@@ -12,7 +12,7 @@ import { fmtInt } from "@/lib/format"
 import type { LocNguoi, TongQuan } from "@/lib/ops/people"
 
 import { PeopleFilter } from "./people-filter"
-import { LENH_DUNG, type HangNguoi } from "./people-text"
+import { BO_TIM, LENH_DUNG, type HangNguoi } from "./people-text"
 import { PeopleTable } from "./people-table"
 
 /**
@@ -27,6 +27,10 @@ export type PeopleProps =
   | { mode: "cloud" }
   | {
       mode: "local"
+      /** Vai xem được bí danh mới có ô tìm (che-tim-bi-danh-viewer). */
+      coTim: boolean
+      /** Vai không xem được bí danh đã gõ ?q= — máy chủ đã bỏ, trang báo một dòng. */
+      boTim: boolean
       tong: TongQuan
       loc: LocNguoi
       rows: HangNguoi[]
@@ -91,7 +95,7 @@ export function PeopleView(props: PeopleProps) {
       </div>
     )
   }
-  const { tong, loc, rows, total, page, pages } = props
+  const { tong, loc, rows, total, page, pages, coTim, boTim } = props
   const stats =
     tong.nguoi > 0
       ? [
@@ -112,9 +116,16 @@ export function PeopleView(props: PeopleProps) {
               <FrameTitle role="heading" aria-level={2}>Người</FrameTitle>
               <FrameDescription>Xếp theo số tin đã đăng, nhiều nhất trước.</FrameDescription>
             </div>
-            <PeopleFilter sources={tong.theoNguon.map((n) => n.source)} source={loc.source} q={loc.q} />
+            <PeopleFilter sources={tong.theoNguon.map((n) => n.source)} source={loc.source} q={loc.q} coTim={coTim} />
           </FrameHeader>
-          <FramePanel>{total === 0 ? <LocRong /> : <PeopleTable rows={rows} />}</FramePanel>
+          <FramePanel className="flex flex-col gap-3">
+            {boTim && (
+              <p className="text-muted-foreground text-sm" data-people-bo-tim="">
+                {BO_TIM}
+              </p>
+            )}
+            {total === 0 ? <LocRong /> : <PeopleTable rows={rows} />}
+          </FramePanel>
           {total > 0 && (
             <FrameFooter className="flex-row flex-wrap items-center justify-between gap-2">
               <span className="text-muted-foreground text-sm tabular-nums" data-people-trang="">
