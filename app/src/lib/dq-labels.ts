@@ -32,6 +32,11 @@ const TEN_KIEM: Record<string, string> = {
   "danh-ba-sdt:n4": "Danh bạ SĐT: tin nhiều số",
   "danh-ba-sdt:n5": "Danh bạ SĐT: số bộ bóc bỏ sót",
   "eval-classify": "Độ đúng cách đọc", // pipeline/eval-classify.mjs (PL9)
+  // pipeline/do-the-duyet.mjs (HD11) — độ đủ dữ liệu của thẻ ghép căn chờ duyệt
+  "the-duyet:roi-kho": "Thẻ ghép căn: bên đã rời kho",
+  "the-duyet:anh-ops": "Thẻ ghép căn: bên không có ảnh cho vai Vận hành",
+  "the-duyet:anh-admin": "Thẻ ghép căn: bên không có ảnh nào",
+  "the-duyet:do-day": "Thẻ ghép căn: độ đầy trường",
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",
@@ -72,6 +77,7 @@ const DOI_TUONG: Record<string, string> = {
   all: "Mọi thị trường",
   enrichment_proposals: "Bảng đề xuất",
   sellers: "Bảng người bán",
+  entity_match: "Thẻ ghép căn chờ duyệt",
 }
 
 /** Ô độ đúng của eval-classify (PL9): `<lát>|<phân khúc>|<cách đọc>|<trường>`. */
@@ -104,6 +110,8 @@ export function dqEntityLabel(entity: string, areaNames: ReadonlyMap<string, str
   return { text: "Đối tượng khác (chưa diễn giải)", code: entity, known: false }
 }
 
+/** Mười trường của bảng so trên thẻ ghép căn + người đăng, đúng thứ tự detail của the-duyet:do-day. */
+const TRUONG_DO_DAY = ["giá", "diện tích", "giá/m²", "phường", "loại hình", "phòng ngủ", "phòng tắm", "đường", "toà", "tầng", "người đăng"]
 /** Số thập phân kiểu Việt («0.966» → «0,966»). */
 const so = (s: string) => s.replace(".", ",")
 /** Số nguyên có dấu chấm nghìn. */
@@ -191,6 +199,16 @@ export function dqDetail(check: string, detail: string | null): DqText {
     if (kiem === "n4" && (m = d.match(/^nhieu=(\d+) rong=(\d+) tong=(\d+)$/)))
       return { text: `${nguyen(m[1])} tin nhiều số · ${nguyen(m[2])} tin trống số dù bài có số · ${nguyen(m[3])} tin`, known: true }
   }
+  if (/^the-duyet:(roi-kho|anh-ops|anh-admin)$/.test(check) && (m = d.match(/^tong=(\d+) so=(\d+) ben=(\d+)$/)))
+    return { text: `${nguyen(m[2])}/${nguyen(m[1])} thẻ chờ · ${nguyen(m[3])} bên`, known: true }
+  if (
+    /^the-duyet:do-day$/.test(check) &&
+    (m = d.match(/^tong=(\d+) gia=(\d+) dt=(\d+) gia_m2=(\d+) phuong=(\d+) loai=(\d+) pn=(\d+) wc=(\d+) duong=(\d+) toa=(\d+) tang=(\d+) nguoi_dang=(\d+)$/))
+  )
+    return {
+      text: [`${nguyen(m[1])} tin còn sống`, ...TRUONG_DO_DAY.map((t, i) => `${t} ${nguyen(m![i + 2])}`)].join(" · "),
+      known: true,
+    }
   if (
     (m = d.match(
       /^run=\S+ tap=nguoi split=(test|dev) n=(\d+) dung=(\d+|-) ti_le=([\d.]+|-) can_duoi=([\d.]+|-) nguong=([\d.]+) nhom=([AB]) ly_do=(-|chua-co-nhan-nguoi|chua-co-cach-doc) bat_dong=(\d+) mat_chu=(\d+)$/,

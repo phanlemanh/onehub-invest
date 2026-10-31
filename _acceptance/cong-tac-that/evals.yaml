@@ -1,0 +1,79 @@
+schema_version: 1
+feature_slug: cong-tac-that
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; fail 0; ca (a) S05 paused → 0 lời gọi nhà cung cấp giả, thoát 0, một dòng mã + lý do; nửa active có lời gọi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca (b) 0 nhóm active → 0 lượt, không fallback"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/collect-chotot.mjs, scripts/chotot-daily.sh, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca (c) vùng S06 mới active được thu và có trong chuỗi nạp; should-NOT-fire: vùng không active không thu, không nạp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca (d) paused/retired xen giữa active: chỉ active được thu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, scripts/chotot-daily.sh, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca (e) DB lỗi → 0 lời gọi, thoát ≠0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca (f) trạng thái lạ ở nguồn và ở đơn vị đều bị chặn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ctt_cong_launchd
+    paths: [scripts/airdna-daily.sh, scripts/smoke-daily.sh, pipeline/scripts/weekly-with-jitter.sh]
+    expected: "exit 0; 'CONG-LAUNCHD PASS'; mỗi script: cổng 3 → thoát 0 đúng một dòng có lý do; should-NOT-fire: cổng 2 → thoát ≠0 fail-closed"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ctt_unit
+    paths: [scripts/chotot-daily.sh, pipeline/scripts/cong-tac-that.test.mjs]
+    expected: "exit 0; ca chạy thật chotot-daily: S06 không chạy → thoát 0, 0 nạp; DB lỗi → thoát ≠0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ctt_khong_cung
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, scripts/chotot-daily.sh, scripts/airdna-daily.sh, scripts/smoke-daily.sh, pipeline/scripts/weekly-with-jitter.sh]
+    expected: "exit 0; 'KHONG-CUNG PASS'; should-NOT-fire: 0 chỗ danh sách cứng, 0 chỗ đọc enabled"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; fail 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ctt_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
