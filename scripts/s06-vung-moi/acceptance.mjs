@@ -88,7 +88,8 @@ async function modeMig() {
     const maMau = dai[0].id;
     await c.query(`INSERT INTO area_breakdowns (area_id, kind, label, payload) VALUES ($1, 'svm', 'svm', '{}')`, [maMau]);
     await c.query(`INSERT INTO data_level_snapshot (snap_date, market_id, property_type, unit, data_level, n) VALUES (current_date, $1, 'svm', 'can', 'B0', 1)`, [maMau]);
-    console.log(`trước: ${truoc.length} thị trường, ${dai.length} mã dài, area_sources trỏ mã dài ${as0.n}`);
+    const { rows: [cu0] } = await c.query(`SELECT count(*)::int AS dai FROM collection_units WHERE EXISTS (SELECT 1 FROM unnest(market_codes) m WHERE m ~ '^vn-(thanh-pho|tinh)-')`);
+    console.log(`trước: ${truoc.length} thị trường, ${dai.length} mã dài, area_sources trỏ mã dài ${as0.n}, collection_units ${cu0.dai}`);
 
     const r1 = apSql(ca.db, readFileSync(MIG, "utf8"));
     check(r1.code === 0, `áp 064 lần một thoát 0 (${r1.out.trim().split("\n").pop()})`);
@@ -105,6 +106,12 @@ async function modeMig() {
     const { rows: [ab] } = await c.query(`SELECT count(*)::int AS n FROM area_breakdowns WHERE area_id = $1`, [maMau.replace(MA_DAI, "vn-")]);
     const { rows: [dl] } = await c.query(`SELECT count(*)::int AS n FROM data_level_snapshot WHERE market_id = $1`, [maMau.replace(MA_DAI, "vn-")]);
     check(ab.n === 1 && dl.n === 1, `area_breakdowns và data_level_snapshot cài trước sang mã mới (${ab.n}, ${dl.n})`);
+
+    // cột mảng: collection_units.market_codes trỏ mã dài → mã mới, và admin lưu lại đơn vị không bị trigger 048 chặn
+    const { rows: [cu] } = await c.query(`SELECT count(*)::int AS dai FROM collection_units WHERE EXISTS (SELECT 1 FROM unnest(market_codes) m WHERE m ~ '^vn-(thanh-pho|tinh)-')`);
+    const luu = await c.query(`UPDATE collection_units SET market_codes = market_codes WHERE cardinality(market_codes) > 0`).then((r) => r.rowCount, (e) => `lỗi ${e.code} ${e.message}`);
+    check(cu.dai === 0 && cu0.dai > 0 && typeof luu === "number" && luu > 0,
+      `collection_units.market_codes trỏ mã dài ${cu0.dai} → ${cu.dai}; lưu lại ${luu} đơn vị qua trigger không lỗi`);
 
     const r2 = apSql(ca.db, readFileSync(MIG, "utf8"));
     const sau2 = await trangThaiThiTruong(c);

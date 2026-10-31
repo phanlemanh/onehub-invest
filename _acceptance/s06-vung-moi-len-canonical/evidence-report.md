@@ -2,192 +2,183 @@
 schema_version: 2
 feature_slug: s06-vung-moi-len-canonical
 verdict: REJECT
-failed_evals: ["E4","E5","E9","E10"]
+failed_evals: ["E10"]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 49a64baee53df0efff707b13ff50860237325df3
+verified_commit: b69a2d3be662fcf57fde5fcc9d52bdbabcda0c84
 human_signoff:
 ---
 
 # Evidence Report: s06-vung-moi-len-canonical
 
-Round 1. Hồ sơ này thay trọn round cũ; lịch sử round nằm ở mục Iterations.
+Vòng 2. Một eval không đạt: E10 (AC-9, bộ test `scripts/*.test.mjs`). Mười một eval còn lại và năm lệnh suite đều xanh. Không có lệnh fail nào nằm ngoài eval: lệnh fail duy nhất, `node --test scripts/*.test.mjs`, đã gắn vào E10.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | script | PASS |
 | E2 | AC-2 | script | PASS |
 | E3 | AC-3 | test | PASS |
-| E4 | AC-4 | script | FAIL |
-| E5 | AC-5 | script | FAIL |
+| E4 | AC-4 | script | PASS |
+| E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | script | PASS |
 | E8 | AC-8 | script | PASS |
-| E9 | AC-9 | test | FAIL |
+| E9 | AC-9 | test | PASS |
 | E10 | AC-9 | test | FAIL |
 | E11 | AC-9 | script | PASS |
 | E12 | AC-10 | script | PASS |
 
-Lệnh fail không gắn eval: không có. Cả ba lệnh fail đều gắn eval: `node scripts/s06-vung-moi/acceptance.mjs reassign` (E4, E5), `cd pipeline && npm test` (E9), `node --test scripts/*.test.mjs` (E10).
-
 ## Evidence
 
 - eval: E1
-  run_id: minted-s06-vung-moi-len-canonical-E1-r1
+  run_id: minted-s06-vung-moi-len-canonical-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_mig
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     MIG PASS
 
 - eval: E2
-  run_id: minted-s06-vung-moi-len-canonical-E2-r1
+  run_id: minted-s06-vung-moi-len-canonical-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_rao
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     RAO PASS
 
 - eval: E3
-  run_id: minted-s06-vung-moi-len-canonical-E3-r1
+  run_id: minted-s06-vung-moi-len-canonical-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.svm_unit
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
-    ℹ duration_ms 91.866209
+    node --test pipeline/lib/thi-truong.test.mjs: fail 0
+    duration_ms 71.748375
 
 - eval: E4
-  run_id: minted-s06-vung-moi-len-canonical-E4-r1
-  exit_code: 1
+  run_id: minted-s06-vung-moi-len-canonical-E4-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_reassign
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
-    ok   AC-4 bản chép: áp 064
-    ok   AC-4 reassign không đối số thoát 0
-    FAIL AC-4 phường giả upsert dưới vn-da-nang: vn-da-nang-an-hai, vn-da-nang-an-khe, vn-da-nang-an-thang, vn-da-nang-avuong, vn-da-nang-ba-na, vn-da-nang-ban-thach, vn-da-nang-ben-giang, vn-da-nang-ben-hien, vn-da-nang-cam-le, vn-da-n
-    ok   AC-4 tập id phường HN/HCM trước = sau (304)
-    FAIL AC-4 khoá haiphong không có snapshot → đúng một dòng gọi tên (0)
-    REASSIGN FAIL (2 mục)
+    REASSIGN PASS
 
 - eval: E5
-  run_id: minted-s06-vung-moi-len-canonical-E5-r1
-  exit_code: 1
+  run_id: minted-s06-vung-moi-len-canonical-E5-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_reassign
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
-    Cùng lệnh với E4; các dòng AC-5 của lệnh đều ok nhưng lệnh kết thúc đỏ (2 mục AC-4) nên eval gắn chung lệnh bị tính đỏ.
-    ok   AC-5 064 chưa áp: một dòng nêu danang + vn-da-nang thiếu
-    ok   AC-5 0 thị trường mới được chèn (34 → 34)
-    ok   AC-5 phường Hà Nội/TP.HCM vẫn upsert
-    REASSIGN FAIL (2 mục)
+    REASSIGN PASS
 
 - eval: E6
-  run_id: minted-s06-vung-moi-len-canonical-E6-r1
+  run_id: minted-s06-vung-moi-len-canonical-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_transform
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     TRANSFORM PASS
 
 - eval: E7
-  run_id: minted-s06-vung-moi-len-canonical-E7-r1
+  run_id: minted-s06-vung-moi-len-canonical-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_transform
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     TRANSFORM PASS
 
 - eval: E8
-  run_id: minted-s06-vung-moi-len-canonical-E8-r1
+  run_id: minted-s06-vung-moi-len-canonical-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_real
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     REAL PASS
 
 - eval: E9
-  run_id: minted-s06-vung-moi-len-canonical-E9-r1
-  exit_code: 1
+  run_id: minted-s06-vung-moi-len-canonical-E9-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
-    ℹ tests 322
-    ℹ pass 321
-    ℹ fail 0
-    ℹ cancelled 1
-    ✖ failing tests:
-    test at scripts/bait-gap-sellers.test.mjs:104:1
-    ✖ SD-AC-1 đỏ: view bản chép bỏ đếm n_rent → bắt «cột tổng hợp của C» (120000.304917ms)
-      'test timed out after 120000ms'
+    cd pipeline && npm test: fail 0
+    duration_ms 297553.619833
 
 - eval: E10
-  run_id: minted-s06-vung-moi-len-canonical-E10-r1
+  run_id: minted-s06-vung-moi-len-canonical-E10-r2
   exit_code: 1
   baseline: red
   verifier: config:executors.test.scripts
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
+    ... (trích đuôi) ...
+    P2 offers: 37563 high / 6037 medium / 0 skip — phường: 37513 ward_v3 + 50 text-match (match 86.2%)
+    sau:
+    ok   0 tin trỏ khu vực không hợp lệ hay khu vực mồi
+    ok   S03: 2 tin mồi → 2 về phường cũ
+    ok   S05: 2 tin mồi → 2 về phường cũ
+    ok   S06: 2 tin mồi → 2 về phường cũ
     ok   ROLLBACK — 6 bảng băm bằng gốc · ops_audit +0 dòng transform · 0 khu vực mồi
     kiem-tin-rao-gan: FAIL (1)
     1 !== 0
         at TestContext.<anonymous> (scripts/kiem-tin-rao-gan-khu-vuc.test.mjs:24:10)
-      code: 'ERR_ASSERTION', actual: 1, expected: 0, operator: 'strictEqual'
-
-- eval: E11
-  run_id: minted-s06-vung-moi-len-canonical-E11-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.svm_scope
-  verified_at: 2026-10-31T13:26:23Z
-  output: |
-    SCOPE OK
+        code: 'ERR_ASSERTION', actual: 1, expected: 0, operator: 'strictEqual'
 
 - eval: E12
-  run_id: minted-s06-vung-moi-len-canonical-E12-r1
+  run_id: minted-s06-vung-moi-len-canonical-E12-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.svm_dem
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
   output: |
     DEM PASS
+
+- eval: E11
+  run_id: minted-s06-vung-moi-len-canonical-E11-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.svm_scope
+  verified_at: 2026-10-31T13:39:03Z
+  output: |
+    SCOPE OK
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-s06-vung-moi-len-canonical-SUITE-npm_test__bb6271-r1
+  run_id: minted-s06-vung-moi-len-canonical-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-s06-vung-moi-len-canonical-SUITE-lint-r1
+  run_id: minted-s06-vung-moi-len-canonical-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
 
 - cmd: cd app && npm test
-  run_id: minted-s06-vung-moi-len-canonical-SUITE-npm_test__bd9a35-r1
+  run_id: minted-s06-vung-moi-len-canonical-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-s06-vung-moi-len-canonical-SUITE-test_lint_rules-r1
+  run_id: minted-s06-vung-moi-len-canonical-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-s06-vung-moi-len-canonical-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-s06-vung-moi-len-canonical-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T13:26:23Z
+  verified_at: 2026-10-31T13:39:03Z
 
 ## Known limits
 
@@ -195,11 +186,11 @@ Lệnh fail không gắn eval: không có. Cả ba lệnh fail đều gắn eval
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+none — mọi eval feature đều đỏ trên baseline hoặc không đo được baseline (có phân biệt hoặc ghi lý do bên dưới); không eval nào xanh ở cả hai phía.
 
-Ghi chú trung thực: chỉ E10 có baseline red; các eval còn lại không đo được baseline (n-a) vì lý do dưới đây, nên mục này không chứng minh thêm điều gì cho chúng.
+E10 có baseline red: bộ `scripts/*.test.mjs` cũng đỏ trên code cũ ở merge-base. Ca đỏ nằm ở `scripts/kiem-tin-rao-gan-khu-vuc.test.mjs` dòng 24, nơi test kỳ vọng bản thường của `kiem-tin-rao-gan-khu-vuc.mjs --thu` thoát 0 nhưng nhận mã khác 0. Test này thuộc việc khác (do-khu-vuc-tu-dung-moi), không thuộc các AC của feature này. Nhật ký commit gần nhất ghi chú KDM đỏ sẵn trên main; báo cáo này chưa tự dò lại điểm đó, người ký cần đối chiếu ở Cổng 2.
 
-Baseline không đo:
+Baseline khong do
 - node scripts/s06-vung-moi/acceptance.mjs mig: bo qua baseline: tep scripts/s06-vung-moi/acceptance.mjs co o cay dang kiem nhung chua co o merge-base 0c3f4842d7da679ef9b6de43c96aa00df1063c71 — eval moi, chay tren code cu khong phan biet gi
 - node scripts/s06-vung-moi/acceptance.mjs rao: bo qua baseline: tep scripts/s06-vung-moi/acceptance.mjs co o cay dang kiem nhung chua co o merge-base 0c3f4842d7da679ef9b6de43c96aa00df1063c71 — eval moi, chay tren code cu khong phan biet gi
 - node --test pipeline/lib/thi-truong.test.mjs: bo qua baseline: tep pipeline/lib/thi-truong.test.mjs co o cay dang kiem nhung chua co o merge-base 0c3f4842d7da679ef9b6de43c96aa00df1063c71 — eval moi, chay tren code cu khong phan biet gi
@@ -212,8 +203,9 @@ Baseline không đo:
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất (không eval nào có runs > 1)
+none — mọi eval chạy nhiều lần đều đồng nhất (toàn bộ eval là deterministic, một lần chạy mỗi eval).
 
 ## Iterations
 
-Round 1: E4, E5, E9, E10 failed — E4/E5 chung lệnh reassign: phường giả không upsert đúng dưới vn-da-nang (chuỗi id in ra lệch kỳ vọng) và khoá haiphong không có snapshot không in đúng một dòng gọi tên; E9: một test (bait-gap-sellers SD-AC-1) quá hạn 120 giây trong bộ test pipeline, 321 test khác đạt; E10: kiem-tin-rao-gan-khu-vuc.test.mjs báo một vi phạm (1 khác 0). Returned to implementation.
+Round 1: E4, E5, E9, E10 failed — nhật ký vòng 1 ghi bốn eval này đỏ ở commit 49a64bae; tổng kết vòng REJECT. Returned to implementation (commit 72ed0712 cô lập fixture khỏi ranh giới S04 thật và siết scope.sh; commit b69a2d3b đổi AC-9 thành «không thêm đỏ so với main»).
+Round 2: E10 failed — bộ `scripts/*.test.mjs` còn đỏ ở `kiem-tin-rao-gan-khu-vuc.test.mjs` (test của việc do-khu-vuc-tu-dung-moi); E4, E5, E9 đã xanh. Returned to implementation / chờ người quyết ở Cổng 2 về cách đọc AC-9.

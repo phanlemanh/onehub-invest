@@ -55,6 +55,21 @@ BEGIN
   END IF;
 
   UPDATE areas a SET id = c.ma_ngan FROM _ma_cap c WHERE a.id = c.ma_dai;
+
+  -- Cột mảng mang mã thị trường (không khoá ngoại): đổi SAU areas vì trigger collection_units_kiem_tham_chieu (048) đòi
+  -- mỗi mã trong market_codes là thị trường có thật — đổi trước thì mã ngắn chưa tồn tại.
+  IF to_regclass('collection_units') IS NOT NULL THEN
+    UPDATE collection_units u
+       SET market_codes = (SELECT array_agg(coalesce(c.ma_ngan, m) ORDER BY o)
+                             FROM unnest(u.market_codes) WITH ORDINALITY AS x(m, o) LEFT JOIN _ma_cap c ON c.ma_dai = x.m)
+     WHERE EXISTS (SELECT 1 FROM unnest(u.market_codes) m JOIN _ma_cap c ON c.ma_dai = m);
+  END IF;
+  IF to_regclass('asset_nodes') IS NOT NULL THEN
+    UPDATE asset_nodes n
+       SET area_ids = (SELECT array_agg(coalesce(c.ma_ngan, m) ORDER BY o)
+                         FROM unnest(n.area_ids) WITH ORDINALITY AS x(m, o) LEFT JOIN _ma_cap c ON c.ma_dai = x.m)
+     WHERE EXISTS (SELECT 1 FROM unnest(n.area_ids) m JOIN _ma_cap c ON c.ma_dai = m);
+  END IF;
   RAISE NOTICE '064: đổi % mã thị trường dài sang vn-<x>', so_cap;
 END
 $khoi$;
