@@ -5,7 +5,7 @@ slug: judge-evidence-du-truong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T23:00:00Z
 approved_by:
@@ -73,4 +73,7 @@ Trục quét (preset entity-feature, làm tay vì chỉ có ba trục nhỏ): **
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: sửa phần dùng chung của bộ kiểm (`agent/tests/judge-chung.ts`) không làm bằng chứng E1/E3 bị coi là cũ, vì hai phép đo này chưa khai tệp đó.
+  - Ngoài-2: khi lô thật không có thẻ cũ đang chờ, phép đo lô thật báo xanh mà chưa thử việc giữ nguyên thẻ cũ.
 - Eval đã ký bị thay khi hồ sơ này được ký: `judge-nguong-la-code/E6` → AC-1 (bảng ở design doc §4).

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 058bc8db2cc2b043c496ae291bd50de218ec5562
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: judge-evidence-du-truong
