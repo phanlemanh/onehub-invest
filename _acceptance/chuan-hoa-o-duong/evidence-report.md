@@ -7,13 +7,13 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 17b57b7cc3cfe57cf8ebf1335c0a48671fce6346
+verified_commit: ad585aac0de13dc42b987d01226c34a51aaabded
 human_signoff:
 ---
 
 # Evidence Report: chuan-hoa-o-duong
 
-Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì một lệnh suite hồi quy (`cd app && npm test`) đỏ và không gắn với eval nào (xem mục Lệnh suite bên dưới).
+Round 2. Mười hai eval của hợp đồng đều mang từ round 1 (delta không chạm paths của eval). Lệnh suite `cd app && npm test` đỏ ở ON12-AC-7 (dữ liệu da-nang trên DB local, không gắn eval nào), nên verdict tổng là REJECT.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -38,9 +38,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-1 tiền tố vị trí xanh (20 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-chuan-hoa-o-duong-E2-r1
@@ -48,9 +48,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-2 số nhà và đuôi địa chỉ xanh (8 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-chuan-hoa-o-duong-E3-r1
@@ -58,9 +58,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-3 tên đường bắt đầu bằng số xanh (8 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-chuan-hoa-o-duong-E4-r1
@@ -68,9 +68,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-4 ô đường không mang tên xanh (8 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-chuan-hoa-o-duong-E5-r1
@@ -78,9 +78,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-5 khác đường vẫn loại xanh (6 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-chuan-hoa-o-duong-E6-r1
@@ -88,9 +88,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-6 chữ Eth xanh
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-chuan-hoa-o-duong-E7-r1
@@ -98,9 +98,9 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-7 thẻ và luật cùng khoá đường xanh (58 ô)
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-chuan-hoa-o-duong-E8-r1
@@ -108,82 +108,82 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
   baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-entity-duong.test.ts: ca CD-AC-8 probe ô đường thật xanh
-    ℹ duration_ms 896.239541
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-chuan-hoa-o-duong-E9-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.judge_luat
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    agent/tests/judge-luat.test.ts: mọi ca xanh
-    ℹ duration_ms 875.64825
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E10
   run_id: minted-chuan-hoa-o-duong-E10-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.the_duyet_phuong
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    app/tests/the-duyet-phuong-lech-gia.test.tsx: mọi ca xanh
-    ℹ duration_ms 2344.063209
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E11
   run_id: minted-chuan-hoa-o-duong-E11-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    app/tests/the-duyet-du-can-cu.test.tsx: mọi ca xanh
-    ℹ duration_ms 4723.367833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E12
   run_id: minted-chuan-hoa-o-duong-E12-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.the_so_song
   verified_at: 2026-10-31T09:37:09Z
+  carried_from_round: 1
   output: |
-    app/tests/the-so-gia-tri-song.test.tsx: mọi ca xanh
-    ℹ duration_ms 2869.919416
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bb6271-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:37:09Z
+  verified_at: 2026-10-31T10:13:44Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-chuan-hoa-o-duong-SUITE-lint-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:37:09Z
+  verified_at: 2026-10-31T10:13:44Z
 
 - cmd: cd app && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bd9a35-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bd9a35-r2
   exit_code: 1
-  verified_at: 2026-10-31T09:37:09Z
-  ghi chú: một ca đỏ, `tests/ops-nhan-theo-context.test.tsx` ca «ON12-AC-7 mọi giá trị đang có trên DB local có nhãn». Trang /ops còn chữ thô theo luật du-phong «(chưa có tên Việt)» trong hai chuỗi «S06 · da-nang (chưa có tên Việt)» và «da-nang (chưa có tên Việt)». Ca này đo dữ liệu thật trên DB local (giá trị da-nang chưa có nhãn), không gắn eval nào của hợp đồng này; chưa xác định là hồi quy do diff hay do dữ liệu máy.
+  verified_at: 2026-10-31T10:13:44Z
+  note: 758 ca, 757 qua, 1 hỏng. Ca hỏng là ON12-AC-7 «mọi giá trị đang có trên DB local có nhãn» (tests/ops-nhan-theo-context.test.tsx): trang /ops còn chữ thô «da-nang (chưa có tên Việt)». Lệnh này không gắn eval nào của hợp đồng; nguyên nhân là dữ liệu da-nang trên DB local, đã ghi đỏ hạ tầng ở commit ad585aac (đỏ sẵn trên main a404af39).
 
 - cmd: cd pipeline && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__13563d-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:37:09Z
+  verified_at: 2026-10-31T10:13:44Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-chuan-hoa-o-duong-SUITE-test_lint_rules-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:37:09Z
+  verified_at: 2026-10-31T10:13:44Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-chuan-hoa-o-duong-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-chuan-hoa-o-duong-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:37:09Z
+  verified_at: 2026-10-31T10:13:44Z
 
 ## Known limits
 
@@ -191,18 +191,22 @@ Vòng 1. Cả 12 eval của hợp đồng đều xanh. Verdict là REJECT vì m�
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên HEAD lẫn baseline): E9, E10, E11, E12. Đây là regression-guard có chủ ý của AC-9 (tệp test không đổi so với main), không phải bằng chứng cho hành vi mới.
+carried tu round 1 — baseline khong do lai round nay. Field baseline cua tung eval ghi n-a.
 
-Baseline không đo:
-- cd agent && node --import tsx --test tests/judge-entity-duong.test.ts: bo qua baseline: tep agent/tests/judge-entity-duong.test.ts co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline), cần xác nhận là regression-guard có chủ ý hoặc viết lại để assert hành vi mới:
+- E9 — `cd agent && node --import tsx --test tests/judge-luat.test.ts`
+- E10 — `cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx`
+- E11 — `cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx`
+- E12 — `cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx`
 
-Lệnh suite `cd app && npm test` có một ca đỏ (mô tả ở mục Lệnh suite) và không gắn eval nào, nên `failed_evals` để trống nhưng verdict là REJECT.
+Lệnh fail không gắn eval: `cd app && npm test` (thoát mã 1, do ON12-AC-7 nêu ở khối suite trên).
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval chạy một lần, không có eval nhiều lượt.
 
 ## Iterations
 
-Round 1: mọi eval E1–E12 xanh; lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-7 (nhãn «chưa có tên Việt» cho da-nang trên DB local), không gắn eval. Trả về triển khai/điều tra: xác định ca đỏ có sẵn ở main hay do diff.
+Round 1: S4 REJECT — 12/12 eval xanh, suite app đỏ ở ON12-AC-7 do dữ liệu da-nang trên DB local. Trả về triển khai.
+Round 2: 12 eval mang từ round 1; suite app vẫn đỏ ở ON12-AC-7 (cùng nguyên nhân dữ liệu da-nang, đỏ sẵn trên main a404af39). REJECT.
 
