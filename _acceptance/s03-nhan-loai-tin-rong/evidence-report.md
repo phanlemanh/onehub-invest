@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4f05a25cfa6cb48002e9d44b7f378d095a3d8712
+verified_commit: ad46ab7e43172544f74a36dd69d8ee3042000089
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -177,3 +177,7 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 
 Round 1: đã chấm, lịch sử xem run-log.jsonl.
 Round 2: toàn bộ eval E1 đến E10 và các lệnh suite đều xanh; không còn eval hỏng.
+
+### Re-pin lần 1 — 2026-10-31, do gộp main (SD3, sdt-luu-goc-e164) sau chữ ký
+run_id: repin-20261031T131943Z-91839
+sha: ad46ab7e43172544f74a36dd69d8ee3042000089 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
