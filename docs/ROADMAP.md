@@ -349,6 +349,20 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
+### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
+
+ZCode khảo sát và đề xuất (vòng claudedp-3110-11); số là tin bán đang sống ở canonical, đo từ DB local mỗi ngày.
+Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với mục tiêu); việc thu đi qua các vòng claudedp-3110-5/6/7/10.
+
+| Kênh | Mốc 31/10 | Mục tiêu 05/11 | Điều kiện |
+|---|---|---|---|
+| S06 | 29.762 tin bán · 2 vùng · ~2.200 mới/ngày | ~45.000 tin bán · 5 vùng · 2 lượt/ngày | bộ thu vùng mới (tham số vùng đúng, T2); sửa deadlock resolve trước khi lên 2 lượt |
+| S03 | 1.153 tin · ~130 mới/ngày · 28 nhóm | 2.500 tin · 200 mới/ngày | thêm nhóm; chỉ đọc, an toàn Zalo |
+| S01 | 611 căn · thu tuần một lần | 1.000 căn · 15 mới/ngày | chạy hằng ngày; rủi ro chống bot |
+| S08 | 148 dự án / 19.669 căn | 200 dự án / 30.000 căn | ≤1 lượt/tuần, chỉ nội bộ (không lên cổng Invest/API) |
+| S05 | 28 tin, paused | không tính | không nạp credit |
+| S02 | — | không tính | chỉ hiệu chuẩn |
+
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
 |---|---|---|
