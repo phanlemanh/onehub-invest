@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>98 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>83 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>101 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>87 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
@@ -42,6 +42,7 @@ flowchart TD
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
+- Luật ghép căn và bảng so thẻ duyệt so ô đường theo tên đường — bỏ ngõ/ngách/hẻm/số nhà và đuôi địa chỉ, không còn loại oan «đường khác» (`chuan-hoa-o-duong`)
 - Job cloud-sync thoát khác 0 khi bất kỳ bước nào hỏng, và push-ops-facts kết nối theo DATABASE_URL (`cloud-sync-bao-loi-that`)
 - Nhà đầu tư mở So sánh ở /compare (301 từ /so-sanh) và Đã lưu, cả hai có PageHeader, trạng thái tải/trống/lỗi, Đã lưu trống dùng c-empty-11 (`compare-saved-trang-thai`)
 - Công tắc bật/tắt nhóm thu ở /ops/sources không hạ nhóm đã gỡ hay đã xong về tạm dừng, không hồi sinh chúng qua tắt rồi bật, và không đổi nhóm nháp thành tạm dừng khi tắt (`cong-tac-khong-ha-nhom-go`)
@@ -95,10 +96,13 @@ flowchart TD
 - Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
 - Mọi route /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở ops-access.ts, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction (`quyen-bon-vai-mot-cho`)
 - Quyết định trên thẻ ghép căn chỉ ghi khi chạm đúng một ứng viên còn chờ; không chạm được thì route trả lỗi có tên, thẻ vẫn chờ, không dòng nào được ghi (`quyet-dinh-phai-cham-ung-vien`)
+- resolve-properties tự thử lại có hạn khi Postgres báo deadlock (40P01), không đổi logic resolve (`resolve-thu-lai-deadlock`)
 - Transform S03 đọc giá và diện tích không lẫn URL/SĐT, chuẩn hoá cách viết giá của môi giới, chặn giá phi lý, gom repost theo mã toà/căn, ghi tên người bán và phường theo thị trường của nhóm (`s03-cam-mau-so-lieu`)
 - Giá tỷ chẵn viết bằng đồng («3.000.000.000 đ») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-chan-dong`)
 - Giá tỷ viết bằng đồng mà ngay sau là khoảng trắng/xuống dòng rồi số 1–2 chữ số («3.000.000.000\n50m2») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-sau-khoang-trang`)
+- Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo tín hiệu chữ, đơn vị giá và bối cảnh nhóm; vẫn loại bài khách tìm nhà; bài đã có loại không đổi (`s03-nhan-loai-tin-rong`)
 - check-freshness và /ops đo S05 theo nhịp 2 lượt/tuần: SLO_HOURS.S05 = 96 giờ ở cả hai bản chép, giữ parity với /ops (`s05-slo-theo-lich`)
+- Tin và danh bạ Người lưu số gốc SĐT ở một dạng +84…, danh bạ có bí danh số gốc, và bảng người bán thành view trên danh bạ (`sdt-luu-goc-e164`)
 - Bước tổng hợp người bán thêm dòng cho mọi SĐT mới trên tin, không chỉ cập nhật và xoá dòng đã có (`sellers-them-dong-lai`)
 - Người vận hành thấy cùng một số SLO trên /ops và /ops/collections (`slo-mot-nguon`)
 - Mọi route API của app nằm trong một sổ bề mặt và chỉ trả đúng thứ sổ cho phép (`so-be-mat-api`)
@@ -171,6 +175,7 @@ flowchart TD
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
 - kho tri thức riêng tư đi kèm — nguồn của mọi bản phạm vi đang dùng là trang tri thức ghim băm (`kho-tri-thuc-invest`)
 - khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ; S05 tạm dừng thì bước thu không gọi Apify; lịch S05 xuống 2 lượt/tuần (`khoa-nap-s05-paused`)
+- Trang /ops gọi đúng tên thị trường vùng mới của S06 (Đà Nẵng, Hải Phòng, Khánh Hoà) khi bảng khu vực còn giữ mã dài — bản tạm ở app tới khi đổi mã khu vực (`khu-vuc-vung-moi-s06`)
 - Danh sách tệp bản đồ được dùng hex (MAP_FILES) viết trước chỉ ghim chữ ở một module chung; LB-AC-1 và DHT-AC-5 cùng đọc nó (`lb-ac-1-map-files-mot-nguon`)
 - Gỡ ảnh và chữ AirDNA khỏi trang chi tiết listing (Invest) (`listing-airdna-photos`)
 - Lộ trình máy đọc + quy định «mỗi loại thông tin một chỗ» — bật gói road-map, cắt đợt phan-loai-2310 và cam-mau-2310 (`lo-trinh-2310`)
@@ -199,6 +204,7 @@ flowchart TD
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
 - Tin rao S03 thôi gộp nhầm bài của nhiều người khi thiếu phường/diện tích, và cột «Luồng 7 ngày» đếm đúng tập bài transform đọc (`s03-gop-trung-dung`)
 - bộ nạp S03 lọc U+0000 khỏi mọi chuỗi trước khi ghi stg_zalo_posts — gỡ kẹt nạp đêm từ 29/10 (`s03-null-byte`) — đã giao — máy thông, cửa veto còn mở
+- Phép đo danh bạ SĐT chặt — mỗi số một người đo mỗi đêm, đúng ảnh và tên đúng người khi chuyển 060, che số /ops/people qua loader thật (`sd3-lam-chat-do-danh-ba`)
 - snapshot thu thập chỉ hiện ra cho bước nạp khi đã ghi trọn vẹn, nên lượt nạp không bao giờ đánh dấu «đã nạp» một snapshot dở dang (`snapshot-nguyen-tu`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
@@ -216,6 +222,7 @@ flowchart TD
 - Chuẩn UI ReUI — đợt B3 thống nhất biểu đồ (bảng màu chuỗi chung, gom code chép trùng, tách file > 200 dòng) (`ui-clean-b3-charts`)
 - Bộ chuẩn UI/UX ReUI — Phần A (setup: skill + MCP ReUI, skill onehub-ui, lint chặn tự vẽ tay, cắm vào kit) (`ui-standards-reui`)
 - thước baseline UI của ui-standards-reui theo kịp các đợt dọn — tệp mẫu suy từ suppressions, tài liệu baseline so lần đo mới nhất (`ui-standards-reui-thuoc-loi-thoi`)
+- Bộ test sổ từ vựng trên DB (vocab-db.itest) đo đúng sổ hiện tại — nạp phần từ vựng của mọi migration sau 043 — nên xanh trên main và trên DB đi trước main (`vocab-db-itest-xanh-tren-main`)
 - Giá trị wanted → inquiry «Yêu cầu» trong Ý định tin, mô hình Listing (bên bán) ↔ Yêu cầu (bên mua) ở CONTEXT.md, và ba chữ «tin» chỉ bài ở /ops/collections (`wanted-thanh-inquiry`)
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
