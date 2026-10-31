@@ -5,7 +5,7 @@ slug: do-the-duyet-du-du-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-do-the-duyet-du-du-lieu-design.md
@@ -78,6 +78,9 @@ Hàng HD11 của `docs/plan/lo-trinh.json` (T2, dãy P4, đợt 3). Cổng Đán
   thay thế là bộ đọc ảnh thật của app (AC-6); `roi-kho` và `do-day` chỉ có câu đo độc lập (AC-2) — giới hạn đã khai.
 - «Người đăng» đo theo cột của tin (`seller_phone_hash`/`seller_name`); `seller_ref` S03/S05 là hằng số (H15) nên không dùng.
 - Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
-  - Ngoài-1: Phép kiểm chống lộ mã tin chỉ bắt mã đứng thành một từ trọn; cột đối tượng chưa bị ép dạng, nên mã tin lọt vào cột đó kèm dấu câu có thể không bị báo.
-  - Ngoài-2: Test nhãn độ đầy chỉ kiểm có nhãn, không ghim tên trường đứng đúng cạnh con số của nó; đổi chỗ hai nhãn thì trang chất lượng ghi sai chú thích mà test vẫn xanh.
-  - Ngoài-3: Luật nhận ảnh của lệnh chỉ được thử bằng ca viết tay, chưa đặt cạnh bộ đọc ảnh của app trên các ca biên; app đổi luật thì chỉ phép so trên dữ liệu thật hằng ngày (E6) mới lộ ra.
+  - Ngoài-1: Phép đo ON12 có thể báo đỏ nhầm khi lượt ghi có từ 10 dòng trở lên (thẻ chờ có bên thuộc từ 7 nguồn).
+  - Ngoài-2: Test nhãn /ops/quality dùng kết quả viết tay thay vì sinh từ lệnh; lệnh đổi thứ tự trường thì trang có thể hiện chữ thô mà test vẫn xanh.
+  - Ngoài-3: Đối chứng đỏ «FAIL DOI MA THOAT» chỉ chứng lệnh thoát khác 0, không chứng nguyên nhân là dòng không đạt.
+  - Ngoài-4: Phép kiểm chống lộ mã tin chỉ bắt mã đứng thành một từ trọn; cột đối tượng chưa bị ép dạng.
+  - Ngoài-5: Test nhãn độ đầy không ghim tên trường đứng đúng cạnh con số của nó.
+  - Ngoài-6: Luật nhận ảnh của lệnh chỉ được thử bằng ca viết tay, chưa đặt cạnh bộ đọc ảnh của app trên các ca biên; phép so trên dữ liệu thật hằng ngày (E6) vẫn chạy.

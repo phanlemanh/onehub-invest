@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7b5eab47f7538a67e258f8b844c2de47981785f4
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: do-the-duyet-du-du-lieu
