@@ -5,7 +5,7 @@ slug: phat-bieu-db-do-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) + ghi lại ô dữ liệu thật đi lên cloud qua sync
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-phat-bieu-db-do-tren-main-design.md
