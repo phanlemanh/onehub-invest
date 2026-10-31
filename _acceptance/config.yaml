@@ -46,6 +46,8 @@ executors:
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
+    dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
+    dtd_app_nhan: "cd app && node --import tsx --test tests/dq-the-duyet-label.test.tsx"   # do-the-duyet-du-du-lieu E5 — nhãn dq-labels
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -485,6 +487,11 @@ executors:
     ddb_job: "bash _acceptance/do-danh-ba-sdt/probes/job.sh"   # do-danh-ba-sdt E4 — bước cuối cloud-sync, hộp thử node giả
     ddb_on12: "bash _acceptance/do-danh-ba-sdt/probes/on12.sh"   # do-danh-ba-sdt E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
     ddb_pham_vi: "bash _acceptance/do-danh-ba-sdt/probes/pham-vi.sh"   # do-danh-ba-sdt E6
+    dtd_db: "bash _acceptance/do-the-duyet-du-du-lieu/probes/db.sh"   # do-the-duyet-du-du-lieu E2, E3, E4b — DB thử oneinvest_p4_dtd (dựng + xoá)
+    dtd_job: "bash _acceptance/do-the-duyet-du-du-lieu/probes/job.sh"   # do-the-duyet-du-du-lieu E4 — bước cuối cloud-sync, hộp thử node giả
+    dtd_on12: "bash _acceptance/do-the-duyet-du-du-lieu/probes/on12.sh"   # do-the-duyet-du-du-lieu E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
+    dtd_hom_nay: "bash _acceptance/do-the-duyet-du-du-lieu/probes/hom-nay.sh"   # do-the-duyet-du-du-lieu E6 — DB máy thu chỉ đọc, so bộ đọc ảnh app
+    dtd_pham_vi: "bash _acceptance/do-the-duyet-du-du-lieu/probes/pham-vi.sh"   # do-the-duyet-du-du-lieu E7
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
