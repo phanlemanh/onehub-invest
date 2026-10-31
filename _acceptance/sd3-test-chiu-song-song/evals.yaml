@@ -1,0 +1,32 @@
+schema_version: 1
+feature_slug: sd3-test-chiu-song-song
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.sts_chan
+    layer: backend-effect
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; một phiên giữ pg_advisory_xact_lock(33033) + khoá dòng UPDATE trên 200 dòng sale_offer_records trong giao dịch mở; node --test --test-timeout=30000 bait-gap-sellers.test.mjs → thoát 0, 'ℹ pass 7', ca '✔ SD-AC-1 đỏ' có mặt, dưới 30 s; đối chứng: bản tệp ở merge-base chép tạm cạnh tệp thật, chạy --test-timeout=10000 dưới cùng phiên chặn → thoát ≠ 0 với 'timed out'/'cancelled' (bắt 'DOI CHUNG KHONG BAT' nếu bản cũ xanh); in 'CHAN OK'; phiên chặn ROLLBACK, tệp tạm xoá"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.sts_khoa
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; rút phongRieng nguyên văn từ tệp test, chạy trong giao dịch + 060 + refreshBaitGap; pg_locks của phiên: 0 khoá tư vấn, 0 khoá mạnh hơn AccessShareLock trên quan hệ schema public; đối chứng: cùng phiên lấy 33033 → đếm ra 1 ('DOI CHUNG KHONG BAT' nếu mù); in 'KHOA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.sts_assert
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; tập thông điệp assert (chuỗi mở đầu SD-AC/SD3/AC-7 và regex của assert.rejects) ở merge-base = ở HEAD, ≥ 10 thông điệp; số chỗ đọc 'public' giảm đúng 2; đối chứng: xoá một thông điệp ở bản HEAD → bắt 'THONG DIEP ASSERT DOI'; in 'ASSERT OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.sts_pham_vi
+    paths: [_acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base thuộc: pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/*, _acceptance/config.yaml, run-log/evidence-report của sdt-luu-goc-e164 và sellers-them-dong-lai (ghim lại), PRODUCT-MAP.md, LO-TRINH.html; probe không chứa supabase/SUPABASE_/mgmtExec; đối chứng: pipeline/scripts/boc-sdt.test.mjs → 'NGOAI PHAM VI'; in 'PHAM VI OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

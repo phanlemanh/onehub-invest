@@ -1,31 +1,55 @@
 // bait-gap-sellers.test.mjs — người bán (sellers) từ SD3 sdt-luu-goc-e164 là VIEW trên bí danh `sdt` + tin (060, Hỏi-C bước 2).
 // Giữ lời hứa của PL2 AC-7 (không dòng mồ côi) và SD1 (mọi SĐT trên tin có dòng, cột tổng hợp đúng, tên, payload cloud)
-// trên view thay cho bảng ghi tay. BEGIN…ROLLBACK trên Postgres local :5433, nạp 060 trong giao dịch khi DB chưa áp —
-// không để lại dòng nào. Số trong test là số bịa.
+// trên view thay cho bảng ghi tay. BEGIN…ROLLBACK trên Postgres local :5433; mỗi ca dựng lược đồ riêng (bản rỗng của các
+// bảng liên quan) rồi nạp 060 vào đó — không chạm dữ liệu dùng chung, không để lại dòng nào. Số trong test là số bịa.
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 import pg from "pg";
 
 import { sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
-import { MIG_060, napSdtE164 } from "../lib/nap-060.mjs";
+import { MIG_060 } from "../lib/nap-060.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { localReadSql, selectList } from "../sync-cloud.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+// Bảng 060, view sellers, refresh-bait-gap và phép đối chiếu danh bạ chạm tới — chép rỗng sang lược đồ riêng của từng ca.
+const BANG = ["sale_offer_records", "registry_aliases", "parties", "ref_lookup", "properties", "property_offers", "ops_audit"];
+const SQL_034 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/034_ruler_p2_views.sql"), "utf8");
+let soPhong = 0;
+
+/** Lược đồ riêng trong giao dịch: bản rỗng của BANG (cột, mặc định, ràng buộc, chỉ mục cùng tên), view sale_offers như 044,
+ * hai view thước của 034; search_path trỏ vào đó trước public. Không giữ khoá nào của bảng dùng chung ngoài ACCESS SHARE lúc
+ * chép, không xếp hàng khoá tư vấn 33033 — chạy song song với các bộ khác (app, agent) không phải chờ ca nào. */
+async function phongRieng(c) {
+  const sc = `bg_sd3_${process.pid}_${++soPhong}`;
+  await c.query(`CREATE SCHEMA ${sc}`);
+  const defOffers = (await c.query("SELECT pg_get_viewdef('public.sale_offers') AS d")).rows[0].d;
+  for (const t of BANG) {
+    await c.query(`CREATE TABLE ${sc}.${t} (LIKE public.${t} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING GENERATED)`);
+    const idx = await c.query(`SELECT pg_get_indexdef(indexrelid) AS d FROM pg_index WHERE indrelid = $1::regclass`, [`public.${t}`]);
+    for (const { d } of idx.rows) await c.query(d.replace(` ON public.${t} `, ` ON ${sc}.${t} `));
+  }
+  await c.query(`SET LOCAL search_path = ${sc}, public`);
+  await c.query(`CREATE VIEW sale_offers AS ${defOffers}`);
+  await c.query(SQL_034);
+  return sc;
+}
+
 async function withTx(fn, sql060 = MIG_060) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     await c.query("BEGIN");
-    // Cùng khoá với write-offers.test.mjs / agent tests: bộ đó nạp lại hàm 039 trong giao dịch —
-    // chạy song song với một lượt đối soát là deadlock.
-    await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await napSdtE164(c, sql060);
-    return await fn(c);
+    const sc = await phongRieng(c);
+    await c.query(sql060); // 060 (hoặc bản chép đối chứng) dựng view sellers trong lược đồ riêng
+    return await fn(c, sc);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
@@ -72,8 +96,8 @@ async function lat(c) {
 }
 
 test("SD3 sellers là view sau 060", { timeout: 120_000 }, async () => {
-  await withTx(async (c) => {
-    const { rows } = await c.query(`SELECT relkind FROM pg_class WHERE relname = 'sellers' AND relnamespace = 'public'::regnamespace`);
+  await withTx(async (c, sc) => {
+    const { rows } = await c.query(`SELECT relkind FROM pg_class WHERE relname = 'sellers' AND relnamespace = $1::regnamespace`, [sc]);
     assert.equal(rows[0].relkind, "v");
   });
 });
@@ -133,7 +157,7 @@ test("SD-AC-8 payload cloud: đủ SĐT trên tin, không cột name, không s�
   await withTx(async (c) => {
     await lat(c);
     const cols = (await c.query(
-      `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sellers' ORDER BY ordinal_position`,
+      `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'sellers' ORDER BY ordinal_position`,
     )).rows.map((r) => r.c);
     const tai = (await c.query(localReadSql("sellers", selectList("sellers", cols).sql))).rows.map((r) => JSON.parse(r.j));
     for (const so of [A, C]) assert.equal(tai.filter((x) => x.phone_hash === bam(so)).length, 1, `SD-AC-8 payload cloud thiếu SĐT`);
