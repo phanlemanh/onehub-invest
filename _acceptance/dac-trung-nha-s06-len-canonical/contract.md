@@ -5,7 +5,7 @@ slug: dac-trung-nha-s06-len-canonical
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (061) — khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-dac-trung-nha-s06-len-canonical-design.md
@@ -75,3 +75,14 @@ này. Migration 061 do liên làn cấp.
 - «Field mới khai RESO-first trong mappings.yaml» ← AC-2.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Ca DB chưa đưa một tin mang giá trị rác qua cả transform; việc loại rác chỉ được đo ở bước đọc.
+  - Ngoài-2: Ca lược đồ kiểm danh sách mã trong ràng buộc, chưa thử ghi thật từng mã mới.
+  - Ngoài-4: Mặt tiền lưu bằng số mét, trong khi RESO định nghĩa FrontageLength là chuỗi mô tả.
+  - Ngoài-6: Tin gỡ mất một đặc trưng (số nhà, toạ độ…) thì ô vẫn giữ giá trị cũ, vì phát biểu cũ không bị rút.
+- Mở hợp đồng mới (Ngoài-3, Ngoài-5): số tầng dạng «3.0» do đường khác ghi (người duyệt, bộ đọc sau này) làm bộ phân xử
+  lỗi và dừng cả lô tin — sửa trigger hoặc cách ép kiểu, có ca đo.
+- Sửa test hồ sơ đã ký (giám sát duyệt P1-87): `phat-bieu-va-phan-xu` «PD-AC-1 sổ» nạp 061 trước khi so sổ;
+  `thoi-gian-va-hieu-luc` AC-3 thêm bảy mã vào trục ghi tay và nạp 061; `so-tu-vung-mot-nguon` VB-AC-1 thêm bảy mã, số mục
+  71 → 78. E9b bỏ `phat-bieu-db.itest` vì PD-AC-1 và PD-AC-8 đã đỏ trên main (giám sát mở hàng riêng).
