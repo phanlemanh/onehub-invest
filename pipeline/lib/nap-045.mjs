@@ -6,6 +6,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { napLai061 } from "./nap-061.mjs";
+
 const MIG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/045_phat_bieu_va_phan_xu.sql"), "utf8");
 /** Phần hàm của 045 (mục 6–8): nạp lại khi DB đã áp, tránh ALTER bảng dùng chung (khoá độc quyền) trong test. */
 const HAM = MIG.slice(MIG.indexOf("-- 6. Bộ phân xử"));
@@ -35,6 +37,7 @@ export async function napPhatBieu(client, { moCong = true } = {}) {
   const { rows } = await client.query("SELECT to_regclass('field_assertions') IS NOT NULL AS co");
   await client.query(rows[0].co ? HAM : MIG);
   await napLai059(client);
+  await napLai061(client);
   if (moCong) {
     await client.query(`INSERT INTO ops_audit (actor, action, env, detail)
       SELECT 'test:phat-bieu', 'phat-bieu:cat-chuyen', 'local', '{"giao_dich_thu": true}'::jsonb
