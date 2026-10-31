@@ -76,7 +76,7 @@ evals:
     executor: script
     cmd: config:executors.script.svm_dem
     paths: [scripts/s06-vung-moi/dem-ma-dai.mjs, scripts/s06-vung-moi/acceptance.mjs]
-    expected: "exit 0; 'DEM PASS'; trên bản chép: sạch → lệnh đếm thoát 0, không dòng nào; cài lần lượt một dòng trỏ mã dài ở mỗi bảng khoá ngoại catalog liệt (ma trận lấy từ catalog, không danh sách tay) và ở area_sources → lệnh đếm thoát 1, in đúng một dòng gọi tên bảng đó; danh sách bảng của lệnh = danh sách khoá ngoại catalog (so tập)"
+    expected: "exit 0; 'DEM PASS'; trên bản chép: sạch → lệnh đếm thoát 0, không dòng nào; cài lần lượt một dòng trỏ mã dài ở mỗi bảng khoá ngoại catalog liệt (ma trận lấy từ catalog, không danh sách tay) → lệnh đếm thoát 1, in đúng một dòng gọi tên bảng đó kèm 'chặn'; area_sources còn mã dài → chỉ dòng 'báo', thoát 0; danh sách bảng của lệnh = danh sách khoá ngoại catalog (so tập)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-9

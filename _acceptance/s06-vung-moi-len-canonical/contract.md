@@ -37,7 +37,7 @@ Source input: lời Mạnh 31/10 qua giám sát + design doc `docs/superpowers/s
 - AC-7: Given tin S06 có `city_code` không ánh xạ được, When chạy `transform-chotot`, Then tin vẫn vào canonical với `area_id` NULL như hôm nay, lượt không lỗi, và cuối lượt in một dòng cho mỗi mã lạ kèm số tin.
 - AC-8: Given bản chép DB máy thu (db-thu) đã áp 064 và có ranh giới phường Đà Nẵng thật từ S04, When chạy `reassign-areas` → `transform-chotot` → 300 + 400, Then ≥ 80% tin bán S06 sống của `vn-da-nang` có phường — mẫu số là tin bán S06 sống có `city_code` ánh xạ ra `vn-da-nang`, không suy từ `area_id` — và tỉ lệ có phường của `vn-hanoi`, `vn-hcmc` không giảm so với trước.
 - AC-9: Given nhánh, When chạy bộ test `pipeline/` và `scripts/`, Then tất cả xanh.
-- AC-10: Given một DB (bản chép local, hay cloud qua đường đọc chỉ-đọc của sync), When chạy lệnh đếm mã dài, Then lệnh đọc catalog để liệt MỌI bảng có khoá ngoại tới `areas` cùng các cột chữ `area_id`/`market_id`, đếm dòng trỏ 32 mã dài, in một dòng mỗi bảng có dòng và thoát 1; không có dòng nào thì thoát 0 — đây là bước chặn trước khi áp 064 lên DB máy thu.
+- AC-10: Given một DB (bản chép local, hay cloud qua đường đọc chỉ-đọc của sync), When chạy lệnh đếm mã dài, Then lệnh đọc catalog để liệt MỌI bảng có khoá ngoại tới `areas` cùng các cột chữ `area_id`/`market_id`, đếm dòng trỏ 32 mã dài; còn dòng ở khoá ngoại nào thì in một dòng gọi tên bảng và thoát 1; cột chữ không khoá ngoại (vd `area_sources`) chỉ in dòng báo, không chặn; không còn dòng ở khoá ngoại thì thoát 0 — đây là bước chặn trước khi áp 064 lên DB máy thu.
 
 ## Coverage
 
