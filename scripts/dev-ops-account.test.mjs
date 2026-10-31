@@ -248,6 +248,14 @@ describe("vai viewer (--vai viewer, hồ sơ viewer-khong-thay-the-duyet E10)", 
     assert.throws(() => docVai(["--vai"]), /admin, viewer/, "--vai thiếu giá trị");
   });
 
+  test("(e) --vai ops → tài khoản ops-role-test@local.test, tệp riêng bị git check-ignore (anh-goc-qua-may-chu AC-9)", () => {
+    assert.equal(docVai(["--vai", "ops"]), "ops");
+    assert.equal(VAI_THU.ops.email, "ops-role-test@local.test");
+    assert.equal(VAI_THU.ops.file, path.join(path.dirname(CRED_FILE), "ops-role-test-account.json"));
+    assert.ok(isGitIgnored(VAI_THU.ops.file));
+    assert.throws(() => docVai(["--vai", "la"]), /admin, viewer, ops/);
+  });
+
   test("(d) không cờ --vai → như hôm nay", () => {
     assert.equal(docVai([]), "admin");
     assert.equal(docVai(["--rotate"]), "admin");

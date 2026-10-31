@@ -19,7 +19,7 @@ import {
   type MediaRow,
   type PostMediaRow,
 } from "../src/lib/ops/review-media"
-import { snapshotMediaPath } from "../src/lib/ops/zalo-media"
+import { mediaKeyUrl, snapshotMediaPath } from "../src/lib/ops/zalo-media"
 
 const SNAP = "hcmc__zalo-agent__2026-10-23T000000"
 const SNAP2 = "hanoi__zalo-agent__2026-10-22T070651"
@@ -37,8 +37,9 @@ const post = (media_files: unknown, media: unknown = null, snapshot_id = SNAP): 
 })
 /** Dòng bảng media mà bên đọc nhận, rút từ ĐÚNG bên ghi (pipeline/media-rows.mjs) — không viết tay khuôn bên đọc. */
 const qua = (posts: PostMediaRow[], offerId = "o1"): MediaRow[] =>
-  mediaRowsFromPosts(offerId, "S03", posts).map((r: { resource_record_key: string; media_url: string | null; local_file: string | null }) => ({
+  mediaRowsFromPosts(offerId, "S03", posts).map((r: { resource_record_key: string; media_key: string; media_url: string | null; local_file: string | null }) => ({
     offer_id: r.resource_record_key,
+    media_key: r.media_key,
     media_url: r.media_url,
     local_file: r.local_file,
   }))
@@ -102,20 +103,29 @@ const MA_TRAN: [string, PostMediaRow[], unknown][] = [
   ["tin không bài", [], undefined],
 ]
 
+/** Luật ghép đã ký, đổi theo anh-goc-qua-may-chu: ảnh URL gốc → ảnh máy chủ lấy hộ theo khoá của dòng media cùng URL;
+ *  ảnh mẫu evidence thôi xuống client. Thứ tự, chống trùng, trần 12 giữ nguyên. */
+const quaKhoa = (bai: PostMediaRow[], offerId = "o1") => {
+  const khoa = new Map(qua(bai, offerId).flatMap((r) => (r.media_url && !r.local_file ? [[r.media_url, r.media_key]] : [])))
+  return buildOfferImages(bai).map((img) =>
+    img.origin === "remote" ? { src: mediaKeyUrl(khoa.get(img.src) ?? "") ?? "", origin: "proxy" as const, expiring: false } : img,
+  )
+}
+
 describe("NH-AC-3 tương đương với buildOfferImages", () => {
   test("NH-AC-3 tương đương với buildOfferImages trên ma trận viết trước", () => {
     let chay = 0
-    for (const [ten, bai, ev] of MA_TRAN) {
-      assert.deepEqual(buildMediaImages(qua(bai), ev), buildOfferImages(bai, ev), `ca lệch: ${ten}`)
+    for (const [ten, bai] of MA_TRAN) {
+      assert.deepEqual(buildMediaImages(qua(bai)), quaKhoa(bai), `ca lệch: ${ten}`)
       chay++
     }
     assert.equal(chay, MA_TRAN.length, "số ca chạy phải bằng số ca khai")
     assert.equal(MAX_IMAGES_PER_OFFER, 12)
     // Chiều đỏ: bên ghi xếp URL gốc trước ảnh đã tải → ca đầu lệch, thông điệp gọi tên ca.
-    const [ten, bai, ev] = MA_TRAN[0]
+    const [ten, bai] = MA_TRAN[0]
     const nguoc = [...qua(bai)].sort((a, b) => Number(a.local_file != null) - Number(b.local_file != null))
     const bo = nguoc.map((r) => ({ ...r, local_file: r.local_file && r.media_url ? null : r.local_file }))
-    assert.notDeepEqual(buildMediaImages(bo, ev), buildOfferImages(bai, ev), `đột biến «URL gốc trước ảnh đã tải» phải lệch ở ca: ${ten}`)
+    assert.notDeepEqual(buildMediaImages(bo), quaKhoa(bai), `đột biến «URL gốc trước ảnh đã tải» phải lệch ở ca: ${ten}`)
   })
 
   test("NH-AC-3 hai bản regex của snapshot và tên tệp cho cùng kết quả", () => {
@@ -144,7 +154,8 @@ function fakeQuery(rows: MediaRow[]) {
   }
   return { calls, query }
 }
-const S06_ROWS: MediaRow[] = [1, 2, 3].map((n) => ({ offer_id: "s06", media_url: IMG(n), local_file: null }))
+const KHOA = (n: number) => n.toString(16).padStart(32, "0")
+const S06_ROWS: MediaRow[] = [1, 2, 3].map((n) => ({ offer_id: "s06", media_key: KHOA(n), media_url: IMG(n), local_file: null }))
 const S03_BAI = [
   post([{ url: ZDN(1), file: "media/1.jpg", snapshotId: SNAP }, { url: ZDN(2), error: "http-500", snapshotId: SNAP }], [
     { url: ZDN(1) },
@@ -167,35 +178,34 @@ describe("NH-AC-5 Hàng duyệt đọc bảng media", () => {
     assert.doesNotMatch(calls[0].text, /stg_zalo_posts/)
     assert.deepEqual(calls[0].values, [["s06", "s03"]])
     assert.deepEqual(Object.keys(out).map(Number), [7, 9])
-    assert.deepEqual(out[7].offer_a, [1, 2, 3].map((n) => ({ src: IMG(n), origin: "remote", expiring: false })))
+    assert.deepEqual(out[7].offer_a, [1, 2, 3].map((n) => ({ src: mediaKeyUrl(KHOA(n)), origin: "proxy", expiring: false })))
     const b = out[7].offer_b!
     assert.equal(b.length, 12, "tối đa 12 ảnh")
     assert.equal(b[0].origin, "local")
-    assert.ok(b.slice(1).every((i) => i.origin === "remote" && i.expiring), "sau ảnh đã tải là URL gốc có hạn")
-    assert.ok(!b.some((i) => i.src === ZDN(1)), "URL gốc đã có bản tải không lặp")
-    assert.deepEqual(out[9].offer, buildOfferImages(S03_BAI), "tin bổ sung: đúng mảng của luật ghép đã ký")
-    const { query: q2 } = fakeQuery([{ offer_id: "s03", media_url: ZDN(1), local_file: null }])
+    assert.ok(b.slice(1).every((i) => i.origin === "proxy"), "sau ảnh đã tải là ảnh máy chủ lấy hộ")
+    assert.doesNotMatch(JSON.stringify(out), /zdn\.vn|img\.example\.test/, "không URL gốc nào xuống client")
+    assert.deepEqual(out[9].offer, quaKhoa(S03_BAI, "s03"), "tin bổ sung: đúng mảng của luật ghép đã ký (đổi theo khoá)")
+    const { query: q2 } = fakeQuery([{ offer_id: "s03", media_key: KHOA(9), media_url: ZDN(1), local_file: null }])
     const o2 = await loadReviewMedia([ITEMS[0]], ADMIN, q2)
-    assert.equal(o2[7].offer_b!.at(-1)?.src, IMG(99), "image_url của evidence đứng cuối khi chưa có")
+    assert.ok(!o2[7].offer_b!.some((i) => i.src === IMG(99)), "image_url của evidence thôi xuống client (anh-goc-qua-may-chu)")
   })
 
-  test("NH-AC-5 dưới vai Vận hành → {} và 0 truy vấn; vai ops chỉ ảnh đã tải (PL3); 42P01 → {}; lỗi khác ném", async () => {
+  test("NH-AC-5 dưới vai Vận hành → {} và 0 truy vấn; vai ops không nhận URL gốc (PL3, anh-goc-qua-may-chu); 42P01 → {}; lỗi khác ném", async () => {
     for (const u of [null, user("user"), user("viewer")]) {
       const { calls, query } = fakeQuery(ROWS)
       assert.deepEqual(await loadReviewMedia(ITEMS, u, query), {}, "người dưới vai Vận hành không được nhận ảnh")
       assert.equal(calls.length, 0, u?.role ?? "khách")
     }
-    // PL3 (the-duyet-du-can-cu Hỏi-1): vai ops nhận ảnh đã tải, URL gốc (tên miền nguồn — tầng A) chỉ admin.
+    // PL3 + anh-goc-qua-may-chu: vai ops nhận ảnh đã tải và ảnh lấy hộ theo khoá; URL gốc (tầng A) không tới vai nào.
     const { query: qOps } = fakeQuery(ROWS)
     const ops = await loadReviewMedia(ITEMS, user("ops"), qOps)
     for (const m of Object.values(ops)) {
       for (const k of ["offer_a", "offer_b", "offer"] as const) {
-        for (const img of m[k] ?? []) assert.equal(img.origin, "local", "vai ops nhận URL gốc")
+        for (const img of m[k] ?? []) assert.notEqual(img.origin, "remote", "vai ops nhận URL gốc")
       }
     }
-    // Chiều đỏ: đột biến bỏ kiểm isAdmin (gọi như admin) → có ảnh — ca trên sẽ đỏ đúng thông điệp ghim.
     const { query } = fakeQuery(ROWS)
-    assert.notDeepEqual(await loadReviewMedia(ITEMS, { ...user("ops"), role: "admin" }, query), {})
+    assert.deepEqual(await loadReviewMedia(ITEMS, ADMIN, query), ops, "ops và admin nhận cùng kết quả")
     const fail = (code: string) => async () => {
       throw Object.assign(new Error(`lỗi ${code}`), { code })
     }
@@ -208,7 +218,7 @@ describe("NH-AC-5 Hàng duyệt đọc bảng media", () => {
 describe("NH-AC-6 nạp ảnh dòng chảy", () => {
   test("NH-AC-6 nạp ảnh dòng chảy: mọi nguồn có khoá, kể cả S06", async () => {
     const { loadFlowMedia } = await import("../src/lib/data-flow-queries")
-    const rows: MediaRow[] = [...S06_ROWS, ...qua(S03_BAI, "s03"), { offer_id: "s05", media_url: FB(1), local_file: null }]
+    const rows: MediaRow[] = [...S06_ROWS, ...qua(S03_BAI, "s03"), { offer_id: "s05", media_key: KHOA(5), media_url: FB(1), local_file: null }]
     const { calls, query } = fakeQuery(rows)
     const recs = [
       { offerId: "s03", source: "S03" },

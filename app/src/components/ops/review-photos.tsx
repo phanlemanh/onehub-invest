@@ -24,8 +24,8 @@ import type { ReviewImage } from "@/lib/ops/review-media";
 
 /**
  * Dải ảnh tin trên thẻ hàng duyệt (chuyển thể @reui/c-attachment-3) + hộp phóng to.
- * `images` từ loadReviewMedia: vai Vận hành nhận ảnh đã tải về máy thu, quản trị viên nhận cả URL gốc (PL3);
- * undefined thì không render gì. `chiGoc` = số ảnh chỉ có URL gốc mà vai người xem không nhận — thẻ nói ra thay vì im.
+ * `images` từ loadReviewMedia: ảnh đã tải về máy thu và ảnh máy chủ lấy hộ theo khoá (anh-goc-qua-may-chu) — không có
+ * URL gốc; undefined thì không render gì. `chiGoc` = số ảnh chỉ có ở nguồn mà máy chủ chưa lấy hộ được — thẻ nói ra.
  * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
  */
 export function ReviewPhotos({ label, images, chiGoc = 0 }: {
@@ -38,7 +38,7 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
   if (!images) return null;
   const giu = chiGoc > 0 ? (
     <p className="text-muted-foreground text-xs" data-review-photos-chi-goc>
-      {label}: {chiGoc} ảnh chỉ có ở nguồn — quản trị viên xem được
+      {label}: {chiGoc} ảnh chỉ có ở nguồn, chưa lấy được
     </p>
   ) : null;
   if (images.length === 0) {
@@ -81,7 +81,11 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
                 {label} · ảnh {open + 1}/{images.length}
               </DialogTitle>
               <DialogDescription>
-                {images[open].origin === "local" ? "Ảnh lưu trên máy" : "Ảnh từ URL gốc của nguồn"}
+                {images[open].origin === "local"
+                  ? "Ảnh lưu trên máy"
+                  : images[open].origin === "proxy"
+                    ? "Ảnh máy chủ lấy từ nguồn"
+                    : "Ảnh từ URL gốc của nguồn"}
                 {images[open].expiring ? " — URL có hạn, có thể đã hết." : "."}
               </DialogDescription>
             </DialogHeader>

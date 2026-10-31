@@ -497,7 +497,8 @@ const THE_ANH = [{ id: 1, item_type: "entity_match", evidence: { offer_a: { offe
 async function napAnh() {
   const rows: [string, string, string | null, string | null, number][] = [
     ["mk1", "td_s05", null, `${SNAP}/media/a.jpg`, 1],
-    ["mk2", "td_s05", "https://scontent.fbcdn.net/x/1.jpg", null, 2],
+    // mk2 đúng khuôn 32 hex → máy chủ lấy hộ (anh-goc-qua-may-chu); mk3 sai khuôn → không lấy hộ được, thẻ đếm ở chiGoc.
+    ["0000000000000000000000000000a002", "td_s05", "https://scontent.fbcdn.net/x/1.jpg", null, 2],
     ["mk3", "td_s06", "https://cdn.nguon-thu.example/2.jpg", null, 1],
   ]
   for (const [k, offer, url, file, order] of rows)
@@ -510,17 +511,18 @@ async function napAnh() {
 }
 
 async function kiemAc4(mod: MediaMod) {
-  // Ma trận viết trước: 5 vai × {ảnh đã tải, chỉ URL gốc} = 10 ô — kỳ vọng [đã tải, URL gốc].
+  // Ma trận viết trước: 5 vai × {ảnh đã tải, ảnh lấy hộ theo khoá} = 10 ô — kỳ vọng [đã tải, lấy hộ]. URL gốc không tới
+  // vai nào (anh-goc-qua-may-chu đổi PL3: trước đây admin nhận URL gốc).
   const KY_VONG: Record<Vai, [boolean, boolean]> = {
-    user: [false, false], viewer: [false, false], ops: [true, false], admin: [true, true], owner: [true, true],
+    user: [false, false], viewer: [false, false], ops: [true, true], admin: [true, true], owner: [true, true],
   }
   let n = 0
-  for (const [vai, [taiVe, goc]] of Object.entries(KY_VONG) as [Vai, [boolean, boolean]][]) {
+  for (const [vai, [taiVe, layHo]] of Object.entries(KY_VONG) as [Vai, [boolean, boolean]][]) {
     const m = (await mod.loadReviewMedia(THE_ANH, nguoi(vai), qDb))[1]
     const anh = [...(m?.offer_a ?? []), ...(m?.offer_b ?? [])]
-    if (vai === "ops" && anh.some((i) => i.origin !== "local")) assert.fail("TD-AC-4: vai ops nhận URL gốc")
+    if (anh.some((i) => i.origin === "remote" || !i.src.startsWith("/api/zalo-media?"))) assert.fail(`TD-AC-4: vai ${vai} nhận URL gốc`)
     assert.equal(anh.some((i) => i.origin === "local"), taiVe, `${vai}: ảnh đã tải`)
-    assert.equal(anh.some((i) => i.origin === "remote"), goc, `${vai}: URL gốc`)
+    assert.equal(anh.some((i) => i.origin === "proxy"), layHo, `${vai}: ảnh lấy hộ`)
     n += 2
   }
   assert.equal(n, 10)
@@ -545,14 +547,16 @@ describe("TD-AC-4 ảnh tin theo vai", () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
-  test("TD-AC-4 loader: ma trận 5 vai × 2 loại ảnh; vai ops chỉ ảnh đã tải + số ảnh bị giữ", async () => {
+  test("TD-AC-4 loader: ma trận 5 vai × 2 loại ảnh; không vai nào nhận URL gốc; dòng sai khoá đếm ở chiGoc", async () => {
     ready()
     const mod = (await import("../src/lib/ops/review-media")) as MediaMod
     await kiemAc4(mod)
     const ops = (await mod.loadReviewMedia(THE_ANH, nguoi("ops"), qDb))[1]
-    assert.deepEqual(ops.chiGoc, { offer_a: 1, offer_b: 1 }, "vai ops: số ảnh chỉ có URL gốc theo bên")
-    const sai = await banChepTam<MediaMod>("src/lib/ops/review-media.ts", (s) => s.replace("media[s.key] = local;", "media[s.key] = all;"))
-    await assert.rejects(kiemAc4(sai), /TD-AC-4: vai ops nhận URL gốc/)
+    assert.deepEqual(ops.chiGoc, { offer_b: 1 }, "vai ops: số ảnh không lấy hộ được theo bên")
+    const sai = await banChepTam<MediaMod>("src/lib/ops/review-media.ts", (s) =>
+      s.replace(`if (src) push({ src, origin: "proxy", expiring: false });`, `if (src) push({ src: r.media_url, origin: "proxy", expiring: false });`),
+    )
+    await assert.rejects(kiemAc4(sai), /TD-AC-4: vai \w+ nhận URL gốc/)
   })
 
   test("TD-AC-4 route ảnh: snapshot 200 cho ops/admin/owner, 404 cho user/viewer/khách; ?path= 404 cho ops", async () => {
@@ -576,7 +580,7 @@ describe("TD-AC-4 ảnh tin theo vai", () => {
     }
     assert.ok(!html.includes("fbcdn") && !html.includes("nguon-thu.example"), "URL gốc lọt vào trang vai ops")
     const cau = [...doc.querySelectorAll("[data-review-photos-chi-goc]")].map((e) => e.textContent)
-    assert.deepEqual(cau, ["Tin A: 1 ảnh chỉ có ở nguồn — quản trị viên xem được", "Tin B: 1 ảnh chỉ có ở nguồn — quản trị viên xem được"])
+    assert.deepEqual(cau, ["Tin B: 1 ảnh chỉ có ở nguồn, chưa lấy được"])
   })
 
   test("TD-AC-4 probe DB local thật: ảnh local_file của tin trên thẻ chờ = số ảnh vai ops nhận", async (t) => {
