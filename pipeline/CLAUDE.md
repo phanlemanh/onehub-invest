@@ -27,6 +27,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | scripts/nap-lai-nguoi.mjs | Thước DB2b: hai lượt transform + bước đêm trong giao dịch ROLLBACK, lượt 2 bằng 0, đối chứng bỏ tra bí danh; `--doi-chung-hong` |
 | label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
 | do-danh-ba-sdt.mjs | SD5: năm kiểm trục SĐT của danh bạ Người (audit 30/10 N1–N5) theo nguồn S03/S05, `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
+| do-the-duyet.mjs | HD11: bốn kiểm độ đủ dữ liệu thẻ ghép căn chờ duyệt (rời kho, ảnh theo vai, độ đầy 10 trường + người đăng theo nguồn), `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
 | eval-classify.mjs | PL9: độ đúng từng ô (cách đọc × trường × phân khúc) theo cận dưới Wilson so ngưỡng F3 (`npm run eval:classify -- --lat ocp1 [--split dev] [--dry]` → `dq_check_results`, `--tap-mau <tệp.jsonl>` chỉ in); lõi `lib/eval-classify.mjs`, cách đọc `parser` |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 

@@ -1,0 +1,172 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · cong-tac-that</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>công tắc thật — mọi đường thu S01, S02, S05, S06 hỏi vòng đời nguồn × đơn vị qua một cổng trước khi gọi nhà cung cấp, hết danh sách cứng, lỗi DB thì dừng</h1><div class="sub">Trang hồ sơ · <span class="mono">cong-tac-that</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">công tắc thật — mọi đường thu S01, S02, S05, S06 hỏi vòng đời nguồn × đơn vị qua một cổng trước khi gọi nhà cung cấp, hết danh sách cứng, lỗi DB thì dừng</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">TV2b (lộ trình, mốc TVM1 «tạm dừng/bật nguồn từ cloud»): ca thật 21–24/10 S05 hết credit vẫn bắn 4 lần/ngày; tắt hết nhóm thì apify-facebook-collector.mjs và collect-chotot.mjs rơi về danh sách cứng; chotot-daily.sh cứng hai thành phố…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-10-27</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">4 mục để ngoài phạm vi · 9 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>9</b></span><span data-k="phep_do">Phép đo <b>11</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>2</b></span><span data-k="quyet_dinh_nguoi">người <b>3</b></span><span data-k="ma">Mã <b>fcbdb1a</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>TV2b (lộ trình, mốc TVM1 «tạm dừng/bật nguồn từ cloud»): ca thật 21–24/10 S05 hết credit vẫn bắn 4 lần/ngày; tắt hết nhóm thì apify-facebook-collector.mjs và collect-chotot.mjs rơi về danh sách cứng; chotot-daily.sh cứng hai thành phố. TV2a (#129) đã có luật chạy pipeline/lib/vong-doi.mjs (isRunnable nguồn × đơn vị, CLI thoát 0 chạy · 3 không chạy · 2 lỗi); PL12 (#139) đổi source_groups thành view trên collection_units. ZCode làm ở lời giao claudedp-2610-13 (zcode/cong-tac-that @ 6ac79718; đang mở lại vì lỗi set -e ở hai script cổng). TV2b mở đường cho TV4b (bấm tạm dừng từ cloud) và TV15 (trần chi phí S05). Hạng T3 theo lộ trình: đổi hành vi chạy đêm của bốn nguồn.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given nguồn S05 ở trạng thái khác active, When chạy collector S05, Then 0 lời gọi nhà cung cấp, thoát 0, in đúng một dòng mã nguồn + lý do; nguồn active và có nhóm active thì có lời gọi.</li><li data-ac="AC-2"><b>AC-2</b> — Given S05 active nhưng không còn nhóm active, When chạy collector, Then 0 lượt thu, không rơi về danh sách nhóm nào khác, thoát 0.</li><li data-ac="AC-3"><b>AC-3</b> — Given thêm một vùng S06 active mới, When chạy lượt thu và chuỗi nạp hằng ngày, Then vùng đó được thu và được nạp; vùng paused/retired không được thu hay nạp.</li><li data-ac="AC-4"><b>AC-4</b> — Given nhóm hay vùng paused/retired xen giữa nhóm active, When chạy, Then chỉ đơn vị active được thu (cả hai nửa trong một lượt).</li><li data-ac="AC-5"><b>AC-5</b> — Given DB không kết nối được hoặc cổng vòng đời lỗi, When chạy bất kỳ đường thu nào của S01, S02, S05, S06, Then 0 lời gọi nhà cung cấp và thoát khác 0.</li><li data-ac="AC-6"><b>AC-6</b> — Given trạng thái lạ (ngoài năm trạng thái) ở nguồn hoặc đơn vị, When chạy, Then đơn vị đó bị chặn.</li><li data-ac="AC-7"><b>AC-7</b> — Given cổng vòng đời trả «không chạy» (3) hoặc «lỗi» (2), When chạy THẬT từng script vào của launchd (airdna-daily, weekly-with-jitter, smoke-daily, chotot-daily), Then với 3: thoát 0 kèm một dòng mã + lý do; với 2: thoát khác 0; cả hai: 0 lời gọi nhà cung cấp.</li><li data-ac="AC-8"><b>AC-8</b> — Given mã nguồn sau thay đổi, When soát các đường thu, Then không còn danh sách nhóm/vùng viết cứng hay vòng lặp vùng cứng, và quyết định chạy chỉ đi qua `pipeline/lib/vong-doi.mjs` (không đọc `enabled` để quyết thu).</li><li data-ac="AC-9"><b>AC-9</b> — Given nhánh, When chạy bộ test của `pipeline/` và `scripts/`, rồi ghim lại các hồ sơ đã ký chạm các tệp này, Then tất cả xanh; hồ sơ có thước bị đổi theo hành vi mới mang dòng revisit.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 5</button><button class="btn" data-loc="may" aria-pressed="false">Máy 2</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 3</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="nguoi" data-id="d-20261026T231111Z-1"><b>2026-10-26</b> · Người (Mạnh) · decision · gate1 — DB lỗi hoặc cổng vòng đời lỗi thì DỪNG (fail-closed) cho cả S01, S02, S05, S06 — đảo hành vi fail-open của 2510-4 (khoa-nap-s05-paused) cho S05<div class="note">không bao giờ đốt chi phí S05 hay thu nguồn đã tạm dừng khi không đọc được trạng thái; job-exit và watchdog đã báo lỗi lượt thu</div></li><li data-loai="nguoi" data-id="d-20261026T231111Z-2"><b>2026-10-26</b> · Người (Mạnh) · decision · gate1 — giữ mục secrets.allowed &#39;postgres://oneinvest:oneinvest@localhost:5433&#39; ZCode đã thêm vào git config chung; lần sau gặp chặn git-secrets phải HỎI trước khi đổi<div class="note">chuỗi kết nối DB dev đã công khai khắp kho, cấp hẹp đúng một chuỗi</div></li><li data-loai="may" data-id="d-20261026T231111Z-3"><b>2026-10-26</b> · Máy · descope · S1 — bỏ gap-probe — việc tích hợp làn ZCode đã có mã; phạm vi Mạnh duyệt trực tiếp tại Cổng 1 với hai quyết định có đánh đổi<div class="note">đổi lại không có phản biện context sạch trước duyệt; phản biện dồn vào lượt chấm S4</div></li><li data-loai="may" data-id="d-20261030T232128-sc"><b>2026-10-30</b> · Máy · revisit · S4 — scope.sh thêm scripts/job-exit.test.mjs — tệp sửa để giữ AC-9 (job-exit) xanh khi chotot-daily có cổng vong-doi + bước đọc vùng S06 từ DB<div class="note">phạm vi rộng thêm đúng một tệp test làn Claude; không đổi hành vi script</div></li><li data-loai="nguoi" data-id="d-20261031T012039Z-1"><b>2026-10-31</b> · Người (Mạnh (vòng 4); cách đọc AC-9 theo khuyến nghị claudedp, Mạnh xác nhận ở Cổng 2) · revisit · S4 — Mạnh đồng ý chấm vòng 4 sau ba vòng REJECT (31/10). AC-9 chấm theo nghĩa «không thêm đỏ so với main»: đỏ có sẵn y hệt trên main sạch (au3_lock, au3_apify, au3_r1_probe, snt_mo_coi) nêu trong báo cáo, không tính là hồi quy của nhánh, sửa ở việc riêng<div class="note">mọi lỗi ba vòng chỉ ra đã sửa ở 1feeb90a; đỏ còn lại không do nhánh gây ra</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>feature-loop:cham-lenh</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E1-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E2-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E3-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E4-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E5-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E6-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E7-20261031T015054Z</td><td class="mono">2026-10-31T01:50:54Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E8-20261031T015039Z</td><td class="mono">2026-10-31T01:50:39Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E9-20261031T015054Z</td><td class="mono">2026-10-31T01:50:54Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-9</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E10-20261031T015101Z</td><td class="mono">2026-10-31T01:51:01Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-9</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">cong-tac-that-E11-20261031T015054Z</td><td class="mono">2026-10-31T01:50:54Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given nguồn S05 ở trạng thái khác active, When chạy collector S05, Then 0 lời gọi nhà cung cấp, thoát 0, in đúng một dòng mã nguồn + lý do; nguồn active và có nhóm active thì có lời gọi.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E1-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (a): S05 paused → 0 lời gọi, thoát 0, một dòng mã + lý_do (388.751375ms)
+✔ TV2b (nửa dương): S05 active + nhóm active → lời gọi tới nhà cung cấp giả đúng nhóm active (485.339791ms)
+ℹ tests 10
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given S05 active nhưng không còn nhóm active, When chạy collector, Then 0 lượt thu, không rơi về danh sách nhóm nào khác, thoát 0.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E2-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (b): S05 active nhưng 0 nhóm active → 0 lượt, KHÔNG fallback, thoát 0 (380.326167ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · test</h3><p class="crit">AC-3: Given thêm một vùng S06 active mới, When chạy lượt thu và chuỗi nạp hằng ngày, Then vùng đó được thu và được nạp; vùng paused/retired không được thu hay nạp.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E3-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), vùng paused/retired bị bỏ, nạp theo DB (983.8115ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · test</h3><p class="crit">AC-4: Given nhóm hay vùng paused/retired xen giữa nhóm active, When chạy, Then chỉ đơn vị active được thu (cả hai nửa trong một lượt).</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E4-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), vùng paused/retired bị bỏ, nạp theo DB (983.8115ms)
+✔ TV2b (nửa dương): S05 active + nhóm active → lời gọi tới nhà cung cấp giả đúng nhóm active (485.339791ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · test</h3><p class="crit">AC-5: Given DB không kết nối được hoặc cổng vòng đời lỗi, When chạy bất kỳ đường thu nào của S01, S02, S05, S06, Then 0 lời gọi nhà cung cấp và thoát khác 0.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E5-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (e): DB lỗi → 0 lời gọi, thoát ≠0 (fail-closed) — cả S05 lẫn S06 (113.70875ms)
+✔ v2: vong-doi trả 2 (DB lỗi) → script THOÁT 1 rõ ràng với dòng lỗi (189.574583ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · test</h3><p class="crit">AC-6: Given trạng thái lạ (ngoài năm trạng thái) ở nguồn hoặc đơn vị, When chạy, Then đơn vị đó bị chặn.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E6-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ TV2b (f): trạng thái lạ → chặn (fail-closed) — nguồn lẫn đơn vị (580.82625ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given cổng vòng đời trả «không chạy» (3) hoặc «lỗi» (2), When chạy THẬT từng script vào của launchd (airdna-daily, weekly-with-jitter, smoke-daily, chotot-daily), Then với 3: thoát 0 kèm một dòng mã + lý do; với 2: thoát khác 0; cả hai: 0 lời gọi nhà cung cấp.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E7-20261031T015054Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.ctt_cong_launchd</b></span><span>verified_at <b>2026-10-31T01:50:54Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   scripts/airdna-daily.sh · cổng 3 → thoát 0, đúng một dòng có lý do
+ok   scripts/airdna-daily.sh · cổng 2 → thoát 1, dừng fail-closed
+ok   pipeline/scripts/weekly-with-jitter.sh · cổng 3 → thoát 0, đúng một dòng có lý do
+ok   pipeline/scripts/weekly-with-jitter.sh · cổng 2 → thoát 1, dừng fail-closed
+ok   scripts/smoke-daily.sh · cổng 3 → thoát 0, đúng một dòng có lý do
+ok   scripts/smoke-daily.sh · cổng 2 → thoát 1, dừng fail-closed
+CONG-LAUNCHD PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · test</h3><p class="crit">AC-7: Given cổng vòng đời trả «không chạy» (3) hoặc «lỗi» (2), When chạy THẬT từng script vào của launchd (airdna-daily, weekly-with-jitter, smoke-daily, chotot-daily), Then với 3: thoát 0 kèm một dòng mã + lý do; với 2: thoát khác 0; cả hai: 0 lời gọi nhà cung cấp.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E8-20261031T015039Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.ctt_unit</b></span><span>verified_at <b>2026-10-31T01:50:39Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ v2: vong-doi trả 3 → script in dòng bỏ-đi và THOÁT 0 (không còn chết ngầm mã 3) (189.6855ms)
+✔ v2: vong-doi trả 2 (DB lỗi) → script THOÁT 1 rõ ràng với dòng lỗi (189.574583ms)
+✔ v2: vong-doi trả 0 → script VƯỢT cổng sang bước kế (không chết ở thay thế lệnh) (354.184875ms)
+ℹ pass 10
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-8: Given mã nguồn sau thay đổi, When soát các đường thu, Then không còn danh sách nhóm/vùng viết cứng hay vòng lặp vùng cứng, và quyết định chạy chỉ đi qua `pipeline/lib/vong-doi.mjs` (không đọc `enabled` để quyết thu).</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E9-20261031T015054Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.ctt_khong_cung</b></span><span>verified_at <b>2026-10-31T01:50:54Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">chỗ còn danh sách cứng: 0
+chỗ đọc enabled trong đường thu: 0
+ok   pipeline/apify-facebook-collector.mjs gọi cổng vòng đời
+ok   pipeline/collect-chotot.mjs gọi cổng vòng đời
+ok   scripts/chotot-daily.sh gọi cổng vòng đời
+ok   scripts/airdna-daily.sh gọi cổng vòng đời
+ok   scripts/smoke-daily.sh gọi cổng vòng đời
+ok   pipeline/scripts/weekly-with-jitter.sh gọi cổng vòng đời
+KHONG-CUNG PASS</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · test</h3><p class="crit">AC-9: Given nhánh, When chạy bộ test của `pipeline/` và `scripts/`, rồi ghim lại các hồ sơ đã ký chạm các tệp này, Then tất cả xanh; hồ sơ có thước bị đổi theo hành vi mới mang dòng revisit.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E10-20261031T015101Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.pipeline</b></span><span>verified_at <b>2026-10-31T01:51:01Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">✔ AC-3 không còn khuôn cũ (40.881792ms)
+ℹ tests 307
+ℹ suites 14
+ℹ pass 307
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · script</h3><p class="crit">AC-9: Given nhánh, When chạy bộ test của `pipeline/` và `scripts/`, rồi ghim lại các hồ sơ đã ký chạm các tệp này, Then tất cả xanh; hồ sơ có thước bị đổi theo hành vi mới mang dòng revisit.</p>
+<div class="kv"><span>run_id <b>cong-tac-that-E11-20261031T015054Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.ctt_scope</b></span><span>verified_at <b>2026-10-31T01:50:54Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok  scripts/au3-nap-bao-loi/acceptance.mjs
+ok  scripts/chotot-daily.sh
+ok  scripts/job-exit.test.mjs
+ok  scripts/smoke-daily.sh
+SCOPE OK</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals: không có eval tính năng nào đo được trên baseline. Baseline khong do: `ctt_unit` (E1–E6, E8) và ba
+probe `cong-launchd.sh` (E7), `khong-cung.sh` (E9), `scope.sh` (E11) chưa có trên diffBase `993d7394`, nên chạy trên mã cũ không
+chứng được gì. E10 có trên diffBase và xanh ở đó. Đây là suite canh hồi quy, xanh cả hai phía là đúng ý của nó. Vòng 3 đã thử
+chiều đỏ cho E3 bằng tay trên bản chép, và eval phân biệt được.</div>
+<h2>Variance (eval ngẫu nhiên)</h2><div class="flag fred">Không eval nào khai `runs` &gt; 1. Vòng 3 thấy `node --test scripts/*.test.mjs` chập chờn ở `ci-test-module.test.mjs`. Vòng này
+lệnh đó xanh 270/270 cả hai lần trên nhánh và một lần trên main. Gốc lỗi pg «Connection terminated» của vòng 3 chưa tìm ra.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1 (`7d257c00`): E1 và E8 FAIL, E3 thiếu ca chứng. Nửa nạp chứng bằng bản chép, và job-exit hồi quy 11 ca. Trả về làm tiếp.</li><li>Round 2 (`9b1c4814`): E3 FAIL vì nửa nạp vẫn chứng bằng bản chép. Sandbox au3 chotot đỏ thêm 6 mục. Trả về làm tiếp.</li><li>Round 3 (`59652aaf`): E3 và au3_chotot đã sửa. E10 FAIL vì harness au3 thêm khuôn `process.argv[1]` vào tệp có</li><li>`import.meta.url`. Hết ba vòng, chuyển lên người.</li><li>Round 4 (`fcbdb1af`, Mạnh đồng ý mở): harness au3 nhận diện CLI bằng độ dài argv, nên E10 xanh 307/307. 11/11 eval PASS. AC-9</li><li>theo cách đọc đã ghi sổ: nhánh thêm 0 đỏ so với main và sửa 2 thước đỏ có sẵn. Còn năm thước đỏ có sẵn giống hệt main, chờ</li><li>người xác nhận ở Cổng 2.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Triển khai lên máy thu (plist, chạy thật một ngày «S05 paused: 0 lời gọi»): lời giao triển khai riêng sau merge, bằng chứng hai phía.</li><li data-loai="ngoai">Nút tạm dừng/bật nguồn trên /ops (TV4b) và tự tạm dừng khi chạm trần chi phí (TV15).</li><li data-loai="ngoai">Sửa `pipeline/lib/vong-doi.mjs` (luật của TV2a, giữ nguyên).</li><li data-loai="ngoai">Gọi nhà cung cấp thật trong lúc kiểm: mọi ca dùng nhà cung cấp giả đếm lời gọi.</li><li data-loai="gioi-han">**AC-9, ghim lại hồ sơ đã ký (ngoài eval)**. Phiên chấm chạy từng lệnh của `khoa-nap-s05-paused`, `au3-nap-bao-loi` và `snapshot-nguyen-tu` trên nhánh `fcbdb1af` và trên main `993d7394`. Rồi so output sau khi chuẩn hoá PID, đường tạm và mốc giờ: | Lệnh (hồ sơ · eval) | Nhánh | Main | Phán | |---|---|---|---| | `node --test scripts/job-exit.test.mjs` | 68/68 xanh | 68/68 xanh | xanh | | `node --test scripts/*.test.mjs` (CI; kns E9) | 270/270 xanh (chạy hai lần) | 270/270 xanh | xanh, lần này không chập chờn | | `cd pipeline &amp;&amp; npm test` (E10) | 307/307 | 299/299 | xanh | | `au3_chotot` (au3 E1/E4/E6) | CHOTOT PASS 11/11 | đỏ 2 mục | nhánh sửa | | `kns_s05_gate` (kns E4/E5) | S05-GATE PASS | đỏ 2 mục ((b)) | nhánh sửa | | `kns_s05_unit` (kns E6) | 7/7 xanh (cong-tac-that.test) | 2/2 xanh (s05-paused.test) | xanh | | `kns_lich_s05`, `kns_lich_unit` (kns E11–E13) | xanh | xanh | xanh | | `au3_syntax`, `au3_ts_format` (au3 E8/E10) | xanh | xanh | xanh | | `snt_dang_ghi`, `snt_trung_ms`, `snt_ten_that_co_san` (snt E1–E4) | PASS cả ba | PASS cả ba | xanh | | `collector_test_clean` (snt E8) | 63/63 xanh | 63/63 xanh | xanh | | `au3_apify` (kns E7; au3 E2/E3/E5/E7) | đỏ 1 mục ((a) DB chết thật) | output giống hệt | có sẵn trên main | | `kns_au3_regress` (kns E8, snt E7) | dừng ở APIFY, cùng mục (a) | output giống hệt | có sẵn trên main | | `au3_lock` (kns E1–E3; au3 E11) | đỏ 2 mục (zalo-import-daily: PID chết, khoá &gt;2h) | giống sau chuẩn hoá PID | có sẵn trên main | | `au3_r1_probe` (au3 E9) | «R1: hcmc T07 KHÔNG BAO GIỜ được nạp lại» | giống sau chuẩn hoá đường tạm | có sẵn trên main | | `snt_mo_coi` (snt E5/E6) | đỏ 2 mục (zalo-import-daily (b), (c)) | output giống hệt | có sẵn trên main | | `kns_scope` (kns E10) | 18 dòng «NGOÀI PHẠM VI», toàn tệp cong-tac-that | SCOPE OK | không tính ở nhánh khác (revisit kns `d-20261031T012039Z-2`) | Đếm theo cách đọc AC-9 đã ghi sổ («không thêm đỏ so với main»): nhánh thêm **0** đỏ và sửa **2** thước đỏ có sẵn (`au3_chotot` 2 mục, `kns_s05_gate` 2 mục). Đỏ có sẵn giống hệt trên cả hai cây là năm thước: `au3_apify` 1 mục, `kns_au3_regress` (cùng mục đó), `au3_lock` 2 mục, `au3_r1_probe`, `snt_mo_coi` 2 mục. Danh sách này khớp danh sách trong dòng revisit `d-20261031T012039Z-1`; `kns_au3_regress` là thước gộp, đỏ cùng mục với `au3_apify`. Mọi đỏ có sẵn đều nằm ở nhánh mã `zalo-import-daily.sh`/`apify-facebook-daily.sh`, và nhánh này không chạm hai tệp đó.</li><li data-loai="gioi-han">**Cách đọc AC-9 chưa có chữ ký trực tiếp của người.** Chữ AC-9 trong hợp đồng là «tất cả xanh». Câu «không thêm đỏ so với main» nằm ở dòng revisit `d-20261031T012039Z-1`. Dòng đó ghi `decided_by` là «Mạnh (vòng 4); cách đọc AC-9 theo khuyến nghị claudedp, Mạnh xác nhận ở Cổng 2». Nghĩa là Mạnh mới duyệt mở vòng 4, còn cách đọc thì chờ Mạnh xác nhận tại Cổng 2. Ký `human_signoff` hồ sơ này cũng là xác nhận cách đọc đó. Nếu Mạnh muốn AC-9 xanh tuyệt đối thì đỏ có sẵn phải sửa trước. Dòng revisit đã nêu giá phải trả cho lựa chọn đó.</li><li data-loai="gioi-han">Nếu `kns_scope` chạy từ nhánh khác thì không tính (revisit `d-20261031T012039Z-2`, ghi bởi claudedp). Lý do: thước giữ danh sách tệp cố định của PR 2510-4/9/14 và đo diff `merge-base..HEAD`. Trên main thước xanh.</li><li data-loai="gioi-han">E4: dữ liệu mẫu vẫn xếp đơn vị không active SAU các đơn vị active, chưa xen giữa. Vì vậy test chưa loại lỗi kiểu `break`. Đọc mã thì không có lỗi đó: collect-chotot dùng `continue`, chotot-daily và S05 dùng `.filter`.</li><li data-loai="gioi-han">E8: v2 chứng «0 nạp» khi cổng trả 3 bằng thoát 0, chưa assert là `runs.log` vắng.</li><li data-loai="gioi-han">Harness au3 phân biệt «CLI hay import» bằng độ dài argv. Nếu sau này có tệp được chạy với tham số mà import `lib/vong-doi.mjs`, vong-doi giả sẽ in rồi thoát giữa chừng. Hiện chỉ `collect-chotot.mjs` và `apify-facebook-collector.mjs` import nó, và trong sandbox chotot cả hai đều là bản giả.</li><li data-loai="gioi-han">`cong-tac-that/decisions.jsonl` vẫn chưa có dòng revisit cho lần mở rộng `probes/scope.sh` ở vòng 3 (thêm `scripts/au3-nap-bao-loi/acceptance.mjs` và `khoa-nap-s05-paused/evals.yaml`). Hai hồ sơ đích đã có dòng revisit riêng. Danh sách cho phép có glob rộng `_acceptance/*/probes/*`.</li><li data-loai="gioi-han">origin/main nay ở `4307a0b8`, đi trước merge-base 49 commit. `git fetch` của phiên chấm cập nhật ref này. Ba tệp chạm chung là `LO-TRINH.html`, `PRODUCT-MAP.md` và `_acceptance/config.yaml`. `git merge-tree` cho thấy chỉ `LO-TRINH.html` (tệp máy sinh) xung đột. Gộp main trước khi merge sẽ đổi tệp ngoài cổng sau `verified_commit`, nên phải ghim lại E10 và job-exit theo nếp repin.</li><li data-loai="gioi-han">Các lượt trên main và lượt so output chỉ để đối chứng, không thay eval. Output nằm ở thư mục scratchpad phiên, `/private/tmp/claude-503/-Users-manhphan-dev-onehub-invest--claude-worktrees-quirky-archimedes-75aa8c/6da7bb6c-5ffa-4c0a-a350-8745636735e0/scratchpad/r4`.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">fcbdb1af32044dfff9b766419bfb36156a62e5f5</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>

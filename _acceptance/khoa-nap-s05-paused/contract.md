@@ -71,3 +71,5 @@ ZCode d60b8e6 gộp `origin/main` 08afadf, rồi gộp a92ed3f.
   - Ngoài-6: mở hợp đồng mới
 - Known limits:
   - Ngoài-4: Trap `rm -rf` không kiểm chủ khoá: tác vụ bị lấy khoá sau 2 giờ, khi kết thúc, xoá khoá của tác vụ mới
+
+- 29/10 (revisit): AC-5 fail-open được thay bằng fail-closed của `cong-tac-that` (Mạnh duyệt 27/10) — xem dòng revisit trong decisions.jsonl.

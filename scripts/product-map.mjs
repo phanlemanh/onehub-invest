@@ -25,7 +25,7 @@ const { frontmatterField } = require(path.join(__dirname, '..', 'lib', 'evidence
 // cùng hồ sơ cho hai kết luận trái nhau).
 const { recordProblem, navValues, consumedTexts, usesUat, usesOpportunity, usesEvidence,
         missingArtifact, readRecord, ioReason, configList, NAV_RULES, mapState, MAP_LABELS,
-        mapTracked, DA_THONG_CONG_2, conflictProblem, hoSoNghi, DA_DONG_THUC_TE } =
+        mapTracked, DA_THONG_CONG_2, conflictProblem, hoSoNghi, DA_DONG_THUC_TE, coTepTrongCay } =
   require(path.join(__dirname, '..', 'lib', 'workspace-record.cjs'));
 
 export { NAV_RULES };
@@ -309,6 +309,7 @@ export function renderProductMap(root) {
   if (existsSync(acc)) {
     for (const entry of readdirSync(acc, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
+      if (!coTepTrongCay(path.join(acc, entry.name))) continue;
       const item = classify(path.join(acc, entry.name), entry.name);
       buckets[item.key].push(item);
     }

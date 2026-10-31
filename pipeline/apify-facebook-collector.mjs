@@ -15,55 +15,27 @@
 // Danh sách nhóm ĐỌC TỪ DB (source_groups, quản trị qua /ops/sources admin)
 // — thêm/xoá nhóm không cần sửa code. Fallback danh sách cũ nếu DB không lên.
 import { realpathSync } from "node:fs";
+// 2610-13 (TV2b): luật chạy nguồn × đơn vị — DUY NHẤT qua đây
+import { docTrangThai, isRunnable } from "./lib/vong-doi.mjs";
 import { fileURLToPath } from "node:url";
 
-const FALLBACK_GROUPS = [
-  "https://www.facebook.com/groups/1642453779410701", // Bình Thạch TPHCM
-  "https://www.facebook.com/groups/151411010405738",  // CHCC Hà Nội
-  "https://www.facebook.com/groups/285736614961804",  // BĐS Hà Nội
-  "https://www.facebook.com/groups/1573989412657228",
-];
 
-// 2510-4 (claudedp): đọc status S05 từ source_registry THEO MÃ (code='S05',
-// không literal tên nguồn) — khác 'active' thì bỏ qua thu, KHÔNG gọi mạng,
-// exit 0: đang pause mà vẫn gọi Apify chỉ nhận 402 và đốt lượt.
-export const s05Skip = (status) => status !== "active";
-export async function s05Status() {
-  const pg = (await import("pg")).default;
-  const c = new pg.Client({
-    connectionString:
-      process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
-  });
-  try {
-    await c.connect();
-    const { rows } = await c.query(`SELECT status FROM source_registry WHERE code = 'S05'`);
-    return rows[0]?.status ?? null;
-  } finally {
-    await c.end().catch(() => {});
-  }
+
+// 2610-13 (TV2b): NHÓM chỉ từ DB qua luật vong-doi (source_groups.status là
+// nguồn sự thật từ 047) — KHÔNG còn FALLBACK_GROUPS: DB lỗi → thoát ≠0
+// (fail-closed), không còn nhóm active → 0 lượt (không thu mò).
+async function loadGroups(client) {
+  const src = (await client.query(`SELECT code, status FROM source_registry WHERE code = 'S05'`)).rows[0] ?? null;
+  const { rows } = await client.query(
+    `SELECT group_key, status FROM source_groups WHERE source_code = 'S05' ORDER BY id`,
+  );
+  return rows
+    .map((r) => ({ key: r.group_key, ...isRunnable(src, { status: r.status }) }))
+    .filter((r) => r.run)
+    .map((r) => r.key);
 }
 
-async function loadGroups() {
-  try {
-    const pg = (await import("pg")).default;
-    const c = new pg.Client({
-      connectionString:
-        process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
-    });
-    await c.connect();
-    const { rows } = await c.query(
-      `SELECT group_key FROM source_groups WHERE source_code = 'S05' AND enabled ORDER BY id`,
-    );
-    await c.end();
-    if (rows.length === 0) throw new Error("0 nhóm bật");
-    return rows.map((r) => r.group_key);
-  } catch (e) {
-    console.warn(`⚠ source_groups DB fail (${e.message}) — dùng fallback ${FALLBACK_GROUPS.length} nhóm`);
-    return FALLBACK_GROUPS;
-  }
-}
-
-const APIFY_API = "https://api.apify.com/v2";
+const APIFY_API = process.env.APIFY_API ?? "https://api.apify.com/v2"; // 2610-13: env cho test nhà cung cấp giả
 const COLLECTOR_URL = process.env.COLLECTOR_URL ?? "http://localhost:9210";
 
 async function creds() {
@@ -243,21 +215,35 @@ async function pushToCollector(posts) {
 
 // ─── Main ───
 async function main() {
-  // 2510-4: pause theo source_registry — kiểm TRƯỚC khi đọc creds/gọi Apify.
-  // DB không lên thì coi như active (fail-open) — thu vẫn chạy như trước.
-  let status = "active";
+  // 2610-13 (TV2b): cổng DUY NHẤT qua pipeline/lib/vong-doi — trước khi đọc
+  // creds/gọi Apify. Từ chối → 0 lời gọi, thoát 0, một dòng mã + lý do.
+  // DB lỗi → thoát ≠0 (fail-closed — hết fail-open của 2510-4 theo TV2b).
+  const pg = (await import("pg")).default;
+  const dbc = new pg.Client({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+  });
+  let GROUPS;
   try {
-    status = await s05Status();
+    await dbc.connect();
+    const kq = await docTrangThai(dbc, "S05");
+    if (!kq.run) {
+      console.log(`S05 ${kq.ly_do} — bỏ qua thu`);
+      await dbc.end();
+      return;
+    }
+    GROUPS = await loadGroups(dbc);
+    await dbc.end();
   } catch (e) {
-    console.warn(`⚠ source_registry DB fail (${e.message}) — coi như active, thu bình thường`);
+    console.error(`S05 vong-doi lỗi — dừng (fail-closed): ${e.message}`);
+    process.exit(1);
   }
-  if (s05Skip(status)) {
-    console.log(`S05 paused — bỏ qua thu (status='${status}')`);
+  if (GROUPS.length === 0) {
+    console.log("S05 khong-con-nhom-active — bỏ qua thu (0 nhóm active)");
     return;
   }
   const { token } = await creds();
-  const GROUPS = await loadGroups();
-  console.log(`nhóm thu (source_groups): ${GROUPS.length}`);
+  console.log(`nhóm thu (vong-doi active): ${GROUPS.length}`);
   const isPoll = process.argv.includes("--poll");
 
   if (isPoll) {
@@ -295,7 +281,7 @@ async function main() {
 }
 
 // Chỉ chạy main() khi được gọi trực tiếp (khuôn import-airbnb/import-chotot)
-// — test import s05Status/s05Skip từ file này không làm collector chạy theo.
+// — test import luật vong-doi từ file này không làm collector chạy theo.
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
     console.error("❌", e.message);

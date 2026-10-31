@@ -8,6 +8,10 @@ ROOT="$(pwd)"
 echo "=== One Invest Setup ==="
 echo "Root: $ROOT"
 
+# 0. Driver gộp cho hai tệp sinh (.gitattributes, kit 2.36.0 GITATTR-TEP-SINH) — cấu hình repo, mọi worktree dùng chung
+git config merge.tep-sinh.driver true
+echo "    ✓ git: merge.tep-sinh.driver = true (PRODUCT-MAP.md, LO-TRINH.html)"
+
 # 1. Docker PostgreSQL
 echo ""
 echo ">>> 1. Khởi động PostgreSQL (Docker)..."

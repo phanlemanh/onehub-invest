@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 019b79f716edc909bef759a46f393738dc82e6ad
+verified_commit: 29acb416382fda9edc520ca311d3012e0dc6b79f
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -147,3 +147,11 @@ Round 1: mọi eval xanh (E1–E6, E5b) và năm lệnh suite xanh; verdict PASS
 ### Re-pin lần 1 — 2026-10-30, do gộp origin/main (PR #192, #195) sau chữ ký
 run_id: repin-20261030T051252Z-30186
 sha: 019b79f716edc909bef759a46f393738dc82e6ad · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-31, do gộp main da1fd687 sau khi ZCode khai 19 nhóm S03 (claudedp-3110-1)
+run_id: repin-20261031T011326Z-36765
+sha: f6d3621b8671328db960df679fe9920140eeac3f · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-31, do gộp main 4307a0b8 + đổi khoá số đo audit trong do-boc-sdt (S5-AC-6)
+run_id: repin-20261031T022204Z-96612
+sha: 29acb416382fda9edc520ca311d3012e0dc6b79f · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng

@@ -169,6 +169,11 @@ _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển th�
 - Slug URL: —
 _Avoid_: sổ điện thoại
 
+**Độ đủ thẻ duyệt**: Bốn kiểm đo thẻ ghép căn đang chờ duyệt mỗi ngày: thẻ có bên đã rời kho; thẻ có bên không có ảnh cho vai Vận hành (chỉ ảnh đã tải về máy thu); thẻ có bên không có ảnh nào (vai quản trị viên, gồm URL gốc); độ đầy mười trường của bảng so cộng người đăng trên các tin còn sống, theo nguồn — chỉ báo, không ngưỡng. Chỉ số đếm — không mã tin, không chữ tin, không URL.
+- Code: `pipeline/do-the-duyet.mjs`, kiểm `the-duyet:roi-kho`, `the-duyet:anh-ops`, `the-duyet:anh-admin`, `the-duyet:do-day` ở `dq_check_results` · RESO: không có
+- Slug URL: —
+_Avoid_: độ hoàn chỉnh thẻ
+
 **Độ đúng cách đọc**: Tỉ lệ tin mà một cách đọc (bộ đọc theo luật, sau này luật E1, AI) đọc đúng một trường so với nhãn người, tính trên tập chấm của một lát cho từng phân khúc (thị trường × loại hình), so với ngưỡng tự áp F3 bằng cận dưới Wilson 95% chứ không bằng tỉ lệ thô (nhóm A 0,95 · nhóm B 0,90). Ô chưa có nhãn người hay chưa có cách đọc là «bỏ qua» có lý do.
 - Code: `pipeline/eval-classify.mjs` (`npm run eval:classify`), `pipeline/lib/eval-classify.mjs`, kiểm `eval-classify` ở `dq_check_results` · RESO: không có
 - Slug URL: —
