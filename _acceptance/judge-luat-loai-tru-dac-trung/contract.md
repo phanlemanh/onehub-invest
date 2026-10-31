@@ -5,7 +5,7 @@ slug: judge-luat-loai-tru-dac-trung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-31T02:03:43Z
 approved_by:
