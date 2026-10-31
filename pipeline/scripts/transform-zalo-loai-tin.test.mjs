@@ -266,3 +266,67 @@ describe("SLT-AC-8 đếm theo nguồn", () => {
     assert.deepEqual(Object.keys(dem), [...goc.NGUON_LOAI]);
   });
 });
+
+// ---------- s03-cho-vay-khong-phai-bds (CV-AC-n): «<số> năm/nữ» không phải viết tắt phòng ngủ «<số>n» ----------
+const NHANH_N_MOI = "\\d+\\s*n\\s*\\+?\\s*\\d?(?![a-zà-ỹđ])";
+const NHANH_N_CU = "\\d+\\s*n\\s*\\+?\\s*\\d?\\b";
+/** Bản trước khi sửa: nhánh «<số>n» kết bằng ranh giới từ ASCII của JS. */
+const banCu = () => banDot([[NHANH_N_MOI, NHANH_N_CU]]);
+
+const NAM_NU = [
+  ["Cho vay 500tr thời hạn 1 năm, thu về lãi", "1 năm"],
+  ["góp 3 năm giá 2 tỷ", "3 năm"],
+  ["tuyển 3 nữ lương 10tr", "3 nữ"],
+  ["bảo hành 5 năm giá 7tr", "5 năm"],
+  ["ảnh 5 nét giá 2tr", "5 nét"],
+];
+function kiemNamNu(mod, cu) {
+  const lech = [];
+  for (const [text, cum] of NAM_NU) {
+    if (!cu.coDauHieuBds(text)) lech.push(`«${text}» bản cũ không khớp — ô không đo được lỗi`);
+    const r = suy(mod, text);
+    if (mod.coDauHieuBds(text) || r.kind !== null || r.nguon !== "bo") lech.push(`«${text}» → ${mod.coDauHieuBds(text)}/${r.kind}/${r.nguon}`);
+    const trungTinh = text.replace(cum, "dài hạn");
+    if (mod.coDauHieuBds(trungTinh) || cu.coDauHieuBds(trungTinh)) lech.push(`«${trungTinh}» khớp nhờ chỗ khác`);
+  }
+  if (lech.length) assert.fail(`CV-AC-1 năm thành phòng ngủ: ${lech.join(" · ")}`);
+}
+
+const VIET_TAT = [
+  ["2n1wc 70m2 giá 3,2 tỷ", true],
+  ["1n1k 45m2 7tr", true],
+  ["căn 3n2vs 5 tỷ", true],
+  ["2n+1 giá 2,9 tỷ", true],
+  ["Căn 2n 14tr", true],
+  ["căn 2n, giá 14tr", true],
+  ["giá 14tr căn 2n", true],
+  ["1nk giá 3 tỷ", false],
+];
+function kiemVietTat(mod, cu) {
+  const lech = [];
+  for (const [text, bds] of VIET_TAT) {
+    const a = suy(mod, text), b = suy(cu, text);
+    if (mod.coDauHieuBds(text) !== bds || cu.coDauHieuBds(text) !== bds || a.kind !== b.kind || a.nguon !== b.nguon) {
+      lech.push(`«${text}» → ${mod.coDauHieuBds(text)}/${a.kind}/${a.nguon} (bản cũ ${cu.coDauHieuBds(text)}/${b.kind}/${b.nguon}, cần BĐS ${bds})`);
+    }
+  }
+  if (lech.length) assert.fail(`CV-AC-2 viết tắt phòng ngủ mất: ${lech.join(" · ")}`);
+}
+
+describe("CV-AC-1/2 «<số> năm/nữ» không phải phòng ngủ, viết tắt thật giữ nguyên", () => {
+  test("CV-AC-1 năm ô «<số> năm/nữ/nét» có giá → không dấu hiệu BĐS, không thành tin; bản cũ khớp (đối chứng dương)", async () => {
+    kiemNamNu(goc, await banCu());
+  });
+  test("chiều đỏ CV-AC-1: bản chép đặt lại ranh giới từ cũ → ô «Cho vay … 1 năm» đỏ", async () => {
+    const cu = await banCu();
+    assert.throws(() => kiemNamNu(cu, cu), /CV-AC-1 năm thành phòng ngủ: .*Cho vay 500tr thời hạn 1 năm/);
+  });
+  test("CV-AC-2 tám ô viết tắt: dấu hiệu BĐS và loại bằng bản cũ", async () => {
+    kiemVietTat(goc, await banCu());
+  });
+  test("chiều đỏ CV-AC-2: bản đột biến lookahead dương (chỉ chữ số, + hay khoảng trắng sau) → ô «căn 2n, giá 14tr» đỏ", async () => {
+    const mod = await banDot([[NHANH_N_MOI, "\\d+\\s*n\\s*\\+?\\s*\\d?(?=[\\d+\\s])"]]);
+    const cu = await banCu();
+    assert.throws(() => kiemVietTat(mod, cu), /CV-AC-2 viết tắt phòng ngủ mất: .*căn 2n, giá 14tr/);
+  });
+});
