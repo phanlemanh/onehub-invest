@@ -162,19 +162,34 @@ export function checkApiSurface({ entries, files }) {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function walk(dir, out = []) {
-  for (const name of readdirSync(dir)) {
+const FS = { readdirSync, statSync, readFileSync };
+// Mục biến mất giữa lúc đọc tên và lúc stat/đọc (bản đột biến tạm của test khác chạy song song vừa bị xoá) thì bỏ qua;
+// lỗi khác vẫn ném — sổ bề mặt không được im lặng thiếu một tệp đọc hỏng.
+const matGiuaChung = (e) => e?.code === "ENOENT";
+
+function walk(dir, out = [], io = FS) {
+  let names;
+  try { names = io.readdirSync(dir); } catch (e) { if (matGiuaChung(e)) return out; throw e; }
+  for (const name of names) {
     const p = path.join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
+    let st;
+    try { st = io.statSync(p); } catch (e) { if (matGiuaChung(e)) continue; throw e; }
+    if (st.isDirectory()) walk(p, out, io);
+    // Tệp ẩn (`.on3-mut-…`, `.nt2-mut-…`) là bản đột biến tạm của test khác, không phải mã của app; thư mục ẩn vẫn quét.
+    else if (name.startsWith(".")) continue;
     else if (/\.(ts|tsx)$/.test(name)) out.push(p);
   }
   return out;
 }
 
-/** Đọc mọi .ts/.tsx dưới app/src thành map đường gốc kho → mã nguồn. */
-export function loadFiles() {
+/** Đọc mọi .ts/.tsx dưới <base>/app/src thành map đường tương đối base → mã nguồn. */
+export function loadFiles(base = root, io = FS) {
   const files = {};
-  for (const p of walk(path.join(root, "app/src"))) files[path.relative(root, p).split(path.sep).join("/")] = readFileSync(p, "utf8");
+  for (const p of walk(path.join(base, "app/src"), [], io)) {
+    let src;
+    try { src = io.readFileSync(p, "utf8"); } catch (e) { if (matGiuaChung(e)) continue; throw e; }
+    files[path.relative(base, p).split(path.sep).join("/")] = src;
+  }
   return files;
 }
 
