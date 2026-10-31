@@ -1,0 +1,91 @@
+{
+  "feature_plain": "Khi một đề xuất làm giàu được áp hay hoàn tác, mọi tin cùng một bài đăng được cập nhật theo, không còn tin nào giữ giá trị cũ; 29 tin đang lệch được sửa một lần; hai ca đỏ của bộ test phát biểu xanh lại; và test dòng chảy cloud không còn để rác trong DB chung.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ cập nhật loại hình, phòng ngủ, đường, toà… của mọi tin chung bài đăng khi áp một đề xuất (máy hay người), tin không liên quan giữ nguyên."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ trả mọi tin chung bài đăng về đúng giá trị khi hoàn tác một đề xuất."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ giữ nguyên hành vi với tin không chung bài đăng với tin nào."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ để bộ test dùng đúng bản hàm mới, kể cả khi test nạp lại các migration cũ trong giao dịch thử."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ sửa một lần mọi tin đang lệch khi áp migration 063 (theo Hỏi-1), có dòng nhật ký, chạy lại không đổi gì."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ làm trọn bộ test phát biểu xanh trên bản chép DB máy thu, kể cả khi DB còn lược đồ rác."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ cho test dòng chảy cloud tự dọn lược đồ tạm của lượt đã chết (phạm vi theo Hỏi-2) và tự dọn khi bị ngắt, không đụng lượt đang chạy."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ giữ bộ test pipeline, bộ test app, typecheck và lint app xanh."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG xoá lược đồ rác trong hợp đồng này — đó là việc vận hành có sao lưu, làm theo phạm vi Mạnh chốt."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đổi cách các bước nạp tin hằng đêm phân xử; tin đã nghỉ chung bài đăng chỉ lệch thông tin nguồn gốc, migration dọn một lần."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đổi luật phân xử hay thứ tự ưu tiên giữa các nguồn phát biểu."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đụng phần việc PL5 đang làm trên tệp test phát biểu — chỉ sửa một dòng."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Hai hàm ghi (áp, hoàn tác) × hai người ghi (máy, người) — AC-1, AC-2 phủ đủ bốn ô."
+    },
+    {
+      "i": 1,
+      "p": "Tin chung bài với tin còn sống, với tin đã nghỉ, và tin không chung bài — AC-1 đến AC-3; DB máy thu có 2.518 bài đăng nằm trong từ hai tin trở lên."
+    },
+    {
+      "i": 2,
+      "p": "Ba đường chạy: DB đã áp 063, test nạp lại migration cũ trong giao dịch, và bản chép dữ liệu thật — AC-4 đến AC-6."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Bước tự dọn của test sẽ xoá lược đồ rác trên DB chung ngay lượt đầu, trước khi anh chốt xoá 6 hay 20 và không qua sao lưu — đẩy thành Hỏi-2 cho anh quyết, việc xoá vận hành đi trước lượt chấm."
+    },
+    {
+      "i": 1,
+      "p": "AC-5 viết sẵn theo lối máy khuyên của Hỏi-1 — đã ghi rõ «theo Hỏi-1»; anh chọn lối khác thì máy sửa AC-5 trước khi lập kế hoạch."
+    },
+    {
+      "i": 2,
+      "p": "Lo cloud không nhận 6 tin đã sửa — không đứng: bước đồng bộ chép trọn bảng tin mỗi đêm, không lấy theo mốc."
+    },
+    {
+      "i": 3,
+      "p": "Ca kiểm PD-AC-1 có thể xanh oan khi bản chép không còn lược đồ rác — đã thêm tiền đề và phép đối chứng câu đếm cũ."
+    },
+    {
+      "i": 4,
+      "p": "Rủi ro chậm lượt làm giàu chưa đo — E5 nay in thời gian một lượt áp trước và sau 063 để anh thấy."
+    }
+  ]
+}
