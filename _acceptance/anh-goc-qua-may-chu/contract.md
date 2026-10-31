@@ -5,7 +5,7 @@ slug: anh-goc-qua-may-chu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-anh-goc-qua-may-chu-design.md
@@ -48,3 +48,8 @@ Audit hàng duyệt 30/10 H5 (`docs/research/audit-hang-duyet-3010.md`): 182.852
 - Chọn «chỉ máy thu» ở Hỏi-1 thì lời hứa của ô cơ hội cho vai Vận hành **trên cloud** chưa thành ở vòng này: vai ops làm từ xa qua cloud vẫn thấy 0 ảnh S06 tới khi TV9 (`bai-goc-anh-len-cloud`) dùng lại bộ lấy ảnh này.
 
 - Hỏi-1: nếu Mạnh chọn làm cả cloud ngay, thêm AC: trên cloud `?media=` đọc `media_url` từ bảng đã đồng bộ (cần đưa `media` lên cloud qua sync, sửa leak gate) — vòng lớn hơn.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-2: bộ chặn địa chỉ nội bộ chưa chặn các dải hiếm (IPv6 nhúng IPv4, NAT64, 6to4, 192.0.0.0/24, 198.18.0.0/15) — chỉ nguy khi mạng máy thu cấu hình đặc biệt.
+  - Ngoài-4: đối chứng dương của phép đối chiếu DB (AGM-DC) đúng theo cách dựng, chưa chứng được bộ quét HTML bắt tên máy khi nó lọt ra.
+  - Ngoài-5: ma trận 5 vai × 3 khoá (AGM-AC-2) tự suy kỳ vọng từ chính luật quyền, chưa viết tay từng ô.

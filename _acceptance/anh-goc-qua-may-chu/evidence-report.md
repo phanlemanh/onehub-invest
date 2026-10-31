@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 71e5c44c7ea351f7b4d635ca098e8acd349fdc27
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: anh-goc-qua-may-chu
@@ -121,7 +121,7 @@ human_signoff:
 - eval: E10
   run_id: minted-anh-goc-qua-may-chu-E10-r1
   exit_code: 0
-  verifier: config:executors.ui_check
+  verifier: scripts/ui-capture.sh
   verified_at: 2026-10-30T23:43:39Z
   screenshot: evidence/E10-step1.png
   observed: |
