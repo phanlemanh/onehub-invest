@@ -5,7 +5,7 @@ slug: phat-bieu-db-do-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) + ghi lại ô dữ liệu thật đi lên cloud qua sync
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-phat-bieu-db-do-tren-main-design.md
@@ -69,3 +69,13 @@ Quét không gian (preset test-matrix), ba trục. Mỗi ô đi qua cả hai hà
 - Không có ô cơ hội với ngưỡng (hàng sửa lỗi do giám sát giao); thước sống là PD-AC-8 trên DB máy thu sau khi áp: 0 ô lệch.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-2: Chiều đỏ của phép đo tự dọn chỉ báo hỏng khi không còn lược đồ nào, chưa đòi đủ sáu.
+  - Ngoài-3: Phép đo tự dọn có thể treo thay vì báo đỏ khi test chết trước lúc kịp tạo lược đồ.
+  - Ngoài-4: Ca ngắt test mới đo thật được lược đồ máy thu; năm loại lược đồ khác chưa kịp tạo lúc gửi tín hiệu.
+  - Ngoài-5: Phép đo 063 để lại bản chép DB thử trên máy chung tới lần dựng lại sau.
+  - Ngoài-6: Phép đo E6 gieo lược đồ thử ngoài giao dịch và chỉ in số đối chứng, không tự đỏ khi đối chứng không phân biệt.
+  - Ngoài-7: Bộ nạp test cắt hàm 063 theo dấu mục chữ; đổi chữ dấu mục thì test có thể chạy cả phần sửa dữ liệu mà không báo.
+  - Ngoài-9: Test bị ngắt đúng lúc đang dựng có thể sót một lược đồ tạm tới lần chạy sau tự dọn.
+  - Ngoài-10: Đối chứng câu đếm cũ của PD-AC-1 chỉ in ra màn hình, kết quả phép đo không phụ thuộc vào nó.
