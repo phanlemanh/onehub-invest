@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d92a2782e9126a694cb9184c4eca43dae0b1a807
+verified_commit: 8ce2ef88fd163915394be634b2e9a017f108cf7d
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -265,3 +265,7 @@ sha: 1e669d2e98c2f385196a913762013e47e6279807 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 8 — 2026-10-31, do gộp main 04e35c5d vào nhánh HD11
 run_id: repin-20261031T030713Z-55767
 sha: d92a2782e9126a694cb9184c4eca43dae0b1a807 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)
+
+### Re-pin lần 9 — 2026-10-31, do HD5: gộp main (gồm #225) + sửa test đã ký theo 061 (giám sát duyệt P1-87)
+run_id: repin-20261031T062112Z-97833
+sha: 8ce2ef88fd163915394be634b2e9a017f108cf7d · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)

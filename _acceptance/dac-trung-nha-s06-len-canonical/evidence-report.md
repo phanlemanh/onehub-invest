@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9946fa29a8da7ee80bfaef86964da4c6efc81053
+verified_commit: 8ce2ef88fd163915394be634b2e9a017f108cf7d
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -164,3 +164,7 @@ none — every multi-run eval is uniform
 Round 1: E1, E4, E5, E6, E7, E8, E9b failed — các ca DB chạy song song trên cùng DB thử. Returned to implementation.
 Round 2: toàn bộ eval xanh sau khi khoá ca DB chạy tuần tự và bổ sung ma trận DT-AC-3 cùng đối chứng dương DT-AC-7.
 Round 3: E3, E7, E8, E9 chạy lại trên bản mới, xanh; E1, E2, E4, E5, E6, E9b mang từ round trước, delta không chạm paths của chúng.
+
+### Re-pin lần 1 — 2026-10-31, do HD5: gộp main (gồm #225) + sửa test đã ký theo 061 (giám sát duyệt P1-87)
+run_id: repin-20261031T062112Z-97833
+sha: 8ce2ef88fd163915394be634b2e9a017f108cf7d · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
