@@ -1,0 +1,72 @@
+schema_version: 1
+slug: proxy-anh-chan-svg
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-1: ma trận 7 ô viết tay (4 kiểu chuẩn + image/jpg + IMAGE/PNG + image/jpeg; charset=binary), mỗi ô so 200, đúng byte và content-type kỳ vọng viết tay; chiều đỏ: bản đột biến trả nguyên type của nguồn → ô IMAGE/PNG đỏ ghim «PAS-AC-1 chép kiểu nguồn»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-2: ma trận 7 ô viết tay (image/svg+xml, image/svg+xml; charset=utf-8, IMAGE/SVG+XML, image/x-icon, image/bmp, image/tiff, image/avif) → mỗi ô 415, thân bằng đúng chuỗi hằng viết tay «định dạng ảnh không được phép», không chứa tên máy, pathname hay query của URL nguồn, thân nguồn không được đọc (bộ đếm đọc = 0); chiều đỏ: bản đột biến bỏ danh sách cho phép → ô image/svg+xml đỏ ghim «PAS-AC-2 SVG lọt»; bản đột biến nối pathname vào thân 415 → ô image/svg+xml đỏ ghim «PAS-AC-2 thân lộ đường»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-3: text/html và không có content-type → 502 (không phải 415)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-4: 5 ô viết tay (200, 403 http, 415 svg, 502 text/html, 504 quá giờ) — mỗi ô có x-content-type-options = nosniff và content-security-policy chứa sandbox; chiều đỏ: bản đột biến bỏ header khỏi phản hồi lỗi → ô 403 đỏ ghim «PAS-AC-4 thiếu nosniff»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/zalo-media.ts, app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-5: vai ops qua serveZaloMedia ở 3 nhánh (?media= lấy hộ với bộ lấy ảnh thật + tải về giả, ?media= có local_file trong SNAPSHOTS_DIR tạm, ?snapshot=) → 200 và cả hai header; chiều đỏ: bản đột biến bỏ header khỏi sendImage → nhánh ?snapshot= đỏ ghim «PAS-AC-5 sendImage thiếu header»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.anh_goc_chan_svg
+    paths: [app/src/lib/ops/zalo-media.ts, app/src/lib/ops/lay-anh-goc.ts, app/tests/anh-goc-chan-svg.test.tsx]
+    expected: "exit 0; ca PAS-AC-6: dòng media chỉ URL gốc, bộ tải về giả trả image/svg+xml chứa <script> → serveZaloMedia cho vai ops trả 415; thân và mọi header không chứa tên máy gốc; đối chứng dương: cùng dòng mà nguồn trả image/png → 200"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.anh_goc
+    paths: [app/src/lib/ops/lay-anh-goc.ts, app/src/lib/ops/zalo-media.ts, app/tests/anh-goc-qua-may-chu.test.tsx]
+    expected: "exit 0; bộ test HD10 xanh trọn — số ca pass bằng số ca ở commit gộp HD10 6b610913 (đọc từ output, không viết cứng); tệp test không đổi được đo riêng ở E9"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [app/src/app/api/zalo-media/route.ts, scripts/check-portal-compliance.mjs]
+    expected: "exit 0; mục 6 «zalo-media: xemNoiDungTin chặn trước stat/readFile» xanh — route trả thẳng `return serveZaloMedia(req, user);` (không dựng Response mới, nên header của lõi tới biên HTTP nguyên vẹn); chiều đỏ sẵn có của mục 6: bản sao route đổi lời trả → báo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.anh_goc_hd10_nguyen
+    paths: [app/tests/anh-goc-qua-may-chu.test.tsx]
+    expected: "exit 0; git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx rỗng — không ca HD10 nào bị sửa kỳ vọng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
