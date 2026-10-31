@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 00c1cf1e3d67fb415f913ef51cf025f731cb47c0
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: vocab-db-itest-xanh-tren-main

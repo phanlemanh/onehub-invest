@@ -5,7 +5,7 @@ slug: vocab-db-itest-xanh-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T07:35:00Z
 approved_by:
@@ -41,3 +41,12 @@ Bỏ quét không gian — một trục (DB đích: đi trước main / dựng �
 - Ghim lại hai hồ sơ đã ký dùng test này — việc của làn ghim lại sau gộp.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Răng đối chứng chụp DB trước/sau chỉ lấy ràng buộc đuôi `_chk`, chưa chụp `registry_aliases_kind_check` (đuôi `_check`) mà test nay dựng lại.
+  - Ngoài-2: Rào chống bỏ sót của bộ rút chỉ đếm câu thêm từ vựng; câu dựng lại ràng buộc thụt lề hoặc nằm trong khối DO $$ bị bỏ qua mà không báo tên tệp.
+  - Ngoài-3: Vế «DB thật không đổi» của răng đối chứng không phủ ràng buộc đuôi `_check`.
+  - Ngoài-4: Răng đối chứng tuyên chụp «mọi ràng buộc» nhưng chỉ chụp lớp `_chk`.
+  - Ngoài-5: Lời hứa «migration mới tự vào» chỉ có phép kiểm đủ cho câu thêm từ vựng, chưa cho câu ràng buộc.
+  - Ngoài-6: (mang từ vòng 1) Rào bộ rút chỉ đếm câu thêm từ vựng — cùng lớp Ngoài-2.
+  - Ngoài-7: (mang từ vòng 1) Răng đối chứng chỉ chứng cùng tên ca và cùng số lời gọi assert, không so nội dung từng assertion.
