@@ -1,33 +1,23 @@
+# Review findings: dac-trung-nha-s06-len-canonical (round 3)
+
 ## Trong hợp đồng
 
-- Hình dạng 5 (tuyên quét LỚP nhưng chỉ có điểm-case): ma trận DT-AC-3 thiếu ô so với lời hứa «mỗi trường × hợp lệ/vắng/rác»
-  file: `pipeline/scripts/dac-trung-s06.test.mjs:17`
-  severity: medium
-  AC: AC-3
-  source: measurement
-  detail: evals.yaml E3 hứa ma trận viết trước «mỗi trường × hợp lệ/vắng/rác». Nhưng MA_TRAN (26 dòng, `assert.equal(n, 26)` chỉ tự đếm số dòng của chính nó chứ không đếm số ô trường×lớp) thiếu ít nhất bốn ô: (a) unit_number · vắng (không có dòng payload {} cho mã căn); (b) bathrooms · vắng (không có toilets null/không có) và bathrooms · rác trên trần (lib ghi «WC > 50» là rác, TRAN.wc=50, nhưng không dòng nào thử toilets > 50); (c) lot_size_dimensions · rác ở vế length (chỉ có width rác; không dòng nào width hợp lệ + length 0/âm/>200 để xem chỉ ra frontage_length mà không có lot_size_dimensions); (d) latitude/longitude · vắng cả hai (chỉ có «thiếu kinh độ»). Ví dụ: xoá kiểm `daiOk` hay xoá `wc <= TRAN.wc` trong lib/dac-trung-s06.mjs thì cả 26 dòng vẫn xanh. Ca đỏ duy nhất là khung toạ độ, nên không bù được các ô này.
-  rationale: AC-3 đòi ma trận viết trước, mỗi trường một dòng hợp lệ, một dòng vắng, một dòng rác, và dòng width không length; ma trận thiếu ô là AC-3 chưa đủ.
-
-- Hình dạng 4 (assert âm tính một mình): kiểm «0 ô mới khác rỗng thiếu phát biểu sống» trong DT-AC-7 không có đối chứng dương
-  file: `pipeline/scripts/do-dac-trung-s06.mjs:134`
-  severity: medium
-  AC: AC-7
-  source: measurement
-  detail: `bao(thieu.length === 0, "DT-AC-7 mọi ô mới khác rỗng có phát biểu sống cùng giá trị …")` chỉ đạt khi truy vấn NOT EXISTS trả rỗng. Thước không lần nào cho thấy truy vấn này bắt được một ô thiếu phát biểu, ví dụ bằng cách rút một phát biểu hoặc đổi giá trị một ô trên bản chép rồi đòi gọi tên `offer_id.field`. Lượt gốc GOC chỉ đối chứng cho vế tỉ lệ 95%: ở lượt đó các ô đều rỗng, nên vế này cũng sẽ xanh suông. E7 trong evals.yaml chỉ khai ca đỏ cho vế tỉ lệ. Nếu so khớp `value_key`/`subject_key` lọc nhầm hết dòng thì vế này vẫn xanh. Trái lại, DT-AC-8 cùng tệp có đối chứng dương (đổi property_type).
-  rationale: AC-7 đòi mọi ô mới khác rỗng có phát biểu sống cùng giá trị; phép kiểm này xanh suông thì AC-7 không được chứng minh.
+(không có finding nào)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 5: E4 hứa «giá trị rác không có phát biểu» trong ca DB DT-AC-4, nhưng ca chỉ chạy một tin toàn giá trị hợp lệ**
+(không có mục mới ở round này; các mục từ round trước được máy chèn dưới nhãn r<N>)
+
+- **Hình dạng 5: E4 hứa «giá trị rác không có phát biểu» trong ca DB DT-AC-4, nhưng ca chỉ chạy một tin toàn giá trị hợp lệ (r2)**
   Người dùng thấy gì: Chưa có bài thử đưa một tin mang giá trị rác qua toàn bộ quy trình nạp để xác nhận nó không sinh dữ liệu sai. Việc loại rác đã được thử ở bước đọc nên rủi ro thực tế thấp.
   Căn cứ: Rác đã bị chặn từ bước đọc và có kiểm riêng, nên nếu hụt thì cũng chỉ là thiếu một lớp kiểm thêm. Dữ liệu không bị mất, và bổ sung bài thử sau này rẻ.
   file: `pipeline/scripts/dac-trung-s06.itest.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 3/1 (đo chuỗi có mặt thay vì hành vi): DT-AC-1 đo «field_assertions nhận phát biểu cho 7 mã mới và offer_status» bằng cách tìm chuỗi trong định nghĩa ràng buộc**
+- **Hình dạng 3/1 (đo chuỗi có mặt thay vì hành vi): DT-AC-1 đo «field_assertions nhận phát biểu cho 7 mã mới và offer_status» bằng cách tìm chuỗi trong định nghĩa ràng buộc (r2)**
   Người dùng thấy gì: Bài thử chỉ xác nhận danh sách mã được phép có chứa tên các trường mới, chưa thử ghi thật cho từng mã. Việc ghi thật đã được kiểm ở bước khác nên nguy cơ lọt lỗi là nhỏ.
   Căn cứ: Ghi thật cho các trường số đã có bài thử riêng, nên chỗ hụt chỉ nằm ở trạng thái chào, ít ảnh hưởng người dùng. Lỗi nếu có sẽ lộ ngay khi nạp và sửa không đắt.
   file: `pipeline/scripts/dac-trung-s06.itest.mjs`
@@ -62,7 +52,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5: tuyên quét lớp «mỗi trường × hợp lệ/vắng/rác» nhưng ma trận DT-AC-3 thiếu ô rác của chiều dài và trần WC (r1)**
+- **Hình dạng 5: tuyên quét lớp «mỗi trường × hợp lệ/vắng/rác» nhưng ma trận DT-AC-3 thiếu ô rác của chiều dài và trần WC (r1 · tệp đã đổi)**
   Người dùng thấy gì: Bộ kiểm thử chưa bắt được lỗi nếu ai đó nới lỏng việc loại chiều dài rác hoặc số phòng tắm quá lớn. Người dùng chỉ ảnh hưởng nếu sau này có thay đổi sai mà không bị phát hiện.
   Căn cứ: Đây là độ chặt của bộ kiểm thử, không phải lỗi dữ liệu hiện tại, và đã được hợp đồng chủ động bỏ ra khỏi phạm vi.
   file: `pipeline/scripts/dac-trung-s06.test.mjs`
@@ -75,5 +65,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `pipeline/scripts/dac-trung-s06.itest.mjs`
   severity: medium
   Đề xuất: wont-fix
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
