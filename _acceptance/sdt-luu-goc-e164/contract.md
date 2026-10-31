@@ -5,7 +5,7 @@ slug: sdt-luu-goc-e164
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-sdt-luu-goc-e164-design.md
@@ -73,3 +73,10 @@ Migration số 060 do giám sát cấp. DB máy thu hôm nay: `seller_phone` d�
 ## Notes
 
 - Băm giữ vì cloud chỉ nhận khoá (Hỏi-A); đổi khoá một lần trong vòng này (Hỏi-C bước 2).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-3: Nếu code mới chạy đêm trước khi áp 060 lên máy thu, bước dựng danh bạ lỗi và nhãn người bán trên trang Căn giá tốt tạm mất — phải áp 060 ngay sau khi gộp.
+  - Ngoài-5: Phép kiểm danh bạ chỉ chứng mỗi người giữ số cũ của mình, chưa chứng không có số lạ thừa hay một số thuộc hai người.
+  - Ngoài-6: Phép kiểm che số trên danh bạ quét chuỗi từ 4 chữ số, chưa bắt lộ đúng 3 chữ số; đối chứng đỏ không chạy qua bộ quét thật.
+  - Ngoài-7: Phép kiểm «ba vai» trên danh bạ thực chất chỉ phân biệt hai cách gọi; vai quản trị trùng vai vận hành.
+  - Ngoài-12: Nếu lượt chạy đêm diễn ra trước khi áp 060, một số căn có thể giữ khoá số điện thoại đời cũ mãi — thứ tự triển khai bắt buộc: áp 060 trước lượt đêm kế tiếp.
+  - Ngoài-16: Khoá căn sau 060 được kiểm bằng chính cách băm của phép đo, chưa có bằng chứng độc lập trên dữ liệu thật.

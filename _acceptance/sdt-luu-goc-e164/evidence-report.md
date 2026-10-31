@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e27d09d4ce2545f02933bade8c79a170cfc04f31
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: sdt-luu-goc-e164
