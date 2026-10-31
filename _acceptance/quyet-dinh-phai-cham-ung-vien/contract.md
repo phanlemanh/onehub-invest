@@ -5,7 +5,7 @@ slug: quyet-dinh-phai-cham-ung-vien
 owner: phanlemanh@gmail.com
 risk_tier: T3      # app/src/app/api/v1/ops/review/** — đường ghi quyết định (t3_paths)
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-quyet-dinh-phai-cham-ung-vien-design.md
@@ -72,3 +72,8 @@ Khác căn, Để sau):
   nửa sau AC-8 (7 thẻ thật).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Phép đo trên bản chép đặt tệp route đột biến tạm ngay trong mã nguồn; bị ngắt giữa chừng thì tệp có thể nằm lại.
+  - Ngoài-2: Script đo không tự chặn khi thiếu DATABASE_URL; chạy tay quên khai thì có thể ghi vào DB khác dự định.
+  - Ngoài-3: Ca đối chứng của AC-4 báo đỏ với mọi lỗi, chưa ghim đúng lỗi khớp một chiều.
