@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: nguoi-noi-theo-sdt
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.nguoi
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+    expected: "exit 0; ma trận chonGop viết trước, mỗi dòng một dáng (một–một · SĐT hai người gửi · người gửi hai SĐT · cặp chỉ trên tin nghỉ · tài khoản S03 với SĐT S05 · tin S06 · người theo SĐT merged · người theo SĐT split · Ks = Ka), số assert = số dòng ma trận; chỉ dòng một–một ra gộp (tu = người theo SĐT, vao = người tài khoản cùng nguồn)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nguoi
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+    expected: "exit 0; tin chỉ SĐT p với p đã gộp vào a → vai trên a, method parser, evidence_tier observed; cùng tin khi p chưa gộp → vai trên người theo SĐT; tin có tài khoản → vai source_field trên người tài khoản không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; DB thử, BEGIN…ROLLBACK, 055 + 060 nạp trong giao dịch, mồi viết tay: sau một lượt người theo SĐT status merged, merged_into = người tài khoản; registry_events đúng một dòng gop mỗi cặp (related_keys = {Ka}, reason và changed_by khác rỗng); bí danh sdt còn sống trên Ks; vai parser của Ks rút với retract_reason gop-nguoi; tin ấy có vai sống trên Ka"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; cùng mồi E3, lượt hai: số đếm trả về gop = 0, nguoi_moi = 0, bi_danh_moi = 0, vai_moi = 0, vai_rut = 0; số dòng registry_events và party_roles sau lượt hai bằng sau lượt một"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; mồi có SĐT hai người gửi và người gửi hai SĐT: 0 người merged trong các ca đó; số đếm nhieu_nhieu theo nguồn = 1 SĐT nhiều người gửi và 1 người gửi nhiều SĐT; dòng in chứa phần nhiều–nhiều"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/dung-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; ghi tập vai sống (subject_key, party_key, method) trước lần gộp; gộp; tách bằng tachNguoi: Ks status split, merged_into null, một dòng tach; tập vai sống sau tách = tập trước gộp; tập id (khoá chính) của mỗi bảng trong bốn bảng sau mỗi bước là tập cha của tập trước bước, và mỗi dòng cũ chỉ khác ở retracted_at/retract_reason (party_roles), retired_at (registry_aliases), status/merged_into (parties); lượt dựng thêm: 0 gộp, Ks vẫn split"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; trên mồi trộn mọi dáng của E1: gom mỗi người về người cuối chuỗi merged_into, đếm SĐT khác nhau (bí danh sdt sống) mỗi người cuối ≤ 1; mọi dòng gop có nguồn của object_key = nguồn của related_keys[0]; đối chứng: bản chép chonGop bỏ vế «người gửi có một SĐT» → kiểm này bắt người hai SĐT"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.nguoi_nap_lai
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/nap-lai-nguoi.mjs]
+    expected: "exit 0; DB thử chép máy thu (không phải oneinvest), một giao dịch ROLLBACK: in N1 trước lượt theo nguồn (tinhSo của do-danh-ba-sdt), lượt một gộp theo nguồn = N1 trước, N1 sau lượt một = 0, lượt hai gộp 0 và số sống bằng lượt một, 0 người cuối mang hai SĐT, 0 gộp khác nguồn; mỗi dòng gop: related_keys[0] = người mang bí danh tai_khoan_nguon của người gửi duy nhất mà thước tự rút từ stg_zalo_posts cho SĐT ấy (không qua chonGop); tinhSo dùng nguyên bản base 0c3f4842 (do-danh-ba-sdt.mjs không đổi trong vòng, thước in git hash-object của tệp), nhận cặp đã gộp qua parties.status = merged; đối chứng gộp sai: trong SAVEPOINT đổi merged_into của một cặp sang người tài khoản khác → kiểm đích gộp bắt; đối chứng luật lỏng (bỏ vế người gửi một SĐT) cùng giao dịch → thước báo người hai SĐT; --doi-chung-hong thoát 1; đếm bảng trên kết nối riêng trước = sau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/dung-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; tiến trình con node pipeline/dung-nguoi.mjs trên DB thử (chốt chotDbThuNguoi từ chối oneinvest; 055 + 060 áp lên DB thử nếu chưa có): --tach <khoá> không --ly-do → thoát 2 trước khi mở kết nối DB, stderr nêu --ly-do; --tach khoá không có → thoát 1, stderr nêu khoá; --tach người active → thoát 1, stderr nêu trạng thái active; mỗi ca đếm bốn bảng (kết nối riêng) trước = sau; trong giao dịch thử, người merged → tách xong, in dòng tách"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.nguoi
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/dung-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+    expected: "exit 0; quét mọi chuỗi SQL của mô-đun (SQL.*) và mọi chuỗi SQL trong pipeline/dung-nguoi.mjs: số câu quét = số khoá SQL.* đếm độc lập + số câu của dung-nguoi.mjs; đối chứng dương: một câu cài sẵn JOIN users và một câu DELETE FROM parties phải bị bắt; bangDuocDoc = [] cho mọi câu thật; câu chạm parties chỉ là INSERT hoặc UPDATE … SET status, merged_into; câu chạm registry_events chỉ là INSERT; không câu nào có DELETE hay TRUNCATE"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
