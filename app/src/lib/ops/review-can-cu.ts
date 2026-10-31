@@ -140,6 +140,81 @@ function soPhuong(a: string | number | null, b: string | number | null): So {
   return ka === kb ? "khop" : "lech";
 }
 
+/** Bỏ dấu, hoa và ký tự lạ: «Đinh Bộ Lĩnh» → `dinh bo linh`. */
+function boDau(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Các khoá có thể của tên đường. Tiền tố có dấu («Đường», «Phố», «Đ.», «D.») chắc là tiền tố: bỏ. Tiền tố không dấu
+ * («duong», «pho») có thể là tên thật — «Duong Lam» là «Đường Lâm» hay «Dương Lâm» — nên giữ CẢ HAI cách đọc (HD2).
+ */
+export function khoaDuong(v: string): string[] {
+  const s = v.normalize("NFC").trim().toLowerCase();
+  const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
+  if (coDau) return [boDau(coDau[1])].filter(Boolean);
+  const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
+  return [...new Set([khongDau ? boDau(khongDau[1]) : "", boDau(s)])].filter(Boolean);
+}
+
+/** So hàng Đường: chung ít nhất một cách đọc → Khớp (bản chép ở agent/src/agents/judge-entity.ts). */
+function soDuong(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaDuong(String(a));
+  const kb = khoaDuong(String(b));
+  if (ka.length === 0 || kb.length === 0) return "thieu";
+  return ka.some((k) => kb.includes(k)) ? "khop" : "lech";
+}
+
+/**
+ * Khoá toà: bỏ MỘT tiền tố «Toà/Block/Tháp/Lô», rồi bỏ dấu, hoa, khoảng trắng — «Block A» = «Toà A» = «a». Chỉ MÃ
+ * toà mới so được (một từ, có chữ số hoặc không quá ba ký tự: «A», «CT2», «S5.01»); tên gọi («Sao Biển», «Park 6»,
+ * «Chung Cư 38 Hoàng mai») không so được với mã của cùng toà nên coi như thiếu (HD2).
+ */
+export function khoaToa(v: string): string | null {
+  const s = v.normalize("NFC").trim().toLowerCase().replace(/^(?:toà|tòa|toa|block|tháp|thap|tower|lô|lo|building)\s+/u, "");
+  if (/\s/.test(s)) return null;
+  const k = boDau(s).replace(/ /g, "");
+  return k && k.length <= 8 && (/\d/.test(k) || k.length <= 3) ? k : null;
+}
+
+/** So hàng Toà theo mã toà; tên gọi không phải mã → Thiếu (bản chép ở agent/src/agents/judge-entity.ts). */
+function soToa(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaToa(String(a));
+  const kb = khoaToa(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+/** Khoá tầng: số đầu tiên — «Tầng 12» = «12»; chuỗi không có số («tầng cao») coi như thiếu. */
+export function khoaTang(v: string): number | null {
+  const m = v.match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+
+/** So hàng Tầng theo số tầng (bản chép ở agent/src/agents/judge-entity.ts). */
+function soTang(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaTang(String(a));
+  const kb = khoaTang(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+/** Hàng có khoá riêng; hàng còn lại so bằng `soGiaTri`. */
+const SO_RIENG: Partial<Record<keyof BenGhepCan, (a: string | number | null, b: string | number | null) => So>> = {
+  phuong: soPhuong,
+  street: soDuong,
+  block: soToa,
+  floor: soTang,
+};
+
 /** Ô hiện: giá trị thật (kể cả «unknown» — hiện «Chưa rõ»), chỉ chuỗi rỗng/null về null. */
 const hien = (v: unknown): string | number | null =>
   v === null || v === undefined || (typeof v === "string" && v.trim() === "") ? null : (v as string | number);
@@ -172,7 +247,7 @@ export function soTruongGhepCan(
       label,
       a: va,
       b: vb,
-      so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),
+      so: (SO_RIENG[key] ?? soGiaTri)(va, vb),
       truc: Boolean(truc),
       canCuA: truc ? nhanCanCu(canCuA[truc]) : CHUA_CAN_CU_TIN,
       canCuB: truc ? nhanCanCu(canCuB[truc]) : CHUA_CAN_CU_TIN,

@@ -8,7 +8,7 @@ import type { PairData } from "../src/tools/native.js";
 
 export type Tin = {
   perm2: number | null; area: number | null; phuong: string | null; loai: string | null;
-  street?: string | null; block?: string | null; floor?: string | null; bathrooms?: number | null;
+  street?: string | null; block?: string | null; floor?: string | null; bathrooms?: number | null; pn?: number | null;
 };
 export const TR = 1e6;
 
@@ -21,7 +21,7 @@ export function cap(a: Tin, b: Tin): PairData {
     priceVnd: t.perm2 !== null && t.area !== null ? t.perm2 * t.area : null,
     areaM2: t.area,
     pricePerm2: t.perm2,
-    bedrooms: null,
+    bedrooms: t.pn ?? null,
     phuong: t.phuong,
     propertyType: t.loai,
     sellerName: null,

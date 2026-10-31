@@ -3,6 +3,8 @@
 // viết lời giải thích. Mỗi lần chấm ghi model + trace của cuộc gọi vào evidence.cham (sổ ai_calls vẫn nhận dòng của nó).
 // Cặp chưa có thẻ → sinh thẻ; thẻ đang chờ → cập nhật tại chỗ; thẻ người đã quyết → bỏ qua. KHÔNG tự quyết (status
 // vẫn pending, người quyết ở /ops/review) và KHÔNG ghi property_candidates / sale_offers (luật 7).
+// HD3: cặp có tin rời kho (khoá không còn trong sale_offers) → rút thẻ chờ sang deferred bởi máy, lý do «tin rời kho»,
+// một dòng ops_audit mỗi thẻ; tin quay lại → trả thẻ máy đã rút về chờ rồi chấm lại (044: «gỡ khi tin quay lại»).
 // Chạy: npx tsx scripts/judge-run.ts [--khong-llm]
 import { realpathSync } from "node:fs";
 import { basename } from "node:path";
@@ -120,14 +122,51 @@ export const SQL_CAP_NHAT = `WITH khoa AS (SELECT id, status FROM review_queue W
    WHERE id = ANY($4) AND status = 'pending'
      AND NOT EXISTS (SELECT 1 FROM khoa WHERE khoa.status <> 'pending')`;
 
+export const MAY = "machine:judge-run";
+/** Thẻ máy rút vì tin rời kho — không tính là người đã quyết. */
+const mayRut = (t: { status: string; decided_by: string | null }) => t.status === "deferred" && t.decided_by === MAY;
+
+/** Tin sống của cặp — sale_offers là view tin chưa nghỉ (044). */
+export const SQL_TIN_SONG = `SELECT offer_id FROM sale_offers WHERE offer_id = ANY($1)`;
+
+/** Vế khoá cặp chung cho rút và trả lại: một thẻ của cặp do NGƯỜI quyết (kể cả giữa lúc đọc và lúc ghi) thì không thẻ
+ *  nào của cặp bị đụng — cùng luật và cùng cách khoá `FOR UPDATE` như SQL_CAP_NHAT. */
+const KHOA_CAP = `khoa AS (SELECT id, status, decided_by FROM review_queue WHERE id = ANY($1) FOR UPDATE)`;
+const KHONG_NGUOI_QUYET = `NOT EXISTS (SELECT 1 FROM khoa WHERE khoa.status <> 'pending'
+       AND NOT (khoa.status = 'deferred' AND khoa.decided_by = '${MAY}'))`;
+
+/** Rút thẻ chờ của cặp rời kho: $1 id thẻ của cặp, $2 decision_note, $3 roi_kho (jsonb mảng khoá). Ghi ops_audit cùng câu. */
+export const SQL_RUT_ROI_KHO = `WITH ${KHOA_CAP},
+   rut AS (UPDATE review_queue SET status = 'deferred', decided_by = '${MAY}', decided_at = now(), decision_note = $2
+     WHERE id = ANY($1) AND status = 'pending' AND ${KHONG_NGUOI_QUYET}
+     RETURNING id, item_id),
+   ghi AS (INSERT INTO ops_audit (actor, action, env, detail)
+     SELECT '${MAY}', 'review-queue:rut-roi-kho', 'local',
+       jsonb_build_object('review_id', id, 'item_id', item_id, 'ly_do', 'tin rời kho', 'roi_kho', $3::jsonb) FROM rut
+     RETURNING 1)
+   SELECT id, item_id FROM rut`;
+
+/** Trả thẻ máy đã rút về chờ khi hai tin đã sống lại: $1 id thẻ của cặp. Ghi ops_audit cùng câu. */
+export const SQL_TRA_LAI = `WITH ${KHOA_CAP},
+   tra AS (UPDATE review_queue SET status = 'pending', decided_by = NULL, decided_at = NULL, decision_note = NULL
+     WHERE id = ANY($1) AND status = 'deferred' AND decided_by = '${MAY}' AND ${KHONG_NGUOI_QUYET}
+     RETURNING id, item_id),
+   ghi AS (INSERT INTO ops_audit (actor, action, env, detail)
+     SELECT '${MAY}', 'review-queue:tra-lai-tin-ve-kho', 'local',
+       jsonb_build_object('review_id', id, 'item_id', item_id, 'ly_do', 'tin về kho') FROM tra
+     RETURNING 1)
+   SELECT id, item_id FROM tra`;
+
+export type DemLuot = { sinh: number; capNhat: number; boQua: number; loi: number; roiKho: number; rut: number; traLai: number };
+
 const tieuDe = (p: PairData) =>
   `Cùng căn? ${p.a.phuong ?? "?"} ${p.a.areaM2 ?? 0}m² ↔ ${p.b.areaM2 ?? 0}m² (score ${p.score})`;
 
 export async function chamMotLuot(
   db: pg.ClientBase,
   deps: ChamDeps,
-): Promise<{ sinh: number; capNhat: number; boQua: number; loi: number }> {
-  const dem = { sinh: 0, capNhat: 0, boQua: 0, loi: 0 };
+): Promise<DemLuot> {
+  const dem: DemLuot = { sinh: 0, capNhat: 0, boQua: 0, loi: 0, roiKho: 0, rut: 0, traLai: 0 };
   const caps = new Map<string, [string, string]>();
   const them = (a: string, b: string) => {
     const k = [a, b].sort().join("|");
@@ -138,7 +177,9 @@ export async function chamMotLuot(
   );
   for (const u of ung) them(u.offer_a, u.offer_b);
   const { rows: cho } = await db.query(
-    `SELECT item_id FROM review_queue WHERE status = 'pending' AND item_type = 'entity_match' ORDER BY id`,
+    `SELECT item_id FROM review_queue WHERE item_type = 'entity_match'
+       AND (status = 'pending' OR (status = 'deferred' AND decided_by = $1)) ORDER BY id`,
+    [MAY],
   );
   for (const t of cho) {
     const m = String(t.item_id).match(/^pair:(.+)\|(.+)$/);
@@ -147,12 +188,32 @@ export async function chamMotLuot(
 
   for (const [a, b] of caps.values()) {
     const { rows: the } = await db.query(
-      `SELECT id, status FROM review_queue WHERE item_type = 'entity_match' AND item_id = ANY($1) ORDER BY id`,
+      `SELECT id, status, decided_by FROM review_queue WHERE item_type = 'entity_match' AND item_id = ANY($1) ORDER BY id`,
       [[`pair:${a}|${b}`, `pair:${b}|${a}`]],
     );
-    if (the.some((t) => t.status !== "pending")) {
+    if (the.some((t) => t.status !== "pending" && !mayRut(t))) {
       dem.boQua++; // người đã quyết cặp này — không sửa, không sinh lại
       continue;
+    }
+    const { rows: song } = await db.query(SQL_TIN_SONG, [[a, b]]);
+    const conSong = new Set(song.map((r) => String(r.offer_id)));
+    const roi = [a, b].filter((k) => !conSong.has(k));
+    if (roi.length > 0) {
+      // tin rời kho — không đọc cặp, không sinh thẻ, không tính lỗi; rút thẻ còn chờ
+      dem.roiKho++;
+      if (the.length > 0) {
+        const { rowCount } = await db.query(SQL_RUT_ROI_KHO, [
+          the.map((t) => t.id),
+          `tin rời kho: ${roi.join(", ")} không còn trong kho`,
+          JSON.stringify(roi),
+        ]);
+        dem.rut += rowCount ?? 0;
+      }
+      continue;
+    }
+    if (the.some(mayRut)) {
+      const { rowCount } = await db.query(SQL_TRA_LAI, [the.map((t) => t.id)]);
+      dem.traLai += rowCount ?? 0;
     }
     const pair = await deps.queryPair(a, b);
     if (!pair) {
@@ -201,6 +262,7 @@ async function main() {
     const { rows } = await c.query(CAU_DEM_THIEU_THE);
     console.log(`═══ JUDGE RUN XONG ═══`);
     console.log(`thẻ mới ${dem.sinh} | cập nhật ${dem.capNhat} | bỏ qua (người đã quyết) ${dem.boQua} | lỗi đọc cặp ${dem.loi}`);
+    console.log(`cặp có tin rời kho ${dem.roiKho} · thẻ rút ${dem.rut} · thẻ trả lại ${dem.traLai}`);
     console.log(`cặp needs_llm chưa có thẻ: ${rows[0].n}`);
     console.log(`→ Mở /ops/review để phán quyết`);
   } finally {
