@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 3f393c5d1be5fb9d0b6cffdfad6918fa06218e72
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: the-ghep-can-tin-roi-kho
@@ -133,7 +133,7 @@ human_signoff:
   run_id: minted-the-ghep-can-tin-roi-kho-E9-r1
   exit_code: 0
   baseline: n-a
-  verifier: agent/tests/judge-roi-kho.itest.ts
+  verifier: config:executors.test.rk_itest
   verified_at: 2026-10-31T02:13:47Z
   output: |
     cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts: ca RK-AC-9 lô thật xanh.

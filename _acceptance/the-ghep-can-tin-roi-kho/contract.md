@@ -5,7 +5,7 @@ slug: the-ghep-can-tin-roi-kho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-the-ghep-can-tin-roi-kho-design.md
@@ -92,3 +92,7 @@ trỏ khoá tin không còn sống; mỗi thẻ rút có lý do «tin rời kho�
 - Ngưỡng «chạy lại không rút trùng» — số dòng `ops_audit` qua hai lượt; AC-5, AC-9 (b).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Sau khi bộ chấm chạy thật và có tin quay lại kho, ca đo trên lô thật có thể báo đỏ nhầm vì coi thẻ máy đã rút là thẻ người quyết.
+  - Ngoài-2: Dòng «cặp needs_llm chưa có thẻ» vẫn đếm cả cặp rời kho mà máy cố ý không sinh thẻ, nên con số có thể khác 0 dù không sót cặp nào.
