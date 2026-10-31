@@ -3,7 +3,8 @@
 // tra DNS và bộ tải về đều giả; tên máy giả dùng đuôi `.test`. Mỗi phép đo có chiều đỏ trên bản chép tạm của tệp nguồn.
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
@@ -193,5 +194,96 @@ describe("PAS-AC-4 mọi phản hồi của bộ lấy ảnh mang nosniff + CSP 
     } finally {
       xoa()
     }
+  })
+})
+
+// ---------- AC-5, AC-6: qua serveZaloMedia ----------
+type ZaloMod = typeof import("../src/lib/ops/zalo-media")
+const OPS = { id: "pas-ops", email: "pas-ops@local.test", plan: "free" as const, role: "ops" as const }
+const K_GOC = "0123456789abcdef0123456789abcdef"
+const K_LOCAL = "fedcba9876543210fedcba9876543210"
+const SNAP = "hanoi__s06-gia__2026-10-31T000000"
+
+const goc = mkdtempSync(path.join(os.tmpdir(), "pas-snap-"))
+mkdirSync(path.join(goc, "hanoi", SNAP, "media"), { recursive: true })
+writeFileSync(path.join(goc, "hanoi", SNAP, "media", "a.png"), BYTE)
+process.env.SNAPSHOTS_DIR = goc
+process.on("exit", () => rmSync(goc, { recursive: true, force: true }))
+
+const traMedia = async (k: string) =>
+  k === K_GOC
+    ? { media_url: URL_GOC, local_file: null }
+    : k === K_LOCAL
+      ? { media_url: URL_GOC, local_file: `${SNAP}/media/a.png` }
+      : null
+
+/** Bộ lấy ảnh THẬT với bộ tải về giả trả kiểu `type`. */
+const layThat = (type: string) => ((u: string) => layAnhGoc(u, { traDns: dns, taiVe: nguon(type).tai })) as typeof layAnhGoc
+
+const NHANH: { ten: string; qs: string; layAnh: typeof layAnhGoc }[] = [
+  { ten: "?media= lấy hộ", qs: `media=${K_GOC}`, layAnh: layThat("image/png") },
+  { ten: "?media= local_file", qs: `media=${K_LOCAL}`, layAnh: layThat("image/png") },
+  { ten: "?snapshot=", qs: `snapshot=${encodeURIComponent(SNAP)}&file=${encodeURIComponent("media/a.png")}`, layAnh: layThat("image/png") },
+]
+
+async function kiemAc5(serve: ZaloMod["serveZaloMedia"]) {
+  for (const n of NHANH) {
+    const res = await serve(new Request(`http://localhost/api/zalo-media?${n.qs}`), OPS, { traMedia, layAnh: n.layAnh })
+    assert.equal(res.status, 200, `${n.ten}: mã`)
+    if (res.headers.get("x-content-type-options") !== "nosniff") assert.fail(`PAS-AC-5 sendImage thiếu header: ${n.ten}`)
+    assert.match(res.headers.get("content-security-policy") ?? "", /\bsandbox\b/, `${n.ten}: CSP sandbox`)
+  }
+}
+
+describe("PAS-AC-5 ba nhánh ảnh của /api/zalo-media mang nosniff + CSP sandbox", () => {
+  test("PAS-AC-5 ba nhánh, vai ops", async () => {
+    const { serveZaloMedia } = (await import("../src/lib/ops/zalo-media")) as ZaloMod
+    assert.equal(NHANH.length, 3)
+    await kiemAc5(serveZaloMedia)
+  })
+  test("chiều đỏ PAS-AC-5 sendImage thiếu header: bản đột biến bỏ header khỏi sendImage → nhánh ?snapshot= đỏ", async () => {
+    let src = readFileSync(path.join(APP, "src/lib/ops/zalo-media.ts"), "utf8")
+    const a = "        ...HEADER_ANH_AN_TOAN,\n"
+    assert.ok(src.includes(a), "chỗ đột biến không còn trong zalo-media.ts")
+    src = src.replace(a, "").replace(`from "./lay-anh-goc"`, `from ${JSON.stringify(path.join(APP, "src/lib/ops/lay-anh-goc.ts"))}`)
+    const dir = mkdtempSync(path.join(APP, "tests", ".pas-dot-"))
+    try {
+      const f = path.join(dir, "zalo-media.ts")
+      writeFileSync(f, src)
+      const m = (await import(pathToFileURL(f).href)) as ZaloMod
+      await assert.rejects(kiemAc5(m.serveZaloMedia), /PAS-AC-5 sendImage thiếu header: \?media= local_file/)
+      const snap = NHANH[2]
+      const res = await m.serveZaloMedia(new Request(`http://localhost/api/zalo-media?${snap.qs}`), OPS, { traMedia, layAnh: snap.layAnh })
+      assert.notEqual(res.headers.get("x-content-type-options"), "nosniff", "PAS-AC-5 sendImage thiếu header: ?snapshot= phải đỏ ở bản đột biến")
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("PAS-AC-6 nguồn trả SVG có script → 415 qua route, không lộ tên máy", () => {
+  const SVG_DOC = new TextEncoder().encode(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(document.cookie)</script></svg>`)
+  async function goi(type: string) {
+    const { serveZaloMedia } = (await import("../src/lib/ops/zalo-media")) as ZaloMod
+    async function* than() {
+      yield SVG_DOC
+    }
+    const layAnh = ((u: string) =>
+      layAnhGoc(u, {
+        traDns: dns,
+        taiVe: async () => ({ status: 200, headers: new Headers({ "content-type": type }), body: than() }),
+      })) as typeof layAnhGoc
+    return serveZaloMedia(new Request(`http://localhost/api/zalo-media?media=${K_GOC}`), OPS, { traMedia, layAnh })
+  }
+  test("PAS-AC-6 image/svg+xml (thân chứa <script>) → 415, thân và header không chứa tên máy", async () => {
+    const res = await goi("image/svg+xml")
+    assert.equal(res.status, 415)
+    const hdr = [...res.headers].map(([k, v]) => `${k}:${v}`).join("\n")
+    const than = await res.text()
+    assert.ok(!than.includes(HOST) && !hdr.includes(HOST), "PAS-AC-6 lộ tên máy gốc")
+    assert.ok(!than.includes("<script"), "PAS-AC-6 thân nguồn lọt ra")
+  })
+  test("PAS-AC-6 đối chứng dương: cùng dòng mà nguồn trả image/png → 200", async () => {
+    assert.equal((await goi("image/png")).status, 200)
   })
 })
