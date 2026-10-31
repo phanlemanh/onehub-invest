@@ -5,7 +5,7 @@ slug: nguoi-noi-theo-sdt
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-nguoi-noi-theo-sdt-design.md
