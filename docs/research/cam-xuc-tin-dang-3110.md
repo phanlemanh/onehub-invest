@@ -44,7 +44,7 @@ xuống giá.
 
 ## 3. Phép đo thô H1 (31/10, regex làm đại diện tạm cho Kev)
 
-Phạm vi: 10.888 tin bán S06 đang sống, ghép được tin gốc trong `stg_chotot_ads`, trong nhóm phường × loại hình có
+Phạm vi: 10.888 tin bán S06 đang sống, ghép được tin gốc trong bảng stg của S06, trong nhóm phường × loại hình có
 ≥ 15 tin. Tỉ số = giá/m² ÷ trung vị nhóm. KTC 95% = bootstrap 2.000 lần trên trung vị.
 
 ### 3.1 Mức xuất hiện (toàn bộ tin, chưa gộp bài trùng)
