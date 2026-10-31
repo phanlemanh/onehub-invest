@@ -5,7 +5,7 @@ slug: sd3-lam-chat-do-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-31T12:42:00Z
 design_doc: docs/superpowers/specs/2026-10-31-sd3-lam-chat-do-danh-ba-design.md
