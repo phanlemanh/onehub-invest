@@ -119,4 +119,4 @@ test("E1 đối chứng đỏ: đếm cả cặp đã gộp", () =>
 test("E1 đối chứng đỏ: không trừ bài chạm trần", () =>
   banChep("if (bat.length >= TRAN_SO_MOI_BAI) continue;", "", (m) => assert.throws(() => kiemSo(m), /N5 KHONG TRU TRAN 3 SO/)));
 test("E1 đối chứng đỏ: chỉ đọc sdt_bam", () =>
-  banChep('Object.freeze(["sdt_bam", "sdt"])', 'Object.freeze(["sdt_bam"])', (m) => assert.throws(() => kiemSo(m), /BO SOT BI DANH sdt/)));
+  banChep('Object.freeze([ALIAS_KIND.sdt_bam, ALIAS_KIND.sdt])', 'Object.freeze([ALIAS_KIND.sdt_bam])', (m) => assert.throws(() => kiemSo(m), /BO SOT BI DANH sdt/)));

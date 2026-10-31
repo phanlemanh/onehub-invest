@@ -31,7 +31,7 @@ export type NguoiHang = {
   taiKhoan: string | null
   sdtBam: string | null
   /** Loại bí danh của `sdtBam`: `sdt` (số gốc E.164, che cố định) hay `sdt_bam` (đời trước). */
-  sdtKind: "sdt" | "sdt_bam"
+  sdtKind: typeof ALIAS_KIND.sdt | typeof ALIAS_KIND.sdt_bam
 }
 
 export type DanhSachNguoi = { rows: NguoiHang[]; total: number; page: number; pages: number }
@@ -144,8 +144,8 @@ export async function danhSachNguoi(loc: LocNguoi, q: Q = pool): Promise<DanhSac
         soBiDanh: ds.length,
         ten: dau(ds, "ten"),
         taiKhoan: dau(ds, "tai_khoan_nguon"),
-        sdtBam: dau(ds, "sdt") ?? dau(ds, "sdt_bam"),
-        sdtKind: dau(ds, "sdt") != null ? "sdt" : "sdt_bam",
+        sdtBam: dau(ds, ALIAS_KIND.sdt) ?? dau(ds, ALIAS_KIND.sdt_bam),
+        sdtKind: dau(ds, ALIAS_KIND.sdt) != null ? ALIAS_KIND.sdt : ALIAS_KIND.sdt_bam,
       }
     }),
   }

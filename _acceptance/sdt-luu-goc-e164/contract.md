@@ -5,7 +5,7 @@ slug: sdt-luu-goc-e164
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-sdt-luu-goc-e164-design.md

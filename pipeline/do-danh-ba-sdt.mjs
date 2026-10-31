@@ -10,11 +10,12 @@ import { fileURLToPath } from "node:url";
 
 import { extractPhones } from "./transform-zalo.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
+import { ALIAS_KIND } from "./lib/vocab.generated.mjs";
 
 export const NGUON = Object.freeze(["S03", "S05"]);
 const KENH = Object.freeze({ S03: "zalo", S05: "facebook" });
 /** Bí danh SĐT: dạng băm hôm nay, dạng số gốc sau SD3 (Hỏi-A). */
-export const KIEU_BI_DANH_SDT = Object.freeze(["sdt_bam", "sdt"]);
+export const KIEU_BI_DANH_SDT = Object.freeze([ALIAS_KIND.sdt_bam, ALIAS_KIND.sdt]);
 export const MUI_GIO = "Asia/Ho_Chi_Minh";
 /** Ngưỡng đạt (Hỏi-1, Mạnh duyệt 31/10). */
 export const NGUONG_N2 = 10;

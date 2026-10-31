@@ -6,10 +6,8 @@
 //            (kind='sale', perm2 5tr–500tr chống dữ liệu rác, n≥5/phường).
 //   GAP     = bait_gap_pct trên offer P1 (S03/S05): % dưới thước công khai
 //            của cùng phường — dương = tin nội bộ rẻ hơn rao công khai.
-//   SELLERS = registry DẪN XUẤT: script này là CHỦ DUY NHẤT của các cột
-//            tổng hợp (n_ads, sources, first/last_seen, flags) — transform
-//            chỉ ghi offers; tránh bug n_ads cộng dồn mỗi lần transform
-//            chạy lại.
+//   SELLERS = VIEW (060, SD3) trên bí danh `sdt` + tin — tự đúng, script
+//            này chỉ đếm, không ghi.
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";

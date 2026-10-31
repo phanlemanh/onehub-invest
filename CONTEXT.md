@@ -78,7 +78,7 @@ _Avoid_: master data, MDM
 - Ghi chú: trang `/ops/people` «Danh bạ người» (máy thu) liệt người theo nguồn, số tin, bí danh; nhãn «Có thể là môi giới» là suy luận chỉ hiển thị (từ 5 tin còn sống).
 _Avoid_: hồ sơ người bán
 
-**Bí danh**: Một định danh của thực thể danh bạ tại một nguồn — tài khoản tại nguồn, SĐT băm hay tên hiển thị. Bí danh tài khoản và SĐT thuộc đúng một người sống của nguồn ấy; SĐT luôn là người riêng, không gắn vào người tài khoản (DB2b, Hỏi-4).
+**Bí danh**: Một định danh của thực thể danh bạ tại một nguồn — tài khoản tại nguồn, SĐT số gốc hay tên hiển thị. Bí danh tài khoản và SĐT thuộc đúng một người sống của nguồn ấy; SĐT luôn là người riêng, không gắn vào người tài khoản (DB2b, Hỏi-4). Từ SD3 SĐT lưu số gốc dạng `+84…` (bí danh `sdt`); bí danh «SĐT băm» đời trước nghỉ, trên `/ops/people` số gốc hiện nhãn che «SĐT (đã che)» ở mọi vai.
 - Code: `registry_alias` · RESO: không có
 _Avoid_: alias (trên UI)
 
