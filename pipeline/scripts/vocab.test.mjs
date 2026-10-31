@@ -34,6 +34,10 @@ const NHAN = [
   ["assertion_field", "property_type", "Loại hình"], ["assertion_field", "bedrooms", "Phòng ngủ"],
   ["assertion_field", "bathrooms", "WC"], ["assertion_field", "street_raw", "Đường"], ["assertion_field", "block_raw", "Toà"],
   ["assertion_field", "offer_status", "Trạng thái chào"],
+  // HD5 (dac-trung-nha-s06-len-canonical, 061; giám sát duyệt P1-87): bảy đặc trưng nhà S06.
+  ["assertion_field", "street_number", "Số nhà"], ["assertion_field", "unit_number", "Mã căn"],
+  ["assertion_field", "frontage_length", "Mặt tiền"], ["assertion_field", "lot_size_dimensions", "Ngang × dài"],
+  ["assertion_field", "stories", "Số tầng"], ["assertion_field", "latitude", "Vĩ độ"], ["assertion_field", "longitude", "Kinh độ"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -68,7 +72,7 @@ test("VB-AC-1 sổ thật: đủ 17 trục, đúng code + nhãn từng byte", ()
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 71);
+  assert.equal(NHAN.length, 78); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
