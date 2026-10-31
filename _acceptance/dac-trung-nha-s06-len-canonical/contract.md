@@ -5,7 +5,9 @@ slug: dac-trung-nha-s06-len-canonical
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (061) — khớp t3_paths
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-dac-trung-nha-s06-len-canonical-design.md
 ---
 
