@@ -5,7 +5,7 @@ slug: vocab-db-itest-xanh-tren-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-31T07:35:00Z
 approved_by:

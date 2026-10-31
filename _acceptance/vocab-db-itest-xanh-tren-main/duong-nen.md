@@ -1,7 +1,7 @@
 ---
 slug: vocab-db-itest-xanh-tren-main
-at: 2026-10-31T09:47:32.297Z
-sha: 9a41f460e99353aaea3fffa9a1575788f73cb31e
+at: 2026-10-31T09:59:31.456Z
+sha: 850c98a5330114119966d4891d5ba1d5e7c1ec68
 nen: do
 cong_cu: xanh
 suite: do
@@ -11,13 +11,9 @@ engine: xanh
 
 ## Dòng đỏ
 
-- nen suite: DO SAN executors.test.agent ma 1
-- nen suite: DO SAN executors.test.app ma 2
 - nen suite: DO SAN executors.test.app_ui ma 1
-- nen suite: DO SAN executors.test.pipeline ma 1
-- nen suite: CAY BAN SAU SUITE pipeline/scripts/vocab-db.itest.mjs
 
 ## Dòng vàng
 
-- nen suite: TEP CUA VONG _acceptance/vocab-db-itest-xanh-tren-main/gap-probe.md (khong tinh)
-- nen suite: TEP CUA VONG docs/superpowers/plans/2026-10-31-vocab-db-itest-xanh-tren-main.md (khong tinh)
+- nen luoi: 1 vi pham cua chinh vong (khong tinh)
+- VIOLATION [vocab-db-itest-xanh-tren-main]: hồ sơ có bằng chứng nhưng status chưa arm cổng — status=approved; PR đổi code chịu cổng (pipeline/scripts/vocab-db.itest.mjs…) mà hồ sơ trong PR chưa arm. Cổng chỉ chấm hồ sơ ở implemented/verified/signed-off, hồ sơ này đang tàng hình. Đặt status: implemented để cổng chấm, hoặc gỡ evidence-report.md / tách hồ sơ khỏi PR nếu bằng chứng thuộc phạm vi đã bỏ.
