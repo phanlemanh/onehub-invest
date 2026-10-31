@@ -19,9 +19,10 @@ const ROOT = join(PIPE, "..");
 const MIG_GOC = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
 const MIG050 = readFileSync(join(ROOT, "db/migrations/050_wanted_thanh_inquiry.sql"), "utf8");
 // Migration sau 043 cũng nạp ref_* (045 hai trục, 055 danh bạ, 056 data_level, 059 assertion_field/offer_status/change_type…)
-// và dựng lại CHECK theo sổ (059: field_assertions_field_chk). Chỉ lấy đúng các câu ấy ở cấp ngoài cùng (phần còn lại dựng
-// bảng/hàm, đã có trên DB khi ci-db-init dựng từ migration), theo thứ tự số — migration mới tự vào, sổ không lạc test.
-const CAU_REF = /^(?:INSERT INTO ref_(?:field_)?lookup\b[\s\S]*?;|ALTER TABLE \w+ DROP CONSTRAINT IF EXISTS \w+_chk;|ALTER TABLE \w+ ADD CONSTRAINT \w+_chk\s+CHECK\b[\s\S]*?;)[ \t]*$/gm;
+// và dựng lại CHECK theo sổ (059: field_assertions_field_chk; 060: registry_aliases_kind_check — tên ràng buộc mang đuôi
+// `_chk` hoặc `_check`). Chỉ lấy đúng các câu ấy ở cấp ngoài cùng (phần còn lại dựng bảng/hàm, đã có trên DB khi
+// ci-db-init dựng từ migration), theo thứ tự số — migration mới tự vào, sổ không lạc test.
+const CAU_REF = /^(?:INSERT INTO ref_(?:field_)?lookup\b[\s\S]*?;|ALTER TABLE \w+ DROP CONSTRAINT IF EXISTS \w+_ch(?:ec)?k;|ALTER TABLE \w+ ADD CONSTRAINT \w+_ch(?:ec)?k\s+CHECK\b[\s\S]*?;)[ \t]*$/gm;
 /** Câu ref_* + CHECK của mọi migration có số trong (tu, den) — mở hai đầu. */
 function refGiua(tu, den) {
   const D = join(ROOT, "db/migrations");
