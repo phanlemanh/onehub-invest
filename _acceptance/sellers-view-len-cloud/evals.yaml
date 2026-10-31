@@ -17,7 +17,7 @@ evals:
     expected: "exit 0; DB thử oneinvest_p4_svc chép máy thu (db-thu-chac.sh của SD3, xoá khi xong), đứng vai cloud; chạy câu kiểu bảng thật (export của sync-cloud) qua exec trên DB thử: sellers view → dichKhongPhaiBang trả ['sellers'] và thông điệp ghim; trong giao dịch DROP VIEW + CREATE TABLE sellers đúng cột cho phép → trả [] (đối chứng dương); với sellers đã dựng lại thành bảng, dichKhongPhaiBang trên MỌI bảng FILL của DB thử → [] (0 bảng bị chặn oan); trong giao dịch khác, câu chèn kiểu tráo bảng (jsonb_populate_record vào public.sellers) khi sellers là view → lỗi Postgres (bằng chứng lỗi có thật mà chốt chặn trước); in 'CLOUD GIA OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
-    criterion: AC-2b
+    criterion: AC-7
     executor: script
     cmd: config:executors.script.svc_cloud_gia
     layer: backend-effect
@@ -25,7 +25,7 @@ evals:
     expected: "exit 0; cùng probe E2, trong giao dịch trên DB thử: DROP VIEW sellers, dựng sellers bằng câu CREATE TABLE sellers rút NGUYÊN VĂN từ db/migrations/022_chotot_source.sql (không viết tay), sync_stage theo 038; đọc dòng từ view máy thu (dựng lại view trong giao dịch con trước khi drop, hoặc đọc trước) bằng localReadSql thật; nạp vào sync_stage rồi chạy buildSwapSql thật cho sellers → thành công, count(sellers) = số dòng view, count(DISTINCT phone_hash) = count(*); đối chứng đỏ: nhân đôi một dòng trong staging → lượt tráo lỗi ('TRAO TRUNG KHOA' bắt); in 'TRAO THAT OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
-    criterion: AC-2c
+    criterion: AC-8
     executor: test
     cmd: config:executors.test.svc_sync
     paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
