@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: qv-ac-9-khong-chap-chon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/check-api-surface.mjs, app/tests/api-surface-tep-an.test.tsx]
+    expected: "exit 0; ca 'TA-AC-1' xanh: loadFiles trên cây tạm trả đúng hai khoá không ẩn (lib/that.ts, api/v1/a/route.ts); chiều đỏ: bản đột biến bỏ nhánh tệp ẩn (chép cạnh bản thật) trả thêm khoá lib/.x-mut-1-that.tsx → ca đỏ ghim 'TA-AC-1: tệp ẩn lọt vào kết quả'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/check-api-surface.mjs, app/tests/api-surface-tep-an.test.tsx]
+    expected: "exit 0; ca 'TA-AC-2' xanh trên bốn ca io tiêm viết trước: (a) readdirSync báo thêm tệp ma ma.tsx và thư mục ma ma-dir → không ném, kết quả không có mục ma; (b) statSync báo tệp thường nhưng readFileSync ném ENOENT → không ném, tệp ấy vắng; (c) statSync báo thư mục nhưng readdirSync ném ENOENT → không ném, không mục nào dưới thư mục ấy; (d) statSync ném EACCES → loadFiles ném lỗi code EACCES. Chiều đỏ: ba bản đột biến, mỗi bản bỏ đúng một nhánh chịu ENOENT (ở stat, ở đọc tệp, ở liệt kê thư mục), chạy trên cùng ca → đỏ ghim lần lượt 'TA-AC-2a: mục biến mất trước stat làm loadFiles ném ENOENT', 'TA-AC-2b: tệp biến mất trước khi đọc làm loadFiles ném ENOENT', 'TA-AC-2c: thư mục biến mất trước khi liệt kê làm loadFiles ném ENOENT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [scripts/check-api-surface.mjs, scripts/check-deals-api.mjs, app/tests/api-surface-tep-an.test.tsx]
+    expected: "exit 0; ca 'TA-AC-3' xanh: bản chép (scripts/check-api-surface.mjs, scripts/check-deals-api.mjs, app/src) nằm dưới os.tmpdir(); tiến trình con sinh-xoá .qv-mut-*.tsx trong app/src/lib của bản chép và báo số tệp đã sinh-xoá ≥ 1000 (đối chứng dương, thiếu thì đỏ 'TA-AC-3: tải sinh-xoá không chạy'); bản mới chạy static và mutation mỗi chế độ 5 lượt, cả 10 lượt thoát 0 (lượt đỏ → 'TA-AC-3: bản mới đỏ dưới tải sinh-xoá'); đối chứng âm là bản đột biến bỏ cả nhánh tệp ẩn lẫn nhánh chịu ENOENT, sinh từ bản hiện tại (không đọc git), chạy static tới lượt ENOENT đầu tiên trong trần 60 lượt hoặc 90 giây — không gặp thì đỏ 'TA-AC-3: bản không chịu ENOENT không tái hiện lỗi trong trần'; trước và sau ca, app/src thật có 0 tệp .qv-mut-* (khác 0 → 'TA-AC-3: tệp sinh-xoá lọt vào cây thật')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.api_surface_static
+    paths: [scripts/check-api-surface.mjs, app/src/app/api/**, app/src/lib/api-surface.ts]
+    expected: "exit 0; dòng 'api-surface static: ĐẠT' và 'sổ bề mặt API: N/N route khớp sổ' với N bằng số route.ts trên cây (không giảm so với main)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    paths: [scripts/check-api-surface.mjs, app/src/app/api/**, app/src/lib/api-surface.ts]
+    expected: "exit 0; dòng 'bản nguyên ĐẠT' và M1–M20 đều 'TRƯỢT với «…»'; dòng cuối 'api-surface mutation: ĐẠT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/**, scripts/check-api-surface.mjs]
+    expected: "exit 0; cd app && npm test toàn bộ xanh, gồm QV-AC-9"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/**]
+    expected: "exit 0; typecheck và lint app 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
