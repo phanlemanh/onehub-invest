@@ -5,7 +5,7 @@ slug: nguoi-noi-theo-sdt
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-nguoi-noi-theo-sdt-design.md
@@ -77,3 +77,10 @@ hai gộp 0; không Người nào gộp hai SĐT khác nhau mà không có bí d
 - «lượt hai gộp 0» — AC-4, AC-8.
 - «không Người nào gộp hai SĐT khác nhau» — AC-7, AC-8 (đối chứng đỏ).
 - «tách lại không mất dữ liệu» — AC-6, AC-9.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-3: Khi một người có cả tin nghỉ và tin sống, vai người đăng có thể ghi phương pháp parser của tin nghỉ thay vì source_field của tin sống (vai vẫn nằm đúng người).
+  - Ngoài-4: Gõ `--ly-do` mà thiếu `--tach` thì dung-nguoi không báo lỗi mà chạy dựng một lượt rồi ghi.
+  - Ngoài-5: Bàn đo E7 chưa trộn mọi dáng của E1 trên một DB; bất biến AC-7 được chứng ở hàm thuần (E1) và trên dữ liệu thật (E8).
