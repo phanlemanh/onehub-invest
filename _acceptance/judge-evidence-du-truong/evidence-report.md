@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 058bc8db2cc2b043c496ae291bd50de218ec5562
+verified_commit: 2c606de7739996014ef7fa1eb2d6518a965e96fd
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -132,3 +132,7 @@ none — every multi-run eval is uniform (moi eval chay mot lan, deterministic)
 ## Iterations
 
 Round 1: E1, E2, E3, E4, E5, E6 passed; khong judgment item nao, khong eval fail. Baseline A/B bi chan ha tang nen moi field baseline la n-a.
+
+### Re-pin lần 1 — 2026-10-31, do gộp main mới chạm judge-entity.ts và review-can-cu.ts
+run_id: repin-20261031T004719Z-72649
+sha: 2c606de7739996014ef7fa1eb2d6518a965e96fd · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
