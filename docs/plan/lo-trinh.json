@@ -2946,7 +2946,7 @@
       "ma": "KC1",
       "slug": "nhan-bac-model-lon-s03",
       "nhom": "kev-chung-cat-3110",
-      "hang": "T2",
+      "hang": "T3",
       "vai": "nen",
       "tieu_chi": 9,
       "phu": [
@@ -2959,7 +2959,7 @@
         "pipeline/nhan-bac-s03.mjs",
         "pipeline/lib/nhan-bac.mjs"
       ],
-      "ghi_chu": "Bảng nhãn bạc mới cần migration (Claude giữ db/migrations). Model thầy chốt theo kết quả Mạnh thử với ZCode; mặc định Qwen local. Gạt SĐT/định danh tài khoản thu trước khi gửi model cloud; tầng A không rời máy."
+      "ghi_chu": "Bảng nhãn bạc mới cần migration 065 (giám sát giữ số; db/migrations nằm trong t3_paths → T3). Dãy U1, ưu tiên 2, sau RM1. Model thầy chốt theo kết quả Mạnh thử với ZCode; mặc định Qwen local. Gạt SĐT/định danh tài khoản thu trước khi gửi model cloud; tầng A không rời máy."
     }
   ],
   "chan_troi": [
