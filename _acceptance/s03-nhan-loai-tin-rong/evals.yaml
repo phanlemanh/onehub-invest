@@ -1,0 +1,83 @@
+schema_version: 1
+slug: s03-nhan-loai-tin-rong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-1: ma trận viết tay 9 ô (mỗi tín hiệu bán một ô: giá tỷ, «thu về», «cắt lỗ», «hạ giá», «giá tốt», «chuyển nhượng», «bao thuế phí», «BTP», «sổ hồng») → kind sale, nguồn tin-hieu-chu; ô «3400 tỷ thu về» giá 3,4 tỷ; hai ô đối chứng «chuyển nhượng HĐ thuê 2PN 14tr», «2PN giá tốt 12tr» → rent_lt chứ không sale; chiều đỏ: bản đột biến bỏ «thu về» khỏi danh sách → ô «thu về» đỏ ghim «SLT-AC-1 thiếu tín hiệu bán»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-2: ma trận viết tay 7 ô («LBV A 2PN Full nt 14Tr», «S9.03 3PN FULL 14tr», «HÀNG THUÊ MCP 3PN 21tr», «Studio 6tr5», «2PN 10tr/tháng», «pass thẻ 2PN 14tr», «1PN 5,5 triệu») → rent_lt, nguồn don-vi-gia; ô đối chứng «45tr/m2» không thành thuê; chiều đỏ: bản đột biến coi «/m2» là thuê → ô 45tr/m2 đỏ ghim «SLT-AC-2 giá theo m2 thành thuê»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-3: ma trận 5 nhóm viết tay (tên «… CHUYỂN NHƯỢNG» → sale, tên «CHO THUÊ …» → rent_lt, tên «CHO THUÊ - CHUYỂN NHƯỢNG» → cả hai, nhóm chưa tên 25 bài chữ bài 90% bán → sale, nhóm chưa tên 19 bài → cả hai) × bài giá không đơn vị + 2PN 70m2 → đúng kind/rỗng, nguồn boi-canh-nhom; chiều đỏ: bản đột biến hạ ngưỡng 20 bài xuống 1 → nhóm 19 bài đỏ ghim «SLT-AC-3 ngưỡng tỉ lệ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-4: ma trận viết tay 8 ô («Khách sale xem liền căn 2PN», «Kháh xem liền 2PN … TC 2.7tỷ», «Khách em đang ở Vin xem liền 2PN 6,5tr», «Khách e tìm 1pn 5,5tr», «cần mua 2PN 3 tỷ», «cần thuê studio 6tr», «anh chị có căn gửi em 2PN 10tr», «tìm căn 3PN dưới 5 tỷ») → kind rỗng, nguồn bai-cau; đối chứng dương «Có khách cọc, còn 1 căn 2PN 3,1 tỷ thu về» vẫn sale; chiều đỏ: bản đột biến xét tín hiệu bán trước bài cầu → ô «Kháh xem liền» đỏ ghim «SLT-AC-4 bài cầu lọt»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-5: ma trận viết tay 5 ô («ai cần vay 2 tỷ lãi thấp» có tỷ không BĐS, «2PN view hồ đẹp» có BĐS không giá, «xem nhà T7-CN 2PN» không giá, «tuyển sale lương 10tr/tháng» không BĐS → rỗng; «CN 2PN 14tr» → rent_lt chứ không sale); chiều đỏ: bản đột biến thêm CN trần vào tín hiệu bán → ô «CN 2PN 14tr» đỏ ghim «SLT-AC-5 CN thành bán»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-6: bài «cho thuê … 3 tỷ» (parsePost rent_lt) và «bán … 14tr» (parsePost sale) giữ nguyên kind, nguồn chu-bai; chiều đỏ: bản đột biến cho suy loại chạy cả khi kind có sẵn → ô «cho thuê … 3 tỷ» đỏ ghim «SLT-AC-6 đổi loại đã có»; parse.test.mjs chạy trong suite pipeline npm test xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin_doi_chieu
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs]
+    expected: "exit 0; ca SLT-DC-7 trên DB máy thu (BEGIN … ROLLBACK, chỉ in số): sau suy loại, số nhóm gộp có ≥ 2 bài khác bedrooms hoặc khác areaM2 = 0; đối chứng dương: nối hai bài khác PN vào cùng nhóm thì bộ đếm ra ≥ 1; ca viết tay SLT-AC-7 trong pipeline/scripts/transform-zalo-loai-tin.test.mjs: hai bài cùng phường khác PN/DT/giá → khác repostKey"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca SLT-AC-8: hàm đếm nguồn trên bộ bài viết tay trả đúng {chu-bai, tin-hieu-chu, don-vi-gia, boi-canh-nhom, bai-cau, bo} khớp số viết tay; tổng = số bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin_doi_chieu
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs]
+    expected: "exit 0; ca SLT-DC-9 trên DB máy thu (BEGIN … ROLLBACK, chỉ in số): runTransformZalo với suy loại tắt rồi bật trên cùng dữ liệu — tin sale sau gộp tăng ≥ 30%, tin thuê giá ≥ 1 tỷ không tăng, tin sale giá < 300 triệu không tăng; chạy bật rồi tắt trong cùng transaction thì số tin còn sống chỉ gồm bài suy loại = 0 (đối chứng dương: bản đột biến bỏ đối soát thì ra ≥ 1); tập bài cầu mẫu viết tay chèn vào lô thì không bài nào thành tin"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin_doi_chieu
+    paths: [pipeline/label-sample.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs]
+    expected: "exit 0; ca SLT-AC-10 (thuần, 60 bài viết tay 20/20/20 ba tầng, n=12) → 4/4/4, cùng seed cùng kết quả, seed khác khác; ca SLT-DC-10 trên DB máy thu BEGIN … ROLLBACK: lấy lát s03-loai-tin lần một thêm n dòng, lần hai cùng seed thêm 0 dòng, --thu thêm 0 dòng; chiều đỏ: bản đột biến bỏ phân tầng → tỉ lệ lệch đỏ ghim «SLT-AC-10 mẫu không phân tầng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
