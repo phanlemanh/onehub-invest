@@ -2918,6 +2918,27 @@
         "pipeline/sql"
       ],
       "ghi_chu": "Dãy P4. Dưới mục tiêu cỡ: một phép đo hẹp. Nên giao trước HD13 để có số đối chứng."
+    },
+    {
+      "dung_tren": [],
+      "dot": "ra-mat-0511",
+      "ma": "RM1",
+      "slug": "s03-nhan-loai-tin-rong",
+      "nhom": "ra-mat-0511",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "phu": [
+        "RM1"
+      ],
+      "cau_giao": "Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo bối cảnh nhóm và đơn vị giá, vẫn loại bài khách tìm nhà",
+      "bat_khi": "Trên mẫu gắn nhãn: recall tin bán S03 tăng so với trước, precision không giảm, bài cầu (khách cần/tìm/xem) vẫn bị loại",
+      "vi_sao": "parsePost chỉ nhận chữ «bán»/«cho thuê» nên loại 72% bài S03 (25.415/35.359); mẫu 3 ngày có 306 bài giá tỷ + dấu hiệu BĐS bị bỏ (~100/ngày). Mục tiêu ra mắt 05/11: S03 200 tin mới/ngày (ROADMAP).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/label-sample.mjs"
+      ],
+      "ghi_chu": "Dãy U1, ưu tiên 1 (giám sát 31/10, Mạnh «Giao U1 sửa»). Chạy song song P4 sdt-luu-goc-e164 (cùng tệp, khác hàm)."
     }
   ],
   "chan_troi": [
@@ -3391,6 +3412,16 @@
         "HD15"
       ],
       "mo_lai_khi": "Có ít nhất 30 cặp có ảnh hai bên đã có nhãn của người duyệt (sau HD10 và HD13)"
+    },
+    {
+      "ma": "RM2",
+      "dot": "ra-mat-0511",
+      "cau_giao": "Người duyệt khai và sửa mục đích nhóm S03 (bán / thuê / cả hai) ở /ops",
+      "ly_do": "Cần cột mới ở sổ nhóm (migration) và màn /ops — ngoài vùng giao cho RM1",
+      "phu": [
+        "RM2"
+      ],
+      "mo_lai_khi": "RM1 đã giao và đo được tỉ lệ nhóm bị suy sai mục đích"
     }
   ],
   "da_bac": []
