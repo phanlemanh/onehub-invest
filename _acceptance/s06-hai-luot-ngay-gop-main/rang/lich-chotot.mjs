@@ -95,7 +95,11 @@ if (boBanCai) {
   if (JSON.stringify(ban) !== JSON.stringify(goc)) { console.error(`AC-3: bản cài lệch bản kho\n cài: ${JSON.stringify(ban)}\n kho: ${JSON.stringify(goc)}`); process.exit(1); }
   const uid = execFileSync("id", ["-u"], { encoding: "utf8" }).trim();
   const p = execFileSync("launchctl", ["print", `gui/${uid}/com.oneinvest.chotot`], { encoding: "utf8" });
-  const moc = [...p.matchAll(/"Minute" => (\d+)\s+"Hour" => (\d+)/g)].map(([, m, h]) => `${h.padStart(2, "0")}:${m.padStart(2, "0")}`).sort();
+  // tách từng khối descriptor rồi đọc tập khoá: khối có khoá ngoài Hour/Minute (Weekday, Day…) hay thiếu một trong hai → đỏ
+  const khoi = [...p.matchAll(/descriptor = \{([^}]*)\}/g)].map(([, t]) => Object.fromEntries([...t.matchAll(/"(\w+)" => (\d+)/g)].map(([, k, v]) => [k, +v])));
+  const la = khoi.filter((d) => Object.keys(d).sort().join(",") !== "Hour,Minute");
+  if (la.length) { console.error(`AC-3: launchd giữ mốc có khoá lạ ${JSON.stringify(la)}`); process.exit(1); }
+  const moc = khoi.map((d) => `${String(d.Hour).padStart(2, "0")}:${String(d.Minute).padStart(2, "0")}`).sort();
   if (moc.join(",") !== "05:30,14:00") { console.error(`AC-3: launchd giữ mốc [${moc}] ≠ 05:30,14:00`); process.exit(1); }
   console.log(`bản cài: khớp bản kho (thay __ROOT__) · launchd giữ ${moc.join(" + ")}`);
 }
