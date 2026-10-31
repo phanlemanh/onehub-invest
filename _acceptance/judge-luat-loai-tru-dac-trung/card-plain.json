@@ -2,12 +2,12 @@
   "feature_plain": "Máy chấm cặp tin «cùng một căn?» sẽ kết luận «khác căn» ngay khi hai tin khác nhau rõ ở một đặc trưng nhà (phòng ngủ, WC, đường, mã căn, tầng, diện tích), và ghi đặc trưng nào khác lên thẻ.",
   "will_do": [
     {"id": "AC-1", "p": "Sẽ ra «khác căn» khi phòng ngủ, WC, đường, mã căn hay tầng có ở cả hai tin mà khác nhau."},
-    {"id": "AC-2", "p": "Sẽ ra «khác căn» khi diện tích hai tin lệch từ 1,5% trở lên."},
+    {"id": "AC-2", "p": "Sẽ ra «khác căn» khi diện tích lệch quá 1 m² (làm tròn); với căn hộ, phải lệch quá cả 1 m² lẫn 10% (tim tường hay thông thủy)."},
     {"id": "AC-3", "p": "Sẽ ghi đúng đặc trưng nào khác, kèm số hai bên, vào lý do trên thẻ."},
     {"id": "AC-4", "p": "Sẽ coi các cách viết khác nhau của cùng một đường là một đường."},
     {"id": "AC-8", "p": "Sẽ coi «Tầng 12» và «12», «A1» và «a1» là giống nhau."},
     {"id": "AC-5", "p": "Sẽ sửa ma trận thử của luật cũ cho khớp luật mới."},
-    {"id": "AC-6", "p": "Sẽ cho ra «khác căn» ở cả 11 thẻ anh đã từ chối, và không loại thẻ #23 anh đã nhận."},
+    {"id": "AC-6", "p": "Sẽ cho ra «khác căn» ở 9/11 thẻ anh đã từ chối (hai thẻ chỉ lệch 1 m² để anh duyệt tay), và không loại thẻ #23."},
     {"id": "AC-7", "p": "Sẽ đổi phiên bản luật thành pl25-2."}
   ],
   "wont_do": [

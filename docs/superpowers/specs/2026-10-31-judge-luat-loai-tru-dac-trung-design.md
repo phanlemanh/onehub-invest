@@ -39,10 +39,12 @@ căn duy nhất có diện tích bằng nhau.
    - đường (`street_raw`): khoá đường bỏ tiền tố «Đường/Phố/Đ.», bỏ dấu và hoa — khoá khác nhau;
    - mã căn (`block_raw`): khoá bỏ hoa và khoảng trắng — khác nhau;
    - tầng (`floor_raw`): số rút từ chuỗi — khác nhau;
-   - diện tích: lệch từ ngưỡng chặt `NGUONG.dienTichNoMin = 0,015` (1,5%) trở lên. Ngưỡng nằm dưới mức nhỏ nhất Mạnh ghi
-     khác (1,9%), trên sai số làm tròn nửa m² ở căn 50 m² (1%) — Hỏi-1.
-2. «Cùng căn» chỉ ra khi không có lý do loại nào và diện tích lệch dưới ngưỡng chặt (thay 10%), cộng các điều kiện giá/m²,
-   phường, loại hình như cũ.
+   - diện tích (Mạnh chốt ở Cổng Phạm vi 31/10, thay Hỏi-1 bản phần trăm): so theo sai số làm tròn và cách đo, không
+     theo phần trăm. Lệch không quá `NGUONG.dienTichLamTronM2 = 1` m² coi là bằng nhau (40,5 m² có thể ghi 40 hay 41).
+     Cặp có ít nhất một bên là căn hộ (`apartment`) — diện tích tim tường hay thông thủy — chỉ loại khi lệch vượt cả 1 m²
+     lẫn `NGUONG.dienTichCanHoMax = 0,1` (10%).
+2. «Cùng căn» chỉ ra khi không có lý do loại nào và diện tích nằm trong sai số (thay ngưỡng 10% cũ), cộng các điều kiện
+   giá/m², phường, loại hình như cũ.
 3. Lý do loại đi vào `ly_do` của kết quả. `judge-run` đã ghi `ly_do` vào `evidence.cham` của thẻ, nên đặc trưng khác hiện
    trong evidence mà không phải sửa `judge-run.ts` (HD3 của P3 đang sửa tệp đó). `cau` của lý do không mang số (luật cũ
    AC-2: số không vào prompt), số đo ở `so`.
@@ -61,11 +63,7 @@ hàng P1 `dac-trung-nha-s06-len-canonical` (HD5) đưa lên canonical; ghi chú 
 
 Không chạm giao diện (dòng sổ «bỏ đặc-tả-UX»).
 
-## Hình — Hỏi-1 (ngưỡng diện tích chặt)
+## Áp lên 12 thẻ đã quyết
 
-```mermaid
-flowchart LR
-  Q{"Diện tích hai tin lệch bao nhiêu thì «khác căn»?"}
-  Q -->|"(khuyên) từ 1,5%"| A["11/11 thẻ Mạnh từ chối ra «khác căn»<br/>#23 (cùng căn) không bị loại<br/>sửa ma trận PL25: ô «dt 4% → yes» thành «dt bằng nhau → yes»"]
-  Q -->|"giữ như cũ (chỉ «chưa chắc» từ 10%)"| B["4/11 thẻ từ chối ra «khác căn»<br/>không đạt câu bật khi «≥ 9/10»<br/>ma trận PL25 giữ nguyên"]
-```
+Luật diện tích theo làm tròn: 9/11 thẻ từ chối ra «khác căn» (14, 16, 17, 18, 19, 20, 21, 22, 24); thẻ 13 (52 ↔ 51) và
+15 (53 ↔ 52) chỉ lệch 1 m² và tin A không có đặc trưng khác, nên luật để «chưa chắc»; #23 (45 ↔ 45) không bị loại.
