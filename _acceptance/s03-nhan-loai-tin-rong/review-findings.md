@@ -1,39 +1,43 @@
 ## Trong hợp đồng
 
-- suyLoai xếp tin bán thành cho thuê khi chữ bài có «tháng» (bàn giao/ân hạn), kể cả khi giá là tr/m² hoặc đồng ≥ 1 tỷ
-  AC: AC-2
-  file: `pipeline/transform-zalo.mjs:326`
-  severity: high
-  source: bugs
-  detail: Điều kiện `giaThue || (DON_VI_THUE.test(so) && !coTy)` chỉ loại trừ chữ «tỷ». DON_VI_THUE gồm `\btháng\b` trần, mà chữ này rất hay có trong tin bán («bàn giao tháng 12», «hỗ trợ lãi suất 0% 18 tháng», «nhận nhà tháng 11»). Nhánh này lại chạy TRƯỚC tín hiệu bán và bối cảnh nhóm, nên vẫn thắng ngay cả trong nhóm bán. Chạy suyLoai(parsePost(t), t, "sale") cho thấy: (1) «Căn hộ 2PN 70m2 giá 45tr/m2, bàn giao tháng 12» ra {kind: rent_lt, nguon: don-vi-gia}, giá/m² 45 triệu. lyDoGiaPhiLy chỉ xét priceVnd (đang null) nên bài lọt qua, có giá nên đạt confidence medium và được ghi thành tin THUÊ mang price_perm2 = 45 triệu. Tin rác này đi thẳng vào sale_offers mà không có cảnh báo nào. (2) «Căn 2PN 70m2 giá 3.200.000.000 sổ hồng, nhận nhà tháng 11» cũng ra rent_lt, dù có tín hiệu bán «sổ hồng». Sau đó bài bị gạt im lặng vào ô «thue-tu-1-ty», nên một tin bán hợp lệ bị mất, và con số đó lại bị đếm như lỗi giá chứ không phải lỗi phân loại. Cách sửa: không suy ra thuê khi đã có pricePerm2Vnd hoặc priceVnd ≥ 1e9; với «tháng» trần thì chỉ nhận khi đi liền sau giá (dạng /tháng, tr/tháng). Có thể cân nhắc xét tín hiệu bán trước đơn vị thuê.
-  rationale: AC-2 chỉ cho nhận thuê khi giá không kèm /m² và bài không có chữ «tỷ»; hai ca lỗi vi phạm đúng các điều kiện này (và đè tín hiệu bán của AC-1).
-
-- Assertion âm-tính-một-mình (hình dạng 4): «tin thuê ≥ 1 tỷ không tăng» trong SLT-DC-9 luôn đúng, kể cả khi suy loại sai
-  AC: AC-9
-  file: `pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs:322`
+- **DAU_HIEU_BDS coi «<số> năm/nữ/nét…» là dấu hiệu BĐS vì \b của JS không nhận chữ có dấu**
+  AC: AC-5
+  file: `pipeline/transform-zalo.mjs:254`
   severity: medium
-  source: measurement
-  detail: Dòng 322 kiểm `assert.ok(bat.thue_tu_1_ty <= tat.thue_tu_1_ty, ...)`, trong đó `thue_tu_1_ty` đếm `kind = 'rent_lt' AND price_vnd >= 1e9` trong view `sale_offers` (demS03, dòng 279-283). Nhưng trong runTransformZalo (pipeline/transform-zalo.mjs:520-521), bước lọc `lyDoGiaPhiLy` (dòng 454-456, `GIA_THUE_TRAN = 1e9` ở dòng 450) đã bỏ mọi bài rent_lt có priceVnd >= 1e9 trước khi ghi offer, và chạy sau suyLoai ở cả hai lượt tắt/bật. Vì vậy số này bằng 0 ở cả hai lượt, độc lập với suy loại: bản suy loại gán nhầm hàng loạt bài giá tỷ thành rent_lt vẫn làm phép đo xanh. Ca này không có đối chứng dương (không có bản đột biến nào, không có mồi nào cho thấy bộ đếm có thể ra số > 0), nên phần «tin thuê giá ≥ 1 tỷ không tăng» của AC-9/E9 thực ra không được đo. Muốn đo thật thì phải đếm trước bước lọc, ví dụ đọc `kq.loaiGiaPhiLy['thue-tu-1-ty']` của hai lượt.
-  rationale: AC-9 nêu đích danh điều kiện «tin thuê giá ≥ 1 tỷ không tăng» trên DB thật; phép đo mô tả luôn ra 0 nên điều kiện này chưa được kiểm thật.
+  source: bugs
+  detail: Nhánh `\d+\s*n\s*\+?\s*\d?\b` trong DAU_HIEU_BDS dùng để bắt «2n», «2n1». Nhưng `\b` của JS chỉ hiểu ký tự ASCII, kể cả khi có cờ u/i, nên chữ có dấu như ă/ữ/é bị coi là ký tự ngoài từ, và ranh giới từ vẫn khớp ngay sau chữ «n». Hệ quả là «5 năm», «1 năm», «3 nữ» đều được tính là dấu hiệu BĐS. Cửa vào của suyLoai (bắt buộc có giá + dấu hiệu BĐS) vì thế mở cho bài không phải BĐS. Đã chạy thử: coDauHieuBds("Cho vay 500tr thời hạn 1 năm, thu về lãi") = true, và suyLoai trả { kind: 'rent_lt', nguon: 'don-vi-gia' }. Bài cho vay này thành tin thuê và được ghi vào sale_offers mà không có dòng log nào báo. Cách sửa: thay `\b` bằng lookahead âm có chữ có dấu, ví dụ `(?![a-zà-ỹđ])`, giống cách CO_TY đang làm.
+  rationale: AC-5 yêu cầu bài thiếu dấu hiệu BĐS không được nhận thành tin; bài cho vay «1 năm» bị nhận thành tin thuê nên AC-5 thất bại.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **SLT-DC-10 sẽ đỏ vĩnh viễn ngay khi lát s03-loai-tin được lấy mẫu thật trên DB máy thu**
+- **Hình dạng 4 (âm tính một mình): «tin bán < 300 triệu không tăng» trên DB không có mồi đối chứng dương**
+  Người dùng thấy gì: Kiểm tra trên dữ liệu thật chưa chứng minh được rằng sàn giá chặn tin bán dưới 300 triệu, vì có thể lô thật không có bài nào rơi vào dải đó. Người dùng vẫn được bảo vệ bởi luật sàn giá đã kiểm ở mức ma trận viết tay.
+  Căn cứ: Hậu quả nhẹ: không làm mất hay lộ dữ liệu, chỉ là bằng chứng đo chưa chặt, và bổ sung bài đối chứng sau này rẻ, không ảnh hưởng người dùng.
+  file: `pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): SLT-DC-10 kiểm phân tầng bằng số `moiTang` do chính layMau tự báo, không kiểm các dòng đã ghi**
+  Người dùng thấy gì: Việc kiểm mẫu gắn nhãn chia ba tầng bằng nhau trên dữ liệu thật dựa vào số tự khai của công cụ lấy mẫu, chưa đọc lại các dòng đã ghi. Nếu công cụ ghi sai tầng mà vẫn báo đúng thì kiểm tra không phát hiện.
+  Căn cứ: Hậu quả nhẹ: chỉ ảnh hưởng độ tin cậy của mẫu chấm nhãn nội bộ, không đụng dữ liệu người dùng, và người dùng có thể chạy lại lấy mẫu để thử lại.
+  file: `pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **SLT-DC-10 sẽ đỏ vĩnh viễn ngay khi lát s03-loai-tin được lấy mẫu thật trên DB máy thu (r1 · tệp đã đổi)**
   Người dùng thấy gì: Sau khi lấy mẫu thật để gắn nhãn, một ca kiểm tự động sẽ báo đỏ dù tính năng vẫn đúng. Người dùng không thấy gì khác lạ, chỉ người vận hành thấy báo động giả.
   Căn cứ: Không ảnh hưởng dữ liệu hay người dùng cuối, chỉ gây báo đỏ giả cho người vận hành; sửa lúc nào cũng rẻ.
   file: `pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **YEU_CAU gạt nhầm câu mời xem nhà rất thường gặp của người bán («Khách thiện chí xem nhà…») thành Yêu cầu**
+- **YEU_CAU gạt nhầm câu mời xem nhà rất thường gặp của người bán («Khách thiện chí xem nhà…») thành Yêu cầu (r1 · tệp đã đổi)**
   Người dùng thấy gì: Một số tin bán có câu mời «khách thiện chí xem nhà» sẽ bị coi là người mua tìm nhà và không thành tin bán. Người dùng thấy thiếu một phần tin bán.
   Căn cứ: Chỉ làm hụt một phần tin bán, không mất dữ liệu gốc vì bài vẫn còn nguyên và có thể nhận lại khi chỉnh luật.
   file: `pipeline/transform-zalo.mjs`
   severity: medium
   Đề xuất: known-limits
-
-## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

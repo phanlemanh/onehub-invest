@@ -1,19 +1,16 @@
 ---
 schema_version: 2
 feature_slug: s03-nhan-loai-tin-rong
-verdict: REJECT
+verdict: PASS
 failed_evals: []
-reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c69263a8279772b2c2608f76b06f44dc1eed7be8
+verified_commit: 4f05a25cfa6cb48002e9d44b7f378d095a3d8712
 human_signoff:
 ---
 
 # Evidence Report: s03-nhan-loai-tin-rong
-
-Lý do REJECT: mọi eval của hợp đồng (E1–E10) đều xanh, nhưng lệnh suite hồi quy `cd app && npm test` đỏ và không gắn eval nào (xem khối suite bên dưới). Một test của làn app (ON12-AC-7, trang /ops còn chữ thô «da-nang (chưa có tên Việt)») thất bại; cần người xác định đây là hồi quy do nhánh này hay đã đỏ sẵn trên main trước khi cho qua.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -31,137 +28,136 @@ Lý do REJECT: mọi eval của hợp đồng (E1–E10) đều xanh, nhưng l�
 ## Evidence
 
 - eval: E1
-  run_id: minted-s03-nhan-loai-tin-rong-E1-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E2
-  run_id: minted-s03-nhan-loai-tin-rong-E2-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E3
-  run_id: minted-s03-nhan-loai-tin-rong-E3-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E4
-  run_id: minted-s03-nhan-loai-tin-rong-E4-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E5
-  run_id: minted-s03-nhan-loai-tin-rong-E5-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E6
-  run_id: minted-s03-nhan-loai-tin-rong-E6-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E8
-  run_id: minted-s03-nhan-loai-tin-rong-E8-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    ℹ duration_ms 89.51225
+    ℹ duration_ms 82.332709
 
 - eval: E7
-  run_id: minted-s03-nhan-loai-tin-rong-E7-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin_doi_chieu
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs
-    ℹ duration_ms 22839.916167
+    ℹ duration_ms 18470.02525
 
 - eval: E9
-  run_id: minted-s03-nhan-loai-tin-rong-E9-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin_doi_chieu
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs
-    ℹ duration_ms 22839.916167
+    ℹ duration_ms 18470.02525
 
 - eval: E10
-  run_id: minted-s03-nhan-loai-tin-rong-E10-r1
+  run_id: minted-s03-nhan-loai-tin-rong-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.s03_loai_tin_doi_chieu
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
   output: |
     cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs
-    ℹ duration_ms 22839.916167
+    ℹ duration_ms 18470.02525
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__bb6271-r1
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-lint-r1
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
 
 - cmd: cd app && npm test
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-10-31T11:45:58Z
-  note: 758 test, 757 đạt, 1 đỏ — tests/ops-nhan-theo-context.test.tsx «ON12-AC-7 mọi giá trị đang có trên DB local có nhãn»: trang /ops còn chữ thô «da-nang (chưa có tên Việt)». Lệnh không gắn eval nào.
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-10-31T11:57:28Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__13563d-r1
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-test_lint_rules-r1
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-s03-nhan-loai-tin-rong-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-s03-nhan-loai-tin-rong-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T11:45:58Z
+  verified_at: 2026-10-31T11:57:28Z
 
 ## Known limits
 
@@ -169,16 +165,15 @@ Lý do REJECT: mọi eval của hợp đồng (E1–E10) đều xanh, nhưng l�
 
 ## Analyst
 
-none — không eval nào xanh ở cả hai phía (baseline không đo được, xem bên dưới); lệnh suite xanh-cả-hai-phía là hồi quy bình thường.
+carried tư round 1 — baseline khong do lai round nay (evals.yaml không đổi từ lần baseline cuối, round 1).
 
-Baseline khong do
-- cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs: bo qua baseline: tep pipeline/scripts/transform-zalo-loai-tin.test.mjs co o cay dang kiem nhung chua co o merge-base a404af391c6ceb23b598a903418d01d7c92cc9b8 — eval moi, chay tren code cu khong phan biet gi
-- cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs: bo qua baseline: tep pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs co o cay dang kiem nhung chua co o merge-base a404af391c6ceb23b598a903418d01d7c92cc9b8 — eval moi, chay tren code cu khong phan biet gi
+Eval không-phân-biệt: none. Lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval chạy một lần, xác định, không có phương sai.
 
 ## Iterations
 
-Round 1: không eval nào đỏ; lệnh suite `cd app && npm test` đỏ (ON12-AC-7, chữ thô «da-nang (chưa có tên Việt)» trên /ops), không gắn eval nào. Verdict REJECT; cần xác định hồi quy hay đỏ sẵn trên main.
+Round 1: đã chấm, lịch sử xem run-log.jsonl.
+Round 2: toàn bộ eval E1 đến E10 và các lệnh suite đều xanh; không còn eval hỏng.

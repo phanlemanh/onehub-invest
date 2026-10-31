@@ -5,7 +5,7 @@ slug: s03-nhan-loai-tin-rong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-s03-nhan-loai-tin-rong-design.md
