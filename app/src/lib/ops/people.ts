@@ -30,6 +30,8 @@ export type NguoiHang = {
   ten: string | null
   taiKhoan: string | null
   sdtBam: string | null
+  /** Loại bí danh của `sdtBam`: `sdt` (số gốc E.164, che cố định) hay `sdt_bam` (đời trước). */
+  sdtKind: "sdt" | "sdt_bam"
 }
 
 export type DanhSachNguoi = { rows: NguoiHang[]; total: number; page: number; pages: number }
@@ -69,11 +71,16 @@ export function laMoiGioi(soTin: number): boolean {
 }
 
 /**
- * Giá trị bí danh để hiện: vai dưới Vận hành → null (ẩn); SĐT băm → 8 ký tự đầu; tên và tài khoản đi qua bộ che tên
+ * Giá trị bí danh để hiện: vai dưới Vận hành → null (ẩn); SĐT băm → 8 ký tự đầu; SĐT số gốc (`sdt`, E.164) → nhãn che
+ * cố định, 0 chữ số, mọi vai (SD3 Hỏi-2 — hàng U1 people-hien-so-goc mở số); tên và tài khoản đi qua bộ che tên
  * nguồn chung (một tên người bán S06 ở máy thu chứa tên nguồn thật) — danh sách tên rỗng thì «—» (đóng chặt).
  */
+/** Nhãn hiện thay số gốc tới khi U1 mở (Hỏi-2): không chữ số nào của số. */
+export const NHAN_CHE_SDT = "SĐT (đã che)"
+
 export function hienBiDanh(kind: string, value: string, entries: SourceNameEntry[], xem: boolean): string | null {
   if (!xem) return null
+  if (kind === ALIAS_KIND.sdt) return NHAN_CHE_SDT
   if (kind === ALIAS_KIND.sdt_bam) return `${value.slice(0, 8)}…`
   return maskSourceNames(value, entries) ?? "—"
 }
@@ -137,7 +144,8 @@ export async function danhSachNguoi(loc: LocNguoi, q: Q = pool): Promise<DanhSac
         soBiDanh: ds.length,
         ten: dau(ds, "ten"),
         taiKhoan: dau(ds, "tai_khoan_nguon"),
-        sdtBam: dau(ds, "sdt_bam"),
+        sdtBam: dau(ds, "sdt") ?? dau(ds, "sdt_bam"),
+        sdtKind: dau(ds, "sdt") != null ? "sdt" : "sdt_bam",
       }
     }),
   }
