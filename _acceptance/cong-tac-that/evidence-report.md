@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fcbdb1af32044dfff9b766419bfb36156a62e5f5
+verified_commit: 4819c9ceb992643c00d90dad5df0f834daf688bc
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -296,3 +296,7 @@ Round 3 (`59652aaf`): E3 và au3_chotot đã sửa. E10 FAIL vì harness au3 th�
 Round 4 (`fcbdb1af`, Mạnh đồng ý mở): harness au3 nhận diện CLI bằng độ dài argv, nên E10 xanh 307/307. 11/11 eval PASS. AC-9
 theo cách đọc đã ghi sổ: nhánh thêm 0 đỏ so với main và sửa 2 thước đỏ có sẵn. Còn năm thước đỏ có sẵn giống hệt main, chờ
 người xác nhận ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-31, do ghim lại sau Cổng 2 cong-tac-that: harness au3 bắt kịp main + revisit hồ sơ đã ký
+run_id: repin-20261031T031750Z-45355
+sha: 4819c9ceb992643c00d90dad5df0f834daf688bc · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
