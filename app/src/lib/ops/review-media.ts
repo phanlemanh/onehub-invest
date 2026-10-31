@@ -1,26 +1,28 @@
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
-import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
+import { xemNoiDungTin } from "@/lib/ops-access";
 
-import { snapshotMediaUrl } from "./zalo-media";
+import { mediaKeyUrl, snapshotMediaUrl } from "./zalo-media";
 
 /**
  * Ảnh tin cho thẻ ở hàng duyệt /ops/review và hồ sơ tin của /ops/data-flow — người duyệt nhìn ảnh để quyết
  * (vd. E1 ghi «đất» mà ảnh là nhà 4 tầng). Chỉ DB máy thu: bảng `media` không sync cloud.
- * Vai (PL3, AGENTS.md luật 6): ảnh ĐÃ TẢI về máy thu tới vai Vận hành trở lên (`xemNoiDungTin`); URL gốc mang tên miền
- * nguồn thật (tầng A) chỉ tới quản trị viên — vai Vận hành nhận số ảnh bị giữ lại ở `chiGoc` để thẻ nói ra.
+ * Vai (PL3, AGENTS.md luật 6; anh-goc-qua-may-chu): ảnh tới vai Vận hành trở lên (`xemNoiDungTin`), mọi vai đó nhận
+ * cùng một kết quả. URL gốc mang tên miền nguồn thật (tầng A) KHÔNG xuống trình duyệt ở vai nào — ảnh chỉ có URL gốc đi
+ * qua máy chủ theo `media_key`. `chiGoc` chỉ còn đếm dòng không có khoá đúng khuôn (thẻ nói ra thay vì im).
  *
  * Nguồn: bảng `media` (053, RESO Media; NH1 media-canonical-reso) do pipeline/transform-media.mjs dựng mỗi đêm
  * cho S03, S05, S06 theo `media_order`:
- *   1. dòng có `local_file` — ảnh đã tải vào raw snapshot → qua /api/zalo-media
- *   2. dòng chỉ có `media_url` — URL gốc, fbcdn/zdn có hạn
- *   3. `evidence.*.image_url` của thẻ mẫu, đứng cuối
+ *   1. dòng có `local_file` — ảnh đã tải vào raw snapshot → `/api/zalo-media?snapshot=`
+ *   2. dòng chỉ có `media_url` — máy chủ lấy hộ → `/api/zalo-media?media=<media_key>`
+ * Ảnh mẫu `evidence.*.image_url` (không có khoá) thôi đưa xuống client.
  * `buildOfferImages` (ghép từ bài) giữ làm thước đối chiếu: bên ghi dựng dòng media theo đúng luật của nó.
  */
 
 export type ReviewImage = {
   src: string;
-  origin: "local" | "remote";
+  /** local: ảnh đã tải; proxy: máy chủ lấy hộ theo media_key; remote: URL gốc (chỉ `buildOfferImages`, thước đối chiếu). */
+  origin: "local" | "proxy" | "remote";
   /** URL gốc có hạn (fbcdn S05, zdn S03) — hết hạn thì UI hiện trạng thái ảnh hỏng. */
   expiring: boolean;
 };
@@ -28,7 +30,7 @@ export type ReviewImage = {
 /** Bên của thẻ: entity_match Tin A/Tin B; agent_output tin được bổ sung. */
 export type MediaSide = "offer_a" | "offer_b" | "offer";
 
-/** Ảnh theo bên; `chiGoc` = số ảnh chỉ có URL gốc mà vai người xem không được nhận (chỉ có ở vai dưới quản trị). */
+/** Ảnh theo bên; `chiGoc` = số dòng chỉ có URL gốc mà không có khoá đúng khuôn — không lấy hộ được. */
 export type ReviewMedia = Partial<Record<MediaSide, ReviewImage[]>> & { chiGoc?: Partial<Record<MediaSide, number>> };
 
 export type PostMediaRow = {
@@ -41,7 +43,7 @@ export type PostMediaRow = {
 export type ReviewMediaItem = { id: number; item_type: string; evidence: unknown };
 
 /** Một dòng bảng `media` mà bên đọc cần, theo `media_order` của tin. */
-export type MediaRow = { offer_id: string; media_url: string | null; local_file: string | null };
+export type MediaRow = { offer_id: string; media_key: string | null; media_url: string | null; local_file: string | null };
 
 export type MediaRowQuery = (text: string, values: unknown[]) => Promise<{ rows: MediaRow[] }>;
 
@@ -112,8 +114,12 @@ function localMediaSrc(localFile: string | null): string | null {
   return cut > 0 ? snapshotMediaUrl(localFile.slice(0, cut), localFile.slice(cut + 1)) : null;
 }
 
-/** Danh sách ảnh của một tin từ dòng `media` (đã theo media_order): ảnh đã tải trước, rồi URL gốc; không trùng; tối đa 12. */
-export function buildMediaImages(rows: MediaRow[], evidenceImageUrl?: unknown): ReviewImage[] {
+/** Dòng chỉ có URL gốc mà không có khoá đúng khuôn — không lấy hộ được. */
+export const khongLayHoDuoc = (r: MediaRow) => !localMediaSrc(r.local_file) && Boolean(r.media_url) && !mediaKeyUrl(r.media_key ?? "");
+
+/** Danh sách ảnh của một tin từ dòng `media` (đã theo media_order): ảnh đã tải trước, rồi ảnh lấy hộ theo khoá; không
+ *  trùng; tối đa 12. Không bao giờ trả URL gốc. */
+export function buildMediaImages(rows: MediaRow[]): ReviewImage[] {
   const out: ReviewImage[] = [];
   const seen = new Set<string>();
   const push = (img: ReviewImage | null) => {
@@ -123,18 +129,18 @@ export function buildMediaImages(rows: MediaRow[], evidenceImageUrl?: unknown): 
   };
   for (const r of rows) {
     const src = localMediaSrc(r.local_file);
-    if (!src) continue;
-    push({ src, origin: "local", expiring: false });
-    const orig = remoteImage(r.media_url);
-    if (orig) seen.add(orig.src);
+    if (src) push({ src, origin: "local", expiring: false });
   }
-  for (const r of rows) if (!localMediaSrc(r.local_file)) push(remoteImage(r.media_url));
-  push(remoteImage(evidenceImageUrl));
+  for (const r of rows) {
+    if (localMediaSrc(r.local_file) || !r.media_url) continue;
+    const src = mediaKeyUrl(r.media_key ?? "");
+    if (src) push({ src, origin: "proxy", expiring: false });
+  }
   return out;
 }
 
 const MEDIA_SQL = `
-  SELECT resource_record_key AS offer_id, media_url, local_file
+  SELECT resource_record_key AS offer_id, media_key, media_url, local_file
   FROM media
   WHERE resource_record_key = ANY($1::text[])
   ORDER BY resource_record_key, media_order`;
@@ -149,25 +155,25 @@ export async function loadOfferMedia(offerIds: string[], query: MediaRowQuery = 
   return byOffer;
 }
 
-type Side = { key: MediaSide; offerId: string; imageUrl: unknown };
+type Side = { key: MediaSide; offerId: string };
 
 function sidesOf(item: ReviewMediaItem): Side[] {
   const ev = record(item.evidence);
   if (item.item_type === "entity_match") {
     return (["offer_a", "offer_b"] as const).flatMap((key) => {
       const o = record(ev[key]);
-      return typeof o.offer_id === "string" ? [{ key, offerId: o.offer_id, imageUrl: o.image_url }] : [];
+      return typeof o.offer_id === "string" ? [{ key, offerId: o.offer_id }] : [];
     });
   }
   if (item.item_type === "agent_output" && typeof ev.offer_id === "string") {
-    return [{ key: "offer", offerId: ev.offer_id, imageUrl: undefined }];
+    return [{ key: "offer", offerId: ev.offer_id }];
   }
   return [];
 }
 
 /**
  * Bản `evidence` gửi xuống client: bỏ `image_url` của từng bên. Ảnh tới thẻ chỉ qua
- * `loadReviewMedia` (chỉ admin) — để nguyên thì URL ảnh nằm trong dữ liệu trang của mọi role ops.
+ * `loadReviewMedia` (theo khoá, không URL gốc) — để nguyên thì URL ảnh nằm trong dữ liệu trang của mọi role ops.
  */
 export function stripEvidenceImages(evidence: unknown): Record<string, unknown> {
   const ev = { ...record(evidence) };
@@ -183,7 +189,8 @@ export function stripEvidenceImages(evidence: unknown): Record<string, unknown> 
 
 /**
  * Ảnh cho từng thẻ, khoá theo `review_queue.id`. Một truy vấn cho cả hàng duyệt.
- * Vai dưới Vận hành → `{}` (không chạm DB). Vai Vận hành → chỉ ảnh đã tải, kèm `chiGoc`. DB thiếu bảng `media` → `{}`.
+ * Vai dưới Vận hành → `{}` (không chạm DB). Vai Vận hành trở lên → ảnh đã tải + ảnh lấy hộ, kèm `chiGoc` khi có dòng
+ * không lấy hộ được. DB thiếu bảng `media` → `{}`.
  */
 export async function loadReviewMedia(
   items: ReviewMediaItem[],
@@ -191,7 +198,6 @@ export async function loadReviewMedia(
   query: MediaRowQuery = defaultMediaQuery,
 ): Promise<Record<number, ReviewMedia>> {
   if (!xemNoiDungTin(user)) return {};
-  const admin = isAdmin(user);
   const plan = items.map((item) => ({ id: item.id, sides: sidesOf(item) })).filter((p) => p.sides.length > 0);
   if (plan.length === 0) return {};
 
@@ -208,14 +214,9 @@ export async function loadReviewMedia(
   for (const { id, sides } of plan) {
     const media: ReviewMedia = {};
     for (const s of sides) {
-      const all = buildMediaImages(byOffer.get(s.offerId) ?? [], s.imageUrl);
-      if (admin) {
-        media[s.key] = all;
-        continue;
-      }
-      const local = all.filter((img) => img.origin === "local");
-      media[s.key] = local;
-      const giu = all.length - local.length;
+      const rows = byOffer.get(s.offerId) ?? [];
+      media[s.key] = buildMediaImages(rows);
+      const giu = rows.filter(khongLayHoDuoc).length;
       if (giu > 0) media.chiGoc = { ...media.chiGoc, [s.key]: giu };
     }
     out[id] = media;
