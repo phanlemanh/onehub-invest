@@ -18,7 +18,7 @@ function khoaGia() {
 let soTin = 0;
 const tin = (source, o = {}) => ({
   offer_id: `o${++soTin}`, source, originating_system_key: `k${soTin}`, seller_ref: null, seller_name: null,
-  seller_phone_hash: null, post_ids: [], first_seen: `2026-10-${String(soTin).padStart(2, "0")}T00:00:00Z`, retired_at: null, ...o,
+  seller_phone: null, post_ids: [], first_seen: `2026-10-${String(soTin).padStart(2, "0")}T00:00:00Z`, retired_at: null, ...o,
 });
 const bai = (rows) => new Map(rows.map(([post_id, source, sender_id, sender_name = null]) => [post_id, { source, sender_id, sender_name }]));
 /** Người giữ bí danh (S0x, kind, value) trong bộ bí danh. */
@@ -39,7 +39,7 @@ function giaiNguoiGanSdt(tins, biDanh, o) {
   for (const t of tins) {
     const d = rutDinhDanh(t, o.baiTheoId);
     if (d.taiKhoan.length !== 1 || !d.sdt || daGan.has(`${t.source}|${d.sdt}`)) continue;
-    const giu = kq.biDanhMoi.find((a) => a.kind === "sdt_bam" && a.value === d.sdt && a.source === t.source);
+    const giu = kq.biDanhMoi.find((a) => a.kind === "sdt" && a.value === d.sdt && a.source === t.source);
     const tk = kq.vai.find((v) => v.subject_key === `${t.source}:${t.originating_system_key}`);
     if (giu && tk) { giu.object_key = tk.party_key; daGan.add(`${t.source}|${d.sdt}`); }
   }
@@ -49,12 +49,12 @@ function giaiNguoiGanSdt(tins, biDanh, o) {
 function maTranAC5(giai) {
   const taoKhoa = khoaGia();
   const baiTheoId = bai([["pa", "S03", "A"], ["pb", "S03", "B"], ["pd1", "S03", "A"], ["pd2", "S03", "B"]]);
-  const ta = tin("S03", { post_ids: ["pa"], seller_phone_hash: "h" });
-  const tb = tin("S03", { seller_phone_hash: "h" });
-  const tc = tin("S03", { post_ids: ["pb"], seller_phone_hash: "h" });
-  const td = tin("S03", { post_ids: ["pd1", "pd2"], seller_phone_hash: "k" });
-  const te = tin("S03", { seller_phone_hash: "m" });
-  const tf = tin("S05", { seller_phone_hash: "h" });
+  const ta = tin("S03", { post_ids: ["pa"], seller_phone: "h" });
+  const tb = tin("S03", { seller_phone: "h" });
+  const tc = tin("S03", { post_ids: ["pb"], seller_phone: "h" });
+  const td = tin("S03", { post_ids: ["pd1", "pd2"], seller_phone: "k" });
+  const te = tin("S03", { seller_phone: "m" });
+  const tf = tin("S05", { seller_phone: "h" });
   const tins = [ta, tb, tc, td, te, tf];
   const kq = giai(tins, new Map(), { baiTheoId, taoKhoa });
   return { kq, bd: ap(new Map(), kq), tins, baiTheoId, taoKhoa, ta, tb, tc, td, te, tf };
@@ -66,22 +66,22 @@ function kiemAC5(m) {
   const { kq, bd } = m;
   const A = chu(bd, "S03", "tai_khoan_nguon", "A");
   const B = chu(bd, "S03", "tai_khoan_nguon", "B");
-  const PH = chu(bd, "S03", "sdt_bam", "h");
+  const PH = chu(bd, "S03", "sdt", "h");
   const loi = [];
   const dong = (ten, dk) => { if (!dk) loi.push(ten); };
   const va = vaiCua(kq, m.ta);
-  dong("(a)", va.length === 1 && va[0].party_key === A && PH && PH !== A && ![...bd].some(([k, v]) => v === A && k.includes("|sdt_bam|")));
+  dong("(a)", va.length === 1 && va[0].party_key === A && PH && PH !== A && ![...bd].some(([k, v]) => v === A && k.includes("|sdt|")));
   const vb = vaiCua(kq, m.tb);
   dong("(b)", vb.length === 1 && vb[0].party_key === PH && vb[0].method === "parser" && vb[0].evidence_tier === "observed");
   const vc = vaiCua(kq, m.tc);
-  dong("(c)", vc.length === 1 && vc[0].party_key === B && chu(bd, "S03", "sdt_bam", "h") === PH);
+  dong("(c)", vc.length === 1 && vc[0].party_key === B && chu(bd, "S03", "sdt", "h") === PH);
   const vd = vaiCua(kq, m.td);
-  const PK = chu(bd, "S03", "sdt_bam", "k");
+  const PK = chu(bd, "S03", "sdt", "k");
   dong("(d)", vd.length === 2 && new Set(vd.map((v) => v.party_key)).size === 2 && vd.every((v) => [A, B].includes(v.party_key)) && PK && ![A, B].includes(PK));
   const ve = vaiCua(kq, m.te);
-  const PM = chu(bd, "S03", "sdt_bam", "m");
+  const PM = chu(bd, "S03", "sdt", "m");
   dong("(e)", ve.length === 1 && ve[0].party_key === PM && ve[0].method === "parser");
-  const PH5 = chu(bd, "S05", "sdt_bam", "h");
+  const PH5 = chu(bd, "S05", "sdt", "h");
   dong("(f)", Boolean(PH5) && PH5 !== PH && kq.nguoiMoi.find((p) => p.party_key === PH5)?.source === "S05");
   const lai = giaiNguoi(m.tins, bd, { baiTheoId: m.baiTheoId, taoKhoa: m.taoKhoa });
   dong("(g)", lai.nguoiMoi.length === 0 && lai.biDanhMoi.length === 0);
@@ -150,7 +150,7 @@ test("moiKhoaNguoi: pty_ + 26 ký tự Crockford, không trùng", () => {
 // ---- AC-6 luật rút vai (lõi) ----
 
 test("AC-6 bài mất (tin có SĐT): giữ vai theo bài, không vai parser thay; chiều đỏ khi bỏ giữ", () => {
-  const t = tin("S03", { post_ids: ["q1"], seller_phone_hash: "h1" });
+  const t = tin("S03", { post_ids: ["q1"], seller_phone: "h1" });
   const subject = `S03:${t.originating_system_key}`;
   const cu = { id: 1, subject_key: subject, party_key: "pty_CU", method: "source_field", evidence: { offer_id: t.offer_id, field: "post_ids", post_ids: ["q1"] } };
   const mat = new Map(); // q1 không còn nối được
@@ -195,9 +195,9 @@ test("AC-6 chonVaiRut: chỉ rút khi có bằng chứng thay; bài mất thì g
 
 test("RF6 hai bản ghi cùng chủ thể (tin nghỉ doi_khoa + tin thay): một vai, bằng chứng từ bản ghi sống", () => {
   const b = bai([["p1", "S03", "A"]]);
-  const cu = tin("S03", { offer_id: "cu", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone_hash: "h",
+  const cu = tin("S03", { offer_id: "cu", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone: "h",
     retired_at: "2026-10-02T00:00:00Z", first_seen: "2026-09-01T00:00:00Z" });
-  const moi = tin("S03", { offer_id: "moi", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone_hash: "h" });
+  const moi = tin("S03", { offer_id: "moi", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone: "h" });
   const rong = tin("S05", { offer_id: "r1", originating_system_key: "k-rong" });
   const rong2 = tin("S05", { offer_id: "r2", originating_system_key: "k-rong", retired_at: "2026-10-02T00:00:00Z" });
   const kq = giaiNguoi([cu, moi, rong, rong2], new Map(), { baiTheoId: b, taoKhoa: khoaGia() });
@@ -205,4 +205,46 @@ test("RF6 hai bản ghi cùng chủ thể (tin nghỉ doi_khoa + tin thay): mộ
   assert.equal(new Set(cap).size, cap.length, `RF6 vai trùng chủ thể: ${cap}`);
   assert.deepEqual(kq.vai.map((v) => v.evidence.offer_id), ["moi"], "RF6 bằng chứng không lấy từ bản ghi sống");
   assert.deepEqual(kq.khongDinhDanh, { S05: 1 }, "RF6 khong_dinh_danh đếm theo bản ghi thay vì chủ thể");
+});
+
+// ---- SD3 sdt-luu-goc-e164 (E4 lõi thuần): người theo SĐT đời trước (bí danh sdt_bam) được GIỮ party_key ----
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { khoaBamCu } from "../lib/danh-ba-nguoi.mjs";
+
+function kiemGiuNguoi(mod) {
+  const SO = "+84911000001";
+  const bd = new Map([[mod.khoaBiDanh("S03", "sdt_bam", mod.khoaBamCu(SO)), "pty_CU"]]);
+  const kq = mod.giaiNguoi([tin("S03", { seller_phone: SO }), tin("S05", { seller_phone: SO })], bd, { taoKhoa: khoaGia() });
+  const sdt03 = kq.biDanhMoi.filter((a) => a.kind === "sdt" && a.source === "S03");
+  if (kq.nguoiMoi.some((p) => p.source === "S03") || sdt03.length !== 1 || sdt03[0].object_key !== "pty_CU")
+    throw new Error(`NGUOI MOI THAY VI GIU: S03 người mới ${kq.nguoiMoi.filter((p) => p.source === "S03").length}`);
+  // S05 chưa có sdt_bam → người riêng của nguồn (luật Hỏi-4 của DB2b không đổi).
+  assert.equal(kq.nguoiMoi.filter((p) => p.source === "S05").length, 1);
+  return kq;
+}
+
+test("SD3-E4: số có sdt_bam đời trước → thêm bí danh sdt cho đúng người cũ, không người mới", () => {
+  kiemGiuNguoi({ giaiNguoi, khoaBiDanh, khoaBamCu });
+  assert.equal(khoaBamCu("+84911000001").length, 32);
+});
+
+test("SD3-E4 đỏ: bản chép bỏ tra sdt_bam đời trước → bắt «NGUOI MOI THAY VI GIU»", async () => {
+  const TEP = fileURLToPath(new URL("../lib/danh-ba-nguoi.mjs", import.meta.url));
+  const goc = readFileSync(TEP, "utf8");
+  const moi = goc.replace("    if (cu) return themBiDanh(source, ALIAS_KIND.sdt, e164, cu);\n", "");
+  assert.notEqual(moi, goc, "bản chép không đổi được — mẫu thay đã lệch mã");
+  const ban = path.join(path.dirname(TEP), `.ban-${process.pid}-danh-ba-nguoi.mjs`);
+  writeFileSync(ban, moi);
+  try {
+    const m = await import(pathToFileURL(ban).href);
+    assert.throws(() => kiemGiuNguoi(m), /NGUOI MOI THAY VI GIU/);
+  } finally {
+    rmSync(ban, { force: true });
+  }
+});
+
+test("SD3-E4: bộ dựng nghỉ sdt_bam bằng retired_at, không DELETE", () => {
+  assert.match(SQL.nghiSdtBam, /^UPDATE registry_aliases SET retired_at = now\(\) WHERE kind = 'sdt_bam' AND retired_at IS NULL$/);
 });

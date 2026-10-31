@@ -10,17 +10,18 @@ import { fileURLToPath } from "node:url";
 
 import { extractPhones } from "./transform-zalo.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
+import { ALIAS_KIND } from "./lib/vocab.generated.mjs";
 
 export const NGUON = Object.freeze(["S03", "S05"]);
 const KENH = Object.freeze({ S03: "zalo", S05: "facebook" });
 /** Bí danh SĐT: dạng băm hôm nay, dạng số gốc sau SD3 (Hỏi-A). */
-export const KIEU_BI_DANH_SDT = Object.freeze(["sdt_bam", "sdt"]);
+export const KIEU_BI_DANH_SDT = Object.freeze([ALIAS_KIND.sdt_bam, ALIAS_KIND.sdt]);
 export const MUI_GIO = "Asia/Ho_Chi_Minh";
 /** Ngưỡng đạt (Hỏi-1, Mạnh duyệt 31/10). */
 export const NGUONG_N2 = 10;
 const TRAN_SO_MOI_BAI = 3; // trần của extractPhones
 
-/** Bộ dò rộng của audit §7: chữ số xen tối đa 3 ký tự tách, nhận «o» thay «0», gom về 10 số đầu di động. */
+/** Bộ dò rộng của audit §7: chữ số xen tối đa 3 ký tự tách, nhận «o» thay «0», gom về 10 số đầu di động, trả dạng E.164. */
 const DO_RONG = /(?<!\d)(?:\(?\+?84\)?|0|[oO])(?:[\s.\-_,/()·•*]{0,3}[\doO]){8,10}(?!\d)/g;
 export function doRong(text) {
   const out = new Set();
@@ -28,7 +29,7 @@ export function doRong(text) {
     let so = m[0].replace(/[oO]/g, "0").replace(/\D/g, "");
     if (so.startsWith("84")) so = "0" + so.slice(2);
     so = so.slice(0, 10);
-    if (/^0[35789]\d{8}$/.test(so)) out.add(so);
+    if (/^0[35789]\d{8}$/.test(so)) out.add("+84" + so.slice(1)); // SD3: cùng dạng E.164 với bộ bóc
   }
   return out;
 }
@@ -92,7 +93,7 @@ export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin }) 
       const bat = extractPhones(p.text ?? "");
       if (bat.length > 0) coSo++;
       if (bat.length >= TRAN_SO_MOI_BAI) continue;
-      const da = new Set(bat.map((s) => s.slice(0, 10)));
+      const da = new Set(bat); // bộ bóc và bộ dò rộng cùng trả E.164 (SD3)
       if ([...doRong(p.text)].some((s) => !da.has(s))) sot++;
     }
 

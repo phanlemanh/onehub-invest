@@ -115,19 +115,20 @@ for (const [t, allow] of Object.entries(CLOUD_ALLOW)) {
 export const CHUNK_BYTES = 1_800_000; // thân yêu cầu mỗi mẻ nạp (413 đo ở ~2,5–4MB)
 export const SHRINK_MIN = 0.5; // local < 50% số dòng đang có trên cloud → dừng (local đang dựng dở)
 // Bảng được co dưới ngưỡng khi một lượt dọn xác định ghi audit giải thích đúng số dòng còn lại
-// (canonical-khong-tin-gia AC-10: refresh-bait-gap xoá người bán mồ côi sau khi rút tin thử).
-export const SHRINK_AUDIT = { sellers: "bait-gap:sellers-orphan" };
+// (canonical-khong-tin-gia AC-10). Từ SD3 (060) sellers là view trên tin — không còn lượt dọn người bán mồ côi
+// nào ghi audit `bait-gap:sellers-orphan`, nên mục sellers bỏ; cơ chế giữ cho bảng khác khai sau.
+export const SHRINK_AUDIT = {};
 export const SHRINK_AUDIT_HOURS = 24;
 
 /**
  * Quyết định chặn tụt cho một bảng. Co dưới SHRINK_MIN chỉ được qua khi bảng có trong
  * SHRINK_AUDIT và có dòng audit trong SHRINK_AUDIT_HOURS mà detail.remaining = số dòng gửi.
- * @param {{ table: string, local: number, cloud: number, audits: { action: string, at: Date|string, detail: any }[], now: Date|string }} a
+ * @param {{ table: string, local: number, cloud: number, audits: { action: string, at: Date|string, detail: any }[], now: Date|string, auditMap?: Record<string, string> }} a
  * @returns {{ ok: boolean, reason: string }}
  */
-export function shrinkVerdict({ table, local, cloud, audits, now }) {
+export function shrinkVerdict({ table, local, cloud, audits, now, auditMap = SHRINK_AUDIT }) {
   if (!(cloud > 0) || local >= SHRINK_MIN * cloud) return { ok: true, reason: "" };
-  const action = SHRINK_AUDIT[table];
+  const action = auditMap[table];
   const since = new Date(now).getTime() - SHRINK_AUDIT_HOURS * 3600_000;
   const explained = action && audits.some(
     (r) => r.action === action && new Date(r.at).getTime() >= since && Number(r.detail?.remaining) === local,
