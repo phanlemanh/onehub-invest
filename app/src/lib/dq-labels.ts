@@ -31,6 +31,7 @@ const TEN_KIEM: Record<string, string> = {
   "danh-ba-sdt:n3": "Danh bạ SĐT: bảng người bán so với tin",
   "danh-ba-sdt:n4": "Danh bạ SĐT: tin nhiều số",
   "danh-ba-sdt:n5": "Danh bạ SĐT: số bộ bóc bỏ sót",
+  "danh-ba-sdt:n6": "Danh bạ SĐT: mỗi số một người",
   "eval-classify": "Độ đúng cách đọc", // pipeline/eval-classify.mjs (PL9)
   // pipeline/do-the-duyet.mjs (HD11) — độ đủ dữ liệu của thẻ ghép căn chờ duyệt
   "the-duyet:roi-kho": "Thẻ ghép căn: bên đã rời kho",
@@ -185,7 +186,7 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
   if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
     return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
-  const kiemDanhBa = check.match(/^danh-ba-sdt:(n[1-5])$/)
+  const kiemDanhBa = check.match(/^danh-ba-sdt:(n[1-6])$/)
   if (kiemDanhBa) {
     const kiem = kiemDanhBa[1]
     if ((m = d.match(/^so=(\d+) tong=(\d+)$/)) && ["n1", "n2", "n5"].includes(kiem)) {
@@ -196,6 +197,11 @@ export function dqDetail(check: string, detail: string | null): DqText {
     }
     if (kiem === "n3" && (m = d.match(/^sellers=(\d+) sdt_tren_tin=(\d+)$/)))
       return { text: `${nguyen(m[1])} dòng bảng người bán · ${nguyen(m[2])} SĐT trên tin`, known: true }
+    if (kiem === "n6" && (m = d.match(/^trung=(\d+) thua=(\d+) thieu=(\d+) tong=(\d+)$/)))
+      return {
+        text: `${nguyen(m[1])} số thuộc hai người · ${nguyen(m[2])} số lạ không có trên tin · ${nguyen(m[3])} số trên tin chưa có người · ${nguyen(m[4])} số trong danh bạ`,
+        known: true,
+      }
     if (kiem === "n4" && (m = d.match(/^nhieu=(\d+) rong=(\d+) tong=(\d+)$/)))
       return { text: `${nguyen(m[1])} tin nhiều số · ${nguyen(m[2])} tin trống số dù bài có số · ${nguyen(m[3])} tin`, known: true }
   }

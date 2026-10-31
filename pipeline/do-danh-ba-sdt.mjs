@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // do-danh-ba-sdt.mjs — SD5 `do-danh-ba-sdt`: đo trục SĐT của danh bạ Người (audit docs/research/audit-bang-nguoi-sdt-3010.md
-// §0 N1–N5, câu đo §7) theo nguồn S03, S05.
+// §0 N1–N5, câu đo §7) theo nguồn S03, S05; N6 «mỗi số một người» (hồ sơ sd3-lam-chat-do-danh-ba, Ngoài-14 của SD3).
 //   node pipeline/do-danh-ba-sdt.mjs           in bảng năm số
 //   node pipeline/do-danh-ba-sdt.mjs --write   ghi dq_check_results, một dòng mỗi (kiểm, đối tượng) mỗi ngày giờ máy thu
 // Đọc trong giao dịch chỉ đọc. Ghi: một giao dịch xoá dòng cùng kiểm + đối tượng của ngày hôm nay rồi chèn. Chỉ số đếm lên
@@ -40,14 +40,16 @@ export function doRong(text) {
  * - `bai`: Map post_id → `{sender_id, text}` của nguồn;
  * - `biDanh`: bí danh SĐT còn hiệu lực `{object_key, kind, value, source}`;
  * - `daGop`: Set party_key đã `merged`; `coVai`: Set party_key có vai chưa rút;
- * - `sellers`, `sdtTrenTin`: hai số đếm của N3.
+ * - `sellers`, `sdtTrenTin`: hai số đếm của N3;
+ * - `banGhiSdt`: `{ <nguồn>: Set }` SĐT trên mọi bản ghi tin của nguồn, kể cả tin đã nghỉ (N6).
+ * Bí danh mang `retired_at` khác null không được tính ở kiểm nào.
  */
-export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin }) {
+export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin, banGhiSdt = {} }) {
   const kq = {};
   for (const nguon of NGUON) {
     const tinNguon = tin.filter((t) => t.source === nguon);
     const baiNguon = bai[nguon] ?? new Map();
-    const biDanhNguon = biDanh.filter((b) => b.source === nguon && KIEU_BI_DANH_SDT.includes(b.kind));
+    const biDanhNguon = biDanh.filter((b) => b.source === nguon && KIEU_BI_DANH_SDT.includes(b.kind) && !b.retired_at);
 
     // N1 — SĐT ↔ người gửi trên tin sống; cặp 1–1 mà người theo SĐT chưa gộp.
     const nguoiCuaSdt = new Map();
@@ -97,11 +99,29 @@ export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin }) 
       if ([...doRong(p.text)].some((s) => !da.has(s))) sot++;
     }
 
+    // N6 — mỗi số một người (chỉ bí danh `sdt` số gốc còn hiệu lực): số thuộc ≥2 người, số lạ không có trên bản ghi tin
+    // nào của nguồn, SĐT trên tin sống không người nào mang.
+    const nguoiCuaSo = new Map();
+    for (const b of biDanhNguon) {
+      if (b.kind !== ALIAS_KIND.sdt) continue;
+      if (!nguoiCuaSo.has(b.value)) nguoiCuaSo.set(b.value, new Set());
+      nguoiCuaSo.get(b.value).add(b.object_key);
+    }
+    const banGhi = banGhiSdt[nguon] ?? new Set();
+    const soTrenTin = new Set(tinNguon.map((t) => t.seller_phone).filter(Boolean));
+    const n6 = {
+      trung: [...nguoiCuaSo.values()].filter((ng) => ng.size > 1).length,
+      thua: [...nguoiCuaSo.keys()].filter((so) => !banGhi.has(so)).length,
+      thieu: [...soTrenTin].filter((so) => !nguoiCuaSo.has(so)).length,
+      tong: nguoiCuaSo.size,
+    };
+
     kq[nguon] = {
       n1: { so: chuaGop.length, tong: capMotMot.length },
       n2: { so: khongVai.length, tong: nguoiSdt.size },
       n4: { nhieu, rong, tong: tinNguon.length },
       n5: { so: sot, tong: coSo },
+      n6,
     };
   }
   kq.sellers = { n3: { sellers, sdt_tren_tin: sdtTrenTin } };
@@ -115,17 +135,18 @@ export function xepTrangThai(kiem, v) {
     : kiem === "n2" ? v.so <= NGUONG_N2
     : kiem === "n3" ? v.sellers === v.sdt_tren_tin
     : kiem === "n4" ? v.rong === 0
+    : kiem === "n6" ? v.trung === 0 && v.thua === 0 && v.thieu === 0
     : v.so === 0;
   return dat ? "pass" : "fail";
 }
 
 export const veDetail = (v) => Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ");
 
-/** Dòng ghi: `[{check_name, entity, status, detail}]` — 4 kiểm × 2 nguồn + N3. */
+/** Dòng ghi: `[{check_name, entity, status, detail}]` — 5 kiểm × 2 nguồn + N3. */
 export function veDong(kq) {
   const dong = [];
   for (const nguon of NGUON) {
-    for (const kiem of ["n1", "n2", "n4", "n5"]) {
+    for (const kiem of ["n1", "n2", "n4", "n5", "n6"]) {
       const v = kq[nguon][kiem];
       dong.push({ check_name: `danh-ba-sdt:${kiem}`, entity: nguon, status: xepTrangThai(kiem, v), detail: veDetail(v) });
     }
@@ -147,8 +168,11 @@ export async function docDuLieu(client) {
       bai[nguon] = new Map(posts.map((p) => [p.post_id, { sender_id: p.sender_id, text: p.text }]));
     }
     const { rows: biDanh } = await client.query(
-      `SELECT object_key, kind, value, source FROM registry_aliases
+      `SELECT object_key, kind, value, source, retired_at FROM registry_aliases
        WHERE retired_at IS NULL AND kind = ANY ($1) AND source = ANY ($2)`, [KIEU_BI_DANH_SDT, NGUON]);
+    const { rows: banGhi } = await client.query(
+      `SELECT source, array_agg(DISTINCT seller_phone) AS so FROM sale_offer_records
+       WHERE source = ANY ($1) AND seller_phone IS NOT NULL GROUP BY source`, [NGUON]);
     const { rows: gop } = await client.query(`SELECT party_key FROM parties WHERE status = 'merged'`);
     const { rows: vai } = await client.query(`SELECT DISTINCT party_key FROM party_roles WHERE retracted_at IS NULL`);
     const { rows: [n3] } = await client.query(
@@ -160,6 +184,7 @@ export async function docDuLieu(client) {
       daGop: new Set(gop.map((r) => r.party_key)),
       coVai: new Set(vai.map((r) => r.party_key)),
       sellers: n3.sellers, sdtTrenTin: n3.sdt,
+      banGhiSdt: Object.fromEntries(banGhi.map((r) => [r.source, new Set(r.so)])),
     };
   } catch (e) {
     await client.query("ROLLBACK").catch(() => {});
