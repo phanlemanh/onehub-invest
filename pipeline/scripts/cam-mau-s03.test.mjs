@@ -50,11 +50,11 @@ const AC1_SDT = [
 
 test("CM-AC-1: giá/DT/PN không lấy từ URL hay SĐT; phones đọc từ chữ gốc", () => {
   for (const [chu, doc, dapAn] of AC1) assert.equal(doc(tz.parsePost(chu)), dapAn, `CM-AC-1 «${chu}»`);
-  assert.deepEqual(tz.parsePost("Cho thuê 65m2 lh 0901.234.567").phones, ["0901234567"], "CM-AC-1 phones");
+  assert.deepEqual(tz.parsePost("Cho thuê 65m2 lh 0901.234.567").phones, ["+84901234567"], "CM-AC-1 phones");
   for (const chu of AC1_SDT) {
     const p = tz.parsePost(chu);
     assert.equal(p.priceVnd, 9e6, `CM-AC-1 SĐT «${chu}»`);
-    assert.deepEqual(p.phones, ["0901234567"], `CM-AC-1 phones «${chu}»`);
+    assert.deepEqual(p.phones, ["+84901234567"], `CM-AC-1 phones «${chu}»`);
   }
   assert.equal(AC1.length + AC1_SDT.length, 8);
 });

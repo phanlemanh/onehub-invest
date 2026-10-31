@@ -47,8 +47,8 @@ const bai = {
     ["p6", { sender_id: "u5", text: `lh ${SO.e}` }],
     ["p7", { sender_id: null, text: "lh 0912 000 001" }],
     ["p8", { sender_id: null, text: "lh 0912000002" }],
-    // N5: dạng «ddd dd•dd ddd» bộ bóc sót · dạng «09x.xxx.xxx» bắt được · bài 4 số (chạm trần 3) không đếm
-    ["r1", { sender_id: null, text: "lh 091 20•00 003" }],
+    // N5: dạng «oddd ddd ddd» bộ bóc sót · dạng «09x.xxx.xxx» bắt được · bài 4 số (chạm trần 3) không đếm
+    ["r1", { sender_id: null, text: "lh o912 000 003" }], // chữ «o» thay số 0: bộ dò rộng nhận, bộ bóc không (SD2 đã bóc dạng •)
     ["r2", { sender_id: null, text: "lh 091.200.0004" }],
     ["r3", { sender_id: null, text: "0913000001 0913000002 0913000003 091 30•00 004" }],
   ]),
@@ -106,12 +106,14 @@ test("E1 trạng thái theo ngưỡng Hỏi-1 (hai chiều mỗi kiểm)", () =>
     ["n3", { sellers: 3, sdt_tren_tin: 3 }, "pass"], ["n3", { sellers: 19, sdt_tren_tin: 208 }, "fail"],
     ["n4", { nhieu: 5, rong: 0 }, "pass"], ["n4", { nhieu: 0, rong: 1 }, "fail"],
     ["n5", { so: 0 }, "pass"], ["n5", { so: 1 }, "fail"],
+    ["n6", { trung: 0, thua: 0, thieu: 0, tong: 5 }, "pass"], ["n6", { trung: 1, thua: 0, thieu: 0 }, "fail"],
+    ["n6", { trung: 0, thua: 1, thieu: 0 }, "fail"], ["n6", { trung: 0, thua: 0, thieu: 1 }, "fail"],
   ];
   for (const [k, v, mong] of ca) assert.equal(that.xepTrangThai(k, v), mong, `${k} ${JSON.stringify(v)}`);
 });
-test("E1 dòng ghi: 9 dòng, detail chỉ số đếm", () => {
+test("E1 dòng ghi: 11 dòng, detail chỉ số đếm", () => {
   const dong = that.veDong(that.tinhSo(vao));
-  assert.equal(dong.length, 9);
+  assert.equal(dong.length, 11);
   for (const d of dong) assert.match(d.detail, /^([a-z_0-9]+=\d+)( [a-z_0-9]+=\d+)*$/, d.detail);
 });
 test("E1 đối chứng đỏ: đếm cả cặp đã gộp", () =>
@@ -119,4 +121,79 @@ test("E1 đối chứng đỏ: đếm cả cặp đã gộp", () =>
 test("E1 đối chứng đỏ: không trừ bài chạm trần", () =>
   banChep("if (bat.length >= TRAN_SO_MOI_BAI) continue;", "", (m) => assert.throws(() => kiemSo(m), /N5 KHONG TRU TRAN 3 SO/)));
 test("E1 đối chứng đỏ: chỉ đọc sdt_bam", () =>
-  banChep('Object.freeze(["sdt_bam", "sdt"])', 'Object.freeze(["sdt_bam"])', (m) => assert.throws(() => kiemSo(m), /BO SOT BI DANH sdt/)));
+  banChep('Object.freeze([ALIAS_KIND.sdt_bam, ALIAS_KIND.sdt])', 'Object.freeze([ALIAS_KIND.sdt_bam])', (m) => assert.throws(() => kiemSo(m), /BO SOT BI DANH sdt/)));
+
+// ---- hồ sơ sd3-lam-chat-do-danh-ba (Ngoài-14 của SD3): N6 «mỗi số một người» ----
+const P = (n) => `+849010000${String(n).padStart(2, "0")}`; // số bịa dạng E.164
+/** Fixture lành: S03 hai tin sống (P1, P2), P3 chỉ có trên tin đã nghỉ; S05 cùng số P1 ở người khác (khác nguồn). */
+function lanh() {
+  return {
+    tin: [
+      { source: "S03", seller_phone: P(1), seller_phone_hash: "h1", post_ids: [] },
+      { source: "S03", seller_phone: P(2), seller_phone_hash: "h2", post_ids: [] },
+      { source: "S05", seller_phone: P(1), seller_phone_hash: "h1", post_ids: [] },
+    ],
+    bai: {},
+    biDanh: [
+      { object_key: "pA", kind: "sdt", value: P(1), source: "S03", retired_at: null },
+      { object_key: "pB", kind: "sdt", value: P(2), source: "S03", retired_at: null },
+      { object_key: "pC", kind: "sdt", value: P(3), source: "S03", retired_at: null },
+      { object_key: "pD", kind: "sdt", value: P(1), source: "S05", retired_at: null },
+      { object_key: "pE", kind: "sdt_bam", value: "h9", source: "S03", retired_at: null },
+    ],
+    daGop: new Set(), coVai: new Set(), sellers: 0, sdtTrenTin: 0,
+    banGhiSdt: { S03: new Set([P(1), P(2), P(3)]), S05: new Set([P(1)]) },
+  };
+}
+const NGHI = "2026-10-31T00:00:00Z";
+/** Ma trận viết trước: tên ô · đột biến trên fixture lành · N6 mong của S03 [trung, thua, thieu, tong]. */
+const MA_TRAN_N6 = [
+  ["lành (số cùng ở nguồn khác không tính trùng; số chỉ ở tin nghỉ không thừa; sdt_bam không tính)", () => {}, [0, 0, 0, 3]],
+  ["một số thuộc hai người cùng nguồn", (f) => f.biDanh.push({ object_key: "pZ", kind: "sdt", value: P(1), source: "S03", retired_at: null }), [1, 0, 0, 3]],
+  ["số không có trên bản ghi tin nào của nguồn", (f) => f.biDanh.push({ object_key: "pY", kind: "sdt", value: P(9), source: "S03", retired_at: null }), [0, 1, 0, 4]],
+  ["SĐT trên tin sống không người mang", (f) => { f.tin.push({ source: "S03", seller_phone: P(8), seller_phone_hash: "h8", post_ids: [] }); f.banGhiSdt.S03.add(P(8)); }, [0, 0, 1, 3]],
+  ["bí danh sdt đã nghỉ trùng số với bí danh còn hiệu lực của người khác", (f) => f.biDanh.push({ object_key: "pW", kind: "sdt", value: P(1), source: "S03", retired_at: NGHI }), [0, 0, 0, 3]],
+  ["số trên tin sống chỉ còn ở bí danh sdt đã nghỉ", (f) => { f.tin.push({ source: "S03", seller_phone: P(7), seller_phone_hash: "h7", post_ids: [] }); f.banGhiSdt.S03.add(P(7)); f.biDanh.push({ object_key: "pV", kind: "sdt", value: P(7), source: "S03", retired_at: NGHI }); }, [0, 0, 1, 3]],
+];
+const KHOA_N6 = ["trung", "thua", "thieu", "tong"];
+function kiemN6(mod) {
+  let soAssert = 0;
+  for (const [ten, dotBien, mong] of MA_TRAN_N6) {
+    const f = lanh();
+    dotBien(f);
+    const kq = mod.tinhSo(f);
+    KHOA_N6.forEach((k, i) => {
+      if (kq.S03.n6[k] !== mong[i]) throw new Error(`N6 LECH ${k}: «${ten}» ${kq.S03.n6[k]} ≠ ${mong[i]}`);
+      soAssert++;
+    });
+    assert.deepEqual(kq.S05.n6, { trung: 0, thua: 0, thieu: 0, tong: 1 }, `N6 S05 «${ten}»`);
+    assert.equal(mod.xepTrangThai("n6", kq.S03.n6), mong.slice(0, 3).every((x) => x === 0) ? "pass" : "fail", `N6 trạng thái «${ten}»`);
+  }
+  assert.equal(soAssert, MA_TRAN_N6.length * KHOA_N6.length);
+  return soAssert;
+}
+test("LDB E1 ma trận N6 viết trước, mỗi ô một lỗi trên cùng fixture lành", () => {
+  assert.equal(kiemN6(that), 24);
+});
+test("LDB E1 đối chứng đỏ: bản chép bỏ đếm thua → bắt «N6 LECH thua»", () =>
+  banChep("thua: [...nguoiCuaSo.keys()].filter((so) => !banGhi.has(so)).length,", "thua: 0,", (m) => assert.throws(() => kiemN6(m), /N6 LECH thua/)));
+
+/** Dòng ghi lên dq_check_results (bảng lên cloud) không được mang SĐT. */
+function kiemDetail(dong) {
+  for (const d of dong) if (/\+?84\d{9}|(?<!\d)0[35789]\d{8}(?!\d)/.test(d.detail)) throw new Error(`LO SO TRONG DETAIL: ${d.check_name}`);
+  return dong.length;
+}
+test("LDB E2 veDong: 11 dòng, mỗi (kiểm, nguồn) một lần, detail n6 chỉ số đếm", () => {
+  const dong = that.veDong(that.tinhSo(lanh()));
+  assert.equal(kiemDetail(dong), 11);
+  const cap = dong.map((d) => `${d.check_name}|${d.entity}`);
+  assert.equal(new Set(cap).size, 11);
+  for (const nguon of that.NGUON) for (const k of ["n1", "n2", "n4", "n5", "n6"]) assert.ok(cap.includes(`danh-ba-sdt:${k}|${nguon}`), `${k} ${nguon}`);
+  assert.ok(cap.includes("danh-ba-sdt:n3|sellers"));
+  for (const d of dong.filter((x) => x.check_name === "danh-ba-sdt:n6")) assert.match(d.detail, /^trung=\d+ thua=\d+ thieu=\d+ tong=\d+$/);
+});
+test("LDB E2 đối chứng đỏ: detail mang số gốc → bắt «LO SO TRONG DETAIL»", () => {
+  const kq = that.tinhSo(lanh());
+  kq.S03.n6 = { ...kq.S03.n6, trung: P(1) };
+  assert.throws(() => kiemDetail(that.veDong(kq)), /LO SO TRONG DETAIL/);
+});

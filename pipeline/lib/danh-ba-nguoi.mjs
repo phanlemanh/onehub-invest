@@ -1,7 +1,7 @@
 // danh-ba-nguoi.mjs — DB2b ho-nguoi-theo-nguon: danh bạ Người theo từng nguồn + vai «người đăng» là phát biểu
 // (ADR-0016 §3, §8, §10 Đợt 2b; design docs/superpowers/specs/2026-10-30-ho-nguoi-theo-nguon-design.md).
 // Phần thuần (rút định danh, giải người, chọn vai rút) tách khỏi phần DB để đo không cần DB.
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { ALIAS_KIND, ASSERTION_METHOD, EVIDENCE_TIER, PARTY_ROLE } from "./vocab.generated.mjs";
 
 /** Vai bộ dựng được ghi — không vai suy luận (môi giới, sàn) ở hàng này (AC-9). */
@@ -37,7 +37,7 @@ const sach = (s) => (typeof s === "string" && s.trim() !== "" ? s.trim() : null)
 /**
  * Định danh người đăng của một tin.
  * S06: tài khoản = phần số của seller_ref `ct:<số>`. S03/S05: người gửi của từng bài trong post_ids, cùng nguồn.
- * @param {{ source: string, seller_ref?: string|null, seller_name?: string|null, seller_phone_hash?: string|null, post_ids?: string[]|null }} tin
+ * @param {{ source: string, seller_ref?: string|null, seller_name?: string|null, seller_phone?: string|null, post_ids?: string[]|null }} tin
  * @param {Map<string, { source: string, sender_id: string|null, sender_name: string|null }>} baiTheoId
  */
 export function rutDinhDanh(tin, baiTheoId) {
@@ -60,7 +60,12 @@ export function rutDinhDanh(tin, baiTheoId) {
     taiKhoan.push(...theo.values());
     if (taiKhoan.length) field = "post_ids";
   }
-  return { taiKhoan, sdt: sach(tin.seller_phone_hash), field };
+  return { taiKhoan, sdt: sach(tin.seller_phone), field };
+}
+
+/** Khoá bí danh `sdt_bam` đời trước của một số E.164: sha256 của dạng «0…» cắt 32 ký tự (SD3 nối người cũ qua nó). */
+export function khoaBamCu(e164) {
+  return createHash("sha256").update("0" + e164.slice(3)).digest("hex").slice(0, 32);
 }
 
 const thoiDiem = (x) => (x == null ? Number.POSITIVE_INFINITY : +new Date(x));
@@ -96,6 +101,14 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
     nguoiMoi.push({ party_key, source });
     return themBiDanh(source, kind, value, party_key);
   };
+  // SD3: người theo SĐT tra bí danh `sdt` (số gốc E.164); chưa có thì tra `sdt_bam` đời trước của cùng số để GIỮ
+  // party_key, rồi thêm `sdt` cho đúng người ấy. Bí danh `sdt_bam` nghỉ ở bước ghi (dungNguoi), không sửa tại chỗ.
+  const layNguoiSdt = (source, e164) => {
+    if (bd.has(khoaBiDanh(source, ALIAS_KIND.sdt, e164))) return bd.get(khoaBiDanh(source, ALIAS_KIND.sdt, e164));
+    const cu = bd.get(khoaBiDanh(source, ALIAS_KIND.sdt_bam, khoaBamCu(e164)));
+    if (cu) return themBiDanh(source, ALIAS_KIND.sdt, e164, cu);
+    return layNguoi(source, ALIAS_KIND.sdt, e164);
+  };
   const thuTu = [...tins].sort((a, b) => thoiDiem(a.first_seen) - thoiDiem(b.first_seen) || String(a.offer_id).localeCompare(String(b.offer_id)));
   for (const t of thuTu) {
     const d = rutDinhDanh(t, baiTheoId);
@@ -114,11 +127,11 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
       const evidence = { offer_id: t.offer_id, field: d.field, ...(tk.post_ids.length ? { post_ids: tk.post_ids } : {}) };
       ghiVai({ subject_key, party_key, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.source_field, evidence_tier: EVIDENCE_TIER.fact, evidence });
     }
-    const nguoiSdt = d.sdt ? layNguoi(t.source, ALIAS_KIND.sdt_bam, d.sdt) : null;
+    const nguoiSdt = d.sdt ? layNguoiSdt(t.source, d.sdt) : null;
     if (!d.taiKhoan.length && nguoiSdt && !giuBaiMat.has(subject_key)) {
       ghiVai({
         subject_key, party_key: nguoiSdt, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.parser,
-        evidence_tier: EVIDENCE_TIER.observed, evidence: { offer_id: t.offer_id, field: "seller_phone_hash" },
+        evidence_tier: EVIDENCE_TIER.observed, evidence: { offer_id: t.offer_id, field: "seller_phone" },
       });
     }
   }
@@ -168,7 +181,7 @@ export function chonVaiRut(vaiSong, vaiLuotNay, tinsLuotNay, baiTheoId) {
 
 /** Mọi câu SQL của mô-đun (AC-9 quét chính các chuỗi này). */
 export const SQL = Object.freeze({
-  tin: `SELECT offer_id, source, originating_system_key, seller_ref, seller_name, seller_phone_hash, post_ids, first_seen, retired_at
+  tin: `SELECT offer_id, source, originating_system_key, seller_ref, seller_name, seller_phone, post_ids, first_seen, retired_at
           FROM sale_offer_records WHERE source = ANY($1::text[]) AND originating_system_key IS NOT NULL`,
   bai: `SELECT DISTINCT ON (post_id) post_id, agent_id, sender_id, sender_name FROM stg_zalo_posts
          WHERE post_id = ANY($1::text[]) AND agent_id = ANY($2::text[]) ORDER BY post_id, captured_at DESC`,
@@ -181,12 +194,14 @@ export const SQL = Object.freeze({
             ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`,
   themVai: `INSERT INTO party_roles (subject_key, party_key, role, method, evidence_tier, evidence, run_id)
             SELECT s, p, r, m, e, ev, $7 FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::jsonb[]) AS x(s, p, r, m, e, ev)`,
+  // SD3: bí danh SĐT băm đời trước nghỉ hết (người giữ party_key qua bí danh `sdt`); chỉ đặt retired_at, đúng luật 055.
+  nghiSdtBam: `UPDATE registry_aliases SET retired_at = now() WHERE kind = 'sdt_bam' AND retired_at IS NULL`,
   rutVai: `UPDATE party_roles SET retracted_at = now(), retract_reason = $2 WHERE id = ANY($1::bigint[]) AND retracted_at IS NULL`,
   // Đối chiếu trên SĐT của tin, không trên sellers (SD1): sellers từng thiếu dòng nên phép đối chiếu luôn xanh.
   sellersThieu: `SELECT DISTINCT o.seller_phone_hash || ':' || o.source AS k FROM sale_offers o
-                  WHERE o.seller_phone_hash IS NOT NULL
-                    AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt_bam'
-                                      AND a.source = o.source AND a.value = o.seller_phone_hash)
+                  WHERE o.seller_phone IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt'
+                                      AND a.source = o.source AND a.value = o.seller_phone)
                   ORDER BY 1`,
 });
 
@@ -219,6 +234,7 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   let biDanhMoi = 0;
   if (dinhDanh.length) biDanhMoi += (await c.query(SQL.themDinhDanh, cot(dinhDanh))).rowCount;
   if (ten.length) biDanhMoi += (await c.query(SQL.themTen, cot(ten))).rowCount;
+  const sdtBamNghi = (await c.query(SQL.nghiSdtBam)).rowCount;
 
   const dangSong = new Set(vaiSong.map((v) => `${v.subject_key}|${v.party_key}`));
   const rut = chonVaiRut(vaiSong, kq.vai, tins, baiTheoId);
@@ -236,15 +252,15 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   for (const p of kq.nguoiMoi) cong(p.source, "nguoi_moi");
   for (const v of moi) cong(v.subject_key.slice(0, 3), "vai_moi");
   const kqDem = {
-    nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, vai_moi: moi.length, vai_rut: rut.length,
+    nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, sdt_bam_nghi: sdtBamNghi, vai_moi: moi.length, vai_rut: rut.length,
     khong_dinh_danh: kq.khongDinhDanh, theo_nguon,
   };
   const kdd = Object.entries(kq.khongDinhDanh).map(([s, n]) => `${s}=${n}`).join(" ") || "0";
-  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · +${moi.length} vai · rút ${rut.length} · không định danh ${kdd}`);
+  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · không định danh ${kdd}`);
   return kqDem;
 }
 
-/** «<phone_hash>:<S0x>» cho mỗi (SĐT, nguồn) trên tin sống chưa có người sống mang bí danh sdt_bam đúng nguồn. */
+/** «<phone_hash>:<S0x>» cho mỗi (SĐT, nguồn) trên tin sống chưa có người sống mang bí danh sdt (E.164) đúng nguồn. */
 export async function sellersThieuNguoi(c) {
   return (await c.query(SQL.sellersThieu)).rows.map((r) => r.k);
 }

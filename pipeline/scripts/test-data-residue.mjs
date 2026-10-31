@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 import { napPhatBieu } from "../lib/nap-045.mjs";
+import { napSdtE164 } from "../lib/nap-060.mjs";
 
 import { TEST_MARKERS, testMarker } from "../lib/test-posts.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
@@ -105,6 +106,7 @@ export async function simulate(c) {
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
     await napPhatBieu(c);
+    await napSdtE164(c); // SD3: SĐT số gốc E.164, sellers là view — như DB sau 060
     const maxId = Number((await c.query(`SELECT coalesce(max(id), 0) AS m FROM ops_audit`)).rows[0].m);
     before = await measureResidue(c);
     await runTransformZalo(c);

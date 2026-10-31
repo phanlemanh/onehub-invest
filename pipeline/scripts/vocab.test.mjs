@@ -45,7 +45,7 @@ const NHAN = [
   ["assertion_method", "e2_llm", "LLM E2"], ["assertion_method", "legacy", "Giá trị có trước"],
   ["registry_status", "active", "Đang dùng"], ["registry_status", "merged", "Đã gộp"],
   ["registry_status", "split", "Đã tách"], ["registry_status", "retired", "Đã nghỉ"],
-  ["alias_kind", "tai_khoan_nguon", "Tài khoản tại nguồn"], ["alias_kind", "sdt_bam", "SĐT băm"], ["alias_kind", "ten", "Tên hiển thị"],
+  ["alias_kind", "tai_khoan_nguon", "Tài khoản tại nguồn"], ["alias_kind", "sdt_bam", "SĐT băm"], ["alias_kind", "ten", "Tên hiển thị"], ["alias_kind", "sdt", "SĐT số gốc"],
   ["registry_event_kind", "gop", "Gộp"], ["registry_event_kind", "tach", "Tách"], ["registry_event_kind", "nghi", "Nghỉ"],
   ["party_role", "nguoi_dang", "Người đăng"],
   ["listing_intent", "offer", "Tin rao"], ["listing_intent", "inquiry", "Yêu cầu"],
@@ -72,7 +72,7 @@ test("VB-AC-1 sổ thật: đủ 17 trục, đúng code + nhãn từng byte", ()
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 78); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field
+  assert.equal(NHAN.length, 79); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

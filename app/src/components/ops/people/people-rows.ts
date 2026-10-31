@@ -15,6 +15,6 @@ export function hangNguoi(r: NguoiHang, entries: SourceNameEntry[], xem: boolean
     an: !xem,
     ten: hien("ten", r.ten),
     taiKhoan: hien("tai_khoan_nguon", r.taiKhoan),
-    sdtBam: hien("sdt_bam", r.sdtBam),
+    sdtBam: hien(r.sdtKind, r.sdtBam),
   }
 }

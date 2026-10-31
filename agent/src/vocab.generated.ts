@@ -11,7 +11,7 @@ export const VOCAB = {
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
   registry_status: ["active", "merged", "split", "retired"],
-  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten"],
+  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt"],
   registry_event_kind: ["gop", "tach", "nghi"],
   party_role: ["nguoi_dang"],
   listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
@@ -49,7 +49,7 @@ export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedr
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
-export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten" } as const;
+export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" } as const;
 export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;
 export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
 export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;

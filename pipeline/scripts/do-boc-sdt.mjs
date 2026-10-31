@@ -99,7 +99,10 @@ function demNhieuSdt(tin, bai, source) {
   return tin.filter((t) => t.source === source && new Set(t.post_ids.flatMap((id) => [...rong(bai.get(id)?.text)])).size >= 2).length;
 }
 /** Thước SD-AC-7 trên một chụp + một bộ bóc; trả danh sách lỗi có tên. */
-function thuocBay(tin, bai, boc) {
+/** SD3 đổi dạng ra sang E.164; thước SD2 so ở dạng 10 chữ số «0…» của bộ dò rộng, nên quy về đó trước khi so. */
+const ve0 = (p) => (p && p.startsWith("+84") ? "0" + p.slice(3) : p);
+function thuocBay(tin, bai, bocGoc) {
+  const boc = (text) => bocGoc(text).map(ve0);
   const loi = [];
   let sot = 0;
   let so11 = 0;
@@ -114,7 +117,7 @@ function thuocBay(tin, bai, boc) {
   if (so11) loi.push(`11 chữ số: ${so11} bài S03 nhận số không đủ 10 chữ số`);
   for (const t of tin) {
     const chon = chonSdtTin(t.post_ids.map((id) => ({ post_id: id, posted_at: bai.get(id)?.posted_at, phones: boc(bai.get(id)?.text ?? "") })));
-    if ((t.seller_phone ?? null) !== chon) loi.push(`chọn: tin ${t.offer_id} seller_phone khác chonSdtTin trên bài của tin`);
+    if ((ve0(t.seller_phone) ?? null) !== chon) loi.push(`chọn: tin ${t.offer_id} seller_phone khác chonSdtTin trên bài của tin`);
   }
   return { loi, sot, so11 };
 }
@@ -159,10 +162,10 @@ try {
     bao(dong.length === 1 && n === thuoc && !truocCo, `SD-AC-5 ${s}: log «tin nhiều SĐT: ${n}» (${dong.length} dòng) · thước bộ dò rộng ${thuoc} · audit 30/10 ${auditNhieuSdt(s)} · bản trước có dòng: ${truocCo}`);
   }
 
-  // ---- SD-AC-6: dạng số và băm không đổi ----
+  // ---- SD-AC-6: dạng số và băm — từ SD3 là E.164 `+84…`, băm từ dạng ấy ----
   for (const s of ["S03", "S05"]) {
     const co = sau.filter((t) => t.source === s && t.seller_phone);
-    const sai = co.filter((t) => !/^0[35789]\d{8}$/.test(t.seller_phone) || t.seller_phone_hash !== createHash("sha256").update(t.seller_phone).digest("hex").slice(0, 32));
+    const sai = co.filter((t) => !/^\+84[35789]\d{8}$/.test(t.seller_phone) || t.seller_phone_hash !== createHash("sha256").update(t.seller_phone).digest("hex").slice(0, 32));
     bao(co.length > 0 && sai.length === 0, `SD-AC-6 ${s}: ${co.length} tin có SĐT · sai dạng/băm ${sai.length}${sai.length ? ` (${sai.slice(0, 5).map((t) => `${t.offer_id}:${hinh(t.seller_phone)}`).join("; ")})` : ""}`);
   }
 

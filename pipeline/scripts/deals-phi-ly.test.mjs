@@ -1,5 +1,7 @@
 // deals-phi-ly.test.mjs — hồ sơ deals-loai-tin-phi-ly (ON11): luật loại tin phi lý khỏi Căn giá tốt.
 // Ca DB chạy BEGIN…ROLLBACK trên Postgres local :5433 (khuôn bait-gap-sellers.test.mjs) — không để lại dòng nào.
+import { createHash } from "node:crypto";
+import { napSdtE164 } from "../lib/nap-060.mjs";
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
@@ -42,6 +44,7 @@ async function withTx(fn) {
   try {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
+    await napSdtE164(c); // SD3: nạp 060 trong giao dịch khi DB chưa áp
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -49,7 +52,8 @@ async function withTx(fn) {
   }
 }
 
-const H = "t_on11_seller_hash_0000000000000000";
+const SO_H = "+84919000011"; // số bịa
+const H = createHash("sha256").update(SO_H).digest("hex").slice(0, 32);
 // [offer_id, diện tích, phòng ngủ, giảm % so với thước, lý do mong đợi]
 const FIX = [
   ["t_on11_hop_ly", 80, 2, 10, null],
@@ -63,18 +67,17 @@ async function fixture(c) {
   const ruler = (await c.query(`SELECT area_id, m FROM v_ruler_p2_area ORDER BY area_id LIMIT 1`)).rows[0];
   assert.ok(ruler, "DP-AC-2 không phường nào có thước (v_ruler_p2_area rỗng) — ca không chạy được");
   const m = Number(ruler.m);
-  await c.query(
-    `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen) VALUES ($1, '{S03}', 4, now(), now())`,
-    [H],
-  );
+  // SD3: sellers là view trên bí danh sdt + tin — người theo SĐT như bộ dựng danh bạ ghi.
+  await c.query(`INSERT INTO parties (party_key, source) VALUES ('pty_01HZZZZZZZZZZZZZZZZZZZDP11', 'S03')`);
+  await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ('pty_01HZZZZZZZZZZZZZZZZZZZDP11', 'sdt', $1, 'S03')`, [SO_H]);
   for (const [id, area, beds, gap] of FIX) {
     const perm2 = Math.round(m * (1 - gap / 100));
     await c.query(
       `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
-         seller_phone_hash, property_type, area_id, area_m2, bedrooms, price_perm2, bait_gap_pct)
-       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', $2, 'unknown', $3, $4, $5, $6::numeric,
+         seller_phone_hash, seller_phone, property_type, area_id, area_m2, bedrooms, price_perm2, bait_gap_pct)
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', $2, $8, 'unknown', $3, $4, $5, $6::numeric,
                ROUND((1 - $6::numeric / $7::numeric) * 100, 1))`,
-      [id, H, ruler.area_id, area, beds, perm2, m],
+      [id, H, ruler.area_id, area, beds, perm2, m, SO_H],
     );
   }
   return m;
