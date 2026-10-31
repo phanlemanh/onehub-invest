@@ -23,9 +23,10 @@ async function dem(c) {
 }
 
 /** Áp `sql` hai lần trong giao dịch ROLLBACK; ném lỗi ghim khi lần hai đổi số dòng hay lần một không điền lùi. */
-async function kiem(c, sql) {
+async function kiem(c, sql, truoc = "") {
   await c.query("BEGIN");
   try {
+    if (truoc) await c.query(truoc);
     await c.query(sql);
     const mot = await dem(c);
     if (!(mot.tin > 0 && mot.moi === mot.tin && mot.khac === mot.tin)) {
@@ -67,7 +68,11 @@ async function main() {
     }
     let do_ = null;
     try {
-      await kiem(c, lech);
+      // bản chép DB có thể đã áp 059 (khoá + dòng điền lùi có sẵn) — trong giao dịch ROLLBACK, đưa về trạng thái trước 059
+      // (bỏ khoá, xoá dòng new_listing) để bản lệch chạy trên đúng nền mà migration gặp lần đầu
+      const truoc059 = "DROP INDEX IF EXISTS history_transactional_new_listing_uq;\n" +
+        "DELETE FROM history_transactional WHERE change_type = 'new_listing';\n";
+      await kiem(c, lech, truoc059);
     } catch (e) {
       do_ = e.message;
     }

@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: do-danh-ba-sdt
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; hàm thuần của lệnh trên tập viết trước (tin, bài, người gửi, bí danh, vai): ma trận ca → số, số assert = số phần tử: N1 cặp 1–1 chưa gộp đếm 1, cặp đã merged không đếm, SĐT dùng chung 2 người gửi không đếm, người gửi 2 SĐT không đếm; N2 người SĐT có vai rút rồi vẫn tính là không vai, người có vai chưa rút không tính; người có bí danh `sdt` (không `sdt_bam`) được đếm ở N1 và N2; N3 sellers = số SĐT → pass, lệch → fail; N4 tin hai bài hai số đếm 1, tin rỗng seller_phone mà bài có số đếm 1; N5 bài «ddd dd•dd ddd» đếm 1, bài «09x.xxx.xxx» không đếm, bài 33 số (chạm trần 3) không đếm; bộ bóc là extractPhones nạp từ transform-zalo.mjs (so tham chiếu hàm); đối chứng đỏ: bản chép đếm cả cặp đã merged → bắt ('N1 DEM CA CAP DA GOP'); bản chép không trừ bài chạm trần → bắt ('N5 KHONG TRU TRAN 3 SO'); bản chép chỉ đọc `sdt_bam` → bắt ('BO SOT BI DANH sdt')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ddb_db
+    paths: [pipeline/do-danh-ba-sdt.mjs, _acceptance/do-danh-ba-sdt/probes/db.mjs]
+    expected: "exit 0; DB thử oneinvest_p4_ddb dựng mới (db/db-thu.sh), xoá khi xong; lệnh (tiến trình con, không --write) và câu đo độc lập chép từ audit §7 (SQL Q2/Q3/Q4 + bộ dò rộng viết lại trong probe, không nạp do-danh-ba-sdt.mjs) cho cùng mười số, in bảng hai cột; ma trận Δ viết trước 12 ô (N1, N2, N4-nhiều, N4-rỗng, N5 × S03, S05 + N3 sellers + N3 SĐT trên tin) × 9 fixture (mỗi nguồn: cặp 1–1 + người SĐT không vai · tin hai SĐT · tin trống SĐT · bài «ddd dd•dd ddd»; thêm một dòng sellers): mỗi fixture COMMIT (mã 'ddb-thu-…', chèn theo ràng buộc 055/044) cho Δ đúng bằng vectơ viết trước ở MỌI ô (ô đích 1, ô kéo theo như N3 SĐT khi thêm SĐT mới 1, còn lại 0), số assert = 12 × 9 = 108, và sau mỗi fixture lệnh vẫn trùng câu đo độc lập; đối chứng đỏ: câu độc lập trên bảng VALUES lệch một số → hàm so bắt ('LECH N<i> <nguồn>'); in 'DOI CHUNG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ddb_db
+    paths: [pipeline/do-danh-ba-sdt.mjs, _acceptance/do-danh-ba-sdt/probes/db.mjs]
+    expected: "exit 0; trên DB thử: `--write` hai lần liên tiếp, phiên DB đặt TimeZone=UTC, có sẵn một dòng cũ checked_at 23:30 UTC hôm trước (= hôm nay giờ máy thu) → dòng cũ bị thay, số dòng danh-ba-sdt:* có checked_at hôm nay bằng đúng số (kiểm × đối tượng) viết trước (N1,N2,N4,N5 × S03,S05 + N3 × sellers = 9) sau mỗi lượt, mọi detail khớp khoá=giá trị chỉ số; status theo design §1 tính lại từ detail; quét entity + detail: 0 chuỗi khớp SĐT (0[35789]\\d{8}, +84), 0 khoá băm 32 hex của sale_offers, 0 sender_name; câu ghi trong mã chỉ DELETE/INSERT dq_check_results; DATABASE_URL trỏ cổng đóng → thoát ≠ 0; đối chứng đỏ: bản chép bỏ bước xoá trong ngày → lượt hai thành 18 dòng, bắt ('NHAN DONG TRONG NGAY'); in 'GHI DQ OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ddb_job
+    paths: [scripts/cloud-sync.sh, _acceptance/do-danh-ba-sdt/probes/job.sh]
+    expected: "exit 0; trong scripts/cloud-sync.sh dòng job_run cloud-sync do-danh-ba-sdt … --write là job_run cuối, sau job_run … bac-du-lieu; bash -n sạch; hộp thử: cloud-sync với các bước giả thoát 0 và do-danh-ba-sdt giả in dòng fail rồi thoát 0 → job thoát 0; bước giả thoát 1 → job thoát ≠ 0 kèm 'JOB FAIL [cloud-sync] bước do-danh-ba-sdt'; đối chứng: bản chép đặt bước trước bac-du-lieu → bắt ('SAI THU TU BUOC'); in 'JOB OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ddb_app_nhan
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-danh-ba-sdt-label.test.tsx]
+    expected: "exit 0; ma trận viết trước 5 kiểm × đối tượng hợp lệ × (pass, fail), detail sinh bằng hàm veDetail của lệnh thật → dqCheckName, dqEntityLabel, dqDetail known: true; số assert = số phần tử; đối chứng đỏ: detail thiếu khoá → known: false"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5b
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ddb_on12
+    paths: [app/src/lib/dq-labels.ts, pipeline/do-danh-ba-sdt.mjs, _acceptance/do-danh-ba-sdt/probes/on12.sh]
+    expected: "exit 0; trên DB thử riêng sau một lượt --write: ca ON12-AC-5 (app/tests/ops-nhan-theo-context.test.tsx) pass; CONTEXT.md có thuật ngữ chứa 'danh-ba-sdt'; in 'ON12 OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ddb_pham_vi
+    paths: [_acceptance/do-danh-ba-sdt/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp của git diff merge-base origin/main..HEAD trong danh sách AC-6; in 'PHAM VI OK'; đối chứng: db/migrations/057_x.sql, pipeline/refresh-bait-gap.mjs và scripts/zalo-import-daily.sh → NGOAI PHAM VI"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
