@@ -5,7 +5,7 @@ slug: cong-tac-gop-nguoi-dem
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T15:31:01Z
 approved_by:
@@ -74,3 +74,9 @@ Trục (quét hình thái, preset test-matrix):
 ## Đường đo
 
 Hàng không có `opportunity.md` (giao từ Ngoài-1 HD13); thước là AC-7 trên dữ liệu thật chép máy thu.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Thước nạp lại xoá dòng nhật ký công tắc trong lượt thử trên DB thử (luôn lùi lại), lệch nếp nhật ký chỉ-thêm trong mã kiểm thử.
+  - Ngoài-2: Bài kiểm lệnh dựng tay khi công tắc tắt (E9) chỉ dựa vào nhãn tự báo, chưa kiểm số cặp gộp; việc không gộp khi tắt vẫn được chứng ở E1, E4 và thước E7.
