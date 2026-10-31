@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c9d0a3224eec039b05e4d454f6e3cdfa5756afe3
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: the-so-doc-gia-tri-song

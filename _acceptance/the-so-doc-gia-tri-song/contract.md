@@ -5,7 +5,7 @@ slug: the-so-doc-gia-tri-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T22:45:24Z
 approved_by:
@@ -57,3 +57,10 @@ Quét tay ba trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 - Hàng «Người đăng» trên bảng so — HD7 `the-duyet-hien-nguoi-dang`.
 - Sau khi duyệt, sheet tự sang thẻ kế — HD8 `the-duyet-tu-sang-the-ke`.
 - Thẻ bổ sung tin (`agent_output`), nhánh viewer và cloud của `/ops/review`.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Dữ liệu «lúc chấm» trong test dựng tay, không lấy từ nơi sinh thẻ thật — nơi sinh thẻ đổi cách ghi thì test vẫn xanh.
+  - Ngoài-2: Test chỉ kiểm ô có chứa giá trị đúng, nên ô dính thêm chữ thừa vẫn qua.
+  - Ngoài-3: Với thẻ đã quyết, test chỉ kiểm ba nút quyết đã biến mất, chưa kiểm khu trạng thái đã quyết còn hiện.
