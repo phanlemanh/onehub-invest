@@ -11,7 +11,7 @@ export const VOCAB = Object.freeze({
   evidence_tier: Object.freeze(["fact", "observed", "inferred"]),
   assertion_method: Object.freeze(["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"]),
   registry_status: Object.freeze(["active", "merged", "split", "retired"]),
-  alias_kind: Object.freeze(["tai_khoan_nguon", "sdt_bam", "ten"]),
+  alias_kind: Object.freeze(["tai_khoan_nguon", "sdt_bam", "ten", "sdt"]),
   registry_event_kind: Object.freeze(["gop", "tach", "nghi"]),
   party_role: Object.freeze(["nguoi_dang"]),
   listing_intent: Object.freeze(["offer", "inquiry", "not_listing", "unknown"]),
@@ -30,7 +30,7 @@ export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", b
 export const EVIDENCE_TIER = Object.freeze({ fact: "fact", observed: "observed", inferred: "inferred" });
 export const ASSERTION_METHOD = Object.freeze({ hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" });
 export const REGISTRY_STATUS = Object.freeze({ active: "active", merged: "merged", split: "split", retired: "retired" });
-export const ALIAS_KIND = Object.freeze({ tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten" });
+export const ALIAS_KIND = Object.freeze({ tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" });
 export const REGISTRY_EVENT_KIND = Object.freeze({ gop: "gop", tach: "tach", nghi: "nghi" });
 export const PARTY_ROLE = Object.freeze({ nguoi_dang: "nguoi_dang" });
 export const LISTING_INTENT = Object.freeze({ offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" });

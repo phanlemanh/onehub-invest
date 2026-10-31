@@ -388,6 +388,7 @@ enums:
       - { code: tai_khoan_nguon, label_vi: Tài khoản tại nguồn }
       - { code: sdt_bam, label_vi: SĐT băm }
       - { code: ten, label_vi: Tên hiển thị }
+      - { code: sdt, label_vi: SĐT số gốc }   # SD3 (Hỏi-A): E.164 +84…, RESO MemberMobilePhone
   registry_event_kind:
     term_vi: Sự kiện danh bạ
     dd_field: null
