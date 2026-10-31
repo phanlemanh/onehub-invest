@@ -41,7 +41,19 @@ const MA_TRAN = [
   ["toạ độ · trong khung VN", { payload: {}, ...HN }, [f("latitude", "21.0285", "latitude"), f("longitude", "105.8542", "longitude")]],
   ["toạ độ · ngoài khung VN", { payload: {}, latitude: 48.85, longitude: 2.35 }, []],
   ["toạ độ · thiếu kinh độ", { payload: {}, latitude: 21.03, longitude: null }, []],
+  ["toạ độ · vắng cả hai", { payload: {} }, []],
+  ["mã căn · vắng", { payload: {} }, []],
+  ["WC · vắng", { payload: {}, toilets: null }, []],
+  ["WC · rác > 50", { payload: {}, toilets: 60 }, []],
+  ["ngang hợp lệ + dài rác 0", { payload: { width: 4, length: 0 } }, [f("frontage_length", "4", "payload.width")]],
+  ["ngang hợp lệ + dài rác > 200", { payload: { width: 4, length: 250 } }, [f("frontage_length", "4", "payload.width")]],
+  ["ngang hợp lệ + dài rác chữ", { payload: { width: 4, length: "sâu" } }, [f("frontage_length", "4", "payload.width")]],
 ];
+
+// Ô bắt buộc của ma trận (trường × lớp) — mỗi ô phải có ít nhất một dòng mang đúng tiền tố tên.
+const O_BAT_BUOC = ["số nhà · hợp lệ", "số nhà · vắng", "số nhà · rác", "mã căn · hợp lệ", "mã căn · vắng", "mã căn · rác",
+  "ngang + dài · số JSON", "dài không ngang", "ngang · rác", "ngang hợp lệ + dài rác", "tầng · số JSON", "tầng · vắng", "tầng · rác",
+  "WC · hợp lệ", "WC · vắng", "WC · rác", "toạ độ · trong khung VN", "toạ độ · vắng cả hai", "toạ độ · ngoài khung VN"];
 
 test("DT-AC-3: docDacTrungS06 — mỗi dòng ma trận ra đúng tập {field, value, rule_id}; số assert bằng số dòng", () => {
   let n = 0;
@@ -50,10 +62,36 @@ test("DT-AC-3: docDacTrungS06 — mỗi dòng ma trận ra đúng tập {field, 
     n++;
   }
   assert.equal(n, MA_TRAN.length);
-  assert.equal(n, 26);
+  assert.equal(n, 33);
+  for (const o of O_BAT_BUOC) assert.ok(MA_TRAN.some(([ten]) => ten.startsWith(o)), `DT-AC-3 ma trận thiếu ô «${o}»`);
 });
 
 let dem = 0;
+/** Nạp bản sao đột biến của lib/dac-trung-s06.mjs (thay `cu` bằng `moi`), trả module; xoá tệp ngay sau khi nạp. */
+async function banSao(cu, moi) {
+  const goc = readFileSync(join(LIB, "dac-trung-s06.mjs"), "utf8");
+  assert.ok(goc.includes(cu), `đột biến không khớp mã nguồn: «${cu}»`);
+  const tep = join(LIB, `dac-trung-s06.dotbien-${process.pid}-${++dem}.mjs`);
+  writeFileSync(tep, goc.replace(cu, moi));
+  try {
+    return await import(pathToFileURL(tep).href);
+  } finally {
+    unlinkSync(tep);
+  }
+}
+
+test("DT-AC-3 đỏ: bản sao bỏ kiểm chiều dài thì dòng «ngang hợp lệ + dài rác 0» ra ngang × dài", async () => {
+  const m = await banSao("if (ngangOk && daiOk) them(", "if (ngangOk) them(");
+  const dong = MA_TRAN.find(([ten]) => ten === "ngang hợp lệ + dài rác 0");
+  assert.notDeepEqual(m.docDacTrungS06(dong[1]), dong[2], "DT-AC-3 đỏ: chiều dài rác phải lọt ở bản sao");
+});
+
+test("DT-AC-3 đỏ: bản sao bỏ trần WC thì dòng «WC · rác > 50» ra phát biểu", async () => {
+  const m = await banSao("wc > 0 && wc <= TRAN.wc", "wc > 0");
+  const dong = MA_TRAN.find(([ten]) => ten === "WC · rác > 50");
+  assert.notDeepEqual(m.docDacTrungS06(dong[1]), dong[2], "DT-AC-3 đỏ: WC trên trần phải lọt ở bản sao");
+});
+
 test("DT-AC-3 đỏ: bản sao bỏ khung toạ độ VN thì dòng «toạ độ ngoài khung» ra phát biểu", async () => {
   const goc = readFileSync(join(LIB, "dac-trung-s06.mjs"), "utf8");
   const cu = "const KHUNG_VN = { vi: [8, 24], kinh: [102, 110] };";

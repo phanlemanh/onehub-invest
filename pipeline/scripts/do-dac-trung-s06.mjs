@@ -128,15 +128,24 @@ try {
   }
   const doSau = doBay(kq);
   bao(doSau.length === 0, `DT-AC-7 bản mới: mỗi đặc trưng ≥ 95% trên mẫu số hợp lệ${doSau.length ? ` — ${doSau.join("; ")}` : ""}`);
-  const { rows: thieu } = await c.query(`
+  const SQL_THIEU = `
     SELECT o.offer_id, x.f FROM sale_offers o
       CROSS JOIN LATERAL (VALUES ('street_number', o.street_number), ('unit_number', o.unit_number),
         ('frontage_length', o.frontage_length::text), ('lot_size_dimensions', o.lot_size_dimensions), ('stories', o.stories::text),
         ('latitude', o.latitude::text), ('longitude', o.longitude::text)) AS x(f, v)
      WHERE o.source = 'S06' AND x.v IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.subject_key = 'S06:' || o.originating_system_key
-             AND fa.field = x.f AND fa.retracted_at IS NULL AND fa.value_key = assertion_value_key(x.v))`);
+             AND fa.field = x.f AND fa.retracted_at IS NULL AND fa.value_key = assertion_value_key(x.v))`;
+  const { rows: thieu } = await c.query(SQL_THIEU);
   bao(thieu.length === 0, `DT-AC-7 mọi ô mới khác rỗng có phát biểu sống cùng giá trị — thiếu ${thieu.length}${thieu.length ? ` (${thieu.slice(0, 5).map((t) => `${t.offer_id}.${t.f}`).join("; ")})` : ""}`);
+  // Đối chứng dương: đổi số nhà của một tin S06 trên bản chép (SAVEPOINT) thì truy vấn phải gọi tên đúng ô ấy.
+  await c.query("SAVEPOINT doi_chung_7");
+  const { rows: [mot] } = await c.query("SELECT offer_id FROM sale_offers WHERE source = 'S06' AND street_number IS NOT NULL ORDER BY offer_id LIMIT 1");
+  await c.query("UPDATE sale_offer_records SET street_number = 'dt-doi-chung' WHERE offer_id = $1", [mot.offer_id]);
+  const { rows: thieuDc } = await c.query(SQL_THIEU);
+  await c.query("ROLLBACK TO SAVEPOINT doi_chung_7");
+  bao(thieuDc.length === 1 && thieuDc[0].offer_id === mot.offer_id && thieuDc[0].f === "street_number",
+    `DT-AC-7 đối chứng: đổi số nhà một tin thì thước gọi tên ô thiếu phát biểu (${thieuDc.map((t) => `${t.offer_id}.${t.f}`).join("; ")})`);
 
   const lech = lechCot(truoc, sau);
   bao(lech.length === 0 && truoc.length > 0, `DT-AC-8 tập tin + năm cột cũ + offer_status (mọi nguồn) + bathrooms (S03/S05): ${truoc.length} tin · lệch ${lech.length}${lech.length ? ` (${lech.slice(0, 10).join("; ")})` : ""}`);
