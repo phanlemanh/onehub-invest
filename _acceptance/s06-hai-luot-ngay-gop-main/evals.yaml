@@ -13,7 +13,7 @@ evals:
     executor: script
     cmd: config:executors.script.lich_chotot
     paths: [pipeline/cron/*.plist]
-    expected: "exit 0; dòng '14:00 cách mọi mốc giờ cố định của <n> plist khác (kho + bản cài) ≥ 60 phút' (n ≥ 20), dòng 'loại trừ có tên …' liệt cloud-sync, zalo-heartbeat, zalo-watchdog ở cả kho và cài, và chiều đỏ '19:30 va airdna-daily · 23:30 va zalo-import · job giả 13:30 ngoài kho va 14:00'"
+    expected: "exit 0; dòng '14:00 cách mọi mốc giờ cố định của <n> plist khác (<k> kho + <c> bản cài) ≥ 60 phút' (n ≥ 20, c ≥ 1 — c = 0 thì exit 1 «không đọc được job đã cài nào»), dòng 'loại trừ có tên …' liệt cloud-sync, zalo-heartbeat, zalo-watchdog ở cả kho và cài, và chiều đỏ '19:30 va airdna-daily · 23:30 va zalo-import · job giả 13:30 ngoài kho va 14:00 · job mỗi giờ va 14:00'"
   - id: E3
     criterion: AC-3
     executor: script
