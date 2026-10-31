@@ -7,9 +7,13 @@
 import type { AgentConfig } from "../runtime/loop.js";
 import type { PairData } from "../tools/native.js";
 
-/** Ngưỡng ghép căn — giữ nguyên ba số của prompt cũ; chỉnh ngưỡng là việc của tập nhãn (PL8/PL9). */
-export const NGUONG = Object.freeze({ giaM2YesMax: 0.15, dienTichYesMax: 0.1, giaM2NoMin: 0.3 });
-export const PHIEN_BAN_NGUONG = "pl25-1";
+/**
+ * Ngưỡng ghép căn. Giá/m² giữ hai số của PL25. Diện tích (HD2, Mạnh chốt 31/10): so theo sai số làm tròn và cách đo, không
+ * theo phần trăm — lệch không quá `dienTichLamTronM2` m² coi là bằng nhau (40,5 m² có thể ghi 40 hay 41); cặp có căn hộ
+ * (tim tường hay thông thủy) chỉ khác khi lệch vượt cả số m² ấy lẫn `dienTichCanHoMax`.
+ */
+export const NGUONG = Object.freeze({ giaM2YesMax: 0.15, giaM2NoMin: 0.3, dienTichLamTronM2: 1, dienTichCanHoMax: 0.1 });
+export const PHIEN_BAN_NGUONG = "pl25-2";
 
 export type KetLuan = "yes" | "no" | "unsure";
 /** `cau` là lời định tính đưa vào prompt (không mang số đo — AC-2); `so` là số đo chỉ in trên thẻ cho người duyệt. */
@@ -61,6 +65,32 @@ export function soPhuong(a: string | number | null, b: string | number | null): 
   return ka === kb ? "khop" : "lech";
 }
 
+/** Khoá đường: bỏ MỘT tiền tố «Đường/Phố/Đ.», bỏ dấu, hoa và ký tự lạ — «Đường Đinh Bộ Lĩnh» = «đinh bộ lĩnh». */
+export function khoaDuong(v: string | null): string | null {
+  if (v === null) return null;
+  const k = v
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/^(?:đường|duong|phố|pho|đ\.|d\.)\s*/u, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  return k || null;
+}
+/** Khoá mã căn: bỏ hoa và mọi ký tự không phải chữ/số — «A 1» = «a1». */
+export function khoaMaCan(v: string | null): string | null {
+  const k = (v ?? "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  return k || null;
+}
+/** Tầng: số đầu tiên trong chuỗi — «Tầng 12» = «12»; chuỗi không có số (vd «tầng cao») coi như thiếu. */
+export function soTang(v: string | null): number | null {
+  const m = (v ?? "").match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+
 const loaiHinh = (s: string | null): string | null => {
   const t = (s ?? "").trim().toLowerCase();
   return t && t !== "unknown" ? t : null;
@@ -70,6 +100,9 @@ const giaM2 = (t: PairData["a"] | PairData["b"]): number | null =>
 /** Độ lệch thành phần trăm một chữ số thập phân, cắt xuống: 0,149 hiện «14,9%», không thành «15%». Chỉ dùng cho `so`
  *  trên thẻ — lệch đúng bằng ngưỡng vẫn in ra đúng số ngưỡng, nên số không bao giờ vào prompt (S4 r1–r2, AC-2). */
 export const phanTram = (x: number) => `${(Math.floor(x * 1000 + 1e-6) / 10).toFixed(1).replace(".", ",")}%`;
+
+/** Diện tích in trên thẻ, dấu phẩy thập phân: 40.5 → «40,5». */
+const m2 = (v: number | null) => String(v).replace(".", ",");
 
 /** Luật ghép căn — tất định, đối xứng A↔B. `lechFn`, `soPhuongFn` chỉ để test đối chứng. */
 export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn: typeof soPhuong = soPhuong): KetQuaLuat {
@@ -87,19 +120,40 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn:
   else if (giaXa) ly_do.push({ ma: "gia_m2_xa", cau: "giá/m² lệch xa", so: phanTram(lg) });
   else if (lg < NGUONG.giaM2YesMax) ly_do.push({ ma: "gia_m2_gan", cau: "giá/m² sát nhau", so: phanTram(lg) });
   else ly_do.push({ ma: "gia_m2_giua", cau: "giá/m² lệch vừa", so: phanTram(lg) });
-  if (ld === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
-  else if (ld < NGUONG.dienTichYesMax) ly_do.push({ ma: "dien_tich_gan", cau: "diện tích sát nhau", so: phanTram(ld) });
-  else ly_do.push({ ma: "dien_tich_xa", cau: "diện tích lệch đáng kể", so: phanTram(ld) });
+  // Diện tích theo làm tròn + cách đo (HD2): |a − b| làm tròn 1e-9 (40,5 ↔ 41,5 đúng bằng 1 m²).
+  const da = pair.a.areaM2 !== null && pair.b.areaM2 !== null && pair.a.areaM2 > 0 && pair.b.areaM2 > 0
+    ? lamTron(Math.abs(pair.a.areaM2 - pair.b.areaM2)) : null;
+  const canHo = la === "apartment" || lb === "apartment";
+  const khacDienTich = da !== null && da > NGUONG.dienTichLamTronM2 && (!canHo || (ld !== null && ld > NGUONG.dienTichCanHoMax));
+  const soDienTich = da === null ? undefined : `${m2(pair.a.areaM2)} ↔ ${m2(pair.b.areaM2)} m² · ${phanTram(ld ?? 0)}`;
+  if (da === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
+  else if (khacDienTich) ly_do.push({ ma: "khac_dien_tich", cau: "diện tích khác", so: soDienTich });
+  else ly_do.push({ ma: "dien_tich_gan", cau: "diện tích khớp trong sai số", so: soDienTich });
   if (sp === "thieu") ly_do.push({ ma: "thieu_phuong", cau: "thiếu phường ở một tin" });
   else ly_do.push(khacPhuong ? { ma: "khac_phuong", cau: "khác phường" } : { ma: "cung_phuong", cau: "cùng phường" });
   if (la === null || lb === null) ly_do.push({ ma: "thieu_loai", cau: "thiếu loại hình ở một tin" });
   else ly_do.push(khacLoai ? { ma: "khac_loai", cau: "khác loại hình" } : { ma: "cung_loai", cau: "cùng loại hình" });
 
+  // Luật loại trừ (HD2): đặc trưng có ở CẢ HAI tin mà khác thì «khác căn»; thiếu một bên bỏ qua, không suy.
+  const dacTrung: [string, string, string | number | null, string | number | null, unknown, unknown][] = [
+    ["pn", "phòng ngủ", pair.a.bedrooms, pair.b.bedrooms, pair.a.bedrooms, pair.b.bedrooms],
+    ["wc", "WC", pair.a.bathrooms, pair.b.bathrooms, pair.a.bathrooms, pair.b.bathrooms],
+    ["duong", "đường", khoaDuong(pair.a.street), khoaDuong(pair.b.street), pair.a.street, pair.b.street],
+    ["ma_can", "mã căn", khoaMaCan(pair.a.block), khoaMaCan(pair.b.block), pair.a.block, pair.b.block],
+    ["tang", "tầng", soTang(pair.a.floor), soTang(pair.b.floor), pair.a.floor, pair.b.floor],
+  ];
+  let khacDacTrung = khacDienTich;
+  for (const [ma, ten, ka, kb, ga, gb] of dacTrung) {
+    if (ka === null || kb === null || ka === kb) continue;
+    khacDacTrung = true;
+    ly_do.push({ ma: `khac_${ma}`, cau: `${ten} khác`, so: `${String(ga).trim()} ↔ ${String(gb).trim()}` });
+  }
+
   let same_house: KetLuan = "unsure";
-  if (giaXa || khacPhuong || khacLoai) same_house = "no";
+  if (giaXa || khacPhuong || khacLoai || khacDacTrung) same_house = "no";
   else if (
     lg !== null && lg < NGUONG.giaM2YesMax &&
-    ld !== null && ld < NGUONG.dienTichYesMax &&
+    da !== null &&
     sp === "khop" &&
     la !== null && la === lb
   ) same_house = "yes";

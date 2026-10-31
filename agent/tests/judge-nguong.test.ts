@@ -35,20 +35,20 @@ const voi = (o: Partial<Tin>): Tin => ({ ...goc, ...o });
 
 /** Ma trận viết trước — 12 ô; ô 10–12 sát ngưỡng. */
 const MA_TRAN: { o: number; ten: string; p: PairData; ky_vong: KetLuan }[] = [
-  { o: 1, ten: "giá 5% dt 4% cùng phường cùng loại", p: cap(goc, voi({ perm2: 105 * TR, area: 52 })), ky_vong: "yes" },
-  { o: 2, ten: "giá/m² lệch 41%", p: cap(goc, voi({ perm2: 170 * TR, area: 52 })), ky_vong: "no" },
-  { o: 3, ten: "khác phường", p: cap(goc, voi({ perm2: 105 * TR, area: 52, phuong: "Gò Vấp" })), ky_vong: "no" },
-  { o: 4, ten: "khác loại", p: cap(goc, voi({ perm2: 105 * TR, area: 52, loai: "can_ho" })), ky_vong: "no" },
-  { o: 5, ten: "giá/m² lệch 20%", p: cap(goc, voi({ perm2: 125 * TR, area: 52 })), ky_vong: "unsure" },
+  { o: 1, ten: "giá 5% dt lệch 1 m² cùng phường cùng loại", p: cap(goc, voi({ perm2: 105 * TR, area: 51 })), ky_vong: "yes" },
+  { o: 2, ten: "giá/m² lệch 41%", p: cap(goc, voi({ perm2: 170 * TR, area: 51 })), ky_vong: "no" },
+  { o: 3, ten: "khác phường", p: cap(goc, voi({ perm2: 105 * TR, area: 51, phuong: "Gò Vấp" })), ky_vong: "no" },
+  { o: 4, ten: "khác loại", p: cap(goc, voi({ perm2: 105 * TR, area: 51, loai: "can_ho" })), ky_vong: "no" },
+  { o: 5, ten: "giá/m² lệch 20%", p: cap(goc, voi({ perm2: 125 * TR, area: 51 })), ky_vong: "unsure" },
   { o: 6, ten: "thiếu diện tích một bên", p: cap(goc, voi({ perm2: 105 * TR, area: null })), ky_vong: "unsure" },
   {
     o: 7,
     ten: "phường viết khác dạng",
-    p: cap(voi({ phuong: "Phường Bình Thạnh" }), voi({ perm2: 105 * TR, area: 52, phuong: "binh thanh" })),
+    p: cap(voi({ phuong: "Phường Bình Thạnh" }), voi({ perm2: 105 * TR, area: 51, phuong: "binh thanh" })),
     ky_vong: "yes",
   },
-  { o: 8, ten: "loại unknown một bên", p: cap(goc, voi({ perm2: 105 * TR, area: 52, loai: "unknown" })), ky_vong: "unsure" },
-  { o: 9, ten: "chỉ một bên có phường", p: cap(goc, voi({ perm2: 105 * TR, area: 52, phuong: null })), ky_vong: "unsure" },
+  { o: 8, ten: "loại unknown một bên", p: cap(goc, voi({ perm2: 105 * TR, area: 51, loai: "unknown" })), ky_vong: "unsure" },
+  { o: 9, ten: "chỉ một bên có phường", p: cap(goc, voi({ perm2: 105 * TR, area: 51, phuong: null })), ky_vong: "unsure" },
   { o: 10, ten: "giá/m² lệch đúng 0,15", p: cap(voi({ perm2: 85 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure" },
   { o: 11, ten: "100 vs 140 — phân biệt mẫu số", p: cap(goc, voi({ perm2: 140 * TR })), ky_vong: "unsure" },
   { o: 12, ten: "giá/m² lệch đúng 0,30", p: cap(voi({ perm2: 70 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure" },
@@ -62,7 +62,7 @@ function kiemO(o: number, p: PairData, ky_vong: KetLuan, lechFn = lech) {
 }
 
 test("AC-1 hằng NGUONG khai một chỗ", () => {
-  assert.deepEqual({ ...NGUONG }, { giaM2YesMax: 0.15, dienTichYesMax: 0.1, giaM2NoMin: 0.3 });
+  assert.deepEqual({ ...NGUONG }, { giaM2YesMax: 0.15, giaM2NoMin: 0.3, dienTichLamTronM2: 1, dienTichCanHoMax: 0.1 });
 });
 
 test("AC-1 ma trận luật — 12 ô, hai chiều A↔B", () => {
@@ -91,19 +91,20 @@ test("AC-1 đối chứng đỏ: mẫu số min ở ô 11 ra no", () => {
 const lechTho = (x: number | null, y: number | null) =>
   x === null || y === null || x <= 0 || y <= 0 ? null : Math.abs(x - y) / Math.max(x, y);
 
-/** Quét n = 1..2000 phần mười: diện tích lệch đúng 0,1, giá/m² lệch đúng 0,15 và 0,30 — mọi cặp phải ra unsure. */
+/** Quét n = 1..2000 phần mười: căn hộ diện tích lệch đúng 0,1 (sai số cách đo — HD2: chưa vượt, nên «yes»), giá/m² lệch
+ *  đúng 0,15 và 0,30 (unsure). Kết luận không được phụ thuộc sai số dấu phẩy động. */
 function kiemDungNguong(lechFn = lech): number {
   let n = 0;
   for (let i = 1; i <= 2000; i++) {
     const b = i / 10;
-    const ca: [string, PairData][] = [
-      ["dt 0,1", cap(voi({ area: (b * 9) / 10 }), voi({ perm2: 105 * TR, area: b }))],
-      ["giá 0,15", cap(voi({ perm2: ((b * 85) / 100) * TR }), voi({ perm2: b * TR }))],
-      ["giá 0,30", cap(voi({ perm2: ((b * 70) / 100) * TR }), voi({ perm2: b * TR }))],
+    const ca: [string, PairData, KetLuan][] = [
+      ["dt 0,1 căn hộ", cap(voi({ area: (b * 9) / 10, loai: "apartment" }), voi({ perm2: 105 * TR, area: b, loai: "apartment" })), "yes"],
+      ["giá 0,15", cap(voi({ perm2: ((b * 85) / 100) * TR }), voi({ perm2: b * TR })), "unsure"],
+      ["giá 0,30", cap(voi({ perm2: ((b * 70) / 100) * TR }), voi({ perm2: b * TR })), "unsure"],
     ];
-    for (const [ten, p] of ca) {
+    for (const [ten, p, ky] of ca) {
       const kq = apNguong(p, lechFn).same_house;
-      assert.equal(kq, "unsure", `AC-1 đúng ngưỡng lệch theo sai số máy: ${ten} ở b=${b} ra ${kq}`);
+      assert.equal(kq, ky, `AC-1 đúng ngưỡng lệch theo sai số máy: ${ten} ở b=${b} ra ${kq}`);
       n++;
     }
   }
@@ -112,13 +113,13 @@ function kiemDungNguong(lechFn = lech): number {
 
 test("AC-1 lệch đúng bằng ngưỡng — kết luận không phụ thuộc sai số dấu phẩy động", () => {
   assert.equal(kiemDungNguong(), 6000);
-  // ca hội đồng nêu: 19,8 vs 22 m² — tính thô dưới 0,1 nhưng phải là đúng ngưỡng
-  const p = cap(voi({ area: 19.8 }), voi({ perm2: 105 * TR, area: 22 }));
-  assert.ok(lechTho(19.8, 22)! < NGUONG.dienTichYesMax);
+  // ca hội đồng nêu: 19,8 vs 22 m² — tính thô dưới 0,1 nhưng phải là đúng ngưỡng (căn hộ: chưa vượt sai số cách đo)
+  const p = cap(voi({ area: 19.8, loai: "apartment" }), voi({ perm2: 105 * TR, area: 22, loai: "apartment" }));
+  assert.ok(lechTho(19.8, 22)! < NGUONG.dienTichCanHoMax);
   const kq = apNguong(p);
-  assert.equal(kq.same_house, "unsure");
-  assert.equal(kq.lech.dien_tich, NGUONG.dienTichYesMax);
-  assert.ok(lyDoChu(kq).includes("diện tích lệch đáng kể (10,0%)"));
+  assert.equal(kq.same_house, "yes");
+  assert.equal(kq.lech.dien_tich, NGUONG.dienTichCanHoMax);
+  assert.ok(lyDoChu(kq).includes("diện tích khớp trong sai số (19,8 ↔ 22 m² · 10,0%)"));
 });
 
 test("AC-1 đối chứng đỏ: so độ lệch thô thì quét đúng ngưỡng bắt được", () => {
@@ -154,8 +155,8 @@ test("AC-2 sát ngưỡng — prompt không mang số đo, kể cả lệch đú
     { p: cap(voi({ perm2: 70 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", cau: "giá/m² lệch vừa", so: "30,0%" },
     { p: cap(voi({ perm2: 69.97 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", cau: "giá/m² lệch xa", so: "30,0%" },
     { p: cap(voi({ perm2: 69.6 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", cau: "giá/m² lệch xa", so: "30,4%" },
-    { p: cap(voi({ area: 45.25 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "yes", cau: "diện tích sát nhau", so: "9,5%" },
-    { p: cap(voi({ area: 45 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "unsure", cau: "diện tích lệch đáng kể", so: "10,0%" },
+    { p: cap(voi({ area: 45.25, loai: "apartment" }), voi({ perm2: 105 * TR, area: 50, loai: "apartment" })), ky_vong: "yes", cau: "diện tích khớp trong sai số", so: "45,25 ↔ 50 m² · 9,5%" },
+    { p: cap(voi({ area: 44.9, loai: "apartment" }), voi({ perm2: 105 * TR, area: 50, loai: "apartment" })), ky_vong: "no", cau: "diện tích khác", so: "44,9 ↔ 50 m² · 10,2%" },
   ];
   let n = 0;
   for (const s of SAT) {
@@ -228,7 +229,7 @@ const soPhuongCu = (a: string | number | null, b: string | number | null): SoPhu
 
 const NHAN_LY_DO: Record<string, SoPhuong> = { cung_phuong: "khop", khac_phuong: "lech", thieu_phuong: "thieu" };
 /** Cặp tin số đo ô (1) ma trận AC-1 PL25 (giá/m² lệch 5%, dt lệch 4%, cùng loại), chỉ khác tên phường. */
-const capPhuong = (a: string | null, b: string | null) => cap(voi({ phuong: a }), voi({ perm2: 105 * TR, area: 52, phuong: b }));
+const capPhuong = (a: string | null, b: string | null) => cap(voi({ phuong: a }), voi({ perm2: 105 * TR, area: 51, phuong: b }));
 
 /** Ma trận viết trước — ĐÚNG 32 cặp (evals.yaml E2): 21 ô của KP-AC-2 theo thứ tự cũ, ô (21) «Phường 12 | phuong-12» nay
  *  khop; rồi 11 ô phường số mới. */
