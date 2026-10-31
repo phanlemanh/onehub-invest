@@ -5,7 +5,7 @@ slug: sellers-view-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-sellers-view-len-cloud-design.md
@@ -58,3 +58,6 @@ phần cloud của migration nằm ở `docs/ops/cloud-schema-catchup-*.sql`, M�
 ## Notes
 
 - Lượt sync đầu sau khi áp 060 lên máy thu tráo trọn sellers, sale_offers, properties trên cloud sang khoá SĐT mới trong một giao dịch (Hỏi-1 SD3: đổi một lần) — không cần DDL cloud; việc ghi đè này là câu hỏi cho người ở Cổng 1 (d-20261031T150425Z-6).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Sổ lộ trình chưa ghi rằng cloud giữ danh sách người bán dạng bảng và tệp hướng dẫn cloud 060 còn chờ chạy phần đo trước.
+  - Ngoài-2: Ô kiểm «ghi vào view người bán thì lỗi» nhận mọi lỗi, chưa ghim thông điệp lỗi do view.
