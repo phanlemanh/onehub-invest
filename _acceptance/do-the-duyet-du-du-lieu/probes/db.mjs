@@ -100,6 +100,7 @@ function soSanh(lenh, docLap) {
 }
 
 // ---------- E2: đối chứng + ma trận Δ ----------
+let FIXTURE_IDS = []
 const c = await moi()
 try {
   const truoc = soCuaLenh()
@@ -119,6 +120,7 @@ try {
   assert.equal(chon.length, 2, "bản chép không có hai tin sống chưa có ảnh để dựng fixture")
   const [P, Q] = chon.map((r) => r.offer_id)
   const S = chon[0].source
+  FIXTURE_IDS = [P, Q]
   await c.query(`UPDATE sale_offer_records SET price_vnd = 5e9, area_m2 = 80, price_perm2 = 6.25e7,
       area_id = (SELECT area_id FROM sale_offers WHERE area_id IS NOT NULL LIMIT 1), property_type = 'apartment', bedrooms = 2,
       bathrooms = 2, street_raw = 'Phố thử', block_raw = 'Toà thử', floor_raw = '9', seller_name = 'Người thử'
@@ -204,16 +206,23 @@ try {
     const dat = r.check_name === "the-duyet:do-day" ? true : v.so === 0
     assert.equal(r.status, dat ? "pass" : "fail", `${r.check_name} ${r.entity}`)
   }
-  const { rows: ids } = await c2.query(`SELECT DISTINCT offer_id FROM sale_offers LIMIT 50`)
+  // Quét LỚP: mọi offer_id của bảng bản ghi tin (kể cả tin đã nghỉ) + mọi offer_id thẻ duyệt nhắc tới + định danh fixture.
+  const { rows: ids } = await c2.query(`
+    SELECT offer_id FROM sale_offer_records
+    UNION SELECT t.evidence -> b.k ->> 'offer_id' FROM review_queue t CROSS JOIN (VALUES ('offer_a'), ('offer_b')) b(k)
+    WHERE jsonb_typeof(t.evidence -> b.k -> 'offer_id') = 'string'`)
+  const tapId = new Set([...ids.map((x) => x.offer_id), ...FIXTURE_IDS, "dtd-thu-khong-co", "dtd-thu-a", "dtd-thu-b"])
+  assert.ok(FIXTURE_IDS.length === 2 && FIXTURE_IDS.every((id) => tapId.has(id)), "tập quét thiếu định danh fixture P, Q")
   const quetLot = (dong) => {
     for (const r of dong) for (const s of [r.entity, r.detail]) {
       if (/https?:|\/\//.test(s)) throw new Error(`DINH DANH TIN LOT: URL ở ${r.check_name}`)
-      for (const { offer_id } of [...ids, { offer_id: "dtd-thu-khong-co" }]) if (s.includes(offer_id)) throw new Error(`DINH DANH TIN LOT: ${r.check_name}`)
+      for (const tu of s.split(/[\s=]+/)) if (tapId.has(tu)) throw new Error(`DINH DANH TIN LOT: ${r.check_name}`)
     }
   }
   quetLot(rows)
-  assert.throws(() => quetLot([{ check_name: "x", entity: "entity_match", detail: "tong=1 dtd-thu-khong-co" }]), /DINH DANH TIN LOT/)
-  ok("E3 hai lượt --write phiên UTC: số dòng hôm nay = số dòng lệnh in, dòng 06:30 bị thay, ba kiểm đầu fail mà thoát 0, detail chỉ khoá=số, 0 định danh tin (đối chứng 'DINH DANH TIN LOT')")
+  for (const id of [...FIXTURE_IDS, "dtd-thu-khong-co"])
+    assert.throws(() => quetLot([{ check_name: "x", entity: "entity_match", detail: `tong=1 ben=${id}` }]), /DINH DANH TIN LOT/)
+  ok(`E3 hai lượt --write phiên UTC: số dòng hôm nay = số dòng lệnh in, dòng 06:30 bị thay, ba kiểm đầu fail mà thoát 0, detail chỉ khoá=số, 0 định danh tin trên tập ${tapId.size} offer_id gồm hai fixture P, Q (đối chứng 'DINH DANH TIN LOT' cho P, Q và tin không có)`)
   const ma = readFileSync(LENH, "utf8").split("\n").filter((l) => !/^\s*(\/\/|\*)/.test(l)).join("\n")
   const quetGhi = (t) => {
     for (const m of t.matchAll(/\b(INSERT\s+INTO|UPDATE|DELETE\s+FROM|TRUNCATE|COPY)\s+([a-z_]+)/gi))
