@@ -34,8 +34,9 @@ export const TRUONG = Object.freeze({
   nguoi_dang: (t) => coChu(t.seller_phone_hash) || coChu(t.seller_name),
 });
 
-// Luật ảnh chép đúng bộ đọc của app (app/src/lib/ops/review-media.ts + zalo-media.ts): vai Vận hành thấy ảnh đã tải
-// (`local_file` = `<snapshot>/media/<tệp>` hợp khuôn); quản trị viên thấy thêm URL gốc http(s) và image_url của thẻ.
+// Luật ảnh chép đúng bộ đọc của app (app/src/lib/ops/review-media.ts + zalo-media.ts, sau anh-goc-qua-may-chu): mọi vai
+// từ Vận hành thấy cùng một bộ ảnh — ảnh đã tải (`local_file` = `<snapshot>/media/<tệp>` hợp khuôn) và ảnh máy chủ lấy hộ
+// (`media_url` có, `media_key` đúng khuôn 32 hex). `image_url` trong thẻ không còn tới trình duyệt.
 const SNAPSHOT_ID = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/;
 const MEDIA_FILE = /^media\/[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 export function anhDaTai(localFile) {
@@ -46,22 +47,17 @@ export function anhDaTai(localFile) {
   const file = localFile.slice(cut + 1);
   return SNAPSHOT_ID.test(snap) && !snap.includes("..") && MEDIA_FILE.test(file) && !file.includes("..");
 }
-export function urlXemDuoc(url) {
-  if (typeof url !== "string") return false;
-  try {
-    const u = new URL(url);
-    return u.protocol === "https:" || u.protocol === "http:";
-  } catch {
-    return false;
-  }
+const MEDIA_KEY = /^[0-9a-f]{32}$/;
+export function layHoDuoc(m) {
+  return Boolean(m.media_url) && MEDIA_KEY.test(m.media_key ?? "");
 }
 
-/** Hai bên của một thẻ entity_match: `{ offerId, imageUrl }`; bên thiếu offer_id bị bỏ (như sidesOf của app). */
+/** Hai bên của một thẻ entity_match: `{ offerId }`; bên thiếu offer_id bị bỏ (như sidesOf của app). */
 export function benCuaThe(evidence) {
   const ev = evidence && typeof evidence === "object" ? evidence : {};
   return BEN.flatMap((k) => {
     const o = ev[k] && typeof ev[k] === "object" ? ev[k] : {};
-    return typeof o.offer_id === "string" ? [{ offerId: o.offer_id, imageUrl: o.image_url }] : [];
+    return typeof o.offer_id === "string" ? [{ offerId: o.offer_id }] : [];
   });
 }
 
@@ -69,7 +65,7 @@ export function benCuaThe(evidence) {
  * Bốn kiểm — hàm thuần. Đầu vào:
  * - `the`: dòng review_queue `{ item_type, status, evidence }` (lọc thẻ entity_match đang chờ ở đây);
  * - `tin`: Map offer_id → dòng sale_offers (source + các cột của TRUONG);
- * - `media`: Map offer_id → dòng media `{ media_url, local_file }`.
+ * - `media`: Map offer_id → dòng media `{ media_key, media_url, local_file }`.
  */
 export function tinhSo({ the, tin, media }) {
   const cho = the.filter((t) => t.item_type === LOAI_THE && t.status === "pending");
@@ -79,8 +75,9 @@ export function tinhSo({ the, tin, media }) {
     const loi = { roiKho: 0, anhOps: 0, anhAdmin: 0 };
     for (const b of benCuaThe(t.evidence)) {
       const dong = media.get(b.offerId) ?? [];
-      const ops = dong.some((m) => anhDaTai(m.local_file));
-      const admin = ops || dong.some((m) => urlXemDuoc(m.media_url)) || urlXemDuoc(b.imageUrl);
+      // Hai vai cùng một bộ ảnh từ anh-goc-qua-may-chu; giữ hai kiểm để số theo vai vẫn đọc được nếu luật vai tách lại.
+      const ops = dong.some((m) => anhDaTai(m.local_file) || layHoDuoc(m));
+      const admin = ops;
       const song = tin.get(b.offerId);
       if (!song) loi.roiKho++;
       else {
@@ -136,7 +133,7 @@ export async function docDuLieu(client) {
               street_raw, block_raw, floor_raw, seller_phone_hash, seller_name
        FROM sale_offers WHERE offer_id = ANY ($1::text[])`, [ids]);
     const { rows: mediaRows } = await client.query(
-      `SELECT resource_record_key AS offer_id, media_url, local_file FROM media WHERE resource_record_key = ANY ($1::text[])`,
+      `SELECT resource_record_key AS offer_id, media_key, media_url, local_file FROM media WHERE resource_record_key = ANY ($1::text[])`,
       [ids]);
     await client.query("COMMIT");
     const media = new Map();

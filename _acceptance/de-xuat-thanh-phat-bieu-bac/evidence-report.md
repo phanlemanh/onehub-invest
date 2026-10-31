@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8dda79719fd65ed5e5e914cdb35ec85dcc1b2c81
+verified_commit: 585687ac614970e3f37c2a36c77485ef81fe85a3
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -283,3 +283,7 @@ sha: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 5 — 2026-10-31, do HD11 thêm bước do-the-duyet cuối cloud-sync; dãy bước trong job-exit.test.mjs đổi
 run_id: repin-20261031T005125Z-17275
 sha: 8dda79719fd65ed5e5e914cdb35ec85dcc1b2c81 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths) · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
+
+### Re-pin lần 6 — 2026-10-31, do gộp main 4307a0b8 vào nhánh HD11
+run_id: repin-20261031T013406Z-45800
+sha: 585687ac614970e3f37c2a36c77485ef81fe85a3 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)

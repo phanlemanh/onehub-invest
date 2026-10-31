@@ -19,8 +19,8 @@ Mỗi thẻ có hai bên `evidence.offer_a.offer_id`, `evidence.offer_b.offer_id
 | Kiểm | Đo | Đối tượng | Đạt khi |
 |---|---|---|---|
 | `the-duyet:roi-kho` | Thẻ có ít nhất một bên mà `offer_id` không còn trong `sale_offers` (tin nghỉ hoặc khoá chết) | `entity_match` | 0 |
-| `the-duyet:anh-ops` | Thẻ có ít nhất một bên không có dòng `media` nào mang `local_file` (vai Vận hành chỉ thấy ảnh đã tải) | `entity_match` | 0 |
-| `the-duyet:anh-admin` | Thẻ có ít nhất một bên không có ảnh nào quản trị viên thấy: ảnh đã tải, URL gốc http(s) của `media`, hoặc `image_url` của bên trong thẻ — đúng luật `review-media.ts` | `entity_match` | 0 |
+| `the-duyet:anh-ops` | Thẻ có ít nhất một bên không có ảnh nào vai Vận hành thấy (ảnh đã tải, hoặc ảnh máy chủ lấy hộ theo `media_key` từ anh-goc-qua-may-chu) | `entity_match` | 0 |
+| `the-duyet:anh-admin` | Thẻ có ít nhất một bên không có ảnh nào quản trị viên thấy — đúng luật `review-media.ts`; từ anh-goc-qua-may-chu (31/10) cùng bộ ảnh với vai Vận hành: ảnh đã tải hoặc ảnh máy chủ lấy hộ theo `media_key` | `entity_match` | 0 |
 | `the-duyet:do-day` | Mỗi bên, theo nguồn của bên: số bên có giá trị ở từng trường trong 10 trường của bảng so — giá, DT, giá/m², phường, loại hình (khác `unknown`), PN, WC, đường, toà, tầng — cộng «người đăng» (`seller_phone_hash` hoặc `seller_name` có giá trị) — đọc từ `sale_offers` hiện tại, đếm theo `offer_id` khác nhau mỗi nguồn; bên rời kho không vào mẫu số (Hỏi-2) | `S03`/`S05`/`S06` (nguồn có bên trong thẻ chờ) | chỉ báo (Hỏi-1) |
 
 Không thẻ chờ nào → ba kiểm đầu ghi `tong=0` và đạt; `do-day` không ghi dòng nguồn nào.

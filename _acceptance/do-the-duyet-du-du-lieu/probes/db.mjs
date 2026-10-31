@@ -7,6 +7,7 @@ import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
 const pg = createRequire(path.join(ROOT, "pipeline/package.json"))("pg")
@@ -45,28 +46,28 @@ function soCuaLenh() {
   return v
 }
 
-/** Câu đo độc lập: SQL trên review_queue, sale_offers, media (luật ảnh = ràng buộc khuôn của bảng media + http(s)). */
+/** Câu đo độc lập: SQL trên review_queue, sale_offers, media (luật ảnh = ràng buộc khuôn local_file của bảng media, hoặc
+ *  URL gốc kèm media_key 32 hex mà máy chủ lấy hộ — anh-goc-qua-may-chu; hai vai cùng một bộ ảnh). */
 async function soDocLap(c) {
   const v = {}
   const { rows } = await c.query(`
     WITH the AS (SELECT id, evidence FROM review_queue WHERE item_type = 'entity_match' AND status = 'pending'),
     ben AS (
-      SELECT t.id, b.k, t.evidence -> b.k ->> 'offer_id' AS oid, t.evidence -> b.k ->> 'image_url' AS img
+      SELECT t.id, b.k, t.evidence -> b.k ->> 'offer_id' AS oid
       FROM the t CROSS JOIN (VALUES ('offer_a'), ('offer_b')) b(k)
       WHERE jsonb_typeof(t.evidence -> b.k -> 'offer_id') = 'string'),
     co AS (
       SELECT ben.*,
         EXISTS (SELECT 1 FROM sale_offers s WHERE s.offer_id = ben.oid) AS song,
         EXISTS (SELECT 1 FROM media m WHERE m.resource_record_key = ben.oid
-                  AND m.local_file ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]*/media/[A-Za-z0-9][A-Za-z0-9_.-]*$'
-                  AND position('..' in m.local_file) = 0) AS ops,
-        EXISTS (SELECT 1 FROM media m WHERE m.resource_record_key = ben.oid
-                  AND (m.local_file IS NOT NULL OR m.media_url ~ '^https?://')) OR coalesce(ben.img ~ '^https?://', false) AS admin
+                  AND ((m.local_file ~ '^[A-Za-z0-9][A-Za-z0-9_.:-]*/media/[A-Za-z0-9][A-Za-z0-9_.-]*$'
+                        AND position('..' in m.local_file) = 0)
+                    OR (m.media_url IS NOT NULL AND m.media_key ~ '^[0-9a-f]{32}$'))) AS ops
       FROM ben)
     SELECT (SELECT count(*) FROM the)::int AS tong,
       count(DISTINCT id) FILTER (WHERE NOT song)::int AS roi_so, count(*) FILTER (WHERE NOT song)::int AS roi_ben,
       count(DISTINCT id) FILTER (WHERE NOT ops)::int AS ops_so, count(*) FILTER (WHERE NOT ops)::int AS ops_ben,
-      count(DISTINCT id) FILTER (WHERE NOT admin)::int AS admin_so, count(*) FILTER (WHERE NOT admin)::int AS admin_ben
+      count(DISTINCT id) FILTER (WHERE NOT ops)::int AS admin_so, count(*) FILTER (WHERE NOT ops)::int AS admin_ben
     FROM co`)
   const r = rows[0]
   for (const k of Object.keys(KIEM3)) v[`${k}.tong`] = r.tong
@@ -130,24 +131,27 @@ try {
   const theCho = (a, b, status = "pending") => c.query(
     `INSERT INTO review_queue (item_type, item_id, title, evidence, status) VALUES ('entity_match', $1, 'dtd-thu', $2, $3)`,
     [`dtd-thu-${++soThe}`, JSON.stringify({ offer_a: { offer_id: a }, offer_b: { offer_id: b } }), status])
-  const anh = (oid, url, file) => c.query(
+  const anh = (khoa, oid, url, file) => c.query(
     `INSERT INTO media (media_key, resource_record_key, originating_system_name, originating_system_resource_record_key,
        media_order, media_modification_timestamp, media_url, local_file) VALUES ($1, $2, $3, $1, 0, now(), $4, $5)`,
-    [`dtd-thu-${oid}-${file ? "l" : "u"}`, oid, S, url, file])
+    [khoa, oid, S, url, file])
+  const khoaDung = (x) => createHash("md5").update(`dtd-thu-${x}`).digest("hex")
   const day = (n) => Object.fromEntries(["tong", ...TRUONG].map((k) => [`do-day.${S}.${k}`, n]))
   const FIX = [
     { ten: "thẻ chờ có bên rời kho (P, tin không có)", lam: () => theCho(P, "dtd-thu-khong-co"),
       delta: { "roi-kho.tong": 1, "anh-ops.tong": 1, "anh-admin.tong": 1, "roi-kho.so": 1, "roi-kho.ben": 1,
         "anh-ops.so": 1, "anh-ops.ben": 2, "anh-admin.so": 1, "anh-admin.ben": 2, ...day(1) } },
-    { ten: "bên P có ảnh chỉ URL gốc", lam: () => anh(P, "https://anh.example/p.jpg", null),
-      delta: { "anh-admin.ben": -1 } },
+    { ten: "bên P có dòng URL gốc khoá sai khuôn (không lấy hộ được)", lam: () => anh(`dtd-thu-${P}-u`, P, "https://anh.example/p0.jpg", null),
+      delta: {} },
+    { ten: "bên P có dòng URL gốc khoá đúng khuôn (máy chủ lấy hộ)", lam: () => anh(khoaDung(P), P, "https://anh.example/p.jpg", null),
+      delta: { "anh-ops.ben": -1, "anh-admin.ben": -1 } },
     { ten: "thẻ chờ (Q, P), Q 0 dòng media", lam: () => theCho(Q, P),
-      delta: { "roi-kho.tong": 1, "anh-ops.tong": 1, "anh-admin.tong": 1, "anh-ops.so": 1, "anh-ops.ben": 2,
-        "anh-admin.so": 1, "anh-admin.ben": 1, ...day(1), [`do-day.${S}.tong`]: 1 } },
+      delta: { "roi-kho.tong": 1, "anh-ops.tong": 1, "anh-admin.tong": 1, "anh-ops.so": 1, "anh-ops.ben": 1,
+        "anh-admin.so": 1, "anh-admin.ben": 1, ...day(1) } },
     { ten: "bên Q thiếu PN", lam: () => c.query(`UPDATE sale_offer_records SET bedrooms = NULL WHERE offer_id = $1`, [Q]),
       delta: { [`do-day.${S}.pn`]: -1 } },
-    { ten: "bên Q có ảnh đã tải", lam: () => anh(Q, null, `hanoi__dtd-thu__x/media/q.jpg`),
-      delta: { "anh-ops.ben": -1, "anh-admin.so": -1, "anh-admin.ben": -1 } },
+    { ten: "bên Q có ảnh đã tải", lam: () => anh(`dtd-thu-${Q}-l`, Q, null, `hanoi__dtd-thu__x/media/q.jpg`),
+      delta: { "anh-ops.so": -1, "anh-ops.ben": -1, "anh-admin.so": -1, "anh-admin.ben": -1 } },
     { ten: "thẻ đã quyết (không đếm)", lam: () => theCho("dtd-thu-a", "dtd-thu-b", "approved"), delta: {} },
   ]
   let soAssert = 0
