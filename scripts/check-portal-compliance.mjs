@@ -2,7 +2,8 @@
 // Kiểm TĨNH ranh giới cổng (AGENTS.md luật 5, 6, 9): đo TRẠNG THÁI cây mã, không đo diff.
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
-//   - /api/zalo-media chặn vai Vận hành trở lên trước khi đọc file, nhánh ?path= (OpenClaw) chặn admin (PL3);
+//   - /api/zalo-media chặn vai Vận hành trở lên trước khi đọc file, nhánh ?path= (OpenClaw) chặn admin (PL3); nhánh
+//     ?media= chặn vai trước tra DB và lấy ảnh gốc (anh-goc-qua-may-chu);
 //   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
@@ -132,6 +133,37 @@ check(
 check(
   !routeChuyenPhien(mediaRoute.replace("return serveZaloMedia(req, user);", "return serveZaloMedia(req);")),
   "chiều đỏ zalo-media: bản sao route gọi serveZaloMedia(req) không kèm phiên → báo",
+);
+
+// 6b. Chế độ ?media=<khoá> (anh-goc-qua-may-chu): gate xemNoiDungTin đứng TRƯỚC lời gọi serveMediaKey; trong serveMediaKey
+//     khuôn khoá kiểm trước truy vấn DB, truy vấn trước lấy ảnh; route không gọi bộ lấy ảnh trực tiếp.
+function mediaKeyGated(src) {
+  const serve = src.slice(src.indexOf("export async function serveZaloMedia"));
+  const gate = serve.indexOf("if (!xemNoiDungTin(user)) return");
+  const goiMedia = serve.indexOf("serveMediaKey(");
+  const fn = src.slice(src.indexOf("async function serveMediaKey"), src.indexOf("export async function serveZaloMedia"));
+  const khuon = fn.indexOf("if (!MEDIA_KEY.test(key)) return");
+  const tra = fn.indexOf("await traMedia(key)");
+  const lay = fn.indexOf("return layAnh(");
+  return gate >= 0 && goiMedia > gate && khuon >= 0 && tra > khuon && lay > tra && !/(layAnh|traMedia)\w*[^;\n]*\(/.test(serve.slice(0, gate));
+}
+check(
+  mediaKeyGated(media) && !/lay-anh-goc|layAnhGoc/.test(mediaRoute),
+  "zalo-media ?media=: xemNoiDungTin chặn trước tra DB và lấy ảnh; khoá kiểm khuôn trước truy vấn; route không gọi bộ lấy ảnh",
+);
+// Chiều đỏ: bản sao gọi lấy ảnh trước gate vai → phép kiểm phải báo.
+check(
+  !mediaKeyGated(
+    media.replace(
+      "if (!xemNoiDungTin(user)) return notFound();",
+      'await (deps.layAnh ?? layAnhGoc)("https://x.test/a.jpg");\n  if (!xemNoiDungTin(user)) return notFound();',
+    ),
+  ),
+  "chiều đỏ zalo-media: nhánh media gọi lấy ảnh trước xemNoiDungTin → báo",
+);
+check(
+  !mediaKeyGated(media.replace("if (!MEDIA_KEY.test(key)) return notFound();", "")),
+  "chiều đỏ zalo-media: bản sao bỏ kiểm khuôn khoá → báo",
 );
 
 // 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;

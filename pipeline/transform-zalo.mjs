@@ -115,14 +115,31 @@ function coDuoiSoNgan(t, m, i, nhom) {
   return nhom.test(than) && than.endsWith("000") && THAN_SO_TIEN.test(t.slice(0, i - 1));
 }
 
+/** Bộ bóc SĐT (SD2) — tách khỏi PHONE_RE để chữ đọc giá (gatSo) không đổi. Tiền tố 0 · +84 · 84 rồi đúng 9 chữ số, mỗi
+ *  chữ số đứng sau tối đa hai ký tự tách (chấm, gạch, cách, tab, «•», «·» — xuống dòng không nối số). «(+84)», «(84)»,
+ *  «(0dd)» mở ngoặc trước khi khớp. */
+const TACH_SDT = "[.\\- \\t•·]";
+const SDT_RE = new RegExp(`(?<!\\d)(?:\\+84|84|0)(?:${TACH_SDT}{0,2}\\d){9}(?!\\d)`, "g");
+/** Ngay sau một khớp: ký tự tách rồi đúng một chữ số lẻ — số 11 chữ số viết tách («0912 345 678 9»), bỏ cả khớp. */
+const DUOI_SO_LE = new RegExp(`^${TACH_SDT}{1,2}\\d(?!\\d)`);
+
+/** Chữ để bóc SĐT: gạt URL (tên tệp ảnh mang dãy số giống SĐT), mở ngoặc mã quốc gia và đầu số. */
+function chuBocSdt(text) {
+  return (text ?? "")
+    .replace(URL_RE, " ")
+    .replace(/\(\s*\+?84\s*\)/g, "+84")
+    .replace(/\(\s*(0\d{2})\s*\)/g, "$1");
+}
+
 export function extractPhones(text) {
-  const raw = text.match(PHONE_RE) ?? [];
+  const t = chuBocSdt(text);
+  const raw = [...t.matchAll(SDT_RE)].filter((m) => !DUOI_SO_LE.test(t.slice(m.index + m[0].length))).map((m) => m[0]);
   const seen = new Set();
   const out = [];
   for (const r of raw) {
     let digits = r.replace(/\D/g, "");
     if (digits.startsWith("84")) digits = "0" + digits.slice(2);
-    if (digits.length !== 10 && digits.length !== 11) continue;
+    if (digits.length !== 10) continue;
     if (!/^[35789]/.test(digits.slice(1))) continue;
     if (seen.has(digits)) continue;
     seen.add(digits);
@@ -130,6 +147,24 @@ export function extractPhones(text) {
     if (out.length >= 3) break; // tin rao hiếm khi có >3 SĐT thật
   }
   return out;
+}
+
+/** SĐT của tin (SD2): số nằm trong nhiều bài nhất của tin; hoà thì xét bài theo thứ tự neo (posted_at sớm nhất, hoà thì
+ *  post_id nhỏ nhất — cùng «post neo» của lib/offer-key.mjs) và lấy số hoà đầu tiên trong bài sớm nhất có nó.
+ *  @param {{post_id: string, posted_at: string|Date, phones: string[]|null}[]} bai @returns {string|null} */
+export function chonSdtTin(bai) {
+  const dem = new Map();
+  for (const b of bai) for (const p of new Set(b.phones ?? [])) dem.set(p, (dem.get(p) ?? 0) + 1);
+  if (!dem.size) return null;
+  const max = Math.max(...dem.values());
+  const neo = [...bai].sort((a, b) => new Date(a.posted_at) - new Date(b.posted_at) || (a.post_id < b.post_id ? -1 : a.post_id > b.post_id ? 1 : 0));
+  for (const b of neo) for (const p of b.phones ?? []) if (dem.get(p) === max) return p;
+  return null;
+}
+
+/** Số tin mà hợp các số trên mọi bài của tin có ≥ 2 số khác nhau (dòng log «tin nhiều SĐT»). */
+export function demTinNhieuSdt(nhom) {
+  return nhom.filter((o) => new Set(o.baiSdt.flatMap((b) => b.phones ?? [])).size >= 2).length;
 }
 
 // ---- Bước 2: parse ----
@@ -383,7 +418,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
         postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: pr.phone, authorHash: pr.post.author_hash, sellerName: null, sellerNameAt: null,
+        phone: null, baiSdt: [], authorHash: pr.post.author_hash, sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
     } else {
@@ -393,6 +428,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
+    o.baiSdt.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, phones: pr.phones });
     // seller_name (N1): tên hiển thị của bài mới nhất có tên — người bán trên tin rao là tầng C (ADR-0007 sửa đổi 23/10).
     const ten = (pr.post.sender_name ?? "").trim();
     if (ten && (o.sellerNameAt === null || new Date(pr.post.posted_at) >= new Date(o.sellerNameAt))) {
@@ -401,6 +437,9 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     }
   }
   console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
+  // SĐT của tin chọn trên mọi bài (SD2), không lấy số đầu của bài đầu.
+  for (const o of dedup.values()) o.phone = chonSdtTin(o.baiSdt);
+  console.log(`tin nhiều SĐT: ${demTinNhieuSdt([...dedup.values()])}`);
 
   // ---- Bước 5: ghi canonical ----
   // Upsert + đối soát offer cũ (writeOffers, migration 039) thay cho DELETE toàn nguồn:

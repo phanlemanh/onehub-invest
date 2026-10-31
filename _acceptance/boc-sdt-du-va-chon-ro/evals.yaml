@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: boc-sdt-du-va-chon-ro
+# Ca test thuần «SD-AC-n» ở pipeline/scripts/boc-sdt.test.mjs (npm test). Thước dữ liệu thật ở pipeline/scripts/do-boc-sdt.mjs
+# trên DB thử oneinvest_p1_n1 (chép oneinvest, xoá sau). Mỗi ma trận có ca đỏ trên bản sao đột biến chép cạnh tệp thật rồi xoá.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/boc-sdt.test.mjs]
+    expected: "exit 0; ca 'SD-AC-1' xanh: ma trận hình thái sinh toàn phần (6 tiền tố × 5 ký tự tách × một/hai ký tự tách = 60 ô, mỗi ô một số 10 chữ số cố định chép tay) cộng dòng bốn dạng sót của audit và các dạng đã bắt (liền, từng chữ số cách); số assert bằng số ô in ra, mỗi ô đúng mảng 0xxxxxxxxx viết trước; ca đỏ: bản sao bộ bóc dùng lại PHONE_RE cũ ghim dòng «•»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/boc-sdt.test.mjs, pipeline/parse.test.mjs]
+    expected: "exit 0; ca 'SD-AC-2' xanh: số 11 chữ số dạng liền, có dấu tách và +84 kèm 10 số đều không có trong kết quả; câu có cả số 11 chữ số lẫn số 10 chữ số ra đúng số 10 chữ số; hai số 10 chữ số kề nhau cách bởi mỗi loại ký tự tách (một và hai ký tự) và bởi xuống dòng ra đúng hai số theo thứ tự; hai ca đỏ: bản sao nhận độ dài 11 ghim «11 chữ số», bản sao cho khớp vượt 10 chữ số rồi mới bỏ ghim «hai số kề»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/boc-sdt.test.mjs]
+    expected: "exit 0; ca 'SD-AC-3' xanh: mỗi câu không có SĐT (giá nhóm nghìn, diện tích, ngày, mã căn, số cố định 024, dãy 12 số, số trong URL) ra rỗng và bản đối chứng cùng câu thêm một SĐT ra đúng số ấy; gatSo của mọi câu trong ma trận SD-AC-1…3 bằng kết quả của gatSo bản trước (chép từ merge-base vào tệp cạnh rồi xoá); ca đỏ: bản sao bỏ guard chữ số đứng sau ghim «dãy 12 số»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/boc-sdt.test.mjs]
+    expected: "exit 0; ca 'SD-AC-4' xanh: ma trận viết trước sáu tin (một bài một số, nhiều bài cùng số, số nhiều bài nhất không ở bài đầu, hoà hai số, bài neo không số, không số) — số assert bằng số dòng, mỗi dòng đúng số viết trước; ca đỏ: bản sao chọn số đầu của bài đầu ghim «nhiều bài nhất»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.boc_sdt_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-boc-sdt.mjs]
+    expected: "exit 0; dòng 'SD-AC-5' xanh: log transform S03 và S05 của bản mới mỗi nguồn đúng một dòng «tin nhiều SĐT: <n>», n bằng số tin sống mà hợp số trên mọi bài của tin có ≥ 2 số khác nhau, thước đếm bằng bộ dò rộng (không dùng extractPhones), in cạnh số audit 30/10 (S03 11, S05 1) và gọi tên tin khi lệch; ca dương trong thước: tin tổng hợp hai bài mỗi bài một số khác nhau được đếm; đối chứng: log bản trước không có dòng ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.boc_sdt_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-boc-sdt.mjs]
+    expected: "exit 0; dòng 'SD-AC-6' xanh: mọi seller_phone khác rỗng của sale_offers sống S03/S05 khớp ^0[35789]\\d{8}$ và seller_phone_hash = sha256(seller_phone) cắt 32 hex; in số tin đã kiểm mỗi nguồn (> 0)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.boc_sdt_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-boc-sdt.mjs]
+    expected: "exit 0; dòng 'SD-AC-7' xanh trên bản mới: bài S03 sót theo bộ dò rộng (trừ bài chạm trần) = 0, bài nhận số 11 chữ số = 0, các tin S03 rỗng SĐT mà bài có số ở bản trước (in số, đo 30/10 là 3) đều có seller_phone ở bản mới, mọi seller_phone sống S03/S05 = chonSdtTin trên bài của tin; ca đỏ: cùng thước chạy trên kết quả bản trước ra đỏ ghim «sót» và «11 chữ số»; in số tin nhiều SĐT mỗi nguồn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.boc_sdt_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-boc-sdt.mjs]
+    expected: "exit 0; dòng 'SD-AC-8' xanh: tập tin sống S03 và S05 (nhóm post_ids sắp xếp, price_vnd, area_m2, kind) sau bản trước và sau bản mới giống hệt, in số tin mỗi nguồn (> 0); đối chứng dương cùng lệnh: thước so tập tin trên một bản chép mà một tin bị đổi giá ra lệch và gọi tên tin ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ bộ test pipeline xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

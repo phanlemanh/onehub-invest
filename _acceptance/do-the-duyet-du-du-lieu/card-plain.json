@@ -1,0 +1,24 @@
+{
+  "feature_plain": "Mỗi lượt đồng bộ, máy ghi lên trang Kiểm chất lượng bao nhiêu thẻ ghép căn đang chờ duyệt thiếu dữ liệu: tin đã rời kho, không có ảnh xem được, hay thiếu trường nhà và người đăng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đếm bốn thứ trên thẻ ghép căn đang chờ: bên có tin đã rời kho, bên không ảnh cho vai Ops, bên không ảnh nào, và độ đầy từng trường theo nguồn."},
+    {"id": "AC-2", "p": "Sẽ cho số khớp với một câu đếm viết riêng trên bản chép DB, và mỗi thẻ mẫu thêm vào chỉ đổi đúng ô đã viết trước."},
+    {"id": "AC-3", "p": "Sẽ ghi một dòng mỗi kiểm mỗi ngày (giờ Việt Nam), chạy lại không nhân dòng, chỉ ghi số đếm, và dòng không đạt không làm job đỏ."},
+    {"id": "AC-4", "p": "Sẽ chạy như bước cuối của job đồng bộ 15 phút, sau bước đo danh bạ SĐT; lệnh lỗi thì job báo lỗi."},
+    {"id": "AC-5", "p": "Sẽ hiện tên kiểm, đối tượng và chi tiết bằng tiếng Việt trên bảng Kiểm chất lượng, có thuật ngữ trong CONTEXT.md."},
+    {"id": "AC-6", "p": "Sẽ in bảng số cho 7 thẻ đang chờ hôm nay, và số bên không ảnh khớp đúng cái bộ đọc ảnh của app trả về."},
+    {"id": "AC-7", "p": "Sẽ chỉ đổi lệnh mới, test, một bước trong cloud-sync, nhãn ở dq-labels.ts, CONTEXT.md và hồ sơ này."},
+    {"id": "AC-8", "p": "Sẽ đưa các dòng kiểm lên cloud ở lượt đồng bộ kế (trễ tối đa 15 phút), đo bằng chính câu đọc của bước đồng bộ."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa các lỗi được đo (tin rời kho, ảnh, trường thiếu) và không đo thẻ agent_output."},
+    {"id": "OOS-2", "p": "Không đặt ngưỡng đạt cho độ đầy và không làm màn số riêng."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Cách tính độ đầy (lấy số từ đâu, có tính bên đã rời kho không, những trường nào) máy đã tự chọn mà audit chưa quyết; nay thành Hỏi-2 cho anh."},
+    {"i": 1, "p": "Chỗ đặt bước đo máy mượn từ quyết định của hàng danh bạ SĐT; nay thành Hỏi-3 cho anh: cuối job 15 phút hay SQL chạy mỗi Chủ nhật."},
+    {"i": 2, "p": "Thiếu thước đo ngoài: đã thêm so số bên không ảnh với bộ đọc ảnh của app; số audit 30/10 không dựng lại được nên ghi là giới hạn."},
+    {"i": 3, "p": "Chưa đo việc dòng không đạt vẫn để job xanh: đã thêm ca có dòng không đạt vẫn thoát 0, kèm bản lỗi bị bắt."},
+    {"i": 4, "p": "Chưa đo các dòng có lên cloud: đã thêm AC-8 đo bằng câu đọc thật của bước đồng bộ."}
+  ]
+}
