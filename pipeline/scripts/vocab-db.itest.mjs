@@ -26,7 +26,16 @@ const CAU_REF = /^(?:INSERT INTO ref_(?:field_)?lookup\b[\s\S]*?;|ALTER TABLE \w
 function refGiua(tu, den) {
   const D = join(ROOT, "db/migrations");
   return readdirSync(D).filter((f) => /^\d{3}_.*\.sql$/.test(f) && +f.slice(0, 3) > tu && +f.slice(0, 3) < den).sort()
-    .flatMap((f) => readFileSync(join(D, f), "utf8").match(CAU_REF) ?? []).join("\n");
+    .flatMap((f) => {
+      const t = readFileSync(join(D, f), "utf8");
+      const cau = t.match(CAU_REF) ?? [];
+      // câu nạp ref_* không ở cấp ngoài cùng (trong DO $$, thụt lề…) thì bộ rút bỏ sót — báo tên tệp thay vì lặng im
+      const nap = (t.match(/INSERT INTO ref_(?:field_)?lookup\b/g) ?? []).length;
+      if (cau.filter((x) => x.startsWith("INSERT")).length !== nap) {
+        throw new Error(`${f}: có câu nạp ref_* ngoài cấp ngoài cùng — bộ rút của vocab-db.itest không đọc được, sửa bộ rút`);
+      }
+      return cau;
+    }).join("\n");
 }
 const REF_TRUOC_050 = refGiua(43, 50);
 const REF_SAU_050 = refGiua(50, 1000);
