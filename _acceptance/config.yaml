@@ -80,6 +80,7 @@ executors:
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
+    nap_lai_ba_luot_fk: "cd pipeline && node --test scripts/nap-lai-ba-luot-fk.test.mjs"   # reconcile-tin-con-anh — đối chứng 039 đọc FK từ lược đồ, tin còn ảnh, ROLLBACK
     nap_lai: "cd pipeline && node --test scripts/nap-lai.test.mjs"   # PL14: khoá tin bền, đối soát không xoá, quét DELETE — không cần DB
     nap_lai_db: "cd pipeline && node --test scripts/nap-lai-db.itest.mjs"   # PL14: migration 044 + đối soát + đổi khoá + listing nghỉ + sync con, trong giao dịch ROLLBACK — cần DB local :5433
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"

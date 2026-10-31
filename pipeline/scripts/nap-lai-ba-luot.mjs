@@ -37,7 +37,8 @@ export const QUYET_DINH = ["de_xuat_da_quyet", "the_review_da_quyet", "ung_vien_
 export const LIEN_KET = HANG.filter((h) => !QUYET_DINH.includes(h));
 
 // Hai hàm đối soát đối chứng — cùng chữ ký với bản 044, chỉ sống trong giao dịch ROLLBACK của thước.
-const FK = [
+/** Sáu FK của đời 039 — giữ để làm chiều đỏ của test: danh sách cứng bỏ sót bảng thêm sau (053 media). */
+export const FK_039 = [
   ["nights", "nights_listing_id_fkey", "listing_id", "listing_records(id)"],
   ["listing_stats", "listing_stats_listing_id_fkey", "listing_id", "listing_records(id)"],
   ["property_offers", "property_offers_offer_id_fkey", "offer_id", "sale_offer_records(offer_id)"],
@@ -45,10 +46,26 @@ const FK = [
   ["property_candidates", "property_candidates_offer_b_fkey", "offer_b", "sale_offer_records(offer_id)"],
   ["enrichment_proposals", "enrichment_proposals_offer_id_fkey", "offer_id", "sale_offer_records(offer_id)"],
 ];
-const DOI_CHUNG = {
-  "039": FK.map(([t, con, col, ref]) =>
-    `ALTER TABLE ${t} DROP CONSTRAINT ${con}; ALTER TABLE ${t} ADD CONSTRAINT ${con} FOREIGN KEY (${col}) REFERENCES ${ref} ON DELETE CASCADE;`,
-  ).join("\n") + `
+/**
+ * Mọi FK trỏ hai bảng bản ghi (sale_offer_records, listing_records), đọc từ pg_constraint trong giao dịch — trừ khoá
+ * tự trỏ superseded_by (đời 039 chưa có). Bảng thêm sau 044 (053 media) tự vào danh sách, đối chứng 039 không còn vướng
+ * FK khi xoá tin còn ảnh (reconcile-tin-con-anh).
+ * @returns {Promise<{ bang: string, ten: string, dinh_nghia: string }[]>}
+ */
+export async function fkTroBanGhi(client) {
+  const { rows } = await client.query(`SELECT conrelid::regclass::text AS bang, conname AS ten, pg_get_constraintdef(oid) AS dinh_nghia
+    FROM pg_constraint
+    WHERE contype = 'f' AND confrelid IN ('sale_offer_records'::regclass, 'listing_records'::regclass) AND conrelid <> confrelid
+    ORDER BY 1, 2`);
+  return rows;
+}
+
+/** SQL đổi danh sách FK sang ON DELETE CASCADE (chỉ trong giao dịch ROLLBACK của thước). */
+export const sqlCascade = (fks) => fks.map(({ bang, ten, dinh_nghia }) =>
+  `ALTER TABLE ${bang} DROP CONSTRAINT ${ten}; ALTER TABLE ${bang} ADD CONSTRAINT ${ten} ${dinh_nghia.replace(/\s+ON DELETE \w+( \w+)?/i, "")} ON DELETE CASCADE;`,
+).join("\n");
+
+export const HAM_039 = `
 CREATE OR REPLACE FUNCTION reconcile_stale_offers(p_source text, p_live text[], p_actor text)
 RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE n integer;
@@ -56,7 +73,11 @@ BEGIN
   WITH d AS (DELETE FROM sale_offer_records WHERE source = p_source AND NOT (offer_id = ANY (p_live)) RETURNING 1) -- quet-xoa:bo-qua
   SELECT count(*) INTO n FROM d;
   RETURN jsonb_build_object('source', p_source, 'stale', n, 'doi_chung', '039');
-END $$;`,
+END $$;`;
+
+/** Đối chứng: tên → SQL nạp trong giao dịch (hàm nhận client khi cần đọc lược đồ). */
+export const DOI_CHUNG = {
+  "039": async (client) => `${sqlCascade(await fkTroBanGhi(client))}\n${HAM_039}`,
   "khong-chuyen": `
 CREATE OR REPLACE FUNCTION reconcile_stale_offers(p_source text, p_live text[], p_actor text)
 RETURNS jsonb LANGUAGE plpgsql AS $$
@@ -135,7 +156,7 @@ export async function chayBaLuot(client, { doiChung = null, out = console.log } 
     if (!(await client.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await client.query(MIG_044);
     // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
     await napPhatBieu(client);
-    if (doiChung) await client.query(DOI_CHUNG[doiChung]);
+    if (doiChung) await client.query(typeof DOI_CHUNG[doiChung] === "function" ? await DOI_CHUNG[doiChung](client) : DOI_CHUNG[doiChung]);
     const can = (dk, loi) => { if (!dk) throw new Error(`nap-lai-ba-luot: điều kiện dương không đạt — ${loi}`); };
     const tinCu = [];
     for (const s of ["S03", "S05"]) {
