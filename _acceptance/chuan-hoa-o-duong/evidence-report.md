@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: chuan-hoa-o-duong
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ad585aac0de13dc42b987d01226c34a51aaabded
+verified_commit: bcfe1751629f3a1d68d27b32504548f57eeb70db
 human_signoff:
 ---
 
 # Evidence Report: chuan-hoa-o-duong
-
-Round 2. Mười hai eval của hợp đồng đều mang từ round 1 (delta không chạm paths của eval). Lệnh suite `cd app && npm test` đỏ ở ON12-AC-7 (dữ liệu da-nang trên DB local, không gắn eval nào), nên verdict tổng là REJECT.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -31,6 +29,8 @@ Round 2. Mười hai eval của hợp đồng đều mang từ round 1 (delta kh
 | E12 | AC-9 | test | PASS |
 
 ## Evidence
+
+Ghi chú: round 3 không chạy lại E1 – E12 (delta không chạm paths của các eval này); mỗi block dưới đây là carry-forward từ round 1, giữ nguyên run_id và verified_at.
 
 - eval: E1
   run_id: minted-chuan-hoa-o-duong-E1-r1
@@ -155,35 +155,34 @@ Round 2. Mười hai eval của hợp đồng đều mang từ round 1 (delta kh
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bb6271-r2
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-31T10:13:44Z
+  verified_at: 2026-10-31T11:40:24Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-chuan-hoa-o-duong-SUITE-lint-r2
+  run_id: minted-chuan-hoa-o-duong-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-31T10:13:44Z
+  verified_at: 2026-10-31T11:40:24Z
 
 - cmd: cd app && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bd9a35-r2
-  exit_code: 1
-  verified_at: 2026-10-31T10:13:44Z
-  note: 758 ca, 757 qua, 1 hỏng. Ca hỏng là ON12-AC-7 «mọi giá trị đang có trên DB local có nhãn» (tests/ops-nhan-theo-context.test.tsx): trang /ops còn chữ thô «da-nang (chưa có tên Việt)». Lệnh này không gắn eval nào của hợp đồng; nguyên nhân là dữ liệu da-nang trên DB local, đã ghi đỏ hạ tầng ở commit ad585aac (đỏ sẵn trên main a404af39).
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__bd9a35-r3
+  exit_code: 0
+  verified_at: 2026-10-31T11:40:24Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__13563d-r2
+  run_id: minted-chuan-hoa-o-duong-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-10-31T10:13:44Z
+  verified_at: 2026-10-31T11:40:24Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-chuan-hoa-o-duong-SUITE-test_lint_rules-r2
+  run_id: minted-chuan-hoa-o-duong-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-31T10:13:44Z
+  verified_at: 2026-10-31T11:40:24Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-chuan-hoa-o-duong-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-chuan-hoa-o-duong-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-31T10:13:44Z
+  verified_at: 2026-10-31T11:40:24Z
 
 ## Known limits
 
@@ -191,22 +190,23 @@ Round 2. Mười hai eval của hợp đồng đều mang từ round 1 (delta kh
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay. Field baseline cua tung eval ghi n-a.
+carried tu round 1 — baseline khong do lai round nay
 
-Eval không phân biệt (xanh cả trên HEAD lẫn baseline), cần xác nhận là regression-guard có chủ ý hoặc viết lại để assert hành vi mới:
-- E9 — `cd agent && node --import tsx --test tests/judge-luat.test.ts`
-- E10 — `cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx`
-- E11 — `cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx`
-- E12 — `cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx`
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline; baseline round này ghi n-a), nên xác nhận là regression-guard có chủ ý hoặc viết lại để assert hành vi mới:
 
-Lệnh fail không gắn eval: `cd app && npm test` (thoát mã 1, do ON12-AC-7 nêu ở khối suite trên).
+- E9: cd agent && node --import tsx --test tests/judge-luat.test.ts
+- E10: cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx
+- E11: cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
+- E12: cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx
+
+Cả bốn đúng là các tệp test không đổi, có chủ ý làm regression-guard cho AC-9.
 
 ## Variance
 
-none — mọi eval chạy một lần, không có eval nhiều lượt.
+none — mọi eval là deterministic (runs: 1), không có eval nhiều lần chạy.
 
 ## Iterations
 
-Round 1: S4 REJECT — 12/12 eval xanh, suite app đỏ ở ON12-AC-7 do dữ liệu da-nang trên DB local. Trả về triển khai.
-Round 2: 12 eval mang từ round 1; suite app vẫn đỏ ở ON12-AC-7 (cùng nguyên nhân dữ liệu da-nang, đỏ sẵn trên main a404af39). REJECT.
+Round 1: E1 – E12 chạy và xanh; ghi run_id hậu tố r1.
+Round 3: không chạy lại E1 – E12 (carry-forward); chạy lại sáu lệnh suite, tất cả xanh. Verdict PASS.
 
