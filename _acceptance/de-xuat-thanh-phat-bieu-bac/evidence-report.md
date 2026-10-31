@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2
+verified_commit: 8dda79719fd65ed5e5e914cdb35ec85dcc1b2c81
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -279,3 +279,7 @@ sha: 0dd6aaa85de5c09c4034f3b0f903228ca2acb61c · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 4 — 2026-10-31, do lỗi tích hợp SD5: dãy bước cloud-sync thêm do-danh-ba-sdt; idem-059 chiều đỏ chạy trên nền trước 059
 run_id: repin-20261031T001653Z-71523
 sha: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
+
+### Re-pin lần 5 — 2026-10-31, do HD11 thêm bước do-the-duyet cuối cloud-sync; dãy bước trong job-exit.test.mjs đổi
+run_id: repin-20261031T005125Z-17275
+sha: 8dda79719fd65ed5e5e914cdb35ec85dcc1b2c81 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths) · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
