@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: sdt-luu-goc-e164
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a969f24aaafdbcb3be9be56d360d974e3768c6a5
+verified_commit: e27d09d4ce2545f02933bade8c79a170cfc04f31
 human_signoff:
 ---
 
 # Evidence Report: sdt-luu-goc-e164
-
-Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test hồi quy đỏ, không gắn eval nào). Cả chín eval của hợp đồng đều đạt.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -32,12 +30,12 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
 - eval: E1
   run_id: minted-sdt-luu-goc-e164-E1-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.sd3_boc
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs
-    ℹ duration_ms 184.485792
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-sdt-luu-goc-e164-E2-r1
@@ -45,8 +43,9 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
   baseline: n-a
   verifier: config:executors.script.sd3_mig
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    MIG OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-sdt-luu-goc-e164-E3-r1
@@ -54,8 +53,9 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
   baseline: n-a
   verifier: config:executors.script.sd3_du_lieu
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    DU LIEU OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-sdt-luu-goc-e164-E4-r1
@@ -63,8 +63,9 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
   baseline: n-a
   verifier: config:executors.script.sd3_danh_ba
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    DANH BA OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-sdt-luu-goc-e164-E5-r1
@@ -72,24 +73,25 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
   baseline: n-a
   verifier: config:executors.script.sd3_sellers
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    SELLERS OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
-  run_id: minted-sdt-luu-goc-e164-E6-r1
+  run_id: minted-sdt-luu-goc-e164-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.sd3_bait_gap
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
   output: |
     BAIT GAP OK
 
 - eval: E7
-  run_id: minted-sdt-luu-goc-e164-E7-r1
+  run_id: minted-sdt-luu-goc-e164-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sd3_cloud
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
   output: |
     CLOUD OK
 
@@ -99,50 +101,50 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
   baseline: n-a
   verifier: config:executors.script.sd3_doc
   verified_at: 2026-10-31T09:59:23Z
+  carried_from_round: 1
   output: |
-    PEOPLE OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
-  run_id: minted-sdt-luu-goc-e164-E9-r1
+  run_id: minted-sdt-luu-goc-e164-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sd3_pham_vi
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
   output: |
     PHAM VI OK
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__bb6271-r1
+  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-sdt-luu-goc-e164-SUITE-lint-r1
+  run_id: minted-sdt-luu-goc-e164-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
 
 - cmd: cd app && npm test
-  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-10-31T09:59:23Z
-  note: một test đỏ, tests/ops-nhan-theo-context.test.tsx, ca ON12-AC-7 «mọi giá trị đang có trên DB local có nhãn». Trang /ops còn chữ thô «(chưa có tên Việt)» ở hai chuỗi «S06 · da-nang (chưa có tên Việt)» và «da-nang (chưa có tên Việt)». Không gắn eval nào của hợp đồng.
+  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-10-31T11:25:14Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__13563d-r1
+  run_id: minted-sdt-luu-goc-e164-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-sdt-luu-goc-e164-SUITE-test_lint_rules-r1
+  run_id: minted-sdt-luu-goc-e164-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-sdt-luu-goc-e164-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-sdt-luu-goc-e164-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T09:59:23Z
+  verified_at: 2026-10-31T11:25:14Z
 
 ## Known limits
 
@@ -150,18 +152,9 @@ Round 1. REJECT vì lệnh suite `cd app && npm test` không đạt (một test 
 
 ## Analyst
 
-Eval không phân biệt (xanh trên cả HEAD lẫn baseline, chứng minh harness chứ không phải tính năng; nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
-- E1 (`node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs`)
+carried tu round 1 — baseline khong do lai round nay.
 
-Baseline khong do:
-- node _acceptance/sdt-luu-goc-e164/probes/do.mjs mig: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/do.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/sdt-luu-goc-e164/probes/do.mjs du-lieu: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/do.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/sdt-luu-goc-e164/probes/do.mjs danh-ba: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/do.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/sdt-luu-goc-e164/probes/do.mjs sellers: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/do.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/sdt-luu-goc-e164/probes/do.mjs cloud: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/do.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/sdt-luu-goc-e164/probes/people.sh: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/people.sh co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- bash _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh: bo qua baseline: tep _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
+Eval khong-phan-biet (pass tren ca HEAD lan baseline, chung minh harness chu khong phai feature): E1 (lenh `node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs`). Can viet lai de assert hanh vi moi hoac xac nhan la regression-guard co chu y.
 
 ## Variance
 
@@ -169,4 +162,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: REJECT — cả chín eval E1 đến E9 đạt, nhưng lệnh suite `cd app && npm test` đỏ ở một test (ON12-AC-7, chữ thô «(chưa có tên Việt)» trên trang /ops) và không gắn eval nào. Trả về triển khai để xem test đó có do nhánh này gây ra không.
+Round 1: eval REJECT — tra ve trien khai.
+Round 2: E6, E7, E9 chay lai va dat; E1-E5, E8 carry-forward tu round 1; cac lenh suite xanh.
