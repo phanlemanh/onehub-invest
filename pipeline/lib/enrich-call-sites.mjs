@@ -9,6 +9,7 @@ export const CALL_SITES = [
   { file: "app/src/app/api/v1/ops/review/[id]/decide/route.ts", fn: "decide_enrichment_review", vai: "nguoi" },
   { file: "agent/src/enrich/run.ts", fn: "apply_enrichment", vai: "may" },
   { file: "agent/scripts/enrich-revert.ts", fn: "revert_enrichment", vai: "nguoi" },
+  { file: "pipeline/scripts/idem-063.mjs", fn: "apply_enrichment", vai: "may" },   // phép đo 063 trên DB thử, ROLLBACK
 ];
 
 const FN = /\b(apply_enrichment|revert_enrichment|decide_enrichment_review)\s*\(/g;

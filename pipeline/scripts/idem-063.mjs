@@ -51,7 +51,8 @@ async function main() {
       const { id } = await one(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, evidence)
         VALUES ('idem-063', $1, 'property_type', 'apartment', 'apartment', 'e2_llm', 'direct', '{}'::jsonb) RETURNING id`, [A.offer_id]);
       const t0 = performance.now();
-      await c.query("SELECT apply_enrichment($1, 'enrich-run:idem-063')", [[Number(id)]]);
+      const ids = [Number(id)];
+      await c.query("SELECT apply_enrichment($1, $2)", [ids, "enrich-run:idem-063"]);
       const ms = Math.round(performance.now() - t0);
       await c.query(`ROLLBACK TO SAVEPOINT do_${nhan}`);
       return ms;

@@ -54,7 +54,7 @@ evals:
     executor: script
     cmd: config:executors.script.dc_tu_don
     paths: [app/tests/dong-chay-cloud.test.tsx, app/scripts/dc-tu-don.ts]
-    expected: "exit 0: gieo lược đồ dc_cloud_<pid chết>, dc_local_<pid chết>, dc_cloud_<pid sống>, dc_khac_<pid chết>; chạy test dòng chảy cloud → dòng 'dc-tu-don quét: xoá 2 lược đồ pid chết, giữ pid sống, giữ tiền tố khác'; chạy test rồi gửi SIGTERM sau khi lược đồ của nó đã có → dòng 'dc-tu-don ngắt: còn 0 lược đồ của pid <p>'; chiều đỏ trong cùng script: bản test bỏ bước quét → dòng 'dc-tu-don đối chứng: còn 2 lược đồ pid chết'; dọn mọi lược đồ gieo khi xong"
+    expected: "exit 0: ma trận viết trước sáu tiền tố × hai tín hiệu. Gieo dc_<tiền tố>_<pid chết> cho cả sáu tiền tố (local, cloud, noflow, ta, mut, mig), dc_cloud_<pid sống>, dc_khac_<pid chết>; chạy test dòng chảy cloud → dòng 'dc-tu-don quét: xoá 6 lược đồ pid chết, giữ pid sống, giữ tiền tố khác'; chạy test rồi ngắt khi lược đồ của nó đã có, một lượt mỗi tín hiệu → dòng 'dc-tu-don ngắt SIGTERM: còn 0 lược đồ của pid <p>' và 'dc-tu-don ngắt SIGINT: còn 0 lược đồ của pid <q>'; chiều đỏ trong cùng script: bản test bỏ bước quét → dòng 'dc-tu-don đối chứng: còn 6 lược đồ pid chết'; dọn mọi lược đồ gieo khi xong"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
