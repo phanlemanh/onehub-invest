@@ -10,7 +10,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
-  KHOA_DANH_BA, LY_DO_GOP, LY_DO_RUT, LUAT_GOP, NGUOI_LAM, chotDbThuNguoi, dungNguoi, sellersThieuNguoi, tachNguoi,
+  CONG_TAC_GOP, KHOA_DANH_BA, LY_DO_GOP, LY_DO_RUT, LUAT_GOP, NGUOI_LAM, chotDbThuNguoi, dungNguoi, ghiCongTac, sellersThieuNguoi,
+  tachNguoi,
 } from "../lib/danh-ba-nguoi.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { KIEM_ENUM, kiemEnum } from "../dq-enum-vocab.mjs";
@@ -416,6 +417,12 @@ test("AC-2 enum và DQ (b): kiểm từ vựng bốn bảng danh bạ ghi dòng 
 
 // ---- HD13 nguoi-noi-theo-sdt (E3–E7, E9): gộp người theo SĐT một–một cùng nguồn, lượt hai, nhiều–nhiều, tách ----
 
+/** Công tắc gộp trong giao dịch của ca (ROLLBACK cuối ca): gỡ dòng sẵn có của DB thử rồi ghi một dòng (cong-tac-gop-nguoi-dem). */
+async function batCongTac(db, bat = true) {
+  await db.query(`DELETE FROM ops_audit WHERE action = '${CONG_TAC_GOP}'`);
+  await ghiCongTac(db, { bat, lyDo: "itest" });
+}
+
 /**
  * Mồi gộp S03: g1 gửi tin «g-mot» mang SĐT g1 (lượt đầu tin nghỉ → chưa một–một), tin «g-chi» chỉ SĐT g1 (vai parser).
  * `moLai()` đánh thức tin g-mot → lượt sau là cặp một–một sống.
@@ -452,6 +459,7 @@ function chiThem(truoc, sau, buoc) {
 test("HD13 E3 gộp một–một: merged + merged_into, một sự kiện gop, bí danh giữ, vai parser rút gop-nguoi và về người tài khoản", async () => {
   await trongGiaoDich(async (db) => {
     const f = await fixtureGop(db);
+    await batCongTac(db);
     await dungNguoi(db, { runId: "itest-hd13-1", out: im });
     const [ks] = await nguoiCua(db, "S03", "sdt", so("g1"));
     const [ka] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("g1"));
@@ -475,6 +483,7 @@ test("HD13 E3 gộp một–một: merged + merged_into, một sự kiện gop, 
 test("HD13 E4 lượt hai sau gộp: 0 gộp, 0 sự kiện, 0 người/bí danh/vai mới, 0 vai rút", async () => {
   await trongGiaoDich(async (db) => {
     const f = await fixtureGop(db);
+    await batCongTac(db);
     await dungNguoi(db, { runId: "itest-hd13-4a", out: im });
     await f.moLai();
     await dungNguoi(db, { runId: "itest-hd13-4b", out: im });
@@ -488,6 +497,7 @@ test("HD13 E4 lượt hai sau gộp: 0 gộp, 0 sự kiện, 0 người/bí danh
 
 test("HD13 E5 nhiều–nhiều: SĐT hai người gửi và người gửi hai SĐT không gộp, số đếm và dòng in theo nguồn", async () => {
   await trongGiaoDich(async (db) => {
+    await batCongTac(db);
     const l0 = await dungNguoi(db, { runId: "itest-hd13-5a", out: im });
     const ba = await themBai(db, "bg2", { sender: "g2" });
     const bb = await themBai(db, "bg3", { sender: "g3" });
@@ -512,6 +522,7 @@ test("HD13 E5 nhiều–nhiều: SĐT hai người gửi và người gửi hai 
 test("HD13 E6 tách: split + sự kiện tach, vai về như trước gộp, không mất/đổi dòng, lượt sau không gộp lại", async () => {
   await trongGiaoDich(async (db) => {
     const f = await fixtureGop(db);
+    await batCongTac(db);
     await dungNguoi(db, { runId: "itest-hd13-6a", out: im });
     const truocGop = await vaiTap(db, [f.chi, f.mot]);
     const a0 = await anhDong(db);
@@ -554,6 +565,7 @@ async function viPhamAC7(db) {
 test("HD13 E7 không Người hai SĐT, không gộp khác nguồn; đối chứng luật lỏng làm kiểm đỏ", async () => {
   await trongGiaoDich(async (db) => {
     const f = await fixtureGop(db);
+    await batCongTac(db);
     await f.moLai();
     const bc = await themBai(db, "bg5", { sender: "g5" });
     const bd = await themBai(db, "bg5b", { sender: "g5" });
@@ -601,6 +613,7 @@ test("HD13 E9 CLI tách: thiếu --ly-do thoát 2 trước DB; khoá không có 
   // Tách người merged trong giao dịch thử: in dòng tách.
   await trongGiaoDich(async (db) => {
     const f = await fixtureGop(db);
+    await batCongTac(db);
     await dungNguoi(db, { runId: "itest-hd13-9a", out: im });
     await f.moLai();
     await dungNguoi(db, { runId: "itest-hd13-9b", out: im });
@@ -609,4 +622,175 @@ test("HD13 E9 CLI tách: thiếu --ly-do thoát 2 trước DB; khoá không có 
     await tachNguoi(db, ks, { lyDo: "thử E9", out: (s) => dong.push(s) });
     assert.match(dong[0], new RegExp(`tách ${ks} khỏi pty_`));
   });
+});
+
+// ---- cong-tac-gop-nguoi-dem (E1, E2, E4, E5, E6, E9): công tắc ops_audit cho bước gộp, mặc định tắt ----
+// DB thử là bản chép dữ liệu thật: cặp một–một sẵn có của nó cũng vào gop_cho, nên ca đo theo hiệu so với lượt nền.
+
+const mocSuKien = async (db) => (await db.query("SELECT coalesce(max(id), 0) AS m FROM registry_events")).rows[0].m;
+const capGop = async (db, moc) =>
+  (await db.query("SELECT object_key || '>' || related_keys[1] AS k FROM registry_events WHERE kind = 'gop' AND id > $1 ORDER BY 1", [moc]))
+    .rows.map((r) => r.k);
+const soMerged = async (db) => (await db.query("SELECT count(*)::int AS n FROM parties WHERE status = 'merged'")).rows[0].n;
+const goCongTac = (db) => db.query(`DELETE FROM ops_audit WHERE action = '${CONG_TAC_GOP}'`);
+/** fn trong SAVEPOINT riêng, luôn lùi về; trả kết quả + tập cặp gộp mới. */
+async function thuCa(db, moc, fn) {
+  await db.query("SAVEPOINT ca");
+  try {
+    const kq = await fn();
+    return { kq, cap: await capGop(db, moc) };
+  } finally {
+    await db.query("ROLLBACK TO SAVEPOINT ca");
+  }
+}
+
+test("CTG E1 mặc định tắt: dungNguoi và buocDem không gộp, báo gop_cho; đối chứng gop: true; không bảng ops_audit → tắt", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(async (db) => {
+    await goCongTac(db);
+    const nen = await dungNguoi(db, { runId: "itest-ctg1-0", out: im });
+    const f = await fixtureGop(db);
+    await dungNguoi(db, { runId: "itest-ctg1-a", out: im });
+    await f.moLai();
+    const m0 = await soMerged(db);
+    const moc = await mocSuKien(db);
+    const dong = [];
+    const kq = await dungNguoi(db, { runId: "itest-ctg1-b", out: (s) => dong.push(s) });
+    assert.deepEqual([kq.cong_tac_gop, kq.gop, kq.gop_cho - nen.gop_cho], ["tat", 0, 1], "CTG E1 dungNguoi tắt");
+    assert.ok(dong.join("\n").includes(`công tắc gộp tắt (chờ ${kq.gop_cho})`), `CTG E1 dòng in: ${dong.join(" | ")}`);
+    assert.equal(await soMerged(db), m0, "CTG E1 dungNguoi tắt mà có người merged");
+    assert.deepEqual(await capGop(db, moc), [], "CTG E1 dungNguoi tắt mà có sự kiện gop");
+
+    const dem = (await buocDem(db, { savepoint: true, runId: "itest-ctg1-dem" })).nguoi;
+    assert.deepEqual([dem.cong_tac_gop, dem.gop, dem.gop_cho], ["tat", 0, kq.gop_cho], "CTG E1 buocDem tắt");
+    assert.equal(await soMerged(db), m0, "CTG E1 buocDem tắt mà có người merged");
+    assert.deepEqual(await capGop(db, moc), [], "CTG E1 buocDem tắt mà có sự kiện gop");
+
+    // Đối chứng dương: cùng mồi, ép gộp → người theo SĐT của mồi merged.
+    const [ks] = await nguoiCua(db, "S03", "sdt", so("g1"));
+    const ep = await thuCa(db, moc, async () => {
+      const r = await dungNguoi(db, { gop: true, runId: "itest-ctg1-ep", out: im });
+      return { r, st: await trangThaiCua(db, ks) };
+    });
+    assert.equal(ep.kq.st.status, "merged", "CTG E1 đối chứng: ép gộp mà mồi không merged");
+    assert.deepEqual([ep.kq.r.cong_tac_gop, ep.kq.r.gop, ep.kq.r.gop_cho], ["bat", kq.gop_cho, 0]);
+
+    // Không bảng (AC-3): dòng bat có thật nhưng bảng vắng → tắt, giao dịch không hỏng.
+    await db.query("SAVEPOINT kb");
+    await ghiCongTac(db, { bat: true, lyDo: "itest" });
+    await db.query("ALTER TABLE ops_audit RENAME TO ops_audit_ctg_tam");
+    const kb = await dungNguoi(db, { runId: "itest-ctg1-kb", out: im });
+    assert.equal(kb.cong_tac_gop, "tat", "CTG E1 không bảng ops_audit mà không tắt");
+    assert.deepEqual((await db.query("SELECT 1 AS x")).rows, [{ x: 1 }], "CTG E1 không bảng: giao dịch hỏng");
+    await db.query("ROLLBACK TO SAVEPOINT kb");
+  });
+});
+
+test("CTG E2 bật: dungNguoi và buocDem không truyền gop gộp đúng tập cặp của lượt ép; đối chứng dòng tat", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(async (db) => {
+    await goCongTac(db);
+    const f = await fixtureGop(db);
+    await dungNguoi(db, { runId: "itest-ctg2-a", out: im });
+    await f.moLai();
+    const moc = await mocSuKien(db);
+    const [ks] = await nguoiCua(db, "S03", "sdt", so("g1"));
+    const [ka] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("g1"));
+    const ep = await thuCa(db, moc, () => dungNguoi(db, { gop: true, runId: "itest-ctg2-ep", out: im }));
+    assert.ok(ep.cap.includes(`${ks}>${ka}`), "CTG E2 lượt ép không gộp mồi");
+    const bat = await thuCa(db, moc, async () => {
+      await batCongTac(db);
+      return dungNguoi(db, { runId: "itest-ctg2-bat", out: im });
+    });
+    assert.deepEqual(bat.cap, ep.cap, "CTG E2 dungNguoi bật: tập cặp khác lượt ép");
+    assert.deepEqual([bat.kq.cong_tac_gop, bat.kq.gop_cho], ["bat", 0]);
+    const dem = await thuCa(db, moc, async () => {
+      await batCongTac(db);
+      return (await buocDem(db, { savepoint: true, runId: "itest-ctg2-dem" })).nguoi;
+    });
+    assert.deepEqual(dem.cap, ep.cap, "CTG E2 buocDem bật: tập cặp khác lượt ép");
+    assert.deepEqual([dem.kq.cong_tac_gop, dem.kq.gop_cho], ["bat", 0]);
+    // Đối chứng dương: dòng tat → bước đêm gộp 0 (vế đêm đọc công tắc thật).
+    const tat = await thuCa(db, moc, async () => {
+      await batCongTac(db, false);
+      return (await buocDem(db, { savepoint: true, runId: "itest-ctg2-tat" })).nguoi;
+    });
+    assert.deepEqual([tat.cap, tat.kq.gop, tat.kq.cong_tac_gop], [[], 0, "tat"], "CTG E2 đối chứng: dòng tat mà bước đêm vẫn gộp");
+  });
+});
+
+test("CTG E4 tắt sau khi đã gộp: người gộp giữ nguyên, lượt sau ổn định", async () => {
+  await trongGiaoDich(async (db) => {
+    const f = await fixtureGop(db);
+    await batCongTac(db);
+    await dungNguoi(db, { runId: "itest-ctg4-a", out: im });
+    await f.moLai();
+    await dungNguoi(db, { runId: "itest-ctg4-b", out: im });
+    const [ks] = await nguoiCua(db, "S03", "sdt", so("g1"));
+    const [ka] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("g1"));
+    assert.deepEqual(await trangThaiCua(db, ks), { status: "merged", merged_into: ka }, "CTG E4 lượt bật không gộp mồi");
+    await batCongTac(db, false);
+    await dungNguoi(db, { runId: "itest-ctg4-c", out: im });
+    const ev2 = (await db.query("SELECT count(*)::int AS n FROM registry_events")).rows[0].n;
+    const l3 = await dungNguoi(db, { runId: "itest-ctg4-d", out: im });
+    assert.deepEqual(await trangThaiCua(db, ks), { status: "merged", merged_into: ka }, "CTG E4 tắt làm người gộp đổi");
+    assert.deepEqual(await vaiTap(db, [f.chi]), [`${f.chi}|${ka}|parser`], "CTG E4 tắt làm vai tin chỉ SĐT rời người tài khoản");
+    assert.deepEqual([l3.nguoi_moi, l3.bi_danh_moi, l3.vai_moi, l3.vai_rut, l3.gop], [0, 0, 0, 0, 0], "CTG E4 lượt 3 khác 0");
+    assert.equal((await db.query("SELECT count(*)::int AS n FROM registry_events")).rows[0].n, ev2, "CTG E4 lượt 3 thêm sự kiện");
+  });
+});
+
+const CLI_DUNG = path.join(ROOT, "pipeline/dung-nguoi.mjs");
+const chayCli = (args, env = {}) => spawnSync(process.execPath, [CLI_DUNG, ...args], { encoding: "utf8", env: { ...process.env, ...env } });
+const demCongTac = async () => (await c.query(`SELECT count(*)::int AS n FROM ops_audit WHERE action = '${CONG_TAC_GOP}'`)).rows[0].n;
+/** Chốt DB thử cho ca CLI ghi DB (kết nối c ngoài giao dịch). */
+async function chotCli() {
+  const { rows: [r] } = await c.query("SELECT current_database() AS db, to_regclass('public.parties')::text AS p");
+  assert.equal(chotDbThuNguoi(r.db, Boolean(r.p)), null);
+  assert.notEqual(r.db, "oneinvest", "CTG không chạy ca CLI ghi DB trên oneinvest");
+}
+
+test("CTG E5 CLI công tắc: --thu không ghi; chạy thật thêm đúng một dòng, bốn bảng không đổi", { timeout: 120_000 }, async () => {
+  await chotCli();
+  const t0 = await demCongTac();
+  const d0 = await dem4(c);
+  const r1 = chayCli(["--cong-tac-gop", "tat", "--ly-do", "thử E5", "--thu"]);
+  assert.equal(r1.status, 0, `CTG E5 --thu: thoát ${r1.status} ${r1.stderr}`);
+  assert.deepEqual([await demCongTac(), await dem4(c)], [t0, d0], "CTG E5 --thu ghi DB");
+  const moc = (await c.query("SELECT coalesce(max(id), 0) AS m FROM ops_audit")).rows[0].m;
+  const r2 = chayCli(["--cong-tac-gop", "tat", "--ly-do", "thử E5"]);
+  assert.equal(r2.status, 0, `CTG E5 chạy thật: thoát ${r2.status} ${r2.stderr}`);
+  const moi = (await c.query(`SELECT actor, action, env, detail FROM ops_audit WHERE id > $1 AND action = '${CONG_TAC_GOP}'`, [moc])).rows;
+  assert.deepEqual(moi, [{ actor: NGUOI_LAM, action: CONG_TAC_GOP, env: "local", detail: { bat: false, ly_do: "thử E5" } }], "CTG E5 dòng ghi");
+  assert.deepEqual(await dem4(c), d0, "CTG E5 công tắc đổi bốn bảng");
+});
+
+test("CTG E6 CLI sai cờ: thoát 2 trước khi mở DB; đối chứng lệnh hợp lệ thoát 1 vì lỗi kết nối", () => {
+  const KHONG = { DATABASE_URL: "postgres://127.0.0.1:1/khong" };
+  for (const [args, mau] of [
+    [["--cong-tac-gop", "mo", "--ly-do", "x"], /--cong-tac-gop/],
+    [["--cong-tac-gop", "bat"], /--ly-do/],
+    [["--cong-tac-gop", "bat", "--ly-do", "x", "--tach", "pty_x"], /--tach/],
+  ]) {
+    const r = chayCli(args, KHONG);
+    assert.equal(r.status, 2, `CTG E6 ${args.join(" ")}: thoát ${r.status} ${r.stderr}`);
+    assert.match(r.stderr, mau);
+    assert.doesNotMatch(r.stderr, /ECONNREFUSED|connect/i, `CTG E6 ${args.join(" ")}: đã mở kết nối`);
+  }
+  const ok = chayCli(["--cong-tac-gop", "bat", "--ly-do", "x"], KHONG);
+  assert.equal(ok.status, 1, `CTG E6 đối chứng: thoát ${ok.status}`);
+  assert.match(ok.stderr, /ECONNREFUSED|connect/i, "CTG E6 đối chứng: không phải lỗi kết nối");
+});
+
+test("CTG E9 CLI dựng --thu theo công tắc: tắt thì không gộp, số merged không đổi", { timeout: 600_000 }, async () => {
+  await chotCli();
+  // CLI dựng trong giao dịch riêng nên 060 phải có sẵn trên DB thử (không phải DB máy thu).
+  await napSdtE164(c);
+  const moi = (await c.query(`SELECT detail FROM ops_audit WHERE action = '${CONG_TAC_GOP}' ORDER BY id DESC LIMIT 1`)).rows[0];
+  if (moi?.detail?.bat === true) await ghiCongTac(c, { bat: false, lyDo: "CTG E9: công tắc mới nhất đang bật, ghi tắt trước" });
+  const m0 = (await c.query("SELECT count(*)::int AS n FROM parties WHERE status = 'merged'")).rows[0].n;
+  const r = chayCli(["--thu"]);
+  assert.equal(r.status, 0, `CTG E9 thoát ${r.status} ${r.stderr}`);
+  assert.match(r.stdout, /công tắc gộp tắt/);
+  const kq = JSON.parse(r.stdout.split("\n").find((l) => l.startsWith("{")));
+  assert.equal(kq.cong_tac_gop, "tat");
+  assert.equal((await c.query("SELECT count(*)::int AS n FROM parties WHERE status = 'merged'")).rows[0].n, m0, "CTG E9 merged đổi");
 });

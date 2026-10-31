@@ -277,6 +277,23 @@ export function chonVaiRut(vaiSong, vaiLuotNay, tinsLuotNay, baiTheoId) {
   });
 }
 
+// ---- cong-tac-gop-nguoi-dem: công tắc ops_audit cho bước gộp, mặc định tắt (cùng nếp cổng phat-bieu:cat-chuyen) ----
+
+/** action của dòng công tắc trong ops_audit; detail = { bat: boolean, ly_do }. */
+export const CONG_TAC_GOP = "danh-ba:gop-sdt";
+
+/**
+ * Công tắc từ các dòng ops_audit của nó: dòng id lớn nhất thắng (bất kể thứ tự mảng); chỉ `detail.bat === true` là bật —
+ * không dòng, bat thiếu hay bat không phải boolean đều là tắt.
+ * @param {{ id: string|number, detail: any }[]} rows
+ * @returns {"bat"|"tat"}
+ */
+export function docCongTac(rows) {
+  let moi = null;
+  for (const r of rows) if (!moi || BigInt(String(r.id)) > BigInt(String(moi.id))) moi = r;
+  return moi?.detail?.bat === true ? "bat" : "tat";
+}
+
 /** Mọi câu SQL của mô-đun (AC-9 quét chính các chuỗi này). */
 export const SQL = Object.freeze({
   tin: `SELECT offer_id, source, originating_system_key, seller_ref, seller_name, seller_phone, post_ids, first_seen, retired_at
@@ -309,7 +326,32 @@ export const SQL = Object.freeze({
                     AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt'
                                       AND a.source = o.source AND a.value = o.seller_phone)
                   ORDER BY 1`,
+  // Công tắc gộp: dò bảng trước (to_regclass, không bắt lỗi — lỗi SELECT làm hỏng giao dịch của buocDem), rồi đọc/ghi.
+  coBangAudit: `SELECT to_regclass('public.ops_audit') IS NOT NULL AS co`,
+  congTac: `SELECT id, detail FROM ops_audit WHERE action = '${CONG_TAC_GOP}' ORDER BY id DESC LIMIT 1`,
+  ghiCongTac: `INSERT INTO ops_audit (actor, action, env, detail) VALUES ($1, '${CONG_TAC_GOP}', 'local', $2::jsonb)`,
 });
+
+/**
+ * Công tắc gộp hiện hành; DB không có bảng ops_audit → tắt.
+ * @param {import("pg").Client} c
+ * @returns {Promise<"bat"|"tat">}
+ */
+export async function congTacGop(c) {
+  if (!(await c.query(SQL.coBangAudit)).rows[0].co) return "tat";
+  return docCongTac((await c.query(SQL.congTac)).rows);
+}
+
+/**
+ * Ghi một dòng công tắc (bật/tắt kèm lý do). Chạy trong giao dịch của người gọi; không dựng danh bạ.
+ * @param {import("pg").Client} c
+ */
+export async function ghiCongTac(c, { bat, lyDo }) {
+  if (typeof bat !== "boolean") throw loiTach("SAI_CONG_TAC", "dung-nguoi: công tắc gộp chỉ nhận bat | tat");
+  if (!sach(lyDo)) throw loiTach("THIEU_LY_DO", "dung-nguoi: --cong-tac-gop cần --ly-do «…»");
+  await c.query(SQL.ghiCongTac, [NGUOI_LAM, JSON.stringify({ bat, ly_do: sach(lyDo) })]);
+  return { cong_tac_gop: bat ? "bat" : "tat", ly_do: sach(lyDo) };
+}
 
 /** Khoá advisory của bộ dựng — hai lượt chồng nhau (job đêm, --thu) xếp hàng thay vì va chỉ mục duy nhất. */
 export const KHOA_DANH_BA = 55055;
@@ -318,10 +360,13 @@ export const KHOA_DANH_BA = 55055;
  * Dựng danh bạ Người + vai người đăng từ mọi sale_offer_records (kể cả tin nghỉ). Chạy trong giao dịch của người gọi;
  * chỉ thêm (rút vai có lý do, không xoá). `traBiDanh: false` bỏ tra bí danh — CHỈ cho đối chứng của thước E7;
  * `motSdtMoiNguoi: false` bỏ vế «người gửi/người cuối có một SĐT» của luật gộp — CHỈ cho đối chứng của thước HD13.
+ * `gop` vắng → theo công tắc ops_audit `danh-ba:gop-sdt` (mặc định tắt); `true`/`false` CHỈ cho test và đối chứng của thước.
+ * Tắt: vẫn tính cặp đủ luật (báo `gop_cho`) nhưng không ghi gộp mới; người đã gộp giữ nguyên.
  * @param {import("pg").Client} c
  */
-export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh = true, motSdtMoiNguoi = true, out = console.log } = {}) {
+export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh = true, motSdtMoiNguoi = true, gop: epGop, out = console.log } = {}) {
   await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
+  const congTac = epGop === undefined ? await congTacGop(c) : epGop ? "bat" : "tat";
   const tins = (await c.query(SQL.tin, [["S03", "S05", "S06"]])).rows;
   const postIds = [...new Set(tins.flatMap((t) => (t.source === "S06" ? [] : t.post_ids ?? [])))];
   const baiTheoId = new Map(
@@ -340,7 +385,9 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const gopVao = new Map(trangThaiRows.filter((p) => p.status === "merged").map((p) => [p.party_key, p.merged_into]));
   const biDanhSau = new Map(biDanh);
   for (const a of kq.biDanhMoi) biDanhSau.set(khoaBiDanh(a.source, a.kind, a.value, a.object_key), a.object_key);
-  const { gop, nhieuNhieu } = chonGop(tins, biDanhSau, trangThai, { baiTheoId, gopVao, motSdtMoiNguoi });
+  const { gop: gopDu, nhieuNhieu } = chonGop(tins, biDanhSau, trangThai, { baiTheoId, gopVao, motSdtMoiNguoi });
+  const gop = congTac === "bat" ? gopDu : [];
+  const gopCho = congTac === "bat" ? [] : gopDu;
   for (const g of gop) gopVao.set(g.tu, g.vao);
   kq.vai = anhXaVai(kq.vai, gopVao);
 
@@ -375,14 +422,20 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const cong = (s, k) => { theo_nguon[s] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[s][k]++; };
   for (const p of kq.nguoiMoi) cong(p.source, "nguoi_moi");
   for (const v of moi) cong(v.subject_key.slice(0, 3), "vai_moi");
-  for (const g of gop) { theo_nguon[g.source] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[g.source].gop = (theo_nguon[g.source].gop ?? 0) + 1; }
+  const congNguon = (ds, k) => {
+    for (const g of ds) { theo_nguon[g.source] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[g.source][k] = (theo_nguon[g.source][k] ?? 0) + 1; }
+  };
+  congNguon(gop, "gop");
+  congNguon(gopCho, "gop_cho");
   const kqDem = {
     nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, sdt_bam_nghi: sdtBamNghi, vai_moi: moi.length, vai_rut: rut.length,
-    gop: gop.length, nhieu_nhieu: nhieuNhieu, khong_dinh_danh: kq.khongDinhDanh, theo_nguon,
+    gop: gop.length, cong_tac_gop: congTac, gop_cho: gopCho.length, nhieu_nhieu: nhieuNhieu, khong_dinh_danh: kq.khongDinhDanh,
+    theo_nguon,
   };
   const kdd = Object.entries(kq.khongDinhDanh).map(([s, n]) => `${s}=${n}`).join(" ") || "0";
   const nn = Object.entries(nhieuNhieu).map(([s, v]) => `${s}=${v.sdt_nhieu_nguoi}/${v.nguoi_nhieu_sdt}`).join(" ");
-  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · gộp ${gop.length} · nhiều–nhiều (SĐT nhiều người gửi/người gửi nhiều SĐT) ${nn} · không định danh ${kdd}`);
+  const tat = congTac === "tat" ? ` · công tắc gộp tắt (chờ ${gopCho.length})` : "";
+  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · gộp ${gop.length}${tat} · nhiều–nhiều (SĐT nhiều người gửi/người gửi nhiều SĐT) ${nn} · không định danh ${kdd}`);
   return kqDem;
 }
 

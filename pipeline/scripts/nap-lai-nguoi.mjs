@@ -7,6 +7,8 @@
 // HD13 nguoi-noi-theo-sdt (E8): N1 của do-danh-ba-sdt (tinhSo, tệp không đổi trong vòng) trước lượt 1 = số gộp lượt 1, N1 sau
 // = 0, mỗi lần gộp trỏ đúng người tài khoản của người gửi mà thước tự rút bằng SQL (không qua chonGop), 0 người cuối hai SĐT,
 // 0 gộp khác nguồn, lượt 2 gộp 0; hai đối chứng trong SAVEPOINT: luật lỏng phải sinh người hai SĐT, gộp sai phải bị kiểm đích bắt.
+// cong-tac-gop-nguoi-dem: lượt 0 công tắc tắt (gộp 0, gop_cho = N1 chưa gộp) → bật trong giao dịch → lượt 1 gộp như trên;
+// đối chứng bước đêm ép gộp ở lượt 0 (SAVEPOINT) phải gộp > 0.
 // Exit 0 = đạt; 1 = lượt 2 khác 0, số lượt 2 khác lượt 1, đối chứng không ném, sellers thiếu người, hay một kiểm HD13 hỏng;
 // 2 = lỗi / điều kiện dương không đạt (một nguồn có 0 người). `--doi-chung-hong`: đối chứng gọi bộ dựng CÓ tra bí danh
 // (phá thử thước — phải thoát 1).
@@ -16,7 +18,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-import { KHOA_DANH_BA, chotDbThuNguoi, dungNguoi, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
+import { CONG_TAC_GOP, KHOA_DANH_BA, chotDbThuNguoi, dungNguoi, ghiCongTac, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napSdtE164 } from "../lib/nap-060.mjs";
 import { loadStgPosts } from "../lib/test-posts.mjs";
@@ -102,14 +104,17 @@ async function viPhamMotSdt(c) {
   return { haiSdt, khacNguon };
 }
 
-async function motLuot(c) {
+/** Một lượt đêm; `chiDem` bỏ ba transform (đối chứng trên dữ liệu lượt trước vừa dựng), `dung` thay bộ dựng (đối chứng). */
+async function motLuot(c, { chiDem = false, dung } = {}) {
   const log = console.log;
   console.log = () => {};
   try {
-    await runTransformZalo(c);
-    await runTransformFb(c);
-    await runTransformChotot(c);
-    return (await buocDem(c, { savepoint: true, runId: `nap-lai-nguoi-${Date.now()}` })).nguoi;
+    if (!chiDem) {
+      await runTransformZalo(c);
+      await runTransformFb(c);
+      await runTransformChotot(c);
+    }
+    return (await buocDem(c, { savepoint: true, runId: `nap-lai-nguoi-${Date.now()}`, ...(dung ? { dung } : {}) })).nguoi;
   } finally {
     console.log = log;
   }
@@ -146,11 +151,24 @@ export async function chayNapLaiNguoi(c, { doiChungHong = false, out = console.l
 
     const mocSuKien = Number((await c.query("SELECT coalesce(max(id), 0) AS m FROM registry_events")).rows[0].m);
     const gopCo = Number((await c.query("SELECT count(*) AS n FROM registry_events WHERE kind = 'gop'")).rows[0].n);
-    const k1 = await motLuot(c);
-    // N1 «trước gộp»: cùng trạng thái lượt 1 dựng (tin sau transform, người theo SĐT đã có bí danh sdt) nhưng coi như chưa ai gộp —
-    // trước lượt 1 bí danh sdt chưa có (060 vừa nạp), nên đếm trước lượt luôn ra 0. Chỉ đúng khi DB chưa có lần gộp nào (gopCo).
+    // cong-tac-gop-nguoi-dem: lượt 0 với công tắc tắt (gỡ dòng sẵn có trong giao dịch) → không gộp, báo gop_cho theo nguồn.
+    await c.query(`DELETE FROM ops_audit WHERE action = '${CONG_TAC_GOP}'`);
+    const k0 = await motLuot(c);
+    // N1 «chưa gộp»: sau lượt 0 (người theo SĐT đã có bí danh sdt, chưa ai gộp) — trước lượt 0 bí danh sdt chưa có (060 vừa
+    // nạp), nên đếm sớm hơn luôn ra 0. Chỉ đúng khi DB chưa có lần gộp nào (gopCo).
     const n1Truoc = await soN1(c, { boQuaGop: true });
     out(`hd13 gop-co-san: ${gopCo} · n1-chua-gop: ${NGUON_N1.map((s) => `${s}=${n1Truoc[s]}`).join(" ")}`);
+    const gop0 = Object.fromEntries(NGUON_N1.map((s) => [s, k0.theo_nguon?.[s]?.gop ?? 0]));
+    const cho0 = Object.fromEntries(NGUON_N1.map((s) => [s, k0.theo_nguon?.[s]?.gop_cho ?? 0]));
+    out(`cong-tac luot0: ${k0.cong_tac_gop} · gop ${NGUON_N1.map((s) => `${s}=${gop0[s]}`).join(" ")} · gop_cho ${NGUON_N1.map((s) => `${s}=${cho0[s]}`).join(" ")}`);
+    // Đối chứng: bước đêm bỏ công tắc (ép gộp) ở lượt 0 → thước phải thấy lượt 0 gộp.
+    await c.query("SAVEPOINT cong_tac");
+    const ep = await motLuot(c, { chiDem: true, dung: (x, o) => dungNguoi(x, { ...o, gop: true }) });
+    await c.query("ROLLBACK TO SAVEPOINT cong_tac");
+    out(`doi-chung cong-tac bo-cong-tac: luot0 gop=${ep.gop}${ep.gop > 0 ? " → do (đúng kỳ vọng)" : " → khong do"}`);
+    await ghiCongTac(c, { bat: true, lyDo: "nap-lai-nguoi: thước bật trong giao dịch ROLLBACK" });
+    const k1 = await motLuot(c);
+    const congTac = { k0, gop0, cho0, epGop: ep.gop, k1CongTac: k1.cong_tac_gop };
     const luot1 = await demTheoNguon(c);
     out(`luot1: ${inDem(luot1)}`);
     const n1Sau = await soN1(c);
@@ -202,7 +220,7 @@ export async function chayNapLaiNguoi(c, { doiChungHong = false, out = console.l
       await c.query("ROLLBACK TO SAVEPOINT hd13_sai");
     }
     out(`doi-chung hd13 gop-sai: ${gopSaiBat === null ? "khong co lan gop nao" : gopSaiBat ? "bat (đúng kỳ vọng)" : "khong bat"}`);
-    const hd13 = { gopCo, n1Truoc, n1Sau, gop1, dich, motSdt, long, gopSaiBat };
+    const hd13 = { gopCo, n1Truoc, n1Sau, gop1, dich, motSdt, long, gopSaiBat, congTac };
 
     const sellersThieu = await sellersThieuNguoi(c);
     out(`sellers_thieu_nguoi: ${sellersThieu.length}${sellersThieu.length ? ` (vd ${sellersThieu.slice(0, 3).join(", ")})` : ""}`);
@@ -252,6 +270,11 @@ async function main() {
     if (h.motSdt.haiSdt || h.motSdt.khacNguon) loi.push("HD13 người hai SĐT hay gộp khác nguồn");
     if (!(h.long.haiSdt > 0)) loi.push("HD13 đối chứng luật lỏng không đỏ");
     if (h.gopSaiBat !== true) loi.push("HD13 đối chứng gộp sai không bị bắt");
+    const ct = h.congTac;
+    if (ct.k0.cong_tac_gop !== "tat" || ct.k0.gop !== 0) loi.push(`công tắc lượt 0 ${ct.k0.cong_tac_gop} gộp ${ct.k0.gop}`);
+    for (const s of NGUON_N1) if (ct.cho0[s] !== h.n1Truoc[s]) loi.push(`công tắc gop_cho lượt 0 ${s}=${ct.cho0[s]} khác N1 chưa gộp ${h.n1Truoc[s]}`);
+    if (!(ct.epGop > 0)) loi.push("đối chứng bỏ công tắc không đỏ");
+    if (ct.k1CongTac !== "bat") loi.push(`công tắc lượt 1 ${ct.k1CongTac}`);
     if (Object.keys(truoc).some((t) => truoc[t] !== sau[t])) loi.push("ROLLBACK không trả DB về như cũ");
     console.log(loi.length ? `nap-lai-nguoi: KHÔNG ĐẠT — ${loi.join(" · ")}` : "nap-lai-nguoi: ĐẠT");
     process.exitCode = loi.length ? 1 : 0;

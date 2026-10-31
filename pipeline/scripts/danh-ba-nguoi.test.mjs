@@ -341,3 +341,84 @@ test("HD13 E10 đọc tĩnh: SQL bộ dựng + dung-nguoi.mjs không tầng A, k
   assert.deepEqual(vi("DELETE FROM parties WHERE party_key = $1"), ["xoá"]);
   assert.deepEqual(vi("UPDATE parties SET source = 'S03'"), ["UPDATE parties ngoài status/merged_into"]);
 });
+
+// ---- cong-tac-gop-nguoi-dem: công tắc ops_audit cho bước gộp, mặc định tắt ----
+import { CONG_TAC_GOP, docCongTac } from "../lib/danh-ba-nguoi.mjs";
+
+test("CTG E3 docCongTac: ma trận bảy dáng, dòng id lớn nhất thắng, chỉ detail.bat === true là bật", () => {
+  const bat = (id) => ({ id: String(id), detail: { bat: true, ly_do: "x" } });
+  const tat = (id) => ({ id: String(id), detail: { bat: false, ly_do: "x" } });
+  const maTran = [
+    ["rỗng", [], "tat"],
+    ["[bat]", [bat(1)], "bat"],
+    ["[tat]", [tat(1)], "tat"],
+    ["[bat, tat]", [bat(1), tat(2)], "tat"],
+    ["[tat, bat] viết ngược thứ tự", [bat(9), tat(3)], "bat"],
+    ["[bat, bat chuỗi]", [bat(1), { id: "2", detail: { bat: "true", ly_do: "x" } }], "tat"],
+    ["[detail thiếu bat]", [{ id: "1", detail: { ly_do: "x" } }], "tat"],
+  ];
+  let soAssert = 0;
+  for (const [ten, rows, ky] of maTran) {
+    assert.equal(docCongTac(rows), ky, `CTG E3 ${ten}`);
+    soAssert++;
+  }
+  assert.equal(soAssert, maTran.length);
+  // id bigserial về dạng chuỗi: "10" > "9" theo số, không theo chữ.
+  assert.equal(docCongTac([tat(9), bat(10)]), "bat", "CTG E3 so id theo số");
+});
+
+/** Câu chạm ops_audit (đọc/ghi/sửa/xoá), không tính phép dò to_regclass. */
+const chamAudit = (sql) => /\b(?:FROM|INTO|UPDATE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE|DROP\s+TABLE)\s+ops_audit\b/i.test(sql);
+const viAudit = (sql) => {
+  if (!chamAudit(sql)) return [];
+  if (/^\s*SELECT\b/i.test(sql) && /\bFROM\s+ops_audit\b/i.test(sql) && !/\b(UPDATE|DELETE|TRUNCATE|INSERT)\b/i.test(sql)) return [];
+  if (/^\s*INSERT INTO ops_audit\b/i.test(sql)) return [];
+  return [`ops_audit ngoài SELECT/INSERT: ${sql.slice(0, 50)}`];
+};
+/** Lời gọi bộ dựng (dungNguoi( hoặc bộ tiêm dung( của buocDem), trừ chính định nghĩa hàm; trả đối số đến dấu ) khớp. */
+function loiGoiDung(nguon) {
+  const goi = [];
+  for (const m of nguon.matchAll(/(?<![\w.])(dungNguoi|dung)\(/g)) {
+    if (/function\s+$/.test(nguon.slice(Math.max(0, m.index - 20), m.index))) continue;
+    let sau = 0;
+    let i = m.index + m[0].length;
+    for (; i < nguon.length; i++) {
+      if (nguon[i] === "(") sau++;
+      else if (nguon[i] === ")") { if (sau === 0) break; sau--; }
+    }
+    goi.push(nguon.slice(m.index, i + 1));
+  }
+  return goi;
+}
+const mangGop = (goi) => /[{,]\s*gop\s*[:,}]|\.\.\./.test(goi);
+
+test("CTG E8 đọc tĩnh: ops_audit chỉ SELECT/INSERT, một câu đọc + một câu ghi công tắc, mã chạy thật không truyền gop", () => {
+  const doc = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
+  const nguonCli = doc("../dung-nguoi.mjs");
+  const cli = [...nguonCli.matchAll(/"((?:SELECT|INSERT|UPDATE|DELETE|TRUNCATE)\b[^"]*)"/g)].map((m) => m[1]);
+  const cau = [...Object.values(SQL), ...cli];
+  const loi = cau.flatMap(viAudit);
+  assert.deepEqual(loi, [], `CTG E8 ${loi.join(" | ")}`);
+  const docCt = cau.filter((s) => /^\s*SELECT\b/i.test(s) && /\bFROM\s+ops_audit\b/i.test(s) && s.includes(`'${CONG_TAC_GOP}'`));
+  const ghiCt = cau.filter((s) => /^\s*INSERT INTO ops_audit\b/i.test(s));
+  assert.equal(CONG_TAC_GOP, "danh-ba:gop-sdt");
+  assert.equal(docCt.length, 1, "CTG E8 số câu đọc công tắc");
+  assert.equal(ghiCt.length, 1, "CTG E8 số câu ghi công tắc");
+  assert.equal(cau.filter(chamAudit).length, 2, "CTG E8 câu chạm ops_audit ngoài đọc/ghi công tắc");
+
+  const goi = ["../refresh-bait-gap.mjs", "../dung-nguoi.mjs", "../lib/danh-ba-nguoi.mjs"].flatMap((p) => loiGoiDung(doc(p)));
+  assert.ok(goi.length >= 3, `CTG E8 rút được ${goi.length} lời gọi bộ dựng`);
+  assert.deepEqual(goi.filter(mangGop), [], "CTG E8 lời gọi chạy thật truyền gop");
+  // buocDem chạy thật không nhận bộ dựng thay thế.
+  const goiDem = [...doc("../refresh-bait-gap.mjs").matchAll(/(?<![\w.])buocDem\(([^)]*)\)/g)].map((m) => m[0]);
+  assert.ok(goiDem.length >= 1 && goiDem.every((g) => !/\bdung\s*:/.test(g)), `CTG E8 buocDem chạy thật: ${goiDem.join(" | ")}`);
+
+  // Đối chứng dương: câu và lời gọi cài sẵn phải bị bắt.
+  assert.equal(viAudit("UPDATE ops_audit SET detail = '{}'").length, 1);
+  assert.equal(viAudit("DELETE FROM ops_audit WHERE id = 1").length, 1);
+  assert.deepEqual(viAudit("SELECT to_regclass('public.ops_audit') IS NOT NULL AS co"), []);
+  assert.equal(loiGoiDung("await dungNguoi(c, { gop: true });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("await dungNguoi(c, { runId, gop });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("await dungNguoi(c, { ...o });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("export async function dungNguoi(c, { gop } = {}) {}").length, 0);
+});
