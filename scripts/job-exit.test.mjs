@@ -148,7 +148,10 @@ const JOBS = {
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
     tree: { copy: ["scripts/cloud-sync.sh", "scripts/lib/job-step.sh"] },
-    seq: ["ha-bung-het-han", "sync-cloud", "refresh-data-flow", "push-ops-facts", "trang-thai-chao", "bac-du-lieu"],
+    seq: [
+      "ha-bung-het-han", "sync-cloud", "refresh-data-flow", "push-ops-facts", "trang-thai-chao", "bac-du-lieu",
+      "do-danh-ba-sdt",
+    ],
   },
   "collector-tuan": {
     // weekly-with-jitter → weekly-collect (set -e, exec) → finalize-hanoi.sh: khúc DB làn Claude nằm ở finalize
@@ -293,16 +296,17 @@ describe("AU13 cloud-sync", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "push-ops-facts" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "push-ops-facts", J.seq), [], r.stderr);
   });
-  test("AU13 cloud-sync: bac-du-lieu hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước bac-du-lieu (PL16, bước cuối)", () => {
+  test("AU13 cloud-sync: bac-du-lieu hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước bac-du-lieu (PL16, sau push-ops-facts)", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "bac-du-lieu" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "bac-du-lieu", J.seq), [], r.stderr);
-    assert.equal(J.seq.at(-1), "bac-du-lieu", "phân bố bậc là bước cuối, sau push-ops-facts (Hỏi-3)");
+    // PL16 Hỏi-3: bậc đứng sau nhịp tim push-ops-facts; SD5 (Hỏi-3 của do-danh-ba-sdt) nối thêm một bước đo sau bậc
+    assert.ok(J.seq.indexOf("bac-du-lieu") > J.seq.indexOf("push-ops-facts"), "phân bố bậc chạy sau push-ops-facts (Hỏi-3)");
     assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "bac-du-lieu", 1)), r.stderr);
   });
   test("AU13 cloud-sync: trang-thai-chao hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước trang-thai-chao (PL19, ngay trước bậc)", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "trang-thai-chao" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "trang-thai-chao", J.seq), [], r.stderr);
-    assert.deepEqual(J.seq.slice(-3), ["push-ops-facts", "trang-thai-chao", "bac-du-lieu"],
+    assert.deepEqual(J.seq.slice(-4, -1), ["push-ops-facts", "trang-thai-chao", "bac-du-lieu"],
       "trạng thái chào chạy ngay trước ảnh chụp bậc (B5 đọc trạng thái mới)");
     assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "trang-thai-chao", 1)), r.stderr);
   });
@@ -329,6 +333,12 @@ describe("AU13 cloud-sync", () => {
     const ok = runJob(J.root(), J.script, {}, via);
     assert.equal(ok.code, 0, ok.stderr);
     assert.deepEqual(ok.calls, J.seq);
+  });
+  test("SD5 cloud-sync: do-danh-ba-sdt hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước do-danh-ba-sdt (bước cuối, sau bậc)", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "do-danh-ba-sdt" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "do-danh-ba-sdt", J.seq), [], r.stderr);
+    assert.deepEqual(J.seq.slice(-2), ["bac-du-lieu", "do-danh-ba-sdt"], "đo danh bạ SĐT là bước cuối, ngay sau bậc");
+    assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "do-danh-ba-sdt", 1)), r.stderr);
   });
   for (const step of J.seq) {
     test(`AU13 cloud-sync: bản đột biến bỏ job_run ở ${step} → bị bắt`, () => {
