@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bdda4717f3406dda6e3b76f8d7d40b702c735d97
+verified_commit: e430f2e962f588b35efdf5c7805aeb1eacf5808a
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -177,3 +177,7 @@ Round 1: tất cả E1–E10 đạt; không eval nào hỏng. Baseline bị ch�
 ### Re-pin lần 1 — 2026-10-31, do gộp main sau chữ ký
 run_id: repin-20261031T004047Z-24389
 sha: bdda4717f3406dda6e3b76f8d7d40b702c735d97 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-31, do gộp main sau chữ ký (#230, #231)
+run_id: repin-20261031T011035Z-48423
+sha: e430f2e962f588b35efdf5c7805aeb1eacf5808a · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
