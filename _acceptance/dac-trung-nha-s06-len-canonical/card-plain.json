@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Các đặc trưng nhà mà tin rao vặt S06 đã có sẵn — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, số WC, toạ độ — được đưa lên dữ liệu chuẩn của tin, mỗi giá trị kèm căn cứ là trường nguồn nó đọc từ, để bộ đánh giá ghép căn và thẻ duyệt dùng được.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ thêm bảy ô mới vào tin (số nhà, mã căn, mặt tiền, ngang × dài, số tầng, vĩ độ, kinh độ) với ràng buộc chặn giá trị vô lý; áp lại lần hai không lỗi, không đụng dữ liệu."},
+    {"id":"AC-2","p":"Sẽ khai bảy trường theo tên chuẩn quốc tế RESO trong sổ từ vựng, và bộ kiểm sổ xanh."},
+    {"id":"AC-3","p":"Sẽ đọc đúng từng đặc trưng từ dữ liệu S06, bỏ giá trị rác (0, âm, chữ ở ô số, mặt tiền trên 200 m, trên 100 tầng, toạ độ ngoài Việt Nam)."},
+    {"id":"AC-4","p":"Sẽ ghi mỗi giá trị thành một phát biểu có căn cứ (trường nguồn, thời điểm tin đăng); giá trị sai kiểu hoặc ngoài miền bị chặn ở mọi đường ghi, kể cả người nhập tay."},
+    {"id":"AC-5","p":"Sẽ dựng ô của tin từ phát biểu thắng, kèm nguồn gốc; người duyệt sửa tay thì thắng giá trị máy đọc."},
+    {"id":"AC-6","p":"Sẽ nạp lại không nhân đôi; giá trị đổi ở nguồn thì phát biểu cũ được rút, ô mang giá trị mới."},
+    {"id":"AC-7","p":"Sẽ đưa mỗi đặc trưng lên ô của tin ở ít nhất 95% số tin có nó (mẫu số theo Hỏi-1), in kèm số tin có khoá và số giá trị rác bị loại."},
+    {"id":"AC-8","p":"Sẽ giữ nguyên tập tin, loại hình, phòng ngủ, đường, toà, tầng, trạng thái chào của mọi tin, và WC của tin S03/S05; không cột mới nào lên cloud."},
+    {"id":"AC-9","p":"Sẽ giữ bộ test pipeline và các ca DB phát biểu, trạng thái chào xanh."}
+  ],
+  "wont_do": [
+    {"id":"OOS-1","p":"KHÔNG đọc đặc trưng từ chữ bài S03/S05, và chưa làm luật loại trừ «khác căn» trong bộ đánh giá."},
+    {"id":"OOS-2","p":"KHÔNG đưa bảy ô lên cloud hay lên thẻ duyệt trong vòng này; chưa áp lên DB máy thu (bước sau khi gộp)."},
+    {"id":"OOS-3","p":"KHÔNG sửa migration 057 của PL5 — chỗ chồng ràng buộc đã báo giám sát."}
+  ],
+  "coverage_plain": [
+    {"i":0,"p":"Lược đồ: bảy ô, ràng buộc miền, trường phát biểu, áp lại (AC-1); sổ RESO (AC-2)."},
+    {"i":1,"p":"Đọc: mỗi trường × hợp lệ / vắng / rác, nguồn thay thế, ngang thiếu dài (AC-3)."},
+    {"i":2,"p":"Phát biểu: lớp, phương pháp, căn cứ, thời điểm; chặn sai kiểu và ngoài miền (AC-4)."},
+    {"i":3,"p":"Phân xử và vòng đời: thắng, người thắng máy, nạp lại, đổi giá trị (AC-5, AC-6)."},
+    {"i":4,"p":"Dữ liệu thật và không lùi: tỉ lệ lên ô, có căn cứ, cột cũ, cloud (AC-7, AC-8, AC-9)."},
+    {"i":5,"p":"Không chạy bước quét độ phủ riêng: audit đã liệt đủ đặc trưng S06 có ở stg."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Nghi số trường lệch nhau quanh WC — WC vốn đã là trường phát biểu; đã thêm việc giữ nguyên WC của S03/S05."},
+    {"i":1,"p":"Cách tính mẫu số 95% do máy tự chọn — đã đưa thành Hỏi-1 cho anh, thước in đủ ba số bằng phép đếm độc lập."},
+    {"i":2,"p":"Người nhập tay giá trị ngoài miền có thể làm đứng cả lượt — đã chặn ở mọi đường ghi, có ca kiểm từng trường."},
+    {"i":3,"p":"Ca đỏ có thể «đỏ» chỉ vì lỗi thiếu cột — đã chạy ca đỏ trên DB đã có cột."},
+    {"i":4,"p":"Miễn trừ phòng ngủ không có trần — đã bỏ miễn trừ."}
+  ]
+}
