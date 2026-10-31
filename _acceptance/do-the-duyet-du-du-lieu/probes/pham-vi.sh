@@ -8,7 +8,9 @@ base=$(git merge-base origin/main HEAD) || { echo "KHONG TINH DUOC DIEM RE NHANH
 files=$(git diff --name-only "$base" HEAD) || { echo "GIT DIFF LOI"; exit 2; }
 cho_phep() {
   case "$1" in
-    pipeline/do-the-duyet.mjs|pipeline/do-the-duyet.test.mjs|pipeline/CLAUDE.md|scripts/cloud-sync.sh|\
+    pipeline/do-the-duyet.mjs|pipeline/do-the-duyet.test.mjs|pipeline/CLAUDE.md|scripts/cloud-sync.sh|scripts/job-exit.test.mjs|\
+    _acceptance/de-xuat-thanh-phat-bieu-bac/evidence-report.md|_acceptance/de-xuat-thanh-phat-bieu-bac/run-log.jsonl|\
+    _acceptance/thoi-gian-va-hieu-luc/evidence-report.md|_acceptance/thoi-gian-va-hieu-luc/run-log.jsonl|\
     app/src/lib/dq-labels.ts|app/tests/dq-the-duyet-label.test.tsx|CONTEXT.md|_acceptance/config.yaml|\
     _acceptance/do-the-duyet-du-du-lieu/*|docs/superpowers/specs/2026-10-31-do-the-duyet-du-du-lieu-design.md|\
     docs/superpowers/plans/2026-10-31-do-the-duyet-du-du-lieu.md|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;

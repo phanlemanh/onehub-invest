@@ -5,7 +5,7 @@ slug: do-the-duyet-du-du-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-do-the-duyet-du-du-lieu-design.md
@@ -45,6 +45,8 @@ Hàng HD11 của `docs/plan/lo-trinh.json` (T2, dãy P4, đợt 3). Cổng Đán
   (`app/src/lib/ops/review-media.ts`, theo vai) trả 0 ảnh trên cùng các thẻ — thước ngoài lệnh và ngoài câu đo của probe.
 - AC-7: Given nhánh so với merge-base, When liệt kê tệp đổi, Then chỉ trong: `pipeline/do-the-duyet.mjs`,
   `pipeline/do-the-duyet.test.mjs`, `pipeline/CLAUDE.md` (một dòng), `scripts/cloud-sync.sh` (một bước),
+  `scripts/job-exit.test.mjs` (dãy bước ghim của cloud-sync), bản ghim lại của hồ sơ có `paths` chạm tệp đó (`evidence-report.md`,
+  `run-log.jsonl` của `de-xuat-thanh-phat-bieu-bac`, `thoi-gian-va-hieu-luc`),
   `app/src/lib/dq-labels.ts`, `app/tests/dq-the-duyet-label.test.tsx`, `CONTEXT.md`, `_acceptance/config.yaml`, hồ sơ này,
   design doc, plan, tệp máy sinh (`PRODUCT-MAP.md`, `LO-TRINH.html`).
 - AC-8: Given dòng `the-duyet:*` vừa ghi ở cuối một lượt cloud-sync, When lượt kế chạy `sync-cloud.mjs`, Then câu đọc
