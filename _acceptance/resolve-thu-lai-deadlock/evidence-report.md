@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: resolve-thu-lai-deadlock
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b306b13972d344f00dbaa637566a4765fd5339b0
+verified_commit: 9578df2ee0eba3a4b977296bb4f0aa5df875145a
 human_signoff:
 ---
 
 # Evidence Report: resolve-thu-lai-deadlock
 
-Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một lệnh suite hồi quy không gắn eval nào (`cd app && npm test`) thoát khác 0: ca `ON12-AC-7` trong `app/tests/ops-nhan-theo-context.test.tsx` báo trang /ops còn chữ thô «(chưa có tên Việt)» cho khu vực `da-nang` trên DB local. Lỗi này nằm ở nhãn UI /ops và dữ liệu DB local, không chạm `pipeline/resolve-properties.mjs`; cần người xác nhận nguồn gốc trước khi quyết.
+Round 2. Chín eval tính năng (E1–E9) được mang sang từ round 1 vì delta không chạm paths của chúng. Sáu lệnh suite chạy lại ở round này, tất cả xanh.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -35,9 +35,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_unit
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/lib/thu-lai-deadlock.test.mjs
-    ℹ duration_ms 45.311959
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-resolve-thu-lai-deadlock-E2-r1
@@ -45,9 +45,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_unit
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/lib/thu-lai-deadlock.test.mjs
-    ℹ duration_ms 45.311959
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-resolve-thu-lai-deadlock-E3-r1
@@ -55,9 +55,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_unit
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/lib/thu-lai-deadlock.test.mjs
-    ℹ duration_ms 45.311959
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-resolve-thu-lai-deadlock-E4-r1
@@ -65,19 +65,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_unit
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/lib/thu-lai-deadlock.test.mjs
-    ℹ duration_ms 45.311959
-
-- eval: E7
-  run_id: minted-resolve-thu-lai-deadlock-E7-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.rtld_unit
-  verified_at: 2026-10-31T10:08:15Z
-  output: |
-    lệnh: node --test pipeline/lib/thu-lai-deadlock.test.mjs
-    ℹ duration_ms 45.311959
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-resolve-thu-lai-deadlock-E5-r1
@@ -85,9 +75,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_itest
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/tests/resolve-properties-deadlock.itest.mjs
-    ℹ duration_ms 4719.021584
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-resolve-thu-lai-deadlock-E6-r1
@@ -95,9 +85,19 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_itest
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/tests/resolve-properties-deadlock.itest.mjs
-    ℹ duration_ms 4719.021584
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E7
+  run_id: minted-resolve-thu-lai-deadlock-E7-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.rtld_unit
+  verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-resolve-thu-lai-deadlock-E8-r1
@@ -105,9 +105,9 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_itest
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/tests/resolve-properties-deadlock.itest.mjs
-    ℹ duration_ms 4719.021584
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-resolve-thu-lai-deadlock-E9-r1
@@ -115,43 +115,41 @@ Vòng 1. Cả chín eval của tính năng đều xanh. Verdict REJECT vì một
   baseline: n-a
   verifier: config:executors.test.rtld_itest
   verified_at: 2026-10-31T10:08:15Z
+  carried_from_round: 1
   output: |
-    lệnh: node --test pipeline/tests/resolve-properties-deadlock.itest.mjs
-    ℹ duration_ms 4719.021584
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__bb6271-r1
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T10:08:15Z
+  verified_at: 2026-10-31T11:13:54Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-lint-r1
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T10:08:15Z
+  verified_at: 2026-10-31T11:13:54Z
 
 - cmd: cd app && npm test
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-10-31T10:08:15Z
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-10-31T11:13:54Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__13563d-r1
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-31T10:08:15Z
+  verified_at: 2026-10-31T11:13:54Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-test_lint_rules-r1
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T10:08:15Z
+  verified_at: 2026-10-31T11:13:54Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-resolve-thu-lai-deadlock-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-resolve-thu-lai-deadlock-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T10:08:15Z
-
-Ghi chú lệnh suite không gắn eval và không đạt: `cd app && npm test` (1 ca đỏ: `ON12-AC-7 mọi giá trị đang có trên DB local có nhãn`, trang /ops còn chữ thô «(chưa có tên Việt)» trong «S06 · da-nang (chưa có tên Việt)» và «da-nang (chưa có tên Việt)»). Lệnh này không gắn eval nào, nên `failed_evals` để trống.
+  verified_at: 2026-10-31T11:13:54Z
 
 ## Known limits
 
@@ -159,17 +157,16 @@ Ghi chú lệnh suite không gắn eval và không đạt: `cd app && npm test` 
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)? Không áp dụng: không eval nào đo được baseline. Không eval nào được xác định là xanh-cả-hai-phía.
+carried tu round 1 — baseline khong do lai round nay.
 
-Baseline không đo
-- node --test pipeline/lib/thu-lai-deadlock.test.mjs: bo qua baseline: tep pipeline/lib/thu-lai-deadlock.test.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
-- node --test pipeline/tests/resolve-properties-deadlock.itest.mjs: bo qua baseline: tep pipeline/tests/resolve-properties-deadlock.itest.mjs co o cay dang kiem nhung chua co o merge-base 82a53e0a84604610a26b381021b325d4c085f8bf — eval moi, chay tren code cu khong phan biet gi
+Không có eval không-phân-biệt nào được liệt kê.
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, xác định)
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: chín eval feature xanh; lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-7 (nhãn /ops «(chưa có tên Việt)» cho da-nang, dữ liệu DB local), không gắn eval nào. Trả về để xác định nguồn gốc lỗi suite.
+Round 1: lệnh suite app npm test đỏ; các eval E1–E9 xanh. Trả về cho khâu cài đặt.
+Round 2: sáu lệnh suite xanh; E1–E9 mang sang từ round 1 vì delta không chạm paths của chúng. Verdict PASS.
 

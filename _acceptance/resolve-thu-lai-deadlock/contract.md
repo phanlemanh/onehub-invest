@@ -5,7 +5,7 @@ slug: resolve-thu-lai-deadlock
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-31T09:35:00Z
 design_doc: docs/superpowers/specs/2026-10-31-resolve-thu-lai-deadlock-design.md
