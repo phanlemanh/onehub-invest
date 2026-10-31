@@ -18,7 +18,9 @@ import { chonSdtTin, extractPhones, runTransformZalo } from "../transform-zalo.m
 
 const GOC = "9b40715dab682a3bff273caa72c588128c871aba";
 // Số đo của audit 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §2.3) — chỉ in cạnh, không làm ngưỡng.
-const AUDIT_NHIEU_SDT = { S03: 11, S05: 1 };
+// Khoá theo «<nguồn>_30_10» để không giống khai báo SLO nguồn mà scripts/s05-slo.test.mjs quét.
+const AUDIT_NHIEU_SDT = { s03_30_10: 11, s05_30_10: 1 };
+const auditNhieuSdt = (s) => AUDIT_NHIEU_SDT[`${s.toLowerCase()}_30_10`];
 const DB_URL = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_[a-z0-9_]+$/.test(DB_URL)) {
   console.error("do-boc-sdt: cần DATABASE_URL trỏ DB thử oneinvest_<dãy>_<việc> (bash db/db-thu.sh …)");
@@ -154,7 +156,7 @@ try {
     const n = dong.length === 1 ? Number(dong[0].split(":")[1]) : NaN;
     const thuoc = demNhieuSdt(sau, bai, s);
     const truocCo = logTruoc[s].some((l) => l.startsWith("tin nhiều SĐT:"));
-    bao(dong.length === 1 && n === thuoc && !truocCo, `SD-AC-5 ${s}: log «tin nhiều SĐT: ${n}» (${dong.length} dòng) · thước bộ dò rộng ${thuoc} · audit 30/10 ${AUDIT_NHIEU_SDT[s]} · bản trước có dòng: ${truocCo}`);
+    bao(dong.length === 1 && n === thuoc && !truocCo, `SD-AC-5 ${s}: log «tin nhiều SĐT: ${n}» (${dong.length} dòng) · thước bộ dò rộng ${thuoc} · audit 30/10 ${auditNhieuSdt(s)} · bản trước có dòng: ${truocCo}`);
   }
 
   // ---- SD-AC-6: dạng số và băm không đổi ----
