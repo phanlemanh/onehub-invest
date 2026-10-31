@@ -26,11 +26,19 @@ before(async () => { c = new pg.Client({ connectionString: DB_URL }); await c.co
 after(async () => { await c.end(); });
 
 const one = async (sql, p = []) => (await c.query(sql, p)).rows[0];
+/** DB đã áp 061 (máy thu sau triển khai) → bỏ CHECK miền và trigger của 061 trong giao dịch, để bản sao đột biến được đo
+ *  trên tiền đề «chưa áp» (061 idempotent: IF NOT EXISTS không thêm lại thứ đã có). */
+async function boRang061(client) {
+  for (const r of ["frontage_length", "stories", "latitude", "longitude"])
+    await client.query(`ALTER TABLE sale_offer_records DROP CONSTRAINT IF EXISTS sale_offer_records_${r}_chk`);
+  await client.query("DROP TRIGGER IF EXISTS field_assertions_gia_tri_061 ON field_assertions");
+}
 async function trongGiaoDich(fn, { sql061 } = {}) {
   await c.query("BEGIN");
   await c.query("SELECT pg_advisory_xact_lock(33033)");
   try {
     await napPhatBieu(c);
+    if (sql061) await boRang061(c);
     await napDacTrung(c, sql061 ? { sql: sql061 } : undefined);
     return await fn();
   } finally {
