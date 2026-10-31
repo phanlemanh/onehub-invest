@@ -31,7 +31,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.s03_loai_tin
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
-    expected: "exit 0; ca SLT-AC-4: ma trận viết tay 8 ô («Khách sale xem liền căn 2PN», «Kháh xem liền 2PN … TC 2.7tỷ», «Khách em đang ở Vin xem liền 2PN 6,5tr», «Khách e tìm 1pn 5,5tr», «cần mua 2PN 3 tỷ», «cần thuê studio 6tr», «anh chị có căn gửi em 2PN 10tr», «tìm căn 3PN dưới 5 tỷ») → kind rỗng, nguồn bai-cau; đối chứng dương «Có khách cọc, còn 1 căn 2PN 3,1 tỷ thu về» vẫn sale; chiều đỏ: bản đột biến xét tín hiệu bán trước bài cầu → ô «Kháh xem liền» đỏ ghim «SLT-AC-4 bài cầu lọt»"
+    expected: "exit 0; ca SLT-AC-4: ma trận viết tay 8 ô («Khách sale xem liền căn 2PN», «Kháh xem liền 2PN … TC 2.7tỷ», «Khách em đang ở Vin xem liền 2PN 6,5tr», «Khách e tìm 1pn 5,5tr», «cần mua 2PN 3 tỷ», «cần thuê studio 6tr», «anh chị có căn gửi em 2PN 10tr», «tìm căn 3PN dưới 5 tỷ») → kind rỗng, nguồn yeu-cau; đối chứng dương «Có khách cọc, còn 1 căn 2PN 3,1 tỷ thu về» vẫn sale; chiều đỏ: bản đột biến xét tín hiệu bán trước Yêu cầu → ô «Kháh xem liền» đỏ ghim «SLT-AC-4 Yêu cầu lọt thành tin rao»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -63,7 +63,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.s03_loai_tin
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
-    expected: "exit 0; ca SLT-AC-8: hàm đếm nguồn trên bộ bài viết tay trả đúng {chu-bai, tin-hieu-chu, don-vi-gia, boi-canh-nhom, bai-cau, bo} khớp số viết tay; tổng = số bài"
+    expected: "exit 0; ca SLT-AC-8: hàm đếm nguồn trên bộ bài viết tay trả đúng {chu-bai, tin-hieu-chu, don-vi-gia, boi-canh-nhom, yeu-cau, bo} khớp số viết tay; tổng = số bài"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
@@ -71,7 +71,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.s03_loai_tin_doi_chieu
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs]
-    expected: "exit 0; ca SLT-DC-9 trên DB máy thu (BEGIN … ROLLBACK, chỉ in số): runTransformZalo với suy loại tắt rồi bật trên cùng dữ liệu — tin sale sau gộp tăng ≥ 30%, tin thuê giá ≥ 1 tỷ không tăng, tin sale giá < 300 triệu không tăng; chạy bật rồi tắt trong cùng transaction thì số tin còn sống chỉ gồm bài suy loại = 0 (đối chứng dương: bản đột biến bỏ đối soát thì ra ≥ 1); tập bài cầu mẫu viết tay chèn vào lô thì không bài nào thành tin"
+    expected: "exit 0; ca SLT-DC-9 trên DB máy thu (BEGIN … ROLLBACK, chỉ in số): runTransformZalo với suy loại tắt rồi bật trên cùng dữ liệu — tin sale sau gộp tăng ≥ 30%, tin thuê giá ≥ 1 tỷ không tăng, tin sale giá < 300 triệu không tăng; chạy bật rồi tắt trong cùng transaction thì số tin còn sống chỉ gồm bài suy loại = 0 (đối chứng dương: bản đột biến bỏ đối soát thì ra ≥ 1); tập Yêu cầu mẫu viết tay chèn vào lô thì không bài nào thành tin"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10

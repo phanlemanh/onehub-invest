@@ -9,6 +9,6 @@
 ## Đề bài `luong-suy-loai`
 
 - Loại hình: flowchart dọc, một cột chính.
-- Nút: «Bài S03» → «parsePost có chữ bán/cho thuê?» (có → «giữ loại · nguồn chu-bai») → «Bài cầu? (khách tìm/xem/cần, cần mua/thuê)» (có → «bỏ · bai-cau») → «Có giá và dấu hiệu BĐS?» (không → «bỏ · bo») → «Tín hiệu bán? (tỷ, thu về, cắt lỗ, hạ giá, chuyển nhượng, BTP)» (có → «Bán · tin-hieu-chu») → «Giá triệu dưới 1 tỷ / «tháng» / pass?» (có → «Thuê · don-vi-gia») → «Mục đích nhóm (tên, rồi tỉ lệ ≥20 bài ≥85%)» → bán / thuê («boi-canh-nhom») / cả hai («bỏ»).
+- Nút: «Bài S03» → «parsePost có chữ bán/cho thuê?» (có → «giữ loại · nguồn chu-bai») → «Yêu cầu? (khách tìm/xem/cần, cần mua/thuê)» (có → «không thành tin rao, giữ ở stg · yeu-cau») → «Có giá và dấu hiệu BĐS?» (không → «bỏ · bo») → «Tín hiệu bán? (tỷ, thu về, cắt lỗ, hạ giá, chuyển nhượng, BTP)» (có → «Bán · tin-hieu-chu») → «Giá triệu dưới 1 tỷ / «tháng» / pass?» (có → «Thuê · don-vi-gia») → «Mục đích nhóm (tên, rồi tỉ lệ ≥20 bài ≥85%)» → bán / thuê («boi-canh-nhom») / cả hai («bỏ»).
 - Nhãn bằng chữ tiếng Việt như trên; mã nguồn in nhỏ dưới mỗi kết cục.
 - AC liên quan: AC-1..AC-6.
