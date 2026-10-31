@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>98 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>81 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>82 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
@@ -69,6 +69,7 @@ flowchart TD
 - Mọi job đêm thoát khác 0 khi không tới được DB, và watchdog cảnh báo khi DB sập (`job-bao-loi-that`)
 - Thẻ ghép căn do judge-run sinh mang đủ mười trường của bảng so cho cả Tin A và Tin B (`judge-evidence-du-truong`)
 - Chấm lại ghép căn không đổi thẻ người vừa quyết, và so phường theo cùng khoá với thẻ duyệt (`judge-giu-quyet-dinh-nguoi`)
+- Bộ đánh giá ghép căn loại trừ tất định một cặp khi một đặc trưng nhà khác rõ, ghi đặc trưng nào khác vào evidence (`judge-luat-loai-tru-dac-trung`)
 - Ghép căn kết luận bằng luật ngưỡng trong code, LLM chỉ viết lời giải thích; mỗi lần chấm ghi model và trace lên thẻ; mọi cặp ứng viên needs_llm sinh đúng một thẻ ghép căn (`judge-nguong-la-code`)
 - Thẻ duyệt ghép căn và luật chấm cùng coi «P.12» là «Phường 12» (`khoa-phuong-chung-phuong-so`)
 - Leak gate của sync cloud đỏ khi role anon còn SELECT được bất kỳ bảng hay view nào (`leak-gate-kiem-anon`)

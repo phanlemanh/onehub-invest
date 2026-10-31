@@ -37,13 +37,13 @@ const goc: Tin = { perm2: 100 * TR, area: 50, phuong: "Bình Thạnh", loai: "nh
 const voi = (o: Partial<Tin>): Tin => ({ ...goc, ...o });
 /** Số đo từng tin theo mã; queryPair giả dựng cặp đúng chiều được hỏi. */
 const TIN: Record<string, Tin> = {
-  o1: goc, o2: voi({ perm2: 105 * TR, area: 52 }), // yes
-  o3: goc, o4: voi({ perm2: 170 * TR, area: 52 }), // no
-  o5: goc, o6: voi({ perm2: 125 * TR, area: 52 }), // unsure
-  o7: goc, o8: voi({ perm2: 105 * TR, area: 52 }), // cặp pending (không phải needs_llm)
-  o9: goc, o10: voi({ perm2: 105 * TR, area: 52 }),
-  o11: goc, o12: voi({ perm2: 105 * TR, area: 52 }),
-  o13: goc, o14: voi({ perm2: 105 * TR, area: 52 }),
+  o1: goc, o2: voi({ perm2: 105 * TR, area: 51 }), // yes
+  o3: goc, o4: voi({ perm2: 170 * TR, area: 51 }), // no
+  o5: goc, o6: voi({ perm2: 125 * TR, area: 51 }), // unsure
+  o7: goc, o8: voi({ perm2: 105 * TR, area: 51 }), // cặp pending (không phải needs_llm)
+  o9: goc, o10: voi({ perm2: 105 * TR, area: 51 }),
+  o11: goc, o12: voi({ perm2: 105 * TR, area: 51 }),
+  o13: goc, o14: voi({ perm2: 105 * TR, area: 51 }),
 };
 const dungCap = (a: string, b: string): PairData => {
   const p = cap(TIN[a], TIN[b]);
@@ -266,9 +266,9 @@ test("JE-AC-1 sinh thẻ đủ mười trường — mọi cặp needs_llm có �
 const CO_A = { street: "Đường Phan Văn Trị", block: "A1", floor: "12", bathrooms: 2 };
 const CO_B = { street: "Phan Văn Trị", block: "B2", floor: "7", bathrooms: 3 };
 TIN.o15 = voi(CO_A);
-TIN.o16 = voi({ ...CO_B, perm2: 105 * TR, area: 52 });
+TIN.o16 = voi({ ...CO_B, perm2: 105 * TR, area: 51 });
 TIN.o17 = goc;
-TIN.o18 = voi({ perm2: 105 * TR, area: 52 });
+TIN.o18 = voi({ perm2: 105 * TR, area: 51 });
 type Ev = { offer_a: Record<string, unknown>; offer_b: Record<string, unknown> };
 /** 16 ô viết trước: 4 trường × 2 bên × {có (o15|o16), null (o17|o18)}. Trả số assert đã chạy. */
 const kiemGiaTri = (evCo: Ev, evNull: Ev, pCo: PairData) => {

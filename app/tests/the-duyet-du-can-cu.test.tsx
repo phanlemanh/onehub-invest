@@ -172,7 +172,8 @@ async function kiemSo(mod: CanCuMod) {
     n += 3
   }
   assert.equal(n, 30)
-  assert.equal(mod.soTruongGhepCan({}, {}).find((h) => h.key === "floor")!.so, "thieu", "TD-AC-2: tầng thiếu cả hai bên phải là Thiếu")
+  // Hàng tầng có khoá riêng từ hồ sơ judge-luat-loai-tru-dac-trung — ca «thiếu cả hai bên» đo trên hàng Giá (soGiaTri).
+  assert.equal(mod.soTruongGhepCan({}, {}).find((h) => h.key === "price_vnd")!.so, "thieu", "TD-AC-2: giá thiếu cả hai bên phải là Thiếu")
 }
 test("TD-AC-2 bảng so: ma trận 10 trường × khớp/lệch/thiếu, 10 hàng, trường ngoài trục ghi «chưa ghi căn cứ»", async () => {
   await kiemSo(canCu)
@@ -190,7 +191,7 @@ test("TD-AC-2 bảng so: ma trận 10 trường × khớp/lệch/thiếu, 10 hà
   const sai = await banChepTam<CanCuMod>("src/lib/ops/review-can-cu.ts", (s) =>
     s.replace('if (trong(a) || trong(b)) return "thieu";', 'if (trong(a) && trong(b)) return "khop";\n  if (trong(a) || trong(b)) return "thieu";'),
   )
-  await assert.rejects(kiemSo(sai), /TD-AC-2: tầng thiếu cả hai bên phải là Thiếu/)
+  await assert.rejects(kiemSo(sai), /TD-AC-2: giá thiếu cả hai bên phải là Thiếu/)
 })
 
 test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 6 phương pháp = 18 ô theo sổ từ vựng", () => {

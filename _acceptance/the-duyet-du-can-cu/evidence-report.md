@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a788632b0a69bdd17b1e7a7eb14f5127cb55268a
+verified_commit: 9403e44b090a59220b232398af14d261fc6fc75b
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -270,3 +270,7 @@ sha: 1b8f33197cf99361500cebdf33f6755a03773630 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 4 — 2026-10-30, do gộp main (#215 đổi review-can-cu) sau sửa probe hàng duyệt
 run_id: repin-20261030T171737Z-58733
 sha: a788632b0a69bdd17b1e7a7eb14f5127cb55268a · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
+
+### Re-pin lần 5 — 2026-10-31, do bảng so thẻ ghép căn so đường/toà/tầng bằng khoá riêng (judge-luat-loai-tru-dac-trung vòng 2)
+run_id: repin-20261031T063631Z-45656
+sha: 9403e44b090a59220b232398af14d261fc6fc75b · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13 · diff chạm vật đo ngoài làn máy: E13 — chưa chứng lại, đi vòng S4 delta

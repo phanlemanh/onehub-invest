@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 71d13bca7d372b82393f7cac705cb12d28c1ddad
+verified_commit: 9403e44b090a59220b232398af14d261fc6fc75b
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -158,3 +158,7 @@ sha: 97f6a455c7cd852ba85f33a9bf7558d419478621 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-30, do phuong-so đổi khoaPhuong; trỏ eval thay thế tới phuong-so; gộp main
 run_id: repin-20261030T222258Z-25093
 sha: 71d13bca7d372b82393f7cac705cb12d28c1ddad · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E3 · thay bởi hồ sơ đã ký: E3→phuong-so#AC-1 · AC không có chốt máy: AC-3
+
+### Re-pin lần 3 — 2026-10-31, do bảng so thẻ ghép căn so đường/toà/tầng bằng khoá riêng (judge-luat-loai-tru-dac-trung vòng 2)
+run_id: repin-20261031T063631Z-45656
+sha: 9403e44b090a59220b232398af14d261fc6fc75b · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E3 · thay bởi hồ sơ đã ký: E3→phuong-so#AC-1 · AC không có chốt máy: AC-3

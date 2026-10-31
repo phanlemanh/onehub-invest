@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Máy chấm cặp tin «cùng một căn?» ra «khác căn» ngay khi hai tin khác rõ ở một đặc trưng nhà (phòng ngủ, WC, đường, toà, tầng, hoặc diện tích lệch quá 1 m² — căn hộ quá cả 10%), ghi đặc trưng nào khác lên thẻ; bảng so trên thẻ duyệt so đường, toà, tầng bằng đúng cách luật so.",
+  "analyst_plain": "Ma trận phường cũ (E5) chạy trên bản trước vòng cũng xanh, nên riêng nó không phân biệt; phần mới của vòng được chứng bằng chiều đỏ trong từng ca của judge-luat.test.ts (luật cũ pl25-1 hoặc bản đột biến của chính tệp vừa sửa)."
+}
