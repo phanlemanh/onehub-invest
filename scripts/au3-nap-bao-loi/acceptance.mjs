@@ -100,14 +100,27 @@ function chototSandbox({ realImport = false } = {}) {
   const sb = sandbox("chotot-daily.sh");
   const p = (f) => join(sb.repo, "pipeline", f);
   writeFileSync(p("collect-chotot.mjs"), fakeModule(sb.calls, "collect", '"collect"'));
+  // TV2b (cong-tac-that): cổng vòng đời S06 + bước đọc vùng từ DB đứng trước nạp. vong-doi giả (CLI thoát 0,
+  // isRunnable theo status); pg bọc: bước đọc vùng (node -e — argv chỉ có node) nhận vùng giả hanoi + hcmc active,
+  // còn import-chotot.mjs THẬT (argv có tệp + snapshot) dùng pg thật — giữ ca (a) DB chết ở bước nạp.
+  mkdirSync(p("lib"), { recursive: true });
+  writeFileSync(p("lib/vong-doi.mjs"), `export function isRunnable(src, unit) { return { run: (unit?.status ?? "active") === "active" }; }
+if (process.argv.length > 2) { console.log(JSON.stringify({ code: process.argv[2], run: true, ly_do: "chay" })); process.exit(0); }
+`);
+  mkdirSync(p("node_modules/pg"), { recursive: true });
+  writeFileSync(p("node_modules/pg/package.json"), JSON.stringify({ name: "pg", type: "module", exports: "./index.mjs" }));
+  writeFileSync(p("node_modules/pg/index.mjs"), `import { createRequire } from "node:module";
+const rows = { source_registry: [{ code: "S06", status: "active" }], source_groups: [{ group_key: "hanoi", status: "active" }, { group_key: "hcmc", status: "active" }] };
+class Client { async connect() {} async end() {} async query(sql) { return { rows: rows[Object.keys(rows).find((t) => sql.includes(t))] ?? [] }; } }
+export default process.argv.length > 1 ? createRequire(${JSON.stringify(join(ROOT, "pipeline/package.json"))})("pg") : { Client };
+`);
   if (realImport) {
     cpSync(join(ROOT, "pipeline/import-chotot.mjs"), p("import-chotot.mjs"));
     cpSync(join(ROOT, "pipeline/package.json"), p("package.json"));
-    symlinkSync(join(ROOT, "pipeline/node_modules"), p("node_modules"));
   } else {
     writeFileSync(p("import-chotot.mjs"), fakeModule(sb.calls, "import", 'process.argv[2].split("/").at(-1)'));
   }
-  for (const [f, tag] of [["transform-chotot.mjs", "transform-chotot"], ["refresh-bait-gap.mjs", "refresh-bait-gap"], ["resolve-properties.mjs", "resolve-properties"]]) {
+  for (const [f, tag] of [["transform-chotot.mjs", "transform-chotot"], ["transform-media.mjs", "transform-media"], ["refresh-bait-gap.mjs", "refresh-bait-gap"], ["resolve-properties.mjs", "resolve-properties"]]) {
     writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
   }
   for (const c of ["hanoi", "hcmc"]) {
@@ -184,6 +197,7 @@ function apifySandbox({ realImport = false } = {}) {
   }
   if (realImport) {
     cpSync(join(ROOT, "pipeline/import-airbnb.mjs"), p("import-airbnb.mjs"));
+    cpSync(join(ROOT, "pipeline/import-s08-row.mjs"), p("import-s08-row.mjs")); // import-airbnb nhập bộ đọc dòng S08 (ZC8)
     cpSync(join(ROOT, "pipeline/package.json"), p("package.json"));
     symlinkSync(join(ROOT, "pipeline/node_modules"), p("node_modules"));
   } else {
@@ -256,6 +270,18 @@ async function modeApify() {
   finish("APIFY");
 }
 
+/** zalo-import-daily (NH1 + enrich-chay-sau-nap) gọi thêm transform-media và bước enrich ở agent/ (node --import tsx);
+ * bản giả: gói tsx rỗng + enrich-run.ts ghi lời gọi (Node 24 tự bỏ kiểu .ts). */
+function fakeEnrich(sb) {
+  const a = (f) => join(sb.repo, "agent", f);
+  mkdirSync(a("scripts"), { recursive: true });
+  mkdirSync(a("node_modules/tsx"), { recursive: true });
+  writeFileSync(a("package.json"), JSON.stringify({ type: "module" }));
+  writeFileSync(a("node_modules/tsx/package.json"), JSON.stringify({ name: "tsx", type: "module", exports: "./index.mjs" }));
+  writeFileSync(a("node_modules/tsx/index.mjs"), "");
+  writeFileSync(a("scripts/enrich-run.ts"), fakeModule(sb.calls, "enrich-run", JSON.stringify("enrich-run")));
+}
+
 const mode = process.argv[2];
 // ---------------------------------------------------------- ts-format (vòng 3)
 // Khuôn tên snapshot thật: collector trên main ghi mốc có MILI-GIÂY 'YYYY-MM-DDThhmmssmmm', trùng ms thì thêm '-n';
@@ -263,8 +289,9 @@ const mode = process.argv[2];
 function tsSandbox(script) {
   const sb = sandbox(script);
   const p = (f) => join(sb.repo, "pipeline", f);
-  for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
+  for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["transform-media.mjs", "transform-media"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
   writeFileSync(p("import-airbnb.mjs"), fakeModule(sb.calls, "import", 'process.argv[2].split("__").at(-1)'));
+  fakeEnrich(sb);
   const names = ["2026-10-24T090800123-1", "TEST", "2026-10-24T090755", "2026-10-24", "2026-10-24T090800123", "2026-10-24T090800123Z-x"];
   for (const ts of names) {
     const dir = join(sb.repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`);

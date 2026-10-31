@@ -19,37 +19,41 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SNAP_ROOT = process.env.CHOTOT_SNAP_ROOT ?? join(ROOT, "collector", "snapshots");
-const API = "https://gateway.chotot.com/v1/public/ad-listing";
+const API = process.env.CHOTOT_API ?? "https://gateway.chotot.com/v1/public/ad-listing"; // 2610-13: env cho test nhà cung cấp giả
 const LIMIT = 50; // page nhỏ = request đều nhau theo nhịp người duyệt web
 
-// Regions đọc từ DB (source_groups, quản trị /ops/sources) — thêm tỉnh mới
-// (Đà Nẵng, Hải Phòng…) không cần sửa code. Fallback 2 thành phố cũ.
-const FALLBACK_REGIONS = [
-  { region_v2: 12000, city: "hanoi", cityCode: "vn-hanoi" },
-  { region_v2: 13000, city: "hcmc", cityCode: "vn-hcmc" },
-];
 
+// 2610-13 (TV2b): vùng chỉ từ DB qua luật vong-doi (source_groups.status,
+// nguồn sự thật từ 047) — KHÔNG còn FALLBACK_REGIONS. DB lỗi → NÉM (main
+// bắt → exit 1, fail-closed); nguồn/vùng không active bị isRunnable chặn.
+import { isRunnable, docTrangThai } from "./lib/vong-doi.mjs";
 async function loadRegions() {
+  const pg = (await import("pg")).default;
+  const c = new pg.Client({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+  });
   try {
-    const pg = (await import("pg")).default;
-    const c = new pg.Client({
-      connectionString:
-        process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
-    });
     await c.connect();
+    const src = (await c.query(`SELECT code, status FROM source_registry WHERE code = 'S06'`)).rows[0] ?? null;
     const { rows } = await c.query(
-      `SELECT group_key, name, params FROM source_groups
-       WHERE source_code = 'S06' AND enabled ORDER BY id`,
+      `SELECT group_key, params, status FROM source_groups WHERE source_code = 'S06' ORDER BY id`,
     );
-    await c.end();
-    const regions = rows
-      .filter((r) => r.params?.region_v2)
-      .map((r) => ({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode }));
-    if (regions.length === 0) throw new Error("0 region bật");
-    return regions;
-  } catch (e) {
-    console.warn(`⚠ source_groups DB fail (${e.message}) — fallback ${FALLBACK_REGIONS.length} region`);
-    return FALLBACK_REGIONS;
+    // 2610-13 vòng 3: vùng active thiếu region_v2 → in một dòng mã + params-hong
+    // (thay vì bỏ lặng lẽ — quản trị /ops/sources thấy ngay mà sửa)
+    const kq = [];
+    for (const r of rows) {
+      const quyet = isRunnable(src, { status: r.status });
+      if (!quyet.run) continue;
+      if (!r.params?.region_v2) {
+        console.log(`S06 ${r.group_key} params-hong — thiếu region_v2 trong params`);
+        continue;
+      }
+      kq.push({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode });
+    }
+    return kq;
+  } finally {
+    await c.end().catch(() => {});
   }
 }
 // cg=1000 nhà đất | cg=1010 căn hộ; st=s bán | st=u thuê (type từng ad là
@@ -70,7 +74,7 @@ const UAS = [
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const jitter = () => sleep(600 + Math.random() * 1200);
+const jitter = () => (process.env.CHOTOT_JITTER === "0" ? sleep(0) : sleep(600 + Math.random() * 1200)); // 2610-13: công tắc cho test
 const ua = () => UAS[Math.floor(Math.random() * UAS.length)];
 
 function argPages() {
@@ -124,7 +128,32 @@ async function writeSnapshot(city, items, coverage) {
 
 async function main() {
   const startedAt = new Date().toISOString();
+  // 2610-13: cổng NGUỒN trước mọi lời gọi — từ chối → 0 lời gọi, thoát 0,
+  // một dòng mã + lý do; DB lỗi → thoát ≠0 (fail-closed).
+  {
+    const pg = (await import("pg")).default;
+    const c = new pg.Client({
+      connectionString:
+        process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+    });
+    try {
+      await c.connect();
+      const kq = await docTrangThai(c, "S06");
+      await c.end();
+      if (!kq.run) {
+        console.log(`S06 ${kq.ly_do} — bỏ qua thu`);
+        return;
+      }
+    } catch (e) {
+      console.error(`S06 vong-doi lỗi — dừng (fail-closed): ${e.message}`);
+      process.exit(1);
+    }
+  }
   let REGIONS = await loadRegions();
+  if (REGIONS.length === 0) {
+    console.log("S06 khong-con-vung-active — bỏ qua thu (0 vùng active)");
+    return;
+  }
   if (process.env.CHOTOT_REGIONS) {
     REGIONS = REGIONS.filter((r) => process.env.CHOTOT_REGIONS.split(",").includes(r.city));
   }
