@@ -5,10 +5,10 @@ slug: s06-vung-moi-len-canonical
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-31-s06-vung-moi-len-canonical-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-31
 ---
 
 # Acceptance Contract: s06-vung-moi-len-canonical
