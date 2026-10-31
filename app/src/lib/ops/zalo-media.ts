@@ -2,13 +2,19 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { User } from "@/lib/auth";
+import { pool } from "@/lib/db";
 import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 import { isLoginQrFile } from "@/lib/zalo-admin";
+
+import { layAnhGoc } from "./lay-anh-goc";
 
 /**
  * Lõi của GET /api/zalo-media — phục vụ ảnh tin (PII tầng A, ADR-0007) cho trang /ops.
  * KHÔNG sync cloud (file chỉ có trên máy local → ở cloud route trả 404).
- * Hai chế độ:
+ * Ba chế độ:
+ *   - `?media=<media_key>`: vai Vận hành trở lên (anh-goc-qua-may-chu); tra dòng bảng `media` (chỉ DB máy thu) —
+ *     có `local_file` thì phục vụ như `?snapshot=`, chỉ có `media_url` thì máy chủ tự lấy ảnh (`lay-anh-goc.ts`).
+ *     Trình duyệt chỉ thấy khoá, không thấy URL hay tên miền nguồn (tầng A).
  *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw cho /ops/deals (PR #5) — chỉ admin.
  *   - `?snapshot=<snapshotId>&file=media/<tên>`: vai Vận hành trở lên (PL3); ảnh N1 tải vào raw snapshot
  *     (`<SNAPSHOTS_DIR>/<market>/<snapshotId>/media/*`, DATA-CONTRACT v2) cho /ops/review.
@@ -67,6 +73,22 @@ export function snapshotMediaUrl(snapshotId: string, file: string): string | nul
   return `/api/zalo-media?snapshot=${encodeURIComponent(snapshotId)}&file=${encodeURIComponent(file)}`;
 }
 
+/** Khoá ảnh của bảng `media` (053): 32 ký tự hex thường — đo DB máy thu 31/10, mọi khoá đúng khuôn. */
+export const MEDIA_KEY = /^[0-9a-f]{32}$/;
+
+/** URL cùng origin cho một ảnh theo khoá (loader thẻ duyệt), null khi khoá sai khuôn. */
+export function mediaKeyUrl(key: string): string | null {
+  return MEDIA_KEY.test(key) ? `/api/zalo-media?media=${key}` : null;
+}
+
+export type MediaKeyRow = { media_url: string | null; local_file: string | null };
+export type MediaKeyQuery = (key: string) => Promise<MediaKeyRow | null>;
+
+const traMediaMacDinh: MediaKeyQuery = async (key) => {
+  const { rows } = await pool.query<MediaKeyRow>("SELECT media_url, local_file FROM media WHERE media_key = $1", [key]);
+  return rows[0] ?? null;
+};
+
 /** realpath của các gốc (macOS: /tmp → /private/tmp); gốc chưa có trên máy → bỏ. */
 async function realRoots(roots: string[]): Promise<string[]> {
   const out: string[] = [];
@@ -109,10 +131,38 @@ async function sendImage(resolved: string, roots: string[], mediaOnly: boolean):
   }
 }
 
-export async function serveZaloMedia(req: Request, user: User | null): Promise<Response> {
-  // Ảnh tin đã tải vào snapshot: vai Vận hành trở lên (PL3, AGENTS.md luật 6). Chế độ ?path= (gốc OpenClaw) giữ admin.
-  if (!xemNoiDungTin(user)) return new Response("not found", { status: 404 });
+const notFound = () => new Response("not found", { status: 404 });
+
+/** Chế độ `?media=`: khoá đúng khuôn → dòng `media` → file local hoặc ảnh gốc qua máy chủ. Bảng vắng (cloud) → 404. */
+async function serveMediaKey(key: string, traMedia: MediaKeyQuery, layAnh: typeof layAnhGoc): Promise<Response> {
+  if (!MEDIA_KEY.test(key)) return notFound();
+  let row: MediaKeyRow | null;
+  try {
+    row = await traMedia(key);
+  } catch (err) {
+    if ((err as { code?: string }).code === "42P01") return notFound(); // undefined_table: cloud không có bảng media
+    throw err;
+  }
+  if (!row) return notFound();
+  if (row.local_file) {
+    const cut = row.local_file.indexOf("/");
+    const joined = cut > 0 ? snapshotMediaPath(row.local_file.slice(0, cut), row.local_file.slice(cut + 1)) : null;
+    return joined ? sendImage(joined, [snapshotsRoot()], true) : outside();
+  }
+  if (!row.media_url) return notFound();
+  return layAnh(row.media_url);
+}
+
+export async function serveZaloMedia(
+  req: Request,
+  user: User | null,
+  deps: { traMedia?: MediaKeyQuery; layAnh?: typeof layAnhGoc } = {},
+): Promise<Response> {
+  // Ảnh tin (đã tải, hoặc lấy hộ theo media_key): vai Vận hành trở lên (PL3, AGENTS.md luật 6). Chế độ ?path= (gốc OpenClaw) giữ admin.
+  if (!xemNoiDungTin(user)) return notFound();
   const q = new URL(req.url).searchParams;
+  const key = q.get("media");
+  if (key !== null) return serveMediaKey(key, deps.traMedia ?? traMediaMacDinh, deps.layAnh ?? layAnhGoc);
   const snapshot = q.get("snapshot");
   const file = q.get("file");
   if (snapshot !== null || file !== null) {

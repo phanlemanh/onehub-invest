@@ -27,13 +27,15 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const CRED_FILE = path.join(REPO, ".claude/ops-test-account.json");
 
-/** Hai tài khoản thử: admin (mặc định, vào mọi trang /ops) và viewer (vào Ops, không thấy nội dung tin). */
+/** Ba tài khoản thử: admin (mặc định, vào mọi trang /ops), viewer (vào Ops, không thấy nội dung tin) và ops (vai Vận
+ *  hành: thấy nội dung thẻ duyệt và ảnh tin, không vào trang chỉ-admin — anh-goc-qua-may-chu AC-9). */
 export const VAI_THU = {
   admin: { email: DEFAULT_EMAIL, file: CRED_FILE },
   viewer: { email: "viewer-test@local.test", file: path.join(REPO, ".claude/viewer-test-account.json") },
+  ops: { email: "ops-role-test@local.test", file: path.join(REPO, ".claude/ops-role-test-account.json") },
 };
 
-/** Vai từ argv: không cờ → admin; `--vai <admin|viewer>`; giá trị khác hoặc thiếu → ném lỗi (CLI thoát 2, chưa kết nối DB). */
+/** Vai từ argv: không cờ → admin; `--vai <admin|viewer|ops>`; giá trị khác hoặc thiếu → ném lỗi (CLI thoát 2, chưa kết nối DB). */
 export function docVai(argv) {
   const i = argv.indexOf("--vai");
   if (i === -1) return "admin";
@@ -215,7 +217,9 @@ async function main() {
   console.log(
     vai === "admin"
       ? `role admin → vào được mọi trang /ops (cổng Ops mở cho role admin/ops, không cần OPS_EMAILS).`
-      : `role viewer → vào được Ops nhưng chỉ thấy số và mã S0x; thẻ duyệt, bài gốc, ảnh tin bị che.`,
+      : vai === "ops"
+        ? `role ops → vào Ops, thấy thẻ duyệt, bài gốc và ảnh tin; trang chỉ-admin (vd. /ops/sources) trả 404.`
+        : `role viewer → vào được Ops nhưng chỉ thấy số và mã S0x; thẻ duyệt, bài gốc, ảnh tin bị che.`,
   );
 }
 

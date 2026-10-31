@@ -86,7 +86,7 @@ function canCu(kq: KetQuaLuat, giai: string | null, c: Pick<Cham, "model" | "tra
 }
 
 /** Dữ liệu hai tin trên thẻ — đúng bộ khoá thẻ seed 029 (bên đọc /ops/review). */
-function evidenceThe(p: PairData) {
+export function evidenceThe(p: PairData) {
   const tin = (t: PairData["a"] | PairData["b"]) => ({
     offer_id: t.offerId,
     source: t.source,
@@ -96,6 +96,11 @@ function evidenceThe(p: PairData) {
     bedrooms: t.bedrooms,
     phuong: t.phuong,
     property_type: t.propertyType,
+    // Bốn hàng còn lại của bảng so (TRUONG_GHEP_CAN, review-can-cu.ts) — tên khoá theo bên đọc, null tường minh.
+    bathrooms: t.bathrooms ?? null,
+    street: t.street ?? null,
+    block: t.block ?? null,
+    floor: t.floor ?? null,
   });
   return {
     offer_a: { ...tin(p.a), text: p.a.text },

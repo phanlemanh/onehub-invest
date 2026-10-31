@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, CircleHelpIcon, SparklesIcon, XIcon } from "lucide-react";
+import { CheckIcon, CircleHelpIcon, SparklesIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert";
 import { Badge } from "@/components/reui/badge";
@@ -330,9 +330,28 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
 function EntityMatchCard({ item, media, context, render }: CardProps) {
   const d = useDecide(item.id);
   const ev = item.evidence as ReviewEvidence;
-  const rows = soTruongGhepCan(ev.offer_a ?? {}, ev.offer_b ?? {}, context?.offer_a?.canCu, context?.offer_b?.canCu);
+  // HD6: bảng so đọc giá trị sống (`ben`) khi ngữ cảnh có; `evidence` chỉ còn để hiện «Lúc chấm». `ben === null` = rời kho.
+  const benA = context?.offer_a?.ben;
+  const benB = context?.offer_b?.ben;
+  const roiKho = [benA === null && "Tin A", benB === null && "Tin B"].filter((x): x is string => Boolean(x));
+  const rows = soTruongGhepCan(
+    benA ?? ev.offer_a ?? {},
+    benB ?? ev.offer_b ?? {},
+    context?.offer_a?.canCu,
+    context?.offer_b?.canCu,
+    { a: benA ? ev.offer_a : undefined, b: benB ? ev.offer_b : undefined },
+  );
+  const khoa = roiKho.length > 0;
   const body = (
     <div className="flex flex-col gap-4">
+      {khoa && (
+        <Alert variant="warning" data-review-roi-kho>
+          <TriangleAlertIcon aria-hidden />
+          {roiKho.map((ben) => (
+            <AlertTitle key={ben} data-review-roi-kho-ben>{ben} không còn trong kho</AlertTitle>
+          ))}
+        </Alert>
+      )}
       <ReviewCompare rows={rows} />
       {(item.ai_suggestion || item.ai_reasoning) && (
         <Alert variant="info" data-review-ai>
@@ -370,15 +389,15 @@ function EntityMatchCard({ item, media, context, render }: CardProps) {
   );
   const actions = item.status === "pending" ? (
     <PendingActions d={d}>
-      <Button size="sm" onClick={() => d.decide("approved")} disabled={d.pending || !d.ready}>
+      <Button size="sm" onClick={() => d.decide("approved")} disabled={d.pending || !d.ready || khoa}>
         <CheckIcon data-icon="inline-start" aria-hidden />
         Cùng căn
       </Button>
-      <Button size="sm" variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.ready}>
+      <Button size="sm" variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.ready || khoa}>
         <XIcon data-icon="inline-start" aria-hidden />
         Khác căn
       </Button>
-      <Button size="sm" variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.ready}>
+      <Button size="sm" variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.ready || khoa}>
         <CircleHelpIcon data-icon="inline-start" aria-hidden />
         Không chắc
       </Button>

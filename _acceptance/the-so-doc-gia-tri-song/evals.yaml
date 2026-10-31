@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: the-so-doc-gia-tri-song
+# Ca test mang tiền tố «GS-AC-n», tệp app/tests/the-so-gia-tri-song.test.tsx (khuôn the-duyet-du-can-cu.test.tsx):
+# - lược đồ tạm `gs_<pid>` (bảng LIKE public.*: sale_offers là VIEW sống của sale_offer_records nên dựng bảng tạm tên
+#   sale_offers che view; dữ liệu viết trước), search_path = gs_<pid>, public; xoá cuối lượt;
+# - loadReviewContext THẬT đọc lược đồ tạm, ReviewCard THẬT dựng trong jsdom (renderToStaticMarkup);
+# - chiều đỏ: bản chép tạm tests/.gs-cu-* của tệp nguồn đổi đúng một chỗ, thông điệp ghim;
+# - probe DB máy thu chỉ SELECT, bỏ qua có lý do dưới CI.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'GS-AC-1 bảng so đọc giá trị sống' xanh: lát tạm có Tin A/Tin B trong sale_offers, mười trường của mỗi bên khác evidence (ma trận viết trước 10 trường × 2 bên = 20 ô); loadReviewContext thật → ReviewCard → với từng ô của 20 ô (ma trận viết trước), chữ của ô SAU KHI bỏ nút [data-review-luc-cham] bằng giá trị sống đã định dạng, và [data-review-luc-cham] trong chính ô đó chứa giá trị evidence; nhãn So từng hàng tính từ giá trị sống: ma trận viết trước gồm hàng sống khớp/evidence lệch → 'Khớp' và hàng sống lệch/evidence khớp → 'Lệch'; chiều đỏ: bản chép review-card.tsx bỏ dùng ngữ cảnh (đọc evidence như trước vòng) → đỏ 'GS-AC-1 ô đọc evidence thay giá trị sống'; bản chép tính So từ evidence → đỏ 'GS-AC-1 nhãn So tính từ evidence'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    expected: "exit 0; ca 'GS-AC-2 dòng Lúc chấm' xanh: ô diện tích sống 72 khác evidence 70 → ô có [data-review-luc-cham] chữ 'Lúc chấm: 70 m²'; ô giá giống evidence → không có [data-review-luc-cham]; lát 'tin không đổi' (evidence dựng từ chính dòng sale_offers, số dạng JSON; pg trả numeric dạng chuỗi) → đếm [data-review-luc-cham] bằng 0; chiều đỏ: bản chép review-compare.tsx bỏ dòng phụ → đỏ 'GS-AC-2 ô đổi thiếu dòng Lúc chấm'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-so-gia-tri-song.test.tsx]
+    expected: "exit 0; ca 'GS-AC-3 Chưa rõ là Thiếu' xanh: ma trận viết trước 5 cặp loại hình (unknown↔house, unknown↔unknown, null↔house, house↔house, house↔apartment) → soTruongGhepCan cho hàng property_type ra [thieu, thieu, thieu, khop, lech], đếm 5 assert; thẻ dựng với unknown↔house có badge So 'Thiếu' và ô A chữ 'Chưa rõ'; chiều đỏ: bản chép review-can-cu.ts bỏ luật unknown → đỏ 'GS-AC-3 Chưa rõ so ra Lệch'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'GS-AC-4 tin rời kho khoá nút' xanh: lát tạm thiếu Tin A trong sale_offers, Tin B sống; loadReviewContext thật → context.offer_a.ben === null; ReviewCard dựng bằng createRoot trong jsdom, gõ lý do 'đủ căn cứ' vào [data-review-reason] (khuôn TD-AC-7) → [data-review-roi-kho] chứa 'Tin A không còn trong kho', ba nút Cùng căn/Khác căn/Không chắc có thuộc tính disabled; lát đối xứng (Tin B rời) → 'Tin B không còn trong kho'; lát cả hai rời → Alert có đúng hai dòng [data-review-roi-kho-ben] với hai câu ấy và chữ của Alert chỉ gồm hai câu đó; chiều đỏ: bản chép review-card.tsx bỏ điều kiện khoá → đỏ 'GS-AC-4 nút quyết không khoá khi tin rời kho'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    expected: "exit 0; ca 'GS-AC-5 hai bên sống không Alert' xanh: lát hai tin sống → không [data-review-roi-kho], createRoot + gõ lý do: nút quyết tắt khi lý do trống, bật khi gõ 'đủ căn cứ' (đối chứng hai chiều); thẻ dựng không context → không Alert, ô đọc evidence; chiều đỏ: bản chép review-card.tsx coi ngữ cảnh thiếu khoá ben là rời kho → đỏ 'GS-AC-5 Alert rời kho trên thẻ không rời kho'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    expected: "exit 0 trên máy thu; ca 'GS-AC-6 probe DB máy thu' xanh: đọc mọi thẻ entity_match mọi trạng thái (chỉ SELECT), tập id thẻ có Tin A rời kho tính độc lập bằng SQL (NOT EXISTS trong sale_offers) — tập id thẻ mà ReviewCard từ loadReviewContext thật có Alert bên A BẰNG ĐÚNG tập ấy (deepEqual sau sắp), thẻ hai tin sống không Alert; tập rời kho rỗng thì t.skip có lý do; dưới CI t.skip có lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.design.hd6_gate
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/review-compare.tsx]
+    expected: "exit 0; design gate (jsdom) trên review-card.tsx và review-compare.tsx không vi phạm nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'GS-AC-8 thẻ đã quyết có tin rời kho' xanh: lát tạm thẻ status rejected, Tin A không có trong sale_offers → loadReviewContext thật → ReviewCard có [data-review-roi-kho] 'Tin A không còn trong kho', không nút Cùng căn/Khác căn/Không chắc, có khu trạng thái đã quyết như trước vòng; chiều đỏ: bản chép review-card.tsx chỉ hiện Alert khi status pending → đỏ 'GS-AC-8 thẻ đã quyết không báo tin rời kho'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
