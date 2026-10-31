@@ -5,7 +5,7 @@ slug: chuan-hoa-o-duong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T09:25:00Z
 approved_by:
@@ -55,6 +55,12 @@ Quét tay theo ba trục: chiều ô đường, quan hệ hai bên, nơi đọc.
 ## Notes
 
 - Hồ sơ đã ký có eval khai `paths` gồm `app/src/lib/ops/review-can-cu.ts` (bằng chứng sẽ hoá cũ khi vòng này đổi tệp, ghim lại bằng làn máy sau khi chấm): judge-luat-loai-tru-dac-trung, judge-giu-quyet-dinh-nguoi, judge-evidence-du-truong, khoa-phuong-chung-phuong-so, phuong-so, the-duyet-phuong-lech-gia, the-so-doc-gia-tri-song, the-duyet-du-can-cu.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Hai đường chỉ đánh số («Đường 2» ↔ «Đường 3») hiện «Thiếu» thay vì «Lệch» ở hàng Đường, nên không bị loại theo đường.
+  - Ngoài-2: Ô gõ không dấu «3 thang 2» bị coi số 3 là số nhà, sinh thêm cách đọc «thang 2».
+  - Ngoài-3: Ô đường chỉ có từ vị trí viết không dấu («Ngo», «Hem») không được coi là thiếu tên đường.
+  - Ngoài-5: Cùng lỗi Ngoài-3 — từ vị trí trần không dấu vẫn sinh khoá và ra «Lệch».
+  - Ngoài-6: Nhánh thẻ «Cùng căn» của phép kiểm dữ liệu thật (CD-AC-8) chưa có chiều đỏ, có thể xanh khi không có thẻ nào.
 
 ## Out of scope
 
