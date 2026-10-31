@@ -5,7 +5,9 @@ slug: the-ghep-can-tin-roi-kho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-the-ghep-can-tin-roi-kho-design.md
 ---
 
@@ -81,7 +83,8 @@ Trục (quét hình thái, preset entity-feature trên thẻ × trạng thái ti
 
 Câu ngưỡng đã ký ở Cổng Đáng (`opportunity.md`): «Sau một lượt đêm: 0 thẻ chờ duyệt trỏ khoá tin không còn sống; mỗi thẻ
 rút có lý do «tin rời kho» và vết audit; chạy lại không rút trùng». judge-run chưa có lịch đêm (TV13b) — vòng đo trên một
-lượt judge-run; đổi «lượt đêm» thành «lượt judge-run» là Hỏi-1 ở Cổng Phạm vi.
+lượt judge-run. Mạnh chọn ở Cổng Phạm vi 31/10 (Hỏi-1 = đổi): ngưỡng của vòng là «Sau một lượt judge-run: 0 thẻ chờ duyệt
+trỏ khoá tin không còn sống; mỗi thẻ rút có lý do «tin rời kho» và vết audit; chạy lại không rút trùng»; lịch đêm để TV13b.
 
 - Ngưỡng «0 thẻ chờ duyệt trỏ khoá tin không còn sống» — số từ `review_queue` sau lượt chạy, đếm thẻ `pending` có bên
   không trong `sale_offers`; AC-1, AC-9 (a) bảo đảm (E9 in số này trên lô thật nguyên trạng).
