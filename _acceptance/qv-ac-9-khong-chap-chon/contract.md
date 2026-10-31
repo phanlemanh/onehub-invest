@@ -5,7 +5,7 @@ slug: qv-ac-9-khong-chap-chon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T13:25:00Z
 approved_by:
@@ -54,3 +54,8 @@ khác `ENOENT`), quét đủ ở AC-1 và AC-2; xem dòng descope trong sổ.
 - Bỏ qua chỉ áp cho TỆP ẩn; thư mục ẩn vẫn được quét, để phạm vi kiểm không hẹp đi.
 - Giới hạn khai lúc thiết kế: một module ẩn import qua `./.x` sẽ rơi khỏi bao đóng import của bộ kiểm; trong kho hiện
   không có tệp mã ẩn nào.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Hồ sơ ghi ca TA-AC-1 trả hai tệp, trong khi cây thử có thêm một tệp ở thư mục con nên test kiểm ba tệp.
+  - Ngoài-2: Kỳ vọng của E1 ghi «đúng hai khoá», lệch với ba khoá mà test thật sự kiểm.
+  - Ngoài-3: Hàm đếm tệp sinh-xoá trong cây thật bỏ qua mọi lỗi đọc, nên khi không đọc được cây vẫn báo sạch.
+  - Ngoài-4: Phép kiểm «không có tệp sinh-xoá lọt vào cây thật» chỉ có chiều âm, chưa có ca chứng nó đếm ra được tệp.
