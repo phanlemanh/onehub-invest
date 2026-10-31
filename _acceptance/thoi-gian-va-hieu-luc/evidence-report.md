@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9c2fbc0cf29959285fd1012c1a1f2285eedfa487
+verified_commit: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -245,3 +245,7 @@ sha: 077625a5826090375bbe9ac3cf02b9bedc6d45ba · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-10-30, do sửa test thẻ duyệt cho observed_at (CI app)
 run_id: repin-20261030T172852Z-94366
 sha: 9c2fbc0cf29959285fd1012c1a1f2285eedfa487 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths) · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
+
+### Re-pin lần 4 — 2026-10-31, do lỗi tích hợp SD5: dãy bước cloud-sync thêm do-danh-ba-sdt; idem-059 chiều đỏ chạy trên nền trước 059
+run_id: repin-20261031T001653Z-71523
+sha: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)
