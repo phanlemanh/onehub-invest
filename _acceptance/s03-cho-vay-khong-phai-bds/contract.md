@@ -5,7 +5,9 @@ slug: s03-cho-vay-khong-phai-bds
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-10-31T14:45:00Z
 design_doc: docs/superpowers/specs/2026-10-31-s03-cho-vay-khong-phai-bds-design.md
 ---
 
