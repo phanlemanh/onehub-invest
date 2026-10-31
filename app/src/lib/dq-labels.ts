@@ -25,6 +25,12 @@ const TEN_KIEM: Record<string, string> = {
   "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
   "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
   "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
+  // pipeline/do-danh-ba-sdt.mjs (SD5) — trục SĐT của danh bạ Người
+  "danh-ba-sdt:n1": "Danh bạ SĐT: cặp một–một chưa gộp",
+  "danh-ba-sdt:n2": "Danh bạ SĐT: người không có tin",
+  "danh-ba-sdt:n3": "Danh bạ SĐT: bảng người bán so với tin",
+  "danh-ba-sdt:n4": "Danh bạ SĐT: tin nhiều số",
+  "danh-ba-sdt:n5": "Danh bạ SĐT: số bộ bóc bỏ sót",
   "eval-classify": "Độ đúng cách đọc", // pipeline/eval-classify.mjs (PL9)
 }
 const COT_ENUM: Record<string, string> = {
@@ -65,6 +71,7 @@ const DOI_TUONG: Record<string, string> = {
   llm: "Bộ đọc AI",
   all: "Mọi thị trường",
   enrichment_proposals: "Bảng đề xuất",
+  sellers: "Bảng người bán",
 }
 
 /** Ô độ đúng của eval-classify (PL9): `<lát>|<phân khúc>|<cách đọc>|<trường>`. */
@@ -170,6 +177,20 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
   if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
     return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
+  const kiemDanhBa = check.match(/^danh-ba-sdt:(n[1-5])$/)
+  if (kiemDanhBa) {
+    const kiem = kiemDanhBa[1]
+    if ((m = d.match(/^so=(\d+) tong=(\d+)$/)) && ["n1", "n2", "n5"].includes(kiem)) {
+      const [, so, tong] = m
+      if (kiem === "n1") return { text: `${nguyen(so)}/${nguyen(tong)} cặp một–một chưa gộp`, known: true }
+      if (kiem === "n2") return { text: `${nguyen(so)}/${nguyen(tong)} người theo SĐT không có tin`, known: true }
+      return { text: `${nguyen(so)} bài bộ bóc bỏ sót · ${nguyen(tong)} bài có số`, known: true }
+    }
+    if (kiem === "n3" && (m = d.match(/^sellers=(\d+) sdt_tren_tin=(\d+)$/)))
+      return { text: `${nguyen(m[1])} dòng bảng người bán · ${nguyen(m[2])} SĐT trên tin`, known: true }
+    if (kiem === "n4" && (m = d.match(/^nhieu=(\d+) rong=(\d+) tong=(\d+)$/)))
+      return { text: `${nguyen(m[1])} tin nhiều số · ${nguyen(m[2])} tin trống số dù bài có số · ${nguyen(m[3])} tin`, known: true }
+  }
   if (
     (m = d.match(
       /^run=\S+ tap=nguoi split=(test|dev) n=(\d+) dung=(\d+|-) ti_le=([\d.]+|-) can_duoi=([\d.]+|-) nguong=([\d.]+) nhom=([AB]) ly_do=(-|chua-co-nhan-nguoi|chua-co-cach-doc) bat_dong=(\d+) mat_chu=(\d+)$/,

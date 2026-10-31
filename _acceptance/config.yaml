@@ -44,6 +44,8 @@ executors:
     ecw_pipeline: "node --test pipeline/lib/eval-classify.test.mjs"   # eval-classify-wilson E1, E2, E3, E4, E6, E8 — lõi thuần + lệnh --tap-mau, không DB
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
+    ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
+    ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -112,6 +114,7 @@ executors:
     enrich_giao_dich: "cd agent && node --import tsx --test tests/enrich-giao-dich.test.ts"   # enrich-chay-sau-nap AC-2..AC-4 — runEnrich trong BEGIN…ROLLBACK trên :5433, giao dịch mỗi tin = SAVEPOINT
     enrich_buoc_job: "node --test scripts/enrich-buoc-job.test.mjs"   # enrich-chay-sau-nap AC-6..AC-8 — bước enrich-run của zalo-import-daily (node giả, không DB)
     audit_loc: "cd app && node --import tsx --test tests/audit-loc.test.tsx"   # loc-enrich-thu-ops-audit AC-1..AC-5 — lược đồ tạm (ops_audit + phiên), route GET thật, public không chạm
+    the_so_song: "cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx"   # the-so-doc-gia-tri-song (HD6) — lược đồ tạm gs_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
     sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
@@ -473,6 +476,10 @@ executors:
     ecw_db: "bash _acceptance/eval-classify-wilson/probes/db.sh"   # eval-classify-wilson E5, E7 — DB thử oneinvest_p4_ecw (dựng + xoá), --dry trên oneinvest
     ecw_on12: "bash _acceptance/eval-classify-wilson/probes/on12.sh"   # eval-classify-wilson E9b — ON12-AC-5 trên DB thử sau lượt ghi thật
     ecw_pham_vi: "bash _acceptance/eval-classify-wilson/probes/pham-vi.sh"   # eval-classify-wilson E10
+    ddb_db: "bash _acceptance/do-danh-ba-sdt/probes/db.sh"   # do-danh-ba-sdt E2, E3 — DB thử oneinvest_p4_ddb (dựng + xoá)
+    ddb_job: "bash _acceptance/do-danh-ba-sdt/probes/job.sh"   # do-danh-ba-sdt E4 — bước cuối cloud-sync, hộp thử node giả
+    ddb_on12: "bash _acceptance/do-danh-ba-sdt/probes/on12.sh"   # do-danh-ba-sdt E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
+    ddb_pham_vi: "bash _acceptance/do-danh-ba-sdt/probes/pham-vi.sh"   # do-danh-ba-sdt E6
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
@@ -525,6 +532,7 @@ executors:
     mgn_gate: "for f in app/src/app/ops/labels/page.tsx app/src/components/ops/labels/labels-view.tsx app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/agreement-table.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # man-gan-nhan-mu E11
     ngl_gate: "for f in app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/luu-nhan.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # nhan-gia-va-luu-loi-mang E5
     dbn_gate: "for f in app/src/app/ops/people/page.tsx app/src/app/ops/people/[[]partyKey]/page.tsx app/src/components/ops/people/*.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # danh-ba-nguoi-tren-ops E13
+    hd6_gate: "for f in app/src/components/ops/review-card.tsx app/src/components/ops/review/review-compare.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # the-so-doc-gia-tri-song E7
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # Sàn thiết kế S4 (design-floor bậc M1): chấm hex thô trên tệp giao diện mà vòng chạm. Nối ở noi-design-floor sau khi
     # don-hex-tho dọn hết hex thô ngoài vendor; mười vòng thí điểm DO1 đếm từ hàng này (ghi chú nhận 2.35.0 của kit, mục 2.4).

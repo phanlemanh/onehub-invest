@@ -18,13 +18,18 @@ function giaTri(h: HangSo, v: string | number | null) {
   return <span translate="no">{v}</span>
 }
 
-/** Ô giá trị; trường trục mang căn cứ của chính tin đó ngay dưới giá trị. */
-function O({ h, v, canCu }: { h: HangSo; v: string | number | null; canCu: string }) {
+/** Ô giá trị; trường trục mang căn cứ của chính tin đó ngay dưới giá trị; ô đổi từ lúc sinh thẻ mang dòng «Lúc chấm». */
+function O({ h, v, canCu, lucCham }: { h: HangSo; v: string | number | null; canCu: string; lucCham: string | number | null }) {
   return (
     <TableCell className="align-top whitespace-normal">
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="font-medium">{giaTri(h, v)}</span>
         {h.truc && <span className="text-muted-foreground text-xs" data-review-can-cu>{canCu}</span>}
+        {lucCham !== null && (
+          <span className="text-muted-foreground text-xs" data-review-luc-cham>
+            Lúc chấm: {giaTri(h, lucCham)}
+          </span>
+        )}
       </div>
     </TableCell>
   )
@@ -56,8 +61,8 @@ export function ReviewCompare({ rows }: { rows: HangSo[] }) {
                 {!h.truc && <span className="text-muted-foreground" data-review-can-cu>{h.canCuA}</span>}
               </div>
             </TableCell>
-            <O h={h} v={h.a} canCu={h.canCuA} />
-            <O h={h} v={h.b} canCu={h.canCuB} />
+            <O h={h} v={h.a} canCu={h.canCuA} lucCham={h.lucChamA} />
+            <O h={h} v={h.b} canCu={h.canCuB} lucCham={h.lucChamB} />
             <TableCell className="align-top">
               <Badge variant={SO_VARIANT[h.so]}>{SO_LABEL[h.so]}</Badge>
             </TableCell>
