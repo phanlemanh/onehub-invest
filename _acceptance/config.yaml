@@ -180,6 +180,7 @@ executors:
     cloud_catchup_inquiry: "node scripts/check-cloud-catchup.mjs wanted-thanh-inquiry"   # wanted-thanh-inquiry AC-6 — tệp SQL bắt kịp cloud có ĐO TRƯỚC + ÁP
     ten_cu_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/con-ten-cu.mjs"   # wanted-thanh-inquiry AC-2/4/5/6 — tên cũ wanted chỉ còn ở lịch sử; đích sinh, docs sống, khối ÁP
     vocab_db_rieng: "node _acceptance/wanted-thanh-inquiry/rang/db-rieng.mjs"   # wanted-thanh-inquiry AC-3 — DB riêng dựng từ db/migrations, chạy vocab-db.itest rồi xoá (luật đợt 27/10: không thử migration chưa gộp trên oneinvest)
+    vocab_db_doi_chung: "node _acceptance/vocab-db-itest-xanh-tren-main/rang/doi-chung.mjs"   # vocab-db-itest-xanh-tren-main AC-3 — bản vocab-db.itest của main 82a53e0a đỏ đúng bốn ca trên cùng DB, bản hiện tại xanh
     on12_tien_de: "node _acceptance/khu-vuc-vung-moi-s06/rang/on12-tien-de.mjs"   # khu-vuc-vung-moi-s06 E2: đếm ảnh chụp S06 vùng mới rồi chạy ON12-AC-7 trên DB :5433
     fixture_goc_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/fixture-goc.mjs"   # wanted-thanh-inquiry AC-7 — bản chụp markup trước vòng dựng lại được từ sha main ghi trong nó
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
