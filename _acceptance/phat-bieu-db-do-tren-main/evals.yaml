@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: phat-bieu-db-do-tren-main
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pb_chung_bai
+    paths: [db/migrations/063_*, pipeline/lib/nap-045.mjs, pipeline/scripts/phat-bieu-chung-bai.itest.mjs]
+    expected: "exit 0; ca 'PB-AC-1' xanh trên ma trận {máy e2_llm, người hitl} × {B sống, B đã nghỉ}: sau apply_enrichment năm cột + field_provenance của A và B bằng kết quả resolve_offer_fields chạy lại, tin C không chung post giữ băm; chiều đỏ: bản apply_enrichment của 059 (chỉ phân xử tin của đề xuất) nạp trong cùng giao dịch → ca đỏ ghim 'PB-AC-1: tin chung post không được phân xử lại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pb_chung_bai
+    paths: [db/migrations/063_*, pipeline/lib/nap-045.mjs, pipeline/scripts/phat-bieu-chung-bai.itest.mjs]
+    expected: "exit 0; ca 'PB-AC-2' xanh trên ma trận {máy, người} × {B sống, B đã nghỉ}: sau revert_enrichment cột của A và B về đúng kết quả phân xử sau khi rút, C giữ băm; chiều đỏ: bản revert_enrichment của 045 → ca đỏ ghim 'PB-AC-2: hoàn tác không về tin chung post'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pb_chung_bai
+    paths: [db/migrations/063_*, pipeline/scripts/phat-bieu-chung-bai.itest.mjs]
+    expected: "exit 0; ca 'PB-AC-3' xanh: trên cùng fixture tin không chung post, áp rồi hoàn tác bằng bản 063 và bản trước 063 (hai giao dịch) cho cùng số trả về, cùng trạng thái đề xuất, cùng băm sale_offer_records và properties"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pb_chung_bai
+    paths: [pipeline/lib/nap-045.mjs, pipeline/scripts/phat-bieu-chung-bai.itest.mjs]
+    expected: "exit 0; ca 'PB-AC-4' xanh: sau napPhatBieu trong giao dịch, định nghĩa apply_enrichment và revert_enrichment (pg_get_functiondef) chứa offers_chung_chu_the; chiều đỏ: bộ nạp không nạp lại 063 → ca đỏ ghim 'PB-AC-4: bộ nạp test đè hàm 063 bằng bản cũ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.idem_063
+    paths: [db/migrations/063_*, pipeline/scripts/idem-063.mjs]
+    expected: "exit 0 trên bản chép DB máy thu (DB thử, trong giao dịch ROLLBACK): dòng 'idem-063 lượt 1: xét <n> · đổi <m>' với m > 0, dòng 'idem-063 sau áp: resolve(NULL) đổi 0 · cắt chuyển lệch 0', dòng 'idem-063 lượt 2: đổi 0', dòng 'idem-063 thời gian: một lượt apply_enrichment <a> ms trước 063 · <b> ms sau 063' (thông tin, không ngưỡng), đúng một dòng ops_audit phat-bieu:phan-xu-lai-063 mang số xét/đổi; số đọc từ DB, không ghi cứng; chiều đỏ trong cùng script: chỉ nạp phần hàm của 063 (bỏ mục sửa dữ liệu) → dòng 'idem-063 đối chứng: cắt chuyển lệch <k>' với k > 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.phat_bieu_db_063
+    paths: [db/migrations/063_*, pipeline/lib/nap-045.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0: dựng lại DB thử oneinvest_p2_pd từ DB máy thu, áp 063; tiền đề in trước khi chạy: số lược đồ dc_* trên bản chép > 0 (bằng 0 thì gieo một lược đồ dc_thu_<pid> có view sale_offers mang field_provenance trong giao dịch thử) và đối chứng PD-AC-1: câu đếm không lọc lược đồ ra > 1 dòng, câu lọc current_schema() ra đúng 1; chạy trọn phat-bieu-db.itest.mjs — mọi ca xanh, gồm PD-AC-1 (đếm cột trong current_schema) và PD-AC-8 (cắt chuyển lệch 0)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dc_tu_don
+    paths: [app/tests/dong-chay-cloud.test.tsx, app/scripts/dc-tu-don.ts]
+    expected: "exit 0: gieo lược đồ dc_cloud_<pid chết>, dc_local_<pid chết>, dc_cloud_<pid sống>, dc_khac_<pid chết>; chạy test dòng chảy cloud → dòng 'dc-tu-don quét: xoá 2 lược đồ pid chết, giữ pid sống, giữ tiền tố khác'; chạy test rồi gửi SIGTERM sau khi lược đồ của nó đã có → dòng 'dc-tu-don ngắt: còn 0 lược đồ của pid <p>'; chiều đỏ trong cùng script: bản test bỏ bước quét → dòng 'dc-tu-don đối chứng: còn 2 lược đồ pid chết'; dọn mọi lược đồ gieo khi xong"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; cd pipeline && npm test toàn bộ xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/**]
+    expected: "exit 0; cd app && npm test toàn bộ xanh, gồm dong-chay-cloud"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/**]
+    expected: "exit 0; typecheck và lint app 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
