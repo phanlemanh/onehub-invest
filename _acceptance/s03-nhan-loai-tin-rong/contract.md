@@ -5,7 +5,9 @@ slug: s03-nhan-loai-tin-rong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-s03-nhan-loai-tin-rong-design.md
 ---
 
@@ -52,3 +54,4 @@ build, Mạnh («Giao U1 sửa», 31/10), hàng RM1.
 ## Notes
 
 - Mô phỏng 31/10 (trước khi sửa ba lỗi luật thấy ở mẫu đọc lướt): +~2.300 bài bán, +~6.000 bài thuê theo bài (chưa gộp); 6/24 bài mẫu sai, cả 6 do «CN» chủ nhật, tên nhóm «chuyển nhượng» chứa tin thuê, và Yêu cầu viết rời — ba lỗi ấy thành luật ở AC-2, AC-3, AC-4, AC-5.
+- RM1 là lớp luật sàn cho mốc 05/11 và lớp dự phòng khi model không chạy; phân loại bằng model là KC1 (nhãn bạc, đo Haiku 5.5 + Decisions API so với Qwen 27B local) — model thay luật khi tập nhãn vàng xác nhận (luật 7), qua đường PL5.
