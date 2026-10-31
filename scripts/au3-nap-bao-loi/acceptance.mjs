@@ -197,6 +197,7 @@ function apifySandbox({ realImport = false } = {}) {
   }
   if (realImport) {
     cpSync(join(ROOT, "pipeline/import-airbnb.mjs"), p("import-airbnb.mjs"));
+    cpSync(join(ROOT, "pipeline/import-s08-row.mjs"), p("import-s08-row.mjs")); // import-airbnb nhập bộ đọc dòng S08 (ZC8)
     cpSync(join(ROOT, "pipeline/package.json"), p("package.json"));
     symlinkSync(join(ROOT, "pipeline/node_modules"), p("node_modules"));
   } else {
@@ -269,6 +270,18 @@ async function modeApify() {
   finish("APIFY");
 }
 
+/** zalo-import-daily (NH1 + enrich-chay-sau-nap) gọi thêm transform-media và bước enrich ở agent/ (node --import tsx);
+ * bản giả: gói tsx rỗng + enrich-run.ts ghi lời gọi (Node 24 tự bỏ kiểu .ts). */
+function fakeEnrich(sb) {
+  const a = (f) => join(sb.repo, "agent", f);
+  mkdirSync(a("scripts"), { recursive: true });
+  mkdirSync(a("node_modules/tsx"), { recursive: true });
+  writeFileSync(a("package.json"), JSON.stringify({ type: "module" }));
+  writeFileSync(a("node_modules/tsx/package.json"), JSON.stringify({ name: "tsx", type: "module", exports: "./index.mjs" }));
+  writeFileSync(a("node_modules/tsx/index.mjs"), "");
+  writeFileSync(a("scripts/enrich-run.ts"), fakeModule(sb.calls, "enrich-run", JSON.stringify("enrich-run")));
+}
+
 const mode = process.argv[2];
 // ---------------------------------------------------------- ts-format (vòng 3)
 // Khuôn tên snapshot thật: collector trên main ghi mốc có MILI-GIÂY 'YYYY-MM-DDThhmmssmmm', trùng ms thì thêm '-n';
@@ -276,8 +289,9 @@ const mode = process.argv[2];
 function tsSandbox(script) {
   const sb = sandbox(script);
   const p = (f) => join(sb.repo, "pipeline", f);
-  for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
+  for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["transform-media.mjs", "transform-media"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
   writeFileSync(p("import-airbnb.mjs"), fakeModule(sb.calls, "import", 'process.argv[2].split("__").at(-1)'));
+  fakeEnrich(sb);
   const names = ["2026-10-24T090800123-1", "TEST", "2026-10-24T090755", "2026-10-24", "2026-10-24T090800123", "2026-10-24T090800123Z-x"];
   for (const ts of names) {
     const dir = join(sb.repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`);
