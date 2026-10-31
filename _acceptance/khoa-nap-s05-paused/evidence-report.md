@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 95ec548281191e05ef901f0aa0e4d7bb5a30fea5
+verified_commit: 6826a2a9e38a4fff5c02c402b2904f59ae4289ba
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -312,3 +312,11 @@ baseline. Có 6 phát hiện ngoài hợp đồng (1 medium, 5 low), đã chuy�
 ### Re-pin lần 1 — 2026-10-25, do gộp main (#109 sửa ảnh mẫu manifest) — lượt trước đỏ E9
 run_id: repin-20261025T123047Z-75696
 sha: 95ec548281191e05ef901f0aa0e4d7bb5a30fea5 · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-31, do ghim lại sau Cổng 2 cong-tac-that: harness au3 bắt kịp main + revisit hồ sơ đã ký
+run_id: repin-20261031T031750Z-45355
+sha: 4819c9ceb992643c00d90dad5df0f834daf688bc · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-31, do ghim lại sau gộp origin/main (333c9891)
+run_id: repin-20261031T033210Z-30899
+sha: 6826a2a9e38a4fff5c02c402b2904f59ae4289ba · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng

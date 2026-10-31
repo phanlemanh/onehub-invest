@@ -10,10 +10,10 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>chưa có"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>96 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>76 việc"] --> GG{"Cổng Giá trị"}
+  B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>97 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>81 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
@@ -31,16 +31,14 @@ flowchart TD
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
-
-## Đang làm
-
-- Thẻ ghép căn có một bên đã rời kho tự rút khỏi hàng duyệt kèm lý do «tin rời kho» và vết audit (`the-ghep-can-tin-roi-kho`)
+- Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
 - Người duyệt vai Vận hành ở máy thu thấy ảnh tin chỉ có URL gốc (S06, S05) trên thẻ duyệt — ảnh đi qua máy chủ theo media_key, trình duyệt không nhận URL hay tên miền nguồn (`anh-goc-qua-may-chu`)
 - audit-all không còn PASS giả ở backup và membership S03, và kiểm các trang /ops ở đúng cổng :3456 (`audit-all-noi-that`)
 - Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx (`auth-hop-chuan`)
+- Bộ bóc SĐT của S03/S05 bắt đủ bốn dạng viết tách lạ, bỏ số 11 chữ số, và tin chọn SĐT theo luật rõ trên mọi bài của tin — dạng số ra giữ nguyên (`boc-sdt-du-va-chon-ro`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
@@ -55,6 +53,7 @@ flowchart TD
 - Người vận hành mở «Căn giá tốt» /ops/deals không thấy căn có diện tích hay số phòng phi lý, danh sách không dồn ở trần giảm giá, và thẻ ghi «đăng 1 lần» thay «mới» (`deals-loai-tin-phi-ly`)
 - Người xem và bearer chung không nhận định danh tài khoản thu hay mã nhóm Zalo ở bề mặt Thu thập; mã nhóm không lên cloud (`dinh-danh-tai-khoan-thu-theo-vai`)
 - Mỗi đêm đo trục SĐT của danh bạ Người và ghi vào dq_check_results để /ops/quality hiện (`do-danh-ba-sdt`)
+- Mỗi đêm scorecard ghi tỉ lệ thẻ ghép căn chờ duyệt có đủ dữ liệu hai bên (ảnh, đặc trưng nhà, người đăng, tin còn sống) (`do-the-duyet-du-du-lieu`)
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
 - Người vận hành mở /ops/data-flow ở máy thu khi bước làm tươi số dòng chảy hỏng quá 45 phút thì thấy cảnh báo số cũ như trên cloud, không phải số cũ trình bày như số mới (`dong-chay-so-cu-may-thu`)
 - Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0% (`dq-moi-nhat-moi-kiem`)
@@ -91,7 +90,9 @@ flowchart TD
 - Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px (`ops-review-khung-hang-cho`)
 - Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên (`phat-bieu-va-phan-xu`)
 - Thẻ duyệt ghép căn và luật chấm đọc trọn các cách ghi phường số (`phuong-so`)
+- Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
 - Mọi route /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở ops-access.ts, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction (`quyen-bon-vai-mot-cho`)
+- Quyết định trên thẻ ghép căn chỉ ghi khi chạm đúng một ứng viên còn chờ; không chạm được thì route trả lỗi có tên, thẻ vẫn chờ, không dòng nào được ghi (`quyet-dinh-phai-cham-ung-vien`)
 - Transform S03 đọc giá và diện tích không lẫn URL/SĐT, chuẩn hoá cách viết giá của môi giới, chặn giá phi lý, gom repost theo mã toà/căn, ghi tên người bán và phường theo thị trường của nhóm (`s03-cam-mau-so-lieu`)
 - Giá tỷ chẵn viết bằng đồng («3.000.000.000 đ») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-chan-dong`)
 - Giá tỷ viết bằng đồng mà ngay sau là khoảng trắng/xuống dòng rồi số 1–2 chữ số («3.000.000.000\n50m2») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-sau-khoang-trang`)
@@ -105,6 +106,7 @@ flowchart TD
 - Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi (`soat-tang-a-moi-duong-len-cloud`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
+- Thẻ ghép căn có một bên đã rời kho tự rút khỏi hàng duyệt kèm lý do «tin rời kho» và vết audit (`the-ghep-can-tin-roi-kho`)
 - Người duyệt mở thẻ ghép căn và thấy bảng so đọc giá trị sống của hai tin, ô thiếu một bên hiện «Thiếu» chứ không tính là «Lệch» (`the-so-doc-gia-tri-song`)
 - Mọi phát biểu có thời điểm quan sát; mỗi tin có trạng thái chào được phân xử từ bằng chứng theo thời gian; giá và trạng thái của tin được giữ thành lịch sử gom được theo căn; căn lên B5 khi đang chào, còn trong cửa sổ độ tươi và có lịch sử giá (`thoi-gian-va-hieu-luc`)
 - Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx (`trang-chu-methodology`)
@@ -137,6 +139,7 @@ flowchart TD
 - script cài collector :9210 dưới launchd (ZC4 bước code) — kiểm điều kiện chạy trước, ghi plist, KHÔNG tự khởi động (`collector-api-launchd`)
 - Collector API :9210 tắt êm — SIGTERM/SIGINT flush hết buffer rồi mới thoát (`collector-graceful-shutdown`)
 - 2510-2 — collector API không còn treo cứng khi một lượt flush có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 id mới nhất; lô HTTP có trần (`collector-seen-cap`)
+- công tắc thật — mọi đường thu S01, S02, S05, S06 hỏi vòng đời nguồn × đơn vị qua một cổng trước khi gọi nhà cung cấp, hết danh sách cứng, lỗi DB thì dừng (`cong-tac-that`)
 - Trang /ops/people cho người vận hành xem danh bạ Người ở máy thu — người theo nguồn S0x, số tin đã đăng, bí danh, nhãn suy luận chỉ hiển thị (`danh-ba-nguoi-tren-ops`)
 - Dữ liệu DB local nằm trong volume có tên — sao lưu, khôi phục kiểm được, chuyển và lùi (`db-vao-volume`)
 - Tự kiểm live của DB local đo đủ bốn nhánh dữ liệu, gồm volume khác tên (`db-volume-check-volume-khac-ten`)

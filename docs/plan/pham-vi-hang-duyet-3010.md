@@ -39,5 +39,6 @@ nguon: onehub-invest-tri-thuc:wiki/chu-de/hang-duyet-ghep-can.md#e02a9b3cd0d995c
 - `HD13` — danh bạ Người gộp theo SĐT, cùng nguồn rồi khác nguồn
 - `HD14` — tải lại ảnh S05 (chờ: S05 tạm không nạp credit)
 - `HD15` — mô hình thị giác so ảnh cặp ghép căn (chờ: chưa đủ cặp có nhãn)
+- `HD16` — proxy ảnh tin chỉ phục vụ jpeg/png/webp/gif, chặn SVG, mọi phản hồi ảnh mang nosniff + CSP sandbox (Ngoài-1+3 của HD10)
 ```
 <!-- PHAM-VI-MA>>> -->

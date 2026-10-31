@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2
+verified_commit: d92a2782e9126a694cb9184c4eca43dae0b1a807
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -279,3 +279,19 @@ sha: 0dd6aaa85de5c09c4034f3b0f903228ca2acb61c · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 4 — 2026-10-31, do lỗi tích hợp SD5: dãy bước cloud-sync thêm do-danh-ba-sdt; idem-059 chiều đỏ chạy trên nền trước 059
 run_id: repin-20261031T001653Z-71523
 sha: 55f3b9522b914d7eafe4f3bb4c0540f78e8938c2 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
+
+### Re-pin lần 5 — 2026-10-31, do HD11 thêm bước do-the-duyet cuối cloud-sync; dãy bước trong job-exit.test.mjs đổi
+run_id: repin-20261031T005125Z-17275
+sha: 8dda79719fd65ed5e5e914cdb35ec85dcc1b2c81 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths) · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
+
+### Re-pin lần 6 — 2026-10-31, do gộp main 4307a0b8 vào nhánh HD11
+run_id: repin-20261031T013406Z-45800
+sha: 585687ac614970e3f37c2a36c77485ef81fe85a3 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
+
+### Re-pin lần 7 — 2026-10-31, do gộp main kit 2.36 vào nhánh HD11 trước chữ ký
+run_id: repin-20261031T024948Z-82872
+sha: 1e669d2e98c2f385196a913762013e47e6279807 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
+
+### Re-pin lần 8 — 2026-10-31, do gộp main 04e35c5d vào nhánh HD11
+run_id: repin-20261031T030713Z-55767
+sha: d92a2782e9126a694cb9184c4eca43dae0b1a807 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)

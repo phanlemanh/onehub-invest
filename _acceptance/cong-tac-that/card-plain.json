@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Tạm dừng một nguồn hay một nhóm/vùng ở trang quản trị nguồn thì lượt thu đêm của S01, S02, S05, S06 thật sự dừng: không còn danh sách cứng nào thu thay, và khi không đọc được sổ nguồn thì lượt thu dừng hẳn chứ không thu đại.",
+  "decisions_plain": [
+    {"id": "d-20261026T231111Z-3", "p": "KHÔNG chạy bước phản biện bằng máy trước Cổng 1, vì anh đã duyệt phạm vi trực tiếp kèm hai quyết định có đánh đổi; đổi lại không có lượt soi phạm vi bằng con mắt khác."},
+    {"id": "d-20261030T232128-sc", "p": "Thước phạm vi cho phép thêm tệp test của các job chạy đêm, vì phải sửa tệp này để giữ các job chạy đêm báo lỗi đúng; đổi lại phạm vi rộng thêm đúng một tệp test, hành vi script không đổi."}
+  ]
+}

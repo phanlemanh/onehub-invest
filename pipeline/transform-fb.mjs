@@ -11,7 +11,7 @@ import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { parsePost, matchPhuong } from "./transform-zalo.mjs";
+import { parsePost, matchPhuong, chonSdtTin, demTinNhieuSdt } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
@@ -99,7 +99,7 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
         postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: pr.phone, senderName: pr.post.sender_name, authorHash: pr.post.author_hash,
+        phone: null, baiSdt: [], senderName: pr.post.sender_name, authorHash: pr.post.author_hash,
       });
     } else {
       const o = dedup.get(offerId);
@@ -109,8 +109,12 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
+    dedup.get(offerId).baiSdt.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, phones: pr.phones });
   }
   console.log(`dedup: ${dedup.size} unique offers`);
+  // SĐT của tin chọn trên mọi bài (SD2), cùng luật S03.
+  for (const o of dedup.values()) o.phone = chonSdtTin(o.baiSdt);
+  console.log(`tin nhiều SĐT: ${demTinNhieuSdt([...dedup.values()])}`);
 
   // Upsert + đối soát offer cũ (writeOffers, migration 039) thay cho DELETE toàn nguồn:
   // đề xuất enrich + thẻ duyệt sống qua lần nạp lại (_acceptance/enrich-hau-ky).

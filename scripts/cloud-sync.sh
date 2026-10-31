@@ -26,5 +26,8 @@ job_run cloud-sync bac-du-lieu node "$ROOT/pipeline/bac-du-lieu.mjs" --write
 # SD5 `do-danh-ba-sdt` (Hỏi-3): năm kiểm trục SĐT của danh bạ Người, một dòng mỗi kiểm mỗi ngày (giờ máy thu), chỉ ghi DB
 # local; bước cuối. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
 job_run cloud-sync do-danh-ba-sdt node "$ROOT/pipeline/do-danh-ba-sdt.mjs" --write
+# HD11 `do-the-duyet-du-du-lieu` (Hỏi-3): bốn kiểm độ đủ dữ liệu thẻ ghép căn chờ duyệt, một dòng mỗi kiểm mỗi ngày (giờ
+# máy thu), chỉ ghi DB local; bước cuối — dòng lên cloud ở lượt sync-cloud kế. Dòng `fail` không đổi mã thoát.
+job_run cloud-sync do-the-duyet node "$ROOT/pipeline/do-the-duyet.mjs" --write
 exit "$JOB_RC"
 
