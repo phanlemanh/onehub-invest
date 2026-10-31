@@ -1,0 +1,41 @@
+{
+  "feature_plain": "Thẻ ghép căn trỏ tới tin đã rời kho tự rời hàng «Chờ duyệt» kèm lý do «tin rời kho» và vết audit; tin quay lại thì thẻ tự về hàng chờ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ rút thẻ chờ có Tin A, Tin B hay cả hai không còn trong kho: thẻ sang «hoãn» do máy ghi, lý do «tin rời kho» nêu đúng khoá đã rời — cả khi thẻ ghi cặp theo chiều ngược."},
+    {"id": "AC-2", "p": "Sẽ ghi đúng một dòng nhật ký vận hành cho mỗi thẻ rút, nêu thẻ, lý do và các khoá đã rời."},
+    {"id": "AC-3", "p": "Sẽ chấm cặp hai tin còn sống y như trước, không rút và không ghi nhật ký."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG đụng thẻ người đã quyết (duyệt, từ chối, hoãn) dù một bên đã rời kho."},
+    {"id": "AC-5", "p": "Sẽ không rút trùng khi chạy lại: nhật ký và thẻ giữ nguyên."},
+    {"id": "AC-6", "p": "Sẽ không sinh thẻ cho cặp chưa có thẻ mà một bên đã rời kho, và không đếm nó là lỗi đọc."},
+    {"id": "AC-7", "p": "Sẽ không rút gì nếu người vừa quyết một thẻ của cặp đúng lúc máy đang rút — quyết định người đứng."},
+    {"id": "AC-8", "p": "Sẽ in một dòng tổng kết: số cặp có tin rời kho, số thẻ rút, số thẻ trả lại."},
+    {"id": "AC-9", "p": "Sẽ chứng trên bản chép lô thẻ thật: giữ nguyên trạng thì không còn thẻ chờ nào trỏ tin rời kho; dựng lại toàn bộ thẻ chờ thì mọi thẻ rời kho được rút có lý do, thẻ sống giữ, chạy lại không rút thêm."},
+    {"id": "AC-10", "p": "Sẽ giữ xanh mọi ca đã ký của ba vòng judge trước, và đủ 31 tên ca đã ký."},
+    {"id": "AC-11", "p": "Sẽ trả thẻ máy đã rút về hàng chờ khi tin quay lại kho, ghi nhật ký «trả lại», rồi chấm lại; thẻ người hoãn không bao giờ bị trả lại."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không đặt lịch chạy đêm cho bộ chấm — việc của hàng TV13b; vòng này đo trên một lượt chạy."},
+    {"id": "OOS-2", "p": "Không thêm cảnh báo «Tin A không còn trong kho» trên thẻ — hàng giao diện riêng."},
+    {"id": "OOS-3", "p": "Không chuyển thẻ sang khoá mới khi tin được thay khoá — bước nạp đã lo."},
+    {"id": "OOS-4", "p": "Không sửa bảng ứng viên của cặp rời kho — bộ chấm không ghi bảng đó."},
+    {"id": "OOS-5", "p": "Số «cặp cần người chưa có thẻ» vẫn đếm cả cặp rời kho chưa từng có thẻ."},
+    {"id": "OOS-6", "p": "Không đo hàng đêm số thẻ có bên rời kho — hàng đo lường riêng."},
+    {"id": "OOS-7", "p": "Không rút thẻ còn chờ của cặp mà người đã quyết thẻ chiều kia — theo luật đã ký; kho hiện không có cặp nào như vậy."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Bên rời kho: A, B, cả hai, hoặc không bên nào — AC-1 và AC-3 phủ đủ bốn ô."},
+    {"i": 1, "p": "Chiều thẻ thuận và ngược — AC-1 đo cả hai."},
+    {"i": 2, "p": "Trạng thái thẻ: chờ, người đã quyết, máy đã rút, chưa có thẻ — AC-1, AC-4, AC-11, AC-6; cặp lẫn để ngoài (OOS-7)."},
+    {"i": 3, "p": "Thời điểm: lượt đầu, chạy lại, người quyết giữa chừng, tin quay lại — AC-5, AC-7, AC-11."},
+    {"i": 4, "p": "Vết để lại: thẻ, nhật ký vận hành, dòng in — AC-1, AC-2, AC-11, AC-8."},
+    {"i": 5, "p": "Dữ liệu: fixture, lô thật nguyên trạng, lô thật dựng lại — AC-1..AC-8, AC-11, AC-9."},
+    {"i": 6, "p": "Thước đủ: mọi ô có ít nhất một tiêu chí; hai thẻ chờ của một cặp gộp vào AC-1 vì máy rút theo cặp."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thẻ rút là vĩnh viễn — một đêm nạp thiếu lô sẽ xoá cặp thật khỏi hàng duyệt. Đã sửa: thêm AC-11 trả thẻ về hàng chờ khi tin quay lại."},
+    {"i": 1, "p": "Cặp lẫn (người quyết một chiều, chiều kia còn chờ) vẫn để lại thẻ chờ trỏ tin rời kho. Không làm: giữ luật đã ký «người đã quyết cặp thì máy không sửa», kho hiện có 0 cặp như vậy."},
+    {"i": 2, "p": "Đo lô thật bằng cách dựng lại toàn bộ thẻ chờ thì không nói gì về hàng duyệt thật. Đã sửa: thêm nhánh giữ nguyên trạng."},
+    {"i": 3, "p": "Ngưỡng đã ký nói «sau một lượt đêm» nhưng bộ chấm chưa có lịch đêm. Đưa lên anh quyết (Hỏi-1)."},
+    {"i": 4, "p": "«Không ca nào bị xoá» chưa có danh sách để so. Đã sửa: danh sách 31 tên viết trước."}
+  ]
+}
