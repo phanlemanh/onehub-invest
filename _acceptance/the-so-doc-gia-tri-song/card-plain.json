@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Người duyệt mở thẻ ghép căn và thấy bảng so đọc giá trị hiện tại của hai tin; «Chưa rõ» không còn bị tính là «Lệch»; thẻ có tin đã rời kho báo rõ và khoá nút quyết.",
+  "analyst_plain": "Không đo được phép «đỏ trên bản cũ» tự động ở vòng này (bước chạy lại trên bản trước vòng bị công cụ chặn); bù lại, mỗi ca của bộ test tự mang chiều đỏ bằng bản đột biến của chính tệp vừa sửa."
+}
