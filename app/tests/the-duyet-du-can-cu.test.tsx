@@ -402,7 +402,7 @@ describe("TD-AC-2 DB căn cứ đọc từ field_provenance do bên ghi 045 dự
     assert.deepEqual(ctx[1].offer_b!.canCu, { bathrooms: { lop: "fact", phuongPhap: "source_field" } })
     assert.deepEqual(ctx[1].offer_a!.canCu, { street_raw: { lop: "observed", phuongPhap: "legacy" } })
     assert.deepEqual(ctx[3].offer_a!.canCu, {}, "tin không phát biểu")
-    assert.deepEqual(ctx[3].offer_b, { toanVan: null, nhom: null, canCu: {} }, "tin vắng khỏi sale_offers")
+    assert.deepEqual(ctx[3].offer_b, { toanVan: null, nhom: null, canCu: {}, ben: null }, "tin vắng khỏi sale_offers") // ben: null = rời kho (HD6)
     const rowsSo = canCu.soTruongGhepCan({}, {}, ctx[3].offer_a!.canCu, ctx[3].offer_b!.canCu).filter((h) => h.truc)
     for (const h of rowsSo) assert.equal(h.canCuA, "Chưa ghi căn cứ — đọc từ tin", `${h.key}`)
   })
