@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: sdt-luu-goc-e164
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sd3_boc
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/parse.test.mjs, pipeline/scripts/boc-sdt.test.mjs]
+    expected: "exit 0; ma trận dạng viết trước (mọi dạng của SD2: 0…, 84…, +84…, (+84), dấu tách •·.-, hai ký tự tách liền) → đúng một chuỗi +84… mỗi ô, số assert = số phần tử; số 11 chữ số và đầu số ngoài 3/5/7/8/9 vẫn bị bỏ; seller_phone_hash của tin = sha256(seller_phone)[0:32] trên tin dựng qua transform thật; đối chứng đỏ: bản chép trả dạng 0… → bắt ('DANG SO KHONG PHAI E164')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.sd3_mig
+    paths: [db/migrations/060_sdt_e164.sql, pipeline/mappings.yaml, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
+    expected: "exit 0; DB thử oneinvest_p4_sd3 chép máy thu, dựng mới, xoá khi xong; áp 060 hai lần: băm lược đồ và đếm dòng mọi bảng chạm sau lần một = sau lần hai; CHECK nhận 'sdt', chỉ mục duy nhất định danh có 'sdt', ref_lookup có dòng alias_kind/sdt; vocab.mjs --check-db: trước 060 có lệch trục alias_kind (đối chứng dương), sau 060 0 lệch trục alias_kind và 0 lệch mới so với trước 060 (lệch có sẵn ở trục khác của máy thu được đếm và in, không tính cho 060); đối chứng đỏ: bản chép 060 bỏ điều kiện 'chỉ dòng dạng cũ' ở bước đổi dạng → lần hai đổi dòng, bắt ('KHONG IDEMPOTENT'); in 'MIG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.sd3_du_lieu
+    paths: [db/migrations/060_sdt_e164.sql, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
+    expected: "exit 0; trên DB thử: trước 060 đếm tin có SĐT N; sau 060: 0 seller_phone không khớp ^\\+84[35789]\\d{8}$, số tin có SĐT = N, mọi seller_phone_hash = left(sha256(seller_phone),32); properties: số dòng seller_phone_hash khác null trước = sau, và từng dòng = ánh xạ khoá cũ → khoá E.164 của cùng số (bảng ánh xạ dựng trong probe bằng node:crypto từ seller_phone cũ, không bằng SQL của 060); đối chứng đỏ: bản chép 060 băm từ dạng 0… → bắt ('BAM SAI DANG'); bản chép đặt null khoá căn → bắt ('MAT KHOA CAN'); in 'DU LIEU OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.sd3_danh_ba
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/refresh-bait-gap.mjs, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
+    expected: "exit 0; trên DB thử sau 060: ghi tập (party_key, số 0…) của mọi bí danh sdt_bam trước; chạy bước dựng danh bạ thật (tiến trình con); với mỗi party_key, tập E.164 của bí danh sdt còn hiệu lực = đúng ảnh của tập số cũ của nó; số người có sdt = số người có sdt_bam đếm độc lập trước 060 (in cả hai số); 0 sdt_bam còn hiệu lực, mọi dòng sdt_bam cũ còn nguyên với retired_at; mỗi giá trị sdt còn hiệu lực thuộc đúng một người mỗi nguồn; lượt hai: 0 bí danh, 0 người mới; đối chứng đỏ: bản chép tạo người mới thay vì giữ party_key → bắt ('NGUOI MOI THAY VI GIU'); in 'DANH BA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.sd3_sellers
+    paths: [db/migrations/060_sdt_e164.sql, app/src/lib/deals.ts, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
+    expected: "exit 0; trên DB thử sau 060 và một lượt dựng danh bạ: sellers là view; số dòng = count(DISTINCT seller_phone) tin sống; mọi dòng × mọi cột (7 cột, 6 khoá flags) trùng câu tính độc lập viết lại trong probe theo luật cũ refresh-bait-gap (số ô so = số dòng × 12); truy vấn deals.ts thật chạy (nạp bằng tsx) không lỗi; chụp bảng sellers cũ ngay trước 060 (sau một lượt refresh-bait-gap thật), quy khoá sang E.164, so từng dòng × cột với view, in số dòng mất/thêm và số ô lệch theo cột: 0 dòng mất, first_seen view ≤ cũ, last_seen view ≥ cũ; mọi name khác rỗng của bảng sellers cũ (đọc trước 060) có trong bí danh ten còn hiệu lực của người mang bí danh sdt cùng số (đối chứng đỏ: bản chép 060 bỏ bước chép tên → bắt 'MAT TEN NGUOI BAN'); đối chứng đỏ: hàm so trên view thiếu n_rent → bắt ('LECH COT n_rent'); in 'SELLERS OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.sd3_bait_gap
+    paths: [pipeline/refresh-bait-gap.mjs, _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh, pipeline/scripts/bait-gap-sellers.test.mjs, pipeline/sync-cloud.test.mjs, pipeline/scripts/test-posts.test.mjs, pipeline/scripts/deals-phi-ly.test.mjs]
+    expected: "exit 0; chạy refresh-bait-gap.mjs thật (tiến trình con) trên DB thử sau 060 → exit 0 (sellers là view tổng hợp, mọi câu ghi vào nó đều lỗi nên exit 0 chứng không ghi), cột bait gap của tin trùng câu tính độc lập; quét mã refresh-bait-gap.mjs: 0 câu INSERT/UPDATE/DELETE nhắm sellers (đối chứng: cùng hàm quét bắt 'DELETE FROM sellers' → 'GHI VAO SELLERS'); test bait gap, sync-cloud, test-posts, deals-phi-ly xanh khi dữ liệu nguồn dựng qua sale_offer_records thay vì INSERT thẳng sellers"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.sd3_cloud
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
+    expected: "exit 0; trên DB thử sau 060: dựng câu đọc thật (selectList + localReadSql của sync-cloud.mjs) cho sale_offers, sellers, properties, chạy, quét mọi dòng: 0 cột seller_phone/seller_name/name, 0 giá trị khớp \\+84\\d{9} hay 0[35789]\\d{8}; sellers có trong FILL; đối chứng đỏ: bản PII_EXCLUDE bỏ seller_phone → bắt ('LOT SO GOC'); kèm suite sync-cloud-pii.test.mjs và soat-tang-a.test.mjs xanh; in 'CLOUD OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.sd3_doc
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/people-rows.ts, _acceptance/sdt-luu-goc-e164/probes/people.sh, _acceptance/sdt-luu-goc-e164/probes/people.tsx, pipeline/do-danh-ba-sdt.mjs, pipeline/scripts/do-boc-sdt.mjs, pipeline/scripts/test-data-residue.mjs]
+    layer: backend-effect
+    expected: "exit 0; trên DB thử sau 060 + một lượt dựng danh bạ, loader thật của people.ts (nạp bằng tsx) ở ba vai (viewer, ops, admin): mỗi ô bí danh sdt khớp nhãn che ghim trước, 0 chữ số của số gốc (quét mọi chuỗi 3+ chữ số liên tiếp trong ô); số người có ô che = số người có bí danh sdt (đối chứng dương); đối chứng đỏ: bản chép áp luật che cũ cắt 8 ký tự → bắt 'LO SO GOC TREN PEOPLE'; doRong và do-boc-sdt nhận E.164; test do-danh-ba-sdt và test-data-residue xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.sd3_pham_vi
+    paths: [_acceptance/sdt-luu-goc-e164/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base trong danh sách AC-9; quét mọi probe và script của nhánh: không lệnh psql/node nào trỏ DB oneinvest khi áp 060 (chỉ oneinvest_<…> thử); in 'PHAM VI OK'; đối chứng: app/src/app/ops/people/page.tsx và một lệnh áp 060 lên oneinvest → bắt ('NGOAI PHAM VI', 'AP LEN DB THAT')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

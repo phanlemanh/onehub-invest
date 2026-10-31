@@ -24,9 +24,9 @@ function sourceBadge(s: string) {
   return <Badge variant="outline">{s}</Badge>;
 }
 
-function fmtPhone(p: string) {
-  // 0973034567 → 0973 034 567 — dễ đọc khi gọi
-  return p.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3");
+/** SĐT lưu số gốc E.164 (SD3): +84973034567 → 0973 034 567 — dễ đọc khi gọi; dạng 0… đời trước vẫn tách nhóm. */
+export function fmtPhone(p: string) {
+  return p.replace(/^(?:\+84|0)(\d{3})(\d{3})(\d{3})$/, "0$1 $2 $3");
 }
 
 /**

@@ -1,21 +1,22 @@
-// bait-gap-sellers.test.mjs — vòng canonical-khong-tin-gia (PL2) AC-7: registry sellers bỏ người bán
-// không còn tin nào. BEGIN…ROLLBACK trên Postgres local :5433 — không để lại dòng nào.
+// bait-gap-sellers.test.mjs — người bán (sellers) từ SD3 sdt-luu-goc-e164 là VIEW trên bí danh `sdt` + tin (060, Hỏi-C bước 2).
+// Giữ lời hứa của PL2 AC-7 (không dòng mồ côi) và SD1 (mọi SĐT trên tin có dòng, cột tổng hợp đúng, tên, payload cloud)
+// trên view thay cho bảng ghi tay. BEGIN…ROLLBACK trên Postgres local :5433, nạp 060 trong giao dịch khi DB chưa áp —
+// không để lại dòng nào. Số trong test là số bịa.
 import { strict as assert } from "node:assert";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
 import { test } from "node:test";
-import { fileURLToPath, pathToFileURL } from "node:url";
 
 import pg from "pg";
 
 import { sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
+import { MIG_060, napSdtE164 } from "../lib/nap-060.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { localReadSql, selectList } from "../sync-cloud.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
-async function withTx(fn) {
+async function withTx(fn, sql060 = MIG_060) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
@@ -23,6 +24,7 @@ async function withTx(fn) {
     // Cùng khoá với write-offers.test.mjs / agent tests: bộ đó nạp lại hàm 039 trong giao dịch —
     // chạy song song với một lượt đối soát là deadlock.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
+    await napSdtE164(c, sql060);
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -30,238 +32,112 @@ async function withTx(fn) {
   }
 }
 
-const H_ORPHAN = "t_pl2_orphan_hash_000000000000000";
-const H_LIVE = "t_pl2_live_hash_00000000000000000";
+const bam = (so) => createHash("sha256").update(so).digest("hex").slice(0, 32);
+const P = process.pid % 1000;
+const SO = (n) => `+8491${String(P).padStart(3, "0")}${String(n).padStart(4, "0")}`;
+let soNguoi = 0;
 
-async function seller(c, hash, nAds) {
-  await c.query(
-    `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen)
-     VALUES ($1, '{S03}', $2, now(), now())`,
-    [hash, nAds],
-  );
+/** Người theo SĐT của nguồn mang bí danh `sdt` (như bộ dựng danh bạ ghi). */
+async function nguoi(c, so, source = "S03") {
+  const pty = `pty_01HZZZZZZZZZZZZZZZZZZZ${String(++soNguoi).padStart(4, "0")}`;
+  await c.query(`INSERT INTO parties (party_key, source) VALUES ($1, $2)`, [pty, source]);
+  await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'sdt', $2, $3)`, [pty, so, source]);
+  return pty;
 }
 
-async function offer(c, id, hash) {
-  await c.query(
-    `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids,
-       price_tier, seller_phone_hash, property_type)
-     VALUES ($1, 'TST', 'sale', 'medium', now(), now(), '{}', 'P1', $2, 'unknown')`,
-    [id, hash],
-  );
-}
-
-const exists = async (c, hash) => (await c.query(`SELECT n_ads FROM sellers WHERE phone_hash = $1`, [hash])).rows[0];
-
-test("AC-7 sellers mồ côi", { timeout: 120_000 }, async () => {
-  await withTx(async (c) => {
-    await seller(c, H_ORPHAN, 3);
-    await seller(c, H_LIVE, 999);
-    await offer(c, "t_pl2_live_offer", H_LIVE);
-    const maxId = Number((await c.query(`SELECT coalesce(max(id), 0) AS m FROM ops_audit`)).rows[0].m);
-
-    const res = await refreshBaitGap(c);
-
-    assert.equal(await exists(c, H_ORPHAN), undefined, "AC-7 người bán mồ côi còn");
-    const live = await exists(c, H_LIVE);
-    assert.ok(live, "AC-7 xoá nhầm người bán còn tin");
-    assert.equal(live.n_ads, 1, "AC-7 cột tổng hợp của người bán còn tin không làm mới");
-    const audit = (await c.query(
-      `SELECT detail FROM ops_audit WHERE id > $1 AND action = 'bait-gap:sellers-orphan'`, [maxId],
-    )).rows;
-    assert.equal(audit.length, 1, "AC-7 thiếu dòng audit bait-gap:sellers-orphan");
-    assert.ok(audit[0].detail.deleted >= 1);
-    const n = Number((await c.query(`SELECT count(*) AS n FROM sellers`)).rows[0].n);
-    assert.equal(audit[0].detail.remaining, n, "AC-7 remaining lệch số dòng sellers");
-    assert.equal(res.sellersRemaining, n);
-  });
-});
-
-test("AC-7 cặp hai chiều: người bán có tin thì không bị xoá", { timeout: 120_000 }, async () => {
-  await withTx(async (c) => {
-    await seller(c, H_ORPHAN, 3);
-    await offer(c, "t_pl2_orphan_offer", H_ORPHAN);
-    await refreshBaitGap(c);
-    assert.ok(await exists(c, H_ORPHAN), "AC-7 xoá nhầm người bán còn tin");
-  });
-});
-
-// ---- SD1 sellers-them-dong-lai: SĐT mới trên tin có dòng sellers (lệnh thêm dòng mất ở 907f4bd4) ----
-// Chiều đỏ: bản đột biến của refresh-bait-gap.mjs chép CẠNH tệp thật (import ./lib/ vẫn đúng), mỗi bản một tên (ESM
-// cache), xoá ngay sau khi nạp.
-
-const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const GOC = readFileSync(join(PIPE, "refresh-bait-gap.mjs"), "utf8");
-let soBan = 0;
-
-/** Nạp một bản đột biến của refresh-bait-gap.mjs; `doi` phải thật sự đổi mã (không đổi → ném, chiều đỏ không rỗng). */
-async function banDotBien(doi) {
-  const ma = doi(GOC);
-  if (ma === GOC) throw new Error("đột biến không đổi mã — thước đỏ rỗng");
-  const f = join(PIPE, `.tam-sellers-${process.pid}-${++soBan}.mjs`);
-  writeFileSync(f, ma);
-  try {
-    return await import(pathToFileURL(f).href);
-  } finally {
-    rmSync(f, { force: true });
-  }
-}
-// Về đúng hành vi trước vòng: chỉ UPDATE dòng đã có.
-const boThemDong = (s) =>
-  s.replace(/INSERT INTO sellers AS x[\s\S]*?FROM s\n\s*ON CONFLICT \(phone_hash\) DO UPDATE\n\s*SET/, "UPDATE sellers x SET")
-    .replace(/flags = EXCLUDED\.flags\n\s*RETURNING \(xmax = 0\) AS moi/, "flags = EXCLUDED.flags FROM s WHERE x.phone_hash = s.h RETURNING false AS moi")
-    .replace(/EXCLUDED\.n_ads/, "s.n_ads").replace(/EXCLUDED\.sources/, "s.srcs").replace(/EXCLUDED\.first_seen/, "s.fs")
-    .replace(/EXCLUDED\.last_seen/, "s.ls").replace(/COALESCE\(x\.name, EXCLUDED\.name\)/, "COALESCE(x.name, s.best_name)")
-    .replace(/flags = EXCLUDED\.flags FROM s/, "flags = jsonb_build_object('n_ads', s.n_ads) FROM s");
-const congDon = (s) => s.replace("SET n_ads = EXCLUDED.n_ads,", "SET n_ads = x.n_ads + EXCLUDED.n_ads,");
-const ghiDeTen = (s) => s.replace("name = COALESCE(x.name, EXCLUDED.name),", "name = EXCLUDED.name,");
-
-const HA = `t_sd1_a_${process.pid}`;
-const HB = `t_sd1_b_${process.pid}`;
-const HC = `t_sd1_c_${process.pid}`;
-
-async function tin(c, id, hash, source, at, ten = null) {
+async function tin(c, id, so, source, at, ten = null) {
   await c.query(
     `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids,
-       price_tier, seller_phone_hash, seller_name, property_type)
-     VALUES ($1, $2, 'sale', 'medium', $3, $3, '{}', 'P1', $4, $5, 'unknown')`,
-    [`t_sd1_${process.pid}_${id}`, source, at, hash, ten],
+       price_tier, seller_phone, seller_phone_hash, seller_name, property_type)
+     VALUES ($1, $2, 'sale', 'medium', $3, $3, '{}', 'P1', $4, $5, $6, 'unknown')`,
+    [`t_sd3_${process.pid}_${id}`, source, at, so, bam(so), ten],
   );
 }
-/** Lát viết trước: A có dòng cũ (n_ads 999, tên cũ), B một tin S03, C hai tin S03 + S05. */
-async function latSd1(c) {
-  await c.query(
-    `INSERT INTO sellers (phone_hash, name, sources, n_ads, first_seen, last_seen) VALUES ($1, 'Tên cũ A', '{S05}', 999, now(), now())`,
-    [HA],
-  );
-  await tin(c, "a1", HA, "S03", "2026-10-01T00:00:00Z", "Tên tin A");
-  await tin(c, "b1", HB, "S03", "2026-10-02T00:00:00Z", "Tên tin B");
-  await tin(c, "c1", HC, "S03", "2026-10-03T00:00:00Z");
-  await tin(c, "c2", HC, "S05", "2026-10-05T00:00:00Z");
-}
-const dongCua = async (c, h) =>
+
+const dongCua = async (c, so) =>
   (await c.query(
     `SELECT phone_hash, name, sources, n_ads, first_seen::text fs, last_seen::text ls, flags FROM sellers WHERE phone_hash = $1`,
-    [h],
+    [bam(so)],
   )).rows;
-const chup = async (c) => [await dongCua(c, HA), await dongCua(c, HB), await dongCua(c, HC)];
 
-async function kiemAc1(c, mod) {
-  await latSd1(c);
-  await mod.refreshBaitGap(c);
-  for (const h of [HA, HB, HC]) assert.equal((await dongCua(c, h)).length, 1, `SD-AC-1 SĐT trên tin thiếu dòng sellers: ${h}`);
-  const [b] = await dongCua(c, HB);
-  assert.deepEqual([b.n_ads, b.sources], [1, ["S03"]], "SD-AC-1 cột tổng hợp của B");
-  const [cc] = await dongCua(c, HC);
-  assert.deepEqual([cc.n_ads, [...cc.sources].sort(), cc.flags.multi_channel], [2, ["S03", "S05"], true], "SD-AC-1 cột tổng hợp của C");
-  const mm = (await c.query(`SELECT min(first_seen)::text a, max(last_seen)::text b FROM sale_offers WHERE seller_phone_hash = $1`, [HC])).rows[0];
-  assert.deepEqual([cc.fs, cc.ls], [mm.a, mm.b], "SD-AC-1 first/last_seen của C lệch tin");
-  const [a] = await dongCua(c, HA);
-  assert.equal(a.n_ads, 1, "SD-AC-1 dòng cũ của A không làm mới");
+const A = SO(1);
+const B = SO(2);
+const C = SO(3);
+/** Lát viết trước: A một tin S03 có tên, B có người mà không tin (mồ côi), C hai tin S03 + S05. */
+async function lat(c) {
+  for (const [so, s] of [[A, "S03"], [B, "S03"], [C, "S03"], [C, "S05"]]) await nguoi(c, so, s);
+  await tin(c, "a1", A, "S03", "2026-10-01T00:00:00Z", "Tên tin A");
+  await tin(c, "c1", C, "S03", "2026-10-03T00:00:00Z");
+  await tin(c, "c2", C, "S05", "2026-10-05T00:00:00Z");
 }
 
-test("SD-AC-1 mọi SĐT trên tin có dòng sellers", { timeout: 120_000 }, async () => {
-  const that = await import("../refresh-bait-gap.mjs");
-  await withTx((c) => kiemAc1(c, that));
-  const sai = await banDotBien(boThemDong);
-  await withTx((c) => assert.rejects(kiemAc1(c, sai), /SD-AC-1 SĐT trên tin thiếu dòng sellers/));
-});
-
-async function kiemAc2(c, mod) {
-  await latSd1(c);
-  await mod.refreshBaitGap(c);
-  const l1 = await chup(c);
-  const r2 = await mod.refreshBaitGap(c);
-  assert.deepEqual(await chup(c), l1, "SD-AC-2 lượt hai đổi cột tổng hợp");
-  assert.equal(r2.sellersInserted, 0, "SD-AC-2 lượt hai thêm dòng");
-}
-
-test("SD-AC-2 lượt hai không đổi", { timeout: 120_000 }, async () => {
-  await withTx((c) => kiemAc2(c, { refreshBaitGap }));
-  const sai = await banDotBien(congDon);
-  await withTx((c) => assert.rejects(kiemAc2(c, sai), /SD-AC-2 lượt hai đổi cột tổng hợp/));
-});
-
-async function kiemAc3(c, mod) {
-  await latSd1(c);
-  await mod.refreshBaitGap(c);
-  assert.equal((await dongCua(c, HA))[0].name, "Tên cũ A", "SD-AC-3 tên cũ bị ghi đè");
-  assert.equal((await dongCua(c, HB))[0].name, "Tên tin B", "SD-AC-3 dòng mới không nhận tên từ tin");
-}
-
-test("SD-AC-3 tên: giữ tên cũ, dòng mới lấy tên từ tin", { timeout: 120_000 }, async () => {
-  await withTx((c) => kiemAc3(c, { refreshBaitGap }));
-  const sai = await banDotBien(ghiDeTen);
-  await withTx((c) => assert.rejects(kiemAc3(c, sai), /SD-AC-3 tên cũ bị ghi đè/));
-});
-
-const CAU_THIEU_CU = `SELECT s.phone_hash || ':' || src AS k FROM sellers s CROSS JOIN LATERAL unnest(s.sources) AS src
-  WHERE NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt_bam'
-                      AND a.source = src AND a.value = s.phone_hash)
-  ORDER BY 1`; // câu đối chiếu trước vòng (origin/main 4704315b), chỉ đọc sellers — chiều đỏ của SD-AC-7
-
-test("SD-AC-7 đối chiếu danh bạ theo SĐT trên tin", { timeout: 120_000 }, async () => {
+test("SD3 sellers là view sau 060", { timeout: 120_000 }, async () => {
   await withTx(async (c) => {
-    const hz = `t_sd1_z_${process.pid}`;
-    await tin(c, "z6", hz, "S06", "2026-10-06T00:00:00Z");
-    assert.ok((await sellersThieuNguoi(c)).includes(`${hz}:S06`), "SD-AC-7 SĐT trên tin không vào phép đối chiếu");
-    const cu = (await c.query(CAU_THIEU_CU)).rows.map((r) => r.k);
-    assert.ok(!cu.includes(`${hz}:S06`), "SD-AC-7 chiều đỏ: câu cũ đọc sellers mà vẫn thấy hz");
-    // Đối chứng dương: có người sống mang bí danh sdt_bam đúng nguồn → không còn thiếu.
-    const pty = "pty_01HZZZZZZZZZZZZZZZZZZZZSD1"; // khoá ULID hợp lệ (khuôn danh-ba-nguoi.itest), chỉ sống trong ROLLBACK
-    await c.query(`INSERT INTO parties (party_key, source) VALUES ($1, 'S06')`, [pty]);
-    await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'sdt_bam', $2, 'S06')`, [pty, hz]);
-    assert.ok(!(await sellersThieuNguoi(c)).includes(`${hz}:S06`), "SD-AC-7 có người mà vẫn báo thiếu");
+    const { rows } = await c.query(`SELECT relkind FROM pg_class WHERE relname = 'sellers' AND relnamespace = 'public'::regnamespace`);
+    assert.equal(rows[0].relkind, "v");
   });
 });
 
-async function kiemAc8(c, mod) {
-  await latSd1(c);
-  await mod.refreshBaitGap(c);
-  const cols = (await c.query(
-    `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sellers' ORDER BY ordinal_position`,
-  )).rows.map((r) => r.c);
-  const tai = (await c.query(localReadSql("sellers", selectList("sellers", cols).sql))).rows.map((r) => JSON.parse(r.j));
-  for (const h of [HA, HB, HC]) {
-    assert.equal(tai.filter((x) => x.phone_hash === h).length, 1, `SD-AC-8 payload cloud thiếu SĐT: ${h}`);
-  }
-  assert.ok(tai.every((x) => !("name" in x)), "SD-AC-8 payload cloud mang cột name");
-}
-
-test("SD-AC-8 payload cloud: đủ SĐT trên tin, không cột name", { timeout: 120_000 }, async () => {
-  await withTx((c) => kiemAc8(c, { refreshBaitGap }));
-  const sai = await banDotBien(boThemDong);
-  await withTx((c) => assert.rejects(kiemAc8(c, sai), /SD-AC-8 payload cloud thiếu SĐT/));
+test("AC-7 (PL2) không dòng mồ côi: số có người mà không tin sống không có dòng sellers", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await lat(c);
+    assert.equal((await dongCua(c, B)).length, 0, "AC-7 người bán mồ côi còn");
+    assert.equal((await dongCua(c, A)).length, 1, "AC-7 người bán còn tin bị mất");
+  });
 });
 
-// ---- Probe DB máy thu: dữ liệu thật, ROLLBACK ----
-const LY_DO_CI = "cần DB máy thu có tin thật mang SĐT — CI chỉ có lược đồ";
-const hieuTap = async (c) => (await c.query(
-  `SELECT (SELECT count(*)::int FROM (SELECT seller_phone_hash FROM sale_offers WHERE seller_phone_hash IS NOT NULL
-                                        EXCEPT SELECT phone_hash FROM sellers) t) thieu,
-          (SELECT count(*)::int FROM (SELECT phone_hash FROM sellers
-                                        EXCEPT SELECT seller_phone_hash FROM sale_offers) t) thua,
-          (SELECT count(*)::int FROM sellers) n`,
-)).rows[0];
+async function kiemTongHop(c) {
+  await lat(c);
+  for (const so of [A, C]) assert.equal((await dongCua(c, so)).length, 1, `SD-AC-1 SĐT trên tin thiếu dòng sellers: ${so.length}`);
+  const [cc] = await dongCua(c, C);
+  assert.deepEqual([cc.n_ads, [...cc.sources].sort(), cc.flags.multi_channel, cc.flags.n_sale, cc.flags.n_rent],
+    [2, ["S03", "S05"], true, 2, 0], "SD-AC-1 cột tổng hợp của C");
+  const mm = (await c.query(`SELECT min(first_seen)::text a, max(last_seen)::text b FROM sale_offer_records WHERE seller_phone = $1`, [C])).rows[0];
+  assert.deepEqual([cc.fs, cc.ls], [mm.a, mm.b], "SD-AC-1 first/last_seen của C lệch bản ghi tin");
+  assert.equal((await dongCua(c, A))[0].name, "Tên tin A", "SD-AC-3 tên không lấy từ tin");
+}
 
-test("SD-AC-5 probe DB máy thu: sellers bằng tập SĐT trên tin, lượt hai không đổi", { timeout: 180_000 }, async (t) => {
-  if (process.env.CI) return t.skip(LY_DO_CI);
+test("SD-AC-1/3 mọi SĐT trên tin có một dòng, cột tổng hợp và tên đúng", { timeout: 120_000 }, async () => {
+  await withTx((c) => kiemTongHop(c));
+});
+
+test("SD-AC-1 đỏ: view bản chép bỏ đếm n_rent → bắt «cột tổng hợp của C»", { timeout: 120_000 }, async () => {
+  const sai = MIG_060.replace("'n_sale', so.n_sale, 'n_rent', so.n_rent,", "'n_sale', so.n_sale, 'n_rent', so.n_sale,");
+  assert.notEqual(sai, MIG_060);
+  // Đối chứng dương: tin C đều là 'sale' nên n_rent đúng = 0; bản chép đặt n_rent = n_sale = 2.
+  await withTx((c) => assert.rejects(kiemTongHop(c), /SD-AC-1 cột tổng hợp của C/), sai.replace("CREATE OR REPLACE VIEW sellers", "DROP VIEW IF EXISTS sellers; CREATE VIEW sellers"));
+});
+
+test("SD-AC-2 refresh-bait-gap chạy hai lượt không đổi view, không ghi sellers", { timeout: 120_000 }, async () => {
   await withTx(async (c) => {
-    const truoc = await hieuTap(c);
-    await refreshBaitGap(c);
-    const l1 = await hieuTap(c);
-    assert.deepEqual([l1.thieu, l1.thua], [0, 0], `SD-AC-5 sellers thiếu SĐT: ${JSON.stringify(l1)}`);
-    if (truoc.thieu > 0) assert.ok(l1.n > truoc.n, `SD-AC-5 số dòng không tăng: ${truoc.n} → ${l1.n}`);
+    await lat(c);
+    const r1 = await refreshBaitGap(c);
+    const l1 = [await dongCua(c, A), await dongCua(c, C)];
     const r2 = await refreshBaitGap(c);
-    assert.equal((await hieuTap(c)).n, l1.n, "SD-AC-5 lượt hai đổi số dòng");
-    assert.equal(r2.sellersInserted, 0, "SD-AC-5 lượt hai thêm dòng");
+    assert.deepEqual([await dongCua(c, A), await dongCua(c, C)], l1, "SD-AC-2 lượt hai đổi view");
+    assert.equal(r1.sellersRemaining, r2.sellersRemaining);
   });
-  const sai = await banDotBien(boThemDong);
+});
+
+test("SD-AC-7 đối chiếu danh bạ theo SĐT trên tin (bí danh sdt)", { timeout: 120_000 }, async () => {
   await withTx(async (c) => {
-    await tin(c, "p1", `t_sd1_p_${process.pid}`, "S03", "2026-10-07T00:00:00Z");
-    await sai.refreshBaitGap(c);
-    await assert.rejects(async () => {
-      const l = await hieuTap(c);
-      assert.deepEqual([l.thieu, l.thua], [0, 0], `SD-AC-5 sellers thiếu SĐT: ${JSON.stringify(l)}`);
-    }, /SD-AC-5 sellers thiếu SĐT/);
+    const z = SO(9);
+    await tin(c, "z6", z, "S06", "2026-10-06T00:00:00Z");
+    assert.ok((await sellersThieuNguoi(c)).includes(`${bam(z)}:S06`), "SD-AC-7 SĐT trên tin không vào phép đối chiếu");
+    await nguoi(c, z, "S06");
+    assert.ok(!(await sellersThieuNguoi(c)).includes(`${bam(z)}:S06`), "SD-AC-7 có người mà vẫn báo thiếu");
+  });
+});
+
+test("SD-AC-8 payload cloud: đủ SĐT trên tin, không cột name, không số gốc", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await lat(c);
+    const cols = (await c.query(
+      `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sellers' ORDER BY ordinal_position`,
+    )).rows.map((r) => r.c);
+    const tai = (await c.query(localReadSql("sellers", selectList("sellers", cols).sql))).rows.map((r) => JSON.parse(r.j));
+    for (const so of [A, C]) assert.equal(tai.filter((x) => x.phone_hash === bam(so)).length, 1, `SD-AC-8 payload cloud thiếu SĐT`);
+    assert.ok(tai.every((x) => !("name" in x)), "SD-AC-8 payload cloud mang cột name");
+    assert.ok(!JSON.stringify(tai).includes(A), "SD-AC-8 payload cloud mang số gốc");
   });
 });

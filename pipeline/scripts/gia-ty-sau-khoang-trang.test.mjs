@@ -111,10 +111,10 @@ const nen = await napBanSao(execFileSync("git", ["show", `${NEN}:pipeline/transf
 // SD2 bỏ số 11 chữ số có chủ ý nên đúng hai dòng này chờ rỗng, 13 dòng còn lại vẫn so bản nền.
 const SD2_RONG = ["Bán căn 1.050.000.000\n60m2", "Cho thuê 50m2.0912.345.678 9 T.Lan 9tr"];
 
-test("GS-AC-3: extractPhones của cây bằng của bản nền ở 15 dòng", () => {
+test("GS-AC-3: extractPhones của cây bằng của bản nền (đổi sang dạng E.164 của SD3) ở 15 dòng", () => {
   assert.equal(DONG_SDT.length, 15);
   for (const r of SD2_RONG) assert.ok(DONG_SDT.includes(r), `GS-AC-3: dòng SD2 chờ rỗng «${r}» phải có trong 15 dòng`);
-  for (const chu of DONG_SDT) assert.deepEqual(tz.extractPhones(chu), SD2_RONG.includes(chu) ? [] : nen.extractPhones(chu), `GS-AC-3 «${chu}»`);
+  for (const chu of DONG_SDT) assert.deepEqual(tz.extractPhones(chu), SD2_RONG.includes(chu) ? [] : nen.extractPhones(chu).map((so) => "+84" + so.slice(1)), `GS-AC-3 «${chu}»`);
 });
 
 test("GS-AC-3 đột biến: lối (a) — PHONE_RE thôi nhận khoảng trắng → «liên hệ.0901 234 567» lệch bản nền", async () => {
