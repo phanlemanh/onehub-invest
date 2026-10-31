@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 00c1cf1e3d67fb415f913ef51cf025f731cb47c0
+verified_commit: 18ed63cc9dc3364c8df134f46eb68f437221e7fc
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -106,3 +106,7 @@ none — every multi-run eval is uniform (moi eval round nay chay 1 lan, xac din
 
 Round 1: baseline da do; ket qua chi tiet xem run-log round 1.
 Round 2: E1-E4 va 5 lenh suite xanh tren commit 00c1cf1e; baseline carried tu round 1, khong do lai.
+
+### Re-pin lần 1 — 2026-10-31, do hoá cũ do gộp main sau chấm (060, DP-AC-5)
+run_id: repin-20261031T153427Z-40231
+sha: 18ed63cc9dc3364c8df134f46eb68f437221e7fc · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng
