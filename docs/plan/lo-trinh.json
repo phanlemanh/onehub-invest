@@ -2715,6 +2715,30 @@
       "ghi_chu": "Dãy U1, đợt 3. T3: chạm quyền xem ảnh (lớp quyền), không chạm dữ liệu người dùng."
     },
     {
+      "dung_tren": [
+        "HD10"
+      ],
+      "dot": "hang-duyet-3010",
+      "ma": "HD16",
+      "slug": "proxy-anh-chan-svg",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "phu": [
+        "HD16"
+      ],
+      "cau_giao": "Proxy ảnh tin /api/zalo-media chỉ phục vụ jpeg/png/webp/gif; SVG và kiểu ảnh lạ trả 415, mọi phản hồi ảnh mang nosniff + CSP sandbox",
+      "bat_khi": "Nguồn trả image/svg+xml có script → /api/zalo-media?media= trả 415; mọi phản hồi ảnh của route có X-Content-Type-Options: nosniff và CSP sandbox",
+      "vi_sao": "Ngoài-1+3 ở Cổng Bằng chứng HD10 (31/10): bộ lấy ảnh gốc trả nguyên image/svg+xml trên origin của app, mở thẳng ảnh là XSS lưu trữ trong phiên Ops; Mạnh chọn «mở hợp đồng mới».",
+      "vung": [
+        "app/src/lib/ops/lay-anh-goc.ts",
+        "app/src/lib/ops/zalo-media.ts",
+        "app/src/app/api/zalo-media"
+      ],
+      "ghi_chu": "Dãy U1, ngay sau HD10 (giám sát xếp ưu tiên — lỗ bảo mật). T3: route mang dữ liệu tầng A. decided_by Mạnh (chọn mở hợp đồng mới khi ký HD10)."
+    },
+    {
       "dung_tren": [],
       "dot": "hang-duyet-3010",
       "ma": "HD11",
