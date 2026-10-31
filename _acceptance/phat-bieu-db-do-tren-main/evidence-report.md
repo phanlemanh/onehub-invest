@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0341f9958fe96d8c086665fd2664f42a53aa416d
+verified_commit: f7bbedc3353a557b611572d7782196163c9aec4e
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -165,3 +165,7 @@ none — mọi eval chạy một lượt, không eval nào ngẫu nhiên hay fla
 
 Round 1: E1–E4, E6 và ba lệnh suite chạy, đạt; các eval còn lại chạy lại ở round 2.
 Round 2: E5, E7, E8, E9, E10 chạy lại trên cây 0341f995, đạt; E1–E4, E6 carry-forward từ round 1 vì delta không chạm paths của chúng.
+
+### Re-pin lần 1 — 2026-10-31, do gộp main sau chữ ký
+run_id: repin-20261031T055706Z-57035
+sha: f7bbedc3353a557b611572d7782196163c9aec4e · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
