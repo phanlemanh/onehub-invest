@@ -20,3 +20,14 @@
 {"ts":"2026-10-30T23:31:22Z","round":2,"evalId":"E9","run_id":"cong-tac-that-E9-20261030T233122Z","exit_code":0,"cmd":"bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""}
 {"ts":"2026-10-30T23:31:22Z","round":2,"evalId":"E11","run_id":"cong-tac-that-E11-20261030T233122Z","exit_code":0,"cmd":"bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""}
 {"ts":"2026-10-30T23:31:27Z","round":2,"evalId":"E10","run_id":"cong-tac-that-E10-20261030T233127Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E1","run_id":"cong-tac-that-E1-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E2","run_id":"cong-tac-that-E2-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E3","run_id":"cong-tac-that-E3-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E4","run_id":"cong-tac-that-E4-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E5","run_id":"cong-tac-that-E5-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E6","run_id":"cong-tac-that-E6-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:23:43Z","round":3,"evalId":"E8","run_id":"cong-tac-that-E8-20261031T002343Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-10-31T00:24:02Z","round":3,"evalId":"E7","run_id":"cong-tac-that-E7-20261031T002402Z","exit_code":0,"cmd":"bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""}
+{"ts":"2026-10-31T00:24:02Z","round":3,"evalId":"E9","run_id":"cong-tac-that-E9-20261031T002402Z","exit_code":0,"cmd":"bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""}
+{"ts":"2026-10-31T00:24:02Z","round":3,"evalId":"E11","run_id":"cong-tac-that-E11-20261031T002402Z","exit_code":0,"cmd":"bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-31T00:24:11Z","round":3,"evalId":"E10","run_id":"cong-tac-that-E10-20261031T002411Z","exit_code":1,"cmd":"cd pipeline && npm test"}
