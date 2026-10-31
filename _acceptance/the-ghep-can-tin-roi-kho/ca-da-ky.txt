@@ -1,0 +1,31 @@
+JE-AC-2 queryPair đọc bốn trường — ma trận 16 ô trên câu SELECT thật
+AC-1 hằng NGUONG khai một chỗ
+AC-1 ma trận luật — 12 ô, hai chiều A↔B
+AC-1 đối chứng đỏ: dt lệch 12% ở ô 1 thôi yes
+AC-1 đối chứng đỏ: mẫu số min ở ô 11 ra no
+AC-1 lệch đúng bằng ngưỡng — kết luận không phụ thuộc sai số dấu phẩy động
+AC-1 đối chứng đỏ: so độ lệch thô thì quét đúng ngưỡng bắt được
+AC-2 prompt không ngưỡng — prompt hệ thống + đầu vào ô 1–9
+AC-2 đối chứng đỏ: prompt cũ bị hàm soi bắt
+AC-2 sát ngưỡng — prompt không mang số đo, kể cả lệch đúng bằng ngưỡng
+AC-2 đối chứng đỏ: hàm soi bắt số đo ở đúng ngưỡng, kể cả khuôn có phần thập phân
+parseGiaiThich chỉ rút lời giải thích
+PS-AC-2 phường khớp thẻ duyệt — 32 cặp, hai chiều, apNguong mặc định, bản rút từ tệp app
+PS-AC-2 đối chứng đỏ: khoaPhuong cũ tiêm qua tham số, bản chép judge-entity.ts bỏ nhánh phường số, tên hàm không có
+AC-5 cùng phường ghi khác kiểu ra yes — 5 ô, hai chiều
+AC-5 đối chứng đỏ: chuanHoaPhuong cũ ra no ở ô Phương Liệt | Phường Phương Liệt
+PS-AC-3 phường số ra yes/no — 4 ô, hai chiều, apNguong mặc định
+PS-AC-3 đối chứng đỏ: khoaPhuong cũ ra no ở ô Phường 01 | Phường 1
+AC-2 prompt model nhận — không chứa ngưỡng (yes/no/unsure)
+AC-3 model trái luật — kết luận vẫn theo luật
+AC-4 model và trace — thẻ khớp dòng ai_calls
+AC-5 model lỗi — ma trận 3 ô, kết luận luật giữ
+JE-AC-1 sinh thẻ đủ mười trường — mọi cặp needs_llm có đúng một thẻ, khuôn seed 029 ∪ bảng so
+JE-AC-3 thẻ mang giá trị bốn trường — evidence và bảng so thật
+JE-AC-4 thẻ cũ giữ khuôn — chạy lại chỉ nối kết quả chấm
+AC-7 chạy lại — không nhân đôi, thẻ chiều ngược được cập nhật
+AC-8 thẻ đã quyết — approved · rejected · deferred y nguyên
+AC-1 thẻ bị quyết giữa lúc chấm — approved · rejected · deferred giữ nguyên, đếm bỏ qua
+AC-2 hai chiều, một thẻ bị quyết — cả hai thẻ giữ nguyên, đếm bỏ qua
+AC-2 người quyết dở giao dịch đúng lúc máy ghi — thẻ anh em không bị sửa, đếm bỏ qua
+AC-9 không ghi ngoài hàng duyệt — băm property_candidates, sale_offers không đổi

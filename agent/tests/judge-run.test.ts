@@ -1,11 +1,14 @@
 // judge-run.test.ts — PL25 `judge-nguong-la-code` AC-2b..AC-9 (E2b–E9): chamMotLuot sinh/cập nhật thẻ hàng duyệt.
 // Thêm hồ sơ `judge-giu-quyet-dinh-nguoi` AC-1..AC-3 (E1–E3): thẻ người quyết giữa lúc chấm không bị máy ghi đè.
 // Thêm hồ sơ `judge-evidence-du-truong` AC-1, AC-3, AC-4 (E1, E3, E4): thẻ mang đủ mười trường của bảng so; ca AC-6 cũ thay bằng JE-AC-1.
+// Thêm hồ sơ `the-ghep-can-tin-roi-kho` RK-AC-1..8, 10, 11 (E1–E8, E10, E11): thẻ có tin rời kho rút/trả lại; ops_audit từ 018.
 // DB thử RỖNG riêng trên :5433 (tạo đầu tệp, xoá cuối tệp) — không chạm `oneinvest`. Lược đồ rút từ migration thật:
-// khối property_candidates của 027, 029 tới «-- Seed», 052 nguyên tệp; sale_offers tối thiểu (chỉ để khoá ngoại).
+// khối property_candidates của 027, 029 tới «-- Seed», 052 nguyên tệp; sale_offers tối thiểu theo hình 044: bảng
+// sale_offer_records (đích khoá ngoại) + view sale_offers lọc retired_at IS NULL — tin rời kho là hàng đã nghỉ.
 // Model giả MockLanguageModelV4. Mỗi ca có đối chứng đỏ chạy ĐÚNG hàm kiểm trên vật hỏng, thông điệp ghim theo evals.yaml.
 import { after, before, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -14,7 +17,16 @@ import { MockLanguageModelV4 } from "ai/test";
 import { TR, cap, khoaBangSo, khuonBen, kiemKhongNguong, kiemKhuonThe, napBangSo, type Tin } from "./judge-chung.js";
 import { NGUONG, apNguong } from "../src/agents/judge-entity.js";
 import type { PairData } from "../src/tools/native.js";
-import { CAU_DEM_THIEU_THE, SQL_CAP_NHAT, chamMotLuot, evidenceThe, type ChamDeps } from "../scripts/judge-run.js";
+import {
+  CAU_DEM_THIEU_THE,
+  MAY,
+  SQL_CAP_NHAT,
+  SQL_RUT_ROI_KHO,
+  SQL_TIN_SONG,
+  chamMotLuot,
+  evidenceThe,
+  type ChamDeps,
+} from "../scripts/judge-run.js";
 
 const SERVER = process.env.SCA_PG_SERVER ?? "postgres://oneinvest:oneinvest@localhost:5433";
 const TEN_DB = `oneinvest_p3_judge_test_${process.pid}`;
@@ -87,15 +99,17 @@ before(async () => {
   const khoiPC = m027.match(/CREATE TABLE IF NOT EXISTS property_candidates \([\s\S]*?\n\);/);
   assert.ok(khoiPC, "không rút được khối property_candidates từ 027");
   const m029 = (await readFile(MIG("029_review_queue.sql"), "utf8")).split("-- Seed")[0];
-  await db.query(`CREATE TABLE sale_offers (offer_id text PRIMARY KEY, ghi_chu text)`);
-  await db.query(khoiPC[0]);
+  await db.query(`CREATE TABLE sale_offer_records (offer_id text PRIMARY KEY, ghi_chu text, retired_at timestamptz)`);
+  await db.query(`CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL`);
+  await db.query(khoiPC[0].replace(/REFERENCES sale_offers\b/g, "REFERENCES sale_offer_records"));
   await db.query(m029);
   await db.query(await readFile(MIG("052_ai_calls.sql"), "utf8"));
+  await db.query(await readFile(MIG("018_ops_audit.sql"), "utf8"));
   process.env.DATABASE_URL = TEST_DB_URL; // recordCallDb đọc DATABASE_URL lúc gọi
 });
 
 beforeEach(async () => {
-  await db.query("TRUNCATE review_queue, property_candidates, sale_offers, ai_calls RESTART IDENTITY CASCADE");
+  await db.query("TRUNCATE review_queue, property_candidates, sale_offer_records, ai_calls, ops_audit RESTART IDENTITY CASCADE");
 });
 
 after(async () => {
@@ -445,7 +459,7 @@ const kiemGiuNguoiQuyet = (id: unknown, truoc: unknown, sau: unknown) =>
 test("AC-1 thẻ bị quyết giữa lúc chấm — approved · rejected · deferred giữ nguyên, đếm bỏ qua", async () => {
   let soAnh = 0;
   for (const st of ["approved", "rejected", "deferred"]) {
-    await db.query("TRUNCATE review_queue, property_candidates, sale_offers RESTART IDENTITY CASCADE");
+    await db.query("TRUNCATE review_queue, property_candidates, sale_offer_records RESTART IDENTITY CASCADE");
     await nap([["o1", "o2", "needs_llm"]]);
     await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ')`);
     const sauQuyet: { j?: Record<string, unknown> } = {};
@@ -542,4 +556,290 @@ test("AC-9 không ghi ngoài hàng duyệt — băm property_candidates, sale_of
   await db.query(`UPDATE property_candidates SET status = 'merged' WHERE id = 1`);
   const sau = await bam("property_candidates");
   assert.throws(() => kiemBam(truoc, sau, "property_candidates"), /AC-9 judge ghi ngoài hàng duyệt: property_candidates/);
+});
+
+// ── hồ sơ the-ghep-can-tin-roi-kho (HD3): thẻ có tin rời kho
+type O = { item: string; a: string; b: string; roi: string[] };
+/** Ma trận viết trước E1: bên rời {A, B, cả hai} × chiều thẻ {a|b, b|a} — 6 ô, mỗi ô một cặp riêng. */
+const O6: O[] = (["A", "B", "ca-hai"] as const).flatMap((ben, i) =>
+  [false, true].map((nguoc, j) => {
+    const n = i * 2 + j + 1;
+    const [a, b] = [`ra${n}`, `rb${n}`];
+    const roi = ben === "A" ? [a] : ben === "B" ? [b] : [a, b];
+    return { a, b, roi, item: nguoc ? `pair:${b}|${a}` : `pair:${a}|${b}` };
+  }),
+);
+/** Tin `k`: sống, hay đã nghỉ (rời kho — còn hàng trong sale_offer_records cho khoá ngoại, không còn trong sale_offers). */
+const tin = (k: string, roi: boolean) =>
+  db.query(`INSERT INTO sale_offer_records (offer_id, retired_at) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [k, roi ? new Date() : null]);
+/** Nạp ô: cặp needs_llm, chỉ tin còn sống nằm trong sale_offers, một thẻ chờ (hoặc người quyết `st`). */
+const napO = async (os: O[], st?: string) => {
+  for (const o of os) {
+    for (const k of [o.a, o.b]) await tin(k, o.roi.includes(k));
+    await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ($1, $2, 0.92, 'needs_llm')`, [o.a, o.b]);
+    if (st)
+      await db.query(`INSERT INTO review_queue (item_type, item_id, title, status, decided_by, decided_at, decision_note)
+        VALUES ('entity_match', $1, 'đã quyết', $2, 'user:test', now(), 'ghi chú người')`, [o.item, st]);
+    else await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', $1, 'chờ')`, [o.item]);
+  }
+};
+const audit = async () => (await db.query(`SELECT * FROM ops_audit ORDER BY id`)).rows;
+/** db bọc: bắt tham số câu `sql`; `sauDoc` chạy sau câu ấy, trước khi chamMotLuot nhận kết quả. */
+function dbBatSql(sql: string, bat: unknown[][], sauDoc?: () => Promise<void>): pg.ClientBase {
+  return new Proxy(db, {
+    get(t, p) {
+      if (p === "query") return async (q: unknown, params?: unknown[]) => {
+        const kq = await t.query(q as string, params);
+        if (q === sql) {
+          if (params) bat.push(params);
+          if (sauDoc) await sauDoc();
+        }
+        return kq;
+      };
+      const v = Reflect.get(t, p);
+      return typeof v === "function" ? v.bind(t) : v;
+    },
+  });
+}
+
+type Dong = Record<string, any>;
+const kiemRut = (o: O, t: Dong) => {
+  assert.ok(t.status === "deferred" && t.decided_by === MAY && t.decided_at != null, `RK-AC-1 thẻ chưa rút: ${o.item}`);
+  const note = String(t.decision_note ?? "");
+  const song = [o.a, o.b].filter((k) => !o.roi.includes(k));
+  assert.ok(
+    note.startsWith("tin rời kho") && o.roi.every((k) => note.includes(k)) && !song.some((k) => note.includes(k)),
+    `RK-AC-1 lý do sai khoá: ${o.item}`,
+  );
+};
+test("RK-AC-1 rút thẻ có tin rời kho", async () => {
+  await napO(O6);
+  const dem = await chamMotLuot(db, deps({ khongLlm: true }));
+  let soO = 0;
+  for (const o of O6) {
+    kiemRut(o, await the(o.item));
+    soO++;
+  }
+  assert.equal(soO, 6);
+  assert.equal(dem.rut, 6);
+  assert.equal(dem.roiKho, 6);
+  // đối chứng đỏ
+  const t0 = await the(O6[0].item);
+  assert.throws(() => kiemRut(O6[0], { ...t0, status: "pending" }), /RK-AC-1 thẻ chưa rút: pair:ra1\|rb1/);
+  const sai = `tin rời kho: ${O6[0].b} không còn trong kho`;
+  assert.throws(() => kiemRut(O6[0], { ...t0, decision_note: sai }), /RK-AC-1 lý do sai khoá: pair:ra1\|rb1/);
+});
+
+const kiemAudit = (o: O, id: unknown, rows: Dong[]) => {
+  const cua = rows.filter((r) => String(r.detail?.review_id) === String(id));
+  const r = cua[0];
+  assert.ok(
+    cua.length === 1 && r.actor === MAY && r.action === "review-queue:rut-roi-kho" && r.detail.item_id === o.item &&
+      r.detail.ly_do === "tin rời kho" && JSON.stringify([...r.detail.roi_kho].sort()) === JSON.stringify([...o.roi].sort()),
+    `RK-AC-2 audit lệch: ${o.item}`,
+  );
+};
+test("RK-AC-2 mỗi thẻ rút một dòng audit", async () => {
+  await napO(O6);
+  await chamMotLuot(db, deps({ khongLlm: true }));
+  const rows = await audit();
+  assert.equal(rows.length, 6);
+  for (const o of O6) kiemAudit(o, (await the(o.item)).id, rows);
+  // đối chứng đỏ (1): dòng trùng review_id của thẻ đầu
+  const id0 = (await the(O6[0].item)).id;
+  assert.throws(() => kiemAudit(O6[0], id0, [...rows, rows.find((r) => String(r.detail.review_id) === String(id0))!]),
+    /RK-AC-2 audit lệch: pair:ra1\|rb1/);
+  // đối chứng đỏ (2): roi_kho của ô «cả hai» thiếu một khoá
+  const o = O6[4];
+  const id4 = (await the(o.item)).id;
+  const thieu = rows.map((r) => String(r.detail.review_id) === String(id4) ? { ...r, detail: { ...r.detail, roi_kho: [o.a] } } : r);
+  assert.throws(() => kiemAudit(o, id4, thieu), /RK-AC-2 audit lệch: pair:ra5\|rb5/);
+});
+
+const kiemSong = (item: string, t: Dong) =>
+  assert.ok(t.status === "pending" && t.evidence?.cham, `RK-AC-3 thẻ sống bị rút: ${item}`);
+test("RK-AC-3 cặp hai bên sống chấm như cũ", async () => {
+  await nap([["o1", "o2", "pending"], ["o3", "o4", "needs_llm"]]);
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ')`);
+  const dem = await chamMotLuot(db, deps({ khongLlm: true }));
+  assert.deepEqual([dem.rut, dem.roiKho, dem.capNhat, dem.sinh], [0, 0, 1, 1]);
+  const x = await the("pair:o1|o2");
+  kiemSong("pair:o1|o2", x);
+  const y = (await tatCaThe()).filter((t) => ["pair:o3|o4", "pair:o4|o3"].includes(t.item_id));
+  assert.equal(y.length, 1);
+  assert.equal(y[0].status, "pending");
+  assert.equal((await audit()).length, 0);
+  // đối chứng đỏ
+  assert.throws(() => kiemSong("pair:o1|o2", { ...x, status: "deferred" }), /RK-AC-3 thẻ sống bị rút: pair:o1\|o2/);
+});
+
+const anhQuyet = (t: Dong) => JSON.stringify([t.status, t.decided_by, t.decided_at, t.decision_note]);
+const kiemNguoiGiu = (item: string, truoc: Dong, sau: Dong) =>
+  assert.equal(anhQuyet(sau), anhQuyet(truoc), `RK-AC-4 thẻ người quyết bị đổi: ${item}`);
+test("RK-AC-4 thẻ người đã quyết không bị rút", async () => {
+  const os: [O, string][] = (["approved", "rejected", "deferred"]).map((st, i) =>
+    [{ a: `qa${i}`, b: `qb${i}`, roi: [`qa${i}`], item: `pair:qa${i}|qb${i}` }, st]);
+  for (const [o, st] of os) await napO([o], st);
+  const truoc = new Map<string, Dong>();
+  for (const [o] of os) truoc.set(o.item, await the(o.item));
+  const dem = await chamMotLuot(db, deps({ khongLlm: true }));
+  for (const [o] of os) kiemNguoiGiu(o.item, truoc.get(o.item)!, await the(o.item));
+  assert.equal((await audit()).length, 0);
+  assert.equal(dem.boQua, 3);
+  // đối chứng đỏ: ô rejected bị đổi người quyết
+  const r = os[1][0].item;
+  assert.throws(() => kiemNguoiGiu(r, truoc.get(r)!, { ...truoc.get(r)!, decided_by: MAY }), /RK-AC-4 thẻ người quyết bị đổi: pair:qa1\|qb1/);
+});
+
+const anhTheRut = async () =>
+  JSON.stringify((await db.query(`SELECT id, status, decided_by, decided_at, decision_note FROM review_queue ORDER BY id`)).rows);
+const kiemKhongRutTrung = (item: string, nTruoc: number, nSau: number) =>
+  assert.equal(nSau, nTruoc, `RK-AC-5 rút trùng: ${item}`);
+test("RK-AC-5 chạy lại không rút trùng", async () => {
+  await napO(O6);
+  const bat: unknown[][] = [];
+  await chamMotLuot(dbBatSql(SQL_RUT_ROI_KHO, bat), deps({ khongLlm: true }));
+  const n1 = (await audit()).length;
+  const anh1 = await anhTheRut();
+  const dem2 = await chamMotLuot(db, deps({ khongLlm: true }));
+  assert.equal(dem2.rut, 0);
+  kiemKhongRutTrung(O6[0].item, n1, (await audit()).length);
+  assert.equal(await anhTheRut(), anh1);
+  // đối chứng đỏ: câu rút bỏ điều kiện status = 'pending', đúng tham số lượt 1 của thẻ đầu
+  const hong = SQL_RUT_ROI_KHO.replace("AND status = 'pending' AND", "AND");
+  assert.notEqual(hong, SQL_RUT_ROI_KHO);
+  await db.query(hong, bat[0]);
+  const nHong = (await audit()).length;
+  assert.throws(() => kiemKhongRutTrung(O6[0].item, n1, nHong), /RK-AC-5 rút trùng: pair:ra1\|rb1/);
+});
+
+const kiemKhongLoi = (dem: { loi: number }, soThe: number) => {
+  assert.equal(dem.loi, 0, "RK-AC-6 cặp rời kho tính vào loi");
+  assert.equal(soThe, 0, "RK-AC-6 sinh thẻ cho cặp rời kho");
+};
+test("RK-AC-6 cặp rời kho chưa thẻ không sinh thẻ", async () => {
+  await tin("o1", false);
+  await tin("o2", true);
+  await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ('o1', 'o2', 0.92, 'needs_llm')`);
+  let goi = 0;
+  const dem = await chamMotLuot(db, deps({ khongLlm: true, queryPair: async (a, b) => { goi++; return queryPair(a, b); } }));
+  kiemKhongLoi(dem, (await tatCaThe()).length);
+  assert.deepEqual([dem.roiKho, dem.rut, dem.sinh, goi], [1, 0, 0, 0]);
+  // đối chứng đỏ
+  assert.throws(() => kiemKhongLoi({ ...dem, loi: 1 }, 0), /RK-AC-6 cặp rời kho tính vào loi/);
+  assert.throws(() => kiemKhongLoi(dem, 1), /RK-AC-6 sinh thẻ cho cặp rời kho/);
+});
+
+const kiemKhongRutCapNguoi = async (anhEm: string) => {
+  const t = await the(anhEm);
+  assert.ok(t.status === "pending" && (await audit()).length === 0, `RK-AC-7 rút thẻ của cặp người đã quyết: ${anhEm}`);
+};
+test("RK-AC-7 người quyết giữa chừng — không rút", async () => {
+  const o: O = { a: "ra1", b: "rb1", roi: ["ra1"], item: "pair:ra1|rb1" };
+  await napO([o]);
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:rb1|ra1', 'chờ')`);
+  const bat: unknown[][] = [];
+  const batRut: unknown[][] = [];
+  const nguoiQuyet = async () => {
+    await db.query(`UPDATE review_queue SET status = 'approved', decided_by = 'user:test', decided_at = now() WHERE item_id = 'pair:ra1|rb1'`);
+  };
+  const boc = dbBatSql(SQL_TIN_SONG, bat, nguoiQuyet);
+  // bọc lớp hai: bắt tham số câu rút mà chamMotLuot gửi
+  const boc2 = new Proxy(boc, {
+    get(t, p) {
+      if (p === "query") return (q: unknown, params?: unknown[]) => {
+        if (q === SQL_RUT_ROI_KHO && params) batRut.push(params);
+        return (t as pg.ClientBase).query(q as string, params);
+      };
+      return Reflect.get(t, p);
+    },
+  });
+  const dem = await chamMotLuot(boc2, deps({ khongLlm: true }));
+  const q = await the("pair:ra1|rb1");
+  assert.deepEqual([q.status, q.decided_by], ["approved", "user:test"]);
+  await kiemKhongRutCapNguoi("pair:rb1|ra1");
+  assert.equal(dem.rut, 0);
+  // đối chứng đỏ: câu rút bỏ vế khoá cặp, đúng tham số chamMotLuot vừa dùng
+  const hong = SQL_RUT_ROI_KHO.replace(/AND NOT EXISTS \(SELECT 1 FROM khoa[\s\S]*?'\)\)/, "");
+  assert.notEqual(hong, SQL_RUT_ROI_KHO);
+  assert.equal(batRut.length, 1);
+  await db.query(hong, batRut[0]);
+  await assert.rejects(kiemKhongRutCapNguoi("pair:rb1|ra1"), /RK-AC-7 rút thẻ của cặp người đã quyết: pair:rb1\|ra1/);
+});
+
+const DONG_IN = "cặp có tin rời kho 3 · thẻ rút 2 · thẻ trả lại 0";
+const kiemDongIn = (stdout: string) => {
+  const dong = stdout.split("\n").find((l) => l.startsWith("cặp có tin rời kho")) ?? "(không có dòng)";
+  assert.equal(dong, DONG_IN, `RK-AC-8 dòng in sai: ${dong}`);
+};
+test("RK-AC-8 dòng in tổng kết", async () => {
+  await napO(O6.slice(0, 2));
+  await tin("rx1", false);
+  await tin("rx2", true);
+  await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ('rx1', 'rx2', 0.92, 'needs_llm')`);
+  const out = execFileSync("node", ["--import", "tsx", "scripts/judge-run.ts", "--khong-llm"], {
+    cwd: join(import.meta.dirname, ".."),
+    env: { ...process.env, DATABASE_URL: TEST_DB_URL },
+    encoding: "utf8",
+  });
+  kiemDongIn(out);
+  // đối chứng đỏ
+  assert.throws(() => kiemDongIn(out.replace("thẻ rút 2", "thẻ rút 3")),
+    /RK-AC-8 dòng in sai: cặp có tin rời kho 3 · thẻ rút 3 · thẻ trả lại 0/);
+});
+
+const kiemCaDaKy = (ds: string[], co: Set<string>) => {
+  for (const ten of ds) assert.ok(co.has(ten), `RK-AC-10 ca đã ký mất: ${ten}`);
+};
+test("RK-AC-10 ca đã ký còn đủ", async () => {
+  const ds = (await readFile(join(import.meta.dirname, "../../_acceptance/the-ghep-can-tin-roi-kho/ca-da-ky.txt"), "utf8"))
+    .split("\n").map((l) => l.trim()).filter(Boolean);
+  const co = new Set<string>();
+  for (const f of ["judge-run.test.ts", "judge-nguong.test.ts", "judge-pair.test.ts"]) {
+    const src = await readFile(join(import.meta.dirname, f), "utf8");
+    for (const m of src.matchAll(/test\("((?:[^"\\]|\\.)*)"/g)) co.add(m[1]);
+  }
+  let soAssert = 0;
+  for (const ten of ds) {
+    kiemCaDaKy([ten], co);
+    soAssert++;
+  }
+  assert.equal(ds.length, 31);
+  assert.equal(soAssert, 31);
+  // đối chứng đỏ
+  assert.throws(() => kiemCaDaKy([...ds, "RK-AC-X ca không có"], co), /RK-AC-10 ca đã ký mất: RK-AC-X ca không có/);
+});
+
+const kiemTraLai = (item: string, t: Dong) =>
+  assert.ok(t.status === "pending" && t.decided_by == null && t.decided_at == null && t.decision_note == null && t.evidence?.cham,
+    `RK-AC-11 thẻ chưa trả lại: ${item}`);
+const kiemKhongTraNguoi = (item: string, t: Dong) =>
+  assert.ok(t.status === "deferred" && t.decided_by === "user:test", `RK-AC-11 trả lại thẻ người quyết: ${item}`);
+test("RK-AC-11 tin quay lại — thẻ máy rút được trả lại", async () => {
+  await tin("o1", true);
+  await tin("o2", false);
+  await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ('o1', 'o2', 0.92, 'needs_llm')`);
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ')`);
+  // ô đối chiếu: cặp hai bên sống, thẻ người hoãn
+  await nap([["o3", "o4", "needs_llm"]]);
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title, status, decided_by, decided_at)
+    VALUES ('entity_match', 'pair:o3|o4', 'người hoãn', 'deferred', 'user:test', now())`);
+  await chamMotLuot(db, deps({ khongLlm: true }));
+  const l1 = await the("pair:o1|o2");
+  assert.deepEqual([l1.status, l1.decided_by], ["deferred", MAY]);
+  const sauL1 = new Date().toISOString();
+  await db.query(`UPDATE sale_offer_records SET retired_at = NULL WHERE offer_id = 'o1'`); // tin quay lại
+  const dem = await chamMotLuot(db, deps({ khongLlm: true }));
+  const t = await the("pair:o1|o2");
+  kiemTraLai("pair:o1|o2", t);
+  assert.ok(t.evidence.cham.luc >= sauL1, "RK-AC-11 thẻ không được chấm lại");
+  const tra = (await audit()).filter((r) => r.action === "review-queue:tra-lai-tin-ve-kho");
+  assert.equal(tra.length, 1);
+  assert.equal(String(tra[0].detail.review_id), String(t.id));
+  assert.deepEqual([dem.traLai, dem.capNhat], [1, 1]);
+  const nguoi = await the("pair:o3|o4");
+  kiemKhongTraNguoi("pair:o3|o4", nguoi);
+  // đối chứng đỏ
+  assert.throws(() => kiemTraLai("pair:o1|o2", l1), /RK-AC-11 thẻ chưa trả lại: pair:o1\|o2/);
+  assert.throws(() => kiemKhongTraNguoi("pair:o3|o4", { ...nguoi, status: "pending" }), /RK-AC-11 trả lại thẻ người quyết: pair:o3\|o4/);
 });
