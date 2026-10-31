@@ -1,0 +1,30 @@
+{
+  "feature_plain": "Khi người vận hành quyết một thẻ ghép căn mà thẻ không còn ứng viên nào để chạm, hệ thống từ chối ghi và báo lỗi rõ ràng, thẻ vẫn nằm trong hàng chờ; thẻ hợp lệ thì quyết định đổi đúng một ứng viên và có dòng nhật ký.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ báo lỗi có tên và không ghi gì khi thẻ không còn ứng viên nào — áp cho Cùng căn, Khác căn, và Để sau theo câu Hỏi-1."},
+    {"id": "AC-2", "p": "Sẽ báo lỗi và giữ nguyên ứng viên đã được quyết trước đó, không quyết đè lên nó."},
+    {"id": "AC-3", "p": "Sẽ đổi đúng một ứng viên còn chờ theo nút người bấm, ghi lý do lên thẻ và một dòng nhật ký nêu ứng viên đã chạm."},
+    {"id": "AC-4", "p": "Sẽ nhận ra ứng viên dù hai tin được lưu theo thứ tự ngược với thẻ."},
+    {"id": "AC-5", "p": "Sẽ báo lỗi khi một thẻ khớp hai ứng viên còn chờ, và chạm đúng ứng viên còn chờ khi cái kia đã quyết."},
+    {"id": "AC-6", "p": "Sẽ báo lỗi khi mã thẻ sai khuôn, kể cả khi có một ứng viên trùng tên một phần."},
+    {"id": "AC-7", "p": "Sẽ hiện nguyên câu lỗi trên thẻ và giữ lý do người đã gõ."},
+    {"id": "AC-8", "p": "Sẽ chứng trên bản chép dữ liệu thật: 12 thẻ khoá chết đều bị chặn, 7 thẻ chờ đều đổi đúng một ứng viên."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG tự đóng hay rút thẻ khoá chết — việc của hàng H1."},
+    {"id": "OOS-2", "p": "KHÔNG khoá nút quyết trước khi bấm — việc của dãy U1."},
+    {"id": "OOS-3", "p": "KHÔNG đổi cách ứng viên được xoá và dựng lại mỗi đêm."},
+    {"id": "OOS-4", "p": "KHÔNG khôi phục 11 quyết định ngày 30/10 — anh đã chọn bỏ."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi trạng thái của ứng viên (không có, còn chờ, đã quyết, hai dòng, một chờ một quyết) nhân với ba nút quyết — AC-1 đến AC-5, đo trên bảng ứng viên thật hôm nay."},
+    {"i": 1, "p": "Mọi khuôn mã thẻ (đúng chiều, ngược chiều, sai khuôn) — AC-4 và AC-6."},
+    {"i": 2, "p": "Đường đi từ máy chủ tới thẻ và tới dữ liệu thật — AC-7 và AC-8 trên 12 thẻ cũ và 7 thẻ chờ."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chặn cả «Để sau» là lựa chọn của anh, máy không được tự quyết — đã chuyển thành câu Hỏi-1."},
+    {"i": 1, "p": "Chưa nói quyết định thật sự chạy ở đâu — đã ghi: chỉ ở máy thu, vì thẻ duyệt không lên cloud."},
+    {"i": 2, "p": "Thiếu ô «một ứng viên chờ, một đã quyết» và chưa thử đủ ba nút — đã thêm vào tiêu chí và bộ đo."},
+    {"i": 3, "p": "Bài đo mã thẻ sai khuôn chưa có chiều đỏ — đã thêm chiều đỏ và đối chứng dương."}
+  ]
+}
