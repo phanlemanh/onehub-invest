@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: quyet-dinh-phai-cham-ung-vien
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-1' xanh: thẻ chờ không có ứng viên × 3 quyết định → 422, code khong-cham-ung-vien, so_dong 0, câu lỗi nêu cặp khoá; băm bốn bảng trước = sau; chiều đỏ: bản route bỏ kiểm số dòng → ca đỏ với thông điệp ghim 'HD9-AC-1: quyết định không chạm ứng viên mà route vẫn ghi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-2' xanh: ứng viên merged và rejected × 3 quyết định → 422, ứng viên giữ trạng thái cũ; chiều đỏ: bản route bỏ điều kiện status IN ('pending','needs_llm') → ca đỏ ghim 'HD9-AC-2: ứng viên đã quyết bị quyết đè'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-3' xanh: ứng viên pending và needs_llm × 3 quyết định → 200, đúng 1 dòng ứng viên đổi sang merged/rejected/pending, decided_by hitl:<id>, thẻ đổi trạng thái kèm decision_note, đúng 1 dòng ops_audit review.decide có detail.ung_vien = id ứng viên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-4' xanh: ứng viên lưu ngược chiều item_id × 3 quyết định → 200, đúng dòng ấy đổi; chiều đỏ: bản route chỉ khớp một chiều → ca đỏ ghim 'HD9-AC-4: ứng viên ngược chiều không được chạm'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-5' xanh: hai dòng còn chờ khớp hai chiều × 3 quyết định → 422 so_dong 2, hai dòng giữ nguyên; một dòng còn chờ + một dòng đã quyết khớp hai chiều × 3 quyết định → 200, chạm đúng dòng còn chờ, dòng đã quyết giữ nguyên; chiều đỏ: bản route nhận so_dong ≥ 1 → ca đỏ ghim 'HD9-AC-5: chạm hai ứng viên mà route vẫn ghi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-6' xanh: item_id 'abc', 'pair:A', 'pair:|B', 'pair:A|B|C' × 3 quyết định → 422 code khong-cham-ung-vien kèm so_dong 0, băm bốn bảng không đổi, kể cả khi có ứng viên sống đúng cặp A|B; đối chứng dương 'pair:A|B' → 200; chiều đỏ: bản route bỏ kiểm khuôn → ca đỏ ghim 'HD9-AC-6: khoá sai khuôn vẫn chạm ứng viên'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.hd9_route
+    paths: [app/src/components/ops/review-card.tsx, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'HD9-AC-7' xanh: thẻ ghép căn render trong jsdom, fetch giả trả đúng thân 422 của route (lấy từ một lần gọi route thật ở AC-1), bấm Cùng căn → dòng lỗi chứa nguyên câu lỗi, ô lý do giữ chữ đã gõ; chiều đỏ: fetch giả trả 200 → ca đỏ ghim 'HD9-AC-7: thẻ không hiện lỗi của route'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.hd9_roundtrip
+    paths: [app/src/app/api/v1/ops/review/**, app/scripts/hd9-roundtrip.ts]
+    expected: "exit 0 trên bản chép DB máy thu: dòng 'HD9 thẻ khoá chết: 12/12 nhận 422, 0 dòng ghi'; dòng 'HD9 thẻ chờ thật: 7/7 đổi đúng 1 ứng viên'; số thẻ đếm độc lập bằng SQL riêng; chiều đỏ trong cùng script: chạy lại với bản route bỏ kiểm số dòng → dòng 'HD9 đối chứng: bản lỗi ghi <n> thẻ khoá chết' với n > 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: ["app/**"]
+    expected: "exit 0; cd app && npm test toàn bộ xanh, gồm TD-AC-7/8 của PL3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    paths: ["app/**"]
+    expected: "exit 0; typecheck và lint app 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

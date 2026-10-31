@@ -840,3 +840,183 @@ test("TD-AC-9 vai viewer và nhánh cloud: 0 truy vấn toàn văn/căn cứ/ả
   )
   await assert.rejects(kiemAc9(sai), /TD-AC-9: vai viewer chạy truy vấn toàn văn/)
 })
+
+// ---------- HD9 quyet-dinh-phai-cham-ung-vien: quyết định phải chạm đúng một ứng viên còn chờ ----------
+const QUYET = ["approved", "rejected", "deferred"] as const
+type UngVien = { a: string; b: string; status: string }
+/** Thẻ ghép căn chờ với item_id tuỳ chọn và các dòng property_candidates kèm theo. */
+async function theGhep(itemId: string, ungVien: UngVien[] = []): Promise<number> {
+  const id = ++soThe
+  await db.query(`INSERT INTO review_queue (id, item_type, item_id, title) VALUES ($1, 'entity_match', $2, 'hd9 ghép')`, [id, itemId])
+  for (const u of ungVien)
+    await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES ($1, $2, 0.5, $3)`, [u.a, u.b, u.status])
+  return id
+}
+const ungVienCua = async (a: string, b: string) =>
+  (await db.query(`SELECT id::int AS id, offer_a, offer_b, status, decided_by FROM property_candidates
+    WHERE (offer_a = $1 AND offer_b = $2) OR (offer_a = $2 AND offer_b = $1) ORDER BY id`, [a, b])).rows
+let soCap = 0
+const capMoi = () => { soCap++; return [`hd9A${soCap}`, `hd9B${soCap}`] as const }
+async function phai422(mod: RouteMod, id: number, status: string, soDong: number, thongDiep: string) {
+  const truoc = await bam()
+  const r = await goi(mod, id, { status, reason: "hd9 lý do" })
+  assert.deepEqual(await bam(), truoc, thongDiep)
+  assert.equal(r.status, 422, `${thongDiep} — mã ${r.status} ${JSON.stringify(r.json)}`)
+  assert.equal(r.json.code, "khong-cham-ung-vien")
+  assert.equal(r.json.so_dong, soDong)
+  return r
+}
+
+describe("HD9 quyết định phải chạm đúng một ứng viên", () => {
+  before(async () => {
+    if (setupErr || cookieOps) return
+    try {
+      cookieOps = (await taoNguoi(db, "ops")).cookie
+    } catch (e) {
+      setupErr = (e as Error).message
+    }
+  })
+  const route = async () => (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+  // bản lỗi tái hiện route cũ (H2): bỏ kiểm số dòng, vẫn đóng thẻ dù không chạm ứng viên nào
+  const boKiemSoDong = (s: string) =>
+    s.replace("if (cham.length !== 1) {", "if (false) {").replace("ungVien = cham[0].id;", "ungVien = cham[0]?.id ?? null;")
+
+  async function kiemAc1(mod: RouteMod) {
+    for (const status of QUYET) {
+      const [a, b] = capMoi()
+      const r = await phai422(mod, await theGhep(`pair:${a}|${b}`), status, 0, "HD9-AC-1: quyết định không chạm ứng viên mà route vẫn ghi")
+      assert.match(String(r.json.error), new RegExp(`${a}.*${b}`), "câu lỗi phải nêu cặp khoá")
+    }
+  }
+  test("HD9-AC-1 thẻ không có ứng viên × 3 quyết định → 422, bốn bảng không đổi (kèm chiều đỏ)", async () => {
+    ready()
+    await kiemAc1(await route())
+    await assert.rejects(kiemAc1(await banChepTam<RouteMod>(ROUTE, boKiemSoDong)), /HD9-AC-1: quyết định không chạm ứng viên mà route vẫn ghi/)
+  })
+
+  async function kiemAc2(mod: RouteMod) {
+    for (const cu of ["merged", "rejected"]) {
+      for (const status of QUYET) {
+        const [a, b] = capMoi()
+        const id = await theGhep(`pair:${a}|${b}`, [{ a, b, status: cu }])
+        const truoc = await ungVienCua(a, b)
+        const r = await goi(mod, id, { status, reason: "hd9 lý do" })
+        assert.deepEqual(await ungVienCua(a, b), truoc, "HD9-AC-2: ứng viên đã quyết bị quyết đè")
+        assert.equal(r.status, 422, `${cu} ${status}`)
+      }
+    }
+  }
+  test("HD9-AC-2 ứng viên đã merged/rejected × 3 quyết định → 422, giữ trạng thái (kèm chiều đỏ)", async () => {
+    ready()
+    await kiemAc2(await route())
+    const sai = await banChepTam<RouteMod>(ROUTE, (s) => s.replace("AND status IN ('pending', 'needs_llm')", ""))
+    await assert.rejects(kiemAc2(sai), /HD9-AC-2: ứng viên đã quyết bị quyết đè/)
+  })
+
+  const DICH: Record<string, string> = { approved: "merged", rejected: "rejected", deferred: "pending" }
+  async function quyetHopLe(mod: RouteMod, itemId: (a: string, b: string) => string, luu: (a: string, b: string) => UngVien[]) {
+    for (const goc of ["pending", "needs_llm"]) {
+      for (const status of QUYET) {
+        const [a, b] = capMoi()
+        const id = await theGhep(itemId(a, b), luu(a, b).map((u) => ({ ...u, status: u.status || goc })))
+        const r = await goi(mod, id, { status, reason: "hd9 lý do" })
+        assert.equal(r.status, 200, `${goc} ${status}: ${JSON.stringify(r.json)}`)
+        const uv = await ungVienCua(a, b)
+        const song = uv.filter((u) => u.decided_by?.startsWith("hitl:"))
+        assert.equal(song.length, 1, `${goc} ${status}: đúng một ứng viên đổi`)
+        assert.equal(song[0].status, DICH[status])
+        const the = (await db.query(`SELECT status, decision_note FROM review_queue WHERE id = $1`, [id])).rows[0]
+        assert.deepEqual(the, { status, decision_note: "hd9 lý do" })
+        const au = (await db.query(`SELECT detail FROM ops_audit WHERE action = 'review.decide' AND (detail->>'reviewId')::int = $1`, [id])).rows
+        assert.equal(au.length, 1, "đúng một dòng audit")
+        assert.equal(au[0].detail.ung_vien, song[0].id, "audit phải nêu ứng viên đã chạm")
+      }
+    }
+  }
+  test("HD9-AC-3 ứng viên pending/needs_llm × 3 quyết định → đổi đúng một dòng, thẻ + audit nêu ứng viên", async () => {
+    ready()
+    await quyetHopLe(await route(), (a, b) => `pair:${a}|${b}`, (a, b) => [{ a, b, status: "" }])
+  })
+
+  async function kiemAc4(mod: RouteMod) {
+    try {
+      await quyetHopLe(mod, (a, b) => `pair:${a}|${b}`, (a, b) => [{ a: b, b: a, status: "" }])
+    } catch (e) {
+      throw new Error(`HD9-AC-4: ứng viên ngược chiều không được chạm — ${(e as Error).message}`)
+    }
+  }
+  test("HD9-AC-4 ứng viên lưu ngược chiều × 3 quyết định → chạm đúng dòng ấy (kèm chiều đỏ)", async () => {
+    ready()
+    await kiemAc4(await route())
+    const sai = await banChepTam<RouteMod>(ROUTE, (s) => s.replace(" OR (offer_a = $4 AND offer_b = $3)", ""))
+    await assert.rejects(kiemAc4(sai), /HD9-AC-4: ứng viên ngược chiều không được chạm/)
+  })
+
+  async function kiemAc5(mod: RouteMod) {
+    for (const status of QUYET) {
+      const [a, b] = capMoi()
+      const id = await theGhep(`pair:${a}|${b}`, [{ a, b, status: "pending" }, { a: b, b: a, status: "needs_llm" }])
+      await phai422(mod, id, status, 2, "HD9-AC-5: chạm hai ứng viên mà route vẫn ghi")
+    }
+    await quyetHopLe(mod, (a, b) => `pair:${a}|${b}`, (a, b) => [{ a, b, status: "" }, { a: b, b: a, status: "merged" }])
+  }
+  test("HD9-AC-5 hai ứng viên còn chờ → 422 so_dong 2; một chờ + một đã quyết → chạm dòng chờ (kèm chiều đỏ)", async () => {
+    ready()
+    await kiemAc5(await route())
+    await assert.rejects(kiemAc5(await banChepTam<RouteMod>(ROUTE, (s) => s.replace("if (cham.length !== 1) {", "if (cham.length === 0) {"))),
+      /HD9-AC-5: chạm hai ứng viên mà route vẫn ghi/)
+  })
+
+  async function kiemAc6(mod: RouteMod) {
+    for (const status of QUYET) {
+      const [a, b] = capMoi()
+      // ứng viên sống đúng cặp A|B có thật — khoá sai khuôn vẫn không được chạm nó
+      await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score) VALUES ($1, $2, 0.5)`, [a, b])
+      for (const sai of ["abc", `pair:${a}`, `pair:|${b}`, `pair:${a}|${b}|C`, ` pair:${a}|${b}`]) {
+        await phai422(mod, await theGhep(sai), status, 0, `HD9-AC-6: khoá sai khuôn vẫn chạm ứng viên (${sai})`)
+      }
+      const dung = await goi(mod, await theGhep(`pair:${a}|${b}`), { status, reason: "hd9 lý do" })
+      assert.equal(dung.status, 200, "đối chứng dương: khoá đúng khuôn phải qua")
+    }
+  }
+  test("HD9-AC-6 item_id sai khuôn × 3 quyết định → 422, đối chứng dương khoá đúng khuôn → 200 (kèm chiều đỏ)", async () => {
+    ready()
+    await kiemAc6(await route())
+    const sai = await banChepTam<RouteMod>(ROUTE, (s) => s.replace("const cap = capKhoa(item.item_id);", "const cap = item.item_id.replace(\"pair:\", \"\").split(\"|\");"))
+    await assert.rejects(kiemAc6(sai), /HD9-AC-6: khoá sai khuôn vẫn chạm ứng viên/)
+  })
+
+  async function kiemAc7(than: { status: number; body: unknown }) {
+    const React = await import("react")
+    Object.assign(globalThis, { React })
+    const { createRoot } = await import("react-dom/client")
+    const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+    const fetchGoc = globalThis.fetch
+    globalThis.fetch = (async () => new Response(JSON.stringify(than.body), { status: than.status, headers: { "content-type": "application/json" } })) as typeof fetch
+    try {
+      document.body.innerHTML = "<div id=root></div>"
+      const root = createRoot(document.getElementById("root")!)
+      await React.act(async () =>
+        root.render(<AppRouterContext.Provider value={ROUTER as never}><thatCard.ReviewCard item={ghepCan()} /></AppRouterContext.Provider>))
+      const el = document.querySelector("[data-review-reason]") as HTMLTextAreaElement
+      const set = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!
+      await React.act(async () => { set.call(el, "giá lệch hd9"); el.dispatchEvent(new dom.window.Event("input", { bubbles: true })) })
+      const nut = [...document.querySelectorAll("[data-review-actions] button")].find((b) => b.textContent === "Cùng căn") as HTMLButtonElement
+      await React.act(async () => { nut.click(); await new Promise((r) => setTimeout(r, 30)) })
+      const loi = String((than.body as { error?: string }).error ?? "")
+      assert.ok(document.body.textContent?.includes(loi) && loi.length > 0, "HD9-AC-7: thẻ không hiện lỗi của route")
+      assert.equal((document.querySelector("[data-review-reason]") as HTMLTextAreaElement).value, "giá lệch hd9", "lý do phải giữ nguyên")
+      await React.act(async () => root.unmount())
+    } finally {
+      globalThis.fetch = fetchGoc
+    }
+  }
+  test("HD9-AC-7 thẻ hiện nguyên câu lỗi 422 của route và giữ lý do (kèm chiều đỏ)", async () => {
+    ready()
+    const [a, b] = capMoi()
+    const r = await goi(await route(), await theGhep(`pair:${a}|${b}`), { status: "approved", reason: "hd9 lý do" })
+    assert.equal(r.status, 422, "cần thân 422 thật của route")
+    await kiemAc7({ status: 422, body: r.json })
+    await assert.rejects(kiemAc7({ status: 200, body: { ok: true, error: r.json.error } }), /HD9-AC-7: thẻ không hiện lỗi của route/)
+  })
+})
