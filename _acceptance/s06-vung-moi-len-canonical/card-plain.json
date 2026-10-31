@@ -1,36 +1,3 @@
 {
-  "feature_plain": "Tin bán S06 của các vùng mới (Đà Nẵng, Hải Phòng, và Bình Dương nay thuộc TP.HCM) hiện lên đúng phường trên Invest trước ngày ra mắt 05/11, thay vì nằm không phường như hôm nay.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ đổi mã 32 tỉnh/thành từ dạng dài (vn-thanh-pho-da-nang) sang dạng ngắn (vn-da-nang) một lần, giữ nguyên tên và ranh giới; chạy lại không đổi gì."},
-    {"id": "AC-2", "p": "Sẽ dừng hẳn, không đổi dòng nào, nếu còn dữ liệu nào đang trỏ mã dài hoặc mã ngắn đã có người dùng — và nói rõ bảng nào."},
-    {"id": "AC-3", "p": "Sẽ gom việc «thành phố nào là thị trường nào» về một chỗ duy nhất, gồm cả tỉnh cũ đã sáp nhập (Bình Dương, Bà Rịa–Vũng Tàu → TP.HCM; Hải Dương → Hải Phòng; Quảng Nam → Đà Nẵng)."},
-    {"id": "AC-4", "p": "Sẽ nạp phường cho thành phố mới khi đã có ranh giới, không động tới phường Hà Nội/TP.HCM, và nói ra thành phố nào chưa có ranh giới."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG tự tạo thị trường mới khi đổi mã chưa áp — chỉ báo một dòng và bỏ qua thành phố đó."},
-    {"id": "AC-6", "p": "Sẽ xếp tin S06 Đà Nẵng và Bình Dương vào đúng phường, tin Hà Nội/TP.HCM giữ nguyên phường như trước."},
-    {"id": "AC-7", "p": "Sẽ không làm hỏng lượt chạy khi tin mang mã thành phố lạ: tin vẫn vào, không phường, và có dòng đếm mã lạ."},
-    {"id": "AC-8", "p": "Sẽ đạt ≥ 80% tin bán S06 Đà Nẵng có phường trên bản chép dữ liệu thật, Hà Nội/TP.HCM không tụt."},
-    {"id": "AC-9", "p": "Sẽ giữ xanh toàn bộ test pipeline và scripts."},
-    {"id": "AC-10", "p": "Sẽ có một lệnh chỉ đọc đếm mọi chỗ còn trỏ mã dài — anh chạy nó trên cloud trước khi áp, ra 0 mới áp."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG tự áp lên DB máy thu hay cloud — đó là bước sau Cổng 2, cần anh duyệt riêng (Hỏi-1)."},
-    {"id": "OOS-2", "p": "KHÔNG sửa bộ thu S06 (đổi tham số vùng, bật Hải Phòng/Bình Dương) — việc của ZCode."},
-    {"id": "OOS-3", "p": "KHÔNG tự thu ranh giới phường Đà Nẵng/Hải Phòng — ZCode đang thu (claudedp-3110-17)."},
-    {"id": "OOS-4", "p": "KHÔNG gỡ chỗ tra mã dài trong trang (PR #242) — để việc riêng sau khi đổi mã."},
-    {"id": "OOS-5", "p": "KHÔNG làm cho S01, S03, S05 và Khánh Hoà."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Thị trường: đủ năm loại — đã có phường, mới có phường, tỉnh cũ đã sáp nhập, mã lạ, thị trường chưa có trong DB."},
-    {"i": 1, "p": "Lớp: đổi mã (AC-1, AC-2) · một chỗ ánh xạ (AC-3) · nạp phường (AC-4, AC-5) · xếp tin (AC-6, AC-7) · dữ liệu thật (AC-8) · hồi quy (AC-9)."},
-    {"i": 2, "p": "Trạng thái DB: chưa đổi mã, đổi lần đầu, đổi lại, còn dữ liệu trỏ mã cũ, cloud còn dòng trỏ mã cũ (AC-10)."},
-    {"i": 3, "p": "Hai chiều: có ca phải xảy ra và ca phải KHÔNG xảy ra cho mỗi lớp."},
-    {"i": 4, "p": "Đà Nẵng bắt buộc đo trên ranh giới thật; Hải Phòng đo khi ZCode có ranh giới, chưa có thì khai giới hạn ở Cổng 2."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Việc đổi mã chạm cloud và mã công khai, lại có lối khác (giữ mã dài, ánh xạ sang) — máy không được tự quyết: đã thành Hỏi-3 cho anh."},
-    {"i": 1, "p": "Trước chỉ định đếm «thị trường đã lưu» trên cloud — thiếu các bảng khác: đã thêm AC-10 đếm mọi bảng, liệt từ cấu trúc DB."},
-    {"i": 2, "p": "Tỉ lệ có phường có thể bị tính trên mẫu số sai (luôn 100%): đã ghim mẫu số theo mã thành phố của tin và thêm ca phải đỏ."},
-    {"i": 3, "p": "Ranh giới mẫu viết tay có thể lệch tên thư mục ZCode thật, làm Đà Nẵng bị bỏ qua im lặng: đã ghim theo khuôn bộ thu, nạp qua bộ nạp thật, và báo thành phố thiếu ranh giới."},
-    {"i": 4, "p": "Phép kiểm «không còn danh sách cứng» chỉ dò chữ cũ: đã đổi sang kiểm quan hệ (thêm thành phố ở một chỗ là hai bước tự nhận)."}
-  ]
+ "feature_plain": "Tin bán S06 của các vùng mới (Đà Nẵng, Hải Phòng, và Bình Dương nay thuộc TP.HCM) hiện lên đúng phường trên Invest trước ngày ra mắt 05/11, thay vì nằm không phường như hôm nay."
 }
