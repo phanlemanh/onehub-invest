@@ -1,0 +1,65 @@
+schema_version: 1
+feature_slug: cong-tac-gop-nguoi-dem
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/refresh-bait-gap.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; DB thử, BEGIN…ROLLBACK, mồi một–một của HD13 (fixtureGop), trong giao dịch gỡ mọi dòng công tắc sẵn có của DB thử (ROLLBACK cuối ca): sau dungNguoi và sau buocDem(savepoint) 0 người merged, 0 dòng registry_events gop, cong_tac_gop = tat, gop_cho = 1, dòng in chứa «công tắc gộp tắt (chờ 1)»; đối chứng dương cùng mồi: truyền gop: true → 1 merged; ca không bảng (AC-3): trong SAVEPOINT đổi tên ops_audit, dungNguoi không truyền gop → cong_tac_gop = tat và câu SELECT 1 kế tiếp cùng giao dịch chạy được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; cùng mồi, chèn dòng công tắc bat=true rồi dungNguoi không truyền gop: tập cặp (object_key → related_keys[1]) của sự kiện gop bằng tập của một lượt khác cùng mồi truyền gop: true (SAVEPOINT riêng); cong_tac_gop = bat, gop_cho = 0; vế đêm: cùng mồi + dòng bat, buocDem(savepoint) không truyền gop → cùng tập cặp, cong_tac_gop = bat; đối chứng dương: dòng công tắc tat → buocDem gộp 0 (vế đêm đọc công tắc thật)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.nguoi
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+    expected: "exit 0; ma trận hàm thuần đọc công tắc từ danh sách dòng viết trước, mỗi dòng một dáng (rỗng · [bat] · [tat] · [bat, tat] · [tat, bat] · [bat, detail.bat = \"true\" chuỗi] · [detail thiếu bat]) → kết quả tat/bat/tat/tat/bat/tat/tat; số assert = số dòng ma trận; dòng có id lớn nhất thắng bất kể thứ tự mảng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; mồi một–một, công tắc bật → lượt 1 gộp; chèn công tắc tắt → lượt 2 và lượt 3: Ks vẫn merged, merged_into = Ka, vai sống của tin chỉ SĐT trên Ka; lượt 3 trả nguoi_moi = bi_danh_moi = vai_moi = vai_rut = gop = 0 và số dòng registry_events không đổi so với sau lượt 2"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/dung-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; tiến trình con node pipeline/dung-nguoi.mjs trên DB thử (chotDbThuNguoi): --cong-tac-gop tat --ly-do «thử E5» --thu → thoát 0, đếm ops_audit danh-ba:gop-sdt và bốn bảng (kết nối riêng) trước = sau; không --thu → thoát 0, đúng một dòng mới với actor dung-nguoi, detail.bat = false, detail.ly_do = «thử E5», bốn bảng không đổi; dòng tat để lại trên DB thử không đổi mặc định (tắt)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/dung-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; tiến trình con với DATABASE_URL trỏ cổng không mở (postgres://127.0.0.1:1/khong): --cong-tac-gop mo --ly-do x · --cong-tac-gop bat (thiếu --ly-do) · --cong-tac-gop bat --ly-do x --tach pty_x → mỗi ca thoát 2, stderr nêu --cong-tac-gop hoặc --ly-do hoặc --tach, không có lỗi kết nối (chứng thoát trước khi mở DB); đối chứng: lệnh hợp lệ cùng URL đó thoát 1 với lỗi kết nối"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.nguoi_nap_lai
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/refresh-bait-gap.mjs, pipeline/scripts/nap-lai-nguoi.mjs]
+    expected: "exit 0; DB thử chép máy thu, một giao dịch ROLLBACK: lượt đêm 0 (công tắc chưa có dòng) in gop = 0 theo nguồn và gop_cho theo nguồn = N1 chưa gộp đếm độc lập (tinhSo của do-danh-ba-sdt, tập gộp rỗng); chèn công tắc bat trong giao dịch → lượt 1 gộp theo nguồn = N1, N1 sau = 0, 0 gộp sai đích, 0 người hai SĐT, 0 gộp khác nguồn, lượt 2 gộp 0; lượt 0 và lượt 1 đều chạy qua buocDem không truyền gop; đối chứng bỏ công tắc (buocDem với gop: true ở lượt 0, SAVEPOINT) → thước báo lượt 0 gộp > 0 và in đỏ đúng kỳ vọng; đếm bảng trên kết nối riêng trước = sau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.nguoi
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/dung-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+    expected: "exit 0; quét tĩnh mọi SQL.* và mọi chuỗi SQL của dung-nguoi.mjs: câu chạm ops_audit chỉ là SELECT … FROM ops_audit hoặc INSERT INTO ops_audit; không câu nào UPDATE/DELETE/TRUNCATE ops_audit; có đúng một câu đọc công tắc và một câu ghi công tắc mang 'danh-ba:gop-sdt' (hằng); quét lời gọi dungNguoi( trong refresh-bait-gap.mjs, dung-nguoi.mjs, lib/danh-ba-nguoi.mjs: không lời gọi nào mang khoá gop (số lời gọi rút được ≥ 3); đối chứng dương: câu cài sẵn UPDATE ops_audit bị bắt, lời gọi cài sẵn dungNguoi(c, { gop: true }) bị bắt"
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/dung-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+    expected: "exit 0; tiến trình con node pipeline/dung-nguoi.mjs --thu trên DB thử (chotDbThuNguoi; 055 + 060 áp nếu thiếu; công tắc mới nhất không phải bat — nếu là bat thì ca chèn tat trước, ghi rõ): thoát 0, stdout chứa «công tắc gộp tắt», JSON in cong_tac_gop = tat; số người merged đếm trên kết nối riêng trước = sau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
