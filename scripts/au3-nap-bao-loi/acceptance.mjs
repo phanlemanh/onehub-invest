@@ -101,18 +101,18 @@ function chototSandbox({ realImport = false } = {}) {
   const p = (f) => join(sb.repo, "pipeline", f);
   writeFileSync(p("collect-chotot.mjs"), fakeModule(sb.calls, "collect", '"collect"'));
   // TV2b (cong-tac-that): cổng vòng đời S06 + bước đọc vùng từ DB đứng trước nạp. vong-doi giả (CLI thoát 0,
-  // isRunnable theo status); pg bọc: bước đọc vùng (node -e, không argv[1]) nhận vùng giả hanoi + hcmc active,
-  // còn import-chotot.mjs THẬT (argv[1] là tệp) dùng pg thật — giữ ca (a) DB chết ở bước nạp.
+  // isRunnable theo status); pg bọc: bước đọc vùng (node -e — argv chỉ có node) nhận vùng giả hanoi + hcmc active,
+  // còn import-chotot.mjs THẬT (argv có tệp + snapshot) dùng pg thật — giữ ca (a) DB chết ở bước nạp.
   mkdirSync(p("lib"), { recursive: true });
   writeFileSync(p("lib/vong-doi.mjs"), `export function isRunnable(src, unit) { return { run: (unit?.status ?? "active") === "active" }; }
-if (process.argv[1]?.endsWith("vong-doi.mjs")) { console.log(JSON.stringify({ code: process.argv[2], run: true, ly_do: "chay" })); process.exit(0); }
+if (process.argv.length > 2) { console.log(JSON.stringify({ code: process.argv[2], run: true, ly_do: "chay" })); process.exit(0); }
 `);
   mkdirSync(p("node_modules/pg"), { recursive: true });
   writeFileSync(p("node_modules/pg/package.json"), JSON.stringify({ name: "pg", type: "module", exports: "./index.mjs" }));
   writeFileSync(p("node_modules/pg/index.mjs"), `import { createRequire } from "node:module";
 const rows = { source_registry: [{ code: "S06", status: "active" }], source_groups: [{ group_key: "hanoi", status: "active" }, { group_key: "hcmc", status: "active" }] };
 class Client { async connect() {} async end() {} async query(sql) { return { rows: rows[Object.keys(rows).find((t) => sql.includes(t))] ?? [] }; } }
-export default process.argv[1] ? createRequire(${JSON.stringify(join(ROOT, "pipeline/package.json"))})("pg") : { Client };
+export default process.argv.length > 1 ? createRequire(${JSON.stringify(join(ROOT, "pipeline/package.json"))})("pg") : { Client };
 `);
   if (realImport) {
     cpSync(join(ROOT, "pipeline/import-chotot.mjs"), p("import-chotot.mjs"));
