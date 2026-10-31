@@ -23,6 +23,8 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const { frontmatterField } = require(path.join(__dirname, '..', 'lib', 'evidence-core.cjs'));
+// Thư mục không tệp nào không vào «ngoài lộ trình» — cùng hàm với bản đồ (hồ sơ tep-sinh-khong-chan-gop, AC-6).
+const { coTepTrongCay } = require(path.join(__dirname, '..', 'lib', 'workspace-record.cjs'));
 
 const { KHOA: KHOA_, khoaTuConfig: khoaTuConfig_, cacTepTuConfig } = require(path.join(__dirname, 'lo-trinh-khoa.cjs'));
 // Mô-đun đọc hồ sơ dùng chung với trang hồ sơ (hồ sơ trang-ho-so-mot-viec, hàng X2): dải tóm tắt của
@@ -332,7 +334,7 @@ export function suyTrangThai({ root, khuon, classify, sections, nhan = [] }) {
   // Vòng ngoài lộ trình: hồ sơ không hàng nào trỏ — đếm, không cờ.
   const troi = new Set(dong.flatMap(d => [d.slug, d.hoSo]).filter(Boolean));
   const ngoaiLoTrinh = existsSync(acc)
-    ? readdirSync(acc, { withFileTypes: true }).filter(e => e.isDirectory() && !troi.has(e.name)).map(e => e.name).sort()
+    ? readdirSync(acc, { withFileTypes: true }).filter(e => e.isDirectory() && !troi.has(e.name) && coTepTrongCay(path.join(acc, e.name))).map(e => e.name).sort()
     : [];
   // Hàng sống qua Cổng Đáng: mỗi slug một lần; n = hồ sơ có opportunity đã decided.
   let n = 0; let k = 0;
