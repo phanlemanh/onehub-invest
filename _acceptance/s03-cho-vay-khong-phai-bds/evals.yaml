@@ -1,0 +1,27 @@
+schema_version: 1
+slug: s03-cho-vay-khong-phai-bds
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca CV-AC-1: ma trận viết tay 5 ô («Cho vay 500tr thời hạn 1 năm, thu về lãi», «góp 3 năm giá 2 tỷ», «tuyển 3 nữ lương 10tr», «bảo hành 5 năm giá 7tr», «ảnh 5 nét giá 2tr») — mỗi ô: bản chép giữ ranh giới từ cũ (bản cũ) cho coDauHieuBds = true (đối chứng dương), bản sửa cho false, và suyLoai bản sửa ra kind rỗng nguồn bo; thay «<số> năm/nữ/nét» bằng chữ trung tính thì cả hai bản đều false; chiều đỏ: bản chép đặt lại ranh giới từ cũ ở nhánh «<số>n» → ô «Cho vay … 1 năm» đỏ ghim «CV-AC-1 năm thành phòng ngủ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_loai_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
+    expected: "exit 0; ca CV-AC-2: ma trận viết tay 8 ô («2n1wc 70m2 giá 3,2 tỷ», «1n1k 45m2 7tr», «căn 3n2vs 5 tỷ», «2n+1 giá 2,9 tỷ», «Căn 2n 14tr», «căn 2n, giá 14tr», «giá 14tr căn 2n», «1nk giá 3 tỷ») — mỗi ô coDauHieuBds và kind/nguồn của bản sửa bằng bản chép giữ ranh giới từ cũ; bảy ô đầu là dấu hiệu BĐS; chiều đỏ: bản đột biến lookahead dương (chỉ cho chữ số, + hay khoảng trắng đứng sau) → ô «căn 2n, giá 14tr» đỏ ghim «CV-AC-2 viết tắt phòng ngủ mất»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline npm test xanh (gồm transform-zalo-loai-tin.test.mjs của RM1 và parse.test.mjs)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
