@@ -28,6 +28,8 @@ const NODE_SHIM = `#!/bin/bash
 step=""
 for a in "$@"; do case "$a" in *.mjs|*.js) step="$(basename "$a")"; step="\${step%.*}"; full="$a"; break;; esac; done
 [ -z "$step" ] && step=node
+# TV2b vòng 3: chotot-daily đọc vùng S06 từ DB bằng node -e (không có tệp .mjs) — nhãn riêng, trả một vùng
+case "$step:$*" in node:*source_groups*) step=doc-vung-s06;; esac
 echo "$step" >> "$CALLS"
 code=""
 IFS=',' read -ra items <<< "\${FAIL_STEPS:-}"
@@ -41,6 +43,7 @@ if [ -z "$code" ] && [ -n "\${FAIL_DB:-}" ]; then
 fi
 if [ -n "$code" ]; then echo "Error: connect ECONNREFUSED 127.0.0.1:5433" >&2; exit "$code"; fi
 [ "$step" = airdna-rotate ] && echo "vn-hanoi"
+[ "$step" = doc-vung-s06 ] && echo "hanoi"
 exit 0
 `;
 const DOCKER_SHIM = `#!/bin/bash
@@ -122,10 +125,11 @@ const JOBS = {
     script: "scripts/chotot-daily.sh",
     tree: {
       copy: ["scripts/chotot-daily.sh", "scripts/lib/job-step.sh"],
-      dirs: ["collector/snapshots/hanoi/hanoi__chotot-ads__20261023T000000"],
+      dirs: ["collector/snapshots/hanoi/hanoi__chotot-ads__20261023T000000", "pipeline"],
     },
+    // TV2b vòng 3 (cong-tac-that): cổng vòng đời S06 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
     // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
-    seq: ["collect-chotot", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
+    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -143,7 +147,8 @@ const JOBS = {
       dirs: ["collector/snapshots/vn/vn__airdna-research__20261023T000000"],
       files: { "collector/dist/cli.js": "" },
     },
-    seq: ["airdna-rotate", "cli", "transform-airdna", "dq-truthful-coverage"],
+    // TV2b (cong-tac-that): cổng vòng đời S02 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
+    seq: ["vong-doi", "airdna-rotate", "cli", "transform-airdna", "dq-truthful-coverage"],
   },
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",

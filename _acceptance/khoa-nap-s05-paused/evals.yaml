@@ -23,19 +23,19 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.kns_s05_gate
-    expected: "exit 0; 'S05-GATE PASS'; (a) paused → exit 0, log 'S05 paused — bỏ qua thu', should-NOT-fire 0 lời gọi mạng; (d) thiếu dòng S05 → như paused; DB tạm đã xoá"
+    expected: "exit 0; 'S05-GATE PASS'; (a) paused → exit 0, log 'S05 nguon-paused — bỏ qua thu', should-NOT-fire 0 lời gọi mạng; (d) thiếu dòng S05 → như paused; DB tạm đã xoá"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
     executor: script
     cmd: config:executors.script.kns_s05_gate
-    expected: "exit 0; (b) active → should-NOT-fire không có dòng 'S05 paused', đi tới creds; (c) DB không tới → log 'coi như active', không coi là paused"
+    expected: "exit 0; (b) active → should-NOT-fire không có dòng 'S05 paused', đi tới creds; (c) DB không tới → fail-closed: thoát ≠0, 0 lời gọi (đảo AC-5 theo cong-tac-that, revisit 29/10)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-4
     executor: test
     cmd: config:executors.test.kns_s05_unit
-    expected: "exit 0; s05-paused.test 2/2 (luật chỉ 'active' mới thu)"
+    expected: "exit 0; fail 0 — cong-tac-that.test (luật chỉ 'active' mới thu qua vong-doi; thay s05-paused.test đã xoá ở TV2b)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
