@@ -4,8 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FILL } from "../sync-cloud.mjs";
 import {
-  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, bangDuocDoc, chonVaiRut, giaiNguoi, giuVaiBaiMat, khoaBiDanh, moiKhoaNguoi,
-  rutDinhDanh,
+  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, anhXaVai, bangDuocDoc, chonGop, chonVaiRut, giaiNguoi, giuVaiBaiMat, khoaBiDanh,
+  moiKhoaNguoi, rutDinhDanh,
 } from "../lib/danh-ba-nguoi.mjs";
 
 const BON_BANG = ["parties", "registry_aliases", "registry_events", "party_roles"];
@@ -247,4 +247,97 @@ test("SD3-E4 đỏ: bản chép bỏ tra sdt_bam đời trước → bắt «NGU
 
 test("SD3-E4: bộ dựng nghỉ sdt_bam bằng retired_at, không DELETE", () => {
   assert.match(SQL.nghiSdtBam, /^UPDATE registry_aliases SET retired_at = now\(\) WHERE kind = 'sdt_bam' AND retired_at IS NULL$/);
+});
+
+// ---- HD13 nguoi-noi-theo-sdt: gộp người theo SĐT một–một cùng nguồn (E1, E2, E10) ----
+
+/** Một ca chonGop: dựng người bằng giaiNguoi trên các tin, rồi chọn gộp với trạng thái/gộp có sẵn của ca. */
+function caGop(tins, baiRows, { trangThai = () => new Map(), gopVao = () => new Map(), suaBiDanh = (bd) => bd } = {}) {
+  const baiTheoId = bai(baiRows);
+  const kq = giaiNguoi(tins, new Map(), { baiTheoId, taoKhoa: khoaGia() });
+  const bd = suaBiDanh(ap(new Map(), kq));
+  return { bd, kq, baiTheoId, ...chonGop(tins, bd, trangThai(bd), { baiTheoId, gopVao: gopVao(bd) }) };
+}
+
+test("HD13 E1 chonGop: ma trận mười dáng, chỉ cặp một–một cùng nguồn của người active được gộp", () => {
+  const sdt = (bd, s, v) => chu(bd, s, "sdt", v);
+  const tk = (bd, s, v) => chu(bd, s, "tai_khoan_nguon", v);
+  const MA_TRAN = [
+    ["một–một", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]]),
+      (r) => [{ tu: sdt(r.bd, "S03", "h"), vao: tk(r.bd, "S03", "A"), source: "S03", sdt: "h" }]],
+    ["SĐT hai người gửi", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pb"], seller_phone: "h" })],
+      [["pa", "S03", "A"], ["pb", "S03", "B"]]), () => []],
+    ["người gửi hai SĐT", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pa2"], seller_phone: "k" })],
+      [["pa", "S03", "A"], ["pa2", "S03", "A"]]), () => []],
+    ["cặp chỉ trên tin nghỉ", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h", retired_at: "2026-10-20T00:00:00Z" })],
+      [["pa", "S03", "A"]]), () => []],
+    ["tài khoản S03, SĐT S05", () => caGop([tin("S03", { post_ids: ["pa"] }), tin("S05", { post_ids: ["pa"], seller_phone: "h" })],
+      [["pa", "S03", "A"]]), () => []],
+    ["tin S06", () => caGop([tin("S06", { seller_ref: "ct:1", seller_phone: "h" })], []), () => []],
+    ["người theo SĐT merged", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "merged"]]) }), () => []],
+    ["người theo SĐT split", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "split"]]) }), () => []],
+    ["Ks = Ka", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { suaBiDanh: (bd) => new Map([...bd].map(([k, v]) => [k, k === khoaBiDanh("S03", "sdt", "h") ? tk(bd, "S03", "A") : v])) }), () => []],
+    ["người tài khoản đã gộp SĐT khác", () => caGop(
+      [tin("S03", { post_ids: ["pa"], seller_phone: "k" }), tin("S03", { post_ids: ["pa1"], seller_phone: "h", retired_at: "2026-10-20T00:00:00Z" })],
+      [["pa", "S03", "A"], ["pa1", "S03", "A"]],
+      { gopVao: (bd) => new Map([[sdt(bd, "S03", "h"), tk(bd, "S03", "A")]]), trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "merged"]]) }),
+    () => []],
+  ];
+  let soAssert = 0;
+  for (const [dong, chay, mong] of MA_TRAN) {
+    const r = chay();
+    assert.deepEqual(r.gop, mong(r), `HD13 E1 sai gộp: ${dong}`);
+    soAssert++;
+  }
+  assert.equal(soAssert, MA_TRAN.length);
+  assert.equal(soAssert, 10);
+  // nhieuNhieu đếm hai ca nhiều–nhiều theo nguồn.
+  const nn = caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pb"], seller_phone: "h" }),
+    tin("S03", { post_ids: ["pc"], seller_phone: "m" }), tin("S03", { post_ids: ["pc2"], seller_phone: "n" })],
+  [["pa", "S03", "A"], ["pb", "S03", "B"], ["pc", "S03", "C"], ["pc2", "S03", "C"]]).nhieuNhieu;
+  assert.deepEqual(nn.S03, { sdt_nhieu_nguoi: 1, nguoi_nhieu_sdt: 1 });
+});
+
+test("HD13 E2 anhXaVai: tin chỉ SĐT của số đã gộp về người tài khoản (parser/observed); chưa gộp thì ở người theo SĐT", () => {
+  const t1 = tin("S03", { post_ids: ["pa"], seller_phone: "h" });
+  const t2 = tin("S03", { seller_phone: "h" });
+  const r = caGop([t1, t2], [["pa", "S03", "A"]]);
+  const ks = chu(r.bd, "S03", "sdt", "h");
+  const ka = chu(r.bd, "S03", "tai_khoan_nguon", "A");
+  assert.deepEqual(r.gop.map((g) => [g.tu, g.vao]), [[ks, ka]]);
+  const vaiCua = (vai, t) => vai.filter((v) => v.subject_key === `S03:${t.originating_system_key}`).map((v) => `${v.party_key}/${v.method}/${v.evidence_tier}`);
+  const sau = anhXaVai(r.kq.vai, new Map(r.gop.map((g) => [g.tu, g.vao])));
+  assert.deepEqual(vaiCua(sau, t2), [`${ka}/parser/observed`], "HD13 E2 tin chỉ SĐT không về người tài khoản");
+  assert.deepEqual(vaiCua(sau, t1), [`${ka}/source_field/fact`], "HD13 E2 tin có tài khoản đổi vai");
+  const chuaGop = anhXaVai(r.kq.vai, new Map());
+  assert.deepEqual(vaiCua(chuaGop, t2), [`${ks}/parser/observed`], "HD13 E2 chưa gộp mà vai rời người theo SĐT");
+});
+
+test("HD13 E10 đọc tĩnh: SQL bộ dựng + dung-nguoi.mjs không tầng A, không xoá, ghi danh bạ đúng hai kiểu", () => {
+  const nguonLib = readFileSync(new URL("../lib/danh-ba-nguoi.mjs", import.meta.url), "utf8");
+  const nguonCli = readFileSync(new URL("../dung-nguoi.mjs", import.meta.url), "utf8");
+  const khoaDocLap = [...nguonLib.slice(nguonLib.indexOf("export const SQL"), nguonLib.indexOf("});", nguonLib.indexOf("export const SQL")))
+    .matchAll(/^ {2}(\w+): `/gm)].length;
+  const cli = [...nguonCli.matchAll(/"((?:BEGIN|COMMIT|ROLLBACK|SELECT|INSERT|UPDATE|DELETE|TRUNCATE)\b[^"]*)"/g)].map((m) => m[1]);
+  const cau = [...Object.values(SQL), ...cli];
+  assert.equal(Object.keys(SQL).length, khoaDocLap, "HD13 E10 số khoá SQL.* khác số đếm độc lập trong mã nguồn");
+  assert.ok(cli.length >= 3, "HD13 E10 không rút được câu nào của dung-nguoi.mjs");
+  assert.equal(cau.length, khoaDocLap + cli.length);
+  const vi = (sql) => {
+    const loi = [];
+    if (bangDuocDoc(sql).length) loi.push(`tầng A ${bangDuocDoc(sql).join(",")}`);
+    if (/\b(DELETE|TRUNCATE)\b/i.test(sql)) loi.push("xoá");
+    if (/\bUPDATE\s+parties\b/i.test(sql) && !/SET\s+status\s*=[^,]+,\s*merged_into\s*=/i.test(sql)) loi.push("UPDATE parties ngoài status/merged_into");
+    if (/\bregistry_events\b/i.test(sql) && !/^\s*INSERT INTO registry_events\b/i.test(sql)) loi.push("registry_events không phải INSERT");
+    return loi;
+  };
+  const loi = cau.flatMap((s) => vi(s).map((l) => `${l}: ${s.slice(0, 50)}`));
+  assert.deepEqual(loi, [], `HD13 E10 ${loi.join(" | ")}`);
+  // Đối chứng dương: hai câu cài sẵn phải bị bắt.
+  assert.deepEqual(vi("SELECT p.party_key FROM parties p JOIN users u ON true"), ["tầng A users"]);
+  assert.deepEqual(vi("DELETE FROM parties WHERE party_key = $1"), ["xoá"]);
+  assert.deepEqual(vi("UPDATE parties SET source = 'S03'"), ["UPDATE parties ngoài status/merged_into"]);
 });

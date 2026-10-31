@@ -142,6 +142,104 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
   return { nguoiMoi, biDanhMoi, vai, khongDinhDanh };
 }
 
+// ---- HD13 nguoi-noi-theo-sdt: gộp người theo SĐT vào người theo tài khoản cùng nguồn khi nối một–một ----
+
+/** Lý do rút vai của người vừa bị gộp; lý do sự kiện gộp; người làm ghi vào registry_events. */
+export const LY_DO_GOP = "gop-nguoi";
+export const LUAT_GOP = "sdt-mot-mot";
+export const NGUOI_LAM = "dung-nguoi";
+/** Nguồn có cả người gửi lẫn SĐT trên tin; S06 chưa có SĐT (HD12), khác nguồn ngoài hàng này. */
+export const NGUON_GOP = Object.freeze(["S03", "S05"]);
+
+/**
+ * Cặp (SĐT, người gửi) một–một trên tin SỐNG, theo từng nguồn: SĐT có đúng một người gửi và người gửi ấy có đúng một SĐT
+ * (cùng định nghĩa N1 của do-danh-ba-sdt). `motSdtMoiNguoi: false` bỏ vế sau (và rào người cuối một SĐT của chonGop) — CHỈ
+ * cho đối chứng của thước.
+ */
+export function capMotMot(tins, baiTheoId, { motSdtMoiNguoi = true } = {}) {
+  const cap = [];
+  const nhieuNhieu = {};
+  for (const source of NGUON_GOP) {
+    const nguoiCuaSdt = new Map();
+    const sdtCuaNguoi = new Map();
+    for (const t of tins) {
+      if (t.source !== source || t.retired_at != null) continue;
+      const d = rutDinhDanh(t, baiTheoId);
+      if (!d.sdt) continue;
+      for (const tk of d.taiKhoan) {
+        if (!nguoiCuaSdt.has(d.sdt)) nguoiCuaSdt.set(d.sdt, new Set());
+        nguoiCuaSdt.get(d.sdt).add(tk.value);
+        if (!sdtCuaNguoi.has(tk.value)) sdtCuaNguoi.set(tk.value, new Set());
+        sdtCuaNguoi.get(tk.value).add(d.sdt);
+      }
+    }
+    for (const [sdt, ng] of [...nguoiCuaSdt].sort(([a], [b]) => a.localeCompare(b))) {
+      if (ng.size !== 1) continue;
+      const taiKhoan = [...ng][0];
+      if (motSdtMoiNguoi && sdtCuaNguoi.get(taiKhoan).size !== 1) continue;
+      cap.push({ source, sdt, taiKhoan });
+    }
+    nhieuNhieu[source] = {
+      sdt_nhieu_nguoi: [...nguoiCuaSdt.values()].filter((s) => s.size > 1).length,
+      nguoi_nhieu_sdt: [...sdtCuaNguoi.values()].filter((s) => s.size > 1).length,
+    };
+  }
+  return { cap, nhieuNhieu };
+}
+
+/** Người cuối của chuỗi merged_into (chặn vòng). */
+export function nguoiCuoi(gopVao, k) {
+  const da = new Set();
+  let x = k;
+  while (gopVao.has(x) && !da.has(x)) { da.add(x); x = gopVao.get(x); }
+  return x;
+}
+
+/**
+ * Lần gộp mới của lượt: người theo SĐT `tu` vào người theo tài khoản `vao` cùng nguồn, cả hai đang active (người split hay
+ * merged không bao giờ bị gộp tự động), và người cuối của `vao` chưa mang SĐT nào khác — không Người nào hai SĐT (AC-7).
+ * @param {Map<string,string>} biDanh khoaBiDanh → party_key (đã gồm bí danh mới của lượt)
+ * @param {Map<string,string>} trangThai party_key → status (vắng = active)
+ */
+export function chonGop(tins, biDanh, trangThai, { baiTheoId = new Map(), gopVao = new Map(), motSdtMoiNguoi = true } = {}) {
+  const { cap, nhieuNhieu } = capMotMot(tins, baiTheoId, { motSdtMoiNguoi });
+  const vao = new Map(gopVao);
+  const sdtCua = new Map(); // `${source}|${người cuối}` → Set SĐT
+  const ganSdt = (source, k, sdt) => {
+    const kk = `${source}|${nguoiCuoi(vao, k)}`;
+    if (!sdtCua.has(kk)) sdtCua.set(kk, new Set());
+    sdtCua.get(kk).add(sdt);
+  };
+  for (const [khoa, k] of biDanh) {
+    const [source, kind, ...v] = khoa.split("|");
+    if (kind === ALIAS_KIND.sdt) ganSdt(source, k, v.join("|"));
+  }
+  const active = (k) => (trangThai.get(k) ?? "active") === "active";
+  const gop = [];
+  for (const { source, sdt, taiKhoan } of cap) {
+    const tu = biDanh.get(khoaBiDanh(source, ALIAS_KIND.sdt, sdt));
+    const ka = biDanh.get(khoaBiDanh(source, ALIAS_KIND.tai_khoan_nguon, taiKhoan));
+    if (!tu || !ka || tu === ka || !active(tu) || !active(ka) || vao.has(tu)) continue;
+    const coSdt = sdtCua.get(`${source}|${nguoiCuoi(vao, ka)}`);
+    if (motSdtMoiNguoi && coSdt && [...coSdt].some((s) => s !== sdt)) continue;
+    vao.set(tu, ka);
+    ganSdt(source, ka, sdt);
+    gop.push({ tu, vao: ka, source, sdt });
+  }
+  return { gop, nhieuNhieu };
+}
+
+/** Vai của lượt chuyển về người cuối của chuỗi gộp; một vai mỗi (chủ thể, người). */
+export function anhXaVai(vai, gopVao) {
+  const theo = new Map();
+  for (const v of vai) {
+    const party_key = nguoiCuoi(gopVao, v.party_key);
+    const k = `${v.subject_key}|${party_key}`;
+    if (!theo.has(k)) theo.set(k, { ...v, party_key });
+  }
+  return [...theo.values()];
+}
+
 const baiNoiDuoc = (p, source, baiTheoId) => {
   const b = baiTheoId.get(p);
   return Boolean(b && b.source === source && sach(b.sender_id) !== null);
@@ -197,6 +295,14 @@ export const SQL = Object.freeze({
   // SD3: bí danh SĐT băm đời trước nghỉ hết (người giữ party_key qua bí danh `sdt`); chỉ đặt retired_at, đúng luật 055.
   nghiSdtBam: `UPDATE registry_aliases SET retired_at = now() WHERE kind = 'sdt_bam' AND retired_at IS NULL`,
   rutVai: `UPDATE party_roles SET retracted_at = now(), retract_reason = $2 WHERE id = ANY($1::bigint[]) AND retracted_at IS NULL`,
+  // HD13: trạng thái người khác active (merged → merged_into); gộp và tách chỉ đổi status/merged_into, sự kiện chỉ thêm.
+  trangThai: `SELECT party_key, status, merged_into FROM parties WHERE status <> 'active'`,
+  gop: `UPDATE parties SET status = 'merged', merged_into = x.vao FROM unnest($1::text[], $2::text[]) AS x(tu, vao)
+         WHERE parties.party_key = x.tu AND parties.status = 'active'`,
+  themSuKien: `INSERT INTO registry_events (object_key, kind, related_keys, reason, changed_by)
+               SELECT k, $3, ARRAY[r], l, $4 FROM unnest($1::text[], $2::text[], $5::text[]) AS x(k, r, l)`,
+  docNguoi: `SELECT status, merged_into FROM parties WHERE party_key = $1 FOR UPDATE`,
+  tach: `UPDATE parties SET status = 'split', merged_into = NULL WHERE party_key = $1 AND status = 'merged'`,
   // Đối chiếu trên SĐT của tin, không trên sellers (SD1): sellers từng thiếu dòng nên phép đối chiếu luôn xanh.
   sellersThieu: `SELECT DISTINCT o.seller_phone_hash || ':' || o.source AS k FROM sale_offers o
                   WHERE o.seller_phone IS NOT NULL
@@ -210,10 +316,11 @@ export const KHOA_DANH_BA = 55055;
 
 /**
  * Dựng danh bạ Người + vai người đăng từ mọi sale_offer_records (kể cả tin nghỉ). Chạy trong giao dịch của người gọi;
- * chỉ thêm (rút vai có lý do, không xoá). `traBiDanh: false` bỏ tra bí danh — CHỈ cho đối chứng của thước E7.
+ * chỉ thêm (rút vai có lý do, không xoá). `traBiDanh: false` bỏ tra bí danh — CHỈ cho đối chứng của thước E7;
+ * `motSdtMoiNguoi: false` bỏ vế «người gửi/người cuối có một SĐT» của luật gộp — CHỈ cho đối chứng của thước HD13.
  * @param {import("pg").Client} c
  */
-export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh = true, out = console.log } = {}) {
+export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh = true, motSdtMoiNguoi = true, out = console.log } = {}) {
   await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
   const tins = (await c.query(SQL.tin, [["S03", "S05", "S06"]])).rows;
   const postIds = [...new Set(tins.flatMap((t) => (t.source === "S06" ? [] : t.post_ids ?? [])))];
@@ -227,6 +334,16 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const vaiSong = (await c.query(SQL.vaiSong)).rows;
   const kq = giaiNguoi(tins, biDanh, { baiTheoId, giuBaiMat: giuVaiBaiMat(vaiSong, baiTheoId) });
 
+  // HD13: gộp một–một cùng nguồn trên bí danh cũ + mới của lượt, rồi vai của lượt về người cuối của chuỗi gộp.
+  const trangThaiRows = (await c.query(SQL.trangThai)).rows;
+  const trangThai = new Map(trangThaiRows.map((p) => [p.party_key, p.status]));
+  const gopVao = new Map(trangThaiRows.filter((p) => p.status === "merged").map((p) => [p.party_key, p.merged_into]));
+  const biDanhSau = new Map(biDanh);
+  for (const a of kq.biDanhMoi) biDanhSau.set(khoaBiDanh(a.source, a.kind, a.value, a.object_key), a.object_key);
+  const { gop, nhieuNhieu } = chonGop(tins, biDanhSau, trangThai, { baiTheoId, gopVao, motSdtMoiNguoi });
+  for (const g of gop) gopVao.set(g.tu, g.vao);
+  kq.vai = anhXaVai(kq.vai, gopVao);
+
   if (kq.nguoiMoi.length) await c.query(SQL.themNguoi, [kq.nguoiMoi.map((p) => p.party_key), kq.nguoiMoi.map((p) => p.source)]);
   const cot = (ds) => [ds.map((a) => a.object_key), ds.map((a) => a.source), ds.map((a) => a.kind), ds.map((a) => a.value)];
   const dinhDanh = kq.biDanhMoi.filter((a) => a.kind !== ALIAS_KIND.ten);
@@ -235,10 +352,17 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   if (dinhDanh.length) biDanhMoi += (await c.query(SQL.themDinhDanh, cot(dinhDanh))).rowCount;
   if (ten.length) biDanhMoi += (await c.query(SQL.themTen, cot(ten))).rowCount;
   const sdtBamNghi = (await c.query(SQL.nghiSdtBam)).rowCount;
+  if (gop.length) {
+    await c.query(SQL.gop, [gop.map((g) => g.tu), gop.map((g) => g.vao)]);
+    await c.query(SQL.themSuKien, [gop.map((g) => g.tu), gop.map((g) => g.vao), "gop", NGUOI_LAM, gop.map((g) => `${LUAT_GOP} ${g.source}`)]);
+  }
 
   const dangSong = new Set(vaiSong.map((v) => `${v.subject_key}|${v.party_key}`));
   const rut = chonVaiRut(vaiSong, kq.vai, tins, baiTheoId);
-  if (rut.length) await c.query(SQL.rutVai, [rut.map((r) => r.id), LY_DO_RUT]);
+  const rutGop = rut.filter((r) => gopVao.has(r.party_key));
+  const rutThay = rut.filter((r) => !gopVao.has(r.party_key));
+  if (rutGop.length) await c.query(SQL.rutVai, [rutGop.map((r) => r.id), LY_DO_GOP]);
+  if (rutThay.length) await c.query(SQL.rutVai, [rutThay.map((r) => r.id), LY_DO_RUT]);
   const moi = kq.vai.filter((v) => !dangSong.has(`${v.subject_key}|${v.party_key}`));
   if (moi.length) {
     await c.query(SQL.themVai, [
@@ -251,13 +375,38 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const cong = (s, k) => { theo_nguon[s] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[s][k]++; };
   for (const p of kq.nguoiMoi) cong(p.source, "nguoi_moi");
   for (const v of moi) cong(v.subject_key.slice(0, 3), "vai_moi");
+  for (const g of gop) { theo_nguon[g.source] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[g.source].gop = (theo_nguon[g.source].gop ?? 0) + 1; }
   const kqDem = {
     nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, sdt_bam_nghi: sdtBamNghi, vai_moi: moi.length, vai_rut: rut.length,
-    khong_dinh_danh: kq.khongDinhDanh, theo_nguon,
+    gop: gop.length, nhieu_nhieu: nhieuNhieu, khong_dinh_danh: kq.khongDinhDanh, theo_nguon,
   };
   const kdd = Object.entries(kq.khongDinhDanh).map(([s, n]) => `${s}=${n}`).join(" ") || "0";
-  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · không định danh ${kdd}`);
+  const nn = Object.entries(nhieuNhieu).map(([s, v]) => `${s}=${v.sdt_nhieu_nguoi}/${v.nguoi_nhieu_sdt}`).join(" ");
+  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · gộp ${gop.length} · nhiều–nhiều (SĐT nhiều người gửi/người gửi nhiều SĐT) ${nn} · không định danh ${kdd}`);
   return kqDem;
+}
+
+/** Lỗi tách có mã máy đọc (CLI đổi thành thoát 1). */
+function loiTach(code, message) {
+  return Object.assign(new Error(message), { code });
+}
+
+/**
+ * Tách một lần gộp (AC-6): người đang merged về split, bỏ merged_into, một sự kiện `tach`, rồi dựng lại ngay trong cùng giao
+ * dịch để vai về người đã tách. Người split không bao giờ bị gộp tự động lại. Chạy trong giao dịch của người gọi.
+ * @param {import("pg").Client} c
+ */
+export async function tachNguoi(c, partyKey, { lyDo, runId = new Date().toISOString(), out = console.log } = {}) {
+  if (!sach(lyDo)) throw loiTach("THIEU_LY_DO", "dung-nguoi: tách cần lý do (--ly-do «…»)");
+  await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
+  const p = (await c.query(SQL.docNguoi, [partyKey])).rows[0];
+  if (!p) throw loiTach("KHONG_CO", `dung-nguoi: không có người ${partyKey}`);
+  if (p.status !== "merged") throw loiTach("SAI_TRANG_THAI", `dung-nguoi: người ${partyKey} đang ${p.status}, chỉ tách được người merged`);
+  await c.query(SQL.tach, [partyKey]);
+  await c.query(SQL.themSuKien, [[partyKey], [p.merged_into], "tach", NGUOI_LAM, [sach(lyDo)]]);
+  out(`danh-ba-nguoi: tách ${partyKey} khỏi ${p.merged_into}`);
+  const dung = await dungNguoi(c, { runId, out });
+  return { tu: partyKey, vao: p.merged_into, dung };
 }
 
 /** «<phone_hash>:<S0x>» cho mỗi (SĐT, nguồn) trên tin sống chưa có người sống mang bí danh sdt (E.164) đúng nguồn. */
