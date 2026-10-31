@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.ma_thi_truong_dai
     paths: [app/src/lib/market-names.ts, app/tests/ma-thi-truong-dai.test.tsx]
-    expected: "exit 0; ca 'KV-AC-1' xanh trên ma trận viết trước 12 mã (da-nang, vn-da-nang, hai-phong, vn-hai-phong, khanh-hoa, vn-khanh-hoa, vn-thanh-pho-da-nang, vn-tinh-khanh-hoa, hanoi, hcmc → tên; binh-duong, danang → mã lạ); chiều đỏ 1: bản hàm bỏ tra mã dài → ca đỏ ghim 'KV-AC-1: mã da-nang không ra tên thị trường'; chiều đỏ 2: bản hàm tra mã dài trước mã ngắn → ca đỏ ghim 'KV-AC-1: mã khanh-hoa không ra tên thị trường'"
+    expected: "exit 0; ca 'KV-AC-1' xanh trên ma trận viết trước 14 mã (da-nang, vn-da-nang, hai-phong, vn-hai-phong, khanh-hoa, vn-khanh-hoa, vn-thanh-pho-da-nang, vn-tinh-khanh-hoa, an-giang, vn-an-giang, hanoi, hcmc → tên; binh-duong, danang → mã lạ); chiều đỏ 1: bản hàm bỏ tra mã dài → ca đỏ ghim 'KV-AC-1: mã da-nang không ra tên thị trường'; chiều đỏ 2: bản hàm tra mã dài trước mã ngắn → ca đỏ ghim 'KV-AC-1: mã khanh-hoa không ra tên thị trường'; chiều đỏ 3: bản hàm bỏ riêng nhánh vn-tinh- → ca đỏ ghim 'KV-AC-1: mã an-giang không ra tên thị trường'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
@@ -14,7 +14,7 @@ evals:
     executor: script
     cmd: config:executors.script.on12_tien_de
     paths: [app/src/lib/market-names.ts, _acceptance/khu-vuc-vung-moi-s06/rang/on12-tien-de.mjs]
-    expected: "exit 0; dòng 'on12 tiền đề: ảnh chụp S06 theo khoá …' có ít nhất một khoá ngoài hanoi/hcmc (da-nang=1 lúc thiết kế; bằng 0 → thoát 2, không đo được); ba ca ON12-AC-7 ✔ gồm 'mọi giá trị đang có trên DB local có nhãn' — trang /ops không còn «(chưa có tên Việt)». Chiều đỏ ghi lúc thiết kế: trên main a404af39 ca này đỏ với 'S06 · da-nang (chưa có tên Việt)'"
+    expected: "exit 0; dòng 'on12 tiền đề: ảnh chụp S06 theo khoá …' có ít nhất một khoá ngoài hanoi/hcmc (da-nang=1 lúc thiết kế; bằng 0 → thoát 2, không đo được); đủ ba ca ON12-AC-7 ✔ (bảng nhãn giá trị thô · render danh mục nguồn · mọi giá trị đang có trên DB local có nhãn) — thiếu ca nào thì thoát 1 nêu ca — trang /ops không còn «(chưa có tên Việt)». Chiều đỏ ghi lúc thiết kế: trên main a404af39 ca này đỏ với 'S06 · da-nang (chưa có tên Việt)'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3

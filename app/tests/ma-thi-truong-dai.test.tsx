@@ -13,6 +13,7 @@ const TEN = new Map([
   ["vn-thanh-pho-hai-phong", "Thành phố Hải Phòng"],
   ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
   ["vn-khanh-hoa", "Khánh Hòa (mã ngắn)"],
+  ["vn-tinh-an-giang", "Tỉnh An Giang"], // chỉ có mã dài vn-tinh-* — đo riêng nhánh tra vn-tinh-
 ])
 // Ma trận viết trước: khoá nhóm thu, cityCode, mã dài, mã lạ.
 const MA_TRAN: [string, string | null][] = [
@@ -24,6 +25,8 @@ const MA_TRAN: [string, string | null][] = [
   ["vn-khanh-hoa", "Khánh Hòa (mã ngắn)"],
   ["vn-thanh-pho-da-nang", "Thành phố Đà Nẵng"], // mã dài đầy đủ làm đầu vào
   ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
+  ["an-giang", "Tỉnh An Giang"],
+  ["vn-an-giang", "Tỉnh An Giang"],
   ["hanoi", "Hà Nội"],
   ["hcmc", "Hồ Chí Minh"],
   ["binh-duong", null], // đã nhập vào TP.HCM, areas không có mã — có chủ đích, chờ ma-thi-truong-ngan
@@ -70,4 +73,9 @@ test("KV-AC-1 chiều đỏ: bản hàm tra mã dài trước mã ngắn thì kh
     "    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n    areaNames.get(`vn-tinh-${ngan}`) ??\n    areaNames.get(`vn-${ngan}`)",
   )
   await banSai("thu-tu", sai, /KV-AC-1: mã khanh-hoa không ra tên thị trường/)
+})
+
+test("KV-AC-1 chiều đỏ: bản hàm bỏ riêng nhánh vn-tinh- thì an-giang không ra tên", async () => {
+  const sai = GOC().replace(" ??\n    areaNames.get(`vn-tinh-${ngan}`)", "")
+  await banSai("bo-tinh", sai, /KV-AC-1: mã an-giang không ra tên thị trường/)
 })

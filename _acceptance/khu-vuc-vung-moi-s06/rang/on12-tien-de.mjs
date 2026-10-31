@@ -20,4 +20,8 @@ const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-name
   { cwd: path.join(ROOT, "app"), encoding: "utf8", timeout: 600_000 });
 const ca = [...(r.stdout + r.stderr).matchAll(/^([✔✖]) (ON12-AC-7[^(]*)/gm)].map((m) => `${m[1]} ${m[2].trim()}`);
 console.log(ca.join("\n"));
+// Đối chứng dương: đủ ba ca ON12-AC-7 thật sự chạy và xanh — pattern lệch tên ca thì node --test bỏ qua hết mà vẫn thoát 0.
+const CAN = ["bảng nhãn giá trị thô", "render danh mục nguồn", "mọi giá trị đang có trên DB local có nhãn"];
+const thieu = CAN.filter((t) => !ca.some((x) => x.startsWith("✔") && x.includes(t)));
+if (thieu.length) { console.error(`on12 tiền đề: thiếu ca xanh — ${thieu.join(" · ")}`); process.exit(1); }
 process.exit(r.status ?? 1);
