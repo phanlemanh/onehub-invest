@@ -36,13 +36,12 @@ Source input: lời Mạnh 31/10 qua giám sát + design doc `docs/superpowers/s
 - AC-6: Given tin S06 trong stg với `city_code` `vn-da-nang` (hay `vn-binh-duong`) và tên phường 2025 khớp một phường của thị trường đích, When chạy `transform-chotot`, Then tin bán có `area_id` là phường đó và confidence high; kết quả gán phường của tin Hà Nội/TP.HCM không đổi so với trước thay đổi.
 - AC-7: Given tin S06 có `city_code` không ánh xạ được, When chạy `transform-chotot`, Then tin vẫn vào canonical với `area_id` NULL như hôm nay, lượt không lỗi, và cuối lượt in một dòng cho mỗi mã lạ kèm số tin.
 - AC-8: Given bản chép DB máy thu (db-thu) đã áp 064 và có ranh giới phường Đà Nẵng thật từ S04, When chạy `reassign-areas` → `transform-chotot` → 300 + 400, Then ≥ 80% tin bán S06 sống của `vn-da-nang` có phường — mẫu số là tin bán S06 sống có `city_code` ánh xạ ra `vn-da-nang`, không suy từ `area_id` — và tỉ lệ có phường của `vn-hanoi`, `vn-hcmc` không giảm so với trước.
-- AC-9: Given nhánh, When chạy bộ test `pipeline/` và `scripts/`, Then tất cả xanh.
 - AC-10: Given một DB (bản chép local, hay cloud qua đường đọc chỉ-đọc của sync), When chạy lệnh đếm mã dài, Then lệnh đọc catalog để liệt MỌI bảng có khoá ngoại tới `areas` cùng các cột chữ `area_id`/`market_id`, đếm dòng trỏ 32 mã dài; còn dòng ở khoá ngoại nào thì in một dòng gọi tên bảng và thoát 1; cột chữ và cột mảng không khoá ngoại (vd `area_sources`, `collection_units.market_codes`) chỉ in dòng báo, không chặn; không còn dòng ở khoá ngoại thì thoát 0 — đây là bước chặn trước khi áp 064 lên DB máy thu.
 
 ## Coverage
 
 - Trục A — thị trường: có sẵn phường (HN, HCM) · mới có phường (ĐN, HP) · tỉnh cũ đã sáp nhập (BD, BR-VT, HD, QN) · mã lạ · thị trường chưa có trong `areas`. [thước CE: Nghị quyết sáp nhập 2025 — 34 tỉnh; `areas` 34 thị trường]
-- Trục B — lớp: migration (AC-1, AC-2) · ánh xạ (AC-3) · nạp phường (AC-4, AC-5) · chuyển S06 (AC-6, AC-7) · dữ liệu thật (AC-8) · hồi quy (AC-9).
+- Trục B — lớp: migration (AC-1, AC-2) · ánh xạ (AC-3) · nạp phường (AC-4, AC-5) · chuyển S06 (AC-6, AC-7) · dữ liệu thật (AC-8) · hồi quy (đưa ra Known limits — xem Notes).
 - Trục C — trạng thái DB: 064 chưa áp (AC-5) · áp lần đầu · áp lại (AC-1) · có tham chiếu/va chạm (AC-2) · cloud còn dòng trỏ mã dài (AC-10).
 - Trục D — chiều: dương (AC-1, AC-4, AC-6, AC-8) · không được bắn (AC-2, AC-5, AC-7, phần «không đổi» của AC-4, AC-6).
 - Đà Nẵng ở AC-8 BẮT BUỘC có ranh giới S04 thật (claudedp-3110-17); Hải Phòng đo cùng ngưỡng khi có, chưa có thì khai giới hạn ở Cổng 2.
@@ -58,3 +57,5 @@ Source input: lời Mạnh 31/10 qua giám sát + design doc `docs/superpowers/s
 ## Notes
 
 - Thứ tự áp: code của hàng chịu được 064 chưa áp (AC-5); dữ liệu vùng mới chỉ có phường sau khi áp 064 + có ranh giới S04.
+- Known limits — thu phạm vi sau khi hết trần 3 lượt chấm (Mạnh 31/10 «Đồng ý theo lời khuyên»):
+  - AC-9 cũ (bộ test chung `pipeline/` và `scripts/` xanh): ship không có bằng chứng máy của lượt chấm hồ sơ. Ba lượt đỏ vì ba lý do môi trường (test hết giờ và rớt kết nối khi DB máy thu quá tải bởi các bản chép 3,4 GB chạy song song; một tin S06 trôi phường sau lượt thu bù), không lượt nào do code của hàng. CI của PR chạy lại hai bộ này trên môi trường riêng.

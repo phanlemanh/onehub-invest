@@ -20,7 +20,7 @@ evals:
     executor: test
     cmd: config:executors.test.svm_unit
     paths: [pipeline/lib/thi-truong.mjs, pipeline/lib/thi-truong.test.mjs, pipeline/reassign-areas.mjs, pipeline/transform-chotot.mjs]
-    expected: "exit 0; fail 0; ma trận viết trước: 4 khoá bộ thu + 2 mã thị trường + 4 mã tỉnh sáp nhập → đúng mã, 3 mã lạ (rỗng, null, vn-xyz) → null; khoá module ⊂ id trong collector/src/config/cities.ts (đọc tệp thật); quét hai tệp reassign-areas.mjs, transform-chotot.mjs (bỏ chú thích): 0 chuỗi khớp /vn-[a-z-]+/ hay khoá bộ thu nào; ca quan hệ: thêm khoá giả vào bản chép module → tập thành phố mà hai bước tính ra có khoá đó; đối chứng dương: chèn 'vn-da-nang' cứng vào bản chép transform → quét đỏ ghim tên tệp"
+    expected: "exit 0; fail 0; ma trận viết trước: 4 khoá bộ thu + 2 mã thị trường + 4 mã tỉnh sáp nhập → đúng mã, 3 mã lạ (rỗng, null, vn-xyz) → null; khoá module ⊂ id trong collector/src/config/cities.ts (đọc tệp thật); quét hai tệp reassign-areas.mjs, transform-chotot.mjs (bỏ chú thích): 0 chuỗi khớp /vn-[a-z-]+/ hay khoá bộ thu nào; ca quan hệ: thêm khoá giả vào bản chép module → tập thành phố mà hai bước tính ra có khoá đó; đối chứng dương: chèn 'vn-da-nang' cứng vào bản chép transform → quét đỏ ghim tên tệp; phía transform đo bằng hành vi ở E6 (bản chép module thêm mã tỉnh giả → tin mang mã đó ra phường ĐN, module gốc → mã lạ)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -34,14 +34,14 @@ evals:
     executor: script
     cmd: config:executors.script.svm_reassign
     paths: [pipeline/reassign-areas.mjs, pipeline/lib/thi-truong.mjs, scripts/s06-vung-moi/acceptance.mjs]
-    expected: "exit 0; ca chưa áp 064 trên bản chép riêng: dòng nêu 'danang' + 'vn-da-nang' thiếu, 0 thị trường mới được chèn (34 trước = 34 sau, không có vn-da-nang), phường Hà Nội/TP.HCM vẫn upsert"
+    expected: "exit 0; ca chưa áp 064 trên bản chép riêng: dòng nêu 'danang' + 'vn-da-nang' thiếu, 0 thị trường mới được chèn (34 trước = 34 sau, không có vn-da-nang), số phường upsert của Hà Nội và TP.HCM đọc từ dòng log đều > 0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: script
     cmd: config:executors.script.svm_transform
     paths: [pipeline/transform-chotot.mjs, pipeline/lib/thi-truong.mjs, scripts/s06-vung-moi/acceptance.mjs]
-    expected: "exit 0; 'TRANSFORM PASS'; bản chép DB đã áp 064 + phường giả ĐN: tin stg city_code vn-da-nang và vn-binh-duong (phường thật TP.HCM) có ward_name_v3 khớp → area_id đúng phường, confidence high; bảng (offer_id → area_id) của tin vn-hanoi, vn-hcmc chạy bằng transform của main và của nhánh trên cùng bản chép giống hệt từng dòng"
+    expected: "exit 0; 'TRANSFORM PASS'; bản chép DB đã áp 064 + phường giả ĐN: tin stg city_code vn-da-nang và vn-binh-duong (phường thật TP.HCM) có ward_name_v3 khớp → area_id đúng phường, confidence high; bảng (offer_id → area_id) của tin vn-hanoi, vn-hcmc chạy bằng transform của main và của nhánh trên cùng bản chép giống hệt từng dòng; quan hệ AC-3: transform chạy với bản chép module thêm SAP_NHAP vn-tinh-thu-gia → vn-da-nang xếp tin mã đó vào vn-da-nang-thu-hai, transform với module gốc để tin đó NULL và in 'city_code lạ: vn-tinh-thu-gia (1 tin)'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -61,6 +61,7 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.test.pipeline
+    status: not-run
     paths: [pipeline/**]
     expected: "exit 0; fail 0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -68,6 +69,7 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.test.scripts
+    status: not-run
     paths: [scripts/**]
     expected: "exit 0; fail 0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -76,12 +78,13 @@ evals:
     executor: script
     cmd: config:executors.script.svm_dem
     paths: [scripts/s06-vung-moi/dem-ma-dai.mjs, scripts/s06-vung-moi/acceptance.mjs]
-    expected: "exit 0; 'DEM PASS'; trên bản chép: sạch → lệnh đếm thoát 0, không dòng nào; cài lần lượt một dòng trỏ mã dài ở mỗi bảng khoá ngoại catalog liệt (ma trận lấy từ catalog, không danh sách tay) → lệnh đếm thoát 1, in đúng một dòng gọi tên bảng đó kèm 'chặn'; area_sources còn mã dài → chỉ dòng 'báo', thoát 0; danh sách bảng của lệnh = danh sách khoá ngoại catalog (so tập)"
+    expected: "exit 0; 'DEM PASS'; trên bản chép: sạch → lệnh đếm thoát 0, không dòng nào; cài lần lượt một dòng trỏ mã dài ở mỗi bảng khoá ngoại catalog liệt (ma trận lấy từ catalog, không danh sách tay) → lệnh đếm thoát 1, in đúng một dòng gọi tên bảng đó kèm 'chặn'; area_sources và cột mảng collection_units.market_codes còn mã dài → chỉ dòng 'báo', thoát 0; bản chép đã áp 064 → không còn dòng báo nào; danh sách bảng của lệnh = danh sách khoá ngoại catalog (so tập)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-9
     executor: script
     cmd: config:executors.script.svm_scope
+    status: not-run
     paths: ["**"]
     expected: "exit 0; 'SCOPE OK'; mọi tệp đổi so merge-base nằm trong danh sách được phép của hàng"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

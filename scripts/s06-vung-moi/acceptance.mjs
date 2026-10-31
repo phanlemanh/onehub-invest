@@ -209,6 +209,13 @@ async function modeDem() {
     check(r.code === 0 && /báo area_sources\.area_id/.test(r.out) && !/khoá ngoại — chặn/.test(r.out), "sạch khoá ngoại: thoát 0, area_sources chỉ dòng 'báo'");
     const { con } = await demMaDai(exec);
     check(con.every((x) => !x.fk), "bản chép sạch: không khoá ngoại nào trỏ mã dài");
+    check(/báo collection_units\.market_codes còn \d+ dòng/.test(r.out), "AC-10 cột mảng collection_units.market_codes mang mã dài → dòng 'báo'");
+    const ca064 = await banCa("dem_064");
+    try {
+      check(apSql(ca064.db, readFileSync(MIG, "utf8")).code === 0, "AC-10 bản chép khác: áp 064");
+      const r064 = spawnSync("node", [join(ROOT, "scripts/s06-vung-moi/dem-ma-dai.mjs")], { env: { ...process.env, DATABASE_URL: ca064.url }, encoding: "utf8" });
+      check(r064.status === 0 && !/market_codes/.test(r064.stdout) && !/area_sources/.test(r064.stdout), "AC-10 sau 064: không còn dòng báo cột mảng hay area_sources");
+    } finally { await ca064.don(); }
     let i = 0;
     for (const fk of fks) {
       // mỗi ca một bản chép riêng — không phải hoàn lại dòng đã cài
@@ -308,7 +315,8 @@ async function modeReassign() {
     check(r.code === 0 && r.out.split("\n").some((l) => l.includes("danang") && l.includes("vn-da-nang") && l.includes("chưa có trong areas")),
       "AC-5 064 chưa áp: một dòng nêu danang + vn-da-nang thiếu");
     check(JSON.stringify(mk1) === JSON.stringify(mk0) && !mk1.includes("vn-da-nang"), `AC-5 0 thị trường mới được chèn (${mk0.length} → ${mk1.length})`);
-    check(/hanoi: phường upsert/.test(r.out) && /hcmc: phường upsert/.test(r.out), "AC-5 phường Hà Nội/TP.HCM vẫn upsert");
+    const soUpsert = (k) => Number((r.out.match(new RegExp(`^${k}: phường upsert (\\d+)/`, "m")) ?? [])[1] ?? 0);
+    check(soUpsert("hanoi") > 0 && soUpsert("hcmc") > 0, `AC-5 phường Hà Nội/TP.HCM vẫn upsert (${soUpsert("hanoi")}, ${soUpsert("hcmc")} > 0)`);
   } finally { await b.don(); }
   finish("REASSIGN");
 }
@@ -333,6 +341,24 @@ function chayTransform(ca, banMain = false) {
   return { code: r.status, out: (r.stdout ?? "") + (r.stderr ?? "") };
 }
 function require_fs() { return createRequire(import.meta.url)("node:fs"); }
+
+/** transform-chotot của NHÁNH chạy trong cây tạm mà lib/thi-truong.mjs là bản chép có thêm một dòng SAP_NHAP giả — chứng
+ * bước chuyển lấy ánh xạ từ module (quan hệ AC-3), không chỉ có chuỗi gọi hàm. */
+function chayTransformModuleGia(ca, maGia, thiTruong) {
+  const { mkdirSync, symlinkSync, readdirSync, cpSync } = require_fs();
+  const T = mkdtempSync(join(tmpdir(), "svm-mod-"));
+  mkdirSync(join(T, "pipeline/lib"), { recursive: true });
+  for (const f of readdirSync(join(ROOT, "pipeline/lib"))) {
+    if (f !== "thi-truong.mjs") symlinkSync(join(ROOT, "pipeline/lib", f), join(T, "pipeline/lib", f));
+  }
+  writeFileSync(join(T, "pipeline/lib/thi-truong.mjs"), readFileSync(join(ROOT, "pipeline/lib/thi-truong.mjs"), "utf8")
+    .replace("export const SAP_NHAP = {", `export const SAP_NHAP = {\n  "${maGia}": "${thiTruong}",`));
+  for (const f of ["node_modules", "transform-zalo.mjs", "package.json"]) symlinkSync(join(ROOT, "pipeline", f), join(T, "pipeline", f));
+  cpSync(join(ROOT, "pipeline/transform-chotot.mjs"), join(T, "pipeline/transform-chotot.mjs"));
+  const r = spawnSync("node", [join(T, "pipeline/transform-chotot.mjs")], { env: { ...process.env, DATABASE_URL: ca.url }, encoding: "utf8", maxBuffer: 64 << 20 });
+  rmSync(T, { recursive: true, force: true });
+  return { code: r.status, out: (r.stdout ?? "") + (r.stderr ?? "") };
+}
 
 const bangHnHcm = async (c) => (await c.query(
   `SELECT o.offer_id, o.area_id FROM sale_offer_records o JOIN stg_chotot_ads s ON o.originating_system_key = s.list_id::text
@@ -386,6 +412,16 @@ async function modeTransform() {
     const dongLa = r.out.split("\n").filter((l) => l.startsWith("city_code lạ:"));
     check(la && la.area_id === null && dongLa.length === 1 && dongLa[0].includes("vn-xyz-thu") && dongLa[0].includes("(1 tin)"),
       `AC-7 tin vn-xyz-thu → area_id NULL, đúng một dòng '${dongLa[0] ?? "—"}'`);
+    // AC-3 quan hệ phía transform: mã tỉnh giả chỉ có trong BẢN CHÉP module → bản transform đó xếp tin vào phường ĐN;
+    // đối chứng: transform thật (module gốc) để tin ấy không phường và đếm là mã lạ.
+    await chenTin(c.c, 9900000004, "vn-tinh-thu-gia", "Phường Thử Hai");
+    const rg = chayTransformModuleGia(c, "vn-tinh-thu-gia", "vn-da-nang");
+    const gia = await ga(9900000004);
+    check(rg.code === 0 && gia?.area_id === "vn-da-nang-thu-hai", `AC-3 module chép thêm vn-tinh-thu-gia → vn-da-nang: transform xếp tin vào ${gia?.area_id}`);
+    await c.c.query(`UPDATE sale_offer_records SET area_id = NULL WHERE originating_system_key = '9900000004'`);
+    const rt = chayTransform(c);
+    const that = await ga(9900000004);
+    check(that?.area_id === null && /city_code lạ: vn-tinh-thu-gia \(1 tin\)/.test(rt.out), "AC-3 đối chứng: module gốc không có mã giả → tin không phường, đếm mã lạ");
   } finally { await c.don(); }
   finish("TRANSFORM");
 }
