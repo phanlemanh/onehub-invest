@@ -14,7 +14,22 @@ evals:
     cmd: config:executors.script.svc_cloud_gia
     layer: backend-effect
     paths: [pipeline/sync-cloud.mjs, _acceptance/sellers-view-len-cloud/probes/cloud-gia.mjs]
-    expected: "exit 0; DB thử oneinvest_p4_svc chép máy thu (db-thu-chac.sh của SD3, xoá khi xong), đứng vai cloud; chạy câu kiểu bảng thật (export của sync-cloud) qua exec trên DB thử: sellers view → dichKhongPhaiBang trả ['sellers'] và thông điệp ghim; trong giao dịch DROP VIEW + CREATE TABLE sellers đúng cột cho phép → trả [] (đối chứng dương); trong giao dịch khác, câu chèn kiểu tráo bảng (jsonb_populate_record vào public.sellers) khi sellers là view → lỗi Postgres (bằng chứng lỗi có thật mà chốt chặn trước); in 'CLOUD GIA OK'"
+    expected: "exit 0; DB thử oneinvest_p4_svc chép máy thu (db-thu-chac.sh của SD3, xoá khi xong), đứng vai cloud; chạy câu kiểu bảng thật (export của sync-cloud) qua exec trên DB thử: sellers view → dichKhongPhaiBang trả ['sellers'] và thông điệp ghim; trong giao dịch DROP VIEW + CREATE TABLE sellers đúng cột cho phép → trả [] (đối chứng dương); với sellers đã dựng lại thành bảng, dichKhongPhaiBang trên MỌI bảng FILL của DB thử → [] (0 bảng bị chặn oan); trong giao dịch khác, câu chèn kiểu tráo bảng (jsonb_populate_record vào public.sellers) khi sellers là view → lỗi Postgres (bằng chứng lỗi có thật mà chốt chặn trước); in 'CLOUD GIA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-2b
+    executor: script
+    cmd: config:executors.script.svc_cloud_gia
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, db/migrations/022_chotot_source.sql, db/migrations/038_sync_stage.sql, _acceptance/sellers-view-len-cloud/probes/cloud-gia.mjs]
+    expected: "exit 0; cùng probe E2, trong giao dịch trên DB thử: DROP VIEW sellers, dựng sellers bằng câu CREATE TABLE sellers rút NGUYÊN VĂN từ db/migrations/022_chotot_source.sql (không viết tay), sync_stage theo 038; đọc dòng từ view máy thu (dựng lại view trong giao dịch con trước khi drop, hoặc đọc trước) bằng localReadSql thật; nạp vào sync_stage rồi chạy buildSwapSql thật cho sellers → thành công, count(sellers) = số dòng view, count(DISTINCT phone_hash) = count(*); đối chứng đỏ: nhân đôi một dòng trong staging → lượt tráo lỗi ('TRAO TRUNG KHOA' bắt); in 'TRAO THAT OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-2c
+    executor: test
+    cmd: config:executors.test.svc_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; test liệt kê mọi (bảng, cột) trong CLOUD_ALLOW có tên khớp /phone_hash$/ → ít nhất ba (sale_offers.seller_phone_hash, sellers.phone_hash, properties.seller_phone_hash) và mọi bảng đều thuộc FILL; đối chứng đỏ: bản chép CLOUD_ALLOW thêm bảng ngoài FILL có cột seller_phone_hash → hàm kiểm bắt ('KHOA MO COI')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -29,7 +44,7 @@ evals:
     executor: script
     cmd: config:executors.script.svc_catchup
     paths: [docs/ops/cloud-schema-catchup-2026-10-31-060.sql, _acceptance/sellers-view-len-cloud/probes/catchup.sh]
-    expected: "exit 0; tệp catch-up tồn tại; tách khối ĐO TRƯỚC (trước dấu '-- ÁP') và khối ÁP; khối ÁP không chứa CREATE VIEW, DROP TABLE, DROP VIEW, ALTER TABLE, registry_aliases, seller_phone ~ hay nội dung nào của 060 (so từng câu lệnh của db/migrations/060_sdt_e164.sql: 0 câu trùng); chạy khối ĐO TRƯỚC trên DB thử dựng vai cloud (sellers là bảng đúng cột, không registry_aliases — dựng trong giao dịch) → ra dòng kỳ vọng ghi trong tệp; đối chứng đỏ: chèn 'CREATE OR REPLACE VIEW sellers' vào khối ÁP bản chép → bắt ('AP CO DDL SELLERS'); in 'CATCHUP OK'"
+    expected: "exit 0; tệp catch-up tồn tại; tách khối ĐO TRƯỚC (trước dấu '-- ÁP') và khối ÁP; khối ÁP không chứa CREATE VIEW, DROP TABLE, DROP VIEW, ALTER TABLE, registry_aliases, seller_phone ~ hay nội dung nào của 060 (so từng câu lệnh của db/migrations/060_sdt_e164.sql: 0 câu trùng); chạy khối ĐO TRƯỚC trên DB thử dựng vai cloud (sellers là bảng đúng cột, không registry_aliases — dựng trong giao dịch) → ra dòng kỳ vọng ghi trong tệp; hai ô đối chứng âm trong giao dịch riêng: sellers dựng là view → đầu ra khác dòng kỳ vọng và gọi tên 'sellers'; thêm bảng registry_aliases → đầu ra khác và gọi tên 'registry_aliases' (số ô = 3 trạng thái); đối chứng đỏ: chèn 'CREATE OR REPLACE VIEW sellers' vào khối ÁP bản chép → bắt ('AP CO DDL SELLERS'); in 'CATCHUP OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
