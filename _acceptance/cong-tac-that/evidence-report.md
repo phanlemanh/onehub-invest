@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fcbdb1af32044dfff9b766419bfb36156a62e5f5
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: cong-tac-that

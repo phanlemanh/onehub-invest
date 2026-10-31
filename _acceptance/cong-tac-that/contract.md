@@ -5,7 +5,7 @@ slug: cong-tac-that
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-27
 ---
@@ -48,3 +48,11 @@ Source input: lộ trình TV2b + lời giao claudedp-2610-13 (phiên điều ph�
 - Nút tạm dừng/bật nguồn trên /ops (TV4b) và tự tạm dừng khi chạm trần chi phí (TV15).
 - Sửa `pipeline/lib/vong-doi.mjs` (luật của TV2a, giữ nguyên).
 - Gọi nhà cung cấp thật trong lúc kiểm: mọi ca dùng nhà cung cấp giả đếm lời gọi.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-2: chạy tay lượt thu tuần S01 hay chạy thử S02 thì vẫn thu dù nguồn đang tạm dừng.
+  - Ngoài-3: vùng S06 bật ở /ops mà thiếu mã thành phố vẫn được thu, bản thu ghi thành phố rỗng.
+  - Ngoài-4: dữ liệu mẫu của test có thể hỏng lặng lẽ, ca «0 lời gọi» khi đó xanh oan.
+  - Ngoài-5: bấm tạm dừng S01 trong 30 phút sau khi lịch tuần đã gọi thì lượt tuần đó vẫn thu.
