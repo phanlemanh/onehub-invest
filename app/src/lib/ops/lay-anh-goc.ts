@@ -7,7 +7,7 @@ import { isIP } from "node:net";
  * URL gốc mang tên miền nguồn thật (tầng A, ADR-0007): trình duyệt không bao giờ thấy nó — thân và header phản hồi
  * lỗi là chữ chung, không chép URL hay tên máy, không ghi log.
  * Bảng chặn (design doc §3, AC-4): chỉ `https:`; tên máy phân giải ra địa chỉ riêng/loopback/link-local (IPv4, IPv6,
- * `::ffff:` ánh xạ) → 403; ≤ 3 chuyển hướng, mỗi bước kiểm lại; nguồn không 2xx, không phải ảnh, quá 8 MB → 502;
+ * `::ffff:` ánh xạ) → 403; ≤ 3 chuyển hướng, mỗi bước kiểm lại; nguồn không 2xx, không phải ảnh, quá 8 MB → 502; ảnh ngoài jpeg/png/webp/gif → 415;
  * quá 8 giây → 504. Kết nối đi bằng đúng địa chỉ đã kiểm (`lookup` của `https.request` trả địa chỉ ấy) — chống đổi
  * DNS giữa lúc kiểm và lúc nối.
  */
@@ -21,11 +21,37 @@ export const THOI_HAN_MS = 8000;
 export const TRAN_BYTE = 8 * 1024 * 1024;
 export const TRAN_CHUYEN_HUONG = 3;
 
-const loi = (status: 403 | 404 | 502 | 504) =>
-  new Response(status === 403 ? "nguồn ảnh bị chặn" : status === 504 ? "nguồn ảnh quá giờ" : "không lấy được ảnh", {
-    status,
-    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
-  });
+/** Kiểu ảnh được phục vụ (proxy-anh-chan-svg) — cùng tập với bảng MIME của nhánh ảnh đã tải trong zalo-media.ts.
+ *  SVG là tài liệu có thể chứa script nên không bao giờ nằm ở đây. */
+export const ANH_CHO_PHEP: ReadonlySet<string> = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+
+/** Hai lớp chắn cho mọi phản hồi ảnh của /api/zalo-media: trình duyệt không đoán kiểu, và tài liệu mở thẳng chạy trong
+ *  hộp cát không script. */
+export const HEADER_ANH_AN_TOAN: Readonly<Record<string, string>> = {
+  "x-content-type-options": "nosniff",
+  "content-security-policy": "sandbox; default-src 'none'",
+};
+
+/** `content-type` của nguồn → kiểu chuẩn: bỏ tham số, hạ chữ thường, `image/jpg` → `image/jpeg`; vắng → "". */
+export function chuanHoaKieu(raw: string | null): string {
+  const t = (raw ?? "").split(";")[0].trim().toLowerCase();
+  return t === "image/jpg" ? "image/jpeg" : t;
+}
+
+const loi = (status: 403 | 404 | 415 | 502 | 504) =>
+  new Response(
+    status === 403
+      ? "nguồn ảnh bị chặn"
+      : status === 415
+        ? "định dạng ảnh không được phép"
+        : status === 504
+          ? "nguồn ảnh quá giờ"
+          : "không lấy được ảnh",
+    {
+      status,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", ...HEADER_ANH_AN_TOAN },
+    },
+  );
 
 const v4So = (ip: string) => ip.split(".").reduce((n, p) => n * 256 + Number(p), 0);
 const trongDai = (ip: string, goc: string, bit: number) => {
@@ -149,8 +175,10 @@ export async function layAnhGoc(
         continue;
       }
       if (res.status < 200 || res.status >= 300) return loi(502);
-      const type = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+      const type = chuanHoaKieu(res.headers.get("content-type"));
       if (!type.startsWith("image/")) return loi(502);
+      // Kiểu ảnh ngoài danh sách (SVG, icon, avif…) bị từ chối TRƯỚC khi đọc thân nguồn.
+      if (!ANH_CHO_PHEP.has(type)) return loi(415);
       const khai = Number(res.headers.get("content-length"));
       if (Number.isFinite(khai) && khai > tranByte) return loi(502);
 
@@ -168,7 +196,9 @@ export async function layAnhGoc(
         buf.set(p, o);
         o += p.byteLength;
       }
-      return new Response(buf, { headers: { "content-type": type, "cache-control": "private, max-age=300" } });
+      return new Response(buf, {
+        headers: { "content-type": type, "cache-control": "private, max-age=300", ...HEADER_ANH_AN_TOAN },
+      });
     }
   } catch (err) {
     if (signal.aborted || laQuaGio(err)) return loi(504);
