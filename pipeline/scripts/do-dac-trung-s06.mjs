@@ -19,6 +19,7 @@ import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
 import { CLOUD_ALLOW } from "../sync-cloud.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
+import { ASSERTION_FIELD } from "../lib/vocab.generated.mjs";
 
 const GOC = "25ce701b";
 const NGUONG = 0.95;
@@ -28,7 +29,8 @@ if (!/\/oneinvest_[a-z0-9_]+$/.test(DB_URL)) {
   process.exit(2);
 }
 const PIPE = join(import.meta.dirname, "..");
-const BAY = ["street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"];
+const A = ASSERTION_FIELD;
+const BAY = [A.street_number, A.unit_number, A.frontage_length, A.lot_size_dimensions, A.stories, A.latitude, A.longitude];
 
 // Mỗi đặc trưng: biểu thức «có khoá khác rỗng», «hợp lệ» và «giá trị nguồn» trên stg (a = tin stg, viết độc lập với bộ đọc).
 const SO = (e) => `(CASE WHEN (${e}) ~ '^\\s*[0-9]+([.,][0-9]+)?\\s*(m|mét|tầng|t)?\\s*$' THEN replace(substring((${e}) from '[0-9]+(?:[.,][0-9]+)?'), ',', '.')::numeric END)`;
@@ -74,7 +76,7 @@ function doBay(kq) {
   }
   return do_;
 }
-const COT_CU = ["property_type", "bedrooms", "street_raw", "block_raw", "floor_raw", "offer_status"];
+const COT_CU = [A.property_type, A.bedrooms, A.street_raw, A.block_raw, "floor_raw", A.offer_status];
 async function chup(c) {
   const { rows } = await c.query(`SELECT offer_id, source, ${COT_CU.join(", ")}, bathrooms FROM sale_offers
     WHERE source IN ('S03','S05','S06') ORDER BY offer_id`);

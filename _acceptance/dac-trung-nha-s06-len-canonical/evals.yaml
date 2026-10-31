@@ -77,6 +77,6 @@ evals:
     criterion: AC-9
     executor: script
     cmd: config:executors.script.dac_trung_s06_that
-    paths: [pipeline/scripts/phat-bieu-db.itest.mjs, pipeline/scripts/dac-trung-s06.itest.mjs, db/migrations/061_*.sql]
-    expected: "exit 0; ca DB phát biểu (phat-bieu-db.itest) và ca DB trạng thái chào của 059 chạy trên DB thử đã nạp 061 đều xanh"
+    paths: [pipeline/scripts/trang-thai-chao.itest.mjs, pipeline/scripts/dac-trung-s06.itest.mjs, db/migrations/061_*.sql]
+    expected: "exit 0; ca DB của HD5 và ca DB trạng thái chào của 059 (trang-thai-chao.itest) trên DB thử đều xanh; phat-bieu-db.itest không chạy ở đây vì PD-AC-1 (view thiếu field_provenance) và PD-AC-8 đã đỏ trên main 25ce701b — giám sát duyệt P1-87, hàng riêng sửa"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
