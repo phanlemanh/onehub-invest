@@ -78,8 +78,8 @@ test("SĐT +84: '+84973034567' chuẩn hoá về 0", () => {
   assert.deepEqual(extractPhones("Liên hệ +84973034567"), ["0973034567"]);
 });
 
-test("SĐT 11 số (đầu số mới): '03745678901'", () => {
-  assert.deepEqual(extractPhones("Zalo 03745678901"), ["03745678901"]);
+test("SĐT 11 số không nhận (di động VN chỉ còn 10 số — SD2): '03745678901'", () => {
+  assert.deepEqual(extractPhones("Zalo 03745678901"), []);
 });
 
 test("parsePost gắn phone + phones; test cũ có sẵn SĐT trong text", () => {

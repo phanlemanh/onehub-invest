@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: dbb10ca139eb8c84a377e81ee5f12affd5ba6feb
+verified_commit: 29acb416382fda9edc520ca311d3012e0dc6b79f
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -148,3 +148,11 @@ none — mọi eval chỉ chạy một lượt (runs 1, deterministic), không c
 
 Round 1: E5b failed — lượt đối chứng của do-cam-mau-s03 trên bản chép dữ liệu thật không tái lập mốc gốc seller_name_pct (đo 89.6); lượt cây vẫn đạt cả bảy thước và ca DB của N1 xanh. Returned to implementation.
 Round 2: E5 và E5b chạy lại và xanh — phép đo N1 không còn phụ thuộc seller_name có sẵn trên DB thử (commit dbb10ca1); E1, E2, E3, E4, E6 mang tiếp từ round 1.
+
+### Re-pin lần 1 — 2026-10-31, do gộp main da1fd687 sau khi ZCode khai 19 nhóm S03 (claudedp-3110-1)
+run_id: repin-20261031T011326Z-36765
+sha: f6d3621b8671328db960df679fe9920140eeac3f · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-31, do gộp main 4307a0b8 + đổi khoá số đo audit trong do-boc-sdt (S5-AC-6)
+run_id: repin-20261031T022204Z-96612
+sha: 29acb416382fda9edc520ca311d3012e0dc6b79f · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
