@@ -102,6 +102,39 @@ const txt = (el: Element | null | undefined) => (el?.textContent ?? "").replace(
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
 const admin = new pg.Client({ connectionString: localDbUrl() })
 let setupErr: string | null = null
+
+// Lượt bị giết giữa chừng không tới after() nên để lược đồ tạm lại DB chung (31/10: 20 lược đồ của 6 lượt). Đầu lượt xoá lược
+// đồ đúng sáu tiền tố của test này mà tiến trình mang pid đã chết; lượt đang chạy (pid sống) và tiền tố khác giữ nguyên.
+// Bị ngắt bằng SIGTERM/SIGINT thì tự xoá lược đồ của mình rồi thoát (hồ sơ phat-bieu-db-do-tren-main AC-7).
+const LUOC_DO_TAM = /^dc_(local|cloud|noflow|ta|mut|mig)_(\d+)$/
+function pidSong(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM" // có tiến trình, chỉ là không phải của mình
+  }
+}
+async function donLuocDoChet() {
+  const { rows } = await admin.query<{ nspname: string }>(`SELECT nspname FROM pg_namespace WHERE nspname ~ '^dc_'`)
+  for (const { nspname } of rows) {
+    const m = LUOC_DO_TAM.exec(nspname)
+    if (m && !pidSong(Number(m[2]))) await admin.query(`DROP SCHEMA IF EXISTS "${nspname}" CASCADE`)
+  }
+}
+for (const [sig, ma] of [["SIGTERM", 143], ["SIGINT", 130]] as const)
+  process.once(sig, () => {
+    const c = new pg.Client({ connectionString: localDbUrl() })
+    c.connect()
+      .then(async () => {
+        for (const s of SCHEMAS) await c.query(`DROP SCHEMA IF EXISTS "${s}" CASCADE`).catch(() => {})
+      })
+      .catch(() => {})
+      .finally(() => {
+        c.end().catch(() => {})
+        process.exit(ma)
+      })
+  })
 let PAYLOAD: Payload
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
 
@@ -130,6 +163,7 @@ async function ingest(payload: Payload) {
 before(async () => {
   try {
     await admin.connect()
+    await donLuocDoChet()
     await makeLocal(S_LOCAL)
     // Một cửa sổ tính lâu hơn hai cửa sổ kia → measured_at của khối phải là computed_at CŨ NHẤT (AC-4).
     await admin.query(`UPDATE "${S_LOCAL}".data_flow_snapshot SET computed_at = computed_at - interval '2 hours' WHERE time_window = '30d'`)
