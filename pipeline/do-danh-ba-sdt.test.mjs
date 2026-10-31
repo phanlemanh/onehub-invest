@@ -47,8 +47,8 @@ const bai = {
     ["p6", { sender_id: "u5", text: `lh ${SO.e}` }],
     ["p7", { sender_id: null, text: "lh 0912 000 001" }],
     ["p8", { sender_id: null, text: "lh 0912000002" }],
-    // N5: dạng «ddd dd•dd ddd» bộ bóc sót · dạng «09x.xxx.xxx» bắt được · bài 4 số (chạm trần 3) không đếm
-    ["r1", { sender_id: null, text: "lh 091 20•00 003" }],
+    // N5: dạng «oddd ddd ddd» bộ bóc sót · dạng «09x.xxx.xxx» bắt được · bài 4 số (chạm trần 3) không đếm
+    ["r1", { sender_id: null, text: "lh o912 000 003" }], // chữ «o» thay số 0: bộ dò rộng nhận, bộ bóc không (SD2 đã bóc dạng •)
     ["r2", { sender_id: null, text: "lh 091.200.0004" }],
     ["r3", { sender_id: null, text: "0913000001 0913000002 0913000003 091 30•00 004" }],
   ]),
