@@ -64,9 +64,17 @@ export function shortAreaName(name: string): string {
   return name.replace(/^(Thành phố|Tỉnh)\s+/, "")
 }
 
-/** Mã thị trường/khu vực (`hanoi`, `vn-tinh-an-giang`, `vn`) → tên khu vực; mã lạ → «(chưa có tên Việt)». */
+/** Mã thị trường/khu vực (`hanoi`, `vn-tinh-an-giang`, `vn`) → tên khu vực; mã lạ → «(chưa có tên Việt)».
+ * TẠM (hàng khu-vuc-vung-moi-s06): areas còn 32 thị trường mã dài `vn-thanh-pho-*`/`vn-tinh-*` của lần nạp tỉnh cũ, trong
+ * khi nhóm thu (S06 `da-nang` → `vn-da-nang`) theo quy ước `vn-<khoá>` — mã ngắn không thấy thì tra thêm hai dạng dài.
+ * Bỏ khi hàng ma-thi-truong-ngan (migration 064) đổi mã areas về dạng ngắn. */
 export function marketNameOf(code: string, areaNames: ReadonlyMap<string, string>): TenThiTruong {
   if (code === "vn") return { name: "Toàn quốc", known: true }
-  const ten = areaNames.get(code) ?? areaNames.get(`vn-${code}`)
+  const ngan = code.startsWith("vn-") ? code.slice(3) : code
+  const ten =
+    areaNames.get(code) ??
+    areaNames.get(`vn-${ngan}`) ??
+    areaNames.get(`vn-thanh-pho-${ngan}`) ??
+    areaNames.get(`vn-tinh-${ngan}`)
   return ten ? { name: ten, known: true } : { name: `${code} (chưa có tên Việt)`, known: false }
 }
