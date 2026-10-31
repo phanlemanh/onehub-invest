@@ -41,56 +41,10 @@ export async function refreshBaitGap(c) {
       AND o.price_tier = 'P1' AND o.kind = 'sale' AND o.price_perm2 > 0`);
   console.log(`bait_gap_pct: cập nhật ${gap.rowCount} offers P1`);
 
-  // ---- 3. Sellers registry — tổng hợp lại toàn bộ từ offers (chân lý) ----
-  // Upsert: SĐT mới trên tin được thêm dòng (lệnh thêm dòng mất ở 907f4bd4 — SD1); dòng đã có ghi đè cột tổng hợp
-  // (không cộng dồn), tên giữ tên đã có. xmax = 0 ⇔ dòng vừa thêm.
-  const agg = await c.query(`
-    WITH s AS (
-      SELECT seller_phone_hash h,
-             count(*) n_ads,
-             min(first_seen) fs, max(last_seen) ls,
-             max(seller_name) best_name,
-             array_agg(DISTINCT source) srcs,
-             count(*) FILTER (WHERE kind = 'sale') n_sale,
-             count(*) FILTER (WHERE kind = 'rent_lt') n_rent,
-             percentile_cont(0.5) WITHIN GROUP (ORDER BY bait_gap_pct) FILTER (WHERE bait_gap_pct IS NOT NULL) med_gap,
-             count(*) FILTER (WHERE bait_gap_pct >= 10) n_good
-      FROM sale_offers
-      WHERE seller_phone_hash IS NOT NULL
-      GROUP BY 1
-    )
-    INSERT INTO sellers AS x (phone_hash, name, sources, n_ads, first_seen, last_seen, flags)
-    SELECT s.h, s.best_name, s.srcs, s.n_ads, s.fs, s.ls,
-           jsonb_build_object(
-             'n_sale', s.n_sale, 'n_rent', s.n_rent,
-             'median_gap_pct', s.med_gap, 'n_good_deals', s.n_good,
-             'multi_channel', cardinality(s.srcs) > 1,
-             'sources', to_jsonb(s.srcs))
-    FROM s
-    ON CONFLICT (phone_hash) DO UPDATE
-    SET n_ads = EXCLUDED.n_ads, sources = EXCLUDED.sources, first_seen = EXCLUDED.first_seen,
-        last_seen = EXCLUDED.last_seen,
-        name = COALESCE(x.name, EXCLUDED.name),
-        flags = EXCLUDED.flags
-    RETURNING (xmax = 0) AS moi`);
-  const sellersInserted = agg.rows.filter((r) => r.moi).length;
-  console.log(`sellers: thêm ${sellersInserted}, cập nhật ${agg.rowCount - sellersInserted} người bán`);
-
-  // ---- 4. Người bán không còn tin nào (vd chỉ đăng trong tin thử đã rút — PL2) ----
-  // Registry dẫn xuất từ offers: không còn offer thì không còn chỗ đứng. Ghi audit số đã xoá
-  // + số còn lại — sync-cloud đọc dòng này để biết bảng co lại vì dọn, không phải local dựng dở.
-  const orphan = await c.query(`
-    DELETE FROM sellers x
-    WHERE NOT EXISTS (SELECT 1 FROM sale_offers o WHERE o.seller_phone_hash = x.phone_hash)`);
+  // ---- 3. Người bán: từ SD3 (060) `sellers` là VIEW trên bí danh `sdt` của danh bạ + tin — tự đúng, bước này chỉ đếm.
+  // Không còn ghi/xoá sellers và không còn audit bait-gap:sellers-orphan (view không có dòng mồ côi để dọn). ----
   const remaining = Number((await c.query(`SELECT count(*) AS n FROM sellers`)).rows[0].n);
-  if (orphan.rowCount > 0) {
-    await c.query(
-      `INSERT INTO ops_audit (actor, action, env, detail)
-       VALUES ('refresh-bait-gap', 'bait-gap:sellers-orphan', 'local', $1)`,
-      [{ deleted: orphan.rowCount, remaining }],
-    );
-  }
-  console.log(`sellers: xoá ${orphan.rowCount} người bán không còn tin, còn ${remaining}`);
+  console.log(`sellers (view): ${remaining} người bán`);
 
   // ---- 5. Loại tin phi lý khỏi Căn giá tốt (ON11) — SAU bước người bán: registry giữ tín hiệu rao mồi ----
   const cand = await c.query(`
@@ -108,9 +62,6 @@ export async function refreshBaitGap(c) {
   }
   return {
     gap: gap.rowCount,
-    sellersUpdated: agg.rowCount - sellersInserted,
-    sellersInserted,
-    sellersDeleted: orphan.rowCount,
     sellersRemaining: remaining,
     loaiPhiLy: loai.total,
   };

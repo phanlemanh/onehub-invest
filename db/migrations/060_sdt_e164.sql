@@ -59,7 +59,10 @@ WHERE seller_phone IS NOT NULL AND seller_phone !~ '^\+84[35789][0-9]{8}$';
 
 -- ---- 5. sellers: bỏ bảng (Hỏi-5; pg_dump trước khi áp lên máy thu), view cùng cột trên bí danh `sdt` + tin.
 -- Dòng = số có bí danh sdt còn hiệu lực và có tin sống (như bảng cũ sau dọn mồ côi). Cột tổng hợp như refresh-bait-gap cũ;
--- first_seen/last_seen từ mọi bản ghi tin kể cả đã nghỉ (Hỏi-4); name = tên khác rỗng mới nhất của tin (Hỏi-3). ----
+-- first_seen/last_seen từ mọi bản ghi tin kể cả đã nghỉ (Hỏi-4); name = tên khác rỗng mới nhất của tin (Hỏi-3).
+-- Số giảm so thước tính THẲNG từ v_ruler_p2_area (cùng công thức bước 2 của refresh-bait-gap), không đọc bait_gap_pct:
+-- luật loại tin phi lý (ON11) xoá bait_gap_pct của tin phi lý SAU bước người bán, mà sổ người bán phải giữ tín hiệu rao
+-- mồi trên MỌI tin như bảng cũ. ----
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -69,17 +72,24 @@ BEGIN
 END $$;
 
 CREATE OR REPLACE VIEW sellers AS
-WITH so AS (
+WITH g AS (
+  SELECT o.*,
+         CASE WHEN o.price_tier = 'P1' AND o.kind = 'sale' AND o.price_perm2 > 0 AND r.m IS NOT NULL
+              THEN round((1 - o.price_perm2::numeric / r.m::numeric) * 100, 1) END AS gap
+  FROM sale_offers o
+  LEFT JOIN v_ruler_p2_area r ON r.area_id = o.area_id
+),
+so AS (
   SELECT seller_phone,
          seller_phone_hash AS h,
          count(*) AS n_ads,
          array_agg(DISTINCT source) AS srcs,
          count(*) FILTER (WHERE kind = 'sale') AS n_sale,
          count(*) FILTER (WHERE kind = 'rent_lt') AS n_rent,
-         percentile_cont(0.5) WITHIN GROUP (ORDER BY bait_gap_pct) FILTER (WHERE bait_gap_pct IS NOT NULL) AS med_gap,
-         count(*) FILTER (WHERE bait_gap_pct >= 10) AS n_good,
+         percentile_cont(0.5) WITHIN GROUP (ORDER BY gap) FILTER (WHERE gap IS NOT NULL) AS med_gap,
+         count(*) FILTER (WHERE gap >= 10) AS n_good,
          (array_agg(btrim(seller_name) ORDER BY last_seen DESC) FILTER (WHERE btrim(coalesce(seller_name, '')) <> ''))[1] AS ten
-  FROM sale_offers
+  FROM g
   WHERE seller_phone IS NOT NULL AND seller_phone_hash IS NOT NULL
   GROUP BY seller_phone, seller_phone_hash
 ),
