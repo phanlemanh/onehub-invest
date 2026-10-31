@@ -253,7 +253,8 @@ const DAU_HIEU_BDS = /(?:\d+\s*(?:pn|phòng\s*ngủ|wc|vs)\b|\d+\s*n\s*\+?\s*\d?
 // KHÔNG «CN» trần — trong bài S03 «CN» hay là «chủ nhật» («xem nhà T7-CN»).
 const CO_TY = /\d(?:[\d.,]*\d)?\s*t(?:ỷ|y)(?![a-zà-ỹ])/iu;
 const TIN_HIEU_BAN = /(?:thu\s*về|cắt\s*lỗ|hạ\s*giá|giá\s*tốt|chuyển\s*nh[ưư][ợơ]ng|bao\s*thuế|\bbtp\b|sổ\s*(?:hồng|đỏ))/iu;
-const DON_VI_THUE = /(?:\/\s*th(?:áng)?\b|\btháng\b|\bpass\b)/iu;
+// «tháng» chỉ tính khi đi liền sau giá triệu («14tr tháng», «10 triệu/tháng») — «bàn giao tháng 12» không phải thuê.
+const DON_VI_THUE = /(?:\/\s*th(?:áng)?\b|\d\s*(?:tr|triệu)\s*(?:một|mỗi|1)?\s*tháng\b|\bpass\b)/iu;
 const GIA_TRIEU = /\d\s*(?:tr|triệu)(?!\s*\/\s*m)/iu;
 const TEN_BAN = /(?:chuyển\s*nh[ưư][ợơ]ng|\bbán\b|giỏ\s*hàng|quỹ|giá\s*đáy)/iu;
 const TEN_THUE = /cho\s*thuê/iu;
@@ -323,7 +324,9 @@ export function suyLoai(pr, text, mucDich) {
   if (!coGia || !DAU_HIEU_BDS.test(so)) return { kind: null, nguon: "bo" };
   const coTy = CO_TY.test(so);
   const giaThue = pr.priceVnd != null && pr.priceVnd < 1e9 && pr.pricePerm2Vnd == null && !coTy && GIA_TRIEU.test(so);
-  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: KIND.rent_lt, nguon: "don-vi-gia" };
+  // Giá theo m² hay giá từ 1 tỷ không bao giờ là thuê (AC-2), dù chữ có «/tháng» hay «pass».
+  const giaCoTheThue = pr.pricePerm2Vnd == null && (pr.priceVnd == null || pr.priceVnd < 1e9) && !coTy;
+  if (giaThue || (DON_VI_THUE.test(so) && giaCoTheThue)) return { kind: KIND.rent_lt, nguon: "don-vi-gia" };
   if (coTy || TIN_HIEU_BAN.test(so)) {
     if (pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
     if (pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
@@ -332,6 +335,7 @@ export function suyLoai(pr, text, mucDich) {
   if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {
     if (mucDich === KIND.sale && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
     if (mucDich === KIND.sale && pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
+    if (mucDich === KIND.rent_lt && !giaCoTheThue) return { kind: null, nguon: "bo" };
     return { kind: mucDich, nguon: "boi-canh-nhom" };
   }
   return { kind: null, nguon: "bo" };

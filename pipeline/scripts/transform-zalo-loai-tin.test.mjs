@@ -90,6 +90,16 @@ const THUE = [
   ["1PN 5,5 triệu", "rent_lt", "don-vi-gia", 5_500_000],
 ];
 const THUE_DOI_CHUNG = [["căn hộ 70m2 giá 45tr/m2", null, "bo"]];
+/** Nhóm thuê, bài không chữ loại mà giá đồng từ 1 tỷ hay giá theo m² — không được thành thuê (S4 r1, AC-2). */
+const NHOM_THUE_GIA_TY = [
+  ["Căn 2PN 70m2 giá 3.800.000.000", null, "bo"],
+  ["Căn 2PN 70m2 giá 45tr/m2", null, "bo"],
+];
+/** Bài bán có «tháng» không đứng sau giá (bàn giao, nhận nhà) — không được thành thuê (S4 r1, AC-2). */
+const THANG_BAN = [
+  ["Căn hộ 2PN 70m2 giá 45tr/m2, bàn giao tháng 12", "sale", "boi-canh-nhom"],
+  ["Căn 2PN 70m2 giá 3.200.000.000 sổ hồng, nhận nhà tháng 11", "sale", "tin-hieu-chu", 3_200_000_000],
+];
 
 describe("SLT-AC-2 giá triệu / tháng / pass → rent_lt", () => {
   test("SLT-AC-2 ma trận 7 ô viết tay + ô đối chứng giá theo m²", () => {
@@ -103,10 +113,27 @@ describe("SLT-AC-2 giá triệu / tháng / pass → rent_lt", () => {
     ]]);
     assert.throws(() => kiemMaTran(mod, "SLT-AC-2 giá theo m2 thành thuê", THUE_DOI_CHUNG), /SLT-AC-2 giá theo m2 thành thuê: .*45tr\/m2/);
   });
+  test("SLT-AC-2 nhóm thuê mà giá từ 1 tỷ hay theo m² → không thành thuê (giữ rỗng)", () => {
+    kiemMaTran(goc, "SLT-AC-2 nhóm thuê giá tỷ", NHOM_THUE_GIA_TY, "rent_lt");
+  });
+  test("chiều đỏ SLT-AC-2 nhóm thuê giá tỷ: bản đột biến bỏ chặn giá ở bối cảnh nhóm → ô «3.800.000.000» đỏ", async () => {
+    const mod = await banDot([["    if (mucDich === KIND.rent_lt && !giaCoTheThue) return { kind: null, nguon: \"bo\" };\n", ""]]);
+    assert.throws(() => kiemMaTran(mod, "SLT-AC-2 nhóm thuê giá tỷ", NHOM_THUE_GIA_TY, "rent_lt"), /SLT-AC-2 nhóm thuê giá tỷ: .*3\.800\.000\.000/);
+  });
+  test("SLT-AC-2 «tháng» không sau giá (bàn giao, nhận nhà) trong bài bán → không thành thuê", () => {
+    kiemMaTran(goc, "SLT-AC-2 tháng thành thuê", THANG_BAN, "sale");
+  });
+  test("chiều đỏ SLT-AC-2 tháng thành thuê: bản đột biến coi «tháng» trần là thuê, bỏ chặn giá m²/tỷ → hai ô đỏ", async () => {
+    const mod = await banDot([
+      ["|\\d\\s*(?:tr|triệu)\\s*(?:một|mỗi|1)?\\s*tháng\\b|", "|\\btháng\\b|"],
+      ["(DON_VI_THUE.test(so) && giaCoTheThue)", "(DON_VI_THUE.test(so) && !coTy)"],
+    ]);
+    assert.throws(() => kiemMaTran(mod, "SLT-AC-2 tháng thành thuê", THANG_BAN, "sale"), /SLT-AC-2 tháng thành thuê: .*bàn giao tháng 12.*nhận nhà tháng 11/);
+  });
 });
 
 // ---------- AC-3 ----------
-const BAI_GIA_KHONG_DON_VI = "Căn 2PN 70m2 view hồ, giá 7.000.000.000"; // giá không đơn vị, không tín hiệu
+const BAI_GIA_KHONG_DON_VI = "Căn 2PN 70m2 view hồ, Giá: 2,900"; // giá không đơn vị (như «Giá: 2,900» của tin thật), không tín hiệu
 const nhom = (ten, sale, rent, conv) => [
   ...Array.from({ length: sale }, () => ({ conversation_id: conv, group_name: ten, kind: "sale" })),
   ...Array.from({ length: rent }, () => ({ conversation_id: conv, group_name: ten, kind: "rent_lt" })),
@@ -187,7 +214,7 @@ describe("SLT-AC-5 không thêm tin rác", () => {
   test("chiều đỏ SLT-AC-5 CN thành bán: thêm CN trần vào tín hiệu bán và xét trước giá → ô «CN 2PN 14tr» đỏ", async () => {
     const mod = await banDot([
       ["const TIN_HIEU_BAN = /(?:thu", "const TIN_HIEU_BAN = /(?:\\bcn\\b|thu"],
-      ["  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: KIND.rent_lt, nguon: \"don-vi-gia\" };\n  if (coTy || TIN_HIEU_BAN.test(so)) {",
+      ["  if (giaThue || (DON_VI_THUE.test(so) && giaCoTheThue)) return { kind: KIND.rent_lt, nguon: \"don-vi-gia\" };\n  if (coTy || TIN_HIEU_BAN.test(so)) {",
         "  if (coTy || TIN_HIEU_BAN.test(so)) {"],
     ]);
     assert.throws(() => kiemMaTran(mod, "SLT-AC-5 CN thành bán", KHONG_RAC), /SLT-AC-5 CN thành bán: .*CN 2PN 14tr/);
