@@ -13,7 +13,7 @@ import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuPhongNgu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
-import { CONFIDENCE } from "./lib/vocab.generated.mjs";
+import { CONFIDENCE, KIND } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -274,14 +274,14 @@ export function coDauHieuBds(text) {
 export function mucDichTheoTen(ten) {
   if (!ten) return null;
   const ban = TEN_BAN.test(ten), thue = TEN_THUE.test(ten);
-  return ban && !thue ? "sale" : thue && !ban ? "rent_lt" : null;
+  return ban && !thue ? KIND.sale : thue && !ban ? KIND.rent_lt : null;
 }
 
 /**
  * Mục đích từng nhóm (khoá conversation_id): theo tên, rồi theo tỉ lệ loại chữ bài trên mọi bài của lượt (lượt nạp lại
  * toàn bộ stg nên là lịch sử nhóm) — ≥ 20 bài chữ bài và ≥ 85% một loại; còn lại «ca-hai».
  * @param {{ conversation_id: string|null, group_name?: string|null, kind: string|null }[]} bai kind = kết quả parsePost
- * @returns {Map<string, "sale"|"rent_lt"|"ca-hai">}
+ * @returns {Map<string, KIND.sale|KIND.rent_lt|"ca-hai">}
  */
 export function mucDichNhom(bai) {
   const dem = new Map();
@@ -289,7 +289,7 @@ export function mucDichNhom(bai) {
     const k = b.conversation_id ?? "";
     const e = dem.get(k) ?? { ten: b.group_name ?? null, sale: 0, rent_lt: 0 };
     if (!e.ten && b.group_name) e.ten = b.group_name;
-    if (b.kind === "sale" || b.kind === "rent_lt") e[b.kind]++;
+    if (b.kind === KIND.sale || b.kind === KIND.rent_lt) e[b.kind]++;
     dem.set(k, e);
   }
   const out = new Map();
@@ -297,8 +297,8 @@ export function mucDichNhom(bai) {
     const theoTen = mucDichTheoTen(e.ten);
     if (theoTen) { out.set(k, theoTen); continue; }
     const tong = e.sale + e.rent_lt;
-    if (tong >= NHOM_TOI_THIEU && e.sale / tong >= NHOM_TI_LE) out.set(k, "sale");
-    else if (tong >= NHOM_TOI_THIEU && e.rent_lt / tong >= NHOM_TI_LE) out.set(k, "rent_lt");
+    if (tong >= NHOM_TOI_THIEU && e.sale / tong >= NHOM_TI_LE) out.set(k, KIND.sale);
+    else if (tong >= NHOM_TOI_THIEU && e.rent_lt / tong >= NHOM_TI_LE) out.set(k, KIND.rent_lt);
     else out.set(k, "ca-hai");
   }
   return out;
@@ -309,8 +309,8 @@ export function mucDichNhom(bai) {
  * thì điền giá theo triệu như parsePost làm cho bài có chữ «bán».
  * @param {ReturnType<typeof parsePost>} pr  (bị sửa priceVnd trong ca giá không đơn vị)
  * @param {string} text
- * @param {"sale"|"rent_lt"|"ca-hai"|undefined} mucDich
- * @returns {{ kind: "sale"|"rent_lt"|null, nguon: string }}
+ * @param {KIND.sale|KIND.rent_lt|"ca-hai"|undefined} mucDich
+ * @returns {{ kind: KIND.sale|KIND.rent_lt|null, nguon: string }}
  */
 export function suyLoai(pr, text, mucDich) {
   if (pr.kind) return { kind: pr.kind, nguon: "chu-bai" };
@@ -321,13 +321,13 @@ export function suyLoai(pr, text, mucDich) {
   if (!coGia || !DAU_HIEU_BDS.test(so)) return { kind: null, nguon: "bo" };
   const coTy = CO_TY.test(so);
   const giaThue = pr.priceVnd != null && pr.priceVnd < 1e9 && pr.pricePerm2Vnd == null && !coTy && GIA_TRIEU.test(so);
-  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: "rent_lt", nguon: "don-vi-gia" };
+  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: KIND.rent_lt, nguon: "don-vi-gia" };
   if (coTy || TIN_HIEU_BAN.test(so)) {
     if (pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
-    return { kind: "sale", nguon: "tin-hieu-chu" };
+    return { kind: KIND.sale, nguon: "tin-hieu-chu" };
   }
-  if (mucDich === "sale" || mucDich === "rent_lt") {
-    if (mucDich === "sale" && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
+  if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {
+    if (mucDich === KIND.sale && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
     return { kind: mucDich, nguon: "boi-canh-nhom" };
   }
   return { kind: null, nguon: "bo" };
@@ -458,7 +458,8 @@ export async function docThiTruongNhom(client) {
  * @param {import("pg").Client} client
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
-export async function runTransformZalo(client, { parse = parsePost } = {}) {
+// `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -484,8 +485,16 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   const parsed = [];
   let nFull = 0, nPartial = 0, nFail = 0;
   const loaiGiaPhiLy = { "thue-tu-1-ty": 0, "ban-tren-100-ty": 0 };
-  for (const p of posts) {
-    const pr = parse(p.text);
+  // Đọc mọi bài trước: mục đích nhóm (bước 2b) tính trên loại chữ bài của cả nhóm.
+  const docBai = posts.map((p) => ({ p, pr: parse(p.text) }));
+  const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
+  const nguon = [];
+  for (const { p, pr } of docBai) {
+    if (suyLoaiTin) {
+      const r = suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? ""));
+      pr.kind = r.kind;
+      nguon.push(r.nguon);
+    } else nguon.push(pr.kind ? "chu-bai" : "bo");
     if (!pr.kind) { nFail++; continue; }
     const lyDo = lyDoGiaPhiLy(pr);
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
@@ -507,6 +516,8 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
   console.log(`giá phi lý (không thành offer): ${JSON.stringify(loaiGiaPhiLy)}`);
+  const nguonLoai = demNguonLoai(nguon);
+  console.log(`loại tin theo nguồn: ${JSON.stringify(nguonLoai)}`);
 
   // ---- Bước 4: gom repost theo khoá nội dung (repostKey); offer_id cấp ở bước 5 ----
   const dedup = new Map();
@@ -579,7 +590,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   const { reconcile } = await writeOffers(client, "S03", rows, { assertions: phatBieuPhongNgu("S03", nhom, "transform-zalo@045") });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai };
 }
 
 async function main() {

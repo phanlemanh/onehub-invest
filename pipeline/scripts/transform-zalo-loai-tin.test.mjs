@@ -164,7 +164,7 @@ describe("SLT-AC-4 Yêu cầu không thành tin rao", () => {
   test("chiều đỏ SLT-AC-4 Yêu cầu lọt thành tin rao: xét tín hiệu bán trước Yêu cầu → ô «Kháh xem liền» đỏ", async () => {
     const mod = await banDot([
       ['  if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };\n', ""],
-      ['  if (mucDich === "sale" || mucDich === "rent_lt") {', '  if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };\n  if (mucDich === "sale" || mucDich === "rent_lt") {'],
+      ['  if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {', '  if (YEU_CAU.test(so)) return { kind: null, nguon: "yeu-cau" };\n  if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {'],
     ]);
     assert.throws(() => kiemMaTran(mod, "SLT-AC-4 Yêu cầu lọt thành tin rao", YEU_CAU), /SLT-AC-4 Yêu cầu lọt thành tin rao: .*Kháh xem liền/);
   });
@@ -187,7 +187,7 @@ describe("SLT-AC-5 không thêm tin rác", () => {
   test("chiều đỏ SLT-AC-5 CN thành bán: thêm CN trần vào tín hiệu bán và xét trước giá → ô «CN 2PN 14tr» đỏ", async () => {
     const mod = await banDot([
       ["const TIN_HIEU_BAN = /(?:thu", "const TIN_HIEU_BAN = /(?:\\bcn\\b|thu"],
-      ["  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: \"rent_lt\", nguon: \"don-vi-gia\" };\n  if (coTy || TIN_HIEU_BAN.test(so)) {",
+      ["  if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: KIND.rent_lt, nguon: \"don-vi-gia\" };\n  if (coTy || TIN_HIEU_BAN.test(so)) {",
         "  if (coTy || TIN_HIEU_BAN.test(so)) {"],
     ]);
     assert.throws(() => kiemMaTran(mod, "SLT-AC-5 CN thành bán", KHONG_RAC), /SLT-AC-5 CN thành bán: .*CN 2PN 14tr/);
