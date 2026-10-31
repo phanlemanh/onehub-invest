@@ -7,9 +7,13 @@
 import type { AgentConfig } from "../runtime/loop.js";
 import type { PairData } from "../tools/native.js";
 
-/** Ngưỡng ghép căn — giữ nguyên ba số của prompt cũ; chỉnh ngưỡng là việc của tập nhãn (PL8/PL9). */
-export const NGUONG = Object.freeze({ giaM2YesMax: 0.15, dienTichYesMax: 0.1, giaM2NoMin: 0.3 });
-export const PHIEN_BAN_NGUONG = "pl25-1";
+/**
+ * Ngưỡng ghép căn. Giá/m² giữ hai số của PL25. Diện tích (HD2, Mạnh chốt 31/10): so theo sai số làm tròn và cách đo, không
+ * theo phần trăm — lệch không quá `dienTichLamTronM2` m² coi là bằng nhau (40,5 m² có thể ghi 40 hay 41); cặp có căn hộ
+ * (tim tường hay thông thủy) chỉ khác khi lệch vượt cả số m² ấy lẫn `dienTichCanHoMax`.
+ */
+export const NGUONG = Object.freeze({ giaM2YesMax: 0.15, giaM2NoMin: 0.3, dienTichLamTronM2: 1, dienTichCanHoMax: 0.1 });
+export const PHIEN_BAN_NGUONG = "pl25-2";
 
 export type KetLuan = "yes" | "no" | "unsure";
 /** `cau` là lời định tính đưa vào prompt (không mang số đo — AC-2); `so` là số đo chỉ in trên thẻ cho người duyệt. */
@@ -61,6 +65,78 @@ export function soPhuong(a: string | number | null, b: string | number | null): 
   return ka === kb ? "khop" : "lech";
 }
 
+// ── Khoá đường / toà / tầng: chép NGUYÊN VĂN từ app/src/lib/ops/review-can-cu.ts, cùng lý do với khoá phường ở trên —
+// «khớp / lệch / thiếu» của luật trùng nhãn bảng so người duyệt thấy. tests/judge-luat.test.ts (LT-AC-9) rút các hàm này
+// từ tệp app và so từng ô với bản ở đây.
+type So = SoPhuong;
+/** Bỏ dấu, hoa và ký tự lạ: «Đinh Bộ Lĩnh» → `dinh bo linh`. */
+export function boDau(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Các khoá có thể của tên đường. Tiền tố có dấu («Đường», «Phố», «Đ.», «D.») chắc là tiền tố: bỏ. Tiền tố không dấu
+ * («duong», «pho») có thể là tên thật — «Duong Lam» là «Đường Lâm» hay «Dương Lâm» — nên giữ CẢ HAI cách đọc (HD2).
+ */
+export function khoaDuong(v: string): string[] {
+  const s = v.normalize("NFC").trim().toLowerCase();
+  const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
+  if (coDau) return [boDau(coDau[1])].filter(Boolean);
+  const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
+  return [...new Set([khongDau ? boDau(khongDau[1]) : "", boDau(s)])].filter(Boolean);
+}
+
+/** So hàng Đường: chung ít nhất một cách đọc → Khớp (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soDuong(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaDuong(String(a));
+  const kb = khoaDuong(String(b));
+  if (ka.length === 0 || kb.length === 0) return "thieu";
+  return ka.some((k) => kb.includes(k)) ? "khop" : "lech";
+}
+
+/**
+ * Khoá toà: bỏ MỘT tiền tố «Toà/Block/Tháp/Lô», rồi bỏ dấu, hoa, khoảng trắng — «Block A» = «Toà A» = «a». Chỉ MÃ
+ * toà mới so được (một từ, có chữ số hoặc không quá ba ký tự: «A», «CT2», «S5.01»); tên gọi («Sao Biển», «Park 6»,
+ * «Chung Cư 38 Hoàng mai») không so được với mã của cùng toà nên coi như thiếu (HD2).
+ */
+export function khoaToa(v: string): string | null {
+  const s = v.normalize("NFC").trim().toLowerCase().replace(/^(?:toà|tòa|toa|block|tháp|thap|tower|lô|lo|building)\s+/u, "");
+  if (/\s/.test(s)) return null;
+  const k = boDau(s).replace(/ /g, "");
+  return k && k.length <= 8 && (/\d/.test(k) || k.length <= 3) ? k : null;
+}
+
+/** So hàng Toà theo mã toà; tên gọi không phải mã → Thiếu (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soToa(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaToa(String(a));
+  const kb = khoaToa(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+/** Khoá tầng: số đầu tiên — «Tầng 12» = «12»; chuỗi không có số («tầng cao») coi như thiếu. */
+export function khoaTang(v: string): number | null {
+  const m = v.match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+
+/** So hàng Tầng theo số tầng (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soTang(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaTang(String(a));
+  const kb = khoaTang(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+
 const loaiHinh = (s: string | null): string | null => {
   const t = (s ?? "").trim().toLowerCase();
   return t && t !== "unknown" ? t : null;
@@ -70,6 +146,9 @@ const giaM2 = (t: PairData["a"] | PairData["b"]): number | null =>
 /** Độ lệch thành phần trăm một chữ số thập phân, cắt xuống: 0,149 hiện «14,9%», không thành «15%». Chỉ dùng cho `so`
  *  trên thẻ — lệch đúng bằng ngưỡng vẫn in ra đúng số ngưỡng, nên số không bao giờ vào prompt (S4 r1–r2, AC-2). */
 export const phanTram = (x: number) => `${(Math.floor(x * 1000 + 1e-6) / 10).toFixed(1).replace(".", ",")}%`;
+
+/** Diện tích in trên thẻ, dấu phẩy thập phân: 40.5 → «40,5». */
+const m2 = (v: number | null) => String(v).replace(".", ",");
 
 /** Luật ghép căn — tất định, đối xứng A↔B. `lechFn`, `soPhuongFn` chỉ để test đối chứng. */
 export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn: typeof soPhuong = soPhuong): KetQuaLuat {
@@ -87,19 +166,43 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn:
   else if (giaXa) ly_do.push({ ma: "gia_m2_xa", cau: "giá/m² lệch xa", so: phanTram(lg) });
   else if (lg < NGUONG.giaM2YesMax) ly_do.push({ ma: "gia_m2_gan", cau: "giá/m² sát nhau", so: phanTram(lg) });
   else ly_do.push({ ma: "gia_m2_giua", cau: "giá/m² lệch vừa", so: phanTram(lg) });
-  if (ld === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
-  else if (ld < NGUONG.dienTichYesMax) ly_do.push({ ma: "dien_tich_gan", cau: "diện tích sát nhau", so: phanTram(ld) });
-  else ly_do.push({ ma: "dien_tich_xa", cau: "diện tích lệch đáng kể", so: phanTram(ld) });
+  // Diện tích theo làm tròn + cách đo (HD2): |a − b| làm tròn 1e-9 (40,5 ↔ 41,5 đúng bằng 1 m²).
+  const da = pair.a.areaM2 !== null && pair.b.areaM2 !== null && pair.a.areaM2 > 0 && pair.b.areaM2 > 0
+    ? lamTron(Math.abs(pair.a.areaM2 - pair.b.areaM2)) : null;
+  const canHo = la === "apartment" || lb === "apartment";
+  const khacDienTich = da !== null && da > NGUONG.dienTichLamTronM2 && (!canHo || (ld !== null && ld > NGUONG.dienTichCanHoMax));
+  const soDienTich = da === null ? undefined : `${m2(pair.a.areaM2)} ↔ ${m2(pair.b.areaM2)} m² · ${phanTram(ld ?? 0)}`;
+  if (da === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
+  else if (khacDienTich) ly_do.push({ ma: "khac_dien_tich", cau: "diện tích khác", so: soDienTich });
+  else ly_do.push({ ma: "dien_tich_gan", cau: "diện tích khớp trong sai số", so: soDienTich });
   if (sp === "thieu") ly_do.push({ ma: "thieu_phuong", cau: "thiếu phường ở một tin" });
   else ly_do.push(khacPhuong ? { ma: "khac_phuong", cau: "khác phường" } : { ma: "cung_phuong", cau: "cùng phường" });
   if (la === null || lb === null) ly_do.push({ ma: "thieu_loai", cau: "thiếu loại hình ở một tin" });
   else ly_do.push(khacLoai ? { ma: "khac_loai", cau: "khác loại hình" } : { ma: "cung_loai", cau: "cùng loại hình" });
 
+  // Luật loại trừ (HD2): đặc trưng có ở CẢ HAI tin mà khác thì «khác căn»; thiếu một bên bỏ qua, không suy.
+  const dacTrung: [string, string, number | null, number | null][] = [
+    ["pn", "phòng ngủ", pair.a.bedrooms, pair.b.bedrooms],
+    ["wc", "WC", pair.a.bathrooms, pair.b.bathrooms],
+  ];
+  const dacTrungChu: [string, string, So, string | null, string | null][] = [
+    ["duong", "đường", soDuong(pair.a.street, pair.b.street), pair.a.street, pair.b.street],
+    ["toa", "toà", soToa(pair.a.block, pair.b.block), pair.a.block, pair.b.block],
+    ["tang", "tầng", soTang(pair.a.floor, pair.b.floor), pair.a.floor, pair.b.floor],
+  ];
+  let khacDacTrung = khacDienTich;
+  const khac = (ma: string, ten: string, ga: unknown, gb: unknown) => {
+    khacDacTrung = true;
+    ly_do.push({ ma: `khac_${ma}`, cau: `${ten} khác`, so: `${String(ga).trim()} ↔ ${String(gb).trim()}` });
+  };
+  for (const [ma, ten, ga, gb] of dacTrung) if (ga !== null && gb !== null && ga !== gb) khac(ma, ten, ga, gb);
+  for (const [ma, ten, so, ga, gb] of dacTrungChu) if (so === "lech") khac(ma, ten, ga, gb);
+
   let same_house: KetLuan = "unsure";
-  if (giaXa || khacPhuong || khacLoai) same_house = "no";
+  if (giaXa || khacPhuong || khacLoai || khacDacTrung) same_house = "no";
   else if (
     lg !== null && lg < NGUONG.giaM2YesMax &&
-    ld !== null && ld < NGUONG.dienTichYesMax &&
+    da !== null &&
     sp === "khop" &&
     la !== null && la === lb
   ) same_house = "yes";

@@ -88,7 +88,7 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     assert.equal(await bamTin(), truoc, "045 ghi vào năm cột của tin");
     // cột nguồn gốc có trên view sống
     assert.equal((await one(`SELECT count(*)::int AS n FROM information_schema.columns
-      WHERE table_name = 'sale_offers' AND column_name = 'field_provenance'`)).n, 1, "view sale_offers thiếu field_provenance");
+      WHERE table_schema = current_schema() AND table_name = 'sale_offers' AND column_name = 'field_provenance'`)).n, 1, "view sale_offers thiếu field_provenance");
     await c.query("SELECT count(*) FROM v_ruler_p2");
     await c.query("SELECT count(*) FROM v_ruler_p2_area");
 

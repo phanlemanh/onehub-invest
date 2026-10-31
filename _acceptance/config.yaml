@@ -46,12 +46,15 @@ executors:
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
+    dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
+    dtd_app_nhan: "cd app && node --import tsx --test tests/dq-the-duyet-label.test.tsx"   # do-the-duyet-du-du-lieu E5 — nhãn dq-labels
     sd3_boc: "node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs"   # sdt-luu-goc-e164 E1 — bộ bóc ra +84…
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
-    kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
+    kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
+    ctt_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"   # TV2b cong-tac-that — nhà cung cấp giả + DB tạm
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
@@ -66,6 +69,7 @@ executors:
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
+    rk_itest: "cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts"   # the-ghep-can-tin-roi-kho E9 — lô thật chép chỉ-SELECT từ oneinvest, ngoài CI
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
@@ -108,6 +112,7 @@ executors:
     danh_ba_doi_chieu: "cd app && node --import tsx --test tests/danh-ba-nguoi-doi-chieu.test.tsx"   # danh-ba-nguoi-tren-ops E15 — đối chiếu chỉ-đọc trên DB máy thu :5433 (READ ONLY), chỉ in số
     anh_goc: "cd app && node --import tsx --test tests/anh-goc-qua-may-chu.test.tsx"   # anh-goc-qua-may-chu — ?media= qua máy chủ: bộ lấy ảnh giả, lược đồ tạm có bảng media, ma trận vai và lỗi nguồn
     anh_goc_doi_chieu: "cd app && node --import tsx --test tests/anh-goc-doi-chieu.test.tsx"   # anh-goc-qua-may-chu AC-7 — DB máy thu chỉ đọc, không gọi mạng
+    anh_goc_chan_svg: "cd app && node --import tsx --test tests/anh-goc-chan-svg.test.tsx"   # proxy-anh-chan-svg — danh sách kiểu ảnh cho phép, 415, nosniff + CSP sandbox
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
@@ -115,10 +120,14 @@ executors:
     bac_level: "cd app && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --import tsx --test tests/data-level-sql.itest.tsx"   # de-xuat-thanh-phat-bieu-bac E1: offer_data_level (SQL) khớp levelOf (app) trên 64 tổ hợp — DB thử
     tg_db: "cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs"   # thoi-gian-va-hieu-luc E1–E7: 059 + observed_at + trạng thái chào + lịch sử + B5 + bộ itest PL16 trên 059 (S4 r1 t4), giao dịch ROLLBACK — DB thử (sau gộp: TG_DB_URL)
     hd9_route: "cd app && node --import tsx --test --test-name-pattern='HD9' tests/the-duyet-du-can-cu.test.tsx"   # quyet-dinh-phai-cham-ung-vien E1–E7: route decide trên lược đồ tạm của bộ thẻ duyệt + thẻ trong jsdom
+    pb_chung_bai: "cd pipeline && DATABASE_URL=${PB_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_pd} node --test --test-concurrency=1 scripts/phat-bieu-chung-bai.itest.mjs"   # phat-bieu-db-do-tren-main E1–E4: áp/hoàn tác đề xuất trên tin chung post, giao dịch ROLLBACK — DB thử
+    phat_bieu_db_063: "bash db/db-thu.sh oneinvest_p2_pd >/dev/null && P=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest_p2_pd -q -v ON_ERROR_STOP=1) && \"${P[@]}\" < db/migrations/063_phat_bieu_theo_bai_dang.sql && echo \"dc_ trên bản chép: $(\"${P[@]}\" -tA -c \"SELECT count(*) FROM pg_namespace WHERE nspname ~ '^dc_'\")\" && \"${P[@]}\" -c \"CREATE SCHEMA IF NOT EXISTS dc_thu_e6; CREATE OR REPLACE VIEW dc_thu_e6.sale_offers AS SELECT * FROM public.sale_offer_records WHERE false\" && echo \"đối chứng PD-AC-1: không lọc $(\"${P[@]}\" -tA -c \"SELECT count(*) FROM information_schema.columns WHERE table_name = 'sale_offers' AND column_name = 'field_provenance'\") · lọc current_schema $(\"${P[@]}\" -tA -c \"SELECT count(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'sale_offers' AND column_name = 'field_provenance'\")\" && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_pd node --test --test-concurrency=1 scripts/phat-bieu-db.itest.mjs"   # phat-bieu-db-do-tren-main E6: bản chép DB máy thu + 063 + lược đồ thử dc_thu_e6 (đối chứng câu đếm), trọn bộ PD-AC — chỉ DB thử
     cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
     enrich_giao_dich: "cd agent && node --import tsx --test tests/enrich-giao-dich.test.ts"   # enrich-chay-sau-nap AC-2..AC-4 — runEnrich trong BEGIN…ROLLBACK trên :5433, giao dịch mỗi tin = SAVEPOINT
     enrich_buoc_job: "node --test scripts/enrich-buoc-job.test.mjs"   # enrich-chay-sau-nap AC-6..AC-8 — bước enrich-run của zalo-import-daily (node giả, không DB)
     audit_loc: "cd app && node --import tsx --test tests/audit-loc.test.tsx"   # loc-enrich-thu-ops-audit AC-1..AC-5 — lược đồ tạm (ops_audit + phiên), route GET thật, public không chạm
+    judge_luat: "cd agent && node --import tsx --test tests/judge-luat.test.ts"   # judge-luat-loai-tru-dac-trung (HD2) — luật loại trừ thuần + probe evidence thẻ đã quyết trên DB máy thu (bỏ qua có lý do dưới CI)
+    judge_nguong: "cd agent && node --import tsx --test tests/judge-nguong.test.ts"   # judge-luat-loai-tru-dac-trung AC-5 — ma trận PL25/KP/PS theo luật pl25-2
     the_so_song: "cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx"   # the-so-doc-gia-tri-song (HD6) — lược đồ tạm gs_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
     sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
@@ -277,6 +286,7 @@ executors:
     deals_api_mutation: "node scripts/check-deals-api.mjs mutation"
     # so-be-mat-api (NT4) — sổ bề mặt API; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433 + một user admin
     api_surface_static: "node scripts/check-api-surface.mjs static"
+    anh_goc_hd10_nguyen: "git diff --exit-code 6b610913 -- app/tests/anh-goc-qua-may-chu.test.tsx"   # proxy-anh-chan-svg AC-7 — bộ test HD10 không bị sửa kỳ vọng
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
@@ -487,6 +497,11 @@ executors:
     ddb_job: "bash _acceptance/do-danh-ba-sdt/probes/job.sh"   # do-danh-ba-sdt E4 — bước cuối cloud-sync, hộp thử node giả
     ddb_on12: "bash _acceptance/do-danh-ba-sdt/probes/on12.sh"   # do-danh-ba-sdt E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
     ddb_pham_vi: "bash _acceptance/do-danh-ba-sdt/probes/pham-vi.sh"   # do-danh-ba-sdt E6
+    dtd_db: "bash _acceptance/do-the-duyet-du-du-lieu/probes/db.sh"   # do-the-duyet-du-du-lieu E2, E3, E4b — DB thử oneinvest_p4_dtd (dựng + xoá)
+    dtd_job: "bash _acceptance/do-the-duyet-du-du-lieu/probes/job.sh"   # do-the-duyet-du-du-lieu E4 — bước cuối cloud-sync, hộp thử node giả
+    dtd_on12: "bash _acceptance/do-the-duyet-du-du-lieu/probes/on12.sh"   # do-the-duyet-du-du-lieu E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
+    dtd_hom_nay: "bash _acceptance/do-the-duyet-du-du-lieu/probes/hom-nay.sh"   # do-the-duyet-du-du-lieu E6 — DB máy thu chỉ đọc, so bộ đọc ảnh app
+    dtd_pham_vi: "bash _acceptance/do-the-duyet-du-du-lieu/probes/pham-vi.sh"   # do-the-duyet-du-du-lieu E7
     sd3_mig: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs mig"   # sdt-luu-goc-e164 E2 — 060 hai lần (DB thử)
     sd3_du_lieu: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs du-lieu"   # sdt-luu-goc-e164 E3 — tin/căn +84… (DB thử)
     sd3_danh_ba: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs danh-ba"   # sdt-luu-goc-e164 E4 — bí danh sdt (DB thử)
@@ -538,7 +553,13 @@ executors:
     idem_056: "bash db/check-idempotent-tam.sh db/migrations/056_data_level.sql data_level_snapshot ref_lookup ref_field_lookup"   # de-xuat-thanh-phat-bieu-bac E12 — DB tạm chép lược đồ DB local
     tg_roundtrip: "cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node scripts/trang-thai-roundtrip.mjs"   # thoi-gian-va-hieu-luc E8: trang-thai-chao hai lần trên bản chép DB máy thu — GHI phát biểu nên chỉ DB thử
     hd9_roundtrip: "cd app && DATABASE_URL=${HD9_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_hd9} node --import tsx scripts/hd9-roundtrip.ts"   # quyet-dinh-phai-cham-ung-vien E8: quyết lại 12 thẻ khoá chết + 7 thẻ chờ trên bản chép DB máy thu — GHI nên chỉ DB thử
+    idem_063: "bash db/db-thu.sh oneinvest_p2_idem >/dev/null && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_idem node scripts/idem-063.mjs"   # phat-bieu-db-do-tren-main E5: áp 063 hai lần trên bản chép DB máy thu trong giao dịch ROLLBACK, đối chứng bỏ mục sửa dữ liệu
+    dc_tu_don: "cd app && node --import tsx scripts/dc-tu-don.ts"   # phat-bieu-db-do-tren-main E7: test dòng chảy cloud quét lược đồ dc_* của pid chết + tự dọn khi bị ngắt
     idem_059: "bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup && bash db/db-thu.sh oneinvest_p2_idem >/dev/null && (cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_idem node scripts/idem-059.mjs); rc=$?; bash db/db-thu.sh oneinvest_p2_idem --xoa >/dev/null; exit $rc"   # thoi-gian-va-hieu-luc E10 — lược đồ (DB tạm không dữ liệu) + bản chép CÓ dữ liệu: lần một điền lùi > 0 dòng, lần hai không nhân dòng, chiều đỏ bỏ khoá duy nhất (S4 r1 t5)
+    # cong-tac-that (TV2b, T3) — cổng vòng đời trên bản chép tạm, không chạm máy thật
+    ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
+    ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
+    ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

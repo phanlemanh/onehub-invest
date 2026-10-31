@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c9d0a3224eec039b05e4d454f6e3cdfa5756afe3
+verified_commit: 9403e44b090a59220b232398af14d261fc6fc75b
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -160,3 +160,7 @@ none — every multi-run eval is uniform
 
 Round 1: lenh suite cd agent && npm test khong xanh o vong 1; cac eval E1-E8 xanh. Returned to implementation.
 Round 2: E3 chay lai va xanh; tat ca lenh suite xanh; E1, E2, E4, E5, E6, E7, E8 carry-forward tu round 1. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-31, do bảng so thẻ ghép căn so đường/toà/tầng bằng khoá riêng (judge-luat-loai-tru-dac-trung vòng 2)
+run_id: repin-20261031T063631Z-45656
+sha: 9403e44b090a59220b232398af14d261fc6fc75b · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

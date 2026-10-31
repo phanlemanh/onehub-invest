@@ -20,11 +20,19 @@ export const SAU_045_CUA_059 = MIG_059
     MIG_059.indexOf("-- 6. Lịch sử giá"))
   : "";
 
-/** Gọi ngay sau mọi lần nạp lại 045 trong giao dịch: DB đã áp 059 → nạp lại phần 059 mà 045 vừa đè. */
+// 063 thay apply_enrichment (bản 059) và revert_enrichment (bản 045): phân xử lại mọi tin chung post. Nạp lại 045/059
+// đè hai hàm ấy → nạp lại phần hàm của 063 (trước mục 4 sửa dữ liệu — mục ấy không chạy trong test) ngay sau 059.
+const TEP_063 = join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/063_phat_bieu_theo_bai_dang.sql");
+const MIG_063 = existsSync(TEP_063) ? readFileSync(TEP_063, "utf8") : "";
+export const HAM_063 = MIG_063 ? MIG_063.slice(0, MIG_063.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
+
+/** Gọi ngay sau mọi lần nạp lại 045 trong giao dịch: DB đã áp 059 → nạp lại phần 059 mà 045 vừa đè, rồi hàm 063. */
 export async function napLai059(client) {
   if (!SAU_045_CUA_059) return;
   const { rows } = await client.query("SELECT to_regclass('history_transactional') IS NOT NULL AS co");
-  if (rows[0].co) await client.query(SAU_045_CUA_059);
+  if (!rows[0].co) return;
+  await client.query(SAU_045_CUA_059);
+  if (HAM_063) await client.query(HAM_063);
 }
 
 /**
