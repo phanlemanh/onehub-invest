@@ -3,11 +3,14 @@
 set -uo pipefail
 R="${1:?gốc kho}"; cd "$R"; bad=0
 base=$(git merge-base origin/main HEAD); tip=HEAD
-# Đã gộp (verified_commit là tổ tiên của main) → đo đúng diff của PR gốc (cặp cha của commit gộp đầu tiên
+# Đã gộp (mốc neo là tổ tiên của main) → đo đúng diff của PR gốc (cặp cha của commit gộp đầu tiên
 # chứa nó), không đo nhánh đang chạy: thước nói về phạm vi PR này, không về mọi nhánh sau (revisit 31/10).
-V=$(sed -n 's/^verified_commit: *//p' _acceptance/khoa-nap-s05-paused/evidence-report.md | head -1)
+# Mốc neo = commit ĐẦU TIÊN thêm evidence-report của hồ sơ (thuộc PR gốc) — không dùng verified_commit vì ghim lại đổi nó.
+V=$(git log --diff-filter=A --format=%H -- _acceptance/khoa-nap-s05-paused/evidence-report.md | tail -1)
 if [ -n "$V" ] && git merge-base --is-ancestor "$V" origin/main 2>/dev/null; then
-  M=$(git log --format=%H --ancestry-path --merges "$V"..origin/main | tail -1)
+  M=""; for c in $(git rev-list --first-parent --merges --reverse --since="$(git log -1 --format=%cI "$V")" origin/main); do
+    git merge-base --is-ancestor "$V" "$c^2" 2>/dev/null && { M=$c; break; }
+  done
   [ -n "$M" ] && { base=$(git merge-base "$M^1" "$M^2"); tip="$M^2"; echo "PR gốc đã gộp ($(git log -1 --format=%h "$M")) — đo diff của PR đó"; }
 fi
 while read -r f; do
