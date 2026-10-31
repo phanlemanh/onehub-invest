@@ -5,7 +5,7 @@
 // không thuộc glob `npm test` (chạy bằng executors.test.vocab_db).
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,14 +18,19 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
 const MIG_GOC = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
 const MIG050 = readFileSync(join(ROOT, "db/migrations/050_wanted_thanh_inquiry.sql"), "utf8");
-// 045 (PL15) nạp hai trục mới vào ref_* trong mục «4. Sổ từ vựng» — chỉ lấy đúng đoạn ấy (phần còn lại của 045 dựng bảng
-// phát biểu, đã có trên DB khi ci-db-init dựng từ migration).
-const MIG045_REF = (() => {
-  const t = readFileSync(join(ROOT, "db/migrations/045_phat_bieu_va_phan_xu.sql"), "utf8");
-  const i = t.indexOf("INSERT INTO ref_lookup"), j = t.indexOf("-- 5. ", i);
-  if (i < 0 || j < 0) throw new Error("045: không tìm thấy đoạn nạp ref_* (mục 4)");
-  return t.slice(i, j);
-})();
+// Migration sau 043 cũng nạp ref_* (045 hai trục, 055 danh bạ, 056 data_level, 059 assertion_field/offer_status/change_type…)
+// và dựng lại CHECK theo sổ (059: field_assertions_field_chk). Chỉ lấy đúng các câu ấy ở cấp ngoài cùng (phần còn lại dựng
+// bảng/hàm, đã có trên DB khi ci-db-init dựng từ migration), theo thứ tự số — migration mới tự vào, sổ không lạc test.
+const CAU_REF = /^(?:INSERT INTO ref_(?:field_)?lookup\b[\s\S]*?;|ALTER TABLE \w+ DROP CONSTRAINT IF EXISTS \w+_chk;|ALTER TABLE \w+ ADD CONSTRAINT \w+_chk\s+CHECK\b[\s\S]*?;)[ \t]*$/gm;
+/** Câu ref_* + CHECK của mọi migration có số trong (tu, den) — mở hai đầu. */
+function refGiua(tu, den) {
+  const D = join(ROOT, "db/migrations");
+  return readdirSync(D).filter((f) => /^\d{3}_.*\.sql$/.test(f) && +f.slice(0, 3) > tu && +f.slice(0, 3) < den).sort()
+    .flatMap((f) => readFileSync(join(D, f), "utf8").match(CAU_REF) ?? []).join("\n");
+}
+const REF_TRUOC_050 = refGiua(43, 50);
+const REF_SAU_050 = refGiua(50, 1000);
+if (!REF_TRUOC_050.includes("INSERT INTO ref_lookup")) throw new Error("045: không tìm thấy câu nạp ref_*");
 // PL14 (044) đổi sale_offers thành VIEW sống: áp lại 043 trên DB đã có 044 thì nhắm bảng bản ghi (dựng DB mới vẫn chạy
 // 043 nguyên văn theo thứ tự). MIG được gán trong before() khi đã biết trạng thái DB.
 let MIG = MIG_GOC;
@@ -41,8 +46,8 @@ const CHK_025 = {
 };
 
 let c;
-/** Sổ hiện tại = 043, đoạn ref_* của 045, rồi 050. */
-const apMig = async () => { await c.query(MIG); await c.query(MIG045_REF); await c.query(MIG050); };
+/** Sổ hiện tại = 043, câu ref_* của 044–049, 050, rồi câu ref_* + CHECK của mọi migration sau 050. */
+const apMig = async () => { await c.query(MIG); await c.query(REF_TRUOC_050); await c.query(MIG050); await c.query(REF_SAU_050); };
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -210,7 +215,8 @@ test("VD-IQ-3 050 sau 043: wanted → inquiry «Yêu cầu», sổ khớp, các 
   await trongGiaoDich(async () => {
     await tienDe();
     await c.query(MIG);
-    await c.query(MIG045_REF);
+    await c.query(REF_TRUOC_050);
+    await c.query(REF_SAU_050);   // các trục sau 050 nạp sẵn — lệch còn lại chỉ do thiếu 050
     const lech = (await checkDb(c, REG)).map((x) => x.msg).join("\n");
     assert.ok(lech.includes("inquiry"), `043 một mình phải lệch sổ ở inquiry: ${lech}`);
     const truocTruc = await demTruc();
