@@ -38,3 +38,4 @@ CLAUDE.local.md
 # Tài khoản ops thử (scripts/dev-ops-account.mjs) — chứa mật khẩu DB local
 .claude/ops-test-account.json
 .claude/viewer-test-account.json
+.claude/ops-role-test-account.json
