@@ -5,7 +5,9 @@ slug: nhan-bac-model-lon-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline, db]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-01
 design_doc: docs/superpowers/specs/2026-10-31-nhan-bac-model-lon-s03-design.md
 ---
 
