@@ -20,8 +20,8 @@ Mỗi thẻ có hai bên `evidence.offer_a.offer_id`, `evidence.offer_b.offer_id
 |---|---|---|---|
 | `the-duyet:roi-kho` | Thẻ có ít nhất một bên mà `offer_id` không còn trong `sale_offers` (tin nghỉ hoặc khoá chết) | `entity_match` | 0 |
 | `the-duyet:anh-ops` | Thẻ có ít nhất một bên không có dòng `media` nào mang `local_file` (vai Vận hành chỉ thấy ảnh đã tải) | `entity_match` | 0 |
-| `the-duyet:anh-admin` | Thẻ có ít nhất một bên không có dòng `media` nào (quản trị viên thấy cả URL gốc) | `entity_match` | 0 |
-| `the-duyet:do-day` | Mỗi bên, theo nguồn của bên: số bên có giá trị ở từng trường trong 10 trường của bảng so — giá, DT, giá/m², phường, loại hình (khác `unknown`), PN, WC, đường, toà, tầng — cộng «người đăng» (`seller_phone_hash` hoặc `seller_name` có giá trị) — đọc từ `sale_offers` hiện tại; bên rời kho tính là thiếu cả 11 | `S03`/`S05`/`S06` (nguồn có bên trong thẻ chờ) | chỉ báo (Hỏi-1) |
+| `the-duyet:anh-admin` | Thẻ có ít nhất một bên không có ảnh nào quản trị viên thấy: ảnh đã tải, URL gốc http(s) của `media`, hoặc `image_url` của bên trong thẻ — đúng luật `review-media.ts` | `entity_match` | 0 |
+| `the-duyet:do-day` | Mỗi bên, theo nguồn của bên: số bên có giá trị ở từng trường trong 10 trường của bảng so — giá, DT, giá/m², phường, loại hình (khác `unknown`), PN, WC, đường, toà, tầng — cộng «người đăng» (`seller_phone_hash` hoặc `seller_name` có giá trị) — đọc từ `sale_offers` hiện tại, đếm theo `offer_id` khác nhau mỗi nguồn; bên rời kho không vào mẫu số (Hỏi-2) | `S03`/`S05`/`S06` (nguồn có bên trong thẻ chờ) | chỉ báo (Hỏi-1) |
 
 Không thẻ chờ nào → ba kiểm đầu ghi `tong=0` và đạt; `do-day` không ghi dòng nguồn nào.
 
@@ -34,7 +34,7 @@ xoá theo cùng luật ngày. `detail` dòng `khoá=giá trị` chỉ số đế
 
 ### 3. Nhịp chạy
 
-Bước cuối `scripts/cloud-sync.sh`, sau `do-danh-ba-sdt` (cùng nhịp SD5 — Hỏi-3 đã duyệt 31/10).
+Bước cuối `scripts/cloud-sync.sh`, sau `do-danh-ba-sdt` (Hỏi-3 của hồ sơ này, Mạnh duyệt 31/10). Dòng lên cloud ở lượt đồng bộ kế (AC-8).
 
 ### 4. Hiện trên `/ops/quality`
 

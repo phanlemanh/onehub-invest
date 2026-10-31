@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.dtd_pipeline
     paths: [pipeline/do-the-duyet.mjs, pipeline/do-the-duyet.test.mjs]
-    expected: "exit 0; hàm thuần trên tập thẻ viết trước (chờ, đã quyết, agent_output; bên còn sống/rời kho; media local/URL/không có; trường đủ/thiếu theo nguồn): ma trận (kiểm, đối tượng, khoá) → số viết trước, số assert = số phần tử; thẻ đã quyết và agent_output không đếm; bên rời kho thiếu cả 11 trường; loại hình 'unknown' tính là thiếu; đối chứng đỏ: bản chép đếm cả thẻ đã quyết → bắt ('DEM CA THE DA QUYET'); bản chép coi dòng media chỉ URL là ảnh vai ops thấy → bắt ('ANH OPS NHAN URL GOC'); bản chép tính 'unknown' là có loại hình → bắt ('UNKNOWN TINH LA CO')"
+    expected: "exit 0; hàm thuần trên tập thẻ viết trước (chờ, đã quyết, agent_output; bên còn sống/rời kho; media local/URL/không có; trường đủ/thiếu theo nguồn): ma trận (kiểm, đối tượng, khoá) → số viết trước, số assert = số phần tử; thẻ đã quyết và agent_output không đếm; bên rời kho không vào mẫu số độ đầy (Hỏi-2); loại hình 'unknown' tính là thiếu; đối chứng đỏ: bản chép đếm cả thẻ đã quyết → bắt ('DEM CA THE DA QUYET'); bản chép coi dòng media chỉ URL là ảnh vai ops thấy → bắt ('ANH OPS NHAN URL GOC'); bản chép tính 'unknown' là có loại hình → bắt ('UNKNOWN TINH LA CO')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
