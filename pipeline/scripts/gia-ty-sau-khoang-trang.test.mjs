@@ -38,7 +38,9 @@ async function banSaoDotBien(thay) {
 const BO_NHANH_DUOI = [["if (coDuoiSoNgan(t, m, i, nhom)) return true;", ""]];
 const BO_000 = [['than.endsWith("000") && ', ""]];
 const BO_THAN = [[" && THAN_SO_TIEN.test(t.slice(0, i - 1))", ""]];
-const LOI_A = [["const PHONE_RE = /(?<!\\d)(?:\\+84|0)(?:[.\\-\\s]?\\d)", "const PHONE_RE = /(?<!\\d)(?:\\+84|0)(?:[.\\-]?\\d)"]];
+// SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-78): bộ bóc SĐT dùng SDT_RE riêng — lối (a) bỏ khoảng trắng khỏi tập ký
+// tự tách của bộ bóc.
+const LOI_A = [['const TACH_SDT = "[.\\\\- \\\\t•·]";', 'const TACH_SDT = "[.\\\\-•·]";']];
 
 // ---- AC-1: giá + khoảng trắng/xuống dòng + 1–2 chữ số ----
 const SAU_KHOANG_TRANG = [
@@ -105,9 +107,14 @@ test("GS-AC-2 đột biến: bỏ điều kiện thân số tiền → «50m2.09
 const DONG_SDT = [...SAU_KHOANG_TRANG.map(([chu]) => chu), ...SDT];
 const nen = await napBanSao(execFileSync("git", ["show", `${NEN}:pipeline/transform-zalo.mjs`], { cwd: PIPE, encoding: "utf8" }));
 
+// SD2 (giám sát duyệt P1-78, P1-79): bản nền nhận «số» 11 chữ số ở hai dòng (giá trên hai dòng; số tách đuôi một chữ số);
+// SD2 bỏ số 11 chữ số có chủ ý nên đúng hai dòng này chờ rỗng, 13 dòng còn lại vẫn so bản nền.
+const SD2_RONG = ["Bán căn 1.050.000.000\n60m2", "Cho thuê 50m2.0912.345.678 9 T.Lan 9tr"];
+
 test("GS-AC-3: extractPhones của cây bằng của bản nền ở 15 dòng", () => {
   assert.equal(DONG_SDT.length, 15);
-  for (const chu of DONG_SDT) assert.deepEqual(tz.extractPhones(chu), nen.extractPhones(chu), `GS-AC-3 «${chu}»`);
+  for (const r of SD2_RONG) assert.ok(DONG_SDT.includes(r), `GS-AC-3: dòng SD2 chờ rỗng «${r}» phải có trong 15 dòng`);
+  for (const chu of DONG_SDT) assert.deepEqual(tz.extractPhones(chu), SD2_RONG.includes(chu) ? [] : nen.extractPhones(chu), `GS-AC-3 «${chu}»`);
 });
 
 test("GS-AC-3 đột biến: lối (a) — PHONE_RE thôi nhận khoảng trắng → «liên hệ.0901 234 567» lệch bản nền", async () => {

@@ -15,6 +15,10 @@ import{appendFileSync}from"node:fs";appendFileSync("$S/calls","import "+process.
 if(process.argv[2].includes("/hcmc/")&&process.env.FAIL_HCMC==="1"){console.error("JSON hỏng (lỗi giả)");process.exit(1);}
 EOF
 mkdir -p "$R/collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-23T130000000" "$R/collector/snapshots/hcmc/hcmc__zalo-agent__2026-10-23T070000000"
+# 2510-8: tệp bọc có cổng manifest (thiếu manifest <30′ = snapshot chưa xong) — fixture lành phải có manifest
+for d in hanoi/hanoi__zalo-agent__2026-10-23T130000000 hcmc/hcmc__zalo-agent__2026-10-23T070000000; do
+  echo "{\"snapshotId\":\"$(basename "$d")\",\"files\":[]}" > "$R/collector/snapshots/$d/manifest.json"
+done
 echo "2026-10-22T120000000" > "$R/pipeline/logs/apify-daily.state"
 P="$S/bin:$(dirname "$(command -v node)"):/usr/bin:/bin"
 W=$(env -i HOME="$S/home" PATH="$P" /bin/bash -c 'command -v sleep')
