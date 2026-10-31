@@ -523,6 +523,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    sts_chan: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs chan"   # sd3-test-chiu-song-song E1 — xanh dưới phiên giữ 33033, bản cũ treo
+    sts_khoa: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs khoa"   # sd3-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    sts_assert: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs assert"   # sd3-test-chiu-song-song E3 — thông điệp assert giữ nguyên
+    sts_pham_vi: "bash _acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh"   # sd3-test-chiu-song-song E4
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
