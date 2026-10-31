@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.nhan_bac_db
     paths: [pipeline/nhan-bac-s03.mjs, pipeline/lib/nhan-bac.mjs, pipeline/scripts/nhan-bac-s03-db.test.mjs]
-    expected: "exit 0; ca NB-AC-3 (ROLLBACK, lô 50 bài thật, backend giả): count + md5(string_agg) của sale_offer_records, listing_records, stg_zalo_posts, field_assertions trước = sau; s03_silver_labels thêm 50; đối chứng dương: bản đột biến ghi thêm một dòng stg → bộ so đỏ ghim «NB-AC-3 ghi ngoài bảng nhãn bạc»; chỉ in số"
+    expected: "exit 0; ca NB-AC-3 (ROLLBACK, lô 50 bài thật, backend giả): count + md5(string_agg) của sale_offer_records, sale_offers, properties, listing_records, stg_zalo_posts, field_assertions trước = sau; s03_silver_labels thêm 50; đối chứng dương: bản đột biến ghi thêm một dòng stg → bộ so đỏ ghim «NB-AC-3 ghi ngoài bảng nhãn bạc»; chỉ in số"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -55,7 +55,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.nhan_bac
     paths: [pipeline/lib/nhan-bac.mjs, pipeline/scripts/nhan-bac-s03.test.mjs]
-    expected: "exit 0; ca NB-AC-7: máy chủ HTTP giả ghi yêu cầu — Qwen: POST /v1/chat/completions; Haiku: POST /v1/messages qua @anthropic-ai/sdk (baseURL giả) với model claude-haiku-5-5; Decisions: POST /v1/decisions với model gpt-6-luna và hai câu hỏi choice tên intent, kind; trả lời mẫu của từng backend đọc ra cùng hình {listing_intent, kind, probability}; chiều đỏ: bản đột biến đổi tên câu hỏi intent → ô Decisions đỏ ghim «NB-AC-7 đọc sai trả lời Decisions»"
+    expected: "exit 0; ca NB-AC-7: máy chủ HTTP giả ghi yêu cầu — Qwen: POST /v1/chat/completions; Haiku: POST /v1/messages qua @anthropic-ai/sdk (baseURL giả) với model claude-haiku-5-5; Decisions: POST /v1/decisions với model gpt-6-luna và hai câu hỏi choice tên intent, kind; trả lời mẫu Decisions dựng theo đúng hình tài liệu 31/10 (answers[].type choice, name, choice, probabilities[{value, probability}], confidence — trích chỗ trong tài liệu ở chú thích test), Haiku theo hình content[].text của SDK; trả lời mẫu của từng backend đọc ra cùng hình {listing_intent, kind, probability}; chiều đỏ: bản đột biến đổi tên câu hỏi intent → ô Decisions đỏ ghim «NB-AC-7 đọc sai trả lời Decisions»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
@@ -63,7 +63,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.nhan_bac
     paths: [pipeline/nhan-bac-s03.mjs, pipeline/lib/nhan-bac.mjs, pipeline/scripts/nhan-bac-s03.test.mjs]
-    expected: "exit 0; ca NB-AC-8: tệp vàng viết tay 12 bài + backend giả trả lời định sẵn → bảng đo đúng từng số (ý định 10/12, bán/thuê trên offer 5/6, Yêu cầu 3/3, JSON hỏng 1, trích giả 1) — đếm độc lập trên cùng mảng kết quả; đầu ra không chứa chữ bài nào; chiều đỏ: bản đột biến tính bán/thuê trên mọi bài thay vì bài offer → ô đỏ ghim «NB-AC-8 bán/thuê đo sai mẫu số»"
+    expected: "exit 0; ca NB-AC-8: tệp vàng viết tay 12 bài theo khuôn giao diện JSONL {post_id, listing_intent, kind} ghi trong contract + backend giả trả lời định sẵn → bảng đo đúng từng số (ý định 10/12, bán/thuê trên offer 5/6, Yêu cầu 3/3, JSON hỏng 1, trích giả 1) — đếm độc lập trên cùng mảng kết quả; đầu ra không chứa chữ bài nào; chiều đỏ: bản đột biến tính bán/thuê trên mọi bài thay vì bài offer → ô đỏ ghim «NB-AC-8 bán/thuê đo sai mẫu số»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
@@ -78,5 +78,5 @@ evals:
     executor: judgment
     layer: backend-effect
     inputs: [docs/research/s03-nhan-bac-do-3-backend.md, _acceptance/nhan-bac-model-lon-s03/opportunity.md]
-    question: "Tệp số đo có đủ ba backend (Qwen local, Haiku 5.5, Decisions) đo trên cùng tập vàng 61 bài, mỗi backend có ý định đúng, bán/thuê trên offer, Yêu cầu bắt, JSON hỏng, trích giả, độ trễ, chi phí — và kết luận so ngưỡng sống ≥ 95% ý định của ô cơ hội có khớp số trong bảng không? Tệp có chữ bài nguyên văn hay tên nguồn thật không?"
+    question: "Tệp số đo có đủ ba backend (Qwen local, Haiku 5.5, Decisions), mỗi backend ghi cùng một băm danh sách post_id tập vàng và đủ: ý định đúng, bán/thuê trên offer, Yêu cầu bắt, JSON hỏng, trích giả, độ trễ, chi phí hết bài cũ — và ba ô đạt/không (ý định ≥ 95%, bán/thuê trên offer ≥ 95%, chi phí hết bài cũ ≤ 10 USD với cloud) có khớp số trong bảng không? Tệp có đoạn nào trông như chữ bài nguyên văn (câu rao dài, số điện thoại) không?"
     evidence_required: [run_id, verdict, verifier, verified_at, rationale]

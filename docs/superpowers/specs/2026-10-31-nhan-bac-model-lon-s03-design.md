@@ -29,12 +29,14 @@ chuẩn hoá — bài đổi chữ thì nhãn mới) · `model` (vd `anthropic:c
 **`pipeline/lib/nhan-bac.mjs`:** ba backend sau một giao diện `hoi(text) → {raw | answers, ms, usage}`:
 - `qwen` — MTPLX chat completions local (như ZCode); chữ không rời máy.
 - `anthropic` — SDK chính thức `@anthropic-ai/sdk`, model `claude-haiku-5-5`, effort `low`, đầu ra một dòng JSON;
-  chữ gửi đi đã qua `stripPII`. Chạy hết bài cũ có thể dùng Batch API (giảm 50%).
+  chữ gửi đi đã qua `stripPII`. Đường Batch API (giảm 50%) để vòng sau.
 - `decisions` — `POST /v1/decisions` model `gpt-6-luna`, hai câu hỏi `choice` (intent 3 lớp, kind 2 lớp) → `choice` +
   `probabilities`; **không trả câu trích** → `quote` null, `quote_ok` null (Hỏi-4).
 Chung: `stripPII` (SĐT, email, link) trước mọi backend cloud; chỉ gửi chữ bài — không gửi `group_name`, `sender_name`,
 `conversation_id`, tên nguồn; `parseReply` kiểm JSON + giá trị lạ + trích so chuỗi; lỗi mạng/timeout/từ chối → dòng
 `unknown` + `error_kind`, lượt chạy tiếp.
+
+**Khuôn tệp vàng (giao diện với ZCode, Hỏi-1):** JSONL, mỗi dòng `{"post_id":"…","listing_intent":"offer|inquiry|not_listing","kind":"sale|rent_lt|null"}`, đặt ở máy thu, không commit.
 
 **`pipeline/nhan-bac-s03.mjs`:** `--model <qwen|haiku|decisions> [--limit n] [--since ngày] [--thu] [--tran-usd x]
 [--gold tệp.jsonl]`. Ghi ON CONFLICT DO NOTHING; `--thu` không ghi; `--tran-usd` ước token trước khi gửi, dừng trước
@@ -43,7 +45,7 @@ chữ bài.
 
 ## Chi phí (giá 31/10)
 
-~38k bài × ~600 token vào: Haiku 5.5 ≈ $2,3 vào + ~$1,1 ra (Batch ≈ một nửa); Decisions ≈ $2,3 vào, ra không tính.
+~38k bài × ~600 token vào: Haiku 5.5 ≈ $2,3 vào + ~$1,1 ra (Batch, vòng sau, ≈ một nửa); Decisions ≈ $2,3 vào, ra không tính.
 Hằng ngày ~2.000 bài: dưới $0,2 với cloud, 0 đồng với Qwen local (~50 phút).
 
 ## Ngoài phạm vi
