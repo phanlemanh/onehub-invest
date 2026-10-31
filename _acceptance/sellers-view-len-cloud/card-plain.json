@@ -1,31 +1,89 @@
 {
   "feature_plain": "Sau khi máy thu chuyển sang lưu số điện thoại gốc, lượt đồng bộ đêm lên cloud vẫn chạy tiếp; trang /ops trên cloud vẫn có danh sách người bán, chỉ đổi khoá một lần.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ dừng cả lượt đồng bộ, trước khi gửi dòng nào, khi một bảng đích trên cloud không phải bảng thường; lời dừng gọi tên bảng và chỉ tới tệp hướng dẫn áp cloud."},
-    {"id": "AC-2", "p": "Sẽ chứng trên một bản chép thử đóng vai cloud: danh sách người bán ở dạng view thì bị dừng, ở dạng bảng thì qua, và ghi vào view thì lỗi thật."},
-    {"id": "AC-3", "p": "Sẽ đọc danh sách người bán mới ở máy thu đúng các cột được phép lên cloud, không có tên người bán gốc."},
-    {"id": "AC-4", "p": "Sẽ có tệp hướng dẫn áp cloud cho đợt này: phần đo trước phân biệt cloud đúng với cloud sai, phần áp không đổi cấu trúc bảng nào."},
-    {"id": "AC-6", "p": "Sẽ chỉ đổi bộ đồng bộ, test của nó, tệp hướng dẫn cloud và hồ sơ này; không lệnh nào chạm cloud thật."},
-    {"id": "AC-7", "p": "Sẽ chạy đúng câu tráo dữ liệu của bộ đồng bộ trên bảng người bán dựng theo cấu trúc cloud thật: thành công, đủ dòng, không trùng người."},
-    {"id": "AC-8", "p": "Sẽ chứng mọi chỗ trên cloud mang khoá người bán đều được thay trong cùng một lượt, không chỗ nào giữ khoá cũ."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ dừng cả lượt đồng bộ, trước khi gửi dòng nào, khi một bảng đích trên cloud không phải bảng thường; lời dừng gọi tên bảng và chỉ tới tệp hướng dẫn áp cloud."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ chứng trên một bản chép thử đóng vai cloud: danh sách người bán ở dạng view thì bị dừng, ở dạng bảng thì qua, và ghi vào view thì lỗi thật."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đọc danh sách người bán mới ở máy thu đúng các cột được phép lên cloud, không có tên người bán gốc."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ có tệp hướng dẫn áp cloud cho đợt này: phần đo trước phân biệt cloud đúng với cloud sai, phần áp không đổi cấu trúc bảng nào."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ chỉ đổi bộ đồng bộ, test của nó, tệp hướng dẫn cloud và hồ sơ này; không lệnh nào chạm cloud thật."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ chạy đúng câu tráo dữ liệu của bộ đồng bộ trên bảng người bán dựng theo cấu trúc cloud thật: thành công, đủ dòng, không trùng người."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ chứng mọi chỗ trên cloud mang khoá người bán đều được thay trong cùng một lượt, không chỗ nào giữ khoá cũ."
+    }
   ],
   "wont_do": [
-    {"id": "AC-5", "p": "Sẽ KHÔNG đổi hành vi đồng bộ nào khác: mọi test đồng bộ và chặn lộ dữ liệu cũ vẫn xanh."},
-    {"id": "OOS-1", "p": "Không áp gì lên cloud thật trong hàng này — áp là bước anh duyệt riêng sau khi gộp."},
-    {"id": "OOS-2", "p": "Không đổi tên hay thêm bảng trên cloud, không đưa số điện thoại gốc lên cloud."}
+    {
+      "id": "AC-5",
+      "p": "Sẽ KHÔNG đổi hành vi đồng bộ nào khác: mọi test đồng bộ và chặn lộ dữ liệu cũ vẫn xanh."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Không áp gì lên cloud thật trong hàng này — áp là bước anh duyệt riêng sau khi gộp."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không đổi tên hay thêm bảng trên cloud, không đưa số điện thoại gốc lên cloud."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Mọi kiểu bảng đích có thể gặp trên cloud (bảng, bảng chia phần, view, view lưu sẵn, bảng ngoại, thiếu bảng) đều có một ô kiểm — AC-1, AC-2."},
-    {"i": 1, "p": "Cả ba phía: đọc ở máy thu, ghi lên cloud, tài liệu áp cloud — AC-2, AC-3, AC-4, AC-7."},
-    {"i": 2, "p": "Khoá người bán trên cloud: chỗ được thay trong lượt và chỗ có thể bị bỏ sót — AC-8."},
-    {"i": 3, "p": "Thước đủ: mục Ngoài-2 của hồ sơ lưu số gốc, và chính câu tráo dữ liệu thật của bộ đồng bộ."}
+    {
+      "i": 0,
+      "p": "Mọi kiểu bảng đích có thể gặp trên cloud (bảng, bảng chia phần, view, view lưu sẵn, bảng ngoại, thiếu bảng) đều có một ô kiểm — AC-1, AC-2."
+    },
+    {
+      "i": 1,
+      "p": "Cả ba phía: đọc ở máy thu, ghi lên cloud, tài liệu áp cloud — AC-2, AC-3, AC-4, AC-7."
+    },
+    {
+      "i": 2,
+      "p": "Khoá người bán trên cloud: chỗ được thay trong lượt và chỗ có thể bị bỏ sót — AC-8."
+    },
+    {
+      "i": 3,
+      "p": "Thước đủ: mục Ngoài-2 của hồ sơ lưu số gốc, và chính câu tráo dữ liệu thật của bộ đồng bộ."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Bản đầu nói «cloud không cần gì», nhưng lượt đồng bộ đầu sẽ ghi đè khoá người bán trên cloud mà chưa ai duyệt. Đã xử: thành câu hỏi Hỏi-1 cho anh, kèm tiêu chí AC-8 chứng không chỗ nào giữ khoá cũ."},
-    {"i": 1, "p": "Lựa chọn «dừng cả lượt» và «chặn bảng ngoại» do máy tự chọn mà trích căn cứ chưa đúng. Đã xử: ghi lại lý do — bỏ riêng một bảng làm lệch khoá giữa ba bảng tráo cùng lúc."},
-    {"i": 2, "p": "Chưa có phép đo lượt đồng bộ thật chạy trọn trên cấu trúc cloud thật. Đã xử: thêm AC-7 chạy câu tráo thật, đòi đủ dòng và không trùng người."},
-    {"i": 3, "p": "Tiêu chí chặn chưa ghi rõ bảng ngoại và trường hợp thiếu bảng. Đã xử: AC-1 nay ghi đủ, thiếu bảng giữ lỗi cũ; thêm ô chứng không bảng nào bị chặn oan."},
-    {"i": 4, "p": "Phần đo trước của tệp hướng dẫn cloud chỉ được thử trên trạng thái đúng. Đã xử: thêm hai trạng thái sai, đòi đầu ra khác và gọi tên chỗ lệch."}
+    {
+      "i": 0,
+      "p": "Bản đầu nói «cloud không cần gì», nhưng lượt đồng bộ đầu sẽ ghi đè khoá người bán trên cloud mà chưa ai duyệt. Đã xử: thành câu hỏi Hỏi-1 cho anh, kèm tiêu chí AC-8 chứng không chỗ nào giữ khoá cũ."
+    },
+    {
+      "i": 1,
+      "p": "Lựa chọn «dừng cả lượt» và «chặn bảng ngoại» do máy tự chọn mà trích căn cứ chưa đúng. Đã xử: ghi lại lý do — bỏ riêng một bảng làm lệch khoá giữa ba bảng tráo cùng lúc."
+    },
+    {
+      "i": 2,
+      "p": "Chưa có phép đo lượt đồng bộ thật chạy trọn trên cấu trúc cloud thật. Đã xử: thêm AC-7 chạy câu tráo thật, đòi đủ dòng và không trùng người."
+    },
+    {
+      "i": 3,
+      "p": "Tiêu chí chặn chưa ghi rõ bảng ngoại và trường hợp thiếu bảng. Đã xử: AC-1 nay ghi đủ, thiếu bảng giữ lỗi cũ; thêm ô chứng không bảng nào bị chặn oan."
+    },
+    {
+      "i": 4,
+      "p": "Phần đo trước của tệp hướng dẫn cloud chỉ được thử trên trạng thái đúng. Đã xử: thêm hai trạng thái sai, đòi đầu ra khác và gọi tên chỗ lệch."
+    }
   ],
-  "scope_plain": "Hai việc bỏ ngoài hàng này:"
+  "scope_plain": "Hai việc bỏ ngoài hàng này:",
+  "analyst_plain": "Ba lệnh test của bộ đồng bộ cũng xanh trên bản chưa sửa (đúng chất test hồi quy: chúng giữ hành vi cũ, phép đo mới nằm ở các ca SVC thêm vào cùng tệp). Bốn lệnh kiểm dựng DB thử là lệnh mới nên không chạy được trên bản cũ để so."
 }
