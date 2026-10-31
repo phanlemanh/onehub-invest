@@ -1,0 +1,93 @@
+schema_version: 1
+feature_slug: the-ghep-can-tin-roi-kho
+# Ca «RK-AC-n». judge-run.test.ts dùng DB thử RỖNG riêng (oneinvest_p3_judge_test_<pid>) có thêm ops_audit dựng từ
+# db/migrations/018_ops_audit.sql; judge-roi-kho.itest.ts chép lô thật từ oneinvest CHỈ bằng SELECT sang DB thử riêng.
+# Mỗi phép đo có đối chứng đỏ chạy đúng hàm kiểm (hoặc đúng câu SQL đã sửa hỏng) trên vật hỏng, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-1 rút thẻ có tin rời kho' trong agent/tests/judge-run.test.ts xanh. Ma trận viết trước ĐÚNG 6 ô = bên rời {A, B, cả hai} × chiều thẻ {pair:a|b, pair:b|a}: mỗi ô một cặp riêng, thẻ entity_match pending chèn sẵn, cặp needs_llm trong property_candidates, sale_offers chỉ chứa các tin còn sống của ô. chamMotLuot(khongLlm) → mỗi thẻ: status 'deferred', decided_by 'machine:judge-run', decided_at không null, decision_note bắt đầu 'tin rời kho', chứa mọi khoá đã rời của ô và KHÔNG chứa khoá còn sống; số ô kiểm = 6; dem.rut = 6, dem.roiKho = 6. Đối chứng đỏ cùng fixture: (1) hàm kiểm trên bản ghi thẻ còn status 'pending' → 'RK-AC-1 thẻ chưa rút: <item_id>'; (2) hàm kiểm trên bản ghi mà decision_note nêu khoá còn sống thay khoá đã rời → 'RK-AC-1 lý do sai khoá: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-2 mỗi thẻ rút một dòng audit' trong agent/tests/judge-run.test.ts xanh: cùng fixture 6 ô của E1; sau lượt, ops_audit có đúng 6 dòng; mỗi thẻ rút có ĐÚNG MỘT dòng mà detail->>'review_id' = id thẻ, với actor 'machine:judge-run', action 'review-queue:rut-roi-kho', detail.item_id = item_id thẻ, detail.ly_do = 'tin rời kho', detail.roi_kho (mảng) bằng tập khoá đã rời của ô viết trước. Đối chứng đỏ cùng fixture: (1) chèn thêm một dòng audit trùng review_id của thẻ đầu → 'RK-AC-2 audit lệch: <item_id>'; (2) hàm kiểm trên danh sách dòng mà roi_kho của thẻ đầu thiếu một khoá (ô 'cả hai') → 'RK-AC-2 audit lệch: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, db/migrations/018_ops_audit.sql]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-3 cặp hai bên sống chấm như cũ' trong agent/tests/judge-run.test.ts xanh: hai cặp hai bên đều trong sale_offers — cặp X có thẻ pending chèn sẵn, cặp Y needs_llm chưa thẻ; chamMotLuot(khongLlm) → dem.rut = 0, dem.roiKho = 0, dem.capNhat = 1, dem.sinh = 1; thẻ X status 'pending', evidence.cham có mặt; cặp Y có đúng một thẻ pending; ops_audit 0 dòng. Đối chứng đỏ cùng fixture: hàm kiểm trên bản ghi thẻ X đặt status 'deferred' → 'RK-AC-3 thẻ sống bị rút: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-4 thẻ người đã quyết không bị rút' trong agent/tests/judge-run.test.ts xanh. Ma trận viết trước ĐÚNG 3 ô = trạng thái người quyết {approved, rejected, deferred} (decided_by 'user:test', decision_note 'ghi chú người'), mỗi ô một cặp có Tin A rời kho; chụp (status, decided_by, decided_at, decision_note) trước; chamMotLuot(khongLlm) → ba ảnh sau BẰNG ảnh trước; ops_audit 0 dòng; dem.boQua = 3. Đối chứng đỏ cùng fixture: hàm kiểm trên ảnh sau mà ô 'rejected' bị đổi decided_by sang 'machine:judge-run' → 'RK-AC-4 thẻ người quyết bị đổi: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-5 chạy lại không rút trùng' trong agent/tests/judge-run.test.ts xanh: fixture 6 ô của E1; lượt 1 rồi chụp (số dòng ops_audit, ảnh mọi thẻ: id, status, decided_by, decided_at, decision_note); lượt 2 → dem.rut = 0, số dòng ops_audit bằng lượt 1, ảnh thẻ bằng lượt 1. Đối chứng đỏ cùng fixture: chạy lại SQL_RUT_ROI_KHO đã bỏ điều kiện status = 'pending' (đúng tham số lượt 1 của thẻ đầu, bắt qua db bọc) → hàm kiểm thấy audit tăng → 'RK-AC-5 rút trùng: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-6 cặp rời kho chưa thẻ không sinh thẻ' trong agent/tests/judge-run.test.ts xanh: một cặp needs_llm mà Tin B không trong sale_offers, chưa có thẻ; chamMotLuot(khongLlm) → 0 thẻ entity_match, dem.loi = 0, dem.roiKho = 1, dem.rut = 0, dem.sinh = 0; queryPair không được gọi cho cặp ấy (deps.queryPair bọc đếm lời gọi = 0). Đối chứng đỏ cùng fixture: (1) hàm kiểm trên dem có loi = 1 → 'RK-AC-6 cặp rời kho tính vào loi'; (2) hàm kiểm khi bảng có một thẻ cho cặp → 'RK-AC-6 sinh thẻ cho cặp rời kho'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-7 người quyết giữa chừng — không rút' trong agent/tests/judge-run.test.ts xanh: cặp có Tin A rời kho với HAI thẻ pending (pair:a|b và pair:b|a); db bọc chặn câu kiểm tin sống của chamMotLuot và, trước khi trả kết quả, cho người quyết thẻ pair:a|b ('approved', decided_by 'user:test'); sau lượt: thẻ pair:a|b vẫn 'approved'/'user:test', thẻ pair:b|a vẫn 'pending', ops_audit 0 dòng, dem.rut = 0. Đối chứng đỏ cùng fixture: chạy bản SQL_RUT_ROI_KHO đã bỏ vế NOT EXISTS (khoá cặp) với đúng tham số chamMotLuot vừa dùng (bắt qua db bọc) → hàm kiểm → 'RK-AC-7 rút thẻ của cặp người đã quyết: pair:<b>|<a>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-8 dòng in tổng kết' trong agent/tests/judge-run.test.ts xanh: DB thử có 2 cặp rời kho mỗi cặp một thẻ pending và 1 cặp needs_llm rời kho chưa thẻ; chạy THẬT 'node --import tsx scripts/judge-run.ts --khong-llm' (cwd agent/, DATABASE_URL = DB thử) → exit 0, stdout có dòng khớp đúng 'cặp có tin rời kho 3 · thẻ rút 2 · thẻ trả lại 0'. Đối chứng đỏ cùng fixture: hàm kiểm trên stdout mà dòng ghi 'thẻ rút 3' → 'RK-AC-8 dòng in sai: cặp có tin rời kho 3 · thẻ rút 3 · thẻ trả lại 0'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts
+    expected: "exit 0; ca 'RK-AC-9 lô thật' trong agent/tests/judge-roi-kho.itest.ts xanh (tệp ngoài glob tests/*.test.ts — chỉ chạy ở máy có kho local, CI không chạy): DB thử riêng (oneinvest_p3_roi_kho_<pid>) có sale_offers theo kiểu cột oneinvest (dungSaleOffers của judge-chung.ts), property_candidates, review_queue từ 029 tới «-- Seed», ai_calls từ 052, ops_audit từ 018. Chép từ oneinvest CHỈ bằng SELECT: mọi thẻ entity_match, các hàng sale_offers còn sống của mọi khoá trên item_id, các cặp property_candidates needs_llm. Tập thẻ rời kho kỳ vọng TÍNH TRƯỚC lượt chạy bằng câu SELECT riêng trên oneinvest (khoá trên item_id không có trong oneinvest.sale_offers), không đọc lại từ DB thử. Nhánh (a) nguyên trạng: giữ trạng thái gốc của thẻ; in số thẻ pending có khoá không sống trước lượt; sau lượt 1 số ấy = 0, thẻ đã quyết giữ nguyên (status, decided_by). Nhánh (b) dựng: đặt lại mọi thẻ status 'pending', decided_by/decided_at/decision_note NULL; lượt 1 → mọi thẻ của tập kỳ vọng: status 'deferred', decision_note bắt đầu 'tin rời kho', đúng một dòng ops_audit; mọi thẻ ngoài tập: status 'pending'; số thẻ pending có khoá không sống = 0. Lượt 2 → dem.rut = 0, số dòng ops_audit không đổi. In số: '<n> thẻ · <k> rời kho rút · <n-k> sống giữ'. Kho không có thẻ entity_match nào có bên rời kho → t.skip có lý do. Đối chứng đỏ cùng fixture: hàm kiểm trên bản ghi mà thẻ rời kho đầu tiên còn 'pending' → 'RK-AC-9 thẻ rời kho còn chờ: <item_id>' (dùng cho cả hai nhánh)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-roi-kho.itest.ts, agent/tests/judge-chung.ts]
+
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; toàn bộ agent npm test xanh, gồm mọi ca đã ký của judge-nguong-la-code, judge-giu-quyet-dinh-nguoi và judge-evidence-du-truong trong agent/tests/judge-run.test.ts, agent/tests/judge-nguong.test.ts và agent/tests/judge-pair.test.ts. Ca 'RK-AC-10 ca đã ký còn đủ' trong agent/tests/judge-run.test.ts đọc danh sách viết trước _acceptance/the-ghep-can-tin-roi-kho/ca-da-ky.txt (31 tên, rút từ ba tệp trên tại đỉnh nhánh HD1 trước khi code vòng này) và tên ca test(\"…\") trong ba tệp: mọi tên của danh sách có mặt; số assert = số dòng danh sách = 31. Đối chứng đỏ cùng fixture: danh sách cộng thêm một tên không có trong tệp nào → 'RK-AC-10 ca đã ký mất: <tên>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, agent/tests/judge-nguong.test.ts, agent/tests/judge-pair.test.ts, agent/tests/judge-chung.ts, _acceptance/the-ghep-can-tin-roi-kho/ca-da-ky.txt]
+
+  - id: E11
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'RK-AC-11 tin quay lại — thẻ máy rút được trả lại' trong agent/tests/judge-run.test.ts xanh: cặp có Tin A rời kho, thẻ pending, chạy lượt 1 → thẻ deferred bởi machine:judge-run; chèn lại Tin A vào sale_offers; lượt 2 → thẻ status 'pending', decided_by/decided_at/decision_note NULL, evidence.cham có mặt và luc của cham sau lượt 1; ops_audit có đúng một dòng action 'review-queue:tra-lai-tin-ve-kho' với detail.review_id = id thẻ; dem.traLai = 1, dem.capNhat = 1. Thẻ deferred bởi người ('user:test') trên cặp hai bên sống thì KHÔNG được trả lại (cùng lượt 2, ô đối chiếu). Đối chứng đỏ cùng fixture: (1) hàm kiểm trên bản ghi thẻ còn 'deferred' → 'RK-AC-11 thẻ chưa trả lại: <item_id>'; (2) hàm kiểm trên bản ghi mà thẻ người 'deferred' bị đổi về 'pending' → 'RK-AC-11 trả lại thẻ người quyết: <item_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]

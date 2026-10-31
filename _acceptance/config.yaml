@@ -67,6 +67,7 @@ executors:
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
+    rk_itest: "cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts"   # the-ghep-can-tin-roi-kho E9 — lô thật chép chỉ-SELECT từ oneinvest, ngoài CI
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
