@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 658ed65417657641abc9e2ffd29bd73c8b383891
+verified_commit: 83b4937231085658643b991c5d029c11deee9c8a
 human_signoff:
 ---
 
@@ -22,64 +22,61 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-s03-cho-vay-khong-phai-bds-E1-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-E1-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
   output: |
-    Lệnh: cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    Bộ test xanh, gồm ca CV-AC-1 (ma trận 4 ô «năm/nữ» sau số).
-    duration_ms 109.387458
+    cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
+    Bộ test CV-AC-1 (ma trận 5 ô, gồm ô «5 nét») xanh.
 
 - eval: E2
-  run_id: minted-s03-cho-vay-khong-phai-bds-E2-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-E2-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.s03_loai_tin
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
   output: |
-    Lệnh: cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
-    Bộ test xanh, gồm ca CV-AC-2 (ma trận 8 ô viết tắt phòng ngủ).
-    duration_ms 109.387458
+    cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs
+    Bộ test CV-AC-2 (ma trận 8 ô viết tắt phòng ngủ) xanh.
 
 - eval: E3
-  run_id: minted-s03-cho-vay-khong-phai-bds-E3-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
   output: |
-    Lệnh: cd pipeline && npm test
-    Bộ pipeline xanh (gồm transform-zalo-loai-tin.test.mjs và parse.test.mjs).
-    duration_ms 236621.64725
+    cd pipeline && npm test
+    Bộ pipeline xanh, gồm transform-zalo-loai-tin.test.mjs và parse.test.mjs.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-npm_test__bb6271-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-lint-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
 
 - cmd: cd app && npm test
-  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-npm_test__bd9a35-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-test_lint_rules-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-s03-cho-vay-khong-phai-bds-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-31T15:43:35Z
+  verified_at: 2026-10-31T15:51:04Z
 
 ## Known limits
 
@@ -87,13 +84,13 @@ human_signoff:
 
 ## Analyst
 
-Eval không phân biệt (xanh trên cả HEAD lẫn baseline):
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline; chứng minh harness, cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
 - cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs: E1, E2
 
 Baseline không đo:
 - cd pipeline && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
-Judge: không có judgment item nào trong vòng này; mọi eval là executor test.
+Judge panels: eval không khai panel judgment nào; không có mục judgment cần người quyết.
 
 ## Variance
 
@@ -101,4 +98,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E1, E2, E3 đều xanh; không eval nào đỏ. Một finding trong hợp đồng (ma trận CV-AC-1 thiếu phần tử «nét») ghi ở review-findings.md.
+Round 1: S4 r1 PASS 3/3, còn 1 mục trong hợp đồng (thiếu ô «5 nét» cho CV-AC-1). Trả về triển khai, thêm ô «5 nét».
+Round 2: E1, E2, E3 đều PASS trên commit 83b49372 sau khi bổ sung ô «5 nét»; các lệnh suite xanh.
