@@ -50,6 +50,7 @@ executors:
     dtd_app_nhan: "cd app && node --import tsx --test tests/dq-the-duyet-label.test.tsx"   # do-the-duyet-du-du-lieu E5 — nhãn dq-labels
     sd3_boc: "node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs"   # sdt-luu-goc-e164 E1 — bộ bóc ra +84…
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
+    ldb_n6: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # sd3-lam-chat-do-danh-ba E1, E2 — N6 hàm thuần + 11 dòng ghi, không DB
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -115,6 +116,8 @@ executors:
     anh_goc: "cd app && node --import tsx --test tests/anh-goc-qua-may-chu.test.tsx"   # anh-goc-qua-may-chu — ?media= qua máy chủ: bộ lấy ảnh giả, lược đồ tạm có bảng media, ma trận vai và lỗi nguồn
     anh_goc_doi_chieu: "cd app && node --import tsx --test tests/anh-goc-doi-chieu.test.tsx"   # anh-goc-qua-may-chu AC-7 — DB máy thu chỉ đọc, không gọi mạng
     anh_goc_chan_svg: "cd app && node --import tsx --test tests/anh-goc-chan-svg.test.tsx"   # proxy-anh-chan-svg — danh sách kiểu ảnh cho phép, 415, nosniff + CSP sandbox
+    s03_loai_tin: "cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs"   # s03-nhan-loai-tin-rong — suy loại tin S03: tín hiệu chữ, đơn vị giá, bối cảnh nhóm, bài cầu
+    s03_loai_tin_doi_chieu: "cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # s03-nhan-loai-tin-rong AC-7/AC-9 — DB máy thu, BEGIN…ROLLBACK, chỉ in số
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
@@ -138,6 +141,7 @@ executors:
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
     nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
+    judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -513,6 +517,11 @@ executors:
     sd3_cloud: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs cloud"   # sdt-luu-goc-e164 E7 — câu đọc sync-cloud, không đẩy (DB thử)
     sd3_doc: "bash _acceptance/sdt-luu-goc-e164/probes/people.sh"   # sdt-luu-goc-e164 E8 — loader /ops/people ba vai (DB thử)
     sd3_pham_vi: "bash _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh"   # sdt-luu-goc-e164 E9
+    ldb_n6_db: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs n6"   # sd3-lam-chat-do-danh-ba E4 — N6 trước/sau 060 (DB thử)
+    ldb_anh: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs anh"   # sd3-lam-chat-do-danh-ba E5 — đúng ảnh người → số (DB thử)
+    ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
+    ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
+    ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"

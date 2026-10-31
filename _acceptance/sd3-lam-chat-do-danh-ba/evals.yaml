@@ -1,0 +1,61 @@
+schema_version: 1
+feature_slug: sd3-lam-chat-do-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ldb_n6
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ma trận N6 viết trước, mỗi ô một lỗi trên CÙNG fixture lành (số thuộc hai người cùng nguồn → trung=1; cùng số ở hai nguồn khác nhau → trung=0; số không có trên bản ghi tin nào của nguồn → thua=1; số chỉ có trên tin đã nghỉ → thua=0; SĐT trên tin sống không người mang → thieu=1; bí danh sdt_bam không tính vào N6; bí danh sdt ĐÃ NGHỈ của người A trùng số với bí danh còn hiệu lực của người B → trung=0; số trên tin sống chỉ còn ở bí danh sdt đã nghỉ → thieu=1) — số assert = số ô; fixture lành → trung=thua=thieu=0, đạt; đối chứng đỏ: bản chép tinhSo bỏ đếm thua → ô số lạ bắt ('N6 LECH thua')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ldb_n6
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; veDong ra đúng 11 dòng (n1,n2,n4,n5,n6 × S03,S05 + n3) với mỗi tên kiểm × nguồn đúng một lần; detail của n6 khớp ^trung=\\d+ thua=\\d+ thieu=\\d+ tong=\\d+$ (chỉ số đếm); đối chứng đỏ: kết quả có chuỗi +84… trong detail → bắt ('LO SO TRONG DETAIL')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ddb_app_nhan
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-danh-ba-sdt-label.test.tsx, pipeline/do-danh-ba-sdt.mjs]
+    expected: "exit 0; dòng sinh bằng veDong thật trên hai kết quả viết trước (mọi kiểm đạt, mọi kiểm không đạt) — 11 dòng mỗi kết quả, tên kiểm · đối tượng · chi tiết đều known; chi tiết n6 ra câu tiếng Việt ghim nguyên văn; đối chứng đỏ: chi tiết n6 thiếu khoá (thieu vắng) rơi về «chưa diễn giải»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ldb_n6_db
+    layer: backend-effect
+    paths: [pipeline/do-danh-ba-sdt.mjs, _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs]
+    expected: "exit 0; DB thử oneinvest_p4_ldb_n6 chép máy thu (db-thu-chac.sh của SD3, xoá khi xong); trước 060: chạy do-danh-ba-sdt.mjs thật (tiến trình con) → n6 không đạt ở nguồn có tin mang SĐT (thieu>0, đối chứng dương: phép đo phân biệt được); áp 060 + dựng danh bạ thật → n6 đạt ở S03 và S05 (trung=thua=thieu=0, tong>0, in tong); đối chứng đỏ: dữ liệu docDuLieu đọc từ DB thử sau 060, đột biến trong bộ nhớ (một số gán thêm cho người thứ hai cùng nguồn — chỉ mục duy nhất của DB chặn chèn thật), đưa qua tinhSo thật → n6 không đạt, trung=1; lọt thì bắt ('N6 KHONG BAT'); in 'N6 OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ldb_anh
+    paths: [db/migrations/060_sdt_e164.sql, pipeline/lib/danh-ba-nguoi.mjs, _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs]
+    expected: "exit 0; DB thử chép máy thu; trước 060 chạy bước đêm đời trước (refresh-bait-gap + dựng danh bạ của commit cha thứ nhất của merge SD3, bung bằng git archive) để danh bạ khớp tin mới thu, rồi dựng ánh xạ party_key → tập E.164 (từ sdt_bam còn hiệu lực khớp khoá băm của số 0… trên bản ghi tin, quy E.164 bằng node:crypto); sau 060 + dựng danh bạ thật dựng party_key → tập giá trị sdt còn hiệu lực; so bằng hàm soAnh: cùng tập khoá, mỗi khoá cùng tập số (bằng nhau, không phải tập con), assert.equal số người hai bên, số khoá chỉ có ở một phía = 0, mỗi (nguồn, số) đúng một người; đếm thẳng từ bảng bí danh số sdt_bam còn hiệu lực không khớp bản ghi tin nào (mồ côi) và số người chỉ mang chúng — assert số người trước = số người khớp + số người mồ côi, in cả hai, người mồ côi không được biến mất im (đối chứng: một sdt_bam mồ côi chèn trong giao dịch → đếm mồ côi tăng 1, bắt ('MO COI KHONG DEM') nếu không); đối chứng đỏ đi qua soAnh: ánh xạ sau thêm một số lạ cho một người → bắt ('LECH ANH'); bỏ một người → bắt ('LECH ANH'); in 'ANH OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ldb_ten
+    paths: [db/migrations/060_sdt_e164.sql, _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs]
+    expected: "exit 0; DB thử chép máy thu; chụp sellers cũ (phone_hash, name) và tập người mang sdt_bam = phone_hash trước 060, sau một lượt bước đêm đời trước; sau 060 + dựng danh bạ: với mỗi tên khác rỗng, tập người ĐÃ CÓ trước 060 nay mang bí danh sdt còn hiệu lực của số ấy khác rỗng và MỌI người trong đó có bí danh ten còn hiệu lực = btrim(tên); người theo SĐT sinh sau 060 mang số ấy được đếm, in riêng, không tính sai (đối chứng dương: một người sinh sau 060 không ten không làm hàm kiemTen đỏ); in số tên kiểm và số người; đối chứng đỏ đi qua hàm kiemTen: bản chép 060 chép tên sang object_key khác → bắt ('TEN SAI NGUOI'); nghỉ bí danh tên của một người trong giao dịch → bắt ('TEN SAI NGUOI'); in 'TEN OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ldb_people
+    layer: backend-effect
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/people-rows.ts, app/src/lib/ops-access.ts, app/tests/people-che-so-loader.test.tsx, _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh]
+    expected: "exit 0; probes/people.sh dựng DB thử oneinvest_p4_ldb_people (db-thu-chac.sh, xoá khi xong) và chạy test với DATABASE_URL trỏ DB thử; test từ chối DATABASE_URL vắng hoặc trỏ DB oneinvest (đối chứng: trỏ oneinvest → ném ('DB DUNG CHUNG')); BEGIN…ROLLBACK, nạp 060 trong giao dịch, dựng người có bí danh sdt (số bịa) + tên; loader thật danhSachNguoi (lọc nguồn) và motNguoi qua client giao dịch; quyền xem từ xemNoiDungTin thật của user vai viewer, ops, admin; mọi ô hàng (hangNguoi) và mọi bí danh trang một người (hienBiDanh) qua loSoGoc: 0 ô chứa chuỗi 3+ chữ số liên tiếp của số gốc; số ô che = số vai xem được × số người có sdt (đối chứng dương); in quyền xem của từng vai (admin = ops nói ra); đối chứng đỏ: luật che đời trước (sdt→sdt_bam, 8 ký tự đầu) trên CÙNG hàng qua CÙNG loSoGoc → bắt ('LO SO GOC TREN PEOPLE')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ldb_pham_vi
+    paths: [_acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base nằm trong vùng của hàng; quét probe của hồ sơ VÀ tệp test mới (app/tests/people-che-so-loader.test.tsx): không lệnh áp 060 hay chuỗi kết nối nào tới DB oneinvest (trừ câu chặn của chính test); in 'PHAM VI OK'; đối chứng: app/src/app/ops/people/page.tsx và một lệnh áp 060 lên oneinvest → bắt ('NGOAI PHAM VI', 'AP LEN DB THAT')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

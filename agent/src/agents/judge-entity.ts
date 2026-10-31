@@ -82,13 +82,29 @@ export function boDau(s: string): string {
 /**
  * Các khoá có thể của tên đường. Tiền tố có dấu («Đường», «Phố», «Đ.», «D.») chắc là tiền tố: bỏ. Tiền tố không dấu
  * («duong», «pho») có thể là tên thật — «Duong Lam» là «Đường Lâm» hay «Dương Lâm» — nên giữ CẢ HAI cách đọc (HD2).
+ * Trước đó bỏ phần chỉ vị trí (hồ sơ chuan-hoa-o-duong): cụm «Ngõ 254», «Hẻm 80/66», «Số 10 Ngõ 9» ở đầu chuỗi, rồi đuôi
+ * địa chỉ sau dấu phẩy; số nhà trần («175 Lạc Long Quân») giữ hai cách đọc, trừ «3 Tháng 2» — số là một phần tên đường.
+ * Ô chỉ có số hay chỉ có từ vị trí («Số 8», «Ngõ») không mang tên đường → không khoá nào. Dấu giữ tới lúc xuất khoá.
  */
 export function khoaDuong(v: string): string[] {
-  const s = v.normalize("NFC").trim().toLowerCase();
-  const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
-  if (coDau) return [boDau(coDau[1])].filter(Boolean);
-  const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
-  return [...new Set([khongDau ? boDau(khongDau[1]) : "", boDau(s)])].filter(Boolean);
+  const t = v
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/ð/g, "đ")
+    .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
+    .replace(/,.*$/u, "")
+    .trim();
+  if (/^(?:số|ngõ|ngách|hẻm|kiệt)?$/u.test(t)) return [];
+  const soNha = t.match(/^\d[\p{L}\d/-]*\s+(.+)$/u);
+  const cachDoc = soNha && !/^tháng\s+\d/u.test(soNha[1]) ? [soNha[1], t] : [t];
+  const khoa = cachDoc.flatMap((s) => {
+    const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
+    if (coDau) return [boDau(coDau[1])];
+    const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
+    return [khongDau ? boDau(khongDau[1]) : "", boDau(s)];
+  });
+  return [...new Set(khoa)].filter((k) => k && !/^\d+$/.test(k));
 }
 
 /** So hàng Đường: chung ít nhất một cách đọc → Khớp (chép từ app/src/lib/ops/review-can-cu.ts). */
