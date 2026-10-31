@@ -43,3 +43,12 @@ test("AC-8 hangNguoi: hàng danh sách dùng đúng loại bí danh, ô SĐT kh�
   // Đối chứng dương: bí danh băm đời trước vẫn hiện 8 ký tự đầu như cũ.
   assert.equal(hangNguoi({ ...r, sdtBam: "abcdef0123456789", sdtKind: "sdt_bam" }, [], true).sdtBam, "abcdef01…")
 })
+
+test("SD3 thẻ Căn giá tốt: SĐT số gốc E.164 hiện tách nhóm dạng quen đọc", async () => {
+  const { fmtPhone } = await import("../src/components/ops/deal-card")
+  assert.equal(fmtPhone(SO), "0912 345 678")
+  assert.equal(fmtPhone("0912345678"), "0912 345 678") // dạng 0… đời trước vẫn tách nhóm
+  // Đối chứng đỏ: khuôn đời trước chỉ nhận 0…, số +84… ra nguyên khối.
+  const cu = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3")
+  assert.equal(cu(SO), SO)
+})

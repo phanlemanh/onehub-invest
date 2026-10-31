@@ -8,7 +8,7 @@ cho_phep() {
     db/migrations/060_sdt_e164.sql|pipeline/mappings.yaml|pipeline/lib/vocab.generated.mjs|app/src/lib/vocab.generated.ts|agent/src/vocab.generated.ts|\
     pipeline/transform-zalo.mjs|pipeline/transform-fb.mjs|pipeline/lib/danh-ba-nguoi.mjs|pipeline/lib/nap-060.mjs|pipeline/refresh-bait-gap.mjs|\
     pipeline/sync-cloud.mjs|pipeline/do-danh-ba-sdt.mjs|pipeline/scripts/do-boc-sdt.mjs|pipeline/scripts/test-data-residue.mjs|\
-    app/src/lib/ops/people.ts|app/src/components/ops/people/people-rows.ts|\
+    app/src/lib/ops/people.ts|app/src/components/ops/people/people-rows.ts|app/src/components/ops/deal-card.tsx|\
     pipeline/*.test.mjs|pipeline/scripts/*.test.mjs|pipeline/scripts/danh-ba-nguoi.itest.mjs|app/tests/sdt-che-tren-people.test.tsx|app/tests/sellers-chip.test.tsx|\
     CONTEXT.md|pipeline/CLAUDE.md|_acceptance/config.yaml|_acceptance/sdt-luu-goc-e164/*|_acceptance/*/evidence-report.md|_acceptance/*/run-log.jsonl|\
     docs/superpowers/specs/2026-10-31-sdt-luu-goc-e164-design.md|docs/superpowers/plans/2026-10-31-sdt-luu-goc-e164.md|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
