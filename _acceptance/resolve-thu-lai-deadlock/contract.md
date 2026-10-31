@@ -5,7 +5,7 @@ slug: resolve-thu-lai-deadlock
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T09:35:00Z
 design_doc: docs/superpowers/specs/2026-10-31-resolve-thu-lai-deadlock-design.md
@@ -80,3 +80,12 @@ hỏng ngay; logic resolve không đổi».
 - «lỗi khác vẫn hỏng ngay» — unit + CLI; AC-3, AC-9.
 - «logic resolve không đổi» — đọc tĩnh + so bảng; AC-7, AC-5.
 - «không thử lại vô hạn» (dòng CHẾT) — AC-2.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Tập câu SQL gốc mà E7 so là bản chụp lưu sẵn, test không rút lại từ commit 82a53e0a.
+  - Ngoài-2: Phép đếm ô của ma trận E1 so với chính độ dài ma trận, nên bớt một ô sẽ không bị bắt.
+  - Ngoài-3: Mô tả E9 ghi khoá bảng sale_offer_records trong khi test khoá view sale_offers.
+  - Ngoài-4: Bộ unit rtld_unit (gồm rào đọc tĩnh AC-7) chưa chạy trong CI, chỉ chạy ở lượt chấm và làn ghim lại.
+  - Ngoài-5: Itest không kiểm stable_key của căn có sẵn trong mồi có thật sự khớp cụm hay không.
