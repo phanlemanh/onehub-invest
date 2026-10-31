@@ -4,6 +4,7 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,7 @@ import { KHOA_DANH_BA, LY_DO_RUT, chotDbThuNguoi, dungNguoi, sellersThieuNguoi }
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { KIEM_ENUM, kiemEnum } from "../dq-enum-vocab.mjs";
 import { buocDem } from "../refresh-bait-gap.mjs";
+import { napSdtE164 } from "../lib/nap-060.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_055 = readFileSync(path.join(ROOT, "db/migrations/055_danh_ba_nguoi.sql"), "utf8");
@@ -39,6 +41,7 @@ export async function trongGiaoDich(fn, client = c) {
   try {
     await client.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
     await client.query(SQL_055);
+    await napSdtE164(client); // SD3: SĐT số gốc E.164, bí danh sdt, sellers là view
     return await fn(client);
   } finally {
     await client.query("ROLLBACK");
@@ -135,9 +138,9 @@ let snapZalo;
 async function themTin(db, { id, source, at = "2026-10-01T00:00:00Z", postIds = [], sellerRef = null, ten = null, sdt = null, nghi = false }) {
   await db.query(
     `INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids, originating_system_key,
-                                     seller_ref, seller_name, seller_phone_hash, retired_at)
-     VALUES ($1, 'sale', $2, $2, $3, $4::text[], $1, $5, $6, $7, CASE WHEN $8 THEN now() END)`,
-    [`${T}-${id}`, at, source, postIds, sellerRef, ten, sdt, nghi]);
+                                     seller_ref, seller_name, seller_phone, seller_phone_hash, retired_at)
+     VALUES ($1, 'sale', $2, $2, $3, $4::text[], $1, $5, $6, $7, $8, CASE WHEN $9 THEN now() END)`,
+    [`${T}-${id}`, at, source, postIds, sellerRef, ten, sdt, sdt && bam(sdt), nghi]);
   return `${source}:${T}-${id}`;
 }
 async function themBai(db, id, { kenh = "openclaw-hook", sender = null, ten = null }) {
@@ -149,6 +152,9 @@ async function themBai(db, id, { kenh = "openclaw-hook", sender = null, ten = nu
   return `${T}-${id}`;
 }
 const ai = (s) => `${T}-${s}`;
+const bam = (so) => createHash("sha256").update(so).digest("hex").slice(0, 32);
+/** SĐT bịa dạng E.164 (SD3), cố định theo nhãn fixture + pid — không va số thật vì đầu +8490 + 7 chữ số băm. */
+const so = (nhan) => `+8490${String(parseInt(bam(ai(nhan)).slice(0, 8), 16) % 1e7).padStart(7, "0")}`;
 /** Vai sống của một tin: [{party_key, method, evidence_tier, evidence}] */
 const vaiSong = async (db, subject) =>
   (await db.query(`SELECT party_key, method, evidence_tier, evidence FROM party_roles WHERE subject_key = $1 AND retracted_at IS NULL ORDER BY party_key`, [subject])).rows;
@@ -173,12 +179,12 @@ async function fixtureZalo(db) {
   const b5 = await themBai(db, "b5", { kenh: "apify-facebook", sender: "s1" });
   const b7 = await themBai(db, "b7", { sender: "s7" });
   return {
-    motBai: await themTin(db, { id: "mot-bai", source: "S03", postIds: [b1], sdt: ai("h1") }),
+    motBai: await themTin(db, { id: "mot-bai", source: "S03", postIds: [b1], sdt: so("h1") }),
     haiBai: await themTin(db, { id: "hai-bai", source: "S03", postIds: [b2a, b2b] }),
-    chiSdt: await themTin(db, { id: "chi-sdt", source: "S03", postIds: [], sdt: ai("h9") }),
+    chiSdt: await themTin(db, { id: "chi-sdt", source: "S03", postIds: [], sdt: so("h9") }),
     khongGi: await themTin(db, { id: "khong-gi", source: "S03", postIds: [b4] }),
     s05: await themTin(db, { id: "s05", source: "S05", postIds: [b5] }),
-    s05Sdt: await themTin(db, { id: "s05-sdt", source: "S05", postIds: [], sdt: ai("h5") }),
+    s05Sdt: await themTin(db, { id: "s05-sdt", source: "S05", postIds: [], sdt: so("h5") }),
     nghi: await themTin(db, { id: "nghi", source: "S03", postIds: [b7], nghi: true }),
     bai: { b1, b2b, b4 },
   };
@@ -217,9 +223,9 @@ test("AC-4 S03/S05 người gửi: ma trận 7 dòng", async () => {
     const truoc = (await dungNguoi(db, { runId: "itest-ac4", out: im })).khong_dinh_danh.S03 ?? 0;
     const [s1] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s1"));
     const [s2] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s2"));
-    const [h9] = await nguoiCua(db, "S03", "sdt_bam", ai("h9"));
+    const [h9] = await nguoiCua(db, "S03", "sdt", so("h9"));
     const [s1f] = await nguoiCua(db, "S05", "tai_khoan_nguon", ai("s1"));
-    const [h5] = await nguoiCua(db, "S05", "sdt_bam", ai("h5"));
+    const [h5] = await nguoiCua(db, "S05", "sdt", so("h5"));
     const [s7] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s7"));
     const nguoiVa = async (subject) => (await vaiSong(db, subject)).map((v) => `${v.party_key}/${v.method}/${v.evidence_tier}`);
     const MA_TRAN = [
@@ -269,7 +275,7 @@ test("AC-6 chạy lại: lượt hai bằng 0, đổi người gửi rút vai, m
     assert.equal((await dem4(db)).party_roles, dem2.party_roles + 1, "AC-6 chạy lại nhân dòng: party_roles");
 
     // Lượt 4: bài của tin s1 (tin CÓ SĐT h1) mất khỏi stg_zalo_posts → giữ vai, không ghi vai parser tới người h1.
-    const [h1] = await nguoiCua(db, "S03", "sdt_bam", ai("h1"));
+    const [h1] = await nguoiCua(db, "S03", "sdt", so("h1"));
     assert.ok(h1, "AC-6 fixture: tin một bài phải mang SĐT để ca bài mất chạm nhánh vai parser");
     await db.query("DELETE FROM stg_zalo_posts WHERE post_id = $1", [f.bai.b1]);
     const l4 = await dungNguoi(db, { runId: "itest-ac6-4", out: im });
@@ -284,15 +290,15 @@ test("AC-6 chạy lại: lượt hai bằng 0, đổi người gửi rút vai, m
 
 test("AC-8 sellers có người: mỗi (SĐT, nguồn) trên tin có người sống", async () => {
   await trongGiaoDich(async (db) => {
-    const hx = ai("hx");
+    const hx = so("hx");
     await themTin(db, { id: "hx3", source: "S03", postIds: [], sdt: hx });
     await themTin(db, { id: "hx5", source: "S05", postIds: [], sdt: hx });
     await dungNguoi(db, { runId: "itest-ac8", out: im });
     assert.deepEqual(await sellersThieuNguoi(db), [], "AC-8 sellers thiếu người");
     // Chiều đỏ: tin mang SĐT mới thêm SAU lượt dựng — đối chiếu đọc SĐT trên tin (SD1), không đọc sellers.
-    const hy = ai("hy");
+    const hy = so("hy");
     await themTin(db, { id: "hy6", source: "S06", sdt: hy });
-    assert.deepEqual(await sellersThieuNguoi(db), [`${hy}:S06`], `AC-8 sellers thiếu người: ${hy}:S06`);
+    assert.deepEqual(await sellersThieuNguoi(db), [`${bam(hy)}:S06`], `AC-8 sellers thiếu người: S06`);
   });
 });
 
@@ -301,7 +307,7 @@ test("RF3 post_ids: cột NOT NULL (lõi vẫn chịu null), tin S03 mảng rỗ
     const { rows: [r] } = await db.query(
       `SELECT attnotnull FROM pg_attribute WHERE attrelid = 'sale_offer_records'::regclass AND attname = 'post_ids'`);
     assert.equal(r.attnotnull, true, "RF3 post_ids thôi NOT NULL — thêm ca null vào itest");
-    const s = await themTin(db, { id: "rf3", source: "S03", sdt: ai("h3") });
+    const s = await themTin(db, { id: "rf3", source: "S03", sdt: so("h3") });
     await dungNguoi(db, { runId: "itest-rf3", out: im });
     assert.equal((await vaiSong(db, s)).length, 1, "RF3 tin post_ids rỗng mất vai SĐT");
   });
@@ -313,13 +319,17 @@ const VUNG_THUOC = "vn-hcmc-binh-hung-hoa"; // phường có thước P2 trên d
 test("AC-10 chạy đêm: bộ dựng trong giao dịch riêng, lỗi ném ra mà không kéo lùi bait gap/sellers", { timeout: 300_000 }, async () => {
   const lap = async (db) => {
     await fixtureS06(db);
-    const hz = ai("hz");
+    const sz = so("hz");
+    const hz = bam(sz);
     const tin = `${T}-p1`;
+    // SD3: sellers là view trên tin — dòng của hz sinh từ chính tin này, không chèn tay.
     await db.query(
       `INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids, originating_system_key,
-                                       area_id, price_tier, price_perm2, area_m2, bedrooms, seller_phone_hash)
-       VALUES ($1, 'sale', now(), now(), 'S03', '{}', $1, $2, 'P1', 50000000, 60, 2, $3)`, [tin, VUNG_THUOC, hz]);
-    await db.query(`INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen) VALUES ($1, ARRAY['S03'], 0, now(), now())`, [hz]);
+                                       area_id, price_tier, price_perm2, area_m2, bedrooms, seller_phone, seller_phone_hash)
+       VALUES ($1, 'sale', now(), now(), 'S03', '{}', $1, $2, 'P1', 50000000, 60, 2, $3, $4)`, [tin, VUNG_THUOC, sz, hz]);
+    // Người của SĐT đã có từ lượt đêm trước — dòng sellers có sẵn để ca lỗi đo «không kéo lùi».
+    await db.query(`INSERT INTO parties (party_key, source) VALUES ($1, 'S03')`, [PTY]);
+    await db.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'sdt', $2, 'S03')`, [PTY, sz]);
     return { tin, hz };
   };
   const banGhi = async (db, { tin, hz }) => ({

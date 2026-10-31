@@ -198,10 +198,12 @@ test("mgmtExec: 429/503 thử lại rồi thành công; retry:false không lặp
   assert.equal(d.calls.length, 3);
 });
 
-// canonical-khong-tin-gia AC-10 — chặn tụt cho qua khi bảng co vì một lượt dọn có audit khớp số.
+// canonical-khong-tin-gia AC-10 — chặn tụt cho qua khi bảng co vì một lượt dọn có audit khớp số. Từ SD3 sellers là view
+// và SHRINK_AUDIT thôi khai sellers; ma trận đo cơ chế bằng bản đồ audit truyền vào (như sellers khai trước SD3).
 const NOW = new Date("2026-10-24T00:15:00Z");
+const MAP_CU = { sellers: "bait-gap:sellers-orphan" };
 const orphanAudit = (remaining, hoursAgo = 0.25) => ({
-  action: SHRINK_AUDIT.sellers, at: new Date(NOW - hoursAgo * 3600_000), detail: { deleted: 989, remaining },
+  action: MAP_CU.sellers, at: new Date(NOW - hoursAgo * 3600_000), detail: { deleted: 989, remaining },
 });
 const AC10_MATRIX = [
   ["(1) sellers tụt, audit khớp trong 24h", { table: "sellers", local: 54, cloud: 1043, audits: [orphanAudit(54)] }, true],
@@ -215,15 +217,22 @@ const AC10_MATRIX = [
 test("AC-10 chặn tụt có audit", () => {
   let n = 0;
   for (const [name, args, ok] of AC10_MATRIX) {
-    assert.equal(shrinkVerdict({ ...args, now: NOW }).ok, ok, `AC-10 ${ok ? "chặn oan" : "cho qua tụt không giải thích được"}: ${name}`);
+    assert.equal(shrinkVerdict({ ...args, now: NOW, auditMap: MAP_CU }).ok, ok, `AC-10 ${ok ? "chặn oan" : "cho qua tụt không giải thích được"}: ${name}`);
     n++;
   }
   assert.equal(n, 6, "AC-10 ma trận phải đủ 6 ô");
-  assert.match(shrinkVerdict({ ...AC10_MATRIX[3][1], now: NOW }).reason, /local tụt sellers: 54 < 50% của 1043/);
+  assert.match(shrinkVerdict({ ...AC10_MATRIX[3][1], now: NOW, auditMap: MAP_CU }).reason, /local tụt sellers: 54 < 50% của 1043/);
+});
+
+test("SD3 SHRINK_AUDIT thôi khai sellers: audit mồ côi cũ không còn miễn trừ tụt sellers", () => {
+  assert.equal("sellers" in SHRINK_AUDIT, false, "SD3 SHRINK_AUDIT còn mục sellers");
+  assert.equal(shrinkVerdict({ ...AC10_MATRIX[0][1], now: NOW }).ok, false, "SD3 tụt sellers vẫn được miễn bằng audit đời trước");
+  // Đối chứng dương: cùng ô với bản đồ đời trước thì qua — phép đo phân biệt được.
+  assert.equal(shrinkVerdict({ ...AC10_MATRIX[0][1], now: NOW, auditMap: MAP_CU }).ok, true);
 });
 
 test("AC-10 chiều đỏ: bỏ so remaining thì ô (2) cho qua", () => {
-  const loose = (a) => (a.table in SHRINK_AUDIT && a.audits.length > 0) || shrinkVerdict(a).ok;
+  const loose = (a) => (a.table in MAP_CU && a.audits.length > 0) || shrinkVerdict({ ...a, auditMap: MAP_CU }).ok;
   const wrong = AC10_MATRIX.filter(([, args, ok]) => loose({ ...args, now: NOW }) !== ok).map(([name]) => name);
   assert.deepEqual(wrong, ["(2) sellers tụt, remaining lệch 1", "(3) sellers tụt, audit cũ hơn 24h"]);
 });

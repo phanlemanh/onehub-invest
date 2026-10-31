@@ -59,13 +59,13 @@ test("GT-AC-1 đột biến: bỏ điều kiện bỏ-qua → «3.000.000.000» 
 
 // ---- AC-2: mọi SĐT vẫn bị gạt khỏi bước đọc số ----
 const SDT = [
-  ["Cho thuê 2PN 9tr, liên hệ.0901234567 T.Lan", ["0901234567"]],
-  ["Cho thuê 2PN 9tr, liên hệ.0901.234.567 T.Lan", ["0901234567"]],
-  ["Cho thuê 2PN 9tr, liên hệ.0901 234 567 T.Lan", ["0901234567"]],
-  ["Cho thuê 2PN 9tr, LH,0901234567 T.Lan", ["0901234567"]],
-  ["Cho thuê 2PN 9tr, LH 0901234567,0912345678 T.Lan", ["0901234567", "0912345678"]],
-  ["Cho thuê 2PN 9tr, LH 0901234567.0912 345 678 T.Lan", ["0901234567", "0912345678"]],
-  ["Cho thuê 50m2,0901234567 T.Lan 9tr", ["0901234567"]],
+  ["Cho thuê 2PN 9tr, liên hệ.0901234567 T.Lan", ["+84901234567"]],
+  ["Cho thuê 2PN 9tr, liên hệ.0901.234.567 T.Lan", ["+84901234567"]],
+  ["Cho thuê 2PN 9tr, liên hệ.0901 234 567 T.Lan", ["+84901234567"]],
+  ["Cho thuê 2PN 9tr, LH,0901234567 T.Lan", ["+84901234567"]],
+  ["Cho thuê 2PN 9tr, LH 0901234567,0912345678 T.Lan", ["+84901234567", "+84912345678"]],
+  ["Cho thuê 2PN 9tr, LH 0901234567.0912 345 678 T.Lan", ["+84901234567", "+84912345678"]],
+  ["Cho thuê 50m2,0901234567 T.Lan 9tr", ["+84901234567"]],
 ];
 
 test("GT-AC-2: 7 dòng SĐT trước «T.Lan» đều ra giá 9 triệu", () => {
@@ -86,7 +86,7 @@ test("GT-AC-3: extractPhones — giá tỷ chẵn ra rỗng, SĐT ra đúng", ()
 
 test("GT-AC-3 đột biến: điều kiện vào PHONE_RE dùng chung → SĐT nối SĐT chỉ còn một số", async () => {
   const m = await banSaoDotBien(VAO_PHONE_RE);
-  assert.deepEqual(m.extractPhones(SDT[4][0]), ["0901234567"], "GT-AC-3 đột biến vẫn trích đủ hai số — thước không đo danh sách SĐT");
+  assert.deepEqual(m.extractPhones(SDT[4][0]), ["+84901234567"], "GT-AC-3 đột biến vẫn trích đủ hai số — thước không đo danh sách SĐT");
 });
 
 // ---- AC-4: giá đồng mới đi qua chốt khoảng ----

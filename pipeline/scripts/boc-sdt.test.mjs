@@ -14,7 +14,7 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const THAT = join(PIPE, "transform-zalo.mjs");
 // Commit gốc của vòng (main trước SD2) — gatSo phải ra đúng như bản này.
 const GOC = "9b40715dab682a3bff273caa72c588128c871aba";
-const SO = "0987654321";
+const SO = "+84987654321"; // SD3: bộ bóc trả E.164
 
 let dem = 0;
 /** Nạp bản sao đột biến của transform-zalo.mjs (mã nguồn qua `doi`), trả module; xoá tệp ngay sau khi nạp. */
@@ -60,7 +60,7 @@ MA_TRAN_1.push(
   ["cũ · +84 liền", "LH +84987654321", [SO]],
 );
 
-test("SD-AC-1: ma trận hình thái — mỗi ô ra đúng số 0xxxxxxxxx, số assert bằng số ô", () => {
+test("SD-AC-1: ma trận hình thái — mỗi ô ra đúng số +84xxxxxxxxx, số assert bằng số ô", () => {
   assert.equal(MA_TRAN_1.length, 6 * 5 * 2 + 11, "số ô ma trận phải là 60 ô sinh + 11 dòng riêng");
   let n = 0;
   for (const [ten, cau, mong] of MA_TRAN_1) {
@@ -82,11 +82,11 @@ const MA_TRAN_2 = [
   ["11 · có dấu tách", "Zalo 0374.567.8901", []],
   ["11 · tách đuôi một chữ số", "Zalo 0912 345 678 9 nhé", []],
   ["11 · +84 kèm 10 số", "Zalo +840987654321", []],
-  ["11 lẫn 10", "Zalo 03745678901 hoặc 0912345678", ["0912345678"]],
+  ["11 lẫn 10", "Zalo 03745678901 hoặc 0912345678", ["+84912345678"]],
 ];
 for (const t of [...TACH, ...TACH.map(HAI), "\n"])
-  MA_TRAN_2.push([`hai số kề · ${JSON.stringify(t)}`, `LH 0912345678${t}0987654321`, ["0912345678", SO]]);
-MA_TRAN_2.push(["hai số kề · nhóm 4-3-3", "LH 0912 345 678 0987 654 321", ["0912345678", SO]]);
+  MA_TRAN_2.push([`hai số kề · ${JSON.stringify(t)}`, `LH 0912345678${t}0987654321`, ["+84912345678", SO]]);
+MA_TRAN_2.push(["hai số kề · nhóm 4-3-3", "LH 0912 345 678 0987 654 321", ["+84912345678", SO]]);
 
 test("SD-AC-2: không nhận số 11 chữ số; hai số kề ra đủ hai số theo thứ tự", () => {
   for (const [ten, cau, mong] of MA_TRAN_2) assert.deepEqual(extractPhones(cau), mong, `SD-AC-2 «${ten}»`);
@@ -101,7 +101,7 @@ test("SD-AC-2 đỏ: bản sao nhận độ dài 11 thì trượt dòng «11 ch�
 
 test("SD-AC-2 đỏ: bản sao cho khớp vượt 10 chữ số rồi mới bỏ thì trượt «hai số kề»", async () => {
   const m = await banSao((s) => s.replace("(?:${TACH_SDT}{0,2}\\\\d){9}(?!\\\\d)", "(?:${TACH_SDT}{0,2}\\\\d){9,}(?!\\\\d)"));
-  assert.notDeepEqual(m.extractPhones("LH 0912 345 678 0987 654 321"), ["0912345678", SO], "SD-AC-2 đỏ: hai số kề phải hỏng");
+  assert.notDeepEqual(m.extractPhones("LH 0912 345 678 0987 654 321"), ["+84912345678", SO], "SD-AC-2 đỏ: hai số kề phải hỏng");
 });
 
 // ---- SD-AC-3: không bắt nhầm, có đối chứng dương; gatSo không đổi ----
@@ -118,7 +118,7 @@ const MA_TRAN_3 = [
 test("SD-AC-3: câu không có SĐT ra rỗng, bản đối chứng cùng câu thêm một SĐT ra đúng số ấy", () => {
   for (const [ten, cau] of MA_TRAN_3) {
     assert.deepEqual(extractPhones(cau), [], `SD-AC-3 «${ten}» không được ra số`);
-    assert.deepEqual(extractPhones(`${cau} — LH 0912345678`), ["0912345678"], `SD-AC-3 đối chứng «${ten}»`);
+    assert.deepEqual(extractPhones(`${cau} — LH 0912345678`), ["+84912345678"], `SD-AC-3 đối chứng «${ten}»`);
   }
 });
 
@@ -161,4 +161,24 @@ test("SD-AC-4 đỏ: bản sao chọn số đầu của bài đầu thì trượ
   const m = await banSao((s) => s.replace("export function chonSdtTin(bai) {", "export function chonSdtTin(bai) {\n  return bai[0]?.phones?.[0] ?? null;"));
   const [, bai, mong] = MA_TRAN_4[2];
   assert.notEqual(m.chonSdtTin(bai), mong, "SD-AC-4 đỏ: nhiều bài nhất phải trượt ở bản sao");
+});
+
+// ---- SD3 sdt-luu-goc-e164 (E1): dạng ra E.164 cho MỌI ô của hai ma trận; khoá băm tính từ dạng ấy ----
+const E164 = /^\+84[35789]\d{8}$/;
+function kiemE164(boc) {
+  let n = 0;
+  for (const [ten, cau, mong] of [...MA_TRAN_1, ...MA_TRAN_2]) {
+    for (const so of boc(cau)) if (!E164.test(so)) throw new Error(`DANG SO KHONG PHAI E164: «${ten}» ra ${so.length} ký tự`);
+    n += mong.length;
+  }
+  return n;
+}
+
+test("SD3-E1: mọi số bộ bóc trả ở hai ma trận đều dạng +84…", () => {
+  assert.ok(kiemE164(extractPhones) > 0);
+});
+
+test("SD3-E1 đỏ: bản sao trả dạng 0… → bắt «DANG SO KHONG PHAI E164»", async () => {
+  const m = await banSao((s) => s.replace('const e164 = "+84" + digits.slice(1);', "const e164 = digits;"));
+  assert.throws(() => kiemE164(m.extractPhones), /DANG SO KHONG PHAI E164/);
 });
