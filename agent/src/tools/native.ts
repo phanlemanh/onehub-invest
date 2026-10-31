@@ -18,6 +18,10 @@ export type PairData = {
     propertyType: string | null;
     text: string | null; // P1 raw text
     sellerName: string | null;
+    street: string | null; // street_raw (migration 030) — bốn trường của bảng so thẻ ghép căn
+    block: string | null;
+    floor: string | null;
+    bathrooms: number | null;
   };
   b: {
     offerId: string;
@@ -31,18 +35,24 @@ export type PairData = {
     propertyType: string | null;
     subject: string | null; // P2 title
     sellerName: string | null;
+    street: string | null;
+    block: string | null;
+    floor: string | null;
+    bathrooms: number | null;
   };
   score: number;
   signals: Record<string, unknown>;
 };
 
-export async function queryPair(offerA: string, offerB: string): Promise<PairData | null> {
-  const c = new pg.Client({ connectionString: DB_URL });
-  await c.connect();
+/** Đọc cặp tin từ kho. `client` đã mở (test trên DB thử) thì dùng nó và không đóng; vắng thì tự mở kết nối như cũ. */
+export async function queryPair(offerA: string, offerB: string, client?: pg.Client): Promise<PairData | null> {
+  const c = client ?? new pg.Client({ connectionString: DB_URL });
+  if (!client) await c.connect();
   try {
     const { rows } = await c.query(
       `SELECT o.offer_id, o.source, o.kind, o.price_vnd, o.area_m2,
               o.price_perm2, o.bedrooms, o.phuong_raw, o.property_type, o.seller_name,
+              o.street_raw, o.block_raw, o.floor_raw, o.bathrooms,
               (SELECT left(z.text, 300) FROM stg_zalo_posts z
                 WHERE z.post_id = ANY(o.post_ids)
                   AND z.agent_id IS DISTINCT FROM 'apify-facebook'
@@ -72,17 +82,19 @@ export async function queryPair(offerA: string, offerB: string): Promise<PairDat
         priceVnd: n(a.price_vnd), areaM2: n(a.area_m2), pricePerm2: n(a.price_perm2),
         bedrooms: a.bedrooms, phuong: a.phuong_raw, propertyType: a.property_type,
         text: a.text, sellerName: a.seller_name,
+        street: a.street_raw, block: a.block_raw, floor: a.floor_raw, bathrooms: n(a.bathrooms),
       },
       b: {
         offerId: b.offer_id, source: b.source, kind: b.kind,
         priceVnd: n(b.price_vnd), areaM2: n(b.area_m2), pricePerm2: n(b.price_perm2),
         bedrooms: b.bedrooms, phuong: b.phuong_raw, propertyType: b.property_type,
         subject: b.subject, sellerName: b.seller_name,
+        street: b.street_raw, block: b.block_raw, floor: b.floor_raw, bathrooms: n(b.bathrooms),
       },
       score: cand[0] ? Number(cand[0].score) : 0,
       signals: (cand[0]?.signals ?? {}) as Record<string, unknown>,
     };
   } finally {
-    await c.end();
+    if (!client) await c.end();
   }
 }

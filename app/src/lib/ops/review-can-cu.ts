@@ -91,10 +91,15 @@ export type HangSo = {
   truc: boolean;
   canCuA: string;
   canCuB: string;
+  /** Giá trị lúc sinh thẻ (`evidence`) khi khác giá trị sống đang hiện; null khi giống hay không có giá trị sống (HD6). */
+  lucChamA: string | number | null;
+  lucChamB: string | number | null;
 };
 
-const trong = (v: unknown): v is null | undefined => v === null || v === undefined || (typeof v === "string" && v.trim() === "");
-const khoa = (v: string | number) => (typeof v === "number" ? String(v) : v.trim().toLowerCase());
+/** Trống, hoặc «chưa rõ» (`unknown` của loại hình): không phải một giá trị để so — so ra Thiếu, không ra Lệch (H9). */
+// Một dòng: agent/tests/judge-nguong.test.ts rút nguyên văn hằng này (khuôn `^const <tên> = .*;$`).
+const trong = (v: unknown): v is null | undefined => v === null || v === undefined || (typeof v === "string" && (v.trim() === "" || v.trim().toLowerCase() === "unknown"));
+const khoa = (v: string | number) => (typeof v === "number" ? String(v) : /^-?\d+(\.\d+)?$/.test(v.trim()) ? String(Number(v)) : v.trim().toLowerCase());
 
 /** So hai giá trị: thiếu một bên (hay cả hai) → Thiếu; cùng khoá → Khớp; khác → Lệch. Tất định, không ngưỡng. */
 export function soGiaTri(a: string | number | null | undefined, b: string | number | null | undefined): So {
@@ -135,11 +140,33 @@ function soPhuong(a: string | number | null, b: string | number | null): So {
   return ka === kb ? "khop" : "lech";
 }
 
-/** Bảng so mười trường của thẻ ghép căn, mỗi giá trị kèm căn cứ của chính tin đó. */
-export function soTruongGhepCan(a: BenGhepCan, b: BenGhepCan, canCuA: CanCuTin = {}, canCuB: CanCuTin = {}): HangSo[] {
+/** Ô hiện: giá trị thật (kể cả «unknown» — hiện «Chưa rõ»), chỉ chuỗi rỗng/null về null. */
+const hien = (v: unknown): string | number | null =>
+  v === null || v === undefined || (typeof v === "string" && v.trim() === "") ? null : (v as string | number);
+
+/** Giá trị lúc chấm khi khác giá trị sống (so theo khoá: số theo trị, chuỗi bỏ hoa/khoảng trắng); không có thì null. */
+function lucCham(song: string | number | null, cham: BenGhepCan | undefined, key: keyof BenGhepCan): string | number | null {
+  if (!cham) return null;
+  const c = hien(cham[key]);
+  if (c === null && song === null) return null;
+  if (c !== null && song !== null && khoa(c) === khoa(song)) return null;
+  return c;
+}
+
+/**
+ * Bảng so mười trường của thẻ ghép căn, mỗi giá trị kèm căn cứ của chính tin đó. `a`/`b` là giá trị đang hiện (sống từ
+ * kho khi có — HD6); `lucCham` là `evidence` lúc sinh thẻ, chỉ để hiện «Lúc chấm» ở ô đã đổi, không vào nhãn So.
+ */
+export function soTruongGhepCan(
+  a: BenGhepCan,
+  b: BenGhepCan,
+  canCuA: CanCuTin = {},
+  canCuB: CanCuTin = {},
+  lc: { a?: BenGhepCan; b?: BenGhepCan } = {},
+): HangSo[] {
   return TRUONG_GHEP_CAN.map(({ key, label, truc }) => {
-    const va = trong(a[key]) ? null : (a[key] as string | number);
-    const vb = trong(b[key]) ? null : (b[key] as string | number);
+    const va = hien(a[key]);
+    const vb = hien(b[key]);
     return {
       key,
       label,
@@ -149,6 +176,8 @@ export function soTruongGhepCan(a: BenGhepCan, b: BenGhepCan, canCuA: CanCuTin =
       truc: Boolean(truc),
       canCuA: truc ? nhanCanCu(canCuA[truc]) : CHUA_CAN_CU_TIN,
       canCuB: truc ? nhanCanCu(canCuB[truc]) : CHUA_CAN_CU_TIN,
+      lucChamA: lucCham(va, lc.a, key),
+      lucChamB: lucCham(vb, lc.b, key),
     };
   });
 }

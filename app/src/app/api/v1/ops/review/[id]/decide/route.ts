@@ -12,8 +12,10 @@ export const dynamic = "force-dynamic";
  * Body: { status: "approved" | "rejected" | "deferred", reason: string, choices?: { <field>: <proposal_id> | null } }
  * `reason` bắt buộc (PL3): cắt khoảng trắng hai đầu, 1…1.000 ký tự — thiếu/trắng/quá dài → 400 trước BEGIN, không đổi gì.
  *
- * Entity_match approved → property_candidates status='merged'
- * Entity_match rejected → property_candidates status='rejected'
+ * Entity_match approved → property_candidates status='merged' · rejected → 'rejected' · deferred → 'pending', CHỈ khi
+ *   quyết định chạm đúng MỘT ứng viên còn chờ (khớp cặp `pair:<A>|<B>` theo hai chiều, status pending/needs_llm — HD9).
+ *   Không chạm đúng một (0, 2, hay item_id sai khuôn) → ROLLBACK, 422 `{ error, code: "khong-cham-ung-vien", so_dong }`:
+ *   thẻ vẫn chờ, không dòng audit nào (audit hàng duyệt 30/10, H2).
  * Agent_output enrich:<offer_id> → decide_enrichment_review (migration 033):
  *   approved áp đề xuất fill-gap · rejected bác · deferred giữ chờ lượt sau
  *   Thẻ có field xung đột (luật E1 trái LLM, AC-11): approved bắt buộc `choices` cho mỗi
@@ -89,27 +91,40 @@ export async function POST(
       }
     }
 
+    // entity_match → quyết định phải chạm đúng một ứng viên còn chờ, TRƯỚC khi đóng thẻ (HD9).
+    let ungVien: number | null = null;
+    if (item.item_type === "entity_match") {
+      const cap = capKhoa(item.item_id);
+      const candStatus =
+        status === "approved" ? "merged" :
+        status === "rejected" ? "rejected" :
+        "pending"; // deferred → về pending chờ thêm tín hiệu
+      const { rows: cham } = cap
+        ? await client.query(
+            `UPDATE property_candidates SET status = $1, decided_by = $2
+             WHERE ((offer_a = $3 AND offer_b = $4) OR (offer_a = $4 AND offer_b = $3))
+               AND status IN ('pending', 'needs_llm')
+             RETURNING id::int AS id`,
+            [candStatus, `hitl:${user.id}`, cap[0], cap[1]],
+          )
+        : { rows: [] as { id: number }[] };
+      if (cham.length !== 1) {
+        await client.query("ROLLBACK");
+        const khoa = cap ? `${cap[0]} và ${cap[1]}` : `«${item.item_id}» (khoá thẻ sai khuôn)`;
+        return NextResponse.json({
+          error: `Thẻ không chạm đúng một ứng viên ghép căn còn chờ (${khoa}: khớp ${cham.length}) — quyết định không được ghi, thẻ vẫn chờ.`,
+          code: "khong-cham-ung-vien",
+          so_dong: cham.length,
+        }, { status: 422 });
+      }
+      ungVien = cham[0].id;
+    }
+
     // Cập nhật review_queue kèm lý do người duyệt (PL3)
     await client.query(
       `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now(), decision_note = $4 WHERE id = $3`,
       [status, user.id, id, reason],
     );
-
-    // Nếu entity_match → cập nhật property_candidates tương ứng
-    if (item.item_type === "entity_match" && item.item_id.startsWith("pair:")) {
-      const [offerA, offerB] = item.item_id.replace("pair:", "").split("|");
-      const candStatus =
-        status === "approved" ? "merged" :
-        status === "rejected" ? "rejected" :
-        "pending"; // deferred → về pending chờ thêm tín hiệu
-      if (offerA && offerB) {
-        await client.query(
-          `UPDATE property_candidates SET status = $1, decided_by = $2
-           WHERE (offer_a = $3 AND offer_b = $4) OR (offer_a = $4 AND offer_b = $3)`,
-          [candStatus, `hitl:${user.id}`, offerA, offerB],
-        );
-      }
-    }
 
     // agent_output enrich:<offer_id> → áp/bác đề xuất enrichment qua hàm SQL duy nhất
     // (migration 033) — cùng transaction với cập nhật review_queue ở trên.
@@ -127,6 +142,7 @@ export async function POST(
     await ghiAuditTrong(client, q.actor, "review.decide", {
       thao_tac: "decide", reviewId: id, item_type: item.item_type, item_id: item.item_id,
       from: item.status, to: status, ly_do: reason,
+      ...(ungVien !== null ? { ung_vien: ungVien } : {}),
       ...(applyIds ? { choices } : {}),
     });
     await client.query("COMMIT");
@@ -139,6 +155,12 @@ export async function POST(
   } finally {
     client.release();
   }
+}
+
+/** Cặp khoá của thẻ ghép căn: đúng khuôn `pair:<A>|<B>`, A và B khác rỗng, không phần thừa → [A, B]; khác → null. */
+function capKhoa(itemId: string): [string, string] | null {
+  const m = /^pair:([^|\s]+)\|([^|\s]+)$/.exec(itemId);
+  return m ? [m[1], m[2]] : null;
 }
 
 /** choices hợp lệ: vắng → undefined; object { field: số nguyên | null } → giữ; khác → false. */
