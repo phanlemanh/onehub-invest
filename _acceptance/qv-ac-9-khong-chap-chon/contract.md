@@ -5,7 +5,7 @@ slug: qv-ac-9-khong-chap-chon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-31T13:25:00Z
 approved_by:
