@@ -29,7 +29,9 @@ async function banSaoDotBien(thay) {
 
 const BO_DIEU_KIEN = [['(laDuoiNhomNghin(t, m, i) ? m : " ")', '" "']];
 const CHI_KY_TU_TRUOC = [["return nhom.test(m);", "return true;"]];
-const VAO_PHONE_RE = [["const PHONE_RE = /(?<!\\d)(?:", "const PHONE_RE = /(?<!\\d)(?<!\\d[.,])(?:"]];
+// SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-78): bộ bóc SĐT dùng SDT_RE riêng, PHONE_RE chỉ còn cho gatSo — đột biến
+// đặt điều kiện dấu chấm/phẩy vào biểu thức của bộ bóc.
+const VAO_PHONE_RE = [["new RegExp(`(?<!\\\\d)(?:\\\\+84|84|0)", "new RegExp(`(?<!\\\\d)(?<!\\\\d[.,])(?:\\\\+84|84|0)"]];
 
 // ---- AC-1: giá tỷ chẵn viết bằng đồng ----
 const TY_CHAN = [

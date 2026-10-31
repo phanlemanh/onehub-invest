@@ -22,7 +22,7 @@ evals:
     executor: test
     cmd: config:executors.test.pipeline
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gia-ty-chan-dong.test.mjs]
-    expected: "exit 0; ca 'GT-AC-3' xanh: extractPhones ra [] ở 5 dòng giá tỷ chẵn, cả hai số ở dòng SĐT nối SĐT bằng phẩy, [\"0901234567\"] ở các dòng AC-2 khác; ca đỏ trên bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung ghim «0901234567,0912345678» chỉ còn một số"
+    expected: "exit 0; ca 'GT-AC-3' xanh: extractPhones ra [] ở 5 dòng giá tỷ chẵn, cả hai số ở dòng SĐT nối SĐT bằng phẩy, [\"0901234567\"] ở các dòng AC-2 khác; ca đỏ trên bản sao đưa điều kiện dấu chấm/phẩy vào biểu thức của bộ bóc SĐT (SDT_RE — từ SD2 bộ bóc tách khỏi PHONE_RE dùng chung; giám sát duyệt P1-78) ghim «0901234567,0912345678» chỉ còn một số"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -44,7 +44,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.gia_ty_chan_dong_so
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/so-gia-ty-chan-dong.mjs]
-    expected: "exit 0; so-gia-ty-chan-dong in số bài S03 thật, số bài đổi giá, số bài đổi danh sách SĐT (=0), và mỗi bài đổi giá kèm mã bài + nhãn dạng; mọi bài đổi giá mang nhãn 'gia-ty-chan-dong', bài đổi ngoài dạng ấy = 0; lượt đối chứng (luôn chạy trong cùng lệnh): bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung, trên cùng bộ bài thật cộng một bài tổng hợp «Cho thuê 2PN 9tr LH 0901234567,0912345678 T.Lan», phải TRƯỢT và gọi tên bài tổng hợp đổi SĐT — không bắt được thì lệnh exit 1"
+    expected: "exit 0; so-gia-ty-chan-dong in số bài S03 thật, số bài đổi giá, số bài đổi danh sách SĐT (=0; từ SD2 boc-sdt-du-va-chon-ro — giám sát duyệt P1-81 — danh sách «trước» lấy bằng bộ bóc của cây vì bộ bóc đổi có chủ ý sau bản nền), và mỗi bài đổi giá kèm mã bài + nhãn dạng; mọi bài đổi giá mang nhãn 'gia-ty-chan-dong', bài đổi ngoài dạng ấy = 0; lượt đối chứng (luôn chạy trong cùng lệnh): bản sao đưa điều kiện dấu chấm/phẩy vào biểu thức của bộ bóc SĐT (SDT_RE, tách khỏi PHONE_RE dùng chung từ SD2), trên cùng bộ bài thật cộng một bài tổng hợp «Cho thuê 2PN 9tr LH 0901234567,0912345678 T.Lan», phải TRƯỢT và gọi tên bài tổng hợp đổi SĐT — không bắt được thì lệnh exit 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5b
     criterion: AC-5

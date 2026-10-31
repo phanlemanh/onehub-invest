@@ -1,8 +1,10 @@
 // so-gia-ty-chan-dong.mjs — hồ sơ _acceptance/s03-gia-ty-chan-dong, AC-6: so đầu ra parsePost của bản nền ghim NEN với bản
 // cây trên toàn bộ bài S03 thật. Chỉ đọc (BEGIN READ ONLY trên DATABASE_URL), không ghi gì.
 // Đạt khi: 0 bài đổi danh sách SĐT, và mọi bài đổi giá mang dạng giá tỷ chẵn viết bằng đồng. Sai → exit 1, gọi tên bài.
-// Lượt đối chứng (luôn chạy) thay bản cây bằng bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung, thêm một bài tổng hợp có SĐT
-//               nối SĐT — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
+// Lượt đối chứng (luôn chạy) thay bản cây bằng bản sao đưa điều kiện dấu chấm/phẩy vào biểu thức của bộ bóc SĐT, thêm một bài tổng
+//               hợp có SĐT nối SĐT — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
+// SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên danh sách SĐT «trước» lấy bằng bộ bóc
+//               của cây — thước chỉ đo phần giá tỷ của hồ sơ này; bộ bóc giờ dùng SDT_RE riêng, không còn PHONE_RE dùng chung.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -32,9 +34,9 @@ const nen = await napBanSao(execFileSync("git", ["show", `${NEN}:pipeline/transf
 async function napCay(dotBien) {
   if (!dotBien) return import(pathToFileURL(join(PIPE, "transform-zalo.mjs")).href);
   const src = readFileSync(join(PIPE, "transform-zalo.mjs"), "utf8");
-  const cu = "const PHONE_RE = /(?<!\\d)(?:";
+  const cu = "new RegExp(`(?<!\\\\d)(?:\\\\+84|84|0)";
   if (!src.includes(cu)) throw new Error("so-gia-ty-chan-dong: đột biến không khớp mã nguồn");
-  return napBanSao(src.replace(cu, "const PHONE_RE = /(?<!\\d)(?<!\\d[.,])(?:"), "dot-bien");
+  return napBanSao(src.replace(cu, "new RegExp(`(?<!\\\\d)(?<!\\\\d[.,])(?:\\\\+84|84|0)"), "dot-bien");
 }
 
 const c = new pg.Client({ connectionString: DB_URL });
@@ -51,6 +53,7 @@ try {
 /** Một lượt so: true khi ĐẠT (0 bài đổi SĐT, mọi bài đổi giá mang dạng giá tỷ chẵn). */
 async function luot(dotBien) {
   const cay = await napCay(dotBien);
+  const boc = (await napCay(false)).extractPhones;
   const posts = dotBien ? [...thatPosts, BAI_TONG_HOP] : thatPosts;
   const doiGia = [];
   const doiSdt = [];
@@ -60,9 +63,9 @@ async function luot(dotBien) {
     if (a.priceVnd !== b.priceVnd || a.pricePerm2Vnd !== b.pricePerm2Vnd) {
       doiGia.push({ id: p.post_id, truoc: a.priceVnd, sau: b.priceVnd, nhan: TY_CHAN.test(p.text) ? "gia-ty-chan-dong" : "khac" });
     }
-    if (JSON.stringify(a.phones) !== JSON.stringify(b.phones)) doiSdt.push(p.post_id);
+    if (JSON.stringify(boc(p.text)) !== JSON.stringify(b.phones)) doiSdt.push(p.post_id);
   }
-  const ten = dotBien ? "lượt đối chứng (điều kiện vào PHONE_RE dùng chung + bài tổng hợp SĐT nối SĐT)" : "lượt cây";
+  const ten = dotBien ? "lượt đối chứng (điều kiện vào biểu thức bộ bóc SĐT + bài tổng hợp SĐT nối SĐT)" : "lượt cây";
   console.log(`${ten}: ${posts.length} bài · đổi giá ${doiGia.length} · đổi danh sách SĐT ${doiSdt.length}`);
   for (const d of doiGia) console.log(`  đổi giá ${d.id}: ${d.truoc} → ${d.sau} [${d.nhan}]`);
   for (const id of doiSdt) console.log(`  đổi SĐT ${id}`);
