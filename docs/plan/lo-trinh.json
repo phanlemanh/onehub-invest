@@ -2918,6 +2918,70 @@
         "pipeline/sql"
       ],
       "ghi_chu": "Dãy P4. Dưới mục tiêu cỡ: một phép đo hẹp. Nên giao trước HD13 để có số đối chứng."
+    },
+    {
+      "dung_tren": [],
+      "dot": "ra-mat-0511",
+      "ma": "RM1",
+      "slug": "s03-nhan-loai-tin-rong",
+      "nhom": "ra-mat-0511",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "phu": [
+        "RM1"
+      ],
+      "cau_giao": "Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo bối cảnh nhóm và đơn vị giá, vẫn loại bài khách tìm nhà",
+      "bat_khi": "Trên mẫu gắn nhãn: recall tin bán S03 tăng so với trước, precision không giảm, bài cầu (khách cần/tìm/xem) vẫn bị loại",
+      "vi_sao": "parsePost chỉ nhận chữ «bán»/«cho thuê» nên loại 72% bài S03 (25.415/35.359); mẫu 3 ngày có 306 bài giá tỷ + dấu hiệu BĐS bị bỏ (~100/ngày). Mục tiêu ra mắt 05/11: S03 200 tin mới/ngày (ROADMAP).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/label-sample.mjs"
+      ],
+      "ghi_chu": "Dãy U1, ưu tiên 1 (giám sát 31/10, Mạnh «Giao U1 sửa»). Chạy song song P4 sdt-luu-goc-e164 (cùng tệp, khác hàm)."
+    },
+    {
+      "dung_tren": [],
+      "dot": "kev-chung-cat-3110",
+      "ma": "KC1",
+      "slug": "nhan-bac-model-lon-s03",
+      "nhom": "kev-chung-cat-3110",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "phu": [
+        "KC1"
+      ],
+      "cau_giao": "Lệnh nhãn bạc: model lớn đọc mọi bài S03 và ghi ý định tin, bán/thuê, xác suất và câu trích nguyên văn vào bảng nhãn bạc riêng (mỗi dòng ghi model đã gắn) — không ghi dữ liệu canonical",
+      "bat_khi": "Đo trên mẫu 61 bài đã gắn tay: Claude Haiku 5.5 và OpenAI Decisions API so với Qwen 27B local (ý định 98%, bán/thuê 97%); bên cloud đạt ≥ 95% và rẻ hơn chạy hết bài cũ, Qwen local chạy hằng ngày; câu trích giả bị loại bằng so chuỗi; 0 dòng ghi vào sale_offers",
+      "vi_sao": "Mạnh 31/10: dùng một model lớn vừa phân loại vừa gắn nhãn để cải thiện Kev. Qwen 27B local đạt 95% trên 61 bài (s03-boc-tach-cau-truc-3010 §8.2); nhãn bạc là dữ liệu huấn luyện cho KC2 và đề xuất cho PL5.",
+      "vung": [
+        "pipeline/classify-s03.mjs",
+        "pipeline/lib/nhan-bac.mjs"
+      ],
+      "ghi_chu": "Bảng nhãn bạc mới cần migration 065 (giám sát giữ số; db/migrations nằm trong t3_paths → T3). Dãy U1, ưu tiên 2, sau RM1. Model thầy chốt theo kết quả Mạnh thử với ZCode; mặc định Qwen local. Gạt SĐT/định danh tài khoản thu trước khi gửi model cloud; tầng A không rời máy. Mạnh chốt 31/10: đo Haiku 5.5 + Decisions API (gpt-6-luna). Xây trên nhánh ZCode zcode/classify-s03 @ce75ba2e (pipeline/classify-s03.mjs). Bảng nhãn bạc dùng chung với PL5."
+    },
+    {
+      "dung_tren": [
+        "KC1"
+      ],
+      "dot": "kev-chung-cat-3110",
+      "ma": "KC3",
+      "slug": "vlm-anh-tin-s03",
+      "nhom": "kev-chung-cat-3110",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "phu": [
+        "KC3"
+      ],
+      "cau_giao": "VLM đọc ảnh tin S03 cho bài mà chữ không đủ (thiếu giá, thiếu dấu hiệu BĐS, thiếu loại hình) và ghi thêm vào bảng nhãn bạc với nguồn «ảnh» — ảnh tải về máy trước, gửi base64, không kèm tầng A",
+      "bat_khi": "Trên một mẫu bài có ảnh đã gắn tay: Haiku 5.5 hoặc Decisions API đọc đúng giá/loại hình ≥ 90%; số bài «chữ không đủ» có nhãn bạc tăng; 0 URL zdn hết hạn bị gửi",
+      "vi_sao": "20.292/39.367 bài S03 có ảnh (DB 31/10); mô phỏng RM1 còn ~16.000 bài chữ thiếu giá hay dấu hiệu BĐS — ảnh rao thường chứa giá, số phòng, mã căn. Mạnh chốt đo Haiku 5.5 và Decisions API 31/10.",
+      "vung": [
+        "pipeline/vlm-anh-s03.mjs"
+      ],
+      "ghi_chu": "Dãy U1 sau KC1 (giám sát xếp). Qwen 27B local không đọc ảnh; GLM-V qua gói ZCode không dùng được (điều khoản)."
     }
   ],
   "chan_troi": [
@@ -3391,6 +3455,36 @@
         "HD15"
       ],
       "mo_lai_khi": "Có ít nhất 30 cặp có ảnh hai bên đã có nhãn của người duyệt (sau HD10 và HD13)"
+    },
+    {
+      "ma": "RM2",
+      "dot": "ra-mat-0511",
+      "cau_giao": "Người duyệt khai và sửa mục đích nhóm S03 (bán / thuê / cả hai) ở /ops",
+      "ly_do": "Cần cột mới ở sổ nhóm (migration) và màn /ops — ngoài vùng giao cho RM1",
+      "phu": [
+        "RM2"
+      ],
+      "mo_lai_khi": "RM1 đã giao và đo được tỉ lệ nhóm bị suy sai mục đích"
+    },
+    {
+      "ma": "KC2",
+      "dot": "kev-chung-cat-3110",
+      "cau_giao": "Kev huấn luyện lại đầu quyết định trên S06 (nhãn ad_type sẵn có) cộng nhãn bạc S03 của KC1, đo trên tập nhãn vàng giữ kín; đạt ngưỡng tự áp (cận dưới ≥ 0,95) thì PL5 dùng điểm Kev mới",
+      "ly_do": "Cần tập nhãn vàng người gắn để đo và hiệu chuẩn — việc vận hành chưa xảy ra; và cần nhãn bạc của KC1",
+      "phu": [
+        "KC2"
+      ],
+      "mo_lai_khi": "KC1 đã giao và /ops/labels có ≥ 200 nhãn vàng của lát s03-loai-tin"
+    },
+    {
+      "ma": "KC4",
+      "dot": "kev-chung-cat-3110",
+      "cau_giao": "Đọc bài S03 chỉ có ảnh (không có chữ) bằng VLM để nhận tin rao và Yêu cầu",
+      "ly_do": "Bài chỉ có ảnh hiện không vào stg (0 bài không chữ trong stg_zalo_posts, 31/10) — cần bộ thu (làn ZCode) giữ lại kèm ảnh",
+      "phu": [
+        "KC4"
+      ],
+      "mo_lai_khi": "Bộ thu giữ bài S03 chỉ có ảnh vào raw và stg kèm ảnh (DATA-CONTRACT tăng schemaVersion) và KC3 đã giao"
     }
   ],
   "da_bac": []

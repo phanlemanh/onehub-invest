@@ -9,7 +9,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 |--------|---------|
 | import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
-| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1) |
+| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1); bài không ghi «bán/cho thuê» được suy loại (RM1: Yêu cầu → cửa vào → đơn vị giá → tín hiệu bán → mục đích nhóm, `suyLoai`), log đếm theo nguồn |
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
 | refresh-bait-gap.mjs | Bait gap P1 + đếm người bán (`sellers` là VIEW từ 060, không ghi); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
@@ -25,6 +25,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | scripts/trang-thai-roundtrip.mjs | Thước PL19 (AC-8): trang-thai-chao hai lần trên DB thử, đếm độc lập, chiều đỏ DB không tới được |
 | dung-nguoi.mjs | DB2b: dựng danh bạ Người + vai người đăng một lượt (chạy đêm đi qua `buocDem` của refresh-bait-gap); `--thu` ROLLBACK |
 | scripts/nap-lai-nguoi.mjs | Thước DB2b: hai lượt transform + bước đêm trong giao dịch ROLLBACK, lượt 2 bằng 0, đối chứng bỏ tra bí danh; `--doi-chung-hong` |
+| label-sample.mjs | PL7: chọn tin vào `eval_label_items` cho người gắn nhãn mù (`--lat ocp1` lọc tên nhóm; `--lat s03-loai-tin` phân tầng ba phần bằng nhau theo `tangLoai` — chữ bài · mới nhận · vẫn bỏ); `--thu` không ghi |
 | label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
 | do-danh-ba-sdt.mjs | SD5: năm kiểm trục SĐT của danh bạ Người (audit 30/10 N1–N5) theo nguồn S03/S05, `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
 | do-the-duyet.mjs | HD11: bốn kiểm độ đủ dữ liệu thẻ ghép căn chờ duyệt (rời kho, ảnh theo vai, độ đầy 10 trường + người đăng theo nguồn), `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
