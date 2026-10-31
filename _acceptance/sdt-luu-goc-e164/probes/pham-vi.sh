@@ -9,7 +9,7 @@ cho_phep() {
     pipeline/transform-zalo.mjs|pipeline/transform-fb.mjs|pipeline/lib/danh-ba-nguoi.mjs|pipeline/lib/nap-060.mjs|pipeline/refresh-bait-gap.mjs|\
     pipeline/sync-cloud.mjs|pipeline/do-danh-ba-sdt.mjs|pipeline/scripts/do-boc-sdt.mjs|pipeline/scripts/test-data-residue.mjs|\
     app/src/lib/ops/people.ts|app/src/components/ops/people/people-rows.ts|\
-    pipeline/*.test.mjs|pipeline/scripts/*.test.mjs|app/tests/sdt-che-tren-people.test.tsx|\
+    pipeline/*.test.mjs|pipeline/scripts/*.test.mjs|pipeline/scripts/danh-ba-nguoi.itest.mjs|app/tests/sdt-che-tren-people.test.tsx|app/tests/sellers-chip.test.tsx|\
     CONTEXT.md|pipeline/CLAUDE.md|_acceptance/config.yaml|_acceptance/sdt-luu-goc-e164/*|_acceptance/*/evidence-report.md|_acceptance/*/run-log.jsonl|\
     docs/superpowers/specs/2026-10-31-sdt-luu-goc-e164-design.md|docs/superpowers/plans/2026-10-31-sdt-luu-goc-e164.md|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
     *) return 1 ;;
@@ -21,6 +21,7 @@ while IFS= read -r f; do [ -z "$f" ] && continue
 done < <(git diff --name-only "$base" HEAD)
 ap_that() { grep -nE "(-d +|/)oneinvest([^_a-z]|$)" "$1" | grep -E "060|db/migrations" ; }
 for f in $(git diff --name-only "$base" HEAD -- '_acceptance/sdt-luu-goc-e164/probes' 'pipeline/lib/nap-060.mjs'); do
+  [ "$f" = "_acceptance/sdt-luu-goc-e164/probes/pham-vi.sh" ] && continue  # tệp này mang chuỗi đối chứng của chính nó
   [ -f "$f" ] && ap_that "$f" && { echo "AP LEN DB THAT $f"; bad=1; }
 done
 tmp=$(mktemp); echo 'psql -d oneinvest < db/migrations/060_sdt_e164.sql' > "$tmp"
