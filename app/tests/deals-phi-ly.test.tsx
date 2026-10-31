@@ -54,8 +54,19 @@ async function seed(c: pg.Client, gaps: (number | null)[]): Promise<string[]> {
 async function xoaCotPii(c: pg.Client) {
   const view = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass('sale_offers')`)).rows[0]?.relkind === "v";
   const bang = view ? "sale_offer_records" : "sale_offers";
+  // Từ SD3 (060) sellers máy thu là VIEW trên tin — xoá cột người bán CASCADE kéo theo nó. Trên cloud sellers là BẢNG
+  // do sync đổ, chỉ mang cột CLOUD_ALLOW.sellers: chép view thành bảng đúng hình dạng ấy trước khi xoá cột.
+  const sellersView = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass('sellers')`)).rows[0]?.relkind === "v";
+  if (sellersView) {
+    const cot = (CLOUD_ALLOW.sellers as string[]).map((x) => `"${x}"`).join(", ");
+    await c.query(`CREATE TABLE sellers_cloud AS SELECT ${cot} FROM sellers`);
+  }
   for (const col of PII_EXCLUDE.sale_offers as string[]) {
     await c.query(`ALTER TABLE ${bang} DROP COLUMN ${col} CASCADE`);
+  }
+  if (sellersView) {
+    await c.query(`DROP VIEW IF EXISTS sellers`);
+    await c.query(`ALTER TABLE sellers_cloud RENAME TO sellers`);
   }
   if (!view) return;
   await c.query(`CREATE OR REPLACE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL`);

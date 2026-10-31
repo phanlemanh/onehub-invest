@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e3db58d737f151461331d9ac51aac8a9d93ec343
+verified_commit: 06c00e55d4a1e2c630b91abf897440fed61220ae
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -99,3 +99,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1, E2, E3 đều đạt; lệnh suite xanh. Verdict PASS.
 
+
+### Re-pin lần 1 — 2026-10-31, do DP-AC-5 bản cloud dựng sellers là bảng khi máy thu là view (060)
+run_id: repin-20261031T144601Z-34121
+sha: 06c00e55d4a1e2c630b91abf897440fed61220ae · suites: 6 lệnh exit 0 · evals: 3/3 eval máy đạt kỳ vọng
