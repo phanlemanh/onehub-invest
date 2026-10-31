@@ -1,0 +1,28 @@
+{
+  "feature_plain": "Đường ảnh tin của trang Ops chỉ trả ảnh thường (jpeg, png, webp, gif); ảnh dạng vector SVG có thể chứa mã độc thì bị từ chối, và mọi ảnh trả về kèm hai lớp chắn để trình duyệt không bao giờ chạy mã từ ảnh.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ trả ảnh jpeg, png, webp, gif bình thường, kể cả khi nguồn ghi kiểu ảnh lệch chuẩn (chữ hoa, «jpg», thêm tham số); kiểu ảnh trả về luôn là một trong bốn kiểu chuẩn."},
+    {"id": "AC-2", "p": "Sẽ từ chối (mã 415) ảnh SVG và các kiểu ảnh lạ (icon, bmp, tiff, avif), thân lỗi là một câu chung, không lộ địa chỉ nguồn."},
+    {"id": "AC-4", "p": "Sẽ gắn hai lớp chắn (không cho trình duyệt đoán kiểu, chạy trong hộp cát) vào mọi phản hồi của bộ lấy ảnh, kể cả phản hồi lỗi."},
+    {"id": "AC-5", "p": "Sẽ gắn hai lớp chắn vào cả ba đường ảnh của trang Ops (lấy hộ, ảnh đã tải theo khoá, ảnh snapshot), và đường ảnh trả nguyên phản hồi để lớp chắn không rơi mất."},
+    {"id": "AC-6", "p": "Sẽ trả 415 khi người vận hành mở một ảnh mà nguồn trả SVG có mã — không lộ tên miền nguồn."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG đổi mã lỗi của nguồn không phải ảnh (vẫn 502 như HD10 đã ký)."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG sửa bộ kiểm của HD10 — nó phải xanh nguyên như lúc ký."},
+    {"id": "OOS-1", "p": "KHÔNG soi byte đầu của ảnh — lớp chắn đã đủ chặn đường chạy mã."},
+    {"id": "OOS-2", "p": "KHÔNG cho phép avif, heic — ảnh nguồn dạng ấy sẽ hiện «ảnh hỏng»."},
+    {"id": "OOS-3", "p": "KHÔNG đổi bộ chặn địa chỉ nội bộ (đã ghi hạn chế ở HD10)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ mọi dạng kiểu ảnh nguồn: bốn kiểu cho phép, biến thể của chúng, SVG, ảnh lạ, không phải ảnh — AC-1, AC-2, AC-3."},
+    {"i": 1, "p": "Phủ cả ba đường ảnh của trang Ops — AC-5, AC-6."},
+    {"i": 2, "p": "Phủ mọi kết cục phản hồi (thành công và bốn mã lỗi) cho hai lớp chắn — AC-4."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chọn mã 415 thiếu căn cứ thật. Đã ghi căn cứ là câu giao của hàng HD16 do giám sát xếp; ghi chú thẻ duyệt hiện 415 và 502 giống nhau (ảnh hỏng)."},
+    {"i": 1, "p": "Phép đo chưa chứng đường ảnh không làm rơi lớp chắn. Đã thêm phép kiểm route trả nguyên phản hồi của lõi."},
+    {"i": 2, "p": "Lời hứa «không sửa bộ kiểm HD10» chưa đo được. Đã thêm phép đo tệp test HD10 không đổi so với lúc gộp."},
+    {"i": 3, "p": "Thân lỗi 415 chưa ghim nguyên văn. Đã ghim câu chung và kiểm không lộ đường dẫn, có chiều đỏ."}
+  ]
+}

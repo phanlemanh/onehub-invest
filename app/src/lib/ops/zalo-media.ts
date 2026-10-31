@@ -6,7 +6,7 @@ import { pool } from "@/lib/db";
 import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 import { isLoginQrFile } from "@/lib/zalo-admin";
 
-import { layAnhGoc } from "./lay-anh-goc";
+import { HEADER_ANH_AN_TOAN, layAnhGoc } from "./lay-anh-goc";
 
 /**
  * Lõi của GET /api/zalo-media — phục vụ ảnh tin (PII tầng A, ADR-0007) cho trang /ops.
@@ -103,7 +103,7 @@ async function realRoots(roots: string[]): Promise<string[]> {
 }
 
 const inMediaDir = (p: string) => path.basename(path.dirname(p)) === "media";
-const outside = () => new Response("path ngoài vùng cho phép", { status: 403 });
+const outside = () => new Response("path ngoài vùng cho phép", { status: 403, headers: { "x-content-type-options": "nosniff" } });
 
 async function sendImage(resolved: string, roots: string[], mediaOnly: boolean): Promise<Response> {
   const real = await realRoots(roots);
@@ -124,6 +124,8 @@ async function sendImage(resolved: string, roots: string[], mediaOnly: boolean):
       headers: {
         "content-type": MIME[path.extname(target).toLowerCase()],
         "cache-control": "private, max-age=300",
+        // Cùng hai lớp chắn với ảnh lấy hộ (proxy-anh-chan-svg AC-5): mọi ảnh của route không bị đoán kiểu, chạy trong hộp cát.
+        ...HEADER_ANH_AN_TOAN,
       },
     });
   } catch {
