@@ -9,7 +9,7 @@ evals:
     executor: test
     cmd: config:executors.test.judge_entity_duong
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-1 tiền tố vị trí' xanh: ma trận viết trước 10 cặp × 2 chiều (đếm 20), gồm hai cặp có dấu phẩy sau cụm vị trí ('Ngõ 5, Kim Mã', 'Số 10, Ngõ 9, La Dương'), mỗi ô không có lý do khac_duong và same_house 'yes'; chiều đỏ: bản đột biến bỏ dòng cắt cụm vị trí (ngõ/ngách/hẻm/kiệt/số + số) → đỏ 'CD-AC-1 cùng đường có tiền tố vị trí bị loại: Ngõ 254 Minh Khai ↔ Minh Khai'; bản đột biến cắt dấu phẩy TRƯỚC khi bỏ cụm vị trí → đỏ 'CD-AC-1 cùng đường có tiền tố vị trí bị loại: Ngõ 5, Kim Mã ↔ Kim Mã'"
+    expected: "exit 0; ca 'CD-AC-1 tiền tố vị trí' xanh: ma trận viết trước 10 cặp × 2 chiều (đếm 20), mỗi ô không khac_duong, 'yes' và soDuong 'khop', gồm hai cặp có dấu phẩy sau cụm vị trí ('Ngõ 5, Kim Mã', 'Số 10, Ngõ 9, La Dương'), mỗi ô không có lý do khac_duong và same_house 'yes'; chiều đỏ: bản đột biến bỏ dòng cắt cụm vị trí (ngõ/ngách/hẻm/kiệt/số + số) → đỏ 'CD-AC-1 cùng đường có tiền tố vị trí bị loại: Ngõ 254 Minh Khai ↔ Minh Khai'; bản đột biến cắt dấu phẩy TRƯỚC khi bỏ cụm vị trí → đỏ 'CD-AC-1 cùng đường có tiền tố vị trí bị loại: Ngõ 5, Kim Mã ↔ Kim Mã'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -23,7 +23,7 @@ evals:
     executor: test
     cmd: config:executors.test.judge_entity_duong
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-3 tên đường bắt đầu bằng số' xanh: '3 Tháng 2' ↔ 'Đường 3 Tháng 2' và 'Đường số 7' ↔ 'Đường số 7' không khac_duong, 'Đường số 7' ↔ 'Đường số 9' và '30 Tháng 4' ↔ '2 Tháng 4' → 'no' + khac_duong, cả hai chiều (đếm 8); chiều đỏ: bản đột biến chỉ giữ cách đọc đã bỏ số nhà trần → đỏ 'CD-AC-3 tên đường bắt đầu bằng số bị loại: 3 Tháng 2 ↔ Đường 3 Tháng 2'; bản đột biến bỏ ngoại lệ «tháng <số>» → đỏ 'CD-AC-3 hai đường đánh số khác không loại: 30 Tháng 4 ↔ 2 Tháng 4'"
+    expected: "exit 0; ca 'CD-AC-3 tên đường bắt đầu bằng số' xanh: '3 Tháng 2' ↔ 'Đường 3 Tháng 2' và 'Đường số 7' ↔ 'Đường số 7' không khac_duong, 'Đường số 7' ↔ 'Đường số 9' và '30 Tháng 4' ↔ '2 Tháng 4' → 'no' + khac_duong, cả hai chiều (đếm 8); chiều đỏ: bản đột biến luôn bỏ số đầu chuỗi, một cách đọc (không ngoại lệ «tháng <số>», không giữ cách đọc nguyên) → đỏ 'CD-AC-3 tên đường bắt đầu bằng số bị loại: 3 Tháng 2 ↔ Đường 3 Tháng 2'; bản đột biến bỏ ngoại lệ «tháng <số>» → đỏ 'CD-AC-3 hai đường đánh số khác không loại: 30 Tháng 4 ↔ 2 Tháng 4'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
