@@ -7,6 +7,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { boc } from "./lib/thu-lai-deadlock.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -17,13 +18,14 @@ const CLUSTER_EXPR = `
     || '|' || round(o.area_m2)::text
     || '|' || round(o.price_vnd / 1e6)::text`;
 
-async function main() {
-  const c = new pg.Client({ connectionString: DB_URL });
-  await c.connect();
-  try {
+/** Một lượt resolve trên client đã kết nối. Mọi câu đi qua bộ thử lại deadlock (hồ sơ resolve-thu-lai-deadlock):
+ *  câu bị Postgres huỷ vì 40P01 được chạy lại, tối đa 3 lần. opts tiêm cho test; mặc định là chạy thật. */
+export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
+  const q = boc(c, opts);
+  {
     // ── Stage A: match existing + create NEW ──
     // M-1: KHÔNG TRUNCATE — properties persistent vĩnh viễn.
-    const { rows: clusters } = await c.query(`
+    const { rows: clusters } = await q.query(`
       WITH g AS (
         SELECT o.offer_id, o.area_id, o.kind, o.property_type,
                o.first_seen, o.last_seen, s.latitude, s.longitude,
@@ -44,7 +46,7 @@ async function main() {
     let nEvidence = 0, nNew = 0, nMatched = 0;
     for (const cl of clusters) {
       // MATCH existing qua stable_key (= cluster_key)
-      const { rows: existing } = await c.query(
+      const { rows: existing } = await q.query(
         `SELECT id FROM properties WHERE stable_key = $1`, [cl.cluster_key],
       );
       let pid;
@@ -52,13 +54,13 @@ async function main() {
         pid = existing[0].id;
         nMatched++;
         // ENRICH existing: cập nhật last_seen + n_evidence
-        await c.query(
+        await q.query(
           `UPDATE properties SET last_seen = GREATEST(last_seen, $2), n_evidence = $3 WHERE id = $1`,
           [pid, cl.ls, cl.n],
         );
       } else {
         // CREATE NEW (pending — chờ HITL verify)
-        const { rows: ins } = await c.query(
+        const { rows: ins } = await q.query(
           `INSERT INTO properties (geo, area_id, property_type, kind, cluster_key, stable_key,
                                    n_evidence, first_seen, last_seen, resolved_by, verification)
            VALUES (ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3, $4, $5, $6, $6,
@@ -69,7 +71,7 @@ async function main() {
         pid = ins[0].id;
         nNew++;
       }
-      await c.query(
+      await q.query(
         `INSERT INTO property_offers (property_id, offer_id, score, signals)
          SELECT $1, o.offer_id, 1.0, '{"geo":1,"price":1,"area":1}'::jsonb
          FROM sale_offers o
@@ -83,13 +85,13 @@ async function main() {
       );
       nEvidence += cl.n;
     }
-    console.log(
+    ghi(
       `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) | ${nEvidence} offers`,
     );
 
     // ── Stage B: cặp ứng viên P1↔P2 (cùng phường, DT ±15%, giá/m² ±20%) ──
-    await c.query(`DELETE FROM property_candidates WHERE status IN ('pending','needs_llm')`);
-    const { rows: pairs } = await c.query(`
+    await q.query(`DELETE FROM property_candidates WHERE status IN ('pending','needs_llm')`);
+    const { rows: pairs } = await q.query(`
       WITH p1 AS (
         SELECT o.offer_id, o.area_id, o.area_m2, o.price_perm2
         FROM sale_offers o
@@ -120,9 +122,19 @@ async function main() {
       ON CONFLICT (offer_a, offer_b) DO NOTHING
       RETURNING 1`);
     const nLlm = pairs.length
-      ? (await c.query(`SELECT count(*)::int n FROM property_candidates WHERE status='needs_llm'`)).rows[0].n
+      ? (await q.query(`SELECT count(*)::int n FROM property_candidates WHERE status='needs_llm'`)).rows[0].n
       : 0;
-    console.log(`Stage B: ${pairs.length} cặp P1↔P2 (${nLlm} needs_llm)`);
+    ghi(`Stage B: ${pairs.length} cặp P1↔P2 (${nLlm} needs_llm)`);
+  }
+  if (q.soLanThuLai > 0) ghi(`resolve-properties: thử lại sau deadlock ${q.soLanThuLai} lần`);
+  return { soLanThuLai: q.soLanThuLai, soCauGui: q.soCauGui };
+}
+
+async function main() {
+  const c = new pg.Client({ connectionString: DB_URL });
+  await c.connect();
+  try {
+    await chayResolve(c);
   } finally {
     await c.end();
   }
