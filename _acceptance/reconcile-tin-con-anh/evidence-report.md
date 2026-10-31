@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fac09d6856bad87cd02c495d5fe877591d477ec6
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: reconcile-tin-con-anh

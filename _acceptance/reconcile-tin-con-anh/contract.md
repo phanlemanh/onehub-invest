@@ -5,7 +5,7 @@ slug: reconcile-tin-con-anh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T18:35:00Z
 ---
@@ -38,3 +38,5 @@ trên DB máy thu là bản 044 — chỉ cho nghỉ (`retired_at`), không xoá
 ## Notes
 
 - Kiểm thêm theo lời giao: log `pipeline/logs/zalo-import.log` lượt 00:00 ngày 01/11 không có lỗi media/khoá ngoại; đối soát S03 stale 0.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Tệp test của đối chứng cần cơ sở dữ liệu máy thu mà mang đuôi .test.mjs, nên lệnh test nhanh của pipeline có thể treo khi cơ sở dữ liệu bận.

@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>103 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>104 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>86 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -32,10 +32,6 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
-
-## Đang làm
-
-- Thước nạp lại ba lượt (PL14) chạy được khi có tin còn ảnh bị luật mới loại — đối chứng 039 đổi mọi khoá ngoại trỏ bảng bản ghi sang xoá dây chuyền, gồm bảng ảnh thêm sau (`reconcile-tin-con-anh`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -203,6 +199,7 @@ flowchart TD
 - Bộ kiểm sổ bề mặt API (check-api-surface) không đỏ vì tệp đột biến tạm của test khác bị xoá giữa lúc quét — CI app thôi đỏ chập chờn ở QV-AC-9 (`qv-ac-9-khong-chap-chon`)
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
 - script đo nền hiệu năng chỉ chạy trên DB local — rào assertLocalDatabaseUrl trước mọi lệnh ghi DB (`rao-db-local-do-nen`)
+- Thước nạp lại ba lượt (PL14) chạy được khi có tin còn ảnh bị luật mới loại — đối chứng 039 đổi mọi khoá ngoại trỏ bảng bản ghi sang xoá dây chuyền, gồm bảng ảnh thêm sau (`reconcile-tin-con-anh`)
 - Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia) (`review-card-photos`)
 - Backend ảnh tin cho hàng duyệt /ops/review (route /api/zalo-media + loader ảnh theo thẻ) (`review-media-backend`)
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
