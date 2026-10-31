@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 83b4937231085658643b991c5d029c11deee9c8a
+verified_commit: 17f67509a97a8baeaa198d3bc154e3d27d5a459f
 human_signoff:
 ---
 
@@ -100,3 +100,7 @@ none — every multi-run eval is uniform
 
 Round 1: S4 r1 PASS 3/3, còn 1 mục trong hợp đồng (thiếu ô «5 nét» cho CV-AC-1). Trả về triển khai, thêm ô «5 nét».
 Round 2: E1, E2, E3 đều PASS trên commit 83b49372 sau khi bổ sung ô «5 nét»; các lệnh suite xanh.
+
+### Re-pin lần 1 — 2026-10-31, do gộp main sau #244 (xung đột PR #253)
+run_id: repin-20261031T170656Z-90893
+sha: 17f67509a97a8baeaa198d3bc154e3d27d5a459f · suites: 6 lệnh exit 0 · evals: 3/3 eval máy đạt kỳ vọng
