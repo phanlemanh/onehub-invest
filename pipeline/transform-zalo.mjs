@@ -259,6 +259,8 @@ const TEN_BAN = /(?:chuyển\s*nh[ưư][ợơ]ng|\bbán\b|giỏ\s*hàng|quỹ|gi
 const TEN_THUE = /cho\s*thuê/iu;
 const NHOM_TOI_THIEU = 20;
 const NHOM_TI_LE = 0.85;
+/** Sàn giá bán suy loại (AC-9): bài suy ra bán mà giá dưới 300 triệu (vd «5.000.000» trong nhóm bán) giữ rỗng. */
+const GIA_BAN_SAN = 3e8;
 
 /** Bài là Yêu cầu (bên mua). */
 export function laYeuCau(text) {
@@ -324,10 +326,12 @@ export function suyLoai(pr, text, mucDich) {
   if (giaThue || (DON_VI_THUE.test(so) && !coTy)) return { kind: KIND.rent_lt, nguon: "don-vi-gia" };
   if (coTy || TIN_HIEU_BAN.test(so)) {
     if (pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
+    if (pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
     return { kind: KIND.sale, nguon: "tin-hieu-chu" };
   }
   if (mucDich === KIND.sale || mucDich === KIND.rent_lt) {
     if (mucDich === KIND.sale && pr.priceVnd == null && giaKhongDonVi) pr.priceVnd = Math.round(parseVnNumber(giaKhongDonVi[1]) * 1e6);
+    if (mucDich === KIND.sale && pr.priceVnd != null && pr.priceVnd < GIA_BAN_SAN) return { kind: null, nguon: "bo" };
     return { kind: mucDich, nguon: "boi-canh-nhom" };
   }
   return { kind: null, nguon: "bo" };
@@ -337,6 +341,23 @@ export function suyLoai(pr, text, mucDich) {
 export function demNguonLoai(nguon) {
   const out = Object.fromEntries(NGUON_LOAI.map((k) => [k, 0]));
   for (const n of nguon) out[n] = (out[n] ?? 0) + 1;
+  return out;
+}
+
+/**
+ * Tầng loại tin của từng bài cho lát nhãn `s03-loai-tin` (AC-10): `chu-bai` — parsePost đã gán loại; `moi-nhan` — suy
+ * loại mới nhận; `van-bo` — vẫn không loại (kể cả Yêu cầu). Tính bằng chính parsePost + suyLoai của lượt transform.
+ * @param {{ post_id: string, text: string, conversation_id?: string|null, group_name?: string|null }[]} posts
+ * @returns {Map<string, "chu-bai"|"moi-nhan"|"van-bo">}
+ */
+export function tangLoai(posts, { parse = parsePost } = {}) {
+  const docBai = posts.map((p) => ({ p, pr: parse(p.text) }));
+  const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
+  const out = new Map();
+  for (const { p, pr } of docBai) {
+    if (pr.kind) { out.set(p.post_id, "chu-bai"); continue; }
+    out.set(p.post_id, suyLoai(pr, p.text, mucDich.get(p.conversation_id ?? "")).kind ? "moi-nhan" : "van-bo");
+  }
   return out;
 }
 
