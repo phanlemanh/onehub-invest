@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 2b2d29efc9070bde71da296b457950c0e717e640
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: proxy-anh-chan-svg
