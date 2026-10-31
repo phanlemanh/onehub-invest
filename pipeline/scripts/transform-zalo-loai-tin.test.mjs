@@ -278,6 +278,7 @@ const NAM_NU = [
   ["góp 3 năm giá 2 tỷ", "3 năm"],
   ["tuyển 3 nữ lương 10tr", "3 nữ"],
   ["bảo hành 5 năm giá 7tr", "5 năm"],
+  ["ảnh 5 nét giá 2tr", "5 nét"],
 ];
 function kiemNamNu(mod, cu) {
   const lech = [];
@@ -313,7 +314,7 @@ function kiemVietTat(mod, cu) {
 }
 
 describe("CV-AC-1/2 «<số> năm/nữ» không phải phòng ngủ, viết tắt thật giữ nguyên", () => {
-  test("CV-AC-1 bốn ô «<số> năm/nữ» có giá → không dấu hiệu BĐS, không thành tin; bản cũ khớp (đối chứng dương)", async () => {
+  test("CV-AC-1 năm ô «<số> năm/nữ/nét» có giá → không dấu hiệu BĐS, không thành tin; bản cũ khớp (đối chứng dương)", async () => {
     kiemNamNu(goc, await banCu());
   });
   test("chiều đỏ CV-AC-1: bản chép đặt lại ranh giới từ cũ → ô «Cho vay … 1 năm» đỏ", async () => {

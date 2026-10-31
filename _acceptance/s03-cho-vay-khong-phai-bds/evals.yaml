@@ -7,7 +7,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.s03_loai_tin
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/transform-zalo-loai-tin.test.mjs]
-    expected: "exit 0; ca CV-AC-1: ma trận viết tay 4 ô («Cho vay 500tr thời hạn 1 năm, thu về lãi», «góp 3 năm giá 2 tỷ», «tuyển 3 nữ lương 10tr», «bảo hành 5 năm giá 7tr») — mỗi ô: bản chép giữ ranh giới từ cũ (bản cũ) cho coDauHieuBds = true (đối chứng dương), bản sửa cho false, và suyLoai bản sửa ra kind rỗng nguồn bo; thay «<số> năm/nữ» bằng chữ trung tính thì cả hai bản đều false; chiều đỏ: bản chép đặt lại ranh giới từ cũ ở nhánh «<số>n» → ô «Cho vay … 1 năm» đỏ ghim «CV-AC-1 năm thành phòng ngủ»"
+    expected: "exit 0; ca CV-AC-1: ma trận viết tay 5 ô («Cho vay 500tr thời hạn 1 năm, thu về lãi», «góp 3 năm giá 2 tỷ», «tuyển 3 nữ lương 10tr», «bảo hành 5 năm giá 7tr», «ảnh 5 nét giá 2tr») — mỗi ô: bản chép giữ ranh giới từ cũ (bản cũ) cho coDauHieuBds = true (đối chứng dương), bản sửa cho false, và suyLoai bản sửa ra kind rỗng nguồn bo; thay «<số> năm/nữ/nét» bằng chữ trung tính thì cả hai bản đều false; chiều đỏ: bản chép đặt lại ranh giới từ cũ ở nhánh «<số>n» → ô «Cho vay … 1 năm» đỏ ghim «CV-AC-1 năm thành phòng ngủ»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
