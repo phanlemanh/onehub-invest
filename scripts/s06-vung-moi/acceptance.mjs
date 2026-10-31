@@ -115,9 +115,11 @@ async function modeMig() {
     const ca2 = await banCa("mig_do");
     try {
       const hong = readFileSync(MIG, "utf8").replace(/UPDATE area_sources[^;]*;/, "");
-      apSql(ca2.db, hong);
+      const rh = apSql(ca2.db, hong);
       const { rows: [x] } = await ca2.c.query(`SELECT count(*)::int AS n FROM area_sources WHERE area_id ~ '^vn-(thanh-pho|tinh)-'`);
-      check(x.n === as0.n, `chiều đỏ: bỏ UPDATE area_sources → 'area_sources còn ${x.n} mã dài' (thước bắt được)`);
+      const { rows: [y] } = await ca2.c.query(`SELECT count(*)::int AS n FROM areas WHERE id ~ '^vn-(thanh-pho|tinh)-'`);
+      // migration hỏng PHẢI chạy (thoát 0, areas đã đổi) — chỉ thiếu bước area_sources; nếu nó không chạy thì đối chứng vô nghĩa
+      check(rh.code === 0 && y.n === 0 && x.n === as0.n, `chiều đỏ: bản hỏng chạy (areas còn ${y.n} mã dài) nhưng 'area_sources còn ${x.n} mã dài' (thước bắt được)`);
     } finally { await ca2.don(); }
   } finally { await ca.don(); }
   finish("MIG");
@@ -258,6 +260,9 @@ async function napRanhGioiGia(ca, khoa, thiTruong, tenPhuong) {
   if (n.n !== items.length) throw new Error(`importer nạp ${n.n}/${items.length} ranh giới`);
 }
 
+/** Cô lập: bỏ ranh giới S04 thật của thành phố mới khỏi bản chép để ca chỉ đo fixture (bản gốc có thể đã có danang/haiphong thật). */
+const boRanhGioiMoi = (c) => c.query(`DELETE FROM stg_osm_boundaries WHERE snapshot_id LIKE 'danang\\_\\_%' OR snapshot_id LIKE 'haiphong\\_\\_%'`);
+
 const chayReassign = (ca) => {
   const r = spawnSync("node", [join(ROOT, "pipeline/reassign-areas.mjs")], { env: { ...process.env, DATABASE_URL: ca.url }, encoding: "utf8", maxBuffer: 64 << 20 });
   return { code: r.status, out: (r.stdout ?? "") + (r.stderr ?? "") };
@@ -272,6 +277,7 @@ async function modeReassign() {
   const a = await banCa("re_a");
   try {
     check(apSql(a.db, readFileSync(MIG, "utf8")).code === 0, "AC-4 bản chép: áp 064");
+    await boRanhGioiMoi(a.c);
     await napRanhGioiGia(a, "danang", "vn-da-nang", ["Thử Một", "Thử Hai"]);
     const truoc = await tapPhuong(a.c, ["vn-hanoi", "vn-hcmc"]);
     const r = chayReassign(a);
@@ -286,6 +292,7 @@ async function modeReassign() {
   // AC-5: CHƯA áp 064
   const b = await banCa("re_b");
   try {
+    await boRanhGioiMoi(b.c);
     const mk0 = (await b.c.query(`SELECT id FROM areas WHERE region_type = 'market' ORDER BY id`)).rows.map((r) => r.id);
     // polygon thị trường còn ở mã dài — fixture đặt theo mã dài, khoá vẫn là danang
     await napRanhGioiGia(b, "danang", "vn-thanh-pho-da-nang", ["Thử Một"]);
@@ -348,6 +355,7 @@ async function modeTransform() {
   const c = await banCa("tf_nhanh");
   try {
     check(apSql(c.db, readFileSync(MIG, "utf8")).code === 0, "bản chép: áp 064");
+    await boRanhGioiMoi(c.c);
     await napRanhGioiGia(c, "danang", "vn-da-nang", ["Thử Một", "Thử Hai"]);
     check(chayReassign(c).code === 0, "bản chép: reassign nạp phường giả ĐN");
     // không cài tin lạ → không có dòng 'city_code lạ' (should-NOT-fire)
