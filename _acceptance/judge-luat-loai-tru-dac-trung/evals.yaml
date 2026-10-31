@@ -1,0 +1,63 @@
+schema_version: 1
+feature_slug: judge-luat-loai-tru-dac-trung
+# Ca test mang tiền tố «LT-AC-n» trong agent/tests/judge-luat.test.ts (tệp mới, không DB trừ probe AC-6), và ma trận PL25
+# đã sửa trong agent/tests/judge-nguong.test.ts (AC-5). Chiều đỏ: apNguong của bản chép tạm judge-entity.ts đổi đúng một
+# chỗ (tests/.lt-cu-<pid>-<n>.ts, xoá cuối lượt), hoặc apNguong bản cũ (pl25-1) chép nguyên từ origin/main 4307a0b8 làm
+# fixture tests/fixtures/judge-entity-pl25-1.ts.txt. Probe AC-6 chỉ SELECT, bỏ qua có lý do dưới CI.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-1 ma trận đặc trưng' xanh: ma trận viết trước 5 đặc trưng × 3 trạng thái = 15 ô, mỗi ô chạy xuôi và ngược (30 assert, đếm đúng 30); khác → 'no', giống → 'yes', thiếu một bên → không 'no'; chiều đỏ: apNguong bản pl25-1 (fixture) → ô 'khác' ra khác 'no', đỏ 'LT-AC-1 đặc trưng khác không loại: <đặc trưng>'; bản đột biến coi thiếu một bên là khác → đỏ 'LT-AC-1 thiếu một bên thành lý do loại: <đặc trưng>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-2 diện tích chặt' xanh: ma trận viết trước 5 ô × 2 chiều (52↔53 → 'no' + khac_dien_tich; 100↔101,5 đúng ngưỡng → 'no'; 50↔50,5 → 'yes'; 45↔45 → 'yes'; 50↔null → không khac_dien_tich, không 'no'), đếm 10 assert; chiều đỏ: bản pl25-1 cho 52↔53 ra 'yes' → đỏ 'LT-AC-2 diện tích lệch nhỏ không loại'; bản đột biến đổi '>=' thành '>' ở ngưỡng diện tích → đỏ 'LT-AC-2 đúng ngưỡng không loại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-3 lý do có mã' xanh: với từng đặc trưng của ma trận AC-1 ở trạng thái khác, ly_do có đúng 1 lý do mã khac_<đặc trưng> và so chứa cả hai giá trị; mọi cau của mọi ô không khớp /\\d/; chiều đỏ: bản đột biến đưa số vào cau → đỏ 'LT-AC-3 cau mang số'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-4 khoá đường' xanh: ma trận viết trước 4 dạng của cùng một đường (từng cặp 6 cặp) → không lý do khac_duong và kết luận 'yes'; 'Đinh Bộ Lĩnh' ↔ 'Phan Văn Trị' → 'no'; chiều đỏ: bản đột biến so đường nguyên văn → đỏ 'LT-AC-4 cùng đường viết khác dạng bị loại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.judge_nguong
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]
+    expected: "exit 0; mọi ca của judge-nguong.test.ts xanh với ma trận PL25 sửa theo luật mới (ô không nói về diện tích dùng diện tích bằng nhau; ô 1 'dt bằng nhau → yes'), ca KP/PS phường giữ nguyên kết luận; đối chứng đỏ sẵn có của tệp (AC-1 'dt lệch 12% ở ô 1 thôi yes', PS-AC-2 bản rút) vẫn đỏ đúng thông điệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0 trên máy thu; ca 'LT-AC-6 probe thẻ đã quyết' xanh: đọc review_queue entity_match status approved/rejected (chỉ SELECT), dựng PairData từ evidence.offer_a/offer_b, tập thẻ rejected có ≥1 đặc trưng khác hai bên tính độc lập trong test (năm đặc trưng + diện tích với ngưỡng 0,015 viết thẳng trong test, không import NGUONG); assert tập id ấy bằng danh sách viết trước [13..22, 24] (đếm 11) và tập approved bằng [23] (đếm 1); apNguong → 11 thẻ ra 'no', #23 không 'no'; chiều đỏ: apNguong bản pl25-1 → đỏ 'LT-AC-6 thẻ người từ chối không bị loại'; bản đột biến bỏ luật diện tích chặt → ít nhất một trong 7 thẻ chỉ khác diện tích (13, 14, 15, 16, 21, 22, 24) không ra 'no', cùng thông điệp; ca 'LT-AC-6 bộ nạp cặp thật': queryPair thật trên một cặp tin sống có S06 (chỉ SELECT) → PairData có street/bathrooms khác null ở ít nhất một bên; dưới CI t.skip có lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-7 phiên bản' xanh: PHIEN_BAN_NGUONG === 'pl25-2' và NGUONG deepEqual {giaM2YesMax: 0.15, giaM2NoMin: 0.3, dienTichNoMin: 0.015} (bỏ dienTichYesMax: «cùng căn» nay đòi diện tích lệch dưới ngưỡng chặt); chiều đỏ: fixture pl25-1 → đỏ 'LT-AC-7 phiên bản luật chưa đổi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.judge_luat
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-luat.test.ts]
+    expected: "exit 0; ca 'LT-AC-8 tầng và mã căn viết khác dạng' xanh: ma trận viết trước — tầng {'12','Tầng 12','tầng 12 '} từng cặp (3 cặp) không khac_tang; mã căn {'A1','a1','A 1'} từng cặp (3 cặp) không khac_ma_can; 'tầng cao' ↔ '12' không khac_tang (thiếu một bên); '12' ↔ '15' → 'no' + khac_tang; 'A1' ↔ 'B2' → 'no' + khac_ma_can; cả hai chiều; chiều đỏ: bản đột biến so nguyên văn → đỏ 'LT-AC-8 cùng tầng hay mã căn viết khác dạng bị loại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
