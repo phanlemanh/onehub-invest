@@ -5,7 +5,7 @@ slug: sd3-lam-chat-do-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T12:42:00Z
 design_doc: docs/superpowers/specs/2026-10-31-sd3-lam-chat-do-danh-ba-design.md
@@ -65,3 +65,7 @@ hứa, đối chứng không qua bộ quét thật). 060 chưa áp lên máy thu
 ## Notes
 
 - Trước khi áp 060, N6 trên máy thu không đạt (`thieu` = mọi số trên tin) — đó là tín hiệu «chưa áp 060», không phải lỗi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Phép kiểm «số người trước = khớp + mồ côi» ở lượt chuyển luôn đúng theo cách dựng tập, nên không bắt thêm người mất im lặng; số người mồ côi chỉ được in.
+  - Ngoài-2: Cùng chỗ với Ngoài-1 — đẳng thức đếm mồ côi không bao giờ báo đỏ; các phép so ánh xạ chính vẫn chạy.
+  - Ngoài-3: Đối chứng «trước 060 N6 không đạt» bị bỏ qua im lặng nếu bản chép thử không có nguồn nào mang SĐT.
