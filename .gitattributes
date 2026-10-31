@@ -1,0 +1,5 @@
+# Hai tệp sinh vẽ trọn từ nguồn — gộp nhánh chính giữ bản của nhánh đang đứng, rồi vẽ lại bằng
+# `node scripts/product-map.mjs --root .` (khối GITATTR-TEP-SINH của GUIDE kit 2.36.0). Mỗi bản clone cần chạy một lần:
+# git config merge.tep-sinh.driver true   (scripts/setup.sh làm hộ)
+PRODUCT-MAP.md merge=tep-sinh
+LO-TRINH.html merge=tep-sinh
