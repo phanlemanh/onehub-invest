@@ -1,0 +1,77 @@
+schema_version: 1
+feature_slug: resolve-thu-lai-deadlock
+# Ca «RTLD-AC-n». Unit: pipeline/lib/thu-lai-deadlock.test.mjs — client giả, hàm chờ tiêm, không DB.
+# Itest: pipeline/tests/resolve-properties-deadlock.itest.mjs — DB thử oneinvest_p3_rtld_<pid> ở :5433, tạo đầu tệp, xoá cuối
+# tệp; không đọc, không ghi oneinvest. Mỗi phép đo có đối chứng đỏ chạy đúng hàm kiểm trên vật hỏng, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    expected: "exit 0; ca 'RTLD-AC-1 thử lại rồi thành công' xanh. Ma trận viết trước ĐÚNG 3 ô n = 1, 2, 3 lỗi 40P01 rồi trả {rows:[{x:n}]}: số lần chạy = n + 1, kết quả trả về là {rows:[{x:n}]}, mảng lần chờ ghi bởi hàm chờ tiêm = [500,1000,2000].slice(0,n), soLanThuLai = n; thêm ô n = 0: chạy 1 lần, không chờ. Đối chứng đỏ: hàm kiểm trên bản ghi có mảng chờ [500,500] cho n = 2 → 'RTLD-AC-1 nhịp chờ sai: n=2'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/thu-lai-deadlock.mjs, pipeline/lib/thu-lai-deadlock.test.mjs]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    expected: "exit 0; ca 'RTLD-AC-2 hết lượt thì ném lỗi cuối' xanh: client giả ném 40P01 ở mọi lần (message mang số lần chạy); query bị từ chối với lỗi có code '40P01' và message của lần chạy thứ 4; số lần chạy = 4; tổng chờ = 3500. Ô mặc định: MAC_DINH xuất từ thu-lai-deadlock.mjs bằng {lan: 3, nhip: [500,1000,2000]}, và boc(client, {cho}) chỉ tiêm hàm chờ (không truyền lan, nhip) trên client giả 40P01 mọi lần → chạy đúng 4 lần, mảng chờ [500,1000,2000]. Đối chứng đỏ: hàm kiểm trên bản ghi số lần chạy = 5 → 'RTLD-AC-2 vượt trần: 5 lần chạy'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/thu-lai-deadlock.mjs, pipeline/lib/thu-lai-deadlock.test.mjs]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    expected: "exit 0; ca 'RTLD-AC-3 lỗi khác ném ngay' xanh. Ma trận viết trước ĐÚNG 5 ô: code '23505', '42601', '40001', '55P03', và Error không code (message 'ECONNREFUSED'): mỗi ô ném đúng lỗi đó ở lần chạy 1, số lần chạy = 1, mảng chờ rỗng, soLanThuLai = 0. Đối chứng đỏ: hàm kiểm trên bản ghi ô '40001' có số lần chạy = 2 → 'RTLD-AC-3 thử lại mã không phải deadlock: 40001'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/thu-lai-deadlock.mjs, pipeline/lib/thu-lai-deadlock.test.mjs]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    expected: "exit 0; ca 'RTLD-AC-4 dòng log mỗi lần thử lại' xanh: câu SQL nhiều dòng có khoảng trắng thừa, tham số ['offer_bimat_123', 42], 2 lỗi 40P01 rồi thành công; hàm ghi log tiêm nhận đúng 2 dòng, bằng nguyên văn 'resolve-properties: deadlock (40P01) ở «<nhãn>», thử lại 1/3 sau 500ms' và '… thử lại 2/3 sau 1000ms', nhãn = 40 ký tự đầu của câu đã gộp khoảng trắng; không dòng nào chứa 'offer_bimat_123' hay '42'. Đối chứng đỏ: hàm kiểm trên dòng có nối thêm tham số → 'RTLD-AC-4 log lộ tham số'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/thu-lai-deadlock.mjs, pipeline/lib/thu-lai-deadlock.test.mjs]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.rtld_itest
+    expected: "exit 0; ca 'RTLD-AC-5 deadlock thật — resolve hoàn tất, kết quả bằng lượt sạch' xanh. DB thử dựng view sale_offers bằng đúng câu 'CREATE OR REPLACE VIEW sale_offers …' rút từ tệp db/migrations/044_nap_lai_khong_xoa.sql (đọc tệp, không chép tay) trên bảng sale_offer_records, property_offers có khoá ngoại offer_id → sale_offer_records như 044; assert pg_get_viewdef('sale_offers') chỉ đọc sale_offer_records với điều kiện retired_at IS NULL. Mồi cố định (≥ 3 cụm S06, ≥ 1 property có sẵn khớp stable_key, ≥ 2 cặp P1↔P2 trong đó ≥ 1 cặp điểm ≥ 0.90). Lượt sạch: chayResolve trên mồi → chụp ba bảng theo khoá nghiệp vụ (properties: stable_key, n_evidence, last_seen, verification; property_offers: stable_key của property × offer_id; property_candidates: offer_a, offer_b, score, status). Nạp lại mồi; lượt có vũ đạo: client bọc, lần đầu thấy câu bắt đầu 'INSERT INTO property_offers' thì phiên thứ hai BEGIN; LOCK TABLE sale_offers IN ACCESS EXCLUSIVE MODE; rồi câu của resolve chạy (khoá property_offers, chờ sale_offers); sau 200 ms phiên thứ hai LOCK property_offers IN ACCESS EXCLUSIVE MODE (deadlock_timeout phiên hai 10s); phiên hai COMMIT sau khi được khoá. chayResolve không ném; phiên hai COMMIT thành công; ảnh ba bảng bằng ảnh lượt sạch. Quan hệ «mọi câu qua bộ thử lại»: client gốc bọc spy đếm mọi lời gọi query tới nó, boc đếm mọi câu nó gửi (kể cả lần chạy lại) → hai số bằng nhau ở cả lượt sạch lẫn lượt có vũ đạo, và số câu lượt sạch > 0. Đối chứng đỏ: hàm so trên ảnh lượt sạch bớt một dòng property_offers → 'RTLD-AC-5 kết quả lệch lượt sạch: property_offers'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/thu-lai-deadlock.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.rtld_itest
+    expected: "exit 0; ca 'RTLD-AC-6 vũ đạo là deadlock thật' xanh: cùng mồi và vũ đạo của E5 với opts {lan: 0} → chayResolve ném lỗi code '40P01'; phiên hai vẫn COMMIT. Ở lượt E5 (thử lại bật) bộ đếm soLanThuLai ≥ 1. Đối chứng đỏ: hàm kiểm trên lượt bật mà soLanThuLai = 0 → 'RTLD-AC-6 không dựng được deadlock'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/thu-lai-deadlock.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    expected: "exit 0; ca 'RTLD-AC-7 chữ SQL không đổi' xanh: đọc pipeline/resolve-properties.mjs, rút MỌI template literal trừ chuỗi in (bắt đầu 'Stage A:', 'Stage B:' hoặc 'resolve-properties:'), gộp khoảng trắng, so với tập ghi sẵn trong pipeline/lib/thu-lai-deadlock.sql-base.json (chụp từ 82a53e0a trước khi sửa) → bằng nhau; đối chứng dương của bộ rút: tập base có ĐÚNG 9 phần tử, phần tử đầu bắt đầu 'floor(s.latitude / 0.0005)' (CLUSTER_EXPR) và có phần tử bắt đầu 'INSERT INTO property_offers'; regex /\\bc\\.query\\(/ không khớp chỗ nào trong tệp. Đối chứng đỏ: (1) hàm so trên tập có một câu đổi 'DO NOTHING' thành 'DO UPDATE' → 'RTLD-AC-7 SQL đổi: <40 ký tự đầu>'; (2) hàm quét trên chuỗi mã có 'await c.query(`SELECT 1`)' → 'RTLD-AC-7 còn c.query trực tiếp'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/thu-lai-deadlock.test.mjs, pipeline/lib/thu-lai-deadlock.sql-base.json]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.rtld_itest
+    expected: "exit 0; ca 'RTLD-AC-8 dòng tổng kết thử lại' xanh: lượt sạch của E5 ghi stdout (hàm ghi tiêm) đúng 2 dòng, dòng 1 bắt đầu 'Stage A: ', dòng 2 bắt đầu 'Stage B: '; lượt có vũ đạo ghi đúng 3 dòng, dòng 3 = 'resolve-properties: thử lại sau deadlock <n> lần' với n = soLanThuLai của lượt. Đối chứng đỏ: hàm kiểm trên lượt sạch có thêm dòng 'resolve-properties: thử lại sau deadlock 0 lần' → 'RTLD-AC-8 dòng tổng kết khi không thử lại'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.rtld_itest
+    expected: "exit 0; ca 'RTLD-AC-9 điểm vào CLI thật' xanh: mồi của E5 trên DB thử; phiên hai BEGIN; LOCK TABLE stg_chotot_ads IN ACCESS EXCLUSIVE MODE; rồi spawn 'node pipeline/resolve-properties.mjs' (cwd gốc kho suy từ vị trí tệp test, env DATABASE_URL = DB thử); chờ tới khi pg_locks có lock granted = false trên stg_chotot_ads của pid khác; phiên hai LOCK TABLE sale_offer_records IN ACCESS EXCLUSIVE MODE (deadlock_timeout phiên hai 10s) rồi COMMIT. Tiến trình thoát 0; stderr chứa 'deadlock (40P01) ở «' và 'thử lại 1/3 sau 500ms'; stdout có dòng bắt đầu 'resolve-properties: thử lại sau deadlock '. Ô lỗi khác: DB thử bỏ chỉ mục duy nhất (offer_a, offer_b) của property_candidates → tiến trình thoát 1, stderr chứa mã '42P10', không chứa 'thử lại'. Đối chứng đỏ: hàm kiểm trên kết quả spawn {code: 1} của ô deadlock → 'RTLD-AC-9 CLI không qua deadlock: exit 1'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/thu-lai-deadlock.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs]
