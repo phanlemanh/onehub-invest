@@ -6,7 +6,7 @@ node --test pipeline/do-danh-ba-sdt.test.mjs pipeline/scripts/boc-sdt.test.mjs >
 (cd app && node --import tsx --test tests/sdt-che-tren-people.test.tsx) | grep -E "^ℹ (pass|fail)"
 TEN=oneinvest_p4_sd3_people
 trap 'bash db/db-thu.sh "$TEN" --xoa >/dev/null 2>&1 || true' EXIT
-bash db/db-thu.sh "$TEN" >/dev/null
+bash _acceptance/sdt-luu-goc-e164/probes/db-thu-chac.sh "$TEN"
 DB_URL="postgres://oneinvest:oneinvest@localhost:5433/$TEN"
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d "$TEN" -v ON_ERROR_STOP=1 -q < db/migrations/060_sdt_e164.sql
 DATABASE_URL="$DB_URL" node pipeline/dung-nguoi.mjs | tail -1

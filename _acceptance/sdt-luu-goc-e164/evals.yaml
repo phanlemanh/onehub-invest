@@ -13,7 +13,7 @@ evals:
     executor: script
     cmd: config:executors.script.sd3_mig
     paths: [db/migrations/060_sdt_e164.sql, pipeline/mappings.yaml, _acceptance/sdt-luu-goc-e164/probes/do.mjs]
-    expected: "exit 0; DB thử oneinvest_p4_sd3 chép máy thu, dựng mới, xoá khi xong; áp 060 hai lần: băm lược đồ và đếm dòng mọi bảng chạm sau lần một = sau lần hai; CHECK nhận 'sdt', chỉ mục duy nhất định danh có 'sdt', ref_lookup có dòng alias_kind/sdt; vocab.mjs --check-db exit 0; đối chứng đỏ: bản chép 060 bỏ điều kiện 'chỉ dòng dạng cũ' ở bước đổi dạng → lần hai đổi dòng, bắt ('KHONG IDEMPOTENT'); in 'MIG OK'"
+    expected: "exit 0; DB thử oneinvest_p4_sd3 chép máy thu, dựng mới, xoá khi xong; áp 060 hai lần: băm lược đồ và đếm dòng mọi bảng chạm sau lần một = sau lần hai; CHECK nhận 'sdt', chỉ mục duy nhất định danh có 'sdt', ref_lookup có dòng alias_kind/sdt; vocab.mjs --check-db: trước 060 có lệch trục alias_kind (đối chứng dương), sau 060 0 lệch trục alias_kind và 0 lệch mới so với trước 060 (lệch có sẵn ở trục khác của máy thu được đếm và in, không tính cho 060); đối chứng đỏ: bản chép 060 bỏ điều kiện 'chỉ dòng dạng cũ' ở bước đổi dạng → lần hai đổi dòng, bắt ('KHONG IDEMPOTENT'); in 'MIG OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3

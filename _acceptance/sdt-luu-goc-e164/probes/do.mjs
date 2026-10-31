@@ -27,7 +27,10 @@ const e164 = (so0) => "+84" + so0.slice(1);
 const SO0 = /^0[35789]\d{8}$/;
 
 function dbThu(xoa = false) {
-  const r = spawnSync("bash", ["db/db-thu.sh", TEN, ...(xoa ? ["--xoa"] : [])], { cwd: ROOT, encoding: "utf8" });
+  // Dựng qua db-thu-chac.sh: kiểm DB thử đủ bảng, dựng lại khi pg_dump gãy giữa chừng (S4 r1); xoá thì gọi thẳng db-thu.sh.
+  const r = xoa
+    ? spawnSync("bash", ["db/db-thu.sh", TEN, "--xoa"], { cwd: ROOT, encoding: "utf8" })
+    : spawnSync("bash", ["_acceptance/sdt-luu-goc-e164/probes/db-thu-chac.sh", TEN], { cwd: ROOT, encoding: "utf8" });
   if (r.status !== 0 && !xoa) throw new Error(`db-thu lỗi: ${r.stderr.slice(-300)}`);
 }
 async function moi() {
@@ -86,9 +89,21 @@ async function chupLuocDo(c) {
            (SELECT count(*) FROM ref_lookup) AS ref`);
   return r;
 }
+/** Dòng lệch của `vocab --check-db` (bỏ dòng tổng «N lệch»). */
+function lechSo() {
+  const v = node(["pipeline/vocab.mjs", "--check-db"]);
+  return (v.stdout + v.stderr).split("\n").filter((l) => /^vocab --check-db: /.test(l) && !/: \d+ lệch$/.test(l)).sort();
+}
+/** Dòng lệch thuộc trục của SD3 (alias_kind / registry_aliases.kind). */
+const cuaSd3 = (l) => /alias_kind|registry_aliases\.kind/.test(l);
+
 async function mig() {
   const c = await moi();
   try {
+    // Lệch sổ ↔ DB trước 060: phần của trục alias_kind phải có (DB chưa nhận 'sdt' — đối chứng dương cho phép kiểm);
+    // phần ở trục khác là nợ có sẵn của máy thu (vd assertion_field của hàng PL khác) — đếm, in, không tính cho 060.
+    const l0 = lechSo();
+    assert.ok(l0.some(cuaSd3), "vocab --check-db trước 060 không thấy lệch alias_kind — phép kiểm không phân biệt");
     await c.query(MIG);
     const s1 = await chupLuocDo(c);
     await c.query(MIG);
@@ -102,9 +117,11 @@ async function mig() {
     assert.match(ix.d, /'sdt'::text/);
     const { rows: ref } = await c.query(`SELECT label_vi FROM ref_lookup WHERE lookup_name = 'alias_kind' AND lookup_value = 'sdt'`);
     assert.equal(ref.length, 1);
-    const v = node(["pipeline/vocab.mjs", "--check-db"]);
-    assert.equal(v.status, 0, `vocab --check-db thoát ${v.status}: ${(v.stdout + v.stderr).slice(-300)}`);
-    ok("CHECK, chỉ mục định danh và ref_lookup có 'sdt'; vocab --check-db exit 0");
+    const l1 = lechSo();
+    assert.deepEqual(l1.filter(cuaSd3), [], "vocab --check-db sau 060 còn lệch trục alias_kind");
+    const moiSinh = l1.filter((l) => !l0.includes(l));
+    assert.deepEqual(moiSinh, [], `060 sinh lệch sổ mới: ${moiSinh.join(" | ")}`);
+    ok(`CHECK, chỉ mục định danh và ref_lookup có 'sdt'; vocab --check-db: trục alias_kind trước 060 lệch ${l0.filter(cuaSd3).length}, sau 0; 060 không sinh lệch mới; ${l1.length} lệch có sẵn ở trục khác (nợ máy thu, ngoài SD3)`);
     const sai = MIG.replace("WHERE seller_phone ~ '^0[35789][0-9]{8}$';", ";");
     assert.notEqual(sai, MIG);
     await thu(c, async () => {
