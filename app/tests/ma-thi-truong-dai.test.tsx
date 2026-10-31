@@ -12,7 +12,7 @@ const TEN = new Map([
   ["vn-thanh-pho-da-nang", "Thành phố Đà Nẵng"],
   ["vn-thanh-pho-hai-phong", "Thành phố Hải Phòng"],
   ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
-  ["vn-dn", "Đà Nẵng (mã ngắn)"],
+  ["vn-khanh-hoa", "Khánh Hòa (mã ngắn)"],
 ])
 // Ma trận viết trước: khoá nhóm thu, cityCode, mã dài, mã lạ.
 const MA_TRAN: [string, string | null][] = [
@@ -20,14 +20,14 @@ const MA_TRAN: [string, string | null][] = [
   ["vn-da-nang", "Thành phố Đà Nẵng"],
   ["hai-phong", "Thành phố Hải Phòng"],
   ["vn-hai-phong", "Thành phố Hải Phòng"],
-  ["khanh-hoa", "Tỉnh Khánh Hòa"],
-  ["vn-khanh-hoa", "Tỉnh Khánh Hòa"],
-  ["vn-thanh-pho-da-nang", "Thành phố Đà Nẵng"],
+  ["khanh-hoa", "Khánh Hòa (mã ngắn)"], // mã ngắn có sẵn thắng mã dài cùng gốc
+  ["vn-khanh-hoa", "Khánh Hòa (mã ngắn)"],
+  ["vn-thanh-pho-da-nang", "Thành phố Đà Nẵng"], // mã dài đầy đủ làm đầu vào
+  ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
   ["hanoi", "Hà Nội"],
   ["hcmc", "Hồ Chí Minh"],
-  ["dn", "Đà Nẵng (mã ngắn)"],
-  ["binh-duong", null],
-  ["danang", null],
+  ["binh-duong", null], // đã nhập vào TP.HCM, areas không có mã — có chủ đích, chờ ma-thi-truong-ngan
+  ["danang", null], // không khớp mờ
 ]
 
 type Fn = (code: string, m: ReadonlyMap<string, string>) => { name: string; known: boolean }
@@ -44,18 +44,30 @@ test("KV-AC-1 marketNameOf: khoá ngắn và cityCode ra tên thị trường m�
   kiem(marketNameOf)
 })
 
-test("KV-AC-1 chiều đỏ: bản hàm bỏ tra mã dài thì khoá da-nang không ra tên", async () => {
-  const goc = readFileSync(join(__dirname, "../src/lib/market-names.ts"), "utf8")
-  const sai = goc
-    .replace("    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n", "")
-    .replace("    areaNames.get(`vn-tinh-${ngan}`)", "    undefined")
-  assert.notEqual(sai, goc, "chiều đỏ: market-names.ts không còn hai dòng tra mã dài — sửa phép đo")
-  const f = join(__dirname, `.ma-dai-sai-${process.pid}.ts`)
+const GOC = () => readFileSync(join(__dirname, "../src/lib/market-names.ts"), "utf8")
+async function banSai(ten: string, sai: string, mau: RegExp) {
+  assert.notEqual(sai, GOC(), `chiều đỏ ${ten}: market-names.ts đã đổi — sửa phép đo`)
+  const f = join(__dirname, `.ma-dai-${ten}-${process.pid}.ts`)
   writeFileSync(f, sai)
   try {
     const { marketNameOf } = await import(f)
-    assert.throws(() => kiem(marketNameOf), /KV-AC-1: mã da-nang không ra tên thị trường/)
+    assert.throws(() => kiem(marketNameOf), mau)
   } finally {
     rmSync(f, { force: true })
   }
+}
+
+test("KV-AC-1 chiều đỏ: bản hàm bỏ tra mã dài thì khoá da-nang không ra tên", async () => {
+  const sai = GOC()
+    .replace("    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n", "")
+    .replace("    areaNames.get(`vn-tinh-${ngan}`)", "    undefined")
+  await banSai("bo-dai", sai, /KV-AC-1: mã da-nang không ra tên thị trường/)
+})
+
+test("KV-AC-1 chiều đỏ: bản hàm tra mã dài trước mã ngắn thì khanh-hoa ra tên mã dài", async () => {
+  const sai = GOC().replace(
+    "    areaNames.get(`vn-${ngan}`) ??\n    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n    areaNames.get(`vn-tinh-${ngan}`)",
+    "    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n    areaNames.get(`vn-tinh-${ngan}`) ??\n    areaNames.get(`vn-${ngan}`)",
+  )
+  await banSai("thu-tu", sai, /KV-AC-1: mã khanh-hoa không ra tên thị trường/)
 })
