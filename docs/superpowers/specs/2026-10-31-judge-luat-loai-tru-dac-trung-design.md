@@ -67,3 +67,16 @@ Không chạm giao diện (dòng sổ «bỏ đặc-tả-UX»).
 
 Luật diện tích theo làm tròn: 9/11 thẻ từ chối ra «khác căn» (14, 16, 17, 18, 19, 20, 21, 22, 24); thẻ 13 (52 ↔ 51) và
 15 (53 ↔ 52) chỉ lệch 1 m² và tin A không có đặc trưng khác, nên luật để «chưa chắc»; #23 (45 ↔ 45) không bị loại.
+
+## Vòng 2 — trả lại ở Cổng Bằng chứng (31/10)
+
+Mạnh trả lại, gom tám mục ngoài hợp đồng sửa luôn:
+
+- **Khoá chung thẻ ↔ luật (Ngoài-3, AC-9).** `app/src/lib/ops/review-can-cu.ts` thêm `soDuong`, `soToa`, `soTang`; bảng so
+  thẻ dùng chúng cho ba hàng Đường / Toà / Tầng (`SO_RIENG`). `judge-entity.ts` chép nguyên văn như khoá phường; LT-AC-9
+  rút bản app và so từng ô.
+- **Đường không dấu (Ngoài-2, Ngoài-7, AC-10).** Tiền tố có dấu chắc là tiền tố; tiền tố không dấu giữ hai cách đọc.
+- **Toà (Ngoài-1, Ngoài-5, AC-11).** Lý do đổi thành `khac_toa` «toà khác» theo từ vựng `block_raw` «Toà»; chỉ so khi hai
+  bên là mã toà.
+- **Probe AC-6 (Ngoài-6, Ngoài-8).** Đo theo tính chất trên mọi thẻ đã quyết; bộ tính độc lập phủ đủ sáu đặc trưng.
+- **E5 (Ngoài-4).** Sửa chữ kỳ vọng theo ma trận test thật.

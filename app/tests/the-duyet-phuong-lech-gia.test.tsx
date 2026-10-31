@@ -150,29 +150,31 @@ function kiemAc4(mod: CanCuMod) {
   // Chín hàng còn lại, mỗi hàng một cặp viết trước kèm nhãn ghim (cách so trước vòng). Bốn hàng chữ dùng cặp mà
   // khoaPhuong sẽ biến thành Khớp (bắt rò rỉ); năm hàng số: khoá của khoaPhuong là chính chữ số nên rò rỉ không đổi
   // kết quả. Mỗi assert so cả với nhãn ghim lẫn với soGiaTri.
-  const KHAC_PHUONG: [keyof import("../src/lib/ops/review-can-cu").BenGhepCan, string | number, string | number, "khop" | "lech"][] = [
+  const KHAC_PHUONG: [keyof import("../src/lib/ops/review-can-cu").BenGhepCan, string | number, string | number, "khop" | "lech" | "thieu"][] = [
     ["price_vnd", 7e9, 8.5e9, "lech"],
     ["area_m2", 52, 52, "khop"],
     ["price_perm2", 1.35e8, 1.42e8, "lech"],
     ["bedrooms", 2, 3, "lech"],
     ["bathrooms", 1, 1, "khop"],
     ["property_type", "Nhà riêng", "nha-rieng", "lech"],
-    ["street", "Đường Phan Văn Trị", "duong-phan-van-tri", "lech"],
-    ["block", "P. A1", "A1", "lech"],
-    ["floor", "Tầng 12", "tang-12", "lech"],
+    // Ba hàng đường/toà/tầng có khoá riêng từ hồ sơ judge-luat-loai-tru-dac-trung (Mạnh chọn «đổi thẻ theo luật»,
+    // Cổng 2 lần 1 Ngoài-3): cặp viết trước mà khoaPhuong ra nhãn KHÁC khoá riêng, nên rò rỉ vẫn đỏ.
+    ["street", "Phường Phan Văn Trị", "phan van tri", "lech"],
+    ["block", "Phường A1", "A1", "thieu"],
+    ["floor", "Tầng 12", "12", "khop"],
   ]
   for (const [k, x, y, nhan] of KHAC_PHUONG) {
     const so = mod.soTruongGhepCan({ [k]: x }, { [k]: y }).find((r) => r.key === k)!.so
     assert.equal(so, nhan, `TPL-AC-4: chuẩn hoá phường lan sang hàng ${k}`)
-    assert.equal(so, mod.soGiaTri(x, y), `TPL-AC-4: hàng ${k} khác cách so trước vòng`)
+    if (!["street", "block", "floor"].includes(k)) assert.equal(so, mod.soGiaTri(x, y), `TPL-AC-4: hàng ${k} khác cách so trước vòng`)
   }
   assert.equal(KHAC_PHUONG.length, 9)
 }
 test("TPL-AC-4 trống hay chỉ tiền tố → Thiếu; giá trị giữ nguyên; chín hàng khác không chuẩn hoá", async () => {
   kiemAc4(canCu)
-  const lan = await banChep((s) => s.replace('so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),', "so: soPhuong(va, vb),"))
+  const lan = await banChep((s) => s.replace('so: (SO_RIENG[key] ?? soGiaTri)(va, vb),', "so: soPhuong(va, vb),"))
   assert.throws(() => kiemAc4(lan), /TPL-AC-4: chuẩn hoá phường lan sang hàng property_type/)
-  const lanTang = await banChep((s) => s.replace('so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),', 'so: key === "phuong" || key === "floor" ? soPhuong(va, vb) : soGiaTri(va, vb),'))
+  const lanTang = await banChep((s) => s.replace("  floor: soTang,", "  floor: soPhuong,"))
   assert.throws(() => kiemAc4(lanTang), /TPL-AC-4: chuẩn hoá phường lan sang hàng floor/)
   const lanNguoc = await banChep((s) => s.replace('return khoa(a) === khoa(b) ? "khop" : "lech";', 'return khoaPhuong(String(a)) === khoaPhuong(String(b)) ? "khop" : "lech";'))
   assert.throws(() => kiemAc4(lanNguoc), /TPL-AC-4: chuẩn hoá phường lan sang hàng property_type/)
@@ -216,7 +218,7 @@ async function kiemAc5(card: CardMod) {
 test("TPL-AC-5 sheet thẻ ghép căn thật: hàng Phường hiện «Khớp» cạnh hai giá trị nguyên văn", async () => {
   await kiemAc5((await import("../src/components/ops/review-card")) as CardMod)
   // Chiều đỏ trên cùng fixture: bản chép review-card dùng bản chép review-can-cu bỏ khoaPhuong (so khoá cũ).
-  const libSai = chepTep(NGUON, (s) => s.replace('so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),', "so: soGiaTri(va, vb),"))
+  const libSai = chepTep(NGUON, (s) => s.replace('so: (SO_RIENG[key] ?? soGiaTri)(va, vb),', "so: soGiaTri(va, vb),"))
   const cardSai = (await import(
     chepTep("src/components/ops/review-card.tsx", (s) => s.replace('from "@/lib/ops/review-can-cu"', `from "${libSai}"`))
   )) as CardMod

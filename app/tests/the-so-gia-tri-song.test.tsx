@@ -228,7 +228,7 @@ describe("GS-AC-1/2 bảng so đọc giá trị sống", () => {
     await assert.rejects(kiemAc1(docEv), /GS-AC-1 ô đọc evidence thay giá trị sống/)
     // Bản chép bảng so tính So từ giá trị lúc chấm, ô vẫn hiện giá trị sống.
     const soCham = await banChepTam<CanCuMod>("src/lib/ops/review-can-cu.ts", (s) =>
-      s.replace(': soGiaTri(va, vb),', ': soGiaTri(hien(lc.a?.[key]) ?? va, hien(lc.b?.[key]) ?? vb),'),
+      s.replace('(SO_RIENG[key] ?? soGiaTri)(va, vb),', '(SO_RIENG[key] ?? soGiaTri)(hien(lc.a?.[key]) ?? va, hien(lc.b?.[key]) ?? vb),'),
     )
     const rows = soCham.soTruongGhepCan(SONG_A, SONG_B, {}, {}, { a: CHAM_A, b: CHAM_B })
     const doc = new JSDOM(`<div>${renderToStaticMarkup(<thatCompare.ReviewCompare rows={rows} />)}</div>`).window.document

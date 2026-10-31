@@ -65,31 +65,77 @@ export function soPhuong(a: string | number | null, b: string | number | null): 
   return ka === kb ? "khop" : "lech";
 }
 
-/** Khoá đường: bỏ MỘT tiền tố «Đường/Phố/Đ.», bỏ dấu, hoa và ký tự lạ — «Đường Đinh Bộ Lĩnh» = «đinh bộ lĩnh». */
-export function khoaDuong(v: string | null): string | null {
-  if (v === null) return null;
-  const k = v
-    .normalize("NFC")
-    .trim()
-    .toLowerCase()
-    .replace(/^(?:đường|duong|phố|pho|đ\.|d\.)\s*/u, "")
+// ── Khoá đường / toà / tầng: chép NGUYÊN VĂN từ app/src/lib/ops/review-can-cu.ts, cùng lý do với khoá phường ở trên —
+// «khớp / lệch / thiếu» của luật trùng nhãn bảng so người duyệt thấy. tests/judge-luat.test.ts (LT-AC-9) rút các hàm này
+// từ tệp app và so từng ô với bản ở đây.
+type So = SoPhuong;
+/** Bỏ dấu, hoa và ký tự lạ: «Đinh Bộ Lĩnh» → `dinh bo linh`. */
+export function boDau(s: string): string {
+  return s
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/đ/g, "d")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
-  return k || null;
 }
-/** Khoá mã căn: bỏ hoa và mọi ký tự không phải chữ/số — «A 1» = «a1». */
-export function khoaMaCan(v: string | null): string | null {
-  const k = (v ?? "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
-  return k || null;
+
+/**
+ * Các khoá có thể của tên đường. Tiền tố có dấu («Đường», «Phố», «Đ.», «D.») chắc là tiền tố: bỏ. Tiền tố không dấu
+ * («duong», «pho») có thể là tên thật — «Duong Lam» là «Đường Lâm» hay «Dương Lâm» — nên giữ CẢ HAI cách đọc (HD2).
+ */
+export function khoaDuong(v: string): string[] {
+  const s = v.normalize("NFC").trim().toLowerCase();
+  const coDau = s.match(/^(?:(?:đường|phố)[\s-]+|[đd]\.\s*)(.*)$/u);
+  if (coDau) return [boDau(coDau[1])].filter(Boolean);
+  const khongDau = s.match(/^(?:duong|pho)[\s-]+(.*)$/u);
+  return [...new Set([khongDau ? boDau(khongDau[1]) : "", boDau(s)])].filter(Boolean);
 }
-/** Tầng: số đầu tiên trong chuỗi — «Tầng 12» = «12»; chuỗi không có số (vd «tầng cao») coi như thiếu. */
-export function soTang(v: string | null): number | null {
-  const m = (v ?? "").match(/\d+/);
+
+/** So hàng Đường: chung ít nhất một cách đọc → Khớp (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soDuong(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaDuong(String(a));
+  const kb = khoaDuong(String(b));
+  if (ka.length === 0 || kb.length === 0) return "thieu";
+  return ka.some((k) => kb.includes(k)) ? "khop" : "lech";
+}
+
+/**
+ * Khoá toà: bỏ MỘT tiền tố «Toà/Block/Tháp/Lô», rồi bỏ dấu, hoa, khoảng trắng — «Block A» = «Toà A» = «a». Chỉ MÃ
+ * toà mới so được (một từ, có chữ số hoặc không quá ba ký tự: «A», «CT2», «S5.01»); tên gọi («Sao Biển», «Park 6»,
+ * «Chung Cư 38 Hoàng mai») không so được với mã của cùng toà nên coi như thiếu (HD2).
+ */
+export function khoaToa(v: string): string | null {
+  const s = v.normalize("NFC").trim().toLowerCase().replace(/^(?:toà|tòa|toa|block|tháp|thap|tower|lô|lo|building)\s+/u, "");
+  if (/\s/.test(s)) return null;
+  const k = boDau(s).replace(/ /g, "");
+  return k && k.length <= 8 && (/\d/.test(k) || k.length <= 3) ? k : null;
+}
+
+/** So hàng Toà theo mã toà; tên gọi không phải mã → Thiếu (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soToa(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaToa(String(a));
+  const kb = khoaToa(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+/** Khoá tầng: số đầu tiên — «Tầng 12» = «12»; chuỗi không có số («tầng cao») coi như thiếu. */
+export function khoaTang(v: string): number | null {
+  const m = v.match(/\d+/);
   return m ? Number(m[0]) : null;
 }
+
+/** So hàng Tầng theo số tầng (chép từ app/src/lib/ops/review-can-cu.ts). */
+export function soTang(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaTang(String(a));
+  const kb = khoaTang(String(b));
+  if (ka === null || kb === null) return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
 
 const loaiHinh = (s: string | null): string | null => {
   const t = (s ?? "").trim().toLowerCase();
@@ -135,19 +181,22 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn:
   else ly_do.push(khacLoai ? { ma: "khac_loai", cau: "khác loại hình" } : { ma: "cung_loai", cau: "cùng loại hình" });
 
   // Luật loại trừ (HD2): đặc trưng có ở CẢ HAI tin mà khác thì «khác căn»; thiếu một bên bỏ qua, không suy.
-  const dacTrung: [string, string, string | number | null, string | number | null, unknown, unknown][] = [
-    ["pn", "phòng ngủ", pair.a.bedrooms, pair.b.bedrooms, pair.a.bedrooms, pair.b.bedrooms],
-    ["wc", "WC", pair.a.bathrooms, pair.b.bathrooms, pair.a.bathrooms, pair.b.bathrooms],
-    ["duong", "đường", khoaDuong(pair.a.street), khoaDuong(pair.b.street), pair.a.street, pair.b.street],
-    ["ma_can", "mã căn", khoaMaCan(pair.a.block), khoaMaCan(pair.b.block), pair.a.block, pair.b.block],
-    ["tang", "tầng", soTang(pair.a.floor), soTang(pair.b.floor), pair.a.floor, pair.b.floor],
+  const dacTrung: [string, string, number | null, number | null][] = [
+    ["pn", "phòng ngủ", pair.a.bedrooms, pair.b.bedrooms],
+    ["wc", "WC", pair.a.bathrooms, pair.b.bathrooms],
+  ];
+  const dacTrungChu: [string, string, So, string | null, string | null][] = [
+    ["duong", "đường", soDuong(pair.a.street, pair.b.street), pair.a.street, pair.b.street],
+    ["toa", "toà", soToa(pair.a.block, pair.b.block), pair.a.block, pair.b.block],
+    ["tang", "tầng", soTang(pair.a.floor, pair.b.floor), pair.a.floor, pair.b.floor],
   ];
   let khacDacTrung = khacDienTich;
-  for (const [ma, ten, ka, kb, ga, gb] of dacTrung) {
-    if (ka === null || kb === null || ka === kb) continue;
+  const khac = (ma: string, ten: string, ga: unknown, gb: unknown) => {
     khacDacTrung = true;
     ly_do.push({ ma: `khac_${ma}`, cau: `${ten} khác`, so: `${String(ga).trim()} ↔ ${String(gb).trim()}` });
-  }
+  };
+  for (const [ma, ten, ga, gb] of dacTrung) if (ga !== null && gb !== null && ga !== gb) khac(ma, ten, ga, gb);
+  for (const [ma, ten, so, ga, gb] of dacTrungChu) if (so === "lech") khac(ma, ten, ga, gb);
 
   let same_house: KetLuan = "unsure";
   if (giaXa || khacPhuong || khacLoai || khacDacTrung) same_house = "no";

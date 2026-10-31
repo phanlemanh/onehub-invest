@@ -6,6 +6,7 @@ import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { stripTypeScriptTypes } from "node:module";
 import pg from "pg";
 import type { PairData } from "../src/tools/native.js";
 import { queryPair } from "../src/tools/native.js";
@@ -30,6 +31,8 @@ async function dotBien(doi: (s: string) => string): Promise<Mod> {
   assert.notEqual(ma, GOC, "đột biến không đổi mã — chiều đỏ vô nghĩa");
   return banChep(ma);
 }
+/** So nguyên văn — thân của bản đột biến «bỏ khoá». */
+const NGUYEN_VAN = '(x: string | null, y: string | null) => (x === null || y === null ? "thieu" : x === y ? "khop" : "lech")';
 const cu = () => banChep(readFileSync(join(import.meta.dirname, "fixtures/judge-entity-pl25-1.ts.txt"), "utf8"));
 
 const dao = (p: PairData): PairData => ({
@@ -56,7 +59,7 @@ const DAC_TRUNG: { ten: string; ma: string; khac: [Partial<Tin>, Partial<Tin>]; 
   { ten: "phòng ngủ", ma: "khac_pn", khac: [{ pn: 3 }, { pn: 4 }], giong: [{ pn: 3 }, { pn: 3 }], thieu: [{ pn: null }, { pn: 4 }] },
   { ten: "WC", ma: "khac_wc", khac: [{ bathrooms: 2 }, { bathrooms: 3 }], giong: [{ bathrooms: 2 }, { bathrooms: 2 }], thieu: [{ bathrooms: 2 }, { bathrooms: null }] },
   { ten: "đường", ma: "khac_duong", khac: [{ street: "Đinh Bộ Lĩnh" }, { street: "Phan Văn Trị" }], giong: [{ street: "Đinh Bộ Lĩnh" }, { street: "Đinh Bộ Lĩnh" }], thieu: [{ street: null }, { street: "Phan Văn Trị" }] },
-  { ten: "mã căn", ma: "khac_ma_can", khac: [{ block: "A1" }, { block: "B2" }], giong: [{ block: "A1" }, { block: "A1" }], thieu: [{ block: "A1" }, { block: null }] },
+  { ten: "toà", ma: "khac_toa", khac: [{ block: "A1" }, { block: "B2" }], giong: [{ block: "A1" }, { block: "A1" }], thieu: [{ block: "A1" }, { block: null }] },
   { ten: "tầng", ma: "khac_tang", khac: [{ floor: "12" }, { floor: "15" }], giong: [{ floor: "12" }, { floor: "12" }], thieu: [{ floor: null }, { floor: "15" }] },
 ];
 
@@ -79,7 +82,7 @@ function kiemAc1(mod: Mod): number {
 test("LT-AC-1 ma trận đặc trưng", async () => {
   assert.equal(kiemAc1(that), 30);
   await assert.rejects(async () => kiemAc1(await cu()), /LT-AC-1 đặc trưng khác không loại: phòng ngủ/);
-  const thieuLaKhac = await dotBien((s) => s.replace("if (ka === null || kb === null || ka === kb) continue;", "if (ka === kb) continue;"));
+  const thieuLaKhac = await dotBien((s) => s.replace("if (ga !== null && gb !== null && ga !== gb) khac(ma, ten, ga, gb);", "if (ga !== gb) khac(ma, ten, ga, gb);"));
   await assert.rejects(async () => kiemAc1(thieuLaKhac), /LT-AC-1 thiếu một bên thành lý do loại/);
 });
 
@@ -156,7 +159,7 @@ function kiemAc4(mod: Mod) {
 
 test("LT-AC-4 khoá đường", async () => {
   kiemAc4(that);
-  const nguyenVan = await dotBien((s) => s.replace('["duong", "đường", khoaDuong(pair.a.street), khoaDuong(pair.b.street)', '["duong", "đường", pair.a.street, pair.b.street'));
+  const nguyenVan = await dotBien((s) => s.replace('soDuong(pair.a.street, pair.b.street)', `(${NGUYEN_VAN})(pair.a.street, pair.b.street)`));
   assert.throws(() => kiemAc4(nguyenVan), /LT-AC-4 cùng đường viết khác dạng bị loại/);
 });
 
@@ -166,22 +169,22 @@ function kiemAc8(mod: Mod) {
     for (let i = 0; i < ds.length; i++)
       for (let j = i + 1; j < ds.length; j++) {
         const kq = chay(mod, cap(voi({ [k]: ds[i] }), voi({ [k]: ds[j] })));
-        assert.equal(coMa(kq, ma).length, 0, `LT-AC-8 cùng tầng hay mã căn viết khác dạng bị loại: «${ds[i]}» ↔ «${ds[j]}»`);
+        assert.equal(coMa(kq, ma).length, 0, `LT-AC-8 cùng tầng hay toà viết khác dạng bị loại: «${ds[i]}» ↔ «${ds[j]}»`);
       }
   };
   cung("floor", ["12", "Tầng 12", "tầng 12 "], "khac_tang");
-  cung("block", ["A1", "a1", "A 1"], "khac_ma_can");
+  cung("block", ["A1", "a1", "Toà A1", "Block A1"], "khac_toa");
   assert.equal(coMa(chay(mod, cap(voi({ floor: "tầng cao" }), voi({ floor: "12" }))), "khac_tang").length, 0, "LT-AC-8 tầng không có số thành lý do loại");
   assert.equal(chay(mod, cap(voi({ floor: "12" }), voi({ floor: "15" }))).same_house, "no", "LT-AC-8 hai tầng khác không loại");
-  assert.equal(chay(mod, cap(voi({ block: "A1" }), voi({ block: "B2" }))).same_house, "no", "LT-AC-8 hai mã căn khác không loại");
+  assert.equal(chay(mod, cap(voi({ block: "A1" }), voi({ block: "B2" }))).same_house, "no", "LT-AC-8 hai toà khác không loại");
 }
 
-test("LT-AC-8 tầng và mã căn viết khác dạng", async () => {
+test("LT-AC-8 tầng và toà viết khác dạng", async () => {
   kiemAc8(that);
   const nguyenVan = await dotBien((s) =>
-    s.replace("khoaMaCan(pair.a.block), khoaMaCan(pair.b.block)", "pair.a.block, pair.b.block").replace("soTang(pair.a.floor), soTang(pair.b.floor)", "pair.a.floor, pair.b.floor"),
+    s.replace("soToa(pair.a.block, pair.b.block)", `(${NGUYEN_VAN})(pair.a.block, pair.b.block)`).replace("soTang(pair.a.floor, pair.b.floor)", `(${NGUYEN_VAN})(pair.a.floor, pair.b.floor)`),
   );
-  assert.throws(() => kiemAc8(nguyenVan), /LT-AC-8 cùng tầng hay mã căn viết khác dạng bị loại/);
+  assert.throws(() => kiemAc8(nguyenVan), /LT-AC-8 cùng tầng hay toà viết khác dạng bị loại/);
 });
 
 // ---------- LT-AC-7 ----------
@@ -193,6 +196,94 @@ function kiemAc7(mod: Mod) {
 test("LT-AC-7 phiên bản", async () => {
   kiemAc7(that);
   await assert.rejects(async () => kiemAc7(await cu()), /LT-AC-7 phiên bản luật chưa đổi/);
+});
+
+// ---------- LT-AC-9: luật so đường/toà/tầng bằng ĐÚNG khoá của thẻ duyệt ----------
+const TEP_APP = join(import.meta.dirname, "../../app/src/lib/ops/review-can-cu.ts");
+/** Rút NGUYÊN VĂN một hàm theo tên từ tệp app (cùng khuôn với bộ rút của judge-nguong.test.ts). */
+function rutApp(ten: string): string {
+  const m = readFileSync(TEP_APP, "utf8").match(new RegExp(`^(?:export )?function ${ten}\\([\\s\\S]*?\\n}`, "m"));
+  assert.ok(m, `LT-AC-9 không rút được ${ten} từ review-can-cu.ts`);
+  return m[0].replace(/^export /, "");
+}
+type SoFn = (a: string | null, b: string | null) => string;
+function soApp(): Record<"soDuong" | "soToa" | "soTang", SoFn> {
+  const ma = ["boDau", "khoaDuong", "soDuong", "khoaToa", "soToa", "khoaTang", "soTang"].map(rutApp).join("\n");
+  return new Function(`${stripTypeScriptTypes(ma)}\nreturn { soDuong, soToa, soTang };`)();
+}
+// Ma trận viết trước: mỗi hàng [hàm, A, B, kỳ vọng].
+const MA_TRAN_9: [keyof ReturnType<typeof soApp>, string | null, string | null, string][] = [
+  ["soDuong", "Đường Đinh Bộ Lĩnh", "đinh bộ lĩnh", "khop"],
+  ["soDuong", "Duong Lam", "PHỐ DƯƠNG LÂM", "khop"],
+  ["soDuong", "Duong Lang", "Đường Láng", "khop"],
+  ["soDuong", "Dương Lâm", "Đường Láng", "lech"],
+  ["soDuong", "Đường Phan Văn Trị", "duong-phan-van-tri", "khop"],
+  ["soDuong", "Đinh Bộ Lĩnh", null, "thieu"],
+  ["soToa", "Block A", "Toà A", "khop"],
+  ["soToa", "A", "B", "lech"],
+  ["soToa", "Sao Biển", "S5.01", "thieu"],
+  ["soToa", "CT2", "CT3", "lech"],
+  ["soTang", "Tầng 12", "12", "khop"],
+  ["soTang", "tầng cao", "12", "thieu"],
+  ["soTang", "12", "15", "lech"],
+];
+function kiemAc9(luat: Record<string, SoFn>): number {
+  const app = soApp();
+  let n = 0;
+  for (const [ten, a, b, ky] of MA_TRAN_9)
+    for (const [x, y] of [[a, b], [b, a]] as const) {
+      const the = app[ten](x, y);
+      const lu = luat[ten](x, y);
+      assert.ok(the === ky && lu === ky, `LT-AC-9 luật lệch thẻ duyệt ở ${ten}: ${x} | ${y} (thẻ ${the}, luật ${lu}, kỳ vọng ${ky})`);
+      n++;
+    }
+  return n;
+}
+
+test("LT-AC-9 khoá đường/toà/tầng của luật trùng thẻ duyệt", async () => {
+  assert.equal(kiemAc9(that as unknown as Record<string, SoFn>), 26);
+  const lech = await dotBien((s) => s.replace("return ka.some((k) => kb.includes(k))", "return ka[0] === kb[0]"));
+  assert.throws(() => kiemAc9(lech as unknown as Record<string, SoFn>), /LT-AC-9 luật lệch thẻ duyệt ở soDuong: Duong Lam \| PHỐ DƯƠNG LÂM/);
+  assert.throws(() => rutApp("soKhongCo"), /LT-AC-9 không rút được soKhongCo/);
+});
+
+// ---------- LT-AC-10: đường viết không dấu ----------
+function kiemAc10(mod: Mod) {
+  const CUNG: [string, string][] = [["Duong Lam", "Phố Dương Lâm"], ["Duong Lang", "Đường Láng"], ["Pho Hue", "Phố Huế"], ["Duong Lam", "Dương Lâm"]];
+  for (const [a, b] of CUNG) {
+    const kq = chay(mod, cap(voi({ street: a }), voi({ street: b })));
+    assert.ok(coMa(kq, "khac_duong").length === 0 && kq.same_house === "yes", `LT-AC-10 cùng đường có dấu và không dấu bị loại: ${a} ↔ ${b}`);
+  }
+  assert.equal(chay(mod, cap(voi({ street: "Dương Lâm" }), voi({ street: "Đường Láng" }))).same_house, "no", "LT-AC-10 hai đường khác không loại");
+  return CUNG.length;
+}
+
+test("LT-AC-10 đường viết không dấu", async () => {
+  assert.equal(kiemAc10(that), 4);
+  // Lỗi cũ (Ngoài-2/7 của Cổng 2 lần 1): bỏ tiền tố không dấu mà không giữ cách đọc nguyên.
+  const boTienTo = await dotBien((s) => s.replace('[khongDau ? boDau(khongDau[1]) : "", boDau(s)]', "[khongDau ? boDau(khongDau[1]) : boDau(s)]"));
+  assert.throws(() => kiemAc10(boTienTo), /LT-AC-10 cùng đường có dấu và không dấu bị loại: Duong Lam ↔ Phố Dương Lâm/);
+});
+
+// ---------- LT-AC-11: toà — nhãn đúng từ vựng, chỉ mã toà mới so ----------
+function kiemAc11(mod: Mod) {
+  const kq = chay(mod, cap(voi({ block: "A" }), voi({ block: "B" })));
+  assert.ok(coMa(kq, "khac_toa").length === 1 && kq.same_house === "no", "LT-AC-11 hai mã toà khác không loại");
+  assert.ok(kq.ly_do.every((l) => !/mã căn/.test(l.cau)) && coMa(kq, "khac_toa")[0].cau === "toà khác", "LT-AC-11 nhãn lý do toà không theo từ vựng");
+  const KHONG_LOAI: [string, string][] = [["Block A", "Toà A"], ["Sao Biển", "S5.01"], ["Chung Cư 38 Hoàng mai", "A"], ["Park 6", "S1001"]];
+  for (const [a, b] of KHONG_LOAI) {
+    const k = chay(mod, cap(voi({ block: a }), voi({ block: b })));
+    assert.equal(coMa(k, "khac_toa").length, 0, `LT-AC-11 tên gọi hay tiền tố toà bị loại: ${a} ↔ ${b}`);
+  }
+  return KHONG_LOAI.length;
+}
+
+test("LT-AC-11 toà theo mã", async () => {
+  assert.equal(kiemAc11(that), 4);
+  const nguyenVan = await dotBien((s) => s.replace("soToa(pair.a.block, pair.b.block)", `(${NGUYEN_VAN})(pair.a.block, pair.b.block)`));
+  assert.throws(() => kiemAc11(nguyenVan), /LT-AC-11 tên gọi hay tiền tố toà bị loại/);
+  const nhanCu = await dotBien((s) => s.replace('["toa", "toà",', '["ma_can", "mã căn",'));
+  assert.throws(() => kiemAc11(nhanCu), /LT-AC-11 hai mã toà khác không loại|LT-AC-11 nhãn lý do toà/);
 });
 
 // ---------- LT-AC-6: probe DB máy thu (chỉ SELECT) ----------
@@ -208,7 +299,20 @@ function tuEvidence(a: Ben, b: Ben): PairData {
   });
   return { a: { ...ben(a), text: null }, b: { ...ben(b), subject: null }, score: 0, signals: {} };
 }
-/** Tính độc lập «có ≥1 đặc trưng khác ở cả hai bên» — số viết thẳng (1 m², căn hộ 10%), không đọc NGUONG. */
+/** Tính độc lập «có ≥1 đặc trưng khác ở cả hai bên» — viết lại trong test, không import khoá hay NGUONG của luật: số
+ *  viết thẳng (1 m², căn hộ 10%); đường/toà/tầng chuẩn hoá theo cách đọc rộng nhất (Ngoài-8 của Cổng 2 lần 1). */
+const tron = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function cachDocDuong(v: string): string[] {
+  const t = tron(v);
+  const bo = t.replace(/^(?:duong|pho|d) /, "");
+  return [t, bo];
+}
+function maToa(v: string): string | null {
+  const t = tron(v).replace(/^(?:toa|block|thap|tower|lo|building) /, "");
+  if (t.includes(" ") || !t || t.length > 8) return null;
+  return /\d/.test(t) || t.length <= 3 ? t : null;
+}
+const soDau = (v: string) => (v.match(/\d+/) ?? [null])[0];
 function coDacTrungKhac(p: PairData): boolean {
   const { a, b } = p;
   const hai = (x: unknown, y: unknown) => x !== null && y !== null;
@@ -219,6 +323,20 @@ function coDacTrungKhac(p: PairData): boolean {
     const canHo = a.propertyType === "apartment" || b.propertyType === "apartment";
     if (d > 1 + 1e-9 && (!canHo || d / Math.max(a.areaM2, b.areaM2) > 0.1)) return true;
   }
+  if (a.street && b.street) {
+    const da = cachDocDuong(a.street);
+    if (!cachDocDuong(b.street).some((k) => k && da.includes(k))) return true;
+  }
+  if (a.block && b.block) {
+    const ta = maToa(a.block);
+    const tb = maToa(b.block);
+    if (ta !== null && tb !== null && ta !== tb) return true;
+  }
+  if (a.floor && b.floor) {
+    const fa = soDau(a.floor);
+    const fb = soDau(b.floor);
+    if (fa !== null && fb !== null && Number(fa) !== Number(fb)) return true;
+  }
   return false;
 }
 async function docThe(c: pg.Client) {
@@ -227,10 +345,10 @@ async function docThe(c: pg.Client) {
   );
   return rows.map((r) => ({ id: r.id as number, status: r.status as string, p: tuEvidence(r.evidence.offer_a, r.evidence.offer_b) }));
 }
+/** Luật trên mọi thẻ đã quyết, theo TÍNH CHẤT chứ không theo danh sách id (Ngoài-6 của Cổng 2 lần 1): người quyết thêm
+ *  thẻ thì phép đo vẫn đứng. Trả số thẻ từ chối có đặc trưng khác. */
 function kiemAc6(mod: Mod, the: Awaited<ReturnType<typeof docThe>>) {
   const loai = the.filter((t) => t.status === "rejected" && coDacTrungKhac(t.p)).map((t) => t.id);
-  assert.deepEqual(loai, [14, 16, 17, 18, 19, 20, 21, 22, 24], "tập thẻ từ chối có đặc trưng khác lệch danh sách viết trước");
-  assert.deepEqual(the.filter((t) => t.status === "approved").map((t) => t.id), [23], "tập thẻ nhận lệch danh sách viết trước");
   for (const t of the) {
     const kq = mod.apNguong(t.p).same_house;
     if (loai.includes(t.id)) assert.equal(kq, "no", `LT-AC-6 thẻ người từ chối không bị loại: #${t.id}`);
@@ -246,7 +364,7 @@ test("LT-AC-6 probe thẻ đã quyết", async (t) => {
   try {
     const the = await docThe(c);
     if (the.length === 0) return t.skip("máy thu chưa có thẻ ghép căn đã quyết — bàn đo rỗng");
-    assert.equal(kiemAc6(that, the), 9);
+    assert.ok(kiemAc6(that, the) >= 1, "LT-AC-6 không có thẻ từ chối nào có đặc trưng khác — bàn đo không phân biệt");
     await assert.rejects(async () => kiemAc6(await cu(), the), /LT-AC-6 thẻ người từ chối không bị loại/);
     const boDienTich = await dotBien((s) => s.replace("let khacDacTrung = khacDienTich;", "let khacDacTrung = false;"));
     await assert.rejects(async () => kiemAc6(boDienTich, the), /LT-AC-6 thẻ người từ chối không bị loại/);
