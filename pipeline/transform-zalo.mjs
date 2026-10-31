@@ -141,9 +141,10 @@ export function extractPhones(text) {
     if (digits.startsWith("84")) digits = "0" + digits.slice(2);
     if (digits.length !== 10) continue;
     if (!/^[35789]/.test(digits.slice(1))) continue;
-    if (seen.has(digits)) continue;
-    seen.add(digits);
-    out.push(digits);
+    const e164 = "+84" + digits.slice(1); // SD3 (Hỏi-A): một dạng E.164 cho mọi chỗ lưu
+    if (seen.has(e164)) continue;
+    seen.add(e164);
+    out.push(e164);
     if (out.length >= 3) break; // tin rao hiếm khi có >3 SĐT thật
   }
   return out;

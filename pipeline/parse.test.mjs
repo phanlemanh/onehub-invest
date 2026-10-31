@@ -63,19 +63,19 @@ test("phẩy thập phân kiểu VN: '2,9 tỷ' → 2.9e9, '8,5tr/tháng' → 8.
 import { extractPhones } from "./transform-zalo.mjs";
 
 test("SĐT dạng thường: '0963466005'", () => {
-  assert.deepEqual(extractPhones("Bán gấp 62m². LH 0963466005"), ["0963466005"]);
+  assert.deepEqual(extractPhones("Bán gấp 62m². LH 0963466005"), ["+84963466005"]);
 });
 
 test("SĐT phân tách space: '0973 034 567'", () => {
-  assert.deepEqual(extractPhones("Chính chủ bán. Call 0973 034 567"), ["0973034567"]);
+  assert.deepEqual(extractPhones("Chính chủ bán. Call 0973 034 567"), ["+84973034567"]);
 });
 
 test("SĐT phân tách chấm: '0973.034.567'", () => {
-  assert.deepEqual(extractPhones("LH: 0973.034.567 (A. Minh)"), ["0973034567"]);
+  assert.deepEqual(extractPhones("LH: 0973.034.567 (A. Minh)"), ["+84973034567"]);
 });
 
-test("SĐT +84: '+84973034567' chuẩn hoá về 0", () => {
-  assert.deepEqual(extractPhones("Liên hệ +84973034567"), ["0973034567"]);
+test("SĐT +84: '+84973034567' giữ dạng E.164", () => {
+  assert.deepEqual(extractPhones("Liên hệ +84973034567"), ["+84973034567"]);
 });
 
 test("SĐT 11 số không nhận (di động VN chỉ còn 10 số — SD2): '03745678901'", () => {
@@ -84,8 +84,8 @@ test("SĐT 11 số không nhận (di động VN chỉ còn 10 số — SD2): '03
 
 test("parsePost gắn phone + phones; test cũ có sẵn SĐT trong text", () => {
   const p = parsePost("Bán gấp Hoàn Kiếm — 62m², 82tr/m2, tổng 5.1t. Tư vấn 0963466005");
-  assert.equal(p.phone, "0963466005");
-  assert.deepEqual(p.phones, ["0963466005"]);
+  assert.equal(p.phone, "+84963466005");
+  assert.deepEqual(p.phones, ["+84963466005"]);
 });
 
 test("bỏ số cố định đầu 024 và dãy số ngắn (diện tích/giá)", () => {

@@ -11,7 +11,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
 | transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1); bài không ghi «bán/cho thuê» được suy loại (RM1: Yêu cầu → cửa vào → đơn vị giá → tín hiệu bán → mục đích nhóm, `suyLoai`), log đếm theo nguồn |
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
-| refresh-bait-gap.mjs | Bait gap P1 + registry sellers (upsert: thêm dòng cho SĐT mới trên tin, ghi đè cột tổng hợp, giữ tên; xoá người bán không còn tin, audit); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
+| refresh-bait-gap.mjs | Bait gap P1 + đếm người bán (`sellers` là VIEW từ 060, không ghi); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
@@ -54,6 +54,7 @@ sale_offers = VIEW sống của sale_offer_records (offer_id, area_id, kind, pri
 history_transactional (resource_record_key = offer_id, field_name ListPrice|StandardStatus, change_type, …) — lịch sử giá/trạng thái (059, trigger trên sale_offer_records, chỉ local); property_price_history = VIEW gom theo căn
 market_asset_stats (area_id, kind, median_perm2, median_rent)
 parties / registry_aliases / registry_events / party_roles — danh bạ Người (055, chỉ-thêm, chỉ local; khoá `pty_<ULID>`)
+sellers = VIEW (060, SD3) — một dòng mỗi SĐT trên tin sống (`seller_phone` E.164 `+84…`, `seller_phone_hash` = 32 ký tự đầu sha256 của số E.164); tên lấy từ tin, ngày từ mọi bản ghi tin; bí danh danh bạ `sdt` (số gốc), `sdt_bam` nghỉ
 airdna_markets / airdna_scores / airdna_market_metrics
 ```
 
@@ -81,3 +82,6 @@ airdna_markets / airdna_scores / airdna_market_metrics
    do `resolve_offer_fields` dựng từ `field_assertions` — bộ đọc ghi phát biểu (`lib/assert.mjs`), không UPDATE thẳng
    (`lib/scan-canonical-write.mjs` đỏ). Chưa cắt chuyển (`ops_audit phat-bieu:cat-chuyen`) thì phân xử dừng có tên. Test
    và thước trong giao dịch: `napPhatBieu(c)` (`lib/nap-045.mjs`) nạp 045 + mở cổng trong giao dịch.
+8. **SĐT lưu số gốc E.164 (SD3, 060)**: bộ bóc trả `+84…`; `sellers` là view — không INSERT/UPDATE/DELETE. Test và
+   thước trong giao dịch: `napSdtE164(c)` (`lib/nap-060.mjs`) nạp 060 khi DB chưa áp. Áp 060 lên DB máy thu là bước triển khai
+   riêng (Mạnh duyệt, `pg_dump` trước).

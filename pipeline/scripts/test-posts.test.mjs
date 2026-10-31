@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import pg from "pg";
 import { napPhatBieu } from "../lib/nap-045.mjs";
+import { napSdtE164 } from "../lib/nap-060.mjs";
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -37,6 +38,7 @@ async function withTx(fn) {
     if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
     await napPhatBieu(c);
+    await napSdtE164(c); // SD3: sellers là view trên bí danh sdt — nạp 060 trong giao dịch khi DB chưa áp
     // stg_zalo_posts.snapshot_id có khoá ngoại tới airbnb_snapshots — đăng ký hai snapshot fixture.
     for (const [id, source] of [[AGENT_SNAP, "zalo-agent"], [MOCK_SNAP, "zalo-mock"]]) {
       await c.query(
@@ -331,11 +333,10 @@ test("AC-8 thước dư lượng bắt được tin giả", { timeout: 300_000 }
     await runTransformZalo(c);
     const [o] = await offersWith(c, p);
     assert.ok(o?.seller_phone_hash, "AC-8 fixture: offer phải mang hash SĐT");
-    await c.query(
-      `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen)
-       VALUES ($1, '{S03}', 1, now(), now()) ON CONFLICT (phone_hash) DO NOTHING`,
-      [o.seller_phone_hash],
-    );
+    // Người theo SĐT như bộ dựng danh bạ ghi (bí danh sdt) → view sellers có dòng cho số này.
+    await c.query(`INSERT INTO parties (party_key, source) VALUES ('pty_01HZZZZZZZZZZZZZZZZZZZTP01', 'S03')`);
+    await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source)
+      VALUES ('pty_01HZZZZZZZZZZZZZZZZZZZTP01', 'sdt', $1, 'S03') ON CONFLICT DO NOTHING`, [o.seller_phone]);
     // Gắn dấu thử cho p trong stg, KHÔNG chạy lại transform → offer giả còn nằm trong canonical.
     await c.query(`UPDATE stg_zalo_posts SET group_name = 'TEST' WHERE post_id = $1`, [p]);
     const dirty = await measureResidue(c);

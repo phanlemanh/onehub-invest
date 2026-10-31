@@ -48,6 +48,8 @@ executors:
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
     dtd_app_nhan: "cd app && node --import tsx --test tests/dq-the-duyet-label.test.tsx"   # do-the-duyet-du-du-lieu E5 — nhãn dq-labels
+    sd3_boc: "node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs"   # sdt-luu-goc-e164 E1 — bộ bóc ra +84…
+    sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -68,6 +70,8 @@ executors:
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
     rk_itest: "cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts"   # the-ghep-can-tin-roi-kho E9 — lô thật chép chỉ-SELECT từ oneinvest, ngoài CI
+    rtld_unit: "node --test pipeline/lib/thu-lai-deadlock.test.mjs"   # resolve-thu-lai-deadlock E1–E4, E7 — client giả + đọc tĩnh, không DB
+    rtld_itest: "node --test pipeline/tests/resolve-properties-deadlock.itest.mjs"   # resolve-thu-lai-deadlock E5, E6, E8, E9 — deadlock thật trên DB thử oneinvest_p3_rtld_<pid> ở :5433, ngoài CI
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
@@ -504,6 +508,13 @@ executors:
     dtd_on12: "bash _acceptance/do-the-duyet-du-du-lieu/probes/on12.sh"   # do-the-duyet-du-du-lieu E5b — ON12-AC-5 trên DB thử sau lượt ghi thật
     dtd_hom_nay: "bash _acceptance/do-the-duyet-du-du-lieu/probes/hom-nay.sh"   # do-the-duyet-du-du-lieu E6 — DB máy thu chỉ đọc, so bộ đọc ảnh app
     dtd_pham_vi: "bash _acceptance/do-the-duyet-du-du-lieu/probes/pham-vi.sh"   # do-the-duyet-du-du-lieu E7
+    sd3_mig: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs mig"   # sdt-luu-goc-e164 E2 — 060 hai lần (DB thử)
+    sd3_du_lieu: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs du-lieu"   # sdt-luu-goc-e164 E3 — tin/căn +84… (DB thử)
+    sd3_danh_ba: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs danh-ba"   # sdt-luu-goc-e164 E4 — bí danh sdt (DB thử)
+    sd3_sellers: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs sellers"   # sdt-luu-goc-e164 E5 — view sellers (DB thử)
+    sd3_cloud: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs cloud"   # sdt-luu-goc-e164 E7 — câu đọc sync-cloud, không đẩy (DB thử)
+    sd3_doc: "bash _acceptance/sdt-luu-goc-e164/probes/people.sh"   # sdt-luu-goc-e164 E8 — loader /ops/people ba vai (DB thử)
+    sd3_pham_vi: "bash _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh"   # sdt-luu-goc-e164 E9
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
