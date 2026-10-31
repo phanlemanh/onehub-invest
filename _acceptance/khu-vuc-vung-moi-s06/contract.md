@@ -5,7 +5,7 @@ slug: khu-vuc-vung-moi-s06
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T08:25:00Z
 approved_by:
@@ -45,3 +45,6 @@ của AC-1; xem dòng descope trong sổ.
 - Nạp phường vùng mới cho `reassign-areas` (hàng sau).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Phép kiểm trang tổng quan /ops chỉ xác nhận không còn chữ «(chưa có tên Việt)», chưa xác nhận hàng Đà Nẵng hiện ra với tên tiếng Việt.
