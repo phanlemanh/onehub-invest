@@ -176,6 +176,16 @@
       "tep": "pipeline/scripts/install-collector-api.test.mjs",
       "ca": "2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ",
       "ly_do": "chạy install-collector-api.sh thật, cần plutil (công cụ chỉ có trên macOS) — runner CI là Ubuntu"
+    },
+    {
+      "tep": "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
+      "ca": "SLT-DC-7, SLT-DC-9: tắt rồi bật suy loại, rồi tắt lại — cùng một transaction",
+      "ly_do": "cần bài S03 thật ở stg_zalo_posts (DB máy thu) — DB CI dựng từ migration không có, lượt nạp rỗng"
+    },
+    {
+      "tep": "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
+      "ca": "SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0",
+      "ly_do": "cần bài S03 thật ở stg_zalo_posts (DB máy thu) — DB CI dựng từ migration không có, lượt nạp rỗng"
     }
   ],
   "agent": [
