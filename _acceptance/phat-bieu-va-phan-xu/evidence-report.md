@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a6c36bced4d3a279ead793c6a3f5d9a2a92789c9
+verified_commit: f9dcacc85ed90bd7ac81ee26195f39c81832669b
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -302,3 +302,7 @@ sha: 611eea9ae548e969c38e95cf9f928765bf2bd0ad · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-31, do HD5: áp 061 lên :5433 (Mạnh duyệt 31/10) + gộp main gồm #237
 run_id: repin-20261031T092252Z-13255
 sha: a6c36bced4d3a279ead793c6a3f5d9a2a92789c9 · suites: 6 lệnh exit 0 · evals: 22/22 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-31, do gộp main gồm #244 (vocab-db.itest xanh), #248, #251; eval TG chạy trên DB thử P1 chép từ :5433
+run_id: repin-20261031T162209Z-96810
+sha: f9dcacc85ed90bd7ac81ee26195f39c81832669b · suites: 6 lệnh exit 0 · evals: 22/22 eval máy đạt kỳ vọng
