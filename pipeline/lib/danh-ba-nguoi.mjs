@@ -182,9 +182,11 @@ export const SQL = Object.freeze({
   themVai: `INSERT INTO party_roles (subject_key, party_key, role, method, evidence_tier, evidence, run_id)
             SELECT s, p, r, m, e, ev, $7 FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::jsonb[]) AS x(s, p, r, m, e, ev)`,
   rutVai: `UPDATE party_roles SET retracted_at = now(), retract_reason = $2 WHERE id = ANY($1::bigint[]) AND retracted_at IS NULL`,
-  sellersThieu: `SELECT s.phone_hash || ':' || src AS k FROM sellers s CROSS JOIN LATERAL unnest(s.sources) AS src
-                  WHERE NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt_bam'
-                                      AND a.source = src AND a.value = s.phone_hash)
+  // Đối chiếu trên SĐT của tin, không trên sellers (SD1): sellers từng thiếu dòng nên phép đối chiếu luôn xanh.
+  sellersThieu: `SELECT DISTINCT o.seller_phone_hash || ':' || o.source AS k FROM sale_offers o
+                  WHERE o.seller_phone_hash IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt_bam'
+                                      AND a.source = o.source AND a.value = o.seller_phone_hash)
                   ORDER BY 1`,
 });
 
@@ -242,7 +244,7 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   return kqDem;
 }
 
-/** «<phone_hash>:<S0x>» cho mỗi (dòng sellers, nguồn trong sources) chưa có người sống mang bí danh sdt_bam đúng nguồn. */
+/** «<phone_hash>:<S0x>» cho mỗi (SĐT, nguồn) trên tin sống chưa có người sống mang bí danh sdt_bam đúng nguồn. */
 export async function sellersThieuNguoi(c) {
   return (await c.query(SQL.sellersThieu)).rows.map((r) => r.k);
 }
