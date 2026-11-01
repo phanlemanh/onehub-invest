@@ -211,17 +211,19 @@ if (MODE === "chan") {
     spawnSync("bash", [path.join(ROOT, "db/db-thu.sh"), DB_THU, "--xoa"], { cwd: ROOT, timeout: 120_000 });
   }
 } else if (MODE === "khoa") {
-  const { luocDoRieng } = await import(pathToFileURL(path.join(PIPE, "lib/luoc-do-rieng.mjs")).href);
+  const { luocDoRieng, neuLaBang } = await import(pathToFileURL(path.join(PIPE, "lib/luoc-do-rieng.mjs")).href);
   const { MIG_060 } = await import(pathToFileURL(path.join(PIPE, "lib/nap-060.mjs")).href);
   const { refreshBaitGap } = await import(pathToFileURL(path.join(PIPE, "refresh-bait-gap.mjs")).href);
   const SQL_034 = doc("db/migrations/034_ruler_p2_views.sql");
-  /** Danh sách bảng mà tệp khai cho lược đồ riêng — rút nguyên văn, không chép tay. */
+  /** Danh sách bảng mà tệp khai cho lược đồ riêng — rút nguyên văn, không chép tay. Bảng tệp thêm có điều kiện qua
+   * neuLaBang(c, "<t>") (vd sellers khi DB chưa áp 060) đọc riêng ở `coDieuKien` và thêm đúng như tệp làm. */
   const bangCua = (f) => {
     const s = doc(f);
     const m = s.match(/const BANG\s*=\s*\[([\s\S]*?)\]/) ?? s.match(/luocDoRieng\(c,\s*\[([^\]]*)\]/);
     assert.ok(m, `${f}: không thấy danh sách bảng của lược đồ riêng`);
     return [...m[1].matchAll(/"([a-z_]+)"/g)].map((x) => x[1]);
   };
+  const coDieuKien = (f) => [...doc(f).matchAll(/luocDoRieng\(c,[^\n]*?neuLaBang\(c,\s*"([a-z_]+)"\)/g)].map((x) => x[1]);
   const VIEW_TIN = "CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL";
   const ca = [
     { f: TEP.dealsPipe, xem: true, viec: async (c) => { await refreshBaitGap(c); } },
@@ -238,10 +240,12 @@ if (MODE === "chan") {
   for (const { f, xem, viec } of ca) {
     const s = doc(f);
     if (xem) for (const dong of [VIEW_TIN, "SQL_034", "MIG_060"]) assert.ok(s.includes(dong), `${f}: dựng lược đồ riêng không còn «${dong}»`);
-    const bang = bangCua(f);
+    if (xem) assert.deepEqual(coDieuKien(f), ["sellers"], `${f}: dựng lược đồ riêng không còn thêm sellers khi nó là bảng (060)`);
     const c = await moPhien();
     try {
       await c.query("BEGIN");
+      const bang = [...bangCua(f)];
+      for (const t of coDieuKien(f)) bang.push(...(await neuLaBang(c, t)));
       const sc = await luocDoRieng(c, bang, { tienTo: "atss_khoa" });
       if (xem) { await c.query(VIEW_TIN); await c.query(SQL_034); await c.query(MIG_060); }
       await c.query("SAVEPOINT viec");
