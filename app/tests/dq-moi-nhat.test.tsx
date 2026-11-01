@@ -1,6 +1,7 @@
 // dq-moi-nhat.test.tsx — hồ sơ dq-moi-nhat-moi-kiem (ON9): bảng «Kiểm chất lượng» của /ops/quality.
-// Ca DB chạy ĐÚNG câu dqLatestSql()/loadDqChecks() trên fixture trong BEGIN…ROLLBACK (Postgres local :5433, khoá 33033)
-// — bảng thật bị gạt trong giao dịch, không để lại dòng nào. Ca bảng vẽ DqChecksTable trong jsdom.
+// Ca DB chạy ĐÚNG câu dqLatestSql()/loadDqChecks() trên fixture trong BEGIN…ROLLBACK (Postgres local :5433): mỗi ca dựng
+// bản rỗng riêng của dq_check_results (pipeline/lib/luoc-do-rieng.mjs) — không xếp hàng khoá 33033, không xoá bảng dùng
+// chung, không để lại dòng nào. Ca bảng vẽ DqChecksTable trong jsdom.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -8,6 +9,7 @@ import { JSDOM } from "jsdom";
 import pg from "pg";
 
 import { dqLatestSql, dqResult, dqSection, loadDqChecks } from "../src/lib/dq-checks";
+import { luocDoRieng } from "../../pipeline/lib/luoc-do-rieng.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const CU = `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
@@ -18,8 +20,7 @@ async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   await c.connect();
   try {
     await c.query("BEGIN");
-    await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await c.query("DELETE FROM dq_check_results");
+    await luocDoRieng(c, ["dq_check_results"], { tienTo: "dq_moi_nhat" });
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
