@@ -5,7 +5,7 @@ feature: VLM đọc ảnh tin S03 cho bài mà chữ không đủ (thiếu giá,
 owner: phanlemanh@gmail.com
 stage: decided                # discovery | decided | archived
 decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: Mạnh 02/11 «Đồng ý theo khuyến nghị» (U1-86, giám sát chuyển lời): làm với ngưỡng U1 đề xuất
+decided_by: Mạnh 02/11 «Đồng ý theo khuyến nghị», nói rõ thêm «Đồng ý với U1 làm» (U1-86, giám sát chuyển lời): làm với ngưỡng U1 đề xuất
 decided_at: 2026-11-01T22:09:34Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
