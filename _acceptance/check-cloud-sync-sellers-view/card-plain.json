@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ thước kiểm tra đồng bộ lên cloud chạy lại được sau khi máy thu đổi sang lưu số điện thoại gốc: danh sách người bán được dựng thành bảng trong DB mô phỏng, các cơ chế ghi lịch sử được bỏ khỏi bản chép.",
+  "analyst_plain": "Ba phép kiểm của hàng (ca mới, mười ca cũ chạy lần lượt, phạm vi) đạt ở lượt hai và được mang sang lượt ba; lượt ba chỉ chạy lại các bộ test chung và đều xanh."
+}
