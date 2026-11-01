@@ -1,0 +1,30 @@
+{"feature_plain":"Với tin rao nhóm chat S03 mà chữ thiếu giá, thiếu dấu hiệu BĐS hoặc thiếu loại hình, máy đọc ảnh đã tải về và thêm một nhãn đề xuất có ghi rõ nguồn là ảnh.",
+"will_do":[
+{"id":"AC-1","p":"Sẽ chỉ đọc bài thật sự thiếu dữ kiện và có ảnh; bài đủ chữ, bài người đi tìm nhà, bài thử thì bỏ qua."},
+{"id":"AC-2","p":"Sẽ chỉ dùng ảnh hợp lệ trên máy, tối đa 4 ảnh một bài; bài không còn ảnh thì không tốn lượt gọi model."},
+{"id":"AC-3","p":"Sẽ chỉ gửi ảnh và chữ đã làm sạch; không có đường link ảnh, SĐT trong chữ, tên nhóm, người gửi hay mã lô thu nào rời máy."},
+{"id":"AC-4","p":"Sẽ lưu mỗi bài một nhãn nguồn ảnh cạnh nhãn chữ sẵn có; chạy lại không tốn tiền cho bài đã đọc tốt, bài lỗi được đọc lại."},
+{"id":"AC-5","p":"Sẽ KHÔNG đổi một dòng dữ liệu tin, căn hay ảnh nào, và nhãn không lên cloud."},
+{"id":"AC-6","p":"Sẽ đi tiếp khi một bài lỗi và dừng trước khi vượt trần tiền đã đặt."},
+{"id":"AC-7","p":"Sẽ có lệnh chấm model theo phiếu người gắn, báo đạt hay chưa đạt 90%, tách ảnh riêng với ảnh ghép, và báo chưa đủ mẫu khi quá ít bài có giá."},
+{"id":"AC-8","p":"Sẽ có lệnh đếm bao nhiêu bài đã có nhãn tốt, không tính bài lỗi, và lệnh rút phiếu gắn tay tái lập được."}],
+"wont_do":[
+{"id":"OOS-1","p":"Chưa đưa nhãn ảnh vào tin thật; đó là việc của vòng sau và vẫn qua người duyệt."},
+{"id":"OOS-2","p":"Chưa đọc 3.538 bài chỉ có ảnh không ghép được vào bài chữ nào (việc KC4)."},
+{"id":"OOS-3","p":"Không tải lại ảnh đã lỗi: hơn một nửa bài chỉ-ảnh không có tệp trên máy; đây là việc của làn thu."},
+{"id":"OOS-4","p":"Chưa chạy hết 2.392 bài và chưa đặt lịch đêm; quyết khi có số đo và chi phí thật."},
+{"id":"OOS-5","p":"Chưa thêm cột riêng cho giá và loại hình vào bảng nhãn."},
+{"id":"OOS-6","p":"Không dùng Decisions API đọc ảnh vì nó không nhận ảnh; Qwen local và GLM-V cũng không dùng được."},
+{"id":"OOS-7","p":"Không thu nhỏ ảnh, không che chữ in trên ảnh, không sửa mã nhãn chữ hiện có."}],
+"coverage_plain":[
+{"i":0,"p":"Mọi loại chữ của bài đều có đáp án chọn hay bỏ, đối chiếu với số đo thật ngày 02/11 (AC-1, chọn bài)."},
+{"i":1,"p":"Mọi tình trạng ảnh, từ tốt tới hỏng và quá cỡ, đều có cách xử (AC-2, lọc ảnh)."},
+{"i":2,"p":"Mọi thứ có thể rời máy đều được soát trên yêu cầu thật gửi tới máy giả (AC-3, dữ liệu rời máy)."},
+{"i":3,"p":"Mọi kết cục của một bài, từ tốt tới lỗi mạng và hết tiền, đều có hành vi đã định (AC-4, AC-6)."},
+{"i":4,"p":"Có đủ bốn lớp đo: máy giả, cơ sở dữ liệu thử, lô thật và phiếu người (AC-5, AC-7, AC-8, AC-9)."}],
+"gap_probe_plain":[
+{"i":0,"p":"Cách tính «đọc đúng» ban đầu sẽ cho model không đọc được giá vẫn đạt khi đa số ảnh không có giá. Đã sửa cách tính và đưa thành Hỏi-3; ngân sách lượt chấm phiếu vào Hỏi-4."},
+{"i":1,"p":"Máy đã tự quyết việc đọc cả ảnh ghép với căn cứ chưa đủ, trong khi ghép sai có thể gán giá căn khác vào nhãn. Đã chuyển thành Hỏi-2 và đo tách riêng."},
+{"i":2,"p":"Số đếm «tăng» có thể tăng cả khi toàn lô lỗi. Đã sửa để chỉ đếm nhãn tốt, và đo lại tập đọc còn 2.392 bài."},
+{"i":3,"p":"Một số lời hứa ở mức lệnh chưa có phép kiểm, như chấm phiếu không được ghi vào bảng nhãn. Đã bổ sung phép kiểm chạy lệnh thật."},
+{"i":4,"p":"Lỗi tạm có thể khoá một bài không bao giờ được đọc lại. Đã sửa để bài lỗi được đọc lại; bài đăng lại đã có dòng riêng sẵn."}]}

@@ -40,7 +40,7 @@ stg_zalo_posts ─ loadStgPosts (gạt bài thử)
               └ silver_labels (SQL_GHI của KC1), ai_calls (recordCallDb)
 ```
 
-**Chọn bài.** Đơn vị là bài chữ, cộng ảnh riêng của nó và ảnh các bài chỉ-ảnh `ganBaiAnh` gán vào (cùng luật PL28). Theo Hỏi-4, mặc định gồm cả ảnh ghép và nhãn ghi số ảnh mỗi loại. Lý do thiếu:
+**Chọn bài.** Đơn vị là bài chữ, cộng ảnh riêng của nó và ảnh các bài chỉ-ảnh `ganBaiAnh` gán vào (cùng luật PL28). Theo câu hỏi về ảnh ghép (Hỏi-2 trên thẻ), mặc định gồm cả ảnh ghép và nhãn ghi số ảnh mỗi loại. Lý do thiếu:
 `thieu_gia` (parsePost không ra giá) · `thieu_dau_hieu` (`coDauHieuBds` sai) · `thieu_loai_hinh` (không có từ loại hình và
 không có số phòng). Yêu cầu (`laYeuCau`) bị loại. Bài chỉ-ảnh không gán được thuộc KC4.
 
