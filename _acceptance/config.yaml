@@ -58,6 +58,7 @@ executors:
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
     ctt_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"   # TV2b cong-tac-that — nhà cung cấp giả + DB tạm
+    svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
@@ -145,6 +146,7 @@ executors:
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
     nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
     judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
+    judge_entity_khong_dau: "cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts"   # duong-thang-n-khong-dau — khoá đường có dấu = không dấu (tháng N, từ vị trí trần); probe DB máy thu bỏ qua có lý do dưới CI
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -584,6 +586,14 @@ executors:
     dc_tu_don: "cd app && node --import tsx scripts/dc-tu-don.ts"   # phat-bieu-db-do-tren-main E7: test dòng chảy cloud quét lược đồ dc_* của pid chết + tự dọn khi bị ngắt
     idem_059: "bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup && bash db/db-thu.sh oneinvest_p2_idem >/dev/null && (cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_idem node scripts/idem-059.mjs); rc=$?; bash db/db-thu.sh oneinvest_p2_idem --xoa >/dev/null; exit $rc"   # thoi-gian-va-hieu-luc E10 — lược đồ (DB tạm không dữ liệu) + bản chép CÓ dữ liệu: lần một điền lùi > 0 dòng, lần hai không nhân dòng, chiều đỏ bỏ khoá duy nhất (S4 r1 t5)
     # cong-tac-that (TV2b, T3) — cổng vòng đời trên bản chép tạm, không chạm máy thật
+    # s06-vung-moi-len-canonical (T3, 064) — mọi ca DB chạy trên bản chép DB máy thu (db/db-thu.sh), không chạm oneinvest
+    svm_mig: "node scripts/s06-vung-moi/acceptance.mjs mig"
+    svm_rao: "node scripts/s06-vung-moi/acceptance.mjs rao"
+    svm_reassign: "node scripts/s06-vung-moi/acceptance.mjs reassign"
+    svm_transform: "node scripts/s06-vung-moi/acceptance.mjs transform"
+    svm_real: "node scripts/s06-vung-moi/acceptance.mjs real"
+    svm_dem: "node scripts/s06-vung-moi/acceptance.mjs dem"
+    svm_scope: "bash _acceptance/s06-vung-moi-len-canonical/probes/scope.sh \"$PWD\""
     ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
     ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
     ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
