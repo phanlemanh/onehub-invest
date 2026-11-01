@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 67218f52f078ada79c2ae7cdbb491efbfcafb1b3
+verified_commit: b6aead3d3bc53888af97ac23e478e266fe1d3610
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -192,3 +192,7 @@ sha: d5fd5b065a8d397fb70d197dc0913183c1106355 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-11-01, do gộp main 00124441 (#252, #262, #263) — không đổi mã của hồ sơ
 run_id: repin-20261101T103117Z-83776
 sha: 67218f52f078ada79c2ae7cdbb491efbfcafb1b3 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 4 — 2026-11-01, do gộp main f7810d81 (#260 đổi pipeline/scripts/phat-bieu.test.mjs) — không đổi mã của hồ sơ
+run_id: repin-20261101T104542Z-29565
+sha: b6aead3d3bc53888af97ac23e478e266fe1d3610 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
