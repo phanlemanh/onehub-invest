@@ -5,7 +5,7 @@ slug: sd3-test-chiu-song-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T07:20:00Z
 ---
@@ -61,3 +61,12 @@ không đổi.
   lượt probe bản trước bị bỏ lại giữ 33033 + khoá dòng ~1 giờ, chặn sync đêm (giám sát dừng). Mọi phiên probe nay đặt hạn phía
   máy chủ (idle_in_transaction 30 s, statement 60 s, lock 3 s), cả probe trần 180 s, đóng phiên ở finally; đo: giết -9 giữa
   chừng → khoá nhả ngay.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Probe phạm vi không kiểm mã thoát của git diff, có thể báo đạt khi không liệt kê được tệp.
+  - Ngoài-2: Phép đo «không khoá mạnh / không khoá view trên public» chưa có đối chứng dương.
+  - Ngoài-3: «Đã chờ đúng lúc DDL» đo bằng ngưỡng tuyệt đối 2,5 giây, không so với đường nền.
+  - Ngoài-4: Trần cả probe là 900 giây trong mã, hồ sơ ghi 180 giây.
+  - Ngoài-6: Cùng chỗ với Ngoài-1 ở lượt trước.
+  - Ngoài-7: Cùng chỗ với Ngoài-2 ở lượt trước.
+  - Ngoài-8: Phép đo «chỉ hai câu đọc schema đổi» là đếm, không so quan hệ.
+  - AC-3: Bản sửa còn đổi ca đối chứng đỏ (bỏ DROP, sửa P0 của gap-probe) — chữ AC-3 «chỉ hai câu đọc schema đổi» không đúng, phép đo không thấy chỗ đổi này.

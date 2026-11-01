@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 24b2458ec20ac56536115f7d39f273983d997796
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: sd3-test-chiu-song-song
