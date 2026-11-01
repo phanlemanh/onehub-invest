@@ -257,6 +257,9 @@ executors:
     cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
     cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     cloud_sync_pii_cot: "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot"    # NT2 soat-tang-a-moi-duong-len-cloud: leak gate đỏ khi cột ngoài CLOUD_ALLOW / bảng tầng A có dòng
+    cloud_sync_sellers_view: "cd pipeline && node scripts/check-cloud-sync.mjs sellers-view"   # check-cloud-sync-sellers-view E1 — nguồn sau 060/059 dựng được DB mô phỏng, sellers là bảng hai phía, sync đổ đủ dòng
+    cloud_sync_tuan_tu: "cd pipeline && r=0; for c in stage atomic fail fidelity keep pii overlap allow anon pii-cot; do node scripts/check-cloud-sync.mjs $c || r=1; done; exit $r"   # check-cloud-sync-sellers-view E2 — mười ca cũ chạy tuần tự (một container một lúc)
+    ccs_pham_vi: "bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh"   # check-cloud-sync-sellers-view E3
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
@@ -531,6 +534,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    sts_chan: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs chan"   # sd3-test-chiu-song-song E1 — xanh dưới phiên giữ 33033, bản cũ treo
+    sts_khoa: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs khoa"   # sd3-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    sts_assert: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs assert"   # sd3-test-chiu-song-song E3 — thông điệp assert giữ nguyên
+    sts_pham_vi: "bash _acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh"   # sd3-test-chiu-song-song E4
     svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
     svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
     svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt
