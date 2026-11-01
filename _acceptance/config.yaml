@@ -255,6 +255,7 @@ executors:
     cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     cloud_sync_pii_cot: "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot"    # NT2 soat-tang-a-moi-duong-len-cloud: leak gate đỏ khi cột ngoài CLOUD_ALLOW / bảng tầng A có dòng
     cloud_sync_sellers_view: "cd pipeline && node scripts/check-cloud-sync.mjs sellers-view"   # check-cloud-sync-sellers-view E1 — nguồn sau 060/059 dựng được DB mô phỏng, sellers là bảng hai phía, sync đổ đủ dòng
+    cloud_sync_tuan_tu: "cd pipeline && r=0; for c in stage atomic fail fidelity keep pii overlap allow anon pii-cot; do node scripts/check-cloud-sync.mjs $c || r=1; done; exit $r"   # check-cloud-sync-sellers-view E2 — mười ca cũ chạy tuần tự (một container một lúc)
     ccs_pham_vi: "bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh"   # check-cloud-sync-sellers-view E3
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
