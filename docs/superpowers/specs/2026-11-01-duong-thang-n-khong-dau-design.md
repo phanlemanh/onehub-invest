@@ -15,10 +15,13 @@ trong hàm chỉ nhận chữ có dấu:
 
 ## Cách làm
 
-Chạy hai phép thử trên chuỗi đã `boDau`, thay vì trên chuỗi còn dấu: ô chỉ có từ vị trí khớp `/^(?:so|ngo|ngach|hem|kiet)?$/`
-trên `boDau(t)`, và ngoại lệ «tháng <số>» khớp `/^thang \d/` trên `boDau(phần sau số)`. Cụm vị trí ở đầu chuỗi vốn đã nhận
-cả hai dạng có dấu và không dấu. Không thêm hàm mới. Sửa trong `app/src/lib/ops/review-can-cu.ts` rồi chép nguyên văn sang
-`agent/src/agents/judge-entity.ts`.
+Trước hai phép thử cũ, đưa dạng không dấu hay gõ sai dấu về dạng có dấu, giữ nguyên hai phép thử:
+- `thang` đứng trước một số → `tháng`, nên ngoại lệ «tháng <số>» bắt được «30 thang 4»;
+- ô mà `boDau` của nó chỉ còn là một từ vị trí (`so|ngo|ngach|hem|kiet`) → `ngõ`, nên «Ngo», «Ngỏ», «Hem» ra Thiếu như «Ngõ».
+
+Cụm vị trí ở đầu chuỗi vốn đã nhận cả hai dạng. Giữ nguyên hai phép thử cũ để các bản đột biến của test đã ký
+(`judge-entity-duong.test.ts`: CD-AC-3, CD-AC-4) vẫn đỏ đúng chỗ, tức hợp đồng AC-7 «không sửa test đã ký». Không thêm hàm
+mới. Sửa trong `app/src/lib/ops/review-can-cu.ts`, rồi chép nguyên văn sang `agent/src/agents/judge-entity.ts`.
 
 Lối khác là liệt kê thêm dạng không dấu vào hai regex còn dấu (`tháng|thang`). Lối này bị loại vì không gỡ được ô gõ sai
 dấu («Ngỏ», «Hẽm»), và phép đo AC-6 trên dữ liệu thật sẽ đỏ đúng ở những ô ấy. Thử trên `boDau` thì mọi biến thể dấu đều
