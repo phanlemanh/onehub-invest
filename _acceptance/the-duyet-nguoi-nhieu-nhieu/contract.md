@@ -5,7 +5,7 @@ slug: the-duyet-nguoi-nhieu-nhieu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-01
 design_doc: docs/superpowers/specs/2026-11-01-the-duyet-nguoi-nhieu-nhieu-design.md

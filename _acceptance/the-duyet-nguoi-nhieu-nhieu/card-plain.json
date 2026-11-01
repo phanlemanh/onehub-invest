@@ -1,31 +1,91 @@
 {
-  "feature_plain": "Người duyệt ở /ops/review thấy thẻ «Gộp Người?» cho mỗi nhóm tài khoản–SĐT không nối một–một (một số nhiều người đăng, hay một người nhiều số), chọn gộp thành một Người hay giữ tách; đêm dựng danh bạ kế tiếp áp đúng lựa chọn đó, có vết và tách lại được.",
+  "feature_plain": "Khi một SĐT có nhiều người đăng, hay một người đăng dùng nhiều SĐT, máy dựng một thẻ «Gộp Người?» trên /ops/review; người duyệt chọn gộp, giữ tách hay hoãn cho cả nhóm, và lượt dựng danh bạ đêm sau làm theo.",
   "will_do": [
-    {"id":"AC-1","p":"Sẽ sinh đúng một thẻ chờ cho mỗi nhóm tài khoản–SĐT không một–một ở S03 và S05; nhóm một–một, tin đã nghỉ và tin S06 không có thẻ."},
-    {"id":"AC-2","p":"Sẽ không sinh thẻ trùng khi dựng lại; mỗi nhóm đang sống luôn có đúng một thẻ còn hiệu lực, kể cả khi nhóm co lại rồi giãn về như cũ."},
-    {"id":"AC-3","p":"Sẽ sinh thẻ mới khi nhóm có thêm tài khoản hay SĐT, và đóng thẻ chờ cũ kèm ghi chú trỏ thẻ mới; không xoá thẻ nào."},
-    {"id":"AC-4","p":"Sẽ ghi trên thẻ mã nguồn S0x, từng tài khoản (ID, tên, số tin), từng SĐT và tối đa 5 tin mẫu; không ghi tên nguồn thật."},
-    {"id":"AC-5","p":"Sẽ gộp đúng các thành viên ghi trên thẻ anh duyệt «gộp» vào người tài khoản cũ nhất còn hoạt động, bỏ qua người đã tách, mỗi lần gộp một dòng vết, cả khi công tắc gộp tự động đang tắt."},
-    {"id":"AC-7","p":"Sẽ cho tách lại một người đã gộp theo thẻ bằng lệnh tách của HD13, trả vai về như cũ, và không gộp lại ở lượt sau."},
-    {"id":"AC-8","p":"Sẽ hiện thẻ «Gộp Người?» với bảng tài khoản, SĐT, tin mẫu và ba nút «Gộp thành một Người» / «Giữ tách» / «Hoãn» chỉ bấm được khi đã ghi lý do; báo lỗi rõ nếu gửi hỏng; vai viewer không thấy bảng."},
-    {"id":"AC-9","p":"Sẽ giữ thước HD13 đỏ với người hai SĐT không có thẻ duyệt, và giữ nguyên bộ test đã ký của HD13."},
-    {"id":"AC-10","p":"Sẽ chứng trên bản chép DB máy thu (rồi hoàn lại) rằng số thẻ sinh ra bằng số nhóm đếm độc lập ở từng nguồn."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ sinh đúng một thẻ chờ cho mỗi nhóm tài khoản–SĐT không một–một ở S03 và S05; nhóm một–một, tin đã nghỉ và tin S06 không có thẻ."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ không sinh thẻ trùng khi dựng lại; mỗi nhóm đang sống luôn có đúng một thẻ còn hiệu lực, kể cả khi nhóm co lại rồi giãn về như cũ."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ sinh thẻ mới khi nhóm có thêm tài khoản hay SĐT, và đóng thẻ chờ cũ kèm ghi chú trỏ thẻ mới; không xoá thẻ nào."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ ghi trên thẻ mã nguồn S0x, từng tài khoản (ID, tên, số tin), từng SĐT và tối đa 5 tin mẫu; không ghi tên nguồn thật."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ gộp đúng các thành viên ghi trên thẻ anh duyệt «gộp» vào người tài khoản cũ nhất còn hoạt động, bỏ qua người đã tách, mỗi lần gộp một dòng vết, cả khi công tắc gộp tự động đang tắt."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ cho tách lại một người đã gộp theo thẻ bằng lệnh tách của HD13, trả vai về như cũ, và không gộp lại ở lượt sau."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ hiện thẻ «Gộp Người?» với bảng tài khoản, SĐT, tin mẫu và ba nút «Gộp thành một Người» / «Giữ tách» / «Hoãn» chỉ bấm được khi đã ghi lý do; báo lỗi rõ nếu gửi hỏng; vai viewer không thấy bảng."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ thước HD13 đỏ với người hai SĐT không có thẻ duyệt, và giữ nguyên bộ test đã ký của HD13."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ chứng trên bản chép DB máy thu (rồi hoàn lại) rằng số thẻ sinh ra bằng số nhóm đếm độc lập ở từng nguồn."
+    }
   ],
   "wont_do": [
-    {"id":"AC-6","p":"Sẽ KHÔNG gộp ai khi thẻ là «Giữ tách» hay «Hoãn»."},
-    {"id":"OOS-1","p":"Không làm gộp một phần nhóm (chọn từng cặp tài khoản–SĐT)."},
-    {"id":"OOS-2","p":"Không làm ca khác nguồn (S06 chưa có SĐT — chờ HD12)."},
-    {"id":"OOS-3","p":"Không đưa thẻ Người lên cloud — thẻ duyệt hiện chỉ ở máy local."},
-    {"id":"OOS-4","p":"Không để model gợi ý trên thẻ — người tự quyết."}
+    {
+      "id": "AC-6",
+      "p": "Sẽ KHÔNG gộp ai khi thẻ là «Giữ tách» hay «Hoãn»."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Không làm gộp một phần nhóm (chọn từng cặp tài khoản–SĐT)."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không làm ca khác nguồn (S06 chưa có SĐT — chờ HD12)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đưa thẻ Người lên cloud — thẻ duyệt hiện chỉ ở máy local."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không để model gợi ý trên thẻ — người tự quyết."
+    }
   ],
   "coverage_plain": [
-    {"i":0,"p":"Độ phủ quét tay theo bốn trục: hình nhóm, vòng đời thẻ, hệ quả quyết định, nơi đọc."}
+    {
+      "i": 0,
+      "p": "Độ phủ quét tay theo bốn trục: hình nhóm, vòng đời thẻ, hệ quả quyết định, nơi đọc."
+    }
   ],
   "gap_probe_plain": [
-    {"i":0,"p":"Máy đã tự quyết gộp hai việc trong một dòng; việc nới bất biến «một Người một SĐT» của HD13 nay thành câu Hỏi-4 để anh quyết."},
-    {"i":1,"p":"Chưa nói thẻ đã duyệt áp lên ai khi nhóm đổi trước đêm dựng — nay áp đúng thành viên ghi trên thẻ, thành viên mới có thẻ riêng."},
-    {"i":2,"p":"Nhóm co rồi giãn có thể mất thẻ chờ — nay thẻ máy đóng không tính, nhóm sống luôn có một thẻ hiệu lực."},
-    {"i":3,"p":"Tiêu chí gộp chống câu thiết kế về người đã tách — nay bỏ qua người đã tách và chọn đích là người tài khoản còn hoạt động."},
-    {"i":4,"p":"Trạng thái lỗi, đang gửi và vai viewer chưa có phép đo — nay thêm hai ca trong bài test giao diện."}
+    {
+      "i": 0,
+      "p": "Máy đã tự quyết gộp hai việc trong một dòng; việc nới bất biến «một Người một SĐT» của HD13 nay thành câu Hỏi-4 để anh quyết."
+    },
+    {
+      "i": 1,
+      "p": "Chưa nói thẻ đã duyệt áp lên ai khi nhóm đổi trước đêm dựng — nay áp đúng thành viên ghi trên thẻ, thành viên mới có thẻ riêng."
+    },
+    {
+      "i": 2,
+      "p": "Nhóm co rồi giãn có thể mất thẻ chờ — nay thẻ máy đóng không tính, nhóm sống luôn có một thẻ hiệu lực."
+    },
+    {
+      "i": 3,
+      "p": "Tiêu chí gộp chống câu thiết kế về người đã tách — nay bỏ qua người đã tách và chọn đích là người tài khoản còn hoạt động."
+    },
+    {
+      "i": 4,
+      "p": "Trạng thái lỗi, đang gửi và vai viewer chưa có phép đo — nay thêm hai ca trong bài test giao diện."
+    }
   ]
 }
