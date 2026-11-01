@@ -1,0 +1,34 @@
+schema_version: 1
+feature_slug: pb-ac-5-khong-quet-tep-tam
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/phat-bieu.test.mjs, pipeline/lib/scan-canonical-write.mjs]
+    expected: "exit 0; ca 'TT-AC-1' xanh: cây tạm dưới os.tmpdir() có 200 tệp .mjs trong pipeline/; tiến trình con sinh-xoá .gs-mut-*.mjs báo ≥ 200 tệp (thiếu → đỏ 'TT-AC-1: tải sinh-xoá không chạy'); quetChiuTepTam qua filesOfTree(r) và findCallSites(r) mỗi bộ 30 lượt không ném, filesOfTree mỗi lượt đủ 200 tệp thường (lượt ném → đỏ 'TT-AC-1: lớp bọc vẫn ném dưới tải sinh-xoá'); chiều đỏ: gọi thẳng từng bộ quét tới ENOENT đầu tiên trong trần 400 lượt hoặc 20 giây — không gặp → đỏ 'TT-AC-1: quét trực tiếp không tái hiện ENOENT trong trần'; tiến trình con dừng và cây tạm xoá trong finally"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/phat-bieu.test.mjs]
+    expected: "exit 0; ca 'TT-AC-2' xanh trên ma trận viết trước: ENOENT tệp thường → ném, fn gọi 1 lần; EACCES → ném, gọi 1 lần; ENOENT tệp ẩn mãi → ném, gọi đúng 5 lần (lan = 5); ENOENT tệp ẩn một lần rồi thành công → trả kết quả, gọi 2 lần. Chiều đỏ: bản lỏng chạy lại với mọi ENOENT chạy cùng ma trận → đỏ ghim 'TT-AC-2: ENOENT trên tệp thường bị nuốt'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/phat-bieu.test.mjs]
+    expected: "exit 0; ca 'TT-AC-3' xanh: mã nguồn phat-bieu.test.mjs có ≥ 4 chỗ gọi filesOfTree(ROOT / findCallSites(ROOT / kiemVai(ROOT và chỗ nào cũng nằm trong quetChiuTepTam(() => …); chiều đỏ: cùng mã nguồn bỏ lớp bọc ở chỗ gọi filesOfTree(ROOT → bộ soát nêu đúng dòng ấy, ca đỏ ghim 'TT-AC-3: lời gọi quét cây thật không qua lớp bọc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; cd pipeline && npm test toàn bộ xanh, gồm PB-AC-5 (quét cây thật, ma trận đối chứng, ENRICH_COLS), PB-AC-6 (chỗ gọi, đối chứng) và gia-ty-sau-khoang-trang"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
