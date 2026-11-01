@@ -11,7 +11,21 @@ const mtplx = createOpenAI({
   apiKey: "none", // local server không cần key
 }); // MTPLX chỉ có chat completions, không Responses API — getModel dùng mtplx.chat()
 
-export type ModelName = "qwen27b" | "kev4b" | "decisions" | "haiku";
+/** Qwen tắt suy nghĩ (chat_template_kwargs.enable_thinking=false, như classify-s03 của ZCode): việc nhãn ngắn
+ * cần JSON gọn — bật suy nghĩ thì hết maxOutputTokens trước khi ra JSON. @ai-sdk/openai không có extraBody,
+ * nên chèn trường qua tham số fetch của SDK; chỉ áp cho bản này, các agent khác giữ nguyên. */
+const mtplxKhongNghi = createOpenAI({
+  baseURL: MTPLX_URL,
+  apiKey: "none",
+  fetch: (url, init) => {
+    if (init?.body && typeof init.body === "string") {
+      init = { ...init, body: JSON.stringify({ ...JSON.parse(init.body), chat_template_kwargs: { enable_thinking: false } }) };
+    }
+    return fetch(url, init);
+  },
+});
+
+export type ModelName = "qwen27b" | "qwen27b-khong-nghi" | "kev4b" | "decisions" | "haiku";
 
 /** Model cloud đi qua Vercel AI Gateway (KC1, Mạnh 01/11): một khoá AI_GATEWAY_API_KEY, ngân sách + nhật ký ở Gateway.
  * Đọc env lúc gọi để test trỏ được Gateway giả (AI_GATEWAY_BASE_URL). */
@@ -24,6 +38,8 @@ export function getModel(name: ModelName) {
   switch (name) {
     case "qwen27b":
       return mtplx.chat("qwen3.8-27b-local");
+    case "qwen27b-khong-nghi":
+      return mtplxKhongNghi.chat("qwen3.8-27b-local");
     case "haiku":
       return gw()(GATEWAY_MODEL.haiku);
     default:

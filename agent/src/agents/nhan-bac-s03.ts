@@ -151,9 +151,10 @@ export async function hoiBai(backend: Backend, text: string, opts: HoiOpts = {})
       };
     } else {
       const r = await generateText({
-        model: opts.languageModel ?? getModel(backend === "qwen" ? "qwen27b" : "haiku"),
+        model: opts.languageModel ?? getModel(backend === "qwen" ? "qwen27b-khong-nghi" : "haiku"),
         system: SYSTEM,
         prompt: sach,
+        temperature: 0,
         maxOutputTokens: 400,
       });
       usage = r.usage;

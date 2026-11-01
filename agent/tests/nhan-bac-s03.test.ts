@@ -253,3 +253,30 @@ test("chiều đỏ NB-AC-9: bản đột biến kiểm trần SAU khi gửi →
   for (const _ of LO10) { const n = await hoi(); tong += n.cost_usd ?? 0; if (tong > 0.035) break; }
   assert.throws(() => kiemTran(dem.n, true), /NB-AC-9 vượt trần chi phí/);
 });
+
+// ---------- NB-AC-7 (bổ sung S4 tập vàng): Qwen nhãn bạc tắt suy nghĩ như classify-s03 ----------
+import { generateText as goiThat } from "ai";
+import { getModel as layModel } from "../src/runtime/models.js";
+async function thanGui(ten: "qwen27b" | "qwen27b-khong-nghi") {
+  const cu = globalThis.fetch;
+  let than: Record<string, unknown> = {};
+  globalThis.fetch = (async (_u: unknown, init?: RequestInit) => {
+    than = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ id: "x", object: "chat.completion", created: 0, model: "m",
+      choices: [{ index: 0, message: { role: "assistant", content: "{}" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } }), { headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+  try { await goiThat({ model: layModel(ten), prompt: "p", temperature: 0 }); } finally { globalThis.fetch = cu; }
+  return than;
+}
+test("NB-AC-7 Qwen nhãn bạc gửi chat_template_kwargs.enable_thinking=false; bản qwen27b thường không đổi", async () => {
+  const t = await thanGui("qwen27b-khong-nghi");
+  assert.deepEqual(t.chat_template_kwargs, { enable_thinking: false }, "NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ");
+  assert.equal(t.temperature, 0);
+  const thuong = await thanGui("qwen27b");
+  assert.equal(thuong.chat_template_kwargs, undefined, "NB-AC-7 bản qwen27b thường bị đổi theo");
+});
+test("chiều đỏ NB-AC-7: thân của bản qwen27b thường → bộ kiểm tắt-suy-nghĩ đỏ", async () => {
+  const t = await thanGui("qwen27b");
+  assert.throws(() => assert.deepEqual(t.chat_template_kwargs, { enable_thinking: false }, "NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ"), /NB-AC-7 Qwen nhãn bạc còn bật suy nghĩ/);
+});
