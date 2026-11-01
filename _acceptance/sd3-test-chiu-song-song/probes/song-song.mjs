@@ -17,8 +17,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 const PIPE = path.join(ROOT, "pipeline");
 const TEP = "pipeline/scripts/bait-gap-sellers.test.mjs";
 const pg = createRequire(path.join(PIPE, "package.json"))("pg");
-const DB_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const MODE = process.argv[2];
+// chan: chạy trên DB THỬ riêng (khoá tư vấn và khoá bảng chỉ tranh nhau trong cùng một database) — không phiền DB máy thu
+// đang dùng chung, không bị tải của bộ khác làm nhiễu; DB thử dựng bằng db-thu-chac.sh của SD3 và xoá khi xong.
+// khoa: đo khoá của chính phiên trên DB máy thu (chỉ ACCESS SHARE, ROLLBACK).
+const DB_THU = `oneinvest_p4_sts_${process.pid}`;
+const DB_URL = `postgres://oneinvest:oneinvest@localhost:5433/${MODE === "chan" ? DB_THU : "oneinvest"}`;
 
 // An toàn trên DB dùng chung (sự cố 01/11: một lượt `chan` bị bỏ lại giữ 33033 + khoá dòng 1 giờ, chặn sync đêm). Mọi phiên
 // probe đặt hạn PHÍA MÁY CHỦ — Postgres tự huỷ giao dịch dù tiến trình này chết, bị giết hay treo — và cả tiến trình có trần.
@@ -31,8 +35,12 @@ const moPhien = async () => {
   for (const q of HAN_PHIEN) await k.query(q);
   return k;
 };
-const TRAN_PROBE_MS = 180_000;
-setTimeout(() => { console.error(`PROBE VUOT TRAN ${TRAN_PROBE_MS / 1000} s — thoát, máy chủ tự huỷ giao dịch`); process.exit(3); }, TRAN_PROBE_MS).unref();
+const TRAN_PROBE_MS = 900_000; // gồm dựng DB thử (pg_dump) — phiên chặn vẫn có hạn riêng phía máy chủ
+setTimeout(() => {
+  console.error(`PROBE VUOT TRAN ${TRAN_PROBE_MS / 1000} s — thoát, máy chủ tự huỷ giao dịch`);
+  try { unlinkSync(path.join(PIPE, `scripts/bait-gap-sellers.cu-${process.pid}.mjs`)); } catch {}
+  process.exit(3);
+}, TRAN_PROBE_MS).unref();
 
 const base = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
 const moi = readFileSync(path.join(ROOT, TEP), "utf8");
@@ -43,7 +51,8 @@ assert.notEqual(cu, moi, "tệp test chưa đổi so merge-base");
  * trả { code, giay, out, biGiet }. Tiến trình treo (kết nối DB còn chờ khoá) không in gì trước khi bị giết. */
 function chay(tep, tranMs, tranTienTrinhMs) {
   const t0 = Date.now();
-  const r = spawnSync("node", ["--test", `--test-timeout=${tranMs}`, tep], { cwd: PIPE, encoding: "utf8", timeout: tranTienTrinhMs });
+  const r = spawnSync("node", ["--test", `--test-timeout=${tranMs}`, tep],
+    { cwd: PIPE, encoding: "utf8", timeout: tranTienTrinhMs, env: { ...process.env, DATABASE_URL: DB_URL } });
   return { code: r.status, giay: (Date.now() - t0) / 1000, out: `${r.stdout ?? ""}${r.stderr ?? ""}`, biGiet: r.signal != null || r.error?.code === "ETIMEDOUT" };
 }
 
@@ -51,7 +60,7 @@ function chay(tep, tranMs, tranTienTrinhMs) {
 function chayNen(tep, tranMs) {
   const t0 = Date.now();
   return new Promise((res) => {
-    const ch = spawn("node", ["--test", `--test-timeout=${tranMs}`, tep], { cwd: PIPE });
+    const ch = spawn("node", ["--test", `--test-timeout=${tranMs}`, tep], { cwd: PIPE, env: { ...process.env, DATABASE_URL: DB_URL } });
     let out = "";
     ch.stdout.on("data", (d) => (out += d));
     ch.stderr.on("data", (d) => (out += d));
@@ -71,7 +80,12 @@ if (MODE === "chan") {
     return k;
   };
   const dong = async (k) => { await k.query("ROLLBACK").catch(() => {}); await k.end().catch(() => {}); };
-  const tamCu = path.join(PIPE, `scripts/bait-gap-sellers.cu-${process.pid}.test.mjs`);
+  // Tên không khớp glob `scripts/*.test.mjs` của npm test — bị bỏ lại (probe bị giết) cũng không lọt vào lượt test sau.
+  const tamCu = path.join(PIPE, `scripts/bait-gap-sellers.cu-${process.pid}.mjs`);
+  const dung = spawnSync("bash", [path.join(ROOT, "_acceptance/sdt-luu-goc-e164/probes/db-thu-chac.sh"), DB_THU],
+    { cwd: ROOT, encoding: "utf8", timeout: 600_000 });
+  assert.equal(dung.status, 0, `không dựng được DB thử ${DB_THU}:\n${dung.stderr}`);
+  console.log(`# DB thử: ${DB_THU}`);
   try {
     // Phiên chặn A: như ca dài của bộ app — giữ 33033 + khoá dòng 200 tin.
     let a = await moChan();
@@ -110,6 +124,7 @@ if (MODE === "chan") {
   } finally {
     try { unlinkSync(tamCu); } catch {}
     for (const k of MO) await dong(k);
+    spawnSync("bash", [path.join(ROOT, "db/db-thu.sh"), DB_THU, "--xoa"], { cwd: ROOT, timeout: 120_000 });
   }
 } else if (MODE === "khoa") {
   // Rút đúng khối lược đồ riêng của tệp test (không nạp tệp test — node:test sẽ chạy ca).
@@ -164,21 +179,31 @@ if (MODE === "chan") {
     await c.end();
   }
 } else if (MODE === "assert") {
-  /** Thông điệp assert: chuỗi nháy kép/backtick mở đầu bằng mã ca, và regex trong assert.rejects. */
-  const thongDiep = (s) => [...s.matchAll(/["`]((?:SD-AC|SD3|AC-7)[^"`]*)["`]|rejects\([^)]*?\/([^/]+)\//g)]
-    .map((m) => m[1] ?? m[2]).sort();
+  /** Thông điệp assert: (1) chuỗi nháy kép/backtick mở đầu bằng mã ca; (2) regex literal đối số cuối của assert.rejects. */
+  const chuoiMa = (s) => [...s.matchAll(/["`]((?:SD-AC|SD3|AC-7)[^"`]*)["`]/g)].map((m) => m[1]);
+  const regexRejects = (s) => [...s.matchAll(/rejects\(.*?,\s*\/((?:[^/\\\n]|\\.)+)\//g)].map((m) => `/${m[1]}/`);
+  const thongDiep = (s) => [...chuoiMa(s), ...regexRejects(s)].sort();
+  // Ma trận viết trước: mỗi lớp đếm riêng, số regex rút được = số lời gọi assert.rejects có đối số regex.
+  const soRejects = (s) => (s.match(/assert\.rejects\([^\n]*,\s*\//g) ?? []).length;
+  for (const [ten, t] of [["merge-base", cu], ["HEAD", moi]]) {
+    assert.equal(regexRejects(t).length, soRejects(t), `${ten}: rút ${regexRejects(t).length} regex ≠ ${soRejects(t)} lời gọi rejects`);
+    assert.ok(soRejects(t) >= 1, `${ten}: không có lời gọi assert.rejects nào — bộ rút regex không được thử`);
+  }
   const a = thongDiep(cu), b = thongDiep(moi);
-  console.log(`# thông điệp assert: merge-base ${a.length} · HEAD ${b.length}`);
-  assert.ok(a.length >= 10, "đọc được quá ít thông điệp — bộ rút hỏng");
+  console.log(`# thông điệp assert: merge-base ${chuoiMa(cu).length} chuỗi + ${regexRejects(cu).length} regex · HEAD ${chuoiMa(moi).length} chuỗi + ${regexRejects(moi).length} regex`);
+  assert.ok(chuoiMa(cu).length >= 10, "đọc được quá ít thông điệp chuỗi — bộ rút hỏng");
   assert.deepEqual(b, a, "THONG DIEP ASSERT DOI");
   // Câu đọc schema trong thân ca: merge-base đọc 'public', HEAD đọc lược đồ riêng — đúng hai chỗ (khối lược đồ riêng đọc
   // catalog public để chép, không tính).
   const thanCa = (s) => s.slice(s.indexOf("const bam = "));
   const docPublic = (s) => (thanCa(s).match(/'public'(::regnamespace)?/g) ?? []).length;
   assert.equal(docPublic(cu) - docPublic(moi), 2, `số câu đọc schema public trong thân ca đổi ${docPublic(cu)} → ${docPublic(moi)}`);
-  // Đối chứng đỏ: bản HEAD xoá một thông điệp → bộ so bắt.
+  // Đối chứng đỏ, mỗi lớp một ô: xoá một thông điệp chuỗi; đổi regex của assert.rejects → bộ so bắt cả hai.
   assert.throws(() => assert.deepEqual(thongDiep(moi.replace("SD-AC-7 có người mà vẫn báo thiếu", "x")), a, "THONG DIEP ASSERT DOI"),
     /THONG DIEP ASSERT DOI/);
+  const doiRegex = moi.replace("/SD-AC-1 cột tổng hợp của C/)", "/BẤT KỲ/)");
+  assert.notEqual(doiRegex, moi, "đối chứng regex: không tìm thấy regex của ca SD-AC-1 đỏ");
+  assert.throws(() => assert.deepEqual(thongDiep(doiRegex), a, "THONG DIEP ASSERT DOI"), /THONG DIEP ASSERT DOI/);
   console.log("ASSERT OK");
 } else {
   console.error("dùng: song-song.mjs chan|khoa|assert");
