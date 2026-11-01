@@ -346,19 +346,35 @@ async function napTin() {
   await q(`INSERT INTO "${S}".ops_audit (actor, action, env, detail) VALUES ('machine:td', 'phat-bieu:cat-chuyen', 'local', '{}')`, [])
 }
 
-/** Ảnh chụp public mà route decide và hàm 033/045 có thể chạm (số dòng từng bảng) — phải y nguyên sau lượt. */
+/**
+ * Public mà route decide và hàm 033/045 có thể chạm — lượt thử không được ghi dòng nào vào đó. DB local dùng chung có job
+ * S06/đêm ghi cùng lúc, nên không so tổng số dòng trước/sau (đỏ theo tải); chỉ xét dòng public sinh/sửa trong cửa sổ lượt
+ * (xmin mới hơn mốc xid lúc mở) mà mang dấu của lượt này: mã tin/cặp/thẻ td_, hd9, vai td-, actor machine:td, tên lược đồ
+ * tạm, mã người tạo trong lược đồ tạm. Phải bằng 0 ở mọi bảng.
+ */
 const BANG_PUBLIC = ["review_queue", "ops_audit", "property_candidates", "enrichment_proposals", "sale_offer_records", "properties", "property_offers", "field_assertions", "users", "sessions"]
-let publicTruoc: Record<string, number> = {}
-async function chupPublic(): Promise<Record<string, number>> {
+const DAU_LUOT = String.raw`td_s0\d|td_s06b|td_np|tdA\d|tdB\d|hd9A\d|hd9B\d|hd9 |td-(user|viewer|ops|admin|owner|run)|machine:td|td (ghép|bổ sung|thẻ)`
+const layMoc = async () => String((await admin.query(`SELECT (txid_current() % 4294967296)::text AS x`)).rows[0].x)
+let xidMoc = ""
+/** Số dòng mang dấu lượt sinh/sửa sau `moc` ở từng bảng của `luocDo`; dấu gồm tên lược đồ tạm `nguon` + mã người trong đó. */
+async function publicBiCham(
+  { luocDo = "public", nguon = S, bang = BANG_PUBLIC, moc = xidMoc } = {},
+): Promise<Record<string, number>> {
+  const ids = (await admin.query(`SELECT id FROM "${nguon}".users`).catch(() => ({ rows: [] as { id: string }[] }))).rows.map((r) => r.id)
+  const dau = [DAU_LUOT, nguon, ...ids].join("|")
   const out: Record<string, number> = {}
-  for (const t of BANG_PUBLIC) out[t] = (await admin.query(`SELECT count(*)::int AS n FROM public.${t}`)).rows[0].n
+  for (const t of bang)
+    out[t] = (await admin.query(
+      `SELECT count(*)::int AS n FROM "${luocDo}".${t} x WHERE age(x.xmin) <= age($1::xid) AND to_jsonb(x)::text ~ $2`,
+      [moc, dau],
+    )).rows[0].n
   return out
 }
 
 before(async () => {
   try {
     await admin.connect()
-    publicTruoc = await chupPublic()
+    xidMoc = await layMoc()
     await dungLuocDo()
     await dungBangPhien(admin, S)
     await napTin()
@@ -372,12 +388,67 @@ after(async () => {
   await db.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
+  const cham = await publicBiCham().catch(() => null)
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
-  const publicSau = await chupPublic().catch(() => null)
   await admin.end().catch(() => {})
-  assert.deepEqual(publicSau, publicTruoc, "public đã bị chạm")
+  assert.deepEqual(cham, Object.fromEntries(BANG_PUBLIC.map((t) => [t, 0])), "public đã bị chạm")
 })
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
+
+// ---------- kiểm «public đã bị chạm» chịu tải (main-xanh-duoi-tai-db) ----------
+// Lược đồ nháp đóng vai public: một phiên khác ghi (commit) như job đêm; kiểm chỉ đếm dòng mang dấu lượt sau mốc.
+describe("TD public chịu tải: kiểm public chỉ đếm dòng mang dấu lượt trong cửa sổ", () => {
+  const N = `${S}_tai`
+  const bang = ["ops_audit"]
+  const ghi = (actor: string) =>
+    admin.query(`INSERT INTO "${N}".ops_audit (actor, action, detail) VALUES ($1, 'thu', '{}'::jsonb)`, [actor])
+  const dem = async (moc: string) => (await publicBiCham({ luocDo: N, nguon: N, bang, moc })).ops_audit
+  before(async () => {
+    if (setupErr) return
+    await admin.query(`DROP SCHEMA IF EXISTS "${N}" CASCADE`)
+    await admin.query(`CREATE SCHEMA "${N}"`)
+    await admin.query(`CREATE TABLE "${N}".ops_audit (id serial, actor text, action text, detail jsonb)`)
+    await dungBangPhien(admin, N)
+  })
+  after(async () => {
+    await admin.query(`DROP SCHEMA IF EXISTS "${N}" CASCADE`).catch(() => {})
+  })
+
+  test("TD-TAI-1 phiên khác ghi dòng không dấu sau mốc → đếm 0 (đối chứng: so số dòng thấy lệch 1)", async () => {
+    ready()
+    const moc = await layMoc()
+    const truoc = (await admin.query(`SELECT count(*)::int AS n FROM "${N}".ops_audit`)).rows[0].n
+    await ghi("job:s06")
+    assert.equal(await dem(moc), 0, "TD-TAI-1: dòng của job khác bị tính là lượt chạm public")
+    const sau = (await admin.query(`SELECT count(*)::int AS n FROM "${N}".ops_audit`)).rows[0].n
+    assert.equal(sau - truoc, 1, "đối chứng: cách cũ (so số dòng) phải thấy lệch")
+  })
+
+  test("TD-TAI-2 ma trận sáu dấu lượt ghi sau mốc → mỗi dấu đếm đúng 1, kiểm cuối lượt đỏ", async () => {
+    ready()
+    await admin.query(`SET search_path TO "${N}"`)
+    const nguoiThu = await taoNguoi(admin, "ops").finally(() => admin.query("RESET search_path"))
+    const DAU = [`offer td_s06`, `pair:hd9A1|hd9B1`, `td-ops`, `machine:td`, `${N}.ops_audit`, nguoiThu.id]
+    for (const d of DAU) {
+      const moc = await layMoc()
+      await ghi(d)
+      assert.equal(await dem(moc), 1, `TD-TAI-2: dấu «${d}» không được đếm`)
+    }
+    const moc = await layMoc()
+    await ghi("machine:td")
+    const cham = await publicBiCham({ luocDo: N, nguon: N, bang, moc })
+    assert.throws(() => assert.deepEqual(cham, { ops_audit: 0 }, "public đã bị chạm"), /public đã bị chạm/)
+  })
+
+  test("TD-TAI-3 dòng mang dấu có từ trước mốc → không đếm; lấy mốc trước khi ghi → đếm 1", async () => {
+    ready()
+    await ghi("machine:td")
+    assert.equal(await dem(await layMoc()), 0, "TD-TAI-3: dòng trước cửa sổ lượt bị tính")
+    const moc = await layMoc()
+    await ghi("machine:td")
+    assert.equal(await dem(moc), 1, "đối chứng: dòng trong cửa sổ phải được tính")
+  })
+})
 
 type CtxMod = typeof import("../src/lib/ops/review-context")
 const THE_DB = [

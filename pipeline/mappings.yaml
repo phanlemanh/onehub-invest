@@ -140,6 +140,34 @@ canonical:
       dd: BathroomsTotalInteger
       note: "đối chiếu research/reso-standards.md bảng field map; migration 030/031"
       checked_on: "2026-10-22"
+    street_number:
+      dd: StreetNumber
+      note: "số nhà của tin S06 (payload street_number, vắng thì streetnumber_display) — chỉ qua phát biểu, migration 061 (HD5)"
+      checked_on: "2026-10-31"
+    unit_number:
+      dd: UnitNumber
+      note: "mã căn công bố của tin S06 (payload unitnumber_display, vắng thì unitnumber) — giữ nguyên chữ nguồn; migration 061"
+      checked_on: "2026-10-31"
+    frontage_length:
+      dd: FrontageLength
+      note: "mặt tiền (m) — payload width S06; numeric, CHECK > 0; migration 061"
+      checked_on: "2026-10-31"
+    lot_size_dimensions:
+      dd: LotSizeDimensions
+      note: "«ngang x dài» (m) khi S06 có cả width lẫn length — RESO không có trường chiều sâu lô riêng; migration 061"
+      checked_on: "2026-10-31"
+    stories:
+      dd: Stories
+      note: "số tầng của nhà (payload floors S06) — Property.Stories, không phải StoriesTotal của toà (ADR-0013); migration 061"
+      checked_on: "2026-10-31"
+    latitude:
+      dd: Latitude
+      note: "vĩ độ tin S06 (cột latitude của stg) — CHECK [-90, 90]; migration 061"
+      checked_on: "2026-10-31"
+    longitude:
+      dd: Longitude
+      note: "kinh độ tin S06 (cột longitude của stg) — CHECK [-180, 180]; migration 061"
+      checked_on: "2026-10-31"
 
 # --------------------------------------------------------------------------
 # LỚP MEDIA — bảng `media` (migration 053, NH1 media-canonical-reso): ảnh tin theo resource Media
@@ -325,7 +353,7 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059); dd_lookup = tên field RESO của trường"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061); dd_lookup = tên field RESO của trường"
     checked_on: "2026-10-30"
     columns: [field_assertions.field]
     nullable: false
@@ -336,6 +364,13 @@ enums:
       - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
       - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
       - { code: offer_status, label_vi: Trạng thái chào, dd_lookup: StandardStatus }
+      - { code: street_number, label_vi: Số nhà, dd_lookup: StreetNumber }
+      - { code: unit_number, label_vi: Mã căn, dd_lookup: UnitNumber }
+      - { code: frontage_length, label_vi: Mặt tiền, dd_lookup: FrontageLength }
+      - { code: lot_size_dimensions, label_vi: Ngang × dài, dd_lookup: LotSizeDimensions }
+      - { code: stories, label_vi: Số tầng, dd_lookup: Stories }
+      - { code: latitude, label_vi: Vĩ độ, dd_lookup: Latitude }
+      - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
