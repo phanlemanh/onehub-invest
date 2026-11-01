@@ -344,17 +344,12 @@ biết, không phải điều kiện chặn.
 
 Giả định một tài khoản một số chưa kiểm chứng. Khảo sát 20/10 từng đặt trần 50 lượt/ngày, chỉ cho Deals; với trần đó 2.000 tài khoản mất 40 ngày, nên muốn nhanh hơn phải nâng trần.
 
-### 10.2 Cách làm cho S06
+### 10.2 Thu người bán và SĐT: ZCode và Mạnh giải quyết
 
-| Cách | Làm gì | Rủi ro | Làn |
-|---|---|---|---|
-| **A. Hiện số theo tài khoản, nhịp thấp** | Mỗi tài khoản một lượt, ưu tiên tài khoản có tin bán; lưu vào `registry_aliases`; dừng ngay khi bị chặn | Gọi endpoint private của nguồn; bị chặn thì có thể kéo theo luồng thu chính; có thể cần tài khoản thu (tầng A); không được vượt đăng nhập hay chống bot | ZCode, Claude |
-| B. Xin nguồn đường chính thức | Làm việc với S06 về đối tác hoặc API | Chậm, có thể bị từ chối; sạch nhất về điều khoản | Mạnh |
-| C. Tạm thời nút «Hỏi người đăng» qua đội | Người xem gửi yêu cầu, đội liên hệ | Tốn người, không phải SĐT | Claude |
+Mạnh chốt 02/11: thu thập ở mọi kênh là việc của ZCode và Mạnh. Phía Claude làm chiến lược, kế hoạch, điều phối, và nhận dữ liệu từ `stg_*` trở đi. Các số ở §10.1 là đầu vào cho hai bên,
+không phải phương án đã chọn. Kênh nào, cách nào, nhịp nào: hai bên quyết. Bên Claude không dò nguồn thêm.
 
-Em đề xuất A cho bước thử có giới hạn sau khi anh xác nhận nhịp và tài khoản thu, song song hỏi B; 9% tin ẩn số luôn cần C hoặc B.
-
-### 10.3 Việc phải đổi để người bán lên cloud và Invest
+### 10.3 Làn Claude: việc phải đổi để người bán lên cloud và Invest
 
 | Chỗ | Đổi | Ghi chú |
 |---|---|---|
@@ -370,10 +365,38 @@ Em đề xuất A cho bước thử có giới hạn sau khi anh xác nhận nh�
 
 **Đang mở, hôm nay:**
 
-- **S06: SĐT 0%.** Chưa giải quyết, cần chọn ở §10.2.
-- **S01: chưa có tên và SĐT người bán**, chưa kiểm trang chi tiết.
-- **S03: 43% tin thiếu SĐT.** Bổ sung theo người gửi kéo được lên ~79%.
-- **S05: paused từ 21/10.**
-- **S07: chưa có bộ thu.**
+| Cảnh báo | Bên giải quyết |
+|---|---|
+| S06: SĐT 0% | ZCode, Mạnh |
+| S01: chưa có tên và SĐT người bán | ZCode, Mạnh |
+| S05: paused từ 21/10 | ZCode, Mạnh |
+| S07: chưa có bộ thu | ZCode, Mạnh |
+| S03: 43% tin thiếu SĐT, phần bài không ghi số | ZCode, Mạnh về thu; Claude về lấy số từ bài khác của cùng người gửi (`transform-*`) |
 
 **Để cảnh báo tự chạy, không dựng cơ chế mới:** thêm một kiểm «phủ người bán và SĐT theo nguồn» vào `pipeline/do-danh-ba-sdt.mjs` (đã chạy trong cloud-sync, `--write` ghi `dq_check_results`, bảng này đã lên cloud). Chỉ ghi số đếm theo mã nguồn, không SĐT. Hiện dòng `fail` không đổi mã thoát; muốn cảnh báo ồn hơn thì đưa thêm vào `/ops-check`. Ngưỡng do anh chốt.
+
+### 10.5 Kế hoạch điều phối tới 05/11
+
+**Nguyên tắc:** hai làn không chờ nhau. Bề mặt người bán lên trước với dữ liệu đang có, SĐT từng kênh về tới đâu thì hiện tới đó, không cần sửa cổng thêm lần nào. Giao tin nhanh là mục tiêu, nên tin thiếu số phải hiện rõ là thiếu thay vì bị ẩn.
+
+**Điểm nối giữa hai làn.** `DATA-CONTRACT.md` hiện không có mục người bán (đang ở `schemaVersion` 4). Đây là chỗ cần chốt đầu tiên: ZCode đề xuất và tăng phiên bản, Claude viết migration và transform (luật làn). Phía nhận cần bốn thứ cho mỗi kênh:
+
+| Cần | Vì sao |
+|---|---|
+| Định danh người bán theo tài khoản hoặc người gửi, tên hiển thị | Gộp tin theo người |
+| SĐT, lưu `+84…` theo ROADMAP mục 24 | Liên hệ |
+| Trạng thái lấy số: có số · nguồn ẩn số · chưa thử · lỗi | Tách «không thể» khỏi «chưa làm», để cổng và cảnh báo nói đúng |
+| Giờ thấy | Biết số còn mới hay không |
+
+**Thứ tự:**
+
+| Khi | Làn | Việc | Xong khi |
+|---|---|---|---|
+| 02/11 | Điều phối | Giao đầu việc thu và chốt điểm nối qua đầu mối liên làn | ZCode nhận |
+| 02–03/11 | Claude | Chốt nghĩa «sống»; chuyển trường từ thô lên tin chuẩn; lấy số S03 theo người gửi; kiểm phủ người bán theo nguồn | Việc 1–2 ở §8.3, kiểm chạy trong cloud-sync |
+| 03–04/11 | Claude | Mở người bán lên cloud; API tin rao công khai; `/vn/[market]/listings` có tin rao, lọc, người bán | Mạnh ký Gate 2 |
+| Song song | ZCode, Mạnh | Thu người bán và SĐT từng kênh, theo thứ tự hai bên chọn | Số phủ tăng trên kiểm |
+| 04/11 | Điều phối | Kiểm dữ liệu thật trên cloud, chốt danh sách kênh ra mắt | Bảng phủ theo kênh |
+| 05/11 | Mạnh | Ra mắt | |
+
+**Theo dõi hằng ngày** là bảng phủ theo kênh ở §10.1, gắn cùng báo cáo «Mục tiêu dữ liệu ra mắt 05/11». Sau khi điểm nối chốt, việc sửa khoá căn, ghép chéo nguồn (việc 8–10 ở §8.3) mới có đầu vào: SĐT S06 mở lại khả năng gộp người và tin giữa các nguồn, nên đây cũng là lối chính để tin thật sự tốt hơn nguồn gốc.
