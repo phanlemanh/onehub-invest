@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: check-cloud-sync-sellers-view
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.cloud_sync_sellers_view
+    layer: backend-effect
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; nguồn sellers relkind v (ca fail nếu chưa áp 060); PASS: local mô phỏng sellers là bảng; count + md5(string_agg phone_hash) bằng view nguồn; cloud mô phỏng sellers là bảng, cột = CLOUD_ALLOW.sellers; runSync đổ đủ số dòng; hai ô ĐỎ-ĐÚNG: pg_dump -s -t public.sellers và -t public.sale_offer_records nạp vào DB trống thì psql gãy ('DOI CHUNG KHONG BAT' nếu nạp được); in 'check-cloud-sync sellers-view: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2a
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_stage
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync stage: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_atomic
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync atomic: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2c
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_fail
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync fail: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2d
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_fidelity
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync fidelity: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2e
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_keep
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync keep: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2f
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_pii
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync pii: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2g
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_overlap
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync overlap: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2h
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_allow
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync allow: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2i
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync anon: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2j
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_pii_cot
+    paths: [pipeline/scripts/check-cloud-sync.mjs]
+    expected: "exit 0; 'check-cloud-sync pii-cot: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ccs_pham_vi
+    paths: [_acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base thuộc: pipeline/scripts/check-cloud-sync.mjs, _acceptance/check-cloud-sync-sellers-view/*, _acceptance/config.yaml, run-log/evidence-report của cloud-sync-atomic, leak-gate-kiem-anon, soat-tang-a-moi-duong-len-cloud, PRODUCT-MAP.md, LO-TRINH.html; thước không chứa mgmtExec gọi cloud thật hay SUPABASE_; đối chứng: pipeline/sync-cloud.mjs → 'NGOAI PHAM VI'; in 'PHAM VI OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -14,6 +14,7 @@
 //   allow     cột cho phép, chuẩn hoá seller_ref, soát tên nguồn
 //   anon      leak gate kiểm quyền đọc công khai anon/authenticated (leak-gate-kiem-anon, AU1)
 //   pii-cot   leak gate đỏ khi bảng người bán ở cloud có cột ngoài CLOUD_ALLOW / bảng tầng A có dòng (NT2)
+//   sellers-view  nguồn sau 060/059 dựng được DB mô phỏng; sellers là bảng ở hai phía, sync đổ đủ dòng (check-cloud-sync-sellers-view)
 import { execFileSync, spawn } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -116,11 +117,40 @@ function bangBanGhi() {
 }
 const BAN_GHI = bangBanGhi();
 
+// SD3 (060): ở local, sellers là VIEW trên bí danh `sdt` + bản ghi tin; pg_dump -t sellers chỉ ra câu CREATE VIEW đọc
+// registry_aliases/sale_offer_records mà thước không dump — psql ON_ERROR_STOP chết, cả thước gãy (đo 31/10). Cloud vẫn giữ
+// sellers là BẢNG (sellers-view-len-cloud). Nên thước bỏ sellers khỏi dump và dựng bảng bằng câu CREATE TABLE nguyên văn
+// của 022; DB local mô phỏng nạp thêm dòng của view (COPY), DB cloud mô phỏng để rỗng như mọi bảng FILL. Rỗng khi nguồn
+// chưa áp 060 (sellers còn là bảng → dump như cũ).
+const SELLERS_COT = ["phone_hash", "name", "sources", "n_ads", "first_seen", "last_seen", "flags"];
+function sellersLaView() {
+  const out = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "psql", "-U", "oneinvest", "-h", "localhost",
+    "-d", SRC_DB, "-At", "-c", "SELECT relkind FROM pg_class WHERE oid = to_regclass('public.sellers')"], { encoding: "utf8" }).trim();
+  return out === "v";
+}
+const SELLERS_VIEW = sellersLaView();
+const DDL_SELLERS_022 = readFileSync(path.join(ROOT, "db/migrations/022_chotot_source.sql"), "utf8")
+  .match(/CREATE TABLE IF NOT EXISTS sellers \([\s\S]*?\n\);/)?.[0];
+if (!DDL_SELLERS_022) throw new Error("không rút được CREATE TABLE sellers từ 022");
+
+/** Dựng public.sellers thành bảng theo 022 trong DB mô phỏng; `data` → chép dòng view sellers của nguồn (chỉ đọc nguồn). */
+function veSellersBang(db, { data }) {
+  if (!SELLERS_VIEW) return;
+  psql(db, DDL_SELLERS_022);
+  if (!data) return;
+  const dong = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "psql", "-U", "oneinvest", "-h", "localhost",
+    "-d", SRC_DB, "-X", "-q", "-v", "ON_ERROR_STOP=1", "-c", `COPY (SELECT ${SELLERS_COT.join(", ")} FROM public.sellers) TO STDOUT`],
+    { encoding: "utf8", maxBuffer: 1 << 30 });
+  psql(db, `COPY public.sellers (${SELLERS_COT.join(", ")}) FROM STDIN;\n${dong}\\.\n`);
+}
+
 function dump(tables, { schemaOnly }) {
   const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", SRC_DB, "--no-owner", "--no-acl"];
   if (schemaOnly) args.push("-s");
-  for (const t of tables) args.push("-t", `public.${BAN_GHI[t] ?? t}`);
-  return execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 });
+  for (const t of tables) if (!(SELLERS_VIEW && t === "sellers")) args.push("-t", `public.${BAN_GHI[t] ?? t}`);
+  // 059: trigger lịch sử trên sale_offer_records gọi hàm public.history_*() mà pg_dump -t không kèm — DB mô phỏng chỉ
+  // cần hình bảng + dữ liệu, nên bỏ câu CREATE TRIGGER (một dòng mỗi câu trong đầu ra pg_dump).
+  return execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 }).replace(/^CREATE TRIGGER .*;$/gm, "");
 }
 
 /** Vẽ lại hình trước 044 trong DB mô phỏng: bảng bản ghi đổi tên về sale_offers/listings, bỏ bốn cột 044 (cột ở lại
@@ -148,6 +178,7 @@ export function buildLocalSim(name = "local") {
   psql(db, "CREATE EXTENSION IF NOT EXISTS postgis;");
   psql(db, dump([...FILL, "source_registry"], { schemaOnly: false }));
   veHinhCu(db, { cloud: false });
+  veSellersBang(db, { data: true });
   return db;
 }
 
@@ -176,6 +207,7 @@ export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true,
   ddl = ddl.replace(/\bairdna_(markets|scores|market_metrics|sub_monthly|future_daily|listings|submarket_metrics)\b/g, "ref_calib_$1");
   psql(db, ddl);
   veHinhCu(db, { cloud: true });
+  veSellersBang(db, { data: false });
   // bảng người bán trên cloud chỉ mang cột trong CLOUD_ALLOW (trạng thái đích NT2 — leak gate đỏ khi có cột khác)
   const extra = psql(db, `SELECT format('ALTER TABLE public.%I DROP COLUMN %I;', table_name, column_name)
     FROM information_schema.columns WHERE table_schema = 'public' AND (${Object.entries(sync.CLOUD_ALLOW)
@@ -1240,6 +1272,54 @@ async function casePiiCot() {
   else fail(`bảng tầng A rỗng mà gate đỏ: ${empty.join(", ")}`);
 }
 
+/** sellers-view (hồ sơ check-cloud-sync-sellers-view): nguồn đã áp 060 (sellers là view) và 059 (trigger lịch sử) — DB
+ * mô phỏng dựng được; local mô phỏng mang sellers dạng bảng đủ dòng và đúng tập khoá của view nguồn; cloud mô phỏng mang
+ * sellers dạng bảng đúng cột CLOUD_ALLOW; một lượt sync đổ đủ dòng sang cloud. Đối chứng: dump cũ (kéo view sellers, giữ
+ * CREATE TRIGGER) nạp vào DB trống thì gãy — chứng bản vá chặn một lỗi có thật. */
+async function caseSellersView() {
+  const nguon = (sql) => execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "psql", "-U", "oneinvest", "-h", "localhost",
+    "-d", SRC_DB, "-X", "-At", "-c", sql], { encoding: "utf8" }).trim();
+  if (!SELLERS_VIEW) {
+    fail("nguồn chưa áp 060 (sellers không phải view) — ca không đo được gì");
+    return;
+  }
+  const BAM = "SELECT count(*) || ':' || coalesce(md5(string_agg(phone_hash, ',' ORDER BY phone_hash)), '') FROM sellers";
+  const goc = nguon(BAM);
+  const L = buildLocalSim("sv_local");
+  const C = buildCloudSim("sv_cloud");
+  const kieu = async (db) => (await q1(db, "SELECT relkind FROM pg_class WHERE oid = to_regclass('public.sellers')"))[0]?.relkind;
+  if ((await kieu(L)) === "r") pass("local mô phỏng: sellers là bảng");
+  else fail(`local mô phỏng: sellers relkind ${await kieu(L)}`);
+  const ban = psql(L, BAM).trim();
+  if (ban === goc) pass(`local mô phỏng: sellers ${goc.split(":")[0]} dòng, tập phone_hash khớp view nguồn`);
+  else fail(`local mô phỏng lệch view nguồn: ${ban} ≠ ${goc}`);
+  if ((await kieu(C)) === "r") pass("cloud mô phỏng: sellers là bảng");
+  else fail(`cloud mô phỏng: sellers relkind ${await kieu(C)}`);
+  const cot = (await q1(C, `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sellers'`))
+    .map((r) => r.c).sort();
+  if (JSON.stringify(cot) === JSON.stringify([...sync.CLOUD_ALLOW.sellers].sort())) pass("cloud mô phỏng: sellers đúng cột CLOUD_ALLOW");
+  else fail(`cloud mô phỏng: cột sellers ${cot.join(",")}`);
+  await runSync(L, C);
+  const sau = Number((await q1(C, "SELECT count(*)::int AS n FROM sellers"))[0].n);
+  if (String(sau) === goc.split(":")[0]) pass(`sync đổ ${sau} dòng sellers sang cloud mô phỏng`);
+  else fail(`sync đổ ${sau} dòng sellers, nguồn ${goc.split(":")[0]}`);
+  // Đối chứng: dump cũ nạp vào DB trống phải gãy (view sellers đọc bảng không dump; trigger gọi hàm không dump).
+  for (const [ten, args] of [["view sellers", ["-t", "public.sellers"]], ["trigger lịch sử", ["-t", `public.${BAN_GHI.sale_offers ?? "sale_offers"}`]]]) {
+    const db = makeDb(`sv_cu_${ten.split(" ")[0]}`);
+    const ddl = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost",
+      "-d", SRC_DB, "--no-owner", "--no-acl", "-s", ...args], { encoding: "utf8", maxBuffer: 1 << 30 });
+    let gay = false;
+    try {
+      psql(db, ddl);
+    } catch {
+      gay = true;
+    }
+    if (gay) pass(`ĐỎ-ĐÚNG dump cũ (${ten}) nạp vào DB trống thì gãy — bản vá chặn lỗi có thật`);
+    else fail(`DOI CHUNG KHONG BAT: dump cũ (${ten}) vẫn nạp được`);
+    dropDb(db);
+  }
+}
+
 // tiến trình con cho ca fail (d): chạy một lượt có nạp chậm để bị kill -9 giữa chừng
 if (process.argv[2] === "__child") {
   const [, , , L, C, runId, ct, port] = process.argv;
@@ -1261,6 +1341,7 @@ const CASES = {
   allow: caseAllow,
   anon: caseAnon,
   "pii-cot": casePiiCot,
+  "sellers-view": caseSellersView,
 };
 
 const which = process.argv[2];
