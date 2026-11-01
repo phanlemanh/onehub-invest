@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: nhan-bac-model-lon-s03
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b752410505bfd2746ec78269fe8691ddfcedec06
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: nhan-bac-model-lon-s03
@@ -128,7 +128,7 @@ human_signoff:
     - domain-correctness: PASS — Ba backend cùng băm; Qwen 100% và 97% đạt; Haiku 93% và 94% không đạt, ~6,07 USD đạt; Decisions 97% đạt, 91% không đạt, ~1,61 USD đạt; phép tính và cách ước chi phí ×38000/61 đúng; tệp chỉ có số liệu và post_id.
     - operational-feasibility: PASS — Đủ ba backend, băm 16 ký tự hex, đủ cột; tổng 19+15=34 và 34+11+16=61 khớp; chi phí hết bài cũ tính lại vẫn không quá 10 USD; tệp không chép chữ bài nào.
     - spec-alignment: PASS — Cùng băm, đủ cột; Decisions ghi "—" ở trích giả vì backend này không trích và tệp có nói rõ; phần trăm và chi phí tính lại khớp bảng.
-  human_override:  # chi nguoi ghi
+  human_override: Đạt — Mạnh 2026-11-01
 
 ### Lệnh suite (hồi quy)
 

@@ -5,7 +5,7 @@ slug: nhan-bac-model-lon-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline, db]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-01
 design_doc: docs/superpowers/specs/2026-10-31-nhan-bac-model-lon-s03-design.md
@@ -54,3 +54,11 @@ không rời máy; luật 7 giữ (model không ghi canonical). Bảng nhãn b�
 
 - 01/11 Mạnh sửa ở Gate 1.5: đi qua Vercel AI Gateway và dùng lại lớp AI SDK của `agent/` — xem sổ dòng gate1 «đi qua Gateway».
 - Lõi prompt, `stripPII`, `parseReply` chép từ nhánh ZCode `zcode/classify-s03` @ce75ba2e (làn Claude sở hữu `pipeline/` phần phân loại; ZCode được ghi nguồn trong mã).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Bước gạt thông tin cá nhân được kiểm bằng bài dựng tay, chưa kiểm bằng hàng đọc thật từ cơ sở dữ liệu; nếu bước ghép chữ bài sau này đổi, bài kiểm vẫn xanh dù tên nhóm hay người gửi có thể lọt vào yêu cầu.
+  - Ngoài-2: Bài kiểm backend Decisions dùng trả lời giả do người viết dựng; nếu máy chủ thật trả khác hình thì xác suất và chi phí có thể ghi rỗng mà bài kiểm vẫn xanh — chỉ số đo thật trên tập vàng lộ ra.
+  - Ngoài-3: Chưa có bài kiểm tự động chứng minh yêu cầu tới Haiku và Decisions mang đúng khoá và đúng đích trên đường truyền; chỉ lượt đo thật với khoá Gateway thấy được lỗi cấu hình ở chỗ này.
+  - Ngoài-5: Cờ `--since` bị bỏ qua: đặt mốc ngày để chỉ gắn nhãn bài mới thì bài cũ vẫn được gửi đi tính phí; trần chi phí vẫn chặn mức chi tối đa.
+  - Ngoài-7: Cùng lỗi `--since`: mốc ngày bị bỏ qua lặng lẽ, lô gửi đi có thể gồm cả bài cũ và tiêu phí cloud vào lô không mong muốn.
+  - Ngoài-9: Bộ kiểm tự động dùng câu trả lời Decisions giả do người viết tạo; nếu Gateway trả hình khác thì kiểm tự động vẫn xanh, lỗi chỉ lộ khi đo thật.
+  - Ngoài-11: Ca chiều đỏ của trần chi phí không chạy qua lệnh thật; một lỗi làm lệnh kiểm trần sau khi đã gửi có thể lọt qua kiểm tự động, khi đó tiền cloud vượt trần tối đa một bài.
