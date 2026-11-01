@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 16d5db633acfdacceac94fc663b01e985d254dd1
+verified_commit: 01918855cc21e828e2979083f82db9c1aac013b6
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -194,3 +194,7 @@ Round 1: tất cả eval E1–E10 đạt, các lệnh suite xanh; verdict PASS.
 ### Re-pin lần 1 — 2026-11-01, do ghim lại sau gộp main xanh (#257) và chữ ký Cổng 2
 run_id: repin-20261101T045955Z-14833
 sha: 16d5db633acfdacceac94fc663b01e985d254dd1 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 4/6
+
+### Re-pin lần 2 — 2026-11-01, do nhánh HD17 sửa danh-ba-nguoi.mjs + nap-lai-nguoi.mjs
+run_id: repin-20261101T111728Z-58694
+sha: 01918855cc21e828e2979083f82db9c1aac013b6 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
