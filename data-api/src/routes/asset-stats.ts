@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { pool } from "../db/client.js";
+import { giaiMaKhuVuc } from "../lib/ma-thi-truong.js";
 
 export const assetStatsRoute = new Hono();
 
@@ -8,8 +9,11 @@ export const assetStatsRoute = new Hono();
  * Query: ?area=<area_id> (bắt buộc) | ?market=<market_id> (tất cả phường con)
  */
 assetStatsRoute.get("/", async (c) => {
-  const area = c.req.query("area");
-  const market = c.req.query("market");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const rawArea = c.req.query("area");
+  const rawMarket = c.req.query("market");
+  const area = rawArea ? await giaiMaKhuVuc(rawArea) : undefined;
+  const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : undefined;
 
   if (!area && !market) {
     return c.json(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { pool } from "@/lib/db";
+import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,11 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const u = new URL(req.url);
-  const area = u.searchParams.get("area");
-  const market = u.searchParams.get("market");
+  const rawArea = u.searchParams.get("area");
+  const rawMarket = u.searchParams.get("market");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const area = rawArea ? await giaiMaKhuVuc(rawArea) : null;
+  const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;
 
   if (!area && !market) {
     return NextResponse.json(

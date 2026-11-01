@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 import { canCallOpsApi } from "@/lib/ops-access";
 import { KIND } from "@/lib/vocab.generated";
 
@@ -20,7 +21,9 @@ export async function GET(req: Request) {
   }
   const u = new URL(req.url);
   const kind = u.searchParams.get("kind") === KIND.rent_lt ? KIND.rent_lt : KIND.sale;
-  const area = u.searchParams.get("area");
+  const rawArea = u.searchParams.get("area");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const area = rawArea ? await giaiMaKhuVuc(rawArea) : null;
   const limit = Math.min(200, Math.max(1, Number(u.searchParams.get("limit") ?? 50) || 50));
   const sinceDays = Math.min(365, Math.max(1, Number(u.searchParams.get("since_days") ?? 30) || 30));
 

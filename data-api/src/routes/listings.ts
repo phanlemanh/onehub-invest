@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { pool } from "../db/client.js";
+import { giaiMaKhuVuc } from "../lib/ma-thi-truong.js";
 
 export const listingsRoute = new Hono();
 
@@ -8,8 +9,11 @@ export const listingsRoute = new Hono();
  * Query: ?market=<id>&area=<id>&bedrooms=2&limit=50&offset=0
  */
 listingsRoute.get("/", async (c) => {
-  const market = c.req.query("market");
-  const area = c.req.query("area");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const rawMarket = c.req.query("market");
+  const rawArea = c.req.query("area");
+  const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : undefined;
+  const area = rawArea ? await giaiMaKhuVuc(rawArea) : undefined;
   const bedrooms = c.req.query("bedrooms");
   const limit = Math.min(200, Number(c.req.query("limit") ?? 50) || 50);
   const offset = Math.max(0, Number(c.req.query("offset") ?? 0) || 0);
