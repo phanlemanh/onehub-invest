@@ -5,7 +5,7 @@ slug: app-test-chiu-song-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-01
 ---
@@ -68,3 +68,11 @@ trong giao dịch. Hàng này rút khuôn đó thành thư viện dùng chung `p
   (idle_in_transaction 30 s, statement 60 s, lock 3 s), cả probe trần 900 giây gồm dựng DB thử, đóng phiên ở finally.
 - Đường nền so sánh của probe ghim sha d96640c6 (đỉnh nhánh chính lúc hàng rẽ), không dùng merge-base trôi.
 - Mã viết trước hồ sơ (commit 2a4d7b4d) — hồ sơ chốt phạm vi trên mã đã có; ghi ở sổ quyết định.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Ca kiểm bản cloud xác nhận bản đầy đủ phải lỗi nhưng không phân biệt lỗi vì thiếu bảng với lỗi vì đã xoá cột nhạy cảm, nên bước xoá cột hỏng thì ca vẫn xanh.
+  - Ngoài-2: Bước nghiệm thu so thông báo của các ca test bỏ qua những câu có chèn biến, nên sửa hay xoá các câu ấy thì không bị báo.
+  - Ngoài-3: Phép đo khoá chạy trên phần việc dựng lại của ba tệp test, không chạy chính các tệp; lượt chạy thật dưới phiên giữ khoá chia sẻ ở AC-1 đỡ phần lớn rủi ro này.
+  - Ngoài-4: Đã sửa ở vòng 1 (công cụ chép bảng nay chép được cột tính tự động, có ca kiểm); ghi lại vì lượt chấm chép nguyên mục cũ, không còn là hạn chế.
+  - Ngoài-5: Cùng khe với Ngoài-3: một câu mới gọi thẳng dữ liệu dùng chung có thể lọt phép đo khoá.
+  - Ngoài-6: Vòng 1 đã thêm đối chứng cho kiểm tra hai phiên không chờ nhau (bản đột biến giữ khoá phải đỏ); ghi lại vì lượt chấm chép nguyên mục cũ, không còn là hạn chế.
+  - Ngoài-7: Test của thư viện so số lượng ràng buộc của bản chép, chưa so nội dung từng ràng buộc.
