@@ -104,10 +104,14 @@ BEGIN
              max(o.bathrooms)  AS bathrooms,
              max(o.street_raw) AS street,
              array_agg(DISTINCT o.offer_id ORDER BY o.offer_id) AS offer_ids,
-             -- đề xuất của chính tin gắn căn; căn chỉ gắn tin chung chủ thể → mọi đề xuất đã áp của lượt
-             coalesce((SELECT array_agg(DISTINCT ep.id ORDER BY ep.id) FROM enrichment_proposals ep
-                        WHERE ep.id = ANY (applied) AND ep.offer_id = ANY (array_agg(o.offer_id))),
-                      (SELECT array_agg(x ORDER BY x) FROM unnest(applied) x)) AS ids
+             -- đề xuất có chủ thể giao chủ thể của các tin gắn căn (tin của đề xuất, hoặc tin chung bài đăng với nó)
+             (SELECT array_agg(DISTINCT ep.id ORDER BY ep.id)
+                FROM enrichment_proposals ep JOIN sale_offer_records eo ON eo.offer_id = ep.offer_id
+               WHERE ep.id = ANY (applied)
+                 AND (ep.offer_id = ANY (array_agg(o.offer_id))
+                      OR (eo.source || ':' || coalesce(eo.originating_system_key, eo.post_ids[1]))
+                         = ANY (SELECT unnest(offer_subject_keys(x.source, x.originating_system_key, x.post_ids))
+                                  FROM sale_offer_records x WHERE x.offer_id = ANY (array_agg(o.offer_id))))) AS ids
       FROM property_offers po
       JOIN sale_offer_records o ON o.offer_id = po.offer_id
       WHERE po.offer_id = ANY (t_offers)
@@ -172,24 +176,25 @@ BEGIN
     tap := ARRAY[r.offer_id] || offers_chung_chu_the(ARRAY[subj]);
     PERFORM resolve_offer_fields(tap);
     -- Ngược của cascade properties (nguyên 036, 066 mở rộng sang căn của tin chung chủ thể): căn mất giá trị khi nó bằng
-    -- đúng giá trị hoàn tác VÀ không tin nào của căn (kể cả chính tin chung sau phân xử lại) còn mang nó.
+    -- đúng giá trị hoàn tác VÀ không tin nào của căn (kể cả chính tin chung sau phân xử lại, kể cả tin đã nghỉ — cùng tập bản
+    -- ghi mà bước áp đọc) còn mang nó.
     IF r.field = 'bedrooms' THEN
       UPDATE properties p SET bedrooms = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND p.bedrooms::text = r.value
-        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offers o ON o.offer_id = q.offer_id
+        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
                         WHERE q.property_id = p.id AND o.bedrooms::text = r.value);
     ELSIF r.field = 'bathrooms' THEN
       UPDATE properties p SET bathrooms = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND p.bathrooms::text = r.value
-        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offers o ON o.offer_id = q.offer_id
+        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
                         WHERE q.property_id = p.id AND o.bathrooms::text = r.value);
     ELSIF r.field = 'street_raw' THEN
       UPDATE properties p SET street = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND lower(p.street) = r.value_key
-        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offers o ON o.offer_id = q.offer_id
+        AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
                         WHERE q.property_id = p.id AND lower(o.street_raw) = r.value_key);
     END IF;
     UPDATE properties p SET enrichment_log = p.enrichment_log || jsonb_build_array(jsonb_build_object(
@@ -234,13 +239,14 @@ BEGIN
      WHERE ep.status = 'applied';
     t_offers := offers_chung_chu_the(t_subjs);
     WITH agg AS (
-      SELECT po.property_id, max(o.bedrooms) AS bedrooms, max(o.bathrooms) AS bathrooms, max(o.street_raw) AS street
+      SELECT po.property_id, max(o.bedrooms) AS bedrooms, max(o.bathrooms) AS bathrooms, max(o.street_raw) AS street,
+             array_agg(DISTINCT o.offer_id ORDER BY o.offer_id) AS offer_ids
         FROM property_offers po JOIN sale_offer_records o ON o.offer_id = po.offer_id
        WHERE po.offer_id = ANY (t_offers)
        GROUP BY po.property_id
     ), can AS (
       -- đếm ô trên giá trị TRƯỚC khi ghi
-      SELECT p.id, agg.bedrooms, agg.bathrooms, agg.street,
+      SELECT p.id, agg.bedrooms, agg.bathrooms, agg.street, agg.offer_ids,
              (p.bedrooms IS NULL AND agg.bedrooms IS NOT NULL)::int + (p.bathrooms IS NULL AND agg.bathrooms IS NOT NULL)::int
            + (p.street IS NULL AND agg.street IS NOT NULL)::int AS o
         FROM properties p JOIN agg ON p.id = agg.property_id
@@ -250,7 +256,7 @@ BEGIN
         bathrooms = COALESCE(p.bathrooms, can.bathrooms),
         street    = COALESCE(p.street, can.street),
         enrichment_log = p.enrichment_log || jsonb_build_array(jsonb_build_object(
-          't', now(), 'src', 'sua-mot-lan-066', 'actor', 'migration:066'))
+          't', now(), 'src', 'sua-mot-lan-066', 'offer_ids', to_jsonb(can.offer_ids), 'actor', 'migration:066'))
       FROM can
       WHERE p.id = can.id AND can.o > 0
       RETURNING can.o

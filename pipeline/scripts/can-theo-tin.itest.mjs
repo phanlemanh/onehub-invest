@@ -169,7 +169,8 @@ async function kiemHoanTac(tag, { nguoi, bNghi, cungCan, o }, { revertCu = false
   if (revertCu) await c.query(REVERT_063);
   assert.equal((await one("SELECT revert_enrichment($1, 'hitl:thu', 'thử hoàn tác') AS n", [[p]])).n, 1);
   const ganPB = (await c.query("SELECT offer_id FROM property_offers WHERE property_id = $1", [t.PB])).rows.map((r) => r.offer_id);
-  const conMang = (await c.query(`SELECT 1 FROM sale_offers WHERE offer_id = ANY ($1) AND bedrooms = 3`, [ganPB])).rowCount > 0;
+  // cùng tập bản ghi mà bước áp đọc: kể cả tin đã nghỉ
+  const conMang = (await c.query(`SELECT 1 FROM sale_offer_records WHERE offer_id = ANY ($1) AND bedrooms = 3`, [ganPB])).rowCount > 0;
   const pb = await canRow(t.PB);
   if (bGiu && pb.bedrooms === null) throw new Error(`CT-AC-2: căn mất giá trị B vẫn mang (${o})`);
   if (conMang && pb.bedrooms === null) throw new Error(`CT-AC-2: căn mất giá trị còn tin mang (${o})`);
@@ -196,11 +197,26 @@ test("CT-AC-2 ô D của PB mang cùng giá trị: căn giữ", async () => {
   });
 });
 
-test("CT-AC-2 ô B còn mang giá trị từ nguồn riêng sau phân xử lại: căn giữ", async () => {
+test("CT-AC-2 ô B còn mang giá trị từ nguồn riêng sau phân xử lại: căn giữ (B sống và B đã nghỉ, khác căn)", async () => {
+  for (const o of MA_TRAN.filter((x) => x.nguoi === "may" && !x.cungCan)) {
+    await trongGiaoDich(async () => {
+      const { pb, conMang } = await kiemHoanTac(`a2-b-${MA_TRAN.indexOf(o)}`, o, { bGiu: true });
+      assert.equal(conMang, true, `tiền đề: B vẫn mang 3 sau hoàn tác (${o.o})`);
+      assert.equal(pb.bedrooms, 3);
+    });
+  }
+});
+
+test("CT-AC-1 proposal_ids: một lượt áp có đề xuất của hai bài đăng — căn tin chung chỉ ghi đề xuất cùng bài", async () => {
   await trongGiaoDich(async () => {
-    const { pb, conMang } = await kiemHoanTac("a2-b", MA_TRAN[0], { bGiu: true });
-    assert.equal(conMang, true, "tiền đề: B vẫn mang 3 sau hoàn tác");
-    assert.equal(pb.bedrooms, 3);
+    const t = await dung("a1-pid", { bNghi: false, cungCan: false });
+    const X = tin("ct-a1-pid-x", ["ct-a1-pid-x"]);
+    await writeOffers(c, TST, [X]);
+    const pA = await deXuat(t.A, "bedrooms", "3");
+    const pX = await deXuat(X.offer_id, "bedrooms", "2");
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[pA, pX]]);
+    const log = (await canRow(t.PB)).enrichment_log.at(-1);
+    assert.deepEqual(log.proposal_ids, [pA], "CT-AC-1: căn tin chung ghi đề xuất của bài đăng khác");
   });
 });
 
@@ -260,10 +276,15 @@ test("CT-AC-4 sửa một lần: điền đúng các ô lệch do 063 để lạ
     const pr = await deXuat(r.A, "bedrooms", "5");
     await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[pr]]);
     await c.query("UPDATE enrichment_proposals SET status = 'reverted' WHERE id = $1", [pr]);
-    // Đối chứng 2 — căn không gắn tin chung chủ thể của đề xuất nào: không đổi.
+    // Đối chứng 2 — căn không gắn tin chung chủ thể của đề xuất applied nào, dù tin G MANG giá trị (đề xuất của G không
+    // applied — đánh dấu skipped): bản khối sửa bỏ bộ lọc tin chung sẽ điền PG → phép này đỏ.
     const G = tin("ct-a4-g", ["ct-a4-g"]);
     await writeOffers(c, TST, [G]);
+    const pg_ = await deXuat(G.offer_id, "bedrooms", "4");
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[pg_]]);
+    await c.query("UPDATE enrichment_proposals SET status = 'skipped' WHERE id = $1", [pg_]);
     const PG = await can([G.offer_id]);
+    assert.equal((await bedroomsCuaTin([G.offer_id]))[0], 4, "tiền đề: G mang giá trị");
     const hG = async () => (await one("SELECT md5(row(bedrooms, bathrooms, street, enrichment_log)::text) AS h FROM properties WHERE id = $1", [PG])).h;
     const truocG = await hG();
     // Đối chứng 3 — ô căn có sẵn: giữ nguyên.
