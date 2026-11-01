@@ -1,0 +1,20 @@
+{
+ "feature_plain": "Kiểm hằng đêm «cặp một–một chưa gộp» thôi báo đỏ mãi sau khi người vận hành tách một người ra.",
+ "will_do": [
+  {"id": "AC-1", "p": "Sẽ không đếm cặp của người đã tách vào số «chưa gộp», nhưng vẫn tính nó trong tổng."},
+  {"id": "AC-2", "p": "Sẽ vẫn đếm cặp của người chưa gộp chưa tách, kể cả khi có người khác đã tách."},
+  {"id": "AC-3", "p": "Sẽ giữ nguyên mọi số cũ của bảng kiểm khi chưa ai bị tách."},
+  {"id": "AC-5", "p": "Sẽ đọc riêng danh sách người đã gộp và người đã tách trong cùng một lượt đọc chỉ-đọc."},
+  {"id": "AC-6", "p": "Sẽ cho dòng kiểm đêm của S03 là đạt khi cặp duy nhất thuộc người đã tách; nhãn trên trang ops vẫn đọc được."},
+  {"id": "AC-7", "p": "Sẽ giữ kiểm xanh qua ba đêm chưa gộp → gộp → tách, trạng thái đặt bằng đúng câu ghi thật của danh bạ."},
+  {"id": "AC-8", "p": "Sẽ in ra log đêm số cặp đang đứng ngoài kiểm vì đã tách, mỗi nguồn một dòng, không ghi vào bảng kiểm."}
+ ],
+ "wont_do": [
+  {"id": "AC-4", "p": "Sẽ KHÔNG đổi kết quả của thước nạp lại người (không truyền danh sách đã tách)."},
+  {"id": "AC-9", "p": "Sẽ KHÔNG đếm cặp mà SĐT không có người nào mang."},
+  {"id": "OOS-1", "p": "Không đưa số cặp đã tách lên trang ops — chỉ in ra log đêm."},
+  {"id": "OOS-2", "p": "Không xử người ở trạng thái nghỉ (chưa có đường nào tạo trạng thái này)."},
+  {"id": "OOS-3", "p": "Không sửa thước nạp lại người."},
+  {"id": "OOS-4", "p": "Không ghi lại dòng kiểm đã ghi trước đây; đêm kế tự ghi đè."}
+ ]
+}
