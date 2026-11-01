@@ -5,8 +5,10 @@ slug: chuyen-huong-ma-thi-truong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-01-chuyen-huong-ma-thi-truong-design.md
+approved_by: Mạnh
+approved_at: 2026-11-01
 ---
 
 # Acceptance Contract: chuyen-huong-ma-thi-truong
@@ -26,7 +28,7 @@ Source input: lời Mạnh 01/11 qua phiên này («Chờ chuyển hướng») +
 ## Criteria
 
 - AC-1: Given luật đổi mã của migration 064 (`regexp_replace(id,'^vn-(thanh-pho|tinh)-','vn-')`, đọc từ tệp 064) và 32 mã dài đọc từ DB máy thu, When gọi `maNgan` của app và bản chép của data-api, Then cả hai trả đúng kết quả của luật 064 cho cả 32 mã và cho ma trận mã không đổi (`vn-hanoi`, `vn-hcmc`, mã phường `vn-hanoi-<slug>`, `vn`, `vn-tinh` không có đuôi, chuỗi rỗng, mã chứa `thanh-pho` giữa chuỗi); hai bản cho cùng đầu ra trên mọi phần tử.
-- AC-2: Given DB sau 064 (bản chép đã áp chính migration 064), When mở trang thị trường, trang listing của thị trường và trang phường bằng đường mã dài (vd `/vn/thanh-pho-da-nang`, `/vn/thanh-pho-da-nang/listings`, `/vn/<tỉnh>/<phường>` khi có phường), Then trang chuyển hướng (308 vĩnh viễn, hay 307 nếu Hỏi-1 chọn tạm) sang đúng đường mã ngắn tương ứng, giữ đoạn con và query, với cả 32 mã.
+- AC-2: Given DB sau 064 (bản chép đã áp chính migration 064), When mở trang thị trường, trang listing của thị trường và trang phường bằng đường mã dài (vd `/vn/thanh-pho-da-nang`, `/vn/thanh-pho-da-nang/listings`, `/vn/<tỉnh>/<phường>` khi có phường), Then trang chuyển hướng vĩnh viễn (308, Hỏi-1) sang đúng đường mã ngắn tương ứng, giữ đoạn con và query, với cả 32 mã.
 - AC-3: Given DB trước 064 (mã dài còn trong `areas`), When mở cùng các đường mã dài ở AC-2, Then trang hiện như hôm nay với mã nhận được — không chuyển hướng nào bắn.
 - AC-4: Given mã dài không có đích (`/vn/tinh-khong-co`) ở cả hai trạng thái, và mã không mang tiền tố dài (`/vn/hanoi`, `/vn/hcmc`, trang phường Hà Nội), When mở các trang đó, Then mã dài không đích trả 404 như hôm nay (không chuyển hướng tới chỗ không có), mã khác hiện như hôm nay không chuyển hướng.
 - AC-5: Given DB sau 064, When mở Finder `/vn?market=thanh-pho-da-nang`, Ước tính lợi suất `/yield?area=vn-thanh-pho-da-nang` (cũng là đích của link cũ `/vn/thanh-pho-da-nang/dau-tu`) và So sánh `/compare?areas=vn-thanh-pho-da-nang,vn-hanoi`, Then trang chọn đúng thị trường mã ngắn như khi gõ mã ngắn; với DB trước 064 cùng các URL ấy chọn đúng thị trường mã dài như hôm nay.
@@ -55,4 +57,4 @@ Source input: lời Mạnh 01/11 qua phiên này («Chờ chuyển hướng») +
 ## Notes
 
 - Thứ tự triển khai: gộp #252 → gộp hàng này → Mạnh duyệt áp 064 (sau lệnh đếm `--cloud` ra 0).
-- Hỏi-1 (308 hay 307) và Hỏi-2 (giữ bí danh API bao lâu) chờ Mạnh ở Cổng Phạm vi — sổ quyết định.
+- Cổng Phạm vi 01/11 (Mạnh «duyệt»): Hỏi-1 = 308 vĩnh viễn; Hỏi-2 = giữ bí danh mã cũ ở API không hạn, không cơ chế hết hạn.
