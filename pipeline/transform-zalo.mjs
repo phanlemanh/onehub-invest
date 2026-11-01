@@ -163,6 +163,21 @@ export function chonSdtTin(bai) {
   return null;
 }
 
+/**
+ * seller_ref của tin S03/S05 (HD4, audit 30/10 H15): người gửi (`sender_id`) của bài neo — posted_at sớm nhất, hoà thì
+ * post_id nhỏ nhất, cùng thứ tự neo của chonSdtTin. Bài không có người gửi thì xét bài kế. Không rơi về author_hash: đó là
+ * mã agent thu, một giá trị cho cả nguồn.
+ * @param {{ post_id: string, posted_at: string|Date, sender_id?: string|null }[]} bai
+ */
+export function chonNguoiGuiTin(bai) {
+  const neo = [...bai].sort((a, b) => new Date(a.posted_at) - new Date(b.posted_at) || (a.post_id < b.post_id ? -1 : a.post_id > b.post_id ? 1 : 0));
+  for (const b of neo) {
+    const ai = typeof b.sender_id === "string" ? b.sender_id.trim() : "";
+    if (ai) return ai;
+  }
+  return null; // không bài nào có người gửi
+}
+
 /** Số tin mà hợp các số trên mọi bài của tin có ≥ 2 số khác nhau (dòng log «tin nhiều SĐT»). */
 export function demTinNhieuSdt(nhom) {
   return nhom.filter((o) => new Set(o.baiSdt.flatMap((b) => b.phones ?? [])).size >= 2).length;
@@ -560,14 +575,14 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: null, baiSdt: [], authorHash: pr.post.author_hash, sellerName: null, sellerNameAt: null,
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id }],
+        phone: null, baiSdt: [], sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
     } else {
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -603,7 +618,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
       area_m2: o.areaM2, price_perm2: o.pricePerm2, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,
-      seller_phone_hash: phoneHash, seller_ref: o.authorHash, seller_name: o.sellerName,
+      seller_phone_hash: phoneHash, seller_ref: chonNguoiGuiTin(o.posts), seller_name: o.sellerName,
     });
     if (phoneHash) {
       const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
