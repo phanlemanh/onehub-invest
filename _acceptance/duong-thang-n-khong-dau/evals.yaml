@@ -74,3 +74,10 @@ evals:
     paths: [app/src/lib/ops/review-can-cu.ts]
     expected: "exit 0; mọi ca của app/tests/the-duyet-du-can-cu.test.tsx xanh, tệp không đổi so với merge-base của nhánh (diffBase)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.judge_entity_khong_dau
+    paths: [agent/tests/judge-entity-duong.test.ts, agent/tests/judge-luat.test.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx, app/tests/the-duyet-du-can-cu.test.tsx, agent/tests/judge-entity-khong-dau.test.ts]
+    expected: "exit 0; ca 'KD-AC-7 tệp test đã ký không đổi so với merge-base' xanh: merge-base = git merge-base HEAD origin/main; 4 tệp test đã ký (judge-entity-duong, judge-luat, the-duyet-phuong-lech-gia, the-duyet-du-can-cu) có nội dung bằng git show <merge-base>:<tệp>; chiều đỏ trên cùng phép so: tệp của vòng này (judge-entity-khong-dau.test.ts, chưa có ở merge-base) → đỏ 'KD-AC-7 tệp test đã ký bị sửa so với merge-base'; không có origin/main đủ lịch sử → t.skip có lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

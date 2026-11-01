@@ -5,6 +5,7 @@
 // (src/agents/.kd-<pid>-<n>.ts), xoá cuối lượt.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { join } from "node:path";
@@ -191,4 +192,39 @@ test("KD-AC-6 có dấu = không dấu", async (t) => {
   } finally {
     await c.end();
   }
+});
+
+// ---------- KD-AC-7 (vế «không đổi»): tệp test đã ký giữ nguyên so với merge-base của nhánh ----------
+const GOC_KHO = join(import.meta.dirname, "../..");
+const TEP_DA_KY = [
+  "agent/tests/judge-entity-duong.test.ts",
+  "agent/tests/judge-luat.test.ts",
+  "app/tests/the-duyet-phuong-lech-gia.test.tsx",
+  "app/tests/the-duyet-du-can-cu.test.tsx",
+];
+const git = (...a: string[]) => execFileSync("git", a, { cwd: GOC_KHO, encoding: "utf8" }).trim();
+/** Tệp nào trong danh sách khác nội dung ở `base` so với cây đang làm. */
+function tepDoi(base: string, ds: string[]): string[] {
+  return ds.filter((f) => {
+    try {
+      return git("show", `${base}:${f}`) !== readFileSync(join(GOC_KHO, f), "utf8").trim();
+    } catch {
+      return true;
+    }
+  });
+}
+test("KD-AC-7 tệp test đã ký không đổi so với merge-base", (t) => {
+  let base: string;
+  try {
+    base = git("merge-base", "HEAD", "origin/main");
+  } catch {
+    return t.skip("không có origin/main đủ lịch sử để tính merge-base (CI checkout nông)");
+  }
+  t.diagnostic(`KD-AC-7: merge-base ${base.slice(0, 8)} · ${TEP_DA_KY.length} tệp`);
+  assert.deepEqual(tepDoi(base, TEP_DA_KY), [], "KD-AC-7 tệp test đã ký bị sửa so với merge-base");
+  // Chiều đỏ: tệp có thật trong cây nhưng khác nội dung ở mốc so — một tệp của vòng này (chưa có ở merge-base).
+  assert.throws(
+    () => assert.deepEqual(tepDoi(base, ["agent/tests/judge-entity-khong-dau.test.ts"]), [], "KD-AC-7 tệp test đã ký bị sửa so với merge-base"),
+    /KD-AC-7 tệp test đã ký bị sửa so với merge-base/,
+  );
 });
