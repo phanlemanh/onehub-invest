@@ -1,0 +1,39 @@
+schema_version: 1
+feature_slug: app-test-chiu-song-song
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.atss_chan
+    layer: backend-effect
+    paths: [app/tests/deals-phi-ly.test.tsx, app/tests/dq-moi-nhat.test.tsx, pipeline/scripts/deals-phi-ly.test.mjs, pipeline/lib/luoc-do-rieng.mjs, _acceptance/app-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; trên DB THỬ riêng oneinvest_p4_atss_<pid> (db-thu-chac.sh của SD3, xoá khi xong; tiến trình test con nhận DATABASE_URL của DB thử) — phiên A giữ pg_advisory_xact_lock(33033) + FOR UPDATE 200 dòng sale_offer_records + 200 dòng dq_check_results → ba tệp chạy cùng lúc đều thoát 0, 'ℹ pass 5' (deals app), 'ℹ pass 6' (dq), 'ℹ pass 4' (deals pipeline), mỗi tệp dưới 30 s; A đóng rồi phiên B giữ ACCESS EXCLUSIVE trên public.sale_offer_records + public.dq_check_results + public.properties 3 s rồi nhả → ba tệp thoát 0 trong [2,5 s; 30 s) và dài hơn lượt dưới A của cùng tệp ít nhất 2 s (so đường nền); đối chứng: bản merge-base của từng tệp chép tạm (tên .cu-<pid>, không khớp glob *.test.* của npm test) dưới phiên A2 → bị giết ở trần tiến trình hoặc timed out ('DOI CHUNG KHONG BAT' nếu xanh); mỗi phiên probe đặt idle_in_transaction_session_timeout 30 s, statement_timeout 60 s, lock_timeout 3 s phía máy chủ, cả probe trần 900 s, đóng mọi phiên ở finally; phiên chặn không chồng nhau; in 'CHAN OK'; tệp tạm xoá"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.atss_khoa
+    paths: [app/tests/deals-phi-ly.test.tsx, app/tests/dq-moi-nhat.test.tsx, pipeline/scripts/deals-phi-ly.test.mjs, pipeline/lib/luoc-do-rieng.mjs, _acceptance/app-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; mỗi tệp: danh sách bảng rút nguyên văn từ tệp (const BANG hoặc đối số luocDoRieng), hai tệp deals còn đủ ba dòng dựng (CREATE VIEW sale_offers …, SQL_034, MIG_060); luocDoRieng + phần việc (deals pipeline: refreshBaitGap; deals app: câu đọc sale_offers ⋈ v_ruler_p2_area ⋈ areas ⋈ sellers ⋈ stg_zalo_posts; dq: INSERT rồi SELECT dq_check_results) → pg_locks của phiên: 0 khoá tư vấn, 0 khoá mạnh hơn AccessShareLock trên quan hệ schema public, 0 khoá trên view public; đối chứng mỗi tệp: đọc public.sale_offers (view) và UPDATE … WHERE false lên bảng public đầu danh sách → hai phép đếm thấy ≥ 1 ('DOI CHUNG KHONG BAT' nếu mù); in 'KHOA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.atss_assert
+    paths: [app/tests/deals-phi-ly.test.tsx, app/tests/dq-moi-nhat.test.tsx, pipeline/scripts/deals-phi-ly.test.mjs, _acceptance/app-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; mỗi tệp: đa tập thông điệp chuỗi mở đầu DP/DQ (≥ 4) ở merge-base trừ HEAD và HEAD trừ merge-base bằng đúng danh sách đã khai — deals app bỏ 'DP không phường nào có thước (v_ruler_p2_area rỗng) — ca không chạy được', deals pipeline bỏ 'DP-AC-2 không phường nào có thước …', mỗi tệp deals thêm 'DP thước bịa không ra đúng một phường', dq không đổi; ba thông điệp đối chứng trong ca còn có mặt; đối chứng: xoá 'DQ-AC-1' khỏi bản dq → 'THONG DIEP ASSERT DOI'; in 'ASSERT OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.atss_lib
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs, _acceptance/app-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; node --test scripts/luoc-do-rieng.test.mjs trên bản thật thoát 0 'ℹ pass 3'; ba bản đột biến của thư viện chép tạm (.dot-<pid>, test chép tạm trỏ vào nó): thêm pg_advisory_xact_lock(33033) sau CREATE SCHEMA → đỏ 'giữ khoá 33033'; bỏ CHECK/PK/UNIQUE → đỏ 'lệch ràng buộc'; giữ nextval dãy public → đỏ 'dãy riêng không bắt đầu từ 1' hoặc 'đẩy dãy dùng chung'; tệp tạm xoá; in 'LIB OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.atss_pham_vi
+    paths: [_acceptance/app-test-chiu-song-song/probes/pham-vi.sh]
+    expected: "exit 0; danh sách tệp đổi so merge-base liệt kê được và khác rỗng (không thì exit 2); mọi tệp thuộc: ba tệp test, pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs, _acceptance/app-test-chiu-song-song/*, _acceptance/config.yaml, run-log/evidence-report của deals-loai-tin-phi-ly, deals-phi-ly-test-theo-view, dq-moi-nhat-moi-kiem, sdt-luu-goc-e164 (ghim lại), PRODUCT-MAP.md, LO-TRINH.html; probe không chứa supabase/SUPABASE_/mgmtExec; đối chứng: app/tests/sellers-chip.test.tsx → 'NGOAI PHAM VI'; in 'PHAM VI OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
