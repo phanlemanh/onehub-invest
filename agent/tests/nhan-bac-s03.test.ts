@@ -147,7 +147,7 @@ test("NB-AC-7 getModel/getDecisionModel trả model Gateway đúng tên; Qwen gi
   assert.equal(h.modelId, "anthropic/claude-haiku-5.5");
   assert.match(h.provider, /gateway/);
   const d = getDecisionModel() as unknown as { modelId: string; provider: string };
-  assert.equal(d.modelId, "openai/gpt-6-luna");
+  assert.equal(d.modelId, "openai/gpt-6-luna-decisions");
   assert.match(d.provider, /gateway/);
   const q = getModel("qwen27b") as { modelId: string };
   assert.equal(q.modelId, "qwen3.8-27b-local");

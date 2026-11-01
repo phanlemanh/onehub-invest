@@ -30,7 +30,7 @@ export type ModelName = "qwen27b" | "qwen27b-khong-nghi" | "kev4b" | "decisions"
 /** Model cloud đi qua Vercel AI Gateway (KC1, Mạnh 01/11): một khoá AI_GATEWAY_API_KEY, ngân sách + nhật ký ở Gateway.
  * Đọc env lúc gọi để test trỏ được Gateway giả (AI_GATEWAY_BASE_URL). */
 const gw = () => createGateway({ baseURL: process.env.AI_GATEWAY_BASE_URL || undefined, apiKey: process.env.AI_GATEWAY_API_KEY });
-export const GATEWAY_MODEL = { haiku: "anthropic/claude-haiku-5.5", luna: "openai/gpt-6-luna" } as const;
+export const GATEWAY_MODEL = { haiku: "anthropic/claude-haiku-5.5", luna: "openai/gpt-6-luna-decisions" } // Gateway liệt kê bản -decisions là evaluation; "openai/gpt-6-luna" là language model (400 khi gọi evaluate, đo 01/11) as const;
 
 /** Trả về language model cho AI SDK generateText. Chỉ qwen27b qua SDK;
  * kev/decisions dùng HTTP riêng (xem tools/native.ts). */

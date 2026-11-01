@@ -8,7 +8,7 @@ import { KIND, LISTING_INTENT } from "../vocab.generated.js";
 import { getDecisionModel, getModel, GATEWAY_MODEL } from "../runtime/models.js";
 import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-call-log.js";
 
-export const PROMPT_VERSION = "nb-s03-v1";
+export const PROMPT_VERSION = "nb-s03-v2"; // v2: thêm dòng bài-không-chữ (Haiku trả văn xuôi cho bài chỉ có ảnh/link)
 export const VIEC = "nhan-bac-s03";
 export type Backend = "qwen" | "haiku" | "decisions";
 export const BACKENDS: readonly Backend[] = ["qwen", "haiku", "decisions"];
@@ -36,11 +36,11 @@ export const SYSTEM = `Bạn phân loại tin đăng nhóm chat BĐS Việt Nam.
 {"intent":"offer|inquiry|not_listing","kind":"sale|rent_lt|null","confidence":0.0-1.0,"quote":"<chuỗi con nguyên văn từ chữ bài làm căn cứ>"}
 - offer: tin RAO bán/cho thuê (kể cả viết gọn: "S9.03 3PN FULL 14tr" = thuê vì 14tr/tháng; "cắt lỗ … 2,62 tỷ" = bán; "chuyển nhượng" = bán)
 - inquiry: khách ĐI TÌM nhà ("khách e tìm 1pn 5,5tr", "cần mua 2PN")
-- not_listing: không phải tin BĐS (tin tức, chat, quảng cáo khác)
+- not_listing: không phải tin BĐS (tin tức, chat, quảng cáo khác) — kể cả bài không có chữ đọc được (chỉ ảnh, link, ký hiệu): khi đó quote = ""
 - kind: sale=bán/mua-bán/chuyển nhượng/cắt lỗ; rent_lt=cho thuê/thuê (đơn vị triệu/tháng); null=khi intent≠offer
 - confidence: độ tin 0-1
 - quote: CHÍNH XÁC chuỗi con có trong chữ bài (sẽ được kiểm bằng so chuỗi — câu bịa bị loại)
-Trả MỘT dòng JSON, không giải thích.`;
+Luôn trả MỘT dòng JSON, không giải thích, không hỏi lại — kể cả khi bài trống hay chỉ có link.`;
 
 /** Một nhãn — đúng hình một dòng silver_labels (trừ khoá bài/run). */
 export type Nhan = {
