@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 import { canCallOpsApi } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const u = new URL(req.url);
-  const market = u.searchParams.get("market");
+  const rawMarket = u.searchParams.get("market");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;
   const limit = Math.min(100, Number(u.searchParams.get("limit") ?? 30) || 30);
   const minDiscount = Math.max(0, Math.min(50, Number(u.searchParams.get("min_discount") ?? 5) || 5));
 

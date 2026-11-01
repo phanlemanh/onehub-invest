@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
+import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const u = new URL(req.url);
-  const market = u.searchParams.get("market");
+  const rawMarket = u.searchParams.get("market");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;
   const bedrooms = u.searchParams.get("bedrooms");
   const limit = Math.min(200, Number(u.searchParams.get("limit") ?? 50) || 50);
   const offset = Math.max(0, Number(u.searchParams.get("offset") ?? 0) || 0);
