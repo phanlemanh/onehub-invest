@@ -51,6 +51,8 @@ executors:
     sd3_boc: "node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs"   # sdt-luu-goc-e164 E1 — bộ bóc ra +84…
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     ldb_n6: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # sd3-lam-chat-do-danh-ba E1, E2 — N6 hàm thuần + 11 dòng ghi, không DB
+    svc_sync: "node --test pipeline/sync-cloud.test.mjs"   # sellers-view-len-cloud E1, E8 — chốt kiểu bảng + khoá người bán trong FILL, không DB
+    svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -158,6 +160,8 @@ executors:
     gia_ty_chan_dong_so: "cd pipeline && node scripts/so-gia-ty-chan-dong.mjs"   # s03-gia-ty-chan-dong AC-6: so đầu ra bản nền với bản cây trên mọi bài S03 thật, chỉ đọc (READ ONLY); lượt đối chứng luôn chạy (giám sát duyệt P1-55)
     gia_ty_sau_khoang_trang_so: "cd pipeline && node scripts/so-gia-ty-sau-khoang-trang.mjs"   # s03-gia-ty-sau-khoang-trang AC-6: so mọi trường parsePost bản nền ec899d03 với bản cây trên mọi bài S03 thật, chỉ đọc (READ ONLY); lượt đối chứng luôn chạy (giám sát duyệt P1-58)
     gop_anh_that: "bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/gop-anh.itest.mjs scripts/media-canonical.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-gop-anh.mjs"   # gop-tin-chi-anh-o-transform (PL28) E3–E6, E7c: ca DB + thước dữ liệu thật trên DB thử, giao dịch ROLLBACK (giám sát duyệt P1-61)
+    dac_trung_s06_that: "bash db/db-thu.sh oneinvest_p1_n3 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n3 node --test --test-concurrency=1 scripts/dac-trung-s06.itest.mjs scripts/trang-thai-chao.itest.mjs &&DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n3 node scripts/do-dac-trung-s06.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n3 --xoa; exit $r"   # dac-trung-nha-s06-len-canonical (HD5) E1, E4–E8, E9b: ca DB + thước dữ liệu thật trên DB thử (giám sát duyệt P1-83, P1-88)
+    dac_trung_s06_vocab: "bash db/db-thu.sh oneinvest_p1_n4 && cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n4 node scripts/dac-trung-s06-vocab-db.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n4 --xoa; exit $r"   # HD5 E2: sổ + check-db trên DB thử riêng (giám sát duyệt P1-83, P1-88)
     boc_sdt_that: "bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-boc-sdt.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n1 --xoa; exit $r"   # boc-sdt-du-va-chon-ro (SD2) E5–E8: bản trước rồi bản mới trên DB thử, so tập tin + thước «Bật khi» (giám sát duyệt P1-76)
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
@@ -525,6 +529,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
+    svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
+    svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt
+    svc_pham_vi: "bash _acceptance/sellers-view-len-cloud/probes/pham-vi.sh"   # sellers-view-len-cloud E6
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
