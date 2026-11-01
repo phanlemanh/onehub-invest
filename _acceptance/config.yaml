@@ -262,6 +262,11 @@ executors:
     cloud_sync_sellers_view: "cd pipeline && node scripts/check-cloud-sync.mjs sellers-view"   # check-cloud-sync-sellers-view E1 — nguồn sau 060/059 dựng được DB mô phỏng, sellers là bảng hai phía, sync đổ đủ dòng
     cloud_sync_tuan_tu: "cd pipeline && r=0; for c in stage atomic fail fidelity keep pii overlap allow anon pii-cot; do node scripts/check-cloud-sync.mjs $c || r=1; done; exit $r"   # check-cloud-sync-sellers-view E2 — mười ca cũ chạy tuần tự (một container một lúc)
     ccs_pham_vi: "bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh"   # check-cloud-sync-sellers-view E3
+    atss_chan: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs chan"   # app-test-chiu-song-song E1 — ba tệp xanh dưới phiên giữ 33033/DDL/khoá chia sẻ, bản cũ treo vì chờ khoá
+    atss_khoa: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs khoa"   # app-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    atss_assert: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs assert"   # app-test-chiu-song-song E3 — thông điệp assert giữ nguyên trừ câu thước đã khai
+    atss_lib: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — test thư viện lược đồ riêng + ba đột biến đỏ
+    atss_pham_vi: "bash _acceptance/app-test-chiu-song-song/probes/pham-vi.sh"   # app-test-chiu-song-song E5
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
