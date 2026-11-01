@@ -1,37 +1,29 @@
+# Review findings: check-cloud-sync-sellers-view (round 2)
+
 ## Trong hợp đồng
+
+(không có)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **dump() âm thầm bỏ MỌI CREATE TRIGGER ở mọi ca, chỉ ca sellers-view mới soát**
-  Người dùng thấy gì: Công cụ kiểm tra đồng bộ lên cloud có thể không báo gì nếu sau này xuất hiện một cơ chế tự động mới trên bảng dữ liệu. Người dùng cuối không thấy ảnh hưởng, chỉ có thể bỏ sót một thay đổi hành vi khi kiểm tra nội bộ.
-  Căn cứ: Chỉ ảnh hưởng độ nhạy của công cụ kiểm nội bộ, không làm mất hay lộ dữ liệu, và có thể bổ sung cảnh báo sau khi có trigger mới thật sự.
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): sellers ở hai DB mô phỏng do thước tự dựng thành bảng theo DDL 022, rồi lại assert đúng hình đó**
+  Người dùng thấy gì: Bước kiểm đồng bộ lên cloud chỉ chứng minh việc chép từ bảng sang bảng. Nó không chạy thử đường đọc từ khung nhìn người bán thật của máy thu. Nếu đường đó hỏng riêng thì bước kiểm này vẫn báo xanh.
+  Căn cứ: Hợp đồng đã chủ ý loại phần này, và đường đọc khung nhìn thật đã được đo ở hồ sơ khác, nên rủi ro cho người dùng thấp và không mất dữ liệu.
   file: `pipeline/scripts/check-cloud-sync.mjs`
-  severity: low
+  severity: medium
   Đề xuất: known-limits
 
-- **Ô 'chỉ bỏ trigger 059 đã biết' xanh dù thiếu trigger, không đúng 'đúng tập' như evals mô tả**
-  Người dùng thấy gì: Bước kiểm tra có thể báo đạt dù chỉ một phần các cơ chế lịch sử bị bỏ khỏi bản mô phỏng. Người dùng cuối không bị ảnh hưởng.
-  Căn cứ: Sai lệch chỉ ở độ chặt của phép kiểm nội bộ, không động đến dữ liệu thật, và tự phát hiện được nếu lỗi này thực sự gây hại.
-  file: `pipeline/scripts/check-cloud-sync.mjs`
-  severity: low
+- **Hình dạng 4 (assertion âm tính đứng một mình): 'không ca nào in TRIGGER LA' và 'dump() ném TRIGGER LA' không có đối chứng dương**
+  Người dùng thấy gì: Nếu sau này máy thu có thêm một cơ chế ghi lịch sử mới, bước kiểm có thể không báo lỗi đúng như hứa mà vẫn xanh. Người dùng cuối không bị ảnh hưởng trực tiếp, chỉ người vận hành có thể tin nhầm là bước kiểm đã quét sạch.
+  Căn cứ: Đây là công cụ kiểm nội bộ chạy trên máy thu, không đụng dữ liệu người dùng, và người vận hành tự phát hiện được khi bước kiểm gãy vì phụ thuộc thiếu.
+  file: `_acceptance/check-cloud-sync-sellers-view/evals.yaml`
+  severity: medium
   Đề xuất: known-limits
-
-- **Đối chứng 'NGOAI PHAM VI' của pham-vi.sh luôn đúng, không phân biệt được gì**
-  Người dùng thấy gì: Bước kiểm tra phạm vi thay đổi có thể báo sạch dù không thật sự quét hết tệp. Người dùng cuối không bị ảnh hưởng, chỉ giảm độ tin của bằng chứng nghiệm thu.
-  Căn cứ: Chỉ làm yếu bằng chứng nội bộ chứ không gây hại cho người dùng, và người duyệt vẫn đối chiếu được danh sách tệp đổi bằng tay.
-  file: `_acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4 — assertion âm tính một mình: grep 'không chạm cloud' không có đối chứng dương**
-  Người dùng thấy gì: Bước kiểm tra việc không chạm cloud có thể bỏ sót một đường gọi gián tiếp. Hiện chưa có dấu hiệu công cụ gọi cloud, nên người dùng không bị ảnh hưởng.
-  Căn cứ: Rủi ro chỉ là giả định, không có dấu hiệu thực tế, không mất dữ liệu, và chi phí dựng thêm đối chứng cao hơn hậu quả.
-  file: `_acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh`
-  severity: low
-  Đề xuất: wont-fix
 
 ## Chưa adversarial-verify (refuter chết)
+
+(không có)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

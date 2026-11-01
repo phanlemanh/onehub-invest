@@ -1,193 +1,89 @@
 ---
 schema_version: 2
 feature_slug: check-cloud-sync-sellers-view
-verdict: BLOCKED
-failed_evals: ["E1","E2b","E2c","E2d","E2e","E2f","E2g","E2h","E2i","E2j"]
-reason: "Lệnh `cd app && npm test` chạy quá 30 phút chưa xong. Eval khai long_running: 30 trong evals.yaml (không thấy khai riêng, dùng mặc định 30 phút). Lệnh được chuyển nền (task b4iwqvbuz) sau 600s. Tiến trình node --import tsx --test --test-concurrency=8 tests/*.test.tsx vẫn chạy ở 30:59 và chưa in dòng kết thúc. Không có kết quả đạt hay hỏng. Không chạy lại, không kill tiến trình. Ngoài ra mười eval cloud-sync gãy vì Postgres mô phỏng hết chỗ trống đĩa (No space left on device)."
+verdict: REJECT
+failed_evals: []
+reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 269ed3cf13b6ca5e6ce408b539c32848dc4fe25f
+verified_commit: 6a56caba6a2b3887aa9a61d6fed95a08fa771957
 human_signoff:
 ---
 
 # Evidence Report: check-cloud-sync-sellers-view
 
+Vòng 2. Cả ba eval của hợp đồng (E1, E2, E3) đều đạt. Verdict tổng vẫn là REJECT vì lệnh suite `cd pipeline && npm test` thất bại và không gắn eval nào (một test, PB-AC-5 trong `scripts/phat-bieu.test.mjs`, gãy do tệp tạm `.gs-mut-*` biến mất giữa lúc quét cây). Chi tiết ở mục «Lệnh suite (hồi quy)».
+
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | script | FAIL |
-| E2a | AC-2 | script | PASS |
-| E2b | AC-2 | script | FAIL |
-| E2c | AC-2 | script | FAIL |
-| E2d | AC-2 | script | FAIL |
-| E2e | AC-2 | script | FAIL |
-| E2f | AC-2 | script | FAIL |
-| E2g | AC-2 | script | FAIL |
-| E2h | AC-2 | script | FAIL |
-| E2i | AC-2 | script | FAIL |
-| E2j | AC-2 | script | FAIL |
+| E1 | AC-1 | script | PASS |
+| E2 | AC-2 | script | PASS |
 | E3 | AC-3 | script | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-check-cloud-sync-sellers-view-E1-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_sellers_view
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    PASS local mô phỏng: sellers là bảng
-    PASS local mô phỏng: sellers 297 dòng, trọn bảy cột khớp view nguồn
-    PASS ĐỎ-ĐÚNG đảo first_seen/last_seen → băm lệch view nguồn
-    PASS cloud mô phỏng: sellers là bảng
-    PASS cloud mô phỏng: sellers đúng cột CLOUD_ALLOW
-    FAIL ca sellers-view ném lỗi: could not extend file "base/22035/23251": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync sellers-view: CÓ LỖI
-
-- eval: E2a
-  run_id: minted-check-cloud-sync-sellers-view-E2a-r1
+  run_id: minted-check-cloud-sync-sellers-view-E1-r2
   exit_code: 0
   baseline: red
-  verifier: config:executors.script.cloud_sync_stage
-  verified_at: 2026-11-01T03:20:57Z
+  verifier: config:executors.script.cloud_sync_sellers_view
+  verified_at: 2026-11-01T04:01:21Z
   output: |
-    check-cloud-sync stage: OK
+    check-cloud-sync sellers-view: OK
 
-- eval: E2b
-  run_id: minted-check-cloud-sync-sellers-view-E2b-r1
-  exit_code: 1
+- eval: E2
+  run_id: minted-check-cloud-sync-sellers-view-E2-r2
+  exit_code: 0
   baseline: red
-  verifier: config:executors.script.cloud_sync_atomic
-  verified_at: 2026-11-01T03:20:57Z
+  verifier: config:executors.script.cloud_sync_tuan_tu
+  verified_at: 2026-11-01T04:01:21Z
   output: |
-    FAIL ca atomic ném lỗi: could not write to file "pg_wal/xlogtemp.600": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync atomic: CÓ LỖI
-
-- eval: E2c
-  run_id: minted-check-cloud-sync-sellers-view-E2c-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_fail
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca fail ném lỗi: could not extend file "base/22035/23336": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync fail: CÓ LỖI
-
-- eval: E2d
-  run_id: minted-check-cloud-sync-sellers-view-E2d-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_fidelity
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca fidelity ném lỗi: could not extend file "base/22035/23335": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync fidelity: CÓ LỖI
-
-- eval: E2e
-  run_id: minted-check-cloud-sync-sellers-view-E2e-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_keep
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca keep ném lỗi: could not extend file "base/22035/23315": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync keep: CÓ LỖI
-
-- eval: E2f
-  run_id: minted-check-cloud-sync-sellers-view-E2f-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_pii
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca pii ném lỗi: could not write to file "pg_wal/xlogtemp.598": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync pii: CÓ LỖI
-
-- eval: E2g
-  run_id: minted-check-cloud-sync-sellers-view-E2g-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_overlap
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca overlap ném lỗi: could not extend file "base/22035/23221": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync overlap: CÓ LỖI
-
-- eval: E2h
-  run_id: minted-check-cloud-sync-sellers-view-E2h-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_allow
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca allow ném lỗi: could not extend file "base/22035/23221": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync allow: CÓ LỖI
-
-- eval: E2i
-  run_id: minted-check-cloud-sync-sellers-view-E2i-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_anon
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    PASS ĐỎ-ĐÚNG thiếu role anon: LEAK GATE FAIL (trước khi gửi): cloud không có role anon
-    PASS tiền điều kiện AC-1: anon SELECT được public.spatial_ref_sys trong cloud mô phỏng
-    FAIL AC-1 lượt sync trên cloud sạch gãy: [stage] could not extend file "base/23488/24930": No space left on device
-    FAIL ca anon ném lỗi: the database system is in recovery mode
-    check-cloud-sync anon: CÓ LỖI
-
-- eval: E2j
-  run_id: minted-check-cloud-sync-sellers-view-E2j-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.script.cloud_sync_pii_cot
-  verified_at: 2026-11-01T03:20:57Z
-  output: |
-    FAIL ca pii-cot ném lỗi: could not extend file "base/22035/23226": No space left on device (tại syncOnce, sync-cloud.mjs:695)
-    check-cloud-sync pii-cot: CÓ LỖI
+    check-cloud-sync pii-cot: OK
+    (mười ca chạy tuần tự, ca cuối in OK)
 
 - eval: E3
-  run_id: minted-check-cloud-sync-sellers-view-E3-r1
+  run_id: minted-check-cloud-sync-sellers-view-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ccs_pham_vi
-  verified_at: 2026-11-01T03:20:57Z
+  verified_at: 2026-11-01T04:01:21Z
   output: |
     PHAM VI OK
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-check-cloud-sync-sellers-view-SUITE-npm_test__bb6271-r1
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-01T03:20:57Z
+  verified_at: 2026-11-01T04:01:21Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-check-cloud-sync-sellers-view-SUITE-lint-r1
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-01T03:20:57Z
+  verified_at: 2026-11-01T04:01:21Z
 
 - cmd: cd app && npm test
-  run_id: minted-check-cloud-sync-sellers-view-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-01T03:20:57Z
-  note: BLOCKED, không phải hỏng. Lệnh chạy quá 30 phút chưa kết thúc (tiến trình còn chạy ở 30:59, chưa có dòng kết thúc). Không có kết quả đạt hay hỏng; không chạy lại, không kill.
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-01T04:01:21Z
 
 - cmd: cd pipeline && npm test
-  run_id: `
-  exit_code: 0
-  verified_at: 2026-11-01T03:20:57Z
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-npm_test__13563d-r2
+  exit_code: 1
+  verified_at: 2026-11-01T04:01:21Z
+  note: |
+    366 test, 365 đạt, 1 hỏng: PB-AC-5 (scripts/phat-bieu.test.mjs, dòng 17) "quét cây thật: không câu nào ghi thẳng năm cột vào bảng tin ngoài bộ phân xử". Lỗi ENOENT ở statSync trong lib/scan-canonical-write.mjs: tệp tạm pipeline/.gs-mut-92691-5.mjs có lúc liệt kê nhưng đã bị xoá khi stat (đua với test đột biến chạy song song). Lệnh này không gắn eval nào.
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-check-cloud-sync-sellers-view-SUITE-test_lint_rules-r1
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-01T03:20:57Z
+  verified_at: 2026-11-01T04:01:21Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-check-cloud-sync-sellers-view-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-check-cloud-sync-sellers-view-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-01T03:20:57Z
+  verified_at: 2026-11-01T04:01:21Z
 
 ## Known limits
 
@@ -195,15 +91,25 @@ human_signoff:
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt). Riêng E3 là eval mới, baseline không đo.
+none — moi eval feature deu red tren baseline (co phan biet)
 
-Baseline khong do
+Lưu ý: E3 có baseline n-a nên không nằm trong nhận định này; xem mục dưới.
+
+### Baseline khong do
+
 - bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh: bo qua baseline: tep _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh co o cay dang kiem nhung chua co o merge-base 9479b0ef62f5f9826711e46fff529a97ad729bae — eval moi, chay tren code cu khong phan biet gi
+
+Lệnh fail không gắn eval: `cd pipeline && npm test` (một test PB-AC-5, xem trên). Đây là lý do duy nhất của verdict REJECT; cần người xem đây là test dễ gãy do đua tệp tạm (flaky) hay do thay đổi của feature trước khi chạy lại.
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định; không có eval đa lượt.
+none — every multi-run eval is uniform
+
+## Judge
+
+Không có eval judgment nào trong hợp đồng này; không có panel giám khảo.
 
 ## Iterations
 
-Round 1: E1, E2b, E2c, E2d, E2e, E2f, E2g, E2h, E2i, E2j không chạy xong — Postgres mô phỏng hết chỗ trống đĩa (No space left on device), E2i còn thấy máy chủ vào chế độ phục hồi; E2a và E3 đạt. Lệnh suite `cd app && npm test` quá 30 phút chưa kết thúc nên verdict là BLOCKED. Cách xử lý: giải phóng đĩa rồi chạy lại các eval cloud-sync, và chạy lại suite app với timeout dài hơn.
+Round 1: BLOCKED — lệnh suite `cd app && npm test` chạy quá 30 phút không ra kết quả, không có PASS/FAIL.
+Round 2: REJECT — E1, E2, E3 đạt; `cd pipeline && npm test` hỏng một test (PB-AC-5, đua tệp tạm `.gs-mut-*`), không gắn eval. Trả lại để xử lý.
