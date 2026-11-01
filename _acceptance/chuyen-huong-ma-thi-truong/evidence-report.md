@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f2870a81040e37e6b9f9951f3888b8081d0a208b
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: chuyen-huong-ma-thi-truong

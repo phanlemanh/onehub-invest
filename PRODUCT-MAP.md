@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>114 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>115 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>89 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -32,10 +32,6 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
-
-## Đang làm
-
-- link và mã thị trường cũ (32 mã dài vn-thanh-pho-*/vn-tinh-*) vẫn mở được sau khi migration 064 đổi sang mã ngắn vn-<x> — chuyển hướng vĩnh viễn có điều kiện ở các trang Invest, bí danh mã cũ ở API công khai của app và data-api, đúng ở cả hai trạng thái trước/sau 064 (`chuyen-huong-ma-thi-truong`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -147,6 +143,7 @@ flowchart TD
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
 - bước kiểm local-only của check-s08-inventory chạy được trên main sau khi import-airbnb nhập import-s08-row (`check-s08-harness`) — đã giao — máy thông, cửa veto còn mở
 - nạp lại một snapshot Chợ Tốt cũ hơn không làm lùi giá, tiêu đề và nội dung của tin đã có bản mới (`chotot-khong-lui`)
+- link và mã thị trường cũ (32 mã dài vn-thanh-pho-*/vn-tinh-*) vẫn mở được sau khi migration 064 đổi sang mã ngắn vn-<x> — chuyển hướng vĩnh viễn có điều kiện ở các trang Invest, bí danh mã cũ ở API công khai của app và data-api, đúng ở cả hai trạng thái trước/sau 064 (`chuyen-huong-ma-thi-truong`)
 - CI chạy typecheck và test của app, pipeline, agent, data-api trên mọi PR (`ci-test-module`)
 - Đồng bộ cloud nguyên tử — prod không trống/thiếu dữ liệu giữa các lượt sync; chốt luật sale_offers lên cloud (`cloud-sync-atomic`)
 - Người vận hành mở /ops/collections không thấy số S02 nào ở biểu đồ, bảng hay panel Rotation; số S02 chỉ ở /ops/quality và tiêu đề biểu đồ nói rõ đang đếm gì (`collections-khong-so-s02`)

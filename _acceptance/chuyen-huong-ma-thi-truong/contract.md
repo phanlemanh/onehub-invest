@@ -5,7 +5,7 @@ slug: chuyen-huong-ma-thi-truong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-01-chuyen-huong-ma-thi-truong-design.md
 approved_by: Mạnh
 approved_at: 2026-11-01
@@ -58,3 +58,15 @@ Source input: lời Mạnh 01/11 qua phiên này («Chờ chuyển hướng») +
 
 - Thứ tự triển khai: gộp #252 → gộp hàng này → Mạnh duyệt áp 064 (sau lệnh đếm `--cloud` ra 0).
 - Cổng Phạm vi 01/11 (Mạnh «duyệt»): Hỏi-1 = 308 vĩnh viễn; Hỏi-2 = giữ bí danh mã cũ ở API không hạn, không cơ chế hết hạn.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Mở Ước tính lợi suất với địa chỉ lặp tham số thị trường thì trang báo lỗi; link do hệ thống tạo không lặp tham số.
+  - Ngoài-2: Địa chỉ thị trường gõ sai phần đầu có thể bị chuyển hướng vĩnh viễn sang địa chỉ vô nghĩa rồi mới báo không tìm thấy.
+  - Ngoài-4: Cùng lỗi với Ngoài-1, trước thay đổi này trang vẫn mở bằng thị trường mặc định nên đây là hồi quy.
+  - Ngoài-5: Cùng lỗi với Ngoài-2, kết quả cuối vẫn là trang không tìm thấy nhưng trình duyệt có thể nhớ lần chuyển hướng.
+  - Ngoài-6: Bước kiểm E12 có thể bỏ sót một tệp test mới vỡ lúc nạp khi nhánh đã có ca đỏ khác; người dùng không gặp trực tiếp.
+  - Ngoài-7: Phép đo chỉ xác nhận mã dài có mặt trong kết quả, chưa soi từng dòng; người dùng không gặp trực tiếp.
+  - Ngoài-8: Phép đo mã dài mới phủ một trong chín lời gọi API công khai, tám lời gọi còn lại chưa đo phần mã.
+  - Ngoài-9: Đối chứng đột biến của E6 và E7 không ghim thông điệp thật nên kém tin cậy hơn dự định; người dùng không gặp trực tiếp.
+  - Ngoài-10: Đột biến «luôn tra» có thể vẫn xanh dù phép đếm truy vấn của E4 bị làm yếu; người dùng không gặp trực tiếp.
+  - Ngoài-11: Dữ liệu thử Đà Nẵng dựng tay nên hai trường hợp mã phường chưa được đo đúng như mô tả, cần theo dõi khi dữ liệu phường thật được nạp.
+  - Ngoài-12: Đối chứng E12 chỉ thử hàm lọc thuần nên có thể bỏ sót một kiểu lỗi test; người dùng không gặp trực tiếp.
