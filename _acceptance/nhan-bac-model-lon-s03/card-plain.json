@@ -1,24 +1,6 @@
-{"feature_plain":"Một lệnh mới cho model lớn đọc bài S03 và ghi «nhãn bạc» (bài là tin rao, Yêu cầu hay không phải tin; bán hay thuê; độ chắc; câu trích) vào một bảng riêng trên máy thu, để đo model nào phân loại tốt và làm dữ liệu dạy lại Kev — không đụng tin đang hiện trên cổng.",
-"will_do":[
-{"id":"AC-1","p":"Sẽ có bảng nhãn bạc riêng trên máy thu (migration 065), áp lại không lỗi, và không bao giờ được đẩy lên cloud."},
-{"id":"AC-2","p":"Sẽ ghi đúng một nhãn mỗi bài cho mỗi model; chạy lại không nhân dòng, bài đổi chữ thì có nhãn mới, chạy thử không ghi gì."},
-{"id":"AC-3","p":"Sẽ không đổi một dòng nào của tin, căn, bài thu hay phát biểu — chỉ bảng nhãn bạc có dòng mới."},
-{"id":"AC-4","p":"Sẽ gạt số điện thoại, email, link trước khi gửi bài ra cloud, và không gửi tên nhóm, tên người đăng hay mã cuộc chat."},
-{"id":"AC-5","p":"Sẽ đánh dấu câu trích mà model bịa (không có trong bài); nhãn từ Decisions để trống câu trích vì API ấy không trả."},
-{"id":"AC-6","p":"Sẽ ghi bài lỗi (trả lời hỏng, từ chối, mất mạng, quá giờ) là «chưa rõ» và chạy tiếp bài sau, cuối lượt đếm lỗi theo loại."},
-{"id":"AC-7","p":"Sẽ gọi đúng ba nơi: Qwen trên máy, Claude Haiku 5.5, OpenAI Decisions — và đọc trả lời của cả ba ra cùng một kiểu nhãn."},
-{"id":"AC-8","p":"Sẽ có chế độ đo trên tập vàng in bảng độ đúng từng model mà không in chữ bài."},
-{"id":"AC-9","p":"Sẽ dừng trước khi tiền gọi API vượt trần đã đặt cho lần chạy."},
-{"id":"AC-10","p":"Sẽ đo thật ba model trên 61 bài vàng và so ba ngưỡng sống: ý định ≥ 95%, bán/thuê ≥ 95%, chi phí hết bài cũ ≤ 10 USD."}],
-"wont_do":[
-{"id":"OOS-1","p":"KHÔNG ghi nhãn vào bài thu hay tin trên cổng, KHÔNG thay luật suy loại RM1 — việc PL5 khi nhãn vàng xác nhận."},
-{"id":"OOS-2","p":"KHÔNG dạy lại Kev, KHÔNG đọc ảnh, KHÔNG xử lý bài chỉ có ảnh — các hàng KC2, KC3, KC4."},
-{"id":"OOS-3","p":"KHÔNG dựng lịch chạy đêm và chưa chọn model chạy hằng ngày — vòng sau, theo số đo."},
-{"id":"OOS-4","p":"KHÔNG đưa bảng nhãn bạc lên cloud."},
-{"id":"OOS-5","p":"KHÔNG dùng đường Batch API của Haiku vòng này — gửi từng bài để gạt và trần chi phí kiểm được."}],
-"coverage_plain":[
-{"i":0,"p":"Ba model (Qwen trên máy, Haiku 5.5, Decisions) đều có ô đo gửi đúng, gạt đúng và đo thật (AC-4, AC-5, AC-7, AC-10)."},
-{"i":1,"p":"Năm kết cục một bài — nhãn tốt, trích bịa, trả lời hỏng, từ chối, mất mạng — đều có ô đo (AC-5, AC-6)."},
-{"i":2,"p":"Năm cách ghi — bài mới, chạy lại, bài đổi chữ, chạy thử, chạm trần tiền — đều có ô đo (AC-2, AC-3, AC-9)."},
-{"i":3,"p":"Dữ liệu rời máy chỉ là chữ bài đã gạt; tầng A và trường nhóm/người không đi (AC-4)."},
-{"i":4,"p":"Ba lớp đo: ma trận viết tay với model giả, DB máy thu trong giao dịch huỷ, đo thật trên tập vàng."}]}
+{
+  "feature_plain": "Một lệnh cho model lớn đọc từng bài trong nhóm chat (S03) và ghi nhãn đề xuất: tin rao, khách tìm nhà hay không phải tin BĐS, bán hay thuê, kèm câu trích làm căn cứ — vào một bảng nhãn riêng, không đụng dữ liệu tin/căn chính.",
+  "decisions": [
+    {"id": "E10", "q": "Bảng số đo ba backend có đủ, khớp ngưỡng và không lộ chữ bài?", "why": "Hội đồng đề xuất Đạt: cả ba backend cùng băm tập vàng, các ô đạt/không khớp số; chỉ Qwen local đạt cả hai ngưỡng chất lượng."}
+  ]
+}
