@@ -1,11 +1,1 @@
-{"feature_plain":"Khi một đề xuất làm giàu dữ liệu (số phòng ngủ, phòng tắm, tên đường) được áp hay hoàn tác, căn nhà gắn với các tin rao chung một bài đăng cũng được cập nhật theo, không chỉ căn của tin chính; kèm một lần sửa phần đã lệch từ 31/10.",
-"will_do":[
- {"id":"AC-1","p":"Sẽ điền ô còn trống của căn gắn tin chung bài đăng khi áp đề xuất, lấy giá trị lớn nhất của các tin gắn căn đó, ghi nhật ký có tên tin nguồn; ô đã có giá trị giữ nguyên."},
- {"id":"AC-3","p":"Sẽ giữ y kết quả cũ cho tin không chung bài đăng với ai — căn và cột của tin không đổi so với hôm nay."},
- {"id":"AC-4","p":"Sẽ sửa một lần các ô căn đã lệch kể từ khi 063 chạy, ghi một dòng nhật ký vận hành với số căn và số ô; chạy lại không đổi thêm gì."}],
-"wont_do":[
- {"id":"AC-2","p":"Sẽ KHÔNG để căn giữ giá trị đã rút khi hoàn tác — trừ khi còn tin nào của căn (kể cả chính tin chung) vẫn mang giá trị đó."},
- {"id":"AC-5","p":"Sẽ KHÔNG đổi gì khi áp migration lần hai, và không chạm DB dùng chung khi thử."},
- {"id":"OOS-1","p":"Không xử lý tin đổi loại nhà bị nối sang căn mới — đã mở hàng riêng tin-doi-loai-go-lien-ket-can-cu."},
- {"id":"OOS-2","p":"Không áp lên DB máy thu trong vòng này — sẽ xin anh duyệt riêng, sao lưu trước."},
- {"id":"OOS-3","p":"Không đẩy gì lên cloud."}]}
+{"feature_plain":"Khi một đề xuất làm giàu được áp hay hoàn tác, căn của mọi tin cùng bài đăng cũng được cập nhật theo, không chỉ căn của tin trong đề xuất.","analyst_plain":"Bài kiểm phát biểu chung bài đăng xanh cả trước và sau việc này, nên nó chỉ canh không làm hỏng cái cũ, không chứng minh tính năng mới."}
