@@ -1,0 +1,99 @@
+schema_version: 1
+feature_slug: the-duyet-nguoi-nhieu-nhieu
+# Ca test mang tiền tố «TN-AC-n». Hàm thuần ở pipeline/scripts/the-duyet-nguoi.test.mjs (không DB); phần DB ở
+# pipeline/scripts/the-duyet-nguoi.itest.mjs trong giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_u2_nguoi);
+# thẻ trên màn ở app/tests/review-nguoi.test.tsx (jsdom) + một ui-check trên bản chạy thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.test.mjs]
+    expected: "exit 0; ca 'TN-AC-1 mỗi nhóm nhiều–nhiều một thẻ' xanh trên ma trận viết trước 6 hình (1 SĐT 2 tài khoản · 1 tài khoản 2 SĐT · nhóm lẫn 3 tài khoản 2 SĐT · một–một · tin nghỉ · tin S06): đếm 3 nhóm, mã thẻ tất định (đảo thứ tự tin ra cùng mã), 0 nhóm cho ba hình cuối; chiều đỏ: bản đột biến coi một–một là nhóm → đỏ 'TN-AC-1 nhóm một–một sinh thẻ: S03'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-2 lượt hai không thẻ mới' xanh: lượt một sinh N thẻ, lượt hai 0; đặt thẻ lần lượt approved/rejected/deferred rồi dựng lại → 0 thẻ thứ hai cho nhóm ấy (4 trạng thái × 1 nhóm); chiều đỏ: bản đột biến chỉ tra thẻ chờ khi chống trùng → đỏ 'TN-AC-2 nhóm đã quyết sinh thẻ thứ hai: rejected'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-3 nhóm đổi thì thẻ mới' xanh: thêm tin nối tài khoản thứ ba vào nhóm có thẻ chờ → đúng 1 thẻ chờ mới, thẻ cũ deferred với decision_note chứa mã thẻ mới và decided_by 'dung-nguoi'; nhóm có thẻ đã quyết thì thẻ cũ giữ trạng thái; đếm dòng review_queue không giảm; chiều đỏ: bản đột biến không đóng thẻ cũ → đỏ 'TN-AC-3 hai thẻ chờ cho một nhóm'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-4 evidence đủ và không tầng A' xanh: evidence có source khớp ^S0[0-9]$, mỗi tài khoản {id, ten, so_tin}, mỗi SĐT {sdt khớp ^\\+84[0-9]{9}$, so_tin}, tin_mau ≤ 5 phần tử {offer_id, gia, dien_tich, ngay}; chuỗi JSON evidence không chứa real_name nào của source_registry (đọc từ DB thử); chiều đỏ: bản đột biến chép tên nguồn thật vào evidence → đỏ 'TN-AC-4 evidence lộ tên nguồn thật'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-5 thẻ duyệt gộp cả nhóm' xanh: nhóm 2 tài khoản 1 SĐT, thẻ approved, công tắc gộp TẮT → lượt kế: mọi Người của nhóm có người cuối = party_key nhỏ nhất trong các người tài khoản, số sự kiện gop lý do 'the-duyet:<id> S03' = số người nhóm − 1, vai sống của tin trong nhóm nằm trên người đích; lượt sau nữa 0 gộp, 0 sự kiện; chiều đỏ: bản đột biến chọn đích party_key lớn nhất → đỏ 'TN-AC-5 đích gộp không phải người tài khoản cũ nhất'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-6 giữ tách và hoãn không gộp' xanh: thẻ rejected và thẻ deferred (2 nhóm) → 0 sự kiện gop lý do the-duyet, mọi người của hai nhóm vẫn active, 0 thẻ mới; đối chứng dương: nhóm thứ ba approved trong cùng lượt có gộp; chiều đỏ: bản đột biến áp mọi thẻ đã quyết → đỏ 'TN-AC-6 thẻ rejected bị áp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-7 tách lại người gộp theo thẻ' xanh: sau TN-AC-5, tachNguoi trên một người bị gộp → split, merged_into rỗng, 1 sự kiện tach; tập vai sống (tin, người, phương pháp) bằng tập trước lần gộp; lượt dựng sau 0 gộp dù thẻ vẫn approved; đếm dòng bốn bảng danh bạ không giảm; chiều đỏ: bản đột biến áp lại thẻ khi người đã split → đỏ 'TN-AC-7 người đã tách bị gộp lại theo thẻ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.review_nguoi
+    paths: [app/src/components/ops/review-card-nguoi.tsx, app/src/components/ops/review-card.tsx, app/src/lib/ops/review-queue.ts, app/tests/review-nguoi.test.tsx]
+    expected: "exit 0; ca 'TN-AC-8 thẻ Gộp Người' xanh (jsdom, render ReviewCard thật): tiêu đề «Gộp Người?», bảng có đủ tài khoản và SĐT của evidence mẫu, tin mẫu; ba nút «Gộp thành một Người»/«Giữ tách»/«Hoãn» disabled khi lý do trống, enabled khi có lý do; bấm từng nút → fetch giả nhận body status approved/rejected/deferred kèm reason (3 ô); thẻ đã quyết ba trạng thái → nhãn «Đã gộp»/«Giữ tách»/«Hoãn» + «Lý do: …»; thẻ data_quality không mang tiền tố nguoi: vẫn ra câu «chưa có giao diện duyệt» (đối chứng); chiều đỏ: bản đột biến đổi nút giữ tách thành approved → đỏ 'TN-AC-8 nút Giữ tách gửi sai trạng thái: approved'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review-card-nguoi.tsx, app/src/components/ops/review-card.tsx]
+    target: "http://localhost:3456/ops/review"
+    steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops), mở /ops/review trên DB có ít nhất một thẻ data_quality nguoi: chờ, chụp thẻ ở khổ rộng và khổ hẹp 375px"
+    expected: "thấy thẻ «Gộp Người?» với bảng tài khoản và SĐT, tin mẫu, ô lý do và ba nút; khổ hẹp không tràn ngang; ảnh lưu ở _acceptance/the-duyet-nguoi-nhieu-nhieu/evidence/E9-*.png"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nguoi_nap_lai_u2
+    paths: [pipeline/scripts/nap-lai-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/lib/the-duyet-nguoi.mjs]
+    expected: "exit 0; thước nạp lại HD13 xanh trên DB thử có một thẻ approved đã áp: người cuối mang 2 SĐT có sự kiện the-duyet nên không đỏ; đối chứng: thước được chạy thêm một ca ép gộp hai SĐT không sự kiện the-duyet → đỏ với thông điệp có 'hai SĐT' và party_key; 0 lần gộp khác nguồn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi
+    paths: [pipeline/scripts/danh-ba-nguoi.test.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs, pipeline/scripts/the-duyet-nguoi.test.mjs]
+    expected: "exit 0; ca 'TN-AC-9 test đã ký HD13 không đổi' xanh: hai tệp có nội dung byte-bằng git show <merge-base HEAD origin/main>:<tệp>; chiều đỏ trên CÙNG phép so: so một bản chép của danh-ba-nguoi.test.mjs sửa một dòng (tệp CÓ ở merge-base) → đỏ 'TN-AC-9 tệp test đã ký bị sửa so với merge-base'; tệp vắng ở mốc là lỗi riêng 'TN-AC-9 không đọc được tệp ở merge-base', không gộp vào kết luận «đã sửa»; không có origin/main đủ lịch sử → t.skip có lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    paths: [pipeline/lib/danh-ba-nguoi.mjs]
+    expected: "exit 0; mọi ca của pipeline/scripts/danh-ba-nguoi.itest.mjs (HD13 đã ký) xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.the_duyet_nguoi_db
+    paths: [pipeline/lib/the-duyet-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/the-duyet-nguoi.itest.mjs]
+    expected: "exit 0; ca 'TN-AC-10 DB thật: thẻ bằng số nhóm' xanh trên DB thử chép từ DB máy thu, trong giao dịch ROLLBACK: đếm độc lập số nhóm nhiều–nhiều theo nguồn bằng truy vấn SQL viết riêng trong test (không gọi hàm của bộ dựng), số thẻ chờ sinh ở lượt một bằng số đó ở cả S03 và S05 (in hai số), lượt hai 0 thẻ mới; DB thử không có tin S03/S05 nào → t.skip có lý do; chiều đỏ chỉ đòi lệch > 0 dưới bản đột biến coi một–một là nhóm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
