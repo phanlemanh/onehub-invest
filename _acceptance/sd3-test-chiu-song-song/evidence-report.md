@@ -2,20 +2,22 @@
 schema_version: 2
 feature_slug: sd3-test-chiu-song-song
 verdict: REJECT
-failed_evals: [E1]
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2aebe70e5381fe878df42afe775310be7b0965c9
+verified_commit: 891f273214392067c0cb72fcb527cd02ba996f4a
 human_signoff:
 ---
 
 # Evidence Report: sd3-test-chiu-song-song
 
+Vòng 2. Cả bốn eval của tính năng (E1–E4) đều đạt. Verdict vẫn là REJECT vì lệnh suite `cd app && npm test` không đạt và không gắn với eval nào (xem mục «Lệnh suite» và «Iterations»).
+
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | script | FAIL |
+| E1 | AC-1 | script | PASS |
 | E2 | AC-2 | script | PASS |
 | E3 | AC-3 | script | PASS |
 | E4 | AC-4 | script | PASS |
@@ -23,79 +25,73 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-sd3-test-chiu-song-song-E1-r1
-  result: thất bại (probe không in 'CHAN OK')
+  run_id: minted-sd3-test-chiu-song-song-E1-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sts_chan
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
   output: |
-    error: canceling statement due to lock timeout (mã lỗi 55P03)
-    at async moChan (_acceptance/sd3-test-chiu-song-song/probes/song-song.mjs:68:5)
-    at async song-song.mjs:77:13
-    Phiên chặn B không lấy được khoá ACCESS EXCLUSIVE trong hạn lock_timeout 3 s nên probe sập trước khi đo test.
+    CHAN OK
 
 - eval: E2
-  run_id: minted-sd3-test-chiu-song-song-E2-r1
+  run_id: minted-sd3-test-chiu-song-song-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sts_khoa
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
   output: |
     KHOA OK
 
 - eval: E3
-  run_id: minted-sd3-test-chiu-song-song-E3-r1
+  run_id: minted-sd3-test-chiu-song-song-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sts_assert
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
   output: |
     ASSERT OK
 
 - eval: E4
-  run_id: minted-sd3-test-chiu-song-song-E4-r1
+  run_id: minted-sd3-test-chiu-song-song-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sts_pham_vi
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
   output: |
     PHAM VI OK
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__bb6271-r1
+  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-sd3-test-chiu-song-song-SUITE-lint-r1
+  run_id: minted-sd3-test-chiu-song-song-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
 
 - cmd: cd app && npm test
-  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__bd9a35-r1
-  result: thất bại, không gắn eval nào
-  verified_at: 2026-11-01T00:52:40Z
-  note: |
-    Ca tests/the-duyet-du-can-cu.test.tsx dừng ở bước dọn (after) với lỗi "public đã bị chạm".
-    Số dòng properties và property_offers ở DB lệch so với lúc đầu (properties 29841 so với 29828, property_offers 32815 so với 32799).
-    Lệch này không thuộc tệp feature đổi, nhiều khả năng do tiến trình khác ghi vào DB dùng chung khi chạy. Chưa kiểm chứng nguyên nhân; cần chạy lại khi DB yên.
+  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__bd9a35-r2
+  exit_code: 1
+  verified_at: 2026-11-01T01:47:57Z
+  ghi chú: lệnh KHÔNG đạt, không gắn eval nào. Tệp tests/the-duyet-du-can-cu.test.tsx, bước dọn sau cùng, báo «public đã bị chạm»: số dòng bảng properties (36779, kỳ vọng 36757) và property_offers (40776, kỳ vọng 40750) khác lúc đầu. Các bảng còn lại khớp. Tệp test này nằm ngoài phạm vi đổi của tính năng (AC-4); chênh lệch trông như DB dùng chung đổi do tiến trình khác trong lúc chạy, nhưng chưa được xác minh.
 
 - cmd: cd pipeline && npm test
-  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__13563d-r1
+  run_id: minted-sd3-test-chiu-song-song-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-sd3-test-chiu-song-song-SUITE-test_lint_rules-r1
+  run_id: minted-sd3-test-chiu-song-song-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-sd3-test-chiu-song-song-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-sd3-test-chiu-song-song-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-01T00:52:40Z
+  verified_at: 2026-11-01T01:47:57Z
 
 ## Known limits
 
@@ -103,11 +99,7 @@ human_signoff:
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
-
-Lưu ý: không eval nào đo được baseline (xem dưới), nên câu trên chỉ là "không có eval nào bị phát hiện xanh cả hai phía", không phải bằng chứng phân biệt.
-
-Lệnh fail không gắn eval: `cd app && npm test` (xem khối suite ở trên).
+none — không eval nào xanh ở cả HEAD lẫn baseline (cả bốn eval đều baseline n-a, nên chưa chứng minh được tính phân biệt bằng A/B).
 
 Baseline khong do
 - node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs chan: bo qua baseline: tep _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs co o cay dang kiem nhung chua co o merge-base a686c72a05350151fe3654ce1cb9c3ed6e6016ff — eval moi, chay tren code cu khong phan biet gi
@@ -117,8 +109,9 @@ Baseline khong do
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval chạy một lần, deterministic, đều đồng nhất.
 
 ## Iterations
 
-Round 1: E1 failed — probe chan: phiên chặn B hết hạn lock_timeout 3 s khi xin ACCESS EXCLUSIVE trên public.sale_offer_records / public.registry_aliases (lỗi 55P03 ở moChan). Returned to implementation.
+Round 1: (lịch sử vòng 1 không có trong đầu vào của bước soạn này; xem run-log.jsonl).
+Round 2: E1–E4 đạt; lệnh suite `cd app && npm test` không đạt (the-duyet-du-can-cu: số dòng properties và property_offers ở public đổi so với lúc đầu), không gắn eval nào. Verdict REJECT. Trả về triển khai: kiểm tra xem chênh lệch do tiến trình khác ghi vào DB dùng chung hay do chính tính năng, rồi chạy lại.
