@@ -84,22 +84,24 @@ async function seed(c: pg.Client, gaps: (number | null)[]): Promise<string[]> {
 /** Lược đồ cloud: sale_offers không có cột PII_EXCLUDE. Từ 044 (PL14) sale_offers là VIEW sống trên bảng bản ghi
  *  sale_offer_records — xoá cột ở bảng thật; CASCADE kéo đổ view sống và hai view thước đọc qua nó, nên dựng lại đúng
  *  như 044 (view `SELECT *` chỉ hàng sống) và 034 (thước). DB trước 044 thì xoá thẳng trên bảng sale_offers. */
-async function xoaCotPii(c: pg.Client) {
-  const view = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass('sale_offers')`)).rows[0]?.relkind === "v";
+// Mọi câu tra tên mang tên lược đồ riêng: CASCADE xoá view sellers của bản riêng, câu DROP không tên lược đồ sau đó
+// sẽ rơi xuống public.sellers qua search_path.
+async function xoaCotPii(c: pg.Client, sc: string) {
+  const view = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass($1)`, [`${sc}.sale_offers`])).rows[0]?.relkind === "v";
   const bang = view ? "sale_offer_records" : "sale_offers";
   // Từ SD3 (060) sellers máy thu là VIEW trên tin — xoá cột người bán CASCADE kéo theo nó. Trên cloud sellers là BẢNG
   // do sync đổ, chỉ mang cột CLOUD_ALLOW.sellers: chép view thành bảng đúng hình dạng ấy trước khi xoá cột.
-  const sellersView = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass('sellers')`)).rows[0]?.relkind === "v";
+  const sellersView = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass($1)`, [`${sc}.sellers`])).rows[0]?.relkind === "v";
   if (sellersView) {
     const cot = (CLOUD_ALLOW.sellers as string[]).map((x) => `"${x}"`).join(", ");
-    await c.query(`CREATE TABLE sellers_cloud AS SELECT ${cot} FROM sellers`);
+    await c.query(`CREATE TABLE ${sc}.sellers_cloud AS SELECT ${cot} FROM ${sc}.sellers`);
   }
   for (const col of PII_EXCLUDE.sale_offers as string[]) {
-    await c.query(`ALTER TABLE ${bang} DROP COLUMN ${col} CASCADE`);
+    await c.query(`ALTER TABLE ${sc}.${bang} DROP COLUMN ${col} CASCADE`);
   }
   if (sellersView) {
-    await c.query(`DROP VIEW IF EXISTS sellers`);
-    await c.query(`ALTER TABLE sellers_cloud RENAME TO sellers`);
+    await c.query(`DROP VIEW IF EXISTS ${sc}.sellers`);
+    await c.query(`ALTER TABLE ${sc}.sellers_cloud RENAME TO sellers`);
   }
   if (!view) return;
   await c.query(`CREATE OR REPLACE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL`);
@@ -154,7 +156,7 @@ test("DP-AC-5 bản cloud", { timeout: 120_000 }, async () => {
     await seed(c, [30, 12, 40]);
     const full = (await run(c, dealsSql())).map((r) => r.offerId);
     await c.query(`DROP TABLE stg_zalo_posts CASCADE`);
-    await xoaCotPii(c);
+    await xoaCotPii(c, sc);
     // Chỉ lược đồ riêng (đã xoá như cloud): bản cloud không được với tới bảng nào của public.
     await c.query(`SET LOCAL search_path = ${sc}`);
     const onCloud = (await run(c, cloud)).map((r) => r.offerId);

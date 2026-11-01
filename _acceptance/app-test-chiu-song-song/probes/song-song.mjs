@@ -33,6 +33,8 @@ const MO = [];
 const moPhien = async () => {
   const k = new pg.Client({ connectionString: DB_URL });
   MO.push(k);
+  // Phiên bị máy chủ cắt (hết hạn) không được làm sập tiến trình trước finally — finally còn phải xoá DB thử.
+  k.on("error", (e) => console.error(`# phiên probe bị cắt: ${e.message}`));
   await k.connect();
   for (const q of HAN_PHIEN) await k.query(q);
   return k;
@@ -111,9 +113,12 @@ if (MODE === "chan") {
     await k.query("SELECT pg_advisory_xact_lock(33033)");
     await k.query("SELECT 1 FROM sale_offer_records ORDER BY offer_id LIMIT 200 FOR UPDATE");
     await k.query("SELECT 1 FROM dq_check_results LIMIT 200 FOR UPDATE");
-    return k;
+    return giuSong(k);
   };
-  const dong = async (k) => { await k.query("ROLLBACK").catch(() => {}); await k.end().catch(() => {}); };
+  // Phiên chặn ngồi trong giao dịch lâu hơn hạn idle 30 s khi bản đối chứng treo tới trần: một câu nhẹ mỗi 10 s giữ nó
+  // sống; hạn phía máy chủ vẫn nguyên (tiến trình chết → hết nhịp → máy chủ huỷ giao dịch sau 30 s).
+  const giuSong = (k) => { k.nhip = setInterval(() => k.query("SELECT 1").catch(() => {}), 10_000); return k; };
+  const dong = async (k) => { clearInterval(k.nhip); await k.query("ROLLBACK").catch(() => {}); await k.end().catch(() => {}); };
   const dung = spawnSync("bash", [path.join(ROOT, "_acceptance/sdt-luu-goc-e164/probes/db-thu-chac.sh"), DB_THU],
     { cwd: ROOT, encoding: "utf8", timeout: 600_000 });
   assert.equal(dung.status, 0, `không dựng được DB thử ${DB_THU}:\n${dung.stderr}`);
@@ -159,6 +164,7 @@ if (MODE === "chan") {
     const cc = await moPhien();
     await cc.query("BEGIN");
     await cc.query(`LOCK TABLE ${coMat.map((t) => `public.${t}`).join(", ")} IN ACCESS SHARE MODE`);
+    giuSong(cc);
     const dotC = TEP.dealsApp.replace(/\.test\.tsx$/, `.dotc-${process.pid}.tsx`);
     const thanApp = doc(TEP.dealsApp);
     assert.ok(thanApp.includes("DROP TABLE stg_zalo_posts CASCADE"), "đối chứng C: không thấy câu DROP stg_zalo_posts để đột biến");
