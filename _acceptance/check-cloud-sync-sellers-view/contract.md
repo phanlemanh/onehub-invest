@@ -5,7 +5,7 @@ slug: check-cloud-sync-sellers-view
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T10:30:00Z
 ---
@@ -49,3 +49,10 @@ cả mười ca của thước gãy (đo 31/10: EPIPE ở buildLocalSim). Sửa 
 - Local mô phỏng mang `sellers` dạng BẢNG chép dòng của view (COPY), không phải view — ca không thử câu đọc view của máy thu
   (đã đo ở sellers-view-len-cloud E3).
 - Bản dump bỏ câu `CREATE TRIGGER` — DB mô phỏng không có trigger lịch sử; thước không đo lịch sử tin.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Ca sellers-view chạy lượt đồng bộ từ bản sao người bán dạng bảng, không đi qua view thật của máy thu (đường đọc view đo ở sellers-view-len-cloud).
+  - Ngoài-2: Phép so cột sellers của cloud mô phỏng gần như luôn đúng vì chính thước dựng bảng theo danh sách cột dùng để so.
+  - Ngoài-3: Nhánh báo lỗi khi gặp trigger lạ chưa có ca nào chứng là nó thật sự báo.
+  - Ngoài-4: Phép kiểm «thước không chạm cloud» chỉ đọc chữ trong mã, không quan sát lúc chạy.
+  - Ngoài-5: Cùng chỗ với Ngoài-1 ở lượt trước: thước tự dựng sellers thành bảng rồi kiểm lại đúng hình đó.
+  - Ngoài-6: Cùng chỗ với Ngoài-3 ở lượt trước: «không có TRIGGER LA» chỉ là khẳng định vắng mặt.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: eb616ec81959c1498d6fecd70621e27bdb501cbe
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: check-cloud-sync-sellers-view
