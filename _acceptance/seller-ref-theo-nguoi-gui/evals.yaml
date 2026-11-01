@@ -1,0 +1,59 @@
+schema_version: 1
+feature_slug: seller-ref-theo-nguoi-gui
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/seller-ref.test.mjs]
+    expected: "exit 0; ca «SR AC-1»: tin ba bài cùng sender_id ' 123 ' → chonNguoiGuiTin trả '123'; ca đối chứng: bản chép trả author_hash → assert.throws /SELLER_REF CON LA HANG/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/seller-ref.test.mjs]
+    expected: "exit 0; ca «SR AC-2»: ma trận viết trước bốn ô (neo ở cuối mảng · neo ở giữa · hoà posted_at phân bằng post_id · posted_at chuỗi ISO khác múi giờ) — số assert bằng số ô, mỗi ô trả người gửi bài neo; ca đối chứng: bản chép lấy bài đầu mảng → assert.throws /SELLER_REF KHONG THEO NEO/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/seller-ref.test.mjs]
+    expected: "exit 0; ca «SR AC-3»: bài neo sender_id null / '' / '  ' → trả người gửi bài kế theo neo; mọi bài không người gửi → null; ca đối chứng: bản chép rơi về author_hash → assert.throws /SELLER_REF ROI VE HANG/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.seller_ref_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/seller-ref.itest.mjs]
+    expected: "exit 0; ca «SR AC-4»: DB thử, BEGIN…ROLLBACK, gieo bài S03 + S05 (hai người gửi, một bài không người gửi, author_hash chung) → seller_ref từng tin đọc lại từ sale_offers khớp người gửi mong (tin không người gửi → NULL); ca đối chứng: transform-zalo/transform-fb của commit ed0ff2cd (git show ra thư mục tạm) cùng fixture → assert.throws /TRANSFORM NEN VAN HANG/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.seller_ref_that
+    paths: [pipeline/sync-cloud.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/seller-ref.itest.mjs]
+    expected: "exit 0; ca «SR AC-5»: seller_ref do transform của cây ghi ở E4 đi qua biểu thức che mà selectList('sale_offers', ['source','seller_ref']) của sync-cloud.mjs sinh (chạy trên DB thử, sync-cloud.mjs không sửa) → dòng S03 thành 'S03:<cùng số>' khớp SELLER_REF_RE, dòng S05 đuôi không số thành NULL; ca đối chứng: giá trị thô 'ct:1' qua câu kiểm leak gate bị bắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/seller-ref.test.mjs]
+    expected: "exit 0; ca «SR AC-6»: rutDinhDanh với tin S03 và S05 (post_ids hai người gửi) cho deepEqual giữa seller_ref hằng và seller_ref người gửi; đối chứng dương: tin S06 seller_ref 'ct:1' vs 'ct:2' cho kết quả khác — phép so phân biệt được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.seller_ref_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-seller-ref.mjs]
+    expected: "exit 0; thước do-seller-ref trên bản chép dữ liệu thật (DB thử oneinvest_p3_sref, BEGIN…ROLLBACK), KHÔNG xoá tin S03/S05 đang có trước lượt, gọi đúng runTransformZalo/runTransformFb mà lượt đêm gọi; người gửi bài neo tính độc lập từ stg_zalo_posts bằng SQL riêng của thước; sau lượt cây số tin sống S03/S05 còn mang seller_ref hằng cũ (đọc trước lượt) = 0, in số tin được ghi đè / tổng; lượt cây S03 và S05 đều ĐẠT ba vế (số ref khác nhau ±1% số người gửi bài neo · mỗi ref = người gửi bài neo của chính tin · ref quá 5% tin chỉ khi đúng người gửi); lượt nền ed0ff2cd TRƯỢT ở cả hai nguồn — in số trước/sau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.seller_ref_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/do-seller-ref.mjs]
+    expected: "exit 0; thước do-seller-ref so tin của lượt cây và lượt nền ed0ff2cd trên cùng dữ liệu: số tin bằng nhau theo offer_id, và so MỌI cột của sale_offers đọc từ information_schema trừ seller_ref và danh sách mốc giờ ghi khai cứng trong thước (in số cột đã so) → 0 ô khác ở S03 và S05; đối chứng: đổi một cột ngoài nhóm giá/diện tích/SĐT (vd n_reposts) của một tin lượt cây trong giao dịch → thước gọi đúng tên cột ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
