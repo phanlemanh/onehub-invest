@@ -604,6 +604,12 @@ executors:
     svm_real: "node scripts/s06-vung-moi/acceptance.mjs real"
     svm_dem: "node scripts/s06-vung-moi/acceptance.mjs dem"
     svm_scope: "bash _acceptance/s06-vung-moi-len-canonical/probes/scope.sh \"$PWD\""
+    # chuyen-huong-ma-thi-truong (01/11): DB thử trên :5433 dựng trong scripts/chuyen-huong-ma-thi-truong/acceptance.mjs
+    chm_ma: "node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs ma"
+    chm_app: "node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app"
+    chm_api: "node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs api"
+    chm_scope: "bash _acceptance/chuyen-huong-ma-thi-truong/probes/scope.sh \"$PWD\""
+    chm_app_test: "node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app-test"
     ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
     ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
     ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
