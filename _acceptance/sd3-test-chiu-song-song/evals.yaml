@@ -1,0 +1,32 @@
+schema_version: 1
+feature_slug: sd3-test-chiu-song-song
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.sts_chan
+    layer: backend-effect
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; trên DB THỬ riêng oneinvest_p4_sts_<pid> (db-thu-chac.sh của SD3, xoá khi xong; tiến trình test con nhận DATABASE_URL của DB thử) — phiên A giữ pg_advisory_xact_lock(33033) + khoá dòng UPDATE 200 dòng sale_offer_records → node --test bait-gap-sellers.test.mjs thoát 0, 'ℹ pass 7', '✔ SD-AC-1 đỏ' có mặt, dưới 30 s; A đóng rồi phiên B giữ ACCESS EXCLUSIVE trên public.sale_offer_records + public.registry_aliases 3 s rồi nhả → thoát 0 trong [2,5 s; 30 s); đối chứng: bản merge-base chép tạm (tên không khớp glob *.test.mjs của npm test), dưới phiên A2 → treo tới trần (bị giết/timed out; 'DOI CHUNG KHONG BAT' nếu xanh); mỗi phiên probe đặt idle_in_transaction_session_timeout 30 s, statement_timeout 60 s, lock_timeout 3 s phía máy chủ, cả probe trần 180 s, đóng mọi phiên ở finally — bị giết giữa chừng thì máy chủ nhả khoá ngay; phiên chặn không chồng nhau; in 'CHAN OK'; tệp tạm xoá"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.sts_khoa
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; rút phongRieng nguyên văn từ tệp test, chạy trong giao dịch + 060 + refreshBaitGap; pg_locks của phiên: 0 khoá tư vấn, 0 khoá mạnh hơn AccessShareLock trên quan hệ schema public, 0 khoá trên view public; mặc định nextval của bảng trong lược đồ riêng (dịch với search_path=public) đều trỏ '<lược đồ riêng>.…' — 'DAY DUNG CHUNG' nếu trỏ dãy public; đối chứng: cùng phiên lấy một khoá tư vấn riêng → đếm ra 1 ('DOI CHUNG KHONG BAT' nếu mù); in 'KHOA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.sts_assert
+    paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
+    expected: "exit 0; tập thông điệp assert ở merge-base = ở HEAD, rút theo hai lớp đếm riêng: chuỗi mở đầu SD-AC/SD3/AC-7 (≥ 10) và regex literal của assert.rejects (số rút được = số lời gọi assert.rejects có đối số regex, ≥ 1); số chỗ đọc 'public' giảm đúng 2; đối chứng mỗi lớp một ô: xoá một thông điệp chuỗi, đổi regex của ca SD-AC-1 đỏ → cả hai bắt 'THONG DIEP ASSERT DOI'; in 'ASSERT OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.sts_pham_vi
+    paths: [_acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base thuộc: pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/*, _acceptance/config.yaml, run-log/evidence-report của sdt-luu-goc-e164 và sellers-them-dong-lai (ghim lại), PRODUCT-MAP.md, LO-TRINH.html; probe không chứa supabase/SUPABASE_/mgmtExec; đối chứng: pipeline/scripts/boc-sdt.test.mjs → 'NGOAI PHAM VI'; in 'PHAM VI OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

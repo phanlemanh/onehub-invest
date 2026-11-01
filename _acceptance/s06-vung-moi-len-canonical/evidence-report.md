@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2e6f60e05e7b6475d3defa50ed762b79d02336a6
+verified_commit: 61cc5334e1fed71c94a4f7dd523c35331879c0e8
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -184,3 +184,7 @@ Round 5: toàn bộ eval và lệnh suite xanh — PASS.
 ### Re-pin lần 1 — 2026-11-01, do hoá cũ do gộp origin/main sau chữ ký (main xanh lại ở 5cbf3e23)
 run_id: repin-20261101T051028Z-36128
 sha: 2e6f60e05e7b6475d3defa50ed762b79d02336a6 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E9, E10, E11 · AC không có chốt máy: AC-9
+
+### Re-pin lần 2 — 2026-11-01, do hoá cũ do gộp origin/main ed0ff2cd (#261) sau chữ ký
+run_id: repin-20261101T084210Z-89159
+sha: 61cc5334e1fed71c94a4f7dd523c35331879c0e8 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E9, E10, E11 · AC không có chốt máy: AC-9 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6, suite 4/6

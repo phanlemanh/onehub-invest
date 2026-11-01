@@ -122,6 +122,8 @@ executors:
     anh_goc_chan_svg: "cd app && node --import tsx --test tests/anh-goc-chan-svg.test.tsx"   # proxy-anh-chan-svg — danh sách kiểu ảnh cho phép, 415, nosniff + CSP sandbox
     s03_loai_tin: "cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs"   # s03-nhan-loai-tin-rong — suy loại tin S03: tín hiệu chữ, đơn vị giá, bối cảnh nhóm, bài cầu
     s03_loai_tin_doi_chieu: "cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # s03-nhan-loai-tin-rong AC-7/AC-9 — DB máy thu, BEGIN…ROLLBACK, chỉ in số
+    nhan_bac: "cd agent && node --import tsx --test tests/nhan-bac-s03.test.ts"   # nhan-bac-model-lon-s03 (KC1) — backend giả, gạt tầng A, trích, lỗi, đo, trần chi phí
+    nhan_bac_db: "cd agent && node --import tsx --test tests/nhan-bac-s03-db.itest.ts"   # nhan-bac-model-lon-s03 (KC1) — 065 + ghi chỉ bảng nhãn bạc, DB máy thu ROLLBACK
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
@@ -146,6 +148,7 @@ executors:
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
     nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
     judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
+    judge_entity_khong_dau: "cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts"   # duong-thang-n-khong-dau — khoá đường có dấu = không dấu (tháng N, từ vị trí trần); probe DB máy thu bỏ qua có lý do dưới CI
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -255,6 +258,9 @@ executors:
     cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
     cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     cloud_sync_pii_cot: "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot"    # NT2 soat-tang-a-moi-duong-len-cloud: leak gate đỏ khi cột ngoài CLOUD_ALLOW / bảng tầng A có dòng
+    cloud_sync_sellers_view: "cd pipeline && node scripts/check-cloud-sync.mjs sellers-view"   # check-cloud-sync-sellers-view E1 — nguồn sau 060/059 dựng được DB mô phỏng, sellers là bảng hai phía, sync đổ đủ dòng
+    cloud_sync_tuan_tu: "cd pipeline && r=0; for c in stage atomic fail fidelity keep pii overlap allow anon pii-cot; do node scripts/check-cloud-sync.mjs $c || r=1; done; exit $r"   # check-cloud-sync-sellers-view E2 — mười ca cũ chạy tuần tự (một container một lúc)
+    ccs_pham_vi: "bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh"   # check-cloud-sync-sellers-view E3
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
@@ -529,6 +535,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    sts_chan: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs chan"   # sd3-test-chiu-song-song E1 — xanh dưới phiên giữ 33033, bản cũ treo
+    sts_khoa: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs khoa"   # sd3-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    sts_assert: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs assert"   # sd3-test-chiu-song-song E3 — thông điệp assert giữ nguyên
+    sts_pham_vi: "bash _acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh"   # sd3-test-chiu-song-song E4
     svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
     svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
     svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt
