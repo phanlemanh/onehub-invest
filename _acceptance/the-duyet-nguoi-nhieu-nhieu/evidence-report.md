@@ -104,7 +104,7 @@ human_signoff:
 - eval: E9
   run_id: minted-the-duyet-nguoi-nhieu-nhieu-E9-r1
   exit_code: 0
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái ego-browser trên máy dev của worktree (:3462); bản tổng hợp ghi nhầm khoá executors.ui-check không có trong config — sổ d-20261101T135958Z-17
   verified_at: 2026-11-01T09:18:21Z
   carried_from_round: 1
   # carry-forward tu round 1 — delta khong cham paths cua eval
