@@ -8,13 +8,13 @@ evals:
     executor: test
     cmd: config:executors.test.can_theo_tin
     paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs, pipeline/lib/nap-045.mjs]
-    expected: "exit 0; ca 'CT-AC-1' chạy đủ ma trận 8 ô (máy/người × B sống/nghỉ × PB cùng/khác căn PA): PB.bedrooms = giá trị phân xử của B, enrichment_log PB có dòng src enrich-proposals với offer_ids chứa B; ô PB có sẵn giữ nguyên; ca 'CT-AC-1 chiều đỏ' với bản 063 ném 'CT-AC-1: căn tin chung bài đăng không nhận theo' ở cả 8 ô"
+    expected: "exit 0; ca 'CT-AC-1' chạy đủ ma trận 8 ô (máy/người × B sống/nghỉ × PB cùng/khác căn PA) + ô 'A ≠ B cùng căn' (PB.bedrooms = max giá trị phân xử của A, B) + ô 'PB có sẵn' (giữ nguyên): PB.bedrooms = max giá trị phân xử các tin trong tập gắn PB, enrichment_log PB có dòng src enrich-proposals với offer_ids chứa B; ca 'CT-AC-1 chiều đỏ' với bản 063: ở 4 ô KHÁC căn ném 'CT-AC-1: căn tin chung bài đăng không nhận theo (<ô>)'; ở 4 ô CÙNG căn assert PB.bedrooms của 063 = của 066 và chỉ dòng log khác (063 thiếu offer_ids chứa B)"
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.can_theo_tin
     paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs]
-    expected: "exit 0; ca 'CT-AC-2' (ma trận 8 ô): sau hoàn tác PB.bedrooms NULL khi không tin khác của PB mang giá trị, giữ khi có tin D của PB mang cùng giá trị; PB có dòng enrich-revert; 'CT-AC-2 chiều đỏ' bản 063 ném 'CT-AC-2: căn tin chung bài đăng giữ giá trị đã rút'"
+    expected: "exit 0; ca 'CT-AC-2' (ma trận 8 ô): sau hoàn tác PB.bedrooms NULL khi không tin nào của PB còn mang giá trị; ô 'D của PB mang cùng giá trị' giữ; ô 'B còn mang giá trị từ nguồn riêng sau phân xử lại' giữ (ném 'CT-AC-2: căn mất giá trị B vẫn mang' nếu sai); mỗi ô PB có dòng enrich-revert; 'CT-AC-2 chiều đỏ' bản 063 ở 4 ô KHÁC căn ném 'CT-AC-2: căn tin chung bài đăng giữ giá trị đã rút (<ô>)'"
   - id: E3
     criterion: AC-3
     executor: test
@@ -26,7 +26,7 @@ evals:
     executor: test
     cmd: config:executors.test.can_theo_tin
     paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs]
-    expected: "exit 0; ca 'CT-AC-4': fixture lệch (căn tin chung trống, đề xuất applied) → chạy khối sửa một lần: n ô điền = số ô trống của fixture, 1 dòng ops_audit can-theo-tin:sua-mot-lan-066 với detail {properties, cells}; chạy lần hai 0 ô, vẫn 1 dòng ops_audit"
+    expected: "exit 0; ca 'CT-AC-4': lệch sinh bằng apply_enrichment bản 063 trong giao dịch (không viết tay) → khối sửa một lần 066: cells = số ô lệch đếm độc lập (truy vấn riêng trước/sau), 1 dòng ops_audit can-theo-tin:sua-mot-lan-066 detail {properties, cells}; lượt hai 0 ô, vẫn 1 dòng; ba ô đối chứng: đề xuất đã hoàn tác → 0 ô; căn không gắn tin chung bài → md5 không đổi; ô căn đã có giá trị → giữ nguyên"
   - id: E5
     criterion: AC-5
     executor: script
