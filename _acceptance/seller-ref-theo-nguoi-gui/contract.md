@@ -5,7 +5,7 @@ slug: seller-ref-theo-nguoi-gui
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T08:55:00Z
 approved_by:
@@ -75,3 +75,10 @@ Trục (quét hình thái, preset test-matrix — xem dòng descope trong sổ):
   nhất» (hồ sơ boc-sdt-du-va-chon-ro), mã người gửi theo bài neo; hai cột có thể thuộc hai người.
 - OOS-6: Màn hay truy vấn sản phẩm đọc `seller_ref` («tin cùng người đăng») — hôm nay không bên nào trong app, agent,
   data-api đọc cột này; hàng làm đúng cột canonical.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Ở tin nhiều người cùng gửi, mã người đăng và tên người đăng có thể thuộc hai người khác nhau.
+  - Ngoài-2: Mã người gửi trộn chữ và số lên cloud chỉ còn phần số cuối, có thể trùng người (khoảng một giá trị).
+  - Ngoài-3: Bài kiểm đối chứng cổng chặn lộ dữ liệu chỉ so mẫu với chuỗi viết sẵn, chưa chạy cổng thật.

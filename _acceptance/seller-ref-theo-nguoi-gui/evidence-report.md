@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 553e76a50521ab53c64af0b01ab7833d8a3ea2d3
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: seller-ref-theo-nguoi-gui
