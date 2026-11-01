@@ -3,6 +3,7 @@
 // Phần thuần (rút định danh, giải người, chọn vai rút) tách khỏi phần DB để đo không cần DB.
 import { createHash, randomBytes } from "node:crypto";
 import { ALIAS_KIND, ASSERTION_METHOD, EVIDENCE_TIER, PARTY_ROLE } from "./vocab.generated.mjs";
+import { SQL_THE, dungThe, lanGopTheoThe, nhomNhieuNhieu, theChoAp } from "./the-duyet-nguoi.mjs";
 
 /** Vai bộ dựng được ghi — không vai suy luận (môi giới, sàn) ở hàng này (AC-9). */
 export const VAI_GHI = Object.freeze([PARTY_ROLE.nguoi_dang]);
@@ -389,6 +390,16 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const gop = congTac === "bat" ? gopDu : [];
   const gopCho = congTac === "bat" ? [] : gopDu;
   for (const g of gop) gopVao.set(g.tu, g.vao);
+  // HD17: thẻ người đã duyệt «gộp» áp ở đây, cả khi công tắc gộp tắt (Hỏi-2) — trước anhXaVai để vai đi theo người đích.
+  const theCu = (await c.query(SQL_THE.theNguoi)).rows;
+  const daAp = (await c.query(SQL_THE.daAp)).rows.map((r) => r.reason);
+  const gopThe = [];
+  let theKhongAp = 0;
+  for (const t of theChoAp(theCu, daAp)) {
+    const l = lanGopTheoThe(t, biDanhSau, trangThai, gopVao);
+    if (!l) { theKhongAp++; continue; }
+    for (const tu of l.tu) { gopVao.set(tu, l.dich); gopThe.push({ tu, vao: l.dich, lyDo: l.lyDo }); }
+  }
   kq.vai = anhXaVai(kq.vai, gopVao);
 
   if (kq.nguoiMoi.length) await c.query(SQL.themNguoi, [kq.nguoiMoi.map((p) => p.party_key), kq.nguoiMoi.map((p) => p.source)]);
@@ -403,6 +414,11 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
     await c.query(SQL.gop, [gop.map((g) => g.tu), gop.map((g) => g.vao)]);
     await c.query(SQL.themSuKien, [gop.map((g) => g.tu), gop.map((g) => g.vao), "gop", NGUOI_LAM, gop.map((g) => `${LUAT_GOP} ${g.source}`)]);
   }
+  if (gopThe.length) {
+    await c.query(SQL.gop, [gopThe.map((g) => g.tu), gopThe.map((g) => g.vao)]);
+    await c.query(SQL.themSuKien, [gopThe.map((g) => g.tu), gopThe.map((g) => g.vao), "gop", NGUOI_LAM, gopThe.map((g) => g.lyDo)]);
+  }
+  const the = await dungThe(c, nhomNhieuNhieu(tins, baiTheoId), theCu);
 
   const dangSong = new Set(vaiSong.map((v) => `${v.subject_key}|${v.party_key}`));
   const rut = chonVaiRut(vaiSong, kq.vai, tins, baiTheoId);
@@ -430,12 +446,12 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const kqDem = {
     nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, sdt_bam_nghi: sdtBamNghi, vai_moi: moi.length, vai_rut: rut.length,
     gop: gop.length, cong_tac_gop: congTac, gop_cho: gopCho.length, nhieu_nhieu: nhieuNhieu, khong_dinh_danh: kq.khongDinhDanh,
-    theo_nguon,
+    theo_nguon, the_moi: the.the_moi, the_dong: the.the_dong, the_ap: gopThe.length, the_khong_ap: theKhongAp,
   };
   const kdd = Object.entries(kq.khongDinhDanh).map(([s, n]) => `${s}=${n}`).join(" ") || "0";
   const nn = Object.entries(nhieuNhieu).map(([s, v]) => `${s}=${v.sdt_nhieu_nguoi}/${v.nguoi_nhieu_sdt}`).join(" ");
   const tat = congTac === "tat" ? ` · công tắc gộp tắt (chờ ${gopCho.length})` : "";
-  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · gộp ${gop.length}${tat} · nhiều–nhiều (SĐT nhiều người gửi/người gửi nhiều SĐT) ${nn} · không định danh ${kdd}`);
+  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · nghỉ ${sdtBamNghi} sdt_bam · +${moi.length} vai · rút ${rut.length} · gộp ${gop.length}${tat} · nhiều–nhiều (SĐT nhiều người gửi/người gửi nhiều SĐT) ${nn} · không định danh ${kdd} · thẻ Người +${the.the_moi} mới, ${the.the_dong} đóng, ${gopThe.length} gộp theo thẻ${theKhongAp ? `, ${theKhongAp} không áp được` : ""}`);
   return kqDem;
 }
 
