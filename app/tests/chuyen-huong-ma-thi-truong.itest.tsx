@@ -2,7 +2,7 @@
 // (đuôi .itest): scripts/chuyen-huong-ma-thi-truong/acceptance.mjs dựng DB thử (trước/sau migration 064) rồi chạy tệp này
 // với DATABASE_URL trỏ DB thử. CHM_PHAN=app → trang Invest + API /api/v1 (AC-2..AC-6, AC-8 phần app);
 // CHM_PHAN=api → data-api (AC-7, AC-8). Gọi thẳng hàm trang và handler route; chuyển hướng/404 đọc từ digest lỗi của Next.
-// Đột biến và mốc gốc hàng là bản chép cạnh tệp thật (tên __chm-*), xoá ở after().
+// Đột biến và mốc gốc hàng là bản chép cạnh tệp (tên __chm-*) trong bản chụp mã của acceptance.mjs, xoá ở after().
 import nodeModule, { createRequire } from "node:module"
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"

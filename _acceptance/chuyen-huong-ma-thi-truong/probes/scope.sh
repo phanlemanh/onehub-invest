@@ -18,7 +18,7 @@ kiem() { # $1 = danh sách tệp đổi, $2 = danh sách tệp mới; in dòng, 
   while read -r f; do
   case "$f" in
     app/src/proxy.ts|data-api/src/middleware/*) echo "CỔNG AUTH BỊ CHẠM $f"; b=1;;
-    app/src/lib/ma-thi-truong.ts|app/src/lib/queries.ts|data-api/src/lib/ma-thi-truong.ts|data-api/src/routes/*.ts|\
+    app/src/lib/ma-thi-truong.ts|app/src/lib/queries.ts|app/src/lib/dq-labels.ts|data-api/src/lib/ma-thi-truong.ts|data-api/src/routes/*.ts|\
     "app/src/app/(app)/[country]/page.tsx"|"app/src/app/(app)/[country]/[market]/page.tsx"|\
     "app/src/app/(app)/[country]/[market]/listings/page.tsx"|"app/src/app/(app)/[country]/[market]/[submarket]/page.tsx"|\
     "app/src/app/(app)/yield/page.tsx"|"app/src/app/(app)/compare/page.tsx"|app/src/app/api/v1/*/route.ts|\

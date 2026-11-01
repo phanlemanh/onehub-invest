@@ -8,7 +8,7 @@
 //   CHM_GOC_MOI=1 … → dựng lại bản gốc (mặc định dùng lại nếu < 6 giờ)
 import { execFileSync, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -125,9 +125,22 @@ async function dungTrangThai(phan, tt, ph) {
   return { db, url: URL_DB(db), don: () => docker(["dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", db]) };
 }
 
-function chayItest(phan, tt, ctx, ph) {
+/** Bản chụp mã trong .acceptance-runs/: bản chép đột biến của itest nằm ở đây, không ở app/src. Trong lượt S4 tsc và ESLint chạy
+ *  song song và đọc app/src, tệp tạm bị xoá giữa chừng làm chúng đỏ ENOENT (E11 vòng 2). node_modules là symlink về mã thật. */
+function dungCay(phan) {
+  const cay = join(ROOT, `.acceptance-runs/chuyen-huong-ma-thi-truong/cay-${phan}`);
+  rmSync(cay, { recursive: true, force: true });
+  for (const [mod, phu] of [["app", ["src", "package.json", "tsconfig.json"]], ["data-api", ["src", "package.json", "tsconfig.json"]]]) {
+    for (const p of phu) cpSync(join(ROOT, mod, p), join(cay, mod, p), { recursive: true });
+    symlinkSync(join(ROOT, mod, "node_modules"), join(cay, mod, "node_modules"));
+  }
+  cpSync(join(ROOT, "app", ITEST), join(cay, "app", ITEST));
+  return { app: join(cay, "app"), dataApi: join(cay, "data-api"), don: () => rmSync(cay, { recursive: true, force: true }) };
+}
+
+function chayItest(phan, tt, ctx, ph, cwd) {
   const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", ITEST], {
-    cwd: APP, encoding: "utf8", maxBuffer: 64 << 20,
+    cwd, encoding: "utf8", maxBuffer: 64 << 20,
     env: { ...process.env, DATABASE_URL: ctx.url, CHM_PHAN: phan, CHM_TRANG_THAI: tt, CHM_MA_DAI: JSON.stringify(ph.maDai),
            CHM_PHUONG: ph.id, CHM_PHUONG_TEN: ph.name, CHM_GOC: ph.goc, DATA_API_KEYS: "" },
   });
@@ -143,15 +156,16 @@ async function cheDoDb(phan, ten) {
   const khoa = new pg.Client({ connectionString: URL_DB("oneinvest") });
   await khoa.connect();
   await khoa.query("SELECT pg_advisory_lock(hashtext('chm_dung_ban_goc'))");
+  const cay = dungCay(phan);
   try {
     await banGoc();
     const ph = { ...(await chonPhuong()), maDai: await maDai(), goc: gocHang() };
     console.log(`phường thử: ${ph.id} (${ph.name}), tin cấp thị trường ${ph.offer_id}; gốc hàng ${ph.goc.slice(0, 10)}`);
     for (const tt of ["truoc", "sau"]) {
       const ctx = await dungTrangThai(phan, tt, ph);
-      try { chayItest(phan, tt, ctx, ph); } finally { ctx.don(); }
+      try { chayItest(phan, tt, ctx, ph, cay.app); } finally { ctx.don(); }
     }
-  } finally { await khoa.end(); }
+  } finally { cay.don(); await khoa.end(); }
   finish(ten);
 }
 
@@ -185,7 +199,8 @@ async function cheDoMa() {
   console.log(`số assert: ${tatCa.length}`);
   // Chiều đỏ: bản chép data-api chỉ nhận tiền tố thanh-pho → phải lệch ở mã vn-tinh-* đầu tiên, gọi tên bản 'data-api'.
   const goc = join(ROOT, "data-api/src/lib/ma-thi-truong.ts");
-  const ban = join(ROOT, "data-api/src/lib/__chm-dot-bien-ma.ts");
+  const cay = dungCay("ma");
+  const ban = join(cay.dataApi, "src/lib/__chm-dot-bien-ma.ts");
   const src = readFileSync(goc, "utf8");
   if (!src.includes("/^vn-(thanh-pho|tinh)-/")) dung("không thấy regex trong bản data-api để đột biến");
   try {
@@ -195,7 +210,7 @@ async function cheDoMa() {
     const dau = dai.find((x) => x.startsWith("vn-tinh-"));
     check(lechDo.length > 0 && lechDo[0] === `data-api lệch ở '${dau}': ${dau} ≠ ${so064[tatCa.indexOf(dau)]}`,
       `MA chiều đỏ: data-api đổi regex → lệch đầu tiên gọi tên '${dau}' và 'data-api' (${lechDo[0] ?? "không lệch"})`);
-  } finally { rmSync(ban, { force: true }); }
+  } finally { cay.don(); }
   finish("MA");
 }
 
