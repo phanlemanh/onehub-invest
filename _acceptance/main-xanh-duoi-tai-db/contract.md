@@ -5,7 +5,7 @@ slug: main-xanh-duoi-tai-db
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T02:20:00Z
 approved_by:
@@ -59,3 +59,14 @@ Trục (quét hình thái, preset test-matrix):
 - OOS-2: Bắt lượt XOÁ dòng public có từ trước (bản cũ bắt bằng số dòng nhưng đỏ theo mọi job xoá).
 - OOS-3: Sửa job S06/đêm hay khoá chung với nó (làn ZCode/pipeline).
 - OOS-4: Các test DB khác có thể cũng nhạy tải — chỉ hai chỗ giám sát đo được đỏ.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Lỗi đọc bảng người của lược đồ tạm bị nuốt; khi khâu dựng hỏng, kiểm cuối lượt có thể mất mã người trong tập dấu mà không báo.
+  - Ngoài-2: Lỗi gốc của kiểm cuối lượt bị đổi thành thông điệp «public đã bị chạm», có thể dẫn người sửa đi nhầm hướng.
+  - Ngoài-3: Job giữ khoá quá khoảng 30 giây làm AC-10 đỏ với nhãn «không idempotent» thay vì nhãn do tải.
+  - Ngoài-4: Ngưỡng dưới 400ms ở ca «lỗi không phải tải» có thể đỏ giả khi máy dữ liệu đang bận.
+  - Ngoài-5: Dấu lượt trong TD-TAI-2 là chuỗi gõ tay; dòng thật lọt vào public mà không mang dấu quen thuộc thì không bị đếm.
+  - Ngoài-6: Mẫu nhận dấu có khoảng 16 nhánh nhưng mới 6 nhánh có kiểm riêng.
+  - Ngoài-7: Bằng chứng kiểm cuối lượt đỏ khi public bị chạm là gián tiếp (đo bằng bản chép, không chạy chính hook after).
