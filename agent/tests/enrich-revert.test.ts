@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type pg from "pg";
+import pg from "pg";
 
 import { main } from "../scripts/enrich-revert.js";
 import { resolveContext, type ContextResult } from "../src/agents/context-resolver.js";
@@ -316,6 +316,139 @@ const SHAPE = `
 const COUNTS = `SELECT (SELECT count(*) FROM enrichment_proposals) || '/' || (SELECT count(*) FROM sale_offers)
   || '/' || (SELECT count(*) FROM review_queue) || '/' || (SELECT count(*) FROM ops_audit) AS n`;
 
+// Áp lại migration trên DB local dùng chung: DDL khoá độc quyền bảng mà job S06/đêm đang ghi, nên có thể deadlock (40P01)
+// hay hết chờ khoá (55P03) — đó là tải, không phải lỗi idempotent. Mỗi lần áp nằm trong SAVEPOINT, chờ khoá có hạn, thử
+// lại tối đa 5 lần cho đúng hai mã ấy; mọi lỗi khác (kể cả lỗi idempotent thật) ném ngay. Trả số lần đã thử; lỗi ném ra
+// mang thêm `lan` = số lần đã thử.
+const MA_TAI = new Set(["40P01", "55P03"]);
+async function apLaiChiuTai(
+  c: pg.Client, sql: string, { lockTimeout = "5s", lanToiDa = 5, lui = 500 } = {},
+): Promise<number> {
+  for (let lan = 1; ; lan++) {
+    await c.query(`SAVEPOINT ap_lai; SET LOCAL lock_timeout = '${lockTimeout}'`);
+    try {
+      await c.query(sql);
+      await c.query("RELEASE SAVEPOINT ap_lai; SET LOCAL lock_timeout = 0");
+      return lan;
+    } catch (e) {
+      await c.query("ROLLBACK TO SAVEPOINT ap_lai; SET LOCAL lock_timeout = 0");
+      if (!MA_TAI.has((e as { code?: string }).code ?? "") || lan >= lanToiDa) throw Object.assign(e as Error, { lan });
+      await new Promise((r) => setTimeout(r, lui * lan));
+    }
+  }
+}
+
+// Bàn đo tranh khoá: phiên B riêng giữ advisory lock (khoá thử theo pid, không đụng bảng nào của DB dùng chung).
+const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const K1 = 7_100_000 + (process.pid % 100_000);
+const K2 = K1 + 100_000;
+async function phienB(): Promise<pg.Client> {
+  const b = new pg.Client({ connectionString: DB_URL });
+  await b.connect();
+  return b;
+}
+const ngu = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const maLoi = (e: unknown) => (e as { code?: string }).code;
+
+test("AC-10 chịu tải: hết chờ khoá (55P03) được lùi và thử lại", async () => {
+  const b = await phienB();
+  try {
+    await withTx(async (c) => {
+      const cau = `SELECT pg_advisory_xact_lock(${K1})`;
+      // Đối chứng: áp thẳng trong lúc B giữ khoá → 55P03 (bàn đo thật sự tạo tranh khoá).
+      await b.query(`SELECT pg_advisory_lock(${K1})`);
+      await c.query("SAVEPOINT dc; SET LOCAL lock_timeout = '300ms'");
+      await c.query(cau).then(
+        () => assert.fail("AC-10 bàn đo không tạo được tranh khoá"),
+        (e) => assert.equal(maLoi(e), "55P03", "AC-10 bàn đo không tạo được tranh khoá"),
+      );
+      await c.query("ROLLBACK TO SAVEPOINT dc; SET LOCAL lock_timeout = 0");
+      // B nhả sau ~700ms: lần 1 (chờ 300ms) hết hạn, lần sau qua.
+      const nha = ngu(700).then(() => b.query(`SELECT pg_advisory_unlock(${K1})`));
+      const lan = await apLaiChiuTai(c, cau, { lockTimeout: "300ms", lui: 300 });
+      await nha;
+      assert.ok(lan >= 2, `AC-10 không thử lại khi hết chờ khoá (lan=${lan})`);
+      assert.equal((await c.query("SELECT 1 AS x")).rows[0].x, 1, "AC-10 giao dịch hỏng sau khi lùi");
+    });
+  } finally {
+    await b.end();
+  }
+});
+
+test("AC-10 chịu deadlock: nạn nhân 40P01 được lùi và thử lại", async () => {
+  const cau = `SELECT pg_advisory_xact_lock(${K1}); SELECT pg_sleep(0.5); SELECT pg_advisory_xact_lock(${K2})`;
+  // B giữ K2, đợi phía test giữ K1 rồi xin K1 → vòng chờ chéo. deadlock_timeout của B dài nên phía test (1s) là nạn nhân.
+  const dungB = async (b: pg.Client) => {
+    await b.query("SET deadlock_timeout = '30s'");
+    await b.query(`SELECT pg_advisory_lock(${K2})`);
+    // Bọc trong object: await một promise trả về sẽ chờ luôn B xin K1 trước khi phía test kịp giữ nó.
+    return {
+      xong: ngu(200).then(async () => {
+        await b.query(`SELECT pg_advisory_lock(${K1})`);
+        await b.query("SELECT pg_advisory_unlock_all()");
+      }),
+    };
+  };
+  const b1 = await phienB();
+  const b2 = await phienB();
+  try {
+    await withTx(async (c) => {
+      // Đối chứng: áp thẳng → 40P01.
+      const { xong: xong1 } = await dungB(b1);
+      await c.query("SAVEPOINT dc");
+      await c.query(cau).then(
+        () => assert.fail("AC-10 bàn đo không tạo được deadlock"),
+        (e) => assert.equal(maLoi(e), "40P01", "AC-10 bàn đo không tạo được deadlock"),
+      );
+      await c.query("ROLLBACK TO SAVEPOINT dc");
+      await xong1;
+      const { xong: xong2 } = await dungB(b2);
+      const lan = await apLaiChiuTai(c, cau, { lui: 200 });
+      await xong2;
+      assert.ok(lan >= 2, `AC-10 không thử lại khi deadlock (lan=${lan})`);
+      assert.equal((await c.query("SELECT 1 AS x")).rows[0].x, 1, "AC-10 giao dịch hỏng sau deadlock");
+    });
+  } finally {
+    await b1.end();
+    await b2.end();
+  }
+});
+
+test("AC-10 chạm trần thử lại: khoá không nhả → ném 55P03 sau đúng 5 lần", async () => {
+  const b = await phienB();
+  try {
+    await b.query(`SELECT pg_advisory_lock(${K1})`);
+    await withTx(async (c) => {
+      await apLaiChiuTai(c, `SELECT pg_advisory_xact_lock(${K1})`, { lockTimeout: "200ms", lanToiDa: 5, lui: 10 }).then(
+        () => assert.fail("AC-10 hết trần mà không ném"),
+        (e) => {
+          assert.equal(maLoi(e), "55P03", "AC-10 hết trần ném sai mã");
+          assert.equal((e as { lan?: number }).lan, 5, "AC-10 số lần thử khác trần");
+        },
+      );
+      assert.equal((await c.query("SELECT 1 AS x")).rows[0].x, 1, "AC-10 giao dịch hỏng sau khi chạm trần");
+    });
+  } finally {
+    await b.end();
+  }
+});
+
+test("AC-10 lỗi không phải tải ném ngay, không thử lại", async () => {
+  await withTx(async (c) => {
+    for (const [cau, ma] of [["SELEC 1", "42601"], ["CREATE TABLE enrichment_proposals (x int)", "42P07"]] as const) {
+      const t0 = Date.now();
+      await apLaiChiuTai(c, cau).then(
+        () => assert.fail(`AC-10 câu lỗi «${cau}» không ném`),
+        (e) => {
+          assert.equal(maLoi(e), ma, `AC-10 câu «${cau}» ném sai mã`);
+          assert.equal((e as { lan?: number }).lan, 1, `AC-10 câu «${cau}» bị thử lại`);
+        },
+      );
+      assert.ok(Date.now() - t0 < 400, `AC-10 câu «${cau}» chờ lùi trước khi ném`);
+    }
+  });
+});
+
 test("AC-10 migration idempotent", async () => {
   // 044 (nap-lai-khong-xoa) thay phần khoá ngoại + hàm đối soát của 039 và biến sale_offers thành VIEW, nên sau 044
   // không áp lại 039 được (khoá ngoại của nó trỏ BẢNG sale_offers) — chuỗi áp lại là 036 + 044 + 045 (045 thay
@@ -328,7 +461,7 @@ test("AC-10 migration idempotent", async () => {
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {
       for (const f of files) {
-        await c.query(readFileSync(f, "utf8")).catch((e: Error) => {
+        await apLaiChiuTai(c, readFileSync(f, "utf8")).catch((e: Error) => {
           throw new Error(`AC-10 không idempotent: ${f.split("/").pop()} lần ${round}: ${e.message}`);
         });
       }
