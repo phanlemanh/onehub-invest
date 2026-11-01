@@ -12,9 +12,12 @@ fi
 ds=$(git diff --name-only "$base" HEAD) || { echo "scope: git diff lỗi"; exit 2; }
 [ -n "$ds" ] || { echo "scope: diff rỗng — không có gì để kiểm"; exit 2; }
 moi=$(git diff --name-only --diff-filter=A "$base" HEAD) || { echo "scope: git diff lỗi"; exit 2; }
-while read -r f; do
+# Chiều đỏ (đối chứng trên cùng bộ luật): danh sách giả chứa cổng auth và route mới phải bị gọi tên.
+kiem() { # $1 = danh sách tệp đổi, $2 = danh sách tệp mới; in dòng, trả 1 khi có vi phạm
+  local b=0
+  while read -r f; do
   case "$f" in
-    app/src/proxy.ts|data-api/src/middleware/*) echo "CỔNG AUTH BỊ CHẠM $f"; bad=1;;
+    app/src/proxy.ts|data-api/src/middleware/*) echo "CỔNG AUTH BỊ CHẠM $f"; b=1;;
     app/src/lib/ma-thi-truong.ts|app/src/lib/queries.ts|data-api/src/lib/ma-thi-truong.ts|data-api/src/routes/*.ts|\
     "app/src/app/(app)/[country]/page.tsx"|"app/src/app/(app)/[country]/[market]/page.tsx"|\
     "app/src/app/(app)/[country]/[market]/listings/page.tsx"|"app/src/app/(app)/[country]/[market]/[submarket]/page.tsx"|\
@@ -22,11 +25,17 @@ while read -r f; do
     app/tests/chuyen-huong-ma-thi-truong.itest.tsx|scripts/chuyen-huong-ma-thi-truong/*|_acceptance/chuyen-huong-ma-thi-truong/*|\
     _acceptance/config.yaml|docs/superpowers/specs/2026-11-01-chuyen-huong-ma-thi-truong-design.md|\
     docs/superpowers/plans/2026-11-01-chuyen-huong-ma-thi-truong.md|PRODUCT-MAP.md|LO-TRINH.html|docs/ROADMAP.md) echo "ok  $f";;
-    *) echo "NGOÀI PHẠM VI $f"; bad=1;;
+    *) echo "NGOÀI PHẠM VI $f"; b=1;;
   esac
-done <<< "$ds"
-while read -r f; do
-  case "$f" in */page.tsx|*/route.ts) echo "ROUTE MỚI $f"; bad=1;; esac
-done <<< "$moi"
+  done <<< "$1"
+  while read -r f; do
+    case "$f" in */page.tsx|*/route.ts) echo "ROUTE MỚI $f"; b=1;; esac
+  done <<< "$2"
+  return $b
+}
+do=$(kiem $'app/src/proxy.ts\napp/src/app/(app)/x/page.tsx' 'app/src/app/(app)/x/page.tsx')
+case "$do" in *"CỔNG AUTH BỊ CHẠM app/src/proxy.ts"*"ROUTE MỚI app/src/app/(app)/x/page.tsx"*) echo "ok  chiều đỏ: bộ luật gọi tên cổng auth và route mới";;
+  *) echo "scope: chiều đỏ không bắt được tệp giả — luật hỏng"; exit 2;; esac
+kiem "$ds" "$moi" || bad=1
 (cd data-api && npm run -s typecheck) || { echo "data-api typecheck đỏ"; bad=1; }
 [ "$bad" = 0 ] && echo "SCOPE OK"; exit "$bad"
