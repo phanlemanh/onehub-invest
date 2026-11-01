@@ -146,7 +146,7 @@ function veSellersBang(db, { data }) {
 
 // Trigger bị bỏ khỏi bản dump (bảng, tên) — ca sellers-view đối chiếu với tập đã biết của 059.
 export const TRIGGER_BO = [];
-export const TRIGGER_DA_BIET = ["history_doi_gia", "history_doi_trang_thai", "history_tin_moi"];
+export const TRIGGER_DA_BIET = ["sale_offer_records.history_doi_gia", "sale_offer_records.history_doi_trang_thai", "sale_offer_records.history_tin_moi"];
 function dump(tables, { schemaOnly, giuTrigger = false }) {
   const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", SRC_DB, "--no-owner", "--no-acl"];
   if (schemaOnly) args.push("-s");
@@ -156,6 +156,8 @@ function dump(tables, { schemaOnly, giuTrigger = false }) {
   const ra = execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 });
   if (giuTrigger) return ra;
   return ra.replace(/^CREATE TRIGGER (\S+) .* ON public\.(\S+) .*;$/gm, (_, ten, bang) => {
+    // Trigger ngoài tập đã biết của 059 → dừng mọi ca, gọi tên: DB mô phỏng không được lặng lẽ thiếu một hành vi mới.
+    if (!TRIGGER_DA_BIET.includes(`${bang}.${ten}`)) throw new Error(`TRIGGER LA trên bảng FILL: ${bang}.${ten} — thêm vào TRIGGER_DA_BIET nếu bỏ được khỏi DB mô phỏng`);
     TRIGGER_BO.push(`${bang}.${ten}`);
     return "";
   });
@@ -1320,10 +1322,9 @@ async function caseSellersView() {
   else fail(`sync sellers lệch: local ${bL} · cloud ${bC}`);
   // Trigger bị bỏ khỏi dump: đúng tập đã biết của 059, không trigger lạ, không CONSTRAINT TRIGGER nào còn sót.
   const bo = [...new Set(TRIGGER_BO)].sort();
-  const la = bo.filter((x) => !TRIGGER_DA_BIET.includes(x.split(".")[1]));
   console.log(`note: trigger bỏ khỏi dump: ${bo.join(", ") || "(không)"}`);
-  if (bo.length && !la.length) pass(`chỉ bỏ trigger lịch sử 059 đã biết (${bo.length})`);
-  else fail(`TRIGGER LA bị bỏ khỏi dump: ${la.join(", ") || "(không bỏ trigger nào — phép đo mù)"}`);
+  if (JSON.stringify(bo) === JSON.stringify([...TRIGGER_DA_BIET].sort())) pass(`bỏ đúng tập trigger lịch sử 059 (${bo.length}, kể cả bảng)`);
+  else fail(`tập trigger bỏ khỏi dump lệch tập 059: ${bo.join(", ") || "(không bỏ trigger nào — phép đo mù)"}`);
   const conLai = dump([...FILL, "source_registry"], { schemaOnly: true }).match(/^CREATE (CONSTRAINT )?TRIGGER .*$/gm) ?? [];
   if (!conLai.length) pass("bản dump đã xử lý không còn câu tạo trigger");
   else fail(`bản dump còn câu tạo trigger: ${conLai[0].slice(0, 80)}`);
