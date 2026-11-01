@@ -14,6 +14,7 @@ import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 import { kiemCatChuyen, resolveOffers, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -114,6 +115,8 @@ export async function runTransformChotot(client) {
     if (Number.isInteger(Number(ad.rooms)) && Number(ad.rooms) > 0) {
       phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
     }
+    // HD5 (061): đặc trưng nhà — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, WC, toạ độ; rule_id = khoá nguồn đã đọc.
+    for (const d of docDacTrungS06(ad)) phatBieu.push({ ...chung, ...d });
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
   const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };

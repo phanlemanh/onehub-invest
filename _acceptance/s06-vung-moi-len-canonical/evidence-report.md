@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c470eb64ba776900fb1b2cf08e36cf85766bcbf3
+verified_commit: 2e6f60e05e7b6475d3defa50ed762b79d02336a6
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -180,3 +180,7 @@ Round 2: REJECT do một suite script đỏ và một finding trong hợp đồn
 Round 3: REJECT — suite app đỏ cộng finding trong hợp đồng ở AC-3, AC-5, AC-10 — trả về implementation.
 Round 4: 9/9 eval xanh nhưng REJECT do hồi quy app trên nhánh cũ; đã gộp main (app 767/767).
 Round 5: toàn bộ eval và lệnh suite xanh — PASS.
+
+### Re-pin lần 1 — 2026-11-01, do hoá cũ do gộp origin/main sau chữ ký (main xanh lại ở 5cbf3e23)
+run_id: repin-20261101T051028Z-36128
+sha: 2e6f60e05e7b6475d3defa50ed762b79d02336a6 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E9, E10, E11 · AC không có chốt máy: AC-9

@@ -3,14 +3,20 @@ import { test } from "node:test";
 
 import {
   ADVISORY_KEY,
+  CATCHUP_060,
   CLOUD_ALLOW,
+  KIEU_DICH_CHO_QUA,
+  RENAME,
   SHRINK_AUDIT,
   PII_EXCLUDE,
   SOURCE_EXCLUDE,
   assertNoTag,
   buildSwapSql,
   chunkRows,
+  dichKhongPhaiBang,
   dollarTag,
+  khoaNguoiBanNgoaiFill,
+  kieuBangSql,
   localTypes,
   mgmtExec,
   planTables,
@@ -18,6 +24,7 @@ import {
   scanSourceNames,
   selectList,
   shrinkVerdict,
+  syncOnce,
 } from "./sync-cloud.mjs";
 
 // cloud-sync-atomic (_acceptance/cloud-sync-atomic) — lõi thuần của sync nguyên tử.
@@ -279,4 +286,59 @@ test("NH-AC-9 media không lên cloud", async () => {
   di(goc);
   assert.ok(tep.length > 0, "không quét được data-api/src");
   for (const p of tep) assert.doesNotMatch(readFileSync(p, "utf8"), /FROM media\b|media_url/, `data-api nhắc bảng media: ${p}`);
+});
+
+// sellers-view-len-cloud (_acceptance/sellers-view-len-cloud) — chốt kiểu bảng đích cloud + khoá người bán trong FILL.
+
+test("SVC E1 ma trận kiểu bảng đích: r, p qua; v, m, f chặn", () => {
+  const o = (kind) => dichKhongPhaiBang([{ t: "sellers", kind }]);
+  assert.deepEqual(o("r"), [], "bảng thường bị chặn oan");
+  assert.deepEqual(o("p"), [], "bảng phân vùng bị chặn oan");
+  assert.deepEqual(o("v"), ["sellers"], "view lọt");
+  assert.deepEqual(o("m"), ["sellers"], "materialized view lọt");
+  assert.deepEqual(o("f"), ["sellers"], "bảng ngoại lọt");
+  assert.match(kieuBangSql(["sellers"]), /relkind/);
+  // Đối chứng đỏ: tập cho qua có thêm 'v' thì ô view không còn chặn — phép thử phân biệt được.
+  const loi = (cho) => [{ t: "sellers", kind: "v" }].filter((r) => !cho.includes(r.kind)).map((r) => r.t);
+  assert.deepEqual(loi([...KIEU_DICH_CHO_QUA, "v"]), [], "DICH LA VIEW: đối chứng không phân biệt");
+});
+
+/** exec giả của cloud: trả relkind theo bảng; ghi mọi câu nhận được. */
+function cloudGia(kindOf, { thieu = [] } = {}) {
+  const calls = [];
+  const ten = FILL.map(RENAME).filter((t) => !thieu.includes(t));
+  const exec = async (sql) => {
+    calls.push(sql);
+    if (sql.includes("to_regclass('sync_stage.rows')")) return [{ r: "sync_stage.rows", s: "sync_stage.swaps" }];
+    if (sql.includes("relkind")) return ten.map((t) => ({ t, kind: kindOf(t) }));
+    if (sql.includes("information_schema.columns")) return ten.map((t) => ({ t, c: "id", gen: false }));
+    return [];
+  };
+  return { exec, calls };
+}
+
+test("SVC E1 đường thật: sellers là view → syncOnce dừng ở pha catalog, không gửi dòng nào lên staging", async () => {
+  const { exec, calls } = cloudGia((t) => (t === "sellers" ? "v" : "r"));
+  await assert.rejects(syncOnce({ local: null, exec, log: () => {} }), (e) => {
+    assert.equal(e.phase, "catalog");
+    assert.match(e.message, /sellers/);
+    assert.ok(e.message.includes(CATCHUP_060.split("/").pop()), "thông điệp không trỏ tệp catch-up 060");
+    return true;
+  });
+  assert.equal(calls.filter((s) => /INSERT INTO sync_stage\.rows/i.test(s)).length, 0, "đã ghi staging trước khi chặn");
+});
+
+test("SVC E1 bảng FILL vắng trên cloud giữ lỗi «cloud thiếu bảng» có sẵn", async () => {
+  const { exec } = cloudGia(() => "r", { thieu: ["sellers"] });
+  await assert.rejects(syncOnce({ local: null, exec, log: () => {} }), /cloud thiếu bảng: sellers/);
+});
+
+test("SVC E8 mọi cột khoá người bán lên cloud nằm trong bảng FILL (tráo cùng một giao dịch)", () => {
+  const khoa = Object.entries(CLOUD_ALLOW).flatMap(([t, cols]) => cols.filter((c) => /phone_hash$/.test(c)).map((c) => `${t}.${c}`));
+  for (const k of ["sale_offers.seller_phone_hash", "sellers.phone_hash", "properties.seller_phone_hash"])
+    assert.ok(khoa.includes(k), `thiếu cột khoá ${k}`);
+  assert.deepEqual(khoaNguoiBanNgoaiFill(), [], "KHOA MO COI");
+  // Đối chứng đỏ: một bảng ngoài FILL mang khoá người bán.
+  const lech = khoaNguoiBanNgoaiFill({ ...CLOUD_ALLOW, ghi_chu_ops: ["id", "seller_phone_hash"] });
+  assert.deepEqual(lech, ["ghi_chu_ops.seller_phone_hash"], "KHOA MO COI: đối chứng không phân biệt");
 });
