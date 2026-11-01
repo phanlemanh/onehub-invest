@@ -22,9 +22,9 @@ cả mười ca của thước gãy (đo 31/10: EPIPE ở buildLocalSim). Sửa 
 ## Criteria
 
 - AC-1: Given DB máy thu đã áp 060 (sellers là view) và 059 (trigger lịch sử), When chạy ca mới `sellers-view` của thước, Then
-  DB mô phỏng dựng được; local mô phỏng có `sellers` là bảng, đủ dòng và đúng tập `phone_hash` của view nguồn; cloud mô phỏng
-  có `sellers` là bảng đúng cột cho phép; một lượt sync đổ đủ dòng sellers sang cloud mô phỏng; đối chứng: dump cũ (kéo view
-  sellers, giữ CREATE TRIGGER) nạp vào DB trống thì gãy.
+  DB mô phỏng dựng được; local mô phỏng có `sellers` là bảng, trọn bảy cột khớp view nguồn; cloud mô phỏng có `sellers` là
+  bảng đúng cột cho phép; một lượt sync đổ đủ dòng, các cột cho phép khớp local; chỉ trigger lịch sử 059 đã biết bị bỏ khỏi
+  dump; đối chứng: dump cũ (kéo view sellers / giữ CREATE TRIGGER) nạp vào DB trống thì gãy đúng vì phụ thuộc không được dump.
 - AC-2: Given mười ca cũ của thước (stage, atomic, fail, fidelity, keep, pii, overlap, allow, anon, pii-cot), When chạy trên DB
   máy thu hiện tại, Then mỗi ca thoát 0 — ba hồ sơ đã ký trỏ thước này ghim lại được.
 - AC-3: Given nhánh so merge-base, When liệt kê tệp đổi, Then chỉ `pipeline/scripts/check-cloud-sync.mjs`, hồ sơ này,
@@ -32,12 +32,13 @@ cả mười ca của thước gãy (đo 31/10: EPIPE ở buildLocalSim). Sửa 
 
 ## Coverage
 
-- Trục **hình nguồn** (sellers là view sau 060 · trigger lịch sử 059 · nguồn chưa áp 060 — dump như cũ) — AC-1, AC-2.
+- Trục **hình nguồn** (sellers là view sau 060 · trigger lịch sử 059) — AC-1, AC-2.
 - Trục **phía mô phỏng** (local mô phỏng có dữ liệu · cloud mô phỏng rỗng đúng cột) — AC-1.
 - Trục **lời hứa cũ** (mười ca của ba hồ sơ đã ký) — AC-2.
 
 ## Out of scope
 
+- Nguồn chưa áp 060/059 (nhánh dump như cũ): máy thu đã áp, không còn bản sao trước 060 để đo — nhánh đó giữ nguyên mã cũ.
 - Dựng lại đúng view sellers (cùng registry_aliases, parties) trong local mô phỏng — sync đọc local bằng câu đọc cột, bảng cùng
   cột là đủ; đổi gì ở `pipeline/sync-cloud.mjs`; áp gì lên cloud.
 

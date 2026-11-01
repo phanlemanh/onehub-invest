@@ -7,7 +7,7 @@ evals:
     cmd: config:executors.script.cloud_sync_sellers_view
     layer: backend-effect
     paths: [pipeline/scripts/check-cloud-sync.mjs]
-    expected: "exit 0; nguồn sellers relkind v (ca fail nếu chưa áp 060); PASS: local mô phỏng sellers là bảng; count + md5(string_agg phone_hash) bằng view nguồn; cloud mô phỏng sellers là bảng, cột = CLOUD_ALLOW.sellers; runSync đổ đủ số dòng; hai ô ĐỎ-ĐÚNG: pg_dump -s -t public.sellers và -t public.sale_offer_records nạp vào DB trống thì psql gãy ('DOI CHUNG KHONG BAT' nếu nạp được); in 'check-cloud-sync sellers-view: OK'"
+    expected: "exit 0; nguồn sellers relkind v (ca fail nếu chưa áp 060); PASS: local mô phỏng sellers là bảng; count + md5(row_to_json trọn bảy cột) bằng view nguồn; ĐỎ-ĐÚNG đảo first_seen/last_seen → băm lệch; cloud mô phỏng sellers là bảng, cột = CLOUD_ALLOW.sellers; sau runSync băm các cột CLOUD_ALLOW local = cloud và đủ số dòng; trigger bỏ khỏi dump đúng tập history_* của 059 ('TRIGGER LA' nếu khác hoặc rỗng), bản dump đã xử lý không còn CREATE (CONSTRAINT) TRIGGER; hai ô ĐỎ-ĐÚNG ghim lý do: pg_dump -s -t public.sellers nạp vào DB trống gãy với 'does not exist' + tên một bảng/view nguồn của view (registry_aliases, sale_offer_records, sale_offers, parties, v_ruler); dump() thật của thước với giuTrigger nạp vào DB có postgis gãy với 'history_…() does not exist' ('DOI CHUNG KHONG BAT' nếu khác); in 'check-cloud-sync sellers-view: OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2a
     criterion: AC-2

@@ -144,13 +144,21 @@ function veSellersBang(db, { data }) {
   psql(db, `COPY public.sellers (${SELLERS_COT.join(", ")}) FROM STDIN;\n${dong}\\.\n`);
 }
 
-function dump(tables, { schemaOnly }) {
+// Trigger bị bỏ khỏi bản dump (bảng, tên) — ca sellers-view đối chiếu với tập đã biết của 059.
+export const TRIGGER_BO = [];
+export const TRIGGER_DA_BIET = ["history_doi_gia", "history_doi_trang_thai", "history_tin_moi"];
+function dump(tables, { schemaOnly, giuTrigger = false }) {
   const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", SRC_DB, "--no-owner", "--no-acl"];
   if (schemaOnly) args.push("-s");
   for (const t of tables) if (!(SELLERS_VIEW && t === "sellers")) args.push("-t", `public.${BAN_GHI[t] ?? t}`);
   // 059: trigger lịch sử trên sale_offer_records gọi hàm public.history_*() mà pg_dump -t không kèm — DB mô phỏng chỉ
   // cần hình bảng + dữ liệu, nên bỏ câu CREATE TRIGGER (một dòng mỗi câu trong đầu ra pg_dump).
-  return execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 }).replace(/^CREATE TRIGGER .*;$/gm, "");
+  const ra = execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 });
+  if (giuTrigger) return ra;
+  return ra.replace(/^CREATE TRIGGER (\S+) .* ON public\.(\S+) .*;$/gm, (_, ten, bang) => {
+    TRIGGER_BO.push(`${bang}.${ten}`);
+    return "";
+  });
 }
 
 /** Vẽ lại hình trước 044 trong DB mô phỏng: bảng bản ghi đổi tên về sale_offers/listings, bỏ bốn cột 044 (cột ở lại
@@ -1283,16 +1291,22 @@ async function caseSellersView() {
     fail("nguồn chưa áp 060 (sellers không phải view) — ca không đo được gì");
     return;
   }
-  const BAM = "SELECT count(*) || ':' || coalesce(md5(string_agg(phone_hash, ',' ORDER BY phone_hash)), '') FROM sellers";
-  const goc = nguon(BAM);
+  // Băm trọn bảy cột (không chỉ khoá): thứ tự cột hay kiểu COPY lệch DDL 022 thì băm lệch.
+  const bamCot = (cols) => `SELECT count(*) || ':' || coalesce(md5(string_agg(row_to_json(x)::text, '|' ORDER BY x.phone_hash)), '')
+    FROM (SELECT ${cols.join(", ")} FROM sellers) x`;
+  const goc = nguon(bamCot(SELLERS_COT));
   const L = buildLocalSim("sv_local");
   const C = buildCloudSim("sv_cloud");
   const kieu = async (db) => (await q1(db, "SELECT relkind FROM pg_class WHERE oid = to_regclass('public.sellers')"))[0]?.relkind;
   if ((await kieu(L)) === "r") pass("local mô phỏng: sellers là bảng");
   else fail(`local mô phỏng: sellers relkind ${await kieu(L)}`);
-  const ban = psql(L, BAM).trim();
-  if (ban === goc) pass(`local mô phỏng: sellers ${goc.split(":")[0]} dòng, tập phone_hash khớp view nguồn`);
+  const ban = psql(L, bamCot(SELLERS_COT)).trim();
+  if (ban === goc) pass(`local mô phỏng: sellers ${goc.split(":")[0]} dòng, trọn bảy cột khớp view nguồn`);
   else fail(`local mô phỏng lệch view nguồn: ${ban} ≠ ${goc}`);
+  // Đối chứng: đảo hai cột ngày thì băm phải lệch — phép so phân biệt được dữ liệu sai cột.
+  const dao = psql(L, bamCot(SELLERS_COT.map((c) => (c === "first_seen" ? "last_seen AS first_seen" : c === "last_seen" ? "first_seen AS last_seen" : c)))).trim();
+  if (dao !== goc) pass("ĐỎ-ĐÚNG đảo first_seen/last_seen → băm lệch view nguồn");
+  else fail("DOI CHUNG KHONG BAT: đảo hai cột ngày mà băm vẫn khớp");
   if ((await kieu(C)) === "r") pass("cloud mô phỏng: sellers là bảng");
   else fail(`cloud mô phỏng: sellers relkind ${await kieu(C)}`);
   const cot = (await q1(C, `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sellers'`))
@@ -1300,24 +1314,41 @@ async function caseSellersView() {
   if (JSON.stringify(cot) === JSON.stringify([...sync.CLOUD_ALLOW.sellers].sort())) pass("cloud mô phỏng: sellers đúng cột CLOUD_ALLOW");
   else fail(`cloud mô phỏng: cột sellers ${cot.join(",")}`);
   await runSync(L, C);
-  const sau = Number((await q1(C, "SELECT count(*)::int AS n FROM sellers"))[0].n);
-  if (String(sau) === goc.split(":")[0]) pass(`sync đổ ${sau} dòng sellers sang cloud mô phỏng`);
-  else fail(`sync đổ ${sau} dòng sellers, nguồn ${goc.split(":")[0]}`);
-  // Đối chứng: dump cũ nạp vào DB trống phải gãy (view sellers đọc bảng không dump; trigger gọi hàm không dump).
-  for (const [ten, args] of [["view sellers", ["-t", "public.sellers"]], ["trigger lịch sử", ["-t", `public.${BAN_GHI.sale_offers ?? "sale_offers"}`]]]) {
-    const db = makeDb(`sv_cu_${ten.split(" ")[0]}`);
-    const ddl = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost",
-      "-d", SRC_DB, "--no-owner", "--no-acl", "-s", ...args], { encoding: "utf8", maxBuffer: 1 << 30 });
-    let gay = false;
+  const choPhep = sync.CLOUD_ALLOW.sellers;
+  const [bL, bC] = [psql(L, bamCot(choPhep)).trim(), psql(C, bamCot(choPhep)).trim()];
+  if (bL === bC && bC.split(":")[0] === goc.split(":")[0]) pass(`sync đổ ${bC.split(":")[0]} dòng sellers sang cloud mô phỏng, các cột cho phép khớp local`);
+  else fail(`sync sellers lệch: local ${bL} · cloud ${bC}`);
+  // Trigger bị bỏ khỏi dump: đúng tập đã biết của 059, không trigger lạ, không CONSTRAINT TRIGGER nào còn sót.
+  const bo = [...new Set(TRIGGER_BO)].sort();
+  const la = bo.filter((x) => !TRIGGER_DA_BIET.includes(x.split(".")[1]));
+  console.log(`note: trigger bỏ khỏi dump: ${bo.join(", ") || "(không)"}`);
+  if (bo.length && !la.length) pass(`chỉ bỏ trigger lịch sử 059 đã biết (${bo.length})`);
+  else fail(`TRIGGER LA bị bỏ khỏi dump: ${la.join(", ") || "(không bỏ trigger nào — phép đo mù)"}`);
+  const conLai = dump([...FILL, "source_registry"], { schemaOnly: true }).match(/^CREATE (CONSTRAINT )?TRIGGER .*$/gm) ?? [];
+  if (!conLai.length) pass("bản dump đã xử lý không còn câu tạo trigger");
+  else fail(`bản dump còn câu tạo trigger: ${conLai[0].slice(0, 80)}`);
+  // Đối chứng ghim lý do: dump cũ nạp vào DB trống (có postgis) phải gãy đúng vì phụ thuộc không được dump.
+  const loiNap = (db, ddl) => {
     try {
       psql(db, ddl);
-    } catch {
-      gay = true;
+      return null;
+    } catch (e) {
+      return String(e.stderr || e.message);
     }
-    if (gay) pass(`ĐỎ-ĐÚNG dump cũ (${ten}) nạp vào DB trống thì gãy — bản vá chặn lỗi có thật`);
-    else fail(`DOI CHUNG KHONG BAT: dump cũ (${ten}) vẫn nạp được`);
-    dropDb(db);
-  }
+  };
+  const dbV = makeDb("sv_cu_view");
+  const ddlView = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost",
+    "-d", SRC_DB, "--no-owner", "--no-acl", "-s", "-t", "public.sellers"], { encoding: "utf8", maxBuffer: 1 << 30 });
+  const lV = loiNap(dbV, ddlView);
+  if (lV && /does not exist/.test(lV) && /registry_aliases|sale_offer_records|sale_offers|parties|v_ruler/.test(lV)) pass("ĐỎ-ĐÚNG dump view sellers nạp vào DB trống gãy vì bảng nguồn của view không được dump");
+  else fail(`DOI CHUNG KHONG BAT (view sellers): ${lV ? lV.split("\n").find((x) => /ERROR/.test(x)) : "nạp được"}`);
+  dropDb(dbV);
+  const dbT = makeDb("sv_cu_trigger");
+  psql(dbT, "CREATE EXTENSION IF NOT EXISTS postgis;");
+  const lT = loiNap(dbT, dump([...FILL, "source_registry"], { schemaOnly: true, giuTrigger: true }));
+  if (lT && /history_\w+\(\) does not exist/.test(lT)) pass("ĐỎ-ĐÚNG dump giữ CREATE TRIGGER (đường dump thật của thước) gãy vì hàm history_* không được dump");
+  else fail(`DOI CHUNG KHONG BAT (trigger): ${lT ? lT.split("\n").find((x) => /ERROR/.test(x)) : "nạp được"}`);
+  dropDb(dbT);
 }
 
 // tiến trình con cho ca fail (d): chạy một lượt có nạp chậm để bị kill -9 giữa chừng
