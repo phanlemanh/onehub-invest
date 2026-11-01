@@ -139,6 +139,22 @@ export function shrinkVerdict({ table, local, cloud, audits, now, auditMap = SHR
     reason: `local tụt ${table}: ${local} < ${SHRINK_MIN * 100}% của ${cloud} dòng trên cloud — local đang dựng dở? không tráo`,
   };
 }
+// sellers-view-len-cloud: bảng đích cloud phải là bảng thường — tráo bảng xoá rồi chèn vào public.<t>, view/materialized
+// view/bảng ngoại không nhận được (060 làm sellers máy thu thành view; cloud giữ bảng, sync đổ từ view).
+export const KIEU_DICH_CHO_QUA = ["r", "p"];
+export const CATCHUP_060 = "docs/ops/cloud-schema-catchup-2026-10-31-060.sql";
+export const kieuBangSql = (names) => `SELECT c.relname AS t, c.relkind::text AS kind
+  FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND c.relname = ANY(ARRAY[${names.map(lit).join(",")}])`;
+/** Tên bảng đích có kiểu ngoài KIEU_DICH_CHO_QUA. Bảng vắng không xét ở đây — «cloud thiếu bảng» bắt. */
+export const dichKhongPhaiBang = (rows) => rows.filter((r) => !KIEU_DICH_CHO_QUA.includes(r.kind)).map((r) => r.t);
+/** Cột khoá người bán (`*phone_hash`) lên cloud ở bảng ngoài FILL — khoá ở đó không đổi cùng lượt tráo, thành mồ côi. */
+export function khoaNguoiBanNgoaiFill(allow = CLOUD_ALLOW, fill = FILL) {
+  return Object.entries(allow).flatMap(([t, cols]) =>
+    fill.includes(t) ? [] : cols.filter((c) => /phone_hash$/.test(c)).map((c) => `${t}.${c}`),
+  );
+}
+
 export const STALE_STAGE_HOURS = 2; // staging của lượt chết quá ngần này thì dọn
 export const ADVISORY_KEY = 74210231; // hai lượt tráo chồng nhau xếp hàng
 export const SELLER_REF_RE = "^S0[1-9]:[0-9]+$";
@@ -537,6 +553,12 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     const [reg] = await exec(`SELECT to_regclass('sync_stage.rows')::text AS r, to_regclass('sync_stage.swaps')::text AS s`);
     if (!reg?.r || !reg?.s) {
       throw new Error("cloud chưa có sync_stage — Mạnh áp migration 038 trước (docs/ops/cloud-sync-atomic.md)");
+    }
+    const kieu = await exec(kieuBangSql(cloudNames));
+    const chan = dichKhongPhaiBang(kieu);
+    if (chan.length) {
+      const ten = chan.map((t) => `${t} (${kieu.find((r) => r.t === t).kind})`).join(", ");
+      throw new Error(`bảng đích cloud không phải bảng thường: ${ten} — cloud giữ bảng, sync đổ từ view máy thu; xem ${CATCHUP_060}`);
     }
     const cols = await exec(`SELECT table_name AS t, column_name AS c,
         (is_generated = 'ALWAYS' OR identity_generation = 'ALWAYS') AS gen

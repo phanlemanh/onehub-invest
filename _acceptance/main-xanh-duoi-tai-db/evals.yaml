@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: main-xanh-duoi-tai-db
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; ca «AC-10 chịu tải: hết chờ khoá (55P03) được lùi và thử lại»: kết nối B giữ pg_advisory_lock(K1). Đối chứng: áp thẳng trong SAVEPOINT với lock_timeout 300ms → reject mã 55P03 (ghim «AC-10 bàn đo không tạo được tranh khoá»). B nhả sau ~700ms; apLaiChiuTai cùng câu (lockTimeout 300ms) → resolve, lan ≥ 2, SELECT 1 kế tiếp trong cùng giao dịch chạy được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; ca «AC-10 lỗi không phải tải ném ngay, không thử lại»: apLaiChiuTai với «SELEC 1» → reject mã 42601, err.lan = 1; với CREATE TABLE enrichment_proposals → reject 42P07, err.lan = 1; mỗi câu ném trong < 400 ms (không chờ lùi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; ca «AC-10 migration idempotent» giữ nguyên mọi assert cũ (cấu trúc SHAPE, COUNTS, dup = 0, chiều đỏ /already exists/), chỉ đổi lời gọi áp file sang apLaiChiuTai"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca «TD-TAI-1» trên lược đồ nháp <S>_tai (bảng ops_audit tự dựng, users/sessions LIKE public): lấy mốc xid, admin commit dòng actor 'job:s06' không dấu → publicBiCham(lược đồ nháp).ops_audit = 0 (ghim «TD-TAI-1: dòng của job khác bị tính là lượt chạm public»); đối chứng: so số dòng trước/sau thấy lệch 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca «TD-TAI-2»: ma trận sáu dấu viết trước (offer td_s06 · pair:hd9A1|hd9B1 · td-ops · machine:td · tên lược đồ nháp · mã người do taoNguoi tạo trong lược đồ nháp), mỗi dấu: lấy mốc, commit một dòng, publicBiCham đếm đúng 1 (6 assert, ghim «TD-TAI-2: dấu «…» không được đếm»); deepEqual kết quả có dấu với bảng toàn 0 ném thông điệp «public đã bị chạm»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca «TD-TAI-3»: dòng actor machine:td commit TRƯỚC mốc → đếm 0 (ghim «TD-TAI-3: dòng trước cửa sổ lượt bị tính»); đối chứng: lấy mốc rồi commit dòng → đếm 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; cả bộ agent npm test xanh trên DB local dùng chung"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; cả bộ app npm test xanh trên DB local dùng chung"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; ca «AC-10 chịu deadlock»: kết nối B đặt deadlock_timeout 30s, giữ advisory K2 rồi chờ K1; trong withTx câu áp giữ K1, ngủ 0.5s, xin K2. Đối chứng: áp thẳng trong SAVEPOINT reject mã 40P01 (ghim «AC-10 bàn đo không tạo được deadlock»); dựng lại rồi apLaiChiuTai cùng câu → resolve, số lần thử ≥ 2, SELECT 1 kế tiếp chạy được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/tests/enrich-revert.test.ts]
+    expected: "exit 0; ca «AC-10 chạm trần thử lại»: kết nối B giữ advisory lock suốt ca; apLaiChiuTai với lockTimeout 200ms, lanToiDa 5, lui 10ms → reject mã 55P03, err.lan = 5; giao dịch dùng tiếp được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
