@@ -24,13 +24,21 @@ export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
   }
 }
 
+/** [t] khi public.<t> đang là BẢNG, [] khi là view hay vắng — cho bảng mà migration nạp trong ca có thể DROP (060 bỏ bảng
+ * sellers khi DB chưa áp): chép nó sang lược đồ riêng thì câu DROP không tên lược đồ rơi vào bản riêng, không chạm public. */
+export async function neuLaBang(c, t) {
+  const r = (await c.query(`SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relname = $1 AND c.relkind IN ('r', 'p')`, [t])).rows;
+  return r.length ? [t] : [];
+}
+
 /** CREATE TABLE <sc>.<t> rỗng dựng từ catalog của public.<t>. Gọi SAU khoaNguon (đọc định nghĩa cần ACCESS SHARE). */
 export async function chepBang(c, sc, t) {
   const oid = (await c.query(`SELECT c.oid FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relname = $1 AND c.relkind IN ('r', 'p')`, [t])).rows[0]?.oid;
   if (!oid) throw new Error(`luoc-do-rieng: public.${t} không phải bảng (hoặc không có)`);
   const cot = (await c.query(`SELECT a.attname AS ten, format_type(a.atttypid, a.atttypmod) AS kieu, a.attnotnull AS nn,
-      a.attgenerated AS sinh, pg_get_expr(d.adbin, 0) AS md
+      a.attgenerated AS sinh, pg_get_expr(d.adbin, d.adrelid) AS md
     FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
     WHERE a.attrelid = $1 AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum`, [oid])).rows;
   const day = [];

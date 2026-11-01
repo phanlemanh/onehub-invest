@@ -11,7 +11,7 @@ import pg from "pg";
 
 import { dealsSql, repostLabel, toDealRow } from "../src/lib/deals";
 import { CLOUD_ALLOW, PII_EXCLUDE } from "../../pipeline/sync-cloud.mjs";
-import { luocDoRieng } from "../../pipeline/lib/luoc-do-rieng.mjs";
+import { luocDoRieng, neuLaBang } from "../../pipeline/lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../../pipeline/lib/nap-060.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -28,7 +28,8 @@ async function withTx<T>(fn: (c: pg.Client, sc: string) => Promise<T>): Promise<
   await c.connect();
   try {
     await c.query("BEGIN");
-    const sc = await luocDoRieng(c, BANG, { tienTo: "dp_app" });
+    // 060 bỏ BẢNG sellers bằng câu DROP không tên lược đồ — DB chưa áp 060 thì chép nó để câu ấy rơi vào bản riêng.
+    const sc = await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "dp_app" });
     // Như 044 (không đọc định nghĩa từ public — pg_get_viewdef xin khoá trên view dùng chung), rồi thước 034, sellers 060.
     await c.query("CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL");
     await c.query(SQL_034);

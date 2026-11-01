@@ -10,7 +10,7 @@ import { test } from "node:test";
 import pg from "pg";
 
 import { implausibleReason } from "../lib/deal-plausibility.mjs";
-import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
+import { luocDoRieng, neuLaBang } from "../lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../lib/nap-060.mjs";
 import { loaiTinPhiLy, refreshBaitGap } from "../refresh-bait-gap.mjs";
 
@@ -51,7 +51,8 @@ async function withTx(fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
-    await luocDoRieng(c, BANG, { tienTo: "dp_on11" });
+    // 060 bỏ BẢNG sellers bằng câu DROP không tên lược đồ — DB chưa áp 060 thì chép nó để câu ấy rơi vào bản riêng.
+    await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "dp_on11" });
     // Như 044 (không đọc định nghĩa từ public — pg_get_viewdef xin khoá trên view dùng chung), rồi thước 034, sellers 060.
     await c.query("CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL");
     await c.query(SQL_034);

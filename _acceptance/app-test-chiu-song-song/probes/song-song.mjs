@@ -76,6 +76,27 @@ function chayNen(f, tranMs, tranTienTrinhMs) {
   });
 }
 const nhanTep = (f) => `atss-${path.basename(f).replace(/\..*$/, "")}-${f.startsWith("app/") ? "app" : "pipe"}`;
+/** Phiên quan sát lấy mẫu pg_stat_activity mỗi 300 ms: backend nào của ba tệp (application_name atss-…) đã kết nối, và
+ * backend nào đang chờ khoá (wait_event_type Lock) mà phiên `pidChan` giữ (pg_blocking_pids chứa nó). */
+async function quanSat(pidChan) {
+  const qs = await moPhien();
+  const coMat = new Set();
+  const biChan = new Set();
+  let chay = true;
+  const vong = (async () => {
+    while (chay) {
+      const { rows } = await qs.query(`SELECT application_name n,
+          coalesce(wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid)), false) chan
+        FROM pg_stat_activity WHERE application_name LIKE 'atss-%'`, [pidChan]);
+      for (const { n, chan } of rows) { coMat.add(n); if (chan) biChan.add(n); }
+      await new Promise((x) => setTimeout(x, 300));
+    }
+  })();
+  return { coMat, biChan, dung: async () => { chay = false; await vong; } };
+}
+const pidCua = async (k) => (await k.query("SELECT pg_backend_pid() p")).rows[0].p;
+// Treo = tiến trình bị giết ở trần hoặc node:test báo hết giờ ca — không khớp dòng tổng kết «ℹ cancelled 0».
+const treo = (r) => r.biGiet || /test timed out after \d+ms/.test(r.out);
 const SO_CA = { [TEP.dealsApp]: 5, [TEP.dq]: 6, [TEP.dealsPipe]: 4 };
 const xanh = (r, ten) => {
   console.log(`# ${ten} ${r.f}: thoát ${r.code}, ${r.giay.toFixed(1)} s`);
@@ -110,8 +131,15 @@ if (MODE === "chan") {
     await b.query("BEGIN");
     await b.query("LOCK TABLE public.sale_offer_records, public.dq_check_results, public.properties IN ACCESS EXCLUSIVE MODE")
       .catch(async (e) => { await dong(b); throw new Error(`PHIEN CHAN B KHONG LAY DUOC KHOA (DB bận): ${e.message}`); });
+    // Đồng hồ 3 s chạy từ lúc cả ba tệp đã có backend (đang thử lấy khoá) — khởi động tsx/node không ăn vào thời gian chặn.
+    const qsB = await quanSat(await pidCua(b));
+    const pRb = Promise.all(Object.values(TEP).map((f) => chayNen(f, 30_000, 60_000)));
+    const canTen = Object.values(TEP).map(nhanTep);
+    for (let i = 0; i < 100 && !canTen.every((n) => qsB.coMat.has(n)); i++) await new Promise((x) => setTimeout(x, 100));
+    await qsB.dung();
+    console.log(`# phiên B: backend đã kết nối trước khi đếm 3 s: ${JSON.stringify([...qsB.coMat].sort())}`);
     const nha = setTimeout(() => dong(b), 3000);
-    const rb = await Promise.all(Object.values(TEP).map((f) => chayNen(f, 30_000, 60_000)));
+    const rb = await pRb;
     clearTimeout(nha);
     await dong(b);
     for (const [i, r] of rb.entries()) {
@@ -138,13 +166,15 @@ if (MODE === "chan") {
     TAM.push(path.join(ROOT, dotC));
     // Tuần tự: ACCESS EXCLUSIVE đang xếp hàng của bản đột biến sẽ chặn cả ACCESS SHARE mới của bản HEAD.
     const rC = await Promise.all(Object.values(TEP).map((f) => chayNen(f, 30_000, 60_000)));
+    const qsC = await quanSat(await pidCua(cc));
     const rDot = await chayNen(dotC, 5_000, 20_000);
+    await qsC.dung();
     await dong(cc);
     console.log(`# phiên C giữ ACCESS SHARE trên ${coMat.length} quan hệ public`);
     for (const r of rC) { xanh(r, "HEAD dưới C"); assert.ok(r.giay < 30, `${r.f} dưới C ${r.giay} s`); }
     console.log(`# đột biến DROP public.stg_zalo_posts dưới C: thoát ${rDot.code}, ${rDot.giay.toFixed(1)} s, bị giết: ${rDot.biGiet}`);
-    assert.ok(rDot.code !== 0 && (rDot.biGiet || /timed out|cancelled/i.test(rDot.out)),
-      `DOI CHUNG KHONG BAT (C): bản đột biến không treo dưới phiên C:\n${rDot.out.slice(-800)}`);
+    assert.ok(rDot.code !== 0 && treo(rDot) && qsC.biChan.has(nhanTep(dotC)),
+      `DOI CHUNG KHONG BAT (C): bản đột biến không treo chờ khoá của phiên C (thấy chờ: ${JSON.stringify([...qsC.biChan])}):\n${rDot.out.slice(-800)}`);
 
     // Đối chứng: bản merge-base của từng tệp (tên không khớp glob *.test.* của npm test) dưới A2 phải treo tới trần.
     const cu = Object.values(TEP).map((f) => {
@@ -154,28 +184,18 @@ if (MODE === "chan") {
       return tam;
     });
     a = await moChan();
-    const pidA2 = (await a.query("SELECT pg_backend_pid() p")).rows[0].p;
+    const pidA2 = await pidCua(a);
     // Phiên quan sát: ghim lý do treo — backend của tệp nào đang chờ khoá mà A2 giữ (pg_blocking_pids chứa pid A2).
-    const qs = await moPhien();
-    const biChan = new Set();
-    let quanSat = true;
-    const vongQs = (async () => {
-      while (quanSat) {
-        const { rows } = await qs.query(`SELECT application_name n FROM pg_stat_activity
-          WHERE application_name LIKE 'atss-%' AND wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid))`, [pidA2]);
-        for (const { n } of rows) biChan.add(n);
-        await new Promise((x) => setTimeout(x, 300));
-      }
-    })();
+    const qsA2 = await quanSat(pidA2);
+    const biChan = qsA2.biChan;
     const rc = await Promise.all(cu.map((f) => chayNen(f, 5_000, 20_000)));
-    quanSat = false;
-    await vongQs;
+    await qsA2.dung();
     await dong(a);
     console.log(`# backend bị A2 (pid ${pidA2}) chặn: ${JSON.stringify([...biChan].sort())}`);
     for (const r of rc) {
       console.log(`# merge-base dưới A2 ${r.f}: thoát ${r.code}, ${r.giay.toFixed(1)} s, bị giết: ${r.biGiet}`);
       assert.notEqual(r.code, 0, `DOI CHUNG KHONG BAT: ${r.f} vẫn xanh dưới phiên chặn`);
-      assert.ok(r.biGiet || /timed out|cancelled/i.test(r.out), `${r.f} đỏ mà không vì treo:\n${r.out.slice(-800)}`);
+      assert.ok(treo(r), `${r.f} đỏ mà không vì treo:\n${r.out.slice(-800)}`);
       assert.ok(biChan.has(nhanTep(r.f)), `DOI CHUNG KHONG BAT: ${r.f} treo mà không thấy chờ khoá của A2`);
     }
     console.log("CHAN OK");
@@ -280,9 +300,9 @@ if (MODE === "chan") {
   assert.match(outThat, /ℹ pass 3\b/, "test lib không đủ 3 ca xanh");
   const lib = doc(LIB);
   const DOT = [
-    ["giữ 33033", "await c.query(`CREATE SCHEMA ${sc}`);", "await c.query(`CREATE SCHEMA ${sc}`); await c.query(\"SELECT pg_advisory_xact_lock(33033)\");", /giữ khoá 33033/],
-    ["bỏ ràng buộc", "WHERE conrelid = $1 AND contype IN ('c', 'p', 'u')", "WHERE conrelid = $1 AND false", /lệch ràng buộc/],
-    ["dãy dùng chung", "md = `nextval('${ten}'::regclass)`;", "day.pop();", /dãy riêng không bắt đầu từ 1|đẩy dãy dùng chung/],
+    ["giữ 33033", "await c.query(`CREATE SCHEMA ${sc}`);", "await c.query(`CREATE SCHEMA ${sc}`); await c.query(\"SELECT pg_advisory_xact_lock(33033)\");", /LDR phiên dựng lược đồ riêng vẫn giữ khoá 33033|canceling statement due to lock timeout/],
+    ["bỏ ràng buộc", "WHERE conrelid = $1 AND contype IN ('c', 'p', 'u')", "WHERE conrelid = $1 AND false", /LDR \S+ lệch ràng buộc/],
+    ["dãy dùng chung", "md = `nextval('${ten}'::regclass)`;", "day.pop();", /LDR dãy riêng không bắt đầu từ 1|LDR chèn vào bản riêng đẩy dãy dùng chung/],
   ];
   for (const [ten, tu, thanh, mong] of DOT) {
     assert.ok(lib.includes(tu), `đột biến «${ten}»: không thấy chỗ cần đổi trong lib`);

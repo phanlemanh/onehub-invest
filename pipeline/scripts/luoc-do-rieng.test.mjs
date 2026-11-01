@@ -35,21 +35,31 @@ const demRangBuoc = async (c, ns, t) =>
 const demChiMuc = async (c, ns, t) =>
   Number((await c.query(`SELECT count(*) n FROM pg_index WHERE indrelid = to_regclass($1 || '.' || $2)`, [ns, t])).rows[0].n);
 
-test("LDR bản chép rỗng mang đủ ràng buộc, chỉ mục, dãy riêng và search_path trỏ vào nó", { timeout: 120_000 }, async () => {
+test("LDR bản chép rỗng mang đủ ràng buộc, chỉ mục, cột sinh, dãy riêng và search_path trỏ vào nó", { timeout: 120_000 }, async () => {
   const c = await moi();
   try {
-    const seq0 = (await c.query(`SELECT last_value::text v FROM public.properties_id_seq`)).rows[0].v;
-    const sc = await luocDoRieng(c, ["sale_offer_records", "properties"], { tienTo: "ldr_test" });
-    for (const t of ["sale_offer_records", "properties"]) {
+    const sc = await luocDoRieng(c, ["sale_offer_records", "properties", "field_assertions"], { tienTo: "ldr_test" });
+    for (const t of ["sale_offer_records", "properties", "field_assertions"]) {
       assert.equal((await c.query(`SELECT relnamespace::regnamespace::text r FROM pg_class WHERE oid = to_regclass($1)`, [t])).rows[0].r, sc, `LDR ${t} chưa trỏ vào lược đồ riêng`);
       assert.equal(Number((await c.query(`SELECT count(*) n FROM ${t}`)).rows[0].n), 0, `LDR ${t} không rỗng`);
       assert.deepEqual(await demRangBuoc(c, sc, t), await demRangBuoc(c, "public", t), `LDR ${t} lệch ràng buộc`);
       assert.equal(await demChiMuc(c, sc, t), await demChiMuc(c, "public", t), `LDR ${t} lệch chỉ mục`);
     }
+    // Cột sinh STORED (field_assertions.value_key): biểu thức chép nguyên, không ném «expression contains variables».
+    const bt = async (ns) => (await c.query(
+      `SELECT pg_get_expr(d.adbin, d.adrelid) e FROM pg_attribute a JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+       WHERE a.attrelid = to_regclass($1 || '.field_assertions') AND a.attname = 'value_key' AND a.attgenerated = 's'`, [ns])).rows[0]?.e;
+    assert.ok(await bt("public"), "LDR public.field_assertions.value_key không còn là cột sinh — ca hết căn cứ");
+    assert.equal(await bt(sc), await bt("public"), "LDR cột sinh lệch biểu thức");
     const id = (await c.query(`INSERT INTO properties (kind) VALUES ('sale') RETURNING id`)).rows[0].id;
     assert.equal(Number(id), 1, "LDR dãy riêng không bắt đầu từ 1");
-    const seq1 = (await c.query(`SELECT last_value::text v FROM public.properties_id_seq`)).rows[0].v;
-    assert.equal(seq1, seq0, "LDR chèn vào bản riêng đẩy dãy dùng chung");
+    // Không so last_value của dãy public: job khác chèn song song đẩy nó (đỏ oan). Đo mặc định của cột trỏ dãy nào.
+    const nsDay = (await c.query(`SELECT s.relnamespace::regnamespace::text ns FROM pg_attrdef d
+      JOIN pg_attribute a ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+      JOIN pg_depend p ON p.classid = 'pg_attrdef'::regclass AND p.objid = d.oid
+      JOIN pg_class s ON s.oid = p.refobjid AND s.relkind = 'S'
+      WHERE d.adrelid = to_regclass($1 || '.properties') AND a.attname = 'id'`, [sc])).rows.map((r) => r.ns);
+    assert.deepEqual(nsDay, [sc], `LDR chèn vào bản riêng đẩy dãy dùng chung (dãy của id ở: ${nsDay})`);
     await c.query("SAVEPOINT pk");
     await assert.rejects(
       c.query(`INSERT INTO properties (id, kind) VALUES (1, 'sale')`),
