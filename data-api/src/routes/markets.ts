@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { pool } from "../db/client.js";
+import { giaiMaKhuVuc } from "../lib/ma-thi-truong.js";
 
 export const marketsRoute = new Hono();
 
@@ -44,7 +45,8 @@ marketsRoute.get("/", async (c) => {
  * GET /v1/markets/:id — chi tiết market + insights
  */
 marketsRoute.get("/:id", async (c) => {
-  const id = c.req.param("id");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const id = await giaiMaKhuVuc(c.req.param("id"));
   const { rows } = await pool.query(
     `SELECT a.id, a.name, a.region_type, a.country_code, a.meta,
             ms.total, ms.seasonality, ms.revenue_growth, ms.regulation, ms.rental_demand
@@ -82,7 +84,8 @@ marketsRoute.get("/:id", async (c) => {
  * GET /v1/markets/:id/submarkets — submarkets + metrics
  */
 marketsRoute.get("/:id/submarkets", async (c) => {
-  const id = c.req.param("id");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const id = await giaiMaKhuVuc(c.req.param("id"));
   const { rows } = await pool.query(
     `SELECT a.id, a.name,
             sm.meta->>'market_score' AS market_score,
@@ -112,7 +115,8 @@ marketsRoute.get("/:id/submarkets", async (c) => {
  * GET /v1/markets/:id/insights — metrics theo tháng (ADR, occupancy, revenue)
  */
 marketsRoute.get("/:id/insights", async (c) => {
-  const id = c.req.param("id");
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
+  const id = await giaiMaKhuVuc(c.req.param("id"));
   const airdnaId = await pool
     .query(`SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'S02' LIMIT 1`, [id])
     .then((r) => r.rows[0]?.source_area_key);
