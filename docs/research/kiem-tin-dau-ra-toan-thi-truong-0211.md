@@ -3,6 +3,9 @@
 Ngày đo: 02/11/2026, 05:20 giờ VN (DB local :5433, chỉ đọc). Trạng thái: **báo cáo để Mạnh quyết**, chưa dựng gì, chưa thêm
 hàng lộ trình. Số S03 chi tiết theo nhóm thuộc phiên `audit-s03`; phần này chỉ dẫn các số ngang nguồn.
 
+> **Cập nhật 02/11, sau khi Mạnh chốt:** tin rao là công khai; thông tin người bán lên cloud và cổng Invest; mọi kênh phải có người bán và SĐT,
+> kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo và cảnh báo tới khi xong. Xem §8.4 và §10. Các số dưới đây vẫn là hiện trạng lúc đo.
+
 ## 1. Kết luận
 
 Ba câu hỏi, cả ba đều chưa:
@@ -20,8 +23,8 @@ Ba câu hỏi, cả ba đều chưa:
    mở chính sách, nhưng chưa có lý do để gọi là tốt hơn nguồn gốc. S03 chưa đủ để hiện: 3,5% tin có phường, mẫu đọc 50 tin có 15
    tin sai giá hoặc diện tích.
 
-**Đề xuất cho 05/11:** bản tìm tin cho đội dùng trước (FRAMING D2), chỉ S06, trong `/ops`. Công khai sau, khi có quyết định về nội
-dung và liên hệ (§8). Em không khuyên gắn nhãn «tin chất lượng hơn» vào ngày ra mắt: số đo chưa cho phép.
+**Đề xuất cho 05/11 (đã đổi theo §8.4):** mở tìm tin công khai, kèm tên người bán, SĐT có đến đâu hiện đến đó, và nói rõ tin nào chưa có SĐT. Em vẫn không khuyên gắn nhãn
+«tin chất lượng hơn» vào ngày ra mắt: số đo chưa cho phép.
 
 **Một sai số cần sửa ngay:** ROADMAP §4 ghi mục tiêu S06 «~45.000 **tin bán**» và mốc 31/10 «29.762 tin bán», nhưng hôm nay tin bán S06
 chỉ có **19.954**; con số 45.760 là bán + thuê. Mốc 29.762 không thể là tin bán. Nếu chỉ tính tin bán, mục tiêu 45.000 còn xa, và
@@ -91,7 +94,7 @@ Những điều bảng không tự nói:
 
 - **Một tài khoản S06 đứng tên 2.872 tin (6,3%) dưới 72 tên khác nhau** (`S06:…143821`, nguồn báo 9.019 tin đang đăng). Tên trên tin của
   tài khoản này không chỉ một người, và mô tả có SĐT đã che. Bản chất của tài khoản này chưa đo được; cần xem trước khi hiện công khai «người đăng». Tổng cộng 233 tài khoản ≥ 20 tin giữ 20,7% tin S06.
-- **S06 không có SĐT ở dữ liệu thu về**, không phải do pipeline làm rơi: payload không có khoá SĐT, chỉ có cờ `phone_hidden` (7.607 tin); 58 mô tả còn SĐT rõ.
+- **S06 không có SĐT ở dữ liệu thu về**, không phải do pipeline làm rơi: payload không có khoá SĐT, chỉ có cờ `phone_hidden` (7.607 tin); 58 mô tả còn SĐT rõ. Nguồn có đường lấy khác, xem §10.1.
 - **Loại người bán có ở thô S06 nhưng không lên tin chuẩn:** cờ tin công ty/môi giới bật ở 81,8% tin, 18,2% còn lại không có cờ, chưa
   kiểm chứng nghĩa của cờ. S03, S05 không có trường này. `CONTEXT.md` ghi rõ «không tự suy vai».
 - **`seller_ref` S03 trên DB còn là hằng.** PR #265 đã gộp sáng nay nhưng chưa có lượt nạp lại; số ở đây là trước lượt đó. Danh bạ thì đã
@@ -291,15 +294,14 @@ Chi phí là ước lượng của em theo phiên làm, chưa qua Cổng. Mọi 
 | 10 | Ghép chéo nguồn và gộp người | Claude | 2 tuần trở lên, phụ thuộc 7–9 | Cao | Không |
 | 11 | Thu S07 | ZCode | Chưa ước lượng, ROADMAP §3 ghi là «bài toán chi phí» | Cao | Không |
 
-### 8.4 Ba quyết định của anh
+### 8.4 Ba quyết định, Mạnh đã chốt 02/11
 
-1. **Có hiện tin S06 công khai không?** Đây là chép dữ liệu một sàn công khai sang sàn khác, kể cả mô tả và ảnh. Điều khoản của S06 chưa ai rà (khác với S02, S08
-   đã có luật). Phương án an toàn hơn: chỉ hiện trường sự kiện (giá, DT, phường, đường), không hiện mô tả, ảnh.
-2. **Người xem liên hệ thế nào khi S06 không có SĐT?** Thu SĐT từng tin (thêm tải, thêm rủi ro chống bot, làn ZCode) hay dẫn sang tin gốc (lộ tên nguồn, phải sửa ADR-0007) hay
-   chấp nhận chưa liên hệ được (làm cổng tra cứu, không phải kênh giao dịch)?
-3. **Có đưa tên và SĐT người bán lên cloud không?** Tầng C cho phép, nhưng `sync-cloud.mjs` đang giữ lại chờ quyết định sản phẩm. Thiếu thì `/ops` trên máy chủ cũng không hiện được tên.
+1. **Tin rao là công khai.** Hiện được trên cổng Invest. Tên nguồn thật vẫn là tầng A, nên không có đường dẫn về tin gốc. S02, S08 vẫn không hiển thị (luật 5).
+2. **Thông tin người bán lên cloud và cổng Invest**, vì đây là tính năng giúp nhà đầu tư tìm căn. Mở `PII_EXCLUDE` (ROADMAP §3 mục 24 từng để ngỏ).
+3. **Mọi kênh phải có người bán và SĐT.** Không lấy được thì kiểm lại cách lấy, báo cáo, và cảnh báo liên tục tới khi giải quyết xong (§10).
 
-S02 và S08 không tham gia hiển thị ở mọi phương án; S08 chỉ làm khung ghép căn nội bộ, đúng luật 5.
+Việc 5 và 7 ở §8.3 vì thế đổi từ «chờ quyết» sang «phải làm». Chưa ai rà điều khoản của S06 và luật dữ liệu cá nhân khi đăng lại SĐT cá nhân ở quy mô lớn; đây là rủi ro đã
+biết, không phải điều kiện chặn.
 
 ## 9. Cách đo, giới hạn
 
@@ -309,3 +311,69 @@ S02 và S08 không tham gia hiển thị ở mọi phương án; S08 chỉ làm 
 - **Chưa đo được:** số trên cloud đọc trực tiếp; tỉ lệ phủ toàn thị trường; chồng lấn thật giữa các nguồn; tỉ lệ tin S06 đã bán hay gỡ ở TP.HCM; độ tươi từ lúc đăng tới lúc hiện;
   nghĩa chính xác của cờ công ty; bản chất tài khoản gom; quyền nội dung của S06.
 - Số đo là ảnh chụp lúc 05:20, trước lượt nạp lại sau PR #265 (`seller_ref` S03). DB đã đi tiếp: đọc lại sau đó thấy bản ghi S06 46.926, tin đăng trong 48 giờ 7.719, tài khoản S06 14.833. Các tỉ lệ không vì thế mà đổi kết luận.
+
+## 10. Kiểm lại cách lấy người bán và SĐT theo kênh (02/11)
+
+### 10.1 Từng kênh
+
+| Kênh | Tên | SĐT tin sống | Cách đang lấy | Kiểm lại | Trần có thể đạt |
+|---|---|---|---|---|---|
+| S06 | 100%, có tên ảo | **0%** | API danh sách, không trả SĐT | Xem dưới | ~91% tin; **~9% chỉ có chat** |
+| S03 | 97–99% | 56,9% (1.576/2.772) | Bóc từ chữ bài | **Bộ bóc không phải chỗ hỏng:** 1.196 tin thiếu số, loại URL ra thì chỉ 1 tin còn dạng số bị sót. Người đăng không ghi số trong bài đó | ~79% nếu lấy số từ bài khác của cùng người gửi: 613 tin; 395 tin thiếu số có ảnh, chưa đo số trong ảnh |
+| S05 | 74–100% | 100% (28 tin) | Bóc từ chữ bài | Cách lấy ổn; **vấn đề là nguồn paused**, lần cuối 21/10 | Theo số tin thu được |
+| S01 | **0%** | **0%** | Không thu người bán | Tìm theo khoá `host`, `hostName`, `primaryHost` trong payload: 0/1.081. `listings` không có cột người bán. **Chưa kiểm trang chi tiết** | Chưa đo được; nền tảng này có thể không công khai SĐT chủ nhà |
+| S07 | | | Chưa có bộ thu | | Chưa đo được |
+| S02, S08 | | | Không thuộc tin hiển thị | S08 chủ động xoá SĐT trước khi ghi thô; giữ nguyên | Không áp dụng |
+
+**S06, kiểm trên 8 tin (mẫu rất nhỏ, chỉ để biết cơ chế):**
+
+- API chi tiết có trả trường SĐT nhưng đã che. Tin có cờ `phone_hidden`: 4/4 che toàn bộ. Tin không cờ: 4/4 che 4 số cuối.
+- Trang tin không cờ có nút hiện số. Em bấm **một lần** trong ego lite: ra đủ số, qua một endpoint riêng (private) của nguồn. Em không lưu số đó.
+- Trang tin có cờ không có nút hiện số, chỉ có «Hỏi thêm người đăng» (xem 1 trang).
+- **Chưa biết nút đó có đòi đăng nhập không:** phiên ego lite không hiện nút đăng nhập, có thể đang giữ phiên. Em định gọi endpoint không kèm phiên để biết, nhưng chế độ quyền từ chối, và em không vòng qua.
+
+**Khối lượng nếu lấy theo tài khoản, không theo tin:**
+
+| | Tài khoản | Tin thô | Tỉ lệ |
+|---|---|---|---|
+| Có cờ ẩn số, gồm tài khoản gom ở §3.1 | 644 | 7.607 | 15,1% thô; 8,8% tin chuẩn (bán 2.635/20.292) |
+| Không ẩn | 14.189 | 42.798 | |
+| 500 tài khoản lớn nhất | 500 | 11.062 | 25,8% số không ẩn |
+| 2.000 tài khoản lớn nhất | 2.000 | 23.742 | 55,5% |
+| 5.000 tài khoản lớn nhất | 5.000 | 33.037 | 77,2% |
+
+Giả định một tài khoản một số chưa kiểm chứng. Khảo sát 20/10 từng đặt trần 50 lượt/ngày, chỉ cho Deals; với trần đó 2.000 tài khoản mất 40 ngày, nên muốn nhanh hơn phải nâng trần.
+
+### 10.2 Cách làm cho S06
+
+| Cách | Làm gì | Rủi ro | Làn |
+|---|---|---|---|
+| **A. Hiện số theo tài khoản, nhịp thấp** | Mỗi tài khoản một lượt, ưu tiên tài khoản có tin bán; lưu vào `registry_aliases`; dừng ngay khi bị chặn | Gọi endpoint private của nguồn; bị chặn thì có thể kéo theo luồng thu chính; có thể cần tài khoản thu (tầng A); không được vượt đăng nhập hay chống bot | ZCode, Claude |
+| B. Xin nguồn đường chính thức | Làm việc với S06 về đối tác hoặc API | Chậm, có thể bị từ chối; sạch nhất về điều khoản | Mạnh |
+| C. Tạm thời nút «Hỏi người đăng» qua đội | Người xem gửi yêu cầu, đội liên hệ | Tốn người, không phải SĐT | Claude |
+
+Em đề xuất A cho bước thử có giới hạn sau khi anh xác nhận nhịp và tài khoản thu, song song hỏi B; 9% tin ẩn số luôn cần C hoặc B.
+
+### 10.3 Việc phải đổi để người bán lên cloud và Invest
+
+| Chỗ | Đổi | Ghi chú |
+|---|---|---|
+| `pipeline/sync-cloud.mjs` | Bỏ `seller_name`, `seller_phone` khỏi `PII_EXCLUDE`, thêm vào `CLOUD_ALLOW`, sửa test | Leak gate đổi cùng hàng của nó, không nới tay; tên nguồn trong giá trị cột vẫn phải soát |
+| Tên ảo | Đánh dấu tài khoản gom, không hiện tên ảo như tên người | 2.876 tin |
+| `api-surface.ts`, `/api/v1/offers` | Chuyển `public`, trả đúng trường cần hiện | Có giới hạn tần suất, vì đây là danh bạ SĐT mở: rất dễ bị cào hàng loạt |
+| Trường trên tin chuẩn | Việc 2 ở §8.3 | Cần cho tìm kiếm |
+| Ảnh | Bản thu nhỏ tự lưu, không dùng URL nguồn | Tên miền nguồn nằm trong URL |
+| `/vn/[market]/listings` | Thêm tin rao cạnh S01, lọc, ô người bán và SĐT | ReUI; T3 theo `_acceptance/config.yaml` nếu chạm đường dẫn |
+| ADR-0007, AGENTS luật 6, ROADMAP mục 24 | Ghi quyết định | Mục 25 đã thêm |
+
+### 10.4 Cảnh báo
+
+**Đang mở, hôm nay:**
+
+- **S06: SĐT 0%.** Chưa giải quyết, cần chọn ở §10.2.
+- **S01: chưa có tên và SĐT người bán**, chưa kiểm trang chi tiết.
+- **S03: 43% tin thiếu SĐT.** Bổ sung theo người gửi kéo được lên ~79%.
+- **S05: paused từ 21/10.**
+- **S07: chưa có bộ thu.**
+
+**Để cảnh báo tự chạy, không dựng cơ chế mới:** thêm một kiểm «phủ người bán và SĐT theo nguồn» vào `pipeline/do-danh-ba-sdt.mjs` (đã chạy trong cloud-sync, `--write` ghi `dq_check_results`, bảng này đã lên cloud). Chỉ ghi số đếm theo mã nguồn, không SĐT. Hiện dòng `fail` không đổi mã thoát; muốn cảnh báo ồn hơn thì đưa thêm vào `/ops-check`. Ngưỡng do anh chốt.

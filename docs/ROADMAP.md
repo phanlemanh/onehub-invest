@@ -340,7 +340,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    (RESO `MemberMobilePhone`: số quốc tế có «+» đứng đầu). Băm chỉ còn là khoá cho cloud, tính từ E.164. Khoá Người vẫn là
    `party_key`, SĐT là bí danh mạnh nhất để tìm và gộp. Số gốc hiện ở máy thu cho **vai Vận hành và `admin`**
    (`/ops/people`, `/ops/deals`); vai Người xem không thấy, không tìm theo SĐT. Đưa số gốc lên cloud là quyết định riêng,
-   chưa mở (`PII_EXCLUDE` giữ nguyên).
+   chưa mở (`PII_EXCLUDE` giữ nguyên). Phần cloud và vai xem đã được mục 25 thay.
+25. **Tin rao công khai, người bán lên cloud và cổng Invest** (02/11, Mạnh chốt sau
+   `docs/research/kiem-tin-dau-ra-toan-thi-truong-0211.md`): mọi tin rao bất động sản là công khai; tên và SĐT người bán lên cloud và
+   cổng Invest vì giúp nhà đầu tư tìm căn. Mọi kênh nguồn phải có người bán và SĐT; kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo
+   và cảnh báo liên tục tới khi xong. Không đổi: tên nguồn thật vẫn tầng A, S02 và S08 không hiển thị (luật 5).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
