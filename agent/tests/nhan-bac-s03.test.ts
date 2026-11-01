@@ -104,12 +104,12 @@ async function thanQuaLo(tuDong: (p: typeof DONG_STG) => { post_id: string; text
   return chu.join("") + JSON.stringify(dec);
 }
 test("NB-AC-4 ô 6: dòng stg có group_name/sender_name/conversation_id → thân Haiku và Decisions không chứa chúng; chữ bài vẫn tới (đối chứng dương)", async () => {
-  const than = await thanQuaLo(baiTuDong);
+  const than = await thanQuaLo((p) => baiTuDong(p, (t) => `h:${t.length}`));
   kiemKhongDinhDanh(than);
   assert.ok(than.includes(DONG_STG.text), "NB-AC-4 đối chứng: chữ bài không tới model");
 });
 test("chiều đỏ NB-AC-4 ô 6: bản đột biến ghép tên nhóm và người gửi vào chữ → đỏ ghim «NB-AC-4 tầng A rời máy»", async () => {
-  const dotBien = (p: typeof DONG_STG) => baiTuDong({ post_id: p.post_id, text: `[${p.group_name}] ${p.sender_name}: ${p.text}` });
+  const dotBien = (p: typeof DONG_STG) => baiTuDong({ post_id: p.post_id, text: `[${p.group_name}] ${p.sender_name}: ${p.text}` }, (t) => `h:${t.length}`);
   const than = await thanQuaLo(dotBien);
   assert.throws(() => kiemKhongDinhDanh(than), /NB-AC-4 tầng A rời máy: «Nhóm Mua Bán Căn Hộ Q7», «Anh Tuấn Môi Giới»/);
 });
