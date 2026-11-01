@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ap-hai-lan.mjs — răng của hồ sơ can-theo-tin-khi-phan-xu-lai (AC-5, E5). Dựng lại DB thử `oneinvest_p2_ct` từ
+// ap-hai-lan.mjs — răng của hồ sơ can-theo-tin-khi-phan-xu-lai (AC-5, E5). Dựng lại DB thử `oneinvest_p2_ct_hai` từ
 // `oneinvest` (db/db-thu.sh), áp 066 lần một rồi lần hai: lần hai phải thoát 0, không đổi định nghĩa hai hàm và không thêm
 // dòng ops_audit `can-theo-tin:*`. DB `oneinvest` dùng chung không bị chạm: đếm `can-theo-tin:*` trên nó = 0 trước và sau.
 // Thoát 0 xanh · 1 lệch một vế (in vế) · 2 không dựng được DB thử.
@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const THU = "oneinvest_p2_ct";
+const THU = "oneinvest_p2_ct_hai";   // tách khỏi DB thử của E1–E4 (oneinvest_p2_ct) để chạy song song không giẫm nhau
 const MIG = readFileSync(path.join(ROOT, "db/migrations/066_can_theo_tin.sql"), "utf8");
 const DX = ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db", "psql", "-U", "oneinvest", "-h", "localhost", "-v", "ON_ERROR_STOP=1", "-At"];
 
