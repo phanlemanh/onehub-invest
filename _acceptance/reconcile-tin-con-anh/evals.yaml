@@ -1,0 +1,27 @@
+schema_version: 1
+slug: reconcile-tin-con-anh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.nap_lai_ba_luot_fk
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/scripts/nap-lai-ba-luot-fk.test.mjs]
+    expected: "exit 0; ca NLF-1 (ROLLBACK): fkTroBanGhi có media_offer_fk, đủ sáu FK đời 039, không có sale_offer_records_superseded_by_fkey"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.nap_lai_ba_luot_fk
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/scripts/nap-lai-ba-luot-fk.test.mjs]
+    expected: "exit 0; ca NLF-2 (ROLLBACK, mồi nguồn T99 một tin một ảnh): đối chứng 039 với FK đọc từ lược đồ xoá mồi (stale 1), ảnh còn 0; chiều đỏ: danh sách cứng sáu FK đời 039 → lỗi 23503 nêu media_offer_fk"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.nap_lai_ba_luot
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs]
+    expected: "exit 0; dòng cuối «nap-lai-ba-luot: ĐẠT — bản thật mất 0 ô; đối chứng phải thấy mất»; đối chứng 039 và khong-chuyen đều «thấy mất»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
