@@ -5,7 +5,9 @@ slug: app-test-chiu-song-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-01
 ---
 
 # Acceptance Contract: app-test-chiu-song-song

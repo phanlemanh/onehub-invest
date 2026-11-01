@@ -1,0 +1,19 @@
+{
+  "feature_plain": "Ba bộ test «Căn giá tốt» và «Kiểm chất lượng dữ liệu mới nhất» chạy song song với các bộ test khác mà không còn đứng chờ nhau hay chặn job đêm.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho ba tệp test chạy xanh dưới 30 giây kể cả khi một phiên khác đang giữ khoá dùng chung; khi có thao tác đổi cấu trúc bảng ngắn thì chờ đúng lúc đó rồi chạy tiếp; bản cũ thì treo vì chính khoá ấy (đối chứng)."},
+    {"id": "AC-2", "p": "Sẽ giữ phiên test chỉ ở mức đọc chung trên bảng thật — không khoá dùng chung, không khoá ghi, không đụng view thật."},
+    {"id": "AC-4", "p": "Sẽ có thư viện «lược đồ riêng» dùng chung kèm test riêng, và ba bản cố tình làm hỏng thư viện đều bị test bắt."},
+    {"id": "AC-5", "p": "Sẽ chỉ đổi đúng các tệp của hàng; bốn hồ sơ đã ký chỉ nhận dòng ghim lại do máy ghi."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG đổi câu báo lỗi nào của ba tệp, trừ đúng câu về thước giá (đọc thước thật → kiểm thước bịa)."},
+    {"id": "OOS-1", "p": "KHÔNG chuyển năm tệp test app khác, test pipeline khác và test agent còn dùng khoá chung; KHÔNG nới thời hạn chờ."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Nguồn chờ: khoá dùng chung, khoá dòng, khoá đổi cấu trúc, vòng chờ hai chiều, và thao tác ghi của chính ca lên bảng thật — AC-1 đo dưới ba kiểu phiên chặn, AC-2 đo khoá của phiên."},
+    {"i": 1, "p": "Giữ lời hứa cũ: câu báo lỗi và các ca đối chứng trong tệp còn nguyên — AC-3."},
+    {"i": 2, "p": "Thư viện dùng chung: bản chép đủ ràng buộc, dãy số riêng, hai phiên song song không chờ nhau, dọn sạch sau ca — AC-4."},
+    {"i": 3, "p": "Thước đủ: các lượt chấm trước hết giờ ở 120 và 180 giây; số đo khoá ngày 01/11 của hàng sd3."}
+  ]
+}
