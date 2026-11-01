@@ -255,6 +255,11 @@ executors:
     cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
     cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     cloud_sync_pii_cot: "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot"    # NT2 soat-tang-a-moi-duong-len-cloud: leak gate đỏ khi cột ngoài CLOUD_ALLOW / bảng tầng A có dòng
+    atss_chan: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs chan"   # app-test-chiu-song-song E1 — ba tệp xanh dưới phiên giữ 33033/DDL/khoá chia sẻ, bản cũ treo vì chờ khoá
+    atss_khoa: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs khoa"   # app-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    atss_assert: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs assert"   # app-test-chiu-song-song E3 — thông điệp assert giữ nguyên trừ câu thước đã khai
+    atss_lib: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — test thư viện lược đồ riêng + ba đột biến đỏ
+    atss_pham_vi: "bash _acceptance/app-test-chiu-song-song/probes/pham-vi.sh"   # app-test-chiu-song-song E5
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
