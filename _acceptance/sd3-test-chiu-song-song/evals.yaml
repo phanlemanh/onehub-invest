@@ -7,14 +7,14 @@ evals:
     cmd: config:executors.script.sts_chan
     layer: backend-effect
     paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
-    expected: "exit 0; một phiên giữ pg_advisory_xact_lock(33033) + khoá dòng UPDATE trên 200 dòng sale_offer_records trong giao dịch mở; node --test --test-timeout=30000 bait-gap-sellers.test.mjs → thoát 0, 'ℹ pass 7', ca '✔ SD-AC-1 đỏ' có mặt, dưới 30 s; đối chứng: bản tệp ở merge-base chép tạm cạnh tệp thật, chạy --test-timeout=10000 dưới cùng phiên chặn → thoát ≠ 0 với 'timed out'/'cancelled' (bắt 'DOI CHUNG KHONG BAT' nếu bản cũ xanh); in 'CHAN OK'; phiên chặn ROLLBACK, tệp tạm xoá"
+    expected: "exit 0; phiên A giữ pg_advisory_xact_lock(33033) + khoá dòng UPDATE 200 dòng sale_offer_records → node --test bait-gap-sellers.test.mjs thoát 0, 'ℹ pass 7', '✔ SD-AC-1 đỏ' có mặt, dưới 30 s; A đóng rồi phiên B giữ ACCESS EXCLUSIVE trên public.sale_offer_records + public.registry_aliases 3 s rồi nhả → thoát 0 trong [2,5 s; 30 s); đối chứng: bản merge-base chép tạm, dưới phiên A2 → treo tới trần (bị giết/timed out; 'DOI CHUNG KHONG BAT' nếu xanh); mỗi phiên chặn lock_timeout 3 s, không chồng nhau; in 'CHAN OK'; tệp tạm xoá"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.sts_khoa
     paths: [pipeline/scripts/bait-gap-sellers.test.mjs, _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs]
-    expected: "exit 0; rút phongRieng nguyên văn từ tệp test, chạy trong giao dịch + 060 + refreshBaitGap; pg_locks của phiên: 0 khoá tư vấn, 0 khoá mạnh hơn AccessShareLock trên quan hệ schema public; đối chứng: cùng phiên lấy 33033 → đếm ra 1 ('DOI CHUNG KHONG BAT' nếu mù); in 'KHOA OK'"
+    expected: "exit 0; rút phongRieng nguyên văn từ tệp test, chạy trong giao dịch + 060 + refreshBaitGap; pg_locks của phiên: 0 khoá tư vấn, 0 khoá mạnh hơn AccessShareLock trên quan hệ schema public, 0 khoá trên view public; mặc định nextval của bảng trong lược đồ riêng (dịch với search_path=public) đều trỏ '<lược đồ riêng>.…' — 'DAY DUNG CHUNG' nếu trỏ dãy public; đối chứng: cùng phiên lấy 33033 → đếm ra 1 ('DOI CHUNG KHONG BAT' nếu mù); in 'KHOA OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
