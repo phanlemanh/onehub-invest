@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: chuyen-huong-ma-thi-truong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.chm_ma
+    paths: [app/src/lib/ma-thi-truong.ts, data-api/src/lib/ma-thi-truong.ts, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; 'MA PASS'; luật đọc từ db/migrations/064_ma_thi_truong_ngan.sql (regex trong regexp_replace, không viết tay); 32 mã dài đọc từ DB máy thu (đếm phải = 32, khác thì đỏ gọi số); ma trận viết trước 9 mã không đổi (vn-hanoi, vn-hcmc, vn-hanoi-phuong-x, vn, vn-tinh, vn-thanh-pho, rỗng, vn-hanoi-thanh-pho-cu, tinh-xyz): mỗi phần tử maNgan(app) = maNgan(data-api) = kết quả luật 064 áp bằng Postgres regexp_replace; số assert in ra = 41. Chiều đỏ ghim: bản chép maNgan của data-api đổi regex thành '^vn-thanh-pho-' → đỏ gọi tên mã vn-tinh-* đầu tiên lệch và tên bản 'data-api'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.chm_app
+    paths: [app/src/lib/ma-thi-truong.ts, app/src/lib/queries.ts, "app/src/app/(app)/[country]/[market]/**", app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; 'APP PASS'; DB thử 'sau' = lược đồ đầy đủ (pg_dump -s) + areas/area_sources của DB máy thu, áp CHÍNH tệp 064, rồi chèn một phường dưới vn-da-nang; với cả 32 mã dài: hàm trang thị trường /vn/<dài> ném NEXT_REDIRECT đích /vn/<ngắn> mã 308; trang listing /vn/<dài>/listings → /vn/<ngắn>/listings; với vn-thanh-pho-da-nang thêm: trang phường /vn/thanh-pho-da-nang/<slug phường> → /vn/da-nang/<slug phường>, và query ?tab=x đi theo đích. Chiều đỏ ghim: chạy cùng ca với bản chép trang bỏ nhánh chuyển hướng → đỏ gọi 'không chuyển hướng: /vn/thanh-pho-da-nang'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.chm_app
+    paths: [app/src/lib/ma-thi-truong.ts, app/src/lib/queries.ts, "app/src/app/(app)/[country]/[market]/**", app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; DB thử 'trước' (chưa áp 064): với cả 32 mã dài, hàm trang thị trường và trang listing trả phần tử trang (không ném) với areaId/marketId = mã dài nhận được; số ca ném NEXT_REDIRECT = 0; đối chứng dương cùng DB: /vn/hanoi trả phần tử areaId vn-hanoi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.chm_app
+    paths: [app/src/lib/ma-thi-truong.ts, "app/src/app/(app)/[country]/[market]/**", app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; ở cả DB 'trước' và 'sau': /vn/tinh-khong-co và /vn/tinh-khong-co/listings ném NEXT_HTTP_ERROR_FALLBACK;404 (không phải NEXT_REDIRECT); /vn/hanoi, /vn/hcmc, /vn/hanoi/listings, một trang phường Hà Nội thật trả phần tử trang, không ném; ca đếm (bọc pool.query, đếm MỌI truy vấn): /vn/hanoi phát sinh đúng số truy vấn của trang trên gốc hàng (mốc đo bằng bản chép trang của gốc chạy cùng DB); đối chứng dương: /vn/thanh-pho-da-nang ở DB 'sau' phát sinh nhiều hơn mốc ≥ 1 truy vấn; đột biến 'luôn tra mã ngắn' trên bản chép trang → ca đếm /vn/hanoi đỏ ghim 'tra thêm khi mã không mang tiền tố dài'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.chm_app
+    paths: ["app/src/app/(app)/[country]/page.tsx", "app/src/app/(app)/yield/page.tsx", "app/src/app/(app)/compare/page.tsx", app/src/lib/ma-thi-truong.ts, app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; trên mỗi DB, so props trang khi gõ mã dài với props khi gõ mã của chính thị trường đó đang có trong DB (sau: mã ngắn; trước: mã dài) — bằng nhau từng khoá: Finder ?market=thanh-pho-da-nang (DB có listing dưới thị trường Đà Nẵng ở cả hai trạng thái nên Đà Nẵng có trong danh sách Finder) → prop market = 'da-nang' (sau) / 'thanh-pho-da-nang' (trước); Lợi suất ?area=vn-thanh-pho-da-nang → cùng nhánh hiển thị và cùng thị trường được chọn như khi gõ mã có trong DB; So sánh ?areas=vn-thanh-pho-da-nang,vn-hanoi → ids = [<mã có trong DB>, vn-hanoi]; đối chứng: ?areas=vn-tinh-khong-co,vn-hanoi → ids = [vn-hanoi]"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.chm_app
+    paths: [app/src/lib/ma-thi-truong.ts, app/src/app/api/v1/listings/route.ts, app/src/app/api/v1/asset-stats/route.ts, app/src/app/api/v1/deals/route.ts, app/src/app/api/v1/offers/route.ts, app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; DB 'sau' có phường vn-da-nang-<slug> kèm listing, tin bán, tin thuê, dòng market_asset_stats và deal (chèn qua lược đồ thật); ma trận viết trước 5 ô (listings?market, asset-stats?market, asset-stats?area=<phường>, deals?market, offers?area=<phường>): mỗi ô gọi handler GET bằng mã ngắn phải trả ≥ 1 phần tử (in số), rồi bằng mã dài trả thân JSON và mã HTTP bằng từng byte; số ô đã assert in ra = 5; đột biến: bản chép từng route bỏ lời gọi giaiMaKhuVuc → đúng ô đó đỏ ghim '<route> mã dài khác mã ngắn'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.chm_api
+    paths: [data-api/src/lib/ma-thi-truong.ts, data-api/src/routes/**, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; 'API PASS'; app.request() của data-api trên DB 'sau' (cùng dữ liệu E6); ma trận viết trước 9 ô (/v1/markets/:id, /:id/submarkets, /:id/insights, /v1/listings?market, /v1/listings?area, /v1/asset-stats?market, /v1/asset-stats?area, /v1/deals?market, /v1/deals?area): mỗi ô gọi bằng mã ngắn phải trả ≥ 1 phần tử hay object có id (in số), rồi bằng mã dài trả thân + mã HTTP bằng từng byte; /v1/markets/vn-thanh-pho-da-nang trả data.id = vn-da-nang; với cả 32 mã dài /v1/markets/<dài> trả 200 data.id = <ngắn>; số ô đã assert = 9; đột biến: bản chép từng tệp route bỏ lời gọi giaiMaKhuVuc → các ô của tệp đó đỏ ghim tên ô"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.chm_api
+    paths: [data-api/src/lib/ma-thi-truong.ts, data-api/src/routes/**, app/src/lib/ma-thi-truong.ts, app/src/app/api/v1/**, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs]
+    expected: "exit 0; DB 'trước' có cùng bộ phường/tin/số liệu dưới mã dài: 5 ô app và 9 ô data-api gọi bằng mã dài trả ≥ 1 phần tử và mã thị trường trong kết quả là mã dài (/v1/markets/vn-thanh-pho-da-nang → data.id = vn-thanh-pho-da-nang); ở cả hai DB: /v1/markets/vn-tinh-khong-co trả 404 NOT_FOUND nêu nguyên mã nhận, /v1/listings?market=vn-tinh-khong-co và app /api/v1/listings?market=vn-tinh-khong-co trả data rỗng; ca đếm (bọc pool.query, đếm mọi truy vấn): /v1/markets/vn-hanoi và app /api/v1/listings?market=vn-hanoi phát sinh đúng số truy vấn của route trên gốc hàng; đối chứng dương: mã dài ở DB 'sau' phát sinh nhiều hơn mốc ≥ 1; đột biến 'luôn tra' → ca đếm vn-hanoi đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.chm_scope
+    paths: [_acceptance/chuyen-huong-ma-thi-truong/probes/scope.sh]
+    expected: "exit 0; 'SCOPE OK'; mọi tệp đổi so gốc của hàng (đỉnh #252 khi chưa gộp, merge-base origin/main khi đã gộp) thuộc danh sách được phép; không tệp nào là app/src/proxy.ts, data-api/src/middleware/**, hay page.tsx/route.ts MỚI; cd data-api && npm run typecheck exit 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [app/src/app/**]
+    expected: "exit 0; fail 0 — luật slug URL tiếng Anh vẫn xanh (không thêm route)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**]
+    expected: "exit 0 — app tsc --noEmit và lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.chm_app_test
+    paths: [app/src/**, app/tests/**]
+    expected: "exit 0; 'APP TEST PASS'; chạy cd app && npm test; đỏ 0 → pass; có ca đỏ → chạy cùng bộ test trên bản chép gốc của hàng (đỉnh #252, hay merge-base origin/main khi đã gộp) và so tập tên ca đỏ: ca đỏ mới (có ở nhánh, không có ở gốc) = 0, in tên từng ca đỏ sẵn; đối chứng: tập rỗng ở gốc + 1 ca đỏ ở nhánh → đỏ ghim 'ca đỏ mới: <tên>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

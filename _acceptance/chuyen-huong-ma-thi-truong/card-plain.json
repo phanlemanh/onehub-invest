@@ -1,0 +1,111 @@
+{
+  "feature_plain": "Link cũ của 32 trang tỉnh/thành và mã cũ trên API công khai vẫn dùng được sau khi đổi sang mã thị trường ngắn (vn-da-nang thay vn-thanh-pho-da-nang) — đúng cả trước lẫn sau ngày áp đổi mã.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ dùng đúng một luật đổi mã giống hệt migration 064 ở cả trang lẫn API, kiểm trên cả 32 mã thật."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ chuyển link cũ của trang tỉnh, trang listing và trang phường sang link mã mới, giữ phần đuôi và tham số, sau khi đã áp đổi mã."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ cho Finder, Ước tính lợi suất (kể cả link cũ «đầu tư») và So sánh nhận mã cũ và chọn đúng thị trường."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ cho API công khai của app trả cùng kết quả khi gọi bằng mã cũ hay mã mới."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ typecheck, lint, luật slug xanh và không thêm test đỏ nào; không chạm cổng đăng nhập."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-3",
+      "p": "Sẽ KHÔNG chuyển hướng gì khi chưa áp đổi mã — link cũ mở như hôm nay."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ KHÔNG chuyển tới trang không có: mã cũ không có đích vẫn 404; Hà Nội, TP.HCM không bị đụng."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG để data-api trả khác nhau giữa mã cũ và mã mới; chi tiết thị trường trả mã mới."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ KHÔNG đổi sang mã mới khi DB còn mã cũ, và KHÔNG tốn thêm truy vấn cho mã thường."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Không áp đổi mã 064 trong việc này — anh duyệt riêng sau khi việc này gộp."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Chưa dọn đoạn tra mã cũ thừa trong tên thị trường (làm sau khi áp đổi mã)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đụng trang Ops — link nội bộ sinh từ DB nên tự đúng."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không có sitemap để sửa."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Không thử qua máy chủ thật: phép đo gọi thẳng trang và API trên DB thử."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Không có mã 301 đúng nghĩa (phải sửa tệp của cổng đăng nhập)."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Mọi dạng mã: 32 mã cũ thật, mã cũ không đích, mã đã ngắn sẵn, mã phường và các mã biên — luật lấy từ chính migration 064."
+    },
+    {
+      "i": 1,
+      "p": "Mọi chỗ nhận mã: 3 trang theo đường, 3 trang theo tham số, 4 route API của app, 6 route data-api — đếm bằng lệnh."
+    },
+    {
+      "i": 2,
+      "p": "Cả hai trạng thái DB: trước và sau khi áp đổi mã (AC-3, AC-5, AC-8 so với AC-2, AC-5, AC-6, AC-7)."
+    },
+    {
+      "i": 3,
+      "p": "Cả hai chiều: chuyển đúng khi cần (AC-2, AC-5, AC-6, AC-7) và không bắn khi không cần (AC-3, AC-4, AC-8)."
+    },
+    {
+      "i": 4,
+      "p": "Link «bản đồ» và «đầu tư» cũ đi qua Finder và Lợi suất nên phủ ở AC-5."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Chọn chuyển hướng vĩnh viễn (308) là việc khó rút nên đưa thành câu hỏi Hỏi-1 cho anh, không để máy tự quyết."
+    },
+    {
+      "i": 1,
+      "p": "Giữ mã cũ trên API công khai là cam kết với client ngoài nên đưa thành câu hỏi Hỏi-2."
+    },
+    {
+      "i": 2,
+      "p": "Ca «trước khi áp đổi mã» thiếu dữ liệu nên rỗng bằng rỗng — đã thêm dữ liệu dưới mã cũ và đếm truy vấn có đối chứng."
+    },
+    {
+      "i": 3,
+      "p": "Vài route chỉ so bằng nhau mà không ép có dữ liệu — đã viết ma trận 5 + 9 ô, ô nào cũng phải có dữ liệu, kèm phá thử từng route."
+    },
+    {
+      "i": 4,
+      "p": "Tiêu chí bộ test app không có eval chạy nó — đã thêm hai eval, so ca đỏ với gốc của việc."
+    }
+  ]
+}
