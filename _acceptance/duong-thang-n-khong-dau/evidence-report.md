@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d33ed0279655d93203aae2e5fc24fc9803816e74
+verified_commit: b4911d5026937b5e35beda6ac01e73040db881a8
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -187,3 +187,7 @@ none — every multi-run eval is uniform
 Round 1: E10 va hai lenh suite npm test (agent, app) that bai — returned to implementation.
 Round 2: PASS — E10 va cac suite xanh sau sua; E1-E9 carry-forward tu round 1.
 Round 3: PASS — sau commit d33ed027 (them ca KD-AC-7 vao judge-entity-khong-dau.test.ts, E11); E1-E6, E11 va moi suite chay lai xanh; E7-E10 carry-forward.
+
+### Re-pin lần 1 — 2026-11-01, do KD-AC-7 so hai mốc cố định (kd-ac-7-moc-co-dinh)
+run_id: repin-20261101T072107Z-47831
+sha: b4911d5026937b5e35beda6ac01e73040db881a8 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
