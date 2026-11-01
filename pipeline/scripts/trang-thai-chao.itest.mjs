@@ -11,6 +11,7 @@ import { ghiAnhChup, KHOA } from "../bac-du-lieu.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { writeAssertions } from "../lib/assert.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
+import { napDacTrung } from "../lib/nap-061.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
@@ -120,7 +121,10 @@ test("AC-3 cột và trục: offer_status mặc định unknown, CHECK theo sổ
     });
     const truc = (ten) => reg.axes.find((a) => a.name === ten);
     assert.deepEqual(truc("assertion_field").values.map((v) => v.code).sort(),
-      [...truc("enrich_field").values.map((v) => v.code), "offer_status"].sort(), "trục assertion_field = năm trường enrich + offer_status");
+      // HD5 (dac-trung-nha-s06-len-canonical, 061; giám sát duyệt P1-87): thêm bảy đặc trưng nhà S06, ghi tay.
+      [...truc("enrich_field").values.map((v) => v.code), "offer_status", "street_number", "unit_number", "frontage_length",
+        "lot_size_dimensions", "stories", "latitude", "longitude"].sort(), "trục assertion_field = năm trường enrich + offer_status + bảy đặc trưng HD5");
+    await napDacTrung(db);   // HD5 (061; giám sát duyệt P1-87): sổ đã có bảy mã assertion_field của 061
     assert.deepEqual((await checkDb(db, reg)).map((x) => x.msg), [], "sổ từ vựng lệch DB sau 059");
 
     const regLech = structuredClone(reg);
