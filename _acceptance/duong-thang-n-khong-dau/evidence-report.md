@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 816f4ee73b0a0e528c7491af22190f5fc4860d8e
+verified_commit: d33ed0279655d93203aae2e5fc24fc9803816e74
 human_signoff:
 ---
 
@@ -25,83 +25,83 @@ human_signoff:
 | E8 | AC-7 | test | PASS |
 | E9 | AC-7 | test | PASS |
 | E10 | AC-7 | test | PASS |
+| E11 | AC-7 | test | PASS |
 
 ## Evidence
 
-- eval: E10
-  run_id: minted-duong-thang-n-khong-dau-E10-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.the_duyet
-  verified_at: 2026-11-01T04:38:35Z
-  output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 50736.539
-
 - eval: E1
-  run_id: minted-duong-thang-n-khong-dau-E1-r1
+  run_id: minted-duong-thang-n-khong-dau-E1-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E2
-  run_id: minted-duong-thang-n-khong-dau-E2-r1
+  run_id: minted-duong-thang-n-khong-dau-E2-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E3
-  run_id: minted-duong-thang-n-khong-dau-E3-r1
+  run_id: minted-duong-thang-n-khong-dau-E3-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E4
-  run_id: minted-duong-thang-n-khong-dau-E4-r1
+  run_id: minted-duong-thang-n-khong-dau-E4-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E5
-  run_id: minted-duong-thang-n-khong-dau-E5-r1
+  run_id: minted-duong-thang-n-khong-dau-E5-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E6
-  run_id: minted-duong-thang-n-khong-dau-E6-r1
+  run_id: minted-duong-thang-n-khong-dau-E6-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.judge_entity_khong_dau
-  verified_at: 2026-11-01T01:37:51Z
-  carried_from_round: 1
+  verified_at: 2026-11-01T04:50:28Z
   output: |
-    carry-forward tu round 1 — delta khong cham paths cua eval
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
+
+- eval: E11
+  run_id: minted-duong-thang-n-khong-dau-E11-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.judge_entity_khong_dau
+  verified_at: 2026-11-01T04:50:28Z
+  output: |
+    cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts
+    ℹ duration_ms 716.127417
 
 - eval: E7
   run_id: minted-duong-thang-n-khong-dau-E7-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.test.judge_entity_duong
   verified_at: 2026-11-01T01:37:51Z
   carried_from_round: 1
@@ -111,7 +111,6 @@ human_signoff:
 - eval: E8
   run_id: minted-duong-thang-n-khong-dau-E8-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.test.judge_luat
   verified_at: 2026-11-01T01:37:51Z
   carried_from_round: 1
@@ -121,44 +120,52 @@ human_signoff:
 - eval: E9
   run_id: minted-duong-thang-n-khong-dau-E9-r1
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.test.the_duyet_phuong
   verified_at: 2026-11-01T01:37:51Z
   carried_from_round: 1
   output: |
     carry-forward tu round 1 — delta khong cham paths cua eval
 
+- eval: E10
+  run_id: minted-duong-thang-n-khong-dau-E10-r2
+  exit_code: 0
+  verifier: config:executors.test.the_duyet
+  verified_at: 2026-11-01T04:38:35Z
+  carried_from_round: 2
+  output: |
+    carry-forward tu round 2 — delta khong cham paths cua eval
+
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__bb6271-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-duong-thang-n-khong-dau-SUITE-lint-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 - cmd: cd app && npm test
-  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__bd9a35-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__bd9a35-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__13563d-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-duong-thang-n-khong-dau-SUITE-test_lint_rules-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-duong-thang-n-khong-dau-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-duong-thang-n-khong-dau-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-11-01T04:38:35Z
+  verified_at: 2026-11-01T04:50:28Z
 
 ## Known limits
 
@@ -166,12 +173,10 @@ human_signoff:
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay. Field baseline cua moi eval ghi n-a.
+none — moi eval feature deu red tren baseline (co phan biet)
 
-Eval khong-phan-biet (pass tren ca HEAD lan baseline round 1), xac nhan la regression-guard co chu y cho AC-7 (tep test cua cac ho so da ky phai giu xanh):
-- E7 (cd agent && node --import tsx --test tests/judge-entity-duong.test.ts)
-- E8 (cd agent && node --import tsx --test tests/judge-luat.test.ts)
-- E9 (cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx)
+Baseline khong do
+- cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts: bo qua baseline: tep agent/tests/judge-entity-khong-dau.test.ts co o cay dang kiem nhung chua co o merge-base 5cbf3e234c82159bc1a86632a2fcc8fbc5ce89f5 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
@@ -179,6 +184,6 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E10 và một số lệnh suite chưa xanh — trả về triển khai để sửa.
-Round 2: E10 và toàn bộ lệnh suite xanh; E1–E9 mang sang từ round 1 vì delta không chạm paths của các eval đó. Verdict PASS.
-
+Round 1: E10 va hai lenh suite npm test (agent, app) that bai — returned to implementation.
+Round 2: PASS — E10 va cac suite xanh sau sua; E1-E9 carry-forward tu round 1.
+Round 3: PASS — sau commit d33ed027 (them ca KD-AC-7 vao judge-entity-khong-dau.test.ts, E11); E1-E6, E11 va moi suite chay lai xanh; E7-E10 carry-forward.
