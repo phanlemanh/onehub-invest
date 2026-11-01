@@ -114,19 +114,20 @@ test("CT-AC-1 áp đề xuất: căn của tin chung bài đăng nhận max() gi
   for (const o of MA_TRAN) await trongGiaoDich(() => kiemAp(`a1-${MA_TRAN.indexOf(o)}`, o));
 });
 
-test("CT-AC-1 ô A ≠ B cùng căn: căn nhận max() bedrooms của A và B", async () => {
+test("CT-AC-1 ô hai giá trị trên cùng căn: căn nhận max() bedrooms của các tin trong tập", async () => {
   await trongGiaoDich(async () => {
-    // B có sẵn bedrooms 4 từ đề xuất riêng (chủ thể của B), áp TRƯỚC khi gắn căn → căn còn trống
-    const t = await dung("a1-max", {
-      bNghi: false, cungCan: true,
-      truocLienKet: async ({ B }) => { await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[await deXuat(B, "bedrooms", "4")]]); },
-    });
-    assert.equal((await canRow(t.PA)).bedrooms, null, "tiền đề: căn còn trống");
-    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[await deXuat(t.A, "bedrooms", "3")]]);
+    // A và B chung bài đăng nên luôn phân xử về CÙNG một giá trị; muốn max() phân biệt được, tập phải có thêm tin E
+    // (bài đăng riêng) gắn cùng căn, mang giá trị khác — đề xuất của A (3) và của E (4) áp chung một lượt.
+    const E = tin("ct-a1-max-e", ["ct-a1-max-e"]);
+    const t = await dung("a1-max", { bNghi: false, cungCan: true, them: [E] });
+    await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [t.PA, E.offer_id]);
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')",
+      [[await deXuat(t.A, "bedrooms", "3"), await deXuat(E.offer_id, "bedrooms", "4")]]);
     const [a] = await bedroomsCuaTin([t.A]);
     const [b] = await bedroomsCuaTin([t.B]);
-    assert.notEqual(a, null);
-    assert.equal((await canRow(t.PA)).bedrooms, Math.max(a, b ?? -Infinity), "CT-AC-1: căn không nhận max() của các tin gắn căn");
+    const [e] = await bedroomsCuaTin([E.offer_id]);
+    assert.deepEqual([a, b, e], [3, 3, 4], "tiền đề: A, B chung bài về 3; E riêng về 4 — max() phân biệt được với giá trị của A");
+    assert.equal((await canRow(t.PA)).bedrooms, 4, "CT-AC-1: căn không nhận max() của các tin trong tập");
   });
 });
 
@@ -258,19 +259,23 @@ test("CT-AC-3 tin không chung bài đăng: áp + hoàn tác bằng 066 và 063 
 });
 
 // ---------------------------------------------------------------------------------------------------------------------
+/** Ô lệch đếm độc lập trên cả ba cột: ô căn trống mà một tin gắn căn mang giá trị. */
 const demLech = async (ids) => Number((await one(`
-  SELECT count(*) FILTER (WHERE p.bedrooms IS NULL AND o.bedrooms IS NOT NULL) AS n
-    FROM property_offers po JOIN properties p ON p.id = po.property_id JOIN sale_offer_records o ON o.offer_id = po.offer_id
-   WHERE p.id = ANY ($1)`, [ids])).n);
+  SELECT count(*) FILTER (WHERE a) + count(*) FILTER (WHERE b) + count(*) FILTER (WHERE s) AS n FROM (
+    SELECT p.id, bool_or(p.bedrooms IS NULL AND o.bedrooms IS NOT NULL) a, bool_or(p.bathrooms IS NULL AND o.bathrooms IS NOT NULL) b,
+           bool_or(p.street IS NULL AND o.street_raw IS NOT NULL) s
+      FROM property_offers po JOIN properties p ON p.id = po.property_id JOIN sale_offer_records o ON o.offer_id = po.offer_id
+     WHERE p.id = ANY ($1) GROUP BY p.id) x`, [ids])).n);
 const demAudit = async () => Number((await one("SELECT count(*) AS n FROM ops_audit WHERE action = 'can-theo-tin:sua-mot-lan-066'")).n);
 
 test("CT-AC-4 sửa một lần: điền đúng các ô lệch do 063 để lại, một dòng audit, lượt hai 0 ô, ba ô đối chứng", async () => {
   await trongGiaoDich(async () => {
     await c.query(APPLY_063);
     await c.query(REVERT_063);
-    // Lệch thật: áp bằng 063 nên PB của B chung bài còn trống.
+    // Lệch thật trên đủ ba cột: áp bằng 063 nên PB của B chung bài còn trống bedrooms, bathrooms, street.
     const t = await dung("a4", { bNghi: false, cungCan: false });
-    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[await deXuat(t.A, "bedrooms", "3")]]);
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[
+      await deXuat(t.A, "bedrooms", "3"), await deXuat(t.A, "bathrooms", "2"), await deXuat(t.A, "street_raw", "Ngõ 5 Láng Hạ")]]);
     // Đối chứng 1 — đề xuất không còn applied (đánh dấu reverted) dù tin còn mang giá trị: căn không được điền.
     const r = await dung("a4-rv", { bNghi: false, cungCan: false });
     const pr = await deXuat(r.A, "bedrooms", "5");
@@ -292,11 +297,12 @@ test("CT-AC-4 sửa một lần: điền đúng các ô lệch do 063 để lạ
     await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[await deXuat(s.A, "bedrooms", "3")]]);
 
     const lechTruoc = await demLech([t.PB]);
-    assert.equal(lechTruoc, 1, "tiền đề: 063 để PB lệch 1 ô");
+    assert.equal(lechTruoc, 3, "tiền đề: 063 để PB lệch đủ 3 ô (bedrooms, bathrooms, street)");
     const auditTruoc = await demAudit();
     await c.query(KHOI_SUA_066);
     assert.equal(await demLech([t.PB]), 0, "CT-AC-4: ô lệch chưa được điền");
-    assert.equal((await canRow(t.PB)).bedrooms, 3);
+    const pbSua = await canRow(t.PB);
+    assert.deepEqual([pbSua.bedrooms, pbSua.bathrooms, pbSua.street], [3, 2, "Ngõ 5 Láng Hạ"], "CT-AC-4: ba cột không được điền đúng");
     assert.equal(await demAudit(), auditTruoc + 1, "CT-AC-4: thiếu dòng audit");
     const d = (await one("SELECT detail FROM ops_audit WHERE action = 'can-theo-tin:sua-mot-lan-066' ORDER BY id DESC LIMIT 1")).detail;
     assert.deepEqual({ cells: d.cells, properties: d.properties }, { cells: lechTruoc, properties: 1 }, "CT-AC-4: detail không khớp đếm độc lập");
