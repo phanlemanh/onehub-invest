@@ -1,27 +1,46 @@
-# Review findings: can-theo-tin-khi-phan-xu-lai (vòng 4)
+# Review findings: can-theo-tin-khi-phan-xu-lai (round 4)
 
 ## Trong hợp đồng
 
-(không có)
+(không có finding nào map được vào AC)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Răng E5 sẽ đỏ vĩnh viễn ngay khi 066 được áp thật vào DB oneinvest**
-  Người dùng thấy gì: Sau khi bản sửa được áp thật lên dữ liệu của máy thu, phép kiểm tự động này sẽ báo lỗi mãi dù không có gì hỏng. Người dùng cuối không bị ảnh hưởng, nhưng người vận hành sẽ thấy cảnh báo sai.
-  Căn cứ: Chỉ làm báo động giả cho người vận hành, không mất hay lộ dữ liệu, và chỉ xuất hiện sau bước triển khai riêng nên sửa lúc đó vẫn rẻ.
+- **E5 'expected' trong evals.yaml lệch với răng ap-hai-lan.mjs sau commit 886fed1e**
+  Người dùng thấy gì: Phần mô tả bài kiểm ghi hơi khác cách bài kiểm thật chạy. Người dùng cuối không thấy gì khác, chỉ người ký đọc mô tả có thể hiểu sai.
+  Căn cứ: Không ảnh hưởng dữ liệu hay người dùng, chỉ là câu chữ mô tả; sửa lại sau rất rẻ và không mất gì.
+  file: `_acceptance/can-theo-tin-khi-phan-xu-lai/evals.yaml`
+  severity: medium
+  Đề xuất: known-limits
+
+- **E5 expected vẫn đòi oneinvest can-theo-tin:* = 0, trong khi răng đã đổi sang so trước = sau**
+  Người dùng thấy gì: Mô tả bài kiểm còn đòi con số cũ, nên sau khi bản sửa lên máy thu thật, người chấm theo mô tả có thể tưởng bài kiểm sai dù không có lỗi gì.
+  Căn cứ: Chỉ gây hiểu nhầm cho người đọc tài liệu, không mất hay lộ dữ liệu; tự sửa được bằng cách chỉnh câu mô tả.
+  file: `_acceptance/can-theo-tin-khi-phan-xu-lai/evals.yaml`
+  severity: low
+  Đề xuất: known-limits
+
+- **Phép kiểm 'bản chép thiếu bảng' không bắt được trường hợp pg_dump chết giữa phần dữ liệu; DB thử bị bỏ lại khi db-thu.sh thất bại**
+  Người dùng thấy gì: Khi máy quá tải, bài kiểm có thể báo xanh trên bản chép dở và để lại vài cơ sở dữ liệu thử thừa trên máy. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Chỉ ảnh hưởng máy kiểm nội bộ, không đụng dữ liệu thật; DB thử thừa xoá tay được, lỗi hiếm nên sửa không đáng công.
+  file: `_acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Hình dạng 4 (assertion chỉ âm tính, không có đối chứng dương): phép «DB oneinvest không bị chạm» của E5 không thể đỏ**
+  Người dùng thấy gì: Bài kiểm xác nhận dữ liệu dùng chung không bị đụng đến có thể không phát hiện nếu có ai lỡ áp bản sửa lên đó. Việc áp lên máy thu thật vẫn do Mạnh duyệt riêng và có sao lưu trước.
+  Căn cứ: Rủi ro thấp vì bước áp thật đã có người duyệt và sao lưu, nên nếu lỡ chạm vẫn khôi phục được; ghi nhận giới hạn là đủ.
   file: `_acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 — Fixture VIẾT TAY đúng khuôn bên đọc (đối chứng dương vế (1) của răng E5)**
-  Người dùng thấy gì: Phép kiểm phụ dùng dữ liệu mẫu tự viết nên có thể không phát hiện nếu cách nhận diện tin sai theo cùng một kiểu. Việc sửa căn theo tin vẫn được một bài kiểm khác dựng sát thực tế kiểm tra lại.
-  Căn cứ: Rủi ro thấp vì đã có bài kiểm khác che đúng chỗ này, không ảnh hưởng dữ liệu người dùng, và nâng độ chặt sau này không tốn nhiều.
+- **Hình dạng 2 (fixture viết tay theo đúng khuôn bên đọc): ca gieo căn lệch của E5 ghi thẳng bản ghi tin và đề xuất 'applied'**
+  Người dùng thấy gì: Một ca thử dùng dữ liệu gieo tay nên chỉ chứng tỏ bản sửa nhận đúng dạng dữ liệu do người viết tạo ra. Dạng dữ liệu thật vẫn được kiểm ở bài khác.
+  Căn cứ: Không ảnh hưởng người dùng vì ca sinh lệch bằng đường thật đã có bài kiểm riêng; sửa thêm tốn công mà ít thêm bảo đảm.
   file: `_acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs`
   severity: low
-  Đề xuất: known-limits
+  Đề xuất: wont-fix
 
-## Chưa adversarial-verify (refuter chết)
-
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/5 lỗi rơi vào file không bộ đo nào phủ (_acceptance/can-theo-tin-khi-phan-xu-lai/evals.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
