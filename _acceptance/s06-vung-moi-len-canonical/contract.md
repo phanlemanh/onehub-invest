@@ -5,7 +5,7 @@ slug: s06-vung-moi-len-canonical
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-31-s06-vung-moi-len-canonical-design.md
 approved_by: Mạnh
 approved_at: 2026-10-31
@@ -59,3 +59,10 @@ Source input: lời Mạnh 31/10 qua giám sát + design doc `docs/superpowers/s
 - Thứ tự áp: code của hàng chịu được 064 chưa áp (AC-5); dữ liệu vùng mới chỉ có phường sau khi áp 064 + có ranh giới S04.
 - Known limits — thu phạm vi sau khi hết trần 3 lượt chấm (Mạnh 31/10 «Đồng ý theo lời khuyên»):
   - AC-9 cũ (bộ test chung `pipeline/` và `scripts/` xanh): ship không có bằng chứng máy của lượt chấm hồ sơ. Ba lượt đỏ vì ba lý do môi trường (test hết giờ và rớt kết nối khi DB máy thu quá tải bởi các bản chép 3,4 GB chạy song song; một tin S06 trôi phường sau lượt thu bù), không lượt nào do code của hàng. CI của PR chạy lại hai bộ này trên môi trường riêng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-2: còn đoạn tra mã dài thừa trong trang tên thị trường của app, chưa dọn.
+  - Ngoài-3: trang chất lượng dữ liệu /ops/quality có thể hiện trùng thị trường tối đa 7 ngày sau khi áp 064.
+  - Ngoài-4: chạy bước chuyển S06 trước khi áp 064 hay nạp phường thì tin vùng mới tạm không có phường mà không có cảnh báo.
+  - Ngoài-5: ca kiểm nạp phường dùng snapshot giả viết tay, chưa đi qua bộ ghi thật của bộ thu.
+  - Ngoài-6: chiều đỏ của ca đổi mã chưa ghim tiền đề có mã dài, có thể qua rỗng khi dữ liệu đổi.
+  - Ngoài-7: phép quét chuỗi thành phố cứng chỉ bắt một số dạng viết.

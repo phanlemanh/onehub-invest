@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c470eb64ba776900fb1b2cf08e36cf85766bcbf3
-human_signoff:
+human_signoff: Mạnh 2026-11-01
 ---
 
 # Evidence Report: s06-vung-moi-len-canonical
