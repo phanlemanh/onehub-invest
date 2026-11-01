@@ -155,17 +155,21 @@ function boDau(s: string): string {
  * («duong», «pho») có thể là tên thật — «Duong Lam» là «Đường Lâm» hay «Dương Lâm» — nên giữ CẢ HAI cách đọc (HD2).
  * Trước đó bỏ phần chỉ vị trí (hồ sơ chuan-hoa-o-duong): cụm «Ngõ 254», «Hẻm 80/66», «Số 10 Ngõ 9» ở đầu chuỗi, rồi đuôi
  * địa chỉ sau dấu phẩy; số nhà trần («175 Lạc Long Quân») giữ hai cách đọc, trừ «3 Tháng 2» — số là một phần tên đường.
- * Ô chỉ có số hay chỉ có từ vị trí («Số 8», «Ngõ») không mang tên đường → không khoá nào. Dấu giữ tới lúc xuất khoá.
+ * Ô chỉ có số hay chỉ có từ vị trí («Số 8», «Ngõ») không mang tên đường → không khoá nào. Dấu giữ tới lúc xuất khoá;
+ * trước hai phép thử «từ vị trí trần» và «tháng <số>», dạng không dấu hay gõ sai dấu («Ngo», «Ngỏ», «30 thang 4») được đưa về
+ * dạng có dấu, nên ra đúng như «Ngõ», «30 Tháng 4».
  */
 export function khoaDuong(v: string): string[] {
-  const t = v
+  let t = v
     .normalize("NFC")
     .trim()
     .toLowerCase()
     .replace(/ð/g, "đ")
     .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
     .replace(/,.*$/u, "")
-    .trim();
+    .trim()
+    .replace(/(^|\s)thang(?=\s+\d)/gu, "$1tháng");
+  if (/^(?:so|ngo|ngach|hem|kiet)$/.test(boDau(t))) t = "ngõ";
   if (/^(?:số|ngõ|ngách|hẻm|kiệt)?$/u.test(t)) return [];
   const soNha = t.match(/^\d[\p{L}\d/-]*\s+(.+)$/u);
   const cachDoc = soNha && !/^tháng\s+\d/u.test(soNha[1]) ? [soNha[1], t] : [t];
