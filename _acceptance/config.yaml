@@ -79,6 +79,7 @@ executors:
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
+    nap_lai_ba_luot_fk: "cd pipeline && node --test scripts/nap-lai-ba-luot-fk.test.mjs"   # reconcile-tin-con-anh — đối chứng 039 đọc FK từ lược đồ, tin còn ảnh, ROLLBACK
     nap_lai: "cd pipeline && node --test scripts/nap-lai.test.mjs"   # PL14: khoá tin bền, đối soát không xoá, quét DELETE — không cần DB
     nap_lai_db: "cd pipeline && node --test scripts/nap-lai-db.itest.mjs"   # PL14: migration 044 + đối soát + đổi khoá + listing nghỉ + sync con, trong giao dịch ROLLBACK — cần DB local :5433
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
@@ -180,6 +181,7 @@ executors:
     cloud_catchup_inquiry: "node scripts/check-cloud-catchup.mjs wanted-thanh-inquiry"   # wanted-thanh-inquiry AC-6 — tệp SQL bắt kịp cloud có ĐO TRƯỚC + ÁP
     ten_cu_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/con-ten-cu.mjs"   # wanted-thanh-inquiry AC-2/4/5/6 — tên cũ wanted chỉ còn ở lịch sử; đích sinh, docs sống, khối ÁP
     vocab_db_rieng: "node _acceptance/wanted-thanh-inquiry/rang/db-rieng.mjs"   # wanted-thanh-inquiry AC-3 — DB riêng dựng từ db/migrations, chạy vocab-db.itest rồi xoá (luật đợt 27/10: không thử migration chưa gộp trên oneinvest)
+    vocab_db_doi_chung: "node _acceptance/vocab-db-itest-xanh-tren-main/rang/doi-chung.mjs"   # vocab-db-itest-xanh-tren-main AC-3 — bản vocab-db.itest của main 82a53e0a đỏ đúng bốn ca trên cùng DB, bản hiện tại xanh
     on12_tien_de: "node _acceptance/khu-vuc-vung-moi-s06/rang/on12-tien-de.mjs"   # khu-vuc-vung-moi-s06 E2: đếm ảnh chụp S06 vùng mới rồi chạy ON12-AC-7 trên DB :5433
     fixture_goc_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/fixture-goc.mjs"   # wanted-thanh-inquiry AC-7 — bản chụp markup trước vòng dựng lại được từ sha main ghi trong nó
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
