@@ -8,10 +8,13 @@
     <string>bash</string>
     <string>__ROOT__/pipeline/scripts/weekly-with-jitter.sh</string>
     <string>hanoi</string>
+    <string>hcmc</string>
   </array>
-  <!-- Chủ nhật 19:30 (trong cửa sổ CCP 19-23; script tự jitter ≤30 phút) -->
+  <!-- 3110-7: hằng ngày 19:30 (trong cửa sổ CCP 19-23; script tự jitter ≤30 phút;
+       weekly-with-jitter giữ cổng vòng đời S01 fail-closed). Hai thành phố:
+       weekly-collect.sh chạy discovery đa query khu vực + listing mỗi city. -->
   <key>StartCalendarInterval</key>
-  <dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>19</integer><key>Minute</key><integer>30</integer></dict>
+  <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>30</integer></dict>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/launchd-collector.log</string>
   <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/launchd-collector.log</string>
 </dict>
