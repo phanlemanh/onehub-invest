@@ -5,7 +5,7 @@ slug: n1-dem-nguoi-tach
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T06:10:00Z
 approved_by:
@@ -73,3 +73,13 @@ Trục (quét hình thái, preset test-matrix):
 - OOS-4: Ghi lại dòng `danh-ba-sdt:n1` đã ghi trên máy thu trước khi đổi — lượt đêm kế ghi đè dòng của ngày ấy.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Mô tả kỳ vọng của E4 ghi số cặp chưa gộp S03 = 1, trong khi ca test kiểm 2.
+  - Ngoài-2: Mô tả kỳ vọng của E9 gọi người đã tách là pS, ca test dùng pZ.
+  - Ngoài-3: Trùng Ngoài-1 — mô tả E4 lệch số với ca test.
+  - Ngoài-4: Việc bước đêm in dòng số cặp đã tách chỉ được kiểm qua nội dung mã, chưa chạy bước đêm thật.
+  - Ngoài-5: Bản lượt 2 của Ngoài-1.
+  - Ngoài-6: Bản lượt 2 của Ngoài-2.
+  - Ngoài-7: Bản lượt 2 của Ngoài-1.
+  - Ngoài-8: Bản lượt 2 của Ngoài-4.
