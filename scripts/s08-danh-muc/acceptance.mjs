@@ -98,7 +98,7 @@ async function modeNapHaiLan() {
     check(Number(by["GIA-A-01"]?.land_area) === 100.5 && Number(by["GIA-A-01"]?.number_of_room) === 2, "chuỗi số hợp lệ đổi được ('100,5' → 100.5, '2' → 2)");
     check(by["GIA-A-02"]?.number_of_room === null && by["GIA-A-02"]?.land_area === null, "should-NOT-fire: 'S' và '' về NULL, không thành số");
     check(by["GIA-A-03"]?.number_of_room === null && by["GIA-A-03"]?.apartment_price === null, "should-NOT-fire: '2PN' và giá rác về NULL");
-    check(/0 S08 căn|S08 căn/.test(out1) && /\+1 detail bỏ/.test(out1), "log lượt 1 đếm căn và 1 detail bỏ");
+    check(/0 S08 căn|S08 căn/.test(out1) && /\+1 detail, \+\d+ catalog bỏ/.test(out1), "log lượt 1 đếm căn và detail/catalog bỏ (2610-22 định dạng mới)");
     const r2 = run(dir);
     const out2 = r2.stdout + r2.stderr;
     console.log(`lượt 2: exit ${r2.status} · ${(out2.match(/(\d+) S08 căn/) ?? ["?"])[0]}`);
