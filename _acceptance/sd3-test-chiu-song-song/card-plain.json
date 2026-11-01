@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ test người bán theo số điện thoại (SD3) không còn treo 120 giây khi các bộ test chạy song song: mỗi ca tự dựng một bản rỗng riêng trong giao dịch, không xếp hàng khoá dùng chung 33033.",
+  "analyst_plain": "Bốn phép kiểm của hàng đạt ở lượt hai và được mang sang lượt ba; lượt ba (sau khi gộp bản sửa ca app chập chờn #257) chạy lại các bộ test chung và đều xanh. Một phát hiện trong hợp đồng ở AC-3: tiêu chí ghi «chỉ hai câu đọc schema đổi» nhưng bản sửa còn đổi ca đối chứng đỏ (bỏ lệnh DROP — chính là sửa lỗi nặng P0 của bước phản biện), và phép đo chỉ đếm chữ «public» nên không thấy chỗ đổi thứ ba; người phản bác chưa kiểm được mục này."
+}
