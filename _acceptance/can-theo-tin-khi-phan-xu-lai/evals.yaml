@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: can-theo-tin-khi-phan-xu-lai
+# Itest mới pipeline/scripts/can-theo-tin.itest.mjs (CT-AC-n): DB thử (db/db-thu.sh), mọi ca BEGIN … ROLLBACK, khoá 33033,
+# nạp 045/059/063 + 066 qua lib/nap-045.mjs. Chiều đỏ nạp bản hàm 063 trong cùng giao dịch.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.can_theo_tin
+    paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs, pipeline/lib/nap-045.mjs]
+    expected: "exit 0; ca 'CT-AC-1' chạy đủ ma trận 8 ô (máy/người × B sống/nghỉ × PB cùng/khác căn PA): PB.bedrooms = giá trị phân xử của B, enrichment_log PB có dòng src enrich-proposals với offer_ids chứa B; ô PB có sẵn giữ nguyên; ca 'CT-AC-1 chiều đỏ' với bản 063 ném 'CT-AC-1: căn tin chung bài đăng không nhận theo' ở cả 8 ô"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.can_theo_tin
+    paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs]
+    expected: "exit 0; ca 'CT-AC-2' (ma trận 8 ô): sau hoàn tác PB.bedrooms NULL khi không tin khác của PB mang giá trị, giữ khi có tin D của PB mang cùng giá trị; PB có dòng enrich-revert; 'CT-AC-2 chiều đỏ' bản 063 ném 'CT-AC-2: căn tin chung bài đăng giữ giá trị đã rút'"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.can_theo_tin
+    paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs]
+    expected: "exit 0; ca 'CT-AC-3': áp + hoàn tác đề xuất của C bằng bản 066 và bản 063 cho cùng md5 bảng properties sau áp và sau hoàn tác, cùng cột của C"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.can_theo_tin
+    paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/can-theo-tin.itest.mjs]
+    expected: "exit 0; ca 'CT-AC-4': fixture lệch (căn tin chung trống, đề xuất applied) → chạy khối sửa một lần: n ô điền = số ô trống của fixture, 1 dòng ops_audit can-theo-tin:sua-mot-lan-066 với detail {properties, cells}; chạy lần hai 0 ô, vẫn 1 dòng ops_audit"
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.can_theo_tin_ap_hai_lan
+    paths: [db/migrations/066_can_theo_tin.sql, _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs]
+    expected: "exit 0; trên DB thử dựng lại từ đủ migration (db/db-thu.sh, gồm 066): áp 066 lần hai thoát 0, định nghĩa apply_enrichment/revert_enrichment và số dòng ops_audit can-theo-tin:* trước = sau; DB oneinvest không bị chạm (đếm ops_audit can-theo-tin:* trên oneinvest = 0 trước và sau)"
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pb_chung_bai
+    paths: [db/migrations/066_can_theo_tin.sql, pipeline/scripts/phat-bieu-chung-bai.itest.mjs]
+    expected: "exit 0; mọi ca PB-AC-n xanh với 066 nạp"
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; cd pipeline && npm test xanh"
