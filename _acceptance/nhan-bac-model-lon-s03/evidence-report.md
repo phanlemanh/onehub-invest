@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ec5c81cd6a5d65a79d15af0d8714600efedad82a
+verified_commit: d5fd5b065a8d397fb70d197dc0913183c1106355
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -184,3 +184,7 @@ Round 2: E2–E9 pass; E10 đề xuất PASS, chờ người quyết ở Cổng 
 ### Re-pin lần 1 — 2026-11-01, do gộp main 5cbf3e23 (#257) trước chữ ký
 run_id: repin-20261101T042752Z-99428
 sha: ec5c81cd6a5d65a79d15af0d8714600efedad82a · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-11-01, do sửa CI agent (nạp textHash lúc chạy, 7e3ac081) + gộp main a5fd5829 — chỉ đổi cách import
+run_id: repin-20261101T060558Z-60921
+sha: d5fd5b065a8d397fb70d197dc0913183c1106355 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-10
