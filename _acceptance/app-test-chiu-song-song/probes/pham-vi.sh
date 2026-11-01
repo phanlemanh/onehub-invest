@@ -16,12 +16,33 @@ cho_phep() {
     *) return 1 ;;
   esac
 }
+[ "$base" != "$(git rev-parse HEAD)" ] || { echo "DIEM RE BANG HEAD — phép đo mù"; exit 2; }
+# Bốn hồ sơ đã ký chỉ được nhận dòng ghim lại của làn máy: run-log chỉ THÊM dòng kind repin; evidence-report chỉ đổi
+# verified_commit và thêm mục «### Re-pin» (run_id, sha, dòng trống). Đọc diff -U0 từ stdin, in dòng lạ.
+kiem_ghim() {  # $1 = run-log|evidence
+  awk -v loai="$1" '
+    /^(\+\+\+|---) / || /^@@/ || /^diff / || /^index / { next }
+    /^-/ { if (loai == "evidence" && $0 ~ /^-verified_commit: /) next; print "SUA HO SO DA KY: " $0; next }
+    /^\+/ { if (loai == "run-log" && $0 ~ /"kind":"repin"/) next
+            if (loai == "evidence" && ($0 ~ /^\+verified_commit: / || $0 ~ /^\+### Re-pin / || $0 ~ /^\+run_id: / || $0 ~ /^\+sha: / || $0 ~ /^\+$/)) next
+            print "SUA HO SO DA KY: " $0 }'
+}
 ds=$(git diff --name-only "$base" HEAD) || { echo "KHONG LIET KE DUOC TEP DOI"; exit 2; }
 [ -n "$ds" ] || { echo "KHONG CO TEP DOI — phép đo mù"; exit 2; }
 bad=0
 while IFS= read -r f; do [ -z "$f" ] && continue
   if cho_phep "$f"; then echo "ok $f"; else echo "NGOAI PHAM VI $f"; bad=1; fi
 done <<< "$ds"
+for h in deals-loai-tin-phi-ly deals-phi-ly-test-theo-view dq-moi-nhat-moi-kiem sdt-luu-goc-e164; do
+  for t in run-log evidence; do
+    tep="_acceptance/$h/$([ "$t" = run-log ] && echo run-log.jsonl || echo evidence-report.md)"
+    la=$(git diff -U0 "$base" HEAD -- "$tep" | kiem_ghim "$t")
+    [ -z "$la" ] || { echo "$la"; bad=1; }
+  done
+done
+# Đối chứng: một dòng verdict bị đổi trong evidence-report đã ký → bắt.
+gia=$(printf '%s\n' '--- a/x' '+++ b/x' '@@ -3 +3 @@' '-verdict: PASS' '+verdict: REJECT' | kiem_ghim evidence)
+if echo "$gia" | grep -q "SUA HO SO DA KY"; then echo "doi chung: đổi verdict → SUA HO SO DA KY"; else echo "DOI CHUNG KHONG BAT (ghim)"; bad=1; fi
 for f in _acceptance/app-test-chiu-song-song/probes/song-song.mjs; do
   grep -nE "supabase|SUPABASE_|mgmtExec" "$f" && { echo "CHAM CLOUD $f"; bad=1; }
 done

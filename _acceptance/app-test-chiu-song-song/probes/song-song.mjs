@@ -45,7 +45,12 @@ setTimeout(() => {
   process.exit(3);
 }, TRAN_PROBE_MS).unref();
 
-const base = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+// Đường nền ghim: đỉnh nhánh chính lúc hàng rẽ (cha của commit mã đầu tiên) — không trôi khi nhánh gộp main hay CI nông.
+const base = "d96640c67c8889d4e9203860b8cd1ebd5d6c30ad";
+if (spawnSync("git", ["cat-file", "-e", `${base}^{commit}`], { cwd: ROOT }).status !== 0) {
+  console.error(`KHONG CO SHA DUONG NEN ${base} (clone nông?) — probe không chạy, không tính là xanh`);
+  process.exit(2);
+}
 const doc = (f) => readFileSync(path.join(ROOT, f), "utf8");
 const cuCua = (f) => execFileSync("git", ["show", `${base}:${f}`], { cwd: ROOT, encoding: "utf8" });
 for (const f of Object.values(TEP)) assert.notEqual(cuCua(f), doc(f), `${f} chưa đổi so merge-base`);
@@ -60,7 +65,8 @@ function chayNen(f, tranMs, tranTienTrinhMs) {
   const { cwd, args } = lenh(f, tranMs);
   const t0 = Date.now();
   return new Promise((res) => {
-    const ch = spawn("node", args, { cwd, env: { ...process.env, DATABASE_URL: DB_URL } });
+    // PGAPPNAME: node-pg đặt application_name — phiên quan sát nhận ra backend của từng tệp.
+    const ch = spawn("node", args, { cwd, env: { ...process.env, DATABASE_URL: DB_URL, PGAPPNAME: nhanTep(f) } });
     let out = "";
     let biGiet = false;
     const g = setTimeout(() => { biGiet = true; ch.kill("SIGKILL"); }, tranTienTrinhMs);
@@ -69,6 +75,7 @@ function chayNen(f, tranMs, tranTienTrinhMs) {
     ch.on("close", (code) => { clearTimeout(g); res({ f, code, out, biGiet, giay: (Date.now() - t0) / 1000 }); });
   });
 }
+const nhanTep = (f) => `atss-${path.basename(f).replace(/\..*$/, "")}-${f.startsWith("app/") ? "app" : "pipe"}`;
 const SO_CA = { [TEP.dealsApp]: 5, [TEP.dq]: 6, [TEP.dealsPipe]: 4 };
 const xanh = (r, ten) => {
   console.log(`# ${ten} ${r.f}: thoát ${r.code}, ${r.giay.toFixed(1)} s`);
@@ -114,6 +121,31 @@ if (MODE === "chan") {
       assert.ok(r.giay - ra[i].giay >= 2, `${r.f} dưới B ${r.giay} s so nền ${ra[i].giay} s — không thấy đã chờ DDL`);
     }
 
+    // Phiên chặn C: ACCESS SHARE suốt lượt trên MỌI quan hệ public mà ba tệp nhắc tên (bảng lẫn view) — câu nào của tệp
+    // còn xin ACCESS EXCLUSIVE trên public (DROP/ALTER/CREATE OR REPLACE ghi thẳng public, hay rơi về public qua search_path)
+    // sẽ treo. Đối chứng dương: bản deals app đột biến DROP thẳng public.stg_zalo_posts → treo.
+    const QUAN_HE = ["sale_offer_records", "sale_offers", "sellers", "v_ruler_p2_area", "v_ruler_p2", "stg_zalo_posts", "areas",
+      "properties", "property_offers", "registry_aliases", "parties", "ref_lookup", "ops_audit", "dq_check_results"];
+    const coMat = (await (await moPhien()).query(
+      `SELECT array_agg(t) a FROM unnest($1::text[]) t WHERE to_regclass('public.' || t) IS NOT NULL`, [QUAN_HE])).rows[0].a;
+    const cc = await moPhien();
+    await cc.query("BEGIN");
+    await cc.query(`LOCK TABLE ${coMat.map((t) => `public.${t}`).join(", ")} IN ACCESS SHARE MODE`);
+    const dotC = TEP.dealsApp.replace(/\.test\.tsx$/, `.dotc-${process.pid}.tsx`);
+    const thanApp = doc(TEP.dealsApp);
+    assert.ok(thanApp.includes("DROP TABLE stg_zalo_posts CASCADE"), "đối chứng C: không thấy câu DROP stg_zalo_posts để đột biến");
+    writeFileSync(path.join(ROOT, dotC), thanApp.replace("DROP TABLE stg_zalo_posts CASCADE", "DROP TABLE public.stg_zalo_posts CASCADE"));
+    TAM.push(path.join(ROOT, dotC));
+    // Tuần tự: ACCESS EXCLUSIVE đang xếp hàng của bản đột biến sẽ chặn cả ACCESS SHARE mới của bản HEAD.
+    const rC = await Promise.all(Object.values(TEP).map((f) => chayNen(f, 30_000, 60_000)));
+    const rDot = await chayNen(dotC, 5_000, 20_000);
+    await dong(cc);
+    console.log(`# phiên C giữ ACCESS SHARE trên ${coMat.length} quan hệ public`);
+    for (const r of rC) { xanh(r, "HEAD dưới C"); assert.ok(r.giay < 30, `${r.f} dưới C ${r.giay} s`); }
+    console.log(`# đột biến DROP public.stg_zalo_posts dưới C: thoát ${rDot.code}, ${rDot.giay.toFixed(1)} s, bị giết: ${rDot.biGiet}`);
+    assert.ok(rDot.code !== 0 && (rDot.biGiet || /timed out|cancelled/i.test(rDot.out)),
+      `DOI CHUNG KHONG BAT (C): bản đột biến không treo dưới phiên C:\n${rDot.out.slice(-800)}`);
+
     // Đối chứng: bản merge-base của từng tệp (tên không khớp glob *.test.* của npm test) dưới A2 phải treo tới trần.
     const cu = Object.values(TEP).map((f) => {
       const tam = f.replace(/\.test\.(tsx|mjs)$/, `.cu-${process.pid}.$1`);
@@ -122,12 +154,29 @@ if (MODE === "chan") {
       return tam;
     });
     a = await moChan();
+    const pidA2 = (await a.query("SELECT pg_backend_pid() p")).rows[0].p;
+    // Phiên quan sát: ghim lý do treo — backend của tệp nào đang chờ khoá mà A2 giữ (pg_blocking_pids chứa pid A2).
+    const qs = await moPhien();
+    const biChan = new Set();
+    let quanSat = true;
+    const vongQs = (async () => {
+      while (quanSat) {
+        const { rows } = await qs.query(`SELECT application_name n FROM pg_stat_activity
+          WHERE application_name LIKE 'atss-%' AND wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid))`, [pidA2]);
+        for (const { n } of rows) biChan.add(n);
+        await new Promise((x) => setTimeout(x, 300));
+      }
+    })();
     const rc = await Promise.all(cu.map((f) => chayNen(f, 5_000, 20_000)));
+    quanSat = false;
+    await vongQs;
     await dong(a);
+    console.log(`# backend bị A2 (pid ${pidA2}) chặn: ${JSON.stringify([...biChan].sort())}`);
     for (const r of rc) {
       console.log(`# merge-base dưới A2 ${r.f}: thoát ${r.code}, ${r.giay.toFixed(1)} s, bị giết: ${r.biGiet}`);
       assert.notEqual(r.code, 0, `DOI CHUNG KHONG BAT: ${r.f} vẫn xanh dưới phiên chặn`);
       assert.ok(r.biGiet || /timed out|cancelled/i.test(r.out), `${r.f} đỏ mà không vì treo:\n${r.out.slice(-800)}`);
+      assert.ok(biChan.has(nhanTep(r.f)), `DOI CHUNG KHONG BAT: ${r.f} treo mà không thấy chờ khoá của A2`);
     }
     console.log("CHAN OK");
   } finally {

@@ -24,8 +24,10 @@ trong giao dịch. Hàng này rút khuôn đó thành thư viện dùng chung `p
 
 - AC-1: Given một phiên khác đang giữ khoá tư vấn 33033 và khoá dòng trên `sale_offer_records` + `dq_check_results` trong
   giao dịch mở, When chạy ba tệp test cùng lúc, Then cả ba xanh đủ số ca dưới 30 giây; given một phiên giữ ACCESS EXCLUSIVE
-  trên ba bảng nguồn 3 giây rồi nhả, Then cả ba xanh sau khi chờ đúng lúc đó (≥ 2,5 giây, dưới 30 giây, không deadlock); bản
-  merge-base của từng tệp dưới phiên chặn đầu thì treo tới trần (đối chứng).
+  trên ba bảng nguồn 3 giây rồi nhả, Then cả ba xanh sau khi chờ đúng lúc đó (≥ 2,5 giây và dài hơn lượt không bị chặn ≥ 2 giây, dưới 30 giây, không
+  deadlock); given một phiên giữ ACCESS SHARE suốt lượt trên mọi bảng và view public mà ba tệp nhắc tên, Then cả ba xanh dưới
+  30 giây (không câu nào của tệp xin khoá độc quyền trên public); bản merge-base của từng tệp dưới phiên chặn đầu thì treo vì
+  chờ khoá của chính phiên ấy (đối chứng).
 - AC-2: Given lược đồ riêng mà từng tệp khai (danh sách bảng rút nguyên văn từ tệp) cùng phần việc của ca (refresh-bait-gap,
   đọc view tin/thước/sellers/tin gốc, ghi rồi đọc kết quả kiểm), When đo khoá của phiên, Then không khoá tư vấn nào, không
   khoá nào mạnh hơn ACCESS SHARE trên đối tượng schema `public`, không khoá nào trên view `public`.
@@ -36,7 +38,8 @@ trong giao dịch. Hàng này rút khuôn đó thành thư viện dùng chung `p
   giữ 33033, ROLLBACK không để lại lược đồ); ba bản đột biến của thư viện (giữ 33033, bỏ ràng buộc, dãy dùng chung) đều đỏ
   đúng lý do.
 - AC-5: Given nhánh so merge-base, When liệt kê tệp đổi, Then chỉ ba tệp test, thư viện + test của nó, hồ sơ này,
-  `_acceptance/config.yaml`, tệp sinh và bản ghim lại của bốn hồ sơ đã ký trỏ các tệp test ấy; probe không gọi Supabase.
+  `_acceptance/config.yaml`, tệp sinh và bản ghim lại của bốn hồ sơ đã ký trỏ các tệp test ấy — ở bốn hồ sơ đó chỉ dòng
+  ghim của làn máy (thêm dòng `repin`, đổi `verified_commit`, thêm mục «Re-pin»); probe không gọi Supabase.
 
 ## Coverage
 
@@ -61,4 +64,5 @@ trong giao dịch. Hàng này rút khuôn đó thành thư viện dùng chung `p
 - Bản rỗng KHÔNG chép trigger, khoá ngoại, RLS, dữ liệu (như sd3).
 - Probe E1 chạy trên DB thử riêng (khoá tư vấn chỉ tranh nhau trong cùng database); mọi phiên probe đặt hạn phía máy chủ
   (idle_in_transaction 30 s, statement 60 s, lock 3 s), cả probe trần 900 giây gồm dựng DB thử, đóng phiên ở finally.
+- Đường nền so sánh của probe ghim sha d96640c6 (đỉnh nhánh chính lúc hàng rẽ), không dùng merge-base trôi.
 - Mã viết trước hồ sơ (commit 2a4d7b4d) — hồ sơ chốt phạm vi trên mã đã có; ghi ở sổ quyết định.
