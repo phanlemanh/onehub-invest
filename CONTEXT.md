@@ -333,7 +333,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 
 | Thuật ngữ | Code | RESO | Cột bị ràng | Giá trị (code «nhãn») |
 |---|---|---|---|---|
-| Loại tin | `kind` | PropertyType | `sale_offers.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
+| Loại tin | `kind` | PropertyType | `sale_offers.kind`, `silver_labels.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
 | Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
@@ -345,7 +345,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» |
 | Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
-| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Ý định tin | `listing_intent` | local | `silver_labels.listing_intent` | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
 | Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |

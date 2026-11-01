@@ -6,7 +6,7 @@ Ngày 2026-10-31 · Hạng T3 (migration 065) · Dãy U1 · Hàng KC1 của `doc
 
 Mạnh 31/10: «dùng một model lớn vừa phân loại vừa gắn nhãn để cải thiện Kev». Lệnh mới đọc bài S03 (`stg_zalo_posts`, gạt
 bài thử bằng `loadStgPosts`), hỏi model, và ghi **nhãn bạc** — ý định tin (`listing_intent`: offer · inquiry · not_listing
-· unknown), loại (`sale` · `rent_lt` · rỗng), xác suất, câu trích nguyên văn — vào **bảng riêng** `s03_silver_labels`
+· unknown), loại (`sale` · `rent_lt` · rỗng), xác suất, câu trích nguyên văn — vào **bảng riêng** `silver_labels`
 (migration 065). Không ghi dữ liệu canonical (luật 7): nhãn bạc là đề xuất, dữ liệu huấn luyện KC2 và nguồn đề xuất PL5.
 
 ## Đầu vào có sẵn
@@ -19,7 +19,7 @@ bài thử bằng `loadStgPosts`), hỏi model, và ghi **nhãn bạc** — ý �
 
 ## Thiết kế
 
-**Bảng `s03_silver_labels` (065, chỉ máy thu — không lên cloud):** `label_id` · `post_id` · `text_hash` (băm chữ đã
+**Bảng `silver_labels` (065, chỉ máy thu — không lên cloud):** `label_id` · `post_id` · `text_hash` (băm chữ đã
 chuẩn hoá — bài đổi chữ thì nhãn mới) · `model` (vd `anthropic:claude-haiku-5-5`, `openai:gpt-6-luna`,
 `mtplx:qwen3.8-27b-local`) · `prompt_version` · `listing_intent` (FK `ref_listing_intent` theo sổ từ vựng) · `kind` ·
 `probability` · `probabilities jsonb` · `quote` · `quote_ok` (null khi backend không trả trích) · `json_ok` ·

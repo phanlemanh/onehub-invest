@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans. Steps dùng checkbox (`- [ ]`).
 
-**Goal:** Lệnh nhãn bạc S03 với ba backend (Qwen local, Claude Haiku 5.5 và OpenAI Decisions qua Vercel AI Gateway) ghi vào bảng riêng `s03_silver_labels`, kèm chế độ đo trên tập vàng — không ghi canonical.
+**Goal:** Lệnh nhãn bạc S03 với ba backend (Qwen local, Claude Haiku 5.5 và OpenAI Decisions qua Vercel AI Gateway) ghi vào bảng riêng `silver_labels`, kèm chế độ đo trên tập vàng — không ghi canonical.
 
 **Spec:** `docs/superpowers/specs/2026-10-31-nhan-bac-model-lon-s03-design.md` · hợp đồng AC-1..10 (Mạnh duyệt 01/11; sửa ở Gate 1.5: đi qua Gateway, dùng lại AI SDK của `agent/`).
 
@@ -18,14 +18,14 @@
 
 ## Global Constraints
 
-- Không ghi canonical/stg; chỉ `INSERT … ON CONFLICT DO NOTHING` vào `s03_silver_labels`.
+- Không ghi canonical/stg; chỉ `INSERT … ON CONFLICT DO NOTHING` vào `silver_labels`.
 - Chữ gửi Gateway = `stripPII(text)` — không `group_name`, `sender_name`, `conversation_id`, tên nguồn.
 - Khoá chỉ `AI_GATEWAY_API_KEY` qua `process.env`; không đọc `.env` bằng tay; test dùng máy chủ giả, không gọi mạng.
 - Test DB đặt đuôi `.itest.ts`, BEGIN … ROLLBACK, chỉ in số.
 
-### Task 1: Migration 065 `s03_silver_labels` (AC-1)
+### Task 1: Migration 065 `silver_labels` (AC-1)
 
-**Files:** Create `db/migrations/065_s03_silver_labels.sql` (skill `/new-migration`); Create `agent/tests/nhan-bac-s03-db.itest.ts` (NB-AC-1).
+**Files:** Create `db/migrations/065_silver_labels.sql` (skill `/new-migration`); Create `agent/tests/nhan-bac-s03-db.itest.ts` (NB-AC-1).
 **Phục vụ:** E1. **Verify:** `cd agent && node --import tsx --test tests/nhan-bac-s03-db.itest.ts`.
 
 - [ ] Ca NB-AC-1 (nạp 065 hai lần, cột, khoá duy nhất, CHECK + ref_field_lookup của listing_intent, không trong FILL sync-cloud, chiều đỏ) → đỏ; 065 → xanh; áp DB local; commit.

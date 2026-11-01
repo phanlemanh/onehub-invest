@@ -7,7 +7,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.nhan_bac_db
     paths: [db/migrations/065_*.sql, agent/tests/nhan-bac-s03-db.itest.ts, pipeline/sync-cloud.mjs]
-    expected: "exit 0; ca NB-AC-1 trên DB máy thu trong transaction ROLLBACK: nạp 065 hai lần không lỗi; bảng s03_silver_labels có đủ cột, khoá duy nhất (post_id, text_hash, model, prompt_version), listing_intent tham chiếu sổ từ vựng (chèn giá trị lạ → lỗi khoá ngoại, đối chứng dương); danh sách bảng sync-cloud không chứa s03_silver_labels (đối chứng: thêm bảng vào bản chép danh sách → ca đỏ ghim «NB-AC-1 nhãn bạc lên cloud»)"
+    expected: "exit 0; ca NB-AC-1 trên DB máy thu trong transaction ROLLBACK: nạp 065 hai lần không lỗi; bảng silver_labels có đủ cột, khoá duy nhất (post_id, text_hash, model, prompt_version), listing_intent tham chiếu sổ từ vựng (chèn giá trị lạ → lỗi khoá ngoại, đối chứng dương); danh sách bảng sync-cloud không chứa silver_labels (đối chứng: thêm bảng vào bản chép danh sách → ca đỏ ghim «NB-AC-1 nhãn bạc lên cloud»)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.nhan_bac_db
     paths: [agent/scripts/nhan-bac-run.ts, agent/src/agents/nhan-bac-s03.ts, agent/tests/nhan-bac-s03-db.itest.ts]
-    expected: "exit 0; ca NB-AC-3 (ROLLBACK, lô 50 bài thật, backend giả): count + md5(string_agg) của sale_offer_records, sale_offers, properties, listing_records, stg_zalo_posts, field_assertions trước = sau; s03_silver_labels thêm 50; đối chứng dương: bản đột biến ghi thêm một dòng stg → bộ so đỏ ghim «NB-AC-3 ghi ngoài bảng nhãn bạc»; chỉ in số"
+    expected: "exit 0; ca NB-AC-3 (ROLLBACK, lô 50 bài thật, backend giả): count + md5(string_agg) của sale_offer_records, sale_offers, properties, listing_records, stg_zalo_posts, field_assertions trước = sau; silver_labels thêm 50; đối chứng dương: bản đột biến ghi thêm một dòng stg → bộ so đỏ ghim «NB-AC-3 ghi ngoài bảng nhãn bạc»; chỉ in số"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4

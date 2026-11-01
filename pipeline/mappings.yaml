@@ -262,7 +262,7 @@ enums:
   kind:
     term_vi: Loại tin
     dd_field: PropertyType
-    columns: [sale_offers.kind]
+    columns: [sale_offers.kind, silver_labels.kind]
     nullable: false
     values:
       - { code: sale, label_vi: Bán, dd_lookup: Residential }
@@ -417,7 +417,7 @@ enums:
     local: true
     rationale: "extension ListingIntent (ADR-0013 §9) — yêu cầu là bên mua, đối xứng với listing bên bán (ROADMAP §3 #21); không phải Property, gần nhất SavedSearch"
     checked_on: "2026-10-27"
-    columns: []
+    columns: [silver_labels.listing_intent]
     nullable: false
     values:
       - { code: offer, label_vi: Tin rao }

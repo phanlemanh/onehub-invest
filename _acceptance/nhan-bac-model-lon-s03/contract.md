@@ -22,9 +22,9 @@ không rời máy; luật 7 giữ (model không ghi canonical). Bảng nhãn b�
 
 ## Criteria
 
-- AC-1: Given DB máy thu, When áp migration 065 hai lần, Then có bảng `s03_silver_labels` (cột theo design doc, `listing_intent` khoá ngoại sổ từ vựng, khoá duy nhất post_id + text_hash + model + prompt_version) và lần hai không lỗi; `sync-cloud` không có bảng này trong danh sách đẩy.
+- AC-1: Given DB máy thu, When áp migration 065 hai lần, Then có bảng `silver_labels` (cột theo design doc, `listing_intent` khoá ngoại sổ từ vựng, khoá duy nhất post_id + text_hash + model + prompt_version) và lần hai không lỗi; `sync-cloud` không có bảng này trong danh sách đẩy.
 - AC-2: Given một lô bài S03 và backend giả, When chạy `agent/scripts/nhan-bac-run.ts --model <m>`, Then mỗi bài ghi đúng một dòng; chạy lại cùng tham số thêm 0 dòng; bài đổi chữ (text_hash khác) ghi dòng mới; `--thu` ghi 0 dòng.
-- AC-3: Given DB máy thu trong transaction ROLLBACK, When chạy lệnh trên lô thật với backend giả, Then số dòng và băm nội dung của `sale_offer_records`, `sale_offers`, `properties`, `listing_records`, `stg_zalo_posts`, `field_assertions` không đổi — chỉ `s03_silver_labels` có dòng mới. (cross-layer)
+- AC-3: Given DB máy thu trong transaction ROLLBACK, When chạy lệnh trên lô thật với backend giả, Then số dòng và băm nội dung của `sale_offer_records`, `sale_offers`, `properties`, `listing_records`, `stg_zalo_posts`, `field_assertions` không đổi — chỉ `silver_labels` có dòng mới. (cross-layer)
 - AC-4: Given bài có SĐT, email, link zalo và nhóm có tên, When gửi tới backend cloud (giả, ghi lại thân yêu cầu), Then thân yêu cầu không chứa chuỗi SĐT, email, link nào của bài, không chứa `group_name`, `sender_name`, `conversation_id`.
 - AC-5: Given trả lời model có câu trích không nằm trong chữ bài (đã gạt), When ghi nhãn, Then `quote_ok = false`; câu trích có thật → `true`; backend Decisions (không trả trích) → `quote` và `quote_ok` rỗng.
 - AC-6: Given trả lời JSON hỏng, giá trị lạ, từ chối, lỗi mạng hoặc quá giờ, When ghi nhãn, Then dòng mang `listing_intent = unknown`, `json_ok = false` hoặc `error_kind` đúng loại, và lượt chạy tiếp các bài sau; cuối lượt in số lỗi theo loại.
