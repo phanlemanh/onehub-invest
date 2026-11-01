@@ -85,10 +85,33 @@ test("chiều đỏ NB-AC-4: thân chứa chữ chưa gạt → đỏ ghim «NB-
   assert.throws(() => kiemKhongPII(JSON.stringify(BAI_PII[0].text), BAI_PII[0]), /NB-AC-4 tầng A rời máy/);
 });
 
-test("NB-AC-4 chỉ chữ bài được gửi: hoiBai không nhận group_name/sender_name/conversation_id", () => {
-  // Giao diện hoiBai(backend, text, opts) chỉ có chữ; trường nhóm/người không có đường vào thân yêu cầu.
-  assert.equal(hoiBai.length, 2);
-  assert.equal(stripPII("Nhóm A · Anh Tuấn 0912345678"), "Nhóm A · Anh Tuấn [phone]");
+// Ô thứ sáu: dòng stg mang tên nhóm, tên người gửi, mã hội thoại — đi đúng đường thật baiTuDong → chayLo → hoiBai.
+import { baiTuDong } from "../scripts/nhan-bac-run.js";
+const DONG_STG = { post_id: "p-ac4-6", text: "Bán căn 2PN 70m2 3,2 tỷ", group_name: "Nhóm Mua Bán Căn Hộ Q7", sender_name: "Anh Tuấn Môi Giới", conversation_id: "conv-8812-xyz" };
+const DINH_DANH = [DONG_STG.group_name, DONG_STG.sender_name, DONG_STG.conversation_id];
+function kiemKhongDinhDanh(than: string) {
+  const lot = DINH_DANH.filter((x) => than.includes(x));
+  if (lot.length) assert.fail(`NB-AC-4 tầng A rời máy: «${lot.join("», «")}» có trong thân yêu cầu`);
+}
+async function thanQuaLo(tuDong: (p: typeof DONG_STG) => { post_id: string; text: string; text_hash: string }) {
+  const chu: string[] = [];
+  const dec: unknown[] = [];
+  const bai = [tuDong(DONG_STG)];
+  await chayLo({ backend: "haiku", bai, runId: "a4", tranUsd: 5, ghi: null,
+    hoi: (b, t) => hoiBai(b, t, { languageModel: modelChu('{"intent":"offer","kind":"sale"}', chu), recordCall: async () => {} }) });
+  await chayLo({ backend: "decisions", bai, runId: "a4d", tranUsd: 5, ghi: null,
+    hoi: (b, t) => hoiBai(b, t, { decisionModel: modelDecision({ intent: { type: "choice", choice: "offer" }, kind: { type: "choice", choice: "sale" } }, dec), recordCall: async () => {} }) });
+  return chu.join("") + JSON.stringify(dec);
+}
+test("NB-AC-4 ô 6: dòng stg có group_name/sender_name/conversation_id → thân Haiku và Decisions không chứa chúng; chữ bài vẫn tới (đối chứng dương)", async () => {
+  const than = await thanQuaLo(baiTuDong);
+  kiemKhongDinhDanh(than);
+  assert.ok(than.includes(DONG_STG.text), "NB-AC-4 đối chứng: chữ bài không tới model");
+});
+test("chiều đỏ NB-AC-4 ô 6: bản đột biến ghép tên nhóm và người gửi vào chữ → đỏ ghim «NB-AC-4 tầng A rời máy»", async () => {
+  const dotBien = (p: typeof DONG_STG) => baiTuDong({ post_id: p.post_id, text: `[${p.group_name}] ${p.sender_name}: ${p.text}` });
+  const than = await thanQuaLo(dotBien);
+  assert.throws(() => kiemKhongDinhDanh(than), /NB-AC-4 tầng A rời máy: «Nhóm Mua Bán Căn Hộ Q7», «Anh Tuấn Môi Giới»/);
 });
 
 // ---------- NB-AC-5: câu trích ----------
@@ -133,12 +156,39 @@ test("NB-AC-6 năm kết cục lỗi → unknown + loại lỗi đúng; hoiBai k
   assert.deepEqual(so.map((r) => r.ok), [false, true, false, false, false]);
   assert.ok(so.every((r) => r.viec === "nhan-bac-s03" && r.khach === "pipeline"));
 });
-test("chiều đỏ NB-AC-6: gọi model không qua hoiBai (không bắt lỗi) → ném, ghim «NB-AC-6 một lỗi dừng cả lượt»", async () => {
+// Lô 6 bài, bài thứ 3 lỗi mạng 500: lượt phải đi hết 6 bài, bài sau vẫn nhãn, dòng tổng kết đếm đúng loại lỗi.
+const LO6 = Array.from({ length: 6 }, (_, i) => ({ post_id: `p${i}`, text: `Bán căn ${i} 2PN 3 tỷ`, text_hash: `h${i}` }));
+const traLoi6 = (i: number) => (i === 2 ? modelChu(new APICallError("500")) : modelChu('{"intent":"offer","kind":"sale","confidence":0.9}'));
+function kiemLo6(nhan: Pick<DongNhan, "post_id" | "listing_intent" | "error_kind">[], loi: Record<string, number>) {
+  if (nhan.length !== 6) assert.fail(`NB-AC-6 một lỗi dừng cả lượt: ${nhan.length}/6 bài có nhãn`);
+  assert.deepEqual(nhan.map((d) => d.listing_intent), ["offer", "offer", "unknown", "offer", "offer", "offer"], "NB-AC-6 bài sau lỗi mất nhãn");
+  assert.equal(nhan[2].error_kind, "AI_APICallError");
+  assert.deepEqual(loi, { AI_APICallError: 1 }, "NB-AC-6 dòng tổng kết đếm lỗi sai loại");
+}
+test("NB-AC-6 lô 6 bài, bài 3 lỗi mạng: đủ 6 dòng, bài 4–6 vẫn nhãn, tổng kết đếm {AI_APICallError: 1}", async () => {
+  let i = 0;
+  const so: AiCallRecord[] = [];
+  const dong: DongNhan[] = [];
+  const kq = await chayLo({
+    backend: "haiku", bai: LO6, runId: "r6", tranUsd: 5,
+    hoi: (b, t) => hoiBai(b, t, { languageModel: traLoi6(i++), recordCall: ghiSo(so) }),
+    ghi: async (d) => { dong.push(d); return 1; },
+  });
+  kiemLo6(kq.nhan, kq.loi);
+  assert.equal(dong.length, 6, "NB-AC-6 lô ghi thiếu dòng");
+  assert.equal(so.length, 6, "NB-AC-6 mỗi bài một dòng ai_calls");
+});
+test("chiều đỏ NB-AC-6: bản đột biến gọi model không bắt lỗi (ném lên) → lô dừng ở bài 3, bộ kiểm đỏ ghim «NB-AC-6 một lỗi dừng cả lượt»", async () => {
   const { generateText } = await import("ai");
-  await assert.rejects(
-    generateText({ model: modelChu(new APICallError("500")), prompt: "x" }).catch((e) => { throw new Error(`NB-AC-6 một lỗi dừng cả lượt: ${e.name}`); }),
-    /NB-AC-6 một lỗi dừng cả lượt/,
-  );
+  let i = 0;
+  const dong: DongNhan[] = [];
+  const hoiDotBien = async (): Promise<Nhan> => {
+    const r = await generateText({ model: traLoi6(i++), prompt: "x" }); // không try/catch như hoiBai
+    return { model: "m", ...parseReply(r.text, ""), probabilities: null, error_kind: null, latency_ms: 0, cost_usd: 0 };
+  };
+  await chayLo({ backend: "haiku", bai: LO6, runId: "d6", tranUsd: 5, hoi: hoiDotBien, ghi: async (d) => { dong.push(d); return 1; } }).catch(() => {});
+  assert.equal(dong.length, 2, "đột biến phải dừng sau bài 2");
+  assert.throws(() => kiemLo6(dong, {}), /NB-AC-6 một lỗi dừng cả lượt: 2\/6/);
 });
 
 // ---------- NB-AC-7: ba backend qua lớp model có sẵn ----------
@@ -221,7 +271,22 @@ test("NB-AC-8 tập vàng 12 bài: ý định 10/12, bán/thuê trên offer 5/6,
   const b = doTapVang(DU, VANG);
   kiemBangDo(b);
   assert.equal(b.n, 12);
-  assert.ok(!JSON.stringify(b).includes("Căn"), "NB-AC-8 bảng đo có chữ bài");
+});
+
+// Đầu ra không chứa chữ bài: dòng nhãn mang câu trích (chuỗi con của chữ bài) — bảng đo và trace phải không lọt nó.
+import { dongTrace } from "../scripts/nhan-bac-run.js";
+const CHU_BAI = "Chính chủ bán gấp căn góc 2PN view hồ 3,25 tỷ";
+const DU_CO_CHU = DU.map((d) => ({ ...d, quote: CHU_BAI, text_hash: "h" }) as DongNhan);
+function kiemKhongChu(raRa: string[]) {
+  const lot = raRa.filter((x) => x.includes(CHU_BAI) || x.includes("view hồ"));
+  if (lot.length) assert.fail(`NB-AC-8 bảng đo có chữ bài: ${lot.length} dòng`);
+}
+test("NB-AC-8 đầu vào mang câu trích có chữ bài → bảng đo và trace không chứa chữ bài (đối chứng dương: chữ có trong đầu vào)", () => {
+  assert.ok(JSON.stringify(DU_CO_CHU).includes(CHU_BAI), "đối chứng: đầu vào phải mang chữ bài");
+  kiemKhongChu([JSON.stringify(doTapVang(DU_CO_CHU, VANG)), ...DU_CO_CHU.map(dongTrace)]);
+});
+test("chiều đỏ NB-AC-8: bản đột biến ghi trace nguyên dòng nhãn → đỏ ghim «NB-AC-8 bảng đo có chữ bài»", () => {
+  assert.throws(() => kiemKhongChu(DU_CO_CHU.map((d) => JSON.stringify(d))), /NB-AC-8 bảng đo có chữ bài: 12 dòng/);
 });
 test("chiều đỏ NB-AC-8: bản đột biến tính bán/thuê trên mọi bài → đỏ ghim «NB-AC-8 bán/thuê đo sai mẫu số»", () => {
   const b = doTapVang(DU, VANG);

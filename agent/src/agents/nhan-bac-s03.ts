@@ -33,7 +33,7 @@ export function stripPII(text: string): string {
 
 // ==== prompt (ZCode) ====
 export const SYSTEM = `Bạn phân loại tin đăng nhóm chat BĐS Việt Nam. Với MỖI bài, trả JSON đúng một object:
-{"intent":"offer|inquiry|not_listing","kind":"sale|rent_lt|null","confidence":0.0-1.0,"quote":"<chuỗi con nguyên văn từ chữ bài làm căn cứ>"}
+{"intent":"${LISTING_INTENT.offer}|${LISTING_INTENT.inquiry}|${LISTING_INTENT.not_listing}","kind":"${KIND.sale}|${KIND.rent_lt}|null","confidence":0.0-1.0,"quote":"<chuỗi con nguyên văn từ chữ bài làm căn cứ>"}
 - offer: tin RAO bán/cho thuê (kể cả viết gọn: "S9.03 3PN FULL 14tr" = thuê vì 14tr/tháng; "cắt lỗ … 2,62 tỷ" = bán; "chuyển nhượng" = bán)
 - inquiry: khách ĐI TÌM nhà ("khách e tìm 1pn 5,5tr", "cần mua 2PN")
 - not_listing: không phải tin BĐS (tin tức, chat, quảng cáo khác) — kể cả bài không có chữ đọc được (chỉ ảnh, link, ký hiệu): khi đó quote = ""
@@ -92,17 +92,17 @@ export const CAU_HOI_DECISIONS = {
     type: "choice",
     instructions: "Bài đăng trong nhóm chat BĐS Việt Nam này là gì?",
     criteria: {
-      offer: "Tin rao bán hoặc cho thuê một căn/nhà/đất (kể cả viết gọn chỉ có giá và số phòng)",
-      inquiry: "Người đi tìm mua hoặc tìm thuê (khách cần mua, cần thuê, tìm căn)",
-      not_listing: "Không phải tin bất động sản (chat, tin tức, quảng cáo khác)",
+      [LISTING_INTENT.offer]: "Tin rao bán hoặc cho thuê một căn/nhà/đất (kể cả viết gọn chỉ có giá và số phòng)",
+      [LISTING_INTENT.inquiry]: "Người đi tìm mua hoặc tìm thuê (khách cần mua, cần thuê, tìm căn)",
+      [LISTING_INTENT.not_listing]: "Không phải tin bất động sản (chat, tin tức, quảng cáo khác)",
     },
   },
   kind: {
     type: "choice",
     instructions: "Nếu là tin rao: bán hay cho thuê?",
     criteria: {
-      sale: "Bán, chuyển nhượng, cắt lỗ — giá thường tính bằng tỷ",
-      rent_lt: "Cho thuê dài hạn — giá thường tính bằng triệu mỗi tháng",
+      [KIND.sale]: "Bán, chuyển nhượng, cắt lỗ — giá thường tính bằng tỷ",
+      [KIND.rent_lt]: "Cho thuê dài hạn — giá thường tính bằng triệu mỗi tháng",
       none: "Không phải tin rao",
     },
   },

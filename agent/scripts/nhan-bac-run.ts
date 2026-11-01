@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { BACKENDS, chayLo, doTapVang, PROMPT_VERSION, SQL_GHI, TEN_MODEL, thamSoGhi, type Backend, type Bai, type Vang } from "../src/agents/nhan-bac-s03.js";
+import { BACKENDS, chayLo, doTapVang, PROMPT_VERSION, SQL_GHI, TEN_MODEL, thamSoGhi, type Backend, type Bai, type DongNhan, type Vang } from "../src/agents/nhan-bac-s03.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { loadStgPosts } from "../../pipeline/lib/test-posts.mjs";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
@@ -36,6 +36,20 @@ export function docCo(argv: string[]): Co {
   return { model, limit, since: lay("since") ?? null, thu: argv.includes("--thu") || gold !== null, tranUsd, gold };
 }
 
+/** Một dòng trace — chỉ khoá bài + nhãn + số đo; KHÔNG quote (chuỗi con của chữ bài) để trace không mang chữ bài. */
+export function dongTrace(d: DongNhan): string {
+  return JSON.stringify({
+    post_id: d.post_id, model: d.model, listing_intent: d.listing_intent, kind: d.kind, json_ok: d.json_ok,
+    quote_ok: d.quote_ok, error_kind: d.error_kind, latency_ms: d.latency_ms, cost_usd: d.cost_usd,
+  });
+}
+
+/** Dòng stg → bài gửi model: chỉ post_id + chữ + băm chữ. group_name, sender_name, conversation_id… của dòng stg
+ * không đi theo — đó là đường duy nhất từ DB tới thân yêu cầu (AC-4). */
+export function baiTuDong(p: { post_id: string; text: string }): Bai {
+  return { post_id: p.post_id, text: p.text, text_hash: textHash(p.text) };
+}
+
 /** Bài cần nhãn: bài S03 thật (đã gạt bài thử), chưa có nhãn cùng chữ + model + prompt, lọc --since / tập vàng. */
 export async function chonBai(c: pg.Client, co: Co, vang: Vang[] | null): Promise<Bai[]> {
   const { posts } = await loadStgPosts(c, "zalo");
@@ -47,9 +61,9 @@ export async function chonBai(c: pg.Client, co: Co, vang: Vang[] | null): Promis
   for (const p of posts as { post_id: string; text: string; posted_at?: string }[]) {
     if (trongVang && !trongVang.has(p.post_id)) continue;
     if (co.since && p.posted_at && String(p.posted_at) < co.since) continue;
-    const h = textHash(p.text);
-    if (!trongVang && da.has(`${p.post_id}|${h}`)) continue;
-    out.push({ post_id: p.post_id, text: p.text, text_hash: h });
+    const b = baiTuDong(p);
+    if (!trongVang && da.has(`${b.post_id}|${b.text_hash}`)) continue;
+    out.push(b);
     if (out.length >= co.limit) break;
   }
   return out;
@@ -72,10 +86,7 @@ async function main() {
       ghi: co.thu ? null : async (d) => (await c.query(SQL_GHI, thamSoGhi(d))).rowCount ?? 0,
     });
     await mkdir(TRACES, { recursive: true });
-    await writeFile(join(TRACES, `${runId.replace(/[:.]/g, "-")}.jsonl`), kq.nhan.map((d) => JSON.stringify({
-      post_id: d.post_id, model: d.model, listing_intent: d.listing_intent, kind: d.kind, json_ok: d.json_ok,
-      quote_ok: d.quote_ok, error_kind: d.error_kind, latency_ms: d.latency_ms, cost_usd: d.cost_usd,
-    })).join("\n") + "\n");
+    await writeFile(join(TRACES, `${runId.replace(/[:.]/g, "-")}.jsonl`), kq.nhan.map(dongTrace).join("\n") + "\n");
     console.log(`đã hỏi ${kq.nhan.length} · ghi ${kq.daGhi} · ý định ${JSON.stringify(kq.yDinh)} · lỗi ${JSON.stringify(kq.loi)} · đã dùng ${kq.tongUsd.toFixed(4)} USD`);
     if (vang) console.log(`đo tập vàng: ${JSON.stringify(doTapVang(kq.nhan, vang))}`);
     if (kq.dungTran) { console.log(`dừng: bài kế sẽ vượt trần ${co.tranUsd} USD`); process.exitCode = 4; }
