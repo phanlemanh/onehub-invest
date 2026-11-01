@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: n1-dem-nguoi-tach
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-1»: cặp một–một của người split → n1.so không đếm, n1.tong có đếm; ca đối chứng: bản chép bỏ vế loại người đã tách → assert.throws /N1 DEM CA NGUOI DA TACH/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-2»: cùng tập có một cặp split và một cặp active → n1.so = 1 (đúng cặp active); ca đối chứng: bản chép vế loại nuốt mọi cặp → assert.throws /N1 NUOT NGUOI CHUA GOP/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «E1 ma trận năm số trên tập viết trước» không đổi số mong (S03 n1 so=1 tong=2, S05 n1 so=1 tong=1) và ca «E1 đối chứng đỏ: đếm cả cặp đã gộp» vẫn xanh (bản chép vẫn đỏ /N1 DEM CA CAP DA GOP/)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-4»: tinhSo không có daTach deepEqual tinhSo với daTach rỗng trên tập có người theo SĐT pA chưa gộp; n1.so S03 = 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-5»: client giả trả pM cho câu status = 'merged', pS cho câu status = 'split' → daGop = {pM}, daTach = {pS}; thứ tự câu: BEGIN TRANSACTION READ ONLY đầu, COMMIT cuối, câu split nằm giữa"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-6»: client giả (một tin S03 một–một, người theo SĐT split) → docDuLieu → tinhSo → veDong: 11 dòng, dòng danh-ba-sdt:n1 S03 status pass detail «so=0 tong=1»; mẫu nhãn N1 rút từ app/src/lib/dq-labels.ts (đọc tệp) khớp detail N1; đối chứng: detail thêm « tach=1» → assert.throws /DETAIL N1 LECH NHAN OPS/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs, pipeline/lib/danh-ba-nguoi.mjs]
+    expected: "exit 0; ca «N1T AC-7»: bảng parties trong bộ nhớ, trạng thái đặt bằng SQL.gop rồi SQL.tach nhập từ pipeline/lib/danh-ba-nguoi.mjs (giá trị status rút từ chính câu ghi), mỗi lượt docDuLieu đọc qua câu WHERE status = … của nó → tinhSo: n1.so S03 = [1, 0, 0]"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-8»: inBang(tinhSo(...)) với S03 có 2 cặp đã tách, S05 có 0 → đúng một dòng «danh-ba-sdt:n1 S03 cap_da_tach=2» và một dòng «danh-ba-sdt:n1 S05 cap_da_tach=0»; veDong vẫn 11 dòng, không detail nào chứa cap_da_tach; main in bằng inBang (đọc tĩnh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ddb_pipeline
+    paths: [pipeline/do-danh-ba-sdt.mjs, pipeline/do-danh-ba-sdt.test.mjs]
+    expected: "exit 0; ca «N1T AC-9»: cặp một–một không bí danh + daTach = {pS} → n1.so không đếm cặp ấy; đối chứng: bản chép bỏ vế k != null → assert.throws /N1 DEM CAP KHONG NGUOI/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
