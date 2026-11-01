@@ -65,8 +65,8 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: [app/src/components/ops/review-card-nguoi.tsx, app/src/components/ops/review-card.tsx]
-    target: "http://localhost:3456/ops/review"
-    steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops), mở /ops/review trên DB có ít nhất một thẻ data_quality nguoi: chờ, chụp thẻ ở khổ rộng và khổ hẹp 375px"
+    target: "http://localhost:3462/ops/review"
+    steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops), mở /ops/review trên DB có ít nhất một thẻ data_quality nguoi: chờ (máy dev :3462 chạy từ worktree với DATABASE_URL = DB thử oneinvest_u2_nguoi đã dựng thẻ bằng dung-nguoi.mjs; mật khẩu ở .claude/ops-role-test-account.json của worktree), chụp thẻ ở khổ rộng và khổ hẹp 375px"
     expected: "thấy thẻ «Gộp Người?» với bảng tài khoản và SĐT, tin mẫu, ô lý do và ba nút; khổ hẹp không tràn ngang; ảnh lưu ở _acceptance/the-duyet-nguoi-nhieu-nhieu/evidence/E9-*.png"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E10
