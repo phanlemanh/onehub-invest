@@ -7,7 +7,8 @@
 //      còn 0; áp lần ba: định nghĩa hai hàm và số dòng ops_audit `can-theo-tin:*` không đổi;
 //  (2) `oneinvest_p2_ct_hai_<pid>`: bản chép `oneinvest` (db/db-thu.sh). Đếm độc lập số căn lệch; áp 066 lần một: dòng
 //      `can-theo-tin:sua-mot-lan-066` mới = (lệch > 0 ? 1 : 0), căn lệch còn lại = 0; lần hai: không đổi gì.
-// DB `oneinvest` không bị chạm: đếm `can-theo-tin:*` trước = sau = 0.
+// DB `oneinvest` không bị chạm: đếm `can-theo-tin:*` trước = sau (không đòi 0 — sau khi 066 áp thật lên máy thu, oneinvest có
+// đúng một dòng sửa một lần).
 // Thoát 0 xanh · 1 lệch một vế (in vế) · 2 không dựng được DB thử.
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -115,7 +116,7 @@ try {
   if (sau1.conLech !== 0) lech.push(`lần một: còn ${sau1.conLech} căn lệch sau khối sửa`);
   if (sau2.ham !== sau1.ham) lech.push("định nghĩa apply/revert_enrichment đổi sau lần áp hai");
   if (sau2.audit !== sau1.audit) lech.push(`ops_audit can-theo-tin:* lần một ${sau1.audit} → lần hai ${sau2.audit}`);
-  if (goc0 !== goc1 || goc0 !== 0) lech.push(`DB oneinvest bị chạm: can-theo-tin:* trước ${goc0}, sau ${goc1} (kỳ vọng 0 và 0)`);
+  if (goc0 !== goc1) lech.push(`DB oneinvest bị chạm: can-theo-tin:* trước ${goc0}, sau ${goc1}`);
   if (!/066/.test(psql(THU, "SELECT pg_get_functiondef('apply_enrichment(bigint[],text)'::regprocedure)"))) {
     lech.push("apply_enrichment trên DB thử không phải bản 066");
   }
