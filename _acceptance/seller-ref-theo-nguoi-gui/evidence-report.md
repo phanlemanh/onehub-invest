@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6d38034b3adf9403a92e19d63cc5fc34e8afd47d
+verified_commit: 553e76a50521ab53c64af0b01ab7833d8a3ea2d3
 human_signoff:
 ---
 
@@ -155,3 +155,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 2: mọi eval đạt theo kết quả máy; baseline bị chặn hạ tầng nên mọi baseline là n-a. Lịch sử round 1 không được truyền vào lượt soạn này.
+
+### Re-pin lần 1 — 2026-11-01, do gộp main fcc42f9c + nhãn S04 của N1, sau chữ ký Cổng Bằng chứng
+run_id: repin-20261101T145745Z-77382
+sha: 553e76a50521ab53c64af0b01ab7833d8a3ea2d3 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
