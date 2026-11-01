@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1c86bc278a9a5e63a7d5908a6b20488b8a5208cf
+verified_commit: b298c17cdeb246a307d69e0dd2c3be7e0ad3a4e3
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -281,3 +281,7 @@ sha: f9dcacc85ed90bd7ac81ee26195f39c81832669b · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 12 — 2026-10-31, do gộp main gồm #249; eval TG chạy trên DB thử P1 chép từ :5433
 run_id: repin-20261031T182041Z-21598
 sha: 1c86bc278a9a5e63a7d5908a6b20488b8a5208cf · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)
+
+### Re-pin lần 13 — 2026-11-01, do gộp main gồm #253 và #255 (reconcile tin còn ảnh); eval TG chạy trên DB thử P1 chép từ :5433
+run_id: repin-20261101T021947Z-89439
+sha: b298c17cdeb246a307d69e0dd2c3be7e0ad3a4e3 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)
