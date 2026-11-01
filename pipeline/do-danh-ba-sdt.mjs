@@ -40,18 +40,20 @@ export function doRong(text) {
  * - `bai`: Map post_id → `{sender_id, text}` của nguồn;
  * - `biDanh`: bí danh SĐT còn hiệu lực `{object_key, kind, value, source}`;
  * - `daGop`: Set party_key đã `merged`; `coVai`: Set party_key có vai chưa rút;
+ * - `daTach`: Set party_key đã `split` (n1-dem-nguoi-tach) — người đã tách không bao giờ gộp tự động lại, nên N1 không
+ *   đếm cặp của họ là «chưa gộp»; vắng = rỗng (thước nap-lai-nguoi không truyền);
  * - `sellers`, `sdtTrenTin`: hai số đếm của N3;
  * - `banGhiSdt`: `{ <nguồn>: Set }` SĐT trên mọi bản ghi tin của nguồn, kể cả tin đã nghỉ (N6).
  * Bí danh mang `retired_at` khác null không được tính ở kiểm nào.
  */
-export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin, banGhiSdt = {} }) {
+export function tinhSo({ tin, bai, biDanh, daGop, daTach = new Set(), coVai, sellers, sdtTrenTin, banGhiSdt = {} }) {
   const kq = {};
   for (const nguon of NGUON) {
     const tinNguon = tin.filter((t) => t.source === nguon);
     const baiNguon = bai[nguon] ?? new Map();
     const biDanhNguon = biDanh.filter((b) => b.source === nguon && KIEU_BI_DANH_SDT.includes(b.kind) && !b.retired_at);
 
-    // N1 — SĐT ↔ người gửi trên tin sống; cặp 1–1 mà người theo SĐT chưa gộp.
+    // N1 — SĐT ↔ người gửi trên tin sống; cặp 1–1 mà người theo SĐT chưa gộp và chưa tách.
     const nguoiCuaSdt = new Map();
     const sdtCuaNguoi = new Map();
     const sdtGoc = new Map(); // khoá băm → số gốc (để khớp bí danh `sdt` sau SD3)
@@ -69,10 +71,12 @@ export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin, ba
     }
     const capMotMot = [...nguoiCuaSdt].filter(([, ng]) => ng.size === 1 && sdtCuaNguoi.get([...ng][0]).size === 1).map(([h]) => h);
     const nguoiTheoGiaTri = new Map(biDanhNguon.map((b) => [b.value, b.object_key]));
+    const nguoiCuaCap = (h) => nguoiTheoGiaTri.get(h) ?? nguoiTheoGiaTri.get(sdtGoc.get(h));
     const chuaGop = capMotMot.filter((h) => {
-      const k = nguoiTheoGiaTri.get(h) ?? nguoiTheoGiaTri.get(sdtGoc.get(h));
-      return k != null && !daGop.has(k);
+      const k = nguoiCuaCap(h);
+      return k != null && !daGop.has(k) && !daTach.has(k);
     });
+    const capDaTach = capMotMot.filter((h) => daTach.has(nguoiCuaCap(h))).length;
 
     // N2 — người theo SĐT không có vai chưa rút.
     const nguoiSdt = new Set(biDanhNguon.map((b) => b.object_key));
@@ -118,6 +122,7 @@ export function tinhSo({ tin, bai, biDanh, daGop, coVai, sellers, sdtTrenTin, ba
 
     kq[nguon] = {
       n1: { so: chuaGop.length, tong: capMotMot.length },
+      n1Tach: capDaTach, // chỉ in ra stdout (inBang) — detail N1 giữ khuôn mà dq-labels đọc
       n2: { so: khongVai.length, tong: nguoiSdt.size },
       n4: { nhieu, rong, tong: tinNguon.length },
       n5: { so: sot, tong: coSo },
@@ -156,6 +161,14 @@ export function veDong(kq) {
   return dong;
 }
 
+/** Dòng in của bước đêm: 11 dòng ghi, rồi mỗi nguồn một dòng số cặp một–một đứng ngoài N1 vì người đã tách (không ghi). */
+export function inBang(kq) {
+  return [
+    ...veDong(kq).map((d) => `${d.check_name} ${d.entity} ${d.status} ${d.detail}`),
+    ...NGUON.map((nguon) => `danh-ba-sdt:n1 ${nguon} cap_da_tach=${kq[nguon].n1Tach}`),
+  ];
+}
+
 /** Đọc mọi thứ tinhSo cần, trong một giao dịch chỉ đọc. */
 export async function docDuLieu(client) {
   await client.query("BEGIN TRANSACTION READ ONLY");
@@ -174,6 +187,7 @@ export async function docDuLieu(client) {
       `SELECT source, array_agg(DISTINCT seller_phone) AS so FROM sale_offer_records
        WHERE source = ANY ($1) AND seller_phone IS NOT NULL GROUP BY source`, [NGUON]);
     const { rows: gop } = await client.query(`SELECT party_key FROM parties WHERE status = 'merged'`);
+    const { rows: tach } = await client.query(`SELECT party_key FROM parties WHERE status = 'split'`);
     const { rows: vai } = await client.query(`SELECT DISTINCT party_key FROM party_roles WHERE retracted_at IS NULL`);
     const { rows: [n3] } = await client.query(
       `SELECT (SELECT count(*) FROM sellers)::int AS sellers,
@@ -182,6 +196,7 @@ export async function docDuLieu(client) {
     return {
       tin, bai, biDanh,
       daGop: new Set(gop.map((r) => r.party_key)),
+      daTach: new Set(tach.map((r) => r.party_key)),
       coVai: new Set(vai.map((r) => r.party_key)),
       sellers: n3.sellers, sdtTrenTin: n3.sdt,
       banGhiSdt: Object.fromEntries(banGhi.map((r) => [r.source, new Set(r.so)])),
@@ -222,8 +237,9 @@ async function main() {
   });
   await client.connect();
   try {
-    const dong = veDong(tinhSo(await docDuLieu(client)));
-    for (const d of dong) console.log(`${d.check_name} ${d.entity} ${d.status} ${d.detail}`);
+    const kq = tinhSo(await docDuLieu(client));
+    const dong = veDong(kq);
+    for (const l of inBang(kq)) console.log(l);
     if (args.includes("--write")) console.log(`do-danh-ba-sdt: đã ghi ${await ghi(client, dong)} dòng dq_check_results`);
   } finally {
     await client.end();

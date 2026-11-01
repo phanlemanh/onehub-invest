@@ -194,37 +194,49 @@ test("KD-AC-6 có dấu = không dấu", async (t) => {
   }
 });
 
-// ---------- KD-AC-7 (vế «không đổi»): tệp test đã ký giữ nguyên so với merge-base của nhánh ----------
+// ---------- KD-AC-7 (vế «không đổi»): vòng không sửa tệp test đã ký ----------
+// So hai mốc cố định trong lịch sử, không đọc cây đang làm: MOC_TRUOC = diffBase của lượt chấm (merge-base lúc vòng mở),
+// MOC_SAU = commit ký Cổng 2 của vòng. Merge-base động hết đúng khi vòng đã vào main (kd-ac-7-moc-co-dinh).
 const GOC_KHO = join(import.meta.dirname, "../..");
+const MOC_TRUOC = "5cbf3e234c82159bc1a86632a2fcc8fbc5ce89f5";
+const MOC_SAU = "7bce4ef837f0db9d70178d7c42ab36521df2a7e8";
 const TEP_DA_KY = [
   "agent/tests/judge-entity-duong.test.ts",
   "agent/tests/judge-luat.test.ts",
   "app/tests/the-duyet-phuong-lech-gia.test.tsx",
   "app/tests/the-duyet-du-can-cu.test.tsx",
 ];
-const git = (...a: string[]) => execFileSync("git", a, { cwd: GOC_KHO, encoding: "utf8" }).trim();
-/** Tệp nào trong danh sách khác nội dung ở `base` so với cây đang làm. */
-function tepDoi(base: string, ds: string[]): string[] {
-  return ds.filter((f) => {
-    try {
-      return git("show", `${base}:${f}`) !== readFileSync(join(GOC_KHO, f), "utf8").trim();
-    } catch {
-      return true;
-    }
-  });
-}
-test("KD-AC-7 tệp test đã ký không đổi so với merge-base", (t) => {
-  let base: string;
+const git = (...a: string[]) => execFileSync("git", a, { cwd: GOC_KHO, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+const coO = (moc: string, f: string) => {
   try {
-    base = git("merge-base", "HEAD", "origin/main");
+    git("cat-file", "-e", `${moc}:${f}`);
+    return true;
   } catch {
-    return t.skip("không có origin/main đủ lịch sử để tính merge-base (CI checkout nông)");
+    return false;
   }
-  t.diagnostic(`KD-AC-7: merge-base ${base.slice(0, 8)} · ${TEP_DA_KY.length} tệp`);
-  assert.deepEqual(tepDoi(base, TEP_DA_KY), [], "KD-AC-7 tệp test đã ký bị sửa so với merge-base");
-  // Chiều đỏ: tệp có thật trong cây nhưng khác nội dung ở mốc so — một tệp của vòng này (chưa có ở merge-base).
-  assert.throws(
-    () => assert.deepEqual(tepDoi(base, ["agent/tests/judge-entity-khong-dau.test.ts"]), [], "KD-AC-7 tệp test đã ký bị sửa so với merge-base"),
-    /KD-AC-7 tệp test đã ký bị sửa so với merge-base/,
-  );
+};
+/** So từng byte nội dung tệp giữa hai mốc; tệp vắng ở một mốc là lỗi đọc, không phải «đã sửa». */
+function soHaiMoc(truoc: string, sau: string, ds: string[]): { doi: string[]; khongDoc: string[] } {
+  const doi: string[] = [];
+  const khongDoc: string[] = [];
+  for (const f of ds) {
+    if (!coO(truoc, f) || !coO(sau, f)) khongDoc.push(f);
+    else if (git("show", `${truoc}:${f}`) !== git("show", `${sau}:${f}`)) doi.push(f);
+  }
+  return { doi, khongDoc };
+}
+test("KD-AC-7 tệp test đã ký không đổi trong vòng", (t) => {
+  if (!coO(MOC_TRUOC, "agent") || !coO(MOC_SAU, "agent")) {
+    return t.skip(`không có mốc ${MOC_TRUOC.slice(0, 8)}/${MOC_SAU.slice(0, 8)} trong lịch sử (CI checkout nông)`);
+  }
+  t.diagnostic(`KD-AC-7: ${MOC_TRUOC.slice(0, 8)} → ${MOC_SAU.slice(0, 8)} · ${TEP_DA_KY.length} tệp`);
+  const kq = soHaiMoc(MOC_TRUOC, MOC_SAU, TEP_DA_KY);
+  assert.deepEqual(kq.khongDoc, [], "KD-AC-7 không đọc được tệp ở mốc");
+  assert.deepEqual(kq.doi, [], "KD-AC-7 tệp test đã ký bị sửa trong vòng");
+  // Chiều đỏ trên đúng phép so nội dung: tệp CÓ ở cả hai mốc mà vòng đã sửa (luật khoaDuong) → vào «doi», không vào «khongDoc».
+  const sua = soHaiMoc(MOC_TRUOC, MOC_SAU, ["agent/src/agents/judge-entity.ts"]);
+  assert.deepEqual(sua, { doi: ["agent/src/agents/judge-entity.ts"], khongDoc: [] }, "KD-AC-7 phép so không thấy tệp đã sửa");
+  // Tệp vắng ở mốc trước (tệp mới của vòng) là lỗi đọc riêng, không gộp vào kết luận «đã sửa».
+  const vang = soHaiMoc(MOC_TRUOC, MOC_SAU, ["agent/tests/judge-entity-khong-dau.test.ts"]);
+  assert.deepEqual(vang, { doi: [], khongDoc: ["agent/tests/judge-entity-khong-dau.test.ts"] }, "KD-AC-7 tệp vắng ở mốc bị tính là đã sửa");
 });

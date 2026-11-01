@@ -1,0 +1,6 @@
+{
+  "feature_plain": "Một lệnh cho model lớn đọc từng bài trong nhóm chat (S03) và ghi nhãn đề xuất: tin rao, khách tìm nhà hay không phải tin BĐS, bán hay thuê, kèm câu trích làm căn cứ — vào một bảng nhãn riêng, không đụng dữ liệu tin/căn chính.",
+  "decisions": [
+    {"id": "E10", "q": "Bảng số đo ba backend có đủ, khớp ngưỡng và không lộ chữ bài?", "why": "Hội đồng đề xuất Đạt: cả ba backend cùng băm tập vàng, các ô đạt/không khớp số; chỉ Qwen local đạt cả hai ngưỡng chất lượng."}
+  ]
+}
