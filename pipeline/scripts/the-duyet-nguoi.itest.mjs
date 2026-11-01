@@ -104,7 +104,7 @@ ca("TN-AC-2 lượt hai không thẻ mới; thẻ người đã quyết không s
     assert.equal((await the(db, "a1")).length, 1, "TN-AC-2 lượt một: một thẻ cho nhóm");
     const kq2 = await dung(db);
     assert.equal((await the(db, "a1")).length, 1, "TN-AC-2 lượt hai sinh thẻ thứ hai");
-    assert.ok(kq2.the_moi >= 0);
+    assert.equal(kq2.the_moi, 0, "TN-AC-2 lượt hai sinh thẻ mới");
     for (const st of ["approved", "rejected", "deferred"]) {
       const [x] = await the(db, "a1");
       await db.query("UPDATE review_queue SET status = 'pending', decided_by = NULL WHERE id = $1", [x.id]);
@@ -168,10 +168,10 @@ ca("TN-AC-4 evidence đủ và không tầng A", async (db) => {
     const ten = coBang ? (await db.query("SELECT real_name FROM source_registry WHERE real_name IS NOT NULL")).rows.map((r) => r.real_name) : [];
     const chuoi = JSON.stringify(ev);
     const lo = (s) => ten.filter((t) => t.length >= 3 && s.includes(t));
+    assert.ok(ten.some((t) => t.length >= 3), "TN-AC-4 DB thử không có tên nguồn thật để so — phép quét rỗng nghĩa");
     assert.deepEqual(lo(chuoi), [], "TN-AC-4 evidence lộ tên nguồn thật");
-    if (ten.length) {
-      assert.throws(() => assert.deepEqual(lo(chuoi + ten[0]), [], "TN-AC-4 evidence lộ tên nguồn thật"), /TN-AC-4 evidence lộ tên nguồn thật/);
-    }
+    const tenDai = ten.find((t) => t.length >= 3);
+    assert.throws(() => assert.deepEqual(lo(chuoi + tenDai), [], "TN-AC-4 evidence lộ tên nguồn thật"), /TN-AC-4 evidence lộ tên nguồn thật/);
     // Kênh nguồn thật trong evidence cũng không được có (mã kênh nằm ở KENH_NGUON, không lên thẻ).
     for (const kenh of Object.keys(KENH_NGUON)) assert.ok(!chuoi.includes(kenh), `TN-AC-4 evidence lộ kênh ${kenh}`);
 });
@@ -275,9 +275,8 @@ ca("TN-AC-7 tách lại người gộp theo thẻ: split, vai trả về, không
     assert.equal((await db.query("SELECT status, merged_into FROM parties WHERE party_key = $1", [biGop])).rows[0].status, "split");
     assert.equal((await db.query("SELECT count(*) FROM registry_events WHERE object_key = $1 AND kind = 'tach'", [biGop])).rows[0].count, "1");
     const sau = await vaiTap();
-    const tapNguoiTruoc = new Set(truoc.map((v) => v.split("|").slice(0, 2).join("|")));
     assert.ok(sau.some((v) => v.includes(biGop)), "TN-AC-7 vai không trả về người đã tách");
-    assert.ok([...tapNguoiTruoc].every((v) => sau.some((s) => s.startsWith(v))), "TN-AC-7 vai sống sau tách khác trước lần gộp");
+    assert.deepEqual(sau, truoc, "TN-AC-7 vai sống sau tách khác trước lần gộp");
     const kq = await dung(db);
     assert.equal(kq.the_ap, 0, "TN-AC-7 người đã tách bị gộp lại theo thẻ");
     assert.equal(await cuoi(db, biGop), biGop, "TN-AC-7 người đã tách bị gộp lại theo thẻ");
@@ -319,10 +318,14 @@ test("TN-AC-10 DB thật: thẻ bằng số nhóm đếm độc lập, lượt h
     if (!co) return t.skip("DB thử không có tin S03/S05 sống");
     const dem = await demDocLap(db);
     const coSan = Number((await db.query("SELECT count(*) FROM review_queue WHERE item_type = $1 AND item_id LIKE 'nguoi:%'", [LOAI_THE])).rows[0].count);
-    if (coSan) return t.skip(`DB thử đã có ${coSan} thẻ Người — phép đếm lượt đầu cần DB chưa có thẻ`);
+    // DB thử có thể đã có thẻ (máy dev của E9 dựng sẵn): trong giao dịch, đổi tiền tố mã để bộ dựng coi như chưa có thẻ nào.
+    if (coSan) {
+      await db.query("UPDATE review_queue SET item_id = 'cu-' || item_id WHERE item_type = $1 AND item_id LIKE 'nguoi:%'", [LOAI_THE]);
+      t.diagnostic(`TN-AC-10 gạt ${coSan} thẻ Người có sẵn trong giao dịch`);
+    }
     await dung(db);
     const the1 = (await db.query(`SELECT evidence->>'source' AS s, count(*)::int AS n FROM review_queue
-                                   WHERE item_type = $1 AND status = 'pending' GROUP BY 1`, [LOAI_THE])).rows;
+                                   WHERE item_type = $1 AND item_id LIKE 'nguoi:%' AND status = 'pending' GROUP BY 1`, [LOAI_THE])).rows;
     const theo = Object.fromEntries(the1.map((r) => [r.s, r.n]));
     t.diagnostic(`TN-AC-10 nhóm đếm độc lập S03=${dem.S03} S05=${dem.S05} · thẻ chờ S03=${theo.S03 ?? 0} S05=${theo.S05 ?? 0}`);
     assert.equal(theo.S03 ?? 0, dem.S03, "TN-AC-10 S03 lệch số nhóm");
