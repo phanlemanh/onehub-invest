@@ -1,0 +1,62 @@
+schema_version: 1
+feature_slug: sellers-view-len-cloud
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.svc_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; ma trận viết trước dichKhongPhaiBang trên hàng (relname, relkind): r → qua, p → qua, v → chặn, m → chặn, f (bảng ngoại) → chặn, bảng FILL vắng khỏi hàng → chặn — số assert = số ô; thông điệp lỗi chứa tên bảng và 'cloud-schema-catchup-2026-10-31-060.sql'; câu catalog thật của runSync (exec giả trả relkind v cho sellers) ném PhaseError pha catalog TRƯỚC khi gọi câu ghi staging nào (đếm lời gọi exec chứa sync_stage.rows INSERT = 0); đối chứng đỏ: bản chép bỏ 'v' khỏi tập chặn → ô view bắt ('DICH LA VIEW')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.svc_cloud_gia
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, _acceptance/sellers-view-len-cloud/probes/cloud-gia.mjs]
+    expected: "exit 0; DB thử oneinvest_p4_svc chép máy thu (db-thu-chac.sh của SD3, xoá khi xong), đứng vai cloud; chạy câu kiểu bảng thật (export của sync-cloud) qua exec trên DB thử: sellers view → dichKhongPhaiBang trả ['sellers'] và thông điệp ghim; trong giao dịch DROP VIEW + CREATE TABLE sellers đúng cột cho phép → trả [] (đối chứng dương); với sellers đã dựng lại thành bảng, dichKhongPhaiBang trên MỌI bảng FILL của DB thử → [] (0 bảng bị chặn oan); trong giao dịch khác, câu chèn kiểu tráo bảng (jsonb_populate_record vào public.sellers) khi sellers là view → lỗi Postgres (bằng chứng lỗi có thật mà chốt chặn trước); in 'CLOUD GIA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.svc_cloud_gia
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, db/migrations/022_chotot_source.sql, db/migrations/038_sync_stage.sql, _acceptance/sellers-view-len-cloud/probes/cloud-gia.mjs]
+    expected: "exit 0; cùng probe E2, trong giao dịch trên DB thử: DROP VIEW sellers, dựng sellers bằng câu CREATE TABLE sellers rút NGUYÊN VĂN từ db/migrations/022_chotot_source.sql (không viết tay), sync_stage theo 038; đọc dòng từ view máy thu (dựng lại view trong giao dịch con trước khi drop, hoặc đọc trước) bằng localReadSql thật; nạp vào sync_stage rồi chạy buildSwapSql thật cho sellers → thành công, count(sellers) = số dòng view, count(DISTINCT phone_hash) = count(*); đối chứng đỏ: nhân đôi một dòng trong staging → lượt tráo lỗi ('TRAO TRUNG KHOA' bắt); in 'TRAO THAT OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.svc_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; test liệt kê mọi (bảng, cột) trong CLOUD_ALLOW có tên khớp /phone_hash$/ → ít nhất ba (sale_offers.seller_phone_hash, sellers.phone_hash, properties.seller_phone_hash) và mọi bảng đều thuộc FILL; đối chứng đỏ: bản chép CLOUD_ALLOW thêm bảng ngoài FILL có cột seller_phone_hash → hàm kiểm bắt ('KHOA MO COI')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.svc_doc_local
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, _acceptance/sellers-view-len-cloud/probes/cloud-gia.mjs]
+    expected: "exit 0; trên DB thử (sellers là view sau 060): cột của selectList('sellers', cột view).sql = đúng CLOUD_ALLOW.sellers (so tập bằng nhau), không 'name'; localReadSql đọc ra số dòng = SELECT count(*) FROM sellers; đối chứng đỏ: bản PII_EXCLUDE bỏ 'name' → cột name lọt, bắt ('NAME LEN CLOUD'); in 'DOC LOCAL OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.svc_catchup
+    paths: [docs/ops/cloud-schema-catchup-2026-10-31-060.sql, _acceptance/sellers-view-len-cloud/probes/catchup.sh]
+    expected: "exit 0; tệp catch-up tồn tại; tách khối ĐO TRƯỚC (trước dấu '-- ÁP') và khối ÁP; khối ÁP không chứa CREATE VIEW, DROP TABLE, DROP VIEW, ALTER TABLE, registry_aliases, seller_phone ~ hay nội dung nào của 060 (so từng câu lệnh của db/migrations/060_sdt_e164.sql: 0 câu trùng); chạy khối ĐO TRƯỚC trên DB thử dựng vai cloud (sellers là bảng đúng cột, không registry_aliases — dựng trong giao dịch) → ra dòng kỳ vọng ghi trong tệp; hai ô đối chứng âm trong giao dịch riêng: sellers dựng là view → đầu ra khác dòng kỳ vọng và gọi tên 'sellers'; thêm bảng registry_aliases → đầu ra khác và gọi tên 'registry_aliases' (số ô = 3 trạng thái); đối chứng đỏ: chèn 'CREATE OR REPLACE VIEW sellers' vào khối ÁP bản chép → bắt ('AP CO DDL SELLERS'); in 'CATCHUP OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.svc_sync_cu
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, pipeline/scripts/sync-cloud-pii.test.mjs, pipeline/scripts/soat-tang-a.test.mjs]
+    expected: "exit 0; sync-cloud.test.mjs, scripts/sync-cloud-pii.test.mjs, scripts/soat-tang-a.test.mjs xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.svc_pham_vi
+    paths: [_acceptance/sellers-view-len-cloud/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base trong vùng (pipeline/sync-cloud.mjs, pipeline/sync-cloud*.test.mjs, tệp catch-up 060, hồ sơ, design, plan, _acceptance/config.yaml, tệp sinh); quét probe: không chuỗi supabase, SUPABASE_, mgmtExec hay DB oneinvest; in 'PHAM VI OK'; đối chứng: app/src/app/page.tsx và một dòng 'supabase db push' → bắt ('NGOAI PHAM VI', 'CHAM CLOUD')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
