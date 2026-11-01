@@ -58,6 +58,7 @@ executors:
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
     ctt_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"   # TV2b cong-tac-that — nhà cung cấp giả + DB tạm
+    svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
@@ -121,6 +122,8 @@ executors:
     anh_goc_chan_svg: "cd app && node --import tsx --test tests/anh-goc-chan-svg.test.tsx"   # proxy-anh-chan-svg — danh sách kiểu ảnh cho phép, 415, nosniff + CSP sandbox
     s03_loai_tin: "cd pipeline && node --test scripts/transform-zalo-loai-tin.test.mjs"   # s03-nhan-loai-tin-rong — suy loại tin S03: tín hiệu chữ, đơn vị giá, bối cảnh nhóm, bài cầu
     s03_loai_tin_doi_chieu: "cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # s03-nhan-loai-tin-rong AC-7/AC-9 — DB máy thu, BEGIN…ROLLBACK, chỉ in số
+    nhan_bac: "cd agent && node --import tsx --test tests/nhan-bac-s03.test.ts"   # nhan-bac-model-lon-s03 (KC1) — backend giả, gạt tầng A, trích, lỗi, đo, trần chi phí
+    nhan_bac_db: "cd agent && node --import tsx --test tests/nhan-bac-s03-db.itest.ts"   # nhan-bac-model-lon-s03 (KC1) — 065 + ghi chỉ bảng nhãn bạc, DB máy thu ROLLBACK
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
@@ -255,6 +258,9 @@ executors:
     cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
     cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     cloud_sync_pii_cot: "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot"    # NT2 soat-tang-a-moi-duong-len-cloud: leak gate đỏ khi cột ngoài CLOUD_ALLOW / bảng tầng A có dòng
+    cloud_sync_sellers_view: "cd pipeline && node scripts/check-cloud-sync.mjs sellers-view"   # check-cloud-sync-sellers-view E1 — nguồn sau 060/059 dựng được DB mô phỏng, sellers là bảng hai phía, sync đổ đủ dòng
+    cloud_sync_tuan_tu: "cd pipeline && r=0; for c in stage atomic fail fidelity keep pii overlap allow anon pii-cot; do node scripts/check-cloud-sync.mjs $c || r=1; done; exit $r"   # check-cloud-sync-sellers-view E2 — mười ca cũ chạy tuần tự (một container một lúc)
+    ccs_pham_vi: "bash _acceptance/check-cloud-sync-sellers-view/probes/pham-vi.sh"   # check-cloud-sync-sellers-view E3
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
@@ -529,6 +535,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    sts_chan: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs chan"   # sd3-test-chiu-song-song E1 — xanh dưới phiên giữ 33033, bản cũ treo
+    sts_khoa: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs khoa"   # sd3-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
+    sts_assert: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs assert"   # sd3-test-chiu-song-song E3 — thông điệp assert giữ nguyên
+    sts_pham_vi: "bash _acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh"   # sd3-test-chiu-song-song E4
     svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
     svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
     svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt
@@ -581,6 +591,14 @@ executors:
     dc_tu_don: "cd app && node --import tsx scripts/dc-tu-don.ts"   # phat-bieu-db-do-tren-main E7: test dòng chảy cloud quét lược đồ dc_* của pid chết + tự dọn khi bị ngắt
     idem_059: "bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup && bash db/db-thu.sh oneinvest_p2_idem >/dev/null && (cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_idem node scripts/idem-059.mjs); rc=$?; bash db/db-thu.sh oneinvest_p2_idem --xoa >/dev/null; exit $rc"   # thoi-gian-va-hieu-luc E10 — lược đồ (DB tạm không dữ liệu) + bản chép CÓ dữ liệu: lần một điền lùi > 0 dòng, lần hai không nhân dòng, chiều đỏ bỏ khoá duy nhất (S4 r1 t5)
     # cong-tac-that (TV2b, T3) — cổng vòng đời trên bản chép tạm, không chạm máy thật
+    # s06-vung-moi-len-canonical (T3, 064) — mọi ca DB chạy trên bản chép DB máy thu (db/db-thu.sh), không chạm oneinvest
+    svm_mig: "node scripts/s06-vung-moi/acceptance.mjs mig"
+    svm_rao: "node scripts/s06-vung-moi/acceptance.mjs rao"
+    svm_reassign: "node scripts/s06-vung-moi/acceptance.mjs reassign"
+    svm_transform: "node scripts/s06-vung-moi/acceptance.mjs transform"
+    svm_real: "node scripts/s06-vung-moi/acceptance.mjs real"
+    svm_dem: "node scripts/s06-vung-moi/acceptance.mjs dem"
+    svm_scope: "bash _acceptance/s06-vung-moi-len-canonical/probes/scope.sh \"$PWD\""
     ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
     ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
     ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
