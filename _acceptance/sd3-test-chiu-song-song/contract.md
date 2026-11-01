@@ -55,4 +55,7 @@ không đổi.
   lượt, không chứng câu UPDATE bait_gap_pct trên dữ liệu thật.
 - Lời tả «dưới khoá advisory 33033, chạy trên dữ liệu máy thu» trong evals của hồ sơ đã ký `sellers-them-dong-lai` nay lỗi
   thời (bản rỗng thay dữ liệu thật); hồ sơ ấy được ghim lại, lời tả không sửa (hồ sơ đã ký).
-- Probe E1 giữ khoá 33033 tổng chừng 20 giây trên DB dùng chung (phiên A, A2), mỗi phiên chặn mở-đo-đóng, lock_timeout 3 s.
+- Probe E1 giữ khoá 33033 tổng chừng 20 giây trên DB dùng chung (phiên A, A2), mỗi phiên chặn mở-đo-đóng. Sự cố 01/11: một
+  lượt probe bản trước bị bỏ lại giữ 33033 + khoá dòng ~1 giờ, chặn sync đêm (giám sát dừng). Mọi phiên probe nay đặt hạn phía
+  máy chủ (idle_in_transaction 30 s, statement 60 s, lock 3 s), cả probe trần 180 s, đóng phiên ở finally; đo: giết -9 giữa
+  chừng → khoá nhả ngay.

@@ -20,6 +20,20 @@ const pg = createRequire(path.join(PIPE, "package.json"))("pg");
 const DB_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const MODE = process.argv[2];
 
+// An toàn trên DB dùng chung (sự cố 01/11: một lượt `chan` bị bỏ lại giữ 33033 + khoá dòng 1 giờ, chặn sync đêm). Mọi phiên
+// probe đặt hạn PHÍA MÁY CHỦ — Postgres tự huỷ giao dịch dù tiến trình này chết, bị giết hay treo — và cả tiến trình có trần.
+const HAN_PHIEN = ["SET idle_in_transaction_session_timeout = '30s'", "SET statement_timeout = '60s'", "SET lock_timeout = '3s'"];
+const MO = []; // mọi phiên đang mở — đóng hết ở nhánh nào cũng vậy
+const moPhien = async () => {
+  const k = new pg.Client({ connectionString: DB_URL });
+  MO.push(k);
+  await k.connect();
+  for (const q of HAN_PHIEN) await k.query(q);
+  return k;
+};
+const TRAN_PROBE_MS = 180_000;
+setTimeout(() => { console.error(`PROBE VUOT TRAN ${TRAN_PROBE_MS / 1000} s — thoát, máy chủ tự huỷ giao dịch`); process.exit(3); }, TRAN_PROBE_MS).unref();
+
 const base = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
 const moi = readFileSync(path.join(ROOT, TEP), "utf8");
 const cu = execFileSync("git", ["show", `${base}:${TEP}`], { cwd: ROOT, encoding: "utf8" });
@@ -49,10 +63,8 @@ if (MODE === "chan") {
   // DB :5433 dùng chung với phiên khác — mỗi phiên chặn mở, đo, đóng ngay; không bao giờ mở hai phiên chặn chồng nhau
   // (B xin ACCESS EXCLUSIVE sẽ xếp hàng sau khoá dòng của A và chặn luôn việc của phiên khác).
   const moChan = async () => {
-    const k = new pg.Client({ connectionString: DB_URL });
-    await k.connect();
+    const k = await moPhien();
     await k.query("BEGIN");
-    await k.query("SET LOCAL lock_timeout = '3s'");
     await k.query("SELECT pg_advisory_xact_lock(33033)");
     await k.query(
       "UPDATE sale_offer_records SET last_seen = last_seen WHERE offer_id IN (SELECT offer_id FROM sale_offer_records LIMIT 200)");
@@ -74,10 +86,8 @@ if (MODE === "chan") {
 
     // Phiên chặn B (sau khi A đóng): ca DDL ngắn giữ ACCESS EXCLUSIVE trên hai bảng nguồn 3 s rồi nhả — bản HEAD chờ đúng lúc
     // đó (thử lại NOWAIT) rồi xanh; ≥ 2,5 s chứng nó thật sự chờ. Không lấy được khoá trong 3 s (DB bận) → dừng, không xếp hàng.
-    const b = new pg.Client({ connectionString: DB_URL });
-    await b.connect();
+    const b = await moPhien();
     await b.query("BEGIN");
-    await b.query("SET LOCAL lock_timeout = '3s'");
     await b.query("LOCK TABLE public.sale_offer_records, public.registry_aliases IN ACCESS EXCLUSIVE MODE")
       .catch(async (e) => { await dong(b); throw new Error(`PHIEN CHAN B KHONG LAY DUOC KHOA (DB bận): ${e.message}`); });
     const nha = setTimeout(() => dong(b), 3000);
@@ -99,6 +109,7 @@ if (MODE === "chan") {
     console.log("CHAN OK");
   } finally {
     try { unlinkSync(tamCu); } catch {}
+    for (const k of MO) await dong(k);
   }
 } else if (MODE === "khoa") {
   // Rút đúng khối lược đồ riêng của tệp test (không nạp tệp test — node:test sẽ chạy ca).
@@ -110,8 +121,7 @@ if (MODE === "chan") {
     readFileSync, dirname, join, fileURLToPath, pathToFileURL(path.join(PIPE, "scripts/x.mjs")).href, assert);
   const { MIG_060 } = await import(pathToFileURL(path.join(PIPE, "lib/nap-060.mjs")).href);
   const { refreshBaitGap } = await import(pathToFileURL(path.join(PIPE, "refresh-bait-gap.mjs")).href);
-  const c = new pg.Client({ connectionString: DB_URL });
-  await c.connect();
+  const c = await moPhien();
   try {
     await c.query("BEGIN");
     await phongRieng(c);
@@ -144,8 +154,8 @@ if (MODE === "chan") {
     assert.deepEqual(dayNgoai, [], "DAY DUNG CHUNG");
     const kind = (await c.query("SELECT relkind FROM pg_class WHERE oid = to_regclass('public.sellers')")).rows[0]?.relkind;
     console.log(`# public.sellers relkind lúc đo: ${kind}`);
-    // Đối chứng: cùng phiên lấy 33033 thì phép đếm thấy — phép đo không mù.
-    await c.query("SELECT pg_advisory_xact_lock(33033)");
+    // Đối chứng: cùng phiên lấy một khoá tư vấn (khoá riêng, không tranh 33033 của phiên khác) thì phép đếm thấy — không mù.
+    await c.query("SELECT pg_advisory_xact_lock($1)", [990_000 + (process.pid % 1000)]);
     const tv2 = (await c.query(`SELECT count(*)::int AS n FROM pg_locks WHERE pid = pg_backend_pid() AND locktype = 'advisory'`)).rows[0].n;
     assert.equal(tv2, 1, "DOI CHUNG KHONG BAT: phép đếm khoá tư vấn mù");
     console.log("KHOA OK");
