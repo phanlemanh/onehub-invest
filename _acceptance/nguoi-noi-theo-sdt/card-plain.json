@@ -1,0 +1,22 @@
+{
+ "feature_plain": "Danh bạ Người nối người đăng theo SĐT với tài khoản của chính họ trong cùng nguồn (S03, S05) khi số và tài khoản đi đúng một cặp — mỗi lần nối có vết và tách lại được.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ nối người theo SĐT vào người theo tài khoản cùng nguồn chỉ khi số đó có đúng một người gửi và người gửi đó chỉ dùng một số."},
+  {"id":"AC-2","p":"Sẽ ghi tin chỉ có SĐT (không rõ tài khoản) cho người đã nối, thay vì cho người theo số."},
+  {"id":"AC-3","p":"Sẽ đánh dấu người theo số là «đã gộp» trỏ về người tài khoản, ghi một dòng sự kiện gộp, giữ nguyên bí danh và chuyển vai người đăng sang người tài khoản."},
+  {"id":"AC-4","p":"Sẽ không gộp thêm gì khi dựng lại lần hai trên cùng dữ liệu."},
+  {"id":"AC-5","p":"Sẽ KHÔNG gộp số dùng chung hay người dùng nhiều số; chỉ đếm và in số ca ấy theo nguồn."},
+  {"id":"AC-6","p":"Sẽ cho tách lại một lần gộp bằng lệnh, trả vai về như trước, không xoá dòng nào, và lượt sau không gộp lại."},
+  {"id":"AC-7","p":"Sẽ KHÔNG để Người nào mang hai SĐT khác nhau hay nối hai nguồn khác nhau."},
+  {"id":"AC-8","p":"Sẽ đo trên bản chép dữ liệu thật trong giao dịch hoàn tác: số lần gộp khớp số cặp đếm độc lập, mỗi lần gộp trỏ đúng tài khoản, lượt hai bằng 0."},
+  {"id":"AC-9","p":"Sẽ báo lỗi rõ và không ghi gì khi lệnh tách thiếu lý do, sai khoá, hay người chưa gộp."},
+  {"id":"AC-10","p":"Chặn mọi câu SQL của bộ dựng đọc bảng tầng A, xoá dòng, hay ghi danh bạ ngoài hai kiểu đã định."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"Không nối người khác nguồn — chờ S06 có SĐT (HD12)."},
+  {"id":"OOS-2","p":"Không làm thẻ duyệt cho ca số dùng chung / người nhiều số ở hàng này (chờ anh trả lời Hỏi-1)."},
+  {"id":"OOS-3","p":"Không sửa trang /ops/people, judge và kiểm N2 để đọc theo người đã gộp."},
+  {"id":"OOS-4","p":"Không tự tách khi một cặp đã gộp thôi đi đúng một cặp ở lượt sau."},
+  {"id":"OOS-5","p":"Không áp migration và không chạy gộp thật trên DB máy thu — bước triển khai riêng, anh duyệt."}
+ ]
+}
