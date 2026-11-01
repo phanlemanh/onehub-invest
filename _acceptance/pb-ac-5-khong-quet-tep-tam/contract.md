@@ -5,7 +5,7 @@ slug: pb-ac-5-khong-quet-tep-tam
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-01T03:00:00Z
 approved_by:
