@@ -195,3 +195,82 @@ export async function hoiBai(backend: Backend, text: string, opts: HoiOpts = {})
   }).catch(() => {});
   return nhan;
 }
+
+// ==== chạy một lô (lệnh agent/scripts/nhan-bac-run.ts) ====
+
+/** Giá token 31/10/2026 (USD / 1 triệu token) — chỉ để ƯỚC trước khi gửi; tổng thật cộng chi phí Gateway trả về. */
+export const GIA = { haiku: { vao: 0.1, ra: 0.5 }, decisions: { vao: 0.1, ra: 0 }, qwen: { vao: 0, ra: 0 } } as const;
+/** Ước chi phí một bài (USD): ~3,5 ký tự/token, ~80 token ra. */
+export function uocChiPhi(backend: Backend, text: string): number {
+  const vao = (SYSTEM.length + stripPII(text).length) / 3.5;
+  return (vao * GIA[backend].vao + 80 * GIA[backend].ra) / 1e6;
+}
+
+export type Bai = { post_id: string; text: string; text_hash: string };
+export type DongNhan = Nhan & { source_code: "S03"; post_id: string; text_hash: string; prompt_version: string; run_id: string };
+export type KetQuaLo = { nhan: DongNhan[]; daGhi: number; tongUsd: number; dungTran: boolean; loi: Record<string, number>; yDinh: Record<string, number> };
+
+/**
+ * Chạy một lô: hỏi từng bài, cộng chi phí, dừng TRƯỚC bài làm tổng vượt `tranUsd` (AC-9), ghi qua `ghi` (null = --thu).
+ * Lỗi một bài không dừng lô (hoiBai không ném — AC-6).
+ */
+export async function chayLo(o: {
+  backend: Backend;
+  bai: Bai[];
+  runId: string;
+  tranUsd: number;
+  hoi?: (b: Backend, text: string) => Promise<Nhan>;
+  ghi: ((d: DongNhan) => Promise<number>) | null;
+}): Promise<KetQuaLo> {
+  const hoi = o.hoi ?? ((b, t) => hoiBai(b, t, { trace: o.runId }));
+  const kq: KetQuaLo = { nhan: [], daGhi: 0, tongUsd: 0, dungTran: false, loi: {}, yDinh: {} };
+  for (const b of o.bai) {
+    // Ước bài kế: trung bình chi phí thật đã gặp trong lượt; chưa có bài nào thì ước theo token.
+    const uoc = kq.nhan.length ? kq.tongUsd / kq.nhan.length : uocChiPhi(o.backend, b.text);
+    if (kq.tongUsd + uoc > o.tranUsd) { kq.dungTran = true; break; }
+    const n = await hoi(o.backend, b.text);
+    kq.tongUsd += n.cost_usd ?? uocChiPhi(o.backend, b.text);
+    const d: DongNhan = { ...n, source_code: "S03", post_id: b.post_id, text_hash: b.text_hash, prompt_version: PROMPT_VERSION, run_id: o.runId };
+    kq.nhan.push(d);
+    if (n.error_kind) kq.loi[n.error_kind] = (kq.loi[n.error_kind] ?? 0) + 1;
+    kq.yDinh[n.listing_intent] = (kq.yDinh[n.listing_intent] ?? 0) + 1;
+    if (o.ghi) kq.daGhi += await o.ghi(d);
+  }
+  return kq;
+}
+
+/** Câu ghi một nhãn — chỉ bảng silver_labels, bài đã có nhãn (cùng chữ, model, prompt) thì bỏ qua. */
+export const SQL_GHI = `INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind,
+  probability, probabilities, quote, quote_ok, json_ok, error_kind, latency_ms, cost_usd, run_id)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+  ON CONFLICT ON CONSTRAINT silver_labels_mot_nhan DO NOTHING`;
+export const thamSoGhi = (d: DongNhan) => [d.source_code, d.post_id, d.text_hash, d.model, d.prompt_version, d.listing_intent, d.kind,
+  d.probability, d.probabilities === null ? null : JSON.stringify(d.probabilities), d.quote, d.quote_ok, d.json_ok, d.error_kind,
+  Math.max(0, Math.round(d.latency_ms)), d.cost_usd, d.run_id];
+
+// ==== đo trên tập vàng (AC-8) ====
+export type Vang = { post_id: string; listing_intent: string; kind: string | null };
+export type BangDo = {
+  n: number; yDinhDung: number; offer: number; banThueDung: number; yeuCau: number; yeuCauBat: number;
+  jsonHong: number; trichGia: number; p50Ms: number | null; tongUsd: number;
+};
+/** Bảng đo một backend trên tập vàng — chỉ số, không chữ bài. Bán/thuê tính trên bài vàng là offer. */
+export function doTapVang(nhan: Pick<DongNhan, "post_id" | "listing_intent" | "kind" | "json_ok" | "quote_ok" | "latency_ms" | "cost_usd">[], vang: Vang[]): BangDo {
+  const theo = new Map(nhan.map((x) => [x.post_id, x]));
+  const co = vang.filter((v) => theo.has(v.post_id));
+  const offer = co.filter((v) => v.listing_intent === LISTING_INTENT.offer);
+  const yeu = co.filter((v) => v.listing_intent === LISTING_INTENT.inquiry);
+  const ms = nhan.map((x) => x.latency_ms).sort((a, b) => a - b);
+  return {
+    n: co.length,
+    yDinhDung: co.filter((v) => theo.get(v.post_id)!.listing_intent === v.listing_intent).length,
+    offer: offer.length,
+    banThueDung: offer.filter((v) => { const x = theo.get(v.post_id)!; return x.listing_intent === LISTING_INTENT.offer && x.kind === v.kind; }).length,
+    yeuCau: yeu.length,
+    yeuCauBat: yeu.filter((v) => theo.get(v.post_id)!.listing_intent === LISTING_INTENT.inquiry).length,
+    jsonHong: nhan.filter((x) => !x.json_ok).length,
+    trichGia: nhan.filter((x) => x.quote_ok === false).length,
+    p50Ms: ms.length ? ms[Math.floor((ms.length - 1) / 2)] : null,
+    tongUsd: nhan.reduce((s, x) => s + (x.cost_usd ?? 0), 0),
+  };
+}

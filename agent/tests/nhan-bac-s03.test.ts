@@ -186,3 +186,70 @@ test("NB-AC-7 Qwen và Haiku đọc ra cùng hình nhãn; Haiku mang chi phí Ga
   assert.deepEqual(hinh(q), hinh(h));
   assert.deepEqual([q.model, q.cost_usd, h.model, h.cost_usd], [TEN_MODEL.qwen, null, TEN_MODEL.haiku, 0.000041]);
 });
+
+// ---------- NB-AC-8: đo trên tập vàng ----------
+import { chayLo, doTapVang, type DongNhan, type Vang } from "../src/agents/nhan-bac-s03.js";
+const VANG: Vang[] = [
+  ...["v1", "v2", "v3", "v4"].map((id) => ({ post_id: id, listing_intent: "offer", kind: "sale" })),
+  ...["v5", "v6"].map((id) => ({ post_id: id, listing_intent: "offer", kind: "rent_lt" })),
+  ...["v7", "v8", "v9"].map((id) => ({ post_id: id, listing_intent: "inquiry", kind: null })),
+  ...["v10", "v11", "v12"].map((id) => ({ post_id: id, listing_intent: "not_listing", kind: null })),
+];
+const du = (post_id: string, listing_intent: string, kind: string | null, x: Partial<DongNhan> = {}) =>
+  ({ post_id, listing_intent, kind, json_ok: true, quote_ok: true, latency_ms: 100, cost_usd: 0.001, ...x }) as DongNhan;
+const DU = [
+  du("v1", "offer", "sale"), du("v2", "offer", "sale"), du("v3", "offer", "sale"), du("v4", "offer", "sale", { quote_ok: false }),
+  du("v5", "offer", "rent_lt"), du("v6", "offer", "sale"),                       // v6: đúng ý định, sai bán/thuê
+  du("v7", "inquiry", null), du("v8", "inquiry", null), du("v9", "inquiry", null),
+  du("v10", "not_listing", null), du("v11", "unknown", null, { json_ok: false }), du("v12", "offer", "sale"),
+];
+/** Đếm độc lập từ cùng mảng kết quả — không gọi doTapVang. */
+const demTay = () => ({
+  yDinhDung: DU.filter((d) => VANG.find((v) => v.post_id === d.post_id)!.listing_intent === d.listing_intent).length,
+  banThueDung: VANG.filter((v) => v.listing_intent === "offer").filter((v) => { const d = DU.find((x) => x.post_id === v.post_id)!; return d.listing_intent === "offer" && d.kind === v.kind; }).length,
+});
+function kiemBangDo(b: ReturnType<typeof doTapVang>) {
+  const tay = demTay();
+  const sai = [];
+  if (b.yDinhDung !== 10 || b.yDinhDung !== tay.yDinhDung) sai.push(`ý định ${b.yDinhDung}/12`);
+  if (b.banThueDung !== 5 || b.offer !== 6 || b.banThueDung !== tay.banThueDung) sai.push(`bán/thuê ${b.banThueDung}/${b.offer}`);
+  if (b.yeuCauBat !== 3 || b.yeuCau !== 3) sai.push(`Yêu cầu ${b.yeuCauBat}/${b.yeuCau}`);
+  if (b.jsonHong !== 1 || b.trichGia !== 1) sai.push(`JSON hỏng ${b.jsonHong} · trích giả ${b.trichGia}`);
+  if (sai.length) assert.fail(`NB-AC-8 bán/thuê đo sai mẫu số hoặc số lệch: ${sai.join(" · ")}`);
+}
+test("NB-AC-8 tập vàng 12 bài: ý định 10/12, bán/thuê trên offer 5/6, Yêu cầu 3/3, JSON hỏng 1, trích giả 1 — khớp đếm tay", () => {
+  const b = doTapVang(DU, VANG);
+  kiemBangDo(b);
+  assert.equal(b.n, 12);
+  assert.ok(!JSON.stringify(b).includes("Căn"), "NB-AC-8 bảng đo có chữ bài");
+});
+test("chiều đỏ NB-AC-8: bản đột biến tính bán/thuê trên mọi bài → đỏ ghim «NB-AC-8 bán/thuê đo sai mẫu số»", () => {
+  const b = doTapVang(DU, VANG);
+  const dotBien = { ...b, offer: 12, banThueDung: DU.filter((d) => d.kind === VANG.find((v) => v.post_id === d.post_id)!.kind).length };
+  assert.throws(() => kiemBangDo(dotBien), /NB-AC-8 bán\/thuê đo sai mẫu số/);
+});
+
+// ---------- NB-AC-9: trần chi phí ----------
+const LO10 = Array.from({ length: 10 }, (_, i) => ({ post_id: `t${i}`, text: `Căn 2PN ${60 + i}m2 3 tỷ`, text_hash: `h${i}` }));
+const hoiGia = (dem: { n: number }) => async (): Promise<Nhan> => {
+  dem.n++;
+  return { model: "gia", listing_intent: "offer", kind: "sale", probability: 0.9, probabilities: null, quote: null, quote_ok: null,
+    json_ok: true, error_kind: null, latency_ms: 1, cost_usd: 0.01 };
+};
+function kiemTran(soYeuCau: number, dungTran: boolean) {
+  if (soYeuCau > 3 || !dungTran) assert.fail(`NB-AC-9 vượt trần chi phí: backend nhận ${soYeuCau} yêu cầu`);
+}
+test("NB-AC-9 trần 0,035 USD, mỗi bài 0,01 → đúng 3 yêu cầu, dừng trước bài thứ 4, đã dùng 0,03", async () => {
+  const dem = { n: 0 };
+  const kq = await chayLo({ backend: "haiku", bai: LO10, runId: "r", tranUsd: 0.035, hoi: hoiGia(dem), ghi: null });
+  kiemTran(dem.n, kq.dungTran);
+  assert.equal(dem.n, 3);
+  assert.equal(Number(kq.tongUsd.toFixed(4)), 0.03);
+});
+test("chiều đỏ NB-AC-9: bản đột biến kiểm trần SAU khi gửi → backend nhận 4 yêu cầu, ghim «NB-AC-9 vượt trần chi phí»", async () => {
+  const dem = { n: 0 };
+  let tong = 0;
+  const hoi = hoiGia(dem);
+  for (const _ of LO10) { const n = await hoi(); tong += n.cost_usd ?? 0; if (tong > 0.035) break; }
+  assert.throws(() => kiemTran(dem.n, true), /NB-AC-9 vượt trần chi phí/);
+});
