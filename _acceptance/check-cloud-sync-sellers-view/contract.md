@@ -5,7 +5,9 @@ slug: check-cloud-sync-sellers-view
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: implemented
+veto_state: mo
+veto_opened_at: 2026-11-01T10:30:00Z
 ---
 
 # Acceptance Contract: check-cloud-sync-sellers-view
