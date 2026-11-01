@@ -5,7 +5,7 @@ slug: duong-thang-n-khong-dau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-01T00:55:00Z
 approved_by:
@@ -51,6 +51,9 @@ Quét tay theo ba trục.
 ## Notes
 
 - Hồ sơ đã ký có eval khai `paths` gồm `app/src/lib/ops/review-can-cu.ts` hay `agent/src/agents/judge-entity.ts` có thể bị lưới trước-gộp báo hoá cũ; nếu bị báo thì ghim lại bằng làn máy.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Thêm hay bớt dòng trống chỉ ở đầu hoặc cuối một tệp test đã ký thì phép so KD-AC-7 không phát hiện.
+  - Ngoài-2: Lời hứa «tệp test đã ký không đổi» mới được đo một phần; nếu về sau có người lặng lẽ nới ca kiểm cũ, lượt chấm có thể vẫn báo đạt.
 
 ## Out of scope
 
