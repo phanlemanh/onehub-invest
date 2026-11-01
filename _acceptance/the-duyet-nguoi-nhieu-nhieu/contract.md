@@ -5,7 +5,7 @@ slug: the-duyet-nguoi-nhieu-nhieu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-01
 design_doc: docs/superpowers/specs/2026-11-01-the-duyet-nguoi-nhieu-nhieu-design.md
@@ -55,6 +55,16 @@ Quét tay theo bốn trục.
 ## Notes
 
 - `review_queue` chỉ ở local (bảng tầng A của `pipeline/sync-cloud.mjs`); thẻ duyệt trên máy thu.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-01:
+  - Ngoài-1: Báo cáo nghiệm thu nói có hai ảnh khổ điện thoại nhưng thực ra chỉ có một, vì ảnh bước ba trùng ảnh bước hai.
+  - Ngoài-2: Tệp ghi chú mạng trong hồ sơ nghiệm thu ghi nhãn sai nội dung.
+  - Ngoài-3: Phần dưới của thẻ ở khổ điện thoại chưa được chụp thực sự.
+  - Ngoài-4: Tệp dẫn chứng không chứng minh được lời khẳng định không tràn ngang và không gọi mạng thừa ở khổ điện thoại.
+  - Ngoài-5: Năm tin mẫu trên thẻ có thể không phải năm tin mới nhất.
+  - Ngoài-7: Năm tin mẫu sắp theo tên thứ trong tuần, không theo thời gian; cùng gốc với Ngoài-5.
+  - Ngoài-8: Phép tự thử của công cụ kiểm có thể báo sai hoặc dừng với lỗi khó hiểu trên một số dữ liệu; thao tác được hoàn tác nên dữ liệu thật không đổi.
+  - Ngoài-9: Phép tự thử của công cụ kiểm chỉ chứng minh có người hai SĐT đâu đó, không chỉ đúng cặp vừa thử.
+  - Ngoài-10: Phía tạo thẻ đổi tên trường thì màn duyệt có thể hiện trống mà test giao diện không báo.
 
 ## Out of scope
 
