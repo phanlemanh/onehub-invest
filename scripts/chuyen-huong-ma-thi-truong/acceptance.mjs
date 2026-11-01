@@ -96,8 +96,9 @@ async function chonPhuong() {
 }
 
 /** Một trạng thái: DB chép từ bản gốc, (sau) áp 064, gán phường + dòng cấp thị trường dưới mã M. */
-async function dungTrangThai(tt, ph) {
-  const db = `oneinvest_n1_chm_${tt}`;
+async function dungTrangThai(phan, tt, ph) {
+  // Mỗi chế độ một DB riêng: lượt S4 chạy app và api song song (S4 r1: api xoá DB của app đang đọc).
+  const db = `oneinvest_n1_chm_${phan}_${tt}`;
   docker(["dropdb", "-U", "oneinvest", "-h", "localhost", "--if-exists", db]);
   const r = docker(["createdb", "-U", "oneinvest", "-h", "localhost", "-T", GOC, db]);
   if (r.code !== 0) dung(r.out);
@@ -137,13 +138,20 @@ function chayItest(phan, tt, ctx, ph) {
 }
 
 async function cheDoDb(phan, ten) {
-  await banGoc();
-  const ph = { ...(await chonPhuong()), maDai: await maDai(), goc: gocHang() };
-  console.log(`phường thử: ${ph.id} (${ph.name}), tin cấp thị trường ${ph.offer_id}; gốc hàng ${ph.goc.slice(0, 10)}`);
-  for (const tt of ["truoc", "sau"]) {
-    const ctx = await dungTrangThai(tt, ph);
-    try { chayItest(phan, tt, ctx, ph); } finally { ctx.don(); }
-  }
+  // Mỗi lúc một chế độ, kể cả khi lượt S4 gọi song song: createdb -T từ chối khi có phiên nối vào bản gốc, và mỗi DB thử
+  // ~1.1G trên đĩa VM Docker hẹp (01/11 hai chế độ chạy cùng lúc làm đầy đĩa, Postgres :5433 sập cho mọi dãy).
+  const khoa = new pg.Client({ connectionString: URL_DB("oneinvest") });
+  await khoa.connect();
+  await khoa.query("SELECT pg_advisory_lock(hashtext('chm_dung_ban_goc'))");
+  try {
+    await banGoc();
+    const ph = { ...(await chonPhuong()), maDai: await maDai(), goc: gocHang() };
+    console.log(`phường thử: ${ph.id} (${ph.name}), tin cấp thị trường ${ph.offer_id}; gốc hàng ${ph.goc.slice(0, 10)}`);
+    for (const tt of ["truoc", "sau"]) {
+      const ctx = await dungTrangThai(phan, tt, ph);
+      try { chayItest(phan, tt, ctx, ph); } finally { ctx.don(); }
+    }
+  } finally { await khoa.end(); }
   finish(ten);
 }
 

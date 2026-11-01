@@ -54,7 +54,7 @@ const BEARER = { authorization: "Bearer chm-thu" }
 // ── Bản chép cạnh tệp thật (đột biến / mốc gốc hàng) ───────────────────────────────────────────────
 const banChep: string[] = []
 function chep(rel: string, ten: string, noiDung: string): string {
-  const p = path.join(ROOT, path.dirname(rel), `__chm-${ten}${path.extname(rel)}`)
+  const p = path.join(ROOT, path.dirname(rel), `__chm-${PHAN}-${TT}-${ten}${path.extname(rel)}`)
   writeFileSync(p, noiDung)
   banChep.push(p)
   return p
@@ -103,6 +103,8 @@ async function trang(fn: () => Promise<unknown>): Promise<KQ> {
   }
 }
 const P = (o: Record<string, string>) => Promise.resolve(o)
+/** Luật slug của queries.ts (hàm nội bộ); nơi dùng chứng lại bằng bộ giải thật resolveSubmarketId. */
+const slugPhuong = (ten: string) => ten.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
 type PageFn = (a: { params: Promise<Record<string, string>>; searchParams: Promise<Record<string, string>> }) => Promise<unknown>
 const nap = async (p: string): Promise<PageFn> => (await import(p)).default as PageFn
 const PG = {
@@ -209,9 +211,7 @@ if (PHAN === "app") {
 
   if (TT === "sau") {
     test("CHM-AC-2 trang phường + query đi theo; chiều đỏ bỏ nhánh chuyển hướng", async () => {
-      const ten = E.CHM_PHUONG_TEN!
-      // Chép luật slug của queries.ts (hàm nội bộ), rồi chứng bằng bộ giải thật: slug phải giải ra đúng phường thử.
-      const slug = ten.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+      const slug = slugPhuong(E.CHM_PHUONG_TEN!)
       const { resolveSubmarketId } = await import(abs("app/src/lib/queries.ts"))
       assert.equal(await resolveSubmarketId(NGAN, slug), PHUONG, `slug ${slug} phải giải ra ${PHUONG} dưới ${NGAN}`)
       const sub = await nap(abs(PG.submarket))
@@ -224,6 +224,33 @@ if (PHAN === "app") {
       console.log(`ok   sau: phường ${slug} và ?tab=x đi theo đích; chiều đỏ ghim 'không chuyển hướng: /vn/thanh-pho-da-nang'`)
     })
   }
+
+  // Ma trận viết trước: 3 trang × (không query, ?tab=x) ở cả hai trạng thái DB; phường không có dưới mã mới → 404.
+  test(`CHM-AC-${TT === "sau" ? 2 : 3} ma trận 3 trang × query (${TT})`, async () => {
+    const slug = slugPhuong(E.CHM_PHUONG_TEN!)
+    const sub = await nap(abs(PG.submarket))
+    const trangs: { ten: string; page: PageFn; params: Record<string, string>; duoi: string; prop: string; cho: string }[] = [
+      { ten: "thị trường", page: await nap(abs(PG.market)), params: { country: "vn", market: doan(DAI) }, duoi: "", prop: "areaId", cho: DAI },
+      { ten: "listing", page: await nap(abs(PG.listings)), params: { country: "vn", market: doan(DAI) }, duoi: "/listings", prop: "marketId", cho: DAI },
+      { ten: "phường", page: sub, params: { country: "vn", market: doan(DAI), submarket: slug }, duoi: `/${slug}`, prop: "areaId", cho: PHUONG },
+    ]
+    let soO = 0
+    for (const t of trangs) {
+      for (const sp of [{}, { tab: "x" }] as Record<string, string>[]) {
+        if (TT === "sau") {
+          await kiemChuyen(t.page, t.params, sp, `/vn/${doan(NGAN)}${t.duoi}${sp.tab ? "?tab=x" : ""}`)
+        } else {
+          const k = await trang(() => t.page({ params: P(t.params), searchParams: P(sp) }))
+          assert.ok(k.loai === "el" && k.el.props[t.prop] === t.cho, `trước 064: trang ${t.ten} ${JSON.stringify(sp)} phải hiện với ${t.cho} (${k.loai})`)
+        }
+        soO++
+      }
+    }
+    assert.equal(soO, 6, "số ô đã assert phải = 6")
+    const khongCo = await trang(() => sub({ params: P({ country: "vn", market: doan(DAI), submarket: "phuong-khong-co" }), searchParams: P({}) }))
+    assert.equal(khongCo.loai, "404", "phường không có dưới mã mới phải 404, không chuyển hướng")
+    console.log(`ok   ${TT}: 6/6 ô trang × query; phường không có → 404`)
+  })
 
   // ── AC-4: mã dài không đích → 404; mã thường không bị đụng, không tra thêm ──────────────────────
   test(`CHM-AC-4 mã dài không đích 404, mã thường không chuyển, không tra thêm (${TT})`, async () => {
@@ -240,6 +267,19 @@ if (PHAN === "app") {
       assert.ok(k.loai === "el" && k.el.props.areaId === `vn-${m}`, `/vn/${m} không được đụng`)
     }
     assert.equal((await trang(() => listings({ params: P({ country: "vn", market: "hanoi" }), searchParams: P({}) }))).loai, "el", "/vn/hanoi/listings không được đụng")
+    // Trang phường: phường Hà Nội thật hiện, không tra thêm; thị trường không đích → 404.
+    const sub = await nap(abs(PG.submarket))
+    const { rows: phHn } = (await appPool.query(
+      "SELECT id, name FROM areas WHERE region_type = 'submarket' AND parent_id = 'vn-hanoi' AND id <> $1 ORDER BY id LIMIT 1", [PHUONG],
+    )) as { rows: { id: string; name: string }[] }
+    assert.equal(phHn.length, 1, "chm: DB thử phải có phường Hà Nội")
+    const pHn = { country: "vn", market: "hanoi", submarket: slugPhuong(phHn[0].name) }
+    const kHn = await trang(() => sub({ params: P(pHn), searchParams: P({}) }))
+    assert.ok(kHn.loai === "el" && kHn.el.props.areaId === phHn[0].id, `trang phường Hà Nội ${pHn.submarket} không được đụng (${kHn.loai})`)
+    assert.equal((await trang(() => sub({ params: P({ ...p0, submarket: "x" }), searchParams: P({}) }))).loai, "404", "/vn/tinh-khong-co/x phải 404")
+    const gocSub = await nap(chep(PG.submarket, "goc", docGoc(PG.submarket)))
+    const demSub = async (page: PageFn) => (await demTruyVan(() => page({ params: P(pHn), searchParams: P({}) }))).n
+    assert.equal(await demSub(sub), await demSub(gocSub), `tra thêm khi mã không mang tiền tố dài: trang phường ${pHn.submarket}`)
     // Mốc: bản chép trang của gốc hàng, cùng DB.
     const gocMarket = await nap(chep(PG.market, "goc", docGoc(PG.market)))
     const gocListings = await nap(chep(PG.listings, "goc", docGoc(PG.listings)))
@@ -271,11 +311,20 @@ if (PHAN === "app") {
     assert.equal(tuanTu(fDai), tuanTu(fM), "Finder: props khi gõ mã dài khác khi gõ mã có trong DB")
 
     const yieldPage = (await import(abs(PG.yield))).default as (a: unknown) => Promise<unknown>
-    const yDai = tuanTu(await yieldPage({ searchParams: P({ area: DAI }) }))
-    const yM = tuanTu(await yieldPage({ searchParams: P({ area: M }) }))
-    assert.equal(yDai, yM, "Lợi suất: ?area mã dài khác ?area mã có trong DB")
-    const yDef = tuanTu(await yieldPage({ searchParams: P({}) }))
-    console.log(`     Lợi suất ?area=${DAI}: ${yM === yDef ? "trùng trang mặc định (thị trường chưa có giá hoặc là mặc định)" : "khác trang mặc định — đã chọn Đà Nẵng"}`)
+    // Thị trường Lợi suất chọn đọc từ crumb đầu của tiêu đề trang.
+    const thiTruongYield = (el: unknown) => ((timProps(el, ["crumbs"])?.crumbs as { href: string }[] | undefined)?.[0]?.href) ?? null
+    const elDai = await yieldPage({ searchParams: P({ area: DAI }) })
+    const elM = await yieldPage({ searchParams: P({ area: M }) })
+    const elDef = await yieldPage({ searchParams: P({}) })
+    assert.equal(tuanTu(elDai), tuanTu(elM), "Lợi suất: ?area mã dài khác ?area mã có trong DB")
+    assert.equal(thiTruongYield(elDai), `/vn/${doan(M)}`, `Lợi suất ?area=${DAI} phải chọn ${M}`)
+    assert.equal(thiTruongYield(await yieldPage({ searchParams: P({ market: DAI }) })), `/vn/${doan(M)}`, `Lợi suất ?market=${DAI} phải chọn ${M}`)
+    // Đối chứng dương: trang mặc định không phải Đà Nẵng, nên phép đo trên không xanh nhờ mặc định.
+    assert.notEqual(thiTruongYield(elDef), `/vn/${doan(M)}`, "chm: trang mặc định trùng Đà Nẵng — phép đo không phân biệt được")
+    if (TT === "sau") {
+      const mut = (await import(chep(PG.yield, "bo-doi", doi(doi(docTep(PG.yield), "await giaiMaKhuVuc(sp.area)", "sp.area"), "await giaiMaKhuVuc(sp.market)", "sp.market")))).default as (a: unknown) => Promise<unknown>
+      assert.notEqual(thiTruongYield(await mut({ searchParams: P({ area: DAI }) })), `/vn/${doan(M)}`, "đột biến bỏ đổi mã phải làm Lợi suất không chọn Đà Nẵng")
+    }
 
     const compare = (await import(abs(PG.compare))).default as (a: unknown) => Promise<unknown>
     const c1 = timProps(await compare({ searchParams: P({ areas: `${DAI},vn-hanoi` }) }), ["entries", "ids"])
@@ -310,17 +359,27 @@ if (PHAN === "app") {
     console.log(`ok   ${TT}: 5/5 ô${TT === "sau" ? ", đột biến từng route bị bắt" : ""}`)
   })
 
-  test(`CHM-AC-8 API app mã không đích rỗng, mã thường không tra thêm (${TT})`, async () => {
-    const get = (await import(abs(ROUTE.listings))).GET as GetFn
-    const k = await goiApp(get, "/api/v1/listings?market=vn-tinh-khong-co")
-    assert.equal(soPhanTu(k.body), 0, "listings?market=vn-tinh-khong-co phải rỗng")
-    const goc = (await import(chep(ROUTE.listings, "goc", docGoc(ROUTE.listings)))).GET as GetFn
-    const luon = (await import(chep(ROUTE.listings, "luon-tra", voiLibLuonTra(docTep(ROUTE.listings))))).GET as GetFn
-    const dem = async (g: GetFn, m: string) => (await demTruyVan(() => goiApp(g, `/api/v1/listings?market=${m}&limit=1`))).n
-    assert.equal(await dem(get, "vn-hanoi"), await dem(goc, "vn-hanoi"), "tra thêm khi mã không mang tiền tố dài: /api/v1/listings?market=vn-hanoi")
-    if (TT === "sau") assert.ok((await dem(get, DAI)) >= (await dem(goc, DAI)) + 1, "mã dài phải tra thêm ≥ 1 truy vấn")
-    assert.ok((await dem(luon, "vn-hanoi")) > (await dem(goc, "vn-hanoi")), "đột biến luôn-tra phải làm ca đếm đỏ")
-    console.log(`ok   ${TT}: mã không đích rỗng; vn-hanoi đếm = mốc gốc; luôn-tra bị bắt`)
+  // Ma trận 5 ô: mã không đích trùng từng byte với route của gốc hàng; mã thường không tra thêm.
+  test(`CHM-AC-8 API app mã không đích và mã thường — 5 ô (${TT})`, async () => {
+    const KD = "vn-tinh-khong-co"
+    let soO = 0
+    for (const o of O_APP) {
+      const get = (await import(abs(ROUTE[o.route]))).GET as GetFn
+      const goc = (await import(chep(ROUTE[o.route], `goc-${o.route}`, docGoc(ROUTE[o.route])))).GET as GetFn
+      const luon = (await import(chep(ROUTE[o.route], `luon-tra-${o.route}`, voiLibLuonTra(docTep(ROUTE[o.route]))))).GET as GetFn
+      const kK = await goiApp(get, o.url(KD))
+      const kG = await goiApp(goc, o.url(KD))
+      assert.equal(kK.status, kG.status, `${o.ten} mã không đích khác gốc hàng (HTTP)`)
+      assert.equal(kK.json, kG.json, `${o.ten} mã không đích khác gốc hàng`)
+      assert.equal(soPhanTu(kK.body), 0, `${o.ten} mã không đích phải rỗng`)
+      const dem = async (g: GetFn, m: string) => (await demTruyVan(() => goiApp(g, o.url(m)))).n
+      assert.equal(await dem(get, "vn-hanoi"), await dem(goc, "vn-hanoi"), `tra thêm khi mã không mang tiền tố dài: ${o.ten}`)
+      if (TT === "sau") assert.ok((await dem(get, DAI)) >= (await dem(goc, DAI)) + 1, `${o.ten}: mã dài phải tra thêm ≥ 1 truy vấn`)
+      assert.ok((await dem(luon, "vn-hanoi")) > (await dem(goc, "vn-hanoi")), `${o.ten}: đột biến luôn-tra phải làm ca đếm đỏ`)
+      soO++
+    }
+    assert.equal(soO, 5, "số ô đã assert phải = 5")
+    console.log(`ok   ${TT}: 5/5 ô mã không đích trùng gốc, vn-hanoi đếm = mốc gốc; luôn-tra bị bắt`)
   })
 }
 
@@ -417,16 +476,31 @@ if (PHAN === "api") {
     assert.match(k.json, /vn-tinh-khong-co/, "thông điệp 404 phải nêu nguyên mã nhận")
     const lst = await appTu(abs(R.listings.tep), R.listings.ten, R.listings.goc)
     assert.equal(coDuLieu((await goi(lst, "/v1/listings?market=vn-tinh-khong-co")).body), 0, "/v1/listings?market=vn-tinh-khong-co phải rỗng")
-    const goc = await appTu(chep(R.markets.tep, "goc", docGoc(R.markets.tep)), R.markets.ten, R.markets.goc)
-    const luonSrc = doi(docTep(R.markets.tep), '"../lib/ma-thi-truong.js"', '"../lib/__chm-luon-tra-api.js"')
     let lib = docTep(`${DA}/lib/ma-thi-truong.ts`)
     lib = doi(lib, "if (ngan === id) return id;", 'if (ngan === id && id === "__khong__") return id;')
-    chep(`${DA}/lib/ma-thi-truong.ts`, "luon-tra-api", lib)
-    const luon = await appTu(chep(R.markets.tep, "luon-tra", luonSrc), R.markets.ten, R.markets.goc)
+    const libLuon = path.basename(chep(`${DA}/lib/ma-thi-truong.ts`, "luon-tra-api", lib), ".ts")
+    const gocCua: Partial<Record<keyof typeof R, Hono>> = {}
+    const luonCua: Partial<Record<keyof typeof R, Hono>> = {}
     const dem = async (app: Hono, url: string) => { demApi = 0; await goi(app, url); return demApi }
-    assert.equal(await dem(markets, "/v1/markets/vn-hanoi"), await dem(goc, "/v1/markets/vn-hanoi"), "tra thêm khi mã không mang tiền tố dài: /v1/markets/vn-hanoi")
-    if (TT === "sau") assert.ok((await dem(markets, `/v1/markets/${DAI}`)) >= (await dem(goc, `/v1/markets/${DAI}`)) + 1, "mã dài phải tra thêm ≥ 1 truy vấn")
-    assert.ok((await dem(luon, "/v1/markets/vn-hanoi")) > (await dem(goc, "/v1/markets/vn-hanoi")), "đột biến luôn-tra phải làm ca đếm đỏ")
-    console.log(`ok   ${TT}: 404 nêu nguyên mã, listings rỗng, vn-hanoi đếm = mốc gốc, luôn-tra bị bắt`)
+    const KD = "vn-tinh-khong-co"
+    let soO = 0
+    // Ma trận 9 ô: mã không đích trùng từng byte với route của gốc hàng; mã thường không tra thêm.
+    for (const o of O_API) {
+      const r = R[o.r]
+      const app = await appTu(abs(r.tep), r.ten, r.goc)
+      gocCua[o.r] ??= await appTu(chep(r.tep, `goc-${o.r}`, docGoc(r.tep)), r.ten, r.goc)
+      luonCua[o.r] ??= await appTu(chep(r.tep, `luon-tra-${o.r}`, doi(docTep(r.tep), '"../lib/ma-thi-truong.js"', `"../lib/${libLuon}.js"`)), r.ten, r.goc)
+      const goc = gocCua[o.r]!
+      const kK = await goi(app, o.url(KD))
+      const kG = await goi(goc, o.url(KD))
+      assert.equal(kK.status, kG.status, `${o.ten} mã không đích khác gốc hàng (HTTP)`)
+      assert.equal(kK.json, kG.json, `${o.ten} mã không đích khác gốc hàng`)
+      assert.equal(await dem(app, o.url("vn-hanoi")), await dem(goc, o.url("vn-hanoi")), `tra thêm khi mã không mang tiền tố dài: ${o.ten}`)
+      if (TT === "sau") assert.ok((await dem(app, o.url(DAI))) >= (await dem(goc, o.url(DAI))) + 1, `${o.ten}: mã dài phải tra thêm ≥ 1 truy vấn`)
+      assert.ok((await dem(luonCua[o.r]!, o.url("vn-hanoi"))) > (await dem(goc, o.url("vn-hanoi"))), `${o.ten}: đột biến luôn-tra phải làm ca đếm đỏ`)
+      soO++
+    }
+    assert.equal(soO, 9, "số ô đã assert phải = 9")
+    console.log(`ok   ${TT}: 404 nêu nguyên mã, listings rỗng; 9/9 ô mã không đích trùng gốc, vn-hanoi đếm = mốc gốc; luôn-tra bị bắt`)
   })
 }
