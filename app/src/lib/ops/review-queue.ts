@@ -10,6 +10,8 @@
 export type ReviewQueueRow = {
   id: number;
   item_type: string;
+  /** Mã thẻ (`nguoi:<S0x>:<băm>` ở thẻ Người HD17); truy vấn cũ không chọn thì vắng. */
+  item_id?: string | null;
   title: string;
   evidence: Record<string, unknown>;
   ai_suggestion: string | null;
@@ -23,6 +25,8 @@ export type ReviewQueueRow = {
 export type ReviewItem = {
   id: number;
   item_type: string;
+  /** Có khi dòng nguồn mang mã thẻ; thẻ Người rẽ nhánh theo tiền tố `nguoi:` (HD17). */
+  item_id?: string;
   title: string;
   evidence: Record<string, unknown>;
   ai_suggestion: string | null;
@@ -65,6 +69,7 @@ export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unkno
     // review_queue.id là bigint — pg trả chuỗi; ép về số cho đúng kiểu (khoá media, so sánh thẻ đang mở).
     id: Number(row.id),
     item_type: row.item_type,
+    ...(row.item_id ? { item_id: row.item_id } : {}),
     title: row.title,
     evidence: stripEvidenceConfidence(evidence),
     ai_suggestion: row.ai_suggestion,

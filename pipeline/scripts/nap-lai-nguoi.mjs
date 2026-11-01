@@ -90,13 +90,18 @@ async function gopSaiDich(c, sauId) {
   return { so: rows.length, sai: sai.map((r) => r.ks) };
 }
 
-/** Người cuối của chuỗi merged_into mang ≥ 2 SĐT (bí danh sdt sống) và lần gộp khác nguồn. */
+/**
+ * Người cuối của chuỗi merged_into mang ≥ 2 SĐT (bí danh sdt sống) và lần gộp khác nguồn. HD17 (Hỏi-4): người cuối có
+ * trong chuỗi một lần gộp lý do `the-duyet:` (thẻ người đã duyệt) được mang nhiều SĐT — đó là bí danh nối.
+ */
 async function viPhamMotSdt(c) {
   const haiSdt = (await c.query(`
     WITH RECURSIVE cuoi(k, c) AS (
       SELECT party_key, party_key FROM parties WHERE status <> 'merged'
       UNION ALL SELECT p.party_key, cuoi.c FROM parties p JOIN cuoi ON p.merged_into = cuoi.k WHERE p.status = 'merged')
     SELECT cuoi.c FROM cuoi JOIN registry_aliases a ON a.object_key = cuoi.k AND a.kind = 'sdt' AND a.retired_at IS NULL
+    WHERE NOT EXISTS (SELECT 1 FROM cuoi x JOIN registry_events e ON e.object_key = x.k
+                       WHERE x.c = cuoi.c AND e.kind = 'gop' AND e.reason LIKE 'the-duyet:%')
     GROUP BY cuoi.c HAVING count(DISTINCT a.value) > 1`)).rows.length;
   const khacNguon = (await c.query(`
     SELECT 1 FROM registry_events e JOIN parties a ON a.party_key = e.object_key JOIN parties b ON b.party_key = e.related_keys[1]
@@ -140,7 +145,7 @@ async function demBang(url) {
  * Hai lượt + đối chứng trong một giao dịch ROLLBACK.
  * @param {import("pg").Client} c
  */
-export async function chayNapLaiNguoi(c, { doiChungHong = false, out = console.log } = {}) {
+export async function chayNapLaiNguoi(c, { doiChungHong = false, theDuyet = false, out = console.log } = {}) {
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock(33033)");
@@ -224,7 +229,30 @@ export async function chayNapLaiNguoi(c, { doiChungHong = false, out = console.l
 
     const sellersThieu = await sellersThieuNguoi(c);
     out(`sellers_thieu_nguoi: ${sellersThieu.length}${sellersThieu.length ? ` (vd ${sellersThieu.slice(0, 3).join(", ")})` : ""}`);
-    return { luot1, luot2, ketQua1: k1, ketQua2, bangNhau, doiChungDo, sellersThieu, hd13 };
+    // HD17 `--the-duyet`: duyệt «gộp» một thẻ Người có ≥ 2 SĐT → người cuối hai SĐT có sự kiện the-duyet nên không vi phạm;
+    // đối chứng: ép gộp hai người theo SĐT khác số mà không sự kiện the-duyet → thước phải thấy người hai SĐT.
+    let td = null;
+    if (theDuyet) {
+      await c.query("SAVEPOINT the_duyet");
+      try {
+        const { rows: [the] } = await c.query(`SELECT id FROM review_queue WHERE item_type = 'data_quality' AND item_id LIKE 'nguoi:%'
+          AND status = 'pending' AND jsonb_array_length(evidence->'sdt') >= 2 ORDER BY id LIMIT 1`);
+        if (the) {
+          await c.query("UPDATE review_queue SET status = 'approved', decided_by = 'nap-lai-nguoi', decided_at = now() WHERE id = $1", [the.id]);
+          const kt = await motLuot(c, { chiDem: true });
+          const sau = await viPhamMotSdt(c);
+          const { rows: hai } = await c.query(`SELECT a.object_key FROM registry_aliases a JOIN parties p ON p.party_key = a.object_key
+            WHERE a.kind = 'sdt' AND a.retired_at IS NULL AND p.status = 'active' AND a.source = 'S03' ORDER BY a.value LIMIT 2`);
+          await c.query("UPDATE parties SET status = 'merged', merged_into = $2 WHERE party_key = $1 AND status = 'active'", [hai[0].object_key, hai[1].object_key]);
+          const doiChung = await viPhamMotSdt(c);
+          td = { the: the.id, theAp: kt.the_ap, haiSdt: sau.haiSdt, khacNguon: sau.khacNguon, haiSdtDoiChung: doiChung.haiSdt };
+        } else td = { the: null };
+      } finally {
+        await c.query("ROLLBACK TO SAVEPOINT the_duyet");
+      }
+      out(`hd17 the-duyet: ${JSON.stringify(td)}`);
+    }
+    return { luot1, luot2, ketQua1: k1, ketQua2, bangNhau, doiChungDo, sellersThieu, hd13, theDuyet: td };
   } finally {
     await c.query("ROLLBACK").catch(() => {});
   }
@@ -232,6 +260,7 @@ export async function chayNapLaiNguoi(c, { doiChungHong = false, out = console.l
 
 async function main() {
   const doiChungHong = process.argv.includes("--doi-chung-hong");
+  const theDuyet = process.argv.includes("--the-duyet");
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
@@ -245,7 +274,7 @@ async function main() {
     const bamN1 = execFileSync("git", ["hash-object", join(ROOT, "pipeline/do-danh-ba-sdt.mjs")], { encoding: "utf8" }).trim();
     console.log(`hd13 tinhSo: pipeline/do-danh-ba-sdt.mjs ${bamN1}`);
     const truoc = await demBang(DB_URL);
-    const kq = await chayNapLaiNguoi(c, { doiChungHong });
+    const kq = await chayNapLaiNguoi(c, { doiChungHong, theDuyet });
     const sau = await demBang(DB_URL);
     for (const t of Object.keys(truoc)) {
       const n = (x) => x ?? "không có bảng";
@@ -276,6 +305,11 @@ async function main() {
     if (!(ct.epGop > 0)) loi.push("đối chứng bỏ công tắc không đỏ");
     if (ct.k1CongTac !== "bat") loi.push(`công tắc lượt 1 ${ct.k1CongTac}`);
     if (Object.keys(truoc).some((t) => truoc[t] !== sau[t])) loi.push("ROLLBACK không trả DB về như cũ");
+    const td = kq.theDuyet;
+    if (theDuyet && !td?.the) loi.push("HD17 không có thẻ Người ≥ 2 SĐT để thử");
+    if (td?.the && !(td.theAp > 0)) loi.push("HD17 thẻ duyệt không áp");
+    if (td?.the && (td.haiSdt || td.khacNguon)) loi.push(`HD17 người hai SĐT sau thẻ duyệt ${td.haiSdt}`);
+    if (td?.the && !(td.haiSdtDoiChung > 0)) loi.push("HD17 đối chứng hai SĐT không sự kiện the-duyet không đỏ");
     console.log(loi.length ? `nap-lai-nguoi: KHÔNG ĐẠT — ${loi.join(" · ")}` : "nap-lai-nguoi: ĐẠT");
     process.exitCode = loi.length ? 1 : 0;
   } finally {

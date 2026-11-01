@@ -2982,6 +2982,31 @@
         "pipeline/vlm-anh-s03.mjs"
       ],
       "ghi_chu": "Dãy U1 sau KC1 (giám sát xếp). Qwen 27B local không đọc ảnh; GLM-V qua gói ZCode không dùng được (điều khoản)."
+    },
+    {
+      "dung_tren": [
+        "HD13"
+      ],
+      "dot": "hang-duyet-3010",
+      "ma": "HD17",
+      "slug": "the-duyet-nguoi-nhieu-nhieu",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "phu": [
+        "HD17"
+      ],
+      "cau_giao": "Thẻ duyệt Người cho ca nhiều–nhiều trên /ops/review: một SĐT nhiều người gửi, hay một người gửi nhiều SĐT, thành thẻ để người duyệt quyết gộp hay tách; quyết định áp qua luật xác định, có vết và đảo được",
+      "bat_khi": "Mọi ca nhiều–nhiều mà bộ dựng danh bạ đếm (SĐT nhiều người gửi, người gửi nhiều SĐT) có đúng một thẻ trên /ops/review; người duyệt chọn gộp thì hai Người về một, chọn tách thì giữ nguyên; tách lại một lần gộp không mất dữ liệu",
+      "vi_sao": "Cổng Phạm vi HD13 (31/10): Mạnh trả lời Hỏi-1 = tách thẻ duyệt Người thành hàng riêng; HD13 đo khoảng 9 SĐT dùng chung và 5 người nhiều số vẫn tách người.",
+      "vung": [
+        "app/src/app/ops/review/**",
+        "app/src/components/ops/review-card*",
+        "app/src/lib/ops/review-nguoi*",
+        "app/tests/review-nguoi*"
+      ],
+      "ghi_chu": "Hàng phát sinh từ Hỏi-1 của Cổng Phạm vi HD13 (giám sát P3-138, giao dãy U2 sau HD13). Đứng trên luật một–một của HD13: thẻ chỉ cho ca HD13 đếm mà không gộp."
     }
   ],
   "chan_troi": [
