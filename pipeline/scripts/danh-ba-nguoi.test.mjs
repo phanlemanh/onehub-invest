@@ -4,8 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FILL } from "../sync-cloud.mjs";
 import {
-  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, bangDuocDoc, chonVaiRut, giaiNguoi, giuVaiBaiMat, khoaBiDanh, moiKhoaNguoi,
-  rutDinhDanh,
+  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, anhXaVai, bangDuocDoc, chonGop, chonVaiRut, giaiNguoi, giuVaiBaiMat, khoaBiDanh,
+  moiKhoaNguoi, rutDinhDanh,
 } from "../lib/danh-ba-nguoi.mjs";
 
 const BON_BANG = ["parties", "registry_aliases", "registry_events", "party_roles"];
@@ -247,4 +247,178 @@ test("SD3-E4 đỏ: bản chép bỏ tra sdt_bam đời trước → bắt «NGU
 
 test("SD3-E4: bộ dựng nghỉ sdt_bam bằng retired_at, không DELETE", () => {
   assert.match(SQL.nghiSdtBam, /^UPDATE registry_aliases SET retired_at = now\(\) WHERE kind = 'sdt_bam' AND retired_at IS NULL$/);
+});
+
+// ---- HD13 nguoi-noi-theo-sdt: gộp người theo SĐT một–một cùng nguồn (E1, E2, E10) ----
+
+/** Một ca chonGop: dựng người bằng giaiNguoi trên các tin, rồi chọn gộp với trạng thái/gộp có sẵn của ca. */
+function caGop(tins, baiRows, { trangThai = () => new Map(), gopVao = () => new Map(), suaBiDanh = (bd) => bd } = {}) {
+  const baiTheoId = bai(baiRows);
+  const kq = giaiNguoi(tins, new Map(), { baiTheoId, taoKhoa: khoaGia() });
+  const bd = suaBiDanh(ap(new Map(), kq));
+  return { bd, kq, baiTheoId, ...chonGop(tins, bd, trangThai(bd), { baiTheoId, gopVao: gopVao(bd) }) };
+}
+
+test("HD13 E1 chonGop: ma trận mười dáng, chỉ cặp một–một cùng nguồn của người active được gộp", () => {
+  const sdt = (bd, s, v) => chu(bd, s, "sdt", v);
+  const tk = (bd, s, v) => chu(bd, s, "tai_khoan_nguon", v);
+  const MA_TRAN = [
+    ["một–một", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]]),
+      (r) => [{ tu: sdt(r.bd, "S03", "h"), vao: tk(r.bd, "S03", "A"), source: "S03", sdt: "h" }]],
+    ["SĐT hai người gửi", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pb"], seller_phone: "h" })],
+      [["pa", "S03", "A"], ["pb", "S03", "B"]]), () => []],
+    ["người gửi hai SĐT", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pa2"], seller_phone: "k" })],
+      [["pa", "S03", "A"], ["pa2", "S03", "A"]]), () => []],
+    ["cặp chỉ trên tin nghỉ", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h", retired_at: "2026-10-20T00:00:00Z" })],
+      [["pa", "S03", "A"]]), () => []],
+    ["tài khoản S03, SĐT S05", () => caGop([tin("S03", { post_ids: ["pa"] }), tin("S05", { post_ids: ["pa"], seller_phone: "h" })],
+      [["pa", "S03", "A"]]), () => []],
+    ["tin S06", () => caGop([tin("S06", { seller_ref: "ct:1", seller_phone: "h" })], []), () => []],
+    ["người theo SĐT merged", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "merged"]]) }), () => []],
+    ["người theo SĐT split", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "split"]]) }), () => []],
+    ["Ks = Ka", () => caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" })], [["pa", "S03", "A"]],
+      { suaBiDanh: (bd) => new Map([...bd].map(([k, v]) => [k, k === khoaBiDanh("S03", "sdt", "h") ? tk(bd, "S03", "A") : v])) }), () => []],
+    ["người tài khoản đã gộp SĐT khác", () => caGop(
+      [tin("S03", { post_ids: ["pa"], seller_phone: "k" }), tin("S03", { post_ids: ["pa1"], seller_phone: "h", retired_at: "2026-10-20T00:00:00Z" })],
+      [["pa", "S03", "A"], ["pa1", "S03", "A"]],
+      { gopVao: (bd) => new Map([[sdt(bd, "S03", "h"), tk(bd, "S03", "A")]]), trangThai: (bd) => new Map([[sdt(bd, "S03", "h"), "merged"]]) }),
+    () => []],
+  ];
+  let soAssert = 0;
+  for (const [dong, chay, mong] of MA_TRAN) {
+    const r = chay();
+    assert.deepEqual(r.gop, mong(r), `HD13 E1 sai gộp: ${dong}`);
+    soAssert++;
+  }
+  assert.equal(soAssert, MA_TRAN.length);
+  assert.equal(soAssert, 10);
+  // nhieuNhieu đếm hai ca nhiều–nhiều theo nguồn.
+  const nn = caGop([tin("S03", { post_ids: ["pa"], seller_phone: "h" }), tin("S03", { post_ids: ["pb"], seller_phone: "h" }),
+    tin("S03", { post_ids: ["pc"], seller_phone: "m" }), tin("S03", { post_ids: ["pc2"], seller_phone: "n" })],
+  [["pa", "S03", "A"], ["pb", "S03", "B"], ["pc", "S03", "C"], ["pc2", "S03", "C"]]).nhieuNhieu;
+  assert.deepEqual(nn.S03, { sdt_nhieu_nguoi: 1, nguoi_nhieu_sdt: 1 });
+});
+
+test("HD13 E2 anhXaVai: tin chỉ SĐT của số đã gộp về người tài khoản (parser/observed); chưa gộp thì ở người theo SĐT", () => {
+  const t1 = tin("S03", { post_ids: ["pa"], seller_phone: "h" });
+  const t2 = tin("S03", { seller_phone: "h" });
+  const r = caGop([t1, t2], [["pa", "S03", "A"]]);
+  const ks = chu(r.bd, "S03", "sdt", "h");
+  const ka = chu(r.bd, "S03", "tai_khoan_nguon", "A");
+  assert.deepEqual(r.gop.map((g) => [g.tu, g.vao]), [[ks, ka]]);
+  const vaiCua = (vai, t) => vai.filter((v) => v.subject_key === `S03:${t.originating_system_key}`).map((v) => `${v.party_key}/${v.method}/${v.evidence_tier}`);
+  const sau = anhXaVai(r.kq.vai, new Map(r.gop.map((g) => [g.tu, g.vao])));
+  assert.deepEqual(vaiCua(sau, t2), [`${ka}/parser/observed`], "HD13 E2 tin chỉ SĐT không về người tài khoản");
+  assert.deepEqual(vaiCua(sau, t1), [`${ka}/source_field/fact`], "HD13 E2 tin có tài khoản đổi vai");
+  const chuaGop = anhXaVai(r.kq.vai, new Map());
+  assert.deepEqual(vaiCua(chuaGop, t2), [`${ks}/parser/observed`], "HD13 E2 chưa gộp mà vai rời người theo SĐT");
+});
+
+test("HD13 E10 đọc tĩnh: SQL bộ dựng + dung-nguoi.mjs không tầng A, không xoá, ghi danh bạ đúng hai kiểu", () => {
+  const nguonLib = readFileSync(new URL("../lib/danh-ba-nguoi.mjs", import.meta.url), "utf8");
+  const nguonCli = readFileSync(new URL("../dung-nguoi.mjs", import.meta.url), "utf8");
+  const khoaDocLap = [...nguonLib.slice(nguonLib.indexOf("export const SQL"), nguonLib.indexOf("});", nguonLib.indexOf("export const SQL")))
+    .matchAll(/^ {2}(\w+): `/gm)].length;
+  const cli = [...nguonCli.matchAll(/"((?:BEGIN|COMMIT|ROLLBACK|SELECT|INSERT|UPDATE|DELETE|TRUNCATE)\b[^"]*)"/g)].map((m) => m[1]);
+  const cau = [...Object.values(SQL), ...cli];
+  assert.equal(Object.keys(SQL).length, khoaDocLap, "HD13 E10 số khoá SQL.* khác số đếm độc lập trong mã nguồn");
+  assert.ok(cli.length >= 3, "HD13 E10 không rút được câu nào của dung-nguoi.mjs");
+  assert.equal(cau.length, khoaDocLap + cli.length);
+  const vi = (sql) => {
+    const loi = [];
+    if (bangDuocDoc(sql).length) loi.push(`tầng A ${bangDuocDoc(sql).join(",")}`);
+    if (/\b(DELETE|TRUNCATE)\b/i.test(sql)) loi.push("xoá");
+    if (/\bUPDATE\s+parties\b/i.test(sql) && !/SET\s+status\s*=[^,]+,\s*merged_into\s*=/i.test(sql)) loi.push("UPDATE parties ngoài status/merged_into");
+    if (/\bregistry_events\b/i.test(sql) && !/^\s*INSERT INTO registry_events\b/i.test(sql)) loi.push("registry_events không phải INSERT");
+    return loi;
+  };
+  const loi = cau.flatMap((s) => vi(s).map((l) => `${l}: ${s.slice(0, 50)}`));
+  assert.deepEqual(loi, [], `HD13 E10 ${loi.join(" | ")}`);
+  // Đối chứng dương: hai câu cài sẵn phải bị bắt.
+  assert.deepEqual(vi("SELECT p.party_key FROM parties p JOIN users u ON true"), ["tầng A users"]);
+  assert.deepEqual(vi("DELETE FROM parties WHERE party_key = $1"), ["xoá"]);
+  assert.deepEqual(vi("UPDATE parties SET source = 'S03'"), ["UPDATE parties ngoài status/merged_into"]);
+});
+
+// ---- cong-tac-gop-nguoi-dem: công tắc ops_audit cho bước gộp, mặc định tắt ----
+import { CONG_TAC_GOP, docCongTac } from "../lib/danh-ba-nguoi.mjs";
+
+test("CTG E3 docCongTac: ma trận bảy dáng, dòng id lớn nhất thắng, chỉ detail.bat === true là bật", () => {
+  const bat = (id) => ({ id: String(id), detail: { bat: true, ly_do: "x" } });
+  const tat = (id) => ({ id: String(id), detail: { bat: false, ly_do: "x" } });
+  const maTran = [
+    ["rỗng", [], "tat"],
+    ["[bat]", [bat(1)], "bat"],
+    ["[tat]", [tat(1)], "tat"],
+    ["[bat, tat]", [bat(1), tat(2)], "tat"],
+    ["[tat, bat] viết ngược thứ tự", [bat(9), tat(3)], "bat"],
+    ["[bat, bat chuỗi]", [bat(1), { id: "2", detail: { bat: "true", ly_do: "x" } }], "tat"],
+    ["[detail thiếu bat]", [{ id: "1", detail: { ly_do: "x" } }], "tat"],
+  ];
+  let soAssert = 0;
+  for (const [ten, rows, ky] of maTran) {
+    assert.equal(docCongTac(rows), ky, `CTG E3 ${ten}`);
+    soAssert++;
+  }
+  assert.equal(soAssert, maTran.length);
+  // id bigserial về dạng chuỗi: "10" > "9" theo số, không theo chữ.
+  assert.equal(docCongTac([tat(9), bat(10)]), "bat", "CTG E3 so id theo số");
+});
+
+/** Câu chạm ops_audit (đọc/ghi/sửa/xoá), không tính phép dò to_regclass. */
+const chamAudit = (sql) => /\b(?:FROM|INTO|UPDATE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE|DROP\s+TABLE)\s+ops_audit\b/i.test(sql);
+const viAudit = (sql) => {
+  if (!chamAudit(sql)) return [];
+  if (/^\s*SELECT\b/i.test(sql) && /\bFROM\s+ops_audit\b/i.test(sql) && !/\b(UPDATE|DELETE|TRUNCATE|INSERT)\b/i.test(sql)) return [];
+  if (/^\s*INSERT INTO ops_audit\b/i.test(sql)) return [];
+  return [`ops_audit ngoài SELECT/INSERT: ${sql.slice(0, 50)}`];
+};
+/** Lời gọi bộ dựng (dungNguoi( hoặc bộ tiêm dung( của buocDem), trừ chính định nghĩa hàm; trả đối số đến dấu ) khớp. */
+function loiGoiDung(nguon) {
+  const goi = [];
+  for (const m of nguon.matchAll(/(?<![\w.])(dungNguoi|dung)\(/g)) {
+    if (/function\s+$/.test(nguon.slice(Math.max(0, m.index - 20), m.index))) continue;
+    let sau = 0;
+    let i = m.index + m[0].length;
+    for (; i < nguon.length; i++) {
+      if (nguon[i] === "(") sau++;
+      else if (nguon[i] === ")") { if (sau === 0) break; sau--; }
+    }
+    goi.push(nguon.slice(m.index, i + 1));
+  }
+  return goi;
+}
+const mangGop = (goi) => /[{,]\s*gop\s*[:,}]|\.\.\./.test(goi);
+
+test("CTG E8 đọc tĩnh: ops_audit chỉ SELECT/INSERT, một câu đọc + một câu ghi công tắc, mã chạy thật không truyền gop", () => {
+  const doc = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
+  const nguonCli = doc("../dung-nguoi.mjs");
+  const cli = [...nguonCli.matchAll(/"((?:SELECT|INSERT|UPDATE|DELETE|TRUNCATE)\b[^"]*)"/g)].map((m) => m[1]);
+  const cau = [...Object.values(SQL), ...cli];
+  const loi = cau.flatMap(viAudit);
+  assert.deepEqual(loi, [], `CTG E8 ${loi.join(" | ")}`);
+  const docCt = cau.filter((s) => /^\s*SELECT\b/i.test(s) && /\bFROM\s+ops_audit\b/i.test(s) && s.includes(`'${CONG_TAC_GOP}'`));
+  const ghiCt = cau.filter((s) => /^\s*INSERT INTO ops_audit\b/i.test(s));
+  assert.equal(CONG_TAC_GOP, "danh-ba:gop-sdt");
+  assert.equal(docCt.length, 1, "CTG E8 số câu đọc công tắc");
+  assert.equal(ghiCt.length, 1, "CTG E8 số câu ghi công tắc");
+  assert.equal(cau.filter(chamAudit).length, 2, "CTG E8 câu chạm ops_audit ngoài đọc/ghi công tắc");
+
+  const goi = ["../refresh-bait-gap.mjs", "../dung-nguoi.mjs", "../lib/danh-ba-nguoi.mjs"].flatMap((p) => loiGoiDung(doc(p)));
+  assert.ok(goi.length >= 3, `CTG E8 rút được ${goi.length} lời gọi bộ dựng`);
+  assert.deepEqual(goi.filter(mangGop), [], "CTG E8 lời gọi chạy thật truyền gop");
+  // buocDem chạy thật không nhận bộ dựng thay thế.
+  const goiDem = [...doc("../refresh-bait-gap.mjs").matchAll(/(?<![\w.])buocDem\(([^)]*)\)/g)].map((m) => m[0]);
+  assert.ok(goiDem.length >= 1 && goiDem.every((g) => !/\bdung\s*:/.test(g)), `CTG E8 buocDem chạy thật: ${goiDem.join(" | ")}`);
+
+  // Đối chứng dương: câu và lời gọi cài sẵn phải bị bắt.
+  assert.equal(viAudit("UPDATE ops_audit SET detail = '{}'").length, 1);
+  assert.equal(viAudit("DELETE FROM ops_audit WHERE id = 1").length, 1);
+  assert.deepEqual(viAudit("SELECT to_regclass('public.ops_audit') IS NOT NULL AS co"), []);
+  assert.equal(loiGoiDung("await dungNguoi(c, { gop: true });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("await dungNguoi(c, { runId, gop });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("await dungNguoi(c, { ...o });").filter(mangGop).length, 1);
+  assert.equal(loiGoiDung("export async function dungNguoi(c, { gop } = {}) {}").length, 0);
 });
