@@ -94,10 +94,11 @@ export async function loaiTinPhiLy(c, rows) {
 /**
  * Bước đêm: bait gap + sellers (tự-commit như trước), rồi danh bạ Người (DB2b) trong giao dịch RIÊNG — bộ dựng lỗi
  * không kéo lùi bait gap/sellers, và lỗi được ném lại (không nuốt). `savepoint: true` khi người gọi đã mở giao dịch
- * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng.
+ * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng. Bộ dựng đọc công tắc gộp
+ * ops_audit (mặc định tắt); `dung` thay bộ dựng CHỈ cho đối chứng của thước — job đêm không truyền.
  * @param {import("pg").Client} c
  */
-export async function buocDem(c, { savepoint = false, runId } = {}) {
+export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } = {}) {
   const kq = await refreshBaitGap(c);
   if (!(await c.query("SELECT to_regclass('public.parties') AS t")).rows[0].t) {
     console.log("danh-ba-nguoi: bỏ qua — DB chưa áp 055 (chưa có bảng parties)");
@@ -108,7 +109,7 @@ export async function buocDem(c, { savepoint = false, runId } = {}) {
     : ["BEGIN", "COMMIT", "ROLLBACK"];
   await c.query(mo);
   try {
-    const nguoi = await dungNguoi(c, { runId });
+    const nguoi = await dung(c, { runId });
     await c.query(xong);
     return { ...kq, nguoi };
   } catch (e) {
