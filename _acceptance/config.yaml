@@ -51,6 +51,8 @@ executors:
     sd3_boc: "node --test pipeline/parse.test.mjs pipeline/scripts/boc-sdt.test.mjs"   # sdt-luu-goc-e164 E1 — bộ bóc ra +84…
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     ldb_n6: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # sd3-lam-chat-do-danh-ba E1, E2 — N6 hàm thuần + 11 dòng ghi, không DB
+    svc_sync: "node --test pipeline/sync-cloud.test.mjs"   # sellers-view-len-cloud E1, E8 — chốt kiểu bảng + khoá người bán trong FILL, không DB
+    svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -526,6 +528,10 @@ executors:
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
     ldb_people: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh"   # sd3-lam-chat-do-danh-ba E7 — che số /ops/people qua loader thật (DB thử)
     ldb_pham_vi: "bash _acceptance/sd3-lam-chat-do-danh-ba/probes/pham-vi.sh"   # sd3-lam-chat-do-danh-ba E8
+    svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
+    svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
+    svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt
+    svc_pham_vi: "bash _acceptance/sellers-view-len-cloud/probes/pham-vi.sh"   # sellers-view-len-cloud E6
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
