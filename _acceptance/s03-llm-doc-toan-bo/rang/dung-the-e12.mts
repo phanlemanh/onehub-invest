@@ -17,6 +17,12 @@ try {
   await c.query(`DELETE FROM review_queue`);
   const SNAP = "hanoi__zalo-agent__2099-05-05T000000", ID = "t_ls1_e12", POST = "t_ls1_e12_p";
   const CHU = "Khách cần mua căn hộ giá 5 tỷ khu Minh Khai rộng rãi";
+  // Chạy lại được: gỡ fixture của lần trước.
+  await c.query(`DELETE FROM enrichment_proposals WHERE offer_id = $1`, [ID]);
+  await c.query(`DELETE FROM ops_audit WHERE detail->>'offer_id' = $1`, [ID]);
+  await c.query(`DELETE FROM sale_offers WHERE offer_id = $1`, [ID]);
+  await c.query(`DELETE FROM silver_labels WHERE run_id = 'e12-ban-do'`);
+  await c.query(`DELETE FROM stg_zalo_posts WHERE post_id = $1`, [POST]);
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
   await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
     VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi LS1', 'ls1', $3, now()) ON CONFLICT DO NOTHING`, [POST, SNAP, CHU]);
@@ -26,7 +32,13 @@ try {
     price_vnd: 5e9, quote_gia: "giá 5 tỷ", area_m2: null, quote_dt: "", bedrooms: null, bathrooms: null, street: null, block: null });
   const hoi = async (chu: string) => { const p = docTraLoi(tra, chu); return { model: "gateway:anthropic/claude-haiku-5.5", ...p, error_kind: null, latency_ms: 1, cost_usd: 0 }; };
   const resolve = async () => ({ projectSlug: null, projectName: null, projectCandidates: [], propertyType: "land", typeBasis: "luật mồi", buildingHint: null, areaHint: null, matchedBy: "" });
-  await chayLuot({ client: c, runId: "e12-ban-do", tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [ID], hoi, resolve } as Parameters<typeof chayLuot>[0]);
+  // Cùng cách lệnh thật mở giao dịch mỗi tin (agent/scripts/doc-toan-bo-s03.ts).
+  const giaoDich = async (fn: () => Promise<unknown>) => {
+    await c.query("BEGIN");
+    try { const r = await fn(); await c.query("COMMIT"); return r; } catch (e) { await c.query("ROLLBACK"); throw e; }
+  };
+  const kq = await chayLuot({ client: c, giaoDich, runId: "e12-ban-do", tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [ID], hoi, resolve } as Parameters<typeof chayLuot>[0]);
+  console.log(JSON.stringify(kq));
   const { rows } = await c.query(`SELECT item_id, status, jsonb_array_length(evidence->'doi_chieu') AS dc, jsonb_array_length(evidence->'fields') AS f FROM review_queue`);
   console.log(JSON.stringify(rows));
   if (rows.length !== 1 || rows[0].dc !== 2) { console.error("dung-the-e12: phải đúng một thẻ có hai đối chiếu"); process.exitCode = 1; }
