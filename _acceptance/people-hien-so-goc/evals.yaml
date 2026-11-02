@@ -64,8 +64,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.shs_chu
-    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/lib/ops/people.ts, CONTEXT.md, _acceptance/sdt-luu-goc-e164/evals.yaml, _acceptance/sd3-lam-chat-do-danh-ba/evals.yaml, _acceptance/people-hien-so-goc/probes/chu.mjs]
-    expected: "exit 0; probes/chu.mjs: deals.ts và page.tsx không còn «tầng A» gắn SĐT; 0 NHAN_CHE_SDT trong app/src; CONTEXT.md dòng Bí danh không còn «đã che»; hai ô eval khai status not-run và superseded_by people-hien-so-goc#AC-3; đối chứng đỏ: chạy trên chuỗi mồi có «SĐT (đã che)» → thoát 1 với ('SHS-AC-8')."
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/lib/ops/people.ts, CONTEXT.md, _acceptance/people-hien-so-goc/probes/chu.mjs]
+    expected: "exit 0; probes/chu.mjs: deals.ts và page.tsx không còn «tầng A» gắn SĐT; 0 NHAN_CHE_SDT trong app/src; CONTEXT.md dòng Bí danh không còn «đã che»; đối chứng đỏ: chạy trên chuỗi mồi có «SĐT (đã che)» → thoát 1 với ('SHS-AC-8')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-8

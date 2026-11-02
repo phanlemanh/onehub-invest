@@ -55,8 +55,6 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.sd3_doc
-    status: not-run
-    superseded_by: people-hien-so-goc#AC-3
     paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/people-rows.ts, _acceptance/sdt-luu-goc-e164/probes/people.sh, _acceptance/sdt-luu-goc-e164/probes/people.tsx, pipeline/do-danh-ba-sdt.mjs, pipeline/scripts/do-boc-sdt.mjs, pipeline/scripts/test-data-residue.mjs]
     layer: backend-effect
     expected: "exit 0; trên DB thử sau 060 + một lượt dựng danh bạ, loader thật của people.ts (nạp bằng tsx) ở ba vai (viewer, ops, admin): mỗi ô bí danh sdt khớp nhãn che ghim trước, 0 chữ số của số gốc (quét mọi chuỗi 3+ chữ số liên tiếp trong ô); số người có ô che = số người có bí danh sdt (đối chứng dương); đối chứng đỏ: bản chép áp luật che cũ cắt 8 ký tự → bắt 'LO SO GOC TREN PEOPLE'; doRong và do-boc-sdt nhận E.164; test do-danh-ba-sdt và test-data-residue xanh"

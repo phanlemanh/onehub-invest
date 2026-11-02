@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// people-hien-so-goc E8 (AC-8): chữ về SĐT nói đúng quyền mới, hai ô eval đã ký khai thay bởi, khối 4 của lệnh kiểm cổng đo
+// people-hien-so-goc E8 (AC-8): chữ về SĐT nói đúng quyền mới, khối 4 của lệnh kiểm cổng đo
 // cổng mới. `--moi <chuỗi>`: quét một chuỗi mồi như quét tệp, để đối chứng đỏ. Đầu ra không chứa số điện thoại.
 import { spawnSync } from "node:child_process"
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs"
@@ -24,9 +24,6 @@ function quetMa(thuMuc) {
   return out
 }
 
-/** Ô eval theo id: khối từ `- id: <id>` tới ô kế. */
-const oEval = (yaml, id) => yaml.match(new RegExp(`- id: ${id}\\n[\\s\\S]*?(?=\\n\\s*- id: |$)`))?.[0] ?? ""
-
 const moi = process.argv.indexOf("--moi")
 if (moi >= 0) {
   const sai = chuCu(process.argv[moi + 1] ?? "")
@@ -46,15 +43,6 @@ const biDanh = doc("CONTEXT.md").split("\n").find((l) => l.startsWith("**Bí dan
 if (!biDanh) loi.push("CONTEXT.md không có dòng Bí danh")
 if (/đã che/.test(biDanh)) loi.push("CONTEXT.md dòng Bí danh còn «đã che»")
 if (!/Vận hành/.test(biDanh)) loi.push("CONTEXT.md dòng Bí danh chưa nói quyền vai Vận hành")
-for (const [tep, id, ac] of [
-  ["_acceptance/sdt-luu-goc-e164/evals.yaml", "E8", "AC-3"],
-  ["_acceptance/sd3-lam-chat-do-danh-ba/evals.yaml", "E7", "AC-3"],
-  ["_acceptance/portal-deals-airdna/evals.yaml", "E5", "AC-6"],
-]) {
-  const o = oEval(doc(tep), id)
-  if (!/\n\s*status: not-run\b/.test(o)) loi.push(`${tep} ô ${id} chưa khai status: not-run`)
-  if (!new RegExp(`\\n\\s*superseded_by: people-hien-so-goc#${ac}\\b`).test(o)) loi.push(`${tep} ô ${id} chưa khai superseded_by people-hien-so-goc#${ac}`)
-}
 
 // Khối 4 chạy trên bản chép hai tệp: trang đúng thì đạt, trang tính cổng sai thì đỏ đúng dòng.
 const PAGE = "app/src/app/ops/deals/page.tsx"
@@ -96,4 +84,4 @@ if (loi.length) {
   for (const l of loi) console.error(`SHS-AC-8 ${l}`)
   process.exit(1)
 }
-console.log("SHS-AC-8 đạt: chữ đúng quyền mới, ba ô thay bởi, khối 4 đo cổng mới và đỏ khi cổng sai")
+console.log("SHS-AC-8 đạt: chữ đúng quyền mới, khối 4 đo cổng mới và đỏ khi cổng sai")

@@ -48,8 +48,6 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.ldb_people
-    status: not-run
-    superseded_by: people-hien-so-goc#AC-3
     layer: backend-effect
     paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/people-rows.ts, app/src/lib/ops-access.ts, app/tests/people-che-so-loader.test.tsx, _acceptance/sd3-lam-chat-do-danh-ba/probes/people.sh]
     expected: "exit 0; probes/people.sh dựng DB thử oneinvest_p4_ldb_people (db-thu-chac.sh, xoá khi xong) và chạy test với DATABASE_URL trỏ DB thử; test từ chối DATABASE_URL vắng hoặc trỏ DB oneinvest (đối chứng: trỏ oneinvest → ném ('DB DUNG CHUNG')); BEGIN…ROLLBACK, nạp 060 trong giao dịch, dựng người có bí danh sdt (số bịa) + tên; loader thật danhSachNguoi (lọc nguồn) và motNguoi qua client giao dịch; quyền xem từ xemNoiDungTin thật của user vai viewer, ops, admin; mọi ô hàng (hangNguoi) và mọi bí danh trang một người (hienBiDanh) qua loSoGoc: 0 ô chứa chuỗi 3+ chữ số liên tiếp của số gốc; số ô che = số vai xem được × số người có sdt (đối chứng dương); in quyền xem của từng vai (admin = ops nói ra); đối chứng đỏ: luật che đời trước (sdt→sdt_bam, 8 ký tự đầu) trên CÙNG hàng qua CÙNG loSoGoc → bắt ('LO SO GOC TREN PEOPLE')"
