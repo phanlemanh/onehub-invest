@@ -5,7 +5,7 @@ slug: tin-rao-tren-invest
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, cli, ui]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-tin-rao-tren-invest-design.md
