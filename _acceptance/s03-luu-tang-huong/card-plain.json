@@ -1,0 +1,39 @@
+{
+"feature_plain":"Tin S03 có thêm tầng và hướng nhà khi môi giới ghi trong bài, lưu ở phát biểu của tin để sau này lọc và ghép căn.",
+"will_do":[
+{"id":"AC-2","p":"Sẽ từ chối giá trị tầng, hướng sai khuôn, ngay từ lúc ghi, và nêu tên trường."},
+{"id":"AC-3","p":"Sẽ giữ nguyên tầng đang có của các tin S06, so từng tin trước và sau."},
+{"id":"AC-4","p":"Sẽ đọc hướng kèm nhãn ban công, cửa hay không nói, đúng tối thiểu 100/109 nhãn của audit (nhãn do tác tử gắn)."},
+{"id":"AC-5","p":"Sẽ đọc số tầng và khoảng tầng, không nhầm «nhà 5 tầng» thành tầng của căn."},
+{"id":"AC-6","p":"Sẽ đưa giá trị đọc được tới phát biểu và cột của tin; chạy lại không nhân dòng; hai bài khác nhau thì báo bất đồng."},
+{"id":"AC-7","p":"Sẽ giữ nguyên danh sách tin: đọc thêm tầng, hướng không làm tin nào nghỉ hay mọc; 25–35% tin có hướng, 6–15% có tầng."},
+{"id":"AC-8","p":"Sẽ khai trường hướng đủ sáu điều kiện ADR-0011, có dòng kiểm chất lượng đỏ khi dưới 5% tin có hướng."},
+{"id":"AC-9","p":"Sẽ quét diff để chắc: sync lên cloud không đổi, không route Zalo, không tên nguồn thật, không chữ bài thật."},
+{"id":"AC-10","p":"Sẽ để lượt đêm chạy bình thường khi DB chưa áp 067: chỉ cảnh báo và bỏ qua hai trường."}
+],
+"wont_do":[
+{"id":"AC-1","p":"Sẽ KHÔNG nhân đôi dữ liệu khi áp 067 nhiều lần."},
+{"id":"AC-11","p":"Sẽ KHÔNG làm hỏng thẻ ghép căn và bộ chấm: «tầng cao» hiện nguyên chữ, so với số thì coi là thiếu, không phải lệch."},
+{"id":"OOS-1","p":"Không ghép trục vào danh mục, không tách bài nhiều căn."},
+{"id":"OOS-2","p":"Không đưa hướng lên cloud, Invest, API; không đưa tầng lên Invest."},
+{"id":"OOS-3","p":"Không suy hướng từ trục hay S08; không đọc tầng trong mã viết liền «S801»."},
+{"id":"OOS-4","p":"Không áp 067 lên cloud; không chạy lại transform trên DB chung, giám sát xếp lượt."},
+{"id":"OOS-5","p":"Không đổi cách S08 ghi hướng, không làm thẻ nhóm."}
+],
+"coverage_plain":[
+{"i":0,"p":"Giá trị đúng và sai, ở cả hai nơi ghi (AC-2): mỗi dạng sai một dòng, có ca đỏ."},
+{"i":1,"p":"Dữ liệu tầng cũ của S06 (AC-3): so toàn bảng trước và sau."},
+{"i":2,"p":"Cách đọc hướng và tầng (AC-4, AC-5): ma trận viết trước và 250 nhãn của audit. Nhãn do tác tử gắn, cũng là nguồn của bộ đọc nháp, nên chưa kiểm chứng độc lập."},
+{"i":3,"p":"Chạy lần đầu, chạy lại, bài đổi, bất đồng (AC-6): đếm dòng phát biểu và đọc nguồn gốc ô."},
+{"i":4,"p":"Toàn bộ bài S03 (AC-7): so danh sách tin và tỉ lệ có giá trị."},
+{"i":5,"p":"Luật kho: ADR-0011, ranh giới cloud, tên nguồn (AC-8, AC-9)."},
+{"i":6,"p":"Thứ tự triển khai và các bên đang đọc tầng (AC-10, AC-11)."}
+],
+"gap_probe_plain":[
+{"i":0,"p":"Hợp đồng ghi không lên cloud nhưng tầng thực tế theo cột có sẵn lên Ops cloud; chưa ai kiểm các bên đọc tầng. Đã thành câu hỏi về tầng lên cloud, thêm AC-11, và đổi khoảng tầng sang chữ mà bên đọc đã hiểu nên giao diện không đổi."},
+{"i":1,"p":"Bốn dòng sổ máy tự quyết thiếu căn cứ. Đã đổi căn cứ cho tầng S06 và việc không suy; khoảng tầng và bài nhiều mã thành câu hỏi cho anh."},
+{"i":2,"p":"Phép đo bộ đọc khó đỏ đúng chỗ. Đã viết sẵn đáp án vào thiết kế, thêm chặn hai đầu và đối chứng đỏ. Còn lại: 250 nhãn không có mẫu tách riêng, ghi thành giới hạn."},
+{"i":3,"p":"Giữ tầng S06 và thứ tự áp 067 chỉ đo một thời điểm, lượt đêm có thể đổ. Đã thêm dữ liệu mẫu, so từng tin, ca ghi lại, và AC-10 để lượt đêm không đổ."},
+{"i":4,"p":"Phép quét ranh giới chỉ đo một phần. Đã tách lệnh riêng đo đủ AC-9 có đối chứng, tệp nhãn đọc từ chỗ gitignore."}
+]
+}
