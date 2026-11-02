@@ -1,0 +1,6 @@
+E9u network (Browser pane, origin http://localhost:3461, same-origin /api/v1)
+GET /api/v1/listings/offer_9bf5162791ba7777/contact -> 200 OK (1 lan, sau bam Xem so)
+GET /vn/hanoi/listings/sale?has_phone=1 -> 200 ; ...&price_min=900000000000 -> 200 ; sale (sau Xoa bo loc) -> 200
+2 request RSC ?_rsc=... 200 kem net::ERR_ABORTED (dieu huong mem bi thay the, status 200: chi note)
+static assets (_next/static, woff2) 200/304
+console errors: none

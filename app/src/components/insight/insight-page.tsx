@@ -206,7 +206,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
 
         {breakdown.topListings.length > 0 && (
           <Section id="listing">
-            <ListingsTable rows={breakdown.topListings} currency={currency} allHref={`${basePath}/listings`} />
+            <ListingsTable rows={breakdown.topListings} currency={currency} allHref={`${basePath}/listings/rent?term=short`} />
           </Section>
         )}
 

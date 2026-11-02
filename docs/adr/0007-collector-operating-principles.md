@@ -237,3 +237,19 @@ nhưng không thấy tên nguồn thật.
 
 Hệ quả cần làm (hàng riêng, đợt `tu-van-hanh-2510`): TV9 (bài và ảnh lên cloud), TV10 (hồ sơ tin), TV13 (thẻ duyệt lên
 cloud, quyết định đi xuống bằng lệnh `review.decide`).
+
+## Sửa đổi 2026-11-02 — tên, SĐT người bán lên cloud và cổng Invest
+
+Mạnh chốt: mọi tin rao bất động sản là công khai; tên và SĐT người bán lên cloud và cổng Invest, vì đó là tính năng giúp
+nhà đầu tư tìm căn. Sửa đổi này trả lời câu còn bỏ ngỏ ở sửa đổi 23/10 (có đưa liên hệ người bán trở lại cổng công khai
+hay không) và làm xong việc nới `PII_EXCLUDE.sale_offers` nêu ở đó. Hồ sơ `_acceptance/tin-rao-tren-invest`.
+
+- **Lên cloud:** `sale_offers.seller_name`, `seller_phone`. Giá trị nào chứa tên nguồn thật thì về `NULL` ngay trong câu
+  đọc của `pipeline/sync-cloud.mjs`, sync cảnh báo số đã che; bộ soát tầng A vẫn là lưới cuối.
+- **Lên cổng Invest:** thẻ tin hiện tên; số không nằm trong HTML hay danh sách API, người xem bấm «Xem số» thì
+  `GET /api/v1/listings/{id}/contact` mới trả, mỗi lần một số. Hai route tin rao ở chế độ `public` kèm khoá `publicOffers`.
+- **Không hiển thị:** S02 và S08 (AGENTS.md luật 5) không tính là tin hiển thị được, không qua hai route này.
+
+Không đổi: tên nguồn thật (kể cả trong `seller_ref`, `listing_url`) vẫn tầng A và không rời máy; `listing_url`, ảnh và
+nội dung bài gốc không theo đường này (ảnh đầu của tin là hàng riêng `anh-tin-cong-khai`); `/api/v1/offers` và
+`/api/v1/deals` vẫn ở chế độ `ops`.

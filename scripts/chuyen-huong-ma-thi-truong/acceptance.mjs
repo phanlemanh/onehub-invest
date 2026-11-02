@@ -50,9 +50,13 @@ async function maDai() {
   return rows.map((r) => r.id);
 }
 
-/** Gốc của hàng: đỉnh nhánh s06 (#252) khi nó chưa vào origin/main, ngược lại merge-base origin/main. */
+/** Commit đưa chuyển hướng vào. Mốc phải đứng trước nó, không thì ca «mã dài tra thêm» so bản đã có chuyển hướng với chính nó. */
+const COMMIT_HANG = "296de6df";
+
+/** Gốc của hàng: trước commit của hàng khi hàng đã vào nhánh này; không thì đỉnh nhánh s06 (#252) khi nó chưa vào origin/main, ngược lại merge-base origin/main. */
 function gocHang() {
   const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8" }).trim();
+  if (spawnSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", COMMIT_HANG, "HEAD"]).status === 0) return git("rev-parse", `${COMMIT_HANG}^`);
   const s06 = "origin/feat/s06-vung-moi-len-canonical";
   let trongMain = true;
   try { git("rev-parse", "-q", "--verify", s06); trongMain = spawnSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", s06, "origin/main"]).status === 0; } catch { trongMain = true; }
