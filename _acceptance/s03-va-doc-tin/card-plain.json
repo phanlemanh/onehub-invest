@@ -24,11 +24,11 @@
     },
     {
       "id": "AC-8",
-      "p": "Sẽ lưu toà và trục căn đọc từ chữ bài; hai căn khác trục là hai tin, bài nhiều mã để trống trục."
+      "p": "Sẽ lưu toà và trục căn đọc từ chữ bài; hai căn khác trục là hai tin, bài nhiều mã để trống trục. Thêm: bài nhắc hai toà khác nhau thì để trống toà, mã căn bốn phần giữ nguyên cả mã và đúng toà."
     },
     {
       "id": "AC-9",
-      "p": "Sẽ chứng bằng số đo trên 383 bài do tác tử gắn nhãn và toàn bộ bài thật, có trần mức đổi; vượt trần thì không mở PR. Thêm hai phép đo trên bài thật: không bài nào mất giá vì «không vay», không tin nào đang có bị gạt là thuê từ 1 tỷ."
+      "p": "Sẽ chứng bằng số đo trên 383 bài do tác tử gắn nhãn và toàn bộ bài thật, có trần mức đổi; vượt trần thì không mở PR. Thêm hai phép đo trên bài thật: không bài nào mất giá vì «không vay», không tin nào đang có bị gạt là thuê từ 1 tỷ. Đổi: trần 500 tin mọc chỉ tính phần do bộ đọc sinh ra, tổng số vẫn được in. Phép kiểm của hồ sơ đã ký vẫn phải xanh."
     }
   ],
   "wont_do": [

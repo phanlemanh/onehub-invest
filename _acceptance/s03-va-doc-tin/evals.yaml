@@ -60,7 +60,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.va_doc_tin_db
     paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/va-doc-tin.itest.mjs]
-    expected: "exit 0; ca 'SV1-AC-8 DB' xanh trên DB thử trong ROLLBACK: mỗi Given của AC-8 so đúng cặp giá trị theo bài; bài có mã và thiếu mã ra hai tin; tin seed sẵn offer_id dính hai trục sau nạp mỗi offer_id một unit_number; parser khác LLM thì parser thắng, LLM giữ khi parser không đọc ra; hai lượt không nhân dòng; ca đỏ thuần 'SV1-AC-8' trên bản sao bỏ luật bài nhiều mã ghim mã thứ hai"
+    expected: "exit 0; ca 'SV1-AC-8 DB' xanh trên DB thử trong ROLLBACK: mỗi Given của AC-8 so đúng cặp giá trị theo bài; bài «toà S902 và S101», «toà GH2 và toà GH3» không có block_raw; «S1.03.12.05», «S5.03-22.06», «S605.10.17» giữ nguyên mã và ra toà S1.03, S5.03, S605; hai mã bốn phần khác nhau không có unit_number; bài có mã và thiếu mã ra hai tin; tin seed sẵn offer_id dính hai trục sau nạp mỗi offer_id một unit_number; parser khác LLM thì parser thắng, LLM giữ khi parser không đọc ra; hai lượt không nhân dòng; ca đỏ thuần 'SV1-AC-8' trên bản sao bỏ luật bài nhiều mã ghim mã thứ hai"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
@@ -68,7 +68,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.va_doc_tin_do
     paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/do-va-doc-tin.mjs]
-    expected: "exit 0; lượt cây in ĐẠT từng thước của AC-9 kèm mẫu số và số phần giữ lại; in đường tập, sha256 nhãn, cách chia, sha nền, trạng thái công tắc, số tin, giữ, nghỉ, mọc, bài đổi loại, ô block_raw thêm và đổi, S05 đổi; đỏ khi sha256 lệch bản ghim, vượt trần nghỉ, mọc, S05, dung_thanh_sai, có tin hai trục, công tắc không có tác dụng, hoặc có migration mới; lượt bản nền phải TRƯỢT pn, dt_phay, phuong_huong; thiếu tập nhãn thì exit 2 gọi tên tập; in nhãn «tác tử gắn, không phải nhãn vàng»; không in chữ bài"
+    expected: "exit 0; lượt cây in ĐẠT từng thước của AC-9 kèm mẫu số và số phần giữ lại; in đường tập, sha256 nhãn, cách chia, sha nền, trạng thái công tắc, số tin, giữ, nghỉ, tổng mọc, mọc do bộ đọc, mọc do bài mới, bài đổi loại, ô block_raw thêm và đổi, S05 đổi; đỏ khi sha256 lệch bản ghim, vượt trần nghỉ, mọc do bộ đọc, S05, dung_thanh_sai, có tin hai trục, công tắc không có tác dụng, hoặc có migration mới; lượt bản nền phải TRƯỢT pn, dt_phay, phuong_huong; thiếu tập nhãn thì exit 2 gọi tên tập; in nhãn «tác tử gắn, không phải nhãn vàng»; không in chữ bài"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-9
@@ -76,4 +76,12 @@ evals:
     cmd: config:executors.test.pipeline
     paths: [pipeline/**]
     expected: "exit 0; toàn bộ test pipeline xanh, kể cả ma trận các hồ sơ S03 đã ký"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cam_mau_s03_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.itest.mjs, pipeline/scripts/do-cam-mau-s03.mjs]
+    expected: "exit 0; phép kiểm của hồ sơ đã ký s03-cam-mau-so-lieu xanh, gồm đột biến CM-AC-8 trúng đúng runTransformZalo"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

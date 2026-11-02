@@ -5,7 +5,7 @@ slug: s03-va-doc-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs — không khớp t3_paths
 surfaces: [cli]
-status: implemented
+status: approved
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-s03-va-doc-tin-design.md
@@ -47,12 +47,14 @@ Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
   «Giá: 4.1 thu nét», «1900 btp», «Giá 2.6 allin», tin thuê «Giá 12000» là 12 triệu, «Giá 8.5» là 8,5 triệu) và số không phải giá
   («Bán căn 2PN 2800», «2.65» không nhãn, năm, «1200» trong mã), When `parsePost` đọc, Then mặc định công tắc `giaKhongDonVi` bật:
   ra đúng đáp án, số không phải giá ra null; khi tắt dạng mới ra null, luật cũ của bản nền («Giá: 2.800» ở tin bán) không đổi.
-- AC-8: Given bài một mã, nhiều mã cùng toà, nhiều mã khác toà, chỉ toà, toà có đuôi số («S1.03» là tên toà), mã nội bộ của sàn
+- AC-8: Given bài một mã, nhiều mã cùng toà, nhiều mã khác toà, chỉ toà, toà có đuôi số («S1.03» là tên toà), toà ghi riêng hoặc toà có đuôi số kèm mã toà khác
+  («toà S902 và S101», «toà GH2 và toà GH3»), mã bốn phần («S1.03.12.05», «S5.03-22.06», «S605.10.17»), mã nội bộ của sàn
   («S115451», «NTL22688») và không mã; hai bài khác trục cùng nội dung, cả nhánh đủ phường + DT; một tin đã có `offer_id` dính
   chung hai bài khác trục; bài có mã và bài đăng lại thiếu mã; `block_raw` của LLM khác parser, và LLM có mà parser không có; When
   chạy transform trên DB thử (ROLLBACK) rồi đọc phát biểu và tin, Then bài một mã có phát biểu `block_raw`, `unit_number` (`parser`)
   giữ nguyên chữ môi giới và tin mang đúng cặp đó; nhiều mã không có `unit_number`, toà chỉ giữ khi mọi mã cùng toà; toà có đuôi số
-  và chỉ toà chỉ có `block_raw`; mã nội bộ và không mã không có dòng; hai trục ra hai tin và mỗi `offer_id` chỉ một `unit_number`;
+  và chỉ toà chỉ có `block_raw`; bài có toà ghi riêng kèm mã toà khác không có `block_raw`; mã bốn phần giữ nguyên cả mã làm `unit_number`, toà là phần
+  trước tầng («S1.03», «S5.03», «S605»), hai mã bốn phần khác nhau không có `unit_number`; mã nội bộ và không mã không có dòng; hai trục ra hai tin và mỗi `offer_id` chỉ một `unit_number`;
   bài có mã và bài thiếu mã giữ hai tin (không chứng được cùng căn); parser thắng LLM khi khác, LLM được giữ khi parser không đọc
   ra; nạp lại không nhân dòng. (cross-layer)
 - AC-9: Given tập nhãn audit ghim bằng sha256 và toàn bộ bài S03 thật (chỉ đọc), When chạy phép đo với công tắc ở mặc định, Then
@@ -60,9 +62,10 @@ Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
   giá đúng của bản cây không thấp hơn bản nền, toàn tập và từng họ; công tắc bật không làm giá đúng thấp hơn tắt, toàn tập và từng
   họ, không tăng tin bán dưới 300 triệu, và số giá đúng bật khác tắt; số ô bản nền đúng nay sai ≤ 3; mã căn đúng ≥ 70%, thừa ≤ 10%;
   0 tin mang hai trục; 0 bài thật có giá từ 1 tỷ ở bản nền mất giá vì «không vay» (bài ghi «tài chính», «Tc» mất giá theo AC-4, không tính); 0 bài thật
-  đang thành tin bị gạt là thuê từ 1 tỷ; nghỉ ≤ 200, mọc ≤ 500, S05 đổi ≤ 25% (trần do Hỏi-1); không có migration mới; bộ test pipeline xanh. Bản nền
+  đang thành tin bị gạt là thuê từ 1 tỷ; nghỉ ≤ 200, mọc do bộ đọc ≤ 500 (tin bản cây sinh ra mà bản nền chạy trên cùng dữ liệu không sinh), S05 đổi ≤ 25% (trần do Hỏi-1, Mạnh duyệt đổi cách đo mọc
+  ngày 02/11 vì kho có bài mới mỗi ngày); không có migration mới; bộ test pipeline xanh; phép kiểm `cam_mau_s03_that` của hồ sơ đã ký vẫn xanh. Bản nền
   ghim sha chạy cùng thước phải trượt `pn`, `dt_phay`, `phuong_huong`. Phép đo in đường tập, sha256, cách chia, sha nền, trạng
-  thái công tắc, mẫu số từng thước, số tin, `offer_id` giữ, nghỉ, mọc, bài đổi loại, ô `block_raw` thêm và đổi, số bài S05 đổi;
+  thái công tắc, mẫu số từng thước, số tin, `offer_id` giữ, nghỉ, tổng mọc, mọc do bộ đọc, mọc do bài mới, bài đổi loại, ô `block_raw` thêm và đổi, số bài S05 đổi;
   không in chữ bài. (cross-layer)
 
 ### Cách tính thước AC-9
