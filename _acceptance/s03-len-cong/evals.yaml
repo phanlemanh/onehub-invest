@@ -78,7 +78,7 @@ evals:
     layer: ui-observed
     paths: [app/src/components/listing/offer-card.tsx]
     steps:
-      - "Bản chạy: dev server :3456 của worktree dãy N1 trên DB thử oneinvest_n1_sl1. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "Bản chạy: dev server :3461 của worktree dãy N1 trên DB thử oneinvest_n1_sl1_ui đã áp 069, sổ nháp và transform (đang chạy sẵn; :3456 là của checkout chính). KHÔNG tạo hay sửa tệp nào trong cây."
       - "/vn/hanoi/listings/sale ở 1280 px sáng → evidence/E10-step1.png, có thẻ S03 và thẻ S06"
       - "Cùng trang 1280 px tối → evidence/E10-step2.png"
       - "Cùng trang 375 px sáng → evidence/E10-step3.png; ghi scrollWidth và clientWidth"
