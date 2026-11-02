@@ -231,9 +231,17 @@ async function main() {
   // open -hna (-h = ẩn): cửa sổ không nhảy đè màn hình Mạnh (phàn nàn 2/11);
   // window-position ngoài màn hình + thu về Dock sau khi connect (tab CDP vẫn
   // chạy khi minimize — đã kiểm với lượt đang chạy).
-  // 0211-10 (b): -g không lấy tiêu điểm + -h ẩn + -n instance mới; các cờ
-  // hãm tab nền để tab ẩn/ngoài màn hình VẪN chạy (không headless).
-  spawn("open", ["-ghna", "Google Chrome", "--args", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`, "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--disable-background-timer-throttling"], { stdio: "ignore", detached: false });
+  // 0211-12 (1): spawn BINARY trực tiếp (bỏ `open`) — open qua LaunchServices
+  // vẫn giật tiêu điểm ~18s lúc mở lượt (9 mẫu); binary + stdio ignore +
+  // detached không activate app. Cờ hãm tab nền giữ cho tab ngoài màn hình chạy.
+  const CHROME_BIN = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  const chromeProc = spawn(CHROME_BIN, [
+    `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`,
+    "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100",
+    "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
+    "--disable-background-timer-throttling", "about:blank",
+  ], { stdio: "ignore", detached: true });
+  chromeProc.unref();
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
   let browser;
@@ -348,6 +356,9 @@ async function main() {
   }
 
   await Promise.all(Array.from({ length: THREADS }, (_, i) => motLuong(i)));
+  // 0211-12 (3): đóng tab đã cấp — browser.close qua CDP chỉ NGẮT KẾT NỐI,
+  // tab tích lại sau mỗi lượt (10 tab cho 2 luồng sau vài lượt).
+  for (const t of tabs) await t.close().catch(() => {});
   await ghiState(state);
   if (batch.length > 0) {
     const sid = await ghiSnapshot(batch, "vn");

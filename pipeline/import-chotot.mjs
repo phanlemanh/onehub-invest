@@ -143,8 +143,16 @@ export async function importDir(client, dir) {
             ...(s.accountRef ? { accountRef: s.accountRef } : {}),
             ...(s.seenAt ? { seenAt: s.seenAt } : {}) }
         : { phoneStatus: s.phoneStatus ?? "error" };
+      // 0211-12 (4): displayName lượt số lấy từ payload.account_name của chính
+      // dòng stg khi it.seller không mang tên — stg.seller giờ có tên đồng bộ
+      // với canonical (trước đây chỉ 5/51.994 dòng có tên trong seller).
       await client.query(
-        `UPDATE stg_chotot_ads SET seller = COALESCE(seller, '{}'::jsonb) || $2::jsonb WHERE list_id = $1`,
+        `UPDATE stg_chotot_ads SET seller = COALESCE(seller, '{}'::jsonb) || $2::jsonb
+           || (CASE WHEN COALESCE(seller->>'displayName', $2->>'displayName') IS NULL
+                    AND payload->>'account_name' IS NOT NULL
+               THEN jsonb_build_object('displayName', payload->>'account_name')
+               ELSE '{}'::jsonb END)
+           WHERE list_id = $1`,
         [a.list_id, JSON.stringify(goi)],
       );
       n++;
