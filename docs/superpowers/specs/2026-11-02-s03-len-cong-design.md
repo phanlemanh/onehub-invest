@@ -48,8 +48,12 @@ Làm theo hai đợt trong một hàng, một PR.
    khác: nhận mã của nhóm (Hỏi-2; 2/1.035 tin theo số đo dưới).
 3. **Loại hình** (Hỏi-1). Từ chữ: cụm tường minh, bài nói cả hai thì không nhận. Từ nhóm: chữ im, nhóm có từ 20 bài nói rõ loại và từ
    85% cùng một loại, là cách `mucDichNhom` đang làm với bán và thuê. Ghi bằng phát biểu `e1_rule`: từ chữ là `observed`, từ nhóm
-   là `inferred`, nên LLM (LS1) và người vẫn thắng được. Cột `property_type` nhận giá trị qua `resolve_offer_fields` như mọi phát biểu, `sync-cloud` đã
-   chép cột này và `area_id`, nên không đổi đường sync.
+   là `inferred`, nên LLM (LS1) và người vẫn thắng được. `sync-cloud` đã chép cột `property_type` và `area_id`, nên không đổi đường sync.
+3b. **Migration 068, ngả B (Mạnh chọn 03/11).** Bộ phân xử (061) không bao giờ cho `inferred` vào cột (luật OCP1 26/10), nên thiết kế bản đầu sai: 553 tin suy từ
+   nhóm sẽ vẫn `unknown` và không lên cổng. 068 nới hẹp: riêng `property_type`, không có lớp trên và đúng một giá trị suy thì cột nhận giá trị đó, provenance ghi
+   `tier: inferred`. Hai giá trị suy trái nhau thì về `unknown`. Trường khác giữ luật cũ. Hôm nay không có phát biểu `property_type` lớp `inferred`, nên không ô nào đang có đổi.
+3c. **Enrich vẫn ghi đè được.** `agent/src/enrich/route.ts` (`isEmpty`, «giá trị cũ thắng») và câu chọn tin của `run.ts` đọc cột: thêm nhận biết provenance `inferred`, coi là ô trống; không có
+   bước này thì LLM không bao giờ đề xuất trên các tin đó (AC-11).
 4. **Hai bên đọc** 500, 610 như bảng trên.
 
 **Đợt sau #274.**
@@ -104,6 +108,18 @@ Mẫu nhãn audit gần như toàn căn hộ (339/343), nên số theo nhóm tr�
 
 Kế hoạch đã ghi ngưỡng ≥ 900 chỉ cảnh báo, không chặn ra mắt. AC-9 báo đúng số, không hạ thước; không vượt 50 mới là gãy đường.
 
+## Bên đọc cột `property_type` khi cột mang giá trị suy luận (ngả B)
+
+| Bên đọc | Ảnh hưởng | Xử lý |
+|---|---|---|
+| `offers-public.ts` `VISIBLE` | Tin lên cổng, đúng ý định; thẻ có nhãn «Chưa xác minh» | Không đổi |
+| `sync-cloud` | Chép giá trị; `field_provenance` không lên cloud | Không đổi; cổng không phân biệt lớp, đã có nhãn cho cả S03 |
+| `enrich/run.ts`, `enrich/route.ts` | Ô thôi «trống», LLM không đề xuất | Ô `inferred` mở cho LLM, không mở cho E1 vì E1 có thể suy từ tên nhóm và sẽ vượt lên `observed`; AC-11 |
+| `tools/native.ts` → `judge-entity.ts` `apNguong` | Loại suy tự ra `yes`, `no` khi ghép căn | Câu đọc của `native.ts` trả `unknown` khi lớp là `inferred`; AC-12 |
+| `revert_enrichment` (066) | Hoàn tác đề xuất LLM thì cột về giá trị suy, không về `unknown` | Chốt: hoàn tác trả về trạng thái trước đề xuất; người muốn bác giá trị thì phát biểu `hitl`. AC-11 đo |
+| `offer_core_complete`, `610`, `600` | Tin tính là đủ, độ phủ loại hình tăng | Đúng nghĩa cổng; số tăng ghi ở AC-9 |
+| `resolve-properties` chặng B | `p1` S03, S05 không xét loại hình; chỉ `p2` S06 xét | Không đổi |
+
 ## Đặc tả UX
 
 <!-- ux:ia --> Khuôn IA: giữ thẻ tin của TR1, không màn mới, không tra mẫu vì chỉ thêm một nhãn.
@@ -113,5 +129,5 @@ Kế hoạch đã ghi ngưỡng ≥ 900 chỉ cảnh báo, không chặn ra mắ
 
 ## Không làm
 
-Đọc khu vực từ tên dự án, ghép phường theo dự án · thêm nhóm · ghi dự án từ thẻ · LLM (LS1) · đổi `VISIBLE` nếu Hỏi-1 không chọn · ghi sổ
+Cho `inferred` vào cột ở trường khác `property_type` · đọc khu vực từ tên dự án, ghép phường theo dự án · thêm nhóm · ghi dự án từ thẻ · LLM (LS1) · đổi `VISIBLE` nếu Hỏi-1 không chọn · ghi sổ
 hay nạp lại trên DB chung khi chưa có lượt giám sát xếp.

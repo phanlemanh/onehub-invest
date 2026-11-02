@@ -1,30 +1,147 @@
-{"feature_plain":"Nhà đầu tư thấy tin S03 trên trang tin rao, kể cả tin không nói phường (hiện tên thị trường), kèm nhãn «Chưa xác minh».",
-"will_do":[
-{"id":"AC-1","p":"Sẽ gán khu vực theo sổ nhóm: nhóm thuộc đúng một thị trường thì tin không nói phường nhận tên thị trường; nhóm chưa khai hay khai nhiều thị trường giữ trống."},
-{"id":"AC-2","p":"Sẽ giữ nguyên số liệu thị trường và phường hiện có khi thêm các tin cấp thị trường."},
-{"id":"AC-4","p":"Sẽ đọc loại hình từ chữ bài và từ nhóm, in hai độ đúng riêng trên nhãn do tác tử gắn."},
-{"id":"AC-5","p":"Sẽ ghi loại hình đúng bậc tin cậy: đọc từ chữ cao hơn suy từ nhóm; đọc bằng LLM hay người vẫn thắng được; chạy lại không sinh thêm."},
-{"id":"AC-6","p":"Sẽ có lệnh khai sổ 30 nhóm và thẻ từ tệp nháp trên máy, chạy lại không đổi, không in khoá hay tên nhóm."},
-{"id":"AC-7","p":"Sẽ in phép đo toàn bộ: bao nhiêu tin rơi ở từng chặn của cổng, gồm số tin nhánh phường nơi khác."},
-{"id":"AC-8","p":"Sẽ hiện nhãn «Chưa xác minh» trên thẻ tin S03 và tên thị trường ở chỗ phường, đọc được trên điện thoại, sáng và tối."},
-{"id":"AC-9","p":"Sẽ báo đúng số tin lên cổng so với 900 và tỉ lệ sai nặng so với 10% trên mẫu 30 tin, không hạ thước; sau khi tin rao (#274) gộp mới đo."},
-{"id":"AC-10","p":"Sẽ giữ nguyên đường đưa dữ liệu lên cloud, không để tên nguồn thật, khoá nhóm hay chữ bài vào kho."}],
-"wont_do":[
-{"id":"AC-3","p":"Sẽ KHÔNG để tin cấp thị trường vào thước theo phường, dấu hiệu giá hay ghép căn."},
-{"id":"OOS-1","p":"Không suy phường từ tên dự án, không thêm nhóm S03."},
-{"id":"OOS-2","p":"Không ghi dự án từ thẻ nhóm, không đọc bằng LLM; đó là việc của hàng đọc tin (LS1)."},
-{"id":"OOS-3","p":"Không tự áp sổ hay nạp lại trên dữ liệu chung; giám sát xếp lượt sau khi anh duyệt sổ. Số trên cloud đọc ở báo cáo 07:30."},
-{"id":"OOS-4","p":"Không đổi đường đồng bộ lên cloud, không đưa sổ nhóm lên cloud."}],
-"coverage_plain":[
-{"i":0,"p":"Mọi tổ hợp nhóm và chữ đều có đáp án khu vực (AC-1, gán khu vực)."},
-{"i":1,"p":"Mọi nơi đọc khu vực của tin đều được quét toàn kho so với bảng viết trước; nơi đọc lạ thì đỏ (AC-2, AC-3, AC-8)."},
-{"i":2,"p":"Loại hình phủ chữ, nhóm, LLM có sẵn và chạy lại; đo trên 383 bài nhãn tác tử, chưa kiểm chứng (AC-4, AC-5)."},
-{"i":3,"p":"Sổ nhóm phủ đọc, ghi, chạy lại, lỗi (AC-6, lệnh khai sổ)."},
-{"i":4,"p":"Toàn bộ dữ liệu đo qua đúng các chặn của cổng (AC-7, AC-9)."},
-{"i":5,"p":"Luật về tầng A, cloud và an toàn S03 có quét riêng (AC-10)."}],
-"gap_probe_plain":[
-{"i":0,"p":"Chưa hỏi anh ca chữ nói phường nơi khác. Đã đo: 2 trên 1.035 tin, đưa thành Hỏi-2."},
-{"i":1,"p":"Năm lựa chọn thiếu căn cứ (bỏ bản bấm được, tin ngoài lọc phường, hạ hạng, thẻ chưa ai đọc, câu trích Cổng Đáng). Đã thêm dòng sổ có căn cứ."},
-{"i":2,"p":"Có thể xanh hết mà cổng vẫn gần như không có tin S03. Đã thêm ca đi trọn đường tới trang và sàn 50 tin làm đỏ phép đo."},
-{"i":3,"p":"Phép kiểm hẹp hơn tiêu chí. Đã siết: băm dòng phường, cặp đối chứng, quét toàn kho, đủ bốn tổ hợp giao diện."},
-{"i":4,"p":"Chưa đo độ đúng suy từ nhóm và chưa định nghĩa sai nặng. Đã đo 93%, 92%; sai nặng ghi sẵn trong tiêu chí trước khi đo."}]}
+{
+ "feature_plain": "Nhà đầu tư thấy tin S03 trên trang tin rao, kể cả tin không nói phường (hiện tên thị trường), kèm nhãn «Chưa xác minh».",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ gán khu vực theo sổ nhóm: nhóm thuộc đúng một thị trường thì tin không nói phường nhận tên thị trường; nhóm chưa khai hay khai nhiều thị trường giữ trống."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ giữ nguyên số liệu thị trường và phường hiện có khi thêm các tin cấp thị trường."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ đọc loại hình từ chữ bài và từ nhóm, in hai độ đúng riêng trên nhãn do tác tử gắn."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ cho cột loại hình nhận giá trị suy từ nhóm khi không có gì chắc hơn và chỉ một giá trị; đọc từ chữ cao hơn suy từ nhóm; LLM hay người vẫn thắng được; chạy lại không sinh thêm."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ có lệnh khai sổ 30 nhóm và thẻ từ tệp nháp trên máy, chạy lại không đổi, không in khoá hay tên nhóm."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ in phép đo toàn bộ: bao nhiêu tin rơi ở từng chặn của cổng, gồm số tin nhánh phường nơi khác."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ hiện nhãn «Chưa xác minh» trên thẻ tin S03 và tên thị trường ở chỗ phường, đọc được trên điện thoại, sáng và tối."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ báo đúng số tin lên cổng so với 900 và tỉ lệ sai nặng so với 10% trên mẫu 30 tin, không hạ thước; sau khi tin rao (#274) gộp mới đo."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ giữ nguyên đường đưa dữ liệu lên cloud, không để tên nguồn thật, khoá nhóm hay chữ bài vào kho."
+  },
+  {
+   "id": "AC-11",
+   "p": "Sẽ để LLM vẫn đề xuất được trên tin có loại hình suy, còn luật E1 thì không; hoàn tác đề xuất thì loại hình về giá trị suy."
+  },
+  {
+   "id": "AC-12",
+   "p": "Sẽ KHÔNG để loại hình suy tự kết luận hai tin cùng căn hay khác căn."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-3",
+   "p": "Sẽ KHÔNG để tin cấp thị trường vào thước theo phường, dấu hiệu giá hay ghép căn."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Không suy phường từ tên dự án, không thêm nhóm S03."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không ghi dự án từ thẻ nhóm, không đọc bằng LLM; đó là việc của hàng đọc tin (LS1)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không tự áp sổ hay nạp lại trên dữ liệu chung; giám sát xếp lượt sau khi anh duyệt sổ. Số trên cloud đọc ở báo cáo 07:30."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không đổi đường đồng bộ lên cloud, không đưa sổ nhóm lên cloud."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Mọi tổ hợp nhóm và chữ đều có đáp án khu vực (AC-1, gán khu vực)."
+  },
+  {
+   "i": 1,
+   "p": "Mọi nơi đọc khu vực của tin đều được quét toàn kho so với bảng viết trước; nơi đọc lạ thì đỏ (AC-2, AC-3, AC-8)."
+  },
+  {
+   "i": 2,
+   "p": "Loại hình phủ chữ, nhóm, LLM có sẵn và chạy lại; đo trên 383 bài nhãn tác tử, chưa kiểm chứng (AC-4, AC-5)."
+  },
+  {
+   "i": 3,
+   "p": "Sổ nhóm phủ đọc, ghi, chạy lại, lỗi (AC-6, lệnh khai sổ)."
+  },
+  {
+   "i": 4,
+   "p": "Toàn bộ dữ liệu đo qua đúng các chặn của cổng (AC-7, AC-9)."
+  },
+  {
+   "i": 5,
+   "p": "Luật về tầng A, cloud và an toàn S03 có quét riêng (AC-10)."
+  },
+  {
+   "i": 6,
+   "p": "Mọi nơi đọc cột loại hình khi cột mang giá trị suy: enrich, chấm ghép căn, cổng, sync, bậc dữ liệu (AC-11, AC-12, quét toàn kho)."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Bảng bên đọc của ngả B thiếu bộ chấm ghép căn: loại suy có thể tự ra kết luận cùng căn hay khác căn. Đã thêm AC-12."
+  },
+  {
+   "i": 1,
+   "p": "Ô suy từ nhóm mà coi là trống thì luật E1 cũng được ghi đè và đẩy lên bậc quan sát. Đã chốt: chỉ LLM được đề xuất trên ô này."
+  },
+  {
+   "i": 2,
+   "p": "Chưa có ca hoàn tác đề xuất. Đã chốt: hoàn tác thì cột về giá trị suy; muốn bác giá trị thì người phát biểu."
+  },
+  {
+   "i": 3,
+   "p": "Thiếu ca nhóm đổi đa số và tin hai bài trái loại. Đã thêm vào AC-5."
+  },
+  {
+   "i": 4,
+   "p": "Phép kiểm enrich có thể xanh nhờ mẫu thiếu đường hay WC. Đã siết mẫu và thêm ca đỏ riêng cho câu chọn tin."
+  },
+  {
+   "i": 5,
+   "p": "Bảng bên đọc của ngả B chưa có thước giữ. Đã cho phép quét toàn kho kiểm thêm hai cột loại hình và căn cứ."
+  },
+  {
+   "i": 6,
+   "p": "Chưa hỏi anh ca chữ nói phường nơi khác. Đã đo: 2 trên 1.035 tin, đưa thành Hỏi-2."
+  },
+  {
+   "i": 7,
+   "p": "Năm lựa chọn thiếu căn cứ (bỏ bản bấm được, tin ngoài lọc phường, hạ hạng, thẻ chưa ai đọc, câu trích Cổng Đáng). Đã thêm dòng sổ có căn cứ."
+  },
+  {
+   "i": 8,
+   "p": "Có thể xanh hết mà cổng vẫn gần như không có tin S03. Đã thêm ca đi trọn đường tới trang và sàn 50 tin làm đỏ phép đo."
+  },
+  {
+   "i": 9,
+   "p": "Phép kiểm hẹp hơn tiêu chí. Đã siết: băm dòng phường, cặp đối chứng, quét toàn kho, đủ bốn tổ hợp giao diện."
+  },
+  {
+   "i": 10,
+   "p": "Chưa đo độ đúng suy từ nhóm và chưa định nghĩa sai nặng. Đã đo 93%, 92%; sai nặng ghi sẵn trong tiêu chí trước khi đo."
+  }
+ ]
+}

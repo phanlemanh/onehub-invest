@@ -15,7 +15,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; ca 'SL1-AC-2' xanh: market_metrics, area_breakdowns băm giống hệt có và không có tin cấp thị trường; market_asset_stats 0 dòng cấp thị trường, băm dòng cấp phường khác rỗng và không đổi; ca đỏ trên bản 500 bỏ lọc ghim «SL1-AC-2»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
@@ -23,7 +23,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; ca 'SL1-AC-3' xanh: thước 0 dòng cấp thị trường, bait_gap_pct trống, 0 cặp chứa tin cấp thị trường kể cả hai tin S03 cùng mã, cặp đối chứng cùng phường vẫn sinh, area_id giữ nguyên, ảnh chụp bậc tính đúng thị trường; ca đỏ trên bản 610 cũ ghim «chua-ro»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -45,8 +45,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
-    expected: "exit 0; ca 'SL1-AC-5' xanh: bậc và phương pháp đúng từng ca; dưới 20 bài, dưới 85% không phát biểu; chữ nói rõ thì nhóm im; lần hai không thêm dòng; phát biểu e2_llm observed vẫn thắng; cột property_type đúng giá trị phân xử; ca đỏ trên bản ngưỡng 50% ghim «SL1-AC-5»"
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; ca 'SL1-AC-5' xanh: ma trận phân xử đúng (inferred một giá trị vào cột và provenance tier inferred; hai giá trị về unknown kèm goi_y; observed thắng; block_raw chỉ inferred không vào cột); phân xử lại mọi tin không đổi ô nào; bậc và phương pháp đúng từng ca; dưới 20 bài, dưới 85% không phát biểu; chữ nói rõ thì nhóm im; lần hai không thêm dòng; nhóm tụt ngưỡng thì phát biểu suy bị rút; đổi đa số còn một phát biểu sống; tin hai bài trái nhau về unknown kèm goi_y; observed bài A với inferred bài B có lower_disagree; e1_rule của bộ khác còn nguyên; ca đỏ trên bản ngưỡng 50% và bản 061 cũ cùng ghim «SL1-AC-5»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
@@ -105,8 +105,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_ben_doc
-    paths: [pipeline/scripts/do-s03-len-cong.mjs, pipeline/sql/**, app/src/lib/**, data-api/src/routes/**]
-    expected: "exit 0; quét sale_offers và market_asset_stats trong pipeline, app/src, data-api/src, agent/src; mọi tệp có trong ma trận viết trước kèm kết luận; tệp lạ thì đỏ, thông điệp ghim tên tệp; đối chứng thêm tệp giả ra đỏ"
+    paths: [pipeline/scripts/do-s03-len-cong.mjs, pipeline/sql/**, app/src/lib/**, data-api/src/routes/**, agent/src/**]
+    expected: "exit 0; quét sale_offers, market_asset_stats, property_type, field_provenance trong pipeline, app/src, data-api/src, agent/src, db/migrations; mọi tệp có trong ma trận viết trước kèm kết luận; tệp lạ thì đỏ, thông điệp ghim tên tệp; đối chứng thêm tệp giả ra đỏ"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E14
     criterion: AC-8
@@ -114,4 +114,20 @@ evals:
     cmd: config:executors.script.s03_len_cong_ui_tinh
     paths: [app/src/components/listing/offer-card.tsx, CONTEXT.md]
     expected: "exit 0; thẻ tin import Badge từ @/components/reui/badge, variant warning-light, không className đổi cỡ; CONTEXT.md có thuật ngữ «Chưa xác minh»; đối chứng bản thêm className ra đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-11
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_len_cong_agent
+    paths: [agent/src/enrich/run.ts, agent/src/enrich/route.ts, db/migrations/068_loai_hinh_suy_luan.sql, agent/tests/s03-len-cong.test.ts]
+    expected: "exit 0; ca 'SL1-AC-11' xanh trên mẫu đủ street_raw, bathrooms, kind sale: tin chỉ có inferred vẫn được chọn; đề xuất LLM được ghi, áp xong observed thắng và provenance đổi lớp; E1 không route direct lên ô này; tin observed giữ giá trị cũ; hoàn tác ba ca (LLM cùng giá trị, LLM khác giá trị, E1 trùng giá trị) cột về giá trị suy, tier inferred; hai ca đỏ trên bản route.ts và bản run.ts đều ghim «SL1-AC-11»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-12
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_len_cong_agent
+    paths: [agent/src/tools/native.ts, agent/src/agents/judge-entity.ts, agent/tests/s03-len-cong.test.ts]
+    expected: "exit 0; ca 'SL1-AC-12' xanh: cặp có loại inferred ra unsure kèm thieu_loai ở cả ca khác loại và ca cùng loại, cặp observed giữ no và yes; ca đỏ trên bản đọc cột thô ghim «SL1-AC-12»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
