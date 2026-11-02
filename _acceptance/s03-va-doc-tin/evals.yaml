@@ -81,7 +81,7 @@ evals:
     criterion: AC-9
     executor: script
     layer: backend-effect
-    cmd: config:executors.script.cam_mau_s03_that
+    cmd: bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/cam-mau-s03.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-cam-mau-s03.mjs 2>&1 | grep -q "hcm_sai_thi_truong=0 ĐẠT"
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.itest.mjs, pipeline/scripts/do-cam-mau-s03.mjs]
-    expected: "exit 0; phép kiểm của hồ sơ đã ký s03-cam-mau-so-lieu xanh, gồm đột biến CM-AC-8 trúng đúng runTransformZalo"
+    expected: "exit 0; ca DB của hồ sơ đã ký s03-cam-mau-so-lieu xanh, gồm đột biến CM-AC-8 trúng đúng runTransformZalo; lượt cây in hcm_sai_thi_truong=0 ĐẠT"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

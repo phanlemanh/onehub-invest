@@ -28,7 +28,7 @@
     },
     {
       "id": "AC-9",
-      "p": "Sẽ chứng bằng số đo trên 383 bài do tác tử gắn nhãn và toàn bộ bài thật, có trần mức đổi; vượt trần thì không mở PR. Thêm hai phép đo trên bài thật: không bài nào mất giá vì «không vay», không tin nào đang có bị gạt là thuê từ 1 tỷ. Đổi: trần 500 tin mọc chỉ tính phần do bộ đọc sinh ra, tổng số vẫn được in. Phép kiểm của hồ sơ đã ký vẫn phải xanh."
+      "p": "Sẽ chứng bằng số đo trên 383 bài do tác tử gắn nhãn và toàn bộ bài thật, có trần mức đổi; vượt trần thì không mở PR. Thêm hai phép đo trên bài thật: không bài nào mất giá vì «không vay», không tin nào đang có bị gạt là thuê từ 1 tỷ. Đổi: trần 500 tin mọc chỉ tính phần do bộ đọc sinh ra, tổng số vẫn được in. Ca kiểm trên DB của hồ sơ đã ký vẫn phải xanh; thước phường HCM thôi đếm hướng «Tây Nam» là tên phường. Thước gom quá 10 nội dung đang đỏ từ trước SV1 nên không tính ở hàng này."
     }
   ],
   "wont_do": [

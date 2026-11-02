@@ -63,7 +63,8 @@ Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
   họ, không tăng tin bán dưới 300 triệu, và số giá đúng bật khác tắt; số ô bản nền đúng nay sai ≤ 3; mã căn đúng ≥ 70%, thừa ≤ 10%;
   0 tin mang hai trục; 0 bài thật có giá từ 1 tỷ ở bản nền mất giá vì «không vay» (bài ghi «tài chính», «Tc» mất giá theo AC-4, không tính); 0 bài thật
   đang thành tin bị gạt là thuê từ 1 tỷ; nghỉ ≤ 200, mọc do bộ đọc ≤ 500 (tin bản cây sinh ra mà bản nền chạy trên cùng dữ liệu không sinh), S05 đổi ≤ 25% (trần do Hỏi-1, Mạnh duyệt đổi cách đo mọc
-  ngày 02/11 vì kho có bài mới mỗi ngày); không có migration mới; bộ test pipeline xanh; phép kiểm `cam_mau_s03_that` của hồ sơ đã ký vẫn xanh. Bản nền
+  ngày 02/11 vì kho có bài mới mỗi ngày); không có migration mới; bộ test pipeline xanh; ca DB của hồ sơ đã ký `s03-cam-mau-so-lieu` vẫn xanh, thước `hcm_sai_thi_truong` của hồ sơ đó bằng 0 sau khi
+  bỏ tên phường trùng hướng nhà («Tây Nam»); thước `gom_qua_10_nhieu_nguoi` = 1 đã đỏ từ bản nền do dữ liệu mới nên không tính ở hàng này. Bản nền
   ghim sha chạy cùng thước phải trượt `pn`, `dt_phay`, `phuong_huong`. Phép đo in đường tập, sha256, cách chia, sha nền, trạng
   thái công tắc, mẫu số từng thước, số tin, `offer_id` giữ, nghỉ, tổng mọc, mọc do bộ đọc, mọc do bài mới, bài đổi loại, ô `block_raw` thêm và đổi, số bài S05 đổi;
   không in chữ bài. (cross-layer)
