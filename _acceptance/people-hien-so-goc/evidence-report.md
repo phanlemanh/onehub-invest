@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9767768bef54d1a29821491433059b2c27ce3d96
+verified_commit: 7f198c7a53a774e49f0a0a095431521fd615b22c
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -217,3 +217,7 @@ none — every multi-run eval is uniform
 
 Round 1: E12 failed — probe đo số trên HTML/RSC theo vai chưa đạt Expected; sổ S4 vòng 1 ghi REJECT. Returned to implementation.
 Round 2: tất cả 13 eval xanh, kể cả E12; getDeals đã thôi nuốt lỗi DB thành bản cloud; ô portal-deals-airdna/E5 được khai là thay bởi AC-6. Verdict PASS.
+
+### Re-pin lần 1 — 2026-11-02, do đổi AC-8 theo Mạnh, smoke đo đúng AC-6, rút ba khai thay bởi; giữ nguyên chữ ký
+run_id: repin-20261102T155004Z-10445
+sha: 7f198c7a53a774e49f0a0a095431521fd615b22c · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · AC không có chốt máy: AC-10
