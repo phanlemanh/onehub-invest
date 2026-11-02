@@ -47,7 +47,7 @@ Audit §7.5 sửa câu giao của chính hàng này: «so "Người đăng" theo
 thể là môi giới» của `/ops/people`: câu giao và audit nói số tin, không suy vai.
 
 **Vị trí:** nháp để hàng đứng đầu bảng so, trước Giá (Hỏi-3): câu giao đòi «nhận ra ngay», và hàng cao hơn hàng khác nên để cuối dễ bị cuộn mất. Mười hàng cũ không đổi (`TRUONG_GHEP_CAN` giữ nguyên vì
-`judge-entity` có bản chép và test HD6 ghim mười hàng); hàng mới là prop riêng của `ReviewCompare`.
+`judge-entity` có bản chép và test HD6 ghim mười hàng); hàng mới là phần tử đầu của `rows` truyền vào `ReviewCompare`, không vào `TRUONG_GHEP_CAN`.
 
 **Thẻ đứng riêng** (không ngữ cảnh, hay ngữ cảnh không có khoá `nguoiDang`): không hiện hàng. Không biết thì không hiện một ô trống mang
 nghĩa «không có người đăng»; các test PL3/HD6 dựng thẻ đứng riêng giữ nguyên. Cloud và viewer dừng trước `loadReviewContext` từ PL3.
