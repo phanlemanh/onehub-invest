@@ -31,7 +31,7 @@ AC-2 vẫn đo bằng cách so bảng trước và sau. Bên đọc bị ảnh h
 | `resolve-properties` chặng B | So cùng khu vực; S06 không có tin cấp thị trường nên không sinh cặp | Không đổi, AC-3 đo |
 | `reassign-areas` | Chỉ dọn con của thị trường | Không đổi, AC-3 đo |
 
-**Số tin S03 sau lượt SV1 lúc 17:00Z:** ghi ở hợp đồng khi lượt xong. Mô phỏng của audit là 223 tin nghỉ, 425 tin mọc.
+**Số tin S03 sau lượt đêm có SV1:** đo 17:38Z, xem mục «Số đo lại sau lượt đêm».
 
 ## Thiết kế
 
@@ -45,7 +45,7 @@ Làm theo hai đợt trong một hàng, một PR.
    Thẻ nhóm nằm ở `note`; bên đọc là LS1, không phải hàng này.
 2. **Khu vực cấp thị trường.** Trong `transform-zalo.mjs`: không khớp phường và nhóm khai đúng một thị trường thì `area_id` là mã thị
    trường đó; `phuong_raw` trống, `confidence` không lên `high`. Nhóm chưa khai hay khai nhiều thị trường: giữ `NULL`. Chữ nói phường của thị trường
-   khác: nhận mã của nhóm (Hỏi-2; 2/740 tin theo số đo dưới).
+   khác: nhận mã của nhóm (Hỏi-2; 2/1.035 tin theo số đo dưới).
 3. **Loại hình** (Hỏi-1). Từ chữ: cụm tường minh, bài nói cả hai thì không nhận. Từ nhóm: chữ im, nhóm có từ 20 bài nói rõ loại và từ
    85% cùng một loại, là cách `mucDichNhom` đang làm với bán và thuê. Ghi bằng phát biểu `e1_rule`: từ chữ là `observed`, từ nhóm
    là `inferred`, nên LLM (LS1) và người vẫn thắng được. Cột `property_type` nhận giá trị qua `resolve_offer_fields` như mọi phát biểu, `sync-cloud` đã
@@ -57,6 +57,36 @@ Làm theo hai đợt trong một hàng, một PR.
 5. Phản hồi tin có cờ `unverified` (S03 là đúng), không có mã nguồn. Thẻ tin hiện nhãn «Chưa xác minh». Tin cấp thị trường hiện tên thị
    trường, không vào lọc phường.
 6. Đo trên cổng: số tin theo đúng `VISIBLE`, mẫu 30 tin máy chấm sai nặng.
+
+## Số đo lại sau lượt đêm (17:38Z, DB chung, chỉ đọc)
+
+Giám sát đo 17:37Z, em đo lại 17:38Z, khớp từng số.
+
+| Chặng | Số tin S03 |
+|---|---|
+| Tổng, đều là bán hoặc thuê dài hạn | 3.158 |
+| Có giá và diện tích | 1.272 |
+| Qua ngưỡng giá hợp lý của cổng | 1.265 (bán 876, thuê 389) |
+| Có loại hình / có khu vực, trên tổng 3.158 | 128 / 39 |
+| Đủ giá, diện tích, loại hình / thêm khu vực | 81 / 2 |
+
+Ước trên 1.265 tin, cùng cách đếm biểu thức và sổ nháp, chưa qua bộ đọc thật:
+
+| Thước | Kết quả |
+|---|---|
+| Có loại hình (đã có + chữ + nhóm) | 81 + 266 + 694 = 1.041 |
+| Có khu vực (đã có + nhóm khai một thị trường) | 28 + 1.033 = 1.061 |
+| **Phần giao, ước số lên cổng** | **839 (bán 542, thuê 297)** |
+| Phần giao nếu bỏ suy từ nhóm (chỉ đã có + chữ) | 286 |
+| Nhóm khai một thị trường: có phường / chỉ cấp thị trường | 23 / 1.035 |
+| Trong 1.035: chữ có tên phường thuộc thị trường khác | 2 |
+
+**Đích ≥ 900 ước hụt 61 tin.** 900 là 71% của 1.272 tin; phần giao ước đạt 66%. 553 trong 839 tin lấy loại hình bằng suy từ nhóm, nên
+AC-9 chia mẫu theo nguồn loại hình là bắt buộc. Phần còn thiếu trông vào 207 tin chưa có sổ, LS1, và số tin mọc thêm; không nới thước
+để đủ số. `stg_zalo_posts` vẫn dừng ở 05:00Z, nên số này là của lượt đêm, chưa có tin từ sau mốc đó.
+
+Lượt đêm chỉ gọi transform, chưa chạy `reassign-areas` rồi 300, 400. Không cần chạy trước khi đo: `reassign-areas.mjs`, 300 và 400 không
+đọc `sale_offers`, và `transform-zalo.mjs` không ghi `listings`.
 
 ## Số đo trước khi chọn (16:20Z, trước SV1, đếm bằng biểu thức, chưa qua bộ đọc thật)
 
@@ -72,8 +102,7 @@ Làm theo hai đợt trong một hàng, một PR.
 
 Mẫu nhãn audit gần như toàn căn hộ (339/343), nên số theo nhóm trên nhãn (183/183) không nói gì và không được dùng làm căn cứ.
 
-**Đích ≥ 900 chưa chắc đạt trong hàng này**: số thực tế là phần giao của loại hình và khu vực, nhỏ hơn 611; phần còn lại trông vào số tin mọc
-sau SV1 và LS1. Kế hoạch đã ghi ngưỡng chỉ cảnh báo, không chặn ra mắt. AC-9 báo đúng số, không hạ thước; không vượt 50 mới là gãy đường.
+Kế hoạch đã ghi ngưỡng ≥ 900 chỉ cảnh báo, không chặn ra mắt. AC-9 báo đúng số, không hạ thước; không vượt 50 mới là gãy đường.
 
 ## Đặc tả UX
 
