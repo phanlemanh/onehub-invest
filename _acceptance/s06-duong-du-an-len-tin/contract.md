@@ -5,7 +5,7 @@ slug: s06-duong-du-an-len-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s06-duong-du-an-len-tin-design.md
@@ -26,7 +26,7 @@ Hàng DS1, việc 6 của kế hoạch ra mắt 05/11, chỉ số «Không tệ 
 - AC-4: Given transform chạy hai lượt liên tiếp không đổi dữ liệu, rồi một lượt nguồn đổi tên đường, rồi một lượt nguồn bỏ trống, When đọc phát biểu và tin, Then lượt hai không thêm phát biểu và không đổi tin; lượt đổi rút phát biểu cũ và tin mang tên mới; lượt bỏ trống rút phát biểu của transform, tin có `legacy` thì cột bằng đúng chuỗi `legacy`, không có thì NULL. (cross-layer)
 - AC-5: Given căn tổng hợp: ô trống với một tin có đường; ô trống với hai tin khác đường và khác `last_seen`; hai tin cùng `last_seen`; ô đã có giá trị; căn có tin đã rời kho mang đường; căn không tin nào có đường, When chạy `resolve-properties` thật, Then lần lượt: nhận đường của tin; nhận của tin thấy gần nhất; nhận của `offer_id` nhỏ nhất; giữ nguyên; không nhận từ tin đã rời kho; vẫn trống. Mỗi căn được điền có đúng một mục `enrichment_log`, lượt thứ hai không thêm mục nào. Lệnh hoàn tác `resolve-properties --hoan-tac-duong` trả đúng các ô đã điền về trống theo `enrichment_log`, không đụng ô có sẵn, số ô trả về bằng số mục log. (cross-layer)
 - AC-6: Given ma trận cặp đường gồm «Đường X» × «X», «Phố X» × «X», «Ngõ 5 X» × «X», «Đường X, Phường Y, TP Z» × «X», «Số 277 Đường X» × «Đường X», «Đường X» × «Đường W», và một bên trống, When qua `soDuong` của `judge-entity` và của thẻ duyệt, Then lần lượt ra Khớp, Khớp, Khớp, Khớp, Khớp, Lệch, Thiếu ở cả hai bản, và chỉ ca Lệch làm `same_house = no`.
-- AC-7: Given bản chép DB máy thu (`db/db-thu.sh`, không ghi lên DB dùng chung), transform và `resolve-properties` chạy thật trên bản chép, When đếm trước và sau, Then ≥ 90% tin S06 sống có đường; ≥ 90% căn S06 có đường; loại hình, phòng ngủ, WC, số nhà, mã căn, số tầng không giảm quá 1 điểm %; 0 giá trị đường chứa tên nguồn thật, với danh sách tên có ít nhất một phần tử; trong các cặp tin cùng căn, 0 cặp ra Lệch mà hai chuỗi bằng nhau sau khi bỏ dấu, hoa và tiền tố «Đường», «Phố»; in số từng dòng, số cặp Lệch, số tin bị bỏ theo từng tiền tố hành chính và thời gian chạy. Vi phạm bất kỳ dòng nào thì thoát 1 và in dòng đó, không in tên nguồn. (cross-layer)
+- AC-7: Given bản chép DB máy thu (`db/db-thu.sh`, không ghi lên DB dùng chung), transform và `resolve-properties` chạy thật trên bản chép, When đếm trước và sau, Then ≥ 90% tin S06 sống có đường; ≥ 90% căn S06 có đường; loại hình, phòng ngủ, WC, số nhà, mã căn, số tầng không giảm quá 1 điểm %; 0 giá trị đường chứa tên nguồn thật, với danh sách tên có ít nhất một phần tử; trong các cặp tin cùng căn, 0 cặp ra Lệch mà hai chuỗi bằng nhau sau khi bỏ hoa, tiền tố «Đường», «Phố» viết đúng chính tả (có dấu hoặc không dấu cả chữ) rồi mới bỏ dấu; in số từng dòng, số cặp Lệch, số tin bị bỏ theo từng tiền tố hành chính và thời gian chạy. Vi phạm bất kỳ dòng nào thì thoát 1 và in dòng đó, không in tên nguồn. (cross-layer)
 
 ## Ma trận AC-1
 
@@ -77,7 +77,7 @@ Quét tay theo ba trục (không dùng khung quét: ít chiều, đo từ dữ l
 |---|---|
 | Đường ≥ 90% ở tin | AC-7 (bản chép DB máy thu) |
 | Các trường khác không giảm quá 1 điểm % | AC-7 (bản chép DB máy thu) |
-| Dự án có mặt ở tin và căn | Không đo ở vòng này (Hỏi-1 chọn tách): giám sát thêm hàng T3 vào `docs/plan/lo-trinh.json`, mã hàng ghi vào dòng này và ngưỡng ở `opportunity.md` trước khi ký Cổng Bằng chứng |
+| Dự án có mặt ở tin và căn | Không đo ở vòng này (Hỏi-1 chọn tách): hàng DS2 `s06-du-an-len-tin-can` (T3) đo; đã ghi ở `opportunity.md` |
 
 ## Out of scope
 
@@ -92,3 +92,6 @@ Quét tay theo ba trục (không dùng khung quét: ít chiều, đo từ dữ l
 - Lượt đồng bộ cloud đầu tiên sau gộp chở khoảng 39.000 tin đổi đường; giám sát xếp lượt với TR1.
 - Đo sau gộp, ngoài lượt chấm: sau job đêm đầu tiên chạy `node pipeline/scripts/do-duong-s06.mjs --chi-doc` trên DB máy thu; sau lượt đồng bộ đối chiếu số `street_raw` và `properties.street` khác NULL trên cloud.
 - Biết trước: `Xã Đàn, Đống Đa` bị bỏ như tiền tố hành chính; chuỗi không phẩy thì giữ. Số tin bị bỏ theo từng tiền tố in ở AC-7.
+- Known limits — Mạnh chọn sửa chữ AC-7 ngày 2026-11-03:
+  - Người bán gõ sai tiền tố («Đương An Phú Đông 26» so với «Đường An Phú Đông 26», căn 10658) thì bộ so vẫn ra Lệch; đo 03/11 có đúng một cặp như vậy, và `khoaDuong` không đổi vì hợp đồng đã loại.
+- Ngoài ma trận AC-1: `street_name` nguồn trả dạng mã hoá (base64 dài, đo 03/11 có 21 tin) thì không phát biểu; ghim ở ca thuần cùng tệp test.

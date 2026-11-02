@@ -13,7 +13,7 @@ import { matchPhuong } from "./transform-zalo.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
-import { kiemCatChuyen, resolveOffers, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions } from "./lib/assert.mjs";
 import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 
 const DB_URL =
@@ -48,6 +48,7 @@ export async function runTransformChotot(client) {
   // do bộ phân xử dựng cuối lượt, không ghi thẳng.
   const phatBieu = [];
   const offerIds = [];
+  const khongDuong = [];
   for (const ad of ads) {
     const kind = ad.ad_type === "s" ? KIND.sale : ad.ad_type === "u" ? KIND.rent_lt : null;
     // G-1: property_type theo category Chợ Tốt (migration 025, ADR-0011)
@@ -116,9 +117,13 @@ export async function runTransformChotot(client) {
       phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
     }
     // HD5 (061): đặc trưng nhà — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, WC, toạ độ; rule_id = khoá nguồn đã đọc.
-    for (const d of docDacTrungS06(ad)) phatBieu.push({ ...chung, ...d });
+    const dacTrung = docDacTrungS06(ad);
+    for (const d of dacTrung) phatBieu.push({ ...chung, ...d });
+    if (!dacTrung.some((d) => d.field === ENRICH_FIELD.street_raw)) khongDuong.push(chung.subject_key);
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
+  // DS1: nguồn bỏ trống đường thì rút phát biểu của transform; bộ phân xử trả cột về `legacy` hoặc NULL.
+  await retractRule(client, khongDuong, ENRICH_FIELD.street_raw, "payload.street_name", "nguon-bo-trong");
   const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
   console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
   console.log(

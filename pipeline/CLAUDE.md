@@ -31,6 +31,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | do-danh-ba-sdt.mjs | SD5: năm kiểm trục SĐT của danh bạ Người (audit 30/10 N1–N5) theo nguồn S03/S05, `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
 | do-the-duyet.mjs | HD11: bốn kiểm độ đủ dữ liệu thẻ ghép căn chờ duyệt (rời kho, ảnh theo vai, độ đầy 10 trường + người đăng theo nguồn), `--write` ghi `dq_check_results` một dòng mỗi kiểm mỗi ngày; bước cuối `scripts/cloud-sync.sh` |
 | eval-classify.mjs | PL9: độ đúng từng ô (cách đọc × trường × phân khúc) theo cận dưới Wilson so ngưỡng F3 (`npm run eval:classify -- --lat ocp1 [--split dev] [--dry]` → `dq_check_results`, `--tap-mau <tệp.jsonl>` chỉ in); lõi `lib/eval-classify.mjs`, cách đọc `parser` |
+| scripts/do-duong-s06.mjs | Thước DS1 (AC-7): transform S06 + resolve thật trên DB thử, đếm đường ở tin và căn, sáu trường khác, tên nguồn, cặp cùng tên ra Lệch, rồi chạy hoàn tác; `--chi-doc` chỉ đếm, dùng được trên DB máy thu |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)

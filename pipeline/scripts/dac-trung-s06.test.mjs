@@ -106,3 +106,69 @@ test("DT-AC-3 đỏ: bản sao bỏ khung toạ độ VN thì dòng «toạ đ�
     unlinkSync(tep);
   }
 });
+
+// s06-duong-du-an-len-tin (DS1) — ca thuần «DS1-AC-1»: 27 hàng của bảng Ma trận AC-1 trong contract, cùng thứ tự.
+const R = "payload.street_name";
+const NFD = "Nguyễn Trãi".normalize("NFD");
+const MA_TRAN_DUONG = [
+  ["Nguyễn Xiển", "Nguyễn Xiển"],
+  ["Đường Huỳnh Tấn Phát", "Đường Huỳnh Tấn Phát"],
+  ["  Âu Cơ  ", "Âu Cơ"],
+  ["Lạc   Long  Quân", "Lạc Long Quân"],
+  [NFD, "Nguyễn Trãi".normalize("NFC")],
+  ["Đường Tân Túc, Thị trấn Tân Túc, Bình Chánh", "Đường Tân Túc, Thị trấn Tân Túc, Bình Chánh"],
+  ["Số 277 Đường Bến Bình Đông, Phường 14", "Số 277 Đường Bến Bình Đông, Phường 14"],
+  ["Nguyễn Xiển 0912345678", "Nguyễn Xiển 0912345678"],
+  ["Đường Quận 1 cũ", "Đường Quận 1 cũ"],
+  ["Xã Đàn", "Xã Đàn"],
+  ["Tỉnh lộ 10", "Tỉnh lộ 10"],
+  ["TP Giao Lưu", "TP Giao Lưu"],
+  ["", null],
+  ["   ", null],
+  [123, null],
+  [undefined, null],
+  ["Phường Hòa Quý, Quận Ngũ Hành Sơn, Đà Nẵng", null],
+  ["phường 5", null],
+  ["P. Hòa Quý, Q. Ngũ Hành Sơn", null],
+  ["Quận Ngũ Hành Sơn", null],
+  ["Huyện Bình Chánh, Hồ Chí Minh", null],
+  ["Thị trấn Tân Túc", null],
+  ["Thị xã Bến Cát, Bình Dương", null],
+  ["Xã Tân Nhựt, Bình Chánh", null],
+  ["TP Thủ Đức, Hồ Chí Minh", null],
+  ["Thành phố Thủ Đức, Hồ Chí Minh", null],
+  ["Tỉnh Bình Dương, Việt Nam", null],
+];
+const kiemHang = (doc, i) => {
+  const [vao, mong] = MA_TRAN_DUONG[i];
+  const payload = vao === undefined ? {} : { street_name: vao };
+  assert.deepEqual(doc({ payload }), mong === null ? [] : [f("street_raw", mong, R)], `DS1-AC-1 hàng ${i + 1}`);
+};
+
+test("DS1-AC-1 ma trận 27 hàng", () => {
+  let n = 0;
+  for (let i = 0; i < MA_TRAN_DUONG.length; i++) { kiemHang(docDacTrungS06, i); n++; }
+  assert.equal(n, 27);
+  assert.equal(docDacTrungS06({ payload: { street_name: "Nguyễn Xiển" } })[0].rule_id, R, "đối chứng dương: rule_id");
+  assert.equal(docDacTrungS06({ payload: { street_name: "Tỉnh lộ 10, Bình Chánh" } })[0]?.value, "Tỉnh lộ 10, Bình Chánh", "Tỉnh lộ có phẩy vẫn là đường");
+});
+
+test("DS1 đường nguồn trả dạng mã hoá thì không phát biểu; đường thật có gạch chéo vẫn giữ", () => {
+  // Đo trên bản chép 03/11: 21 tin S06 mang street_name base64 dài 44 ký tự.
+  for (const v of ["6N44uSPrl/bc/6/Ms3bjYea7hylJueNm9YNsUraw4Lo=", "cwnPUW6GMww9JHw8IpEcrcgokNKRF7hkmOI1MjkmKyA="]) {
+    assert.deepEqual(docDacTrungS06({ payload: { street_name: v } }), [], v);
+  }
+  for (const v of ["3/2", "Đường 3/2", "12/5A", "Nguyễn Văn Trỗi"]) {
+    assert.equal(docDacTrungS06({ payload: { street_name: v } })[0]?.value, v, v);
+  }
+});
+
+test("DS1-AC-1 đỏ: bản sao bỏ luật địa danh thì ca đỏ gọi tên hàng 17", async () => {
+  const m = await banSao("if (!t || DIA_DANH.test(t) || DIA_DANH_CO_PHAY.test(t)) return null;", "if (!t) return null;");
+  assert.throws(() => kiemHang(m.docDacTrungS06, 16), /DS1-AC-1 hàng 17/);
+});
+
+test("DS1-AC-1 đỏ: bản sao bỏ neo đầu chuỗi thì ca đỏ gọi tên hàng 9", async () => {
+  const m = await banSao("const DIA_DANH = /^(?:", "const DIA_DANH = /(?:");
+  assert.throws(() => kiemHang(m.docDacTrungS06, 8), /DS1-AC-1 hàng 9/);
+});

@@ -26,6 +26,7 @@ Vì sao: Chỉ số Không tệ đi: đường 95% ở thô còn 19% ở tin và
 
 ## Ngưỡng chết / ngưỡng UAT
 
+- Dự án của tin và căn tách sang hàng DS2 `s06-du-an-len-tin-can` (Mạnh chọn tách ở Hỏi-1, 03/11): vế «dự án có mặt ở tin và căn» trong ngưỡng dưới do DS2 đo, vòng này đo hai vế còn lại.
 - Câu hỏi phép đo trả lời: đã đạt «Đường ≥ 90% ở tin; dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %» chưa?
 - Kết quả nào là SỐNG: Đường ≥ 90% ở tin; dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %
 - Kết quả nào là CHẾT: chưa đạt «Đường ≥ 90% ở tin; dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %» khi hết timebox
