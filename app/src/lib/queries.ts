@@ -40,7 +40,7 @@ export async function getArea(areaId: string): Promise<Area | null> {
 }
 
 /** Slug bỏ dấu tiếng Việt (khớp slugify của pipeline/transform-airbnb.mjs). */
-function slugifyName(name: string): string {
+export function slugifyName(name: string): string {
   return name
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

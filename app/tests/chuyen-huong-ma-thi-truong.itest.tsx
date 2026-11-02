@@ -109,7 +109,8 @@ type PageFn = (a: { params: Promise<Record<string, string>>; searchParams: Promi
 const nap = async (p: string): Promise<PageFn> => (await import(p)).default as PageFn
 const PG = {
   market: "app/src/app/(app)/[country]/[market]/page.tsx",
-  listings: "app/src/app/(app)/[country]/[market]/listings/page.tsx",
+  listings: "app/src/app/(app)/[country]/[market]/listings/sale/page.tsx",
+  listingsGoc: "app/src/app/(app)/[country]/[market]/listings/page.tsx",
   submarket: "app/src/app/(app)/[country]/[market]/[submarket]/page.tsx",
   country: "app/src/app/(app)/[country]/page.tsx",
   yield: "app/src/app/(app)/yield/page.tsx",
@@ -193,7 +194,7 @@ if (PHAN === "app") {
       const p = { country: "vn", market: doan(id) }
       if (TT === "sau") {
         await kiemChuyen(market, p, {}, `/vn/${doan(ngan(id))}`)
-        await kiemChuyen(listings, p, {}, `/vn/${doan(ngan(id))}/listings`)
+        await kiemChuyen(listings, p, {}, `/vn/${doan(ngan(id))}/listings/sale`)
       } else {
         const a = await trang(() => market({ params: P(p), searchParams: P({}) }))
         const b = await trang(() => listings({ params: P(p), searchParams: P({}) }))
@@ -231,7 +232,7 @@ if (PHAN === "app") {
     const sub = await nap(abs(PG.submarket))
     const trangs: { ten: string; page: PageFn; params: Record<string, string>; duoi: string; prop: string; cho: string }[] = [
       { ten: "thị trường", page: await nap(abs(PG.market)), params: { country: "vn", market: doan(DAI) }, duoi: "", prop: "areaId", cho: DAI },
-      { ten: "listing", page: await nap(abs(PG.listings)), params: { country: "vn", market: doan(DAI) }, duoi: "/listings", prop: "marketId", cho: DAI },
+      { ten: "listing", page: await nap(abs(PG.listings)), params: { country: "vn", market: doan(DAI) }, duoi: "/listings/sale", prop: "marketId", cho: DAI },
       { ten: "phường", page: sub, params: { country: "vn", market: doan(DAI), submarket: slug }, duoi: `/${slug}`, prop: "areaId", cho: PHUONG },
     ]
     let soO = 0
@@ -261,12 +262,12 @@ if (PHAN === "app") {
     assert.ok(a.loai === "el", `/vn/tinh-khong-co không được chuyển hướng (${a.loai})`)
     const r404 = await trang(async () => (a as { el: { type: (p: unknown) => Promise<unknown>; props: unknown } }).el.type(a.el.props))
     assert.equal(r404.loai, "404", "/vn/tinh-khong-co phải 404 (InsightPage)")
-    assert.equal((await trang(() => listings({ params: P(p0), searchParams: P({}) }))).loai, "404", "/vn/tinh-khong-co/listings phải 404")
+    assert.equal((await trang(() => listings({ params: P(p0), searchParams: P({}) }))).loai, "404", "/vn/tinh-khong-co/listings/sale phải 404")
     for (const m of ["hanoi", "hcmc"]) {
       const k = await trang(() => market({ params: P({ country: "vn", market: m }), searchParams: P({}) }))
       assert.ok(k.loai === "el" && k.el.props.areaId === `vn-${m}`, `/vn/${m} không được đụng`)
     }
-    assert.equal((await trang(() => listings({ params: P({ country: "vn", market: "hanoi" }), searchParams: P({}) }))).loai, "el", "/vn/hanoi/listings không được đụng")
+    assert.equal((await trang(() => listings({ params: P({ country: "vn", market: "hanoi" }), searchParams: P({}) }))).loai, "el", "/vn/hanoi/listings/sale không được đụng")
     // Trang phường: phường Hà Nội thật hiện, không tra thêm; thị trường không đích → 404.
     const sub = await nap(abs(PG.submarket))
     const { rows: phHn } = (await appPool.query(
@@ -282,7 +283,7 @@ if (PHAN === "app") {
     assert.equal(await demSub(sub), await demSub(gocSub), `tra thêm khi mã không mang tiền tố dài: trang phường ${pHn.submarket}`)
     // Mốc: bản chép trang của gốc hàng, cùng DB.
     const gocMarket = await nap(chep(PG.market, "goc", docGoc(PG.market)))
-    const gocListings = await nap(chep(PG.listings, "goc", docGoc(PG.listings)))
+    const gocListings = await nap(chep(PG.listings, "goc", docGoc(PG.listingsGoc)))
     const luonTraMarket = await nap(chep(PG.market, "luon-tra-trang", voiLibLuonTra(docTep(PG.market))))
     const dem = async (page: PageFn, market: string) => (await demTruyVan(() => page({ params: P({ country: "vn", market }), searchParams: P({}) }))).n
     for (const [ten, moi, goc] of [["market", market, gocMarket], ["listings", listings, gocListings]] as const) {
