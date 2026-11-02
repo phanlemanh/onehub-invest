@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 25127eacf0f06642239e9062bf246d6b5a10be25
+verified_commit: 0a7381412ab08377aa38c77ea357690dbb7b2546
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -108,3 +108,7 @@ Round 2: nhánh dựng lại (bỏ một nhánh khác, gộp main mới), 3/3 ev
 ### Re-pin lần 1 — 2026-11-02, do gộp main, siết bộ dò khong-lo-nguon, sửa fixture AU12 sau vòng chấm
 run_id: repin-20261102T053124Z-55269
 sha: 25127eacf0f06642239e9062bf246d6b5a10be25 · suites: 6 lệnh exit 0 · evals: 3/3 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-02, do hoá cũ do hợp main d8db8e00 vào nhánh gộp, PR 278
+run_id: repin-20261102T162656Z-91202
+sha: 0a7381412ab08377aa38c77ea357690dbb7b2546 · suites: 6 lệnh exit 0 · evals: 3/3 eval máy đạt kỳ vọng
