@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import type { User } from "@/lib/auth"
 import { localOnlyTable } from "@/lib/ops-queries"
 import { xemNoiDungTin } from "@/lib/ops-access"
-import { hienBiDanh, laMoiGioi, motNguoi } from "@/lib/ops/people"
+import { hienBiDanh, laMoiGioi, motNguoi, telHref } from "@/lib/ops/people"
 import { getSourceNameEntries } from "@/lib/source-roles"
 
 import { PersonView } from "./person-view"
@@ -22,7 +22,7 @@ export async function PersonContent({ user, partyKey }: { user: User; partyKey: 
       status={nguoi.status}
       statusLabel={nguoi.statusLabel}
       moiGioi={laMoiGioi(nguoi.tongTin)}
-      aliases={nguoi.aliases.map((a) => ({ ...a, value: hienBiDanh(a.kind, a.value, entries, xem) }))}
+      aliases={nguoi.aliases.map((a) => ({ ...a, value: hienBiDanh(a.kind, a.value, entries, xem), tel: telHref(a.kind, a.value, xem) }))}
       tin={nguoi.tin.map((t) => ({ subjectKey: t.subjectKey, methodLabel: t.methodLabel, tierLabel: t.tierLabel, observedAt: t.observedAt }))}
       tongTin={nguoi.tongTin}
       soVaiRut={nguoi.soVaiRut}

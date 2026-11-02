@@ -20,7 +20,7 @@ Số đo hôm nay trên DB máy thu: 314 người đang hoạt động có bí d
 
 **Lõi `app/src/lib/ops/people.ts`.**
 
-- `fmtPhone` chuyển từ `deal-card.tsx` về đây, `deal-card.tsx` nhập lại và giữ xuất để nơi đang dùng không đổi.
+- `fmtPhone` chuyển từ `deal-card.tsx` về đây, `deal-card.tsx` nhập lại. Bỏ xuất lại ở thẻ khi test cũ dùng nó bị xoá.
 - Thêm `telHref(kind, value, xem)`: trả `tel:+84…` khi vai xem được và giá trị đúng khuôn E.164, còn lại null. Giá trị lệch khuôn
   vẫn hiện chữ, không thành liên kết.
 - Thêm `chuanHoaSdtTim(q)`: bỏ khoảng trắng, chấm, gạch, ngoặc rồi nhận `0…`, `84…`, `+84…` đủ chín số sau đầu số, trả `+84…`
@@ -49,6 +49,15 @@ eval thay bởi của kit:
 | `sd3-lam-chat-do-danh-ba/E7` | `people-hien-so-goc` AC-3 |
 
 Con trỏ chỉ hợp lệ khi hồ sơ này có chữ ký người, nên vòng này không đi đường máy-thông ở Cổng Bằng chứng.
+
+## Chốt ở Cổng Phạm vi (Mạnh gõ «duyệt» 02/11)
+
+- Hỏi-1: vai Vận hành trên Căn giá tốt chỉ thấy tên, nhóm, số; ảnh và chữ bài giữ `admin`.
+- Hỏi-2: ô tìm khớp đủ số, không tìm một phần.
+- Hỏi-3 (AC-11): chỉ 314/15.643 người có số, người có số đầu tiên ở hàng 592. Vai Vận hành trở lên thấy người có số lên trước, rồi nhiều tin
+  trước; vai Người xem giữ thứ tự chỉ theo số tin, để thứ tự không lộ ai có số.
+- Lỗi có sẵn trên `main`, sửa trong vòng này (AC-1): bảng danh bạ dừng ở 10 hàng mặc định của DataGrid, không có nút chuyển trang.
+- Lệnh kiểm cổng thêm `--only deals-gate --root <dir>`, cùng khuôn `--only ops-tier-a`, để `probes/chu.mjs` đo chiều đỏ của mục 4.
 
 ## Không gian đã quét
 

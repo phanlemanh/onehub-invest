@@ -148,7 +148,7 @@ executors:
     the_duyet_hien: "cd app && node --import tsx --test tests/the-duyet-hien-nguoi-dang.test.tsx"   # the-duyet-hien-nguoi-dang (HD7) — lược đồ tạm nd_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
     deals_lien_he: "cd app && node --import tsx --test tests/danh-ba-nguoi-deals-lien-he.test.tsx"   # people-hien-so-goc E6 — /ops/deals qua page thật, getDeals giả, ba vai + cloud
-    shs_deals_cu: "cd app && node --import tsx --test tests/deals-phi-ly.test.tsx tests/sellers-chip.test.tsx"   # people-hien-so-goc E9 — hai bộ test của thẻ Căn giá tốt sau khi dời fmtPhone
+    shs_deals_cu: "cd app && node --import tsx --test tests/deals-phi-ly.test.tsx tests/sellers-chip.test.tsx tests/danh-ba-nguoi-deals-lien-he.test.tsx"   # people-hien-so-goc E9 — hai bộ test của thẻ Căn giá tốt sau khi dời fmtPhone, cộng ca fmtPhone
     sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)

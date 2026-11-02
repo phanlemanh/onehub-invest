@@ -7,9 +7,8 @@ import { pool } from "./db";
  * discount = % dưới giá rao công khai cùng phường (docs/research/
  * investment-pipeline-4-stages.md).
  *
- * PII: seller_phone là tầng A — sale_offers KHÔNG sync cloud (sync-cloud
- * chỉ chạm bảng airdna_*), nên trên Vercel không có dữ liệu này tự nhiên.
- * Broker chip join sellers registry (cũng local-only).
+ * Người bán trên tin rao là tầng C (ADR-0007 mục 9). Số gốc seller_phone ở lại máy thu (PII_EXCLUDE của
+ * sync-cloud; ROADMAP §3 mục 24), nên bản cloud không có cột này. Broker chip join sellers registry (cũng ở máy thu).
  */
 export type DealRow = {
   offerId: string;
@@ -38,6 +37,16 @@ export type DealRow = {
   brokerNAds: number | null;
   brokerMedianGap: number | null;
 };
+
+/**
+ * Bỏ trường theo vai trước khi đưa vào thẻ, để trường cấm không có mặt trong dữ liệu trang: `lienHe` = vai Vận hành trở
+ * lên (Hỏi-B), `noiDung` = ảnh và chữ bài, giữ cho admin vì route ảnh `?path=` chỉ mở cho admin.
+ */
+export function dealTheoVai(d: DealRow, vai: { lienHe: boolean; noiDung: boolean }): DealRow {
+  const lienHe = vai.lienHe ? {} : { sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null };
+  const noiDung = vai.noiDung ? {} : { mediaPath: null, mediaUrl: null, postText: null };
+  return { ...d, ...lienHe, ...noiDung };
+}
 
 /** Giảm hơn ngưỡng này so với thước → tin cần xác minh: vẫn hiện, đứng cuối (Mạnh chốt Hỏi-2, ON11 24/10). */
 export const NGHI_NGO_PCT = 35;
