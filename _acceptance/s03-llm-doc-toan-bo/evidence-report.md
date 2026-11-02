@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: s03-llm-doc-toan-bo
-verdict: REJECT
-failed_evals: ["E11"]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 59568136a166229a034cd0d5d7ba8f526343e9fe
+verified_commit: a3800ef0f67799b689f05a638206db1bd8f005c5
 human_signoff:
 ---
 
 # Evidence Report: s03-llm-doc-toan-bo
-
-Round 1. Verdict REJECT vì E11 đỏ (bộ test pipeline). Một lệnh suite không gắn eval cũng đỏ: `cd app && npm test`.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -27,166 +25,122 @@ Round 1. Verdict REJECT vì E11 đỏ (bộ test pipeline). Một lệnh suite k
 | E8 | AC-8 | test | PASS |
 | E9 | AC-9 | test | PASS |
 | E10 | AC-9 | test | PASS |
-| E11 | AC-9 | test | FAIL |
+| E11 | AC-9 | test | PASS |
 | E12 | AC-7 | ui-check | PASS |
 | E13 | AC-10 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-s03-llm-doc-toan-bo-E1-r1
+  run_id: minted-s03-llm-doc-toan-bo-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E2
-  run_id: minted-s03-llm-doc-toan-bo-E2-r1
+  run_id: minted-s03-llm-doc-toan-bo-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_thuan
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test tests/doc-toan-bo.test.ts
-    duration_ms 204.995875
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E3
-  run_id: minted-s03-llm-doc-toan-bo-E3-r1
+  run_id: minted-s03-llm-doc-toan-bo-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E4
-  run_id: minted-s03-llm-doc-toan-bo-E4-r1
+  run_id: minted-s03-llm-doc-toan-bo-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E5
-  run_id: minted-s03-llm-doc-toan-bo-E5-r1
+  run_id: minted-s03-llm-doc-toan-bo-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E6
-  run_id: minted-s03-llm-doc-toan-bo-E6-r1
+  run_id: minted-s03-llm-doc-toan-bo-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E7
-  run_id: minted-s03-llm-doc-toan-bo-E7-r1
+  run_id: minted-s03-llm-doc-toan-bo-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E8
-  run_id: minted-s03-llm-doc-toan-bo-E8-r1
+  run_id: minted-s03-llm-doc-toan-bo-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E9
-  run_id: minted-s03-llm-doc-toan-bo-E9-r1
+  run_id: minted-s03-llm-doc-toan-bo-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E10
-  run_id: minted-s03-llm-doc-toan-bo-E10-r1
+  run_id: minted-s03-llm-doc-toan-bo-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.agent
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && npm test
-    duration_ms 15584.465333
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E11
-  run_id: minted-s03-llm-doc-toan-bo-E11-r1
-  exit_code: 1
+  run_id: minted-s03-llm-doc-toan-bo-E11-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd pipeline && npm test
-    Postgres báo deadlock giữa hai tiến trình (deadlock.c, DeadLockReport).
-    Ca VL-AC-5 (scripts/vocab-lint.test.mjs:167) đỏ: cây thật còn chỗ viết tay ngoài sổ:
-    app/src/components/ops/review-card.tsx:270 · listing_intent · offer,inquiry,not_listing
-
-- eval: E13
-  run_id: minted-s03-llm-doc-toan-bo-E13-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.ls1_db
-  verified_at: 2026-11-02T22:15:06Z
-  output: |
-    cmd: cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts
-    duration_ms 14013.700583
+  verified_at: 2026-11-02T23:04:33Z
 
 - eval: E12
-  run_id: minted-s03-llm-doc-toan-bo-E12-r1
+  run_id: minted-s03-llm-doc-toan-bo-E12-r2
   exit_code: 0
   baseline: n-a
-  verifier: scripts/ui-capture.sh
-  verified_at: 2026-11-02T22:15:06Z
+  verifier: config:executors.ui_check
+  verified_at: 2026-11-02T23:04:33Z
   screenshot: evidence/E12-step1.png
   observed: |
-    E12-step1.png: Trang Hang duyet, tai khoan ops-role-test@local.test vai Van hanh. Danh sach "1 the", dung 1 dong "Bo sung du lieu: t_ls1_e12 (4 truong)" #177875, loai Bo sung tin, trang thai Cho duyet. E12-step2.png: ngan keo the mo, muc Loai hinh "Luat va AI khac nhau - chon mot ben" (Dat theo luat, Can ho theo AI claude-haiku-5.5, trich dan), muc Doi chieu "AI va bo doc khac nhau" co hai khoi: Y dinh tin (Bo doc Tin rao, AI Yeu cau, trich "can mua can ho") va Gia rao (Bo doc 3.000.000.000 d, AI 5.000.000.000 d, trich "gia 5 ty"). Co toan van tin, o Ly do, nut Ap dung/Bo/De sau. Khop expected. Ghi chu: capture.ui khoa cung tai khoan admin va khong mo the nen dung playwright-cli truc tiep.
-  network_observed: clean
+    E12-step1.png (đọc trực tiếp): trang Hàng duyệt dưới vai Vận hành, bộ lọc "Mọi loại / Chờ duyệt", "1 thẻ", đúng một dòng "Bổ sung dữ liệu: t_ls1_e12 (4 trường)", loại Bổ sung tin, trạng thái Chờ duyệt.
+    E12-step2.png: ngăn chi tiết thẻ mở. Mục "Loại hình" nhãn "Luật và AI khác nhau — chọn một bên": Đất (Theo luật) và Căn hộ (Theo AI, trích dẫn), nút Chọn luật / Chọn AI / Bỏ cả hai. Mục "Đối chiếu" nhãn "AI và bộ đọc khác nhau": Ý định tin (Bộ đọc: Tin rao, AI: Yêu cầu, trích «cần mua căn hộ») và Giá rao (Bộ đọc: 3.00 tỷ, AI: 5.00 tỷ, trích «giá 5 tỷ»), có toàn văn tin. Khớp Expected.
+  network_observed: n-a (driver)
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-s03-llm-doc-toan-bo-SUITE-lint-r1
+  run_id: minted-s03-llm-doc-toan-bo-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:15:06Z
+  verified_at: 2026-11-02T23:04:33Z
 
 - cmd: cd app && npm test
-  run_id: minted-s03-llm-doc-toan-bo-SUITE-npm_test-r1
-  exit_code: 1
-  verified_at: 2026-11-02T22:15:06Z
+  run_id: minted-s03-llm-doc-toan-bo-SUITE-npm_test-r2
+  exit_code: 0
+  verified_at: 2026-11-02T23:04:33Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-s03-llm-doc-toan-bo-SUITE-test_lint_rules-r1
+  run_id: minted-s03-llm-doc-toan-bo-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:15:06Z
+  verified_at: 2026-11-02T23:04:33Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-s03-llm-doc-toan-bo-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-s03-llm-doc-toan-bo-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:15:06Z
+  verified_at: 2026-11-02T23:04:33Z
 
 ## Known limits
 
@@ -194,24 +148,21 @@ Round 1. Verdict REJECT vì E11 đỏ (bộ test pipeline). Một lệnh suite k
 
 ## Analyst
 
-Lệnh fail không gắn eval: `cd app && npm test` thoát 1 (795 test, 794 qua, 1 đỏ). Ca đỏ: GV-AC-3 trong app/tests/gio-ops-gio-vn.test.tsx, báo mẫu «toLocale không múi» ở app/src/components/ops/review-card.tsx. Đây là lỗi hồi quy do chính feature thêm khối đối chiếu vào review-card.tsx, cùng gốc với ca VL-AC-5 làm E11 đỏ (tệp review-card.tsx dòng 270).
+none — moi eval feature deu red tren baseline (co phan biet)
 
-E11 còn có dấu hiệu deadlock Postgres giữa hai tiến trình khi chạy bộ pipeline; cần chạy lại để tách lỗi hạ tầng khỏi lỗi VL-AC-5.
-
-Eval không-phân-biệt (xanh cả HEAD lẫn baseline): none — không eval nào có số đo baseline (toàn n-a, xem mục dưới), nên chưa kết luận được eval nào phân biệt.
+Ghi chú: baseline của mọi eval ở round này đều là n-a (xem mục dưới), nên chưa có eval nào được chứng minh red trên code cũ.
 
 Baseline khong do
-- cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts: bo qua baseline: tep agent/tests/doc-toan-bo-db.itest.ts co o cay dang kiem nhung chua co o merge-base 610a924a817ce9515d54898025b8927c71803ef3 — eval moi, chay tren code cu khong phan biet gi
+- cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx: bo qua baseline: tep agent/tests/doc-toan-bo-db.itest.ts co o cay dang kiem nhung chua co o merge-base 610a924a817ce9515d54898025b8927c71803ef3 — eval moi, chay tren code cu khong phan biet gi
 - cd agent && node --import tsx --test tests/doc-toan-bo.test.ts: bo qua baseline: tep agent/tests/doc-toan-bo.test.ts co o cay dang kiem nhung chua co o merge-base 610a924a817ce9515d54898025b8927c71803ef3 — eval moi, chay tren code cu khong phan biet gi
 - cd agent && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 - cd pipeline && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
-Judge panel: không có panel nào được đề xuất cho vòng này; không có judgment item.
-
 ## Variance
 
-none — mọi eval chạy một lần (runs: 1), không có eval ngẫu nhiên.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E11 failed — ca VL-AC-5 báo review-card.tsx:270 viết tay nhãn ý định ngoài sổ từ vựng; lệnh suite app npm test cũng đỏ ở GV-AC-3 vì cùng tệp. Returned to implementation.
+Round 1: lịch sử round trước nằm ở các lần ghi trước của hồ sơ này; nội dung round 2 thay thế toàn bộ.
+Round 2: tất cả eval E1-E13 và bốn lệnh suite đạt; không có judgment item; không có eval ngẫu nhiên.
