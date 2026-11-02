@@ -6,7 +6,8 @@ import { chiPhi, GIA, parseReply, stripPII, TEN_MODEL, type Nhan } from "../agen
 import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-call-log.js";
 import { getModel } from "../runtime/models.js";
 import { KIND, LISTING_INTENT, PROPERTY_TYPE } from "../vocab.generated.js";
-import { trichCoThat } from "./luat-trich-dan.js";
+import { kiemTrichLoai, trichCoThat } from "./luat-trich-dan.js";
+import { routeFields, type EnrichField, type Routed } from "./route.js";
 
 export const PROMPT_VERSION = "dtb-s03-v1";
 export const VIEC = "doc-toan-bo-s03";
@@ -101,4 +102,68 @@ export async function hoiDoc(
 /** Ước một bài (USD): ~3,5 ký tự/token, ~150 token ra vì hỏi nhiều trường hơn nhãn bạc. Chỉ để chặn trần trước bài đầu. */
 export function uocChiPhiDoc(chuDaGat: string): number {
   return (((SYSTEM.length + chuDaGat.length) / 3.5) * GIA.haiku.vao + 150 * GIA.haiku.ra) / 1e6;
+}
+
+// ==== quyết một tin (thuần) ====
+export const NGUONG_GIA = 0.1;
+export const NGUONG_DIEN_TICH = 0.03;
+
+/** Một bất đồng chỉ đối chiếu: duyệt hay bác đều không đổi tin (Hỏi-1, AC-5, AC-6). */
+export type DoiChieu = { loai: "y_dinh" | "gia" | "dien_tich"; trich: string; ai: string | number; bo_doc: string | number };
+export type DeXuatTin = Routed & { status: "queued" | "skipped"; lyDo?: string };
+export type QuyetTin = { de_xuat: DeXuatTin[]; doi_chieu: DoiChieu[] };
+
+const lech = (ai: number, boDoc: number, nguong: number) => Math.abs(ai - boDoc) > nguong * boDoc;
+
+/**
+ * Thứ tự luật theo hình đã duyệt ở Cổng Phạm vi: tin đã có loại hình thì thôi; E1 có giá trị thì routeFields quyết (E1 trái AI lên
+ * thẻ kể cả khi trích dẫn không đạt); AI một mình thì theo trích dẫn. AI nói không phải tin rao thì không cột nào của tin đổi (AC-5).
+ */
+export function quyetTin(i: {
+  hienTai: { property_type: string | null; price_vnd: number | null; area_m2: number | null };
+  e1Loai: string | null;
+  intent: string;
+  quoteOk: boolean | null;
+  quoteYDinh: string | null;
+  them: DocThem | null;
+  chuDaGat: string;
+  /** Bài có từ hai tin: giá, diện tích của model không biết thuộc tin nào, nên không so. */
+  chungBai: boolean;
+  held: ReadonlySet<EnrichField>;
+}): QuyetTin {
+  const laTinRao = i.intent === LISTING_INTENT.offer;
+  const rs = routeFields({
+    current: { property_type: i.hienTai.property_type },
+    e1: { property_type: i.e1Loai },
+    llm: i.them ? { property_type: i.them.property_type } : null,
+    buildings: [],
+    held: i.held,
+  });
+  const de_xuat: DeXuatTin[] = rs.map((r): DeXuatTin => {
+    if (r.conflict) return { ...r, status: "queued" };
+    if (!laTinRao && (r.route === "direct" || r.route === "corroborated")) return { ...r, route: "review", corroboratedBy: null, status: "skipped", lyDo: "y-dinh-khac" };
+    if (r.source !== "e2_llm" || r.route !== "review") return { ...r, status: "queued" };
+    if (!laTinRao) return { ...r, status: "skipped", lyDo: "y-dinh-khac" };
+    const kq = kiemTrichLoai(r.value, i.them?.quote_loai ?? null, i.chuDaGat);
+    if (kq.ok) return { ...r, route: "corroborated", corroboratedBy: kq.ma, status: "queued" };
+    // Loại khác căn hộ: trích dẫn có thật vẫn không tự điền, lên thẻ cho người (AC-4).
+    if (r.value !== PROPERTY_TYPE.apartment && kq.lyDo === "tu-khoa-loai-khac") return { ...r, status: "queued" };
+    return { ...r, status: "skipped", lyDo: kq.lyDo };
+  });
+
+  const doi_chieu: DoiChieu[] = [];
+  if ((i.intent === LISTING_INTENT.inquiry || i.intent === LISTING_INTENT.not_listing) && i.quoteOk === true && i.quoteYDinh) {
+    doi_chieu.push({ loai: "y_dinh", trich: i.quoteYDinh, ai: i.intent, bo_doc: LISTING_INTENT.offer });
+  }
+  const t = i.them;
+  if (t && !i.chungBai) {
+    const { price_vnd: gia, area_m2: dt } = i.hienTai;
+    if (t.price_vnd && gia && gia > 0 && t.quote_gia && trichCoThat(t.quote_gia, i.chuDaGat) && lech(t.price_vnd, gia, NGUONG_GIA)) {
+      doi_chieu.push({ loai: "gia", trich: t.quote_gia, ai: t.price_vnd, bo_doc: gia });
+    }
+    if (t.area_m2 && dt && dt > 0 && t.quote_dt && trichCoThat(t.quote_dt, i.chuDaGat) && lech(t.area_m2, dt, NGUONG_DIEN_TICH)) {
+      doi_chieu.push({ loai: "dien_tich", trich: t.quote_dt, ai: t.area_m2, bo_doc: dt });
+    }
+  }
+  return { de_xuat, doi_chieu };
 }
