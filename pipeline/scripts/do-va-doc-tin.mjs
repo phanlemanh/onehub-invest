@@ -170,6 +170,21 @@ function nhomTin(mod, tuyChon) {
   return { nhom: [...nhom.values()], dem };
 }
 
+// Hai kiểu lùi so với bản nền trên bài thật (Mạnh nâng phạm vi 02/11, Ngoài-12, Ngoài-13): bài có giá thành mất giá vì «không vay»;
+// bài đang thành tin bị gạt là thuê từ 1 tỷ vì «/tháng» của số khác. Bài ghi «tài chính», «Tc» mất giá theo AC-4 nên không tính.
+const KHONG_VAY = /(?<![\p{L}])(?:không|ko|k|chưa)\s+vay(?![\p{L}])/iu;
+const CO_TAI_CHINH = /(?<![\p{L}])(?:tài\s*chính|tc|ttc)(?![\p{L}])/iu;
+function demLui(mod) {
+  let vay = 0, thue = 0;
+  for (const p of posts) {
+    const a = nen.parsePost(p.text), b = mod.parsePost(p.text);
+    mod.chinhLoaiThueTy?.(b, p.text);
+    if (a.priceVnd >= 1e9 && b.priceVnd == null && KHONG_VAY.test(p.text) && !CO_TAI_CHINH.test(p.text)) vay++;
+    if (a.kind && a.priceVnd != null && !nen.lyDoGiaPhiLy(a) && mod.lyDoGiaPhiLy(b) === "thue-tu-1-ty") thue++;
+  }
+  return { vay, thue };
+}
+
 function chamThuoc(mod, ten) {
   const n = chamNhan(mod, undefined);
   const baiNen = chamNhan(nen, undefined);
@@ -181,6 +196,7 @@ function chamThuoc(mod, ten) {
   const tutNen = khongTut(n, baiNen), tutKdv = khongTut(n, tat);
   const dungThanhSai = demDungThanhSai(mod);
   const haiTruc = that.nhom.filter((o) => o.units.size > 1).length;
+  const lui = demLui(mod);
   const t = [
     ["pn", tile(n.bedrooms) >= 0.9 && tile(n["bedrooms:giu"]) >= 0.85, `toàn tập ${hien(n.bedrooms)}, giữ lại ${hien(n["bedrooms:giu"])}`],
     ["dt_phay", that.dem.dt_phay_sai === 0, `${that.dem.dt_phay_sai} bài thật còn đọc sai DT có phẩy; nhãn ${hien(n.area_m2)}`],
@@ -189,6 +205,8 @@ function chamThuoc(mod, ten) {
     ["gia_kdv_khong_tut", tutKdv.length === 0 && that.dem.ban_duoi_300tr <= thatTat.dem.ban_duoi_300tr, `bật ${hien(n.price_vnd)}, tắt ${hien(tat.price_vnd)}; họ tụt: ${tutKdv.join(",") || "không"}; bán < 300 triệu bật ${that.dem.ban_duoi_300tr}, tắt ${thatTat.dem.ban_duoi_300tr}`],
     ["dung_thanh_sai", dungThanhSai <= TRAN.dung_thanh_sai, `${dungThanhSai} ô bản nền đúng nay sai, trần ${TRAN.dung_thanh_sai}`],
     ["hai_truc", haiTruc === 0, `${haiTruc} tin mang hai trục`],
+    ["khong_vay_mat_gia", lui.vay === 0, `${lui.vay} bài thật có giá ở bản nền mất giá vì «không vay»`],
+    ["thue_ty_lui", lui.thue === 0, `${lui.thue} bài thật đang thành tin bị gạt là thuê từ 1 tỷ`],
     ["cong_tac_co_tac_dung", ten === "bản nền" || tile(n.price_vnd) !== tile(tat.price_vnd), `bật ${hien(n.price_vnd)}, tắt ${hien(tat.price_vnd)}`],
     ["ma_can", tile(n.unit) >= 0.7 && tile(n.unit_thua) <= 0.1, `đúng ${hien(n.unit)} (giữ lại ${hien(n["unit:giu"])}), thừa ${hien(n.unit_thua)} (giữ lại ${hien(n["unit_thua:giu"])})`],
   ];

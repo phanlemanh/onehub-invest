@@ -7,7 +7,7 @@
 //               đuôi — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
 // SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên phone/phones «trước» lấy bằng bộ bóc
 //               của cây — thước chỉ đo phần giá của hồ sơ này.
-// SV1 (s03-va-doc-tin, Mạnh duyệt 02/11): bộ đọc đổi có chủ ý trên bài khác dạng và thêm trường toà, trục, nên chỉ so bài mang dạng của
+// SV1 (s03-va-doc-tin, máy sửa ở S3, sổ d-20261102T021341Z-24): bộ đọc đổi có chủ ý trên bài khác dạng và thêm trường toà, trục, nên chỉ so bài mang dạng của
 //               hồ sơ này, trên các trường bản nền có; phần còn lại đo ở do-va-doc-tin.mjs. SĐT vẫn so trên mọi bài.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";

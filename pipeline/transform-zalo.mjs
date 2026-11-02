@@ -49,21 +49,22 @@ const GIA_TR_LE = /(?<![\p{L}\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|
 const GIA_TY = /(?<![\p{L}\d])(?<!\d[.,])(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/giu;
 const GIA_TRIEU_SO = /(?<![\p{L}\d])(?<!\d[.,])(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/giu;
 // "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị hay "/m" (đơn giá — Ngoài-2).
-const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m|\/\s*m[2²]|\/\s*m\b))/i;
+const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m|\/\s*m[2²]|\/\s*m\b))/gi;
 // "45.000.000/m2", "45.000.000đ/m2" — đơn giá viết bằng đồng: giá/m², không phải tổng giá (Ngoài-2).
 const GIA_DONG_M2 = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])\s*(?:đ|vnđ|vnd)?\s*\/\s*m(?:2|²)?(?![\p{L}\p{N}])/iu;
 // "Giá: 4,000 (thu về)" — số nhóm nghìn đứng sau nhãn giá, không đơn vị: triệu.
 const GIA_NHAN_TRIEU = /giá(?:\s*bán)?\s*:?\s*(\d{1,3}[.,]\d{3})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ|vnd))/i;
 
 // Vá hẹp SV1 (hồ sơ s03-va-doc-tin, audit 02/11 §3). Số đứng sau những chữ này là khoản khác, không phải giá chào: «cắt 450tr»,
-// «vốn 1,4 tỷ», «đã vào 800tr». Sau «còn», «giá», «bán», «chỉ» thì lại là giá: «cắt lỗ còn 3 tỷ».
-const KHONG_PHAI_GIA = /(?<![\p{L}])(?:cắt|lỗ|lõm|âm|giảm|hạ|chênh|lời|đã\s*vào|đã\s*đóng|đã\s*thanh\s*toán|vay|cọc|vốn|trả\s*trước|gốc|tiến\s*độ|bớt|hỗ\s*trợ|chiết\s*khấu|dòng\s*tiền|thu\s*nhập|lãi|tài\s*chính|ngân\s*sách|tc|ttc|tts|htls)(?![\p{L}])[^\d\n]{0,18}$/iu;
+// «vốn 1,4 tỷ», «đã vào 800tr». Sau «còn», «giá», «bán», «chỉ» thì lại là giá: «cắt lỗ còn 3 tỷ». «Không vay», «bán vay» không nêu khoản vay nào: «ko vay 2ty1», «bán vay full 2.350ty» vẫn là giá.
+const KHONG_PHAI_GIA = /(?<![\p{L}])(?:cắt|lỗ|lõm|âm|giảm|hạ|chênh|lời|đã\s*vào|đã\s*đóng|đã\s*thanh\s*toán|(?<!(?<![\p{L}])(?:không|ko|k|chưa|bán)\s+)vay|cọc|vốn|trả\s*trước|gốc|tiến\s*độ|bớt|hỗ\s*trợ|chiết\s*khấu|dòng\s*tiền|thu\s*nhập|lãi|tài\s*chính|ngân\s*sách|tc|ttc|tts|htls)(?![\p{L}])[^\d\n]{0,18}$/iu;
 const LAI_LA_GIA = /(?<![\p{L}])(?:còn|giá|bán|chỉ)\s*[:：]?\s*$/iu;
 /** Số ở vị trí i trong chữ là khoản khác, không phải giá chào (AC-4). */
 function laSoNguCanh(so, i) {
   const truoc = so.slice(Math.max(0, i - 25), i);
   if (LAI_LA_GIA.test(truoc)) return false;
-  if (KHONG_PHAI_GIA.test(so.slice(Math.max(0, i - 25), i))) return true;
+  // Cửa sổ rộng hơn đoạn regex xét, để chặn «không», «bán» trước «vay» không bị cắt mất.
+  if (KHONG_PHAI_GIA.test(so.slice(Math.max(0, i - 40), i))) return true;
   return false;
 }
 /** Khớp đầu tiên của `re` (có cờ g) không phải số ngữ cảnh. */
@@ -338,7 +339,7 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
     // Không đơn vị: "7.000.000" (đủ hai nhóm nghìn) là đồng; "Giá: 4,000" ở tin bán là triệu (4 tỷ), tin thuê để trống.
-    const dong = so.match(GIA_DONG);
+    const dong = khopGia(GIA_DONG, so);
     const giaTrieu = out.kind === "sale" ? so.match(GIA_NHAN_TRIEU) : null;
     if (dong) out.priceVnd = parseInt(dong[1].replace(/\./g, ""), 10);
     else if (giaTrieu) out.priceVnd = Math.round(parseVnNumber(giaTrieu[1]) * 1e6);
@@ -602,8 +603,9 @@ export function maToaCan(text) {
 const GIA_THUE_TRAN = 1e9;
 const GIA_BAN_TRAN = 100e9;
 
-// Đơn vị theo tháng, năm: giá từ 1 tỷ kèm đơn vị này vẫn là thuê phi lý, không đổi loại.
-const THEO_THANG = /\/\s*(?:th(?:áng)?|năm)(?![\p{L}])|(?<![\p{L}])(?:một|mỗi|1)\s*tháng(?![\p{L}])/iu;
+// Đơn vị tháng, năm đi liền số tiền từ 1 tỷ («1 tỷ/tháng»): vẫn là thuê phi lý, không đổi loại. «/tháng» gắn với số khác là tiền thuê
+// hiện tại của bài bán («đang cho thuê 7tr/tháng. Giá bán: 2,7 tỷ»).
+const THEO_THANG = /(?:\d\s*(?:tỷ|tỉ|ty)\s*\d{0,3}|\d{1,3}(?:\.\d{3}){3,}\s*(?:đồng|đ|vnđ|vnd)?|\d{4,}\s*(?:triệu|tr))\s*(?:\/\s*(?:th(?:áng)?|năm|(?:một|1)\s*(?:tháng|năm))|(?:một|mỗi|1)\s*(?:tháng|năm))(?![\p{L}])/iu;
 
 /** Bài thuê giá từ 1 tỷ không ghi đơn vị tháng là bài bán có chữ «cho thuê» («đang cho thuê», AC-5): đổi loại thay vì vứt. */
 export function chinhLoaiThueTy(pr, text) {

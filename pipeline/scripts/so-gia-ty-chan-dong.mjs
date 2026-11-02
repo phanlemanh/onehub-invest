@@ -5,7 +5,7 @@
 //               hợp có SĐT nối SĐT — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
 // SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên danh sách SĐT «trước» lấy bằng bộ bóc
 //               của cây — thước chỉ đo phần giá tỷ của hồ sơ này; bộ bóc giờ dùng SDT_RE riêng, không còn PHONE_RE dùng chung.
-// SV1 (s03-va-doc-tin, Mạnh duyệt 02/11): bộ đọc giá đổi có chủ ý trên bài khác dạng, nên chỉ so giá ở bài mang dạng giá tỷ chẵn;
+// SV1 (s03-va-doc-tin, máy sửa ở S3, sổ d-20261102T021341Z-24): bộ đọc giá đổi có chủ ý trên bài khác dạng, nên chỉ so giá ở bài mang dạng giá tỷ chẵn;
 //               phần đó đo ở do-va-doc-tin.mjs. SĐT vẫn so trên mọi bài.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";

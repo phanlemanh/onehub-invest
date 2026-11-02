@@ -59,6 +59,7 @@ test("SV1-AC-5 DB: thuê từ 1 tỷ không đơn vị thời gian thành bán; 
     const truoc = (await runTransformZalo(c)).loaiGiaPhiLy;
     const ba = await post(c, "Cho thuê căn 2PN giá 3.331 tỷ", "t1");
     const mot = await post(c, "Cho thuê căn 2PN giá 1 tỷ", "t2");
+    const banKemThue = await post(c, "Bán căn 2PN đang cho thuê 7tr/tháng. Giá bán: 2,717 tỷ", "t7");
     const GAT = [
       ["/tháng", "Cho thuê căn 2PN giá 1.334 tỷ/tháng", "t3", "thue-tu-1-ty"],
       ["/th", "Cho thuê căn 2PN giá 1.335 tỷ/th", "t4", "thue-tu-1-ty"],
@@ -71,6 +72,9 @@ test("SV1-AC-5 DB: thuê từ 1 tỷ không đơn vị thời gian thành bán; 
     assert.equal((await tinCua(c, ba))?.kind, "sale", "SV1-AC-5 DB thuê 3,331 tỷ không thành tin bán");
     assert.equal(Number((await tinCua(c, ba))?.price_vnd), 3.331e9, "SV1-AC-5 DB giá thuê 3,331 tỷ");
     assert.equal((await tinCua(c, mot))?.kind, "sale", "SV1-AC-5 DB thuê đúng 1 tỷ không thành tin bán");
+    assert.equal(Number((await tinCua(c, mot))?.price_vnd), 1e9, "SV1-AC-5 DB giá thuê đúng 1 tỷ");
+    assert.equal((await tinCua(c, banKemThue))?.kind, "sale", "SV1-AC-5 DB bài bán kèm tiền thuê không thành tin bán");
+    assert.equal(Number((await tinCua(c, banKemThue))?.price_vnd), 2.717e9, "SV1-AC-5 DB giá bài bán kèm tiền thuê");
     for (const [ten, chu, lyDo, id] of gat) {
       assert.equal(await tinCua(c, id), null, `SV1-AC-5 DB «${ten}» thành tin`);
       const pr = parsePost(chu);

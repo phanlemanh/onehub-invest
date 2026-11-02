@@ -133,10 +133,26 @@ const BANG_NGU_CANH = [
   // Cùng dạng với «cắt lỗ 1 tỷ» nên không đoán là giá: mất giá còn hơn ghi giá sai.
   ["Bán căn cắt lỗ 2,9 tỷ", null],
   ["Bán căn chỉ hơn 8 tỷ", 8e9],
+  // «Không vay», «bán vay» không nêu khoản vay nào nên số sau đó vẫn là giá.
+  ["Bán căn 2PN có bán vay full 2.350ty btp", 2.35e9],
+  ["Bán căn hướng đông nam ,không vay có bán vay full 2.350ty btp", 2.35e9],
+  ["Bán căn 1PN sẵn sổ chủ ko vay 2ty1", 2.1e9],
+  ["Bán căn 2PN không vay 2.350ty btp", 2.35e9],
+  ["Bán căn 2PN chưa vay 3 tỷ", 3e9],
+  // Giá viết đủ số đồng cũng theo luật ngữ cảnh.
+  ["Bán căn cắt 450.000.000", null],
+  ["Bán căn vay 1.400.000.000", null],
+  ["Bán căn đã vào 800.000.000", null],
+  ["Bán căn vay 1.400.000.000 giá 3.200.000.000", 3.2e9],
+  ["Bán căn 3.200.000.000", 3.2e9],
 ];
 test("SV1-AC-4 số ngữ cảnh không thành giá, giá có nhãn thắng; ca đỏ bỏ luật ngữ cảnh", async () => {
   await kiemHaiChieu("SV1-AC-4", BANG_NGU_CANH, (m, c) => m.parsePost(c).priceVnd,
-    [["if (KHONG_PHAI_GIA.test(so.slice(Math.max(0, i - 25), i))) return true;", ""]], "vốn 1,4 tỷ");
+    [["if (KHONG_PHAI_GIA.test(so.slice(Math.max(0, i - 40), i))) return true;", ""]], "vốn 1,4 tỷ");
+  await kiemHaiChieu("SV1-AC-4", BANG_NGU_CANH, (m, c) => m.parsePost(c).priceVnd,
+    [["(?<!(?<![\\p{L}])(?:không|ko|k|chưa|bán)\\s+)vay", "vay"]], "bán vay full");
+  await kiemHaiChieu("SV1-AC-4", BANG_NGU_CANH, (m, c) => m.parsePost(c).priceVnd,
+    [["const dong = khopGia(GIA_DONG, so);", "const dong = so.match(new RegExp(GIA_DONG, \"i\"));"]], "cắt 450.000.000");
 });
 
 // ---- AC-5: thuê từ 1 tỷ không đơn vị tháng thành bán ----
@@ -148,6 +164,12 @@ const BANG_THUE_TY = [
   ["Cho thuê căn 2PN giá 1 tỷ/th", "rent_lt"],
   ["Cho thuê nguyên toà 1,2 tỷ/năm", "rent_lt"],
   ["Cho thuê căn 2PN giá 1 tỷ", "sale"],
+  ["Cho thuê nguyên toà 1,2 tỷ mỗi năm", "rent_lt"],
+  ["Cho thuê nguyên toà 1,2 tỷ 1 năm", "rent_lt"],
+  ["Cho thuê nguyên toà 1,2 tỷ/1 năm", "rent_lt"],
+  // Tiền thuê hiện tại của bài bán: đơn vị tháng không đi liền số tiền từ 1 tỷ.
+  ["Bán căn 2PN đang cho thuê 7tr/tháng. Giá bán: 2,7 tỷ", "sale"],
+  ["Căn 2PN đang cho thuê 7,5tr/tháng. Giá: 27xx thu về", "sale"],
   ["Cho thuê căn 2PN 9tr", "rent_lt"],
   ["Bán căn 3 tỷ", "sale"],
 ];
@@ -162,6 +184,8 @@ test("SV1-AC-5 thuê từ 1 tỷ không ghi tháng đổi thành bán, «/tháng
   const doc = (m, c) => { const pr = m.parsePost(c); m.chinhLoaiThueTy(pr, c); return pr.kind; };
   await kiemHaiChieu("SV1-AC-5", BANG_THUE_TY, doc,
     [["if (!THEO_THANG.test(gatSo(text))) pr.kind = KIND.sale;", ""]], "2PN 3 tỷ");
+  await kiemHaiChieu("SV1-AC-5", BANG_THUE_TY, doc,
+    [["if (!THEO_THANG.test(gatSo(text))) pr.kind = KIND.sale;", "if (!/\\/\\s*(?:th(?:áng)?|năm|1\\s*năm)|(?:mỗi|1)\\s*năm/iu.test(gatSo(text))) pr.kind = KIND.sale;"]], "7tr/tháng");
   // Chốt khoảng giữ nguyên: bài vẫn là thuê thì vẫn bị gạt.
   assert.equal(tz.lyDoGiaPhiLy({ kind: "rent_lt", priceVnd: 1e9 }), "thue-tu-1-ty", "SV1-AC-5 chốt khoảng đổi");
   for (const [chu, lyDo] of LY_DO_GAT) {
