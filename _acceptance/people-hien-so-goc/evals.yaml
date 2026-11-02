@@ -1,0 +1,116 @@
+schema_version: 1
+feature_slug: people-hien-so-goc
+# Ca «SHS-AC-n» thêm vào app/tests/danh-ba-nguoi-tren-ops.test.tsx (cùng lược đồ tạm, page thật với getSessionUser giả).
+# Số trong test là số bịa. Mỗi phép đo mới có cặp hai chiều trên cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-1 qua page thật hai vai ops, admin: HTML có `0912 345 678`, href tel:+84912345678 nằm trong ô cột đầu của hàng đó (bóc từng <td>, so quan hệ hàng ↔ số); không có «SĐT (đã che)»; người không số không có tel:; lược đồ 12 người thì đúng 12 hàng <tr> trong <tbody>, đối chứng đỏ: bản bảng để mặc định 10 hàng → ném; đối chứng đỏ: bản hienBiDanh che số → ném ('SHS-AC-1 không thấy số')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-2: trang một người có hai dòng số và hai tel:, đúng một «Đã nghỉ»; giá trị lệch khuôn hiện chữ, 0 tel:; đối chứng đỏ: telHref bỏ kiểm khuôn → ném ('SHS-AC-2 liên kết lệch khuôn')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-3: bộ quét số (bốn dạng, cả tách nhóm) trên HTML và JSON.stringify cây phần tử của page thật; viewer 0 khớp ở danh sách và trang một người, vẫn có mã người, nguồn, số tin; khách và user có «Cần đăng nhập ops.»; đối chứng dương: cùng bộ quét trên ops > 0; đối chứng đỏ: bản xem=true cho viewer → ném ('SHS-AC-3 viewer nhận số')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-4: ma trận viết trước, sáu dạng gõ qua page thật vai ops ra đúng một mã người và hàng hiện đúng số vừa gõ; người hai số sống, tìm số nào hàng hiện số đó (dựng qua loader, không viết tay hàng); số không ai có → trạng thái trống; `0912` khớp người có tên chứa `0912` và không ra người có số; người chỉ có số nghỉ và người gộp không khớp; tìm tên, tài khoản như cũ; assert đủ số phần tử ma trận; đối chứng đỏ: bỏ chuẩn hoá thì dạng `0912 345 678` ném ('SHS-AC-4 không ra người')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-5: viewer với sáu dạng q so bằng chuỗi với viewer không q (tập mã người, «Trang k/n · m người khớp», ba số đầu), có dòng báo, không có name=\"q\", HTML không chứa chữ số vừa gõ; đối chứng dương: ops cùng q ra đúng một người; đối chứng đỏ: giữ q cho viewer → ném ('SHS-AC-5 viewer lọc được')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.deals_lien_he
+    paths: [app/src/app/ops/deals/**, app/src/components/ops/deal-card.tsx, app/src/lib/deals.ts, app/tests/danh-ba-nguoi-deals-lien-he.test.tsx]
+    expected: "exit 0; ca SHS-AC-6 qua page thật với getDeals giả, ma trận viewer, ops, admin và bản cloud: ops có tên, nhóm, tel:, 0 <img>, không chữ bài; admin đủ; viewer 0 khớp bộ quét số và 0 tên trên HTML và JSON.stringify cây phần tử; cloud không khối liên hệ, chú thích có «máy thu»; đối chứng đỏ: lọc theo isAdmin → ném ('SHS-AC-6 ops không thấy liên hệ'); đối chứng đỏ: bỏ lọc viewer → ném ('SHS-AC-6 viewer nhận số')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_doi_chieu
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/people-rows.ts, app/tests/danh-ba-nguoi-doi-chieu.test.tsx]
+    expected: "exit 0; ca SHS-DC trên DB máy thu READ ONLY: n = count người active có sdt sống, n > 0; qua mọi trang danhSachNguoi số hàng hiện số ở xem=true bằng n, ở xem=false bằng 0; với từng số danhSachNguoi tìm ra hàng đúng party_key mang đúng số đó; in số người có từ hai số sống; count + bản đếm danh bạ trước bằng sau; đối chứng đỏ: bản tìm bỏ lọc sdt → ném ('SHS-DC tìm sai người')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.shs_chu
+    paths: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, app/src/lib/ops/people.ts, CONTEXT.md, _acceptance/sdt-luu-goc-e164/evals.yaml, _acceptance/sd3-lam-chat-do-danh-ba/evals.yaml, _acceptance/people-hien-so-goc/probes/chu.mjs]
+    expected: "exit 0; probes/chu.mjs: deals.ts và page.tsx không còn «tầng A» gắn SĐT; 0 NHAN_CHE_SDT trong app/src; CONTEXT.md dòng Bí danh không còn «đã che»; hai ô eval khai status not-run và superseded_by people-hien-so-goc#AC-3; đối chứng đỏ: chạy trên chuỗi mồi có «SĐT (đã che)» → thoát 1 với ('SHS-AC-8')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.shs_deals_cu
+    paths: [app/src/components/ops/deal-card.tsx, app/src/lib/deals.ts, app/tests/deals-phi-ly.test.tsx, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; deals-phi-ly và sellers-chip xanh sau khi chuyển fmtPhone; fmtPhone(+84912345678) = 0912 345 678; dạng 0… vẫn tách nhóm."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/src/app/ops/deals/**, app/src/components/ops/deal-card.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json phải trỏ worktree), DB máy thu :5433 có danh bạ thật, đăng nhập tài khoản thử vai Vận hành (node scripts/dev-ops-account.mjs --vai ops; đọc .claude/ops-role-test-account.json, không in mật khẩu). Không chép số thật vào báo cáo."
+      - "1280 px sáng: /ops/people lọc S03 → evidence/E10-step1.png; gõ một số vào ô tìm → evidence/E10-step2.png"
+      - "1280 px tối: bấm mã người có số → evidence/E10-step3.png"
+      - "1280 px sáng: /ops/deals → evidence/E10-step4.png"
+      - "390 px sáng: ba màn trên → evidence/E10-step5.png, E10-step6.png, E10-step7.png; ghi document.documentElement.scrollWidth và clientWidth từng màn; ở /ops/people ghi getBoundingClientRect của liên kết số đầu tiên khi chưa cuộn"
+      - "Gõ qua ô tìm thật ở dạng +84… và dạng có dấu tách của cùng một số → evidence/E10-step8.png; báo cáo không chép số thật"
+    expected: "Số đọc được ở sáng và tối; liên kết gọi có href tel:+84…, bấm được; scrollWidth = clientWidth ở 390 px; ở 390 px liên kết số đầu tiên nằm trọn trong khung nhìn khi chưa cuộn ngang; gõ hai dạng qua ô tìm thật đều ra đúng một hàng mang số đó; /ops/deals có khối liên hệ và không có ảnh vỡ."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.shs_gate
+    paths: [app/src/app/ops/people/**, app/src/components/ops/people/**, app/src/app/ops/deals/**, app/src/components/ops/deal-card.tsx]
+    expected: "exit 0; design-gate (a11y/slop) xanh trên từng tệp giao diện của vòng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/src/app/ops/deals/**, _acceptance/people-hien-so-goc/probes/html-vai.mjs]
+    steps:
+      - "Bản chạy ở http://localhost:3460 như E10; tạo tài khoản thử ba vai bằng node scripts/dev-ops-account.mjs (--vai viewer, --vai ops, mặc định admin)."
+      - "BASE_URL=http://localhost:3460 node _acceptance/people-hien-so-goc/probes/html-vai.mjs → ghi nguyên đầu ra vào evidence/E12-output.txt (đầu ra chỉ có số khớp từng vai từng trang, không có số điện thoại)."
+    expected: "Thoát 0; vai viewer 0 chuỗi khớp SĐT ở cả HTML và payload RSC (header RSC: 1) của mọi trang /ops/people, /ops/people/<khoá có số>, /ops/deals và /ops/people?q= đủ sáu dạng của một số thật; vai ops và admin ≥ 1 ở cả ba trang; /ops/deals không có tin mang số thì thoát khác 0; đối chứng dương: cùng bộ đếm trên vai ops với q đó > 0."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-11
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca SHS-AC-11 qua page thật: ba người (có số 1 tin, không số 9 tin, có số 5 tin) → vai ops và admin ra thứ tự có số 5 tin, có số 1 tin, không số 9 tin, dòng mô tả nói người có SĐT lên trước; cùng lược đồ vai viewer ra không số 9 tin, có số 5 tin, có số 1 tin, dòng mô tả cũ; đối chứng đỏ: bản bật ưu tiên cho viewer → ném ('SHS-AC-11 thứ tự lộ ai có số')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
