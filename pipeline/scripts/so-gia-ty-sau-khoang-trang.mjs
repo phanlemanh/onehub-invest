@@ -7,6 +7,8 @@
 //               đuôi — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
 // SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên phone/phones «trước» lấy bằng bộ bóc
 //               của cây — thước chỉ đo phần giá của hồ sơ này.
+// SV1 (s03-va-doc-tin, máy sửa ở S3, sổ d-20261102T021341Z-24): bộ đọc đổi có chủ ý trên bài khác dạng và thêm trường toà, trục, nên chỉ so bài mang dạng của
+//               hồ sơ này, trên các trường bản nền có; phần còn lại đo ở do-va-doc-tin.mjs. SĐT vẫn so trên mọi bài.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -76,9 +78,10 @@ async function luot(dotBien) {
     a.phones = boc(p.text);
     a.phone = a.phones[0] ?? null;
     const b = cay.parsePost(p.text);
-    const truong = Object.keys({ ...a, ...b }).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+    const truong = Object.keys(a).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
     if (truong.includes("phones") || truong.includes("phone")) doiSdt.push(p.post_id);
-    const conLai = truong.filter((k) => k !== "phones" && k !== "phone");
+    const dangNay = [...p.text.matchAll(SAU_KHOANG_TRANG)].length > 0;
+    const conLai = dangNay ? truong.filter((k) => k !== "phones" && k !== "phone") : [];
     if (conLai.length) {
       doi.push({ id: p.post_id, truong: conLai.map((k) => `${k} ${a[k]} → ${b[k]}`).join(", "),
         nhan: dungQuanHe(p.text, a, b, conLai) ? "gia-sau-khoang-trang" : "khac" });

@@ -1,0 +1,120 @@
+{
+  "feature_plain": "Tin S03 hiện đúng diện tích, phòng ngủ, phường và giá hơn, thêm toà và trục căn, không đổi cấu trúc dữ liệu.",
+  "scope_plain": "Những việc dưới đây để hàng khác, hoặc chưa có ca sai để sửa.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ đọc đúng diện tích viết dấu phẩy: «45,7m2» là 45,7 m², không còn thành 7 m²."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ đọc được phòng ngủ viết tắt như «2N», «2n1wc», «1+», «studio», và không nhầm với «2 năm», «5 ngày»."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ thôi gán phường Tây Nam cho tin chỉ ghi hướng Tây Nam; tin gọi đích danh phường vẫn nhận đúng."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ thôi lấy khoản cắt lỗ, tiền vay, tiền đã đóng làm giá; tin chỉ có các số đó thì không có giá. Bài ghi «không vay», «bán vay» vẫn giữ giá; giá viết đủ số đồng cũng theo luật này."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đọc giá che số như «1.8x tỷ», «giá 36xx» thành số sàn (1,8 tỷ; 3,6 tỷ), và không nhầm mã căn hay số tầng thành giá."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ lưu toà và trục căn đọc từ chữ bài; hai căn khác trục là hai tin, bài nhiều mã để trống trục. Thêm: bài nhắc hai toà khác nhau thì để trống toà, mã căn bốn phần giữ nguyên cả mã và đúng toà."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ chứng bằng số đo trên 383 bài do tác tử gắn nhãn và toàn bộ bài thật, có trần mức đổi; vượt trần thì không mở PR. Thêm hai phép đo trên bài thật: không bài nào mất giá vì «không vay», không tin nào đang có bị gạt là thuê từ 1 tỷ. Đổi: trần 500 tin mọc chỉ tính phần do bộ đọc sinh ra, tổng số vẫn được in. Ca kiểm trên DB của hồ sơ đã ký vẫn phải xanh; thước phường HCM thôi đếm hướng «Tây Nam» là tên phường. Thước gom quá 10 nội dung đang đỏ từ trước SV1 nên không tính ở hàng này."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-5",
+      "p": "Sẽ KHÔNG vứt tin ghi cho thuê từ 1 tỷ mà không có đơn vị thời gian: tin đó thành tin bán. «1 tỷ/tháng», «1,2 tỷ/năm» vẫn bị chặn như phi lý. Bài bán ghi kèm tiền thuê «7tr/tháng» thành tin bán, không bị gạt."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG đọc số trần không nhãn: «Bán căn 2PN 2800» vẫn không có giá; chỉ đọc khi có chữ «giá» ngay trước hoặc «thu về, net, btp» ngay sau."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG làm tầng và hướng: hàng sau, cần đổi cấu trúc dữ liệu."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG lưu giá khoảng và cận trên của giá che số: để PL13 (giá khoảng)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG tách bài nhiều căn (PL18), KHÔNG ghép tin S03 tới căn (PL20)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đưa trục căn lên cloud: việc riêng, rủi ro cao hơn hàng này."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG xử lý bài viết bằng ký tự kiểu chữ toán học: mới thấy một bài, chưa đo được bao nhiêu."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG tự nạp lại dữ liệu chung trong vòng này; sau khi gộp, lượt 00:00 tự nạp nếu Hỏi-1 cho phép, điều phối xếp các bước sau đó."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG sửa cách đọc phường của S05, S06: không có tin nào sai vì lỗi này."
+    },
+    {
+      "id": "OOS-8",
+      "p": "KHÔNG đọc mã viết liền kiểu «S801»: chưa kiểm được cách tách toà và trục."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Bảy lỗi đọc trong câu giao đều có tiêu chí riêng (AC-1 đến AC-7, ma trận từng lỗi)."
+    },
+    {
+      "i": 1,
+      "p": "Mỗi lỗi kiểm ba chiều: đọc đúng dạng lỗi, không nhầm dạng gần giống, dạng cũ không tụt (AC-1 đến AC-7)."
+    },
+    {
+      "i": 2,
+      "p": "Phần sau bộ đọc cũng được kiểm: chặn giá phi lý (AC-5), toà và trục khi đối chiếu với LLM (AC-8), gom tin (AC-8, AC-9), S05 đi cùng có trần (AC-9)."
+    },
+    {
+      "i": 3,
+      "p": "Số đo có ba tầng: ca viết tay, 383 bài nhãn chia hai phần và khoá bản ghim, toàn bộ bài thật (AC-9)."
+    },
+    {
+      "i": 4,
+      "p": "Không quét thêm chiều mới vì danh sách lỗi đã đóng từ audit; đổi lại không có bằng chứng phủ từ phép quét đó."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Thiếu: chưa hỏi người về việc tin thật đổi hàng loạt ngay đêm sau khi gộp, và số đo chưa có trần. Đã xử: đo số thật, gửi Hỏi-1, thêm trần vào số đo."
+    },
+    {
+      "i": 1,
+      "p": "Thiếu: giá che số hiện trên tin như giá chính xác mà chưa hỏi người, sai số ghi thấp hơn thực tế; vài lựa chọn dẫn căn cứ không đúng. Đã xử: gửi Hỏi-2, ghi đúng sai số 5%, viết lại căn cứ, thêm một lượt chạy thử trên bản chép dữ liệu."
+    },
+    {
+      "i": 2,
+      "p": "Thiếu: chưa có tiêu chí cho gom tin và cho toà của LLM. Đã xử: viết lại AC-8 đủ các ca. Phản biện còn bắt đúng một lỗi thật: tin đủ phường và diện tích vẫn gộp hai trục làm một, đã sửa."
+    },
+    {
+      "i": 3,
+      "p": "Thiếu: số đo chưa định nghĩa cách tính, nên sửa nhãn hay công tắc hỏng mà vẫn đạt. Đã xử: viết rõ cách tính, khoá bản nhãn, có đối chứng công tắc và nhánh bỏ giá không đơn vị."
+    },
+    {
+      "i": 4,
+      "p": "Thiếu: ca kiểm hẹp hơn luật, và số ròng che được bài hỏng. Đã xử: đóng danh sách từ ngữ cảnh, thêm ca, sửa thêm «/năm», đặt trần số ô đúng thành sai (đang là 0). «Cắt lỗ 2,9 tỷ» một mình cố ý không có giá."
+    }
+  ]
+}

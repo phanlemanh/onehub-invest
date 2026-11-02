@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: s03-va-doc-tin
+# Ca test mang tiền tố «SV1-AC-n»: thuần ở pipeline/scripts/va-doc-tin.test.mjs; DB thử oneinvest_n1_sv1 (BEGIN…ROLLBACK) ở
+# pipeline/scripts/va-doc-tin.itest.mjs; phép đo tập nhãn và bài thật (chỉ đọc) ở pipeline/scripts/do-va-doc-tin.mjs.
+# Mỗi ma trận có ca đỏ: bản sao đột biến của transform-zalo.mjs làm ca đỏ với thông điệp ghim mã ca.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-1' xanh: ma trận viết trước, số assert bằng số dòng, «1.234m2» giữ 1,234; ca đỏ trên bản sao bỏ phẩy khỏi regex diện tích ghim «SV1-AC-1» và dòng «45,7m2»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-2' xanh: dòng viết tắt và dạng cũ ra đúng số, các dòng không phải phòng ra null; ca đỏ trên bản sao bỏ chặn chữ sau «n» ghim «SV1-AC-2» và dòng «2 năm»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-3' xanh: ba dòng hướng ra null, ba dòng đích danh ra phường Tây Nam, phường thường vẫn khớp; ca đỏ trên bản sao bỏ luật hướng ghim «SV1-AC-3» và dòng «hướng Tây Nam»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-4' xanh: mỗi từ trong danh sách đóng có một dòng ra null, giá thật đúng khi có, nhãn giá thắng, «giá vốn», «giảm còn», «chỉ hơn», «cắt lỗ 2,9 tỷ» đúng đáp án, «ko vay 2ty1», «bán vay full 2.350ty» ra giá, «vay 1.400.000.000» ra null; ca đỏ trên bản sao bỏ luật ngữ cảnh ghim «SV1-AC-4» và dòng «vốn 1,4 tỷ»; bỏ chặn trước «vay» ghim dòng «bán vay full»; giá đồng không qua luật ghim dòng «cắt 450.000.000»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.va_doc_tin_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/va-doc-tin.itest.mjs]
+    expected: "exit 0; ca 'SV1-AC-5 DB' xanh trên DB thử trong ROLLBACK: bài thuê 3 tỷ và đúng 1 tỷ thành tin bán đúng giá, bài «đang cho thuê 7tr/tháng. Giá bán: 2,7 tỷ» thành tin bán, «1 tỷ/tháng», «1 tỷ/th», «1,2 tỷ/năm» và bán 120 tỷ không thành tin, bộ đếm tăng đúng 3 thue-tu-1-ty và 1 ban-tren-100-ty; ca đỏ thuần 'SV1-AC-5' trên bản sao bỏ bước đổi loại ghim dòng thuê 3 tỷ; xét đơn vị trên toàn bài ghim dòng «7tr/tháng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-6' xanh: tám dòng che ra số sàn, chữ không che không đổi, «PR6xx20», «Căn 36xx», «Tầng 36xx» ra null; ca đỏ trên bản sao bỏ luật che ghim «SV1-AC-6» và dòng «4.9xx tỷ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.va_doc_tin
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
+    expected: "exit 0; ca 'SV1-AC-7' xanh: mặc định bật ra đúng đáp án, số không phải giá ra null, khi tắt dạng mới ra null, luật cũ bản nền không đổi; ca đỏ trên bản sao bỏ điều kiện nhãn ghim «SV1-AC-7» và dòng «2PN 2800»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.va_doc_tin_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/va-doc-tin.itest.mjs]
+    expected: "exit 0; ca 'SV1-AC-8 DB' xanh trên DB thử trong ROLLBACK: mỗi Given của AC-8 so đúng cặp giá trị theo bài; bài «toà S902 và S101», «toà GH2 và toà GH3» không có block_raw; «S1.03.12.05», «S5.03-22.06», «S605.10.17» giữ nguyên mã và ra toà S1.03, S5.03, S605; hai mã bốn phần khác nhau không có unit_number; bài có mã và thiếu mã ra hai tin; tin seed sẵn offer_id dính hai trục sau nạp mỗi offer_id một unit_number; parser khác LLM thì parser thắng, LLM giữ khi parser không đọc ra; hai lượt không nhân dòng; ca đỏ thuần 'SV1-AC-8' trên bản sao bỏ luật bài nhiều mã ghim mã thứ hai"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.va_doc_tin_do
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/do-va-doc-tin.mjs]
+    expected: "exit 0; lượt cây in ĐẠT từng thước của AC-9 kèm mẫu số và số phần giữ lại; in đường tập, sha256 nhãn, cách chia, sha nền, trạng thái công tắc, số tin, giữ, nghỉ, tổng mọc, mọc do bộ đọc, mọc do bài mới, bài đổi loại, ô block_raw thêm và đổi, S05 đổi; đỏ khi sha256 lệch bản ghim, vượt trần nghỉ, mọc do bộ đọc, S05, dung_thanh_sai, có tin hai trục, công tắc không có tác dụng, hoặc có migration mới; lượt bản nền phải TRƯỢT pn, dt_phay, phuong_huong; thiếu tập nhãn thì exit 2 gọi tên tập; in nhãn «tác tử gắn, không phải nhãn vàng»; không in chữ bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ test pipeline xanh, kể cả ma trận các hồ sơ S03 đã ký"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/cam-mau-s03.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-cam-mau-s03.mjs 2>&1 | grep -q "hcm_sai_thi_truong=0 ĐẠT"
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.itest.mjs, pipeline/scripts/do-cam-mau-s03.mjs]
+    expected: "exit 0; ca DB của hồ sơ đã ký s03-cam-mau-so-lieu xanh, gồm đột biến CM-AC-8 trúng đúng runTransformZalo; lượt cây in hcm_sai_thi_truong=0 ĐẠT"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
