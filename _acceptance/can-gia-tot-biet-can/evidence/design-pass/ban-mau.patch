@@ -1,65 +1,29 @@
-diff --git a/app/src/app/ops/deals/[offerId]/page.tsx b/app/src/app/ops/deals/[offerId]/page.tsx
-new file mode 100644
-index 00000000..98629740
---- /dev/null
-+++ b/app/src/app/ops/deals/[offerId]/page.tsx
-@@ -0,0 +1,35 @@
-+import type { Metadata } from "next";
-+import Link from "next/link";
-+
-+import { DealDetailView } from "@/components/ops/deal-detail-view";
-+import { Button } from "@/components/ui/button";
-+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-+import { dealTheoVai } from "@/lib/deals";
-+import { PROTO } from "@/lib/deals-proto";
-+
-+export const dynamic = "force-dynamic";
-+export const metadata: Metadata = { title: "Một căn" };
-+
-+// BẢN MẪU design-pass: dữ liệu mẫu; S3 thay bằng getDeal và vai thật.
-+export default async function DealPage({ params, searchParams }: { params: Promise<{ offerId: string }>; searchParams: Promise<{ vai?: string; noi?: string }> }) {
-+  const { offerId } = await params;
-+  const { vai, noi } = await searchParams;
-+  const d = PROTO.find((x) => x.offerId === offerId);
-+  if (!d) {
-+    return (
-+      <Empty className="border">
-+        <EmptyHeader>
-+          <EmptyTitle>Không tìm thấy căn này</EmptyTitle>
-+          <EmptyDescription>Căn có thể đã rời danh sách vì giá đổi hoặc tin quá 45 ngày.</EmptyDescription>
-+        </EmptyHeader>
-+        <EmptyContent>
-+          <Button nativeButton={false} render={<Link prefetch={false} href="/ops/deals" />}>Về Căn giá tốt</Button>
-+        </EmptyContent>
-+      </Empty>
-+    );
-+  }
-+  const xem = vai !== "viewer";
-+  const mayThu = noi !== "cloud";
-+  const loc = dealTheoVai(d, { lienHe: xem, noiDung: xem && mayThu });
-+  return <DealDetailView d={{ ...d, ...loc, images: xem && mayThu ? d.images : [], postTextFull: xem && mayThu ? d.postTextFull : null, ...(xem ? {} : { block: null, floor: null, unit: null, street: null, streetNumber: null }) }} xemNoiDung={xem} mayThu={mayThu} />;
-+}
 diff --git a/app/src/app/ops/deals/page.tsx b/app/src/app/ops/deals/page.tsx
-index 6a6ec9ea..afd22ee2 100644
+index 6a6ec9ea..f99863a0 100644
 --- a/app/src/app/ops/deals/page.tsx
 +++ b/app/src/app/ops/deals/page.tsx
-@@ -1,9 +1,14 @@
+@@ -1,9 +1,18 @@
  import type { Metadata } from "next";
 +import Link from "next/link";
  
  import { DealCard } from "@/components/ops/deal-card";
++import { cauChungMinh } from "@/components/ops/deal-detail-view";
++import { DealsGrid } from "@/components/ops/deals-grid";
++import { PageHeader } from "@/components/page/page-header";
 +import { Button } from "@/components/ui/button";
 +import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
  import { getSessionUser } from "@/lib/auth";
- import { dealTheoVai, getDeals } from "@/lib/deals";
+-import { dealTheoVai, getDeals } from "@/lib/deals";
 -import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
++import { dealTheoVai, getDeals, NGHI_NGO_PCT } from "@/lib/deals";
 +import { tenCan, thieuGi } from "@/lib/deals-chi-tiet";
-+import { PROTO } from "@/lib/deals-proto";
++import { PROTO, PROTO_BANG } from "@/lib/deals-proto";
++import { fmtPhone, telHref } from "@/lib/ops/people";
 +import { xemNoiDungTin } from "@/lib/ops-access";
  
  export const dynamic = "force-dynamic";
  export const metadata: Metadata = { title: "Căn giá tốt" };
-@@ -17,10 +22,13 @@ export const metadata: Metadata = { title: "Căn giá tốt" };
+@@ -17,12 +26,37 @@ export const metadata: Metadata = { title: "Căn giá tốt" };
   * getDeals tự rơi về bản không liên hệ. Ở máy thu: khối liên hệ cho vai Vận hành trở
   * lên (Hỏi-B), ảnh và chữ bài cho admin; vai Người xem không nhận trường nào trong đó.
   */
@@ -67,17 +31,41 @@ index 6a6ec9ea..afd22ee2 100644
 -  const [tho, user] = await Promise.all([getDeals(30, 5), getSessionUser()]);
 -  const showContact = xemNoiDungTin(user);
 -  const rows = tho.map((d) => dealTheoVai(d, { lienHe: showContact, noiDung: isAdmin(user) }));
-+export default async function DealsPage({ searchParams }: { searchParams: Promise<{ vai?: string; trong?: string }> }) {
++export default async function DealsPage({ searchParams }: { searchParams: Promise<{ vai?: string; trong?: string; bo?: string; can?: string; noi?: string }> }) {
 +  // BẢN MẪU design-pass: dữ liệu mẫu; S3 thay bằng getDeals và vai thật.
-+  const { vai, trong } = await searchParams;
++  const { vai, trong, bo, can, noi } = await searchParams;
++  const mayThu = noi !== "cloud";
 +  await getSessionUser();
 +  void getDeals; void xemNoiDungTin;
 +  const showContact = vai !== "viewer";
 +  const rows = (trong ? [] : PROTO.filter((d) => !d.roiDanhSach)).map((d) => ({ ...d, ...dealTheoVai(d, { lienHe: showContact, noiDung: showContact }) }));
    const hasContact = showContact && rows.some((r) => r.sellerPhone);
  
++  if (bo !== "the" && !trong) {
++    const hang = PROTO_BANG.map((d) => {
++      const v = { ...d, ...dealTheoVai(d, { lienHe: showContact, noiDung: showContact }) };
++      return {
++        ...v, ten: tenCan(v), thieu: thieuGi(v, { xemNoiDung: showContact, mayThu }), cau: cauChungMinh(v), xacMinhPct: NGHI_NGO_PCT, xemAnh: showContact && mayThu,
++        sdt: v.sellerPhone ? fmtPhone(v.sellerPhone) : null, tel: v.sellerPhone ? telHref("sdt", v.sellerPhone, showContact) : null,
++      };
++    });
++    return (
++      <div className="flex flex-col gap-4">
++        <PageHeader
++          crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt" }]}
++          title="Căn giá tốt"
++          stats={[`${hang.length} căn`, "Giảm từ 5%"]}
++          description="Tin nội bộ S03, S05 rẻ hơn thước S06 cùng phường, 45 ngày gần nhất."
++        />
++        <DealsGrid rows={hang} moBanDau={can ?? null} xemNoiDung={showContact} mayThu={mayThu} />
++      </div>
++    );
++  }
++
    return (
-@@ -35,14 +43,19 @@ export default async function DealsPage() {
+     <div className="flex flex-col gap-4">
+       <div className="flex flex-col gap-1.5">
+@@ -35,14 +69,19 @@ export default async function DealsPage() {
          </p>
        </div>
        {rows.length === 0 ? (
@@ -261,9 +249,100 @@ index 3b4c6a2f..7be745be 100644
 +    </Card>
    );
  }
+diff --git a/app/src/components/ops/review-photos.tsx b/app/src/components/ops/review-photos.tsx
+index 2e1df9c7..2c1f100b 100644
+--- a/app/src/components/ops/review-photos.tsx
++++ b/app/src/components/ops/review-photos.tsx
+@@ -28,10 +28,12 @@ import type { ReviewImage } from "@/lib/ops/review-media";
+  * URL gốc; undefined thì không render gì. `chiGoc` = số ảnh chỉ có ở nguồn mà máy chủ chưa lấy hộ được — thẻ nói ra.
+  * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
+  */
+-export function ReviewPhotos({ label, images, chiGoc = 0 }: {
++export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
+   label: string;
+   images: ReviewImage[] | undefined;
+   chiGoc?: number;
++  /** Ảnh là nội dung chính của trang (trang một căn): lưới ảnh lớn thay dải ảnh nhỏ. */
++  lon?: boolean;
+ }) {
+   const [open, setOpen] = useState<number | null>(null);
+   const [broken, setBroken] = useState<ReadonlySet<number>>(new Set());
+@@ -48,6 +50,23 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
+ 
+   return (
+     <>
++      {lon ? (
++        <div role="group" aria-label={`Ảnh ${label}`} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
++          {images.map((img, i) => (
++            <button
++              key={img.src}
++              type="button"
++              aria-label={`Phóng to ${label} ảnh ${i + 1}`}
++              onClick={() => setOpen(i)}
++              className="bg-muted text-muted-foreground flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md text-xs"
++            >
++              {broken.has(i) ? "Ảnh hỏng" : (
++                <PhotoImg img={img} alt={`${label} — ảnh ${i + 1}`} className="size-full object-cover" onError={() => markBroken(i)} />
++              )}
++            </button>
++          ))}
++        </div>
++      ) : (
+       <AttachmentGroup role="group" aria-label={`Ảnh ${label}`}>
+         {images.map((img, i) => (
+           <Attachment
+@@ -73,6 +92,7 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
+           </Attachment>
+         ))}
+       </AttachmentGroup>
++      )}
+       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
+         {open !== null && (
+           <DialogContent className="sm:max-w-3xl">
+diff --git a/app/src/app/ops/deals/[offerId]/page.tsx b/app/src/app/ops/deals/[offerId]/page.tsx
+new file mode 100644
+index 00000000..98629740
+--- /dev/null
++++ b/app/src/app/ops/deals/[offerId]/page.tsx
+@@ -0,0 +1,35 @@
++import type { Metadata } from "next";
++import Link from "next/link";
++
++import { DealDetailView } from "@/components/ops/deal-detail-view";
++import { Button } from "@/components/ui/button";
++import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
++import { dealTheoVai } from "@/lib/deals";
++import { PROTO } from "@/lib/deals-proto";
++
++export const dynamic = "force-dynamic";
++export const metadata: Metadata = { title: "Một căn" };
++
++// BẢN MẪU design-pass: dữ liệu mẫu; S3 thay bằng getDeal và vai thật.
++export default async function DealPage({ params, searchParams }: { params: Promise<{ offerId: string }>; searchParams: Promise<{ vai?: string; noi?: string }> }) {
++  const { offerId } = await params;
++  const { vai, noi } = await searchParams;
++  const d = PROTO.find((x) => x.offerId === offerId);
++  if (!d) {
++    return (
++      <Empty className="border">
++        <EmptyHeader>
++          <EmptyTitle>Không tìm thấy căn này</EmptyTitle>
++          <EmptyDescription>Căn có thể đã rời danh sách vì giá đổi hoặc tin quá 45 ngày.</EmptyDescription>
++        </EmptyHeader>
++        <EmptyContent>
++          <Button nativeButton={false} render={<Link prefetch={false} href="/ops/deals" />}>Về Căn giá tốt</Button>
++        </EmptyContent>
++      </Empty>
++    );
++  }
++  const xem = vai !== "viewer";
++  const mayThu = noi !== "cloud";
++  const loc = dealTheoVai(d, { lienHe: xem, noiDung: xem && mayThu });
++  return <DealDetailView d={{ ...d, ...loc, images: xem && mayThu ? d.images : [], postTextFull: xem && mayThu ? d.postTextFull : null, ...(xem ? {} : { block: null, floor: null, unit: null, street: null, streetNumber: null }) }} xemNoiDung={xem} mayThu={mayThu} />;
++}
 diff --git a/app/src/components/ops/deal-detail-view.tsx b/app/src/components/ops/deal-detail-view.tsx
 new file mode 100644
-index 00000000..518c6629
+index 00000000..1f4ab8e9
 --- /dev/null
 +++ b/app/src/components/ops/deal-detail-view.tsx
 @@ -0,0 +1,169 @@
@@ -308,7 +387,7 @@ index 00000000..518c6629
 +}
 +
 +/** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
-+function cauChungMinh(d: DealChiTiet): string | null {
++export function cauChungMinh(d: DealChiTiet): string | null {
 +  if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
 +  const re = `Rẻ hơn thước phường ${fmtInt((d.medianPerm2 - d.pricePerm2) / 1e6)} tr/m², tức ${d.discountPct.toFixed(0)}%`;
 +  return d.suspect
@@ -436,62 +515,732 @@ index 00000000..518c6629
 +    </div>
 +  );
 +}
-diff --git a/app/src/components/ops/review-photos.tsx b/app/src/components/ops/review-photos.tsx
-index 2e1df9c7..2c1f100b 100644
---- a/app/src/components/ops/review-photos.tsx
-+++ b/app/src/components/ops/review-photos.tsx
-@@ -28,10 +28,12 @@ import type { ReviewImage } from "@/lib/ops/review-media";
-  * URL gốc; undefined thì không render gì. `chiGoc` = số ảnh chỉ có ở nguồn mà máy chủ chưa lấy hộ được — thẻ nói ra.
-  * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
-  */
--export function ReviewPhotos({ label, images, chiGoc = 0 }: {
-+export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
-   label: string;
-   images: ReviewImage[] | undefined;
-   chiGoc?: number;
-+  /** Ảnh là nội dung chính của trang (trang một căn): lưới ảnh lớn thay dải ảnh nhỏ. */
-+  lon?: boolean;
- }) {
-   const [open, setOpen] = useState<number | null>(null);
-   const [broken, setBroken] = useState<ReadonlySet<number>>(new Set());
-@@ -48,6 +50,23 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
- 
-   return (
-     <>
-+      {lon ? (
-+        <div role="group" aria-label={`Ảnh ${label}`} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-+          {images.map((img, i) => (
-+            <button
-+              key={img.src}
-+              type="button"
-+              aria-label={`Phóng to ${label} ảnh ${i + 1}`}
-+              onClick={() => setOpen(i)}
-+              className="bg-muted text-muted-foreground flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md text-xs"
-+            >
-+              {broken.has(i) ? "Ảnh hỏng" : (
-+                <PhotoImg img={img} alt={`${label} — ảnh ${i + 1}`} className="size-full object-cover" onError={() => markBroken(i)} />
-+              )}
-+            </button>
-+          ))}
-+        </div>
-+      ) : (
-       <AttachmentGroup role="group" aria-label={`Ảnh ${label}`}>
-         {images.map((img, i) => (
-           <Attachment
-@@ -73,6 +92,7 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
-           </Attachment>
-         ))}
-       </AttachmentGroup>
+diff --git a/app/src/components/ops/deal-sheet.tsx b/app/src/components/ops/deal-sheet.tsx
+new file mode 100644
+index 00000000..8dce1c7f
+--- /dev/null
++++ b/app/src/components/ops/deal-sheet.tsx
+@@ -0,0 +1,244 @@
++"use client"
++
++import { useState } from "react"
++import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, InfoIcon, PhoneIcon, TriangleAlertIcon, XIcon } from "lucide-react"
++import Link from "next/link"
++
++import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
++import { ReviewPhotos } from "@/components/ops/review-photos"
++import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
++import { Badge } from "@/components/reui/badge"
++import { Button } from "@/components/ui/button"
++import { ScrollArea } from "@/components/ui/scroll-area"
++import { Separator } from "@/components/ui/separator"
++import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
++import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
++import { canCungTieuChi, loaiHinh, NGUONG_LOAI_PCT, NGUONG_VAO_PCT } from "@/lib/deals-chi-tiet"
++import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
++import { LABELS_VI } from "@/lib/vocab.generated"
++
++import { DealSimilar } from "./deal-similar"
++import { DiscountBar, type DealHang } from "./deals-cells"
++
++/**
++ * Sheet một căn: khuôn record-sheet / review-detail-sheet của kho (đầu, thân cuộn, chân ghim), khối giá lấy ý
++ * @reui/solution-crm-4. Hai tab: đủ thông tin một căn · căn cùng tiêu chí. Đầu sheet ghim giá nên đổi tab vẫn thấy căn đang xem.
++ */
++function Row({ label, value }: { label: string; value: string | null }) {
++  return (
++    <div className="flex items-baseline justify-between gap-4 text-sm">
++      <dt className="text-muted-foreground shrink-0">{label}</dt>
++      <dd className={value ? "text-end tabular-nums wrap-anywhere" : "text-muted-foreground text-end"}>{value ?? "chưa có"}</dd>
++    </div>
++  )
++}
++
++function Section({ title, children }: { title: string; children: React.ReactNode }) {
++  return (
++    <section className="flex flex-col gap-3">
++      <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
++      {children}
++    </section>
++  )
++}
++
++const trM2 = (v: number | null) => (v ? `${fmtInt(v / 1e6)} tr/m²` : null)
++
++function ChiTiet({ d, xemNoiDung, mayThu }: { d: DealHang; xemNoiDung: boolean; mayThu: boolean }) {
++  const coNoiDung = xemNoiDung && mayThu
++  return (
++    <div className="flex flex-col gap-6 p-4">
++      {d.roiDanhSach && (
++        <Alert variant="info">
++          <InfoIcon aria-hidden="true" />
++          <AlertTitle>Đã rời danh sách</AlertTitle>
++          <AlertDescription>{d.roiDanhSach}</AlertDescription>
++        </Alert>
 +      )}
-       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
-         {open !== null && (
-           <DialogContent className="sm:max-w-3xl">
++      {d.thieu.length > 0 && (
++        <Alert variant="warning">
++          <TriangleAlertIcon aria-hidden="true" />
++          <AlertTitle>Còn thiếu</AlertTitle>
++          <AlertDescription>{d.thieu.join(" · ")}</AlertDescription>
++        </Alert>
++      )}
++      {!mayThu && (
++        <LocalOnlyAlert title="Ảnh, chữ bài chỉ có ở máy thu">
++          Máy chủ chưa giữ hai phần này, nên căn không thiếu chúng. Mở cổng Ops trên máy thu để xem.
++        </LocalOnlyAlert>
++      )}
++      {mayThu && !xemNoiDung && (
++        <LocalOnlyAlert title="Ảnh, chữ bài, liên hệ dành cho vai Vận hành">
++          Vai của bạn chỉ xem được số chứng minh và phường.
++        </LocalOnlyAlert>
++      )}
++      <Section title="Vì sao giá tốt">
++        {d.cau && <p className="text-sm text-pretty">{d.cau}</p>}
++        <dl className="flex flex-col gap-2">
++          <Row label="Giá/m² căn này" value={trM2(d.pricePerm2)} />
++          <Row label="Thước phường" value={trM2(d.medianPerm2)} />
++          <Row label="Số tin dựng thước" value={d.rulerN ? `${fmtInt(d.rulerN)} tin S06` : null} />
++          <Row label="Ngưỡng" value={`Vào từ ${NGUONG_VAO_PCT}%, xác minh trên ${d.xacMinhPct}%, loại trên ${NGUONG_LOAI_PCT}%`} />
++        </dl>
++      </Section>
++      {coNoiDung && (
++        <>
++          <Separator />
++          <Section title="Ảnh">
++            {d.images.length > 0 ? <ReviewPhotos label="Căn" images={d.images} lon /> : <p className="text-muted-foreground text-sm">Chưa có ảnh.</p>}
++          </Section>
++        </>
++      )}
++      <Separator />
++      <Section title="Thông tin căn">
++        <dl className="flex flex-col gap-2">
++          <Row label="Loại hình" value={loaiHinh(d.propertyType)} />
++          <Row label="Diện tích" value={d.areaM2 ? `${fmtInt(d.areaM2)} m²` : null} />
++          <Row label="Phòng ngủ" value={d.bedrooms ? fmtInt(d.bedrooms) : null} />
++          {xemNoiDung && (
++            <>
++              <Row label="Toà" value={d.block} />
++              <Row label="Tầng" value={d.floor} />
++              <Row label="Căn" value={d.unit} />
++              <Row label="Đường" value={[d.streetNumber, d.street].filter(Boolean).join(" ") || null} />
++            </>
++          )}
++          <Row label="Phường" value={d.phuong} />
++          <Row label="Quận" value={d.district} />
++        </dl>
++      </Section>
++      <Separator />
++      <Section title="Tin">
++        <dl className="flex flex-col gap-2">
++          <Row label="Nguồn" value={d.source} />
++          <Row label="Độ tin trích xuất" value={LABELS_VI.confidence[d.confidence as keyof typeof LABELS_VI.confidence] ?? d.confidence} />
++          <Row label="Thấy lần đầu" value={fmtVnDate(d.firstSeen)} />
++          <Row label="Thấy lần cuối" value={fmtVnDate(d.lastSeen)} />
++          <Row label="Số lần đăng" value={fmtInt(d.nReposts)} />
++        </dl>
++      </Section>
++      {xemNoiDung && (
++        <>
++          <Separator />
++          <Section title="Người đăng">
++            <dl className="flex flex-col gap-2">
++              <Row label="Tên" value={d.sellerName} />
++              <Row label="SĐT" value={d.sdt} />
++              <Row label="Nhóm" value={d.groupName} />
++              <Row label="Số tin của người này" value={d.brokerNAds ? fmtInt(d.brokerNAds) : null} />
++            </dl>
++          </Section>
++        </>
++      )}
++      {coNoiDung && (
++        <>
++          <Separator />
++          <Section title="Chữ bài">
++            {d.postTextFull ? (
++              <blockquote className="border-s-2 ps-3 text-sm break-words whitespace-pre-wrap" translate="no">{d.postTextFull}</blockquote>
++            ) : (
++              <p className="text-muted-foreground text-sm">Chưa có chữ bài.</p>
++            )}
++          </Section>
++        </>
++      )}
++    </div>
++  )
++}
++
++export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, onMoCan, onOpenChange }: {
++  d: DealHang | null
++  rows: DealHang[]
++  xemNoiDung: boolean
++  mayThu: boolean
++  /** Vị trí trong thứ tự bảng đang thấy; −1 khi căn mở từ danh sách cùng tiêu chí nằm ngoài lọc đang bật. */
++  viTri: number
++  tong: number
++  onChuyen: (buoc: 1 | -1) => void
++  onMoCan: (id: string) => void
++  onOpenChange: (open: boolean) => void
++}) {
++  // Giữ tab khi chuyển căn: đang duyệt so sánh thì căn kế vẫn ở tab so sánh.
++  const [tab, setTab] = useState<"chi-tiet" | "cung-tieu-chi">("chi-tiet")
++  const soCung = d ? canCungTieuChi(d, rows).can.length : 0
++  return (
++    <Sheet open={d !== null} onOpenChange={onOpenChange}>
++      <SheetContent
++        side="right"
++        showCloseButton={false}
++        className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-xl"
++        onKeyDown={(e) => {
++          if (e.key === "j") onChuyen(1)
++          if (e.key === "k") onChuyen(-1)
++        }}
++      >
++        {d && (
++          <>
++            <SheetHeader className="gap-3 border-b pb-0">
++              <div className="flex items-start justify-between gap-3">
++                <div className="flex min-w-0 flex-col gap-0.5">
++                  <SheetTitle>{d.ten}</SheetTitle>
++                  <SheetDescription className="text-xs tabular-nums">
++                    {d.source} · thấy {fmtVnDate(d.firstSeen)} · đăng {fmtInt(d.nReposts)} lần
++                  </SheetDescription>
++                </div>
++                <div className="flex shrink-0 items-center gap-1">
++                  {viTri >= 0 && <span className="text-muted-foreground px-1 text-xs tabular-nums">{viTri + 1}/{tong}</span>}
++                  <Button variant="ghost" size="icon-sm" aria-label="Căn trước (phím K)" disabled={viTri <= 0} onClick={() => onChuyen(-1)}>
++                    <ChevronUpIcon aria-hidden />
++                  </Button>
++                  <Button variant="ghost" size="icon-sm" aria-label="Căn kế (phím J)" disabled={viTri < 0 || viTri >= tong - 1} onClick={() => onChuyen(1)}>
++                    <ChevronDownIcon aria-hidden />
++                  </Button>
++                  <SheetClose render={<Button variant="ghost" size="icon-sm" aria-label="Đóng" />}>
++                    <XIcon aria-hidden />
++                  </SheetClose>
++                </div>
++              </div>
++              <div className="flex flex-wrap items-baseline gap-2">
++                <span className="text-2xl font-semibold tracking-tight tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</span>
++                <span className="text-muted-foreground text-sm tabular-nums">{trM2(d.pricePerm2)}</span>
++                {d.suspect && <Badge variant="warning-light">Cần xác minh</Badge>}
++              </div>
++              <DiscountBar d={d} />
++              <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
++                <TabsList variant="line" className="justify-start gap-5">
++                  <TabsTrigger value="chi-tiet" className="flex-none px-1 text-sm">Chi tiết</TabsTrigger>
++                  <TabsTrigger value="cung-tieu-chi" className="flex-none gap-1.5 px-1 text-sm">
++                    Căn cùng tiêu chí
++                    <Badge variant="outline" radius="full" className="tabular-nums">{soCung}</Badge>
++                  </TabsTrigger>
++                </TabsList>
++              </Tabs>
++            </SheetHeader>
++            {/* key theo căn: đổi căn thì về đầu thân cuộn và trả lại trạng thái nới tiêu chí. */}
++            <ScrollArea key={d.offerId} className="min-h-0 flex-1">
++              {tab === "chi-tiet" ? <ChiTiet d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} /> : <DealSimilar d={d} rows={rows} onMo={onMoCan} />}
++            </ScrollArea>
++            {xemNoiDung && (
++              <SheetFooter className="flex-row items-center justify-between gap-3 border-t">
++                <div className="flex min-w-0 flex-col gap-0.5">
++                  <span className="truncate text-sm font-medium" translate="no">{d.sellerName ?? "Người đăng chưa có tên"}</span>
++                  <span className="text-muted-foreground truncate text-xs tabular-nums">{d.brokerNAds ? `${fmtInt(d.brokerNAds)} tin` : "Chưa rõ số tin"}</span>
++                </div>
++                <div className="flex shrink-0 items-center gap-2">
++                  <Button variant="outline" size="icon" aria-label="Mở trang một căn" nativeButton={false} render={<Link prefetch={false} href={`/ops/deals/${d.offerId}`} />}>
++                    <ExternalLinkIcon aria-hidden />
++                  </Button>
++                  {d.tel && d.sdt ? (
++                    <Button className="tabular-nums" nativeButton={false} render={<a href={d.tel} />}>
++                      <PhoneIcon aria-hidden="true" />
++                      <span translate="no">{d.sdt}</span>
++                    </Button>
++                  ) : (
++                    <span className="text-muted-foreground text-xs">Chưa có SĐT</span>
++                  )}
++                </div>
++              </SheetFooter>
++            )}
++          </>
++        )}
++      </SheetContent>
++    </Sheet>
++  )
++}
+diff --git a/app/src/components/ops/deal-similar.tsx b/app/src/components/ops/deal-similar.tsx
+new file mode 100644
+index 00000000..5be3b5bf
+--- /dev/null
++++ b/app/src/components/ops/deal-similar.tsx
+@@ -0,0 +1,102 @@
++"use client"
++
++import { useState } from "react"
++
++import { Badge } from "@/components/reui/badge"
++import { Button } from "@/components/ui/button"
++import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
++import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
++import { canCungTieuChi } from "@/lib/deals-chi-tiet"
++import { fmtCompact, fmtInt } from "@/lib/format"
++
++import { DealThumb, type DealHang } from "./deals-cells"
++
++const HIEN_TOI_DA = 20
++const trM2 = (v: number | null) => (v ? fmtInt(v / 1e6) : "—")
++
++/** Một hàng so sánh: tr/m² kèm chênh với căn đang xem, vì đó là con số quyết nên gọi căn nào trước. */
++function Hang({ d, goc, onMo }: { d: DealHang; goc: DealHang | null; onMo?: () => void }) {
++  const chenh = goc && d.pricePerm2 && goc.pricePerm2 ? Math.round((d.pricePerm2 - goc.pricePerm2) / 1e6) : null
++  return (
++    <TableRow data-state={goc ? undefined : "selected"} className={onMo ? "cursor-pointer" : undefined} onClick={onMo}>
++      <TableCell className="min-w-0 whitespace-normal">
++        <div className="flex min-w-0 items-center gap-2">
++          {d.xemAnh && <DealThumb d={d} />}
++          <div className="flex min-w-0 flex-col items-start gap-0.5">
++            {/* Không gắn xử lý ở nút: cú bấm, hoặc Enter trên nút, đi lên onClick của hàng. */}
++            {goc ? (
++              <Button variant="link" size="xs" className="max-w-full justify-start"><span className="truncate">{d.block ?? "Chưa rõ toà"}</span></Button>
++            ) : (
++              <span className="ps-2 text-xs font-medium">Căn này</span>
++            )}
++            <span className="text-muted-foreground ps-2 text-xs tabular-nums">
++              {[d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null, d.source].filter(Boolean).join(" · ")}
++            </span>
++          </div>
++        </div>
++      </TableCell>
++      <TableCell className="text-end text-sm font-medium tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</TableCell>
++      <TableCell className="text-end">
++        <div className="flex flex-col items-end gap-0.5">
++          <span className="text-sm tabular-nums">{trM2(d.pricePerm2)}</span>
++          {chenh !== null && (
++            <span className="text-muted-foreground text-xs tabular-nums">{chenh === 0 ? "bằng" : chenh > 0 ? `+${chenh}` : `−${-chenh}`}</span>
++          )}
++        </div>
++      </TableCell>
++      <TableCell className="text-end">
++        {d.suspect ? (
++          <Badge variant="warning-light" className="tabular-nums">−{(d.discountPct ?? 0).toFixed(0)}%</Badge>
++        ) : (
++          <span className="text-sm tabular-nums">−{(d.discountPct ?? 0).toFixed(0)}%</span>
++        )}
++      </TableCell>
++    </TableRow>
++  )
++}
++
++/** Tab «Căn cùng tiêu chí» trong sheet: bù chỗ sheet che bảng, vẫn so được căn đang xem với các căn tương tự. */
++export function DealSimilar({ d, rows, onMo }: { d: DealHang; rows: DealHang[]; onMo: (id: string) => void }) {
++  const [chiPhuong, setChiPhuong] = useState(false)
++  const { moTa, can } = canCungTieuChi(d, rows, chiPhuong)
++  return (
++    <div className="flex flex-col gap-3 p-4">
++      <div className="flex flex-wrap items-center gap-1.5">
++        {moTa.map((m) => <Badge key={m} variant="outline">{m}</Badge>)}
++        <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(can.length)} căn trong danh sách</span>
++      </div>
++      {can.length === 0 ? (
++        <Empty className="border">
++          <EmptyHeader>
++            <EmptyTitle>Chưa có căn nào cùng tiêu chí</EmptyTitle>
++            <EmptyDescription>{chiPhuong || !d.phuong ? "Phường này chưa có căn giá tốt nào khác." : "Nới về cùng phường có thể thấy thêm căn."}</EmptyDescription>
++          </EmptyHeader>
++          {!chiPhuong && d.phuong && (
++            <EmptyContent>
++              <Button variant="outline" onClick={() => setChiPhuong(true)}>Xem mọi căn trong phường</Button>
++            </EmptyContent>
++          )}
++        </Empty>
++      ) : (
++        <Table>
++          <TableHeader>
++            <TableRow>
++              <TableHead>Căn</TableHead>
++              <TableHead className="text-end">Giá</TableHead>
++              <TableHead className="text-end">tr/m²</TableHead>
++              <TableHead className="text-end">Giảm</TableHead>
++            </TableRow>
++          </TableHeader>
++          <TableBody>
++            <Hang d={d} goc={null} />
++            {can.slice(0, HIEN_TOI_DA).map((r) => <Hang key={r.offerId} d={r} goc={d} onMo={() => onMo(r.offerId)} />)}
++          </TableBody>
++        </Table>
++      )}
++      {can.length > HIEN_TOI_DA && <p className="text-muted-foreground text-xs">Hiện {HIEN_TOI_DA} căn giảm nhiều nhất.</p>}
++      {can.length > 0 && !chiPhuong && (
++        <Button variant="ghost" size="sm" className="self-start" onClick={() => setChiPhuong(true)}>Xem mọi căn trong phường</Button>
++      )}
++    </div>
++  )
++}
+diff --git a/app/src/components/ops/deals-cells.tsx b/app/src/components/ops/deals-cells.tsx
+new file mode 100644
+index 00000000..66bc0940
+--- /dev/null
++++ b/app/src/components/ops/deals-cells.tsx
+@@ -0,0 +1,74 @@
++"use client"
++
++import { ImageOffIcon } from "lucide-react"
++
++import { Progress, ProgressLabel } from "@/components/ui/progress"
++import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
++import { cn } from "cn"
++import type { DealChiTiet } from "@/lib/deals-chi-tiet"
++import { fmtInt } from "@/lib/format"
++
++/** Một hàng của bảng Căn giá tốt: các chữ phải tính phía máy chủ vì lib/deals, lib/ops/people mang pg. */
++export type DealHang = DealChiTiet & {
++  ten: string
++  thieu: string[]
++  cau: string | null
++  tel: string | null
++  sdt: string | null
++  xacMinhPct: number
++  xemAnh: boolean
++}
++
++/** Trục thanh giảm: 0 tới 50%, ngưỡng loại của ON11; vạch là ngưỡng cần xác minh. */
++const TRUC_PCT = 50
++
++/** Mức giảm so thước: mẫu MetricBarCell của kho (@reui/data-grid-base-2) cộng vạch ngưỡng (@reui/data-grid-advanced-1). */
++export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) {
++  const pct = d.discountPct ?? 0
++  return (
++    <div className="flex min-w-0 flex-col gap-1">
++      <div className="flex min-w-0 items-center gap-2">
++        <span className={cn("shrink-0 text-end font-medium tabular-nums", gon ? "w-10 text-sm" : "text-sm")}>−{pct.toFixed(0)}%</span>
++        <div className="relative min-w-12 flex-1">
++          <Progress
++            value={(pct / TRUC_PCT) * 100}
++            className={cn(
++              "flex-row flex-nowrap items-center **:data-[slot=progress-track]:flex-1",
++              d.suspect ? "**:data-[slot=progress-indicator]:bg-warning" : "**:data-[slot=progress-indicator]:bg-success",
++            )}
++          >
++            <ProgressLabel className="sr-only">Mức giảm so thước phường</ProgressLabel>
++          </Progress>
++          <span aria-hidden="true" className="bg-foreground/50 absolute -inset-y-0.5 w-px" style={{ left: `${(d.xacMinhPct / TRUC_PCT) * 100}%` }} />
++        </div>
++      </div>
++      <span className="text-muted-foreground truncate text-xs tabular-nums">
++        Thước {d.medianPerm2 ? `${fmtInt(d.medianPerm2 / 1e6)} tr/m²` : "—"} · {d.rulerN ? `${fmtInt(d.rulerN)} tin` : "—"}
++      </span>
++    </div>
++  )
++}
++
++/** Ảnh đầu 40 px, rê chuột xem lớn: đủ để loại căn bằng mắt mà chưa phải mở sheet. */
++export function DealThumb({ d }: { d: DealHang }) {
++  const anh = d.images[0]?.src
++  if (!anh) {
++    return (
++      <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md" title="Chưa có ảnh">
++        <ImageOffIcon className="size-4" aria-hidden="true" />
++      </span>
++    )
++  }
++  return (
++    <HoverCard>
++      <HoverCardTrigger render={<span className="size-10 shrink-0 overflow-hidden rounded-md" />}>
++        {/* eslint-disable-next-line @next/next/no-img-element -- ảnh qua route proxy của Ops, không qua next/image */}
++        <img src={anh} alt="" loading="lazy" className="size-full object-cover" />
++      </HoverCardTrigger>
++      <HoverCardContent side="right" className="w-72 p-1">
++        {/* eslint-disable-next-line @next/next/no-img-element -- như trên */}
++        <img src={anh} alt="" className="aspect-3/2 w-full rounded-md object-cover" />
++      </HoverCardContent>
++    </HoverCard>
++  )
++}
+diff --git a/app/src/components/ops/deals-grid.tsx b/app/src/components/ops/deals-grid.tsx
+new file mode 100644
+index 00000000..545e92a5
+--- /dev/null
++++ b/app/src/components/ops/deals-grid.tsx
+@@ -0,0 +1,276 @@
++"use client"
++
++import { useMemo, useState } from "react"
++import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
++import { HouseIcon, ImageIcon, MapPinIcon, PhoneIcon, RadioTowerIcon } from "lucide-react"
++
++import { DATA_GRID_VI } from "@/components/insight/insight-grid"
++import { FILTER_LABELS_VI, FILTER_OPERATORS_VI } from "@/components/listing/listings-filter-bar"
++import { Badge } from "@/components/reui/badge"
++import { DataGrid, dataGridFeatures, type DataGridFeatures } from "@/components/reui/data-grid/data-grid"
++import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
++import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
++import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
++import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
++import { Filters } from "@/components/reui/filters/filters"
++import { createFilterQuery, flattenFilterConditions } from "@/components/reui/filters/filters-query"
++import type { FilterField, FilterQuery } from "@/components/reui/filters/filters-types"
++import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/reui/frame"
++import { Button } from "@/components/ui/button"
++import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
++import { loaiHinh } from "@/lib/deals-chi-tiet"
++import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
++
++import { DiscountBar, DealThumb, type DealHang } from "./deals-cells"
++import { DealSheet } from "./deal-sheet"
++
++/**
++ * /ops/deals — khuôn records-grid của kho (Frame + data-grid + @reui/filters, bấm hàng mở sheet), tab trạng thái có
++ * đếm theo objectives-grid. Tab trả lời «việc gì tiếp»; chip lọc trả lời «trong đám nào».
++ */
++
++type Tab = "all" | "du" | "xac-minh" | "thieu"
++const TABS: { value: Tab; label: string }[] = [
++  { value: "all", label: "Tất cả" },
++  { value: "du", label: "Đủ để gọi" },
++  { value: "xac-minh", label: "Cần xác minh" },
++  { value: "thieu", label: "Còn thiếu" },
++]
++const tabCua = (d: DealHang): Exclude<Tab, "all"> => (d.suspect ? "xac-minh" : d.thieu.length > 0 ? "thieu" : "du")
++
++const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
++  {
++    id: "can",
++    accessorFn: (d) => d.ten,
++    header: ({ column }) => <DataGridColumnHeader title="Căn" column={column} />,
++    cell: ({ row: { original: d } }) => (
++      <div className="flex min-w-0 items-center gap-2">
++        {d.xemAnh && <DealThumb d={d} />}
++        <div className="flex min-w-0 flex-col items-start gap-0.5">
++          {/* Không tự mở sheet: cú bấm đi lên onRowClick của hàng (xem ghi chú ở records-grid). */}
++          <Button variant="link" size="xs" className="max-w-full justify-start">
++            <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
++          </Button>
++          <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong].filter(Boolean).join(" · ")}</span>
++        </div>
++      </div>
++    ),
++    enableSorting: false,
++    minSize: 240,
++    meta: { autoSize: true, headerClassName: "ps-4", cellClassName: "ps-4" },
++  },
++  {
++    id: "gia",
++    accessorFn: (d) => d.priceVnd ?? 0,
++    header: ({ column }) => <DataGridColumnHeader title="Giá" column={column} />,
++    cell: ({ row: { original: d } }) => (
++      <div className="flex flex-col items-end gap-0.5">
++        <span className="text-sm font-medium tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</span>
++        <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? `${fmtInt(d.pricePerm2 / 1e6)} tr/m²` : "—"}</span>
++        {/* Màn hẹp bỏ cột Giảm: mức giảm vào thẳng dưới giá, không phải cuộn ngang mới thấy lý do căn có mặt. */}
++        <span className="text-xs font-medium tabular-nums md:hidden">−{(d.discountPct ?? 0).toFixed(0)}%</span>
++      </div>
++    ),
++    size: 96,
++    meta: { headerClassName: "text-end", cellClassName: "text-end" },
++  },
++  {
++    id: "giam",
++    accessorFn: (d) => d.discountPct ?? 0,
++    header: ({ column }) => <DataGridColumnHeader title="Giảm so thước" column={column} />,
++    cell: ({ row: { original: d } }) => <DiscountBar d={d} gon />,
++    size: 190,
++    meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
++  },
++  {
++    id: "tinhTrang",
++    accessorFn: tabCua,
++    header: ({ column }) => <DataGridColumnHeader title="Tình trạng" column={column} />,
++    cell: ({ row: { original: d } }) => {
++      const t = tabCua(d)
++      return t === "xac-minh" ? <Badge variant="warning-light">Cần xác minh</Badge>
++        : t === "thieu" ? <Badge variant="outline">Thiếu {d.thieu.length}</Badge>
++        : <Badge variant="success-light">Đủ để gọi</Badge>
++    },
++    size: 120,
++    meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
++  },
++  {
++    id: "goi",
++    accessorFn: (d) => d.sellerName ?? "",
++    header: "Gọi ai",
++    cell: ({ row: { original: d } }) => (
++      <div className="flex min-w-0 flex-col items-start gap-0.5">
++        {d.tel && d.sdt ? (
++          <Button variant="outline" size="xs" className="tabular-nums" nativeButton={false} render={<a href={d.tel} onClick={(e) => e.stopPropagation()} />}>
++            <PhoneIcon aria-hidden="true" />
++            <span translate="no">{d.sdt}</span>
++          </Button>
++        ) : (
++          <span className="text-muted-foreground text-xs">Chưa có SĐT</span>
++        )}
++        <span className="text-muted-foreground max-w-full truncate text-xs" translate="no">{d.sellerName ?? "Chưa có tên"}</span>
++      </div>
++    ),
++    enableSorting: false,
++    size: 150,
++    meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
++  },
++  {
++    id: "thay",
++    accessorFn: (d) => d.firstSeen,
++    header: ({ column }) => <DataGridColumnHeader title="Thấy" column={column} />,
++    cell: ({ row: { original: d } }) => (
++      <div className="flex flex-col gap-0.5">
++        <span className="text-sm tabular-nums">{fmtVnDate(d.firstSeen)}</span>
++        <span className="text-muted-foreground text-xs tabular-nums">{d.source} · {fmtInt(d.nReposts)} lần</span>
++      </div>
++    ),
++    size: 110,
++    meta: { headerClassName: "hidden xl:table-cell", cellClassName: "hidden xl:table-cell" },
++  },
++]
++
++const O_LOC = {
++  source: (d: DealHang) => d.source,
++  type: (d: DealHang) => loaiHinh(d.propertyType) ?? "Chưa rõ",
++  phuong: (d: DealHang) => d.phuong ?? "Chưa gắn",
++  anh: (d: DealHang) => (d.images.length > 0 ? "Có ảnh" : "Chưa có ảnh"),
++} as const
++type OLoc = keyof typeof O_LOC
++const ICON = "size-4"
++
++function truongLoc(rows: DealHang[], xemNoiDung: boolean): FilterField[] {
++  const dem = (id: OLoc) => {
++    const m = new Map<string, number>()
++    for (const r of rows) m.set(O_LOC[id](r), (m.get(O_LOC[id](r)) ?? 0) + 1)
++    return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([value, n]) => ({ value, label: value, description: `${fmtInt(n)} căn` }))
++  }
++  const many = (value: string) => ({ value, label: FILTER_OPERATORS_VI[value] ?? value, arity: "many" as const })
++  const base = { type: "select" as const, operators: [many("is_any_of"), many("is_none_of")], defaultOperator: "is_any_of" }
++  return [
++    { ...base, id: "phuong", label: "Phường", icon: <MapPinIcon className={ICON} aria-hidden="true" />, searchable: true, options: dem("phuong") },
++    { ...base, id: "type", label: "Loại hình", icon: <HouseIcon className={ICON} aria-hidden="true" />, options: dem("type") },
++    { ...base, id: "source", label: "Nguồn", icon: <RadioTowerIcon className={ICON} aria-hidden="true" />, options: dem("source") },
++    ...(xemNoiDung ? [{ ...base, id: "anh", label: "Ảnh", icon: <ImageIcon className={ICON} aria-hidden="true" />, options: dem("anh") }] : []),
++  ]
++}
++
++function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
++  const dk = flattenFilterConditions(query).filter((c) => c.field in O_LOC && c.values.length > 0)
++  return (d) => dk.every((c) => {
++    const trung = c.values.includes(O_LOC[c.field as OLoc](d))
++    return c.operator === "is_none_of" ? !trung : trung
++  })
++}
++
++/** `rows` đến theo thứ tự của dealsSql (căn cần xác minh đứng cuối, ON11); người bấm tiêu đề cột mới đổi thứ tự. */
++export function DealsGrid({ rows, moBanDau = null, xemNoiDung, mayThu }: { rows: DealHang[]; moBanDau?: string | null; xemNoiDung: boolean; mayThu: boolean }) {
++  const [tab, setTab] = useState<Tab>("all")
++  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
++  const [moId, setMoId] = useState<string | null>(moBanDau)
++  // Hàng vừa xem giữ nền chọn sau khi đóng sheet, để mắt về đúng chỗ đang duyệt.
++  const [vuaXem, setVuaXem] = useState<string | null>(moBanDau)
++  const [sorting, setSorting] = useState<SortingState>([])
++  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 })
++
++  const fields = useMemo(() => truongLoc(rows, xemNoiDung), [rows, xemNoiDung])
++  const quaLoc = useMemo(() => rows.filter(hopBoLoc(query)), [rows, query])
++  const dem = useMemo(() => {
++    const c: Record<Tab, number> = { all: quaLoc.length, du: 0, "xac-minh": 0, thieu: 0 }
++    for (const d of quaLoc) c[tabCua(d)]++
++    return c
++  }, [quaLoc])
++  const data = useMemo(() => (tab === "all" ? quaLoc : quaLoc.filter((d) => tabCua(d) === tab)), [quaLoc, tab])
++
++  // Vai Người xem không có liên hệ: bỏ hẳn cột, không ghi «Chưa có SĐT» vì căn không thiếu số.
++  const cot = useMemo(() => (xemNoiDung ? COLUMNS : COLUMNS.filter((c) => c.id !== "goi")), [xemNoiDung])
++  const table = useTable({
++    features: dataGridFeatures,
++    columns: cot,
++    data,
++    getRowId: (d) => d.offerId,
++    enableRowSelection: true,
++    state: { pagination, sorting, rowSelection: vuaXem ? { [vuaXem]: true } : {} },
++    onPaginationChange: setPagination,
++    onSortingChange: setSorting,
++  })
++
++  // Thứ tự chuyển căn trong sheet: đúng thứ tự đang thấy (lọc + sắp), không chỉ trang hiện tại.
++  const thuTu = table.getSortedRowModel().rows.map((r) => r.original)
++  const viTri = thuTu.findIndex((d) => d.offerId === moId)
++  const mo = rows.find((d) => d.offerId === moId) ?? null
++
++  const datMo = (id: string | null) => {
++    setMoId(id)
++    if (id) setVuaXem(id)
++    const u = new URL(window.location.href)
++    if (id) u.searchParams.set("can", id)
++    else u.searchParams.delete("can")
++    window.history.replaceState(null, "", u)
++  }
++  // Mở một căn từ sheet: căn nằm ngoài lọc đang bật vẫn mở được, bảng chỉ dời trang khi căn có trong bảng.
++  const moCan = (id: string) => {
++    datMo(id)
++    const i = thuTu.findIndex((d) => d.offerId === id)
++    if (i >= 0) setPagination((p) => ({ ...p, pageIndex: Math.floor(i / p.pageSize) }))
++  }
++  const chuyen = (buoc: 1 | -1) => {
++    const ke = viTri >= 0 ? thuTu[viTri + buoc] : undefined
++    if (ke) moCan(ke.offerId)
++  }
++
++  return (
++    <>
++      <DataGrid
++        table={table}
++        recordCount={data.length}
++        emptyMessage="Không có căn nào khớp bộ lọc."
++        i18n={DATA_GRID_VI}
++        onRowClick={(d) => datMo(d.offerId)}
++        tableLayout={{ dense: true, headerSticky: true }}
++      >
++        <Frame variant="default" spacing="sm" className="w-full">
++          <FrameHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
++            <Tabs
++              value={tab}
++              onValueChange={(v) => {
++                setTab(v as Tab)
++                setPagination((p) => ({ ...p, pageIndex: 0 }))
++              }}
++            >
++              <TabsList variant="line" className="no-scrollbar max-w-full justify-start gap-5 overflow-x-auto">
++                {TABS.map((t) => (
++                  <TabsTrigger key={t.value} value={t.value} className="flex-none gap-1.5 px-1 text-sm">
++                    {t.label}
++                    <Badge variant="outline" radius="full" className="tabular-nums">{dem[t.value]}</Badge>
++                  </TabsTrigger>
++                ))}
++              </TabsList>
++            </Tabs>
++            <Filters
++              fields={fields}
++              query={query}
++              onQueryChange={(q) => {
++                setQuery(q)
++                setPagination((p) => ({ ...p, pageIndex: 0 }))
++              }}
++              labels={FILTER_LABELS_VI}
++              operatorLabels={FILTER_OPERATORS_VI}
++              showClear
++            />
++          </FrameHeader>
++          <FramePanel className="p-0! shadow-none!">
++            <DataGridScrollArea>
++              <DataGridTable />
++            </DataGridScrollArea>
++          </FramePanel>
++          <FrameFooter>
++            <DataGridPagination />
++          </FrameFooter>
++        </Frame>
++      </DataGrid>
++      <DealSheet d={mo} rows={rows} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
++    </>
++  )
++}
 diff --git a/app/src/lib/deals-chi-tiet.ts b/app/src/lib/deals-chi-tiet.ts
 new file mode 100644
-index 00000000..1e6fc058
+index 00000000..f6eb4b86
 --- /dev/null
 +++ b/app/src/lib/deals-chi-tiet.ts
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,75 @@
 +import type { DealRow } from "./deals";
 +import { LABELS_VI } from "./vocab.generated";
 +import type { ReviewImage } from "./ops/review-media";
@@ -547,12 +1296,32 @@ index 00000000..1e6fc058
 +  if (vai.xemNoiDung && !d.sellerPhone) out.push("Chưa có SĐT");
 +  return out;
 +}
++
++/** Biên diện tích của «căn cùng tiêu chí»: ±25% quanh căn đang xem. */
++export const BIEN_DIEN_TICH = 0.25;
++
++/**
++ * Căn cùng tiêu chí với căn đang xem, cùng thứ tự danh sách: căn cần xác minh đứng cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%;
++ * `chiPhuong` nới về cùng phường. Không biết loại hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
++ */
++export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong = false): { moTa: string[]; can: T[] } {
++  if (!d.phuong) return { moTa: ["Chưa gắn phường"], can: [] };
++  const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
++  const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
++  const can = rows
++    .filter((r) => r.offerId !== d.offerId && r.phuong === d.phuong)
++    .filter((r) => !loai || loaiHinh(r.propertyType) === loai)
++    .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
++    .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0));
++  const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
++  return { moTa, can };
++}
 diff --git a/app/src/lib/deals-proto.ts b/app/src/lib/deals-proto.ts
 new file mode 100644
-index 00000000..a4b25100
+index 00000000..e7d81e07
 --- /dev/null
 +++ b/app/src/lib/deals-proto.ts
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,64 @@
 +// BẢN MẪU design-pass CG1: dữ liệu bịa, không lên main. Xoá ở S3.
 +import type { DealChiTiet } from "./deals-chi-tiet";
 +
@@ -592,3 +1361,28 @@ index 00000000..a4b25100
 +    postTextFull: "Bán căn 2 ngủ tầng trung, giá tốt nhất khu.",
 +  },
 +];
++
++// 30 căn bịa để đo mật độ của bảng: trộn đủ, thiếu, cần xác minh; S0x là mã, không có tên thật.
++const PHUONG = ["Phường Mẫu A", "Phường Mẫu B", "Phường Mẫu C", "Phường Mẫu D", "Phường Mẫu E"];
++const MAU = ["#475569", "#64748b", "#334155", "#52525b", "#57534e"];
++export const PROTO_BANG: DealChiTiet[] = Array.from({ length: 30 }, (_, i) => {
++  const dt = 48 + ((i * 7) % 62);
++  const giam = 5 + ((i * 13) % 44);
++  const thuoc = (58 + ((i * 13) % 50)) * 1e6;
++  const m2 = thuoc * (1 - giam / 100);
++  const coToa = i % 3 !== 1;
++  const coAnh = i % 5 !== 2;
++  const loai = i % 6 === 5 ? "unknown" : i % 6 === 2 ? "house" : "apartment";
++  return {
++    ...goc, offerId: `proto-${String(i + 1).padStart(2, "0")}`, source: i % 3 === 2 ? "S05" : "S03",
++    priceVnd: Math.round((m2 * dt) / 1e8) * 1e8, areaM2: dt, pricePerm2: m2, bedrooms: dt > 95 ? 3 : dt > 60 ? 2 : 1,
++    phuong: i === 29 ? "Phường Mẫu F" : PHUONG[i % 3], medianPerm2: thuoc, rulerN: 6 + ((i * 9) % 58), discountPct: giam, suspect: giam > 35,
++    propertyType: loai, block: coToa ? `Toà M${(i % 6) + 1}` : null, floor: coToa ? String(3 + (i % 20)) : null,
++    unit: i % 4 === 0 ? String(1000 + i * 7) : null, streetNumber: null, street: null, district: "Quận Mẫu",
++    images: coAnh ? [anh(MAU[i % 5], "Ảnh mẫu 1"), anh(MAU[(i + 1) % 5], "Ảnh mẫu 2"), anh(MAU[(i + 2) % 5], "Ảnh mẫu 3")] : [],
++    postTextFull: `Bán căn ${dt}m2, sổ lâu dài, thiện chí bán. Xem nhà buổi tối sau 18h.`,
++    sellerName: i % 7 === 6 ? null : `Người Bán Mẫu ${(i % 9) + 1}`,
++    sellerPhone: `+849000000${String((i % 89) + 10)}`, brokerNAds: 1 + ((i * 5) % 11), nReposts: 1 + (i % 4),
++    firstSeen: new Date(Date.UTC(2026, 9, 3 + i, 3)).toISOString(),
++  };
++}).sort((a, b) => Number(a.suspect) - Number(b.suspect) || b.discountPct - a.discountPct);
