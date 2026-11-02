@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 82d1723c9d040f257db00d428205a19e635747d4
+verified_commit: 72c69094a5750d4bdf3a3cddcb81fb016f2ce8b2
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -182,3 +182,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 ## Iterations
 
 Round 1: toàn bộ eval máy xanh, E9 do hội đồng đề xuất PASS (human_override để trống cho người quyết ở Cổng 2).
+
+### Re-pin lần 1 — 2026-11-02, do ghim lại sau gộp main b96dd58b để gỡ xung đột tệp sinh của PR 272
+run_id: repin-20261102T042105Z-77668
+sha: 72c69094a5750d4bdf3a3cddcb81fb016f2ce8b2 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths)
