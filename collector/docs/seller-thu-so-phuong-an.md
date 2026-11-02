@@ -26,7 +26,7 @@
 |---|---|---|---|---|---|
 | **S03 zalo** | số đã CÔNG KHAI trong `payload.text` — collector chỉ đặt trạng thái (regex thấy số); số E.164 pipeline đã trích sẵn từ trước | theo lượt thu hiện có, 0 lời gọi mới | không cần | `available` khi text có số, `not_tried` khi không | không — chỉ chờ vòng bật v5 ghi `seller` |
 | **S05 facebook** | như S03: số nếu có nằm trong text post | theo lượt thu (paused tới 7/11) | không cần | `available`/`not_tried` | không |
-| **S06 chợ tốt** | bấm «hiện số» từng tin qua web (KHÔNG đăng nhập — đã kiểm); lấy số + đổi nút thành «Gọi» xác nhận | ghép 2 lượt thu S06 hiện có (05:30/14:00), CHỈ lấy số cho tin trong worklist ưu tiên (tin BÁN mới, vùng mục tiêu) — không dàn trải cả 51.994 | **50 lời gọi hiện số/ngày** (đã chốt HD12 vòng 3010-7); nghỉ ngẫu nhiên 3–8s giữa 2 lời gọi | `available` · `error` (bị chặn/đổi giao diện) · còn lại `hidden_by_source` | duyệt: (a) dùng đường web không-đăng-nhập, (b) trần 50/ngày giữ nguyên, (c) tiêu chí tin vào worklist lấy số |
+| **S06 chợ tốt** | bấm «hiện số» từng tin qua web (KHÔNG đăng nhập — đã kiểm); lấy số + đổi nút thành «Gọi» xác nhận | ghép 2 lượt thu S06 hiện có (05:30/14:00) — **Mạnh chốt 2/11: KHÔNG trần khối lượng, MỌI tin thu được đều lấy SĐT + danh tính người môi giới** (bỏ trần 50/ngày cũ của 3010-7 và bỏ lọc worklist); giữ nhịp nghỉ ngẫu nhiên 3–8s giữa 2 lời gọi + đo `phoneStatus` để nhận biết khi nguồn bắt đầu chặn | không trần (chỉ nhịp) | `available` · `error` (bị chặn/đổi giao diện) · tin `phone_hidden` → `hidden_by_source` (không cố lấy) | đã chốt 2/11: đường web không-đăng-nhập + mọi tin + kèm danh tính (`displayName`, `accountRef` nếu lấy được) |
 | **S01 airbnb** | nguồn CHE SĐT chủ nhà (nền tảng trung gian) — không có đường hợp lệ | — | — | `hidden_by_source` (đứng yên) | chấp nhận KHÔNG lấy số S01 |
 | **S07 (chưa thu)** | chưa đăng ký nguồn | — | — | `not_tried` | khi mở kênh: thiết kế `seller` ngay từ vòng đầu |
 
@@ -35,8 +35,15 @@ này. S02 chỉ hiệu chuẩn, không dính.
 
 ## Đề xuất bật v5 theo kênh (mỗi kênh một vòng riêng)
 
-1. **S03 trước** (rẻ nhất: 0 lời gọi, 54.237/55.646 đã có senderId) — collector
+1. **S06 trước** (Mạnh chốt 2/11: bỏ trần, mọi tin + danh tính người môi giới) —
+   xin vòng GIAO triển khai 3010-7 với phạm vi mới.
+2. **S03 ngay sau** (rẻ nhất: 0 lời gọi, 54.237/55.646 đã có senderId) — collector
    ghi `seller {accountRef=senderId, displayName=senderName, phone=null,
    phoneStatus theo regex, seenAt=fetchedAt}` + manifest v5.
-2. **S06 sau khi Mạnh duyệt trần** — vòng thu số worklist 50/ngày.
 3. S05 mở lại sau 7/11 (đi cùng S03 vì cùng payload sender).
+
+## Lịch sử chốt
+
+- 30/10 (HD12/3010-7): trần 50 lời gọi/ngày, khoá theo Hỏi-A Mạnh.
+- 2/11 (sau XONG 0211-1): **Mạnh chốt bỏ trần — mọi tin lấy SĐT + danh tính
+  người môi giới**; giữ nhịp 3–8s/lời gọi, tin `phone_hidden` không cố lấy.
