@@ -5,7 +5,7 @@ slug: s03-va-doc-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs — không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: approved
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-s03-va-doc-tin-design.md
@@ -33,10 +33,13 @@ Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
   trả trước, gốc, tiến độ, bớt, hỗ trợ, chiết khấu, dòng tiền, thu nhập, lãi, tài chính, ngân sách, tc, ttc, tts, htls), mỗi từ
   một dòng, và các dòng kèm giá thật, When `parsePost` đọc, Then chữ chỉ có số ngữ cảnh ra null; giá thật ra đúng khi có; nhãn
   «giá …» thắng số đứng trước nó; «giá vốn 1,4 tỷ» ra null; «giảm còn 2,5 tỷ» và «chỉ hơn 8 tỷ» là giá; «cắt lỗ 2,9 tỷ» một mình ra
-  null vì cùng dạng với «cắt lỗ 1 tỷ» (thà thiếu giá hơn ghi sai).
-- AC-5: Given bài `rent_lt` giá từ 1 tỷ không đơn vị thời gian (kể cả đúng 1 tỷ), «1 tỷ/tháng», «1 tỷ/th», «1,2 tỷ/năm», và bán trên
-  100 tỷ, When chạy transform trên DB thử (ROLLBACK), Then bài đầu thành tin bán đúng giá; các bài sau không thành tin và đếm đúng
-  lý do `thue-tu-1-ty`, `ban-tren-100-ty`. (cross-layer)
+  null vì cùng dạng với «cắt lỗ 1 tỷ» (thà thiếu giá hơn ghi sai); «không vay», «ko vay», «chưa vay», «bán vay» không phải số ngữ cảnh nên
+  «ko vay 2ty1», «bán vay full 2.350ty» ra đúng giá; giá viết đủ số đồng theo cùng luật: «cắt 450.000.000», «vay 1.400.000.000» ra null,
+  «vay 1.400.000.000 giá 3.200.000.000» ra 3,2 tỷ.
+- AC-5: Given bài `rent_lt` giá từ 1 tỷ không đơn vị thời gian (kể cả đúng 1 tỷ), bài có đơn vị tháng gắn với số khác («đang cho thuê 7tr/tháng.
+  Giá bán: 2,7 tỷ»), «1 tỷ/tháng», «1 tỷ/th», «1,2 tỷ/năm», «1,2 tỷ mỗi năm», «1,2 tỷ 1 năm», và bán trên 100 tỷ, When chạy transform trên DB thử
+  (ROLLBACK), Then bài không đơn vị và bài có đơn vị gắn số khác thành tin bán đúng giá; các bài sau không thành tin và đếm đúng lý do
+  `thue-tu-1-ty`, `ban-tren-100-ty`. (cross-layer)
 - AC-6: Given giá che số có đơn vị hoặc nhãn («4.9xx tỷ», «2,3xx tỷ», «giá 36xx», «1.8x tỷ», «3,2** tỷ», «1.9x thu về», «18XX tỷ»,
   «37xx thu nét») và dạng gần giống («2.9 tỷ», «PR6xx20», «Căn 36xx», «Tầng 36xx»), When `parsePost` đọc, Then che số ra số sàn;
   chữ không che không đổi; mã căn và số che không nhãn, không đơn vị ra null. Luật này không đi sau công tắc.
@@ -56,7 +59,8 @@ Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
   phòng ngủ đúng ≥ 90% toàn tập và ≥ 85% phần giữ lại; 0 bài thật đọc sai diện tích do dấu phẩy; 0 bài thật đọc phường từ hướng;
   giá đúng của bản cây không thấp hơn bản nền, toàn tập và từng họ; công tắc bật không làm giá đúng thấp hơn tắt, toàn tập và từng
   họ, không tăng tin bán dưới 300 triệu, và số giá đúng bật khác tắt; số ô bản nền đúng nay sai ≤ 3; mã căn đúng ≥ 70%, thừa ≤ 10%;
-  0 tin mang hai trục; nghỉ ≤ 200, mọc ≤ 500, S05 đổi ≤ 25% (trần do Hỏi-1); không có migration mới; bộ test pipeline xanh. Bản nền
+  0 tin mang hai trục; 0 bài thật có giá từ 1 tỷ ở bản nền mất giá vì «không vay» (bài ghi «tài chính», «Tc» mất giá theo AC-4, không tính); 0 bài thật
+  đang thành tin bị gạt là thuê từ 1 tỷ; nghỉ ≤ 200, mọc ≤ 500, S05 đổi ≤ 25% (trần do Hỏi-1); không có migration mới; bộ test pipeline xanh. Bản nền
   ghim sha chạy cùng thước phải trượt `pn`, `dt_phay`, `phuong_huong`. Phép đo in đường tập, sha256, cách chia, sha nền, trạng
   thái công tắc, mẫu số từng thước, số tin, `offer_id` giữ, nghỉ, mọc, bài đổi loại, ô `block_raw` thêm và đổi, số bài S05 đổi;
   không in chữ bài. (cross-layer)

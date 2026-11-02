@@ -32,8 +32,8 @@ phép đo in số này. Bài không trục giữ nguyên khoá cũ. `offer_id` v
 **Hạng phân xử:** parser (hạng 2) thắng đề xuất LLM (hạng 4), nên `block_raw` S03 đang đến từ LLM có thể đổi khi bộ đọc đọc ra
 giá trị khác. Đó là luật phân xử đã có; phép đo in số ô đổi (đo 02/11: thêm 1.276, đổi 4).
 
-**Mức đổi trên dữ liệu thật** (đo 02/11, chỉ đọc): S03 2.772 → 3.010 tin; `offer_id` giữ 2.638, nghỉ 134, mọc 372; bán 854 → 1.176; thuê
-1.925 → 1.834; 576 bài thuê từ 1 tỷ đổi thành bán. S05 đi cùng bộ đọc: 18/100 bài đổi, chủ yếu thêm phòng ngủ; S05 hiện 28 tin. Phép đo
+**Mức đổi trên dữ liệu thật** (đo 02/11, chỉ đọc): S03 2.772 → 3.025 tin; `offer_id` giữ 2.642, nghỉ 130, mọc 383; bán 854 → 1.191; thuê
+1.925 → 1.834; 613 bài thuê từ 1 tỷ đổi thành bán. S05 đi cùng bộ đọc: 18/100 bài đổi, chủ yếu thêm phòng ngủ; S05 hiện 28 tin. Phép đo
 đặt trần, xem AC-9.
 
 ## Tám câu ADR-0013

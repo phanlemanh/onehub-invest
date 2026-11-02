@@ -30,7 +30,7 @@ evals:
     executor: test
     cmd: config:executors.test.va_doc_tin
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/va-doc-tin.test.mjs]
-    expected: "exit 0; ca 'SV1-AC-4' xanh: mỗi từ trong danh sách đóng có một dòng ra null, giá thật đúng khi có, nhãn giá thắng, «giá vốn», «giảm còn», «chỉ hơn», «cắt lỗ 2,9 tỷ» đúng đáp án; ca đỏ trên bản sao bỏ luật ngữ cảnh ghim «SV1-AC-4» và dòng «vốn 1,4 tỷ»"
+    expected: "exit 0; ca 'SV1-AC-4' xanh: mỗi từ trong danh sách đóng có một dòng ra null, giá thật đúng khi có, nhãn giá thắng, «giá vốn», «giảm còn», «chỉ hơn», «cắt lỗ 2,9 tỷ» đúng đáp án, «ko vay 2ty1», «bán vay full 2.350ty» ra giá, «vay 1.400.000.000» ra null; ca đỏ trên bản sao bỏ luật ngữ cảnh ghim «SV1-AC-4» và dòng «vốn 1,4 tỷ»; bỏ chặn trước «vay» ghim dòng «bán vay full»; giá đồng không qua luật ghim dòng «cắt 450.000.000»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -38,7 +38,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.va_doc_tin_db
     paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/scripts/va-doc-tin.itest.mjs]
-    expected: "exit 0; ca 'SV1-AC-5 DB' xanh trên DB thử trong ROLLBACK: bài thuê 3 tỷ và đúng 1 tỷ thành tin bán đúng giá, «1 tỷ/tháng», «1 tỷ/th», «1,2 tỷ/năm» và bán 120 tỷ không thành tin, bộ đếm gọi tên thue-tu-1-ty, ban-tren-100-ty; ca đỏ thuần 'SV1-AC-5' trên bản sao bỏ bước đổi loại ghim dòng thuê 3 tỷ"
+    expected: "exit 0; ca 'SV1-AC-5 DB' xanh trên DB thử trong ROLLBACK: bài thuê 3 tỷ và đúng 1 tỷ thành tin bán đúng giá, bài «đang cho thuê 7tr/tháng. Giá bán: 2,7 tỷ» thành tin bán, «1 tỷ/tháng», «1 tỷ/th», «1,2 tỷ/năm» và bán 120 tỷ không thành tin, bộ đếm tăng đúng 3 thue-tu-1-ty và 1 ban-tren-100-ty; ca đỏ thuần 'SV1-AC-5' trên bản sao bỏ bước đổi loại ghim dòng thuê 3 tỷ; xét đơn vị trên toàn bài ghim dòng «7tr/tháng»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
