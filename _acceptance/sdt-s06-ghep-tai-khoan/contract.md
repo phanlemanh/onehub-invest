@@ -5,9 +5,9 @@ slug: sdt-s06-ghep-tai-khoan
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (068) — khớp t3_paths
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-sdt-s06-ghep-tai-khoan-design.md
 ---
 
@@ -53,6 +53,8 @@ Bốn trục: số riêng (hợp lệ · không · sai dạng) × ẩn số (kh�
 | L9 | không, sai dạng | không | trống mã, 0 | bất kỳ | giữ nguyên | 16 |
 
 ## Quyết định chờ Mạnh
+
+Mạnh duyệt ngày 02/11/2026 theo lối máy khuyên ở cả ba câu.
 
 - **Hỏi-1. Rút số ghép khi tin chuyển sang ẩn số hoặc tài khoản có thêm số thứ hai?** Máy khuyên rút, chỉ số ghép. Lối khác: giữ số ở ca hai số và chỉ đếm báo; số có thể sai người nhưng không mất; ca ẩn số vẫn phải rút theo luật «không bao giờ». Hợp đồng đang soạn theo lối khuyên. Việc này xoá giá trị, nhưng dựng lại được từ stg.
 - **Hỏi-2. Thứ tự đưa vào chạy thật?** Máy khuyên: importer v5 vào main → gộp PR này → `pg_dump` → áp 068 (nếu 067 vào sau thì áp lại 068 sau 067) → lượt S06 kế ghi thật. Lần ghi thật đầu tiên kéo theo khoá băm SĐT S06 lên cloud ở lượt sync kế, số gốc vẫn ở máy. Lối khác: hoãn tới khi PR #274 vào: mọi thứ lên cùng lúc, nhưng số trên tin chậm hơn.
