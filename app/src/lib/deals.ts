@@ -7,9 +7,8 @@ import { pool } from "./db";
  * discount = % dưới giá rao công khai cùng phường (docs/research/
  * investment-pipeline-4-stages.md).
  *
- * PII: seller_phone là tầng A — sale_offers KHÔNG sync cloud (sync-cloud
- * chỉ chạm bảng airdna_*), nên trên Vercel không có dữ liệu này tự nhiên.
- * Broker chip join sellers registry (cũng local-only).
+ * Bản cloud (`dealsSql({ cloud: true })`) không đọc liên hệ: Căn giá tốt vẫn chỉ hiện liên hệ ở máy thu.
+ * Broker chip join sellers registry.
  */
 export type DealRow = {
   offerId: string;
