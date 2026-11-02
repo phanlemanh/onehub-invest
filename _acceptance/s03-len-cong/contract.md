@@ -5,7 +5,9 @@ slug: s03-len-cong
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: không khớp t3_paths; lộ trình ước T3 lúc cắt, thiết kế không chạm sync-cloud hay migration (dòng sổ S1)
 surfaces: [cli, web]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s03-len-cong-design.md
 ---
 
