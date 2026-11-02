@@ -5,7 +5,7 @@ slug: s03-va-doc-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs — không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-s03-va-doc-tin-design.md
@@ -108,3 +108,38 @@ vi, báo điều phối. Không hạ ngưỡng.
   giá đúng» ← `pipeline/scripts/do-va-doc-tin.mjs` trên tập nhãn audit và bài thật [AC-9].
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Ghi chú trong sổ field vẫn nói mã căn chỉ đến từ một nguồn, trong khi nguồn thứ hai cũng đang cấp. Người đọc sổ có thể hiểu sai nguồn gốc dữ liệu, nhưng số liệu hiển thị không bị ảnh hưởng.
+  - Ngoài-3: Các bài sơ cấp chỉ ghi giá theo nhãn như «Giá TTS» sẽ không đọc ra giá và biến mất khỏi danh sách tin. Người dùng không thấy những căn này dù trước đây có hiện.
+  - Ngoài-4: Một phép kiểm của đợt trước sẽ báo đỏ giả khi ai đó chạy lại, dù dữ liệu người dùng thấy không sai. (Đã xử lý trong vòng: đột biến CM-AC-8 đã trúng đúng hàm, E11 chứng.)
+  - Ngoài-6: Một số ít tin ghi mã căn dài bốn phần có thể bị gán sai toà và sai căn, hai căn khác nhau có thể bị gộp thành một tin. (Đã xử lý trong vòng: mã bốn phần đã đọc đúng ở lượt 4.)
+  - Ngoài-7: Hai bài cùng một căn nhưng một bài viết chữ thường có thể thành hai tin riêng thay vì một.
+  - Ngoài-8: Con số 0 báo cáo về giá bị mất có thể chưa chứng minh chắc chắn, nên khó tin hoàn toàn rằng không còn bài nào mất giá.
+  - Ngoài-9: Tin thuê ghi giá theo năm có thể lọt thành tin bán nếu sau này bộ đọc đổi mà không phép kiểm nào báo.
+  - Ngoài-10: Phép đo «không tin nào mang hai căn» có thể không bắt được trường hợp tin gộp nhầm hai căn.
+  - Ngoài-12: Phép đo diện tích có thể bỏ sót lỗi với số có hai chữ số lẻ như 63,45m2 nếu bộ đọc hỏng sau này.
+  - Ngoài-13: Ai đó có thể xoá bớt ca kiểm mà bộ test vẫn xanh, làm lời đảm bảo yếu đi âm thầm.
+  - Ngoài-14: Phép kiểm tự động có thể báo nhầm «có tin mang hai trục» khi một tin có hai bài đăng lại khác nhau về chữ hoa/thường. Người dùng không thấy dữ liệu sai, chỉ có thể gặp một lần kiểm đỏ giả.
+  - Ngoài-16: Một bài cho thuê ghi giá theo năm bằng chữ như «1,2 tỷ mỗi năm» có thể bị coi là tin bán giá 1,2 tỷ và hiện trên danh sách bán. Hiện chưa có bài thật nào viết như vậy. (Đã xử lý trong vòng: dạng giá năm đã không còn đổi thành tin bán.)
+  - Ngoài-17: Một số bài cho thuê có giá viết kiểu «12000 net» hoặc «8.5x» có thể bị hiểu thành bán nhà giá hàng tỷ. Người xem sẽ thấy một tin bán với giá cao sai hẳn so với thực tế.
+  - Ngoài-18: Một bài bán ghi giá che kiểu «25x tỷ» có thể hiện giá chỉ khoảng 250 triệu, thấp hơn rất nhiều so với giá thật. Người xem sẽ thấy căn đó rẻ bất thường.
+  - Ngoài-19: Phép kiểm tự động chưa khẳng định giá của bài cho thuê đúng 1 tỷ sau khi đổi thành tin bán; nếu giá ở biên này bị đọc sai thì phép kiểm vẫn xanh. Hiện không có bằng chứng giá thật bị sai.
+  - Ngoài-20: Phép đo chất lượng diện tích có thể không bắt được lỗi nếu sau này diện tích dạng «63,45m2» bị đọc sai thành 45. Hiện diện tích những bài như vậy vẫn đọc đúng.
+  - Ngoài-21: Phép kiểm cũ về giá tỷ chẵn giờ chỉ còn bắt được lỗi số điện thoại. Nếu giá của loại bài này bị đọc sai thì phép kiểm vẫn báo đạt.
+  - Ngoài-22: Hồ sơ nghiệm thu cũ vẫn ghi phép đo rộng hơn thực tế đang chạy. Người đọc hồ sơ có thể tưởng nó kiểm nhiều hơn mức thật.
+  - Ngoài-23: Chú thích trong mã nói Mạnh đã duyệt việc nới phép kiểm, nhưng hồ sơ không có bằng chứng người duyệt đúng việc đó. Dấu vết duyệt vì thế có thể gây hiểu nhầm.
+  - Ngoài-27: Một số mã căn như PR2.07 bị lưu cả cụm làm tên toà, nên cùng một toà có hai tên và mất mã căn. Khoảng 199 bài thật bị ảnh hưởng.
+  - Ngoài-28: Phép kiểm cũ về giá tỷ chẵn luôn báo đạt phần giá và vẫn in câu khẳng định như thể đã đo. Kết quả này có thể làm người đọc yên tâm sai.
+  - Ngoài-29: Bài cho thuê ghi giá che kiểu «7.5x triệu» có thể bị đọc thành tin bán 7,5 tỷ. Hiện chưa thấy bài thật nào dính.
+  - Ngoài-30: Bài viết không dấu kiểu «hướng tay nam» vẫn có thể bị gán nhầm vào phường Tây Nam. Hiện không có bài thật nào dính.
+  - Ngoài-31: Hai bài đăng cùng một căn nhưng khác chữ hoa chữ thường có thể bị tính thành hai tin riêng. Ca kiểm hiện tại không phát hiện điều này.
+  - Ngoài-32: Phép đo «không tin nào mang hai trục» chưa từng được chứng minh là có thể báo đỏ. Con số 0 vì thế chưa chắc phản ánh chất lượng thật.
+  - Ngoài-33: Phần kiểm giá của phép đo giá tỷ chẵn không thể báo lỗi nữa, kể cả khi giá bị đổi sai. Chỉ còn phần kiểm số điện thoại hoạt động.
+  - Ngoài-34: Ca thử về việc bỏ đường dẫn khỏi giá chỉ còn bắt được lỗi ở số điện thoại. Nếu phần gạt đường dẫn hỏng thì ca thử không báo.
+  - Ngoài-35: Nếu ai đó lỡ xoá một dòng trong bảng ca thử thì các kiểm tra vẫn xanh. Một dòng kiểm quan trọng có thể mất mà không ai hay.
+  - Trong hợp đồng, phép kiểm chưa đủ chặt (lượt 4, Mạnh ký với giới hạn): ca DB của AC-8, AC-5 thiếu một số dạng chỉ kiểm ở mức hàm; E11 không buộc dòng thước vào lượt cây; E5, E8 ghi đòi hỏi rộng hơn lệnh chạy thật.
+  - Thước `gom_qua_10_nhieu_nguoi` của `s03-cam-mau-so-lieu` = 1 trên cả bản nền: lượt ghim lại của hai hồ sơ dùng thước này sẽ đỏ tới khi có người xử.
+- Mở hợp đồng mới (Ngoài-2): Giá che dính chữ tỷ («36xxtỷ», «3,0xtỷ») không đọc được, bài mất giá im lặng.
+- Mở hợp đồng mới (Ngoài-15): Phát biểu parser block_raw/unit_number không được rút khi bộ đọc thôi đọc ra giá trị, nên giá trị cũ thắng LLM mãi.
+- Mở hợp đồng mới (Ngoài-25): chinhLoaiThueTy dò «/tháng» trên toàn bài nên bài bán có tiền thuê theo tháng vẫn bị gạt là thuê từ 1 tỷ. Đã xử lý trong vòng: AC-5 đã nâng, sửa ở lượt 3, không cần hàng riêng.
+- Mở hợp đồng mới (Ngoài-26): Từ ngữ cảnh «vay» bắt cả «không vay», «ko vay» nên giá thật bị bỏ và tin biến mất. Đã xử lý trong vòng: AC-4 đã nâng, sửa ở lượt 3, không cần hàng riêng.
