@@ -8,9 +8,12 @@
     <string>/bin/bash</string>
     <string>__ROOT__/scripts/chotot-daily.sh</string>
   </array>
-  <!-- 05:30 hằng ngày — snapshot vải công khai S06 (bán + thuê, HN + HCMC) -->
+  <!-- 3110-6: 2 lượt/ngày — 05:30 + 14:00 (cách 8,5h, ngoài khung zalo-import 00:00, apify 06/12/18, airdna 19:05) -->
   <key>StartCalendarInterval</key>
-  <dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>30</integer></dict>
+  <array>
+    <dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/chotot.log</string>
   <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/chotot.log</string>
 </dict>
