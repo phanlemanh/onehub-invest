@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { XIcon } from "lucide-react"
 import { cn } from "cn"
 
@@ -71,11 +71,14 @@ export function ListingsExplorer({
   listings,
   currency,
   capNote = null,
+  toolbarStart = null,
 }: {
   listings: ListingCardRow[]
   currency: string
   /** Ghi chú khi trang chỉ tải một phần listing của thị trường. */
   capNote?: string | null
+  /** Ô đứng đầu hàng công cụ (thời hạn thuê). */
+  toolbarStart?: ReactNode
 }) {
   const [sort, setSort] = useState<SortKey>("revenue")
   const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
@@ -105,6 +108,7 @@ export function ListingsExplorer({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
+        {toolbarStart}
         <div className="hidden min-w-0 flex-1 lg:block">
           <ListingsFilterBar listings={listings} currency={currency} query={query} onQueryChange={changeQuery} />
         </div>
@@ -199,7 +203,6 @@ export function ListingsExplorer({
                 <ListingCard
                   key={listing.id}
                   listing={listing}
-                  currency={currency}
                   active={listing.id === activeId}
                   onHover={setActiveId}
                 />

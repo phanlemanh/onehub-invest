@@ -126,7 +126,7 @@ export async function ListingComps({ listing, marketId }: { listing: ListingDeta
 }
 
 export function ListingCompsEmpty({ listing }: { listing: Pick<ListingDetail, "marketName" | "marketPath"> }) {
-  const href = listing.marketPath ? `${listing.marketPath}/listings` : "/vn"
+  const href = listing.marketPath ? `${listing.marketPath}/listings/rent?term=short` : "/vn"
   return (
     <Frame>
       <FrameHeader>

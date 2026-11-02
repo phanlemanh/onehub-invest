@@ -1,0 +1,30 @@
+# E8u network/console (playwright onResponse/requestfailed/console), app origin http://localhost:3461
+## app responses non-2xx: none besides 308 on /vn/hanoi/listings (expected). POST /api/v1/user-events 204.
+   2   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/98e08a90-749f-4218-872f-604d6bef6be7.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   2   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/332c2ade-3d97-4e93-b89e-409431685220.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   2   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/1fa9be10-1ead-4951-abe3-0a72f27e6309.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   2   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&price_min=5000000&price_max=15000000&sort=price-asc&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   2   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&price_min=5000000&price_max=15000000&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   2   CONSOLE_ERROR Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information. 
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1788934735687340773/original/f8ef595a-c16a-4b7c-9bb2-6198dd5e42f1.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1788934735687340773/original/a8c71677-e675-4143-a4d4-b0b6bae203a0.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1788934735687340773/original/44bec939-999e-448e-845c-93b0024237da.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1774315497192225374/original/c3840740-fb3b-4f6c-8601-283424aa2513.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1774315497192225374/original/4d6526b6-f7d5-4959-851d-8f1a51b0589c.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1774315497192225374/original/39ddd20a-2819-4bc9-a804-d62ef86b327f.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1686186204336372007/original/32309cfb-0473-48d7-9850-4c557624d994.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/e5268e13-f420-4a4c-ab37-f85cb7fc42a6.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/e5268e13-f420-4a4c-ab37-f85cb7fc42a6.jpeg?aki_policy=x_large net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/c61b62ab-d210-43b1-a719-876e45e32a21.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/c61b62ab-d210-43b1-a719-876e45e32a21.jpeg?aki_policy=x_large net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/9e542fec-62ff-4566-8953-3db17593d5c9.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/9e542fec-62ff-4566-8953-3db17593d5c9.jpeg?aki_policy=x_large net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/83b10424-031e-4b9a-ab40-9e6b51a35cd0.jpeg?im_w=480 net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET https://a0.muscache.com/im/pictures/hosting/Hosting-1516025323860152155/original/332c2ade-3d97-4e93-b89e-409431685220.jpeg?aki_policy=x_large net::ERR_BLOCKED_BY_ORB
+   1   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&price_min=5000000&price_max=15000000&sort=price-asc&page=2&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   1   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&price_min=5000000&price_max=15000000&sort=price-asc&has_phone=1&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   1   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&price_min=5000000&price_max=15000000&has_phone=1&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   1   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?type=apartment&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   1   REQFAILED GET http://localhost:3461/vn/hanoi/listings/rent?term=short&_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+   1   REQFAILED GET http://localhost:3461/listing/abnb_1572508437758393289?_rsc=rAvnooaEFWwuxu3m net::ERR_ABORTED
+## notes: REQFAILED ...?_rsc= net::ERR_ABORTED = RSC prefetch bi huy khi dieu huong tiep (khong phai loi server); a0.muscache.com ERR_BLOCKED_BY_ORB = anh ben thu ba (third-party). CONSOLE: React dev warning 'unique key' tu ListingsPageBody (khong phai network).

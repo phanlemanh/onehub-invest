@@ -7,7 +7,7 @@ import {
   BookOpenIcon,
   CalculatorIcon,
   GitCompareIcon,
-  HouseIcon,
+  KeyRoundIcon, TagIcon,
   MapIcon,
   MenuIcon,
 } from "lucide-react"
@@ -41,7 +41,8 @@ const icon = (Icon: typeof MapIcon) => <Icon className="text-muted-foreground mt
 
 const PRODUCT: NavLink[] = [
   { title: "Thị trường", href: "/vn", description: "Xếp hạng phường theo RevPAR, công suất, giá — kèm bản đồ.", icon: icon(MapIcon) },
-  { title: "Listing", href: "/vn/hanoi/listings", description: "Duyệt listing Airbnb trên lưới và bản đồ nhãn giá.", icon: icon(HouseIcon) },
+  { title: "Bán", href: "/vn/hanoi/listings/sale", description: "Tin bán từ nhiều nguồn, kèm số người đăng.", icon: icon(TagIcon) },
+  { title: "Cho thuê", href: "/vn/hanoi/listings/rent", description: "Thuê dài hạn và thuê ngắn hạn, kèm số người đăng.", icon: icon(KeyRoundIcon) },
   { title: "Lợi suất", href: "/yield", description: "Ước tính lợi suất một căn: ngắn hạn so với dài hạn.", icon: icon(CalculatorIcon) },
   { title: "So sánh", href: "/compare", description: "Đặt cạnh nhau tối đa 4 thị trường hoặc phường.", icon: icon(GitCompareIcon) },
 ]

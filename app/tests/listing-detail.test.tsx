@@ -488,7 +488,7 @@ test("LD-AC-8 comps trống: Empty có đúng một hành động Duyệt listin
   let host = await render(<ListingCompsEmpty listing={{ marketName: "Thành phố Hà Nội", marketPath: "/vn/hanoi" }} />);
   let acts = host.querySelectorAll("a, button");
   assert.equal(acts.length, 1);
-  assert.equal(acts[0].getAttribute("href"), "/vn/hanoi/listings");
+  assert.equal(acts[0].getAttribute("href"), "/vn/hanoi/listings/rent?term=short");
   assert.equal(acts[0].textContent, "Duyệt listing ở Thành phố Hà Nội");
   host = await render(<ListingCompsEmpty listing={{ marketName: null, marketPath: null }} />);
   acts = host.querySelectorAll("a, button");
