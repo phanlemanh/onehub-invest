@@ -52,13 +52,13 @@ export function ListingsPageBody({
         }
       />
       {kind !== LISTING_KIND.rent_st ? (
-        <RegionError what="tin rao của thị trường">
+        <RegionError what="tin rao của thị trường" leading={term}>
           <Suspense key={JSON.stringify(filters)} fallback={<OffersRegionSkeleton toolbarStart={term} />}>
             <OffersRegion marketId={marketId} marketName={marketName} marketPath={marketPath} kind={kind} filters={filters} toolbarStart={term} />
           </Suspense>
         </RegionError>
       ) : (
-        <RegionError what="listing của thị trường">
+        <RegionError what="listing của thị trường" leading={term}>
           <Suspense fallback={<ListingsRegionSkeleton toolbarStart={term} />}>
             <ListingsRegion marketId={marketId} marketName={marketName} marketPath={marketPath} currency={currency} toolbarStart={term} />
           </Suspense>

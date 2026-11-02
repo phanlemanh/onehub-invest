@@ -9,7 +9,7 @@ import { getOfferWards, getPublicOffers, type ListingKind, type OfferFilters } f
 import { slugifyName } from "@/lib/queries"
 import { OffersExplorer } from "./offers-explorer"
 
-/** Vùng tin bán, tin thuê dài hạn — tải trong `RegionError > Suspense` để PageHeader và chọn Loại tin đứng trước. */
+/** Vùng tin bán, tin thuê dài hạn — tải trong `RegionError > Suspense` để PageHeader và ô thời hạn đứng trước. */
 export async function OffersRegion({
   marketId,
   marketName,
