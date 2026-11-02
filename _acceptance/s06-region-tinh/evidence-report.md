@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 25127eacf0f06642239e9062bf246d6b5a10be25
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: s06-region-tinh

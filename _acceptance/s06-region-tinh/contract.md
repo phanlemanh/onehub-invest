@@ -5,7 +5,7 @@ slug: s06-region-tinh
 owner: manh.phan@onemount.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-02T02:08:02Z
 approved_by:
@@ -39,3 +39,8 @@ Source input: GIAO claudedp-0111-2 (liên làn, 01/11) + XONG của ZCode 21:51Z
 - Chốt `cityCode` của Bình Dương (đã sáp nhập TP.HCM) và đưa vùng mới lên canonical: thuộc `s06-vung-moi-len-canonical`.
 - Gọi API thật của nguồn: số đo tin từng tỉnh là của ZCode, không chấm lại ở đây.
 - Form thêm vùng trên `/ops/sources` nhận `region`: chưa cần, cấu hình qua triển khai.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Một vùng trả tin thiếu mã thì dữ liệu S06 của mọi vùng không được làm mới trong lượt đó; dữ liệu chậm một lượt, không mất.
