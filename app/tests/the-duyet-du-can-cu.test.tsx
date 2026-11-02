@@ -744,6 +744,22 @@ describe("TD-AC-7/8 route decide nhận lý do", () => {
       }
     }
   }
+  test("LS1-AC-7 route thật: thẻ chỉ có đối chiếu duyệt được, đúng một dòng enrich:doi-chieu, thẻ thường thì không", async (t) => {
+    if (setupErr) return t.skip(setupErr)
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = ++soThe
+    const doi_chieu = [{ loai: "gia", trich: "giá 5 tỷ", ai: 5e9, bo_doc: 3e9 }]
+    await db.query(`INSERT INTO review_queue (id, item_type, item_id, title, evidence) VALUES ($1, 'agent_output', $2, 'td đối chiếu', $3)`, [id, `enrich:td_dc${id}`, { doi_chieu }])
+    const r = await goi(mod, id, { status: "approved", reason: "AI đọc đúng giá" })
+    assert.equal(r.status, 200, `LS1-AC-7 route từ chối thẻ chỉ có đối chiếu: ${JSON.stringify(r.json)}`)
+    const a = (await db.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:td_dc${id}`])).rows
+    assert.equal(a.length, 1, "LS1-AC-7 phải đúng một dòng phán quyết")
+    assert.deepEqual([a[0].detail.phan_quyet, a[0].detail.ly_do, a[0].detail.doi_chieu], ["approved", "AI đọc đúng giá", doi_chieu], "LS1-AC-7 phán quyết không đọc lại được")
+    const thuong = await theMoi("agent_output")
+    assert.equal((await goi(mod, thuong, { status: "approved", reason: "ok" })).status, 200)
+    assert.equal((await db.query(`SELECT 1 FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'reviewId' = $1`, [String(thuong)])).rows.length, 0, "LS1-AC-7 đối chứng: thẻ thường không có dòng phán quyết")
+  })
+
   test("TD-AC-7 route: thiếu / trắng / quá 1.000 ký tự × 2 loại thẻ → 400, bốn bảng không đổi", async () => {
     ready()
     const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod

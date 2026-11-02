@@ -474,3 +474,31 @@ test("LS1-AC-10 dưới ngưỡng và dưới 100 ca: thoát 5, không đạt; c
     assert.equal(await loaiHinh(c, id), "apartment");
   });
 });
+
+// ---------- AC-7: duyệt thẻ ----------
+import { ghiPhanQuyetDoiChieu } from "../../app/src/lib/ops/doi-chieu.js";
+
+test("LS1-AC-7 duyệt thẻ: áp bên được chọn của đề xuất, phán quyết đọc lại được, không đổi giá, diện tích, retired_at", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const id = await moiTin(c, FIXTURE_AC7);
+    await chay(c, [id], hoiAc7(), { resolve: E1_DAT });
+    const [the] = await theCua(c, id);
+    const ds = await deXuat(c, id);
+    const ai = ds.find((d) => d.source === "e2_llm")!;
+    const cot = async () => (await c.query(`SELECT price_vnd, area_m2, retired_at FROM sale_offers WHERE offer_id = $1`, [id])).rows[0];
+    const truoc = await cot();
+    // Đúng thứ tự của route decide với thẻ xung đột.
+    await c.query(`SELECT apply_enrichment($1, $2)`, [[Number(ai.id)], "hitl:test"]);
+    await c.query(`SELECT decide_enrichment_review($1, 'rejected', $2)`, [the.id, "hitl:test"]);
+    const n = await ghiPhanQuyetDoiChieu(c, { reviewId: Number(the.id), itemId: `enrich:${id}`, status: "approved", lyDo: "đúng", actor: "hitl:test", env: "local", evidence: the.evidence });
+    assert.equal(n, 1);
+    assert.equal(await loaiHinh(c, id), "apartment", "LS1-AC-7 phải áp bên được chọn");
+    const sau = await deXuat(c, id);
+    assert.deepEqual(sau.map((d) => [d.source, d.status]), [["e1_rule", "rejected"], ["e2_llm", "applied"]]);
+    const { rows } = await c.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:${id}`]);
+    assert.deepEqual(rows[0]?.detail.doi_chieu.map((d: { loai: string }) => d.loai), ["y_dinh", "gia"], "LS1-AC-7 phán quyết không đọc lại được");
+    assert.deepEqual(await cot(), truoc, "LS1-AC-7 duyệt làm đổi cột giá, diện tích hoặc retired_at");
+    assert.equal(await ghiPhanQuyetDoiChieu(c, { reviewId: 1, itemId: "x", status: "rejected", lyDo: "x", actor: "hitl:test", env: "local", evidence: { fields: [] } }), 0, "LS1-AC-7 thẻ không đối chiếu không được ghi");
+  });
+});
