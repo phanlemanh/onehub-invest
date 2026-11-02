@@ -1,0 +1,107 @@
+schema_version: 1
+feature_slug: so-ghep-s06-nhan-danh-ba
+# Ca DB «SG-AC-n» ở pipeline/scripts/so-ghep-s06.test.mjs: BEGIN…ROLLBACK trên lược đồ riêng, số bịa. Mỗi kiểm có ca đỏ trên bản đột biến cùng fixture, ghim thông điệp.
+# Thước dữ liệu thật E9 chạy trên DB thử từ db/db-thu.sh, không chạy trên oneinvest dùng chung (bài học Ngoài-2 hồ sơ trước).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_test
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/so-ghep-s06.test.mjs]
+    expected: "exit 0; ca SG-AC-1 xanh: bảng 12 ô viết trước ghi rõ nguồn fixture từng ô (S06 trực tiếp và ghép ghi bằng ganSdtS06 thật; S06 mất dấu xoá khoá sau khi ghi; S03, S05 ghi bằng đường nạp của chính nguồn đó), số ô assert bằng 12; assert bí danh, người theo SĐT và vai từng ô, vai mọi tin S06 về người theo tài khoản; ô S03, S05 so với kết quả rutDinhDanh cũ. Chiều đỏ cùng fixture: đảo danh sách dương thành chỉ loại dấu ghép thì đỏ với thông điệp nêu ô S06-mat-dau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_test
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/gan-sdt-s06.mjs, pipeline/scripts/so-ghep-s06.test.mjs]
+    expected: "exit 0; hai ca SG-AC-2a (ẩn số), SG-AC-2b (số thứ hai): assert seller_phone tin ghép đã null để chứng minh lượt rút có xảy ra; so tập cặp bí danh và người ở ba mốc: ca ẩn số diff rỗng, ca số thứ hai diff đúng bằng cặp của số trực tiếp mới; chạy lại diff rỗng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_test
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, db/migrations/060_sdt_e164.sql, pipeline/scripts/so-ghep-s06.test.mjs]
+    expected: "exit 0; ca SG-AC-3 xanh trên view sellers thật: một dòng cho số có tin trực tiếp, n_ads bằng số tin gồm tin ghép; số chỉ có tin ghép không có dòng và không vào sellersThieuNguoi; đối chứng dương: số trực tiếp thiếu bí danh có trong sellersThieuNguoi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_test
+    paths: [db/migrations/069_*.sql, pipeline/scripts/so-ghep-s06.test.mjs]
+    expected: "exit 0; ca SG-AC-4 xanh: ô trực tiếp và ghép ghi bằng ganSdtS06 thật rồi resolve_offer_fields; áp 069 hai lần; cột mới đứng cuối; ma trận năm ô cho true (ghép, mất dấu), false (trực tiếp, không số, nguồn khác), số assert bằng 5; md5 từng dòng của view trên các cột cũ và của sale_offer_records trước sau bằng nhau; sau resolve_offer_fields cột vẫn đúng. Chiều đỏ: view đổi thành chỉ nhận dấu ghép thì ca nêu ô mất dấu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/so-ghep-s06.test.mjs]
+    expected: "exit 0; ca SG-AC-5 qua runTransformChotot thật: chưa có cột thì số ghép không ghi, số trực tiếp có ghi, log chứa CHUA-AP-069, không ném; có cột thì ghi; ghi đè view về SELECT * cũ giữa hai lượt thì lại in CHUA-AP-069"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, pipeline/scripts/so-ghep-s06-cloud.itest.mjs, docs/ops/cloud-schema-catchup-*-so-ghep.sql]
+    expected: "exit 0; sync thật từ view có số ghép tới lược đồ tạm vai cloud: seller_phone_inferred tới nơi đúng true trên dòng ghép, false trên dòng trực tiếp; field_provenance không tới và piiColumnLeaks chặn khi cố thêm; lược đồ thiếu cột thì sync chạy tiếp và log chứa lệch schema; tệp catch-up chạy thật: ĐO TRƯỚC gọi tên cột, ÁP chỉ ADD COLUMN IF NOT EXISTS, chạy hai lần không lỗi, đầu tệp khớp đúng năm tên mốc gộp, kéo về, áp cloud, áp 069, áp 068"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_api
+    paths: [app/src/lib/offers-public.ts, app/src/app/api/v1/listings/**, app/tests/so-ghep-nhan.test.tsx]
+    expected: "exit 0; hai route thật trên lược đồ tạm, ma trận năm ô viết trước (ghép, trực tiếp, không số, có số mà cột NULL, lược đồ không có cột): phoneInferred và inferred đúng từng ô, hai ô sau trả true và HTTP 200; so khoá cũ với danh sách viết trước; bốn ca 404 cùng thân; JSON danh sách không khớp mẫu SĐT. Chiều đỏ: bỏ cột khỏi câu đọc thì ca nêu phoneInferred"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7b
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sg_be_mat
+    paths: [scripts/check-api-surface.mjs, app/src/lib/api-surface.ts]
+    expected: "exit 0; check-api-surface xanh với hai route đã đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sg_ui
+    paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-card.tsx, app/tests/so-ghep-nhan-giao-dien.test.tsx]
+    expected: "exit 0; jsdom trên OfferCard thật lấy dữ liệu từ khuôn trả về của API: năm trạng thái ST-lien-he-* đọc từ bảng viết trước, số trạng thái assert bằng 5, mỗi trạng thái assert có hoặc không Badge với chữ đúng, Badge mang biến thể warning-light và không có class cỡ tự đặt; chiều đỏ: bỏ Badge thì ca nêu ST-lien-he-ghep"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8u
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/sale
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3462, DATABASE_URL trỏ DB thử đã áp 068, 069 và đã gán số; không ghi DB dùng chung"
+      - "Trước khi chụp, chèn style che số: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Truy vấn chỉ đọc DB thử: một tin hiện công khai có số ghép, một tin có số trực tiếp, cùng Hà Nội; ghi mã tin, không ghi số"
+      - "Mở trang, thẻ số ghép có Badge Chưa xác minh trước khi bấm, chụp evidence/E8u-truoc.png; bấm Xem số, Badge còn, chụp evidence/E8u-sau.png"
+      - "Thẻ số trực tiếp không có Badge, chụp evidence/E8u-truc-tiep.png; đổi khổ 320, không tràn ngang, chụp evidence/E8u-320.png"
+      - "Mở /vn/hanoi/listings/rent, một tin thuê có số ghép có Badge, chụp evidence/E8u-thue.png"
+    paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-card.tsx]
+    expected: "năm ảnh đúng mô tả ở các bước; ảnh không lộ số; scrollWidth bằng clientWidth ở 320"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sg_do
+    paths: [pipeline/do-so-ghep-s06.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/gan-sdt-s06.mjs, db/migrations/069_*.sql, db/migrations/068_*.sql]
+    expected: "exit 0; lệnh tự áp 068, 069 và chạy ganSdtS06, dungNguoi trên DB thử; in số trước và sau cho bí danh, người, người không có tin, sellers, tin có nhãn riêng bán và thuê; bí danh S06 mới lớn hơn 0 và không vượt số số trực tiếp; tin có nhãn lớn hơn 0 và bằng số tin không mang dấu trực tiếp; so_ghep_ra_so=0 trong khi so_ghep_ra_so_neu_bo_nhanh lớn hơn 0 trên cùng dữ liệu; từ chối chạy khi tên DB là oneinvest và thoát 2; đầu ra không khớp mẫu SĐT cả dạng +84 lẫn 0; ca đột biến trong test cho bất biến sai thì thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    inputs: [docs/adr/0011-reso-first-data-law.md, CONTEXT.md, pipeline/mappings.yaml, docs/superpowers/specs/2026-11-02-sdt-s06-ghep-tai-khoan-design.md, docs/ROADMAP.md, _acceptance/so-ghep-s06-nhan-danh-ba/contract.md]
+    question: "Các tệp này có đủ: thuật ngữ nhãn theo khuôn CONTEXT.md; seller_phone_inferred khai đủ sáu điều kiện ADR-0011 và ghi chú seller_phone không còn nói số ở lại máy; dòng đính chính mục hạ nguồn và OOS-2 trong thiết kế cũ; ROADMAP nêu thứ tự 069 trước 068 và phần cloud?"
+    expected: "bốn vế đều có trong tệp"
+    evidence_required: [verdict, rationale]
