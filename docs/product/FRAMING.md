@@ -5,6 +5,17 @@
 > Thứ tự đọc: mục đích → người dùng → «tin cậy» → mục tiêu → thước đo → rồi mới tới cách làm.
 > Tài liệu này đứng trên `CONTEXT-PRODUCT.md` (sản phẩm hôm nay) và ROADMAP §1 (hiến pháp kỹ thuật).
 
+## 0. Sứ mệnh và chỉ nam
+
+OneHub Invest là kênh duy nhất giúp nhà đầu tư và môi giới hết vất vả tìm dữ liệu, tìm hàng, tính toán thẩm định, quản lý và
+khai thác dòng tiền (Mạnh, 02/11). Ai vào cũng trả lời được bốn câu: thị trường nào hợp với tôi; tìm hàng ở đâu đủ thông tin,
+chính xác, không trùng, lọc được, thấy được dấu hiệu giá tốt; dòng tiền, chi phí vốn và dự phóng nhiều năm; quản lý và khai thác
+danh mục.
+
+Điều phải chứng minh: **phân loại và làm giàu dựa phần lớn vào AI Agent, và đường ống từ lúc thu tới lúc trao cho người dùng chỉ
+tốt lên, không tệ đi**, về tốc độ, bóc tách, phân loại. Người thụ hưởng là nhà đầu tư, môi giới và nền tảng vận hành. Chỉ số của
+đợt ra mắt 05/11: `docs/plan/ra-mat-0511-so-luong-chat-luong.md` §2.
+
 ## 1. Mục đích
 
 Gom mọi tin rao của người môi giới trên thị trường thành **một mạng lưới listing đủ tin cậy**, để môi giới
@@ -217,3 +228,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang · Mạnh duyệt thang + bậc đích |
 | 2026-10-27 | Chỉ đổi chữ, không đổi nghĩa: «tin đăng» → «tin rao» / «tin», «mạng lưới listing» → «mạng lưới tin rao» (luật «listing» = thuê ngắn hạn, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`) | Mạnh giao quyết · Claude ghi |
 | 2026-10-27 | Hướng B (Mạnh chốt): «listing» là mọi tin niêm yết theo RESO — trả «mạng lưới listing» về như bản gốc; lớp giữa §3.1 gọi «Listing (tin)» | Mạnh chốt · Claude ghi |
+| 2026-11-02 | Thêm §0 sứ mệnh và chỉ nam; tám chỉ số ra mắt 05/11 ở `docs/plan/ra-mat-0511-so-luong-chat-luong.md`; ngưỡng chất lượng chỉ đo, không chặn | Mạnh chốt · Claude ghi |
