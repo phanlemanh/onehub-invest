@@ -9,3 +9,9 @@
 {"ts":"2026-11-02T05:00:58Z","round":2,"evalId":"E4","run_id":"s08-noi-tiep-E4-r2-20261102T050058Z","exit_code":0,"cmd":"node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"}
 {"ts":"2026-11-02T05:00:58Z","round":2,"evalId":"E5","run_id":"s08-noi-tiep-E5-r2-20261102T050058Z","exit_code":1,"cmd":"bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"}
 {"ts":"2026-11-02T05:01:00Z","round":2,"evalId":"E6","run_id":"s08-noi-tiep-E6-r2-20261102T050100Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"}
+{"ts":"2026-11-02T05:09:45Z","round":3,"evalId":"E1","run_id":"s08-noi-tiep-E1-r3-20261102T050945Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T05:11:36Z","round":3,"evalId":"E2","run_id":"s08-noi-tiep-E2-r3-20261102T051136Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E3","run_id":"s08-noi-tiep-E3-r3-20261102T051327Z","exit_code":0,"cmd":"node --test pipeline/scripts/import-s08-row.test.mjs"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E4","run_id":"s08-noi-tiep-E4-r3-20261102T051327Z","exit_code":0,"cmd":"node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E5","run_id":"s08-noi-tiep-E5-r3-20261102T051327Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"}
+{"ts":"2026-11-02T05:13:29Z","round":3,"evalId":"E6","run_id":"s08-noi-tiep-E6-r3-20261102T051329Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"}
