@@ -11,7 +11,7 @@ import { test } from "node:test";
 
 import pg from "pg";
 
-import { sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
+import { RULE_TRUC_TIEP, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { MIG_060 } from "../lib/nap-060.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { localReadSql, selectList } from "../sync-cloud.mjs";
@@ -200,6 +200,9 @@ test("SD-AC-7 đối chiếu danh bạ theo SĐT trên tin (bí danh sdt)", { ti
   await withTx(async (c) => {
     const z = SO(9);
     await tin(c, "z6", z, "S06", "2026-10-06T00:00:00Z");
+    // Từ so-ghep-s06-nhan-danh-ba: S06 chỉ đối chiếu số có dấu trực tiếp.
+    await c.query(`UPDATE sale_offer_records SET field_provenance = jsonb_build_object('seller_phone', jsonb_build_object('rule_id', $1::text)) WHERE offer_id = $2`,
+      [RULE_TRUC_TIEP, `t_sd3_${process.pid}_z6`]);
     assert.ok((await sellersThieuNguoi(c)).includes(`${bam(z)}:S06`), "SD-AC-7 SĐT trên tin không vào phép đối chiếu");
     await nguoi(c, z, "S06");
     assert.ok(!(await sellersThieuNguoi(c)).includes(`${bam(z)}:S06`), "SD-AC-7 có người mà vẫn báo thiếu");
