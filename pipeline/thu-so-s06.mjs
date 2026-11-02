@@ -221,7 +221,10 @@ async function main() {
   const { spawn } = await import("node:child_process");
   const profileDir = join(STATE_DIR, "chrome-profile");
   await mkdir(profileDir, { recursive: true });
-  spawn("open", ["-na", "Google Chrome", "--args", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`, "--no-first-run", "--no-default-browser-check"], { stdio: "ignore", detached: false });
+  // open -hna (-h = ẩn): cửa sổ không nhảy đè màn hình Mạnh (phàn nàn 2/11);
+  // window-position ngoài màn hình + thu về Dock sau khi connect (tab CDP vẫn
+  // chạy khi minimize — đã kiểm với lượt đang chạy).
+  spawn("open", ["-hna", "Google Chrome", "--args", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`, "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100"], { stdio: "ignore", detached: false });
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
   let browser;
@@ -235,6 +238,10 @@ async function main() {
     }
   }
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
+  try {
+    const { execFile } = await import("node:child_process");
+    execFile("osascript", ["-e", 'tell application "Google Chrome" to set minimized of every window to true'], () => {});
+  } catch { /* thiếu quyền thì thôi — cửa sổ đã mở ẩn nhờ -h */ }
 
   const ketQua = { co_so: 0, khac_so: 0 };
   const errors = {};
