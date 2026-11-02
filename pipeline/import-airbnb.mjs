@@ -84,6 +84,11 @@ const AIRBNB_IMPORTER_SOURCES = new Set([
 export function isAllowedSource(source) {
   return AIRBNB_IMPORTER_SOURCES.has(String(source));
 }
+
+// v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn,
+// đọc items y như cũ — cùng mảng với import-chotot.mjs, test đối chiếu hai bản.
+// Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
   const m = String(name).match(/__([^_]+)__/);
@@ -118,8 +123,9 @@ async function main() {
     process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  // v2 (N1 media) + v3 (Kev-nhãn meta.kev) đều giữ nguyên hình dạng cũ, chỉ thêm key
-  if (![1, 2, 3, 4].includes(manifest.schemaVersion)) {
+  // v2 (N1 media) + v3 (Kev-nhãn meta.kev) + v5 (seller người bán) đều giữ
+  // nguyên hình dạng cũ, chỉ thêm key
+  if (!SUPPORTED_SCHEMA_VERSIONS.includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
   // Lớp thứ hai nhận diện snapshot thử (mở lại 2310-4): chỉ nhìn TÊN THƯ MỤC

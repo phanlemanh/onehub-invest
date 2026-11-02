@@ -47,9 +47,17 @@ async function latestSnapshotDir() {
   return [dirs[0].dir];
 }
 
-async function readSnapshot(dir) {
+// v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn
+// (kênh S06 chưa ghi seller — giữ ghi 1 cho tới khi được cấp vòng thu số riêng);
+// cùng mảng với import-airbnb.mjs, test đối chiếu hai bản không lệch.
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5];
+
+// Export để test đọc snapshot v5 từ dir tạm (verify sha256 + parse, không đụng DB)
+export async function readSnapshot(dir) {
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  if (manifest.schemaVersion !== 1) throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  if (!SUPPORTED_SCHEMA_VERSIONS.includes(manifest.schemaVersion)) {
+    throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  }
   // Lớp 2 (mở lại 2310-4 lần 2): manifest.source là lời khai của chính snapshot
   if (manifest.source !== "chotot-ads") {
     console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
