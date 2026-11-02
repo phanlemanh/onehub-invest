@@ -253,6 +253,10 @@ const khoa = assignOfferIds("S03", cuaCay.that.nhom.map((o) => ({ posts: o.posts
 const moi = new Set(khoa.map((k) => k.offer_id));
 const giu = songCu.filter((o) => moi.has(o.offer_id)).length;
 const nghi = songCu.length - giu, moc = moi.size - giu;
+// Trần mọc chỉ tính tin bộ đọc sinh ra (Mạnh duyệt 02/11): tin bản nền chạy trên cùng dữ liệu cũng mọc là do kho có bài mới.
+const cuSet = new Set(songCu.map((o) => o.offer_id));
+const moiNen = new Set(assignOfferIds("S03", cuaNen.that.nhom.map((o) => ({ posts: o.posts })), tinCu).map((k) => k.offer_id));
+const mocBoDoc = [...moi].filter((id) => !cuSet.has(id) && !moiNen.has(id)).length;
 const baiTheoId = new Map(posts.map((p) => [p.post_id, p]));
 const toaMoi = (o) => { for (const id of o.post_ids) { const p = baiTheoId.get(id); const b = p && cay.docToaTruc(p.text).block; if (b) return b; } return null; };
 let oToaThem = 0, oToaDoi = 0;
@@ -264,7 +268,7 @@ for (const o of songCu) {
 }
 const coTruc = new Set(cuaCay.that.nhom.filter((o) => o.units.size).map((o) => o.noiDung));
 const tachThieuMa = cuaCay.that.nhom.filter((o) => !o.units.size && coTruc.has(o.noiDung)).length;
-console.log(`số tin: ${songCu.length} → ${moi.size} · offer_id giữ ${giu}, nghỉ ${nghi}, mọc ${moc}`);
+console.log(`số tin: ${songCu.length} → ${moi.size} · offer_id giữ ${giu}, nghỉ ${nghi}, tổng mọc ${moc} (do bộ đọc ${mocBoDoc}, do bài mới ${moc - mocBoDoc})`);
 console.log(`bán ${cuaCay.that.dem.ban} (nền ${cuaNen.that.dem.ban}), thuê ${cuaCay.that.dem.thue} (nền ${cuaNen.that.dem.thue}), bài đổi loại thuê từ 1 tỷ ${cuaCay.that.dem.doi_loai_thue_ty}; tin có trục ${cuaCay.that.nhom.filter((o) => o.units.size).length}`);
 console.log(`ô block_raw: thêm ${oToaThem}, đổi so với giá trị đang có ${oToaDoi}; tin không mã cùng nội dung với tin có trục (giữ tách, không chứng được cùng căn) ${tachThieuMa}`);
 const TRUONG = ["kind", "priceVnd", "pricePerm2Vnd", "areaM2", "bedrooms"];
@@ -272,7 +276,7 @@ const doiS05 = postsS05.filter((p) => { const a = nen.parsePost(p.text), b = cay
 console.log(`S05 dùng chung bộ đọc: ${doiS05}/${postsS05.length} bài đổi đầu ra (không có nhãn S05)`);
 const vuot = [
   [nghi > TRAN.nghi, `nghỉ ${nghi} > ${TRAN.nghi}`],
-  [moc > TRAN.moc, `mọc ${moc} > ${TRAN.moc}`],
+  [mocBoDoc > TRAN.moc, `mọc do bộ đọc ${mocBoDoc} > ${TRAN.moc}`],
   [doiS05 > TRAN.s05 * postsS05.length, `S05 đổi ${doiS05}/${postsS05.length} > ${TRAN.s05 * 100}%`],
   [trenNhanh !== "" || chuaCommit !== "", `có migration mới: ${trenNhanh} ${chuaCommit}`],
 ];

@@ -30,10 +30,10 @@ và các bài của một tin không phát biểu hai trục khác nhau. Bài c�
 phép đo in số này. Bài không trục giữ nguyên khoá cũ. `offer_id` vẫn dính theo post (PL14).
 
 **Hạng phân xử:** parser (hạng 2) thắng đề xuất LLM (hạng 4), nên `block_raw` S03 đang đến từ LLM có thể đổi khi bộ đọc đọc ra
-giá trị khác. Đó là luật phân xử đã có; phép đo in số ô đổi (đo 02/11: thêm 1.276, đổi 4).
+giá trị khác. Đó là luật phân xử đã có; phép đo in số ô đổi (đo 02/11: thêm 1.254, đổi 4).
 
-**Mức đổi trên dữ liệu thật** (đo 02/11, chỉ đọc): S03 2.772 → 3.025 tin; `offer_id` giữ 2.642, nghỉ 130, mọc 383; bán 854 → 1.191; thuê
-1.925 → 1.834; 613 bài thuê từ 1 tỷ đổi thành bán. S05 đi cùng bộ đọc: 18/100 bài đổi, chủ yếu thêm phòng ngủ; S05 hiện 28 tin. Phép đo
+**Mức đổi trên dữ liệu thật** (đo 02/11, chỉ đọc): S03 2.772 → 3.158 tin; `offer_id` giữ 2.642, nghỉ 130, tổng mọc 516 (391 do bộ đọc, 125 do bài mới, trần 500 tính phần do bộ đọc); bán 904 → 1.252; thuê
+2.000 → 1.906 (so với bản nền trên cùng dữ liệu); 648 bài thuê từ 1 tỷ đổi thành bán. S05 đi cùng bộ đọc: 18/100 bài đổi, chủ yếu thêm phòng ngủ; S05 hiện 28 tin. Phép đo
 đặt trần, xem AC-9.
 
 ## Tám câu ADR-0013

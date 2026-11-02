@@ -267,6 +267,19 @@ const BANG_MA = [
   ["Bán căn R1.052716 3 tỷ", { block: "R1", unit: "R1.052716" }],
   ["Bán 2PN 3 tỷ S115451", { block: null, unit: null }],
   ["Bán 2PN 3 tỷ (NTL22688)", { block: null, unit: null }],
+  // Toà ghi riêng hoặc toà có đuôi số kèm mã toà khác: không đoán toà nào.
+  ["Bán toà S902 và S101 2PN 3 tỷ", { block: null, unit: null }],
+  ["Bán S101 và toà S902 2PN 3 tỷ", { block: null, unit: null }],
+  ["Bán căn toà GH2 và căn toà GH3 3 tỷ", { block: null, unit: null }],
+  ["Bán 2PN toà S1.03 và LD1 3 tỷ", { block: null, unit: null }],
+  ["Bán căn toà GH2 và căn toà gh2 3 tỷ", { block: "GH2", unit: null }],
+  ["Bán căn toà GH2 60 M2 3 tỷ (S115451)", { block: "GH2", unit: null }],
+  // Mã bốn phần: giữ nguyên cả mã, toà là phần trước tầng.
+  ["Bán S1.03.12.05 2PN 3 tỷ", { block: "S1.03", unit: "S1.03.12.05" }],
+  ["Bán S5.03-22.06 2PN 3 tỷ", { block: "S5.03", unit: "S5.03-22.06" }],
+  ["Bán S605.10.17 2PN 3 tỷ", { block: "S605", unit: "S605.10.17" }],
+  ["Bán S1.03.12.05 và S1.03.12.07 3 tỷ", { block: "S1.03", unit: null }],
+  ["Bán S1.03.12.05 và S5.03-22.06 3 tỷ", { block: null, unit: null }],
 ];
 test("SV1-AC-8 đọc toà, trục giữ nguyên chữ; bài nhiều mã trống trục; ca đỏ bỏ luật nhiều mã", async () => {
   const doc = (m, c) => JSON.stringify(m.docToaTruc(c));

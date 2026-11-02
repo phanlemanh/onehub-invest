@@ -265,6 +265,8 @@ const STUDIO = /(?<![\p{L}])(?:studio|stu)(?![\p{L}])/iu;
 // Giữ nguyên chữ môi giới (UnitNumber); «S801» viết liền không tầng chưa kiểm cách tách nên không đọc.
 const TOA = "([A-Z]{1,3}\\d{1,2}(?:[A-Z]\\d)?)";
 const MA_DANG = [
+  // Bốn phần: toà có đuôi số («S1.03», «S605» viết liền) + tầng + trục; đứng đầu để dạng ba phần không cắt cụt mã.
+  new RegExp(`(?<![\\p{L}\\p{N}_])([A-Z]{1,3}\\d{1,2}[.\\-_]\\d{2}|[A-Z]{1,3}\\d{3})[.\\-_]\\d{2}[.\\-_]\\d{2}[A-Z]?(?![\\p{L}\\p{N}])`, "giu"),
   new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}[.\\-_ ]?\\d{2}[.\\-_]\\d{2}[A-Z]?(?![\\p{L}\\p{N}])`, "giu"),
   new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}(?:\\.\\d{2}\\.?|[.\\-_])\\d{4}(?![\\p{L}\\p{N}])`, "giu"),
   new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}(?:\\.\\d{2})?[.\\-_ ]?(?:[xX*]{2}|[xX*]\\.)[.\\-_]?\\d{2}(?!\\d)`, "giu"),
@@ -274,7 +276,9 @@ const MA_DANG = [
 const TOA_DUOI_SO = new RegExp(`(?<![\\p{L}\\p{N}_])([A-Z]{1,3}\\d{1,2}[.\\-_]\\d{2})(?![\\p{L}\\p{N}.\\-])`, "giu");
 // Không phải toà: tháng «T4», quận «Q9», và các chữ của mô tả căn.
 const KHONG_PHAI_TOA = /^(?:T|Q|PN|WC|VS|N|M|DT|TR|BR|W|HD|HH)\d/i;
-const TOA_RIENG = /(?<![\p{L}])(?:toà|tòa|toa)\s*:?\s*([A-Z]{1,3}\d{1,2}[A-Z]?\d?)(?![\p{L}\p{N}])/iu;
+const TOA_RIENG = /(?<![\p{L}])(?:toà|tòa|toa)\s*:?\s*([A-Z]{1,3}\d{1,2}[A-Z]?\d?)(?![\p{L}\p{N}])/giu;
+// Mã trông như toà ở phần còn lại của bài: chữ HOA + 1–3 số. Chỉ để biết bài có nhắc toà khác, không đọc thành toà.
+const MA_TOA_KHAC = /(?<![\p{L}\p{N}_.\-])[A-Z]{1,3}\d{1,3}(?:[A-Z]\d?)?(?![\p{L}\p{N}])/gu;
 
 /** Toà duy nhất khi so không phân biệt hoa thường, giữ nguyên chữ của lần đầu; không có hoặc nhiều toà thì null. */
 const motToa = (ds) => (new Set(ds.map((t) => t.toUpperCase())).size === 1 ? ds[0] : null);
@@ -293,9 +297,12 @@ export function docToaTruc(text) {
   if (units.length !== 1) unit = null;
   if (thay.length) return { block: motToa(thay.map((m) => m[1])), unit };
   const duoi = [...so.matchAll(TOA_DUOI_SO)].filter((m) => !KHONG_PHAI_TOA.test(m[1])).map((m) => m[1]);
-  if (duoi.length) return { block: motToa(duoi), unit: null };
-  const toa = so.match(TOA_RIENG);
-  if (toa) return { block: toa[1], unit: null };
+  const conLai = so.replace(TOA_DUOI_SO, " "); // «toà S1.03» là một toà, không đọc lại «S1» ở các bước sau
+  const rieng = [...conLai.matchAll(TOA_RIENG)].map((m) => m[1]);
+  if (duoi.length || rieng.length) {
+    const khac = (conLai.match(MA_TOA_KHAC) ?? []).filter((m) => !KHONG_PHAI_TOA.test(m));
+    return { block: motToa([...duoi, ...rieng, ...khac]), unit: null };
+  }
   return { block: motToa(maToaCan(text).filter((m) => !KHONG_PHAI_TOA.test(m))), unit: null };
 }
 
@@ -643,13 +650,6 @@ export async function docThiTruongNhom(client) {
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
-/** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */
-export async function docDanhSachPhuong(client) {
-  const moiThiTruong = await docThiTruongCoPhuong(client);
-  const areas = await docPhuongHopLe(client, moiThiTruong);
-  return { moiThiTruong, phuong: areas.map((a) => ({ id: a.id, name: a.name, market: a.parent_id })) };
-}
-
 export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
@@ -785,6 +785,13 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
   return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai };
+}
+
+/** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */
+export async function docDanhSachPhuong(client) {
+  const moiThiTruong = await docThiTruongCoPhuong(client);
+  const areas = await docPhuongHopLe(client, moiThiTruong);
+  return { moiThiTruong, phuong: areas.map((a) => ({ id: a.id, name: a.name, market: a.parent_id })) };
 }
 
 async function main() {
