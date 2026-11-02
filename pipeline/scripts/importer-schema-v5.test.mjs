@@ -118,7 +118,8 @@ test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone c�
 
 // MỞ LẠI 0211-7 đB: lượt LẤY SỐ (methods.hienSo) chỉ cập nhật seller — không
 // làm mới captured_at / payload (tin hết hạn không thành «vừa thấy»).
-test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ thêm seller", { timeout: 120_000 }, async () => {
+// 0211-8 (1)(2): item mỏng KHÔNG ghi null đè tên; item error KHÔNG xoá số đã có.
+test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ thêm seller; không đè tên, không xoá số", { timeout: 120_000 }, async () => {
   const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
   const c = new pg.Client({ connectionString: DB_URL });
   const dirThuong = dirSnapshot([{
@@ -132,6 +133,13 @@ test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ 
     payload: { list_id: 999888777 }, // item MỎNG của lượt số
     seller: { ...SELLER_V5, displayName: null },
   }], { finishedAt: "2026-11-02T10:05:00Z", hienSo: 1 });
+  // lượt số THỨ HAI lỗi trang (phone null, phoneStatus error) — thử lại sau
+  const dirSoLoi = dirSnapshot([{
+    source: "chotot-ads", sourceId: "999888777", kind: "listing",
+    fetchedAt: "2026-11-02T11:00:00Z",
+    payload: { list_id: 999888777 },
+    seller: { accountRef: "S06:777001", displayName: null, phone: null, phoneStatus: "error", seenAt: "2026-11-02T11:00:00Z" },
+  }], { finishedAt: "2026-11-02T11:05:00Z", hienSo: 1 });
   await c.connect();
   try {
     await c.query("BEGIN");
@@ -140,15 +148,24 @@ test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ 
     const truoc = (await c.query("SELECT captured_at, payload->>'full_name' AS fn, subject FROM stg_chotot_ads WHERE list_id = $1", [999888777])).rows[0];
     await importDir(c, dirSo);
     const sau = (await c.query(
-      "SELECT captured_at, payload->>'full_name' AS fn, subject, seller->>'phone' AS phone FROM stg_chotot_ads WHERE list_id = $1",
+      "SELECT captured_at, payload->>'full_name' AS fn, subject, seller->>'phone' AS phone, seller->>'full_name' AS ten FROM stg_chotot_ads WHERE list_id = $1",
       [999888777])).rows[0];
     assert.equal(String(sau.captured_at), String(truoc.captured_at), "lượt số KHÔNG làm mới captured_at");
     assert.equal(sau.fn, truoc.fn, "payload không bị ghi đè bằng bản mỏng");
     assert.equal(sau.subject, truoc.subject);
     assert.equal(sau.phone, "+84901234567", "số vẫn vào cột seller");
+    assert.equal(sau.ten, "Môi giới A", "0211-8(1): item mỏng KHÔNG ghi null đè tên người bán đang có");
+    await importDir(c, dirSoLoi);
+    const sauLoi = (await c.query(
+      "SELECT seller->>'phone' AS phone, seller->>'phoneStatus' AS ps, seller->>'full_name' AS ten FROM stg_chotot_ads WHERE list_id = $1",
+      [999888777])).rows[0];
+    assert.equal(sauLoi.phone, "+84901234567", "0211-8(2): item error phone-null KHÔNG xoá số đã nạp");
+    assert.equal(sauLoi.ps, "error", "phoneStatus vẫn ghi được trạng thái lỗi");
+    assert.equal(sauLoi.ten, "Môi giới A", "tên vẫn còn nguyên sau lượt lỗi");
   } finally {
     rmSync(dirThuong, { recursive: true, force: true });
     rmSync(dirSo, { recursive: true, force: true });
+    rmSync(dirSoLoi, { recursive: true, force: true });
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
   }

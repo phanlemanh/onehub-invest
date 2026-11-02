@@ -238,10 +238,8 @@ async function main() {
     }
   }
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
-  try {
-    const { execFile } = await import("node:child_process");
-    execFile("osascript", ["-e", 'tell application "Google Chrome" to set minimized of every window to true'], () => {});
-  } catch { /* thiếu quyền thì thôi — cửa sổ đã mở ẩn nhờ -h */ }
+  // 0211-8: KHÔNG osascript "every window" — đụng mọi cửa sổ Chrome của máy;
+  // cửa sổ bộ thu đã ẩn nhờ -h và nằm ngoài màn hình nhờ --window-position.
 
   const ketQua = { co_so: 0, khac_so: 0 };
   const errors = {};

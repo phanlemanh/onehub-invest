@@ -132,9 +132,20 @@ export async function importDir(client, dir) {
     const seller = { full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) };
     if (it.seller && typeof it.seller === "object") Object.assign(seller, it.seller);
     if (sellerOnly) {
+      // 0211-8 (1)(2): item lượt số MỎNG (payload chỉ list_id) — chỉ gộp
+      // it.seller: có phone thì ghi {phone, phoneStatus, accountRef, seenAt};
+      // KHÔNG phone (error) thì chỉ {phoneStatus} — không mang khoá phone/
+      // accountRef để không ghi null đè TÊN đang có và không XOÁ số đã nạp
+      // từ lần thử trước. full_name/company_ad không bao giờ từ lượt số.
+      const s = it.seller ?? {};
+      const goi = s.phone
+        ? { phone: s.phone, phoneStatus: s.phoneStatus ?? "available",
+            ...(s.accountRef ? { accountRef: s.accountRef } : {}),
+            ...(s.seenAt ? { seenAt: s.seenAt } : {}) }
+        : { phoneStatus: s.phoneStatus ?? "error" };
       await client.query(
         `UPDATE stg_chotot_ads SET seller = COALESCE(seller, '{}'::jsonb) || $2::jsonb WHERE list_id = $1`,
-        [a.list_id, JSON.stringify(seller)],
+        [a.list_id, JSON.stringify(goi)],
       );
       n++;
       continue;
