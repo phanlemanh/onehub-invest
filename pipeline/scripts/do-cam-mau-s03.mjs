@@ -69,7 +69,9 @@ async function demThuoc(c, m, { noiTheo = "conversation_id" } = {}) {
   const hn = (await docPhuongHopLe(c, ["vn-hanoi"])).map((a) => bare(a.name));
   const hcm = (await docPhuongHopLe(c, ["vn-hcmc"])).map((a) => bare(a.name));
   const sach = (t, khac) => khac.every((k) => !k.includes(t) && !t.includes(k));
-  const chiHcm = hcm.filter((t) => t.length >= 4 && sach(t, hn));
+  // Tên phường trùng hướng nhà («Tây Nam»): chữ bài thường là hướng, s03-va-doc-tin AC-3 không đọc thành phường nếu không gọi đích danh.
+  const laHuong = (t) => /^(?:đông|tây|nam|bắc)(?:\s+(?:nam|bắc))?$/u.test(t);
+  const chiHcm = hcm.filter((t) => t.length >= 4 && sach(t, hn) && !laHuong(t));
   const coTen = (text, ds) => { const l = text.normalize("NFC").toLowerCase(); return ds.some((t) => l.includes(t)); };
 
   let thue = 0, ban = 0, url = 0, maxNd = 0, qua10NhieuNguoi = 0, coTenBan = 0, hcmSai = 0;
