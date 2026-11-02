@@ -5,6 +5,7 @@ import { Badge } from "@/components/reui/badge";
 import { DealSeenNote } from "@/components/ops/deal-seen-note";
 import { type DealRow, dealMediaSrc } from "@/lib/deals";
 import { fmtInt } from "@/lib/format";
+import { fmtPhone } from "@/lib/ops/people";
 
 function fmtPrice(v: number | null) {
   if (v === null) return "—";
@@ -22,11 +23,6 @@ function confBadge(c: string) {
 // Ops chỉ hiện mã nguồn (SPL tầng B) — tên nguồn thật là tầng A.
 function sourceBadge(s: string) {
   return <Badge variant="outline">{s}</Badge>;
-}
-
-/** SĐT lưu số gốc E.164 (SD3): +84973034567 → 0973 034 567 — dễ đọc khi gọi; dạng 0… đời trước vẫn tách nhóm. */
-export function fmtPhone(p: string) {
-  return p.replace(/^(?:\+84|0)(\d{3})(\d{3})(\d{3})$/, "0$1 $2 $3");
 }
 
 /**

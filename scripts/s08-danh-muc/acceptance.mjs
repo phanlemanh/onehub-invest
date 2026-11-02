@@ -98,7 +98,7 @@ async function modeNapHaiLan() {
     check(Number(by["GIA-A-01"]?.land_area) === 100.5 && Number(by["GIA-A-01"]?.number_of_room) === 2, "chuỗi số hợp lệ đổi được ('100,5' → 100.5, '2' → 2)");
     check(by["GIA-A-02"]?.number_of_room === null && by["GIA-A-02"]?.land_area === null, "should-NOT-fire: 'S' và '' về NULL, không thành số");
     check(by["GIA-A-03"]?.number_of_room === null && by["GIA-A-03"]?.apartment_price === null, "should-NOT-fire: '2PN' và giá rác về NULL");
-    check(/0 S08 căn|S08 căn/.test(out1) && /\+1 detail bỏ/.test(out1), "log lượt 1 đếm căn và 1 detail bỏ");
+    check(/0 S08 căn|S08 căn/.test(out1) && /\+1 detail, \+\d+ catalog bỏ/.test(out1), "log lượt 1 đếm căn và detail/catalog bỏ (2610-22 định dạng mới)");
     const r2 = run(dir);
     const out2 = r2.stdout + r2.stderr;
     console.log(`lượt 2: exit ${r2.status} · ${(out2.match(/(\d+) S08 căn/) ?? ["?"])[0]}`);
@@ -202,7 +202,16 @@ function modeKhongLoNguon() {
   const khop = mau.filter((m) => tapThem.includes(m));
   console.log(`chuỗi nguồn thật khớp trong dòng thêm: ${khop.length}`);
   check(khop.length === 0, "should-NOT-fire: không chuỗi nào của nguồn thật (tên/mã dự án, mã căn, đường dẫn API) trong dòng thêm");
-  const url = them.filter((l) => /https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(l));
+  // Mạnh duyệt 02/11: miễn ĐÚNG URL DTD của plist launchd, so nguyên URL chứ không xoá chuỗi con.
+  // Tách tại mỗi lần xuất hiện scheme, để URL ngoài dính sau URL được miễn vẫn bị soát.
+  const DTD_PLIST = "http://www.apple.com/DTDs/PropertyList-1.0.dtd";
+  const coUrlNgoai = (l) => (l.match(/https?:\/\/(?:(?!https?:\/\/)[^\s"'`<>])+/gi) ?? []).filter((u) => u !== DTD_PLIST).some((u) => /^https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(u));
+  check(!coUrlNgoai(`+<!DOCTYPE plist "${DTD_PLIST}">`), "URL DTD plist được miễn");
+  // tách "http:" khỏi "//" để chính các dòng đối chứng không bị bộ dò bắt
+  for (const la of [`${"http:"}//www.apple.com/DTDs/khac.dtd`, `${DTD_PLIST}x`, `${DTD_PLIST}?q=1`, `${DTD_PLIST}.nguon-gia.example.com/api`, `${DTD_PLIST}@nguon-gia.example.com/api`, `${"http:"}//localhost:3000,${"http:"}//nguon-gia.example.com/api`, `${"http:"}//testbase?u=${"http:"}//nguon-gia.example.com/api`, `${DTD_PLIST},${"http:"}//nguon-gia.example.com/api`]) {
+    check(coUrlNgoai(`+ ${la}`), "should-NOT-fire: URL khác URL DTD vẫn bị bắt");
+  }
+  const url = them.filter(coUrlNgoai);
   console.log(`dòng thêm có URL ngoài máy: ${url.length}`);
   check(url.length === 0, "should-NOT-fire: không URL tên miền ngoài trong dòng thêm");
   const fx = JSON.parse(readFileSync(join(ROOT, "collector/src/test/fixtures/s08-ocp2.json"), "utf8"));

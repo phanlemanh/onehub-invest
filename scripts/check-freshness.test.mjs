@@ -25,7 +25,7 @@ const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@local
 
 const NOW = new Date("2026-10-23T12:00:00Z");
 const ago = (h) => new Date(NOW.getTime() - h * 3.6e6).toISOString();
-const TABLES = ["source_registry", "airbnb_snapshots", "airdna_markets", "stg_zalo_posts", "stg_chotot_ads"];
+const TABLES = ["source_registry", "airbnb_snapshots", "airdna_markets", "stg_zalo_posts", "stg_chotot_ads", "stg_s08_inventory"];
 const CANARY = "REALNAME-CANARY";
 // source_ids canh — không literal nguồn thật nào trong tệp này
 const IDS = {
@@ -35,6 +35,7 @@ const IDS = {
   S04: ["canary-s04"],
   S05: ["canary-s05"],
   S06: ["canary-s06"],
+  S08: ["canary-s08"],
 };
 const ALL_IDS = Object.values(IDS).flat();
 
@@ -66,6 +67,7 @@ function baseFixture() {
       { code: "S04", status: "completed", ids: IDS.S04 },
       { code: "S05", status: "active", ids: IDS.S05 },
       { code: "S06", status: "active", ids: IDS.S06 },
+      { code: "S08", status: "active", ids: IDS.S08 },
     ],
     snapshots: [
       { id: "hanoi__s01a__1", city: "hanoi", source: IDS.S01[0], at: ago(24 * 9) },
@@ -78,6 +80,7 @@ function baseFixture() {
       { id: "hanoi__s03mock__1", city: "hanoi", source: IDS.S03[1], at: ago(24 * 5) },
       { id: "hanoi__s06__1", city: "hanoi", source: IDS.S06[0], at: ago(10) },
       { id: "hcmc__s06__1", city: "hcmc", source: IDS.S06[0], at: ago(10) },
+      { id: "vn__s08__1", city: "vn", source: IDS.S08[0], at: ago(2) },
     ],
     airdna: [{ id: "m1", country: "vn", at: ago(48) }],
     posts: [
@@ -89,13 +92,14 @@ function baseFixture() {
       { id: 1, snap: "hanoi__s06__1", at: ago(10) },
       { id: 2, snap: "hcmc__s06__1", at: ago(10) },
     ],
+    s08: [{ id: "s08u1", snap: "vn__s08__1", at: ago(2) }],
   };
 }
 
 /** Dời giờ THU của một snapshot (và giờ nạp các hàng của nó theo cùng mốc) — tuổi tính theo snapshot. */
 function ageSnapshot(f, id, at) {
   f.snapshots.find((s) => s.id === id).at = at;
-  for (const r of [...f.posts, ...f.ads]) if (r.snap === id) r.at = at;
+  for (const r of [...f.posts, ...f.ads, ...(f.s08 ?? [])]) if (r.snap === id) r.at = at;
   return f;
 }
 
@@ -121,6 +125,10 @@ async function seed(c, schema, f) {
   for (const a of f.ads) {
     await q(`INSERT INTO §.stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id, captured_at)
              VALUES ($1, 0, 'x', 0, 's', '{}', $2, $3)`, [a.id, a.snap, a.at]);
+  }
+  for (const u of f.s08 ?? []) {
+    await q(`INSERT INTO §.stg_s08_inventory (source_id, snapshot_id, project_id, state, product_code, payload)
+             VALUES ($1, $2, 'p1', 'notSold', 'x', '{}')`, [u.id, u.snap]);
   }
 }
 
@@ -217,7 +225,7 @@ describe("AC-5 SLO", () => {
     assert.deepEqual(rows.filter((r) => r.code === "S07").map((r) => r.status), ["no-slo"], "mã active chưa khai SLO phải ra đúng một no-slo");
   });
   test("AC-5 bảng SLO đúng năm giá trị giờ", () => {
-    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 });
+    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 });
   });
 });
 
@@ -495,6 +503,7 @@ const EDGE = [
   ["S03", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s03agent__1").at = ago(h); f.snapshots.find((x) => x.id === "hanoi__s03mock__1").at = ago(400); }],
   ["S05", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = ago(h); }],
   ["S06", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s06__1").at = ago(h); }],
+  ["S08", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s08__1").at = ago(h); }],
 ];
 let edgeRan = 0;
 describe("GT-AC-4 ma trận biên SLO", () => {
@@ -510,9 +519,9 @@ describe("GT-AC-4 ma trận biên SLO", () => {
       });
     }
   }
-  test("GT-AC-4 ma trận biên đủ 10 ca", () => {
+  test("GT-AC-4 ma trận biên đủ 12 ca", () => {
     assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(SLO_HOURS).sort(), "ma trận phải phủ đúng mọi mã có SLO");
-    assert.equal(edgeRan, 10, `chỉ ${edgeRan}/10 ca biên đã chạy tới cuối`);
+    assert.equal(edgeRan, 12, `chỉ ${edgeRan}/12 ca biên đã chạy tới cuối`);
   });
 });
 
@@ -533,6 +542,7 @@ const TIME_MATRIX = {
   S03: "airbnb_snapshots.collected_at",
   S05: "airbnb_snapshots.collected_at",
   S06: "airbnb_snapshots.collected_at",
+  S08: "airbnb_snapshots.collected_at",
 };
 /** Cột mà SQL của probe thật sự lấy max — giải bí danh bảng từ FROM/JOIN. Trả danh sách lỗi có tên mã. */
 function timeColumnProblems(probes, declared) {

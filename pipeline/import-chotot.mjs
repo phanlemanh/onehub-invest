@@ -55,6 +55,12 @@ async function readSnapshot(dir) {
     console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
     process.exit(0);
   }
+  // 2510-34: manifest thiếu finishedAt → captured_at NULL, và từ vòng 2510-6
+  // dòng đó ĐÓNG BĂNG vĩnh viễn (WHERE EXCLUDED.captured_at >= NULL luôn sai).
+  // Từ chối nạp (exit ≠0, log rõ) thay vì sinh dòng NULL — khuyến nghị lời giao.
+  if (typeof manifest.finishedAt !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(manifest.finishedAt)) {
+    throw new Error(`manifest thiếu finishedAt (có: ${JSON.stringify(manifest.finishedAt)}) — snapshot hỏng, từ chối nạp: ${dir}`);
+  }
   for (const f of manifest.files) {
     const buf = await readFile(join(dir, f.name));
     const sha = createHash("sha256").update(buf).digest("hex");
@@ -71,6 +77,8 @@ async function readSnapshot(dir) {
 // KHÔNG LÙI NỘI DUNG — WHERE chặn CẢ lệnh update khi snapshot nạp vào cũ hơn
 // dòng hiện có (price/payload/snapshot_id/captured_at giữ nguyên bản mới);
 // bằng mốc (nạp lại cùng snapshot) thì cập nhật như cũ — idempotent.
+// 2510-34: OR ... IS NULL — dòng captured_at NULL (di sản manifest thiếu mốc
+// trước guard 2510-34) vẫn CẬP NHẬT được bằng snapshot có mốc, hết đóng băng.
 // 2410-1 v2: captured_at = giờ thu snapshot (airbnb_snapshots.collected_at).
 export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, subject,
                               price, price_string, size_m2, rooms, toilets, house_type,
@@ -84,7 +92,8 @@ export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_
    seller = EXCLUDED.seller, images = EXCLUDED.images,
    payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
    captured_at = EXCLUDED.captured_at
- WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at`;
+ WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at
+    OR stg_chotot_ads.captured_at IS NULL`;
 
 async function importDir(client, dir) {
   const { manifest, items } = await readSnapshot(dir);

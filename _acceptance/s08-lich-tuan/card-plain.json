@@ -1,0 +1,9 @@
+{
+ "feature_plain": "Danh mục dự án S08 tự thu đúng một lần mỗi tuần, và Ops báo khi dữ liệu cũ quá 8 ngày.",
+ "decisions_plain": [
+  {
+   "id": "d-20261102T020802Z-g1",
+   "p": "KHÔNG chạy lượt phản biện riêng trước khi làm — đổi lại dựa vào review nhánh và các ca đối chứng âm trong tiêu chí."
+  }
+ ]
+}
