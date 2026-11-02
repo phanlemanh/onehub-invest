@@ -3007,6 +3007,72 @@
         "app/tests/review-nguoi*"
       ],
       "ghi_chu": "Hàng phát sinh từ Hỏi-1 của Cổng Phạm vi HD13 (giám sát P3-138, giao dãy U2 sau HD13). Đứng trên luật một–một của HD13: thẻ chỉ cho ca HD13 đếm mà không gộp."
+    },
+    {
+      "ma": "SV1",
+      "slug": "s03-va-doc-tin",
+      "cau_giao": "Vá hẹp bộ đọc tin S03 trong pipeline/transform-zalo.mjs: diện tích có phẩy, phòng ngủ viết tắt, tắt khớp phường theo hướng, số ngữ cảnh không phải giá, «thuê ≥ 1 tỷ» thành bán thay vì vứt, giá che số, giá không đơn vị (làm sau cùng, có test riêng); lưu toà và trục qua phát biểu có sẵn, không migration",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Audit S03 02/11: 43% ô hỏng do bộ đọc, 33% đọc được mà không lưu; luật sửa được 87% lỗi giá, diện tích, phòng ngủ trên mẫu.",
+      "hang": "T2",
+      "dung_tren": [],
+      "bat_khi": "Trên tập nhãn của audit: phòng ngủ đúng ≥ 90%, không còn diện tích sai do dấu phẩy, không còn phường đọc nhầm từ hướng; giá không đơn vị không làm tụt giá đúng so với trước",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Mạnh chốt làm hết, hai PR tách nhau (02/11, phiên audit S03). Căn cứ docs/research/s03-audit-trich-xuat-0211.md §8, §10. Là lát hẹp của PL13 và PL17, làm trước mà không đóng hai hàng đó, không chờ PL6, PL15. Sau hàng này tin S03 tới căn vẫn 0, việc đó là PL20.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/parse.test.mjs",
+        "docs/research/s03-audit-trich-xuat-0211.md"
+      ]
+    },
+    {
+      "ma": "SV2",
+      "slug": "s03-luu-tang-huong",
+      "cau_giao": "Lưu tầng và hướng của tin S03 bằng migration mới: thêm floor_raw vào field_assertions_field_chk, thêm trường hướng kèm nhãn «của cái gì» (ban công, cửa, không nói), nhiều giá trị",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "vi_sao": "Audit S03 02/11: mô phỏng 29% tin có hướng, 7% có khoảng tầng, hiện không có chỗ lưu.",
+      "hang": "T3",
+      "dung_tren": [
+        "SV1"
+      ],
+      "bat_khi": "Tầng và hướng đọc được đi tới phát biểu của tin; trường hướng khai đủ 6 điều kiện ADR-0011 vì DirectionFaces không dùng được",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Mạnh chốt cách lưu hướng một trường kèm nhãn (02/11). Migration số 067. Không cản ra mắt 05/11: chưa kịp thì sang sau.",
+      "vung": [
+        "db/migrations/067*",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/mappings.yaml",
+        "docs/architecture/reso-khung-phan-loai.md"
+      ]
+    },
+    {
+      "ma": "TR1",
+      "slug": "tin-rao-tren-invest",
+      "cau_giao": "Đưa người bán lên cloud, mở API tin rao công khai và tab tin rao ở /vn/[market]/listings; kênh thiếu SĐT phải hiện cảnh báo thiếu",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Mạnh chốt 02/11: tin rao công khai, tên và SĐT người bán lên cloud và cổng Invest; đây là giá trị cho nhà đầu tư tìm căn.",
+      "hang": "T3",
+      "dung_tren": [],
+      "bat_khi": "Trên cloud: nhà đầu tư tìm được tin rao và liên hệ được người bán; tin thiếu SĐT ghi rõ là thiếu; không lộ tên nguồn thật",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Căn cứ docs/research/kiem-tin-dau-ra-toan-thi-truong-0211.md §10.5. Thu người bán và SĐT là làn ZCode và Mạnh. Kiểm trên cloud sau lượt nạp lại S03 của SV1, vì lượt đó làm 223 offer_id nghỉ và 425 mọc (mô phỏng).",
+      "vung": [
+        "pipeline/sync-cloud.mjs",
+        "app/src/app/api/v1/offers/**",
+        "app/src/lib/api-surface.ts",
+        "scripts/check-api-surface.mjs",
+        "app/src/components/listing/**",
+        "app/src/app/(app)/[country]/[market]/listings/**"
+      ]
     }
   ],
   "chan_troi": [
