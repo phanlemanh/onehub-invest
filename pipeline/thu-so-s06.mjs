@@ -94,24 +94,26 @@ async function docViec(client, state) {
   const rows = (await client.query(q)).rows;
   const daTh = (id) => state.da_thu[id] && state.da_thu[id].phone !== undefined;
   if (PHASE === 1) {
-    const viec = [];
-    for (const r of rows) {
-      if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
-    }
-    // mẫu đo «một tài khoản một số»: tin thứ 2 của N tài khoản nhiều tin nhất
+    // MỞ LẠI 0211-7 đC: mẫu đo «một tài khoản một số» xếp ĐẦU pha 1 (lượt 30′
+    // không bao giờ tới cuối danh sách) — tin thứ 2 của N tài khoản nhiều tin nhất.
+    const mau = [];
     let n = 0;
     for (const r of rows) {
       if (r.list_id2 && !daTh(r.list_id2) && n < MAU) {
-        viec.push({ ...r, list_id: r.list_id2, mau: true });
+        mau.push({ ...r, list_id: r.list_id2, mau: true });
         n++;
       }
+    }
+    const viec = [...mau];
+    for (const r of rows) {
+      if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
     }
     return viec;
   }
   // pha 2: mọi tin không ẩn chưa có số
   const q2 = `
     SELECT list_id, area_name AS area, payload->>'region_name' AS region, ad_type AS st,
-           (payload->>'account_id') AS account_id
+           (payload->>'account_id') AS account_id, city_code
     FROM stg_chotot_ads
     WHERE (payload->>'phone_hidden') IS DISTINCT FROM 'true'
     ORDER BY list_time DESC`;
@@ -203,7 +205,8 @@ async function laySoTrang(context, viec) {
 }
 
 async function main() {
-  console.log(`[thu-so-s06] pha ${PHASE} · luồng ${THREADS} · cửa sổ ${MINUTES}′ · web=${WEB_BASE.replace(/https?:\/\//, "«che»")}`);
+  // MỞ LẠI 0211-7 đD: che cả tên miền trong log (tầng A — không vào nac*.log)
+  console.log(`[thu-so-s06] pha ${PHASE} · luồng ${THREADS} · cửa sổ ${MINUTES}′ · web=«che»`);
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   const state = await docState();
@@ -242,7 +245,6 @@ async function main() {
   let chanLienTiep = 0;
   let thu = 0;
   let iViec = 0;
-  const cityCua = {};
 
   async function motLuong(idx) {
     const context = contexts[idx % contexts.length];
@@ -273,33 +275,28 @@ async function main() {
       }
       state.da_thu[v.list_id] = { phone: kq.phone ?? null, status: kq.status, at: new Date().toISOString(), ms };
 
-      // item v5 — payload ĐỦ từ stg (UPSERT ghi đè nhiều cột; payload mỏng sẽ NULL hoá)
-      if (kq.phone || kq.status === "het-han" || kq.status === "khong-nut") {
-        const p = await client
-          .query("SELECT payload, city_code FROM stg_chotot_ads WHERE list_id = $1", [v.list_id])
-          .then((r) => r.rows[0])
-          .catch(() => null);
-        if (p) {
-          cityCua[v.list_id] = p.city_code;
-          batch.push({
-            source: "chotot-ads",
-            sourceId: `ct-${v.list_id}`,
-            kind: "ad",
-            fetchedAt: new Date().toISOString(),
-            payload: p.payload,
-            seller: {
-              accountRef: v.account_id ? `S06:${v.account_id}` : null,
-              displayName: p.payload?.account_name ?? p.payload?.full_name ?? null,
-              phone: kq.phone ?? null,
-              phoneStatus: kq.phone ? "available" : kq.status === "het-han" ? "hidden_by_source" : "not_tried",
-              seenAt: new Date().toISOString(),
-            },
-          });
+      // item v5 MỎNG (MỞ LẠI 0211-7 đB): lượt lấy số chỉ mang list_id + seller —
+      // importer đường seller-only KHÔNG đụng captured_at/payload/cột khác.
+      // Lỗi trang (het-han/khong-nut) là `error` theo hợp đồng, không phải hidden_by_source.
+      if (kq.phone || kq.status === "het-han" || kq.status === "khong-nut" || kq.status === "trang-khac") {
+        batch.push({
+          source: "chotot-ads",
+          sourceId: `ct-${v.list_id}`,
+          kind: "ad",
+          fetchedAt: new Date().toISOString(),
+          payload: { list_id: v.list_id },
+          seller: {
+            accountRef: v.account_id ? `S06:${v.account_id}` : null,
+            displayName: null,
+            phone: kq.phone ?? null,
+            phoneStatus: kq.phone ? "available" : "error",
+            seenAt: new Date().toISOString(),
+          },
+        });
+        if (batch.length >= 500) {
+          const sid = await ghiSnapshot(batch.splice(0, 500), v.city_code ?? "vn");
+          console.log(`flush 500 → ${sid}`);
         }
-      }
-      if (batch.length >= 500) {
-        const sid = await ghiSnapshot(batch.splice(0, 500), Object.values(cityCua)[0]);
-        console.log(`flush 500 → ${sid}`);
       }
       if (thu % 25 === 0) {
         await ghiState(state);
@@ -313,7 +310,7 @@ async function main() {
   await Promise.all(Array.from({ length: THREADS }, (_, i) => motLuong(i)));
   await ghiState(state);
   if (batch.length > 0) {
-    const sid = await ghiSnapshot(batch, Object.values(cityCua)[0]);
+    const sid = await ghiSnapshot(batch, "vn");
     console.log(`flush cuối ${batch.length} → ${sid}`);
   }
   await browser.close().catch(() => {});

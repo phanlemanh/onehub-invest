@@ -34,16 +34,17 @@ const PAYLOAD_V5 = { list_id: 999888777, region_v2: "808", region_name: "hanoi",
   category: 1000, type: "s", account_id: 777001, account_name: "Môi giới A",
   full_name: "Môi giới A", seller_info: { live_ads: 3 } };
 
-function dirSnapshot(items, { schemaVersion = 5 } = {}) {
+function dirSnapshot(items, { schemaVersion = 5, finishedAt = "2026-11-02T08:05:00Z", hienSo = 0 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "ct-v5-"));
   const gz = gzipSync(Buffer.from(JSON.stringify(items)));
   const sha = createHash("sha256").update(gz).digest("hex");
   writeFileSync(join(dir, "items-0001.json.gz"), gz);
   writeFileSync(join(dir, "manifest.json"), JSON.stringify({
-    schemaVersion, snapshotId: "hanoi__chotot-ads__20261102T080000000",
+    schemaVersion, snapshotId: `hanoi__chotot-ads__${finishedAt.replace(/[-:]/g, "").slice(0, 17)}`,
     city: "hanoi", source: "chotot-ads",
-    startedAt: "2026-11-02T08:00:00Z", finishedAt: "2026-11-02T08:05:00Z",
+    startedAt: "2026-11-02T08:00:00Z", finishedAt,
     counts: { items: items.length, failed: 0 },
+    coverage: { discovered: items.length, captured: items.length, failed: 0, methods: hienSo ? { hienSo } : { gatewayApi: items.length } },
     files: [{ name: "items-0001.json.gz", sha256: sha, bytes: gz.length }],
   }));
   return dir;
@@ -77,44 +78,77 @@ test("readSnapshot: v6 chưa khai vẫn bị từ chối rõ ràng", async () =>
   }
 });
 
-// MỞ LẠI 0211-1 đ1 (điểm CHẶN): importDir phải gộp RawItem.seller vào cột
-// seller có sẵn của stg_chotot_ads — không thì SĐT thu về mất ở bước nạp. Chạy
-// importDir THẬT trên lược đồ tạm (luoc-do-rieng — bản chép rỗng chỉ đủ bảng,
-// BEGIN…ROLLBACK không chạm public), đọc lại dòng trong bảng.
-test("importDir: it.seller gộp vào cột seller stg_chotot_ads; snapshot không seller ra như cũ", { timeout: 120_000 }, async () => {
+// MỞ LẠI 0211-7 đA: lượt thu THƯỜNG (không seller v5) nạp SAU lượt có số phải
+// KHÔNG xoá phone/phoneStatus/accountRef/seenAt đã có — phần mô tả vẫn mới.
+test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone còn nguyên, mô tả lấy bản mới", { timeout: 120_000 }, async () => {
   const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
   const c = new pg.Client({ connectionString: DB_URL });
-  const dirMoi = dirSnapshot([{
+  const dirSo = dirSnapshot([{
     source: "chotot-ads", sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T08:00:00Z",
     payload: PAYLOAD_V5, seller: SELLER_V5,
-  }]);
-  // Cùng list_id, KHÔNG seller — đường v4 cũ phải ra giá trị y như trước v5
-  const dirCu = dirSnapshot([{
+  }], { finishedAt: "2026-11-02T08:05:00Z" });
+  const dirThuong = dirSnapshot([{
     source: "chotot-ads", sourceId: "999888777", kind: "listing",
-    fetchedAt: "2026-11-02T07:00:00Z",
-    payload: { ...PAYLOAD_V5, account_id: undefined },
-  }], { schemaVersion: 4 });
+    fetchedAt: "2026-11-02T09:00:00Z",
+    payload: { ...PAYLOAD_V5, full_name: "Môi giới B", seller_info: { live_ads: 9 } },
+  }], { schemaVersion: 4, finishedAt: "2026-11-02T09:05:00Z" }); // lượt danh sách bình thường, mới hơn
   await c.connect();
   try {
     await c.query("BEGIN");
-    await luocDoRieng(c, ["stg_chotot_ads", "airbnb_snapshots"], { tienTo: "v5_import" });
-    // Nạp bản CŨ trước (không seller) rồi bản MỚI (có seller) — cùng list_id
-    await importDir(c, dirCu);
-    const cu = (await c.query("SELECT seller FROM stg_chotot_ads WHERE list_id = $1", [999888777])).rows[0];
-    assert.deepEqual(cu.seller, { full_name: "Môi giới A", company_ad: null, live_ads: 3 },
-      "snapshot không seller → giá trị y hệt trước v5");
-    await importDir(c, dirMoi);
-    const moi = (await c.query(
-      "SELECT seller->>'phone' AS phone, seller->>'accountRef' AS ref, seller->>'displayName' AS ten, seller->>'live_ads' AS live FROM stg_chotot_ads WHERE list_id = $1",
+    await luocDoRieng(c, ["stg_chotot_ads", "airbnb_snapshots"], { tienTo: "v5_dA" });
+    await importDir(c, dirSo);
+    await importDir(c, dirThuong);
+    const r = (await c.query(
+      "SELECT seller->>'phone' AS phone, seller->>'phoneStatus' AS ps, seller->>'accountRef' AS ref, seller->>'full_name' AS fn, seller->>'live_ads' AS live, captured_at FROM stg_chotot_ads WHERE list_id = $1",
       [999888777])).rows[0];
-    assert.equal(moi.phone, "+84901234567", "SĐT phải vào cột seller — điểm chặn vòng 1");
-    assert.equal(moi.ref, "S06:777001");
-    assert.equal(moi.ten, "Môi giới A");
-    assert.equal(moi.live, "3", "trường seller_info cũ vẫn giữ khi gộp");
+    assert.equal(r.phone, "+84901234567", "lượt thường mới hơn KHÔNG được xoá phone đã nạp");
+    assert.equal(r.ps, "available");
+    assert.equal(r.ref, "S06:777001");
+    assert.equal(r.fn, "Môi giới B", "phần mô tả lấy bản mới");
+    assert.equal(r.live, "9");
+    assert.ok(new Date(r.captured_at).toISOString().startsWith("2026-11-02T09:05"), "lượt thường vẫn cập nhật captured_at như luật cũ");
   } finally {
-    rmSync(dirMoi, { recursive: true, force: true });
-    rmSync(dirCu, { recursive: true, force: true });
+    rmSync(dirSo, { recursive: true, force: true });
+    rmSync(dirThuong, { recursive: true, force: true });
+    await c.query("ROLLBACK").catch(() => {});
+    await c.end();
+  }
+});
+
+// MỞ LẠI 0211-7 đB: lượt LẤY SỐ (methods.hienSo) chỉ cập nhật seller — không
+// làm mới captured_at / payload (tin hết hạn không thành «vừa thấy»).
+test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ thêm seller", { timeout: 120_000 }, async () => {
+  const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+  const c = new pg.Client({ connectionString: DB_URL });
+  const dirThuong = dirSnapshot([{
+    source: "chotot-ads", sourceId: "999888777", kind: "listing",
+    fetchedAt: "2026-11-02T07:00:00Z",
+    payload: { ...PAYLOAD_V5 },
+  }], { schemaVersion: 4, finishedAt: "2026-11-02T07:05:00Z" });
+  const dirSo = dirSnapshot([{
+    source: "chotot-ads", sourceId: "999888777", kind: "listing",
+    fetchedAt: "2026-11-02T10:00:00Z",
+    payload: { list_id: 999888777 }, // item MỎNG của lượt số
+    seller: { ...SELLER_V5, displayName: null },
+  }], { finishedAt: "2026-11-02T10:05:00Z", hienSo: 1 });
+  await c.connect();
+  try {
+    await c.query("BEGIN");
+    await luocDoRieng(c, ["stg_chotot_ads", "airbnb_snapshots"], { tienTo: "v5_dB" });
+    await importDir(c, dirThuong);
+    const truoc = (await c.query("SELECT captured_at, payload->>'full_name' AS fn, subject FROM stg_chotot_ads WHERE list_id = $1", [999888777])).rows[0];
+    await importDir(c, dirSo);
+    const sau = (await c.query(
+      "SELECT captured_at, payload->>'full_name' AS fn, subject, seller->>'phone' AS phone FROM stg_chotot_ads WHERE list_id = $1",
+      [999888777])).rows[0];
+    assert.equal(String(sau.captured_at), String(truoc.captured_at), "lượt số KHÔNG làm mới captured_at");
+    assert.equal(sau.fn, truoc.fn, "payload không bị ghi đè bằng bản mỏng");
+    assert.equal(sau.subject, truoc.subject);
+    assert.equal(sau.phone, "+84901234567", "số vẫn vào cột seller");
+  } finally {
+    rmSync(dirThuong, { recursive: true, force: true });
+    rmSync(dirSo, { recursive: true, force: true });
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
   }

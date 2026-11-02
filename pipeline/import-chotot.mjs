@@ -89,7 +89,19 @@ export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_
    price = EXCLUDED.price, price_string = EXCLUDED.price_string,
    size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
    ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
-   seller = EXCLUDED.seller, images = EXCLUDED.images,
+   -- MỞ LẠI 0211-7 đA: lượt thu THƯỜNG (payload không có seller v5) phải KHÔNG
+   -- xoá phone/phoneStatus/accountRef/seenAt đã nạp từ lượt lấy số — phần mô tả
+   -- (full_name, company_ad, seller_info) vẫn lấy bản mới, các khoá số người bán
+   -- giữ từ bản hiện có khi EXCLUDED không mang phone.
+   seller = CASE
+     WHEN EXCLUDED.seller->>'phone' IS NOT NULL THEN EXCLUDED.seller
+     ELSE (EXCLUDED.seller - 'phone' - 'phoneStatus' - 'accountRef' - 'seenAt')
+        || jsonb_strip_nulls(jsonb_build_object(
+             'phone', stg_chotot_ads.seller->'phone',
+             'phoneStatus', stg_chotot_ads.seller->'phoneStatus',
+             'accountRef', stg_chotot_ads.seller->'accountRef',
+             'seenAt', stg_chotot_ads.seller->'seenAt'))
+   END, images = EXCLUDED.images,
    payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
    captured_at = EXCLUDED.captured_at
  WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at`;
@@ -106,6 +118,10 @@ export async function importDir(client, dir) {
     [manifest.snapshotId, manifest.city, manifest.source, manifest.finishedAt, JSON.stringify(manifest)],
   );
 
+  // MỞ LẠI 0211-7 đB: lượt LẤY SỐ (coverage.methods.hienSo) nạp seller-ONLY —
+  // không làm mới captured_at / payload / cột khác: tin đã hết hạn không thành
+  // «vừa thấy», payload không bị ghi đè bằng bản mỏng của lượt số.
+  const sellerOnly = Number(manifest.coverage?.methods?.hienSo ?? 0) > 0;
   let n = 0;
   for (const it of items) {
     const a = it.payload;
@@ -115,6 +131,14 @@ export async function importDir(client, dir) {
     // trước v5 — không migration, cột jsonb đủ chỗ.
     const seller = { full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) };
     if (it.seller && typeof it.seller === "object") Object.assign(seller, it.seller);
+    if (sellerOnly) {
+      await client.query(
+        `UPDATE stg_chotot_ads SET seller = COALESCE(seller, '{}'::jsonb) || $2::jsonb WHERE list_id = $1`,
+        [a.list_id, JSON.stringify(seller)],
+      );
+      n++;
+      continue;
+    }
     await client.query(
       UPSERT_SQL,
       [
@@ -132,7 +156,7 @@ export async function importDir(client, dir) {
     );
     n++;
   }
-  console.log(`✅ ${n} ads → stg_chotot_ads`);
+  console.log(`✅ ${n} ads → stg_chotot_ads${sellerOnly ? " (lượt lấy số: chỉ cập nhật seller)" : ""}`);
   return n;
 }
 
