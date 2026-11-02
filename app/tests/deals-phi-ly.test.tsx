@@ -81,7 +81,7 @@ async function seed(c: pg.Client, gaps: (number | null)[]): Promise<string[]> {
   return ids;
 }
 
-/** Lược đồ cloud: sale_offers không có cột PII_EXCLUDE. Từ 044 (PL14) sale_offers là VIEW sống trên bảng bản ghi
+/** Lược đồ cloud: sale_offers không có cột PII_EXCLUDE (tin-rao-tren-invest đã mở tên, SĐT nên danh sách có thể rỗng). Từ 044 (PL14) sale_offers là VIEW sống trên bảng bản ghi
  *  sale_offer_records — xoá cột ở bảng thật; CASCADE kéo đổ view sống và hai view thước đọc qua nó, nên dựng lại đúng
  *  như 044 (view `SELECT *` chỉ hàng sống) và 034 (thước). DB trước 044 thì xoá thẳng trên bảng sale_offers. */
 // Mọi câu tra tên mang tên lược đồ riêng: CASCADE xoá view sellers của bản riêng, câu DROP không tên lược đồ sau đó
@@ -96,7 +96,7 @@ async function xoaCotPii(c: pg.Client, sc: string) {
     const cot = (CLOUD_ALLOW.sellers as string[]).map((x) => `"${x}"`).join(", ");
     await c.query(`CREATE TABLE ${sc}.sellers_cloud AS SELECT ${cot} FROM ${sc}.sellers`);
   }
-  for (const col of PII_EXCLUDE.sale_offers as string[]) {
+  for (const col of (PII_EXCLUDE as Record<string, string[]>).sale_offers ?? []) {
     await c.query(`ALTER TABLE ${sc}.${bang} DROP COLUMN ${col} CASCADE`);
   }
   if (sellersView) {

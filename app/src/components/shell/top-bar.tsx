@@ -36,6 +36,7 @@ interface TopBarProps {
 export function TopBar({ portal, user, searchEntries }: TopBarProps) {
   const pathname = usePathname()
   const sections = NAV_SECTIONS[portal]
+  const pinned = sections.filter((item) => item.pinned)
 
   return (
     <header className="flex w-full shrink-0 items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
@@ -59,7 +60,7 @@ export function TopBar({ portal, user, searchEntries }: TopBarProps) {
                 variant="ghost"
                 size="sm"
                 nativeButton={false}
-                render={<Link href={item.href} />}
+                render={<Link href={item.hrefFor?.(pathname) ?? item.href} />}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(NAV_ITEM, isActive ? NAV_ACTIVE : NAV_RESTING)}
               >
@@ -70,7 +71,7 @@ export function TopBar({ portal, user, searchEntries }: TopBarProps) {
           })}
         </nav>
 
-        {/* Dưới lg: các mục gập vào một menu. */}
+        {/* Dưới lg: mục ghim giữ ngoài, các mục còn lại gập vào một menu. */}
         <div className="flex items-center gap-0.5 lg:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -87,7 +88,7 @@ export function TopBar({ portal, user, searchEntries }: TopBarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={8} className="w-48">
               <DropdownMenuGroup>
-                {sections.map((item) => (
+                {sections.filter((item) => !item.pinned).map((item) => (
                   <DropdownMenuItem
                     key={item.id}
                     render={<Link href={item.href} />}
@@ -100,6 +101,26 @@ export function TopBar({ portal, user, searchEntries }: TopBarProps) {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          {pinned.length > 0 && (
+            <nav aria-label="Dịch vụ chính" className="flex items-center gap-0.5">
+              {pinned.map((item) => {
+                const isActive = item.match(pathname)
+                return (
+                  <Button
+                    key={item.id}
+                    variant="ghost"
+                    size="sm"
+                    nativeButton={false}
+                    render={<Link href={item.hrefFor?.(pathname) ?? item.href} />}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(NAV_ITEM, isActive ? NAV_ACTIVE : NAV_RESTING)}
+                  >
+                    {item.label}
+                  </Button>
+                )
+              })}
+            </nav>
+          )}
         </div>
       </div>
 

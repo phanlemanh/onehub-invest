@@ -7,8 +7,8 @@ import { pool } from "./db";
  * discount = % dưới giá rao công khai cùng phường (docs/research/
  * investment-pipeline-4-stages.md).
  *
- * Người bán trên tin rao là tầng C (ADR-0007 mục 9). Số gốc seller_phone ở lại máy thu (PII_EXCLUDE của
- * sync-cloud; ROADMAP §3 mục 24), nên bản cloud không có cột này. Broker chip join sellers registry (cũng ở máy thu).
+ * Người bán trên tin rao là tầng C (ADR-0007 mục 9). Bản cloud (`dealsSql({ cloud: true })`) không đọc liên hệ: Căn giá tốt
+ * vẫn chỉ hiện liên hệ ở máy thu. Broker chip join sellers registry (cũng ở máy thu).
  */
 export type DealRow = {
   offerId: string;
@@ -65,7 +65,7 @@ export function repostLabel(n: number | null | undefined): string {
  * Câu SQL của danh sách Căn giá tốt. Số giảm là `bait_gap_pct` pipeline đã tính sẵn (refresh-bait-gap, luật 10) —
  * tin phi lý đã bị pipeline gạt số giảm về NULL (ON11) nên không lọt vào đây. Thứ tự: tin thường trước tin cần xác
  * minh, mỗi nhóm giảm dần — sắp TRƯỚC LIMIT, không thì 30 thẻ vẫn toàn tin sát trần.
- * `cloud`: bản không đụng `stg_zalo_posts` hay cột người bán ở lại máy (sync-cloud `PII_EXCLUDE`).
+ * `cloud`: bản không đụng `stg_zalo_posts` hay cột người bán: Căn giá tốt chỉ hiện liên hệ ở máy thu.
  */
 export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
   const full = `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area), base AS (
@@ -109,7 +109,7 @@ export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
   return full
     .replace(/LEFT JOIN LATERAL \([\s\S]*?\) z ON TRUE/, "/* cloud: không có stg_zalo_posts (PII) */")
     .replace(/z\.sender_name, z\.group_name,[\s\S]*?AS post_text/, "NULL AS sender_name, NULL AS group_name, NULL AS media_path, NULL AS media_url, NULL AS post_text")
-    // cột người bán cũng không tồn tại trên cloud sale_offers (sync loại) → NULL hoá
+    // không đọc cột người bán trên cloud → NULL hoá
     .replace("o.area_id, o.post_ids, o.seller_name, o.seller_phone,", "o.area_id, o.post_ids, NULL AS seller_name, NULL AS seller_phone,");
 }
 
@@ -151,7 +151,7 @@ export function toDealRow(r: DealSqlRow): DealRow {
 const THIEU_LUOC_DO_MAY_THU = new Set(["42P01", "42703"]);
 
 export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[]> {
-  // Cloud không có stg_zalo_posts và các cột seller_* (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
+  // Cloud không có stg_zalo_posts (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
   // cloud, trang tự nhiên không cột liên hệ. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho PageError có
   // Retry: nuốt nó thì trang vẫn đủ thẻ nhưng mất liên hệ và nói sai «chỉ có ở máy thu» (S4 r1 E12).
   let rows;

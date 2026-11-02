@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { catchError, type ErrorInfo } from "next/error"
 import { CircleAlertIcon, RotateCwIcon } from "lucide-react"
 
@@ -16,9 +17,9 @@ import { Button } from "@/components/ui/button"
  * Khác error.tsx: chỉ thay vùng hỏng, PageHeader và phần còn lại của trang vẫn đứng. `retry()`
  * của `catchError` tải lại vùng từ server; redirect()/notFound() không bị bắt nhầm.
  */
-function RegionErrorFallback({ what }: { what: string }, { error, retry }: ErrorInfo) {
+function RegionErrorFallback({ what, leading = null }: { what: string; leading?: ReactNode }, { error, retry }: ErrorInfo) {
   const digest = error instanceof Error && "digest" in error ? String(error.digest) : null
-  return (
+  const alert = (
     <Alert variant="destructive">
       <CircleAlertIcon aria-hidden="true" />
       <AlertTitle>Không tải được {what}</AlertTitle>
@@ -34,6 +35,8 @@ function RegionErrorFallback({ what }: { what: string }, { error, retry }: Error
       </AlertAction>
     </Alert>
   )
+  // Điều khiển của trang sống trong vùng (ô thời hạn thuê) vẫn phải còn khi vùng hỏng, để đổi được sang chỗ lành.
+  return leading ? <div className="flex flex-col gap-4"><div>{leading}</div>{alert}</div> : alert
 }
 
 export const RegionError = catchError(RegionErrorFallback)
