@@ -424,7 +424,7 @@ async function main() {
     const stg = Number((await c2.query("SELECT count(*) n FROM stg_chotot_ads WHERE seller->>'phone' LIKE '+84%'")).rows[0].n);
     await c2.end();
     const st = Object.values(state.da_thu).filter((x) => x.phone).length;
-    console.log();
+    console.log(`[đối chiếu] state ${st} số · stg ${stg} số · lệch ${st - stg}${st !== stg ? " — CHẠY: node bu-seller-v5.mjs" : ""}`);
   } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
   process.exit(chanLienTiep >= 5 ? 2 : 0);
 }
