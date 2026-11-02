@@ -5,7 +5,7 @@ slug: s06-hai-luot-ngay-gop-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-31T13:30:00Z
 design_doc: docs/superpowers/specs/2026-10-31-s06-hai-luot-ngay-gop-main-design.md
