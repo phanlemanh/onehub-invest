@@ -5,7 +5,9 @@ slug: s03-len-cong
 owner: phanlemanh@gmail.com
 risk_tier: T3      # ngả B (Mạnh chọn 03/11): thêm migration 069 sửa bộ phân xử, khớp t3_paths db/migrations/**
 surfaces: [cli, web]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s03-len-cong-design.md
 ---
 
