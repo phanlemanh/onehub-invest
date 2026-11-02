@@ -137,7 +137,7 @@ async function loadPendingCounts(): Promise<PendingCount> {
 /** Đọc review_queue (tầng A, chỉ local). Không chọn ai_confidence — Q9: số không tới trình duyệt. */
 async function loadReviewQueue(user: User) {
   const { rows } = await pool.query<ReviewQueueRow>(
-    `SELECT id, item_type, title, evidence, ai_suggestion, ai_reasoning, status, decision_note, created_at
+    `SELECT id, item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, status, decision_note, created_at
      FROM review_queue ORDER BY created_at DESC, id DESC`,
   );
   // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
