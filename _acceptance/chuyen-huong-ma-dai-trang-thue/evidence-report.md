@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 545d470277aee9267901b0b8eea865ca170bede5
+verified_commit: 83c65b0359950a6d2bcccfb71ca6eb62f5ae2ac6
 human_signoff:
 ---
 
@@ -24,86 +24,86 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-E1-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-E1-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.chm_app
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
   output: |
-    lệnh: node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
+    node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
     APP PASS
 
 - eval: E2
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-E2-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-E2-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.chm_app
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
   output: |
-    lệnh: node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
+    node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
     APP PASS
 
 - eval: E3
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-E3-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-E3-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.chm_app
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
   output: |
-    lệnh: node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
+    node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
     APP PASS
 
 - eval: E4
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-E4-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-E4-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.chm_app
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
   output: |
-    lệnh: node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
+    node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
     APP PASS
 
 - eval: E5
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-E5-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-E5-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.chm_app
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
   output: |
-    lệnh: node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
+    node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app
     APP PASS
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__bb6271-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-lint-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 - cmd: cd app && npm test
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__bd9a35-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__13563d-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-test_lint_rules-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-chuyen-huong-ma-dai-trang-thue-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-02T22:28:37Z
+  verified_at: 2026-11-02T22:42:43Z
 
 ## Known limits
 
@@ -111,7 +111,7 @@ human_signoff:
 
 ## Analyst
 
-Eval không phân biệt (xanh trên cả HEAD lẫn baseline): lệnh `node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app` phủ E1, E2, E3, E4, E5. Lệnh này chạy trên diffBase vẫn xanh, nên cần xác nhận đây là regression-guard có chủ ý hoặc viết lại để assert hành vi mới.
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline): lệnh `node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app` phủ E1, E2, E3, E4, E5. Lệnh này nhận cả hai trạng thái DB (truoc và sau 064) trong cùng một lượt chạy, nên xanh ở baseline là chủ ý; chiều phân biệt nằm trong các dòng đối chứng và đột biến của chính lệnh. Cần xác nhận đây là regression-guard có chủ ý hoặc viết lại để assert hành vi mới.
 
 ## Variance
 
@@ -119,4 +119,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: tất cả eval đạt, không eval nào hỏng. Không cần quay lại bước triển khai.
+Round 1: lịch sử vòng đầu nằm trong run-log.jsonl cùng thư mục.
+Round 2: E1, E2, E3, E4, E5 xanh, các lệnh suite xanh; verdict PASS.

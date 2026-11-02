@@ -1,16 +1,21 @@
-# Review findings: chuyen-huong-ma-dai-trang-thue
-
 ## Trong hợp đồng
 
-- **E5 khai chiều đỏ của check 'có ô:' nhưng lệnh của E5 không tạo được chiều đỏ đó**
+- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: đối chứng 'có ô' dựng đầu ra từ chính danh sách oCan, không đi qua đường đọc thật ở chayItest**
   AC: AC-5
-  file: `_acceptance/chuyen-huong-ma-dai-trang-thue/evals.yaml:37`
+  file: `scripts/chuyen-huong-ma-thi-truong/acceptance.mjs:165`
   severity: medium
-  source: bugs
-  detail: AC-5 và `expected` của E5 đòi `acceptance.mjs` đỏ khi đầu ra thiếu dòng của một nhóm ô. Lệnh của E5 là `config:executors.script.chm_app`, tức `acceptance.mjs app`. Trên vật lành, lệnh này chỉ in các dòng `ok ... có ô: ...`, nên nhánh `FAIL` ở acceptance.mjs dòng 155-156 không chạy. Ba đột biến trong itest chỉ phá mã trang (segment, nhánh chuyển hướng, query), không đột biến nào làm thiếu dòng log. Bằng chứng duy nhất là một lần phá tay: bước Verify của Task 2 trong plan và câu «phá dòng ô» trong gap-probe.md; hồ sơ chưa có run-log. Hệ quả: nếu guard hỏng về sau (ví dụ `check` thành luôn đúng, hoặc chuỗi `out.includes` khớp sai) thì E5 vẫn thoát 0 và in 'APP PASS'. Vế này của AC-5 vì vậy được báo đạt mà không có phép đo chạy lại được. Cách sửa: thêm một ca đối chứng tự động, như cách `cheDoAppTest` đã làm với `caDoMoi`: tách phép kiểm dòng thành hàm thuần, đưa cho nó đầu ra thiếu một dòng và assert báo đúng dòng đó.
+  source: measurement
+  detail: Dòng 165 đặt `const du = oCan(tt).join("\n")`, rồi dòng 166-167 đưa `du` vào `oThieu`. `oThieu` (dòng 146) chính là `oCan(tt).filter(dau => !out.includes(dau))`. Fixture vì vậy sinh từ cùng danh sách mà bên đọc dùng, không rút từ log của itest (bên viết). Vế 'đủ dòng → không thiếu' (dòng 166) đúng theo cách dựng. Vế 'bỏ từng dòng' (dòng 167) chỉ chứng minh `filter` và `includes` chạy đúng. Hai vế chỉ gọi `oThieu`, không chạm phép gác thật ở dòng 158: `if (phan === "app") for (...) check(!oThieu(out, tt).includes(dau), ...)`. Nếu xoá hoặc đảo dòng 158, hay làm điều kiện `phan` sai, các dòng 'APP đối chứng' vẫn xanh và lệnh vẫn in 'APP PASS'. Ví dụ itest chạy 0 ca và thoát 0 thì không còn gì bắt, trong khi comment dòng 157 nêu đúng ca này. Vì vậy vế AC-5 «acceptance.mjs đỏ khi đầu ra thiếu dòng của một nhóm ô» chưa được đo ở mức lệnh. E5 trong evals.yaml dòng 37 chỉ đòi dòng 'APP đối chứng' xanh. Lượt chạy thật ở dòng 158 có bắt lệch chữ giữa log itest và oCan, nên lỗ hổng nằm ở chiều đỏ của phép gác, không ở chiều xanh. Kết luận này rút từ đọc mã, tôi chưa chạy đột biến xoá dòng 158.
+  rationale: AC-5 đòi rõ «acceptance.mjs đỏ khi đầu ra thiếu dòng của một nhóm ô»; finding nói phép gác thật chưa được đo ở chiều đỏ nên vế này của AC-5 chưa được chứng minh.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
+
+(không có mục nào)
+
+## Chưa adversarial-verify (refuter chết)
+
+(không có mục nào)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
