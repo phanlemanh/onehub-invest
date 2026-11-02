@@ -1,83 +1,117 @@
-# Review findings: s03-va-doc-tin (round 3)
+# Review findings: s03-va-doc-tin (round 4)
 
 ## Trong hợp đồng
 
-- **Toà riêng và toà đuôi số bỏ qua mã toà khác trong bài, vi phạm «toà chỉ giữ khi mọi mã cùng toà»**
-  AC: AC-8
-  file: `pipeline/transform-zalo.mjs:295`
+- **E5 và E8 đòi ca đỏ thuần và dạng mã mà lệnh của chính eval không chạy**
+  file: `_acceptance/s03-va-doc-tin/evals.yaml:63`
   severity: medium
-  source: bugs
-  detail: Trong docToaTruc, nhánh TOA_DUOI_SO (motToa chỉ xét các khớp cùng dạng) và nhánh TOA_RIENG (toa[1]) trả toà ngay mà không đối chiếu maToaCan. Chỉ nhánh cuối cùng mới xét các mã trần. Đã chạy: «Bán toà S902 và S101 2PN 3 tỷ» và «Bán S101 và toà S902 2PN 3 tỷ» đều ra block S902; «Bán căn toà GH2 và căn toà GH3 3 tỷ» ra block GH2. AC-8 yêu cầu bài nhiều mã khác toà không có block_raw. Vì parser thắng LLM, giá trị đoán này còn đè lên block_raw của LLM. Đo chỉ đọc trên bài thật: khoảng 89 bài có block mà không có unit vẫn mang mã toà khác (đếm heuristic, theo maToaCan, có thể lẫn vài mã không phải toà). Theo đúng đường đọc của transform, 7 tin (47 bài) có các bài phát biểu hai block_raw khác nhau, ví dụ S902/S101, S302/S203, S7.03/S7.02. repostKey không có toà trong khoá và thước hai_truc chỉ đếm trục, nên không có gì báo. AC-8 itest chỉ phủ nhiều mã dạng đủ («LD1.12.02 và PR2.10.10»), không phủ các nhánh này. Cách sửa gợi ý: trước khi trả ở hai nhánh, gộp toà đọc được với maToaCan (đã lọc KHONG_PHAI_TOA) rồi mới gọi motToa.
-  rationale: AC-8 nêu đích danh nhiều mã khác toà và «toà chỉ giữ khi mọi mã cùng toà», mà hai nhánh này vẫn trả toà.
+  AC: AC-8
+  source: conventions
+  detail: E5 (dòng 41) và E8 (dòng 63) dùng `config:executors.script.va_doc_tin_db`. Lệnh này chỉ chạy `scripts/va-doc-tin.itest.mjs`, nhưng `expected` đòi hai thứ mà đầu ra của nó không có. (1) Ca đỏ thuần 'SV1-AC-5' và 'SV1-AC-8' nằm ở `pipeline/scripts/va-doc-tin.test.mjs` (dòng 183, 284), tệp này chạy dưới executor `va_doc_tin` và cũng không có trong `paths` của E5, E8. (2) E8 ghi ca 'SV1-AC-8 DB' có «S5.03-22.06», nhưng itest chỉ có S1.03.12.05, S605.10.17 và hai mã bốn phần; dạng S5.03-22.06 chỉ có ở ma trận thuần (test dòng 279). AC-8 nói rõ «When chạy transform trên DB thử». Vì vậy bằng chứng E5, E8 không chứng được phần ca đỏ, và E8 không chứng được S5.03-22.06 đi qua DB. Tương tự, AC-5 liệt kê «1,2 tỷ mỗi năm», «1,2 tỷ 1 năm» trong nhánh DB, nhưng mảng GAT của itest không có hai dòng này (chỉ có ở test thuần, dòng 167-168). Hướng sửa: thêm ca vào itest và thêm lệnh test thuần vào eval, hoặc sửa lại `expected` và AC cho đúng lệnh thật.
+
+- **Hình dạng 3 — Assert chuỗi có mặt trong khi lời hứa là quan hệ: E11 grep toàn bộ output, không buộc «hcm_sai_thi_truong=0 ĐẠT» vào lượt cây, và nuốt exit của thước**
+  file: `_acceptance/s03-va-doc-tin/evals.yaml:84`
+  severity: medium
+  AC: AC-9
+  source: measurement
+  detail: Cmd E11 kết thúc bằng `node scripts/do-cam-mau-s03.mjs 2>&1 | grep -q "hcm_sai_thi_truong=0 ĐẠT"`. Expected hứa quan hệ: «lượt cây in hcm_sai_thi_truong=0 ĐẠT». Nhưng do-cam-mau-s03.mjs in cùng một khuôn `  ${k}=${v} ĐẠT|TRƯỢT` ở cả lượt cây lẫn lượt đối chứng bản nền (vòng `for (const [k, ok] of Object.entries(DAT))` sau `luot("nen", …)`). Vì vậy dòng đó xuất hiện ở lượt nào grep cũng khớp: cây hcm>0 TRƯỢT mà nền hcm=0 thì E11 vẫn xanh. Mã thoát của ống là của grep, nên mã thoát khác 0 của node bị bỏ. Tín hiệu đó cũng là tín hiệu duy nhất của đối chứng `MOC_GOC.hcm_sai_thi_truong: v > 0`. Vòng này vừa thêm bộ lọc `laHuong` vào `chiHcm` (do-cam-mau-s03.mjs dòng 72-74), đúng chỗ cần chứng minh thước vẫn đỏ được. Nếu bộ lọc làm thước mù và cả hai lượt ra 0, dòng «KHÔNG tái lập mốc gốc» chỉ được in ra rồi bị bỏ qua, E11 vẫn xanh. Bỏ tín hiệu thoát là có lý do (`gom_qua_10_nhieu_nguoi=1` đã đỏ từ bản nền), nhưng cmd không có phép kiểm thay thế cho lượt nào in dòng đó, cũng không kiểm dòng đối chứng.
+
+- **Hình dạng 5 — Tuyên quét lớp nhưng chỉ có điểm-case: E8 đòi «mỗi Given của AC-8» trên DB, ca DB thiếu S5.03-22.06, NTL22688, toà đuôi số kèm mã khác và cặp khác trục ở nhánh thiếu phường/DT**
+  file: `pipeline/scripts/va-doc-tin.itest.mjs:105`
+  severity: medium
+  AC: AC-8
+  source: measurement
+  detail: evals.yaml dòng 63 hứa ca 'SV1-AC-8 DB' so «mỗi Given của AC-8» và nêu đích danh «S1.03.12.05», «S5.03-22.06», «S605.10.17» giữ nguyên mã, ra toà S1.03, S5.03, S605. Trong itest chỉ dựng bonPhan (S1.03.12.05, dòng 105) và bonPhanCuc (S605.10.17, dòng 106). Grep «S5.03» trong itest không có kết quả, nên dạng mã có gạch ngang chưa từng đi qua đường transform → phát biểu → phân xử → tin. Các Given khác của AC-8 cũng thiếu trên DB: «NTL22688» (chỉ có S115451, dòng 108); toà có đuôi số kèm mã toà khác (BANG_MA có «toà S1.03 và LD1», itest không có); «hai bài khác trục cùng nội dung, cả nhánh đủ phường + DT» chỉ có cặp truc1/truc2 đủ phường + DT (dòng 112-113), nhánh thiếu phường/DT không có cặp nào cùng nội dung trên DB. Các dòng thiếu chỉ được đo ở mức thuần: docToaTruc trong BANG_MA, repostKey với pr viết tay. Không có ma trận viết trước ghim số Given bằng số ca DB, nên chữ «mỗi Given» của E8 rộng hơn phần thật sự chạy.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **docDanhSachPhuong chèn trước runTransformZalo làm lệch đột biến CM-AC-8 của hồ sơ đã ký; executor cam_mau_s03_that sẽ đỏ**
+- **Sổ RESO chưa ghi S03 là nguồn mới của unit_number**
+  Người dùng thấy gì: Ghi chú trong sổ field vẫn nói mã căn chỉ đến từ một nguồn, trong khi nguồn thứ hai cũng đang cấp. Người đọc sổ có thể hiểu sai nguồn gốc dữ liệu, nhưng số liệu hiển thị không bị ảnh hưởng.
+  Căn cứ: Chỉ là ghi chú lệch, không mất hay sai dữ liệu của người dùng, và sửa lại sau rất rẻ.
+  file: `pipeline/mappings.yaml`
+  severity: low
+  Đề xuất: known-limits
+
+- **Giá che dính chữ tỷ («36xxtỷ», «3,0xtỷ») không đọc được, bài mất giá im lặng**
+  Người dùng thấy gì: Những bài rao ghi giá che viết liền chữ tỷ (ví dụ 36xxtỷ) không đọc ra được giá, nên không thành tin trên cổng. Người dùng sẽ không thấy các căn này và không có thông báo nào.
+  Căn cứ: Mất tin thật mà không ai biết, nhưng số bài ít (khoảng tám mẫu chữ) và đây là dạng viết mới chưa được hợp đồng nhắc tới.
+  file: `pipeline/transform-zalo.mjs`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Bài chỉ ghi giá theo nhãn TTS/TTC/HTLS mất toàn bộ giá, rơi khỏi tin**
+  Người dùng thấy gì: Các bài sơ cấp chỉ ghi giá theo nhãn như «Giá TTS» sẽ không đọc ra giá và biến mất khỏi danh sách tin. Người dùng không thấy những căn này dù trước đây có hiện.
+  Căn cứ: Có mất tin thật (khoảng 14 bài) nhưng hợp đồng chủ ý chọn thà thiếu giá hơn ghi sai, và cần Mạnh quyết nên ghi thành hạn chế đã biết.
+  file: `pipeline/transform-zalo.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **docDanhSachPhuong chèn trước runTransformZalo làm lệch đột biến CM-AC-8 của hồ sơ đã ký; executor cam_mau_s03_that sẽ đỏ (r3 · tệp đã đổi)**
   Người dùng thấy gì: Một phép kiểm của đợt trước sẽ báo đỏ giả khi ai đó chạy lại, dù dữ liệu người dùng thấy không sai.
   Căn cứ: Chỉ ảnh hưởng người làm kỹ thuật chạy lại phép kiểm cũ, không làm mất hay sai dữ liệu, và có thể xử lý sau với chi phí thấp.
   file: `pipeline/transform-zalo.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **docDanhSachPhuong chép lại hai dòng đọc phường của runTransformZalo và tách chú thích của runTransformZalo khỏi hàm**
+- **docDanhSachPhuong chép lại hai dòng đọc phường của runTransformZalo và tách chú thích của runTransformZalo khỏi hàm (r3 · tệp đã đổi)**
   Người dùng thấy gì: Không ảnh hưởng người dùng; chỉ khiến mã khó đọc và có nguy cơ hai đường đọc phường lệch nhau về sau.
   Căn cứ: Không có hậu quả nhìn thấy với người dùng, chỉ là nợ dọn mã nhỏ, nên ghi vết là đủ.
   file: `pipeline/transform-zalo.mjs`
   severity: low
   Đề xuất: wont-fix
 
-- **Mã căn bốn phần bị cắt cụt: «S1.03.12.05» ra toà S1, trục S1.03.12**
+- **Mã căn bốn phần bị cắt cụt: «S1.03.12.05» ra toà S1, trục S1.03.12 (r3 · tệp đã đổi)**
   Người dùng thấy gì: Một số ít tin ghi mã căn dài bốn phần có thể bị gán sai toà và sai căn, hai căn khác nhau có thể bị gộp thành một tin.
   Căn cứ: Chạm khoảng chín bài trong hơn năm vạn bài, sai ở mức gán toà và căn nên có thể sửa sau khi bộ đọc được mở rộng, chưa làm mất dữ liệu gốc.
   file: `pipeline/transform-zalo.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: ca khoá gom ghi `ma: []` nên che lỗi tách khoá của parsePost thật**
+- **Hình dạng 2 — Fixture viết tay đúng khuôn bên đọc: ca khoá gom ghi `ma: []` nên che lỗi tách khoá của parsePost thật (r3 · tệp đã đổi)**
   Người dùng thấy gì: Hai bài cùng một căn nhưng một bài viết chữ thường có thể thành hai tin riêng thay vì một.
   Căn cứ: Chỉ làm dư một tin trùng chứ không mất hay sai dữ liệu, hiếm gặp và có thể gộp lại khi chạy lại.
   file: `pipeline/scripts/va-doc-tin.test.mjs`
   severity: high
   Đề xuất: known-limits
 
-- **Hình dạng 4 — Âm tính một mình: hai thước mới `khong_vay_mat_gia`, `thue_ty_lui` không có đối chứng dương**
+- **Hình dạng 4 — Âm tính một mình: hai thước mới `khong_vay_mat_gia`, `thue_ty_lui` không có đối chứng dương (r3 · tệp đã đổi)**
   Người dùng thấy gì: Con số 0 báo cáo về giá bị mất có thể chưa chứng minh chắc chắn, nên khó tin hoàn toàn rằng không còn bài nào mất giá.
   Căn cứ: Không làm sai dữ liệu người dùng, chỉ giảm độ tin của phép đo, và bổ sung đối chứng sau là việc rẻ.
   file: `pipeline/scripts/do-va-doc-tin.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 — Tuyên cả lớp đơn vị năm của AC-5 nhưng lý do gạt chỉ có điểm-case: «mỗi năm», «1 năm», «/1 năm» chỉ assert kind**
+- **Hình dạng 5 — Tuyên cả lớp đơn vị năm của AC-5 nhưng lý do gạt chỉ có điểm-case: «mỗi năm», «1 năm», «/1 năm» chỉ assert kind (r3 · tệp đã đổi)**
   Người dùng thấy gì: Tin thuê ghi giá theo năm có thể lọt thành tin bán nếu sau này bộ đọc đổi mà không phép kiểm nào báo.
   Căn cứ: Hôm nay kết quả đúng nên chưa có hại, rủi ro chỉ ở lần sửa sau và có thể bổ sung phép kiểm rẻ.
   file: `pipeline/scripts/va-doc-tin.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 — Âm tính một mình: thước `hai_truc` đếm trên nhóm mà khoá đã chứa trục, gần như không thể đỏ**
+- **Hình dạng 4 — Âm tính một mình: thước `hai_truc` đếm trên nhóm mà khoá đã chứa trục, gần như không thể đỏ (r3 · tệp đã đổi)**
   Người dùng thấy gì: Phép đo «không tin nào mang hai căn» có thể không bắt được trường hợp tin gộp nhầm hai căn.
   Căn cứ: Không gây sai dữ liệu trực tiếp, chỉ làm lời đảm bảo yếu đi, và đã có phép đếm trên cơ sở dữ liệu thử bổ sung.
   file: `pipeline/scripts/do-va-doc-tin.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 — Âm tính một mình: nhánh giá của so-gia-ty-chan-dong thành hằng đúng mà vẫn in câu khẳng định**
+- **Hình dạng 4 — Âm tính một mình: nhánh giá của so-gia-ty-chan-dong thành hằng đúng mà vẫn in câu khẳng định (r3)**
   Người dùng thấy gì: Một công cụ so sánh phụ có thể in kết luận «giá đúng» mà không thật sự kiểm giá; người dùng cuối không thấy.
   Căn cứ: Công cụ phụ nội bộ, không ảnh hưởng dữ liệu hay tính năng, sửa không đáng chi phí.
   file: `pipeline/scripts/so-gia-ty-chan-dong.mjs`
   severity: medium
   Đề xuất: wont-fix
 
-- **Hình dạng 3 — Thước `dt_phay` hứa quan hệ «DT = số có phẩy» nhưng ngưỡng `< 15` loại lỗi đọc phần lẻ hai chữ số**
+- **Hình dạng 3 — Thước `dt_phay` hứa quan hệ «DT = số có phẩy» nhưng ngưỡng `< 15` loại lỗi đọc phần lẻ hai chữ số (r3 · tệp đã đổi)**
   Người dùng thấy gì: Phép đo diện tích có thể bỏ sót lỗi với số có hai chữ số lẻ như 63,45m2 nếu bộ đọc hỏng sau này.
   Căn cứ: Hiện diện tích đọc đúng, chưa có sai sót cho người dùng, chỉ là phép đo chưa phủ hết.
   file: `pipeline/scripts/do-va-doc-tin.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 — E1 tuyên «số assert bằng số dòng» nhưng ma trận không ghim số phần tử**
+- **Hình dạng 5 — E1 tuyên «số assert bằng số dòng» nhưng ma trận không ghim số phần tử (r3 · tệp đã đổi)**
   Người dùng thấy gì: Ai đó có thể xoá bớt ca kiểm mà bộ test vẫn xanh, làm lời đảm bảo yếu đi âm thầm.
   Căn cứ: Không gây sai dữ liệu cho người dùng, chỉ là rủi ro về sau và bổ sung đếm số dòng rất rẻ.
   file: `_acceptance/s03-va-doc-tin/evals.yaml`
@@ -133,21 +167,21 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **Thước so-gia-ty-chan-dong không còn đỏ được vì giá: nhánh kiểm giá thành hằng đúng (r1 · tệp đã đổi)**
+- **Thước so-gia-ty-chan-dong không còn đỏ được vì giá: nhánh kiểm giá thành hằng đúng (r1)**
   Người dùng thấy gì: Phép kiểm cũ về giá tỷ chẵn giờ chỉ còn bắt được lỗi số điện thoại. Nếu giá của loại bài này bị đọc sai thì phép kiểm vẫn báo đạt.
   Căn cứ: Không làm sai dữ liệu người dùng đang xem, chỉ làm một phép kiểm nội bộ yếu đi; ghi lại là đủ, sửa sau cũng không đắt.
   file: `pipeline/scripts/so-gia-ty-chan-dong.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Sửa thước E6 của hai hồ sơ đã ký nhưng không cập nhật evals, hợp đồng vẫn mô tả phép đo cũ (r1 · tệp đã đổi)**
+- **Sửa thước E6 của hai hồ sơ đã ký nhưng không cập nhật evals, hợp đồng vẫn mô tả phép đo cũ (r1)**
   Người dùng thấy gì: Hồ sơ nghiệm thu cũ vẫn ghi phép đo rộng hơn thực tế đang chạy. Người đọc hồ sơ có thể tưởng nó kiểm nhiều hơn mức thật.
   Căn cứ: Chỉ là giấy tờ lệch với thực tế, người dùng cuối không bị ảnh hưởng và có thể chỉnh lại bất cứ lúc nào với chi phí thấp.
   file: `pipeline/scripts/so-gia-ty-sau-khoang-trang.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Comment ghi «Mạnh duyệt 02/11» cho việc sửa thước đã ký, nhưng hồ sơ không có dấu vết duyệt (r1 · tệp đã đổi)**
+- **Comment ghi «Mạnh duyệt 02/11» cho việc sửa thước đã ký, nhưng hồ sơ không có dấu vết duyệt (r1)**
   Người dùng thấy gì: Chú thích trong mã nói Mạnh đã duyệt việc nới phép kiểm, nhưng hồ sơ không có bằng chứng người duyệt đúng việc đó. Dấu vết duyệt vì thế có thể gây hiểu nhầm.
   Căn cứ: Không ảnh hưởng dữ liệu hay người dùng cuối; chỉ cần người ký xác nhận hoặc sửa lại câu chữ, sửa rất rẻ.
   file: `pipeline/scripts/so-gia-ty-chan-dong.mjs`
@@ -182,7 +216,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **Phần giá của so-gia-ty-chan-dong không còn trượt được nhưng vẫn in «mọi bài đổi giá là giá tỷ chẵn» (r1 · tệp đã đổi)**
+- **Phần giá của so-gia-ty-chan-dong không còn trượt được nhưng vẫn in «mọi bài đổi giá là giá tỷ chẵn» (r1)**
   Người dùng thấy gì: Phép kiểm cũ về giá tỷ chẵn luôn báo đạt phần giá và vẫn in câu khẳng định như thể đã đo. Kết quả này có thể làm người đọc yên tâm sai.
   Căn cứ: Chỉ làm một báo cáo nội bộ kém tin cậy, không đụng dữ liệu người dùng; ghi nhận rồi sửa sau là đủ.
   file: `pipeline/scripts/so-gia-ty-chan-dong.mjs`
@@ -217,7 +251,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 — Âm tính một mình: nửa giá của thước so-gia-ty-chan-dong không thể đỏ sau khi sửa (r1 · tệp đã đổi)**
+- **Hình dạng 4 — Âm tính một mình: nửa giá của thước so-gia-ty-chan-dong không thể đỏ sau khi sửa (r1)**
   Người dùng thấy gì: Phần kiểm giá của phép đo giá tỷ chẵn không thể báo lỗi nữa, kể cả khi giá bị đổi sai. Chỉ còn phần kiểm số điện thoại hoạt động.
   Căn cứ: Là điểm yếu của một phép kiểm nội bộ, không làm sai dữ liệu hiển thị; ghi nhận rồi sửa sau là hợp lý.
   file: `pipeline/scripts/so-gia-ty-chan-dong.mjs`
@@ -238,4 +272,4 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/6 lỗi rơi vào file không bộ đo nào phủ (_acceptance/s03-va-doc-tin/evals.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

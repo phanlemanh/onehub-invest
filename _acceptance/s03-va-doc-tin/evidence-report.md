@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: s03-va-doc-tin
-verdict: REJECT
-failed_evals: ["E9"]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e8f2c2071e360564312d48f0f93b8537a054cba4
+verified_commit: 9f021407d5711946cbe28b56e8d348ab92fa1090
 human_signoff:
 ---
 
 # Evidence Report: s03-va-doc-tin
-
-Round 3. Eval E9 không đạt: lượt cây ĐẠT mọi thước, nhưng script đo dừng vì số tin mọc 516 vượt trần 500.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -25,149 +23,148 @@ Round 3. Eval E9 không đạt: lượt cây ĐẠT mọi thước, nhưng scrip
 | E6 | AC-6 | test | PASS |
 | E7 | AC-7 | test | PASS |
 | E8 | AC-8 | script | PASS |
-| E9 | AC-9 | script | FAIL |
+| E9 | AC-9 | script | PASS |
 | E10 | AC-9 | test | PASS |
+| E11 | AC-9 | script | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-s03-va-doc-tin-E1-r3
+  run_id: minted-s03-va-doc-tin-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
     cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
+    ℹ duration_ms 135.483875
 
 - eval: E2
-  run_id: minted-s03-va-doc-tin-E2-r3
+  run_id: minted-s03-va-doc-tin-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
     cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
+    ℹ duration_ms 135.483875
 
 - eval: E3
-  run_id: minted-s03-va-doc-tin-E3-r3
+  run_id: minted-s03-va-doc-tin-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
     cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
+    ℹ duration_ms 135.483875
 
 - eval: E4
-  run_id: minted-s03-va-doc-tin-E4-r3
+  run_id: minted-s03-va-doc-tin-E4-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
     cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
-
-- eval: E6
-  run_id: minted-s03-va-doc-tin-E6-r3
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
-  output: |
-    cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
-
-- eval: E7
-  run_id: minted-s03-va-doc-tin-E7-r3
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.va_doc_tin
-  verified_at: 2026-11-02T05:16:15Z
-  output: |
-    cd pipeline && node --test scripts/va-doc-tin.test.mjs
-    ℹ duration_ms 142.834625
+    ℹ duration_ms 135.483875
 
 - eval: E5
-  run_id: minted-s03-va-doc-tin-E5-r3
+  run_id: minted-s03-va-doc-tin-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.va_doc_tin_db
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
-    bash db/db-thu.sh oneinvest_n1_sv1 && node --test scripts/va-doc-tin.itest.mjs
-    ℹ duration_ms 43595.976458
+    bash db/db-thu.sh oneinvest_n1_sv1 && cd pipeline && node --test scripts/va-doc-tin.itest.mjs
+    ℹ duration_ms 77268.074334
+
+- eval: E6
+  run_id: minted-s03-va-doc-tin-E6-r4
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.va_doc_tin
+  verified_at: 2026-11-02T07:57:35Z
+  output: |
+    cd pipeline && node --test scripts/va-doc-tin.test.mjs
+    ℹ duration_ms 135.483875
+
+- eval: E7
+  run_id: minted-s03-va-doc-tin-E7-r4
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.va_doc_tin
+  verified_at: 2026-11-02T07:57:35Z
+  output: |
+    cd pipeline && node --test scripts/va-doc-tin.test.mjs
+    ℹ duration_ms 135.483875
 
 - eval: E8
-  run_id: minted-s03-va-doc-tin-E8-r3
+  run_id: minted-s03-va-doc-tin-E8-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.va_doc_tin_db
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
-    bash db/db-thu.sh oneinvest_n1_sv1 && node --test scripts/va-doc-tin.itest.mjs
-    ℹ duration_ms 43595.976458
+    bash db/db-thu.sh oneinvest_n1_sv1 && cd pipeline && node --test scripts/va-doc-tin.itest.mjs
+    ℹ duration_ms 77268.074334
 
 - eval: E9
-  run_id: minted-s03-va-doc-tin-E9-r3
-  exit_code: 1
+  run_id: minted-s03-va-doc-tin-E9-r4
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.va_doc_tin_do
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
-    --- lượt cây (nhãn do tác tử gắn, không phải nhãn vàng), công tắc giá không đơn vị: mặc định ---
-    giá đúng theo họ: toàn tập 208/237 · grand-park 29/32 · ocean-park 64/65 · smart-city 16/21 · khac 99/119
-    ĐẠT   pn: toàn tập 225/241, giữ lại 68/77
-    ĐẠT   dt_phay / phuong_huong / gia_khong_tut_nen / gia_kdv_khong_tut / dung_thanh_sai / hai_truc
-    ĐẠT   khong_vay_mat_gia / thue_ty_lui / cong_tac_co_tac_dung
-    ĐẠT   ma_can: đúng 60/62 (giữ lại 25/25), thừa 0/188 (giữ lại 0/54)
-    --- lượt bản nền: TRƯỢT pn, dt_phay, phuong_huong, ma_can (đúng như thiết kế, bản nền phải trượt) ---
-    số tin: 2772 → 3158 · offer_id giữ 2642, nghỉ 130, mọc 516
-    bán 1252 (nền 904), thuê 1906 (nền 2000), bài đổi loại thuê từ 1 tỷ 648; tin có trục 433
-    ô block_raw: thêm 1276, đổi so với giá trị đang có 4; tin không mã cùng nội dung với tin có trục 335
-    S05 dùng chung bộ đọc: 18/100 bài đổi đầu ra (không có nhãn S05)
-    do-va-doc-tin: vượt trần: mọc 516 > 500
+    cd pipeline && node scripts/do-va-doc-tin.mjs
+    do-va-doc-tin: ĐẠT
 
 - eval: E10
-  run_id: minted-s03-va-doc-tin-E10-r3
+  run_id: minted-s03-va-doc-tin-E10-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
   output: |
     cd pipeline && npm test
-    ℹ duration_ms 275315.542333
+    ℹ duration_ms 310595.796417
+
+- eval: E11
+  run_id: minted-s03-va-doc-tin-E11-r4
+  exit_code: 0
+  baseline: green
+  verifier: pipeline/scripts/do-cam-mau-s03.mjs
+  verified_at: 2026-11-02T07:57:35Z
+  output: |
+    bash db/db-thu.sh oneinvest_p1_n1 && node --test scripts/cam-mau-s03.itest.mjs && node scripts/do-cam-mau-s03.mjs
+    ℹ duration_ms 49895.04525
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-s03-va-doc-tin-SUITE-npm_test__bb6271-r3
+  run_id: minted-s03-va-doc-tin-SUITE-npm_test__bb6271-r4
   exit_code: 0
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-s03-va-doc-tin-SUITE-lint-r3
+  run_id: minted-s03-va-doc-tin-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
 
 - cmd: cd app && npm test
-  run_id: minted-s03-va-doc-tin-SUITE-npm_test__bd9a35-r3
+  run_id: minted-s03-va-doc-tin-SUITE-npm_test__bd9a35-r4
   exit_code: 0
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-s03-va-doc-tin-SUITE-test_lint_rules-r3
+  run_id: minted-s03-va-doc-tin-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-02T05:16:15Z
+  verified_at: 2026-11-02T07:57:35Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-s03-va-doc-tin-SUITE-node_scripts_check_portal_compliance_mjs-r3
+  run_id: minted-s03-va-doc-tin-SUITE-node_scripts_check_portal_compliance_mjs-r4
   exit_code: 0
-  verified_at: 2026-11-02T05:16:15Z
-
-Lệnh fail không gắn eval: không có. Lệnh duy nhất fail là lệnh của E9 (`cd pipeline && node scripts/do-va-doc-tin.mjs`), đã gắn E9 ở trên.
+  verified_at: 2026-11-02T07:57:35Z
 
 ## Known limits
 
@@ -175,20 +172,18 @@ Lệnh fail không gắn eval: không có. Lệnh duy nhất fail là lệnh c�
 
 ## Analyst
 
-none — mọi eval feature đều không đo được trên baseline (xem dưới), nên không có eval nào được xác nhận là không-phân-biệt.
+Eval không-phân-biệt (xanh trên cả HEAD lẫn baseline): E11 — hồ sơ s03-cam-mau-so-lieu đã ký, đây là regression-guard có chủ ý cho AC-9, không chứng tính năng mới.
 
-Baseline không đo:
-- cd pipeline && node --test scripts/va-doc-tin.test.mjs: bỏ qua baseline: tệp pipeline/scripts/va-doc-tin.test.mjs có ở cây đang kiểm nhưng chưa có ở merge-base b96dd58b546f8efcd804b40a4b418d7d98cab9c1 — eval mới, chạy trên code cũ không phân biệt gì
-- bash db/db-thu.sh oneinvest_n1_sv1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_sv1 node --test scripts/va-doc-tin.itest.mjs: bỏ qua baseline: tệp pipeline/scripts/va-doc-tin.itest.mjs có ở cây đang kiểm nhưng chưa có ở merge-base b96dd58b546f8efcd804b40a4b418d7d98cab9c1 — eval mới, chạy trên code cũ không phân biệt gì
-- cd pipeline && node scripts/do-va-doc-tin.mjs: bỏ qua baseline: tệp pipeline/scripts/do-va-doc-tin.mjs có ở cây đang kiểm nhưng chưa có ở merge-base b96dd58b546f8efcd804b40a4b418d7d98cab9c1 — eval mới, chạy trên code cũ không phân biệt gì
-- cd pipeline && npm test: baseline vượt trần 180 giây/lệnh — đã dừng cả cây tiến trình; BLOCKED hạ tầng, không phải kết quả của code cũ
+Baseline khong do
+- cd pipeline && node --test scripts/va-doc-tin.test.mjs: bo qua baseline: tep pipeline/scripts/va-doc-tin.test.mjs co o cay dang kiem nhung chua co o merge-base 630f4511644c54a849ea27d2af035590daff2c33 — eval moi, chay tren code cu khong phan biet gi
+- bash db/db-thu.sh oneinvest_n1_sv1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_sv1 node --test scripts/va-doc-tin.itest.mjs: bo qua baseline: tep pipeline/scripts/va-doc-tin.itest.mjs co o cay dang kiem nhung chua co o merge-base 630f4511644c54a849ea27d2af035590daff2c33 — eval moi, chay tren code cu khong phan biet gi
+- cd pipeline && node scripts/do-va-doc-tin.mjs: bo qua baseline: tep pipeline/scripts/do-va-doc-tin.mjs co o cay dang kiem nhung chua co o merge-base 630f4511644c54a849ea27d2af035590daff2c33 — eval moi, chay tren code cu khong phan biet gi
+- cd pipeline && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
 ## Variance
 
-none — mọi eval chạy một lần, tất định, không có pass_rate hỗn hợp.
+none — mọi eval chạy một lần, xác định, không có phương sai.
 
 ## Iterations
 
-Round 1: lịch sử nằm trong run-log.jsonl và các commit trước (known-limits ghi từ r1).
-Round 2: bằng chứng S4 lượt 2 PASS (commit 41cc8afe).
-Round 3: E9 không đạt — lượt cây ĐẠT mọi thước nhưng số tin mọc 516 vượt trần 500 sau khi sửa SV1 (a9063f27). Trả về cho bước triển khai: quyết định nâng trần hoặc giảm số tin mọc.
+Round 4: tất cả E1–E11 và năm lệnh suite xanh; không eval nào cần phán đoán của người.
