@@ -147,13 +147,18 @@ export function toDealRow(r: DealSqlRow): DealRow {
   };
 }
 
+// Mã Postgres khi DB không có lược đồ riêng của máy thu: 42P01 thiếu bảng, 42703 thiếu cột.
+const THIEU_LUOC_DO_MAY_THU = new Set(["42P01", "42703"]);
+
 export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[]> {
-  // Cloud KHÔNG có stg_zalo_posts (PII tầng A — leak gate cấm): bản đầy đủ fail 42P01 → rơi về bản cloud,
-  // trang cloud tự nhiên không cột liên hệ (đúng thiết kế PII — P4).
+  // Cloud không có stg_zalo_posts và các cột seller_* (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
+  // cloud, trang tự nhiên không cột liên hệ. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho PageError có
+  // Retry: nuốt nó thì trang vẫn đủ thẻ nhưng mất liên hệ và nói sai «chỉ có ở máy thu» (S4 r1 E12).
   let rows;
   try {
     ({ rows } = await pool.query(dealsSql(), [minDiscountPct, limit]));
-  } catch {
+  } catch (e) {
+    if (!THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "")) throw e;
     ({ rows } = await pool.query(dealsSql({ cloud: true }), [minDiscountPct, limit]));
   }
   return rows.map(toDealRow);

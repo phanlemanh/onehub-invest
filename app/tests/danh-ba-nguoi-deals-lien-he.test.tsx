@@ -1,7 +1,7 @@
 // danh-ba-nguoi-deals-lien-he.test.tsx — hồ sơ _acceptance/people-hien-so-goc, ca «SHS-AC-6»: /ops/deals qua page thật (bản
 // chép thay getSessionUser và getDeals), ma trận ba vai và bản cloud. Vai Vận hành thấy liên hệ, không ảnh và chữ bài; vai
 // Người xem không nhận trường liên hệ nào, cả trong cây phần tử. Số, tên, nhóm trong ca đều bịa.
-import { after, test } from "node:test"
+import { after, test, type TestContext } from "node:test"
 import assert from "node:assert/strict"
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
@@ -123,4 +123,45 @@ test("SHS-AC-8 fmtPhone: số gốc E.164 và dạng 0… đều tách nhóm", (
   // Đối chứng đỏ: khuôn đời trước chỉ nhận 0…, số +84… ra nguyên khối.
   const cu = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3")
   assert.throws(() => assert.equal(cu("+84912345678"), "0912 345 678", "SHS-AC-8 fmtPhone"), /SHS-AC-8 fmtPhone/)
+})
+
+// S4 r1 E12: deadlock ở máy thu bị nuốt thành bản cloud, trang đủ thẻ mà mất liên hệ. Pool thay bằng stub, không chạm DB.
+async function goiDeals(mod: { getDeals: () => Promise<unknown[]> }, code: string, t: TestContext) {
+  const { pool } = await import("../src/lib/db")
+  const cauLenh: string[] = []
+  const q = t.mock.method(pool, "query", (async (sql: string) => {
+    cauLenh.push(sql)
+    if (cauLenh.length === 1) throw Object.assign(new Error("lỗi thử"), { code })
+    return { rows: [] }
+  }) as never)
+  try {
+    return { kq: await mod.getDeals().then(() => "rơi", () => "ném"), cauLenh }
+  } finally {
+    q.mock.restore()
+  }
+}
+
+test("SHS-AC-6 getDeals chỉ rơi về bản cloud khi thiếu lược đồ máy thu; lỗi khác ném tiếp", async (t) => {
+  const that = await import("../src/lib/deals")
+  for (const code of ["42P01", "42703"]) {
+    const { kq, cauLenh } = await goiDeals(that, code, t)
+    assert.equal(kq, "rơi", `SHS-AC-6 ${code} phải rơi về bản cloud`)
+    assert.deepEqual(cauLenh, [that.dealsSql(), that.dealsSql({ cloud: true })], `SHS-AC-6 ${code} sai câu truy vấn`)
+  }
+  for (const code of ["40P01", "55P03", "57P01"]) {
+    const { kq, cauLenh } = await goiDeals(that, code, t)
+    assert.equal(kq, "ném", `SHS-AC-6 ${code} bị nuốt thành bản cloud`)
+    assert.equal(cauLenh.length, 1, `SHS-AC-6 ${code} vẫn gọi bản cloud`)
+  }
+
+  // Đối chứng đỏ: bản chép bỏ lọc mã (catch trần đời trước) nuốt deadlock.
+  const goc = readFileSync(join(APP, "src/lib/deals.ts"), "utf8")
+  const tu = `    if (!THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "")) throw e;\n`
+  assert.ok(goc.includes(tu), "đột biến không áp được")
+  mkdirSync(thuMuc, { recursive: true })
+  const f = join(thuMuc, "deals-cu.ts")
+  writeFileSync(f, goc.replace(tu, "").replace(`from "./db"`, `from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`))
+  const cu = (await import(pathToFileURL(f).href)) as typeof that
+  const { kq } = await goiDeals(cu, "40P01", t)
+  assert.throws(() => assert.equal(kq, "ném", "SHS-AC-6 40P01 bị nuốt thành bản cloud"), /SHS-AC-6 40P01 bị nuốt/)
 })
