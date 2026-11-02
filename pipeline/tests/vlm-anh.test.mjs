@@ -241,6 +241,17 @@ test("VLM-AC-8 hai model đếm riêng; toàn lô lỗi 401 không làm tăng nh
   assert.equal(theo["mtplx:y"].loi, 1);
 });
 
+test("VLM-AC-9 JSON hỏng chỉ đếm trả lời hỏng thật; lỗi mạng và bài có ảnh hỏng kèm ảnh tốt tách đúng", () => {
+  const tap = [baiGia("mang", ["thieu_gia"], ["s1"]), baiGia("hong", ["thieu_gia"], ["s2"]), baiGia("lan", ["thieu_gia"], ["s3", "s4"])];
+  const d = demNhan(tap, [
+    { ...dongNhan("mang", "mtplx:y", { anh: [{ sha256: "s1", error_kind: "AI_APICallError" }] }, "AI_APICallError"), json_ok: false },
+    dongNhan("hong", "mtplx:y", { anh: [{ sha256: "s2", error_kind: "json-hong" }] }, "json-hong"),
+    { ...dongNhan("lan", "mtplx:y", { anh: [{ sha256: "s3", error_kind: "AI_APICallError" }, { sha256: "s4", error_kind: "json-hong" }] }, "AI_APICallError"), json_ok: false },
+  ]);
+  assert.equal(d.models[0].jsonHong, 2, "VLM-AC-9 lỗi mạng bị tính là JSON hỏng");
+  assert.deepEqual(d.models[0].loiTheoLop, { AI_APICallError: 2, "json-hong": 1 });
+});
+
 test("VLM-AC-9 kiểm lô thật: thiếu dòng Qwen tốt hoặc tập rỗng thì có lý do; đủ thì rỗng", () => {
   const tap = [baiGia("a", ["thieu_gia"], ["s"])];
   assert.deepEqual(kiemLoThat(demNhan(tap, [dongNhan("a", "mtplx:y", { price_vnd: 1, anh: [{ sha256: "s" }] })])), []);

@@ -263,7 +263,7 @@ export function demNhan(tap, rows) {
       if (daDoc.size !== hienTai.size || [...hienTai].some((s) => !daDoc.has(s))) m.tapAnhDoi += 1;
       m.tongMs += r.latency_ms ?? 0;
       m.soAnhGoi += p.so_anh_goi ?? 0;
-      if (r.json_ok === false) m.jsonHong += 1;
+      if (r.error_kind === "json-hong" || (p.anh ?? []).some((a) => a.error_kind === "json-hong")) m.jsonHong += 1;
       if (r.error_kind === "lo-url") m.loUrl += 1;
       if (r.error_kind) m.loiTheoLop[r.error_kind] = (m.loiTheoLop[r.error_kind] ?? 0) + 1;
       if ((p.xung_dot ?? []).length) m.xungDot += 1;
