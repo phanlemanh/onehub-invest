@@ -5,7 +5,7 @@ slug: people-hien-so-goc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-people-hien-so-goc-design.md
@@ -57,3 +57,9 @@ Hỏi-B (Mạnh chốt 30/10, `docs/research/audit-bang-nguoi-sdt-3010.md` dòng
 ## Notes
 
 - Con trỏ `superseded_by` chỉ hợp lệ khi hồ sơ này có chữ ký người, nên Cổng Bằng chứng không đi đường máy-thông.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-2: Eval đo chữ và ô thay bởi chưa khai đủ tệp nên bằng chứng có thể không bị đánh dấu cũ khi các tệp đó đổi sau này, và kỳ vọng của nó cùng AC-8 vẫn ghi hai ô trong khi thực tế đã thay ba ô.
+  - Ngoài-5: Hai tài liệu nội bộ (`.claude/skills/onehub-ui/routes.md`, `scripts/check-portal-compliance.mjs`) vẫn gọi SĐT người bán hoặc Căn giá tốt là tầng A, trái quy định mới.
+  - Ngoài-7: Cơ sở dữ liệu máy thu lệch cấu trúc thì Căn giá tốt vẫn hiện thẻ nhưng mất hết liên hệ, không báo lỗi và không ghi log.
+  - Ngoài-8: Bằng chứng trên bản chạy thật chỉ kiểm một số trang mẫu của danh bạ, không duyệt hết mọi trang và mọi người.
+  - S4 vòng 1: Test áp migration lên lược đồ thật của DB máy thu có thể đụng khoá với job thật; lần 02/11 lúc 07:19:26 UTC job `resolve-properties` mất một câu lệnh, chưa xác định đúng tệp gây ra, giám sát giữ việc riêng.

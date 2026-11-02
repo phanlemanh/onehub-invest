@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9767768bef54d1a29821491433059b2c27ce3d96
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: people-hien-so-goc
