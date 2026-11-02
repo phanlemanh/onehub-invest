@@ -5,6 +5,8 @@
 //               hợp có SĐT nối SĐT — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
 // SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên danh sách SĐT «trước» lấy bằng bộ bóc
 //               của cây — thước chỉ đo phần giá tỷ của hồ sơ này; bộ bóc giờ dùng SDT_RE riêng, không còn PHONE_RE dùng chung.
+// SV1 (s03-va-doc-tin, Mạnh duyệt 02/11): bộ đọc giá đổi có chủ ý trên bài khác dạng, nên chỉ so giá ở bài mang dạng giá tỷ chẵn;
+//               phần đó đo ở do-va-doc-tin.mjs. SĐT vẫn so trên mọi bài.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -60,8 +62,8 @@ async function luot(dotBien) {
   for (const p of posts) {
     const a = nen.parsePost(p.text);
     const b = cay.parsePost(p.text);
-    if (a.priceVnd !== b.priceVnd || a.pricePerm2Vnd !== b.pricePerm2Vnd) {
-      doiGia.push({ id: p.post_id, truoc: a.priceVnd, sau: b.priceVnd, nhan: TY_CHAN.test(p.text) ? "gia-ty-chan-dong" : "khac" });
+    if (TY_CHAN.test(p.text) && (a.priceVnd !== b.priceVnd || a.pricePerm2Vnd !== b.pricePerm2Vnd)) {
+      doiGia.push({ id: p.post_id, truoc: a.priceVnd, sau: b.priceVnd, nhan: "gia-ty-chan-dong" });
     }
     if (JSON.stringify(boc(p.text)) !== JSON.stringify(b.phones)) doiSdt.push(p.post_id);
   }

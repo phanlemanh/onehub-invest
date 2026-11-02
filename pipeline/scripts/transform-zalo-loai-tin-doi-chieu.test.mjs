@@ -153,7 +153,7 @@ async function chenThueTy(c) {
   await c.query(
     `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
      VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi thuê tỷ SLT', 'slt-dc-nhom-ty', $3, '2026-10-30T08:00:00Z')`,
-    [`t_slt_dc_ty_${process.pid}`, SNAP, "Cho thuê căn hộ 2PN 70m2 giá 3 tỷ"]);
+    [`t_slt_dc_ty_${process.pid}`, SNAP, "Cho thuê căn hộ 2PN 70m2 giá 3 tỷ/tháng"]);
 }
 
 /** Chạy transform im lặng (log transform chỉ là số, nhưng dài) — trả kết quả. */
@@ -209,7 +209,7 @@ describe("SLT-DC đối chiếu trên DB máy thu (ROLLBACK)", () => {
         // Thuê từ 1 tỷ bị bước giá phi lý gạt trước khi ghi tin — đếm ở bộ đếm của bước ấy (trước lọc), không ở sale_offers.
         const tyTat = kqTat.loaiGiaPhiLy["thue-tu-1-ty"], tyBat = kq.loaiGiaPhiLy["thue-tu-1-ty"];
         console.log(`SLT-DC-9 thuê từ 1 tỷ (trước lọc giá phi lý): tắt ${tyTat} · bật ${tyBat}`);
-        assert.ok(tyTat >= 1, "SLT-DC-9 đối chứng dương: mồi «cho thuê … 3 tỷ» không vào bộ đếm thuê từ 1 tỷ");
+        assert.ok(tyTat >= 1, "SLT-DC-9 đối chứng dương: mồi «cho thuê … 3 tỷ/tháng» không vào bộ đếm thuê từ 1 tỷ");
         assert.ok(tyBat <= tyTat, `SLT-DC-9 tin thuê ≥ 1 tỷ tăng: ${tyTat} → ${tyBat}`);
         assert.ok(bat.ban_duoi_300tr <= tat.ban_duoi_300tr, `SLT-DC-9 tin bán < 300 triệu tăng: ${tat.ban_duoi_300tr} → ${bat.ban_duoi_300tr}`);
       });

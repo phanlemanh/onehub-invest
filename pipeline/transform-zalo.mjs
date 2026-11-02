@@ -11,7 +11,7 @@ import pg from "pg";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
-import { phatBieuPhongNgu } from "./lib/assert.mjs";
+import { phatBieuPhongNgu, phatBieuToaTruc } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { CONFIDENCE, KIND } from "./lib/vocab.generated.mjs";
 
@@ -42,15 +42,85 @@ export function parseVnNumber(raw) {
 const GIA_TY_NHOM_NGHIN = /^\d{1,2}[.,]\d{3}$/;
 // "2ty450", "3ty2", "2 tỷ 450" — phần lẻ không được là số phòng, diện tích, triệu hay số đếm của căn ("8 tỷ 4 tầng",
 // "3 tỷ 2 ô tô tránh" — Ngoài-1, Ngoài-4 nâng phạm vi ở Cổng Bằng chứng 30/10).
-const GIA_TY_LE = /(?<![\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng|tầng|lầu|trệt|ô\s*tô|oto|căn|mặt))/i;
+const GIA_TY_LE = /(?<![\p{L}\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng|tầng|lầu|trệt|ô\s*tô|oto|căn|mặt))/giu;
 // "5tr5", "8tr5" (không dấu cách giữa tr và phần lẻ).
-const GIA_TR_LE = /(?<![\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/i;
+const GIA_TR_LE = /(?<![\p{L}\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/giu;
+// Số dính chữ cái («S702 triệu») không phải giá; cờ g để bỏ qua số ngữ cảnh rồi xét số kế (khopGia).
+const GIA_TY = /(?<![\p{L}\d])(?<!\d[.,])(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/giu;
+const GIA_TRIEU_SO = /(?<![\p{L}\d])(?<!\d[.,])(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/giu;
 // "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị hay "/m" (đơn giá — Ngoài-2).
 const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m|\/\s*m[2²]|\/\s*m\b))/i;
 // "45.000.000/m2", "45.000.000đ/m2" — đơn giá viết bằng đồng: giá/m², không phải tổng giá (Ngoài-2).
 const GIA_DONG_M2 = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])\s*(?:đ|vnđ|vnd)?\s*\/\s*m(?:2|²)?(?![\p{L}\p{N}])/iu;
 // "Giá: 4,000 (thu về)" — số nhóm nghìn đứng sau nhãn giá, không đơn vị: triệu.
 const GIA_NHAN_TRIEU = /giá(?:\s*bán)?\s*:?\s*(\d{1,3}[.,]\d{3})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ|vnd))/i;
+
+// Vá hẹp SV1 (hồ sơ s03-va-doc-tin, audit 02/11 §3). Số đứng sau những chữ này là khoản khác, không phải giá chào: «cắt 450tr»,
+// «vốn 1,4 tỷ», «đã vào 800tr». Sau «còn», «giá», «bán», «chỉ» thì lại là giá: «cắt lỗ còn 3 tỷ».
+const KHONG_PHAI_GIA = /(?<![\p{L}])(?:cắt|lỗ|lõm|âm|giảm|hạ|chênh|lời|đã\s*vào|đã\s*đóng|đã\s*thanh\s*toán|vay|cọc|vốn|trả\s*trước|gốc|tiến\s*độ|bớt|hỗ\s*trợ|chiết\s*khấu|dòng\s*tiền|thu\s*nhập|lãi|tài\s*chính|ngân\s*sách|tc|ttc|tts|htls)(?![\p{L}])[^\d\n]{0,18}$/iu;
+const LAI_LA_GIA = /(?<![\p{L}])(?:còn|giá|bán|chỉ)\s*[:：]?\s*$/iu;
+/** Số ở vị trí i trong chữ là khoản khác, không phải giá chào (AC-4). */
+function laSoNguCanh(so, i) {
+  const truoc = so.slice(Math.max(0, i - 25), i);
+  if (LAI_LA_GIA.test(truoc)) return false;
+  if (KHONG_PHAI_GIA.test(so.slice(Math.max(0, i - 25), i))) return true;
+  return false;
+}
+/** Khớp đầu tiên của `re` (có cờ g) không phải số ngữ cảnh. */
+function khopGia(re, so) {
+  for (const m of so.matchAll(re)) if (!laSoNguCanh(so, m.index)) return m;
+  return null;
+}
+// Nhãn giá ngay trước số: «Giá:», «Giá bán:», «GIÁ;», «Giá thuê», «Giá chỉ». «Đơn giá», «giá gốc» không phải.
+const NHAN_GIA = /(?<!đơn\s)(?<![\p{L}])gi[áa](?:\s*(?:bán|thuê|chốt|chào|net|nét|chỉ(?:\s*từ|\s*còn)?|cho\s*thuê))*\s*[:：;=\-–]?\s*(?:chỉ\s*)?$/iu;
+const SAU_THU_VE = /^\s*\(?\s*(?:net|nét|thu\s*về|thu\s*vè|thu\s*nét|thu\s*net|btp|bao\s*thuế|all\s*in)(?![\p{L}])/iu;
+// Giá che số: «4.9xx», «3,0x tỷ», «3,2** tỷ», «36xx», «18XX tỷ». Số không dấu phải đủ hai chữ số; không dính chữ cái hay chữ số
+// («PR6xx20», «Be2.2x12» là mã căn).
+const GIA_CHE = /(?<![\p{L}\d])(?<!\d[.,])(\d{1,2}[.,]\d{1,2}|\d{2})([xX*]{1,3})(?![\p{L}\d*])/gu;
+
+/** Giá che số ra số sàn (đồng), hoặc null. Chữ số môi giới viết ra là phần chắc chắn; phần che không đoán (hồ sơ: một cột giá). */
+function docGiaChe(so) {
+  for (const m of so.matchAll(GIA_CHE)) {
+    if (laSoNguCanh(so, m.index)) continue;
+    const sau = so.slice(m.index + m[0].length);
+    const coTy = /^\s*t(?:ỷ|ỉ|y)(?![\p{L}])/iu.test(sau);
+    const coNhan = NHAN_GIA.test(so.slice(Math.max(0, m.index - 30), m.index));
+    if (!coTy && !coNhan && !SAU_THU_VE.test(sau)) continue;
+    if (/[.,]/.test(m[1])) return Math.round(parseFloat(m[1].replace(",", ".")) * 1e9);
+    return parseInt(m[1], 10) * 10 ** m[2].length * 1e6;
+  }
+  return null;
+}
+
+// Số trần không đơn vị mà môi giới hiểu là triệu hay tỷ. Nhóm 1 = số.
+const SO_TRAN = /(?<![\p{L}\d])(?<!\d[.,])(\d{1,2}[.,]\d{1,3}|\d{4,5})(?![\p{L}\d.,²%])(?!\s*(?:tỷ|tỉ|ty|tr|triệu|m\b|m2|m²|đ|vnd|\/))/giu;
+const GIA_CO_NHAN_SO = NHAN_GIA;
+
+/** Giá không đơn vị (AC-7), hẹp: phải có nhãn giá ngay trước, hoặc «net», «thu về», «btp» ngay sau; không có thì không đọc.
+ *  «2800», «2.800», «1,950» là triệu (từ 1 tỷ). «4.1», «2.65» là tỷ ở tin bán; «8.5» là triệu ở tin thuê. */
+function docGiaKhongDonVi(so, kind) {
+  for (const m of so.matchAll(SO_TRAN)) {
+    if (laSoNguCanh(so, m.index)) continue;
+    const truoc = so.slice(Math.max(0, m.index - 30), m.index);
+    const coNhan = GIA_CO_NHAN_SO.test(truoc);
+    const sauNet = SAU_THU_VE.test(so.slice(m.index + m[0].length));
+    if (!coNhan && !sauNet) continue;
+    const raw = m[1];
+    if (/^\d{1,2}[.,]\d{3}$/.test(raw) || /^\d{4,5}$/.test(raw)) {
+      // Chưa biết loại mà có dấu («Giá: 2,900»): để `suyLoai` đọc theo bối cảnh nhóm, như bản nền.
+      if (kind == null && !sauNet && /[.,]/.test(raw)) return null;
+      const trieu = parseInt(raw.replace(/[.,]/g, ""), 10);
+      // Tin thuê viết theo nghìn đồng, không dấu: «Giá 12000» là 12 triệu một tháng; «4,000» ở tin thuê không rõ nên để trống.
+      if (kind === KIND.rent_lt && !sauNet) return /^\d{4,5}$/.test(raw) ? trieu * 1e3 : null;
+      if (trieu >= 1000 && trieu < 100000) return trieu * 1e6;
+      continue;
+    }
+    const v = parseFloat(raw.replace(",", "."));
+    if (kind === KIND.rent_lt) return v < 100 ? Math.round(v * 1e6) : null;
+    if ((kind === KIND.sale || sauNet) && v >= 1 && v < 100) return Math.round(v * 1e9);
+  }
+  return null;
+}
 
 /** Số đứng trước chữ tỷ, ra đơn vị tỷ: "2.650" → 2,65 · "2400" (từ 1.000, không dấu) → 2,4 · còn lại như parseVnNumber. */
 export function soTy(raw) {
@@ -183,8 +253,52 @@ export function demTinNhieuSdt(nhom) {
   return nhom.filter((o) => new Set(o.baiSdt.flatMap((b) => b.phones ?? [])).size >= 2).length;
 }
 
+// Phòng ngủ viết tắt: «2N», «1N+», «2n1wc», «3n2vs», «2 ngủ». Chữ theo sau không được là chữ cái: «2 năm», «3 nữ», «5 ngày». Dấu
+// cộng («1N+») chưa có chỗ lưu. Studio là 0 phòng ngủ.
+const PN_TAT = /(?<![\p{L}\d.,])([1-9])\s*(?:n|ngủ|ngu)(?![\p{L}])/iu;
+// «1+»: một phòng ngủ cộng; chỉ tính khi đứng riêng, không phải phép cộng số.
+const PN_CONG = /(?<![\p{L}\d.,+])([1-3])\+(?![\p{L}\d+])(?!\s*\d)/u;
+const STUDIO = /(?<![\p{L}])(?:studio|stu)(?![\p{L}])/iu;
+
+// Mã căn: toà + tầng + trục. Thứ tự: đủ tầng và trục → viết liền → tầng che → lộ một chữ số → toà + trục (bộ đọc audit 02/11 §10).
+// Giữ nguyên chữ môi giới (UnitNumber); «S801» viết liền không tầng chưa kiểm cách tách nên không đọc.
+const TOA = "([A-Z]{1,3}\\d{1,2}(?:[A-Z]\\d)?)";
+const MA_DANG = [
+  new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}[.\\-_ ]?\\d{2}[.\\-_]\\d{2}[A-Z]?(?![\\p{L}\\p{N}])`, "giu"),
+  new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}(?:\\.\\d{2}\\.?|[.\\-_])\\d{4}(?![\\p{L}\\p{N}])`, "giu"),
+  new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}(?:\\.\\d{2})?[.\\-_ ]?(?:[xX*]{2}|[xX*]\\.)[.\\-_]?\\d{2}(?!\\d)`, "giu"),
+  new RegExp(`(?<![\\p{L}\\p{N}_])${TOA}[.\\-_ ]?\\d[xX*][.\\-_]?\\d{2}(?!\\d)`, "giu"),
+];
+// Toà có đuôi số («S1.03», «R1.01»): cả cụm là tên toà của khu đó, không phải toà + trục.
+const TOA_DUOI_SO = new RegExp(`(?<![\\p{L}\\p{N}_])([A-Z]{1,3}\\d{1,2}[.\\-_]\\d{2})(?![\\p{L}\\p{N}.\\-])`, "giu");
+// Không phải toà: tháng «T4», quận «Q9», và các chữ của mô tả căn.
+const KHONG_PHAI_TOA = /^(?:T|Q|PN|WC|VS|N|M|DT|TR|BR|W|HD|HH)\d/i;
+const TOA_RIENG = /(?<![\p{L}])(?:toà|tòa|toa)\s*:?\s*([A-Z]{1,3}\d{1,2}[A-Z]?\d?)(?![\p{L}\p{N}])/iu;
+
+/** Toà và trục đọc từ chữ bài (AC-8). Bài nhiều mã (thường nhiều căn) để trống trục, chờ PL18; toà chỉ giữ khi mọi mã cùng toà.
+ *  @returns {{ block: string|null, unit: string|null }} */
+export function docToaTruc(text) {
+  const so = gatSo(text);
+  let thay = [];
+  for (const re of MA_DANG) {
+    thay = [...so.matchAll(re)].filter((m) => !KHONG_PHAI_TOA.test(m[1]));
+    if (thay.length) break;
+  }
+  const units = [...new Set(thay.map((m) => m[0].toUpperCase()))];
+  const blocks = [...new Set(thay.map((m) => m[1].toUpperCase()))];
+  let unit = thay[0]?.[0] ?? null;
+  if (units.length !== 1) unit = null;
+  if (blocks.length) return { block: blocks.length === 1 ? blocks[0] : null, unit };
+  const duoi = [...new Set([...so.matchAll(TOA_DUOI_SO)].filter((m) => !KHONG_PHAI_TOA.test(m[1])).map((m) => m[1].toUpperCase()))];
+  if (duoi.length) return { block: duoi.length === 1 ? duoi[0] : null, unit: null };
+  const toa = so.match(TOA_RIENG);
+  if (toa) return { block: toa[1].toUpperCase(), unit: null };
+  const tran = [...new Set(maToaCan(text).filter((m) => !KHONG_PHAI_TOA.test(m)))];
+  return { block: tran.length === 1 ? tran[0] : null, unit: null };
+}
+
 // ---- Bước 2: parse ----
-export function parsePost(text) {
+export function parsePost(text, { giaKhongDonVi = true } = {}) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
   // Số đọc trên chữ đã gạt URL và SĐT (N1); SĐT người đăng đọc từ chữ gốc ở dưới.
@@ -204,17 +318,19 @@ export function parsePost(text) {
   if (!out.pricePerm2Vnd && dongM2) out.pricePerm2Vnd = parseInt(dongM2[1].replace(/\./g, ""), 10);
 
   // "2ty450", "3ty2", "2 tỷ 450": phần sau chữ tỷ là phần lẻ (2,45 tỷ) — xét trước dạng tỷ thường, vì "3ty2" khớp cả hai.
-  const tyLe = so.match(GIA_TY_LE);
+  const tyLe = khopGia(GIA_TY_LE, so);
   // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
   // chỉ theo ASCII nên 'tổ' vẫn tạo boundary giả (bench C2 bắt được).
-  const ty = so.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
-  if (tyLe) out.priceVnd = Math.round(parseFloat(`${tyLe[1]}.${tyLe[2]}`) * 1e9);
+  const ty = khopGia(GIA_TY, so);
+  const che = docGiaChe(so);
+  if (che != null) out.priceVnd = che;
+  else if (tyLe) out.priceVnd = Math.round(parseFloat(`${tyLe[1]}.${tyLe[2]}`) * 1e9);
   else if (ty) out.priceVnd = Math.round(soTy(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
     // "5tr5", "8tr5": phần sau chữ tr là phần lẻ (5,5 triệu).
-    const trLe = so.match(GIA_TR_LE);
-    const trieu = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
+    const trLe = khopGia(GIA_TR_LE, so);
+    const trieu = khopGia(GIA_TRIEU_SO, so);
     if (trLe) out.priceVnd = Math.round(parseFloat(`${trLe[1]}.${trLe[2]}`) * 1e6);
     else if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
   }
@@ -225,21 +341,27 @@ export function parsePost(text) {
     const giaTrieu = out.kind === "sale" ? so.match(GIA_NHAN_TRIEU) : null;
     if (dong) out.priceVnd = parseInt(dong[1].replace(/\./g, ""), 10);
     else if (giaTrieu) out.priceVnd = Math.round(parseVnNumber(giaTrieu[1]) * 1e6);
+    else if (giaKhongDonVi) out.priceVnd = docGiaKhongDonVi(so, out.kind);
   }
 
   // diện tích: "65m2", "65m²", "DT 45m"
-  const area = so.match(/(\d+(?:\.\d+)?)\s*m[²2]/i);
-  if (area) out.areaM2 = parseFloat(area[1]);
+  const area = so.match(/(\d+(?:[.,]\d+)?)\s*m[²2]/i);
+  if (area) out.areaM2 = parseFloat(area[1].replace(",", "."));
   else out.areaM2 = dienTichMetTran(so);
 
   // bedrooms: "2PN", "2 phòng ngủ", "2BR"
   const bd = so.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
+  const tat = bd ? null : so.match(PN_TAT);
   if (bd) out.bedrooms = parseInt(bd[1]);
+  else if (tat) out.bedrooms = parseInt(tat[1]);
+  else if (PN_CONG.test(so)) out.bedrooms = parseInt(so.match(PN_CONG)[1]);
+  else if (STUDIO.test(so)) out.bedrooms = 0;
 
   // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)
   out.phones = extractPhones(text);
   out.phone = out.phones[0] ?? null;
   out.ma = maToaCan(text);
+  Object.assign(out, docToaTruc(text));
 
   // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
   // thành null để transform bỏ qua thay vì gãy INSERT bigint.
@@ -410,6 +532,8 @@ export function matchPhuong(text, phuongSlugs) {
   return best;
 }
 
+const HUONG_GHEP = /^(?:đông|tây)\s*(?:nam|bắc)$/u;
+
 /**
  * Phường theo thị trường (N1): khớp dài nhất như matchPhuong trên danh sách phường của nhiều thị trường; khớp dài nhất
  * rơi vào hai thị trường (tên trùng giữa Hà Nội và TP.HCM) thì không đoán — trả null.
@@ -419,6 +543,8 @@ export function matchPhuong(text, phuongSlugs) {
  */
 export function matchPhuongThiTruong(text, entries) {
   const textLower = text.normalize("NFC").toLowerCase();
+  // AC-3: tên phường trùng hướng («Tây Nam») chỉ khớp khi gọi đích danh; không thì là hướng nhà.
+  const tenHuongHopLe = (v, chu) => !HUONG_GHEP.test(v) || new RegExp(`(?<![\\p{L}])(?:phường|p\\.|p|xã)\\s*${v}(?![\\p{L}])`, "u").test(chu);
   let best = null;
   let bestLen = 0;
   let tranh = false;
@@ -429,6 +555,7 @@ export function matchPhuongThiTruong(text, entries) {
     let len = 0;
     for (const v of variants) {
       if (v.length < 2 || /^[\d\s]+$/.test(v)) continue;
+      if (!tenHuongHopLe(v, textLower)) continue;
       if (textLower.includes(v) && v.length > len) len = v.length;
     }
     if (len === 0) continue;
@@ -452,10 +579,12 @@ export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().re
  */
 export function repostKey(pr, post) {
   const noiDung = `${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`;
-  if (pr.phuong && pr.areaM2 != null) return noiDung;
+  // SV1: trục tách căn ở cả nhánh đủ phường + DT, để một tin không phát biểu hai trục.
+  if (pr.phuong && pr.areaM2 != null) return pr.unit ? `${noiDung}|${pr.unit.toUpperCase()}` : noiDung;
   const nguoi = post.sender_id ? `sender:${post.sender_id}` : pr.phone ? `phone:${pr.phone}` : `text:${normText(post.text)}`;
   // N1: mã toà/căn tách các căn khác nhau của một môi giới cùng giá/PN (đo 30/10: một offer gom 40 bài).
-  const ma = pr.ma ?? [];
+  // SV1: thêm trục mới đọc để hai căn khác trục không chung tin; viết hoa để cùng trục khác hoa thường vẫn chung.
+  const ma = [...new Set([...(pr.ma ?? []), ...(pr.unit ? [pr.unit] : [])].map((m) => m.toUpperCase()))].sort();
   return `${noiDung}|${ma.join(",") || "?"}|${nguoi}`;
 }
 
@@ -471,6 +600,15 @@ export function maToaCan(text) {
 // Chốt khoảng giá (N1, Hỏi-2 = a): số phi lý không thành offer. Không đổi loại tin — ý định là việc của PL5.
 const GIA_THUE_TRAN = 1e9;
 const GIA_BAN_TRAN = 100e9;
+
+// Đơn vị theo tháng, năm: giá từ 1 tỷ kèm đơn vị này vẫn là thuê phi lý, không đổi loại.
+const THEO_THANG = /\/\s*(?:th(?:áng)?|năm)(?![\p{L}])|(?<![\p{L}])(?:một|mỗi|1)\s*tháng(?![\p{L}])/iu;
+
+/** Bài thuê giá từ 1 tỷ không ghi đơn vị tháng là bài bán có chữ «cho thuê» («đang cho thuê», AC-5): đổi loại thay vì vứt. */
+export function chinhLoaiThueTy(pr, text) {
+  if (pr.kind !== KIND.rent_lt || pr.priceVnd == null || pr.priceVnd < GIA_THUE_TRAN) return;
+  if (!THEO_THANG.test(gatSo(text))) pr.kind = KIND.sale;
+}
 
 /** Lý do một bài đã đọc có giá phi lý, hoặc null. */
 export function lyDoGiaPhiLy(pr) {
@@ -502,6 +640,13 @@ export async function docThiTruongNhom(client) {
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
+/** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */
+export async function docDanhSachPhuong(client) {
+  const moiThiTruong = await docThiTruongCoPhuong(client);
+  const areas = await docPhuongHopLe(client, moiThiTruong);
+  return { moiThiTruong, phuong: areas.map((a) => ({ id: a.id, name: a.name, market: a.parent_id })) };
+}
+
 export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
@@ -539,6 +684,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
       nguon.push(r.nguon);
     } else nguon.push(pr.kind ? "chu-bai" : "bo");
     if (!pr.kind) { nFail++; continue; }
+    chinhLoaiThueTy(pr, p.text);
     const lyDo = lyDoGiaPhiLy(pr);
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
     const khai = thiTruongNhom.get(p.conversation_id);
@@ -575,14 +721,14 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id }],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit }],
         phone: null, baiSdt: [], sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
     } else {
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -630,7 +776,9 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   }
   await auditRejected(client, "S03", rejected);
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
-  const { reconcile } = await writeOffers(client, "S03", rows, { assertions: phatBieuPhongNgu("S03", nhom, "transform-zalo@045") });
+  const { reconcile } = await writeOffers(client, "S03", rows, {
+    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", nhom.flatMap((o) => o.posts), "transform-zalo@sv1")],
+  });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
   return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai };

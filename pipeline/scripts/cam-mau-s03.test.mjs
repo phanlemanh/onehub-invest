@@ -59,9 +59,11 @@ test("CM-AC-1: giá/DT/PN không lấy từ URL hay SĐT; phones đọc từ ch�
   assert.equal(AC1.length + AC1_SDT.length, 8);
 });
 
-test("CM-AC-1 đột biến: bỏ bước gạt URL/SĐT → dòng URL «6tY» ra sai", async () => {
-  const m = await banSaoDotBien([["const so = gatSo(text);", "const so = text;"]]);
-  assert.notEqual(m.parsePost(AC1[0][0]).priceVnd, 7e6, "CM-AC-1 đột biến «6tY» vẫn đúng — thước không đo bước gạt");
+// SV1 (s03-va-doc-tin): `docToaTruc` cũng mở đầu bằng dòng gạt nên chuỗi đột biến neo vào câu chú thích của parsePost;
+// bộ đọc giá tỷ chặn số dính chữ nên «6tY» không còn đỏ khi bỏ gạt, ca đỏ chuyển sang dòng SĐT.
+test("CM-AC-1 đột biến: bỏ bước gạt URL/SĐT → dòng SĐT «T.Lan» ra sai", async () => {
+  const m = await banSaoDotBien([["chữ gốc ở dưới.\n  const so = gatSo(text);", "chữ gốc ở dưới.\n  const so = text;"]]);
+  assert.notEqual(m.parsePost(AC1_SDT[0]).priceVnd, 9e6, "CM-AC-1 đột biến SĐT vẫn đúng — thước không đo bước gạt");
 });
 
 // ---- AC-2: giá tỷ ----
@@ -147,7 +149,7 @@ test("CM-AC-3 đột biến: tắt luật đơn giá đồng và bỏ chặn «/
 });
 
 test("CM-AC-3 đột biến: bỏ luật «tr chen phần lẻ» → «5tr5» ra sai", async () => {
-  const m = await banSaoDotBien([["const trLe = so.match(GIA_TR_LE);", "const trLe = null;"]]);
+  const m = await banSaoDotBien([["const trLe = khopGia(GIA_TR_LE, so);", "const trLe = null;"]]);
   assert.notEqual(m.parsePost("Cho thuê 2PN 5tr5").priceVnd, 5.5e6, "CM-AC-3 đột biến «5tr5» vẫn đúng");
 });
 

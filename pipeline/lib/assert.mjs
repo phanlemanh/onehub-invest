@@ -2,7 +2,7 @@
 // Spec: docs/superpowers/specs/2026-10-26-phat-bieu-va-phan-xu-design.md §3.4.
 // Người gọi giữ transaction — hàm không tự mở/đóng.
 
-import { ASSERTION_METHOD, ENRICH_FIELD, EVIDENCE_TIER } from "./vocab.generated.mjs";
+import { ASSERTION_FIELD, ASSERTION_METHOD, ENRICH_FIELD, EVIDENCE_TIER } from "./vocab.generated.mjs";
 
 /** Khoá gốc của chủ thể phát biểu: '<S0x>:<id gốc>' (post_id, list_id). */
 export function subjectKey(source, id) {
@@ -88,4 +88,22 @@ export function phatBieuPhongNgu(source, nhom, methodVersion) {
     evidence_tier: EVIDENCE_TIER.observed, method: ASSERTION_METHOD.parser, method_version: methodVersion,
     observed_at: p.posted_at ?? null,
   }))));
+}
+
+/**
+ * Phát biểu toà và trục của bộ đọc tin S03 (hồ sơ s03-va-doc-tin): mỗi bài có giá trị một phát biểu quan sát, giữ nguyên chữ
+ * môi giới. Bài không đọc ra thì không có dòng.
+ * @param {string} source
+ * @param {Array<{post_id: string, posted_at: string|Date|null, block?: string|null, unit?: string|null}>} bai
+ * @param {string} methodVersion
+ */
+export function phatBieuToaTruc(source, bai, methodVersion) {
+  const dong = (p, field, value) => ({
+    subject_key: subjectKey(source, p.post_id), field, value, evidence_tier: EVIDENCE_TIER.observed,
+    method: ASSERTION_METHOD.parser, method_version: methodVersion, observed_at: p.posted_at ?? null,
+  });
+  return bai.flatMap((p) => [
+    ...(p.block ? [dong(p, ASSERTION_FIELD.block_raw, p.block)] : []),
+    ...(p.unit ? [dong(p, ASSERTION_FIELD.unit_number, p.unit)] : []),
+  ]);
 }
