@@ -5,10 +5,10 @@ slug: s03-llm-doc-toan-bo
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-02-s03-llm-doc-toan-bo-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-03
 ---
 
 # Acceptance Contract: s03-llm-doc-toan-bo
