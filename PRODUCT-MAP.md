@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>124 việc"]
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>125 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>94 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -32,6 +32,10 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+
+## Đang làm
+
+- Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 069 (`so-ghep-s06-nhan-danh-ba`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -247,6 +251,7 @@ flowchart TD
 - Hàng Phường của bảng so ghép căn ở /ops/review so theo tên phường chuẩn, không báo «Lệch» khi hai tin cùng phường chỉ khác cách viết (`the-duyet-phuong-lech-gia`)
 - collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
+- Nhà đầu tư tìm được tin rao kèm người bán và SĐT trên cổng Invest — tên, SĐT lên cloud, API Listing theo loại, trang Bán và Cho thuê với thẻ chung (`tin-rao-tren-invest`)
 - hai ca test bước chụp (UC-TA-5, UC-BR) hết đỏ chập chờn khi bộ test scripts/ chạy song song (`uc-ta-5-tmp-rieng`)
 - Bộ chuẩn UI/UX ReUI — đợt B1 (dọn cổng Ops tới khi không còn UI tự vẽ tay) (`ui-clean-b1-ops`)
 - Chuẩn UI ReUI — đợt B3 thống nhất biểu đồ (bảng màu chuỗi chung, gom code chép trùng, tách file > 200 dòng) (`ui-clean-b3-charts`)
