@@ -30,5 +30,5 @@ Cổng Đáng: Mạnh «Chốt, chuyển việc» lúc 15:41:12Z ngày 02/11 (ph
 
 - Câu hỏi phép đo trả lời: [đề xuất] đã đạt «S03 lên cổng ≥ 900 tin; sai nặng ≤ 10%; tin khu vực cấp thị trường không có dấu hiệu theo phường và không làm lệch rollup 300, 400» chưa?
 - Kết quả nào là SỐNG: [đề xuất] S03 lên cổng ≥ 900 tin; sai nặng ≤ 10%; tin khu vực cấp thị trường không có dấu hiệu theo phường và không làm lệch rollup 300, 400
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «S03 lên cổng ≥ 900 tin; sai nặng ≤ 10%; tin khu vực cấp thị trường không có dấu hiệu theo phường và không làm lệch rollup 300, 400» khi hết timebox
+- Kết quả nào là CHẾT: [đề xuất] đường gãy, số lên cổng không vượt 50 khi hết timebox. Dưới 900 mà trên 50 chỉ là cảnh báo, báo đúng số (kế hoạch §1: ngưỡng chỉ để cảnh báo, không chặn ra mắt; §4 mục 6: ra mắt S06 trước)
 - Timebox: [đề xuất] 2026-11-04 (mốc Ba việc của kế hoạch ra mắt 05/11 xong; từ 22:00 ngày 04/11 chỉ gộp bản vá đường ống)

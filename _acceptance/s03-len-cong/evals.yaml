@@ -1,0 +1,117 @@
+schema_version: 1
+feature_slug: s03-len-cong
+# Ca mang tiền tố «SL1-AC-n». Thuần: pipeline/scripts/s03-len-cong.test.mjs. DB thử oneinvest_n1_sl1: pipeline/scripts/s03-len-cong.itest.mjs.
+# Đo toàn bộ và thước diff: pipeline/scripts/do-s03-len-cong.mjs. Sau #274: app/tests/s03-len-cong.test.tsx.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s03_len_cong
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/s03-len-cong.test.mjs]
+    expected: "exit 0; ca 'SL1-AC-1' xanh: năm dòng ma trận đúng khu vực, phuong_raw, confidence, số assert bằng số dòng; ca đỏ trên bản sao bỏ điều kiện đúng một thị trường ghim «SL1-AC-1» và dòng khai hai thị trường"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; ca 'SL1-AC-2' xanh: market_metrics, area_breakdowns băm giống hệt có và không có tin cấp thị trường; market_asset_stats 0 dòng cấp thị trường, băm dòng cấp phường khác rỗng và không đổi; ca đỏ trên bản 500 bỏ lọc ghim «SL1-AC-2»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; ca 'SL1-AC-3' xanh: thước 0 dòng cấp thị trường, bait_gap_pct trống, 0 cặp chứa tin cấp thị trường kể cả hai tin S03 cùng mã, cặp đối chứng cùng phường vẫn sinh, area_id giữ nguyên, ảnh chụp bậc tính đúng thị trường; ca đỏ trên bản 610 cũ ghim «chua-ro»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s03_len_cong
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/s03-len-cong.test.mjs]
+    expected: "exit 0; ca 'SL1-AC-4' xanh: ma trận loại hình đúng đáp án; ca đỏ trên bản sao nhận «PN» là căn hộ ghim «SL1-AC-4»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s03_len_cong_do
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-s03-len-cong.mjs]
+    expected: "exit 0; in «nhãn do tác tử gắn»; hai dòng theo chữ và theo nhóm (đối chứng giữ lại), mỗi dòng ≥ 85% kèm số nhận và mẫu số; nhận tổng ≥ 50%"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; ca 'SL1-AC-5' xanh: bậc và phương pháp đúng từng ca; dưới 20 bài, dưới 85% không phát biểu; chữ nói rõ thì nhóm im; lần hai không thêm dòng; phát biểu e2_llm observed vẫn thắng; cột property_type đúng giá trị phân xử; ca đỏ trên bản ngưỡng 50% ghim «SL1-AC-5»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_db
+    paths: [pipeline/khai-so-nhom.mjs, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; ca 'SL1-AC-6' xanh: mặc định không ghi; ghi đúng; chạy lại không thêm nhật ký; mã lạ thoát khác 0 và DB không đổi; enabled, status không đổi; stdout không chứa khoá hay tên nhóm thử; thiếu đơn vị hay thẻ thì thoát khác 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_do
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-s03-len-cong.mjs]
+    expected: "exit 0; tập offer_id trùng khít; giá, diện tích, kind không đổi; bản đột biến lệch; in số qua từng chặn kèm mẫu số"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.s03_len_cong_app
+    paths: [app/src/lib/offers-public.ts, app/src/app/api/v1/offers/route.ts, app/tests/s03-len-cong.test.tsx]
+    expected: "exit 0; ca 'SL1-AC-8' xanh: unverified đúng từng nguồn, phản hồi không có khoá source; tin chỉ inferred và mã thị trường qua VISIBLE, bản bỏ phát biểu thì biến mất; lọc thị trường có, lọc phường không có; ca đỏ khi thêm source vào phản hồi ghim «SL1-AC-8»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/listing/offer-card.tsx]
+    steps:
+      - "Bản chạy: dev server :3456 của worktree dãy N1 trên DB thử oneinvest_n1_sl1. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "/vn/hanoi/listings/sale ở 1280 px sáng → evidence/E10-step1.png, có thẻ S03 và thẻ S06"
+      - "Cùng trang 1280 px tối → evidence/E10-step2.png"
+      - "Cùng trang 375 px sáng → evidence/E10-step3.png; ghi scrollWidth và clientWidth"
+      - "Cùng trang 375 px tối → evidence/E10-step4.png; ghi scrollWidth và clientWidth"
+      - "Chọn một phường ở bộ lọc → evidence/E10-step5.png"
+    expected: "Thẻ S03 có nhãn «Chưa xác minh» màu cảnh báo cỡ mặc định, thẻ S06 không; thẻ cấp thị trường hiện tên thị trường và mất khỏi kết quả khi lọc phường; 375 px sáng và tối không tràn."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s03_len_cong_do
+    paths: [pipeline/scripts/do-s03-len-cong.mjs]
+    expected: "exit 0; in số lên cổng so với 900, sai nặng so với 10% theo định nghĩa ở AC-9, nhãn do tác tử gắn, seed mẫu. Dưới đích vẫn exit 0, ghi rõ số; số lên cổng không vượt 50 hay lỗi đo thì exit khác 0, thông điệp ghim «SL1-AC-9»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.s03_len_cong_ranh
+    paths: [pipeline/scripts/do-s03-len-cong.mjs]
+    expected: "exit 0; chỉ quét dòng thêm; sync-cloud không đổi, collector/openclaw và route ops/zalo không đổi; không tên nguồn thật lấy từ source_registry local, không khoá nhóm, không chữ bài; research-local bị ignore; đối chứng chèn tên thật vào dòng thêm giả ra đỏ, định danh có sẵn không đổi thì không đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s03_len_cong_ben_doc
+    paths: [pipeline/scripts/do-s03-len-cong.mjs, pipeline/sql/**, app/src/lib/**, data-api/src/routes/**]
+    expected: "exit 0; quét sale_offers và market_asset_stats trong pipeline, app/src, data-api/src, agent/src; mọi tệp có trong ma trận viết trước kèm kết luận; tệp lạ thì đỏ, thông điệp ghim tên tệp; đối chứng thêm tệp giả ra đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s03_len_cong_ui_tinh
+    paths: [app/src/components/listing/offer-card.tsx, CONTEXT.md]
+    expected: "exit 0; thẻ tin import Badge từ @/components/reui/badge, variant warning-light, không className đổi cỡ; CONTEXT.md có thuật ngữ «Chưa xác minh»; đối chứng bản thêm className ra đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
