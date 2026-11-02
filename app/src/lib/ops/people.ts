@@ -29,8 +29,8 @@ export type NguoiHang = {
   soBiDanh: number
   ten: string | null
   taiKhoan: string | null
-  sdtBam: string | null
-  /** Loại bí danh của `sdtBam`: `sdt` (số gốc E.164, che cố định) hay `sdt_bam` (đời trước). */
+  sdt: string | null
+  /** Loại bí danh của `sdt`: `sdt` (số gốc E.164) hay `sdt_bam` (băm đời trước, đã nghỉ hết trên máy thu). */
   sdtKind: typeof ALIAS_KIND.sdt | typeof ALIAS_KIND.sdt_bam
 }
 
@@ -53,7 +53,8 @@ export type MotNguoi = {
   soVaiRut: number
 }
 
-export type LocNguoi = { source: string | null; q: string; page: number }
+/** `uuTienSo`: người có SĐT đang dùng lên trước; chỉ bật cho vai xem được số, để thứ tự không lộ ai có số. */
+export type LocNguoi = { source: string | null; q: string; page: number; uuTienSo?: boolean }
 
 /** `?source=` chỉ nhận mã S0x; giá trị khác bỏ lọc. */
 export function parseSource(v: string | undefined): string | null {
@@ -70,27 +71,45 @@ export function laMoiGioi(soTin: number): boolean {
   return soTin >= NGUONG_MOI_GIOI
 }
 
-/**
- * Giá trị bí danh để hiện: vai dưới Vận hành → null (ẩn); SĐT băm → 8 ký tự đầu; SĐT số gốc (`sdt`, E.164) → nhãn che
- * cố định, 0 chữ số, mọi vai (SD3 Hỏi-2 — hàng U1 people-hien-so-goc mở số); tên và tài khoản đi qua bộ che tên
- * nguồn chung (một tên người bán S06 ở máy thu chứa tên nguồn thật) — danh sách tên rỗng thì «—» (đóng chặt).
- */
-/** Nhãn hiện thay số gốc tới khi U1 mở (Hỏi-2): không chữ số nào của số. */
-export const NHAN_CHE_SDT = "SĐT (đã che)"
+/** SĐT lưu số gốc E.164 (SD3): +84973034567 → 0973 034 567 — dễ đọc khi gọi; dạng 0… đời trước vẫn tách nhóm. */
+export function fmtPhone(p: string): string {
+  return p.replace(/^(?:\+84|0)(\d{3})(\d{3})(\d{3})$/, "0$1 $2 $3")
+}
 
+const SDT_E164 = /^\+84[35789]\d{8}$/
+
+/** Liên kết gọi của bí danh số gốc: vai được xem và giá trị đúng khuôn E.164; còn lại null, chữ vẫn hiện. */
+export function telHref(kind: string, value: string, xem: boolean): string | null {
+  return xem && kind === ALIAS_KIND.sdt && SDT_E164.test(value) ? `tel:${value}` : null
+}
+
+/** Chữ gõ ở ô tìm → số E.164 nếu là một SĐT đủ số (bỏ dấu tách; nhận 0…, 84…, +84…); chuỗi dở → null, tìm như chữ. */
+export function chuanHoaSdtTim(q: string): string | null {
+  const m = /^(?:\+?84|0)([35789]\d{8})$/.exec(q.replace(/[\s.()-]/g, ""))
+  return m ? `+84${m[1]}` : null
+}
+
+/**
+ * Giá trị bí danh để hiện: vai dưới Vận hành → null (ẩn); SĐT số gốc (`sdt`, E.164) → số tách nhóm (Hỏi-B: vai Vận hành
+ * và admin xem được); SĐT băm đời trước → 8 ký tự đầu; tên và tài khoản đi qua bộ che tên nguồn chung (một tên người
+ * bán S06 ở máy thu chứa tên nguồn thật) — danh sách tên rỗng thì «—» (đóng chặt).
+ */
 export function hienBiDanh(kind: string, value: string, entries: SourceNameEntry[], xem: boolean): string | null {
   if (!xem) return null
-  if (kind === ALIAS_KIND.sdt) return NHAN_CHE_SDT
+  if (kind === ALIAS_KIND.sdt) return fmtPhone(value)
   if (kind === ALIAS_KIND.sdt_bam) return `${value.slice(0, 8)}…`
   return maskSourceNames(value, entries) ?? "—"
 }
 
-/** Khớp tìm: bí danh tên hoặc tài khoản còn dùng chứa chuỗi tìm, không phân biệt hoa thường. */
+/** Khớp tìm: bí danh tên hoặc tài khoản còn dùng chứa chuỗi tìm (không phân biệt hoa thường), hoặc bí danh số gốc còn dùng đúng bằng số đã chuẩn hoá ($3). */
 const LOC = `p.status = 'active' AND ($1::text IS NULL OR p.source = $1)
   AND ($2::text = '' OR EXISTS (
     SELECT 1 FROM registry_aliases a
     WHERE a.object_key = p.party_key AND a.retired_at IS NULL AND a.kind IN ('${ALIAS_KIND.ten}', '${ALIAS_KIND.tai_khoan_nguon}')
-      AND strpos(lower(a.value), lower($2)) > 0))`
+      AND strpos(lower(a.value), lower($2)) > 0)
+    OR ($3::text IS NOT NULL AND EXISTS (
+      SELECT 1 FROM registry_aliases a
+      WHERE a.object_key = p.party_key AND a.retired_at IS NULL AND a.kind = '${ALIAS_KIND.sdt}' AND a.value = $3)))`
 
 export async function danhBaTongQuan(q: Q = pool): Promise<TongQuan> {
   const { rows } = await q.query<{ source: string; nguoi: number; vai: number }>(
@@ -108,7 +127,8 @@ export async function danhBaTongQuan(q: Q = pool): Promise<TongQuan> {
 
 export async function danhSachNguoi(loc: LocNguoi, q: Q = pool): Promise<DanhSachNguoi> {
   const tim = loc.q.trim()
-  const { rows: dem } = await q.query<{ n: number }>(`SELECT count(*)::int AS n FROM parties p WHERE ${LOC}`, [loc.source, tim])
+  const sdt = chuanHoaSdtTim(tim)
+  const { rows: dem } = await q.query<{ n: number }>(`SELECT count(*)::int AS n FROM parties p WHERE ${LOC}`, [loc.source, tim, sdt])
   const total = dem[0]?.n ?? 0
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const page = loc.page > pages ? 1 : loc.page
@@ -117,8 +137,10 @@ export async function danhSachNguoi(loc: LocNguoi, q: Q = pool): Promise<DanhSac
             (SELECT count(DISTINCT r.subject_key) FROM party_roles r
              WHERE r.party_key = p.party_key AND r.role = 'nguoi_dang' AND r.retracted_at IS NULL)::int AS so_tin
      FROM parties p WHERE ${LOC}
-     ORDER BY so_tin DESC, p.party_key LIMIT $3 OFFSET $4`,
-    [loc.source, tim, PAGE_SIZE, (page - 1) * PAGE_SIZE],
+     ORDER BY ($6::boolean AND EXISTS (SELECT 1 FROM registry_aliases a
+                 WHERE a.object_key = p.party_key AND a.retired_at IS NULL AND a.kind = 'sdt')) DESC,
+              so_tin DESC, p.party_key LIMIT $4 OFFSET $5`,
+    [loc.source, tim, sdt, PAGE_SIZE, (page - 1) * PAGE_SIZE, loc.uuTienSo === true],
   )
   const keys = nguoi.map((r) => r.party_key)
   const { rows: bd } = keys.length
@@ -144,7 +166,8 @@ export async function danhSachNguoi(loc: LocNguoi, q: Q = pool): Promise<DanhSac
         soBiDanh: ds.length,
         ten: dau(ds, "ten"),
         taiKhoan: dau(ds, "tai_khoan_nguon"),
-        sdtBam: dau(ds, ALIAS_KIND.sdt) ?? dau(ds, ALIAS_KIND.sdt_bam),
+        // Người nhiều số: hàng hiện đúng số vừa tìm, không để người dùng tưởng ra sai người.
+        sdt: (sdt && ds.find((a) => a.kind === ALIAS_KIND.sdt && a.value === sdt)?.value) || (dau(ds, ALIAS_KIND.sdt) ?? dau(ds, ALIAS_KIND.sdt_bam)),
         sdtKind: dau(ds, ALIAS_KIND.sdt) != null ? ALIAS_KIND.sdt : ALIAS_KIND.sdt_bam,
       }
     }),

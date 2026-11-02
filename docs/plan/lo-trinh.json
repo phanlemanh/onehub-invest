@@ -71,6 +71,18 @@
         "ON20",
         "ON21"
       ]
+    },
+    {
+      "ma": "KHM1",
+      "ten": "Ba việc của kế hoạch ra mắt 05/11 xong; từ 22:00 ngày 04/11 chỉ gộp bản vá đường ống",
+      "loai": "han",
+      "ngay": "2026-11-04",
+      "dot": "ke-hoach-ra-mat-0211",
+      "hang": [
+        "SL1",
+        "LS1",
+        "DS1"
+      ]
     }
   ],
   "hang": [
@@ -3043,7 +3055,7 @@
       "nhom": "tin-rao-0511",
       "dot": "tin-rao-0511",
       "phu": [],
-      "ghi_chu": "Mạnh chốt cách lưu hướng một trường kèm nhãn (02/11). Migration số 067. Không cản ra mắt 05/11: chưa kịp thì sang sau.",
+      "ghi_chu": "Mạnh chốt cách lưu hướng một trường kèm nhãn (02/11). Migration số 067. Không cản ra mắt 05/11: chưa kịp thì sang sau. Tạm dừng 02/11 giữa S3 theo docs/plan/ra-mat-0511-so-luong-chat-luong.md §4 mục 2, nhánh claude/s03-luu-tang-huong, nối lại sau 05/11.",
       "vung": [
         "db/migrations/067*",
         "pipeline/transform-zalo.mjs",
@@ -3072,6 +3084,78 @@
         "scripts/check-api-surface.mjs",
         "app/src/components/listing/**",
         "app/src/app/(app)/[country]/[market]/listings/**"
+      ]
+    },
+    {
+      "ma": "SL1",
+      "slug": "s03-len-cong",
+      "cau_giao": "Nhà đầu tư mở trang tin rao và thấy tin S03 đủ giá, diện tích, kể cả tin không nói phường (mang khu vực cấp thị trường), kèm nhãn «chưa xác minh»",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "2.772 tin S03 chỉ 97 tin có khu vực nên cổng chỉ có 4 tin S03; 77% phường đang có là đọc nhầm hướng. Sổ nhóm 30 nhóm và thẻ 16 nhóm lớn cho tin khu vực đáng tin.",
+      "hang": "T3",
+      "dung_tren": [
+        "SV1",
+        "TR1"
+      ],
+      "bat_khi": "S03 lên cổng ≥ 900 tin; sai nặng ≤ 10%; tin khu vực cấp thị trường không có dấu hiệu theo phường và không làm lệch rollup 300, 400",
+      "nhom": "ke-hoach-ra-mat-0211",
+      "dot": "ke-hoach-ra-mat-0211",
+      "phu": [
+        "V3"
+      ],
+      "ghi_chu": "Việc 3 của docs/plan/ra-mat-0511-so-luong-chat-luong.md; dãy N1 đổi từ SV2 sang. Mốc 04/11. Cắt cuối cùng theo §4 mục 6. Thiết kế phải kiểm: rollup 300, 400 với khu vực cấp thị trường; số tin S03 sau lượt nạp SV1. Hạng là ước, máy suy lại ở Cổng Phạm vi.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/reassign-areas.mjs",
+        "pipeline/sync-don-vi.mjs",
+        "pipeline/sql",
+        "app/src/components/listing/**"
+      ]
+    },
+    {
+      "ma": "LS1",
+      "slug": "s03-llm-doc-toan-bo",
+      "cau_giao": "LLM đọc toàn bộ chữ S03 ở lớp đề xuất, tự áp loại hình và ý định khi trích dẫn có thật và qua luật; giá, diện tích chỉ đối chiếu; bất đồng lên /ops/review",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Chỉ số AI của kế hoạch ra mắt: hiện ≤ 8,5% tin S03 có đề xuất, 4,1% có AI đã áp. Đích này để chứng minh mô hình AI, chưa đo được khả thi.",
+      "hang": "T3",
+      "dung_tren": [
+        "SV1"
+      ],
+      "bat_khi": "≥ 90% tin S03 có đề xuất; ≥ 50% có AI đã áp; lệnh chạy trọn toàn bộ tin; giá, diện tích không bị AI ghi đè; chi cloud không quá 5 USD/ngày",
+      "nhom": "ke-hoach-ra-mat-0211",
+      "dot": "ke-hoach-ra-mat-0211",
+      "phu": [
+        "V4"
+      ],
+      "ghi_chu": "Việc 4 của docs/plan/ra-mat-0511-so-luong-chat-luong.md; giám sát xếp dãy. Mốc 04/11. Không kịp thì lùi về chỉ đối chiếu theo §4 mục 5. Đường ghi và khoảng 6 USD chờ Mạnh duyệt. Chưa kiểm lệnh LLM chạy trọn 2.772 tin.",
+      "vung": [
+        "agent/src/enrich/**",
+        "agent/src/agents/enrich-text.ts",
+        "pipeline/lib/enrich-call-sites.mjs"
+      ]
+    },
+    {
+      "ma": "DS1",
+      "slug": "s06-duong-du-an-len-tin",
+      "cau_giao": "Đường và dự án của tin S06 đi tới tin và căn, không rơi giữa chừng",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Chỉ số Không tệ đi: đường 95% ở thô còn 19% ở tin và căn; dự án 22% ở thô còn 0.",
+      "hang": "T2",
+      "dung_tren": [],
+      "bat_khi": "Đường ≥ 90% ở tin; dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %",
+      "nhom": "ke-hoach-ra-mat-0211",
+      "dot": "ke-hoach-ra-mat-0211",
+      "phu": [
+        "V6"
+      ],
+      "ghi_chu": "Việc 6 của docs/plan/ra-mat-0511-so-luong-chat-luong.md; giám sát xếp dãy. Mốc 04/11, cắt được theo §4 mục 4. Hạng là ước: cần migration thì thành T3.",
+      "vung": [
+        "pipeline/transform-chotot.mjs",
+        "pipeline/sql"
       ]
     }
   ],
