@@ -25,6 +25,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import pg from "pg";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+let _tatChrome = null; // 0211-14 (3a): handler tín hiệu gọi được — Chrome không ở lại khi Ctrl-C
 const STATE_DIR = join(ROOT, "state", "thu-so-s06");
 const SNAP_ROOT = join(ROOT, "state", "seller-v5");
 const WEB_BASE = process.env.S06_WEB_BASE; // tầng A — chỉ trong env local
@@ -277,6 +278,7 @@ async function main() {
       }
     }
   };
+  _tatChrome = tatChrome;
 
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
   // 0211-10 (b): mỗi luồng giữ đúng MỘT tab tạo MỘT lần đầu qua
@@ -383,6 +385,7 @@ async function main() {
     }
   }
 
+  try {
   await Promise.all(Array.from({ length: THREADS }, (_, i) => motLuong(i)));
   // 0211-12 (3): đóng tab đã cấp — browser.close qua CDP chỉ NGẮT KẾT NỐI,
   // tab tích lại sau mỗi lượt (10 tab cho 2 luồng sau vài lượt).
@@ -394,7 +397,10 @@ async function main() {
   }
   await browser.close().catch(() => {});
   await client.end().catch(() => {});
-  await tatChrome();
+  } finally {
+    // 0211-14 (3a): finally — kể cả đường ném lỗi giữa lượt cũng tắt Chrome mình spawn
+    await tatChrome();
+  }
 
   const giayMoiTin = thu > 0 ? (Date.now() - t0) / 1000 / thu : 0;
   const tong = viec.length + Object.keys(state.da_thu).length;
@@ -421,8 +427,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   // Ctrl-C / SIGTERM giữa lượt: đừng để Chrome ở lại chiếm màn hình
   for (const sig of ["SIGINT", "SIGTERM"]) {
     process.on(sig, () => {
-      console.log(`nhận ${sig} — dừng`);
-      process.exit(130);
+      console.log(`nhận ${sig} — tắt Chrome rồi dừng`);
+      _tatChrome?.().finally(() => process.exit(130));
     });
   }
 }
