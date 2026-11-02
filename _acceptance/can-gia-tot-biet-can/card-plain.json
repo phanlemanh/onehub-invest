@@ -1,0 +1,124 @@
+{
+ "feature_plain": "Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ cho mỗi thẻ danh sách hiện tên căn, ảnh đầu, giá, mức giảm và dẫn tới trang một căn."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ cho trang một căn hiện toà, tầng, số căn, đường, phường, người đăng và nút gọi; mục không có dữ liệu thì không hiện dòng rỗng."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ hiện tối đa 12 ảnh và chữ bài đầy đủ, ảnh luôn qua máy chủ, không lộ đường dẫn gốc."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ chứng minh giá tốt bằng giá/m², thước phường, số tin dựng thước, mức giảm, đặt cạnh ba ngưỡng 5%, 35%, 50%."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ nêu đúng từng thứ căn còn thiếu; căn đủ thì không có khối này."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ phân biệt mã sai, căn đã rời danh sách có lý do, bản trên cloud, và lỗi có nút Thử lại."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ đối chiếu trên dữ liệu thật ở máy thu: mọi căn đủ số hoặc nêu thiếu, mọi căn có ảnh hiện được ảnh, và in số căn đạt từng câu."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ dùng được ở sáng, tối và màn điện thoại, không ảnh vỡ, không tràn ngang."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ kiểm bằng đăng nhập thật ba vai, tải mọi ảnh của mọi căn."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-6",
+   "p": "Sẽ KHÔNG đưa ảnh, chữ bài, tên, SĐT hay địa chỉ dưới phường tới vai Người xem, kể cả trong dữ liệu trang."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG làm lọc và bảng xếp hạng: thuộc hàng CG3."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG đưa tin S06 vào danh sách: thuộc hàng CG2, nên hôm nay danh sách vẫn 4 căn."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đưa ảnh và chữ bài lên cloud: chờ hàng TV9, TV10; trên cloud trang nói rõ."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG ghi kết quả xác minh, gắn nhãn hay hiện trên Invest: thuộc CG5, CG6, CG7."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG có bản đồ: hôm nay không căn nào có toạ độ."
+  },
+  {
+   "id": "OOS-6",
+   "p": "KHÔNG tách đường hay toà từ chữ bài: chờ kết quả phiên chấm sớm (Hỏi-3)."
+  }
+ ],
+ "scope_plain": "Hàng đầu tiên chỉ giải câu «biết căn», chưa làm đủ số căn và chưa ghi gì lên Invest.",
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Bốn vai đều có phép đo trên trang thật và đăng nhập thật (AC-1, AC-3, AC-6, AC-10)."
+  },
+  {
+   "i": 1,
+   "p": "Thẻ, trang một căn, dữ liệu xuống trình duyệt và tệp ảnh đều được đo (AC-1, AC-2, AC-6, AC-10)."
+  },
+  {
+   "i": 2,
+   "p": "Năm câu của ngưỡng dùng được, mỗi câu có một tiêu chí (AC-1 tới AC-4)."
+  },
+  {
+   "i": 3,
+   "p": "Bảy thứ có thể thiếu, mỗi thứ một ca đi qua trang thật (AC-5, AC-8)."
+  },
+  {
+   "i": 4,
+   "p": "Sáu mức giảm quanh ba ngưỡng, đỏ khi câu truy vấn lệch ngưỡng trên trang (AC-4, AC-7)."
+  },
+  {
+   "i": 5,
+   "p": "Máy thu, cloud, lỗi, không tìm thấy, đã rời danh sách, đang tải (AC-7, AC-9)."
+  },
+  {
+   "i": 6,
+   "p": "Tên trường theo chuẩn ngành cho loại hình, địa chỉ, ảnh (AC-1, AC-2, AC-3)."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Máy tự chọn căn rời danh sách thì báo không tìm thấy, làm hỏng đường dẫn đã gửi và che căn thiếu thước. Đã thành Hỏi-1, máy khuyên mở trang kèm lý do."
+  },
+  {
+   "i": 1,
+   "p": "Máy gói liên hệ vào phần «chỉ có ở máy thu» dù luật 02/11 đã cho lên cloud, và câu truy vấn cloud sẽ lỗi vì hai cột không lên. Đã thành Hỏi-2 và đo trên đúng danh sách cột của cloud."
+  },
+  {
+   "i": 2,
+   "p": "Nhiều lựa chọn của máy có căn cứ yếu, và chưa ai quyết vai Người xem có thấy số căn không. Đã viết lại, thành Hỏi-3, Hỏi-4, Hỏi-5; thêm ma trận mức giảm quanh ba ngưỡng."
+  },
+  {
+   "i": 3,
+   "p": "Phép đo ảnh chỉ soi đường dẫn đúng khuôn nên mọi ảnh hỏng vẫn xanh. Đã đổi sang tải thật mọi ảnh bằng hai vai."
+  },
+  {
+   "i": 4,
+   "p": "Ngưỡng chết «ở đâu» và phiên chấm sớm chưa có chỗ đo. Đã định nghĩa từng câu; chỉ biết phường thì không tính là đạt «ở đâu»."
+  }
+ ]
+}

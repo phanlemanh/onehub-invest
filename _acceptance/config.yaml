@@ -122,6 +122,8 @@ executors:
     the_duyet_phuong: "cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx"   # the-duyet-phuong-lech-gia — hàm thuần + jsdom; probe chỉ SELECT DB máy thu (bỏ qua có lời ở CI)
     api_surface_ops: "cd app && node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx"   # api-surface-anh-vai-ops — sổ zalo-media ≥ mã (ma trận 6 người gọi × 2 chế độ), route chặn canAccessOps bằng 404
     zalo_media_core: "cd app && node --import tsx --test tests/zalo-media.test.tsx"   # lõi serveZaloMedia (PL3 + review-media-backend) — hồi quy quyền thật
+    can_gia_tot: "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-biet-can — /ops/deals và trang một căn trên lược đồ tạm, page thật, vai giả
+    can_gia_tot_doi_chieu: "cd app && node --import tsx --test tests/can-gia-tot-doi-chieu.test.tsx"   # can-gia-tot-biet-can AC-8 — DB máy thu chỉ đọc
     danh_ba_ops: "cd app && node --import tsx --test tests/danh-ba-nguoi-tren-ops.test.tsx"   # danh-ba-nguoi-tren-ops — /ops/people trên lược đồ tạm có 055, page thật, vai giả
     danh_ba_doi_chieu: "cd app && node --import tsx --test tests/danh-ba-nguoi-doi-chieu.test.tsx"   # danh-ba-nguoi-tren-ops E15 — đối chiếu chỉ-đọc trên DB máy thu :5433 (READ ONLY), chỉ in số
     anh_goc: "cd app && node --import tsx --test tests/anh-goc-qua-may-chu.test.tsx"   # anh-goc-qua-may-chu — ?media= qua máy chủ: bộ lấy ảnh giả, lược đồ tạm có bảng media, ma trận vai và lỗi nguồn
@@ -170,6 +172,8 @@ executors:
     nguoi_nap_lai_u2: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node scripts/nap-lai-nguoi.mjs --the-duyet"
     seller_ref_that: "bash db/db-thu.sh oneinvest_p3_sref && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node --test --test-concurrency=1 scripts/seller-ref.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node scripts/do-seller-ref.mjs"   # seller-ref-theo-nguoi-gui (HD4) E4, E5, E7, E8: ca DB + thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P3-141)
   script:
+    can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\[offerId\]' .claude/skills/onehub-ui/routes.md && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
+    can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
     lich_chotot: "node _acceptance/s06-hai-luot-ngay-gop-main/rang/lich-chotot.mjs"   # s06-hai-luot-ngay-gop-main AC-1..3 — plist chotot 05:30 + 14:00, không va mốc plist khác, bản cài + launchd khớp
     can_theo_tin_ap_hai_lan: "node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs"   # can-theo-tin-khi-phan-xu-lai E5 — DB thử dựng từ đủ migration, áp 066 lần hai không đổi gì, oneinvest không bị chạm
