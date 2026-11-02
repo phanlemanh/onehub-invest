@@ -1,6 +1,7 @@
 import { pool } from "./db";
 import { VN_TZ } from "./format";
 import { giaiMaKhuVuc } from "./ma-thi-truong";
+import { findSourceNames, type SourceNameEntry } from "./mask-source-names";
 import {
   OFFER_HIDDEN_SOURCES,
   OFFER_MANY_NAMES,
@@ -60,6 +61,22 @@ function whereOf(marketId: string | null, f: OfferFilters) {
   return { where: conds.join(" AND "), params };
 }
 
+/**
+ * Định danh nguồn dùng để che ở bản chạy tại máy thu. Trên cloud không có `source_registry` (null): sync đã che giá trị
+ * trước khi gửi. Có bảng mà rỗng thì không biết tên nào cần che, `mangDinhDanh` coi mọi giá trị là trúng.
+ */
+async function sourceEntries(): Promise<SourceNameEntry[] | null> {
+  const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass('source_registry')::text AS r`);
+  if (rows[0]?.r == null) return null;
+  const { rows: names } = await pool.query<{ code: string; x: string }>(
+    `SELECT DISTINCT code, x FROM (SELECT code, real_name AS x FROM source_registry
+       UNION ALL SELECT code, unnest(source_ids) FROM source_registry) t WHERE x IS NOT NULL AND x <> ''`,
+  );
+  return names.map((n) => ({ code: n.code, realName: n.x }));
+}
+const mangDinhDanh = (v: string, entries: SourceNameEntry[] | null) =>
+  entries !== null && (entries.length === 0 || findSourceNames(v, entries).length > 0);
+
 /** Bỏ số nhà ở đầu chuỗi đường: người đăng có thể đã giấu ở nơi khác (FRAMING §3.3). */
 const streetOf = (raw: string | null) => raw?.replace(/^[\d\s/.,-]+/, "").trim() || null;
 
@@ -75,7 +92,8 @@ export async function getPublicOffers(
 ): Promise<{ rows: PublicOffer[]; total: number; withPhone: number }> {
   const { where, params } = whereOf(marketId, f);
   const from = `FROM sale_offers o JOIN areas a ON a.id = o.area_id`;
-  const [{ rows }, { rows: counts }] = await Promise.all([
+  const [entries, { rows }, { rows: counts }] = await Promise.all([
+    sourceEntries(),
     pool.query(
       `WITH nhieu_ten AS (
          SELECT seller_ref FROM sale_offers WHERE seller_ref IS NOT NULL AND seller_ref <> ''
@@ -114,7 +132,7 @@ export async function getPublicOffers(
       frontageLength: frontage(r.frontage_length),
       ward: { id: r.area_id, name: r.area_name },
       street: streetOf(r.street_raw),
-      sellerName: r.many_names ? null : r.seller_name,
+      sellerName: r.many_names || (r.seller_name !== null && mangDinhDanh(r.seller_name, entries)) ? null : r.seller_name,
       sellerManyNames: r.many_names,
       hasPhone: r.has_phone,
       updatedAt: r.updated_at,
@@ -141,7 +159,8 @@ export async function getOfferPhone(offerId: string): Promise<string | null> {
     `SELECT o.seller_phone FROM sale_offers o WHERE o.offer_id = $1 AND ${VISIBLE}`,
     [offerId],
   );
-  return rows[0]?.seller_phone ?? null;
+  const phone: string | null = rows[0]?.seller_phone ?? null;
+  return phone !== null && mangDinhDanh(phone, await sourceEntries()) ? null : phone;
 }
 
 /** Mã thị trường đọc từ query (`market`), mã dài cũ đổi sang mã ngắn. */

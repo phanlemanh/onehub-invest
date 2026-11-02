@@ -260,6 +260,29 @@ test("E4 số lẻ, số quá cỡ ở query bị bỏ qua hoặc làm tròn xu�
   assert.equal(await dem("price_min=9000000000000"), 0, "số lớn hợp lệ vẫn là điều kiện thật")
 })
 
+test("E4 máy thu có source_registry: tên, số mang định danh nguồn không ra API; không có bảng thì giữ nguyên; bảng rỗng thì đóng chặt", async () => {
+  const TEN_BAN = "Team BÀNTAY Giả"
+  const so = "+84912999888"
+  await nap([tin("ten", { seller_name: TEN_BAN }), tin("sach", { seller_name: "Lan Sạch" }), tin("sdt", { seller_phone: so })])
+  const ten = async () => Object.fromEntries((await danh("kind=sale")).data.map((r) => [r.offerId, r.sellerName]))
+  // Cloud: bảng vắng, sync đã che từ trước nên đọc nguyên.
+  assert.equal((await ten()).ten, TEN_BAN, "đối chứng: không có bảng thì không che")
+  await admin.query(`CREATE TABLE "${S}".source_registry (LIKE public.source_registry INCLUDING DEFAULTS)`)
+  try {
+    // Bảng rỗng ở máy thu: không biết tên nào cần che, nên không trả tên nào.
+    assert.deepEqual([...new Set(Object.values(await ten()))], [null], "bảng rỗng phải đóng chặt")
+    await admin.query(`INSERT INTO "${S}".source_registry (code, real_name, label_vi) VALUES ('S06', 'Bàntay Giả', 'nguồn thử')`)
+    const t = await ten()
+    assert.equal(t.ten, null, "tên mang định danh nguồn phải về null")
+    assert.equal(t.sach, "Lan Sạch", "tên sạch giữ nguyên")
+    assert.equal((await goiSo("sdt")).status, 200, "số sạch vẫn lấy được")
+    await admin.query(`UPDATE "${S}".source_registry SET real_name = '912999' WHERE code = 'S06'`)
+    assert.equal((await goiSo("sdt")).status, 404, "số mang định danh nguồn không ra")
+  } finally {
+    await admin.query(`DROP TABLE "${S}".source_registry`)
+  }
+})
+
 test("E4 trần limit, offset; giá trị sai bỏ qua; phiên ops nhận y hệt khách; kind lạ 400; v1/offers không phiên 401", async () => {
   await nap([tin("a")])
   const m = (await danh("kind=sale&limit=500&offset=99999")).meta

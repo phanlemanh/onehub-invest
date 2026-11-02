@@ -587,6 +587,47 @@ test("E9 vùng lỗi có Thử lại; đầu trang và ô Dài hạn | Ngắn h�
   }
 });
 
+test("E9 vùng thuê dài hạn hỏng, bấm Ngắn hạn thoát được lỗi dù chỉ đổi query", async () => {
+  const React = await import("react");
+  const { ListingsPageBody } = await import("../src/components/listing/listings-page-body");
+  const { RegionError } = await import("../src/components/states/region-error");
+  const f = await bo("kind=sale");
+  const ranhCua = (kind: "rent_lt" | "rent_st") => {
+    const cay = ListingsPageBody({ country: "vn", countryName: "Việt Nam", marketId: "vn-hanoi", marketName: "Hà Nội", marketPath: "/vn/hanoi", currency: "VND", kind, filters: f });
+    let ranh: ReactElement | null = null;
+    tim(cay, (el) => {
+      if (el.type === RegionError) ranh = el;
+    });
+    return ranh as unknown as ReactElement;
+  };
+  const Boom = (): ReactNode => {
+    throw new Error("hỏng");
+  };
+  const err = console.error;
+  console.error = () => {};
+  try {
+    const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
+    const { PathnameContext, SearchParamsContext } = await import("next/dist/shared/lib/hooks-client-context.shared-runtime");
+    const khung = (con: ReactNode) => (
+      <AppRouterContext.Provider value={router as never}>
+        <PathnameContext.Provider value="/vn/hanoi/listings/rent">
+          <SearchParamsContext.Provider value={new URLSearchParams("") as never}>
+            <div>{con}</div>
+          </SearchParamsContext.Provider>
+        </PathnameContext.Provider>
+      </AppRouterContext.Provider>
+    );
+    const host = await render(null);
+    await act(() => (currentRoot as unknown as { render: (n: ReactNode) => void }).render(khung(React.cloneElement(ranhCua("rent_lt"), {}, <Boom />))));
+    assert.ok(host.querySelector('[role="alert"]'), "đối chứng: vùng dài hạn đang lỗi");
+    await act(() => (currentRoot as unknown as { render: (n: ReactNode) => void }).render(khung(React.cloneElement(ranhCua("rent_st"), {}, <span>lành</span>))));
+    assert.equal(Boolean(host.querySelector('[role="alert"]')), false, "vẫn kẹt ở vùng lỗi");
+    assert.match(host.textContent ?? "", /lành/);
+  } finally {
+    console.error = err;
+  }
+});
+
 // ---- E9: số không vào HTML ----
 function khongCoSo(html: string) {
   for (const dang of [SO, "0912000001", "0912 000 001", "84912000001"]) assert.ok(!html.includes(dang), "SO TRONG HTML");

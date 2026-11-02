@@ -51,14 +51,15 @@ export function ListingsPageBody({
             : "Airbnb tự thu thập · công suất và doanh thu tính trên lịch đặt các tháng tới"
         }
       />
+      {/* key: ranh giới lỗi chỉ tự xoá khi đường dẫn đổi, mà đổi thời hạn chỉ đổi query. */}
       {kind !== LISTING_KIND.rent_st ? (
-        <RegionError what="tin rao của thị trường" leading={term}>
+        <RegionError key={kind} what="tin rao của thị trường" leading={term}>
           <Suspense key={JSON.stringify(filters)} fallback={<OffersRegionSkeleton toolbarStart={term} />}>
             <OffersRegion marketId={marketId} marketName={marketName} marketPath={marketPath} kind={kind} filters={filters} toolbarStart={term} />
           </Suspense>
         </RegionError>
       ) : (
-        <RegionError what="listing của thị trường" leading={term}>
+        <RegionError key={kind} what="listing của thị trường" leading={term}>
           <Suspense fallback={<ListingsRegionSkeleton toolbarStart={term} />}>
             <ListingsRegion marketId={marketId} marketName={marketName} marketPath={marketPath} currency={currency} toolbarStart={term} />
           </Suspense>
