@@ -5,7 +5,7 @@ slug: guard-edits-goc-theo-tep
 owner: phanlemanh@gmail.com
 risk_tier: T3      # .claude/hooks/** nằm trong t3_paths
 surfaces: [config]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-guard-edits-goc-theo-tep-design.md
