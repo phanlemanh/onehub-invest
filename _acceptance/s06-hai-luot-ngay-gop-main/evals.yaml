@@ -1,0 +1,34 @@
+schema_version: 1
+feature_slug: s06-hai-luot-ngay-gop-main
+# Răng rang/lich-chotot.mjs đọc plist bằng plutil, không DB; vế AC-3 đọc bản cài ở ~/Library/LaunchAgents và launchctl print.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.lich_chotot
+    paths: [pipeline/cron/com.oneinvest.chotot.plist]
+    expected: "exit 0; dòng 'lịch chotot: plutil -lint OK · 05:30 + 14:00 · …' và 'chiều đỏ: bỏ 14:00 → đỏ AC-1 · dời 12:10 → đỏ AC-1 · 14:00 kèm Weekday 2 → đỏ AC-1 · …' (đột biến Weekday đỏ với thông điệp 'AC-1: lịch … \"Weekday\":2')"
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.lich_chotot
+    paths: [pipeline/cron/*.plist]
+    expected: "exit 0; dòng '14:00 cách mọi mốc giờ cố định của <n> plist khác (<k> kho + <c> bản cài) ≥ 60 phút' (n ≥ 20, c ≥ 1 — c = 0 thì exit 1 «không đọc được job đã cài nào»), dòng 'loại trừ có tên …' liệt cloud-sync, zalo-heartbeat, zalo-watchdog ở cả kho và cài, và chiều đỏ '19:30 va airdna-daily · 23:30 va zalo-import · job giả 13:30 ngoài kho va 14:00 · job mỗi giờ va 14:00'"
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.lich_chotot
+    paths: [pipeline/cron/com.oneinvest.chotot.plist]
+    expected: "exit 0; dòng 'bản cài: khớp bản kho (thay __ROOT__) · launchd giữ 05:30 + 14:00' — không phải dòng BỎ QUA"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/**]
+    expected: "exit 0; node --test scripts/*.test.mjs xanh"
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; cd pipeline && npm test xanh"
