@@ -345,6 +345,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `docs/research/kiem-tin-dau-ra-toan-thi-truong-0211.md`): mọi tin rao bất động sản là công khai; tên và SĐT người bán lên cloud và
    cổng Invest vì giúp nhà đầu tư tìm căn. Mọi kênh nguồn phải có người bán và SĐT; kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo
    và cảnh báo liên tục tới khi xong. Không đổi: tên nguồn thật vẫn tầng A, S02 và S08 không hiển thị (luật 5).
+26. **Bán, Cho thuê trên header thay mục Listing** (02/11, Mạnh chốt «Làm theo bản này»): header Thị trường · Bán · Cho thuê · Lợi suất · So sánh; `/vn/<tt>/listings/sale`, `/vn/<tt>/listings/rent`, thuê ngắn hạn `?term=short` bằng ô Dài hạn | Ngắn hạn trên hàng lọc, mặc định dài hạn; `/listings` chuyển 308. Listing vẫn là khái niệm cha trong mã, URL, API (mục 21), API giữ `?kind=`. Điện thoại vẫn thấy Bán, Cho thuê ngoài menu.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

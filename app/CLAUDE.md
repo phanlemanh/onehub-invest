@@ -67,7 +67,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
-- `/vn/hanoi/listings` — Duyệt listing (`/[country]/[market]/listings`: thẻ + bản đồ nhãn giá)
+- `/vn/hanoi/listings/sale`, `/vn/hanoi/listings/rent` — Tin bán, Cho thuê (`?term=short` là thuê ngắn hạn: thẻ + bản đồ nhãn giá); `/listings` → 308
 - `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup&eq&rate&term`; mô hình ở `lib/yield.ts`, vốn vay ở `lib/financing.ts`); mục «Dòng tiền vốn vay» `#financing` nhận phần Mô phỏng đầu tư cũ — `/vn/<market>/dau-tu` → 301 `/yield?area=<market>#financing`
 - `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/deals`, `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đóng mặc định: `role` `ops`/`admin`, hoặc email trong `OPS_EMAILS`; tự đăng ký = `role=user` → 404). Cấp quyền: `UPDATE users SET role = 'ops' WHERE email = …`
 - `/ops/collections` (+ `GET /api/v1/ops/collections`) — mã tài khoản thu, hồ sơ, mã nhóm Zalo, tài khoản giữ nhóm chỉ cho vai `ops` trở lên (`xemDinhDanhThu`); vai `viewer` và bearer chung nhận bản đã che (`cheDinhDanhThu`: giữ số dòng, mã về null)

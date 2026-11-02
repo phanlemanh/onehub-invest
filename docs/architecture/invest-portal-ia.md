@@ -70,7 +70,8 @@ INVEST PORTAL  (công khai, đọc là chính)
 │    #tong-quan #doanh-thu #cong-suat #gia-phong #nguon-cung
 │    #mua-vu #phuong #listing #loi-suat
 │  ├─ /vn/[market]/[submarket]   Insight phường/xã (cùng template, có thêm benchmark anh em)
-│  ├─ /vn/[market]/listings      Listing explorer (lưới thẻ | map nhãn giá)   ← MỚI (L4)
+│  ├─ /vn/[market]/listings/sale Tin bán (lưới thẻ)   ← /listings chuyển 308 về đây
+│  ├─ /vn/[market]/listings/rent Cho thuê: dài hạn (lưới thẻ), ?term=short thuê ngắn hạn (lưới thẻ | map nhãn giá)
 │  └─ /vn/[market]/map           → redirect /vn?market=…&view=map (giữ link cũ)
 │
 ├─ /listing/[id]             Chi tiết listing
@@ -89,7 +90,7 @@ INVEST PORTAL  (công khai, đọc là chính)
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
-│ ◆ One Invest   Thị trường  Listing  Lợi suất  So sánh   [⌘K Tìm tỉnh, phường…]  🇻🇳 VND  (avatar)│
+│ ◆ One Invest   Thị trường  Bán  Cho thuê  Lợi suất  So sánh   [⌘K Tìm tỉnh, phường…]  🇻🇳 VND  (avatar)│
 ├───────────────────────────────────────────────────────────────────────────────┤
 │ VN › Hà Nội ▾ › Tây Hồ ▾      [badge 239 listing] [badge 62 phường]   ⤴ Chia sẻ  ♡ Lưu │ ← page header
 │ [Phòng ngủ ▾] [Loại phòng ▾] [Phân khúc giá ▾]* [Tất cả bộ lọc]  · 12 tháng gần nhất │ ← filter bar (*pha sau)
@@ -97,7 +98,7 @@ INVEST PORTAL  (công khai, đọc là chính)
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Mục chính (4):** Thị trường (Finder + Insight) · Listing · Lợi suất · So sánh. Mục **Đã lưu** nằm trong menu avatar, giống AirDNA L12.
+- **Mục chính (5, Mạnh chốt 02/11/2026):** Thị trường (Finder + Insight) · Bán · Cho thuê · Lợi suất · So sánh. Bán, Cho thuê trỏ `/vn/<thị trường>/listings/sale` và `/rent`, giữ thị trường đang xem; dưới `lg` hai mục này vẫn ngoài menu. Thời hạn thuê là ô Dài hạn | Ngắn hạn trên hàng lọc (`?term=short`). Mục **Đã lưu** nằm trong menu avatar, giống AirDNA L12.
 - **Bộ chọn quốc gia + tiền tệ:** VN/TH, VND/USD (`currencyFor` hiện đã có logic).
 - **Footer:** Phương pháp · Giới thiệu · liên kết "Nội bộ" sang `/ops` (theo luật 4 của `portals.md`).
 
@@ -224,7 +225,7 @@ Ghi chú P3:
 - `/listing/[id]`: KPI so với listing cùng phường (dưới 5 thì cả thị trường) — giá dùng nhãn trung tính (Giá thấp → Cao cấp), công suất dùng bậc tốt/xấu; lịch 365 đêm (heatmap form-5); 10 listing gần nhất cùng số phòng ngủ (comps theo khoảng cách như AirDNA).
 - Không có biểu đồ giá theo ngày: chỉ 44/237 listing Hà Nội có giá theo đêm và mỗi listing chỉ một mức giá → đường phẳng, vô nghĩa. "Giá" = giá niêm yết đặt cạnh phân bố giá cùng khu vực.
 - `/[country]/[market]/listings`: 300 listing doanh thu cao nhất (Bangkok có 30.922); lọc phường, sắp xếp, lọc theo khung bản đồ khi người dùng kéo/zoom, rê thẻ ↔ nhãn giá. Số liệu theo listing đọc từ bảng `listing_stats` do pipeline tính sẵn (`410_listing_stats.sql`) — không gộp 11 triệu dòng nights lúc tải trang.
-- Nav có mục "Listing" → `/vn/hanoi/listings`; bảng "Listing nổi bật" của Insight có nút "Xem tất cả".
+- Nav có mục Bán, Cho thuê → `/vn/<thị trường>/listings/sale|rent`; bảng "Listing nổi bật" của Insight có nút "Xem tất cả".
 
 Ghi chú P4:
 - `/yield`: báo cáo tính ở server từ tham số URL (chia sẻ được) thay cho `/yield/[reportId]` — chưa cần lưu báo cáo. Chỉ chạy ở thị trường có dữ liệu bán/thuê (hiện Hà Nội, mô phỏng G1).

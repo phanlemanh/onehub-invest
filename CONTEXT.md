@@ -114,10 +114,15 @@ _Avoid_: tin tìm mua, wanted
 **Yêu cầu thuê**: Yêu cầu có `kind` ∈ `rent_lt`, `rent_st`.
 - Code: `kind = rent_lt | rent_st` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType = ResidentialLease
 
-**Tin bán**: Tin rao có `kind = sale`.
+**Tin bán**: Tin rao có `kind = sale`. Mục «Bán» trên header cổng Invest.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
+- Slug URL: `sale`
 
-**Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`).
+**Cho thuê**: Nhóm listing cho thuê, gồm thuê dài hạn và thuê ngắn hạn; mục trên header cổng Invest, chọn thời hạn bằng ô «Dài hạn | Ngắn hạn» (`?term=short`, mặc định dài hạn).
+- Code: `kind` ∈ `rent_lt`, `rent_st` · RESO: PropertyType = ResidentialLease
+- Slug URL: `rent`
+
+**Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`). Nhãn ô thời hạn: «Dài hạn».
 - Code: `kind = rent_lt` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Monthly
 
 **Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.

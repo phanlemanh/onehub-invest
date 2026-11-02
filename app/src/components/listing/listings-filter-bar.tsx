@@ -127,15 +127,6 @@ export function listingFilterFields(listings: ListingCardRow[], currency: string
         .map(([value, n]) => ({ value, label: roomTypeVi(value) ?? value, description: `${fmtInt(n)} listing` })),
     },
     {
-      id: FIELD.bedrooms,
-      label: "Phòng ngủ",
-      icon: <BedDoubleIcon className={ICON} aria-hidden="true" />,
-      type: "number",
-      operators: ops("gte", "eq", "lte"),
-      defaultOperator: "gte",
-      placeholder: "số phòng ngủ",
-    },
-    {
       id: FIELD.price,
       label: "Giá/đêm",
       icon: <BanknoteIcon className={ICON} aria-hidden="true" />,
@@ -145,6 +136,15 @@ export function listingFilterFields(listings: ListingCardRow[], currency: string
       placeholder: "₫",
       valueText: priceText(currency),
       renderValue: priceText(currency),
+    },
+    {
+      id: FIELD.bedrooms,
+      label: "Phòng ngủ",
+      icon: <BedDoubleIcon className={ICON} aria-hidden="true" />,
+      type: "number",
+      operators: ops("gte", "eq", "lte"),
+      defaultOperator: "gte",
+      placeholder: "số phòng ngủ",
     },
   ]
 }
