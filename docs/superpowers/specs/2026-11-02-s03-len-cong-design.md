@@ -20,7 +20,7 @@ S03 chưa có bộ đọc loại hình; 96 phát biểu loại hình hiện có 
 
 ## Hai phép kiểm kế hoạch chưa làm
 
-**Rollup 300, 400 với khu vực cấp thị trường: không ảnh hưởng.** Hai tệp chỉ đọc `listings` (Airbnb), không đọc `sale_offers`.
+**Rollup 300, 400 với khu vực cấp thị trường: không ảnh hưởng.** Hai tệp chỉ đọc `listings` (S01), không đọc `sale_offers`.
 AC-2 vẫn đo bằng cách so bảng trước và sau. Bên đọc bị ảnh hưởng thật ở chỗ khác:
 
 | Bên đọc | Khi tin mang mã thị trường | Xử lý |
@@ -108,6 +108,18 @@ Lượt đêm chỉ gọi transform, chưa chạy `reassign-areas` rồi 300, 40
 Mẫu nhãn audit gần như toàn căn hộ (339/343), nên số theo nhóm trên nhãn (183/183) không nói gì và không được dùng làm căn cứ.
 
 Kế hoạch đã ghi ngưỡng ≥ 900 chỉ cảnh báo, không chặn ra mắt. AC-9 báo đúng số, không hạ thước; không vượt 50 mới là gãy đường.
+
+## Số đo sau khi làm (03/11, DB thử, sổ nháp chưa qua Mạnh duyệt)
+
+| Số | Ước | Đo |
+|---|---|---|
+| Theo chữ, nhãn do tác tử gắn | 69/74 | 69/74 (93,2%) |
+| Theo nhóm, đối chứng giữ lại | 3.837/4.177 (92%) | 3.424/3.758 (91,1%), tính lại trên bộ đọc thật |
+| Nhận tổng trên bài có nhãn loại | ≥ 50% | 254/343 (74,1%) |
+| S03 lên cổng | 839 | 962 (bán 628, thuê 334), vượt đích 900 |
+| Sai nặng trên mẫu 30 tin, nhãn mù do tác tử gắn, không phải nhãn vàng | ≤ 10% | 2/30 (6,7%) |
+
+Tập tin: mã nền và mã mới cùng sổ nháp trùng khít 3.571 tin. Riêng sổ làm 2 tin có giá 50 tỷ, không diện tích, tách ra khỏi tin gom cũ, vì nhóm khai thị trường thì đường khớp phường có sẵn từ N1 khớp được. Hai tin này không lên cổng vì thiếu diện tích.
 
 ## Bên đọc cột `property_type` khi cột mang giá trị suy luận (ngả B)
 

@@ -7,6 +7,8 @@ import { KIND, PROPERTY_TYPE } from "./vocab.generated";
 
 /** Nguồn không bao giờ hiển thị (AGENTS.md luật 5). */
 export const OFFER_HIDDEN_SOURCES = ["S02", "S08"] as const;
+/** Nguồn tin nhóm chưa đối chiếu với nguồn khác: thẻ hiện nhãn «Chưa xác minh» (s03-len-cong). */
+export const OFFER_UNVERIFIED_SOURCE = "S03";
 /** Trần hiển thị: đo 02/11 có 8 tin trên 30 tầng và 3 tin mặt tiền trên 100 m, nghi bóc sai nên thẻ không hiện. */
 export const OFFER_MAX_STORIES = 30;
 export const OFFER_MAX_FRONTAGE_M = 100;
@@ -66,6 +68,8 @@ export type PublicOffer = {
   sellerName: string | null;
   sellerManyNames: boolean;
   hasPhone: boolean;
+  /** Tin chưa đối chiếu nguồn: cờ thay cho mã nguồn, mã nguồn không rời máy chủ. */
+  unverified: boolean;
   updatedAt: string;
   /** Số ngày từ lần đầu hệ thống thấy tin, theo ngày VN. Không phải ngày đăng gốc. */
   firstSeenDays: number;

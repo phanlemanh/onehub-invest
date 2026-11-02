@@ -287,7 +287,7 @@ test("SL1-AC-6 khai-so-nhom: mặc định không ghi, ghi đúng, chạy lại 
     }
     // Nhóm cùng tên, nơi có thẻ nơi không: thiếu thẻ.
     const { rows: khoa } = await c.query("SELECT group_key FROM collection_units WHERE unit_code = ANY ($1)", [[nhom[0].unit_code, nhom[1].unit_code]]);
-    await c.query("INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('sl1_so', 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING");
+    await c.query("INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('sl1_so', 'hanoi', 'sl1-thu', '{}') ON CONFLICT DO NOTHING");
     for (const [i, r] of khoa.entries()) {
       await c.query(
         `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, sender_id, sender_name, conversation_id)
@@ -321,7 +321,7 @@ const TZ = join(HERE, "../transform-zalo.mjs");
 let nBai = 0;
 
 async function moLuot(c) {
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}')
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'sl1-thu', '{}')
     ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
   await c.query(`CREATE TEMP VIEW stg_zalo_posts AS SELECT * FROM public.stg_zalo_posts WHERE post_id LIKE '${TAG}%'`);
 }
