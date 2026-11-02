@@ -11,6 +11,7 @@ import { createRequire } from "node:module";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { boWorktree } from "../lib/bo-worktree.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const APP = join(ROOT, "app");
@@ -235,8 +236,7 @@ function cheDoAppTest() {
   if (nhanh.ten.length === 0) { check(nhanh.code === 0, "APP-TEST nhánh 0 ca đỏ"); return finish("APP TEST"); }
   const goc = gocHang();
   const wt = join(ROOT, ".acceptance-runs/chuyen-huong-ma-thi-truong/goc-app");
-  rmSync(wt, { recursive: true, force: true });
-  spawnSync("git", ["-C", ROOT, "worktree", "prune"]);
+  boWorktree(ROOT, wt); // đồ sót của lượt trước: thư mục lẫn metadata của đúng wt này
   mkdirSync(dirname(wt), { recursive: true });
   execFileSync("git", ["-C", ROOT, "worktree", "add", "--detach", wt, goc], { stdio: "ignore" });
   try {
@@ -246,7 +246,7 @@ function cheDoAppTest() {
     for (const t of nhanh.ten.filter((t) => g.ten.includes(t))) console.log(`đỏ sẵn ở gốc: ${t}`);
     check(moi.length === 0, moi.length ? `ca đỏ mới: ${moi.join(" | ")}` : `APP-TEST 0 ca đỏ mới so gốc ${goc.slice(0, 10)}`);
   } finally {
-    spawnSync("git", ["-C", ROOT, "worktree", "remove", "--force", wt]);
+    boWorktree(ROOT, wt);
   }
   finish("APP TEST");
 }
