@@ -435,6 +435,7 @@ test("E9 không có số: nói thẳng, không gọi mạng", async () => {
   const goi = fetchGia([traSo]);
   const host = await render(<OfferContact offerId="a" hasPhone={false} />);
   assert.equal(host.textContent, "Chưa có số");
+  assert.ok(host.querySelector('[data-slot="badge"]'), "trạng thái đi qua Badge");
   assert.equal(goi.length, 0);
   assert.equal(host.querySelector("button"), null);
 });

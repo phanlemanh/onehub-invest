@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { PhoneIcon, RotateCwIcon } from "lucide-react"
 
+import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 
 /** «+84912345678» → «0912 345 678»; số dạng khác giữ nguyên. */
@@ -33,7 +34,7 @@ export function OfferContact({ offerId, hasPhone }: { offerId: string; hasPhone:
     }
   }
 
-  if (!hasPhone || state === "none") return <span className="text-muted-foreground text-xs">Chưa có số</span>
+  if (!hasPhone || state === "none") return <Badge variant="secondary">Chưa có số</Badge>
   if (phone)
     return (
       <Button variant="outline" size="sm" nativeButton={false} render={<a href={`tel:${phone}`} />}>

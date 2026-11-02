@@ -89,6 +89,12 @@ evals:
     executor: ui-check
     layer: ui-observed
     route: /vn/hanoi/listings/sale
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3461; chỉ đọc DB, không ghi"
+      - "Trước khi chụp, chèn style che tên và số: [data-listing-id] p .font-medium,a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Truy vấn chỉ đọc DB máy thu: một seller_ref có từ 3 tên trở lên và một tin hiện công khai của nó ở Hà Nội; ghi mã tin, không ghi tên"
+      - "Mở /vn/hanoi/listings/sale, lọc phường của tin đó; thẻ mang mã tin phải hiện Tài khoản nhiều tên"
+      - "Chụp evidence/E7u.png, ghi mã tin và nhãn vào output"
     paths: [app/src/components/listing/offer-card.tsx, app/src/lib/offers-public.ts]
     expected: "chọn tài khoản nhiều tên bằng truy vấn trên DB máy thu; mở trang có tin của tài khoản đó: thẻ hiện Tài khoản nhiều tên, không hiện tên; lọc theo phường của tin đó: nhãn giữ nguyên; ảnh chụp che tên và số; output ghi mã tin và nhãn, không ghi tên thật"
     evidence_required: [run_id, screenshot, output, verifier, verified_at]
@@ -112,6 +118,12 @@ evals:
     executor: ui-check
     layer: ui-observed
     route: /vn/hanoi/listings/sale
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3461; chỉ đọc DB, không ghi"
+      - "Trước khi chụp, chèn style che tên và số: [data-listing-id] p .font-medium,a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Làm lần lượt từng thao tác trong expected trên /vn/hanoi và /vn/hcmc, ghi URL sau mỗi bước"
+      - "Đo documentElement.scrollWidth và innerWidth ở 375 và 320 cho Bán, Dài hạn, Ngắn hạn"
+      - "Chụp evidence/E8u-sale.png, E8u-rent.png, E8u-short.png, E8u-375.png"
     paths: [app/src/components/listing/offers-explorer.tsx, app/src/components/listing/rent-term-toggle.tsx, app/src/components/listing/offers-filter-sheet.tsx, app/src/components/listing/listing-card.tsx, app/src/components/shell/top-bar.tsx]
     expected: "header có Thị trường, Bán, Cho thuê, Lợi suất, So sánh; từ /vn/hcmc/listings/rent bấm Bán sang /vn/hcmc/listings/sale, từ /yield bấm Bán sang Hà Nội; mở /vn/hanoi/listings nhận 308 sang /listings/sale; bấm Cho thuê: có ô Dài hạn đang chọn; thêm lọc loại hình và giá theo triệu, bật rồi tắt Chỉ tin có số: mỗi thao tác URL và số tin đổi; đổi sắp xếp: URL và thẻ đầu đổi; bấm số trang 2: URL và tập mã tin đổi, chuột giữa mở tab mới được; F5 giữ nguyên; đổi lọc về trang đầu; bấm Ngắn hạn: URL chỉ còn term=short, lưới thẻ có ảnh, bản đồ, nút Xem listing mở đúng trang và mục Cho thuê sáng; ở Bán lọc giá 1,5 tới 3 tỷ: URL đúng đồng, chip ghi 1,5 – 3; so ba loại: Giá ở đầu thẻ, hàng cuối cùng một vị trí; màn 375 và 320: Bán, Cho thuê ngoài menu, documentElement.scrollWidth bằng innerWidth ở cả ba loại, mở ngăn Bộ lọc áp giá ra URL đúng và nút mang số 1; ảnh chụp che Người đăng và số; output ghi URL từng bước và scrollWidth"
     evidence_required: [run_id, screenshot, output, verifier, verified_at]
@@ -127,6 +139,13 @@ evals:
     executor: ui-check
     layer: ui-observed
     route: /vn/hanoi/listings/sale
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3461; chỉ đọc DB, không ghi"
+      - "Trước khi chụp, chèn style che tên và số: [data-listing-id] p .font-medium,a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Truy vấn chỉ đọc DB máy thu: thị trường và loại tin có tin kèm số; mở đúng trang đó với has_phone=1"
+      - "Lấy HTML thô của trang bằng fetch, đếm dãy +84; bấm Xem số; đếm lời gọi /contact ở tab mạng"
+      - "Đổi sáng, tối; lọc giá 900 tỷ trở lên (price_min=900000000000) cho màn lọc ra 0, bấm Xoá bộ lọc"
+      - "Chụp evidence/E9u-sang.png, E9u-toi.png, E9u-trong.png; output không ghi số thật"
     paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-card.tsx, app/src/components/listing/offers-explorer.tsx]
     expected: "chọn thị trường và loại tin bằng truy vấn tin có số trên DB máy thu (02/11 Hà Nội có 2 tin bán); bấm Xem số thấy link gọi; mạng ghi nhận đúng một lời gọi contact; view-source trước khi bấm không chứa dãy +84 nào; bản không lọc có Badge Chưa có số; sáng và tối đều đọc được; ảnh chụp che số và tên; lọc giá cực lớn ra màn lọc ra 0, bấm Xoá bộ lọc quay lại; một thẻ Tài khoản nhiều tên thấy đúng nhãn; output ghi href có tiền tố tel:, số lời gọi mạng, scrollWidth, không ghi số thật"
     evidence_required: [run_id, screenshot, output, verifier, verified_at]
