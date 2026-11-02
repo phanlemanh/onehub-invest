@@ -34,6 +34,8 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.portal_static
+    status: not-run
+    superseded_by: people-hien-so-goc#AC-6
     expected: "exit 0; ba khối SĐT/tên, nội dung tin, ảnh tin đều chỉ render khi showContact = isAdmin(user)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

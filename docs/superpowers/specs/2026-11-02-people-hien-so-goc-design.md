@@ -47,6 +47,7 @@ eval thay bởi của kit:
 |---|---|
 | `sdt-luu-goc-e164/E8` | `people-hien-so-goc` AC-3 |
 | `sd3-lam-chat-do-danh-ba/E7` | `people-hien-so-goc` AC-3 |
+| `portal-deals-airdna/E5` | `people-hien-so-goc` AC-6 |
 
 Con trỏ chỉ hợp lệ khi hồ sơ này có chữ ký người, nên vòng này không đi đường máy-thông ở Cổng Bằng chứng.
 
