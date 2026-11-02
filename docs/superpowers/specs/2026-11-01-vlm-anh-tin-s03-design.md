@@ -8,7 +8,7 @@ Bài S03 mà chữ không đủ (thiếu giá, dấu hiệu BĐS hoặc loại h
 bạc nguồn «ảnh». Nhãn bạc là đề xuất, không ghi canonical (luật 7). Ảnh lấy từ bản đã tải về máy, gửi base64.
 
 Mạnh 02/11 sửa thiết kế, nguyên văn: «Sửa theo bốn đề xuất rồi dựng lại thẻ. Về phần lộ nguồn gắn nhãn chứ ko chặn. Để tôi xem xét và tìm giải
-pháp sau.» Bốn đề xuất: gắn nhãn ảnh lộ nguồn · đo hai model · đọc thêm trường · đọc mỗi ảnh một lần.
+pháp sau.» Bốn đề xuất: gắn nhãn ảnh lộ nguồn · đo hai model · đọc thêm trường · đọc mỗi ảnh một lần. Cùng ngày Mạnh thêm: «Đo lường bổ sung DeepSeek V4.1 Flash (1017)».
 
 ## Số đo đầu vào (DB local 02/11, chỉ số)
 
@@ -39,7 +39,7 @@ Sáu ảnh lặp nhiều nhất gồm quảng cáo thương hiệu, sơ đồ d�
 vô giá trị, nên máy không tự bỏ ảnh lặp mà ghi `so_bai_dung_chung`. Ảnh QR mời nhóm tự in logo và tên nguồn thật.
 
 Gọi thử Qwen local ngày 02/11 trên 3 ảnh thu nhỏ, prompt thô (không phải số đo): 1–3 giây mỗi ảnh; phòng ngủ đúng 3/3, diện tích 1/1, dự án 2/2; **giá
-0/3** dù cả ba ảnh có giá; toà-căn 1 đúng, 1 thiếu, 1 sai; loại ảnh sai cả 3. Nên phải đo cả hai model, chưa kết luận được bên nào.
+0/3** dù cả ba ảnh có giá; toà-căn 1 đúng, 1 thiếu, 1 sai; loại ảnh sai cả 3. Nên phải đo nhiều model, chưa kết luận được bên nào.
 
 ## Thiết kế
 
@@ -48,7 +48,7 @@ stg_zalo_posts ─ loadStgPosts (gạt bài thử)
    └ pipeline/lib/vlm-anh.mjs      thuần: lý do thiếu, ghép ảnh (ganBaiAnh), đường tệp (localFile), kiểm tệp, gom theo sha256, gộp nhãn bài
    ├ pipeline/vlm-anh-s03.mjs      CLI không gọi model: --dem (đường đo) · --rut-mau (phiếu gắn tay, seed cố định)
    └ agent/src/agents/vlm-anh-s03.ts  hỏi model bằng generateText, mỗi lượt một ảnh base64, chặn URL trước khi gửi
-        └ agent/scripts/vlm-anh-run.ts CLI: --model qwen|haiku --limit --since --thu --tran-usd --gold
+        └ agent/scripts/vlm-anh-run.ts CLI: --model qwen|haiku|deepseek --limit --since --thu --tran-usd --gold
               └ silver_labels (SQL_GHI của KC1), ai_calls (recordCallDb)
 ```
 
@@ -69,12 +69,16 @@ cảnh của bài, có thể đoán loại hình kém hơn, và `--gold` sẽ ch
 phần chữ của yêu cầu ngay trước lúc gọi: còn `http`/`zdn.vn` thì không gửi, ghi `error_kind = lo-url`. Thêm một lớp ở `fetch` là thừa, vì phép đo máy giả đã soát
 thân yêu cầu thật.
 
-**Hai model.** `--model qwen` đi `getModel("qwen27b-khong-nghi")` tới MTPLX trên máy, 0 đồng, không rời máy. `--model haiku` đi Gateway. Dòng của hai model sống cạnh
-nhau vì khoá duy nhất có `model`. Không sửa `agent/src/runtime/models.ts`.
+**Ba model.** `--model qwen` đi `getModel("qwen27b-khong-nghi")` tới MTPLX trên máy, 0 đồng, không rời máy. `--model haiku` đi `getModel("haiku")` qua Gateway. `--model deepseek` đi Gateway với id ghim `deepseek/deepseek-v4.1-flash-1017`;
+`agent/src/runtime/models.ts` bị U1-87 cấm sửa, nên `vlm-anh-s03.ts` tự tạo `createGateway` cùng biến môi trường. Dòng của các model sống cạnh nhau vì khoá duy nhất có `model`.
+
+**Định tuyến Gateway.** Danh sách Gateway 02/11 (`/v1/models/<id>/endpoints`): DeepSeek 1017 có 22 nhà cung cấp, 11 bên `has_zdr` đúng, 4 bên nén `fp8`, giá vào $0,035–0,30 mỗi triệu token. Không ghim thì ảnh có thể tới bên không cam kết không giữ
+dữ liệu, và hai lần đo có thể đi hai bên khác nhau, số không so được. Mọi yêu cầu Gateway đặt `zeroDataRetention` và `disallowPromptTraining`; DeepSeek thêm `only: ["baseten"]` (cam kết đủ, không nén `fp8`, sẵn sàng 99,996% một ngày, $0,30 vào, $1,20 ra). Baseten lỗi thì
+ảnh mang `error_kind`, không tự chuyển sang bên khác. Cam kết là thông tin Gateway khai, máy không tự kiểm được. Suy nghĩ của model tắt như Qwen, vì việc chỉ cần JSON ngắn.
 
 **Ảnh lộ nguồn.** Điểm ảnh có thể tự in logo hay tên nguồn thật, máy không gạt được. Model trả `lo_nguon` (đúng hoặc sai, không ghi tên), nhãn được lưu và đếm,
 **không lớp nào lọc hay chặn theo nhãn**. Prompt và mã trong kho không chứa tên nguồn thật. Kế hoạch chạy giữ ảnh rời máy ở mức ít nhất: S4 và lô thử dùng Qwen; lần gửi cloud duy nhất
-là `--gold --model haiku` trên phiếu mẫu, sau khi Mạnh đã xem từng ảnh. Lệnh `--model haiku` trên lô vẫn chạy được về kỹ thuật, nhưng chạy khi nào là quyết định của Mạnh.
+là `--gold` với `haiku` và `deepseek` trên phiếu mẫu, sau khi Mạnh đã xem từng ảnh. Lệnh model cloud trên lô vẫn chạy được về kỹ thuật, nhưng chạy khi nào là quyết định của Mạnh.
 
 **Ghi.** `silver_labels` qua `SQL_GHI`, `prompt_version = vlm-s03-v1`, `text_hash` của bài chữ. Khoá duy nhất có
 `prompt_version` nên dòng ảnh sống cạnh dòng chữ của KC1. `probabilities` = `{nguon:"anh", price_vnd, property_type, bedrooms_total, living_area_m2,
@@ -94,7 +98,8 @@ chỉ báo số. Mỗi lần gọi của `--gold` có dòng `ai_calls`, để bi
 ## Vì sao không
 
 - **Decisions API**: `experimental_evaluate` chỉ nhận `state` JSON và câu hỏi choice/score/boolean, không có phần ảnh, không trả
-  được số giá. Câu này chỉ đúng với đường SDK qua Gateway: `docs/research/decision-models-landscape.md` ghi API gốc `/v1/decisions` nhận ảnh, chưa thử, và đường gốc cần lớp gọi riêng. Vòng này đo Haiku và Qwen.
+  được số giá. Câu này chỉ đúng với đường SDK qua Gateway: `docs/research/decision-models-landscape.md` ghi API gốc `/v1/decisions` nhận ảnh, chưa thử, và đường gốc cần lớp gọi riêng. Vòng này đo Qwen, Haiku và DeepSeek.
+- **Bí danh `deepseek-v4.1-flash`**: bí danh có thể đổi bản sau lần đo; Mạnh nói rõ bản 1017 nên ghim id.
 - **Lọc ảnh lộ nguồn**: Mạnh 02/11 chốt gắn nhãn, không chặn; giải pháp tính sau.
 - **Bỏ ảnh lặp**: trong ảnh lặp có ảnh rao thật kèm giá; bỏ là mất dữ liệu. Ghi số bài dùng chung để PL5 cân nhắc.
 - **Migration thêm cột**: chạm `db/migrations/**` (ngoài ranh giới, lên T3), trong khi `probabilities jsonb` đủ cho giai đoạn đo.
@@ -104,7 +109,7 @@ chỉ báo số. Mỗi lần gọi của `--gold` có dòng `ai_calls`, để bi
 
 ## Chi phí
 
-Lô thử 100 bài chạy Qwen local, 0 đồng. Trần 1 USD chỉ dành cho Haiku chấm phiếu mẫu 60 ảnh ở Cổng Giá trị. Ước thời gian hết tập đọc tính từ lô thử, ước tiền nếu dùng Haiku tính từ lượt chấm phiếu, ghi ở
+Lô thử 100 bài chạy Qwen local, 0 đồng. Trần 1 USD chung dành cho Haiku và DeepSeek chấm phiếu mẫu 60 ảnh ở Cổng Giá trị. Ước thời gian hết tập đọc tính từ lô thử, ước tiền nếu dùng model cloud tính từ lượt chấm phiếu, ghi ở
 `docs/research/s03-vlm-anh-do.md`. Chạy hết bài cũ không thuộc vòng này.
 
 ## Ngoài phạm vi

@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_agent
     paths: [agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03.test.ts, pipeline/lib/vlm-anh.mjs]
-    expected: "exit 0; ca VLM-AC-3: máy chủ HTTP giả qua AI_GATEWAY_BASE_URL ghi thân yêu cầu thật của getModel(haiku), máy chủ giả qua MTPLX_URL ghi thân yêu cầu thật của getModel(qwen27b-khong-nghi); dòng stg mồi có giá trị canh cho mỗi trường cấm và chữ bài canh; assert mỗi thân có đúng một ảnh base64 đúng byte tệp và không chứa từng giá trị canh; đối chứng dương cùng fixture: chuỗi gốc chứa đủ giá trị canh; ca chặn: chữ còn zdn.vn vào hàm gọi → số yêu cầu tới máy giả = 0, error_kind lo-url; ca VLM-AC-2b: bài hết ảnh → số yêu cầu = 0 và không có dòng nhãn."
+    expected: "exit 0; ca VLM-AC-3: máy chủ HTTP giả qua AI_GATEWAY_BASE_URL ghi thân yêu cầu thật của Haiku và DeepSeek, máy chủ giả qua MTPLX_URL ghi thân yêu cầu thật của Qwen; ma trận viết trước ba model; hai yêu cầu Gateway có zeroDataRetention và disallowPromptTraining đúng; yêu cầu DeepSeek có model deepseek/deepseek-v4.1-flash-1017 và only đúng baseten, đối chứng: yêu cầu Haiku không mang only baseten; dòng stg mồi có giá trị canh cho mỗi trường cấm và chữ bài canh; assert mỗi thân có đúng một ảnh base64 đúng byte tệp và không chứa từng giá trị canh; đối chứng dương cùng fixture: chuỗi gốc chứa đủ giá trị canh; ca chặn: chữ còn zdn.vn vào hàm gọi → số yêu cầu tới máy giả = 0, error_kind lo-url; ca VLM-AC-2b: bài hết ảnh → số yêu cầu = 0 và không có dòng nhãn."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -47,7 +47,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [agent/scripts/vlm-anh-run.ts, agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03-db.itest.ts]
-    expected: "exit 0; ca VLM-AC-6: ma trận viết trước JSON hỏng, loại hình lạ, giá chữ, 401, 500 qua Gateway giả: đủ dòng; lỗi mạng và JSON hỏng có error_kind là tên lớp lỗi, không chép thông điệp, lượt sau gọi lại đúng ảnh đó; loại hình lạ và giá chữ giữ các trường còn lại, trường đó vào truong_la, không error_kind, lượt sau 0 yêu cầu; bản ghi ai_calls đủ số dòng; spawn CLI thật với URL cloud mặc định trỏ cổng chết để không gì đi thật: trần trả mã 4 ở lô và ở --gold, không --model trả mã 2, --model decisions trả mã 2, --model qwen trỏ MTPLX giả chạy được, --thu giữ nguyên số dòng silver_labels."
+    expected: "exit 0; ca VLM-AC-6: ma trận viết trước JSON hỏng, loại hình lạ, giá chữ, 401, 500 qua Gateway giả: đủ dòng; lỗi mạng và JSON hỏng có error_kind là tên lớp lỗi, không chép thông điệp, lượt sau gọi lại đúng ảnh đó; loại hình lạ và giá chữ giữ các trường còn lại, trường đó vào truong_la, không error_kind, lượt sau 0 yêu cầu; bản ghi ai_calls đủ số dòng; spawn CLI thật với URL cloud mặc định trỏ cổng chết để không gì đi thật: trần trả mã 4 ở lô và ở --gold, trả lời không có chi phí vẫn dừng đúng theo đơn giá đã khai, không --model trả mã 2, --model decisions trả mã 2, --model qwen trỏ MTPLX giả chạy được, --model deepseek trỏ Gateway giả chạy được, --thu giữ nguyên số dòng silver_labels."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
