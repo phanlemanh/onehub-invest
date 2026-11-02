@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3839846da7c2e15827e3ffda536a2d7a5a52043b
+verified_commit: 25127eacf0f06642239e9062bf246d6b5a10be25
 human_signoff:
 ---
 
@@ -145,3 +145,7 @@ none — 6 eval tất định; năm lượt `s05k_unit` cho cùng kết quả.
 
 Round 1: 6/6 eval đạt trên cây `ba9601af`, PASS kèm F1 tới F5 không chặn.
 Round 2: nhánh dựng lại (bỏ một nhánh khác, gộp main mới), 6/6 eval đạt trên `3839846d`. F3 hết do lệnh `s05k_hoiquy` đã sửa; F1, F2, F4, F5, N1 còn. PASS, kèm Known limits và Ngoài hợp đồng cho người đọc ở Cổng 2.
+
+### Re-pin lần 1 — 2026-11-02, do gộp main, siết bộ dò khong-lo-nguon, sửa fixture AU12 sau vòng chấm
+run_id: repin-20261102T053124Z-55269
+sha: 25127eacf0f06642239e9062bf246d6b5a10be25 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng

@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a2e6ce3aafe60834c51c7bc1e4a2d70796df2ac0
+verified_commit: 25127eacf0f06642239e9062bf246d6b5a10be25
 human_signoff:
 ---
 
@@ -147,3 +147,7 @@ none — không có eval nhiều lượt; E1 và E2 cùng một lệnh cho kết
 Round 1: E5 failed — bộ dò bắt URL DTD plist; thêm phép miễn, thay probe E4 và E5, thêm E6.
 Round 2: E5 failed — bộ dò tự bắt dòng đối chứng mới thêm; phép miễn lọt URL có tiền tố URL DTD plist. Trả về sửa bộ dò.
 Round 3: 6/6 đạt trên cây `a2e6ce3a`. Phép miễn so nguyên URL; còn finding F9 và F8 ở bộ dò, không thuộc `expected`.
+
+### Re-pin lần 1 — 2026-11-02, do gộp main, siết bộ dò khong-lo-nguon, sửa fixture AU12 sau vòng chấm
+run_id: repin-20261102T053124Z-55269
+sha: 25127eacf0f06642239e9062bf246d6b5a10be25 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng

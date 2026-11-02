@@ -10,3 +10,4 @@
 {"ts":"2026-11-02T04:55:48Z","round":2,"evalId":"E4","run_id":"s06-region-tinh-E4-r2-20261102T045548Z","exit_code":0,"cmd":"node _acceptance/s06-region-tinh/probes/nap-region.mjs"}
 {"ts":"2026-11-02T04:55:48Z","round":2,"evalId":"E5","run_id":"s06-region-tinh-E5-r2-20261102T045548Z","exit_code":0,"cmd":"node _acceptance/s06-region-tinh/probes/nap-region.mjs"}
 {"ts":"2026-11-02T04:55:48Z","round":2,"evalId":"E6","run_id":"s06-region-tinh-E6-r2-20261102T045548Z","exit_code":0,"cmd":"node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"}
+{"ts":"2026-11-02T05:38:28Z","kind":"repin","run_id":"repin-20261102T053124Z-55269","sha":"25127eacf0f06642239e9062bf246d6b5a10be25","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0},"wall_s":423.9,"so_lenh":22,"tong_ket":{"ket_cuc":"xanh","phut":7.1,"so_lenh":22,"model_goi":0,"model_carry":0,"chap_chon":0}}
