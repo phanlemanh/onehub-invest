@@ -11,7 +11,7 @@ import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { parsePost, matchPhuong, chonSdtTin, demTinNhieuSdt } from "./transform-zalo.mjs";
+import { parsePost, matchPhuong, chonSdtTin, chonNguoiGuiTin, demTinNhieuSdt } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
@@ -98,14 +98,14 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: null, baiSdt: [], senderName: pr.post.sender_name, authorHash: pr.post.author_hash,
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id }],
+        phone: null, baiSdt: [], senderName: pr.post.sender_name,
       });
     } else {
       const o = dedup.get(offerId);
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -134,7 +134,7 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
       area_m2: o.areaM2, price_perm2: o.pricePerm2, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_name: o.senderName,
-      seller_phone: o.phone, seller_phone_hash: phoneHash, seller_ref: o.authorHash,
+      seller_phone: o.phone, seller_phone_hash: phoneHash, seller_ref: chonNguoiGuiTin(o.posts),
     });
     if (phoneHash) {
       const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };

@@ -10,9 +10,11 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { mintOfferId } from "./lib/offer-key.mjs";
 import { matchPhuong } from "./transform-zalo.mjs";
-import { docPhuongHopLe } from "./lib/osm.mjs";
+import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
+import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 import { kiemCatChuyen, resolveOffers, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -26,16 +28,15 @@ const norm = (s) =>
  */
 export async function runTransformChotot(client) {
   await kiemCatChuyen(client);   // PL15: chưa cắt chuyển thì dừng trước mọi lần ghi (job đỏ có tên, không mất ô)
-  // Phường hợp lệ theo thành phố (OSM đã migrate sáp nhập 2025) — bộ đọc chung, bỏ khu vực lạc
-  const areas = await docPhuongHopLe(client, ["vn-hanoi", "vn-hcmc"]);
-  const byCity = new Map([
-    ["vn-hanoi", new Map(areas.filter((a) => a.parent_id === "vn-hanoi").map((a) => [norm(a.name), a.id]))],
-    ["vn-hcmc", new Map(areas.filter((a) => a.parent_id === "vn-hcmc").map((a) => [norm(a.name), a.id]))],
-  ]);
-  const slugLists = new Map([
-    ["vn-hanoi", areas.filter((a) => a.parent_id === "vn-hanoi").map((a) => [a.id.replace("vn-hanoi-", ""), a.name])],
-    ["vn-hcmc", areas.filter((a) => a.parent_id === "vn-hcmc").map((a) => [a.id.replace("vn-hcmc-", ""), a.name])],
-  ]);
+  // Phường hợp lệ của MỌI thị trường có phường (OSM đã migrate sáp nhập 2025) — bộ đọc chung với S03, bỏ khu vực lạc;
+  // city_code của tin đi qua MỘT chỗ ánh xạ (lib/thi-truong.mjs: tỉnh cũ đã sáp nhập → thị trường mới).
+  const markets = await docThiTruongCoPhuong(client);
+  const areas = await docPhuongHopLe(client, markets);
+  const byCity = new Map(markets.map((m) => [m, new Map(areas.filter((a) => a.parent_id === m).map((a) => [norm(a.name), a.id]))]));
+  const slugLists = new Map(markets.map((m) => [m, areas.filter((a) => a.parent_id === m).map((a) => [a.id.slice(m.length + 1), a.name])]));
+  const { rows: mkRows } = await client.query(`SELECT id FROM areas WHERE region_type = 'market'`);
+  const thiTruongCo = new Set(mkRows.map((r) => r.id));
+  const maLa = new Map();
 
   const { rows: ads } = await client.query(
     `SELECT * FROM stg_chotot_ads WHERE price > 0 AND size_m2 > 0`,
@@ -58,7 +59,9 @@ export async function runTransformChotot(client) {
     if (!kind) { nSkip++; continue; }
 
     // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
-    const wardMap = byCity.get(ad.city_code);
+    const mk = thiTruongCua(ad.city_code, thiTruongCo);
+    if (!mk) maLa.set(ad.city_code ?? "(rỗng)", (maLa.get(ad.city_code ?? "(rỗng)") ?? 0) + 1);
+    const wardMap = byCity.get(mk);
     let areaId = wardMap?.get(norm(ad.ward_name_v3)) ?? null;
     if (areaId) nWardV3++;
     if (!areaId) {
@@ -66,9 +69,9 @@ export async function runTransformChotot(client) {
     }
     let phuongRaw = areaId ? ad.ward_name_v3 ?? ad.ward_name : null;
     if (!areaId) {
-      const m = matchPhuong(`${ad.subject ?? ""} ${ad.ward_name ?? ""} ${ad.area_name ?? ""}`, slugLists.get(ad.city_code) ?? []);
+      const m = matchPhuong(`${ad.subject ?? ""} ${ad.ward_name ?? ""} ${ad.area_name ?? ""}`, slugLists.get(mk) ?? []);
       if (m) {
-        areaId = `${ad.city_code}-${m.slug}`;
+        areaId = `${mk}-${m.slug}`;
         phuongRaw = m.name;
         nWardTxt++;
       }
@@ -112,6 +115,8 @@ export async function runTransformChotot(client) {
     if (Number.isInteger(Number(ad.rooms)) && Number(ad.rooms) > 0) {
       phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
     }
+    // HD5 (061): đặc trưng nhà — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, WC, toạ độ; rule_id = khoá nguồn đã đọc.
+    for (const d of docDacTrungS06(ad)) phatBieu.push({ ...chung, ...d });
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
   const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
@@ -121,7 +126,8 @@ export async function runTransformChotot(client) {
     `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match` +
     `${nHigh + nMed > 0 ? ` (match ${(((nWardV3 + nWardTxt) / (nHigh + nMed)) * 100).toFixed(1)}%)` : ""}`,
   );
-  return { high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt };
+  for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
+  return { high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa) };
 }
 
 async function main() {

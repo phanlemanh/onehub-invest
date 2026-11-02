@@ -79,6 +79,8 @@ const DOI_TUONG: Record<string, string> = {
   enrichment_proposals: "Bảng đề xuất",
   sellers: "Bảng người bán",
   entity_match: "Thẻ ghép căn chờ duyệt",
+  "S04/danang": "S04 · Đà Nẵng",
+  "S04/haiphong": "S04 · Hải Phòng",
 }
 
 /** Ô độ đúng của eval-classify (PL9): `<lát>|<phân khúc>|<cách đọc>|<trường>`. */

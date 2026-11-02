@@ -21,6 +21,7 @@ import { PnlChart } from "@/components/yield/pnl/chart";
 import { YieldConfidence } from "@/components/yield/yield-confidence";
 import { YieldForm } from "@/components/yield/yield-form";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
+import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 import { currencyFor, getArea, getYieldAreas, getYieldComps, getYieldMarkets } from "@/lib/queries";
 import { FINANCING_HORIZON, financingPlan, LOAN_DEFAULTS, type LoanInputs } from "@/lib/financing";
 import { COST_DEFAULTS, estimateYield, monthlyPnl, type YieldInputs } from "@/lib/yield";
@@ -56,12 +57,15 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
   // `area` có thể là mã thị trường (link cũ dau-tu chuyển về /yield?area=<thị trường>): chọn thị trường ấy,
   // phường để mặc định. Mã phường mang tiền tố mã thị trường (`vn-hcmc-…`) nên nút «Đầu tư» của Insight phường
   // chỉ cần `area` để mở đúng thị trường.
-  const marketOfArea = markets.find((m) => m.id === sp.area);
-  const marketOfWard = markets.find((m) => sp.area?.startsWith(`${m.id}-`));
-  const picked = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? marketOfWard;
+  // Mã thị trường dài đã đổi sang mã ngắn (migration 064) vẫn chọn đúng thị trường; mã khác giữ nguyên, không truy vấn.
+  const spArea = sp.area ? await giaiMaKhuVuc(sp.area) : undefined;
+  const spMarket = sp.market ? await giaiMaKhuVuc(sp.market) : undefined;
+  const marketOfArea = markets.find((m) => m.id === spArea);
+  const marketOfWard = markets.find((m) => spArea?.startsWith(`${m.id}-`));
+  const picked = marketOfArea ?? markets.find((m) => m.id === spMarket) ?? marketOfWard;
   // Khu vực có thật (Insight hiện mọi thị trường) mà thị trường của nó chưa có giá bán/thuê: nói rõ, không lặng lẽ
   // dựng báo cáo của thành phố khác. Mã không có trong `areas` vẫn rơi về thị trường mặc định.
-  const unsupported = !picked && sp.area ? await getArea(sp.area) : null;
+  const unsupported = !picked && spArea ? await getArea(spArea) : null;
   if (unsupported) {
     const name = unsupported.regionType === "market" ? unsupported.name : (unsupported.parentName ?? unsupported.name);
     return (
@@ -88,7 +92,7 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
   // Mặc định: phường có giá bán và nhiều listing nhất; căn 1 PN 60 m².
   const defaultArea =
     [...areas].filter((a) => a.medianPerm2).sort((a, b) => b.listings - a.listings)[0] ?? areas[0];
-  const area = (marketOfArea ? undefined : areas.find((a) => a.id === sp.area)) ?? defaultArea;
+  const area = (marketOfArea ? undefined : areas.find((a) => a.id === spArea)) ?? defaultArea;
   const sqm = num(sp.m2, 60, 15, 400);
   const inputs: YieldInputs = {
     area: area.id,

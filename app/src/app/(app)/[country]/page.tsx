@@ -7,6 +7,7 @@ import { FinderView, type FinderLevel } from "@/components/finder/finder-view";
 import { FINDER_METRICS, type FinderMetric } from "@/components/finder/bins";
 import { Badge } from "@/components/reui/badge";
 import { fmtInt } from "@/lib/format";
+import { maNgan } from "@/lib/ma-thi-truong";
 import { currencyFor, getCountryMarkets, getFinderAreas } from "@/lib/queries";
 
 const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam" };
@@ -44,7 +45,13 @@ export default async function FinderPage({
 
   // Mặc định cấp PHƯỜNG: mới có vài tỉnh tự thu, so sánh có nghĩa nằm ở phường.
   const level: FinderLevel = sp.level === "market" ? "market" : "submarket";
-  const market = markets.some((m) => m.slug === sp.market) ? sp.market! : markets[0].slug;
+  // `?market=` mang đoạn mã thị trường dài đã đổi sang mã ngắn (migration 064) vẫn chọn đúng thị trường.
+  const marketNgan = sp.market ? maNgan(`${country}-${sp.market}`).slice(country.length + 1) : undefined;
+  const market = markets.some((m) => m.slug === sp.market)
+    ? sp.market!
+    : markets.some((m) => m.slug === marketNgan)
+      ? marketNgan!
+      : markets[0].slug;
   const metric: FinderMetric = FINDER_METRICS.some((m) => m.value === sp.metric)
     ? (sp.metric as FinderMetric)
     : "revpar";

@@ -1,13 +1,17 @@
 // deals-phi-ly.test.mjs — hồ sơ deals-loai-tin-phi-ly (ON11): luật loại tin phi lý khỏi Căn giá tốt.
-// Ca DB chạy BEGIN…ROLLBACK trên Postgres local :5433 (khuôn bait-gap-sellers.test.mjs) — không để lại dòng nào.
+// Ca DB chạy BEGIN…ROLLBACK trên Postgres local :5433; mỗi ca dựng lược đồ riêng (bản rỗng các bảng liên quan, view tin
+// như 044, thước 034, sellers 060 — lib/luoc-do-rieng.mjs) — không xếp hàng khoá 33033, không chạm dữ liệu dùng chung,
+// không để lại dòng nào. Thước tính trên năm căn bịa của chính ca, không đọc thước thật.
 import { createHash } from "node:crypto";
-import { napSdtE164 } from "../lib/nap-060.mjs";
+import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import pg from "pg";
 
 import { implausibleReason } from "../lib/deal-plausibility.mjs";
+import { luocDoRieng, neuLaBang } from "../lib/luoc-do-rieng.mjs";
+import { MIG_060 } from "../lib/nap-060.mjs";
 import { loaiTinPhiLy, refreshBaitGap } from "../refresh-bait-gap.mjs";
 
 const DB_URL =
@@ -38,13 +42,21 @@ test("DP-AC-1 ma trận lý do", () => {
   assert.equal(implausibleReason({ areaM2: 0, bedrooms: 11 }), "thieu-dien-tich", "DP-AC-1 thứ tự xét");
 });
 
+// Bảng mà view tin, thước 034, 060 và refresh-bait-gap chạm tới — chép rỗng sang lược đồ riêng của từng ca.
+const BANG = ["sale_offer_records", "registry_aliases", "parties", "ref_lookup", "properties", "property_offers", "ops_audit"];
+const SQL_034 = readFileSync(new URL("../../db/migrations/034_ruler_p2_views.sql", import.meta.url), "utf8");
+
 async function withTx(fn) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     await c.query("BEGIN");
-    await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await napSdtE164(c); // SD3: nạp 060 trong giao dịch khi DB chưa áp
+    // 060 bỏ BẢNG sellers bằng câu DROP không tên lược đồ — DB chưa áp 060 thì chép nó để câu ấy rơi vào bản riêng.
+    await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "dp_on11" });
+    // Như 044 (không đọc định nghĩa từ public — pg_get_viewdef xin khoá trên view dùng chung), rồi thước 034, sellers 060.
+    await c.query("CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL");
+    await c.query(SQL_034);
+    await c.query(MIG_060);
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -62,10 +74,30 @@ const FIX = [
   ["t_on11_qua_rong", 5000, 3, 40, "dien-tich-ngoai-khoang"],
 ];
 
-/** Dựng fixture ở một phường thật có thước; không phường nào có thước → ca FAIL có tên. */
+const PHUONG = "vn-hanoi-t-on11";
+const M = 100_000_000; // giá/m² của năm căn thước bịa
+
+/** Thước: năm căn bịa cùng phường, mỗi căn một tin giá M/m² — v_ruler_p2_area (034) ra trung vị M, n = 5. */
+async function thuoc(c) {
+  for (let i = 0; i < 5; i++) {
+    const oid = `t_on11_thuoc_${i}`;
+    await c.query(
+      `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
+         property_type, area_id, area_m2, price_perm2)
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'unknown', $2, 80, $3)`,
+      [oid, PHUONG, M],
+    );
+    const pid = (await c.query(`INSERT INTO properties (kind, area_id) VALUES ('sale', $1) RETURNING id`, [PHUONG])).rows[0].id;
+    await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [pid, oid]);
+  }
+  const ruler = (await c.query(`SELECT area_id, m FROM v_ruler_p2_area`)).rows;
+  assert.deepEqual(ruler.map((r) => [r.area_id, Number(r.m)]), [[PHUONG, M]], "DP thước bịa không ra đúng một phường");
+  return ruler[0];
+}
+
+/** Dựng fixture ở phường của thước bịa. */
 async function fixture(c) {
-  const ruler = (await c.query(`SELECT area_id, m FROM v_ruler_p2_area ORDER BY area_id LIMIT 1`)).rows[0];
-  assert.ok(ruler, "DP-AC-2 không phường nào có thước (v_ruler_p2_area rỗng) — ca không chạy được");
+  const ruler = await thuoc(c);
   const m = Number(ruler.m);
   // SD3: sellers là view trên bí danh sdt + tin — người theo SĐT như bộ dựng danh bạ ghi.
   await c.query(`INSERT INTO parties (party_key, source) VALUES ('pty_01HZZZZZZZZZZZZZZZZZZZDP11', 'S03')`);

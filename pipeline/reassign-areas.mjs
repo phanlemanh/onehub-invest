@@ -26,11 +26,12 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { NGUON_PHUONG, phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
+import { THANH_PHO } from "./lib/thi-truong.mjs";
 
-export const MARKETS = {
-  hanoi: { id: "vn-hanoi", name: "Hà Nội" },
-  hcmc: { id: "vn-hcmc", name: "TP. Hồ Chí Minh" },
-};
+// Tập thành phố lấy từ MỘT chỗ ánh xạ (lib/thi-truong.mjs) — khoá = tiền tố snapshot S04 của bộ thu.
+export const MARKETS = Object.fromEntries(
+  Object.entries(THANH_PHO).map(([k, t]) => [k, { id: t.id, name: t.ten, tuChen: t.tuChen }]),
+);
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -53,13 +54,25 @@ async function upsertPhuong(client, city, log) {
     [`${city}__%`],
   );
   const out = { upserted: 0, ids: [], skippedLevel: 0, skippedOutside: [], bounds: bounds.length };
-  if (bounds.length === 0) return out;
-  await client.query(
-    `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-     VALUES ($1, NULL, 'market', $2, 'vn', '{}'::jsonb)
-     ON CONFLICT (id) DO NOTHING`,
-    [market.id, market.name],
-  );
+  if (bounds.length === 0) {
+    log.log(`${city}: chưa có snapshot ranh giới S04 (${city}__…) — bỏ qua`);
+    return out;
+  }
+  if (market.tuChen) {
+    await client.query(
+      `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
+       VALUES ($1, NULL, 'market', $2, 'vn', '{}'::jsonb)
+       ON CONFLICT (id) DO NOTHING`,
+      [market.id, market.name],
+    );
+  } else {
+    // Thị trường mới chỉ nạp phường khi ĐÃ có trong areas (064 đã áp) — không tự chèn kẻo trùng mã dài cũ
+    const { rows: co } = await client.query(`SELECT 1 FROM areas WHERE id = $1 AND region_type = 'market'`, [market.id]);
+    if (!co.length) {
+      log.warn(`  ! ${city}: thị trường ${market.id} chưa có trong areas — bỏ qua, không chèn (áp migration 064 trước)`);
+      return { ...out, bounds: 0 };
+    }
+  }
   const { rows: [mk] } = await client.query(`SELECT geom IS NOT NULL AS co FROM areas WHERE id = $1`, [market.id]);
   if (!mk.co) log.warn(`  ! ${city}: ${market.id} chưa có polygon — không chốt vị trí phường`);
   const marketSlug = slugify(market.name.replace(/^TP\.\s*/, ""));
