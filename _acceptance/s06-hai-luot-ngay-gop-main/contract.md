@@ -5,7 +5,7 @@ slug: s06-hai-luot-ngay-gop-main
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-31T13:30:00Z
 design_doc: docs/superpowers/specs/2026-10-31-s06-hai-luot-ngay-gop-main-design.md
@@ -59,3 +59,6 @@ Bỏ quét không gian — thay đổi một tệp cấu hình, ba trục liệt
 - Siết SLO S06 theo nhịp mới.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-2: Lệnh cài và đầu script thu S06 vẫn ghi chỉ chạy 05:30, trong khi lịch thật có hai lượt 05:30 và 14:00.
