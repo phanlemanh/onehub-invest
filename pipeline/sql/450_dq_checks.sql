@@ -128,6 +128,23 @@ FROM (
       WHEN 'osm-boundaries' THEN 90 END
 ) f;
 
+-- ============ (e) s03-unit-facing-fill: tỷ lệ tin S03 có hướng (ADR-0011 điều kiện 6, migration 067) ============
+-- Đếm theo field_provenance và phát biểu, không đọc cột unit_facing, để chạy được cả khi DB chưa áp 067. Chưa có phát biểu → skip.
+INSERT INTO dq_check_results (check_name, entity, status, detail)
+SELECT 's03-unit-facing-fill', 'sale_offers',
+  CASE
+    WHEN n_phat_bieu = 0 THEN 'skip'
+    WHEN n_tin = 0 OR n_co_huong::numeric / n_tin < 0.05 THEN 'fail'
+    ELSE 'pass'
+  END,
+  'tin có hướng ' || n_co_huong || '/' || n_tin || ', phát biểu ' || n_phat_bieu
+FROM (
+  SELECT (SELECT count(*) FROM field_assertions WHERE field = 'unit_facing' AND subject_key LIKE 'S03:%' AND retracted_at IS NULL) AS n_phat_bieu,
+         count(*) AS n_tin,
+         count(*) FILTER (WHERE field_provenance ? 'unit_facing') AS n_co_huong
+    FROM sale_offers WHERE source = 'S03'
+) d;
+
 -- Tổng kết cho log weekly-collect
 SELECT check_name, entity, status, detail
-FROM dq_check_results ORDER BY checked_at DESC, id DESC LIMIT 32;
+FROM dq_check_results ORDER BY checked_at DESC, id DESC LIMIT 33;

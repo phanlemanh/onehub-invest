@@ -12,6 +12,7 @@ import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { writeAssertions } from "../lib/assert.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
+import { napTangHuong } from "../lib/nap-067.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
@@ -125,6 +126,7 @@ test("AC-3 cột và trục: offer_status mặc định unknown, CHECK theo sổ
       [...truc("enrich_field").values.map((v) => v.code), "offer_status", "street_number", "unit_number", "frontage_length",
         "lot_size_dimensions", "stories", "latitude", "longitude"].sort(), "trục assertion_field = năm trường enrich + offer_status + bảy đặc trưng HD5");
     await napDacTrung(db);   // HD5 (061; giám sát duyệt P1-87): sổ đã có bảy mã assertion_field của 061
+    await napTangHuong(db);  // SV2 (067): sổ đã có hai mã và hai trục mới
     assert.deepEqual((await checkDb(db, reg)).map((x) => x.msg), [], "sổ từ vựng lệch DB sau 059");
 
     const regLech = structuredClone(reg);

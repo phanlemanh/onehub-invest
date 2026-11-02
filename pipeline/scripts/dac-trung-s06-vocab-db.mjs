@@ -7,11 +7,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
+import { napTangHuong } from "../lib/nap-067.mjs";
 import { ASSERTION_FIELD, ENRICH_FIELD } from "../lib/vocab.generated.mjs";
 
 // Tập mã của 059 (năm trường enrich + trạng thái chào) và bảy mã HD5 thêm ở 061 — rút từ hằng sinh của sổ.
 const MA_059 = [...Object.values(ENRICH_FIELD), ASSERTION_FIELD.offer_status];
-const MA_061 = Object.values(ASSERTION_FIELD).filter((m) => !MA_059.includes(m));
+const MA_067 = [ASSERTION_FIELD.floor_raw, ASSERTION_FIELD.unit_facing];   // SV2: hai mã sau 061, áp ở vế chính
+const MA_061 = Object.values(ASSERTION_FIELD).filter((m) => !MA_059.includes(m) && !MA_067.includes(m));
 const lit = (ds) => ds.map((m) => `'${m}'`).join(", ");
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -40,6 +42,7 @@ try {
   // Vế chính: áp 061 (hai lần) rồi checkDb phải sạch.
   await napDacTrung(c);
   await napDacTrung(c);
+  await napTangHuong(c);   // SV2: sổ đã có 067, nên vế sạch cần cả 067
   const lech = await checkDb(c, reg);
   console.log(`--check-db (đã áp 061): ${lech.length} lệch`);
   for (const x of lech) console.log(`  ${x.msg}`);

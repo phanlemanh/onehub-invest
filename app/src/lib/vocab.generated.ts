@@ -7,7 +7,9 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
-  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "floor_raw", "unit_facing"],
+  unit_facing_of: ["balcony", "door", "unspecified"],
+  facing_direction: ["north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
   registry_status: ["active", "merged", "split", "retired"],
@@ -28,6 +30,8 @@ export type Confidence = (typeof VOCAB.confidence)[number];
 export type PriceTier = (typeof VOCAB.price_tier)[number];
 export type EnrichField = (typeof VOCAB.enrich_field)[number];
 export type AssertionField = (typeof VOCAB.assertion_field)[number];
+export type UnitFacingOf = (typeof VOCAB.unit_facing_of)[number];
+export type FacingDirection = (typeof VOCAB.facing_direction)[number];
 export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
 export type RegistryStatus = (typeof VOCAB.registry_status)[number];
@@ -45,7 +49,9 @@ export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "la
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
-export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", floor_raw: "floor_raw", unit_facing: "unit_facing" } as const;
+export const UNIT_FACING_OF = { balcony: "balcony", door: "door", unspecified: "unspecified" } as const;
+export const FACING_DIRECTION = { north: "north", south: "south", east: "east", west: "west", northeast: "northeast", northwest: "northwest", southeast: "southeast", southwest: "southwest" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
@@ -58,7 +64,7 @@ export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_ch
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
 
-export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
+export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "unit_facing", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
 
 /** Nhãn tiếng Việt từng giá trị (label_vi của sổ). */
 export const LABELS_VI = {
@@ -67,7 +73,9 @@ export const LABELS_VI = {
   confidence: { high: "cao", medium: "trung bình", low: "thấp" },
   price_tier: { P0: "giá giao dịch (P0)", P1: "giá nội bộ (P1)", P2: "giá công khai (P2)" },
   enrich_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà" },
-  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ" },
+  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ", floor_raw: "Tầng", unit_facing: "Hướng" },
+  unit_facing_of: { balcony: "Ban công", door: "Cửa chính", unspecified: "Không nói rõ" },
+  facing_direction: { north: "Bắc", south: "Nam", east: "Đông", west: "Tây", northeast: "Đông Bắc", northwest: "Tây Bắc", southeast: "Đông Nam", southwest: "Tây Nam" },
   evidence_tier: { fact: "Sự thật", observed: "Quan sát có trích dẫn", inferred: "Suy luận" },
   assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước" },
   registry_status: { active: "Đang dùng", merged: "Đã gộp", split: "Đã tách", retired: "Đã nghỉ" },

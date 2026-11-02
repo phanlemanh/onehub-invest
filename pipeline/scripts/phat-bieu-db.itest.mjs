@@ -18,6 +18,7 @@ import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { napLai059 } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
+import { napTangHuong } from "../lib/nap-067.mjs";
 import { spawnSync } from "node:child_process";
 import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
@@ -523,6 +524,7 @@ test("PD-AC-1 sổ: sau 045 trong giao dịch, DB khớp sổ từ vựng (check
   await trongGiaoDich(c, async () => {
     const reg = readMappings(ROOT);
     await napDacTrung(c);   // HD5 (061; giám sát duyệt P1-87): sổ đã có bảy mã assertion_field của 061
+    await napTangHuong(c);  // SV2 (067): sổ đã có hai mã và hai trục mới
     assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 lệch sổ");
     await c.query("DELETE FROM ref_lookup WHERE lookup_name = 'assertion_method' AND lookup_value = 'legacy'");
     const lech = await checkDb(c, reg);

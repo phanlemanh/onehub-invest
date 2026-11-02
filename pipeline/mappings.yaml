@@ -131,11 +131,16 @@ canonical:
         "block"; tòa chuẩn hoá qua asset_nodes node_type=building (≈ComplexName)
       checked_on: "2026-10-22"
     floor_raw:
+      dd: UnitFloorLocation
+      note: "số tầng hoặc đúng ba chữ khoảng «tầng thấp», «tầng trung», «tầng cao» (khoảng là giá trị riêng của VN); DD 2.1 UnitFloorLocation là chuỗi, không có danh sách giá trị; đi qua phát biểu từ migration 067"
+      checked_on: "2026-11-02"
+    unit_facing:
       dd: null
       rationale: >
-        tầng lầu từ text — chưa đối chiếu DD (ứng viên UnitFloorNumber cần tra
-        dd.reso.org trước khi dùng ngoài raw); hiện chỉ lưu raw để matching signals
-      checked_on: "2026-10-22"
+        hướng của căn kèm nhãn «của cái gì», dạng <unit_facing_of>:<facing_direction>[,…]. Hướng ban công là tiêu chí
+        mua căn hộ ở VN và môi giới hay ghi nhiều hướng; DD 2.1 chỉ có DirectionFaces là hướng lối vào chính của toà,
+        chọn một giá trị, nên không hợp. Migration 067 (CHECK khuôn, trigger phát biểu); DQ s03-unit-facing-fill
+      checked_on: "2026-11-02"
     bathrooms:
       dd: BathroomsTotalInteger
       note: "đối chiếu research/reso-standards.md bảng field map; migration 030/031"
@@ -371,6 +376,37 @@ enums:
       - { code: stories, label_vi: Số tầng, dd_lookup: Stories }
       - { code: latitude, label_vi: Vĩ độ, dd_lookup: Latitude }
       - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
+      - { code: floor_raw, label_vi: Tầng, dd_lookup: UnitFloorLocation }
+      - { code: unit_facing, label_vi: Hướng }
+  unit_facing_of:
+    term_vi: Hướng của cái gì
+    dd_field: null
+    local: true
+    rationale: "extension — phần nhãn của sale_offer_records.unit_facing (ADR-0011 sáu điều kiện, migration 067): bài nói hướng ban công, hướng cửa, hoặc chỉ nói «hướng»"
+    checked_on: "2026-11-02"
+    columns: []
+    nullable: false
+    values:
+      - { code: balcony, label_vi: Ban công }
+      - { code: door, label_vi: Cửa chính }
+      - { code: unspecified, label_vi: Không nói rõ }
+  facing_direction:
+    term_vi: Hướng
+    dd_field: null
+    local: true
+    rationale: "extension — phần hướng của sale_offer_records.unit_facing (ADR-0011 sáu điều kiện, migration 067); tám hướng, không dùng lookup của DirectionFaces vì trường đó nói về lối vào toà"
+    checked_on: "2026-11-02"
+    columns: []
+    nullable: false
+    values:
+      - { code: north, label_vi: Bắc }
+      - { code: south, label_vi: Nam }
+      - { code: east, label_vi: Đông }
+      - { code: west, label_vi: Tây }
+      - { code: northeast, label_vi: Đông Bắc }
+      - { code: northwest, label_vi: Tây Bắc }
+      - { code: southeast, label_vi: Đông Nam }
+      - { code: southwest, label_vi: Tây Nam }
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null

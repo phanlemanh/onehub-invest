@@ -11,9 +11,9 @@ import pg from "pg";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
-import { phatBieuPhongNgu, phatBieuToaTruc } from "./lib/assert.mjs";
+import { co067, phatBieuPhongNgu, phatBieuTangHuong, phatBieuToaTruc } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
-import { CONFIDENCE, KIND } from "./lib/vocab.generated.mjs";
+import { CONFIDENCE, FACING_DIRECTION, KIND, UNIT_FACING_OF } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -283,15 +283,20 @@ const MA_TOA_KHAC = /(?<![\p{L}\p{N}_.\-])[A-Z]{1,3}\d{1,3}(?:[A-Z]\d?)?(?![\p{L
 /** Toà duy nhất khi so không phân biệt hoa thường, giữ nguyên chữ của lần đầu; không có hoặc nhiều toà thì null. */
 const motToa = (ds) => (new Set(ds.map((t) => t.toUpperCase())).size === 1 ? ds[0] : null);
 
+/** Các mã căn trong chữ bài, theo dạng khớp đầu tiên của MA_DANG. */
+function maTrongBai(so) {
+  for (const re of MA_DANG) {
+    const thay = [...so.matchAll(re)].filter((m) => !KHONG_PHAI_TOA.test(m[1]));
+    if (thay.length) return thay;
+  }
+  return [];
+}
+
 /** Toà và trục đọc từ chữ bài (AC-8). Bài nhiều mã (thường nhiều căn) để trống trục, chờ PL18; toà chỉ giữ khi mọi mã cùng toà.
  *  @returns {{ block: string|null, unit: string|null }} */
 export function docToaTruc(text) {
   const so = gatSo(text);
-  let thay = [];
-  for (const re of MA_DANG) {
-    thay = [...so.matchAll(re)].filter((m) => !KHONG_PHAI_TOA.test(m[1]));
-    if (thay.length) break;
-  }
+  const thay = maTrongBai(so);
   const units = [...new Set(thay.map((m) => m[0].toUpperCase()))];
   let unit = thay[0]?.[0] ?? null;
   if (units.length !== 1) unit = null;
@@ -307,6 +312,66 @@ export function docToaTruc(text) {
 }
 
 // ---- Bước 2: parse ----
+// Tầng và hướng của căn (hồ sơ s03-luu-tang-huong, bộ đọc audit 02/11 §10).
+const CHU_HUONG = {
+  "đông nam": FACING_DIRECTION.southeast, "đông bắc": FACING_DIRECTION.northeast, "tây nam": FACING_DIRECTION.southwest, "tây bắc": FACING_DIRECTION.northwest,
+  "dong nam": FACING_DIRECTION.southeast, "dong bac": FACING_DIRECTION.northeast, "tay nam": FACING_DIRECTION.southwest, "tay bac": FACING_DIRECTION.northwest,
+  đông: FACING_DIRECTION.east, tây: FACING_DIRECTION.west, nam: FACING_DIRECTION.south, bắc: FACING_DIRECTION.north,
+  dong: FACING_DIRECTION.east, tay: FACING_DIRECTION.west, bac: FACING_DIRECTION.north,
+  đn: FACING_DIRECTION.southeast, đb: FACING_DIRECTION.northeast, tn: FACING_DIRECTION.southwest, tb: FACING_DIRECTION.northwest,
+  dn: FACING_DIRECTION.southeast, db: FACING_DIRECTION.northeast,
+};
+// «Đông-Nam» viết liền là một hướng; «Đông - Nam» có khoảng trắng là hai hướng.
+const TEN_HUONG = "(?:(?:đông|tây|dong|tay)(?:\\s*|-)(?:nam|bắc|bac)|đông|tây|nam|bắc|dong|tay|bac|đn|đb|tn|tb|dn|db)";
+// Có từ dẫn: «Hướng: ĐN - TN», «BC Đông & Nam», «hướng cửa Bắc», «cửa chính Tây Nam», «ban công hướng Nam».
+const HUONG_DAN = new RegExp(`(?<![\\p{L}])(hướng\\s*(?:ban\\s*c[ôo]ng|bc|nhà|cửa(?:\\s*chính)?|chính)|huong|hướng|ban\\s*c[ôo]ng(?:\\s*hướng)?|bc(?:\\s*hướng)?|cửa\\s*chính)\\s*[:：\\-–]?\\s*(${TEN_HUONG}(?:\\s*(?:[-–/,&+]|và)\\s*${TEN_HUONG})*)(?![\\p{L}])`, "iu");
+const TEN_HUONG_G = new RegExp(`(?<![\\p{L}])${TEN_HUONG}(?![\\p{L}])`, "giu");
+// Không từ dẫn: chỉ tên đủ hai chữ («Toà X1, 30m2, Đông Nam»), bỏ khi đứng sau từ chỉ nơi chốn.
+const HUONG_TRAN = /(?<![\p{L}])(đông\s*nam|đông\s*bắc|tây\s*nam|tây\s*bắc)(?![\p{L}])/giu;
+const NOI_CHON = /(?:phường|xã|quận|huyện|khu|cổng|phía|miền|hà|nằm|tp|tỉnh|đường|tại|ở|sài\s*gòn|gia\s*lâm|hưng\s*yên)\s*$/iu;
+const TANG_SO = /(?<![\p{L}]|\d\s*)(?:tầng|tang|lầu)\s*[:\-]?\s*(\d{1,2})(?![\d\p{L}]|[.,]\d|\s*(?:m\b|m2|tầng|tum|và|,\s*\d|-\s*\d))/iu;
+const TANG_KHOANG = /(?<![\p{L}])(?:tầng\s*(trung\s*cao|trung|cao|thấp|vừa)|tang\s*(trung|cao|thap)|(trung)\s*tầng)(?![\p{L}]|\s*(?:cấp|tâm))/iu;
+
+const khoaHuong = (s) => s.toLowerCase().replace(/[\s-]+/gu, " ");
+
+/** Khoảng tầng về đúng ba chữ: «trung cao» ra tầng cao, «vừa» ra tầng trung. */
+function chuKhoangTang(m) {
+  const k = khoaHuong(m[1] ?? m[2] ?? m[3]);
+  if (k === "cao" || k === "trung cao") return "tầng cao";
+  return k === "thấp" || k === "thap" ? "tầng thấp" : "tầng trung";
+}
+
+/** Tầng trong mã căn: hai chữ số trước trục ở dạng đủ («S1.12.08», «GH3-1203»); mã che tầng thì null. */
+function tangTuMa(m) {
+  const so = m[0].slice(m[1].length).match(/(\d{2})[.\-_]?\d{2}[A-Z]?$/iu)?.[1];
+  return so && Number(so) > 0 ? String(Number(so)) : null;
+}
+
+/** Hướng dạng lưu `<của cái gì>:<hướng>[,<hướng>]`, các hướng sắp theo chữ cái và không trùng (CHECK của 067). */
+function giaTriHuong(cuaCaiGi, ds) {
+  return `${cuaCaiGi}:${[...new Set(ds)].sort().join(",")}`;
+}
+
+/** Tầng và hướng đọc từ chữ bài. Bài nhiều mã (thường nhiều căn) để trống cả hai, chờ PL18, cùng luật với trục.
+ *  @returns {{ floor: string|null, facing: string|null }} floor: số dạng chữ hoặc «tầng thấp|trung|cao»; facing: dạng lưu của unit_facing */
+export function docTangHuong(text) {
+  const so = gatSo(text).normalize("NFC");
+  const ma = maTrongBai(so);
+  if (new Set(ma.map((m) => m[0].toUpperCase())).size > 1) return { floor: null, facing: null };
+  const tangSo = so.match(TANG_SO)?.[1];
+  const khoang = so.match(TANG_KHOANG);
+  const tangMa = ma.length ? tangTuMa(ma[0]) : null;
+  const floor = tangSo && Number(tangSo) > 0 ? String(Number(tangSo)) : tangMa ?? (khoang ? chuKhoangTang(khoang) : null);
+
+  const dan = so.match(HUONG_DAN);
+  if (dan) {
+    const cua = /ban\s*c[ôo]ng|bc/iu.test(dan[1]) ? UNIT_FACING_OF.balcony : /cửa/iu.test(dan[1]) ? UNIT_FACING_OF.door : UNIT_FACING_OF.unspecified;
+    return { floor, facing: giaTriHuong(cua, [...dan[2].matchAll(TEN_HUONG_G)].map((x) => CHU_HUONG[khoaHuong(x[0])])) };
+  }
+  const tran = [...so.matchAll(HUONG_TRAN)].filter((m) => !NOI_CHON.test(so.slice(Math.max(0, m.index - 14), m.index)));
+  return { floor, facing: tran.length ? giaTriHuong(UNIT_FACING_OF.unspecified, tran.map((m) => CHU_HUONG[khoaHuong(m[1])])) : null };
+}
+
 export function parsePost(text, { giaKhongDonVi = true } = {}) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
@@ -370,7 +435,7 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
   out.phones = extractPhones(text);
   out.phone = out.phones[0] ?? null;
   out.ma = maToaCan(text);
-  Object.assign(out, docToaTruc(text));
+  Object.assign(out, docToaTruc(text), docTangHuong(text));
 
   // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
   // thành null để transform bỏ qua thay vì gãy INSERT bigint.
@@ -724,14 +789,14 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit }],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, floor: pr.floor, facing: pr.facing }],
         phone: null, baiSdt: [], sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
     } else {
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, floor: pr.floor, facing: pr.facing });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -778,9 +843,15 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     }
   }
   await auditRejected(client, "S03", rejected);
+  const coTangHuong = await co067(client);
+  if (!coTangHuong) console.warn("transform-zalo: DB chưa áp migration 067, bỏ phát biểu tầng và hướng ở lượt này");
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
-    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", nhom.flatMap((o) => o.posts), "transform-zalo@sv1")],
+    assertions: [
+      ...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"),
+      ...phatBieuToaTruc("S03", nhom.flatMap((o) => o.posts), "transform-zalo@sv1"),
+      ...(coTangHuong ? phatBieuTangHuong("S03", nhom.flatMap((o) => o.posts), "transform-zalo@sv2") : []),
+    ],
   });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);

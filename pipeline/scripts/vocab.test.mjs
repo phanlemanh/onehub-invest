@@ -13,7 +13,7 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
-  "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
+  "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "unit_facing_of", "facing_direction", "evidence_tier", "assertion_method",
   "registry_status", "alias_kind", "registry_event_kind", "party_role",
   "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
 ];
@@ -38,6 +38,11 @@ const NHAN = [
   ["assertion_field", "street_number", "Số nhà"], ["assertion_field", "unit_number", "Mã căn"],
   ["assertion_field", "frontage_length", "Mặt tiền"], ["assertion_field", "lot_size_dimensions", "Ngang × dài"],
   ["assertion_field", "stories", "Số tầng"], ["assertion_field", "latitude", "Vĩ độ"], ["assertion_field", "longitude", "Kinh độ"],
+  // SV2 (067): tầng, hướng và hai trục của hướng
+  ["assertion_field", "floor_raw", "Tầng"], ["assertion_field", "unit_facing", "Hướng"],
+  ["unit_facing_of", "balcony", "Ban công"], ["unit_facing_of", "door", "Cửa chính"], ["unit_facing_of", "unspecified", "Không nói rõ"],
+  ["facing_direction", "north", "Bắc"], ["facing_direction", "south", "Nam"], ["facing_direction", "east", "Đông"], ["facing_direction", "west", "Tây"],
+  ["facing_direction", "northeast", "Đông Bắc"], ["facing_direction", "northwest", "Tây Bắc"], ["facing_direction", "southeast", "Đông Nam"], ["facing_direction", "southwest", "Tây Nam"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -68,11 +73,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 17 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 19 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 79); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt
+  assert.equal(NHAN.length, 92); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; SV2 (067): +2 mã + hai trục hướng
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

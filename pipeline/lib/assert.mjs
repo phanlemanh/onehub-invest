@@ -107,3 +107,28 @@ export function phatBieuToaTruc(source, bai, methodVersion) {
     ...(p.unit ? [dong(p, ASSERTION_FIELD.unit_number, p.unit)] : []),
   ]);
 }
+
+/**
+ * Phát biểu tầng và hướng của một lượt, mỗi bài một dòng (hồ sơ s03-luu-tang-huong). Bài không đọc được trường nào thì không có dòng.
+ * @param {string} source mã nguồn
+ * @param {{ post_id: string, posted_at?: string|null, floor?: string|null, facing?: string|null }[]} bai
+ * @param {string} methodVersion
+ */
+export function phatBieuTangHuong(source, bai, methodVersion) {
+  const dong = (p, field, value) => ({
+    subject_key: subjectKey(source, p.post_id), field, value, evidence_tier: EVIDENCE_TIER.observed,
+    method: ASSERTION_METHOD.parser, method_version: methodVersion, observed_at: p.posted_at ?? null,
+  });
+  return bai.flatMap((p) => [
+    ...(p.floor ? [dong(p, ASSERTION_FIELD.floor_raw, p.floor)] : []),
+    ...(p.facing ? [dong(p, ASSERTION_FIELD.unit_facing, p.facing)] : []),
+  ]);
+}
+
+/** DB đã áp 067 chưa. Transform đọc một lần đầu lượt: chưa áp thì bỏ hai trường, CHECK không cho ghi (AC-10). */
+export async function co067(client) {
+  const { rows } = await client.query(
+    `SELECT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_schema = 'public' AND table_name = 'sale_offer_records' AND column_name = 'unit_facing') AS co`);
+  return rows[0].co;
+}

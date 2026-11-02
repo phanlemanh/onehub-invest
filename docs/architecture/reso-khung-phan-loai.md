@@ -87,6 +87,8 @@ Field `Building` dùng cho danh mục Ocean Park 1: `BuildingKey`, `BuildingName
 | `first_seen` | `OnMarketTimestamp` (lần đầu thấy đang chào) · `OriginalEntryTimestamp` | 2.0 | mappings.yaml đang `dd: null` |
 | trạng thái chào — mới | `StandardStatus` (§6) | 2.0 | |
 | hướng, view, nội thất | `DirectionFaces`, `View`, `Furnished` | 2.0 | Nhóm C (F3) |
+| hướng căn của tin S03 | extension `unit_facing` (nhãn + hướng, nhiều giá trị) | — | Tách khỏi `DirectionFaces`: trường RESO là hướng lối vào chính của toà, một giá trị; S03 nói ban công hoặc không nói, có bài ghi hai hướng. Migration 067, hồ sơ `s03-luu-tang-huong` |
+| tầng của tin | `UnitFloorLocation` (số; khoảng «tầng thấp/trung/cao» là giá trị riêng của VN) | 2.1 | `floor_raw`, đi qua phát biểu từ migration 067 |
 | người đăng | `ListAgentKey`, `ListAgentFullName`, `ListAgentMobilePhone` → `Member` (`MemberKey`, `MemberMobilePhone`) | 2.0 | Tầng C (ROADMAP §3.11) |
 | `seller_ref` | `Member.MemberKey` / `OriginatingSystemMemberKey` | 2.0 | |
 | ảnh | `Media` (`MediaKey`, `ResourceRecordKey`=ListingKey, `MediaURL`, `Order`, `MediaCategory=Photo`, `ImageOf`) | 2.0 | |
