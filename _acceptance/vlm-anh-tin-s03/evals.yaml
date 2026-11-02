@@ -84,7 +84,7 @@ evals:
     criterion: AC-9
     executor: script
     layer: backend-effect
-    cmd: "node pipeline/vlm-anh-s03.mjs --dem --kiem-lo-that"
+    cmd: node pipeline/vlm-anh-s03.mjs --dem --kiem-lo-that
     paths: [pipeline/vlm-anh-s03.mjs, pipeline/lib/vlm-anh.mjs, docs/research/s03-vlm-anh-do.md]
     expected: "exit 0 trên DB local sau khi đã chạy lô thật: tập đọc > 0, số dòng tốt của Qwen ≥ 1, các nhóm cộng lại bằng tập đọc; DB không có lô thật thì exit khác 0."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
