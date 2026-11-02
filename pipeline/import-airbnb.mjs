@@ -186,6 +186,7 @@ async function main() {
     let zaloMedia = 0;
   let s08 = 0;
   let s08Detail = 0;
+  let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
     for (const it of items) {
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         const mediaFiles = mediaFilesOf(it, manifest.snapshotId);
@@ -279,8 +280,14 @@ async function main() {
       } else if (it.source === "s08-danh-muc") {
         // S08 inventory_unit (2410-12): item state=detail là metadata dự án
         // (không phải căn, CHECK state chặn) — bỏ có log.
+        // 2610-22(3): state=catalog (kind project_catalog, gộp v4) cũng metadata
+        // — bỏ im lặng CÓ ĐẾM như detail, hết cảnh báo «state lạ».
         if (it.meta?.state === "detail") {
           s08Detail++;
+          continue;
+        }
+        if (it.meta?.state === "catalog") {
+          s08Catalog++;
           continue;
         }
         const st = it.meta?.state;
@@ -328,7 +335,7 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail bỏ)`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ)`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
