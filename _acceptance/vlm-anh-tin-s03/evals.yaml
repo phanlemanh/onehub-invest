@@ -15,7 +15,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_pipeline
     paths: [pipeline/lib/vlm-anh.mjs, pipeline/media-rows.mjs, pipeline/tests/vlm-anh.test.mjs]
-    expected: "exit 0; ca VLM-AC-2: ma trận 7 loại entry trên thư mục tạm suy từ os.tmpdir(), tệp thật ghi bằng byte đầu JPEG; assert số ảnh giữ, đếm bỏ theo từng lý do, trần 4 ảnh; đối chứng hai chiều cùng fixture: tệp đúng được giữ, cùng tệp đó đổi byte đầu thì bỏ với lý do sai-dinh-dang."
+    expected: "exit 0; ca VLM-AC-2: ma trận 9 loại entry trên thư mục tạm suy từ os.tmpdir(), khoá entry rút từ dòng do media-rows.mjs đọc được chứ không viết tay khuôn riêng, tệp thật ghi bằng byte đầu JPEG; assert số ảnh giữ, đếm bỏ theo từng lý do, 5 entry cùng sha256 tính một ảnh, trần 4 ảnh khác nhau, entry thiếu sha256 mang băm đúng byte tệp; đối chứng hai chiều cùng fixture: tệp đúng được giữ, cùng tệp đó đổi byte đầu thì bỏ với lý do sai-dinh-dang."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_agent
     paths: [agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03.test.ts, pipeline/lib/vlm-anh.mjs]
-    expected: "exit 0; ca VLM-AC-3: máy chủ HTTP giả qua AI_GATEWAY_BASE_URL ghi thân yêu cầu thật của getModel(haiku); dòng stg mồi có giá trị canh cho mỗi trường cấm; assert thân chứa base64 đúng byte tệp và không chứa từng giá trị canh; đối chứng dương cùng fixture: chuỗi gốc chứa đủ giá trị canh trước khi làm sạch; ca chặn: chữ còn zdn.vn vào hàm gọi → số yêu cầu tới máy giả = 0, error_kind lo-url; ca VLM-AC-2b: bài hết ảnh → số yêu cầu = 0 và không có dòng nhãn."
+    expected: "exit 0; ca VLM-AC-3: máy chủ HTTP giả qua AI_GATEWAY_BASE_URL ghi thân yêu cầu thật của getModel(haiku), máy chủ giả qua MTPLX_URL ghi thân yêu cầu thật của getModel(qwen27b-khong-nghi); dòng stg mồi có giá trị canh cho mỗi trường cấm và chữ bài canh; assert mỗi thân có đúng một ảnh base64 đúng byte tệp và không chứa từng giá trị canh; đối chứng dương cùng fixture: chuỗi gốc chứa đủ giá trị canh; ca chặn: chữ còn zdn.vn vào hàm gọi → số yêu cầu tới máy giả = 0, error_kind lo-url; ca VLM-AC-2b: bài hết ảnh → số yêu cầu = 0 và không có dòng nhãn."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -31,7 +31,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [agent/scripts/vlm-anh-run.ts, agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03-db.itest.ts]
-    expected: "exit 0; ca VLM-AC-4 trên DB local trong ROLLBACK, backend giả: lượt một ghi N dòng đúng các khoá probabilities, đọc lại bằng SELECT; dòng chữ KC1 mồi còn; hai bài cùng chữ khác post_id ra hai dòng; lượt hai thêm 0 dòng và 0 lần gọi; lượt một trả 500 rồi lượt hai trả tốt → một dòng, error_kind rỗng; quote mồi có SĐT thì ghi đã gạt; loại hình ngoài sổ thì trường rỗng kèm error_kind."
+    expected: "exit 0; ca VLM-AC-4 trên DB local trong ROLLBACK, backend giả: lượt một ghi N dòng đúng các khoá probabilities gồm băm prompt và mảng anh, đọc lại bằng SELECT; dòng chữ KC1 mồi còn; hai bài cùng chữ khác post_id ra hai dòng; cùng bài hai model ra hai dòng; lượt hai thêm 0 dòng và 0 lần gọi; lượt một trả 500 rồi lượt hai trả tốt → một dòng, error_kind rỗng; đổi nội dung prompt giữ nguyên bản → CLI thoát 2 và 0 yêu cầu, đổi bản → có yêu cầu mới và dòng mới; quote mồi có SĐT thì ghi đã gạt."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -39,7 +39,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [agent/scripts/vlm-anh-run.ts, agent/tests/vlm-anh-s03-db.itest.ts, pipeline/sync-cloud.mjs]
-    expected: "exit 0; ca VLM-AC-5 (ROLLBACK, REPEATABLE READ, lô bài thật, backend giả): count + md5 sáu bảng trước bằng sau, trong khi silver_labels tăng đúng số bài; FILL không có silver_labels."
+    expected: "exit 0; ca VLM-AC-5 (ROLLBACK, REPEATABLE READ, lô bài thật, backend giả): assert số bài chọn được N > 0; count + md5 sáu bảng trước bằng sau, trong khi silver_labels tăng đúng N; FILL không có silver_labels."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
@@ -47,7 +47,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [agent/scripts/vlm-anh-run.ts, agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03-db.itest.ts]
-    expected: "exit 0; ca VLM-AC-6: ma trận viết trước JSON hỏng, loại hình lạ, giá chữ, 401, 500 qua Gateway giả: đủ dòng, error_kind là tên lớp lỗi và không chép thông điệp; bản ghi ai_calls đủ số dòng; spawn CLI thật: trần trả mã 4, --model decisions trả mã 2, --thu giữ nguyên số dòng silver_labels."
+    expected: "exit 0; ca VLM-AC-6: ma trận viết trước JSON hỏng, loại hình lạ, giá chữ, 401, 500 qua Gateway giả: đủ dòng; lỗi mạng và JSON hỏng có error_kind là tên lớp lỗi, không chép thông điệp, lượt sau gọi lại đúng ảnh đó; loại hình lạ và giá chữ giữ các trường còn lại, trường đó vào truong_la, không error_kind, lượt sau 0 yêu cầu; bản ghi ai_calls đủ số dòng; spawn CLI thật với URL cloud mặc định trỏ cổng chết để không gì đi thật: trần trả mã 4 ở lô và ở --gold, không --model trả mã 2, --model decisions trả mã 2, --model qwen trỏ MTPLX giả chạy được, --thu giữ nguyên số dòng silver_labels."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -55,7 +55,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [agent/scripts/vlm-anh-run.ts, agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03-db.itest.ts, pipeline/lib/vlm-anh.mjs]
-    expected: "exit 0; ca VLM-AC-7: phiếu do hàm rút mẫu thật của pipeline sinh, điền đáp án viết tay; ma trận gồm lệch 0,5%, lệch 2%, model trả rỗng khi có giá, model đọc giá khi ghi không có giá, ô trống, ảnh không thuộc bài, ảnh riêng và ảnh ghép; tỉ lệ khớp số viết tay từng thước; ca 9 bài không giá mà model trả rỗng toàn bộ không được đạt; 9/10 đạt, 8/10 không đạt, 29 bài có giá báo chưa đủ mẫu; --gold giữ nguyên số dòng silver_labels; đầu ra không chứa chữ bài canh."
+    expected: "exit 0; ca VLM-AC-7: phiếu do hàm rút mẫu thật của pipeline sinh, điền đáp án viết tay; ma trận gồm lệch 0,5%, lệch 2%, model trả rỗng khi có giá, model đọc giá khi ghi không có giá, không có một giá, không thể hiện loại hình, ô trống, không thuộc bài, ảnh riêng và ảnh ghép, người đánh lộ nguồn mà model gắn và không gắn; tỉ lệ khớp số viết tay từng thước; Gateway giả đếm số yêu cầu bằng đúng số ảnh đã gắn, ô trống 0 yêu cầu, ai_calls đủ dòng; trường thêm in số nhưng không đổi cờ đạt; ca 9 ảnh không giá mà model trả rỗng toàn bộ không được đạt, ca tương tự cho loại hình; 27/30 đạt, 26/30 không đạt, 29 ảnh báo chưa đủ mẫu; model A đạt giá, model B đạt loại hình thì không model nào đạt; nhóm ghép 14 ảnh báo chưa đủ mẫu riêng; --gold giữ nguyên số dòng silver_labels; đầu ra không chứa chữ bài canh."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
@@ -63,12 +63,28 @@ evals:
     layer: backend-effect
     cmd: config:executors.test.vlm_db
     paths: [pipeline/vlm-anh-s03.mjs, pipeline/lib/vlm-anh.mjs, agent/scripts/vlm-anh-run.ts, agent/tests/vlm-anh-s03-db.itest.ts]
-    expected: "exit 0; ca VLM-AC-8: dòng ghi bằng hàm lô thật trong ROLLBACK (tốt, lỗi, chưa đọc), hàm đếm của --dem khớp số viết tay từng lý do, 401 toàn lô không làm tăng số nhãn tốt; rút mẫu hai lần cùng seed ra cùng danh sách, khác seed ra khác; phiếu không có khoá dự đoán; đích ngoài research-local bị từ chối; tệp pipeline/vlm-anh-s03.mjs và lib không import gói ai, không gọi fetch."
+    expected: "exit 0; ca VLM-AC-8: dòng ghi bằng hàm lô thật trong ROLLBACK (tốt, rỗng, lỗi, chưa đọc, hai model), hàm đếm của --dem khớp số viết tay từng lý do, từng model, từng loại ảnh, bốn nhóm cộng lại bằng tập đọc; bài thiếu giá chỉ có loại hình thì tốt nhưng không lấp đúng; một ảnh lộ nguồn dùng 10 bài in 1 ảnh, 10 bài; 401 toàn lô không làm tăng số nhãn tốt; bài thêm ảnh sau lần đọc tính tập ảnh đã đổi; rút mẫu hai lần cùng seed ra cùng danh sách, khác seed ra khác; fixture có ảnh dùng chung thì phiếu có mỗi sha256 đúng một lần, đủ ba tầng, đủ khoá đường mở ảnh, số lượt riêng, số lượt ghép, bài đại diện; phiếu không có khoá dự đoán; đích ngoài research-local bị từ chối; chọn bài trên dòng stg thật qua loadStgPosts ra số > 0 và không có bài thử; tệp pipeline/vlm-anh-s03.mjs và lib không import gói ai, không gọi fetch."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
     executor: judgment
     inputs: [docs/research/s03-vlm-anh-do.md]
-    question: "Báo cáo có đủ số bài có nhãn ảnh trước và sau, tỉ lệ JSON hỏng, số lo-url, số dòng có giá, chi phí thật, ước chi phí hết tập đọc, có gọi nguồn bằng mã S0x, và có tránh chép đoạn chữ của tin rao không?"
-    expected: "Đủ sáu số, mỗi số có lệnh tái lập; nguồn chỉ gọi bằng mã S0x; không có đoạn chữ của tin rao."
+    question: "Báo cáo có đủ số bài có nhãn ảnh trước và sau, tỉ lệ JSON hỏng, số lo-url, số dòng có giá và có từng trường thêm, số ảnh theo loại, số ảnh mang nhãn lộ nguồn, số ảnh khác nhau so với số lượt, thời gian thật, ước thời gian hết tập đọc, có gọi nguồn bằng mã S0x, và có tránh chép đoạn chữ của tin rao không?"
+    expected: "Đủ chín mục số, mỗi số có lệnh tái lập; nguồn chỉ gọi bằng mã S0x; không có đoạn chữ của tin rao."
     evidence_required: [run_id, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.vlm_db
+    paths: [agent/scripts/vlm-anh-run.ts, agent/src/agents/vlm-anh-s03.ts, agent/tests/vlm-anh-s03-db.itest.ts, pipeline/lib/vlm-anh.mjs]
+    expected: "exit 0; ca VLM-AC-10 trên DB local trong ROLLBACK, backend giả đếm yêu cầu: ma trận viết trước năm phần tử của AC-10, số yêu cầu đúng bằng số sha256 khác nhau; ba bài chung ảnh ra ba dòng, so_bai_dung_chung = 3 cả khi lô chỉ chứa một bài; (giá A, giá B) ra price_vnd rỗng và xung_dot; (giá, rỗng) ra giá và không xung_dot; (tốt, 500) giữ kết quả ảnh tốt, có error_kind, lô sau đúng 1 yêu cầu; lô hai có bài mới cùng ảnh: 0 yêu cầu cho ảnh đó, quote khớp lượt đầu, đổi sang model khác thì có yêu cầu; đối chứng hai chiều cho nhãn lộ nguồn: cùng ảnh, model trả lo_nguon true và false đều có đúng một yêu cầu đi và đều có dòng, chỉ khác nhãn và so_anh_lo_nguon."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: "node pipeline/vlm-anh-s03.mjs --dem --kiem-lo-that"
+    paths: [pipeline/vlm-anh-s03.mjs, pipeline/lib/vlm-anh.mjs, docs/research/s03-vlm-anh-do.md]
+    expected: "exit 0 trên DB local sau khi đã chạy lô thật: tập đọc > 0, số dòng tốt của Qwen ≥ 1, các nhóm cộng lại bằng tập đọc; DB không có lô thật thì exit khác 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
