@@ -5,6 +5,19 @@
 -- mở rộng tập căn) + mục 4 sửa một lần phần lệch (chỉ điền ô trống, idempotent). Bộ nạp test (pipeline/lib/nap-045.mjs)
 -- nạp lại phần hàm (mục 2–3, trước mục 4) sau 063. Sao lưu :5433 bằng pg_dump TRƯỚC khi áp (mục 4 ghi dữ liệu thật).
 
+-- 1. Tin (kể cả đã nghỉ) thật sự chung chủ thể với tin khác: chủ thể trong tập cho trước có từ hai bản ghi tin trở lên.
+-- Tin đã nghỉ chỉ được đọc cho căn khi nằm trong tập này; tin riêng đã nghỉ đi đúng 063 (không đọc).
+CREATE OR REPLACE FUNCTION tin_that_su_chung(p_subjects text[])
+RETURNS text[] LANGUAGE sql STABLE AS $$
+  WITH t AS (
+    SELECT o.offer_id, k
+      FROM sale_offer_records o, unnest(offer_subject_keys(o.source, o.originating_system_key, o.post_ids)) AS k
+     WHERE k = ANY (coalesce(p_subjects, '{}'))
+  )
+  SELECT coalesce(array_agg(DISTINCT offer_id), '{}') FROM t
+   WHERE k IN (SELECT k FROM t GROUP BY k HAVING count(DISTINCT offer_id) > 1)
+$$;
+
 -- 2. apply_enrichment — nguyên thân 063, chỉ mở rộng tập căn của bước cascade.
 CREATE OR REPLACE FUNCTION apply_enrichment(p_ids bigint[], p_actor text)
 RETURNS integer LANGUAGE plpgsql AS $$
@@ -21,6 +34,7 @@ DECLARE
   ai      text;
   t_offers text[];
   t_subjs  text[];
+  t_chung  text[];
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen') THEN
     RAISE EXCEPTION 'phân xử: chưa cắt chuyển — chạy node pipeline/phat-bieu-cat-chuyen.mjs trước (PL15)';
@@ -83,7 +97,7 @@ BEGIN
   END LOOP;
 
   -- Cascade: căn của tin đề xuất đã áp VÀ căn của mọi tin chung chủ thể với chúng (066) nhận field còn trống + một dòng
-  -- enrichment_log. Đọc sale_offer_records (không phải view sống) để tin chung đã nghỉ vẫn đưa giá trị về căn của nó.
+  -- enrichment_log. Đọc sale_offer_records để tin chung đã nghỉ vẫn đưa giá trị về căn của nó; tin riêng đã nghỉ không đọc (063).
   IF n > 0 THEN
     SELECT coalesce(array_agg(DISTINCT o.offer_id), '{}'),
            coalesce(array_agg(DISTINCT o.source || ':' || coalesce(o.originating_system_key, o.post_ids[1])), '{}')
@@ -91,6 +105,7 @@ BEGIN
       FROM enrichment_proposals ep JOIN sale_offer_records o ON o.offer_id = ep.offer_id
      WHERE ep.id = ANY (applied);
     t_offers := t_offers || offers_chung_chu_the(t_subjs);
+    t_chung := tin_that_su_chung(t_subjs);
     UPDATE properties p SET
       bedrooms  = COALESCE(p.bedrooms, agg.bedrooms),
       bathrooms = COALESCE(p.bathrooms, agg.bathrooms),
@@ -114,7 +129,7 @@ BEGIN
                                   FROM sale_offer_records x WHERE x.offer_id = ANY (array_agg(o.offer_id))))) AS ids
       FROM property_offers po
       JOIN sale_offer_records o ON o.offer_id = po.offer_id
-      WHERE po.offer_id = ANY (t_offers)
+      WHERE po.offer_id = ANY (t_offers) AND (o.retired_at IS NULL OR o.offer_id = ANY (t_chung))
       GROUP BY po.property_id
     ) agg
     WHERE p.id = agg.property_id;
@@ -138,6 +153,7 @@ DECLARE
   reopened bigint[] := '{}';
   more     bigint[];
   tap      text[];
+  tap_chung text[];
 BEGIN
   IF p_actor IS NULL OR p_actor !~ '^hitl:.+' THEN
     RAISE EXCEPTION 'revert_enrichment: chỉ người được hoàn tác (actor hitl:<tên>), nhận: %', p_actor;
@@ -174,28 +190,31 @@ BEGIN
     END IF;
     -- 063: phân xử lại mọi bản ghi tin chung chủ thể với phát biểu vừa rút.
     tap := ARRAY[r.offer_id] || offers_chung_chu_the(ARRAY[subj]);
+    tap_chung := tin_that_su_chung(ARRAY[subj]);
     PERFORM resolve_offer_fields(tap);
     -- Ngược của cascade properties (nguyên 036, 066 mở rộng sang căn của tin chung chủ thể): căn mất giá trị khi nó bằng
-    -- đúng giá trị hoàn tác VÀ không tin nào của căn (kể cả chính tin chung sau phân xử lại, kể cả tin đã nghỉ — cùng tập bản
-    -- ghi mà bước áp đọc) còn mang nó.
+    -- đúng giá trị hoàn tác VÀ không tin sống nào của căn, cũng không tin đã nghỉ chung chủ thể với đề xuất, còn mang nó.
     IF r.field = 'bedrooms' THEN
       UPDATE properties p SET bedrooms = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND p.bedrooms::text = r.value
         AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
-                        WHERE q.property_id = p.id AND o.bedrooms::text = r.value);
+                        WHERE q.property_id = p.id AND o.bedrooms::text = r.value
+                          AND (o.retired_at IS NULL OR o.offer_id = ANY (tap_chung)));
     ELSIF r.field = 'bathrooms' THEN
       UPDATE properties p SET bathrooms = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND p.bathrooms::text = r.value
         AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
-                        WHERE q.property_id = p.id AND o.bathrooms::text = r.value);
+                        WHERE q.property_id = p.id AND o.bathrooms::text = r.value
+                          AND (o.retired_at IS NULL OR o.offer_id = ANY (tap_chung)));
     ELSIF r.field = 'street_raw' THEN
       UPDATE properties p SET street = NULL
       FROM property_offers po
       WHERE po.offer_id = ANY (tap) AND p.id = po.property_id AND lower(p.street) = r.value_key
         AND NOT EXISTS (SELECT 1 FROM property_offers q JOIN sale_offer_records o ON o.offer_id = q.offer_id
-                        WHERE q.property_id = p.id AND lower(o.street_raw) = r.value_key);
+                        WHERE q.property_id = p.id AND lower(o.street_raw) = r.value_key
+                          AND (o.retired_at IS NULL OR o.offer_id = ANY (tap_chung)));
     END IF;
     UPDATE properties p SET enrichment_log = p.enrichment_log || jsonb_build_array(jsonb_build_object(
       't', now(), 'src', 'enrich-revert', 'proposal_ids', jsonb_build_array(r.id),
@@ -229,6 +248,7 @@ DO $$
 DECLARE
   t_subjs text[];
   t_offers text[];
+  t_chung text[];
   n_can integer;
   n_o   integer;
 BEGIN
@@ -238,11 +258,12 @@ BEGIN
       FROM enrichment_proposals ep JOIN sale_offer_records o ON o.offer_id = ep.offer_id
      WHERE ep.status = 'applied';
     t_offers := offers_chung_chu_the(t_subjs);
+    t_chung := tin_that_su_chung(t_subjs);
     WITH agg AS (
       SELECT po.property_id, max(o.bedrooms) AS bedrooms, max(o.bathrooms) AS bathrooms, max(o.street_raw) AS street,
              array_agg(DISTINCT o.offer_id ORDER BY o.offer_id) AS offer_ids
         FROM property_offers po JOIN sale_offer_records o ON o.offer_id = po.offer_id
-       WHERE po.offer_id = ANY (t_offers)
+       WHERE po.offer_id = ANY (t_offers) AND (o.retired_at IS NULL OR o.offer_id = ANY (t_chung))
        GROUP BY po.property_id
     ), can AS (
       -- đếm ô trên giá trị TRƯỚC khi ghi

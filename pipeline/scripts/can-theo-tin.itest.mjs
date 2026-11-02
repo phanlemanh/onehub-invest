@@ -258,6 +258,53 @@ test("CT-AC-3 tin không chung bài đăng: áp + hoàn tác bằng 066 và 063 
   assert.deepEqual(moi, cu, "CT-AC-3: tin không chung bài đăng cho kết quả khác bản 063");
 });
 
+/** Biến thể có tin đã nghỉ: `dung` trả { C, PC }, chụp căn PC (bỏ t, offer_ids, proposal_ids của log) sau áp và sau hoàn tác. */
+async function luotRiengNghi(dung) {
+  const { C, PC } = await dung();
+  const p = await deXuat(C, "bedrooms", "3");
+  const chup = async () => {
+    const r = await canRow(PC);
+    return { bedrooms: r.bedrooms, log: r.enrichment_log.map(({ t, offer_ids, proposal_ids, ...x }) => x) };
+  };
+  await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[p]]);
+  const sauAp = await chup();
+  await c.query("SELECT revert_enrichment($1, 'hitl:thu', 'thử')", [[p]]);
+  return { sauAp, sauRut: await chup() };
+}
+const nghi = (o) => c.query(`UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'doi_khoa' WHERE offer_id = $1`, [o]);
+/** X mang sẵn 3 từ đề xuất riêng rồi nghỉ, gắn cùng căn với C sống. `chung` = X còn chung bài đăng với Y ở căn khác. */
+async function dungXNghi(tag, chung) {
+  const C = tin(`ct-a3-${tag}-c`, [`ct-a3-${tag}-c`]);
+  const X = tin(`ct-a3-${tag}-x`, [`ct-a3-${tag}-x`]);
+  const them = chung ? [tin(`ct-a3-${tag}-y`, [`ct-a3-${tag}-y`, `ct-a3-${tag}-x`])] : [];
+  await writeOffers(c, TST, [C, X, ...them]);
+  await c.query("SELECT apply_enrichment($1, 'enrich-run:ct')", [[await deXuat(X.offer_id, "bedrooms", "3")]]);
+  const PC = await can([C.offer_id, X.offer_id]);
+  await nghi(X.offer_id);
+  return { C: C.offer_id, PC };
+}
+const CA_NGHI = [
+  { o: "C riêng đã nghỉ", sauAp: null, dung: async () => {
+    const C = tin("ct-a3-k1-c", ["ct-a3-k1-c"]);
+    await writeOffers(c, TST, [C]);
+    const PC = await can([C.offer_id]);
+    await nghi(C.offer_id);
+    return { C: C.offer_id, PC };
+  } },
+  { o: "C sống, X riêng đã nghỉ cùng căn mang cùng giá trị", sauAp: 3, dung: () => dungXNghi("k2", false) },
+  { o: "C sống, X đã nghỉ cùng căn mang cùng giá trị, X chung bài đăng với tin khác", sauAp: 3, dung: () => dungXNghi("k3", true) },
+];
+
+for (const ca of CA_NGHI) {
+  test(`CT-AC-3 có tin đã nghỉ, ${ca.o}: kết quả đúng bằng 063`, async () => {
+    const moi = await trongGiaoDich(() => luotRiengNghi(ca.dung));
+    const cu = await trongGiaoDich(async () => { await c.query(APPLY_063); await c.query(REVERT_063); return luotRiengNghi(ca.dung); });
+    assert.equal(cu.sauAp.bedrooms, ca.sauAp, `tiền đề 063 sau áp (${ca.o})`);
+    assert.equal(cu.sauRut.bedrooms, null, `tiền đề 063 sau hoàn tác (${ca.o})`);
+    assert.deepEqual(moi, cu, `CT-AC-3: ${ca.o} — kết quả khác bản 063`);
+  });
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 /** Ô lệch đếm độc lập trên cả ba cột: ô căn trống mà một tin gắn căn mang giá trị. */
 const demLech = async (ids) => Number((await one(`
