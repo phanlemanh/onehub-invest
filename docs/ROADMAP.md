@@ -364,6 +364,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
+> **Sửa 02/11 (Mạnh chốt):** mốc S06 29.762 không phải tin bán; đo ngày 02/11: bán 20.873, thuê 27.626. S06 báo tách bán, thuê;
+> đích là độ phủ so với tổng nguồn báo, con số 45.000 chỉ để tham khảo. Chất lượng chỉ đo, không chặn. Tám chỉ số, kế hoạch ba
+> ngày và thứ tự cắt: `docs/plan/ra-mat-0511-so-luong-chat-luong.md`.
+
 ZCode khảo sát và đề xuất (vòng claudedp-3110-11); số là tin bán đang sống ở canonical, đo từ DB local mỗi ngày.
 Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với mục tiêu); việc thu đi qua các vòng claudedp-3110-5/6/7/10.
 
