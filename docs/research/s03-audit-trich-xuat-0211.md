@@ -259,7 +259,7 @@ Mức cải thiện lấy trên mẫu; **chi phí thời gian là ước tính**
 | **1** | **Vá hẹp bộ đọc + lưu `ma`:** DT phẩy, PN viết tắt, tắt khớp phường theo hướng, số ngữ cảnh không phải giá, «thuê ≥ 1 tỷ» thành bán thay vì vứt, giá che số | PN 59→95%; DT 72→92%, hết DT sai; 144 tin hết DT sai, 75 phường sai biến mất; PN cấp tin 67→94%; tin bán 854→~1.174 (+37%); toà và mã từ 2% lên khoảng 47–53% tin | 1–2 ngày thợ; chạy lại transform; không tốn API | Giá không đơn vị dễ sai bậc (Grand Park 37→33/39; 528 bài bán < 300 triệu trong mô phỏng); đổi khoá gom nên một phần `offer_id` nghỉ và mọc lại | **Có**; nên làm giá che số và không đơn vị sau cùng, có test riêng | PL13, PL17 (lát hẹp, không chờ PL6/PL15) |
 | **2** | **LLM đọc mọi chữ riêng ở lớp đề xuất**, kèm trích dẫn, so với bộ đọc; bất đồng dùng để ưu tiên luật và duyệt | Giá, DT, PN khoảng 100%; ý định 95%, bán/thuê 98% trên nhãn; cứu phần vá không tới | Haiku **~5–6 USD** hết bài cũ, **0,5–0,8 USD/ngày** (766–1.009 chữ mới/ngày). Qwen 0 USD, 13–24 giờ máy, 2–3 giờ/ngày. Thêm trường vào lệnh KC1: ~1–2 ngày | Luật 7: LLM không tự ghi dữ liệu. Sai bậc giá (3 ca) cần chặn. `silver_labels` đang 0 dòng | **Chạy đối chiếu: có. Ghi vào tin: không** | KC1 mở rộng, đích PL18 |
 | **3** | **Thẻ nhóm + khai sổ PL12** | Toà 68→85%, mã căn 55→76%, loại 88→96%; dự án cho bài chữ im; không đổi giá, DT, PN; ý định −2/255 | Anh biên tập 16 nhóm lớn; +18% chi phí LLM | Thêm gán sai dự án (2 ca trên mẫu, 3,4% tổng); mức đúng chưa đo độc lập; thẻ cũ dần | **Có**; khai sổ độc lập với code, có tác dụng khi hướng 2 chạy | PL12 (đã ký), PL18 E1 |
-| **1b** | **Đọc và lưu toà, trục, tầng vào cột đã có; đọc hướng** (§10) | Trục 0→17% bài rao (OCP 60%); hướng 0→20% (OCP 65%); khoảng tầng 5%. Bộ đọc hướng đúng 106/109, thừa 0–1/141 | Toà, trục, tầng: gộp vào hạng 1, không cần migration. Hướng: cần migration và tra RESO | Mã trùng giữa dự án; bài nhiều căn; bộ đọc mã mới chỉnh sau khi xem nhãn | **Có** cho toà, trục, tầng. Hướng: có nếu anh chốt tên trường kịp | PL13, PL17; ADR-0013 |
+| **1b** | **Đọc và lưu toà, trục, tầng vào cột đã có; đọc hướng** (§10) | Trục 0→17% bài rao (OCP 60%); hướng 0→20% (OCP 65%); khoảng tầng 5%. Bộ đọc hướng đúng 106/109, thừa 0–1/141 | Toà, trục: gộp vào hạng 1, không cần migration. Tầng và hướng: cần migration (T3), xem §10 | Mã trùng giữa dự án; bài nhiều căn; bộ đọc mã mới chỉnh sau khi xem nhãn | **Có** cho toà, trục. Tầng, hướng: có nếu anh ký T3 kịp | PL13, PL17; ADR-0013 |
 | 4 | **Đọc ảnh mồ côi**, sau khi có số KC3 | ~1.709 album hiện mất hẳn; có thể thành tin mới (chưa đo) | ~2–5 USD chưa đo (cần số KC3); bộ gom ảnh | Mẫu 13 tệp quá nhỏ; ảnh chụp lại tin đã có có thể chỉ tạo trùng | Không chắc | KC4, mở lại sau KC3 |
 | 5 | **Tách bài nhiều căn** | 14% chữ riêng bài rao; 10.126 cụm giá đang chỉ cho 219 tin; hết gom nhầm | Bộ đọc LLM ra mảng căn; đổi khoá offer | Chưa đo độ đúng tách; không rõ căn có còn hàng; dễ phồng số tin | Không | PL18 |
 | 6 | **Ghép mã toà vào danh mục, tới căn** | Hiện **0 tin S03 tới căn**. Cận trên 863/1.297 tin có mã khớp tiền tố S08 | Danh mục OCP đầy đủ; xử lý mã trùng bằng dự án (cần hướng 3) | S08 chỉ dùng nội bộ; 150 dự án, trùng tiền tố nhiều; độ đúng chưa đo | Không | PL10, PL20 |
@@ -271,7 +271,7 @@ Mức cải thiện lấy trên mẫu; **chi phí thời gian là ước tính**
 1. Có làm hạng 1 trước 05/11 không, và có gồm giá che số, giá không đơn vị không. Em nghiêng về có, cả hai, có test riêng cho giá; nếu thiếu thời gian thì DT phẩy, PN viết tắt, tắt phường theo hướng là ba việc rẻ nhất, an toàn nhất.
 2. Đường ghi của LLM sau 05/11: chỉ đề xuất qua `/ops/review`, hay tự áp khi trích dẫn có thật và qua luật kiểm khoảng giá. Câu này đụng luật 7, chỉ anh quyết. Trước 05/11 em đề nghị chỉ đối chiếu.
 3. Anh biên tập thẻ nhóm, hay duyệt nháp em viết. Nháp ở `research-local/s03-audit-0211/the-nhom-nhap.json`.
-4. Hướng lưu thành một trường chung, hay tách hướng ban công với hướng cửa. Em nghiêng về một trường kèm nhãn «của cái gì» vì 85% bài không nói rõ (§10).
+4. ~~Hướng lưu thành một trường chung, hay tách ban công với cửa.~~ **Anh chốt 02/11: một trường kèm nhãn «của cái gì»** (§10).
 
 ## 9. Điều chưa đo được, giới hạn
 
@@ -348,9 +348,30 @@ Ba điều cần đọc kèm bảng này:
 
 ### Việc phải chốt trước khi ghi
 
-- **Tên trường hướng.** Theo em nhớ, `DirectionFaces` của RESO chỉ hướng lối vào chính, còn trong 845 bài ghi hướng: 124 nói ban công, 1 nói cửa, 720 không nói. Chưa tra lại DD, phải tra theo ADR-0011 trước khi làm migration. `pipeline/mappings.yaml` đang ánh xạ hướng của S08 vào `DirectionFaces`, nên cũng cần xem lại.
-- **Hai hướng trong một bài.** 151 bài ghi kiểu «Đông Bắc, Tây Bắc», phải lưu được nhiều giá trị.
-- **Khoảng tầng.** ADR-0013 nhắc `UnitFloorLocation`, cần tra xem có nhận các giá trị cao, trung, thấp không.
+- **Cách lưu hướng: anh đã chốt 02/11, một trường kèm nhãn «của cái gì».** Trong 845 bài ghi hướng: 124 nói ban công, 1 nói cửa, 720 không nói.
+- **Hướng không dùng được `DirectionFaces`.** Đã tra DD 2.0: đó là hướng lối vào chính của toà nhà, kiểu chọn một giá trị. S03 chủ yếu nói ban công hoặc không nói, và 151 bài ghi hai hướng. Vậy cần extension khai đủ 6 điều kiện của ADR-0011. `docs/architecture/reso-khung-phan-loai.md` và `pipeline/mappings.yaml` đang gán hướng vào `DirectionFaces`, cần xem lại.
+- **Tầng: `UnitFloorLocation` của DD 2.1 hợp với số tầng** (chuỗi, gợi ý tối đa 3 ký tự, không có danh sách giá trị), nhưng không hợp với «tầng trung». `floor_raw` giữ chữ gốc, nên `pipeline/mappings.yaml` cần ghi lại ánh xạ thay cho `dd: null`.
 - **Mã trùng giữa dự án.** S1 có ở nhiều dự án, nên ghép trục phải biết dự án trước; phần này phụ thuộc thẻ nhóm (§6).
+
+### Nếu làm hết trong đợt vá
+
+Làm hết nghĩa là: bảy lỗi của hạng 1, cộng lưu toà, trục, tầng và hướng. Mô phỏng lại toàn bộ khoá gom; ở trạng thái hiện tại mô phỏng ra đúng 2.772 tin, khớp DB.
+
+| | Hiện tại | Sau khi làm hết |
+|---|---:|---:|
+| Tin S03 | 2.772 | 2.974 |
+| Bài vào tin | 19.592 | 22.691 |
+| Tin có hướng | 0 | 855 (29%) |
+| Tin có trục | 0 | 718 (24%) |
+| Tin có số tầng | 0 | 99 (3%) |
+| Tin có khoảng tầng | 0 | 201 (7%) |
+| `offer_id` giữ / nghỉ / mọc mới | | 2.549 / 223 / 425 |
+| Tin S03 tới căn | 0 | **vẫn 0** |
+
+- **Vẫn chưa tới căn.** Đợt vá chỉ đọc và lưu; ghép trục vào danh mục là PL20, cần danh mục và dự án.
+- **Thêm toà, trục gần như không đổi số tin:** 7 tin bị tách. Phần đổi số tin chủ yếu đến từ vá giá, DT, PN.
+- **Chạm cổng T3.** Tầng và hướng cần migration: `floor_raw` chưa nằm trong `assertion_field`, và hướng chưa có cột. `db/migrations/**` thuộc `t3_paths`. Gộp một PR thì cả phần vá phải chờ cổng T3; nên tách hai PR.
+- **Trục chưa lên cloud.** `unit_number` không nằm trong danh sách sync của `sale_offers`. Thêm vào là sửa `pipeline/sync-cloud.mjs`, cũng T3; để ngoài đợt vá nếu chưa hiện trên Invest.
+- **Bài nhiều mã:** 31 tin có bài ghi từ hai mã trở lên. Nên để trống trục ở các tin này, chờ PL18 tách căn.
 
 **Giới hạn:** nhãn hướng do một tác tử gắn, không có người và không có người gắn thứ hai. Tỉ lệ ở bảng đầu đếm bằng bộ đọc nháp trên toàn bộ, chưa có trọng số. Bài nhiều căn chỉ tính căn đầu.
