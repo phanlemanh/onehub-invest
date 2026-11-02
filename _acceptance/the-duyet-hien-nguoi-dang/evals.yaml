@@ -97,7 +97,7 @@ evals:
     paths: [app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx]
     target: "http://localhost:3462/ops/review"
     steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops; mật khẩu ở .claude/ops-role-test-account.json của worktree), mở /ops/review trên DB local :5433, mở một thẻ ghép căn chờ có Tin B của tài khoản hơn nghìn tin, chụp bảng so ở khổ rộng và khổ hẹp 375px"
-    expected: "thấy hàng «Người đăng» đúng vị trí đã duyệt ở Hỏi-3, Tin A có tên và SĐT, Tin B có tên, «Chưa có SĐT» và Badge «Đăng n tin» với n trên một nghìn; ô So là «Không so được», không phải «Lệch»; khổ hẹp không tràn ngang trang; ảnh lưu ở _acceptance/the-duyet-hien-nguoi-dang/evidence/E12-*.png"
+    expected: "thấy hàng «Người đăng» đúng vị trí đã duyệt ở Hỏi-3, Tin A có SĐT và tên, «—» ở chỗ tên khi nguồn chỉ ghi chữ giữ chỗ «unknown» (cả 7 thẻ chờ ngày 02/11 đều vậy; nhánh có tên đo ở ND-AC-1), Tin B có tên, «Chưa có SĐT» và Badge «Đăng n tin» với n trên một nghìn; ô So là «Không so được», không phải «Lệch»; khổ hẹp không tràn ngang trang; ảnh lưu ở _acceptance/the-duyet-hien-nguoi-dang/evidence/E12-*.png"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E13
     criterion: AC-1

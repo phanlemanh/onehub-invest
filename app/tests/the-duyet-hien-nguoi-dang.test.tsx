@@ -152,7 +152,7 @@ const vai = (subject: string, party: string, rut = false, method = "source_field
 const biDanh = (party: string, source: string, kind: string, value: string) =>
   admin.query(`INSERT INTO "${S}".registry_aliases (object_key, source, kind, value) VALUES ($1,$2,$3,$4)`, [party, source, kind, value])
 
-const P = { u1: "+84900000001", p2: "+84900000002", p3: "+84900000003", p4: "+84900000004", z: "+84900000009" }
+const P = { u1: "+84900000001", p2: "+84900000002", p3: "+84900000003", p4: "+84900000004", p5: "+84900000005", z: "+84900000009" }
 
 before(async () => {
   try {
@@ -183,9 +183,26 @@ before(async () => {
     for (const [i, s] of ["u5", "u6", "u7"].entries()) await bai(`nd-p-m${i}`, "openclaw-hook", s, `Người ${s}`)
     await tin("nd_m1", { src: "S03", posts: ["nd-p-m0", "nd-p-m1", "nd-p-m2"], ref: "openclaw-hook" })
     await tin("nd_n1", { src: "S06", ten: "Sàn Lớn", ref: "ct:222" })
+    // Cùng SĐT trên tin, hai tài khoản khác nhau, cùng nguồn.
+    await bai("nd-p-x1", "openclaw-hook", "u8", "Hồ Xuân")
+    await bai("nd-p-x2", "openclaw-hook", "u9", "Vũ Yến")
+    await tin("nd_x1", { src: "S03", ten: "Hồ Xuân", sdt: P.p5, posts: ["nd-p-x1"], ref: "u8" })
+    await tin("nd_x2", { src: "S03", ten: "Vũ Yến", sdt: P.p5, posts: ["nd-p-x2"], ref: "u9" })
+    // Hai tin nhiều người, chung đúng một người (người gửi bài nd-p-m0).
+    await bai("nd-p-m3", "openclaw-hook", "u10", "Người u10")
+    await tin("nd_m2", { src: "S03", posts: ["nd-p-m0", "nd-p-m3"], ref: "openclaw-hook" })
 
     await dungNguoi(db, { gop: false, runId: "itest-hd7", out: () => {} } as Parameters<typeof dungNguoi>[1])
 
+    // Tên trên tin khác tên trong danh bạ: ô phải hiện người neo, không phải chữ trên tin.
+    await admin.query(`UPDATE "${S}".sale_offer_records SET seller_name = 'Tên Ghi Trên Tin' WHERE offer_id = 'nd_a1'`)
+    // Tin không định danh: không vai, không SĐT.
+    await tin("nd_kd", { src: "S03" })
+    // Một thẻ thật trong review_queue tạm: phép băm AC-7 có evidence để đo.
+    await admin.query(
+      `INSERT INTO "${S}".review_queue (id, item_type, item_id, title, evidence) VALUES (71, 'entity_match', 'nd-71', 'Cùng căn? #71', $1::jsonb)`,
+      [JSON.stringify({ offer_a: { offer_id: "nd_z1", source: "S03", text: "Tin A" }, offer_b: { offer_id: "nd_d1", source: "S06", subject: "Tin B" } })],
+    )
     // Sau khi dựng: Tin B không còn SĐT trên tin, số chỉ còn ở bí danh của người.
     await admin.query(`UPDATE "${S}".sale_offer_records SET seller_phone = NULL WHERE offer_id = 'nd_c2'`)
     // Tin S06 có thêm một người khoá nhỏ hơn: neo phải theo `ct:<số>`, không rơi về khoá nhỏ nhất.
@@ -253,7 +270,10 @@ describe("the-duyet-hien-nguoi-dang", () => {
     const a = oCua(doc, 1)
     assert.equal(chuO(a, "[data-review-nguoi-ten]"), "Nguyễn Văn Minh", "ND-AC-1 THIEU TEN NGUOI DANG")
     assert.equal(chuO(a, "[data-review-nguoi-sdt]"), P.u1, "ND-AC-1 thiếu SĐT")
-    assert.ok(chuO(a, "[data-review-can-cu]"), "ND-AC-1 thiếu căn cứ của vai")
+    // nd_a1, nd_d1 đều có tài khoản nguồn: bộ dựng ghi vai fact/source_field.
+    const canCuVai = canCu.nhanCanCu({ lop: "fact", phuongPhap: "source_field" })
+    assert.equal(chuO(a, "[data-review-can-cu]"), canCuVai, "ND-AC-1 THIEU CAN CU O A")
+    assert.equal(chuO(oCua(doc, 2), "[data-review-can-cu]"), canCuVai, "ND-AC-1 THIEU CAN CU O B")
     assert.equal(chuO(oCua(doc, 2), "[data-review-nguoi-sdt]"), "Chưa có SĐT", "ND-AC-1 nguồn giấu SĐT")
   }
 
@@ -279,6 +299,9 @@ describe("the-duyet-hien-nguoi-dang", () => {
     const nguoi = canCu.soNguoiDang(ctx.offer_a!.nguoiDang!, ctx.offer_b!.nguoiDang!, null)
     const docDo = new JSDOM(`<div>${renderToStaticMarkup(<bo.ReviewCompare rows={[nguoi]} />)}</div>`).window.document
     assert.throws(() => kiemAc1Hang(docDo), /ND-AC-1 THIEU TEN NGUOI DANG/)
+    const boCanCu = await banChepTam<CompareMod>("src/components/ops/review/review-compare.tsx", (s) => s.replace("{nhanCanCu(neo.canCu)}", "{nhanCanCu(undefined)}"))
+    const docCanCu = new JSDOM(`<div>${renderToStaticMarkup(<boCanCu.ReviewCompare rows={[nguoi]} />)}</div>`).window.document
+    assert.throws(() => kiemAc1Hang(docCanCu), /ND-AC-1 THIEU CAN CU O A/)
   })
 
   // ---------- ND-AC-2 ----------
@@ -345,14 +368,26 @@ describe("the-duyet-hien-nguoi-dang", () => {
       const item = theGhep(id, a, b)
       return dungThe(thatCard, item, await ngu(item))
     }
-    const khop = await the(31, "nd_a1", "nd_a2")
-    assert.equal(nhan(khop), "Khớp", "ND-AC-3 đầu-cuối: cùng người không ra Khớp")
-    assert.match(chuO(oCua(khop, 3), "[data-review-so-phu]") ?? "", /Cùng người trong danh bạ/)
-    assert.equal(nhan(await the(32, "nd_b1", "nd_b2")), "Lệch", "ND-AC-3 đầu-cuối: cùng nguồn khác người")
-    const sdt = await the(33, "nd_c1", "nd_c2")
-    assert.equal(nhan(sdt), "Không so được")
-    // Tin A mang số trên tin, Tin B (nd_c2) đã bỏ số trên tin: số chung đến từ bí danh `sdt` do bộ dựng ghi.
-    assert.equal(chuO(oCua(sdt, 3), "[data-review-so-phu]"), `Cùng SĐT ${P.p4}`, "ND-AC-3 đầu-cuối: SĐT tin đối bí danh")
+    // Cùng 9 phần tử của ma trận trên, nhưng đi từ dungNguoi thật qua loadReviewContext tới thẻ.
+    const DAU_CUOI: [string, string, string, string | null][] = [
+      ["nd_a1", "nd_a2", "Khớp", "Cùng người trong danh bạ: Nguyễn Văn Minh"],
+      ["nd_x1", "nd_x2", "Không so được", `Cùng SĐT ${P.p5}`],
+      ["nd_c1", "nd_c2", "Không so được", `Cùng SĐT ${P.p4}`],
+      ["nd_b1", "nd_b2", "Lệch", null],
+      ["nd_z1", "nd_b1", "Thiếu", null],
+      ["nd_e1", "nd_d1", "Không so được", null],
+      ["nd_a1", "nd_khong_co", "Thiếu", null],
+      ["nd_kd", "nd_d1", "Thiếu", null],
+      ["nd_m1", "nd_m2", "Khớp", "Cùng người trong danh bạ: Người u5"],
+    ]
+    assert.equal(DAU_CUOI.length, MA_TRAN.length, "ND-AC-3 đầu-cuối thiếu phần tử của ma trận")
+    for (const [i, [a, b, mongNhan, mongPhu]] of DAU_CUOI.entries()) {
+      const doc = await the(31 + i, a, b)
+      assert.equal(nhan(doc), mongNhan, `ND-AC-3 đầu-cuối ${a}+${b} (nhãn)`)
+      assert.equal(chuO(oCua(doc, 3), "[data-review-so-phu]"), mongPhu, `ND-AC-3 đầu-cuối ${a}+${b} (dòng phụ)`)
+    }
+    // Tin A mang số trên tin, Tin B (nd_c2) đã bỏ số trên tin: số chung đến từ bí danh `sdt` do bộ dựng ghi, ô cũng hiện số đó.
+    assert.equal(chuO(oCua(await the(40, "nd_c1", "nd_c2"), 2), "[data-review-nguoi-sdt]"), P.p4, "ND-AC-3 đầu-cuối: ô không lấy SĐT từ bí danh")
   })
 
   // ---------- ND-AC-4 ----------
@@ -428,6 +463,7 @@ describe("the-duyet-hien-nguoi-dang", () => {
     // Người neo từ 10 tin, người kia nhiều hơn: chỉ Badge, không chữ phụ.
     const neoLon = oCua(oBadge(so, ben("S03", [nd("p1", "Neo", [], 15), nd("p2", "Kia", [], 40)]), ben("S06", [nd("py", "Y")])), 1)
     assert.equal(neoLon.querySelector("[data-review-so-tin]"), null, "ND-AC-5 người neo từ 10 tin vẫn có chữ phụ")
+    assert.equal(chuO(neoLon, "[data-review-dang-nhieu]"), "Đăng 40 tin", "ND-AC-5 người neo từ 10 tin mất Badge của người nhiều tin nhất")
   }
 
   test("ND-AC-5 badge Đăng n tin", async () => {
@@ -453,6 +489,8 @@ describe("the-duyet-hien-nguoi-dang", () => {
     assert.equal(m.ds[0].partyKey, rows[0].party_key, "ND-AC-6 KHONG THEO NEO")
     const doc = await dungThe(thatCard, theGhep(61, "nd_m1", "nd_d1"), await ngu(theGhep(61, "nd_m1", "nd_d1"), mod))
     assert.equal(chuO(oCua(doc, 1), "[data-review-nguoi-khac]"), "+2 người khác", "ND-AC-6 thiếu +n người khác")
+    const { rows: tenNeo } = await db.query(`SELECT value FROM registry_aliases WHERE object_key = $1 AND kind = 'ten'`, [rows[0].party_key])
+    assert.equal(chuO(oCua(doc, 1), "[data-review-nguoi-ten]"), tenNeo[0].value, "ND-AC-6 O KHONG HIEN NGUOI NEO")
     // S06: `ct:<số>` khớp tài khoản `<số>`, dù có người khoá nhỏ hơn trên tin.
     const n = (await ngu(theGhep(62, "nd_a1", "nd_n1"), mod)).offer_b!.nguoiDang!
     assert.equal(n.ds.length, 2)
@@ -470,23 +508,36 @@ describe("the-duyet-hien-nguoi-dang", () => {
       s.replace("ds: chonNguoiNeo(nguoiTheoTin.get(s.offerId) ?? [], r.seller_ref),", "ds: chonNguoiNeo(nguoiTheoTin.get(s.offerId) ?? [], null),"),
     )
     await assert.rejects(kiemAc6(sai), /ND-AC-6 KHONG THEO NEO/)
+    // Tên trên tin khác tên trong danh bạ (nd_a1): ô theo người neo.
+    const ctxA = await ngu(theGhep(64, "nd_a1", "nd_d1"))
+    const hangA = canCu.soNguoiDang(ctxA.offer_a!.nguoiDang!, ctxA.offer_b!.nguoiDang!, null)
+    const kiemTen = (mod: CompareMod) => {
+      const doc = new JSDOM(`<div>${renderToStaticMarkup(<mod.ReviewCompare rows={[hangA]} />)}</div>`).window.document
+      assert.equal(chuO(oCua(doc, 1), "[data-review-nguoi-ten]"), "Nguyễn Văn Minh", "ND-AC-6 O KHONG HIEN NGUOI NEO")
+    }
+    kiemTen(thatCompare)
+    const theoTin = await banChepTam<CompareMod>("src/components/ops/review/review-compare.tsx", (s) => s.replace("neo?.ten ?? ben.ten", "ben.ten ?? neo?.ten"))
+    assert.throws(() => kiemTen(theoTin), /ND-AC-6 O KHONG HIEN NGUOI NEO/)
   })
 
   // ---------- ND-AC-7 ----------
-  const bam = async () =>
-    (
-      await db.query(
-        `SELECT (SELECT md5(coalesce(string_agg(t::text, '|' ORDER BY t::text), '')) FROM review_queue t) AS q,
-                (SELECT md5(coalesce(string_agg(t::text, '|' ORDER BY t::text), '')) FROM sale_offer_records t) AS o,
-                (SELECT md5(coalesce(string_agg(t::text, '|' ORDER BY t::text), '')) FROM party_roles t) AS r`,
-      )
-    ).rows[0]
+  // Mọi bảng bộ đọc có thể chạm, trong lược đồ tạm.
+  const BANG_BAM = ["review_queue", "sale_offer_records", "party_roles", "registry_aliases", "parties", "registry_events"]
+  const bam = async () => {
+    const out: Record<string, string> = {}
+    for (const t of BANG_BAM) {
+      out[t] = (await db.query(`SELECT md5(coalesce(string_agg(t::text, '|' ORDER BY t::text), '')) AS h FROM ${t} t`)).rows[0].h
+    }
+    return out
+  }
 
   test("ND-AC-7 không người, rời kho, đứng riêng", async () => {
     ready()
     const truoc = await bam()
     // Tin chưa có trong danh bạ.
-    const itemZ = theGhep(71, "nd_z1", "nd_d1")
+    const { rows: hangThe } = await db.query("SELECT * FROM review_queue WHERE id = 71")
+    assert.equal(hangThe.length, 1, "ND-AC-7 phép băm cần một thẻ thật trong review_queue")
+    const itemZ = toReviewItem({ ...hangThe[0], id: Number(hangThe[0].id), created_at: hangThe[0].created_at.toISOString() }, hangThe[0].evidence)
     const ctxZ = await ngu(itemZ)
     const docZ = await dungThe(thatCard, itemZ, ctxZ)
     const z = oCua(docZ, 1)
@@ -513,9 +564,22 @@ describe("the-duyet-hien-nguoi-dang", () => {
     const sai = await banChepTam<CardMod>("src/components/ops/review-card.tsx", (s) => s.replace("nguoiA === undefined && nguoiB === undefined ? hangSo : ", ""))
     await assert.rejects(kiemDungRieng(sai), /ND-AC-7 HANG KHI KHONG BIET/)
     // Nút quyết chỉ phụ thuộc lý do và tin rời kho.
-    assert.ok((await nutCuaThe(thatCard, itemZ, ctxZ, "")).slice(0, 2).every(Boolean), "ND-AC-7 nút bật khi chưa có lý do")
-    assert.ok((await nutCuaThe(thatCard, itemZ, ctxZ, "cùng người đăng")).slice(0, 2).every((t) => !t), "ND-AC-7 nút tắt khi đã có lý do")
+    const nutChuaLyDo = await nutCuaThe(thatCard, itemZ, ctxZ, "")
+    assert.ok(nutChuaLyDo.length >= 2, "ND-AC-7 không thấy nút quyết")
+    assert.ok(nutChuaLyDo.slice(0, 2).every(Boolean), "ND-AC-7 nút bật khi chưa có lý do")
+    const nutCoLyDo = await nutCuaThe(thatCard, itemZ, ctxZ, "cùng người đăng")
+    assert.ok(nutCoLyDo.length >= 2, "ND-AC-7 không thấy nút quyết")
+    assert.ok(nutCoLyDo.slice(0, 2).every((t) => !t), "ND-AC-7 nút tắt khi đã có lý do")
+    const nutRoiKho = await nutCuaThe(thatCard, itemR, ctxR, "cùng người đăng")
+    assert.ok(nutRoiKho.length >= 2, "ND-AC-7 không thấy nút quyết")
+    assert.ok(nutRoiKho.slice(0, 2).every(Boolean), "ND-AC-7 nút bật khi tin đã rời kho")
     assert.deepEqual(await bam(), truoc, "ND-AC-7 đọc thẻ làm đổi dữ liệu")
+    // Đối chứng dương: bộ đọc mà ghi thì phép băm phải đỏ (ghi vào lược đồ tạm).
+    const coGhi = await banChepTam<CtxMod>("src/lib/ops/review-context.ts", (s) =>
+      s.replace("const { rows } = await query(CONTEXT_SQL, [offerIds]);", `await query("UPDATE review_queue SET evidence = evidence || '{}'::jsonb || jsonb_build_object('x', 1)", []);\n  const { rows } = await query(CONTEXT_SQL, [offerIds]);`),
+    )
+    await ngu(itemZ, coGhi)
+    assert.notDeepEqual(await bam(), truoc, "ND-AC-7 PHEP BAM KHONG BIET DO")
   })
 
   // ---------- ND-AC-8: DB máy thu, chỉ SELECT ----------
