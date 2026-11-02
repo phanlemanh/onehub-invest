@@ -202,12 +202,14 @@ function modeKhongLoNguon() {
   const khop = mau.filter((m) => tapThem.includes(m));
   console.log(`chuỗi nguồn thật khớp trong dòng thêm: ${khop.length}`);
   check(khop.length === 0, "should-NOT-fire: không chuỗi nào của nguồn thật (tên/mã dự án, mã căn, đường dẫn API) trong dòng thêm");
-  // Mạnh duyệt 02/11: miễn ĐÚNG URL DTD của plist launchd, không miễn cả tên miền.
+  // Mạnh duyệt 02/11: miễn ĐÚNG URL DTD của plist launchd, so nguyên URL chứ không xoá chuỗi con.
   const DTD_PLIST = "http://www.apple.com/DTDs/PropertyList-1.0.dtd";
-  const coUrlNgoai = (l) => /https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(l.replaceAll(DTD_PLIST, ""));
+  const coUrlNgoai = (l) => (l.match(/https?:\/\/[^\s"'`<>]+/gi) ?? []).filter((u) => u !== DTD_PLIST).some((u) => /^https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(u));
   check(!coUrlNgoai(`+<!DOCTYPE plist "${DTD_PLIST}">`), "URL DTD plist được miễn");
-  // ghép chuỗi để chính dòng đối chứng này không bị bộ dò bắt
-  check(coUrlNgoai(`+ ${"http://www.apple"}.com/DTDs/khac.dtd`), "should-NOT-fire: URL khác cùng tên miền vẫn bị bắt");
+  // tách "http:" khỏi "//" để chính các dòng đối chứng không bị bộ dò bắt
+  for (const la of [`${"http:"}//www.apple.com/DTDs/khac.dtd`, `${DTD_PLIST}x`, `${DTD_PLIST}?q=1`, `${DTD_PLIST}.nguon-gia.example.com/api`, `${DTD_PLIST}@nguon-gia.example.com/api`]) {
+    check(coUrlNgoai(`+ ${la}`), "should-NOT-fire: URL khác URL DTD vẫn bị bắt");
+  }
   const url = them.filter(coUrlNgoai);
   console.log(`dòng thêm có URL ngoài máy: ${url.length}`);
   check(url.length === 0, "should-NOT-fire: không URL tên miền ngoài trong dòng thêm");

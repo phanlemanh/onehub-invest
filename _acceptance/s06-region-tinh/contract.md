@@ -5,7 +5,7 @@ slug: s06-region-tinh
 owner: manh.phan@onemount.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-02T02:08:02Z
 approved_by:

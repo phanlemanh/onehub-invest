@@ -1,0 +1,12 @@
+{"ts":"2026-11-02T02:36:28Z","round":1,"evalId":"E1","run_id":"s05-khoa-nap-E1-r1-20261102T023628Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T02:36:29Z","round":1,"evalId":"E2","run_id":"s05-khoa-nap-E2-r1-20261102T023629Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T02:36:31Z","round":1,"evalId":"E3","run_id":"s05-khoa-nap-E3-r1-20261102T023631Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T02:36:33Z","round":1,"evalId":"E4","run_id":"s05-khoa-nap-E4-r1-20261102T023633Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T02:36:34Z","round":1,"evalId":"E5","run_id":"s05-khoa-nap-E5-r1-20261102T023634Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T02:36:40Z","round":1,"evalId":"E6","run_id":"s05-khoa-nap-E6-r1-20261102T023640Z","exit_code":0,"cmd":"node --test scripts/s05-b-lich.test.mjs scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"}
+{"ts":"2026-11-02T04:56:02Z","round":2,"evalId":"E1","run_id":"s05-khoa-nap-E1-r2-20261102T045602Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T04:56:02Z","round":2,"evalId":"E2","run_id":"s05-khoa-nap-E2-r2-20261102T045602Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T04:56:03Z","round":2,"evalId":"E3","run_id":"s05-khoa-nap-E3-r2-20261102T045603Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T04:56:03Z","round":2,"evalId":"E4","run_id":"s05-khoa-nap-E4-r2-20261102T045603Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T04:56:04Z","round":2,"evalId":"E5","run_id":"s05-khoa-nap-E5-r2-20261102T045604Z","exit_code":0,"cmd":"node --test scripts/s05-khoa-nap.test.mjs"}
+{"ts":"2026-11-02T04:56:04Z","round":2,"evalId":"E6","run_id":"s05-khoa-nap-E6-r2-20261102T045604Z","exit_code":0,"cmd":"node --test scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"}
