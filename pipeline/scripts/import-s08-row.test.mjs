@@ -47,6 +47,21 @@ test("s08Num/s08Int: chuỗi số hợp lệ đổi được; '', 'S', '2PN', th
   assert.equal(s08Int("2PN"), null);
 });
 
+// 2610-22(4): siết s08Num — trim; chỉ MỘT dấu phẩy/chấm thập phân; hex/nhiều
+// dấu/phẩy nghìn bị loại; phẩy = thập phân (nguồn ghi chấm — bằng chứng
+// built_up_area 100.1/100.78; '1,500' → 1.5 theo quyết chữ trong DATA-CONTRACT).
+test("s08Num siết (2610-22): ' ', '0x10', '1.500.000', '1 500' → null; ' 100,5 ' → 100.5; '1,500' → 1.5", async () => {
+  const { s08Num } = await import("../import-airbnb.mjs");
+  assert.equal(s08Num(" "), null, "khoảng trắng trim hết → null");
+  assert.equal(s08Num("0x10"), null, "hex — trước đây Number('0x10')=16 lọt");
+  assert.equal(s08Num("1.500.000"), null, "nhiều dấu chấm (nghìn) → null");
+  assert.equal(s08Num("1 500"), null, "khoảng trắng giữa số → null");
+  assert.equal(s08Num(" 100,5 "), 100.5, "trim + phẩy thập phân");
+  assert.equal(s08Num("100.78"), 100.78, "chấm thập phân — dạng thật của nguồn");
+  assert.equal(s08Num("1,500"), 1.5, "một dấu phẩy = thập phân (quyết 2610-22)");
+  assert.equal(s08Num("13579135000"), 13579135000, "số nguyên to (giá) vẫn qua");
+});
+
 // 2610-10 vòng 2 (BÁO 2610-17): s08RowOf áp đổi số — 'S' (studio) và '' → null
 test("s08RowOf: cột số qua s08Num/s08Int — 'S', '', chuỗi phẩy đổi đúng", () => {
   const r = s08RowOf({

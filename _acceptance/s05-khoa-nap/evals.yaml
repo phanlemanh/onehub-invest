@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: s05-khoa-nap
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s05k_unit
+    expected: "exit 0; ca (1) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s05k_unit
+    expected: "exit 0; ca (2)+(3) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s05k_unit
+    expected: "exit 0; should-NOT-fire: khoá khoẻ không bị gỡ, chờ có trần"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s05k_unit
+    expected: "exit 0; ca (3b) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s05k_unit
+    expected: "exit 0; ca (5) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s05k_hoiquy
+    expected: "exit 0; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+

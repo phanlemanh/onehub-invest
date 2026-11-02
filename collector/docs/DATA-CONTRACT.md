@@ -63,11 +63,15 @@ snapshots/
 
 ## Lịch sử phiên bản
 
-- **schemaVersion 4 (2026-10-24, PL10/claudedp-2310-12)**: thêm kind
-  `inventory_unit` + nguồn `s08-danh-muc` (S08 — quỹ căn chủ đầu tư OCP1-3,
+- **schemaVersion 4 (2026-10-24, PL10/claudedp-2310-12; sửa chữ 2610-22)**:
+  thêm kind `inventory_unit` + nguồn `s08-danh-muc` (S08 — quỹ căn chủ đầu tư,
   sourceId = sha256(S08|project|product_code), meta {projectId, projectType,
   state notSold|sold|detail, productCode}; payload bản ghi API nguyên vẹn,
-  KHÔNG contact_data). Tương thích cũ; bên import chấp nhận `{1,2,3,4}`.
+  KHÔNG contact_data). Từ 24/10 (mở rộng all) kind `project_catalog` — mỗi dự
+  án 1 item danh mục, state=catalog, productCode=project-<id>, sourceId =
+  sha256(S08|catalog|project_id) TÁCH khỏi item detail cùng dự án (2610-22(2)
+  sửa trùng sha256(S08|project|id) cũ — snapshot cũ giữ nguyên, bất biến).
+  Tương thích cũ; bên import chấp nhận `{1,2,3,4}`.
 - **schemaVersion 3 (2026-10-23, claudedp-2310-11 Kev-nhãn)**: thêm
   `RawItem.meta.kev = {p, model, threshold, at}` cho nguồn `zalo-agent`/`openclaw-hook` —
   điểm gate Kev-4B đi CÙNG tin như dữ liệu (p=null khi gate down); KHÔNG còn lọc p<0.9 ở
