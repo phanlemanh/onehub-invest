@@ -6,15 +6,15 @@
 
 ```mermaid
 flowchart TD
-  A["Đang cân nhắc cơ hội<br/>1 việc"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>chưa có"]
+  A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
+  GD --> B["Sắp mở vòng<br/>1 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>124 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>94 việc"] --> GG{"Cổng Giá trị"}
-  GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>93 việc"] --> GG{"Cổng Giá trị"}
+  GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
 > **Bốn cổng người** — mỗi cổng là một câu hỏi chỉ người trả lời được:
@@ -22,7 +22,7 @@ flowchart TD
 > đã đủ và đúng chưa · **Cổng Bằng chứng** đã làm đúng thứ đã hứa chưa ·
 > **Cổng Giá trị** thứ đã giao có ăn thua không.
 
-## Đang cân nhắc cơ hội
+## Sắp mở vòng
 
 - Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt: giá/m² so với thước, số tin dựng thước, mức giảm so với ngưỡng; căn thiếu dữ liệu ghi rõ thiếu gì (`can-gia-tot-biet-can`)
 
@@ -97,7 +97,6 @@ flowchart TD
 - Sau mỗi lượt cloud-sync, máy local đẩy lên cloud năm khối số tổng hợp Ops có mốc đo, qua bộ soát tầng A, và cloud có một hàm đọc chung báo số cũ quá 45′ (`ops-facts-so-tong-hop`)
 - Người vận hành đọc /ops/collections và /ops/quality chỉ thấy mã S0x kèm vai trò, không tên nguồn thật — kể cả nhãn job đẩy từ máy thu (`ops-nhan-ma-nguon`)
 - Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px (`ops-review-khung-hang-cho`)
-- Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số (`people-hien-so-goc`)
 - Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên (`phat-bieu-va-phan-xu`)
 - Thẻ duyệt ghép căn và luật chấm đọc trọn các cách ghi phường số (`phuong-so`)
 - Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
@@ -260,3 +259,7 @@ flowchart TD
 - Giá trị wanted → inquiry «Yêu cầu» trong Ý định tin, mô hình Listing (bên bán) ↔ Yêu cầu (bên mua) ở CONTEXT.md, và ba chữ «tin» chỉ bài ở /ops/collections (`wanted-thanh-inquiry`)
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
+
+## Đã nghiệm thu giá trị
+
+- Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số (`people-hien-so-goc`) — lặp thêm (iterate)
