@@ -11,9 +11,9 @@ import pg from "pg";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
-import { phatBieuPhongNgu, phatBieuToaTruc } from "./lib/assert.mjs";
+import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
-import { CONFIDENCE, KIND } from "./lib/vocab.generated.mjs";
+import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -574,6 +574,62 @@ export function matchPhuongThiTruong(text, entries) {
   return tranh ? null : best;
 }
 
+/**
+ * Khu vực của một bài (hồ sơ s03-len-cong). Khớp phường thì lấy phường. Không khớp mà nhóm khai đúng một thị trường có trong `areas`:
+ * mã thị trường, `phuong` trống nên confidence không lên high. Chưa khai hay khai nhiều: trống.
+ * @param {{ khai?: string[]|null, ph?: { id: string, slug: string }|null, maCoThat: Set<string> }} v
+ * @returns {{ areaId: string|null, phuong: string|null }}
+ */
+export function ganKhuVuc({ khai, ph, maCoThat }) {
+  if (ph) return { areaId: ph.id, phuong: ph.slug };
+  if (khai?.length === 1 && maCoThat.has(khai[0])) return { areaId: khai[0], phuong: null };
+  return { areaId: null, phuong: null };
+}
+
+/**
+ * Gộp khu vực khi một tin có thêm bài. Tin có phường giữ nguyên (khoá gom đã chứa phường). Tin chỉ cấp thị trường: nhận mã đầu tiên có,
+ * hai bài khai hai thị trường thì về trống vì không biết tin thuộc đâu.
+ * @param {{ areaId: string|null, phuongRaw: string|null, xungKhuVuc?: boolean }} o bị sửa
+ * @param {string|null} areaId
+ */
+export function gopKhuVuc(o, areaId) {
+  if (o.phuongRaw || !areaId || o.xungKhuVuc) return;
+  if (o.areaId === null) o.areaId = areaId;
+  else if (o.areaId !== areaId) { o.areaId = null; o.xungKhuVuc = true; }
+}
+
+const LOAI_CAN_HO = /(căn hộ|chung cư|chcc|studio)/iu;
+const LOAI_NHA = /(biệt thự|liền kề|shophouse|nhà phố|nhà mặt|nhà riêng)/iu;
+export const LOAI_HINH_VERSION = "transform-zalo@sl1";
+
+/** Loại hình nói rõ trong chữ bài; nói cả hai loại hay chỉ «PN», «căn» thì không nhận. */
+export function docLoaiHinh(text) {
+  const chu = (text ?? "").normalize("NFC");
+  const ch = LOAI_CAN_HO.test(chu), nh = LOAI_NHA.test(chu);
+  return ch && !nh ? PROPERTY_TYPE.apartment : nh && !ch ? PROPERTY_TYPE.house : null;
+}
+
+/**
+ * Loại hình của nhóm theo bài nói rõ loại: ≥ 20 bài và ≥ 85% một loại, cùng ngưỡng với mucDichNhom. Bài không có nhóm không tính.
+ * @param {{ conversation_id: string|null, loai: string|null }[]} bai
+ * @returns {Map<string, string>}
+ */
+export function loaiHinhNhom(bai) {
+  const dem = new Map();
+  for (const { conversation_id: k, loai } of bai) {
+    if (!k || !loai) continue;
+    const e = dem.get(k) ?? new Map();
+    e.set(loai, (e.get(loai) ?? 0) + 1);
+    dem.set(k, e);
+  }
+  const out = new Map();
+  for (const [k, e] of dem) {
+    const tong = [...e.values()].reduce((a, b) => a + b, 0);
+    for (const [loai, n] of e) if (tong >= NHOM_TOI_THIEU && n / tong >= NHOM_TI_LE) out.set(k, loai);
+  }
+  return out;
+}
+
 /** Chữ bài đã chuẩn hoá để so trùng: NFC, chữ thường, mọi dãy không phải chữ/số thành một dấu cách. */
 export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 
@@ -665,6 +721,8 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     return entriesCua.get(k);
   };
   const thiTruongNhom = await docThiTruongNhom(client);
+  const { rows: dongTT } = await client.query("SELECT id FROM areas WHERE region_type = 'market'");
+  const maCoThat = new Set(dongTT.map((r) => r.id));
 
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
@@ -679,6 +737,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   // Đọc mọi bài trước: mục đích nhóm (bước 2b) tính trên loại chữ bài của cả nhóm.
   const docBai = posts.map((p) => ({ p, pr: parse(p.text) }));
   const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
+  const loaiNhom = loaiHinhNhom(posts.map((p) => ({ conversation_id: p.conversation_id, loai: docLoaiHinh(p.text) })));
   const nguon = [];
   for (const { p, pr } of docBai) {
     if (suyLoaiTin) {
@@ -692,7 +751,11 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
     const khai = thiTruongNhom.get(p.conversation_id);
     const ph = matchPhuongThiTruong(p.text, entries(khai?.length ? khai : moiThiTruong));
-    if (ph) { pr.phuong = ph.slug; pr.areaId = ph.id; }
+    const kv = ganKhuVuc({ khai, ph, maCoThat });
+    if (kv.areaId) { pr.areaId = kv.areaId; pr.phuong = kv.phuong; }
+    const loaiChu = docLoaiHinh(p.text);
+    pr.loaiHinh = loaiChu ?? loaiNhom.get(p.conversation_id) ?? null;
+    pr.nguonLoaiHinh = loaiChu ? "chu" : pr.loaiHinh ? "nhom" : null;
     // tính price_perm2 nếu thiếu
     if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
       pr.pricePerm2Vnd = Math.round(pr.priceVnd / pr.areaM2);
@@ -724,14 +787,15 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit }],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh }],
         phone: null, baiSdt: [], sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
     } else {
       o.nReposts++;
+      gopKhuVuc(o, pr.areaId ?? null);
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -778,9 +842,20 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     }
   }
   await auditRejected(client, "S03", rejected);
+  // Bài đã có phát biểu luật của bộ khác giữ nguyên: writeOffers thay theo (chủ thể, trường, phương pháp) nên sẽ rút nhầm dòng đó.
+  const baiDoc = nhom.flatMap((o) => o.posts);
+  const { rows: boKhac } = await client.query(
+    `SELECT DISTINCT subject_key FROM field_assertions
+      WHERE retracted_at IS NULL AND field = $1 AND method = $2 AND method_version IS DISTINCT FROM $3`,
+    [ENRICH_FIELD.property_type, ASSERTION_METHOD.e1_rule, LOAI_HINH_VERSION],
+  );
+  const chuTheKhac = new Set(boKhac.map((r) => r.subject_key));
+  const dongLoai = phatBieuLoaiHinh("S03", baiDoc, LOAI_HINH_VERSION).filter((d) => !chuTheKhac.has(d.subject_key));
+  const rutLoai = await rutLoaiHinhCu(client, dongLoai.map((d) => d.subject_key), LOAI_HINH_VERSION);
+  console.log(`loại hình: ${dongLoai.length} phát biểu, rút ${rutLoai}`);
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
-    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", nhom.flatMap((o) => o.posts), "transform-zalo@sv1")],
+    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai],
   });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
