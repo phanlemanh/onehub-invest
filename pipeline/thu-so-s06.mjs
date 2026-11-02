@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { setTimeout as sleep } from "node:timers/promises";
 import pg from "pg";
+import { importDir } from "./import-chotot.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 let _tatChrome = null; // 0211-14 (3a): handler tín hiệu gọi được — Chrome không ở lại khi Ctrl-C
@@ -63,7 +64,7 @@ export function chuanHoa84(raw) {
   return m ? `+84${m[1]}${m[2]}` : null;
 }
 
-const jitter = () => 3000 + Math.floor(Math.random() * 5000); // nghỉ 3–8s giữa lời gọi
+const jitter = () => 8000 + Math.floor(Math.random() * 7000); // nghỉ 8–15s (Mạnh duyệt 0211-16, thay 3–8s)
 
 async function docState() {
   try {
@@ -129,6 +130,7 @@ const daTh = (id) => {
 }
 
 /** Ghi batch items v5 ra snapshot ngoài đường quét. */
+const daFlush = []; // dir bản v5 đã ghi trong lượt — nạp hết cuối lượt (0211-16)
 async function ghiSnapshot(batch, cityCode) {
   const city = cityCode || "vn";
   const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 17);
@@ -155,6 +157,7 @@ async function ghiSnapshot(batch, cityCode) {
     files,
   };
   await writeFile(join(dir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  daFlush.push(dir);
   return snapshotId;
 }
 
@@ -396,6 +399,10 @@ async function main() {
     console.log(`flush cuối ${batch.length} → ${sid}`);
   }
   await browser.close().catch(() => {});
+  // 0211-16: nạp NGAY mọi bản v5 của lượt vào stg — số không nằm chờ trong snapshot
+  for (const d of daFlush) {
+    try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
+  }
   await client.end().catch(() => {});
   } finally {
     // 0211-14 (3a): finally — kể cả đường ném lỗi giữa lượt cũng tắt Chrome mình spawn
