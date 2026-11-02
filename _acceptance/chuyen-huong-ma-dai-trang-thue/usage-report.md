@@ -75,3 +75,36 @@ wall: 457s
 - **claude-sonnet-5-5**: 5 agent · 11 calls · out 8,449 · in 22 · cache_read 136,226 · cache_create 137,082
 - **claude-haiku-5-5**: 7 agent · 15 calls · out 16,149 · in 32 · cache_read 184,124 · cache_create 149,503
 
+### S4 round 3 — wf_b209250d-321 (13 agent, 53,452 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 6 | 13,771 | 14 | 247,105 | 139 |
+| review:bugs | claude-opus-5-5 | 5 | 11,204 | 12 | 190,915 | 112 |
+| review:conventions | claude-opus-5-5 | 6 | 9,762 | 12 | 195,297 | 100 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 2,963 | 6 | 51,833 | 40 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,912 | 4 | 22,983 | 25 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,577 | 4 | 22,981 | 68 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 2,507 | 4 | 25,357 | 18 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,226 | 4 | 22,987 | 232 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,952 | 4 | 23,001 | 8 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,615 | 4 | 22,995 | 7 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 955 | 4 | 23,006 | 16 |
+| machine:node scripts/chuyen-huong-ma-thi-truong/ | claude-haiku-5-5 | 2 | 684 | 4 | 23,020 | 13 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 324 | 4 | 18,641 | 5 |
+
+
+wall: 396s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 2,963 | 51,833 | 40 | 22:54:51 | 22:55:31 |
+| machine | 7 | 12,921 | 160,973 | 368 | 22:54:51 | 23:00:59 |
+| review | 3 | 34,737 | 633,317 | 140 | 22:54:51 | 22:57:10 |
+| capture | 1 | 324 | 18,641 | 5 | 23:01:01 | 23:01:06 |
+| synthesize | 1 | 2,507 | 25,357 | 18 | 23:01:08 | 23:01:26 |
+
+- **claude-opus-5-5**: 3 agent · 17 calls · out 34,737 · in 38 · cache_read 633,317 · cache_create 248,922
+- **claude-sonnet-5-5**: 3 agent · 7 calls · out 5,794 · in 14 · cache_read 95,831 · cache_create 86,670
+- **claude-haiku-5-5**: 7 agent · 14 calls · out 12,921 · in 28 · cache_read 160,973 · cache_create 149,119
+

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-02T22:42:43Z",
-  "generated_sha": "83c65b0359950a6d2bcccfb71ca6eb62f5ae2ac6",
+  "generated_at": "2026-11-02T22:53:19Z",
+  "generated_sha": "aa8c99371d19720205eb761cb413468d58484721",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "chuyen-huong-ma-dai-trang-thue",
-  "round": 2,
+  "round": 3,
   "riskTier": "T2",
   "evals": [
     {
@@ -105,7 +105,7 @@
       "id": "E5",
       "criterion": "AC-5",
       "cmd": "node scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app",
-      "expected": "\"exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim và đích thực nhận; dòng 'APP đối chứng' xanh cho cả hai trạng thái: đầu ra đủ dòng không thiếu ô, bỏ từng dòng thì báo đúng dòng đó\"",
+      "expected": "\"exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim và đích thực nhận; dòng 'APP đối chứng' xanh cho cả hai trạng thái: chạy chayItest thật với itest 0 ca thoát 0 thì đỏ đúng từng nhóm ô\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -133,14 +133,14 @@
     "cd app && npm run test:lint-rules",
     "node scripts/check-portal-compliance.mjs"
   ],
-  "diffBase": "dd3b28ea49654fe8e23cce5e61bd6e0cdbaeabf0",
+  "diffBase": "21de52206b3de6c7721051ebf8a46a21783a5752",
   "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a",
   "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.36.0/skills/acceptance/references/judge-personas.md",
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.36.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a/_acceptance/chuyen-huong-ma-dai-trang-thue/contract.md",
-  "invokedAt": "2026-11-02T22:42:43Z",
-  "invokedSha": "83c65b0359950a6d2bcccfb71ca6eb62f5ae2ac6",
+  "invokedAt": "2026-11-02T22:53:19Z",
+  "invokedSha": "aa8c99371d19720205eb761cb413468d58484721",
   "vungVat": [
     "_acceptance/chuyen-huong-ma-dai-trang-thue/design-floor.json",
     "_acceptance/chuyen-huong-ma-dai-trang-thue/evals.yaml",
@@ -205,14 +205,14 @@
     "scripts/chuyen-huong-ma-thi-truong/acceptance.mjs"
   ],
   "coEvalPaths": true,
-  "evalsHash": "da49e7bbf1a326fb04a8cec765e0a346acb3eccf7935a510cd07d5648ee7d4e8",
+  "evalsHash": "57c3a064d71863a3e15b442b8c24a1bd419f70d276c409fd25251fa053ca022a",
   "runBaseline": true,
   "thuocChup": {
-    "sha": "83c65b0359950a6d2bcccfb71ca6eb62f5ae2ac6",
+    "sha": "aa8c99371d19720205eb761cb413468d58484721",
     "n": 227,
-    "digest": "ae7f900c382caaa49a8c5ef4dc5a1e7b71a745e65d781e0d04948e26c7f5f103",
+    "digest": "c280f9de3f2885c163a55fb70ae0b2d5629670044291b14c57f0f42b97c8b408",
     "tep": {
-      "_acceptance/chuyen-huong-ma-dai-trang-thue/evals.yaml": "da49e7bbf1a326fb04a8cec765e0a346acb3eccf7935a510cd07d5648ee7d4e8",
+      "_acceptance/chuyen-huong-ma-dai-trang-thue/evals.yaml": "57c3a064d71863a3e15b442b8c24a1bd419f70d276c409fd25251fa053ca022a",
       "_acceptance/config.yaml": "3aeed435ba149d1dadc24708c818c4b7dfbabaac49a1078f393ffa88203bdf63",
       "agent/tests/ai-call-log.test.ts": "ec1671d58ec1ca4c35ae90d48bf18dc70e53f0556478a46a5ef19e06d8754800",
       "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
@@ -442,7 +442,7 @@
     }
   },
   "cayChup": {
-    "sha": "83c65b0359950a6d2bcccfb71ca6eb62f5ae2ac6",
+    "sha": "aa8c99371d19720205eb761cb413468d58484721",
     "ban": {},
     "chuaTheoDoi": []
   }

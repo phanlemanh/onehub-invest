@@ -5,7 +5,7 @@ slug: chuyen-huong-ma-dai-trang-thue
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-02T22:10:33Z
 design_doc: docs/superpowers/specs/2026-11-03-chuyen-huong-ma-dai-trang-thue-design.md
