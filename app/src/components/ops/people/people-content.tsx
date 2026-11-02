@@ -17,7 +17,7 @@ export async function PeopleContent({ user, loc }: { user: User; loc: LocNguoi }
   if (process.env.VERCEL === "1" || (await localOnlyTable("parties"))) return <PeopleView mode="cloud" />
   const xem = xemNoiDungTin(user)
   const boTim = !xem && loc.q.trim() !== ""
-  const locDung = xem ? loc : { ...loc, q: "" }
+  const locDung = xem ? { ...loc, uuTienSo: true } : { ...loc, q: "" }
   const [tong, ds, entries] = await Promise.all([
     danhBaTongQuan(),
     danhSachNguoi(locDung),

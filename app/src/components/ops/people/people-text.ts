@@ -10,9 +10,11 @@ export type HangNguoi = {
   an: boolean
   ten: string | null
   taiKhoan: string | null
-  sdtBam: string | null
+  sdt: string | null
+  /** `tel:+84…` của số gốc; null khi vai không được xem hoặc không có số gốc đúng khuôn. */
+  tel: string | null
 }
 
 export const AN_VOI_VIEWER = "Ẩn với vai Người xem"
 export const LENH_DUNG = "node pipeline/dung-nguoi.mjs"
-export const BO_TIM = "Tìm theo tên hay tài khoản chỉ dành cho vai Vận hành — danh sách dưới đây không lọc theo chữ tìm."
+export const BO_TIM = "Tìm theo tên, tài khoản hay SĐT chỉ dành cho vai Vận hành — danh sách dưới đây không lọc theo chữ tìm."

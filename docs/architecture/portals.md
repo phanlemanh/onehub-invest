@@ -146,7 +146,7 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
 | `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |
 | `/ops/sources` | Nguồn dữ liệu 🔒 | registry SPL + giải mã tầng A + **QUẢN TRỊ nguồn: tài khoản Zalo (QR login), allowlist nhóm (bất biến 1 nhóm–1 tài khoản), sau này profile AirDNA/Airbnb — gated `role=admin`** | SPL | C1→E2 |
-| `/ops/deals` | Căn giá tốt | tin P1 (S03/S05) rẻ hơn thước P2 cùng phường; liên hệ người bán + nội dung/ảnh tin (tầng A) chỉ `role=admin` và chỉ có ở DB local (dời từ `/deals` công khai, 2026-10-22) | P4 | đã có |
+| `/ops/deals` | Căn giá tốt | tin P1 (S03/S05) rẻ hơn thước P2 cùng phường; liên hệ người bán (tầng C) từ vai Vận hành trở lên, nội dung và ảnh tin chỉ `role=admin`; cả hai chỉ có ở máy thu (dời từ `/deals` công khai, 2026-10-22; hạ cổng liên hệ theo Hỏi-B, `people-hien-so-goc`) | P4 | đã có |
 | `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | — | ngay |
 
 - **Shell thiết kế**: `@reui/app-shell-26` (SOC console) + `agent-activity-*`,

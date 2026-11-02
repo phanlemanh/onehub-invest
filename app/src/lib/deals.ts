@@ -7,9 +7,8 @@ import { pool } from "./db";
  * discount = % dưới giá rao công khai cùng phường (docs/research/
  * investment-pipeline-4-stages.md).
  *
- * PII: seller_phone là tầng A — sale_offers KHÔNG sync cloud (sync-cloud
- * chỉ chạm bảng airdna_*), nên trên Vercel không có dữ liệu này tự nhiên.
- * Broker chip join sellers registry (cũng local-only).
+ * Người bán trên tin rao là tầng C (ADR-0007 mục 9). Số gốc seller_phone ở lại máy thu (PII_EXCLUDE của
+ * sync-cloud; ROADMAP §3 mục 24), nên bản cloud không có cột này. Broker chip join sellers registry (cũng ở máy thu).
  */
 export type DealRow = {
   offerId: string;
@@ -38,6 +37,16 @@ export type DealRow = {
   brokerNAds: number | null;
   brokerMedianGap: number | null;
 };
+
+/**
+ * Bỏ trường theo vai trước khi đưa vào thẻ, để trường cấm không có mặt trong dữ liệu trang: `lienHe` = vai Vận hành trở
+ * lên (Hỏi-B), `noiDung` = ảnh và chữ bài, giữ cho admin vì route ảnh `?path=` chỉ mở cho admin.
+ */
+export function dealTheoVai(d: DealRow, vai: { lienHe: boolean; noiDung: boolean }): DealRow {
+  const lienHe = vai.lienHe ? {} : { sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null };
+  const noiDung = vai.noiDung ? {} : { mediaPath: null, mediaUrl: null, postText: null };
+  return { ...d, ...lienHe, ...noiDung };
+}
 
 /** Giảm hơn ngưỡng này so với thước → tin cần xác minh: vẫn hiện, đứng cuối (Mạnh chốt Hỏi-2, ON11 24/10). */
 export const NGHI_NGO_PCT = 35;
@@ -138,13 +147,18 @@ export function toDealRow(r: DealSqlRow): DealRow {
   };
 }
 
+// Mã Postgres khi DB không có lược đồ riêng của máy thu: 42P01 thiếu bảng, 42703 thiếu cột.
+const THIEU_LUOC_DO_MAY_THU = new Set(["42P01", "42703"]);
+
 export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[]> {
-  // Cloud KHÔNG có stg_zalo_posts (PII tầng A — leak gate cấm): bản đầy đủ fail 42P01 → rơi về bản cloud,
-  // trang cloud tự nhiên không cột liên hệ (đúng thiết kế PII — P4).
+  // Cloud không có stg_zalo_posts và các cột seller_* (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
+  // cloud, trang tự nhiên không cột liên hệ. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho PageError có
+  // Retry: nuốt nó thì trang vẫn đủ thẻ nhưng mất liên hệ và nói sai «chỉ có ở máy thu» (S4 r1 E12).
   let rows;
   try {
     ({ rows } = await pool.query(dealsSql(), [minDiscountPct, limit]));
-  } catch {
+  } catch (e) {
+    if (!THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "")) throw e;
     ({ rows } = await pool.query(dealsSql({ cloud: true }), [minDiscountPct, limit]));
   }
   return rows.map(toDealRow);

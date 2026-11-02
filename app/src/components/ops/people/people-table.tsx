@@ -35,6 +35,20 @@ export function PeopleTable({ rows }: { rows: HangNguoi[] }) {
         cell: ({ row }) => (
           <div className="flex min-w-0 flex-col items-start gap-0.5">
             <BiDanh an={row.original.an} value={row.original.ten} />
+            {!row.original.an && row.original.tel && (
+              <Button
+                variant="link"
+                size="xs"
+                className="justify-start px-0 tabular-nums"
+                nativeButton={false}
+                render={<a href={row.original.tel} />}
+              >
+                <span translate="no">{row.original.sdt}</span>
+              </Button>
+            )}
+            {!row.original.an && !row.original.tel && row.original.sdt && (
+              <span className="text-muted-foreground font-mono text-xs">{row.original.sdt}</span>
+            )}
             <Button
               variant="link"
               size="xs"
@@ -70,13 +84,10 @@ export function PeopleTable({ rows }: { rows: HangNguoi[] }) {
       },
       {
         id: "taiKhoan",
-        header: "Tài khoản · SĐT băm",
+        header: "Tài khoản",
         cell: ({ row }) => (
           <div className="flex min-w-0 flex-col gap-0.5">
             <BiDanh an={row.original.an} value={row.original.taiKhoan} />
-            {!row.original.an && row.original.sdtBam && (
-              <span className="text-muted-foreground font-mono text-xs">{row.original.sdtBam}</span>
-            )}
           </div>
         ),
         size: 220,
@@ -97,6 +108,8 @@ export function PeopleTable({ rows }: { rows: HangNguoi[] }) {
     columns,
     data: rows,
     getRowId: (r) => r.partyKey,
+    // Máy chủ đã chia trang; bảng vẽ đủ hàng được gửi, không cắt ở 10 hàng mặc định.
+    state: { pagination: { pageIndex: 0, pageSize: Math.max(rows.length, 1) } },
   })
 
   return (

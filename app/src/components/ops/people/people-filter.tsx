@@ -45,7 +45,7 @@ export function PeopleFilter({ sources, source, q, coTim }: { sources: string[];
             <InputGroupAddon>
               <SearchIcon aria-hidden="true" />
             </InputGroupAddon>
-            <InputGroupInput name="q" defaultValue={q} placeholder="Tên hoặc tài khoản" aria-label="Tìm theo tên hoặc tài khoản" />
+            <InputGroupInput name="q" defaultValue={q} placeholder="Tên, tài khoản hoặc SĐT" aria-label="Tìm theo tên, tài khoản hoặc SĐT" />
           </InputGroup>
           <Button type="submit" variant="outline" size="sm">
             Tìm
