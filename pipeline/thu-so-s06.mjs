@@ -164,12 +164,13 @@ async function laySoTrang(page, viec) {
   try {
     const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (process.env.S06_DEBUG) console.log(`[dbg] HTTP ${res?.status()} → ${page.url().replace(WEB_BASE, "«che»")}`);
-    if (res && (res.status() === 403 || res.status() === 429)) return { status: "chan" };
+    // 0211-11: chan gắn nhãn nguồn chặn — chỉ nhãn, không URL/tên miền
+    if (res && (res.status() === 403 || res.status() === 429)) return { status: `chan-${res.status()}` };
     await page.waitForTimeout(1200);
     const pathOk = page.url().includes(`/${viec.list_id}.htm`);
     if (!pathOk) {
       const body = (await page.content()).toLowerCase();
-      if (body.includes("captcha")) return { status: "chan" };
+      if (body.includes("captcha")) return { status: "chan-captcha" };
       return { status: "trang-khac" };
     }
     // nút hiện số (đã kiểm 02/11: KHÔNG đòi đăng nhập)
@@ -178,7 +179,7 @@ async function laySoTrang(page, viec) {
       .catch(() => null);
     if (!nut) {
       const body = (await page.content()).toLowerCase();
-      if (body.includes("captcha")) return { status: "chan" };
+      if (body.includes("captcha")) return { status: "chan-captcha" };
       if (body.includes("không còn") || body.includes("hết hạn") || body.includes("đã bán")) return { status: "het-han" };
       return { status: "khong-nut" };
     }
@@ -250,23 +251,27 @@ async function main() {
   // Target.createTarget {background: true} — không nhấc Chrome lên; tái dùng
   // bằng goto cho mọi tin (điều phối nghi newPage mỗi tin là nguyên nhân
   // cửa sổ bung). Fallback: context.newPage() nếu đường CDP không trả page.
+  const ctx0 = contexts[0];
   const tabs = [];
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
     try {
+      // 0211-11: cấp theo DÒNG THỜI GIAN — chụp pages trước, tạo target, đợi
+      // page MỚI xuất hiện (không thuộc tập trước). Tìm theo url about:blank
+      // khiến luồng 2+ lấy lại tab chưa điều hướng của luồng 1 → goto đè nhau.
+      const truoc = new Set(ctx0.pages());
       const cdpSs = await browser.newBrowserCDPSession();
       await cdpSs.send("Target.createTarget", { url: "about:blank", background: true });
       await cdpSs.detach();
-      const hetTab = context_pages(contexts[0]);
-      for (let lan = 0; lan < 20 && !tab; lan++) {
+      for (let lan = 0; lan < 40 && !tab; lan++) {
         await sleep(250);
-        tab = hetTab().find((pg) => pg.url() === "about:blank");
+        tab = ctx0.pages().find((pg) => !truoc.has(pg));
       }
     } catch { /* rơi xuống fallback */ }
-    tabs.push(tab ?? (await contexts[0].newPage()));
+    tabs.push(tab ?? (await ctx0.newPage()));
   }
-  function context_pages(ctx) {
-    return () => ctx.pages();
+  if (new Set(tabs).size !== THREADS) {
+    throw new Error(`tab trùng nhau: ${new Set(tabs).size}/${THREADS} — không chạy`);
   }
 
   const ketQua = { co_so: 0, khac_so: 0 };
@@ -296,7 +301,7 @@ async function main() {
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
       // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
-      if (["chan", "khong-ra-so", "loi-trang", "timeout"].includes(kq.status)) chanLienTiep++;
+      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
       else chanLienTiep = 0;
       if (kq.status === "co-so") ketQua.co_so++;
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
