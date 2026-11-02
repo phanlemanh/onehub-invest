@@ -5,7 +5,7 @@ slug: can-theo-tin-khi-phan-xu-lai
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-01-can-theo-tin-khi-phan-xu-lai-design.md
 approved_by: Mạnh
 approved_at: 2026-11-01
@@ -55,3 +55,10 @@ Bỏ quét không gian — ba trục liệt tay (dòng `descope` trong sổ):
 - Đẩy Supabase.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Phép kiểm áp hai lần có thể báo lỗi giả khi căn có tin ngoài tập khối sửa.
+  - Ngoài-2: Số phòng tắm và tên đường của căn chưa được kiểm tự động khi đề xuất bị áp hay hoàn tác.
+  - Ngoài-3: Các ca «giữ nguyên» không ghim tiền đề dương nên có thể xanh mà không đo gì.
+  - Ngoài-4: Phép đo «là bản 066» chỉ tìm chuỗi 066 trong thân hàm.
+  - Ngoài-5: Căn lệch trong phép kiểm áp hai lần được dựng bằng INSERT tay, không phải do 063 sinh ra.

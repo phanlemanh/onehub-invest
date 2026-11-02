@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>116 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>117 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>90 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -32,10 +32,6 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
-
-## Đang làm
-
-- Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -144,6 +140,7 @@ flowchart TD
 - Khi trang đăng nhập hoặc đăng ký lỗi lúc dựng, nút «Thử lại» tải lại phần trang từ server (retry) thay vì chỉ vẽ lại phía client (reset); _acceptance/config.yaml thành YAML chuẩn (`auth-error-thu-lai-retry`)
 - backfill ảnh Zalo xét cả snapshot zalo-agent schemaVersion 3, không chỉ v2 (`backfill-zalo-media-v3`)
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
+- Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
 - bước kiểm local-only của check-s08-inventory chạy được trên main sau khi import-airbnb nhập import-s08-row (`check-s08-harness`) — đã giao — máy thông, cửa veto còn mở
