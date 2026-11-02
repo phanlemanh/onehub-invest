@@ -102,6 +102,10 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   thiếu phường hoặc diện tích thì thêm người đăng (`sender_id` → SĐT → chữ bài chuẩn hoá) — DB local 349 → 586 tin S03,
   nhóm lớn nhất 177 → 115 bài, đối soát không cho nghỉ tin nào. «Luồng 7 ngày qua» đếm «S03 — bài nhận» bằng đúng tập
   `loadStgPosts` + `testMarker`, cột «S03 — tin rao mới». S05 cùng công thức khoá — chưa đổi.
+- Vá hẹp bộ đọc tin S03 (`_acceptance/s03-va-doc-tin`, SV1, 02/11): DT có phẩy, PN viết tắt, phường trùng hướng phải gọi đích danh, số
+  ngữ cảnh không thành giá, thuê từ 1 tỷ không đơn vị thời gian thành bán, giá che số lưu số sàn (Mạnh duyệt, sai số tới khoảng 5%, PL13 lo cận
+  trên), giá không đơn vị có nhãn. Toà, trục đi qua phát biểu `parser`, trục vào khoá gom. Trên nhãn tác tử gắn (không phải nhãn vàng): PN 61→225/241,
+  giá 128→208/237. Có hiệu lực ở lượt 00:00 sau khi gộp (Mạnh duyệt): S03 2.772→3.158 tin, nghỉ 130, mọc do bộ đọc 391; đo chỉ đọc khớp lượt thử trên DB thử.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).

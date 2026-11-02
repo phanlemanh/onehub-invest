@@ -13,8 +13,14 @@ TEN="${1:?thiếu tên DB thử}"
 DX=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db)
 "${DX[@]}" dropdb -U oneinvest -h localhost --if-exists "$TEN"
 if [ "${2:-}" = "--xoa" ]; then echo "db-thu: đã xoá $TEN"; exit 0; fi
-"${DX[@]}" createdb -U oneinvest -h localhost "$TEN"
-"${DX[@]}" sh -c "pg_dump -U oneinvest -h localhost --no-owner --exclude-extension=pg_cron --exclude-schema=cron \
-  --exclude-table-data=stg_calendar --exclude-table-data=stg_abnb_nights oneinvest \
-  | psql -U oneinvest -h localhost -q -v ON_ERROR_STOP=1 $TEN" >/dev/null
+# pipefail: pg_dump lỗi giữa ống (02/11, DDL song song trên oneinvest) mà sh vẫn thoát 0 thì để lại DB rỗng. Lỗi đó nhất thời nên thử lại.
+for lan in 1 2 3; do
+  "${DX[@]}" createdb -U oneinvest -h localhost "$TEN"
+  "${DX[@]}" bash -c "set -o pipefail; pg_dump -U oneinvest -h localhost --no-owner --exclude-extension=pg_cron --exclude-schema=cron \
+    --exclude-table-data=stg_calendar --exclude-table-data=stg_abnb_nights oneinvest \
+    | psql -U oneinvest -h localhost -q -v ON_ERROR_STOP=1 $TEN" >/dev/null && break
+  "${DX[@]}" dropdb -U oneinvest -h localhost --if-exists "$TEN"
+  [ "$lan" -lt 3 ] || { echo "db-thu: chép oneinvest sang $TEN lỗi ba lần"; exit 1; }
+  sleep 20
+done
 echo "db-thu: $TEN dựng xong — DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/$TEN"
