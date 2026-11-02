@@ -6,21 +6,21 @@ evals:
     executor: script
     cmd: config:executors.script.chm_app
     paths: [app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs, "app/src/app/(app)/[country]/[market]/listings/**", app/src/components/listing/listings-route.tsx, app/src/lib/ma-thi-truong.ts]
-    expected: "exit 0; 'APP PASS'; trên DB 'sau' dòng '32 mã × 3 trang (có rent)' và cả 32 mã trang rent chuyển 308 sang /vn/<ngắn>/listings/rent; trên DB 'truoc' cùng dòng và số ca chuyển hướng = 0. Chiều đỏ ghim: E5 đột biến bỏ nhánh chuyển hướng → 'không chuyển hướng: /vn/thanh-pho-da-nang'"
+    expected: "exit 0; 'APP PASS'; trên DB 'sau' dòng '32 mã × 3 trang (có rent)' và cả 32 mã trang rent chuyển 308 sang /vn/<ngắn>/listings/rent, dòng 'đích rent mở được 32/32' (bộ đếm tăng trong vòng lặp, không phải hằng số); trên DB 'truoc' cùng dòng và số ca chuyển hướng = 0. Chiều đỏ ghim: E5 đột biến bỏ nhánh chuyển hướng → 'không chuyển hướng: /vn/thanh-pho-da-nang'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.chm_app
     paths: [app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs, "app/src/app/(app)/[country]/[market]/listings/**", app/src/components/listing/listings-route.tsx, app/src/lib/ma-thi-truong.ts]
-    expected: "exit 0; dòng 'ô rent 4/4 query' và '8/8 ô trang × query' trên cả hai DB; sau 064 đích giữ nguyên ?tab=x, ?term=short, ?term=short&tab=x; trước 064 prop kind = rent_lt hoặc rent_st. Chiều đỏ ghim: E5 đột biến rơi query → '/vn/thanh-pho-da-nang chuyển sai đích'"
+    expected: "exit 0; dòng 'ô rent 4/4 query' và '8/8 ô trang × query' trên cả hai DB; sau 064 đích giữ nguyên ?tab=x, ?term=short, ?term=short&tab=x và đích mở ra đúng kind; trước 064 prop kind = rent_lt hoặc rent_st. Chiều đỏ ghim: E5 đột biến rơi query → '/vn/thanh-pho-da-nang chuyển sai đích' với đích thực nhận /vn/da-nang/listings/rent"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: script
     cmd: config:executors.script.chm_app
     paths: [app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs, "app/src/app/(app)/[country]/[market]/listings/**", app/src/components/listing/listings-route.tsx, app/src/lib/ma-thi-truong.ts]
-    expected: "exit 0; dòng 'đường cũ ?kind= 4/4' trên cả hai DB; nhịp một đích viết trước /vn/thanh-pho-da-nang/listings/rent[?tab=x][&term=short], nhịp hai sau 064 sang /vn/da-nang/listings/rent cùng query. Chiều đỏ: bản chép nhầm segment của E5 đỏ ở nhịp hai vì cùng hàm kiemChuyen"
+    expected: "exit 0; dòng 'đường cũ ?kind= 4/4' trên cả hai DB; nhịp một đích viết trước /vn/thanh-pho-da-nang/listings/rent[?tab=x][&term=short], nhịp hai sau 064 sang /vn/da-nang/listings/rent cùng query. Chiều đỏ: nhịp hai của ?kind=rent_st gọi trang rent với term=short, đúng đối số của đột biến nhầm segment ở E5"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -34,5 +34,5 @@ evals:
     executor: script
     cmd: config:executors.script.chm_app
     paths: [app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs, "app/src/app/(app)/[country]/[market]/listings/**", app/src/components/listing/listings-route.tsx, app/src/lib/ma-thi-truong.ts]
-    expected: "exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim; acceptance.mjs check 'có ô:' đỏ khi đầu ra thiếu dòng của nhóm ô"
+    expected: "exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim và đích thực nhận; acceptance.mjs check 'có ô:' đỏ khi đầu ra thiếu dòng của nhóm ô"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

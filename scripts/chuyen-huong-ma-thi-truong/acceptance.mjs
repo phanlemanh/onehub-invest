@@ -152,7 +152,7 @@ function chayItest(phan, tt, ctx, ph, cwd) {
   for (const l of out.split("\n")) if (/^(ok|FAIL|chm:)|✔|✖|phần tử|Lợi suất|^ℹ (pass|fail)/.test(l.trim())) console.log(`  [${tt}] ${l.trim()}`);
   check(r.status === 0, `${phan} trên DB ${tt} (itest thoát ${r.status})`);
   // Ô rent phải thật sự chạy: thoát 0 với 0 ca cũng là xanh.
-  if (phan === "app") for (const dau of ["32 mã × 3 trang (có rent)", "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])])
+  if (phan === "app") for (const dau of ["32 mã × 3 trang (có rent)", ...(tt === "sau" ? ["đích rent mở được 32/32"] : []), "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])])
     check(out.includes(dau), `${phan} trên DB ${tt} có ô: ${dau}`);
   if (r.status !== 0) console.log(out.split("\n").filter((l) => /not ok|AssertionError|Error|expected|actual|chm:/.test(l)).slice(0, 40).join("\n"));
 }

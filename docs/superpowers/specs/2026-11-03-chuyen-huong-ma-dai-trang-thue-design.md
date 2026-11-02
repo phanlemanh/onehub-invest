@@ -18,13 +18,15 @@ Chỉ thêm phép đo. Không đổi mã sản phẩm: chuyển hướng đã c�
 
 Thêm ô vào `app/tests/chuyen-huong-ma-thi-truong.itest.tsx`, chạy qua `scripts/chuyen-huong-ma-thi-truong/acceptance.mjs app`
 trên DB thử `oneinvest_n1_chm_*`, cả hai trạng thái trước và sau 064:
-- 32 mã dài × trang rent.
+- 32 mã dài × trang rent, và mở tiếp đích dưới mã ngắn.
 - Ma trận trang × query có thêm hàng rent; ma trận riêng rent × `{}`, `tab`, `term`, `term + tab`.
 - Đường cũ `/listings?kind=rent_lt|rent_st` đi hai nhịp tới trang rent.
-- Mã không đích 404, mã thường không đụng, đếm truy vấn bằng mốc gốc.
+- Mã không đích 404, mã thường không đụng, đếm truy vấn bằng mốc gốc; đột biến tra thêm làm ca đếm đỏ.
 - Ba đột biến trên bản chép: nhầm segment, bỏ nhánh chuyển hướng, rơi query.
 
-`acceptance.mjs` đòi thấy dòng của từng nhóm ô trong đầu ra: `node --test` chạy 0 ca vẫn thoát 0.
+`acceptance.mjs` đòi thấy dòng của từng nhóm ô trong đầu ra: `node --test` chạy 0 ca vẫn thoát 0. Số trong dòng lấy từ bộ đếm tăng trong vòng lặp.
+
+Giới hạn đo: gọi hàm trang với tham số dựng sẵn, không qua máy chủ Next, cùng cách hồ sơ gốc.
 
 ## Đã loại
 
