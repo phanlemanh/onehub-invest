@@ -94,7 +94,8 @@ export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_
    captured_at = EXCLUDED.captured_at
  WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at`;
 
-async function importDir(client, dir) {
+// Export để test chạy importDir trên lược đồ tạm (luoc-do-rieng) — MỞ LẠI 0211-1 đ1
+export async function importDir(client, dir) {
   const { manifest, items } = await readSnapshot(dir);
   console.log(`manifest ok: ${manifest.snapshotId} — ${items.length} items`);
 
@@ -108,6 +109,12 @@ async function importDir(client, dir) {
   let n = 0;
   for (const it of items) {
     const a = it.payload;
+    // v5 (MỞ LẠI 0211-1 đ1): RawItem.seller gộp PHẲNG vào cột seller có sẵn
+    // (thêm accountRef/displayName/phone/phoneStatus/seenAt cạnh full_name/
+    // company_ad/seller_info). Snapshot cũ không có it.seller → giá trị y hệt
+    // trước v5 — không migration, cột jsonb đủ chỗ.
+    const seller = { full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) };
+    if (it.seller && typeof it.seller === "object") Object.assign(seller, it.seller);
     await client.query(
       UPSERT_SQL,
       [
@@ -118,7 +125,7 @@ async function importDir(client, dir) {
         a.area_name ?? null, a.ward_name ?? null, a.ward_name_v3 ?? null,
         a.latitude ?? null, a.longitude ?? null,
         a.list_time ? new Date(a.list_time).toISOString() : null,
-        JSON.stringify({ full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) }),
+        JSON.stringify(seller),
         JSON.stringify({ images: a.images ?? [], thumbnails: a.image_thumbnails ?? [] }),
         JSON.stringify(a), manifest.snapshotId, manifest.finishedAt, // 2410-1 v2: giờ thu snapshot (airbnb_snapshots.collected_at) — không dùng giờ nạp/giờ từng item
       ],

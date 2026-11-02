@@ -56,7 +56,7 @@ snapshots/
                                    // tầng C (ADR-0007 mục 9); KHÔNG chứa định danh
                                    // tài khoản THU (tầng A)
     "displayName": "Nguyễn Văn A", // tên hiển thị người bán (tầng C)
-    "phone": "+849012345678",      // SĐT E.164 bắt đầu +84 (tầng C); null = chưa có
+    "phone": "+84901234567",       // SĐT E.164 +84 + 9 chữ số (di động VN); null = chưa có
     "phoneStatus": "hidden_by_source", // available | hidden_by_source | not_tried | error
     "seenAt": "2026-11-02T08:00:00Z"   // giờ collector thấy người bán gắn tin này
   },                               // (mặc định = fetchedAt khi không có riêng)
@@ -97,10 +97,10 @@ Trường nào ĐÃ có sẵn trong payload snapshot hiện tại, trường nà
 
 | Kênh | accountRef | displayName | phone | phoneStatus hiện tại | Ghi chú |
 |---|---|---|---|---|---|
-| S01 airbnb-listing | `hostId` nằm sâu trong payload (pdpSections/deferredState) — chưa tách | chưa tách | nguồn che (Airbnb ẩn SĐT chủ nhà) | `not_tried` | người bán = chủ nhà cho thuê ngắn hạn |
-| S03 zalo-agent | ✅ `payload.senderId` | ✅ `payload.senderName` | ✅ số trong `payload.text` (parser trích sẵn) | `available` khi text có số, còn lại `not_tried` | stg có senderId 54.237/55.646 |
-| S05 apify-facebook | ✅ `payload.senderId` (`user.id`) | ✅ `payload.senderName` | hiếm — FB hạn chế SĐT trong post | `not_tried` | S05 paused tới 7/11 |
-| S06 chotot-ads | ❌ `seller_info` không có id tài khoản | ✅ `payload.full_name` | ❌ 0/51.994 — nguồn che 100% | `hidden_by_source` | cần nút «hiện số» — xem `seller-thu-so-phuong-an.md` |
+| S01 | `hostId` nằm sâu trong payload (pdpSections/deferredState) — chưa tách | chưa tách | nguồn che (ẩn SĐT chủ nhà) | `not_tried` | người bán = chủ nhà cho thuê ngắn hạn |
+| S03 | ✅ `payload.senderId` | ✅ `payload.senderName` | ✅ số trong `payload.text` (parser trích sẵn) | `available` khi text có số, còn lại `not_tried` | stg có senderId 54.237/55.646 |
+| S05 | ✅ `payload.senderId` (`user.id`) | ✅ `payload.senderName` | hiếm — nguồn hạn chế SĐT trong post | `not_tried` | S05 paused tới 7/11 |
+| S06 | ✅ `payload.account_id` | ✅ `payload.account_name` | ❌ 0/51.994 — nguồn che 100% | `hidden_by_source` | `account_id` có 51.994/51.994 dòng (15.199 tài khoản); nút «hiện số» không cần đăng nhập — xem `seller-thu-so-phuong-an.md` |
 | S07 (chưa đăng ký) | — | — | — | `not_tried` | chưa thu |
 
 Khi một kênh bắt đầu ghi `seller`, manifest của kênh đó chuyển `schemaVersion: 5`

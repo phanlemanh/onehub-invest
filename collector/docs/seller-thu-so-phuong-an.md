@@ -24,10 +24,10 @@
 
 | Kênh | Cách | Nhịp | Trần | phoneStatus đặt | Cần gì từ Mạnh |
 |---|---|---|---|---|---|
-| **S03 zalo** | số đã CÔNG KHAI trong `payload.text` — collector chỉ đặt trạng thái (regex thấy số); số E.164 pipeline đã trích sẵn từ trước | theo lượt thu hiện có, 0 lời gọi mới | không cần | `available` khi text có số, `not_tried` khi không | không — chỉ chờ vòng bật v5 ghi `seller` |
-| **S05 facebook** | như S03: số nếu có nằm trong text post | theo lượt thu (paused tới 7/11) | không cần | `available`/`not_tried` | không |
-| **S06 chợ tốt** | bấm «hiện số» từng tin qua web (KHÔNG đăng nhập — đã kiểm); lấy số + đổi nút thành «Gọi» xác nhận | ghép 2 lượt thu S06 hiện có (05:30/14:00) — **Mạnh chốt 2/11: KHÔNG trần khối lượng, MỌI tin thu được đều lấy SĐT + danh tính người môi giới** (bỏ trần 50/ngày cũ của 3010-7 và bỏ lọc worklist); giữ nhịp nghỉ ngẫu nhiên 3–8s giữa 2 lời gọi + đo `phoneStatus` để nhận biết khi nguồn bắt đầu chặn | không trần (chỉ nhịp) | `available` · `error` (bị chặn/đổi giao diện) · tin `phone_hidden` → `hidden_by_source` (không cố lấy) | đã chốt 2/11: đường web không-đăng-nhập + mọi tin + kèm danh tính (`displayName`, `accountRef` nếu lấy được) |
-| **S01 airbnb** | nguồn CHE SĐT chủ nhà (nền tảng trung gian) — không có đường hợp lệ | — | — | `hidden_by_source` (đứng yên) | chấp nhận KHÔNG lấy số S01 |
+| **S03** | số đã CÔNG KHAI trong `payload.text` — collector chỉ đặt trạng thái (regex thấy số); số E.164 pipeline đã trích sẵn từ trước | theo lượt thu hiện có, 0 lời gọi mới | không cần | `available` khi text có số, `not_tried` khi không | không — chỉ chờ vòng bật v5 ghi `seller` |
+| **S05** | như S03: số nếu có nằm trong text post | theo lượt thu (paused tới 7/11) | không cần | `available`/`not_tried` | không |
+| **S06** | bấm «hiện số» từng tin qua web (KHÔNG đăng nhập — đã kiểm); lấy số + đổi nút thành «Gọi» xác nhận | ghép 2 lượt thu S06 hiện có (05:30/14:00) — **Mạnh chốt 2/11: KHÔNG trần khối lượng, MỌI tin thu được đều lấy SĐT + danh tính người môi giới** (bỏ trần 50/ngày cũ của 3010-7 và bỏ lọc worklist); giữ nhịp nghỉ ngẫu nhiên 3–8s giữa 2 lời gọi + đo `phoneStatus` để nhận biết khi nguồn bắt đầu chặn | không trần (chỉ nhịp) | `available` · `error` (bị chặn/đổi giao diện) · tin `phone_hidden` → `hidden_by_source` (không cố lấy) | đã chốt 2/11: đường web không-đăng-nhập + mọi tin + kèm danh tính (`displayName`, `accountRef` nếu lấy được) |
+| **S01** | nguồn CHE SĐT chủ nhà (nền tảng trung gian) — không có đường hợp lệ | — | — | `hidden_by_source` (đứng yên) | chấp nhận KHÔNG lấy số S01 |
 | **S07 (chưa thu)** | chưa đăng ký nguồn | — | — | `not_tried` | khi mở kênh: thiết kế `seller` ngay từ vòng đầu |
 
 S08 giữ chính sách cũ: **xoá SĐT trước khi ghi thô** — không nằm trong phạm vi
