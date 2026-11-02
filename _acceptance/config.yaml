@@ -124,6 +124,9 @@ executors:
     s03_loai_tin_doi_chieu: "cd pipeline && node --test scripts/transform-zalo-loai-tin-doi-chieu.test.mjs"   # s03-nhan-loai-tin-rong AC-7/AC-9 — DB máy thu, BEGIN…ROLLBACK, chỉ in số
     nhan_bac: "cd agent && node --import tsx --test tests/nhan-bac-s03.test.ts"   # nhan-bac-model-lon-s03 (KC1) — backend giả, gạt tầng A, trích, lỗi, đo, trần chi phí
     nhan_bac_db: "cd agent && node --import tsx --test tests/nhan-bac-s03-db.itest.ts"   # nhan-bac-model-lon-s03 (KC1) — 065 + ghi chỉ bảng nhãn bạc, DB máy thu ROLLBACK
+    vlm_pipeline: "node --test pipeline/tests/vlm-anh.test.mjs"   # vlm-anh-tin-s03 (KC3) — chọn bài, ảnh từ đĩa, phiếu; không DB, không mạng (giám sát duyệt U1-87)
+    vlm_agent: "cd agent && node --import tsx --test tests/vlm-anh-s03.test.ts"   # vlm-anh-tin-s03 (KC3) — Gateway giả ghi thân yêu cầu, lỗi, trần, đo; không DB
+    vlm_db: "cd agent && node --import tsx --test tests/vlm-anh-s03-db.itest.ts"   # vlm-anh-tin-s03 (KC3) — ghi silver_labels, không đụng canonical; DB local trong ROLLBACK
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB

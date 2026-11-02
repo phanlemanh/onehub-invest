@@ -1,0 +1,139 @@
+{
+"feature_plain": "Với tin rao nhóm chat S03 mà chữ thiếu giá, thiếu dấu hiệu BĐS hoặc thiếu loại hình, máy đọc ảnh đã tải về, mỗi ảnh một lần, và thêm một nhãn đề xuất ghi rõ nguồn là ảnh; đo ba model: Qwen trên máy, Haiku và DeepSeek V4.1 Flash 1017.",
+"will_do": [
+{
+"id": "AC-1",
+"p": "Sẽ chỉ đọc bài thật sự thiếu dữ kiện và có ảnh; bài đủ chữ, bài người đi tìm nhà, bài thử thì bỏ qua."
+},
+{
+"id": "AC-2",
+"p": "Sẽ chỉ dùng ảnh hợp lệ trên máy, tối đa 4 ảnh khác nhau một bài; bài không còn ảnh thì không tốn lượt gọi model."
+},
+{
+"id": "AC-3",
+"p": "Sẽ chỉ gửi câu hỏi cố định và một ảnh; chữ bài, đường link ảnh, SĐT trong chữ, tên nhóm, người gửi và mã lô thu không đi cùng, ở cả ba model; ảnh gửi cloud chỉ tới nhà cung cấp cam kết không giữ dữ liệu."
+},
+{
+"id": "AC-4",
+"p": "Sẽ lưu mỗi bài một nhãn nguồn ảnh cho từng model, gồm giá, loại hình, phòng ngủ, diện tích, mã căn, toà, dự án; bài đã đọc tốt không tốn tiền lại, và sửa nội dung câu hỏi mà quên đổi bản thì lệnh từ chối."
+},
+{
+"id": "AC-5",
+"p": "Sẽ KHÔNG đổi một dòng dữ liệu tin, căn hay ảnh nào, và nhãn không lên cloud."
+},
+{
+"id": "AC-6",
+"p": "Sẽ đi tiếp khi một ảnh lỗi, dừng trước khi vượt trần tiền, và từ chối chạy nếu không nói rõ dùng model nào."
+},
+{
+"id": "AC-7",
+"p": "Sẽ có lệnh chấm từng model theo phiếu người gắn: một model phải đạt 90% cả giá lẫn loại hình, ảnh chưa gắn không được gửi đi, mỗi lần gửi đều có sổ ghi lại."
+},
+{
+"id": "AC-8",
+"p": "Sẽ có lệnh đếm bài tốt, rỗng, lỗi, chưa đọc, số bài lấp đúng chỗ thiếu, số ảnh mang nhãn lộ nguồn; và lệnh rút phiếu 60 ảnh khác nhau chia đều ba nhóm."
+},
+{
+"id": "AC-9",
+"p": "Sẽ chạy thử 100 bài thật bằng model trên máy, không ảnh nào rời máy, có chốt máy xác nhận lô đã chạy và một báo cáo số đo."
+},
+{
+"id": "AC-10",
+"p": "Sẽ đọc mỗi ảnh khác nhau đúng một lần rồi dùng lại cho mọi bài chung ảnh; hai ảnh trái giá thì để trống giá, không đoán; ảnh tự in tên nguồn vẫn được đọc và mang nhãn, không bị chặn."
+}
+],
+"wont_do": [
+{
+"id": "OOS-1",
+"p": "Chưa đưa nhãn ảnh vào tin thật; đó là việc của vòng sau và vẫn qua người duyệt."
+},
+{
+"id": "OOS-2",
+"p": "Chưa đọc 3.538 bài chỉ có ảnh không ghép được vào bài chữ nào (việc KC4)."
+},
+{
+"id": "OOS-3",
+"p": "Không tải lại ảnh đã lỗi: hơn một nửa bài chỉ-ảnh không có tệp trên máy; đây là việc của làn thu."
+},
+{
+"id": "OOS-4",
+"p": "Chưa chạy hết 2.392 bài và chưa đặt lịch đêm; quyết khi có số đo."
+},
+{
+"id": "OOS-5",
+"p": "Chưa thêm cột riêng cho giá và loại hình vào bảng nhãn."
+},
+{
+"id": "OOS-6",
+"p": "Chưa đo Decisions API: đường đang dùng không nhận ảnh, đường gốc chưa thử (xem Hỏi-3)."
+},
+{
+"id": "OOS-7",
+"p": "Không đọc thêm ảnh mới đến sau của bài đã có nhãn tốt; chỉ đếm để biết có bao nhiêu bài như vậy."
+},
+{
+"id": "OOS-8",
+"p": "Không lọc hay chặn ảnh lộ nguồn; anh tìm giải pháp sau, vòng này chỉ gắn nhãn và đưa số."
+},
+{
+"id": "OOS-9",
+"p": "Không chạy Haiku hay DeepSeek trên lô thật; hai model này chỉ chấm phiếu mẫu."
+},
+{
+"id": "OOS-10",
+"p": "Không thu nhỏ ảnh, không che chữ in trên ảnh, không sửa mã nhãn chữ hiện có."
+}
+],
+"coverage_plain": [
+{
+"i": 0,
+"p": "Mọi loại chữ của bài đều có đáp án chọn hay bỏ, đối chiếu số đo thật ngày 02/11 (AC-1, chọn bài)."
+},
+{
+"i": 1,
+"p": "Mọi tình trạng ảnh, từ tốt tới hỏng và quá cỡ, đều có cách xử (AC-2, lọc ảnh)."
+},
+{
+"i": 2,
+"p": "Mọi thứ có thể rời máy được soát trên yêu cầu thật gửi tới máy giả; riêng chữ in trong ảnh chỉ gắn nhãn (AC-3, AC-10)."
+},
+{
+"i": 3,
+"p": "Mọi kết cục của một bài, từ tốt tới lỗi mạng, hết tiền và hai ảnh trái giá, đều có hành vi đã định (AC-4, AC-6, AC-10)."
+},
+{
+"i": 4,
+"p": "Ảnh một bài dùng, ảnh dùng chung và ảnh đã đọc ở lượt trước đều được xử đúng (AC-8, AC-10)."
+},
+{
+"i": 5,
+"p": "Cả ba model đều đi qua cùng phép soát và cùng thước chấm (AC-3, AC-6, AC-7)."
+},
+{
+"i": 6,
+"p": "Có đủ bốn lớp đo: máy giả, cơ sở dữ liệu thử, lô thật và phiếu người (AC-5, AC-7, AC-8, AC-9)."
+}
+],
+"gap_probe_plain": [
+{
+"i": 0,
+"p": "Máy đã tự bỏ Decisions với lý do chưa đủ, và ô cơ hội đã ký vẫn ghi ngưỡng cũ, nên Qwen đạt có thể bị tính là không đạt. Đã tách thành Hỏi-3 và Hỏi-6; câu ngưỡng thay chỉ có hiệu lực khi anh duyệt."
+},
+{
+"i": 1,
+"p": "Số bài tăng có thể đẹp giả: bài thiếu giá chỉ đọc ra loại hình vẫn được tính, một ảnh quảng cáo có thể đẩy 30 bài, lô thật chọn 0 bài mà mọi phép kiểm vẫn xanh. Đã thêm số lấp đúng chỗ thiếu, tách nhóm ảnh dùng chung và một chốt máy."
+},
+{
+"i": 2,
+"p": "Phiếu theo ảnh còn nhiều chỗ hở: ảnh ghép sai có thể không lộ, ảnh không có loại hình trả rỗng vẫn tính đúng, giá theo m² bị tính nhầm. Đã thêm ba nhóm rút mẫu, luật chọn bài đại diện và các lựa chọn trên phiếu."
+},
+{
+"i": 3,
+"p": "Lời hứa chỉ gửi ảnh đã xem chưa có phép kiểm: 20 ô bỏ trống có thể vẫn gửi đi, không thu lại được. Đã thêm phép đếm số ảnh gửi, trần tiền ở lượt chấm và sổ ghi mỗi lần gửi."
+},
+{
+"i": 4,
+"p": "Luật gộp ảnh về bài chưa kín: một loại hình lạ có thể làm lỗi 30 bài, sửa câu hỏi quên đổi bản thì số ký không khớp nhãn. Đã định rõ từng ca; ảnh mới đến sau chỉ đếm, chưa đọc thêm."
+}
+]
+}
