@@ -36,7 +36,7 @@ async function s05(ban, last, now) {
 }
 
 test("S5-AC-1 bảng SLO hai bản: S05 = 96, các mã khác giữ nguyên", () => {
-  const MONG = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 };
+  const MONG = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 };
   for (const [ten, ban] of BAN) assert.deepEqual({ ...ban.SLO_HOURS }, MONG, `S5-AC-1 bảng SLO bản ${ten}`);
 });
 

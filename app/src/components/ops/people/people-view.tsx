@@ -114,7 +114,7 @@ export function PeopleView(props: PeopleProps) {
           <FrameHeader className="flex-row flex-wrap items-center justify-between gap-2">
             <div className="flex min-w-0 flex-col gap-0.5">
               <FrameTitle role="heading" aria-level={2}>Người</FrameTitle>
-              <FrameDescription>Xếp theo số tin đã đăng, nhiều nhất trước.</FrameDescription>
+              <FrameDescription>{coTim ? "Người có SĐT lên trước, rồi đến người nhiều tin hơn." : "Xếp theo số tin đã đăng, nhiều nhất trước."}</FrameDescription>
             </div>
             <PeopleFilter sources={tong.theoNguon.map((n) => n.source)} source={loc.source} q={loc.q} coTim={coTim} />
           </FrameHeader>

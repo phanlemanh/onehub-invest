@@ -1,0 +1,19 @@
+{"ts":"2026-11-02T02:37:50Z","round":1,"evalId":"E1","run_id":"s08-noi-tiep-E1-r1-20261102T023750Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T02:39:42Z","round":1,"evalId":"E2","run_id":"s08-noi-tiep-E2-r1-20261102T023942Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T02:41:43Z","round":1,"evalId":"E3","run_id":"s08-noi-tiep-E3-r1-20261102T024143Z","exit_code":0,"cmd":"node --test pipeline/scripts/import-s08-row.test.mjs"}
+{"ts":"2026-11-02T02:41:44Z","round":1,"evalId":"E4","run_id":"s08-noi-tiep-E4-r1-20261102T024144Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-11-02T02:41:45Z","round":1,"evalId":"E5","run_id":"s08-noi-tiep-E5-r1-20261102T024145Z","exit_code":1,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat && node scripts/s08-danh-muc/acceptance.mjs khong-lo-nguon && node scripts/s08-danh-muc/acceptance.mjs thieu-env"}
+{"ts":"2026-11-02T04:57:09Z","round":2,"evalId":"E1","run_id":"s08-noi-tiep-E1-r2-20261102T045709Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T04:59:00Z","round":2,"evalId":"E2","run_id":"s08-noi-tiep-E2-r2-20261102T045900Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T05:00:51Z","round":2,"evalId":"E3","run_id":"s08-noi-tiep-E3-r2-20261102T050051Z","exit_code":0,"cmd":"node --test pipeline/scripts/import-s08-row.test.mjs"}
+{"ts":"2026-11-02T05:00:58Z","round":2,"evalId":"E4","run_id":"s08-noi-tiep-E4-r2-20261102T050058Z","exit_code":0,"cmd":"node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"}
+{"ts":"2026-11-02T05:00:58Z","round":2,"evalId":"E5","run_id":"s08-noi-tiep-E5-r2-20261102T050058Z","exit_code":1,"cmd":"bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"}
+{"ts":"2026-11-02T05:01:00Z","round":2,"evalId":"E6","run_id":"s08-noi-tiep-E6-r2-20261102T050100Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"}
+{"ts":"2026-11-02T05:09:45Z","round":3,"evalId":"E1","run_id":"s08-noi-tiep-E1-r3-20261102T050945Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T05:11:36Z","round":3,"evalId":"E2","run_id":"s08-noi-tiep-E2-r3-20261102T051136Z","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E3","run_id":"s08-noi-tiep-E3-r3-20261102T051327Z","exit_code":0,"cmd":"node --test pipeline/scripts/import-s08-row.test.mjs"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E4","run_id":"s08-noi-tiep-E4-r3-20261102T051327Z","exit_code":0,"cmd":"node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"}
+{"ts":"2026-11-02T05:13:27Z","round":3,"evalId":"E5","run_id":"s08-noi-tiep-E5-r3-20261102T051327Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"}
+{"ts":"2026-11-02T05:13:29Z","round":3,"evalId":"E6","run_id":"s08-noi-tiep-E6-r3-20261102T051329Z","exit_code":0,"cmd":"bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"}
+{"ts":"2026-11-02T05:38:28Z","kind":"repin","run_id":"repin-20261102T053124Z-55269","sha":"25127eacf0f06642239e9062bf246d6b5a10be25","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0},"wall_s":423.9,"so_lenh":22,"tong_ket":{"ket_cuc":"xanh","phut":7.1,"so_lenh":22,"model_goi":0,"model_carry":0,"chap_chon":0}}
+{"ts":"2026-11-02T16:35:49Z","kind":"repin","run_id":"repin-20261102T162656Z-91202","sha":"0a7381412ab08377aa38c77ea357690dbb7b2546","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0},"wall_s":532.8,"so_lenh":22,"tong_ket":{"ket_cuc":"xanh","phut":8.9,"so_lenh":22,"model_goi":0,"model_carry":0,"chap_chon":0}}

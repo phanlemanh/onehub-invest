@@ -62,6 +62,7 @@ const mkTemp = async (role, id, tag) => {
   await db.query(`INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, now() + interval '10 minutes')`, [tok, id]);
   return tok;
 };
+const TIN_P1_CO_SDT = `SELECT count(*)::int n FROM sale_offers WHERE price_tier = 'P1' AND seller_phone IS NOT NULL AND last_seen >= now() - interval '45 days'`;
 const media = (p, tok) => get(`/api/zalo-media?path=${encodeURIComponent(p)}`, tok);
 try {
   // ---- khách (không phiên) ----
@@ -93,11 +94,14 @@ try {
   r = await get("/api/zalo-media?path=/etc/hosts", userTok);
   check(r.status === 404, "user thường: /api/zalo-media bị chặn (404, chưa tới kiểm path)");
 
-  // ---- user role=ops (tạm): vào Ops nhưng KHÔNG thấy tầng A ----
+  // ---- user role=ops (tạm): vào Ops, thấy liên hệ người bán, không thấy ảnh tin ----
   const opsTok = await mkTemp("ops", opsId, "o");
   r = await get("/ops/deals", opsTok);
   check(r.status === 200, `role=ops: /ops/deals trả 200 (${r.status})`);
-  check(count(r.body, /href="tel:/g) === 0, `role=ops: không có SĐT (${count(r.body, /href="tel:/g)} link tel:)`);
+  // people-hien-so-goc AC-6: vai Vận hành ở máy thu thấy nút gọi trên /ops/deals; ảnh tin vẫn chỉ admin.
+  const { rows: tinCoSo } = await db.query(TIN_P1_CO_SDT);
+  const opsTel = count(r.body, /href="tel:/g);
+  check(tinCoSo[0].n === 0 || opsTel > 0, `role=ops: thấy SĐT người bán (${opsTel} link tel:, DB có ${tinCoSo[0].n} tin P1 kèm SĐT)`);
   r = await get("/api/v1/ops/coverage", opsTok);
   check(r.status === 200, `role=ops: API /api/v1/ops/coverage trả 200 (${r.status})`);
   r = await get("/ops/sources", opsTok);
@@ -118,9 +122,7 @@ try {
       check(false, "admin: /ops/deals 404 — admin đầu tiên không nằm trong OPS_EMAILS");
     } else {
       check(r.status === 200, "admin: /ops/deals trả 200");
-      const { rows: withPhone } = await db.query(
-        `SELECT count(*)::int n FROM sale_offers WHERE price_tier = 'P1' AND seller_phone IS NOT NULL AND last_seen >= now() - interval '45 days'`,
-      );
+      const { rows: withPhone } = await db.query(TIN_P1_CO_SDT);
       const tel = count(r.body, /href="tel:/g);
       // Có tin P1 kèm SĐT trong DB local → admin phải thấy ít nhất một (khối liên hệ không bị gate nhầm).
       check(withPhone[0].n === 0 || tel > 0, `admin: thấy SĐT người bán (${tel} link tel:, DB có ${withPhone[0].n} tin P1 kèm SĐT)`);

@@ -1,0 +1,9 @@
+{
+ "feature_plain": "Bản thu S06 thiếu mốc giờ bị từ chối để không làm sai thứ tự mới cũ, và tin thiếu mốc giờ sẵn có vẫn được cập nhật ở lần thu sau.",
+ "decisions_plain": [
+  {
+   "id": "d-20261102T020802Z-g1",
+   "p": "KHÔNG chạy lượt phản biện riêng trước khi làm — đổi lại dựa vào review nhánh và các ca đối chứng âm trong tiêu chí."
+  }
+ ]
+}

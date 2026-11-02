@@ -66,6 +66,9 @@ before(async () => {
   await admin.query(`INSERT INTO "${S}".source_registry VALUES ('S07', 'Nguon That Dbn'), ('S03', NULL)`)
   await sc.connect()
   await sc.query(readFileSync(MIG, "utf8"))
+  // Phần 1 của 060: bí danh `sdt` (số gốc), như máy thu. Phần sau của 060 đụng bảng ngoài lược đồ tạm nên không nạp.
+  const mig060 = readFileSync(join(ROOT, "db/migrations/060_sdt_e164.sql"), "utf8")
+  await sc.query(mig060.slice(mig060.indexOf("-- ---- 1."), mig060.indexOf("-- ---- 2.")))
   // Ma trận bảy người.
   await nguoi("S03", P[1])
   await biDanh(P[1], "ten", TEN_LO_NGUON, "S03")
@@ -467,7 +470,7 @@ test("CTV-AC-1 viewer gõ q qua page thật: danh sách như không q, có dòng
   assert.deepEqual(goi, ["src/components/ops/people/people-content.tsx"], "CTV-AC-1 chỗ gọi hàm danh sách")
   // Chiều đỏ: bản chép bỏ chỗ xoá q cho viewer → viewer lọc được.
   const dot = await banChep<{ PeopleContent: typeof PeopleContent }>("src/components/ops/people/people-content.tsx", [
-    ["const locDung = xem ? loc : { ...loc, q: \"\" }", "const locDung = loc"],
+    [`const locDung = xem ? { ...loc, uuTienSo: true } : { ...loc, q: "" }`, "const locDung = loc"],
   ])
   const hDot = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: null, q: "chị lan", page: 1 } }))
   assert.throws(() => assert.deepEqual(maNguoi(hDot), maNguoi(khong), "CTV-AC-1 viewer lọc được bằng q"), /CTV-AC-1 viewer lọc được bằng q/)
@@ -504,11 +507,237 @@ test("CTV-AC-3 viewer: lọc nguồn vẫn áp, q bị bỏ (so hai tập)", asy
   assert.match(await qua("ops", { source: "S05", q: "zzz" }), /Không có người khớp bộ lọc/)
   // Chiều đỏ: bản chép bỏ luôn source cho viewer.
   const dot = await banChep<{ PeopleContent: typeof PeopleContent }>("src/components/ops/people/people-content.tsx", [
-    ["const locDung = xem ? loc : { ...loc, q: \"\" }", "const locDung = xem ? loc : { ...loc, q: \"\", source: null }"],
+    [`{ ...loc, q: "" }`, `{ ...loc, q: "", source: null }`],
   ])
   const hDot = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: "S05", q: "zzz", page: 1 } }))
   assert.throws(() => assert.deepEqual(maNguoi(hDot), maNguoi(khongQ), "CTV-AC-3 viewer mất lọc nguồn"), /CTV-AC-3 viewer mất lọc nguồn/)
 })
+
+// ---------- people-hien-so-goc (SHS-AC-n): số gốc cho vai Vận hành, vai Người xem không nhận số. Số trong ca là số bịa. ----------
+const SO = "+84912345678"
+const SAU_DANG = [SO, "0912345678", "84912345678", "0912 345 678", "0912.345.678", "(+84) 912-345-678"]
+/** Bốn dạng số: +84…, 84…, 0…, tách nhóm bằng dấu cách, chấm, gạch. */
+const QUET_SO = /(?<![\da-zA-Z])(?:\+?84[35789]\d{8}|0[35789]\d{8}|0[35789]\d{2}[ .-]?\d{3}[ .-]?\d{3})(?![\da-zA-Z])/g
+const demSo = (s: string) => s.match(QUET_SO)?.length ?? 0
+const SHS = {
+  SO1: K(101), KHONG: K(102), SO5: K(103), // S02: ba người của AC-11
+  MOT: K(111), KS: K(112), HAI: K(113), NGHI: K(114), GOP: K(115), LECH: K(116), HN: K(117), CHU: K(118), // S04: ma trận
+} as const
+const MUOI_HAI = Array.from({ length: 12 }, (_, i) => K(121 + i)) // S08: đo số hàng của bảng
+const NGUON_SHS = ["S02", "S04", "S08"]
+
+/** Hạt giống SHS trên ba nguồn riêng, dọn khi xong (bảng chỉ-thêm: tắt trigger trong lược đồ tạm) để số tổng của ca DBN giữ nguyên. */
+async function voiShs(fn: () => Promise<void>) {
+  const ten = (k: string, s: string, v: string) => biDanh(k, "ten", v, s)
+  const nghi = (r: { rows: { id: number }[] }) => sc.query(`UPDATE registry_aliases SET retired_at = now() WHERE id = $1`, [r.rows[0].id])
+  for (const [k, n, so] of [[SHS.SO1, 1, "+84987654301"], [SHS.KHONG, 9, null], [SHS.SO5, 5, "+84987654305"]] as const) {
+    await nguoi("S02", k)
+    if (so) await biDanh(k, "sdt", so, "S02")
+    for (let i = 1; i <= n; i++) await vai(k, `S02:${k.slice(-3)}-${i}`)
+  }
+  await nguoi("S04", SHS.MOT)
+  await ten(SHS.MOT, "S04", "Shs Có Số")
+  await biDanh(SHS.MOT, "tai_khoan_nguon", "acc-shs-111", "S04")
+  await biDanh(SHS.MOT, "sdt", SO, "S04")
+  for (let i = 1; i <= 2; i++) await vai(SHS.MOT, `S04:mot-${i}`)
+  await nguoi("S04", SHS.KS)
+  await ten(SHS.KS, "S04", "Shs Không Số")
+  await nguoi("S04", SHS.HAI)
+  await biDanh(SHS.HAI, "sdt", "+84933333331", "S04")
+  await biDanh(SHS.HAI, "sdt", "+84933333332", "S04")
+  await nguoi("S04", SHS.NGHI)
+  await nghi(await biDanh(SHS.NGHI, "sdt", "+84944444441", "S04"))
+  await nguoi("S04", SHS.GOP, "merged", SHS.MOT)
+  await biDanh(SHS.GOP, "sdt", "+84955555551", "S04")
+  await nguoi("S04", SHS.LECH)
+  await biDanh(SHS.LECH, "sdt", "12345", "S04")
+  await nguoi("S04", SHS.HN)
+  await biDanh(SHS.HN, "sdt", "+84966666661", "S04")
+  await nghi(await biDanh(SHS.HN, "sdt", "+84966666662", "S04"))
+  await nguoi("S04", SHS.CHU)
+  await ten(SHS.CHU, "S04", "Cô 0912 Bán Nhà")
+  for (const [i, k] of MUOI_HAI.entries()) {
+    await nguoi("S08", k)
+    await ten(k, "S08", `Mười Hai ${i}`)
+  }
+  try {
+    await fn()
+  } finally {
+    const bang = ["party_roles", "registry_aliases", "parties"]
+    for (const b of bang) await sc.query(`ALTER TABLE ${b} DISABLE TRIGGER USER`)
+    await sc.query(`DELETE FROM party_roles WHERE left(subject_key, 3) = ANY($1)`, [NGUON_SHS])
+    await sc.query(`DELETE FROM registry_aliases WHERE source = ANY($1)`, [NGUON_SHS])
+    await sc.query(`DELETE FROM parties WHERE source = ANY($1)`, [NGUON_SHS])
+    for (const b of bang) await sc.query(`ALTER TABLE ${b} ENABLE TRIGGER USER`)
+  }
+}
+
+const hangBang = (h: string) => (h.match(/<tbody[\s\S]*?<\/tbody>/)?.[0] ?? "").match(/<tr[\s\S]*?<\/tr>/g) ?? []
+const oDau = (tr: string) => tr.match(/<td[\s\S]*?<\/td>/)?.[0] ?? ""
+const hangCua = (h: string, key: string) => hangBang(h).find((tr) => tr.includes(key)) ?? ""
+const thuTuMa = (h: string) => [...new Set(h.match(/pty_[0-9A-HJKMNP-TV-Z]{26}/g) ?? [])]
+
+/** Như quaPage nhưng trả cả cây phần tử đã chuỗi hoá: dữ liệu đưa xuống client, kể cả phần không vẽ thành chữ. */
+async function quaPageCay(mod: PageMod, loai: unknown, props: unknown, u: User | null) {
+  g.__DBN_NGUOI = u
+  const cay = await mod.default(props)
+  const el = timPhanTu(cay, loai)
+  const noiDung = el ? await (loai as (p: Record<string, unknown>) => Promise<ReactElement>)(el.props) : (cay as ReactElement)
+  return { html: renderToStaticMarkup(noiDung), json: JSON.stringify(noiDung) }
+}
+async function trangShs() {
+  const { PeopleContent } = await import("../src/components/ops/people/people-content")
+  const { PersonContent } = await import("../src/components/ops/people/person-content")
+  const listPage = await banChep<PageMod>("src/app/ops/people/page.tsx", [STUB])
+  const onePage = await banChep<PageMod>("src/app/ops/people/[partyKey]/page.tsx", [STUB])
+  return {
+    PeopleContent,
+    ds: (role: string | null, sp: Record<string, string> = {}) => quaPageCay(listPage, PeopleContent, { searchParams: Promise.resolve(sp) }, user(role)),
+    mot: (role: string | null, partyKey: string) => quaPageCay(onePage, PersonContent, { params: Promise.resolve({ partyKey }) }, user(role)),
+  }
+}
+
+test("SHS-AC-1 danh sách qua page thật: số tách nhóm và liên kết gọi ở cột đầu đúng hàng, vẽ đủ hàng máy chủ gửi", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    for (const role of ["ops", "admin"]) {
+      const { html } = await t.ds(role, { source: "S04" })
+      const dau = oDau(hangCua(html, SHS.MOT))
+      assert.ok(dau.includes("0912 345 678"), "SHS-AC-1 không thấy số")
+      assert.ok(dau.includes(`href="tel:${SO}"`), "SHS-AC-1 liên kết gọi không ở cột đầu của hàng đó")
+      assert.ok(!hangCua(html, SHS.KS).includes("tel:"), "SHS-AC-1 người không số có liên kết gọi")
+      assert.ok(!html.includes("SĐT (đã che)"), "SHS-AC-1 còn nhãn che")
+      assert.equal(hangBang((await t.ds(role, { source: "S08" })).html).length, 12, "SHS-AC-1 bảng cắt hàng")
+    }
+    // Chiều đỏ 1: bảng để mặc định 10 hàng; đối chứng dương: bảng thật cùng 12 hàng.
+    const { PeopleTable } = await import("../src/components/ops/people/people-table")
+    const rows = MUOI_HAI.map((partyKey) => ({ partyKey, source: "S08", soTin: 0, soBiDanh: 1, moiGioi: false, an: false, ten: "x", taiKhoan: null, sdt: null, tel: null }))
+    assert.equal(hangBang(renderToStaticMarkup(<PeopleTable rows={rows} />)).length, 12)
+    const dot = await banChep<{ PeopleTable: typeof PeopleTable }>("src/components/ops/people/people-table.tsx", [
+      ["    state: { pagination: { pageIndex: 0, pageSize: Math.max(rows.length, 1) } },\n", ""],
+    ])
+    const soHang = hangBang(renderToStaticMarkup(<dot.PeopleTable rows={rows} />)).length
+    assert.throws(() => assert.equal(soHang, 12, "SHS-AC-1 bảng cắt hàng"), /SHS-AC-1 bảng cắt hàng/)
+    // Chiều đỏ 2: hienBiDanh che số.
+    const che = await banDot("if (kind === ALIAS_KIND.sdt) return fmtPhone(value)", `if (kind === ALIAS_KIND.sdt) return "SĐT (đã che)"`)
+    assert.throws(() => assert.ok(String(che.hienBiDanh("sdt", SO, [], true)).includes("0912 345 678"), "SHS-AC-1 không thấy số"), /SHS-AC-1 không thấy số/)
+  }))
+
+test("SHS-AC-2 trang một người: số còn dùng và số đã nghỉ đều gọi được, giá trị lệch khuôn không thành liên kết", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    for (const role of ["ops", "admin"]) {
+      const { html } = await t.mot(role, SHS.HN)
+      assert.ok(html.includes("0966 666 661") && html.includes("0966 666 662"), "SHS-AC-2 thiếu số")
+      assert.ok(html.includes("tel:+84966666661") && html.includes("tel:+84966666662"), "SHS-AC-2 thiếu liên kết")
+      assert.equal(html.split("tel:").length - 1, 2, "SHS-AC-2 số liên kết")
+      assert.equal(html.split("Đã nghỉ").length - 1, 1, "SHS-AC-2 dấu Đã nghỉ")
+      const lech = (await t.mot(role, SHS.LECH)).html
+      assert.ok(lech.includes("12345") && !lech.includes("tel:"), "SHS-AC-2 liên kết lệch khuôn")
+    }
+    const dot = await banDot("SDT_E164.test(value)", "value !== ''")
+    assert.throws(() => assert.equal(dot.telHref("sdt", "12345", true), null, "SHS-AC-2 liên kết lệch khuôn"), /SHS-AC-2 liên kết lệch khuôn/)
+  }))
+
+test("SHS-AC-3 vai Người xem: HTML và cây phần tử không có số; khách và user không thấy trang; cùng bộ quét bắt được số ở vai Vận hành", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    const ds = await t.ds("viewer", { source: "S04" })
+    const mot = await t.mot("viewer", SHS.MOT)
+    for (const [noi, s] of [["danh sách HTML", ds.html], ["danh sách cây", ds.json], ["một người HTML", mot.html], ["một người cây", mot.json]]) {
+      assert.equal(demSo(s), 0, `SHS-AC-3 viewer nhận số: ${noi}`)
+      assert.ok(!s.includes("tel:"), `SHS-AC-3 viewer nhận số: ${noi}`)
+    }
+    assert.ok(ds.html.includes(SHS.MOT) && ds.html.includes("S04") && hangCua(ds.html, SHS.MOT).includes(">2<"), "SHS-AC-3 viewer mất mã, nguồn hay số tin")
+    assert.ok(mot.html.includes(SHS.MOT) && mot.html.includes("S04"), "SHS-AC-3 viewer mất mã hay nguồn")
+    for (const role of [null, "user"]) {
+      for (const { html } of [await t.ds(role), await t.mot(role, SHS.MOT)]) assert.ok(html.includes("Cần đăng nhập ops.") && !html.includes("pty_"), `SHS-AC-3 ${role ?? "khách"} thấy trang`)
+    }
+    // Đối chứng dương: cùng bộ quét trên vai Vận hành.
+    const ops = await t.ds("ops", { source: "S04" })
+    assert.ok(demSo(ops.html) > 0 && demSo(ops.json) > 0 && demSo((await t.mot("ops", SHS.MOT)).html) > 0, "SHS-AC-3 bộ quét không bắt được số")
+    // Chiều đỏ: bản cho viewer xem như vai Vận hành.
+    const dot = await banChep<{ PeopleContent: typeof t.PeopleContent }>("src/components/ops/people/people-content.tsx", [["const xem = xemNoiDungTin(user)", "const xem = xemNoiDungTin(user) || true"]])
+    const h = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: "S04", q: "", page: 1 } }))
+    assert.throws(() => assert.equal(demSo(h), 0, "SHS-AC-3 viewer nhận số"), /SHS-AC-3 viewer nhận số/)
+  }))
+
+test("SHS-AC-4 tìm theo số: sáu dạng ra đúng người, người hai số hiện đúng số vừa gõ, số dở tìm như chữ", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    let o = 0
+    for (const role of ["ops", "admin"]) {
+      for (const q of SAU_DANG) {
+        const { html } = await t.ds(role, { q })
+        assert.deepEqual(maNguoi(html), [SHS.MOT], `SHS-AC-4 không ra người: ${q}`)
+        assert.ok(oDau(hangCua(html, SHS.MOT)).includes("0912 345 678"), `SHS-AC-4 hàng không hiện số: ${q}`)
+        o++
+      }
+    }
+    assert.equal(o, 12, "SHS-AC-4 ma trận đủ sáu dạng hai vai")
+    const ma: [string, string[], string][] = [
+      ["+84933333332", [SHS.HAI], "0933 333 332"],
+      ["+84933333331", [SHS.HAI], "0933 333 331"],
+      ["+84911111111", [], ""], // số không ai có
+      ["+84944444441", [], ""], // chỉ có số đã nghỉ
+      ["+84955555551", [], ""], // người đã gộp
+      ["0912", [SHS.CHU], ""], // số dở: như chữ, không ra người có số
+      ["shs có số", [SHS.MOT], ""],
+      ["ACC-SHS-111", [SHS.MOT], ""],
+    ]
+    for (const [q, kq, hien] of ma) {
+      const { html } = await t.ds("ops", { q })
+      assert.deepEqual(maNguoi(html), [...kq].sort(), `SHS-AC-4 sai người: ${q}`)
+      if (hien) assert.ok(oDau(hangCua(html, SHS.HAI)).includes(hien), `SHS-AC-4 người hai số hiện sai số: ${q}`)
+      if (kq.length === 0) assert.match(html, /Không có người khớp bộ lọc/)
+    }
+    assert.equal(ma.length, 8, "SHS-AC-4 ma trận đủ tám ca")
+    const hai = (await t.ds("ops", { q: "+84933333331" })).html
+    assert.ok(!oDau(hangCua(hai, SHS.HAI)).includes("0933 333 332"), "SHS-AC-4 người hai số hiện cả số kia")
+    // Chiều đỏ: bỏ chuẩn hoá.
+    const dot = await banDot("const sdt = chuanHoaSdtTim(tim)", "const sdt: string | null = tim")
+    const r = await dot.danhSachNguoi({ source: null, q: "0912 345 678", page: 1 }, sc)
+    assert.throws(() => assert.deepEqual(r.rows.map((x) => x.partyKey), [SHS.MOT], "SHS-AC-4 không ra người"), /SHS-AC-4 không ra người/)
+  }))
+
+test("SHS-AC-5 vai Người xem gõ sáu dạng số: danh sách như không gõ, có dòng báo, không ô tìm, không chép lại số", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    const { BO_TIM } = await import("../src/components/ops/people/people-text")
+    const khong = (await t.ds("viewer")).html
+    for (const q of SAU_DANG) {
+      const { html, json } = await t.ds("viewer", { q })
+      assert.deepEqual(maNguoi(html), maNguoi(khong), `SHS-AC-5 viewer lọc được: ${q}`)
+      assert.deepEqual(dauTrang(html), dauTrang(khong), `SHS-AC-5 viewer lọc được: ${q}`)
+      assert.ok(html.includes(BO_TIM), "SHS-AC-5 thiếu dòng báo")
+      assert.ok(!html.includes('name="q"'), "SHS-AC-5 viewer có ô tìm")
+      for (const s of [html, json]) assert.ok(!s.includes(q) && !s.includes("912345678") && !s.includes("912 345 678"), "SHS-AC-5 chép lại số vừa gõ")
+      assert.deepEqual(maNguoi((await t.ds("ops", { q })).html), [SHS.MOT], "SHS-AC-5 đối chứng: vai Vận hành ra đúng một người")
+    }
+    // Chiều đỏ: giữ q cho viewer.
+    const dot = await banChep<{ PeopleContent: typeof t.PeopleContent }>("src/components/ops/people/people-content.tsx", [[`{ ...loc, q: "" }`, "loc"]])
+    const h = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: null, q: SO, page: 1 } }))
+    assert.throws(() => assert.deepEqual(maNguoi(h), maNguoi(khong), "SHS-AC-5 viewer lọc được"), /SHS-AC-5 viewer lọc được/)
+  }))
+
+test("SHS-AC-11 người có số lên trước cho vai Vận hành trở lên; vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số", () =>
+  voiShs(async () => {
+    const t = await trangShs()
+    for (const role of ["ops", "admin"]) {
+      const { html } = await t.ds(role, { source: "S02" })
+      assert.deepEqual(thuTuMa(html), [SHS.SO5, SHS.SO1, SHS.KHONG], "SHS-AC-11 người có số không lên trước")
+      assert.match(html, /Người có SĐT lên trước/)
+      assert.doesNotMatch(html, /Xếp theo số tin đã đăng/)
+    }
+    const { html } = await t.ds("viewer", { source: "S02" })
+    assert.deepEqual(thuTuMa(html), [SHS.KHONG, SHS.SO5, SHS.SO1], "SHS-AC-11 thứ tự lộ ai có số")
+    assert.match(html, /Xếp theo số tin đã đăng/)
+    assert.doesNotMatch(html, /Người có SĐT lên trước/)
+    // Chiều đỏ: bật ưu tiên cho viewer.
+    const dot = await banChep<{ PeopleContent: typeof t.PeopleContent }>("src/components/ops/people/people-content.tsx", [[`{ ...loc, q: "" }`, `{ ...loc, q: "", uuTienSo: true }`]])
+    const h = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: "S02", q: "", page: 1 } }))
+    assert.throws(() => assert.deepEqual(thuTuMa(h), [SHS.KHONG, SHS.SO5, SHS.SO1], "SHS-AC-11 thứ tự lộ ai có số"), /SHS-AC-11 thứ tự lộ ai có số/)
+  }))
 
 // Cuối tệp: dựng RegionError trong jsdom với con ném lỗi → câu «Thử lại» hiện (ranh giới lỗi chỉ chạy khi dựng phía khách).
 test("DBN-AC-8 RegionError của trang hiện «Thử lại» khi nội dung ném lỗi", async () => {

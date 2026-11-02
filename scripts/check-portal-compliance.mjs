@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Kiểm TĨNH ranh giới cổng (AGENTS.md luật 5, 6, 9): đo TRẠNG THÁI cây mã, không đo diff.
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
-//   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
+//   - /ops/deals: khối liên hệ từ vai Vận hành trở lên (Hỏi-B), nội dung và ảnh tin chỉ admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn vai Vận hành trở lên trước khi đọc file, nhánh ?path= (OpenClaw) chặn admin (PL3); nhánh
 //     ?media= chặn vai trước tra DB và lấy ảnh gốc (anh-goc-qua-may-chu);
 //   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
@@ -42,11 +42,33 @@ function opsTierA(r) {
   check(hits.length === 0, `ops ngoài /ops/sources: chữ hiển thị chỉ mã S0x (${hits.length} chỗ trúng trong ${files.length} tệp)`);
   check(positive >= 1, `đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (${positive} chỗ)`);
 }
-// `--only ops-tier-a --root <dir>`: chỉ chạy mục 12 trên một cây khác (ca chiều đỏ của scripts/ops-nhan-ma-nguon.test.mjs).
+// Mục 4 trên một cây: trả mã render của trang và thẻ cho mục 5.
+function dealsGate(r) {
+  const doc = (p) => (existsSync(path.join(r, "app", p)) ? readFileSync(path.join(r, "app", p), "utf8") : "");
+  const dealsPage = code(doc("src/app/ops/deals/page.tsx"));
+  const deals = `${dealsPage}\n${code(doc("src/components/ops/deal-card.tsx"))}`;
+  check(/const showContact = xemNoiDungTin\(user\)/.test(dealsPage), "ops/deals tính showContact từ xemNoiDungTin(user)");
+  check(
+    /const rows = tho\.map\(\(d\) => dealTheoVai\(d, \{ lienHe: showContact, noiDung: isAdmin\(user\) \}\)\)/.test(dealsPage),
+    "ops/deals lọc trường theo vai trước khi vào thẻ",
+  );
+  check(/<DealCard\b[^>]*\bshowContact=\{showContact\}/.test(dealsPage), "ops/deals truyền showContact xuống DealCard");
+  for (const [label, re] of [
+    ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
+    ["nội dung tin", /\{showContact && d\.postText/],
+    ["ảnh tin", /\{showContact && \(d\.mediaPath \|\| d\.mediaUrl\)/],
+  ]) {
+    check(re.test(deals), `ops/deals: ${label} chỉ render khi showContact`);
+  }
+  check((deals.match(/showContact &&/g) ?? []).length >= 3, "ops/deals: có đủ 3 khối gate theo vai");
+  return deals;
+}
+// `--only <mục> --root <dir>`: chỉ chạy một mục trên một cây khác, cho ca chiều đỏ: `ops-tier-a` (mục 12,
+// scripts/ops-nhan-ma-nguon.test.mjs), `deals-gate` (mục 4, _acceptance/people-hien-so-goc/probes/chu.mjs).
 const [flag, only, ...rest] = process.argv.slice(2);
-if (flag === "--only" && only === "ops-tier-a") {
+if (flag === "--only" && (only === "ops-tier-a" || only === "deals-gate")) {
   const i = rest.indexOf("--root");
-  opsTierA(i >= 0 ? path.resolve(rest[i + 1]) : root);
+  (only === "ops-tier-a" ? opsTierA : dealsGate)(i >= 0 ? path.resolve(rest[i + 1]) : root);
   console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
   process.exit(fails.length === 0 ? 0 : 1);
 }
@@ -69,20 +91,10 @@ check(
   "next.config redirect /deals → /ops/deals",
 );
 
-// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user). Thẻ tách ở
-//    components/ops/deal-card.tsx (ON11) — trang phải truyền đúng showContact xuống thẻ, và đo trên cả hai tệp.
-const dealsPage = code(read("src/app/ops/deals/page.tsx"));
-const deals = `${dealsPage}\n${code(read("src/components/ops/deal-card.tsx"))}`;
-check(/const showContact = isAdmin\(user\)/.test(dealsPage), "ops/deals tính showContact từ isAdmin(user)");
-check(/<DealCard\b[^>]*\bshowContact=\{showContact\}/.test(dealsPage), "ops/deals truyền showContact xuống DealCard");
-for (const [label, re] of [
-  ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
-  ["nội dung tin", /\{showContact && d\.postText/],
-  ["ảnh tin", /\{showContact && \(d\.mediaPath \|\| d\.mediaUrl\)/],
-]) {
-  check(re.test(deals), `ops/deals: ${label} chỉ render khi showContact`);
-}
-check((deals.match(/showContact &&/g) ?? []).length >= 3, "ops/deals: có đủ 3 khối gate tầng A");
+// 4. /ops/deals: khối liên hệ chỉ khi showContact = xemNoiDungTin(user) (Hỏi-B, people-hien-so-goc); trường liên hệ và
+//    nội dung lọc theo vai trước khi vào thẻ, nội dung và ảnh giữ cho isAdmin. Thẻ tách ở components/ops/deal-card.tsx
+//    (ON11) — trang phải truyền đúng showContact xuống thẻ, và đo trên cả hai tệp.
+const deals = dealsGate(root);
 
 // 5. Ops chỉ dùng mã tầng B — không literal tên nguồn thật trong chữ hiển thị.
 const realNames = /\b(Zalo|Facebook|Chợ Tốt|Chotot|AirDNA)\b/;

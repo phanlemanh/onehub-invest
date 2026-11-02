@@ -20,7 +20,7 @@
     <key>S05_RESULTS_LIMIT</key>
     <string>100</string>
     <key>S05_NEWER_THAN</key>
-    <string>4 days</string>
+    <string>5 days</string>
   </dict>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/apify-facebook.log</string>
   <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/apify-facebook.log</string>

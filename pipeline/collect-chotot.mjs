@@ -39,17 +39,27 @@ async function loadRegions() {
     const { rows } = await c.query(
       `SELECT group_key, params, status FROM source_groups WHERE source_code = 'S06' ORDER BY id`,
     );
-    // 2610-13 vòng 3: vùng active thiếu region_v2 → in một dòng mã + params-hong
+    // 2610-13 vòng 3: vùng active thiếu cả hai mã → in một dòng mã + params-hong
     // (thay vì bỏ lặng lẽ — quản trị /ops/sources thấy ngay mà sửa)
+    // 0111-2: params.region = mã TỈNH (tham số `region` của API — hệ mã riêng:
+    // 12 HN · 13 HCM · 3 ĐN · 2 HP · 7 BD · 34 KH) được ƯU TIÊN; region_v2 (mã
+    // phường, tham số `region_v2`) giữ nguyên cho các vùng đã chạy — HN/HCM/ĐN
+    // không đổi hành vi.
     const kq = [];
     for (const r of rows) {
       const quyet = isRunnable(src, { status: r.status });
       if (!quyet.run) continue;
-      if (!r.params?.region_v2) {
-        console.log(`S06 ${r.group_key} params-hong — thiếu region_v2 trong params`);
+      const regionTinh = r.params?.region;
+      const regionV2 = r.params?.region_v2;
+      if (!regionTinh && !regionV2) {
+        console.log(`S06 ${r.group_key} params-hong — thiếu region (tỉnh) hoặc region_v2 trong params`);
         continue;
       }
-      kq.push({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode });
+      kq.push({
+        ...(regionTinh ? { region: regionTinh } : { region_v2: regionV2 }),
+        city: r.group_key,
+        cityCode: r.params.cityCode,
+      });
     }
     return kq;
   } finally {
@@ -84,8 +94,11 @@ function argPages() {
 const MAX_PAGES = Number.isFinite(argPages()) ? argPages() : 25;
 const DRY = process.argv.includes("--dry");
 
-async function fetchPage(regionV2, feed, page) {
-  const url = `${API}?region_v2=${regionV2}&cg=${feed.cg}&st=${feed.st}&o=${page * LIMIT}&page=${page}&limit=${LIMIT}&key_param_included=true`;
+async function fetchPage(vung, feed, page) {
+  // 0111-2: vung mang `region` (mã tỉnh) hoặc `region_v2` (mã phường cũ) —
+  // đúng một tham số khu vực lên API theo chế độ của vùng.
+  const vungQs = vung.region !== undefined ? `region=${vung.region}` : `region_v2=${vung.region_v2}`;
+  const url = `${API}?${vungQs}&cg=${feed.cg}&st=${feed.st}&o=${page * LIMIT}&page=${page}&limit=${LIMIT}&key_param_included=true`;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const res = await fetch(url, { headers: { "user-agent": ua(), accept: "application/json" } });
@@ -167,7 +180,7 @@ async function main() {
       for (let page = 1; page <= MAX_PAGES; page++) {
         let ads;
         try {
-          ads = await fetchPage(region.region_v2, feed, page);
+          ads = await fetchPage(region, feed, page);
         } catch (e) {
           failed.push(`${region.city}/${feed.note}: ${e.message}`);
           break; // fail-soft: bỏ dư feed này, sang feed kế
@@ -181,7 +194,9 @@ async function main() {
             kind: "ad",
             fetchedAt: new Date().toISOString(),
             payload: ad,
-            meta: { city: region.cityCode, region_v2: region.region_v2, cg: feed.cg, st: feed.st, page },
+            // 0111-2: meta mang đúng chế độ mã của vùng — `region` (tỉnh) hoặc
+            // `region_v2` (phường cũ); importer lấy a.region_v2 từ payload trước.
+            meta: { city: region.cityCode, ...("region" in region ? { region: region.region } : { region_v2: region.region_v2 }), cg: feed.cg, st: feed.st, page },
           });
         }
         feedCount += ads.length;
