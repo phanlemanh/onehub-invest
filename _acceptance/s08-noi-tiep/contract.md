@@ -5,7 +5,7 @@ slug: s08-noi-tiep
 owner: manh.phan@onemount.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-02T02:08:02Z
 approved_by:
@@ -37,3 +37,10 @@ Source input: GIAO claudedp-2610-22 + XONG của ZCode 23:01Z 01/11.
 - Viết lại snapshot cũ mang `sourceId` trùng: bất biến, giữ nguyên.
 - Dọn `trap` không kiểm chủ khoá và các việc ngoài năm điểm.
 - Gọi API thật của nguồn S08; build `dist` trên checkout chính là bước triển khai.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Bộ dò lộ nguồn vẫn bỏ sót vài dạng URL hiếm; trên nhánh này không có URL nào thuộc các dạng đó, phép dò chuỗi nguồn thật chạy riêng.
+  - Ngoài-2: Nếu nguồn từng ghi dấu phẩy theo nghĩa hàng nghìn, số có thể sai 1000 lần mà không báo lỗi; dữ liệu thật hiện chưa có dạng này.
+  - Ngoài-3: Ô diện tích, giá, số phòng viết số âm hoặc kiểu 1e3, .5, 5. sẽ để trống thay vì hiện số.
