@@ -22,6 +22,17 @@ Phạm vi soát: `git diff origin/main...HEAD` trên script job S05, job nạp S
 
 ## Ngoài hợp đồng
 
+- **Khoá nạp ghi hỏng tới mức thiếu cả mã tiến trình hoặc mốc giờ thì không tự gỡ**
+  Người dùng thấy gì: Lượt nạp S05 và S03 bị kẹt tới khi có người gỡ khoá bằng tay; dữ liệu đến chậm, không mất.
+  Căn cứ: Chỉ xảy ra khi tệp khoá hỏng, và người vận hành gỡ được; nên khép bằng một việc riêng vì khoá này dùng chung.
+  file: `scripts/zalo-import-daily.sh`
+  severity: medium
+  Đề xuất: new-contract
+
+## Ghi chép gốc của phiên chấm (mục ngoài hợp đồng)
+
+Bản chép đúng khuôn thẻ do tác giả viết lại ở mục «Ngoài hợp đồng» trên.
+
 - **N1 (còn) — khoá thiếu `pid` và `luc`, hoặc PID sống mà thiếu `luc`, không bao giờ được gỡ.** Đo lại trên HEAD: cả hai ca dừng ở trần, khoá giữ nguyên, cho tới khi gỡ tay. Khoá dùng chung nên job nạp S03 cũng kẹt. Không thuộc năm điểm của lời giao; cần một việc riêng nếu muốn khép.
 
 ## Đã soát, không phải finding

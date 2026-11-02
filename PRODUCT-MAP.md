@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>5 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>118 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>92 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
@@ -32,6 +32,14 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+
+## Đang làm
+
+- bộ nạp S06 từ chối snapshot thiếu finishedAt và dòng captured_at NULL có sẵn không bị đóng băng (`chotot-thieu-moc`)
+- S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
+- bộ thu S06 nhận mã tỉnh params.region bên cạnh region_v2, để bật được vùng mà mã cũ không hoạt động (`s06-region-tinh`)
+- S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
+- bộ thu và bộ nạp S08 không nuốt lỗi token, không trùng sourceId danh mục, không đọc nhầm số (`s08-noi-tiep`)
 
 ## Đã giao — chờ phiên nghiệm thu
 

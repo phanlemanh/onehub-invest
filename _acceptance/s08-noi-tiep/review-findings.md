@@ -23,6 +23,29 @@ Không có finding chặn.
 
 ## Ngoài hợp đồng
 
+- **Bộ dò lộ nguồn vẫn bỏ sót vài dạng URL hiếm**
+  Người dùng thấy gì: Người dùng không thấy gì khác; một URL ngoài viết dạng hiếm có thể lọt phép dò URL khi thêm code.
+  Căn cứ: Trên nhánh này không có URL nào thuộc các dạng đó, và phép dò chuỗi nguồn thật vẫn chạy riêng; có từ trước, sửa sau được.
+  file: `scripts/s08-danh-muc/acceptance.mjs`
+  severity: low
+  Đề xuất: known-limits
+- **Chú thích trong ca kiểm trỏ nhầm nơi quyết cách đọc dấu phẩy**
+  Người dùng thấy gì: Nếu nguồn từng ghi dấu phẩy theo nghĩa hàng nghìn, số có thể sai 1000 lần mà không báo lỗi; hiện chưa gặp ca nào.
+  Căn cứ: Dữ liệu thật chưa có dạng này; khi gặp thì lộ qua giá hay diện tích bất thường, nhưng cách đọc nên được ghi rõ khi có dịp.
+  file: `pipeline/scripts/import-s08-row.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+- **Số âm và số viết kiểu 1e3, .5, 5. giờ được coi là không có giá trị**
+  Người dùng thấy gì: Các ô diện tích, giá, số phòng viết các dạng này sẽ để trống thay vì hiện số.
+  Căn cứ: Số âm vô nghĩa với các cột này; các dạng còn lại chưa thấy trong dữ liệu, và ô trống thì không làm sai số.
+  file: `pipeline/import-s08-row.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+## Ghi chép gốc của phiên chấm (mục ngoài hợp đồng)
+
+Bản chép đúng khuôn thẻ do tác giả viết lại ở mục «Ngoài hợp đồng» trên.
+
 - **F9 (MỚI, trung bình, cần người xem) — bản sửa làm rộng bộ dò ở chỗ khác.** Bộ dò mới gom cả cụm không khoảng trắng thành một token rồi chỉ soát scheme và host ở đầu token. Vì vậy URL ngoài dính liền sau URL thuộc ngoại lệ có sẵn nay lọt, trong khi bộ dò vòng 2 quét từng lần xuất hiện nên bắt được:
 
   | Dạng thử (host thứ hai là tên miền giả) | Vòng 2 | HEAD |

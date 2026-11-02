@@ -24,6 +24,17 @@ Phạm vi soát: `git diff origin/main...HEAD` trên bộ thu S06, importer S06,
 
 ## Ngoài hợp đồng
 
+- **Một tin thiếu mã ở một vùng dừng cả lượt xử lý S06 hôm đó**
+  Người dùng thấy gì: Một vùng mới trả tin thiếu mã thì dữ liệu S06 của mọi vùng không được làm mới trong lượt đó.
+  Căn cứ: Dữ liệu chậm một lượt, không mất, lượt sau chạy lại được; hành vi có từ trước, và lời giao triển khai sẽ có bước đo dữ liệu thật trước khi bật Hải Phòng, Bình Dương.
+  file: `scripts/chotot-daily.sh`
+  severity: medium
+  Đề xuất: known-limits
+
+## Ghi chép gốc của phiên chấm (mục ngoài hợp đồng)
+
+Bản chép đúng khuôn thẻ do tác giả viết lại ở mục «Ngoài hợp đồng» trên.
+
 - **N1 (còn) — một tin thiếu mã ở một vùng dừng transform của cả S06 trong lượt đó.** Job hằng ngày đặt cờ lỗi khi nạp hỏng rồi thoát trước transform. Hành vi có từ trước; chế độ `region` thêm một đường mới dẫn tới nó. Nên đưa vào lời GIAO bật Hải Phòng và Bình Dương một bước đo payload thật trước khi bật. Phiên chấm không gọi API thật nên không đo được.
 
 ## Đã soát, không phải finding
