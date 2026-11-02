@@ -217,9 +217,14 @@ const DOI_CHIEU = [
 ];
 test("LS1-AC-7 thẻ có đề xuất và đối chiếu: hiện câu trích, loại, hai giá trị", async () => {
   const r = await render(agentItem({ ...ENRICH_EVIDENCE, doi_chieu: DOI_CHIEU }));
-  const t = r.text();
-  for (const s of ["Đối chiếu", "Ý định tin", "cần mua căn hộ", "Yêu cầu", "Tin rao", "Giá rao", "giá 5 tỷ", "5.000.000.000", "3.000.000.000"]) {
-    assert.ok(t.includes(s), `LS1-AC-7 thẻ thiếu «${s}»`);
+  assert.ok(r.text().includes("Đối chiếu"), "LS1-AC-7 thẻ thiếu khối đối chiếu");
+  const hang = (loai: string) => document.querySelector(`[data-review-doi-chieu-loai="${loai}"]`)?.textContent ?? "";
+  // Ghim từng giá trị vào đúng bên và đúng loại: tráo hai bên hoặc gắn nhầm câu trích là đỏ.
+  for (const [loai, nhan, cap, trich] of [
+    ["y_dinh", "Ý định tin", "Bộ đọc: Tin rao · AI: Yêu cầu", "«cần mua căn hộ»"],
+    ["gia", "Giá rao", "Bộ đọc: 3.000.000.000 đ · AI: 5.000.000.000 đ", "«giá 5 tỷ»"],
+  ]) {
+    for (const s of [nhan, cap, trich]) assert.ok(hang(loai).includes(s), `LS1-AC-7 hàng ${loai} thiếu «${s}»: ${hang(loai)}`);
   }
   assert.ok([...document.querySelectorAll("button")].some((b) => b.textContent === "Áp dụng"), "LS1-AC-7 thẻ có đề xuất giữ nút Áp dụng");
   await r.unmount();

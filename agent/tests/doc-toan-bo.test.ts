@@ -46,7 +46,7 @@ test("LS1 Focus 5: chữ NFD nhiều khoảng trắng, trích NFC vẫn là có 
 // ---------- gạt chữ, gọi model (AC-2) ----------
 import { MockLanguageModelV4 } from "ai/test";
 import { chayLo, type Nhan } from "../src/agents/nhan-bac-s03.js";
-import { docTraLoi, gatChu, hoiDoc } from "../src/enrich/doc-toan-bo.js";
+import { docTraLoi, gatChu, hoiDoc, modelMacDinh } from "../src/enrich/doc-toan-bo.js";
 
 function modelGia(tra: string | Error, nhan: string[] = [], cost?: string) {
   return new MockLanguageModelV4({
@@ -84,6 +84,11 @@ test("chiều đỏ LS1-AC-2: gửi chữ chưa gạt thì phép đo thấy chu�
   const nhan: string[] = [];
   await hoiDoc(BAI_DAI, { languageModel: modelGia("{}", nhan), recordCall: async () => {} });
   assert.ok(LO.some((lo) => nhan[0].includes(lo)), "chiều đỏ: phép đo không phân biệt được");
+});
+
+test("LS1-AC-8 model mặc định của lời gọi là Haiku", () => {
+  const m = modelMacDinh() as { modelId?: string };
+  assert.match(String(m.modelId), /haiku/, `LS1-AC-8 model mặc định: ${m.modelId}`);
 });
 
 test("docTraLoi: JSON hỏng, giá chuỗi, giá 0, ý định lạ, trích so trên chữ đã gạt", () => {
@@ -169,6 +174,10 @@ test("LS1-AC-5 E1 trùng AI nhưng AI nói không phải tin rao: không áp", (
   const r = quyetTin(vao({ intent: "not_listing", e1Loai: "apartment" })).de_xuat;
   assert.deepEqual(r.map((d) => d.status), ["skipped"]);
 });
+test("LS1-AC-5 not_listing kèm trích có thật: đối chiếu mang câu trích; trích giả thì không", () => {
+  assert.deepEqual(quyetTin(vao({ intent: "not_listing" })).doi_chieu, [{ loai: "y_dinh", trich: "Bán căn hộ 2PN", ai: "not_listing", bo_doc: "offer" }]);
+  assert.equal(quyetTin(vao({ intent: "not_listing", quoteOk: false })).doi_chieu.length, 0);
+});
 test("LS1-AC-5 trích giả hoặc nói offer: không đối chiếu ý định", () => {
   assert.equal(quyetTin(vao({ intent: "inquiry", quoteOk: false })).doi_chieu.length, 0);
   assert.equal(quyetTin(vao({ intent: "offer" })).doi_chieu.length, 0);
@@ -183,6 +192,16 @@ test("LS1-AC-6 biên giá 10% hai phía, biên diện tích 3% hai phía", () =>
   assert.deepEqual(loai(quyetTin(vao({ them: giaAi(2.69e9) }))), ["gia"], "thấp hơn quá 10% phải lên thẻ");
   assert.deepEqual(loai(quyetTin(vao({ hienTai: { property_type: "unknown", price_vnd: 3e9, area_m2: 100 }, chuDaGat: `${CHU_TIN}`, them: them({ area_m2: 103, quote_dt: "70m2" }) }))), [], "đúng 3% không lên thẻ");
   assert.deepEqual(loai(quyetTin(vao({ them: dtAi(72.2) }))), ["dien_tich"], "quá 3% phải lên thẻ");
+});
+test("LS1-AC-6 hàng đối chiếu mang đúng trích, giá trị AI, giá trị bộ đọc", () => {
+  assert.deepEqual(quyetTin(vao({ them: giaAi(5e9) })).doi_chieu, [{ loai: "gia", trich: "giá 3 tỷ", ai: 5e9, bo_doc: 3e9 }]);
+  assert.deepEqual(quyetTin(vao({ them: dtAi(90) })).doi_chieu, [{ loai: "dien_tich", trich: "70m2", ai: 90, bo_doc: 70 }]);
+});
+test("LS1-AC-6 trích giả, bộ đọc không có diện tích, chung bài: không so diện tích", () => {
+  assert.deepEqual(loai(quyetTin(vao({ them: them({ area_m2: 90, quote_dt: "90m2" }) }))), [], "trích giả");
+  assert.deepEqual(loai(quyetTin(vao({ hienTai: { property_type: "unknown", price_vnd: 3e9, area_m2: null }, them: dtAi(90) }))), [], "bộ đọc không có diện tích");
+  assert.deepEqual(loai(quyetTin(vao({ chungBai: true, them: dtAi(90) }))), [], "chung bài");
+  assert.deepEqual(loai(quyetTin(vao({ them: dtAi(90) }))), ["dien_tich"], "đối chứng dương");
 });
 test("LS1-AC-6 trích giả, bộ đọc không có giá, chung bài: không so giá", () => {
   assert.deepEqual(loai(quyetTin(vao({ them: them({ price_vnd: 5e9, quote_gia: "giá 5 tỷ" }) }))), [], "trích giả");

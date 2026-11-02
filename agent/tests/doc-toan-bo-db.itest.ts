@@ -17,7 +17,7 @@ const SNAP = "hanoi__zalo-agent__2099-05-05T000000";
 const MIG_065 = join(import.meta.dirname, "../../db/migrations/065_silver_labels.sql");
 let dem = 0;
 
-type Tin = { id: string; text: string | null; source?: string; property_type?: string; price?: number | null; area?: number | null; kind?: string; confidence?: string; street?: string };
+type Tin = { nhom?: string; id: string; text: string | null; source?: string; property_type?: string; price?: number | null; area?: number | null; kind?: string; confidence?: string; street?: string };
 
 async function nen(c: pg.Client) {
   await c.query(await readFile(MIG_065, "utf8"));
@@ -27,7 +27,7 @@ async function moiTin(c: pg.Client, t: Tin): Promise<string> {
   const post = `t_ls1_p_${process.pid}_${++dem}`;
   if (t.text !== null) {
     await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
-      VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi LS1', 'ls1', $3, '2026-10-31T08:00:00Z')`, [post, SNAP, t.text]);
+      VALUES ($1, $2, 'openclaw-hook', $4, 'ls1', $3, '2026-10-31T08:00:00Z')`, [post, SNAP, t.text, t.nhom ?? "Nhóm mồi LS1"]);
   }
   await insertOffer(c, { offer_id: t.id, source: t.source ?? "S03", property_type: t.property_type ?? "unknown", street_raw: t.street ?? null, post_ids: [post] });
   await c.query(`UPDATE sale_offers SET price_vnd = $2, area_m2 = $3, kind = $4, confidence = $5 WHERE offer_id = $1`,
@@ -109,6 +109,8 @@ const MA_TRAN_AC4: [string, string, string, Record<string, unknown>, string | nu
   ["từ khoá loại khác", "t_ls1_lk", "Chính chủ bán nhà phố 4 tầng Minh Khai", { property_type: "apartment", quote_loai: "bán nhà phố" }, "tu-khoa-loai-khac"],
   ["gần X", "t_ls1_gan", "Cho thuê phòng gần chung cư Times City 3tr", { property_type: "apartment", quote_loai: "gần chung cư Times City" }, "ngu-canh-loai-tru"],
   ["cạnh X", "t_ls1_canh", "Bán lô cạnh căn hộ mẫu dự án Minh Khai", { property_type: "apartment", quote_loai: "cạnh căn hộ mẫu" }, "ngu-canh-loai-tru"],
+  ["cần mua X", "t_ls1_cm", "Khách cần mua căn hộ 2PN khu Minh Khai", { property_type: "apartment", quote_loai: "cần mua căn hộ 2PN" }, "ngu-canh-loai-tru"],
+  ["không có trích", "t_ls1_ktr", CHU_DUNG + " tin không trích", { property_type: "apartment", quote_loai: "" }, "khong-co-trich"],
   ["hai loại", "t_ls1_hai", "Bán căn hộ và nhà phố cùng khu Minh Khai", { property_type: "apartment", quote_loai: "Bán căn hộ và nhà phố" }, "ngu-canh-loai-tru"],
 ];
 test("LS1-AC-4 ma trận: loại hình giữ unknown, đề xuất skipped ghi lý do, không thẻ; đối chứng dương cùng tin", async () => {
@@ -225,7 +227,10 @@ test("LS1-AC-7 E1 trái model, ý định, giá; chạy hai lần: đúng một 
     await chay(c, [id], hoiAc7(goi), { resolve: E1_DAT });
     const the = await theCua(c, id);
     assert.equal(the.length, 1, "LS1-AC-7 phải đúng một thẻ");
-    assert.deepEqual(the[0].evidence.doi_chieu.map((d: { loai: string }) => d.loai), ["y_dinh", "gia"]);
+    assert.deepEqual(the[0].evidence.doi_chieu, [
+      { loai: "y_dinh", trich: "cần mua căn hộ", ai: "inquiry", bo_doc: "offer" },
+      { loai: "gia", trich: "giá 5 tỷ", ai: 5e9, bo_doc: 3e9 },
+    ], "LS1-AC-7 hàng đối chiếu sai trích hoặc sai bên");
     assert.equal(the[0].evidence.fields.length, 2, "LS1-AC-7 thẻ phải có hai bên xung đột");
     assert.equal(goi.length, 1, "LS1-AC-7 gọi model lần hai cho cùng chữ");
     assert.equal((await deXuat(c, id)).length, dem1, "LS1-AC-7 đề xuất nhân đôi");
@@ -331,8 +336,6 @@ test("LS1-AC-8 không cờ: trần 3 USD, 500 thẻ; cờ sai ném lỗi; thiế
   assert.throws(() => docCo(["--tran-usd", "x"]), /--tran-usd/);
   assert.throws(() => docCo(["--mau", "10"]), /--mau và --nhan/);
   assert.ok(!("model" in co), "LS1-AC-8 không có cờ đổi model");
-  const { TEN_MODEL } = await import("../src/agents/nhan-bac-s03.js");
-  assert.match(TEN_MODEL.haiku, /haiku/, "LS1-AC-8 model phải là Haiku");
   await withTx(async (c) => {
     const n = noi(c, { khoa: undefined });
     assert.equal(await chayLenh(co, n), 2);
@@ -389,9 +392,14 @@ test("LS1-AC-9 --dem khớp đếm độc lập, phân biệt skipped và đã �
     assert.equal(sau.coDeXuat - truoc.coDeXuat, 1, "LS1-AC-9 skipped không tính vào có đề xuất");
     assert.equal(sau.coDeXuatKeSkipped - truoc.coDeXuatKeSkipped, 2, "LS1-AC-9 kể skipped phải tăng hai");
     assert.throws(() => kiemDem({ ...sau, coDeXuat: sau.coDeXuat + 1 }, { mau: sau.mau, coDeXuat: sau.coDeXuat, coDeXuatKeSkipped: sau.coDeXuatKeSkipped, aiDaAp: sau.aiDaAp }), /LS1-AC-9 --dem sai số coDeXuat/, "chiều đỏ đếm cả S05");
-    const [d] = await deXuat(c, ap);
-    await c.query(`SELECT revert_enrichment($1, $2, $3)`, [[d.id], "hitl:test", "lùi cả lượt"]);
-    assert.equal(await loaiHinh(c, ap), "unknown", "LS1-AC-9 hoàn tác không trả về unknown");
+    // Dòng người vận hành đọc: mỗi số phải đúng ô, so với đếm độc lập.
+    const tay = await demTay(c);
+    const pt = (x: number) => `${x} (${(x / tay.mau * 100).toFixed(1)}%)`;
+    const n = noi(c);
+    await chayLenh(docCo(["--dem"]), n);
+    assert.ok(n.dong.some((d) => d.startsWith(`mẫu (tin S03 sống): ${tay.mau} `)), `LS1-AC-9 --dem in sai mẫu: ${n.dong}`);
+    const dong = `có đề xuất: ${pt(tay.coDeXuat)} · kể skipped: ${pt(tay.coDeXuatKeSkipped)} · AI đã áp: ${pt(tay.aiDaAp)}`;
+    assert.ok(n.dong.includes(dong), `LS1-AC-9 --dem in sai ô, mong «${dong}»: ${n.dong}`);
   });
 });
 
@@ -407,7 +415,9 @@ test("LS1-AC-9 cờ đỏ chi phí hai phía quanh 5 USD/ngày", async () => {
     assert.deepEqual(d.map((x) => x.do), [false, true], "LS1-AC-9 cờ đỏ phải bật khi quá, không bật khi đúng bằng 5 USD");
     const n = noi(c);
     await chayLenh({ ...docCo(["--dem"]) }, n);
-    assert.ok(n.dong.some((l) => l.includes("CỜ ĐỎ")), "LS1-AC-9 --dem phải in cờ đỏ");
+    const chi = (ngay: string) => n.dong.find((l) => l.startsWith(`chi ${ngay}`)) ?? "";
+    assert.ok(chi("2099-01-02").includes("CỜ ĐỎ"), `LS1-AC-9 ngày quá 5 USD phải có cờ: ${n.dong}`);
+    assert.ok(chi("2099-01-01") && !chi("2099-01-01").includes("CỜ ĐỎ"), `LS1-AC-9 ngày đúng 5 USD không được có cờ: ${n.dong}`);
   });
 });
 
@@ -418,24 +428,32 @@ const baiMau = async (c: pg.Client, n: number, sai: number) => {
     const post = `t_ls1_mau_${process.pid}_${++dem}`;
     await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at)
       VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi LS1', 'ls1', $3, '2026-10-31T08:00:00Z')`, [post, SNAP, `Chính chủ bán căn hộ 2PN mã ${post}`]);
+    await insertOffer(c, { offer_id: `t_ls1_mo_${post}`, source: "S03", property_type: "unknown", street_raw: null, post_ids: [post] });
     nhan.push({ post_id: post, property_type: i < sai ? "house" : "apartment" });
   }
   return nhan;
 };
+/** Băm canonical và lớp đề xuất, thẻ: đo mẫu không được đổi dòng nào. */
+const bamCanon = async (c: pg.Client) => (await c.query(`SELECT
+  (SELECT md5(coalesce(string_agg(offer_id || '|' || property_type || '|' || coalesce(price_vnd::text, '') || '|' || coalesce(area_m2::text, ''), ',' ORDER BY offer_id), '')) FROM sale_offer_records) AS tin,
+  (SELECT count(*) FROM enrichment_proposals) AS de_xuat, (SELECT count(*) FROM review_queue) AS the`)).rows[0];
 const hoiCanHo = (goi: string[] = []) => hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" }), goi);
 
 test("LS1-AC-10 mẫu đạt: Wilson khớp tính tay, in đủ số, ghi dòng mẫu, không chạm canonical; lượt thật dùng lại nhãn", async () => {
   await withTx(async (c) => {
     await nen(c);
     const nhan = await baiMau(c, 110, 2);
-    const offers = async () => (await c.query(`SELECT count(*)::int AS n FROM enrichment_proposals`)).rows[0].n;
-    const truoc = await offers();
+    const truoc = await bamCanon(c);
     const goi: string[] = [];
     const kq = await doMau({ client: c, runId: "m1", nhan, n: 110, nguong: 0.85, tranUsd: 3, thu: false, cam: [], hoi: hoiCanHo(goi), resolve: E1_RONG, wilson: wilsonDuoi });
     // Wilson 108/110, z=1,96 tính tay: 0,9360.
     assert.deepEqual([kq.n, kq.ap, kq.dung, kq.the, kq.dat], [110, 110, 108, 0, true]);
     assert.ok(Math.abs(kq.canDuoi! - 0.936) < 0.001, `LS1-AC-10 Wilson lệch tính tay: ${kq.canDuoi}`);
-    assert.equal(await offers(), truoc, "LS1-AC-10 mẫu ghi đề xuất");
+    assert.deepEqual(await bamCanon(c), truoc, "LS1-AC-10 mẫu đạt đổi canonical, đề xuất hoặc thẻ");
+    // Đối chứng dương: phép băm thấy tin đổi.
+    await c.query(`UPDATE sale_offers SET property_type = 'apartment' WHERE offer_id = $1`, [`t_ls1_mo_${nhan[0].post_id}`]);
+    assert.notDeepEqual(await bamCanon(c), truoc, "LS1-AC-10 phép băm không thấy tin đổi");
+    await c.query(`UPDATE sale_offers SET property_type = 'unknown' WHERE offer_id = $1`, [`t_ls1_mo_${nhan[0].post_id}`]);
     assert.equal(await coMauDat(c), true);
     assert.equal(goi.length, 110);
     await doMau({ client: c, runId: "m2", nhan, n: 110, nguong: 0.85, tranUsd: 3, thu: false, cam: [], hoi: hoiCanHo(goi), resolve: E1_RONG, wilson: wilsonDuoi });
@@ -459,9 +477,11 @@ test("LS1-AC-10 dưới ngưỡng và dưới 100 ca: thoát 5, không đạt; c
     const sai = await baiMau(c, 110, 30);
     await writeFile(tep, JSON.stringify(sai.map((x) => [x.post_id, { property_type: x.property_type }])));
     const n5 = noi(c, { hoi: hoiCanHo() });
+    const banDuoi = await bamCanon(c);
     assert.equal(await chayLenh(docCo(["--mau", "110", "--nhan", tep]), n5), 5, "LS1-AC-10 dưới ngưỡng phải thoát 5");
     assert.ok(n5.dong.some((d) => d.includes("DƯỚI NGƯỠNG")), `LS1-AC-10: ${n5.dong}`);
     assert.equal(await coMauDat(c), false, "LS1-AC-10 mẫu rớt không được tính đạt");
+    assert.deepEqual(await bamCanon(c), banDuoi, "LS1-AC-10 dưới ngưỡng đổi canonical, đề xuất hoặc thẻ");
 
     const it = await baiMau(c, 50, 0);
     await writeFile(tep, JSON.stringify(it.map((x) => [x.post_id, { property_type: x.property_type }])));
@@ -475,30 +495,65 @@ test("LS1-AC-10 dưới ngưỡng và dưới 100 ca: thoát 5, không đạt; c
   });
 });
 
-// ---------- AC-7: duyệt thẻ ----------
-import { ghiPhanQuyetDoiChieu } from "../../app/src/lib/ops/doi-chieu.js";
-
-test("LS1-AC-7 duyệt thẻ: áp bên được chọn của đề xuất, phán quyết đọc lại được, không đổi giá, diện tích, retired_at", async () => {
+// ---------- AC-2 trên đường thật: chữ đến model do chính lệnh dựng, tên cấm đọc từ source_registry ----------
+const LO_DB = ["0912.345.678", "khach@example.test", "https://nguon-gia.example/tin/1", "www.khac.example/x", "NguonGiaThat", "nguongia.vn", "Nhóm Giả Hà Nội"];
+const DAU_BAI = "Bán căn hộ 2PN Times City.";
+const DUOI_BAI = "Đuôi bài dài vẫn phải tới model.";
+const BAI_DB = `${DAU_BAI} LH ${LO_DB[0]} hoặc ${LO_DB[1]}. Xem ${LO_DB[2]} ${LO_DB[3]}. Đăng ở ${LO_DB[4]} ${LO_DB[5]} trong ${LO_DB[6]}. ` + "Căn góc thoáng mát, nội thất đầy đủ. ".repeat(45) + DUOI_BAI;
+export function kiemChuGui(goi: string[]) {
+  assert.equal(goi.length, 1, "LS1-AC-2 phải đúng một lời gọi");
+  assert.ok(goi[0].length > 500 && goi[0].includes(DUOI_BAI), "LS1-AC-2 chữ gửi đi bị cắt");
+  assert.ok(goi[0].includes(DAU_BAI), "LS1-AC-2 đối chứng dương: chữ thường phải còn");
+  for (const lo of LO_DB) assert.ok(!goi[0].includes(lo), `LS1-AC-2 chữ đến model còn chuỗi lộ: ${lo}`);
+}
+test("LS1-AC-2 chayLuot và doMau: chữ gửi đi đã gạt SĐT, email, link, tên nhóm, tên nguồn trong source_registry", async () => {
+  assert.ok(BAI_DB.length >= 1500);
   await withTx(async (c) => {
     await nen(c);
-    const id = await moiTin(c, FIXTURE_AC7);
-    await chay(c, [id], hoiAc7(), { resolve: E1_DAT });
+    await c.query(`INSERT INTO source_registry (code, real_name, label_vi, source_ids) VALUES ('S98', $1, 'nguồn thử', $2)`, [LO_DB[4], [LO_DB[5]]]);
+    const id = await moiTin(c, { id: "t_ls1_gat", text: BAI_DB, nhom: LO_DB[6] });
+    const goi: string[] = [];
+    await chay(c, [id], hoiGia(() => traLoi({}), goi), { cam: undefined });
+    kiemChuGui(goi);
+    const post = (await c.query(`SELECT post_ids[1] AS p FROM sale_offers WHERE offer_id = $1`, [id])).rows[0].p;
+    await c.query(`DELETE FROM silver_labels WHERE post_id = $1`, [post]);
+    const goiMau: string[] = [];
+    await doMau({ client: c, runId: "m-gat", nhan: [{ post_id: post, property_type: "apartment" }], n: 1, nguong: 0.85, tranUsd: 3, thu: false, hoi: hoiGia(() => traLoi({}), goiMau), resolve: E1_RONG, wilson: wilsonDuoi });
+    kiemChuGui(goiMau);
+  });
+});
+test("chiều đỏ LS1-AC-2: chữ chưa gạt thì phép đo báo chuỗi lộ", () => {
+  assert.throws(() => kiemChuGui([BAI_DB]), /LS1-AC-2 chữ đến model còn chuỗi lộ/);
+});
+
+test("LS1-AC-5 not_listing kèm trích có thật qua lượt thật: thẻ mang câu trích, tin không nghỉ", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const id = await moiTin(c, { id: "t_ls1_nl", text: "Mọi người ơi cho hỏi thủ tục sang tên nhà thế nào", property_type: "house" });
+    await chay(c, [id], hoiGia(() => traLoi({ intent: "not_listing", kind: null, quote: "cho hỏi thủ tục" })));
     const [the] = await theCua(c, id);
-    const ds = await deXuat(c, id);
-    const ai = ds.find((d) => d.source === "e2_llm")!;
-    const cot = async () => (await c.query(`SELECT price_vnd, area_m2, retired_at FROM sale_offers WHERE offer_id = $1`, [id])).rows[0];
-    const truoc = await cot();
-    // Đúng thứ tự của route decide với thẻ xung đột.
-    await c.query(`SELECT apply_enrichment($1, $2)`, [[Number(ai.id)], "hitl:test"]);
-    await c.query(`SELECT decide_enrichment_review($1, 'rejected', $2)`, [the.id, "hitl:test"]);
-    const n = await ghiPhanQuyetDoiChieu(c, { reviewId: Number(the.id), itemId: `enrich:${id}`, status: "approved", lyDo: "đúng", actor: "hitl:test", env: "local", evidence: the.evidence });
-    assert.equal(n, 1);
-    assert.equal(await loaiHinh(c, id), "apartment", "LS1-AC-7 phải áp bên được chọn");
-    const sau = await deXuat(c, id);
-    assert.deepEqual(sau.map((d) => [d.source, d.status]), [["e1_rule", "rejected"], ["e2_llm", "applied"]]);
-    const { rows } = await c.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:${id}`]);
-    assert.deepEqual(rows[0]?.detail.doi_chieu.map((d: { loai: string }) => d.loai), ["y_dinh", "gia"], "LS1-AC-7 phán quyết không đọc lại được");
-    assert.deepEqual(await cot(), truoc, "LS1-AC-7 duyệt làm đổi cột giá, diện tích hoặc retired_at");
-    assert.equal(await ghiPhanQuyetDoiChieu(c, { reviewId: 1, itemId: "x", status: "rejected", lyDo: "x", actor: "hitl:test", env: "local", evidence: { fields: [] } }), 0, "LS1-AC-7 thẻ không đối chiếu không được ghi");
+    assert.deepEqual(the?.evidence.doi_chieu, [{ loai: "y_dinh", trich: "cho hỏi thủ tục", ai: "not_listing", bo_doc: "offer" }]);
+    assert.equal((await c.query(`SELECT retired_at FROM sale_offers WHERE offer_id = $1`, [id])).rows[0].retired_at, null, "LS1-AC-5 tin bị nghỉ");
+  });
+});
+
+test("LS1-AC-9 lùi cả lượt: id lấy theo run_id --dem in ra, mọi tin của lượt về unknown, lượt khác giữ nguyên", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const hoi = hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" }));
+    const CHU = "Chính chủ bán căn hộ 2PN khu Minh Khai mã";
+    const a = await moiTin(c, { id: "t_ls1_l_a", text: `${CHU} A` });
+    const b = await moiTin(c, { id: "t_ls1_l_b", text: `${CHU} B` });
+    const giu = await moiTin(c, { id: "t_ls1_l_giu", text: `${CHU} C` });
+    const RUN = "doc-toan-bo-t-lui";
+    assert.equal((await chay(c, [a, b], hoi, { runId: RUN })).daAp, 2);
+    await chay(c, [giu], hoi, { runId: "doc-toan-bo-t-giu" });
+    const n = noi(c);
+    await chayLenh(docCo(["--dem"]), n);
+    assert.ok(n.dong.some((d) => d.startsWith("run_id để hoàn tác:") && d.includes(RUN)), `LS1-AC-9 --dem phải in run_id: ${n.dong}`);
+    const ids = (await c.query(`SELECT id FROM enrichment_proposals WHERE run_id = $1 AND status = 'applied'`, [RUN])).rows.map((r) => r.id);
+    assert.equal(ids.length, 2);
+    await c.query(`SELECT revert_enrichment($1, $2, $3)`, [ids, "hitl:test", "lùi cả lượt"]);
+    assert.deepEqual([await loaiHinh(c, a), await loaiHinh(c, b), await loaiHinh(c, giu)], ["unknown", "unknown", "apartment"], "LS1-AC-9 lùi lượt sai tin");
   });
 });

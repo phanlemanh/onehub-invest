@@ -282,7 +282,7 @@ test("TD-AC-6 vùng nút không đổi theo ai_suggestion; suy luận AI tách s
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const db = new pg.Client({ connectionString: urlS })
 let setupErr: string | null = null
-const BANG = ["review_queue", "sale_offer_records", "stg_zalo_posts", "stg_chotot_ads", "field_assertions", "ops_audit", "media", "property_candidates", "enrichment_proposals", "properties", "property_offers"]
+const BANG = ["review_queue", "sale_offer_records", "stg_zalo_posts", "stg_chotot_ads", "field_assertions", "ops_audit", "media", "property_candidates", "enrichment_proposals", "properties", "property_offers", "silver_labels"]
 
 const VAN_S03 = Array.from({ length: 30 }, (_, i) => `Dòng ${String(i).padStart(2, "0")} của bài S03: căn hộ 2 ngủ, sổ hồng, tầng trung, giá thương lượng.`).join("\n").slice(0, 1200)
 const VAN_S03_CU = "Bản cũ của bài S03 — không được hiện."
@@ -293,7 +293,12 @@ const NHOM_S03 = "Nhóm thử td"
 async function dungLuocDo() {
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`)
   await admin.query(`CREATE SCHEMA "${S}"`)
-  for (const t of BANG) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING DEFAULTS INCLUDING GENERATED)`)
+  // Hai bảng đầu ghi của lệnh đọc toàn bộ cần chỉ mục duy nhất cho ON CONFLICT (ca LS1-AC-7).
+  const CAN_CHI_MUC = new Set(["silver_labels", "enrichment_proposals"])
+  for (const t of BANG) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING DEFAULTS INCLUDING GENERATED${CAN_CHI_MUC.has(t) ? " INCLUDING INDEXES" : ""})`)
+  // LIKE đặt tên ràng buộc tự sinh; đầu ghi gọi ON CONFLICT ON CONSTRAINT theo tên thật.
+  const { rows: rb } = await admin.query(`SELECT conname FROM pg_constraint WHERE conrelid = $1::regclass AND contype = 'u'`, [`"${S}".silver_labels`])
+  for (const r of rb) await admin.query(`ALTER TABLE "${S}".silver_labels RENAME CONSTRAINT "${r.conname}" TO silver_labels_mot_nhan`)
   await admin.query(`CREATE VIEW "${S}".sale_offers AS SELECT * FROM "${S}".sale_offer_records WHERE retired_at IS NULL`)
   // Cột serial mang default nextval(public…) — đổi sang sequence riêng của lược đồ để không đụng sequence của public.
   const { rows } = await admin.query(
@@ -700,8 +705,8 @@ async function theMoi(loai: "entity_match" | "agent_output"): Promise<number> {
     await db.query(`INSERT INTO review_queue (id, item_type, item_id, title) VALUES ($1, 'agent_output', $2, 'td bổ sung')`, [id, `enrich:td_s06b`])
     await db.query(
       `INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, review_id, status)
-       VALUES ('td-run', 'td_s06b', 'bedrooms', '3', '3', 'e2_llm', 'review', $1, 'queued')`,
-      [id],
+       VALUES ('td-run', 'td_s06b', 'bedrooms', '3', $2, 'e2_llm', 'review', $1, 'queued')`,
+      [id, String(id)],
     )
   }
   return id
@@ -744,17 +749,71 @@ describe("TD-AC-7/8 route decide nhận lý do", () => {
       }
     }
   }
-  test("LS1-AC-7 route thật: thẻ chỉ có đối chiếu duyệt được, đúng một dòng enrich:doi-chieu, thẻ thường thì không", async (t) => {
-    if (setupErr) return t.skip(setupErr)
+  // Thẻ do chính lệnh đọc toàn bộ ghi (model giả), rồi duyệt qua route thật: không chép tay hình evidence hay thứ tự của route.
+  async function theThat(id: string, chu: string) {
+    const duong = "../../agent/src/enrich/doc-toan-bo.js" // biến: tsc của app không theo sang mã agent
+    const { chayLuot, docTraLoi } = (await import(duong)) as { chayLuot: (o: unknown) => Promise<{ loiGhi: string[]; theMoi: number }>; docTraLoi: (t: string, c: string) => object }
+    const post = `${id}_p`
+    await db.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text, captured_at) VALUES ($1, 'hanoi__zalo-agent__ls1', $2, $3, now())`, [post, NHOM_S03, chu])
+    await db.query(`INSERT INTO sale_offer_records (offer_id, source, kind, property_type, price_vnd, area_m2, post_ids, first_seen, last_seen) VALUES ($1, 'S03', 'sale', 'unknown', 3000000000, 70, $2, now(), now())`, [id, [post]])
+    const tra = JSON.stringify({ intent: "inquiry", kind: null, confidence: 0.9, quote: "cần mua căn hộ", property_type: "apartment", quote_loai: "cần mua căn hộ", price_vnd: 5e9, quote_gia: "giá 5 tỷ", area_m2: null, quote_dt: "", bedrooms: null, bathrooms: null, street: null, block: null })
+    const kq = await chayLuot({
+      client: db, runId: `td-run-${id}`, tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [id],
+      hoi: async (c: string) => ({ model: "gateway:anthropic/claude-haiku-5.5", ...docTraLoi(tra, c), error_kind: null, latency_ms: 1, cost_usd: 0 }),
+      resolve: async () => ({ projectSlug: null, projectName: null, projectCandidates: [], propertyType: "land", typeBasis: "luật mồi", buildingHint: null, areaHint: null, matchedBy: "" }),
+      giaoDich: async (fn: () => Promise<unknown>) => { await db.query("BEGIN"); try { const r = await fn(); await db.query("COMMIT"); return r } catch (e) { await db.query("ROLLBACK"); throw e } },
+    })
+    assert.deepEqual([kq.loiGhi, kq.theMoi], [[], 1], "LS1-AC-7 lệnh đọc phải ghi được đúng một thẻ")
+    const the = (await db.query(`SELECT id, evidence FROM review_queue WHERE item_id = $1 AND status = 'pending'`, [`enrich:${id}`])).rows
+    assert.equal(the.length, 1)
+    const dx = (await db.query(`SELECT id, source, status FROM enrichment_proposals WHERE offer_id = $1 ORDER BY source`, [id])).rows
+    return { theId: Number(the[0].id), evidence: the[0].evidence, e1: Number(dx.find((d) => d.source === "e1_rule").id), ai: Number(dx.find((d) => d.source === "e2_llm").id) }
+  }
+  const cotTin = async (id: string) => (await db.query(`SELECT property_type, price_vnd::text AS gia, area_m2::text AS dt, retired_at FROM sale_offer_records WHERE offer_id = $1`, [id])).rows[0]
+  const trangThai = async (id: string) => (await db.query(`SELECT source, status FROM enrichment_proposals WHERE offer_id = $1 ORDER BY source`, [id])).rows.map((d) => [d.source, d.status])
+  const phanQuyet = async (id: string) => (await db.query(`SELECT actor, detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:${id}`])).rows
+  const CHU_LS1 = "Khách cần mua căn hộ giá 5 tỷ khu Minh Khai rộng rãi"
+
+  test("LS1-AC-7 duyệt thẻ thật qua route: áp bên chọn, phán quyết đọc lại được, giá, diện tích, retired_at không đổi", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = "td_s03_ls1a"
+    const t = await theThat(id, CHU_LS1)
+    const truoc = await cotTin(id)
+    const r = await goi(mod, t.theId, { status: "approved", reason: "AI đọc đúng", choices: { property_type: t.ai } })
+    assert.equal(r.status, 200, `LS1-AC-7 route từ chối: ${JSON.stringify(r.json)}`)
+    const sau = await cotTin(id)
+    assert.equal(sau.property_type, "apartment", "LS1-AC-7 phải áp bên được chọn")
+    assert.deepEqual([sau.gia, sau.dt, sau.retired_at], [truoc.gia, truoc.dt, truoc.retired_at], "LS1-AC-7 duyệt đổi giá, diện tích hoặc retired_at")
+    assert.deepEqual(await trangThai(id), [["e1_rule", "rejected"], ["e2_llm", "applied"]])
+    const a = await phanQuyet(id)
+    assert.equal(a.length, 1, "LS1-AC-7 phải đúng một dòng phán quyết")
+    assert.deepEqual([a[0].detail.phan_quyet, a[0].detail.ly_do, a[0].detail.doi_chieu], ["approved", "AI đọc đúng", t.evidence.doi_chieu], "LS1-AC-7 phán quyết không đọc lại được")
+  })
+
+  test("LS1-AC-7 bác thẻ thật qua route: bác cả hai đề xuất, tin không đổi, phán quyết ghi rejected", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = "td_s03_ls1b"
+    const t = await theThat(id, CHU_LS1 + " nữa")
+    const truoc = await cotTin(id)
+    assert.equal((await goi(mod, t.theId, { status: "rejected", reason: "bộ đọc đúng" })).status, 200)
+    assert.deepEqual(await cotTin(id), truoc, "LS1-AC-7 bác làm đổi tin")
+    assert.deepEqual(await trangThai(id), [["e1_rule", "rejected"], ["e2_llm", "rejected"]])
+    assert.equal((await phanQuyet(id))[0]?.detail.phan_quyet, "rejected")
+  })
+
+  test("LS1-AC-7 thẻ chỉ có đối chiếu duyệt được, đúng một dòng; thẻ thường không có dòng nào", async () => {
+    ready()
     const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
     const id = ++soThe
     const doi_chieu = [{ loai: "gia", trich: "giá 5 tỷ", ai: 5e9, bo_doc: 3e9 }]
     await db.query(`INSERT INTO review_queue (id, item_type, item_id, title, evidence) VALUES ($1, 'agent_output', $2, 'td đối chiếu', $3)`, [id, `enrich:td_dc${id}`, { doi_chieu }])
     const r = await goi(mod, id, { status: "approved", reason: "AI đọc đúng giá" })
     assert.equal(r.status, 200, `LS1-AC-7 route từ chối thẻ chỉ có đối chiếu: ${JSON.stringify(r.json)}`)
-    const a = (await db.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:td_dc${id}`])).rows
+    const a = await phanQuyet(`td_dc${id}`)
     assert.equal(a.length, 1, "LS1-AC-7 phải đúng một dòng phán quyết")
-    assert.deepEqual([a[0].detail.phan_quyet, a[0].detail.ly_do, a[0].detail.doi_chieu], ["approved", "AI đọc đúng giá", doi_chieu], "LS1-AC-7 phán quyết không đọc lại được")
+    assert.deepEqual(a[0].detail.doi_chieu, doi_chieu)
     const thuong = await theMoi("agent_output")
     assert.equal((await goi(mod, thuong, { status: "approved", reason: "ok" })).status, 200)
     assert.equal((await db.query(`SELECT 1 FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'reviewId' = $1`, [String(thuong)])).rows.length, 0, "LS1-AC-7 đối chứng: thẻ thường không có dòng phán quyết")

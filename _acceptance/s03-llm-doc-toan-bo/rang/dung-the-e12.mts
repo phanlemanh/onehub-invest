@@ -39,7 +39,7 @@ try {
   };
   const kq = await chayLuot({ client: c, giaoDich, runId: "e12-ban-do", tranUsd: 3, tranThe: 500, thu: false, cam: [], chiTin: [ID], hoi, resolve } as Parameters<typeof chayLuot>[0]);
   console.log(JSON.stringify(kq));
-  const { rows } = await c.query(`SELECT item_id, status, jsonb_array_length(evidence->'doi_chieu') AS dc, jsonb_array_length(evidence->'fields') AS f FROM review_queue`);
+  const { rows } = await c.query(`SELECT item_id, status, evidence->'doi_chieu' AS dc, jsonb_array_length(evidence->'fields') AS f FROM review_queue`);
   console.log(JSON.stringify(rows));
-  if (rows.length !== 1 || rows[0].dc !== 2) { console.error("dung-the-e12: phải đúng một thẻ có hai đối chiếu"); process.exitCode = 1; }
+  if (rows.length !== 1 || JSON.stringify(rows[0].dc.map((d: { loai: string; ai: unknown; bo_doc: unknown; trich: string }) => [d.loai, d.ai, d.bo_doc, d.trich])) !== JSON.stringify([["y_dinh", "inquiry", "offer", "cần mua căn hộ"], ["gia", 5e9, 3e9, "giá 5 tỷ"]])) { console.error("dung-the-e12: phải đúng một thẻ, hai đối chiếu đúng bên"); process.exitCode = 1; }
 } finally { await c.end(); }

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
-import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
+import { aiSuggestionLabel, listingIntentLabel, propertyTypeLabel } from "@/lib/ops-labels";
 import { doiChieuCua, type DoiChieu } from "@/lib/ops/doi-chieu";
 import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan } from "@/lib/ops/review-can-cu";
 import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
@@ -267,10 +267,9 @@ function EvidenceExcerpt({ text, group }: { text?: string | null; group?: string
 }
 
 const DOI_CHIEU_LABEL: Record<DoiChieu["loai"], string> = { y_dinh: "Ý định tin", gia: "Giá rao", dien_tich: "Diện tích" };
-const Y_DINH_LABEL: Record<string, string> = { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao" };
 
 function giaTriDoiChieu(loai: DoiChieu["loai"], v: string | number) {
-  if (loai === "y_dinh") return Y_DINH_LABEL[String(v)] ?? String(v);
+  if (loai === "y_dinh") return listingIntentLabel(String(v)).label;
   const n = Number(v);
   if (!Number.isFinite(n)) return String(v);
   return loai === "gia" ? `${n.toLocaleString("vi-VN")} đ` : `${n.toLocaleString("vi-VN")} m²`;

@@ -15,6 +15,8 @@ import { routeFields, type EnrichField, type Routed } from "./route.js";
 import { giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
 export const PROMPT_VERSION = "dtb-s03-v1";
+/** Model mặc định của lượt; không có cờ đổi (Hỏi-2). */
+export const modelMacDinh = () => getModel("haiku");
 export const VIEC = "doc-toan-bo-s03";
 
 // ==== gạt chữ trước khi gửi ====
@@ -83,7 +85,7 @@ export async function hoiDoc(
   let nhan: Nhan;
   try {
     const r = await generateText({
-      model: o.languageModel ?? getModel("haiku"), system: SYSTEM, prompt: chuDaGat, temperature: 0, maxOutputTokens: 600,
+      model: o.languageModel ?? modelMacDinh(), system: SYSTEM, prompt: chuDaGat, temperature: 0, maxOutputTokens: 600,
     });
     usage = r.usage;
     const p = docTraLoi(r.text, chuDaGat);

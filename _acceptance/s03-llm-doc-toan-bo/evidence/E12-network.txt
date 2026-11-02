@@ -1,0 +1,6 @@
+console: 0 errors, 1 warning (font preload, static, note-only)
+network: playwright-cli has no network command; no failed app XHR observed; page loaded (200), login 303
+console log:
+[INFO] React DevTools
+[LOG] HMR connected
+[WARNING] font preload unused (static asset)
