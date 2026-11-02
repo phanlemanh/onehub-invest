@@ -275,6 +275,9 @@ const TOA_DUOI_SO = new RegExp(`(?<![\\p{L}\\p{N}_])([A-Z]{1,3}\\d{1,2}[.\\-_]\\
 const KHONG_PHAI_TOA = /^(?:T|Q|PN|WC|VS|N|M|DT|TR|BR|W|HD|HH)\d/i;
 const TOA_RIENG = /(?<![\p{L}])(?:toà|tòa|toa)\s*:?\s*([A-Z]{1,3}\d{1,2}[A-Z]?\d?)(?![\p{L}\p{N}])/iu;
 
+/** Toà duy nhất khi so không phân biệt hoa thường, giữ nguyên chữ của lần đầu; không có hoặc nhiều toà thì null. */
+const motToa = (ds) => (new Set(ds.map((t) => t.toUpperCase())).size === 1 ? ds[0] : null);
+
 /** Toà và trục đọc từ chữ bài (AC-8). Bài nhiều mã (thường nhiều căn) để trống trục, chờ PL18; toà chỉ giữ khi mọi mã cùng toà.
  *  @returns {{ block: string|null, unit: string|null }} */
 export function docToaTruc(text) {
@@ -285,16 +288,14 @@ export function docToaTruc(text) {
     if (thay.length) break;
   }
   const units = [...new Set(thay.map((m) => m[0].toUpperCase()))];
-  const blocks = [...new Set(thay.map((m) => m[1].toUpperCase()))];
   let unit = thay[0]?.[0] ?? null;
   if (units.length !== 1) unit = null;
-  if (blocks.length) return { block: blocks.length === 1 ? blocks[0] : null, unit };
-  const duoi = [...new Set([...so.matchAll(TOA_DUOI_SO)].filter((m) => !KHONG_PHAI_TOA.test(m[1])).map((m) => m[1].toUpperCase()))];
-  if (duoi.length) return { block: duoi.length === 1 ? duoi[0] : null, unit: null };
+  if (thay.length) return { block: motToa(thay.map((m) => m[1])), unit };
+  const duoi = [...so.matchAll(TOA_DUOI_SO)].filter((m) => !KHONG_PHAI_TOA.test(m[1])).map((m) => m[1]);
+  if (duoi.length) return { block: motToa(duoi), unit: null };
   const toa = so.match(TOA_RIENG);
-  if (toa) return { block: toa[1].toUpperCase(), unit: null };
-  const tran = [...new Set(maToaCan(text).filter((m) => !KHONG_PHAI_TOA.test(m)))];
-  return { block: tran.length === 1 ? tran[0] : null, unit: null };
+  if (toa) return { block: toa[1], unit: null };
+  return { block: motToa(maToaCan(text).filter((m) => !KHONG_PHAI_TOA.test(m))), unit: null };
 }
 
 // ---- Bước 2: parse ----

@@ -151,12 +151,24 @@ const BANG_THUE_TY = [
   ["Cho thuê căn 2PN 9tr", "rent_lt"],
   ["Bán căn 3 tỷ", "sale"],
 ];
+const LY_DO_GAT = [
+  ["Cho thuê căn 2PN giá 1 tỷ/tháng", "thue-tu-1-ty"],
+  ["Cho thuê căn 2PN giá 1 tỷ/th", "thue-tu-1-ty"],
+  ["Cho thuê nguyên toà 1,2 tỷ/năm", "thue-tu-1-ty"],
+  ["Bán căn 2PN 120 tỷ", "ban-tren-100-ty"],
+  ["Cho thuê căn 2PN giá 3 tỷ", null],
+];
 test("SV1-AC-5 thuê từ 1 tỷ không ghi tháng đổi thành bán, «/tháng» giữ thuê; ca đỏ bỏ bước đổi", async () => {
   const doc = (m, c) => { const pr = m.parsePost(c); m.chinhLoaiThueTy(pr, c); return pr.kind; };
   await kiemHaiChieu("SV1-AC-5", BANG_THUE_TY, doc,
     [["if (!THEO_THANG.test(gatSo(text))) pr.kind = KIND.sale;", ""]], "2PN 3 tỷ");
   // Chốt khoảng giữ nguyên: bài vẫn là thuê thì vẫn bị gạt.
   assert.equal(tz.lyDoGiaPhiLy({ kind: "rent_lt", priceVnd: 1e9 }), "thue-tu-1-ty", "SV1-AC-5 chốt khoảng đổi");
+  for (const [chu, lyDo] of LY_DO_GAT) {
+    const pr = tz.parsePost(chu);
+    tz.chinhLoaiThueTy(pr, chu);
+    assert.equal(tz.lyDoGiaPhiLy(pr), lyDo, `SV1-AC-5 lý do «${chu}»`);
+  }
 });
 
 // ---- AC-6: giá che số ----
@@ -212,6 +224,10 @@ test("SV1-AC-7 giá không đơn vị đọc hẹp khi bật, không đọc khi 
 // ---- AC-8: toà, trục ----
 const BANG_MA = [
   ["Bán PR6xx20 2PN 3 tỷ", { block: "PR6", unit: "PR6xx20" }],
+  ["Bán pr6.12.20 2PN 3 tỷ", { block: "pr6", unit: "pr6.12.20" }],
+  ["Bán lD1xx02 và LD1xx06 3 tỷ", { block: "lD1", unit: null }],
+  ["Bán căn toà gh2 3 tỷ", { block: "gh2", unit: null }],
+  ["Bán 2PN toà s1.03 3 tỷ", { block: "s1.03", unit: null }],
   ["Bán S1.12.08 3 tỷ", { block: "S1", unit: "S1.12.08" }],
   ["Bán GH3-1203 3 tỷ", { block: "GH3", unit: "GH3-1203" }],
   ["Bán PR6.3x13 3 tỷ", { block: "PR6", unit: "PR6.3x13" }],

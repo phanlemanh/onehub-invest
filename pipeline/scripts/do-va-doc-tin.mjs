@@ -242,7 +242,7 @@ for (const o of songCu) {
   const b = toaMoi(o);
   if (!b) continue;
   if (!o.block_raw) oToaThem++;
-  else if (o.block_raw.toUpperCase() !== b) oToaDoi++;
+  else if (o.block_raw.toUpperCase() !== b.toUpperCase()) oToaDoi++;
 }
 const coTruc = new Set(cuaCay.that.nhom.filter((o) => o.units.size).map((o) => o.noiDung));
 const tachThieuMa = cuaCay.that.nhom.filter((o) => !o.units.size && coTruc.has(o.noiDung)).length;

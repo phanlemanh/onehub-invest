@@ -9,7 +9,7 @@ import pg from "pg";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { docPhuongHopLe } from "../lib/osm.mjs";
 import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER } from "../lib/vocab.generated.mjs";
-import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
+import { chinhLoaiThueTy, lyDoGiaPhiLy, parsePost, runTransformZalo } from "../transform-zalo.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "";
 if (!/\/oneinvest_[a-z0-9_]+$/.test(DB_URL)) {
@@ -55,20 +55,30 @@ const phatBieuLlm = (c, id, value) => c.query(
 
 test("SV1-AC-5 DB: thuê từ 1 tỷ không đơn vị thời gian thành bán; có đơn vị và bán trên 100 tỷ bị gạt, đếm đúng lý do", { timeout: 1_200_000 }, async () => {
   await withTx(async (c) => {
+    // DB thử chép dữ liệu thật nên bộ đếm đã có sẵn số: đo phần tăng của đúng các bài dựng.
+    const truoc = (await runTransformZalo(c)).loaiGiaPhiLy;
     const ba = await post(c, "Cho thuê căn 2PN giá 3.331 tỷ", "t1");
     const mot = await post(c, "Cho thuê căn 2PN giá 1 tỷ", "t2");
-    const thang = await post(c, "Cho thuê căn 2PN giá 1.334 tỷ/tháng", "t3");
-    const th = await post(c, "Cho thuê căn 2PN giá 1.335 tỷ/th", "t4");
-    const nam = await post(c, "Cho thuê nguyên toà 1,336 tỷ/năm", "t5");
-    const ban = await post(c, "Bán căn 2PN 120 tỷ", "t6");
+    const GAT = [
+      ["/tháng", "Cho thuê căn 2PN giá 1.334 tỷ/tháng", "t3", "thue-tu-1-ty"],
+      ["/th", "Cho thuê căn 2PN giá 1.335 tỷ/th", "t4", "thue-tu-1-ty"],
+      ["/năm", "Cho thuê nguyên toà 1,336 tỷ/năm", "t5", "thue-tu-1-ty"],
+      ["bán 120 tỷ", "Bán căn 2PN 120 tỷ", "t6", "ban-tren-100-ty"],
+    ];
+    const gat = [];
+    for (const [ten, chu, tag, lyDo] of GAT) gat.push([ten, chu, lyDo, await post(c, chu, tag)]);
     const r = await runTransformZalo(c);
     assert.equal((await tinCua(c, ba))?.kind, "sale", "SV1-AC-5 DB thuê 3,331 tỷ không thành tin bán");
     assert.equal(Number((await tinCua(c, ba))?.price_vnd), 3.331e9, "SV1-AC-5 DB giá thuê 3,331 tỷ");
     assert.equal((await tinCua(c, mot))?.kind, "sale", "SV1-AC-5 DB thuê đúng 1 tỷ không thành tin bán");
-    for (const [ten, id] of [["/tháng", thang], ["/th", th], ["/năm", nam], ["bán 120 tỷ", ban]]) {
+    for (const [ten, chu, lyDo, id] of gat) {
       assert.equal(await tinCua(c, id), null, `SV1-AC-5 DB «${ten}» thành tin`);
+      const pr = parsePost(chu);
+      chinhLoaiThueTy(pr, chu);
+      assert.equal(lyDoGiaPhiLy(pr), lyDo, `SV1-AC-5 DB lý do «${ten}»`);
     }
-    assert.ok(r.loaiGiaPhiLy["thue-tu-1-ty"] >= 3 && r.loaiGiaPhiLy["ban-tren-100-ty"] >= 1, `SV1-AC-5 DB đếm ${JSON.stringify(r.loaiGiaPhiLy)}`);
+    const tang = (k) => (r.loaiGiaPhiLy[k] ?? 0) - (truoc[k] ?? 0);
+    assert.deepEqual([tang("thue-tu-1-ty"), tang("ban-tren-100-ty")], [3, 1], `SV1-AC-5 DB đếm ${JSON.stringify(r.loaiGiaPhiLy)} (trước ${JSON.stringify(truoc)})`);
   });
 });
 
@@ -81,6 +91,7 @@ test("SV1-AC-8 DB: phát biểu toà, trục đúng cặp theo bài; khoá gom; 
     const phuong = hn.map((a) => bare(a.name)).find((t) => t.length >= 5 && hcm.every((k) => !k.includes(t.toLowerCase()) && !t.toLowerCase().includes(k)));
 
     const motMa = await post(c, "Bán PR6.12.20 2PN 3.411 tỷ", "m1");
+    const chuThuong = await post(c, "Bán pr6.12.25 2PN 3.423 tỷ", "m13");
     const cungToa = await post(c, "Bán LD1.12.02 và LD1.12.06 2PN 3.412 tỷ", "m2");
     const khacToa = await post(c, "Bán LD1.12.02 và PR2.10.10 2PN 3.413 tỷ", "m3");
     const chiToa = await post(c, "Bán căn toà GH2 2PN 3.414 tỷ", "m4");
@@ -111,6 +122,8 @@ test("SV1-AC-8 DB: phát biểu toà, trục đúng cặp theo bài; khoá gom; 
       return o;
     };
     await cap(motMa, "PR6", "PR6.12.20");
+    await cap(chuThuong, "pr6", "pr6.12.25");
+    assert.deepEqual(await phatBieuParser(c, chuThuong), ["block_raw=pr6", "unit_number=pr6.12.25"], "SV1-AC-8 DB giữ nguyên chữ môi giới");
     assert.deepEqual(await phatBieuParser(c, motMa), ["block_raw=PR6", "unit_number=PR6.12.20"], "SV1-AC-8 DB phát biểu bài một mã");
     await cap(cungToa, "LD1", null);
     assert.deepEqual(await phatBieuParser(c, cungToa), ["block_raw=LD1"], "SV1-AC-8 DB bài nhiều mã cùng toà");
