@@ -7,13 +7,11 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a7b9780aba607ba961351dca66336ed7a2a58090
+verified_commit: 237496941dccf1703ce79c00f8482664af9c812d
 human_signoff:
 ---
 
 # Evidence Report: can-theo-tin-khi-phan-xu-lai
-
-Vòng 5 (do Mạnh mở). Nội dung thay trọn vòng cũ; lịch sử các vòng nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -28,101 +26,101 @@ Vòng 5 (do Mạnh mở). Nội dung thay trọn vòng cũ; lịch sử các vò
 ## Evidence
 
 - eval: E1
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E1-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E1-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.can_theo_tin
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs
-    ℹ duration_ms 10622.035291
+    ℹ duration_ms 19081.317209
 
 - eval: E2
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E2-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E2-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.can_theo_tin
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs
-    ℹ duration_ms 10622.035291
+    ℹ duration_ms 19081.317209
 
 - eval: E3
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E3-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E3-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.can_theo_tin
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs
-    ℹ duration_ms 10622.035291
+    ℹ duration_ms 19081.317209
 
 - eval: E4
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E4-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E4-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.can_theo_tin
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs
-    ℹ duration_ms 10622.035291
+    ℹ duration_ms 19081.317209
 
 - eval: E5
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E5-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E5-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.can_theo_tin_ap_hai_lan
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs
-    (2) áp 066 hai lần trên oneinvest_p2_ct_hai_66791: căn lệch trước 0 → sau lần một 0 · audit +0 rồi +0 · hàm giữ · oneinvest can-theo-tin:* 0 → 0
+    (2) áp 066 hai lần trên oneinvest_p2_ct_hai_63317: căn lệch trước 0 → sau lần một 0 · audit +0 rồi +0 · hàm giữ · oneinvest can-theo-tin:* 0 → 0
 
 - eval: E6
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E6-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E6-r6
   exit_code: 0
   baseline: green
   verifier: config:executors.test.pb_chung_bai
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && node --test --test-concurrency=1 scripts/phat-bieu-chung-bai.itest.mjs
-    ℹ duration_ms 2745.822458
+    ℹ duration_ms 4179.578458
 
 - eval: E7
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-E7-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-E7-r6
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
   output: |
     cd pipeline && npm test
-    ℹ duration_ms 492070.272625
+    ℹ duration_ms 295232.390791
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-npm_test__bb6271-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-npm_test__bb6271-r6
   exit_code: 0
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-lint-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-lint-r6
   exit_code: 0
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
 
 - cmd: cd app && npm test
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-npm_test__bd9a35-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-npm_test__bd9a35-r6
   exit_code: 0
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-test_lint_rules-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-test_lint_rules-r6
   exit_code: 0
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-node_scripts_check_portal_compliance_mjs-r5
+  run_id: minted-can-theo-tin-khi-phan-xu-lai-SUITE-node_scripts_check_portal_compliance_mjs-r6
   exit_code: 0
-  verified_at: 2026-11-01T22:45:33Z
+  verified_at: 2026-11-02T00:59:10Z
 
 ## Known limits
 
@@ -130,14 +128,13 @@ Vòng 5 (do Mạnh mở). Nội dung thay trọn vòng cũ; lịch sử các vò
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên bản mới lẫn baseline): E6 (`cd pipeline && DATABASE_URL=${PB_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_pd} node --test --test-concurrency=1 scripts/phat-bieu-chung-bai.itest.mjs`). Đây là regression-guard của hành vi phát biểu chung bài đã có, không chứng minh tính năng mới.
+Eval không phân biệt (xanh trên cả HEAD lẫn baseline, chứng minh harness chứ không phải tính năng; nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
+- E6: cd pipeline && DATABASE_URL=${PB_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_pd} node --test --test-concurrency=1 scripts/phat-bieu-chung-bai.itest.mjs
 
 Baseline khong do:
-- cd pipeline && DATABASE_URL=${CT_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ct} node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs: bo qua baseline: tep pipeline/scripts/can-theo-tin.itest.mjs co o cay dang kiem nhung chua co o merge-base e6543f3a65e6e0a1483333a8be93fc66777e7640 — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs: bo qua baseline: tep _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs co o cay dang kiem nhung chua co o merge-base e6543f3a65e6e0a1483333a8be93fc66777e7640 — eval moi, chay tren code cu khong phan biet gi
+- cd pipeline && DATABASE_URL=${CT_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ct} node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs: bo qua baseline: tep pipeline/scripts/can-theo-tin.itest.mjs co o cay dang kiem nhung chua co o merge-base c1471a999041c85e54d13d151c3328446d7d9a2c — eval moi, chay tren code cu khong phan biet gi
+- node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs: bo qua baseline: tep _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs co o cay dang kiem nhung chua co o merge-base c1471a999041c85e54d13d151c3328446d7d9a2c — eval moi, chay tren code cu khong phan biet gi
 - cd pipeline && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
-
-Các phát hiện từ bước rà soát (hai mục trong hợp đồng về ca tin đã nghỉ không chung bài đăng, cùng các mục ngoài hợp đồng) nằm ở `review-findings.md` để người đọc ở Cổng 2.
 
 ## Variance
 
@@ -145,6 +142,6 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 4: E5 bị BLOCKED hạ tầng — bản chép DB thử thiếu bảng khi máy tải nặng; vế (1) vẫn xanh. Chạy lại ở vòng sau.
-Round 5: do Mạnh mở; giữ nguyên E7 và evals.yaml. Cả bảy eval và năm lệnh suite xanh trên cây a7b9780a.
+Round 5: PASS 7/7 theo commit a49764c0; hai mục AC-3 về tin đã nghỉ chờ người ở Cổng Bằng chứng.
+Round 6: PASS 7/7 sau gộp main và bản sửa 887918be (066 chỉ đọc tin đã nghỉ khi thật sự chung chủ thể); không có eval nào đỏ.
 
