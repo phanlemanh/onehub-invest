@@ -1,0 +1,9 @@
+{
+ "feature_plain": "Lượt thu S05 không hụt tin khi lệch ngày, và hai lượt nạp không đè nhau hay treo khi tệp khoá có giá trị lạ.",
+ "decisions_plain": [
+  {
+   "id": "d-20261102T020802Z-g1",
+   "p": "KHÔNG chạy lượt phản biện riêng trước khi làm — đổi lại dựa vào review nhánh và các ca đối chứng âm trong tiêu chí."
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "feature_plain": "Khi hết hạn đăng nhập, bộ thu S08 báo lỗi rõ thay vì im lặng ra 0 dự án; dữ liệu danh mục không bị trùng hay đọc nhầm số.",
+ "decisions_plain": [
+  {
+   "id": "d-20261102T020802Z-g1",
+   "p": "KHÔNG chạy lượt phản biện riêng trước khi làm — đổi lại dựa vào review nhánh và các ca đối chứng âm trong tiêu chí."
+  },
+  {
+   "id": "d-20261102T-dtd",
+   "p": "Bộ dò lộ nguồn miễn đúng một địa chỉ công khai của Apple dùng trong tệp lịch — đổi lại mọi địa chỉ khác vẫn bị bắt."
+  }
+ ]
+}

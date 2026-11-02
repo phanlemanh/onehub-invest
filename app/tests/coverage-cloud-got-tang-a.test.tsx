@@ -21,7 +21,7 @@ process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app đọc lúc impo
 process.env.OPS_API_TOKEN = "au12-thu"
 // Next tạo kho request bằng globalThis.AsyncLocalStorage lúc nạp mô-đun — đặt TRƯỚC mọi import động (runtime Next tự đặt).
 Object.assign(globalThis, { AsyncLocalStorage })
-const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
+const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_s08_inventory", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
 
 type Block = Record<string, unknown> & { measured_at: string; error?: string; rows?: unknown }
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Block> }

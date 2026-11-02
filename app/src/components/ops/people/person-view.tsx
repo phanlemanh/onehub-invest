@@ -4,6 +4,7 @@ import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { PageHeader } from "@/components/page/page-header"
 import { Badge } from "@/components/reui/badge"
 import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
+import { Button } from "@/components/ui/button"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
@@ -11,8 +12,8 @@ import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import { MoiGioiBadge } from "./people-badges"
 import { AN_VOI_VIEWER } from "./people-text"
 
-/** Bí danh đã áp quyền xem: `value` null = ẩn với vai Người xem. */
-export type BiDanhHien = { kind: string; label: string; value: string | null; source: string; firstSeen: string; retired: boolean }
+/** Bí danh đã áp quyền xem: `value` null = ẩn với vai Người xem; `tel` chỉ có ở số gốc đúng khuôn, vai xem được. */
+export type BiDanhHien = { kind: string; label: string; value: string | null; tel: string | null; source: string; firstSeen: string; retired: boolean }
 export type TinHien = { subjectKey: string; methodLabel: string; tierLabel: string; observedAt: string }
 
 export type PersonProps =
@@ -58,7 +59,7 @@ export function PersonView(props: PersonProps) {
       <Frame spacing="default" className="w-full min-w-0">
         <FrameHeader>
           <FrameTitle role="heading" aria-level={2}>Bí danh</FrameTitle>
-          <FrameDescription>Tên, tài khoản và SĐT băm của người này tại nguồn.</FrameDescription>
+          <FrameDescription>Tên, tài khoản và SĐT của người này tại nguồn.</FrameDescription>
         </FrameHeader>
         <FramePanel>
           {aliases.length === 0 ? (
@@ -87,7 +88,21 @@ export function PersonView(props: PersonProps) {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm wrap-anywhere whitespace-normal">
-                      {a.value == null ? <span className="text-muted-foreground text-xs">{AN_VOI_VIEWER}</span> : a.value}
+                      {a.value == null ? (
+                        <span className="text-muted-foreground text-xs">{AN_VOI_VIEWER}</span>
+                      ) : a.tel ? (
+                        <Button
+                          variant="link"
+                          size="xs"
+                          className="justify-start px-0 tabular-nums"
+                          nativeButton={false}
+                          render={<a href={a.tel} />}
+                        >
+                          <span translate="no">{a.value}</span>
+                        </Button>
+                      ) : (
+                        a.value
+                      )}
                     </TableCell>
                     <TableCell className="text-sm" translate="no">{a.source}</TableCell>
                     <TableCell className="text-muted-foreground text-xs tabular-nums">{fmtVnDateTime(a.firstSeen)}</TableCell>

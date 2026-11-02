@@ -1,5 +1,5 @@
 import type { SourceNameEntry } from "@/lib/mask-source-names"
-import { hienBiDanh, laMoiGioi, type NguoiHang } from "@/lib/ops/people"
+import { hienBiDanh, laMoiGioi, telHref, type NguoiHang } from "@/lib/ops/people"
 
 import type { HangNguoi } from "./people-text"
 
@@ -15,6 +15,7 @@ export function hangNguoi(r: NguoiHang, entries: SourceNameEntry[], xem: boolean
     an: !xem,
     ten: hien("ten", r.ten),
     taiKhoan: hien("tai_khoan_nguon", r.taiKhoan),
-    sdtBam: hien(r.sdtKind, r.sdtBam),
+    sdt: hien(r.sdtKind, r.sdt),
+    tel: r.sdt == null ? null : telHref(r.sdtKind, r.sdt, xem),
   }
 }

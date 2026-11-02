@@ -53,10 +53,10 @@ async function creds() {
 // thuần để test không gọi Apify.
 // - resultsLimit là trần của actor trên CẢ LƯỢT (tổng mọi startUrls) theo
 //   khuôn Apify — với 2 nhóm bật tức tối đa ~50 tin/nhóm mỗi lượt.
-// - onlyPostsNewerThan mặc định '4 days': phủ khoảng cách lượt dài nhất của
-//   lịch Thứ Ba→Thứ Sáu→Thứ Ba (3–4 ngày) + đệm — '12 hours' cũ chỉ hợp với
-//   lịch 4 lượt/ngày, lịch mới sẽ bỏ ~85–90% bài giữa hai lượt.
-export const S05_NEWER_THAN_MAC_DINH = "4 days";
+// - onlyPostsNewerThan mặc định '5 days' (2510-31): '4 days' vừa khít khoảng
+//   Thứ Sáu→Thứ Ba (3–4 ngày) không đệm — trễ chút là mất bài ở mép; 5 ngày
+//   có đệm 1 ngày. Plist đặt cùng giá trị.
+export const S05_NEWER_THAN_MAC_DINH = "5 days";
 export function s05ResultsLimit() {
   const n = Number(process.env.S05_RESULTS_LIMIT);
   return Number.isFinite(n) && n > 0 ? n : 100;

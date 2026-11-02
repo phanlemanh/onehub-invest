@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.oneinvest.s08-danh-muc</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>/Users/manhphan/dev/onehub-invest/scripts/s08-danh-muc/s08-weekly.sh</string>
+	</array>
+	<!-- MỘT lượt mỗi tuần: sáng Chủ nhật 06:30 (chính sách Mạnh duyệt 24/10:
+	     ≤1 lượt/tuần; script tự chặn qua cổng vong-doi khi nguồn paused/retired). -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>0</integer>
+		<key>Hour</key>
+		<integer>6</integer>
+		<key>Minute</key>
+		<integer>30</integer>
+	</dict>
+	<key>StandardOutPath</key>
+	<string>/Users/manhphan/dev/onehub-invest/pipeline/logs/s08-weekly.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/manhphan/dev/onehub-invest/pipeline/logs/s08-weekly.log</string>
+</dict>
+</plist>
