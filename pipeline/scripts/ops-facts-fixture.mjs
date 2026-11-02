@@ -3,7 +3,7 @@
 // local — tên thật không rời máy), cộng snapshot / thẻ chờ viết trước. `admin` là pg client đã kết nối (bên gọi tự mang pg).
 import { localDbUrl } from "./capture-ops-facts.mjs";
 
-const LIKE = ["airbnb_snapshots", "airdna_markets", "stg_zalo_posts", "stg_chotot_ads", "stg_abnb_listings", "sale_offers", "review_queue", "ops_audit"];
+const LIKE = ["airbnb_snapshots", "airdna_markets", "stg_zalo_posts", "stg_chotot_ads", "stg_abnb_listings", "stg_s08_inventory", "sale_offers", "review_queue", "ops_audit"]; // 3110-10 MỞ LẠI: probe S08 cần bảng này trong hộp cát
 
 /** Snapshot viết trước theo luồng thu: [source, giờ trước] — trong và ngoài 24 giờ. */
 export const SNAPSHOTS = [
