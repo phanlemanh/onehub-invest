@@ -1,0 +1,20 @@
+performance.getEntriesByType('resource') dump (ego-browser, no read_network_requests)
+{
+ "chain": [
+  {
+   "tag": "DIV",
+   "ox": "auto",
+   "sw": 639,
+   "cw": 639
+  },
+  {
+   "tag": "DIV",
+   "ox": "scroll",
+   "sw": 671,
+   "cw": 671
+  }
+ ],
+ "bad": [],
+ "total": 33,
+ "xhr": []
+}

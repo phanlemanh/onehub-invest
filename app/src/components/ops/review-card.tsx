@@ -21,6 +21,7 @@ import { ReviewCompare } from "./review/review-compare";
 import { ReviewFullText } from "./review/review-full-text";
 import { ReviewReason } from "./review/review-reason";
 import { ReviewPhotos } from "./review-photos";
+import { NguoiCard } from "./review-card-nguoi";
 
 export type { ReviewItem } from "@/lib/ops/review-queue";
 
@@ -84,7 +85,7 @@ const DONE_LABEL: Record<string, Record<string, string>> = {
 };
 
 /** Gửi quyết định (kèm lý do) lên route decide rồi làm mới danh sách. Lý do giữ nguyên khi route trả lỗi. */
-function useDecide(id: number) {
+export function useDecide(id: number) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
@@ -110,8 +111,8 @@ function useDecide(id: number) {
 }
 
 /** Thẻ đã quyết: nhãn trạng thái + lý do đã ghi (thẻ quyết trước PL3 không có lý do). */
-function DoneState({ item }: { item: ReviewItem }) {
-  const label = DONE_LABEL[item.item_type]?.[item.status] ?? "Đã quyết";
+export function DoneState({ item, labels }: { item: ReviewItem; labels?: Record<string, string> }) {
+  const label = (labels ?? DONE_LABEL[item.item_type])?.[item.status] ?? "Đã quyết";
   return (
     <div className="flex flex-col gap-1.5">
       <div>
@@ -127,7 +128,7 @@ function DoneState({ item }: { item: ReviewItem }) {
 }
 
 /** Chân thẻ chờ: ô lý do trên hàng nút; mọi nút tắt khi lý do trống (PL3). */
-function PendingActions({ d, extraBlock, children }: {
+export function PendingActions({ d, extraBlock, children }: {
   d: ReturnType<typeof useDecide>;
   extraBlock?: string | null;
   children: ReactNode;
@@ -160,6 +161,8 @@ export function ReviewCard({ item, media, context, children = stacked }: {
 }) {
   if (item.item_type === "entity_match") return <EntityMatchCard item={item} media={media} context={context} render={children} />;
   if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} context={context} render={children} />;
+  // HD17: thẻ Người dùng loại data_quality + mã `nguoi:` (theo tiền lệ agent_output + `enrich:`).
+  if (item.item_type === "data_quality" && item.item_id?.startsWith("nguoi:")) return <NguoiCard item={item} render={children} />;
   return children({
     body: (
       <p className="text-muted-foreground text-xs">
