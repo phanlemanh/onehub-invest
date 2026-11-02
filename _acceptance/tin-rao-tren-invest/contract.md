@@ -5,7 +5,7 @@ slug: tin-rao-tren-invest
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, cli, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-tin-rao-tren-invest-design.md
@@ -74,3 +74,26 @@ Không có `opportunity.md`: Mạnh giao thẳng, nên không có ngưỡng Cổ
 - Ảnh bằng chứng commit lên kho công khai phải che cột tên và số.
 - Đổi `/listings` thành chuyển hướng làm phải sửa ba ca test của hồ sơ đã ký: `chuyen-huong-ma-thi-truong` (`PG.listings` trỏ `sale/page.tsx`), `LB-AC` thứ tự trường lọc, `LD-AC-8` link. S4 phải ghim lại hai hồ sơ đó.
 - Từ giờ link cũ `/vn/<tt>/listings` mở Bán thay vì thuê ngắn hạn như trên production; ai cần thuê ngắn hạn phải đổi link.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Nếu lớp che tên bị hỏng và bài kiểm tra đỏ, nội dung báo lỗi có thể in ra tên nguồn thật rồi bị đưa vào hồ sơ bằng chứng trên kho công khai. Hiện chưa có bản ghi nào bị lộ.
+  - Ngoài-2: Phép kiểm tra việc che tên chỉ có tác dụng khi dữ liệu thật còn đúng một tin mang định danh nguồn. Khi tin đó hết hạn, lỗi gỡ che tên sau này có thể lọt qua mà bài kiểm tra vẫn xanh.
+  - Ngoài-3: Bài kiểm tra không chứng minh đã duyệt đủ các trang tin, nên nếu việc lấy trang bị thiếu thì kết quả «0 tin lộ định danh» vẫn hiện xanh. Người dùng chưa gặp lỗi nào từ chuyện này.
+  - Ngoài-4: Sổ tay giao diện ghi trang /listings như một trang có giao diện đầy đủ, trong khi thực tế nó chỉ chuyển sang Bán hoặc Cho thuê. Người làm giao diện sau này có thể hiểu nhầm, người dùng cuối không thấy gì.
+  - Ngoài-5: Một phần ghi chú về ba trang tin rao trong sổ tay giao diện bị cắt khi hiển thị, nên người đọc thiếu thông tin về ô chọn Dài hạn, Ngắn hạn. Người dùng cuối không bị ảnh hưởng.
+  - Ngoài-7: Ở máy thu, một số tin có thẻ hiện nút Xem số nhưng bấm vào lại báo Chưa có số, và bộ lọc Chỉ tin có số đếm dư vài tin. Trên cổng công khai ở cloud không gặp.
+  - Ngoài-8: Sổ tay giao diện ghi sai loại trang cho /listings và cụt một câu về ô thời hạn của trang Cho thuê. Người dùng cuối không thấy ảnh hưởng.
+  - Ngoài-9: Phần kiểm tự động việc che tên, số người bán có nguồn thật chưa thử hết các trường hợp, nên sau này có thể sửa hỏng mà không bị báo. Hiện chưa thấy người dùng bị ảnh hưởng.
+  - Ngoài-10: Một ca kiểm tự động nói là bấm Ngắn hạn nhưng thực ra không bấm, nên nếu nút này hỏng thì ca đó không báo. Việc bấm thật vẫn được kiểm bằng bước thử giao diện riêng.
+  - Ngoài-11: Ai gõ tay một đường dẫn có ký tự lạ ở bộ lọc phường sẽ thấy trang tin Bán hoặc Cho thuê báo lỗi thay vì bỏ qua bộ lọc đó. Chỉ xảy ra với đường dẫn cố tình dựng, người dùng thường không gặp.
+  - Ngoài-12: Một số ít thẻ tin hiện tên đường bị cụt chữ đầu, hoặc vẫn còn số nhà dạng «Số 1». Người xem thấy địa chỉ hơi lạ nhưng vẫn hiểu được.
+  - Ngoài-13: Nếu ai mở link ngoài có sẵn tham số phường kiểu cũ, họ không gỡ được bộ lọc đó bằng nút Xoá bộ lọc, dù chip đã biến mất.
+  - Ngoài-14: Khi mở link cũ tới một trang đã không còn tin, người xem thấy báo «không có tin khớp» và không còn nút chuyển trang, phải bấm Xoá bộ lọc mới quay lại được.
+  - Ngoài-15: Bài kiểm có thể không phát hiện nếu sau này ai đổi tên tham số sắp xếp hay trang ở bộ lọc. Hiện sản phẩm vẫn chạy đúng.
+  - Ngoài-16: Bài kiểm chưa chứng minh trực tiếp rằng khách chưa đăng nhập bị từ chối ở API nội bộ, nên nếu ai làm hỏng chỗ này bài kiểm có thể không báo.
+  - Ngoài-17: Bài kiểm chỉ đọc chữ trong kịch bản kiểm tra, chưa chạy thật, nên có thể bỏ sót nếu kịch bản đó bị sửa sai.
+  - Ngoài-18: Bài kiểm có thể báo xanh dù một link từ trang Insight hay thanh đầu trang thực tế không dẫn đúng, nhưng chưa thấy link nào sai.
+  - Ngoài-19: Phép kiểm khuôn số điện thoại chỉ soát một mẫu 500 tin chứ chưa phải mọi tin có số, nên số sai khuôn ở tin khác có thể lọt.
+  - Ngoài-20: Bài kiểm có thể báo đạt dù không soát được số nào, nên không bảo đảm chắc chắn rằng số hiện ra đều đúng khuôn.
+  - Ngoài-21: Bài kiểm không đủ ca để bắt trường hợp tin thiếu phường hoặc thiếu loại bị lộ số liên hệ nếu ai sửa sai điều kiện ẩn sau này.
+  - Ngoài-22: Bài kiểm chưa chứng minh mọi thông tin khác của tin vẫn nguyên sau khi đồng bộ lên máy chủ, chỉ kiểm vài chỉ số thô.
+  - Ngoài-23: Bài kiểm có thể không phát hiện nếu hàng cuối của thẻ thuê ngắn hạn bị đặt sai chỗ, nhưng chưa thấy thẻ nào sai.

@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: tin-rao-tren-invest
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f44d043e74b44716d7a00e0714cab35544eec78a
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: tin-rao-tren-invest
@@ -35,7 +35,7 @@ Vòng 3. Chỉ E4b chạy lại trên cây f44d043e; các eval còn lại giữ 
 | E9 | AC-9 | test | PASS |
 | E9u | AC-9 | ui-check | PASS |
 | E9b | AC-9 | test | PASS |
-| E10 | AC-10 | judgment | UNCERTAIN |
+| E10 | AC-10 | judgment | PASS |
 
 ## Analyst
 
@@ -147,7 +147,7 @@ none — every multi-run eval is uniform
 - eval: E7u
   run_id: minted-tin-rao-tren-invest-E7u-r2
   exit_code: 0
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-02T08:58:45Z
   carried_from_round: 2
   screenshot: evidence/E7u.png
@@ -175,7 +175,7 @@ none — every multi-run eval is uniform
 - eval: E8u
   run_id: minted-tin-rao-tren-invest-E8u-r1
   exit_code: 0
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-02T08:39:42Z
   carried_from_round: 1
   screenshot: evidence/E8u-sale.png
@@ -200,7 +200,7 @@ none — every multi-run eval is uniform
 - eval: E9u
   run_id: minted-tin-rao-tren-invest-E9u-r1
   exit_code: 0
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-02T08:39:42Z
   carried_from_round: 1
   screenshot: evidence/E9u-sang.png
@@ -230,7 +230,7 @@ none — every multi-run eval is uniform
   required_evidence:
     - Một câu rõ ràng, đặt ở ADR-0007 dòng 226-227 hoặc ngay sau sửa đổi 02/11, nói `seller_name`/`seller_phone` trong `seller_*` đã hết bị loại. Hoặc Mạnh xác nhận ghi chú rằng sửa đổi 02/11 thay thế luật gate ở dòng 226-227. Lấy từ: /Users/manhphan/dev/onehub-invest/.claude/worktrees/distracted-napier-fce98f/docs/adr/0007-collector-operating-principles.md. Có câu này thì verdict đổi sang PASS.
     - Nội dung dòng 53 của /Users/manhphan/dev/onehub-invest/.claude/worktrees/distracted-napier-fce98f/.claude/skills/onehub-ui/catalog.md và dòng 48-52 của routes.md bị rút gọn khi tôi đọc, nên chưa thấy hết. Cần trích đoạn đầy đủ cho thấy khung thẻ dùng chung `ListingCardFrame` và khuôn Duyệt listing.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-02 — Đạt
 
 ### Lệnh suite (hồi quy)
 
