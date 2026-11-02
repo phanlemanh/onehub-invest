@@ -5,7 +5,7 @@ slug: sdt-s06-ghep-tai-khoan
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (068) — khớp t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-sdt-s06-ghep-tai-khoan-design.md
