@@ -45,7 +45,7 @@ evals:
     cmd: config:executors.test.tir_doi_chieu
     layer: backend-effect
     paths: [app/src/lib/offers-public.ts, app/tests/tin-rao-doi-chieu.test.tsx]
-    expected: "exit 0 khi có DB máy thu; không có DB thì exit 1 thông điệp THIEU DB MAY THU, không tính là đạt; READ ONLY, chỉ in số: total theo thị trường và loại tin bằng câu đếm độc lập viết tay trong test; duyệt các trang tới trần: 0 giá trị chuỗi chứa token từ source_registry sau khi che bằng cùng điều kiện của sync; 0 tin S02, S08; trang đầu vn-hcmc dưới 1000 ms ở cả bốn sort; 0 số hiện được sai khuôn +84 và 9 chữ số; in số tin giá phi lý ở trang đầu từng sort (phải bằng 0); đối chứng: withPhone bằng đếm độc lập"
+    expected: "exit 0 khi có DB máy thu; không có DB thì exit 1 thông điệp THIEU DB MAY THU, không tính là đạt; READ ONLY, chỉ in số: total theo thị trường và loại tin bằng câu đếm độc lập viết tay trong test; duyệt các trang tới trần: 0 giá trị chuỗi chứa token từ source_registry trong đúng giá trị getPublicOffers trả, test không che hộ; mọi tin hiện được mà biểu thức che của sync bắt được, kể cả ngoài trần trang, đọc lại qua getPublicOffers phải có sellerName null; 0 tin S02, S08; trang đầu vn-hcmc dưới 1000 ms ở cả bốn sort; 0 số hiện được sai khuôn +84 và 9 chữ số; in số tin giá phi lý ở trang đầu từng sort (phải bằng 0); đối chứng: withPhone bằng đếm độc lập"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4c
     criterion: AC-4

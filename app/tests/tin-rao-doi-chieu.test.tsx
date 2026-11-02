@@ -7,8 +7,8 @@ import pg from "pg"
 import { OFFER_RECENT_DAYS, OFFER_RENT_MAX_VND, OFFER_RENT_MIN_VND, OFFER_SALE_MIN_VND, OFFER_SORTS, parseOfferFilters, type PublicOffer } from "../src/lib/offers-filters"
 import { getOfferPhone, getPublicOffers } from "../src/lib/offers-public"
 import { pool } from "../src/lib/db"
-import { maskedSourceExpr } from "../../pipeline/sync-cloud.mjs"
 import { guardValues, entriesFromTokens } from "../../pipeline/lib/tier-a-guard.mjs"
+import { maskedSourceExpr } from "../../pipeline/sync-cloud.mjs"
 
 const DB = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 const HIEN = `o.kind = $1 AND o.property_type IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0 AND o.area_m2 > 0
@@ -50,20 +50,13 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
         assert.equal(dau.withPhone, doc.co_so, `${tt} ${kind}: withPhone lệch đếm độc lập`)
         console.log(`${tt} ${kind}: total ${doc.total} · có số ${doc.co_so}`)
 
-        // Duyệt tới trần. Cùng điều kiện che của sync: tên mang định danh sẽ về null trên cloud, nên soát phần còn lại.
+        // Duyệt tới trần.
         const gap: PublicOffer[] = []
         for (let offset = 0; offset <= 960 && offset < doc.total; offset += 50) {
           gap.push(...(await getPublicOffers(tt, filters(`kind=${kind}&limit=50&offset=${offset}`))).rows)
         }
-        const { rows: seChe } = await c.query(
-          `SELECT o.offer_id FROM sale_offers o WHERE o.offer_id = ANY($1::text[]) AND o.seller_name IS NOT NULL AND ${maskedSourceExpr("seller_name", tokens)} IS NULL`,
-          [gap.map((r) => r.offerId)],
-        )
-        const dongChe = new Set(seChe.map((r) => r.offer_id))
-        for (const r of gap) {
-          const sach = dongChe.has(r.offerId) ? { ...r, sellerName: null } : r
-          dem.dinhDanh += guardValues(sach, entries).length
-        }
+        // Soát đúng giá trị getPublicOffers trả, không che hộ: AC-4 hứa về đầu ra thật.
+        for (const r of gap) dem.dinhDanh += guardValues(r, entries).length
         const { rows: [an] } = await c.query(
           `SELECT count(*)::int AS n FROM sale_offers WHERE offer_id = ANY($1::text[]) AND source IN ('S02', 'S08')`,
           [gap.map((r) => r.offerId)],
@@ -71,6 +64,28 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
         dem.tinAn += an.n
       }
     }
+
+    // Tin mang định danh hiếm, có thể nằm ngoài trần trang: tìm bằng biểu thức của sync rồi đọc đúng tin đó qua đường công khai.
+    let mangDinhDanh = 0
+    for (const kind of LOAI) {
+      const { rows: ban } = await c.query(
+        `SELECT o.offer_id, o.area_id, a.parent_id FROM sale_offers o JOIN areas a ON a.id = o.area_id
+         WHERE ${HIEN} AND o.seller_name IS NOT NULL AND ${maskedSourceExpr("seller_name", tokens)} IS NULL`,
+        [kind],
+      )
+      for (const b of ban) {
+        let thay: PublicOffer | undefined
+        for (let offset = 0; !thay && offset <= 960; offset += 50) {
+          const trang = await getPublicOffers(b.parent_id, filters(`kind=${kind}&ward=${b.area_id}&limit=50&offset=${offset}`))
+          thay = trang.rows.find((r) => r.offerId === b.offer_id)
+          if (trang.rows.length < 50) break
+        }
+        assert.ok(thay, "tin mang định danh không đọc lại được qua đường công khai")
+        mangDinhDanh++
+        assert.equal(thay.sellerName, null, "tên mang định danh nguồn lọt ra API")
+      }
+    }
+    console.log(`tin mang định danh đã đọc lại ${mangDinhDanh}`)
 
     for (const sort of OFFER_SORTS) {
       const t0 = performance.now()
