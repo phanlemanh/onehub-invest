@@ -21,7 +21,9 @@ const json = (f) => JSON.parse(execFileSync("plutil", ["-convert", "json", "-o",
 const lich = (p) => [p.StartCalendarInterval ?? []].flat().map(({ Hour, Minute, Weekday }) => ({ Hour, Minute, Weekday }));
 const phut = (m) => m.Hour * 60 + (m.Minute ?? 0);
 // mốc thiếu Hour = launchd chạy mỗi giờ → luôn tính là va (khoảng 0), không để phép so ra NaN rồi lọt
-const khoang = (a, b) => { if (a.Hour == null || b.Hour == null) return 0; const d = Math.abs(phut(a) - phut(b)); return Math.min(d, 1440 - d); };
+// mốc có Hour mà thiếu Minute = launchd chạy mỗi phút của giờ đó → so với cả 60 phút, không coi là HH:00
+const cacPhut = (m) => (m.Minute == null ? Array.from({ length: 60 }, (_, i) => m.Hour * 60 + i) : [phut(m)]);
+const khoang = (a, b) => { if (a.Hour == null || b.Hour == null) return 0; return Math.min(...cacPhut(a).flatMap((x) => cacPhut(b).map((y) => { const d = Math.abs(x - y); return Math.min(d, 1440 - d); }))); };
 
 function kiemKho(tep) {
   execFileSync("plutil", ["-lint", tep], { stdio: "pipe" });
@@ -81,7 +83,11 @@ try {
   const moiGio = join(tam, "com.oneinvest.moi-gio.plist");
   writeFileSync(moiGio, '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>Label</key><string>moi-gio</string><key>StartCalendarInterval</key><dict><key>Minute</key><integer>50</integer></dict></dict></plist>');
   if (!/moi-gio/.test(vaCham(KY_VONG[1], [moiGio]).join(", "))) throw new Error("chiều đỏ AC-2: job mỗi giờ (chỉ Minute) không va 14:00");
-  console.log("chiều đỏ: bỏ 14:00 → đỏ AC-1 · dời 12:10 → đỏ AC-1 · 14:00 kèm Weekday 2 → đỏ AC-1 · 19:30 va airdna-daily · 23:30 va zalo-import · job giả 13:30 ngoài kho va 14:00 · job mỗi giờ va 14:00");
+  // job chỉ có Hour 13 chạy mỗi phút 13:00–13:59, sát 14:00 dù HH:00 cách đúng 60 phút
+  const caGio = join(tam, "com.oneinvest.ca-gio.plist");
+  writeFileSync(caGio, '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>Label</key><string>ca-gio</string><key>StartCalendarInterval</key><dict><key>Hour</key><integer>13</integer></dict></dict></plist>');
+  if (!/ca-gio/.test(vaCham(KY_VONG[1], [caGio]).join(", "))) throw new Error("chiều đỏ AC-2: job chỉ có Hour 13 không va 14:00");
+  console.log("chiều đỏ: bỏ 14:00 → đỏ AC-1 · dời 12:10 → đỏ AC-1 · 14:00 kèm Weekday 2 → đỏ AC-1 · 19:30 va airdna-daily · 23:30 va zalo-import · job giả 13:30 ngoài kho va 14:00 · job mỗi giờ va 14:00 · job chỉ Hour 13 va 14:00");
 } finally { rmSync(tam, { recursive: true, force: true }); }
 
 if (boBanCai) {
