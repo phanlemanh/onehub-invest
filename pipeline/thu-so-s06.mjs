@@ -92,7 +92,14 @@ async function docViec(client, state) {
     WHERE (payload->>'phone_hidden') IS DISTINCT FROM 'true'
     GROUP BY 1 ORDER BY so_tin DESC`;
   const rows = (await client.query(q)).rows;
-  const daTh = (id) => state.da_thu[id] && state.da_thu[id].phone !== undefined;
+  // 0211-9 (2): chỉ tin CÓ SỐ hoặc trạng thái CHỐT (het-han) tính là đã xử lý —
+// loi-trang/chan/timeout/khong-nut/khong-ra-so/so-khong-hop-le/trang-khac được
+// thử lại ở lượt sau (trước đây phone null cũng coi là xong → 175+19 tin lỗi
+// bị bỏ vĩnh viễn).
+const daTh = (id) => {
+  const x = state.da_thu[id];
+  return !!x && (x.phone !== null || x.status === "het-han");
+};
   if (PHASE === 1) {
     // MỞ LẠI 0211-7 đC: mẫu đo «một tài khoản một số» xếp ĐẦU pha 1 (lượt 30′
     // không bao giờ tới cuối danh sách) — tin thứ 2 của N tài khoản nhiều tin nhất.
@@ -150,11 +157,10 @@ async function ghiSnapshot(batch, cityCode) {
   return snapshotId;
 }
 
-/** Mở trang tin, bấm hiện số, trả { status, phone }. */
-async function laySoTrang(context, viec) {
+/** Mở trang tin trên tab TÁI DÙNG, bấm hiện số, trả { status, phone }. */
+async function laySoTrang(page, viec) {
   const loai = viec.st === "s" ? "mua-ban-nha-dat" : "cho-thue-nha-dat";
   const url = `${WEB_BASE}/${loai}-${slug(viec.area)}-${slug(viec.region)}/${viec.list_id}.htm`;
-  const page = await context.newPage();
   try {
     const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (process.env.S06_DEBUG) console.log(`[dbg] HTTP ${res?.status()} → ${page.url().replace(WEB_BASE, "«che»")}`);
@@ -200,7 +206,7 @@ async function laySoTrang(context, viec) {
     if (!phone) return { status: "khong-ra-so" }; // dấu hiệu bị chặn nếu lặp lại
     return { status: "co-so", phone };
   } finally {
-    await page.close().catch(() => {});
+    // tab giữ nguyên cho tin kế — KHÔNG close (0211-10 b)
   }
 }
 
@@ -224,7 +230,9 @@ async function main() {
   // open -hna (-h = ẩn): cửa sổ không nhảy đè màn hình Mạnh (phàn nàn 2/11);
   // window-position ngoài màn hình + thu về Dock sau khi connect (tab CDP vẫn
   // chạy khi minimize — đã kiểm với lượt đang chạy).
-  spawn("open", ["-hna", "Google Chrome", "--args", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`, "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100"], { stdio: "ignore", detached: false });
+  // 0211-10 (b): -g không lấy tiêu điểm + -h ẩn + -n instance mới; các cờ
+  // hãm tab nền để tab ẩn/ngoài màn hình VẪN chạy (không headless).
+  spawn("open", ["-ghna", "Google Chrome", "--args", `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`, "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding", "--disable-background-timer-throttling"], { stdio: "ignore", detached: false });
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
   let browser;
@@ -238,8 +246,28 @@ async function main() {
     }
   }
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
-  // 0211-8: KHÔNG osascript "every window" — đụng mọi cửa sổ Chrome của máy;
-  // cửa sổ bộ thu đã ẩn nhờ -h và nằm ngoài màn hình nhờ --window-position.
+  // 0211-10 (b): mỗi luồng giữ đúng MỘT tab tạo MỘT lần đầu qua
+  // Target.createTarget {background: true} — không nhấc Chrome lên; tái dùng
+  // bằng goto cho mọi tin (điều phối nghi newPage mỗi tin là nguyên nhân
+  // cửa sổ bung). Fallback: context.newPage() nếu đường CDP không trả page.
+  const tabs = [];
+  for (let i = 0; i < THREADS; i++) {
+    let tab = null;
+    try {
+      const cdpSs = await browser.newBrowserCDPSession();
+      await cdpSs.send("Target.createTarget", { url: "about:blank", background: true });
+      await cdpSs.detach();
+      const hetTab = context_pages(contexts[0]);
+      for (let lan = 0; lan < 20 && !tab; lan++) {
+        await sleep(250);
+        tab = hetTab().find((pg) => pg.url() === "about:blank");
+      }
+    } catch { /* rơi xuống fallback */ }
+    tabs.push(tab ?? (await contexts[0].newPage()));
+  }
+  function context_pages(ctx) {
+    return () => ctx.pages();
+  }
 
   const ketQua = { co_so: 0, khac_so: 0 };
   const errors = {};
@@ -252,13 +280,13 @@ async function main() {
   let iViec = 0;
 
   async function motLuong(idx) {
-    const context = contexts[idx % contexts.length];
+    const tab = tabs[idx % tabs.length];
     while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5) {
       const v = viec[iViec++];
       const tBat = Date.now();
       let kq;
       try {
-        kq = await laySoTrang(context, v);
+        kq = await laySoTrang(tab, v);
       } catch (e) {
         kq = { status: e.message?.includes("Timeout") ? "timeout" : "loi-trang" };
       }
@@ -266,7 +294,9 @@ async function main() {
       thu++;
 
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
-      if (kq.status === "chan" || kq.status === "khong-ra-so") chanLienTiep++;
+      // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
+      // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
+      if (["chan", "khong-ra-so", "loi-trang", "timeout"].includes(kq.status)) chanLienTiep++;
       else chanLienTiep = 0;
       if (kq.status === "co-so") ketQua.co_so++;
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
