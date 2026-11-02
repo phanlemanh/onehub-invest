@@ -48,8 +48,9 @@ Từ 22:00 ngày 04/11 chỉ gộp bản vá lỗi cho đường ống.
 
 **Vì sao việc 5 xếp sau dù rất cần:** nguồn đang phạt 429 tới 17:32 ngày 03/11, và anh đã chốt gặp 429 thì dừng, không nới.
 Thu theo tài khoản nhiều tin trước giúp được nhiều nhất nếu bị chặn sớm: 2.000 tài khoản đầu phủ 24.933/41.075 tin trên cổng
-(61%), 5.000 tài khoản đầu phủ 33.142 (81%). Với 2 luồng nghỉ 8–15 giây, 2.000 tài khoản mất khoảng 3,5 giờ (ước). Căn cứ
-ghép số theo tài khoản mới là mẫu 72 cặp.
+(61%), 5.000 tài khoản đầu phủ 33.142 (81%). Liên làn ước 2.000 tài khoản mất khoảng 4,5 giờ, chưa đo ở nhịp này. Căn cứ ghép
+số theo tài khoản mới là mẫu 72 cặp. Chưa phân biệt được 429 do tốc độ hay hạn mức ngày; nếu là hạn mức, đích 20.000 tin có
+thể không đạt.
 
 **Về chỉ số AI:** đích 50% đặt ra để chứng minh, chưa đo được khả thi. Kể cả đạt, tới 05/11 chỉ nói được AI gánh loại hình và
 ý định của S03; giá, diện tích vẫn do parser, S06 vẫn lấy trường từ nguồn. Không nên nói «phần lớn dựa vào AI» cho toàn hệ thống.
@@ -88,3 +89,4 @@ Hàng chờ đang có 31 mục. Trước 05/11 chỉ cần năm mục này; ph�
 - Số S03 đo trước lượt SV1; mô phỏng của audit chưa chạy thật.
 - Chưa kiểm tin có khu vực cấp thị trường có ảnh hưởng tới rollup 300, 400 hay không.
 - Chưa kiểm lệnh LLM hiện có chạy được trọn 2.772 tin trong một lượt.
+- Đích S06 bán phủ ≥ 90% phụ thuộc phần TP.HCM chạm trần; ngày 02/11 chưa có vòng nào xử lý phần này.
