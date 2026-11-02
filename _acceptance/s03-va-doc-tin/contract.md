@@ -5,7 +5,7 @@ slug: s03-va-doc-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs — không khớp t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-s03-va-doc-tin-design.md
