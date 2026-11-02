@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7f198c7a53a774e49f0a0a095431521fd615b22c
+verified_commit: b7bde4aeed1ff07b63c58c1a0003752de8b16b61
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -221,3 +221,7 @@ Round 2: tất cả 13 eval xanh, kể cả E12; getDeals đã thôi nuốt lỗ
 ### Re-pin lần 1 — 2026-11-02, do đổi AC-8 theo Mạnh, smoke đo đúng AC-6, rút ba khai thay bởi; giữ nguyên chữ ký
 run_id: repin-20261102T155004Z-10445
 sha: 7f198c7a53a774e49f0a0a095431521fd615b22c · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-11-02, do hoá cũ do #274 đổi deals.ts và test sau khi xác minh, phát hiện lúc gộp main cho hồ sơ nghiệm thu
+run_id: repin-20261102T220455Z-57881
+sha: b7bde4aeed1ff07b63c58c1a0003752de8b16b61 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · AC không có chốt máy: AC-10
