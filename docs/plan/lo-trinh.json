@@ -3157,6 +3157,71 @@
         "pipeline/transform-chotot.mjs",
         "pipeline/sql"
       ]
+    },
+    {
+      "ma": "DS2",
+      "slug": "s06-du-an-len-tin-can",
+      "cau_giao": "Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Dự án 22% ở thô còn 0 ở tin và căn. Tách từ DS1 vì cần migration và sửa sync-cloud.",
+      "hang": "T3",
+      "dung_tren": [
+        "DS1"
+      ],
+      "bat_khi": "Dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Mạnh chọn tách ở Hỏi-1 của DS1 (03/11). Hạng T3: migration thêm trường phát biểu và cột tin, sửa sync-cloud. Không cản ra mắt 05/11.",
+      "vung": [
+        "db/migrations",
+        "pipeline/transform-chotot.mjs",
+        "pipeline/sync-cloud.mjs",
+        "pipeline/sql"
+      ]
+    },
+    {
+      "ma": "AC1",
+      "slug": "anh-tin-cong-khai",
+      "cau_giao": "Nhà đầu tư thấy ảnh đầu của tin rao trên thẻ tin ở cổng Invest",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 7,
+      "vi_sao": "Đo 02/11: 39.920/39.965 tin có ảnh; ảnh đầu khoảng 0,7 GB theo mẫu 40 ảnh S03. Thẻ ListingCard đã có ô ảnh.",
+      "hang": "T3",
+      "dung_tren": [
+        "TR1"
+      ],
+      "bat_khi": "Ảnh đầu hiện trên thẻ tin; cloud không giữ URL nguồn; mẫu S06 đã xem không có dấu tên nguồn; ảnh giấy tờ bị lọc",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Mạnh duyệt 02/11: sửa ADR-0007 và AGENTS luật 6 cho ảnh đầu của tin, hàng riêng song song TR1, không chặn 05/11. Đường đề xuất: webp rộng 480px, tên tệp ngẫu nhiên. Trước khi mở: xem mẫu S06, phần tải qua điều phối liên làn.",
+      "vung": [
+        "app/src/components/listing/**",
+        "docs/adr",
+        "AGENTS.md"
+      ]
+    },
+    {
+      "ma": "GL1",
+      "slug": "gop-bang-listing",
+      "cau_giao": "Gộp sale_offers và listings thành một Listing có kind (sale, rent_lt, rent_st)",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "ROADMAP §3 mục 21. 92 câu SQL ở 46 tệp đọc sale_offers, 49 câu ở 29 tệp đọc listings.",
+      "hang": "T3",
+      "dung_tren": [],
+      "bat_khi": "Bảng cha cộng view lọc kind giữ tên cũ; số Insight trước và sau khớp",
+      "nhom": "tin-rao-0511",
+      "dot": "tin-rao-0511",
+      "phu": [],
+      "ghi_chu": "Mạnh đồng ý 02/11 làm ngay sau ra mắt 05/11, không chặn mốc. Đường ghi và lược đồ máy chủ chưa kiểm.",
+      "vung": [
+        "db/migrations",
+        "pipeline/sql",
+        "app/src/lib"
+      ]
     }
   ],
   "chan_troi": [
