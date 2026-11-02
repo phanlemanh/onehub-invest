@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f44d043e74b44716d7a00e0714cab35544eec78a
+verified_commit: a31be05f6641e46c592787b8a17084f14a1f7af5
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -273,3 +273,7 @@ none — every multi-run eval is uniform
 Round 1: các eval feature đạt; một lệnh suite hồi quy (test:lint-rules) đỏ ở vòng đầu. Trả về thi công.
 Round 2: E4b bị finding mức cao (đo sau khi tự xoá sellerName, không đo giá trị API thực trả). Trả về thi công.
 Round 3: commit f44d043e sửa E4b đo đúng giá trị API trả và đọc lại tin mang định danh; E4b và toàn bộ lệnh suite xanh, các eval khác carry-forward. Còn mục judgment E10 chờ người quyết nên verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-11-02, do gộp main sau chữ ký (SV1, va-doc-tin) làm hoá cũ theo lưới trước-gộp
+run_id: repin-20261102T100448Z-70996
+sha: a31be05f6641e46c592787b8a17084f14a1f7af5 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E8u, E9u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
