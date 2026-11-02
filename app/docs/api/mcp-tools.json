@@ -25,6 +25,31 @@
       "auth": "public"
     },
     {
+      "name": "oneinvest_get_listings",
+      "description": "Danh sách Listing công khai theo loại: tin bán, tin thuê dài hạn (kèm tên người bán, không kèm SĐT), thuê ngắn hạn. Lọc theo thị trường, phường, loại hình, giá, diện tích, phòng ngủ, có số. Bề mặt này chưa hứa ổn định: trường có thể đổi.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "market": { "type": "string", "description": "Market ID (vd: vn-hanoi)" },
+          "kind": { "type": "string", "enum": ["sale", "rent_lt", "rent_st"], "default": "rent_st" },
+          "ward": { "type": "string", "description": "Area ID của phường, nhiều mã cách nhau dấu phẩy" },
+          "type": { "type": "string", "description": "Loại hình, nhiều mã cách nhau dấu phẩy" },
+          "price_min": { "type": "number" },
+          "price_max": { "type": "number" },
+          "area_min": { "type": "number" },
+          "area_max": { "type": "number" },
+          "bedrooms": { "type": "integer" },
+          "has_phone": { "type": "string", "enum": ["1"] },
+          "sort": { "type": "string", "enum": ["newest", "price-asc", "price-desc", "perm2-asc"], "default": "newest" },
+          "limit": { "type": "integer", "default": 24, "maximum": 50 },
+          "offset": { "type": "integer", "default": 0, "maximum": 960 }
+        }
+      },
+      "endpoint": "/api/v1/listings",
+      "method": "GET",
+      "auth": "public"
+    },
+    {
       "name": "oneinvest_get_offers",
       "description": "Danh sách tin bán/cho thuê BĐS gần đây, lọc theo phường/loại/thời gian. Kèm confidence + source code SPL. Đang tạm đóng cho ops — cần header Authorization: Bearer <OPS_API_TOKEN>.",
       "inputSchema": {
@@ -44,5 +69,5 @@
   "base_url": "http://localhost:3000",
   "cloud_base_url": "https://onehub-invest.vercel.app",
   "auth": "theo từng công cụ — khoá auth của mỗi công cụ là chế độ trong sổ bề mặt app/src/lib/api-surface.ts; ops = header Authorization: Bearer <OPS_API_TOKEN> hoặc phiên ops. Dữ liệu đã pseudonymize theo SPL ADR-0007.",
-  "updated": "2026-10-24"
+  "updated": "2026-11-02"
 }
