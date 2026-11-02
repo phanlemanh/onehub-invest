@@ -5,7 +5,7 @@ slug: sdt-s06-ghep-tai-khoan
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (068) — khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-sdt-s06-ghep-tai-khoan-design.md
@@ -86,3 +86,14 @@ Quét bằng `morphological-scan`, chân sản phẩm từ DB local và `collect
   Tin đã ghi không mất số (AC-4), nhưng số chưa kịp lên tin sẽ mất tới khi ZCode bù từ snapshot.
 - Bốn số Context đo bằng câu chỉ đọc 02/11; lượt S06 kế có thể đổi chúng, AC-8 đo lại lúc chấm và đối chiếu câu đếm độc lập.
 - Đường nền hạ tầng chưa chạy: hook đợt `dieu-phoi` chặn `duong-nen.mjs`, và lệnh xin từ chối vì worktree này không thuộc dãy nào. S4 vẫn chạy suite.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-2: Lệnh đo `--thu` chạy trên DB dùng chung, không có DB thử riêng và không giữ khoá 33033, nên trùng giờ thu thì job thu hoặc nạp có thể chờ trong chốc lát; dữ liệu không đổi vì lượt đo hoàn tác.
+  - Ngoài-3: Phép kiểm ranh giới chưa phủ hết phạm vi AC-9 và làn ZCode, nên có thể xanh nếu về sau có người sửa nhầm script thu hoặc tệp đẩy cloud.
+  - Ngoài-7: Phép đo số ghép trỏ sai tin chỉ có kiểm bằng 0, chưa chứng minh nó bắt được lỗi thật.
+  - Ngoài-8: Ca tài khoản khoảng trắng và cờ ẩn số dạng chuỗi chỉ kiểm kết quả rỗng, chưa có đối chứng dương.
+  - Ngoài-9: Lệnh chấm ranh giới chỉ chạy đường xanh, chiều đỏ không nằm trong lệnh.
+  - Ngoài-10: Mẫu ranh giới bỏ lọt tệp đẩy cloud và script thu, nạp mà AC-9 hứa không đổi; hôm nay chưa có tệp nào như vậy bị sửa.
+  - Ngoài-11: Ô «giữ nguyên» chỉ kiểm mã luật, nên xuất xứ của tin giữ số bị đổi nhẹ vẫn có thể xanh.
+  - Ngoài-12: Dòng stg và bước «importer xoá số» của AC-4 là dữ liệu dựng tay, chưa đi qua bộ nạp thật, nên chưa phủ ca thu lại đổi mã tài khoản hay cờ ẩn số.
+  - Ngoài-13: Chiều đỏ của lệnh đo chỉ đưa giá trị tay vào hàm kiểm bất biến, chưa chứng minh lệnh thật thoát 1 khi dữ liệu bị đổi.
+  - Ngoài-14: Bản hàm phân xử dưới test đọc từ DB dùng chung, nên có migration mới chưa áp thì kết quả xanh có thể không phản ánh mã đang kiểm.
