@@ -1,0 +1,5 @@
+== E12 network (Browser pane, origin http://localhost:3462, 269 requests in window) ==
+last 80 listed: all 200 OK (static chunks, woff2, /api/zalo-media, GET /ops/review 200)
+no failed request, no 4xx/5xx, no third-party request seen
+== console ==
+errors: 0; warnings: 5 (font css preloaded-not-used, Next dev); info/log: HMR, Fast Refresh, React DevTools
