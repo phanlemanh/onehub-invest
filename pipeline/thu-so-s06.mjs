@@ -165,7 +165,11 @@ async function laySoTrang(page, viec) {
     const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (process.env.S06_DEBUG) console.log(`[dbg] HTTP ${res?.status()} → ${page.url().replace(WEB_BASE, "«che»")}`);
     // 0211-11: chan gắn nhãn nguồn chặn — chỉ nhãn, không URL/tên miền
-    if (res && (res.status() === 403 || res.status() === 429)) return { status: `chan-${res.status()}` };
+    if (res && (res.status() === 403 || res.status() === 429)) {
+      // 0211-13 (2): tôn trọng Retry-After — chỉ ghi nhãn số giây, không tự đổi nhịp
+      const ra = res.headers()["retry-after"];
+      return { status: `chan-${res.status()}${ra ? `-ra-${ra}s` : ""}` };
+    }
     await page.waitForTimeout(1200);
     const pathOk = page.url().includes(`/${viec.list_id}.htm`);
     if (!pathOk) {
@@ -231,20 +235,40 @@ async function main() {
   // open -hna (-h = ẩn): cửa sổ không nhảy đè màn hình Mạnh (phàn nàn 2/11);
   // window-position ngoài màn hình + thu về Dock sau khi connect (tab CDP vẫn
   // chạy khi minimize — đã kiểm với lượt đang chạy).
-  // 0211-12 (1): spawn BINARY trực tiếp (bỏ `open`) — open qua LaunchServices
-  // vẫn giật tiêu điểm ~18s lúc mở lượt (9 mẫu); binary + stdio ignore +
-  // detached không activate app. Cờ hãm tab nền giữ cho tab ngoài màn hình chạy.
+  // 0211-13 (1): THỬ NỐI TRƯỚC — cổng đã trả lời thì dùng instance đang sống,
+  // KHÔNG spawn (spawn khi instance cũ còn sống làm Chrome mới nhường chỗ và
+  // KÍCH HOẠT cửa sổ cũ — bộ thu chiếm trước màn hình từ 17:26 tới 17:4x VN).
+  // Chỉ khi cổng chết mới spawn binary (không qua open — đỡ giật tiêu điểm).
   const CHROME_BIN = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-  const chromeProc = spawn(CHROME_BIN, [
-    `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`,
-    "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100",
-    "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
-    "--disable-background-timer-throttling", "about:blank",
-  ], { stdio: "ignore", detached: true });
-  chromeProc.unref();
+  let chromeProc = null;
+  const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
+  const { chromium } = requireCollector("playwright-core");
+  let browser;
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+    console.log("nối Chrome CDP đang sống — không spawn");
+  } catch {
+    chromeProc = spawn(CHROME_BIN, [
+      `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`,
+      "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100",
+      "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
+      "--disable-background-timer-throttling", "about:blank",
+    ], { stdio: "ignore", detached: true });
+    chromeProc.unref();
+    for (let lan = 0; ; lan++) {
+      try {
+        browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+        break;
+      } catch (e) {
+        if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
+        await sleep(1000);
+      }
+    }
+  }
   // 0211-12/hậu nấc-4: Chrome detached Ở LẠI sau lượt và có lúc chiếm trước —
   // tắt đúng PID mình spawn khi lượt kết thúc (kể cả đường lỗi).
   const tatChrome = async () => {
+    if (!chromeProc) return; // instance do lượt trước mở — không đụng (0211-13)
     for (const sig of ["SIGTERM", "SIGKILL"]) {
       try { process.kill(chromeProc.pid, sig); } catch { return; }
       for (let i = 0; i < 10; i++) {
@@ -253,18 +277,7 @@ async function main() {
       }
     }
   };
-  const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
-  const { chromium } = requireCollector("playwright-core");
-  let browser;
-  for (let lan = 0; ; lan++) {
-    try {
-      browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-      break;
-    } catch (e) {
-      if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
-      await sleep(1000);
-    }
-  }
+
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
   // 0211-10 (b): mỗi luồng giữ đúng MỘT tab tạo MỘT lần đầu qua
   // Target.createTarget {background: true} — không nhấc Chrome lên; tái dùng
@@ -332,7 +345,11 @@ async function main() {
         mau.da_do++;
         if (kq.phone && soTin1) kq.phone === soTin1 ? mau.trung++ : mau.khac++;
       }
-      state.da_thu[v.list_id] = { phone: kq.phone ?? null, status: kq.status, at: new Date().toISOString(), ms };
+      const cu = state.da_thu[v.list_id];
+      state.da_thu[v.list_id] = {
+        phone: kq.phone ?? null, status: kq.status, at: new Date().toISOString(), ms,
+        ...(cu ? { lan_truoc: { status: cu.status, phone: cu.phone ?? null, at: cu.at } } : {}),
+      };
 
       // item v5 MỎNG (MỞ LẠI 0211-7 đB): lượt lấy số chỉ mang list_id + seller —
       // importer đường seller-only KHÔNG đụng captured_at/payload/cột khác.
