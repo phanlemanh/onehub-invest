@@ -28,8 +28,9 @@
 //   - seller_ref lên dạng «<mã S0x>:<dãy số cuối>» — giá trị gốc mang tiền tố/tên nguồn;
 //   - payload bảng người bán được soát ở local với tên + định danh nguồn đọc từ
 //     source_registry local (danh sách này không rời máy) — trúng là dừng, không gửi;
-//   - PII_EXCLUDE (SĐT, tên người bán) GIỮ nguyên: luật mới không bắt loại, nhưng mở các
-//     cột đó là việc sản phẩm riêng chưa được xác nhận — không phải vì tầng A.
+//   - tên, SĐT người bán của sale_offers lên cloud (Mạnh chốt 02/11, tin-rao-tren-invest); giá trị
+//     mang định danh nguồn được che thành NULL ngay trong câu đọc, nên không rời máy và không
+//     làm dừng lượt; bộ soát phía sau vẫn là lưới cuối. sellers.name, properties.seller_name ở lại.
 // Env: ~/.oneinvest/cloud.env (chmod 600): SUPABASE_MGMT_TOKEN
 import { randomBytes } from "node:crypto";
 import { realpathSync } from "node:fs";
@@ -38,6 +39,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { fold, nameVariants } from "./lib/mask-source-names.mjs";
 import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
@@ -73,12 +75,10 @@ export const FILL = [
 ];
 
 // Cột loại tường minh (nguyên tắc 2026-10-21, docs/research/investment-pipeline-4-stages.md).
-// Luật 2026-10-23 xếp định danh người bán vào tầng C nhưng các cột này vẫn ở lại máy
-// trong đợt này — mở chúng là quyết định sản phẩm riêng.
+// sale_offers đã mở tên, SĐT theo quyết định 02/11; hai bảng dưới chưa có việc sản phẩm cần.
 export const PII_EXCLUDE = {
-  sale_offers: ["seller_phone", "seller_name"],
   sellers: ["name"], // sellers: hash + aggregate lên cloud; name ở lại máy
-  // 031 thêm properties.seller_name (copy từ sale_offers) — ở lại máy như sale_offers.
+  // 031 thêm properties.seller_name (copy từ sale_offers).
   properties: ["seller_name"],
 };
 
@@ -97,6 +97,7 @@ export const CLOUD_ALLOW = {
     "phuong_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "source",
     "price_tier", "district_raw", "seller_phone_hash", "seller_ref", "bait_gap_pct",
     "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms",
+    "seller_name", "seller_phone", "stories", "frontage_length",
   ],
   sellers: ["phone_hash", "sources", "n_ads", "first_seen", "last_seen", "flags"],
   properties: [
@@ -178,10 +179,52 @@ const q = (id) => `"${String(id).replace(/"/g, '""')}"`;
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const SAFE = /^[A-Za-z0-9_-]+$/;
 
+// Cột được che theo token nguồn trong câu đọc (tin-rao-tren-invest AC-2).
+const MASKED_COLS = { sale_offers: ["seller_name", "seller_phone"] };
+
+// Bảng gập dấu cho translate(), sinh từ chính fold() để câu đọc và bộ soát không lệch nhau.
+const FOLD_FROM = [];
+const FOLD_TO = [];
+for (const [lo, hi] of [[0xc0, 0x24f], [0x1e00, 0x1eff]]) {
+  for (let cp = lo; cp <= hi; cp++) {
+    const ch = String.fromCodePoint(cp);
+    const b = fold(ch);
+    if (b !== ch && b.length === 1) {
+      FOLD_FROM.push(ch);
+      FOLD_TO.push(b);
+    }
+  }
+}
+const foldSql = (expr) => `translate(lower(normalize(${expr}, NFC)), ${lit(FOLD_FROM.join(""))}, ${lit(FOLD_TO.join(""))})`;
+
+/** Biểu thức SQL trả giá trị cột, hoặc NULL khi mang định danh nguồn. Khớp theo lõi của bộ soát: biến thể ≥ 4 ký tự trúng
+ * ở mọi chỗ, ngắn hơn phải đứng riêng một từ. Thiếu token thì NULL hết (đóng chặt): không soát được thì không gửi. */
+export function maskedSourceExpr(col, tokens) {
+  const variants = [...new Set((tokens ?? []).filter(Boolean).flatMap((t) => nameVariants(t)))];
+  if (!variants.length) return "NULL::text";
+  const whole = `' ' || regexp_replace(f, '[^[:alnum:]]', ' ', 'g') || ' '`;
+  const hit = variants
+    .map((v) => (v.length >= 4 ? `position(${lit(v)} in f) > 0` : `position(${lit(` ${v.replace(/[^\p{L}\p{N}]+/gu, " ")} `)} in ${whole}) > 0`))
+    .join(" OR ");
+  return `(SELECT CASE WHEN ${hit} THEN NULL ELSE ${q(col)} END FROM (SELECT ${foldSql(q(col))} AS f) m)`;
+}
+
+/** Số giá trị bị che ở sale_offers, chỉ đếm, không đọc giá trị. */
+export async function countMaskedSeller(local, sourceTokens) {
+  const n = (c) => `count(*) FILTER (WHERE ${q(c)} IS NOT NULL AND ${maskedSourceExpr(c, sourceTokens)} IS NULL)::int`;
+  const { rows } = await local.query(`SELECT ${n("seller_name")} AS name, ${n("seller_phone")} AS phone FROM sale_offers`);
+  return rows[0];
+}
+
+/** Cảnh báo một dòng cho lượt sync; null khi không che gì. Không bao giờ chứa giá trị. */
+export function maskedSellerWarning({ name, phone }) {
+  return name || phone ? `che định danh nguồn ở sale_offers: ${name} tên, ${phone} số` : null;
+}
+
 /** Danh sách biểu thức SELECT cho một bảng local: loại PII_EXCLUDE/SOURCE_EXCLUDE, chỉ
  * CLOUD_ALLOW với bảng người bán, chuẩn hoá seller_ref, cột geometry/geography → hex EWKB
- * (`geoCols`). `unapproved` = cột local chưa duyệt lên cloud. */
-export function selectList(table, localCols, geoCols = []) {
+ * (`geoCols`), che cột người bán theo `sourceTokens`. `unapproved` = cột local chưa duyệt lên cloud. */
+export function selectList(table, localCols, geoCols = [], sourceTokens = []) {
   const exclude = [...(PII_EXCLUDE[table] ?? []), ...(SOURCE_EXCLUDE[table] ?? [])];
   const allow = CLOUD_ALLOW[table];
   const cols = localCols.filter((c) => !exclude.includes(c) && (!allow || allow.includes(c)));
@@ -190,9 +233,11 @@ export function selectList(table, localCols, geoCols = []) {
     .map((c) =>
       table === "sale_offers" && c === "seller_ref"
         ? SELLER_REF_EXPR
-        : geoCols.includes(c)
-          ? `${q(c)}::text AS ${q(c)}`
-          : q(c),
+        : MASKED_COLS[table]?.includes(c)
+          ? `${maskedSourceExpr(c, sourceTokens)} AS ${q(c)}`
+          : geoCols.includes(c)
+            ? `${q(c)}::text AS ${q(c)}`
+            : q(c),
     )
     .join(", ");
   return { sql, cols, unapproved };
@@ -341,6 +386,20 @@ END $chk$;`);
 export function scanSourceNames(text, tokens) {
   const hit = guardValues(text, entriesFromTokens(tokens))[0];
   return hit ? hit.code : null;
+}
+
+/** Soát payload bảng người bán trước khi gửi: trúng là dừng, không dòng nào rời máy. `data`: tên cloud → dòng JSON. */
+export function assertNoSourceNames(data, tokens) {
+  for (const t of Object.keys(CLOUD_ALLOW)) {
+    for (const j of data.get(RENAME(t)) ?? []) {
+      if (!scanSourceNames(j, tokens)) continue;
+      const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
+      throw new PhaseError(
+        "scan",
+        `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
+      );
+    }
+  }
 }
 
 class PhaseError extends Error {
@@ -644,10 +703,12 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       columns[ct] = send;
       // Dòng dạng JSON do Postgres sinh: số thập phân trong jsonb, micro-giây, ngày giữ
       // nguyên (JSON.parse của node-pg làm tròn số jsonb về double).
-      const list = selectList(t, send, geo.get(t) ?? []).sql;
+      const list = selectList(t, send, geo.get(t) ?? [], tokens).sql;
       const { rows } = await local.query(localReadSql(t, list));
       data.set(ct, send.length ? rows.map((r) => r.j) : []);
     }
+    const masked = maskedSellerWarning(await countMaskedSeller(local, tokens));
+    if (masked) warn(masked);
     await local.query("COMMIT");
   } catch (e) {
     await local.query("ROLLBACK").catch(() => {});
@@ -657,16 +718,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   lap("read");
 
   // 3. soát tên nguồn (bảng người bán) + chặn tụt
-  for (const t of Object.keys(CLOUD_ALLOW)) {
-    for (const j of data.get(RENAME(t)) ?? []) {
-      if (!scanSourceNames(j, tokens)) continue;
-      const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
-      throw new PhaseError(
-        "scan",
-        `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
-      );
-    }
-  }
+  assertNoSourceNames(data, tokens);
   const counts = Object.fromEntries([...data].map(([t, rows]) => [t, rows.length]));
   for (const t of cloudNames) {
     const v = shrinkVerdict({ table: t, local: counts[t] ?? 0, cloud: cloudCounts[t] ?? 0, audits: shrinkAudits, now: readAt });
