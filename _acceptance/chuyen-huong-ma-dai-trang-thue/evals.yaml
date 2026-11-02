@@ -34,5 +34,5 @@ evals:
     executor: script
     cmd: config:executors.script.chm_app
     paths: [app/tests/chuyen-huong-ma-thi-truong.itest.tsx, scripts/chuyen-huong-ma-thi-truong/acceptance.mjs, "app/src/app/(app)/[country]/[market]/listings/**", app/src/components/listing/listings-route.tsx, app/src/lib/ma-thi-truong.ts]
-    expected: "exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim và đích thực nhận; dòng 'APP đối chứng' xanh cho cả hai trạng thái: đầu ra đủ dòng không thiếu ô, bỏ từng dòng thì báo đúng dòng đó"
+    expected: "exit 0; dòng 'ô rent ba đột biến' trên DB 'sau'; đối chứng dương cùng ca xanh trước; ba đột biến đỏ đúng thông điệp ghim và đích thực nhận; dòng 'APP đối chứng' xanh cho cả hai trạng thái: chạy chayItest thật với itest 0 ca thoát 0 thì đỏ đúng từng nhóm ô"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

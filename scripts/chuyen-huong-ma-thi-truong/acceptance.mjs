@@ -8,7 +8,7 @@
 //   CHM_GOC_MOI=1 … → dựng lại bản gốc (mặc định dùng lại nếu < 6 giờ)
 import { execFileSync, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { boWorktree } from "../lib/bo-worktree.mjs";
@@ -23,7 +23,8 @@ const DX = ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db"];
 const ITEST = "tests/chuyen-huong-ma-thi-truong.itest.tsx";
 
 let loi = 0;
-const check = (ok, ten) => { console.log(`${ok ? "ok  " : "FAIL"} ${ten}`); if (!ok) loi++; };
+let hungCheck = null; // đối chứng phép gác: gom kết quả check thay vì tính vào lượt chạy
+const check = (ok, ten) => { if (hungCheck) { hungCheck.push({ ok, ten }); return; } console.log(`${ok ? "ok  " : "FAIL"} ${ten}`); if (!ok) loi++; };
 const finish = (ten) => { console.log(loi ? `${ten} FAIL (${loi} mục)` : `${ten} PASS`); process.exit(loi ? 1 : 0); };
 const dung = (msg) => { console.error(`chm: ${msg}`); process.exit(2); };
 
@@ -146,8 +147,8 @@ function dungCay(phan) {
 const oCan = (tt) => ["32 mã × 3 trang (có rent)", ...(tt === "sau" ? ["đích rent mở được 32/32"] : []), "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])];
 const oThieu = (out, tt) => oCan(tt).filter((dau) => !out.includes(dau));
 
-function chayItest(phan, tt, ctx, ph, cwd) {
-  const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", ITEST], {
+function chayItest(phan, tt, ctx, ph, cwd, tep = ITEST) {
+  const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", tep], {
     cwd, encoding: "utf8", maxBuffer: 64 << 20,
     env: { ...process.env, DATABASE_URL: ctx.url, CHM_PHAN: phan, CHM_TRANG_THAI: tt, CHM_MA_DAI: JSON.stringify(ph.maDai),
            CHM_PHUONG: ph.id, CHM_PHUONG_TEN: ph.name, CHM_GOC: ph.goc, DATA_API_KEYS: "" },
@@ -161,13 +162,6 @@ function chayItest(phan, tt, ctx, ph, cwd) {
 }
 
 async function cheDoDb(phan, ten) {
-  // Đối chứng của phép kiểm ô (thuần): đầu ra đủ dòng → không thiếu; bỏ từng dòng → báo đúng dòng đó.
-  if (phan === "app") for (const tt of ["truoc", "sau"]) {
-    const du = oCan(tt).join("\n");
-    check(oThieu(du, tt).length === 0, `${ten} đối chứng ${tt}: đầu ra đủ dòng → không thiếu ô`);
-    const sai = oCan(tt).filter((dau) => { const t = oThieu(du.replace(dau, ""), tt); return !(t.length === 1 && t[0] === dau); });
-    check(sai.length === 0, `${ten} đối chứng ${tt}: bỏ từng dòng trong ${oCan(tt).length} dòng → báo đúng dòng đó${sai.length ? ` — sai ở ${sai.join(" | ")}` : ""}`);
-  }
   // Mỗi lúc một chế độ, kể cả khi lượt S4 gọi song song: createdb -T từ chối khi có phiên nối vào bản gốc, và mỗi DB thử
   // ~1.1G trên đĩa VM Docker hẹp (01/11 hai chế độ chạy cùng lúc làm đầy đĩa, Postgres :5433 sập cho mọi dãy).
   const khoa = new pg.Client({ connectionString: URL_DB("oneinvest") });
@@ -175,6 +169,18 @@ async function cheDoDb(phan, ten) {
   await khoa.query("SELECT pg_advisory_lock(hashtext('chm_dung_ban_goc'))");
   const cay = dungCay(phan);
   try {
+    // Đối chứng phép gác ô, đi qua chayItest thật: itest không ca nào thoát 0 thì mọi nhóm ô phải đỏ, đúng tên từng nhóm.
+    if (phan === "app") for (const tt of ["truoc", "sau"]) {
+      const tep = "tests/__chm-khong-ca.itest.tsx";
+      writeFileSync(join(cay.app, tep), "export {}\n");
+      hungCheck = [];
+      chayItest(phan, tt, { url: URL_DB(GOC) }, { maDai: [], id: "", name: "", goc: "" }, cay.app, tep);
+      const kq = hungCheck;
+      hungCheck = null;
+      const do_ = kq.filter((x) => !x.ok).map((x) => x.ten);
+      const cho = oCan(tt).map((dau) => `${phan} trên DB ${tt} có ô: ${dau}`);
+      check(JSON.stringify(do_) === JSON.stringify(cho), `${ten} đối chứng ${tt}: itest 0 ca thoát 0 → đỏ đúng ${cho.length} nhóm ô${JSON.stringify(do_) === JSON.stringify(cho) ? "" : ` — nhận ${do_.join(" | ")}`}`);
+    }
     await banGoc();
     const ph = { ...(await chonPhuong()), maDai: await maDai(), goc: gocHang() };
     console.log(`phường thử: ${ph.id} (${ph.name}), tin cấp thị trường ${ph.offer_id}; gốc hàng ${ph.goc.slice(0, 10)}`);
