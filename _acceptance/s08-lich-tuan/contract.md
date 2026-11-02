@@ -5,7 +5,7 @@ slug: s08-lich-tuan
 owner: manh.phan@onemount.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-02T02:08:02Z
 approved_by:
@@ -39,3 +39,10 @@ Source input: GIAO claudedp-3110-10 + MỞ LẠI 02/11 + XONG của ZCode 01:07Z
 - Cài plist và chuyển tệp `s08-weekly.sh` untracked trong checkout chính: bước triển khai, đang chạy sẵn từ tệp đó, lần đầu 08/11 06:30.
 - Gọi API thật của nguồn S08.
 - Đích 200 dự án của S08: chưa đạt, báo riêng trong mục tiêu dữ liệu.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-1: Chạy lần hai trong ngày vẫn báo xong dù không có bản thu mới; số độ tươi vẫn đo theo giờ thu thật.
+  - Ngoài-2: Tệp lịch tuần còn nằm ngoài git ở máy chạy, phải chuyển trước lần cập nhật code sau merge và kiểm lại trước 08/11 06:30, nếu lỡ thì mất một lượt tuần.
+  - Ngoài-3: Tên một ca kiểm còn ghi năm giá trị độ tươi trong khi ca đã kiểm đúng sáu giá trị.
