@@ -5,7 +5,9 @@ slug: s06-duong-du-an-len-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s06-duong-du-an-len-tin-design.md
 ---
 
@@ -14,7 +16,7 @@ design_doc: docs/superpowers/specs/2026-11-02-s06-duong-du-an-len-tin-design.md
 ## Context
 
 Hàng DS1, việc 6 của kế hoạch ra mắt 05/11, chỉ số «Không tệ đi». Đo 02/11: đường có ở 98,2% tin S06 trong dữ liệu thô, chỉ 16,9% ở tin và
-17,7% ở căn, vì transform không đọc `payload.street_name`. Dự án cần migration nên vòng này đề xuất tách (Hỏi-1).
+17,7% ở căn, vì transform không đọc `payload.street_name`. Dự án cần migration nên tách thành hàng T3 riêng (Mạnh chọn ở Hỏi-1).
 
 ## Criteria
 
@@ -67,19 +69,19 @@ Quét tay theo ba trục (không dùng khung quét: ít chiều, đo từ dữ l
 | Dạng chữ nguồn (đo trên 48.499 tin) | thường · có tiền tố · thừa khoảng trắng · có phẩy · số đầu · địa danh hành chính · rỗng · vắng | AC-1, AC-6 |
 | Trạng thái ô tin | trống · có `legacy` · có phát biểu cũ cùng/khác chữ · nguồn rút | AC-2, AC-3, AC-4 |
 | Trạng thái ô căn | trống · có sẵn · nhiều tin · tin rời kho · không tin nào có đường | AC-5 |
-| Nơi đọc | hàm thuần · DB thử · DB máy thu trong giao dịch | AC-1, AC-2, AC-7 |
+| Nơi đọc | hàm thuần · DB thử · bản chép DB máy thu | AC-1, AC-2, AC-7 |
 
 ## Đường đo
 
 | Ngưỡng (opportunity.md) | Đo bằng |
 |---|---|
-| Đường ≥ 90% ở tin | AC-7 (DB máy thu) |
-| Các trường khác không giảm quá 1 điểm % | AC-7 (DB máy thu) |
-| Dự án có mặt ở tin và căn | Không đo ở vòng này nếu Hỏi-1 chọn tách: giám sát thêm hàng T3 vào `docs/plan/lo-trinh.json`, mã hàng ghi vào dòng này và ngưỡng ở `opportunity.md` trước khi ký Cổng Bằng chứng |
+| Đường ≥ 90% ở tin | AC-7 (bản chép DB máy thu) |
+| Các trường khác không giảm quá 1 điểm % | AC-7 (bản chép DB máy thu) |
+| Dự án có mặt ở tin và căn | Không đo ở vòng này (Hỏi-1 chọn tách): giám sát thêm hàng T3 vào `docs/plan/lo-trinh.json`, mã hàng ghi vào dòng này và ngưỡng ở `opportunity.md` trước khi ký Cổng Bằng chứng |
 
 ## Out of scope
 
-- Dự án của tin và căn (`SubdivisionName`, `project_node`): cần migration và sửa `sync-cloud.mjs`, chờ Hỏi-1.
+- Dự án của tin và căn (`SubdivisionName`, `project_node`): cần migration và sửa `sync-cloud.mjs`, tách thành hàng T3 riêng theo Hỏi-1.
 - Chuẩn hoá đường về danh mục, tách số nhà ra khỏi chữ đường.
 - Đường của S03, S05: lớp LLM và parser của hàng khác.
 - Sửa `khoaDuong`, luật `judge-entity`, giao diện thẻ duyệt; đổi cách lên cloud.
