@@ -242,6 +242,17 @@ async function main() {
     "--disable-background-timer-throttling", "about:blank",
   ], { stdio: "ignore", detached: true });
   chromeProc.unref();
+  // 0211-12/hậu nấc-4: Chrome detached Ở LẠI sau lượt và có lúc chiếm trước —
+  // tắt đúng PID mình spawn khi lượt kết thúc (kể cả đường lỗi).
+  const tatChrome = async () => {
+    for (const sig of ["SIGTERM", "SIGKILL"]) {
+      try { process.kill(chromeProc.pid, sig); } catch { return; }
+      for (let i = 0; i < 10; i++) {
+        await sleep(300);
+        try { process.kill(chromeProc.pid, 0); } catch { return; } // đã chết
+      }
+    }
+  };
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
   let browser;
@@ -366,6 +377,7 @@ async function main() {
   }
   await browser.close().catch(() => {});
   await client.end().catch(() => {});
+  await tatChrome();
 
   const giayMoiTin = thu > 0 ? (Date.now() - t0) / 1000 / thu : 0;
   const tong = viec.length + Object.keys(state.da_thu).length;
@@ -389,4 +401,11 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.error("❌", e);
     process.exit(1);
   });
+  // Ctrl-C / SIGTERM giữa lượt: đừng để Chrome ở lại chiếm màn hình
+  for (const sig of ["SIGINT", "SIGTERM"]) {
+    process.on(sig, () => {
+      console.log(`nhận ${sig} — dừng`);
+      process.exit(130);
+    });
+  }
 }
