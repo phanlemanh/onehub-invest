@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Khi duyệt thẻ ghép căn, bạn thấy ngay ai đăng mỗi tin, họ đang rao bao nhiêu tin, và danh bạ có nói hai tin cùng một người hay không.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm một hàng «Người đăng» đầu bảng so, mỗi bên có tên, SĐT («Chưa có SĐT» khi nguồn không có) và căn cứ; mười hàng cũ giữ nguyên."},
+    {"id": "AC-2", "p": "Sẽ đếm số tin đang rao chỉ trên tin còn trong kho và vai chưa rút, nên một người có tin đã rời kho không bị tính dư."},
+    {"id": "AC-3", "p": "Sẽ ghi Khớp chỉ khi danh bạ nói cùng người, kèm tên người chung; cùng nguồn khác người là Lệch; chung SĐT mà danh bạ chưa nối ghi «Không so được» kèm số chung; thiếu dữ liệu ghi Thiếu."},
+    {"id": "AC-4", "p": "Sẽ báo một cờ khi tên gọi của người đăng Tin B xuất hiện đúng dấu trong văn bản Tin A khác nguồn; cờ chỉ để gợi ý, không đổi nhãn."},
+    {"id": "AC-5", "p": "Sẽ hiện Badge «Đăng n tin» khi một người đăng của tin có từ 10 tin đang rao, ở cả Tin A và Tin B; dưới 10 tin chỉ hiện chữ."},
+    {"id": "AC-6", "p": "Sẽ hiện người đã gửi bài khi tin có nhiều người gửi, kèm «+n người khác»; chưa biết ai gửi thì chọn cố định một người, không đổi theo thứ tự trong dữ liệu."},
+    {"id": "AC-7", "p": "Sẽ hiện tên và SĐT trên tin kèm «Chưa có trong danh bạ» khi tin chưa có người; tin rời kho hiện «—» và Thiếu; hàng này không đổi nút quyết và không ghi gì vào dữ liệu."}
+  ],
+  "wont_do": [
+    {"id": "AC-8", "p": "Sẽ KHÔNG có cặp tin S05 và S06 nào ra Lệch trên dữ liệu máy thu thật; tài khoản rao hơn nghìn tin phải có Badge đúng số, kiểm bằng một phép đếm riêng, và thấy được trên màn thật ở cả khổ rộng lẫn 375px."},
+    {"id": "OOS-1", "p": "Không ghi người đăng vào hồ sơ thẻ và không gom các cặp cùng Tin A: để hàng P3 làm."},
+    {"id": "OOS-2", "p": "Không cho người đăng vào luật chấm tự động: hàng này chỉ để bạn đọc."},
+    {"id": "OOS-3", "p": "Không tự gộp người khi thấy cùng SĐT: việc đó đi qua thẻ Gộp Người đã có."},
+    {"id": "OOS-4", "p": "Không biến tên liên hệ trong văn bản thành dữ liệu người."},
+    {"id": "OOS-5", "p": "Không đổi cách đếm của trang danh bạ người, thẻ bổ sung tin, và phần vai viewer hay bản cloud."},
+    {"id": "OOS-6", "p": "Không làm việc tự sang thẻ kế sau khi duyệt: đó là hàng HD8."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Quét tay bốn trục vì chỉ thêm một hàng vào bảng có sẵn."},
+    {"i": 2, "p": "Quan hệ hai tin: mọi ca từ chung người đến thiếu một bên đều có nhãn viết trước (AC-3 ma trận nhãn, AC-4 cờ tên gọi)."},
+    {"i": 3, "p": "Số người trên tin: không người, một người, nhiều người có hoặc không rõ ai gửi (AC-1 hàng cơ bản, AC-6 người hiện đầu, AC-7 chưa có người)."},
+    {"i": 4, "p": "Số tin của người: sát mốc 10, hàng nghìn, tin rời kho, vai đã rút (AC-2 cách đếm, AC-5 Badge, AC-8 dữ liệu thật)."},
+    {"i": 5, "p": "Nơi kiểm: từ hàm tính nhãn đến thẻ dựng thật, dữ liệu máy thu và màn thật (AC-1 hàng cơ bản, AC-7 thẻ không ngữ cảnh, AC-8 dữ liệu thật)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản nháp ghi Khớp khi hai tin chung SĐT, trong khi audit §7.5 đã quyết so theo người trong danh bạ. Đã sửa: chung SĐT chỉ hiện dòng phụ, không ra Khớp."},
+    {"i": 1, "p": "Bản nháp tự quyết tin nhiều người hiện ai mà không có căn cứ, nên có thể giấu một tài khoản rao nhiều. Đã chuyển thành Hỏi-1 và thêm ca đo."},
+    {"i": 2, "p": "Vị trí hàng, Badge cho Tin A và việc bỏ dựng thử đều ghi là máy đã quyết. Đã chuyển hai câu đầu thành Hỏi-2, Hỏi-3 và dựng thật để bạn xem ảnh."},
+    {"i": 3, "p": "Chưa có phép đo xuyên từ danh bạ thật tới thẻ thật, và phép đo trên dữ liệu máy thu có thể rỗng khi hàng duyệt cạn. Đã thêm ca đầu-cuối và 20 cặp dựng từ tin sống, đỏ khi không đủ mẫu."},
+    {"i": 4, "p": "Cờ tên gọi có thể bật nhầm trên từ thường như «nhà mình». Đã đòi đúng dấu và chữ hoa, ghi lại trường hợp còn nhầm như «hướng Nam»."}
+  ]
+}

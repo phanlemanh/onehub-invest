@@ -541,6 +541,10 @@ _Avoid_: quy tắc AI, context rule
 - Ghi chú: Số đo tính sẵn ở pipeline (`market_coverage`, luật 10). Khác «Độ tươi»: độ tươi đo thời gian từ lần thu cuối, độ phủ đo thị trường có đủ tin.
 _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 
+**Không so được**: Nhãn So của hàng «Người đăng» trên thẻ ghép căn khi danh bạ chưa nói hai tin cùng người mà cũng không kết luận được là khác người, thường vì hai tin khác nguồn. Không phải Lệch; hai tin chung SĐT mà danh bạ chưa nối cũng mang nhãn này, kèm dòng phụ nêu số chung.
+- Code: `khong_so`
+_Avoid_: chưa so
+
 ## Cổng & tính năng
 
 **Cổng Invest**: Cổng công khai, chỉ đọc, cho nhà đầu tư (`docs/architecture/portals.md`).

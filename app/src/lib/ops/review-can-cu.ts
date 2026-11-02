@@ -48,8 +48,8 @@ export function nhanCanCu(c: CanCu | undefined): string {
   return `${LABELS_VI.evidence_tier[c.lop]} · ${pp}`;
 }
 
-export type So = "khop" | "lech" | "thieu";
-export const SO_LABEL: Record<So, string> = { khop: "Khớp", lech: "Lệch", thieu: "Thiếu" };
+export type So = "khop" | "lech" | "thieu" | "khong_so";
+export const SO_LABEL: Record<So, string> = { khop: "Khớp", lech: "Lệch", thieu: "Thiếu", khong_so: "Không so được" };
 
 /** Một bên của thẻ ghép căn như evidence ghi (029 + 030). */
 export type BenGhepCan = {
@@ -275,6 +275,87 @@ export function soTruongGhepCan(
       lucChamB: lucCham(vb, lc.b, key),
     };
   });
+}
+
+/** Một người trong danh bạ có vai «người đăng» còn sống trên tin (HD7). `soTin` đếm tin khác nhau còn trong kho. */
+export type NguoiDang = { partyKey: string; ten: string | null; sdts: string[]; taiKhoan: string[]; soTin: number; canCu: CanCu | undefined };
+
+/** Người đăng của một tin: tên và SĐT ghi trên tin, cùng những người trong danh bạ — `ds[0]` là người neo (`chonNguoiNeo`). */
+export type BenNguoi = { source: string; ten: string | null; sdt: string | null; ds: NguoiDang[] };
+
+/** Từ mốc này ô hiện Badge «Đăng n tin» (audit hàng duyệt §5.1); nói số tin, không suy vai môi giới. */
+export const NGUONG_DANG_NHIEU = 10;
+
+/** Hàng «Người đăng» của bảng so. `dangNhieu*` = số tin của người nhiều tin nhất trên tin khi từ ngưỡng, không thì null. */
+export type HangNguoi = {
+  key: "nguoi_dang";
+  a: BenNguoi | null;
+  b: BenNguoi | null;
+  so: So;
+  phu: string | null;
+  tenGoi: string | null;
+  dangNhieuA: number | null;
+  dangNhieuB: number | null;
+};
+
+/**
+ * Người neo lên đầu: người có tài khoản nguồn bằng `seller_ref` của tin (S06 ghi tiền tố `ct:`), chưa khớp thì `party_key`
+ * nhỏ nhất. Không phụ thuộc thứ tự vai trong DB.
+ */
+export function chonNguoiNeo(ds: NguoiDang[], sellerRef: string | null): NguoiDang[] {
+  const ref = sellerRef?.replace(/^ct:/, "") ?? null;
+  const theoKhoa = [...ds].sort((x, y) => (x.partyKey < y.partyKey ? -1 : x.partyKey > y.partyKey ? 1 : 0));
+  const neo = ref === null ? undefined : theoKhoa.find((n) => n.taiKhoan.includes(ref));
+  return neo ? [neo, ...theoKhoa.filter((n) => n !== neo)] : theoKhoa;
+}
+
+const dangNhieu = (b: BenNguoi | null): number | null => {
+  const max = Math.max(0, ...(b?.ds ?? []).map((n) => n.soTin));
+  return max >= NGUONG_DANG_NHIEU ? max : null;
+};
+
+const sdtCua = (b: BenNguoi): string[] => [...(b.sdt ? [b.sdt] : []), ...b.ds.flatMap((n) => n.sdts)];
+
+/**
+ * Tên gọi = chữ cuối của tên người neo Tin B, có trong toàn văn Tin A nguyên từ, đúng dấu, viết hoa chữ đầu hay viết hoa
+ * cả từ: «mình» không thành «Minh», «an ninh» không thành «An». Chỉ là cờ, không vào nhãn So.
+ */
+export function timTenGoi(tenB: string | null, toanVanA: string | null | undefined): string | null {
+  const cuoi = tenB?.normalize("NFC").trim().split(/\s+/).at(-1) ?? "";
+  if ([...cuoi].length < 2 || !/^\p{L}+$/u.test(cuoi) || !toanVanA) return null;
+  const x = cuoi[0].toUpperCase() + cuoi.slice(1).toLowerCase();
+  const re = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])(?:${x}|${x.toUpperCase()})(?![\\p{L}\\p{M}\\p{N}])`, "u");
+  return re.test(toanVanA.normalize("NFC")) ? x : null;
+}
+
+/** Nhãn So + dòng phụ. Khớp chỉ khi danh bạ nói cùng người (audit §7.5); SĐT trùng mà danh bạ chưa nối là sự kiện để hiện, không phải nhãn. */
+function soNguoi(a: BenNguoi | null, b: BenNguoi | null): { so: So; phu: string | null } {
+  if (!a || !b) return { so: "thieu", phu: null };
+  const sdtA = sdtCua(a);
+  const sdtB = sdtCua(b);
+  if ((a.ds.length === 0 && sdtA.length === 0) || (b.ds.length === 0 && sdtB.length === 0)) return { so: "thieu", phu: null };
+  const chung = a.ds.find((n) => b.ds.some((m) => m.partyKey === n.partyKey));
+  if (chung) return { so: "khop", phu: `Cùng người trong danh bạ${chung.ten ? `: ${chung.ten}` : ""}` };
+  const so = sdtA.find((v) => sdtB.includes(v));
+  if (so) return { so: "khong_so", phu: `Cùng SĐT ${so}` };
+  if (a.source !== b.source) return { so: "khong_so", phu: null };
+  return { so: a.ds.length > 0 && b.ds.length > 0 ? "lech" : "thieu", phu: null };
+}
+
+/** Hàng «Người đăng» từ hai bên đọc sống. `null` = bên đã rời kho. Hàm thuần, chỉ để hiện — không vào `judge-entity`. */
+export function soNguoiDang(a: BenNguoi | null, b: BenNguoi | null, toanVanA?: string | null): HangNguoi {
+  const { so, phu } = soNguoi(a, b);
+  const khacNguon = so === "khong_so" && a !== null && b !== null && a.source !== b.source;
+  return {
+    key: "nguoi_dang",
+    a,
+    b,
+    so,
+    phu,
+    tenGoi: khacNguon ? timTenGoi(b.ds[0]?.ten ?? b.ten, toanVanA) : null,
+    dangNhieuA: dangNhieu(a),
+    dangNhieuB: dangNhieu(b),
+  };
 }
 
 /** Giá VND gọn: «2,35 tỷ» / «850tr»; null → «—». */

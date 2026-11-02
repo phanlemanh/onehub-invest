@@ -11,8 +11,8 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/comp
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
 import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
-import { CHUA_CAN_CU, lyDoHopLe, soTruongGhepCan } from "@/lib/ops/review-can-cu";
-import type { ReviewContext } from "@/lib/ops/review-context";
+import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan } from "@/lib/ops/review-can-cu";
+import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
 import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
@@ -337,13 +337,18 @@ function EntityMatchCard({ item, media, context, render }: CardProps) {
   const benA = context?.offer_a?.ben;
   const benB = context?.offer_b?.ben;
   const roiKho = [benA === null && "Tin A", benB === null && "Tin B"].filter((x): x is string => Boolean(x));
-  const rows = soTruongGhepCan(
+  const hangSo = soTruongGhepCan(
     benA ?? ev.offer_a ?? {},
     benB ?? ev.offer_b ?? {},
     context?.offer_a?.canCu,
     context?.offer_b?.canCu,
     { a: benA ? ev.offer_a : undefined, b: benB ? ev.offer_b : undefined },
   );
+  // Không có khoá người = không biết (không hàng); `ben: null` = bên đã rời kho (ô «—», So Thiếu).
+  const nguoiCua = (c: OfferContext | undefined) => (c?.ben === null ? null : c?.nguoiDang);
+  const nguoiA = nguoiCua(context?.offer_a);
+  const nguoiB = nguoiCua(context?.offer_b);
+  const rows = nguoiA === undefined && nguoiB === undefined ? hangSo : [soNguoiDang(nguoiA ?? null, nguoiB ?? null, context?.offer_a?.toanVan), ...hangSo];
   const khoa = roiKho.length > 0;
   const body = (
     <div className="flex flex-col gap-4">
