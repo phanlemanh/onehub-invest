@@ -5,7 +5,7 @@ slug: the-duyet-hien-nguoi-dang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-the-duyet-hien-nguoi-dang-design.md
