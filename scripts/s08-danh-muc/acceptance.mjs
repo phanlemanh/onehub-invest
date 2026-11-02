@@ -202,7 +202,13 @@ function modeKhongLoNguon() {
   const khop = mau.filter((m) => tapThem.includes(m));
   console.log(`chuỗi nguồn thật khớp trong dòng thêm: ${khop.length}`);
   check(khop.length === 0, "should-NOT-fire: không chuỗi nào của nguồn thật (tên/mã dự án, mã căn, đường dẫn API) trong dòng thêm");
-  const url = them.filter((l) => /https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(l));
+  // Mạnh duyệt 02/11: miễn ĐÚNG URL DTD của plist launchd, không miễn cả tên miền.
+  const DTD_PLIST = "http://www.apple.com/DTDs/PropertyList-1.0.dtd";
+  const coUrlNgoai = (l) => /https?:\/\/(?!testbase\b|[^\s"'`]*\.invalid\b|localhost\b|127\.0\.0\.1\b)[a-z0-9.-]+\.[a-z]{2,}/i.test(l.replaceAll(DTD_PLIST, ""));
+  check(!coUrlNgoai(`+<!DOCTYPE plist "${DTD_PLIST}">`), "URL DTD plist được miễn");
+  // ghép chuỗi để chính dòng đối chứng này không bị bộ dò bắt
+  check(coUrlNgoai(`+ ${"http://www.apple"}.com/DTDs/khac.dtd`), "should-NOT-fire: URL khác cùng tên miền vẫn bị bắt");
+  const url = them.filter(coUrlNgoai);
   console.log(`dòng thêm có URL ngoài máy: ${url.length}`);
   check(url.length === 0, "should-NOT-fire: không URL tên miền ngoài trong dòng thêm");
   const fx = JSON.parse(readFileSync(join(ROOT, "collector/src/test/fixtures/s08-ocp2.json"), "utf8"));

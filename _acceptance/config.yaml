@@ -620,6 +620,23 @@ executors:
     ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
     ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
     ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
+    # sáu hồ sơ nhận nhánh ZCode (liên làn 02/11, nhánh feat/zcode-gop-0211)
+    s06r_unit: "node --test pipeline/scripts/s06-region-tinh.test.mjs"
+    s06r_nap: "node _acceptance/s06-region-tinh/probes/nap-region.mjs"
+    s06r_cong: "node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"
+    s08l_do: "node --test pipeline/scripts/ops-facts-so-tong-hop.test.mjs scripts/check-freshness.test.mjs scripts/s05-slo.test.mjs"
+    s08l_app: "cd app && node --import tsx --test tests/ops-facts-so-tong-hop.test.tsx tests/slo-mot-nguon.test.tsx"
+    s08l_weekly: "bash _acceptance/s08-lich-tuan/probes/weekly.sh \"$PWD\""
+    s08l_pii: "cd pipeline && node --test sync-pii.test.mjs"
+    s08n_collector: "cd collector && npm test"
+    s08n_row: "node --test pipeline/scripts/import-s08-row.test.mjs"
+    s08n_nap: "node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"
+    s08n_rong: "bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"
+    s08n_cac: "bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"
+    s05k_unit: "node --test scripts/s05-khoa-nap.test.mjs"
+    s05k_hoiquy: "node --test scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"
+    ctm_unit: "node --test pipeline/scripts/chotot-thieu-moc.test.mjs"
+    ctm_lui: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

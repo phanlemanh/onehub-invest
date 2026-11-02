@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: s08-noi-tiep
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s08n_collector
+    expected: "exit 0; ca 2610-22(1) pass; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s08n_collector
+    expected: "exit 0; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s08n_row
+    expected: "exit 0; ca s08Num siết pass; should-NOT-fire: '0x10' không thành số"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s08n_nap
+    expected: "exit 0; in NAP OK; có +1 detail, +1 catalog bỏ; should-NOT-fire: không có 'state lạ'; lượt hai 0 căn mới, số dòng không đổi; đối chứng: item state lạ thật thì vẫn cảnh báo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s08n_cac
+    expected: "exit 0; cả ba chế độ đều chạy và PASS; should-NOT-fire: URL khác trên cùng tên miền với URL DTD được miễn vẫn bị bắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s08n_rong
+    expected: "exit 0; in RONG OK; code=1 trang rỗng và code=1 thiếu data kết thúc bình thường; should-NOT-fire: code=0 và thiếu code vẫn ném"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
