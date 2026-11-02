@@ -241,6 +241,25 @@ test("E4 đúng mười bảy trường; không lộ số, mã nguồn, tài kho
   for (const v of [SO_A, "0912000001", "tk-gia-777", "nguon-gia.test", "bai-gia-1", '"S06"']) assert.ok(!chuoi.includes(v), `lộ ${v}`)
 })
 
+test("E4 số lẻ, số quá cỡ ở query bị bỏ qua hoặc làm tròn xuống, không làm lỗi trang", async () => {
+  await nap([tin("a")])
+  const bang = [
+    "page=0.5", "page=0.9", "offset=0.5", "limit=0.5", "page=1e20", "limit=1e20", "offset=1e30",
+    "price_min=99999999999999999999", "price_max=1e30", "area_min=1e30", "area_max=99999999999999999999",
+    "bedrooms=0.5", "bedrooms=99999999999", "bedrooms=1e30", "price_min=0.5",
+  ]
+  for (const q of bang) {
+    const r = await goi(`market=${TT}&kind=sale&${q}`)
+    assert.equal(r.status, 200, `${q} trả ${r.status}`)
+  }
+  const dem = async (q: string) => ma(await danh(`kind=sale&${q}`)).length
+  for (const q of ["page=0.5", "limit=0.5", "offset=0.5", "price_min=99999999999999999999", "area_min=1e30", "bedrooms=99999999999"]) {
+    assert.equal(await dem(q), 1, `${q} phải bị bỏ qua, tin vẫn hiện`)
+  }
+  assert.equal(await dem("price_min=1.5"), 1, "giá lẻ làm tròn xuống, không lỗi")
+  assert.equal(await dem("price_min=9000000000000"), 0, "số lớn hợp lệ vẫn là điều kiện thật")
+})
+
 test("E4 trần limit, offset; giá trị sai bỏ qua; phiên ops nhận y hệt khách; kind lạ 400; v1/offers không phiên 401", async () => {
   await nap([tin("a")])
   const m = (await danh("kind=sale&limit=500&offset=99999")).meta

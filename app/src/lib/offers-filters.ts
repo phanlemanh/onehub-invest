@@ -73,28 +73,35 @@ export type PublicOffer = {
 
 export type OfferWard = { id: string; name: string; n: number };
 
-const positive = (v: string | null): number | null => {
+// Số quá cỡ (kể cả gõ nhầm thêm số 0) bỏ qua như chữ: Postgres báo lỗi nếu vượt kiểu cột, cả trang đổ theo.
+const positive = (v: string | null, max = Number.MAX_SAFE_INTEGER): number | null => {
   const n = Number(v);
-  return v !== null && v !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  return v !== null && v !== "" && Number.isFinite(n) && n > 0 && n <= max ? n : null;
 };
+/** Số nguyên từ 1 trở lên, số lẻ làm tròn xuống; dưới 1 bỏ qua, nên `page=0.5` không thành OFFSET âm. */
+const whole = (v: string | null, max?: number): number | null => {
+  const n = positive(v, max);
+  return n !== null && n >= 1 ? Math.floor(n) : null;
+};
+const INT4_MAX = 2_147_483_647;
 const list = (v: string | null): string[] => (v ? v.split(",").map((x) => x.trim()).filter(Boolean) : []);
 
 /** Đọc bộ lọc từ query string. Giá trị sai bỏ qua; `limit`, `offset` luôn nằm trong trần. */
 export function parseOfferFilters(q: URLSearchParams): OfferFilters {
   const sort = q.get("sort") as OfferSort | null;
-  const limit = Math.floor(positive(q.get("limit")) ?? OFFERS_PAGE_SIZE);
-  const page = Math.floor(positive(q.get("page")) ?? 1);
-  const offset = q.has("offset") ? Math.floor(positive(q.get("offset")) ?? 0) : (page - 1) * OFFERS_PAGE_SIZE;
+  const limit = whole(q.get("limit")) ?? OFFERS_PAGE_SIZE;
+  const page = whole(q.get("page")) ?? 1;
+  const offset = q.has("offset") ? (whole(q.get("offset")) ?? 0) : (page - 1) * OFFERS_PAGE_SIZE;
   const types = new Set<string>(Object.values(PROPERTY_TYPE).filter((t) => t !== PROPERTY_TYPE.unknown));
   return {
     kind: q.get("kind") === KIND.rent_lt ? KIND.rent_lt : KIND.sale,
     wards: list(q.get("ward") ?? q.get("area")),
     types: list(q.get("type")).filter((t) => types.has(t)),
-    priceMin: positive(q.get("price_min")),
-    priceMax: positive(q.get("price_max")),
+    priceMin: whole(q.get("price_min")),
+    priceMax: whole(q.get("price_max")),
     areaMin: positive(q.get("area_min")),
     areaMax: positive(q.get("area_max")),
-    bedroomsMin: positive(q.get("bedrooms")),
+    bedroomsMin: whole(q.get("bedrooms"), INT4_MAX),
     hasPhone: q.get("has_phone") === "1",
     sort: sort && OFFER_SORTS.includes(sort) ? sort : "newest",
     limit: Math.min(OFFERS_MAX_LIMIT, limit),
