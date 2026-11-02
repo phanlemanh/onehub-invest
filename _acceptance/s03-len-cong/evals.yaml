@@ -15,7 +15,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/069_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; ca 'SL1-AC-2' xanh: market_metrics, area_breakdowns băm giống hệt có và không có tin cấp thị trường; market_asset_stats 0 dòng cấp thị trường, băm dòng cấp phường khác rỗng và không đổi; ca đỏ trên bản 500 bỏ lọc ghim «SL1-AC-2»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
@@ -23,7 +23,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/069_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; ca 'SL1-AC-3' xanh: thước 0 dòng cấp thị trường, bait_gap_pct trống, 0 cặp chứa tin cấp thị trường kể cả hai tin S03 cùng mã, cặp đối chứng cùng phường vẫn sinh, area_id giữ nguyên, ảnh chụp bậc tính đúng thị trường; ca đỏ trên bản 610 cũ ghim «chua-ro»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
@@ -45,7 +45,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.s03_len_cong_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/068_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, pipeline/lib/nap-061.mjs, db/migrations/069_loai_hinh_suy_luan.sql, pipeline/sql/500_asset_stats.sql, pipeline/sql/610_data_level.sql, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; ca 'SL1-AC-5' xanh: ma trận phân xử đúng (inferred một giá trị vào cột và provenance tier inferred; hai giá trị về unknown kèm goi_y; observed thắng; block_raw chỉ inferred không vào cột); phân xử lại mọi tin không đổi ô nào; bậc và phương pháp đúng từng ca; dưới 20 bài, dưới 85% không phát biểu; chữ nói rõ thì nhóm im; lần hai không thêm dòng; nhóm tụt ngưỡng thì phát biểu suy bị rút; đổi đa số còn một phát biểu sống; tin hai bài trái nhau về unknown kèm goi_y; observed bài A với inferred bài B có lower_disagree; e1_rule của bộ khác còn nguyên; ca đỏ trên bản ngưỡng 50% và bản 061 cũ cùng ghim «SL1-AC-5»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
@@ -120,7 +120,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.s03_len_cong_agent
-    paths: [agent/src/enrich/run.ts, agent/src/enrich/route.ts, db/migrations/068_loai_hinh_suy_luan.sql, agent/tests/s03-len-cong.test.ts]
+    paths: [agent/src/enrich/run.ts, agent/src/enrich/route.ts, db/migrations/069_loai_hinh_suy_luan.sql, agent/tests/s03-len-cong.test.ts]
     expected: "exit 0; ca 'SL1-AC-11' xanh trên mẫu đủ street_raw, bathrooms, kind sale: tin chỉ có inferred vẫn được chọn; đề xuất LLM được ghi, áp xong observed thắng và provenance đổi lớp; E1 không route direct lên ô này; tin observed giữ giá trị cũ; hoàn tác ba ca (LLM cùng giá trị, LLM khác giá trị, E1 trùng giá trị) cột về giá trị suy, tier inferred; hai ca đỏ trên bản route.ts và bản run.ts đều ghim «SL1-AC-11»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E16
