@@ -15,6 +15,7 @@ set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 HOOK="$REPO/.claude/hooks/guard-edits.sh"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/onehub-guard-selftest.XXXXXX")"
+TMP_THUC="$(cd "$TMP" && pwd -P)"   # git worktree list in đường thật (macOS: /var → /private/var)
 A="$TMP/a"
 B="$TMP/b"
 C="$A/.claude/worktrees/c"
@@ -122,7 +123,8 @@ fi
 # Dọn rồi kiểm.
 cleanup; trap - EXIT
 [ ! -e "$TMP" ] && ok "thư mục tạm đã gỡ" || fail "thư mục tạm còn tồn tại"
-git -C "$REPO" worktree list | grep -q "onehub-guard-selftest" && fail "worktree tạm còn trong git worktree list" || ok "git worktree list sạch"
+# Chỉ xét worktree của lần chạy này: kho dùng chung, lần chạy khác có thể đang giữ worktree cùng tiền tố.
+git -C "$REPO" worktree list | grep -qF "$TMP_THUC/" && fail "worktree tạm còn trong git worktree list" || ok "git worktree list sạch"
 [ "$(git -C "$REPO" status --porcelain)" = "$before" ] && ok "cây làm việc thật không đổi" || fail "cây làm việc thật bị đổi"
 
 if [ "$fails" -eq 0 ]; then echo "PASS"; exit 0; fi
