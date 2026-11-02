@@ -49,9 +49,10 @@ Làm theo hai đợt trong một hàng, một PR.
 3. **Loại hình** (Hỏi-1). Từ chữ: cụm tường minh, bài nói cả hai thì không nhận. Từ nhóm: chữ im, nhóm có từ 20 bài nói rõ loại và từ
    85% cùng một loại, là cách `mucDichNhom` đang làm với bán và thuê. Ghi bằng phát biểu `e1_rule`: từ chữ là `observed`, từ nhóm
    là `inferred`, nên LLM (LS1) và người vẫn thắng được. `sync-cloud` đã chép cột `property_type` và `area_id`, nên không đổi đường sync.
-3b. **Migration 068, ngả B (Mạnh chọn 03/11).** Bộ phân xử (061) không bao giờ cho `inferred` vào cột (luật OCP1 26/10), nên thiết kế bản đầu sai: 553 tin suy từ
-   nhóm sẽ vẫn `unknown` và không lên cổng. 068 nới hẹp: riêng `property_type`, không có lớp trên và đúng một giá trị suy thì cột nhận giá trị đó, provenance ghi
+3b. **Migration 069, ngả B (Mạnh chọn 03/11).** Bộ phân xử (từ 061) không bao giờ cho `inferred` vào cột (luật OCP1 26/10), nên thiết kế bản đầu sai: 553 tin suy từ
+   nhóm sẽ vẫn `unknown` và không lên cổng. 069 nới hẹp: riêng `property_type`, không có lớp trên và đúng một giá trị suy thì cột nhận giá trị đó, provenance ghi
    `tier: inferred`. Hai giá trị suy trái nhau thì về `unknown`. Trường khác giữ luật cũ. Hôm nay không có phát biểu `property_type` lớp `inferred`, nên không ô nào đang có đổi.
+   067 (SV2) và 068 (SĐT S06) cũng thay `resolve_offer_fields` và có thể gộp sau 069. Vì vậy 069 không chép thân hàm mà vá thân hàm đang có trên DB (`pg_get_functiondef`), không khớp đúng một chỗ thì dừng lỗi. Migration áp sau 069 mà chép thân hàm bản cũ sẽ làm mất luật này; AC-5 đọc hàm thật trên DB thử để bắt ca đó.
 3c. **Enrich vẫn ghi đè được.** `agent/src/enrich/route.ts` (`isEmpty`, «giá trị cũ thắng») và câu chọn tin của `run.ts` đọc cột: thêm nhận biết provenance `inferred`, coi là ô trống; không có
    bước này thì LLM không bao giờ đề xuất trên các tin đó (AC-11).
 4. **Hai bên đọc** 500, 610 như bảng trên.
