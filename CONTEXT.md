@@ -125,6 +125,21 @@ _Avoid_: tin tìm mua, wanted
 **Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`). Nhãn ô thời hạn: «Dài hạn».
 - Code: `kind = rent_lt` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Monthly
 
+**Thuê dài hạn**: Nhãn đầy đủ của tin cho thuê theo tháng; trên dòng đếm và tiêu đề trang. Ô thời hạn ghi gọn «Dài hạn».
+- Code: `kind = rent_lt`
+
+**Thuê ngắn hạn**: Nhãn đầy đủ của listing cho thuê theo đêm, chỉ đọc ở `/listings/rent?term=short`. Ô thời hạn ghi gọn «Ngắn hạn».
+- Code: `kind = rent_st` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Daily
+
+**Xem số**: Nút trên thẻ tin: bấm một lần mới lấy số của người đăng, nên số không nằm trong HTML hay danh sách API.
+- Code: `OfferContact` · API `/api/v1/listings/{id}/contact` · RESO: ListAgentDirectPhone
+
+**Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
+- Code: `hasPhone = false`
+
+**Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
+- Code: `sellerManyNames`, `OFFER_MANY_NAMES`
+
 **Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.
 - Code: `deal` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
@@ -184,7 +199,7 @@ _Avoid_: độ hoàn chỉnh thẻ
 - Slug URL: —
 _Avoid_: accuracy, độ chính xác
 
-**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
+**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10); tên và SĐT lên cloud và cổng Invest (Mạnh chốt 02/11), giá trị mang tên nguồn thật thì che.
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker

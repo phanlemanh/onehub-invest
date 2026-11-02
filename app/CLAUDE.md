@@ -72,7 +72,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/deals`, `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đóng mặc định: `role` `ops`/`admin`, hoặc email trong `OPS_EMAILS`; tự đăng ký = `role=user` → 404). Cấp quyền: `UPDATE users SET role = 'ops' WHERE email = …`
 - `/ops/collections` (+ `GET /api/v1/ops/collections`) — mã tài khoản thu, hồ sơ, mã nhóm Zalo, tài khoản giữ nhóm chỉ cho vai `ops` trở lên (`xemDinhDanhThu`); vai `viewer` và bearer chung nhận bản đã che (`cheDinhDanhThu`: giữ số dòng, mã về null)
 - `/ops/review`, `/ops/data-flow` — nội dung thẻ duyệt và bài gốc chỉ cho vai `ops` trở lên (`xemNoiDungTin` ở `lib/ops-access.ts`); vai `viewer` thấy số thẻ chờ và câu chú thích. Tài khoản thử viewer: `node scripts/dev-ops-account.mjs --vai viewer`; vai Vận hành: `--vai ops` (ops-role-test@local.test)
-- `/ops/deals` — Căn giá tốt (P1 dưới thước P2); liên hệ/nội dung/ảnh tin (SPL tầng A) chỉ `role=admin`, chỉ có ở DB local. `/deals` redirect sang đây
+- `/ops/deals` — Căn giá tốt (P1 dưới thước P2); liên hệ/nội dung/ảnh tin trên trang này chỉ `role=admin`, chỉ có ở DB local (liên hệ người bán là tầng C, lên cổng Invest ở trang Bán, Cho thuê qua «Xem số»). `/deals` redirect sang đây
 
 ## Don't
 - **Don't create custom UI when ReUI block exists** (see skill `onehub-ui`)

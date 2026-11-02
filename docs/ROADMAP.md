@@ -39,8 +39,8 @@
    đường chính.
 3. **SPL**: mã nguồn S0x (ADR-0007); tầng A (tên nguồn thật, hồ sơ người dùng app,
    định danh tài khoản thu, phiên/khoá) KHÔNG bao giờ rời máy thu. Người bán, tên nhóm
-   thu là tầng C; nội dung bài, ảnh tin, thẻ duyệt lên cloud cho vai ops (ADR-0007
-   sửa đổi 23/10, 24/10, 26/10).
+   thu là tầng C, tên và SĐT người bán lên cloud và cổng Invest; nội dung bài, ảnh tin,
+   thẻ duyệt lên cloud cho vai ops (ADR-0007 sửa đổi 23/10, 24/10, 26/10, 02/11).
 4. **Observability là điều kiện ra quyết định**: nguồn mới phải hiện trên
    /ops ngay (feed health), hành vi thu phải đo được (CCP/DQO).
 5. **An toàn social**: agent LLM không bao giờ gửi tin vào nhóm xã hội
@@ -166,6 +166,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
+  `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
+  cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
+  `docs/ops/cloud-schema-catchup-2026-11-02-tin-rao.sql`. Đọc công khai qua `app/src/lib/offers-public.ts` và hai route
+  `/api/v1/listings*` (khoá `publicOffers`, công cụ MCP `oneinvest_get_listings`); tên lên thẻ, số chỉ trả khi bấm «Xem số»;
+  S02, S08 không hiển thị. Trang `/vn/<tt>/listings/sale`, `/rent` dùng chung khung thẻ `ListingCardFrame`.
 - Số tổng hợp Ops lên cloud (ON22 `ops-facts-so-tong-hop`, 24/10, ADR-0014): `push-ops-facts` đẩy thêm năm khối có
   `measured_at` — độ tươi, job launchd, lockdown từng lớp, bản ghi 24h, số thẻ chờ (`scripts/lib/ops-local.mjs`, khớp hàm
   app bằng phép đo đối chiếu); khối đo không được ghi `error`; cloud đọc qua `readOpsFacts()` (none/fresh/stale, 45′).
@@ -418,6 +424,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
 | P-A3 | Gỡ ảnh/chữ AirDNA khỏi /listing/[id] (luật 5) — chỉ ảnh tự thu, căn chưa thu PDP không ảnh | 🔄 nhánh fix/listing-airdna-photos |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
+| TR1 | Tin rao trên Invest: người bán lên cloud, API tin rao công khai, trang Bán và Cho thuê — `_acceptance/tin-rao-tren-invest` | 🔨 chờ Cổng Bằng chứng; sau ký: Mạnh bật tường lửa, gộp, chạy catch-up, sync |
 
 ### Track 5 — Vận hành
 | # | Việc | Trạng thái |
