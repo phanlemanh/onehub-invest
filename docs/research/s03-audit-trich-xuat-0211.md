@@ -20,12 +20,13 @@ Nó sai với số phòng và diện tích (lỗi luật), với toà (đọc đ
 
 Trên toàn bộ các ô đó: đúng và đã lưu 25%, chữ không có thông tin 34%, hỏng 41%. Bảng trên chia phần hỏng 41%, tính ngang nhau giữa sáu trường (§4).
 
-Bốn điều nên biết thêm:
+Năm điều nên biết thêm:
 
 1. **38% số bài (19.520/51.180) chỉ có ảnh**, chữ không có gì để đọc. Regex hay LLM chữ đều không giúp được. 6.149 bài trong số đó không gắn được vào bài chữ nào (§7).
 2. **Chất lượng khác hẳn theo họ nhóm, đúng như anh cảm nhận.** Regex đọc đúng số phòng 34/40 ở họ Grand Park nhưng chỉ 7/76 ở họ Ocean Park (§3).
 3. **Tin S03 chưa tới được căn nào: `property_offers` S03 = 0.** Regex không phải lý do: ghép cần phường, mà chữ bài rao gần như không ghi phường (0,6%), trong khi 77% phường đang có là đọc nhầm hướng nhà (§1, §2).
 4. **Ý thẻ nhóm của anh có giá trị, nhưng ở dự án và toà, không ở giá.** Thẻ đưa toà đọc đúng từ 106 lên 132/155 và không đổi giá, DT, PN. Điểm yếu là mức đúng của dự án suy từ nhóm chưa đo được độc lập (§6).
+5. **Hướng và trục căn đọc được, tầng thì hầu như không.** 20% bài rao ghi hướng, 17% ghi được toà + trục, chỉ 1,6% ghi đủ tầng vì môi giới che tầng có chủ ý. Toà + trục là đường tới căn không cần phường (§10).
 
 **Đề xuất (§8):** trước 05/11 vá một lát luật hẹp và lưu mã toà; chạy LLM toàn bộ chữ riêng để đối chiếu (khoảng 5–6 USD), chưa ghi vào dữ liệu; anh biên tập thẻ cho 16 nhóm lớn.
 Sau 05/11: tách bài nhiều căn, đọc ảnh mồ côi, ghép danh mục.
@@ -258,6 +259,7 @@ Mức cải thiện lấy trên mẫu; **chi phí thời gian là ước tính**
 | **1** | **Vá hẹp bộ đọc + lưu `ma`:** DT phẩy, PN viết tắt, tắt khớp phường theo hướng, số ngữ cảnh không phải giá, «thuê ≥ 1 tỷ» thành bán thay vì vứt, giá che số | PN 59→95%; DT 72→92%, hết DT sai; 144 tin hết DT sai, 75 phường sai biến mất; PN cấp tin 67→94%; tin bán 854→~1.174 (+37%); toà và mã từ 2% lên khoảng 47–53% tin | 1–2 ngày thợ; chạy lại transform; không tốn API | Giá không đơn vị dễ sai bậc (Grand Park 37→33/39; 528 bài bán < 300 triệu trong mô phỏng); đổi khoá gom nên một phần `offer_id` nghỉ và mọc lại | **Có**; nên làm giá che số và không đơn vị sau cùng, có test riêng | PL13, PL17 (lát hẹp, không chờ PL6/PL15) |
 | **2** | **LLM đọc mọi chữ riêng ở lớp đề xuất**, kèm trích dẫn, so với bộ đọc; bất đồng dùng để ưu tiên luật và duyệt | Giá, DT, PN khoảng 100%; ý định 95%, bán/thuê 98% trên nhãn; cứu phần vá không tới | Haiku **~5–6 USD** hết bài cũ, **0,5–0,8 USD/ngày** (766–1.009 chữ mới/ngày). Qwen 0 USD, 13–24 giờ máy, 2–3 giờ/ngày. Thêm trường vào lệnh KC1: ~1–2 ngày | Luật 7: LLM không tự ghi dữ liệu. Sai bậc giá (3 ca) cần chặn. `silver_labels` đang 0 dòng | **Chạy đối chiếu: có. Ghi vào tin: không** | KC1 mở rộng, đích PL18 |
 | **3** | **Thẻ nhóm + khai sổ PL12** | Toà 68→85%, mã căn 55→76%, loại 88→96%; dự án cho bài chữ im; không đổi giá, DT, PN; ý định −2/255 | Anh biên tập 16 nhóm lớn; +18% chi phí LLM | Thêm gán sai dự án (2 ca trên mẫu, 3,4% tổng); mức đúng chưa đo độc lập; thẻ cũ dần | **Có**; khai sổ độc lập với code, có tác dụng khi hướng 2 chạy | PL12 (đã ký), PL18 E1 |
+| **1b** | **Đọc và lưu toà, trục, tầng vào cột đã có; đọc hướng** (§10) | Trục 0→17% bài rao (OCP 60%); hướng 0→20% (OCP 65%); khoảng tầng 5%. Bộ đọc hướng đúng 106/109, thừa 0–1/141 | Toà, trục, tầng: gộp vào hạng 1, không cần migration. Hướng: cần migration và tra RESO | Mã trùng giữa dự án; bài nhiều căn; bộ đọc mã mới chỉnh sau khi xem nhãn | **Có** cho toà, trục, tầng. Hướng: có nếu anh chốt tên trường kịp | PL13, PL17; ADR-0013 |
 | 4 | **Đọc ảnh mồ côi**, sau khi có số KC3 | ~1.709 album hiện mất hẳn; có thể thành tin mới (chưa đo) | ~2–5 USD chưa đo (cần số KC3); bộ gom ảnh | Mẫu 13 tệp quá nhỏ; ảnh chụp lại tin đã có có thể chỉ tạo trùng | Không chắc | KC4, mở lại sau KC3 |
 | 5 | **Tách bài nhiều căn** | 14% chữ riêng bài rao; 10.126 cụm giá đang chỉ cho 219 tin; hết gom nhầm | Bộ đọc LLM ra mảng căn; đổi khoá offer | Chưa đo độ đúng tách; không rõ căn có còn hàng; dễ phồng số tin | Không | PL18 |
 | 6 | **Ghép mã toà vào danh mục, tới căn** | Hiện **0 tin S03 tới căn**. Cận trên 863/1.297 tin có mã khớp tiền tố S08 | Danh mục OCP đầy đủ; xử lý mã trùng bằng dự án (cần hướng 3) | S08 chỉ dùng nội bộ; 150 dự án, trùng tiền tố nhiều; độ đúng chưa đo | Không | PL10, PL20 |
@@ -269,6 +271,7 @@ Mức cải thiện lấy trên mẫu; **chi phí thời gian là ước tính**
 1. Có làm hạng 1 trước 05/11 không, và có gồm giá che số, giá không đơn vị không. Em nghiêng về có, cả hai, có test riêng cho giá; nếu thiếu thời gian thì DT phẩy, PN viết tắt, tắt phường theo hướng là ba việc rẻ nhất, an toàn nhất.
 2. Đường ghi của LLM sau 05/11: chỉ đề xuất qua `/ops/review`, hay tự áp khi trích dẫn có thật và qua luật kiểm khoảng giá. Câu này đụng luật 7, chỉ anh quyết. Trước 05/11 em đề nghị chỉ đối chiếu.
 3. Anh biên tập thẻ nhóm, hay duyệt nháp em viết. Nháp ở `research-local/s03-audit-0211/the-nhom-nhap.json`.
+4. Hướng lưu thành một trường chung, hay tách hướng ban công với hướng cửa. Em nghiêng về một trường kèm nhãn «của cái gì» vì 85% bài không nói rõ (§10).
 
 ## 9. Điều chưa đo được, giới hạn
 
@@ -281,3 +284,73 @@ Mức cải thiện lấy trên mẫu; **chi phí thời gian là ước tính**
 - **Cải thiện của vá là mô phỏng** trên bài cũ, chưa chạy transform thật; số tin mới là ước theo khoá gom. Giá trị «~180 tin giá nghi sai» ước theo từ khoá, chưa đọc tay hết.
 - `seller_ref` còn là hằng trên DB tới khi PR #265 được nạp lại, nên chưa đo được chất lượng định danh người bán.
 - **Chi phí thật của phép đo:** Haiku ~0,41 USD (gồm một lần lỗi cấu hình ~0,05 USD); Qwen dừng ở 83 bài do máy bị dùng chung.
+
+## 10. Bổ sung: suy tầng, hướng, căn (ý của Mạnh)
+
+**Trả lời ngắn:** hướng đọc được ngay từ chữ. Căn đọc được tới mức trục, đủ để tới căn theo ADR-0013. Tầng gần như không có để đọc, và không suy được từ đâu. Suy hướng từ trục cho kết quả đúng, nhưng hiện lấp được rất ít bài.
+
+### Có bao nhiêu trong chữ
+
+Trên 4.220 bài rao chữ riêng. Hiện S03 không lưu trường nào trong số này: `floor_raw` và `unit_number` đều 0 dòng, chưa có cột hướng.
+
+| Trường | Toàn bộ | Họ Ocean Park (690) | Họ Grand Park (2.556) | Họ Smart City (762) |
+|---|---:|---:|---:|---:|
+| Hướng | **845 (20,0%)** | 449 (65%) | 300 (12%) | 4 (0,5%) |
+| Toà + trục | **728 (17,3%)** | 415 (60%) | 260 (10%) | 3 (0,4%) |
+| Có tầng, dạng bất kỳ | **322 (7,6%)** | | | |
+| · chỉ khoảng: tầng cao, trung, thấp | 207 (4,9%) | | | |
+| · số trong chữ: «tầng 12» | 58 (1,4%) | | | |
+| · số trong mã, tức đủ toà + tầng + trục | 67 (1,6%) | | | |
+
+- **Tầng bị che có chủ ý.** 335 bài ghi mã kiểu «PR6xx20», gấp 5 lần số bài ghi đủ mã. Đây không phải lỗi đọc: môi giới không muốn lộ căn.
+- **Thêm 161 bài Grand Park** có mã viết liền kiểu «S801». Nếu tính cả dạng này thì trục lên 889 bài (21%), nhưng cách tách toà và trục dạng này chưa được kiểm.
+- **«5 tầng» ở nhà phố là số tầng của nhà, không phải tầng của căn.** Phải tách hai nghĩa, vì nhà phố đã có cột `stories` riêng.
+
+### Bộ đọc đúng tới đâu
+
+Chấm trên 250 bài rao của mẫu, nhãn do một tác tử gắn mù riêng cho hướng và tầng.
+
+| Trường | Bộ đọc nháp | Haiku (đã chạy ở §3) |
+|---|---:|---:|
+| Hướng | Đúng 106/109, thừa 1/141 | Chưa thử |
+| Khoảng tầng | Đúng 24/25, không thừa | Chưa so riêng |
+| Số tầng | Đúng 4/5, không thừa | Chưa so riêng |
+| Mã căn, so với nhãn gốc | Đúng 49/62, thừa 19/188 | Đúng 21/62, thừa 43/188 |
+
+- **Hướng và khoảng tầng** dùng bộ đọc viết trước khi xem nhãn. Ca thừa duy nhất của hướng thực ra là nhãn sót: chữ ghi «Hướng: TN-TB».
+- **Mã căn và số tầng lấy từ mã** dùng bộ đọc đã chỉnh sau khi xem nhãn, nên 49/62 và 4/5 là số lạc quan. Bản đầu chỉ bắt 18/62.
+- **Riêng các trường này, LLM không cần thiết.** Số của Haiku chỉ mang tính tham khảo, vì lệnh ở §3 không hỏi kỹ về mã và tầng.
+
+### Suy được gì, không suy được gì
+
+| Suy | Kiểm thế nào | Kết quả | Lấp thêm |
+|---|---|---|---|
+| **Trục → hướng** | Giấu một môi giới, đoán từ ít nhất 2 môi giới khác | Mã che: đúng 117/118. Mọi dạng mã: 123/126 | 10–28 bài |
+| **Trục → PN** | Như trên | Mã che: đúng 191/191. Mọi dạng mã: 267/304 | Chưa đếm |
+| **Trục → DT** | Như trên, làm tròn m² | Mã che: đúng 175/182. Mọi dạng mã: 185/198 | Chưa đếm |
+| **Toà + DT + PN → hướng**, khi không có trục | Như trên | Đúng 119/122 | 12 bài |
+| **Danh mục S08 → hướng, chung cư** | Đếm trên danh mục | **Không dùng được**: 1/13.562 căn cao tầng có hướng | 0 |
+| **Danh mục S08 → hướng, thấp tầng** | Đếm trên danh mục | Có: 7.595/7.704 căn. Chưa đo số bài S03 khớp được | Chưa đo |
+| **Danh mục S08 → PN theo trục** | Cùng trục khác tầng, trong danh mục | Cùng một PN: 830/909 trục (91%) | Chưa đo |
+| **Tầng** | | **Không có nguồn nào để suy** | 0 |
+
+Ba điều cần đọc kèm bảng này:
+
+- **Số đúng có thể cao giả.** Môi giới hay chép bài nhau, nên hai bài cùng trục có thể là một căn. Khi lọc cặp giá lệch từ 5% trở lên, tức nhiều khả năng khác căn, chỉ còn 9/10 cặp cùng hướng: quá ít để kết luận. Về lý thì cùng trục cùng hướng là đúng, và danh mục cũng xác nhận cùng trục cùng PN ở 91% số trục, nhưng hướng chưa có bằng chứng độc lập.
+- **Lấp được ít vì bài có mã thường đã ghi sẵn hướng.** Họ Grand Park ít ghi hướng (12%) nhưng cũng ít ghi mã (10%), còn họ Smart City gần như không có cả hai. Trong số 288 bài có trục mà thiếu hướng, chỉ 28 bài nằm ở trục có đủ phiếu. Bảng sẽ tốt dần theo số bài, nên giá trị của nó nằm ở sau này, không phải trước 05/11.
+- **So S03 với danh mục chưa kết luận được.** PN khớp 63/86 khi so theo toà + trục, nhưng phép so chưa lọc theo dự án. Phần DT của danh mục gần như trống, nên bỏ phép so DT.
+
+### Vì sao vẫn đáng làm
+
+- **Tới căn không cần phường.** ADR-0013 đã định nghĩa khoá căn mức trục khi tầng bị che: `<StackKey>:*`. Đây là lối ra cho việc `property_offers` S03 đang bằng 0 (§1), và môi giới che tầng thì mức trục là mức cao nhất có thể với đa số bài.
+- **Gom tin đúng hơn.** Hai căn khác trục của cùng môi giới, cùng giá, sẽ không bị gom làm một.
+- **Hướng là tiêu chí mua thật.** Không cần ghép gì vẫn dùng được, ít nhất ở họ Ocean Park.
+
+### Việc phải chốt trước khi ghi
+
+- **Tên trường hướng.** Theo em nhớ, `DirectionFaces` của RESO chỉ hướng lối vào chính, còn trong 845 bài ghi hướng: 124 nói ban công, 1 nói cửa, 720 không nói. Chưa tra lại DD, phải tra theo ADR-0011 trước khi làm migration. `pipeline/mappings.yaml` đang ánh xạ hướng của S08 vào `DirectionFaces`, nên cũng cần xem lại.
+- **Hai hướng trong một bài.** 151 bài ghi kiểu «Đông Bắc, Tây Bắc», phải lưu được nhiều giá trị.
+- **Khoảng tầng.** ADR-0013 nhắc `UnitFloorLocation`, cần tra xem có nhận các giá trị cao, trung, thấp không.
+- **Mã trùng giữa dự án.** S1 có ở nhiều dự án, nên ghép trục phải biết dự án trước; phần này phụ thuộc thẻ nhóm (§6).
+
+**Giới hạn:** nhãn hướng do một tác tử gắn, không có người và không có người gắn thứ hai. Tỉ lệ ở bảng đầu đếm bằng bộ đọc nháp trên toàn bộ, chưa có trọng số. Bài nhiều căn chỉ tính căn đầu.
