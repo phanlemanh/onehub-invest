@@ -22,10 +22,6 @@
    "p": "Sẽ nêu đúng từng thứ căn còn thiếu; căn đủ thì không có khối này."
   },
   {
-   "id": "AC-7",
-   "p": "Sẽ phân biệt mã sai, căn đã rời danh sách có lý do, bản trên cloud, và lỗi có nút Thử lại."
-  },
-  {
    "id": "AC-8",
    "p": "Sẽ đối chiếu trên dữ liệu thật ở máy thu: mọi căn đủ số hoặc nêu thiếu, mọi căn có ảnh hiện được ảnh, và in số căn đạt từng câu."
   },
@@ -42,6 +38,10 @@
   {
    "id": "AC-6",
    "p": "Sẽ KHÔNG đưa ảnh, chữ bài, tên, SĐT hay địa chỉ dưới phường tới vai Người xem, kể cả trong dữ liệu trang."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ KHÔNG nói căn thiếu ảnh hay chữ khi chỉ vì đang ở cloud; mã sai báo không tìm thấy, căn rời danh sách nêu lý do, lỗi có nút Thử lại."
   },
   {
    "id": "OOS-1",
