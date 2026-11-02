@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a31be05f6641e46c592787b8a17084f14a1f7af5
+verified_commit: 39e71ac0e342d4e51ee9d0f2e6645cbaf924256a
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -277,3 +277,7 @@ Round 3: commit f44d043e sửa E4b đo đúng giá trị API trả và đọc l�
 ### Re-pin lần 1 — 2026-11-02, do gộp main sau chữ ký (SV1, va-doc-tin) làm hoá cũ theo lưới trước-gộp
 run_id: repin-20261102T100448Z-70996
 sha: a31be05f6641e46c592787b8a17084f14a1f7af5 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E8u, E9u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-11-02, do ghim lại sau khi hợp main 610a924a
+run_id: repin-20261102T212949Z-95510
+sha: 39e71ac0e342d4e51ee9d0f2e6645cbaf924256a · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E8u, E9u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
