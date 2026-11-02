@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-02T07:06:49Z",
-  "generated_sha": "11168c70694ad47974d8ea453b4b425070977c80",
+  "generated_at": "2026-11-02T08:23:11Z",
+  "generated_sha": "9767768bef54d1a29821491433059b2c27ce3d96",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "people-hien-so-goc",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
@@ -317,8 +317,8 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.36.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/cam-xuc-tin-dang-9299b2/_acceptance/people-hien-so-goc/contract.md",
-  "invokedAt": "2026-11-02T07:06:49Z",
-  "invokedSha": "11168c70694ad47974d8ea453b4b425070977c80",
+  "invokedAt": "2026-11-02T08:23:11Z",
+  "invokedSha": "9767768bef54d1a29821491433059b2c27ce3d96",
   "vungVat": [
     "CONTEXT.md",
     "_acceptance/config.yaml",
@@ -346,6 +346,8 @@
     "_acceptance/people-hien-so-goc/evidence/design-pass/person-so--mobile-375--light.png",
     "_acceptance/people-hien-so-goc/probes/chu.mjs",
     "_acceptance/people-hien-so-goc/probes/html-vai.mjs",
+    "_acceptance/people-hien-so-goc/s4-args.json",
+    "_acceptance/portal-deals-airdna/evals.yaml",
     "_acceptance/sd3-lam-chat-do-danh-ba/evals.yaml",
     "_acceptance/sdt-luu-goc-e164/evals.yaml",
     "app/src/app/ops/deals/page.tsx",
@@ -388,9 +390,12 @@
     "_acceptance/people-hien-so-goc/decisions.jsonl",
     "_acceptance/people-hien-so-goc/design-pass.md",
     "_acceptance/people-hien-so-goc/duong-nen.md",
+    "_acceptance/people-hien-so-goc/evidence-report.md",
     "_acceptance/people-hien-so-goc/gap-probe.md",
     "_acceptance/people-hien-so-goc/opportunity.md",
     "_acceptance/people-hien-so-goc/reuse-plan.md",
+    "_acceptance/people-hien-so-goc/review-findings.md",
+    "_acceptance/people-hien-so-goc/run-log.jsonl",
     "_acceptance/people-hien-so-goc/usage-report.md",
     "app/CLAUDE.md",
     "docs/ROADMAP.md",
@@ -412,6 +417,7 @@
     "_acceptance/people-hien-so-goc/du-bao.json",
     "_acceptance/people-hien-so-goc/duong-nen.md",
     "_acceptance/people-hien-so-goc/evals.yaml",
+    "_acceptance/people-hien-so-goc/evidence-report.md",
     "_acceptance/people-hien-so-goc/evidence/design-pass/deals-ops--desktop-1280--dark.png",
     "_acceptance/people-hien-so-goc/evidence/design-pass/deals-ops--desktop-1280--light.png",
     "_acceptance/people-hien-so-goc/evidence/design-pass/deals-ops--mobile-375--light.png",
@@ -434,7 +440,11 @@
     "_acceptance/people-hien-so-goc/probes/chu.mjs",
     "_acceptance/people-hien-so-goc/probes/html-vai.mjs",
     "_acceptance/people-hien-so-goc/reuse-plan.md",
+    "_acceptance/people-hien-so-goc/review-findings.md",
+    "_acceptance/people-hien-so-goc/run-log.jsonl",
+    "_acceptance/people-hien-so-goc/s4-args.json",
     "_acceptance/people-hien-so-goc/usage-report.md",
+    "_acceptance/portal-deals-airdna/evals.yaml",
     "_acceptance/sd3-lam-chat-do-danh-ba/evals.yaml",
     "_acceptance/sdt-luu-goc-e164/evals.yaml",
     "app/CLAUDE.md",
@@ -488,6 +498,8 @@
     "_acceptance/people-hien-so-goc/evidence/design-pass/person-so--mobile-375--light.png",
     "_acceptance/people-hien-so-goc/probes/chu.mjs",
     "_acceptance/people-hien-so-goc/probes/html-vai.mjs",
+    "_acceptance/people-hien-so-goc/s4-args.json",
+    "_acceptance/portal-deals-airdna/evals.yaml",
     "_acceptance/sd3-lam-chat-do-danh-ba/evals.yaml",
     "_acceptance/sdt-luu-goc-e164/evals.yaml",
     "app/src/app/ops/deals/page.tsx",
@@ -532,11 +544,39 @@
   ],
   "coEvalPaths": true,
   "evalsHash": "2872eaef3e967849eab7719f906977bec4003f1bafb4b8cb9305c928de1300b9",
-  "runBaseline": true,
+  "runBaseline": false,
+  "carriedAnalyst": {
+    "fromRound": 1,
+    "nonDiscriminating": [
+      {
+        "cmd": "cd app && node --import tsx --test tests/danh-ba-nguoi-tren-ops.test.tsx",
+        "evals": [
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E13"
+        ]
+      },
+      {
+        "cmd": "cd app && node --import tsx --test tests/danh-ba-nguoi-doi-chieu.test.tsx",
+        "evals": [
+          "E7"
+        ]
+      },
+      {
+        "cmd": "for f in app/src/app/ops/people/page.tsx app/src/app/ops/people/[[]partyKey]/page.tsx app/src/components/ops/people/*.tsx app/src/app/ops/deals/page.tsx app/src/components/ops/deal-card.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done",
+        "evals": [
+          "E11"
+        ]
+      }
+    ]
+  },
   "thuocChup": {
-    "sha": "11168c70694ad47974d8ea453b4b425070977c80",
+    "sha": "9767768bef54d1a29821491433059b2c27ce3d96",
     "n": 218,
-    "digest": "e2563407361b8660a3357f5f6f5b2abe31028704abf7e6c3a3785e999e1e8df4",
+    "digest": "16f02290efec4ca8ce486764a30aba9f6c059ac113be3bfa13ec1cf796e2e933",
     "tep": {
       "_acceptance/config.yaml": "a5b2fdf5e0f15b284947da92a4ee1281c41ab86d0d028a56ef2742e6387c26c6",
       "_acceptance/people-hien-so-goc/evals.yaml": "2872eaef3e967849eab7719f906977bec4003f1bafb4b8cb9305c928de1300b9",
@@ -588,7 +628,7 @@
       "app/tests/compare-saved.test.tsx": "15b326a968bc259931f9b368c8d9a3111d2db6afee5a2547d811b30b566bde47",
       "app/tests/cong-tac-nhom-go.test.tsx": "3398355b78bee52c734739d63c39dff220c613b205345080095abe0e0431f050",
       "app/tests/coverage-cloud-got-tang-a.test.tsx": "554e4f6c91af75e3ab6199927e608377773d5f70932c096b730df14841f5fa50",
-      "app/tests/danh-ba-nguoi-deals-lien-he.test.tsx": "e9332ac8ccb129853cb219fb36943990a2ffc749a1caa1d891b265aca444b56c",
+      "app/tests/danh-ba-nguoi-deals-lien-he.test.tsx": "52c25acf69f9cd16940a183480d4197baa71fd4c81ddde8efd203675b9fccd35",
       "app/tests/danh-ba-nguoi-doi-chieu.test.tsx": "ff8923ab2517c1f3d947bd438e7d9a7660fb08d12ebe3d6a6f0688d4a060013e",
       "app/tests/danh-ba-nguoi-tren-ops.test.tsx": "54cce97d4cedff5d361dcb9653989a85857e7152275a7b58a19d56dbb9aa8a3d",
       "app/tests/data-level.test.tsx": "3a357df682d7e2c64ea054c92bb72c2b759ef71ef1a97c07c56f682384feddf0",
@@ -759,7 +799,7 @@
     }
   },
   "cayChup": {
-    "sha": "11168c70694ad47974d8ea453b4b425070977c80",
+    "sha": "9767768bef54d1a29821491433059b2c27ce3d96",
     "ban": {},
     "chuaTheoDoi": []
   }
