@@ -416,6 +416,16 @@ async function main() {
       con_lai: conLai, gio_du_kien_xong: +duKienGio.toFixed(1), chan_lien_tiep: chanLienTiep,
     })}`,
   );
+  // 0211-15: đối chiếu state↔stg cuối lượt — lệch khác 0 nghĩa là có số bị
+  // mất ở bước flush/nạp (đã mất 71 số một lần) → chạy node bu-seller-v5.mjs
+  try {
+    const c2 = new pg.Client({ connectionString: DB_URL });
+    await c2.connect();
+    const stg = Number((await c2.query("SELECT count(*) n FROM stg_chotot_ads WHERE seller->>'phone' LIKE '+84%'")).rows[0].n);
+    await c2.end();
+    const st = Object.values(state.da_thu).filter((x) => x.phone).length;
+    console.log();
+  } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
   process.exit(chanLienTiep >= 5 ? 2 : 0);
 }
 
@@ -428,7 +438,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   for (const sig of ["SIGINT", "SIGTERM"]) {
     process.on(sig, () => {
       console.log(`nhận ${sig} — tắt Chrome rồi dừng`);
-      _tatChrome?.().finally(() => process.exit(130));
+      // 0211-15: khi _tatChrome còn null thì ?.() nhả undefined và cả chuỗi
+      // finally bỏ qua — exit không chạy. Promise.resolve luôn tạo chuỗi.
+      Promise.resolve(_tatChrome?.()).finally(() => process.exit(130));
     });
   }
 }
