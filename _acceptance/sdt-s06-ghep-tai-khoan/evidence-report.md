@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f3e5a4e4fb0784131b1293790d0f6311a6f05af0
+verified_commit: 09630490f23e5bedd247010bc07b7f8437cc3853
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -170,3 +170,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1 đến E9 và sáu lệnh suite đều xanh; không eval nào thất bại, không có mục cần người chốt trong bảng eval.
 
+
+### Re-pin lần 1 — 2026-11-02, do hợp main sau #282, #274; bỏ vế PII_EXCLUDE khỏi AC-9, E9 theo lời Mạnh
+run_id: repin-20261102T234207Z-13760
+sha: 09630490f23e5bedd247010bc07b7f8437cc3853 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
