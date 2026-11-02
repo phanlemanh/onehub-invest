@@ -1,0 +1,108 @@
+schema_version: 1
+feature_slug: the-duyet-hien-nguoi-dang
+# Ca test mang tiền tố «ND-AC-n», tệp app/tests/the-duyet-hien-nguoi-dang.test.tsx (khuôn the-so-gia-tri-song.test.tsx):
+# - lược đồ tạm `nd_<pid>` (bảng LIKE public.*, dữ liệu viết trước), search_path = nd_<pid>, public; xoá cuối lượt;
+# - loadReviewContext THẬT đọc lược đồ tạm, ReviewCard THẬT dựng trong jsdom;
+# - chiều đỏ: bản chép tạm tests/.nd-cu-* của tệp nguồn đổi đúng một chỗ, thông điệp ghim;
+# - probe DB máy thu chỉ SELECT, bỏ qua có lý do dưới CI.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-context.ts, app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-1 hàng Người đăng đứng đầu' xanh: lát tạm hai tin có vai, loadReviewContext thật, ReviewCard jsdom: hàng [data-review-compare] đầu tiên là nguoi_dang, ô A có tên, SĐT E.164 và căn cứ vai, ô B nguồn giấu SĐT hiện 'Chưa có SĐT'; mười hàng còn lại đúng thứ tự TRUONG_GHEP_CAN và nhãn So bằng khi dựng không có người (so từng hàng, 10 phần tử); chiều đỏ: bản chép bỏ tên → đỏ 'ND-AC-1 THIEU TEN NGUOI DANG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-context.ts, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-2 số tin chỉ đếm tin sống' xanh: một người có 3 vai sống trên 3 tin, 1 tin retired_at có giá trị, thêm 1 vai đã rút trên tin sống thứ tư, thêm 1 vai thứ hai cùng subject_key với một tin đã đếm (người khác giữ nguyên) → soTin === 2; đối chứng: bản chép SQL bỏ điều kiện retired_at → đỏ 'ND-AC-2 DEM CA TIN ROI KHO'; bản chép bỏ retracted_at của vai đếm → đỏ 'ND-AC-2 DEM CA VAI DA RUT'; bản chép bỏ DISTINCT trên lát có hai dòng vai cùng một tin cùng người ở lược đồ không ràng buộc → đỏ 'ND-AC-2 DEM TRUNG TIN'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-3 ma trận luật so' xanh: ma trận viết trước đúng 9 phần tử của AC-3 (9 assert = 9 phần tử), nhãn và dòng phụ từng ô bằng giá trị viết trước trên hàm thuần; thêm ca 'ND-AC-3 đầu-cuối' trên lược đồ tạm: dữ liệu danh bạ dựng bằng dungNguoi thật từ tin và bài tạm, loadReviewContext thật, ReviewCard jsdom: DOM ra Khớp 'Cùng người trong danh bạ', Lệch, và 'Cùng SĐT' với SĐT trên tin đối bí danh sdt; chiều đỏ: bản chép cho khác nguồn ra lech → đỏ 'ND-AC-3 KHAC NGUON RA LECH'; bản chép coi chung SĐT là khop → đỏ 'ND-AC-3 SDT RA KHOP'; bản chép không nêu tên người chung → đỏ 'ND-AC-3 KHONG NEU NGUOI CHUNG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-4 cờ tên gọi' xanh: ma trận viết trước 9 ca ('Nguyễn Văn Minh' + 'LH anh Minh' → cờ 'Minh'; 'Trần Văn Đức' + 'LH ANH ĐỨC' → cờ 'Đức'; 'Lê Nam' + 'hướng Nam' → cờ 'Nam' (dương giả đã biết); 'Minh' + 'nhà mình bán' → không; 'An' + 'an ninh' → không; 'An' + 'Thanh' → không; tên một ký tự → không; Tin A không toàn văn → không; nhãn Lệch cùng nguồn → không) và một ca DOM qua loadReviewContext thật: toàn văn Tin A tới được cờ; chiều đỏ: bản chép so chuỗi con thay nguyên từ → đỏ 'ND-AC-4 KHOP GIUA TU'; bản chép bỏ đòi hoa → đỏ 'ND-AC-4 KHOP TU THUONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    expected: "exit 0; ca 'ND-AC-5 badge Đăng n tin' xanh: ma trận 9, 10, 2872 tin × Tin A, Tin B (6 ô): 9 → chữ '9 tin đang rao', không [data-review-dang-nhieu]; 10 → Badge 'Đăng 10 tin', không chữ phụ; 2872 → Badge 'Đăng 2.872 tin', không chữ phụ; thêm ca tin hai người neo 1 tin, người kia 40 tin → Badge 'Đăng 40 tin' và chữ '1 tin đang rao'; chiều đỏ: bản chép ngưỡng > 10 → đỏ 'ND-AC-5 SAI NGUONG'; bản chép Badge chỉ theo người neo → đỏ 'ND-AC-5 GIAU NGUOI NHIEU TIN'; bản chép chỉ áp Tin B → đỏ 'ND-AC-5 THIEU BEN A'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review/review-compare.tsx, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-6 người neo theo seller_ref' xanh trên lát tạm dựng bằng dungNguoi thật (bí danh tai_khoan_nguon từ bên ghi, không viết tay): tin S03 ba người, seller_ref trùng tài khoản người có party_key lớn nhất → ô hiện người đó + '+2 người khác'; tin S06 seller_ref 'ct:<số>' khớp tài khoản '<số>'; tin seller_ref hằng → party_key nhỏ nhất; chèn vai theo hai thứ tự đảo ra cùng kết quả; chiều đỏ: bản chép bỏ thứ tự neo → đỏ 'ND-AC-6 KHONG THEO NEO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-7 không người, rời kho, đứng riêng' xanh: tin không vai → 'Chưa có trong danh bạ' kèm tên, SĐT trên tin; bên rời kho → ô '—', So Thiếu; ReviewCard không context → không [data-review-compare=nguoi_dang]; gõ lý do thì nút bật, không lý do thì tắt; băm review_queue, sale_offers, party_roles trước và sau khi đọc bằng nhau; chiều đỏ: bản chép hiện hàng khi không ngữ cảnh → đỏ 'ND-AC-7 HANG KHI KHONG BIET'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.the_so_song
+    paths: [app/src/lib/ops/review-context.ts, app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx]
+    expected: "exit 0; bộ HD6 xanh, tệp app/tests/the-so-gia-tri-song.test.tsx không đổi so với merge-base"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/lib/ops/review-context.ts, app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx]
+    expected: "exit 0; bộ PL3 xanh, tệp app/tests/the-duyet-du-can-cu.test.tsx không đổi so với merge-base"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/components/ops/review-content.tsx, app/src/lib/ops/review-context.ts]
+    expected: "exit 0; vai viewer vẫn không tới nội dung tin; tệp app/tests/viewer-the-duyet.test.tsx không đổi so với merge-base"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.the_duyet_hien
+    paths: [app/src/lib/ops/review-context.ts, app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-hien-nguoi-dang.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'ND-AC-8 DB máy thu' xanh hoặc bỏ qua có lý do dưới CI: chỉ SELECT, loadReviewContext thật cho mọi thẻ entity_match pending cộng 20 cặp dựng từ tin sống S05 × tin sống S06 của tài khoản lớn nhất; 0 cặp S05↔S06 ra lech; tập cặp có Badge = tập cặp theo truy vấn count(DISTINCT) độc lập, số trên Badge = số đếm; ít nhất 1 cặp từ 1000 tin; in dòng 'ND-AC-8 đo:' với số cặp theo từng nhãn, số cờ tên gọi kèm mã thẻ, số tin nhiều người đi nhánh dự phòng, thời gian truy vấn; không có cặp S05↔S06 → đỏ 'ND-AC-8 KHONG DU MAU'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx]
+    target: "http://localhost:3462/ops/review"
+    steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops; mật khẩu ở .claude/ops-role-test-account.json của worktree), mở /ops/review trên DB local :5433, mở một thẻ ghép căn chờ có Tin B của tài khoản hơn nghìn tin, chụp bảng so ở khổ rộng và khổ hẹp 375px"
+    expected: "thấy hàng «Người đăng» đúng vị trí đã duyệt ở Hỏi-3, Tin A có tên và SĐT, Tin B có tên, «Chưa có SĐT» và Badge «Đăng n tin» với n trên một nghìn; ô So là «Không so được», không phải «Lệch»; khổ hẹp không tràn ngang trang; ảnh lưu ở _acceptance/the-duyet-hien-nguoi-dang/evidence/E12-*.png"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.design.hd6_gate
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/review-compare.tsx]
+    expected: "exit 0; design gate (jsdom) trên các tệp thẻ duyệt không vi phạm nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -142,6 +142,7 @@ executors:
     judge_luat: "cd agent && node --import tsx --test tests/judge-luat.test.ts"   # judge-luat-loai-tru-dac-trung (HD2) — luật loại trừ thuần + probe evidence thẻ đã quyết trên DB máy thu (bỏ qua có lý do dưới CI)
     judge_nguong: "cd agent && node --import tsx --test tests/judge-nguong.test.ts"   # judge-luat-loai-tru-dac-trung AC-5 — ma trận PL25/KP/PS theo luật pl25-2
     the_so_song: "cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx"   # the-so-doc-gia-tri-song (HD6) — lược đồ tạm gs_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
+    the_duyet_hien: "cd app && node --import tsx --test tests/the-duyet-hien-nguoi-dang.test.tsx"   # the-duyet-hien-nguoi-dang (HD7) — lược đồ tạm nd_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
     sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
