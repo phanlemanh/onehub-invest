@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, TagsIcon, UsersIcon, WorkflowIcon } from "lucide-react"
+import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, InboxIcon, KeyRoundIcon, MapIcon, PaletteIcon, ShieldCheckIcon, TagIcon, TagsIcon, UsersIcon, WorkflowIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -15,6 +15,10 @@ export interface NavSection {
   icon: ReactNode
   /** Mục đang chọn tính theo URL, không giữ state. */
   match: (pathname: string) => boolean
+  /** Đích tính theo trang đang xem, thay cho `href` (giữ thị trường đang xem). */
+  hrefFor?: (pathname: string) => string
+  /** Dưới `lg` vẫn nằm ngoài menu: dịch vụ chính, không giấu sau hai lần chạm. */
+  pinned?: boolean
   /** Nhóm trên thanh bên của shell Ops (app-shell-36); Invest không dùng. */
   group?: OpsNavGroup
 }
@@ -28,6 +32,12 @@ const icon = (Icon: typeof MapIcon) => (
 // Icon trong nút menu của Sidebar: không gắn size, nút tự định cỡ (ReUI layout).
 const glyph = (Icon: typeof MapIcon) => <Icon aria-hidden="true" />
 
+// Giữ thị trường đang xem; trang không gắn thị trường (Lợi suất, So sánh, chi tiết listing) dùng Hà Nội, nơi nhiều tin nhất.
+const listingsHref = (segment: "sale" | "rent") => (pathname: string) => {
+  const m = /^\/(vn|th)\/([^/]+)/.exec(pathname)
+  return `/${m?.[1] ?? "vn"}/${m?.[2] ?? "hanoi"}/listings/${segment}`
+}
+
 export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
   invest: [
     {
@@ -35,15 +45,26 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       label: "Thị trường",
       href: "/vn",
       icon: icon(MapIcon),
-      match: (p) => /^\/(vn|th)(\/|$)/.test(p) && !p.endsWith("/listings"),
+      match: (p) => /^\/(vn|th)(\/|$)/.test(p) && !/\/listings(\/|$)/.test(p),
     },
     {
-      id: "listings",
-      label: "Listing",
-      // Thị trường nhiều listing nhất; Finder/Insight dẫn tới thị trường khác.
-      href: "/vn/hanoi/listings",
-      icon: icon(HouseIcon),
-      match: (p) => p.endsWith("/listings") || p.startsWith("/listing/"),
+      id: "sale",
+      label: "Bán",
+      href: "/vn/hanoi/listings/sale",
+      hrefFor: listingsHref("sale"),
+      pinned: true,
+      icon: icon(TagIcon),
+      match: (p) => p.endsWith("/listings/sale"),
+    },
+    {
+      id: "rent",
+      label: "Cho thuê",
+      href: "/vn/hanoi/listings/rent",
+      hrefFor: listingsHref("rent"),
+      pinned: true,
+      icon: icon(KeyRoundIcon),
+      // Chi tiết listing hiện chỉ có ở thuê ngắn hạn.
+      match: (p) => p.endsWith("/listings/rent") || p.startsWith("/listing/"),
     },
     {
       id: "yield",

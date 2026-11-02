@@ -276,12 +276,12 @@ test("LB-AC-3 trường lọc: bốn trường, lựa chọn từ dữ liệu k�
   const { listingFilterFields, FILTER_LABELS_VI } = await import("../src/components/listing/listings-filter-bar");
   const { DEFAULT_FILTER_LABELS } = await import("../src/components/reui/filters/filters-i18n");
   const fields = listingFilterFields(ROWS, "VND");
-  assert.deepEqual(fields.map((f) => f.id), ["area", "roomType", "bedrooms", "price"]);
-  assert.deepEqual(fields.map((f) => f.label), ["Phường", "Loại phòng", "Phòng ngủ", "Giá/đêm"]);
+  assert.deepEqual(fields.map((f) => f.id), ["area", "roomType", "price", "bedrooms"]);
+  assert.deepEqual(fields.map((f) => f.label), ["Phường", "Loại phòng", "Giá/đêm", "Phòng ngủ"]);
   assert.deepEqual(fields[0].options!.map((o) => o.label), ["Ba Đình", "Hoàn Kiếm", "Tây Hồ"]);
   assert.deepEqual(fields[0].options!.map((o) => o.description), ["2 listing", "2 listing", "1 listing"]);
   assert.deepEqual(fields[1].options!.map((o) => o.label), ["Nguyên căn", "Phòng riêng"]);
-  const text = fields[3].valueText!({ value: [1_500_000, 2_500_000], values: [1_500_000, 2_500_000] } as never);
+  const text = fields[2].valueText!({ value: [1_500_000, 2_500_000], values: [1_500_000, 2_500_000] } as never);
   assert.equal(text.replace(/ /g, " "), "1,5 tr ₫ – 2,5 tr ₫");
   for (const key of ["addFilter", "clearAll", "searchFields", "selectCondition", "valuePlaceholder", "remove"] as const) {
     assert.ok(FILTER_LABELS_VI[key], `thiếu nhãn VI ${key}`);
@@ -399,7 +399,7 @@ const URLS = ["a0.muscache.com/im/p/1.jpeg", "https://a0.muscache.com/im/p/2.jpe
 
 test("LB-AC-8 ảnh thẻ: khung 3:2 object-cover, lùi ảnh kế khi lỗi (cả trước hydrate), hết ảnh thì không panel", async () => {
   const { ListingCard } = await import("../src/components/listing/listing-card");
-  const card = (photoUrls: string[]) => <ListingCard listing={{ ...ROWS[0], photoUrls }} currency="VND" active={false} onHover={() => {}} />;
+  const card = (photoUrls: string[]) => <ListingCard listing={{ ...ROWS[0], photoUrls }} active={false} onHover={() => {}} />;
   let host = await render(card(URLS));
   const imgs = () => [...host.querySelectorAll("img")];
   assert.equal(imgs().length, 1);
@@ -465,7 +465,8 @@ test("LB-AC-9 vùng: PageHeader ngoài, RegionError > Suspense(skeleton) > Listi
   const r = await import("../src/components/listing/listings-region");
   const { PageHeader } = await import("../src/components/page/page-header");
   const { RegionError } = await import("../src/components/states/region-error");
-  const tree = ListingsPageBody({ country: "vn", countryName: "Việt Nam", marketId: "vn-hanoi", marketName: "Thành phố Hà Nội", marketPath: "/vn/hanoi", currency: "VND" });
+  const { parseOfferFilters } = await import("../src/lib/offers-filters");
+  const tree = ListingsPageBody({ country: "vn", countryName: "Việt Nam", marketId: "vn-hanoi", marketName: "Thành phố Hà Nội", marketPath: "/vn/hanoi", currency: "VND", kind: "rent_st", filters: parseOfferFilters(new URLSearchParams()) });
   const got = regions(tree, [PageHeader], RegionError);
   assert.deepEqual(got.errors, []);
   assert.deepEqual(got.found, [{ fallback: r.ListingsRegionSkeleton, content: r.ListingsRegion }]);

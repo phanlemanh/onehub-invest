@@ -118,6 +118,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    **Định danh người bán trên tin rao (tên, SĐT, ID tài khoản) là tầng C — công khai, KHÔNG tính là
    lộ danh tính**: người đăng rao bán đang làm hoạt động bán hàng/môi giới (Mạnh chốt 2026-10-23,
    sửa đổi ADR-0007 mục 9). `sale_offers` được lên cloud; vẫn loại mọi cột lộ tên nguồn thật.
+   **Tên, SĐT người bán lên cloud và cổng Invest** (Mạnh chốt 2026-11-02, sửa đổi ADR-0007): giá trị chứa tên nguồn thật
+   về `NULL` trước khi rời máy; số chỉ trả khi bấm «Xem số» qua route `public` khai `publicOffers`, không nằm trong HTML
+   hay danh sách API. S02, S08 không tính là tin hiển thị được.
    **Tên nhóm cộng đồng mà S03 thu cũng là tầng C** (Mạnh chốt 2026-10-24, sửa đổi ADR-0007): được hiện trên
    `/ops/**` ở cloud và đi qua `ops_heartbeat`; không đánh `data-tier-a`. Tên nguồn thật vẫn tầng A — ngoài
    `/ops/sources` chỉ mã `S0x` kèm vai trò, ở cả cloud lẫn máy thu; dạng `S08-<tên thật>` chỉ ở `/ops/sources`

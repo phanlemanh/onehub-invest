@@ -21,6 +21,7 @@ export const MCP_MSG = {
   noMode: "công cụ thiếu chế độ",
   badMode: "chế độ công cụ không có trong sổ",
   mode: "chế độ công cụ lệch sổ",
+  onDinh: "ON DINH: công cụ tin rao phải ghi chưa hứa ổn định",
 };
 
 // Năm chế độ của ApiMode (app/src/lib/api-surface.ts). Dài trước ngắn để «ops-session» không bị đọc thành «ops».
@@ -63,6 +64,10 @@ export function checkMcpTools({ entries, manifest }) {
       ok = false;
     } else if (mode !== e.mode) {
       violations.push(`${name}: ${MCP_MSG.mode} (khai ${mode}, sổ ${e.mode})`);
+      ok = false;
+    }
+    if (e.publicOffers && !String(t.description ?? "").includes("chưa hứa ổn định")) {
+      violations.push(`${name}: ${MCP_MSG.onDinh}`);
       ok = false;
     }
     if (ok) lines.push(`${name} → ${route} ${t.method}: ${mode} = sổ ${e.mode}`);

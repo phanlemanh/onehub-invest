@@ -52,6 +52,13 @@ executors:
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     ldb_n6: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # sd3-lam-chat-do-danh-ba E1, E2 — N6 hàm thuần + 11 dòng ghi, không DB
     svc_sync: "node --test pipeline/sync-cloud.test.mjs"   # sellers-view-len-cloud E1, E8 — chốt kiểu bảng + khoá người bán trong FILL, không DB
+    tir_sync: "node --test pipeline/sync-cloud.test.mjs"   # tin-rao-tren-invest E1 — ma trận cột lên cloud, không DB
+    tir_sync_db: "cd pipeline && node --test scripts/sync-nguoi-ban.itest.mjs"   # tin-rao-tren-invest E2, E3 — che định danh nguồn, tệp catch-up; lược đồ tạm trên DB local :5433
+    tir_quet_that: "cd pipeline && node --test scripts/sync-nguoi-ban-that.itest.mjs"   # tin-rao-tren-invest E2b — chỉ đọc DB máy thu, soát toàn bảng thật bằng câu đọc thật, chỉ in số
+    tir_api: "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"   # tin-rao-tren-invest E4, E5, E7 — hai route thật, lược đồ tạm
+    tir_doi_chieu: "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx"   # tin-rao-tren-invest E4b — chỉ đọc DB máy thu, chỉ in số
+    tir_ui: "cd app && node --import tsx --test tests/tin-rao-giao-dien.test.tsx"   # tin-rao-tren-invest E8, E9 — bộ lọc ↔ URL, ô liên hệ, trạng thái (jsdom)
+    tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)

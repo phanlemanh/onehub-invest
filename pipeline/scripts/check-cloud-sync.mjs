@@ -800,7 +800,7 @@ async function casePii() {
   const C = buildCloudSim("pii_cloud");
   const seen = [];
   await runSync(L, C, { exec: captureExec(C, seen) });
-  const forbidden = { sale_offers: ["seller_phone", "seller_name"], sellers: ["name"], properties: ["seller_name"] };
+  const forbidden = { sale_offers: ["listing_url"], sellers: ["name"], properties: ["seller_name"] };
   const hits = seen.filter(([t, keys]) => keys.some((k) => forbidden[t].includes(k)));
   const KEYCOL = { sale_offers: "offer_id", sellers: "phone_hash", properties: "id" };
   for (const [t, k] of Object.entries(KEYCOL)) {
@@ -808,13 +808,13 @@ async function casePii() {
     if (rows.length && rows.every(([, keys]) => keys.includes(k))) pass(`đối chứng dương: bắt được ${rows.length} payload ${t}, mang ${k}`);
     else fail(`không bắt được payload ${t} (hoặc thiếu ${k}) — thước mù với bảng này`);
   }
-  if (!hits.length) pass("không payload nào mang seller_phone / seller_name / sellers.name / properties.seller_name");
+  if (!hits.length) pass("không payload nào mang sale_offers.listing_url / sellers.name / properties.seller_name");
   else fail(`${hits.length} payload mang cột loại`);
   const leaks = await sync.leakGate(cloudExec(C));
   if (!leaks.length) pass("leak gate sau tráo PASS (vế cũ + seller_ref + quyền sync_stage)");
   else fail(`leak gate: ${leaks.join(", ")}`);
 
-  // chiều đỏ: bản sao sync-cloud bỏ seller_phone khỏi cả hai lớp chặn
+  // chiều đỏ: bản sao sync-cloud bỏ ba cột này khỏi cả hai lớp chặn
   const dir = mkdtempSync(path.join(tmpdir(), "cloudsync-pii-"));
   try {
     copyFileSync(path.join(PIPE, "sync-cloud.mjs"), path.join(dir, "sync-cloud.mjs"));
@@ -824,19 +824,19 @@ async function casePii() {
     const src = readFileSync(p, "utf8");
     // bỏ cả hai lớp chặn cho đủ ba cột của ba bảng
     const mut = src
-      .replace('sale_offers: ["seller_phone", "seller_name"]', 'sale_offers: ["seller_name"]')
+      .replace('sale_offers: ["listing_url"]', "sale_offers: []")
       .replace('sellers: ["name"],', "sellers: [],")
       .replace('properties: ["seller_name"],', "properties: [],")
-      .replace('"offer_id", "area_id",', '"offer_id", "seller_phone", "area_id",')
+      .replace('"offer_id", "area_id",', '"offer_id", "listing_url", "area_id",')
       .replace('sellers: ["phone_hash",', 'sellers: ["name", "phone_hash",')
       .replace('"id", "geo", "area_id",', '"id", "seller_name", "geo", "area_id",');
-    const changed = ['sale_offers: ["seller_name"]', "sellers: [],", "properties: [],", '"seller_phone", "area_id"', '"name", "phone_hash"', '"seller_name", "geo"'].every((x) => mut.includes(x));
+    const changed = ["sale_offers: []", "sellers: [],", "properties: [],", '"listing_url", "area_id"', '"name", "phone_hash"', '"seller_name", "geo"'].every((x) => mut.includes(x));
     if (!changed) throw new Error("không cấy được đủ đột biến PII — khuôn sync-cloud.mjs đổi?");
     writeFileSync(p, mut);
     const m = await import(pathToFileURL(p).href);
     const C2 = buildCloudSim("pii_red");
     // cloud mô phỏng không có cột loại (cột bảng người bán ⊆ CLOUD_ALLOW) — bản sao đỏ thêm cột để đột biến gửi được
-    await q1(C2, "ALTER TABLE properties ADD COLUMN seller_name text; ALTER TABLE sale_offers ADD COLUMN seller_phone text; ALTER TABLE sellers ADD COLUMN name text");
+    await q1(C2, "ALTER TABLE properties ADD COLUMN seller_name text; ALTER TABLE sale_offers ADD COLUMN listing_url text; ALTER TABLE sellers ADD COLUMN name text");
     const red = [];
     const local = await client(L, { types: m.localTypes });
     try {
@@ -844,7 +844,7 @@ async function casePii() {
     } finally {
       await local.end();
     }
-    for (const [t, c] of [["sale_offers", "seller_phone"], ["sellers", "name"], ["properties", "seller_name"]]) {
+    for (const [t, c] of [["sale_offers", "listing_url"], ["sellers", "name"], ["properties", "seller_name"]]) {
       if (red.some(([x, k]) => x === t && k.includes(c))) pass(`ĐỎ-ĐÚNG pii: bỏ ${t}.${c} khỏi danh sách loại + thêm vào cho phép → thước bắt được trong payload`);
       else fail(`thước không bắt được ${t}.${c} lọt vào payload`);
     }
@@ -1219,12 +1219,12 @@ async function casePiiCot() {
   };
 
   // (a) cột ngoài danh sách cấy thẳng trên cloud
-  await q1(C, "ALTER TABLE sale_offers ADD COLUMN seller_phone text");
+  await q1(C, "ALTER TABLE sale_offers ADD COLUMN so_giay_to text");
   const a = await sync.leakGate(cloudExec(C));
-  if (a.includes("cột ngoài danh sách cho phép: sale_offers.seller_phone")) pass("ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.seller_phone (leak gate nêu <bảng>.<cột>)");
-  else fail(`leak gate không bắt cột sale_offers.seller_phone: ${JSON.stringify(a)}`);
-  await redRun("ĐỎ-ĐÚNG cột ngoài danh sách: lượt sync dừng ở pha gate trước khi tráo, giữ số cũ", "sale_offers.seller_phone");
-  await q1(C, "ALTER TABLE sale_offers DROP COLUMN seller_phone");
+  if (a.includes("cột ngoài danh sách cho phép: sale_offers.so_giay_to")) pass("ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.so_giay_to (leak gate nêu <bảng>.<cột>)");
+  else fail(`leak gate không bắt cột sale_offers.so_giay_to: ${JSON.stringify(a)}`);
+  await redRun("ĐỎ-ĐÚNG cột ngoài danh sách: lượt sync dừng ở pha gate trước khi tráo, giữ số cũ", "sale_offers.so_giay_to");
+  await q1(C, "ALTER TABLE sale_offers DROP COLUMN so_giay_to");
 
   // (b) cột có ở LOCAL (mang giá trị) và cloud. Ba lượt: (b1) code thật — chốt trước khi gửi dừng lượt; (b2) bản sao bỏ chốt
   // ấy — lượt đi tới bên ghi: bên ghi không mang giá trị cột lên cloud, leak gate sau tráo vẫn đỏ; (b3) đối chứng của b2 —
