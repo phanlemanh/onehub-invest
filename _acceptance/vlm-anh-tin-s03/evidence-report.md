@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 82d1723c9d040f257db00d428205a19e635747d4
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: vlm-anh-tin-s03

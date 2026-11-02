@@ -5,7 +5,7 @@ slug: vlm-anh-tin-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline, agent]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-01-vlm-anh-tin-s03-design.md
@@ -74,3 +74,17 @@ Later: bài chỉ-ảnh không gán (KC4), chạy hết bài cũ, lịch đêm, 
 ## Notes
 
 Số ≥ 90% cần phiếu người gắn nên không phải điều kiện S4: S4 chứng minh lệnh đo đúng, số thật vào Cổng Giá trị (Hỏi-2). S4 không gửi ảnh nào ra khỏi máy; lần gửi cloud duy nhất là Haiku và DeepSeek chấm phiếu sau khi Mạnh đã xem từng ảnh mẫu. S4 chỉ gọi máy giả nên chưa chứng minh model cloud chạy thật; lần chạy thật đầu tiên là lượt chấm phiếu.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-2: Gõ giá sai dạng trong phiếu thì ảnh đó lặng lẽ bị bỏ khỏi mẫu chấm, nên kết luận «đạt» có thể dựa trên mẫu nhỏ hơn người chạy tưởng.
+  - Ngoài-3: Lượt chấm phiếu bằng model cloud chỉ có sổ ghi các lần gọi, không có nhật ký chi tiết từng ảnh đã gửi.
+  - Ngoài-4: Phân loại ảnh dùng bộ tên tự đặt, chưa đối chiếu chuẩn ngành, nên các bước sau có thể phải đổi tên hoặc quy đổi lại.
+  - Ngoài-5: Chữ chép từ ảnh có thể chứa tên nguồn thật và được lưu trong bảng nhãn nội bộ; bảng này không lên cloud, giải pháp lộ nguồn Mạnh tính sau.
+  - Ngoài-6: Bộ kiểm phần chọn bài và đếm không chạy trong lượt kiểm chung của CI, chỉ chạy bằng lệnh riêng.
+  - Ngoài-7: Lệnh mẫu chấm phiếu ghi đường dẫn tương đối không chạy được; người chạy cần đường dẫn đầy đủ.
+  - Ngoài-8: Báo cáo đo nói mọi số lấy từ lệnh đếm, nhưng hai số trong đó không tái lập được bằng lệnh đã ghi.
+  - Ngoài-9: Dịch vụ model lỗi tạm thời lúc chấm phiếu thì ảnh lỗi bị tính như model đọc sai, có thể ra «không đạt» mà lệnh vẫn báo thành công.
+  - Ngoài-10: Cơ sở dữ liệu trục trặc thì ảnh vẫn được gửi ra cloud nhưng không có dòng sổ ghi lại và lệnh không báo lỗi.
+  - Ngoài-11: Chạy lệnh chấm phiếu đúng như mẫu chỉ nhận về chữ «Error», không biết thiếu tệp hay hỏng phiếu.
+  - Ngoài-13: Gõ sai ngày lọc thì lệnh không báo lỗi mà chạy trên mọi bài, tốn thêm thời gian so với dự định.
+  - Ngoài-14: Ca kiểm bảng đếm không in chữ bài dùng dữ liệu vốn không có chữ, nên không phát hiện được nếu sau này bảng đếm lộ chữ bài.
