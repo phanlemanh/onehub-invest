@@ -5,7 +5,7 @@ slug: the-duyet-hien-nguoi-dang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-02
 design_doc: docs/superpowers/specs/2026-11-02-the-duyet-hien-nguoi-dang-design.md
@@ -60,3 +60,5 @@ Quét tay theo bốn trục.
 
 - Ở 375px cột So cuộn ngang trong bảng (38px) vì Badge «Không so được» dài hơn nhãn khác; khổ rộng không bị.
 - Cờ tên gọi có dương giả đã biết trên chữ viết hoa trùng tên («hướng Nam», «Hồ Chí Minh»); cờ chỉ là gợi ý, không vào nhãn So.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-02:
+  - Ngoài-3: Bộ đọc thẻ duyệt nới kiểu dòng kết quả truy vấn, nên bước kiểm kiểu lỏng hơn ở một chỗ; người duyệt không thấy gì khác.

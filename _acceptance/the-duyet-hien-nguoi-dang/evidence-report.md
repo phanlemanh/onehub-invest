@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7725e86ccbd34b5a830fd468eae58f480af80190
-human_signoff:
+human_signoff: Mạnh 2026-11-02
 ---
 
 # Evidence Report: the-duyet-hien-nguoi-dang
