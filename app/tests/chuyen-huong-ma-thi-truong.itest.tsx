@@ -77,6 +77,7 @@ before(() => {
   libLuonTra = chep(LIB, "luon-tra", s)
 })
 const voiLibLuonTra = (s: string) => doi(s, '"@/lib/ma-thi-truong"', `"@/lib/${path.basename(libLuonTra, ".ts")}"`)
+const voiRoute = (s: string, banRoute: string) => doi(s, '"@/components/listing/listings-route"', `"@/components/listing/${path.basename(banRoute, ".tsx")}"`)
 
 // ── Đếm truy vấn trên pool của app (một module cho mọi trang/route) ───────────────────────────────
 type Pool = { query: (...a: unknown[]) => Promise<unknown>; end: () => Promise<void> }
@@ -110,7 +111,9 @@ const nap = async (p: string): Promise<PageFn> => (await import(p)).default as P
 const PG = {
   market: "app/src/app/(app)/[country]/[market]/page.tsx",
   listings: "app/src/app/(app)/[country]/[market]/listings/sale/page.tsx",
+  rent: "app/src/app/(app)/[country]/[market]/listings/rent/page.tsx",
   listingsGoc: "app/src/app/(app)/[country]/[market]/listings/page.tsx",
+  listingsRoute: "app/src/components/listing/listings-route.tsx",
   submarket: "app/src/app/(app)/[country]/[market]/[submarket]/page.tsx",
   country: "app/src/app/(app)/[country]/page.tsx",
   yield: "app/src/app/(app)/yield/page.tsx",
@@ -188,26 +191,39 @@ if (PHAN === "app") {
   test(`CHM-AC-${TT === "sau" ? 2 : 3} trang thị trường + listing với 32 mã dài (${TT})`, async () => {
     const market = await nap(abs(PG.market))
     const listings = await nap(abs(PG.listings))
+    const rent = await nap(abs(PG.rent))
     assert.equal(MA_DAI.length, 32, "chm: cần đủ 32 mã dài")
     let chuyen = 0
+    let soMa = 0
+    let soDichRent = 0
     for (const id of MA_DAI) {
       const p = { country: "vn", market: doan(id) }
+      soMa++
       if (TT === "sau") {
         await kiemChuyen(market, p, {}, `/vn/${doan(ngan(id))}`)
         await kiemChuyen(listings, p, {}, `/vn/${doan(ngan(id))}/listings/sale`)
+        await kiemChuyen(rent, p, {}, `/vn/${doan(ngan(id))}/listings/rent`)
+        // Đích phải mở được: chuỗi đích đúng mà mã ngắn không giải ra thì người xem vẫn gặp 404.
+        const d = await trang(() => rent({ params: P({ country: "vn", market: doan(ngan(id)) }), searchParams: P({}) }))
+        assert.ok(d.loai === "el" && d.el.props.marketId === ngan(id) && d.el.props.kind === "rent_lt", `đích /vn/${doan(ngan(id))}/listings/rent không mở được (${d.loai})`)
+        soDichRent++
       } else {
         const a = await trang(() => market({ params: P(p), searchParams: P({}) }))
         const b = await trang(() => listings({ params: P(p), searchParams: P({}) }))
-        if (a.loai === "chuyen" || b.loai === "chuyen") chuyen++
+        const c = await trang(() => rent({ params: P(p), searchParams: P({}) }))
+        if (a.loai === "chuyen" || b.loai === "chuyen" || c.loai === "chuyen") chuyen++
         assert.ok(a.loai === "el" && a.el.props.areaId === id, `trước 064: trang ${id} phải hiện với mã nhận được (${a.loai})`)
         assert.ok(b.loai === "el" && b.el.props.marketId === id, `trước 064: listing ${id} phải hiện với mã nhận được (${b.loai})`)
+        assert.ok(c.loai === "el" && c.el.props.marketId === id, `trước 064: trang rent ${id} phải hiện với mã nhận được (${c.loai})`)
       }
     }
     if (TT === "truoc") assert.equal(chuyen, 0, "trước 064 không chuyển hướng nào được bắn")
     // Đối chứng dương cùng DB: /vn/hanoi hiện vn-hanoi.
     const h = await trang(() => market({ params: P({ country: "vn", market: "hanoi" }), searchParams: P({}) }))
     assert.ok(h.loai === "el" && h.el.props.areaId === "vn-hanoi", "/vn/hanoi phải hiện vn-hanoi")
-    console.log(`ok   ${TT}: 32 mã × 2 trang ${TT === "sau" ? "chuyển 308 đúng đích" : "hiện như hôm nay, 0 chuyển hướng"}`)
+    assert.equal(soMa, 32, "số mã đã chạy phải = 32")
+    if (TT === "sau") assert.equal(soDichRent, 32, "số đích rent đã mở phải = 32")
+    console.log(`ok   ${TT}: ${soMa} mã × 3 trang (có rent) ${TT === "sau" ? `chuyển 308 đúng đích, đích rent mở được ${soDichRent}/32` : "hiện như hôm nay, 0 chuyển hướng"}`)
   })
 
   if (TT === "sau") {
@@ -226,13 +242,14 @@ if (PHAN === "app") {
     })
   }
 
-  // Ma trận viết trước: 3 trang × (không query, ?tab=x) ở cả hai trạng thái DB; phường không có dưới mã mới → 404.
-  test(`CHM-AC-${TT === "sau" ? 2 : 3} ma trận 3 trang × query (${TT})`, async () => {
+  // Ma trận viết trước: 4 trang × (không query, ?tab=x) ở cả hai trạng thái DB; phường không có dưới mã mới → 404.
+  test(`CHM-AC-${TT === "sau" ? 2 : 3} ma trận 4 trang × query (${TT})`, async () => {
     const slug = slugPhuong(E.CHM_PHUONG_TEN!)
     const sub = await nap(abs(PG.submarket))
     const trangs: { ten: string; page: PageFn; params: Record<string, string>; duoi: string; prop: string; cho: string }[] = [
       { ten: "thị trường", page: await nap(abs(PG.market)), params: { country: "vn", market: doan(DAI) }, duoi: "", prop: "areaId", cho: DAI },
       { ten: "listing", page: await nap(abs(PG.listings)), params: { country: "vn", market: doan(DAI) }, duoi: "/listings/sale", prop: "marketId", cho: DAI },
+      { ten: "cho thuê", page: await nap(abs(PG.rent)), params: { country: "vn", market: doan(DAI) }, duoi: "/listings/rent", prop: "marketId", cho: DAI },
       { ten: "phường", page: sub, params: { country: "vn", market: doan(DAI), submarket: slug }, duoi: `/${slug}`, prop: "areaId", cho: PHUONG },
     ]
     let soO = 0
@@ -247,11 +264,126 @@ if (PHAN === "app") {
         soO++
       }
     }
-    assert.equal(soO, 6, "số ô đã assert phải = 6")
+    assert.equal(soO, 8, "số ô đã assert phải = 8")
     const khongCo = await trang(() => sub({ params: P({ country: "vn", market: doan(DAI), submarket: "phuong-khong-co" }), searchParams: P({}) }))
     assert.equal(khongCo.loai, "404", "phường không có dưới mã mới phải 404, không chuyển hướng")
-    console.log(`ok   ${TT}: 6/6 ô trang × query; phường không có → 404`)
+    console.log(`ok   ${TT}: ${soO}/8 ô trang × query; phường không có → 404`)
   })
+
+  // Ma trận viết trước riêng trang Cho thuê: term quyết loại tin nên phải đi theo đích, không chỉ tham số lạ.
+  const O_RENT: { sp: Record<string, string>; duoi: string; kind: string }[] = [
+    { sp: {}, duoi: "", kind: "rent_lt" },
+    { sp: { tab: "x" }, duoi: "?tab=x", kind: "rent_lt" },
+    { sp: { term: "short" }, duoi: "?term=short", kind: "rent_st" },
+    { sp: { term: "short", tab: "x" }, duoi: "?term=short&tab=x", kind: "rent_st" },
+  ]
+  test(`CHM-TT-AC-2 ma trận trang Cho thuê × query (${TT})`, async () => {
+    const rent = await nap(abs(PG.rent))
+    const p = { country: "vn", market: doan(DAI) }
+    let soO = 0
+    for (const o of O_RENT) {
+      if (TT === "sau") {
+        await kiemChuyen(rent, p, o.sp, `/vn/${doan(NGAN)}/listings/rent${o.duoi}`)
+        const d = await trang(() => rent({ params: P({ country: "vn", market: doan(NGAN) }), searchParams: P(o.sp) }))
+        assert.ok(d.loai === "el" && d.el.props.marketId === NGAN && d.el.props.kind === o.kind, `đích rent ${JSON.stringify(o.sp)} phải hiện ${NGAN} loại ${o.kind} (${d.loai})`)
+      } else {
+        const k = await trang(() => rent({ params: P(p), searchParams: P(o.sp) }))
+        assert.ok(k.loai === "el" && k.el.props.marketId === DAI && k.el.props.kind === o.kind, `trước 064: trang rent ${JSON.stringify(o.sp)} phải hiện ${DAI} loại ${o.kind} (${k.loai})`)
+      }
+      soO++
+    }
+    assert.equal(soO, 4, "số ô rent × query phải = 4")
+    console.log(`ok   ${TT}: ô rent ${soO}/4 query ${TT === "sau" ? "đi theo đích, đích hiện đúng loại tin" : "hiện đúng loại tin, 0 chuyển hướng"}`)
+  })
+
+  // Đường cũ /listings?kind= đi hai nhịp: sang trang Cho thuê dưới mã nhận được, rồi (sau 064) sang mã ngắn.
+  test(`CHM-TT-AC-3 đường cũ ?kind= tới trang Cho thuê (${TT})`, async () => {
+    const cu = await nap(abs(PG.listingsGoc))
+    const rent = await nap(abs(PG.rent))
+    const p = { country: "vn", market: doan(DAI) }
+    const O: { sp: Record<string, string>; nhip1: string; kind: string; nhip2: string }[] = [
+      { sp: { kind: "rent_lt" }, nhip1: "", kind: "rent_lt", nhip2: "" },
+      { sp: { kind: "rent_st" }, nhip1: "?term=short", kind: "rent_st", nhip2: "?term=short" },
+      { sp: { kind: "rent_lt", tab: "x" }, nhip1: "?tab=x", kind: "rent_lt", nhip2: "?tab=x" },
+      { sp: { kind: "rent_st", tab: "x" }, nhip1: "?tab=x&term=short", kind: "rent_st", nhip2: "?tab=x&term=short" },
+    ]
+    let soO = 0
+    for (const o of O) {
+      const dich1 = `/vn/${doan(DAI)}/listings/rent${o.nhip1}`
+      await kiemChuyen(cu, p, o.sp, dich1)
+      const sp2 = Object.fromEntries(new URL(dich1, "http://chm.local").searchParams)
+      if (TT === "sau") {
+        await kiemChuyen(rent, p, sp2, `/vn/${doan(NGAN)}/listings/rent${o.nhip2}`)
+      } else {
+        const k = await trang(() => rent({ params: P(p), searchParams: P(sp2) }))
+        assert.ok(k.loai === "el" && k.el.props.marketId === DAI && k.el.props.kind === o.kind, `trước 064: ${dich1} phải hiện ${DAI} loại ${o.kind} (${k.loai})`)
+      }
+      soO++
+    }
+    assert.equal(soO, 4, "số ô đường cũ phải = 4")
+    console.log(`ok   ${TT}: đường cũ ?kind= ${soO}/4 tới trang Cho thuê`)
+  })
+
+  // Không đích → 404; mã thường không bị đụng, không tra thêm so với mốc gốc hàng (cùng DB).
+  test(`CHM-TT-AC-4 trang Cho thuê: mã không đích 404, mã thường không đụng (${TT})`, async () => {
+    const rent = await nap(abs(PG.rent))
+    const p0 = { country: "vn", market: "tinh-khong-co" }
+    for (const sp of [{}, { term: "short" }] as Record<string, string>[]) {
+      assert.equal((await trang(() => rent({ params: P(p0), searchParams: P(sp) }))).loai, "404", `/vn/tinh-khong-co/listings/rent ${JSON.stringify(sp)} phải 404`)
+    }
+    for (const m of ["hanoi", "hcmc"]) {
+      for (const o of O_RENT) {
+        const k = await trang(() => rent({ params: P({ country: "vn", market: m }), searchParams: P(o.sp) }))
+        assert.ok(k.loai === "el" && k.el.props.marketId === `vn-${m}` && k.el.props.kind === o.kind, `/vn/${m}/listings/rent ${JSON.stringify(o.sp)} không được đụng (${k.loai})`)
+      }
+    }
+    const goc = await nap(chep(PG.listings, "goc-rent", docGoc(PG.listingsGoc)))
+    const dem = async (page: PageFn, market: string) => (await demTruyVan(() => page({ params: P({ country: "vn", market }), searchParams: P({}) }))).n
+    const nMoi = await dem(rent, "hanoi")
+    const nGoc = await dem(goc, "hanoi")
+    assert.equal(nMoi, nGoc, `tra thêm khi mã không mang tiền tố dài: trang rent /vn/hanoi ${nMoi} truy vấn, gốc ${nGoc}`)
+    // Đối chứng dương: sau 064 mã dài không còn trong areas nên tra thêm; trước 064 nó còn nên không tra.
+    const nDai = await dem(rent, doan(DAI))
+    const nDaiGoc = await dem(goc, doan(DAI))
+    if (TT === "sau") assert.ok(nDai >= nDaiGoc + 1, `trang rent: mã dài phải tra thêm ≥ 1 truy vấn (${nDai} so mốc ${nDaiGoc})`)
+    else assert.equal(nDai, nDaiGoc, `trang rent trước 064: mã dài không được tra thêm (${nDai} so mốc ${nDaiGoc})`)
+    // Đột biến: phần chung tra mã đổi cả khi thị trường có sẵn (ListingsRoute chỉ tra khi !area) → ca đếm /vn/hanoi phải đỏ.
+    const routeLuonTra = chep(PG.listingsRoute, "luon-tra-rent", voiLibLuonTra(doi(docTep(PG.listingsRoute), "const area = await getArea(marketId)", "await thiTruongDaDoi(country, market)\n  const area = await getArea(marketId)")))
+    const luonTra = await nap(chep(PG.rent, "luon-tra-rent", voiRoute(docTep(PG.rent), routeLuonTra)))
+    const nLuon = await dem(luonTra, "hanoi")
+    assert.ok(nLuon > nGoc, `đột biến luôn-tra phải làm ca đếm rent đỏ (luôn-tra ${nLuon}, gốc ${nGoc})`)
+    console.log(`ok   ${TT}: ô rent 404 cho mã không đích, hanoi/hcmc không đụng, đếm truy vấn = mốc gốc; mã dài +${nDai - nDaiGoc}; tra thêm bị bắt`)
+  })
+
+  if (TT === "sau") {
+    // Trang Bán và Cho thuê dùng chung ListingsRoute: mỗi đột biến chạy lại đúng ca dương trên cùng DB, phải đỏ đúng thông điệp.
+    test("CHM-TT-AC-5 chiều đỏ: ba đột biến phá chuyển hướng trang Cho thuê", async () => {
+      const p = { country: "vn", market: doan(DAI) }
+      const dich = `/vn/${doan(NGAN)}/listings/rent?term=short`
+      // Ghim cả đích thực nhận: hai đột biến cùng thông điệp nhưng hại khác nhau.
+      const sangDich = (thuc: string) => (e: assert.AssertionError) => {
+        assert.match(e.message, /\/vn\/thanh-pho-da-nang chuyển sai đích/)
+        assert.equal(e.actual, thuc)
+        return true
+      }
+      const rent = await nap(abs(PG.rent))
+      await kiemChuyen(rent, p, { term: "short" }, dich) // đối chứng dương: vật lành, cùng ca
+      const route = docTep(PG.listingsRoute)
+      const page = docTep(PG.rent)
+      // (1) Trang Cho thuê truyền nhầm segment → link cũ sang trang Bán.
+      const nhamBan = await nap(chep(PG.rent, "nham-ban", doi(page, 'segment: "rent"', 'segment: "sale"')))
+      await assert.rejects(kiemChuyen(nhamBan, p, { term: "short" }, dich), sangDich(`/vn/${doan(NGAN)}/listings/sale?term=short`))
+      // (2) Bỏ nhánh chuyển hướng ở phần chung.
+      const boChuyen = chep(PG.listingsRoute, "bo-chuyen-rent", doi(route, "if (moi) permanentRedirect(", 'if (moi === "__khong__") permanentRedirect('))
+      const mut2 = await nap(chep(PG.rent, "bo-chuyen-rent", voiRoute(page, boChuyen)))
+      await assert.rejects(kiemChuyen(mut2, p, { term: "short" }, dich), /không chuyển hướng: \/vn\/thanh-pho-da-nang/)
+      // (3) Chuyển hướng làm rơi query → ?term=short mất, người xem sang nhầm thuê dài hạn.
+      const boQuery = chep(PG.listingsRoute, "bo-query-rent", doi(route, "/listings/${segment}`, search)", "/listings/${segment}`, {})"))
+      const mut3 = await nap(chep(PG.rent, "bo-query-rent", voiRoute(page, boQuery)))
+      await assert.rejects(kiemChuyen(mut3, p, { term: "short" }, dich), sangDich(`/vn/${doan(NGAN)}/listings/rent`))
+      console.log("ok   sau: ô rent ba đột biến (nhầm segment, bỏ chuyển hướng, rơi query) đều đỏ đúng thông điệp")
+    })
+  }
 
   // ── AC-4: mã dài không đích → 404; mã thường không bị đụng, không tra thêm ──────────────────────
   test(`CHM-AC-4 mã dài không đích 404, mã thường không chuyển, không tra thêm (${TT})`, async () => {
