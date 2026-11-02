@@ -28,6 +28,13 @@ const TEP_063 = join(dirname(fileURLToPath(import.meta.url)), "../../db/migratio
 const MIG_063 = existsSync(TEP_063) ? readFileSync(TEP_063, "utf8") : "";
 export const HAM_063 = MIG_063 ? MIG_063.slice(0, MIG_063.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
 
+// 066 thay lại hai hàm ấy (mở rộng cascade sang căn của tin chung chủ thể) → nạp sau 063. Mục 4 sửa dữ liệu tách riêng
+// (KHOI_SUA_066) để test chạy có chủ đích.
+const TEP_066 = join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/066_can_theo_tin.sql");
+const MIG_066 = existsSync(TEP_066) ? readFileSync(TEP_066, "utf8") : "";
+export const HAM_066 = MIG_066 ? MIG_066.slice(0, MIG_066.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
+export const KHOI_SUA_066 = MIG_066 ? MIG_066.slice(MIG_066.indexOf("-- 4. Sửa dữ liệu một lần")) : "";
+
 /** Gọi ngay sau mọi lần nạp lại 045 trong giao dịch: DB đã áp 059 → nạp lại phần 059 mà 045 vừa đè, rồi hàm 063. */
 export async function napLai059(client) {
   if (!SAU_045_CUA_059) return;
@@ -35,6 +42,7 @@ export async function napLai059(client) {
   if (!rows[0].co) return;
   await client.query(SAU_045_CUA_059);
   if (HAM_063) await client.query(HAM_063);
+  if (HAM_066) await client.query(HAM_066);
 }
 
 /**
