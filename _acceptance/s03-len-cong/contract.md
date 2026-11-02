@@ -13,7 +13,7 @@ design_doc: docs/superpowers/specs/2026-11-02-s03-len-cong-design.md
 
 ## Context
 
-Kế hoạch ra mắt §3 việc 3. Cổng TR1 đòi đủ loại hình, giá, diện tích, khu vực; đo 17:38Z sau lượt đêm, 1.272 tin S03 có giá và diện tích mà chỉ 39 tin S03 có khu vực và 81 có
+Kế hoạch ra mắt §3 việc 3. Cổng TR1 đòi đủ loại hình, giá, diện tích, khu vực; đo 17:38Z sau lượt đêm, 1.265 tin S03 có giá và diện tích qua ngưỡng cổng mà chỉ 28 có khu vực và 81 có
 loại hình; đủ cả bốn trường chỉ 2 tin. Hàng này mở hai chặn đó và gắn nhãn. AC-8, AC-9 chỉ làm được sau khi #274 gộp. Nhãn dùng để đo do tác tử gắn, không phải nhãn vàng.
 
 ## Acceptance criteria
