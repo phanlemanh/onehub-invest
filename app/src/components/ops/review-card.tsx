@@ -12,7 +12,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
 import { aiSuggestionLabel, listingIntentLabel, propertyTypeLabel } from "@/lib/ops-labels";
 import { doiChieuCua, type DoiChieu } from "@/lib/ops/doi-chieu";
-import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan } from "@/lib/ops/review-can-cu";
+import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan, fmtGia } from "@/lib/ops/review-can-cu";
 import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
 import { RawLabel } from "./raw-label";
@@ -272,7 +272,7 @@ function giaTriDoiChieu(loai: DoiChieu["loai"], v: string | number) {
   if (loai === "y_dinh") return listingIntentLabel(String(v)).label;
   const n = Number(v);
   if (!Number.isFinite(n)) return String(v);
-  return loai === "gia" ? `${n.toLocaleString("vi-VN")} đ` : `${n.toLocaleString("vi-VN")} m²`;
+  return loai === "gia" ? fmtGia(n) : `${String(n).replace(".", ",")} m²`;
 }
 
 /** Bộ đọc và AI khác nhau về ý định, giá, diện tích: hiện hai giá trị + câu trích; quyết định chỉ ghi nhật ký, tin không đổi. */

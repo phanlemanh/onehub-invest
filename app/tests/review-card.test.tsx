@@ -222,7 +222,7 @@ test("LS1-AC-7 thẻ có đề xuất và đối chiếu: hiện câu trích, lo
   // Ghim từng giá trị vào đúng bên và đúng loại: tráo hai bên hoặc gắn nhầm câu trích là đỏ.
   for (const [loai, nhan, cap, trich] of [
     ["y_dinh", "Ý định tin", "Bộ đọc: Tin rao · AI: Yêu cầu", "«cần mua căn hộ»"],
-    ["gia", "Giá rao", "Bộ đọc: 3.000.000.000 đ · AI: 5.000.000.000 đ", "«giá 5 tỷ»"],
+    ["gia", "Giá rao", "Bộ đọc: 3.00 tỷ · AI: 5.00 tỷ", "«giá 5 tỷ»"],
   ]) {
     for (const s of [nhan, cap, trich]) assert.ok(hang(loai).includes(s), `LS1-AC-7 hàng ${loai} thiếu «${s}»: ${hang(loai)}`);
   }
