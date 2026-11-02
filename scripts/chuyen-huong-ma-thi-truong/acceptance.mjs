@@ -142,6 +142,9 @@ function dungCay(phan) {
   return { app: join(cay, "app"), dataApi: join(cay, "data-api"), don: () => rmSync(cay, { recursive: true, force: true }) };
 }
 
+const oCan = (tt) => ["32 mã × 3 trang (có rent)", ...(tt === "sau" ? ["đích rent mở được 32/32"] : []), "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])];
+const oThieu = (out, tt) => oCan(tt).filter((dau) => !out.includes(dau));
+
 function chayItest(phan, tt, ctx, ph, cwd) {
   const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", ITEST], {
     cwd, encoding: "utf8", maxBuffer: 64 << 20,
@@ -152,12 +155,18 @@ function chayItest(phan, tt, ctx, ph, cwd) {
   for (const l of out.split("\n")) if (/^(ok|FAIL|chm:)|✔|✖|phần tử|Lợi suất|^ℹ (pass|fail)/.test(l.trim())) console.log(`  [${tt}] ${l.trim()}`);
   check(r.status === 0, `${phan} trên DB ${tt} (itest thoát ${r.status})`);
   // Ô rent phải thật sự chạy: thoát 0 với 0 ca cũng là xanh.
-  if (phan === "app") for (const dau of ["32 mã × 3 trang (có rent)", ...(tt === "sau" ? ["đích rent mở được 32/32"] : []), "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])])
-    check(out.includes(dau), `${phan} trên DB ${tt} có ô: ${dau}`);
+  if (phan === "app") for (const dau of oCan(tt)) check(!oThieu(out, tt).includes(dau), `${phan} trên DB ${tt} có ô: ${dau}`);
   if (r.status !== 0) console.log(out.split("\n").filter((l) => /not ok|AssertionError|Error|expected|actual|chm:/.test(l)).slice(0, 40).join("\n"));
 }
 
 async function cheDoDb(phan, ten) {
+  // Đối chứng của phép kiểm ô (thuần): đầu ra đủ dòng → không thiếu; bỏ từng dòng → báo đúng dòng đó.
+  if (phan === "app") for (const tt of ["truoc", "sau"]) {
+    const du = oCan(tt).join("\n");
+    check(oThieu(du, tt).length === 0, `${ten} đối chứng ${tt}: đầu ra đủ dòng → không thiếu ô`);
+    const sai = oCan(tt).filter((dau) => { const t = oThieu(du.replace(dau, ""), tt); return !(t.length === 1 && t[0] === dau); });
+    check(sai.length === 0, `${ten} đối chứng ${tt}: bỏ từng dòng trong ${oCan(tt).length} dòng → báo đúng dòng đó${sai.length ? ` — sai ở ${sai.join(" | ")}` : ""}`);
+  }
   // Mỗi lúc một chế độ, kể cả khi lượt S4 gọi song song: createdb -T từ chối khi có phiên nối vào bản gốc, và mỗi DB thử
   // ~1.1G trên đĩa VM Docker hẹp (01/11 hai chế độ chạy cùng lúc làm đầy đĩa, Postgres :5433 sập cho mọi dãy).
   const khoa = new pg.Client({ connectionString: URL_DB("oneinvest") });
