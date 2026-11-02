@@ -1,0 +1,33 @@
+{
+  "feature_plain": "Tin và căn S06 có tên đường, thay vì mất giữa đường như hôm nay (98% ở dữ liệu thô, 17% ở tin và căn).",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đọc tên đường của nguồn theo bảng 27 trường hợp viết sẵn: làm sạch khoảng trắng, bỏ chuỗi chỉ là địa danh hành chính, giữ «Xã Đàn», «Tỉnh lộ 10»."},
+    {"id": "AC-2", "p": "Sẽ ghi đường vào tin kèm căn cứ từ nguồn, cùng cách các trường khác của tin đang đi."},
+    {"id": "AC-3", "p": "Sẽ để chữ của nguồn thay giá trị cũ của tin; nguồn trống thì giữ giá trị cũ, và lịch sử cũ không bị xoá."},
+
+    {"id": "AC-5", "p": "Sẽ điền đường cho căn đang trống từ tin còn sống thấy gần nhất, không đè giá trị có sẵn, và có lệnh trả các ô đã điền về trống."},
+    {"id": "AC-6", "p": "Sẽ giữ thẻ ghép căn không báo «khác đường» oan: «Đường X», «Phố X», «Ngõ 5 X» đều khớp với «X»."},
+    {"id": "AC-7", "p": "Sẽ đo trên bản chép dữ liệu thật: ≥ 90% tin và căn có đường, các trường khác không tụt quá 1 điểm %, không giá trị nào lộ tên nguồn."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Sẽ KHÔNG đổi gì khi chạy lại trên cùng dữ liệu; nguồn đổi tên thì tin đổi theo, nguồn bỏ trống thì tin về giá trị cũ hoặc trống."},
+    {"id": "OOS-1", "p": "KHÔNG đưa dự án lên tin và căn ở vòng này: dự án cần đổi cấu trúc dữ liệu và đường lên cloud (câu hỏi 1)."},
+    {"id": "OOS-2", "p": "KHÔNG chuẩn hoá đường về danh mục và không tách số nhà khỏi chữ đường."},
+    {"id": "OOS-3", "p": "KHÔNG làm đường của hai nguồn S03, S05."},
+    {"id": "OOS-4", "p": "KHÔNG đổi luật so đường, luật chấm ghép căn, giao diện thẻ hay cách lên cloud."},
+    {"id": "OOS-5", "p": "KHÔNG chạy tay trên dữ liệu thật: job đêm tự làm sau khi gộp."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Dạng chữ của nguồn: đủ các dạng đếm được trên 48.499 tin (AC-1, AC-6)."},
+    {"i": 1, "p": "Trạng thái ô đường của tin: trống, có giá trị cũ, nguồn đổi, nguồn rút (AC-2, AC-3, AC-4)."},
+    {"i": 2, "p": "Trạng thái ô đường của căn: trống, có sẵn, nhiều tin, tin đã rời kho, không tin nào có đường (AC-5)."},
+    {"i": 3, "p": "Nơi đo: hàm thuần, kho thử, bản chép dữ liệu thật (AC-1, AC-2, AC-7)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Căn nhận đường mà không có đường hoàn tác, và căn cứ ghi lối đổi cấu trúc là đã chết trong khi nó chỉ đắt. Đã thêm lệnh trả ô về trống; lựa chọn lên câu hỏi 2 cho người."},
+    {"i": 1, "p": "Phép đo cuối chỉ in số, không đỏ khi có vi phạm, và kiểm tên nguồn có thể luôn ra 0. Đã viết lại để thoát đỏ, có ca gài lỗi chứng minh."},
+    {"i": 2, "p": "Bảng trường hợp chưa viết sẵn, «Xã Đàn» sẽ bị bỏ oan và «P. Hòa Quý» lọt. Đã viết bảng 27 hàng và đổi luật."},
+    {"i": 3, "p": "Câu hỏi về dự án bị ghi như đã quyết và dự án có thể mất dấu sau khi tách. Đã đổi thành câu hỏi; hàng mới phải có trong lộ trình trước Cổng Bằng chứng."},
+    {"i": 4, "p": "Ngưỡng chỉ đo trước khi gộp và giao dịch dài có thể khoá kho chung. Đã chuyển sang bản chép; có bước đo sau job đêm đầu tiên."}
+  ]
+}
