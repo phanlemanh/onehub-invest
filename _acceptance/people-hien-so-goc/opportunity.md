@@ -35,3 +35,7 @@ Vì sao: Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-
 - Kết quả nào là SỐNG: Từ «Bật khi» của audit dòng 267, số 165 đổi thành số đo hôm nay: 314/314 người có bí danh `sdt` hiện số với vai `ops` và `admin`; vai `ops` thấy liên hệ trên `/ops/deals`; HTML và JSON của vai `viewer` trên ba bề mặt ấy không chứa chuỗi SĐT nào; tìm một SĐT, gõ `09…` hay `+84…`, ra đúng người.
 - Kết quả nào là CHẾT: Trên ba bề mặt của hàng (danh bạ, một người, `/ops/deals`), vai `viewer` nhận được dù một chuỗi SĐT; hoặc tìm theo SĐT ra người sai hay không ra người có số đó.
 - Timebox: Theo dự báo hàng SD4, không quá 2,3 giờ máy.
+
+## Kết quả đo sau khi giao
+
+Phiên nghiệm thu 2026-11-03, hồ sơ `uat-session.md`, verdict `iterate` (Mạnh). Ngưỡng SỐNG: 333/333 người có số hiện số với vai xem được (ngưỡng ghi 314, số người đã tăng); vai `ops` thấy liên hệ trên `/ops/deals`; vai `viewer` 0 chuỗi SĐT trên 10 trang mẫu; tìm theo số ra đúng người. Chấm kín: điểm 3, «Không sử dụng được», vì thiếu căn cứ giá tốt, bộ lọc và bảng xếp hạng. Ngưỡng của ô này không đo việc dùng được, nên vòng kế cần thước riêng.
