@@ -1,0 +1,147 @@
+schema_version: 1
+feature_slug: tin-rao-tren-invest
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tir_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; ma trận viết trước (bảng, cột, gửi hay ở lại), số assert bằng số ô: sale_offers.seller_name, seller_phone, stories, frontage_length gửi; sellers.name, properties.seller_name, sale_offers.listing_url, properties.photos, cột mới chưa khai ở lại; piiColumnLeaks với exec giả sạch khi cloud có bốn cột mới, đỏ 'cột ngoài danh sách cho phép' với cột khác; đối chứng đỏ: bản PII_EXCLUDE giữ seller_phone → ô bắt 'SDT O LAI MAY'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tir_sync_db
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, pipeline/scripts/sync-nguoi-ban.itest.mjs]
+    expected: "exit 0; lược đồ tạm trên :5433, xoá cuối lượt, source_registry và dòng sale_offers rút từ khuôn bảng thật bằng LIKE; đọc bằng selectList + localReadSql thật: dòng tên chứa định danh → seller_name null, các cột khác nguyên; số chứa định danh → seller_phone null; tên sạch giữ nguyên từng byte; cảnh báo đếm đúng và không chứa giá trị; scanSourceNames trên kết quả sạch; đối chứng đỏ cùng fixture: định danh ở phuong_raw → bộ soát thật vẫn dừng; bỏ che → bộ soát dừng ở seller_name, thông điệp ghim"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tir_quet_that
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, pipeline/scripts/sync-nguoi-ban-that.itest.mjs]
+    expected: "exit 0 khi có DB máy thu, không có DB thì exit 1 THIEU DB MAY THU; READ ONLY, chỉ in số: chạy selectList + localReadSql thật và scanSourceNames thật trên toàn sale_offers, không giới hạn trang và kể cả tin S02, S08, tin cũ: số trúng bằng 0 tức lượt sync đầu không dừng; in số giá trị đã che; in số dòng S02, S08 có tên hoặc số, phải bằng 0, khác 0 thì đỏ; đối chứng: cùng câu bỏ che phải có số trúng ≥ 1 khi còn giá trị mang định danh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tir_sync_db
+    layer: backend-effect
+    paths: [docs/ops/cloud-schema-catchup-2026-11-02-tin-rao.sql, pipeline/scripts/sync-nguoi-ban.itest.mjs]
+    expected: "exit 0; đọc tệp: khối ÁP chỉ gồm ALTER TABLE public.sale_offers ADD COLUMN IF NOT EXISTS seller_name, seller_phone, stories, frontage_length (không DROP, DELETE, UPDATE, TRUNCATE, CREATE); đầu tệp có năm mốc tường lửa, gộp, kéo về, áp, sync ở đúng thứ tự dòng tăng dần (đảo hai dòng → đỏ); chạy trên lược đồ tạm bảng thiếu bốn cột: ĐO TRƯỚC báo thiếu, ÁP hai lần không lỗi, ĐO TRƯỚC lần sau báo đủ, số dòng không đổi; đối chứng đỏ: thêm một câu DROP vào bản chép → ô bắt 'CAU CAM'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tir_api
+    paths: [app/src/lib/offers-public.ts, app/src/lib/offers-filters.ts, app/src/app/api/v1/listings/route.ts, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; route thật, không phiên, lược đồ tạm có một tin mỗi ca: ma trận viết trước mỗi bộ lọc (market, kind, ward, type, giá hai đầu, diện tích hai đầu, bedrooms, has_phone) một ô vào một ô loại; bốn sort newest, price-asc, price-desc, perm2-asc: assert thứ tự trên ít nhất ba tin, hai tin trùng giá hay trùng giờ vẫn ổn định; duyệt trang hợp bằng total, không lặp; năm trường lõi mỗi trường thiếu một tin, S02, S08, tin 31 ngày, tin bán 499 triệu, tin thuê 499 nghìn, tin thuê 500 triệu không bao giờ ra và đối chứng dương tin bán 500 triệu, tin thuê 500 nghìn có ra; khoá mỗi dòng bằng đúng mười ba trường của hợp đồng (so tập); phiên ops nhận phản hồi y hệt khách; chuỗi JSON không chứa SĐT, mã nguồn, seller_ref của fixture; limit=500 → 50, offset=99999 → 960; giá trị sai bỏ qua; ma trận viết trước cho nhánh cũ (không kind, kind=rent_st, limit=200, offset, bedrooms, mã thị trường cũ), so từng dòng và thứ tự với câu truy vấn của bản trước vòng, số assert bằng số ô; limit=200 ở nhánh cũ vẫn 200 dòng, đối chứng đỏ: áp trần 50 vào nhánh cũ → ô bắt NHANH CU; kind=abc trả 400; v1/offers không phiên vẫn 401; đối chứng dương: tin đủ điều kiện ra đúng một lần"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4b
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tir_doi_chieu
+    layer: backend-effect
+    paths: [app/src/lib/offers-public.ts, app/tests/tin-rao-doi-chieu.test.tsx]
+    expected: "exit 0 khi có DB máy thu; không có DB thì exit 1 thông điệp THIEU DB MAY THU, không tính là đạt; READ ONLY, chỉ in số: total theo thị trường và loại tin bằng câu đếm độc lập viết tay trong test; duyệt các trang tới trần: 0 giá trị chuỗi chứa token từ source_registry sau khi che bằng cùng điều kiện của sync; 0 tin S02, S08; trang đầu vn-hcmc dưới 1000 ms ở cả bốn sort; 0 số hiện được sai khuôn +84 và 9 chữ số; in số tin giá phi lý ở trang đầu từng sort (phải bằng 0); đối chứng: withPhone bằng đếm độc lập"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4c
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tir_api
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, docs/ops/cloud-schema-catchup-2026-11-02-tin-rao.sql, app/src/lib/offers-public.ts, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; cầu nối hai đầu: dựng lược đồ vai cloud từ CLOUD_ALLOW của sync (trừ bốn cột mới) rồi chạy tệp catch-up thật, nạp dòng local tạm qua selectList, localReadSql và đường ghi thật của sync, gọi getPublicOffers và contact trên lược đồ đó: total đúng, số khớp +84 và 9 chữ số, tên đã che không ra; lược đồ chưa catch-up: đường đọc và ghi thật của sync bản mới có cảnh báo 'lệch schema: cloud thiếu cột' cho đúng bốn cột, không gửi bốn cột đó, lượt không dừng, các cột khác của dòng nguyên vẹn; getPublicOffers báo thiếu cột, còn getMarketListings của thuê ngắn hạn vẫn trả dòng; đối chứng đỏ: bỏ catch-up → truy vấn báo thiếu cột, ô ghim thông điệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tir_api
+    paths: [app/src/lib/offers-public.ts, "app/src/app/api/v1/listings/[id]/contact/route.ts", app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; route thật, không phiên: tin hiện có số → 200, đúng +84…, Cache-Control no-store; tin không số, tin S08, tin thiếu trường, tin 31 ngày, mã abnb_ của thuê ngắn hạn, mã không tồn tại → cùng 404 và thân giống hệt từng byte; đối chứng đỏ: chép câu truy vấn bỏ điều kiện hiện → tin S08 lộ số, ô bắt 'TIN AN LO SO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tir_be_mat
+    paths: [app/src/lib/api-surface.ts, scripts/check-api-surface.mjs, scripts/check-api-surface.test.mjs, app/tests/quyen-bon-vai.test.tsx, app/tests/viewer-the-duyet.test.tsx, app/docs/api/mcp-tools.json, scripts/smoke-api-surface.mjs]
+    expected: "exit 0; sổ thật qua; v1/listings và v1/listings/[id]/contact khai public + publicOffers; v1/offers vẫn ops; đối chứng đỏ trên bản chép: route public khác đọc sale_offers → đúng thông điệp 'đọc sale_offers mà sổ khai public', khoá publicOffers trên route ngoài danh sách → đỏ có tên, thư viện đọc sale_offers khác offers-public trong bao đóng → đỏ; v1/deals vẫn ops; mcp-tools có oneinvest_get_listings public, oneinvest_get_offers ops; mô tả oneinvest_get_listings có câu chưa hứa ổn định, đối chứng đỏ: bỏ câu → ô bắt ON DINH; smoke có ca khách v1/listings?kind=sale 200 và v1/offers 401; ba ca khai route ở bộ test giao diện (TA-AC-3, QV-AC-9, VT-AC-8) xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6b
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [app/src/lib/api-surface.ts, app/src/app/api/v1/listings/route.ts, "app/src/app/api/v1/listings/[id]/contact/route.ts"]
+    expected: "exit 0; làn tĩnh của cổng xanh với route mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tir_api
+    layer: backend-effect
+    paths: [app/src/lib/offers-public.ts, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; fixture ba tài khoản: 3 tên trải qua hai trang (limit 1), 2 tên, seller_ref rỗng nhiều tên; ô 3 tên: mọi tin ở cả hai trang sellerName null, sellerManyNames true; ô 2 tên giữ tên; ô rỗng giữ tên, không gộp; ô có ward: tài khoản 3 tên lọc còn đúng 1 tên trong phường vẫn sellerManyNames true; đối chứng đỏ: đổi ngưỡng thành 4 → ô 3 tên bắt 'NHIEU TEN', đếm sau lọc → ô ward bắt 'DEM SAU LOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7u
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/sale
+    paths: [app/src/components/listing/offer-card.tsx, app/src/lib/offers-public.ts]
+    expected: "chọn tài khoản nhiều tên bằng truy vấn trên DB máy thu; mở trang có tin của tài khoản đó: thẻ hiện Tài khoản nhiều tên, không hiện tên; lọc theo phường của tin đó: nhãn giữ nguyên; ảnh chụp che tên và số; output ghi mã tin và nhãn, không ghi tên thật"
+    evidence_required: [run_id, screenshot, output, verifier, verified_at]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tir_ui
+    paths: [app/src/components/listing/offer-filter-query.ts, app/src/components/listing/offers-explorer.tsx, app/src/components/listing/listings-page-body.tsx, app/src/components/listing/listing-card.tsx, app/src/components/listing/offer-card.tsx, app/src/components/listing/rent-term-toggle.tsx, app/src/components/listing/listings-route.tsx, app/src/components/listing/offers-filter-sheet.tsx, app/src/components/shell/nav.tsx, app/src/components/shell/top-bar.tsx, app/tests/tin-rao-giao-dien.test.tsx]
+    expected: "exit 0; khứ hồi queryFromOfferFilters ↔ paramsFromOfferQuery trên ma trận viết trước cho cả sale và rent_lt, giá đổi đúng đơn vị tỷ ở sale, triệu ở rent_lt, số lẻ 1,5 tỷ không làm tròn; ngăn lọc dựng cùng tham số với thanh chip; quá 984 tin có dòng nhắc, dưới trần không; điều kiện soạn dở không sinh tham số; pageWindow đúng trên ma trận trang; ListingsPageBody sale và rent_lt dựng OffersRegion, rent_st dựng ListingsRegion, chỉ hai loại thuê có RentTermToggle kể cả trong skeleton và màn chưa có tin; bảng chuyển hướng viết trước của listings/page.tsx: không tham số, kind=sale, kind=rent_lt, kind=rent_st, kind lạ, kèm tham số khác đều 308 đúng đích; NAV_SECTIONS.invest đúng năm mục theo thứ tự, hrefFor trên ma trận đường dẫn giữ thị trường, trang không gắn thị trường về hanoi; match: mỗi đường dẫn đúng một mục sáng, /listing/x sáng rent; offerSpecs đúng trên ma trận loại hình và trường thiếu; firstSeenVi đúng ở 0, 1, n ngày; renderToString OfferCard và ListingCard: cả hai mang đúng thứ tự ô Giá, Thông số, Vị trí, hàng cuối, không có ký hiệu ₫, thẻ thuê ngắn hạn có ảnh thì ô ảnh đứng đầu; offers-explorer không import data-grid; bảng link nội bộ viết trước: insight-page allHref và listing-sections mang /listings/rent?term=short, marketing mang /listings/sale và /listings/rent; ba ca test cũ đã sửa (LB-AC thứ tự trường, LB-AC-9, LD-AC-8) xanh; đối chứng đỏ: bỏ nhân đơn vị → ô bắt 'DON VI GIA', hrefFor cố định hanoi → ô bắt 'GIU THI TRUONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tir_api
+    layer: backend-effect
+    paths: [app/src/components/listing/offer-filter-query.ts, app/src/lib/offers-filters.ts, app/src/lib/offers-public.ts, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; đi trọn chiều: chip giá 2 tỷ qua queryFromOfferFilters thành URL, qua parseOfferFilters vào getPublicOffers trên lược đồ tạm: đúng tin giá ≥ 2 tỷ ra, tin 1,9 tỷ loại; làm tương tự cho loại tin, phường, loại hình, diện tích, phòng ngủ, có số, trang; sort lấy đúng giá trị bộ dựng URL sinh ra, thứ tự dòng đổi theo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8u
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/sale
+    paths: [app/src/components/listing/offers-explorer.tsx, app/src/components/listing/rent-term-toggle.tsx, app/src/components/listing/offers-filter-sheet.tsx, app/src/components/listing/listing-card.tsx, app/src/components/shell/top-bar.tsx]
+    expected: "header có Thị trường, Bán, Cho thuê, Lợi suất, So sánh; từ /vn/hcmc/listings/rent bấm Bán sang /vn/hcmc/listings/sale, từ /yield bấm Bán sang Hà Nội; mở /vn/hanoi/listings nhận 308 sang /listings/sale; bấm Cho thuê: có ô Dài hạn đang chọn; thêm lọc loại hình và giá theo triệu, bật rồi tắt Chỉ tin có số: mỗi thao tác URL và số tin đổi; đổi sắp xếp: URL và thẻ đầu đổi; bấm số trang 2: URL và tập mã tin đổi, chuột giữa mở tab mới được; F5 giữ nguyên; đổi lọc về trang đầu; bấm Ngắn hạn: URL chỉ còn term=short, lưới thẻ có ảnh, bản đồ, nút Xem listing mở đúng trang và mục Cho thuê sáng; ở Bán lọc giá 1,5 tới 3 tỷ: URL đúng đồng, chip ghi 1,5 – 3; so ba loại: Giá ở đầu thẻ, hàng cuối cùng một vị trí; màn 375 và 320: Bán, Cho thuê ngoài menu, documentElement.scrollWidth bằng innerWidth ở cả ba loại, mở ngăn Bộ lọc áp giá ra URL đúng và nút mang số 1; ảnh chụp che Người đăng và số; output ghi URL từng bước và scrollWidth"
+    evidence_required: [run_id, screenshot, output, verifier, verified_at]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tir_ui
+    paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-card.tsx, app/src/components/listing/offers-region.tsx, app/src/components/listing/offers-explorer.tsx, app/tests/tin-rao-giao-dien.test.tsx]
+    expected: "exit 0; jsdom, fetch giả: hasPhone false → «Chưa có số», không gọi mạng; bấm Xem số → gọi đúng một lần, thành link tel:+84…, hiển thị 0xxx; lỗi mạng và 500 → Thử lại, bấm lại lấy được; 404 → Chưa có số; view lọc ra 0 có Xoá bộ lọc; vùng không phường có «Đang thu thập» và link Insight; thẻ không ảnh không có phần tử img hay khung 3:2; ảnh onError thì mất ô ảnh; tên null không nhiều tên hiện Chưa có tên; OffersRegionSkeleton dựng đúng sáu thẻ; RegionError có Thử lại, PageHeader và chọn Loại tin nằm ngoài vùng lỗi; đang lấy số nút khoá, bấm đôi vẫn một lời gọi; renderToString lưới thẻ không chứa SĐT của fixture; đối chứng đỏ: truyền số vào props → chuỗi HTML chứa số, ô bắt 'SO TRONG HTML'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9u
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/sale
+    paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-card.tsx, app/src/components/listing/offers-explorer.tsx]
+    expected: "chọn thị trường và loại tin bằng truy vấn tin có số trên DB máy thu (02/11 Hà Nội có 2 tin bán); bấm Xem số thấy link gọi; mạng ghi nhận đúng một lời gọi contact; view-source trước khi bấm không chứa dãy +84 nào; bản không lọc có Badge Chưa có số; sáng và tối đều đọc được; ảnh chụp che số và tên; lọc giá cực lớn ra màn lọc ra 0, bấm Xoá bộ lọc quay lại; một thẻ Tài khoản nhiều tên thấy đúng nhãn; output ghi href có tiền tố tel:, số lời gọi mạng, scrollWidth, không ghi số thật"
+    evidence_required: [run_id, screenshot, output, verifier, verified_at]
+  - id: E9b
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tir_api
+    layer: backend-effect
+    paths: [app/src/components/listing/offers-region.tsx, app/src/lib/offers-public.ts, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; lược đồ tạm có tin kèm SĐT: renderToString vùng server OffersRegion thật không chứa số của fixture ở dạng +84 hay 0xxx, có đúng mã tin; contact của mã đó trả số; đối chứng dương: chính dãy số đó có trong bảng tạm và trong phản hồi contact; thị trường không có phường ra «Đang thu thập»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    inputs: [docs/adr/0007-collector-operating-principles.md, AGENTS.md, .claude/rules/pii-spl.md, CONTEXT.md, docs/architecture/portals.md, docs/architecture/invest-portal-ia.md, .claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, docs/ROADMAP.md]
+    question: "Trong chín tệp này: có câu nào còn nói tên, SĐT người bán trên tin rao ở lại máy, hay route public không được đọc sale_offers mà không kèm ngoại lệ tin rao, không? ADR-0007, AGENTS.md và ROADMAP có nói tên, SĐT người bán lên cloud và cổng Invest, tên nguồn thật vẫn tầng A không? Có câu nào cho S02, S08 hiển thị trên cổng không? invest-portal-ia.md có năm mục header; CONTEXT.md có slug sale, rent và nhãn Loại tin, Cho thuê, Thuê dài hạn, Thuê ngắn hạn, Xem số, Chưa có số, Tài khoản nhiều tên; portals.md có API Listing công khai; routes.md và catalog.md có khuôn Duyệt Listing và khung thẻ dùng chung không?"
+    expected: "Đồng thuận PASS: không câu mâu thuẫn, đủ các nội dung đã kê"
+    evidence_required: [run_id, verifier, verified_at]
