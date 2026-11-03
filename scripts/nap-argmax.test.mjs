@@ -54,7 +54,8 @@ test("nap-argmax: vượt ARG_MAX vẫn liệt kê đủ, đúng thứ tự mố
     const thiTruong = join(goc, "collector", "snapshots", "hanoi");
     mkdirSync(thiTruong, { recursive: true });
     const dem = "x".repeat(190);
-    const SO = 4000;
+    // ARG_MAX khác nhau theo máy (macOS 1 MB, runner Linux 2 MB): mỗi đường dẫn dài hơn 200 ký tự nên SO này luôn vượt
+    const SO = Math.ceil(Number(spawnSync("getconf", ["ARG_MAX"], { encoding: "utf8" }).stdout) / 200);
     for (let i = SO - 1; i >= 0; i--) {
       const ts = `2026-11-03T${String(100000 + i).slice(-6)}000`;
       mkdirSync(join(thiTruong, `${dem}__zalo-agent__${ts}`));
