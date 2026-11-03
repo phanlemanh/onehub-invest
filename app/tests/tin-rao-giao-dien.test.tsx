@@ -146,6 +146,7 @@ const tin = (id: string, o: Partial<PublicOffer> = {}): PublicOffer => ({
   sellerName: "Người Giả",
   sellerManyNames: false,
   hasPhone: true,
+  phoneInferred: false,
   updatedAt: "2026-11-01T00:00:00Z",
   firstSeenDays: 3,
   ...o,
@@ -433,7 +434,7 @@ const nutXem = (h: ParentNode) => byText(h, "button", "Xem số");
 test("E9 không có số: nói thẳng, không gọi mạng", async () => {
   const { OfferContact } = await import("../src/components/listing/offer-contact");
   const goi = fetchGia([traSo]);
-  const host = await render(<OfferContact offerId="a" hasPhone={false} />);
+  const host = await render(<OfferContact offerId="a" hasPhone={false} inferred={false} />);
   assert.equal(host.textContent, "Chưa có số");
   assert.ok(host.querySelector('[data-slot="badge"]'), "trạng thái đi qua Badge");
   assert.equal(goi.length, 0);
@@ -443,7 +444,7 @@ test("E9 không có số: nói thẳng, không gọi mạng", async () => {
 test("E9 bấm Xem số: gọi đúng một lần, thành link tel, hiển thị 0xxx", async () => {
   const { OfferContact } = await import("../src/components/listing/offer-contact");
   const goi = fetchGia([traSo]);
-  const host = await render(<OfferContact offerId="a/b" hasPhone />);
+  const host = await render(<OfferContact offerId="a/b" hasPhone inferred={false} />);
   await act(() => click(nutXem(host)));
   assert.deepEqual(goi, ["/api/v1/listings/a%2Fb/contact"]);
   assert.equal(host.querySelector("a")?.getAttribute("href"), `tel:${SO}`);
@@ -455,7 +456,7 @@ test("E9 lỗi mạng và 500 hiện Thử lại, bấm lại lấy được; 40
   const loi: GoiFetch[] = [async () => { throw new Error("mạng"); }, async () => new Response("", { status: 500 })];
   for (const hong of loi) {
     const goi = fetchGia([hong, traSo]);
-    const host = await render(<OfferContact offerId="a" hasPhone />);
+    const host = await render(<OfferContact offerId="a" hasPhone inferred={false} />);
     await act(() => click(nutXem(host)));
     const lai = byText(host, "button", "Thử lại");
     assert.equal(lai?.getAttribute("aria-label"), "Không lấy được số, thử lại");
@@ -464,7 +465,7 @@ test("E9 lỗi mạng và 500 hiện Thử lại, bấm lại lấy được; 40
     assert.equal(host.querySelector("a")?.getAttribute("href"), `tel:${SO}`);
   }
   fetchGia([async () => new Response("", { status: 404 })]);
-  const host = await render(<OfferContact offerId="a" hasPhone />);
+  const host = await render(<OfferContact offerId="a" hasPhone inferred={false} />);
   await act(() => click(nutXem(host)));
   assert.equal(host.textContent, "Chưa có số");
 });
@@ -473,7 +474,7 @@ test("E9 đang lấy số nút khoá, bấm đôi vẫn một lời gọi", asyn
   const { OfferContact } = await import("../src/components/listing/offer-contact");
   let xong: (r: Response) => void = () => {};
   const goi = fetchGia([() => new Promise<Response>((r) => (xong = r))]);
-  const host = await render(<OfferContact offerId="a" hasPhone />);
+  const host = await render(<OfferContact offerId="a" hasPhone inferred={false} />);
   const nut = nutXem(host);
   await act(() => click(nut));
   const dang = byText(host, "button", "Đang lấy…") as HTMLButtonElement;

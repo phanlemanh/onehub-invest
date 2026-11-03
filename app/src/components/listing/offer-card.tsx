@@ -63,8 +63,8 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
               <span className="text-muted-foreground">{o.sellerManyNames ? "Tài khoản nhiều tên" : "Chưa có tên"}</span>
             )}
           </p>
-          <div className="flex-none">
-            <OfferContact offerId={o.offerId} hasPhone={o.hasPhone} />
+          <div>
+            <OfferContact offerId={o.offerId} hasPhone={o.hasPhone} inferred={o.phoneInferred} />
           </div>
         </>
       }
