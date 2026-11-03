@@ -5,7 +5,7 @@ slug: can-gia-tot-biet-can
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: approved
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-can-gia-tot-biet-can-design.md
@@ -27,7 +27,6 @@ Phiên nghiệm thu `people-hien-so-goc` 03/11 chấm 3, «Không sử dụng đ
 - AC-6 (cross-layer): Given căn có ảnh, chữ bài, tên, SĐT, When vai Người xem mở bảng, sheet và trang một căn qua page thật, Then HTML, cây phần tử và dữ liệu đưa xuống trình duyệt không chứa ảnh, chữ bài, tên, nhóm, số ở mọi dạng, không có cột «Gọi ai» và trường lọc «Ảnh», danh sách cùng tiêu chí không có ảnh, khối «Còn thiếu» không nói căn thiếu ba thứ đó, vẫn hiện đủ số chứng minh và phường, không có toà, tầng, số căn, số nhà; tên nguồn thật không xuất hiện ở vai nào, chỉ mã `S0x`; khách không đăng nhập không vào được bảng và trang.
 - AC-7 (cross-layer): Given mã căn không có, căn rời danh sách, DB không có bảng và cột của máy thu, danh sách trống, và lỗi DB khác, When mở bảng, `?can=<offerId>` hay trang một căn, Then lần lượt thấy: «Không tìm thấy căn này» có liên kết về danh sách; trang căn kèm nhãn «Đã rời danh sách» nêu đúng lý do (quá 45 ngày, giảm dưới 5%, giảm trên 50%, không tính được mức giảm), `?can=` của căn ngoài danh sách chuyển sang trang đó; trên cloud bảng, sheet, trang đều chạy, có số chứng minh, người liên hệ theo vai và câu «Ảnh, chữ bài chỉ có ở máy thu», không có ô ảnh, không có trường lọc «Ảnh», không nói căn thiếu; trống có «Chưa có căn nào giảm từ 5%…» kèm hành động, lọc không ra căn nào có câu trống kèm nút xoá chip, tab không có căn có câu trống; đang tải có khung xương; khối lỗi có Thử lại. Câu truy vấn của bản cloud chỉ đọc cột có trong `CLOUD_ALLOW` của `pipeline/sync-cloud.mjs`.
 - AC-8 (cross-layer): Given DB máy thu thật, When đối chiếu chỉ đọc qua loader, Then 100% căn trong danh sách có đủ giá/m², thước, số tin, mức giảm hoặc có nhãn thiếu tương ứng; mọi căn có dòng `media` có từ một ảnh; mọi căn có bài gốc có chữ; in số căn đạt từng câu theo định nghĩa ở mục Đường đo, ghi rõ là số định hướng; in phân bố ba tab; mọi căn có trong `getDeals` khi và chỉ khi `getDeal` không nêu lý do rời; đếm trước và sau bằng nhau.
-- AC-9: Given bản đang chạy với phiên vai Vận hành, When đi từ bảng, chọn tab, thêm chip lọc, mở sheet, chuyển căn, xem căn cùng tiêu chí, phóng to ảnh, mở trang một căn, quay về, ở sáng, tối và 390 px, Then mọi căn có dòng `media` hiện được ít nhất một ảnh thật, trừ căn mà mọi ảnh chỉ còn link gốc đã hết hạn (nguồn từ chối khi thử trực tiếp) và được đếm riêng, ảnh không tải được hiện «Ảnh hỏng» chứ không vỡ, tỉ lệ ảnh hỏng được ghi, không tràn ngang ở 390 px và mức giảm vẫn thấy ở 390 px không phải cuộn, liên kết gọi trong hàng bấm được mà không mở sheet, chữ đọc được ở cả hai nền.
 - AC-10 (cross-layer): Given máy thu đang chạy, When đăng nhập thật bằng tài khoản thử ba vai và tải HTML cùng dữ liệu RSC của `/ops/deals` và mọi trang một căn, Then vai Người xem 0 lần xuất hiện SĐT, tên, chữ bài, đường dẫn ảnh của căn; vai Vận hành và `admin` có đủ; mỗi căn có dòng `media` có ít nhất một ảnh vai Vận hành tải được, trừ căn mà mọi ảnh chỉ còn link gốc đã hết hạn (nguồn từ chối khi thử trực tiếp); link gốc còn sống mà vai Vận hành không tải được là vi phạm, và phải có ít nhất một căn tải được ảnh; vai Người xem bị từ chối ở cả `?media=` và `?snapshot=`; in tỉ lệ tải được theo từng đường và số căn chỉ còn link hết hạn.
 - AC-11 (cross-layer): Given lược đồ tạm có căn đủ ba tab và nhiều phường, When dùng tab, chip lọc, sắp xếp và chuyển căn qua hàm và thành phần thật, Then mỗi căn thuộc đúng một trong ba tab «Đủ để gọi», «Cần xác minh», «Còn thiếu»; số trên tab tính theo chip lọc đang bật; chip Phường, Loại hình, Nguồn, Ảnh với «là» và «không phải» ra đúng tập căn; J và K đi đúng thứ tự đang thấy qua cả ranh trang và dừng ở hai đầu; `?can=<offerId>` mở đúng căn khi tải lại, đóng sheet thì bỏ tham số và hàng vừa xem giữ nền chọn.
 - AC-12: Given căn đang xem và ma trận viết trước: cùng phường khác loại hình, khác phường, diện tích đúng biên ±25%, ngoài biên, căn loại hình `unknown`, căn không có diện tích, căn giảm trên 35%, When mở tab «Căn cùng tiêu chí», Then số trên tab và các hàng đúng tập cùng phường, cùng loại hình, diện tích ±25%; tiêu chí không biết thì bỏ và nhãn nói rõ; căn cần xác minh đứng cuối; hàng «Căn này» đứng đầu làm mốc, mỗi căn khác có giá, tr/m², chênh tr/m² đúng dấu, mức giảm; bấm một hàng thì sheet chuyển sang căn đó, vẫn ở tab này; không có căn nào thì có câu trống và nút «Xem mọi căn trong phường», bấm ra đúng mọi căn cùng phường.
@@ -39,8 +38,8 @@ Phiên nghiệm thu `people-hien-so-goc` 03/11 chấm 3, «Không sử dụng đ
 - Trục C — Năm câu: căn nào | ở đâu | ảnh gì | vì sao giá tốt | gọi ai [thước CE: ngưỡng SỐNG của `opportunity.md`] → AC-1, AC-2, AC-3, AC-4.
 - Trục D — Trường thiếu: loại hình | m² | địa chỉ dưới phường | ảnh | chữ bài | SĐT | thước → AC-5, AC-8.
 - Trục E — Mức giảm so ngưỡng: 4,9 | 5 | 35 | 36 | 50 | 50,1 [thước CE: `NGHI_NGO_PCT`, `dealsSql`] → AC-4, AC-7.
-- Trục F — Nơi chạy và trạng thái: máy thu | cloud (bảng, sheet, trang) | lỗi DB | không tìm thấy | đã rời danh sách | danh sách trống | lọc trống | đang tải → AC-7, AC-9.
-- Trục G — Thao tác quét: tab | chip lọc | sắp xếp | J, K | `?can=` | hàng vừa xem [thước CE: Đặc tả UX mục 4] → AC-11, AC-9.
+- Trục F — Nơi chạy và trạng thái: máy thu | cloud (bảng, sheet, trang) | lỗi DB | không tìm thấy | đã rời danh sách | danh sách trống | lọc trống | đang tải → AC-7.
+- Trục G — Thao tác quét: tab | chip lọc | sắp xếp | J, K | `?can=` | hàng vừa xem [thước CE: Đặc tả UX mục 4] → AC-11.
 - Trục H — Tiêu chí cùng loại: phường | loại hình | diện tích biên ±25% | không biết loại hình | không biết diện tích | giảm trên 35% → AC-12.
 - Chân ngành: `[NGÀNH: RESO PropertyType, UnparsedAddress, Media]` → AC-1, AC-2, AC-3.
 
@@ -64,6 +63,7 @@ Phiên nghiệm thu `people-hien-so-goc` 03/11 chấm 3, «Không sử dụng đ
 - Ghi kết quả xác minh, nhãn biên tập, hiện trên Invest: CG5, CG6, CG7.
 - Bản đồ vị trí căn: hôm nay 0 căn có toạ độ.
 - Tách tên đường hay mã toà từ chữ bài: thuộc `pipeline/`, chưa có số đo cho thấy cần; chữ bài hiện đầy đủ để người đọc.
+- AC-9 (đi trọn đường trên bản chạy thật ở sáng, tối và 390 px) không còn là tiêu chí, Mạnh chọn ở trần lượt: lượt chấm 3 đo thấy đạt mọi phần trừ bảng ở 390 px cuộn ngang bên trong (906 px trong khung 348 px, cột đã ẩn vẫn giữ độ rộng); trang không tràn, mức giảm vẫn thấy không phải cuộn. Hạn chế đã biết: thanh cuộn thừa đó còn, và phần này ship không có bằng chứng máy ở lượt chấm cuối.
 
 ## Notes
 

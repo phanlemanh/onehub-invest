@@ -83,21 +83,6 @@ evals:
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/lib/ops/review-media.ts, app/tests/can-gia-tot-doi-chieu.test.tsx]
     expected: "exit 0; ca CGT-DC trên DB máy thu READ ONLY: n = số căn của getDeals, n > 0; với từng căn: đủ bốn số hoặc thieuGi có nhãn tương ứng; có dòng media thì images ≥ 1 và mọi src đúng khuôn; có bài gốc thì postTextFull khác rỗng; in phân bố ba tab; với mọi tin P1 bán: có trong getDeals khi và chỉ khi getDeal không nêu lý do rời; in số căn đạt từng câu theo định nghĩa của mục Đường đo (căn nào, ở đâu theo cột, ảnh gì, vì sao, gọi ai) và số căn đạt từ 4 trên 5, ghi nhãn số định hướng, không đỏ vì số này; đếm sale_offers và media trước bằng sau; báo cáo không chép tên, số, chữ bài thật; đối chứng đỏ: bản bỏ ảnh → ném ('CGT-DC thiếu ảnh')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E9
-    criterion: AC-9
-    executor: ui-check
-    layer: ui-observed
-    paths: [app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-body.tsx, app/src/components/ops/review-photos.tsx]
-    steps:
-      - "Bản chạy: dev server của worktree ở http://localhost:3460 (app-3460-worktree của .claude/launch.json), DB máy thu :5433, đăng nhập tài khoản thử vai Vận hành (node scripts/dev-ops-account.mjs --vai ops; không in mật khẩu). Chép số, tên, chữ bài thật vào báo cáo là sai; ảnh chứng phải che phần đó trước khi chụp."
-      - "1280 px sáng: /ops/deals → bấm tab «Đủ để gọi» → thêm chip Phường (chọn trường, chọn «là», chọn giá trị) → bỏ chip → bấm một hàng mở sheet → phím J rồi K → tab «Căn cùng tiêu chí» → bấm một hàng → tab «Chi tiết» → bấm ảnh, chuyển ảnh sau, đóng → nút mở trang một căn → quay về → Esc đóng sheet; chụp evidence/E9-step1.png tới E9-step4.png; ghi số căn thấy trọn trên màn 1280×800"
-      - "Bước nào cần nhiều căn hơn dữ liệu thật có (chuyển trang, tab cùng tiêu chí có căn, tab rỗng): ghi «không đo được trên dữ liệu thật», không ghi đạt; phần đó do E13, E14 chứng trên fixture"
-      - "Bấm nút gọi trong hàng: sheet không mở, href tel:+84…"
-      - "1280 px tối: bảng, sheet, tab cùng tiêu chí → evidence/E9-step5.png, E9-step6.png"
-      - "390 px sáng: bảng, sheet, tab cùng tiêu chí → evidence/E9-step7.png tới E9-step9.png; ghi scrollWidth và clientWidth từng màn; mức giảm thấy không phải cuộn ngang"
-      - "Ghi naturalWidth từng img trong sheet của mọi căn trong danh sách"
-    expected: "Chip, tab, J, K, tab cùng tiêu chí chạy đúng trên bản thật; mỗi căn có dòng media có ít nhất một img naturalWidth > 0, trừ căn E10 đếm là chỉ còn link hết hạn; img không tải được hiện «Ảnh hỏng»; báo cáo ghi tỉ lệ ảnh hỏng từng căn, trên 50% ảnh hỏng ở một căn thì ghi là lỗi, trừ khi đó đều là link hết hạn theo E10; scrollWidth = clientWidth ở 390 px; liên kết gọi trong hàng có href tel:+84… và không mở sheet; chữ đọc được ở sáng và tối; đường về bảng chạy, hàng vừa xem giữ nền chọn."
-    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E10
     criterion: AC-10
     executor: script
