@@ -107,7 +107,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   trên), giá không đơn vị có nhãn. Toà, trục đi qua phát biểu `parser`, trục vào khoá gom. Trên nhãn tác tử gắn (không phải nhãn vàng): PN 61→225/241,
   giá 128→208/237. Có hiệu lực ở lượt 00:00 sau khi gộp (Mạnh duyệt): S03 2.772→3.158 tin, nghỉ 130, mọc do bộ đọc 391; đo chỉ đọc khớp lượt thử trên DB thử.
 - LLM đọc toàn bộ chữ S03 (LS1 `_acceptance/s03-llm-doc-toan-bo`, 03/11): lệnh `agent/scripts/doc-toan-bo-s03.ts`, lõi `agent/src/enrich/doc-toan-bo.ts`.
-  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ. Tin
+  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ đã đọc được; nhãn JSON hỏng được đọc lại trong trần tiền của lượt. Tin
   `unknown` chỉ tự điền căn hộ khi câu trích có thật và chứa từ khoá (`agent/src/enrich/luat-trich-dan.ts`), actor `doc-toan-bo:<runId>`; loại khác và E1 trái model lên thẻ.
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
@@ -382,6 +382,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    tạo sản phẩm phái sinh khi không có văn bản cho phép → **điều kiện chưa đạt, hiệu lực hiện tại là A**: chỉ số tổng hợp của
    S06/S07 chỉ dùng nội bộ (hiệu chuẩn, kiểm chiều ở `/ops`), cổng chỉ hiện số tự đo. B có hiệu lực khi có văn bản cho phép
    của nguồn hoặc ý kiến pháp lý xác nhận được dùng.
+28. **Danh bạ là định danh nhà, môi giới của sàn xác nhận qua Quỹ hàng** (03/11, Mạnh duyệt cả năm câu của
+   `docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md` §9): mọi căn có một khoá, kể cả căn off-market (suy ra: không có tin công khai còn hiệu lực), cùng ý với
+   Housing Dictionary của Beike. Tra căn khi giao dịch và xác nhận nằm ở Quỹ hàng, đội mình đi cùng đường như một công ty;
+   trang Ops để kiểm độ phủ và vận hành. Máy thu kéo sự kiện lớp danh mục về, thành phát biểu qua cửa kiểm; Invest không mở
+   cửa vào (ADR-0017 §6 sửa). Vật thể ra khỏi máy thu khi có tin hoặc có xác nhận; thứ chỉ từ S08 ở lại, kể cả tên toà
+   (ADR-0016 §9 sửa). Lát đầu Ocean Park 1 và Grand Park cao tầng, mở thêm bằng cấu hình. Không trả theo lượt; hai công ty độc
+   lập cùng giá trị thì lên lớp sự thật. Hàng: DB1, DN1–DN4; mục chờ DN5–DN7.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
