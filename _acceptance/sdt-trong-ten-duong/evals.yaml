@@ -24,7 +24,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.sdt_db
     paths: [pipeline/lib/sdt-trong-chuoi.mjs, pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/lib/assert.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
-    expected: "exit 0; ca 'SDT-AC-2' xanh: fixture legacy sinh bằng catChuyen thật, phát biểu nguồn cũ sinh bằng writeAssertions thật; 12 hàng ra đúng cột viết trước, số assert bằng 12; ô NULL không có field_provenance.street_raw, ô có chữ trỏ phát biểu sống cùng giá trị; 0 phát biểu sống mang số; legacy mang số có retract_reason chua-sdt, dòng còn; lượt kế inserted 0, retracted 0, offers_changed 0. Chiều đỏ: bản sao không rút legacy mang số thì ca ghim «legacy mang số còn sống»; bản sao bỏ rút phát biểu của bộ đọc thì ca đỏ gọi tên hàng 10."
+    expected: "exit 0; ca 'SDT-AC-2' xanh: fixture legacy sinh bằng catChuyen thật, phát biểu nguồn cũ sinh bằng writeAssertions thật; 12 hàng ra đúng cột viết trước, số assert bằng 12; ô NULL không có field_provenance.street_raw, ô có chữ trỏ phát biểu sống cùng giá trị; 0 phát biểu sống mang số; legacy mang số có retract_reason chua-sdt, dòng còn; lượt kế inserted 0, retracted 0, offers_changed 0, số phát biểu đã rút không đổi và lượt đầu có rút. Chiều đỏ: bản sao không rút legacy mang số thì ca ghim «legacy mang số còn sống»; bản sao bỏ rút phát biểu của bộ đọc thì ca đỏ gọi tên hàng 10."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -39,9 +39,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.sdt_do
-    long_running: 180
     paths: [pipeline/scripts/do-sdt-trong-duong.mjs, scripts/chotot-daily.sh, db/db-thu.sh, pipeline/transform-chotot.mjs, pipeline/resolve-properties.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/lib/sdt-trong-chuoi.mjs, pipeline/lib/duong-can.mjs, pipeline/lib/assert.mjs]
-    expected: "exit 0 trên bản chép oneinvest_sdt_do; in tên DB; đối chiếu hai dòng job đêm; trước: tin ≥ 1, căn ≥ 1, nguồn ≥ 1; rút chua-sdt ≥ 1, mục go-sdt-duong ≥ 1; sau = 0 ở tin, căn, nhật ký; số tin nguồn sạch lệch chữ = 0 trên mẫu số ≥ 40.000; ô căn sạch đổi hoặc mất = 0 trên ít nhất 1.000 ô sạch; dòng in chứa dãy số của cả lượt, kể cả log transform và resolve, = 0; in số chuỗi có chữ bị bỏ và số theo định nghĩa rộng. Đối chứng dòng job đã comment thì không khớp. Chiều đỏ cùng lệnh trên bản chép vừa chạy, mỗi ca thoát 1 và ghim thông điệp, stdout không chứa dãy số trừ ca gài in: ma trận --gai-sdt 3 bảng × 2 dạng = 6 ca ra «đường còn số», --gai-mat-duong bỏ đường một tin rồi qua phép so ra «tin nguồn sạch lệch chữ: 1», --gai-can-doi đổi một ô rồi qua phép so ra «ô căn đường sạch đổi hoặc mất: 1», --gai-in-so ra «dòng in chứa dãy số». Trỏ thước vào DB oneinvest thì thoát 2."
+    expected: "exit 0 trên bản chép oneinvest_sdt_do đã qua bước --chay; băm mã trong bản chép khớp mã hiện tại, lệch thì thoát 1; in tên DB; đối chiếu hai dòng job đêm; trước: tin ≥ 1, căn ≥ 1, nguồn ≥ 1; rút chua-sdt ≥ 1, mục go-sdt-duong ≥ 1; sau = 0 ở tin, căn, nhật ký; số tin nguồn sạch lệch chữ = 0 trên mẫu số ≥ 40.000; ô căn sạch đổi hoặc mất = 0 trên ít nhất 1.000 ô sạch; dòng in chứa dãy số của cả lượt, kể cả log transform và resolve, = 0; in số chuỗi có chữ bị bỏ và số theo định nghĩa rộng. Đối chứng dòng job đã comment thì không khớp. Chiều đỏ cùng lệnh trên bản chép vừa chạy, mỗi ca thoát 1 và ghim thông điệp, stdout không chứa dãy số trừ ca gài in: ma trận --gai-sdt 3 bảng × 2 dạng = 6 ca ra «đường còn số», --gai-mat-duong bỏ đường một tin rồi qua phép so ra «tin nguồn sạch lệch chữ: 1», --gai-can-doi đổi một ô rồi qua phép so ra «ô căn đường sạch đổi hoặc mất: 1», --gai-in-so ra «dòng in chứa dãy số», --gai-bam ra «bản chép không phải của mã này». Trỏ thước vào DB oneinvest thì thoát 2, cả khi có --chay."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5
@@ -49,5 +48,5 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.sdt_db
     paths: [pipeline/sync-cloud.mjs, pipeline/lib/duong-can.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
-    expected: "exit 0; ca 'SDT-AC-5' xanh: lô đọc từ localReadSql, selectList thật chứa đúng tin và căn vừa về NULL, hai cột null; buildSwapSql thật có EXCLUDED cho hai cột khi upsert, không keep thì DELETE trắng đúng từng bảng đứng trước INSERT của bảng đó, có keep thì không xoá trắng; mục go-sdt-duong trong lô không chứa dãy số; CLOUD_ALLOW không có field_assertions, sale_offers không có street_number, unit_number. Chiều đỏ: bản sao câu đọc lọc street_raw IS NOT NULL thì ca ghim «lô đồng bộ thiếu hàng về NULL»."
+    expected: "exit 0; ca 'SDT-AC-5' xanh: lô đọc từ localReadSql, selectList thật chứa đúng tin và căn vừa về NULL, hai cột null; buildSwapSql thật có EXCLUDED cho hai cột khi upsert, không keep thì DELETE trắng đúng từng bảng đứng trước INSERT của bảng đó, có keep thì không xoá trắng; mục go-sdt-duong trong lô không chứa dãy số; FILL có sale_offers, properties, không có field_assertions; CLOUD_ALLOW không có field_assertions, sale_offers không có street_number, unit_number. Chiều đỏ: bản sao câu đọc lọc street_raw IS NOT NULL thì ca ghim «lô đồng bộ thiếu hàng về NULL»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

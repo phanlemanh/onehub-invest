@@ -14,7 +14,7 @@ import { mintOfferId } from "../lib/offer-key.mjs";
 import { MAU_DAY_SO } from "../lib/sdt-trong-chuoi.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { chayResolve } from "../resolve-properties.mjs";
-import { buildSwapSql, CLOUD_ALLOW, localReadSql, selectList } from "../sync-cloud.mjs";
+import { buildSwapSql, CLOUD_ALLOW, FILL, localReadSql, selectList } from "../sync-cloud.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -166,8 +166,13 @@ test("SDT-AC-2 ma trận 12 hàng, legacy bị rút mà dòng còn, xuất xứ 
   const coSoL = rows.filter((r) => coSo(r.value));
   assert.equal(coSoL.length, MA_TRAN_AC2.filter((h) => coSo(h.l)).length, "SDT-AC-2 dòng legacy mang số còn đủ");
   for (const r of coSoL) assert.deepEqual([r.retract_reason, Boolean(r.retracted_at)], ["chua-sdt", true], "SDT-AC-2 lý do rút");
+  // Đếm thẳng phát biểu đã rút: `retracted` của transform không gồm hai đường rút của bước này.
+  const daRut = async () => (await c.query(`SELECT count(*)::int n FROM field_assertions WHERE retracted_at IS NOT NULL AND subject_key = ANY($1)`, [dsAc2.map((i) => `S06:${i}`)])).rows[0].n;
+  const rutDau = await daRut();
+  assert.ok(rutDau >= 1, "SDT-AC-2 đối chứng dương: lượt đầu có phát biểu bị rút");
   const lai = await chayTransform(c);
   assert.deepEqual([lai.inserted, lai.retracted, lai.offersChanged], [0, 0, 0], "SDT-AC-2 lượt kế không đổi");
+  assert.equal(await daRut(), rutDau, "SDT-AC-2 lượt kế không rút thêm");
   await kiemCot2();
 }));
 test("SDT-AC-2 đỏ: bản sao không rút legacy mang số", { timeout: 300_000 }, () => trongGiaoDich(async () => {
@@ -345,7 +350,9 @@ test("SDT-AC-5 lô đồng bộ chở NULL lên, không chở số", { timeout: 
     assert.ok(!upsert.includes(`DELETE FROM public."${b}";`), `SDT-AC-5 có keep thì không xoá trắng ${b}`);
   }
 
-  assert.ok(!Object.keys(CLOUD_ALLOW).includes("field_assertions"), "SDT-AC-5 field_assertions không lên cloud");
+  // Bảng lên cloud do FILL quyết; bảng trong FILL mà không có khoá CLOUD_ALLOW thì gửi mọi cột.
+  assert.ok(FILL.includes("sale_offers") && FILL.includes("properties"), "SDT-AC-5 đối chứng dương: hai bảng có trong FILL");
+  assert.ok(!FILL.includes("field_assertions") && !Object.keys(CLOUD_ALLOW).includes("field_assertions"), "SDT-AC-5 field_assertions không lên cloud");
   for (const k of ["street_number", "unit_number"]) assert.ok(!CLOUD_ALLOW.sale_offers.includes(k), `SDT-AC-5 ${k} không lên cloud`);
 }));
 test("SDT-AC-5 đỏ: bản sao câu đọc lọc street_raw khác NULL", { timeout: 300_000 }, () => trongGiaoDich(async () => {
