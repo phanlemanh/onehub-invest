@@ -18,6 +18,11 @@ const CLUSTER_EXPR = `
     || '|' || round(o.area_m2)::text
     || '|' || round(o.price_vnd / 1e6)::text`;
 
+// Tin cấp thị trường (s03-len-cong AC-3) không dựng căn: căn mang mã thị trường là thước giá có dòng cấp thị trường.
+// Tin chưa có area_id vẫn dựng như cũ, nên không JOIN.
+const KHONG_CAP_THI_TRUONG = `
+  NOT EXISTS (SELECT 1 FROM areas x WHERE x.id = o.area_id AND x.region_type = 'market')`;
+
 /** Một lượt resolve trên client đã kết nối. Mọi câu đi qua bộ thử lại deadlock (hồ sơ resolve-thu-lai-deadlock):
  *  câu bị Postgres huỷ vì 40P01 được chạy lại, tối đa 3 lần. opts tiêm cho test; mặc định là chạy thật. */
 export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
@@ -34,7 +39,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
         JOIN stg_chotot_ads s
           ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
         WHERE o.source = 'S06' AND s.latitude IS NOT NULL
-          AND o.area_m2 IS NOT NULL AND o.price_vnd > 0)
+          AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
+          AND ${KHONG_CAP_THI_TRUONG})
       SELECT cluster_key, count(*)::int n,
              min(first_seen) fs, max(last_seen) ls,
              (array_agg(area_id ORDER BY last_seen DESC))[1] area_id,
@@ -79,6 +85,7 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
            ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
          WHERE o.source='S06' AND s.latitude IS NOT NULL
            AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
+           AND ${KHONG_CAP_THI_TRUONG}
            AND ${CLUSTER_EXPR} = $2
          ON CONFLICT (property_id, offer_id) DO NOTHING`,
         [pid, cl.cluster_key],

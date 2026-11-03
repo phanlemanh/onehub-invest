@@ -262,9 +262,28 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
     const { rows: [{ k: kTt }] } = await c.query("SELECT (offer_subject_keys('S06', $1, '{}'))[1] k", [`S06|sl1tt${process.pid}`]);
     await writeAssertions(c, [{ subject_key: kTt, field: "property_type", value: "apartment", evidence_tier: "fact", method: "source_field" }]);
     await resolveOffers(c, [s06Tt]);
+    // Tin S06 có toạ độ: mã thị trường thì không được dựng căn (không thì đủ 5 căn là thước có dòng cấp thị trường), không mã khu vực thì vẫn dựng như cũ.
+    const tinS06CoToaDo = async (ma, areaId, i) => {
+      const listId = 910000000 + process.pid * 100 + i;
+      const { rows: [{ id }] } = await c.query("SELECT 'offer_' || substr(encode(digest('S06|' || $1::text, 'sha256'), 'hex'), 1, 16) id", [listId]);
+      const gia = 4e9 + i * 1e8;
+      await c.query(
+        `INSERT INTO sale_offer_records (offer_id, originating_system_key, source, kind, price_vnd, area_m2, price_perm2, confidence, first_seen, last_seen, n_reposts, post_ids, area_id)
+         VALUES ($1, $2, 'S06', 'sale', $3::float8, 60, $3::float8 / 60, 'high', now(), now(), 1, '{}', $4)`, [id, `S06|${listId}`, gia, areaId]);
+      await c.query(
+        `INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id, latitude, longitude)
+         VALUES ($1, 0, $2, 1000, 's', '{}', (SELECT min(snapshot_id) FROM stg_chotot_ads), $3, 105.8)`, [listId, ma, 21 + i * 0.01]);
+      const { rows: [{ k: kk }] } = await c.query("SELECT (offer_subject_keys('S06', $1, '{}'))[1] k", [`S06|${listId}`]);
+      await writeAssertions(c, [{ subject_key: kk, field: "property_type", value: "apartment", evidence_tier: "fact", method: "source_field" }]);
+      await resolveOffers(c, [id]);
+      return id;
+    };
+    const s06TtToaDo = [];
+    for (let i = 0; i < 6; i++) s06TtToaDo.push(await tinS06CoToaDo(`sl1tt${i}`, market, i));
+    const s06KhongMa = await tinS06CoToaDo("sl1null", null, 6);
 
     // Thu hẹp bộ ghép về phường đối chứng và tin thử: chạy cả 50 nghìn tin mất hơn 10 phút. Mã bộ ghép vẫn là mã thật.
-    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${[a, b, doiChung, coGap, ...nhieu, { id: s06Tt }].map((t) => t.id).join(",")},${s06}}')`);
+    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${[a, b, doiChung, coGap, ...nhieu, ...[s06Tt, ...s06TtToaDo, s06KhongMa].map((id) => ({ id }))].map((t) => t.id).join(",")},${s06}}')`);
     await refreshBaitGap(c);
     await chayResolve(c, { ghi() {}, savepoint: true });
     const thanhPho = Object.keys(MARKETS).find((k2) => MARKETS[k2].id === market);
@@ -272,6 +291,9 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
     await runReassign(c, [thanhPho], { log: IM });
 
     assert.equal((await c.query(`SELECT count(*)::int n FROM v_ruler_p2_area v JOIN areas x ON x.id = v.area_id WHERE x.region_type = 'market'`)).rows[0].n, 0, "SL1-AC-3 thước cấp thị trường");
+    const canCua = async (ids) => (await c.query("SELECT count(*)::int n FROM property_offers WHERE offer_id = ANY ($1)", [ids])).rows[0].n;
+    assert.equal(await canCua(s06TtToaDo), 0, "SL1-AC-3 tin S06 cấp thị trường được dựng căn");
+    assert.equal(await canCua([s06KhongMa]), 1, "SL1-AC-3 đối chứng: tin S06 chưa có khu vực mất căn");
     assert.ok((await c.query("SELECT count(*)::int n FROM v_ruler_p2_area v JOIN areas x ON x.id = v.area_id WHERE x.parent_id = $1", [market])).rows[0].n > 0, "SL1-AC-3 đối chứng: không còn thước phường");
     const { rows: [{ bait_gap_pct: gap }] } = await c.query("SELECT bait_gap_pct FROM sale_offer_records WHERE offer_id = $1", [coGap.id]);
     assert.notEqual(gap, null, "SL1-AC-3 đối chứng: tin có phường có thước mà gap trống");
