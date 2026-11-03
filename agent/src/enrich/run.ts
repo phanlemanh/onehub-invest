@@ -69,11 +69,13 @@ type OfferRow = {
   block_raw: string | null;
   text: string | null;
   group_name: string | null;
+  loai_suy: boolean;
 };
 
 const OFFER_SELECT = `
   SELECT o.offer_id, o.property_type, o.bedrooms, o.bathrooms, o.street_raw, o.block_raw,
-         z.text, z.group_name
+         z.text, z.group_name,
+         coalesce(o.field_provenance #>> '{property_type,tier}' = 'inferred', false) AS loai_suy
   FROM sale_offers o
   LEFT JOIN LATERAL (
     SELECT left(s.text, 500) AS text, s.group_name FROM stg_zalo_posts s
@@ -100,7 +102,8 @@ async function selectOffers(c: pg.Client, limit: number, offerIds?: string[]): P
        SELECT t.*, (t.offer_id IN (SELECT offer_id FROM loose)) AS deferred_first FROM (${OFFER_SELECT}
          WHERE o.offer_id IN (SELECT offer_id FROM loose)
             OR (o.source IN ('S03','S05') AND o.kind = 'sale' AND o.confidence IN ('high','medium')
-                AND (o.property_type = 'unknown' OR o.street_raw IS NULL OR o.bathrooms IS NULL)
+                AND (o.property_type = 'unknown' OR o.field_provenance #>> '{property_type,tier}' = 'inferred'
+                     OR o.street_raw IS NULL OR o.bathrooms IS NULL)
                 AND NOT EXISTS (
                   SELECT 1 FROM ops_audit a
                   WHERE a.action = 'enrich:thu' AND a.detail->>'offer_id' = o.offer_id
@@ -270,6 +273,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
       llm: llmRes?.result ? llmFieldsFromEnrich(llmRes.result) : null,
       buildings,
       held,
+      inferredFields: o.loai_suy ? new Set<EnrichField>(["property_type"]) : undefined,
     });
     routed.push(rs);
     if (opts.dry) continue;

@@ -6,11 +6,15 @@
 # pg_dump chỉ lấy khoá đọc (AccessShare) trên oneinvest — không chặn đọc/ghi của job khác.
 #   bash db/db-thu.sh <tên>          dựng lại từ đầu (xoá nếu có)
 #   bash db/db-thu.sh <tên> --xoa    xoá DB thử
+#   bash db/db-thu.sh <tên> --neu-chua-co   có sẵn thì giữ nguyên (lượt chấm chạy song song nhiều lệnh trên một DB thử: dựng trước một lần)
 # Trỏ lệnh vào DB thử: DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/<tên>
 set -euo pipefail
 TEN="${1:?thiếu tên DB thử}"
 [[ "$TEN" =~ ^oneinvest_[a-z0-9_]+$ ]] || { echo "db-thu: tên phải dạng oneinvest_<dãy>_<việc> (không được là oneinvest)"; exit 2; }
 DX=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db)
+if [ "${2:-}" = "--neu-chua-co" ] && "${DX[@]}" psql -U oneinvest -h localhost -d "$TEN" -Atc "SELECT 1 FROM sale_offer_records LIMIT 1" 2>/dev/null | /usr/bin/grep -q 1; then
+  echo "db-thu: giữ $TEN có sẵn"; exit 0
+fi
 "${DX[@]}" dropdb -U oneinvest -h localhost --if-exists "$TEN"
 if [ "${2:-}" = "--xoa" ]; then echo "db-thu: đã xoá $TEN"; exit 0; fi
 # pipefail: pg_dump lỗi giữa ống (02/11, DDL song song trên oneinvest) mà sh vẫn thoát 0 thì để lại DB rỗng. Lỗi đó nhất thời nên thử lại.

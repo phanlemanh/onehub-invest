@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { Badge } from "@/components/reui/badge"
 import { fmtCompact, fmtInt } from "@/lib/format"
 import type { PublicOffer } from "@/lib/offers-filters"
 import { KIND, LABELS_VI, PROPERTY_TYPE } from "@/lib/vocab.generated"
@@ -38,6 +39,7 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
       price={`${fmtCompact(o.priceVnd)}${o.kind === KIND.rent_lt ? "/tháng" : ""}`}
       priceNote={o.kind === KIND.sale && o.pricePerm2 !== null ? `${fmtCompact(o.pricePerm2)}/m²` : null}
       meta={firstSeenVi(o.firstSeenDays)}
+      name={o.unverified ? <div><Badge variant="warning-light">Chưa xác minh</Badge></div> : null}
       specs={offerSpecs(o)}
       place={
         <p className="truncate">

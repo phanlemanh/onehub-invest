@@ -146,6 +146,7 @@ const tin = (id: string, o: Partial<PublicOffer> = {}): PublicOffer => ({
   sellerName: "Người Giả",
   sellerManyNames: false,
   hasPhone: true,
+  unverified: false,
   updatedAt: "2026-11-01T00:00:00Z",
   firstSeenDays: 3,
   ...o,

@@ -51,7 +51,10 @@ export async function queryPair(offerA: string, offerB: string, client?: pg.Clie
   try {
     const { rows } = await c.query(
       `SELECT o.offer_id, o.source, o.kind, o.price_vnd, o.area_m2,
-              o.price_perm2, o.bedrooms, o.phuong_raw, o.property_type, o.seller_name,
+              o.price_perm2, o.bedrooms, o.phuong_raw,
+              -- Loại hình suy từ nhóm không phải căn cứ ghép căn (s03-len-cong AC-12): bộ chấm thấy như chưa biết.
+              CASE WHEN o.field_provenance #>> '{property_type,tier}' = 'inferred' THEN 'unknown' ELSE o.property_type END AS property_type,
+              o.seller_name,
               o.street_raw, o.block_raw, o.floor_raw, o.bathrooms,
               (SELECT left(z.text, 300) FROM stg_zalo_posts z
                 WHERE z.post_id = ANY(o.post_ids)

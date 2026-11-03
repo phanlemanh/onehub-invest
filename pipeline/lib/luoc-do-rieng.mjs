@@ -7,8 +7,9 @@
 let soLuocDo = 0;
 
 /** ACCESS SHARE trên mọi bảng nguồn trong MỘT câu NOWAIT; bị ca DDL khác chặn thì nhả hết, chờ 100 ms rồi thử lại — không
- * bao giờ vừa giữ vừa chờ (không vào vòng deadlock), chỉ chờ đúng lúc ca DDL ấy còn chạy. Trả số lần thử lại. */
-export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
+ * bao giờ vừa giữ vừa chờ (không vào vòng deadlock), chỉ chờ đúng lúc ca DDL ấy còn chạy. Trần 5 phút: NOWAIT không xếp hàng,
+ * nên chuỗi ca DDL nối đuôi trên DB chung có thể chặn liền hơn 100 giây. Trả số lần thử lại. */
+export async function khoaNguon(c, bang, { toiDa = 3000 } = {}) {
   const ds = bang.map((t) => `public.${t}`).join(", ");
   for (let lan = 0; ; lan++) {
     await c.query("SAVEPOINT khoa_nguon");
