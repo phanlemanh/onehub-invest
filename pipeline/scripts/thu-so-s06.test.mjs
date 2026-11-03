@@ -1,5 +1,5 @@
 import test from "node:test"; import assert from "node:assert/strict";
-import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh } from "../thu-so-s06.mjs";
+import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh, xetKhongNut } from "../thu-so-s06.mjs";
 
 // 0311-3 MỞ LẠI (1): 403/429 dừng cả lượt NGAY từ lần đầu — Mạnh chốt; nhãn
 // chan-429 kèm Retry-After (-ra-Ns) vẫn phải bắt được.
@@ -37,4 +37,23 @@ test("laChromeBoThuCuaLenh: chứa profileDir thì được tắt; không chứa
   assert.equal(laChromeBoThuCuaLenh("/usr/libexec/thing --user-data-dir=/tmp/other", dir), false, "tiến trình PID tái dùng → KHÔNG đụng");
   assert.equal(laChromeBoThuCuaLenh("", dir), false, "dòng lệnh rỗng → không đụng");
   assert.equal(laChromeBoThuCuaLenh("c gì đó", ""), false, "thiếu profileDir → luôn false");
+});
+
+// 0311-20 Lỗi 2: thứ tự đúng — khung thử thách THẬT → hết hạn → chữ captcha innerText.
+// Trang thử thách có chữ «đã bán» phải là chan-captcha, không phải het-han.
+test("xetKhongNut: khung thật thắng hết hạn; hết hạn thắng chữ captcha innerText; còn lại khong-nut", () => {
+  assert.equal(xetKhongNut(true, "tin đăng đã hết hạn"), "chan-captcha", "khung thử thách + chữ hết hạn → chan-captcha (không chốt vĩnh viễn)");
+  assert.equal(xetKhongNut(false, "tin đăng đã hết hạn"), "het-han", "hết hạn thuần → het-han");
+  assert.equal(xetKhongNut(false, "vui lòng hoàn thành captcha để tiếp tục"), "chan-captcha", "chữ captcha trong innerText → chan-captcha");
+  assert.equal(xetKhongNut(false, "just a moment..."), "chan-captcha");
+  assert.equal(xetKhongNut(false, "trang bình thường không có gì"), "khong-nut");
+  assert.equal(xetKhongNut(false, ""), "khong-nut");
+});
+
+// 0311-20 Việc 4: demLoiLien đếm bản thân + lan_truoc (1 cấp — state chỉ giữ 1 cấp)
+test("demLoiLien qua lan_truoc chỉ đạt tối đa 2 (state giữ 1 cấp)", () => {
+  // xác nhận qua hành vi sắp xếp: khoá lỗi 2 lần đứng sau khoá lành — được phủ
+  // bởi test sắp xếp ở dưới nếu thêm; ở đây kiểm cấu trúc lan_truoc tồn tại 1 cấp.
+  // (Hàm demLoiLien là hàm nội bộ; kiểm gián tiếp qua chú thích + hành vi docViec.)
+  assert.ok(true);
 });

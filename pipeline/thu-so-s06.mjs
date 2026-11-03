@@ -77,6 +77,15 @@ const jitter = () => 15000 + Math.floor(Math.random() * 10000); // nghỉ 15–2
  * captcha/khong-ra-so/timeout giữ luật 5 lần liền. Export cho test. */
 export const canDungNgay = (status) => /^chan-4(03|29)/.test(String(status));
 
+/** 0311-20: nhãn trang KHÔNG NÚT theo thứ tự đúng — khung thử thách thật →
+ * hết hạn → chữ captcha trong innerText → còn lại khong-nut. Export cho test. */
+export function xetKhongNut(khung, txt) {
+  const t = String(txt ?? "").toLowerCase();
+  if (khung || t.includes("just a moment") || t.includes("captcha")) return "chan-captcha";
+  if (t.includes("không còn") || t.includes("hết hạn") || t.includes("đã bán")) return "het-han";
+  return "khong-nut";
+}
+
 /** 0311-3 MỞ LẠI vòng 3 (d): dòng lệnh tiến trình có chứa đúng đường profileDir
  * của bộ thu thì mới được tắt — PID tái dùng/tệp cũ không giết nhầm Chrome khác.
  * Export cho test. */
@@ -150,8 +159,9 @@ async function docViec(client, state) {
     const lid = chonTinChuaHetHan(r, state);
     if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
-  // 0311-19 (b): khoá lỗi 2 lần liền xuống CUỐI hàng — trước đây lỗi thử lại
-  // dồn lên đầu (ORDER BY so_tin) khiến cả lượt sau nạp lại đúng 6 khoá lỗi.
+  // 0311-19 (b) + 0311-20 (Hỏi): khoá lỗi xuống CUỐI hàng — demLoiLien đếm bản
+  // thân + lan_truoc (state chỉ giữ MỘT cấp lan_truoc) nên tối đa 2, nghĩa là
+  // khoá sai lần THỨ HAI trở xuống mới xuống cuối, lần đầu vẫn giữ chỗ.
   const laLoi = (st) => typeof st === "string" && !["co-so", "het-han"].includes(st);
   const demLoiLien = (id) => {
     let n = 0, x = state.da_thu[String(id)];
@@ -219,24 +229,32 @@ async function laySoTrang(page, viec) {
       return { status: `chan-${res.status()}${ra ? `-ra-${ra}s` : ""}` };
     }
     await page.waitForTimeout(1200);
+    // 0311-20 Lỗi 2: thứ tự đúng = khung thử thách THẬT → hết hạn → chữ captcha
+    // trong innerText (hết hạn trước khung làm trang thử thách có chữ «đã bán»
+    // thành het-han — chốt vĩnh viễn, mất tài khoản).
+    const docTrang = () => page.evaluate(() => ({
+      txt: (document.body?.innerText ?? "").toLowerCase(),
+      khung: !!document.querySelector("iframe[src*=challenge], #challenge-running, #challenge-error-text, .cf-turnstile, [class*=challenge]"),
+    }));
     const pathOk = page.url().includes(`/${viec.list_id}.htm`);
-    if (!pathOk) return { status: "trang-khac" };
+    if (!pathOk) {
+      // 0311-20 Lỗi 1 (AC-9): nhánh chuyển hướng CŨNG xét thử thách — nguồn
+      // redirect sang trang thử thách phải vào chuỗi chặn, không gọi mãi.
+      const t = await docTrang();
+      if (t.khung || t.txt.includes("just a moment")) return { status: "chan-captcha" };
+      return { status: "trang-khac" };
+    }
     // nút hiện số (đã kiểm 02/11: KHÔNG đòi đăng nhập)
     const nut = await page
       .waitForSelector('button:has-text("Hiện số"), button:has-text("hiển thị số")', { timeout: 10_000 })
       .catch(() => null);
     if (!nut) {
-      // 0311-19 (b): HẾT HẠN xét TRƯỚC; captcha chỉ nhận khi KHUNG THỬ THÁCH thật
-      // hoặc chữ nằm trong innerText — soi page.content() toàn HTML bắt chữ
-      // "captcha" trong script động gây nhãn sai (đo 03/11 khoá 135270933:
-      // HTTP 200 · 1,6s · 0 chữ captcha trong HTML · innerText "Tin đăng đã hết hạn").
-      const t = await page.evaluate(() => ({
-        txt: (document.body?.innerText ?? "").toLowerCase(),
-        khung: !!document.querySelector("iframe[src*=challenge], #challenge-running, #challenge-error-text, .cf-turnstile, [class*=challenge]"),
-      }));
-      if (t.txt.includes("không còn") || t.txt.includes("hết hạn") || t.txt.includes("đã bán")) return { status: "het-han" };
-      if (t.khung || t.txt.includes("captcha") || t.txt.includes("just a moment")) return { status: "chan-captcha" };
-      return { status: "khong-nut" };
+      // 0311-19 (b): captcha chỉ nhận khi khung thử thách thật hoặc chữ trong
+      // innerText — soi page.content() toàn HTML bắt chữ trong script động
+      // gây nhãn sai (đo 03/11 khoá 135270933: hết hạn thật, 0 chữ captcha).
+      const t = await docTrang();
+      const nhan = xetKhongNut(t.khung, t.txt);
+      return { status: nhan };
     }
     await nut.scrollIntoViewIfNeeded();
     await nut.click();
@@ -421,6 +439,8 @@ async function main() {
   let chanLienTiep = 0;
   let thu = 0;
   let iViec = 0;
+  let khongNutLien = 0;      // 0311-20 Việc 3: ngưỡng riêng 20 lần liền
+  let dungNguongKhongNut = false;
   try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
@@ -445,7 +465,7 @@ async function main() {
 
   async function motLuong(idx) {
     const tab = tabs[idx % tabs.length];
-    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429) {
+    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429 && !dungNguongKhongNut) {
       const v = viec[iViec++];
       const tBat = Date.now();
       let kq;
@@ -460,10 +480,19 @@ async function main() {
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
       // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
-      // 0311-19 (b): khong-nut KHÔNG tính chuỗi chặn — trang hết nội dung nút,
-      // không phải nguồn chặn (het-han/khong-nut/trang-khac đều lành tính)
-      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status) && kq.status !== "khong-nut") chanLienTiep++;
+      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
       else chanLienTiep = 0;
+      // 0311-20 Việc 3: khong-nut không vào chuỗi chặn nhưng có ngưỡng riêng —
+      // 20 lần LIỀN (nguồn đổi giao diện/giấu nút) thì dừng lượt + BÁO.
+      if (kq.status === "khong-nut") {
+        khongNutLien++;
+        if (khongNutLien >= 20) {
+          console.log(`[ngưỡng] 20 khong-nut liền — nguồn đổi giao diện? DỪNG lượt`);
+          dungNguongKhongNut = true;
+        }
+      } else {
+        khongNutLien = 0;
+      }
       // 0311-3 MỞ LẠI (1): 403/429 → dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt)
       if (canDungNgay(kq.status)) {
         dungNgay403429 = true;
@@ -565,7 +594,7 @@ async function main() {
     const st = Object.values(state.da_thu).filter((x) => x.phone).length;
     console.log(`[đối chiếu] state ${st} số · stg ${stg} số · lệch ${st - stg}${st !== stg ? " — CHẠY: node bu-seller-v5.mjs" : ""}`);
   } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
-  process.exit(chanLienTiep >= 5 || dungNgay403429 ? 2 : 0); // 0311-3 MỞ LẠI (1): 403/429 cũng thoát 2
+  process.exit(chanLienTiep >= 5 || dungNgay403429 || dungNguongKhongNut ? 2 : 0); // 403/429 + ngưỡng khong-nut cũng thoát 2
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
