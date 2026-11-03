@@ -77,7 +77,14 @@ FAILED=0
 # các khuôn chia sẻ tiền tố tới giây (state 6 số cũ giữ nguyên).
 # GIỐNG HỆT apify-facebook-daily.sh — hai bản phải không lệch nhau (BÁO 2510-5).
 TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
-for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
+# 0311-8: ls -1d với glob vượt ARG_MAX (11.082 thư mục ≈ 1MB > 1.048.576) —
+# ls thoát 126 'Argument list too long', 2>/dev/null nuốt lỗi → vòng lặp rỗng
+# mà job vẫn thoát 0 (S03 ngừng nạp từ 02/11). find tự duyệt, KHÔNG truyền
+# đối số qua exec; liệt kê lỗi → thoát khác 0 và KHÔNG ghi state.
+DS_DIR=$(find "$ROOT/collector/snapshots" -maxdepth 2 -type d -name '*__zalo-agent__*') || {
+  echo "❌ lỗi liệt kê snapshot (find)" >&2; exit 3
+}
+for SNAP in $(printf '%s\n' "$DS_DIR" | while read -r d; do
     b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
