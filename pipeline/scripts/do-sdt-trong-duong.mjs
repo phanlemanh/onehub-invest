@@ -30,7 +30,8 @@ const iGai = argv.indexOf("--gai-sdt");
 const GAI = iGai >= 0 ? argv[iGai + 1].split(":") : null;
 const SO_SANH = !CHI_DOC || co("--gai-mat-duong") || co("--gai-can-doi");
 const DB_URL = process.env.DATABASE_URL ?? "";
-if (!CHI_DOC && !/\/oneinvest_[a-z0-9_]+$/.test(DB_URL)) {
+// --chay luôn là lượt ghi, kể cả khi đi kèm --chi-doc.
+if ((CHAY || !CHI_DOC) && !/\/oneinvest_[a-z0-9_]+$/.test(DB_URL)) {
   console.error("do-sdt-trong-duong: lượt ghi cần DATABASE_URL trỏ DB thử oneinvest_<dãy>_<việc> (bash db/db-thu.sh …)");
   process.exit(2);
 }
@@ -183,7 +184,7 @@ function chungDo(vipham) {
     console.log(`chiều đỏ ${cac.join(" ")}: thoát ${r.status}, ${dat ? "đúng thông điệp" : "SAI"}`);
     if (!dat) vipham.push(`chiều đỏ ${cac.join(" ")} không ra «${ghim}»`);
   }
-  for (const them of [[], ["--chay"]]) {
+  for (const them of [[], ["--chay"], ["--chay", "--chi-doc"]]) {
     const chung = spawnSync(process.execPath, [toi, ...them], { encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" } });
     console.log(`trỏ vào DB dùng chung ${them.join(" ")}: thoát ${chung.status}`);
     if (chung.status !== 2) vipham.push("thước không từ chối DB dùng chung");
