@@ -5,7 +5,7 @@ slug: s03-llm-doc-toan-bo
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-02-s03-llm-doc-toan-bo-design.md
 approved_by: Mạnh
 approved_at: 2026-11-03
@@ -75,3 +75,17 @@ Bỏ quét không gian (dòng `descope` trong sổ) — bốn trục liệt tay:
 - Đẩy Supabase; đổi giao diện `/ops/review` ngoài khối đối chiếu trong thẻ.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-3: Một quyết định duyệt sinh hai dòng nhật ký mang tên người khác dạng, nên lọc nhật ký theo người có thể tách đôi hai dòng này.
+  - Ngoài-9: Người duyệt đôi khi gặp lại đúng bất đồng mà mình đã quyết, và có thể quyết khác lần trước.
+  - Ngoài-10: Nếu model trả lời hỏng một lần, tin đó bị đánh dấu bỏ qua lâu dài với lý do sai và không được thử đọc lại.
+  - Ngoài-11: Số thẻ mới báo có thể cao hơn thực tế, và lượt có thể dừng tạo thẻ sớm hơn mức trần đã đặt.
+  - Ngoài-12: Có thể lượt thật trả tiền đọc lại những bài đã được đọc ở lượt đo mẫu mà không ai phát hiện.
+  - Ngoài-13: Số cuộc gọi thành công mà lệnh đếm in ra chưa được kiểm, nên có thể sai mà không ai biết.
+  - Ngoài-14: Phần lớn từ trong bảng luật nhận diện loại hình chưa được thử, nên sửa bảng có thể làm máy tự ghi sai loại hình mà test vẫn xanh.
+  - Ngoài-15: Khối đối chiếu cho bất đồng về diện tích chưa được kiểm tra hiển thị, nên có thể hiện sai nhãn hoặc định dạng mà không ai biết.
+  - Ngoài-16: Loại thẻ phổ biến chỉ có bất đồng chưa được thử từ lúc tạo thẻ tới lúc hiện trên màn hình duyệt, nên có thể lệch khuôn mà chưa ai thấy.
+  - Ngoài-17: Các ca kiểm máy không tự điền khi trích dẫn sai chưa đều có phép đối chứng, nên một ca có thể xanh vì lý do sai.
+  - Ngoài-18: Phép thử chạy thử không ghi gì chưa chứng minh được bảng đếm cuộc gọi model thực sự bị chặn ghi.
+  - Ngoài-19: Chưa chứng minh được lệnh dừng vì thiếu khoá trước khi gọi model lần nào, nên có thể đã trả tiền một lần.
