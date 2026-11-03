@@ -5,3 +5,11 @@
 {"ts":"2026-11-03T04:38:47Z","round":1,"evalId":"E5","run_id":"s03-nap-argmax-E5-r1-20261103T043847Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
 {"ts":"2026-11-03T04:38:48Z","round":1,"evalId":"E6","run_id":"s03-nap-argmax-E6-r1-20261103T043848Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"}
 {"ts":"2026-11-03T04:38:49Z","round":1,"evalId":"E7","run_id":"s03-nap-argmax-E7-r1-20261103T043849Z","exit_code":0,"cmd":"node --test scripts/zalo-import-job.test.mjs"}
+{"ts":"2026-11-03T05:15:36Z","round":2,"evalId":"E1","run_id":"s03-nap-argmax-E1-r2-20261103T051536Z","exit_code":0,"cmd":"node --test scripts/nap-argmax.test.mjs"}
+{"ts":"2026-11-03T05:15:36Z","round":2,"evalId":"E2","run_id":"s03-nap-argmax-E2-r2-20261103T051536Z","exit_code":0,"cmd":"node --test scripts/nap-argmax.test.mjs"}
+{"ts":"2026-11-03T05:15:36Z","round":2,"evalId":"E3","run_id":"s03-nap-argmax-E3-r2-20261103T051536Z","exit_code":0,"cmd":"node --test scripts/nap-argmax.test.mjs"}
+{"ts":"2026-11-03T05:15:36Z","round":2,"evalId":"E8","run_id":"s03-nap-argmax-E8-r2-20261103T051536Z","exit_code":0,"cmd":"node --test scripts/nap-argmax.test.mjs"}
+{"ts":"2026-11-03T05:15:36Z","round":2,"evalId":"E4","run_id":"s03-nap-argmax-E4-r2-20261103T051536Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs ts-format"}
+{"ts":"2026-11-03T05:15:41Z","round":2,"evalId":"E5","run_id":"s03-nap-argmax-E5-r2-20261103T051536Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
+{"ts":"2026-11-03T05:15:42Z","round":2,"evalId":"E6","run_id":"s03-nap-argmax-E6-r2-20261103T051541Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"}
+{"ts":"2026-11-03T05:15:43Z","round":2,"evalId":"E7","run_id":"s03-nap-argmax-E7-r2-20261103T051542Z","exit_code":0,"cmd":"node --test scripts/zalo-import-job.test.mjs"}
