@@ -1,6 +1,6 @@
 {
   "feature_plain": "Số điện thoại suy ra từ tài khoản đăng tin S06 không làm sai danh bạ Người, và khi hiện trên cổng Invest thì mang nhãn «chưa xác minh».",
   "decisions": [
-    {"id": "E10", "q": "Tài liệu đã nêu đủ nhãn, thứ tự triển khai và phần cloud chưa?", "why": "Mục này do máy đọc tài liệu rồi chấm, đạt từ lượt 2. Lượt này không ký được nên chưa phải trả lời."}
+    {"id": "E10", "q": "Tài liệu đã nêu đủ nhãn, thứ tự triển khai và phần cloud chưa?", "why": "Ba góc nhìn đều thấy đủ bốn vế trong các tệp: thuật ngữ nhãn, khai báo cột mới, dòng đính chính ở thiết kế cũ, thứ tự 070 trước 068 kèm phần cloud."}
   ]
 }
