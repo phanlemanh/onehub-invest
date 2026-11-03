@@ -276,7 +276,8 @@ export async function chayLuot(o: {
     // Lỗi gọi (mạng, Gateway) không lưu; JSON hỏng lưu để giữ chi phí đã trả. Cả hai được đọc lại ở lượt sau, trong trần tiền của lượt đó.
     ghi: o.thu ? null : async (d: DongNhan) => (d.error_kind && d.error_kind !== "json-hong" ? 0 : (await c.query(SQL_GHI_DOC, thamSoGhi(d))).rowCount ?? 0),
   });
-  kq.daDoc = lo.nhan.length; kq.conLai = bai.size - lo.nhan.length; kq.tongUsd = lo.tongUsd; kq.dungTran = lo.dungTran; kq.loi = lo.loi;
+  // Chỉ nhãn đọc được mới là đã đọc: lỗi gọi và JSON hỏng vẫn còn lại, lượt sau đọc lại.
+  kq.daDoc = lo.nhan.filter((d) => !d.error_kind).length; kq.conLai = bai.size - kq.daDoc; kq.tongUsd = lo.tongUsd; kq.dungTran = lo.dungTran; kq.loi = lo.loi;
   for (const d of lo.nhan) if (!d.error_kind) nhan.set(khoaNhan(d.post_id, d.text_hash), d);
 
   // Pha quyết: 0 USD. Tin đã xử với cùng chữ thì bỏ qua: thẻ đã duyệt không mọc lại (Focus 1).
@@ -388,7 +389,7 @@ export async function demLuot(c: pg.Client): Promise<SoDem> {
 export const NGUONG_DUNG_MAC_DINH = 0.85;
 export const SO_CA_TOI_THIEU = 100;
 export type NhanMau = { post_id: string; property_type: string | null };
-export type KetMau = { n: number; ap: number; dung: number; canDuoi: number | null; tiLeAp: number; the: number; usd: number; dat: boolean; thieuChu: number };
+export type KetMau = { n: number; ap: number; dung: number; canDuoi: number | null; tiLeAp: number; the: number; usd: number; dat: boolean; thieuChu: number; chuaDoc: number };
 
 /** Đọc tệp nhãn dạng [[post_id, {property_type, …}], …] — chỉ giữ khoá bài và loại hình. */
 export function docTepNhan(noiDung: string): NhanMau[] {
@@ -429,11 +430,11 @@ export async function doMau(o: {
   });
   for (const d of lo.nhan) if (!d.error_kind) daCo.set(khoaNhan(d.post_id, d.text_hash), d);
 
-  let ap = 0, dung = 0, the = 0;
+  let ap = 0, dung = 0, the = 0, chuaDoc = 0;
   for (const x of coBai) {
     const b = chuBai.get(x.post_id)!;
     const l = daCo.get(khoaNhan(x.post_id, textHash(b.text)));
-    if (!l) continue;
+    if (!l) { chuaDoc++; continue; }
     const ctx = await o.resolve(b.group_name, b.text);
     const q = quyetTin({
       hienTai: { property_type: "unknown", price_vnd: null, area_m2: null }, e1Loai: ctx.propertyType, intent: l.listing_intent,
@@ -447,7 +448,7 @@ export async function doMau(o: {
   const canDuoi = o.wilson(dung, ap);
   const dat = !lo.dungTran && ap >= SO_CA_TOI_THIEU && canDuoi !== null && canDuoi >= o.nguong;
   const kq: KetMau = {
-    n: coBai.length, ap, dung, canDuoi, tiLeAp: coBai.length ? ap / coBai.length : 0, the, usd: lo.tongUsd, dat, thieuChu: chon.length - coBai.length,
+    n: coBai.length, ap, dung, canDuoi, tiLeAp: coBai.length ? ap / coBai.length : 0, the, usd: lo.tongUsd, dat, thieuChu: chon.length - coBai.length, chuaDoc,
   };
   if (!o.thu) {
     await c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ($1, 'doc-toan-bo:mau', $2)`,
