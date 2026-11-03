@@ -44,6 +44,11 @@
       "tep": "app/tests/ops-dong-chay.test.tsx",
       "ca": "DF-AC-3 DB thật — đủ trường lõi theo nguồn = levelOf",
       "ly_do": "cần tin rao thật ở DB local (đối chứng đòi sale_offers có tin; DB CI dựng từ migration rỗng)"
+    },
+    {
+      "tep": "app/tests/can-gia-tot-doi-chieu.test.tsx",
+      "ca": "CGT-DC đối chiếu DB máy thu chỉ đọc",
+      "ly_do": "cần DB máy thu thật (DB trống của CI không có căn nào để đối chiếu); vẫn đo ở máy"
     }
   ],
   "pipeline": [
