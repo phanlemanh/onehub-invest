@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -130,3 +130,49 @@ test("nap-argmax: rỗng lần đầu chưa có mốc → thoát 0", () => {
     rmSync(goc, { recursive: true, force: true });
   }
 });
+
+// Chạy TRỌN bản chép của mỗi script trên ROOT tạm (node giả, HOME tạm): thoát 3 phải đi qua trap,
+// gỡ khoá state, giữ nguyên state, và không tới bước nạp hay transform nào.
+function chayTronScript(f, { coThuMucSnapshot }) {
+  const goc = mkdtempSync(join(tmpdir(), "nap-argmax-tron-"));
+  try {
+    const nha = join(goc, "home");
+    const nodeGia = join(nha, ".local", "node-v24.21.0", "bin");
+    mkdirSync(nodeGia, { recursive: true });
+    const nhatKy = join(goc, "node-goi.log");
+    writeFileSync(join(nodeGia, "node"), `#!/bin/bash\necho "$*" >> "${nhatKy}"\nexit 0\n`, { mode: 0o755 });
+    const repo = join(goc, "repo");
+    cpSync(join(ROOT, "scripts", "lib"), join(repo, "scripts", "lib"), { recursive: true });
+    cpSync(join(ROOT, "scripts", f), join(repo, "scripts", f));
+    mkdirSync(join(repo, "pipeline", "logs"), { recursive: true });
+    if (coThuMucSnapshot) mkdirSync(join(repo, "collector", "snapshots"), { recursive: true });
+    const state = join(repo, "pipeline", "logs", "apify-daily.state");
+    writeFileSync(state, "2026-11-02T050002870\n");
+    const r = spawnSync("/bin/bash", [join(repo, "scripts", f)], {
+      env: { PATH: "/usr/bin:/bin", HOME: nha, DATABASE_URL: "postgres://khong-dung.invalid/x" },
+      encoding: "utf8",
+      timeout: 120_000,
+    });
+    return {
+      status: r.status,
+      stderr: r.stderr,
+      state: readFileSync(state, "utf8"),
+      khoaCon: existsSync(`${state}.lock`),
+      nodeGoi: existsSync(nhatKy) ? readFileSync(nhatKy, "utf8") : "",
+    };
+  } finally {
+    rmSync(goc, { recursive: true, force: true });
+  }
+}
+
+for (const f of ["zalo-import-daily.sh", "apify-facebook-daily.sh"]) {
+  for (const [ten, coThuMucSnapshot] of [["thư mục rỗng", true], ["thiếu thư mục", false]]) {
+    test(`nap-argmax: chạy trọn ${f}, ${ten}, state có mốc: thoát 3, gỡ khoá, không nạp`, () => {
+      const r = chayTronScript(f, { coThuMucSnapshot });
+      assert.equal(r.status, 3, r.stderr);
+      assert.equal(r.state, "2026-11-02T050002870\n", "state giữ nguyên từng byte");
+      assert.equal(r.khoaCon, false, "khoá phải được gỡ khi thoát 3");
+      assert.doesNotMatch(r.nodeGoi, /import-airbnb|transform-|refresh-bait-gap|enrich/, "không tới bước nạp hay transform");
+    });
+  }
+}
