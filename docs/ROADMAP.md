@@ -382,6 +382,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    tạo sản phẩm phái sinh khi không có văn bản cho phép → **điều kiện chưa đạt, hiệu lực hiện tại là A**: chỉ số tổng hợp của
    S06/S07 chỉ dùng nội bộ (hiệu chuẩn, kiểm chiều ở `/ops`), cổng chỉ hiện số tự đo. B có hiệu lực khi có văn bản cho phép
    của nguồn hoặc ý kiến pháp lý xác nhận được dùng.
+28. **Danh bạ là định danh nhà, môi giới của sàn xác nhận qua Quỹ hàng** (03/11, Mạnh duyệt cả năm câu của
+   `docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md` §9): mọi căn có một khoá, kể cả căn off-market (suy ra: không có tin công khai còn hiệu lực), cùng ý với
+   Housing Dictionary của Beike. Tra căn khi giao dịch và xác nhận nằm ở Quỹ hàng, đội mình đi cùng đường như một công ty;
+   trang Ops để kiểm độ phủ và vận hành. Máy thu kéo sự kiện lớp danh mục về, thành phát biểu qua cửa kiểm; Invest không mở
+   cửa vào (ADR-0017 §6 sửa). Vật thể ra khỏi máy thu khi có tin hoặc có xác nhận; thứ chỉ từ S08 ở lại, kể cả tên toà
+   (ADR-0016 §9 sửa). Lát đầu Ocean Park 1 và Grand Park cao tầng, mở thêm bằng cấu hình. Không trả theo lượt; hai công ty độc
+   lập cùng giá trị thì lên lớp sự thật. Hàng: DB1, DN1–DN4; mục chờ DN5–DN7.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

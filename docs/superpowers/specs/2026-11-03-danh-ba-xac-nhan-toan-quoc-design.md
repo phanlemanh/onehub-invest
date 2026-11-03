@@ -1,10 +1,10 @@
 # Danh bạ nhà có mạng lưới môi giới xác nhận — mô hình kiến trúc
 
-Ngày: 2026-11-03 · Trạng thái: **bản nháp chờ Mạnh duyệt** · Hàng mở vòng sau 05/11 · Dựa trên: ADR-0016 (danh bạ),
+Ngày: 2026-11-03 · Trạng thái: **đã duyệt (Mạnh, 03/11: cả năm câu §9)** · Hàng mở vòng sau 05/11 · Dựa trên: ADR-0016 (danh bạ),
 ADR-0017 (Quỹ hàng), ADR-0015 (đường lệnh kéo), ADR-0007 (SPL), FRAMING D1–D5 · Kho công khai: tài liệu này không ghi
 danh tính sàn và không ghi dữ liệu S08 từng dòng.
 
-Những phần ghi **[đề xuất]** là lựa chọn của phiên, chưa được Mạnh chốt.
+Những phần ghi **[đề xuất]** là lựa chọn của phiên, Mạnh đọc và duyệt cùng toàn văn; hàng code chốt chi tiết ở Cổng Phạm vi.
 
 ## 1. Ý định
 
@@ -187,7 +187,7 @@ Số chính vẫn là north star FRAMING §5. Thêm: số toà có khung · số
 căn · số căn off-market đã xác nhận · độ đồng thuận giữa các công ty · số sàn đang gửi xác nhận. Mọi số **chỉ đếm**, qua
 `dq_check_results`.
 
-## 9. Câu Mạnh phải chốt
+## 9. Câu Mạnh đã chốt (03/11: theo đề xuất cả năm)
 
 | # | Câu | Vì sao đổi thiết kế | Đề xuất |
 |---|---|---|---|
@@ -201,13 +201,13 @@ căn · số căn off-market đã xác nhận · độ đồng thuận giữa c�
 
 | Hàng | Việc | Quan hệ |
 |---|---|---|
-| DB1 (mở rộng) | Bảng vật thể, mở phát biểu, bộ dựng, nối tên dự án, lát Ocean Park 1 + Grand Park | Gộp DBG; xem lại PL10b vì S08 đã có Grand Park |
+| DB1 (mở rộng) + DN1 | Bảng vật thể, mở phát biểu, bộ dựng, lát Ocean Park 1 + Grand Park; DN1 nối tên dự án | Gộp DBG. PL10b giữ nguyên: đo 03/11 S08 chưa có mã khớp cho một số toà S03 nhắc từ 20 lần |
 | DS2 | Dự án của tin S06 đi tới tin và căn | Độc lập |
 | PL20 | Gắn tin vào Danh bạ ở mức sâu nhất | Đứng trên DB1 |
-| Mới: trang Ops | Độ phủ, lưới toà, hồ sơ căn; đọc ở máy thu trước | Đứng trên DB1 |
-| Mới: lên cloud | Bản chiếu có lọc, sửa ADR-0016 §9 | T3, đứng trên trang Ops |
-| Mới: nguồn cấp Quỹ hàng | Bước đẩy kèm bộ soát (ADR-0017 §5) | Đứng trên DB1, chờ khuôn của kho Quỹ hàng |
-| Mới: kéo xác nhận | Bước kéo, cửa kiểm, `network_confirm`, chấm tin cậy, sửa ADR-0017 §6 | T3, chờ khuôn sự kiện |
+| DN2, DN3 | Trang Ops: độ phủ; lưới toà, hồ sơ căn; đọc ở máy thu trước | DN2 đứng trên DB1, PL20 |
+| DN4 | Lên cloud: bản chiếu có lọc | T3, đứng trên DN3 |
+| DN5 (mục chờ) | Nguồn cấp Quỹ hàng: bước đẩy kèm bộ soát (ADR-0017 §5) | Chờ khuôn của kho Quỹ hàng |
+| DN6, DN7 (mục chờ) | Bước kéo, cửa kiểm, `network_confirm`; điểm tin cậy sau khi có số | Chờ khuôn sự kiện; DN7 chờ từ 2 công ty |
 | Kho Quỹ hàng | Khuôn sự kiện, chọn và tạo căn, sinh sự kiện, tra căn | Cắt ở kho đó, không thuộc lộ trình này |
 
 Đợt 2 (nhà phố, đất), DB2 và CGP1 giữ nguyên điều kiện của chúng.

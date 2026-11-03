@@ -4020,7 +4020,7 @@
     {
       "ma": "DN5",
       "dot": "danh-ba-nha-0311",
-      "cau_giao": "Máy thu đẩy nguồn cấp danh mục sang Quỹ hàng theo khuôn có phiên bản, bộ soát chặn tầng A, S08, AirDNA ở cửa ra",
+      "cau_giao": "Máy thu đẩy nguồn cấp danh mục sang Quỹ hàng theo khuôn có phiên bản, bộ soát chặn tầng A, S08, S02 ở cửa ra",
       "ly_do": "ADR-0017: làm khi kho Quỹ hàng đã có khuôn kết nối; khuôn nằm ở kho đó",
       "phu": [
         "DN5"
