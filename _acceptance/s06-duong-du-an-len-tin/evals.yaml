@@ -32,7 +32,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.ds1_db
-    paths: [pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/s06-duong.itest.mjs]
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/assert.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/s06-duong.itest.mjs]
     expected: "exit 0; ca 'DS1-AC-4' xanh: lượt hai inserted 0, retracted 0, offers_changed 0; lượt đổi rút đúng một phát biểu và tin mang tên mới; lượt bỏ trống rút phát biểu, hai ca tách riêng: có legacy thì cột bằng đúng chuỗi legacy, không có thì NULL. Chiều đỏ: bản sao không rút phát biểu khi nguồn trống thì ca đỏ ghim «phát biểu cũ còn sống»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
@@ -55,6 +55,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.ds1_do
+    long_running: 120   # đo 03/11: transform + resolve 74 phút trên bản chép, chưa tính dựng bản chép và ba chiều đỏ
     paths: [pipeline/scripts/do-duong-s06.mjs, pipeline/transform-chotot.mjs, pipeline/resolve-properties.mjs, pipeline/lib/dac-trung-s06.mjs]
     expected: "exit 0 trên bản chép oneinvest_ds1_do, DB dùng chung không bị ghi; in từng dòng: đường ở tin ≥ 90%, đường ở căn ≥ 90%, sáu trường khác trước/sau không giảm quá 1 điểm %, 0 giá trị chứa tên nguồn thật với danh sách tên ≥ 1 phần tử (không in tên), 0 cặp tin cùng căn ra Lệch mà hai chuỗi bằng nhau sau khi bỏ hoa, tiền tố viết đúng chính tả rồi mới bỏ dấu (định nghĩa độc lập với khoaDuong), số tin bị bỏ theo từng tiền tố, thời gian. Chiều đỏ ba cờ cùng lệnh: --nguong-duong 100.1 thoát 1 «đường ở tin dưới ngưỡng»; --gai-ten-nguon gài một giá trị thoát 1 «đường chứa tên nguồn»; --gai-cap-lech gài một cặp thoát 1 «cặp cùng tên ra Lệch»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
