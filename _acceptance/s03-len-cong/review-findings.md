@@ -1,26 +1,46 @@
-# Review findings: s03-len-cong (round 5)
-
 ## Trong hợp đồng
+
+- **Hình dạng 5 (tuyên quét lớp, thực đo một phần): E12 hứa «không chữ bài» trên mọi dòng thêm nhưng chỉ tra chuỗi nằm trong dấu nháy ASCII dài từ 40 ký tự**
+  file: pipeline/scripts/do-s03-len-cong.mjs:398
+  severity: medium
+  AC: AC-10
+  source: measurement
+  detail: Tập so chữ bài chỉ được nạp ở `for (const m of d.matchAll(/["'`]([^"'`]{40,})["'`]/g)) chuoi.add(...)`. Sau đó dòng 403 chỉ tra `position($1 in text)` trên tập `chuoi` này. Dòng thêm dán chữ bài không có dấu nháy, hoặc trong «…» (kiểu trích dẫn của hồ sơ .md và decisions.jsonl trong diff), không vào tập so, nên E12 vẫn xanh. Chuỗi chứa một dấu nháy giữa bài cũng bị cắt thành đoạn ngắn và có thể rơi dưới 40 ký tự. Hợp đồng AC-10 và E12 hứa «không ... chữ bài» trên toàn bộ dòng thêm, còn dòng in «quét N dòng thêm» làm người đọc tưởng cả N dòng đã được tra. Đây là lỗ về phạm vi đo, khác finding r2/r4 về việc thiếu đối chứng: thêm đối chứng chuỗi có nháy vẫn không lộ được lỗ này.
+  rationale: AC-10 hứa quét mọi dòng thêm và đòi «không chữ bài», nhưng thước chỉ tra chuỗi trong dấu nháy dài từ 40 ký tự nên vế này không được đo đủ.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Đổi SQL ở resolve-properties làm đỏ test RTLD-AC-7 của hồ sơ resolve-thu-lai-deadlock, mà CI không chạy test này nên không thấy**
+- **Hình dạng 4 (âm tính một mình): vế «kể cả hai tin S03 cùng mã thị trường» của AC-3 không thể đỏ, vì bộ ghép không bao giờ sinh cặp S03↔S03**
+  Người dùng thấy gì: Một ca kiểm về hai tin cùng thị trường luôn báo xanh nên không bắt được lỗi ở chỗ đó. Người dùng không bị ảnh hưởng, vì hệ thống vốn không ghép hai tin cùng nguồn với nhau.
+  Căn cứ: Hậu quả nhẹ: hành vi thật đúng, chỉ là một phép kiểm thừa, không mất hay lộ dữ liệu, và các nhánh còn lại của phép kiểm này vẫn bắt được lỗi ghép sai.
+  file: `pipeline/scripts/s03-len-cong.itest.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (có mặt thay vì quan hệ): AC-9 hứa ngưỡng «lệch trên 20%» nhưng ca kiểm chỉ đo hai điểm cách xa ngưỡng**
+  Người dùng thấy gì: Nếu ai đổi ngưỡng lệch giá hay diện tích sang mức khác 20% thì ca kiểm vẫn xanh. Số tin «sai nặng» báo cho người quyết có thể hơi lệch so với thước đã hứa.
+  Căn cứ: Hậu quả nhẹ và chỉ xảy ra khi có người sửa ngưỡng; không mất dữ liệu, số đo chạy lại được, và thêm ca sát biên sau này rất rẻ.
+  file: `pipeline/scripts/s03-len-cong.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Đổi SQL ở resolve-properties làm đỏ test RTLD-AC-7 của hồ sơ resolve-thu-lai-deadlock, mà CI không chạy test này nên không thấy (r5 · tệp đã đổi)**
   Người dùng thấy gì: Một bài kiểm gác việc ghép căn của hồ sơ trước đang đỏ vì câu lệnh đã đổi có chủ đích. Cách ghép căn chạy thật không sai, nhưng bài kiểm đó sẽ không còn báo được thay đổi lạ về sau.
   Căn cứ: Không mất dữ liệu và người dùng không thấy gì, nhưng thước gác đỏ im lặng khiến lần đổi sau khó phân biệt; sửa rẻ và chỉ cần một lượt chụp lại kèm ghi chú hồ sơ.
   file: `pipeline/resolve-properties.mjs`
   severity: medium
   Đề xuất: new-contract
 
-- **Hình dạng 5 (tuyên quét lớp, thiếu ma trận toàn phần) kèm hình dạng 4 (âm tính một mình): «năm dòng ma trận» chỉ đo confidence và phuong_raw ở 2/5 dòng**
+- **Hình dạng 5 (tuyên quét lớp, thiếu ma trận toàn phần) kèm hình dạng 4 (âm tính một mình): «năm dòng ma trận» chỉ đo confidence và phuong_raw ở 2/5 dòng (r5 · tệp đã đổi)**
   Người dùng thấy gì: Bài kiểm khu vực chỉ chắc chắn bắt được lỗi ở các tin cấp thị trường. Nếu tin có phường bị mất độ tin cậy cao, bài kiểm này vẫn xanh.
   Căn cứ: Hành vi theo hợp đồng đã được kiểm; lỗ hổng chỉ làm sót một kiểu lỗi hiếm, người dùng không thấy ngay và bổ sung ca sau không tốn nhiều.
   file: `pipeline/scripts/s03-len-cong.itest.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 (fixture viết tay, không round-trip qua writer rồi reader): luật gộp khu vực hai thị trường chỉ đo trên object dựng tay**
+- **Hình dạng 2 (fixture viết tay, không round-trip qua writer rồi reader): luật gộp khu vực hai thị trường chỉ đo trên object dựng tay (r5 · tệp đã đổi)**
   Người dùng thấy gì: Luật cho tin đăng ở hai bài khai hai thị trường khác nhau chỉ được thử trên dữ liệu dựng tay. Chưa thấy lỗi thật, nhưng nếu cách ghi đổi dạng thì bài kiểm vẫn xanh.
   Căn cứ: Không có lỗi thực tế được thấy nên người dùng chưa chịu hậu quả; rủi ro chỉ xuất hiện khi cách ghi đổi sau này và thêm ca đo sau cũng rẻ.
   file: `pipeline/scripts/s03-len-cong.test.mjs`
