@@ -1,16 +1,35 @@
 // luoc-do-rieng.mjs — cho test DB chạy song song (hồ sơ app-test-chiu-song-song; khuôn từ sd3-test-chiu-song-song).
 // Trong giao dịch sẽ ROLLBACK: dựng một lược đồ riêng, chép RỖNG các bảng cần dùng (dựng từ catalog: cột, kiểu, NOT NULL, mặc
 // định, CHECK/PK/UNIQUE, chỉ mục cùng tên; mặc định nextval trỏ dãy riêng) rồi đặt search_path vào đó trước public. Câu SQL
-// không gắn schema của mã đang test sẽ đọc/ghi bản riêng — không xếp hàng khoá tư vấn 33033 dùng chung, không khoá dòng
-// hay DDL trên bảng public. Không chép trigger, khoá ngoại, RLS, dữ liệu.
+// không gắn schema của mã đang test sẽ đọc/ghi bản riêng — không giữ khoá tư vấn 33033 dùng chung suốt ca (chỉ xếp hàng lúc
+// dựng, khi ca DDL khác đang chặn), không khoá dòng hay DDL trên bảng public. Không chép trigger, khoá ngoại, RLS, dữ liệu.
 
 let soLuocDo = 0;
 
-/** ACCESS SHARE trên mọi bảng nguồn trong MỘT câu NOWAIT; bị ca DDL khác chặn thì nhả hết, chờ 100 ms rồi thử lại — không
- * bao giờ vừa giữ vừa chờ (không vào vòng deadlock), chỉ chờ đúng lúc ca DDL ấy còn chạy. Trả số lần thử lại. */
+/** Xếp hàng khoá 33033 của các ca nạp DDL (khoá phiên, FIFO, tới lượt là ca trước đã ROLLBACK). false: lock_timeout hay
+ * statement_timeout của phiên cắt ngang — giao dịch còn nguyên, người gọi thử lại. */
+async function xepHangDdl(c) {
+  await c.query("SAVEPOINT xep_hang");
+  try {
+    await c.query("SELECT pg_advisory_lock(33033)");
+    await c.query("RELEASE SAVEPOINT xep_hang");
+    return true;
+  } catch (e) {
+    await c.query("ROLLBACK TO SAVEPOINT xep_hang");
+    if (e.code !== "55P03" && e.code !== "57014") throw e;
+    return false;
+  }
+}
+
+/** ACCESS SHARE trên mọi bảng nguồn trong MỘT câu NOWAIT. Bị ca DDL khác chặn thì nhả hết, xếp hàng 33033 rồi thử lại: các ca
+ * nạp DDL nối đuôi nhau trên 33033 nên khe giữa hai ca rất ngắn, chỉ thử rồi ngủ thì đói khoá (đo 03/11: bảng bị giữ 97% thời
+ * gian, ca hết 1000 lượt thử). Chỉ cầm 33033 trong đúng một câu NOWAIT, xong nhả ngay; lúc chờ không giữ khoá bảng nào nên
+ * không vào vòng deadlock — gọi đầu giao dịch, trước khi đọc bảng public. Vẫn bị chặn (khoá DDL ngoài 33033) thì nghỉ 100 ms.
+ * Trả số lần thử lại. */
 export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
   const ds = bang.map((t) => `public.${t}`).join(", ");
   for (let lan = 0; ; lan++) {
+    const toiLuot = lan > 0 && (await xepHangDdl(c));
     await c.query("SAVEPOINT khoa_nguon");
     try {
       await c.query(`LOCK TABLE ${ds} IN ACCESS SHARE MODE NOWAIT`);
@@ -19,7 +38,9 @@ export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
     } catch (e) {
       await c.query("ROLLBACK TO SAVEPOINT khoa_nguon");
       if (e.code !== "55P03" || lan >= toiDa) throw e; // 55P03 lock_not_available
-      await new Promise((r) => setTimeout(r, 100));
+      if (!toiLuot) await new Promise((r) => setTimeout(r, 100));
+    } finally {
+      if (toiLuot) await c.query("SELECT pg_advisory_unlock(33033)");
     }
   }
 }

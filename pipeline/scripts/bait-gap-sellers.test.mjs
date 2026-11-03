@@ -12,6 +12,7 @@ import { test } from "node:test";
 import pg from "pg";
 
 import { RULE_TRUC_TIEP, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
+import { khoaNguon } from "../lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../lib/nap-060.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { localReadSql, selectList } from "../sync-cloud.mjs";
@@ -56,28 +57,9 @@ async function chepBang(c, sc, t) {
   for (const { d } of idx.rows) await c.query(d.replace(` ON public.${t} `, ` ON ${sc}.${t} `));
 }
 
-/** ACCESS SHARE trên mọi bảng nguồn trong MỘT câu NOWAIT; một ca khác đang giữ khoá DDL trên bảng nào thì nhả hết, chờ
- * 100 ms rồi thử lại — không bao giờ vừa giữ vừa chờ (không thành vòng deadlock với ca DDL của bộ khác), chỉ chờ đúng lúc ca
- * DDL ấy còn chạy. Không đụng view dùng chung (sale_offers, sellers, view thước) — chúng được dựng lại trong lược đồ riêng. */
-async function khoaNguon(c, bang) {
-  const ds = bang.map((t) => `public.${t}`).join(", ");
-  for (let lan = 0; ; lan++) {
-    await c.query("SAVEPOINT khoa_nguon");
-    try {
-      await c.query(`LOCK TABLE ${ds} IN ACCESS SHARE MODE NOWAIT`);
-      await c.query("RELEASE SAVEPOINT khoa_nguon");
-      return lan;
-    } catch (e) {
-      await c.query("ROLLBACK TO SAVEPOINT khoa_nguon");
-      if (e.code !== "55P03" || lan >= 1000) throw e; // 55P03 lock_not_available
-      await new Promise((r) => setTimeout(r, 100));
-    }
-  }
-}
-
 /** Lược đồ riêng trong giao dịch: bản rỗng của BANG, view sale_offers như 044/059, hai view thước của 034; `sellers` còn là
  * BẢNG ở public (DB chưa áp 060) thì chép rỗng luôn, để bước 2/5 của 060 đọc và bỏ bản riêng. search_path trỏ vào đó trước
- * public. Chỉ ACCESS SHARE trên bảng nguồn (khoaNguon), không xếp hàng khoá tư vấn 33033 — chạy song song với các bộ khác
+ * public. Chỉ ACCESS SHARE trên bảng nguồn (khoaNguon), không giữ khoá tư vấn 33033 suốt ca — chạy song song với các bộ khác
  * (app, agent) không phải chờ ca dài nào. */
 async function phongRieng(c) {
   const sc = `bg_sd3_${process.pid}_${++soPhong}`;

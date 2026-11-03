@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 import pg from "pg";
 
-import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
+import { khoaNguon, luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -107,6 +107,57 @@ test("LDR hai phiên dựng song song không chờ nhau, không giữ khoá 3303
   try {
     assert.equal((await c.query(`SELECT to_regnamespace($1) r`, [scA])).rows[0].r, null, "LDR lược đồ riêng còn sau ROLLBACK");
   } finally {
+    await dong(c);
+  }
+});
+
+/** Một mắt của chuỗi ca nạp DDL: giữ 33033 rồi khoá độc quyền bảng tới ROLLBACK, như `napPhatBieu` trong `withTx` của các bộ
+ * test. Không ghi gì; chờ theo lượt như mọi ca khác (lock_timeout 0, không hạn câu lệnh). */
+const matChuoi = async () => {
+  const c = await moi();
+  await c.query("SET LOCAL lock_timeout = 0");
+  await c.query("SET LOCAL statement_timeout = 0");
+  await c.query("SELECT pg_advisory_xact_lock(33033)");
+  await c.query("LOCK TABLE public.field_assertions IN ACCESS EXCLUSIVE MODE");
+  return c;
+};
+const giu33033 = async (c, pid) => (await c.query(
+  `SELECT count(*)::int n FROM pg_locks WHERE locktype = 'advisory' AND objid = 33033 AND pid = $1 AND granted`, [pid])).rows[0].n;
+
+test("LDR chuỗi ca DDL giữ khoá liền nhau: phiên đọc xếp hàng 33033 rồi vào được, không hết lượt thử, không giữ lại 33033", { timeout: 300_000 }, async () => {
+  const a = await matChuoi();
+  const c = await moi();
+  try {
+    await c.query("SET LOCAL lock_timeout = 0");
+    await c.query("SET LOCAL statement_timeout = 0");
+    // toiDa nhỏ hơn hẳn thời gian a giữ: thử-rồi-ngủ 100 ms hết lượt ở đây, chiều đói khoá của lượt S4 r3.
+    const dangCho = khoaNguon(c, ["field_assertions"], { toiDa: 3 });
+    await new Promise((r) => setTimeout(r, 1_500));
+    await a.query("ROLLBACK");
+    assert.ok((await dangCho) >= 1, "LDR phiên đọc không hề gặp khoá của ca DDL — ca hết căn cứ");
+    const pid = (await c.query("SELECT pg_backend_pid() p")).rows[0].p;
+    assert.equal(await giu33033(c, pid), 0, "LDR xong vẫn giữ 33033: ca DDL khác không vào được");
+    const co = (await c.query(`SELECT count(*)::int n FROM pg_locks WHERE locktype = 'relation' AND pid = $1 AND granted
+      AND relation = 'public.field_assertions'::regclass AND mode = 'AccessShareLock'`, [pid])).rows[0].n;
+    assert.equal(co, 1, "LDR chưa cầm ACCESS SHARE trên bảng nguồn");
+  } finally {
+    await dong(a);
+    await dong(c);
+  }
+});
+
+test("LDR xếp hàng bị lock_timeout cắt: giao dịch không hỏng, thử lại tới khi vào được", { timeout: 300_000 }, async () => {
+  const a = await matChuoi();
+  const c = await moi();
+  try {
+    await c.query("SET LOCAL lock_timeout = '200ms'");
+    const dangCho = khoaNguon(c, ["field_assertions"], { toiDa: 1000 });
+    await new Promise((r) => setTimeout(r, 1_000));
+    await a.query("ROLLBACK");
+    await dangCho;
+    assert.equal((await c.query("SELECT 1 AS mot")).rows[0].mot, 1, "LDR giao dịch hỏng sau khi xếp hàng bị cắt");
+  } finally {
+    await dong(a);
     await dong(c);
   }
 });
