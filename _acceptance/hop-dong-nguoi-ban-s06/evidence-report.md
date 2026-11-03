@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6fd91d9fa783dbd5f71721d13f4f40aa2a211ade
-human_signoff:
+human_signoff: Mạnh 2026-11-03
 ---
 
 # Evidence Report: hop-dong-nguoi-ban-s06

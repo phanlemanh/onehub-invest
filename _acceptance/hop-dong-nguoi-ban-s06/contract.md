@@ -5,7 +5,7 @@ slug: hop-dong-nguoi-ban-s06
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-03T03:35:38Z
 approved_by:
@@ -45,3 +45,10 @@ Source input: GIAO claudedp-0211-1, claudedp-3010-7, claudedp-0311-3; XONG của
 - `pipeline/bu-seller-v5.mjs` không có test tự động: công cụ bù tạm, ZCode đã chạy thật và đối chiếu lệch 0 sáng 03/11; hết cần sau khi nhánh vào main.
 - Áp `068`, đưa số lên canonical: thuộc hồ sơ `sdt-s06-ghep-tai-khoan`.
 - Miền nguồn có sẵn trong các tệp trên main: có từ trước, báo riêng cho giám sát.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Lượt thu số kết thúc bình thường ghi lô cuối hai lần; số không sai, chỉ thêm một dòng bản ghi trên máy thu.
+  - Ngoài-2: Sau tín hiệu dừng, tin xong trong lúc flush có thể chờ lần bù sau mới vào stg.
+  - Ngoài-3: Hai luồng ghi state không theo thứ tự; dừng đúng lúc có thể mất một kết quả khỏi state tới lần ghi kế, số không sai.
