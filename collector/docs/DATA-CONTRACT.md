@@ -83,7 +83,7 @@ snapshots/
 
 Luật người bán (v5):
 
-1. `seller` TÙY CHỌN: kênh không có người bán (osm, airdna…) hoặc tin chưa đủ
+1. `seller` TÙY CHỌN: kênh không có người bán (osm, S02…) hoặc tin chưa đủ
    dữ kiện → bỏ cả key; bên đọc coi là «không biết», không suy gì thêm.
 2. `phone` luôn chuẩn hoá E.164 `+84…` trước khi ghi; không đưa số thô các dạng.
 3. `seller` là tầng C (công khai, ADR-0007 mục 9) — NGOẠI LỆ S08: vẫn xoá SĐT
