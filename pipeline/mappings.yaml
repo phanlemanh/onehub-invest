@@ -131,8 +131,8 @@ canonical:
       checked_on: "2026-10-22"
     street_raw:
       dd: StreetName
-      note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); số nhà chưa tách cột"
-      checked_on: "2026-10-22"
+      note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); S06 đọc payload street_name qua phát biểu source_field (DS1); số nhà chưa tách cột"
+      checked_on: "2026-11-03"
     block_raw:
       dd: null
       rationale: >

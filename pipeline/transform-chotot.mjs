@@ -13,7 +13,8 @@ import { matchPhuong } from "./transform-zalo.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
-import { kiemCatChuyen, resolveOffers, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { rutDuongCoSo } from "./lib/sdt-trong-chuoi.mjs";
 import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 import { ganSdtS06 } from "./gan-sdt-s06.mjs";
 
@@ -49,6 +50,7 @@ export async function runTransformChotot(client) {
   // do bộ phân xử dựng cuối lượt, không ghi thẳng.
   const phatBieu = [];
   const offerIds = [];
+  const khongDuong = [];
   for (const ad of ads) {
     const kind = ad.ad_type === "s" ? KIND.sale : ad.ad_type === "u" ? KIND.rent_lt : null;
     // G-1: property_type theo category Chợ Tốt (migration 025, ADR-0011)
@@ -117,10 +119,18 @@ export async function runTransformChotot(client) {
       phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
     }
     // HD5 (061): đặc trưng nhà — số nhà, mã căn, mặt tiền, ngang × dài, số tầng, WC, toạ độ; rule_id = khoá nguồn đã đọc.
-    for (const d of docDacTrungS06(ad)) phatBieu.push({ ...chung, ...d });
+    const dacTrung = docDacTrungS06(ad);
+    for (const d of dacTrung) phatBieu.push({ ...chung, ...d });
+    if (!dacTrung.some((d) => d.field === ENRICH_FIELD.street_raw)) khongDuong.push(chung.subject_key);
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
-  const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
+  // Phát biểu đường mang số điện thoại, kể cả `legacy`, thì rút rồi phân xử lại, kể cả tin ngoài lượt này. Đứng trước bước dưới để lý do rút đúng là `chua-sdt`.
+  const coSo = await rutDuongCoSo(client);
+  if (coSo.length) console.log(`đường mang số: rút ${coSo.length} phát biểu`);
+  // DS1: nguồn bỏ trống đường thì rút phát biểu của transform; bộ phân xử trả cột về `legacy` hoặc NULL.
+  await retractRule(client, khongDuong, ENRICH_FIELD.street_raw, "payload.street_name", "nguon-bo-trong");
+  for (const k of coSo) offerIds.push(mintOfferId("S06", k.slice("S06:".length)));
+  const pxu = offerIds.length ? await resolveOffers(client, [...new Set(offerIds)]) : { offers: 0, offers_changed: 0 };
   console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
   // SĐT đi sau phân xử: câu upsert phía trên không đụng cột số, nên chạy lại không mất số đã ghi.
   const sdt = await ganSdtS06(client);
@@ -133,7 +143,10 @@ export async function runTransformChotot(client) {
     `${nHigh + nMed > 0 ? ` (match ${(((nWardV3 + nWardTxt) / (nHigh + nMed)) * 100).toFixed(1)}%)` : ""}`,
   );
   for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
-  return { high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa), sdt };
+  return {
+    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa), sdt,
+    inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed,
+  };
 }
 
 async function main() {

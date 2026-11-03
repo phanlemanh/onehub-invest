@@ -1,0 +1,28 @@
+{
+  "ngay_tinh": "2026-11-02",
+  "hang": {
+    "ma": "DS1",
+    "gio_may": [
+      0.38,
+      2.51
+    ],
+    "phan_tram": 0.915
+  },
+  "moc": {
+    "ten": "Ba việc của kế hoạch ra mắt 05/11 xong 04/11",
+    "bat_dau": "2026-11-02",
+    "hoan_tat": "2026-11-02",
+    "gio_may": [
+      5.24,
+      11.99
+    ],
+    "gio_cho": 1.29,
+    "gio_cho_do": true,
+    "muc_tieu": "2026-11-04",
+    "hang": [
+      "SL1",
+      "LS1",
+      "DS1"
+    ]
+  }
+}

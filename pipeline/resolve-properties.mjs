@@ -7,6 +7,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { dienDuongCan, goSdtKhoiCan, hoanTacDuong } from "./lib/duong-can.mjs";
 import { boc } from "./lib/thu-lai-deadlock.mjs";
 
 const DB_URL =
@@ -88,6 +89,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
     ghi(
       `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) | ${nEvidence} offers`,
     );
+    ghi(`Stage A: gỡ ${await goSdtKhoiCan(q)} ô đường mang số`);
+    ghi(`Stage A: điền đường ${await dienDuongCan(q)} căn đang trống`);
 
     // ── Stage B: cặp ứng viên P1↔P2 (cùng phường, DT ±15%, giá/m² ±20%) ──
     await q.query(`DELETE FROM property_candidates WHERE status IN ('pending','needs_llm')`);
@@ -134,7 +137,11 @@ async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    await chayResolve(c);
+    if (process.argv.includes("--hoan-tac-duong")) {
+      console.log(`resolve-properties: trả về trống ${await hoanTacDuong(boc(c))} ô đường`);
+    } else {
+      await chayResolve(c);
+    }
   } finally {
     await c.end();
   }

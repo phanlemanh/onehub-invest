@@ -168,6 +168,11 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và
   `stg_chotot_ads.images`; `/ops/review` và hồ sơ tin `/ops/data-flow` đọc bảng này (tin S06 có ảnh). Chỉ máy thu:
   không vào FILL, leak gate đếm `media` — `_acceptance/media-canonical-reso`.
+- Đường của tin S06 (DS1): `docDuong` đọc `payload.street_name` thành phát biểu `street_raw` (`source_field`), bỏ địa danh
+  hành chính và chuỗi mã hoá; nguồn bỏ trống thì `retractRule` rút phát biểu. Căn nhận đường ở Stage A của
+  `resolve-properties` (`lib/duong-can.mjs`: ô trống, tin thấy gần nhất, ghi `enrichment_log`); `--hoan-tac-duong` trả về
+  trống. Đo trên bản chép 03/11: tin 98,0%, căn 98,1%. Dự án của tin và căn ở hàng DS2 —
+  `_acceptance/s06-duong-du-an-len-tin`.
 - Thẻ duyệt đủ căn cứ (PL3): sheet `/ops/review` hiện bảng so mười trường Tin A/Tin B kèm lớp căn cứ + phương pháp đọc từ
   `sale_offers.field_provenance` (`lib/ops/review-can-cu.ts`), toàn văn đọc lại ở máy thu theo `post_ids` (S03, S05) và
   `stg_chotot_ads.payload.body` (S06) (`lib/ops/review-context.ts`), không độ tự tin/điểm Stage B, suy luận AI tách khỏi
@@ -455,6 +460,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
 | DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
+| DS1 | Đường của tin S06 đi tới tin và căn, không migration — `_acceptance/s06-duong-du-an-len-tin` | 🔶 vòng S4; sau merge: job đêm tự chạy, lượt đầu đo 74 phút trên bản chép, đồng bộ cloud đầu chở khoảng 39.000 tin đổi đường; sau job đêm chạy `node pipeline/scripts/do-duong-s06.mjs --chi-doc` |
 | PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
 | SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
