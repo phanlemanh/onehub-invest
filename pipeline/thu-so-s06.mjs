@@ -241,7 +241,9 @@ async function laySoTrang(page, viec) {
       // 0311-20 Lỗi 1 (AC-9): nhánh chuyển hướng CŨNG xét thử thách — nguồn
       // redirect sang trang thử thách phải vào chuỗi chặn, không gọi mãi.
       const t = await docTrang();
-      if (t.khung || t.txt.includes("just a moment")) return { status: "chan-captcha" };
+      // 0311-24 (nhỏ): khớp xetKhongNut — trang redirect ghi chữ captcha
+      // mà không có khung vẫn là chan-captcha (vào chuỗi chặn)
+      if (t.khung || t.txt.includes("just a moment") || t.txt.includes("captcha")) return { status: "chan-captcha" };
       return { status: "trang-khac" };
     }
     // nút hiện số (đã kiểm 02/11: KHÔNG đòi đăng nhập)
