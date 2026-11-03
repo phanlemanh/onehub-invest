@@ -1,0 +1,29 @@
+import test from "node:test"; import assert from "node:assert/strict";
+import { canDungNgay, chonTinChuaHetHan } from "../thu-so-s06.mjs";
+
+// 0311-3 MỞ LẠI (1): 403/429 dừng cả lượt NGAY từ lần đầu — Mạnh chốt; nhãn
+// chan-429 kèm Retry-After (-ra-Ns) vẫn phải bắt được.
+test("canDungNgay: 403/429 dừng ngay (kèm nhãn Retry-After); captcha/khong-ra-so/timeout KHÔNG", () => {
+  assert.equal(canDungNgay("chan-429"), true);
+  assert.equal(canDungNgay("chan-429-ra-69743s"), true, "nhãn có Retry-After vẫn phải dừng ngay");
+  assert.equal(canDungNgay("chan-403"), true);
+  assert.equal(canDungNgay("chan-captcha"), false, "captcha giữ luật 5 lần liền");
+  assert.equal(canDungNgay("khong-ra-so"), false);
+  assert.equal(canDungNgay("timeout"), false);
+  assert.equal(canDungNgay("co-so"), false);
+});
+
+// 0311-3 MỞ LẠI (4): tin mới nhất het-han làm tài khoản rơi khỏi việc — chọn
+// tin mới nhất KHÔNG het-han (list_id1 → list_id2), ước ~100 tài khoản.
+test("chonTinChuaHetHan: nhảy sang tin kế khi tin mới nhất het-han", () => {
+  const state = { da_thu: { "111": { status: "het-han", phone: null }, "222": { status: "co-so", phone: "+84900000001" } } };
+  // list_id1 het-han → chọn list_id2
+  assert.equal(chonTinChuaHetHan({ list_id1: 111, list_id2: 222 }, state), 222);
+  // cả hai het-han → vẫn trả list_id1 (tài khoản sẽ rơi — chấp nhận, hiếm)
+  const s2 = { da_thu: { "111": { status: "het-han" }, "222": { status: "het-han" } } };
+  assert.equal(chonTinChuaHetHan({ list_id1: 111, list_id2: 222 }, s2), 111);
+  // chưa có state → list_id1
+  assert.equal(chonTinChuaHetHan({ list_id1: 333, list_id2: 444 }, { da_thu: {} }), 333);
+  // không list_id2, list_id1 het-han → list_id1 (không còn lựa chọn)
+  assert.equal(chonTinChuaHetHan({ list_id1: 111 }, state), 111);
+});

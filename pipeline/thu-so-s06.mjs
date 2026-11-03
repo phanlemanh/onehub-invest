@@ -27,6 +27,7 @@ import { importDir } from "./import-chotot.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 let _tatChrome = null; // 0211-14 (3a): handler tín hiệu gọi được — Chrome không ở lại khi Ctrl-C
+let _flushTruocThoat = null; // 0311-3 MỞ LẠI (3): tín hiệu/lỗi cũng flush + nạp trước khi thoát
 const STATE_DIR = join(ROOT, "state", "thu-so-s06");
 const SNAP_ROOT = join(ROOT, "state", "seller-v5");
 const WEB_BASE = process.env.S06_WEB_BASE; // tầng A — chỉ trong env local
@@ -43,14 +44,15 @@ if (PHASE !== 1) {
   process.exit(1);
 }
 const THREADS = Number(flag("threads", 1));
+if (THREADS > 2) {
+  // 0311-3 MỞ LẠI (5): Mạnh duyệt 2 luồng — không trần trước đây
+  console.error("--threads > 2 không được duyệt (Mạnh chốt 2 luồng, 0311-3 MỞ LẠI)");
+  process.exit(1);
+}
 const MINUTES = Number(flag("minutes", 30));
 const MAU = Number(flag("mau", 0)); // 0311-3 đ2: mặc định 0 — mẫu 1tk-1số đã đo 72/72 (100%)
 const LIMIT = Number(flag("limit", 0));
 
-if (!WEB_BASE) {
-  console.error("thiếu env S06_WEB_BASE (tầng A — đặt trong .env local, không lên kho)");
-  process.exit(1);
-}
 
 const slug = (s) =>
   String(s ?? "")
@@ -69,6 +71,11 @@ export function chuanHoa84(raw) {
 }
 
 const jitter = () => 8000 + Math.floor(Math.random() * 7000); // nghỉ 8–15s (Mạnh duyệt 0211-16, thay 3–8s)
+
+/** 0311-3 MỞ LẠI (1): 403/429 dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt) —
+ * captcha/khong-ra-so/timeout giữ luật 5 lần liền. Export cho test. */
+export const canDungNgay = (status) => /^chan-4(03|29)/.test(String(status));
+let dungNgay403429 = false;
 
 async function docState() {
   try {
@@ -131,9 +138,23 @@ async function docViec(client, state) {
   const viec = [...mau];
   for (const r of rows) {
     if (tkDaSo.has(r.account_id)) continue; // đã có số ở tin bất kỳ — không gọi lại
-    if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
+    // 0311-3 MỞ LẠI (4): tin mới nhất het-han làm tài khoản rơi khỏi việc —
+    // chọn tin mới nhất KHÔNG het-han của tài khoản (list_id1 → list_id2).
+    const lid = chonTinChuaHetHan(r, state);
+    if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
   return viec;
+}
+
+/** 0311-3 MỞ LẠI (4): tin mới nhất chưa het-han của tài khoản (state theo list_id).
+ * Export cho test. */
+export function chonTinChuaHetHan(row, state) {
+  for (const lid of [row.list_id1, row.list_id2]) {
+    if (!lid) continue;
+    const x = state?.da_thu?.[String(lid)];
+    if (!x || x.status !== "het-han") return lid;
+  }
+  return row.list_id1 ?? null;
 }
 
 /** Ghi batch items v5 ra snapshot ngoài đường quét. */
@@ -227,6 +248,12 @@ async function laySoTrang(page, viec) {
 }
 
 async function main() {
+  if (!WEB_BASE) {
+    // tầng A — chỉ thoát khi CHẠY chính, không khi test import module
+    console.error("thiếu env S06_WEB_BASE (tầng A — đặt trong .env local, không lên kho)");
+    process.exit(1);
+  }
+
   // MỞ LẠI 0211-7 đD: che cả tên miền trong log (tầng A — không vào nac*.log)
   console.log(`[thu-so-s06] pha ${PHASE} · luồng ${THREADS} · cửa sổ ${MINUTES}′ · web=«che»`);
   const client = new pg.Client({ connectionString: DB_URL });
@@ -284,15 +311,27 @@ async function main() {
   }
   // 0211-12/hậu nấc-4: Chrome detached Ở LẠI sau lượt và có lúc chiếm trước —
   // tắt đúng PID mình spawn khi lượt kết thúc (kể cả đường lỗi).
+  // 0311-3 MỞ LẠI (2): PID Chrome bộ thu GHI VÀO STATE — mọi đường ra tắt đúng
+  // PID đó, kể cả instance của LƯỢT TRƯỚC còn sống (trường hợp nối được vào thì
+  // không có chromeProc riêng); không đụng Chrome khác của Mạnh.
+  const PID_F = join(STATE_DIR, "chrome-pid");
+  {
+    await mkdir(STATE_DIR, { recursive: true });
+    const pidGhi = chromeProc?.pid ?? (await readFile(PID_F, "utf8").then((t) => Number(t.trim())).catch(() => null));
+    if (pidGhi) await writeFile(PID_F, String(pidGhi));
+  }
   const tatChrome = async () => {
-    if (!chromeProc) return; // instance do lượt trước mở — không đụng (0211-13)
+    let pid = chromeProc?.pid;
+    if (!pid) { try { pid = Number((await readFile(PID_F, "utf8")).trim()); } catch {} }
+    if (!pid) return;
     for (const sig of ["SIGTERM", "SIGKILL"]) {
-      try { process.kill(chromeProc.pid, sig); } catch { return; }
+      try { process.kill(pid, sig); } catch { break; }
       for (let i = 0; i < 10; i++) {
         await sleep(300);
-        try { process.kill(chromeProc.pid, 0); } catch { return; } // đã chết
+        try { process.kill(pid, 0); } catch { break; } // đã chết
       }
     }
+    try { await writeFile(PID_F, ""); } catch {} // đã tắt — xoá để lượt sau không giết nhầm
   };
   _tatChrome = tatChrome;
 
@@ -327,6 +366,18 @@ async function main() {
   const ketQua = { co_so: 0, khac_so: 0 };
   const errors = {};
   const batch = [];
+  // 0311-3 MỞ LẠI (3): flush batch + nạp mọi bản — gọi ở mọi đường ra
+  const flushTruocThoat = async () => {
+    if (batch.length > 0) {
+      const sid = await ghiSnapshot(batch.splice(0, batch.length), "vn");
+      console.log(`flush ${sid}`);
+    }
+    for (const d of daFlush.slice()) {
+      try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
+    }
+    daFlush.length = 0;
+  };
+  _flushTruocThoat = flushTruocThoat;
   const mau = { da_do: 0, trung: 0, khac: 0 };
   const deadline = Date.now() + MINUTES * 60_000;
   const t0 = Date.now();
@@ -336,7 +387,7 @@ async function main() {
 
   async function motLuong(idx) {
     const tab = tabs[idx % tabs.length];
-    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5) {
+    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429) {
       const v = viec[iViec++];
       const tBat = Date.now();
       let kq;
@@ -353,6 +404,12 @@ async function main() {
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
       if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
       else chanLienTiep = 0;
+      // 0311-3 MỞ LẠI (1): 403/429 → dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt)
+      if (canDungNgay(kq.status)) {
+        dungNgay403429 = true;
+        const ra = kq.status.match(/-ra-(\d+)s/);
+        console.log(`DỪNG NGAY — ${kq.status}${ra ? ` (Retry-After ${ra[1]} giây)` : ""}`);
+      }
       if (kq.status === "co-so") ketQua.co_so++;
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
       else errors[kq.status] = (errors[kq.status] ?? 0) + 1;
@@ -392,8 +449,10 @@ async function main() {
           console.log(`flush 500 → ${sid}`);
         }
       }
+      // 0311-3 MỞ LẠI (3): ghi state sau MỖI tin có kết quả — dừng giữa lượt
+      // không còn mất kết quả đã thu (trước đây tới 24 tin)
+      await ghiState(state);
       if (thu % 25 === 0) {
-        await ghiState(state);
         const giay = ((Date.now() - t0) / 1000 / thu).toFixed(1);
         console.log(`tiến độ ${thu}/${viec.length} · ${giay}s/tin · có số ${ketQua.co_so} · lỗi ${JSON.stringify(errors)}`);
       }
@@ -413,12 +472,12 @@ async function main() {
   }
   await browser.close().catch(() => {});
   // 0211-16: nạp NGAY mọi bản v5 của lượt vào stg — số không nằm chờ trong snapshot
-  for (const d of daFlush) {
-    try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
-  }
+  await flushTruocThoat();
   await client.end().catch(() => {});
   } finally {
-    // 0211-14 (3a): finally — kể cả đường ném lỗi giữa lượt cũng tắt Chrome mình spawn
+    // 0211-14 (3a) + 0311-3 MỞ LẠI (3): mọi đường ra (lỗi giữa lượt) đều
+    // flush + nạp trước, rồi tắt Chrome — không mất số đã thu, không sót Chrome
+    try { await flushTruocThoat(); await client.end().catch(() => {}); } catch {}
     await tatChrome();
   }
 
@@ -446,7 +505,7 @@ async function main() {
     const st = Object.values(state.da_thu).filter((x) => x.phone).length;
     console.log(`[đối chiếu] state ${st} số · stg ${stg} số · lệch ${st - stg}${st !== stg ? " — CHẠY: node bu-seller-v5.mjs" : ""}`);
   } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
-  process.exit(chanLienTiep >= 5 ? 2 : 0);
+  process.exit(chanLienTiep >= 5 || dungNgay403429 ? 2 : 0); // 0311-3 MỞ LẠI (1): 403/429 cũng thoát 2
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
