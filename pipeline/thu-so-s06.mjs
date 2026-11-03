@@ -28,8 +28,9 @@ import { importDir } from "./import-chotot.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 let _tatChrome = null; // 0211-14 (3a): handler tín hiệu gọi được — Chrome không ở lại khi Ctrl-C
 let _flushTruocThoat = null; // 0311-3 MỞ LẠI (3): tín hiệu/lỗi cũng flush + nạp trước khi thoát
-const STATE_DIR = join(ROOT, "state", "thu-so-s06");
-const SNAP_ROOT = join(ROOT, "state", "seller-v5");
+// vòng 4 e2e: cho test chạy state riêng (env) — không đụng state thật
+const STATE_DIR = process.env.S06_STATE_DIR ?? join(ROOT, "state", "thu-so-s06");
+const SNAP_ROOT = process.env.S06_SNAP_ROOT ?? join(ROOT, "state", "seller-v5"); // vòng 4 e2e: snapshot riêng qua env
 const WEB_BASE = process.env.S06_WEB_BASE; // tầng A — chỉ trong env local
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -366,7 +367,8 @@ async function main() {
     if (!hopLe) {
       const { execFile } = await import("node:child_process");
       const cdpPid = await new Promise((res) =>
-        execFile("lsof", ["-ti", `tcp:${CDP_PORT}`], (e, out) => res(e ? null : Number(String(out).trim().split(/\s+/)[0]) || null)));
+        // vòng 4: -sTCP:LISTEN — chỉ tiến trình NGHE cổng, không bắt tiến trình đang nối
+        execFile("lsof", ["-nP", `-iTCP:${CDP_PORT}`, "-sTCP:LISTEN", "-t"], (e, out) => res(e ? null : Number(String(out).trim().split(/\s+/)[0]) || null)));
       if (cdpPid && (await laChromeBoThu(cdpPid, profileDir))) {
         await writeFile(PID_F, String(cdpPid));
         console.log(`nối theo PID cổng CDP ${cdpPid} (đã xác minh profileDir)`);
@@ -384,7 +386,30 @@ async function main() {
   // cửa sổ bung). Fallback: context.newPage() nếu đường CDP không trả page.
   const ctx0 = contexts[0];
   const tabs = [];
-  try { // 0311-3 MỞ LẠI vòng 3 (b): tạo tab nằm trong try có finally — lỗi ở đây cũng flush + tắt Chrome
+  // 0311-3 MỞ LẠI vòng 4: các khai báo này phải NGOÀI try — vòng 3 để trong khối
+  // try khiến finally gọi flushTruocThoat ném ReferenceError (bị catch rỗng nuốt)
+  // và giayMoiTin dùng thu cũng ném → mọi lượt thoát 1, mất [nấc]/[đối chiếu].
+  const ketQua = { co_so: 0, khac_so: 0 };
+  const errors = {};
+  const batch = [];
+  const flushTruocThoat = async () => {
+    if (batch.length > 0) {
+      const sid = await ghiSnapshot(batch.splice(0, batch.length), "vn");
+      console.log(`flush ${sid}`);
+    }
+    for (const d of daFlush.slice()) {
+      try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
+    }
+    daFlush.length = 0;
+  };
+  _flushTruocThoat = flushTruocThoat;
+  const mau = { da_do: 0, trung: 0, khac: 0 };
+  const deadline = Date.now() + MINUTES * 60_000;
+  const t0 = Date.now();
+  let chanLienTiep = 0;
+  let thu = 0;
+  let iViec = 0;
+  try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
     try {
@@ -405,28 +430,6 @@ async function main() {
   if (new Set(tabs).size !== THREADS) {
     throw new Error(`tab trùng nhau: ${new Set(tabs).size}/${THREADS} — không chạy`);
   }
-
-  const ketQua = { co_so: 0, khac_so: 0 };
-  const errors = {};
-  const batch = [];
-  // 0311-3 MỞ LẠI (3): flush batch + nạp mọi bản — gọi ở mọi đường ra
-  const flushTruocThoat = async () => {
-    if (batch.length > 0) {
-      const sid = await ghiSnapshot(batch.splice(0, batch.length), "vn");
-      console.log(`flush ${sid}`);
-    }
-    for (const d of daFlush.slice()) {
-      try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
-    }
-    daFlush.length = 0;
-  };
-  _flushTruocThoat = flushTruocThoat;
-  const mau = { da_do: 0, trung: 0, khac: 0 };
-  const deadline = Date.now() + MINUTES * 60_000;
-  const t0 = Date.now();
-  let chanLienTiep = 0;
-  let thu = 0;
-  let iViec = 0;
 
   async function motLuong(idx) {
     const tab = tabs[idx % tabs.length];
