@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6fd91d9fa783dbd5f71721d13f4f40aa2a211ade
+verified_commit: 7fcb0775d97fec0af8a7acde313888981235f601
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -319,3 +319,7 @@ Round 1: 8/8 eval đạt trên `19b7e7a8`, kèm F1 tới F4 và hai mục trung 
 ### Re-pin lần 1 — 2026-11-03, do gộp main sau PR 292, mã bộ thu và bộ nạp không đổi
 run_id: repin-20261103T065249Z-13438
 sha: 6fd91d9fa783dbd5f71721d13f4f40aa2a211ade · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-03, do gộp main sau PR 295, 296, 297; hai lượt trước đỏ do deadlock với enrich S03 đang chạy thật, nay enrich đã xong, mã bộ thu và bộ nạp không đổi
+run_id: repin-20261103T103624Z-83428
+sha: 7fcb0775d97fec0af8a7acde313888981235f601 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
