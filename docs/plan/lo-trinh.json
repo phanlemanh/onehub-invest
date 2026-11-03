@@ -417,14 +417,15 @@
     },
     {
       "ma": "PL20",
-      "cau_giao": "Tin căn hộ Ocean Park 1 được gắn vào dòng danh mục ở mức trục hoặc căn bằng một phát biểu trường căn",
+      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park được gắn vào Danh bạ ở mức sâu nhất biết được, trục hoặc căn, bằng một phát biểu trường căn",
       "vai": "nen",
       "tieu_chi": 10,
       "vi_sao": "§0.2 D-3: ghép căn là phát biểu; D1/D3.",
       "hang": "T2",
       "dung_tren": [
         "PL13",
-        "PL15"
+        "PL15",
+        "DB1"
       ],
       "slug": "ghep-tin-vao-danh-muc",
       "bat_khi": "Trên tập test: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A",
@@ -432,7 +433,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "C2.7"
-      ]
+      ],
+      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md."
     },
     {
       "ma": "PL21",
@@ -2515,7 +2517,7 @@
       "vung": [
         "collector/src/**"
       ],
-      "ghi_chu": "Gọi nguồn bằng mã S0x, không ghi tên thật (ADR-0007). Nguồn danh mục theo chính sách luật 5 (chỉ nội bộ, tối đa một lần mỗi tuần). Danh bạ toà Grand Park dựng từ dữ liệu này là mục chờ DBG."
+      "ghi_chu": "Gọi nguồn bằng mã S0x, không ghi tên thật (ADR-0007). Nguồn danh mục theo chính sách luật 5 (chỉ nội bộ, tối đa một lần mỗi tuần). Danh bạ toà Grand Park dựng từ dữ liệu này là mục chờ DBG. Đo 03/11: S08 đã có mã Grand Park nhưng chưa có mã khớp cho một số toà S03 nhắc từ 20 lần, nên hàng này vẫn còn việc; đo lại trước khi mở vòng. DB1 không chờ hàng này."
     },
     {
       "dung_tren": [],
@@ -3386,6 +3388,121 @@
         "app/src/components/listing/**"
       ],
       "ghi_chu": "T3, khó đảo vì ra người dùng thật. Ghi chú nội bộ của cuộc gọi không lên cloud; không tên nguồn thật, không số AirDNA; leak gate phải xanh. Ảnh theo AC1."
+    },
+    {
+      "ma": "DN1",
+      "slug": "noi-du-an-s08-khu-do-thi",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "DN1"
+      ],
+      "dot": "danh-ba-nha-0311",
+      "nhom": "danh-ba",
+      "cau_giao": "Mỗi dự án S08 của lát Ocean Park 1 và Grand Park nối vào đúng một khu đô thị, không còn bí danh dự án trùng mã toà, area_ids OCP1–3 khớp nguồn xác minh",
+      "bat_khi": "Mọi dự án S08 của lát nối đúng một khu đô thị hoặc nằm trong danh sách chưa nối có lý do; 0 bí danh dự án trùng mã toà",
+      "vi_sao": "Đo 03/11: 3/150 dự án S08 khớp asset_nodes đúng tên hoặc bí danh, một dự án có thể bị tách nhiều tên. Tách từ DB1 để DB1 không phình.",
+      "vung": [
+        "db/migrations",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Tên dự án và bảng nối từ S08 chỉ ở local (luật 5). Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §3."
+    },
+    {
+      "ma": "DB1",
+      "slug": "danh-ba-toa-truc-can",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 11,
+      "dung_tren": [
+        "DN1"
+      ],
+      "phu": [
+        "DB1"
+      ],
+      "dot": "danh-ba-2910",
+      "nhom": "danh-ba",
+      "cau_giao": "Danh bạ có toà · trục · căn cao tầng Ocean Park 1 và Grand Park dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; chủ đầu tư ghi ở cấp toà (Building.BuilderName)",
+      "bat_khi": "Dựng lại hai lần: số toà, trục, căn và khoá không đổi; không đúc căn cho ô chưa có bằng chứng",
+      "vi_sao": "ADR-0016 Đợt 1, điều kiện mở đã đạt (S08 có dòng Ocean Park 1). Mạnh 03/11: đây là định danh nhà, khoá chính để làm giàu, gồm cả căn off-market.",
+      "vung": [
+        "db/migrations",
+        "pipeline/sql",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5."
+    },
+    {
+      "ma": "DN2",
+      "slug": "trang-do-phu-danh-ba",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DB1",
+        "PL20"
+      ],
+      "phu": [
+        "DN2"
+      ],
+      "dot": "danh-ba-nha-0311",
+      "nhom": "danh-ba",
+      "cau_giao": "Người vận hành mở trang Danh bạ trên Ops và thấy cây khu đô thị → toà với số căn, số đã xác nhận, số có tin, số off-market, biết toà nào còn thiếu",
+      "vi_sao": "Mạnh 03/11 hỏi có bảng xem dự án, toà, căn chưa; đo: chưa có trang nào. Trả lời «Danh bạ phủ tới đâu».",
+      "vung": [
+        "app/src/app/ops/registry",
+        "app/src/lib",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Slug registry và thuật ngữ off-market vào CONTEXT.md cùng hàng này. Đọc ở máy thu trước; dòng S08 dùng vùng chỉ-máy-thu. Off-market không dùng trạng thái S08."
+    },
+    {
+      "ma": "DN3",
+      "slug": "luoi-toa-ho-so-can",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DN2"
+      ],
+      "phu": [
+        "DN3"
+      ],
+      "dot": "danh-ba-nha-0311",
+      "nhom": "danh-ba",
+      "cau_giao": "Người vận hành mở một toà thấy lưới trục × tầng với trạng thái từng ô, mở một căn thấy tin đang rao, người đăng, lịch sử giá chào, độ chắc từng trường và bằng chứng",
+      "vi_sao": "Kiểm phủ tới từng căn; tra căn cho vận hành. Tra căn khi giao dịch ở Quỹ hàng (Mạnh chốt 03/11).",
+      "vung": [
+        "app/src/app/ops/registry",
+        "app/src/lib"
+      ],
+      "ghi_chu": "Không làm lộ mã căn người đăng đã che ra ngoài Ops. Ô chưa có bằng chứng là ô trống, không tính vào số căn."
+    },
+    {
+      "ma": "DN4",
+      "slug": "danh-ba-len-cloud",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DN3"
+      ],
+      "phu": [
+        "DN4"
+      ],
+      "dot": "danh-ba-nha-0311",
+      "nhom": "danh-ba",
+      "cau_giao": "Bản chiếu Danh bạ lên cloud chỉ gồm vật thể có tin hoặc có xác nhận, không mang giá trị chỉ có từ S08, và trang Danh bạ đọc được trên cloud",
+      "bat_khi": "Trên cloud 0 vật thể và 0 giá trị chỉ có từ S08; cấy một dòng chỉ-S08 thì bộ soát đỏ",
+      "vi_sao": "ADR-0016 §9 sửa 03/11 (Mạnh duyệt). Đội vận hành làm việc từ xa theo ADR-0015.",
+      "vung": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/sql",
+        "app/src/app/ops/registry"
+      ],
+      "ghi_chu": "Hạng T3: đổi đường dữ liệu lên cloud, chạm luật 5."
     }
   ],
   "chan_troi": [
@@ -3801,16 +3918,6 @@
       "mo_lai_khi": "Không mở riêng: C3.2a giao cùng DB2 (đợt danh-ba-2910)"
     },
     {
-      "ma": "DB1",
-      "dot": "danh-ba-2910",
-      "cau_giao": "Danh bạ có toà · trục · căn Ocean Park 1 dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; dọn bí danh dự án trùng mã toà, đối chiếu area_ids OCP1–3 với nguồn xác minh, chủ đầu tư ghi ở cấp toà (Building.BuilderName)",
-      "ly_do": "Luật 11 (ADR-0016 §10): chỉ dựng cấp có dữ liệu lấp — stg_s08_inventory chưa có dòng vì ZC8 chưa giao; PL14, PL15 đã gộp. Thay PL11.",
-      "phu": [
-        "DB1"
-      ],
-      "mo_lai_khi": "ZC8 giao và stg_s08_inventory trên DB máy thu có dòng Ocean Park 1 — cắt thành hàng T3 và ước cỡ lúc ấy (dùng phát biểu PL13 nếu đã giao)"
-    },
-    {
       "ma": "DB2",
       "dot": "danh-ba-2910",
       "cau_giao": "Nhà phố, đất thành vật thể tạm và chỉ gộp khi có bằng chứng; tin P1 và listing thuê ngắn hạn gắn vật thể ở mức sâu nhất biết được; properties thành view trên danh bạ để các tệp đang đọc không gãy",
@@ -3824,11 +3931,11 @@
       "ma": "DBG",
       "dot": "doc-tin-anh-3010",
       "cau_giao": "Danh bạ có toà · trục Grand Park dựng từ danh mục PL10b và phát biểu toà/mã căn trên tin, cùng khung chung với DB1",
-      "ly_do": "Luật 11: chưa có dữ liệu danh mục Grand Park (PL10b chưa giao); tách khỏi DB1 để DB1 không phình",
+      "ly_do": "Mạnh chốt 03/11 lát đầu gồm Ocean Park 1 và Grand Park cao tầng, nên gộp vào DB1; không còn chờ PL10b vì hạt giống gồm cả S08 và phát biểu trên tin",
       "phu": [
         "DBG"
       ],
-      "mo_lai_khi": "PL10b giao và DB1 đã thành hàng"
+      "mo_lai_khi": "Không mở riêng: DBG giao cùng DB1"
     },
     {
       "ma": "AP1",
@@ -3909,6 +4016,36 @@
         "CGP2"
       ],
       "mo_lai_khi": "CG6 giao và có từ 50 nhãn thật do người gắn"
+    },
+    {
+      "ma": "DN5",
+      "dot": "danh-ba-nha-0311",
+      "cau_giao": "Máy thu đẩy nguồn cấp danh mục sang Quỹ hàng theo khuôn có phiên bản, bộ soát chặn tầng A, S08, AirDNA ở cửa ra",
+      "ly_do": "ADR-0017: làm khi kho Quỹ hàng đã có khuôn kết nối; khuôn nằm ở kho đó",
+      "phu": [
+        "DN5"
+      ],
+      "mo_lai_khi": "Kho Quỹ hàng có khuôn «nguồn danh mục và thị trường» và DN4 giao"
+    },
+    {
+      "ma": "DN6",
+      "dot": "danh-ba-nha-0311",
+      "cau_giao": "Máy thu kéo sự kiện xác nhận từ Quỹ hàng, kiểm khuôn rồi ghi thành phát biểu network_confirm; rút được theo công ty hoặc theo người",
+      "ly_do": "ADR-0017 §6 sửa 03/11: chiều ngược mở bằng thoả thuận từng sàn; chưa có khuôn sự kiện và chưa có sàn nào gửi",
+      "phu": [
+        "DN6"
+      ],
+      "mo_lai_khi": "DN5 giao và kho Quỹ hàng có khuôn sự kiện xác nhận"
+    },
+    {
+      "ma": "DN7",
+      "dot": "danh-ba-nha-0311",
+      "cau_giao": "Điểm tin cậy theo công ty, đủ ngưỡng thì một xác nhận lên lớp sự thật",
+      "ly_do": "Đo trước khi build: chưa có xác nhận thật nên chưa đặt được ngưỡng; trước đó dùng luật hai công ty độc lập ở DN6",
+      "phu": [
+        "DN7"
+      ],
+      "mo_lai_khi": "DN6 giao và có từ 2 công ty gửi xác nhận trong cùng một dự án"
     }
   ],
   "da_bac": []
