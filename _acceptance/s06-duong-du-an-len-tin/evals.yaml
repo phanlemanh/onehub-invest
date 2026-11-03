@@ -41,7 +41,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.ds1_db
     paths: [pipeline/resolve-properties.mjs, pipeline/lib/duong-can.mjs, pipeline/scripts/s06-duong.itest.mjs]
-    expected: "exit 0; ca 'DS1-AC-5' xanh: sáu phần tử ma trận ô căn ra đúng giá trị viết trước qua resolve-properties thật; mỗi căn được điền đúng một mục enrichment_log src=resolve-properties; lượt hai không thêm. --hoan-tac-duong trả đúng các ô đã điền về NULL, ô có sẵn giữ nguyên, số ô trả về bằng số mục log. Chiều đỏ: bản sao đè ô có sẵn thì ca đỏ ghim «ô có sẵn bị đè»."
+    expected: "exit 0; ca 'DS1-AC-5' xanh: sáu phần tử ma trận ô căn ra đúng giá trị viết trước qua resolve-properties thật; mỗi căn được điền đúng một mục enrichment_log src=resolve-properties; lượt hai không thêm. --hoan-tac-duong trả đúng các ô đã điền về NULL, ô có sẵn giữ nguyên, số ô trả về bằng số mục log. Chiều đỏ: bản sao đè ô có sẵn thì ca đỏ ghim «ô có sẵn bị đè»; bản sao nhận cả tin đã rời kho thì ca đỏ ghim «nhận đường từ tin đã rời kho», với đối chứng dương tin rời kho cùng căn và đang mang đường."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6

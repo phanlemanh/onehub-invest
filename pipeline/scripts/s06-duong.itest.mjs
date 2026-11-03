@@ -11,6 +11,7 @@ import { dienDuongCan, hoanTacDuong } from "../lib/duong-can.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
+import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { chayResolve } from "../resolve-properties.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 
@@ -91,12 +92,10 @@ test("DS1-AC-2 đỏ: bản sao không đọc street_name", { timeout: 300_000 }
 }));
 
 // ── AC-3 ──
-/** Dòng `legacy` đúng khuôn bên ghi thật (phat-bieu-cat-chuyen.mjs): tin đã có từ transform, cột do bộ phân xử dựng. */
-async function legacy(id, gt, tier = "observed") {
-  const offer = mintOfferId("S06", String(id));
-  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence, observed_at)
-    VALUES ($1, 'street_raw', $2, $3, 'legacy', '045', 'offer:' || $4, jsonb_build_object('note', 'giá trị có trước 045, không căn cứ', 'offer_id', $4::text), now())`,
-  [`S06:${id}`, gt, tier, offer]);
+/** Dòng `legacy` do bên ghi thật sinh: tin đã có từ transform mang sẵn giá trị trong cột, rồi chạy catChuyen. */
+async function legacy(capIdGt) {
+  for (const [id, gt] of capIdGt) await c.query("UPDATE sale_offer_records SET street_raw = $2 WHERE offer_id = $1", [mintOfferId("S06", String(id)), gt]);
+  await catChuyen(c, { actor: "cat-chuyen:thu" });
 }
 const demLegacy = async (ids) => Number((await mot(`SELECT count(*) n FROM field_assertions WHERE method = 'legacy' AND field = 'street_raw' AND subject_key = ANY($1)`,
   [ids.map((i) => `S06:${i}`)])).n);
@@ -106,12 +105,10 @@ async function kiemAc3(a, b, d) {
   assert.equal(td.street_raw, "Đường Giữ", "DS1-AC-3 nguồn rỗng phải giữ legacy");
 }
 test("DS1-AC-3 nguồn thay legacy, nguồn rỗng giữ legacy, dòng legacy còn đủ", { timeout: 300_000 }, () => trongGiaoDich(async () => {
-  const khuon = readFileSync(join(PIPE, "phat-bieu-cat-chuyen.mjs"), "utf8");
-  assert.ok(khuon.includes("'observed', 'legacy', '045', 'offer:' || o_.offer_id"), "DS1-AC-3 bên ghi legacy đổi khuôn — cập nhật fixture");
   const [a, b, d] = [9900007011, 9900007012, 9900007013];
   for (const [i, id] of [a, b, d].entries()) await tin(id, undefined, { gia: 5_200_000_000 + i * 1e8 });
   await chayTransform(c);
-  await legacy(a, "Đường Cùng"); await legacy(b, "Đường Cũ"); await legacy(d, "Đường Giữ");
+  await legacy([[a, "Đường Cùng"], [b, "Đường Cũ"], [d, "Đường Giữ"]]);
   const truoc = await demLegacy([a, b, d]);
   assert.equal(truoc, 3);
   await tin(a, "Đường Cùng"); await tin(b, "Đường Nguồn"); await tin(d, "");
@@ -127,7 +124,9 @@ test("DS1-AC-3 đỏ: bản sao xếp legacy trên source_field trong phép đo"
   const [a, b, d] = [9900007011, 9900007012, 9900007013];
   for (const [i, id] of [a, b, d].entries()) await tin(id, undefined, { gia: 5_200_000_000 + i * 1e8 });
   await chayTransform(c);
-  await legacy(a, "Đường Cùng", "fact"); await legacy(b, "Đường Cũ", "fact"); await legacy(d, "Đường Giữ", "fact");
+  await legacy([[a, "Đường Cùng"], [b, "Đường Cũ"], [d, "Đường Giữ"]]);
+  await c.query(`UPDATE field_assertions SET evidence_tier = 'fact' WHERE method = 'legacy' AND field = 'street_raw' AND subject_key = ANY($1)`,
+    [[a, b, d].map((i) => `S06:${i}`)]);
   await tin(a, "Đường Cùng"); await tin(b, "Đường Nguồn");
   await chayTransform(c);
   await assert.rejects(kiemAc3(a, b, d), /legacy thắng nguồn/);
@@ -143,16 +142,18 @@ test("DS1-AC-4 chạy lại không đổi, nguồn đổi thì đổi theo, ngu�
   const [co, khong] = [9900007021, 9900007022];
   await tin(co, undefined, { gia: 5_500_000_000 }); await tin(khong, undefined, { gia: 5_600_000_000 });
   await chayTransform(c);
-  await legacy(co, "Đường Lịch Sử");
+  await legacy([[co, "Đường Lịch Sử"]]);
   await tin(co, "Đường Một", { gia: 5_500_000_000 }); await tin(khong, "Đường Hai", { gia: 5_600_000_000 });
   await chayTransform(c);
   const anh = async () => JSON.stringify((await c.query(`SELECT id, retracted_at FROM field_assertions WHERE subject_key = ANY($1) ORDER BY id`, [[`S06:${co}`, `S06:${khong}`]])).rows);
   const truoc = await anh();
-  const dongCot = async () => [(await cotDuong(co)).street_raw, (await cotDuong(khong)).street_raw];
+  const dongCot = async () => JSON.stringify((await c.query(`SELECT offer_id, street_raw, block_raw, property_type, bedrooms, bathrooms, price_vnd, field_provenance
+    FROM sale_offer_records WHERE offer_id = ANY($1) ORDER BY offer_id`, [[co, khong].map((i) => mintOfferId("S06", String(i)))])).rows);
   const cotTruoc = await dongCot();
-  await chayTransform(c);
+  const luotHai = await chayTransform(c);
+  assert.deepEqual([luotHai.inserted, luotHai.retracted, luotHai.offersChanged], [0, 0, 0], "DS1-AC-4 lượt hai: inserted, retracted, offers_changed");
   assert.equal(await anh(), truoc, "DS1-AC-4 lượt hai thêm hoặc rút phát biểu");
-  assert.deepEqual(await dongCot(), cotTruoc, "DS1-AC-4 lượt hai đổi tin");
+  assert.equal(await dongCot(), cotTruoc, "DS1-AC-4 lượt hai đổi tin");
 
   await tin(co, "Đường Mới", { gia: 5_500_000_000 });
   await chayTransform(c);
@@ -198,7 +199,14 @@ async function dungO() {
   await tin(9900007052, "Đường Tin Rời Kho", { gia: GIA.roi });
   await tin(9900007061, undefined, { gia: GIA.rong });
   await chayTransform(c);
+  // Đối chứng dương: tin sắp rời kho cùng căn với tin còn lại và đang mang đường, nên ô căn có nguồn rời kho để mà nhận nhầm.
+  assert.equal((await canCua(9900007052)).id, (await canCua(9900007051)).id, "DS1-AC-5 tiền đề: hai tin cùng căn");
+  assert.equal((await cotDuong(9900007052)).street_raw, "Đường Tin Rời Kho", "DS1-AC-5 tiền đề: tin rời kho mang đường");
   await c.query(`UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot' WHERE offer_id = $1`, [mintOfferId("S06", "9900007052")]);
+}
+async function kiemRoiKho() {
+  const p = await canCua(9900007051);
+  if (p.street !== null) throw new Error(`DS1-AC-5 nhận đường từ tin đã rời kho: ${p.street}`);
 }
 async function kiemCoSan() {
   const p = await canCua(9900007041);
@@ -218,7 +226,7 @@ test("DS1-AC-5 căn điền ô trống, không đè, một mục log, có hoàn 
     assert.equal(mucLog(p)[0].value, gt);
   }
   await kiemCoSan();
-  assert.equal((await canCua(9900007051)).street, null, "DS1-AC-5 không nhận đường từ tin đã rời kho");
+  await kiemRoiKho();
   assert.equal((await canCua(9900007061)).street, null, "DS1-AC-5 căn không tin nào có đường vẫn trống");
 
   await chayResolve(c, yenLang);
@@ -238,8 +246,15 @@ test("DS1-AC-5 đỏ: bản sao đè ô có sẵn", { timeout: 600_000 }, () => 
   assert.ok(await m.dienDuongCan(c) > 0);
   await assert.rejects(kiemCoSan(), /ô có sẵn bị đè/);
 }));
-test("DS1-AC-5 đối chứng: bản thật cùng tiền đề không đè", { timeout: 600_000 }, () => trongGiaoDich(async () => {
+test("DS1-AC-5 đỏ: bản sao nhận cả tin đã rời kho", { timeout: 600_000 }, () => trongGiaoDich(async () => {
+  const m = await banSao("lib/duong-can.mjs", "JOIN sale_offers o ON", "JOIN sale_offer_records o ON");
   await dungO();
-  assert.equal(await dienDuongCan(c), 0, "DS1-AC-5 căn có sẵn và căn chỉ còn tin rời kho không được điền");
+  assert.ok(await m.dienDuongCan(c) > 0);
+  await assert.rejects(kiemRoiKho(), /nhận đường từ tin đã rời kho/);
+}));
+test("DS1-AC-5 đối chứng: bản thật cùng tiền đề không đè, không nhận tin rời kho", { timeout: 600_000 }, () => trongGiaoDich(async () => {
+  await dungO();
+  await dienDuongCan(c);
   await kiemCoSan();
+  await kiemRoiKho();
 }));

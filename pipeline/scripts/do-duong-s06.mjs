@@ -45,6 +45,15 @@ const chuan = (s) => s.normalize("NFC").toLowerCase().trim().replace(/\s+/g, " "
   .replace(/^(?:đường|phố|duong|pho)\s+/u, "")
   .normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d");
 
+/** `s` đứng riêng ở một lần xuất hiện bất kỳ trong `t`, không chỉ lần đầu. */
+function chuaNguyenTu(t, s) {
+  const bien = (ch) => ch === undefined || !/[\p{L}\p{N}]/u.test(ch);
+  for (let i = t.indexOf(s); i >= 0; i = t.indexOf(s, i + 1)) {
+    if (bien(t[i - 1]) && bien(t[i + s.length])) return true;
+  }
+  return false;
+}
+
 const SAU_COT = [
   ["loại hình", "property_type IS NOT NULL AND property_type <> 'unknown'"],
   ["phòng ngủ", "bedrooms IS NOT NULL"],
@@ -102,13 +111,11 @@ async function chay() {
     const giaTri = gtr.map((r) => r.v);
     if (co("--gai-ten-nguon") && ten.length) giaTri.push(`Đường ${ten[0][1]} 1`);
     const trung = new Map();
+    if (!chuaNguyenTu("xabc abc", "abc") || chuaNguyenTu("xabc abcx", "abc")) vipham.push("đối chứng khớp nguyên từ sai — phép kiểm tên nguồn vô nghĩa");
     for (const v of giaTri) {
       const t = v.toLowerCase();
       for (const [ma, s] of ten) {
-        const i = t.indexOf(s);
-        if (i < 0) continue;
-        const bien = (ch) => ch === undefined || !/[\p{L}\p{N}]/u.test(ch);
-        if (bien(t[i - 1]) && bien(t[i + s.length])) trung.set(ma, (trung.get(ma) ?? 0) + 1);
+        if (chuaNguyenTu(t, s)) trung.set(ma, (trung.get(ma) ?? 0) + 1);
       }
     }
     const nTrung = [...trung.values()].reduce((a, b) => a + b, 0);
@@ -119,16 +126,20 @@ async function chay() {
     const soDuong = napSoDuong();
     const { rows: nhom } = await c.query(`SELECT array_agg(DISTINCT o.street_raw) d FROM property_offers po JOIN sale_offers o ON o.offer_id = po.offer_id
       WHERE NULLIF(btrim(o.street_raw), '') IS NOT NULL GROUP BY po.property_id HAVING count(DISTINCT o.street_raw) > 1`);
+    // Đối chứng dương: thước và bộ so phân biệt được cùng tên với khác tên, và có cặp để so.
+    if (chuan("Đường Mồi") !== chuan("mồi") || chuan("Dương Khuê") === chuan("Khuê")) vipham.push("đối chứng chuẩn hoá sai — phép kiểm cặp vô nghĩa");
+    if (soDuong("Đường Mồi", "Đường Khác") !== "lech") vipham.push("đối chứng bộ so sai — phép kiểm cặp vô nghĩa");
+    if (!nhom.length) vipham.push("không có cặp tin cùng căn khác chữ — phép kiểm cặp vô nghĩa");
+    const cap = nhom.flatMap(({ d }) => d.flatMap((a, i) => d.slice(i + 1).map((b) => [a, b, soDuong])));
+    // Cặp gài cùng tên đi qua đúng vòng đếm và `chuan` thật; chỉ bộ so của cặp này bị ép ra Lệch.
+    if (co("--gai-cap-lech")) cap.push(["Đường Mồi Gài", "mồi gài", () => "lech"]);
     let nLech = 0, nOan = 0;
-    for (const { d } of nhom) {
-      for (let i = 0; i < d.length; i++) for (let j = i + 1; j < d.length; j++) {
-        if (soDuong(d[i], d[j]) !== "lech") continue;
-        nLech++;
-        if (chuan(d[i]) === chuan(d[j])) nOan++;
-      }
+    for (const [a, b, so] of cap) {
+      if (so(a, b) !== "lech") continue;
+      nLech++;
+      if (chuan(a) === chuan(b)) nOan++;
     }
-    if (co("--gai-cap-lech")) { nLech++; nOan++; }
-    console.log(`cặp tin cùng căn ra Lệch: ${nLech}; trong đó cùng tên sau chuẩn hoá: ${nOan}`);
+    console.log(`nhóm tin cùng căn khác chữ: ${nhom.length}; cặp ra Lệch: ${nLech}; trong đó cùng tên sau chuẩn hoá: ${nOan}`);
     if (nOan) vipham.push(`cặp cùng tên ra Lệch: ${nOan}`);
 
     // Số tin bị bỏ theo từng tiền tố hành chính.

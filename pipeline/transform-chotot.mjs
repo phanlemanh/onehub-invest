@@ -132,7 +132,10 @@ export async function runTransformChotot(client) {
     `${nHigh + nMed > 0 ? ` (match ${(((nWardV3 + nWardTxt) / (nHigh + nMed)) * 100).toFixed(1)}%)` : ""}`,
   );
   for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
-  return { high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa) };
+  return {
+    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa),
+    inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed,
+  };
 }
 
 async function main() {
