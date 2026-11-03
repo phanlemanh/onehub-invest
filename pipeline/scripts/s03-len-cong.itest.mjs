@@ -23,6 +23,8 @@ const HERE = import.meta.dirname;
 const HAM_061 = MIG_061.slice(MIG_061.indexOf("-- 3. Kiểu và miền"));
 const TEP_068 = join(HERE, "../../db/migrations/068_giu_nguon_goc_sdt.sql");
 const MIG_068 = readFileSync(existsSync(TEP_068) ? TEP_068 : join(HERE, "fixtures/068_giu_nguon_goc_sdt.ban-sao.sql"), "utf8");
+const TEP_067 = join(HERE, "../../db/migrations/067_tang_huong_tin.sql");
+const MIG_067 = readFileSync(existsSync(TEP_067) ? TEP_067 : join(HERE, "fixtures/067_tang_huong_tin.ban-sao.sql"), "utf8");
 let seq = 0;
 
 async function withTx(fn) {
@@ -103,9 +105,9 @@ test("SL1-AC-5 đỏ: bản hàm 061 chưa vá thì giá trị suy không vào c
 
 test("SL1-AC-5 áp 069 không đổi ô nào của tin hiện có", async () => {
   await withTx(async (c) => {
+    // Trọn dòng (cả bathrooms, cột đặc trưng 061, field_provenance), trừ dấu thời gian cập nhật.
     const chup = async () => (await c.query(
-      `SELECT md5(string_agg(offer_id || '|' || property_type || '|' || coalesce(bedrooms::text,'') || '|' || coalesce(block_raw,'') || '|' ||
-              coalesce(street_raw,''), E'\n' ORDER BY offer_id)) h, count(*)::int n FROM sale_offer_records`)).rows[0];
+      `SELECT md5(string_agg((to_jsonb(t) - 'updated_at')::text, E'\n' ORDER BY offer_id)) h, count(*)::int n FROM sale_offer_records t`)).rows[0];
     await c.query(HAM_061);
     await resolveOffers(c, null);
     const truoc = await chup();
@@ -114,19 +116,33 @@ test("SL1-AC-5 áp 069 không đổi ô nào của tin hiện có", async () => 
     const sau = await chup();
     assert.ok(truoc.n > 0);
     assert.equal(sau.h, truoc.h, "SL1-AC-5: có ô đổi sau khi áp 069");
+    // Đối chứng: đổi đúng một ô trên cột thước cũ không đo thì băm phải đổi.
+    await c.query("UPDATE sale_offer_records SET bathrooms = coalesce(bathrooms, 0) + 1 WHERE offer_id = (SELECT min(offer_id) FROM sale_offer_records)");
+    assert.notEqual((await chup()).h, truoc.h, "SL1-AC-5: thước không đỏ khi đổi một ô bathrooms");
   });
 });
 
 test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, chạy lại an toàn, mất mốc thì dừng", async () => {
   console.log(`bản 068 dùng: ${existsSync(TEP_068) ? "tệp đã gộp" : "bản sao trong fixtures"}`);
-  for (const [ten, thuTu] of [["068→069", [MIG_068, MIG_069, MIG_069]], ["069→068", [MIG_069, MIG_068, MIG_068]]]) {
+  console.log(`bản 067 dùng: ${existsSync(TEP_067) ? "tệp đã gộp" : "bản sao trong fixtures"}`);
+  // 067 thay trọn thân hàm nên chỉ xét thứ tự 067 đứng trước 069; 069 áp trước thì 067 phải vá lại (xem sổ quyết định).
+  const MA_TRAN = [
+    ["chỉ 069", [MIG_069, MIG_069], { sdt: false, huong: false }],
+    ["067→069", [MIG_067, MIG_069, MIG_069], { sdt: false, huong: true }],
+    ["068→069", [MIG_068, MIG_069, MIG_069], { sdt: true, huong: false }],
+    ["069→068", [MIG_069, MIG_068, MIG_068], { sdt: true, huong: false }],
+    ["067→068→069", [MIG_067, MIG_068, MIG_069, MIG_069], { sdt: true, huong: true }],
+  ];
+  assert.equal(new Set(MA_TRAN.map(([ten]) => ten)).size, 5);
+  for (const [ten, thuTu, mong] of MA_TRAN) {
     await withTx(async (c) => {
       await c.query(HAM_061);
       for (const s of thuTu) await c.query(s);
       const { rows: [{ def }] } = await c.query("SELECT pg_get_functiondef('resolve_offer_fields(text[])'::regprocedure) def");
-      assert.ok(def.includes("fp_sdt"), `${ten}: mất fp_sdt`);
+      assert.equal(def.includes("fp_sdt"), mong.sdt, `${ten}: fp_sdt`);
+      assert.equal(def.includes("unit_facing"), mong.huong, `${ten}: cột 067`);
       assert.ok(def.includes("inferred_vao_cot"), `${ten}: mất luật mới`);
-      assert.equal(def.split("fp_sdt").length, 4, `${ten}: 068 vá trùng`);
+      if (mong.sdt) assert.equal(def.split("fp_sdt").length, 4, `${ten}: 068 vá trùng`);
       const t = await tinMoi(c);
       await writeAssertions(c, [pb(t.posts[0], "property_type", "apartment", "inferred")]);
       await resolveOffers(c, [t.id]);
@@ -176,6 +192,7 @@ test("SL1-AC-2 rollup 300, 400 giữ nguyên; 500 không có dòng cấp thị t
     const nen = await chay();
     for (let i = 0; i < 4; i++) { await tinS03(c, market); await tinS03(c, market, { kind: "rent_lt", gia: 15e6 }); }
     const co = await chay();
+    assert.ok(co.mm.n > 0 && co.ab.n > 0, "SL1-AC-2 rollup rỗng, băm không so được gì");
     assert.equal(co.mm.h, nen.mm.h, "SL1-AC-2 market_metrics đổi");
     assert.equal(co.ab.h, nen.ab.h, "SL1-AC-2 area_breakdowns đổi");
     assert.ok(co.phuong.n > 0, "SL1-AC-2 không có dòng phường để so");
@@ -187,6 +204,11 @@ test("SL1-AC-2 rollup 300, 400 giữ nguyên; 500 không có dòng cấp thị t
     await c.query(bo);
     assert.ok((await bam(c, "market_asset_stats", "area_id IN (SELECT id FROM areas WHERE region_type = 'market')")).n > 0,
       "SL1-AC-2: thước không đỏ trên bản 500 cũ");
+    // Đối chứng băm 300, 400: dữ liệu đầu vào đổi thì băm đổi; và hai tệp không đọc tin rao nên tin cấp thị trường không chạm được.
+    for (const t of ["300_metrics.sql", "400_breakdowns.sql"]) assert.ok(!docSql(t).includes("sale_offers"), `SL1-AC-2 ${t} đọc tin rao`);
+    await c.query("DELETE FROM nights WHERE listing_id = (SELECT min(listing_id) FROM nights)");
+    const doi = await chay();
+    assert.ok(doi.mm.h !== nen.mm.h || doi.ab.h !== nen.ab.h, "SL1-AC-2: băm rollup không đổi khi dữ liệu đầu vào đổi");
   });
 });
 
@@ -198,6 +220,14 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
   await withTx(async (c) => {
     const { market, ward } = await thiTruongCoPhuong(c);
     const a = await tinS03(c, market), b = await tinS03(c, market);
+    // Đủ để thước đạt ngưỡng 5 căn nếu tin cấp thị trường lọt vào: mỗi tin một giá nên mỗi tin một căn.
+    const nhieu = [];
+    for (let i = 0; i < 6; i++) nhieu.push(await tinS03(c, market, { gia: 3e9 + i * 1e8 }));
+    // Đối chứng bait: tin S03 có phường, ở phường có sẵn thước.
+    const { rows: [coThuoc] } = await c.query(
+      `SELECT v.area_id w FROM v_ruler_p2_area v JOIN areas x ON x.id = v.area_id WHERE x.parent_id = $1 ORDER BY v.area_id LIMIT 1`, [market]);
+    assert.ok(coThuoc, "SL1-AC-3 DB thử không có phường có thước");
+    const coGap = await tinS03(c, coThuoc.w, { phuong: "x" });
     // Cặp đối chứng: S03 có phường và tin S06 cùng phường, cùng DT và giá.
     const doiChung = await tinS03(c, ward, { phuong: "x" });
     const s06 = `offer_sl1_s06_${process.pid}`;
@@ -209,7 +239,7 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
     await resolveOffers(c, [s06]);
 
     // Thu hẹp bộ ghép về phường đối chứng và tin thử: chạy cả 50 nghìn tin mất hơn 10 phút. Mã bộ ghép vẫn là mã thật.
-    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${a.id},${b.id},${doiChung.id},${s06}}')`);
+    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${[a, b, doiChung, coGap, ...nhieu].map((t) => t.id).join(",")},${s06}}')`);
     await refreshBaitGap(c);
     await chayResolve(c, { ghi() {}, savepoint: true });
     const thanhPho = Object.keys(MARKETS).find((k2) => MARKETS[k2].id === market);
@@ -217,7 +247,10 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
     await runReassign(c, [thanhPho], { log: IM });
 
     assert.equal((await c.query(`SELECT count(*)::int n FROM v_ruler_p2_area v JOIN areas x ON x.id = v.area_id WHERE x.region_type = 'market'`)).rows[0].n, 0, "SL1-AC-3 thước cấp thị trường");
-    const { rows: dong } = await c.query("SELECT offer_id, bait_gap_pct, area_id FROM sale_offer_records WHERE offer_id = ANY ($1)", [[a.id, b.id]]);
+    assert.ok((await c.query("SELECT count(*)::int n FROM v_ruler_p2_area v JOIN areas x ON x.id = v.area_id WHERE x.parent_id = $1", [market])).rows[0].n > 0, "SL1-AC-3 đối chứng: không còn thước phường");
+    const { rows: [{ bait_gap_pct: gap }] } = await c.query("SELECT bait_gap_pct FROM sale_offer_records WHERE offer_id = $1", [coGap.id]);
+    assert.notEqual(gap, null, "SL1-AC-3 đối chứng: tin có phường có thước mà gap trống");
+    const { rows: dong } = await c.query("SELECT offer_id, bait_gap_pct, area_id FROM sale_offer_records WHERE offer_id = ANY ($1)", [[a.id, b.id, ...nhieu.map((t) => t.id)]]);
     for (const d of dong) {
       assert.equal(d.bait_gap_pct, null, "SL1-AC-3 bait_gap_pct");
       assert.equal(d.area_id, market, "SL1-AC-3 area_id bị dọn");
@@ -272,7 +305,14 @@ test("SL1-AC-6 khai-so-nhom: mặc định không ghi, ghi đúng, chạy lại 
     assert.equal(await nk(), nk0 + 1, "SL1-AC-6 chạy lại thêm nhật ký");
     const { rows: sau } = await c.query("SELECT unit_code, enabled, status FROM collection_units WHERE source_code = 'S03' ORDER BY 1");
     assert.deepEqual(sau, so, "SL1-AC-6 enabled, status đổi");
-    for (const s of ra) assert.ok(!/Nhóm SL1|group_key|Thẻ thử/.test(s), "SL1-AC-6 stdout lộ chữ ngoài số đếm");
+    assert.ok(ra.length > 0, "SL1-AC-6 không có dòng ra để soát");
+    const { rows: giaTriKhoa } = await c.query("SELECT group_key FROM collection_units WHERE source_code = 'S03' AND length(group_key) >= 4");
+    const loKhoa = (s) => giaTriKhoa.some((r) => s.includes(r.group_key));
+    assert.ok(giaTriKhoa.length > 0 && loKhoa(`x ${giaTriKhoa[0].group_key} y`), "SL1-AC-6 đối chứng: thước không đỏ khi dòng ra mang khoá");
+    for (const s of ra) {
+      assert.ok(!/Nhóm SL1|group_key|Thẻ thử/.test(s), "SL1-AC-6 stdout lộ chữ ngoài số đếm");
+      assert.ok(!loKhoa(s), "SL1-AC-6 stdout lộ giá trị khoá nhóm");
+    }
 
     const truoc = await hang();
     const hong = {
@@ -299,6 +339,22 @@ test("SL1-AC-6 khai-so-nhom: mặc định không ghi, ghi đúng, chạy lại 
   const r = spawnSync(process.execPath, [join(HERE, "../khai-so-nhom.mjs"), "--tep", viet("cli.json", [{ unit_code: "S03-N999", market_codes: [] }]), "--ghi"], { encoding: "utf8", env: process.env });
   assert.notEqual(r.status, 0, "SL1-AC-6 lệnh thoát 0 với đơn vị lạ");
   assert.equal(r.stdout, "");
+  assert.match(r.stderr, /đơn vị không có trong sổ/, "SL1-AC-6 lệnh đỏ vì lý do khác");
+  // Đối chứng: lệnh thật với sổ đúng hiện trạng thoát 0, chỉ in số đếm, không ghi.
+  const c2 = new pg.Client({ connectionString: DB_URL });
+  await c2.connect();
+  try {
+    const chup = async () => (await c2.query("SELECT md5(string_agg((t.*)::text, E'\\n' ORDER BY unit_code)) h FROM collection_units t WHERE source_code = 'S03'")).rows[0].h;
+    const { rows: hienTai } = await c2.query("SELECT unit_code, market_codes, group_key FROM collection_units WHERE source_code = 'S03'");
+    const truoc = await chup();
+    const dung = spawnSync(process.execPath, [join(HERE, "../khai-so-nhom.mjs"), "--tep", viet("cli-dung.json", hienTai.map((h) => ({ unit_code: h.unit_code, market_codes: h.market_codes ?? [] })))], { encoding: "utf8", env: { ...process.env, DATABASE_URL: DB_URL } });
+    assert.equal(dung.status, 0, "SL1-AC-6 lệnh thật với sổ đúng phải thoát 0");
+    assert.equal(JSON.parse(dung.stdout).da_ghi, 0);
+    assert.ok(!hienTai.some((h) => h.group_key && dung.stdout.includes(h.group_key)), "SL1-AC-6 lệnh thật in khoá nhóm");
+    assert.equal(await chup(), truoc, "SL1-AC-6 lệnh thật không có --ghi mà DB đổi");
+  } finally {
+    await c2.end();
+  }
 });
 
 test("SL1-AC-6 nháp thật đủ 30 đơn vị, 19 đơn vị có thẻ, 16 tên nhóm", { timeout: 60_000 }, async (t) => {

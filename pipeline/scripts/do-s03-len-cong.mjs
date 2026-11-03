@@ -203,6 +203,7 @@ async function doTapTin() {
   const lech = soTin(nen, co);
   in_(`E8 mã nền và mã mới, cùng sổ nháp: ${nen.length} và ${co.length} tin; thiếu ${lech.thieu}, thêm ${lech.them}, đổi giá, diện tích, loại tin ${lech.doi}`);
   if (lech.thieu || lech.them || lech.doi) throw new Error("SL1-AC-7: tập tin lệch bản nền");
+  if (soTin(nen, [{ ...nen[0], price_vnd: `${nen[0].price_vnd}1` }, ...nen.slice(1)]).doi !== 1) throw new Error("SL1-AC-7: thước không đỏ khi đổi giá");
   const doSo = soTin(khongSo, nen);
   const tach = tinTachNhoSo(khongSo, nen);
   in_(`E8 riêng tác động của sổ lên mã nền: ${khongSo.length} thành ${nen.length} tin; thiếu ${doSo.thieu}, thêm ${doSo.them}, đổi ${doSo.doi}; tin thêm không phải do tách nhờ khớp phường ${tach.lac}`);
@@ -263,14 +264,29 @@ async function ghiMau() {
   const dem = mau.reduce((a, m) => ({ ...a, [m.nguon]: (a[m.nguon] ?? 0) + 1 }), {});
   in_(`mẫu ${mau.length} tin theo seed ${SEED}: ${JSON.stringify(dem)}; ghi vào research-local/, chờ tác tử gắn nhãn`);
 }
+/** Mẫu đóng băng phải còn khớp lượt này: tin còn lên cổng và giá trị được chấm không đổi. */
+export function lechMau(mau, rows) {
+  const theo = new Map(rows.map((r) => [r.offer_id, r]));
+  const mat = mau.filter((m) => !theo.has(m.offer_id)).length;
+  const doi = mau.filter((m) => {
+    const r = theo.get(m.offer_id);
+    return r && ["kind", "property_type", "price_vnd", "area_m2", "market"].some((k) => r[k] !== m[k]);
+  }).length;
+  return { mat, doi };
+}
+const TRAN_MAT_MAU = 3; // Tin rời cổng theo ngày (quá 30 ngày) là bình thường; nhiều hơn thì mẫu đã cũ.
 async function doLenCong() {
   canDbThu();
-  const { so } = await trongGiaoDich(docLenCong);
+  const { so, rows } = await trongGiaoDich(docLenCong);
   in_(`E11 sổ nhóm: nháp, chưa qua Mạnh duyệt`);
   in_(`E11 S03 lên cổng: ${so.n} tin (bán ${so.ban}, thuê ${so.thue}); đích ${DICH_LEN_CONG}${so.n < DICH_LEN_CONG ? `, hụt ${DICH_LEN_CONG - so.n}, chỉ cảnh báo` : ", đạt"}`);
   if (so.n <= GAY_LEN_CONG) throw new Error(`SL1-AC-9: số lên cổng ${so.n}, không vượt ${GAY_LEN_CONG}, đường gãy`);
   if (!existsSync(TEP_MAU) || !existsSync(TEP_NHAN_MAU)) throw new Error("SL1-AC-9: thiếu mẫu hoặc nhãn mẫu; chạy --mau rồi gắn nhãn");
-  const { mau } = JSON.parse(readFileSync(TEP_MAU, "utf8"));
+  const { mau, seed } = JSON.parse(readFileSync(TEP_MAU, "utf8"));
+  if (seed !== SEED || mau.length !== 30) throw new Error(`SL1-AC-9: mẫu sai khuôn (seed ${seed}, ${mau.length} tin)`);
+  const lech = lechMau(mau, rows);
+  in_(`E11 mẫu so với lượt này: rời cổng ${lech.mat}, đổi giá trị ${lech.doi}`);
+  if (lech.doi || lech.mat > TRAN_MAT_MAU) throw new Error("SL1-AC-9: mẫu không còn khớp lượt này; chạy lại --mau rồi gắn nhãn");
   const nhan = new Map(JSON.parse(readFileSync(TEP_NHAN_MAU, "utf8")).nhan.map((n) => [n.offer_id, n]));
   const dem = {};
   let cham = 0, sai = 0;
@@ -282,8 +298,9 @@ async function doLenCong() {
     for (const l of saiNang(m, n)) dem[l] = (dem[l] ?? 0) + 1;
     if (saiNang(m, n).length) sai++;
   }
-  in_(`E11 nhãn do tác tử gắn, không phải nhãn vàng; seed ${SEED}`);
-  in_(`E11 sai nặng: ${sai}/${cham} tin (${phanTram(sai, cham)}); đích ${DICH_SAI_NANG * 100}%${cham && sai / cham > DICH_SAI_NANG ? ", vượt đích, chỉ cảnh báo" : ", đạt"}; theo lý do ${JSON.stringify(dem)}`);
+  if (!cham) throw new Error("SL1-AC-9: không chấm được tin nào trong mẫu");
+  in_(`E11 nhãn do tác tử gắn, không phải nhãn vàng; seed ${seed}`);
+  in_(`E11 sai nặng: ${sai}/${cham} tin (${phanTram(sai, cham)}); đích ${DICH_SAI_NANG * 100}%${sai / cham > DICH_SAI_NANG ? ", vượt đích, chỉ cảnh báo" : ", đạt"}; theo lý do ${JSON.stringify(dem)}`);
 }
 
 // ---- E13: ma trận bên đọc ----

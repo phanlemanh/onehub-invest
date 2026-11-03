@@ -5,9 +5,12 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { after, before, test } from "node:test"
 import pg from "pg"
-import { renderToStaticMarkup } from "react-dom/server"
+import { createElement } from "react"
+import { renderToStaticMarkup, renderToString } from "react-dom/server"
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime"
 
 import { OfferCard } from "../src/components/listing/offer-card"
+import { OffersRegion } from "../src/components/listing/offers-region"
 import { pool } from "../src/lib/db"
 import { parseOfferFilters, type PublicOffer } from "../src/lib/offers-filters"
 import { getOfferWards, getPublicOffers } from "../src/lib/offers-public"
@@ -78,6 +81,7 @@ async function kiemApi(route: { GET: (r: Request) => Promise<Response> }, ca: Ca
   for (const r of rows) {
     const lo = Object.keys(r).filter((k) => /source/i.test(k))
     assert.deepEqual(lo, [], "SL1-AC-8 API lộ khoá nguồn")
+    assert.deepEqual(Object.values(r).filter((v) => typeof v === "string" && /^S0\d$/.test(v)), [], "SL1-AC-8 API lộ mã nguồn trong giá trị")
   }
 }
 
@@ -89,7 +93,10 @@ test("SL1-AC-8 đường đọc công khai: unverified, không mã nguồn, cấ
     const s06 = rows.find((r) => r.offerId === ca.s06)
     assert.equal(s03?.unverified, true, "SL1-AC-8 tin S03 thiếu unverified")
     assert.equal(s06?.unverified, false, "SL1-AC-8 tin S06 sai unverified")
-    for (const r of rows) assert.deepEqual(Object.keys(r).filter((k) => /source/i.test(k)), [], "SL1-AC-8 lộ khoá nguồn")
+    for (const r of rows) {
+      assert.deepEqual(Object.keys(r).filter((k) => /source/i.test(k)), [], "SL1-AC-8 lộ khoá nguồn")
+      assert.deepEqual(Object.values(r).filter((v) => typeof v === "string" && /^S0\d$/.test(v)), [], "SL1-AC-8 lộ mã nguồn trong giá trị")
+    }
     assert.equal(s03?.ward.id, THI_TRUONG, "SL1-AC-8 tin chỉ có loại suy và mã thị trường phải qua VISIBLE")
     assert.equal(s03?.propertyType, "apartment")
 
@@ -108,18 +115,62 @@ test("SL1-AC-8 đường đọc công khai: unverified, không mã nguồn, cấ
   })
 })
 
-test("SL1-AC-8 đỏ trên bản route thêm mã nguồn vào phản hồi", { skip, timeout: 120_000 }, async () => {
-  const goc = readFileSync(ROUTE, "utf8")
-  const moc = "o.n_reposts,\n"
-  assert.ok(goc.includes(moc), "đột biến không khớp route")
-  const f = ROUTE.replace(/route\.ts$/, `.sl1-route-${process.pid}.ts`)
-  writeFileSync(f, goc.replace(moc, "o.n_reposts, o.source AS source_code,\n"))
-  try {
-    const ban = await import(f)
-    await withTx((_c, ca) => assert.rejects(kiemApi(ban, ca), /SL1-AC-8/, "SL1-AC-8: thước không đỏ trên bản thêm mã nguồn"))
-  } finally {
-    rmSync(f, { force: true })
-  }
+for (const [ten, cot, khop] of [["tên khoá", "o.source AS source_code", /khoá nguồn/], ["giá trị dưới tên khác", "o.source AS origin", /mã nguồn trong giá trị/]] as const) {
+  test(`SL1-AC-8 đỏ trên bản route lộ mã nguồn: ${ten}`, { skip, timeout: 120_000 }, async () => {
+    const goc = readFileSync(ROUTE, "utf8")
+    const moc = "o.n_reposts,\n"
+    assert.ok(goc.includes(moc), "đột biến không khớp route")
+    const f = ROUTE.replace(/route\.ts$/, `.sl1-route-${process.pid}-${cot.split(" ").pop()}.ts`)
+    writeFileSync(f, goc.replace(moc, `o.n_reposts, ${cot},\n`))
+    try {
+      const ban = await import(f)
+      await withTx((_c, ca) => assert.rejects(kiemApi(ban, ca), khop, "SL1-AC-8: thước không đỏ trên bản lộ mã nguồn"))
+    } finally {
+      rmSync(f, { force: true })
+    }
+  })
+}
+
+/** Dựng đúng vùng máy chủ của trang tin rao; thẻ tách theo data-listing-id. */
+const veVung = async (marketId: string, marketPath: string, qs = "kind=sale&limit=50") => {
+  const el = await OffersRegion({ marketId, marketName: "Thị trường thử", marketPath, kind: "sale", filters: loc(qs) })
+  const router = { push() {}, replace() {}, refresh() {}, back() {}, forward() {}, prefetch() {} }
+  return renderToString(createElement(AppRouterContext.Provider, { value: router as never }, el))
+}
+const doanThe = (html: string, id: string) => {
+  const i = html.indexOf(`data-listing-id="${id}"`)
+  assert.ok(i >= 0, `SL1-AC-8 thiếu thẻ ${id}`)
+  const j = html.indexOf("data-listing-id=", i + 20)
+  return html.slice(i, j < 0 ? undefined : j)
+}
+
+test("SL1-AC-8 vùng tin rao: thẻ cấp thị trường không có liên kết phường, thẻ có phường có", { skip, timeout: 120_000 }, async () => {
+  await withTx(async (_c, ca) => {
+    const duong = `/vn/${THI_TRUONG}`
+    const html = await veVung(THI_TRUONG, duong)
+    assert.ok(doanThe(html, ca.s06).includes(`href="${duong}/`), "SL1-AC-8 đối chứng: thẻ có phường phải có liên kết phường")
+    const theS03 = doanThe(html, ca.s03)
+    assert.ok(!theS03.includes(`href="${duong}/`), "SL1-AC-8 thẻ cấp thị trường có liên kết phường")
+    assert.ok(theS03.includes("Chưa xác minh"), "SL1-AC-8 thẻ S03 thiếu nhãn")
+  })
+})
+
+test("SL1-AC-8 thị trường chỉ có tin cấp thị trường vẫn hiện tin, không báo đang thu thập", { skip, timeout: 120_000 }, async () => {
+  await withTx(async (c, ca) => {
+    const { rows: [{ id: khongPhuong }] } = await c.query(
+      `SELECT id FROM areas m WHERE region_type = 'market' AND NOT EXISTS (SELECT 1 FROM areas w WHERE w.parent_id = m.id) ORDER BY id LIMIT 1`)
+    const duong = `/vn/${khongPhuong}`
+    assert.ok((await veVung(khongPhuong, duong)).includes("Đang thu thập"), "SL1-AC-8 đối chứng: thị trường chưa có tin phải báo đang thu thập")
+    await c.query("UPDATE sale_offer_records SET area_id = $2 WHERE offer_id = $1", [ca.s03, khongPhuong])
+    const html = await veVung(khongPhuong, duong)
+    assert.ok(!html.includes("Đang thu thập"), "SL1-AC-8 thị trường có tin mà báo đang thu thập")
+    doanThe(html, ca.s03)
+    // Bộ lọc ra 0 là «lọc rỗng», không phải thị trường chưa có tin.
+    assert.ok(!(await veVung(khongPhuong, duong, "kind=sale&limit=50&price_min=999000000000")).includes("Đang thu thập"), "SL1-AC-8 lọc ra 0 mà báo đang thu thập")
+    // Hà Nội mất tin cấp thị trường và tin có phường: cùng nhánh rỗng theo số tin, không theo danh sách phường.
+    await c.query("UPDATE sale_offer_records SET retired_at = now() WHERE offer_id = ANY ($1)", [[ca.s03, ca.s06]])
+    assert.ok((await veVung(khongPhuong, duong)).includes("Đang thu thập"), "SL1-AC-8 hết tin mà không báo đang thu thập")
+  })
 })
 
 const THE: PublicOffer = {

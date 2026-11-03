@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
-import { docLoaiHinh, ganKhuVuc, gopKhuVuc, loaiHinhNhom } from "../transform-zalo.mjs";
+import { docLoaiHinh, ganKhuVuc, gopKhuVuc, loaiHinhNhom, mucTinCay } from "../transform-zalo.mjs";
+import { saiNang, soTin } from "./do-s03-len-cong.mjs";
 
 const TZ = join(import.meta.dirname, "../transform-zalo.mjs");
 const PH = { id: "vn-hanoi-a", slug: "a" };
@@ -14,8 +15,8 @@ const MA = new Set(["hanoi", "hcm"]);
 const MA_TRAN_KV = [
   ["khai một, không phường", { khai: ["hanoi"], ph: null }, { areaId: "hanoi", phuong: null }],
   ["khai một, có phường", { khai: ["hanoi"], ph: PH }, { areaId: PH.id, phuong: PH.slug }],
-  // entries(khai) chỉ đối chiếu phường của thị trường nhóm, nên phường nơi khác đến đây với ph = null.
-  ["khai một, phường thị trường khác", { khai: ["hanoi"], ph: null }, { areaId: "hanoi", phuong: null }],
+  // entries(khai) chỉ đối chiếu phường của thị trường nhóm, nên phường nơi khác đến đây với ph = null: đo ở ca DB của itest.
+  ["khai một, mã không có thật", { khai: ["vn-khong-co"], ph: null }, { areaId: null, phuong: null }],
   ["chưa khai", { khai: undefined, ph: null }, { areaId: null, phuong: null }],
   ["khai hai", { khai: ["hanoi", "hcm"], ph: null }, { areaId: null, phuong: null }],
 ];
@@ -42,6 +43,32 @@ async function banSao(thay) {
 
 test("SL1-AC-1 ma trận nhóm × chữ", () => {
   assert.equal(kiemMaTran(ganKhuVuc), MA_TRAN_KV.length);
+  assert.equal(new Set(MA_TRAN_KV.map(([, v]) => JSON.stringify(v))).size, MA_TRAN_KV.length, "SL1-AC-1 hai dòng trùng đầu vào");
+});
+
+test("SL1-AC-1 confidence theo khu vực: cấp thị trường không lên high", () => {
+  const conf = (vao) => mucTinCay({ hasPrice: true, hasArea: true, hasPhuong: ganKhuVuc({ ...vao, maCoThat: MA }).phuong !== null });
+  assert.equal(conf({ khai: ["hanoi"], ph: PH }), "high");
+  assert.equal(conf({ khai: ["hanoi"], ph: null }), "medium", "SL1-AC-1 tin cấp thị trường lên high");
+  assert.equal(mucTinCay({ hasPrice: false, hasArea: true, hasPhuong: true }), "low");
+});
+
+test("SL1-AC-7 thước tập tin đỏ khi đổi giá, diện tích, loại tin hay mất, thêm tin", () => {
+  const goc = [{ offer_id: "a", kind: "sale", price_vnd: "1", area_m2: "2" }, { offer_id: "b", kind: "sale", price_vnd: "3", area_m2: "4" }];
+  assert.deepEqual(soTin(goc, goc), { thieu: 0, them: 0, doi: 0 });
+  for (const doi of [{ price_vnd: "9" }, { area_m2: "9" }, { kind: "rent_lt" }]) {
+    assert.equal(soTin(goc, [{ ...goc[0], ...doi }, goc[1]]).doi, 1, `SL1-AC-7 không đỏ với ${JSON.stringify(doi)}`);
+  }
+  assert.equal(soTin(goc, goc.slice(1)).thieu, 1);
+  assert.equal(soTin(goc.slice(1), goc).them, 1);
+});
+
+test("SL1-AC-9 sai nặng: từng lý do, trường trống không tính", () => {
+  const m = { kind: "sale", property_type: "apartment", market: "hanoi", price_vnd: "100", area_m2: "50" };
+  assert.deepEqual(saiNang(m, { ...m, property_type: "villa", price_vnd: 110, area_m2: 50 }).sort(), ["loai_hinh"]);
+  assert.deepEqual(saiNang(m, { kind: "rent_lt" }), ["kind"]);
+  assert.deepEqual(saiNang(m, { market: "hcm", price_vnd: 200, area_m2: 100 }).sort(), ["dien_tich", "gia", "thi_truong"]);
+  assert.deepEqual(saiNang(m, { kind: null, property_type: null, market: null, price_vnd: null, area_m2: null }), []);
 });
 
 test("SL1-AC-1 đỏ: bản bỏ điều kiện đúng một thị trường", async () => {

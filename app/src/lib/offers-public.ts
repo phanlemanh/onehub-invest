@@ -156,6 +156,18 @@ export async function getOfferWards(marketId: string, kind: OfferFilters["kind"]
   return rows;
 }
 
+/** Thị trường có tin hiện được hay không, chưa tính bộ lọc; đếm cả tin cấp thị trường, không chỉ tin có phường. */
+export async function hasPublicOffers(marketId: string, kind: OfferFilters["kind"]): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1 FROM sale_offers o JOIN areas a ON a.id = o.area_id
+       WHERE ${VISIBLE} AND o.kind = $1 AND (a.id = $2 OR a.parent_id = $2)
+     ) AS co`,
+    [kind, marketId],
+  );
+  return rows[0].co;
+}
+
 /** Số của đúng một tin đang hiện công khai; null khi tin không hiện hoặc chưa có số. */
 export async function getOfferPhone(offerId: string): Promise<string | null> {
   const { rows } = await pool.query(

@@ -586,6 +586,10 @@ export function ganKhuVuc({ khai, ph, maCoThat }) {
   return { areaId: null, phuong: null };
 }
 
+/** Tin chỉ cấp thị trường có `phuong` trống nên không lên high. */
+export const mucTinCay = ({ hasPrice, hasArea, hasPhuong }) =>
+  hasPrice && hasArea && hasPhuong ? CONFIDENCE.high : hasPrice ? CONFIDENCE.medium : CONFIDENCE.low;
+
 /**
  * Gộp khu vực khi một tin có thêm bài. Tin có phường giữ nguyên (khoá gom đã chứa phường). Tin chỉ cấp thị trường: nhận mã đầu tiên có,
  * hai bài khai hai thị trường thì về trống vì không biết tin thuộc đâu.
@@ -763,7 +767,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     const hasPrice = pr.priceVnd !== null || pr.pricePerm2Vnd !== null;
     const hasArea = pr.areaM2 !== null;
     const hasPhuong = pr.phuong !== null;
-    pr.confidence = hasPrice && hasArea && hasPhuong ? CONFIDENCE.high : hasPrice ? CONFIDENCE.medium : CONFIDENCE.low;
+    pr.confidence = mucTinCay({ hasPrice, hasArea, hasPhuong });
     if (pr.confidence === CONFIDENCE.high) nFull++;
     else if (pr.confidence !== CONFIDENCE.low) nPartial++;
     else if (hasPrice) nPartial++;
