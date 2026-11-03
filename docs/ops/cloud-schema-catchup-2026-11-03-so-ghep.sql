@@ -1,5 +1,5 @@
 -- cloud-schema-catchup-2026-11-03-so-ghep.sql — phần cloud (Supabase) của hồ sơ so-ghep-s06-nhan-danh-ba.
--- CHƯA ÁP. Người chạy: Mạnh (luật 2), theo đúng thứ tự năm mốc:
+-- CHƯA ÁP. Mạnh duyệt khối ÁP (luật 2), Claude chạy qua Management API (mgmtExec của sync-cloud, đo trước, đặt lock_timeout), theo đúng thứ tự năm mốc:
 -- 1. gộp: PR sdt-s06-ghep-tai-khoan rồi PR so-ghep-s06-nhan-danh-ba vào main. Cloud chưa có cột, mọi số hiện kèm nhãn, trang không lỗi.
 -- 2. kéo về: checkout chính ở máy thu kéo main, để lượt sync đêm chạy bản mới.
 -- 3. áp cloud: chạy khối ĐO TRƯỚC, rồi khối ÁP dưới đây trên cloud.

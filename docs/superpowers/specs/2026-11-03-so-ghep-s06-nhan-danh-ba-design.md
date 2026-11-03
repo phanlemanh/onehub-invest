@@ -46,7 +46,7 @@ Nhãn và danh bạ cùng dựa vào `field_provenance`, nên một migration gh
 
 ### Năm mốc triển khai
 
-Ghi ở đầu tệp catch-up. Người chạy: Mạnh.
+Ghi ở đầu tệp catch-up. Mạnh duyệt phần cloud, Claude chạy qua Management API.
 
 1. gộp: PR #283 rồi PR này vào main. Cloud chưa có cột, mọi số hiện kèm nhãn, trang không lỗi.
 2. kéo về: checkout chính ở máy thu kéo main.
@@ -61,7 +61,7 @@ E9 và AC-9 của `sdt-s06-ghep-tai-khoan` hứa `PII_EXCLUDE` còn loại `sell
 ## Không làm
 
 - Nối người theo SĐT S06 vào người theo tài khoản (HD13 chỉ gộp S03, S05). Trang tri thức `nguoi-va-sdt` đã nêu phần lớn người theo SĐT là bản sao không có tin; S06 sẽ thêm khoảng 590 người như vậy. Đo và báo ở AC-9, xử ở vòng riêng.
-- Áp 068, 070 lên DB máy thu, ghi thật, áp cloud: bước triển khai có `pg_dump`, Mạnh chạy.
+- Áp 068, 070 lên DB máy thu, ghi thật, áp cloud: bước triển khai có `pg_dump`, Mạnh duyệt; phần cloud Claude chạy qua Management API.
 - Ngoài-5 phần tin ẩn số giữ số ghép, Ngoài-6 (harness `s06-vung-moi`): việc riêng.
 - Sửa số đếm `n_ads` trong `sellers`, nhãn cấp tin của hàng `s03-len-cong`, xác minh số bằng cách gọi.
 
