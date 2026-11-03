@@ -5,7 +5,7 @@ slug: s03-nap-argmax
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-03T04:37:02Z
 approved_by:
@@ -16,7 +16,7 @@ approved_at:
 
 ## Context
 
-`zalo-import-daily.sh` và `apify-facebook-daily.sh` liệt kê bản thu bằng `ls -1d` với glob. Khi đủ 11.082 thư mục, tổng độ dài đường dẫn 1.065.879 byte vượt ARG_MAX 1.048.576 của macOS: `ls` thoát 126, `2>/dev/null` nuốt lỗi, vòng lặp rỗng, job thoát 0. Đo 03/11: bản ghi mới nhất của S03 trong stg là 12:00 VN 02/11, con trỏ state đứng yên, hơn 1.000 bản thu chờ nạp, raw còn nguyên. ZCode sửa ở `zcode/s03-nap-argmax` @ `0fdc00b2`; liên làn thêm test chạy thật khối liệt kê.
+`zalo-import-daily.sh` và `apify-facebook-daily.sh` liệt kê bản thu bằng `ls -1d` với glob. Khi đủ 11.082 thư mục, tổng độ dài đường dẫn 1.065.879 byte vượt ARG_MAX 1.048.576 của macOS: `ls` thoát 126, `2>/dev/null` nuốt lỗi, vòng lặp rỗng, job thoát 0. Đo 03/11: bản ghi mới nhất của S03 trong stg là 12:00 VN 02/11, con trỏ state đứng yên, hơn 1.000 bản thu chờ nạp, raw còn nguyên. ZCode sửa ở `zcode/s03-nap-argmax` @ `0fdc00b2`, vòng 2 `92ee45c4` thêm nhánh danh sách rỗng; liên làn thêm test chạy thật khối liệt kê.
 
 Source input: GIAO claudedp-0311-8, XONG của ZCode lúc 04:24Z 03/11.
 
@@ -24,6 +24,7 @@ Source input: GIAO claudedp-0311-8, XONG của ZCode lúc 04:24Z 03/11.
 
 - AC-1: Given cây thư mục có tổng độ dài đường dẫn vượt ARG_MAX (khuôn `ls` cũ thoát 126 trên chính cây đó), When chạy khối liệt kê của mỗi script, Then thấy đủ mọi bản thu S03 đúng thứ tự mốc, không tính thư mục `.partial`, mốc sai khuôn, hay bản thu nguồn khác.
 - AC-2: Given bước liệt kê lỗi, When chạy khối liệt kê, Then thoát 3 và tệp state giữ nguyên.
+- AC-5: Given `find` thoát 0 mà danh sách rỗng, When state đã có mốc thật, Then thoát 3 và không ghi state; Given state còn giá trị mặc định (lần đầu), Then thoát 0.
 - AC-3: Given hai script, When so khối liệt kê, Then giống hệt nhau; không script nào còn khuôn `ls -1d` với glob bản thu.
 - AC-4: Given các luật nạp cũ (định dạng mốc, khoá state chung, thư mục mồ côi thiếu manifest), When chạy bộ hồi quy, Then vẫn đạt.
 
@@ -37,7 +38,7 @@ Source input: GIAO claudedp-0311-8, XONG của ZCode lúc 04:24Z 03/11.
 ## Coverage
 
 - Trục vượt giới hạn: AC-1, có đối chứng khuôn cũ gãy trên cùng cây.
-- Trục lỗi im lặng: AC-2, chiều không ghi state.
+- Trục lỗi im lặng: AC-2 và AC-5, chiều không ghi state; AC-5 có chiều should-NOT-fire lần đầu chưa có mốc.
 - Trục hai bản lệch nhau: AC-3.
 - Trục hồi quy luật nạp: AC-4.
 

@@ -49,3 +49,10 @@ evals:
     cmd: config:executors.script.zalo_import_job
     expected: "exit 0; toàn bộ ca của job nạp S03 pass"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03na_unit
+    expected: "exit 0; ca rỗng có mốc thoát 3, state không ghi; ca rỗng chưa có mốc thoát 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
