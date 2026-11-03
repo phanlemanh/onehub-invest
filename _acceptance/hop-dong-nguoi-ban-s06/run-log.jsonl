@@ -6,3 +6,19 @@
 {"ts":"2026-11-03T03:42:35Z","round":1,"evalId":"E6","run_id":"hop-dong-nguoi-ban-s06-E6-r1-20261103T034235Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
 {"ts":"2026-11-03T03:42:36Z","round":1,"evalId":"E7","run_id":"hop-dong-nguoi-ban-s06-E7-r1-20261103T034236Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
 {"ts":"2026-11-03T03:42:38Z","round":1,"evalId":"E8","run_id":"hop-dong-nguoi-ban-s06-E8-r1-20261103T034238Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E1","run_id":"hop-dong-nguoi-ban-s06-E1-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/importer-schema-v5.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E2","run_id":"hop-dong-nguoi-ban-s06-E2-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/importer-schema-v5.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E3","run_id":"hop-dong-nguoi-ban-s06-E3-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/importer-schema-v5.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E4","run_id":"hop-dong-nguoi-ban-s06-E4-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E5","run_id":"hop-dong-nguoi-ban-s06-E5-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E6","run_id":"hop-dong-nguoi-ban-s06-E6-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E7","run_id":"hop-dong-nguoi-ban-s06-E7-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
+{"ts":"2026-11-03T05:16:26Z","round":2,"evalId":"E8","run_id":"hop-dong-nguoi-ban-s06-E8-r2-20261103T051626Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-03T05:16:46Z","round":2,"evalId":"E9","run_id":"hop-dong-nguoi-ban-s06-E9-r2-20261103T051646Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"}
+{"ts":"2026-11-03T05:16:26Z","round":2,"evalId":"E10","run_id":"hop-dong-nguoi-ban-s06-E10-r2-20261103T051626Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06.test.mjs"}
+{"ts":"2026-11-03T05:16:46Z","round":2,"evalId":"E11","run_id":"hop-dong-nguoi-ban-s06-E11-r2-20261103T051646Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"}
+{"ts":"2026-11-03T05:16:26Z","round":2,"evalId":"E12","run_id":"hop-dong-nguoi-ban-s06-E12-r2-20261103T051626Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06.test.mjs"}
+{"ts":"2026-11-03T05:16:46Z","round":2,"evalId":"E13","run_id":"hop-dong-nguoi-ban-s06-E13-r2-20261103T051646Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"}
+{"ts":"2026-11-03T05:16:26Z","round":2,"evalId":"E14","run_id":"hop-dong-nguoi-ban-s06-E14-r2-20261103T051626Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06.test.mjs"}
+{"ts":"2026-11-03T05:16:25Z","round":2,"evalId":"E15","run_id":"hop-dong-nguoi-ban-s06-E15-r2-20261103T051625Z","exit_code":0,"cmd":"cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"}
+{"ts":"2026-11-03T05:18:36Z","round":2,"evalId":"SUITE-npm-test","run_id":"hop-dong-nguoi-ban-s06-SUITE-npm-test-r2-20261103T051836Z","exit_code":0,"cmd":"cd pipeline && npm test"}
