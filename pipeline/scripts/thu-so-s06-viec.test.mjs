@@ -96,6 +96,14 @@ test("pha 2 đã bỏ: thoát khác 0, không chạy", () => {
   assert.match(r.stderr, /pha 2 đã bỏ/);
 });
 
+test("--threads lớn hơn 2: thoát 1; 2 luồng vẫn qua được bước kiểm", () => {
+  const r = chay(["--phase", "1", "--threads", "3", "--minutes", "0"]);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /--threads > 2 không được duyệt/);
+  const hai = chay(["--phase", "1", "--threads", "2", "--minutes", "0"], { base: null });
+  assert.match(hai.stderr, /thiếu env S06_WEB_BASE/, "2 luồng phải đi qua trần, dừng ở bước kiểm env");
+});
+
 test("thiếu S06_WEB_BASE: thoát khác 0, không có miền mặc định", () => {
   const r = chay(["--phase", "1", "--minutes", "0"], { base: null });
   assert.equal(r.status, 1);

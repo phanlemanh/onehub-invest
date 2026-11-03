@@ -96,5 +96,12 @@ evals:
     criterion: AC-12
     executor: script
     cmd: config:executors.script.hdnb_duong_ra
-    expected: "exit 0; ca chonTinChuaHetHan và ca --threads 3 thoát 1 pass"
+    expected: "exit 0; ca chonTinChuaHetHan pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-12
+    executor: script
+    cmd: config:executors.script.hdnb_viec
+    expected: "exit 0; ca --threads 3 thoát 1; should-NOT-fire: 2 luồng qua được trần"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
