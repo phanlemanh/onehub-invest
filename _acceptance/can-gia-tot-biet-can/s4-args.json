@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-03T12:01:51Z",
-  "generated_sha": "216ca26e365a12098bd4da64d4d1933b5257b8ce",
+  "generated_at": "2026-11-03T13:08:19Z",
+  "generated_sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "can-gia-tot-biet-can",
-  "round": 2,
+  "round": 3,
   "riskTier": "T2",
   "evals": [
     {
@@ -356,8 +356,8 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.36.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813/_acceptance/can-gia-tot-biet-can/contract.md",
-  "invokedAt": "2026-11-03T12:01:51Z",
-  "invokedSha": "216ca26e365a12098bd4da64d4d1933b5257b8ce",
+  "invokedAt": "2026-11-03T13:08:19Z",
+  "invokedSha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
   "vungVat": [
     ".claude/launch.json",
     ".claude/skills/onehub-ui/catalog.md",
@@ -366,6 +366,7 @@
     "_acceptance/can-gia-tot-biet-can/card.html",
     "_acceptance/can-gia-tot-biet-can/design-floor.json",
     "_acceptance/can-gia-tot-biet-can/evals.yaml",
+    "_acceptance/can-gia-tot-biet-can/evidence-page.html",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-network.txt",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step1.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step2.png",
@@ -374,6 +375,7 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4b-lightbox2.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
@@ -486,6 +488,7 @@
     "_acceptance/can-gia-tot-biet-can/design-floor.json",
     "_acceptance/can-gia-tot-biet-can/design-pass.md",
     "_acceptance/can-gia-tot-biet-can/evals.yaml",
+    "_acceptance/can-gia-tot-biet-can/evidence-page.html",
     "_acceptance/can-gia-tot-biet-can/evidence-report.md",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-network.txt",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step1.png",
@@ -495,6 +498,7 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4b-lightbox2.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
@@ -575,6 +579,7 @@
     "_acceptance/can-gia-tot-biet-can/card.html",
     "_acceptance/can-gia-tot-biet-can/design-floor.json",
     "_acceptance/can-gia-tot-biet-can/evals.yaml",
+    "_acceptance/can-gia-tot-biet-can/evidence-page.html",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-network.txt",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step1.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step2.png",
@@ -583,6 +588,7 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4b-lightbox2.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
@@ -675,7 +681,66 @@
       }
     ]
   },
+  "carriedEvals": [
+    {
+      "id": "E12",
+      "runId": "minted-can-gia-tot-biet-can-E12-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-03T12:01:51Z",
+      "cmd": "cd app && node --import tsx --test tests/danh-ba-nguoi-deals-lien-he.test.tsx"
+    }
+  ],
   "carriedFindings": [
+    {
+      "file": "app/src/components/ops/deals-cells.tsx",
+      "title": "HoverCardContent bị ghi đè padding bằng p-1",
+      "severity": "low",
+      "plain": "Thẻ nhỏ hiện khi rê chuột có lề trong hẹp hơn các thẻ khác một chút. Chỉ lệch giao diện, không ảnh hưởng thông tin.",
+      "can_cu": "Hậu quả chỉ là lệch nhẹ về thẩm mỹ, không mất hay lộ dữ liệu, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "app/src/components/ops/deal-body.tsx",
+      "title": "Button link trong dòng Phường bị ghi đè padding bằng px-0",
+      "severity": "low",
+      "plain": "Liên kết ở dòng Phường có khoảng đệm khác các nút còn lại. Người dùng vẫn bấm bình thường.",
+      "can_cu": "Chỉ lệch nhỏ về giao diện, không ảnh hưởng chức năng hay dữ liệu, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "app/src/components/ops/deals-grid.tsx",
+      "title": "Trạng thái rỗng theo tab của bảng không có hành động",
+      "severity": "low",
+      "plain": "Khi một tab như Đủ để gọi hết căn, người vận hành chỉ thấy câu thông báo mà không có nút quay về tab Tất cả. Họ tự bấm tab Tất cả được.",
+      "can_cu": "Người dùng tự quay lại bằng cách bấm tab, không mất dữ liệu, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "app/src/lib/source-roles.ts",
+      "title": "Chú thích «Cloud/DB lỗi → []» nằm sai hàm sau khi tách docSourceNameEntries",
+      "severity": "low",
+      "plain": "Người sửa mã sau này có thể hiểu nhầm cách tên nguồn thật được che khi lỗi. Người dùng hiện tại không thấy gì khác.",
+      "can_cu": "Hiện không ảnh hưởng người dùng, chỉ là nguy cơ nhầm cho người sửa sau; sửa chú thích rất rẻ nhưng chưa gây hại.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "scripts/can-gia-tot-quet-ma.test.mjs",
+      "title": "Hình dạng 5, tuyên quét lớp nhưng đối chứng đỏ chỉ một điểm: deals-gate gộp bảy tệp, chỉ gài vào deals-grid",
+      "severity": "medium",
+      "plain": "Bài quét tự động có thể không bắt được nếu ai đó vô tình đưa đường dẫn ảnh gốc vào vài tệp phụ. Hiện chưa có lỗi thật nào lộ ra.",
+      "can_cu": "Là lỗ hổng của lưới an toàn phụ, chưa gây lộ ảnh cho ai; còn có phép quét khác đỡ, sửa sau không gấp.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
     {
       "file": "app/tests/danh-ba-nguoi-deals-lien-he.test.tsx",
       "title": "Hình dạng 2, fixture viết tay: phần cloud của SHS-AC-6 tự xoá ảnh và chữ bài rồi assert không có chúng",
@@ -688,6 +753,9 @@
     }
   ],
   "deltaFiles": [
+    "_acceptance/can-gia-tot-biet-can/card-plain.json",
+    "_acceptance/can-gia-tot-biet-can/card.html",
+    "_acceptance/can-gia-tot-biet-can/evidence-page.html",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-network.txt",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step1.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step2.png",
@@ -696,6 +764,7 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4b-lightbox2.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
@@ -703,24 +772,19 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step8.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step9.png",
     "_acceptance/can-gia-tot-biet-can/s4-args.json",
-    "_acceptance/config.yaml",
     "app/src/app/ops/deals/[offerId]/page.tsx",
     "app/src/components/ops/deal-body.tsx",
+    "app/src/components/ops/deal-similar.tsx",
     "app/src/components/ops/deals-cells.tsx",
     "app/src/components/ops/deals-grid.tsx",
     "app/src/lib/deals-chi-tiet.ts",
-    "app/src/lib/deals.ts",
-    "app/src/lib/source-roles.ts",
     "app/tests/can-gia-tot-biet-can.test.tsx",
-    "app/tests/can-gia-tot-doi-chieu.test.tsx",
-    "app/tests/viewer-the-duyet.test.tsx",
-    "scripts/can-gia-tot-ba-vai.mjs",
-    "scripts/can-gia-tot-quet-ma.test.mjs"
+    "app/tests/ops-nhan/visible-strings.ts"
   ],
   "thuocChup": {
-    "sha": "216ca26e365a12098bd4da64d4d1933b5257b8ce",
+    "sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
     "n": 234,
-    "digest": "d713e5458d2a9ef77a39efcceb8d07d94efbeebc9e31eb12d02b9ad50425c6f0",
+    "digest": "f643869b6627eae3111c63c82a292bbb9d80e92e53dab7e8f16c502bfcfddc27",
     "tep": {
       "_acceptance/can-gia-tot-biet-can/evals.yaml": "0dad7897d3acf33f2df7a37ff140d0a6847e568cba65f52d6171b2776483853c",
       "_acceptance/config.yaml": "3f4b11b3ae66d9a14f9c328c90352fb9004d478ce9af4baa61c4170aa09c50e5",
@@ -769,7 +833,7 @@
       "app/tests/audit-loc.test.tsx": "09835b9b9b67ef4df09a3310b2a1c3bcdf37de92eb2943915aff01f379b66ab6",
       "app/tests/auth-error-thu-lai-retry.test.tsx": "c0a032efda2c1ad927cdba948449176bf613cdf0290722ba4c46ef18898bdc9c",
       "app/tests/auth-hop-chuan.test.tsx": "17d76f1ddcdecaf7b9eeed8562795cf6a4dbfc8d6edd711b49063f6d7524d5f0",
-      "app/tests/can-gia-tot-biet-can.test.tsx": "4ec35427d6a0e9320c17383ee0fb4fe175a6b4be325928c584f40eb5cedbc2f6",
+      "app/tests/can-gia-tot-biet-can.test.tsx": "2ae78f081c4cffbe8dfd28f56f39af92e4d667e9e3e68e14f2132fc36ffd1e8e",
       "app/tests/can-gia-tot-doi-chieu.test.tsx": "db25cbccf2e0fa31df7546bbb515573e393617bf244cec091f4d3971c0a0338c",
       "app/tests/che-do-thu.test.tsx": "d53f15908981c2649834bbb3607a5612e8834998d1da89188eeac57b21a074bf",
       "app/tests/collections-khong-so-s02.test.tsx": "71f522e4f8d6229916fc3736a7f0a965442902622afd7c6f468dba9d4905c1c1",
@@ -959,7 +1023,7 @@
     }
   },
   "cayChup": {
-    "sha": "216ca26e365a12098bd4da64d4d1933b5257b8ce",
+    "sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
     "ban": {},
     "chuaTheoDoi": []
   }

@@ -1,7 +1,10 @@
-E9 network (driver ego-browser: khong co tool doc network/console; so lieu lay tu performance.getEntriesByType("resource") sau luot 1280 sang, 4 can qua J)
-img /api/zalo-media status=200 x7
-img /api/zalo-media status=502 x6   (anh cua can chi con link het han theo E10: 0/5 duong ?media= tai duoc; static asset app-origin: chi ghi chu)
-script/link /_next/static/* status=200 x40
-Khong thay fetch/XHR toi /api/v1 hay route khac loi; khong thay request third-party.
-Console: khong doc duoc (driver). networkObserved = n-a (driver).
-Tel click: bam that vao a[href^="tel:"] cua hang 2, listener bat su kien + preventDefault de khong goi that; dialog khong mo.
+E9 network (driver ego-browser: khong co read_network_requests; dung Resource Timing responseStatus trong trang, 4 can mo sheet)
+Console: khong doc duoc qua driver nay
+{
+ "link app-origin /_next/* status=200": 8,
+ "script app-origin /_next/* status=200": 32,
+ "img app-origin /api/zalo-media?snapshot= status=200": 7,
+ "img app-origin /api/zalo-media?media= status=502": 6
+}
+
+Ghi chu: 502 tren img /api/zalo-media?media= la anh tai qua proxy cua can 2 (link goc het han, khop E10: 'chi con link het han 1'); static asset -> chi note. Khong co fetch/XHR app-origin loi, khong co third-party.
