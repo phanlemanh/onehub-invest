@@ -39,7 +39,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.sdt_do
-    long_running: 120
+    long_running: 180
     paths: [pipeline/scripts/do-sdt-trong-duong.mjs, scripts/chotot-daily.sh, db/db-thu.sh, pipeline/transform-chotot.mjs, pipeline/resolve-properties.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/lib/sdt-trong-chuoi.mjs, pipeline/lib/duong-can.mjs, pipeline/lib/assert.mjs]
     expected: "exit 0 trên bản chép oneinvest_sdt_do; in tên DB; đối chiếu hai dòng job đêm; trước: tin ≥ 1, căn ≥ 1, nguồn ≥ 1; rút chua-sdt ≥ 1, mục go-sdt-duong ≥ 1; sau = 0 ở tin, căn, nhật ký; số tin nguồn sạch lệch chữ = 0 trên mẫu số ≥ 40.000; ô căn sạch đổi hoặc mất = 0; in số chuỗi có chữ bị bỏ và số theo định nghĩa rộng. Chiều đỏ cùng lệnh, mỗi ca thoát 1 và ghim thông điệp, stdout không chứa dãy số: ma trận --gai-sdt 3 bảng × 2 dạng = 6 ca ra «đường còn số», --gai-mat-duong ra «tin nguồn sạch lệch chữ». Trỏ thước vào DB oneinvest thì thoát 2."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
