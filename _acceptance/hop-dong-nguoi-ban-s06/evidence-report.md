@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7fcb0775d97fec0af8a7acde313888981235f601
+verified_commit: d6418b53cde84d7b8134ec0784531ff2e4260439
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -323,3 +323,7 @@ sha: 6fd91d9fa783dbd5f71721d13f4f40aa2a211ade · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-03, do gộp main sau PR 295, 296, 297; hai lượt trước đỏ do deadlock với enrich S03 đang chạy thật, nay enrich đã xong, mã bộ thu và bộ nạp không đổi
 run_id: repin-20261103T103624Z-83428
 sha: 7fcb0775d97fec0af8a7acde313888981235f601 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-11-03, do đổi tên nguồn thành mã S02 ở một dòng hợp đồng dữ liệu, mã không đổi
+run_id: repin-20261103T105820Z-28457
+sha: d6418b53cde84d7b8134ec0784531ff2e4260439 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
