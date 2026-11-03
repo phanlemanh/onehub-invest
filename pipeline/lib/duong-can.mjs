@@ -1,0 +1,79 @@
+// duong-can.mjs — DS1: căn nhận đường từ tin của nó, cuối Stage A của resolve-properties. Chỉ điền ô đang trống, lấy từ tin
+// còn sống có đường thấy gần nhất (hoà thì offer_id nhỏ nhất), mỗi ô điền ghi một mục enrichment_log. Cùng nếp COALESCE của 066.
+// `q` là client đã bọc thử lại deadlock (thu-lai-deadlock.mjs).
+
+import { MAU_DAY_SO } from "./sdt-trong-chuoi.mjs";
+
+const SRC = "resolve-properties";
+
+/**
+ * Ô căn mang số điện thoại về NULL, hồ sơ sdt-trong-ten-duong. Mục log không ghi giá trị vì enrichment_log lên cloud; mục `street`
+ * cũ mang số thì bỏ giá trị, giữ dòng, gắn `che`. Hoàn tác không đụng mục đã che vì không còn giá trị để so.
+ * @returns {Promise<number>} số ô đã gỡ
+ */
+export async function goSdtKhoiCan(q) {
+  const { rowCount } = await q.query(
+    `UPDATE properties
+        SET street = NULL,
+            enrichment_log = enrichment_log || jsonb_build_array(jsonb_build_object(
+              'src', 'go-sdt-duong', 'field', 'street', 'ly_do', 'chua-sdt', 'at', now()))
+      WHERE street ~ $1`,
+    [MAU_DAY_SO],
+  );
+  await q.query(
+    `UPDATE properties p
+        SET enrichment_log = (
+          SELECT jsonb_agg(CASE WHEN e->>'field' = 'street' AND e->>'value' ~ $1
+                                THEN (e - 'value') || jsonb_build_object('che', 'chua-sdt') ELSE e END ORDER BY i)
+            FROM jsonb_array_elements(p.enrichment_log) WITH ORDINALITY t(e, i))
+      WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(p.enrichment_log) x WHERE x->>'field' = 'street' AND x->>'value' ~ $1)`,
+    [MAU_DAY_SO],
+  );
+  return rowCount;
+}
+
+/** @returns {Promise<number>} số căn vừa được điền */
+export async function dienDuongCan(q) {
+  const { rowCount } = await q.query(
+    `WITH chon AS (
+       SELECT DISTINCT ON (po.property_id) po.property_id, o.street_raw, o.offer_id
+         FROM property_offers po
+         JOIN sale_offers o ON o.offer_id = po.offer_id
+        WHERE NULLIF(btrim(o.street_raw), '') IS NOT NULL AND o.street_raw !~ $2
+        ORDER BY po.property_id, o.last_seen DESC, o.offer_id ASC)
+     UPDATE properties p
+        SET street = chon.street_raw,
+            enrichment_log = p.enrichment_log || jsonb_build_array(jsonb_build_object(
+              'src', $1::text, 'field', 'street', 'value', chon.street_raw, 'offer_id', chon.offer_id, 'at', now()))
+       FROM chon
+      WHERE p.id = chon.property_id AND NULLIF(btrim(p.street), '') IS NULL`,
+    [SRC, MAU_DAY_SO],
+  );
+  return rowCount;
+}
+
+/**
+ * Trả về trống đúng các ô do dienDuongCan điền: mục cuối của nguồn này chưa hoàn tác và ô còn đúng giá trị đã ghi. Mỗi ô trả về
+ * thêm một mục `hoan_tac`, log không bị xoá.
+ * @returns {Promise<number>} số ô đã trả về trống
+ */
+export async function hoanTacDuong(q) {
+  const { rowCount } = await q.query(
+    `WITH cuoi AS (
+       SELECT p.id, e.muc
+         FROM properties p
+         CROSS JOIN LATERAL (
+           SELECT x AS muc FROM jsonb_array_elements(p.enrichment_log) WITH ORDINALITY t(x, i)
+            WHERE x->>'src' = $1 AND x->>'field' = 'street'
+            ORDER BY i DESC LIMIT 1) e
+        WHERE NOT e.muc ? 'hoan_tac')
+     UPDATE properties p
+        SET street = NULL,
+            enrichment_log = p.enrichment_log || jsonb_build_array(jsonb_build_object(
+              'src', $1::text, 'field', 'street', 'value', p.street, 'hoan_tac', true, 'at', now()))
+       FROM cuoi
+      WHERE p.id = cuoi.id AND p.street = cuoi.muc->>'value'`,
+    [SRC],
+  );
+  return rowCount;
+}

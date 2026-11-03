@@ -141,7 +141,7 @@ async function banSao(sua: (src: string) => string) {
 // ---- E4: bộ lọc, thứ tự, trang, trường ----
 const TRUONG = [
   "areaM2", "bathrooms", "bedrooms", "firstSeenDays", "frontageLength", "hasPhone", "kind", "offerId", "priceVnd", "pricePerm2",
-  "propertyType", "sellerManyNames", "sellerName", "stories", "street", "updatedAt", "ward",
+  "propertyType", "sellerManyNames", "sellerName", "stories", "street", "unverified", "updatedAt", "ward",
 ]
 
 test("E4 ma trận bộ lọc: mỗi ô một tin vào, một tin loại", async () => {

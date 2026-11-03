@@ -7,6 +7,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { dienDuongCan, goSdtKhoiCan, hoanTacDuong } from "./lib/duong-can.mjs";
 import { boc } from "./lib/thu-lai-deadlock.mjs";
 
 const DB_URL =
@@ -17,6 +18,11 @@ const CLUSTER_EXPR = `
     || '|' || o.kind || '|' || COALESCE(o.property_type, '?')
     || '|' || round(o.area_m2)::text
     || '|' || round(o.price_vnd / 1e6)::text`;
+
+// Tin cấp thị trường (s03-len-cong AC-3) không dựng căn: căn mang mã thị trường là thước giá có dòng cấp thị trường.
+// Tin chưa có area_id vẫn dựng như cũ, nên không JOIN.
+const KHONG_CAP_THI_TRUONG = `
+  NOT EXISTS (SELECT 1 FROM areas x WHERE x.id = o.area_id AND x.region_type = 'market')`;
 
 /** Một lượt resolve trên client đã kết nối. Mọi câu đi qua bộ thử lại deadlock (hồ sơ resolve-thu-lai-deadlock):
  *  câu bị Postgres huỷ vì 40P01 được chạy lại, tối đa 3 lần. opts tiêm cho test; mặc định là chạy thật. */
@@ -34,7 +40,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
         JOIN stg_chotot_ads s
           ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
         WHERE o.source = 'S06' AND s.latitude IS NOT NULL
-          AND o.area_m2 IS NOT NULL AND o.price_vnd > 0)
+          AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
+          AND ${KHONG_CAP_THI_TRUONG})
       SELECT cluster_key, count(*)::int n,
              min(first_seen) fs, max(last_seen) ls,
              (array_agg(area_id ORDER BY last_seen DESC))[1] area_id,
@@ -79,6 +86,7 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
            ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
          WHERE o.source='S06' AND s.latitude IS NOT NULL
            AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
+           AND ${KHONG_CAP_THI_TRUONG}
            AND ${CLUSTER_EXPR} = $2
          ON CONFLICT (property_id, offer_id) DO NOTHING`,
         [pid, cl.cluster_key],
@@ -88,6 +96,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
     ghi(
       `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) | ${nEvidence} offers`,
     );
+    ghi(`Stage A: gỡ ${await goSdtKhoiCan(q)} ô đường mang số`);
+    ghi(`Stage A: điền đường ${await dienDuongCan(q)} căn đang trống`);
 
     // ── Stage B: cặp ứng viên P1↔P2 (cùng phường, DT ±15%, giá/m² ±20%) ──
     await q.query(`DELETE FROM property_candidates WHERE status IN ('pending','needs_llm')`);
@@ -95,6 +105,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
       WITH p1 AS (
         SELECT o.offer_id, o.area_id, o.area_m2, o.price_perm2
         FROM sale_offers o
+        -- Tin cấp thị trường (s03-len-cong AC-3) không có phường để so: «cùng area_id» ở đây chỉ có nghĩa khi là phường.
+        JOIN areas x ON x.id = o.area_id AND x.region_type <> 'market'
         WHERE o.source IN ('S03','S05') AND o.kind='sale'
           AND o.confidence IN ('high','medium')
           AND o.area_m2 BETWEEN 20 AND 500 AND o.price_perm2 BETWEEN 10e6 AND 300e6),
@@ -134,7 +146,11 @@ async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    await chayResolve(c);
+    if (process.argv.includes("--hoan-tac-duong")) {
+      console.log(`resolve-properties: trả về trống ${await hoanTacDuong(boc(c))} ô đường`);
+    } else {
+      await chayResolve(c);
+    }
   } finally {
     await c.end();
   }

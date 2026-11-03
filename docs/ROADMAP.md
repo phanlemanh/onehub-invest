@@ -112,6 +112,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
   Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
+- S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
@@ -167,6 +168,11 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và
   `stg_chotot_ads.images`; `/ops/review` và hồ sơ tin `/ops/data-flow` đọc bảng này (tin S06 có ảnh). Chỉ máy thu:
   không vào FILL, leak gate đếm `media` — `_acceptance/media-canonical-reso`.
+- Đường của tin S06 (DS1): `docDuong` đọc `payload.street_name` thành phát biểu `street_raw` (`source_field`), bỏ địa danh
+  hành chính và chuỗi mã hoá; nguồn bỏ trống thì `retractRule` rút phát biểu. Căn nhận đường ở Stage A của
+  `resolve-properties` (`lib/duong-can.mjs`: ô trống, tin thấy gần nhất, ghi `enrichment_log`); `--hoan-tac-duong` trả về
+  trống. Đo trên bản chép 03/11: tin 98,0%, căn 98,1%. Dự án của tin và căn ở hàng DS2 —
+  `_acceptance/s06-duong-du-an-len-tin`.
 - Thẻ duyệt đủ căn cứ (PL3): sheet `/ops/review` hiện bảng so mười trường Tin A/Tin B kèm lớp căn cứ + phương pháp đọc từ
   `sale_offers.field_provenance` (`lib/ops/review-can-cu.ts`), toàn văn đọc lại ở máy thu theo `post_ids` (S03, S05) và
   `stg_chotot_ads.payload.body` (S06) (`lib/ops/review-context.ts`), không độ tự tin/điểm Stage B, suy luận AI tách khỏi
@@ -393,6 +399,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    cửa vào (ADR-0017 §6 sửa). Vật thể ra khỏi máy thu khi có tin hoặc có xác nhận; thứ chỉ từ S08 ở lại, kể cả tên toà
    (ADR-0016 §9 sửa). Lát đầu Ocean Park 1 và Grand Park cao tầng, mở thêm bằng cấu hình. Không trả theo lượt; hai công ty độc
    lập cùng giá trị thì lên lớp sự thật. Hàng: DB1, DN1–DN4; mục chờ DN5–DN7.
+29. **S01 thu theo ID có trong danh sách S02** (03/11, Mạnh chốt «Cho dùng ID S02», sửa luật 5 và ADR-0009): tìm kiếm S01 chạm
+    trần 15 trang nên chỉ phủ khoảng 2,3% số căn hoạt động ở 3 thành phố. Mở thẳng trang chi tiết theo ID; số S02 không lên cổng, doanh thu
+    S02 chỉ xếp thứ tự. Đo thử 100 căn trước (`claudedp-0311-13`), chạy lớn theo nấc 200 → 500 → 1.000 → 2.000 căn/đêm sau 05/11, đứng trên hàng ZC5.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -404,6 +413,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
 > **LS1 (03/11):** lệnh đọc toàn bộ S03 đã viết, chưa chạy thật; mẫu 383 bài và lượt chính chờ chữ ký hồ sơ `s03-llm-doc-toan-bo`.
+>
+> **SL1 (03/11):** mã, migration 069 và nhãn đã ký hồ sơ `s03-len-cong`; số đo trên DB thử: 962 tin lên cổng, sai nặng 2/30 (nhãn do tác tử gắn). Trên cloud chưa đạt tới khi Mạnh duyệt sổ nhóm và giám sát xếp lượt áp 069, sổ, nạp lại.
 
 > **Sửa 02/11 (Mạnh chốt):** mốc S06 29.762 không phải tin bán; đo ngày 02/11: bán 20.873, thuê 27.626. S06 báo tách bán, thuê;
 > đích là độ phủ so với tổng nguồn báo, con số 45.000 chỉ để tham khảo. Chất lượng chỉ đo, không chặn. Tám chỉ số, kế hoạch ba
@@ -451,6 +462,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
 | DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
+| DS1 | Đường của tin S06 đi tới tin và căn, không migration — `_acceptance/s06-duong-du-an-len-tin` | 🔶 vòng S4; sau merge: job đêm tự chạy, lượt đầu đo 74 phút trên bản chép, đồng bộ cloud đầu chở khoảng 39.000 tin đổi đường; sau job đêm chạy `node pipeline/scripts/do-duong-s06.mjs --chi-doc` |
 | PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
 | SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |

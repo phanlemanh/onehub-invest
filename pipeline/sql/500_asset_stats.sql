@@ -10,8 +10,9 @@ SELECT o.area_id, 'sale', count(*),
        percentile_cont(0.5) WITHIN GROUP (ORDER BY o.price_perm2),
        NULL, now()
 FROM sale_offers o
-WHERE o.kind = 'sale' AND o.area_id IS NOT NULL AND o.confidence IN ('high','medium')
+WHERE o.kind = 'sale' AND o.confidence IN ('high','medium')
   AND o.price_perm2 IS NOT NULL
+  AND o.area_id IN (SELECT id FROM areas WHERE region_type = 'submarket')   -- theo phường: tin S03 chỉ biết thị trường không vào
 GROUP BY o.area_id
 HAVING count(*) >= 3;
 
@@ -24,8 +25,9 @@ SELECT o.area_id, 'rent_lt', count(*),
        NULL,
        percentile_cont(0.5) WITHIN GROUP (ORDER BY o.price_vnd), now()
 FROM sale_offers o
-WHERE o.kind = 'rent_lt' AND o.area_id IS NOT NULL AND o.confidence IN ('high','medium')
+WHERE o.kind = 'rent_lt' AND o.confidence IN ('high','medium')
   AND o.price_vnd IS NOT NULL
+  AND o.area_id IN (SELECT id FROM areas WHERE region_type = 'submarket')
 GROUP BY o.area_id
 HAVING count(*) >= 3;
 

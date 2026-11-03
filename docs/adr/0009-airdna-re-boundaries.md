@@ -33,3 +33,9 @@ từ trước tới nay — cần ranh giới tự đặt trước khi làm.
 - Collector RE AirDNA mới (`airdna-listings`, `airdna-history`) phải qua cổng
   CCP scheduler như mọi collector; audit log volume.
 - Mọi kết luận khảo sát cite evidence REA trong `research-local/` (không commit).
+
+## Sửa đổi 2026-11-03
+
+Mạnh chốt: được dùng ID căn S01 có trong danh sách S02 làm danh sách thu S01, mở thẳng trang chi tiết, không qua tìm kiếm.
+Dữ liệu lên cổng vẫn do S01 tự thu. Số S02 vẫn không lên cổng; doanh thu S02 chỉ dùng xếp thứ tự thu. Điều 3, 4, 5 không đổi.
+Chưa đọc ToS của S02 về cách dùng này; rủi ro đã nêu với Mạnh trước khi chốt: tài khoản bị khoá thì mất nguồn hiệu chuẩn, dữ liệu đã thu vẫn còn.

@@ -59,6 +59,21 @@ export async function writeAssertions(client, rows, { replaceOwn = false } = {})
   return { inserted: res.rowCount, retracted };
 }
 
+/**
+ * Rút phát biểu sống của một luật đọc ở các chủ thể mà lượt này không còn đọc ra giá trị — `replaceOwn` chỉ thay khi lượt có
+ * giá trị mới, nguồn bỏ trống thì phát biểu cũ vẫn sống. Dùng trước khi phân xử.
+ * @returns {Promise<number>} số phát biểu đã rút
+ */
+export async function retractRule(client, subjectKeys, field, ruleId, reason) {
+  if (!subjectKeys.length) return 0;
+  const res = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = $4
+      WHERE retracted_at IS NULL AND subject_key = ANY($1::text[]) AND field = $2 AND rule_id = $3`,
+    [subjectKeys, field, ruleId, reason],
+  );
+  return res.rowCount;
+}
+
 /** Cổng «chưa cắt chuyển» (045): ném trước khi bộ ghi đụng dòng nào — cùng thông điệp với hàm SQL. */
 export async function kiemCatChuyen(client) {
   const { rows } = await client.query(
@@ -106,4 +121,36 @@ export function phatBieuToaTruc(source, bai, methodVersion) {
     ...(p.block ? [dong(p, ASSERTION_FIELD.block_raw, p.block)] : []),
     ...(p.unit ? [dong(p, ASSERTION_FIELD.unit_number, p.unit)] : []),
   ]);
+}
+
+/**
+ * Phát biểu loại hình của bộ đọc tin S03 (hồ sơ s03-len-cong): đọc từ chữ là quan sát, suy từ nhóm là suy luận, cùng phương pháp
+ * luật. Bài không có loại hình thì không có dòng.
+ * @param {string} source
+ * @param {Array<{post_id: string, posted_at: string|Date|null, loaiHinh?: string|null, nguonLoaiHinh?: "chu"|"nhom"|null}>} bai
+ * @param {string} methodVersion
+ */
+export function phatBieuLoaiHinh(source, bai, methodVersion) {
+  return bai.filter((p) => p.loaiHinh).map((p) => ({
+    subject_key: subjectKey(source, p.post_id), field: ENRICH_FIELD.property_type, value: p.loaiHinh,
+    evidence_tier: p.nguonLoaiHinh === "chu" ? EVIDENCE_TIER.observed : EVIDENCE_TIER.inferred,
+    method: ASSERTION_METHOD.e1_rule, method_version: methodVersion,
+    rule_id: p.nguonLoaiHinh === "chu" ? "loai-hinh-chu" : "loai-hinh-nhom", observed_at: p.posted_at ?? null,
+  }));
+}
+
+/**
+ * Rút phát biểu loại hình cùng phiên bản bộ đọc mà lượt này không phát biểu lại (nhóm tụt ngưỡng, đổi đa số trên bài khác).
+ * @param {import("pg").Client} client
+ * @param {string[]} giu chủ thể lượt này có phát biểu
+ * @param {string} methodVersion
+ * @returns {Promise<number>} số dòng rút
+ */
+export async function rutLoaiHinhCu(client, giu, methodVersion) {
+  const res = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'thay-boi-luot'
+      WHERE retracted_at IS NULL AND field = $1 AND method = $2 AND method_version = $3 AND NOT (subject_key = ANY ($4::text[]))`,
+    [ENRICH_FIELD.property_type, ASSERTION_METHOD.e1_rule, methodVersion, giu],
+  );
+  return res.rowCount;
 }
