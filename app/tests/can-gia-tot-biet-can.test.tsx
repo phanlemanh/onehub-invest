@@ -25,6 +25,7 @@ const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const ROOT = resolve(APP, "..")
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 const SQL_034 = readFileSync(join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8")
+const SQL_070 = readFileSync(join(ROOT, "db/migrations/070_nhan_so_ghep.sql"), "utf8")
 const BANG = ["sale_offer_records", "properties", "property_offers", "areas", "stg_zalo_posts", "registry_aliases", "parties", "ref_lookup", "media", "source_registry"]
 
 // ---- jsdom ----
@@ -109,7 +110,7 @@ async function withTx<T>(fn: (c: pg.Client, sc: string) => Promise<T>): Promise<
   try {
     await c.query("BEGIN")
     const sc = await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "cgt" })
-    await c.query("CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL")
+    await c.query(SQL_070) // view thật: CLOUD_ALLOW đòi cột tính seller_phone_inferred
     await c.query(SQL_034)
     await c.query(MIG_060)
     await c.query(`INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S07', $1, 'Nguồn thử')`, [TEN_NGUON])
