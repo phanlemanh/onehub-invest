@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6090f7f333cc6928f7f62917c2be5546000cce45
+verified_commit: cad0b98579c47ed1738cd8b1cf9ef579fdf8b59f
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -224,3 +224,7 @@ sha: 4c19ef56465e966b6a0fbd70b4ef08e634f0cd1f · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-03, do AC-10 nạp lại migration cũ chạy được khi view đã có cột của 070
 run_id: repin-20261103T142825Z-54935
 sha: 6090f7f333cc6928f7f62917c2be5546000cce45 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 3 — 2026-11-03, do gộp main sau khi #298 vào, sửa ca SG-AC-7
+run_id: repin-20261103T154409Z-35460
+sha: cad0b98579c47ed1738cd8b1cf9ef579fdf8b59f · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 (E10 không khai paths) · diff chạm vật đo ngoài làn máy: E8u — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
