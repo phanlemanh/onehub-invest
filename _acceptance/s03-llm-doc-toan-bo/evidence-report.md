@@ -112,7 +112,7 @@ human_signoff: Mạnh 2026-11-03
   run_id: minted-s03-llm-doc-toan-bo-E12-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui_check
+  verifier: scripts/ui-capture-login.mjs
   verified_at: 2026-11-02T23:04:33Z
   screenshot: evidence/E12-step1.png
   observed: |
