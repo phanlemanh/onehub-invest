@@ -6,7 +6,7 @@ evals:
     criterion: AC-1
     executor: test
     layer: backend-effect
-    cmd: "config:executors.test.kd_test"
+    cmd: config:executors.test.kd_test
     expected: "Ca KD-AC-1 xanh: bảng 10 ô viết trước, số assert bằng 10, mỗi ô ghim detail và status của danh-ba-sdt:n3 qua docDuLieu, tinhSo, veDong thật; dấu từ ganSdtS06. Chiều đỏ cùng ô, ghim «KD-AC-1 đối chứng»: câu đếm cũ đỏ giả ở ô ghép chưa bí danh, câu thiếu vế bí danh đỏ giả ở ô ghép đã có bí danh."
     paths: ["pipeline/do-danh-ba-sdt.mjs", "pipeline/lib/danh-ba-nguoi.mjs", "pipeline/scripts/kiem-do-sau-070.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -14,7 +14,7 @@ evals:
     criterion: AC-2
     executor: test
     layer: backend-effect
-    cmd: "config:executors.test.kd_test"
+    cmd: config:executors.test.kd_test
     expected: "Ca KD-AC-2 xanh: sau dungNguoi n3 pass với sellers=3 sdt_tren_tin=3; số mới chưa có bí danh thì fail, dựng lại thì pass."
     paths: ["pipeline/do-danh-ba-sdt.mjs", "pipeline/lib/danh-ba-nguoi.mjs", "pipeline/scripts/kiem-do-sau-070.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -22,7 +22,7 @@ evals:
     criterion: AC-3
     executor: test
     layer: backend-effect
-    cmd: "config:executors.test.kd_test"
+    cmd: config:executors.test.kd_test
     expected: "Ma trận bốn migration × hai trạng thái view; chạy thẳng câu view báo «cannot drop columns from view», qua sqlNapLai không lỗi và view còn cột (cặp hai chiều trên cùng lược đồ)."
     paths: ["pipeline/lib/nap-view-song.mjs", "pipeline/lib/nap-070.mjs", "pipeline/scripts/kiem-do-sau-070.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -30,7 +30,7 @@ evals:
     criterion: AC-4
     executor: script
     layer: backend-effect
-    cmd: "config:executors.script.kd_that"
+    cmd: config:executors.script.kd_that
     expected: "Năm bộ trên bản chép đã áp 070, 068: 0 lỗi view, 0 ca bỏ qua; không ca đỏ nào ngoài ND-AC-1, PD-AC-8, DT-AC-8 CLOUD_ALLOW, DT-AC-7 lượt gốc và mỗi ca đỏ mang đúng lý do đã đo; số ca xanh không dưới mức đo trước khi áp. Đối chứng cùng DB: MIG_061 nạp thẳng báo lỗi view, qua napDacTrung thì không; bản 174c302a của hai bộ gọi thẳng migration báo lỗi view. Bộ phán tự kiểm trước khi đo: lỗi view, đỏ lạ, đỏ lý do khác, thiếu xanh, bỏ qua, sập không ca đều cho vi phạm."
     paths: ["pipeline/lib/nap-view-song.mjs", "pipeline/lib/nap-061.mjs", "pipeline/scripts/nap-lai-db.itest.mjs", "pipeline/scripts/phat-bieu-db.itest.mjs", "_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -38,7 +38,7 @@ evals:
     criterion: AC-5
     executor: script
     layer: backend-effect
-    cmd: "config:executors.script.kd_that"
+    cmd: config:executors.script.kd_that
     expected: "Tập cột sale_offers của oneinvest trước và sau đo bằng nhau; git diff so 174c302a không đổi tệp migration có từ trước. Đối chứng: phép so đỏ khi tập cột khác (thông điệp ghim)."
     paths: ["_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
