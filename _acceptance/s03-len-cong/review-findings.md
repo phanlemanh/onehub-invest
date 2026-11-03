@@ -88,8 +88,8 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Tin nhóm Facebook S05 lên cổng không có nhãn «Chưa xác minh» (r4)**
-  Người dùng thấy gì: Tin lấy từ nhóm Facebook hiện trên trang tin rao mà không có nhãn «Chưa xác minh», nên người xem tưởng tin đã được đối chiếu.
+- **Tin nhóm S05 lên cổng không có nhãn «Chưa xác minh» (r4)**
+  Người dùng thấy gì: Tin lấy từ nhóm S05 hiện trên trang tin rao mà không có nhãn «Chưa xác minh», nên người xem tưởng tin đã được đối chiếu.
   Căn cứ: Hiện chỉ có một tin như vậy trên cổng, nên người dùng ít gặp; việc có mở nhãn sang nguồn này hay không là quyết định sản phẩm của người ký.
   file: `app/src/lib/offers-filters.ts`
   severity: low
