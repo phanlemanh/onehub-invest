@@ -5,7 +5,7 @@ slug: hop-dong-nguoi-ban-s06
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-03T03:35:38Z
 approved_by:
