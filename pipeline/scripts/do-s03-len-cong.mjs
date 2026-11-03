@@ -349,6 +349,29 @@ export function kiemDong(dong, ten, coSan) {
   }
   return [...new Set(loi)];
 }
+// Đoạn chữ bài dán vào dòng thêm: so từng cửa sổ 40 ký tự liên tiếp, không phụ thuộc dấu nháy; chép ngắn hơn 40 ký tự không bắt được.
+const DAI_CHU_BAI = 40;
+const gopTrang = (s) => s.replace(/\s+/g, " ");
+/** Trả chỗ `tep:so` có cửa sổ trùng chữ bài; không bao giờ trả chính đoạn chữ. */
+export function kiemChuBai(dong, baiViet, dai = DAI_CHU_BAI) {
+  const cua = new Map();
+  for (const { tep, so, dong: d } of dong) {
+    const t = gopTrang(d);
+    for (let i = 0; i + dai <= t.length; i++) {
+      const k = t.slice(i, i + dai);
+      if (!cua.has(k)) cua.set(k, `${tep}:${so}`);
+    }
+  }
+  const trung = new Set();
+  for (const bai of baiViet) {
+    const t = gopTrang(bai);
+    for (let i = 0; i + dai <= t.length; i++) {
+      const cho = cua.get(t.slice(i, i + dai));
+      if (cho) trung.add(cho);
+    }
+  }
+  return [...trung];
+}
 function dongThem(base) {
   const out = [];
   let tep = null, so = 0;
@@ -370,13 +393,15 @@ async function ranh() {
   const loi = [];
   for (const f of doi) if (TEP_CAM.some((r) => r.test(f))) loi.push(`SL1-AC-10 tệp cấm đổi: ${f}`);
   if (spawnSync("git", ["-C", GOC, "check-ignore", "-q", "research-local/s03-len-cong/so-nhom-nhap.json"]).status !== 0) loi.push("SL1-AC-10 sổ nháp không bị ignore");
-  const { ten, khoa, tenNhom } = await trongGiaoDich(async (c) => ({
+  const { ten, khoa, tenNhom, baiViet } = await trongGiaoDich(async (c) => ({
     ten: (await c.query(`SELECT DISTINCT code, x FROM (SELECT code, real_name AS x FROM source_registry
        UNION ALL SELECT code, unnest(source_ids) FROM source_registry) t WHERE length(x) >= 3`)).rows.map((r) => ({ code: r.code, realName: r.x })),
     khoa: (await c.query("SELECT group_key FROM collection_units WHERE source_code = 'S03' AND length(group_key) >= 8")).rows.map((r) => r.group_key),
     tenNhom: (await c.query("SELECT DISTINCT group_name FROM stg_zalo_posts WHERE length(group_name) >= 8")).rows.map((r) => r.group_name),
+    baiViet: (await c.query("SELECT DISTINCT text FROM stg_zalo_posts WHERE length(text) >= $1", [DAI_CHU_BAI])).rows.map((r) => r.text),
   }));
   if (!ten.length) throw new Error("SL1-AC-10: source_registry rỗng, không đo được");
+  if (!baiViet.length) throw new Error("SL1-AC-10: stg_zalo_posts rỗng, không đo được chữ bài");
   const dong = dongThem(base);
   const nho = new Map();
   const coSan = (tok) => {
@@ -388,26 +413,20 @@ async function ranh() {
   };
   const THA = /^(PRODUCT-MAP\.md|LO-TRINH\.html)$/; // máy sinh từ hồ sơ khác của nhánh chính
   const dem = { dong: 0 };
-  const chuoi = new Set();
-  for (const { tep, so, dong: d } of dong) {
-    if (THA.test(tep)) continue;
+  const quet = dong.filter(({ tep }) => !THA.test(tep));
+  for (const { tep, so, dong: d } of quet) {
     dem.dong++;
     for (const code of kiemDong(d, ten, coSan)) loi.push(`SL1-AC-10 ${tep}:${so} mang tên thật của ${code}`);
     for (const k of khoa) if (d.includes(k)) loi.push(`SL1-AC-10 ${tep}:${so} mang khoá nhóm`);
     for (const k of tenNhom) if (d.includes(k)) loi.push(`SL1-AC-10 ${tep}:${so} mang tên nhóm`);
-    for (const m of d.matchAll(/["'`]([^"'`]{40,})["'`]/g)) chuoi.add(JSON.stringify([tep, so, m[1].slice(0, 200)]));
   }
-  await trongGiaoDich(async (c) => {
-    for (const j of chuoi) {
-      const [tep, so, s] = JSON.parse(j);
-      const { rows } = await c.query("SELECT 1 FROM stg_zalo_posts WHERE position($1 in text) > 0 LIMIT 1", [s]);
-      if (rows.length) loi.push(`SL1-AC-10 ${tep}:${so} mang chữ bài thật`);
-    }
-  });
+  for (const cho of kiemChuBai(quet, baiViet)) loi.push(`SL1-AC-10 ${cho} mang chữ bài thật`);
   // Đối chứng: tên thật chèn vào dòng thêm giả thì đỏ; định danh có sẵn không đỏ.
   if (!kiemDong(`const x = "${ten[0].realName}";`, ten, () => false).length) loi.push("SL1-AC-10: thước không đỏ khi chèn tên thật");
   if (kiemDong(`const x = "co_${ten[0].realName}_co";`, ten, () => true).length) loi.push("SL1-AC-10: thước đỏ với định danh có sẵn");
-  in_(`E12 quét ${dem.dong} dòng thêm, ${doi.length} tệp đổi, ${chuoi.size} chuỗi dài; đối chứng tên thật ra đỏ, định danh có sẵn không đỏ`);
+  const mauBai = baiViet.map(gopTrang).find((t) => t.length >= DAI_CHU_BAI)?.slice(0, DAI_CHU_BAI) ?? "";
+  if (kiemChuBai([{ tep: "gia", so: 1, dong: `khong nhay ${mauBai} het` }], baiViet).length !== 1) loi.push("SL1-AC-10: thước không đỏ khi chèn chữ bài không dấu nháy");
+  in_(`E12 quét ${dem.dong} dòng thêm, ${doi.length} tệp đổi, so chữ với ${baiViet.length} bài theo cửa sổ ${DAI_CHU_BAI} ký tự; đối chứng tên thật và chữ bài ra đỏ, định danh có sẵn không đỏ`);
   if (loi.length) throw new Error([...new Set(loi)].join("\n"));
 }
 

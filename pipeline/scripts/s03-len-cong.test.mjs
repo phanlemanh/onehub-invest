@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import { docLoaiHinh, ganKhuVuc, gopKhuVuc, loaiHinhNhom, mucTinCay } from "../transform-zalo.mjs";
-import { boTepTam, kiemBenDoc, saiNang, soTin } from "./do-s03-len-cong.mjs";
+import { boTepTam, kiemBenDoc, kiemChuBai, saiNang, soTin } from "./do-s03-len-cong.mjs";
 
 const TZ = join(import.meta.dirname, "../transform-zalo.mjs");
 const PH = { id: "vn-hanoi-a", slug: "a" };
@@ -69,6 +69,17 @@ test("SL1-AC-3 quét bên đọc bỏ tệp tạm đột biến, tệp lạ thư
   const thuong = ["pipeline/tep-la.mjs", "pipeline/.sl1-mut/tep-trong-thu-muc.mjs", ".env.sl1-x"];
   assert.deepEqual(boTepTam(thuong), thuong);
   assert.deepEqual(kiemBenDoc(boTepTam([...tam, "pipeline/tep-la.mjs"]), {}), ["SL1-AC-3 tệp lạ, chưa có kết luận trong ma trận: pipeline/tep-la.mjs"]);
+});
+
+test("SL1-AC-10 chữ bài: bắt đoạn dán không nháy, trong «» và qua dòng xuống; ngắn hơn cửa sổ thì không", () => {
+  const bai = "Bán căn hộ tầng cao, ban công hướng đông nam, sổ đỏ chính chủ,\nmiễn trung gian, liên hệ xem nhà cuối tuần";
+  const doan = "ban công hướng đông nam, sổ đỏ chính chủ, miễn trung gian";
+  const moi = (dong) => [{ tep: "a.md", so: 7, dong }];
+  assert.deepEqual(kiemChuBai(moi(`trích ${doan} hết`), [bai]), ["a.md:7"]);
+  assert.deepEqual(kiemChuBai(moi(`«${doan}»`), [bai]), ["a.md:7"]);
+  assert.deepEqual(kiemChuBai(moi(`"it's ${doan}"`), [bai]), ["a.md:7"]);
+  assert.deepEqual(kiemChuBai(moi(doan.slice(0, 39)), [bai]), []);
+  assert.deepEqual(kiemChuBai(moi("một dòng mã không liên quan gì tới bài rao, đủ dài hơn bốn mươi ký tự"), [bai]), []);
 });
 
 test("SL1-AC-9 sai nặng: từng lý do, trường trống không tính", () => {
