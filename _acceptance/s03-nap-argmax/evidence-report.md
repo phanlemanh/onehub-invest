@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent (vòng 3)
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ed37c1a813a44c3f283b8fbb5effad52b1fdfc8d
+verified_commit: cae5b99b2aa601ac254cb8ab737336763cbdc204
 human_signoff:
 ---
 
@@ -155,3 +155,7 @@ none — every multi-run eval is uniform
 Round 1: PASS (không lỗi; một mục ngoài hợp đồng đã trả ZCode).
 Round 2: PASS — nhánh danh sách rỗng (AC-5) thêm ở `92ee45c4`; tám eval đạt, bốn đột biến bị bắt; Known limits giữ một mục (chạy trọn script chưa có eval tái chạy được).
 Round 3: PASS — thêm bốn ca chạy trọn script; tám eval đạt, hai loại đột biến mới bị bắt; Known limits để trống.
+
+### Re-pin lần 1 — 2026-11-03, do CI Linux: cỡ cây thử trong test theo ARG_MAX, mã script không đổi
+run_id: repin-20261103T055406Z-89718
+sha: cae5b99b2aa601ac254cb8ab737336763cbdc204 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
