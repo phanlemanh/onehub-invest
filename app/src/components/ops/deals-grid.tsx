@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
 import { HouseIcon, ImageIcon, MapPinIcon, PhoneIcon, RadioTowerIcon } from "lucide-react"
 
@@ -18,7 +19,7 @@ import type { FilterField, FilterQuery } from "@/components/reui/filters/filters
 import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { type DealHang, loaiHinh, tabCua, type TabDeal } from "@/lib/deals-chi-tiet"
+import { type DealHang, loaiHinh, tabCua, type TabDeal, soPct } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
 
 import { DiscountBar, DealThumb } from "./deals-cells"
@@ -67,7 +68,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
         <span className="text-sm font-medium tabular-nums">{d.priceVnd === null ? "—" : fmtCompact(d.priceVnd)}</span>
         <span className="text-muted-foreground hidden text-xs tabular-nums md:inline">{d.pricePerm2 ? `${fmtInt(d.pricePerm2 / 1e6)} tr/m²` : "—"}</span>
         {/* Màn hẹp bỏ cột Giảm: mức giảm vào thẳng dưới giá, không phải cuộn ngang mới thấy lý do căn có mặt. */}
-        <span className="text-xs font-medium tabular-nums md:hidden">−{(d.discountPct ?? 0).toFixed(0)}%</span>
+        <span className="text-xs font-medium tabular-nums md:hidden">−{soPct(d.discountPct ?? 0)}%</span>
       </div>
     ),
     size: 96,
@@ -167,9 +168,12 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu }: { rows: DealHang[]; moBanDau?: string | null; locBanDau?: FilterQuery; xemNoiDung: boolean; mayThu: boolean }) {
   const [tab, setTab] = useState<Tab>("all")
   const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
-  const [moId, setMoId] = useState<string | null>(moBanDau)
+  // Nút Back khôi phục trang từ bộ đệm router, prop là của lần tải đầu; `datMo` chỉ đổi URL, nên URL mới biết căn đang xem.
+  const thamSo = useSearchParams()
+  const canBanDau = thamSo ? thamSo.get("can") : moBanDau
+  const [moId, setMoId] = useState<string | null>(canBanDau)
   // Hàng vừa xem giữ nền chọn sau khi đóng sheet, để mắt về đúng chỗ đang duyệt.
-  const [vuaXem, setVuaXem] = useState<string | null>(moBanDau)
+  const [vuaXem, setVuaXem] = useState<string | null>(canBanDau)
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 })
 
@@ -230,7 +234,7 @@ export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu
               <span>Không có căn nào khớp bộ lọc.</span>
               <Button variant="outline" size="sm" onClick={() => setQuery(createFilterQuery())}>Xoá bộ lọc</Button>
             </div>
-          ) : "Tab này chưa có căn."
+          ) : "Mục này chưa có căn."
         }
         i18n={DATA_GRID_VI}
         onRowClick={(d) => datMo(d.offerId)}

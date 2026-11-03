@@ -60,3 +60,50 @@ wall: 940s
 - **claude-opus-5-5**: 3 agent · 25 calls · out 63,203 · in 52 · cache_read 1,776,800 · cache_create 353,774
 - **claude-haiku-5-5**: 11 agent · 22 calls · out 16,606 · in 44 · cache_read 200,843 · cache_create 301,154
 
+### S4 round 2 — wf_2b0153f9-3be (25 agent, 138,116 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| ui:E9 | claude-sonnet-5-5 | 51 | 43,074 | 102 | 6,322,142 | 700 |
+| review:bugs | claude-opus-5-5 | 9 | 20,446 | 18 | 680,670 | 212 |
+| review:measurement | claude-opus-5-5 | 5 | 20,119 | 10 | 249,716 | 197 |
+| review:conventions | claude-opus-5-5 | 8 | 15,208 | 16 | 430,166 | 158 |
+| synthesize:report | claude-sonnet-5-5 | 3 | 10,726 | 6 | 98,854 | 66 |
+| triage | claude-sonnet-5-5 | 2 | 3,850 | 4 | 27,185 | 29 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,797 | 4 | 6,280 | 458 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,273 | 4 | 24,316 | 10 |
+| machine:! grep -rn dealMediaSrc app/src && node | claude-haiku-5-5 | 2 | 2,074 | 4 | 23,896 | 11 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 1,685 | 4 | 3,140 | 372 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 1,676 | 4 | 24,302 | 278 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,625 | 4 | 24,310 | 8 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 3 | 1,460 | 6 | 53,193 | 25 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,349 | 4 | 23,794 | 14 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 5 | 1,307 | 12 | 97,488 | 24 |
+| refute:deals-chi-tiet.ts | claude-sonnet-5-5 | 2 | 1,224 | 4 | 20,189 | 14 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,016 | 4 | 24,083 | 15 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 981 | 4 | 3,140 | 421 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 3 | 930 | 6 | 47,954 | 18 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 2 | 832 | 4 | 23,179 | 15 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 823 | 4 | 23,800 | 7 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 2 | 787 | 4 | 23,120 | 18 |
+| refute:can-gia-tot-biet-can.test.tsx | claude-sonnet-5-5 | 2 | 765 | 4 | 23,155 | 15 |
+| machine:node scripts/can-gia-tot-ba-vai.mjs | claude-haiku-5-5 | 2 | 749 | 4 | 23,791 | 23 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 340 | 4 | 19,962 | 8 |
+
+
+wall: 1289s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 11 | 17,048 | 204,852 | 1151 | 12:01:55 | 12:21:06 |
+| ui | 1 | 43,074 | 6,322,142 | 700 | 12:01:55 | 12:13:35 |
+| review | 3 | 55,773 | 1,360,552 | 213 | 12:01:55 | 12:05:28 |
+| triage | 1 | 3,850 | 27,185 | 29 | 12:21:08 | 12:21:37 |
+| refute | 7 | 7,305 | 288,278 | 27 | 12:21:39 | 12:22:06 |
+| capture | 1 | 340 | 19,962 | 8 | 12:22:09 | 12:22:17 |
+| synthesize | 1 | 10,726 | 98,854 | 66 | 12:22:19 | 12:23:24 |
+
+- **claude-sonnet-5-5**: 11 agent · 77 calls · out 65,295 · in 156 · cache_read 6,756,421 · cache_create 470,224
+- **claude-opus-5-5**: 3 agent · 22 calls · out 55,773 · in 44 · cache_read 1,360,552 · cache_create 348,256
+- **claude-haiku-5-5**: 11 agent · 22 calls · out 17,048 · in 44 · cache_read 204,852 · cache_create 298,444
+

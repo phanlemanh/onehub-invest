@@ -1,23 +1,7 @@
-E9 network (CDP Network.enable qua ego-browser, 3 luot: a=1280 sang luong chinh, b=sheet/anh/trang mot can, c=toi+390)
-FAIL-eligible = fetch/XHR toi localhost:3460; anh/static chi note.
---- luot a: 563 su kien, 13 loi
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
---- luot b: 494 su kien, 3 loi
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.loadingFailed", "u": "", "err": "net::ERR_ABORTED", "t": "Fetch"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
---- luot c: 843 su kien, 2 loi
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
-{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+E9 network (driver ego-browser: khong co tool doc network/console; so lieu lay tu performance.getEntriesByType("resource") sau luot 1280 sang, 4 can qua J)
+img /api/zalo-media status=200 x7
+img /api/zalo-media status=502 x6   (anh cua can chi con link het han theo E10: 0/5 duong ?media= tai duoc; static asset app-origin: chi ghi chu)
+script/link /_next/static/* status=200 x40
+Khong thay fetch/XHR toi /api/v1 hay route khac loi; khong thay request third-party.
+Console: khong doc duoc (driver). networkObserved = n-a (driver).
+Tel click: bam that vao a[href^="tel:"] cua hang 2, listener bat su kien + preventDefault de khong goi that; dialog khong mo.

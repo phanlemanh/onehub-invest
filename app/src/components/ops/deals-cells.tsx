@@ -6,7 +6,7 @@ import { ImageOffIcon } from "lucide-react"
 import { Progress, ProgressLabel } from "@/components/ui/progress"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { cn } from "cn"
-import { type DealHang, NGHI_NGO_PCT, NGUONG_LOAI_PCT } from "@/lib/deals-chi-tiet"
+import { type DealHang, NGHI_NGO_PCT, NGUONG_LOAI_PCT, soPct } from "@/lib/deals-chi-tiet"
 import { fmtInt } from "@/lib/format"
 
 /** Trục thanh giảm: 0 tới 50%, ngưỡng loại của ON11; vạch là ngưỡng cần xác minh. */
@@ -18,7 +18,7 @@ export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) 
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <div className="flex min-w-0 items-center gap-2">
-        <span className={cn("shrink-0 text-end font-medium tabular-nums", gon ? "w-10 text-sm" : "text-sm")}>−{pct.toFixed(0)}%</span>
+        <span className={cn("shrink-0 text-end font-medium tabular-nums", gon ? "w-10 text-sm" : "text-sm")}>−{soPct(pct)}%</span>
         <div className="relative min-w-12 flex-1">
           <Progress
             value={(pct / TRUC_PCT) * 100}

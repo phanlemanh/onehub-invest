@@ -36,6 +36,10 @@ _Avoid_: tỉnh thành, thành phố, city, province
 - Ghi chú: Cấp huyện đã bỏ từ 07/2025: "quận" chỉ còn trong dữ liệu thô (`district_raw`).
 _Avoid_: quận, quận/huyện, huyện, ward, tiểu thị trường
 
+**Khu vực theo tin**: Chữ khu vực cấp trên phường mà người đăng ghi trong tin, giữ nguyên văn để người vận hành đối chiếu; không phải đơn vị hành chính hiện hành.
+- Code: `district_raw`, `district`
+_Avoid_: quận, huyện
+
 **Khu vực**: Một nút bất kỳ của cây địa lý (`areas`, khoá `area_id`, vd. `vn-hanoi-tay-ho`): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).
 - Code: `area` · RESO: Country / StateOrProvince / City tuỳ cấp
 - Tham số URL: `area` · `areas`

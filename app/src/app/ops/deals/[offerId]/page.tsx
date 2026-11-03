@@ -37,7 +37,7 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt", href: "/ops/deals" }, { label: "Một căn" }]}
+        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt", href: d.roiDanhSach ? "/ops/deals" : `/ops/deals?can=${encodeURIComponent(d.offerId)}` }, { label: "Một căn" }]}
         title={d.ten}
         stats={[d.priceVnd === null ? "—" : fmtCompact(d.priceVnd), d.discountPct === null ? "Chưa tính được mức giảm" : chuGiam(d.discountPct), d.source]}
         description="Đủ để quyết có gọi người bán không. Chỉ đọc."

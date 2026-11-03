@@ -6,7 +6,7 @@ import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { canCungTieuChi, type DealHang, loaiHinh } from "@/lib/deals-chi-tiet"
+import { canCungTieuChi, type DealHang, loaiHinh, soPct } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt } from "@/lib/format"
 
 import { DealThumb } from "./deals-cells"
@@ -46,9 +46,9 @@ function Hang({ d, goc, onMo }: { d: DealHang; goc: DealHang | null; onMo?: () =
       </TableCell>
       <TableCell className="text-end">
         {d.suspect ? (
-          <Badge variant="warning-light" className="tabular-nums">−{(d.discountPct ?? 0).toFixed(0)}%</Badge>
+          <Badge variant="warning-light" className="tabular-nums">−{soPct(d.discountPct ?? 0)}%</Badge>
         ) : (
-          <span className="text-sm tabular-nums">−{(d.discountPct ?? 0).toFixed(0)}%</span>
+          <span className="text-sm tabular-nums">−{soPct(d.discountPct ?? 0)}%</span>
         )}
       </TableCell>
     </TableRow>

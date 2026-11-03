@@ -58,12 +58,15 @@ export type DealHang = DealChiTiet & {
   xemAnh: boolean;
 };
 
+/** Số phần trăm in ra: một chữ số thập phân như `bait_gap_pct`, bỏ «.0». Làm tròn về số nguyên thì 4,9 đọc thành 5 và tự mâu thuẫn với ngưỡng. */
+export const soPct = (pct: number): string => String(Number(Math.abs(pct).toFixed(1)));
+
 /** Cùng điều kiện với WHERE của `dealsSql`; `quaHan` do SQL tính vì mốc 45 ngày theo giờ DB. */
 export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, quaHan: boolean): string | null {
   if (d.discountPct === null || d.medianPerm2 === null) return "Không tính được mức giảm";
   if (quaHan) return `Tin quá ${NGAY_TOI_DA} ngày chưa thấy lại`;
-  if (d.discountPct < NGUONG_VAO_PCT) return `Giảm ${d.discountPct.toFixed(1)}%, dưới ngưỡng ${NGUONG_VAO_PCT}%`;
-  if (d.discountPct > NGUONG_LOAI_PCT) return `Giảm ${d.discountPct.toFixed(1)}%, trên ngưỡng ${NGUONG_LOAI_PCT}%`;
+  if (d.discountPct < NGUONG_VAO_PCT) return `Giảm ${soPct(d.discountPct)}%, dưới ngưỡng ${NGUONG_VAO_PCT}%`;
+  if (d.discountPct > NGUONG_LOAI_PCT) return `Giảm ${soPct(d.discountPct)}%, trên ngưỡng ${NGUONG_LOAI_PCT}%`;
   return null;
 }
 
@@ -72,7 +75,7 @@ export function cauChungMinh(d: DealChiTiet): string | null {
   if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
   // Trang một căn mở cả căn đã rời danh sách (Hỏi-1), nên câu phải đúng ngoài khoảng ngưỡng; số giảm âm là căn đắt hơn thước.
   const chenh = fmtInt(Math.abs(d.medianPerm2 - d.pricePerm2) / 1e6);
-  const pct = Math.abs(d.discountPct).toFixed(0);
+  const pct = soPct(d.discountPct);
   if (d.discountPct < 0) return `Đắt hơn thước phường ${chenh} tr/m², tức ${pct}%, nên không phải căn giá tốt.`;
   const re = `Rẻ hơn thước phường ${chenh} tr/m², tức ${pct}%`;
   if (d.discountPct < NGUONG_VAO_PCT) return `${re}, chưa tới ngưỡng vào danh sách ${NGUONG_VAO_PCT}%.`;
@@ -83,7 +86,7 @@ export function cauChungMinh(d: DealChiTiet): string | null {
 }
 
 /** Mức giảm in trên tiêu đề, không ghép dấu trừ vào số âm: căn đắt hơn thước ghi dấu cộng. */
-export const chuGiam = (pct: number): string => (pct < 0 ? `+${Math.abs(pct).toFixed(0)}%` : `−${pct.toFixed(0)}%`);
+export const chuGiam = (pct: number): string => (pct < 0 ? `+${soPct(pct)}%` : `−${soPct(pct)}%`);
 
 export type TabDeal = "du" | "xac-minh" | "thieu";
 /** Mỗi căn đúng một tab: giảm trên ngưỡng là cần xác minh, còn lại thiếu mục là còn thiếu, còn lại đủ để gọi. */

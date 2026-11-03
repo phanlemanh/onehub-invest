@@ -17,7 +17,7 @@ import { MIG_060 } from "../../pipeline/lib/nap-060.mjs"
 import type { User } from "../src/lib/auth"
 import { pool } from "../src/lib/db"
 import type { DealRow } from "../src/lib/deals"
-import { canCungTieuChi, cauChungMinh, type DealHang, NGAY_TOI_DA, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, tabCua, thieuGi } from "../src/lib/deals-chi-tiet"
+import { canCungTieuChi, cauChungMinh, chuGiam, type DealHang, NGAY_TOI_DA, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, tabCua, thieuGi } from "../src/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "../src/lib/format"
 import { LABELS_VI } from "../src/lib/vocab.generated"
 
@@ -192,7 +192,9 @@ function timRows(node: ReactNode): DealHang[] | null {
 }
 
 let goRoot: (() => Promise<void>) | null = null
+let lanVe = 0
 async function ve(cay: ReactNode) {
+  lanVe++
   if (goRoot) await goRoot()
   const { createRoot } = await import("react-dom/client")
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
@@ -217,7 +219,15 @@ async function vaoTrang(mod: PageMod, role: string | null, tham: { can?: string;
   const cay = await mod.default(tham.offerId ? { params: Promise.resolve({ offerId: tham.offerId }) } : { searchParams: Promise.resolve(tham.can ? { can: tham.can } : {}) })
   const mo = await moRong(cay)
   await ve(mo)
-  return { html: () => document.body.innerHTML, text: () => document.body.textContent ?? "", json: jsonCay(mo), rows: timRows(mo) }
+  // DOM chỉ có trang dựng cuối: đọc qua kết quả của lần dựng cũ là đo nhầm trang, nên ném lỗi thay vì trả chữ của trang khác.
+  const lan = lanVe
+  const conSong = () => assert.equal(lanVe, lan, "đọc trang đã bị dựng đè, hãy đo ngay sau mỗi lần vaoTrang")
+  return {
+    html: () => { conSong(); return document.body.innerHTML },
+    text: () => { conSong(); return document.body.textContent ?? "" },
+    json: jsonCay(mo),
+    rows: timRows(mo),
+  }
 }
 async function vaoRedirect(mod: PageMod, role: string, can: string): Promise<string> {
   try {
@@ -256,6 +266,7 @@ const truongLocThat = () => {
 }
 const banLuoi = (doi: [string, string][]) => chep("src/components/ops/deals-grid.tsx", doi)
 const LUOI_GOC = `from "@/components/ops/deals-grid"`
+const THAN_GOC = `from "@/components/ops/deal-body"`
 
 const dsThat = () => import("../src/lib/deals")
 const chiTiet = () => banPage(PAGE_CAN)
@@ -348,7 +359,7 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     for (const [k, v] of Object.entries(moi)) assert.equal((deal as Record<string, unknown>)[k], v, `CGT-AC-2 loader ${k}`)
     assert.ok(deal.firstSeen.startsWith("2026-10-30"), "CGT-AC-2 loader ngày thấy")
 
-    const ky: [string, string][] = [["Toà", TOA], ["Tầng", TANG], ["Căn", CAN], ["Đường", `${SONHA} ${DUONG}`], ["Phường", TEN_A], ["Quận", QUAN], ["Nguồn", "S03"], ["Độ tin trích xuất", LABELS_VI.confidence.high], ["Số lần đăng", "3"], ["Tên", TEN], ["Nhóm", NHOM], ["Số tin của người này", "3"], ["Thấy lần đầu", fmtVnDate(deal.firstSeen)]]
+    const ky: [string, string][] = [["Toà", TOA], ["Tầng", TANG], ["Căn", CAN], ["Đường", `${SONHA} ${DUONG}`], ["Phường", TEN_A], ["Khu vực theo tin", QUAN], ["Nguồn", "S03"], ["Độ tin trích xuất", LABELS_VI.confidence.high], ["Số lần đăng", "3"], ["Tên", TEN], ["Nhóm", NHOM], ["Số tin của người này", "3"], ["Thấy lần đầu", fmtVnDate(deal.firstSeen)]]
     const kiem = () => {
       for (const [nhan, gia] of ky) assert.equal(dong(nhan), gia, `CGT-AC-2 dòng ${nhan}`)
       assert.ok(document.querySelector(`[data-deal-dong="SĐT"] a[href="tel:${SO}"]`), "CGT-AC-2 tel")
@@ -361,7 +372,7 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     // Trang căn chỉ có phường: một dòng Phường, không dòng rỗng; sheet ghi «chưa có».
     await vaoTrang(await chiTiet(), "ops", { offerId: "b2" })
     assert.equal(soDong("Phường"), 1, "CGT-AC-2 dòng Phường")
-    for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Quận"]) assert.equal(soDong(nhan), 0, `CGT-AC-2 trang còn dòng rỗng ${nhan}`)
+    for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Khu vực theo tin"]) assert.equal(soDong(nhan), 0, `CGT-AC-2 trang còn dòng rỗng ${nhan}`)
     const kiemKhongRong = () => {
       const dd = [...document.querySelectorAll("[data-deal-dong] dd")]
       assert.ok(dd.length > 0, "CGT-AC-2 trang không có dòng nào")
@@ -376,7 +387,7 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     await vaoTrang(await banPage(PAGE_CAN, [[`beMat="trang"`, `beMat="sheet"`]]), "ops", { offerId: "b2" })
     assert.throws(kiemKhongRong, /CGT-AC-2 trang ghi «chưa có»/)
     await vaoTrang(await banPage(PAGE_DS), "ops", { can: "b2" })
-    for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Quận"]) assert.equal(dong(nhan), "chưa có", `CGT-AC-2 sheet thiếu «chưa có» ở ${nhan}`)
+    for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Khu vực theo tin"]) assert.equal(dong(nhan), "chưa có", `CGT-AC-2 sheet thiếu «chưa có» ở ${nhan}`)
 
     // Đỏ: tráo hai cột toà và đường trong câu SQL.
     const trao = await banLib<typeof that>("src/lib/deals.ts", [["o.block_raw, o.floor_raw, o.street_raw,", "o.street_raw AS block_raw, o.floor_raw, o.block_raw AS street_raw,"]])
@@ -408,7 +419,8 @@ test("CGT-AC-3 13 dòng media ra 12 ảnh qua khoá, chữ bài đủ, không UR
     const ds = await banPage(PAGE_DS), can = await chiTiet()
     for (const role of ["ops", "admin"]) {
       // Trang một căn và sheet cùng phần thân, đo cả hai.
-      for (const t of [await vaoTrang(can, role, { offerId: "m1" }), await vaoTrang(ds, role, { can: "m1" })]) {
+      for (const dung of [() => vaoTrang(can, role, { offerId: "m1" }), () => vaoTrang(ds, role, { can: "m1" })]) {
+        const t = await dung()
         const goc = document.querySelector('[role="dialog"]') ?? document.body
         kiemAnhCan([...goc.querySelectorAll('[role="group"] img')].map((i) => i.getAttribute("src")!), ky)
         kiemKhongGoc(t.html(), t.json)
@@ -442,12 +454,19 @@ test("CGT-AC-4 bảy mức qua dealsSql thật, ba ngưỡng một nguồn, số
     kiemSqlHang(that.dealsSql())
     assert.throws(() => kiemSqlHang(that.dealsSql().replace(`<= ${NGUONG_LOAI_PCT} `, "<= 60 ")), /CGT-AC-4 SQL lệch hằng/)
     const mod = await banPage(PAGE_DS)
+    const CAU_NGUONG = `Vào từ ${NGUONG_VAO_PCT}%, xác minh trên ${NGHI_NGO_PCT}%, loại trên ${NGUONG_LOAI_PCT}%`
+    // Đỏ: tráo hai ngưỡng hoặc sửa ngưỡng vào, các số vẫn có mặt nhưng câu sai.
+    for (const sai of [`Vào từ \${NGHI_NGO_PCT}%, xác minh trên \${NGUONG_VAO_PCT}%`, `Vào từ 7%, xác minh trên \${NGHI_NGO_PCT}%`]) {
+      const than = chep("src/components/ops/deal-body.tsx", [["Vào từ ${NGUONG_VAO_PCT}%, xác minh trên ${NGHI_NGO_PCT}%", sai]])
+      await vaoTrang(await banPage(PAGE_CAN, [[THAN_GOC, `from "${than}"`]]), "ops", { offerId: "g2" })
+      assert.notEqual(dong("Ngưỡng"), CAU_NGUONG, "CGT-AC-4 đối chứng ngưỡng không đổi")
+    }
     const kiem22 = (m: number) => {
       assert.equal(dong("Giá/m² căn này"), `${fmtInt(M * 0.78 / 1e6)} tr/m²`, "CGT-AC-4 giá/m²")
       assert.equal(dong("Thước phường"), `${fmtInt(m / 1e6)} tr/m²`, "CGT-AC-4 thước")
       assert.equal(dong("Số tin dựng thước"), "5 tin S06", "CGT-AC-4 số tin")
       assert.equal(dong("Mức giảm"), "22%", "CGT-AC-4 mức giảm")
-      assert.ok(dong("Ngưỡng")!.includes(`${NGUONG_VAO_PCT}%`) && dong("Ngưỡng")!.includes(`${NGHI_NGO_PCT}%`) && dong("Ngưỡng")!.includes(`${NGUONG_LOAI_PCT}%`), "CGT-AC-4 ngưỡng")
+      assert.equal(dong("Ngưỡng"), CAU_NGUONG, "CGT-AC-4 ngưỡng")
     }
     await vaoTrang(mod, "ops", { can: "g2" })
     kiem22(M)
@@ -483,6 +502,12 @@ test("CGT-AC-4 căn ngoài khoảng ngưỡng: câu chứng minh đúng, không 
       assert.doesNotMatch(cau, cam, "CGT-AC-4 câu ngoài ngưỡng sai")
     }
     const CAM_TRONG = /trên ngưỡng vào danh sách/
+    // Số trong câu phải là số đem so ngưỡng: làm tròn về số nguyên thì 4,9 đọc thành «tức 5%, chưa tới ngưỡng 5%».
+    const caSo: [number, RegExp][] = [[4.9, /tức 4\.9%, chưa tới ngưỡng vào danh sách 5%/], [35.2, /tức 35\.2%, vượt ngưỡng 35%/], [50.4, /tức 50\.4%, vượt ngưỡng loại 50%/]]
+    for (const [pct, mau] of caSo) kiemCau({ pricePerm2: 90, medianPerm2: 100, discountPct: pct }, cauChungMinh, mau, CAM_TRONG)
+    assert.equal(chuGiam(4.9), "−4.9%", "CGT-AC-4 tiêu đề làm tròn qua ngưỡng")
+    const lamTron = await banLib<typeof import("../src/lib/deals-chi-tiet")>("src/lib/deals-chi-tiet.ts", [["const pct = soPct(d.discountPct);", "const pct = Math.abs(d.discountPct).toFixed(0);"]])
+    assert.throws(() => kiemCau({ pricePerm2: 95, medianPerm2: 100, discountPct: 4.9 }, lamTron.cauChungMinh, caSo[0][1], CAM_TRONG), /CGT-AC-4 câu ngoài ngưỡng sai/)
     kiemCau({ pricePerm2: 95, medianPerm2: 100, discountPct: 4.9 }, cauChungMinh, /chưa tới ngưỡng vào danh sách 5%/, CAM_TRONG)
     kiemCau({ pricePerm2: 110_000_000, medianPerm2: M, discountPct: -10 }, cauChungMinh, /^Đắt hơn thước phường 10 tr\/m², tức 10%/, /Rẻ hơn|-/)
     // Đỏ: bỏ hai nhánh mới thì căn đã rời vẫn được nói là trên ngưỡng.
@@ -498,8 +523,18 @@ test("CGT-AC-4 căn ngoài khoảng ngưỡng: câu chứng minh đúng, không 
     const t2 = await vaoTrang(can, "ops", { offerId: "r-duoi" })
     assert.match(document.querySelector("[data-deal-chung-minh]")?.textContent ?? "", /chưa tới ngưỡng vào danh sách/, "CGT-AC-4 căn dưới ngưỡng sai câu")
     assert.ok(!t2.text().includes("Vì sao giá tốt"), "CGT-AC-4 căn dưới ngưỡng còn «Vì sao giá tốt»")
+    assert.ok(t2.text().includes("So với thước phường"), "CGT-AC-4 căn dưới ngưỡng thiếu tiêu đề thay thế")
     await vaoTrang(can, "ops", { offerId: "r-tren" })
     assert.match(document.querySelector("[data-deal-chung-minh]")?.textContent ?? "", /vượt ngưỡng loại 50% nên đã rời danh sách/, "CGT-AC-4 căn trên ngưỡng sai câu")
+    // Dương: căn trong khoảng ngưỡng mang đúng tiêu đề; đỏ: phần thân luôn ghi tiêu đề thay thế.
+    await tin(c, "r-giua", 22)
+    const kiemTieuDe = async (m: PageMod) => {
+      const t = await vaoTrang(m, "ops", { offerId: "r-giua" })
+      assert.ok(t.text().includes("Vì sao giá tốt") && !t.text().includes("So với thước phường"), "CGT-AC-4 căn trong ngưỡng sai tiêu đề")
+    }
+    await kiemTieuDe(can)
+    const luonThay = chep("src/components/ops/deal-body.tsx", [['"Vì sao giá tốt" : "So với thước phường"', '"So với thước phường" : "So với thước phường"']])
+    await assert.rejects(kiemTieuDe(await banPage(PAGE_CAN, [[THAN_GOC, `from "${luonThay}"`]])), /CGT-AC-4 căn trong ngưỡng sai tiêu đề/)
   })
 })
 
@@ -574,7 +609,8 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     await tin(c, "v2", 22)
     const ds = await banPage(PAGE_DS), can = await chiTiet()
     for (const role of [null, "user"]) {
-      for (const t of [await vaoTrang(ds, role), await vaoTrang(can, role, { offerId: "v1" })]) {
+      for (const dung of [() => vaoTrang(ds, role), () => vaoTrang(can, role, { offerId: "v1" })]) {
+        const t = await dung()
         assert.match(t.text(), /Cần đăng nhập ops/, "CGT-AC-6 khách vào được")
         assert.ok(!t.json.includes(TEN) && !t.html().includes("v1"), "CGT-AC-6 khách thấy nội dung")
       }
@@ -583,7 +619,8 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     kiemKhongLo(viewerBang.html())
     kiemKhongLo(viewerBang.json)
     kiemKhongLo(JSON.stringify(viewerBang.rows))
-    assert.ok(![...document.querySelectorAll("th")].some((th) => /Gọi ai/.test(th.textContent ?? "")), "CGT-AC-6 viewer có cột Gọi ai")
+    const coCotGoi = () => [...document.querySelectorAll("th")].some((th) => /Gọi ai/.test(th.textContent ?? ""))
+    assert.ok(!coCotGoi(), "CGT-AC-6 viewer có cột Gọi ai")
     const kiemLocAnh = () => assert.ok(!truongLocThat().includes("anh"), "CGT-AC-6 viewer có lọc Ảnh")
     kiemLocAnh()
     // Đỏ: lưới luôn mở lọc Ảnh; dương: vai Vận hành ở máy thu có lọc đó.
@@ -592,6 +629,11 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     assert.throws(kiemLocAnh, /CGT-AC-6 viewer có lọc Ảnh/)
     await vaoTrang(ds, "ops")
     assert.ok(truongLocThat().includes("anh"), "CGT-AC-6 đối chứng lọc Ảnh")
+    assert.ok(coCotGoi(), "CGT-AC-6 đối chứng cột Gọi ai")
+    // Đỏ: lưới không bỏ cột theo vai.
+    const conCot = banLuoi([['COLUMNS.filter((c) => c.id !== "goi")', "COLUMNS"]])
+    await vaoTrang(await banPage(PAGE_DS, [[LUOI_GOC, `from "${conCot}"`]]), "viewer")
+    assert.ok(coCotGoi(), "CGT-AC-6 chiều đỏ cột Gọi ai không chạm")
     // Sheet viewer: tab chi tiết rồi tab cùng tiêu chí.
     const viewerSheet = await vaoTrang(ds, "viewer", { can: "v1" })
     kiemKhongLo(viewerSheet.html())
@@ -599,8 +641,13 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     assert.ok(!/Chưa có ảnh|Chưa có chữ bài|Chưa có SĐT/.test(viewerSheet.text()), "CGT-AC-6 viewer có nhãn thiếu vì vai")
     await bam(tabSheet(/Căn cùng tiêu chí/))
     assert.ok(document.querySelector('[data-can-id="v2"]'), "CGT-AC-6 tab cùng tiêu chí không có căn")
-    assert.equal(document.querySelectorAll('[role="dialog"] img').length, 0, "CGT-AC-6 viewer có ảnh ở danh sách cùng tiêu chí")
+    const soAnhCungTieuChi = () => document.querySelectorAll('[data-can-id="v2"] img').length
+    assert.equal(soAnhCungTieuChi(), 0, "CGT-AC-6 viewer có ảnh ở danh sách cùng tiêu chí")
     kiemKhongLo(viewerSheet.html())
+    // Đối chứng: cùng căn, vai Vận hành thấy ảnh ở đúng chỗ đó.
+    await vaoTrang(ds, "ops", { can: "v1" })
+    await bam(tabSheet(/Căn cùng tiêu chí/))
+    assert.ok(soAnhCungTieuChi() > 0, "CGT-AC-6 đối chứng ảnh cùng tiêu chí")
     const viewerCan = await vaoTrang(can, "viewer", { offerId: "v1" })
     kiemKhongLo(viewerCan.html())
     kiemKhongLo(viewerCan.json)
@@ -612,7 +659,8 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     }
     // Tên nguồn thật 0 khớp ở mọi vai, chỉ hiện mã.
     for (const role of ["viewer", "ops", "admin"]) {
-      for (const t of [await vaoTrang(ds, role), await vaoTrang(ds, role, { can: "v1" }), await vaoTrang(can, role, { offerId: "v1" })]) {
+      for (const dung of [() => vaoTrang(ds, role), () => vaoTrang(ds, role, { can: "v1" }), () => vaoTrang(can, role, { offerId: "v1" })]) {
+        const t = await dung()
         assert.ok(!t.html().includes(TEN_NGUON) && !t.json.includes(TEN_NGUON), `CGT-AC-6 ${role} lộ tên nguồn thật`)
       }
     }
@@ -670,7 +718,7 @@ test("CGT-AC-7 mã lạ, căn rời danh sách, trạng thái trống và lỗi"
     await bam(xoa)
     assert.ok(hang("c-con"), "CGT-AC-7 nút xoá không trả căn")
     await bam(tabBang("Cần xác minh"))
-    assert.match(document.body.textContent ?? "", /Tab này chưa có căn/, "CGT-AC-7 tab rỗng")
+    assert.match(document.body.textContent ?? "", /Mục này chưa có căn/, "CGT-AC-7 tab rỗng")
 
     // Đang tải có Skeleton.
     for (const rel of ["src/app/ops/deals/loading.tsx", "src/app/ops/deals/[offerId]/loading.tsx"]) {
@@ -777,11 +825,12 @@ test("CGT-AC-7 lược đồ cloud từ CLOUD_ALLOW: ma trận vai, không ảnh
     const boMayThu = banLuoi([["truongLoc(rows, xemNoiDung && mayThu)", "truongLoc(rows, xemNoiDung)"]])
     await vaoTrang(await banPage(PAGE_DS, [[LUOI_GOC, `from "${boMayThu}"`]]), "ops")
     assert.throws(() => assert.ok(!truongLocThat().includes("anh"), "CGT-AC-7 cloud có lọc Ảnh"), /CGT-AC-7 cloud có lọc Ảnh/)
-    for (const t of [await vaoTrang(ds, "viewer"), await vaoTrang(ds, "viewer", { can: "z1" }), await vaoTrang(can, "viewer", { offerId: "z1" })]) {
+    for (const dung of [() => vaoTrang(ds, "viewer"), () => vaoTrang(ds, "viewer", { can: "z1" }), () => vaoTrang(can, "viewer", { offerId: "z1" })]) {
+      const t = await dung()
       kiemCloudVai(t.html())
       kiemCloudVai(t.json)
     }
-    for (const t of [await vaoTrang(ds, null), await vaoTrang(can, null, { offerId: "z1" })]) assert.match(t.text(), /Cần đăng nhập ops/, "CGT-AC-7 khách vào cloud")
+    for (const dung of [() => vaoTrang(ds, null), () => vaoTrang(can, null, { offerId: "z1" })]) assert.match((await dung()).text(), /Cần đăng nhập ops/, "CGT-AC-7 khách vào cloud")
     // Đỏ: nhánh cloud bỏ dealTheoVai.
     const bo = await banPage(PAGE_DS, [["dealHang(dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu })", "dealHang(d, { xemNoiDung, mayThu })"]])
     const lo = await vaoTrang(bo, "viewer")
@@ -908,6 +957,16 @@ test("CGT-AC-11 mỗi căn một tab, lọc đúng tập, J K theo thứ tự đ
     const t = await vaoTrang(await banPage(PAGE_DS), "ops", { can: id })
     assert.ok(t.rows && document.querySelector('[role="dialog"]'), "CGT-AC-11 ?can= không mở sheet")
     assert.equal(nhanViTri(), `3/${rows.length}`, "CGT-AC-11 ?can= mở sai căn")
+    // Nút Back khôi phục trang với prop của lần tải đầu: URL thắng prop cũ, cả khi URL có căn lẫn khi đã bỏ căn.
+    const { SearchParamsContext } = await import("next/dist/shared/lib/hooks-client-context.shared-runtime")
+    const veTheoUrl = (q: string, moBanDau: string | null) => ve(
+      <SearchParamsContext.Provider value={new URLSearchParams(q) as never}><DealsGrid rows={t.rows!} moBanDau={moBanDau} xemNoiDung mayThu /></SearchParamsContext.Provider>,
+    )
+    await veTheoUrl(`can=${id}`, null)
+    assert.equal(nhanViTri(), `3/${rows.length}`, "CGT-AC-11 Back không mở lại sheet")
+    assert.equal(hang(id)!.getAttribute("data-state"), "selected", "CGT-AC-11 Back mất nền chọn")
+    await veTheoUrl("", id)
+    assert.equal(document.querySelector('[role="dialog"]'), null, "CGT-AC-11 prop cũ thắng URL đã bỏ căn")
   })
 })
 
