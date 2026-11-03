@@ -1,0 +1,61 @@
+schema_version: 1
+feature_slug: s06-duong-du-an-len-tin
+# Ca thuần «DS1-AC-1» ở pipeline/scripts/dac-trung-s06.test.mjs; ca DB «DS1-AC-2..5» ở pipeline/scripts/s06-duong.itest.mjs (DB thử
+# oneinvest_ds1, khoá riêng); AC-6 ở agent/tests/judge-duong-s06.test.ts; thước dữ liệu thật pipeline/scripts/do-duong-s06.mjs.
+# Mỗi phép đo có ca đỏ: đột biến bản sao tệp thật cùng fixture, ghim thông điệp.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ds1_doc
+    paths: [pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/dac-trung-s06.test.mjs]
+    expected: "exit 0; ca 'DS1-AC-1' xanh: 27 hàng của bảng Ma trận AC-1 viết trước trong contract, số assert bằng 27, mỗi hàng so đúng chuỗi hoặc không phát biểu; đối chứng dương: hàng 1 ra đúng rule_id payload.street_name. Chiều đỏ hai ca trên bản sao tệp thật: bỏ luật địa danh thì ca đỏ gọi tên hàng 17; bỏ neo đầu chuỗi thì ca đỏ gọi tên hàng 9. Các ca DT-AC cũ xanh không sửa."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ds1_db
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/s06-duong.itest.mjs]
+    expected: "exit 0; ca 'DS1-AC-2' xanh: runTransformChotot thật trên DB thử; đúng một phát biểu sống fact/source_field/payload.street_name; street_raw của tin bằng giá trị đó; field_provenance.street_raw trỏ phát biểu. Chiều đỏ: bản sao không đọc street_name thì ca đỏ ghim «thiếu phát biểu street_raw»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ds1_db
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/s06-duong.itest.mjs]
+    expected: "exit 0; ca 'DS1-AC-3' xanh: fixture legacy rút từ bên ghi thật phat-bieu-cat-chuyen; ba tin (cùng chữ, khác chữ, nguồn rỗng) ra chữ nguồn, chữ nguồn, giữ legacy; dòng legacy còn đủ, đếm trước bằng đếm sau. Chiều đỏ: bản sao xếp legacy trên source_field trong phép đo thì ca đỏ ghim «legacy thắng nguồn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ds1_db
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/assert.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/s06-duong.itest.mjs]
+    expected: "exit 0; ca 'DS1-AC-4' xanh: lượt hai inserted 0, retracted 0, offers_changed 0; lượt đổi rút đúng một phát biểu và tin mang tên mới; lượt bỏ trống rút phát biểu, hai ca tách riêng: có legacy thì cột bằng đúng chuỗi legacy, không có thì NULL. Chiều đỏ: bản sao không rút phát biểu khi nguồn trống thì ca đỏ ghim «phát biểu cũ còn sống»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ds1_db
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/duong-can.mjs, pipeline/scripts/s06-duong.itest.mjs]
+    expected: "exit 0; ca 'DS1-AC-5' xanh: sáu phần tử ma trận ô căn ra đúng giá trị viết trước qua resolve-properties thật; mỗi căn được điền đúng một mục enrichment_log src=resolve-properties; lượt hai không thêm. --hoan-tac-duong trả đúng các ô đã điền về NULL, ô có sẵn giữ nguyên, số ô trả về bằng số mục log. Chiều đỏ: bản sao đè ô có sẵn thì ca đỏ ghim «ô có sẵn bị đè»; bản sao nhận cả tin đã rời kho thì ca đỏ ghim «nhận đường từ tin đã rời kho», với đối chứng dương tin rời kho cùng căn và đang mang đường."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ds1_judge
+    paths: [agent/src/agents/judge-entity.ts, app/src/lib/ops/review-can-cu.ts, agent/tests/judge-duong-s06.test.ts]
+    expected: "exit 0; ma trận bảy cặp ra Khớp, Khớp, Khớp, Khớp, Khớp, Lệch, Thiếu ở cả bản judge-entity và bản review-can-cu (rút từ tệp thật); chỉ ca Lệch làm same_house = no. Chiều đỏ: bản sao judge-entity bỏ bước bỏ tiền tố trong khoaDuong thì ca đỏ gọi tên cặp «Đường X» × «X»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ds1_do
+    long_running: 120
+    paths: [pipeline/scripts/do-duong-s06.mjs, pipeline/transform-chotot.mjs, pipeline/resolve-properties.mjs, pipeline/lib/dac-trung-s06.mjs]
+    expected: "exit 0 trên bản chép oneinvest_ds1_do, DB dùng chung không bị ghi; in từng dòng: đường ở tin ≥ 90%, đường ở căn ≥ 90%, sáu trường khác trước/sau không giảm quá 1 điểm %, 0 giá trị chứa tên nguồn thật với danh sách tên ≥ 1 phần tử (không in tên), 0 cặp tin cùng căn ra Lệch mà hai chuỗi bằng nhau sau khi bỏ hoa, tiền tố viết đúng chính tả rồi mới bỏ dấu (định nghĩa độc lập với khoaDuong), số tin bị bỏ theo từng tiền tố, thời gian. Chiều đỏ ba cờ cùng lệnh: --nguong-duong 100.1 thoát 1 «đường ở tin dưới ngưỡng»; --gai-ten-nguon gài một giá trị thoát 1 «đường chứa tên nguồn»; --gai-cap-lech gài một cặp thoát 1 «cặp cùng tên ra Lệch»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

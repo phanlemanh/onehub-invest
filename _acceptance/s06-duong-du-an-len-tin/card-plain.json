@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Tên đường của tin S06 giờ đi được từ dữ liệu thô tới tin và căn, thay vì rơi mất giữa đường ống.",
+  "analyst_plain": "Phép so với bản trước khi sửa không chạy được vì rào worktree từ chối lệnh, nên lượt này không biết bài kiểm nào cũng xanh trên mã cũ."
+}

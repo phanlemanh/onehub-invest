@@ -2,6 +2,7 @@
 // Mỗi phần tử {field, value, rule_id}: rule_id = khoá nguồn đã đọc (căn cứ của phát biểu). Giá trị rác không thành phát
 // biểu: số ≤ 0, chữ rỗng, chữ ở trường số, mặt tiền/chiều dài > 200 m, số tầng > 100, WC > 50, toạ độ ngoài khung Việt Nam.
 import { ASSERTION_FIELD } from "./vocab.generated.mjs";
+import { chuaDaySo } from "./sdt-trong-chuoi.mjs";
 
 /** Khung toạ độ Việt Nam (gồm đảo): vĩ 8–24, kinh 102–110. */
 const KHUNG_VN = { vi: [8, 24], kinh: [102, 110] };
@@ -15,6 +16,24 @@ export function docSo(v) {
   return m ? Number(m[1].replace(",", ".")) : null;
 }
 
+// DS1: chuỗi mở đầu bằng địa danh hành chính không phải tên đường. Xã, TP, Thành phố, Tỉnh chỉ bỏ khi có dấu phẩy, để giữ
+// «Xã Đàn», «Tỉnh lộ 10», «TP Giao Lưu».
+const DIA_DANH = /^(?:(?:phường|quận|huyện|thị trấn|thị xã)(?!\p{L})|[pq]\.)/iu;
+const DIA_DANH_CO_PHAY = /^(?:xã|tp\.?|thành phố|tỉnh(?!\s+lộ))(?!\p{L})[^,]*,/iu;
+// Nguồn đôi khi trả street_name đã mã hoá (base64 dài 44 ký tự, không khoảng trắng): không phải tên đường.
+const MA_HOA = /^[A-Za-z0-9+/_-]{32,}={0,2}$/;
+
+/** Tên đường từ `payload.street_name`: NFC, cắt đầu cuối, gộp khoảng trắng; giữ tiền tố «Đường», số nhà và phần sau phẩy vì
+ *  `khoaDuong` xử các dạng đó khi so. Không phải chữ, rỗng, hay chỉ là địa danh → null. */
+export function docDuong(v) {
+  if (typeof v !== "string") return null;
+  const t = v.normalize("NFC").trim().replace(/\s+/g, " ");
+  if (!t || DIA_DANH.test(t) || DIA_DANH_CO_PHAY.test(t)) return null;
+  if (MA_HOA.test(t)) return null;
+  if (chuaDaySo(t)) return null;
+  return t;
+}
+
 const chu = (v) => (typeof v === "string" || typeof v === "number" ? String(v).trim() : "");
 const soChu = (n) => String(Number(n));
 
@@ -26,6 +45,9 @@ export function docDacTrungS06(ad) {
   const p = ad?.payload ?? {};
   const out = [];
   const them = (field, value, rule_id) => out.push({ field, value, rule_id });
+
+  const duong = docDuong(p.street_name);
+  if (duong) them(ASSERTION_FIELD.street_raw, duong, "payload.street_name");
 
   const soNha = chu(p.street_number) ? ["street_number", chu(p.street_number)] : chu(p.streetnumber_display) ? ["streetnumber_display", chu(p.streetnumber_display)] : null;
   if (soNha) them(ASSERTION_FIELD.street_number, soNha[1], `payload.${soNha[0]}`);
