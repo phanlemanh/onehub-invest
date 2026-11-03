@@ -1,7 +1,7 @@
 # ADR-0016: Danh bạ vật thể và người — căn là nút vật thể, listing gắn ở mức sâu nhất biết được
 
 Ngày: 2026-10-27 · Trạng thái: **accepted** (Mạnh duyệt 27/10: «Duyệt khung đã sửa ba điểm, theo các mặc định của em»)
-· Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
+· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
 `docs/product/FRAMING.md`, `CONTEXT.md`, ROADMAP §3 mục 22
 
 > Câu hỏi của Mạnh (27/10): «Mô hình của chúng ta là một bất động sản duy nhất và nhiều listing. Có nên tạo một bảng
@@ -142,7 +142,8 @@ và phát biểu theo vật thể.
 
 - Danh bạ không mang tầng A; nguồn chỉ là mã S0x trong bí danh và phát biểu.
 - **S08** (luật 5 AGENTS — chỉ dùng nội bộ, không tái xuất lên Invest/API): vật thể chỉ có từ S08 (chưa listing nào trỏ
-  vào) **ở lại máy local**; lên cloud khi có ≥ 1 listing trỏ vào. Giá trị kế thừa có nguồn duy nhất S08 chỉ để bắt mâu
+  vào, chưa ai xác nhận) **ở lại máy local**, kể cả tên toà chỉ có từ S08; ra khỏi máy thu khi có ≥ 1 listing trỏ vào
+  **hoặc có ≥ 1 xác nhận của người** (Mạnh duyệt sửa đổi 03/11, ROADMAP §3 mục 28). Giá trị kế thừa có nguồn duy nhất S08 chỉ để bắt mâu
   thuẫn và hiện ở `/ops`, **không hiện trên Invest** khi chưa có nguồn khác xác nhận. Tên toà/trục được lên (tin cũng nói
   tới); bí danh mã căn S08 ở local.
 - ZCode và DATA-CONTRACT không đổi: danh bạ nằm sau `stg_*`.
