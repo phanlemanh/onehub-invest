@@ -1,0 +1,84 @@
+schema_version: 1
+feature_slug: s03-llm-doc-toan-bo
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Ca LS1-AC-1 xanh trên ma trận bảy loại tin viết trước; đỏ khi thêm lại lọc kind (thông điệp ghim mã tin thuê thiếu) trên cùng fixture."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ls1_thuan
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo.test.ts"]
+    expected: "Ca LS1-AC-2 dùng bài 1.500 ký tự: chữ gửi đi dài hơn 500, không SĐT, email, link, tên nhóm, tên miền nguồn trong thân bài, kiểm trên chữ đến model giả; đỏ khi gửi chữ chưa gạt, ghim chuỗi lộ, kèm đối chứng dương."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/src/enrich/luat-trich-dan.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Ca LS1-AC-3 xanh: ô property_type đổi, đề xuất corroborated mang trich-dan:<mã>, 0 thẻ; đọc qua sale_offers sau phân xử, không đọc đề xuất viết tay."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/src/enrich/luat-trich-dan.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Ma trận viết trước gồm năm ca và các bẫy gần X, cạnh X, cần mua X, hai loại trong một câu, model trả nhà phố kèm trích dẫn đúng thì lên thẻ không tự điền, mỗi ca có đối chứng dương cùng tin với trích dẫn đúng; thông điệp ghim lý do skipped."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Thẻ có câu trích, retired_at vẫn NULL, băm dòng tin không đổi; offer và trích giả 0 thẻ; đối chứng dương cùng fixture."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Băm price_vnd, area_m2 mọi tin bằng nhau trước và sau; biên 10% và 3% có ca hai phía; đỏ khi cố ghi giá, ghim offer_id."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts", "app/src/app/api/v1/ops/review/[id]/decide/route.ts"]
+    expected: "Fixture E1 trái model + ý định + giá: đúng một thẻ, lượt hai 0 dòng và 0 lời gọi mới; duyệt qua hàm của route decide: đề xuất đổi đúng, dòng ops_audit đọc lại được, băm cột tin không đổi."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/scripts/doc-toan-bo-s03.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Dừng trước bài vượt trần, lượt sau đọc đúng phần còn lại; --thu 0 dòng trên mọi bảng; thiếu khoá thoát khác 0 trước lời gọi đầu; không cờ thì trần 3 USD, model Haiku, ghim bằng ca đọc cờ; vượt --tran-the dừng tạo thẻ."
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/scripts/doc-toan-bo-s03.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "--dem bằng truy vấn đếm độc lập trong test, fixture phân biệt skipped với corroborated; cờ đỏ quá 5 USD/ngày có ca hai phía; revert_enrichment thật lùi cả lượt; đỏ khi --dem đếm cả S05."
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    paths: ["agent/**"]
+    expected: "Bộ test agent xanh."
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: ["pipeline/lib/enrich-call-sites.mjs", "pipeline/**"]
+    expected: "Bộ test pipeline xanh, gồm ma trận chỗ gọi đã thêm lệnh mới với vai máy."
+  - id: E12
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review-card.tsx]
+    target: "http://localhost:3462/ops/review"
+    steps: "đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs --vai ops), mở /ops/review trên DB thử có thẻ fixture E1 trái model + ý định + giá, mở thẻ enrich:<offer_id>"
+    expected: "thấy đề xuất loại hình và khối đối chiếu: câu trích, loại bất đồng, hai giá trị; đúng một thẻ cho tin đó; ảnh evidence/E12-*.png"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ls1_db
+    paths: ["agent/scripts/doc-toan-bo-s03.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/tests/doc-toan-bo-db.itest.ts"]
+    expected: "Model giả cho nhãn biết trước: Wilson khớp số tính tay; dưới ngưỡng thoát khác 0, 0 dòng canonical; chạy thật khi thiếu dòng mẫu đạt thì từ chối, ghim thông điệp; có dòng đạt thì chạy."

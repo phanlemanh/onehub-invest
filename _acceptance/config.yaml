@@ -35,6 +35,8 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
+    ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
@@ -519,6 +521,9 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    geg_selftest: "bash .claude/hooks/tests/guard-edits.selftest.sh"   # guard-edits-goc-theo-tep E1–E5, E8
+    geg_dot_bien: "bash _acceptance/guard-edits-goc-theo-tep/probes/dot-bien.sh"   # guard-edits-goc-theo-tep E6 — bản cũ và bốn đột biến đỏ đúng ca ghim
+    geg_pham_vi: "bash _acceptance/guard-edits-goc-theo-tep/probes/pham-vi.sh"   # guard-edits-goc-theo-tep E7
     # do-nen-hieu-nang — chỉ đọc DB local (pg_settings, pg_stat_*); đo trang chạy next start cổng 3463 trên build prod
     dn_db: "node _acceptance/do-nen-hieu-nang/probes/db.mjs"
     dn_trang: "bash _acceptance/do-nen-hieu-nang/probes/trang.sh"

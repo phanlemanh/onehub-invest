@@ -108,6 +108,10 @@ _Avoid_: chỗ ở, phòng cho thuê, homestay
 - Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
 _Avoid_: tin tìm mua, wanted
 
+**Đối chiếu**: Khối trong thẻ duyệt nêu chỗ AI và bộ đọc khác nhau về ý định tin, giá rao, diện tích, kèm câu trích. Duyệt hay bỏ chỉ ghi nhật ký, không đổi tin.
+- Code: `evidence.doi_chieu` · không có slug riêng
+_Avoid_: so khớp, kiểm chéo
+
 **Yêu cầu mua**: Yêu cầu có `kind = sale`.
 - Code: `kind = sale` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType ∈ Residential, Land
 

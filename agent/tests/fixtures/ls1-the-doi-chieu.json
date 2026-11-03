@@ -1,0 +1,89 @@
+{
+  "ma_tin": "t_ls1_the",
+  "the": {
+    "item_type": "agent_output",
+    "title": "Bổ sung dữ liệu: t_ls1_the (4 trường)",
+    "evidence": {
+      "text": "Khách cần mua căn hộ giá 5 tỷ khu Minh Khai rộng rãi",
+      "model": "gateway:anthropic/claude-haiku-5.5",
+      "fields": [
+        {
+          "basis": "luật mồi",
+          "field": "property_type",
+          "value": "land",
+          "source": "e1_rule",
+          "conflict": true,
+          "confidence": null,
+          "proposal_id": "e1_rule"
+        },
+        {
+          "basis": "AI gateway:anthropic/claude-haiku-5.5 · trích dẫn",
+          "field": "property_type",
+          "value": "apartment",
+          "source": "e2_llm",
+          "conflict": true,
+          "confidence": null,
+          "proposal_id": "e2_llm"
+        }
+      ],
+      "run_id": "ls1-the",
+      "offer_id": "t_ls1_the",
+      "doi_chieu": [
+        {
+          "ai": "inquiry",
+          "loai": "y_dinh",
+          "trich": "cần mua căn hộ",
+          "bo_doc": "offer"
+        },
+        {
+          "ai": 5000000000,
+          "loai": "gia",
+          "trich": "giá 5 tỷ",
+          "bo_doc": 3000000000
+        }
+      ],
+      "group_name": "Nhóm mồi LS1",
+      "trace_path": null
+    }
+  },
+  "de_xuat": [
+    {
+      "field": "property_type",
+      "value": "land",
+      "value_key": "land",
+      "source": "e1_rule",
+      "route": "review",
+      "corroborated_by": null,
+      "confidence": null,
+      "model": "context-resolver",
+      "trace_path": null,
+      "evidence": {
+        "text": "Khách cần mua căn hộ giá 5 tỷ khu Minh Khai rộng rãi",
+        "basis": "luật mồi",
+        "trich": null,
+        "group_name": "Nhóm mồi LS1",
+        "prompt_version": "dtb-s03-v1"
+      },
+      "status": "queued"
+    },
+    {
+      "field": "property_type",
+      "value": "apartment",
+      "value_key": "apartment",
+      "source": "e2_llm",
+      "route": "review",
+      "corroborated_by": null,
+      "confidence": null,
+      "model": "gateway:anthropic/claude-haiku-5.5",
+      "trace_path": null,
+      "evidence": {
+        "text": "Khách cần mua căn hộ giá 5 tỷ khu Minh Khai rộng rãi",
+        "basis": "AI gateway:anthropic/claude-haiku-5.5 · trích dẫn",
+        "trich": "cần mua căn hộ",
+        "group_name": "Nhóm mồi LS1",
+        "prompt_version": "dtb-s03-v1"
+      },
+      "status": "queued"
+    }
+  ]
+}
