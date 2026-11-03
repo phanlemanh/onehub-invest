@@ -56,3 +56,45 @@ evals:
     cmd: config:executors.script.hdnb_luat_cu
     expected: "exit 0; hai tệp test luật không lùi và thiếu mốc không đổi vẫn pass"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.hdnb_e2e
+    expected: "exit 0; kịch bản 429 thoát 2, in DỪNG NGAY và Retry-After; kịch bản có số thoát 0, có dòng [nấc], [đối chiếu] lệch 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.hdnb_duong_ra
+    expected: "exit 0; ca canDungNgay pass; should-NOT-fire: captcha, khong-ra-so, timeout không dừng ngay"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.hdnb_e2e
+    expected: "exit 0; sau cả ba kịch bản không còn Chrome mang profile test, tệp PID trống"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.hdnb_duong_ra
+    expected: "exit 0; ca laChromeBoThuCuaLenh pass; should-NOT-fire: dòng lệnh không chứa profile thì không được tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.hdnb_e2e
+    expected: "exit 0; kịch bản SIGTERM thoát 130, có ít nhất một số trong stg tạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-12
+    executor: script
+    cmd: config:executors.script.hdnb_duong_ra
+    expected: "exit 0; ca chonTinChuaHetHan và ca --threads 3 thoát 1 pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

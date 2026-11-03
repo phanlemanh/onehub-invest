@@ -666,6 +666,8 @@ executors:
     # hop-dong-nguoi-ban-s06 — bộ nạp giữ số và tên, bộ thu gọi mỗi tài khoản một lần; không gọi nguồn
     hdnb_nap: "cd pipeline && node --test scripts/importer-schema-v5.test.mjs"
     hdnb_viec: "cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"
+    hdnb_duong_ra: "cd pipeline && node --test scripts/thu-so-s06.test.mjs"
+    hdnb_e2e: "cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"   # mở Chrome ngoài màn hình, máy chủ giả local
     hdnb_luat_cu: "cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.

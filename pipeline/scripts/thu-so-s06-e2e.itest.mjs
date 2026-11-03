@@ -1,4 +1,5 @@
-// thu-so-s06.e2e.test.mjs — 0311-3 MỞ LẠI vòng 4: chạy MỘT LƯỢT THẬT qua main,
+// thu-so-s06-e2e.itest.mjs — 0311-3 MỞ LẠI vòng 4: chạy MỘT LƯỢT THẬT qua main,
+// Tên .itest: mở Chrome thật ngoài màn hình nên không nằm trong npm test của pipeline; chạy bằng hdnb_e2e.
 // không gọi nguồn thật: máy chủ HTTP giả trên 127.0.0.1 (S06_WEB_BASE), lược đồ
 // tạm qua search_path (DATABASE_URL), state + snapshot riêng (S06_STATE_DIR /
 // S06_SNAP_ROOT), cổng CDP riêng, Chrome ngoài màn hình và phải TẮT sau lượt.
@@ -36,9 +37,9 @@ async function dungHạTang(cheDo) {
         return res.end("chan");
       }
       res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      res.end(`<html><body><button id="h">Hiện số 0901 ***</button>
+      res.end(`<html><body><button id="h">Hiện số 0900 ***</button>
         <script>document.getElementById('h').onclick=()=>setTimeout(()=>{
-          const a=document.createElement('a');a.href='tel:0901234567';a.textContent='Gọi 0901234567';
+          const a=document.createElement('a');a.href='tel:0900000009';a.textContent='Gọi 0900000009';
           document.body.appendChild(a);},150);</script></body></html>`);
     };
     if (cheDo === "cham") return setTimeout(tra, 4000);
