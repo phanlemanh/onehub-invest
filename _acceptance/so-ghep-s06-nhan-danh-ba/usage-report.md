@@ -52,3 +52,43 @@ wall: 1217s
 - **claude-opus-5-5**: 3 agent · 30 calls · out 86,356 · in 66 · cache_read 2,699,708 · cache_create 447,087
 - **claude-haiku-5-5**: 12 agent · 26 calls · out 21,455 · in 52 · cache_read 301,458 · cache_create 275,794
 
+### S4 round 2 — wf_c5111071-42d (18 agent, 104,105 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 11 | 25,677 | 24 | 957,959 | 267 |
+| review:measurement | claude-opus-5-5 | 6 | 21,422 | 12 | 254,812 | 209 |
+| synthesize:report | claude-sonnet-5-5 | 7 | 14,040 | 14 | 304,343 | 95 |
+| review:conventions | claude-opus-5-5 | 7 | 11,193 | 16 | 374,292 | 111 |
+| baseline:diffBase | claude-sonnet-5-5 | 2 | 3,632 | 4 | 24,053 | 23 |
+| machine:bash db/db-thu.sh oneinvest_sg >/dev/nul | claude-haiku-5-5 | 5 | 3,219 | 10 | 96,208 | 43 |
+| judge:E10:domain-correctness | claude-sonnet-5-5 | 3 | 2,915 | 8 | 49,962 | 20 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,914 | 4 | 20,059 | 46 |
+| judge:E10:spec-alignment | claude-sonnet-5-5 | 4 | 2,689 | 10 | 93,931 | 20 |
+| judge:E10:operational-feasibility | claude-sonnet-5-5 | 4 | 2,575 | 10 | 104,150 | 19 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,521 | 4 | 23,197 | 68 |
+| triage | claude-sonnet-5-5 | 2 | 2,307 | 4 | 22,115 | 19 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,972 | 4 | 23,211 | 9 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,911 | 4 | 23,217 | 7 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 1,830 | 4 | 3,140 | 416 |
+| machine:node --test pipeline/scripts/so-ghep-s06 | claude-haiku-5-5 | 2 | 1,672 | 4 | 23,229 | 12 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,210 | 4 | 23,222 | 16 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 406 | 4 | 18,857 | 6 |
+
+
+wall: 699s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 3,632 | 24,053 | 23 | 03:31:55 | 03:32:18 |
+| machine | 8 | 17,249 | 235,483 | 573 | 03:31:55 | 03:41:28 |
+| judge | 3 | 8,179 | 248,043 | 22 | 03:31:55 | 03:32:17 |
+| review | 3 | 58,292 | 1,587,063 | 268 | 03:31:55 | 03:36:23 |
+| triage | 1 | 2,307 | 22,115 | 19 | 03:41:29 | 03:41:48 |
+| capture | 1 | 406 | 18,857 | 6 | 03:41:50 | 03:41:56 |
+| synthesize | 1 | 14,040 | 304,343 | 95 | 03:41:58 | 03:43:33 |
+
+- **claude-opus-5-5**: 3 agent · 24 calls · out 58,292 · in 52 · cache_read 1,587,063 · cache_create 338,445
+- **claude-sonnet-5-5**: 7 agent · 24 calls · out 28,564 · in 54 · cache_read 617,411 · cache_create 281,477
+- **claude-haiku-5-5**: 8 agent · 19 calls · out 17,249 · in 38 · cache_read 235,483 · cache_create 195,369
+
