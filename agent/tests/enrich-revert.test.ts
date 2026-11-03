@@ -12,6 +12,8 @@ import { resolveContext, type ContextResult } from "../src/agents/context-resolv
 import { parseEnrichOutput } from "../src/agents/enrich-text.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
 import { MIGRATIONS, withTx, insertOffer, insertProperty, insertProposal } from "./helpers/db.js";
+// @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
+import { sqlNapLai } from "../../pipeline/lib/nap-view-song.mjs";
 
 let seq = 0;
 const nextId = () => `t_rev_${++seq}`;
@@ -461,7 +463,8 @@ test("AC-10 migration idempotent", async () => {
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {
       for (const f of files) {
-        await apLaiChiuTai(c, readFileSync(f, "utf8")).catch((e: Error) => {
+        // DB đã áp 070 thì view có thêm cột, câu dựng lại bằng SELECT * của 044, 045 sẽ báo lỗi: sqlNapLai bỏ đúng câu ấy.
+        await apLaiChiuTai(c, await sqlNapLai(c, readFileSync(f, "utf8"))).catch((e: Error) => {
           throw new Error(`AC-10 không idempotent: ${f.split("/").pop()} lần ${round}: ${e.message}`);
         });
       }

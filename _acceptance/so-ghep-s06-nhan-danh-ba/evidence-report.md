@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4c19ef56465e966b6a0fbd70b4ef08e634f0cd1f
+verified_commit: 6090f7f333cc6928f7f62917c2be5546000cce45
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -220,3 +220,7 @@ Round 4: E1 đến E5 mang sang từ round 3, E6, E7, E7b, E8, E8u từ round 1,
 ### Re-pin lần 1 — 2026-11-03, do hoá cũ do gộp main vào nhánh
 run_id: repin-20261103T133106Z-78717
 sha: 4c19ef56465e966b6a0fbd70b4ef08e634f0cd1f · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-11-03, do AC-10 nạp lại migration cũ chạy được khi view đã có cột của 070
+run_id: repin-20261103T142825Z-54935
+sha: 6090f7f333cc6928f7f62917c2be5546000cce45 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
