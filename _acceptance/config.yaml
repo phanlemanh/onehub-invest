@@ -519,6 +519,9 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    geg_selftest: "bash .claude/hooks/tests/guard-edits.selftest.sh"   # guard-edits-goc-theo-tep E1–E5, E8
+    geg_dot_bien: "bash _acceptance/guard-edits-goc-theo-tep/probes/dot-bien.sh"   # guard-edits-goc-theo-tep E6 — bản cũ và bốn đột biến đỏ đúng ca ghim
+    geg_pham_vi: "bash _acceptance/guard-edits-goc-theo-tep/probes/pham-vi.sh"   # guard-edits-goc-theo-tep E7
     # do-nen-hieu-nang — chỉ đọc DB local (pg_settings, pg_stat_*); đo trang chạy next start cổng 3463 trên build prod
     dn_db: "node _acceptance/do-nen-hieu-nang/probes/db.mjs"
     dn_trang: "bash _acceptance/do-nen-hieu-nang/probes/trang.sh"
