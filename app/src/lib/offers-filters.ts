@@ -66,6 +66,8 @@ export type PublicOffer = {
   sellerName: string | null;
   sellerManyNames: boolean;
   hasPhone: boolean;
+  /** Số chưa xác minh: suy ra từ tin khác cùng tài khoản, hoặc thiếu bằng chứng trực tiếp. */
+  phoneInferred: boolean;
   updatedAt: string;
   /** Số ngày từ lần đầu hệ thống thấy tin, theo ngày VN. Không phải ngày đăng gốc. */
   firstSeenDays: number;

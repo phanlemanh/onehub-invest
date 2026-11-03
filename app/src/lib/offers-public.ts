@@ -35,6 +35,12 @@ const VISIBLE = `o.kind IN ('${KIND.sale}', '${KIND.rent_lt}')
   AND o.source <> ALL(ARRAY[${OFFER_HIDDEN_SOURCES.map((s) => `'${s}'`).join(", ")}])
   AND o.last_seen >= now() - interval '${OFFER_RECENT_DAYS} days'`;
 
+/**
+ * Có số mà chưa xác minh (070). Đọc qua to_jsonb để cloud chưa có cột vẫn không lỗi: thiếu cột hay cột NULL đều coi là chưa
+ * xác minh, vì thiếu bằng chứng thì kèm nhãn. Không số thì không có gì để gắn nhãn.
+ */
+const PHONE_INFERRED = `(o.seller_phone IS NOT NULL AND coalesce(to_jsonb(o) ->> 'seller_phone_inferred', 'true') <> 'false')`;
+
 const ORDER: Record<OfferSort, string> = {
   newest: "o.last_seen DESC, o.offer_id",
   "price-asc": "o.price_vnd ASC, o.offer_id",
@@ -103,6 +109,7 @@ export async function getPublicOffers(
               o.bathrooms, o.stories, o.frontage_length,
               o.area_id, a.name AS area_name, o.street_raw, o.seller_name,
               n.seller_ref IS NOT NULL AS many_names, o.seller_phone IS NOT NULL AS has_phone,
+              ${PHONE_INFERRED} AS phone_inferred,
               o.last_seen::text AS updated_at,
               GREATEST(0, (now() AT TIME ZONE '${VN_TZ}')::date - (o.first_seen AT TIME ZONE '${VN_TZ}')::date)::int AS first_seen_days
        ${from} LEFT JOIN nhieu_ten n ON n.seller_ref = o.seller_ref
@@ -135,6 +142,7 @@ export async function getPublicOffers(
       sellerName: r.many_names || (r.seller_name !== null && mangDinhDanh(r.seller_name, entries)) ? null : r.seller_name,
       sellerManyNames: r.many_names,
       hasPhone: r.has_phone,
+      phoneInferred: r.phone_inferred,
       updatedAt: r.updated_at,
       firstSeenDays: r.first_seen_days,
     })),
@@ -154,13 +162,14 @@ export async function getOfferWards(marketId: string, kind: OfferFilters["kind"]
 }
 
 /** Số của đúng một tin đang hiện công khai; null khi tin không hiện hoặc chưa có số. */
-export async function getOfferPhone(offerId: string): Promise<string | null> {
+export async function getOfferPhone(offerId: string): Promise<{ phone: string; inferred: boolean } | null> {
   const { rows } = await pool.query(
-    `SELECT o.seller_phone FROM sale_offers o WHERE o.offer_id = $1 AND ${VISIBLE}`,
+    `SELECT o.seller_phone, ${PHONE_INFERRED} AS phone_inferred FROM sale_offers o WHERE o.offer_id = $1 AND ${VISIBLE}`,
     [offerId],
   );
   const phone: string | null = rows[0]?.seller_phone ?? null;
-  return phone !== null && mangDinhDanh(phone, await sourceEntries()) ? null : phone;
+  if (phone === null || mangDinhDanh(phone, await sourceEntries())) return null;
+  return { phone, inferred: rows[0].phone_inferred };
 }
 
 /** Mã thị trường đọc từ query (`market`), mã dài cũ đổi sang mã ngắn. */

@@ -108,7 +108,7 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
       const so = await getOfferPhone(offer_id)
       if (so === null) continue
       coThat++
-      if (!/^\+84\d{9}$/.test(so)) saiKhuon++
+      if (!/^\+84\d{9}$/.test(so.phone)) saiKhuon++
     }
     console.log(`số hiện được ${coThat} · sai khuôn ${saiKhuon} · định danh nguồn ${dem.dinhDanh} · tin ẩn ${dem.tinAn} · giá phi lý trang đầu ${dem.phiLy}`)
     assert.equal(dem.dinhDanh, 0, "giá trị trả về mang định danh nguồn")
