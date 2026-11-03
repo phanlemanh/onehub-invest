@@ -51,6 +51,11 @@ const khuonSo = (e164) => {
   const d = e164.replace(/\D/g, "").slice(-9);
   return new RegExp(`(?<!\\d)(?:\\+?84|0)?[ .-]?${d.split("").join("[ .-]?")}(?!\\d)`);
 };
+// Khuôn phải bắt đủ sáu dạng và không bắt số khác, trước khi «0 khớp» của vai Người xem có nghĩa gì. Số bịa.
+for (const dang of ["+84912345678", "84912345678", "0912345678", "0912 345 678", "0912.345.678", "912345678"]) {
+  if (!khuonSo("+84912345678").test(`x ${dang} y`)) dungLai(`khuôn số không bắt dạng thứ ${dang.length} ký tự`);
+}
+if (khuonSo("+84912345678").test("x 0912345679 y")) dungLai("khuôn số bắt nhầm số khác");
 const ANH = /\/api\/zalo-media\?(?:media|snapshot)=[^"'\s\\<>]+/g;
 const dongDau = (s) => s.split("\n").map((x) => x.trim()).find((x) => x.length >= 20)?.slice(0, 40) ?? null;
 
@@ -101,6 +106,8 @@ try {
        FROM sale_offers o WHERE o.offer_id = ANY($1::text[])`,
     [ids],
   );
+  const media = (await c.query("SELECT media_url, local_file FROM media WHERE resource_record_key = ANY($1::text[])", [ids])).rows;
+  const urlGoc = media.map((m) => m.media_url).filter(Boolean);
   const tenNguon = (await c.query("SELECT real_name FROM source_registry")).rows.map((r) => r.real_name.toLowerCase());
   const coTenNguon = (s) => tenNguon.some((t) => s.toLowerCase().includes(t));
   // Tên người bán trùng đúng nhãn loại hình của căn là rác nguồn, không phải danh tính: chữ đó vai nào cũng thấy ở cột Loại hình.
@@ -109,7 +116,7 @@ try {
     ...(r.seller_phone ? [{ loai: "số", re: khuonSo(r.seller_phone) }] : []),
     ...(r.seller_name && r.seller_name.length >= 4 && !loaiHinh.has(r.seller_name) ? [{ loai: "tên", s: r.seller_name }] : []),
     ...(r.bai && dongDau(r.bai) ? [{ loai: "chữ bài", s: dongDau(r.bai) }] : []),
-  ]);
+  ]).concat(urlGoc.map((s) => ({ loai: "link ảnh gốc", s })), media.map((m) => m.local_file).filter(Boolean).map((s) => ({ loai: "đường ảnh", s })));
   const quetViewer = (noi, trang) => {
     if (/\/api\/zalo-media\?/.test(trang)) loi.push(`viewer nhận đường ảnh ở ${noi}`);
     if (/tel:\+?\d/.test(trang)) loi.push(`viewer nhận liên kết gọi ở ${noi}`);
@@ -128,6 +135,9 @@ try {
       const anh = [...new Set(t.match(ANH) ?? [])];
       if (vai === "ops") anhCan.set(r.offer_id, anh);
       if (r.seller_phone && !t.includes(`tel:${r.seller_phone}`)) { loi.push(`${vai} thiếu liên kết gọi`); du = false; }
+      // Đối chứng dương của khuôn vai Người xem: cùng khuôn đó phải thấy số thật trên trang vai này.
+      if (r.seller_phone && !khuonSo(r.seller_phone).test(t)) { loi.push(`khuôn số không bắt được số trên trang ${vai}`); du = false; }
+      if (urlGoc.some((u) => t.includes(u))) { loi.push(`${vai} nhận link ảnh gốc`); du = false; }
       if (r.seller_name && !coTenNguon(r.seller_name) && !t.includes(r.seller_name)) { loi.push(`${vai} thiếu tên`); du = false; }
       if (r.bai && dongDau(r.bai) && !coTenNguon(r.bai) && !t.includes(dongDau(r.bai))) { loi.push(`${vai} thiếu chữ bài`); du = false; }
       if (r.co_anh && anh.length === 0) { loi.push(`${vai} thiếu ảnh`); du = false; }

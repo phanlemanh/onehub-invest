@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getSessionUser } from "@/lib/auth";
 import { dealHang, dealTheoVai, getDeal } from "@/lib/deals";
+import { chuGiam } from "@/lib/deals-chi-tiet";
 import { fmtCompact } from "@/lib/format";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
 
@@ -38,7 +39,7 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
       <PageHeader
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt", href: "/ops/deals" }, { label: "Một căn" }]}
         title={d.ten}
-        stats={[d.priceVnd === null ? "—" : fmtCompact(d.priceVnd), d.discountPct === null ? "Chưa tính được mức giảm" : `−${d.discountPct.toFixed(0)}%`, d.source]}
+        stats={[d.priceVnd === null ? "—" : fmtCompact(d.priceVnd), d.discountPct === null ? "Chưa tính được mức giảm" : chuGiam(d.discountPct), d.source]}
         description="Đủ để quyết có gọi người bán không. Chỉ đọc."
         actions={d.suspect ? <Badge variant="warning-light">Cần xác minh</Badge> : undefined}
       />

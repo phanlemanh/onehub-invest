@@ -167,6 +167,14 @@ _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại
 - Code: `tabCua`, `TabDeal` = `du` · `xac-minh` · `thieu` (`app/src/lib/deals-chi-tiet.ts`) · RESO: không có — chỉ số nội bộ
 _Avoid_: căn đẹp, căn sạch
 
+**Một căn**: Trang riêng của một căn trong Căn giá tốt, cùng phần thân với sheet, có đường dẫn để gửi cho nhau. Mục trống thì bỏ dòng.
+- Code: `DealBody` beMat `"trang"` (`app/src/components/ops/deal-body.tsx`) · slug trang: `/ops/deals/<offerId>` · RESO: không có — chỉ số nội bộ
+_Avoid_: chi tiết deal
+
+**Căn cùng tiêu chí**: Tab trong sheet của Căn giá tốt: các căn cùng phường, cùng loại hình, diện tích trong ±25% quanh căn đang xem, để so giá. Căn cần xác minh đứng cuối.
+- Code: `canCungTieuChi` (`app/src/lib/deals-chi-tiet.ts`) · slug trang: không có — tab trong sheet · RESO: không có — chỉ số nội bộ
+_Avoid_: căn tương tự, comps
+
 **Đã rời danh sách**: Nhãn trên trang một căn khi căn không còn trong bảng Căn giá tốt, kèm lý do: quá 45 ngày chưa thấy lại, giảm dưới 5%, giảm trên 50%, hoặc không tính được mức giảm. Căn vẫn mở được để xem lại; chỉ mã không có mới báo «Không tìm thấy».
 - Code: `roiDanhSach`, `lyDoRoi` (`app/src/lib/deals-chi-tiet.ts`) · slug trang: `/ops/deals/<offerId>` · RESO: không có — chỉ số nội bộ
 _Avoid_: tin hết hạn, tin chết

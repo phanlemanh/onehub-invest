@@ -13,11 +13,11 @@ const SRC = /^\/api\/zalo-media\?(media=[0-9a-f]{32}|snapshot=[^&]+&file=media%2
 const VAI = { xemNoiDung: true, mayThu: true }
 
 /** Từng căn đạt ba điều của AC-8; `coMedia`, `coBai` là số dòng đọc thẳng từ bảng, không qua loader. */
-function kiemCan(rows: DealRow[], coMedia: Set<string>, coBai: Set<string>) {
+function kiemCan(rows: DealRow[], coMedia: Set<string>, coBai: Set<string>, nhan: typeof thieuGi = thieuGi) {
   for (const d of rows) {
-    const thieu = thieuGi(d, VAI)
+    // Giá/m², số tin, mức giảm đều tính từ thước; DB chung một nhãn «Chưa có thước phường» (thieuGi) cho bốn số này.
     if (!d.pricePerm2 || !d.medianPerm2 || !d.rulerN || d.discountPct === null) {
-      assert.ok(thieu.length > 0, "CGT-DC thiếu số chứng minh mà không có nhãn")
+      assert.ok(nhan(d, VAI).includes("Chưa có thước phường"), "CGT-DC thiếu số chứng minh mà không có nhãn tương ứng")
     }
     if (coMedia.has(d.offerId)) assert.ok(d.images.length >= 1, "CGT-DC thiếu ảnh")
     for (const i of d.images) assert.match(i.src, SRC, "CGT-DC đường ảnh sai khuôn")
@@ -58,8 +58,10 @@ test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 600_000 }, asy
   const coBai = new Set((await pool.query<{ id: string }>(`SELECT o.offer_id AS id FROM sale_offers o WHERE o.offer_id = ANY($1::text[]) AND EXISTS (SELECT 1 FROM stg_zalo_posts z WHERE z.post_id = ANY(o.post_ids) AND z.text <> '')`, [ids])).rows.map((r) => r.id))
   kiemCan(rows, coMedia, coBai)
   // Đỏ: bản bỏ ảnh.
-  if (coMedia.size > 0) assert.throws(() => kiemCan(rows.map((d) => ({ ...d, images: [] })), coMedia, coBai), /CGT-DC thiếu ảnh/)
-  else console.log("CGT-DC ghi chú: chưa căn nào có dòng media, chiều đỏ của ảnh chạy trên mẫu")
+  const mau = rows[0]
+  assert.throws(() => kiemCan([{ ...mau, images: [] }], new Set([mau.offerId]), new Set()), /CGT-DC thiếu ảnh/)
+  // Đỏ: thiếu thước mà nhãn nói chuyện khác.
+  assert.throws(() => kiemCan([{ ...mau, medianPerm2: null, images: [] }], new Set(), new Set(), () => ["Chưa có SĐT"]), /CGT-DC thiếu số chứng minh/)
 
   // Có trong getDeals ⇔ getDeal không nêu lý do rời.
   const p1 = (await pool.query<{ offer_id: string }>("SELECT offer_id FROM sale_offers WHERE price_tier = 'P1' AND kind = 'sale'")).rows.map((r) => r.offer_id)

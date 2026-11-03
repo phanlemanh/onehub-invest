@@ -12,10 +12,10 @@ import {
   tenCan,
   thieuGi,
 } from "./deals-chi-tiet";
-import { maskSourceNames } from "./mask-source-names";
+import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { fmtPhone, telHref } from "./ops/people";
 import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
-import { getSourceNameEntries } from "./source-roles";
+import { docSourceNameEntries } from "./source-roles";
 
 export { NGHI_NGO_PCT, repostLabel };
 
@@ -192,22 +192,28 @@ async function truyVan(sql: (o: { cloud?: boolean }) => string, values: unknown[
 /** Ở máy thu: gắn ảnh qua khoá (URL gốc không xuống trình duyệt) và che tên nguồn thật trong chữ của người đăng. */
 async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRow[]; mayThu: boolean }> {
   if (!mayThu || rows.length === 0) return { rows, mayThu };
-  let media;
+  // Lỗi hạ tầng ném tiếp cho khối lỗi: nuốt nó thì bộ che trả null và trang báo sai là căn thiếu tên, thiếu chữ bài.
+  let entries: SourceNameEntry[] = [];
+  try {
+    entries = await docSourceNameEntries();
+  } catch (e) {
+    if (!thieuLuocDo(e)) throw e;
+  }
+  let media = null;
   try {
     media = await loadOfferMedia(rows.map((d) => d.offerId));
   } catch (e) {
     if (!thieuLuocDo(e)) throw e;
-    return { rows, mayThu: false };
   }
-  const entries = await getSourceNameEntries();
   return {
-    mayThu,
+    // Thiếu bảng media: coi như bản cloud, chữ bài không được đi tiếp vì trang nói máy chủ không giữ nó.
+    mayThu: media !== null,
     rows: rows.map((d) => ({
       ...d,
-      images: buildMediaImages(media.get(d.offerId) ?? []),
+      images: media ? buildMediaImages(media.get(d.offerId) ?? []) : [],
       sellerName: maskSourceNames(d.sellerName, entries),
       groupName: maskSourceNames(d.groupName, entries),
-      postTextFull: maskSourceNames(d.postTextFull, entries),
+      postTextFull: media ? maskSourceNames(d.postTextFull, entries) : null,
     })),
   };
 }

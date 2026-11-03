@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ImageOffIcon } from "lucide-react"
 
 import { Progress, ProgressLabel } from "@/components/ui/progress"
@@ -38,21 +39,26 @@ export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) 
   )
 }
 
-/** Ảnh đầu 40 px, rê chuột xem lớn: đủ để loại căn bằng mắt mà chưa phải mở sheet. */
+function OTrong({ nhan, ...attrs }: { nhan: string } & Record<`data-${string}`, boolean>) {
+  return (
+    <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md" title={nhan} {...attrs}>
+      <ImageOffIcon className="size-4" aria-hidden="true" />
+      <span className="sr-only">{nhan}</span>
+    </span>
+  )
+}
+
+/** Ảnh đầu 40 px, rê chuột xem lớn: đủ để loại căn bằng mắt mà chưa phải mở sheet. Link gốc hết hạn thì ghi «Ảnh hỏng», không để ô trống. */
 export function DealThumb({ d }: { d: DealHang }) {
   const anh = d.images[0]?.src
-  if (!anh) {
-    return (
-      <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md" title="Chưa có ảnh" data-deal-khong-anh>
-        <ImageOffIcon className="size-4" aria-hidden="true" />
-      </span>
-    )
-  }
+  const [hong, setHong] = useState<string | null>(null)
+  if (!anh) return <OTrong nhan="Chưa có ảnh" data-deal-khong-anh />
+  if (hong === anh) return <OTrong nhan="Ảnh hỏng" data-deal-anh-hong />
   return (
     <HoverCard>
       <HoverCardTrigger render={<span className="size-10 shrink-0 overflow-hidden rounded-md" />}>
         {/* eslint-disable-next-line @next/next/no-img-element -- ảnh qua route proxy của Ops, không qua next/image */}
-        <img src={anh} alt="" loading="lazy" className="size-full object-cover" />
+        <img src={anh} alt="" loading="lazy" className="size-full object-cover" onError={() => setHong(anh)} />
       </HoverCardTrigger>
       <HoverCardContent side="right" className="w-72 p-1">
         {/* eslint-disable-next-line @next/next/no-img-element -- như trên */}

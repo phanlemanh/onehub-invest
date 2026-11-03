@@ -175,7 +175,7 @@ executors:
     seller_ref_that: "bash db/db-thu.sh oneinvest_p3_sref && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node --test --test-concurrency=1 scripts/seller-ref.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node scripts/do-seller-ref.mjs"   # seller-ref-theo-nguoi-gui (HD4) E4, E5, E7, E8: ca DB + thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P3-141)
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
-    can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
+    can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
     gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
     gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9

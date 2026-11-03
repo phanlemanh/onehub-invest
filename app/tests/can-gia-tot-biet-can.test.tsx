@@ -18,7 +18,7 @@ import type { User } from "../src/lib/auth"
 import { pool } from "../src/lib/db"
 import type { DealRow } from "../src/lib/deals"
 import { canCungTieuChi, cauChungMinh, type DealHang, NGAY_TOI_DA, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, tabCua, thieuGi } from "../src/lib/deals-chi-tiet"
-import { fmtCompact, fmtInt } from "../src/lib/format"
+import { fmtCompact, fmtInt, fmtVnDate } from "../src/lib/format"
 import { LABELS_VI } from "../src/lib/vocab.generated"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -53,6 +53,7 @@ const TOA = "Toà Cgt7", TANG = "Tầng Cgt17", CAN = "Căn Cgt1706", SONHA = "S
 const SO_6 = ["+84912345678", "84912345678", "0912345678", "0912 345 678", "0912.345.678", "912345678"]
 const TEN_NGUON = "NguonThatCgt"
 const URL_GOC = "https://gai-url-goc.example/anh"
+const KHOA_NGUOI = `pty_${"0".repeat(26)}`
 
 type Over = Record<string, unknown>
 /** Một tin P1 bán đủ mọi mục; `over` ghi đè cột, `anh` số ảnh, `bai: false` bỏ bài gốc. */
@@ -72,8 +73,8 @@ const khoa = (id: string, i: number) => (Buffer.from(`${id}-${i}`).toString("hex
 const srcDau = (id: string) => `/api/zalo-media?snapshot=snap_cgt&file=${encodeURIComponent(`media/${id}-0.jpg`)}`
 
 /** Thước: năm căn cùng phường giá `m`/m², không số giảm. v_ruler_p2_area (034) ra trung vị `m`, n = 5. */
-async function thuoc(c: pg.Client, area: string, m = M) {
-  for (let i = 0; i < 5; i++) {
+async function thuoc(c: pg.Client, area: string, m = M, n = 5) {
+  for (let i = 0; i < n; i++) {
     const oid = `thuoc-${area}-${i}`
     await c.query(`INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier, property_type, area_id, area_m2, price_perm2) VALUES ($1, 'S06', 'sale', 'high', now(), now(), '{}', 'P2', 'unknown', $2, 80, $3)`, [oid, area, m])
     const pid = (await c.query(`INSERT INTO properties (kind, area_id) VALUES ('sale', $1) RETURNING id`, [area])).rows[0].id
@@ -84,10 +85,12 @@ async function thuoc(c: pg.Client, area: string, m = M) {
 // ---- Pool của app đi qua client của ca, mỗi câu trong savepoint: 42P01 không làm hỏng giao dịch ----
 let conn: pg.Client | null = null
 let loiKe: string | null = null
+let loiCau: [RegExp, string] | null = null
 let soCau = 0
 ;(pool as unknown as { query: unknown }).query = async (sql: string, vals?: unknown[]) => {
   soCau++
   if (loiKe) throw Object.assign(new Error("lỗi thử"), { code: loiKe })
+  if (loiCau?.[0].test(sql)) throw Object.assign(new Error("lỗi thử"), { code: loiCau[1] })
   await conn!.query("SAVEPOINT cgt_q")
   try {
     const r = await conn!.query(sql, vals)
@@ -116,6 +119,7 @@ async function withTx<T>(fn: (c: pg.Client, sc: string) => Promise<T>): Promise<
     return await fn(c, sc)
   } finally {
     loiKe = null
+    loiCau = null
     await c.query("ROLLBACK").catch(() => {})
     await c.end()
     conn = null
@@ -244,39 +248,81 @@ const tabSheet = (ten: RegExp) => [...document.querySelectorAll('[role="dialog"]
 const tabBang = (ten: string) => [...document.querySelectorAll('[role="tab"]')].find((t) => (t.textContent ?? "").startsWith(ten))
 const demTab = (ten: string) => Number((tabBang(ten)?.textContent ?? "").replace(ten, ""))
 
+/** Trường lọc DealsGrid thật sự đưa vào bộ lọc, đọc trên bản đã vẽ. */
+const truongLocThat = () => {
+  const gia = document.querySelector("[data-truong-loc]")?.getAttribute("data-truong-loc")
+  assert.ok(gia, "bảng không có đầu bảng để đọc trường lọc")
+  return gia.split(" ")
+}
+const banLuoi = (doi: [string, string][]) => chep("src/components/ops/deals-grid.tsx", doi)
+const LUOI_GOC = `from "@/components/ops/deals-grid"`
+
 const dsThat = () => import("../src/lib/deals")
 const chiTiet = () => banPage(PAGE_CAN)
 
 // ==== CGT-AC-1 ====
 test("CGT-AC-1 hàng bảng đúng dữ liệu của chính căn đó, thứ tự dealsSql, căn cần xác minh cuối", { timeout: 180_000 }, async () => {
   await withTx(async (c) => {
-    await tin(c, "a1", 22)
-    await tin(c, "a2", 30, {}, { anh: 0 })
-    await tin(c, "a3", 40)
-    await tin(c, "a4", 10)
-    const ky = [{ id: "a2", gap: 30, anh: false, suspect: false }, { id: "a1", gap: 22, anh: true, suspect: false }, { id: "a4", gap: 10, anh: true, suspect: false }, { id: "a3", gap: 40, anh: true, suspect: true }]
-    // a2 không ảnh nên thuộc «Thiếu 1»: đo riêng nhãn.
+    await thuoc(c, PC, 2 * M, 6)
+    const hopDong = { "a1": ["+84912345601", 2_100_000_000], "a2": ["+84912345602", 2_200_000_000], "a3": ["+84912345603", 2_300_000_000], "a4": ["+84912345604", 2_400_000_000] } as const
+    const rieng = (id: keyof typeof hopDong) => ({ seller_phone: hopDong[id][0], price_vnd: hopDong[id][1] })
+    await tin(c, "a1", 22, rieng("a1"))
+    await tin(c, "a2", 30, rieng("a2"), { anh: 0 })
+    await tin(c, "a3", 40, rieng("a3"))
+    await tin(c, "a4", 10, { ...rieng("a4"), area_id: PC })
+    const CH = LABELS_VI.property_type.apartment
+    const ky = [
+      { id: "a2", gap: 30, anh: false, tinhTrang: "Thiếu 1", ten: `${CH} · 50 m² · 2PN`, noi: `${TOA} · ${TEN_A}`, thuoc: M, n: 5 },
+      { id: "a1", gap: 22, anh: true, tinhTrang: "Đủ để gọi", ten: `${CH} · 50 m² · 2PN`, noi: `${TOA} · ${TEN_A}`, thuoc: M, n: 5 },
+      { id: "a4", gap: 10, anh: true, tinhTrang: "Đủ để gọi", ten: `${CH} · 50 m² · 2PN`, noi: `${TOA} · ${TEN_C}`, thuoc: 2 * M, n: 6 },
+      { id: "a3", gap: 40, anh: true, tinhTrang: "Cần xác minh", ten: `${CH} · 50 m² · 2PN`, noi: `${TOA} · ${TEN_A}`, thuoc: M, n: 5 },
+    ] as const
+    // Mỗi căn một giá, một số, căn a4 một thước riêng: gắn nhầm hàng thì đỏ.
+    const kiemHang = () => {
+      for (const r of ky) {
+        const h = hang(r.id)!, chu = h.textContent ?? ""
+        for (const can of [r.ten, r.noi, fmtCompact(hopDong[r.id][1]), `${fmtInt(M * (1 - r.gap / 100) / 1e6)} tr/m²`, `−${r.gap}%`, `Thước ${fmtInt(r.thuoc / 1e6)} tr/m²`, `${r.n} tin`, r.tinhTrang]) assert.ok(chu.includes(can), `CGT-AC-1 ${r.id} thiếu «${can}»`)
+        assert.equal(h.querySelector('a[href^="tel:"]')?.getAttribute("href"), `tel:${hopDong[r.id][0]}`, `CGT-AC-1 ${r.id} tel`)
+      }
+    }
+    const kiemAnh = () => {
+      for (const r of ky) {
+        const imgs = [...hang(r.id)!.querySelectorAll("img")].map((i) => i.getAttribute("src"))
+        assert.deepEqual(imgs, r.anh ? [srcDau(r.id)] : [], "CGT-AC-1 ảnh sai căn")
+      }
+    }
     const mod = await banPage(PAGE_DS)
     await vaoTrang(mod, "ops")
-    assert.match(hang("a2")!.textContent ?? "", /Thiếu 1/)
-    const kyDu = ky
-    assert.deepEqual(idHang(), kyDu.map((r) => r.id), "CGT-AC-1 sai thứ tự")
-    assert.equal(hang("a2")!.querySelectorAll("img").length, 0)
-    for (const r of kyDu.filter((x) => x.id !== "a2")) {
-      assert.equal(hang(r.id)!.querySelector("img")?.getAttribute("src"), srcDau(r.id), "CGT-AC-1 ảnh sai căn")
-      for (const can of [fmtCompact(2_000_000_000), `${fmtInt(M * (1 - r.gap / 100) / 1e6)} tr/m²`, `−${r.gap}%`, `Thước ${fmtInt(M / 1e6)} tr/m²`, "5 tin", r.suspect ? "Cần xác minh" : "Đủ để gọi"]) assert.ok((hang(r.id)!.textContent ?? "").includes(can), `CGT-AC-1 ${r.id} thiếu «${can}»`)
-      assert.equal(hang(r.id)!.querySelector('a[href^="tel:"]')?.getAttribute("href"), `tel:${SO}`, "CGT-AC-1 tel")
-    }
-    const kiemAnh = () => { for (const r of kyDu.filter((x) => x.id !== "a2")) assert.equal(hang(r.id)!.querySelector("img")?.getAttribute("src"), srcDau(r.id), "CGT-AC-1 ảnh sai căn") }
+    assert.deepEqual(idHang(), ky.map((r) => r.id), "CGT-AC-1 sai thứ tự")
+    kiemHang()
     kiemAnh()
     // Đỏ: gắn nhầm ảnh sang hàng khác.
     const nham = await banPage(PAGE_DS, [["const rows = tho.map((d) =>", "const rows = tho.map((d, i) => ({ ...d, images: tho[(i + 1) % tho.length].images })).map((d) =>"]])
     await vaoTrang(nham, "ops")
     assert.throws(kiemAnh, /CGT-AC-1 ảnh sai căn/)
+    // Đỏ: gắn nhầm giá, rồi số gọi, sang hàng khác.
+    await vaoTrang(await banPage(PAGE_DS, [["const rows = tho.map((d) =>", "const rows = tho.map((d, i) => ({ ...d, priceVnd: tho[(i + 1) % tho.length].priceVnd })).map((d) =>"]]), "ops")
+    assert.throws(kiemHang, /CGT-AC-1 a\d thiếu/)
+    await vaoTrang(await banPage(PAGE_DS, [["const rows = tho.map((d) =>", "const rows = tho.map((d, i) => ({ ...d, sellerPhone: tho[(i + 1) % tho.length].sellerPhone })).map((d) =>"]]), "ops")
+    assert.throws(kiemHang, /CGT-AC-1 a\d tel/)
     // Đỏ: sắp giảm nhiều trước làm căn cần xác minh lên đầu.
     const sapSai = await banPage(PAGE_DS, [["const { rows: tho, mayThu } = await getDeals();", "const { rows: tho0, mayThu } = await getDeals(); const tho = [...tho0].sort((a, b) => (b.discountPct ?? 0) - (a.discountPct ?? 0));"]])
     await vaoTrang(sapSai, "ops")
-    assert.throws(() => assert.deepEqual(idHang(), kyDu.map((r) => r.id), "CGT-AC-1 sai thứ tự"), /CGT-AC-1 sai thứ tự/)
+    assert.throws(() => assert.deepEqual(idHang(), ky.map((r) => r.id), "CGT-AC-1 sai thứ tự"), /CGT-AC-1 sai thứ tự/)
+
+    // Ảnh thu nhỏ lỗi tải: hàng ghi «Ảnh hỏng», hàng khác giữ ảnh.
+    const kiemAnhHong = async () => {
+      await React.act(async () => { hang("a1")!.querySelector("img")!.dispatchEvent(new w.Event("error")) })
+      assert.equal(hang("a1")!.querySelector("[data-deal-anh-hong]")?.textContent, "Ảnh hỏng", "CGT-AC-9 ảnh lỗi không ghi «Ảnh hỏng»")
+      assert.equal(hang("a1")!.querySelectorAll("img").length, 0, "CGT-AC-9 ảnh lỗi còn thẻ img")
+      assert.equal(hang("a4")!.querySelectorAll("img").length, 1, "CGT-AC-9 ảnh lỗi kéo theo hàng khác")
+    }
+    await vaoTrang(mod, "ops")
+    await kiemAnhHong()
+    const oSai = chep("src/components/ops/deals-cells.tsx", [[` onError={() => setHong(anh)}`, ""]])
+    const luoiSai = banLuoi([[`from "./deals-cells"`, `from "${oSai}"`]])
+    await vaoTrang(await banPage(PAGE_DS, [[LUOI_GOC, `from "${luoiSai}"`]]), "ops")
+    await assert.rejects(kiemAnhHong, /CGT-AC-9 ảnh lỗi không ghi/)
   })
 })
 
@@ -288,19 +334,23 @@ function kiemCot(d: Pick<DealRow, "block" | "street">) {
 test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dòng nhãn ở sheet và trang", { timeout: 180_000 }, async () => {
   await withTx(async (c) => {
     await tin(c, "b1", 20)
+    // sellers là view đếm theo số đã có trong danh bạ: cùng số thêm hai tin thì «Số tin của người này» là 3.
+    await c.query(`INSERT INTO parties (party_key, source) VALUES ($1, 'S03')`, [KHOA_NGUOI])
+    await c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'sdt', $2, 'S03')`, [KHOA_NGUOI, SO])
+    await tin(c, "b1x", 15, { seller_phone_hash: "h-b1" })
+    await tin(c, "b1y", 16, { seller_phone_hash: "h-b1" })
     await tin(c, "b2", 25, { block_raw: null, floor_raw: null, unit_number: null, street_number: null, street_raw: null, district_raw: null, property_type: "unknown", bedrooms: null }, { anh: 0, bai: false })
     const that = await dsThat()
     const { deal } = await that.getDeal("b1")
     assert.ok(deal, "CGT-AC-2 không đọc được căn")
     kiemCot(deal)
-    const moi = { block: TOA, floor: TANG, unit: CAN, streetNumber: SONHA, street: DUONG, district: QUAN, phuong: TEN_A, source: "S03", confidence: "high", sellerName: TEN, groupName: NHOM, nReposts: 3 }
+    const moi = { block: TOA, floor: TANG, unit: CAN, streetNumber: SONHA, street: DUONG, district: QUAN, phuong: TEN_A, source: "S03", confidence: "high", sellerName: TEN, groupName: NHOM, nReposts: 3, brokerNAds: 3 }
     for (const [k, v] of Object.entries(moi)) assert.equal((deal as Record<string, unknown>)[k], v, `CGT-AC-2 loader ${k}`)
     assert.ok(deal.firstSeen.startsWith("2026-10-30"), "CGT-AC-2 loader ngày thấy")
 
-    const ky: [string, string][] = [["Toà", TOA], ["Tầng", TANG], ["Căn", CAN], ["Đường", `${SONHA} ${DUONG}`], ["Phường", TEN_A], ["Quận", QUAN], ["Nguồn", "S03"], ["Độ tin trích xuất", LABELS_VI.confidence.high], ["Số lần đăng", "3"], ["Tên", TEN], ["Nhóm", NHOM]]
+    const ky: [string, string][] = [["Toà", TOA], ["Tầng", TANG], ["Căn", CAN], ["Đường", `${SONHA} ${DUONG}`], ["Phường", TEN_A], ["Quận", QUAN], ["Nguồn", "S03"], ["Độ tin trích xuất", LABELS_VI.confidence.high], ["Số lần đăng", "3"], ["Tên", TEN], ["Nhóm", NHOM], ["Số tin của người này", "3"], ["Thấy lần đầu", fmtVnDate(deal.firstSeen)]]
     const kiem = () => {
       for (const [nhan, gia] of ky) assert.equal(dong(nhan), gia, `CGT-AC-2 dòng ${nhan}`)
-      assert.ok(dong("Thấy lần đầu"), "CGT-AC-2 dòng Thấy lần đầu")
       assert.ok(document.querySelector(`[data-deal-dong="SĐT"] a[href="tel:${SO}"]`), "CGT-AC-2 tel")
     }
     await vaoTrang(await chiTiet(), "ops", { offerId: "b1" })
@@ -312,7 +362,19 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     await vaoTrang(await chiTiet(), "ops", { offerId: "b2" })
     assert.equal(soDong("Phường"), 1, "CGT-AC-2 dòng Phường")
     for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Quận"]) assert.equal(soDong(nhan), 0, `CGT-AC-2 trang còn dòng rỗng ${nhan}`)
-    assert.doesNotMatch(document.querySelector("[data-deal-dong]")?.parentElement?.textContent ?? "", /chưa có/)
+    const kiemKhongRong = () => {
+      const dd = [...document.querySelectorAll("[data-deal-dong] dd")]
+      assert.ok(dd.length > 0, "CGT-AC-2 trang không có dòng nào")
+      for (const x of dd) {
+        assert.notEqual((x.textContent ?? "").trim(), "", "CGT-AC-2 trang có dòng rỗng")
+        assert.notEqual((x.textContent ?? "").trim(), "chưa có", "CGT-AC-2 trang ghi «chưa có»")
+      }
+    }
+    kiemKhongRong()
+    for (const nhan of ["Loại hình", "Phòng ngủ"]) assert.equal(soDong(nhan), 0, `CGT-AC-2 trang còn dòng rỗng ${nhan}`)
+    // Đỏ: trang vẽ như sheet thì mục trống ghi «chưa có».
+    await vaoTrang(await banPage(PAGE_CAN, [[`beMat="trang"`, `beMat="sheet"`]]), "ops", { offerId: "b2" })
+    assert.throws(kiemKhongRong, /CGT-AC-2 trang ghi «chưa có»/)
     await vaoTrang(await banPage(PAGE_DS), "ops", { can: "b2" })
     for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Quận"]) assert.equal(dong(nhan), "chưa có", `CGT-AC-2 sheet thiếu «chưa có» ở ${nhan}`)
 
@@ -324,9 +386,11 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
 })
 
 // ==== CGT-AC-3 ====
-function kiemAnhCan(imgs: string[], ky: string[], html: string, json: string) {
+function kiemAnhCan(imgs: string[], ky: string[]) {
   assert.deepEqual(imgs, ky, "CGT-AC-3 ảnh sai thứ tự hay sai số")
   for (const s of imgs) assert.match(s, /^\/api\/zalo-media\?(media|snapshot)=/, "CGT-AC-3 src sai khuôn")
+}
+function kiemKhongGoc(html: string, json: string) {
   for (const s of [html, json]) {
     for (const cam of [URL_GOC, "?path=", "gai-listing.example"]) assert.ok(!s.includes(cam), `CGT-AC-3 lộ ${cam}`)
   }
@@ -341,17 +405,24 @@ test("CGT-AC-3 13 dòng media ra 12 ảnh qua khoá, chữ bài đủ, không UR
       ...Array.from({ length: 6 }, (_, i) => `/api/zalo-media?snapshot=snap_cgt&file=${encodeURIComponent(`media/m1-${i}.jpg`)}`),
       ...Array.from({ length: 6 }, (_, i) => `/api/zalo-media?media=${khoa("m1", i + 6)}`),
     ]
+    const ds = await banPage(PAGE_DS), can = await chiTiet()
     for (const role of ["ops", "admin"]) {
-      const t = await vaoTrang(await chiTiet(), role, { offerId: "m1" })
-      const imgs = [...document.querySelectorAll('[role="group"] img')].map((i) => i.getAttribute("src")!)
-      kiemAnhCan(imgs, ky, t.html(), t.json)
-      assert.equal(document.querySelector("[data-deal-chu-bai]")?.textContent, chu, "CGT-AC-3 chữ bài bị cắt")
+      // Trang một căn và sheet cùng phần thân, đo cả hai.
+      for (const t of [await vaoTrang(can, role, { offerId: "m1" }), await vaoTrang(ds, role, { can: "m1" })]) {
+        const goc = document.querySelector('[role="dialog"]') ?? document.body
+        kiemAnhCan([...goc.querySelectorAll('[role="group"] img')].map((i) => i.getAttribute("src")!), ky)
+        kiemKhongGoc(t.html(), t.json)
+        assert.equal(goc.querySelector("[data-deal-chu-bai]")?.textContent, chu, "CGT-AC-3 chữ bài bị cắt")
+      }
     }
-    // Đỏ: buildMediaImages trả media_url.
+    // Đỏ: buildMediaImages trả media_url, đi qua page thật nên HTML và cây phần tử mang URL gốc.
     const rm = chep("src/lib/ops/review-media.ts", [[`const src = mediaKeyUrl(r.media_key ?? "");`, "const src = r.media_url;"]])
-    const dot = await banLib<typeof import("../src/lib/deals")>("src/lib/deals.ts", [[`from "./ops/review-media"`, `from "${rm}"`]])
+    const dotUrl = chep("src/lib/deals.ts", [[`from "./ops/review-media"`, `from "${rm}"`]])
+    const dot = (await import(dotUrl)) as typeof import("../src/lib/deals")
     const { deal } = await dot.getDeal("m1")
-    assert.throws(() => kiemAnhCan(deal!.images.map((i) => i.src), ky, "", ""), /CGT-AC-3/)
+    assert.throws(() => kiemAnhCan(deal!.images.map((i) => i.src), ky), /CGT-AC-3 ảnh sai/)
+    const lo = await vaoTrang(await banPage(PAGE_CAN, [[`from "@/lib/deals"`, `from "${dotUrl}"`]]), "ops", { offerId: "m1" })
+    assert.throws(() => kiemKhongGoc(lo.html(), lo.json), /CGT-AC-3 lộ https:\/\/gai-url-goc/)
   })
 })
 
@@ -397,6 +468,38 @@ test("CGT-AC-4 bảy mức qua dealsSql thật, ba ngưỡng một nguồn, số
     const pageCoDinh = await banPage(PAGE_DS, [[`from "@/lib/deals"`, `from "${chep("src/lib/deals.ts", [["r.m AS median_perm2", "100000000 AS median_perm2"]])}"`]])
     await vaoTrang(pageCoDinh, "ops", { can: "g2" })
     assert.throws(() => kiem22(120_000_000), /CGT-AC-4 thước/)
+  })
+})
+
+test("CGT-AC-4 căn ngoài khoảng ngưỡng: câu chứng minh đúng, không dấu trừ ghép số âm", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await tin(c, "r-duoi", 4.9)
+    await tin(c, "r-am", -10)
+    await tin(c, "r-tren", 60)
+    const can = await chiTiet()
+    const kiemCau = (d: { pricePerm2: number; medianPerm2: number; discountPct: number }, cauFn: typeof cauChungMinh, mau: RegExp, cam: RegExp) => {
+      const cau = cauFn(d as never) ?? ""
+      assert.match(cau, mau, "CGT-AC-4 câu ngoài ngưỡng sai")
+      assert.doesNotMatch(cau, cam, "CGT-AC-4 câu ngoài ngưỡng sai")
+    }
+    const CAM_TRONG = /trên ngưỡng vào danh sách/
+    kiemCau({ pricePerm2: 95, medianPerm2: 100, discountPct: 4.9 }, cauChungMinh, /chưa tới ngưỡng vào danh sách 5%/, CAM_TRONG)
+    kiemCau({ pricePerm2: 110_000_000, medianPerm2: M, discountPct: -10 }, cauChungMinh, /^Đắt hơn thước phường 10 tr\/m², tức 10%/, /Rẻ hơn|-/)
+    // Đỏ: bỏ hai nhánh mới thì căn đã rời vẫn được nói là trên ngưỡng.
+    const cu = await banLib<typeof import("../src/lib/deals-chi-tiet")>("src/lib/deals-chi-tiet.ts", [["if (d.discountPct < 0) return", "if (Number.isNaN(d.discountPct)) return"], ["if (d.discountPct < NGUONG_VAO_PCT) return `${re}", "if (Number.isNaN(d.discountPct)) return `${re}"]])
+    assert.throws(() => kiemCau({ pricePerm2: 95, medianPerm2: 100, discountPct: 4.9 }, cu.cauChungMinh, /chưa tới ngưỡng/, CAM_TRONG), /CGT-AC-4 câu ngoài ngưỡng sai/)
+    assert.throws(() => kiemCau({ pricePerm2: 110_000_000, medianPerm2: M, discountPct: -10 }, cu.cauChungMinh, /^Đắt hơn/, /Rẻ hơn/), /CGT-AC-4 câu ngoài ngưỡng sai/)
+
+    const t1 = await vaoTrang(can, "ops", { offerId: "r-am" })
+    assert.ok(document.querySelector("[data-deal-roi]"), "CGT-AC-4 căn âm mất nhãn rời")
+    assert.match(document.querySelector("[data-deal-chung-minh]")?.textContent ?? "", /^Đắt hơn/, "CGT-AC-4 căn âm sai câu")
+    assert.equal(dong("Mức giảm"), "Đắt hơn 10%", "CGT-AC-4 căn âm sai dòng mức giảm")
+    assert.ok(t1.text().includes("+10%") && !/−-|Vì sao giá tốt/.test(t1.text()), "CGT-AC-4 căn âm sai tiêu đề")
+    const t2 = await vaoTrang(can, "ops", { offerId: "r-duoi" })
+    assert.match(document.querySelector("[data-deal-chung-minh]")?.textContent ?? "", /chưa tới ngưỡng vào danh sách/, "CGT-AC-4 căn dưới ngưỡng sai câu")
+    assert.ok(!t2.text().includes("Vì sao giá tốt"), "CGT-AC-4 căn dưới ngưỡng còn «Vì sao giá tốt»")
+    await vaoTrang(can, "ops", { offerId: "r-tren" })
+    assert.match(document.querySelector("[data-deal-chung-minh]")?.textContent ?? "", /vượt ngưỡng loại 50% nên đã rời danh sách/, "CGT-AC-4 căn trên ngưỡng sai câu")
   })
 })
 
@@ -481,9 +584,14 @@ test("CGT-AC-6 ma trận vai qua page thật bảng, sheet hai tab và trang", {
     kiemKhongLo(viewerBang.json)
     kiemKhongLo(JSON.stringify(viewerBang.rows))
     assert.ok(![...document.querySelectorAll("th")].some((th) => /Gọi ai/.test(th.textContent ?? "")), "CGT-AC-6 viewer có cột Gọi ai")
-    const { truongLoc } = await import("../src/components/ops/deals-grid")
-    assert.equal(truongLoc(viewerBang.rows!, false).some((f) => f.id === "anh"), false, "CGT-AC-6 viewer có lọc Ảnh")
-    assert.equal(truongLoc(viewerBang.rows!, true).some((f) => f.id === "anh"), true, "CGT-AC-6 đối chứng lọc Ảnh")
+    const kiemLocAnh = () => assert.ok(!truongLocThat().includes("anh"), "CGT-AC-6 viewer có lọc Ảnh")
+    kiemLocAnh()
+    // Đỏ: lưới luôn mở lọc Ảnh; dương: vai Vận hành ở máy thu có lọc đó.
+    const moLoc = banLuoi([["truongLoc(rows, xemNoiDung && mayThu)", "truongLoc(rows, true)"]])
+    await vaoTrang(await banPage(PAGE_DS, [[LUOI_GOC, `from "${moLoc}"`]]), "viewer")
+    assert.throws(kiemLocAnh, /CGT-AC-6 viewer có lọc Ảnh/)
+    await vaoTrang(ds, "ops")
+    assert.ok(truongLocThat().includes("anh"), "CGT-AC-6 đối chứng lọc Ảnh")
     // Sheet viewer: tab chi tiết rồi tab cùng tiêu chí.
     const viewerSheet = await vaoTrang(ds, "viewer", { can: "v1" })
     kiemKhongLo(viewerSheet.html())
@@ -597,14 +705,44 @@ test("CGT-AC-7 mã lạ, căn rời danh sách, trạng thái trống và lỗi"
 
 test("CGT-AC-7 mất bảng media khi còn stg_zalo_posts: căn vẫn hiện, coi như bản cloud", { timeout: 120_000 }, async () => {
   await withTx(async (c, sc) => {
-    await tin(c, "k1", 20)
+    await tin(c, "k1", 20, { seller_name: `${TEN} ${TEN_NGUON}` }, { chu: `${BAI} ${TEN_NGUON}` })
     await c.query("DROP TABLE media")
     // Không có public trong đường tìm: bảng media của DB máy thu không được che mất phép đo.
     await c.query(`SET LOCAL search_path = ${sc}`)
-    const { rows, mayThu } = await (await dsThat()).getDeals()
+    const that = await dsThat()
+    const { rows, mayThu } = await that.getDeals()
     assert.deepEqual([rows.map((r) => r.offerId), mayThu], [["k1"], false], "CGT-AC-7 thiếu media làm câm trang")
+    const kiemKhongLo = (s: string) => assert.ok(!s.includes(BAI) && !s.includes(TEN_NGUON), "CGT-AC-6 thiếu media mà chữ bài, tên nguồn đi tiếp")
+    kiemKhongLo(JSON.stringify(rows))
     const t = await vaoTrang(await banPage(PAGE_DS), "ops")
     assert.match(t.text(), /Ảnh, chữ bài chỉ có ở máy thu/)
+    kiemKhongLo(t.html())
+    kiemKhongLo(t.json)
+    kiemKhongLo(JSON.stringify(t.rows))
+    assert.ok(t.html().includes(TEN), "CGT-AC-6 thiếu media mất tên người bán")
+    // Đỏ: nhánh thiếu media để nguyên chữ gốc.
+    const de = await banLib<typeof that>("src/lib/deals.ts", [["postTextFull: media ? maskSourceNames(d.postTextFull, entries) : null", "postTextFull: d.postTextFull"]])
+    const lo = await de.getDeals()
+    assert.throws(() => kiemKhongLo(JSON.stringify(lo.rows)), /CGT-AC-6 thiếu media/)
+  })
+})
+
+test("CGT-AC-7 lỗi đọc source_registry ra khối lỗi, không thành căn thiếu", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await tin(c, "s1", 20)
+    const that = await dsThat()
+    const nem = (mod: typeof that) => assert.rejects(() => mod.getDeals(), { code: "57014" }, "CGT-AC-7 nuốt lỗi source_registry")
+    loiCau = [/FROM source_registry/, "57014"]
+    await nem(that)
+    await assert.rejects(() => that.getDeal("s1"), { code: "57014" }, "CGT-AC-7 trang căn nuốt lỗi source_registry")
+    // Đỏ: quay về hàm nuốt lỗi.
+    const nuot = await banLib<typeof that>("src/lib/deals.ts", [["docSourceNameEntries", "getSourceNameEntries"]])
+    await assert.rejects(nem(nuot), /CGT-AC-7 nuốt lỗi source_registry/)
+    // Thiếu hẳn bảng thì không có gì để che: đóng chặt, không ném.
+    loiCau = [/FROM source_registry/, "42P01"]
+    const { rows } = await that.getDeals()
+    assert.equal(rows[0].sellerName, null, "CGT-AC-6 thiếu registry mà không đóng chặt")
+    loiCau = null
   })
 })
 
@@ -623,8 +761,8 @@ test("CGT-AC-7 lược đồ cloud từ CLOUD_ALLOW: ma trận vai, không ảnh
       const b = await vaoTrang(ds, role)
       assert.ok(b.html().includes(`tel:${SO}`) && b.html().includes(TEN), `CGT-AC-7 ${role} mất liên hệ trên cloud`)
       assert.equal(document.querySelectorAll("img").length, 0, "CGT-AC-7 cloud bảng có ảnh")
-      const { truongLoc } = await import("../src/components/ops/deals-grid")
-      assert.equal(truongLoc(b.rows!, false).some((f) => f.id === "anh"), false, "CGT-AC-7 cloud có lọc Ảnh")
+      const kiemLoc = () => assert.ok(!truongLocThat().includes("anh"), "CGT-AC-7 cloud có lọc Ảnh")
+      kiemLoc()
       assert.match(b.text(), /Ảnh, chữ bài chỉ có ở máy thu/, "CGT-AC-7 cloud thiếu chú thích")
       const s = await vaoTrang(ds, role, { can: "z1" })
       assert.ok(dong("Giá/m² căn này") && dong("Thước phường"), "CGT-AC-7 cloud mất số chứng minh")
@@ -635,6 +773,10 @@ test("CGT-AC-7 lược đồ cloud từ CLOUD_ALLOW: ma trận vai, không ảnh
       await vaoTrang(can, role, { offerId: "z-roi" })
       assert.ok(document.querySelector("[data-deal-roi]"), "CGT-AC-7 cloud mất nhãn rời")
     }
+    // Đỏ: lưới chỉ xét vai, bỏ qua nơi chạy thì vai Vận hành trên cloud có lọc Ảnh.
+    const boMayThu = banLuoi([["truongLoc(rows, xemNoiDung && mayThu)", "truongLoc(rows, xemNoiDung)"]])
+    await vaoTrang(await banPage(PAGE_DS, [[LUOI_GOC, `from "${boMayThu}"`]]), "ops")
+    assert.throws(() => assert.ok(!truongLocThat().includes("anh"), "CGT-AC-7 cloud có lọc Ảnh"), /CGT-AC-7 cloud có lọc Ảnh/)
     for (const t of [await vaoTrang(ds, "viewer"), await vaoTrang(ds, "viewer", { can: "z1" }), await vaoTrang(can, "viewer", { offerId: "z1" })]) {
       kiemCloudVai(t.html())
       kiemCloudVai(t.json)
@@ -674,24 +816,42 @@ test("CGT-AC-11 mỗi căn một tab, lọc đúng tập, J K theo thứ tự đ
     const { createFilterQuery, createFilterRule } = await import("../src/components/reui/filters/filters-query")
     const loc = (path: string, operator: string, value: string[]) => createFilterQuery([createFilterRule({ id: "r", path: [path], operator, value })])
     const CHUNG = { xemNoiDung: true, mayThu: true }
-    const hopNhan = (f: (d: DealHang) => boolean) => rows.filter(f).length
-    const maTran: [string, string, string[], (d: DealHang) => boolean][] = [
-      ["phuong", "is_any_of", [TEN_B], (d) => d.phuong === TEN_B], ["phuong", "is_none_of", [TEN_B], (d) => d.phuong !== TEN_B],
-      ["type", "is_any_of", ["Nhà riêng"], (d) => d.propertyType === "house"], ["type", "is_none_of", ["Nhà riêng"], (d) => d.propertyType !== "house"],
-      ["source", "is_any_of", ["S05"], (d) => d.source === "S05"], ["source", "is_none_of", ["S05"], (d) => d.source !== "S05"],
-      ["anh", "is_any_of", ["Có ảnh"], (d) => d.images.length > 0], ["anh", "is_none_of", ["Có ảnh"], (d) => d.images.length === 0],
+    const N = (...xs: (number | string)[]) => xs.map((x) => (typeof x === "string" ? x : `n${String(x).padStart(2, "0")}`)).sort()
+    const LE = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19], CHAN = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    const tatCaId = async () => {
+      const thay = new Set(idHang())
+      for (let lan = 0; lan < 5; lan++) {
+        const sau = [...document.querySelectorAll("button")].find((b) => b.querySelector(".lucide-chevron-right") && !b.disabled)
+        if (!sau) break
+        const truoc = thay.size
+        await bam(sau)
+        for (const id of idHang()) thay.add(id)
+        if (thay.size === truoc) break
+      }
+      return [...thay].sort()
+    }
+    const maTran: [string, string, string[], string[]][] = [
+      ["phuong", "is_any_of", [TEN_B], N(...LE)], ["phuong", "is_none_of", [TEN_B], N(...CHAN, "n-xm")],
+      ["type", "is_any_of", ["Nhà riêng"], N(0, 4, 8, 12, 16)], ["type", "is_none_of", ["Nhà riêng"], N(1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19, "n-xm")],
+      ["source", "is_any_of", ["S05"], N(0, 5, 10, 15)], ["source", "is_none_of", ["S05"], N(1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19, "n-xm")],
+      ["anh", "is_any_of", ["Có ảnh"], N(1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, "n-xm")], ["anh", "is_none_of", ["Có ảnh"], N(0, 3, 6, 9, 12, 15, 18)],
     ]
     const nhaRieng = (await import("../src/lib/deals-chi-tiet")).loaiHinh("house")!
     const kiemDem = (ky: number) => assert.equal(demTab("Tất cả"), ky, "CGT-AC-11 sai đếm")
-    for (const [f, op, val, dung] of maTran) {
+    for (const [f, op, val, tap] of maTran) {
       await ve(<DealsGrid rows={rows} locBanDau={loc(f, op, f === "type" ? [nhaRieng] : val) as never} {...CHUNG} />)
-      kiemDem(hopNhan(dung))
-      assert.equal(demTab("Đủ để gọi") + demTab("Cần xác minh") + demTab("Còn thiếu"), hopNhan(dung), "CGT-AC-11 sai đếm")
+      kiemDem(tap.length)
+      assert.equal(demTab("Đủ để gọi") + demTab("Cần xác minh") + demTab("Còn thiếu"), tap.length, "CGT-AC-11 sai đếm")
+      assert.deepEqual(await tatCaId(), tap, `CGT-AC-11 sai tập ${f} ${op}`)
     }
     // Đỏ: đếm tab trên toàn bộ thay vì sau lọc.
     const demSai = await banLib<typeof import("../src/components/ops/deals-grid")>("src/components/ops/deals-grid.tsx", [["all: quaLoc.length, du: 0", "all: rows.length, du: 0"]])
     await ve(<demSai.DealsGrid rows={rows} locBanDau={loc("phuong", "is_any_of", [TEN_B]) as never} {...CHUNG} />)
-    assert.throws(() => kiemDem(hopNhan((d) => d.phuong === TEN_B)), /CGT-AC-11 sai đếm/)
+    assert.throws(() => kiemDem(LE.length), /CGT-AC-11 sai đếm/)
+    // Đỏ: lọc đúng số lượng mà sai căn.
+    const tapSai = await banLib<typeof import("../src/components/ops/deals-grid")>("src/components/ops/deals-grid.tsx", [["rows.filter(hopBoLoc(query))", "rows.filter(hopBoLoc(query)).map((_, i) => rows[i])"]])
+    await ve(<tapSai.DealsGrid rows={rows} locBanDau={loc("phuong", "is_any_of", [TEN_B]) as never} {...CHUNG} />)
+    assert.notDeepEqual(await tatCaId(), N(...LE), "CGT-AC-11 đối chứng sai tập không đỏ")
 
     // Chuyển căn: bản thật qua trang 15 hàng.
     const mo = rows[14].offerId, ke = rows[15].offerId

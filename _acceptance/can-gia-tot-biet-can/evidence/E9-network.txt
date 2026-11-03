@@ -1,0 +1,23 @@
+E9 network (CDP Network.enable qua ego-browser, 3 luot: a=1280 sang luong chinh, b=sheet/anh/trang mot can, c=toi+390)
+FAIL-eligible = fetch/XHR toi localhost:3460; anh/static chi note.
+--- luot a: 563 su kien, 13 loi
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+--- luot b: 494 su kien, 3 loi
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.loadingFailed", "u": "", "err": "net::ERR_ABORTED", "t": "Fetch"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+--- luot c: 843 su kien, 2 loi
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}
+{"m": "Network.responseReceived", "u": "http://localhost:3460/api/zalo-media?…", "s": 502, "t": "Image"}

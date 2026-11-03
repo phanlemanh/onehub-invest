@@ -237,7 +237,7 @@ export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu
         tableLayout={{ dense: true, headerSticky: true }}
       >
         <Frame variant="default" spacing="sm" className="w-full">
-          <FrameHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <FrameHeader data-truong-loc={fields.map((f) => f.id).join(" ")} className="flex flex-row flex-wrap items-center justify-between gap-3">
             <Tabs
               value={tab}
               onValueChange={(v) => {

@@ -70,11 +70,20 @@ export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, qua
 /** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
 export function cauChungMinh(d: DealChiTiet): string | null {
   if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
-  const re = `Rẻ hơn thước phường ${fmtInt((d.medianPerm2 - d.pricePerm2) / 1e6)} tr/m², tức ${d.discountPct.toFixed(0)}%`;
+  // Trang một căn mở cả căn đã rời danh sách (Hỏi-1), nên câu phải đúng ngoài khoảng ngưỡng; số giảm âm là căn đắt hơn thước.
+  const chenh = fmtInt(Math.abs(d.medianPerm2 - d.pricePerm2) / 1e6);
+  const pct = Math.abs(d.discountPct).toFixed(0);
+  if (d.discountPct < 0) return `Đắt hơn thước phường ${chenh} tr/m², tức ${pct}%, nên không phải căn giá tốt.`;
+  const re = `Rẻ hơn thước phường ${chenh} tr/m², tức ${pct}%`;
+  if (d.discountPct < NGUONG_VAO_PCT) return `${re}, chưa tới ngưỡng vào danh sách ${NGUONG_VAO_PCT}%.`;
+  if (d.discountPct > NGUONG_LOAI_PCT) return `${re}, vượt ngưỡng loại ${NGUONG_LOAI_PCT}% nên đã rời danh sách.`;
   return d.discountPct > NGHI_NGO_PCT
     ? `${re}, vượt ngưỡng ${NGHI_NGO_PCT}% nên cần gọi xác minh trước khi tin.`
     : `${re}, trên ngưỡng vào danh sách ${NGUONG_VAO_PCT}% và chưa tới ngưỡng cần xác minh ${NGHI_NGO_PCT}%.`;
 }
+
+/** Mức giảm in trên tiêu đề, không ghép dấu trừ vào số âm: căn đắt hơn thước ghi dấu cộng. */
+export const chuGiam = (pct: number): string => (pct < 0 ? `+${Math.abs(pct).toFixed(0)}%` : `−${pct.toFixed(0)}%`);
 
 export type TabDeal = "du" | "xac-minh" | "thieu";
 /** Mỗi căn đúng một tab: giảm trên ngưỡng là cần xác minh, còn lại thiếu mục là còn thiếu, còn lại đủ để gọi. */
