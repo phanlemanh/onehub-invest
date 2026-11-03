@@ -81,6 +81,12 @@ else {
   check(offersShape(r), `offers bearer đúng: 200, khuôn generatedAt/kind/count/rows (${r.status}, ${r.json?.count ?? "?"} dòng)`);
 }
 
+// ---- tin rao công khai: khách đọc được danh sách, phản hồi không mang số ----
+r = await call("/api/v1/listings?kind=sale&limit=5");
+check(r.status === 200 && Array.isArray(r.json?.data) && !/\+84\d{9}/.test(JSON.stringify(r.json)), `listings khách kind=sale: 200, không mang số (${r.status})`);
+r = await call(`/api/v1/listings/khong-co-${nonce}/contact`);
+check(r.status === 404, `contact mã không có: 404 (${r.status})`);
+
 if (!CHI_DOC) {
   const pg = createRequire(path.join(root, "app/package.json"))("pg");
   const { LOGIN_QR_PREFIX } = await import(path.join(root, "app/src/lib/zalo-admin.ts"));

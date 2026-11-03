@@ -118,11 +118,31 @@ _Avoid_: so khớp, kiểm chéo
 **Yêu cầu thuê**: Yêu cầu có `kind` ∈ `rent_lt`, `rent_st`.
 - Code: `kind = rent_lt | rent_st` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType = ResidentialLease
 
-**Tin bán**: Tin rao có `kind = sale`.
+**Tin bán**: Tin rao có `kind = sale`. Mục «Bán» trên header cổng Invest.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
+- Slug URL: `sale`
 
-**Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`).
+**Cho thuê**: Nhóm listing cho thuê, gồm thuê dài hạn và thuê ngắn hạn; mục trên header cổng Invest, chọn thời hạn bằng ô «Dài hạn | Ngắn hạn» (`?term=short`, mặc định dài hạn).
+- Code: `kind` ∈ `rent_lt`, `rent_st` · RESO: PropertyType = ResidentialLease
+- Slug URL: `rent`
+
+**Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`). Nhãn ô thời hạn: «Dài hạn».
 - Code: `kind = rent_lt` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Monthly
+
+**Thuê dài hạn**: Nhãn đầy đủ của tin cho thuê theo tháng; trên dòng đếm và tiêu đề trang. Ô thời hạn ghi gọn «Dài hạn».
+- Code: `kind = rent_lt`
+
+**Thuê ngắn hạn**: Nhãn đầy đủ của listing cho thuê theo đêm, chỉ đọc ở `/listings/rent?term=short`. Ô thời hạn ghi gọn «Ngắn hạn».
+- Code: `kind = rent_st` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Daily
+
+**Xem số**: Nút trên thẻ tin: bấm một lần mới lấy số của người đăng, nên số không nằm trong HTML hay danh sách API.
+- Code: `OfferContact` · API `/api/v1/listings/{id}/contact` · RESO: ListAgentDirectPhone
+
+**Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
+- Code: `hasPhone = false`
+
+**Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
+- Code: `sellerManyNames`, `OFFER_MANY_NAMES`
 
 **Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.
 - Code: `deal` · RESO: không có — chỉ số nội bộ
@@ -159,6 +179,10 @@ _Avoid_: fill-gap, ghi đè
 - Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
 _Avoid_: provenance (trên UI)
 
+**Số ghép theo tài khoản**: SĐT một tin S06 nhận từ tin khác cùng tài khoản, khi tài khoản đó có đúng một số trong dữ liệu thu. Khác số trên tin, là số nguồn trả cho chính tin ấy. Tin ẩn số không bao giờ nhận số ghép.
+- Code: `field_provenance.seller_phone` với `rule_id` = `s06-cung-tai-khoan` (số trên tin: `s06-so-tren-tin`), `pipeline/gan-sdt-s06.mjs` · RESO: resource Member
+_Avoid_: số suy đoán, số đoán
+
 **Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
 - Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
 _Avoid_: tin hết hạn, expired, tình trạng tin
@@ -183,7 +207,7 @@ _Avoid_: độ hoàn chỉnh thẻ
 - Slug URL: —
 _Avoid_: accuracy, độ chính xác
 
-**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
+**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10); tên và SĐT lên cloud và cổng Invest (Mạnh chốt 02/11), giá trị mang tên nguồn thật thì che.
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker

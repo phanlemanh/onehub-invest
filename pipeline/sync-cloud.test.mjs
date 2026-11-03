@@ -19,6 +19,7 @@ import {
   kieuBangSql,
   localTypes,
   mgmtExec,
+  piiColumnLeaks,
   planTables,
   pool,
   scanSourceNames,
@@ -65,16 +66,79 @@ test("danh sách cho phép không giao danh sách loại (PII_EXCLUDE, SOURCE_EX
 });
 
 test("selectList: cột chưa duyệt ở lại máy, seller_ref chuẩn hoá, cột loại vắng", () => {
-  const r = selectList("sale_offers", ["offer_id", "seller_phone", "seller_name", "seller_ref", "source", "listing_url", "new_col"]);
+  const r = selectList("sale_offers", ["offer_id", "seller_ref", "source", "listing_url", "new_col"]);
   assert.deepEqual(r.cols, ["offer_id", "seller_ref", "source"]);
   assert.deepEqual(r.unapproved, ["new_col"]);
   assert.match(r.sql, /substring\("seller_ref" from '\(\[0-9\]\+\)\$'\)/);
   assert.match(r.sql, /"source" \|\| ':'/);
-  assert.doesNotMatch(r.sql, /seller_phone|seller_name|listing_url|new_col/);
+  assert.doesNotMatch(r.sql, /listing_url|new_col/);
   // bảng không phải người bán: mọi cột, không danh sách cho phép
   const n = selectList("nights", ["listing_id", "night", "price"]);
   assert.deepEqual(n.cols, ["listing_id", "night", "price"]);
   assert.deepEqual(n.unapproved, []);
+});
+
+// tin-rao-tren-invest E1 — ma trận viết trước: mỗi ô là một cột, gửi hay ở lại. Số assert bằng số ô.
+const MA_TRAN_COT = [
+  ["sale_offers", "seller_name", "gui", "TEN O LAI MAY"],
+  ["sale_offers", "seller_phone", "gui", "SDT O LAI MAY"],
+  ["sale_offers", "stories", "gui", "SO TANG O LAI MAY"],
+  ["sale_offers", "frontage_length", "gui", "MAT TIEN O LAI MAY"],
+  ["sellers", "name", "o_lai", "TEN BANG SELLERS LEN CLOUD"],
+  ["properties", "seller_name", "o_lai", "TEN BANG PROPERTIES LEN CLOUD"],
+  ["sale_offers", "listing_url", "o_lai", "URL NGUON LEN CLOUD"],
+  ["properties", "photos", "o_lai", "ANH NGUON LEN CLOUD"],
+  ["sale_offers", "cot_moi_chua_khai", "o_lai", "COT CHUA KHAI LEN CLOUD"],
+];
+
+function viPhamMaTran() {
+  const out = [];
+  for (const [bang, cot, ky_vong, thong_diep] of MA_TRAN_COT) {
+    const gui = selectList(bang, [cot], [], ["token-gia"]).cols.includes(cot);
+    if (gui !== (ky_vong === "gui")) out.push(thong_diep);
+  }
+  return out;
+}
+
+test("E1 ma trận cột: bốn cột tin rao gửi, cột còn lại ở lại máy; số ô đúng chín", () => {
+  assert.equal(MA_TRAN_COT.length, 9);
+  assert.deepEqual(viPhamMaTran(), []);
+});
+
+test("E1 đối chứng: giữ seller_phone trong danh sách loại thì ô SĐT đỏ", () => {
+  PII_EXCLUDE.sale_offers = ["seller_phone"];
+  try {
+    assert.deepEqual(viPhamMaTran(), ["SDT O LAI MAY"]);
+  } finally {
+    delete PII_EXCLUDE.sale_offers;
+  }
+});
+
+test("E1 piiColumnLeaks: bốn cột mới trên cloud sạch, cột khác đỏ", async () => {
+  const execVoi = (them) => async (sql) => {
+    if (sql.includes("information_schema.columns")) {
+      return [...CLOUD_ALLOW.sale_offers, ...them].map((c) => ({ t: "sale_offers", c }));
+    }
+    return [{ r: null }];
+  };
+  for (const c of ["seller_name", "seller_phone", "stories", "frontage_length"]) {
+    assert.ok(CLOUD_ALLOW.sale_offers.includes(c), `${c} chưa trong danh sách cho phép`);
+  }
+  assert.deepEqual(await piiColumnLeaks(execVoi([])), []);
+  assert.deepEqual(await piiColumnLeaks(execVoi(["cot_la"])), ["cột ngoài danh sách cho phép: sale_offers.cot_la"]);
+});
+
+test("E2 selectList: thiếu danh sách token thì tên, số thành NULL, không gửi giá trị chưa che", () => {
+  const { sql, cols } = selectList("sale_offers", ["offer_id", "seller_name", "seller_phone"]);
+  assert.deepEqual(cols, ["offer_id", "seller_name", "seller_phone"]);
+  assert.match(sql, /NULL::text AS "seller_name"/);
+  assert.match(sql, /NULL::text AS "seller_phone"/);
+});
+
+test("E2 selectList: token có nháy đơn và ký tự regex đi qua an toàn; biến thể ngắn chỉ khớp nguyên từ", () => {
+  const { sql } = selectList("sale_offers", ["seller_name"], [], ["O'Neil.*(x)", "Abc"]);
+  assert.ok(sql.includes("o''neil"), "nháy đơn phải được thoát");
+  assert.ok(sql.includes("' abc '"), "biến thể ngắn phải khớp nguyên từ");
 });
 
 test("planTables: cha trước con, xoá ngược lại, areas giữ-chỗ vì saved_markets", () => {

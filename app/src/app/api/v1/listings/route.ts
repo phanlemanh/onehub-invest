@@ -1,15 +1,31 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
+import { getPublicOffers, isListingKind, LISTING_KIND, offerMarketOf, parseOfferFilters } from "@/lib/offers-public";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/v1/listings — danh sách listings (public API).
- * Query: ?market=<id>&bedrooms=N&limit=50&offset=0
+ * GET /api/v1/listings — danh sách Listing (public API), chọn loại bằng `kind`; không truyền là `rent_st` như trước.
+ * rent_st: ?market=<id>&bedrooms=N&limit=50&offset=0
+ * sale, rent_lt (tin rao, ROADMAP §3 mục 25): ?market=<id>&kind=&ward=<a,b>&type=<a,b>&price_min=&price_max=&area_min=&area_max=
+ *   &bedrooms=&has_phone=1&sort=newest|price-asc|price-desc|perm2-asc&limit=24&offset=0. Không mang SĐT, chỉ cờ `hasPhone`;
+ *   số lấy từng tin ở /api/v1/listings/<id>/contact; trường trả về do lib/offers-public.ts quyết.
  */
 export async function GET(req: Request) {
   const u = new URL(req.url);
+  const kind = u.searchParams.get("kind");
+  if (kind !== null && !isListingKind(kind)) {
+    return NextResponse.json({ error: "invalid_kind" }, { status: 400 });
+  }
+  if (kind === LISTING_KIND.sale || kind === LISTING_KIND.rent_lt) {
+    const filters = parseOfferFilters(u.searchParams);
+    const { rows, total, withPhone } = await getPublicOffers(await offerMarketOf(u.searchParams), filters);
+    return NextResponse.json({
+      data: rows,
+      meta: { kind, total, withPhone, limit: filters.limit, offset: filters.offset },
+    });
+  }
   const rawMarket = u.searchParams.get("market");
   // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
   const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;

@@ -39,8 +39,8 @@
    đường chính.
 3. **SPL**: mã nguồn S0x (ADR-0007); tầng A (tên nguồn thật, hồ sơ người dùng app,
    định danh tài khoản thu, phiên/khoá) KHÔNG bao giờ rời máy thu. Người bán, tên nhóm
-   thu là tầng C; nội dung bài, ảnh tin, thẻ duyệt lên cloud cho vai ops (ADR-0007
-   sửa đổi 23/10, 24/10, 26/10).
+   thu là tầng C, tên và SĐT người bán lên cloud và cổng Invest; nội dung bài, ảnh tin,
+   thẻ duyệt lên cloud cho vai ops (ADR-0007 sửa đổi 23/10, 24/10, 26/10, 02/11).
 4. **Observability là điều kiện ra quyết định**: nguồn mới phải hiện trên
    /ops ngay (feed health), hành vi thu phải đo được (CCP/DQO).
 5. **An toàn social**: agent LLM không bao giờ gửi tin vào nhóm xã hội
@@ -146,11 +146,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `seller_ref`, S03/S05 theo người gửi của bài; SĐT luôn là người riêng (Hỏi-4); rút vai chỉ khi có bằng chứng thay. Chạy
   cuối `refresh-bait-gap.mjs` (`buocDem`) trong giao dịch riêng, khoá advisory 55055; tay: `pipeline/dung-nguoi.mjs [--thu]`.
   Thước `pipeline/scripts/nap-lai-nguoi.mjs` (hai lượt, lượt 2 bằng 0, đối chứng bỏ tra bí danh). Chỉ local, không sync cloud.
+- SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
+  `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
+  một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
+  068 giữ khoá này qua phân xử bằng cách vá định nghĩa hàm đang chạy. Chưa áp 068 thì bộ gán bỏ qua và in `CHUA-AP-068`. Đo: `node pipeline/gan-sdt-s06.mjs --thu` (ROLLBACK).
 - Danh bạ hiện số gốc (SD4, `_acceptance/people-hien-so-goc`, Hỏi-B 30/10, §3 mục 24): ở máy thu, `/ops/people` và trang một người
   hiện số tách nhóm và liên kết `tel:` cho vai Vận hành và `admin`; ô tìm khớp đủ số ở sáu dạng gõ (`chuanHoaSdtTim`); người có số lên
   trước cho hai vai này, vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số. `/ops/deals`: khối liên hệ hạ từ `isAdmin` xuống
   `xemNoiDungTin`, ảnh và chữ bài giữ `admin` (route `?path=`); `dealTheoVai` lọc trường trước khi vào thẻ, nên vai Người xem không có
-  trường liên hệ trong cây phần tử. Bảng danh bạ vẽ đủ hàng máy chủ gửi (trước đó DataGrid dừng ở 10 hàng). Số gốc vẫn không lên cloud.
+  trường liên hệ trong cây phần tử. Bảng danh bạ vẽ đủ hàng máy chủ gửi (trước đó DataGrid dừng ở 10 hàng). Lúc đó số gốc chưa lên cloud; mục 25 của §3 mở sau.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -185,6 +189,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
+  `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
+  cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
+  `docs/ops/cloud-schema-catchup-2026-11-02-tin-rao.sql`. Đọc công khai qua `app/src/lib/offers-public.ts` và hai route
+  `/api/v1/listings*` (khoá `publicOffers`, công cụ MCP `oneinvest_get_listings`); tên lên thẻ, số chỉ trả khi bấm «Xem số»;
+  S02, S08 không hiển thị. Trang `/vn/<tt>/listings/sale`, `/rent` dùng chung khung thẻ `ListingCardFrame`.
 - Số tổng hợp Ops lên cloud (ON22 `ops-facts-so-tong-hop`, 24/10, ADR-0014): `push-ops-facts` đẩy thêm năm khối có
   `measured_at` — độ tươi, job launchd, lockdown từng lớp, bản ghi 24h, số thẻ chờ (`scripts/lib/ops-local.mjs`, khớp hàm
   app bằng phép đo đối chiếu); khối đo không được ghi `error`; cloud đọc qua `readOpsFacts()` (none/fresh/stale, 45′).
@@ -359,7 +369,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    (RESO `MemberMobilePhone`: số quốc tế có «+» đứng đầu). Băm chỉ còn là khoá cho cloud, tính từ E.164. Khoá Người vẫn là
    `party_key`, SĐT là bí danh mạnh nhất để tìm và gộp. Số gốc hiện ở máy thu cho **vai Vận hành và `admin`**
    (`/ops/people`, `/ops/deals`); vai Người xem không thấy, không tìm theo SĐT. Đưa số gốc lên cloud là quyết định riêng,
-   chưa mở (`PII_EXCLUDE` giữ nguyên).
+   chưa mở (`PII_EXCLUDE` giữ nguyên). Phần cloud và vai xem đã được mục 25 thay.
+25. **Tin rao công khai, người bán lên cloud và cổng Invest** (02/11, Mạnh chốt sau
+   `docs/research/kiem-tin-dau-ra-toan-thi-truong-0211.md`): mọi tin rao bất động sản là công khai; tên và SĐT người bán lên cloud và
+   cổng Invest vì giúp nhà đầu tư tìm căn. Mọi kênh nguồn phải có người bán và SĐT; kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo
+   và cảnh báo liên tục tới khi xong. Không đổi: tên nguồn thật vẫn tầng A, S02 và S08 không hiển thị (luật 5).
+26. **Bán, Cho thuê trên header thay mục Listing** (02/11, Mạnh chốt «Làm theo bản này»): header Thị trường · Bán · Cho thuê · Lợi suất · So sánh; `/vn/<tt>/listings/sale`, `/vn/<tt>/listings/rent`, thuê ngắn hạn `?term=short` bằng ô Dài hạn | Ngắn hạn trên hàng lọc, mặc định dài hạn; `/listings` chuyển 308. Listing vẫn là khái niệm cha trong mã, URL, API (mục 21), API giữ `?kind=`. Điện thoại vẫn thấy Bán, Cho thuê ngoài menu.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -420,6 +435,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
 | PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
+| SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
@@ -440,6 +456,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
 | P-A3 | Gỡ ảnh/chữ AirDNA khỏi /listing/[id] (luật 5) — chỉ ảnh tự thu, căn chưa thu PDP không ảnh | 🔄 nhánh fix/listing-airdna-photos |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
+| TR1 | Tin rao trên Invest: người bán lên cloud, API tin rao công khai, trang Bán và Cho thuê — `_acceptance/tin-rao-tren-invest` | 🔨 chờ Cổng Bằng chứng; sau ký: Mạnh bật tường lửa, gộp, chạy catch-up, sync |
 
 ### Track 5 — Vận hành
 | # | Việc | Trạng thái |
