@@ -41,12 +41,14 @@ test("SDT-AC-1 ma trận 17 hàng", () => {
   assert.equal(n, 17);
 });
 
+// Tên bản sao đánh số trong tiến trình: hai đột biến cùng mili giây mà trùng tên thì import trả bản cũ trong bộ nhớ.
+let soSao = 0;
 /** Bản sao đột biến của một tệp lib, viết cạnh tệp thật rồi xoá. */
 async function banSao(tuongDoi, cu, moi) {
   const tep = join(PIPE, tuongDoi);
   const goc = readFileSync(tep, "utf8");
   assert.ok(goc.includes(cu), `đột biến không khớp mã nguồn: «${cu}»`);
-  const sao = tep.replace(/\.mjs$/, `.dotbien-${process.pid}-${Date.now()}.mjs`);
+  const sao = tep.replace(/\.mjs$/, `.dotbien-${process.pid}-${++soSao}.mjs`);
   writeFileSync(sao, goc.replace(cu, moi));
   try {
     return await import(pathToFileURL(sao).href);
@@ -65,7 +67,7 @@ async function docVoiMau(cu, moi) {
   const tep = join(PIPE, "lib/sdt-trong-chuoi.mjs");
   const goc = readFileSync(tep, "utf8");
   assert.ok(goc.includes(cu), `đột biến không khớp mã nguồn: «${cu}»`);
-  const tenSao = `sdt-trong-chuoi.dotbien-${process.pid}-${Date.now()}.mjs`;
+  const tenSao = `sdt-trong-chuoi.dotbien-${process.pid}-${++soSao}.mjs`;
   const sao = join(PIPE, "lib", tenSao);
   writeFileSync(sao, goc.replace(cu, moi));
   try {

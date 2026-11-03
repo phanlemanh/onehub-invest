@@ -267,6 +267,37 @@ test("SDT-AC-3 đỏ: bản sao ghi giá trị vào mục log", { timeout: 600_0
   const p = await canCua(idTin(0));
   assert.throws(() => { if (logCoSo(p)) throw new Error("SDT-AC-3 log mang số"); }, /log mang số/);
 }));
+// Ô và mục log sinh bằng dienDuongCan chưa lọc, đúng thứ job đêm của bản trước ghi: ô trống × tin còn số là ô 10.
+async function dungLogCu() {
+  const m = await banSao("lib/duong-can.mjs", "AND o.street_raw !~ $2", "AND $2::text IS NOT NULL");
+  await dung3();
+  await m.dienDuongCan(c);
+  const p = await canCua(idTin(10));
+  assert.ok(coSo(p.street) && logCoSo(p), "SDT-AC-3 tiền đề: ô và mục log cũ mang số");
+}
+async function kiemLogCu() {
+  const p = await canCua(idTin(10));
+  if (logCoSo(p)) throw new Error("SDT-AC-3 log cũ còn mang số");
+  return p;
+}
+test("SDT-AC-3 log cũ mang số bị che, dòng còn, chạy lại không đổi", { timeout: 600_000 }, () => trongGiaoDich(async () => {
+  await dungLogCu();
+  await chayResolve(c, yenLang);
+  const p = await kiemLogCu();
+  assert.equal(p.street, null, "SDT-AC-3 ô log cũ về NULL");
+  assert.equal(mucGo(p).length, 1, "SDT-AC-3 ô log cũ có một mục gỡ");
+  assert.equal(p.enrichment_log.filter((e) => e.che === "chua-sdt" && !("value" in e)).length, 1, "SDT-AC-3 đúng một mục bị che, dòng còn");
+  await chayResolve(c, yenLang);
+  assert.deepEqual((await canCua(idTin(10))).enrichment_log, p.enrichment_log, "SDT-AC-3 lượt hai không đổi log");
+  await hoanTacDuong(c);
+  assert.equal((await canCua(idTin(10))).street, null, "SDT-AC-3 hoàn tác không trả số");
+}));
+test("SDT-AC-3 đỏ: bản sao không che mục log cũ", { timeout: 600_000 }, () => trongGiaoDich(async () => {
+  const m = await banSao("lib/duong-can.mjs", "(e - 'value') || jsonb_build_object('che', 'chua-sdt')", "e");
+  await dungLogCu();
+  await m.goSdtKhoiCan(c);
+  await assert.rejects(kiemLogCu(), /log cũ còn mang số/);
+}));
 test("SDT-AC-3 đỏ: bản sao hoàn tác trả số", { timeout: 600_000 }, () => trongGiaoDich(async () => {
   const m = await banSao("lib/duong-can.mjs", "SET street = NULL,\n            enrichment_log = p.enrichment_log", `SET street = '${SO}',\n            enrichment_log = p.enrichment_log`);
   await dung3();
@@ -307,7 +338,12 @@ test("SDT-AC-5 lô đồng bộ chở NULL lên, không chở số", { timeout: 
   const upsert = tra({ sale_offers: ["offer_id"], properties: ["id"] });
   assert.ok(upsert.includes('"street_raw" = EXCLUDED."street_raw"') && upsert.includes('"street" = EXCLUDED."street"'), "SDT-AC-5 upsert ghi đè hai cột");
   const xoaChen = tra({});
-  assert.ok(xoaChen.includes("DELETE FROM public.") && xoaChen.includes('"sale_offers"'), "SDT-AC-5 không keep thì xoá rồi chèn");
+  for (const b of ["sale_offers", "properties"]) {
+    const xoa = xoaChen.indexOf(`DELETE FROM public."${b}";`);
+    const chen = xoaChen.indexOf(`INSERT INTO public."${b}"`);
+    assert.ok(xoa >= 0 && chen > xoa, `SDT-AC-5 không keep thì xoá ${b} rồi chèn`);
+    assert.ok(!upsert.includes(`DELETE FROM public."${b}";`), `SDT-AC-5 có keep thì không xoá trắng ${b}`);
+  }
 
   assert.ok(!Object.keys(CLOUD_ALLOW).includes("field_assertions"), "SDT-AC-5 field_assertions không lên cloud");
   for (const k of ["street_number", "unit_number"]) assert.ok(!CLOUD_ALLOW.sale_offers.includes(k), `SDT-AC-5 ${k} không lên cloud`);
