@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-03T13:08:19Z",
-  "generated_sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
+  "generated_at": "2026-11-03T13:56:07Z",
+  "generated_sha": "c9515e90f9d9fb0912bd231e1a6245e5e3b56a09",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "can-gia-tot-biet-can",
-  "round": 3,
+  "round": 4,
   "riskTier": "T2",
   "evals": [
     {
@@ -244,38 +244,6 @@
       "ref": "config:executors.test.can_gia_tot_doi_chieu"
     },
     {
-      "id": "E9",
-      "criterion": "AC-9",
-      "expected": "\"Chip, tab, J, K, tab cùng tiêu chí chạy đúng trên bản thật; mỗi căn có dòng media có ít nhất một img naturalWidth > 0, trừ căn E10 đếm là chỉ còn link hết hạn; img không tải được hiện «Ảnh hỏng»; báo cáo ghi tỉ lệ ảnh hỏng từng căn, trên 50% ảnh hỏng ở một căn thì ghi là lỗi, trừ khi đó đều là link hết hạn theo E10; scrollWidth = clientWidth ở 390 px; liên kết gọi trong hàng có href tel:+84… và không mở sheet; chữ đọc được ở sáng và tối; đường về bảng chạy, hàng vừa xem giữ nền chọn.\"",
-      "executor": "ui-check",
-      "expectedExit": 0,
-      "steps": [
-        "Bản chạy: dev server của worktree ở http://localhost:3460 (app-3460-worktree của .claude/launch.json), DB máy thu :5433, đăng nhập tài khoản thử vai Vận hành (node scripts/dev-ops-account.mjs --vai ops; không in mật khẩu). Chép số, tên, chữ bài thật vào báo cáo là sai; ảnh chứng phải che phần đó trước khi chụp.",
-        "1280 px sáng: /ops/deals → bấm tab «Đủ để gọi» → thêm chip Phường (chọn trường, chọn «là», chọn giá trị) → bỏ chip → bấm một hàng mở sheet → phím J rồi K → tab «Căn cùng tiêu chí» → bấm một hàng → tab «Chi tiết» → bấm ảnh, chuyển ảnh sau, đóng → nút mở trang một căn → quay về → Esc đóng sheet; chụp evidence/E9-step1.png tới E9-step4.png; ghi số căn thấy trọn trên màn 1280×800",
-        "Bước nào cần nhiều căn hơn dữ liệu thật có (chuyển trang, tab cùng tiêu chí có căn, tab rỗng): ghi «không đo được trên dữ liệu thật», không ghi đạt; phần đó do E13, E14 chứng trên fixture",
-        "Bấm nút gọi trong hàng: sheet không mở, href tel:+84…",
-        "1280 px tối: bảng, sheet, tab cùng tiêu chí → evidence/E9-step5.png, E9-step6.png",
-        "390 px sáng: bảng, sheet, tab cùng tiêu chí → evidence/E9-step7.png tới E9-step9.png; ghi scrollWidth và clientWidth từng màn; mức giảm thấy không phải cuộn ngang",
-        "Ghi naturalWidth từng img trong sheet của mọi căn trong danh sách"
-      ],
-      "paths": [
-        "app/src/app/ops/deals/**",
-        "app/src/components/ops/deals-grid.tsx",
-        "app/src/components/ops/deals-cells.tsx",
-        "app/src/components/ops/deal-sheet.tsx",
-        "app/src/components/ops/deal-similar.tsx",
-        "app/src/components/ops/deal-body.tsx",
-        "app/src/components/ops/review-photos.tsx"
-      ],
-      "evidence_required": [
-        "run_id",
-        "screenshot",
-        "observed",
-        "verifier",
-        "verified_at"
-      ]
-    },
-    {
       "id": "E10",
       "criterion": "AC-10",
       "cmd": "node scripts/can-gia-tot-ba-vai.mjs",
@@ -356,8 +324,8 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.36.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813/_acceptance/can-gia-tot-biet-can/contract.md",
-  "invokedAt": "2026-11-03T13:08:19Z",
-  "invokedSha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
+  "invokedAt": "2026-11-03T13:56:07Z",
+  "invokedSha": "c9515e90f9d9fb0912bd231e1a6245e5e3b56a09",
   "vungVat": [
     ".claude/launch.json",
     ".claude/skills/onehub-ui/catalog.md",
@@ -376,7 +344,9 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4f-anh-hong.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step5b-sheet-dark.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step7.png",
@@ -499,7 +469,9 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4f-anh-hong.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step5b-sheet-dark.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step7.png",
@@ -589,7 +561,9 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4f-anh-hong.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step5b-sheet-dark.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step7.png",
@@ -668,29 +642,192 @@
     "scripts/check-portal-compliance.mjs"
   ],
   "coEvalPaths": true,
-  "evalsHash": "0dad7897d3acf33f2df7a37ff140d0a6847e568cba65f52d6171b2776483853c",
-  "runBaseline": false,
-  "carriedAnalyst": {
-    "fromRound": 1,
-    "nonDiscriminating": [
-      {
-        "cmd": "cd app && node --import tsx --test tests/danh-ba-nguoi-deals-lien-he.test.tsx",
-        "evals": [
-          "E12"
-        ]
-      }
-    ]
-  },
+  "evalsHash": "e5611fd9a37cd3e01b1aa9f10f3b24fc4b7f69a2e63e46a486fad88c947813ee",
+  "runBaseline": true,
   "carriedEvals": [
+    {
+      "id": "E1",
+      "runId": "minted-can-gia-tot-biet-can-E1-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E2",
+      "runId": "minted-can-gia-tot-biet-can-E2-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E3",
+      "runId": "minted-can-gia-tot-biet-can-E3-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E11",
+      "runId": "minted-can-gia-tot-biet-can-E11-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-can-gia-tot-biet-can-E4-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E5",
+      "runId": "minted-can-gia-tot-biet-can-E5-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E6",
+      "runId": "minted-can-gia-tot-biet-can-E6-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
     {
       "id": "E12",
       "runId": "minted-can-gia-tot-biet-can-E12-r2",
       "fromRound": 2,
       "verifiedAt": "2026-11-03T12:01:51Z",
       "cmd": "cd app && node --import tsx --test tests/danh-ba-nguoi-deals-lien-he.test.tsx"
+    },
+    {
+      "id": "E7",
+      "runId": "minted-can-gia-tot-biet-can-E7-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E8",
+      "runId": "minted-can-gia-tot-biet-can-E8-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-doi-chieu.test.tsx"
+    },
+    {
+      "id": "E10",
+      "runId": "minted-can-gia-tot-biet-can-E10-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "node scripts/can-gia-tot-ba-vai.mjs"
+    },
+    {
+      "id": "E13",
+      "runId": "minted-can-gia-tot-biet-can-E13-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
+    },
+    {
+      "id": "E14",
+      "runId": "minted-can-gia-tot-biet-can-E14-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-11-03T13:08:19Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"
     }
   ],
   "carriedFindings": [
+    {
+      "file": "app/src/lib/deals-chi-tiet.ts",
+      "title": "soPct tự định dạng số bằng toFixed, in dấu chấm thập phân thay vì dấu phẩy vi-VN",
+      "severity": "medium",
+      "plain": "Mức giảm lẻ hiện là «4.9%» (dấu chấm) trong khi giá hiện «1,5 tỷ» (dấu phẩy), nên một màn có hai kiểu viết số. Số vẫn đúng, chỉ lệch kiểu viết tiếng Việt.",
+      "can_cu": "Chỉ là lệch cách viết, số đúng và người vận hành đọc được, không mất hay lộ dữ liệu; sửa sau cũng rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/app/ops/deals/[offerId]/page.tsx",
+      "title": "Tham số URL `?can=` là tiếng Việt, sai quy ước tham số tiếng Anh camelCase",
+      "severity": "medium",
+      "plain": "Địa chỉ trang có đuôi tiếng Việt «?can=» thay vì tên tiếng Anh theo quy ước đặt tên. Người dùng không thấy khác biệt khi dùng.",
+      "can_cu": "Chỉ là lệch quy ước đặt tên, không ảnh hưởng người dùng; đổi tên sau phải sửa cả hợp đồng và các liên kết đã lưu nên nên để Mạnh chốt riêng.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/components/ops/deal-body.tsx",
+      "title": "Đặt padding trực tiếp lên Button (`px-0`), trái luật ReUI số 1",
+      "severity": "low",
+      "plain": "Liên kết phường trong sheet bị lệch lề vài điểm ảnh so với thiết kế chuẩn. Không ảnh hưởng chức năng.",
+      "can_cu": "Chỉ là chi tiết thẩm mỹ rất nhỏ, không mất dữ liệu và không cản việc nào của người vận hành.",
+      "proposal": "wont-fix",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/lib/deals-chi-tiet.ts",
+      "title": "Lý do rời danh sách mất dấu âm: căn đắt hơn thước hiện «Giảm 20%, dưới ngưỡng 5%»",
+      "severity": "medium",
+      "plain": "Căn đắt hơn mặt bằng phường nhưng đã rời danh sách sẽ hiện câu tự mâu thuẫn «Giảm 20%, dưới ngưỡng 5%». Người vận hành có thể bối rối về lý do căn rời danh sách.",
+      "can_cu": "Chỉ làm sai câu giải thích trên trang căn đã rời danh sách, không mất dữ liệu và các số khác trên trang vẫn đúng; sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/app/ops/deals/[offerId]/page.tsx",
+      "title": "Crumb «Căn giá tốt» quay lại chính trang một căn khi căn đủ ngưỡng nhưng ngoài 30 căn đã tải",
+      "severity": "medium",
+      "plain": "Khi có hơn 30 căn giá tốt, mở một căn ngoài 30 căn đầu rồi bấm đường dẫn về danh sách sẽ bị đưa lại đúng trang đang đứng. Hiện chỉ có 4 căn nên chưa ai gặp.",
+      "can_cu": "Chưa xảy ra với 4 căn hiện có và người dùng tự thoát bằng nút quay lại hay gõ địa chỉ bảng; việc mở rộng quá 30 căn thuộc CG2.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/components/ops/deals-grid.tsx",
+      "title": "Mở lại bằng ?can= với căn ở trang sau: đóng sheet thì bảng ở trang 1, không thấy hàng vừa xem",
+      "severity": "low",
+      "plain": "Khi danh sách trên 15 căn, mở lại căn ở trang 2 rồi đóng sheet thì bảng quay về trang 1 và người vận hành mất chỗ đang duyệt. Hiện chỉ có 4 căn nên chưa gặp.",
+      "can_cu": "Chưa lộ với 4 căn, chỉ làm mất chỗ duyệt chứ không mất dữ liệu, người dùng tự bấm sang trang 2 được.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/can-gia-tot-biet-can.test.tsx",
+      "title": "Hình dạng 5: sửa cả lớp chỗ in số giảm (soPct) nhưng chỉ đo hai điểm cauChungMinh và chuGiam, không có ma trận",
+      "severity": "medium",
+      "plain": "Một số chỗ hiện mức giảm lẻ chưa có phép kiểm tự động, nên sau này sửa nhầm có thể không bị phát hiện. Người dùng hôm nay không thấy lỗi.",
+      "can_cu": "Không ảnh hưởng người dùng hiện tại, chỉ làm giảm khả năng bắt lỗi về sau.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/can-gia-tot-biet-can.test.tsx",
+      "title": "Hình dạng 4: đối chứng ngưỡng là notEqual một mình, null cũng qua, và bề mặt trang không có đối chứng dương",
+      "severity": "medium",
+      "plain": "Phép kiểm dòng «Ngưỡng» trên trang một căn quá lỏng, nên bỏ dòng này đi có thể vẫn không bị bắt. Hiện dòng vẫn hiển thị đúng.",
+      "can_cu": "Không có hậu quả với người dùng hôm nay, chỉ là lưới an toàn kiểm thử còn lỏng.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/can-gia-tot-biet-can.test.tsx",
+      "title": "Hình dạng 2: tham số URL ở phép đo Back viết tay, còn các ca ?can= khác đi qua nhánh moBanDau mà bản thật không chạy",
+      "severity": "low",
+      "plain": "Phép kiểm tự động chưa đọc địa chỉ trang đúng như bản chạy thật, nên có thể bỏ sót lỗi khi tải lại hay bấm quay lại. Chưa có dấu hiệu lỗi thật.",
+      "can_cu": "Chỉ là độ phủ phép kiểm chưa sát bản thật, không phải lỗi người dùng đang gặp; bản đang chạy còn được đo lại ở các AC chạy thật.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
     {
       "file": "app/src/components/ops/deals-cells.tsx",
       "title": "HoverCardContent bị ghi đè padding bằng p-1",
@@ -699,7 +836,7 @@
       "can_cu": "Hậu quả chỉ là lệch nhẹ về thẩm mỹ, không mất hay lộ dữ liệu, sửa sau rẻ.",
       "proposal": "known-limits",
       "fromRound": 2,
-      "tepDoi": true
+      "tepDoi": false
     },
     {
       "file": "app/src/components/ops/deal-body.tsx",
@@ -709,7 +846,7 @@
       "can_cu": "Chỉ lệch nhỏ về giao diện, không ảnh hưởng chức năng hay dữ liệu, sửa sau rẻ.",
       "proposal": "known-limits",
       "fromRound": 2,
-      "tepDoi": true
+      "tepDoi": false
     },
     {
       "file": "app/src/components/ops/deals-grid.tsx",
@@ -719,7 +856,7 @@
       "can_cu": "Người dùng tự quay lại bằng cách bấm tab, không mất dữ liệu, sửa sau rẻ.",
       "proposal": "known-limits",
       "fromRound": 2,
-      "tepDoi": true
+      "tepDoi": false
     },
     {
       "file": "app/src/lib/source-roles.ts",
@@ -755,6 +892,7 @@
   "deltaFiles": [
     "_acceptance/can-gia-tot-biet-can/card-plain.json",
     "_acceptance/can-gia-tot-biet-can/card.html",
+    "_acceptance/can-gia-tot-biet-can/evals.yaml",
     "_acceptance/can-gia-tot-biet-can/evidence-page.html",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-network.txt",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step1.png",
@@ -765,28 +903,21 @@
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4c-trang-mot-can.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4d-ve-bang.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step4e-hang-vua-xem.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step4f-anh-hong.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step5.png",
+    "_acceptance/can-gia-tot-biet-can/evidence/E9-step5b-sheet-dark.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step6.png",
-    "_acceptance/can-gia-tot-biet-can/evidence/E9-step6b-dark-tab.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step7.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step8.png",
     "_acceptance/can-gia-tot-biet-can/evidence/E9-step9.png",
-    "_acceptance/can-gia-tot-biet-can/s4-args.json",
-    "app/src/app/ops/deals/[offerId]/page.tsx",
-    "app/src/components/ops/deal-body.tsx",
-    "app/src/components/ops/deal-similar.tsx",
-    "app/src/components/ops/deals-cells.tsx",
-    "app/src/components/ops/deals-grid.tsx",
-    "app/src/lib/deals-chi-tiet.ts",
-    "app/tests/can-gia-tot-biet-can.test.tsx",
-    "app/tests/ops-nhan/visible-strings.ts"
+    "_acceptance/can-gia-tot-biet-can/s4-args.json"
   ],
   "thuocChup": {
-    "sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
+    "sha": "c9515e90f9d9fb0912bd231e1a6245e5e3b56a09",
     "n": 234,
-    "digest": "f643869b6627eae3111c63c82a292bbb9d80e92e53dab7e8f16c502bfcfddc27",
+    "digest": "0e031137c7e9616a35241101301caaeb4facc09f41940f09af303a3b0adb7044",
     "tep": {
-      "_acceptance/can-gia-tot-biet-can/evals.yaml": "0dad7897d3acf33f2df7a37ff140d0a6847e568cba65f52d6171b2776483853c",
+      "_acceptance/can-gia-tot-biet-can/evals.yaml": "e5611fd9a37cd3e01b1aa9f10f3b24fc4b7f69a2e63e46a486fad88c947813ee",
       "_acceptance/config.yaml": "3f4b11b3ae66d9a14f9c328c90352fb9004d478ce9af4baa61c4170aa09c50e5",
       "agent/tests/ai-call-log.test.ts": "ec1671d58ec1ca4c35ae90d48bf18dc70e53f0556478a46a5ef19e06d8754800",
       "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
@@ -1023,7 +1154,7 @@
     }
   },
   "cayChup": {
-    "sha": "7b3c62a2019d4cf7eaba08a5af7faec786323ee6",
+    "sha": "c9515e90f9d9fb0912bd231e1a6245e5e3b56a09",
     "ban": {},
     "chuaTheoDoi": []
   }
