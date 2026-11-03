@@ -1,11 +1,11 @@
-# Chọn thị trường cho OneHub Invest — tổng hợp BiggerPockets + AirDNA, đề xuất năng lực và tính năng
+# Chọn thị trường cho OneHub Invest — tổng hợp BiggerPockets + S02, đề xuất năng lực và tính năng
 
 Ngày: 2026-11-03 · Trạng thái: **đề xuất, chờ Mạnh đọc** · Loại: căn cứ (ROADMAP §0) — đầu vào cho một lượt cắt
 (`/acceptance-gate:cat-luot`), **không phải danh sách việc**; không thêm hàng nào vào `docs/plan/lo-trinh.json`.
 
 Đầu vào:
 - `biggerpockets-market-finder-product-analysis.md` (BP)
-- `airdna-vietnam-market-explorer-product-analysis.md` (AirDNA)
+- `s02-vietnam-market-explorer-product-analysis.md` (S02)
 - Khung đối chiếu: `docs/product/FRAMING.md` (sứ mệnh §0, mục đích §1, hai phía §2, lõi §3, phản mục tiêu §4, thước đo §5),
   ROADMAP §1 hiến pháp + §3 quyết định, `docs/plan/lo-trinh.json` (hàng và mục chờ đã có).
 
@@ -18,15 +18,15 @@ sẽ đổi — đúng luật FRAMING §6 dòng cuối.
 
 1. **Hai sản phẩm lớn nhất thế giới về «chọn thị trường» đều yếu đúng ở chỗ OneHub đặt cược: độ tin.**
    - BiggerPockets: số giá cũ dưới nhãn «vừa cập nhật».
-   - AirDNA ở Việt Nam: trung bình bị ngoại lai kéo lệch; ranh giới hành chính cũ; các nhà cung cấp lệch nhau gần gấp đôi.
+   - S02 ở Việt Nam: trung bình bị ngoại lai kéo lệch; ranh giới hành chính cũ; các nhà cung cấp lệch nhau gần gấp đôi.
 
    «Mỗi con số kèm căn cứ, cỡ mẫu, ngày dữ liệu và độ chắc» (FRAMING §3.2) vì thế là **lợi thế định vị**, không chỉ là
    kỷ luật nội bộ.
-2. **Ở Việt Nam chưa ai trả lời cả bốn chiến lược trên cùng một phường.** BP chỉ có thuê dài (và không có ở VN); AirDNA
+2. **Ở Việt Nam chưa ai trả lời cả bốn chiến lược trên cùng một phường.** BP chỉ có thuê dài (và không có ở VN); S02
    chỉ có thuê ngắn, không có giá mua nên không có lợi suất. OneHub đã có ba mảnh: giá rao bán, tiền thuê dài (S06/S03)
    và doanh thu thuê ngắn tự thu (S01). Đây là khoảng trống thật, khớp bốn sản phẩm chủ lực ở FRAMING §2.2.
-3. **«Chọn thị trường» là cửa vào, không phải nơi tạo giá trị.** BP dùng nó để dẫn sang đội môi giới và gói Pro; AirDNA
-   dẫn sang Rentalizer rồi phí đặt giá theo từng căn mỗi tháng. Với OneHub, giá trị nằm ở **nối câu 1 → 2 → 3 trên cùng
+3. **«Chọn thị trường» là cửa vào, không phải nơi tạo giá trị.** BP dùng nó để dẫn sang đội môi giới và gói Pro; S02
+   dẫn sang công cụ ước doanh thu một căn rồi phí đặt giá theo từng căn mỗi tháng. Với OneHub, giá trị nằm ở **nối câu 1 → 2 → 3 trên cùng
    một căn và dẫn về đúng môi giới đang giữ căn** — đúng «hai phía, một lõi».
 4. **Người dùng của cả hai hỏi nhiều nhất hai điều mà không bên nào đo: pháp lý và chi phí thật.** Ở VN, pháp lý thuê
    ngắn hạn quyết ở **cấp toà nhà** và đổi theo tháng. Danh bạ toà · trục · căn (D1, D3) cho OneHub chỗ đặt lớp này mà
@@ -51,7 +51,7 @@ sẽ đổi — đúng luật FRAMING §6 dòng cuối.
 | Gom vào, không phát ra | môi giới cứ đăng nơi quen; OneHub là nơi hiển thị (§2.1, D-chốt) | Tính năng có bắt môi giới làm thêm việc không |
 | Đơn vị nghĩ là căn nhà | hiến pháp #7; khoá sự thật là căn, khoá bằng chứng là id tin (§6) | Tính năng có neo về căn/toà/phường không |
 | Đo trước khi build | hiến pháp #8 | Năng lực mới có số chứng minh nhu cầu không |
-| Luật 5 | số AirDNA chỉ ở `/ops/quality` | Không đề xuất nào đưa số AirDNA ra ngoài |
+| Luật 5 | số S02 chỉ ở `/ops/quality` | Không đề xuất nào đưa số S02 ra ngoài |
 
 ---
 
@@ -59,7 +59,7 @@ sẽ đổi — đúng luật FRAMING §6 dòng cuối.
 
 ### 2.1 Đặt cạnh nhau
 
-| Khía cạnh | BiggerPockets Market Finder | AirDNA «Find a Market» (VN) | OneHub Invest hôm nay |
+| Khía cạnh | BiggerPockets Market Finder | S02 «Find a Market» (VN) | OneHub Invest hôm nay |
 |---|---|---|---|
 | Câu trả lời chính | Vùng đô thị nào hợp dòng tiền / tăng giá (thuê dài) | Tỉnh/thành nào thuê ngắn chạy tốt | Phường nào, căn nào giá tốt (bán, thuê dài, thuê ngắn) |
 | Đơn vị | ~400 vùng đô thị Mỹ, không có cấp nhỏ hơn | 43 thị trường trộn tỉnh cũ / thành phố / đảo; Hà Nội 7 khu theo quận cũ | Tỉnh/thành sau sáp nhập → phường; danh bạ toà · trục · căn đang dựng |
@@ -73,37 +73,38 @@ sẽ đổi — đúng luật FRAMING §6 dòng cuối.
 ### 2.2 Bảy bài học
 
 **B1 — Chọn thị trường là cửa vào; giá trị nằm ở bước kế.**
-- Bằng chứng: BP đặt «Build Your Team» hai lần mỗi trang và khoá số sau Pro. AirDNA xếp thanh trái theo đúng thứ tự
-  Research → Adapt Pricing → Performance → Comps, và nguồn thu lặp lại nằm ở đặt giá theo căn.
+- Bằng chứng: BP đặt «Build Your Team» hai lần mỗi trang và khoá số sau Pro. S02 xếp thanh trái theo đúng thứ tự
+  Research → đặt giá động → Performance → Comps, và nguồn thu lặp lại nằm ở đặt giá theo căn.
 - Hàm ý: Finder của OneHub phải **dẫn sang tin và căn trong phường**, rồi sang ước lợi suất của căn, rồi sang môi giới giữ
   căn. Đo chuyển bước, không đo lượt xem bản đồ.
 
 **B2 — Độ tin là điểm vỡ chung; đó là khe để OneHub khác biệt.**
-- Bằng chứng: Atlanta trên BP +9,7%/năm, Zillow −2,9%. Top listing Hà Nội trên AirDNA giá hàng nghìn USD/đêm. Số listing
+- Bằng chứng: Atlanta trên BP +9,7%/năm, Zillow −2,9%. Top listing Hà Nội trên S02 giá hàng nghìn USD/đêm. Số listing
   TP.HCM lệch giữa các nhà cung cấp từ 6,2 đến 12,1 nghìn.
 - Hàm ý: «nói rõ độ chắc» (chiều 6) và «còn hiệu lực» (chiều 4) phải hiện **trên từng con số tổng hợp**, không chỉ trên
   từng tin. Phản mục tiêu «trình bày suy đoán như sự thật» áp cho cả số trung vị phường.
 
 **B3 — Đơn vị quá thô; quyết định nằm ở khu, phố, toà.**
-- Bằng chứng: người dùng BP nói «neighborhood-to-neighborhood, and sometimes street-to-street». AirDNA gom phần lớn Hà Nội
+- Bằng chứng: người dùng BP nói «neighborhood-to-neighborhood, and sometimes street-to-street». S02 gom phần lớn Hà Nội
   vào một ô «Hanoi City».
 - Hàm ý: phường là sàn, **toà/dự án là đơn vị thật của căn hộ** (D3). Lợi thế cấu trúc này đối thủ không có.
 
 **B4 — Mỗi đối thủ chỉ phục vụ một chiến lược.**
-- Bằng chứng: BP gom mọi thứ vào thuê dài. AirDNA ở VN chỉ có 4 chỉ số thuê ngắn, không có giá mua.
+- Bằng chứng: BP gom mọi thứ vào thuê dài. S02 ở VN chỉ có 4 chỉ số thuê ngắn, không có giá mua.
 - Hàm ý: OneHub đặt **ba lợi suất cạnh nhau trên cùng phường** — thuê ngắn, thuê dài, và chênh giữa hai — cộng tốc độ thị
   trường. Đó là câu trả lời cho «thị trường nào hợp **kiểu đầu tư tôi thích**» (câu 1).
 
 **B5 — Pháp lý và chi phí thật là câu hỏi số một, không ai đo.**
-- Bằng chứng: diễn đàn BP hỏi luật chủ nhà, thuế, bảo hiểm. Điểm «Regulation» của AirDNA suy từ hành vi host.
+- Bằng chứng: diễn đàn BP hỏi luật chủ nhà, thuế, bảo hiểm. Điểm «Regulation» của S02 suy từ hành vi host.
 - Ở VN: Luật Nhà ở 2023; TP.HCM cấm 02/2025 rồi cho lại có điều kiện 04/2026; Hà Nội áp nội quy từng toà.
 - Hàm ý: một **lớp toà** gồm được thuê ngắn không, phí quản lý, nội quy — mỗi giá trị là một phát biểu có người xác nhận
   và ngày. Hạ tầng `field_assertions` (lớp `fact` / `hitl`) đã chứa được.
 
 **B6 — Thời gian không mua lại được.**
-- Bằng chứng: BP và AirDNA mạnh nhờ lịch sử dài (AirDNA từ 2014). OneHub: `market_asset_stats` bị TRUNCATE mỗi lượt
+- Bằng chứng: BP và S02 mạnh nhờ lịch sử dài (S02 từ 2014). OneHub: `market_asset_stats` bị TRUNCATE mỗi lượt
   (`pipeline/sql/500_asset_stats.sql`); `history_transactional` có từ 30/10/2026 và chỉ ở máy thu.
-- Hàm ý: giữ lịch sử thước ngay. Trong lúc chưa đủ 13 tháng, dùng «nhiệt độ thị trường» lấy từ sổ lịch sử: thời gian rao
+- Hàm ý: giữ lịch sử thước ngay; bù quá khứ bằng chỉ số tổng hợp công khai đã hiệu chỉnh — chi tiết ở
+  `price-trend-backfill-proposal.md`. Trong lúc chưa đủ 13 tháng, dùng «nhiệt độ thị trường» lấy từ sổ lịch sử: thời gian rao
   trung vị, tỉ lệ tin giảm giá, tỉ lệ gỡ hoặc đã bán trong 30 ngày. Realtor.com chấm «độ nóng» bằng thời gian rao — cùng
   họ tín hiệu.
 
@@ -124,7 +125,7 @@ Năng lực là thứ dùng chung cho nhiều tính năng; phần lớn thuộc 
 | **N1** | **Số kèm căn cứ** — mọi con số tổng hợp trên cổng mang cỡ mẫu n, ngày dữ liệu (không phải ngày tính), bậc độ chắc; dưới ngưỡng thì hiện «chưa đủ mẫu» thay vì con số | B2 | 1–3 · lõi | PL27 hiện độ chắc theo tin; ngưỡng n ≥ 5 của thước; `MAU_MONG_DUOI` ở hiệu chuẩn | Mở rộng PL27 từ tin sang **số tổng hợp** (thước, lợi suất, KPI phường) | Tỉ lệ số trên cổng có đủ n + ngày + bậc (đích 100%) |
 | **N2** | **Lịch sử thước + nhiệt độ thị trường** — giữ thước phường × loại theo tuần; tính thời gian rao, tỉ lệ giảm giá, tỉ lệ gỡ/đã bán từ sổ lịch sử | B6 | 1 · nhà đầu tư | `history_transactional` (059, chỉ local); `property_price_history` | Thước không giữ lịch sử; số tổng hợp từ sổ lịch sử chưa lên cloud (chỉ số gộp, không lộ tin) | Số tuần lịch sử liên tục theo phường; độ trễ dữ liệu p50 |
 | **N3** | **Luật ngoại lai trước mọi xếp hạng và trung vị** — cắt theo phân vị trong cùng phường × loại; cờ hiện được ở `/ops`; xếp hạng thuê ngắn theo đêm có khách thật, không theo «tiềm năng» | B2 | 1–2 · lõi | Cờ phi lý (427 cờ S06, ra mắt 05/11); ON11 loại tin phi lý ở căn giá tốt | Chưa áp cho xếp hạng listing thuê ngắn và cho lợi suất | Số ngoại lai lọt top N (đích 0) |
-| **N4** | **Thước theo phân khúc** — phường × loại × nhóm phòng ngủ tính sẵn, để bộ lọc «căn 1PN» đổi mọi số | B4, bài học AirDNA (bộ lọc áp mọi số) | 1–2 · nhà đầu tư | PL26 thước phường × loại; ô chờ UH1 «bộ lọc theo phòng ngủ» (mở lại khi pipeline tính sẵn) | Tính sẵn theo nhóm PN cho căn hộ HN — đúng điều kiện mở UH1 | Tỉ lệ phường HN có thước đủ mẫu theo nhóm PN |
+| **N4** | **Thước theo phân khúc** — phường × loại × nhóm phòng ngủ tính sẵn, để bộ lọc «căn 1PN» đổi mọi số | B4, bài học S02 (bộ lọc áp mọi số) | 1–2 · nhà đầu tư | PL26 thước phường × loại; ô chờ UH1 «bộ lọc theo phòng ngủ» (mở lại khi pipeline tính sẵn) | Tính sẵn theo nhóm PN cho căn hộ HN — đúng điều kiện mở UH1 | Tỉ lệ phường HN có thước đủ mẫu theo nhóm PN |
 | **N5** | **Ba lợi suất cùng phường** — thuê dài (tiền thuê P2 / giá), thuê ngắn (doanh thu S01 / giá), chênh giữa hai; S02 chỉ để hiệu chuẩn ở `/ops/quality` | B4 | 1, 3 · nhà đầu tư | Lợi suất phường ở `500_asset_stats.sql`; doanh thu S01 theo listing | Nối doanh thu thuê ngắn theo phường với giá mua cùng phường; ghi rõ «giá rao ≠ giá giao dịch» | Số phường có đủ ba lợi suất; sai số ước thuê khi có số thật |
 | **N6** | **Lớp toà / dự án** — được thuê ngắn không, phí quản lý, nội quy, thước toà; mỗi giá trị là phát biểu có người xác nhận + ngày; tụt bậc khi quá hạn | B5 | 1–3 · nhà đầu tư + môi giới | Danh bạ toà DB1 (Ocean Park 1), DBG (Grand Park); `field_assertions` lớp `fact`/`hitl`; CGP1 (thước theo toà, đang chờ) | Thêm trục «pháp lý thuê ngắn» và «phí quản lý» vào phát biểu cấp toà; quy trình xác nhận | Tỉ lệ toà có phát biểu pháp lý còn hạn |
 | **N7** | **Đối chiếu đa nguồn có kỷ luật** — tự thu so với nguồn hiệu chuẩn; trên cổng chỉ hiện nhãn tầng C «đã hiệu chuẩn», không hiện số nguồn | B2, luật 5 | 1 · lõi | ON10 hiệu chuẩn một bộ số ở `/ops/quality` | Không lớn; cần gỡ lỗ rò Market Score ở `/api/v1/markets` (thẻ việc riêng đã đề xuất) | 0 số S02 trên đường công khai (test) |
@@ -172,7 +173,7 @@ Từ 22:00 ngày 04/11 chỉ gộp bản vá đường ống (KHM1). Mọi đợ
 
 | Không làm | Vì sao |
 |---|---|
-| Hiện số hay điểm AirDNA trên cổng hoặc API công khai | Luật 5; dùng làm thước kiểm ở `/ops/quality` |
+| Hiện số hay điểm S02 trên cổng hoặc API công khai | Luật 5; dùng làm thước kiểm ở `/ops/quality` |
 | Điểm tổng hộp đen kiểu Market Score | Phản mục tiêu «suy đoán như sự thật»; UH3 chờ mô hình điểm đã đo. Nếu làm thì điểm con có công thức công khai, hiện cạnh điểm tổng |
 | Danh sách «chuyên gia chọn» không nêu tiêu chí | Bài học BP; thay bằng T9 (luật in rõ) và Căn giá tốt đã xác minh (CG) |
 | Điểm chất lượng sống A–F | Không có nguồn cấp phường tin được ở VN |
@@ -209,7 +210,7 @@ Từ 22:00 ngày 04/11 chỉ gộp bản vá đường ống (KHM1). Mọi đợ
 ## 9. Nguồn
 
 - `docs/research/biggerpockets-market-finder-product-analysis.md` §0, §3–§8
-- `docs/research/airdna-vietnam-market-explorer-product-analysis.md` §0, §3–§8
+- `docs/research/s02-vietnam-market-explorer-product-analysis.md` §0, §3–§8
 - `docs/product/FRAMING.md` §0–§7 · `docs/ROADMAP.md` §1, §2.3–§2.5, §3 · `docs/plan/lo-trinh.json` (UI3, UI8, UI9, UI14,
   UI16, PL26, PL27, CG1–CG7, CGP1, DB1, DBG, UH1–UH3, SH1, SH10, SH14, KHM1, ON10, ON11)
 - `docs/plan/ra-mat-0511-so-luong-chat-luong.md` §2 · `docs/plan/pham-vi-can-gia-tot-0311.md`
