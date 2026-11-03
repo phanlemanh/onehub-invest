@@ -27,8 +27,10 @@ import { importDir } from "./import-chotot.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 let _tatChrome = null; // 0211-14 (3a): handler tín hiệu gọi được — Chrome không ở lại khi Ctrl-C
-const STATE_DIR = join(ROOT, "state", "thu-so-s06");
-const SNAP_ROOT = join(ROOT, "state", "seller-v5");
+let _flushTruocThoat = null; // 0311-3 MỞ LẠI (3): tín hiệu/lỗi cũng flush + nạp trước khi thoát
+// vòng 4 e2e: cho test chạy state riêng (env) — không đụng state thật
+const STATE_DIR = process.env.S06_STATE_DIR ?? join(ROOT, "state", "thu-so-s06");
+const SNAP_ROOT = process.env.S06_SNAP_ROOT ?? join(ROOT, "state", "seller-v5"); // vòng 4 e2e: snapshot riêng qua env
 const WEB_BASE = process.env.S06_WEB_BASE; // tầng A — chỉ trong env local
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -43,14 +45,15 @@ if (PHASE !== 1) {
   process.exit(1);
 }
 const THREADS = Number(flag("threads", 1));
+if (THREADS > 2) {
+  // 0311-3 MỞ LẠI (5): Mạnh duyệt 2 luồng — không trần trước đây
+  console.error("--threads > 2 không được duyệt (Mạnh chốt 2 luồng, 0311-3 MỞ LẠI)");
+  process.exit(1);
+}
 const MINUTES = Number(flag("minutes", 30));
 const MAU = Number(flag("mau", 0)); // 0311-3 đ2: mặc định 0 — mẫu 1tk-1số đã đo 72/72 (100%)
 const LIMIT = Number(flag("limit", 0));
 
-if (!WEB_BASE) {
-  console.error("thiếu env S06_WEB_BASE (tầng A — đặt trong .env local, không lên kho)");
-  process.exit(1);
-}
 
 const slug = (s) =>
   String(s ?? "")
@@ -69,6 +72,17 @@ export function chuanHoa84(raw) {
 }
 
 const jitter = () => 8000 + Math.floor(Math.random() * 7000); // nghỉ 8–15s (Mạnh duyệt 0211-16, thay 3–8s)
+
+/** 0311-3 MỞ LẠI (1): 403/429 dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt) —
+ * captcha/khong-ra-so/timeout giữ luật 5 lần liền. Export cho test. */
+export const canDungNgay = (status) => /^chan-4(03|29)/.test(String(status));
+
+/** 0311-3 MỞ LẠI vòng 3 (d): dòng lệnh tiến trình có chứa đúng đường profileDir
+ * của bộ thu thì mới được tắt — PID tái dùng/tệp cũ không giết nhầm Chrome khác.
+ * Export cho test. */
+export const laChromeBoThuCuaLenh = (cmdline, profileDir) =>
+  Boolean(profileDir) && String(cmdline ?? "").includes(profileDir);
+let dungNgay403429 = false;
 
 async function docState() {
   try {
@@ -131,9 +145,23 @@ async function docViec(client, state) {
   const viec = [...mau];
   for (const r of rows) {
     if (tkDaSo.has(r.account_id)) continue; // đã có số ở tin bất kỳ — không gọi lại
-    if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
+    // 0311-3 MỞ LẠI (4): tin mới nhất het-han làm tài khoản rơi khỏi việc —
+    // chọn tin mới nhất KHÔNG het-han của tài khoản (list_id1 → list_id2).
+    const lid = chonTinChuaHetHan(r, state);
+    if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
   return viec;
+}
+
+/** 0311-3 MỞ LẠI (4): tin mới nhất chưa het-han của tài khoản (state theo list_id).
+ * Export cho test. */
+export function chonTinChuaHetHan(row, state) {
+  for (const lid of [row.list_id1, row.list_id2]) {
+    if (!lid) continue;
+    const x = state?.da_thu?.[String(lid)];
+    if (!x || x.status !== "het-han") return lid;
+  }
+  return row.list_id1 ?? null;
 }
 
 /** Ghi batch items v5 ra snapshot ngoài đường quét. */
@@ -227,6 +255,12 @@ async function laySoTrang(page, viec) {
 }
 
 async function main() {
+  if (!WEB_BASE) {
+    // tầng A — chỉ thoát khi CHẠY chính, không khi test import module
+    console.error("thiếu env S06_WEB_BASE (tầng A — đặt trong .env local, không lên kho)");
+    process.exit(1);
+  }
+
   // MỞ LẠI 0211-7 đD: che cả tên miền trong log (tầng A — không vào nac*.log)
   console.log(`[thu-so-s06] pha ${PHASE} · luồng ${THREADS} · cửa sổ ${MINUTES}′ · web=«che»`);
   const client = new pg.Client({ connectionString: DB_URL });
@@ -260,6 +294,42 @@ async function main() {
   let chromeProc = null;
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
+  // 0311-3 MỞ LẠI vòng 3 (a)(d): tatChrome + PID định nghĩa TRƯỚC vòng chờ CDP
+  // và TRƯỚC khi dùng — tín hiệu lúc đang chờ CDP hay throw 'chưa lên sau 30 lần'
+  // đều đã có lối tắt. Kill chỉ khi dòng lệnh tiến trình CHỨA profileDir bộ thu
+  // (tệp PID cũ + PID bị tái dùng không giết nhầm tiến trình khác của Mạnh).
+  const PID_F = join(STATE_DIR, "chrome-pid");
+  await mkdir(STATE_DIR, { recursive: true });
+  const { execFile } = await import("node:child_process");
+  /** (d) đọc dòng lệnh tiến trình (ps) rồi kiểm chứa profileDir — chỉ qua ps,
+   * không giết gì ở đây. Trả false khi tiến trình không còn/ps lỗi. */
+  const laChromeBoThu = (pid, dir) => new Promise((res) => {
+    execFile("ps", ["-o", "command=", "-p", String(pid)], (e, out) =>
+      res(!e && laChromeBoThuCuaLenh(String(out), dir)));
+  });
+  const pidCuaMinh = async () => {
+    let pid = chromeProc?.pid;
+    if (!pid) { try { pid = Number((await readFile(PID_F, "utf8")).trim()); } catch {} }
+    return pid || null;
+  };
+  const tatChrome = async () => {
+    let pid = await pidCuaMinh();
+    if (!pid) return;
+    if (!(await laChromeBoThu(pid, profileDir))) {
+      console.log(`PID ${pid} không phải Chrome bộ thu (thiếu profileDir) — không đụng, xoá tệp PID`);
+      try { await writeFile(PID_F, ""); } catch {}
+      return;
+    }
+    for (const sig of ["SIGTERM", "SIGKILL"]) {
+      try { process.kill(pid, sig); } catch { break; }
+      for (let i = 0; i < 10; i++) {
+        await sleep(300);
+        try { process.kill(pid, 0); } catch { break; } // đã chết
+      }
+    }
+    try { await writeFile(PID_F, ""); } catch {} // đã tắt — xoá để lượt sau không giết nhầm
+  };
+  _tatChrome = tatChrome;
   let browser;
   try {
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
@@ -272,29 +342,42 @@ async function main() {
       "--disable-background-timer-throttling", "about:blank",
     ], { stdio: "ignore", detached: true });
     chromeProc.unref();
-    for (let lan = 0; ; lan++) {
-      try {
-        browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-        break;
-      } catch (e) {
-        if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
-        await sleep(1000);
+    await writeFile(PID_F, String(chromeProc.pid)); // (a) ghi NGAY sau spawn
+    try {
+      for (let lan = 0; ; lan++) {
+        try {
+          browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+          break;
+        } catch (e) {
+          if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
+          await sleep(1000);
+        }
+      }
+    } catch (e) {
+      await tatChrome(); // (a) đường throw phải tắt Chrome mình vừa spawn
+      throw e;
+    }
+  }
+  if (!chromeProc) {
+    // (d) nối instance sống: PID phải HỢP LỆ (dòng lệnh chứa profileDir);
+    // tệp trống/lỗi → tìm PID nghe cổng CDP rồi kiểm cùng điều kiện — không
+    // khớp thì DỪNG LƯỢT (không chạy trên Chrome lạ), thoát 1.
+    let pid = await pidCuaMinh();
+    let hopLe = pid && (await laChromeBoThu(pid, profileDir));
+    if (!hopLe) {
+      const { execFile } = await import("node:child_process");
+      const cdpPid = await new Promise((res) =>
+        // vòng 4: -sTCP:LISTEN — chỉ tiến trình NGHE cổng, không bắt tiến trình đang nối
+        execFile("lsof", ["-nP", `-iTCP:${CDP_PORT}`, "-sTCP:LISTEN", "-t"], (e, out) => res(e ? null : Number(String(out).trim().split(/\s+/)[0]) || null)));
+      if (cdpPid && (await laChromeBoThu(cdpPid, profileDir))) {
+        await writeFile(PID_F, String(cdpPid));
+        console.log(`nối theo PID cổng CDP ${cdpPid} (đã xác minh profileDir)`);
+      } else {
+        console.error("Chrome đang sống trên cổng CDP KHÔNG phải của bộ thu (thiếu profileDir) — dừng lượt, không chạy trên Chrome lạ");
+        process.exit(1);
       }
     }
   }
-  // 0211-12/hậu nấc-4: Chrome detached Ở LẠI sau lượt và có lúc chiếm trước —
-  // tắt đúng PID mình spawn khi lượt kết thúc (kể cả đường lỗi).
-  const tatChrome = async () => {
-    if (!chromeProc) return; // instance do lượt trước mở — không đụng (0211-13)
-    for (const sig of ["SIGTERM", "SIGKILL"]) {
-      try { process.kill(chromeProc.pid, sig); } catch { return; }
-      for (let i = 0; i < 10; i++) {
-        await sleep(300);
-        try { process.kill(chromeProc.pid, 0); } catch { return; } // đã chết
-      }
-    }
-  };
-  _tatChrome = tatChrome;
 
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
   // 0211-10 (b): mỗi luồng giữ đúng MỘT tab tạo MỘT lần đầu qua
@@ -303,6 +386,30 @@ async function main() {
   // cửa sổ bung). Fallback: context.newPage() nếu đường CDP không trả page.
   const ctx0 = contexts[0];
   const tabs = [];
+  // 0311-3 MỞ LẠI vòng 4: các khai báo này phải NGOÀI try — vòng 3 để trong khối
+  // try khiến finally gọi flushTruocThoat ném ReferenceError (bị catch rỗng nuốt)
+  // và giayMoiTin dùng thu cũng ném → mọi lượt thoát 1, mất [nấc]/[đối chiếu].
+  const ketQua = { co_so: 0, khac_so: 0 };
+  const errors = {};
+  const batch = [];
+  const flushTruocThoat = async () => {
+    if (batch.length > 0) {
+      const sid = await ghiSnapshot(batch.splice(0, batch.length), "vn");
+      console.log(`flush ${sid}`);
+    }
+    for (const d of daFlush.slice()) {
+      try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
+    }
+    daFlush.length = 0;
+  };
+  _flushTruocThoat = flushTruocThoat;
+  const mau = { da_do: 0, trung: 0, khac: 0 };
+  const deadline = Date.now() + MINUTES * 60_000;
+  const t0 = Date.now();
+  let chanLienTiep = 0;
+  let thu = 0;
+  let iViec = 0;
+  try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
     try {
@@ -324,19 +431,9 @@ async function main() {
     throw new Error(`tab trùng nhau: ${new Set(tabs).size}/${THREADS} — không chạy`);
   }
 
-  const ketQua = { co_so: 0, khac_so: 0 };
-  const errors = {};
-  const batch = [];
-  const mau = { da_do: 0, trung: 0, khac: 0 };
-  const deadline = Date.now() + MINUTES * 60_000;
-  const t0 = Date.now();
-  let chanLienTiep = 0;
-  let thu = 0;
-  let iViec = 0;
-
   async function motLuong(idx) {
     const tab = tabs[idx % tabs.length];
-    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5) {
+    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429) {
       const v = viec[iViec++];
       const tBat = Date.now();
       let kq;
@@ -353,6 +450,12 @@ async function main() {
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
       if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
       else chanLienTiep = 0;
+      // 0311-3 MỞ LẠI (1): 403/429 → dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt)
+      if (canDungNgay(kq.status)) {
+        dungNgay403429 = true;
+        const ra = kq.status.match(/-ra-(\d+)s/);
+        console.log(`DỪNG NGAY — ${kq.status}${ra ? ` (Retry-After ${ra[1]} giây)` : ""}`);
+      }
       if (kq.status === "co-so") ketQua.co_so++;
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
       else errors[kq.status] = (errors[kq.status] ?? 0) + 1;
@@ -392,8 +495,10 @@ async function main() {
           console.log(`flush 500 → ${sid}`);
         }
       }
+      // 0311-3 MỞ LẠI (3): ghi state sau MỖI tin có kết quả — dừng giữa lượt
+      // không còn mất kết quả đã thu (trước đây tới 24 tin)
+      await ghiState(state);
       if (thu % 25 === 0) {
-        await ghiState(state);
         const giay = ((Date.now() - t0) / 1000 / thu).toFixed(1);
         console.log(`tiến độ ${thu}/${viec.length} · ${giay}s/tin · có số ${ketQua.co_so} · lỗi ${JSON.stringify(errors)}`);
       }
@@ -401,7 +506,7 @@ async function main() {
     }
   }
 
-  try {
+  // 0311-3 vòng 3 (b): nằm trong try đã mở trước tabs — không mở try kép
   await Promise.all(Array.from({ length: THREADS }, (_, i) => motLuong(i)));
   // 0211-12 (3): đóng tab đã cấp — browser.close qua CDP chỉ NGẮT KẾT NỐI,
   // tab tích lại sau mỗi lượt (10 tab cho 2 luồng sau vài lượt).
@@ -413,12 +518,12 @@ async function main() {
   }
   await browser.close().catch(() => {});
   // 0211-16: nạp NGAY mọi bản v5 của lượt vào stg — số không nằm chờ trong snapshot
-  for (const d of daFlush) {
-    try { await importDir(client, d); } catch (e) { console.log(`nạp ${d} lỗi: ${e.message}`); }
-  }
+  await flushTruocThoat();
   await client.end().catch(() => {});
   } finally {
-    // 0211-14 (3a): finally — kể cả đường ném lỗi giữa lượt cũng tắt Chrome mình spawn
+    // 0211-14 (3a) + 0311-3 MỞ LẠI (3): mọi đường ra (lỗi giữa lượt) đều
+    // flush + nạp trước, rồi tắt Chrome — không mất số đã thu, không sót Chrome
+    try { await flushTruocThoat(); await client.end().catch(() => {}); } catch {}
     await tatChrome();
   }
 
@@ -446,7 +551,7 @@ async function main() {
     const st = Object.values(state.da_thu).filter((x) => x.phone).length;
     console.log(`[đối chiếu] state ${st} số · stg ${stg} số · lệch ${st - stg}${st !== stg ? " — CHẠY: node bu-seller-v5.mjs" : ""}`);
   } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
-  process.exit(chanLienTiep >= 5 ? 2 : 0);
+  process.exit(chanLienTiep >= 5 || dungNgay403429 ? 2 : 0); // 0311-3 MỞ LẠI (1): 403/429 cũng thoát 2
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -455,12 +560,18 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     process.exit(1);
   });
   // Ctrl-C / SIGTERM giữa lượt: đừng để Chrome ở lại chiếm màn hình
+  // 0311-3 MỞ LẠI vòng 3 (c): tín hiệu → flush + nạp TRƯỚC (có hạn thời gian
+  // để không treo Ctrl-C), chạy đúng MỘT LẦN nếu nhận tín hiệu hai lần.
+  let daNhanTinHieu = false;
   for (const sig of ["SIGINT", "SIGTERM"]) {
     process.on(sig, () => {
-      console.log(`nhận ${sig} — tắt Chrome rồi dừng`);
-      // 0211-15: khi _tatChrome còn null thì ?.() nhả undefined và cả chuỗi
-      // finally bỏ qua — exit không chạy. Promise.resolve luôn tạo chuỗi.
-      Promise.resolve(_tatChrome?.()).finally(() => process.exit(130));
+      if (daNhanTinHieu) return; // tín hiệu lần 2 — đang thoát
+      daNhanTinHieu = true;
+      console.log(`nhận ${sig} — flush + nạp rồi tắt Chrome`);
+      const voiHan = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), new Promise((r) => setTimeout(r, ms))]);
+      voiHan(_flushTruocThoat?.(), 20000)
+        .then(() => voiHan(_tatChrome?.(), 10000))
+        .finally(() => process.exit(130));
     });
   }
 }
