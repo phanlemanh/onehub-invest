@@ -95,6 +95,8 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
       WITH p1 AS (
         SELECT o.offer_id, o.area_id, o.area_m2, o.price_perm2
         FROM sale_offers o
+        -- Tin cấp thị trường (s03-len-cong AC-3) không có phường để so: «cùng area_id» ở đây chỉ có nghĩa khi là phường.
+        JOIN areas x ON x.id = o.area_id AND x.region_type <> 'market'
         WHERE o.source IN ('S03','S05') AND o.kind='sale'
           AND o.confidence IN ('high','medium')
           AND o.area_m2 BETWEEN 20 AND 500 AND o.price_perm2 BETWEEN 10e6 AND 300e6),

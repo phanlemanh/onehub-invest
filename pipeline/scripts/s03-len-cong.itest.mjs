@@ -147,6 +147,23 @@ test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, ch
       await writeAssertions(c, [pb(t.posts[0], "property_type", "apartment", "inferred")]);
       await resolveOffers(c, [t.id]);
       assert.equal((await docTin(c, t.id)).property_type, "apartment", ten);
+      // Chạy thật, đọc lại: thứ tự có 068 giữ dấu số, thứ tự không có 068 làm đối chứng đỏ (dấu số mất qua phân xử).
+      const dauSo = { rule_id: "sl1-thu" }, dauChao = { rule_id: "sl1-chao" };
+      const x = await tinMoi(c);
+      await c.query("UPDATE sale_offer_records SET field_provenance = $2 WHERE offer_id = $1",
+        [x.id, JSON.stringify({ seller_phone: dauSo, offer_status: dauChao })]);
+      await writeAssertions(c, [pb(x.posts[0], "property_type", "apartment", "inferred")]);
+      await resolveOffers(c, [x.id]);
+      const fp = (await docTin(c, x.id)).fp;
+      assert.deepEqual(fp.seller_phone, mong.sdt ? dauSo : undefined, `${ten}: dấu số sau phân xử`);
+      assert.deepEqual(fp.offer_status, dauChao, `${ten}: dấu trạng thái chào sau phân xử`);
+      assert.equal(fp.property_type?.tier, "inferred", `${ten}: xuất xứ loại hình`);
+      if (mong.huong) {
+        await writeAssertions(c, [pb(x.posts[0], "unit_facing", "balcony:east", "observed")]);
+        await resolveOffers(c, [x.id]);
+        const { rows: [{ unit_facing }] } = await c.query("SELECT unit_facing FROM sale_offer_records WHERE offer_id = $1", [x.id]);
+        assert.equal(unit_facing, "balcony:east", `${ten}: cột của 067 không nhận phân xử`);
+      }
     });
   }
   await withTx(async (c) => {
@@ -237,9 +254,17 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
     const { rows: [{ k }] } = await c.query("SELECT (offer_subject_keys('S06', $1, '{}'))[1] k", [`S06|sl1${process.pid}`]);
     await writeAssertions(c, [{ subject_key: k, field: "property_type", value: "apartment", evidence_tier: "fact", method: "source_field" }]);
     await resolveOffers(c, [s06]);
+    // Tin S06 mang mã thị trường, cùng giá, cùng diện tích với tin S03 a: không có luật thì thành cặp theo area_id.
+    const s06Tt = `offer_sl1_s06tt_${process.pid}`;
+    await c.query(
+      `INSERT INTO sale_offer_records (offer_id, originating_system_key, source, kind, price_vnd, area_m2, price_perm2, confidence, first_seen, last_seen, n_reposts, post_ids, area_id)
+       VALUES ($1, $2, 'S06', 'sale', 3e9, 60, 5e7, 'high', now(), now(), 1, '{}', $3)`, [s06Tt, `S06|sl1tt${process.pid}`, market]);
+    const { rows: [{ k: kTt }] } = await c.query("SELECT (offer_subject_keys('S06', $1, '{}'))[1] k", [`S06|sl1tt${process.pid}`]);
+    await writeAssertions(c, [{ subject_key: kTt, field: "property_type", value: "apartment", evidence_tier: "fact", method: "source_field" }]);
+    await resolveOffers(c, [s06Tt]);
 
     // Thu hẹp bộ ghép về phường đối chứng và tin thử: chạy cả 50 nghìn tin mất hơn 10 phút. Mã bộ ghép vẫn là mã thật.
-    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${[a, b, doiChung, coGap, ...nhieu].map((t) => t.id).join(",")},${s06}}')`);
+    await c.query(`CREATE TEMP VIEW sale_offers AS SELECT * FROM public.sale_offers WHERE area_id = '${ward}' OR offer_id = ANY ('{${[a, b, doiChung, coGap, ...nhieu, { id: s06Tt }].map((t) => t.id).join(",")},${s06}}')`);
     await refreshBaitGap(c);
     await chayResolve(c, { ghi() {}, savepoint: true });
     const thanhPho = Object.keys(MARKETS).find((k2) => MARKETS[k2].id === market);
@@ -256,7 +281,7 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
       assert.equal(d.area_id, market, "SL1-AC-3 area_id bị dọn");
     }
     const cap = async (ids) => (await c.query("SELECT count(*)::int n FROM property_candidates WHERE offer_a = ANY ($1) OR offer_b = ANY ($1)", [ids])).rows[0].n;
-    assert.equal(await cap([a.id, b.id]), 0, "SL1-AC-3 có cặp chứa tin cấp thị trường");
+    assert.equal(await cap([a.id, b.id, s06Tt]), 0, "SL1-AC-3 có cặp chứa tin cấp thị trường");
     assert.ok(await cap([doiChung.id]) > 0, "SL1-AC-3 cặp đối chứng cùng phường không sinh");
 
     await ghiAnhChup(c);
@@ -314,16 +339,29 @@ test("SL1-AC-6 khai-so-nhom: mặc định không ghi, ghi đúng, chạy lại 
       assert.ok(!loKhoa(s), "SL1-AC-6 stdout lộ giá trị khoá nhóm");
     }
 
-    const truoc = await hang();
+    // Chụp trọn đơn vị S03 và nhật ký. Mỗi tệp hỏng đều mang một thay đổi hợp lệ ở đơn vị khác: ghi trước khi ném là lộ ngay.
+    assert.ok(so.length >= 3, "DB thử cần ít nhất ba đơn vị S03");
+    const chupSo = async () => ({
+      don_vi: (await c.query("SELECT (t.*)::text x FROM collection_units t WHERE source_code = 'S03' ORDER BY unit_code")).rows.map((r) => r.x),
+      nhat_ky: await nk(),
+    });
+    const coDoi = nhom.map((n, i) => (i === 0 ? { ...n, market_codes: [], the: null, the_ma: null } : n));
+    const truoc = await chupSo();
+    // Đối chứng: chính thay đổi ấy, không kèm lỗi, làm thước đỏ.
+    await c.query("SAVEPOINT doi_chung");
+    assert.equal((await khaiSoNhom(c, viet("doi.json", coDoi), { ghi: true, out() {} })).da_ghi, 1, "SL1-AC-6 đối chứng không ghi");
+    assert.notDeepEqual(await chupSo(), truoc, "SL1-AC-6 đối chứng: thước không thấy lần ghi");
+    await c.query("ROLLBACK TO SAVEPOINT doi_chung");
+    assert.deepEqual(await chupSo(), truoc);
     const hong = {
-      "mã thị trường lạ": nhom.map((n, i) => (i === 1 ? { ...n, market_codes: ["vn-khong-co"] } : n)),
-      "đơn vị không có trong sổ": [...nhom, { unit_code: "S03-N999", market_codes: [] }],
-      "thiếu đơn vị": nhom.slice(1),
-      "thẻ thiếu một vế": nhom.map((n, i) => (i === 1 ? { ...n, the: "x" } : n)),
+      "mã thị trường lạ": coDoi.map((n, i) => (i === 1 ? { ...n, market_codes: ["vn-khong-co"] } : n)),
+      "đơn vị không có trong sổ": [...coDoi, { unit_code: "S03-N999", market_codes: [] }],
+      "thiếu đơn vị": coDoi.slice(0, -1),
+      "thẻ thiếu một vế": coDoi.map((n, i) => (i === 1 ? { ...n, the: "x" } : n)),
     };
     for (const [ly_do, ds] of Object.entries(hong)) {
       await assert.rejects(khaiSoNhom(c, viet("hong.json", ds), { ghi: true, out() {} }), new RegExp(ly_do), ly_do);
-      assert.deepEqual(await hang(), truoc, `SL1-AC-6 ${ly_do}: DB đổi`);
+      assert.deepEqual(await chupSo(), truoc, `SL1-AC-6 ${ly_do}: DB đổi`);
     }
     // Nhóm cùng tên, nơi có thẻ nơi không: thiếu thẻ.
     const { rows: khoa } = await c.query("SELECT group_key FROM collection_units WHERE unit_code = ANY ($1)", [[nhom[0].unit_code, nhom[1].unit_code]]);
@@ -336,10 +374,18 @@ test("SL1-AC-6 khai-so-nhom: mặc định không ghi, ghi đúng, chạy lại 
     await assert.rejects(khaiSoNhom(c, tep, { ghi: true, out() {} }), /thiếu thẻ/);
   });
   // Lệnh thật: thoát khác 0, không ghi.
+  const c3 = new pg.Client({ connectionString: DB_URL });
+  await c3.connect();
+  const chupLenh = async () => (await c3.query(
+    `SELECT (SELECT md5(string_agg((t.*)::text, E'\\n' ORDER BY unit_code)) FROM collection_units t WHERE source_code = 'S03') don_vi,
+            (SELECT count(*)::int FROM ops_audit WHERE actor = 'machine:khai-so-nhom') nhat_ky`)).rows[0];
+  const truocLenh = await chupLenh();
   const r = spawnSync(process.execPath, [join(HERE, "../khai-so-nhom.mjs"), "--tep", viet("cli.json", [{ unit_code: "S03-N999", market_codes: [] }]), "--ghi"], { encoding: "utf8", env: process.env });
   assert.notEqual(r.status, 0, "SL1-AC-6 lệnh thoát 0 với đơn vị lạ");
   assert.equal(r.stdout, "");
   assert.match(r.stderr, /đơn vị không có trong sổ/, "SL1-AC-6 lệnh đỏ vì lý do khác");
+  assert.deepEqual(await chupLenh(), truocLenh, "SL1-AC-6 lệnh thật báo lỗi mà DB đổi");
+  await c3.end();
   // Đối chứng: lệnh thật với sổ đúng hiện trạng thoát 0, chỉ in số đếm, không ghi.
   const c2 = new pg.Client({ connectionString: DB_URL });
   await c2.connect();
