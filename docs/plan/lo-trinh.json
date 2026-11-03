@@ -988,20 +988,23 @@
     },
     {
       "ma": "UI10",
-      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, cột tầng A vẫn chỉ admin thấy",
+      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, liên hệ và nội dung tin theo vai",
       "vai": "Người vận hành",
       "tieu_chi": 9,
       "vi_sao": "B5 của chuẩn UI. Đứng trên PL26 (cùng trang, đổi thước phường × loại). Không đụng AU2 (API).",
       "hang": "T2",
       "slug": "ops-deals-data-grid",
-      "dung_tren": [
-        "PL26"
-      ],
+      "dung_tren": [],
       "nhom": "ops-con-lai",
       "dot": "giao-dien-2310",
       "phu": [
         "GD11"
-      ]
+      ],
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/components/ops/deal-card.tsx"
+      ],
+      "ghi_chu": "Bỏ dung_tren PL26 ở lượt cắt can-gia-tot-0311: bảng không cần thước mới, chung vùng thì lịch tự xếp nối tiếp; câu giao bỏ «cột tầng A chỉ admin» vì SD4 đã đổi. CG3 đứng trên hàng này. Gánh thêm hai tiêu chí của OH2."
     },
     {
       "ma": "UI11",
@@ -3222,6 +3225,167 @@
         "pipeline/sql",
         "app/src/lib"
       ]
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG1",
+      "slug": "can-gia-tot-biet-can",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [],
+      "phu": [
+        "CG1"
+      ],
+      "cau_giao": "Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt: giá/m² so với thước, số tin dựng thước, mức giảm so với ngưỡng; căn thiếu dữ liệu ghi rõ thiếu gì",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Hợp đồng SD4 để ảnh và chữ bài chỉ cho admin; 3/4 căn hôm nay có dòng ảnh trong bảng media, route ?media= đã mở cho vai Vận hành.",
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/components/ops/deal-card.tsx",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Không đổi số căn, không migration. Chạy song song được với CG2. Vai Người xem vẫn không nhận ảnh, chữ bài, liên hệ."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG2",
+      "slug": "can-gia-tot-du-can",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "CG2"
+      ],
+      "cau_giao": "Tin bán S06 có số giảm theo thước phường × loại do đường ống tính sẵn và vào danh sách Căn giá tốt, kèm nhãn nguồn và cờ thiếu SĐT",
+      "bat_khi": "Trên DB máy thu: số tin S06 có số giảm khớp phép đếm SQL độc lập (03/11: 6.494 tin giảm 5–50%); chạy lại lần hai không đổi số; tin P1 giữ nguyên số giảm; tin không có SĐT hiện cờ thiếu, không có nút gọi",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Danh sách hôm nay chỉ 4 căn: 1.233/1.277 tin P1 không có phường; S06 đủ phường và loại nhưng chỉ làm thước.",
+      "vung": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/sql",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Chờ Mạnh chốt Hỏi-2 ở Cổng Đáng của CG1 vì đổi định nghĩa «Căn giá tốt» trong CONTEXT.md; không đồng ý thì hàng về chan_troi. Chưa gọi được cho tới khi có SĐT S06 (làn ZCode). Tính ở pipeline theo luật 10."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG3",
+      "slug": "can-gia-tot-loc-xep-hang",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "UI10",
+        "CG2"
+      ],
+      "phu": [
+        "CG3"
+      ],
+      "cau_giao": "Người vận hành lọc Căn giá tốt theo khu vực, loại hình, toà hoặc dự án, đường và xem bảng xếp hạng theo mức giảm, độ tin và khu vực",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «Không nhìn theo được điều này thì ko thể sử dụng».",
+      "vung": [
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Đường có ở 3.957/20.873 tin S06 và 0 tin S03; toà ở 382 tin S06 và 815 tin S03: bộ lọc phải nói phủ bao nhiêu. Đường và dự án đầy hơn khi DS1 giao."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG4",
+      "slug": "can-gia-tot-cho-thue",
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG3"
+      ],
+      "phu": [
+        "CG4"
+      ],
+      "cau_giao": "Người vận hành chuyển Căn giá tốt sang Cho thuê và thấy tin thuê rẻ hơn thước thuê cùng phường × loại, chứng minh như tin bán",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Thước và số giảm hiện chỉ cho tin bán; S06 có 27.626 tin thuê.",
+      "vung": [
+        "db/migrations",
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/sql",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "T3 vì cần view thước thuê bằng migration. Số migration xin ở sổ SO-MIGRATION. Thước là giá thuê trên tháng, không dùng số AirDNA."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG5",
+      "slug": "can-gia-tot-ghi-xac-minh",
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG1"
+      ],
+      "phu": [
+        "CG5"
+      ],
+      "cau_giao": "Người vận hành ghi kết quả gọi người bán cho một căn: đã liên lạc được chưa, còn bán không, giá xác nhận, ghi chú; thấy lại ai ghi, khi nào",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Mạnh bổ sung: liên hệ người bán trước để bảo đảm thông tin đã xác minh cho nhà đầu tư.",
+      "vung": [
+        "db/migrations",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "T3: dữ liệu mới, quyền ghi. Quyết định ghi đi qua người (luật 7). Cổng Phạm vi phải chốt ghi ở máy thu hay từ cloud theo đường lệnh ADR-0015. Sửa kết quả là thêm dòng, không ghi đè."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG6",
+      "slug": "can-gia-tot-nhan-bien-tap",
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG5"
+      ],
+      "phu": [
+        "CG6"
+      ],
+      "cau_giao": "Người vận hành gắn nhãn giá tốt và lý do cho căn, chọn căn đưa lên cổng Invest và sắp thứ tự hiển thị",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «cho đội vận hành biên tập, sắp xếp để hiển thị» và «Gắn nhãn giá tốt, tại sao tốt».",
+      "vung": [
+        "db/migrations",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Điều kiện chọn đưa lên theo Hỏi-1 ở Cổng Đáng của CG1. Lý do do người viết hoặc chọn; LLM không ghi."
+    },
+    {
+      "dot": "can-gia-tot-0311",
+      "nhom": "can-gia-tot",
+      "ma": "CG7",
+      "slug": "can-gia-tot-tren-invest",
+      "hang": "T3",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "CG6",
+        "TR1"
+      ],
+      "phu": [
+        "CG7"
+      ],
+      "cau_giao": "Nhà đầu tư mở cổng Invest và thấy các căn được đội vận hành chọn, kèm nhãn giá tốt, lý do, chỉ số so với thước, dấu đã xác minh và ngày xác minh",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Đích cuối của vòng: thông tin đã xác minh cho nhà đầu tư; dựng trên đường đưa tin và người bán lên cloud của TR1.",
+      "vung": [
+        "pipeline/sync-cloud.mjs",
+        "app/src/app/(app)/[country]/[market]/listings/**",
+        "app/src/components/listing/**"
+      ],
+      "ghi_chu": "T3, khó đảo vì ra người dùng thật. Ghi chú nội bộ của cuộc gọi không lên cloud; không tên nguồn thật, không số AirDNA; leak gate phải xanh. Ảnh theo AC1."
     }
   ],
   "chan_troi": [
@@ -3725,6 +3889,26 @@
         "KC4"
       ],
       "mo_lai_khi": "Bộ thu giữ bài S03 chỉ có ảnh vào raw và stg kèm ảnh (DATA-CONTRACT tăng schemaVersion) và KC3 đã giao"
+    },
+    {
+      "ma": "CGP1",
+      "dot": "can-gia-tot-0311",
+      "cau_giao": "Tin S03 không có phường so với thước theo toà hoặc dự án",
+      "ly_do": "1.233/1.277 tin P1 không có phường, 793 có mã toà, nhưng S06 chỉ 382 tin có mã toà và 0 mã trùng đủ 5 tin, nên chưa dựng được thước",
+      "phu": [
+        "CGP1"
+      ],
+      "mo_lai_khi": "DS2 đưa dự án tới tin và căn, DB1 dựng toà; đo lại số mã toà có từ 5 tin S06"
+    },
+    {
+      "ma": "CGP2",
+      "dot": "can-gia-tot-0311",
+      "cau_giao": "Nhãn của đội vận hành làm chỉ dẫn cho AI",
+      "ly_do": "Đo trước khi build: chưa có nhãn thật nào, chưa biết nhãn có đủ và đủ nhất quán để làm ví dụ cho model",
+      "phu": [
+        "CGP2"
+      ],
+      "mo_lai_khi": "CG6 giao và có từ 50 nhãn thật do người gắn"
     }
   ],
   "da_bac": []
