@@ -81,7 +81,8 @@
       "pipeline/lib/write-offers.mjs",
       "pipeline/push-ops-facts.mjs",
       "pipeline/transform-media.mjs",
-      "pipeline/gan-sdt-s06.mjs"
+      "pipeline/gan-sdt-s06.mjs",
+      "pipeline/lib/duong-can.mjs"
     ],
     "Migration đã commit, không sửa; hàm và view còn sống được xét ở dòng bên đọc tương ứng": [
       "db/migrations/001_init.sql",
@@ -175,7 +176,11 @@
       "pipeline/tests/vlm-anh.test.mjs",
       "pipeline/scripts/fixtures/067_tang_huong_tin.ban-sao.sql",
       "pipeline/scripts/gan-sdt-s06.test.mjs",
-      "pipeline/scripts/s03-len-cong.test.mjs"
+      "pipeline/scripts/s03-len-cong.test.mjs",
+      "pipeline/scripts/do-duong-s06.mjs",
+      "pipeline/scripts/do-sdt-trong-duong.mjs",
+      "pipeline/scripts/s06-duong.itest.mjs",
+      "pipeline/scripts/sdt-trong-duong.itest.mjs"
     ]
   }
 }
