@@ -26,7 +26,7 @@ async function xepHangDdl(c) {
  * gian, ca hết 1000 lượt thử). Chỉ cầm 33033 trong đúng một câu NOWAIT, xong nhả ngay; lúc chờ không giữ khoá bảng nào nên
  * không vào vòng deadlock — gọi đầu giao dịch, trước khi đọc bảng public. Vẫn bị chặn (khoá DDL ngoài 33033) thì nghỉ 100 ms.
  * Trả số lần thử lại. */
-export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
+export async function khoaNguon(c, bang, { toiDa = 3000 } = {}) {
   const ds = bang.map((t) => `public.${t}`).join(", ");
   for (let lan = 0; ; lan++) {
     const toiLuot = lan > 0 && (await xepHangDdl(c));

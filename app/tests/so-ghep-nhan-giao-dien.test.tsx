@@ -71,6 +71,7 @@ const offer = (o: Partial<PublicOffer>): PublicOffer => ({
   sellerManyNames: false,
   hasPhone: true,
   phoneInferred: false,
+  unverified: false,
   updatedAt: "2026-11-01T00:00:00Z",
   firstSeenDays: 3,
   ...o,
