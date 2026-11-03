@@ -1,0 +1,96 @@
+{
+ "feature_plain": "Rào máy chặn sửa migration đã commit sẽ chạy đúng cả khi phiên sửa tệp ở worktree khác, không chỉ trong worktree của chính phiên.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ chặn sửa migration đã commit khi tệp nằm ở worktree khác, và lời chặn nêu đúng đường của tệp."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ chặn cả khi đường tệp đi qua lối tắt tới kho, như ~/dev/one-invest."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ xét «đã commit» theo đúng worktree chứa tệp: migration chỉ commit ở worktree kia vẫn bị chặn."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ cho sửa bình thường những tệp không thuộc diện chặn: migration mới chưa commit, tệp ngoài mọi kho git, tệp mới ngoài db/migrations."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ giữ nguyên các rào đang có: migration trong worktree của phiên, dữ liệu thô và hồ sơ đăng nhập vẫn bị chặn."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ chứng minh bộ kiểm biết đỏ: chạy nó trên bản hook cũ và chín bản cố tình phá, mỗi bản phải đỏ đúng ca đã gọi tên."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ chỉ đổi hook, bộ kiểm và hồ sơ này; hook kiểm kiểu lúc dừng giữ nguyên."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ ghi rõ trong bộ kiểm cách rào xử lý kho git khác, để đổi quyết định ở Hỏi-4 thì bộ kiểm đỏ."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-8",
+   "p": "Sẽ KHÔNG để lại worktree hay nhánh tạm sau mỗi lần kiểm, kể cả lần đỏ, để không thành rác cho các phiên khác."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG phân biệt kho khác với kho này; trong ~/dev chỉ kho này có db/migrations đã commit (Hỏi-4)."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG vá hook kiểm kiểu lúc dừng, vì nó không biết phiên đã sửa tệp nào (Hỏi-1)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG chặn ca đã xoá cả thư mục db/migrations ở worktree khác rồi ghi lại tên cũ (Hỏi-2)."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG đưa bộ kiểm này vào CI và KHÔNG chặn sửa migration bằng lệnh shell; hook chỉ canh công cụ sửa tệp."
+  }
+ ],
+ "scope_plain": "Việc này chỉ vá một lỗ của rào máy; người dùng cổng Invest và Ops không thấy gì khác.",
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Không chạy bước quét độ phủ tự động, vì việc chỉ chạm một hook với ba luật; đã ghi trong sổ quyết định."
+  },
+  {
+   "i": 1,
+   "p": "Đã soát bằng tay bốn trục: tệp nằm ở đâu, tệp đã commit hay chưa, luật nào áp dụng, cách hook nhận đầu vào. Mỗi trục trỏ về một tiêu chí (AC-1 đến AC-5, AC-9)."
+  },
+  {
+   "i": 2,
+   "p": "Còn một ô chưa phủ: thư mục db/migrations đã bị xoá ở worktree khác; người quyết ở Hỏi-2."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Máy ghi «chỉ có một lối» cho ba lựa chọn gộp một, trong khi cách xử lý thư mục chưa có còn hai lối khác chưa xét. Đã tách dòng sổ, đưa câu này lên thẻ (Hỏi-2) và thêm ca kiểm dữ liệu thô ở thư mục mới; ca đó chặn đúng."
+  },
+  {
+   "i": 1,
+   "p": "Máy tự quyết việc bỏ bảo đảm «tiêu chí viết trước code», mà đó là việc của người. Đã đổi thành câu hỏi (Hỏi-3)."
+  },
+  {
+   "i": 2,
+   "p": "Câu hỏi về kho khác chỉ đếm một trong ba luật. Đã đo cả ba trên ~/dev: luật dữ liệu thô áp ngoài kho từ bản cũ nên không đổi; thêm ca kiểm ghim hành vi (AC-9)."
+  },
+  {
+   "i": 3,
+   "p": "Bộ kiểm chưa gọi tên ca đỏ, và lỗi cú pháp của hook cũng trả cùng mã với «chặn». Mỗi ca chặn nay phải có đúng câu của luật, có thêm năm bản cố tình phá, và từng ca được gọi tên."
+  },
+  {
+   "i": 4,
+   "p": "Chưa đo việc dọn dẹp khi bộ kiểm đỏ. Lượt phá thử nay kiểm thêm rằng không còn worktree hay nhánh tạm."
+  }
+ ]
+}

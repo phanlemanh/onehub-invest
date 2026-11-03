@@ -209,3 +209,30 @@ test("AC-11 đối chứng: thẻ không xung đột không có lựa chọn", a
   await r.unmount();
 });
 
+
+// ---------- s03-llm-doc-toan-bo: khối đối chiếu (AC-7, Focus 3) ----------
+const DOI_CHIEU = [
+  { loai: "y_dinh", trich: "cần mua căn hộ", ai: "inquiry", bo_doc: "offer" },
+  { loai: "gia", trich: "giá 5 tỷ", ai: 5000000000, bo_doc: 3000000000 },
+];
+test("LS1-AC-7 thẻ có đề xuất và đối chiếu: hiện câu trích, loại, hai giá trị", async () => {
+  const r = await render(agentItem({ ...ENRICH_EVIDENCE, doi_chieu: DOI_CHIEU }));
+  assert.ok(r.text().includes("Đối chiếu"), "LS1-AC-7 thẻ thiếu khối đối chiếu");
+  const hang = (loai: string) => document.querySelector(`[data-review-doi-chieu-loai="${loai}"]`)?.textContent ?? "";
+  // Ghim từng giá trị vào đúng bên và đúng loại: tráo hai bên hoặc gắn nhầm câu trích là đỏ.
+  for (const [loai, nhan, cap, trich] of [
+    ["y_dinh", "Ý định tin", "Bộ đọc: Tin rao · AI: Yêu cầu", "«cần mua căn hộ»"],
+    ["gia", "Giá rao", "Bộ đọc: 3.00 tỷ · AI: 5.00 tỷ", "«giá 5 tỷ»"],
+  ]) {
+    for (const s of [nhan, cap, trich]) assert.ok(hang(loai).includes(s), `LS1-AC-7 hàng ${loai} thiếu «${s}»: ${hang(loai)}`);
+  }
+  assert.ok([...document.querySelectorAll("button")].some((b) => b.textContent === "Áp dụng"), "LS1-AC-7 thẻ có đề xuất giữ nút Áp dụng");
+  await r.unmount();
+});
+test("LS1 Focus 3: thẻ chỉ có đối chiếu có nút, không báo thiếu dữ liệu; đối chứng là ca AC-9 thiếu fields", async () => {
+  const r = await render(agentItem({ offer_id: "offer_abc", text: "tin", doi_chieu: DOI_CHIEU }));
+  assert.ok(!r.text().includes("Thẻ thiếu dữ liệu đề xuất"), "Focus 3: thẻ chỉ có đối chiếu bị báo thiếu dữ liệu");
+  const nut = [...document.querySelectorAll("button")].map((b) => b.textContent);
+  assert.ok(nut.includes("Ghi phán quyết") && nut.includes("Bỏ"), `Focus 3: thiếu nút (${nut})`);
+  await r.unmount();
+});

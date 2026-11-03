@@ -17,6 +17,8 @@ import pg from "pg";
 import { BACKENDS, chayLo, doTapVang, PROMPT_VERSION, SQL_GHI, TEN_MODEL, thamSoGhi, type Backend, type Bai, type DongNhan, type Vang } from "../src/agents/nhan-bac-s03.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { loadStgPosts } from "../../pipeline/lib/test-posts.mjs";
+// @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
+import { textHash } from "../../pipeline/lib/eval-labels.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const TRACES = join(import.meta.dirname, "../traces");
@@ -48,16 +50,9 @@ export function baiTuDong(p: { post_id: string; text: string }, bam: (text: stri
   return { post_id: p.post_id, text: p.text, text_hash: bam(p.text) };
 }
 
-/** textHash của pipeline nạp lúc chạy: eval-labels.mjs kéo transform-zalo.mjs → `pg` của pipeline, mà job CI agent
- * chỉ cài phụ thuộc của agent/ — import tĩnh làm test thuần (dongTrace, baiTuDong) không nạp được. */
-const layTextHash = async (): Promise<(text: string) => string> =>
-  // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
-  (await import("../../pipeline/lib/eval-labels.mjs")).textHash;
-
 /** Bài cần nhãn: bài S03 thật (đã gạt bài thử), chưa có nhãn cùng chữ + model + prompt, lọc --since / tập vàng. */
 export async function chonBai(c: pg.Client, co: Co, vang: Vang[] | null): Promise<Bai[]> {
   const { posts } = await loadStgPosts(c, "zalo");
-  const textHash = await layTextHash();
   const da = new Set((await c.query(
     `SELECT post_id || '|' || text_hash AS k FROM silver_labels WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2`,
     [TEN_MODEL[co.model], PROMPT_VERSION])).rows.map((r) => r.k));

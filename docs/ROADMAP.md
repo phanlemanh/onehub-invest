@@ -106,6 +106,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   ngữ cảnh không thành giá, thuê từ 1 tỷ không đơn vị thời gian thành bán, giá che số lưu số sàn (Mạnh duyệt, sai số tới khoảng 5%, PL13 lo cận
   trên), giá không đơn vị có nhãn. Toà, trục đi qua phát biểu `parser`, trục vào khoá gom. Trên nhãn tác tử gắn (không phải nhãn vàng): PN 61→225/241,
   giá 128→208/237. Có hiệu lực ở lượt 00:00 sau khi gộp (Mạnh duyệt): S03 2.772→3.158 tin, nghỉ 130, mọc do bộ đọc 391; đo chỉ đọc khớp lượt thử trên DB thử.
+- LLM đọc toàn bộ chữ S03 (LS1 `_acceptance/s03-llm-doc-toan-bo`, 03/11): lệnh `agent/scripts/doc-toan-bo-s03.ts`, lõi `agent/src/enrich/doc-toan-bo.ts`.
+  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ. Tin
+  `unknown` chỉ tự điền căn hộ khi câu trích có thật và chứa từ khoá (`agent/src/enrich/luat-trich-dan.ts`), actor `doc-toan-bo:<runId>`; loại khác và E1 trái model lên thẻ.
+  Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
+  (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
+  Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
@@ -390,6 +396,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
+
+> **LS1 (03/11):** lệnh đọc toàn bộ S03 đã viết, chưa chạy thật; mẫu 383 bài và lượt chính chờ chữ ký hồ sơ `s03-llm-doc-toan-bo`.
 
 > **Sửa 02/11 (Mạnh chốt):** mốc S06 29.762 không phải tin bán; đo ngày 02/11: bán 20.873, thuê 27.626. S06 báo tách bán, thuê;
 > đích là độ phủ so với tổng nguồn báo, con số 45.000 chỉ để tham khảo. Chất lượng chỉ đo, không chặn. Tám chỉ số, kế hoạch ba
