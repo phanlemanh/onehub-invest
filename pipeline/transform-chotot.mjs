@@ -15,6 +15,7 @@ import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions } from "./lib/assert.mjs";
 import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
+import { ganSdtS06 } from "./gan-sdt-s06.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -126,6 +127,11 @@ export async function runTransformChotot(client) {
   await retractRule(client, khongDuong, ENRICH_FIELD.street_raw, "payload.street_name", "nguon-bo-trong");
   const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
   console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
+  // SĐT đi sau phân xử: câu upsert phía trên không đụng cột số, nên chạy lại không mất số đã ghi.
+  const sdt = await ganSdtS06(client);
+  if (!sdt.bo_qua) {
+    console.log(`SĐT S06: đổi ${sdt.doi} tin (trực tiếp ${sdt.truc_tiep}, ghép ${sdt.ghep}, rút ${sdt.rut}) · tài khoản từ 2 số ${sdt.tai_khoan_hai_so} · số sai dạng ${sdt.sai_e164}`);
+  }
   console.log(
     `P2 offers: ${nHigh} high / ${nMed} medium / ${nSkip} skip — ` +
     `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match` +
@@ -133,7 +139,7 @@ export async function runTransformChotot(client) {
   );
   for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
   return {
-    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa),
+    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa), sdt,
     inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed,
   };
 }

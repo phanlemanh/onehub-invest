@@ -15,6 +15,8 @@ export const MSG = {
   stale: "sổ trỏ route không còn",
   methods: "phương thức lệch sổ",
   publicSale: "đọc sale_offers mà sổ khai public",
+  publicOffersRoute: "khoá publicOffers trên route ngoài danh sách tin rao",
+  publicOffersLib: "đọc sale_offers ngoài offers-public",
   guardOrder: "cổng ops (canCallOpsApi) chạy trước pool.query",
   ops: "chế độ ops mà mã thiếu cổng",
   opsSession: "chế độ ops-session mà mã thiếu canAccessOps",
@@ -48,6 +50,10 @@ const hopCheDo = (mode, q) =>
   : mode === "ops-session" ? !q.bearer && ["viewer", "ops"].includes(q.vai)
   : mode === "admin" ? !q.bearer && ["admin", "owner"].includes(q.vai)
   : false;
+
+// Ngoại lệ của luật «public không đọc sale_offers» (tin-rao-tren-invest): hai route tin rao, và chỉ qua một thư viện.
+const PUBLIC_OFFER_ROUTES = new Set(["v1/listings", "v1/listings/[id]/contact"]);
+const OFFERS_LIB = "app/src/lib/offers-public.ts";
 
 const API_DIR = "app/src/app/api";
 const routeFile = (route) => `${API_DIR}/${route}/route.ts`;
@@ -124,8 +130,13 @@ export function checkApiSurface({ entries, files }) {
     if (got.join(",") !== want.join(",")) violations.push(`${e.route}: ${MSG.methods} (mã ${got.join("/")}, sổ ${want.join("/")})`);
 
     const closure = importClosure(f, files);
-    const readsSale = closure.some((g) => /\bsale_offers\b/.test(stripComments(files[g] ?? "")));
-    if (e.mode === "public" && readsSale) violations.push(`${e.route}: ${MSG.publicSale}`);
+    const saleReaders = closure.filter((g) => /\bsale_offers\b/.test(stripComments(files[g] ?? "")));
+    const offerRoute = e.publicOffers === true && PUBLIC_OFFER_ROUTES.has(e.route);
+    if (e.publicOffers && !offerRoute) violations.push(`${e.route}: ${MSG.publicOffersRoute}`);
+    if (e.mode === "public" && saleReaders.length && !offerRoute) violations.push(`${e.route}: ${MSG.publicSale}`);
+    if (e.mode === "public" && offerRoute) {
+      for (const g of saleReaders) if (g !== OFFERS_LIB) violations.push(`${e.route}: ${MSG.publicOffersLib} (${g})`);
+    }
 
     // Route có nhắc canCallOpsApi (kể cả chỉ còn dòng import) phải gọi nó đúng khuôn AU2: await, 401, trước truy vấn.
     if (/\bcanCallOpsApi\b/.test(stripComments(src)) && !checkDealsRoute(src).ok) violations.push(`${e.route}: ${MSG.guardOrder}`);
@@ -313,6 +324,26 @@ export const MUTATIONS = [
     const r = replaceIn(files, routeFile("zalo-media"), "if (!canAccessOps(user)) return", "if (!user) return");
     return r && { entries, files: r };
   }],
+  ["M21", "khoá publicOffers trên route public khác", MSG.publicOffersRoute, ({ entries, files }) => ({
+    entries: entries.map((e) => (e.route === "v1/markets" ? { ...e, publicOffers: true } : e)),
+    files,
+  })],
+  ["M22", "route tin rao đọc sale_offers qua thư viện khác", MSG.publicOffersLib, ({ entries, files }) => {
+    const f = routeFile("v1/listings/[id]/contact");
+    if (!(f in files)) return null;
+    return {
+      entries,
+      files: {
+        ...files,
+        [f]: `import { docTin } from "@/lib/moi-z";\n${files[f]}`,
+        "app/src/lib/moi-z.ts": SALE_ROUTE.replace("export async function GET()", "export async function docTin()"),
+      },
+    };
+  }],
+  ["M23", "route tin rao bỏ khoá publicOffers", MSG.publicSale, ({ entries, files }) => ({
+    entries: entries.map((e) => (e.route === "v1/listings" ? { ...e, publicOffers: false } : e)),
+    files,
+  })],
 ];
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);

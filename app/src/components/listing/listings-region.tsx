@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import Link from "next/link"
 
 import { Frame, FrameHeader, FramePanel } from "@/components/reui/frame"
@@ -14,7 +15,7 @@ export const LISTINGS_LIMIT = 300
 /**
  * Vùng dữ liệu của trang Duyệt listing — tải trong `RegionError > Suspense` để PageHeader đứng trước.
  */
-export async function ListingsRegion(props: { marketId: string; marketName: string; marketPath: string; currency: string }) {
+export async function ListingsRegion(props: { marketId: string; marketName: string; marketPath: string; currency: string; toolbarStart?: ReactNode }) {
   const { rows, total } = await getMarketListings(props.marketId, { limit: LISTINGS_LIMIT })
   return <ListingsRegionView {...props} rows={rows} total={total} />
 }
@@ -29,24 +30,30 @@ export function ListingsRegionView({
   currency,
   rows,
   total,
+  toolbarStart = null,
 }: {
   marketName: string
   marketPath: string
   currency: string
   rows: ListingCardRow[]
   total: number
+  /** Ô đứng đầu hàng công cụ (thời hạn thuê). */
+  toolbarStart?: ReactNode
 }) {
   if (rows.length === 0) {
     return (
-      <Empty className="border">
-        <EmptyHeader>
-          <EmptyTitle>Đang thu thập listing ở {marketName}</EmptyTitle>
-          <EmptyDescription>Chưa có listing tự thu ở thị trường này; số liệu khu vực vẫn xem được ở Insight.</EmptyDescription>
-        </EmptyHeader>
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link prefetch={false} href={marketPath} />}>
-          Xem Insight {marketName}
-        </Button>
-      </Empty>
+      <div className="flex flex-col gap-4">
+        {toolbarStart && <div>{toolbarStart}</div>}
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyTitle>Đang thu thập listing ở {marketName}</EmptyTitle>
+            <EmptyDescription>Chưa có listing tự thu ở thị trường này; số liệu khu vực vẫn xem được ở Insight.</EmptyDescription>
+          </EmptyHeader>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link prefetch={false} href={marketPath} />}>
+            Xem Insight {marketName}
+          </Button>
+        </Empty>
+      </div>
     )
   }
 
@@ -54,14 +61,15 @@ export function ListingsRegionView({
     total > rows.length
       ? `Hiện ${fmtInt(rows.length)}/${fmtInt(total)} listing doanh thu cao nhất của thị trường.`
       : null
-  return <ListingsExplorer listings={rows} currency={currency} capNote={capNote} />
+  return <ListingsExplorer listings={rows} currency={currency} capNote={capNote} toolbarStart={toolbarStart} />
 }
 
 /** Skeleton đúng bố cục: hàng công cụ · lưới 4 thẻ (ảnh 3:2 + chữ) | khung bản đồ. */
-export function ListingsRegionSkeleton() {
+export function ListingsRegionSkeleton({ toolbarStart = null }: { toolbarStart?: ReactNode } = {}) {
   return (
     <div className="flex flex-col gap-4" aria-busy="true" aria-label="Đang tải listing">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {toolbarStart}
         <Skeleton className="h-8 w-28" />
         <Skeleton className="h-8 w-44" />
       </div>

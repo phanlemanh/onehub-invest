@@ -2,8 +2,8 @@
 # apify-facebook-daily.sh — Thu thập tin BĐS từ Facebook Groups qua Apify
 # (KHÔNG dùng account Facebook cá nhân — Apify dùng proxy infrastructure riêng)
 #
-# Chạy 4 lần/ngày (6h/lần) qua launchd, rồi nạp snapshot mới + transform S05.
-# Chi phí: ~100 posts/run × 4 runs/ngày = 400 posts/ngày = ~$2/ngày trên free tier
+# Chạy 2 lượt/tuần (thứ Ba + thứ Sáu 06:00 — s05-slo-theo-lich, từ 7/11) qua
+# launchd, rồi nạp snapshot mới + transform S05. Chi phí ~100 posts/lượt.
 #
 # Env: ~/.oneinvest/cloud.env cần có APIFY_TOKEN
 set -uo pipefail
@@ -14,8 +14,11 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 AGENT_KEY=$(cat $HOME/.openclaw/credentials/oneinvest-agent.key 2>/dev/null | tr -d '
 ')
 export AGENT_API_KEYS="$AGENT_KEY"
+# 2510-31(5): bước thu in dòng ghim chuẩn qua job-step.sh (nạp sớm — bước thu
+# nằm TRƯỚC phần source ở dưới).
+. "$ROOT/scripts/lib/job-step.sh"
 THU_RC=0
-node "$ROOT/pipeline/apify-facebook-collector.mjs" || THU_RC=$?
+job_step apify-facebook-daily apify-facebook-collector node "$ROOT/pipeline/apify-facebook-collector.mjs" || THU_RC=$?
 # 2510-4: KHÔNG nuốt mã thoát của bước thu — S05 active mà thu hỏng (vd 402)
 # thì vẫn nạp snapshot sẵn có + transform, nhưng trả mã ≠0 ở CUỐI lượt.
 if [ "$THU_RC" != 0 ]; then
@@ -53,22 +56,32 @@ import_one() {
 LOCK_DIR="$STATE.lock"
 # 2510-9: khoá nằm trong pipeline/logs sống qua kill -9/mất điện — ghi PID +
 # giờ lấy khoá; PID chết hoặc khoá >2h thì gỡ lấy lại, đỡ kẹt tới khi gỡ tay.
+# 2510-31(2): 'luc' không phải số làm $(( )) lỗi cú pháp văng cả vòng until —
+# kiểm số TRƯỚC khi tính tuổi; hỏng thì coi như khoá cũ kiểu PID (gỡ được).
+# 2510-31(3): rm -rf không xoá được mà vẫn trả 0 → vòng chờ quay bận vô hạn —
+# chỉ thành công khi thư mục THẬT hết; còn lại rơi vào trần 60 lượt + sleep.
 go_khoa_cu() {
   local pid="" luc=""
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
+  local goc_do_tuoi=0
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
-    echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; rm -rf "$LOCK_DIR"; return 0
+    echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; goc_do_tuoi=1
+  elif [ -n "$luc" ] && ! [[ "$luc" =~ ^[0-9]+$ ]]; then
+    echo "gỡ khoá cũ — file luc không phải số (PID ${pid:-?}, giá trị lạ)"; goc_do_tuoi=1
+  elif [ -n "$luc" ] && [ $(( $(date +%s) - luc )) -gt 7200 ]; then
+    echo "gỡ khoá cũ hơn 2h (PID ${pid:-?}, lấy lúc $luc)"; goc_do_tuoi=1
   fi
-  if [ -n "$luc" ] && [ $(( $(date +%s) - luc )) -gt 7200 ]; then
-    echo "gỡ khoá cũ hơn 2h (PID ${pid:-?}, lấy lúc $luc)"; rm -rf "$LOCK_DIR"; return 0
+  if [ "$goc_do_tuoi" = "1" ]; then
+    rm -rf "$LOCK_DIR" 2>/dev/null
+    [ ! -e "$LOCK_DIR" ] && return 0
+    echo "⚠️ không gỡ được khoá $LOCK_DIR (quyền? NFS?) — giữ chờ" >&2
+    return 1
   fi
   return 1
 }
 i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
-  go_khoa_cu && continue
-  i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
-  sleep 5
+  go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
 done
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
 trap 'rm -rf "$LOCK_DIR" 2>/dev/null; [ -n "${TMPLOG:-}" ] && rm -f "$TMPLOG"' EXIT

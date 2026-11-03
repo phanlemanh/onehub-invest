@@ -1,0 +1,8 @@
+{"ts":"2026-11-02T02:40:09Z","round":1,"evalId":"E1","run_id":"chotot-thieu-moc-E1-r1-20261102T024009Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-02T02:40:10Z","round":1,"evalId":"E2","run_id":"chotot-thieu-moc-E2-r1-20261102T024010Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-02T02:40:11Z","round":1,"evalId":"E3","run_id":"chotot-thieu-moc-E3-r1-20261102T024011Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"}
+{"ts":"2026-11-02T04:56:09Z","round":2,"evalId":"E1","run_id":"chotot-thieu-moc-E1-r2-20261102T045609Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-02T04:56:09Z","round":2,"evalId":"E2","run_id":"chotot-thieu-moc-E2-r2-20261102T045609Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-thieu-moc.test.mjs"}
+{"ts":"2026-11-02T04:56:09Z","round":2,"evalId":"E3","run_id":"chotot-thieu-moc-E3-r2-20261102T045609Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"}
+{"ts":"2026-11-02T05:38:28Z","kind":"repin","run_id":"repin-20261102T053124Z-55269","sha":"25127eacf0f06642239e9062bf246d6b5a10be25","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0},"wall_s":423.9,"so_lenh":22,"tong_ket":{"ket_cuc":"xanh","phut":7.1,"so_lenh":22,"model_goi":0,"model_carry":0,"chap_chon":0}}
+{"ts":"2026-11-02T16:35:49Z","kind":"repin","run_id":"repin-20261102T162656Z-91202","sha":"0a7381412ab08377aa38c77ea357690dbb7b2546","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0},"wall_s":532.8,"so_lenh":22,"tong_ket":{"ket_cuc":"xanh","phut":8.9,"so_lenh":22,"model_goi":0,"model_carry":0,"chap_chon":0}}

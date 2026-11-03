@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: s06-region-tinh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s06r_unit
+    expected: "exit 0; ca 'region (tỉnh)' và 'ưu tiên region' pass; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s06r_unit
+    expected: "exit 0; should-NOT-fire: ca 'region_v2 (cũ)' pass, không có region= trong lời gọi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s06r_unit
+    expected: "exit 0; ca 'thiếu cả hai mã' pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s06r_nap
+    expected: "exit 0; 'CO MA OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s06r_nap
+    expected: "exit 0; should-NOT-fire: 'THIEU MA OK', exit nạp khác 0 và 0 dòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s06r_cong
+    expected: "exit 0; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+

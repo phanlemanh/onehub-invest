@@ -9,7 +9,8 @@ import type { S08Unit } from "../collectors/s08-danh-muc.js";
 /**
  * S08 bước 1 (claudedp-2310-12): item inventory_unit — sourceId ổn định theo
  * căn sha256(S08|project|product_code); payload nguyên vẹn bản ghi API; đủ
- * notSold + sold + detail; không contact_data. Fixture = dữ liệu API thật
+ * notSold + sold + detail; không contact_data. Fixture GIẢ dựng theo hình API
+ * (2610-22(5): sửa chú thích cũ còn ghi «dữ liệu API thật» — thật sự là giả)
  * (không tên miền — base nhận qua tham số/env).
  */
 
@@ -112,6 +113,11 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
     assert.ok(json.includes('keep":"ok'), "trường không-phải-người giữ nguyên");
     assert.ok(result.items.some((i: { kind?: string; meta?: { state?: string } }) => i.kind === "project_catalog"), "có item project_catalog");
     assert.ok(result.items.some((i: { kind?: string; meta?: { state?: string } }) => i.kind === "inventory_unit" && i.meta?.state === "detail"), "detail vẫn ghi (đã strip)");
+    // 2610-22(2): sourceId catalog TÁCH khỏi detail cùng dự án
+    const cat = result.items.find((i: { kind?: string }) => i.kind === "project_catalog")!;
+    const det = result.items.find((i: { meta?: { state?: string } }) => i.meta?.state === "detail")!;
+    assert.notEqual(cat.sourceId, det.sourceId, "catalog và detail cùng dự án phải sourceId KHÁC nhau");
+    assert.ok(cat.sourceId.length === 32, "sourceId catalog 32 hex");
   } finally {
     globalThis.fetch = origFetch;
     if (prevBase === undefined) delete process.env.S08_API_BASE; else process.env.S08_API_BASE = prevBase;
@@ -119,5 +125,29 @@ test("2410-19: strip PII ĐỆ QUY — contact_data lồng mọi độ sâu bị
     delete process.env.S08_EP_UNITS;
     delete process.env.S08_EP_CATALOG;
     delete process.env.S08_EP_DETAIL;
+  }
+});
+
+// 2610-22(1): endpoint danh mục trả envelope lỗi (code≠1 — vd token hết hạn)
+// phải NÉM như fetchPage — trước đây break im lặng thành 0 dự án, failed 0.
+test("2610-22(1): catalog code≠1 → NÉM (token hết hạn lộ rõ), không nuốt im lặng", async () => {
+  const origFetch = globalThis.fetch;
+  process.env.S08_EP_CATALOG = "catalog-fake";
+  process.env.S08_EP_UNITS = "units-fake";
+  globalThis.fetch = (async () =>
+    new Response(JSON.stringify({ code: 401, message: "token expired" }), { status: 200 })) as typeof fetch;
+  const prevBase = process.env.S08_API_BASE;
+  process.env.S08_API_BASE = "http://testbase";
+  try {
+    const mod = await import("../collectors/s08-danh-muc.js");
+    await assert.rejects(
+      () => mod.fetchProjectCatalog("http://testbase", "tok", async () => {}),
+      /S08 catalog code=401.*token hết hạn/,
+    );
+  } finally {
+    globalThis.fetch = origFetch;
+    if (prevBase === undefined) delete process.env.S08_API_BASE; else process.env.S08_API_BASE = prevBase;
+    delete process.env.S08_EP_CATALOG;
+    delete process.env.S08_EP_UNITS;
   }
 });

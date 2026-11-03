@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 import { DealCard } from "@/components/ops/deal-card";
 import { getSessionUser } from "@/lib/auth";
-import { getDeals } from "@/lib/deals";
-import { isAdmin } from "@/lib/ops-access";
+import { dealTheoVai, getDeals } from "@/lib/deals";
+import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Căn giá tốt" };
@@ -12,14 +12,15 @@ export const metadata: Metadata = { title: "Căn giá tốt" };
  * /ops/deals — P4: căn giá tốt từ tín hiệu riêng P1 (S03/S05) đo bằng thước
  * vải công khai P2 (median S06 cùng phường). Nằm ở Ops vì lộ tín hiệu nội bộ.
  *
- * PII tầng A (ADR-0007): SĐT/tên người bán, tên nhóm, nội dung + ảnh tin chỉ
- * có ở DB local (sync-cloud loại cột seller_*, cloud không có stg_zalo_posts)
- * → trên prod getDeals tự rơi về bản không liên hệ. Ở local vẫn chỉ hiện cho
- * admin: canAccessOps cho mọi user đăng nhập khi OPS_EMAILS để trống.
+ * Người bán trên tin rao là tầng C (ADR-0007 mục 9), số gốc ở lại máy thu (ROADMAP §3
+ * mục 24): sync-cloud loại cột seller_*, cloud không có stg_zalo_posts → trên prod
+ * getDeals tự rơi về bản không liên hệ. Ở máy thu: khối liên hệ cho vai Vận hành trở
+ * lên (Hỏi-B), ảnh và chữ bài cho admin; vai Người xem không nhận trường nào trong đó.
  */
 export default async function DealsPage() {
-  const [rows, user] = await Promise.all([getDeals(30, 5), getSessionUser()]);
-  const showContact = isAdmin(user);
+  const [tho, user] = await Promise.all([getDeals(30, 5), getSessionUser()]);
+  const showContact = xemNoiDungTin(user);
+  const rows = tho.map((d) => dealTheoVai(d, { lienHe: showContact, noiDung: isAdmin(user) }));
   const hasContact = showContact && rows.some((r) => r.sellerPhone);
 
   return (
@@ -30,7 +31,7 @@ export default async function DealsPage() {
           Tin nội bộ (S03/S05) rẻ hơn trung vị giá công khai cùng phường
           (thước S06, ≥5 tin/phường, 45 ngày gần nhất). {hasContact
             ? "SĐT người đăng hiện sẵn — gọi xác minh giá giao dịch."
-            : "Thông tin người đăng chỉ có ở máy thu, cho quyền quản trị."}
+            : "Thông tin người đăng chỉ có ở máy thu, cho vai Vận hành trở lên."}
         </p>
       </div>
       {rows.length === 0 ? (

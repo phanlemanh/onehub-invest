@@ -3,9 +3,15 @@
 // (2410-12). Item state=detail là metadata dự án → null (bỏ).
 // 2610-10 vòng 2 (BÁO 2610-17): nguồn DUY NHẤT của cả bộ đổi số —
 // import-airbnb gọi s08RowOf, không tự dựng tham số nữa.
+// 2610-22(4): siết — trim, chỉ nhận số thập phân MỘT dấu phẩy HOẶC chấm
+// (nguồn ghi thập phân bằng CHẤM — bằng chứng built_up_area 100.1/100.78;
+// phẩy coi như thập phân theo đúng lời giao, dữ liệu thật chưa gặp).
+// ' ' → null; '0x10' → null (hồi trước Number('0x10')=16 lọt); '1.500.000' → null.
 export function s08Num(v) {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(String(v).replace(",", "."));
+  if (v === null || v === undefined) return null;
+  const t = String(v).trim();
+  if (!/^[0-9]+([.,][0-9]+)?$/.test(t)) return null;
+  const n = Number(t.replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 export function s08Int(v) {

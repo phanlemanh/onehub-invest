@@ -13,7 +13,7 @@ Không gọi `toFixed`, `toLocaleString` hay tự ghép "tr"/"tỷ" trong compon
 |---|---|---|
 | `fmtMoney(v, currency)` | `109.162 ₫` | tiền đầy đủ. `null` ra "—" |
 | `fmtMoneyCompact(v, currency)` | `1,5 tỷ ₫`, `500 tr ₫` | tiền trong ô KPI, nhãn, tooltip |
-| `fmtCompact(v)` | `1,5 tỷ`, `500 tr` | nhãn trục (không kèm ký hiệu tiền) |
+| `fmtCompact(v)` | `1,5 tỷ`, `500 tr` | nhãn trục; tiền trên thẻ Listing (không kèm ký hiệu tiền) |
 | `fmtPct(v, digits = 1)` | `62,5%` | tỷ lệ; truyền vào phân số 0..1 |
 | `fmtInt(v)` | `1.234` | đếm (listing, phường, đêm) |
 | `fmtMonth(iso)` | `T10/2026` | nhãn tháng |

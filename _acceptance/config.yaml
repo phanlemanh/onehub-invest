@@ -52,6 +52,13 @@ executors:
     sd3_bait_gap: "bash _acceptance/sdt-luu-goc-e164/probes/bait-gap.sh"   # sdt-luu-goc-e164 E6 — refresh thật + test sellers theo view (DB thử)
     ldb_n6: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # sd3-lam-chat-do-danh-ba E1, E2 — N6 hàm thuần + 11 dòng ghi, không DB
     svc_sync: "node --test pipeline/sync-cloud.test.mjs"   # sellers-view-len-cloud E1, E8 — chốt kiểu bảng + khoá người bán trong FILL, không DB
+    tir_sync: "node --test pipeline/sync-cloud.test.mjs"   # tin-rao-tren-invest E1 — ma trận cột lên cloud, không DB
+    tir_sync_db: "cd pipeline && node --test scripts/sync-nguoi-ban.itest.mjs"   # tin-rao-tren-invest E2, E3 — che định danh nguồn, tệp catch-up; lược đồ tạm trên DB local :5433
+    tir_quet_that: "cd pipeline && node --test scripts/sync-nguoi-ban-that.itest.mjs"   # tin-rao-tren-invest E2b — chỉ đọc DB máy thu, soát toàn bảng thật bằng câu đọc thật, chỉ in số
+    tir_api: "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"   # tin-rao-tren-invest E4, E5, E7 — hai route thật, lược đồ tạm
+    tir_doi_chieu: "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx"   # tin-rao-tren-invest E4b — chỉ đọc DB máy thu, chỉ in số
+    tir_ui: "cd app && node --import tsx --test tests/tin-rao-giao-dien.test.tsx"   # tin-rao-tren-invest E8, E9 — bộ lọc ↔ URL, ô liên hệ, trạng thái (jsdom)
+    tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
@@ -150,6 +157,8 @@ executors:
     the_so_song: "cd app && node --import tsx --test tests/the-so-gia-tri-song.test.tsx"   # the-so-doc-gia-tri-song (HD6) — lược đồ tạm gs_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     the_duyet_hien: "cd app && node --import tsx --test tests/the-duyet-hien-nguoi-dang.test.tsx"   # the-duyet-hien-nguoi-dang (HD7) — lược đồ tạm nd_<pid> trên :5433 + jsdom; probe DB máy thu bỏ qua có lý do dưới CI
     sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
+    deals_lien_he: "cd app && node --import tsx --test tests/danh-ba-nguoi-deals-lien-he.test.tsx"   # people-hien-so-goc E6 — /ops/deals qua page thật, getDeals giả, ba vai + cloud
+    shs_deals_cu: "cd app && node --import tsx --test tests/deals-phi-ly.test.tsx tests/sellers-chip.test.tsx tests/danh-ba-nguoi-deals-lien-he.test.tsx"   # people-hien-so-goc E9 — hai bộ test của thẻ Căn giá tốt sau khi dời fmtPhone, cộng ca fmtPhone
     sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
@@ -162,7 +171,11 @@ executors:
     review_nguoi: "cd app && node --import tsx --test tests/review-nguoi.test.tsx"
     nguoi_nap_lai_u2: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node scripts/nap-lai-nguoi.mjs --the-duyet"
     seller_ref_that: "bash db/db-thu.sh oneinvest_p3_sref && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node --test --test-concurrency=1 scripts/seller-ref.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node scripts/do-seller-ref.mjs"   # seller-ref-theo-nguoi-gui (HD4) E4, E5, E7, E8: ca DB + thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P3-141)
+    gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
+    gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
+    shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
     lich_chotot: "node _acceptance/s06-hai-luot-ngay-gop-main/rang/lich-chotot.mjs"   # s06-hai-luot-ngay-gop-main AC-1..3 — plist chotot 05:30 + 14:00, không va mốc plist khác, bản cài + launchd khớp
     can_theo_tin_ap_hai_lan: "node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs"   # can-theo-tin-khi-phan-xu-lai E5 — DB thử dựng từ đủ migration, áp 066 lần hai không đổi gì, oneinvest không bị chạm
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
@@ -632,6 +645,23 @@ executors:
     ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
     ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
     ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
+    # sáu hồ sơ nhận nhánh ZCode (liên làn 02/11, nhánh feat/zcode-gop-0211)
+    s06r_unit: "node --test pipeline/scripts/s06-region-tinh.test.mjs"
+    s06r_nap: "node _acceptance/s06-region-tinh/probes/nap-region.mjs"
+    s06r_cong: "node --test pipeline/scripts/cong-tac-that.test.mjs pipeline/scripts/cong-tac-that-v2.test.mjs"
+    s08l_do: "node --test pipeline/scripts/ops-facts-so-tong-hop.test.mjs scripts/check-freshness.test.mjs scripts/s05-slo.test.mjs"
+    s08l_app: "cd app && node --import tsx --test tests/ops-facts-so-tong-hop.test.tsx tests/slo-mot-nguon.test.tsx"
+    s08l_weekly: "bash _acceptance/s08-lich-tuan/probes/weekly.sh \"$PWD\""
+    s08l_pii: "cd pipeline && node --test sync-pii.test.mjs"
+    s08n_collector: "cd collector && npm test"
+    s08n_row: "node --test pipeline/scripts/import-s08-row.test.mjs"
+    s08n_nap: "node _acceptance/s08-noi-tiep/probes/nap-catalog.mjs"
+    s08n_rong: "bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"
+    s08n_cac: "bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"
+    s05k_unit: "node --test scripts/s05-khoa-nap.test.mjs"
+    s05k_hoiquy: "node --test scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"
+    ctm_unit: "node --test pipeline/scripts/chotot-thieu-moc.test.mjs"
+    ctm_lui: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
@@ -640,6 +670,7 @@ executors:
     mgn_gate: "for f in app/src/app/ops/labels/page.tsx app/src/components/ops/labels/labels-view.tsx app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/agreement-table.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # man-gan-nhan-mu E11
     ngl_gate: "for f in app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/luu-nhan.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # nhan-gia-va-luu-loi-mang E5
     dbn_gate: "for f in app/src/app/ops/people/page.tsx app/src/app/ops/people/[[]partyKey]/page.tsx app/src/components/ops/people/*.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # danh-ba-nguoi-tren-ops E13
+    shs_gate: "for f in app/src/app/ops/people/page.tsx app/src/app/ops/people/[[]partyKey]/page.tsx app/src/components/ops/people/*.tsx app/src/app/ops/deals/page.tsx app/src/components/ops/deal-card.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # people-hien-so-goc E11
     hd6_gate: "for f in app/src/components/ops/review-card.tsx app/src/components/ops/review/review-compare.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # the-so-doc-gia-tri-song E7
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # Sàn thiết kế S4 (design-floor bậc M1): chấm hex thô trên tệp giao diện mà vòng chạm. Nối ở noi-design-floor sau khi

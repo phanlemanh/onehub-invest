@@ -146,7 +146,7 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
 | `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |
 | `/ops/sources` | Nguồn dữ liệu 🔒 | registry SPL + giải mã tầng A + **QUẢN TRỊ nguồn: tài khoản Zalo (QR login), allowlist nhóm (bất biến 1 nhóm–1 tài khoản), sau này profile AirDNA/Airbnb — gated `role=admin`** | SPL | C1→E2 |
-| `/ops/deals` | Căn giá tốt | tin P1 (S03/S05) rẻ hơn thước P2 cùng phường; liên hệ người bán + nội dung/ảnh tin (tầng A) chỉ `role=admin` và chỉ có ở DB local (dời từ `/deals` công khai, 2026-10-22) | P4 | đã có |
+| `/ops/deals` | Căn giá tốt | tin P1 (S03/S05) rẻ hơn thước P2 cùng phường; trên trang này liên hệ người bán (tầng C, cũng ở trang Bán, Cho thuê qua «Xem số») từ vai Vận hành trở lên, nội dung và ảnh tin chỉ `role=admin`; cả hai chỉ có ở máy thu (dời từ `/deals` công khai, 2026-10-22; hạ cổng liên hệ theo Hỏi-B, `people-hien-so-goc`) | P4 | đã có |
 | `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | — | ngay |
 
 - **Shell thiết kế**: `@reui/app-shell-26` (SOC console) + `agent-activity-*`,
@@ -234,7 +234,7 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
 
     | Chế độ | Ai gọi được | Cổng trong mã |
     |---|---|---|
-    | `public` | mọi người | không — và **không được đọc `sale_offers`** (tin rao), kể cả gián tiếp qua thư viện |
+    | `public` | mọi người | không — và **không được đọc `sale_offers`** (tin rao), kể cả gián tiếp qua thư viện; ngoại lệ duy nhất là API Listing công khai, xem dưới bảng |
     | `ops` | máy có `Authorization: Bearer <OPS_API_TOKEN>` hoặc người vận hành đăng nhập | `canCallOpsApi`, hoặc nhánh bearer + `canAccessOps`/`isAdmin` |
     | `ops-session` | chỉ người vận hành đăng nhập — máy có token KHÔNG qua | `canAccessOps`, không nhánh bearer |
     | `admin` | chỉ role `admin` — máy có token KHÔNG qua | `isAdmin`, không nhánh bearer |
@@ -244,10 +244,16 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
     `note`, vd `/api/v1/ops/audit` khai `ops` nhưng phiên phải là admin). Hôm nay tin rao (`/api/v1/offers`) và căn giá tốt (`/api/v1/deals`) ở chế
     độ `ops` (tạm đóng tới khi PL2 rút tin mock); mở lại là một quyết định riêng, đổi dòng sổ cùng commit.
 
+    **API Listing công khai** (2026-11-02, hồ sơ `tin-rao-tren-invest`): `/api/v1/listings` và
+    `/api/v1/listings/[id]/contact` là hai route `public` duy nhất được đọc tin rao, khai khoá `publicOffers: true` trong sổ
+    và chỉ đọc qua `lib/offers-public.ts`. `check-api-surface` đỏ khi khoá nằm trên route khác, khi route public khác hay thư
+    viện khác đọc `sale_offers`. Danh sách trả tên và `hasPhone`, không trả số; số chỉ ở `contact`. Giữ `?kind=`, chưa hứa ổn
+    định; S02, S08 không ra đường này.
+
     **Công cụ MCP theo sổ** (2026-10-24, hồ sơ `mcp-tools-theo-so-be-mat`): `app/docs/api/mcp-tools.json` khai các công
     cụ MCP gọi route ở trên. Đổi chế độ một route có công cụ MCP (vd mở lại `/api/v1/offers`), hoặc thêm công cụ MCP mới,
     thì sửa `mcp-tools.json` cùng commit. Khoá `auth` của mỗi công cụ là một trong năm chế độ của bảng trên, bằng chế độ
-    của route nó gọi — hôm nay `oneinvest_get_asset_stats` là `public`, `oneinvest_get_offers` là `ops`; khoá `auth` gốc
+    của route nó gọi — hôm nay `oneinvest_get_asset_stats` và `oneinvest_get_listings` là `public`, `oneinvest_get_offers` là `ops`; khoá `auth` gốc
     chỉ là mặc định và bản khai không dùng. `scripts/check-mcp-tools.mjs` (chạy trong làn `portal_static` —
     `check-portal-compliance.mjs`) đỏ khi công cụ trỏ route ngoài sổ, phương thức lệch sổ hoặc chế độ lệch sổ.
 

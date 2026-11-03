@@ -67,12 +67,12 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
-- `/vn/hanoi/listings` — Duyệt listing (`/[country]/[market]/listings`: thẻ + bản đồ nhãn giá)
+- `/vn/hanoi/listings/sale`, `/vn/hanoi/listings/rent` — Tin bán, Cho thuê (`?term=short` là thuê ngắn hạn: thẻ + bản đồ nhãn giá); `/listings` → 308
 - `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup&eq&rate&term`; mô hình ở `lib/yield.ts`, vốn vay ở `lib/financing.ts`); mục «Dòng tiền vốn vay» `#financing` nhận phần Mô phỏng đầu tư cũ — `/vn/<market>/dau-tu` → 301 `/yield?area=<market>#financing`
 - `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/deals`, `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đóng mặc định: `role` `ops`/`admin`, hoặc email trong `OPS_EMAILS`; tự đăng ký = `role=user` → 404). Cấp quyền: `UPDATE users SET role = 'ops' WHERE email = …`
 - `/ops/collections` (+ `GET /api/v1/ops/collections`) — mã tài khoản thu, hồ sơ, mã nhóm Zalo, tài khoản giữ nhóm chỉ cho vai `ops` trở lên (`xemDinhDanhThu`); vai `viewer` và bearer chung nhận bản đã che (`cheDinhDanhThu`: giữ số dòng, mã về null)
 - `/ops/review`, `/ops/data-flow` — nội dung thẻ duyệt và bài gốc chỉ cho vai `ops` trở lên (`xemNoiDungTin` ở `lib/ops-access.ts`); vai `viewer` thấy số thẻ chờ và câu chú thích. Tài khoản thử viewer: `node scripts/dev-ops-account.mjs --vai viewer`; vai Vận hành: `--vai ops` (ops-role-test@local.test)
-- `/ops/deals` — Căn giá tốt (P1 dưới thước P2); liên hệ/nội dung/ảnh tin (SPL tầng A) chỉ `role=admin`, chỉ có ở DB local. `/deals` redirect sang đây
+- `/ops/deals` — Căn giá tốt (P1 dưới thước P2); trên trang này liên hệ người bán (tầng C) từ vai `ops` trở lên, nội dung/ảnh tin chỉ `role=admin`, cả hai chỉ có ở DB local (liên hệ người bán lên cổng Invest ở trang Bán, Cho thuê qua «Xem số»). `/deals` redirect sang đây
 
 ## Don't
 - **Don't create custom UI when ReUI block exists** (see skill `onehub-ui`)

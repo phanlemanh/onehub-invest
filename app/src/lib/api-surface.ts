@@ -4,7 +4,8 @@
  * route chưa khai, dòng sổ trỏ route đã xoá, phương thức lệch, route đọc `sale_offers` mà khai `public`, cổng lệch chế độ.
  *
  * Chế độ:
- *   public          — ai cũng gọi được; KHÔNG được đọc `sale_offers` (kể cả gián tiếp qua thư viện).
+ *   public          — ai cũng gọi được; KHÔNG được đọc `sale_offers` (kể cả gián tiếp qua thư viện). Ngoại lệ duy nhất: hai
+ *                     route tin rao khai `publicOffers`, đọc qua đúng `lib/offers-public.ts` (tin-rao-tren-invest).
  *   ops             — máy có bearer OPS_API_TOKEN hoặc phiên ops (`canCallOpsApi`, hoặc nhánh bearer + `canAccessOps`/`isAdmin`).
  *   ops-session     — chỉ phiên ops (`canAccessOps`); KHÔNG có nhánh bearer.
  *   admin           — chỉ role admin (`isAdmin`); KHÔNG có nhánh bearer.
@@ -26,12 +27,15 @@ export type ApiSurfaceEntry = {
   methods: ApiMethod[];
   mode: ApiMode;
   methodModes?: Partial<Record<ApiMethod, ApiMode>>;
+  /** Route public được đọc tin rao; danh sách route đóng ở check-api-surface.mjs. */
+  publicOffers?: boolean;
   note: string;
 };
 
 export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/asset-stats", methods: ["GET"], mode: "public", note: "chỉ số tài sản theo khu vực (metrics precompute)" },
-  { route: "v1/listings", methods: ["GET"], mode: "public", note: "listing cho thuê ngắn hạn tự thu" },
+  { route: "v1/listings", methods: ["GET"], mode: "public", publicOffers: true, note: "danh sách Listing theo loại: thuê ngắn hạn, tin bán, tin thuê dài hạn; không mang SĐT" },
+  { route: "v1/listings/[id]/contact", methods: ["GET"], mode: "public", publicOffers: true, note: "SĐT của đúng một tin đang hiện; tin ẩn hay chưa có số cùng một 404" },
   { route: "v1/markets", methods: ["GET"], mode: "public", note: "chỉ số thị trường theo khu vực" },
   { route: "v1/deals", methods: ["GET"], mode: "ops", note: "căn giá tốt — tạm đóng tới khi PL2 rút tin mock (deals-api-tam-dong)" },
   { route: "v1/offers", methods: ["GET"], mode: "ops", note: "tin rao — cùng chế độ tạm đóng với căn giá tốt (so-be-mat-api)" },

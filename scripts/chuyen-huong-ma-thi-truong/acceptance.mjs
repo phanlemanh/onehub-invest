@@ -8,9 +8,10 @@
 //   CHM_GOC_MOI=1 … → dựng lại bản gốc (mặc định dùng lại nếu < 6 giờ)
 import { execFileSync, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { boWorktree } from "../lib/bo-worktree.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const APP = join(ROOT, "app");
@@ -22,7 +23,8 @@ const DX = ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db"];
 const ITEST = "tests/chuyen-huong-ma-thi-truong.itest.tsx";
 
 let loi = 0;
-const check = (ok, ten) => { console.log(`${ok ? "ok  " : "FAIL"} ${ten}`); if (!ok) loi++; };
+let hungCheck = null; // đối chứng phép gác: gom kết quả check thay vì tính vào lượt chạy
+const check = (ok, ten) => { if (hungCheck) { hungCheck.push({ ok, ten }); return; } console.log(`${ok ? "ok  " : "FAIL"} ${ten}`); if (!ok) loi++; };
 const finish = (ten) => { console.log(loi ? `${ten} FAIL (${loi} mục)` : `${ten} PASS`); process.exit(loi ? 1 : 0); };
 const dung = (msg) => { console.error(`chm: ${msg}`); process.exit(2); };
 
@@ -50,9 +52,13 @@ async function maDai() {
   return rows.map((r) => r.id);
 }
 
-/** Gốc của hàng: đỉnh nhánh s06 (#252) khi nó chưa vào origin/main, ngược lại merge-base origin/main. */
+/** Commit đưa chuyển hướng vào. Mốc phải đứng trước nó, không thì ca «mã dài tra thêm» so bản đã có chuyển hướng với chính nó. */
+const COMMIT_HANG = "296de6df";
+
+/** Gốc của hàng: trước commit của hàng khi hàng đã vào nhánh này; không thì đỉnh nhánh s06 (#252) khi nó chưa vào origin/main, ngược lại merge-base origin/main. */
 function gocHang() {
   const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8" }).trim();
+  if (spawnSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", COMMIT_HANG, "HEAD"]).status === 0) return git("rev-parse", `${COMMIT_HANG}^`);
   const s06 = "origin/feat/s06-vung-moi-len-canonical";
   let trongMain = true;
   try { git("rev-parse", "-q", "--verify", s06); trongMain = spawnSync("git", ["-C", ROOT, "merge-base", "--is-ancestor", s06, "origin/main"]).status === 0; } catch { trongMain = true; }
@@ -138,8 +144,11 @@ function dungCay(phan) {
   return { app: join(cay, "app"), dataApi: join(cay, "data-api"), don: () => rmSync(cay, { recursive: true, force: true }) };
 }
 
-function chayItest(phan, tt, ctx, ph, cwd) {
-  const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", ITEST], {
+const oCan = (tt) => ["32 mã × 3 trang (có rent)", ...(tt === "sau" ? ["đích rent mở được 32/32"] : []), "8/8 ô trang × query", "ô rent 4/4 query", "đường cũ ?kind= 4/4", "ô rent 404", ...(tt === "sau" ? ["ô rent ba đột biến"] : [])];
+const oThieu = (out, tt) => oCan(tt).filter((dau) => !out.includes(dau));
+
+function chayItest(phan, tt, ctx, ph, cwd, tep = ITEST) {
+  const r = spawnSync(process.execPath, ["--import", "tsx", "--test", "--test-concurrency=1", tep], {
     cwd, encoding: "utf8", maxBuffer: 64 << 20,
     env: { ...process.env, DATABASE_URL: ctx.url, CHM_PHAN: phan, CHM_TRANG_THAI: tt, CHM_MA_DAI: JSON.stringify(ph.maDai),
            CHM_PHUONG: ph.id, CHM_PHUONG_TEN: ph.name, CHM_GOC: ph.goc, DATA_API_KEYS: "" },
@@ -147,6 +156,8 @@ function chayItest(phan, tt, ctx, ph, cwd) {
   const out = (r.stdout ?? "") + (r.stderr ?? "");
   for (const l of out.split("\n")) if (/^(ok|FAIL|chm:)|✔|✖|phần tử|Lợi suất|^ℹ (pass|fail)/.test(l.trim())) console.log(`  [${tt}] ${l.trim()}`);
   check(r.status === 0, `${phan} trên DB ${tt} (itest thoát ${r.status})`);
+  // Ô rent phải thật sự chạy: thoát 0 với 0 ca cũng là xanh.
+  if (phan === "app") for (const dau of oCan(tt)) check(!oThieu(out, tt).includes(dau), `${phan} trên DB ${tt} có ô: ${dau}`);
   if (r.status !== 0) console.log(out.split("\n").filter((l) => /not ok|AssertionError|Error|expected|actual|chm:/.test(l)).slice(0, 40).join("\n"));
 }
 
@@ -158,6 +169,18 @@ async function cheDoDb(phan, ten) {
   await khoa.query("SELECT pg_advisory_lock(hashtext('chm_dung_ban_goc'))");
   const cay = dungCay(phan);
   try {
+    // Đối chứng phép gác ô, đi qua chayItest thật: itest không ca nào thoát 0 thì mọi nhóm ô phải đỏ, đúng tên từng nhóm.
+    if (phan === "app") for (const tt of ["truoc", "sau"]) {
+      const tep = "tests/__chm-khong-ca.itest.tsx";
+      writeFileSync(join(cay.app, tep), "export {}\n");
+      hungCheck = [];
+      chayItest(phan, tt, { url: URL_DB(GOC) }, { maDai: [], id: "", name: "", goc: "" }, cay.app, tep);
+      const kq = hungCheck;
+      hungCheck = null;
+      const do_ = kq.filter((x) => !x.ok).map((x) => x.ten);
+      const cho = oCan(tt).map((dau) => `${phan} trên DB ${tt} có ô: ${dau}`);
+      check(JSON.stringify(do_) === JSON.stringify(cho), `${ten} đối chứng ${tt}: itest 0 ca thoát 0 → đỏ đúng ${cho.length} nhóm ô${JSON.stringify(do_) === JSON.stringify(cho) ? "" : ` — nhận ${do_.join(" | ")}`}`);
+    }
     await banGoc();
     const ph = { ...(await chonPhuong()), maDai: await maDai(), goc: gocHang() };
     console.log(`phường thử: ${ph.id} (${ph.name}), tin cấp thị trường ${ph.offer_id}; gốc hàng ${ph.goc.slice(0, 10)}`);
@@ -231,8 +254,7 @@ function cheDoAppTest() {
   if (nhanh.ten.length === 0) { check(nhanh.code === 0, "APP-TEST nhánh 0 ca đỏ"); return finish("APP TEST"); }
   const goc = gocHang();
   const wt = join(ROOT, ".acceptance-runs/chuyen-huong-ma-thi-truong/goc-app");
-  rmSync(wt, { recursive: true, force: true });
-  spawnSync("git", ["-C", ROOT, "worktree", "prune"]);
+  boWorktree(ROOT, wt); // đồ sót của lượt trước: thư mục lẫn metadata của đúng wt này
   mkdirSync(dirname(wt), { recursive: true });
   execFileSync("git", ["-C", ROOT, "worktree", "add", "--detach", wt, goc], { stdio: "ignore" });
   try {
@@ -242,7 +264,7 @@ function cheDoAppTest() {
     for (const t of nhanh.ten.filter((t) => g.ten.includes(t))) console.log(`đỏ sẵn ở gốc: ${t}`);
     check(moi.length === 0, moi.length ? `ca đỏ mới: ${moi.join(" | ")}` : `APP-TEST 0 ca đỏ mới so gốc ${goc.slice(0, 10)}`);
   } finally {
-    spawnSync("git", ["-C", ROOT, "worktree", "remove", "--force", wt]);
+    boWorktree(ROOT, wt);
   }
   finish("APP TEST");
 }

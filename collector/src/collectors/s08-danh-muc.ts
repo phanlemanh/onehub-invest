@@ -114,7 +114,11 @@ export async function fetchProjectCatalog(
     );
     if (!r.ok) throw new Error(`S08 catalog ${r.status} (page ${page})`);
     const j = (await r.json()) as { code?: number; data?: { project_id: string | number; project_type?: string }[] };
-    if (j.code !== 1 || !Array.isArray(j.data) || j.data.length === 0) break;
+    // 2610-22(1): envelope lỗi (code≠1 — vd token hết hạn) PHẢI NÉM như
+    // fetchPage — trước đây break im lặng thành "0 khu đô thị, failed 0".
+    // code=1 + trang rỗng/mảng hỏng mới là hết danh mục.
+    if (j.code !== 1) throw new Error(`S08 catalog code=${j.code} (page ${page}) — token hết hạn?`);
+    if (!Array.isArray(j.data) || j.data.length === 0) break;
     await onPage(j.data.map((d) => ({ id: String(d.project_id), type: d.project_type ?? "unknown", raw: d as Record<string, unknown> })));
     total += j.data.length;
     if (j.data.length < PAGE_LIMIT) break;
@@ -182,11 +186,13 @@ export const s08DanhMuc: Collector = {
       projects = [];
       const n = await fetchProjectCatalog(API_BASE, token, async (page) => {
         projects.push(...page);
-        // item danh mục (gộp v4): mỗi dự án 1 RawItem — raw đã lọc PII
+        // item danh mục (gộp v4): mỗi dự án 1 RawItem — raw đã lọc PII.
+        // 2610-22(2): sourceId catalog tách khỏi item detail CÙNG dự án —
+        // trước đây cả hai đều sha256(S08|project|<id>) trùng nhau.
         for (const d of page) {
           items.push({
             source: "s08-danh-muc",
-            sourceId: createHash("sha256").update(`S08|project|${d.id}`).digest("hex").slice(0, 32),
+            sourceId: createHash("sha256").update(`S08|catalog|${d.id}`).digest("hex").slice(0, 32),
             kind: "project_catalog",
             fetchedAt: startedAt,
             payload: stripPersonData(d.raw) as Record<string, unknown>,

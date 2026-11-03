@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: chotot-thieu-moc
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ctm_unit
+    expected: "exit 0; ca thiếu mốc pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ctm_unit
+    expected: "exit 0; ca NULL có sẵn pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ctm_lui
+    expected: "exit 0; should-NOT-fire: không lùi nội dung; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+

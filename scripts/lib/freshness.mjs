@@ -16,7 +16,7 @@
 
 /** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu —
  * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich). */
-export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 };
+export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 };
 
 /** Cột thời gian (giờ thu) mà probe của từng mã lấy max — phép đo đối chiếu khai báo này với SQL thật. */
 export const TIME_SOURCE = {
@@ -25,6 +25,7 @@ export const TIME_SOURCE = {
   S03: "airbnb_snapshots.collected_at",
   S05: "airbnb_snapshots.collected_at",
   S06: "airbnb_snapshots.collected_at",
+  S08: "airbnb_snapshots.collected_at",
 };
 
 const ZALO_POSTS = `
@@ -51,6 +52,12 @@ export const PROBES = {
   S06: {
     sql: `SELECT s.city, max(s.collected_at) AS last
           FROM stg_chotot_ads c JOIN airbnb_snapshots s USING (snapshot_id)
+          WHERE s.source = ANY($1) GROUP BY s.city`,
+    args: (ids) => [ids],
+  },
+  S08: {
+    sql: `SELECT s.city, max(s.collected_at) AS last
+          FROM stg_s08_inventory i JOIN airbnb_snapshots s USING (snapshot_id)
           WHERE s.source = ANY($1) GROUP BY s.city`,
     args: (ids) => [ids],
   },
