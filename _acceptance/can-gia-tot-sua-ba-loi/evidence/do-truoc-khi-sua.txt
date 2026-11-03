@@ -1,0 +1,20 @@
+# Bốn ca CGB-AC chạy trên mã chưa sửa (main 371381ee), trước khi sửa. Máy: lệnh executors.test.can_gia_tot_sua_ba_loi.
+✖ CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc thế chỗ, Na và tên thật giữ nguyên (217.897ms)
+✖ CGB-AC-1 tên trong bài gốc qua bộ che tên nguồn; trên cloud chữ giữ chỗ không hiện (839.434417ms)
+✖ CGB-AC-2 lý do rời danh sách đúng nghĩa với căn đắt hơn thước (157.195291ms)
+✖ CGB-AC-3 crumb về danh sách không quay lại chính trang, trên cả 33 căn (1932.23125ms)
+ℹ pass 0
+ℹ fail 4
+✖ failing tests:
+  AssertionError [ERR_ASSERTION]: CGB-AC-1 chữ giữ chỗ hiện như tên: loader n01
+    actual: 'unknown',
+    expected: 'Gửi Thật Cgb',
+  AssertionError [ERR_ASSERTION]: CGB-AC-1 phần đã che không hiện
+    actual: false,
+    expected: true,
+  AssertionError [ERR_ASSERTION]: CGB-AC-2 loader g-20
+    actual: 'Giảm 20%, dưới ngưỡng 5%',
+    expected: 'Đắt hơn thước phường 20%, không phải căn giá tốt',
+  AssertionError [ERR_ASSERTION]: CGB-AC-3 crumb quay lại chính trang: b31 ops
+    actual: '/ops/deals?can=b31',
+    expected: '/ops/deals',
