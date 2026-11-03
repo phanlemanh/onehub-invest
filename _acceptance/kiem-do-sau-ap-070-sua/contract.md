@@ -58,3 +58,5 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
   - Ngoài-11: Nếu nhật ký chạy kiểm đổi định dạng, thước có thể coi như không có ca nào bị bỏ qua.
   - Lượt 4: Bằng chứng trên bản chép thật chỉ chứng minh hết lỗi view, chưa chứng minh tổ hợp 070 + 068, vì ba bộ kiểm đè phần 068 của hàm phân xử nên đường ghi số điện thoại không chạy thật.
   - Lượt 3: Hai ca của agent và app từng đỏ khi chạy cả bộ, chưa rõ nguyên nhân, nên có thể đỏ lại khi máy tải nặng.
+  - Sau ký, PD-AC-8 tin nghỉ: Ca PD-AC-8 chỉ so tin sống nên không canh độ trễ cột ở tin nghỉ; đo trên bản chép ngày 04/11 có 460 ô lệch, đều ở tin nghỉ.
+  - Sau ký, PD-AC-8 đỏ sẵn: Phép đo E4 vẫn chấp nhận PD-AC-8 đỏ nếu chỉ lệch `bedrooms`, `block_raw`, nên lệch thật ở tin sống đúng hai trường này thì E4 vẫn đạt.
