@@ -14,6 +14,7 @@
 //   allow     cột cho phép, chuẩn hoá seller_ref, soát tên nguồn
 //   anon      leak gate kiểm quyền đọc công khai anon/authenticated (leak-gate-kiem-anon, AU1)
 //   pii-cot   leak gate đỏ khi bảng người bán ở cloud có cột ngoài CLOUD_ALLOW / bảng tầng A có dòng (NT2)
+//   so-ghep   nhãn số chưa xác minh từ view 070 lên cloud, thiếu cột vẫn chạy, field_provenance không tới (so-ghep-s06-nhan-danh-ba E6)
 //   sellers-view  nguồn sau 060/059 dựng được DB mô phỏng; sellers là bảng ở hai phía, sync đổ đủ dòng (check-cloud-sync-sellers-view)
 import { execFileSync, spawn } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -1352,6 +1353,84 @@ async function caseSellersView() {
   dropDb(dbT);
 }
 
+// ─── ca so-ghep (so-ghep-s06-nhan-danh-ba AC-6 / E6) ─────────────────────
+const SG_DONG = [
+  ["sg-ghep", "+84900000901", { rule_id: "s06-cung-tai-khoan" }, true],
+  ["sg-mat-dau", "+84900000902", {}, true],
+  ["sg-truc-tiep", "+84900000903", { rule_id: "s06-so-tren-tin" }, false],
+  ["sg-khong-so", null, null, false],
+];
+const SG_CATCHUP = path.join(ROOT, "docs/ops/cloud-schema-catchup-2026-11-03-so-ghep.sql");
+
+async function caseSoGhep() {
+  // Local mô phỏng về đúng hình máy thu sau 070: bảng bản ghi + view có nhãn (buildLocalSim vẽ hình trước 044, phải vẽ lại).
+  const L = buildLocalSim("sg_local");
+  await q1(L, `ALTER TABLE sale_offers RENAME TO sale_offer_records;
+    ALTER TABLE sale_offer_records ADD COLUMN retired_at timestamptz, ADD COLUMN retired_reason text,
+      ADD COLUMN superseded_by text, ADD COLUMN originating_system_key text,
+      ALTER COLUMN property_type SET DEFAULT 'unknown'`);
+  psql(L, readFileSync(path.join(ROOT, "db/migrations/070_nhan_so_ghep.sql"), "utf8"));
+  for (const [id, so, rule] of SG_DONG) {
+    await q1(L, `INSERT INTO sale_offer_records (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
+        seller_phone, seller_phone_hash, field_provenance)
+      VALUES ($1, 'S06', 'sale', 'medium', now(), now(), '{}', 'P1', $2, $3, $4)`,
+      [id, so, so && id, JSON.stringify(rule ? { seller_phone: rule } : {})]);
+  }
+  const C = buildCloudSim("sg_cloud");
+  const docNhan = async () => Object.fromEntries((await q1(C,
+    `SELECT offer_id, seller_phone_inferred AS nhan FROM sale_offers WHERE offer_id LIKE 'sg-%'`)).map((r) => [r.offer_id, r.nhan]));
+
+  // Mốc 2 → 3: bản sync mới, cloud chưa có cột.
+  const w = [];
+  await runSync(L, C, { log: (m) => w.push(m) });
+  const coDong = (await q1(C, `SELECT count(*)::int AS n FROM sale_offers WHERE offer_id LIKE 'sg-%'`))[0].n;
+  if (w.some((m) => m.includes("lệch schema") && m.includes("sale_offers.seller_phone_inferred")) && coDong === SG_DONG.length) {
+    pass(`SG-thieu-cot cloud thiếu cột: lượt lành, ${coDong} dòng tới, WARN «lệch schema» gọi tên cột`);
+  } else fail(`SG-thieu-cot: ${coDong} dòng, WARN ${w.join(" | ")}`);
+
+  // Mốc 3: áp khối ÁP của tệp catch-up thật, hai lần.
+  const ap = readFileSync(SG_CATCHUP, "utf8").split("-- ÁP")[1].split("\n").filter((l) => !l.startsWith(" —") && !l.startsWith("--")).join("\n");
+  psql(C, ap);
+  psql(C, ap);
+  await runSync(L, C);
+  const nhan = await docNhan();
+  const sai = SG_DONG.filter(([id, , , ky]) => nhan[id] !== ky).map(([id]) => id);
+  if (!sai.length) pass(`SG-nhan-dung ${SG_DONG.length}/${SG_DONG.length} dòng đúng nhãn trên cloud`);
+  else fail(`SG-nhan-dung sai ở ${sai.join(", ")}: ${JSON.stringify(nhan)}`);
+
+  // Đối chứng cùng fixture: bản sao bỏ cột khỏi CLOUD_ALLOW thì nhãn không tới, và chốt trước khi gửi dừng lượt (lý do mốc 2 trước mốc 3).
+  const { mod, dir } = await loadSyncMutant("sg-bo-allow", (src) => src.replace(', "seller_phone_inferred",\n', ",\n"));
+  try {
+    const lc = await client(L, { types: sync.localTypes });
+    let r;
+    try {
+      r = await expectFail(mod.syncOnce({ local: lc, exec: cloudExec(C), log: () => {} }), "gate");
+    } finally {
+      await lc.end();
+    }
+    if (r.ok && r.msg.includes("sale_offers.seller_phone_inferred")) pass("SG-doi-chung-bo-allow bản sync cũ gặp cloud đã có cột: dừng ở chốt, gọi tên cột");
+    else fail(`SG-doi-chung-bo-allow: ${r.msg}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // field_provenance: có ở local, không ở payload, không ở cloud.
+  const goi = [];
+  const w2 = [];
+  await runSync(L, C, { log: (m) => w2.push(m), exec: cloudExec(C, { hook: (sql) => { if (sql.startsWith("INSERT INTO sync_stage.rows")) goi.push(sql); } }) });
+  const cotCloud = (await q1(C, `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sale_offers'`)).map((r) => r.c);
+  const dongSg = goi.find((x) => x.includes('"sg-ghep"'));
+  const cotBaoLai = w2.some((m) => m.includes("sale_offers.field_provenance"));
+  if (dongSg && !goi.some((x) => x.includes("s06-cung-tai-khoan")) && !cotCloud.includes("field_provenance") && cotBaoLai) {
+    pass("SG-fp-khong-toi field_provenance ở lại máy: không trong payload, không trên cloud, log báo cột ở lại");
+  } else fail(`SG-fp-khong-toi: có mẻ tin ${Boolean(dongSg)}, cột cloud ${cotCloud.includes("field_provenance")}, báo ${cotBaoLai}`);
+
+  await q1(C, "ALTER TABLE sale_offers ADD COLUMN field_provenance jsonb");
+  const leaks = await sync.piiColumnLeaks(cloudExec(C));
+  if (leaks.includes("cột ngoài danh sách cho phép: sale_offers.field_provenance")) pass("SG-pii-chan cố thêm field_provenance lên cloud: piiColumnLeaks chặn");
+  else fail(`SG-pii-chan: ${JSON.stringify(leaks)}`);
+}
+
 // tiến trình con cho ca fail (d): chạy một lượt có nạp chậm để bị kill -9 giữa chừng
 if (process.argv[2] === "__child") {
   const [, , , L, C, runId, ct, port] = process.argv;
@@ -1374,6 +1453,7 @@ const CASES = {
   anon: caseAnon,
   "pii-cot": casePiiCot,
   "sellers-view": caseSellersView,
+  "so-ghep": caseSoGhep,
 };
 
 const which = process.argv[2];
