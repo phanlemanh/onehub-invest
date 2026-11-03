@@ -6,6 +6,8 @@ import type pg from "pg";
 import type { ContextResult } from "../agents/context-resolver.js";
 import { chayLo, chiPhi, GIA, parseReply, SQL_GHI, stripPII, TEN_MODEL, thamSoGhi, type Bai, type DongNhan, type Nhan } from "../agents/nhan-bac-s03.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
+import { textHash } from "../../../pipeline/lib/eval-labels.mjs";
+// @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { testMarker } from "../../../pipeline/lib/test-posts.mjs";
 import { recordCallDb, soToken, tenLop, type RecordCall } from "../runtime/ai-call-log.js";
 import { getModel } from "../runtime/models.js";
@@ -213,11 +215,6 @@ const khoaDaXu = (offerId: string, hash: string) => `${offerId}|${hash}`;
 
 type NhanDoc = Pick<Nhan, "listing_intent" | "quote" | "quote_ok" | "json_ok" | "error_kind"> & { probabilities: unknown };
 
-/** textHash nạp lúc chạy: eval-labels.mjs kéo `pg` của pipeline, job CI agent không có (cùng lẽ với nhan-bac-run). */
-const layTextHash = async (): Promise<(text: string) => string> =>
-  // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
-  (await import("../../../pipeline/lib/eval-labels.mjs")).textHash;
-
 export async function chayLuot(o: {
   client: pg.Client;
   runId: string;
@@ -236,7 +233,6 @@ export async function chayLuot(o: {
 }): Promise<TomTat> {
   const c = o.client;
   const giaoDich = o.giaoDich ?? giaoDichSavepoint(c);
-  const textHash = await layTextHash();
   const cam = o.cam ?? (await docTenCam(c));
   const moi = (await chonTin(c)).filter((t) => !testMarker(t) && (!o.chiTin || o.chiTin.includes(t.offer_id)));
   const tins = moi.filter((t) => t.post_id && coChu(t.text));
@@ -397,7 +393,6 @@ export async function doMau(o: {
   wilson: (dung: number, n: number) => number | null;
 }): Promise<KetMau> {
   const c = o.client;
-  const textHash = await layTextHash();
   const cam = o.cam ?? (await docTenCam(c));
   const chon = o.nhan.slice(0, o.n);
   const { rows } = await c.query(
