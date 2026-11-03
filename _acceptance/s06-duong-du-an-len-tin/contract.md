@@ -5,7 +5,7 @@ slug: s06-duong-du-an-len-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s06-duong-du-an-len-tin-design.md
