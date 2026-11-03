@@ -6,13 +6,9 @@
  * (`data-api/src/lib/ma-thi-truong.ts`, gói đẩy sang repo public) — phép đo E1 khoá hai bản cùng đầu ra với 064.
  */
 import { pool } from "@/lib/db";
+import { maNgan } from "@/lib/market-names";
 
-const MA_DAI = /^vn-(thanh-pho|tinh)-/;
-
-/** Mã dài → mã ngắn; mã khác trả nguyên. Thuần. */
-export function maNgan(id: string): string {
-  return id.replace(MA_DAI, "vn-");
-}
+export { maNgan };
 
 /** Mã khu vực dùng để truy vấn: mã nguyên văn nếu còn trong `areas` (DB chưa áp 064), không thì mã ngắn nếu có, không
  *  có cả hai thì mã nguyên văn (route trả 404/rỗng như cũ). Mã không mang tiền tố dài trả ngay, không truy vấn. */

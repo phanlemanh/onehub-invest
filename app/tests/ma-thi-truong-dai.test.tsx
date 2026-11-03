@@ -1,6 +1,6 @@
 // ma-thi-truong-dai.test.tsx — hồ sơ _acceptance/khu-vuc-vung-moi-s06 (KV-AC-n). marketNameOf tra được thị trường mà areas
 // còn giữ mã dài (`vn-thanh-pho-*`, `vn-tinh-*`) khi nhóm thu dùng khoá ngắn (S06 `da-nang`, cityCode `vn-da-nang`).
-// Bản TẠM tới khi hàng ma-thi-truong-ngan đổi mã areas. Chiều đỏ: bản chép hàm bỏ tra mã dài → ca đỏ với thông điệp ghim.
+// Thêm chiều sau 064: mã dài ghi từ trước ra tên mã ngắn. Chiều đỏ: bản chép hàm bỏ tra mã dài → ca đỏ với thông điệp ghim.
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync, rmSync, writeFileSync } from "node:fs"
@@ -14,6 +14,8 @@ const TEN = new Map([
   ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
   ["vn-khanh-hoa", "Khánh Hòa (mã ngắn)"],
   ["vn-tinh-an-giang", "Tỉnh An Giang"], // chỉ có mã dài vn-tinh-* — đo riêng nhánh tra vn-tinh-
+  ["vn-quang-ngai", "Tỉnh Quảng Ngãi"], // sau 064: chỉ còn mã ngắn
+  ["vn-hue", "Thành phố Huế"],
 ])
 // Ma trận viết trước: khoá nhóm thu, cityCode, mã dài, mã lạ.
 const MA_TRAN: [string, string | null][] = [
@@ -27,9 +29,11 @@ const MA_TRAN: [string, string | null][] = [
   ["vn-tinh-khanh-hoa", "Tỉnh Khánh Hòa"],
   ["an-giang", "Tỉnh An Giang"],
   ["vn-an-giang", "Tỉnh An Giang"],
+  ["vn-tinh-quang-ngai", "Tỉnh Quảng Ngãi"], // dòng kiểm ghi từ trước 064 còn mã dài
+  ["vn-thanh-pho-hue", "Thành phố Huế"],
   ["hanoi", "Hà Nội"],
   ["hcmc", "Hồ Chí Minh"],
-  ["binh-duong", null], // đã nhập vào TP.HCM, areas không có mã — có chủ đích, chờ ma-thi-truong-ngan
+  ["binh-duong", null], // đã nhập vào TP.HCM, areas không có mã — có chủ đích
   ["danang", null], // không khớp mờ
 ]
 
@@ -73,6 +77,11 @@ test("KV-AC-1 chiều đỏ: bản hàm tra mã dài trước mã ngắn thì kh
     "    areaNames.get(`vn-thanh-pho-${ngan}`) ??\n    areaNames.get(`vn-tinh-${ngan}`) ??\n    areaNames.get(`vn-${ngan}`)",
   )
   await banSai("thu-tu", sai, /KV-AC-1: mã khanh-hoa không ra tên thị trường/)
+})
+
+test("KV-AC-1 chiều đỏ: bản hàm bỏ tra mã ngắn của mã dài thì dòng kiểm cũ không ra tên", async () => {
+  const sai = GOC().replace("    areaNames.get(maNgan(code)) ??\n", "")
+  await banSai("bo-ma-ngan", sai, /KV-AC-1: mã vn-tinh-quang-ngai không ra tên thị trường/)
 })
 
 test("KV-AC-1 chiều đỏ: bản hàm bỏ riêng nhánh vn-tinh- thì an-giang không ra tên", async () => {
