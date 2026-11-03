@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
 import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
+import { OFFER_UNVERIFIED_SOURCE } from "@/lib/offers-filters";
 import { canCallOpsApi } from "@/lib/ops-access";
 import { KIND } from "@/lib/vocab.generated";
 
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
     `SELECT o.offer_id, o.kind, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
             o.area_id, a.name AS area_name,
             o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
-            o.source AS source_code
+            o.source = '${OFFER_UNVERIFIED_SOURCE}' AS unverified
      FROM sale_offers o
      LEFT JOIN areas a ON a.id = o.area_id
      WHERE ${where}

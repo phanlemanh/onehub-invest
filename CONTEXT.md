@@ -99,6 +99,10 @@ _Avoid_: tin đăng, offer, sale offer, rao vặt
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
+**Chưa xác minh**: Nhãn trên thẻ tin rao từ nguồn chưa đối chiếu với nguồn khác; hiện tại là tin từ nhóm cộng đồng. Tin vẫn lên cổng, người xem biết cần tự kiểm.
+- Code: `unverified` (cờ trong phản hồi tin rao, thay cho mã nguồn) · RESO: không có, local extension.
+_Avoid_: chưa kiểm duyệt, tin chưa duyệt
+
 **Listing thuê ngắn hạn**: Listing cho thuê theo đêm tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết. Mọi chỉ số ADR, công suất, «Listing hoạt động», «Listing so sánh», «Listing tự thu» đều nói về loại này.
 - Code: `listing` (bảng `listings`; `kind = rent_st` khi gộp bảng) · RESO: thuê theo ngày (PropertyType = ResidentialLease + LeaseAmountFrequency = Daily); lịch đêm, công suất, ADR là local extension (reso-standards.md)
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».

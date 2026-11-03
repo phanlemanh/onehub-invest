@@ -11,6 +11,7 @@ import {
   OFFER_RENT_MAX_VND,
   OFFER_RENT_MIN_VND,
   OFFER_SALE_MIN_VND,
+  OFFER_UNVERIFIED_SOURCE,
   type OfferFilters,
   type OfferSort,
   type OfferWard,
@@ -110,6 +111,7 @@ export async function getPublicOffers(
               o.area_id, a.name AS area_name, o.street_raw, o.seller_name,
               n.seller_ref IS NOT NULL AS many_names, o.seller_phone IS NOT NULL AS has_phone,
               ${PHONE_INFERRED} AS phone_inferred,
+              o.source = '${OFFER_UNVERIFIED_SOURCE}' AS unverified,
               o.last_seen::text AS updated_at,
               GREATEST(0, (now() AT TIME ZONE '${VN_TZ}')::date - (o.first_seen AT TIME ZONE '${VN_TZ}')::date)::int AS first_seen_days
        ${from} LEFT JOIN nhieu_ten n ON n.seller_ref = o.seller_ref
@@ -143,6 +145,7 @@ export async function getPublicOffers(
       sellerManyNames: r.many_names,
       hasPhone: r.has_phone,
       phoneInferred: r.phone_inferred,
+      unverified: r.unverified,
       updatedAt: r.updated_at,
       firstSeenDays: r.first_seen_days,
     })),
@@ -154,11 +157,23 @@ export async function getOfferWards(marketId: string, kind: OfferFilters["kind"]
   const { rows } = await pool.query(
     `SELECT a.id, a.name, count(*)::int AS n
      FROM sale_offers o JOIN areas a ON a.id = o.area_id
-     WHERE ${VISIBLE} AND o.kind = $1 AND (a.id = $2 OR a.parent_id = $2)
+     WHERE ${VISIBLE} AND o.kind = $1 AND a.parent_id = $2 AND a.region_type = 'submarket'
      GROUP BY a.id, a.name ORDER BY a.name`,
     [kind, marketId],
   );
   return rows;
+}
+
+/** Thị trường có tin hiện được hay không, chưa tính bộ lọc; đếm cả tin cấp thị trường, không chỉ tin có phường. */
+export async function hasPublicOffers(marketId: string, kind: OfferFilters["kind"]): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1 FROM sale_offers o JOIN areas a ON a.id = o.area_id
+       WHERE ${VISIBLE} AND o.kind = $1 AND (a.id = $2 OR a.parent_id = $2)
+     ) AS co`,
+    [kind, marketId],
+  );
+  return rows[0].co;
 }
 
 /** Số của đúng một tin đang hiện công khai; null khi tin không hiện hoặc chưa có số. */
