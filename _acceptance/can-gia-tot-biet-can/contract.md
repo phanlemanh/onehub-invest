@@ -5,7 +5,7 @@ slug: can-gia-tot-biet-can
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-can-gia-tot-biet-can-design.md
@@ -69,3 +69,20 @@ Phiên nghiệm thu `people-hien-so-goc` 03/11 chấm 3, «Không sử dụng đ
 
 - Dạng bảng cộng sheet và lọc vào hàng này là Mạnh chốt 03/11. Hàng CG3 giữ phần còn lại; khi mở CG3 phải sửa câu giao và số tiêu chí theo phần đã giao ở đây.
 - Lời cũ của `people-hien-so-goc` AC-6 và `portal-deals-airdna/E5` («vai Vận hành không ảnh, chữ bài») hết đúng từ hàng này; hai hồ sơ cũ không sửa, test `danh-ba-nguoi-deals-lien-he` đổi theo lời mới trong hàng này.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Thẻ để ký phạm vi vẫn nói hai nhóm kiểm tra còn được một tiêu chí đã bị cắt đỡ. Người ký có thể tưởng phần ở màn hình nhỏ vẫn có bằng chứng máy, trong khi thực tế không có.
+  - Ngoài-2: Một ảnh chụp trong hồ sơ nghiệm thu còn hiện rõ tên người đăng của một căn, dù báo cáo nói đã làm mờ. Tên này vốn là thông tin công khai của người rao, nên không lộ bí mật nào, chỉ là hồ sơ ghi sai.
+  - Ngoài-3: Hồ sơ nghiệm thu khẳng định đã làm mờ tên người đăng nhưng một khung ảnh vẫn đọc được tên. Người đọc hồ sơ bị báo sai, còn người dùng ứng dụng không bị ảnh hưởng.
+  - Ngoài-4: Thẻ ký phạm vi còn ghi một tiêu chí đã bị cắt như đang bảo vệ hai nhóm kiểm tra. Người ký thấy thẻ tự mâu thuẫn với phần hạn chế đã biết ngay trên cùng thẻ.
+  - Ngoài-6: Mức giảm lẻ hiện là «4.9%» (dấu chấm) trong khi giá hiện «1,5 tỷ» (dấu phẩy), nên một màn có hai kiểu viết số. Số vẫn đúng, chỉ lệch kiểu viết tiếng Việt.
+  - Ngoài-7: Địa chỉ trang có đuôi tiếng Việt «?can=» thay vì tên tiếng Anh theo quy ước đặt tên. Người dùng không thấy khác biệt khi dùng.
+  - Ngoài-11: Khi danh sách trên 15 căn, mở lại căn ở trang 2 rồi đóng sheet thì bảng quay về trang 1 và người vận hành mất chỗ đang duyệt. Hiện chỉ có 4 căn nên chưa gặp.
+  - Ngoài-12: Một số chỗ hiện mức giảm lẻ chưa có phép kiểm tự động, nên sau này sửa nhầm có thể không bị phát hiện. Người dùng hôm nay không thấy lỗi.
+  - Ngoài-13: Phép kiểm dòng «Ngưỡng» trên trang một căn quá lỏng, nên bỏ dòng này đi có thể vẫn không bị bắt. Hiện dòng vẫn hiển thị đúng.
+  - Ngoài-14: Phép kiểm tự động chưa đọc địa chỉ trang đúng như bản chạy thật, nên có thể bỏ sót lỗi khi tải lại hay bấm quay lại. Chưa có dấu hiệu lỗi thật.
+  - Ngoài-15: Thẻ nhỏ hiện khi rê chuột có lề trong hẹp hơn các thẻ khác một chút. Chỉ lệch giao diện, không ảnh hưởng thông tin.
+  - Ngoài-16: Liên kết ở dòng Phường có khoảng đệm khác các nút còn lại. Người dùng vẫn bấm bình thường.
+  - Ngoài-17: Khi một tab như Đủ để gọi hết căn, người vận hành chỉ thấy câu thông báo mà không có nút quay về tab Tất cả. Họ tự bấm tab Tất cả được.
+  - Ngoài-18: Người sửa mã sau này có thể hiểu nhầm cách tên nguồn thật được che khi lỗi. Người dùng hiện tại không thấy gì khác.
+  - Ngoài-19: Bài quét tự động có thể không bắt được nếu ai đó vô tình đưa đường dẫn ảnh gốc vào vài tệp phụ. Hiện chưa có lỗi thật nào lộ ra.
+  - Ngoài-20: Một ca kiểm cũ về bản cloud chỉ lặp lại điều nó tự đặt sẵn nên không bắt được lỗi. Người dùng không thấy khác biệt gì, chỉ là một lớp kiểm yếu thừa.
