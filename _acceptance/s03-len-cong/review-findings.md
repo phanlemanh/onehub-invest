@@ -1,25 +1,59 @@
 ## Trong hợp đồng
 
-- **Hình dạng 5 (tuyên quét lớp, thực đo một phần): E12 hứa «không chữ bài» trên mọi dòng thêm nhưng chỉ tra chuỗi nằm trong dấu nháy ASCII dài từ 40 ký tự**
-  file: pipeline/scripts/do-s03-len-cong.mjs:398
+- **Hình dạng 3 (có mặt thay vì quan hệ): AC-3 «tính vào đúng thị trường» chỉ assert `co - cu >= 2` trong khi ca gieo 15 tin cấp thị trường**
+  file: `pipeline/scripts/s03-len-cong.itest.mjs:315`
   severity: medium
-  AC: AC-10
+  AC: AC-3
   source: measurement
-  detail: Tập so chữ bài chỉ được nạp ở `for (const m of d.matchAll(/["'`]([^"'`]{40,})["'`]/g)) chuoi.add(...)`. Sau đó dòng 403 chỉ tra `position($1 in text)` trên tập `chuoi` này. Dòng thêm dán chữ bài không có dấu nháy, hoặc trong «…» (kiểu trích dẫn của hồ sơ .md và decisions.jsonl trong diff), không vào tập so, nên E12 vẫn xanh. Chuỗi chứa một dấu nháy giữa bài cũng bị cắt thành đoạn ngắn và có thể rơi dưới 40 ký tự. Hợp đồng AC-10 và E12 hứa «không ... chữ bài» trên toàn bộ dòng thêm, còn dòng in «quét N dòng thêm» làm người đọc tưởng cả N dòng đã được tra. Đây là lỗ về phạm vi đo, khác finding r2/r4 về việc thiếu đối chứng: thêm đối chứng chuỗi có nháy vẫn không lộ được lỗ này.
-  rationale: AC-10 hứa quét mọi dòng thêm và đòi «không chữ bài», nhưng thước chỉ tra chuỗi trong dấu nháy dài từ 40 ký tự nên vế này không được đo đủ.
+  detail: View tạm ở dòng 286 giữ lại các tin mang mã thị trường: a, b, 6 tin `nhieu` (8 tin S03), `s06Tt` và 6 tin `s06TtToaDo`, tổng 15 tin. Dòng 295 xác nhận `s06TtToaDo` không có căn. Dòng 306 kiểm a, b, s06Tt không vào cặp ứng viên, không kiểm chúng không có căn; không có assert nào về căn của S03 hay s06Tt. Các tin không có căn đều vào nhánh `tin_le` của 610. Lời hứa AC-3 là các tin này được tính vào đúng thị trường thay vì `chua-ro`, nên phép so phải là hiệu đúng bằng số tin gieo. Ngưỡng `>= 2` là cận dưới lỏng: bản 610 chỉ tính được 2/15 tin vẫn xanh. Bản join `m.id IN (w.id, w.parent_id)` nếu đếm đôi cũng xanh. Ca cũng không đọc dòng `chua-ro` để xác nhận số đó giảm tương ứng.
+
+- **Hình dạng 5 (thiếu ma trận toàn phần viết trước): «số assert bằng số dòng» của E1 là phép tự so, không ghim 5 dòng, và ma trận thuần không phải 5 dòng của AC-1**
+  file: `pipeline/scripts/s03-len-cong.test.mjs:45`
+  severity: medium
+  AC: AC-1
+  source: measurement
+  detail: `assert.equal(kiemMaTran(ganKhuVuc), MA_TRAN_KV.length)`: `n` được tăng trong vòng for trên chính `MA_TRAN_KV`, nên luôn bằng length nếu không ném lỗi trước đó. Ở `s03-len-cong.itest.mjs:523`, `assert.equal(soDong, mong.length)` có cùng dạng. Xoá một dòng khỏi ma trận thì cả hai vẫn xanh. Không chỗ nào ghim số 5, trong khi cùng tệp itest dòng 136 có ghim `.size, 5` cho ma trận khác. Ngoài ra, expected của E1 nói «năm dòng ma trận đúng khu vực, phuong_raw, confidence», nhưng executor `s03_len_cong` chỉ chạy test thuần. Dòng 3 của AC-1 (khai một + phường thị trường khác, Hỏi-2) đã bị thay bằng «mã không có thật» và chỉ được đo ở itest. Ma trận thuần cũng chỉ so `{areaId, phuong}`, confidence nằm ở ca riêng với hai dòng khu vực.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 4 (âm tính một mình): vế «kể cả hai tin S03 cùng mã thị trường» của AC-3 không thể đỏ, vì bộ ghép không bao giờ sinh cặp S03↔S03**
+- **CONTEXT.md vẫn ghi «Suy luận không bao giờ tự vào cột», trái với luật mới của hàng này**
+  Người dùng thấy gì: Tài liệu từ vựng chuẩn vẫn nói suy luận không bao giờ vào cột, trong khi hệ thống nay cho phép riêng loại hình. Người hoặc tác tử đọc tài liệu có thể hiểu sai hành vi thật.
+  Căn cứ: Chỉ là câu chữ trong tài liệu, không làm sai dữ liệu hay màn hình của người dùng, và sửa lại bất cứ lúc nào cũng rẻ.
+  file: `CONTEXT.md`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (âm tính một mình, không đối chứng): thước E5 «theo nhóm ≥ 85%» gần như tự đạt vì lấy chính ngưỡng 85% của luật làm đích**
+  Người dùng thấy gì: Con số độ đúng khi đoán loại nhà theo nhóm có thể trông tốt hơn thực tế vì thước đo gần như lặp lại ngưỡng của luật. Người duyệt có thể tin vào số này hơn mức nó đáng tin.
+  Căn cứ: Không làm sai tin nào trên cổng, chỉ làm số đo đáng tin ít hơn; số chỉ để cảnh báo nên ghi rõ giới hạn này là đủ.
+  file: `pipeline/scripts/do-s03-len-cong.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (có mặt thay vì quan hệ): ca AC-11 đường đọc toàn bộ chữ chỉ kiểm có đề xuất e2_llm, không kiểm status, nên đề xuất bị bỏ vẫn xanh**
+  Người dùng thấy gì: Nếu đề xuất loại nhà của LLM bị bỏ qua thay vì áp dụng, bài kiểm tra vẫn báo ổn. Tin có thể giữ loại nhà suy đoán lâu hơn dự kiến mà không ai hay.
+  Căn cứ: Chỉ làm bài kiểm tra bắt lỗi kém hơn; dữ liệu và màn hình hiện tại không sai, và các ca khác đã phủ việc áp đề xuất.
+  file: `agent/tests/s03-len-cong.test.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 2 (fixture viết tay, không round-trip): vế «thẻ S06 không có nhãn» chỉ đo trên object `THE` dựng tay, dù HTML có thẻ S06 thật ngay trong ca vùng tin rao**
+  Người dùng thấy gì: Chưa có bài kiểm tra nào xác nhận thẻ tin từ nguồn đã xác minh, khi hiển thị thật trên trang, không bị gắn nhãn «Chưa xác minh». Nếu hỏng, nhà đầu tư sẽ thấy nhãn sai trên tin đáng tin.
+  Căn cứ: Cờ ở phía dữ liệu đã được kiểm đúng nên rủi ro thấp; nếu nhãn sai xuất hiện thì thấy ngay trên trang và sửa nhanh.
+  file: `app/tests/s03-len-cong.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (âm tính một mình): vế «kể cả hai tin S03 cùng mã thị trường» của AC-3 không thể đỏ, vì bộ ghép không bao giờ sinh cặp S03↔S03 (r6 · tệp đã đổi)**
   Người dùng thấy gì: Một ca kiểm về hai tin cùng thị trường luôn báo xanh nên không bắt được lỗi ở chỗ đó. Người dùng không bị ảnh hưởng, vì hệ thống vốn không ghép hai tin cùng nguồn với nhau.
   Căn cứ: Hậu quả nhẹ: hành vi thật đúng, chỉ là một phép kiểm thừa, không mất hay lộ dữ liệu, và các nhánh còn lại của phép kiểm này vẫn bắt được lỗi ghép sai.
   file: `pipeline/scripts/s03-len-cong.itest.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 3 (có mặt thay vì quan hệ): AC-9 hứa ngưỡng «lệch trên 20%» nhưng ca kiểm chỉ đo hai điểm cách xa ngưỡng**
+- **Hình dạng 3 (có mặt thay vì quan hệ): AC-9 hứa ngưỡng «lệch trên 20%» nhưng ca kiểm chỉ đo hai điểm cách xa ngưỡng (r6 · tệp đã đổi)**
   Người dùng thấy gì: Nếu ai đổi ngưỡng lệch giá hay diện tích sang mức khác 20% thì ca kiểm vẫn xanh. Số tin «sai nặng» báo cho người quyết có thể hơi lệch so với thước đã hứa.
   Căn cứ: Hậu quả nhẹ và chỉ xảy ra khi có người sửa ngưỡng; không mất dữ liệu, số đo chạy lại được, và thêm ca sát biên sau này rất rẻ.
   file: `pipeline/scripts/s03-len-cong.test.mjs`
