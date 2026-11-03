@@ -14,6 +14,12 @@
       "port": 3460
     },
     {
+      "name": "app-3460-worktree",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["SNAPSHOTS_DIR=../../../../collector/snapshots", "npm", "--prefix", "app", "run", "dev", "--", "-p", "3460"],
+      "port": 3460
+    },
+    {
       "name": "app-3461",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3461"],

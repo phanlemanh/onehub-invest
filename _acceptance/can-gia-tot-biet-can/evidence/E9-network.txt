@@ -1,0 +1,10 @@
+E9 network (driver ego-browser: khong co read_network_requests; dung Resource Timing responseStatus trong trang, 4 can mo sheet)
+Console: khong doc duoc qua driver nay
+{
+ "link app-origin /_next/* status=200": 8,
+ "script app-origin /_next/* status=200": 32,
+ "img app-origin /api/zalo-media?snapshot= status=200": 7,
+ "img app-origin /api/zalo-media?media= status=502": 6
+}
+
+Ghi chu: 502 tren img /api/zalo-media?media= la anh tai qua proxy cua can 2 (link goc het han, khop E10: 'chi con link het han 1'); static asset -> chi note. Khong co fetch/XHR app-origin loi, khong co third-party.

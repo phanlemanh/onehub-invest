@@ -1,0 +1,148 @@
+{
+  "feature_plain": "Người vận hành quét Căn giá tốt trên một bảng có tab và bộ lọc, mở một căn trong khung trượt bên phải để biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai, và so với các căn cùng tiêu chí.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ hiện mỗi căn thành một hàng: ảnh đầu đúng căn, tên căn, giá, giá mỗi m², mức giảm kèm thước, tình trạng, nút gọi; căn cần xác minh đứng cuối."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ cho khung trượt và trang một căn dùng chung một nội dung: toà, tầng, số căn, đường, phường, nguồn, người đăng, nút gọi."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho vai Vận hành và quản trị xem đủ tối đa 12 ảnh theo thứ tự và chữ bài đầy đủ, không lộ đường dẫn ảnh gốc."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chứng minh giá tốt bằng giá mỗi m², thước phường, số tin dựng thước, mức giảm; ba ngưỡng trên màn hình và trong câu lấy dữ liệu luôn khớp nhau."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ ghi đúng từng thứ căn đang thiếu; căn thiếu số m² hay thước không vào bảng được nên báo ở trang một căn kèm nhãn đã rời danh sách."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ KHÔNG đưa ảnh, chữ bài, tên, số cho vai Người xem, kể cả trong dữ liệu gửi xuống trình duyệt; vai đó không có cột gọi và không lọc theo ảnh."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ đối chiếu trên dữ liệu thật: mỗi căn đủ số chứng minh hoặc ghi thiếu, in phân bố ba tab và số căn đạt từng câu, ghi rõ là số định hướng."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ đăng nhập thật ba vai để kiểm vai Người xem không nhận được gì cấm, vai Vận hành tải được ảnh của mỗi căn có ảnh."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ cho tab đếm theo bộ lọc đang bật, phím J và K chuyển căn đúng thứ tự đang thấy, đường dẫn giữ căn đang mở, đóng lại vẫn thấy hàng vừa xem."
+    },
+    {
+      "id": "AC-12",
+      "p": "Sẽ có tab căn cùng tiêu chí: cùng phường, cùng loại hình, diện tích lệch tới 25%, có chênh giá mỗi m² so với căn đang xem, nới được ra cả phường."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-7",
+      "p": "Chặn màn hình vỡ: căn không có, căn đã rời danh sách, bản chạy trên máy chủ không có ảnh, danh sách trống, lọc không ra căn, đang tải và lỗi đều có câu rõ và việc làm tiếp."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG lọc theo toà, dự án, đường, không lọc phía máy chủ, không xếp hạng theo độ tin, khu vực: để hàng CG3 (lọc và xếp hạng)."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đưa tin S06 vào danh sách, không phân trang phía máy chủ, không tải khung trượt theo từng căn: để hàng CG2 (đủ 20 căn)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG tìm căn cùng tiêu chí ngoài danh sách Căn giá tốt."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG làm khung trượt để vừa mở vừa bấm được bảng: phải sửa thành phần nền."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG đưa ảnh và chữ bài lên bản máy chủ ở hàng này: dữ liệu chưa lên, thuộc hai hàng TV9, TV10; xem Hỏi-6."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG ghi kết quả xác minh, nhãn biên tập, hiện trên cổng Invest: các hàng CG5, CG6, CG7."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG có bản đồ vị trí căn: hôm nay không căn nào có toạ độ."
+    },
+    {
+      "id": "OOS-8",
+      "p": "KHÔNG tách tên đường hay mã toà từ chữ bài; chữ bài hiện đầy đủ để người đọc; xem Hỏi-3."
+    },
+    {
+      "id": "OOS-9",
+      "p": "Sẽ KHÔNG còn tiêu chí đi trọn đường trên bản chạy thật ở sáng, tối và 390 px; thanh cuộn thừa của bảng ở 390 px còn đó, và phần này không có bằng chứng máy ở lượt chấm cuối."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Bốn vai đều có phép đo trên trang thật và đăng nhập thật (AC-1, AC-3, AC-6, AC-10)."
+    },
+    {
+      "i": 1,
+      "p": "Hàng của bảng, hai tab của khung trượt, trang một căn, dữ liệu xuống trình duyệt và tệp ảnh đều được đo (AC-1, AC-2, AC-6, AC-10, AC-12)."
+    },
+    {
+      "i": 2,
+      "p": "Năm câu của ngưỡng dùng được, mỗi câu có một tiêu chí (AC-1 tới AC-4)."
+    },
+    {
+      "i": 3,
+      "p": "Bảy thứ có thể thiếu, mỗi thứ một ca đi đúng đường thật của nó (AC-5, AC-8)."
+    },
+    {
+      "i": 4,
+      "p": "Sáu mức giảm quanh ba ngưỡng, đỏ khi câu lấy dữ liệu lệch ngưỡng trên màn hình (AC-4, AC-7)."
+    },
+    {
+      "i": 5,
+      "p": "Máy thu, bản máy chủ, lỗi, không tìm thấy, đã rời danh sách, danh sách trống, lọc trống, đang tải (AC-7)."
+    },
+    {
+      "i": 6,
+      "p": "Thao tác quét: tab, lọc, sắp xếp, phím chuyển căn, đường dẫn giữ căn, hàng vừa xem (AC-11)."
+    },
+    {
+      "i": 7,
+      "p": "Tiêu chí cùng loại: phường, loại hình, biên diện tích, căn không rõ loại hay diện tích, căn cần xác minh (AC-12)."
+    },
+    {
+      "i": 8,
+      "p": "Tên trường theo chuẩn ngành cho loại hình, địa chỉ, ảnh (AC-1, AC-2, AC-3)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Hợp đồng đòi căn thiếu số m² hay thước nằm trong bảng, nhưng bảng không có những căn đó. Đã sửa: hai ca này đo ở trang một căn, thêm phép đối chứng phải đỏ."
+    },
+    {
+      "i": 1,
+      "p": "Chưa đo vai nào thấy gì trên bản máy chủ, bảng trên máy chủ chưa có trạng thái, chưa cấm tên nguồn thật. Đã sửa: đo bốn vai trên cả ba bề mặt, so số ở sáu cách viết."
+    },
+    {
+      "i": 2,
+      "p": "Đường dẫn của căn đã rời danh sách sẽ mở ra bảng trần, không báo gì. Đã sửa: tự chuyển sang trang một căn, trang đó nêu lý do."
+    },
+    {
+      "i": 3,
+      "p": "Việc đọc ngưỡng ở máy thu trong khi đội làm từ xa là lựa chọn của người, không phải ràng buộc. Chuyển thành Hỏi-6 cho Mạnh; lý do bỏ đường ảnh cũ đã viết lại."
+    },
+    {
+      "i": 4,
+      "p": "Thiếu đo lúc đang tải, trống, lỗi của bảng, chưa chốt tab mặc định, và có bước không làm được trên 4 căn thật. Đã sửa: thêm các ca, mặc định tab Tất cả, bước không đủ căn ghi là không đo được."
+    }
+  ],
+  "scope_plain": "Đã cắt thêm một tiêu chí sau ba lượt chấm: Mạnh chọn thu phạm vi ở trần lượt."
+}
