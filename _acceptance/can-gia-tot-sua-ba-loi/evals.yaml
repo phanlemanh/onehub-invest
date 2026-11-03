@@ -63,3 +63,11 @@ evals:
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, "app/src/app/ops/deals/**"]
     expected: "Bản đang chạy :3460 trên DB máy thu, chỉ đọc, đăng nhập tài khoản thử vai ops. Lấy mã căn bằng SELECT chỉ đọc: một tin P1 bán seller_name = unknown, một tin P1 bán bait_gap_pct âm, một căn trong danh sách. Trang căn unknown: ô Tên không có chữ unknown. Trang căn số âm ở 390 px và màn hình: nhãn đọc đủ «Đắt hơn thước phường … không phải căn giá tốt», scrollWidth không lớn hơn clientWidth, không có thanh cuộn ngang. Căn trong danh sách: bấm crumb mở sheet đúng căn. Căn đã rời: bấm crumb về bảng không mở sheet. Lưu frame vào _acceptance/can-gia-tot-sua-ba-loi/evidence/; đường dẫn, mã căn, tên, SĐT trong frame là tầng C, không có tên nguồn thật."
     evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_ten_invest
+    paths: [app/src/lib/offers-public.ts, app/src/lib/ops/review-context.ts, app/src/components/listing/offer-card.tsx, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; ca CGB-AC-6 ma trận viết trước tám dòng (seller_name → tên): unknown, ' UNKNOWN ', rỗng, toàn khoảng trắng, NULL → không tên; Bán Thật, Na, Anh Unknown → giữ nguyên. So qua getPublicOffers, route /api/v1/listings và vùng máy chủ thật: HTML có Bán Thật và «Chưa có tên», 0 chữ unknown đứng làm nội dung. Tài khoản Hai A, Hai B, unknown: sellerManyNames false, giữ Hai A; đối chứng dương: tài khoản ba tên thật vẫn về nhãn. Đối chứng đỏ: bản chép offers-public.ts gỡ tenTin → ném ('CGB-AC-6 chữ giữ chỗ hiện như tên'); bản chép bỏ FILTER khi đếm → ném ('CGB-AC-6 chữ giữ chỗ tính là một tên')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

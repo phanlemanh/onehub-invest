@@ -126,6 +126,7 @@ executors:
     zalo_media_core: "cd app && node --import tsx --test tests/zalo-media.test.tsx"   # lõi serveZaloMedia (PL3 + review-media-backend) — hồi quy quyền thật
     can_gia_tot: "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-biet-can — /ops/deals và trang một căn trên lược đồ tạm, page thật, vai giả
     can_gia_tot_sua_ba_loi: "cd app && node --import tsx --test --test-name-pattern=CGB-AC tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-sua-ba-loi — ba mục Ngoài-5, 9, 10 của CG1, cùng bộ dựng
+    can_gia_tot_ten_invest: "cd app && node --import tsx --test --test-name-pattern=CGB-AC-6 tests/tin-rao-cong-khai.test.tsx"   # can-gia-tot-sua-ba-loi AC-6 — tên trên cổng Invest, lược đồ tạm, route và vùng máy chủ thật
     can_gia_tot_doi_chieu: "cd app && node --import tsx --test tests/can-gia-tot-doi-chieu.test.tsx"   # can-gia-tot-biet-can AC-8 — DB máy thu chỉ đọc
     danh_ba_ops: "cd app && node --import tsx --test tests/danh-ba-nguoi-tren-ops.test.tsx"   # danh-ba-nguoi-tren-ops — /ops/people trên lược đồ tạm có 055, page thật, vai giả
     danh_ba_doi_chieu: "cd app && node --import tsx --test tests/danh-ba-nguoi-doi-chieu.test.tsx"   # danh-ba-nguoi-tren-ops E15 — đối chiếu chỉ-đọc trên DB máy thu :5433 (READ ONLY), chỉ in số

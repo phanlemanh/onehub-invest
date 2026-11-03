@@ -26,5 +26,6 @@ Phương án đã loại:
 ## Việc không làm
 
 - Sửa chữ `unknown` tận gốc ở đường ống hay bộ thu: giá trị thô giữ nguyên, phần diễn giải ở lớp đọc.
-- Thẻ duyệt đã lọc bằng `tenTin`. Trang Invest công khai đọc thẳng `seller_name`, nhưng đo 04/11 trên DB máy thu có 0 tin `unknown` lọt điều kiện hiện công khai (loại hình, giá, diện tích, phường), nên hôm nay không ai thấy. Lọc nó là việc kế, không làm ở đây.
+- Thẻ duyệt đã lọc bằng `tenTin`. Trường `contact.senderName` của `data-api/src/routes/deals.ts` đọc thẳng `sender_name`, đo 04/11 có 32/69.843 bài `unknown`; không thuộc trang Invest, là việc kế.
+- Sửa đổi 04/11: Mạnh chọn làm luôn trang Invest công khai trước 05/11 (AC-6). `offers-public.ts` dùng `tenTin`, và `unknown` không tính là một tên khi đếm tài khoản nhiều tên.
 - Phân trang: CG2.

@@ -17,7 +17,7 @@ design_doc: docs/superpowers/specs/2026-11-04-can-gia-tot-sua-ba-loi-design.md
 
 ## Context
 
-Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng của `can-gia-tot-biet-can` ngày 03/11 (sổ quyết định của hồ sơ đó, dòng 47, 51, 52). Không đổi bố cục, không đổi dữ liệu.
+Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng của `can-gia-tot-biet-can` ngày 03/11 (sổ quyết định của hồ sơ đó, dòng 47, 51, 52). Mạnh chọn làm luôn trước 05/11 việc lọc cùng chữ giữ chỗ ở trang Invest công khai (AC-6). Không đổi bố cục, không đổi dữ liệu.
 
 ## Criteria
 
@@ -27,6 +27,7 @@ Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng m�
 - AC-4: Given toàn bộ ca của `can-gia-tot-biet-can`, When chạy lại sau khi sửa, Then mọi ca CG1 và kiểm tuân thủ cổng `deals-gate` vẫn xanh, và tệp test của CG1 chỉ có dòng thêm, không có dòng cũ bị xoá hay sửa.
 
 - AC-5: Given bản đang chạy trên DB máy thu, chỉ đọc, When vai Vận hành mở trang một căn có `seller_name` là `unknown`, trang một căn có số giảm âm, và trang một căn còn trong danh sách, ở khổ 390 px và khổ màn hình, Then ô tên không hiện «unknown»; nhãn lý do đọc đủ câu mới, không vỡ khung hay sinh thanh cuộn ngang; bấm crumb của căn trong danh sách mở sheet đúng căn, bấm crumb của căn đã rời về bảng.
+- AC-6 (cross-layer): Given lược đồ tạm có các tin hiện được với `seller_name` là `unknown`, ` UNKNOWN `, chuỗi rỗng, chuỗi toàn khoảng trắng, NULL, tên thật, `Na`, `Anh Unknown`, một tài khoản có hai tên thật và một `unknown`, và một tài khoản có ba tên thật, When khách gọi hàm danh sách, route `/api/v1/listings` và vẽ vùng máy chủ thật của trang tin rao, Then chữ giữ chỗ không hiện như tên ở cả ba đường, thẻ hiện «Chưa có tên»; tên khác giữ nguyên, kể cả `Na` và `Anh Unknown`; `unknown` không tính là một tên khi đếm tài khoản nhiều tên, nên tài khoản hai tên thật vẫn giữ tên còn tài khoản ba tên thật vẫn về nhãn.
 
 ## Coverage
 
@@ -37,15 +38,17 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
 - Trục C — Vị trí căn: hạng đầu | hạng 30 | hạng 31 | cần xác minh ngoài giới hạn | đã rời → AC-3.
 - Trục D — Nơi chạy, vai: máy thu | cloud | Vận hành | Người xem → AC-1, AC-2, AC-3.
 - Trục E — Khổ nhìn: 390 px | màn hình → AC-5.
+- Trục F — Đường đọc Invest: hàm | route | vùng máy chủ; đếm nhiều tên có và không có chữ giữ chỗ → AC-6.
 
 ## Out of scope
 
 - Sửa chữ `unknown` tận gốc ở đường ống hay bộ thu; giá trị thô giữ nguyên.
 - Lọc `Na`: đo 04/11 là tên một người đăng thật ở S03 (2 SĐT, một nhóm, 47/47 tin trùng `sender_name`).
-- Tên người đăng trên trang Invest công khai: đo 04/11 có 0 tin `unknown` lọt điều kiện hiện công khai, nên chưa ai thấy; lọc nó là việc kế. Thẻ duyệt đã lọc sẵn.
+- Trường `contact.senderName` của `data-api/src/routes/deals.ts`: đọc thẳng `sender_name`, đo 04/11 có 32/69.843 bài `unknown`; không thuộc trang Invest, là việc kế. Thẻ duyệt đã lọc sẵn.
 - Phân trang để căn ngoài 30 mở được sheet: CG2.
 - Dấu phẩy thập phân của số phần trăm: CG1 đã xếp không sửa.
 
 ## Notes
 
 - Giới hạn đo: hạng 31 không có trên DB máy thu (3 căn đủ ngưỡng ngày 04/11), nên đường crumb về bảng của căn ngoài 30 chỉ đo qua page thật trên lược đồ tạm, không có frame.
+- Giới hạn đo AC-6: DB máy thu có 0 tin `unknown` lọt điều kiện hiện công khai, nên AC-6 chỉ đo trên lược đồ tạm với vùng máy chủ thật, không có frame.
