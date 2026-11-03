@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: da7f9bb1980bf2d542ecaf8e6b1691f4c8938ff2
+verified_commit: 4c19ef56465e966b6a0fbd70b4ef08e634f0cd1f
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -216,3 +216,7 @@ Round 1: mọi eval của hợp đồng xanh, nhưng lệnh suite `cd app && npm
 Round 2: E1 đến E5 và E9 chạy lại, xanh; E6, E7, E7b, E8, E8u mang sang từ round 1; `cd app && npm test` nay đạt; `cd pipeline && npm test` hỏng do deadlock ở ca AC-2 của write-offers.test.mjs, không gắn eval nào. REJECT, trả về thi công.
 Round 3: E1 đến E5 chạy lại, xanh; các eval còn lại mang sang; `cd pipeline && npm test` hỏng ở ca GS-AC-3a của gan-sdt-s06.test.mjs (không lấy được khoá trên public.field_assertions). REJECT ở trần ba vòng, chuyển người quyết; Mạnh chọn sửa rồi chấm thêm vòng 4.
 Round 4: E1 đến E5 mang sang từ round 3, E6, E7, E7b, E8, E8u từ round 1, E9 từ round 2 (delta không chạm paths của eval nào); cả sáu lệnh suite đạt, kể cả `cd pipeline && npm test`. Hội đồng đề xuất PASS cho E10. Verdict PENDING-JUDGMENT: chờ người chốt E10 và quyết các mục ngoài hợp đồng.
+
+### Re-pin lần 1 — 2026-11-03, do hoá cũ do gộp main vào nhánh
+run_id: repin-20261103T133106Z-78717
+sha: 4c19ef56465e966b6a0fbd70b4ef08e634f0cd1f · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8u, E10 (E10 không khai paths) · AC không có chốt máy: AC-10
