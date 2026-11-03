@@ -5,7 +5,7 @@ slug: guard-edits-goc-theo-tep
 owner: phanlemanh@gmail.com
 risk_tier: T3      # .claude/hooks/** nằm trong t3_paths
 surfaces: [config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-guard-edits-goc-theo-tep-design.md
@@ -47,3 +47,10 @@ Source input: prompt — việc giao từ phiên giám sát, Mạnh bấm mở p
 ## Notes
 
 - Hook chạy theo bản trong `CLAUDE_PROJECT_DIR`, nên phiên ở worktree cũ chỉ có bản sửa sau khi hợp `main`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Bước tự kiểm cuối của rào chặn có thể báo «đã dọn sạch» khi công cụ quản lý mã lỗi đúng lúc kiểm.
+  - Ngoài-3: Bài tự kiểm của rào chặn có thể báo xanh dù bước kiểm dọn không chạy được do công cụ quản lý mã lỗi.
+  - Ngoài-4: Hai dòng tự kiểm «không rò thư mục tạm» và «cây làm việc thật không đổi» vẫn báo xanh khi công cụ quản lý mã lỗi.
+  - Ngoài-5: Phép đo chưa chứng minh bước dừng khi không tạo được thư mục tạm đứng trước bước dọn; đảo thứ tự thì phép đo vẫn xanh.
+  - Ngoài-7: Một dòng kiểm trong bộ thử không thể báo đỏ khi worktree tạm bị sót, vì bước dọn đã chạy trước đó.
+  - Ngoài-8: Hồ sơ ghi chín ca thử còn bộ thử chạy mười một, nên xoá bớt ca phụ thì không có gì báo.
