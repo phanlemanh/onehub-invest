@@ -47,9 +47,17 @@ async function latestSnapshotDir() {
   return [dirs[0].dir];
 }
 
-async function readSnapshot(dir) {
+// v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn
+// (kênh S06 chưa ghi seller — giữ ghi 1 cho tới khi được cấp vòng thu số riêng);
+// cùng mảng với import-airbnb.mjs, test đối chiếu hai bản không lệch.
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5];
+
+// Export để test đọc snapshot v5 từ dir tạm (verify sha256 + parse, không đụng DB)
+export async function readSnapshot(dir) {
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  if (manifest.schemaVersion !== 1) throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  if (!SUPPORTED_SCHEMA_VERSIONS.includes(manifest.schemaVersion)) {
+    throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  }
   // Lớp 2 (mở lại 2310-4 lần 2): manifest.source là lời khai của chính snapshot
   if (manifest.source !== "chotot-ads") {
     console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
@@ -89,13 +97,27 @@ export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_
    price = EXCLUDED.price, price_string = EXCLUDED.price_string,
    size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
    ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
-   seller = EXCLUDED.seller, images = EXCLUDED.images,
+   -- MỞ LẠI 0211-7 đA + 0311-3 đ4: lượt thu THƯỜNG (payload không có seller v5)
+   -- phải KHÔNG xoá phone/phoneStatus/accountRef/seenAt/DISPLAYNAME đã nạp từ
+   -- lượt lấy số — phần mô tả (full_name, company_ad, seller_info) vẫn lấy bản
+   -- mới, các khoá người bán giữ từ bản hiện có khi EXCLUDED không mang phone.
+   seller = CASE
+     WHEN EXCLUDED.seller->>'phone' IS NOT NULL THEN EXCLUDED.seller
+     ELSE (EXCLUDED.seller - 'phone' - 'phoneStatus' - 'accountRef' - 'seenAt' - 'displayName')
+        || jsonb_strip_nulls(jsonb_build_object(
+             'phone', stg_chotot_ads.seller->'phone',
+             'phoneStatus', stg_chotot_ads.seller->'phoneStatus',
+             'accountRef', stg_chotot_ads.seller->'accountRef',
+             'displayName', stg_chotot_ads.seller->'displayName',
+             'seenAt', stg_chotot_ads.seller->'seenAt'))
+   END, images = EXCLUDED.images,
    payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
    captured_at = EXCLUDED.captured_at
  WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at
     OR stg_chotot_ads.captured_at IS NULL`;
 
-async function importDir(client, dir) {
+// Export để test chạy importDir trên lược đồ tạm (luoc-do-rieng) — MỞ LẠI 0211-1 đ1
+export async function importDir(client, dir) {
   const { manifest, items } = await readSnapshot(dir);
   console.log(`manifest ok: ${manifest.snapshotId} — ${items.length} items`);
 
@@ -106,9 +128,46 @@ async function importDir(client, dir) {
     [manifest.snapshotId, manifest.city, manifest.source, manifest.finishedAt, JSON.stringify(manifest)],
   );
 
+  // MỞ LẠI 0211-7 đB: lượt LẤY SỐ (coverage.methods.hienSo) nạp seller-ONLY —
+  // không làm mới captured_at / payload / cột khác: tin đã hết hạn không thành
+  // «vừa thấy», payload không bị ghi đè bằng bản mỏng của lượt số.
+  const sellerOnly = Number(manifest.coverage?.methods?.hienSo ?? 0) > 0;
   let n = 0;
   for (const it of items) {
     const a = it.payload;
+    // v5 (MỞ LẠI 0211-1 đ1): RawItem.seller gộp PHẲNG vào cột seller có sẵn
+    // (thêm accountRef/displayName/phone/phoneStatus/seenAt cạnh full_name/
+    // company_ad/seller_info). Snapshot cũ không có it.seller → giá trị y hệt
+    // trước v5 — không migration, cột jsonb đủ chỗ.
+    const seller = { full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) };
+    if (it.seller && typeof it.seller === "object") Object.assign(seller, it.seller);
+    if (sellerOnly) {
+      // 0211-8 (1)(2): item lượt số MỎNG (payload chỉ list_id) — chỉ gộp
+      // it.seller: có phone thì ghi {phone, phoneStatus, accountRef, seenAt};
+      // KHÔNG phone (error) thì chỉ {phoneStatus} — không mang khoá phone/
+      // accountRef để không ghi null đè TÊN đang có và không XOÁ số đã nạp
+      // từ lần thử trước. full_name/company_ad không bao giờ từ lượt số.
+      const s = it.seller ?? {};
+      const goi = s.phone
+        ? { phone: s.phone, phoneStatus: s.phoneStatus ?? "available",
+            ...(s.accountRef ? { accountRef: s.accountRef } : {}),
+            ...(s.seenAt ? { seenAt: s.seenAt } : {}) }
+        : { phoneStatus: s.phoneStatus ?? "error" };
+      // 0211-12 (4): displayName lượt số lấy từ payload.account_name của chính
+      // dòng stg khi it.seller không mang tên — stg.seller giờ có tên đồng bộ
+      // với canonical (trước đây chỉ 5/51.994 dòng có tên trong seller).
+      await client.query(
+        `UPDATE stg_chotot_ads SET seller = COALESCE(seller, '{}'::jsonb) || $2::jsonb
+           || (CASE WHEN COALESCE(seller->>'displayName', $2->>'displayName') IS NULL
+                    AND payload->>'account_name' IS NOT NULL
+               THEN jsonb_build_object('displayName', payload->>'account_name')
+               ELSE '{}'::jsonb END)
+           WHERE list_id = $1`,
+        [a.list_id, JSON.stringify(goi)],
+      );
+      n++;
+      continue;
+    }
     await client.query(
       UPSERT_SQL,
       [
@@ -119,14 +178,14 @@ async function importDir(client, dir) {
         a.area_name ?? null, a.ward_name ?? null, a.ward_name_v3 ?? null,
         a.latitude ?? null, a.longitude ?? null,
         a.list_time ? new Date(a.list_time).toISOString() : null,
-        JSON.stringify({ full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) }),
+        JSON.stringify(seller),
         JSON.stringify({ images: a.images ?? [], thumbnails: a.image_thumbnails ?? [] }),
         JSON.stringify(a), manifest.snapshotId, manifest.finishedAt, // 2410-1 v2: giờ thu snapshot (airbnb_snapshots.collected_at) — không dùng giờ nạp/giờ từng item
       ],
     );
     n++;
   }
-  console.log(`✅ ${n} ads → stg_chotot_ads`);
+  console.log(`✅ ${n} ads → stg_chotot_ads${sellerOnly ? " (lượt lấy số: chỉ cập nhật seller)" : ""}`);
   return n;
 }
 

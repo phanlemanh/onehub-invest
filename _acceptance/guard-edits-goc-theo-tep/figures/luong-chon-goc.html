@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng chọn gốc</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .frame { max-width: 840px; width: 100%; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Sơ đồ luồng · guard-edits-goc-theo-tep</p>
+    <h1>Luồng chọn gốc của guard-edits</h1>
+
+    <svg viewBox="0 0 840 680" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Luồng chọn gốc của guard-edits">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Mũi tên vẽ trước, nút vẽ sau -->
+      <!-- Phiên sửa một tệp → điểm hỏi -->
+      <line x1="420" y1="80" x2="420" y2="128" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Nhánh Không: sang trái rồi xuống -->
+      <path d="M 280 200 H 188 Q 180 200 180 208 V 324" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Nhánh Có: sang phải rồi xuống (đường bản sửa thêm vào) -->
+      <path d="M 560 200 H 652 Q 660 200 660 208 V 324" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+
+      <!-- Hai nhánh gộp lại ở chấm -->
+      <path d="M 180 388 V 412 Q 180 420 188 420 H 416" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <path d="M 660 388 V 412 Q 660 420 652 420 H 424" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <line x1="420" y1="424" x2="420" y2="456" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- So với ba luật → hai kết cục -->
+      <path d="M 320 504 H 248 Q 240 504 240 512 V 572" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 520 504 H 592 Q 600 504 600 512 V 572" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Nhãn nhánh: có mặt nạ, cách đường 8px -->
+      <rect x="208" y="172" width="44" height="20" rx="2" fill="#f5f5f5"/>
+      <text x="230" y="186" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">Không</text>
+
+      <rect x="596" y="172" width="28" height="20" rx="2" fill="#f5f5f5"/>
+      <text x="610" y="186" fill="#ba4513" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">Có</text>
+
+      <!-- Hai điểm hỏi gắn cạnh nhánh -->
+      <path d="M 208 276 H 180" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <circle cx="180" cy="276" r="2" fill="#2d3142"/>
+      <text x="212" y="272" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">Hỏi-2: thư mục đã bị xoá</text>
+      <text x="212" y="292" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">đi nhánh này — lỗ còn lại</text>
+
+      <path d="M 632 276 H 660" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <circle cx="660" cy="276" r="2" fill="#2d3142"/>
+      <text x="628" y="272" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">Hỏi-4: kho git khác</text>
+      <text x="628" y="292" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">cũng đi nhánh Có</text>
+
+      <!-- Bắt đầu -->
+      <rect x="320" y="32" width="200" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="320" y="32" width="200" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="420" y="60" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Phiên sửa một tệp</text>
+
+      <!-- Điểm hỏi: chọn gốc -->
+      <polygon points="420,128 560,200 420,272 280,200" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="420" y="188" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thư mục của tệp</text>
+      <text x="420" y="204" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">còn tồn tại và thuộc</text>
+      <text x="420" y="220" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">một kho git?</text>
+
+      <!-- Nhánh Không: đường cũ -->
+      <rect x="60" y="324" width="240" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="180" y="360" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đường cũ: gốc theo phiên</text>
+
+      <!-- Nhánh Có: tiêu điểm của bản sửa -->
+      <rect x="540" y="324" width="240" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="540" y="324" width="240" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="660" y="352" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lấy gốc theo kho chứa tệp,</text>
+      <text x="660" y="368" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">về đường thật</text>
+
+      <!-- Chấm gộp -->
+      <circle cx="420" cy="420" r="4" fill="#2d3142"/>
+
+      <!-- So với ba luật -->
+      <polygon points="420,456 520,504 420,552 320,504" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="420" y="508" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">So với ba luật</text>
+
+      <!-- Kết cục -->
+      <rect x="160" y="572" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="160" y="572" width="160" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="240" y="600" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chặn</text>
+
+      <rect x="520" y="572" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="520" y="572" width="160" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="600" y="600" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cho sửa</text>
+
+      <!-- Dải chân: tiêu chí liên quan -->
+      <line x1="40" y1="640" x2="800" y2="640" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="660" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.06em">Liên quan: AC-1, AC-4, AC-5, AC-9</text>
+    </svg>
+  </div>
+</body>
+</html>

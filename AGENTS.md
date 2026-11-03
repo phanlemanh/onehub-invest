@@ -106,9 +106,15 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 4. **DATA-CONTRACT** (`collector/docs/DATA-CONTRACT.md`) là giao diện collector↔pipeline;
    thêm field phải tăng `schemaVersion`.
 5. **AirDNA chỉ để hiệu chuẩn** (ToS) — không đưa số AirDNA lên Invest Portal; chỉ ở `/ops/quality`.
+   **Ngoại lệ về ID** (Mạnh chốt 2026-11-03, sửa luật này và ADR-0009): được dùng ID căn S01 có trong danh sách S02 làm
+   danh sách thu S01; dữ liệu lên cổng vẫn do S01 tự thu, số S02 vẫn không lên cổng, doanh thu S02 chỉ để xếp thứ tự thu.
+   Đo thử 100 căn trước; chạy lớn theo nấc, sau 05/11.
    **S08 (danh mục dự án) cùng chính sách** (Mạnh duyệt 2026-10-24): chỉ đọc, thu tối đa một lần mỗi tuần, chỉ
    dùng nội bộ (dựng danh mục căn, hiệu chuẩn); không tái xuất nguyên văn lên cổng Invest hay API công khai;
    `stg_s08_inventory` chỉ ở local. Tên miền thật của S08 chỉ ở `source_registry` local.
+   **Chỉ số tổng hợp công khai của S06/S07** (giá trung bình theo khu, thay đổi theo thời gian — khác tin rao từng căn) tạm
+   cùng chính sách nội bộ (ROADMAP §3 mục 27): chỉ hiệu chuẩn và kiểm chiều; hiện có nhãn khi có văn bản cho phép của
+   nguồn hoặc ý kiến pháp lý.
 6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A gồm đúng bốn thứ: tên nguồn thật (kể cả tên miền,
    `real_name`, `source_ids`), hồ sơ người dùng app (`user_events/user_profile`), định danh tài khoản thu,
    phiên/khoá/QR/profile. Bốn thứ này KHÔNG rời máy local.

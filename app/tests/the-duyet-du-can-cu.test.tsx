@@ -744,6 +744,79 @@ describe("TD-AC-7/8 route decide nhận lý do", () => {
       }
     }
   }
+  // Thẻ đúng như lệnh đọc toàn bộ ghi: fixture được agent/tests/doc-toan-bo-the.test.ts ghim với đầu ghi thật, nên không chép tay
+  // hình evidence. Không nhập mã agent: job app của CI không có phụ thuộc của agent.
+  async function theThat(id: string) {
+    const raw = readFileSync(path.join(APP, "../agent/tests/fixtures/ls1-the-doi-chieu.json"), "utf8")
+    const f = JSON.parse(raw)
+    const { the, de_xuat } = JSON.parse(raw.replaceAll(f.ma_tin, id)) as {
+      the: { item_type: string; title: string; evidence: { text: string; group_name: string; fields: { proposal_id: number | string; source: string }[] } }
+      de_xuat: { field: string; value: string; value_key: string; source: string; route: string; corroborated_by: string | null; confidence: number | null; model: string; trace_path: string | null; evidence: object; status: string }[]
+    }
+    const post = `${id}_p`
+    await db.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text, captured_at) VALUES ($1, 'hanoi__zalo-agent__ls1', $2, $3, now())`, [post, the.evidence.group_name, the.evidence.text])
+    await db.query(`INSERT INTO sale_offer_records (offer_id, source, kind, property_type, price_vnd, area_m2, post_ids, first_seen, last_seen) VALUES ($1, 'S03', 'sale', 'unknown', 3000000000, 70, $2, now(), now())`, [id, [post]])
+    const theId = Number((await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ($1, $2, $3) RETURNING id`, [the.item_type, `enrich:${id}`, the.title])).rows[0].id)
+    const maDeXuat = new Map<string, number>()
+    for (const d of de_xuat)
+      maDeXuat.set(d.source, Number((await db.query(
+        `INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, corroborated_by, confidence, model, trace_path, evidence, status, review_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+        [`td-run-${id}`, id, d.field, d.value, d.value_key, d.source, d.route, d.corroborated_by, d.confidence, d.model, d.trace_path, d.evidence, d.status, theId],
+      )).rows[0].id))
+    const evidence = { ...the.evidence, fields: the.evidence.fields.map((x) => ({ ...x, proposal_id: maDeXuat.get(x.source) })) }
+    await db.query(`UPDATE review_queue SET evidence = $2 WHERE id = $1`, [theId, evidence])
+    return { theId, evidence: evidence as typeof evidence & { doi_chieu: unknown }, e1: maDeXuat.get("e1_rule")!, ai: maDeXuat.get("e2_llm")! }
+  }
+  const cotTin = async (id: string) => (await db.query(`SELECT property_type, price_vnd::text AS gia, area_m2::text AS dt, retired_at FROM sale_offer_records WHERE offer_id = $1`, [id])).rows[0]
+  const trangThai = async (id: string) => (await db.query(`SELECT source, status FROM enrichment_proposals WHERE offer_id = $1 ORDER BY source`, [id])).rows.map((d) => [d.source, d.status])
+  const phanQuyet = async (id: string) => (await db.query(`SELECT actor, detail FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'item_id' = $1`, [`enrich:${id}`])).rows
+
+  test("LS1-AC-7 duyệt thẻ thật qua route: áp bên chọn, phán quyết đọc lại được, giá, diện tích, retired_at không đổi", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = "td_s03_ls1a"
+    const t = await theThat(id)
+    const truoc = await cotTin(id)
+    const r = await goi(mod, t.theId, { status: "approved", reason: "AI đọc đúng", choices: { property_type: t.ai } })
+    assert.equal(r.status, 200, `LS1-AC-7 route từ chối: ${JSON.stringify(r.json)}`)
+    const sau = await cotTin(id)
+    assert.equal(sau.property_type, "apartment", "LS1-AC-7 phải áp bên được chọn")
+    assert.deepEqual([sau.gia, sau.dt, sau.retired_at], [truoc.gia, truoc.dt, truoc.retired_at], "LS1-AC-7 duyệt đổi giá, diện tích hoặc retired_at")
+    assert.deepEqual(await trangThai(id), [["e1_rule", "rejected"], ["e2_llm", "applied"]])
+    const a = await phanQuyet(id)
+    assert.equal(a.length, 1, "LS1-AC-7 phải đúng một dòng phán quyết")
+    assert.deepEqual([a[0].detail.phan_quyet, a[0].detail.ly_do, a[0].detail.doi_chieu], ["approved", "AI đọc đúng", t.evidence.doi_chieu], "LS1-AC-7 phán quyết không đọc lại được")
+  })
+
+  test("LS1-AC-7 bác thẻ thật qua route: bác cả hai đề xuất, tin không đổi, phán quyết ghi rejected", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = "td_s03_ls1b"
+    const t = await theThat(id)
+    const truoc = await cotTin(id)
+    assert.equal((await goi(mod, t.theId, { status: "rejected", reason: "bộ đọc đúng" })).status, 200)
+    assert.deepEqual(await cotTin(id), truoc, "LS1-AC-7 bác làm đổi tin")
+    assert.deepEqual(await trangThai(id), [["e1_rule", "rejected"], ["e2_llm", "rejected"]])
+    assert.equal((await phanQuyet(id))[0]?.detail.phan_quyet, "rejected")
+  })
+
+  test("LS1-AC-7 thẻ chỉ có đối chiếu duyệt được, đúng một dòng; thẻ thường không có dòng nào", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    const id = ++soThe
+    const doi_chieu = [{ loai: "gia", trich: "giá 5 tỷ", ai: 5e9, bo_doc: 3e9 }]
+    await db.query(`INSERT INTO review_queue (id, item_type, item_id, title, evidence) VALUES ($1, 'agent_output', $2, 'td đối chiếu', $3)`, [id, `enrich:td_dc${id}`, { doi_chieu }])
+    const r = await goi(mod, id, { status: "approved", reason: "AI đọc đúng giá" })
+    assert.equal(r.status, 200, `LS1-AC-7 route từ chối thẻ chỉ có đối chiếu: ${JSON.stringify(r.json)}`)
+    const a = await phanQuyet(`td_dc${id}`)
+    assert.equal(a.length, 1, "LS1-AC-7 phải đúng một dòng phán quyết")
+    assert.deepEqual(a[0].detail.doi_chieu, doi_chieu)
+    const thuong = await theMoi("agent_output")
+    assert.equal((await goi(mod, thuong, { status: "approved", reason: "ok" })).status, 200)
+    assert.equal((await db.query(`SELECT 1 FROM ops_audit WHERE action = 'enrich:doi-chieu' AND detail->>'reviewId' = $1`, [String(thuong)])).rows.length, 0, "LS1-AC-7 đối chứng: thẻ thường không có dòng phán quyết")
+  })
+
   test("TD-AC-7 route: thiếu / trắng / quá 1.000 ký tự × 2 loại thẻ → 400, bốn bảng không đổi", async () => {
     ready()
     const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod

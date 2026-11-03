@@ -38,7 +38,7 @@ trang bang Georgia, ảnh hộp mời Pro) và `~/dev/one-invest/research-local/
    phố»; thứ họ hỏi thật là luật có lợi cho chủ nhà, thuế + bảo hiểm thật, và có tin được người quản lý tại chỗ (BT).
    Market Finder không trả lời ba câu đó bằng số — nó đẩy sang «Build Your Team».
 5. **Cơ hội cho Việt Nam:** chưa thấy công cụ nào ở VN cho so sánh tỉnh/phường theo lợi suất thuê cho nhà đầu tư —
-   Batdongsan chỉ có báo cáo PDF tĩnh, OneHousing/Guland ở cấp dự án/thửa (BT, chưa dùng thử). One Invest đã có
+   S07 chỉ có báo cáo PDF tĩnh, OneHousing/Guland ở cấp dự án/thửa (BT, chưa dùng thử). One Invest đã có
    Finder cấp tỉnh và thước giá cấp phường; nên **học bộ khung 3 lăng kính (dòng tiền · tăng giá · chi trả) và phễu
    «chọn vùng → xem tin → gặp người giữ căn»**, nhưng **làm ngược BP ở độ tin**: ngày dữ liệu trên từng con số, cỡ
    mẫu, phương pháp công khai, và xuống tận phường.
@@ -256,7 +256,7 @@ gọn: «The value is convenience, not exclusivity» (BT).
 | Công cụ | Đơn vị | Chỉ số / điểm | Miễn phí / trả tiền | Khác biệt đáng học |
 |---|---|---|---|---|
 | **Mashvisor** Market Finder | thành phố, khu phố | lợi suất tiền mặt, cap rate, giá thuê/giá; điểm Mashmeter | bản đồ nhiệt chỉ gói Professional/Expert | Thuê dài hạn và ngắn hạn trên **cùng một bản đồ** |
-| **AirDNA** Market Explorer | vùng, tiểu vùng | Market Score 0–100 (gồm cả mức độ quy định) | 12 tháng lịch sử miễn phí; gói Research ~$34–39/tháng | **Luật đưa vào điểm**; legend theo phân vị động (xem `market-finder-spec.md`) |
+| **S02** Market Explorer | vùng, tiểu vùng | Market Score 0–100 (gồm cả mức độ quy định) | 12 tháng lịch sử miễn phí; gói Research ~$34–39/tháng | **Luật đưa vào điểm**; legend theo phân vị động (xem `market-finder-spec.md`) |
 | **Reventure App** | bang, 500 vùng, 3.000 quận, 30.000 ZIP | định giá cao (giá/thu nhập), tồn kho, giảm giá; điểm dự báo | freemium | Đi **xuống tận ZIP**; nội dung dự báo kéo người dùng |
 | **Roofstock** Neighborhood Rating | khu thống kê (~72 nghìn) | 1–5 sao từ thu nhập, trường, việc làm, an ninh… | miễn phí, dẫn về sàn | Chi tiết hơn MSA nhiều bậc — nhưng người dùng báo đã ngừng hoạt động (BT) |
 | **Zillow / Redfin / Realtor.com** | từ vùng đến ZIP | ZHVI, ZORI, giá bán, ngày bán, mức «nóng» | dữ liệu mở, miễn phí | Nguồn thô mà các công cụ khác đóng gói lại |
@@ -264,7 +264,7 @@ gọn: «The value is convenience, not exclusivity» (BT).
 | **Awning** | thành phố | doanh thu, giá đêm, công suất STR | miễn phí, sống nhờ dịch vụ quản lý | Cùng mô hình phễu dịch vụ như BP |
 
 **Việt Nam** (BT, chưa dùng thử):
-- **Batdongsan.com.vn**: «Lịch sử giá» 5 năm theo dự án/khu vực trong từng tin; báo cáo quý dạng PDF có lợi suất cho
+- **S07 (cổng rao)**: «Lịch sử giá» 5 năm theo dự án/khu vực trong từng tin; báo cáo quý dạng PDF có lợi suất cho
   thuê theo tỉnh (2024: Bình Dương ~4,7%, Hà Nội 3,7%, TP.HCM 3,6%). **Không có bản đồ so sánh tương tác.**
 - **OneHousing**: định giá và so sánh **dự án** (2022); còn hoạt động hay không — chưa xác minh.
 - **Guland**: «bản đồ giá» theo thửa/điểm, quy hoạch; không phải bảng màu theo phường.
@@ -295,12 +295,12 @@ gọn: «The value is convenience, not exclusivity» (BT).
 | Lăng kính | Chỉ số VN | Nguồn trong One Invest | Trạng thái (đọc số ở ROADMAP §2.5) |
 |---|---|---|---|
 | Dòng tiền — thuê dài | lợi suất thuê thô theo phường/loại căn | tin bán + tin thuê công khai (P2) | Có giá bán dày ở Hà Nội; tiền thuê dài cần đủ mẫu theo phường (ngưỡng mẫu: câu hỏi mở ở `invest-portal-full-picture-spec.md`) |
-| Dòng tiền — thuê ngắn | doanh thu/giá | listing thuê ngắn tự thu (S01), Hà Nội + TP.HCM | Có; không dùng số AirDNA trên cổng Invest (luật 5) |
+| Dòng tiền — thuê ngắn | doanh thu/giá | listing thuê ngắn tự thu (S01), Hà Nội + TP.HCM | Có; không dùng số S02 trên cổng Invest (luật 5) |
 | Tăng giá | Δ giá/m² trung vị theo quý | chuỗi thời gian từ tin rao | Chưa đủ dài cho «so cùng kỳ năm trước» — phải nói rõ «chưa đủ dữ liệu» thay vì hiện số |
 | Chi trả | giá căn trung vị / thu nhập hộ năm | thu nhập bình quân theo tỉnh từ Tổng cục Thống kê | **Cần kiểm**: số theo 34 tỉnh mới sau sáp nhập 2025 — có thể phải gộp lại từ tỉnh cũ qua bảng chuyển đổi |
 | Sức cầu | dân số tăng, lao động | Tổng cục Thống kê theo tỉnh | Cần kiểm độ tươi và cấp tỉnh mới |
 | Chi phí thật | thuế cho thuê, phí quản lý, phí dịch vụ toà | luật thuế + dữ liệu toà/dự án | Chưa có; đây là câu hỏi người dùng hỏi nhiều nhất ở Mỹ (§3) |
-| Luật | quy định cho thuê ngắn hạn ở chung cư theo địa phương | biên tập tay | Chưa có; AirDNA cho thấy đưa luật vào điểm là khác biệt |
+| Luật | quy định cho thuê ngắn hạn ở chung cư theo địa phương | biên tập tay | Chưa có; S02 cho thấy đưa luật vào điểm là khác biệt |
 
 ### 8.3 Phiên bản tối thiểu đề xuất (SL — cần duyệt trước khi thành đặc tả)
 
@@ -333,30 +333,30 @@ xem tin (chuyển giai đoạn 1 → 2); tỉ lệ ô số có đủ mẫu; đ�
 | L2 | Công thức Affordability của BP | Không chặn — ta dùng công thức riêng, công khai |
 | L3 | Tiếng nói người dùng trên Reddit | Công cụ tìm không vào được; nếu cần, đọc tay |
 | L4 | Thu nhập, dân số theo 34 tỉnh mới — có số chính thức chưa | Kiểm khi viết đặc tả lăng kính «chi trả» |
-| L5 | Công cụ VN (Batdongsan, OneHousing, Guland) — dùng thử thật | Một buổi dùng thử, chụp màn hình |
+| L5 | Công cụ VN (S07, OneHousing, Guland) — dùng thử thật | Một buổi dùng thử, chụp màn hình |
 | L6 | Bộ JSON đầy đủ 400 vùng của BP | Không cần cho mục đích sản phẩm |
 
 ## Nguồn chính
 
 - Trang BP (QS): `https://www.biggerpockets.com/markets`, `/markets/atlanta-sandy-springs-alpharetta-ga`,
   `/markets/states/ga` — bản thu 03/11 trong `research-local/bp-market-finder-2026-11-03/`.
-- Ra mắt (CT): https://www.businesswire.com/news/home/20240807232251/en/ ·
+- Ra mắt (CT): https://www.businesswire.com/news/home/20240807232251/en/
   https://www.biggerpockets.com/blog/a-new-chapter-at-biggerpockets
-- Giá Pro (BT): https://www.kdsdevelopment.net/articles/biggerpockets-review-2026-is-pro-worth-it ·
+- Giá Pro (BT): https://www.kdsdevelopment.net/articles/biggerpockets-review-2026-is-pro-worth-it
   https://www.globenewswire.com/news-release/2026/03/03/3248432/0/en/
 - Review dữ liệu (BT): https://firmtools.ai/biggerpockets-pro/
 - Đối chiếu Atlanta (BT): https://www.zillow.com/atlanta-ga/home-values/ · Redfin Atlanta housing market
-- Diễn đàn BP (BT): https://biggerpockets.com/forums/921/topics/1204990-data-tools-to-find-and-compare-markets ·
-  https://www.biggerpockets.com/forums/921/topics/1227945-what-happened-to-the-market-finder-map ·
-  https://biggerpockets.com/forums/311/topics/1113855-ready-to-invest-out-of-state-for-cash-flow-landlord-friendly-or-not ·
+- Diễn đàn BP (BT): https://biggerpockets.com/forums/921/topics/1204990-data-tools-to-find-and-compare-markets
+  https://www.biggerpockets.com/forums/921/topics/1227945-what-happened-to-the-market-finder-map
+  https://biggerpockets.com/forums/311/topics/1113855-ready-to-invest-out-of-state-for-cash-flow-landlord-friendly-or-not
   https://www.biggerpockets.com/forums/12/topics/685786-memphis-cash-flow-doesnt-seem-to-be-that-great-so-why-memphis
 - Khung đội Core 4 (CT): https://www.biggerpockets.com/blog/core-four-real-estate-team
 - Top 100 Cash Flow Markets (CT): https://www.biggerpockets.com/resources/market-data/2024-top-100-cash-flow-markets
-- Đối thủ (BT): https://help.mashvisor.com/en/articles/7177562-understanding-the-market-finder-heatmap ·
-  https://help.airdna.co/en/articles/11954306-navigating-the-new-airdna-market-explorer-platform ·
-  https://learn.roofstock.com/neighborhood-rating · https://www.zillow.com/research/data/ ·
-  https://www.rentometer.com/products-and-pricing · https://website.awning.com/airbnb-market-data
-- Việt Nam (BT): https://research.batdongsan.com.vn/images/report/bds/1-Bao-cao-TT-BDS_Q3.2024.pdf ·
-  https://wiki.batdongsan.com.vn/tin-tuc/xem-lich-su-gia-de-dang-voi-tinh-nang-moi-tren-batdongsan.com.vn-783040 ·
-  https://vneconomy.vn/onehousing-cong-cu-dinh-gia-nha-thuc-day-minh-bach-hoa-thi-truong-bat-dong-san.htm ·
+- Đối thủ (BT): https://help.mashvisor.com/en/articles/7177562-understanding-the-market-finder-heatmap
+  
+  https://learn.roofstock.com/neighborhood-rating · https://www.zillow.com/research/data/
+  https://www.rentometer.com/products-and-pricing
+- Việt Nam (BT): 
+  
+  https://vneconomy.vn/onehousing-cong-cu-dinh-gia-nha-thuc-day-minh-bach-hoa-thi-truong-bat-dong-san.htm
   https://guland.vn/ban-do-gia

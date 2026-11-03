@@ -35,6 +35,8 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
+    ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
@@ -523,6 +525,9 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    geg_selftest: "bash .claude/hooks/tests/guard-edits.selftest.sh"   # guard-edits-goc-theo-tep E1–E5, E8
+    geg_dot_bien: "bash _acceptance/guard-edits-goc-theo-tep/probes/dot-bien.sh"   # guard-edits-goc-theo-tep E6 — bản cũ và bốn đột biến đỏ đúng ca ghim
+    geg_pham_vi: "bash _acceptance/guard-edits-goc-theo-tep/probes/pham-vi.sh"   # guard-edits-goc-theo-tep E7
     # do-nen-hieu-nang — chỉ đọc DB local (pg_settings, pg_stat_*); đo trang chạy next start cổng 3463 trên build prod
     dn_db: "node _acceptance/do-nen-hieu-nang/probes/db.mjs"
     dn_trang: "bash _acceptance/do-nen-hieu-nang/probes/trang.sh"
@@ -659,9 +664,16 @@ executors:
     s08n_rong: "bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"
     s08n_cac: "bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"
     s05k_unit: "node --test scripts/s05-khoa-nap.test.mjs"
+    s03na_unit: "node --test scripts/nap-argmax.test.mjs"   # s03-nap-argmax: liệt kê bản thu vượt ARG_MAX
     s05k_hoiquy: "node --test scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"
     ctm_unit: "node --test pipeline/scripts/chotot-thieu-moc.test.mjs"
     ctm_lui: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"
+    # hop-dong-nguoi-ban-s06 — bộ nạp giữ số và tên, bộ thu gọi mỗi tài khoản một lần; không gọi nguồn
+    hdnb_nap: "cd pipeline && node --test scripts/importer-schema-v5.test.mjs"
+    hdnb_viec: "cd pipeline && node --test scripts/thu-so-s06-viec.test.mjs"
+    hdnb_duong_ra: "cd pipeline && node --test scripts/thu-so-s06.test.mjs"
+    hdnb_e2e: "cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"   # mở Chrome ngoài màn hình, máy chủ giả local
+    hdnb_luat_cu: "cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
