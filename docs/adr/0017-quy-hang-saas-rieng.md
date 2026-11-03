@@ -1,7 +1,7 @@
 # ADR-0017: Quỹ hàng là sản phẩm SaaS riêng — Invest cấp dữ liệu qua một kết nối một chiều có thoả thuận
 
 Ngày: 2026-10-29 · Trạng thái: **accepted** (Mạnh chốt 29/10: chỗ đứng «Chốt app riêng»; nguyên tắc SaaS «Chốt, viết
-ADR») · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first), ADR-0013 và ADR-0016 (căn, danh bạ vật thể), ADR-0014 và
+ADR») · Sửa đổi 03/11: §6 (mở «xác nhận danh mục») · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first), ADR-0013 và ADR-0016 (căn, danh bạ vật thể), ADR-0014 và
 ADR-0015 (cloud không chọc vào máy local), `docs/architecture/portals.md`, ROADMAP §3 mục 13 và 15
 
 ## Bối cảnh
@@ -95,6 +95,11 @@ Quỹ hàng → Invest hiện **tắt**. Ứng viên về sau: giá chốt (ngu�
 một quyết định kinh doanh có điều khoản với sàn; Invest nhận qua cửa kiểm của chính nó — thành phát biểu kèm bằng
 chứng (ADR-0013), qua người duyệt hoặc luật xác định (luật 7), không ghi thẳng vào danh bạ. Lớp «nguồn» không bao giờ
 sang Invest.
+
+**Sửa đổi 03/11 (Mạnh duyệt, ROADMAP §3 mục 28):** mở một loại kết nối chiều ngược, **«xác nhận danh mục»**, bật theo thoả
+thuận từng sàn, chỉ lớp danh mục (khung toà, thuộc tính căn, báo sai), kèm mã công ty và mã người mờ. Quỹ hàng giữ sự kiện ở
+hộp thư đi; **máy thu Invest kéo về** bằng token máy, nên Invest vẫn không có cửa vào. Giá chốt và mọi chiều ngược khác vẫn
+tắt. Tra căn khi giao dịch thuộc Quỹ hàng. Trước sàn đầu tiên ngoài đội vẫn rà pháp lý như mục «Còn mở».
 
 ## Hệ quả
 
