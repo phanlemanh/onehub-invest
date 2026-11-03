@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b7bde4aeed1ff07b63c58c1a0003752de8b16b61
+verified_commit: 47085d64b7a3b18a89798f9abe9b7b8195f6144c
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -225,3 +225,7 @@ sha: 7f198c7a53a774e49f0a0a095431521fd615b22c · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-02, do hoá cũ do #274 đổi deals.ts và test sau khi xác minh, phát hiện lúc gộp main cho hồ sơ nghiệm thu
 run_id: repin-20261102T220455Z-57881
 sha: b7bde4aeed1ff07b63c58c1a0003752de8b16b61 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · AC không có chốt máy: AC-10
+
+### Re-pin lần 3 — 2026-11-03, do công cụ đo chu.mjs đổi theo khuôn bảng của CG1, gộp main vào nhánh
+run_id: repin-20261103T155534Z-93110
+sha: 47085d64b7a3b18a89798f9abe9b7b8195f6144c · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · diff chạm vật đo ngoài làn máy: E10, E12 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
