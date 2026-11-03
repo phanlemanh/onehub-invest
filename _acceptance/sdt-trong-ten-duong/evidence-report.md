@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: sdt-trong-ten-duong
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 36fc63c88b6309c1f15688f20fee318f19c78742
+verified_commit: 955f139a86313a2c3556aa9a4999618e58a4f49f
 human_signoff:
 ---
 
 # Evidence Report: sdt-trong-ten-duong
-
-Vòng 3. Sáu eval của tính năng đều xanh, nhưng lệnh suite `cd pipeline && npm test` đỏ và không gắn eval nào, nên tổng thể là REJECT (failed_evals để trống vì không eval nào đỏ).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -27,95 +25,100 @@ Vòng 3. Sáu eval của tính năng đều xanh, nhưng lệnh suite `cd pipeli
 ## Evidence
 
 - eval: E1
-  run_id: minted-sdt-trong-ten-duong-E1-r3
+  run_id: minted-sdt-trong-ten-duong-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.sdt_doc
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
-    ℹ duration_ms 61.222041
+    cmd: node --test pipeline/scripts/sdt-trong-duong.test.mjs pipeline/scripts/dac-trung-s06.test.mjs
+    ℹ duration_ms 46.949875
 
 - eval: E2
-  run_id: minted-sdt-trong-ten-duong-E2-r3
+  run_id: minted-sdt-trong-ten-duong-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sdt_db
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
+    cmd: bash db/db-thu.sh oneinvest_sdt && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sdt node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_sdt --xoa; exit $r
     ℹ todo 0
-    ℹ duration_ms 94440.006292
+    ℹ duration_ms 30804.97675
 
 - eval: E3
-  run_id: minted-sdt-trong-ten-duong-E3-r3
+  run_id: minted-sdt-trong-ten-duong-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sdt_db
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
+    cùng lệnh với E2 (một lượt chạy bộ itest phủ E2, E3, E4, E6)
     ℹ todo 0
-    ℹ duration_ms 94440.006292
+    ℹ duration_ms 30804.97675
 
 - eval: E4
-  run_id: minted-sdt-trong-ten-duong-E4-r3
+  run_id: minted-sdt-trong-ten-duong-E4-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sdt_db
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
+    cùng lệnh với E2 (một lượt chạy bộ itest phủ E2, E3, E4, E6)
     ℹ todo 0
-    ℹ duration_ms 94440.006292
+    ℹ duration_ms 30804.97675
 
 - eval: E5
-  run_id: 277b8d940bad
+  run_id: minted-sdt-trong-ten-duong-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sdt_do
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
+    cmd: cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sdt_do node scripts/do-sdt-trong-duong.mjs
     dòng in chứa dãy số của lượt này: 0
 
 - eval: E6
-  run_id: minted-sdt-trong-ten-duong-E6-r3
+  run_id: minted-sdt-trong-ten-duong-E6-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.sdt_db
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
   output: |
+    cùng lệnh với E2 (một lượt chạy bộ itest phủ E2, E3, E4, E6)
     ℹ todo 0
-    ℹ duration_ms 94440.006292
+    ℹ duration_ms 30804.97675
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__bb6271-r3
+  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__bb6271-r4
   exit_code: 0
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-sdt-trong-ten-duong-SUITE-lint-r3
+  run_id: minted-sdt-trong-ten-duong-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
 
 - cmd: cd app && npm test
-  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__bd9a35-r3
+  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__bd9a35-r4
   exit_code: 0
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__13563d-r3
-  exit_code: 1
-  verified_at: 2026-11-03T10:27:19Z
-  ghi chú: lệnh không gắn eval nào. Hai ca đỏ. Ca `GS-AC-3a chuyển ẩn số` ở scripts/gan-sdt-s06.test.mjs không lấy được khoá bảng `public.sale_offer_records` (mã 55P03, lỗi khoá, qua khoaNguon trong lib/luoc-do-rieng.mjs). Ca `AC-4 rút offer giả qua đối soát` ở scripts/test-posts.test.mjs quá hạn 300000ms. Cả hai nằm ngoài các tệp kiểm của tính năng này.
+  run_id: minted-sdt-trong-ten-duong-SUITE-npm_test__13563d-r4
+  exit_code: 0
+  verified_at: 2026-11-03T12:19:42Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-sdt-trong-ten-duong-SUITE-test_lint_rules-r3
+  run_id: minted-sdt-trong-ten-duong-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-sdt-trong-ten-duong-SUITE-node_scripts_check_portal_compliance_mjs-r3
+  run_id: minted-sdt-trong-ten-duong-SUITE-node_scripts_check_portal_compliance_mjs-r4
   exit_code: 0
-  verified_at: 2026-11-03T10:27:19Z
+  verified_at: 2026-11-03T12:19:42Z
 
 ## Known limits
 
@@ -125,25 +128,20 @@ Vòng 3. Sáu eval của tính năng đều xanh, nhưng lệnh suite `cd pipeli
 
 baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «This session is isolated in the worktree /Users/manhphan/dev/onehub-invest/.claude/worktrees/the-duyet-nguoi-nhieu-nhieu, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated »
 
-Baseline không đo ở vòng này nên không xác định được eval nào không phân biệt. Mọi field baseline ghi n-a.
-
-none — moi eval feature deu red tren baseline (co phan biet) không đo được ở vòng này vì baseline bị chặn hạ tầng.
-
 Baseline khong do:
 - node --test pipeline/scripts/sdt-trong-duong.test.mjs pipeline/scripts/dac-trung-s06.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «This session is isolated in the worktree /Users/manhphan/dev/onehub-invest/.claude/worktrees/the-duyet-nguoi-nhieu-nhieu, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated »
 - bash db/db-thu.sh oneinvest_sdt && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sdt node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_sdt --xoa; exit $r: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «This session is isolated in the worktree /Users/manhphan/dev/onehub-invest/.claude/worktrees/the-duyet-nguoi-nhieu-nhieu, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated »
 - cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sdt_do node scripts/do-sdt-trong-duong.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «This session is isolated in the worktree /Users/manhphan/dev/onehub-invest/.claude/worktrees/the-duyet-nguoi-nhieu-nhieu, but this command is too complex to verify that it stays inside the worktree. Refusing to run it — a worktree-isolated »
 
-## Judge
-
-Không có panel judge ở vòng này.
+Eval không-phân-biệt: none — baseline không đo được ở round này nên danh sách này không xác định được; không eval nào bị đánh dấu xanh trên cả hai phía.
 
 ## Variance
 
-none — every multi-run eval is uniform (mọi eval chạy một lần, xác định, không phương sai).
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: lượt chấm 1 trả về, sửa che số trong nhật ký căn cũ và siết thước đo (commit e503b444).
-Round 2: lượt chấm 2 trả về, sửa thước số trong tên đường chạy hai bước (commit 36fc63c8).
-Round 3: sáu eval xanh nhưng lệnh suite `cd pipeline && npm test` đỏ (hai ca không thuộc tệp kiểm của tính năng: lỗi khoá bảng và quá hạn). Verdict REJECT, trả về cho người quyết.
+Round 1: lượt chấm đầu phát hiện lỗi che số trong nhật ký căn cũ và thước đo chưa chặt — đã sửa, trả về triển khai.
+Round 2: lượt chấm hai phát hiện lỗi ở thước chạy hai bước — đã sửa, trả về triển khai.
+Round 3: REJECT ở trần lượt — đã sửa thước từ chối DB chung khi có cờ chạy kèm cờ chỉ đọc.
+Round 4: E1, E2, E3, E4, E5, E6 đều xanh; lệnh suite xanh; không có mục judgment, không có phương sai.
