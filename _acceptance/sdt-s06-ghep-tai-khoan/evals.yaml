@@ -1,0 +1,76 @@
+schema_version: 1
+feature_slug: sdt-s06-ghep-tai-khoan
+# Ca DB «GS-AC-n» ở pipeline/scripts/gan-sdt-s06.test.mjs: BEGIN…ROLLBACK trên lược đồ riêng (lib/luoc-do-rieng.mjs), số bịa. Mỗi kiểm có ca đỏ trên bản đột biến
+# cùng fixture, ghim thông điệp. Thước dữ liệu thật: `node pipeline/gan-sdt-s06.mjs --thu`.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [db/migrations/068_*.sql, pipeline/lib/nap-068.mjs, pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-1 xanh trên fixture ghi bằng ganSdtS06 thật: áp 068 hai lần, 0 dòng tin đổi, sau phân xử khoá seller_phone, offer_status còn, mọi khoá và cột khác giống hệt bản trước 068 trên cùng tin, lượt hai offers_changed = 0, tin không khoá không sinh khoá. Chiều đỏ cùng fixture: hàm trước 068 làm mất khoá, ghim MAT-NGUON-GOC-SDT; định nghĩa không có mốc thì 068 RAISE, ghim MOC-068."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-2 xanh: sinh ô bằng tích Đề-các bốn trục, assert số ô = 88 và 8 ô gạch đúng danh sách, kỳ vọng từng ô đọc từ bảng L1-L9 viết tay trong test; mỗi ô assert số, băm, tier, method, rule_id; tu_tin của mọi số ghép là dòng stg cùng tài khoản mang đúng số. Chiều đỏ cùng fixture: bỏ điều kiện ẩn số, ghim AN-SO-BI-GHEP; n >= 1 thay n = 1, ghim HAI-SO-BI-GHEP; tu_tin đổi sang max của tin khác tài khoản, ghim TU-TIN-LECH."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; hai ca riêng GS-AC-3a (chuyển ẩn số) và GS-AC-3b (thêm số thứ hai) đều xanh: lượt một số ghép có mặt, lượt hai rút số, băm, khoá xuất xứ; tin trực tiếp và không rõ gốc giữ nguyên trong cả hai ca. Chiều đỏ riêng từng ca: đột biến bỏ bước rút ẩn số, ghim CON-SO-GHEP-SAU-AN; bỏ bước rút hai số, ghim CON-SO-GHEP-HAI-SO."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/transform-chotot.mjs, pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-4 xanh, chuỗi qua runTransformChotot thật: lượt một có số, lượt hai không đổi stg thì gan trả doi = 0, xoá seller.phone rồi lượt ba thì số, băm, xuất xứ từng tin không đổi. Dòng stg dạng hợp đồng v5. Chiều đỏ: đột biến gán null khi stg trống, ghim MAT-SO-KHI-STG-TRONG."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-5 xanh: số sai dạng không vào tin, tài khoản một số đúng cộng một số sai vẫn đếm một số, kết quả sai_e164 đúng số dòng; băm so với node:crypto trên số E.164. Chiều đỏ: đột biến bỏ lọc dạng, ghim SAI-E164-VAO-TIN."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/transform-chotot.mjs, pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-6 xanh: runTransformChotot khi hàm có phần giữ ra tin có số; khi hàm chưa có, kể cả sau khi áp lại bản hàm không có phần giữ, ra 0 số, log chứa CHUA-AP-068, không ném. Cùng fixture, hai nhánh chỉ khác nhau ở một lần áp 068."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca GS-AC-7 xanh: tin S03 cùng khoá gốc giữ nguyên, tin S06 đã nghỉ có số, doSdtS06 tách sống và nghỉ. Chiều đỏ: đột biến bỏ lọc nguồn, ghim DUNG-NGUON-KHAC."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gs_thu
+    paths: [pipeline/gan-sdt-s06.mjs]
+    expected: "exit 0 trên DB local; in da_ap_068=true, hai dòng bán, thuê kèm truoc, sau, truc_tiep, ghep; tai_khoan_hai_so; ghep > 0 và bằng câu đếm độc lập trên stg ngay trong lượt; an_so_bi_ghep=0; sai_e164=0; ghep_lech_tu_tin=0; md5 cột trước và sau ROLLBACK bằng nhau; đầu ra không khớp mẫu +84 hay 0 mười chữ số. Chiều đỏ ở ca GS-AC-8 cùng hàm: tin ẩn số mang số ghép thì kiemBatBien báo AN-SO-BI-GHEP, thoát 1; câu đếm lệch báo DEM-LECH; chuỗi có SĐT đi qua bộ in thì báo RO-SO; COMMIT thay ROLLBACK làm md5 lệch, báo DB-DOI."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.gs_ranh_gioi
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; test sync hiện có xanh, diff so nhánh chính không chạm sync-cloud, push-ops-facts, app/, data-api/, collector/, collect-*, import-*. Chiều đỏ: tệp giả trong danh sách diff làm lệnh thoát 1, ghim tên tệp."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

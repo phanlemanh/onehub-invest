@@ -1,0 +1,115 @@
+{
+ "feature_plain": "Tin rao S06 có số điện thoại người bán: tin có số riêng giữ số đó, tin khác của cùng tài khoản nhận số của tài khoản, tin người bán đã ẩn số thì không nhận. Đo trên dữ liệu hôm nay: tin bán từ 0 lên 4.398 trên 20.873, tin thuê từ 0 lên 7.127 trên 27.626.",
+ "will_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ cho kết quả đúng ở cả 88 tình huống viết sẵn trong bảng, gồm bốn ca chính: có số trực tiếp, tài khoản một số, tài khoản hai số, tin ẩn số."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ rút số ghép khi tin chuyển sang ẩn số hoặc tài khoản có thêm số thứ hai, không đụng số thu trực tiếp (theo Hỏi-1)."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ có một lệnh đo thử số trước và sau, riêng bán và thuê, không ghi gì vào dữ liệu và không in số điện thoại nào."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ KHÔNG mất dấu số thu trực tiếp hay ghép qua các lượt sắp xếp lại dữ liệu tin (migration 068)."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ KHÔNG làm tin nào mất số khi chạy lại, kể cả khi lượt thu thường xoá số ở tầng dữ liệu thô."
+  },
+  {
+   "id": "AC-5",
+   "p": "Chặn số sai định dạng khỏi tin, và đếm chúng trong số đo."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ KHÔNG ghi số khi máy thu chưa có phần giữ dấu xuất xứ, và báo có tên."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ KHÔNG đụng tin của nguồn khác; tin đã nghỉ vẫn được gán số."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ KHÔNG đổi đường đẩy dữ liệu lên cloud và không đụng giao diện; riêng mã băm của số vẫn lên cloud sau lần ghi thật đầu tiên, số gốc ở lại máy (câu thứ tự chạy thật)."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG đưa số gốc lên cloud, không hiển thị trên Invest hay Ops, chưa có nhãn «chưa xác minh»."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG chạy bước dựng danh bạ, nên số S06 chưa hiện trong danh sách người bán."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG ghép số cho các nguồn khác."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG gọi nguồn S06, không chạy bộ thu, không sửa bước nạp dữ liệu (việc của ZCode)."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG ghi thật vào dữ liệu máy thu trước khi anh ký; số «sau» trong vòng này đo rồi hoàn lại."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Tin có số riêng hợp lệ, không có số, hoặc số sai dạng: đủ ba trạng thái đo được ở 51.994 dòng dữ liệu thô."
+  },
+  {
+   "i": 1,
+   "p": "Tin ẩn số hay không: cờ do nguồn gắn ở lượt thu danh sách, trước khi gọi số, nên tin không có cờ đúng là chưa bị ẩn."
+  },
+  {
+   "i": 2,
+   "p": "Tài khoản không có mã, không có số, một số, hoặc từ hai số: hiện chưa có tài khoản hai số nào, ca này chỉ kiểm được trên dữ liệu giả."
+  },
+  {
+   "i": 3,
+   "p": "Tin đang trống, đang có số trực tiếp, số ghép, hay số không rõ gốc: hôm nay tin S06 trống hết, ba ca sau phát sinh từ lượt thứ hai trở đi."
+  },
+  {
+   "i": 4,
+   "p": "Chạy lần đầu, chạy lại, sau lượt sắp xếp lại, và khi dữ liệu thô mất số: chạy qua đúng bước xử lý S06 thật (AC-1, AC-4)."
+  },
+  {
+   "i": 5,
+   "p": "88 tình huống đều có kết quả viết trước; 8 ô bị gạch vì tự mâu thuẫn, có ghi lý do."
+  },
+  {
+   "i": 6,
+   "p": "Để sau: đổi số khi tài khoản đổi số thật và kiểm số còn gọi được. Không làm: suy số từ tên người bán, vì tên trùng nhau."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Bản đầu không nói cho anh biết mã băm sẽ lên cloud và chưa có câu hỏi trong hợp đồng. Đã thêm mục ba câu chờ anh quyết, kèm lối khác và sao lưu trước khi áp."
+  },
+  {
+   "i": 1,
+   "p": "Phép đo thật có thể xanh dù không gán được tin nào. Đã bắt buộc số ghép lớn hơn 0 và khớp một câu đếm độc lập."
+  },
+  {
+   "i": 2,
+   "p": "Chưa kiểm chuỗi chạy thật nhiều lượt, và bản đầu chép thân hàm có thể đè việc của nhánh tầng, hướng. Đã thêm ca chạy nhiều lượt và đổi sang vá hàm đang chạy."
+  },
+  {
+   "i": 3,
+   "p": "Bảng tình huống chưa có thật và hai ô chưa quyết. Đã viết đủ 88 ô: số riêng thắng số cũ, nhưng không đè số không rõ gốc."
+  },
+  {
+   "i": 4,
+   "p": "Lo tin không có cờ ẩn số thật ra là chưa biết. Đã đo: cờ có từ trước khi gọi số; mã tài khoản trống có 0 dòng và được thêm vào bảng."
+  }
+ ]
+}
