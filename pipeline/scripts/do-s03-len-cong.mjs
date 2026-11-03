@@ -306,6 +306,11 @@ async function doLenCong() {
 // ---- E13: ma trận bên đọc ----
 const MAU_BEN_DOC = /sale_offers|market_asset_stats|property_type|field_provenance/;
 const PHAM_VI_DOC = ["pipeline", "app/src", "data-api/src", "agent/src", "db/migrations"];
+// Tệp `.sl1-*` chưa theo dõi là bản đột biến của bài kiểm đang chạy song song (E9, E2), tự xoá khi xong; tệp đã commit vẫn quét.
+const TEP_TAM_DO = /(^|\/)\.sl1-[^/]*$/;
+export const boTepTam = (ds) => ds.filter((f) => !TEP_TAM_DO.test(f));
+const dongGit = (...args) => git(...args).split("\n").filter(Boolean);
+const chuaTheoDoi = (...duong) => boTepTam(dongGit("ls-files", "-o", "--exclude-standard", ...duong));
 export function kiemBenDoc(tepCo, maTran) {
   const co = new Set(tepCo);
   const bietHet = new Set(Object.values(maTran).flat());
@@ -315,13 +320,15 @@ export function kiemBenDoc(tepCo, maTran) {
   return loi;
 }
 function benDoc() {
-  const ds = git("ls-files", "-co", "--exclude-standard", ...PHAM_VI_DOC).split("\n").filter(Boolean)
+  const ds = [...dongGit("ls-files", "-c", ...PHAM_VI_DOC), ...chuaTheoDoi(...PHAM_VI_DOC)]
     .filter((f) => !f.includes("/node_modules/") && existsSync(join(GOC, f)))
     .filter((f) => { try { return MAU_BEN_DOC.test(readFileSync(join(GOC, f), "utf8")); } catch { return false; } });
   const { ket_luan: maTran } = JSON.parse(readFileSync(TEP_BEN_DOC, "utf8"));
   const loi = kiemBenDoc(ds, maTran);
   if (kiemBenDoc([...ds, "pipeline/tep-gia.mjs"], maTran).length !== loi.length + 1) throw new Error("SL1-AC-3: đối chứng thêm tệp giả không đỏ");
-  in_(`E13 quét ${ds.length} tệp; đối chứng thêm tệp giả ra đỏ`);
+  const tamGia = "app/src/app/api/v1/offers/.sl1-route-1-gia.ts";
+  if (kiemBenDoc(boTepTam([...ds, tamGia]), maTran).length !== loi.length) throw new Error("SL1-AC-3: đối chứng tệp tạm không được lọc");
+  in_(`E13 quét ${ds.length} tệp; đối chứng thêm tệp giả ra đỏ, tệp tạm đột biến được lọc`);
   for (const [k, v] of Object.entries(maTran)) in_(`E13 ${v.length} tệp: ${k}`);
   if (loi.length) throw new Error(loi.join("\n"));
 }
@@ -351,7 +358,7 @@ function dongThem(base) {
     if (m) { so = Number(m[1]); continue; }
     if (d.startsWith("+") && tep) out.push({ tep, so: so++, dong: d.slice(1) });
   }
-  for (const f of git("ls-files", "-o", "--exclude-standard").split("\n").filter(Boolean)) {
+  for (const f of chuaTheoDoi()) {
     readFileSync(join(GOC, f), "utf8").split("\n").forEach((dong, i) => out.push({ tep: f, so: i + 1, dong }));
   }
   return out;
@@ -359,7 +366,7 @@ function dongThem(base) {
 async function ranh() {
   canDbThu();
   const base = git("merge-base", "HEAD", "origin/main").trim();
-  const doi = [...new Set(git("diff", "--name-only", base).split("\n").filter(Boolean).concat(git("ls-files", "-o", "--exclude-standard").split("\n").filter(Boolean)))];
+  const doi = [...new Set(git("diff", "--name-only", base).split("\n").filter(Boolean).concat(chuaTheoDoi()))];
   const loi = [];
   for (const f of doi) if (TEP_CAM.some((r) => r.test(f))) loi.push(`SL1-AC-10 tệp cấm đổi: ${f}`);
   if (spawnSync("git", ["-C", GOC, "check-ignore", "-q", "research-local/s03-len-cong/so-nhom-nhap.json"]).status !== 0) loi.push("SL1-AC-10 sổ nháp không bị ignore");

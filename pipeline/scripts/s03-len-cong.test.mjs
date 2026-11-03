@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import { docLoaiHinh, ganKhuVuc, gopKhuVuc, loaiHinhNhom, mucTinCay } from "../transform-zalo.mjs";
-import { saiNang, soTin } from "./do-s03-len-cong.mjs";
+import { boTepTam, kiemBenDoc, saiNang, soTin } from "./do-s03-len-cong.mjs";
 
 const TZ = join(import.meta.dirname, "../transform-zalo.mjs");
 const PH = { id: "vn-hanoi-a", slug: "a" };
@@ -61,6 +61,14 @@ test("SL1-AC-7 thước tập tin đỏ khi đổi giá, diện tích, loại ti
   }
   assert.equal(soTin(goc, goc.slice(1)).thieu, 1);
   assert.equal(soTin(goc.slice(1), goc).them, 1);
+});
+
+test("SL1-AC-3 quét bên đọc bỏ tệp tạm đột biến, tệp lạ thường vẫn đỏ", () => {
+  const tam = ["app/src/app/api/v1/offers/.sl1-route-50624-source_code.ts", "pipeline/.sl1-mut-1.mjs", "agent/src/enrich/.sl1-run-1-2.ts"];
+  assert.deepEqual(boTepTam(tam), []);
+  const thuong = ["pipeline/tep-la.mjs", "pipeline/.sl1-mut/tep-trong-thu-muc.mjs", ".env.sl1-x"];
+  assert.deepEqual(boTepTam(thuong), thuong);
+  assert.deepEqual(kiemBenDoc(boTepTam([...tam, "pipeline/tep-la.mjs"]), {}), ["SL1-AC-3 tệp lạ, chưa có kết luận trong ma trận: pipeline/tep-la.mjs"]);
 });
 
 test("SL1-AC-9 sai nặng: từng lý do, trường trống không tính", () => {
