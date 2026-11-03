@@ -2,6 +2,7 @@
   "_ghi_chu": "Ma trận viết tay trước khi quét. Mỗi tệp khớp mẫu sale_offers, market_asset_stats, property_type, field_provenance có đúng một kết luận; tệp lạ làm do-s03-len-cong --ben-doc đỏ.",
   "ket_luan": {
     "Sửa trong hàng này, có ca đỏ riêng (AC-1, 2, 3, 5, 8, 11, 12)": [
+      "agent/src/enrich/doc-toan-bo.ts",
       "agent/src/enrich/route.ts",
       "agent/src/enrich/run.ts",
       "agent/src/tools/native.ts",

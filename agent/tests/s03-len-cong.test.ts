@@ -9,6 +9,7 @@ import pg from "pg";
 
 import { apNguong } from "../src/agents/judge-entity.js";
 import type { ContextResult } from "../src/agents/context-resolver.js";
+import { chonTin, quyetTin } from "../src/enrich/doc-toan-bo.js";
 import { runEnrich, type LlmFn } from "../src/enrich/run.js";
 import { queryPair } from "../src/tools/native.js";
 import { insertOffer, insertProposal } from "./helpers/db.js";
@@ -105,6 +106,27 @@ async function luongEnrich(c: pg.Client, chay: Chay) {
 
 test("SL1-AC-11 enrich chọn tin suy, LLM đề xuất, E1 không áp thẳng, observed giữ", { skip, timeout: 120_000 }, async () => {
   await withTx((c) => luongEnrich(c, runEnrich));
+});
+
+test("SL1-AC-11 đọc toàn bộ chữ: ô suy coi là trống, LLM đề xuất được, E1 không áp, observed giữ", { skip, timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    const suy = await tin(c, { suy: "apartment" });
+    const quanSat = await tin(c, { quanSat: "apartment" });
+    const ds = await chonTin(c);
+    const quyet = (id: string, e1Loai: string | null, llm: string | null) => {
+      const t = ds.find((x) => x.offer_id === id);
+      assert.ok(t, "SL1-AC-11 bộ chọn đọc toàn bộ bỏ sót tin");
+      return quyetTin({
+        hienTai: t, e1Loai, intent: "offer", quoteOk: true, quoteYDinh: "Bán nhà", chuDaGat: "Bán nhà riêng 60m2", chungBai: false, held: new Set(),
+        them: llm ? { property_type: llm, quote_loai: "Bán nhà riêng", price_vnd: null, quote_gia: null, area_m2: null, quote_dt: null, bedrooms: null, bathrooms: null, street: null, block: null } : null,
+      }).de_xuat;
+    };
+    const coLlm = quyet(suy.id, "land", "house");
+    assert.deepEqual(coLlm.map((d) => d.source), ["e2_llm"], "SL1-AC-11 ô suy phải nhận đề xuất LLM, E1 không lên ô này");
+    assert.equal(coLlm[0].value, "house", "SL1-AC-11 giá trị đề xuất");
+    assert.equal(quyet(suy.id, "apartment", null).length, 0, "SL1-AC-11 E1 áp thẳng lên ô suy");
+    assert.equal(quyet(quanSat.id, null, "house").length, 0, "SL1-AC-11 tin observed mất luật giá trị cũ thắng");
+  });
 });
 
 test("SL1-AC-11 hoàn tác ba ca: cột về giá trị suy, phát biểu suy còn sống", { skip, timeout: 120_000 }, async () => {

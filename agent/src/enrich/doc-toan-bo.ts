@@ -129,7 +129,7 @@ const lech = (ai: number, boDoc: number, nguong: number) => Math.abs(ai - boDoc)
  * thẻ kể cả khi trích dẫn không đạt); AI một mình thì theo trích dẫn. AI nói không phải tin rao thì không cột nào của tin đổi (AC-5).
  */
 export function quyetTin(i: {
-  hienTai: { property_type: string | null; price_vnd: number | null; area_m2: number | null };
+  hienTai: { property_type: string | null; price_vnd: number | null; area_m2: number | null; loai_suy?: boolean };
   e1Loai: string | null;
   intent: string;
   quoteOk: boolean | null;
@@ -147,6 +147,8 @@ export function quyetTin(i: {
     llm: i.them ? { property_type: i.them.property_type } : null,
     buildings: [],
     held: i.held,
+    // Loại hình suy từ nhóm (s03-len-cong AC-11): coi là trống cho LLM, E1 không áp thẳng lên ô này.
+    inferredFields: i.hienTai.loai_suy ? new Set<EnrichField>(["property_type"]) : undefined,
   });
   const de_xuat: DeXuatTin[] = rs.map((r): DeXuatTin => {
     if (r.conflict) return { ...r, status: "queued" };
@@ -179,7 +181,7 @@ export function quyetTin(i: {
 
 // ==== một lượt trên DB ====
 export type TinDoc = {
-  offer_id: string; property_type: string | null; price_vnd: number | null; area_m2: number | null;
+  offer_id: string; property_type: string | null; loai_suy: boolean; price_vnd: number | null; area_m2: number | null;
   post_id: string | null; text: string | null; group_name: string | null; snapshot_id: string | null; agent_id: string | null;
 };
 export type TomTat = {
@@ -191,6 +193,7 @@ export type TomTat = {
 export async function chonTin(c: pg.Client): Promise<TinDoc[]> {
   const { rows } = await c.query(
     `SELECT o.offer_id, o.property_type, o.price_vnd::float8 AS price_vnd, o.area_m2::float8 AS area_m2,
+            coalesce(o.field_provenance #>> '{property_type,tier}' = 'inferred', false) AS loai_suy,
             z.post_id, z.text, z.group_name, z.snapshot_id, z.agent_id
      FROM sale_offers o
      LEFT JOIN LATERAL (
