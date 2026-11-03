@@ -1,0 +1,39 @@
+{
+  "feature_plain": "Số điện thoại trên tin S06 lấy lại được dấu nguồn gốc sau sự cố ghi đè hàm phân xử, nên tin ẩn số không còn giữ số ghép, miễn là số còn trong dữ liệu thu.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ tái hiện đúng chuỗi sự cố trên lược đồ tạm bằng tệp migration thật: tin chuyển ẩn số sau khi áp lại 068 thì mất số ghép."},
+    {"id":"AC-2","p":"Sẽ rút số cả khi tin chuyển ẩn số ngay trong lúc hàm đang bị ghi đè; tin ghép không ẩn và tin số trực tiếp vẫn giữ số."},
+    {"id":"AC-3","p":"Sẽ dựng lại dấu nguồn gốc giống hệt bản trước sự cố, và chạy lại không đổi thêm tin nào."},
+    {"id":"AC-4","p":"Sẽ xử đúng cả 26 kiểu tin mất dấu theo bảng viết trước: 12 tin dựng lại được, 14 tin giữ nguyên và được đếm."},
+    {"id":"AC-5","p":"Sẽ giữ nguyên số không khớp dữ liệu thu, không rút dù tin chuyển ẩn số hay tài khoản có thêm số."},
+    {"id":"AC-6","p":"Sẽ khôi phục được cả khi dấu bị mất qua lệnh phân xử toàn bộ, không qua lượt S06."},
+    {"id":"AC-8","p":"Sẽ in hai số đếm (đã dựng lại, còn không rõ gốc) trong nhật ký lượt S06 và lệnh đo, không lộ số điện thoại nào."},
+    {"id":"AC-10","p":"Sẽ đo và gọi tên giới hạn nặng nhất: tin nguồn đổi số trong lúc sự cố thì tin ẩn vẫn giữ số cũ, trái luật, được đếm là không rõ gốc."}
+  ],
+  "wont_do": [
+    {"id":"AC-7","p":"Sẽ KHÔNG khôi phục khi hàm còn bị ghi đè: lượt S06 chạy như đã ký, không đổi số nào, không báo lỗi, chỉ in cảnh báo."},
+    {"id":"AC-9","p":"Sẽ KHÔNG đổi schema, app, API công khai, bộ thu, bộ nạp hay đường lên cloud; mọi phép kiểm cũ giữ nguyên và vẫn xanh."},
+    {"id":"OOS-1","p":"KHÔNG áp 068 và KHÔNG ghi thật lên DB máy thu; mọi kiểm đều hoàn tác."},
+    {"id":"OOS-2","p":"KHÔNG sửa migration đã commit, không thêm migration, không thêm cột."},
+    {"id":"OOS-3","p":"KHÔNG rút số trong lúc hàm còn bị ghi đè, và không đổi lượt S06 thành báo đỏ."},
+    {"id":"OOS-4","p":"KHÔNG làm các mục ngoài hợp đồng khác: số S06 vào danh bạ (đang ở PR 294) và lỗi chấm lại hồ sơ S06 vùng mới."},
+    {"id":"OOS-5","p":"KHÔNG có cảnh báo lên Ops khi còn tin không rõ gốc: chỉ có số đếm trong nhật ký và lệnh đo."}
+  ],
+  "coverage_plain": [
+    {"i":0,"p":"Đã phủ mọi tổ hợp của số trên tin so với dữ liệu thu, số riêng, ẩn số, và số lượng số của tài khoản; bằng chứng đủ là các nhánh luật đang chạy và bảng luật đã ký."},
+    {"i":1,"p":"Đã tính đủ các đường làm mất dấu: lượt S06, lệnh phân xử toàn bộ, duyệt làm giàu. Đo hai đường đầu; duyệt làm giàu gọi cùng một hàm nên không đo riêng."},
+    {"i":2,"p":"Đã phủ ba trạng thái của hàm: đang giữ dấu, bị ghi đè, đã áp lại (AC-7 giữ nguyên hành vi đã ký)."},
+    {"i":3,"p":"Đã phủ hai thời điểm tin chuyển ẩn số: trong lúc bị ghi đè và sau khi áp lại (AC-1, AC-2)."},
+    {"i":4,"p":"Đã phủ hai trạng thái dữ liệu thu trong lúc sự cố: không đổi và tin nguồn đổi số (AC-3, AC-10)."},
+    {"i":5,"p":"Không có chuẩn ngành đúng loại cho việc này, nên thước đo là bảng luật Mạnh đã ký."},
+    {"i":6,"p":"Giả định cần anh xác nhận: ngoài bộ gán, không ai khác ghi số cho tin S06. Nếu về sau có, số trùng số tài khoản sẽ bị xếp là số ghép."},
+    {"i":7,"p":"Để sau: kiểm trước trong lượt S06, rút số ngay trong lúc sự cố, cột nguồn gốc riêng. Không bao giờ: tự áp 068 từ lượt S06, vì áp thật là bước Mạnh duyệt."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Thiếu: bốn giới hạn chỉ nằm trong thiết kế nên anh có thể ký mà không biết tin ẩn số vẫn giữ số khi số đã trôi khỏi dữ liệu thu. Đã sửa: đưa lên hợp đồng, thêm phép đo, sửa tên việc. Bác một phần về PR 294: dòng mới của PR đó đứng sau luật ẩn số nên tin ẩn vẫn bị rút."},
+    {"i":1,"p":"Thiếu: máy đã tự chốt không làm cột nguồn gốc riêng, căn cứ không đủ, và lối này chưa lên thẻ. Đã sửa: thành câu hỏi riêng cho anh (Hỏi-2)."},
+    {"i":2,"p":"Thiếu: sự cố đo bằng bản hàm của chính bộ test, nên có thể xanh mà sự cố thật không tái hiện. Đã sửa: dùng phần hàm trong tệp migration 061 đã commit."},
+    {"i":3,"p":"Thiếu: lệnh đo chạy trên DB chưa có tin mang số nên không chứng được số đếm hay việc che số. Đã sửa: đo dòng in trên dữ liệu thử, kiểm riêng hai dạng số; lệnh đo trên DB thật khai rõ chỉ đo sự có mặt."},
+    {"i":4,"p":"Thiếu: phép đo chưa kiểm tin nguồn của số ghép và chưa cho tin chuyển trạng thái. Đã sửa cả hai, thêm tổng số đếm của 26 kiểu tin."}
+  ]
+}
