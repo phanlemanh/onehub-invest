@@ -36,7 +36,7 @@ executors:
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
-    ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
+    ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
