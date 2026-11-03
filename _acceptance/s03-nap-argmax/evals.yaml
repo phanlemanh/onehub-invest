@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: s03-nap-argmax
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s03na_unit
+    expected: "exit 0; ca vượt ARG_MAX pass, gồm đối chứng khuôn ls cũ thoát 126 và should-NOT-fire .partial, mốc sai, nguồn khác"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s03na_unit
+    expected: "exit 0; ca liệt kê lỗi pass: thoát 3, state giữ nguyên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s03na_unit
+    expected: "exit 0; hai ca kiểm chữ pass: không còn khuôn ls, hai khối giống hệt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au3_ts_format
+    expected: "exit 0; TS-FORMAT PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au3_lock
+    expected: "exit 0; LOCK PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.snt_mo_coi
+    expected: "exit 0; MO-COI PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.test.zalo_import_job
+    expected: "exit 0; toàn bộ ca của job nạp S03 pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03na_unit
+    expected: "exit 0; ca rỗng có mốc thoát 3, state không ghi; ca rỗng chưa có mốc thoát 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

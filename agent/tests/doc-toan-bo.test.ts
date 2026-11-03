@@ -46,7 +46,7 @@ test("LS1 Focus 5: chữ NFD nhiều khoảng trắng, trích NFC vẫn là có 
 // ---------- gạt chữ, gọi model (AC-2) ----------
 import { MockLanguageModelV4 } from "ai/test";
 import { chayLo, type Nhan } from "../src/agents/nhan-bac-s03.js";
-import { docTraLoi, gatChu, hoiDoc, modelMacDinh } from "../src/enrich/doc-toan-bo.js";
+import { docTraLoi, gatChu, hoiDoc, MAX_TOKEN_RA, modelMacDinh } from "../src/enrich/doc-toan-bo.js";
 
 function modelGia(tra: string | Error, nhan: string[] = [], cost?: string) {
   return new MockLanguageModelV4({
@@ -104,6 +104,24 @@ test("docTraLoi: JSON hỏng, giá chuỗi, giá 0, ý định lạ, trích so t
   assert.equal(b.quote_ok, false);
   assert.equal(b.probabilities?.property_type, null);
   assert.equal(b.probabilities?.price_vnd, 2620000000);
+});
+
+test("hoiDoc: trần token ra đủ cho suy nghĩ cộng JSON (đo 03/11: tới 825 token khi không có trần)", async () => {
+  const thay: (number | undefined)[] = [];
+  const model = new MockLanguageModelV4({
+    modelId: "mock",
+    doGenerate: async (o: { maxOutputTokens?: number }) => {
+      thay.push(o.maxOutputTokens);
+      return {
+        content: [{ type: "text", text: "{}" }], finishReason: { unified: "stop", raw: "stop" },
+        usage: { inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined }, outputTokens: { total: 1, text: 1, reasoning: undefined } },
+        warnings: [],
+      };
+    },
+  });
+  await hoiDoc("chữ", { languageModel: model, recordCall: async () => {} });
+  assert.deepEqual(thay, [MAX_TOKEN_RA]);
+  assert.ok(MAX_TOKEN_RA >= 1500, "trần thấp lại cắt câu trả lời");
 });
 
 test("hoiDoc: lời gọi lỗi thành nhãn, không ném; ai_calls vẫn được gọi", async () => {
