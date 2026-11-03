@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0f47508f5e4e2d82637f05f973ac286937731ac0
-human_signoff:
+human_signoff: Mạnh 2026-11-03
 ---
 
 # Evidence Report: kiem-do-sau-ap-070-sua

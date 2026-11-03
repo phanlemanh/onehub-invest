@@ -5,7 +5,7 @@ slug: kiem-do-sau-ap-070-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/ và test, không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-03T07:45:00Z
 design_doc: docs/superpowers/specs/2026-11-03-kiem-do-sau-ap-070-sua-design.md
@@ -45,3 +45,16 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
 
 - Dựng trên `174c302a` vì cần 070; PR nhắm main sau khi #294 gộp, hoặc giám sát gộp chung một cửa sổ.
 - Phép đo AC-4 chỉ chạy trên DB thử (`db/db-thu.sh oneinvest_kd_that`), xoá sau khi đo.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Sửa tiếp hai tệp phụ của bộ kiểm sau khi ký thì bằng chứng vẫn được coi là còn mới, dù kết quả đo có thể đã đổi.
+  - Ngoài-3: Trang Ops hiện số «SĐT trên tin» có thể nhỏ hơn số thật mà không giải thích.
+  - Ngoài-4: Bộ kiểm chưa phát hiện được bảng bị xin khoá giữa chừng trong thân ma trận mười ô; hiện chưa có bảng nào bị sót.
+  - Ngoài-5: Lời báo của phép kiểm khoá hứa phủ mọi ca, nhưng có một đường không được phủ.
+  - Ngoài-6: Một trong bốn tệp nạp lại cũ mới được so văn bản, chưa nạp thật trên cơ sở dữ liệu.
+  - Ngoài-7: Một số ô kiểm dùng bí danh viết tay, nên nếu cách ghi bí danh đổi dạng thì danh bạ có thể đếm sai mà bộ kiểm không báo.
+  - Ngoài-8: Phép tự kiểm của thước đo chỉ đếm số lỗi, không đọc lỗi gì.
+  - Ngoài-9: Thước kiểm «không đổi tệp thay đổi cơ sở dữ liệu cũ» có thể báo không đổi ngay cả khi lệnh so sánh chạy sai.
+  - Ngoài-10: Việc ba bộ kiểm chạy đúng trên bản chép thử mới được kiểm bằng đọc mã nguồn, chưa đo lúc chạy.
+  - Ngoài-11: Nếu nhật ký chạy kiểm đổi định dạng, thước có thể coi như không có ca nào bị bỏ qua.
+  - Lượt 4: Bằng chứng trên bản chép thật chỉ chứng minh hết lỗi view, chưa chứng minh tổ hợp 070 + 068, vì ba bộ kiểm đè phần 068 của hàm phân xử nên đường ghi số điện thoại không chạy thật.
+  - Lượt 3: Hai ca của agent và app từng đỏ khi chạy cả bộ, chưa rõ nguyên nhân, nên có thể đỏ lại khi máy tải nặng.
