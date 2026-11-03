@@ -1,4 +1,4 @@
--- 069_nhan_so_ghep.sql — so-ghep-s06-nhan-danh-ba: view sale_offers thêm cột tính seller_phone_inferred (số S06 chưa xác minh)
+-- 070_nhan_so_ghep.sql — so-ghep-s06-nhan-danh-ba: view sale_offers thêm cột tính seller_phone_inferred (số S06 chưa xác minh)
 -- docs/superpowers/specs/2026-11-03-so-ghep-s06-nhan-danh-ba-design.md; khai field riêng VN ở pipeline/mappings.yaml (ADR-0011).
 -- True khi tin S06 có số mà không mang dấu trực tiếp (số ghép theo tài khoản, hoặc mất dấu). Thiếu bằng chứng thì kèm nhãn.
 -- Cột tính trong view: bảng sale_offer_records không đổi lược đồ, không đổi dòng. Áp TRƯỚC 068 (bộ gán chờ cột này mới ghi số ghép).

@@ -12,8 +12,8 @@
 
 ## Global Constraints
 
-- Không áp 068, 069 lên DB `oneinvest`, không ghi thật, không áp cloud. Test dùng `pipeline/lib/luoc-do-rieng.mjs`; đo dùng `db/db-thu.sh oneinvest_sg`.
-- Không sửa migration đã commit. Số 069 chờ điều phối liên làn xác nhận; 067 đang để trống.
+- Không áp 068, 070 lên DB `oneinvest`, không ghi thật, không áp cloud. Test dùng `pipeline/lib/luoc-do-rieng.mjs`; đo dùng `db/db-thu.sh oneinvest_sg`.
+- Không sửa migration đã commit. Số 070 chờ điều phối liên làn xác nhận; 067 đang để trống.
 - `field_provenance` không lên cloud. Tên nguồn thật không vào mã, log, tệp công khai; chỉ `S0x`.
 - Đầu ra lệnh đo không chứa SĐT.
 - UI: `Badge` từ `@/components/reui/badge`, `variant="warning-light"`, cỡ mặc định, không đặt class cỡ. Chữ đúng «Chưa xác minh».
@@ -22,7 +22,7 @@
 ## Review Focus
 
 - Tin S06 có số mà `field_provenance` là NULL hoặc thiếu khoá: danh bạ không sinh bí danh, view trả true. Ghim ở Task 1, Task 2.
-- `sellersThieu` chạy khi view chưa có cột 069: câu đọc theo `field_provenance`, không đọc cột mới, nên không lỗi. Ghim ở Task 1.
+- `sellersThieu` chạy khi view chưa có cột 070: câu đọc theo `field_provenance`, không đọc cột mới, nên không lỗi. Ghim ở Task 1.
 - `ganSdtS06` với `sql` truyền vào từ test đột biến: tham số `$1` vẫn phải được bind. Ghim ở Task 2.
 - Cloud chưa có cột: `to_jsonb(o) ->> 'seller_phone_inferred'` trả NULL, không lỗi; có số thì coi là true; không số thì false. Ghim ở Task 4.
 - Trang Cho thuê dùng cùng `OfferCard`: prop phải đi qua cả hai trang. Ghim ở Task 5 (E8u có ảnh trang thuê).
@@ -50,26 +50,26 @@ Phục vụ E1, E2, E3. `independent: true`.
 - [ ] Chạy lại lệnh trên và `node --test pipeline/scripts/bait-gap-sellers.test.mjs`. Kỳ vọng: xanh.
 - [ ] Commit `feat(pipeline): danh bạ S06 chỉ nhận số có dấu trực tiếp`.
 
-### Task 2: Migration 069 và bộ gán chờ nhãn
+### Task 2: Migration 070 và bộ gán chờ nhãn
 
 Phục vụ E4, E5. `independent: false`, dùng fixture Task 1.
 
 **Files:**
-- Create: `db/migrations/069_nhan_so_ghep.sql` (qua skill `/new-migration`, bỏ bước áp vào DB local dùng chung)
-- Create: `pipeline/lib/nap-069.mjs`
+- Create: `db/migrations/070_nhan_so_ghep.sql` (qua skill `/new-migration`, bỏ bước áp vào DB local dùng chung)
+- Create: `pipeline/lib/nap-070.mjs`
 - Modify: `pipeline/gan-sdt-s06.mjs`, `pipeline/scripts/so-ghep-s06.test.mjs`
 
 **Interfaces:**
-- Produces: `daCoNhan069(client): Promise<boolean>` và `nap069(client)` ở `pipeline/lib/nap-069.mjs`, cùng khuôn `nap-068.mjs`.
-- `SQL_GAN` nhận `$1::boolean` cho phép ghép; `ganSdtS06` bind `[await daCoNhan069(client)]`.
+- Produces: `daCoNhan070(client): Promise<boolean>` và `nap070(client)` ở `pipeline/lib/nap-070.mjs`, cùng khuôn `nap-068.mjs`.
+- `SQL_GAN` nhận `$1::boolean` cho phép ghép; `ganSdtS06` bind `[await daCoNhan070(client)]`.
 
 - [ ] Viết `SG-AC-4`: ô trực tiếp, ghép ghi bằng `ganSdtS06` rồi `resolve_offer_fields`; ma trận năm ô, số assert bằng 5; cột mới đứng cuối; md5 từng dòng của view trên cột cũ và của `sale_offer_records` trước sau bằng nhau; áp hai lần; chiều đỏ view chỉ nhận dấu ghép.
-- [ ] Viết `SG-AC-5` qua `runTransformChotot`: chưa có cột thì số ghép không ghi, số trực tiếp có ghi, log chứa `CHUA-AP-069`; có cột thì ghi; ghi đè view về bản cũ giữa hai lượt thì lại in `CHUA-AP-069`.
-- [ ] Chạy test. Kỳ vọng: đỏ vì chưa có tệp 069.
-- [ ] Viết 069: `CREATE OR REPLACE VIEW sale_offers AS SELECT <thân 059>, (source = 'S06' AND seller_phone IS NOT NULL AND field_provenance -> 'seller_phone' ->> 'rule_id' IS DISTINCT FROM 's06-so-tren-tin') AS seller_phone_inferred FROM sale_offer_records WHERE …`, liệt kê cột từ định nghĩa hiện hành.
-- [ ] `SQL_GAN` chuyển ô `ghep` thành `giu` khi `$1` false. `ganSdtS06` in `gán SĐT S06: CHUA-AP-069 — …` khi false và không ném lỗi. Giữ nhánh `CHUA-AP-068`.
-- [ ] Chạy test `gan-sdt-s06.test.mjs` và `so-ghep-s06.test.mjs`. Kỳ vọng: xanh; sửa ca cũ cần cột bằng cách `nap069` trong fixture.
-- [ ] Commit `feat(db): 069 nhãn số chưa xác minh, bộ gán chờ nhãn`.
+- [ ] Viết `SG-AC-5` qua `runTransformChotot`: chưa có cột thì số ghép không ghi, số trực tiếp có ghi, log chứa `CHUA-AP-070`; có cột thì ghi; ghi đè view về bản cũ giữa hai lượt thì lại in `CHUA-AP-070`.
+- [ ] Chạy test. Kỳ vọng: đỏ vì chưa có tệp 070.
+- [ ] Viết 070: `CREATE OR REPLACE VIEW sale_offers AS SELECT <thân 059>, (source = 'S06' AND seller_phone IS NOT NULL AND field_provenance -> 'seller_phone' ->> 'rule_id' IS DISTINCT FROM 's06-so-tren-tin') AS seller_phone_inferred FROM sale_offer_records WHERE …`, liệt kê cột từ định nghĩa hiện hành.
+- [ ] `SQL_GAN` chuyển ô `ghep` thành `giu` khi `$1` false. `ganSdtS06` in `gán SĐT S06: CHUA-AP-070 — …` khi false và không ném lỗi. Giữ nhánh `CHUA-AP-068`.
+- [ ] Chạy test `gan-sdt-s06.test.mjs` và `so-ghep-s06.test.mjs`. Kỳ vọng: xanh; sửa ca cũ cần cột bằng cách `nap070` trong fixture.
+- [ ] Commit `feat(db): 070 nhãn số chưa xác minh, bộ gán chờ nhãn`.
 
 ### Task 3: Nhãn lên cloud và tệp năm mốc
 
@@ -79,7 +79,7 @@ Phục vụ E6. `independent: false`, cần cột của Task 2.
 - Modify: `pipeline/sync-cloud.mjs` (`CLOUD_ALLOW.sale_offers`), `pipeline/sync-cloud.test.mjs`
 - Create: `docs/ops/cloud-schema-catchup-2026-11-03-so-ghep.sql`, `pipeline/scripts/so-ghep-s06-cloud.itest.mjs`
 
-- [ ] Viết itest: sync thật từ view tới lược đồ tạm vai cloud; dòng ghép true, dòng trực tiếp false; `field_provenance` không tới; `piiColumnLeaks` chặn khi cố thêm; lược đồ thiếu cột thì sync chạy tiếp, log chứa «lệch schema»; tệp catch-up chạy thật hai lần; đầu tệp khớp năm tên mốc: gộp, kéo về, áp cloud, áp 069, áp 068.
+- [ ] Viết itest: sync thật từ view tới lược đồ tạm vai cloud; dòng ghép true, dòng trực tiếp false; `field_provenance` không tới; `piiColumnLeaks` chặn khi cố thêm; lược đồ thiếu cột thì sync chạy tiếp, log chứa «lệch schema»; tệp catch-up chạy thật hai lần; đầu tệp khớp năm tên mốc: gộp, kéo về, áp cloud, áp 070, áp 068.
 - [ ] Chạy `sg_sync`. Kỳ vọng: đỏ.
 - [ ] Thêm `seller_phone_inferred` vào `CLOUD_ALLOW.sale_offers`. Viết tệp catch-up theo khuôn `cloud-schema-catchup-2026-11-02-tin-rao.sql`: `ADD COLUMN IF NOT EXISTS seller_phone_inferred boolean`.
 - [ ] Chạy `sg_sync`. Kỳ vọng: xanh.
@@ -133,7 +133,7 @@ Phục vụ E9. `independent: false`, cần Task 1, Task 2.
 - Produces: `kiemBatBienSoGhep(so): string[]`; dòng in khoá `bi_danh_moi`, `nguoi_moi`, `nguoi_khong_tin`, `sellers`, `nhan_ban`, `nhan_thue`, `so_ghep_ra_so`, `so_ghep_ra_so_neu_bo_nhanh`.
 
 - [ ] Viết ca đột biến: `kiemBatBienSoGhep` đỏ khi `so_ghep_ra_so > 0`, `so_ghep_ra_so_neu_bo_nhanh = 0`, `bi_danh_moi = 0`, tổng nhãn khác số tin không có dấu trực tiếp; lệnh thoát 2 khi tên DB là `oneinvest`.
-- [ ] Viết lệnh: kiểm tên DB, đọc số trước, `nap068`, `nap069`, `ganSdtS06`, `dungNguoi`, đọc số sau, in qua `inKhongSo`, thoát 1 khi bất biến sai.
+- [ ] Viết lệnh: kiểm tên DB, đọc số trước, `nap068`, `nap070`, `ganSdtS06`, `dungNguoi`, đọc số sau, in qua `inKhongSo`, thoát 1 khi bất biến sai.
 - [ ] Chạy `sg_do` nền. Kỳ vọng: thoát 0, không có SĐT; đưa số thật vào bằng chứng.
 - [ ] Commit `feat(pipeline): lệnh đo số ghép trên DB thử`.
 
@@ -147,5 +147,5 @@ Phục vụ E10. `independent: true`.
 - [ ] `CONTEXT.md`: thuật ngữ «Chưa xác minh» (nhãn · code `seller_phone_inferred` · slug không có · định nghĩa · `_Avoid_`).
 - [ ] `pipeline/mappings.yaml`: khai `seller_phone_inferred` đủ sáu điều kiện ADR-0011; sửa ghi chú `seller_phone` đã lỗi thời.
 - [ ] Thiết kế cũ: dòng đính chính mục hạ nguồn và OOS-2, trỏ sang hồ sơ này.
-- [ ] ROADMAP §2, §4: thứ tự 069 trước 068, phần cloud, năm mốc.
+- [ ] ROADMAP §2, §4: thứ tự 070 trước 068, phần cloud, năm mốc.
 - [ ] Commit `docs: số ghép S06, nhãn và thứ tự áp`.

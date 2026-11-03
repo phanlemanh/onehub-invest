@@ -31,14 +31,14 @@ Danh sách dương: với S06, `rutDinhDanh` chỉ trả `sdt` khi `field_proven
 
 ### Nhãn trên Invest
 
-- Migration 069: `sale_offers` thêm cột cuối `seller_phone_inferred`, true khi `source = 'S06'`, có số và `rule_id` khác `s06-so-tren-tin`. Tính ngay trong view. Không thêm cột vào `sale_offer_records`, không ghi lại bảng, áp nhanh, đảo ngược rẻ.
+- Migration 070: `sale_offers` thêm cột cuối `seller_phone_inferred`, true khi `source = 'S06'`, có số và `rule_id` khác `s06-so-tren-tin`. Tính ngay trong view. Không thêm cột vào `sale_offer_records`, không ghi lại bảng, áp nhanh, đảo ngược rẻ.
 - `CLOUD_ALLOW.sale_offers` thêm cột này; `field_provenance` vẫn không lên. Tệp `docs/ops/cloud-schema-catchup-<ngày>-so-ghep.sql` theo đúng khuôn của `tin-rao-tren-invest`.
 - API: danh sách trả thêm `phoneInferred`; `/contact` trả thêm `inferred`. Không đổi khoá cũ, không đổi 404. Đọc cột qua `to_jsonb(o) ->> 'seller_phone_inferred'` nên cloud thiếu cột không làm câu lệnh lỗi; có số mà không đọc được giá trị thì coi là true.
 - `OfferContact`: có số ghép thì kèm Badge «Chưa xác minh» trước và sau khi bấm.
 
 ### Bộ gán chờ nhãn
 
-`ganSdtS06` đọc lại mỗi lượt xem `sale_offers` có cột nhãn chưa, như cách nó đọc phần giữ 068. Chưa có: không ghi số ghép mới, in `CHUA-AP-069`, số trực tiếp vẫn ghi, không ném lỗi. Vì thế áp nhầm 068 trước 069 không làm số ghép lên Invest không nhãn.
+`ganSdtS06` đọc lại mỗi lượt xem `sale_offers` có cột nhãn chưa, như cách nó đọc phần giữ 068. Chưa có: không ghi số ghép mới, in `CHUA-AP-070`, số trực tiếp vẫn ghi, không ném lỗi. Vì thế áp nhầm 068 trước 070 không làm số ghép lên Invest không nhãn.
 
 ### Hỏng theo hướng đóng
 
@@ -51,7 +51,7 @@ Ghi ở đầu tệp catch-up. Người chạy: Mạnh.
 1. gộp: PR #283 rồi PR này vào main. Cloud chưa có cột, mọi số hiện kèm nhãn, trang không lỗi.
 2. kéo về: checkout chính ở máy thu kéo main.
 3. áp cloud: khối ĐO TRƯỚC rồi khối ÁP. Áp trước khi kéo về thì leak gate của bản sync cũ dừng lượt đêm.
-4. áp 069: `pg_dump` trước, áp trên máy thu, chạy một lượt sync, xem log không còn «lệch schema». Số trực tiếp hết nhãn.
+4. áp 070: `pg_dump` trước, áp trên máy thu, chạy một lượt sync, xem log không còn «lệch schema». Số trực tiếp hết nhãn.
 5. áp 068: `pg_dump` trước, áp, để job ghi số, sync, kiểm trang Bán và Cho thuê.
 
 ## Điểm giáp với #283
@@ -61,7 +61,7 @@ E9 và AC-9 của `sdt-s06-ghep-tai-khoan` hứa `PII_EXCLUDE` còn loại `sell
 ## Không làm
 
 - Nối người theo SĐT S06 vào người theo tài khoản (HD13 chỉ gộp S03, S05). Trang tri thức `nguoi-va-sdt` đã nêu phần lớn người theo SĐT là bản sao không có tin; S06 sẽ thêm khoảng 590 người như vậy. Đo và báo ở AC-9, xử ở vòng riêng.
-- Áp 068, 069 lên DB máy thu, ghi thật, áp cloud: bước triển khai có `pg_dump`, Mạnh chạy.
+- Áp 068, 070 lên DB máy thu, ghi thật, áp cloud: bước triển khai có `pg_dump`, Mạnh chạy.
 - Ngoài-5 phần tin ẩn số giữ số ghép, Ngoài-6 (harness `s06-vung-moi`): việc riêng.
 - Sửa số đếm `n_ads` trong `sellers`, nhãn cấp tin của hàng `s03-len-cong`, xác minh số bằng cách gọi.
 

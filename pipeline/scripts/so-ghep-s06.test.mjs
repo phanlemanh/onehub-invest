@@ -2,16 +2,21 @@
 // Ca DB chạy BEGIN…ROLLBACK trên Postgres local :5433, mỗi ca một lược đồ riêng; không chạm public. Mọi SĐT là số bịa.
 // Mỗi phép đo có ca đỏ trên cùng fixture, ghim thông điệp.
 import { strict as assert } from "node:assert";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
+import { docMoc, docNhanhSoGhep, kiemBatBienSoGhep, tuChoiDb, veDong } from "../do-so-ghep-s06.mjs";
 import { ganSdtS06 } from "../gan-sdt-s06.mjs";
 import { resolveOffers } from "../lib/assert.mjs";
 import { coBangChungSdt, dungNguoi, RULE_TRUC_TIEP, rutDinhDanh, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 import { nap068 } from "../lib/nap-068.mjs";
-import { MIG_069, nap069 } from "../lib/nap-069.mjs";
+import { MIG_070, nap070 } from "../lib/nap-070.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 
@@ -38,7 +43,7 @@ async function withTx(fn) {
     await chepView(c, sc, "sale_offers");
     await chepView(c, sc, "sellers");
     await nap068(c);
-    await nap069(c);
+    await nap070(c);
     await c.query(`INSERT INTO ops_audit (actor, action) VALUES ('test', 'phat-bieu:cat-chuyen')`);
     return await fn(c, { sc });
   } finally {
@@ -252,8 +257,8 @@ test("SG-AC-3 sellers và sellersThieuNguoi: số có tin trực tiếp hiện, 
   });
 });
 
-/** View về bản SELECT * trước 069, trong lược đồ riêng; đúng cả khi public đã áp 069. */
-async function veTruoc069(c, sc) {
+/** View về bản SELECT * trước 070, trong lược đồ riêng; đúng cả khi public đã áp 070. */
+async function veTruoc070(c, sc) {
   await c.query(`DROP VIEW ${sc}.sale_offers CASCADE`);
   await c.query(`CREATE VIEW ${sc}.sale_offers AS SELECT * FROM ${sc}.sale_offer_records WHERE retired_at IS NULL`);
 }
@@ -297,15 +302,15 @@ const dauBang = async (c) => (await c.query(
 const cotBang = async (c, sc) => (await c.query(
   `SELECT column_name AS n FROM information_schema.columns WHERE table_schema = $1 AND table_name = 'sale_offer_records' ORDER BY ordinal_position`, [sc])).rows.map((r) => r.n);
 
-test("SG-AC-4 069 áp hai lần: cột cuối đúng năm ô, cột cũ và bảng không đổi, qua phân xử vẫn đúng", async () => {
+test("SG-AC-4 070 áp hai lần: cột cuối đúng năm ô, cột cũ và bảng không đổi, qua phân xử vẫn đúng", async () => {
   await withTx(async (c, { sc }) => {
     await dungNamO(c);
     assert.equal((await docTin(c, 402)).field_provenance.seller_phone.rule_id, "s06-cung-tai-khoan", "SG-AC-4 tiền đề ô ghép");
     assert.equal((await docTin(c, 403)).seller_phone, "+84900000401", "SG-AC-4 tiền đề ô mất dấu còn số");
-    await veTruoc069(c, sc);
+    await veTruoc070(c, sc);
     const truoc = { view: await dauView(c), bang: await dauBang(c), cot: await cotBang(c, sc) };
-    await c.query(MIG_069);
-    await c.query(MIG_069);
+    await c.query(MIG_070);
+    await c.query(MIG_070);
     const { rows } = await c.query(
       `SELECT attname AS n FROM pg_attribute WHERE attrelid = to_regclass('sale_offers') AND attnum > 0 AND NOT attisdropped ORDER BY attnum DESC LIMIT 1`);
     assert.equal(rows[0].n, "seller_phone_inferred", "SG-AC-4 cột mới không đứng cuối");
@@ -326,10 +331,10 @@ test("SG-AC-4 069 áp hai lần: cột cuối đúng năm ô, cột cũ và bả
 test("SG-AC-4 chiều đỏ: view chỉ nhận dấu ghép thì sai ở ô mất dấu", async () => {
   await withTx(async (c, { sc }) => {
     await dungNamO(c);
-    await veTruoc069(c, sc);
+    await veTruoc070(c, sc);
     const tu = "IS DISTINCT FROM 's06-so-tren-tin'";
-    assert.ok(MIG_069.includes(tu), "SG-AC-4 đột biến không khớp 069");
-    await c.query(MIG_069.replace(tu, "= 's06-cung-tai-khoan'"));
+    assert.ok(MIG_070.includes(tu), "SG-AC-4 đột biến không khớp 070");
+    await c.query(MIG_070.replace(tu, "= 's06-cung-tai-khoan'"));
     assert.deepEqual(await oNhanSai(c), ["S06-mat-dau"], "SG-AC-4 phá thử phải ghim đúng ô S06-mat-dau");
   });
 });
@@ -350,20 +355,89 @@ test("SG-AC-5 qua transform thật: chưa có cột thì không ghi số ghép, 
     await themStg(c, { id: 61, tk: 50 });
     await themStg(c, { id: 62, tk: 50 });
 
-    await veTruoc069(c, sc);
-    assert.match(await chay(), /CHUA-AP-069/, "SG-AC-5 chưa có cột phải báo tên");
+    await veTruoc070(c, sc);
+    assert.match(await chay(), /CHUA-AP-070/, "SG-AC-5 chưa có cột phải báo tên");
     assert.equal((await docId(60)).seller_phone, "+84900000560", "SG-AC-5 chưa có cột vẫn phải ghi số trực tiếp");
     assert.equal((await docId(61)).seller_phone, null, "SG-AC-5 chưa có cột mà ghi số ghép");
 
-    await c.query(MIG_069);
-    assert.doesNotMatch(await chay(), /CHUA-AP-069/, "SG-AC-5 có cột mà vẫn báo");
+    await c.query(MIG_070);
+    assert.doesNotMatch(await chay(), /CHUA-AP-070/, "SG-AC-5 có cột mà vẫn báo");
     assert.equal((await docId(61)).seller_phone, "+84900000560", "SG-AC-5 có cột phải ghi số ghép");
     assert.equal((await docId(61)).field_provenance.seller_phone.rule_id, "s06-cung-tai-khoan", "SG-AC-5 sai dấu ghép");
 
-    await veTruoc069(c, sc);
+    await veTruoc070(c, sc);
     await themStg(c, { id: 63, tk: 50 });
-    assert.match(await chay(), /CHUA-AP-069/, "SG-AC-5 view bị ghi đè phải báo lại");
+    assert.match(await chay(), /CHUA-AP-070/, "SG-AC-5 view bị ghi đè phải báo lại");
     assert.equal((await docId(63)).seller_phone, null, "SG-AC-5 view bị ghi đè mà ghi số ghép mới");
     assert.equal((await docId(61)).seller_phone, "+84900000560", "SG-AC-5 view bị ghi đè làm mất số đã ghép");
+  });
+});
+
+const SO_DAT = { so_ghep_ra_so: 0, so_ghep_ra_so_neu_bo_nhanh: 40, bi_danh_moi: 5, so_truc_tiep: 6, nhan_ban: 30, nhan_thue: 10, tin_khong_dau: 40 };
+
+test("SG-AC-9 bất biến: bộ số đạt thì sạch, mỗi đột biến đỏ đúng khoá", () => {
+  assert.deepEqual(kiemBatBienSoGhep(SO_DAT), []);
+  const CA = [
+    [{ so_ghep_ra_so: 1 }, "so_ghep_ra_so"],
+    [{ so_ghep_ra_so_neu_bo_nhanh: 0 }, "so_ghep_ra_so_neu_bo_nhanh"],
+    [{ bi_danh_moi: 0 }, "bi_danh_moi"],
+    [{ bi_danh_moi: 7 }, "bi_danh_moi"],
+    [{ nhan_ban: 29 }, "tong_nhan"],
+    [{ nhan_ban: 0, nhan_thue: 0, tin_khong_dau: 0 }, "tong_nhan"],
+  ];
+  for (const [doi, khoa] of CA) assert.deepEqual(kiemBatBienSoGhep({ ...SO_DAT, ...doi }), [khoa], khoa);
+});
+
+test("SG-AC-9 lệnh từ chối DB dùng chung và thoát 2 trước khi nối DB; bất biến sai thì thoát 1", () => {
+  assert.ok(tuChoiDb("oneinvest"));
+  assert.equal(tuChoiDb("oneinvest_sg"), null);
+  const lenh = join(dirname(fileURLToPath(import.meta.url)), "../do-so-ghep-s06.mjs");
+  const r = spawnSync(process.execPath, [lenh], { env: { ...process.env, DATABASE_URL: "postgres://127.0.0.1:1/oneinvest" }, encoding: "utf8" });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /không phải DB thử/);
+  const nguon = spawnSync("/usr/bin/grep", ["-c", "process.exitCode = 1", lenh], { encoding: "utf8" });
+  assert.equal(nguon.stdout.trim(), "1", "lệnh phải đặt mã thoát 1 đúng một chỗ khi bất biến sai");
+});
+
+test("SG-AC-9 trên fixture: nhánh chặn số ghép, bỏ nhánh thì ra số, dòng in không có số", async () => {
+  await withTx(async (c) => {
+    await dungMaTran(c);
+    const truoc = await docMoc(c);
+    await dungNguoi(c, yen);
+    const sau = await docMoc(c);
+    const nhanh = await docNhanhSoGhep(c);
+    // Tin 102 ghép, 103 mất dấu; tin 101 trực tiếp.
+    assert.equal(nhanh.so_ghep_ra_so, 0);
+    assert.equal(nhanh.so_ghep_ra_so_neu_bo_nhanh, 2);
+    assert.equal(nhanh.so_truc_tiep, 1);
+    assert.equal(nhanh.tin_khong_dau, 2);
+    assert.equal(sau.bi_danh - truoc.bi_danh, 1);
+    assert.equal(sau.nhan_ban, 2);
+    assert.deepEqual(kiemBatBienSoGhep({ ...sau, ...nhanh, bi_danh_moi: sau.bi_danh - truoc.bi_danh }), []);
+    for (const dong of veDong(truoc, sau, nhanh)) assert.doesNotMatch(dong, /\+84\d{9}|\b0\d{9}\b/);
+    // Đối chứng cùng fixture: một số ghép bị đóng dấu trực tiếp thì đếm lệch nhãn.
+    await c.query(`UPDATE sale_offer_records SET field_provenance = jsonb_build_object('seller_phone', $1::jsonb) WHERE offer_id = '102'`, [JSON.stringify(TRUC)]);
+    assert.equal((await docNhanhSoGhep(c)).tin_khong_dau, 1, "SG-AC-9 phép đếm không thấy tin đổi dấu");
+  });
+});
+
+test("SG-AC-10 kiểm DQ so-chua-xac-minh: skip khi chưa có cột, pass có số trực tiếp, fail khi dấu mất hàng loạt", async () => {
+  const tep = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../sql/450_dq_checks.sql"), "utf8");
+  const dau = tep.indexOf("INSERT INTO dq_check_results", tep.indexOf("-- Nhãn số chưa xác minh"));
+  const cau = tep.slice(dau, tep.indexOf(";", dau) + 1).replace(/^INSERT INTO dq_check_results \(check_name, entity, status, detail\)\n/, "");
+  assert.match(cau, /'so-chua-xac-minh'/, "không cắt được câu kiểm");
+  const chay = async (c) => (await c.query(cau)).rows[0];
+  await withTx(async (c, { sc }) => {
+    await dungMaTran(c);
+    const dat = await chay(c);
+    assert.equal(dat.status, "pass", dat.detail);
+    assert.match(dat.detail, /S06 có số: 3, chưa xác minh: 2, nguồn khác có nhãn: 0/);
+    // Chiều đỏ trên cùng fixture: mất mọi dấu thì mọi số S06 mang nhãn.
+    await c.query(`UPDATE sale_offer_records SET field_provenance = field_provenance - 'seller_phone' WHERE source = 'S06'`);
+    assert.equal((await chay(c)).status, "fail");
+    // View chưa có cột: dựng lại view bỏ cột, kiểm phải ra skip chứ không lỗi.
+    await c.query(`DROP VIEW ${sc}.sellers, ${sc}.sale_offers`);
+    await c.query(`CREATE VIEW ${sc}.sale_offers AS SELECT offer_id, source, seller_phone FROM ${sc}.sale_offer_records WHERE retired_at IS NULL`);
+    assert.equal((await chay(c)).status, "skip");
   });
 });
