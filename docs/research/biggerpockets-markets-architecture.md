@@ -57,6 +57,10 @@ Price), and more"*.
 | Population | Population Growth Rate | 1.29% | <0 · 0–0.5 · 0.5–1 · 1–1.5 · 1.5–2 · 2–2.5 · 2.5–3 · >3% |
 | Unemployment | Unemployment Rate | 3.30% | <1 · 1–2 · 2–3 · 3–4 · 4–5 · 5–6 · 6–7 · >7% |
 
+> **Đính chính 2026-11-03:** khách chưa đăng nhập hiện bị khoá phần lớn số ở trang detail (tiền thuê, RTP,
+> Affordability, dân số, thất nghiệp, thu nhập, 11 điểm A–F) và chỉ thấy 3/25 thẻ đề xuất — kết luận «Pro chỉ bán
+> tầng so sánh» bên dưới không còn đúng. Chi tiết: `biggerpockets-market-finder-product-analysis.md` §5.2.
+
 Kiểm chứng sau login Pro (2026-10-20, same session): 4 nút PRO bật được bình
 thường (không upsell chặn), legend đổi theo từng chỉ số như bảng trên; trang
 detail **không có thêm khối dữ liệu PRO** — nội dung giống khách free, chỉ
