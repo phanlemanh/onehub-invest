@@ -14,6 +14,7 @@ import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions } from "./lib/assert.mjs";
+import { rutDuongCoSo } from "./lib/sdt-trong-chuoi.mjs";
 import { docDacTrungS06 } from "./lib/dac-trung-s06.mjs";
 import { ganSdtS06 } from "./gan-sdt-s06.mjs";
 
@@ -123,9 +124,13 @@ export async function runTransformChotot(client) {
     if (!dacTrung.some((d) => d.field === ENRICH_FIELD.street_raw)) khongDuong.push(chung.subject_key);
   }
   const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
+  // Phát biểu đường mang số điện thoại, kể cả `legacy`, thì rút rồi phân xử lại, kể cả tin ngoài lượt này. Đứng trước bước dưới để lý do rút đúng là `chua-sdt`.
+  const coSo = await rutDuongCoSo(client);
+  if (coSo.length) console.log(`đường mang số: rút ${coSo.length} phát biểu`);
   // DS1: nguồn bỏ trống đường thì rút phát biểu của transform; bộ phân xử trả cột về `legacy` hoặc NULL.
   await retractRule(client, khongDuong, ENRICH_FIELD.street_raw, "payload.street_name", "nguon-bo-trong");
-  const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
+  for (const k of coSo) offerIds.push(mintOfferId("S06", k.slice("S06:".length)));
+  const pxu = offerIds.length ? await resolveOffers(client, [...new Set(offerIds)]) : { offers: 0, offers_changed: 0 };
   console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
   // SĐT đi sau phân xử: câu upsert phía trên không đụng cột số, nên chạy lại không mất số đã ghi.
   const sdt = await ganSdtS06(client);
