@@ -1,43 +1,74 @@
-# Review findings: s03-len-cong (round 3)
-
 ## Trong hợp đồng
 
-- **Hình dạng 4 (âm tính một mình): «DB không đổi» của AC-6 chỉ soi hàng nhom[0], hàng mà các tệp hỏng không hề đổi**
-  file: `pipeline/scripts/s03-len-cong.itest.mjs:326`
-  severity: medium
-  AC: AC-6
-  source: measurement
-  detail: `assert.deepEqual(await hang(), truoc, ...)` đọc một mình unit nhom[0] (dòng 287, 317). Bốn tệp hỏng ở dòng 318-323 không đưa giá trị mới nào cho hàng này. «mã lạ» và «thẻ thiếu một vế» sửa i === 1. «đơn vị không có trong sổ» giữ nguyên nhom[0], còn nhom[0] đã được ghi đúng giá trị đó ở bước --ghi trước. «thiếu đơn vị» bỏ hẳn nhom[0]. Vì vậy, một bản ghi hàng 1 hay số dòng ops_audit rồi mới ném lỗi vẫn xanh ở assert này. `assert.rejects` chỉ chứng minh có ném lỗi, không chứng minh DB không đổi. Vòng lặp không đếm nk() và không chụp toàn bộ collection_units, cũng không có đối chứng dương cho thấy thước đỏ khi có ghi. Ca lệnh thật ở dòng 339-342 chỉ xét exit code, stdout, stderr, không đọc DB. Lời hứa AC-6/E7 «mã lạ thoát khác 0 và DB không đổi» vì thế chưa được đo.
-  rationale: AC-6 hứa rõ «mã thị trường lạ hay đơn vị lạ thì thoát khác 0, DB không đổi», và phép đo không chứng minh được vế DB không đổi.
-
-- **Hình dạng 4 (âm tính một mình): ca «0 cặp chứa tin cấp thị trường» không thể đỏ, vì mẫu không có tin S06 cùng mã thị trường**
-  file: `pipeline/scripts/s03-len-cong.itest.mjs:259`
+- **Hình dạng 4 (âm tính một mình): «0 dòng thước cấp thị trường» không thể đỏ, vì tin S03 gieo không bao giờ vào được thước**
+  file: `pipeline/scripts/s03-len-cong.itest.mjs:274`
   severity: high
   AC: AC-3
   source: measurement
-  detail: `assert.equal(await cap([a.id, b.id]), 0, ...)` đo trên a, b đều là S03, mang area_id thị trường. Stage B ở pipeline/resolve-properties.mjs:95-115 chỉ ghép p1 (S03/S05) với p2 (source = 'S06') theo `p1.area_id = p2.area_id`, không lọc region_type. Hai tin S03 không bao giờ thành cặp với nhau, bất kể khu vực. View tạm ở dòng 242 còn thu tập S06 về đúng một phường, nên a, b không có đối tác nào. Mọi đột biến về khu vực vẫn cho 0. Đối chứng `cap([doiChung.id]) > 0` chỉ chứng minh bộ ghép chạy ở cấp phường, không chứng minh chiều cấp thị trường đỏ được. Bộ ghép không có điều kiện nào loại tin cấp thị trường. Nếu có tin S06 mang mã thị trường, cặp sẽ sinh ra, nhưng thước không gieo ca này. Truy vấn chỉ đọc trên oneinvest_n1_sl1 cho 0 tin S06 cấp thị trường, nên hiện kết quả 0 đến từ dữ liệu, không đến từ luật. Cần gieo một tin S06 cùng mã thị trường và ghim mong đợi, hoặc có ca đỏ riêng; E3 chỉ có ca đỏ cho 610.
-  rationale: AC-3 hứa không có cặp ứng viên chứa tin cấp thị trường, và ca đo không thể đỏ nên lời hứa chưa được chứng minh.
-
-- **Hình dạng 3 (chuỗi có mặt thay cho quan hệ): hai thứ tự 068/069 chỉ đếm chữ «fp_sdt» trong thân hàm, không đo phân xử giữ xuất xứ SĐT**
-  file: `pipeline/scripts/s03-len-cong.itest.mjs:142`
-  severity: medium
-  AC: AC-5
-  source: measurement
-  detail: Lời hứa của AC-5 là hàm cuối giữ nguyên fp_sdt cùng hai mốc offer_status của 068: sau phân xử, field_provenance vẫn còn khoá seller_phone và offer_status, đồng thời luật inferred có hiệu lực. Ma trận thứ tự chỉ kiểm chuỗi trên pg_get_functiondef: `def.includes("fp_sdt")` và `def.split("fp_sdt").length === 4` (dòng 142, 145). Phần chạy thật ở dòng 146-149 chỉ gieo phát biểu property_type rồi đọc property_type, không gieo field_provenance.seller_phone hay offer_status và không đọc lại chúng sau resolve. Tệp không có assert nào về offer_status. Bản 069 làm hỏng phép nối provenance mà vẫn giữ đủ bốn lần xuất hiện chữ fp_sdt sẽ vẫn xanh. Cột 067 cũng chỉ đo kiểu này: `def.includes("unit_facing")` ở dòng 143.
-  rationale: AC-5 yêu cầu 069 giữ nguyên fp_sdt và hai mốc offer_status của 068 ở cả hai thứ tự, mà phép đo chỉ đếm chuỗi.
+  detail: Dòng 274 assert count = 0 trên v_ruler_p2_area với region_type = 'market'. Chú thích dòng 240 nói sáu tin `nhieu` «đủ để thước đạt ngưỡng 5 căn nếu tin cấp thị trường lọt vào: mỗi tin một căn». Điều này không đúng với mã: v_ruler_p2_area (db/migrations/044, dòng 87) đi qua properties JOIN property_offers. Trong mã chạy thật, chỉ pipeline/resolve-properties.mjs ghi property_offers, ở Stage A, và Stage A chỉ lấy o.source = 'S06' JOIN stg_chotot_ads. Tin `nhieu`, `a`, `b` đều là S03. Tin s06Tt không có dòng stg_chotot_ads nên cũng bị loại. Vì vậy không có đột biến nào làm số đếm khác 0. Đối chứng dòng 275 chỉ đếm thước phường có sẵn trong DB, không chứng minh tin mang mã thị trường đi tới được thước. Không có bản đỏ cho riêng vế này (E3 chỉ có ca đỏ trên bản 610). Vế «thước 0 dòng cấp thị trường» của AC-3 nên xanh bất kể mã thế nào.
+  rationale: AC-3 đòi thước không có dòng cấp thị trường như một phép đo cross-layer; phép đo này không thể đỏ nên không chứng minh được AC-3.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 4 (âm tính một mình): confidence ở ca qua transform thật chỉ có notEqual "high", không có dòng phường đối chứng lên high**
+- **Bài nói rõ là đất vẫn nhận loại hình «apartment» suy từ nhóm rồi hiện trên cổng**
+  Người dùng thấy gì: Một số rất ít tin bán đất nền có thể hiện trên trang tin rao với nhãn loại hình là căn hộ. Nhà đầu tư xem tin đó sẽ thấy loại hình sai.
+  Căn cứ: Hiện chỉ khoảng hai bài trên hơn năm mươi nghìn bài, nên ảnh hưởng nhỏ; ghi lại như hạn chế đã biết, sửa sau khá rẻ nhưng chưa cần chặn ra mắt.
+  file: `pipeline/transform-zalo.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Tin nhóm Facebook S05 lên cổng không có nhãn «Chưa xác minh»**
+  Người dùng thấy gì: Tin lấy từ nhóm Facebook hiện trên trang tin rao mà không có nhãn «Chưa xác minh», nên người xem tưởng tin đã được đối chiếu.
+  Căn cứ: Hiện chỉ có một tin như vậy trên cổng, nên người dùng ít gặp; việc có mở nhãn sang nguồn này hay không là quyết định sản phẩm của người ký.
+  file: `app/src/lib/offers-filters.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (có mặt thay vì quan hệ): E13 chỉ so tập tên tệp, không kiểm kết luận gắn với tệp**
+  Người dùng thấy gì: Danh sách các chỗ đọc khu vực được kiểm theo tên tệp, còn phần ghi chú kết luận về từng chỗ không được máy kiểm. Ghi chú sai vẫn có thể lọt mà không báo đỏ.
+  Căn cứ: Không ảnh hưởng dữ liệu hay người dùng cuối, chỉ làm bằng chứng nghiệm thu yếu hơn; người rà soát đọc lại được, nên ghi lại là đủ.
+  file: `pipeline/scripts/do-s03-len-cong.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (âm tính một mình): E12 chỉ có đối chứng cho tên nguồn, không có cho khoá nhóm, tên nhóm và chữ bài**
+  Người dùng thấy gì: Kiểm tra chống lộ thông tin chỉ chứng minh được là bắt tên nguồn thật; với tên nhóm và nội dung bài, chưa chắc nó báo đỏ khi có rò rỉ.
+  Căn cứ: Rủi ro lộ thông tin tầng A là nặng nếu xảy ra, nhưng lần này diff chưa thấy rò và thêm đối chứng sau là rẻ; ghi lại để người ký biết giới hạn của rào.
+  file: `pipeline/scripts/do-s03-len-cong.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (âm tính một mình): `!co.includes("<a href")` không thể đỏ kể cả khi thẻ có liên kết phường**
+  Người dùng thấy gì: Một phép kiểm phụ về liên kết phường trên thẻ tin cấp thị trường không có khả năng báo lỗi, nhưng một phép kiểm khác đã đo đúng việc này.
+  Căn cứ: Không mất khả năng phát hiện lỗi thật vì có phép kiểm đúng ở chỗ khác; sửa không đem lại gì nên chấp nhận.
+  file: `app/tests/s03-len-cong.test.tsx`
+  severity: medium
+  Đề xuất: wont-fix
+
+- **Hình dạng 4 (âm tính một mình): «tin observed giữ giá trị cũ» chỉ assert 0 đề xuất, không ghim tin đã được chọn**
+  Người dùng thấy gì: Phép kiểm xác nhận tin loại hình đã xác thực vẫn giữ giá trị cũ còn yếu, có thể không bắt được lỗi ghi đè nhầm.
+  Căn cứ: Hai ca đỏ chính của luật này đã có và chạy đúng, nên rủi ro mất dữ liệu thấp; thêm đối chứng sau là rẻ.
+  file: `agent/tests/s03-len-cong.test.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 5 (tuyên cả lớp, đo điểm-case): E9 nói «unverified đúng từng nguồn» nhưng chỉ gieo S03 và S06**
+  Người dùng thấy gì: Mô tả của phép kiểm nói «đúng từng nguồn» nhưng thực tế chỉ thử hai nguồn mà hợp đồng cam kết.
+  Căn cứ: Hợp đồng chỉ cam kết hai nguồn nên việc đo đã đủ; chỉ cần chỉnh lời mô tả, không đáng mở việc riêng.
+  file: `app/tests/s03-len-cong.test.tsx`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Hình dạng 4 (âm tính một mình): confidence ở ca qua transform thật chỉ có notEqual "high", không có dòng phường đối chứng lên high (r3 · tệp đã đổi)**
   Người dùng thấy gì: Nếu có lỗi làm mọi tin S03 đều không được xếp độ tin cậy cao, bài kiểm tra hiện tại vẫn báo xanh. Nhà đầu tư có thể thấy tin có phường bị hạ độ tin cậy mà không ai phát hiện.
   Căn cứ: Hậu quả nhẹ vì chỉ lệch nhãn độ tin cậy, không mất hay lộ dữ liệu, và sửa lại được khi chạy lại bước xử lý; bổ sung ca đối chứng sau cũng rẻ.
   file: `pipeline/scripts/s03-len-cong.itest.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 (tuyên quét lớp nhưng phạm vi thiếu): hợp đồng nói E13 quét «toàn kho», mã chỉ quét năm thư mục**
+- **Hình dạng 5 (tuyên quét lớp nhưng phạm vi thiếu): hợp đồng nói E13 quét «toàn kho», mã chỉ quét năm thư mục (r3 · tệp đã đổi)**
   Người dùng thấy gì: Một vài script vận hành và truy vấn phụ ngoài các thư mục chính có thể đọc dữ liệu khu vực theo cách lạ mà bài kiểm tra không phát hiện. Số liệu ở các công cụ nội bộ đó có thể lệch mà không ai biết.
   Căn cứ: Các chỗ bị bỏ sót là công cụ nội bộ, không hiện trên cổng nhà đầu tư, nên hậu quả nhẹ và dễ phát hiện khi dùng; mở rộng phạm vi quét về sau không đắt.
   file: `pipeline/scripts/do-s03-len-cong.mjs`
