@@ -10,11 +10,13 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { daCoPhanGiu068, nap068 } from "./lib/nap-068.mjs";
+import { daCoNhan069, nap069 } from "./lib/nap-069.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 // Trục dung: mã tài khoản trống không gom nhóm; số sai dạng không vào tin, không tính vào tài khoản, chỉ được đếm.
+// $1: view đã có cột nhãn (069) chưa. Chưa có thì không ghi số ghép mới, vì số đó sẽ lên trang mà không có nhãn.
 export const SQL_GAN = String.raw`
 WITH dung AS (
   SELECT list_id, tk, an, tho,
@@ -44,6 +46,7 @@ WITH dung AS (
            WHEN m.rieng IS NOT NULL THEN 'giu'
            WHEN m.an AND m.lop = 'ghep' THEN 'rut'
            WHEN m.an THEN 'giu'
+           WHEN m.n = 1 AND m.lop IN ('trong', 'ghep') AND NOT $1::boolean THEN 'giu'
            WHEN m.n = 1 AND m.lop IN ('trong', 'ghep') THEN 'ghep'
            WHEN m.n >= 2 AND m.lop = 'ghep' THEN 'rut'
            ELSE 'giu' END AS viec
@@ -82,6 +85,7 @@ SELECT (SELECT count(*) FROM upd)::int AS doi,
 /**
  * Gán số cho mọi tin S06, kể cả tin đã nghỉ. Chạy lại không đổi stg thì đổi 0 dòng. Trả số đếm, không trả số điện thoại.
  * Hàm phân xử chưa giữ khoá (chưa áp 068, hoặc migration sau ghi đè) thì không ghi: ghi lúc đó sẽ mất xuất xứ ở lượt phân xử kế.
+ * View chưa có cột nhãn (chưa áp 069, hoặc migration sau ghi đè) thì số trực tiếp vẫn ghi, số ghép mới thì không, in CHUA-AP-069.
  * @param {import("pg").Client} client
  * @param {{ sql?: string }} [o] `sql` chỉ để test đột biến chạy trên đúng fixture.
  * @returns {Promise<{doi: number, truc_tiep: number, ghep: number, rut: number, tai_khoan_hai_so: number, sai_e164: number, bo_qua: null|"CHUA-AP-068"}>}
@@ -91,7 +95,9 @@ export async function ganSdtS06(client, { sql = SQL_GAN } = {}) {
     console.log("gán SĐT S06: CHUA-AP-068 — hàm phân xử chưa giữ khoá seller_phone, lượt này không ghi");
     return { doi: 0, truc_tiep: 0, ghep: 0, rut: 0, tai_khoan_hai_so: 0, sai_e164: 0, bo_qua: "CHUA-AP-068" };
   }
-  const { rows } = await client.query(sql);
+  const coNhan = await daCoNhan069(client);
+  if (!coNhan) console.log("gán SĐT S06: CHUA-AP-069 — view sale_offers chưa có cột nhãn, lượt này không ghi số ghép mới");
+  const { rows } = await client.query(sql, [coNhan]);
   return { ...rows[0], bo_qua: null };
 }
 
@@ -204,7 +210,7 @@ const dongLoai = (ten, truoc, sau) => inKhongSo(`${ten} tin=${sau.tin} song=${sa
   + `sau_song=${sau.co_so_song} sau_nghi=${sau.co_so_nghi} truc_tiep=${sau.truc_tiep} ghep=${sau.ghep}`);
 
 /**
- * Đo trong giao dịch rồi ROLLBACK: tự áp 068, gán, in số trước và sau. DB máy thu không đổi. Bất biến sai thì thoát 1.
+ * Đo trong giao dịch rồi ROLLBACK: tự áp 068, 069, gán, in số trước và sau. DB máy thu không đổi. Bất biến sai thì thoát 1.
  * md5 đo bằng client thứ hai, ngoài giao dịch, để chứng ROLLBACK thật.
  */
 async function chayThu() {
@@ -218,6 +224,7 @@ async function chayThu() {
     let so;
     try {
       await nap068(c);
+      await nap069(c);
       const da_ap_068 = await daCoPhanGiu068(c);
       const truoc = await doSdtS06(c);
       const gan = await ganSdtS06(c);
