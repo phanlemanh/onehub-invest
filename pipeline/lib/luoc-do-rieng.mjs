@@ -45,6 +45,14 @@ export async function khoaNguon(c, bang, { toiDa = 1000 } = {}) {
   }
 }
 
+/** Bảng public giao dịch đang giữ khoá mà không nằm trong danh sách đã khoá từ đầu: mỗi tên là một lần xin khoá giữa chừng. */
+export async function khoaNgoaiDanhSach(c, daKhoa) {
+  const { rows } = await c.query(
+    `SELECT DISTINCT r.relname FROM pg_locks l JOIN pg_class r ON r.oid = l.relation JOIN pg_namespace n ON n.oid = r.relnamespace
+      WHERE l.pid = pg_backend_pid() AND n.nspname = 'public' AND r.relkind IN ('r', 'p') AND NOT r.relname = ANY($1) ORDER BY 1`, [daKhoa]);
+  return rows.map((r) => r.relname);
+}
+
 /** [t] khi public.<t> đang là BẢNG, [] khi là view hay vắng — cho bảng mà migration nạp trong ca có thể DROP (060 bỏ bảng
  * sellers khi DB chưa áp): chép nó sang lược đồ riêng thì câu DROP không tên lược đồ rơi vào bản riêng, không chạm public. */
 export async function neuLaBang(c, t) {

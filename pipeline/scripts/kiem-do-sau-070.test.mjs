@@ -13,7 +13,7 @@ import pg from "pg";
 import { docDuLieu, SQL_N3, tinhSo, veDong, xepTrangThai } from "../do-danh-ba-sdt.mjs";
 import { ganSdtS06 } from "../gan-sdt-s06.mjs";
 import { dungNguoi, RULE_TRUC_TIEP, TIN_VAO_DANH_BA } from "../lib/danh-ba-nguoi.mjs";
-import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
+import { khoaNgoaiDanhSach, luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 import { nap068 } from "../lib/nap-068.mjs";
 import { nap070 } from "../lib/nap-070.mjs";
 import { CAU_VIEW_SONG, sqlNapLai } from "../lib/nap-view-song.mjs";
@@ -22,7 +22,9 @@ const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const GOC = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
-const BANG = ["stg_chotot_ads", "stg_zalo_posts", "sale_offer_records", "field_assertions", "ops_audit", "parties", "registry_aliases", "registry_events", "party_roles"];
+// properties, property_offers: view sellers đọc ở public qua v_ruler_p2_area; review_queue: dựng danh bạ đọc. Phải khoá cùng câu NOWAIT
+// đầu giao dịch; xin giữa chừng thì vào vòng deadlock với ca đổi khoá ngoại chạy song song (nap-lai-ba-luot-fk, đo được ở lượt chấm 4).
+const BANG = ["stg_chotot_ads", "stg_zalo_posts", "sale_offer_records", "field_assertions", "ops_audit", "parties", "registry_aliases", "registry_events", "party_roles", "properties", "property_offers", "review_queue"];
 const yen = { out: () => {} };
 const bam = (so) => createHash("sha256").update(so).digest("hex").slice(0, 32);
 
@@ -46,7 +48,9 @@ async function trongLuocDo(fn) {
   try {
     await c.query("BEGIN");
     const sc = await luocDoRieng(c, BANG, { tienTo: "kd" });
-    return await fn(c, { sc });
+    const kq = await fn(c, { sc });
+    assert.deepEqual(await khoaNgoaiDanhSach(c, BANG), [], "KD ca xin khoá bảng public giữa giao dịch: thêm bảng đó vào BANG");
+    return kq;
   } finally {
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
@@ -219,5 +223,15 @@ test("KD-AC-3 chạy thẳng câu view báo lỗi, đi qua sqlNapLai thì không
     await c.query("ROLLBACK TO SAVEPOINT thang");
     await c.query(await sqlNapLai(c, CAU_VIEW_SONG));
     assert.equal(await coCot(c), true, "KD-AC-3 view phải còn cột sau khi nạp");
+  });
+});
+
+// Đối chứng không đọc thêm bảng public nào: chính câu đọc đó là lần xin khoá giữa chừng (đo 03/11: đọc nights ở đây cho 6 deadlock trong 24 lần).
+test("KD khoá: view sellers chỉ kéo bảng đã khoá từ đầu, bỏ một bảng khỏi danh sách thì phép đo gọi tên nó", async () => {
+  await voiDanhBa(async (c) => {
+    await c.query("SELECT count(*) FROM sellers");
+    assert.deepEqual(await khoaNgoaiDanhSach(c, BANG), [], "KD khoá: sellers kéo bảng ngoài BANG");
+    assert.deepEqual(await khoaNgoaiDanhSach(c, BANG.filter((t) => t !== "property_offers")), ["property_offers"],
+      "KD khoá đối chứng: bỏ property_offers khỏi danh sách thì phải bị gọi tên");
   });
 });
