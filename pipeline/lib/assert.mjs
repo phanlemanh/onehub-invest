@@ -59,6 +59,21 @@ export async function writeAssertions(client, rows, { replaceOwn = false } = {})
   return { inserted: res.rowCount, retracted };
 }
 
+/**
+ * Rút phát biểu sống của một luật đọc ở các chủ thể mà lượt này không còn đọc ra giá trị — `replaceOwn` chỉ thay khi lượt có
+ * giá trị mới, nguồn bỏ trống thì phát biểu cũ vẫn sống. Dùng trước khi phân xử.
+ * @returns {Promise<number>} số phát biểu đã rút
+ */
+export async function retractRule(client, subjectKeys, field, ruleId, reason) {
+  if (!subjectKeys.length) return 0;
+  const res = await client.query(
+    `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = $4
+      WHERE retracted_at IS NULL AND subject_key = ANY($1::text[]) AND field = $2 AND rule_id = $3`,
+    [subjectKeys, field, ruleId, reason],
+  );
+  return res.rowCount;
+}
+
 /** Cổng «chưa cắt chuyển» (045): ném trước khi bộ ghi đụng dòng nào — cùng thông điệp với hàm SQL. */
 export async function kiemCatChuyen(client) {
   const { rows } = await client.query(
