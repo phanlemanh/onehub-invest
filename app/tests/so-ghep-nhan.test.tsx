@@ -85,7 +85,7 @@ const goiSo = (id: string) => contactRoute.GET(new Request(`http://local.test/ap
 
 const KHOA_DANH_SACH = [
   "areaM2", "bathrooms", "bedrooms", "firstSeenDays", "frontageLength", "hasPhone", "kind", "offerId", "phoneInferred", "pricePerm2",
-  "priceVnd", "propertyType", "sellerManyNames", "sellerName", "stories", "street", "updatedAt", "ward",
+  "priceVnd", "propertyType", "sellerManyNames", "sellerName", "stories", "street", "unverified", "updatedAt", "ward",
 ]
 
 // Năm ô viết trước: ô, cột có trong lược đồ không, tin, cờ danh sách, thân route liên hệ.
