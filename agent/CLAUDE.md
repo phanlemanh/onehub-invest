@@ -10,7 +10,7 @@ src/runtime/   loop.ts (ReAct + step budget + hooks + trace JSONL), models.ts, c
 src/agents/    judge-entity, enrich-text, context-resolver — agents-as-config
 src/tools/     native.ts (sau này: MCP-first, A3)
 src/memory/    store.ts — user_events / user_profile (memory là TOOL của runtime)
-scripts/       enrich-run.ts
+scripts/       enrich-run.ts, doc-toan-bo-s03.ts (đọc toàn bộ chữ S03; xem ROADMAP §2.2, LS1)
 traces/        *.jsonl — gitignored
 ```
 

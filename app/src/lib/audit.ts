@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import { pool } from "./db";
 
-const moiTruong = () => (process.env.VERCEL === "1" ? "cloud" : "local");
+export const moiTruong = () => (process.env.VERCEL === "1" ? "cloud" : "local");
 
 /**
  * Chạy `fn` trong một transaction trên một client của pool: BEGIN → fn → COMMIT; fn ném lỗi → ROLLBACK rồi ném lại.
