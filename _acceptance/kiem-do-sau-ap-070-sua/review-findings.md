@@ -1,56 +1,102 @@
+# Review findings: kiem-do-sau-ap-070-sua (round 3)
+
 ## Trong hợp đồng
 
-- **Bộ phán lý do PD-AC-8 chỉ thấy 3 trong 252 ô lệch, nên «lệch toàn ở block_raw» không được đo**
-  file:line: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs:22`
-  severity: medium
-  AC: AC-4
-  source: bugs
-  detail: `lechChiBlockRaw` đọc tập trường từ thông điệp lỗi của ca PD-AC-8, nhưng thông điệp đó chỉ in ba phần tử đầu: `cắt chuyển lệch: ${JSON.stringify(r.lech.slice(0, 3))}` (pipeline/scripts/phat-bieu-db.itest.mjs:500). Nhật ký thật tại .acceptance-runs/kiem-do-sau-ap-070-sua/doi-chieu/phat-bieu-db.itest.log (ghi lúc 15:07) có `actual: 252` và đúng 3 dòng `"field":"block_raw"`, tức 249 ô còn lại không được nhìn. Ba phần tử đó cũng không phải mẫu đại diện: `soMoc` duyệt Map theo thứ tự dòng của `SELECT ... FROM sale_offer_records` không có ORDER BY (pipeline/phat-bieu-cat-chuyen.mjs:23, 31-34, 61). Hệ quả: nếu cắt chuyển làm lệch thêm `seller_phone`-độc lập như `street_raw` hay `property_type` ở ô thứ 4 trở đi, `every(t === "block_raw")` vẫn đúng, xetBo báo đạt và E4 vẫn xanh. Số ca xanh cũng không chặn được vì đó vẫn là ca đã đỏ, và `actual` không được ghim. E4 hứa «mỗi ca đỏ mang đúng lý do đã đo» và chú thích dòng 21 nói «chỉ ghim tập trường», nhưng tập trường đầy đủ không có trong nhật ký. tuKiem (dòng 114-116) chỉ thử trường lạ nằm trong hai phần tử đầu nên không phát hiện được. Cách sửa: để phép đo lấy tập trường trên toàn bộ `r.lech`, ví dụ in tally theo field trong thông điệp, hoặc để probe tự tính từ `catChuyen`. Bản 174c302a của test không cần giữ nguyên thông điệp này, vì đây là tệp trong vùng vật được phép sửa.
-
-- **Hình dạng 3 — lý do đỏ của PD-AC-8 hứa «mọi lệch chỉ ở block_raw» nhưng chỉ đọc được 3 trên 252 phần tử lệch**
-  file:line: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs:22`
-  severity: high
-  AC: AC-4
-  source: measurement
-  detail: lechChiBlockRaw (dòng 22-25) lấy mọi `"field":"…"` trong phần lỗi rồi đòi tất cả bằng block_raw. Comment dòng 21 ghi «PD-AC-8 đo được lệch toàn ở block_raw». Nhưng thông điệp nguồn là `cắt chuyển lệch: ${JSON.stringify(r.lech.slice(0, 3))}` (pipeline/scripts/phat-bieu-db.itest.mjs:500), nên regex chỉ thấy tối đa 3 phần tử đầu. Nhật ký đo thật .acceptance-runs/kiem-do-sau-ap-070-sua/doi-chieu/phat-bieu-db.itest.log có dòng 88 liệt 3 phần tử block_raw, còn dòng 100 ghi `actual: 252`. Vậy 249 ô còn lại không được chấm: lệch mới ở bedrooms, street_raw hay property_type nằm sau 3 phần tử đầu vẫn cho xetBo «đạt». Giá trị r.lech.length cũng không được ghim. Quan hệ E4 hứa là «mỗi ca đỏ mang đúng lý do đã đo», và nó được đo bằng một mẫu cắt cụt. Tự kiểm không lộ lỗ này: `lech(f)` ở dòng 114 và «PD trường lạ» ở dòng 116 dựng tay thông điệp hai phần tử, với trường lạ nằm ngay trong vùng nhìn thấy, tức fixture đúng khuôn bên đọc (cũng là hình dạng 2). Đây vẫn là lỗ cùng loại mà lần sửa S4-r1 (d-20261103T084009Z-20) nhắm đóng.
+(không có finding nào map được vào AC)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 2 — bí danh viết tay đúng khuôn SQL_N3, vế EXISTS của N3 chưa từng đọc dòng do dungNguoi ghi**
-  Người dùng thấy gì: Kiểm tra danh bạ có thể báo đỏ giả trở lại với một số điện thoại đã có bí danh nhưng chỉ còn tin ghép, mà bộ kiểm tra hiện tại vẫn xanh. Chỉ ảnh hưởng công cụ kiểm nội bộ, không ảnh hưởng dữ liệu hay người dùng cổng.
-  Căn cứ: Hậu quả nhẹ vì chỉ làm công cụ kiểm nội bộ báo sai chứ không mất hay lộ dữ liệu, và đỏ giả hiện ra ngay nên người vận hành tự nhận ra được.
-  file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 — đối chứng cột của E5 và các nhánh bộ phán chỉ đếm số vi phạm, không ghim thông điệp như E5 khai**
-  Người dùng thấy gì: Các phép tự kiểm của bộ đo chỉ đếm số lỗi chứ không xác nhận đúng loại lỗi, nên một nhánh sai có thể lọt mà vẫn xanh. Người dùng cổng không bị ảnh hưởng, chỉ giảm độ tin cậy của bộ đo nội bộ.
-  Căn cứ: Rủi ro thấp vì chỉ làm bộ đo kém chặt hơn khai báo, không động đến dữ liệu, và có thể siết lại sau mà không tốn nhiều.
-  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 — vế «không đổi migration có từ trước» của E5 âm tính một mình, không có đối chứng dương**
-  Người dùng thấy gì: Phép kiểm «không sửa migration cũ» chưa từng được thử với một thay đổi thật, nên nếu bộ lọc sai nó vẫn báo sạch. Không ảnh hưởng người dùng cổng.
-  Căn cứ: Nhẹ vì kết quả hiện tại đúng và kho còn có hook chặn sửa migration đã commit làm lớp bảo vệ thứ hai.
+- **Thoát hạ tầng trong khối try bỏ qua finally, để lại bản chép DB thử**
+  Người dùng thấy gì: Nếu phép đo gặp lỗi hạ tầng giữa chừng, một bản chép đầy đủ dữ liệu có thể còn nằm lại trên máy chủ dữ liệu dùng chung cho đến lần đo kế tiếp.
+  Căn cứ: Hậu quả nhẹ: bản chép chỉ nằm trên máy nội bộ, không lộ ra ngoài, và tự bị ghi đè hoặc xoá tay được ở lần chạy sau.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 1 — kiểm bộ chạy đúng DB thử bằng grep mã nguồn, không đo đầu ra**
-  Người dùng thấy gì: Chưa có bằng chứng trực tiếp rằng cả năm bộ kiểm đều chạy trên DB thử thay vì DB chính trên máy, chỉ có kiểm gián tiếp. Nếu rơi nhầm thì phép đo hụt mà vẫn xanh, nhưng không làm hỏng dữ liệu thật.
-  Căn cứ: Nhẹ vì hai trong năm bộ đã có đối chứng gián tiếp và phép đo chạy một lần trên máy nội bộ, nếu sai thì chạy lại được.
+- **Thước độc lập của hồ sơ do-danh-ba-sdt còn câu N3 cũ, sẽ lệch với lệnh sau khi áp 068**
+  Người dùng thấy gì: Khi hồ sơ đo danh bạ cũ được chạy lại sau khi có số ghép, phép đối chiếu độc lập của nó có thể báo lệch dù lệnh đo đúng, làm người vận hành tưởng có lỗi.
+  Căn cứ: Hôm nay chưa lộ vì dữ liệu chưa có số như vậy, và chỉ gây báo đỏ giả khi làm mới hồ sơ cũ; sửa thuộc việc riêng của hồ sơ đó.
+  file: `_acceptance/do-danh-ba-sdt/probes/db.mjs`
+  severity: low
+  Đề xuất: new-contract
+
+- **Khoá `sdt_tren_tin` và nhãn «SĐT trên tin» không còn đúng với số N3 mới**
+  Người dùng thấy gì: Trang vận hành có thể hiện số «SĐT trên tin» nhỏ hơn số SĐT thực có trên tin mà không giải thích vì sao.
+  Căn cứ: Chỉ là chữ nhãn trên màn hình vận hành nội bộ, không mất hay lộ dữ liệu; sửa chữ sau rất rẻ khi có dịp chạm tới nhãn.
+  file: `pipeline/do-danh-ba-sdt.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **`paths` của eval bỏ sót phần được đo, nên bằng chứng không cũ khi các phần đó đổi**
+  Người dùng thấy gì: Nếu sau này ai sửa ba bộ đo còn thiếu, hồ sơ nghiệm thu vẫn được coi là còn mới dù chưa đo lại.
+  Căn cứ: Không ảnh hưởng người dùng cuối; chỉ làm bằng chứng nghiệm thu có thể cũ mà không bị báo, và bổ sung đường dẫn sau này rất dễ.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/evals.yaml`
+  severity: low
+  Đề xuất: known-limits
+
+- **Lỗi hạ tầng giữa phép đo bỏ qua bước xoá DB thử, và kết quả xoá không được kiểm**
+  Người dùng thấy gì: Phép đo có thể báo đạt dù bản chép thử chưa được xoá, để lại dữ liệu người bán trên máy chủ dùng chung ngoài ý muốn.
+  Căn cứ: Dữ liệu người bán trên tin rao đã là công khai theo quy định hiện hành và bản chép chỉ ở máy nội bộ; người vận hành tự xoá được bằng một lệnh.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5 — «bốn migration × hai trạng thái view» chỉ là ma trận văn bản, vế chạy thật là một điểm và 059 không được chạy qua sqlNapLai**
-  Người dùng thấy gì: Một trong bốn migration cũ chưa được chạy thật trọn vẹn trên view mới, chỉ được chứng minh ở mức văn bản. Có thể còn đỏ khi nạp lại migration cũ, nhưng không ảnh hưởng người dùng cổng.
-  Căn cứ: Nhẹ vì ba bộ dùng tệp này đã đỏ sẵn từ trước vì lý do khác và chỉ chạm công cụ kiểm nội bộ, không đụng dữ liệu thật.
+- **Câu đo độc lập của E2 do-danh-ba-sdt vẫn giữ công thức N3 cũ, sẽ báo LECH n3.sdt sau khi có số ghép**
+  Người dùng thấy gì: Khi dữ liệu có số ghép chưa có bí danh, phép đối chiếu của hồ sơ danh bạ cũ sẽ báo lệch giả, khiến người duyệt nghi ngờ con số đúng.
+  Căn cứ: Chưa xảy ra hôm nay, chỉ gây đỏ giả khi chạy lại hồ sơ cũ và không làm sai dữ liệu; nên xử lý trong lần làm mới hồ sơ đó.
+  file: `_acceptance/do-danh-ba-sdt/probes/db.mjs`
+  severity: low
+  Đề xuất: new-contract
+
+- **Hình dạng 5: «bốn migration × hai trạng thái view» chỉ là ma trận văn bản, vế chạy thật chỉ có một điểm, và 059 không được thực thi qua sqlNapLai**
+  Người dùng thấy gì: Bài kiểm nạp lại cấu trúc dữ liệu cũ chưa chạy thử toàn bộ một trong bốn tệp trên view đã mở rộng, nên một lỗi hiếm ở tệp đó có thể lọt.
+  Căn cứ: Không mất dữ liệu người dùng và chỉ lộ khi chạy lại tệp cũ trên máy dev; có thể bổ sung phép chạy thật sau khi cần mà không tốn kém.
   file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+- **Hình dạng 2: bí danh viết tay đúng khuôn SQL_N3, vế EXISTS của n3 chưa từng đọc dòng do dungNguoi ghi**
+  Người dùng thấy gì: Bài kiểm chưa chứng minh cách hệ thống thật ghi bí danh khớp với cách bài kiểm giả lập, nên nếu cách ghi đổi thì bài kiểm vẫn xanh.
+  Căn cứ: Rủi ro chỉ là bài kiểm bỏ sót một thay đổi trong tương lai, không ảnh hưởng dữ liệu hiện tại và dễ bổ sung khi chạm vào phần ghi bí danh.
+  file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: đối chứng cột của E5 và các nhánh bộ phán chỉ đếm số vi phạm, không ghim thông điệp như evals khai**
+  Người dùng thấy gì: Phép tự kiểm của công cụ đo chỉ đếm số vi phạm nên một nhánh hỏng có thể lọt nếu sinh ra vi phạm khác.
+  Căn cứ: Chỉ làm công cụ nghiệm thu kém chặt, không chạm người dùng cuối; sửa sau rẻ nhưng không cấp bách.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: vế «không đổi migration có từ trước» của E5 âm tính một mình, không có đối chứng dương**
+  Người dùng thấy gì: Việc kiểm không sửa tệp cấu trúc dữ liệu cũ chưa có ca thử chứng minh nó bắt được thay đổi thật, nên nếu bộ lọc sai thì vẫn báo đạt.
+  Căn cứ: Hiện chưa có thay đổi nào bị bỏ lọt và git vẫn chặn sửa migration đã commit, nên rủi ro thấp.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 1: kiểm bộ chạy đúng DB thử bằng grep mã nguồn, không đo đầu ra**
+  Người dùng thấy gì: Chưa có bằng chứng lúc chạy rằng ba bộ đo thật sự chạy trên bản chép thử chứ không phải trên dữ liệu thật, nên có thể đo hụt mà vẫn xanh.
+  Căn cứ: Rủi ro là kết quả đo kém tin cậy chứ không làm mất hay lộ dữ liệu; chạy lại phép đo là kiểm lại được.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 2: tự kiểm «bỏ qua ca» và «lỗi view» bơm số thẳng vào bộ phán, đường đọc nhật ký fail-open không được thử**
+  Người dùng thấy gì: Nếu định dạng nhật ký của công cụ chạy test đổi, phép đo có thể không phát hiện ca bị bỏ qua mà vẫn báo đạt.
+  Căn cứ: Chỉ xảy ra khi công cụ test đổi định dạng và không ảnh hưởng người dùng; nhật ký hiện tại khớp, sửa sau rẻ.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3: «phần còn lại giữ nguyên» đo bằng startsWith và endsWith, không đo quan hệ bằng nhau**
+  Người dùng thấy gì: Bài kiểm có thể không phát hiện nếu phần giữa của tệp nạp lại bị thay đổi ngoài ý muốn, vì chỉ so đầu và cuối.
+  Căn cứ: Hàm này hiện chỉ cắt một câu cố định nên khả năng sai thấp, không ảnh hưởng người dùng cuối và có thể siết chặt khi cần.
+  file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+⚠ Cụm ngoài vùng phủ: 3/13 lỗi rơi vào file không bộ đo nào phủ (_acceptance/do-danh-ba-sdt/probes/db.mjs, _acceptance/kiem-do-sau-ap-070-sua/evals.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
