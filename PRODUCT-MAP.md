@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>10 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>128 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>94 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>131 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>96 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -108,10 +108,12 @@ flowchart TD
 - Transform S03 đọc giá và diện tích không lẫn URL/SĐT, chuẩn hoá cách viết giá của môi giới, chặn giá phi lý, gom repost theo mã toà/căn, ghi tên người bán và phường theo thị trường của nhóm (`s03-cam-mau-so-lieu`)
 - Giá tỷ chẵn viết bằng đồng («3.000.000.000 đ») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-chan-dong`)
 - Giá tỷ viết bằng đồng mà ngay sau là khoảng trắng/xuống dòng rồi số 1–2 chữ số («3.000.000.000\n50m2») không bị bước gạt SĐT của transform S03 nuốt mất (`s03-gia-ty-sau-khoang-trang`)
+- Nhà đầu tư thấy tin S03 trên trang tin rao, kể cả tin không nói phường (mang khu vực cấp thị trường), kèm nhãn «Chưa xác minh» (`s03-len-cong`)
 - LLM đọc toàn bộ chữ S03 ở lớp đề xuất, tự áp loại hình khi trích dẫn có thật và qua luật; ý định, giá, diện tích chỉ đối chiếu; bất đồng lên /ops/review (`s03-llm-doc-toan-bo`)
 - Bộ nhận loại tin S03 nhận tin bán và tin thuê không ghi chữ «bán/cho thuê» theo tín hiệu chữ, đơn vị giá và bối cảnh nhóm; vẫn loại bài khách tìm nhà; bài đã có loại không đổi (`s03-nhan-loai-tin-rong`)
 - Vá hẹp bộ đọc tin S03 (diện tích, phòng ngủ, phường theo hướng, số ngữ cảnh, thuê từ 1 tỷ, giá che số, giá không đơn vị) và lưu toà, trục qua phát biểu có sẵn (`s03-va-doc-tin`)
 - check-freshness và /ops đo S05 theo nhịp 2 lượt/tuần: SLO_HOURS.S05 = 96 giờ ở cả hai bản chép, giữ parity với /ops (`s05-slo-theo-lich`)
+- Đường của tin S06 đi tới tin và căn, không rơi giữa chừng (`s06-duong-du-an-len-tin`)
 - Tin và danh bạ Người lưu số gốc SĐT ở một dạng +84…, danh bạ có bí danh số gốc, và bảng người bán thành view trên danh bạ (`sdt-luu-goc-e164`)
 - Bước tổng hợp người bán thêm dòng cho mọi SĐT mới trên tin, không chỉ cập nhật và xoá dòng đã có (`sellers-them-dong-lai`)
 - Người vận hành thấy cùng một số SLO trên /ops và /ops/collections (`slo-mot-nguon`)
@@ -188,6 +190,7 @@ flowchart TD
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
+- job hằng ngày S06 không còn xoá số và tên người bán đã thu; bộ thu số gọi mỗi tài khoản một lần (`hop-dong-nguoi-ban-s06`)
 - importer S08 nạp snapshot S08 vào stg_s08_inventory, chạy lại không nhân dòng, đổi số an toàn, bỏ snapshot thử (`import-s08`)
 - PL1 — importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST), không ghi chúng vào stg_* (`importer-bo-qua-du-lieu-thu`)
 - Bản đồ đích cổng Invest — block đích cho mọi route Invest trước khi dọn tiếp (`invest-target-map`)
@@ -242,9 +245,11 @@ flowchart TD
 - Phép đo danh bạ SĐT chặt — mỗi số một người đo mỗi đêm, đúng ảnh và tên đúng người khi chuyển 060, che số /ops/people qua loader thật (`sd3-lam-chat-do-danh-ba`)
 - Test người bán theo SĐT (SD3) chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`sd3-test-chiu-song-song`)
 - SĐT người bán S06 từ stg lên tin rao, ghép theo tài khoản có đúng một số, tin ẩn số không nhận số ghép, xuất xứ tách được — migration 068 (`sdt-s06-ghep-tai-khoan`)
+- Chuỗi đường chứa số điện thoại không lên tin và căn (`sdt-trong-ten-duong`)
 - Transform S03 và S05 ghi seller_ref theo người gửi bài, không còn một giá trị hằng cho mọi tin của nhóm (`seller-ref-theo-nguoi-gui`)
 - Phần cloud của 060 không làm gãy sync — cloud giữ sellers là bảng, sync dừng có tên khi bảng đích là view, tệp catch-up cloud 060 không DDL (`sellers-view-len-cloud`)
 - snapshot thu thập chỉ hiện ra cho bước nạp khi đã ghi trọn vẹn, nên lượt nạp không bao giờ đánh dấu «đã nạp» một snapshot dở dang (`snapshot-nguyen-tu`)
+- Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
 - Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files (`stg-zalo-media-files`)

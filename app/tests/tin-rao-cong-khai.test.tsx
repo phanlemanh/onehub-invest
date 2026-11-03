@@ -140,8 +140,8 @@ async function banSao(sua: (src: string) => string) {
 
 // ---- E4: bộ lọc, thứ tự, trang, trường ----
 const TRUONG = [
-  "areaM2", "bathrooms", "bedrooms", "firstSeenDays", "frontageLength", "hasPhone", "kind", "offerId", "priceVnd", "pricePerm2",
-  "propertyType", "sellerManyNames", "sellerName", "stories", "street", "updatedAt", "ward",
+  "areaM2", "bathrooms", "bedrooms", "firstSeenDays", "frontageLength", "hasPhone", "kind", "offerId", "phoneInferred", "priceVnd", "pricePerm2",
+  "propertyType", "sellerManyNames", "sellerName", "stories", "street", "unverified", "updatedAt", "ward",
 ]
 
 test("E4 ma trận bộ lọc: mỗi ô một tin vào, một tin loại", async () => {
@@ -386,7 +386,8 @@ test("E5 tin hiện có số 200 no-store; mọi trường hợp khác cùng m�
   const ok = await goiSo("co-so")
   assert.equal(ok.status, 200)
   assert.equal(ok.headers.get("cache-control"), "no-store")
-  assert.deepEqual(await ok.json(), { phone: SO_A })
+  // Lược đồ tạm chưa có cột nhãn: thiếu bằng chứng nên inferred là true (so-ghep-s06-nhan-danh-ba).
+  assert.deepEqual(await ok.json(), { phone: SO_A, inferred: true })
   const than = new Set<string>()
   for (const id of ["khong-so", "s08", "thieu-dt", "cu", "abnb_123", "khong-ton-tai"]) {
     const r = await goiSo(id)
@@ -503,7 +504,7 @@ test("E9b vùng máy chủ thật không chứa số, có mã tin; contact của
   const html = await veVung(TT, "Thành phố X")
   assert.ok(!html.includes(SO_A) && !html.includes("0912000001") && !html.includes("84912000001"), "SO TRONG HTML")
   assert.ok(html.includes('data-listing-id="co-so"'), "thiếu thẻ tin")
-  assert.deepEqual(await (await goiSo("co-so")).json(), { phone: SO_A })
+  assert.deepEqual(await (await goiSo("co-so")).json(), { phone: SO_A, inferred: true })
   await nap([])
   assert.ok((await veVung(TT, "Thành phố X")).includes("Đang thu thập"))
 })

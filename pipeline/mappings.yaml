@@ -98,7 +98,16 @@ canonical:
       note: "ngữ nghĩa resource Member, không phải field Property"
     seller_phone:
       dd: Member
-      note: "LOCAL-ONLY (PII) — không sync cloud (audit e163575)"
+      note: "tầng C, E.164; lên cloud, trên cổng Invest chỉ qua route contact (sửa đổi ADR-0007, 02/11). Số S06 không có dấu trực tiếp đi kèm seller_phone_inferred"
+    seller_phone_inferred:
+      dd: null
+      rationale: >
+        Số người bán chưa xác minh: tin S06 có số mà không mang dấu s06-so-tren-tin, tức số suy từ tin khác cùng tài khoản hoặc
+        thiếu bằng chứng. Đặc trưng VN: S06 ẩn số theo từng tin nhưng cùng tài khoản lộ số ở tin khác, người xem cần biết số đó
+        chưa chắc của tin đang đọc. Tra dd.reso.org 03/11, Member DD 2.0 và 2.1: 15 field điện thoại (MemberDirectPhone,
+        MemberMobilePhone, MemberPreferredPhone…) chỉ nói loại số và định dạng, phần mô tả hiển thị không có trạng thái xác minh.
+        Migration 070 (cột tính của view sale_offers). Kiểu boolean nên không cần CHECK. DQ: so-chua-xac-minh ở pipeline/sql/450_dq_checks.sql.
+      checked_on: "2026-11-03"
     seller_phone_hash:
       dd: Member
       note: "khoá sellers registry ≈ ULI — định danh xuyên nguồn"
@@ -122,8 +131,8 @@ canonical:
       checked_on: "2026-10-22"
     street_raw:
       dd: StreetName
-      note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); số nhà chưa tách cột"
-      checked_on: "2026-10-22"
+      note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); S06 đọc payload street_name qua phát biểu source_field (DS1); số nhà chưa tách cột"
+      checked_on: "2026-11-03"
     block_raw:
       dd: null
       rationale: >

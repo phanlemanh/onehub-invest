@@ -206,6 +206,7 @@ export const MA_TRAN = {
   "sql/200_transform.sql": "mien",
   "sql/300_metrics.sql": "mien",
   "sql/450_dq_checks.sql": "mien",
+  "sql/500_asset_stats.sql": "mien", // s03-len-cong: lọc thống kê theo phường, không gán khu vực
   "refresh-bait-gap.mjs": "mien",
 };
 
@@ -242,7 +243,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 13, "ma trận viết trước phải đủ 13 tệp (design doc §5 + phép đo N1)");
+  assert.equal(Object.keys(MA_TRAN).length, 14, "ma trận viết trước phải đủ 14 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 
