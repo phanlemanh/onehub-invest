@@ -5,7 +5,7 @@ slug: s03-len-cong
 owner: phanlemanh@gmail.com
 risk_tier: T3      # ngả B (Mạnh chọn 03/11): thêm migration 069 sửa bộ phân xử, khớp t3_paths db/migrations/**
 surfaces: [cli, web]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s03-len-cong-design.md
@@ -57,3 +57,30 @@ loại hình; đủ cả bốn trường chỉ 2 tin. Hàng này mở hai chặn
 - Cho `inferred` vào cột ở trường khác `property_type`.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Tài liệu từ vựng chuẩn vẫn nói suy luận không bao giờ vào cột, trong khi hệ thống nay cho phép riêng loại hình. Người hoặc tác tử đọc tài liệu có thể hiểu sai hành vi thật.
+  - Ngoài-2: Con số độ đúng khi đoán loại nhà theo nhóm có thể trông tốt hơn thực tế vì thước đo gần như lặp lại ngưỡng của luật. Người duyệt có thể tin vào số này hơn mức nó đáng tin.
+  - Ngoài-3: Nếu đề xuất loại nhà của LLM bị bỏ qua thay vì áp dụng, bài kiểm tra vẫn báo ổn. Tin có thể giữ loại nhà suy đoán lâu hơn dự kiến mà không ai hay.
+  - Ngoài-4: Chưa có bài kiểm tra nào xác nhận thẻ tin từ nguồn đã xác minh, khi hiển thị thật trên trang, không bị gắn nhãn «Chưa xác minh». Nếu hỏng, nhà đầu tư sẽ thấy nhãn sai trên tin đáng tin.
+  - Ngoài-5: Một ca kiểm về hai tin cùng thị trường luôn báo xanh nên không bắt được lỗi ở chỗ đó. Người dùng không bị ảnh hưởng, vì hệ thống vốn không ghép hai tin cùng nguồn với nhau.
+  - Ngoài-6: Nếu ai đổi ngưỡng lệch giá hay diện tích sang mức khác 20% thì ca kiểm vẫn xanh. Số tin «sai nặng» báo cho người quyết có thể hơi lệch so với thước đã hứa.
+  - Ngoài-8: Bài kiểm khu vực chỉ chắc chắn bắt được lỗi ở các tin cấp thị trường. Nếu tin có phường bị mất độ tin cậy cao, bài kiểm này vẫn xanh.
+  - Ngoài-9: Luật cho tin đăng ở hai bài khai hai thị trường khác nhau chỉ được thử trên dữ liệu dựng tay. Chưa thấy lỗi thật, nhưng nếu cách ghi đổi dạng thì bài kiểm vẫn xanh.
+  - Ngoài-10: Một số rất ít tin bán đất nền có thể hiện trên trang tin rao với nhãn loại hình là căn hộ. Nhà đầu tư xem tin đó sẽ thấy loại hình sai.
+  - Ngoài-11: Tin lấy từ nhóm S05 hiện trên trang tin rao mà không có nhãn «Chưa xác minh», nên người xem tưởng tin đã được đối chiếu.
+  - Ngoài-12: Danh sách các chỗ đọc khu vực được kiểm theo tên tệp, còn phần ghi chú kết luận về từng chỗ không được máy kiểm. Ghi chú sai vẫn có thể lọt mà không báo đỏ.
+  - Ngoài-13: Kiểm tra chống lộ thông tin chỉ chứng minh được là bắt tên nguồn thật; với tên nhóm và nội dung bài, chưa chắc nó báo đỏ khi có rò rỉ.
+  - Ngoài-15: Phép kiểm xác nhận tin loại hình đã xác thực vẫn giữ giá trị cũ còn yếu, có thể không bắt được lỗi ghi đè nhầm.
+  - Ngoài-17: Nếu có lỗi làm mọi tin S03 đều không được xếp độ tin cậy cao, bài kiểm tra hiện tại vẫn báo xanh. Nhà đầu tư có thể thấy tin có phường bị hạ độ tin cậy mà không ai phát hiện.
+  - Ngoài-18: Một vài script vận hành và truy vấn phụ ngoài các thư mục chính có thể đọc dữ liệu khu vực theo cách lạ mà bài kiểm tra không phát hiện. Số liệu ở các công cụ nội bộ đó có thể lệch mà không ai biết.
+  - Ngoài-19: Một ca kiểm tra trang tin rao đang đọc dữ liệu thật thay vì dữ liệu giả, nên có thể đỏ khi máy không có cơ sở dữ liệu. Người dùng cuối không thấy thay đổi nào.
+  - Ngoài-22: Phép kiểm tra rằng thước giá không có dòng cấp thị trường luôn xanh nên không bắt được lỗi nếu sau này có người đổi cách tạo căn. Hiện người dùng không thấy số sai.
+  - Ngoài-23: Một phép so sánh số liệu phường trước và sau khi thêm tin cấp thị trường không phân biệt được bản đúng với bản sai, dù số liệu thật hiện không bị lệch.
+  - Ngoài-24: Phép kiểm chống lộ khoá nhóm và nội dung bài chưa được thử bằng mẫu giả, nên chưa chắc nó bắt được nếu có rò rỉ. Hiện chưa thấy rò rỉ nào.
+  - Ngoài-25: Hai phép kiểm phụ về mẫu lệch và tin tách nhỏ chưa từng được chứng minh là biết báo đỏ, nên có thể im lặng khi có sai.
+  - Ngoài-26: Nếu sau này có nguồn khác lên cổng, nhãn «Chưa xác minh» có thể gắn sai mà phép kiểm hiện tại không phát hiện. Hiện chỉ S03 và S06 hiển thị.
+  - Ngoài-27: Một chú thích trong ca kiểm tra nói đã kiểm Hà Nội nhưng thực tế chưa kiểm, nên trang của vùng Hà Nội khi chỉ có tin cấp thị trường chưa được thử riêng.
+  - Ngoài-28: Khi nhiều lệnh chấm chạy cùng lúc trên máy chưa có DB thử, bằng chứng có thể đỏ giả hoặc đo trên dữ liệu thiếu. Không ảnh hưởng người dùng cuối, chạy lại từng lệnh là qua.
+  - Ngoài-29: Trên máy chưa có DB thử, một phép kiểm về ranh giới dữ liệu nhạy cảm có thể đỏ vì không nối được chứ không vì vi phạm. Người dùng cuối không thấy gì.
+  - Ngoài-30: Hồ sơ cho người ký mô tả sai ba tệp là đã sửa trong hàng này, dù thực tế chúng không đổi. Sản phẩm không bị ảnh hưởng.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9340cd227966631af10fc5fd5e45ccaeadf61d02
-human_signoff:
+human_signoff: Mạnh 2026-11-03
 ---
 
 # Evidence Report: s03-len-cong
@@ -123,7 +123,7 @@ Round 7.
   baseline: n-a
   carried_from_round: 1
   note: carry-forward tu round 1 — delta khong cham paths cua eval
-  verifier: ui-check
+  verifier: scripts/ui-capture.sh
   verified_at: 2026-11-02T23:56:31Z
   screenshot: evidence/E10-step1.png
   observed: |
