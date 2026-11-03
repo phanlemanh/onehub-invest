@@ -46,7 +46,7 @@ evals:
   - id: E7
     criterion: AC-4
     executor: script
-    cmd: config:executors.script.zalo_import_job
+    cmd: config:executors.test.zalo_import_job
     expected: "exit 0; toàn bộ ca của job nạp S03 pass"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

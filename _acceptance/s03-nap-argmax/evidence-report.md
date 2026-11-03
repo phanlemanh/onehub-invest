@@ -99,7 +99,7 @@ human_signoff:
   run_id: s03-nap-argmax-E7-r3-20261103T052836Z
   exit_code: 0
   baseline: green
-  verifier: config:executors.script.zalo_import_job
+  verifier: config:executors.test.zalo_import_job
   verified_at: 2026-11-03T05:28:37Z
   output: |
     ✔ ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự năm bước, không JOB FAIL
