@@ -91,6 +91,12 @@ const MA_TRAN_COT = [
   ["sale_offers", "cot_moi_chua_khai", "o_lai", "COT CHUA KHAI LEN CLOUD"],
 ];
 
+test("so-ghep-s06 E6: nhãn số chưa xác minh gửi, xuất xứ ở lại máy", () => {
+  const { cols, unapproved } = selectList("sale_offers", ["offer_id", "seller_phone_inferred", "field_provenance"]);
+  assert.deepEqual(cols, ["offer_id", "seller_phone_inferred"]);
+  assert.deepEqual(unapproved, ["field_provenance"]);
+});
+
 function viPhamMaTran() {
   const out = [];
   for (const [bang, cot, ky_vong, thong_diep] of MA_TRAN_COT) {
