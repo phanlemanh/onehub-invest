@@ -1,28 +1,33 @@
-# Review findings: so-ghep-s06-nhan-danh-ba (round 2)
-
 ## Trong hợp đồng
 
-(không có)
+Không có.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 5 (tuyên quét lớp nhưng chỉ lấy mẫu): «mọi số hiện được, đếm trên toàn bộ tin có số» nhưng câu đọc có LIMIT 500, không ORDER BY**
+- **Hình dạng 4 (âm tính một mình): `giao_dich_nay_ghi = false` không có đối chứng dương, và thông điệp deadlock không thể hiện ra trong đúng lỗi nó canh**
+  Người dùng thấy gì: Một phép kiểm tự động canh việc bước thử số ghép không vô tình ghi đè luật phân xử trên máy thu có thể không báo đúng chỗ, hoặc vẫn xanh khi luật mới được áp. Người dùng không thấy hậu quả trực tiếp trên sản phẩm; chỉ là một lỗi tương lai có thể lọt qua phép kiểm này mà không ai biết.
+  Căn cứ: Hậu quả nhẹ và gián tiếp: không làm mất hay lộ dữ liệu của người dùng, chỉ làm một lưới an toàn nội bộ kém nhạy hơn; ghi lại để biết, và gia cố sau khi bước triển khai thật xong thì rẻ hơn.
+  file: `pipeline/scripts/so-ghep-s06.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 5 (tuyên quét lớp nhưng chỉ lấy mẫu): «mọi số hiện được, đếm trên toàn bộ tin có số» nhưng câu đọc có LIMIT 500, không ORDER BY (r2)**
   Người dùng thấy gì: Phép kiểm khuôn số điện thoại trên trang tin rao chỉ soi một phần nhỏ tin có số chứ không phải tất cả. Nếu có số sai khuôn nằm ngoài phần được soi thì phép kiểm vẫn báo xanh.
   Căn cứ: Chỉ là phép kiểm phụ chạy trên dữ liệu máy thu, người dùng không thấy gì sai ở sản phẩm; nếu có số lỗi thì lần rà sau vẫn bắt được và sửa sau không tốn kém.
   file: `app/tests/tin-rao-doi-chieu.test.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 (âm tính một mình): saiKhuon = 0 vẫn xanh khi getOfferPhone trả null cho mọi tin, coThat chỉ được in**
+- **Hình dạng 4 (âm tính một mình): saiKhuon = 0 vẫn xanh khi getOfferPhone trả null cho mọi tin, coThat chỉ được in (r2)**
   Người dùng thấy gì: Phép kiểm khuôn số trên trang tin rao vẫn xanh nếu hệ thống không đọc ra được số nào, nên có thể che mất lỗi làm mất số của mọi tin. Người dùng có thể thấy toàn bộ tin hiện «Chưa có số» mà phép kiểm không báo.
   Căn cứ: Hậu quả chỉ xảy ra khi đường đọc số hỏng hoàn toàn, lỗi đó lộ ngay trên trang và người dùng tải lại hay báo là phát hiện; thêm một phép đối chứng sau này rất rẻ.
   file: `app/tests/tin-rao-doi-chieu.test.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5 (tuyên quét lớp nhưng chỉ có điểm-case): «mọi giá trị in đi qua chặn số» chỉ phá thử veDong, bỏ sót hai đường in khác của doTrenDb**
+- **Hình dạng 5 (tuyên quét lớp nhưng chỉ có điểm-case): «mọi giá trị in đi qua chặn số» chỉ phá thử veDong, bỏ sót hai đường in khác của doTrenDb (r2 · tệp đã đổi)**
   Người dùng thấy gì: Lệnh đo số ghép hiện không in số điện thoại nào ra màn hình, nhưng bộ kiểm chưa bảo vệ được hai dòng in phụ. Sau này ai sửa mà làm lộ số ở hai dòng đó thì bộ kiểm vẫn báo xanh.
   Căn cứ: Hiện chưa có số nào bị lộ và lệnh đo chỉ chạy nội bộ trên máy, nên nhẹ với người dùng; bổ sung ca kiểm sau này rẻ nên ghi lại là hạn chế đã biết.
   file: `pipeline/scripts/so-ghep-s06.test.mjs`
@@ -71,8 +76,4 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-## Chưa adversarial-verify (refuter chết)
-
-(không có)
-
-⚠ Cụm ngoài vùng phủ: 2/3 lỗi rơi vào file không bộ đo nào phủ (app/tests/tin-rao-doi-chieu.test.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

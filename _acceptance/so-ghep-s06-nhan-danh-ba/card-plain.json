@@ -1,38 +1,6 @@
 {
-  "feature_plain": "Người xem Invest thấy nhãn «Chưa xác minh» trên số S06 suy từ tài khoản, và danh bạ người bán chỉ nhận số có bằng chứng trực tiếp trên tin. Xong việc này mới được phép bật số S06 thật.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ chỉ đưa số S06 có trên chính tin rao vào danh bạ; số suy từ tài khoản và số mất dấu nguồn gốc không vào, các nguồn khác giữ nguyên."},
-    {"id": "AC-3", "p": "Sẽ giữ danh sách người bán đúng: số có tin trực tiếp có một dòng, số chỉ còn trên tin suy ra không hiện và không bị báo thiếu."},
-    {"id": "AC-4", "p": "Sẽ đánh dấu mọi số S06 không có bằng chứng trực tiếp là chưa xác minh, mà không ghi lại dòng tin nào."},
-    {"id": "AC-5", "p": "Sẽ không ghi số suy ra khi cơ sở dữ liệu chưa có chỗ chứa nhãn, kể cả khi áp nhầm thứ tự; số trực tiếp vẫn ghi và lượt chạy báo rõ."},
-    {"id": "AC-6", "p": "Sẽ đưa nhãn lên cloud qua lượt đồng bộ thật, dấu nguồn gốc vẫn ở lại máy, và có tệp hướng dẫn năm mốc cho Mạnh chạy."},
-    {"id": "AC-7", "p": "Sẽ báo trong API số nào chưa xác minh; thiếu thông tin thì coi là chưa xác minh chứ không báo lỗi; danh sách vẫn không lộ số."},
-    {"id": "AC-8", "p": "Sẽ hiện Badge «Chưa xác minh» ở thẻ tin trang Bán và Cho thuê, trước khi bấm, sau khi bấm và lúc lỗi; số trực tiếp không có Badge."},
-    {"id": "AC-9", "p": "Sẽ đo trên bản sao dữ liệu thật trước khi áp: bao nhiêu số vào danh bạ, bao nhiêu tin mang nhãn, bao nhiêu người chưa có tin, không in số nào."}
-  ],
-  "wont_do": [
-    {"id": "AC-2", "p": "Sẽ KHÔNG làm danh bạ mất hay đổi người khi số suy ra bị rút khỏi tin; chỉ số trực tiếp mới thêm được vào."},
-    {"id": "OOS-1", "p": "Không áp hai thay đổi cơ sở dữ liệu lên máy thu, không ghi số thật, không áp cloud: đó là năm mốc Mạnh chạy sau khi gộp."},
-    {"id": "OOS-2", "p": "Không nối người theo số S06 vào người theo tài khoản; lệnh đo báo số người chưa có tin."},
-    {"id": "OOS-3", "p": "Không sửa việc tin ẩn số giữ số suy ra khi hàm phân xử bị ghi đè (Ngoài-5, việc riêng); ở vòng này số ấy vẫn mang nhãn."},
-    {"id": "OOS-4", "p": "Không sửa bộ đo ranh giới của PR #283 trong hồ sơ này: đó là quyết định riêng cho PR đó."},
-    {"id": "OOS-5", "p": "Không làm nhãn cấp tin của S03, không gọi xác minh số, không gọi nguồn S06, không chạy bộ thu."}
-  ],
-  "scope_plain": "Những việc dưới đây nằm ngoài vòng này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Bốn loại số (trên tin, suy ra, mất dấu, không có số) đều có ca đo, ở AC-1 và AC-4."},
-    {"i": 1, "p": "Ba nguồn tin đi vào danh bạ đều có trong ma trận AC-1; hai nguồn không đổi được so với bản cũ."},
-    {"i": 2, "p": "Bảy lớp từ danh bạ tới màn hình, mỗi lớp một tiêu chí: AC-1, AC-3 đến AC-8."},
-    {"i": 3, "p": "Các tình huống áp sai thứ tự hoặc mất dấu đều có ca đo, và đều hỏng theo hướng số kèm nhãn."},
-    {"i": 4, "p": "Năm trạng thái của ô liên hệ đọc từ bảng viết trước, đo ở AC-8 và xem bằng ảnh thật."},
-    {"i": 5, "p": "Làm ngay AC-1 đến AC-9. Để sau: nối người theo số, tách đếm tin trực tiếp với tin suy ra. Không bao giờ: suy số từ tên người bán."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Sổ ghi nhiều lựa chọn chạm người dùng thật như thể đảo được, và giấu hai lựa chọn của anh. Đã sửa: đưa thành bảy câu hỏi dưới đây."},
-    {"i": 1, "p": "Nếu mất dấu nguồn gốc, khoảng 11.762 tin sẽ hiện số không nhãn mà không phép đo nào thấy. Đã đổi luật: không có bằng chứng trực tiếp thì luôn mang nhãn, thành Hỏi-5."},
-    {"i": 2, "p": "Phép đo dữ liệu thật có thể xanh khi chưa gán số nào. Đã thêm cận dưới và đối chứng bỏ bản sửa."},
-    {"i": 3, "p": "Chưa có phép đo nhãn đi từ dữ liệu tới màn hình, và năm mốc chưa được viết ra. Đã thêm đồng bộ thật, trang Cho thuê, ca thiếu giá trị."},
-    {"i": 4, "p": "Bốn phép đo yếu hơn lời hứa (mất vai, đếm thay vì so tập, dữ liệu mẫu viết tay, thiếu tài liệu đối chiếu). Đã sửa cả bốn."}
-  ],
-  "decisions_plain": []
+  "feature_plain": "Số điện thoại suy ra từ tài khoản đăng tin S06 không làm sai danh bạ Người, và khi hiện trên cổng Invest thì mang nhãn «chưa xác minh».",
+  "decisions": [
+    {"id": "E10", "q": "Tài liệu đã nêu đủ nhãn, thứ tự triển khai và phần cloud chưa?", "why": "Mục này do máy đọc tài liệu rồi chấm, đạt từ lượt 2. Lượt này không ký được nên chưa phải trả lời."}
+  ]
 }
