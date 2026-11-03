@@ -141,7 +141,7 @@ test("DT-AC-4: transform ghi một phát biểu sự thật mỗi đặc trưng;
 let dem = 0;
 test("DT-AC-4 đỏ: bản sao transform bỏ bước đặc trưng thì không có phát biểu street_number", { timeout: 300_000 }, async () => {
   const goc = readFileSync(join(PIPE, "transform-chotot.mjs"), "utf8");
-  const cu = "for (const d of docDacTrungS06(ad)) phatBieu.push({ ...chung, ...d });";
+  const cu = "for (const d of dacTrung) phatBieu.push({ ...chung, ...d });";
   assert.ok(goc.includes(cu), "đột biến không khớp transform-chotot");
   const tep = join(PIPE, `transform-chotot.dotbien-${process.pid}-${++dem}.mjs`);
   writeFileSync(tep, goc.replace(cu, ""));
