@@ -17,7 +17,7 @@ import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { napLai059 } from "../lib/nap-045.mjs";
-import { napDacTrung } from "../lib/nap-061.mjs";
+import { napDacTrung, napLai061 } from "../lib/nap-061.mjs";
 import { sqlNapLai } from "../lib/nap-view-song.mjs";
 import { spawnSync } from "node:child_process";
 import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
@@ -49,6 +49,7 @@ export async function trongGiaoDich(client, fn) {
 export async function napMigration045(client) {
   await client.query(await sqlNapLai(client, MIG));
   await napLai059(client);   // DB đã áp 059 (PL19): 045 vừa đè hàm + dòng sổ của 059
+  await napLai061(client);   // DB đã có cột 061: 045 vừa đè cả hàm 061 và luật 069, ca đo phải chạy đúng bản phân xử thật
 }
 /** Mở cổng «chưa cắt chuyển» trong giao dịch đang chạy (ca không đo cổng). */
 export async function moCong(client) {
@@ -497,9 +498,24 @@ test("PD-AC-8 cắt chuyển: ô ghi thẳng không phát biểu thành đúng m
     assert.deepEqual((await leg(a)).map((x) => [x.evidence_tier, x.method, x.method_version, !!x.note]), [["observed", "legacy", "045", true]]);
     assert.deepEqual(await leg(b), [], "đối chứng: ô đã có phát biểu parser không được ghi legacy");
     assert.equal((await one("SELECT street_raw FROM sale_offers WHERE offer_id = $1", [a.row.offer_id])).street_raw, "Kim Mã");
+    // Chỉ so tin sống: transform chỉ phân xử tin sống nên cột tin nghỉ trễ so với phát biểu, resolve(NULL) của cắt chuyển kéo
+    // chúng lên. Đo 04/11 trên bản chép: 460 ô lệch đều ở tin nghỉ, 0 ô ở tin sống.
+    const tinSong = async (ds) => {
+      const { rows } = await c.query("SELECT offer_id FROM sale_offers WHERE offer_id = ANY($1)", [ds.map((x) => x.offer_id)]);
+      const song = new Set(rows.map((x) => x.offer_id));
+      return ds.filter((x) => song.has(x.offer_id));
+    };
+    const lechSong = await tinSong(r.lech);
     const theoTruong = {};
-    for (const x of r.lech) theoTruong[x.field] = (theoTruong[x.field] ?? 0) + 1;
-    assert.equal(r.lech.length, 0, `cắt chuyển lệch theo trường ${JSON.stringify(theoTruong)}: ${JSON.stringify(r.lech.slice(0, 3))}`);
+    for (const x of lechSong) theoTruong[x.field] = (theoTruong[x.field] ?? 0) + 1;
+    assert.equal(lechSong.length, 0, `cắt chuyển lệch theo trường ${JSON.stringify(theoTruong)}: ${JSON.stringify(lechSong.slice(0, 3))}`);
+    // Đối chứng hai chiều của bộ lọc: ô lệch ở tin sống phải giữ lại, cùng ô đó khi tin đã nghỉ thì bỏ.
+    const mau = [{ offer_id: a.row.offer_id, field: "street_raw" }];
+    assert.deepEqual(await tinSong(mau), mau, "đối chứng: lệch ở tin sống phải được giữ lại");
+    await c.query("SAVEPOINT nghi");
+    await c.query("UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'doi_khoa' WHERE offer_id = $1", [a.row.offer_id]);
+    assert.deepEqual(await tinSong(mau), [], "đối chứng: lệch ở tin nghỉ phải được bỏ");
+    await c.query("ROLLBACK TO SAVEPOINT nghi");
     const au = await one(`SELECT detail FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen' AND actor = 'test:pd-ac-8'`);
     assert.ok(au.detail.truoc && au.detail.sau, "audit thiếu bảng trước/sau");
     assert.equal((await catChuyen(c, { actor: "test:pd-ac-8b" })).legacyMoi, 0, "chạy lại phải ghi 0 legacy");

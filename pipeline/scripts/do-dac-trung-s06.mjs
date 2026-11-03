@@ -17,6 +17,7 @@ import { pathToFileURL } from "node:url";
 
 import pg from "pg";
 
+import { retractRule } from "../lib/assert.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
 import { CLOUD_ALLOW } from "../sync-cloud.mjs";
@@ -110,7 +111,7 @@ async function duongLechLa(c, a, b) {
        ELSE EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.subject_key = 'S06:' || o.originating_system_key AND fa.field = $2
               AND fa.retract_reason = 'chua-sdt') END
      ORDER BY o.offer_id`, [doi, A.street_raw]);
-  return { doi: doi.length, la: rows.map((r) => `${r.offer_id}.street_raw`) };
+  return { doi, la: rows.map((r) => `${r.offer_id}.street_raw`) };
 }
 
 let hong = 0;
@@ -171,14 +172,15 @@ try {
   const lechDoi = lechCot(truoc, doi);
   bao(lechDoi.length === 1 && lechDoi[0] === `${truoc[0].offer_id}.property_type`, `DT-AC-8 đối chứng: đổi property_type một tin thì thước gọi tên (${lechDoi.join("; ")})`);
   const duong = await duongLechLa(c, truoc, sau);
-  bao(duong.la.length === 0, `DT-AC-8 đường S06 đổi đúng theo nguồn: ${duong.doi} ô đổi · lạ ${duong.la.length}${duong.la.length ? ` (${duong.la.slice(0, 10).join("; ")})` : ""}`);
-  // Đối chứng dương: ghi đè đường của một tin S06 trên bản chép (SAVEPOINT) thì thước gọi đúng ô ấy.
+  bao(duong.la.length === 0, `DT-AC-8 đường S06 đổi đúng theo nguồn: ${duong.doi.length} ô đổi · lạ ${duong.la.length}${duong.la.length ? ` (${duong.la.slice(0, 10).join("; ")})` : ""}`);
+  // Đối chứng dương: rút phát biểu đường của một ô đã đổi (SAVEPOINT, không phân xử lại) thì ô ấy mất căn cứ, thước phải gọi tên.
   await c.query("SAVEPOINT doi_chung_8");
-  const { rows: [moc] } = await c.query("SELECT offer_id FROM sale_offers WHERE source = 'S06' ORDER BY offer_id LIMIT 1");
-  await c.query("UPDATE sale_offer_records SET street_raw = 'dt-doi-chung' WHERE offer_id = $1", [moc.offer_id]);
-  const duongDoi = await duongLechLa(c, truoc, await chup(c));
+  const { rows: [moc] } = await c.query(`SELECT offer_id, originating_system_key AS k FROM sale_offers
+    WHERE offer_id = ANY($1) AND street_raw IS NOT NULL ORDER BY offer_id LIMIT 1`, [duong.doi]);
+  await retractRule(c, [`S06:${moc.k}`], A.street_raw, "payload.street_name", "nguon-bo-trong");
+  const duongRut = await duongLechLa(c, truoc, sau);
   await c.query("ROLLBACK TO SAVEPOINT doi_chung_8");
-  bao(duongDoi.la.length === 1 && duongDoi.la[0] === `${moc.offer_id}.street_raw`, `DT-AC-8 đối chứng: ghi đè đường một tin S06 thì thước gọi tên (${duongDoi.la.slice(0, 3).join("; ")})`);
+  bao(duongRut.la.length === 1 && duongRut.la[0] === `${moc.offer_id}.street_raw`, `DT-AC-8 đối chứng: rút phát biểu đường của một ô đổi thì thước gọi tên (${duongRut.la.slice(0, 3).join("; ")})`);
   const loCloud = (CLOUD_ALLOW.sale_offers ?? []).filter((c2) => BAY.includes(c2));
   bao(loCloud.length === 0, `DT-AC-8 CLOUD_ALLOW.sale_offers không có cột mới${loCloud.length ? ` — có ${loCloud.join(", ")}` : ""}`);
 } finally {
