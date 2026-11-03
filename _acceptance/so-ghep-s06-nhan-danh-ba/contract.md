@@ -5,7 +5,7 @@ slug: so-ghep-s06-nhan-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (070) — khớp t3_paths
 surfaces: [api, cli, ui]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-so-ghep-s06-nhan-danh-ba-design.md
