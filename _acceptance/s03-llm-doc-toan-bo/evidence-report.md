@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 59635949ad988967bcf3f5d31729bf7ba59d1bba
+verified_commit: 3bb3b50eaabd0864ffcf11149dc2934d0bfb2305
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -178,3 +178,7 @@ sha: 55a3eb3a922168382ebcfc09d05b33b5e9f40567 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-11-03, do băm chữ bài không kéo pg vào job agent, gộp main
 run_id: repin-20261103T042423Z-22536
 sha: 59635949ad988967bcf3f5d31729bf7ba59d1bba · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E12 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 4/6
+
+### Re-pin lần 4 — 2026-11-03, do sửa trần token và đọc lại JSON hỏng sau lượt mẫu
+run_id: repin-20261103T074139Z-52274
+sha: 3bb3b50eaabd0864ffcf11149dc2934d0bfb2305 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E12 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6

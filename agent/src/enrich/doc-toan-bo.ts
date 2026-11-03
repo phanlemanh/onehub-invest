@@ -4,7 +4,7 @@
 import { generateText, type LanguageModel } from "ai";
 import type pg from "pg";
 import type { ContextResult } from "../agents/context-resolver.js";
-import { chayLo, chiPhi, GIA, parseReply, SQL_GHI, stripPII, TEN_MODEL, thamSoGhi, type Bai, type DongNhan, type Nhan } from "../agents/nhan-bac-s03.js";
+import { chayLo, chiPhi, GIA, parseReply, stripPII, TEN_MODEL, thamSoGhi, type Bai, type DongNhan, type Nhan } from "../agents/nhan-bac-s03.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { textHash } from "../../../pipeline/lib/eval-labels.mjs";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
@@ -20,6 +20,8 @@ export const PROMPT_VERSION = "dtb-s03-v1";
 /** Model mặc định của lượt; không có cờ đổi (Hỏi-2). */
 export const modelMacDinh = () => getModel("haiku");
 export const VIEC = "doc-toan-bo-s03";
+/** Trần token ra, tính cả token suy nghĩ của model: đo 03/11 suy nghĩ 470–690 token, JSON chỉ khoảng 150, trần 600 cắt 241/383 bài. */
+export const MAX_TOKEN_RA = 2000;
 
 // ==== gạt chữ trước khi gửi ====
 const URL_RE = /\b(?:https?:\/\/|www\.)\S+/gi;
@@ -87,7 +89,7 @@ export async function hoiDoc(
   let nhan: Nhan;
   try {
     const r = await generateText({
-      model: o.languageModel ?? modelMacDinh(), system: SYSTEM, prompt: chuDaGat, temperature: 0, maxOutputTokens: 600,
+      model: o.languageModel ?? modelMacDinh(), system: SYSTEM, prompt: chuDaGat, temperature: 0, maxOutputTokens: MAX_TOKEN_RA,
     });
     usage = r.usage;
     const p = docTraLoi(r.text, chuDaGat);
@@ -108,9 +110,9 @@ export async function hoiDoc(
   return nhan;
 }
 
-/** Ước một bài (USD): ~3,5 ký tự/token, ~150 token ra vì hỏi nhiều trường hơn nhãn bạc. Chỉ để chặn trần trước bài đầu. */
+/** Ước một bài (USD): ~3,5 ký tự/token, ~700 token ra gồm cả suy nghĩ (đo 03/11). Chỉ để chặn trần trước bài đầu. */
 export function uocChiPhiDoc(chuDaGat: string): number {
-  return (((SYSTEM.length + chuDaGat.length) / 3.5) * GIA.haiku.vao + 150 * GIA.haiku.ra) / 1e6;
+  return (((SYSTEM.length + chuDaGat.length) / 3.5) * GIA.haiku.vao + 700 * GIA.haiku.ra) / 1e6;
 }
 
 // ==== quyết một tin (thuần) ====
@@ -209,6 +211,17 @@ export async function docTenCam(c: pg.Client): Promise<string[]> {
   return rows.flatMap((r) => [r.real_name, ...(r.source_ids ?? [])]).filter((x): x is string => typeof x === "string");
 }
 
+/** Nhãn JSON hỏng được đọc lại nên nhãn mới thay nhãn hỏng; nhãn tốt giữ nguyên. Chi phí cộng dồn vì lần hỏng cũng đã trả tiền. */
+export const SQL_GHI_DOC = `INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind,
+  probability, probabilities, quote, quote_ok, json_ok, error_kind, latency_ms, cost_usd, run_id)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+  ON CONFLICT ON CONSTRAINT silver_labels_mot_nhan DO UPDATE SET
+    listing_intent = EXCLUDED.listing_intent, kind = EXCLUDED.kind, probability = EXCLUDED.probability,
+    probabilities = EXCLUDED.probabilities, quote = EXCLUDED.quote, quote_ok = EXCLUDED.quote_ok, json_ok = EXCLUDED.json_ok,
+    error_kind = EXCLUDED.error_kind, latency_ms = EXCLUDED.latency_ms, run_id = EXCLUDED.run_id, labeled_at = now(),
+    cost_usd = coalesce(silver_labels.cost_usd, 0) + coalesce(EXCLUDED.cost_usd, 0)
+  WHERE NOT silver_labels.json_ok`;
+
 const coChu = (t: string | null) => (t ?? "").length > 20;
 const khoaNhan = (postId: string, hash: string) => `${postId}|${hash}`;
 const khoaDaXu = (offerId: string, hash: string) => `${offerId}|${hash}`;
@@ -244,11 +257,11 @@ export async function chayLuot(o: {
   for (const t of tins) soTinCuaBai.set(t.post_id!, (soTinCuaBai.get(t.post_id!) ?? 0) + 1);
   const chuGat = (t: TinDoc) => gatChu(t.text!, [...cam, ...(t.group_name ? [t.group_name] : [])]);
 
-  // Pha đọc: mỗi bài một lời gọi, bài đã có nhãn cùng chữ + model + prompt không gọi lại (AC-7, AC-8).
+  // Pha đọc: mỗi bài một lời gọi, bài đã có nhãn đọc được cùng chữ + model + prompt không gọi lại (AC-7, AC-8); nhãn JSON hỏng thì đọc lại.
   const nhan = new Map<string, NhanDoc>();
   for (const r of (await c.query(
     `SELECT post_id, text_hash, listing_intent, probabilities, quote, quote_ok, json_ok, error_kind FROM silver_labels
-     WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2`, [TEN_MODEL.haiku, PROMPT_VERSION])).rows) {
+     WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND json_ok`, [TEN_MODEL.haiku, PROMPT_VERSION])).rows) {
     nhan.set(khoaNhan(r.post_id, r.text_hash), r);
   }
   const bai = new Map<string, Bai>();
@@ -260,11 +273,11 @@ export async function chayLuot(o: {
   const lo = await chayLo({
     backend: "haiku", bai: [...bai.values()], runId: o.runId, tranUsd: o.tranUsd, promptVersion: PROMPT_VERSION, uoc: uocChiPhiDoc,
     hoi: (_b, chu) => hoi(chu),
-    // Lỗi gọi (mạng, Gateway) không lưu: lượt sau đọc lại; JSON hỏng thì lưu, đọc lại cũng tốn tiền như vậy.
-    ghi: o.thu ? null : async (d: DongNhan) => (d.error_kind && d.error_kind !== "json-hong" ? 0 : (await c.query(SQL_GHI, thamSoGhi(d))).rowCount ?? 0),
+    // Lỗi gọi (mạng, Gateway) không lưu; JSON hỏng lưu để giữ chi phí đã trả. Cả hai được đọc lại ở lượt sau, trong trần tiền của lượt đó.
+    ghi: o.thu ? null : async (d: DongNhan) => (d.error_kind && d.error_kind !== "json-hong" ? 0 : (await c.query(SQL_GHI_DOC, thamSoGhi(d))).rowCount ?? 0),
   });
   kq.daDoc = lo.nhan.length; kq.conLai = bai.size - lo.nhan.length; kq.tongUsd = lo.tongUsd; kq.dungTran = lo.dungTran; kq.loi = lo.loi;
-  for (const d of lo.nhan) if (!d.error_kind || d.error_kind === "json-hong") nhan.set(khoaNhan(d.post_id, d.text_hash), d);
+  for (const d of lo.nhan) if (!d.error_kind) nhan.set(khoaNhan(d.post_id, d.text_hash), d);
 
   // Pha quyết: 0 USD. Tin đã xử với cùng chữ thì bỏ qua: thẻ đã duyệt không mọc lại (Focus 1).
   const daXu = new Set((await c.query(
@@ -404,7 +417,7 @@ export async function doMau(o: {
   const daCo = new Map<string, NhanDoc>();
   for (const r of (await c.query(
     `SELECT post_id, text_hash, listing_intent, probabilities, quote, quote_ok, json_ok, error_kind FROM silver_labels
-     WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND post_id = ANY ($3)`,
+     WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND post_id = ANY ($3) AND json_ok`,
     [TEN_MODEL.haiku, PROMPT_VERSION, coBai.map((x) => x.post_id)])).rows) daCo.set(khoaNhan(r.post_id, r.text_hash), r);
   const hoi = o.hoi ?? ((chu: string) => hoiDoc(chu, { trace: o.runId, languageModel: o.languageModel, recordCall: o.thu ? async () => {} : undefined }));
   const bai: Bai[] = coBai.map((x) => ({ post_id: x.post_id, text: gat(x), text_hash: textHash(chuBai.get(x.post_id)!.text) }))
@@ -412,9 +425,9 @@ export async function doMau(o: {
   const lo = await chayLo({
     backend: "haiku", bai, runId: o.runId, tranUsd: o.tranUsd, promptVersion: PROMPT_VERSION, uoc: uocChiPhiDoc,
     hoi: (_b, chu) => hoi(chu),
-    ghi: o.thu ? null : async (d: DongNhan) => (d.error_kind && d.error_kind !== "json-hong" ? 0 : (await c.query(SQL_GHI, thamSoGhi(d))).rowCount ?? 0),
+    ghi: o.thu ? null : async (d: DongNhan) => (d.error_kind && d.error_kind !== "json-hong" ? 0 : (await c.query(SQL_GHI_DOC, thamSoGhi(d))).rowCount ?? 0),
   });
-  for (const d of lo.nhan) if (!d.error_kind || d.error_kind === "json-hong") daCo.set(khoaNhan(d.post_id, d.text_hash), d);
+  for (const d of lo.nhan) if (!d.error_kind) daCo.set(khoaNhan(d.post_id, d.text_hash), d);
 
   let ap = 0, dung = 0, the = 0;
   for (const x of coBai) {

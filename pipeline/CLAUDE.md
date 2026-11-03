@@ -13,6 +13,8 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
 | gan-sdt-s06.mjs | SĐT S06 từ `stg_chotot_ads.seller` lên `sale_offer_records`, ghép theo tài khoản có đúng một số, tin ẩn số không nhận số ghép, xuất xứ ở `field_provenance.seller_phone` (068 giữ qua phân xử); gọi cuối `transform-chotot`; chưa áp 068 thì in `CHUA-AP-068`, không ghi; view chưa có cột nhãn (070) thì in `CHUA-AP-070`, số trực tiếp vẫn ghi, số ghép mới thì không; `--thu` đo trong ROLLBACK, không in số |
 | do-so-ghep-s06.mjs | Đo trên DB thử (`db/db-thu.sh oneinvest_sg`): áp 068, 070, gán số, dựng danh bạ, in số trước và sau cho bí danh, người, `sellers`, tin có nhãn; COMMIT trên DB thử; DB không phải `oneinvest_*` thì thoát 2, bất biến sai thì thoát 1; không in số |
+| thu-so-s06.mjs | Làn ZCode: thu SĐT người bán S06 qua Chrome CDP, mỗi tài khoản một lần, tin ẩn số không gọi; miền nguồn chỉ từ env `S06_WEB_BASE`; `--minutes 0` đo số việc rồi thoát, không mở trình duyệt; bản v5 ghi ở `state/seller-v5/`, nạp cuối lượt theo đường chỉ-người-bán của `import-chotot` |
+| bu-seller-v5.mjs | Làn ZCode: đối chiếu state với stg, bù số còn thiếu bằng một bản v5; không gọi nguồn; chạy từ worktree giữ `state/thu-so-s06/` |
 | refresh-bait-gap.mjs | Bait gap P1 + đếm người bán (`sellers` là VIEW từ 060, không ghi); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
