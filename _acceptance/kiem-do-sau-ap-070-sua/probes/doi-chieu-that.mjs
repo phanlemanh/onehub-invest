@@ -18,10 +18,16 @@ const RA = join(GOC, ".acceptance-runs/kiem-do-sau-ap-070-sua/doi-chieu");
 const MOC = "174c302a";
 const LOI_VIEW = "cannot drop columns from view";
 
-/** PD-AC-8 đo được lệch toàn ở block_raw; số ô đổi theo dữ liệu nên chỉ ghim tập trường. */
-function lechChiBlockRaw(phan) {
-  const truong = [...phan.matchAll(/"field":"([^"]+)"/g)].map((m) => m[1]);
-  return /AssertionError \[ERR_ASSERTION\]: cắt chuyển lệch: \[/.test(phan) && truong.length > 0 && truong.every((t) => t === "block_raw");
+/**
+ * PD-AC-8 đo trên bản chép CHƯA áp 070 ngày 03/11: lệch ở bedrooms và block_raw, không trường nào khác. Số ô đổi theo dữ liệu
+ * nên chỉ ghim tập trường, đọc từ bảng đếm trên MỌI ô lệch, không từ ba ô mẫu. Bớt một trường là tốt hơn nên vẫn đạt.
+ */
+const TRUONG_LECH_DA_DO = ["bedrooms", "block_raw"];
+function lechDungTapDaDo(phan) {
+  const dem = phan.match(/AssertionError \[ERR_ASSERTION\]: cắt chuyển lệch theo trường (\{[^}]*\}):/)?.[1];
+  if (dem == null) return false;
+  const truong = Object.keys(JSON.parse(dem));
+  return truong.length > 0 && truong.every((t) => TRUONG_LECH_DA_DO.includes(t));
 }
 
 /**
@@ -43,7 +49,7 @@ const BO = [
   }] },
   { ten: "phat-bieu-db.itest", loai: "test", xanh: 15, doSan: [{
     ca: "PD-AC-8 cắt chuyển: ô ghi thẳng không phát biểu thành đúng một legacy, cột giữ nguyên, audit có trước/sau; chạy lại 0; ô đã có parser thì không legacy",
-    ly_do: lechChiBlockRaw,
+    ly_do: lechDungTapDaDo,
   }] },
 ];
 /** Đối chứng: bản 174c302a của hai bộ gọi thẳng migration, cùng DB, phải báo lỗi view. Không báo tức là phép đo không chạm view của 070. */
@@ -111,9 +117,12 @@ function tuKiem() {
   const pd = BO[4];
   const tenPd = pd.doSan[0].ca;
   const dauPd = (than) => ({ exit: 1, do: [tenPd], xanh: Array(15).fill("x"), loiView: 0, boQua: 0, log: `✖ failing tests:\n\n${khoiLoi(tenPd, than)}` });
-  const lech = (f) => `  AssertionError [ERR_ASSERTION]: cắt chuyển lệch: [{"field":"block_raw"},{"field":"${f}"}]`;
-  dat("PD đạt", xetBo(pd, dauPd(lech("block_raw"))), 0);
-  datLoi("PD trường lạ", xetBo(pd, dauPd(lech("seller_phone"))), /lý do khác/);
+  const mau = `[{"field":"block_raw"},{"field":"block_raw"},{"field":"block_raw"}]`;
+  const lech = (dem) => `  AssertionError [ERR_ASSERTION]: cắt chuyển lệch theo trường ${dem}: ${mau}`;
+  dat("PD đạt", xetBo(pd, dauPd(lech(`{"block_raw":144,"bedrooms":108}`))), 0);
+  // Ba ô mẫu vẫn toàn block_raw, trường lạ chỉ nằm ở các ô sau mẫu: bảng đếm phải bắt được.
+  datLoi("PD trường lạ sau mẫu", xetBo(pd, dauPd(lech(`{"block_raw":3,"street_raw":249}`))), /lý do khác/);
+  datLoi("PD thiếu bảng đếm", xetBo(pd, dauPd(`  AssertionError [ERR_ASSERTION]: cắt chuyển lệch: ${mau}`)), /lý do khác/);
   datLoi("PD lỗi khác", xetBo(pd, dauPd("  AssertionError [ERR_ASSERTION]: lỗi mới")), /lý do khác/);
   const dk = docNhatKy("✔ A (1ms)\n✖ failing tests:\n✖ B c (2.5ms)\n  ✖ B c (2.5ms)\n✖ D lạ\n");
   if (dk.xanh.join() !== "A" || dk.do.join() !== "B c,D lạ") { console.error("tự kiểm sai: bộ đọc nhật ký"); process.exit(2); }

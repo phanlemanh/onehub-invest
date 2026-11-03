@@ -497,7 +497,9 @@ test("PD-AC-8 cắt chuyển: ô ghi thẳng không phát biểu thành đúng m
     assert.deepEqual((await leg(a)).map((x) => [x.evidence_tier, x.method, x.method_version, !!x.note]), [["observed", "legacy", "045", true]]);
     assert.deepEqual(await leg(b), [], "đối chứng: ô đã có phát biểu parser không được ghi legacy");
     assert.equal((await one("SELECT street_raw FROM sale_offers WHERE offer_id = $1", [a.row.offer_id])).street_raw, "Kim Mã");
-    assert.equal(r.lech.length, 0, `cắt chuyển lệch: ${JSON.stringify(r.lech.slice(0, 3))}`);
+    const theoTruong = {};
+    for (const x of r.lech) theoTruong[x.field] = (theoTruong[x.field] ?? 0) + 1;
+    assert.equal(r.lech.length, 0, `cắt chuyển lệch theo trường ${JSON.stringify(theoTruong)}: ${JSON.stringify(r.lech.slice(0, 3))}`);
     const au = await one(`SELECT detail FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen' AND actor = 'test:pd-ac-8'`);
     assert.ok(au.detail.truoc && au.detail.sau, "audit thiếu bảng trước/sau");
     assert.equal((await catChuyen(c, { actor: "test:pd-ac-8b" })).legacyMoi, 0, "chạy lại phải ghi 0 legacy");
