@@ -108,6 +108,10 @@ _Avoid_: chỗ ở, phòng cho thuê, homestay
 - Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
 _Avoid_: tin tìm mua, wanted
 
+**Đối chiếu**: Khối trong thẻ duyệt nêu chỗ AI và bộ đọc khác nhau về ý định tin, giá rao, diện tích, kèm câu trích. Duyệt hay bỏ chỉ ghi nhật ký, không đổi tin.
+- Code: `evidence.doi_chieu` · không có slug riêng
+_Avoid_: so khớp, kiểm chéo
+
 **Yêu cầu mua**: Yêu cầu có `kind = sale`.
 - Code: `kind = sale` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType ∈ Residential, Land
 
@@ -174,6 +178,10 @@ _Avoid_: fill-gap, ghi đè
 **Nguồn gốc**: Ô nào của tin lấy từ phát biểu nào: lớp, phương pháp, id phát biểu, cờ bất đồng, «chưa đo». Chỉ ở máy local (chưa lên cloud).
 - Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
 _Avoid_: provenance (trên UI)
+
+**Số ghép theo tài khoản**: SĐT một tin S06 nhận từ tin khác cùng tài khoản, khi tài khoản đó có đúng một số trong dữ liệu thu. Khác số trên tin, là số nguồn trả cho chính tin ấy. Tin ẩn số không bao giờ nhận số ghép.
+- Code: `field_provenance.seller_phone` với `rule_id` = `s06-cung-tai-khoan` (số trên tin: `s06-so-tren-tin`), `pipeline/gan-sdt-s06.mjs` · RESO: resource Member
+_Avoid_: số suy đoán, số đoán
 
 **Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
 - Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus

@@ -222,16 +222,20 @@ export async function chayLo(o: {
   tranUsd: number;
   hoi?: (b: Backend, text: string) => Promise<Nhan>;
   ghi: ((d: DongNhan) => Promise<number>) | null;
+  /** Lệnh dùng prompt riêng (doc-toan-bo-s03): khoá nhãn và ước chi phí theo prompt đó. */
+  promptVersion?: string;
+  uoc?: (text: string) => number;
 }): Promise<KetQuaLo> {
   const hoi = o.hoi ?? ((b, t) => hoiBai(b, t, { trace: o.runId }));
+  const uocBai = o.uoc ?? ((t: string) => uocChiPhi(o.backend, t));
   const kq: KetQuaLo = { nhan: [], daGhi: 0, tongUsd: 0, dungTran: false, loi: {}, yDinh: {} };
   for (const b of o.bai) {
     // Ước bài kế: trung bình chi phí thật đã gặp trong lượt; chưa có bài nào thì ước theo token.
-    const uoc = kq.nhan.length ? kq.tongUsd / kq.nhan.length : uocChiPhi(o.backend, b.text);
+    const uoc = kq.nhan.length ? kq.tongUsd / kq.nhan.length : uocBai(b.text);
     if (kq.tongUsd + uoc > o.tranUsd) { kq.dungTran = true; break; }
     const n = await hoi(o.backend, b.text);
-    kq.tongUsd += n.cost_usd ?? uocChiPhi(o.backend, b.text);
-    const d: DongNhan = { ...n, source_code: "S03", post_id: b.post_id, text_hash: b.text_hash, prompt_version: PROMPT_VERSION, run_id: o.runId };
+    kq.tongUsd += n.cost_usd ?? uocBai(b.text);
+    const d: DongNhan = { ...n, source_code: "S03", post_id: b.post_id, text_hash: b.text_hash, prompt_version: o.promptVersion ?? PROMPT_VERSION, run_id: o.runId };
     kq.nhan.push(d);
     if (n.error_kind) kq.loi[n.error_kind] = (kq.loi[n.error_kind] ?? 0) + 1;
     kq.yDinh[n.listing_intent] = (kq.yDinh[n.listing_intent] ?? 0) + 1;

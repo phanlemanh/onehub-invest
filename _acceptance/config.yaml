@@ -35,6 +35,8 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
+    ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
@@ -171,9 +173,12 @@ executors:
     review_nguoi: "cd app && node --import tsx --test tests/review-nguoi.test.tsx"
     nguoi_nap_lai_u2: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node scripts/nap-lai-nguoi.mjs --the-duyet"
     seller_ref_that: "bash db/db-thu.sh oneinvest_p3_sref && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node --test --test-concurrency=1 scripts/seller-ref.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node scripts/do-seller-ref.mjs"   # seller-ref-theo-nguoi-gui (HD4) E4, E5, E7, E8: ca DB + thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P3-141)
+    gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
     can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\[offerId\]' .claude/skills/onehub-ui/routes.md && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
+    gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
+    gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
     lich_chotot: "node _acceptance/s06-hai-luot-ngay-gop-main/rang/lich-chotot.mjs"   # s06-hai-luot-ngay-gop-main AC-1..3 — plist chotot 05:30 + 14:00, không va mốc plist khác, bản cài + launchd khớp
     can_theo_tin_ap_hai_lan: "node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs"   # can-theo-tin-khi-phan-xu-lai E5 — DB thử dựng từ đủ migration, áp 066 lần hai không đổi gì, oneinvest không bị chạm
@@ -520,6 +525,9 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    geg_selftest: "bash .claude/hooks/tests/guard-edits.selftest.sh"   # guard-edits-goc-theo-tep E1–E5, E8
+    geg_dot_bien: "bash _acceptance/guard-edits-goc-theo-tep/probes/dot-bien.sh"   # guard-edits-goc-theo-tep E6 — bản cũ và bốn đột biến đỏ đúng ca ghim
+    geg_pham_vi: "bash _acceptance/guard-edits-goc-theo-tep/probes/pham-vi.sh"   # guard-edits-goc-theo-tep E7
     # do-nen-hieu-nang — chỉ đọc DB local (pg_settings, pg_stat_*); đo trang chạy next start cổng 3463 trên build prod
     dn_db: "node _acceptance/do-nen-hieu-nang/probes/db.mjs"
     dn_trang: "bash _acceptance/do-nen-hieu-nang/probes/trang.sh"
@@ -656,6 +664,7 @@ executors:
     s08n_rong: "bash _acceptance/s08-noi-tiep/probes/catalog-rong.sh"
     s08n_cac: "bash _acceptance/s08-noi-tiep/probes/ba-che-do.sh"
     s05k_unit: "node --test scripts/s05-khoa-nap.test.mjs"
+    s03na_unit: "node --test scripts/nap-argmax.test.mjs"   # s03-nap-argmax: liệt kê bản thu vượt ARG_MAX
     s05k_hoiquy: "node --test scripts/s05-slo.test.mjs scripts/job-exit.test.mjs pipeline/scripts/s05-b-lich.test.mjs"
     ctm_unit: "node --test pipeline/scripts/chotot-thieu-moc.test.mjs"
     ctm_lui: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"

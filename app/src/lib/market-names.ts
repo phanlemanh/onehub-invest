@@ -64,15 +64,21 @@ export function shortAreaName(name: string): string {
   return name.replace(/^(Thành phố|Tỉnh)\s+/, "")
 }
 
+/** Mã dài → mã ngắn, luật của migration 064; mã khác trả nguyên. Thuần: tệp này chạy cả ở client, nên đặt ở đây, không ở
+ *  `ma-thi-truong.ts` (có `pool`). */
+export function maNgan(id: string): string {
+  return id.replace(/^vn-(thanh-pho|tinh)-/, "vn-");
+}
+
 /** Mã thị trường/khu vực (`hanoi`, `vn-tinh-an-giang`, `vn`) → tên khu vực; mã lạ → «(chưa có tên Việt)».
- * TẠM (hàng khu-vuc-vung-moi-s06): areas còn 32 thị trường mã dài `vn-thanh-pho-*`/`vn-tinh-*` của lần nạp tỉnh cũ, trong
- * khi nhóm thu (S06 `da-nang` → `vn-da-nang`) theo quy ước `vn-<khoá>` — mã ngắn không thấy thì tra thêm hai dạng dài.
- * Bỏ khi hàng ma-thi-truong-ngan (migration 064) đổi mã areas về dạng ngắn. */
+ * Tra cả hai chiều vì DB có thể ở trước hoặc sau 064: mã dài ghi từ trước 064 (dòng kiểm cũ) ra tên mã ngắn; mã ngắn trên DB
+ * chưa áp 064 (`areas` còn mã dài `vn-thanh-pho-*`/`vn-tinh-*`, S06 `da-nang` → `vn-da-nang`) ra tên mã dài. */
 export function marketNameOf(code: string, areaNames: ReadonlyMap<string, string>): TenThiTruong {
   if (code === "vn") return { name: "Toàn quốc", known: true }
   const ngan = code.startsWith("vn-") ? code.slice(3) : code
   const ten =
     areaNames.get(code) ??
+    areaNames.get(maNgan(code)) ??
     areaNames.get(`vn-${ngan}`) ??
     areaNames.get(`vn-thanh-pho-${ngan}`) ??
     areaNames.get(`vn-tinh-${ngan}`)

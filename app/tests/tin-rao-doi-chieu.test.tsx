@@ -19,6 +19,10 @@ const THI_TRUONG = ["vn-hanoi", "vn-hcmc"]
 const LOAI = ["sale", "rent_lt"]
 const filters = (qs: string) => parseOfferFilters(new URLSearchParams(qs))
 
+// Chờ khoá quá lâu thì đỏ rõ ràng, không treo. DB dùng chung với lượt chạy đêm và suite khác.
+const LOCK_TIMEOUT = "SET lock_timeout = '30s'"
+pool.on("connect", (cl) => void cl.query(LOCK_TIMEOUT).catch(() => {}))
+
 test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có dữ liệu thu" : false, timeout: 300_000 }, async () => {
   const c = new pg.Client({ connectionString: DB })
   try {
@@ -31,7 +35,10 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
     process.exit(1)
   }
   try {
-    await c.query("BEGIN READ ONLY")
+    // Không mở giao dịch: c giữ khoá đọc trong lúc chờ pool.query, DDL xếp hàng giữa hai bên thì cả ba treo và Postgres không
+    // thấy deadlock. Từng câu tự nhả khoá; READ ONLY đặt theo phiên.
+    await c.query(LOCK_TIMEOUT)
+    await c.query("SET default_transaction_read_only = on")
     const tokens: string[] = (await c.query(`SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
       UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) > 0`)).rows.map((r) => r.x)
     assert.ok(tokens.length > 0, "source_registry rỗng: không đo được")
@@ -116,7 +123,6 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
     assert.equal(dem.phiLy, 0, "tin giá phi lý ở trang đầu")
     assert.equal(saiKhuon, 0, "số sai khuôn +84 và 9 chữ số")
   } finally {
-    await c.query("ROLLBACK").catch(() => {})
     await c.end()
     await pool.end()
   }

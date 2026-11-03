@@ -106,6 +106,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   ngữ cảnh không thành giá, thuê từ 1 tỷ không đơn vị thời gian thành bán, giá che số lưu số sàn (Mạnh duyệt, sai số tới khoảng 5%, PL13 lo cận
   trên), giá không đơn vị có nhãn. Toà, trục đi qua phát biểu `parser`, trục vào khoá gom. Trên nhãn tác tử gắn (không phải nhãn vàng): PN 61→225/241,
   giá 128→208/237. Có hiệu lực ở lượt 00:00 sau khi gộp (Mạnh duyệt): S03 2.772→3.158 tin, nghỉ 130, mọc do bộ đọc 391; đo chỉ đọc khớp lượt thử trên DB thử.
+- LLM đọc toàn bộ chữ S03 (LS1 `_acceptance/s03-llm-doc-toan-bo`, 03/11): lệnh `agent/scripts/doc-toan-bo-s03.ts`, lõi `agent/src/enrich/doc-toan-bo.ts`.
+  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ đã đọc được; nhãn JSON hỏng được đọc lại trong trần tiền của lượt. Tin
+  `unknown` chỉ tự điền căn hộ khi câu trích có thật và chứa từ khoá (`agent/src/enrich/luat-trich-dan.ts`), actor `doc-toan-bo:<runId>`; loại khác và E1 trái model lên thẻ.
+  Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
+  (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
+  Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
@@ -140,6 +146,10 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `seller_ref`, S03/S05 theo người gửi của bài; SĐT luôn là người riêng (Hỏi-4); rút vai chỉ khi có bằng chứng thay. Chạy
   cuối `refresh-bait-gap.mjs` (`buocDem`) trong giao dịch riêng, khoá advisory 55055; tay: `pipeline/dung-nguoi.mjs [--thu]`.
   Thước `pipeline/scripts/nap-lai-nguoi.mjs` (hai lượt, lượt 2 bằng 0, đối chứng bỏ tra bí danh). Chỉ local, không sync cloud.
+- SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
+  `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
+  một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
+  068 giữ khoá này qua phân xử bằng cách vá định nghĩa hàm đang chạy. Chưa áp 068 thì bộ gán bỏ qua và in `CHUA-AP-068`. Đo: `node pipeline/gan-sdt-s06.mjs --thu` (ROLLBACK).
 - Danh bạ hiện số gốc (SD4, `_acceptance/people-hien-so-goc`, Hỏi-B 30/10, §3 mục 24): ở máy thu, `/ops/people` và trang một người
   hiện số tách nhóm và liên kết `tel:` cho vai Vận hành và `admin`; ô tìm khớp đủ số ở sáu dạng gõ (`chuanHoaSdtTim`); người có số lên
   trước cho hai vai này, vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số. `/ops/deals`: khối liên hệ hạ từ `isAdmin` xuống
@@ -365,6 +375,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    cổng Invest vì giúp nhà đầu tư tìm căn. Mọi kênh nguồn phải có người bán và SĐT; kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo
    và cảnh báo liên tục tới khi xong. Không đổi: tên nguồn thật vẫn tầng A, S02 và S08 không hiển thị (luật 5).
 26. **Bán, Cho thuê trên header thay mục Listing** (02/11, Mạnh chốt «Làm theo bản này»): header Thị trường · Bán · Cho thuê · Lợi suất · So sánh; `/vn/<tt>/listings/sale`, `/vn/<tt>/listings/rent`, thuê ngắn hạn `?term=short` bằng ô Dài hạn | Ngắn hạn trên hàng lọc, mặc định dài hạn; `/listings` chuyển 308. Listing vẫn là khái niệm cha trong mã, URL, API (mục 21), API giữ `?kind=`. Điện thoại vẫn thấy Bán, Cho thuê ngoài menu.
+27. **Chỉ số tổng hợp công khai của S06/S07 cho xu hướng giá** (03/11, Mạnh chọn «B — hiện có nhãn» ở
+   `docs/research/price-trend-backfill-proposal.md` §7): chuỗi giá đã hiệu chỉnh được hiện trên cổng, nhãn «hiệu chỉnh từ
+   chỉ số công khai», có dải bất định, không chép nguyên văn, không tên nguồn — **với điều kiện điều khoản sử dụng của nguồn
+   không cấm**. Kiểm 03/11 (§7.1 của tài liệu): điều khoản của cả S06 và S07 cấm dùng nội dung cho mục đích thương mại và cấm
+   tạo sản phẩm phái sinh khi không có văn bản cho phép → **điều kiện chưa đạt, hiệu lực hiện tại là A**: chỉ số tổng hợp của
+   S06/S07 chỉ dùng nội bộ (hiệu chuẩn, kiểm chiều ở `/ops`), cổng chỉ hiện số tự đo. B có hiệu lực khi có văn bản cho phép
+   của nguồn hoặc ý kiến pháp lý xác nhận được dùng.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -374,6 +391,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
+
+> **LS1 (03/11):** lệnh đọc toàn bộ S03 đã viết, chưa chạy thật; mẫu 383 bài và lượt chính chờ chữ ký hồ sơ `s03-llm-doc-toan-bo`.
 
 > **Sửa 02/11 (Mạnh chốt):** mốc S06 29.762 không phải tin bán; đo ngày 02/11: bán 20.873, thuê 27.626. S06 báo tách bán, thuê;
 > đích là độ phủ so với tổng nguồn báo, con số 45.000 chỉ để tham khảo. Chất lượng chỉ đo, không chặn. Tám chỉ số, kế hoạch ba
@@ -423,6 +442,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
 | PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
+| SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
