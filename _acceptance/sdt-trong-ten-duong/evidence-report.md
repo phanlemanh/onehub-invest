@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 955f139a86313a2c3556aa9a4999618e58a4f49f
-human_signoff:
+human_signoff: Mạnh 2026-11-03
 ---
 
 # Evidence Report: sdt-trong-ten-duong

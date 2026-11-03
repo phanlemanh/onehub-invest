@@ -5,7 +5,7 @@ slug: sdt-trong-ten-duong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by:
 veto_state: mo
 veto_opened_at: 2026-11-03T04:45:00Z
@@ -104,3 +104,13 @@ Quét tay theo bốn trục (không dùng khung quét: ít chiều, đo từ d�
 - Biết trước: chuỗi kiểu `123-125-127 Lê Lợi` bị bỏ cùng số điện thoại (hàng 17), đo 03/11 có 0 tin. Gỡ nhầm thì đổi mẫu rồi chạy lại transform; `legacy` đã rút không tự sống lại.
 - AC-4 chạy hai bước vì transform + resolve mất gần 2 giờ, còn lượt chấm trong worktree cô lập không chạy được lệnh nền dài (`_acceptance/s06-duong-du-an-len-tin/loi-kit-long-running.md`). Người chấm đọc và tự đếm trên bản chép, không tự chạy hai bước; băm mã chống dùng bản chép của mã khác.
 - Thứ tự resolve trước transform không chở số lên căn: AC-3 cột «còn số».
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: Nếu ai đó sửa một tệp phụ của bước nhập tin mà không đổi gì khác, lượt chấm vẫn nhận bản chạy cũ là hợp lệ. Việc này chỉ làm lượt kiểm kém chặt, không ảnh hưởng dữ liệu người dùng.
+  - Ngoài-2: Nếu chạy lại phép đo trên cùng bản chép dữ liệu, máy sẽ tốn gần 2 giờ rồi báo lỗi vào phút chót. Người vận hành phải dựng lại bản chép rồi chạy lại.
+  - Ngoài-3: Thỉnh thoảng phép đo có thể báo lỗi nhầm dù dữ liệu sạch, và phải chạy lại gần 2 giờ sau khi đổi mã. Người dùng cuối không bị ảnh hưởng.
+  - Ngoài-4: Nếu máy sập đúng giữa hai bước và có tin đã rời nguồn, số điện thoại trong tên đường của tin đó có thể còn lại và lên cloud. Hiện chưa có tin nào rơi vào trường hợp này.
+  - Ngoài-5: Phép thử chứng minh việc hoàn tác có thể xanh dù không chạm đúng ô đang đo. Chức năng hoàn tác cho người dùng không bị đổi.
+  - Ngoài-6: Một ca thử về nhật ký cũ sẽ xanh dù bước hoàn tác không làm gì với ô đó. Dữ liệu người dùng không bị ảnh hưởng.
+  - Ngoài-7: Bài thử đồng bộ không chứng minh được trường hợp tin từng có số rồi mới được xoá, chỉ chứng minh tin đang trống. Người dùng không thấy khác biệt.
+  - Ngoài-8: Nếu sau này đường đồng bộ thật đổi cách chọn cột, bài thử vẫn xanh và không báo trước. Hiện không ảnh hưởng người dùng.
+  - Ngoài-9: Bài thử chưa chứng minh giá trị trống thật sự đè lên số cũ trên cloud, chỉ chứng minh câu lệnh có nhắc hai cột. Chưa có dấu hiệu lỗi thực tế.
