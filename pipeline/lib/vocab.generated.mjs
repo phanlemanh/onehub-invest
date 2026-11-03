@@ -39,7 +39,7 @@ export const CHANGE_TYPE = Object.freeze({ new_listing: "new_listing", price_cha
 export const DATA_LEVEL = Object.freeze({ B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" });
 export const CAPABILITY_LEVEL = Object.freeze({ N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" });
 
-export const CANONICAL_FIELDS = Object.freeze(["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"]);
+export const CANONICAL_FIELDS = Object.freeze(["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"]);
 
 /** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */
 export function promptEnum(axis) {

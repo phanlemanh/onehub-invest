@@ -145,6 +145,10 @@ _Avoid_: so khớp, kiểm chéo
 **Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
 - Code: `hasPhone = false`
 
+**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số.
+- Code: `seller_phone_inferred` (view `sale_offers`, migration 070) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
+_Avoid_: chưa kiểm chứng, số nghi ngờ
+
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
 

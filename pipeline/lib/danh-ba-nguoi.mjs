@@ -35,10 +35,16 @@ export function khoaBiDanh(source, kind, value, objectKey) {
 
 const sach = (s) => (typeof s === "string" && s.trim() !== "" ? s.trim() : null);
 
+/** Dấu xuất xứ của số S06 đọc trực tiếp trên chính tin (gan-sdt-s06). Danh bạ S06 chỉ nhận số mang đúng dấu này. */
+export const RULE_TRUC_TIEP = "s06-so-tren-tin";
+
+/** Luật dương: số ghép theo tài khoản hay mất dấu đều không tính là bằng chứng của số trên tin. */
+export const coBangChungSdt = (tin) => tin.field_provenance?.seller_phone?.rule_id === RULE_TRUC_TIEP;
+
 /**
  * Định danh người đăng của một tin.
- * S06: tài khoản = phần số của seller_ref `ct:<số>`. S03/S05: người gửi của từng bài trong post_ids, cùng nguồn.
- * @param {{ source: string, seller_ref?: string|null, seller_name?: string|null, seller_phone?: string|null, post_ids?: string[]|null }} tin
+ * S06: tài khoản = phần số của seller_ref `ct:<số>`; số chỉ tính khi có dấu trực tiếp. S03/S05: người gửi của từng bài trong post_ids, cùng nguồn.
+ * @param {{ source: string, seller_ref?: string|null, seller_name?: string|null, seller_phone?: string|null, post_ids?: string[]|null, field_provenance?: object|null }} tin
  * @param {Map<string, { source: string, sender_id: string|null, sender_name: string|null }>} baiTheoId
  */
 export function rutDinhDanh(tin, baiTheoId) {
@@ -61,7 +67,8 @@ export function rutDinhDanh(tin, baiTheoId) {
     taiKhoan.push(...theo.values());
     if (taiKhoan.length) field = "post_ids";
   }
-  return { taiKhoan, sdt: sach(tin.seller_phone), field };
+  const sdt = tin.source === "S06" && !coBangChungSdt(tin) ? null : sach(tin.seller_phone);
+  return { taiKhoan, sdt, field };
 }
 
 /** Khoá bí danh `sdt_bam` đời trước của một số E.164: sha256 của dạng «0…» cắt 32 ký tự (SD3 nối người cũ qua nó). */
@@ -297,7 +304,7 @@ export function docCongTac(rows) {
 
 /** Mọi câu SQL của mô-đun (AC-9 quét chính các chuỗi này). */
 export const SQL = Object.freeze({
-  tin: `SELECT offer_id, source, originating_system_key, seller_ref, seller_name, seller_phone, post_ids, first_seen, retired_at
+  tin: `SELECT offer_id, source, originating_system_key, seller_ref, seller_name, seller_phone, post_ids, first_seen, retired_at, field_provenance
           FROM sale_offer_records WHERE source = ANY($1::text[]) AND originating_system_key IS NOT NULL`,
   bai: `SELECT DISTINCT ON (post_id) post_id, agent_id, sender_id, sender_name FROM stg_zalo_posts
          WHERE post_id = ANY($1::text[]) AND agent_id = ANY($2::text[]) ORDER BY post_id, captured_at DESC`,
@@ -324,6 +331,7 @@ export const SQL = Object.freeze({
   // Đối chiếu trên SĐT của tin, không trên sellers (SD1): sellers từng thiếu dòng nên phép đối chiếu luôn xanh.
   sellersThieu: `SELECT DISTINCT o.seller_phone_hash || ':' || o.source AS k FROM sale_offers o
                   WHERE o.seller_phone IS NOT NULL
+                    AND NOT (o.source = 'S06' AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_TRUC_TIEP}')
                     AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt'
                                       AND a.source = o.source AND a.value = o.seller_phone)
                   ORDER BY 1`,

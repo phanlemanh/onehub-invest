@@ -176,7 +176,7 @@ test("SL1-AC-8 thị trường chỉ có tin cấp thị trường vẫn hiện 
 const THE: PublicOffer = {
   offerId: "x", kind: "sale", propertyType: "apartment", priceVnd: 3e9, areaM2: 60, pricePerm2: 5e7, bedrooms: 2, bathrooms: 2,
   stories: null, frontageLength: null, ward: { id: THI_TRUONG, name: "Hà Nội" }, street: null, sellerName: null, sellerManyNames: false,
-  hasPhone: false, unverified: true, updatedAt: "2026-11-03", firstSeenDays: 0,
+  hasPhone: false, phoneInferred: false, unverified: true, updatedAt: "2026-11-03", firstSeenDays: 0,
 }
 test("SL1-AC-8 thẻ S03 có nhãn «Chưa xác minh», thẻ khác không", () => {
   const co = renderToStaticMarkup(<OfferCard offer={THE} wardHref={null} />)

@@ -177,8 +177,14 @@ executors:
     review_nguoi: "cd app && node --import tsx --test tests/review-nguoi.test.tsx"
     nguoi_nap_lai_u2: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node scripts/nap-lai-nguoi.mjs --the-duyet"
     seller_ref_that: "bash db/db-thu.sh oneinvest_p3_sref && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node --test --test-concurrency=1 scripts/seller-ref.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_sref node scripts/do-seller-ref.mjs"   # seller-ref-theo-nguoi-gui (HD4) E4, E5, E7, E8: ca DB + thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P3-141)
+    sg_test: "node --test pipeline/scripts/so-ghep-s06.test.mjs"   # so-ghep-s06-nhan-danh-ba E1–E5 — lược đồ riêng, số bịa
+    sg_sync: "node --test pipeline/sync-cloud.test.mjs && cd pipeline && node --test scripts/so-ghep-s06-cloud.itest.mjs"   # so-ghep-s06-nhan-danh-ba E6
+    sg_api: "cd app && node --import tsx --test tests/so-ghep-nhan.test.tsx"   # so-ghep-s06-nhan-danh-ba E7 — hai route thật, lược đồ tạm
+    sg_ui: "cd app && node --import tsx --test tests/so-ghep-nhan-giao-dien.test.tsx"   # so-ghep-s06-nhan-danh-ba E8
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest
+    sg_be_mat: "node scripts/check-api-surface.mjs"   # so-ghep-s06-nhan-danh-ba E7b
     gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
     gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
