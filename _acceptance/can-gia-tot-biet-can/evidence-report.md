@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c9515e90f9d9fb0912bd231e1a6245e5e3b56a09
+verified_commit: 099391b739bcd134a85495a68c17856240495f6f
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -212,3 +212,7 @@ none — every multi-run eval is uniform
 Round 1: lệnh suite của app bị đỏ; trả về sửa, commit 216ca26e sửa 17 lỗi của S4 vòng 1.
 Round 2: S4 vòng 2 còn lỗi; trả về sửa ở commit 7b3c62a2, E12 chốt ở round này.
 Round 3: S4 vòng 3 chạm trần lượt; sau đó thu phạm vi (bỏ AC-9 và E9). Round 4: mọi eval carry-forward, sáu lệnh suite xanh trên c9515e90, verdict PASS.
+
+### Re-pin lần 1 — 2026-11-03, do hoá cũ do gộp main eb7f7c07 (PR #294) và sửa dữ liệu thử
+run_id: repin-20261103T211734Z-51561
+sha: 099391b739bcd134a85495a68c17856240495f6f · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
