@@ -5,9 +5,9 @@ slug: sdt-s06-khoi-phuc-xuat-xu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/, không khớp t3_paths; không migration
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-sdt-s06-khoi-phuc-xuat-xu-design.md
 ---
 
