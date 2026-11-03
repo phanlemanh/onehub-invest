@@ -3,6 +3,7 @@
 // Mỗi phép đo có ca đỏ trên cùng fixture, ghim thông điệp.
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -10,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { docMoc, docNhanhSoGhep, kiemBatBienSoGhep, tuChoiDb, veDong } from "../do-so-ghep-s06.mjs";
+import { docMoc, docNhanhSoGhep, doTrenDb, kiemBatBienSoGhep, tuChoiDb, veDong } from "../do-so-ghep-s06.mjs";
 import { ganSdtS06 } from "../gan-sdt-s06.mjs";
 import { resolveOffers } from "../lib/assert.mjs";
 import { coBangChungSdt, dungNguoi, RULE_TRUC_TIEP, rutDinhDanh, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
@@ -53,6 +54,8 @@ async function withTx(fn) {
 }
 
 const yen = { out: () => {} };
+const bam = (so) => createHash("sha256").update(so).digest("hex").slice(0, 32);
+const MAU_SO = /\+84\d{9}|\b0\d{9}\b/;
 
 async function themTin(c, { id, source = "S06", fp = {}, so = null, tk = null, posts = [] }) {
   await c.query(
@@ -239,10 +242,10 @@ test("SG-AC-3 sellers và sellersThieuNguoi: số có tin trực tiếp hiện, 
     await themStg(c, { id: 211, tk: 21 });
     await themStg(c, { id: 9211, tk: 21, so: "+84900000211" });
     await ganSdtS06(c);
+    assert.equal((await docTin(c, 211)).seller_phone, "+84900000211", "SG-AC-3 tiền đề: tin 211 giữ số B");
     await dungNguoi(c, yen);
 
-    const docSeller = async (phone) => (await c.query(
-      `SELECT s.n_ads FROM sellers s JOIN sale_offers o ON o.seller_phone_hash = s.phone_hash WHERE o.seller_phone = $1 LIMIT 1`, [phone])).rows;
+    const docSeller = async (phone) => (await c.query(`SELECT n_ads FROM sellers WHERE phone_hash = $1`, [bam(phone)])).rows;
     assert.deepEqual((await docSeller("+84900000201")).map((r) => r.n_ads), [2], "SG-AC-3 số A phải một dòng, n_ads gồm cả tin ghép");
     assert.deepEqual(await docSeller("+84900000211"), [], "SG-AC-3 số B không được có dòng");
     assert.deepEqual(await sellersThieuNguoi(c), [], "SG-AC-3 số ghép bị báo thiếu");
@@ -252,8 +255,12 @@ test("SG-AC-3 sellers và sellersThieuNguoi: số có tin trực tiếp hiện, 
     await themStg(c, { id: 212, tk: 22, so: "+84900000212" });
     await ganSdtS06(c);
     const thieu = await sellersThieuNguoi(c);
-    assert.equal(thieu.length, 1, `SG-AC-3 số trực tiếp thiếu bí danh phải bị báo: ${thieu.join(", ")}`);
-    assert.ok(thieu[0].endsWith(":S06"), `SG-AC-3 báo sai nguồn: ${thieu[0]}`);
+    assert.deepEqual(thieu, [`${bam("+84900000212")}:S06`], "SG-AC-3 số trực tiếp thiếu bí danh phải bị báo đúng số, đúng nguồn");
+
+    // Đối chứng cho chính số B: tin 211 mang dấu trực tiếp thì số B có dòng, nên «không có dòng» ở trên là do nhánh.
+    await c.query(`UPDATE sale_offer_records SET field_provenance = jsonb_build_object('seller_phone', $1::jsonb) WHERE offer_id = '211'`, [JSON.stringify(TRUC)]);
+    await dungNguoi(c, yen);
+    assert.deepEqual((await docSeller("+84900000211")).map((r) => r.n_ads), [1], "SG-AC-3 đối chứng: số B có dấu trực tiếp phải có một dòng");
   });
 });
 
@@ -388,15 +395,47 @@ test("SG-AC-9 bất biến: bộ số đạt thì sạch, mỗi đột biến đ
   for (const [doi, khoa] of CA) assert.deepEqual(kiemBatBienSoGhep({ ...SO_DAT, ...doi }), [khoa], khoa);
 });
 
-test("SG-AC-9 lệnh từ chối DB dùng chung và thoát 2 trước khi nối DB; bất biến sai thì thoát 1", () => {
+test("SG-AC-9 lệnh từ chối DB dùng chung và thoát 2 trước khi nối DB", () => {
   assert.ok(tuChoiDb("oneinvest"));
   assert.equal(tuChoiDb("oneinvest_sg"), null);
   const lenh = join(dirname(fileURLToPath(import.meta.url)), "../do-so-ghep-s06.mjs");
   const r = spawnSync(process.execPath, [lenh], { env: { ...process.env, DATABASE_URL: "postgres://127.0.0.1:1/oneinvest" }, encoding: "utf8" });
   assert.equal(r.status, 2, r.stderr);
   assert.match(r.stderr, /không phải DB thử/);
-  const nguon = spawnSync("/usr/bin/grep", ["-c", "process.exitCode = 1", lenh], { encoding: "utf8" });
-  assert.equal(nguon.stdout.trim(), "1", "lệnh phải đặt mã thoát 1 đúng một chỗ khi bất biến sai");
+});
+
+/** Giao dịch của ca do withTx giữ, nên BEGIN và COMMIT của phần đo không được đóng nó. */
+const trongGiaoDich = (c) => ({ query: (q, ...a) => (q === "BEGIN" || q === "COMMIT" ? Promise.resolve({ rows: [] }) : c.query(q, ...a)) });
+
+test("SG-AC-9 phần đo chạy thật: dữ liệu đạt trả 0, chạy lại không có bí danh mới thì bất biến sai và trả 1", async () => {
+  await withTx(async (c) => {
+    await themTin(c, { id: 201, tk: 20 });
+    await themStg(c, { id: 201, tk: 20, so: "+84900000201" });
+    await themTin(c, { id: 202, tk: 20 });
+    await themStg(c, { id: 202, tk: 20 });
+    const chay = async () => {
+      const kq = { out: [], err: [] };
+      kq.ma = await doTrenDb(trongGiaoDich(c), { out: (l) => kq.out.push(l), err: (l) => kq.err.push(l) });
+      return kq;
+    };
+    const lan1 = await chay();
+    assert.equal(lan1.ma, 0, `SG-AC-9 dữ liệu đạt phải trả 0: ${lan1.err.join(" ")}`);
+    assert.ok(lan1.out.some((l) => l.includes("bi_danh truoc=0 sau=1")), `SG-AC-9 thiếu dòng số: ${lan1.out.join(" | ")}`);
+    for (const l of lan1.out) assert.doesNotMatch(l, MAU_SO, "SG-AC-9 dòng in có số");
+    const lan2 = await chay();
+    assert.equal(lan2.ma, 1, "SG-AC-9 bất biến sai phải trả 1");
+    assert.deepEqual(lan2.err, ["BẤT BIẾN SAI: bi_danh_moi"]);
+  });
+});
+
+test("SG-AC-9 mọi giá trị in đi qua chặn số: mang dạng số thì veDong ném, số đếm thì không", () => {
+  const moc = { bi_danh: 1, nguoi: 1, nguoi_khong_tin: 1, sellers: 1, nhan_ban: 1, nhan_thue: 1 };
+  const nhanh = { so_ghep_ra_so: 0, so_ghep_ra_so_neu_bo_nhanh: 1, so_truc_tiep: 1, tin_khong_dau: 1 };
+  assert.doesNotThrow(() => veDong(moc, moc, nhanh));
+  for (const dang of ["+84900000999", "0900000999"]) {
+    for (const khoa of Object.keys(moc)) assert.throws(() => veDong(moc, { ...moc, [khoa]: dang }, nhanh), /RO-SO/, `SG-AC-9 ${khoa} lọt chặn số`);
+    for (const khoa of Object.keys(nhanh)) assert.throws(() => veDong(moc, moc, { ...nhanh, [khoa]: dang }), /RO-SO/, `SG-AC-9 ${khoa} lọt chặn số`);
+  }
 });
 
 test("SG-AC-9 trên fixture: nhánh chặn số ghép, bỏ nhánh thì ra số, dòng in không có số", async () => {
@@ -414,7 +453,7 @@ test("SG-AC-9 trên fixture: nhánh chặn số ghép, bỏ nhánh thì ra số,
     assert.equal(sau.bi_danh - truoc.bi_danh, 1);
     assert.equal(sau.nhan_ban, 2);
     assert.deepEqual(kiemBatBienSoGhep({ ...sau, ...nhanh, bi_danh_moi: sau.bi_danh - truoc.bi_danh }), []);
-    for (const dong of veDong(truoc, sau, nhanh)) assert.doesNotMatch(dong, /\+84\d{9}|\b0\d{9}\b/);
+    for (const dong of veDong(truoc, sau, nhanh)) assert.doesNotMatch(dong, MAU_SO, "SG-AC-9 dòng in có số");
     // Đối chứng cùng fixture: một số ghép bị đóng dấu trực tiếp thì đếm lệch nhãn.
     await c.query(`UPDATE sale_offer_records SET field_provenance = jsonb_build_object('seller_phone', $1::jsonb) WHERE offer_id = '102'`, [JSON.stringify(TRUC)]);
     assert.equal((await docNhanhSoGhep(c)).tin_khong_dau, 1, "SG-AC-9 phép đếm không thấy tin đổi dấu");

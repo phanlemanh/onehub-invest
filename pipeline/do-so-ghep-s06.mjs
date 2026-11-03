@@ -77,11 +77,34 @@ export function veDong(truoc, sau, nhanh) {
   ].map(inKhongSo);
 }
 
+/**
+ * Phần đo trên client đã nối: trong giao dịch áp 068, 070, gán số, dựng danh bạ rồi COMMIT; in số và xét bất biến.
+ * @returns {Promise<0|1>} 0 đạt · 1 bất biến sai
+ */
+export async function doTrenDb(c, { out = console.log, err = console.error } = {}) {
+  await c.query("BEGIN");
+  const truoc = await docMoc(c);
+  await nap068(c);
+  await nap070(c);
+  const gan = await ganSdtS06(c);
+  out(inKhongSo(`gan doi=${gan.doi} truc_tiep=${gan.truc_tiep} ghep=${gan.ghep} rut=${gan.rut} bo_qua=${gan.bo_qua}`));
+  await dungNguoi(c, { out: (l) => out(inKhongSo(l)) });
+  const sau = await docMoc(c);
+  const nhanh = await docNhanhSoGhep(c);
+  await c.query("COMMIT");
+  for (const l of veDong(truoc, sau, nhanh)) out(l);
+  const loi = kiemBatBienSoGhep({ ...sau, ...nhanh, bi_danh_moi: sau.bi_danh - truoc.bi_danh });
+  if (!loi.length) return 0;
+  err(`BẤT BIẾN SAI: ${loi.join(", ")}`);
+  return 1;
+}
+
+/** @returns {Promise<0|1|2>} mã thoát của lệnh */
 async function main() {
   const tuChoiUrl = tuChoiDb(new URL(DB_URL).pathname.slice(1));
   if (tuChoiUrl) {
     console.error(`do-so-ghep-s06: ${tuChoiUrl}`);
-    process.exit(2);
+    return 2;
   }
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -90,29 +113,13 @@ async function main() {
     const tuChoi = tuChoiDb(ten);
     if (tuChoi) {
       console.error(`do-so-ghep-s06: ${tuChoi}`);
-      process.exitCode = 2;
-      return;
+      return 2;
     }
-    await c.query("BEGIN");
-    const truoc = await docMoc(c);
-    await nap068(c);
-    await nap070(c);
-    const gan = await ganSdtS06(c);
-    console.log(inKhongSo(`gan doi=${gan.doi} truc_tiep=${gan.truc_tiep} ghep=${gan.ghep} rut=${gan.rut} bo_qua=${gan.bo_qua}`));
-    await dungNguoi(c, { out: (l) => console.log(inKhongSo(l)) });
-    const sau = await docMoc(c);
-    const nhanh = await docNhanhSoGhep(c);
-    await c.query("COMMIT");
-    for (const l of veDong(truoc, sau, nhanh)) console.log(l);
-    const loi = kiemBatBienSoGhep({ ...sau, ...nhanh, bi_danh_moi: sau.bi_danh - truoc.bi_danh });
-    if (loi.length) {
-      console.error(`BẤT BIẾN SAI: ${loi.join(", ")}`);
-      process.exitCode = 1;
-    }
+    return await doTrenDb(c);
   } finally {
     await c.end();
   }
 }
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main().catch((e) => { console.error(e.message); process.exit(1); });
+if (isMain) main().then((ma) => { process.exitCode = ma; }, (e) => { console.error(e.message); process.exitCode = 1; });
