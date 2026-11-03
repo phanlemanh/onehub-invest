@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,7 +29,7 @@ test("nap-argmax: không còn khuôn ls glob snapshot; find -maxdepth 2 đúng k
 test("nap-argmax: khối liệt kê hai bản GIỐNG HỆT nhau (BÁO 2510-5)", () => {
   const khoi = (f) => {
     const s = doc(f);
-    const a = s.indexOf("DS_DIR=$(find");
+    const a = s.indexOf("TS_RE=");
     const b = s.indexOf("done); do", a);
     return s.slice(a, b);
   };
@@ -90,6 +90,41 @@ test("nap-argmax: liệt kê lỗi thì thoát 3 và không ghi state", () => {
       const r = chayBash(khoiLietKe(f), { ROOT: join(goc, "khong-co"), STATE: state });
       assert.equal(r.status, 3, `${f}: phải thoát 3, được ${r.status}`);
       assert.equal(readFileSync(state, "utf8"), "moc-cu", `${f}: không được ghi state`);
+    }
+  } finally {
+    rmSync(goc, { recursive: true, force: true });
+  }
+});
+
+// 0311-8 MỞ LẠI: danh sách rỗng + state CÓ mốc thật → thoát 3, KHÔNG ghi state
+// (mất dấu snapshot phải lộ, không im lặng thoát 0 như lỗi ARG_MAX gốc).
+test("nap-argmax: rỗng khi đã có mốc thật → thoát 3, state giữ nguyên", () => {
+  const goc = mkdtempSync(join(tmpdir(), "nap-argmax-"));
+  try {
+    mkdirSync(join(goc, "collector", "snapshots"), { recursive: true }); // tồn tại nhưng rỗng
+    mkdirSync(join(goc, "state"), { recursive: true }); // khối lát ghi state cuối — cha phải tồn tại
+    const state = join(goc, "state", "last");
+    for (const f of ["zalo-import-daily.sh", "apify-facebook-daily.sh"]) {
+      const r = chayBash(khoiLietKe(f), { ROOT: goc, STATE: state, LAST: "20261102T050002870" });
+      assert.equal(r.status, 3, `${f}: phải thoát 3, được ${r.status} — stderr: ${r.stderr}`);
+      assert.match(r.stderr, /không liệt kê được snapshot nào/, `${f}: phải in rõ lý do`);
+      assert.ok(!existsSync(state), `${f}: KHÔNG được ghi state`);
+    }
+  } finally {
+    rmSync(goc, { recursive: true, force: true });
+  }
+});
+
+// 0311-8 MỞ LẠI: lần đầu chưa có mốc (LAST mặc định) → rỗng là bình thường, thoát 0.
+test("nap-argmax: rỗng lần đầu chưa có mốc → thoát 0", () => {
+  const goc = mkdtempSync(join(tmpdir(), "nap-argmax-"));
+  try {
+    mkdirSync(join(goc, "collector", "snapshots"), { recursive: true });
+    mkdirSync(join(goc, "state"), { recursive: true });
+    const state = join(goc, "state", "last");
+    for (const f of ["zalo-import-daily.sh", "apify-facebook-daily.sh"]) {
+      const r = chayBash(khoiLietKe(f), { ROOT: goc, STATE: state, LAST: "00000000T000000" });
+      assert.equal(r.status, 0, `${f}: phải thoát 0, được ${r.status} — ${r.stderr}`);
     }
   } finally {
     rmSync(goc, { recursive: true, force: true });

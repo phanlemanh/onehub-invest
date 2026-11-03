@@ -84,6 +84,13 @@ TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
 DS_DIR=$(find "$ROOT/collector/snapshots" -maxdepth 2 -type d -name '*__zalo-agent__*') || {
   echo "❌ lỗi liệt kê snapshot (find)" >&2; exit 3
 }
+# 0311-8 MỞ LẠI: find thoát 0 mà danh sách rỗng KHI state đã có mốc thật
+# (LAST ≠ 00000000T000000) = mất dấu snapshot — thoát 3, KHÔNG ghi state;
+# lần đầu chưa có mốc thì rỗng là bình thường, thoát 0.
+if [ -z "$DS_DIR" ] && [ "$LAST" != "00000000T000000" ]; then
+  echo "❌ không liệt kê được snapshot nào dù state đã có mốc $LAST — kiểm thư mục snapshot" >&2
+  exit 3
+fi
 for SNAP in $(printf '%s\n' "$DS_DIR" | while read -r d; do
     b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
