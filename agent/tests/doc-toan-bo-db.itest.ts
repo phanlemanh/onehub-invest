@@ -130,7 +130,7 @@ test("LS1-AC-4 ma trận: loại hình giữ unknown, đề xuất skipped ghi l
   });
 });
 
-test("LS1-AC-4 hỏng JSON: không đề xuất, không thẻ, đánh dấu đã xử; tin đã có loại hình không đổi", async () => {
+test("LS1-AC-4 hỏng JSON: không đề xuất, không thẻ, được đọc lại; nhãn tốt thay nhãn hỏng, cộng chi phí, không gọi lần ba; tin đã có loại hình không đổi", async () => {
   await withTx(async (c) => {
     await nen(c);
     const a = await moiTin(c, { id: "t_ls1_hong", text: "Bán căn gì đó không rõ loại hình nhé" });
@@ -139,7 +139,18 @@ test("LS1-AC-4 hỏng JSON: không đề xuất, không thẻ, đánh dấu đã
     assert.equal((await deXuat(c, a)).length, 0);
     assert.equal(await loaiHinh(c, a), "unknown");
     await chay(c, [a], hoiGia(() => "không phải json", goi));
-    assert.equal(goi.length, 1, "LS1-AC-4 JSON hỏng không gọi lại");
+    assert.equal(goi.length, 2, "JSON hỏng phải được đọc lại ở lượt sau");
+    assert.equal((await deXuat(c, a)).length, 0, "LS1-AC-4 đọc hỏng hai lần không được sinh đề xuất");
+    await chay(c, [a], hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "Bán căn" }), goi));
+    assert.equal(goi.length, 3);
+    assert.equal((await deXuat(c, a)).length, 1, "đọc lại được thì tin phải vào pha quyết, hỏng trước đó không được đánh dấu đã xử");
+    const { rows: nhan } = await c.query(`SELECT json_ok, error_kind, cost_usd::float8 AS usd FROM silver_labels WHERE post_id = (SELECT post_ids[1] FROM sale_offers WHERE offer_id = $1)`, [a]);
+    assert.equal(nhan.length, 1, "một bài một nhãn");
+    assert.equal(nhan[0].json_ok, true);
+    assert.equal(nhan[0].error_kind, null);
+    assert.ok(Math.abs(nhan[0].usd - 0.003) < 1e-9, `chi phí phải cộng cả lần hỏng: ${nhan[0].usd}`);
+    await chay(c, [a], hoiGia(() => "không phải json", goi));
+    assert.equal(goi.length, 3, "nhãn đọc được thì không gọi lại");
     const b = await moiTin(c, { id: "t_ls1_co", text: "Bán căn đã có loại hình nhà riêng rồi", property_type: "house" });
     await chay(c, [b], hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "Bán căn" })));
     assert.equal(await loaiHinh(c, b), "house", "LS1-AC-4 tin đã có loại hình bị đổi");
@@ -458,6 +469,24 @@ test("LS1-AC-10 mẫu đạt: Wilson khớp tính tay, in đủ số, ghi dòng 
     assert.equal(goi.length, 110);
     await doMau({ client: c, runId: "m2", nhan, n: 110, nguong: 0.85, tranUsd: 3, thu: false, cam: [], hoi: hoiCanHo(goi), resolve: E1_RONG, wilson: wilsonDuoi });
     assert.equal(goi.length, 110, "LS1-AC-10 đo lại không được trả tiền hai lần");
+  });
+});
+
+test("LS1-AC-10 mẫu đọc lại bài JSON hỏng: lượt hỏng không tính ca áp, lượt sau chỉ gọi đúng bài hỏng", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const nhan = await baiMau(c, 3, 0);
+    const mot = (hoi: (chu: string) => Promise<Nhan>) => doMau({ client: c, runId: `m${++dem}`, nhan, n: 3, nguong: 0.85, tranUsd: 3, thu: false, cam: [], hoi, resolve: E1_RONG, wilson: wilsonDuoi });
+    const goi: string[] = [];
+    const hongCuoi = hoiGia((chu) => (chu.includes(nhan[2].post_id) ? "{\"intent\":\"off" : traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" })), goi);
+    const dau = await mot(hongCuoi);
+    assert.equal(dau.ap, 2, "bài hỏng không được tính là máy áp");
+    assert.equal(goi.length, 3);
+    const lai: string[] = [];
+    const sau = await mot(hoiCanHo(lai));
+    assert.equal(lai.length, 1, "chỉ bài hỏng được gọi lại");
+    assert.ok(lai[0].includes(nhan[2].post_id));
+    assert.equal(sau.ap, 3, "đọc lại được thì bài vào phép đo");
   });
 });
 
