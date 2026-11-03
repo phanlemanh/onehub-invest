@@ -1,4 +1,4 @@
 {
   "feature_plain": "Trang kiểm dữ liệu trên Ops không còn báo đỏ giả khi có số điện thoại S06 ghép theo tài khoản, và các bộ kiểm nạp lại thay đổi cấu trúc cũ chạy được sau khi cơ sở dữ liệu đã thêm nhãn số ghép.",
-  "analyst_plain": "Cả năm tiêu chí của việc này đều đạt ở lượt 3, không còn lỗi trong phạm vi đã duyệt. Lượt chấm chưa đạt vì hai ca kiểm ngoài phạm vi đỏ khi chạy cả bộ trên cơ sở dữ liệu dùng chung; chạy riêng thì ca của agent xanh 3/3 lần, ca của app xanh 2/2 lần."
+  "analyst_plain": "Cả năm tiêu chí đều đạt ở lượt 4. Lượt chấm chưa đạt vì một ca cũ của bộ kiểm dữ liệu đỏ do tranh khoá với chính bộ kiểm mới của nhánh này khi hai bên chạy song song; em tái hiện được một lần trong sáu lượt thử trên cơ sở dữ liệu riêng, không có phiên nào khác chạy cùng. Đây là lỗi của nhánh, sửa được trong tệp kiểm mới."
 }
