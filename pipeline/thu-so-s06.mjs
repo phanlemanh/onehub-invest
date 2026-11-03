@@ -71,7 +71,7 @@ export function chuanHoa84(raw) {
   return m ? `+84${m[1]}${m[2]}` : null;
 }
 
-const jitter = () => 8000 + Math.floor(Math.random() * 7000); // nghỉ 8–15s (Mạnh duyệt 0211-16, thay 3–8s)
+const jitter = () => 15000 + Math.floor(Math.random() * 10000); // nghỉ 15–25s (claudedp-0311-18, thay 8–15s)
 
 /** 0311-3 MỞ LẠI (1): 403/429 dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt) —
  * captcha/khong-ra-so/timeout giữ luật 5 lần liền. Export cho test. */
@@ -150,6 +150,15 @@ async function docViec(client, state) {
     const lid = chonTinChuaHetHan(r, state);
     if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
+  // 0311-19 (b): khoá lỗi 2 lần liền xuống CUỐI hàng — trước đây lỗi thử lại
+  // dồn lên đầu (ORDER BY so_tin) khiến cả lượt sau nạp lại đúng 6 khoá lỗi.
+  const laLoi = (st) => typeof st === "string" && !["co-so", "het-han"].includes(st);
+  const demLoiLien = (id) => {
+    let n = 0, x = state.da_thu[String(id)];
+    while (x && laLoi(x.status)) { n++; x = x.lan_truoc ? { status: x.lan_truoc.status } : null; }
+    return n;
+  };
+  viec.sort((a, b) => demLoiLien(a.list_id) - demLoiLien(b.list_id));
   return viec;
 }
 
@@ -211,19 +220,22 @@ async function laySoTrang(page, viec) {
     }
     await page.waitForTimeout(1200);
     const pathOk = page.url().includes(`/${viec.list_id}.htm`);
-    if (!pathOk) {
-      const body = (await page.content()).toLowerCase();
-      if (body.includes("captcha")) return { status: "chan-captcha" };
-      return { status: "trang-khac" };
-    }
+    if (!pathOk) return { status: "trang-khac" };
     // nút hiện số (đã kiểm 02/11: KHÔNG đòi đăng nhập)
     const nut = await page
       .waitForSelector('button:has-text("Hiện số"), button:has-text("hiển thị số")', { timeout: 10_000 })
       .catch(() => null);
     if (!nut) {
-      const body = (await page.content()).toLowerCase();
-      if (body.includes("captcha")) return { status: "chan-captcha" };
-      if (body.includes("không còn") || body.includes("hết hạn") || body.includes("đã bán")) return { status: "het-han" };
+      // 0311-19 (b): HẾT HẠN xét TRƯỚC; captcha chỉ nhận khi KHUNG THỬ THÁCH thật
+      // hoặc chữ nằm trong innerText — soi page.content() toàn HTML bắt chữ
+      // "captcha" trong script động gây nhãn sai (đo 03/11 khoá 135270933:
+      // HTTP 200 · 1,6s · 0 chữ captcha trong HTML · innerText "Tin đăng đã hết hạn").
+      const t = await page.evaluate(() => ({
+        txt: (document.body?.innerText ?? "").toLowerCase(),
+        khung: !!document.querySelector("iframe[src*=challenge], #challenge-running, #challenge-error-text, .cf-turnstile, [class*=challenge]"),
+      }));
+      if (t.txt.includes("không còn") || t.txt.includes("hết hạn") || t.txt.includes("đã bán")) return { status: "het-han" };
+      if (t.khung || t.txt.includes("captcha") || t.txt.includes("just a moment")) return { status: "chan-captcha" };
       return { status: "khong-nut" };
     }
     await nut.scrollIntoViewIfNeeded();
@@ -448,7 +460,9 @@ async function main() {
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
       // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
-      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
+      // 0311-19 (b): khong-nut KHÔNG tính chuỗi chặn — trang hết nội dung nút,
+      // không phải nguồn chặn (het-han/khong-nut/trang-khac đều lành tính)
+      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status) && kq.status !== "khong-nut") chanLienTiep++;
       else chanLienTiep = 0;
       // 0311-3 MỞ LẠI (1): 403/429 → dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt)
       if (canDungNgay(kq.status)) {
