@@ -1,6 +1,6 @@
 # Xu hướng giá theo phường · dự án · toà — bù quá khứ bằng chỉ số tổng hợp công khai
 
-Ngày: 2026-11-03 · Trạng thái: **đề xuất, chờ Mạnh đọc** · Loại: căn cứ (ROADMAP §0), đầu vào cho lượt cắt sau; không
+Ngày: 2026-11-03 · Trạng thái: **đề xuất; §7 Mạnh chọn B nhưng điều kiện chưa đạt → hiệu lực A (ROADMAP §3 mục 27)** · Loại: căn cứ (ROADMAP §0), đầu vào cho lượt cắt sau; không
 thêm hàng vào lộ trình. Nối tiếp `market-selection-synthesis-proposal.md` (bài học B6, năng lực N2, tính năng T5).
 Nguồn gọi bằng mã (ADR-0007 sửa đổi 26/10): **S06** rao vặt công khai · **S07** cổng rao · **S08** danh mục dự án.
 
@@ -186,6 +186,26 @@ nhất là **quá khứ trước tháng 10/2026** — đúng chỗ chỉ số t�
 | C — Hiện nguyên chỉ số nguồn kèm tên | Như trang tổng hợp | Nhanh | Trái luật tên nguồn (tầng A); phụ thuộc định nghĩa của người khác; lặp lỗi «hai nguồn khác xa» |
 
 Khuyến nghị **B**, điều kiện: điều khoản sử dụng không cấm, và đoạn hiệu chỉnh luôn mang dải bất định.
+
+### 7.1 Quyết định và kiểm điều kiện (03/11)
+
+**Mạnh chọn B** (03/11). Cùng ngày đã kiểm điều kiện đi kèm (QS; chữ đầy đủ ở `research-local/gia-tham-khao-2026-11-03/`):
+
+| | S06 | S07 |
+|---|---|---|
+| robots | Cho phép trang tham khảo giá; khai tín hiệu nội dung `search=yes, ai-input=yes, ai-train=no` | Cho phép trang dự án; bot phải giãn 10 giây mỗi lượt |
+| Điều khoản sử dụng | Cấm «sử dụng thông tin, nội dung… cho bất kỳ mục đích thương mại nào» khi không có văn bản cho phép; bảo hộ kể cả «cơ sở dữ liệu… tuyển tập»; cấm đưa vào hệ thống khác để «chuẩn bị sản phẩm phát sinh» | Cấm «tạo ra các sản phẩm phái sinh… hoặc khai thác nhằm mục đích thương mại» bất kỳ phần nào của nội dung |
+
+- **Kết luận: điều kiện của B chưa đạt.** robots chỉ nói bot được vào trang nào, không phải giấy phép dùng nội dung.
+- **Hiệu lực hiện tại là A**: chỉ số tổng hợp của S06/S07 chỉ dùng nội bộ (hiệu chuẩn, kiểm chiều ở `/ops`); cổng chỉ hiện
+  số tự đo. Ghi ở ROADMAP §3 mục 27 và cạnh luật 5 của AGENTS.md.
+- **B có hiệu lực khi** có một trong hai: văn bản cho phép của nguồn (thoả thuận dữ liệu), hoặc ý kiến pháp lý xác nhận
+  việc hiện chuỗi đã hiệu chỉnh — không chép nguyên văn — là được dùng. Đây là đánh giá đọc điều khoản, không phải ý kiến
+  pháp lý.
+- **Việc không bị chặn:** bước 0 (giữ lịch sử thước) và chỉ số lặp lại trên cùng căn đều là số tự đo. Bước 1–2 (thu tham
+  chiếu, ghép chuỗi ở `/ops`) vẫn làm được dưới A. Chỉ bước 3 phần «đoạn quá khứ nét đứt trên cổng» phải chờ.
+- **Ghi chú, chỉ nêu sự kiện:** các điều khoản trên nói về «thông tin, nội dung» của trang nói chung, không riêng chỉ số tổng
+  hợp. Quyết định ROADMAP §3 mục 25 (tin rao công khai lên cổng Invest) đã chốt và không bị tài liệu này mở lại.
 
 ## 8. Thước đo
 
