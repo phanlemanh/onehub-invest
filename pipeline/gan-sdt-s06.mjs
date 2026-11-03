@@ -4,6 +4,8 @@
 // Bảng luật L1–L9 ở docs/superpowers/specs/2026-11-02-sdt-s06-ghep-tai-khoan-design.md. Ghi thẳng cột như S03, S05 vì SĐT
 // thuộc Member, không đi đường phát biểu; xuất xứ nằm ở field_provenance.seller_phone, 068 giữ nó qua phân xử. Tài khoản về
 // 0 số trong stg không xoá gì: importer ở main ghi đè seller ở lượt thu thường và làm mất số ở stg.
+// Tin có số mà mất khoá xuất xứ (hàm phân xử từng bị ghi đè) được dựng lại bằng cách so số trên tin với stg hiện tại: trùng số
+// riêng là trực tiếp, thuộc số của tài khoản là ghép, không khớp thì giữ nguyên và đếm là không rõ gốc. Khoá có sẵn không bị suy lại.
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -25,15 +27,18 @@ WITH dung AS (
                  nullif(btrim(s.seller ->> 'phone'), '') AS tho
             FROM stg_chotot_ads s) x
 ), tk_so AS (
-  SELECT d.tk, count(DISTINCT d.so) AS n, min(d.so) AS so_tk, min(d.list_id) AS tu_tin
+  SELECT d.tk, count(DISTINCT d.so) AS n, min(d.so) AS so_tk, min(d.list_id) AS tu_tin, array_agg(DISTINCT d.so) AS cac_so
     FROM dung d
    WHERE d.tk IS NOT NULL AND d.so IS NOT NULL
    GROUP BY d.tk
 ), muc AS (
   SELECT r.offer_id, d.so AS rieng, d.an, t.n, t.so_tk, t.tu_tin,
+         nullif(r.seller_phone, '') IS NOT NULL AS con_so, r.field_provenance ? 'seller_phone' AS co_khoa,
          CASE WHEN nullif(r.seller_phone, '') IS NULL THEN 'trong'
               WHEN r.field_provenance -> 'seller_phone' ->> 'rule_id' = 's06-so-tren-tin' THEN 'truc_tiep'
               WHEN r.field_provenance -> 'seller_phone' ->> 'rule_id' = 's06-cung-tai-khoan' THEN 'ghep'
+              WHEN NOT r.field_provenance ? 'seller_phone' AND r.seller_phone = d.so THEN 'truc_tiep'
+              WHEN NOT r.field_provenance ? 'seller_phone' AND r.seller_phone = ANY (t.cac_so) THEN 'ghep'
               ELSE 'khong_ro' END AS lop
     FROM sale_offer_records r
     JOIN dung d ON r.source = 'S06' AND r.originating_system_key = d.list_id::text
@@ -75,6 +80,8 @@ SELECT (SELECT count(*) FROM upd)::int AS doi,
        (SELECT count(*) FROM upd WHERE viec = 'truc_tiep')::int AS truc_tiep,
        (SELECT count(*) FROM upd WHERE viec = 'ghep')::int AS ghep,
        (SELECT count(*) FROM upd WHERE viec = 'rut')::int AS rut,
+       (SELECT count(*) FROM muc WHERE con_so AND NOT co_khoa AND lop <> 'khong_ro')::int AS khoi_phuc,
+       (SELECT count(*) FROM muc WHERE lop = 'khong_ro')::int AS khong_ro,
        (SELECT count(*) FROM tk_so WHERE n >= 2)::int AS tai_khoan_hai_so,
        (SELECT count(*) FROM dung WHERE tho IS NOT NULL AND so IS NULL)::int AS sai_e164
 `;
@@ -84,12 +91,12 @@ SELECT (SELECT count(*) FROM upd)::int AS doi,
  * Hàm phân xử chưa giữ khoá (chưa áp 068, hoặc migration sau ghi đè) thì không ghi: ghi lúc đó sẽ mất xuất xứ ở lượt phân xử kế.
  * @param {import("pg").Client} client
  * @param {{ sql?: string }} [o] `sql` chỉ để test đột biến chạy trên đúng fixture.
- * @returns {Promise<{doi: number, truc_tiep: number, ghep: number, rut: number, tai_khoan_hai_so: number, sai_e164: number, bo_qua: null|"CHUA-AP-068"}>}
+ * @returns {Promise<{doi: number, truc_tiep: number, ghep: number, rut: number, khoi_phuc: number, khong_ro: number, tai_khoan_hai_so: number, sai_e164: number, bo_qua: null|"CHUA-AP-068"}>}
  */
 export async function ganSdtS06(client, { sql = SQL_GAN } = {}) {
   if (!(await daCoPhanGiu068(client))) {
     console.log("gán SĐT S06: CHUA-AP-068 — hàm phân xử chưa giữ khoá seller_phone, lượt này không ghi");
-    return { doi: 0, truc_tiep: 0, ghep: 0, rut: 0, tai_khoan_hai_so: 0, sai_e164: 0, bo_qua: "CHUA-AP-068" };
+    return { doi: 0, truc_tiep: 0, ghep: 0, rut: 0, khoi_phuc: 0, khong_ro: 0, tai_khoan_hai_so: 0, sai_e164: 0, bo_qua: "CHUA-AP-068" };
   }
   const { rows } = await client.query(sql);
   return { ...rows[0], bo_qua: null };
@@ -180,6 +187,11 @@ export async function md5Sdt(client) {
   return rows[0].m;
 }
 
+/** Dòng kết quả lượt gán, chung cho chạy thật và --thu. */
+export function dongGan(g) {
+  return inKhongSo(`gan doi=${g.doi} truc_tiep=${g.truc_tiep} ghep=${g.ghep} rut=${g.rut} khoi_phuc=${g.khoi_phuc} khong_ro=${g.khong_ro}`);
+}
+
 /** Mã lỗi của lượt đo; rỗng là đạt. @returns {string[]} */
 export function kiemBatBien(so) {
   const loi = [];
@@ -227,7 +239,7 @@ async function chayThu() {
       console.log(inKhongSo(`da_ap_068=${da_ap_068}`));
       console.log(dongLoai("ban", truoc.ban, sau.ban));
       console.log(dongLoai("thue", truoc.thue, sau.thue));
-      console.log(inKhongSo(`gan doi=${gan.doi} truc_tiep=${gan.truc_tiep} ghep=${gan.ghep} rut=${gan.rut}`));
+      console.log(dongGan(gan));
       console.log(inKhongSo(`tai_khoan_hai_so=${sau.tai_khoan_hai_so} an_so_bi_ghep=${sau.an_so_bi_ghep} sai_e164=${sau.sai_e164} `
         + `sai_e164_stg=${sau.sai_e164_stg} ghep_lech_tu_tin=${sau.ghep_lech_tu_tin} dem_doc_lap=${dem_doc_lap}`));
     } finally {
@@ -252,8 +264,7 @@ async function chayThat() {
   await c.connect();
   try {
     const gan = await ganSdtS06(c);
-    console.log(inKhongSo(`gan doi=${gan.doi} truc_tiep=${gan.truc_tiep} ghep=${gan.ghep} rut=${gan.rut} `
-      + `tai_khoan_hai_so=${gan.tai_khoan_hai_so} sai_e164=${gan.sai_e164} bo_qua=${gan.bo_qua}`));
+    console.log(inKhongSo(`${dongGan(gan)} tai_khoan_hai_so=${gan.tai_khoan_hai_so} sai_e164=${gan.sai_e164} bo_qua=${gan.bo_qua}`));
   } finally {
     await c.end();
   }

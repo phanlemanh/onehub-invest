@@ -15,6 +15,8 @@ import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 import { daCoPhanGiu068, MIG_068, nap068 } from "../lib/nap-068.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
+import { readFileSync } from "node:fs";
+import { dongGan } from "../gan-sdt-s06.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -676,3 +678,389 @@ test("GS-AC-8 bộ in chặn SĐT, cho qua số đếm", () => {
     assert.equal(inKhongSo(dong), dong);
   }
 });
+
+// ——— Hồ sơ sdt-s06-khoi-phuc-xuat-xu: tin mất khoá xuất xứ, dựng lại từ stg. Kiểm đọc thẳng cột số, không qua khoá; «migration ghi đè» là
+// phần resolve_offer_fields trích từ tệp 061 đã commit, chứ không phải bản hàm của bộ test.
+const TEP_061 = readFileSync(new URL("../../db/migrations/061_dac_trung_nha.sql", import.meta.url), "utf8");
+const GHI_DE_061 = TEP_061.slice(TEP_061.indexOf("CREATE OR REPLACE FUNCTION resolve_offer_fields"), TEP_061.indexOf("-- 5. Sổ từ vựng"));
+const ghiDe = (c) => c.query(GHI_DE_061);
+const apLai068 = (c) => c.query(MIG_068);
+const docOffer = (c, list) => docTin(c, mintOfferId("S06", String(list)));
+const chuyenAn = (c, list) => c.query(`UPDATE stg_chotot_ads SET payload = payload || '{"phone_hidden": true}' WHERE list_id = $1`, [list]);
+const imLog = (t) => t.mock.method(console, "log", () => {});
+
+/** Bỏ hai nhánh khôi phục: đúng hành vi trước hồ sơ này, dùng cho chiều đỏ. */
+const BO_KHOI_PHUC = () => SQL_GAN
+  .replace(/\s*WHEN NOT r\.field_provenance \? 'seller_phone' AND r\.seller_phone = d\.so THEN 'truc_tiep'/, "")
+  .replace(/\s*WHEN NOT r\.field_provenance \? 'seller_phone' AND r\.seller_phone = ANY \(t\.cac_so\) THEN 'ghep'/, "");
+
+function kiemTinAnMatSo(tin) {
+  assert.equal(tin.seller_phone, null, "TIN-AN-GIU-SO-GHEP");
+  assert.equal(tin.seller_phone_hash, null, "TIN-AN-GIU-SO-GHEP băm");
+  assert.equal(tin.field_provenance.seller_phone, undefined, "TIN-AN-GIU-SO-GHEP khoá");
+}
+
+test("KP «ghi đè» là bản hàm thật của tệp 061: chưa có phần giữ nhưng còn hai mốc của 068", () => {
+  assert.ok(GHI_DE_061.includes("fp_chao"), "KP-061 thiếu mốc");
+  assert.ok(!GHI_DE_061.includes("fp_sdt"), "KP-061 đã có phần giữ");
+});
+
+/** Tài khoản K: tin 80 có số riêng; 81, 82 nhận số ghép; bộ gán thật ghi. Trả số và bản xuất xứ gốc. */
+async function chuoiCoSo(c) {
+  const so = soBia();
+  await themStg(c, { id: 80, tk: "K", so });
+  await themStg(c, { id: 81, tk: "K" });
+  await themStg(c, { id: 82, tk: "K" });
+  await nap068(c);
+  await runTransformChotot(c);
+  const goc = {
+    t80: await docOffer(c, 80), t81: await docOffer(c, 81), t82: await docOffer(c, 82),
+  };
+  assert.equal(goc.t81.seller_phone, so, "KP chuỗi chưa có số ghép");
+  assert.equal(goc.t82.field_provenance.seller_phone.rule_id, "s06-cung-tai-khoan", "KP chuỗi chưa có khoá ghép");
+  await ghiDe(c);
+  await runTransformChotot(c);
+  assert.equal((await docOffer(c, 81)).field_provenance.seller_phone, undefined, "KP khoá chưa mất sau lượt bị ghi đè");
+  assert.equal((await docOffer(c, 81)).seller_phone, so, "KP số phải còn sau lượt bị ghi đè");
+  return { so, goc };
+}
+
+for (const [ten, khoiPhuc] of [["KP-AC-1", true], ["KP-AC-1 chiều đỏ: bỏ nhánh khôi phục", false]]) {
+  test(ten, async (t) => {
+    const m = imLog(t);
+    await withTx(async (c) => {
+      await chuoiCoSo(c);
+      await apLai068(c);
+      await chuyenAn(c, 82);
+      if (khoiPhuc) {
+        await runTransformChotot(c);
+        kiemTinAnMatSo(await docOffer(c, 82));
+      } else {
+        await ganSdtS06(c, { sql: BO_KHOI_PHUC() });
+        await assert.rejects(async () => kiemTinAnMatSo(await docOffer(c, 82)), /TIN-AN-GIU-SO-GHEP/);
+      }
+    });
+    m.mock.restore();
+  });
+}
+
+for (const [ten, khoiPhuc] of [["KP-AC-2", true], ["KP-AC-2 chiều đỏ: bỏ nhánh khôi phục", false]]) {
+  test(ten, async (t) => {
+    const m = imLog(t);
+    await withTx(async (c) => {
+      const { so } = await chuoiCoSo(c);
+      await chuyenAn(c, 82);
+      await runTransformChotot(c);
+      assert.equal((await docOffer(c, 82)).seller_phone, so, "KP-AC-2 trong lúc bị ghi đè tin ẩn còn số");
+      await apLai068(c);
+      if (khoiPhuc) {
+        await runTransformChotot(c);
+        kiemTinAnMatSo(await docOffer(c, 82));
+        assert.equal((await docOffer(c, 81)).seller_phone, so, "KP-AC-2 tin ghép không ẩn mất số");
+        assert.equal((await docOffer(c, 80)).seller_phone, so, "KP-AC-2 tin trực tiếp mất số");
+      } else {
+        await ganSdtS06(c, { sql: BO_KHOI_PHUC() });
+        await assert.rejects(async () => kiemTinAnMatSo(await docOffer(c, 82)), /TIN-AN-GIU-SO-GHEP/);
+      }
+    });
+    m.mock.restore();
+  });
+}
+
+test("KP-AC-3 xuất xứ dựng lại giống hệt bản bộ gán thật ghi, chạy lại không đổi", async (t) => {
+  const m = imLog(t);
+  await withTx(async (c) => {
+    const { goc } = await chuoiCoSo(c);
+    await apLai068(c);
+    const r = await ganSdtS06(c);
+    assert.equal(r.khoi_phuc, 3, "KP-AC-3 số tin dựng lại");
+    for (const [ten, list] of [["t80", 80], ["t81", 81], ["t82", 82]]) {
+      const sau = await docOffer(c, list);
+      assert.deepEqual(sau.field_provenance.seller_phone, goc[ten].field_provenance.seller_phone, `XUAT-XU-KHAC-GOC ${ten}`);
+      assert.equal(sau.seller_phone, goc[ten].seller_phone, `KP-AC-3 số ${ten}`);
+      assert.equal(sau.seller_phone_hash, goc[ten].seller_phone_hash, `KP-AC-3 băm ${ten}`);
+    }
+    const lai = await ganSdtS06(c);
+    assert.equal(lai.doi, 0, "KP-AC-3 lượt kế đổi dòng");
+    assert.equal(lai.khoi_phuc, 0, "KP-AC-3 lượt kế còn khôi phục");
+  });
+  m.mock.restore();
+});
+
+test("KP-AC-3 chiều đỏ: tu_tin tính khác công thức cũ thì lệch bản gốc", async (t) => {
+  const m = imLog(t);
+  await withTx(async (c) => {
+    const { goc } = await chuoiCoSo(c);
+    await apLai068(c);
+    await ganSdtS06(c, { sql: dotBien("min(d.list_id) AS tu_tin", "min(d.list_id) + 1 AS tu_tin") });
+    const sau = await docOffer(c, 81);
+    assert.throws(() => assert.deepEqual(sau.field_provenance.seller_phone, goc.t81.field_provenance.seller_phone, "XUAT-XU-KHAC-GOC t81"), /XUAT-XU-KHAC-GOC/);
+  });
+  m.mock.restore();
+});
+
+// Bảng K1–K7 viết tay từ hợp đồng AC-4; ô sinh bằng tích Đề-các, ô gạch có lý do.
+const BANG_K = [
+  { d: "K1", rieng: "hop_le", an: "*", tk: ["trong", "1", "2"], tren: "rieng", kq: "so_rieng", so_o: 6 },
+  { d: "K2", rieng: "hop_le", an: "*", tk: ["2"], tren: "tk_khac", kq: "so_rieng", so_o: 2 },
+  { d: "K3", rieng: "hop_le", an: "*", tk: ["trong", "1", "2"], tren: "la", kq: "giu", so_o: 6 },
+  { d: "K4", rieng: "khong", an: false, tk: ["1"], tren: "tk", kq: "so_tk", so_o: 1 },
+  { d: "K5", rieng: "khong", an: true, tk: ["1"], tren: "tk", kq: "rut", so_o: 1 },
+  { d: "K6", rieng: "khong", an: "*", tk: ["2"], tren: "tk", kq: "rut", so_o: 2 },
+  { d: "K7", rieng: "khong", an: "*", tk: ["trong", "0", "1", "2"], tren: "la", kq: "giu", so_o: 8 },
+];
+
+function sinhOK() {
+  const o = [];
+  let gach = 0;
+  for (const rieng of ["hop_le", "khong"]) for (const an of [false, true]) for (const tk of ["trong", "0", "1", "2"]) for (const trenTin of ["rieng", "tk", "la"]) {
+    if (rieng === "hop_le" && tk === "0") { gach++; continue; }                  // có số riêng thì tài khoản có số
+    if (rieng === "khong" && trenTin === "rieng") { gach++; continue; }          // không có số riêng để bằng
+    if ((tk === "trong" || tk === "0") && trenTin === "tk") { gach++; continue; } // tài khoản không có số để bằng
+    if (rieng === "hop_le" && tk === "1" && trenTin === "tk") { gach++; continue; } // số duy nhất của tài khoản chính là số riêng
+    o.push({ rieng, an, tk, tren: rieng === "hop_le" && trenTin === "tk" ? "tk_khac" : trenTin });
+  }
+  return { o, gach };
+}
+
+const luatK = (x) => BANG_K.filter((l) => l.rieng === x.rieng && l.tren === x.tren && l.tk.includes(x.tk) && (l.an === "*" || l.an === x.an));
+
+async function dungOK(c, x, base) {
+  const taiKhoan = x.tk === "trong" ? undefined : `k${base}`;
+  const soRieng = x.rieng === "hop_le" ? soBia() : undefined;
+  let phu = [];
+  if (x.tk === "1" && x.rieng !== "hop_le") phu = [soBia()];
+  if (x.tk === "2") phu = x.rieng === "hop_le" ? [soBia()] : [soBia(), soBia()];
+  await themStg(c, { id: base, tk: taiKhoan, so: soRieng, an: x.an ? true : undefined });
+  for (const [i, so] of phu.entries()) await themStg(c, { id: base + 1 + i, tk: taiKhoan, so });
+  const cu = x.tren === "rieng" ? soRieng : x.tren === "la" ? soBia() : phu[0];
+  await themTin(c, { id: base, so: cu, hash: bam(cu) });
+  return { ...x, base, soRieng, phu, cu, taiKhoan };
+}
+
+async function dungMaTranK(c) {
+  const ds = [];
+  for (const [i, x] of sinhOK().o.entries()) ds.push(await dungOK(c, x, 5000 + i * 10));
+  return ds;
+}
+
+async function kiemMaTranK(c, ds) {
+  for (const x of ds) {
+    const tin = await docTin(c, x.base);
+    const khoa = tin.field_provenance.seller_phone;
+    const [luat] = luatK(x);
+    const ten = `${luat.d} ${x.rieng}/${x.an ? "an" : "hien"}/${x.tk}/${x.tren}`;
+    if (luat.kq === "so_rieng") {
+      assert.equal(tin.seller_phone, x.soRieng, `KO-LECH số ${ten}`);
+      assert.deepEqual(khoa, PROV_TRUC_TIEP, `KO-LECH xuất xứ ${ten}`);
+    } else if (luat.kq === "so_tk") {
+      assert.equal(tin.seller_phone, x.cu, `KO-LECH số ${ten}`);
+      assert.equal(khoa?.rule_id, "s06-cung-tai-khoan", `KO-LECH xuất xứ ${ten}`);
+      const nguon = (await c.query(`SELECT seller->>'phone' AS so, payload->>'account_id' AS tk FROM stg_chotot_ads WHERE list_id = $1`, [khoa.tu_tin])).rows[0];
+      assert.equal(nguon?.so, tin.seller_phone, `KO-LECH tu_tin số ${ten}`);
+      assert.equal(nguon?.tk, x.taiKhoan, `KO-LECH tu_tin tài khoản ${ten}`);
+    } else if (luat.kq === "rut") {
+      assert.equal(tin.seller_phone, null, `KO-LECH còn số ${ten}`);
+      assert.equal(tin.seller_phone_hash, null, `KO-LECH còn băm ${ten}`);
+      assert.equal(khoa, undefined, `KO-LECH còn khoá ${ten}`);
+    } else {
+      assert.equal(tin.seller_phone, x.cu, `KO-LECH đổi số ${ten}`);
+      assert.equal(khoa, undefined, `KO-LECH sinh khoá ${ten}`);
+    }
+    assert.equal(tin.seller_phone_hash, tin.seller_phone && bam(tin.seller_phone), `KO-LECH băm ${ten}`);
+  }
+}
+
+test("KP-AC-4 ma trận đúng 48 ô, gạch 22, còn 26, mỗi ô đúng một dòng, số ô mỗi dòng khớp bảng", () => {
+  const { o, gach } = sinhOK();
+  assert.equal(o.length + gach, 48, "KP-AC-4 tổng");
+  assert.equal(gach, 22, "KP-AC-4 gạch");
+  assert.equal(o.length, 26, "KP-AC-4 còn");
+  const dem = {};
+  for (const x of o) {
+    const l = luatK(x);
+    assert.equal(l.length, 1, `KP-AC-4 ô thuộc ${l.length} dòng: ${JSON.stringify(x)}`);
+    dem[l[0].d] = (dem[l[0].d] ?? 0) + 1;
+  }
+  for (const l of BANG_K) assert.equal(dem[l.d], l.so_o, `KP-AC-4 số ô dòng ${l.d}`);
+});
+
+test("KP-AC-4 bộ gán đúng cả 26 ô, tổng 12 dựng lại và 14 không rõ gốc, chạy lại đổi 0 dòng", async () => {
+  await withTx(async (c) => {
+    const ds = await dungMaTranK(c);
+    await nap068(c);
+    const r = await ganSdtS06(c);
+    assert.equal(r.khoi_phuc, 12, "KP-AC-4 khoi_phuc");
+    assert.equal(r.khong_ro, 14, "KP-AC-4 khong_ro");
+    await kiemMaTranK(c, ds);
+    const lai = await ganSdtS06(c);
+    assert.equal(lai.doi, 0, "KP-AC-4 chạy lại đổi dòng");
+    assert.equal(lai.khoi_phuc, 0, "KP-AC-4 chạy lại còn khôi phục");
+  });
+});
+
+for (const [ten, tu] of [
+  ["bỏ nhánh số riêng", "\n              WHEN NOT r.field_provenance ? 'seller_phone' AND r.seller_phone = d.so THEN 'truc_tiep'"],
+  ["bỏ nhánh số tài khoản", "\n              WHEN NOT r.field_provenance ? 'seller_phone' AND r.seller_phone = ANY (t.cac_so) THEN 'ghep'"],
+]) {
+  test(`KP-AC-4 chiều đỏ: ${ten}`, async () => {
+    await withTx(async (c) => {
+      const ds = await dungMaTranK(c);
+      await nap068(c);
+      await ganSdtS06(c, { sql: dotBien(tu, "") });
+      await assert.rejects(() => kiemMaTranK(c, ds), /KO-LECH/);
+    });
+  });
+}
+
+/** Tin 90 khoá lạ, tin 91 không khoá số lạ, tin 92 không khoá khớp số tài khoản (đối chứng dương), cùng tài khoản M một số. */
+async function fixtureKhoaLa(c) {
+  const so = soBia();
+  const [soLa, soLa2] = [soBia(), soBia()];
+  await themStg(c, { id: 93, tk: "M", so });
+  for (const id of [90, 91, 92]) await themStg(c, { id, tk: "M" });
+  await themTin(c, { id: 90, so: soLa, hash: bam(soLa), fp: { seller_phone: { rule_id: "nguon-khac", tier: "observed" } } });
+  await themTin(c, { id: 91, so: soLa2, hash: bam(soLa2) });
+  await themTin(c, { id: 92, so, hash: bam(so) });
+  await nap068(c);
+  return { soLa, soLa2 };
+}
+
+test("KP-AC-5 khoá lạ và số không khớp stg không bị rút qua cả hai bước; tin khớp số tài khoản thì bị rút", async () => {
+  await withTx(async (c) => {
+    const { soLa, soLa2 } = await fixtureKhoaLa(c);
+    const kiem = async (buoc) => {
+      const [a, b] = [await docTin(c, 90), await docTin(c, 91)];
+      assert.equal(a.seller_phone, soLa, `KHOA-LA-BI-DOI số ${buoc}`);
+      assert.equal(a.field_provenance.seller_phone.rule_id, "nguon-khac", `KHOA-LA-BI-DOI khoá ${buoc}`);
+      assert.equal(b.seller_phone, soLa2, `KP-AC-5 số lạ bị đổi ${buoc}`);
+      assert.equal(b.field_provenance.seller_phone, undefined, `KP-AC-5 sinh khoá ${buoc}`);
+    };
+    await c.query(`UPDATE stg_chotot_ads SET payload = payload || '{"phone_hidden": true}' WHERE list_id IN (90, 91, 92)`);
+    const r1 = await ganSdtS06(c);
+    assert.equal(r1.khong_ro, 2, "KP-AC-5 khong_ro bước ẩn số");
+    assert.equal(r1.khoi_phuc, 1, "KP-AC-5 đối chứng dương phải khôi phục");
+    assert.equal((await docTin(c, 92)).seller_phone, null, "KP-AC-5 đối chứng dương phải bị rút");
+    await kiem("ẩn số");
+    await themStg(c, { id: 94, tk: "M", so: soBia() });
+    const r2 = await ganSdtS06(c);
+    assert.equal(r2.khong_ro, 2, "KP-AC-5 khong_ro bước hai số");
+    await kiem("hai số");
+  });
+});
+
+test("KP-AC-5 chiều đỏ: bỏ điều kiện không-có-khoá thì tin khoá lạ bị rút", async () => {
+  await withTx(async (c) => {
+    const { soLa } = await fixtureKhoaLa(c);
+    await c.query(`UPDATE stg_chotot_ads SET seller = seller || jsonb_build_object('phone', $1::text) WHERE list_id = 93`, [soLa]);
+    await c.query(`UPDATE stg_chotot_ads SET payload = payload || '{"phone_hidden": true}' WHERE list_id = 90`);
+    await ganSdtS06(c, { sql: dotBien("WHEN NOT r.field_provenance ? 'seller_phone' AND r.seller_phone = ANY (t.cac_so) THEN 'ghep'", "WHEN r.seller_phone = ANY (t.cac_so) THEN 'ghep'") });
+    const a = await docTin(c, 90);
+    assert.throws(() => assert.equal(a.seller_phone, soLa, "KHOA-LA-BI-DOI"), /KHOA-LA-BI-DOI/);
+  });
+});
+
+for (const [ten, khoiPhuc] of [["KP-AC-6 khoá bị xoá bằng lệnh phân xử toàn bộ, không qua transform", true], ["KP-AC-6 chiều đỏ: bỏ nhánh khôi phục", false]]) {
+  test(ten, async (t) => {
+    const m = imLog(t);
+    await withTx(async (c) => {
+      const so = soBia();
+      await themStg(c, { id: 85, tk: "N", so });
+      await themStg(c, { id: 86, tk: "N" });
+      await nap068(c);
+      await runTransformChotot(c);
+      assert.equal((await docOffer(c, 86)).seller_phone, so, "KP-AC-6 chưa có số ghép");
+      await ghiDe(c);
+      await c.query("SELECT resolve_offer_fields(NULL)");
+      assert.equal((await docOffer(c, 86)).field_provenance.seller_phone, undefined, "KP-AC-6 khoá chưa mất");
+      await apLai068(c);
+      await chuyenAn(c, 86);
+      if (khoiPhuc) {
+        await ganSdtS06(c);
+        kiemTinAnMatSo(await docOffer(c, 86));
+      } else {
+        await ganSdtS06(c, { sql: BO_KHOI_PHUC() });
+        await assert.rejects(async () => kiemTinAnMatSo(await docOffer(c, 86)), /TIN-AN-GIU-SO-GHEP/);
+      }
+    });
+    m.mock.restore();
+  });
+}
+
+test("KP-AC-7 hàm còn bị ghi đè thì không đổi gì, báo tên, không ném; áp lại thì khôi phục", async (t) => {
+  const m = imLog(t);
+  await withTx(async (c) => {
+    const { so } = await chuoiCoSo(c);
+    const r = await runTransformChotot(c);
+    const log = m.mock.calls.map((x) => x.arguments.join(" ")).join("\n");
+    assert.equal(r.sdt.bo_qua, "CHUA-AP-068", "KP-AC-7 bo_qua");
+    assert.match(log, /CHUA-AP-068/, "KP-AC-7 log");
+    assert.equal(r.sdt.khoi_phuc, 0, "KP-AC-7 khoi_phuc");
+    assert.equal(r.sdt.khong_ro, 0, "KP-AC-7 khong_ro");
+    for (const id of [80, 81, 82]) {
+      const tin = await docOffer(c, id);
+      assert.equal(tin.seller_phone, so, `KP-AC-7 số ${id}`);
+      assert.equal(tin.seller_phone_hash, bam(so), `KP-AC-7 băm ${id}`);
+      assert.equal(tin.field_provenance.seller_phone, undefined, `KP-AC-7 khoá ${id}`);
+    }
+    await apLai068(c);
+    const sau = await runTransformChotot(c);
+    assert.ok(sau.sdt.khoi_phuc > 0, "KP-AC-7 đối chứng dương");
+  });
+  m.mock.restore();
+});
+
+test("KP-AC-8 nhật ký và dòng lệnh đo mang đúng hai số đếm, không lộ số; số lọt vào dòng thì ném", async (t) => {
+  await withTx(async (c) => {
+    const so = soBia();
+    const soLa = soBia();
+    await themStg(c, { id: 95, tk: "P", so });
+    await themStg(c, { id: 96, tk: "P" });
+    await themStg(c, { id: 97, tk: "P" });
+    await themStg(c, { id: 98, tk: "P" });
+    await nap068(c);
+    const m0 = imLog(t);
+    await runTransformChotot(c);
+    m0.mock.restore();
+    // Tin 96 mất khoá, tin 97 mang số không khớp stg: đúng một khôi phục, một không rõ gốc.
+    await c.query(`UPDATE sale_offer_records SET field_provenance = field_provenance - 'seller_phone' WHERE offer_id = $1`, [mintOfferId("S06", "96")]);
+    await c.query(`UPDATE sale_offer_records SET seller_phone = $1, seller_phone_hash = $2, field_provenance = field_provenance - 'seller_phone' WHERE offer_id = $3`, [soLa, bam(soLa), mintOfferId("S06", "97")]);
+    const m = imLog(t);
+    const r = await runTransformChotot(c);
+    const log = m.mock.calls.map((x) => x.arguments.join(" ")).filter((d) => d.startsWith("SĐT S06")).join("\n");
+    m.mock.restore();
+    assert.equal(r.sdt.khoi_phuc, 1, "KP-AC-8 khoi_phuc");
+    assert.equal(r.sdt.khong_ro, 1, "KP-AC-8 khong_ro");
+    assert.match(log, /khôi phục 1\b/, "KP-AC-8 log khôi phục");
+    assert.match(log, /không rõ gốc 1\b/, "KP-AC-8 log không rõ gốc");
+    const dong = dongGan({ ...r.sdt, khoi_phuc: 1, khong_ro: 1 });
+    assert.match(dong, /khoi_phuc=1 khong_ro=1/, "KP-AC-8 dòng gán");
+    assert.equal(inKhongSo(dong), dong, "KP-AC-8 đối chứng dương inKhongSo");
+    assert.equal(inKhongSo(log), log, "KP-AC-8 log có dạng số");
+    for (const sai of [so, `0${so.slice(3)}`]) {
+      assert.throws(() => dongGan({ ...r.sdt, khoi_phuc: sai }), /RO-SO/, `KP-AC-8 dạng ${sai.slice(0, 1)} không bị chặn`);
+    }
+  });
+});
+
+for (const [ten, doiSo, conSo] of [["KP-AC-10 G1 giới hạn đã khai: tin nguồn đổi số thì tin ẩn còn số cũ", true, true], ["KP-AC-10 G1 đối chứng: tin nguồn không đổi thì tin ẩn bị rút", false, false]]) {
+  test(ten, async (t) => {
+    const m = imLog(t);
+    await withTx(async (c) => {
+      const { so } = await chuoiCoSo(c);
+      if (doiSo) await c.query(`UPDATE stg_chotot_ads SET seller = seller || jsonb_build_object('phone', $1::text) WHERE list_id = 80`, [soBia()]);
+      await apLai068(c);
+      await chuyenAn(c, 82);
+      // Chỉ giữ tin A; dòng stg của tin nguồn còn nguyên, để số đếm đo đúng tin này.
+      await c.query(`DELETE FROM sale_offer_records WHERE offer_id <> $1`, [mintOfferId("S06", "82")]);
+      const r = await ganSdtS06(c);
+      const tin = await docOffer(c, 82);
+      if (conSo) {
+        assert.equal(tin.seller_phone, so, "KP-AC-10 G1 tin ẩn phải còn số cũ");
+        assert.equal(tin.field_provenance.seller_phone, undefined, "KP-AC-10 G1 không khoá");
+        assert.equal(r.khong_ro, 1, "KP-AC-10 G1 đếm tin không rõ gốc");
+      } else kiemTinAnMatSo(tin);
+    });
+    m.mock.restore();
+  });
+}

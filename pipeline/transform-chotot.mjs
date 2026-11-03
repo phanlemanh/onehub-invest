@@ -135,7 +135,7 @@ export async function runTransformChotot(client) {
   // SĐT đi sau phân xử: câu upsert phía trên không đụng cột số, nên chạy lại không mất số đã ghi.
   const sdt = await ganSdtS06(client);
   if (!sdt.bo_qua) {
-    console.log(`SĐT S06: đổi ${sdt.doi} tin (trực tiếp ${sdt.truc_tiep}, ghép ${sdt.ghep}, rút ${sdt.rut}) · tài khoản từ 2 số ${sdt.tai_khoan_hai_so} · số sai dạng ${sdt.sai_e164}`);
+    console.log(`SĐT S06: đổi ${sdt.doi} tin (trực tiếp ${sdt.truc_tiep}, ghép ${sdt.ghep}, rút ${sdt.rut}) · khôi phục ${sdt.khoi_phuc} · không rõ gốc ${sdt.khong_ro} · tài khoản từ 2 số ${sdt.tai_khoan_hai_so} · số sai dạng ${sdt.sai_e164}`);
   }
   console.log(
     `P2 offers: ${nHigh} high / ${nMed} medium / ${nSkip} skip — ` +
