@@ -369,6 +369,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    cổng Invest vì giúp nhà đầu tư tìm căn. Mọi kênh nguồn phải có người bán và SĐT; kênh nào chưa lấy được thì kiểm lại cách lấy, báo cáo
    và cảnh báo liên tục tới khi xong. Không đổi: tên nguồn thật vẫn tầng A, S02 và S08 không hiển thị (luật 5).
 26. **Bán, Cho thuê trên header thay mục Listing** (02/11, Mạnh chốt «Làm theo bản này»): header Thị trường · Bán · Cho thuê · Lợi suất · So sánh; `/vn/<tt>/listings/sale`, `/vn/<tt>/listings/rent`, thuê ngắn hạn `?term=short` bằng ô Dài hạn | Ngắn hạn trên hàng lọc, mặc định dài hạn; `/listings` chuyển 308. Listing vẫn là khái niệm cha trong mã, URL, API (mục 21), API giữ `?kind=`. Điện thoại vẫn thấy Bán, Cho thuê ngoài menu.
+27. **Chỉ số tổng hợp công khai của S06/S07 cho xu hướng giá** (03/11, Mạnh chọn «B — hiện có nhãn» ở
+   `docs/research/price-trend-backfill-proposal.md` §7): chuỗi giá đã hiệu chỉnh được hiện trên cổng, nhãn «hiệu chỉnh từ
+   chỉ số công khai», có dải bất định, không chép nguyên văn, không tên nguồn — **với điều kiện điều khoản sử dụng của nguồn
+   không cấm**. Kiểm 03/11 (§7.1 của tài liệu): điều khoản của cả S06 và S07 cấm dùng nội dung cho mục đích thương mại và cấm
+   tạo sản phẩm phái sinh khi không có văn bản cho phép → **điều kiện chưa đạt, hiệu lực hiện tại là A**: chỉ số tổng hợp của
+   S06/S07 chỉ dùng nội bộ (hiệu chuẩn, kiểm chiều ở `/ops`), cổng chỉ hiện số tự đo. B có hiệu lực khi có văn bản cho phép
+   của nguồn hoặc ý kiến pháp lý xác nhận được dùng.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
