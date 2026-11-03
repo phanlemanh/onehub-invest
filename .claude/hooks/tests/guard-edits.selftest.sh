@@ -14,7 +14,7 @@ set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 HOOK="$REPO/.claude/hooks/guard-edits.sh"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/onehub-guard-selftest.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/onehub-guard-selftest.XXXXXX")" || { echo "  FAIL  không tạo được thư mục tạm"; exit 1; }
 TMP_THUC="$(cd "$TMP" && pwd -P)"   # git worktree list in đường thật (macOS: /var → /private/var)
 A="$TMP/a"
 B="$TMP/b"
