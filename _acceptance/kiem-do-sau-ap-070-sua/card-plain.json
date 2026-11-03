@@ -1,4 +1,4 @@
 {
   "feature_plain": "Trang kiểm dữ liệu trên Ops không còn báo đỏ giả khi có số điện thoại S06 ghép theo tài khoản, và các bộ kiểm nạp lại thay đổi cấu trúc cũ chạy được sau khi cơ sở dữ liệu đã thêm nhãn số ghép.",
-  "analyst_plain": "Cả năm tiêu chí đều đạt ở lượt 4. Lượt chấm chưa đạt vì một ca cũ của bộ kiểm dữ liệu đỏ do tranh khoá với chính bộ kiểm mới của nhánh này khi hai bên chạy song song; em tái hiện được một lần trong sáu lượt thử trên cơ sở dữ liệu riêng, không có phiên nào khác chạy cùng. Đây là lỗi của nhánh, sửa được trong tệp kiểm mới."
+  "analyst_plain": "Lượt 5 đạt cả năm tiêu chí và cả sáu lệnh hồi quy. Lỗi kẹt khoá của lượt 4 là do bộ kiểm mới của nhánh; sau khi sửa, em đo trên cơ sở dữ liệu riêng từ 1 lần kẹt trong 6 lượt xuống 0 trong 24 lượt. Hai ca đỏ ở lượt 3 đã xanh ở hai lượt liền nhưng chưa rõ nguyên nhân, nên vẫn có thể đỏ lại khi máy tải nặng."
 }

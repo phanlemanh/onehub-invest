@@ -1,88 +1,88 @@
-# Review findings — kiem-do-sau-ap-070-sua (round 4)
+# Review findings — kiem-do-sau-ap-070-sua (round 5)
 
 ## Trong hợp đồng
 
-Không có finding nào map được vào AC.
+Không có.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Thước độc lập của hồ sơ do-danh-ba-sdt còn công thức N3 cũ, trong khi diff làm các eval của hồ sơ ấy cũ**
-  Người dùng thấy gì: Thước kiểm của một hồ sơ nghiệm thu cũ vẫn đếm số điện thoại theo cách cũ. Khi có số ghép từ sàn S06, thước đó có thể báo lệch dù số liệu trên màn hình đúng.
-  Căn cứ: Chỉ làm một phép kiểm phụ báo đỏ nhầm sau này, không làm sai số liệu của người dùng; chạy lại hoặc sửa thước sau đều rẻ.
-  file: `_acceptance/do-danh-ba-sdt/probes/db.mjs`
-  severity: low
-  Đề xuất: new-contract
-
-- **AC-4 đo «đã áp 068» nhưng napPhatBieu đè mất 068 trong giao dịch, bộ gán SĐT bỏ qua mà phép đo vẫn báo đạt**
-  Người dùng thấy gì: Phép đo trên bản chép thật báo đạt, nhưng đường ghi số điện thoại cho tin ghép của S06 không thật sự được chạy trong ba bộ kiểm. Bằng chứng nói nhiều hơn điều đã đo.
-  Căn cứ: Không đụng dữ liệu thật vì mọi thứ nằm trong giao dịch hoàn tác; chỉ là khoảng trống bằng chứng, ghi lại rồi bổ sung ở lượt sau là đủ.
-  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
+- **paths của evals thiếu tệp mà E1–E3 chạy thật, nên sửa các tệp ấy không làm bằng chứng hoá cũ**
+  Người dùng thấy gì: Sau khi ký, nếu ai sửa tiếp hai tệp phụ của bộ kiểm, bằng chứng đã ký vẫn được coi là còn mới dù kết quả đo có thể đã đổi. Người dùng cuối không thấy gì, chỉ rủi ro là tin nhầm một bằng chứng đã cũ.
+  Căn cứ: Không ảnh hưởng dữ liệu hay người dùng, chỉ làm cổng nghiệm thu bỏ sót một lần cần đo lại; sửa sau rẻ và không mất gì.
+  file: `_acceptance/kiem-do-sau-ap-070-sua/evals.yaml`
   severity: medium
   Đề xuất: known-limits
 
-- **Lỗi hạ tầng giữa phép đo bỏ qua bước xoá DB thử, và kết quả xoá không được kiểm**
-  Người dùng thấy gì: Nếu phép đo gặp sự cố giữa chừng, một bản chép cơ sở dữ liệu thử có thể còn sót lại trên máy chủ dùng chung mà không ai hay.
-  Căn cứ: Chỉ tốn chỗ chứa trên máy, không ảnh hưởng dữ liệu thật; người vận hành tự xoá bản thừa bất cứ lúc nào.
-  file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Thước độc lập của hồ sơ do-danh-ba-sdt còn công thức N3 cũ, sẽ báo lệch giả khi có số ghép S06**
-  Người dùng thấy gì: Thước kiểm của hồ sơ danh bạ số điện thoại cũ sẽ báo lệch giả sau khi số ghép S06 được ghi vào hệ thống.
-  Căn cứ: Chỉ gây báo động nhầm ở phép kiểm phụ, không làm sai số liệu hiển thị; sửa sau vẫn rẻ nhưng nên có hàng nhận để không bị quên.
+- **Thước của hồ sơ do-danh-ba-sdt còn công thức N3 cũ, không theo SQL_N3 và TIN_VAO_DANH_BA**
+  Người dùng thấy gì: Thước kiểm của hồ sơ danh bạ cũ có thể báo sai khi có số ghép từ S06 chưa có bí danh, nên người vận hành có thể thấy cảnh báo đỏ hoặc xanh không đúng thực tế ở phép đo cũ.
+  Căn cứ: Chỉ làm một thước đo cũ nói sai, không làm mất hay lộ dữ liệu; nên mở việc riêng để sửa đúng chỗ thay vì chen vào hồ sơ này.
   file: `_acceptance/do-danh-ba-sdt/probes/db.mjs`
   severity: low
   Đề xuất: new-contract
 
-- **Nhãn Ops «SĐT trên tin» sai nghĩa với số N3 mới**
-  Người dùng thấy gì: Trang vận hành ghi «N SĐT trên tin» nhưng con số nay đã loại một số số ghép chưa có bí danh, nên nhỏ hơn số thật mà không có lời giải thích.
-  Căn cứ: Chỉ sai chữ trên trang nội bộ, trạng thái đạt hay không vẫn đúng; sửa nhãn sau rất rẻ.
+- **Nhãn Ops «SĐT trên tin» không còn đúng nghĩa với số N3 mới**
+  Người dùng thấy gì: Trang Ops hiện con số «SĐT trên tin» nhỏ hơn số điện thoại thật có trên tin mà không giải thích, nên người vận hành có thể hiểu nhầm là thiếu số.
+  Căn cứ: Chỉ là chữ hiển thị cho người vận hành nội bộ, không mất dữ liệu; đổi nhãn sau rất rẻ và không cần thu hồi gì.
   file: `app/src/lib/dq-labels.ts`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5: tuyên «ma trận bốn migration × hai trạng thái view» nhưng vế chạy thật chỉ có một điểm, ô 059 không được thực thi ở đâu cả**
-  Người dùng thấy gì: Việc nạp lại bản cập nhật 059 sau khi áp 070 chỉ được kiểm bằng so văn bản, chưa được chạy thật trên cơ sở dữ liệu.
-  Căn cứ: Rủi ro chỉ là bỏ sót lỗi hiếm ở một bước nạp lại nội bộ; không mất dữ liệu và có thể bổ sung phép chạy thật bất cứ lúc nào.
+- **Phép đo khoá giữa chừng không thấy gì trong thân ma trận KD-AC-1, vì khoá đã nhả khi ROLLBACK TO SAVEPOINT**
+  Người dùng thấy gì: Bộ kiểm có thể không phát hiện nếu sau này có đoạn mã xin khoá thêm một bảng giữa chừng, nên lỗi kẹt khoá có thể quay lại mà test vẫn xanh. Hiện chưa có bảng nào bị sót.
+  Căn cứ: Hiện chưa gây sai kết quả nào; chỉ là rào phòng ngừa còn hở ở một đường, các đường khác vẫn được đo, và sửa sau rẻ.
+  file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (âm tính một mình): phép đo «xin khoá giữa giao dịch» bị mù sau ROLLBACK TO SAVEPOINT, đối chứng dương lại nằm trên đường không có savepoint**
+  Người dùng thấy gì: Thông điệp của phép kiểm hứa phủ mọi ca nhưng thực tế có một đường không được phủ, nên người đọc có thể tin rằng việc kẹt khoá đã được kiểm kỹ hơn thực tế.
+  Căn cứ: Không làm sai dữ liệu hay hành vi hiện tại, chỉ làm lời hứa của test rộng hơn phạm vi thật; sửa sau rẻ và tự gỡ được.
   file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2: bí danh viết tay đúng khuôn vế EXISTS của SQL_N3, vế này chưa từng đọc dòng do dungNguoi ghi**
-  Người dùng thấy gì: Phép kiểm số điện thoại có bí danh dùng dòng bí danh dựng tay, chưa đi qua đường ghi thật của danh bạ cho trường hợp số chỉ nằm trên tin ghép.
-  Căn cứ: Nếu sai chỉ lệch một con số kiểm tra nội bộ, không ảnh hưởng người dùng cuối; có thể thêm ca kiểm sau khi nhận diện được.
+- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): «ma trận bốn migration × hai trạng thái view» chỉ so văn bản, vế chạy thật là câu chú thích, ô 059 không được thực thi qua sqlNapLai ở đâu cả**
+  Người dùng thấy gì: Với một trong bốn tệp nạp lại cũ, việc nạp thật trên cơ sở dữ liệu chưa được chạy thử, chỉ so văn bản; nếu có lỗi lúc nạp thật thì bộ kiểm chưa bắt được.
+  Căn cứ: Rủi ro thấp vì văn bản đã đúng và ba tệp kia được chạy thật; nếu lỗi thì chỉ hiện ở môi trường thử, không chạm dữ liệu thật, thử lại được.
   file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4: đối chứng cột của E5 và sáu nhánh tự kiểm chỉ đếm số vi phạm, không ghim thông điệp như evals khai**
-  Người dùng thấy gì: Phần tự kiểm của công cụ đo chỉ đếm số lỗi chứ không kiểm nội dung lỗi, nên một nhánh đổi sang báo lỗi khác vẫn có thể lọt.
-  Căn cứ: Chỉ làm công cụ đo kém nhạy hơn mô tả, không đụng dữ liệu hay giao diện; củng cố sau rẻ.
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): bí danh chèn tay khớp vế EXISTS của SQL_N3, vế này chưa từng quyết định trên dòng do dungNguoi ghi**
+  Người dùng thấy gì: Nếu cách hệ thống ghi bí danh đổi dạng trong tương lai, một số ô kiểm vẫn xanh vì dùng bí danh viết tay, nên danh bạ có thể đếm sai mà test không báo.
+  Căn cứ: Hiện đếm đúng và đường ghi thật đã được kiểm ở chỗ khác; chỉ là khoảng hở cho thay đổi sau này, sửa sau rẻ.
+  file: `pipeline/scripts/kiem-do-sau-070.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 (không ghim thông điệp, không đối chứng dương): đối chứng cột của E5 và các nhánh tự kiểm chỉ đếm số vi phạm, trong khi evals khai «thông điệp ghim»**
+  Người dùng thấy gì: Phép tự kiểm của thước đo chỉ đếm số lỗi chứ không đọc lỗi gì, nên thước có thể báo đỏ vì lý do khác mà vẫn được coi là đạt.
+  Căn cứ: Chỉ làm giảm độ tin cậy của công cụ đo nội bộ, không ảnh hưởng người dùng hay dữ liệu; sửa sau rẻ.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4: vế «không đổi migration có từ trước» của E5 âm tính một mình, không có đối chứng dương**
-  Người dùng thấy gì: Phép kiểm «không sửa migration cũ» chưa có ca thử để chứng tỏ nó thật sự báo đỏ khi migration cũ bị sửa.
-  Căn cứ: Không làm sai dữ liệu; hook và nhánh bảo vệ của kho đã chặn sửa migration đã commit nên rủi ro thấp.
+- **Hình dạng 4 (âm tính một mình): vế «không đổi migration có từ trước» của E5 không có đối chứng dương**
+  Người dùng thấy gì: Thước kiểm việc không đổi các tệp thay đổi cơ sở dữ liệu cũ có thể im lặng báo «không đổi» ngay cả khi lệnh so sánh chạy sai, nên một lần sửa nhầm có thể lọt.
+  Căn cứ: Rủi ro thấp vì hiện không có tệp cũ nào bị sửa và hook của kho cũng chặn sửa; sửa thước sau rẻ.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 1: kiểm bộ đo chạy đúng DB thử bằng grep mã nguồn, không đo đầu ra lúc chạy**
-  Người dùng thấy gì: Việc ba bộ kiểm chạy đúng trên cơ sở dữ liệu thử chỉ được xác nhận bằng đọc mã, chưa bằng kết quả lúc chạy.
-  Căn cứ: Khả năng chạy nhầm sang dữ liệu thật thấp vì mọi thứ nằm trong giao dịch hoàn tác; không mất dữ liệu.
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): kiểm «bộ chạy trên DB thử» bằng grep mã nguồn, không đo lúc chạy**
+  Người dùng thấy gì: Ba bộ kiểm có thể đang chạy nhầm trên cơ sở dữ liệu chính của máy thay vì bản chép thử mà bằng chứng vẫn xanh; chưa có dấu hiệu việc này xảy ra.
+  Căn cứ: Các bộ này chủ yếu đọc và chạy trong giao dịch hoàn tác nên hậu quả nhẹ, và đường chạy vẫn được ghi rõ; bổ sung bằng chứng sau không tốn nhiều.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 2: tự kiểm «bỏ qua ca» và «lỗi view» bơm số thẳng vào xetBo, đường đọc nhật ký fail-open không được thử**
-  Người dùng thấy gì: Nếu định dạng nhật ký của bộ kiểm đổi, công cụ đo có thể coi như «không ca nào bị bỏ qua» và báo đạt nhầm.
-  Căn cứ: Hiện chưa có dấu hiệu sai, chỉ là điểm yếu tiềm ẩn của công cụ đo nội bộ; người dùng cuối không bị ảnh hưởng.
+- **Hình dạng 2 (fixture viết tay): tự kiểm bơm thẳng số loiView, boQua vào xetBo, nên đường đọc số bỏ qua fail-open từ nhật ký không được thử**
+  Người dùng thấy gì: Nếu nhật ký chạy test đổi định dạng, thước có thể coi như không ca nào bị bỏ qua và báo đạt dù thật ra có ca bị bỏ, làm người ký tin nhầm kết quả.
+  Căn cứ: Hiện chưa có ca nào bị bỏ qua và nhật ký còn đúng định dạng; chỉ là điểm yếu tiềm ẩn của công cụ đo, sửa sau rẻ.
   file: `_acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs`
   severity: low
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 3/11 lỗi rơi vào file không bộ đo nào phủ (_acceptance/do-danh-ba-sdt/probes/db.mjs, app/src/lib/dq-labels.ts) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 3/11 lỗi rơi vào file không bộ đo nào phủ (_acceptance/kiem-do-sau-ap-070-sua/evals.yaml, _acceptance/do-danh-ba-sdt/probes/db.mjs, app/src/lib/dq-labels.ts) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

@@ -5,7 +5,7 @@ slug: kiem-do-sau-ap-070-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/ và test, không khớp t3_paths
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-03T07:45:00Z
 design_doc: docs/superpowers/specs/2026-11-03-kiem-do-sau-ap-070-sua-design.md
