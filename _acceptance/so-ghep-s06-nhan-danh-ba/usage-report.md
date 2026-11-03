@@ -1,2 +1,54 @@
 
 - design-floor S1 2026-11-02T22:12:23.233Z: chỉ mục 5310 token · component-catalog 2308 token · authoring-standard 2674 token (tổng 10292 token)
+### S4 round 1 — wf_eb563495-634 (28 agent, 192,209 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| ui:E8u | claude-sonnet-5-5 | 66 | 38,623 | 134 | 8,128,243 | 1029 |
+| review:bugs | claude-opus-5-5 | 13 | 32,636 | 32 | 1,319,573 | 322 |
+| review:conventions | claude-opus-5-5 | 11 | 28,939 | 22 | 956,652 | 285 |
+| review:measurement | claude-opus-5-5 | 6 | 24,781 | 12 | 423,483 | 237 |
+| synthesize:report | claude-sonnet-5-5 | 5 | 16,333 | 10 | 206,693 | 99 |
+| baseline:diffBase | claude-sonnet-5-5 | 2 | 5,858 | 4 | 26,046 | 32 |
+| triage | claude-sonnet-5-5 | 2 | 5,353 | 4 | 26,686 | 37 |
+| judge:E10:domain-correctness | claude-sonnet-5-5 | 4 | 3,252 | 10 | 89,321 | 23 |
+| machine:bash db/db-thu.sh oneinvest_sg >/dev/nul | claude-haiku-5-5 | 4 | 3,131 | 8 | 71,313 | 44 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 3,057 | 4 | 19,853 | 44 |
+| judge:E10:operational-feasibility | claude-sonnet-5-5 | 3 | 2,921 | 8 | 53,906 | 21 |
+| refute:so-ghep-s06.test.mjs | claude-sonnet-5-5 | 5 | 2,878 | 10 | 125,651 | 29 |
+| judge:E10:spec-alignment | claude-sonnet-5-5 | 4 | 2,742 | 8 | 92,053 | 21 |
+| machine:node --test pipeline/sync-cloud.test.mjs | claude-haiku-5-5 | 2 | 2,568 | 4 | 23,051 | 197 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,033 | 4 | 22,991 | 171 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,008 | 4 | 23,011 | 8 |
+| refute:so-ghep-s06.test.mjs | claude-sonnet-5-5 | 4 | 1,942 | 8 | 83,112 | 22 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,840 | 4 | 23,005 | 8 |
+| machine:node --test pipeline/scripts/so-ghep-s06 | claude-haiku-5-5 | 2 | 1,642 | 4 | 23,023 | 9 |
+| refute:so-ghep-s06.test.mjs | claude-sonnet-5-5 | 3 | 1,437 | 6 | 54,322 | 16 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,368 | 4 | 23,027 | 8 |
+| refute:so-ghep-s06.test.mjs | claude-sonnet-5-5 | 4 | 1,253 | 8 | 80,988 | 16 |
+| refute:so-ghep-s06.test.mjs | claude-sonnet-5-5 | 4 | 1,161 | 8 | 70,603 | 16 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,029 | 4 | 23,021 | 7 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 977 | 4 | 23,016 | 13 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 957 | 4 | 3,140 | 315 |
+| machine:node scripts/check-api-surface.mjs | claude-haiku-5-5 | 2 | 845 | 4 | 23,007 | 5 |
+| capture:provenance | claude-sonnet-5-5 | 3 | 645 | 6 | 40,820 | 13 |
+
+
+wall: 1217s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 5,858 | 26,046 | 32 | 01:16:36 | 01:17:08 |
+| machine | 12 | 21,455 | 301,458 | 571 | 01:16:36 | 01:26:06 |
+| ui | 1 | 38,623 | 8,128,243 | 1029 | 01:16:36 | 01:33:44 |
+| judge | 3 | 8,915 | 235,280 | 23 | 01:16:36 | 01:16:59 |
+| review | 3 | 86,356 | 2,699,708 | 323 | 01:16:36 | 01:21:58 |
+| triage | 1 | 5,353 | 26,686 | 37 | 01:33:47 | 01:34:24 |
+| refute | 5 | 8,671 | 414,676 | 31 | 01:34:26 | 01:34:57 |
+| capture | 1 | 645 | 40,820 | 13 | 01:34:59 | 01:35:12 |
+| synthesize | 1 | 16,333 | 206,693 | 99 | 01:35:14 | 01:36:53 |
+
+- **claude-sonnet-5-5**: 13 agent · 109 calls · out 84,398 · in 224 · cache_read 9,078,444 · cache_create 611,793
+- **claude-opus-5-5**: 3 agent · 30 calls · out 86,356 · in 66 · cache_read 2,699,708 · cache_create 447,087
+- **claude-haiku-5-5**: 12 agent · 26 calls · out 21,455 · in 52 · cache_read 301,458 · cache_create 275,794
+
