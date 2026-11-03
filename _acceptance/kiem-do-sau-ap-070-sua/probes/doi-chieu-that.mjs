@@ -18,17 +18,33 @@ const RA = join(GOC, ".acceptance-runs/kiem-do-sau-ap-070-sua/doi-chieu");
 const MOC = "174c302a";
 const LOI_VIEW = "cannot drop columns from view";
 
-/** Đỏ sẵn đo trên bản chép CHƯA áp 070 ngày 03/11, kèm lý do ghim và số ca xanh tối thiểu của lần đo đó. Bộ nào xanh hơn thì vẫn đạt. */
+/** PD-AC-8 đo được lệch toàn ở block_raw; số ô đổi theo dữ liệu nên chỉ ghim tập trường. */
+function lechChiBlockRaw(phan) {
+  const truong = [...phan.matchAll(/"field":"([^"]+)"/g)].map((m) => m[1]);
+  return /AssertionError \[ERR_ASSERTION\]: cắt chuyển lệch: \[/.test(phan) && truong.length > 0 && truong.every((t) => t === "block_raw");
+}
+
+/**
+ * Đỏ sẵn đo trên bản chép CHƯA áp 070 ngày 03/11, kèm số ca xanh tối thiểu của lần đo đó. Bộ nào xanh hơn thì vẫn đạt.
+ * `ca` là đúng tên ca, không phải tiền tố. Ca của thước mang lý do ngay trong tên nên tên đúng là lý do đúng;
+ * ca của node:test có thêm `ly_do`, chấm trên phần lỗi của riêng ca đó.
+ */
 const BO = [
   { ten: "dac-trung-s06.itest", loai: "test", xanh: 8, doSan: [] },
   { ten: "dac-trung-s06-vocab-db", loai: "lenh", doSan: [] },
   { ten: "do-dac-trung-s06", loai: "lenh", xanh: 5, doSan: [
-    { ca: /^DT-AC-8 CLOUD_ALLOW/, ly_do: /có stories, frontage_length/ },
+    { ca: "DT-AC-8 CLOUD_ALLOW.sale_offers không có cột mới — có stories, frontage_length" },
     // Đo lại trên bản chép mới chưa áp 070: oneinvest đã đầy cột nên lượt gốc không còn đỏ để đối chứng.
-    { ca: /^DT-AC-7 đỏ trên lượt gốc/, ly_do: /cột có mà rỗng\): *$/m },
+    { ca: "DT-AC-7 đỏ trên lượt gốc 25ce701b (cột có mà rỗng):" },
   ] },
-  { ten: "nap-lai-db.itest", loai: "test", xanh: 12, doSan: [{ ca: /^ND-AC-1 /, ly_do: /\+\s+'sellers'/ }] },
-  { ten: "phat-bieu-db.itest", loai: "test", xanh: 15, doSan: [{ ca: /^PD-AC-8 /, ly_do: /cắt chuyển lệch/ }] },
+  { ten: "nap-lai-db.itest", loai: "test", xanh: 12, doSan: [{
+    ca: "ND-AC-1 áp 044 (hai lần): bảng bản ghi + view sống, 6 FK RESTRICT, CHECK lý do, thước giá, phụ thuộc đúng tập",
+    ly_do: (phan) => /^\s*actual: \[ 'listings', 'sale_offers', 'sellers' \],$/m.test(phan),
+  }] },
+  { ten: "phat-bieu-db.itest", loai: "test", xanh: 15, doSan: [{
+    ca: "PD-AC-8 cắt chuyển: ô ghi thẳng không phát biểu thành đúng một legacy, cột giữ nguyên, audit có trước/sau; chạy lại 0; ô đã có parser thì không legacy",
+    ly_do: lechChiBlockRaw,
+  }] },
 ];
 /** Đối chứng: bản 174c302a của hai bộ gọi thẳng migration, cùng DB, phải báo lỗi view. Không báo tức là phép đo không chạm view của 070. */
 const BAN_GOC = ["nap-lai-db.itest", "phat-bieu-db.itest"];
@@ -40,15 +56,21 @@ export function docNhatKy(log) {
     boQua: Number(log.match(/^ℹ skipped (\d+)/m)?.[1] ?? 0), log };
 }
 
+/** Phần lỗi của đúng một ca trong khối «failing tests» của node:test; rỗng khi ca không có phần lỗi. */
+export function phanLoi(log, ten) {
+  const khoi = log.split("✖ failing tests:")[1] ?? "";
+  return khoi.split(/^test at .+$/m).find((d) => d.trimStart().split("\n")[0].replace(/ \(\d[\d.]*ms\)$/, "") === `✖ ${ten}`) ?? "";
+}
+
 /** Phán một bộ — hàm thuần, có đối chứng ở tuKiem. Trả danh sách vi phạm. */
 export function xetBo(bo, { exit, do: cacDo, xanh, loiView, boQua = 0, log = "" }) {
   const vp = [];
   if (loiView > 0) vp.push(`${bo.ten}: còn lỗi view`);
   if (boQua > 0) vp.push(`${bo.ten}: ${boQua} ca bị bỏ qua`);
   for (const t of cacDo) {
-    const san = bo.doSan.find((m) => m.ca.test(t));
+    const san = bo.doSan.find((m) => m.ca === t.trimEnd());
     if (!san) vp.push(`${bo.ten}: đỏ ngoài tập đỏ sẵn: ${t.slice(0, 120)}`);
-    else if (!san.ly_do.test(`${t}\n${log}`)) vp.push(`${bo.ten}: ${t.slice(0, 40)} đỏ vì lý do khác lý do đã đo`);
+    else if (san.ly_do && !san.ly_do(phanLoi(log, t))) vp.push(`${bo.ten}: ${t.slice(0, 40)} đỏ vì lý do khác lý do đã đo`);
   }
   if (bo.xanh != null && xanh.length < bo.xanh) vp.push(`${bo.ten}: ${xanh.length} ca xanh, ít hơn mức đã đo ${bo.xanh}`);
   if (exit !== 0 && cacDo.length === 0) vp.push(`${bo.ten}: thoát ${exit} mà không có ca đỏ nào`);
@@ -61,8 +83,13 @@ export function xetCot(truoc, sau) {
 
 function tuKiem() {
   const bo = BO[3];
-  const dau = { exit: 1, do: ["ND-AC-1 áp 044"], xanh: Array(12).fill("x"), loiView: 0, boQua: 0, log: "+   'sellers'" };
+  const tenNd = bo.doSan[0].ca;
+  const khoiLoi = (ten, than) => `test at scripts/x.mjs:1:1\n✖ ${ten} (5.5ms)\n  AssertionError [ERR_ASSERTION]: x\n${than}\n`;
+  const actual = (ds) => `    actual: [ ${ds.map((v) => `'${v}'`).join(", ")} ],`;
+  const dau = { exit: 1, do: [tenNd], xanh: Array(12).fill("x"), loiView: 0, boQua: 0,
+    log: `✖ failing tests:\n\n${khoiLoi(tenNd, actual(["listings", "sale_offers", "sellers"]))}` };
   const dat = (ten, vp, kyVong) => { if (vp.length !== kyVong) { console.error(`tự kiểm sai: ${ten}`); process.exit(2); } };
+  const datLoi = (ten, vp, mau) => { if (vp.length !== 1 || !mau.test(vp[0])) { console.error(`tự kiểm sai: ${ten}`); process.exit(2); } };
   dat("đạt", xetBo(bo, dau), 0);
   dat("lỗi view", xetBo(bo, { ...dau, loiView: 1 }), 1);
   dat("đỏ lạ", xetBo(bo, { ...dau, do: ["ND-AC-2 khác"] }), 1);
@@ -71,6 +98,23 @@ function tuKiem() {
   dat("bỏ qua ca", xetBo(bo, { ...dau, boQua: 2 }), 1);
   dat("sập không ca", xetBo(bo, { ...dau, do: [] }), 1);
   dat("cột lệch", xetCot(["a"], ["a", "b"]), 1);
+  // Đúng lý do cộng phần lạ, lý do nằm ở ca khác, tên chung tiền tố: cả ba đều phải đỏ, đúng nhánh.
+  const tenSau = "ND-AC-1 ca khác cùng tiền tố";
+  datLoi("thêm view phụ thuộc", xetBo(bo, { ...dau, log: `✖ failing tests:\n\n${khoiLoi(tenNd, actual(["listings", "sale_offers", "sellers", "view_moi"]))}` }), /lý do khác/);
+  datLoi("lý do ở ca khác", xetBo(bo, { ...dau, log: `✖ failing tests:\n\n${khoiLoi(tenNd, "lỗi mới")}${khoiLoi(tenSau, actual(["listings", "sale_offers", "sellers"]))}` }), /lý do khác/);
+  datLoi("cùng tiền tố", xetBo(bo, { ...dau, do: [tenNd, tenSau] }), /ngoài tập đỏ sẵn/);
+  const thuoc = BO[2];
+  const dauThuoc = { exit: 1, do: thuoc.doSan.map((m) => m.ca), xanh: Array(5).fill("x"), loiView: 0, boQua: 0 };
+  dat("thước đạt", xetBo(thuoc, dauThuoc), 0);
+  datLoi("cột mới lên cloud", xetBo(thuoc, { ...dauThuoc, do: [`${thuoc.doSan[0].ca}, street_number`, thuoc.doSan[1].ca] }), /ngoài tập đỏ sẵn/);
+  datLoi("cột rỗng thật", xetBo(thuoc, { ...dauThuoc, do: [thuoc.doSan[0].ca, `${thuoc.doSan[1].ca} stories`] }), /ngoài tập đỏ sẵn/);
+  const pd = BO[4];
+  const tenPd = pd.doSan[0].ca;
+  const dauPd = (than) => ({ exit: 1, do: [tenPd], xanh: Array(15).fill("x"), loiView: 0, boQua: 0, log: `✖ failing tests:\n\n${khoiLoi(tenPd, than)}` });
+  const lech = (f) => `  AssertionError [ERR_ASSERTION]: cắt chuyển lệch: [{"field":"block_raw"},{"field":"${f}"}]`;
+  dat("PD đạt", xetBo(pd, dauPd(lech("block_raw"))), 0);
+  datLoi("PD trường lạ", xetBo(pd, dauPd(lech("seller_phone"))), /lý do khác/);
+  datLoi("PD lỗi khác", xetBo(pd, dauPd("  AssertionError [ERR_ASSERTION]: lỗi mới")), /lý do khác/);
   const dk = docNhatKy("✔ A (1ms)\n✖ failing tests:\n✖ B c (2.5ms)\n  ✖ B c (2.5ms)\n✖ D lạ\n");
   if (dk.xanh.join() !== "A" || dk.do.join() !== "B c,D lạ") { console.error("tự kiểm sai: bộ đọc nhật ký"); process.exit(2); }
 }
