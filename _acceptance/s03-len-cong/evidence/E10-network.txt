@@ -1,0 +1,3 @@
+Browser pane, http://localhost:3461 (config dev_server.url = :3456 -> origin ngoai scope da khai).
+206 request; tat ca 200/304 tru 1: GET /vn/hanoi/listings/sale?ward=vn-hanoi-bach-mai&_rsc=... -> net::ERR_ABORTED (prefetch RSC bi huy khi dieu huong; note-only).
+Console errors: none.
