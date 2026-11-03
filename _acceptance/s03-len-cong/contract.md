@@ -84,3 +84,5 @@ loại hình; đủ cả bốn trường chỉ 2 tin. Hàng này mở hai chặn
   - Ngoài-28: Khi nhiều lệnh chấm chạy cùng lúc trên máy chưa có DB thử, bằng chứng có thể đỏ giả hoặc đo trên dữ liệu thiếu. Không ảnh hưởng người dùng cuối, chạy lại từng lệnh là qua.
   - Ngoài-29: Trên máy chưa có DB thử, một phép kiểm về ranh giới dữ liệu nhạy cảm có thể đỏ vì không nối được chứ không vì vi phạm. Người dùng cuối không thấy gì.
   - Ngoài-30: Hồ sơ cho người ký mô tả sai ba tệp là đã sửa trong hàng này, dù thực tế chúng không đổi. Sản phẩm không bị ảnh hưởng.
+  - Trong hợp đồng, AC-3: phép kiểm chỉ đòi số tin tính vào đúng thị trường tăng ít nhất 2 trong khi ca gieo 15 tin, nên nếu tính thiếu thì ca vẫn xanh (Mạnh đồng ý ghi sau chữ ký, cùng ngày).
+  - Trong hợp đồng, AC-1: ca kiểm không ghim số dòng ma trận khu vực, nên xoá bớt một dòng vẫn xanh (Mạnh đồng ý ghi sau chữ ký, cùng ngày).
