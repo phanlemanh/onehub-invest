@@ -1,5 +1,5 @@
 import test from "node:test"; import assert from "node:assert/strict";
-import { canDungNgay, chonTinChuaHetHan } from "../thu-so-s06.mjs";
+import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh } from "../thu-so-s06.mjs";
 
 // 0311-3 MỞ LẠI (1): 403/429 dừng cả lượt NGAY từ lần đầu — Mạnh chốt; nhãn
 // chan-429 kèm Retry-After (-ra-Ns) vẫn phải bắt được.
@@ -26,4 +26,15 @@ test("chonTinChuaHetHan: nhảy sang tin kế khi tin mới nhất het-han", () 
   assert.equal(chonTinChuaHetHan({ list_id1: 333, list_id2: 444 }, { da_thu: {} }), 333);
   // không list_id2, list_id1 het-han → list_id1 (không còn lựa chọn)
   assert.equal(chonTinChuaHetHan({ list_id1: 111 }, state), 111);
+});
+
+// 0311-3 MỞ LẠI vòng 3 (d): chỉ tắt tiến trình có đối số chứa đúng profileDir
+// của bộ thu — PID bị tái dùng / tệp PID cũ không giết nhầm Chrome khác.
+test("laChromeBoThuCuaLenh: chứa profileDir thì được tắt; không chứa thì sống", () => {
+  const dir = "/Users/x/y/state/thu-so-s06/chrome-profile";
+  assert.equal(laChromeBoThuCuaLenh(`/Applications/Google Chrome.app/... --user-data-dir=${dir} --remote-debugging-port=9230`, dir), true, "tiến trình bộ thu → bị tắt");
+  assert.equal(laChromeBoThuCuaLenh("/Applications/Google Chrome.app/... --user-data-dir=/Users/x/khac", dir), false, "Chrome khác → KHÔNG đụng");
+  assert.equal(laChromeBoThuCuaLenh("/usr/libexec/thing --user-data-dir=/tmp/other", dir), false, "tiến trình PID tái dùng → KHÔNG đụng");
+  assert.equal(laChromeBoThuCuaLenh("", dir), false, "dòng lệnh rỗng → không đụng");
+  assert.equal(laChromeBoThuCuaLenh("c gì đó", ""), false, "thiếu profileDir → luôn false");
 });

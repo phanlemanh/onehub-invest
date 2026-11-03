@@ -75,6 +75,12 @@ const jitter = () => 8000 + Math.floor(Math.random() * 7000); // nghỉ 8–15s 
 /** 0311-3 MỞ LẠI (1): 403/429 dừng CẢ LƯỢT NGAY từ lần đầu (Mạnh chốt) —
  * captcha/khong-ra-so/timeout giữ luật 5 lần liền. Export cho test. */
 export const canDungNgay = (status) => /^chan-4(03|29)/.test(String(status));
+
+/** 0311-3 MỞ LẠI vòng 3 (d): dòng lệnh tiến trình có chứa đúng đường profileDir
+ * của bộ thu thì mới được tắt — PID tái dùng/tệp cũ không giết nhầm Chrome khác.
+ * Export cho test. */
+export const laChromeBoThuCuaLenh = (cmdline, profileDir) =>
+  Boolean(profileDir) && String(cmdline ?? "").includes(profileDir);
 let dungNgay403429 = false;
 
 async function docState() {
@@ -287,6 +293,42 @@ async function main() {
   let chromeProc = null;
   const requireCollector = createRequire(join(ROOT, "collector", "package.json"));
   const { chromium } = requireCollector("playwright-core");
+  // 0311-3 MỞ LẠI vòng 3 (a)(d): tatChrome + PID định nghĩa TRƯỚC vòng chờ CDP
+  // và TRƯỚC khi dùng — tín hiệu lúc đang chờ CDP hay throw 'chưa lên sau 30 lần'
+  // đều đã có lối tắt. Kill chỉ khi dòng lệnh tiến trình CHỨA profileDir bộ thu
+  // (tệp PID cũ + PID bị tái dùng không giết nhầm tiến trình khác của Mạnh).
+  const PID_F = join(STATE_DIR, "chrome-pid");
+  await mkdir(STATE_DIR, { recursive: true });
+  const { execFile } = await import("node:child_process");
+  /** (d) đọc dòng lệnh tiến trình (ps) rồi kiểm chứa profileDir — chỉ qua ps,
+   * không giết gì ở đây. Trả false khi tiến trình không còn/ps lỗi. */
+  const laChromeBoThu = (pid, dir) => new Promise((res) => {
+    execFile("ps", ["-o", "command=", "-p", String(pid)], (e, out) =>
+      res(!e && laChromeBoThuCuaLenh(String(out), dir)));
+  });
+  const pidCuaMinh = async () => {
+    let pid = chromeProc?.pid;
+    if (!pid) { try { pid = Number((await readFile(PID_F, "utf8")).trim()); } catch {} }
+    return pid || null;
+  };
+  const tatChrome = async () => {
+    let pid = await pidCuaMinh();
+    if (!pid) return;
+    if (!(await laChromeBoThu(pid, profileDir))) {
+      console.log(`PID ${pid} không phải Chrome bộ thu (thiếu profileDir) — không đụng, xoá tệp PID`);
+      try { await writeFile(PID_F, ""); } catch {}
+      return;
+    }
+    for (const sig of ["SIGTERM", "SIGKILL"]) {
+      try { process.kill(pid, sig); } catch { break; }
+      for (let i = 0; i < 10; i++) {
+        await sleep(300);
+        try { process.kill(pid, 0); } catch { break; } // đã chết
+      }
+    }
+    try { await writeFile(PID_F, ""); } catch {} // đã tắt — xoá để lượt sau không giết nhầm
+  };
+  _tatChrome = tatChrome;
   let browser;
   try {
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
@@ -299,41 +341,41 @@ async function main() {
       "--disable-background-timer-throttling", "about:blank",
     ], { stdio: "ignore", detached: true });
     chromeProc.unref();
-    for (let lan = 0; ; lan++) {
-      try {
-        browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-        break;
-      } catch (e) {
-        if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
-        await sleep(1000);
+    await writeFile(PID_F, String(chromeProc.pid)); // (a) ghi NGAY sau spawn
+    try {
+      for (let lan = 0; ; lan++) {
+        try {
+          browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
+          break;
+        } catch (e) {
+          if (lan >= 30) throw new Error(`Chrome CDP chưa lên sau 30 lần thử: ${e.message}`);
+          await sleep(1000);
+        }
+      }
+    } catch (e) {
+      await tatChrome(); // (a) đường throw phải tắt Chrome mình vừa spawn
+      throw e;
+    }
+  }
+  if (!chromeProc) {
+    // (d) nối instance sống: PID phải HỢP LỆ (dòng lệnh chứa profileDir);
+    // tệp trống/lỗi → tìm PID nghe cổng CDP rồi kiểm cùng điều kiện — không
+    // khớp thì DỪNG LƯỢT (không chạy trên Chrome lạ), thoát 1.
+    let pid = await pidCuaMinh();
+    let hopLe = pid && (await laChromeBoThu(pid, profileDir));
+    if (!hopLe) {
+      const { execFile } = await import("node:child_process");
+      const cdpPid = await new Promise((res) =>
+        execFile("lsof", ["-ti", `tcp:${CDP_PORT}`], (e, out) => res(e ? null : Number(String(out).trim().split(/\s+/)[0]) || null)));
+      if (cdpPid && (await laChromeBoThu(cdpPid, profileDir))) {
+        await writeFile(PID_F, String(cdpPid));
+        console.log(`nối theo PID cổng CDP ${cdpPid} (đã xác minh profileDir)`);
+      } else {
+        console.error("Chrome đang sống trên cổng CDP KHÔNG phải của bộ thu (thiếu profileDir) — dừng lượt, không chạy trên Chrome lạ");
+        process.exit(1);
       }
     }
   }
-  // 0211-12/hậu nấc-4: Chrome detached Ở LẠI sau lượt và có lúc chiếm trước —
-  // tắt đúng PID mình spawn khi lượt kết thúc (kể cả đường lỗi).
-  // 0311-3 MỞ LẠI (2): PID Chrome bộ thu GHI VÀO STATE — mọi đường ra tắt đúng
-  // PID đó, kể cả instance của LƯỢT TRƯỚC còn sống (trường hợp nối được vào thì
-  // không có chromeProc riêng); không đụng Chrome khác của Mạnh.
-  const PID_F = join(STATE_DIR, "chrome-pid");
-  {
-    await mkdir(STATE_DIR, { recursive: true });
-    const pidGhi = chromeProc?.pid ?? (await readFile(PID_F, "utf8").then((t) => Number(t.trim())).catch(() => null));
-    if (pidGhi) await writeFile(PID_F, String(pidGhi));
-  }
-  const tatChrome = async () => {
-    let pid = chromeProc?.pid;
-    if (!pid) { try { pid = Number((await readFile(PID_F, "utf8")).trim()); } catch {} }
-    if (!pid) return;
-    for (const sig of ["SIGTERM", "SIGKILL"]) {
-      try { process.kill(pid, sig); } catch { break; }
-      for (let i = 0; i < 10; i++) {
-        await sleep(300);
-        try { process.kill(pid, 0); } catch { break; } // đã chết
-      }
-    }
-    try { await writeFile(PID_F, ""); } catch {} // đã tắt — xoá để lượt sau không giết nhầm
-  };
-  _tatChrome = tatChrome;
 
   const contexts = [browser.contexts()[0]]; // mọi luồng dùng chung context (cookie CF dùng chung)
   // 0211-10 (b): mỗi luồng giữ đúng MỘT tab tạo MỘT lần đầu qua
@@ -342,6 +384,7 @@ async function main() {
   // cửa sổ bung). Fallback: context.newPage() nếu đường CDP không trả page.
   const ctx0 = contexts[0];
   const tabs = [];
+  try { // 0311-3 MỞ LẠI vòng 3 (b): tạo tab nằm trong try có finally — lỗi ở đây cũng flush + tắt Chrome
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
     try {
@@ -460,7 +503,7 @@ async function main() {
     }
   }
 
-  try {
+  // 0311-3 vòng 3 (b): nằm trong try đã mở trước tabs — không mở try kép
   await Promise.all(Array.from({ length: THREADS }, (_, i) => motLuong(i)));
   // 0211-12 (3): đóng tab đã cấp — browser.close qua CDP chỉ NGẮT KẾT NỐI,
   // tab tích lại sau mỗi lượt (10 tab cho 2 luồng sau vài lượt).
@@ -514,12 +557,18 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     process.exit(1);
   });
   // Ctrl-C / SIGTERM giữa lượt: đừng để Chrome ở lại chiếm màn hình
+  // 0311-3 MỞ LẠI vòng 3 (c): tín hiệu → flush + nạp TRƯỚC (có hạn thời gian
+  // để không treo Ctrl-C), chạy đúng MỘT LẦN nếu nhận tín hiệu hai lần.
+  let daNhanTinHieu = false;
   for (const sig of ["SIGINT", "SIGTERM"]) {
     process.on(sig, () => {
-      console.log(`nhận ${sig} — tắt Chrome rồi dừng`);
-      // 0211-15: khi _tatChrome còn null thì ?.() nhả undefined và cả chuỗi
-      // finally bỏ qua — exit không chạy. Promise.resolve luôn tạo chuỗi.
-      Promise.resolve(_tatChrome?.()).finally(() => process.exit(130));
+      if (daNhanTinHieu) return; // tín hiệu lần 2 — đang thoát
+      daNhanTinHieu = true;
+      console.log(`nhận ${sig} — flush + nạp rồi tắt Chrome`);
+      const voiHan = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), new Promise((r) => setTimeout(r, ms))]);
+      voiHan(_flushTruocThoat?.(), 20000)
+        .then(() => voiHan(_tatChrome?.(), 10000))
+        .finally(() => process.exit(130));
     });
   }
 }
