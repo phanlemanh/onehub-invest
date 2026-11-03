@@ -65,6 +65,7 @@ export const soPct = (pct: number): string => String(Number(Math.abs(pct).toFixe
 export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, quaHan: boolean): string | null {
   if (d.discountPct === null || d.medianPerm2 === null) return "Không tính được mức giảm";
   if (quaHan) return `Tin quá ${NGAY_TOI_DA} ngày chưa thấy lại`;
+  if (d.discountPct < 0) return `Đắt hơn thước phường ${soPct(d.discountPct)}%, không phải căn giá tốt`;
   if (d.discountPct < NGUONG_VAO_PCT) return `Giảm ${soPct(d.discountPct)}%, dưới ngưỡng ${NGUONG_VAO_PCT}%`;
   if (d.discountPct > NGUONG_LOAI_PCT) return `Giảm ${soPct(d.discountPct)}%, trên ngưỡng ${NGUONG_LOAI_PCT}%`;
   return null;

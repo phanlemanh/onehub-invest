@@ -14,10 +14,14 @@ import {
 } from "./deals-chi-tiet";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { fmtPhone, telHref } from "./ops/people";
+import { tenTin } from "./ops/review-context";
 import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
 import { docSourceNameEntries } from "./source-roles";
 
 export { NGHI_NGO_PCT, repostLabel };
+
+/** Số căn trang danh sách tải; căn ngoài số này mở bằng trang một căn (phân trang: CG2). */
+export const SO_CAN_DANH_SACH = 30;
 
 /**
  * G2/P4 — Deals v2: căn giá tốt từ tín hiệu riêng P1 (Zalo S03 + Facebook
@@ -133,6 +137,7 @@ type DealSqlRow = Record<string, unknown>;
 /** Hàng SQL → DealRow (dùng chung cho trang và test). */
 export function toDealRow(r: DealSqlRow): DealRow {
   const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+  const ten = (v: unknown) => tenTin((v as string | null) ?? null);
   const areaId = (r.area_id as string | null) ?? null;
   return {
     offerId: r.offer_id as string,
@@ -151,7 +156,7 @@ export function toDealRow(r: DealSqlRow): DealRow {
     firstSeen: r.first_seen as string,
     lastSeen: r.last_seen as string,
     nReposts: Number(r.n_reposts ?? 1),
-    sellerName: (r.seller_name as string | null) ?? (r.sender_name as string | null) ?? null,
+    sellerName: ten(r.seller_name) ?? ten(r.sender_name),
     sellerPhone: (r.seller_phone as string | null) ?? null,
     groupName: (r.group_name as string | null) ?? null,
     propertyType: (r.property_type as string | null) ?? null,
@@ -218,9 +223,18 @@ async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRo
   };
 }
 
-export async function getDeals(limit = 30, minDiscountPct = NGUONG_VAO_PCT): Promise<{ rows: DealRow[]; mayThu: boolean }> {
+export async function getDeals(limit = SO_CAN_DANH_SACH, minDiscountPct = NGUONG_VAO_PCT): Promise<{ rows: DealRow[]; mayThu: boolean }> {
   const { rows, mayThu } = await truyVan(dealsSql, [minDiscountPct, limit]);
   return hoanTat(rows.map(toDealRow), mayThu);
+}
+
+/**
+ * Căn có trong danh sách trang đang tải không, để crumb biết `?can=` mở được sheet hay sẽ chuyển về trang một căn.
+ * Bọc chính `dealsSql` để thứ tự và giới hạn một nguồn; bản cloud không đọc bài gốc nên chạy được ở cả hai nơi.
+ */
+export async function dealTrongDanhSach(offerId: string): Promise<boolean> {
+  const { rows } = await pool.query(`SELECT 1 FROM (${dealsSql({ cloud: true })}) ds WHERE ds.offer_id = $3`, [NGUONG_VAO_PCT, SO_CAN_DANH_SACH, offerId]);
+  return rows.length > 0;
 }
 
 /** Một căn theo mã; mã lạ, hay tin không phải P1 bán, trả `deal: null`. */

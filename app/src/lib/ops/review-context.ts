@@ -131,7 +131,7 @@ function sidesOf(item: ReviewContextItem): { key: keyof ReviewContext; offerId: 
 
 const rong = (v: string | null) => (v !== null && v.trim() !== "" ? v : null);
 /** Tên trên tin: S05 ghi chữ «unknown» khi nguồn không có tên — không phải một tên. */
-const tenTin = (v: string | null) => (rong(v)?.trim().toLowerCase() === "unknown" ? null : rong(v));
+export const tenTin = (v: string | null) => (rong(v)?.trim().toLowerCase() === "unknown" ? null : rong(v));
 
 function nguoiCuaTin(r: NguoiRow): NguoiDang {
   return {

@@ -1054,10 +1054,10 @@ const dungTenMaTran = async (c: pg.Client) => {
   }
 }
 const coChuGiuCho = (s: string) => /(^|[^\p{L}])unknown([^\p{L}]|$)/iu.test(s.replaceAll("Anh Unknown", ""))
-const oTenHang = (id: string) => hang(id)?.querySelector("span[translate='no']")?.textContent ?? null
+const oTenHang = (id: string) => hang(id)?.querySelector("span.truncate[translate='no']")?.textContent ?? null
 
 test("CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc thế chỗ, Na và tên thật giữ nguyên", { timeout: 300_000 }, async () => {
-  await withTx(async (c, sc) => {
+  await withTx(async (c) => {
     await dungTenMaTran(c)
     const that = await dsThat()
     const { rows } = await that.getDeals()
@@ -1087,7 +1087,7 @@ test("CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc 
     assert.ok(!xem.html().includes(GUI) && !xem.json.includes(GUI), "CGB-AC-1 viewer nhận tên trong bài gốc")
 
     // Đối chứng đỏ: gỡ tenTin khỏi seller_name thì chữ giữ chỗ quay lại, phép đo phải thấy.
-    const goTen = chep("src/lib/deals.ts", [[`tenTin(r.seller_name as string | null)`, `(r.seller_name as string | null)`]])
+    const goTen = chep("src/lib/deals.ts", [[`ten(r.seller_name) ?? ten(r.sender_name)`, `(r.seller_name as string | null) ?? ten(r.sender_name)`]])
     const hong = (await import(goTen)) as typeof that
     assert.equal((await hong.getDeals()).rows.find((r) => r.offerId === "n01")?.sellerName, "unknown", "CGB-AC-1 đối chứng không đỏ")
   })
