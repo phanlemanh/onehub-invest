@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
-import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
-import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan } from "@/lib/ops/review-can-cu";
+import { aiSuggestionLabel, listingIntentLabel, propertyTypeLabel } from "@/lib/ops-labels";
+import { doiChieuCua, type DoiChieu } from "@/lib/ops/doi-chieu";
+import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan, fmtGia } from "@/lib/ops/review-can-cu";
 import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
 import { RawLabel } from "./raw-label";
@@ -265,11 +266,47 @@ function EvidenceExcerpt({ text, group }: { text?: string | null; group?: string
   );
 }
 
+const DOI_CHIEU_LABEL: Record<DoiChieu["loai"], string> = { y_dinh: "Ý định tin", gia: "Giá rao", dien_tich: "Diện tích" };
+
+function giaTriDoiChieu(loai: DoiChieu["loai"], v: string | number) {
+  if (loai === "y_dinh") return listingIntentLabel(String(v)).label;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return loai === "gia" ? fmtGia(n) : `${String(n).replace(".", ",")} m²`;
+}
+
+/** Bộ đọc và AI khác nhau về ý định, giá, diện tích: hiện hai giá trị + câu trích; quyết định chỉ ghi nhật ký, tin không đổi. */
+function DoiChieuBlock({ items }: { items: DoiChieu[] }) {
+  return (
+    <div className="flex flex-col gap-2" data-review-doi-chieu>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium">Đối chiếu</span>
+        <Badge variant="warning-light">AI và bộ đọc khác nhau</Badge>
+      </div>
+      <p className="text-muted-foreground text-xs">Duyệt hay bỏ phần này chỉ ghi vào nhật ký, không đổi tin.</p>
+      <ItemGroup>
+        {items.map((x) => (
+          <Item key={x.loai} variant="outline" size="xs" role="listitem" data-review-doi-chieu-loai={x.loai}>
+            <ItemContent>
+              <ItemDescription>{DOI_CHIEU_LABEL[x.loai] ?? x.loai}</ItemDescription>
+              <ItemTitle>
+                <span className="tabular-nums">Bộ đọc: {giaTriDoiChieu(x.loai, x.bo_doc)} · AI: {giaTriDoiChieu(x.loai, x.ai)}</span>
+              </ItemTitle>
+              <ItemDescription data-review-quote>«{x.trich}»</ItemDescription>
+            </ItemContent>
+          </Item>
+        ))}
+      </ItemGroup>
+    </div>
+  );
+}
+
 function AgentOutputCard({ item, media, context, render }: CardProps) {
   const d = useDecide(item.id);
   const [picked, setPicked] = useState<Record<string, string | undefined>>({});
   const ev = item.evidence as EnrichEvidence;
   const fields = Array.isArray(ev.fields) ? ev.fields : [];
+  const doiChieu = doiChieuCua(ev);
   const conflictFields = [...new Set(fields.filter((f) => f.conflict).map((f) => f.field))];
   const chosen = conflictFields.every((f) => picked[f] !== undefined);
   const approve = () => {
@@ -281,7 +318,7 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
   const body = (
     <div className="flex flex-col gap-4">
       {fields.length === 0 ? (
-        <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p>
+        doiChieu.length === 0 ? <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p> : null
       ) : (
         <ItemGroup>
           {conflictFields.map((f) => (
@@ -304,6 +341,7 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
           ))}
         </ItemGroup>
       )}
+      {doiChieu.length > 0 ? <DoiChieuBlock items={doiChieu} /> : null}
       <ReviewPhotos label="Tin" images={media?.offer} chiGoc={media?.chiGoc?.offer} />
       {context?.offer ? (
         <ReviewFullText label="Tin" ctx={context.offer} doanDau={ev.text} />
@@ -312,10 +350,10 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
       )}
     </div>
   );
-  const actions = fields.length === 0 ? null : item.status === "pending" ? (
+  const actions = fields.length === 0 && doiChieu.length === 0 ? null : item.status === "pending" ? (
     <PendingActions d={d} extraBlock={chosen ? null : "Chọn một bên cho trường xung đột trước khi áp."}>
       <Button size="sm" onClick={approve} disabled={d.pending || !d.ready || !chosen}>
-        Áp dụng
+        {fields.length === 0 ? "Ghi phán quyết" : "Áp dụng"}
       </Button>
       <Button size="sm" variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.ready}>
         Bỏ
