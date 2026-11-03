@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: so-ghep-s06-nhan-danh-ba
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: da7f9bb1980bf2d542ecaf8e6b1691f4c8938ff2
-human_signoff:
+human_signoff: Mạnh 2026-11-03
 ---
 
 # Evidence Report: so-ghep-s06-nhan-danh-ba
@@ -160,7 +160,7 @@ Mốc `verified_at` của lệnh suite vòng 4 là mốc xấp xỉ do máy khô
     - domain-correctness: PASS — thuật ngữ «Chưa xác minh» đủ khuôn (định nghĩa, Code kèm RESO, _Avoid_); mappings.yaml khai đủ sáu điều kiện ADR-0011; ghi chú `seller_phone` không còn nói số ở lại máy; dòng đính chính ở thiết kế cũ nêu rõ mục hạ nguồn và OOS-2; ROADMAP ghi «070 trước 068».
     - operational-feasibility: PASS — mappings.yaml khai `seller_phone_inferred` với `dd: null`, kiểu boolean không cần CHECK, DQ `so-chua-xac-minh` ở 450, migration 070; ROADMAP ghi thứ tự áp «070 trước 068» cùng các mốc cột cloud (CLOUD_ALLOW, áp cột cloud).
     - spec-alignment: PASS — CONTEXT.md đúng khuôn thuật ngữ; mappings.yaml đủ sáu điều kiện ADR-0011 với ngày tra 03/11 và kết quả không có tương đương; ghi chú `seller_phone` nói số lên cloud, trên Invest chỉ qua route contact; thiết kế cũ có đoạn «Đính chính 03/11» sửa ba chỗ; ROADMAP ghi 070 trước 068 kèm năm mốc.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-03 — Đạt
 
 ### Lệnh suite (hồi quy)
 

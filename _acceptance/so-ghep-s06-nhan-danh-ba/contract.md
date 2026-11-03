@@ -5,7 +5,7 @@ slug: so-ghep-s06-nhan-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (070) — khớp t3_paths
 surfaces: [api, cli, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-so-ghep-s06-nhan-danh-ba-design.md
@@ -68,3 +68,17 @@ Quét bằng `morphological-scan`, chân sản phẩm từ `pipeline/lib/danh-ba
 - Băm số ghép vẫn lên cloud qua `seller_phone_hash` theo Hỏi-2 đã duyệt của hồ sơ trước; hồ sơ này không đổi.
 - Đường nền chưa chạy cho hồ sơ này: rào `chan-s4` nhận phiên theo worktree nên từ chối dù khoá `duong-nen` ghi tên P4; khoá đã nhả. Thẻ có cờ vàng thiếu số liệu nền; chạy lại khi dãy mở được từ worktree này.
 - Số migration 070: giám sát đợt xác nhận 03/11, 069 thuộc N1 (dòng sổ cùng ngày); 067 đang để trống.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-2: Vài dòng trong hồ sơ nghiệm thu và tài liệu thiết kế nhắc tên thật của nguồn trên kho đã công khai; dọn cùng đợt sau 05/11.
+  - Ngoài-4: Bộ kiểm chưa thử ca bảng bị một thao tác sửa cấu trúc khác giữ, nên lỗi ở ca đó vẫn xanh.
+  - Ngoài-5: Phép kiểm chưa tái hiện được nhiều thao tác nối đuôi giữ bảng, nên có thể bỏ sót lỗi đói khoá.
+  - Ngoài-6: Một phép kiểm có thể xanh mà không chứng minh tình huống bị cắt rồi thử lại đã xảy ra.
+  - Ngoài-7: Phép kiểm việc nhả khoá chưa được chứng minh là đo đúng, nên có thể xanh dù lỗi có thật.
+  - Ngoài-8: Phép kiểm canh bước thử số ghép không ghi đè luật phân xử có thể không báo đúng chỗ, hoặc vẫn xanh khi luật mới được áp.
+  - Ngoài-9: Phép kiểm khuôn số trên trang tin rao chỉ soi một phần tin có số, số sai khuôn ngoài phần đó vẫn xanh.
+  - Ngoài-10: Phép kiểm khuôn số vẫn xanh nếu không đọc ra được số nào, nên có thể che lỗi làm mất số của mọi tin.
+  - Ngoài-11: Lệnh đo số ghép không in số nào hôm nay, nhưng bộ kiểm chưa bảo vệ hai dòng in phụ.
+  - Ngoài-12: Lệnh đo thử trên DB thật của máy thu có thể làm trang vận hành và việc đồng bộ đứng chờ trong lúc đo.
+  - Ngoài-15: Ca kiểm âm của luật ghép người phá bản chép trong test, nên có thể xanh dù luật thật bị sửa sai.
+  - Ngoài-16: Phép kiểm cho S03 và S05 dùng dữ liệu viết tay, nên chưa thấy lỗi nếu đường nạp thật ghi dạng số khác.
+  - Ngoài-17: Bài kiểm giao diện tự viết thân trả về của route, nên tên trường API và thẻ tin lệch nhau vẫn xanh.
