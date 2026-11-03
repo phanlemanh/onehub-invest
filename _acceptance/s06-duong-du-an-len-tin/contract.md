@@ -5,7 +5,7 @@ slug: s06-duong-du-an-len-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-02-s06-duong-du-an-len-tin-design.md
@@ -94,4 +94,11 @@ Quét tay theo ba trục (không dùng khung quét: ít chiều, đo từ dữ l
 - Biết trước: `Xã Đàn, Đống Đa` bị bỏ như tiền tố hành chính; chuỗi không phẩy thì giữ. Số tin bị bỏ theo từng tiền tố in ở AC-7.
 - Known limits — Mạnh chọn sửa chữ AC-7 ngày 2026-11-03:
   - Người bán gõ sai tiền tố («Đương An Phú Đông 26» so với «Đường An Phú Đông 26», căn 10658) thì bộ so vẫn ra Lệch; đo 03/11 có đúng một cặp như vậy, và `khoaDuong` không đổi vì hợp đồng đã loại.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-03:
+  - Ngoài-1: phép đo tên nguồn trong đường tự viết phép khớp riêng, nên có thể báo sạch trong khi bộ soát lúc đồng bộ vẫn chặn và làm lượt đồng bộ dừng.
+  - Ngoài-2: khoảng 37.000 mục nhật ký điền đường mang khoá thời gian `at`, khác khoá `t` của các bộ ghi cũ; báo cáo đọc nhật ký phải xử lý cả hai dạng.
+  - Ngoài-3: gõ sai giá trị ngưỡng khi chạy tay phép đo thì hai ngưỡng 90% bị bỏ qua mà vẫn báo đạt.
+  - Ngoài-5: bài kiểm «dòng legacy còn đủ» không thể đỏ, nên không phát hiện được transform rút nhầm giá trị legacy.
+  - Ngoài-6: bài kiểm ca nguồn cùng chữ không phân biệt được nguồn thắng hay legacy thắng.
+  - Ngoài-7: hai dòng của phép đo (sáu trường không giảm, ngưỡng đường ở căn) chưa được thử xem có biết báo đỏ không.
 - Ngoài ma trận AC-1: `street_name` nguồn trả dạng mã hoá (base64 dài, đo 03/11 có 21 tin) thì không phát biểu; ghim ở ca thuần cùng tệp test.
