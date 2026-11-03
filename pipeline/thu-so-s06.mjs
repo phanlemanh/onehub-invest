@@ -15,7 +15,7 @@
 // Dùng: node thu-so-s06.mjs --phase 1 [--threads 2] [--minutes 30] [--mau N] [--limit N]
 // Dừng an toàn: 5 lỗi chặn liên tiếp (captcha/403/429/nút không ra số) → thoát 2.
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { join, dirname } from "node:path";
@@ -449,7 +449,7 @@ async function main() {
   process.exit(chanLienTiep >= 5 ? 2 : 0);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
     console.error("❌", e);
     process.exit(1);

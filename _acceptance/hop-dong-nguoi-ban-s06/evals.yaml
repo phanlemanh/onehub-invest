@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: hop-dong-nguoi-ban-s06
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.hdnb_nap
+    expected: "exit 0; ca {1..5} và ca v6 bị từ chối đều pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.hdnb_nap
+    expected: "exit 0; ca đA pass, gồm khẳng định displayName"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.hdnb_nap
+    expected: "exit 0; ca đB pass; should-NOT-fire: item lỗi không xoá số"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.hdnb_viec
+    expected: "exit 0; tài khoản có số ở tin khác ra 0 việc; đối chứng tài khoản chưa có số ra đúng một việc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.hdnb_viec
+    expected: "exit 0; should-NOT-fire: tin ẩn số không vào việc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.hdnb_viec
+    expected: "exit 0; mặc định không lấy mẫu; pha 2 thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.hdnb_viec
+    expected: "exit 0; thiếu env thoát 1; 0 URL ngoài máy trong ba tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.hdnb_luat_cu
+    expected: "exit 0; hai tệp test luật không lùi và thiếu mốc không đổi vẫn pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
