@@ -7,14 +7,14 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>chưa có"]
+  GD --> B["Sắp mở vòng<br/>1 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>10 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>125 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>94 việc"] --> GG{"Cổng Giá trị"}
-  GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
+  GB --> DG["Đã giao<br/>126 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>93 việc"] --> GG{"Cổng Giá trị"}
+  GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
 > **Bốn cổng người** — mỗi cổng là một câu hỏi chỉ người trả lời được:
@@ -22,20 +22,26 @@ flowchart TD
 > đã đủ và đúng chưa · **Cổng Bằng chứng** đã làm đúng thứ đã hứa chưa ·
 > **Cổng Giá trị** thứ đã giao có ăn thua không.
 
+## Sắp mở vòng
+
+- Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt: giá/m² so với thước, số tin dựng thước, mức giảm so với ngưỡng; căn thiếu dữ liệu ghi rõ thiếu gì (`can-gia-tot-biet-can`)
+
 ## Chờ duyệt phạm vi
 
 - ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế (`adr-duong-lenh-keo`)
 - Ca CD-AC-7b chờ request lưu ghi xong rồi mới đọc params, hết chập chờn trên CI (`che-do-thu-test-cho-luu`)
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
+- đầu dò của hồ sơ chuyen-huong-ma-thi-truong gỡ đúng worktree tạm của nó, bỏ lệnh prune trên kho dùng chung (`chm-dau-do-khong-prune`)
 - CI bỏ qua ca «DF-AC-3 DB thật» cần tin rao thật ở DB local (chỉ chạy ở máy thu) (`ci-bo-qua-df-ac-3`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+- hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
 ## Đang làm
 
-- Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 069 (`so-ghep-s06-nhan-danh-ba`)
+- Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -97,7 +103,6 @@ flowchart TD
 - Sau mỗi lượt cloud-sync, máy local đẩy lên cloud năm khối số tổng hợp Ops có mốc đo, qua bộ soát tầng A, và cloud có một hàm đọc chung báo số cũ quá 45′ (`ops-facts-so-tong-hop`)
 - Người vận hành đọc /ops/collections và /ops/quality chỉ thấy mã S0x kèm vai trò, không tên nguồn thật — kể cả nhãn job đẩy từ máy thu (`ops-nhan-ma-nguon`)
 - Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px (`ops-review-khung-hang-cho`)
-- Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số (`people-hien-so-goc`)
 - Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên (`phat-bieu-va-phan-xu`)
 - Thẻ duyệt ghép căn và luật chấm đọc trọn các cách ghi phường số (`phuong-so`)
 - Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
@@ -154,6 +159,7 @@ flowchart TD
 - bước kiểm local-only của check-s08-inventory chạy được trên main sau khi import-airbnb nhập import-s08-row (`check-s08-harness`) — đã giao — máy thông, cửa veto còn mở
 - nạp lại một snapshot Chợ Tốt cũ hơn không làm lùi giá, tiêu đề và nội dung của tin đã có bản mới (`chotot-khong-lui`)
 - bộ nạp S06 từ chối snapshot thiếu finishedAt và dòng captured_at NULL có sẵn không bị đóng băng (`chotot-thieu-moc`)
+- link cũ chứa mã thị trường dài kèm query mở đúng trang Cho thuê, có ca đo tự động và đột biến làm đỏ (`chuyen-huong-ma-dai-trang-thue`) — đã giao — máy thông, cửa veto còn mở
 - link và mã thị trường cũ (32 mã dài vn-thanh-pho-*/vn-tinh-*) vẫn mở được sau khi migration 064 đổi sang mã ngắn vn-<x> — chuyển hướng vĩnh viễn có điều kiện ở các trang Invest, bí danh mã cũ ở API công khai của app và data-api, đúng ở cả hai trạng thái trước/sau 064 (`chuyen-huong-ma-thi-truong`)
 - CI chạy typecheck và test của app, pipeline, agent, data-api trên mọi PR (`ci-test-module`)
 - Đồng bộ cloud nguyên tử — prod không trống/thiếu dữ liệu giữa các lượt sync; chốt luật sale_offers lên cloud (`cloud-sync-atomic`)
@@ -261,3 +267,7 @@ flowchart TD
 - Giá trị wanted → inquiry «Yêu cầu» trong Ý định tin, mô hình Listing (bên bán) ↔ Yêu cầu (bên mua) ở CONTEXT.md, và ba chữ «tin» chỉ bài ở /ops/collections (`wanted-thanh-inquiry`)
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
 - bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới» (`watchdog-l4b-history`)
+
+## Đã nghiệm thu giá trị
+
+- Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số (`people-hien-so-goc`) — lặp thêm (iterate)
