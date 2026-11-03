@@ -63,6 +63,23 @@ async function thuAnh(cookie, src) {
     return { status: 0, image: false };
   }
 }
+/** Căn không tải được ảnh nào chỉ được coi là link hết hạn khi mọi ảnh đi đường lấy hộ và thử thẳng link gốc đều không ra ảnh 2xx. Không in link. */
+async function chiConLinkHetHan(c, offerId, anh) {
+  if (anh.length === 0 || anh.some((s) => !s.includes("?media="))) return false;
+  const { rows } = await c.query("SELECT media_url, local_file FROM media WHERE resource_record_key = $1", [offerId]);
+  if (rows.some((m) => m.local_file || !m.media_url)) return false;
+  for (const m of rows) {
+    try {
+      const r = await fetch(m.media_url, { signal: AbortSignal.timeout(8_000) });
+      await r.arrayBuffer();
+      if (r.ok && (r.headers.get("content-type") ?? "").startsWith("image/")) return false;
+    } catch {
+      // Lỗi mạng không chứng được link hết hạn: máy thu mất mạng thì căn này phải đỏ.
+      return false;
+    }
+  }
+  return true;
+}
 async function theoLo(ds, fn, n = 4) {
   const out = [];
   for (let i = 0; i < ds.length; i += n) out.push(...(await Promise.all(ds.slice(i, i + n).map(fn))));
@@ -123,10 +140,16 @@ try {
   const ketOps = new Map();
   await theoLo(tatCa, async (s) => ketOps.set(s, await thuAnh(phien.ops, s)));
   const ketViewer = await theoLo(tatCa, async (s) => ({ s, ...(await thuAnh(phien.viewer, s)) }));
+  let taiDuoc = 0;
+  let linkHetHan = 0;
   for (const r of rows) {
     if (!r.co_anh) continue;
-    if (!(anhCan.get(r.offer_id) ?? []).some((s) => ketOps.get(s)?.status === 200 && ketOps.get(s)?.image)) loi.push("một căn có dòng media mà vai Vận hành không tải được ảnh nào");
+    const anh = anhCan.get(r.offer_id) ?? [];
+    if (anh.some((s) => ketOps.get(s)?.status === 200 && ketOps.get(s)?.image)) { taiDuoc++; continue; }
+    if (await chiConLinkHetHan(c, r.offer_id, anh)) linkHetHan++;
+    else loi.push("một căn có dòng media mà vai Vận hành không tải được ảnh nào, dù không phải link hết hạn");
   }
+  if (rows.some((r) => r.co_anh) && taiDuoc === 0) loi.push("không căn nào tải được ảnh");
   for (const k of ketViewer) if (![401, 403, 404].includes(k.status)) loi.push(`viewer GET ảnh trả ${k.status}`);
   for (const duong of ["media", "snapshot"]) {
     const ds = tatCa.filter((s) => s.includes(`?${duong}=`));
@@ -134,7 +157,7 @@ try {
     const chan = ketViewer.filter((k) => k.s.includes(`?${duong}=`) && [401, 403, 404].includes(k.status)).length;
     console.log(`ảnh ?${duong}=: ${ds.length} đường · vai Vận hành tải được ${dat}/${ds.length} · vai Người xem bị từ chối ${chan}/${ds.length}`);
   }
-  console.log(`n căn = ${rows.length} · trang đủ ở ops và admin ${trangDu}/${rows.length} · căn có dòng media ${rows.filter((r) => r.co_anh).length}`);
+  console.log(`n căn = ${rows.length} · trang đủ ở ops và admin ${trangDu}/${rows.length} · căn có dòng media ${rows.filter((r) => r.co_anh).length} · tải được ảnh ${taiDuoc} · chỉ còn link hết hạn ${linkHetHan}`);
   if (rows.length === 0) dungLai("không đọc được căn nào từ DB");
 } finally {
   await c.end();

@@ -16,7 +16,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.can_gia_tot
-    paths: ["app/src/app/ops/deals/[offerId]/**", app/src/components/ops/deal-detail-view.tsx, app/src/components/ops/deal-sheet.tsx, app/src/lib/deals.ts, app/tests/can-gia-tot-biet-can.test.tsx]
+    paths: ["app/src/app/ops/deals/[offerId]/**", app/src/components/ops/deal-body.tsx, app/src/components/ops/deal-sheet.tsx, app/src/lib/deals.ts, app/tests/can-gia-tot-biet-can.test.tsx]
     expected: "exit 0; ca CGT-AC-2: loader thật trên lược đồ tạm trả đúng toà, tầng, căn, số nhà, đường, phường, quận, nguồn, độ tin, ngày thấy, số lần đăng, tên, nhóm, số tin; phần thân vẽ trong sheet và trên trang hiện từng giá trị trong đúng dòng nhãn của nó; href tel:+84…; trên trang căn chỉ có phường có đúng một dòng «Phường», 0 dòng rỗng; trong sheet mục không có ghi «chưa có»; đối chứng đỏ: tráo hai cột toà và đường trong câu SQL → ném."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
@@ -40,7 +40,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.can_gia_tot
-    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-detail-view.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-body.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
     expected: "exit 0; ca CGT-AC-4 trên lược đồ tạm: ma trận viết trước bảy mức 4,9; 5; 22; 35; 36; 50; 50,1 đi qua dealsSql thật: đúng năm mức giữa vào danh sách; nhãn «Cần xác minh» đúng ở 36 và 50, không ở 35; vạch trên thanh giảm đặt ở đúng hằng NGHI_NGO_PCT trên trục; căn 22% hiện đúng giá/m², thước, số tin, mức giảm trong đúng dòng và 0 «Cần xác minh»; căn 36% có «Cần xác minh»; ba ngưỡng trên trang bằng ba hằng số xuất từ mã và câu dealsSql chứa đúng các hằng đó; đổi thước trong fixture thì số hiện và câu chứng minh đổi theo; đối chứng đỏ: hiện thước cố định → ném; câu SQL viết cứng 60 → ném ('CGT-AC-4 SQL lệch hằng')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
@@ -48,7 +48,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.can_gia_tot
-    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-detail-view.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
+    paths: [app/src/lib/deals-chi-tiet.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-body.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
     expected: "exit 0; ca CGT-AC-5 ma trận viết trước bảy trường, số assert bằng số phần tử, mỗi ca đi qua loader và page thật trên lược đồ tạm: năm trường loại hình, địa chỉ, ảnh, chữ bài, SĐT qua bảng và sheet: đúng một nhãn trong phần thân, hàng ghi «Thiếu 1», thuộc tab «Còn thiếu»; hai trường m², thước (bait_gap_pct NULL nên không vào dealsSql) qua trang một căn: đúng một nhãn thiếu cùng nhãn «Đã rời danh sách»; căn đủ 0 data-deal-thieu và thuộc tab «Đủ để gọi»; đối chứng đỏ: thieuGi bỏ một trường → ném ('CGT-AC-5 thiếu nhãn'); property_type unknown ra «Chưa rõ loại hình»; tên căn không mang chữ unknown."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
@@ -56,7 +56,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.can_gia_tot
-    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-detail-view.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-body.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
     expected: "exit 0; ca CGT-AC-6 ma trận vai khách, user, viewer, ops, admin qua page thật bảng và trang, vẽ cả hai tab của sheet: viewer HTML, JSON.stringify cây phần tử và props đưa vào DealsGrid 0 khớp với tên, nhóm, số sáu dạng (+84912345678, 84912345678, 0912345678, 0912 345 678, 0912.345.678, 912345678), chữ bài, src ảnh của fixture, tên nguồn thật gài trong fixture (0 khớp ở mọi vai, chỉ hiện S0x), 0 cột «Gọi ai», 0 trường lọc «Ảnh», 0 img ở danh sách cùng tiêu chí, 0 nhãn thiếu về ảnh, chữ, SĐT, vẫn có giá/m², thước và phường, 0 khớp với toà, tầng, số căn, số nhà của fixture; ops có đủ cùng fixture; khách và user không có nội dung căn; đối chứng đỏ: dealTheoVai bỏ lọc chữ bài → ném."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
@@ -72,7 +72,7 @@ evals:
     executor: test
     layer: backend-effect
     cmd: config:executors.test.can_gia_tot
-    paths: ["app/src/app/ops/deals/[offerId]/**", app/src/app/ops/deals/page.tsx, app/src/lib/deals.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-detail-view.tsx, app/src/components/ops/deal-sheet.tsx, pipeline/sync-cloud.mjs, app/tests/can-gia-tot-biet-can.test.tsx]
+    paths: ["app/src/app/ops/deals/[offerId]/**", app/src/app/ops/deals/page.tsx, app/src/lib/deals.ts, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-body.tsx, app/src/components/ops/deal-sheet.tsx, pipeline/sync-cloud.mjs, app/tests/can-gia-tot-biet-can.test.tsx]
     expected: "exit 0; ca CGT-AC-7: mã lạ ra «Không tìm thấy căn này» có href /ops/deals, cả khi mở bằng ?can=; bốn căn rời danh sách vì quá 45 ngày, giảm dưới 5%, giảm trên 50%, không tính được mức giảm ra trang căn với đúng nhãn lý do, ?can= của cả bốn chuyển sang trang đó; danh sách trống có câu trống và hành động; chip không khớp có nút xoá; tab rỗng có câu trống; trang đang tải có Skeleton; lỗi DB ở bảng ra RegionError có Thử lại; ma trận khách, viewer, ops, admin trên lược đồ cloud qua page thật của bảng, sheet, trang: viewer 0 khớp tên, số sáu dạng, ops có đủ, bảng 0 img và 0 trường lọc «Ảnh»; đối chứng đỏ: nhánh cloud bỏ dealTheoVai → ném ('CGT-AC-7 cloud lộ liên hệ'); bảng cloud đọc media → 42P01 → ném; lược đồ tạm dựng đúng theo CLOUD_ALLOW nhập từ pipeline/sync-cloud.mjs (không viết tay, thiếu unit_number, street_number, bảng media, stg_zalo_posts) chạy loader thật, vẽ cả sheet và trang, ra số chứng minh, tên, SĐT, «Ảnh, chữ bài chỉ có ở máy thu», 0 nhãn thiếu về ảnh, chữ; đối chứng đỏ: bản cloud đọc unit_number → 42703 → ném; ném 40P01 thì lỗi đi tiếp tới RegionError, không rơi về bản cloud."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
@@ -87,16 +87,16 @@ evals:
     criterion: AC-9
     executor: ui-check
     layer: ui-observed
-    paths: [app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-detail-view.tsx, app/src/components/ops/review-photos.tsx]
+    paths: [app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deals-cells.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-similar.tsx, app/src/components/ops/deal-body.tsx, app/src/components/ops/review-photos.tsx]
     steps:
-      - "Bản chạy: dev server của worktree ở http://localhost:3460 (app-3460 của .claude/launch.json), DB máy thu :5433, đăng nhập tài khoản thử vai Vận hành (node scripts/dev-ops-account.mjs --vai ops; không in mật khẩu). Chép số, tên, chữ bài thật vào báo cáo là sai; ảnh chứng phải che phần đó trước khi chụp."
+      - "Bản chạy: dev server của worktree ở http://localhost:3460 (app-3460-worktree của .claude/launch.json), DB máy thu :5433, đăng nhập tài khoản thử vai Vận hành (node scripts/dev-ops-account.mjs --vai ops; không in mật khẩu). Chép số, tên, chữ bài thật vào báo cáo là sai; ảnh chứng phải che phần đó trước khi chụp."
       - "1280 px sáng: /ops/deals → bấm tab «Đủ để gọi» → thêm chip Phường (chọn trường, chọn «là», chọn giá trị) → bỏ chip → bấm một hàng mở sheet → phím J rồi K → tab «Căn cùng tiêu chí» → bấm một hàng → tab «Chi tiết» → bấm ảnh, chuyển ảnh sau, đóng → nút mở trang một căn → quay về → Esc đóng sheet; chụp evidence/E9-step1.png tới E9-step4.png; ghi số căn thấy trọn trên màn 1280×800"
       - "Bước nào cần nhiều căn hơn dữ liệu thật có (chuyển trang, tab cùng tiêu chí có căn, tab rỗng): ghi «không đo được trên dữ liệu thật», không ghi đạt; phần đó do E13, E14 chứng trên fixture"
       - "Bấm nút gọi trong hàng: sheet không mở, href tel:+84…"
       - "1280 px tối: bảng, sheet, tab cùng tiêu chí → evidence/E9-step5.png, E9-step6.png"
       - "390 px sáng: bảng, sheet, tab cùng tiêu chí → evidence/E9-step7.png tới E9-step9.png; ghi scrollWidth và clientWidth từng màn; mức giảm thấy không phải cuộn ngang"
       - "Ghi naturalWidth từng img trong sheet của mọi căn trong danh sách"
-    expected: "Chip, tab, J, K, tab cùng tiêu chí chạy đúng trên bản thật; mỗi căn có dòng media có ít nhất một img naturalWidth > 0; img không tải được hiện «Ảnh hỏng»; báo cáo ghi tỉ lệ ảnh hỏng từng căn, trên 50% ảnh hỏng ở một căn thì ghi là lỗi; scrollWidth = clientWidth ở 390 px; liên kết gọi trong hàng có href tel:+84… và không mở sheet; chữ đọc được ở sáng và tối; đường về bảng chạy, hàng vừa xem giữ nền chọn."
+    expected: "Chip, tab, J, K, tab cùng tiêu chí chạy đúng trên bản thật; mỗi căn có dòng media có ít nhất một img naturalWidth > 0, trừ căn E10 đếm là chỉ còn link hết hạn; img không tải được hiện «Ảnh hỏng»; báo cáo ghi tỉ lệ ảnh hỏng từng căn, trên 50% ảnh hỏng ở một căn thì ghi là lỗi, trừ khi đó đều là link hết hạn theo E10; scrollWidth = clientWidth ở 390 px; liên kết gọi trong hàng có href tel:+84… và không mở sheet; chữ đọc được ở sáng và tối; đường về bảng chạy, hàng vừa xem giữ nền chọn."
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E10
     criterion: AC-10
@@ -104,7 +104,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.can_gia_tot_ba_vai
     paths: [app/src/app/ops/deals/**, app/src/lib/deals.ts, app/src/app/api/zalo-media/**, scripts/can-gia-tot-ba-vai.mjs]
-    expected: "exit 0; đăng nhập thật ba tài khoản thử vào bản đang chạy :3460; lấy mã căn từ HTML danh sách, tải mọi trang một căn cả HTML và RSC; vai viewer 0 khớp với SĐT ở sáu dạng (chuẩn hoá trước khi so), tên, chữ bài, đường ảnh đọc từ DB của chính các căn đó; ops và admin có đủ; ops và viewer GET MỌI ảnh của mọi căn qua /api/zalo-media, tách theo ?media= và ?snapshot=: mỗi căn có dòng media có ít nhất một ảnh ops nhận 200 kiểu image, viewer luôn 401, 403 hoặc 404 ở cả hai đường; in tỉ lệ theo đường; n căn > 0; không in giá trị thật, không in mật khẩu."
+    expected: "exit 0; đăng nhập thật ba tài khoản thử vào bản đang chạy :3460; lấy mã căn từ HTML danh sách, tải mọi trang một căn cả HTML và RSC; vai viewer 0 khớp với SĐT ở sáu dạng (chuẩn hoá trước khi so), tên, chữ bài, đường ảnh đọc từ DB của chính các căn đó; ops và admin có đủ; ops và viewer GET MỌI ảnh của mọi căn qua /api/zalo-media, tách theo ?media= và ?snapshot=: mỗi căn có dòng media có ít nhất một ảnh ops nhận 200 kiểu image, trừ căn mà mọi ảnh chỉ qua ?media= và script GET trực tiếp link gốc đều không ra ảnh 2xx (đếm riêng, in số); link gốc còn ra ảnh mà ops không tải được, hay không căn nào tải được ảnh, là vi phạm; viewer luôn 401, 403 hoặc 404 ở cả hai đường; in tỉ lệ theo đường; n căn > 0; không in giá trị thật, không in mật khẩu."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-11
