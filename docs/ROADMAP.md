@@ -107,7 +107,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   trên), giá không đơn vị có nhãn. Toà, trục đi qua phát biểu `parser`, trục vào khoá gom. Trên nhãn tác tử gắn (không phải nhãn vàng): PN 61→225/241,
   giá 128→208/237. Có hiệu lực ở lượt 00:00 sau khi gộp (Mạnh duyệt): S03 2.772→3.158 tin, nghỉ 130, mọc do bộ đọc 391; đo chỉ đọc khớp lượt thử trên DB thử.
 - LLM đọc toàn bộ chữ S03 (LS1 `_acceptance/s03-llm-doc-toan-bo`, 03/11): lệnh `agent/scripts/doc-toan-bo-s03.ts`, lõi `agent/src/enrich/doc-toan-bo.ts`.
-  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ. Tin
+  Đọc bài mới nhất của mọi tin S03 có chữ, trọn chữ đã gạt SĐT, email, link, tên cấm; nhãn ở `silver_labels` prompt `dtb-s03-v1`, không gọi lại cùng chữ đã đọc được; nhãn JSON hỏng được đọc lại trong trần tiền của lượt. Tin
   `unknown` chỉ tự điền căn hộ khi câu trích có thật và chứa từ khoá (`agent/src/enrich/luat-trich-dan.ts`), actor `doc-toan-bo:<runId>`; loại khác và E1 trái model lên thẻ.
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
