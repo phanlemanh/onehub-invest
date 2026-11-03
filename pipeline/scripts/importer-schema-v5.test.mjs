@@ -100,12 +100,14 @@ test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone c�
     await importDir(c, dirSo);
     await importDir(c, dirThuong);
     const r = (await c.query(
-      "SELECT seller->>'phone' AS phone, seller->>'phoneStatus' AS ps, seller->>'accountRef' AS ref, seller->>'full_name' AS fn, seller->>'live_ads' AS live, captured_at FROM stg_chotot_ads WHERE list_id = $1",
+      "SELECT seller->>'phone' AS phone, seller->>'phoneStatus' AS ps, seller->>'accountRef' AS ref, seller->>'displayName' AS ten, seller->>'full_name' AS fn, seller->>'live_ads' AS live, captured_at FROM stg_chotot_ads WHERE list_id = $1",
       [999888777])).rows[0];
     assert.equal(r.phone, "+84901234567", "lượt thường mới hơn KHÔNG được xoá phone đã nạp");
     assert.equal(r.ps, "available");
     assert.equal(r.ref, "S06:777001");
     assert.equal(r.fn, "Môi giới B", "phần mô tả lấy bản mới");
+    // 0311-3 đ4: displayName lượt lấy số cũng phải GIỮ (không nằm trong nhánh ELSE cũ)
+    assert.equal(r.ten, "Môi giới A", "lượt thường KHÔNG được làm mất displayName đã nạp");
     assert.equal(r.live, "9");
     assert.ok(new Date(r.captured_at).toISOString().startsWith("2026-11-02T09:05"), "lượt thường vẫn cập nhật captured_at như luật cũ");
   } finally {

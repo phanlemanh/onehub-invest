@@ -5,14 +5,14 @@
 // Cách: mở trang tin trên web S06 (URL dựng từ area/region — server redirect
 // về đúng trang theo list_id), bấm «hiện số», đọc SĐT từ liên kết tel:,
 // chuẩn hoá +84, ghi RawItem v5 (seller) vào snapshot NGOÀI đường quét
-// (state/seller-v5/... — importer trên main chưa nhận v5; chuyển vào
-// collector/snapshots/ SAU khi nhánh vào main). Nạp tay bằng importer NHÁNH.
+// (state/seller-v5/...) — bu-seller-v5.mjs đối chiếu + bù sau mỗi job hằng
+// ngày tới khi nhánh vào main. Nạp cuối lượt bằng importer NHÁNH.
 // Tên miền web đọc từ env S06_WEB_BASE (tầng A — không hardcode, không log).
+// 03/11 claudedp-0311-3: MẠNH BỎ PHA 2 — chỉ còn pha 1, mỗi tài khoản đúng
+// một lần (không gọi lại tài khoản đã có số); không lấy mẫu mặc định (72/72
+// đã đo «một tài khoản một số» 100%).
 //
-// Dùng: node thu-so-s06.mjs --phase 1 [--threads 1] [--minutes 30] [--mau 300] [--limit N]
-//   pha 1: mỗi tài khoản một tin (tài khoản nhiều tin trước) + mẫu tin thứ 2
-//          của --mau tài khoản đầu để đo giả định «một tài khoản một số».
-//   pha 2: toàn bộ tin không ẩn còn lại (tin mới đi cùng khi chạy hằng ngày).
+// Dùng: node thu-so-s06.mjs --phase 1 [--threads 2] [--minutes 30] [--mau N] [--limit N]
 // Dừng an toàn: 5 lỗi chặn liên tiếp (captcha/403/429/nút không ra số) → thoát 2.
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -38,9 +38,13 @@ const flag = (k, d) => {
   return i >= 0 ? args[i + 1] : d;
 };
 const PHASE = Number(flag("phase", 1));
+if (PHASE !== 1) {
+  console.error("pha 2 đã bỏ theo Mạnh 03/11 (claudedp-0311-3 đ3) — chỉ còn pha 1, mỗi tài khoản một lần");
+  process.exit(1);
+}
 const THREADS = Number(flag("threads", 1));
 const MINUTES = Number(flag("minutes", 30));
-const MAU = Number(flag("mau", 300));
+const MAU = Number(flag("mau", 0)); // 0311-3 đ2: mặc định 0 — mẫu 1tk-1số đã đo 72/72 (100%)
 const LIMIT = Number(flag("limit", 0));
 
 if (!WEB_BASE) {
@@ -95,38 +99,41 @@ async function docViec(client, state) {
     GROUP BY 1 ORDER BY so_tin DESC`;
   const rows = (await client.query(q)).rows;
   // 0211-9 (2): chỉ tin CÓ SỐ hoặc trạng thái CHỐT (het-han) tính là đã xử lý —
-// loi-trang/chan/timeout/khong-nut/khong-ra-so/so-khong-hop-le/trang-khac được
-// thử lại ở lượt sau (trước đây phone null cũng coi là xong → 175+19 tin lỗi
-// bị bỏ vĩnh viễn).
-const daTh = (id) => {
-  const x = state.da_thu[id];
-  return !!x && (x.phone !== null || x.status === "het-han");
-};
-  if (PHASE === 1) {
-    // MỞ LẠI 0211-7 đC: mẫu đo «một tài khoản một số» xếp ĐẦU pha 1 (lượt 30′
-    // không bao giờ tới cuối danh sách) — tin thứ 2 của N tài khoản nhiều tin nhất.
-    const mau = [];
-    let n = 0;
-    for (const r of rows) {
-      if (r.list_id2 && !daTh(r.list_id2) && n < MAU) {
-        mau.push({ ...r, list_id: r.list_id2, mau: true });
-        n++;
-      }
-    }
-    const viec = [...mau];
-    for (const r of rows) {
-      if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
-    }
-    return viec;
+  // loi-trang/chan/timeout/khong-nut/khong-ra-so/so-khong-hop-le/trang-khac được
+  // thử lại ở lượt sau (trước đây phone null cũng coi là xong → 175+19 tin lỗi
+  // bị bỏ vĩnh viễn).
+  const daTh = (id) => {
+    const x = state.da_thu[id];
+    return !!x && (x.phone !== null || x.status === "het-han");
+  };
+  // 0311-3 đ1: mỗi tài khoản ĐÚNG MỘT LẦN — tài khoản ĐÃ CÓ SỐ ở BẤT KỲ tin nào
+  // (state hoặc stg) rời khỏi hàng việc (đo 03/11: 590 tk có số nhưng 542 tin
+  // mới nhất chưa có → 542 lời gọi thừa nếu chỉ theo dõi list_id1/2).
+  const tkDaSo = new Set(
+    (await client.query(
+      "SELECT DISTINCT payload->>'account_id' AS aid FROM stg_chotot_ads WHERE seller->>'phone' LIKE '+84%' AND (payload->>'phone_hidden') IS DISTINCT FROM 'true'",
+    )).rows.map((r) => r.aid),
+  );
+  // state: tài khoản có số ở list_id1/list_id2 bất kỳ (map qua chính rows)
+  for (const r of rows) {
+    const co = (id) => id && state.da_thu[id] && state.da_thu[id].phone;
+    if (co(r.list_id1) || co(r.list_id2)) tkDaSo.add(r.account_id);
   }
-  // pha 2: mọi tin không ẩn chưa có số
-  const q2 = `
-    SELECT list_id, area_name AS area, payload->>'region_name' AS region, ad_type AS st,
-           (payload->>'account_id') AS account_id, city_code
-    FROM stg_chotot_ads
-    WHERE (payload->>'phone_hidden') IS DISTINCT FROM 'true'
-    ORDER BY list_time DESC`;
-  return (await client.query(q2)).rows.filter((r) => !daTh(r.list_id));
+  // 0311-3 đ2: mẫu mặc định 0 (đã đo 72/72) — chỉ khi --mau N tường minh
+  const mau = [];
+  let n = 0;
+  for (const r of rows) {
+    if (MAU > 0 && r.list_id2 && !daTh(r.list_id2) && n < MAU) {
+      mau.push({ ...r, list_id: r.list_id2, mau: true });
+      n++;
+    }
+  }
+  const viec = [...mau];
+  for (const r of rows) {
+    if (tkDaSo.has(r.account_id)) continue; // đã có số ở tin bất kỳ — không gọi lại
+    if (r.list_id1 && !daTh(r.list_id1)) viec.push({ ...r, list_id: r.list_id1, mau: false });
+  }
+  return viec;
 }
 
 /** Ghi batch items v5 ra snapshot ngoài đường quét. */
@@ -228,6 +235,12 @@ async function main() {
   let viec = await docViec(client, state);
   if (LIMIT > 0) viec = viec.slice(0, LIMIT);
   console.log(`việc cần thu: ${viec.length} (đã có state: ${Object.keys(state.da_thu).length})`);
+  if (MINUTES <= 0) {
+    // 0311-3: đo số việc pha 1 KHÔNG mở trình duyệt, KHÔNG gọi nguồn
+    console.log(`[đo] việc pha 1 còn lại: ${viec.length}`);
+    await client.end();
+    process.exit(0);
+  }
 
   // Chrome THẬT attach qua CDP (profile riêng tạm) — context launcher sạch bị
   // Cloudflare chặn 403 (đo 02/11); attach CDP như DevTools: trình duyệt thật,

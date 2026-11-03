@@ -89,17 +89,18 @@ export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_
    price = EXCLUDED.price, price_string = EXCLUDED.price_string,
    size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
    ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
-   -- MỞ LẠI 0211-7 đA: lượt thu THƯỜNG (payload không có seller v5) phải KHÔNG
-   -- xoá phone/phoneStatus/accountRef/seenAt đã nạp từ lượt lấy số — phần mô tả
-   -- (full_name, company_ad, seller_info) vẫn lấy bản mới, các khoá số người bán
-   -- giữ từ bản hiện có khi EXCLUDED không mang phone.
+   -- MỞ LẠI 0211-7 đA + 0311-3 đ4: lượt thu THƯỜNG (payload không có seller v5)
+   -- phải KHÔNG xoá phone/phoneStatus/accountRef/seenAt/DISPLAYNAME đã nạp từ
+   -- lượt lấy số — phần mô tả (full_name, company_ad, seller_info) vẫn lấy bản
+   -- mới, các khoá người bán giữ từ bản hiện có khi EXCLUDED không mang phone.
    seller = CASE
      WHEN EXCLUDED.seller->>'phone' IS NOT NULL THEN EXCLUDED.seller
-     ELSE (EXCLUDED.seller - 'phone' - 'phoneStatus' - 'accountRef' - 'seenAt')
+     ELSE (EXCLUDED.seller - 'phone' - 'phoneStatus' - 'accountRef' - 'seenAt' - 'displayName')
         || jsonb_strip_nulls(jsonb_build_object(
              'phone', stg_chotot_ads.seller->'phone',
              'phoneStatus', stg_chotot_ads.seller->'phoneStatus',
              'accountRef', stg_chotot_ads.seller->'accountRef',
+             'displayName', stg_chotot_ads.seller->'displayName',
              'seenAt', stg_chotot_ads.seller->'seenAt'))
    END, images = EXCLUDED.images,
    payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
