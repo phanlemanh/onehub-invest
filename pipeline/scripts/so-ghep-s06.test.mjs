@@ -35,6 +35,13 @@ async function chepView(c, sc, ten) {
   await c.query(`CREATE VIEW ${sc}.${ten} AS ${rows[0].d}`);
 }
 
+/** Hàm phân xử chép vào lược đồ riêng: 068 sửa hàm theo search_path, không có bản riêng thì nó ghi đè hàm public trong giao
+ * dịch này và deadlock với bộ test đang nạp 061 trên field_assertions. */
+async function chepHamPhanXu(c, sc) {
+  const { rows } = await c.query(`SELECT pg_get_functiondef('public.resolve_offer_fields(text[])'::regprocedure) AS d`);
+  await c.query(rows[0].d.replace("public.resolve_offer_fields", `${sc}.resolve_offer_fields`));
+}
+
 async function withTx(fn) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -43,6 +50,7 @@ async function withTx(fn) {
     const sc = await luocDoRieng(c, BANG, { tienTo: "sg" });
     await chepView(c, sc, "sale_offers");
     await chepView(c, sc, "sellers");
+    await chepHamPhanXu(c, sc);
     await nap068(c);
     await nap070(c);
     await c.query(`INSERT INTO ops_audit (actor, action) VALUES ('test', 'phat-bieu:cat-chuyen')`);
@@ -425,6 +433,20 @@ test("SG-AC-9 phần đo chạy thật: dữ liệu đạt trả 0, chạy lại
     const lan2 = await chay();
     assert.equal(lan2.ma, 1, "SG-AC-9 bất biến sai phải trả 1");
     assert.deepEqual(lan2.err, ["BẤT BIẾN SAI: bi_danh_moi"]);
+  });
+});
+
+test("fixture không ghi đè hàm phân xử của public: 068 áp lên bản riêng", async () => {
+  await withTx(async (c, { sc }) => {
+    const { rows } = await c.query(
+      `SELECT n.nspname AS luoc_do, pg_get_functiondef(p.oid) LIKE '%fp_sdt%' AS co_phan_giu
+         FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE p.oid = to_regprocedure('resolve_offer_fields(text[])')`);
+    assert.deepEqual(rows[0], { luoc_do: sc, co_phan_giu: true });
+    const { rows: pub } = await c.query(
+      `SELECT xmin::text = pg_current_xact_id()::text AS giao_dich_nay_ghi
+         FROM pg_proc WHERE oid = 'public.resolve_offer_fields(text[])'::regprocedure`);
+    assert.equal(pub[0].giao_dich_nay_ghi, false, "giao dịch test đã ghi đè hàm public, sẽ deadlock với bộ test đang nạp 061");
   });
 });
 
