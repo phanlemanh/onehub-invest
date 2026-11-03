@@ -118,7 +118,7 @@ const MA_TRAN_DUONG = [
   [NFD, "Nguyễn Trãi".normalize("NFC")],
   ["Đường Tân Túc, Thị trấn Tân Túc, Bình Chánh", "Đường Tân Túc, Thị trấn Tân Túc, Bình Chánh"],
   ["Số 277 Đường Bến Bình Đông, Phường 14", "Số 277 Đường Bến Bình Đông, Phường 14"],
-  ["Nguyễn Xiển 0912345678", "Nguyễn Xiển 0912345678"],
+  ["Nguyễn Xiển 0912345678", null], // thay ở hồ sơ sdt-trong-ten-duong AC-1
   ["Đường Quận 1 cũ", "Đường Quận 1 cũ"],
   ["Xã Đàn", "Xã Đàn"],
   ["Tỉnh lộ 10", "Tỉnh lộ 10"],

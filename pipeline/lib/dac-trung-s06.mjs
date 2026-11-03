@@ -2,6 +2,7 @@
 // Mỗi phần tử {field, value, rule_id}: rule_id = khoá nguồn đã đọc (căn cứ của phát biểu). Giá trị rác không thành phát
 // biểu: số ≤ 0, chữ rỗng, chữ ở trường số, mặt tiền/chiều dài > 200 m, số tầng > 100, WC > 50, toạ độ ngoài khung Việt Nam.
 import { ASSERTION_FIELD } from "./vocab.generated.mjs";
+import { chuaDaySo } from "./sdt-trong-chuoi.mjs";
 
 /** Khung toạ độ Việt Nam (gồm đảo): vĩ 8–24, kinh 102–110. */
 const KHUNG_VN = { vi: [8, 24], kinh: [102, 110] };
@@ -29,6 +30,7 @@ export function docDuong(v) {
   const t = v.normalize("NFC").trim().replace(/\s+/g, " ");
   if (!t || DIA_DANH.test(t) || DIA_DANH_CO_PHAY.test(t)) return null;
   if (MA_HOA.test(t)) return null;
+  if (chuaDaySo(t)) return null;
   return t;
 }
 
