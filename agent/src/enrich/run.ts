@@ -125,7 +125,7 @@ async function loadBuildings(c: pg.Client): Promise<BuildingNode[]> {
  * Field đang xung đột chờ người: có từ hai đề xuất queued (giá trị khác nhau) cho cùng field.
  * Lượt này không được áp gì cho chúng (AC-7) — kể cả khi thẻ đã bị hoãn.
  */
-async function heldFields(c: pg.Client, offerId: string): Promise<Set<EnrichField>> {
+export async function heldFields(c: pg.Client, offerId: string): Promise<Set<EnrichField>> {
   const { rows } = await c.query(
     `SELECT field FROM enrichment_proposals
      WHERE offer_id = $1 AND status = 'queued' AND route = 'review'
@@ -158,10 +158,12 @@ function basisOf(
  * (tạo mới khi chưa có, kể cả khi thẻ cũ đã bị hoãn), rồi dựng lại evidence từ mọi đề
  * xuất queued của thẻ. Trả id thẻ chờ, hoặc null khi offer không có gì chờ duyệt.
  */
-async function syncReview(
+export async function syncReview(
   c: pg.Client,
-  o: OfferRow,
+  o: Pick<OfferRow, "offer_id" | "text" | "group_name">,
   meta: { runId: string; model: string | null; tracePath: string | null },
+  /** Bất đồng chỉ đối chiếu của lệnh doc-toan-bo-s03: gộp vào thẻ, không đề xuất nào đi kèm cũng tạo thẻ. */
+  doiChieu: readonly { loai: string }[] = [],
 ): Promise<number | null> {
   const itemId = `enrich:${o.offer_id}`;
   const { rows: loose } = await c.query(
@@ -171,12 +173,20 @@ async function syncReview(
     [o.offer_id],
   );
   const { rows: pend } = await c.query(
-    `SELECT id FROM review_queue WHERE item_type = 'agent_output' AND item_id = $1 AND status = 'pending'`,
+    `SELECT id, evidence->'doi_chieu' AS doi_chieu FROM review_queue WHERE item_type = 'agent_output' AND item_id = $1 AND status = 'pending'`,
     [itemId],
   );
   let cardId: number | null = pend[0] ? Number(pend[0].id) : null;
-  if (loose.length === 0 && cardId === null) return null;
+  if (loose.length === 0 && cardId === null && doiChieu.length === 0) return null;
+  // Dựng lại evidence mỗi lượt (kể cả enrich-run đêm) không được làm mất đối chiếu; thẻ «Để sau» truyền đối chiếu sang thẻ mới.
+  let doiChieuCu: { loai: string }[] = pend[0]?.doi_chieu ?? [];
   if (cardId === null) {
+    const { rows: hoan } = await c.query(
+      `SELECT evidence->'doi_chieu' AS doi_chieu FROM review_queue
+       WHERE item_type = 'agent_output' AND item_id = $1 AND status = 'deferred' ORDER BY id DESC LIMIT 1`,
+      [itemId],
+    );
+    doiChieuCu = hoan[0]?.doi_chieu ?? [];
     const { rows } = await c.query(
       // Không gắn gợi ý mặc định (PL3, RV-L04: 'apply' gắn cứng mồi người bấm Áp) — ai_suggestion để NULL.
       `INSERT INTO review_queue (item_type, item_id, title)
@@ -197,6 +207,7 @@ async function syncReview(
      WHERE review_id = $1 AND status = 'queued' ORDER BY id`,
     [cardId],
   );
+  const doiChieuGop = [...doiChieuCu.filter((x) => !doiChieu.some((m) => m.loai === x.loai)), ...doiChieu];
   const evidence = {
     offer_id: o.offer_id,
     text: o.text ? o.text.slice(0, 300) : null,
@@ -215,11 +226,12 @@ async function syncReview(
       basis: f.basis ?? null,
       ...(f.conflict ? { conflict: true as const } : {}),
     })),
+    ...(doiChieuGop.length > 0 ? { doi_chieu: doiChieuGop } : {}),
   };
   const conf = evidence.fields.map((f) => f.confidence).filter((x): x is number => x !== null);
   await c.query(
     `UPDATE review_queue SET evidence = $2, title = $3, ai_confidence = $4 WHERE id = $1`,
-    [cardId, evidence, `Bổ sung dữ liệu: ${o.offer_id} (${fields.length} trường)`, conf.length ? Math.max(...conf) : null],
+    [cardId, evidence, `Bổ sung dữ liệu: ${o.offer_id} (${fields.length + doiChieuGop.length} trường)`, conf.length ? Math.max(...conf) : null],
   );
   return cardId;
 }

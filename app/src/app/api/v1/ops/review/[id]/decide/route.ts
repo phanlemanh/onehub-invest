@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { kiemQuyen } from "@/lib/ops-access";
-import { ghiAuditTrong } from "@/lib/audit";
+import { ghiAuditTrong, moiTruong } from "@/lib/audit";
 import { planEnrichApproval, type EnrichChoices } from "@/lib/enrich-choices";
+import { ghiPhanQuyetDoiChieu } from "@/lib/ops/doi-chieu";
 import { LY_DO_TOI_DA, lyDoHopLe } from "@/lib/ops/review-can-cu";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export const dynamic = "force-dynamic";
  *   Thẻ có field xung đột (luật E1 trái LLM, AC-11): approved bắt buộc `choices` cho mỗi
  *   field đó (thiếu → 400, không đổi gì) → apply_enrichment(đề xuất được chọn + không xung
  *   đột) rồi decide_enrichment_review(...,'rejected') bác phần còn lại, cùng transaction.
+ *   Thẻ có khối đối chiếu (evidence.doi_chieu): approved, rejected ghi thêm một dòng ops_audit `enrich:doi-chieu`, tin không đổi.
  * Quyền `review.decide` (vai ops, không bearer); quyết định, lý do (`decision_note`) và dòng audit (`detail.ly_do`) ghi
  * cùng transaction — audit hỏng thì ROLLBACK cả quyết định lẫn lý do.
  */
@@ -59,7 +61,7 @@ export async function POST(
 
     // Lấy item
     const { rows: items } = await client.query(
-      `SELECT id, item_type, item_id, status FROM review_queue WHERE id = $1 FOR UPDATE`,
+      `SELECT id, item_type, item_id, status, evidence FROM review_queue WHERE id = $1 FOR UPDATE`,
       [id],
     );
     if (items.length === 0) {
@@ -136,6 +138,10 @@ export async function POST(
         await client.query(`SELECT decide_enrichment_review($1, 'rejected', $2)`, [id, actor]);
       } else {
         await client.query(`SELECT decide_enrichment_review($1, $2, $3)`, [id, status, actor]);
+      }
+      // Khối đối chiếu: chỉ ghi phán quyết, không đổi cột nào của tin.
+      if (status !== "deferred") {
+        await ghiPhanQuyetDoiChieu(client, { reviewId: id, itemId: item.item_id, status: status as "approved" | "rejected", lyDo: reason, actor, env: moiTruong(), evidence: item.evidence });
       }
     }
     // Dòng audit trong CÙNG transaction: ghi hỏng → ROLLBACK cả quyết định.

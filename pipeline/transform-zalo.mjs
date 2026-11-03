@@ -13,6 +13,7 @@ import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
+import { normText } from "./lib/norm-text.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
@@ -634,8 +635,7 @@ export function loaiHinhNhom(bai) {
   return out;
 }
 
-/** Chữ bài đã chuẩn hoá để so trùng: NFC, chữ thường, mọi dãy không phải chữ/số thành một dấu cách. */
-export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+export { normText };
 
 /**
  * Khoá gom repost của một bài đã đọc (bước 4). Đủ phường và diện tích: chỉ nội dung kind|phường|giá|DT|PN — bài của

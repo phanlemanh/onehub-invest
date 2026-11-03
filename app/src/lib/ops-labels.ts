@@ -17,6 +17,8 @@ export { sourceStatusLabel } from "./source-status-labels"
 export const propertyTypeLabel = nhan(LABELS_VI.property_type)
 
 /** Loại tin (`sale_offers.kind`) — nhãn từ sổ từ vựng. */
+/** Nhãn ý định tin từ sổ từ vựng (thẻ đối chiếu của /ops/review). */
+export const listingIntentLabel = nhan(LABELS_VI.listing_intent)
 export const offerKindLabel = nhan(LABELS_VI.kind)
 
 /** Độ tin trích xuất (`sale_offers.confidence`) — nhãn từ sổ từ vựng. */
