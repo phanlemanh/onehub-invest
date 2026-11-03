@@ -18,6 +18,7 @@ import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { napLai059 } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
+import { sqlNapLai } from "../lib/nap-view-song.mjs";
 import { spawnSync } from "node:child_process";
 import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
@@ -46,7 +47,7 @@ export async function trongGiaoDich(client, fn) {
 }
 /** Nạp 045 (DB chưa áp → áp lần đầu; đã áp → áp lại, phải không lỗi). */
 export async function napMigration045(client) {
-  await client.query(MIG);
+  await client.query(await sqlNapLai(client, MIG));
   await napLai059(client);   // DB đã áp 059 (PL19): 045 vừa đè hàm + dòng sổ của 059
 }
 /** Mở cổng «chưa cắt chuyển» trong giao dịch đang chạy (ca không đo cổng). */

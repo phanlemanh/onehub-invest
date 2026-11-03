@@ -46,6 +46,7 @@ executors:
     ecw_pipeline: "node --test pipeline/lib/eval-classify.test.mjs"   # eval-classify-wilson E1, E2, E3, E4, E6, E8 — lõi thuần + lệnh --tap-mau, không DB
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
+    kd_test: "node --test pipeline/scripts/kiem-do-sau-070.test.mjs"   # kiem-do-sau-ap-070-sua E1, E2, E3 — lược đồ riêng BEGIN…ROLLBACK trên :5433
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
@@ -574,6 +575,7 @@ executors:
     sd3_cloud: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs cloud"   # sdt-luu-goc-e164 E7 — câu đọc sync-cloud, không đẩy (DB thử)
     sd3_doc: "bash _acceptance/sdt-luu-goc-e164/probes/people.sh"   # sdt-luu-goc-e164 E8 — loader /ops/people ba vai (DB thử)
     sd3_pham_vi: "bash _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh"   # sdt-luu-goc-e164 E9
+    kd_that: "node _acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs"   # kiem-do-sau-ap-070-sua E4, E5 — năm bộ trên bản chép đã áp 070, 068 (DB thử)
     ldb_n6_db: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs n6"   # sd3-lam-chat-do-danh-ba E4 — N6 trước/sau 060 (DB thử)
     ldb_anh: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs anh"   # sd3-lam-chat-do-danh-ba E5 — đúng ảnh người → số (DB thử)
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
