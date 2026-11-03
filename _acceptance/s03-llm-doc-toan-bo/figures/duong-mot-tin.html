@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đường đi của một tin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      padding: 2rem 1rem;
+    }
+    .frame { max-width: 640px; width: 100%; margin: 0 auto; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+    }
+    .sub { font-size: 0.875rem; color: var(--color-muted); margin-bottom: 1.5rem; }
+    svg { width: 100%; height: auto; display: block; }
+    svg text { font-family: 'Geist', system-ui, sans-serif; }
+    svg .name { font-size: 18px; font-weight: 600; fill: #2d3142; }
+    svg .sub-t { font-size: 16px; fill: #4f5d75; }
+    svg .lbl { font-size: 16px; fill: #4f5d75; }
+    svg .mono { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 16px; font-weight: 500; }
+    svg .mid { text-anchor: middle; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · Hỏi-3 · đường ghi</p>
+    <h1>Đường đi của một tin S03</h1>
+    <p class="sub">Máy chỉ tự điền một trường, ở một đầu ra; mọi bất đồng về cùng một thẻ · AC-2 tới AC-7</p>
+
+    <svg viewBox="0 0 600 1112" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ đường đi của một tin S03 từ lúc gạt thông tin tới ba đầu ra">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="600" height="1112" fill="#f5f5f5"/>
+
+      <!-- Mũi tên vẽ trước, ô vẽ sau -->
+      <g fill="none" stroke="#4f5d75" stroke-width="1.2">
+        <line x1="304" y1="64" x2="304" y2="96" marker-end="url(#arrow)"/>
+        <line x1="304" y1="172" x2="304" y2="204" marker-end="url(#arrow)"/>
+
+        <!-- Haiku tách hai đường: loại hình và đối chiếu -->
+        <line x1="212" y1="280" x2="212" y2="336" marker-end="url(#arrow)"/>
+        <line x1="502" y1="280" x2="502" y2="336" marker-end="url(#arrow)"/>
+
+        <!-- Trục chính -->
+        <line x1="212" y1="400" x2="212" y2="456" marker-end="url(#arrow)"/>
+        <line x1="212" y1="552" x2="212" y2="616" marker-end="url(#arrow)"/>
+        <line x1="212" y1="680" x2="212" y2="744" marker-end="url(#arrow-accent)" stroke="#eb6c36" stroke-width="1.4"/>
+
+        <!-- Rãnh trái: về Bỏ qua -->
+        <path d="M 44 368 H 32 Q 24 368 24 376 V 744" marker-end="url(#arrow)"/>
+        <line x1="44" y1="504" x2="24" y2="504"/>
+
+        <!-- Rãnh phải: về thẻ -->
+        <path d="M 380 504 H 388 Q 396 504 396 512 V 744" marker-end="url(#arrow)"/>
+        <line x1="380" y1="648" x2="396" y2="648"/>
+
+        <!-- Đối chiếu -->
+        <line x1="460" y1="448" x2="460" y2="496" marker-end="url(#arrow)"/>
+        <line x1="548" y1="448" x2="548" y2="744" marker-end="url(#arrow)"/>
+      </g>
+
+      <!-- Điểm gộp -->
+      <circle cx="24" cy="504" r="4" fill="#2d3142"/>
+      <circle cx="396" cy="648" r="4" fill="#2d3142"/>
+
+      <!-- Bắt đầu -->
+      <rect x="192" y="16" width="224" height="48" rx="20" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="304" y="46" class="name mid">Tin S03 có chữ</text>
+
+      <!-- Gạt -->
+      <rect x="64" y="96" width="480" height="76" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="304" y="128" class="name mid">Gạt SĐT, email, link, tên nhóm, tên nguồn</text>
+      <text x="304" y="152" class="sub-t mid">Gửi trọn chữ, không cắt ở 500 ký tự</text>
+
+      <!-- Haiku -->
+      <rect x="16" y="204" width="576" height="76" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="304" y="236" class="name mid">Haiku đọc, trần 3 USD</text>
+      <text x="304" y="260" class="sub-t mid">Mỗi thứ đọc được kèm một câu trích nguyên văn</text>
+
+      <!-- Câu hỏi 1 -->
+      <path d="M 58 336 H 366 L 380 368 L 366 400 H 58 L 44 368 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="212" y="374" class="name mid">Trích dẫn có trong chữ?</text>
+
+      <!-- Câu hỏi 2 -->
+      <path d="M 58 456 H 366 L 380 504 L 366 552 H 58 L 44 504 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="212" y="484" class="name mid">Model nói căn hộ, có từ khoá,</text>
+      <text x="212" y="508" class="name mid">không dính «gần», «cạnh»,</text>
+      <text x="212" y="532" class="name mid">«cần mua», nhiều loại?</text>
+
+      <!-- Câu hỏi 3 -->
+      <path d="M 58 616 H 366 L 380 648 L 366 680 H 58 L 44 648 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="212" y="640" class="name mid">Bộ đọc theo luật</text>
+      <text x="212" y="664" class="name mid">có trái không?</text>
+
+      <!-- Nhánh phụ: đối chiếu -->
+      <path d="M 426 336 H 578 L 592 392 L 578 448 H 426 L 412 392 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="502" y="360" class="name mid" style="font-size:16px">Ý định, giá,</text>
+      <text x="502" y="384" class="name mid" style="font-size:16px">diện tích bất</text>
+      <text x="502" y="408" class="name mid" style="font-size:16px">đồng, có trích</text>
+      <text x="502" y="432" class="name mid" style="font-size:16px">dẫn thật?</text>
+
+      <rect x="412" y="496" width="96" height="48" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="460" y="526" class="sub-t mid">Không thẻ</text>
+
+      <!-- Nhãn nhánh -->
+      <g class="lbl">
+        <text x="220" y="312" class="lbl">Loại hình</text>
+        <text x="510" y="312" class="lbl">Đối chiếu</text>
+        <text x="220" y="432" class="lbl">Có</text>
+        <text x="36" y="432" class="lbl">Không, hoặc đọc lỗi</text>
+        <text x="220" y="588" class="lbl">Đạt cả</text>
+        <text x="36" y="576" class="lbl">Thiếu từ khoá</text>
+        <text x="36" y="600" class="lbl">hoặc dính bẫy</text>
+        <text x="220" y="716" class="lbl">Không trái</text>
+        <text x="408" y="576" class="lbl">Model nói</text>
+        <text x="408" y="600" class="lbl">loại khác</text>
+        <text x="408" y="640" class="lbl">Có trái</text>
+        <text x="468" y="476" class="lbl">Không</text>
+        <text x="556" y="476" class="lbl">Có</text>
+      </g>
+
+      <!-- Ba đầu ra -->
+      <rect x="8" y="744" width="128" height="104" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="72" y="776" class="name mid">Bỏ qua,</text>
+      <text x="72" y="800" class="name mid">ghi lý do,</text>
+      <text x="72" y="824" class="name mid">không thẻ</text>
+
+      <rect x="148" y="744" width="128" height="104" rx="6" fill="#fdf0ea" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="212" y="776" class="name mid">Máy tự điền</text>
+      <text x="212" y="800" class="name mid">căn hộ,</text>
+      <text x="212" y="824" class="name mid">không thẻ</text>
+
+      <rect x="288" y="744" width="304" height="176" rx="6" fill="#fdf0ea" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="304" y="776" class="name">Một thẻ trên <tspan class="mono" style="font-size:16px">/ops/review</tspan>,</text>
+      <text x="304" y="800" class="name">người quyết</text>
+      <text x="304" y="828" class="sub-t">Mỗi tin đúng một thẻ.</text>
+      <text x="304" y="852" class="sub-t">Loại hình: áp bên được chọn.</text>
+      <text x="304" y="876" class="sub-t">Ý định, giá, diện tích: chỉ ghi</text>
+      <text x="304" y="900" class="sub-t">phán quyết, không đổi tin.</text>
+
+      <!-- Ghi chú dưới hai đầu ra trái -->
+      <text x="8" y="872" class="sub-t">Chỉ tin chưa rõ loại hình mới</text>
+      <text x="8" y="896" class="sub-t">được điền; tin đã có loại hình</text>
+      <text x="8" y="920" class="sub-t">không đổi.</text>
+
+      <!-- Dải cuối -->
+      <line x1="8" y1="940" x2="592" y2="940" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="8" y="968" class="name">Giá và diện tích không bao giờ bị ghi đè.</text>
+      <text x="8" y="996" class="sub-t">Bất đồng: model thấy tin hỏi mua hoặc không phải tin rao,</text>
+      <text x="8" y="1020" class="sub-t">giá lệch quá 10%, diện tích lệch quá 3%.</text>
+      <text x="8" y="1048" class="sub-t">Bộ đọc theo luật trái model thì vẫn lên thẻ, kể cả khi</text>
+      <text x="8" y="1072" class="sub-t">trích dẫn không đạt.</text>
+
+      <path d="M 12 1088 H 28 L 32 1096 L 28 1104 H 12 L 8 1096 Z" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="40" y="1102" class="sub-t">Câu hỏi</text>
+      <rect x="116" y="1088" width="24" height="16" rx="4" fill="#fdf0ea" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="148" y="1102" class="sub-t">Hai chỗ duy nhất loại hình đổi được</text>
+    </svg>
+  </div>
+</body>
+</html>

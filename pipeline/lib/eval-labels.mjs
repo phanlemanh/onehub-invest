@@ -2,7 +2,7 @@
 // Spec: docs/superpowers/specs/2026-10-30-man-gan-nhan-mu-design.md. Lệnh dùng: label-sample.mjs, label-agreement.mjs.
 import { createHash } from "node:crypto";
 
-import { normText } from "../transform-zalo.mjs";
+import { normText } from "./norm-text.mjs";
 
 /** Mẫu tên nhóm của từng lát (tên nhóm S03 là tầng C). Lát OCP1: cùng mẫu đã dùng để đếm lát 26/10. */
 export const LAT_NHOM = Object.freeze({ ocp1: "ocp|ocean|masteri" });
