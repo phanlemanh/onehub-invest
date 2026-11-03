@@ -18,10 +18,10 @@ import type { FilterField, FilterQuery } from "@/components/reui/filters/filters
 import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { loaiHinh } from "@/lib/deals-chi-tiet"
+import { type DealHang, loaiHinh, tabCua, type TabDeal } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
 
-import { DiscountBar, DealThumb, type DealHang } from "./deals-cells"
+import { DiscountBar, DealThumb } from "./deals-cells"
 import { DealSheet } from "./deal-sheet"
 
 /**
@@ -29,14 +29,13 @@ import { DealSheet } from "./deal-sheet"
  * đếm theo objectives-grid. Tab trả lời «việc gì tiếp»; chip lọc trả lời «trong đám nào».
  */
 
-type Tab = "all" | "du" | "xac-minh" | "thieu"
+type Tab = "all" | TabDeal
 const TABS: { value: Tab; label: string }[] = [
   { value: "all", label: "Tất cả" },
   { value: "du", label: "Đủ để gọi" },
   { value: "xac-minh", label: "Cần xác minh" },
   { value: "thieu", label: "Còn thiếu" },
 ]
-const tabCua = (d: DealHang): Exclude<Tab, "all"> => (d.suspect ? "xac-minh" : d.thieu.length > 0 ? "thieu" : "du")
 
 const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
   {
@@ -49,7 +48,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
         <div className="flex min-w-0 flex-col items-start gap-0.5">
           {/* Không tự mở sheet: cú bấm đi lên onRowClick của hàng (xem ghi chú ở records-grid). */}
           <Button variant="link" size="xs" className="max-w-full justify-start">
-            <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
+            <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại hình", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
           </Button>
           <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong].filter(Boolean).join(" · ")}</span>
         </div>
@@ -140,7 +139,7 @@ const O_LOC = {
 type OLoc = keyof typeof O_LOC
 const ICON = "size-4"
 
-function truongLoc(rows: DealHang[], xemNoiDung: boolean): FilterField[] {
+export function truongLoc(rows: DealHang[], xemNoiDung: boolean): FilterField[] {
   const dem = (id: OLoc) => {
     const m = new Map<string, number>()
     for (const r of rows) m.set(O_LOC[id](r), (m.get(O_LOC[id](r)) ?? 0) + 1)
@@ -165,16 +164,16 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 }
 
 /** `rows` đến theo thứ tự của dealsSql (căn cần xác minh đứng cuối, ON11); người bấm tiêu đề cột mới đổi thứ tự. */
-export function DealsGrid({ rows, moBanDau = null, xemNoiDung, mayThu }: { rows: DealHang[]; moBanDau?: string | null; xemNoiDung: boolean; mayThu: boolean }) {
+export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu }: { rows: DealHang[]; moBanDau?: string | null; locBanDau?: FilterQuery; xemNoiDung: boolean; mayThu: boolean }) {
   const [tab, setTab] = useState<Tab>("all")
-  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
+  const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   const [moId, setMoId] = useState<string | null>(moBanDau)
   // Hàng vừa xem giữ nền chọn sau khi đóng sheet, để mắt về đúng chỗ đang duyệt.
   const [vuaXem, setVuaXem] = useState<string | null>(moBanDau)
   const [sorting, setSorting] = useState<SortingState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 15 })
 
-  const fields = useMemo(() => truongLoc(rows, xemNoiDung), [rows, xemNoiDung])
+  const fields = useMemo(() => truongLoc(rows, xemNoiDung && mayThu), [rows, xemNoiDung, mayThu])
   const quaLoc = useMemo(() => rows.filter(hopBoLoc(query)), [rows, query])
   const dem = useMemo(() => {
     const c: Record<Tab, number> = { all: quaLoc.length, du: 0, "xac-minh": 0, thieu: 0 }
@@ -225,7 +224,14 @@ export function DealsGrid({ rows, moBanDau = null, xemNoiDung, mayThu }: { rows:
       <DataGrid
         table={table}
         recordCount={data.length}
-        emptyMessage="Không có căn nào khớp bộ lọc."
+        emptyMessage={
+          quaLoc.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <span>Không có căn nào khớp bộ lọc.</span>
+              <Button variant="outline" size="sm" onClick={() => setQuery(createFilterQuery())}>Xoá bộ lọc</Button>
+            </div>
+          ) : "Tab này chưa có căn."
+        }
         i18n={DATA_GRID_VI}
         onRowClick={(d) => datMo(d.offerId)}
         tableLayout={{ dense: true, headerSticky: true }}

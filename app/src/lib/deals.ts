@@ -1,4 +1,23 @@
 import { pool } from "./db";
+import {
+  type DealChiTiet,
+  type DealHang,
+  cauChungMinh,
+  lyDoRoi,
+  NGAY_TOI_DA,
+  NGHI_NGO_PCT,
+  NGUONG_LOAI_PCT,
+  NGUONG_VAO_PCT,
+  repostLabel,
+  tenCan,
+  thieuGi,
+} from "./deals-chi-tiet";
+import { maskSourceNames } from "./mask-source-names";
+import { fmtPhone, telHref } from "./ops/people";
+import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
+import { getSourceNameEntries } from "./source-roles";
+
+export { NGHI_NGO_PCT, repostLabel };
 
 /**
  * G2/P4 — Deals v2: căn giá tốt từ tín hiệu riêng P1 (Zalo S03 + Facebook
@@ -7,77 +26,73 @@ import { pool } from "./db";
  * discount = % dưới giá rao công khai cùng phường (docs/research/
  * investment-pipeline-4-stages.md).
  *
- * Người bán trên tin rao là tầng C (ADR-0007 mục 9). Bản cloud (`dealsSql({ cloud: true })`) không đọc liên hệ: Căn giá tốt
- * vẫn chỉ hiện liên hệ ở máy thu. Broker chip join sellers registry (cũng ở máy thu).
+ * Người bán trên tin rao là tầng C (ADR-0007 mục 9), tên và SĐT đã lên cloud (02/11). Bản cloud (`dealsSql({ cloud: true })`)
+ * chỉ đọc cột trong CLOUD_ALLOW; ảnh và chữ bài ở lại máy thu (hồ sơ can-gia-tot-biet-can, Hỏi-2, Hỏi-6).
  */
-export type DealRow = {
-  offerId: string;
-  source: string; // 'S03' | 'S05'
-  priceVnd: number | null;
-  areaM2: number | null;
-  pricePerm2: number | null;
-  bedrooms: number | null;
-  phuong: string | null;
-  areaPath: string | null;
-  medianPerm2: number | null; // thước P2 cùng phường
-  rulerN: number | null; // số tin S06 dựng thước
-  discountPct: number | null; // % dưới thước P2 — bait_gap_pct pipeline tính sẵn
-  suspect: boolean; // giảm > NGHI_NGO_PCT: tin cần xác minh, đứng cuối danh sách
-  confidence: string;
-  firstSeen: string;
-  lastSeen: string;
-  nReposts: number;
-  // liên hệ + broker (chỉ local)
-  sellerName: string | null;
-  sellerPhone: string | null;
-  groupName: string | null;
-  mediaPath: string | null;
-  mediaUrl: string | null; // ảnh FB (CDN url) — khác path local Zalo
-  postText: string | null;
-  brokerNAds: number | null;
-  brokerMedianGap: number | null;
-};
+export type DealRow = DealChiTiet;
 
 /**
- * Bỏ trường theo vai trước khi đưa vào thẻ, để trường cấm không có mặt trong dữ liệu trang: `lienHe` = vai Vận hành trở
- * lên (Hỏi-B), `noiDung` = ảnh và chữ bài, giữ cho admin vì route ảnh `?path=` chỉ mở cho admin.
+ * Bỏ trường theo vai trước khi đưa vào trang, để trường cấm không có mặt trong dữ liệu trang: `lienHe` = tên, nhóm, số;
+ * `noiDung` = ảnh, chữ bài và địa chỉ dưới phường. Cả hai từ vai Vận hành trở lên (`xemNoiDungTin`; Hỏi-4, Hỏi-5).
  */
 export function dealTheoVai(d: DealRow, vai: { lienHe: boolean; noiDung: boolean }): DealRow {
   const lienHe = vai.lienHe ? {} : { sellerName: null, sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null };
-  const noiDung = vai.noiDung ? {} : { mediaPath: null, mediaUrl: null, postText: null };
+  const noiDung = vai.noiDung
+    ? {}
+    : { images: [], postTextFull: null, block: null, floor: null, unit: null, streetNumber: null, street: null, district: null };
   return { ...d, ...lienHe, ...noiDung };
 }
 
-/** Giảm hơn ngưỡng này so với thước → tin cần xác minh: vẫn hiện, đứng cuối (Mạnh chốt Hỏi-2, ON11 24/10). */
-export const NGHI_NGO_PCT = 35;
-
-/** Nguồn ảnh của thẻ: ảnh local đi qua route ảnh tin (chặn admin), ảnh CDN dùng thẳng url. */
-export function dealMediaSrc(d: Pick<DealRow, "mediaPath" | "mediaUrl">): string {
-  return d.mediaPath ? `/api/zalo-media?path=${encodeURIComponent(d.mediaPath)}` : (d.mediaUrl ?? "");
+/** Một hàng của bảng: các chữ cần `lib/ops/people` (mang pg) tính ở đây; `d` đã qua `dealTheoVai`. */
+export function dealHang(d: DealRow, vai: { xemNoiDung: boolean; mayThu: boolean }): DealHang {
+  return {
+    ...d,
+    ten: tenCan(d),
+    thieu: thieuGi(d, vai),
+    cau: cauChungMinh(d),
+    xemAnh: vai.xemNoiDung && vai.mayThu,
+    sdt: d.sellerPhone ? fmtPhone(d.sellerPhone) : null,
+    tel: d.sellerPhone ? telHref("sdt", d.sellerPhone, vai.xemNoiDung) : null,
+  };
 }
 
-/** Nhãn số lần đăng trên thẻ — «mới» cũ thật ra nghĩa là «chưa đăng lại» (OPS-12). */
-export function repostLabel(n: number | null | undefined): string {
-  return `đăng ${n && n > 1 ? n : 1} lần`;
-}
+/** Cột của một tin. `cloud`: không đọc cột ngoài CLOUD_ALLOW; `unit_number`, `street_number` ở lại máy thu. */
+const cotTin = (cloud: boolean) => `o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
+              o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
+              o.area_id, o.post_ids, o.seller_name, o.seller_phone,
+              o.property_type, o.block_raw, o.floor_raw, o.street_raw, o.district_raw,
+              ${cloud ? "NULL AS unit_number, NULL AS street_number" : "o.unit_number, o.street_number"},
+              a.name AS phuong,
+              r.m AS median_perm2, r.n AS ruler_n,
+              o.bait_gap_pct AS discount_pct,
+              o.bait_gap_pct > ${NGHI_NGO_PCT} AS suspect,
+              o.last_seen < now() - interval '${NGAY_TOI_DA} days' AS qua_han,
+              sel.n_ads AS broker_n_ads,
+              sel.flags->>'median_gap_pct' AS broker_med_gap`;
+
+/** Bài gốc mới nhất của tin; bản cloud không có `stg_zalo_posts` (Hỏi-6). */
+const noiBai = (cloud: boolean) => (cloud
+  ? { cot: "NULL AS sender_name, NULL AS group_name, NULL AS post_text_full", join: "/* cloud: không có stg_zalo_posts */" }
+  : {
+      cot: "z.sender_name, z.group_name, z.text AS post_text_full",
+      join: `LEFT JOIN LATERAL (
+       SELECT sender_name, group_name, text
+       FROM stg_zalo_posts z
+       WHERE z.post_id = ANY(b.post_ids)
+       ORDER BY z.captured_at DESC
+       LIMIT 1
+     ) z ON TRUE`,
+    });
 
 /**
  * Câu SQL của danh sách Căn giá tốt. Số giảm là `bait_gap_pct` pipeline đã tính sẵn (refresh-bait-gap, luật 10) —
  * tin phi lý đã bị pipeline gạt số giảm về NULL (ON11) nên không lọt vào đây. Thứ tự: tin thường trước tin cần xác
  * minh, mỗi nhóm giảm dần — sắp TRƯỚC LIMIT, không thì 30 thẻ vẫn toàn tin sát trần.
- * `cloud`: bản không đụng `stg_zalo_posts` hay cột người bán: Căn giá tốt chỉ hiện liên hệ ở máy thu.
  */
 export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
-  const full = `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area), base AS (
-       SELECT o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
-              o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
-              o.area_id, o.post_ids, o.seller_name, o.seller_phone,
-              a.name AS phuong,
-              r.m AS median_perm2, r.n AS ruler_n,
-              o.bait_gap_pct AS discount_pct,
-              o.bait_gap_pct > ${NGHI_NGO_PCT} AS suspect,
-              sel.n_ads AS broker_n_ads,
-              sel.flags->>'median_gap_pct' AS broker_med_gap
+  const bai = noiBai(cloud);
+  return `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area), base AS (
+       SELECT ${cotTin(cloud)}
        FROM sale_offers o
        JOIN ruler r ON r.area_id = o.area_id
        LEFT JOIN areas a ON a.id = o.area_id
@@ -85,32 +100,32 @@ export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
        WHERE o.price_tier = 'P1'
          AND o.kind = 'sale'
          AND o.bait_gap_pct IS NOT NULL
-         AND o.last_seen >= now() - interval '45 days'
+         AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
          AND o.bait_gap_pct >= $1
-         AND o.bait_gap_pct <= 50 -- guard thước mỏng
+         AND o.bait_gap_pct <= ${NGUONG_LOAI_PCT} -- guard thước mỏng
        ORDER BY suspect, discount_pct DESC, o.offer_id
        LIMIT $2
      )
-     SELECT b.*,
-       z.sender_name, z.group_name,
-       COALESCE(z.media->0->>'path', NULL) AS media_path,
-       COALESCE(z.media->0->>'url', NULL) AS media_url,
-       left(z.text, 200) AS post_text
+     SELECT b.*, ${bai.cot}
      FROM base b
-     LEFT JOIN LATERAL (
-       SELECT sender_name, group_name, media, text
-       FROM stg_zalo_posts z
-       WHERE z.post_id = ANY(b.post_ids)
-       ORDER BY z.captured_at DESC
-       LIMIT 1
-     ) z ON TRUE
+     ${bai.join}
      ORDER BY b.suspect, b.discount_pct DESC, b.offer_id`;
-  if (!cloud) return full;
-  return full
-    .replace(/LEFT JOIN LATERAL \([\s\S]*?\) z ON TRUE/, "/* cloud: không có stg_zalo_posts (PII) */")
-    .replace(/z\.sender_name, z\.group_name,[\s\S]*?AS post_text/, "NULL AS sender_name, NULL AS group_name, NULL AS media_path, NULL AS media_url, NULL AS post_text")
-    // không đọc cột người bán trên cloud → NULL hoá
-    .replace("o.area_id, o.post_ids, o.seller_name, o.seller_phone,", "o.area_id, o.post_ids, NULL AS seller_name, NULL AS seller_phone,");
+}
+
+/** Một tin P1 bán theo mã, không lọc theo mức giảm: căn rời danh sách vẫn mở, kèm lý do (Hỏi-1). */
+export function dealSql({ cloud = false }: { cloud?: boolean } = {}): string {
+  const bai = noiBai(cloud);
+  return `WITH b AS (
+       SELECT ${cotTin(cloud)}
+       FROM sale_offers o
+       LEFT JOIN v_ruler_p2_area r ON r.area_id = o.area_id
+       LEFT JOIN areas a ON a.id = o.area_id
+       LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
+       WHERE o.offer_id = $1 AND o.price_tier = 'P1' AND o.kind = 'sale'
+     )
+     SELECT b.*, ${bai.cot}
+     FROM b
+     ${bai.join}`;
 }
 
 type DealSqlRow = Record<string, unknown>;
@@ -139,9 +154,16 @@ export function toDealRow(r: DealSqlRow): DealRow {
     sellerName: (r.seller_name as string | null) ?? (r.sender_name as string | null) ?? null,
     sellerPhone: (r.seller_phone as string | null) ?? null,
     groupName: (r.group_name as string | null) ?? null,
-    mediaPath: (r.media_path as string | null) ?? null,
-    mediaUrl: (r.media_url as string | null) ?? null,
-    postText: (r.post_text as string | null) ?? null,
+    propertyType: (r.property_type as string | null) ?? null,
+    block: (r.block_raw as string | null) ?? null,
+    floor: (r.floor_raw as string | null) ?? null,
+    unit: (r.unit_number as string | null) ?? null,
+    streetNumber: (r.street_number as string | null) ?? null,
+    street: (r.street_raw as string | null) ?? null,
+    district: (r.district_raw as string | null) ?? null,
+    images: [],
+    postTextFull: (r.post_text_full as string | null) ?? null,
+    roiDanhSach: null,
     brokerNAds: num(r.broker_n_ads),
     brokerMedianGap: num(r.broker_med_gap),
   };
@@ -149,17 +171,57 @@ export function toDealRow(r: DealSqlRow): DealRow {
 
 // Mã Postgres khi DB không có lược đồ riêng của máy thu: 42P01 thiếu bảng, 42703 thiếu cột.
 const THIEU_LUOC_DO_MAY_THU = new Set(["42P01", "42703"]);
+const thieuLuocDo = (e: unknown) => THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "");
 
-export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[]> {
-  // Cloud không có stg_zalo_posts (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
-  // cloud, trang tự nhiên không cột liên hệ. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho PageError có
-  // Retry: nuốt nó thì trang vẫn đủ thẻ nhưng mất liên hệ và nói sai «chỉ có ở máy thu» (S4 r1 E12).
-  let rows;
+/**
+ * Cloud không có `stg_zalo_posts`, `unit_number` (nơi chạy, không phải lỗi): chỉ hai mã thiếu lược đồ mới rơi về bản
+ * cloud. Lỗi khác (deadlock, khoá, mất kết nối) ở máy thu ném tiếp cho khối lỗi có Thử lại: nuốt nó thì trang vẫn đủ căn
+ * nhưng nói sai «chỉ có ở máy thu» (S4 r1 E12 của people-hien-so-goc).
+ */
+async function truyVan(sql: (o: { cloud?: boolean }) => string, values: unknown[]): Promise<{ rows: DealSqlRow[]; mayThu: boolean }> {
   try {
-    ({ rows } = await pool.query(dealsSql(), [minDiscountPct, limit]));
+    const { rows } = await pool.query(sql({}), values);
+    return { rows, mayThu: true };
   } catch (e) {
-    if (!THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "")) throw e;
-    ({ rows } = await pool.query(dealsSql({ cloud: true }), [minDiscountPct, limit]));
+    if (!thieuLuocDo(e)) throw e;
+    const { rows } = await pool.query(sql({ cloud: true }), values);
+    return { rows, mayThu: false };
   }
-  return rows.map(toDealRow);
+}
+
+/** Ở máy thu: gắn ảnh qua khoá (URL gốc không xuống trình duyệt) và che tên nguồn thật trong chữ của người đăng. */
+async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRow[]; mayThu: boolean }> {
+  if (!mayThu || rows.length === 0) return { rows, mayThu };
+  let media;
+  try {
+    media = await loadOfferMedia(rows.map((d) => d.offerId));
+  } catch (e) {
+    if (!thieuLuocDo(e)) throw e;
+    return { rows, mayThu: false };
+  }
+  const entries = await getSourceNameEntries();
+  return {
+    mayThu,
+    rows: rows.map((d) => ({
+      ...d,
+      images: buildMediaImages(media.get(d.offerId) ?? []),
+      sellerName: maskSourceNames(d.sellerName, entries),
+      groupName: maskSourceNames(d.groupName, entries),
+      postTextFull: maskSourceNames(d.postTextFull, entries),
+    })),
+  };
+}
+
+export async function getDeals(limit = 30, minDiscountPct = NGUONG_VAO_PCT): Promise<{ rows: DealRow[]; mayThu: boolean }> {
+  const { rows, mayThu } = await truyVan(dealsSql, [minDiscountPct, limit]);
+  return hoanTat(rows.map(toDealRow), mayThu);
+}
+
+/** Một căn theo mã; mã lạ, hay tin không phải P1 bán, trả `deal: null`. */
+export async function getDeal(offerId: string): Promise<{ deal: DealRow | null; mayThu: boolean }> {
+  const { rows, mayThu } = await truyVan(dealSql, [offerId]);
+  if (!rows[0]) return { deal: null, mayThu };
+  const d = toDealRow(rows[0]);
+  const xong = await hoanTat([{ ...d, roiDanhSach: lyDoRoi(d, rows[0].qua_han === true) }], mayThu);
+  return { deal: xong.rows[0], mayThu: xong.mayThu };
 }

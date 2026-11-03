@@ -6,10 +6,10 @@ import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { canCungTieuChi } from "@/lib/deals-chi-tiet"
+import { canCungTieuChi, type DealHang, loaiHinh } from "@/lib/deals-chi-tiet"
 import { fmtCompact, fmtInt } from "@/lib/format"
 
-import { DealThumb, type DealHang } from "./deals-cells"
+import { DealThumb } from "./deals-cells"
 
 const HIEN_TOI_DA = 20
 const trM2 = (v: number | null) => (v ? fmtInt(v / 1e6) : "—")
@@ -18,14 +18,14 @@ const trM2 = (v: number | null) => (v ? fmtInt(v / 1e6) : "—")
 function Hang({ d, goc, onMo }: { d: DealHang; goc: DealHang | null; onMo?: () => void }) {
   const chenh = goc && d.pricePerm2 && goc.pricePerm2 ? Math.round((d.pricePerm2 - goc.pricePerm2) / 1e6) : null
   return (
-    <TableRow data-state={goc ? undefined : "selected"} className={onMo ? "cursor-pointer" : undefined} onClick={onMo}>
+    <TableRow data-state={goc ? undefined : "selected"} data-can-id={d.offerId} className={onMo ? "cursor-pointer" : undefined} onClick={onMo}>
       <TableCell className="min-w-0 whitespace-normal">
         <div className="flex min-w-0 items-center gap-2">
           {d.xemAnh && <DealThumb d={d} />}
           <div className="flex min-w-0 flex-col items-start gap-0.5">
             {/* Không gắn xử lý ở nút: cú bấm, hoặc Enter trên nút, đi lên onClick của hàng. */}
             {goc ? (
-              <Button variant="link" size="xs" className="max-w-full justify-start"><span className="truncate">{d.block ?? "Chưa rõ toà"}</span></Button>
+              <Button variant="link" size="xs" className="max-w-full justify-start"><span className="truncate">{d.block ?? loaiHinh(d.propertyType) ?? "Chưa rõ loại hình"}</span></Button>
             ) : (
               <span className="ps-2 text-xs font-medium">Căn này</span>
             )}
@@ -58,13 +58,14 @@ function Hang({ d, goc, onMo }: { d: DealHang; goc: DealHang | null; onMo?: () =
 /** Tab «Căn cùng tiêu chí» trong sheet: bù chỗ sheet che bảng, vẫn so được căn đang xem với các căn tương tự. */
 export function DealSimilar({ d, rows, onMo }: { d: DealHang; rows: DealHang[]; onMo: (id: string) => void }) {
   const [chiPhuong, setChiPhuong] = useState(false)
-  const { moTa, can } = canCungTieuChi(d, rows, chiPhuong)
+  const { moTa, bo, can } = canCungTieuChi(d, rows, chiPhuong)
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center gap-1.5">
         {moTa.map((m) => <Badge key={m} variant="outline">{m}</Badge>)}
         <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(can.length)} căn trong danh sách</span>
       </div>
+      {bo.length > 0 && <p className="text-muted-foreground text-xs">{bo.join(" · ")}</p>}
       {can.length === 0 ? (
         <Empty className="border">
           <EmptyHeader>

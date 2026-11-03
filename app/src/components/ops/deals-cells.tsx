@@ -5,22 +5,11 @@ import { ImageOffIcon } from "lucide-react"
 import { Progress, ProgressLabel } from "@/components/ui/progress"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { cn } from "cn"
-import type { DealChiTiet } from "@/lib/deals-chi-tiet"
+import { type DealHang, NGHI_NGO_PCT, NGUONG_LOAI_PCT } from "@/lib/deals-chi-tiet"
 import { fmtInt } from "@/lib/format"
 
-/** Một hàng của bảng Căn giá tốt: các chữ phải tính phía máy chủ vì lib/deals, lib/ops/people mang pg. */
-export type DealHang = DealChiTiet & {
-  ten: string
-  thieu: string[]
-  cau: string | null
-  tel: string | null
-  sdt: string | null
-  xacMinhPct: number
-  xemAnh: boolean
-}
-
 /** Trục thanh giảm: 0 tới 50%, ngưỡng loại của ON11; vạch là ngưỡng cần xác minh. */
-const TRUC_PCT = 50
+const TRUC_PCT = NGUONG_LOAI_PCT
 
 /** Mức giảm so thước: mẫu MetricBarCell của kho (@reui/data-grid-base-2) cộng vạch ngưỡng (@reui/data-grid-advanced-1). */
 export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) {
@@ -39,7 +28,7 @@ export function DiscountBar({ d, gon = false }: { d: DealHang; gon?: boolean }) 
           >
             <ProgressLabel className="sr-only">Mức giảm so thước phường</ProgressLabel>
           </Progress>
-          <span aria-hidden="true" className="bg-foreground/50 absolute -inset-y-0.5 w-px" style={{ left: `${(d.xacMinhPct / TRUC_PCT) * 100}%` }} />
+          <span aria-hidden="true" data-vach-nguong={NGHI_NGO_PCT} className="bg-foreground/50 absolute -inset-y-0.5 w-px" style={{ left: `${(NGHI_NGO_PCT / TRUC_PCT) * 100}%` }} />
         </div>
       </div>
       <span className="text-muted-foreground truncate text-xs tabular-nums">
@@ -54,7 +43,7 @@ export function DealThumb({ d }: { d: DealHang }) {
   const anh = d.images[0]?.src
   if (!anh) {
     return (
-      <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md" title="Chưa có ảnh">
+      <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-md" title="Chưa có ảnh" data-deal-khong-anh>
         <ImageOffIcon className="size-4" aria-hidden="true" />
       </span>
     )

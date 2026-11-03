@@ -53,6 +53,7 @@ export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
       {lon ? (
         <div role="group" aria-label={`Ảnh ${label}`} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {images.map((img, i) => (
+            // eslint-disable-next-line onehub-ui/no-raw-controls -- ô ảnh lấp đầy lưới theo tỉ lệ ảnh; Button không có size này và ReUI cấm đặt height, padding lên nó
             <button
               key={img.src}
               type="button"

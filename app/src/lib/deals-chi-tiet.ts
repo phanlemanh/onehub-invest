@@ -1,13 +1,40 @@
-import type { DealRow } from "./deals";
 import { LABELS_VI } from "./vocab.generated";
+import { fmtInt } from "./format";
 import type { ReviewImage } from "./ops/review-media";
 
-/** Ba ngưỡng của Căn giá tốt: vào danh sách, cần xác minh, bị loại vì thước mỏng (ON11). */
+/**
+ * Ba ngưỡng của Căn giá tốt và hạn tin, một nguồn cho câu SQL và chữ trên trang. Tệp này không kéo pg nên thành phần
+ * client dùng được; `lib/deals.ts` mang câu SQL và loader.
+ */
 export const NGUONG_VAO_PCT = 5;
+/** Giảm hơn ngưỡng này so với thước → tin cần xác minh: vẫn hiện, đứng cuối (Mạnh chốt Hỏi-2, ON11 24/10). */
+export const NGHI_NGO_PCT = 35;
 export const NGUONG_LOAI_PCT = 50;
+export const NGAY_TOI_DA = 45;
 
-/** Căn trên trang một căn: tin + các cột «ở đâu» của sale_offers + ảnh đã áp vai. */
-export type DealChiTiet = DealRow & {
+/** Căn của Căn giá tốt: số chứng minh, các cột «ở đâu» của sale_offers, liên hệ, ảnh đã qua khoá, chữ bài đầy đủ. */
+export type DealChiTiet = {
+  offerId: string;
+  source: string; // 'S03' | 'S05'
+  priceVnd: number | null;
+  areaM2: number | null;
+  pricePerm2: number | null;
+  bedrooms: number | null;
+  phuong: string | null;
+  areaPath: string | null;
+  medianPerm2: number | null; // thước P2 cùng phường
+  rulerN: number | null; // số tin S06 dựng thước
+  discountPct: number | null; // % dưới thước P2 — bait_gap_pct pipeline tính sẵn
+  suspect: boolean; // giảm > NGHI_NGO_PCT: tin cần xác minh, đứng cuối danh sách
+  confidence: string;
+  firstSeen: string;
+  lastSeen: string;
+  nReposts: number;
+  sellerName: string | null;
+  sellerPhone: string | null;
+  groupName: string | null;
+  brokerNAds: number | null;
+  brokerMedianGap: number | null;
   propertyType: string | null;
   block: string | null;
   floor: string | null;
@@ -20,6 +47,38 @@ export type DealChiTiet = DealRow & {
   /** Lý do căn không còn trong danh sách; null khi còn trong danh sách. */
   roiDanhSach: string | null;
 };
+
+/** Một hàng của bảng và sheet: `DealChiTiet` đã áp vai cộng các chữ tính phía máy chủ (`dealHang` của lib/deals). */
+export type DealHang = DealChiTiet & {
+  ten: string;
+  thieu: string[];
+  cau: string | null;
+  tel: string | null;
+  sdt: string | null;
+  xemAnh: boolean;
+};
+
+/** Cùng điều kiện với WHERE của `dealsSql`; `quaHan` do SQL tính vì mốc 45 ngày theo giờ DB. */
+export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, quaHan: boolean): string | null {
+  if (d.discountPct === null || d.medianPerm2 === null) return "Không tính được mức giảm";
+  if (quaHan) return `Tin quá ${NGAY_TOI_DA} ngày chưa thấy lại`;
+  if (d.discountPct < NGUONG_VAO_PCT) return `Giảm ${d.discountPct.toFixed(1)}%, dưới ngưỡng ${NGUONG_VAO_PCT}%`;
+  if (d.discountPct > NGUONG_LOAI_PCT) return `Giảm ${d.discountPct.toFixed(1)}%, trên ngưỡng ${NGUONG_LOAI_PCT}%`;
+  return null;
+}
+
+/** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
+export function cauChungMinh(d: DealChiTiet): string | null {
+  if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
+  const re = `Rẻ hơn thước phường ${fmtInt((d.medianPerm2 - d.pricePerm2) / 1e6)} tr/m², tức ${d.discountPct.toFixed(0)}%`;
+  return d.discountPct > NGHI_NGO_PCT
+    ? `${re}, vượt ngưỡng ${NGHI_NGO_PCT}% nên cần gọi xác minh trước khi tin.`
+    : `${re}, trên ngưỡng vào danh sách ${NGUONG_VAO_PCT}% và chưa tới ngưỡng cần xác minh ${NGHI_NGO_PCT}%.`;
+}
+
+export type TabDeal = "du" | "xac-minh" | "thieu";
+/** Mỗi căn đúng một tab: giảm trên ngưỡng là cần xác minh, còn lại thiếu mục là còn thiếu, còn lại đủ để gọi. */
+export const tabCua = (d: Pick<DealHang, "suspect" | "thieu">): TabDeal => (d.suspect ? "xac-minh" : d.thieu.length > 0 ? "thieu" : "du");
 
 export function loaiHinh(t: string | null): string | null {
   if (!t || t === "unknown") return null;
@@ -44,7 +103,7 @@ export function thieuGi(d: DealChiTiet, vai: { xemNoiDung: boolean; mayThu: bool
   const out: string[] = [];
   if (!loaiHinh(d.propertyType)) out.push("Chưa rõ loại hình");
   if (!d.areaM2) out.push("Chưa có diện tích");
-  if (!d.block && !d.street) out.push("Chỉ biết phường, chưa có toà hay đường");
+  if (vai.xemNoiDung && !d.block && !d.street) out.push("Chỉ biết phường, chưa có toà hay đường");
   if (!d.medianPerm2) out.push("Chưa có thước phường");
   if (vai.xemNoiDung && vai.mayThu) {
     if (d.images.length === 0) out.push("Chưa có ảnh");
@@ -61,8 +120,8 @@ export const BIEN_DIEN_TICH = 0.25;
  * Căn cùng tiêu chí với căn đang xem, cùng thứ tự danh sách: căn cần xác minh đứng cuối, còn lại giảm nhiều trước. Mặc định cùng phường, cùng loại hình, diện tích ±25%;
  * `chiPhuong` nới về cùng phường. Không biết loại hình hay diện tích thì bỏ tiêu chí đó, và nói rõ trong `moTa`.
  */
-export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong = false): { moTa: string[]; can: T[] } {
-  if (!d.phuong) return { moTa: ["Chưa gắn phường"], can: [] };
+export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong = false): { moTa: string[]; bo: string[]; can: T[] } {
+  if (!d.phuong) return { moTa: ["Chưa gắn phường"], bo: [], can: [] };
   const loai = !chiPhuong ? loaiHinh(d.propertyType) : null;
   const dt = !chiPhuong && d.areaM2 ? ([d.areaM2 * (1 - BIEN_DIEN_TICH), d.areaM2 * (1 + BIEN_DIEN_TICH)] as const) : null;
   const can = rows
@@ -71,5 +130,11 @@ export function canCungTieuChi<T extends DealChiTiet>(d: T, rows: T[], chiPhuong
     .filter((r) => !dt || (r.areaM2 !== null && r.areaM2 >= dt[0] && r.areaM2 <= dt[1]))
     .sort((a, b) => Number(a.suspect) - Number(b.suspect) || (b.discountPct ?? 0) - (a.discountPct ?? 0));
   const moTa = [d.phuong, loai, dt ? `${Math.round(dt[0])}–${Math.round(dt[1])} m²` : null].filter((x): x is string => Boolean(x));
-  return { moTa, can };
+  const bo = chiPhuong ? [] : [!loai ? "Chưa rõ loại hình nên không so loại hình" : null, !dt ? "Chưa có diện tích nên không so diện tích" : null].filter((x): x is string => Boolean(x));
+  return { moTa, bo, can };
+}
+
+/** Nhãn số lần đăng trên thẻ — «mới» cũ thật ra nghĩa là «chưa đăng lại» (OPS-12). */
+export function repostLabel(n: number | null | undefined): string {
+  return `đăng ${n && n > 1 ? n : 1} lần`;
 }

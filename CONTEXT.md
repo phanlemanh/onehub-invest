@@ -158,10 +158,18 @@ _Avoid_: DQ check, test dữ liệu
 - Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
 _Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 
-**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, thẻ mang nhãn «cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
-- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals.ts`) · RESO: không có — chỉ số nội bộ
-- Nhãn số lần đăng trên thẻ: «đăng 1 lần», «đăng n lần» (`repostLabel`)
+**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
+- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
+- Nhãn số lần đăng: «đăng 1 lần», «đăng n lần» (`repostLabel`)
 _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
+
+**Đủ để gọi**: Tab của bảng Căn giá tốt: căn không cần xác minh và không thiếu mục nào, người vận hành có thể gọi ngay. Hai tab còn lại là «Cần xác minh» (giảm trên 35%) và «Còn thiếu» (thiếu loại hình, địa chỉ, ảnh, chữ bài, SĐT…). Mỗi căn đúng một tab.
+- Code: `tabCua`, `TabDeal` = `du` · `xac-minh` · `thieu` (`app/src/lib/deals-chi-tiet.ts`) · RESO: không có — chỉ số nội bộ
+_Avoid_: căn đẹp, căn sạch
+
+**Đã rời danh sách**: Nhãn trên trang một căn khi căn không còn trong bảng Căn giá tốt, kèm lý do: quá 45 ngày chưa thấy lại, giảm dưới 5%, giảm trên 50%, hoặc không tính được mức giảm. Căn vẫn mở được để xem lại; chỉ mã không có mới báo «Không tìm thấy».
+- Code: `roiDanhSach`, `lyDoRoi` (`app/src/lib/deals-chi-tiet.ts`) · slug trang: `/ops/deals/<offerId>` · RESO: không có — chỉ số nội bộ
+_Avoid_: tin hết hạn, tin chết
 
 **Phát biểu**: Một lời khai về một trường của một tin: giá trị + lớp căn cứ + phương pháp + bằng chứng + ai/khi nào. Chỉ thêm, không sửa, không xoá; rút một phát biểu là đặt lúc rút + lý do (PL15, review phân loại §3.4).
 - Code: `field_assertions` · RESO: extension `FieldAssertion` (khuôn HistoryTransactional, ADR-0013 §6)

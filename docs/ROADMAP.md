@@ -155,6 +155,10 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   trước cho hai vai này, vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số. `/ops/deals`: khối liên hệ hạ từ `isAdmin` xuống
   `xemNoiDungTin`, ảnh và chữ bài giữ `admin` (route `?path=`); `dealTheoVai` lọc trường trước khi vào thẻ, nên vai Người xem không có
   trường liên hệ trong cây phần tử. Bảng danh bạ vẽ đủ hàng máy chủ gửi (trước đó DataGrid dừng ở 10 hàng). Lúc đó số gốc chưa lên cloud; mục 25 của §3 mở sau.
+- Căn giá tốt biết căn (CG1, `_acceptance/can-gia-tot-biet-can`, 03/11): `/ops/deals` là bảng có tab và bộ lọc, sheet một căn, trang `/ops/deals/<offerId>`; thay lưới thẻ
+  và bản mẫu. `getDeals`, `getDeal` trả căn kèm cờ `mayThu`; `dealHang` tính sẵn tên căn, phần còn thiếu, lý do rời phía máy chủ, giao diện dùng chung `DealBody`. Ảnh, chữ bài
+  hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
+  ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -444,6 +448,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
 | SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
+| CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | 🔶 đang chấm; căn chỉ có link ảnh gốc đã hết hạn không hiện được ảnh, đo ở E10 |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
