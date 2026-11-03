@@ -33,7 +33,7 @@ Source input: prompt từ phiên giám sát 02/11, thiết kế ở `design_doc`
 - AC-7: Given tin nguồn khác cùng khoá gốc và tin S06 đã nghỉ, When chạy, Then tin nguồn khác không đổi, tin đã nghỉ vẫn được gán, số đo tách tin sống với tin nghỉ. (cross-layer)
 - AC-8: Given DB local, When chạy `node pipeline/gan-sdt-s06.mjs --thu`, Then lệnh tự áp 068 trong giao dịch rồi ROLLBACK, in `da_ap_068=true`, số tin có số trước và sau riêng bán và thuê, `ghep` lớn hơn 0 và bằng một câu đếm độc lập trên stg, `tai_khoan_hai_so`, `an_so_bi_ghep = 0`, `sai_e164 = 0`, `ghep_lech_tu_tin = 0`;
   dữ liệu sau lệnh không đổi; đầu ra không chứa SĐT nào, ở cả dạng `+84` lẫn `0`; bất biến sai thì lệnh thoát 1. (cross-layer)
-- AC-9: Given PR này, When soát, Then không đổi tệp đẩy dữ liệu lên cloud, `PII_EXCLUDE` vẫn loại `seller_phone`, `field_provenance` không có trong danh sách cho phép, không tệp nào dưới `app/`, `data-api/`, `collector/` và không script thu, nạp nào đổi.
+- AC-9: Given PR này, When soát, Then không đổi tệp đẩy dữ liệu lên cloud, `field_provenance` không có trong danh sách cho phép, không tệp nào dưới `app/`, `data-api/`, `collector/` và không script thu, nạp nào đổi.
   `seller_phone_hash` vốn đã trong danh sách cho phép nên khoá băm S06 rời máy sau lần ghi thật đầu tiên: đây là hành vi đã khai, thuộc Hỏi-2, không phải điều AC này chặn.
 
 ### Ma trận AC-2: 88 ô

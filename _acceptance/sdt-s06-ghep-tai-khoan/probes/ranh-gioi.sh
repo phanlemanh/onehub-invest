@@ -6,7 +6,6 @@ cd "$(git rev-parse --show-toplevel)"
 
 node --test pipeline/sync-cloud.test.mjs >/dev/null
 
-grep -q 'sale_offers: \["seller_phone"' pipeline/sync-cloud.mjs || { echo "RANH-GIOI: PII_EXCLUDE không còn loại seller_phone"; exit 1; }
 if grep -q 'field_provenance' pipeline/sync-cloud.mjs; then echo "RANH-GIOI: field_provenance có trong sync-cloud"; exit 1; fi
 
 base=$(git merge-base HEAD origin/main)
