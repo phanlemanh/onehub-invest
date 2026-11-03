@@ -22,10 +22,14 @@ export async function getSourceRoles(): Promise<SourceRoles> {
 
 /** Local: [{ code, realName }] từ source_registry — CHỈ để che tên trong chữ chạy (mask-source-names), không bao giờ
  *  render. Cloud/DB lỗi → [] → bộ che trả null (đóng chặt). */
+export async function docSourceNameEntries(): Promise<SourceNameEntry[]> {
+  const { rows } = await pool.query<{ code: string; real_name: string | null }>("SELECT code, real_name FROM source_registry")
+  return rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string }))
+}
+
 export async function getSourceNameEntries(): Promise<SourceNameEntry[]> {
   try {
-    const { rows } = await pool.query<{ code: string; real_name: string | null }>("SELECT code, real_name FROM source_registry")
-    return rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string }))
+    return await docSourceNameEntries()
   } catch {
     return []
   }

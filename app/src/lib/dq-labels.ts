@@ -25,6 +25,7 @@ const TEN_KIEM: Record<string, string> = {
   "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
   "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
   "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
+  "so-chua-xac-minh": "Nhãn số chưa xác minh", // pipeline/sql/450_dq_checks.sql (070)
   // pipeline/do-danh-ba-sdt.mjs (SD5) — trục SĐT của danh bạ Người
   "danh-ba-sdt:n1": "Danh bạ SĐT: cặp một–một chưa gộp",
   "danh-ba-sdt:n2": "Danh bạ SĐT: người không có tin",

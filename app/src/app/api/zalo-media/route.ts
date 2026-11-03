@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  *   ?media=<media_key>                     ảnh theo khoá bảng media (/ops/review) — vai Vận hành trở lên; chỉ có URL gốc
  *                                          thì máy chủ tự lấy ảnh, trình duyệt không thấy URL hay tên miền nguồn
  *   ?snapshot=<snapshotId>&file=media/<f>  ảnh N1 trong raw snapshot (/ops/review) — vai Vận hành trở lên
- *   ?path=<mediaPath>                      ảnh staging OpenClaw (/ops/deals) — chỉ admin
+ *   ?path=<mediaPath>                      ảnh staging OpenClaw — chỉ admin
  * Vai Người xem qua cổng phiên Ops nhưng lõi trả 404. Rào chặn đọc file tuỳ ý (isInside + realpath) nằm ở
  * `@/lib/ops/zalo-media`. KHÔNG sync cloud — file chỉ có ở máy local, ở cloud route trả 404.
  */

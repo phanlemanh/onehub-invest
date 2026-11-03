@@ -15,7 +15,7 @@ import { HEADER_ANH_AN_TOAN, layAnhGoc } from "./lay-anh-goc";
  *   - `?media=<media_key>`: vai Vận hành trở lên (anh-goc-qua-may-chu); tra dòng bảng `media` (chỉ DB máy thu) —
  *     có `local_file` thì phục vụ như `?snapshot=`, chỉ có `media_url` thì máy chủ tự lấy ảnh (`lay-anh-goc.ts`).
  *     Trình duyệt chỉ thấy khoá, không thấy URL hay tên miền nguồn (tầng A).
- *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw cho /ops/deals (PR #5) — chỉ admin.
+ *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw (PR #5) — chỉ admin; /ops/deals nay đọc ảnh qua `?media=`, `?snapshot=`.
  *   - `?snapshot=<snapshotId>&file=media/<tên>`: vai Vận hành trở lên (PL3); ảnh N1 tải vào raw snapshot
  *     (`<SNAPSHOTS_DIR>/<market>/<snapshotId>/media/*`, DATA-CONTRACT v2) cho /ops/review.
  *     Route tự ghép đường dưới gốc snapshots — không nhận đường tuyệt đối từ ngoài.

@@ -31,6 +31,7 @@
 //   - tên, SĐT người bán của sale_offers lên cloud (Mạnh chốt 02/11, tin-rao-tren-invest); giá trị
 //     mang định danh nguồn được che thành NULL ngay trong câu đọc, nên không rời máy và không
 //     làm dừng lượt; bộ soát phía sau vẫn là lưới cuối. sellers.name, properties.seller_name ở lại.
+//     Nhãn seller_phone_inferred (070) đi cùng; field_provenance ở lại máy, nhãn là thứ duy nhất của xuất xứ lên cloud.
 // Env: ~/.oneinvest/cloud.env (chmod 600): SUPABASE_MGMT_TOKEN
 import { randomBytes } from "node:crypto";
 import { realpathSync } from "node:fs";
@@ -97,7 +98,7 @@ export const CLOUD_ALLOW = {
     "phuong_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "source",
     "price_tier", "district_raw", "seller_phone_hash", "seller_ref", "bait_gap_pct",
     "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms",
-    "seller_name", "seller_phone", "stories", "frontage_length",
+    "seller_name", "seller_phone", "stories", "frontage_length", "seller_phone_inferred",
   ],
   sellers: ["phone_hash", "sources", "n_ads", "first_seen", "last_seen", "flags"],
   properties: [
