@@ -30,15 +30,15 @@ export const TRANG = [
   "/methodology",
 ];
 
-/** Tiêu đề listing do chủ nhà gõ, nằm trong dữ liệu nhúng `"name":"…"`, có thể chứa tên nguồn. Đây là dữ liệu, không phải chữ của
- *  cổng: chỉ hai trang này được đếm riêng, không đỏ (hồ sơ chu-nguon-tren-cong, Known limits). */
+/** Tiêu đề listing do chủ nhà gõ có thể chứa tên nguồn. Đây là dữ liệu, không phải chữ của cổng: chỉ hai trang này đếm riêng, không đỏ
+ *  (hồ sơ chu-nguon-tren-cong, Known limits). Danh sách tiêu đề đọc từ DB máy thu, không đoán từ trang, nên chữ của cổng không lọt theo;
+ *  không đọc được DB thì không miễn gì. */
 const CO_TIEU_DE_TIN = new Set([O_NGAN_HAN, MAU_LISTING]);
-const TRONG_TIEU_DE_TIN = /\\*"name\\*":\\*"[^"\\]*$/;
 /** Ngoại lệ có tên (Mạnh chốt 04/11): đường link của nút mở trang gốc trên `/listing/[id]`, đúng khuôn hàm dựng link ở listing-labels.ts. */
 const CO_LINK_GOC = new Set([MAU_LISTING]);
 
 /** Tiêu đề tin được miễn trên một trang: vượt trần thì không còn là ca lẻ của dữ liệu. */
-const TRAN_TIEU_DE_TIN = 5;
+const TRAN_TIEU_DE_TIN = 5; // số tiêu đề khác nhau mang tên trên một trang
 /** Câu sai hiện trạng trong chữ hiện. */
 const CAU_SAI = /giả lập|dữ liệu mô phỏng/i;
 /** Đối chứng dương: chữ phải có trong chữ hiện, để thước không xanh khi cả mục bị xoá. */
@@ -73,17 +73,50 @@ function linkGocRanges(html, entries) {
   return [...fold(html).matchAll(new RegExp(`https://www\\.${ten}\\.com/rooms/\\d+`, "g"))].map((m) => [m.index, m.index + m[0].length]);
 }
 
-/** { hien, html, tieuDeTin, linkGoc }, mỗi ô {S01: n}: chữ hiện · toàn tệp · phần được đếm riêng là tiêu đề tin · là link trang gốc. */
-export function quetHtml(html, entries, { coTieuDeTin = false, coLinkGoc = false } = {}) {
+const thoatHtml = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+// Như htmlEscapeJsonString của Next: dữ liệu nhúng thoát & < > thành \\uXXXX.
+const thoatNhung = (t) => t.replace(/&/g, "\\u0026").replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+const trongJson = (t) => JSON.stringify(t).slice(1, -1);
+
+/** Mọi dạng một tiêu đề có thể hiện trong HTML: chữ thô, thoát HTML, dữ liệu nhúng một lớp và hai lớp JSON. */
+function dangCua(t) {
+  const motLop = trongJson(t);
+  const haiLop = trongJson(motLop);
+  return [...new Set([t, thoatHtml(t), motLop, thoatNhung(motLop), haiLop, thoatNhung(haiLop)])];
+}
+
+/** Hit nào nằm trọn trong một lần xuất hiện của tiêu đề, và các tiêu đề có mặt, trên `text`. */
+function trongTieuDe(text, tieuDe) {
+  const f = fold(text);
+  const ranges = [];
+  const coMat = new Set();
+  for (const t of tieuDe) {
+    for (const g of dangCua(t).map(fold)) {
+      for (let i = f.indexOf(g); i !== -1; i = f.indexOf(g, i + 1)) {
+        ranges.push([i, i + g.length]);
+        coMat.add(t);
+      }
+    }
+  }
+  return { la: (h) => ranges.some(([a, b]) => h.start >= a && h.end <= b), coMat };
+}
+
+/** { hien, html, tieuDeTin, linkGoc, soTieuDe }: mỗi ô {S01: n}, không tính phần miễn. `tieuDe` là tiêu đề listing mang tên, đọc từ DB;
+ *  tieuDeTin đếm toàn tệp, soTieuDe là số tiêu đề khác nhau có mặt trên trang. */
+/** @param {string} html @param {{ code: string, realName: string }[]} entries @param {{ tieuDe?: string[], coLinkGoc?: boolean }} [tuyChon] */
+export function quetHtml(html, entries, { tieuDe = [], coLinkGoc = false } = {}) {
+  const chu = chuHien(html);
   const toanBo = findSourceNames(html, entries);
   const ranges = coLinkGoc ? linkGocRanges(html, entries) : [];
   const laLink = (h) => h.code === "S01" && ranges.some(([a, b]) => h.start >= a && h.end <= b);
-  const laTieuDe = (h) => coTieuDeTin && !laLink(h) && TRONG_TIEU_DE_TIN.test(html.slice(Math.max(0, h.start - 300), h.start));
+  const trenHtml = trongTieuDe(html, tieuDe);
+  const trenChu = trongTieuDe(chu, tieuDe);
   return {
-    hien: demTheoMa(findSourceNames(chuHien(html), entries)),
-    html: demTheoMa(toanBo.filter((h) => !laLink(h) && !laTieuDe(h))),
-    tieuDeTin: demTheoMa(toanBo.filter(laTieuDe)),
+    hien: demTheoMa(findSourceNames(chu, entries).filter((h) => !trenChu.la(h))),
+    html: demTheoMa(toanBo.filter((h) => !laLink(h) && !trenHtml.la(h))),
+    tieuDeTin: demTheoMa(toanBo.filter((h) => !laLink(h) && trenHtml.la(h))),
     linkGoc: demTheoMa(toanBo.filter(laLink)),
+    soTieuDe: trenHtml.coMat.size,
   };
 }
 
@@ -97,42 +130,51 @@ export function loiDoDuoc(status, contentType, html) {
 
 const inMa = (dem) => Object.entries(dem).map(([ma, n]) => `${ma}=${n}`).join(" ") || "0";
 
-/** Sổ migration cộng `source_registry` local khi đọc được: S07, S08 chỉ có ở local. Thiếu DB thì nói ra, không im. */
-async function soTen(log) {
-  const seeds = sourceRegistrySeeds();
+async function voiDb(viec) {
+  const pg = createRequire(path.join(ROOT, "app", "package.json"))("pg");
+  const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest", connectionTimeoutMillis: 3000 });
+  await c.connect();
   try {
-    const pg = createRequire(path.join(ROOT, "app", "package.json"))("pg");
-    const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest", connectionTimeoutMillis: 3000 });
-    await c.connect();
-    try {
-      const { rows } = await c.query("SELECT code, real_name FROM source_registry WHERE real_name IS NOT NULL");
-      const them = rows.map((r) => ({ code: r.code, realName: r.real_name }));
-      const out = [...seeds, ...them.filter((t) => !seeds.some((s) => s.code === t.code && s.realName === t.realName))];
-      log(`sổ tên: ${[...new Set(out.map((e) => e.code))].sort().join(" ")} (migration + source_registry local)`);
-      return out;
-    } finally {
-      await c.end();
-    }
-  } catch {
-    log(`sổ tên: ${[...new Set(seeds.map((e) => e.code))].sort().join(" ")} (chỉ migration, không đọc được source_registry)`);
-    return seeds;
+    return await viec(c);
+  } finally {
+    await c.end();
   }
 }
 
-/** Mã một listing thật cho `/listing/:mau`, lấy từ ô thuê ngắn hạn; không có thì trang đó thành không đo được. */
-async function layMauListing(base) {
+/** Sổ migration cộng `source_registry` local, và listing có tiêu đề mang tên. Thiếu DB thì nói ra: sổ hẹp hơn, không miễn tiêu đề nào. */
+async function docDb(log) {
+  const seeds = sourceRegistrySeeds();
+  try {
+    return await voiDb(async (c) => {
+      const { rows } = await c.query("SELECT code, real_name FROM source_registry WHERE real_name IS NOT NULL");
+      const them = rows.map((r) => ({ code: r.code, realName: r.real_name }));
+      const entries = [...seeds, ...them.filter((t) => !seeds.some((s) => s.code === t.code && s.realName === t.realName))];
+      const ds = (await c.query("SELECT id, name FROM listings WHERE name IS NOT NULL ORDER BY id")).rows.filter((r) => findSourceNames(r.name, entries).length);
+      log(`sổ tên: ${[...new Set(entries.map((e) => e.code))].sort().join(" ")} (migration + source_registry local) · ${ds.length} tiêu đề listing mang tên`);
+      return { entries, listings: ds };
+    });
+  } catch {
+    log(`sổ tên: ${[...new Set(seeds.map((e) => e.code))].sort().join(" ")} (chỉ migration, không đọc được DB) · không miễn tiêu đề nào`);
+    return { entries: seeds, listings: [] };
+  }
+}
+
+/** Mã một listing cho `/listing/:mau`: ưu tiên listing có tiêu đề mang tên, là ca khó của ngoại lệ; không có thì lấy từ ô thuê ngắn hạn. */
+async function layMauListing(base, listings) {
+  if (listings[0]) return listings[0].id;
   const html = await (await fetch(base + O_NGAN_HAN)).text();
   return /\/listing\/([A-Za-z0-9_-]+)/.exec(html)?.[1] ?? null;
 }
 
-export async function quetTrang({ base: goc, trang = TRANG, entries, log = console.log }) {
+export async function quetTrang({ base: goc, trang = TRANG, entries: soKhai, listings: dsKhai, log = console.log }) {
   const base = goc.replace(/\/$/, "");
-  entries ??= await soTen(log);
+  const { entries, listings } = soKhai ? { entries: soKhai, listings: dsKhai ?? [] } : await docDb(log);
+  const tieuDeDb = listings.map((l) => l.name);
   let conTen = 0;
   let khongDo = 0;
   for (const p of trang) {
     try {
-      const mau = p === MAU_LISTING ? await layMauListing(base) : null;
+      const mau = p === MAU_LISTING ? await layMauListing(base, listings) : null;
       if (p === MAU_LISTING && !mau) {
         khongDo++;
         log(`KHONG-DO ${p}: không lấy được mã listing mẫu`);
@@ -146,18 +188,18 @@ export async function quetTrang({ base: goc, trang = TRANG, entries, log = conso
         log(`KHONG-DO ${p}: ${loi}`);
         continue;
       }
-      const { hien, html: toanBo, tieuDeTin, linkGoc } = quetHtml(html, entries, { coTieuDeTin: CO_TIEU_DE_TIN.has(p), coLinkGoc: CO_LINK_GOC.has(p) });
+      const { hien, html: toanBo, tieuDeTin, linkGoc, soTieuDe } = quetHtml(html, entries, { tieuDe: CO_TIEU_DE_TIN.has(p) ? tieuDeDb : [], coLinkGoc: CO_LINK_GOC.has(p) });
       const chu = chuHien(html);
-      const tieuDeVuot = Object.values(tieuDeTin).reduce((a, b) => a + b, 0) > TRAN_TIEU_DE_TIN;
+      const tieuDeVuot = soTieuDe > TRAN_TIEU_DE_TIN;
       const thieu = (PHAI_CO[p] ?? []).filter((c) => !chu.includes(c));
       const cauSai = CAU_SAI.test(chu);
       const sach = Object.keys(toanBo).length === 0 && Object.keys(hien).length === 0 && !tieuDeVuot && !thieu.length && !cauSai;
       if (!sach) conTen++;
-      if (tieuDeVuot) log(`VƯỢT-TRẦN ${p}: tiêu đề tin mang tên quá ${TRAN_TIEU_DE_TIN}`);
+      if (tieuDeVuot) log(`VƯỢT-TRẦN ${p}: ${soTieuDe} tiêu đề tin mang tên, trần ${TRAN_TIEU_DE_TIN}`);
       if (cauSai) log(`CÂU-SAI ${p}: còn câu nói dữ liệu là giả lập hoặc mô phỏng`);
       if (thieu.length) log(`THIẾU-CHỮ ${p}: ${thieu.join(" · ")}`);
       const rieng = [
-        Object.keys(tieuDeTin).length ? ` · tiêu đề tin (dữ liệu, không đỏ) ${inMa(tieuDeTin)}` : "",
+        Object.keys(tieuDeTin).length ? ` · tiêu đề tin (dữ liệu, không đỏ) ${soTieuDe} tiêu đề, ${inMa(tieuDeTin)}` : "",
         Object.keys(linkGoc).length ? ` · link trang gốc (ngoại lệ, không đỏ) ${inMa(linkGoc)}` : "",
       ].join("");
       log(`${sach ? "sạch" : "CÒN-TÊN"} ${p}: chữ hiện ${inMa(hien)} · toàn HTML ${inMa(toanBo)}${rieng} · ${html.length} byte`);

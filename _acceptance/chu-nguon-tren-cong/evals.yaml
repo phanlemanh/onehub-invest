@@ -7,43 +7,43 @@ evals:
     executor: test
     cmd: config:executors.test.cn_quet
     paths: [scripts/quet-ten-nguon-html.mjs, scripts/quet-ten-nguon-html.test.mjs, scripts/lib/tier-a-source-names.mjs, pipeline/lib/mask-source-names.mjs]
-    expected: "exit 0; 11 hàng 'CN-AC-1' của ma trận viết trước, số hàng ghim bằng 11; đối chứng trang sạch ra 0; ca lệnh thật: sạch thoát 0 ghim 'tổng: 12 trang · còn tên 0 · không đo được 0', tên ở một trang thoát 1 ghim 'CÒN-TÊN /vn/hanoi/listings/sale: chữ hiện S01=1 · toàn HTML S01=1 S02=1' và báo cáo không chứa tên; 500, không h1, kiểu JSON, không tới được thoát 2 ghim 'KHONG-DO'; tiêu đề tin chỉ miễn ở trang khai, khoá khác name vẫn đỏ; link trang gốc chỉ miễn đúng khuôn trên trang khai, bốn đột biến (đường khác, miền khác, chữ trên nút, mã khác) đỏ; không lấy được listing mẫu thoát 2 ghim 'không lấy được mã listing mẫu'."
+    expected: "exit 0; 11 hàng 'CN-AC-1' của ma trận viết trước, số hàng ghim bằng 11; đối chứng trang sạch ra 0; ca lệnh thật: sạch thoát 0 ghim 'tổng: 12 trang · còn tên 0 · không đo được 0', tên ở một trang thoát 1 ghim 'CÒN-TÊN /vn/hanoi/listings/sale: chữ hiện S01=1 · toàn HTML S01=1 S02=1' và báo cáo không chứa tên; 500, không h1, kiểu JSON, không tới được thoát 2 ghim 'KHONG-DO'; ca 'CN-AC-2 tiêu đề tin': miễn ở h2, title, alt, dữ liệu nhúng của đúng chuỗi trong danh sách, kể cả nháy và &; không có danh sách vẫn đỏ, chữ của cổng và chuỗi ngoài danh sách vẫn đỏ, khoá name ngoài danh sách vẫn đỏ; link trang gốc chỉ miễn đúng khuôn trên trang khai, bốn đột biến (đường khác, miền khác, chữ trên nút, mã khác) đỏ; không lấy được listing mẫu thoát 2 ghim 'không lấy được mã listing mẫu'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     layer: backend-effect
     cmd: config:executors.script.cn_song
-    paths: [scripts/quet-ten-nguon-html.mjs, app/src/app/(marketing)/**, app/src/app/(app)/[country]/[market]/**, app/src/components/marketing/**, app/src/components/shell/site-footer.tsx, app/src/components/insight/**, app/src/components/listing/**, app/src/components/yield/**, app/src/components/compare/**, app/src/components/auth/register-form.tsx, app/src/app/(app)/**, app/src/lib/queries.ts]
-    expected: "exit 0; mười hai dòng 'sạch', dòng 'tổng: 12 trang · còn tên 0 · không đo được 0'; ô thuê ngắn hạn, trang listing có thể in 'tiêu đề tin (dữ liệu, không đỏ)', trang listing in 'link trang gốc (ngoại lệ, không đỏ)'. Cần dev server từ cây này ở cổng BASE_URL (mặc định 3460), DB máy thu. Chiều đỏ: cùng lệnh --base http://localhost:3456 lúc :3456 chạy main trước khi gộp thoát 1, số ghi ở design doc."
+    paths: ["scripts/quet-ten-nguon-html.mjs", "app/src/app/(marketing)/**", "app/src/app/(app)/[country]/[market]/**", "app/src/components/marketing/**", "app/src/components/shell/site-footer.tsx", "app/src/components/insight/**", "app/src/components/listing/**", "app/src/components/yield/**", "app/src/components/compare/**", "app/src/components/auth/register-form.tsx", "app/src/app/(app)/**", "app/src/lib/queries.ts"]
+    expected: "exit 0; mười hai dòng 'sạch', dòng 'tổng: 12 trang · còn tên 0 · không đo được 0'; ô thuê ngắn hạn, trang listing có thể in 'tiêu đề tin (dữ liệu, không đỏ)', trang listing in 'link trang gốc (ngoại lệ, không đỏ)'; dòng đầu in 'sổ tên: … (migration + source_registry local) · n tiêu đề listing mang tên', trang listing mẫu là listing có tiêu đề mang tên. Cần dev server từ cây này ở cổng BASE_URL (mặc định 3460), DB máy thu. Chiều đỏ: cùng lệnh --base http://localhost:3456 lúc :3456 chạy main trước khi gộp thoát 1, số ghi ở design doc."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.cn_quet
     paths: [scripts/check-invest-tier-a.mjs, scripts/quet-ten-nguon-html.test.mjs, scripts/lib/ops-visible-strings.mjs]
-    expected: "exit 0; ca 'CN-AC-2 cây thật' 0 chỗ trúng, thước đi tới chín tệp ghim; ca 'CN-AC-2 chiều đỏ trên fixture': đối chứng dương xanh trên cùng fixture, bốn đột biến đỏ đúng { code: S01, file, line }, tệp không import không đỏ."
+    expected: "exit 0; ca 'CN-AC-3 lối vào' đủ 21 tệp ghim, không có ops, api; ca 'CN-AC-3 cây thật' 0 chỗ trúng, đi tới mười tệp ghim; ca 'CN-AC-3 hồi quy' bắt đúng dòng hai chỗ từng lọt trên mã trước khi sửa; 11 ca 'chiều đỏ' đúng { code: S01, file, line }, 6 ca 'đối chứng xanh' trên cùng fixture, số ca ghim 11 và 6; trang mới tự vào lối vào."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3b
     criterion: AC-3
     executor: script
     cmd: config:executors.script.cn_tinh
-    paths: [scripts/check-invest-tier-a.mjs, app/src/app/(marketing)/**, app/src/app/(app)/[country]/[market]/**, app/src/components/marketing/**, app/src/components/shell/site-footer.tsx, app/src/components/insight/**, app/src/components/listing/**, app/src/components/yield/**, app/src/components/compare/**, app/src/components/auth/register-form.tsx, app/src/app/(app)/**]
-    expected: "exit 0; dòng 'invest-tier-a: 0 chỗ trúng trong N tệp' với N từ 100 trở lên; trên main trước sửa thoát 1 kèm FAIL gọi tệp, dòng, mã."
+    paths: ["scripts/check-invest-tier-a.mjs", "app/src/app/(marketing)/**", "app/src/app/(app)/[country]/[market]/**", "app/src/components/marketing/**", "app/src/components/shell/site-footer.tsx", "app/src/components/insight/**", "app/src/components/listing/**", "app/src/components/yield/**", "app/src/components/compare/**", "app/src/components/auth/register-form.tsx", "app/src/app/(app)/**"]
+    expected: "exit 0; dòng 'invest-tier-a: 0 chỗ trúng trong N tệp' với N từ 200 trở lên; trên main trước sửa thoát 1 kèm FAIL gọi tệp, dòng, mã."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.cn_app
-    paths: [app/tests/chu-nguon-tren-cong.test.tsx, app/src/app/(marketing)/page.tsx, app/src/components/marketing/methodology-definitions.tsx, app/src/components/insight/insight-tables.tsx, app/src/app/(app)/yield/page.tsx, app/src/components/yield/yield-form.tsx, app/src/components/compare/**, app/src/lib/queries.ts]
-    expected: "exit 0; ba ca 'CN-AC-3' xanh, số mô hình vẫn mang nhãn ở bốn chỗ; chiều đỏ trong ca: phép đo bắt câu cũ 'dữ liệu giả lập' và 'DỮ LIỆU MÔ PHỎNG'."
+    paths: [app/tests/chu-nguon-tren-cong.test.tsx, scripts/quet-ten-nguon-html.mjs, app/src/components/listing/listing-card.tsx, app/package.json, app/src/app/(marketing)/page.tsx, app/src/components/marketing/methodology-definitions.tsx, app/src/components/insight/insight-tables.tsx, app/src/app/(app)/yield/page.tsx, app/src/components/yield/yield-form.tsx, app/src/components/compare/**, app/src/lib/queries.ts]
+    expected: "exit 0; ba ca 'CN-AC-4' xanh, ca 'CN-AC-2 round-trip' xanh trên thẻ thật và bộ thoát thật của Next, số mô hình vẫn mang nhãn ở bốn chỗ; chiều đỏ trong ca: phép đo bắt câu cũ 'dữ liệu giả lập' và 'DỮ LIỆU MÔ PHỎNG'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4b
     criterion: AC-4
     executor: test
     cmd: config:executors.test.cn_quet
     paths: [scripts/quet-ten-nguon-html.mjs, scripts/quet-ten-nguon-html.test.mjs]
-    expected: "exit 0; ca 'CN-AC-4 câu sai, thiếu chữ, vượt trần' xanh: bốn đột biến thoát 1, ghim 'CÂU-SAI', 'THIẾU-CHỮ /methodology: nền tảng thuê ngắn hạn', 'VƯỢT-TRẦN'; đối chứng cùng máy chủ sạch thoát 0."
+    expected: "exit 0; ca 'CN-AC-4 câu sai, thiếu chữ, vượt trần' xanh: bốn đột biến thoát 1, ghim 'CÂU-SAI', 'THIẾU-CHỮ /methodology: nền tảng thuê ngắn hạn', 'VƯỢT-TRẦN … 6 tiêu đề'; đối chứng cùng máy chủ sạch thoát 0."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6

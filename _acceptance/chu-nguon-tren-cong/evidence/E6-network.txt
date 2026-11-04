@@ -1,0 +1,1 @@
+n-a (driver): playwright-cli (capture.ui) khong co lenh doc network/console; khong co du lieu mang. Dev server :3460 la server san co cua worktree (pid 58651), khong do minh start nen khong tat.
