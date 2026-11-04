@@ -5,10 +5,10 @@ slug: nhom-dang-ky-hai-lan-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-04-nhom-dang-ky-hai-lan-s03-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-04
 ---
 
 # Acceptance Contract: nhom-dang-ky-hai-lan-s03
