@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bcfe1751629f3a1d68d27b32504548f57eeb70db
+verified_commit: b208bbbfeda169a4f35b8a582acade219c9f8ff5
 human_signoff: Mạnh 2026-10-31
 ---
 
@@ -210,3 +210,7 @@ none — mọi eval là deterministic (runs: 1), không có eval nhiều lần c
 Round 1: E1 – E12 chạy và xanh; ghi run_id hậu tố r1.
 Round 3: không chạy lại E1 – E12 (carry-forward); chạy lại sáu lệnh suite, tất cả xanh. Verdict PASS.
 
+
+### Re-pin lần 1 — 2026-11-04, do sửa bốn lỗi lệnh doc-toan-bo và hai phép đo đường trên dữ liệu thật
+run_id: repin-20261104T003949Z-85404
+sha: b208bbbfeda169a4f35b8a582acade219c9f8ff5 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
