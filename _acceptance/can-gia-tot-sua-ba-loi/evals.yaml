@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: can-gia-tot-sua-ba-loi
+# Ca «CGB-AC-n» ở app/tests/can-gia-tot-biet-can.test.tsx, dùng chung bộ dựng của CG1: lược đồ tạm, page thật, vai giả; số và tên là bịa.
+# Đỏ trước sửa ghi ở evidence/do-truoc-khi-sua.txt. Mỗi phép đo có đối chứng đỏ trên cùng dữ liệu, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_sua_ba_loi
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/lib/ten-tin.ts, app/src/lib/ops/review-context.ts, "app/src/app/ops/deals/**", app/src/components/ops/deal-body.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deals-grid.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
+    expected: "exit 0; ca CGB-AC-1 ma trận viết trước mười dòng (seller_name | sender_name → tên): unknown | Gửi Thật → Gửi Thật; ' UNKNOWN ' | Gửi Thật → Gửi Thật; '' | Gửi Thật → Gửi Thật; '   ' | Gửi Thật → Gửi Thật; NULL | Gửi Thật → Gửi Thật; unknown | unknown → không tên; unknown | không bài gốc → không tên; Bán Thật | unknown → Bán Thật; Na | Gửi Thật → Na; Anh Unknown | Gửi Thật → Anh Unknown. Số assert bằng số dòng, mỗi dòng so getDeals thật rồi so ô tên trên hàng bảng, sheet và trang một căn của page thật; căn không tên hiện đúng «Chưa có tên» ở hàng, «Người đăng chưa có tên» ở sheet, 0 dòng «Tên» trên trang; quét cả ba bề mặt của mọi dòng 0 chữ unknown đứng làm tên. Mỗi phép âm có phép dương trên cùng dữ liệu: vai ops thấy Gửi Thật, vai viewer 0 khớp với Gửi Thật; sender_name mang tên nguồn gài: vai ops thấy phần đã che, 0 khớp tên nguồn, đỏ khi bản chép bỏ che ('CGB-AC-1 lộ tên nguồn'); lược đồ cloud: căn tên thật hiện tên, căn unknown 0 chữ unknown. Đối chứng đỏ: bản chép deals.ts gỡ tenTin khỏi seller_name → ném ('CGB-AC-1 chữ giữ chỗ hiện như tên')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_sua_ba_loi
+    paths: [app/src/lib/deals-chi-tiet.ts, "app/src/app/ops/deals/[offerId]/**", app/tests/can-gia-tot-biet-can.test.tsx]
+    expected: "exit 0; ca CGB-AC-2 ma trận bốn mức so nguyên câu trong [data-deal-roi]: −20 → «Đắt hơn thước phường 20%, không phải căn giá tốt»; −0,5 → «Đắt hơn thước phường 0.5%, không phải căn giá tốt»; 0 → «Giảm 0%, dưới ngưỡng 5%»; 4 → «Giảm 4%, dưới ngưỡng 5%»; đi qua getDeal và page thật; cả bốn có «Đã rời danh sách»; lặp −20 trên lược đồ cloud; đối chứng đỏ: bản chép deals-chi-tiet.ts gỡ nhánh số âm → ném ('CGB-AC-2 lý do tự mâu thuẫn')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_sua_ba_loi
+    paths: [app/src/lib/deals.ts, "app/src/app/ops/deals/**", app/tests/can-gia-tot-biet-can.test.tsx]
+    expected: "exit 0; ca CGB-AC-3 đo quan hệ, không đo chuỗi, trên cả 33 căn ở từng nơi chạy: crumb trên page thật có ?can= khi và chỉ khi id nằm trong getDeals() cùng nơi; đi theo href qua page danh sách thật không bao giờ chuyển ngược về trang đang đứng; dữ liệu có hai căn đồng mức ở ranh hạng 30/31 và căn cần xác minh ngoài giới hạn; ?can= của căn ngoài danh sách vẫn chuyển sang trang một căn; lặp ở vai viewer và lược đồ cloud. Đối chứng đỏ: bản chép deals.ts cho dealTrongDanhSach luôn đúng → ném ('CGB-AC-3 crumb quay lại chính trang'); bản chép đổi SO_CAN_DANH_SACH sang 5 → danh sách và câu kiểm cùng đổi; bản chép ghi cứng 30 trong câu kiểm khi hằng là 5 → ném ('CGB-AC-3 lệch hằng')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, "app/src/app/ops/deals/**", app/tests/can-gia-tot-biet-can.test.tsx]
+    expected: "exit 0; mọi ca CGT-AC-n của CG1 cùng ba ca CGB-AC-n xanh trên cùng tệp; đỏ khi một ca CG1 hỏng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.can_gia_tot_quet_ma
+    paths: [app/src/lib/deals.ts, "app/src/app/ops/deals/**", scripts/check-portal-compliance.mjs]
+    expected: "exit 0; deals-gate của check-portal-compliance đạt, trang một căn vẫn lọc theo xemNoiDungTin; đỏ khi bỏ lọc theo vai (đối chứng đã có trong scripts/can-gia-tot-quet-ma.test.mjs)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.can_gia_tot_ca_cu
+    paths: [app/tests/can-gia-tot-biet-can.test.tsx, _acceptance/can-gia-tot-sua-ba-loi/probes/ca-cu-khong-doi.sh]
+    expected: "exit 0; tệp test CG1 có 0 dòng cũ bị xoá hay sửa so với gốc nhánh; đối chứng đỏ chạy cùng lệnh: bản bỏ một dòng phải đếm được 1, không thì exit 3 ('thước hỏng'); có dòng cũ bị đổi thì exit 1 ('dòng cũ bị xoá hay sửa')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Khởi động bản của chính worktree này trên DB máy thu ở cổng 3462 (SNAPSHOTS_DIR=../../../../collector/snapshots npm --prefix app run dev -- -p 3462; kiểm cwd của tiến trình nghe cổng đúng là worktree này, không dùng server của worktree khác, tắt server này khi xong), chạy node scripts/dev-ops-account.mjs --vai ops rồi đăng nhập ops-role-test@local.test (chân thanh bên hiện «Vận hành»), không dùng ops-test@local.test; lấy mã căn bằng SELECT chỉ đọc"
+      - "Trước mỗi lần chụp, chèn CSS filter blur vào trang để che ảnh tin, tiêu đề, chữ bài, tên người bán, SĐT, tên nhóm, theo khuôn frame E9-step4c-trang-mot-can.png của can-gia-tot-biet-can; đo ô Tên bằng textContent, observed chỉ ghi kết quả so («khác unknown, không rỗng» hoặc «không có dòng Tên»), không ghi giá trị tên, SĐT, tiêu đề"
+      - "Mở trang căn unknown → screenshot evidence/E7-ten.png"
+      - "Mở trang căn số âm ở 390 px và màn hình → screenshot evidence/E7-ly-do-390.png, evidence/E7-ly-do-man.png"
+      - "Bấm crumb của căn trong danh sách → screenshot evidence/E7-crumb-sheet.png; bấm crumb của căn đã rời → screenshot evidence/E7-crumb-bang.png"
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, "app/src/app/ops/deals/**"]
+    expected: "Bản của chính worktree này đang chạy ở :3462 trên DB máy thu, chỉ đọc, đăng nhập ops-role-test@local.test, chân thanh bên hiện «Vận hành». Lấy mã căn bằng SELECT chỉ đọc: một tin P1 bán seller_name = unknown, một tin P1 bán bait_gap_pct âm, một căn trong danh sách. Trang căn unknown: ô Tên không có chữ unknown. Trang căn số âm ở 390 px và màn hình: nhãn đọc đủ «Đắt hơn thước phường … không phải căn giá tốt», scrollWidth không lớn hơn clientWidth, không có thanh cuộn ngang. Căn trong danh sách: bấm crumb mở sheet đúng căn. Căn đã rời: bấm crumb về bảng không mở sheet. Lưu frame vào _acceptance/can-gia-tot-sua-ba-loi/evidence/; kho công khai nên mọi frame phải che mờ ảnh tin, tiêu đề, chữ bài, tên người bán, SĐT, tên nhóm, chỉ để lộ nhãn lý do, crumb và khung bố cục; frame còn đọc được một trong các thứ đó thì E7 FAIL. Observed không chép giá trị tên, SĐT, tiêu đề. Không có tên nguồn thật."
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_ten_invest
+    paths: [app/src/lib/offers-public.ts, app/src/lib/ten-tin.ts, app/src/lib/ops/review-context.ts, app/src/components/listing/offer-card.tsx, app/tests/tin-rao-cong-khai.test.tsx]
+    expected: "exit 0; ca CGB-AC-6 ma trận viết trước tám dòng (seller_name → tên): unknown, ' UNKNOWN ', rỗng, toàn khoảng trắng, NULL → không tên; Bán Thật, Na, Anh Unknown → giữ nguyên. So đủ tám dòng qua getPublicOffers, route /api/v1/listings và thẻ của vùng máy chủ thật: thẻ dòng có tên chứa đúng tên, thẻ dòng không tên chứa «Chưa có tên», 0 chữ unknown đứng làm nội dung. Tài khoản Hai A, Hai B, unknown: sellerManyNames false, giữ Hai A; đối chứng dương: tài khoản ba tên thật vẫn về nhãn. Đối chứng đỏ: bản chép offers-public.ts gỡ tenTin → ném ('CGB-AC-6 chữ giữ chỗ hiện như tên'); bản chép bỏ điều kiện lọc chữ giữ chỗ khi đếm → ném ('CGB-AC-6 chữ giữ chỗ tính là một tên')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_doi_chieu
+    paths: [app/tests/can-gia-tot-doi-chieu.test.tsx, app/src/lib/deals.ts, app/src/lib/db.ts]
+    expected: "exit 0; số lần gọi getDeal bằng số đếm độc lập SELECT count(*) của tin P1 bán, đỏ khi thiếu ('CGT-DC không đo đủ mọi tin của kho'); lech 0; ca xong trong trần 600 giây; thời gian chạy một mình ghi ở evidence/do-cgt-dc-mot-minh.txt là phép đo một lần do người đọc, không phải điều kiện của lệnh; DB không đổi sau đối chiếu. Ca bộ đếm bằng dữ liệu giả 40 mã: đủ mọi mã đúng một lần, tin cuối lệch được đếm, đỉnh song song trên 1 và không quá 5. Đối chứng đỏ cùng ca: lấy mẫu → ném ('CGT-DC không đo đủ mọi tin'); giới hạn 1 → ném ('CGT-DC không chạy song song'); giới hạn 40 → ném ('CGT-DC quá giới hạn song song')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

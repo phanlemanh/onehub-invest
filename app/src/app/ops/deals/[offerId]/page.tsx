@@ -10,7 +10,7 @@ import { RegionError } from "@/components/states/region-error";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getSessionUser } from "@/lib/auth";
-import { dealHang, dealTheoVai, getDeal } from "@/lib/deals";
+import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal } from "@/lib/deals";
 import { chuGiam } from "@/lib/deals-chi-tiet";
 import { fmtCompact } from "@/lib/format";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
@@ -34,10 +34,12 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
     );
   }
   const d = dealHang(dealTheoVai(deal, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu });
+  // `?can=` của căn ngoài danh sách đã tải chuyển ngược về đây, nên crumb chỉ mở sheet khi căn có trong danh sách.
+  const veDanhSach = !d.roiDanhSach && (await dealTrongDanhSach(d.offerId)) ? `/ops/deals?can=${encodeURIComponent(d.offerId)}` : "/ops/deals";
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt", href: d.roiDanhSach ? "/ops/deals" : `/ops/deals?can=${encodeURIComponent(d.offerId)}` }, { label: "Một căn" }]}
+        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Căn giá tốt", href: veDanhSach }, { label: "Một căn" }]}
         title={d.ten}
         stats={[d.priceVnd === null ? "—" : fmtCompact(d.priceVnd), d.discountPct === null ? "Chưa tính được mức giảm" : chuGiam(d.discountPct), d.source]}
         description="Đủ để quyết có gọi người bán không. Chỉ đọc."

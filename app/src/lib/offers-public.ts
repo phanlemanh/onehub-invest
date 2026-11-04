@@ -17,6 +17,7 @@ import {
   type OfferWard,
   type PublicOffer,
 } from "./offers-filters";
+import { tenTin } from "./ten-tin";
 import { KIND, PROPERTY_TYPE } from "./vocab.generated";
 
 /**
@@ -103,7 +104,8 @@ export async function getPublicOffers(
     sourceEntries(),
     pool.query(
       `WITH nhieu_ten AS (
-         SELECT seller_ref FROM sale_offers WHERE seller_ref IS NOT NULL AND seller_ref <> ''
+         SELECT seller_ref FROM sale_offers
+         WHERE seller_ref IS NOT NULL AND seller_ref <> '' AND lower(btrim(seller_name)) NOT IN ('unknown', '')
          GROUP BY seller_ref HAVING count(DISTINCT seller_name) >= ${OFFER_MANY_NAMES}
        )
        SELECT o.offer_id, o.kind, o.property_type, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
@@ -128,27 +130,30 @@ export async function getPublicOffers(
   return {
     total: counts[0].total,
     withPhone: counts[0].with_phone,
-    rows: rows.map((r) => ({
-      offerId: r.offer_id,
-      kind: r.kind,
-      propertyType: r.property_type,
-      priceVnd: Number(r.price_vnd),
-      areaM2: Number(r.area_m2),
-      pricePerm2: r.price_perm2 === null ? null : Number(r.price_perm2),
-      bedrooms: r.bedrooms,
-      bathrooms: r.bathrooms,
-      stories: r.stories !== null && r.stories <= OFFER_MAX_STORIES ? r.stories : null,
-      frontageLength: frontage(r.frontage_length),
-      ward: { id: r.area_id, name: r.area_name },
-      street: streetOf(r.street_raw),
-      sellerName: r.many_names || (r.seller_name !== null && mangDinhDanh(r.seller_name, entries)) ? null : r.seller_name,
-      sellerManyNames: r.many_names,
-      hasPhone: r.has_phone,
-      phoneInferred: r.phone_inferred,
-      unverified: r.unverified,
-      updatedAt: r.updated_at,
-      firstSeenDays: r.first_seen_days,
-    })),
+    rows: rows.map((r) => {
+      const ten = tenTin(r.seller_name);
+      return {
+        offerId: r.offer_id,
+        kind: r.kind,
+        propertyType: r.property_type,
+        priceVnd: Number(r.price_vnd),
+        areaM2: Number(r.area_m2),
+        pricePerm2: r.price_perm2 === null ? null : Number(r.price_perm2),
+        bedrooms: r.bedrooms,
+        bathrooms: r.bathrooms,
+        stories: r.stories !== null && r.stories <= OFFER_MAX_STORIES ? r.stories : null,
+        frontageLength: frontage(r.frontage_length),
+        ward: { id: r.area_id, name: r.area_name },
+        street: streetOf(r.street_raw),
+        sellerName: r.many_names || (ten !== null && mangDinhDanh(ten, entries)) ? null : ten,
+        sellerManyNames: r.many_names,
+        hasPhone: r.has_phone,
+        phoneInferred: r.phone_inferred,
+        unverified: r.unverified,
+        updatedAt: r.updated_at,
+        firstSeenDays: r.first_seen_days,
+      };
+    }),
   };
 }
 
