@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>1 việc"]
+  GD --> B["Sắp mở vòng<br/>chưa có"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>10 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>12 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>130 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>96 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>135 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>97 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -22,10 +22,6 @@ flowchart TD
 > đã đủ và đúng chưa · **Cổng Bằng chứng** đã làm đúng thứ đã hứa chưa ·
 > **Cổng Giá trị** thứ đã giao có ăn thua không.
 
-## Sắp mở vòng
-
-- Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt: giá/m² so với thước, số tin dựng thước, mức giảm so với ngưỡng; căn thiếu dữ liệu ghi rõ thiếu gì (`can-gia-tot-biet-can`)
-
 ## Chờ duyệt phạm vi
 
 - ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế (`adr-duong-lenh-keo`)
@@ -33,10 +29,12 @@ flowchart TD
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
 - đầu dò của hồ sơ chuyen-huong-ma-thi-truong gỡ đúng worktree tạm của nó, bỏ lệnh prune trên kho dùng chung (`chm-dau-do-khong-prune`)
 - CI bỏ qua ca «DF-AC-3 DB thật» cần tin rao thật ở DB local (chỉ chạy ở máy thu) (`ci-bo-qua-df-ac-3`)
+- giải thích hai nhãn «Chưa xác minh» ngay trên thẻ tin và trên trang Phương pháp (`giai-thich-nhan-chua-xac-minh`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+- harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
 ## Đang làm
@@ -50,6 +48,7 @@ flowchart TD
 - Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx (`auth-hop-chuan`)
 - Bộ bóc SĐT của S03/S05 bắt đủ bốn dạng viết tách lạ, bỏ số 11 chữ số, và tin chọn SĐT theo luật rõ trên mọi bài của tin — dạng số ra giữ nguyên (`boc-sdt-du-va-chon-ro`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
+- Người vận hành quét Căn giá tốt trên một bảng có tab và lọc, mở sheet một căn để biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai, so với các căn cùng tiêu chí; căn thiếu dữ liệu ghi rõ thiếu gì; vai Người xem không nhận ảnh, chữ bài, liên hệ (`can-gia-tot-biet-can`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
 - Luật ghép căn và bảng so thẻ duyệt so ô đường theo tên đường — bỏ ngõ/ngách/hẻm/số nhà và đuôi địa chỉ, không còn loại oan «đường khác» (`chuan-hoa-o-duong`)
@@ -156,12 +155,14 @@ flowchart TD
 - Khi trang đăng nhập hoặc đăng ký lỗi lúc dựng, nút «Thử lại» tải lại phần trang từ server (retry) thay vì chỉ vẽ lại phía client (reset); _acceptance/config.yaml thành YAML chuẩn (`auth-error-thu-lai-retry`)
 - backfill ảnh Zalo xét cả snapshot zalo-agent schemaVersion 3, không chỉ v2 (`backfill-zalo-media-v3`)
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
+- Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
 - bước kiểm local-only của check-s08-inventory chạy được trên main sau khi import-airbnb nhập import-s08-row (`check-s08-harness`) — đã giao — máy thông, cửa veto còn mở
 - nạp lại một snapshot Chợ Tốt cũ hơn không làm lùi giá, tiêu đề và nội dung của tin đã có bản mới (`chotot-khong-lui`)
 - bộ nạp S06 từ chối snapshot thiếu finishedAt và dòng captured_at NULL có sẵn không bị đóng băng (`chotot-thieu-moc`)
+- Chữ hiện trên các trang công khai của cổng Invest không mang tên nguồn thật S01, S02, nói đúng giá rao là tin thật (`chu-nguon-tren-cong`)
 - link cũ chứa mã thị trường dài kèm query mở đúng trang Cho thuê, có ca đo tự động và đột biến làm đỏ (`chuyen-huong-ma-dai-trang-thue`) — đã giao — máy thông, cửa veto còn mở
 - link và mã thị trường cũ (32 mã dài vn-thanh-pho-*/vn-tinh-*) vẫn mở được sau khi migration 064 đổi sang mã ngắn vn-<x> — chuyển hướng vĩnh viễn có điều kiện ở các trang Invest, bí danh mã cũ ở API công khai của app và data-api, đúng ở cả hai trạng thái trước/sau 064 (`chuyen-huong-ma-thi-truong`)
 - CI chạy typecheck và test của app, pipeline, agent, data-api trên mọi PR (`ci-test-module`)
@@ -204,6 +205,7 @@ flowchart TD
 - kho tri thức riêng tư đi kèm — nguồn của mọi bản phạm vi đang dùng là trang tri thức ghim băm (`kho-tri-thuc-invest`)
 - khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ; S05 tạm dừng thì bước thu không gọi Apify; lịch S05 xuống 2 lượt/tuần (`khoa-nap-s05-paused`)
 - Trang /ops gọi đúng tên thị trường vùng mới của S06 (Đà Nẵng, Hải Phòng, Khánh Hoà) khi bảng khu vực còn giữ mã dài — bản tạm ở app tới khi đổi mã khu vực (`khu-vuc-vung-moi-s06`)
+- Kiểm danh bạ không đỏ giả với số ghép S06, và test nạp lại migration cũ chạy được sau khi áp 070 (`kiem-do-sau-ap-070-sua`)
 - Danh sách tệp bản đồ được dùng hex (MAP_FILES) viết trước chỉ ghim chữ ở một module chung; LB-AC-1 và DHT-AC-5 cùng đọc nó (`lb-ac-1-map-files-mot-nguon`)
 - Gỡ ảnh và chữ AirDNA khỏi trang chi tiết listing (Invest) (`listing-airdna-photos`)
 - Lộ trình máy đọc + quy định «mỗi loại thông tin một chỗ» — bật gói road-map, cắt đợt phan-loai-2310 và cam-mau-2310 (`lo-trinh-2310`)
@@ -239,6 +241,7 @@ flowchart TD
 - Bài S03 có «<số> năm/nữ» (cho vay, tuyển dụng) không bị coi là dấu hiệu phòng ngủ «<số>n» nên không thành tin rao; viết tắt phòng ngủ thật («2n1wc», «1n1k») vẫn nhận như cũ (`s03-cho-vay-khong-phai-bds`) — đã giao — máy thông, cửa veto còn mở
 - Tin rao S03 thôi gộp nhầm bài của nhiều người khi thiếu phường/diện tích, và cột «Luồng 7 ngày» đếm đúng tập bài transform đọc (`s03-gop-trung-dung`)
 - job nạp S03 liệt kê được bản thu khi số thư mục vượt giới hạn đối số, và lỗi liệt kê làm job đỏ thay vì im lặng (`s03-nap-argmax`) — đã giao — máy thông, cửa veto còn mở
+- Nới luật trích dẫn căn hộ S03 thêm dạng số phòng và studio, xử lại đề xuất đã bỏ bằng nhãn đã đọc, không gọi model (`s03-noi-luat-trich-dan`)
 - bộ nạp S03 lọc U+0000 khỏi mọi chuỗi trước khi ghi stg_zalo_posts — gỡ kẹt nạp đêm từ 29/10 (`s03-null-byte`) — đã giao — máy thông, cửa veto còn mở
 - S05 có đệm cửa sổ thu 5 ngày, khoá nạp không văng hay quay bận, bước thu lỗi có dòng ghim (`s05-khoa-nap`)
 - Kho khớp lịch S06 2 lượt mỗi ngày đã cài trên máy thu — plist chotot trong main mang mốc 05:30 và 14:00, không va lịch job khác (`s06-hai-luot-ngay-gop-main`)
@@ -253,6 +256,7 @@ flowchart TD
 - Transform S03 và S05 ghi seller_ref theo người gửi bài, không còn một giá trị hằng cho mọi tin của nhóm (`seller-ref-theo-nguoi-gui`)
 - Phần cloud của 060 không làm gãy sync — cloud giữ sellers là bảng, sync dừng có tên khi bảng đích là view, tệp catch-up cloud 060 không DDL (`sellers-view-len-cloud`)
 - snapshot thu thập chỉ hiện ra cho bước nạp khi đã ghi trọn vẹn, nên lượt nạp không bao giờ đánh dấu «đã nạp» một snapshot dở dang (`snapshot-nguyen-tu`)
+- Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
 - Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files (`stg-zalo-media-files`)

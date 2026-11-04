@@ -72,7 +72,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.gs_thu
     paths: [pipeline/gan-sdt-s06.mjs]
-    expected: "exit 0; đầu ra có khoi_phuc= và khong_ro=, md5_khop=true, không có dạng số điện thoại. Lệnh này chỉ đo sự có mặt của hai số đếm vì DB local chưa có tin mang số; giá trị do E8a đo."
+    expected: "exit 0; đầu ra có khoi_phuc= và khong_ro=, md5_khop=true, không có dạng số điện thoại. Lệnh này đo sự có mặt của hai số đếm; quan hệ giữa nhãn và số đếm do E8a đo. Từ 04/11 DB local có tin mang số thật, giá trị in ra là số đo thật và được chép vào bằng chứng."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9

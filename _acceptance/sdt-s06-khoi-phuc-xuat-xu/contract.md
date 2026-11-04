@@ -16,7 +16,7 @@ design_doc: docs/superpowers/specs/2026-11-03-sdt-s06-khoi-phuc-xuat-xu-design.m
 ## Context
 
 Mục Ngoài-5 của `_acceptance/sdt-s06-ghep-tai-khoan`. Một migration sau ghi đè `resolve_offer_fields` thì lượt phân xử xoá khoá `field_provenance.seller_phone`; áp lại 068 không đem khoá về; số trên tin thành «không rõ gốc»
-và không bao giờ bị rút, nên tin ẩn số giữ số ghép mà bất biến vẫn báo 0. Chưa có dữ liệu nào mất: DB local có 0 tin S06 mang số. Thiết kế và so sánh hai hướng ở `design_doc`.
+và không bao giờ bị rút, nên tin ẩn số giữ số ghép mà bất biến vẫn báo 0. Chưa có dữ liệu nào mất: lúc lập hồ sơ (03/11) DB local có 0 tin S06 mang số; job 05:30 ngày 04/11 ghi 24.023 số, cả 24.023 tin đều còn khoá, không tin nào mất khoá. Thiết kế và so sánh hai hướng ở `design_doc`.
 
 Source input: prompt từ phiên giám sát 03/11, quyết định Ngoài-5 ở `_acceptance/sdt-s06-ghep-tai-khoan/decisions.jsonl`.
 
@@ -42,7 +42,7 @@ Source input: prompt từ phiên giám sát 03/11, quyết định Ngoài-5 ở 
 - AC-5: Given tin có khoá mà `rule_id` lạ, và tin không khoá mà số không khớp stg, When tin chuyển ẩn số, rồi When tài khoản có thêm số thứ hai, Then ở cả hai bước số giữ nguyên, không sinh khoá, không bị rút; cả hai tin nằm trong `khong_ro`. (cross-layer)
 - AC-6: Given khoá bị xoá bằng `resolve_offer_fields(NULL)`, không qua transform, When `ganSdtS06` chạy khi hàm có phần giữ, Then kết quả đúng như AC-1. (cross-layer)
 - AC-7: Given hàm vẫn mất phần giữ, When `runTransformChotot` chạy, Then không tin nào đổi số hay được dựng lại khoá, in `CHUA-AP-068`, không ném lỗi, `khoi_phuc = 0`, `khong_ro = 0`: AC-6 của hồ sơ gốc không đổi. (cross-layer)
-- AC-8: Given fixture có đúng một tin khôi phục và một tin không rõ gốc, When `runTransformChotot` chạy và When dựng dòng in của `--thu` từ kết quả bộ gán, Then cả hai dòng mang `khoi_phuc=1`, `khong_ro=1`, không chứa SĐT nào; số dạng `+84` hay dạng `0` lọt vào dòng thì ném `RO-SO`. Given DB local, When chạy `--thu`, Then thoát 0, in đủ hai số đếm và `md5_khop=true`; DB local chưa có tin nào mang số nên hai số đếm ở lệnh này đo sự có mặt, không đo giá trị. (cross-layer)
+- AC-8: Given fixture có đúng một tin khôi phục và một tin không rõ gốc, When `runTransformChotot` chạy và When dựng dòng in của `--thu` từ kết quả bộ gán, Then cả hai dòng mang `khoi_phuc=1`, `khong_ro=1`, không chứa SĐT nào; số dạng `+84` hay dạng `0` lọt vào dòng thì ném `RO-SO`. Given DB local, When chạy `--thu`, Then thoát 0, in đủ hai số đếm và `md5_khop=true`; hai số đếm ở lệnh này đo sự có mặt, quan hệ giữa nhãn và số do fixture đo; từ 04/11 DB local có tin mang số thật nên giá trị in ra được chép vào bằng chứng. (cross-layer)
 - AC-9: Given PR này, When soát, Then không tệp nào dưới `db/migrations/`, `app/`, `data-api/`, `collector/`, không tệp đẩy cloud, không script thu, nạp đổi; toàn bộ ca của `pipeline/scripts/gan-sdt-s06.test.mjs` có từ trước vẫn xanh, gồm ma trận 88 ô, không sửa ca nào.
 
 - AC-10: Given tin A mang số ghép lấy từ tin B, khoá đã mất vì hàm bị ghi đè, và B đổi sang số khác trong lúc đó, When áp lại 068 và A chuyển ẩn số, Then A vẫn giữ số cũ, không khoá, `khong_ro = 1`, tên ca ghi rõ đây là giới hạn G1, trái luật ẩn số và được chấp nhận. Cùng fixture nhưng B không đổi số thì A bị rút. (cross-layer)
