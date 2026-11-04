@@ -1,31 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { InfoIcon, PhoneIcon, RotateCwIcon } from "lucide-react"
-import type { ReactNode } from "react"
+import { PhoneIcon, RotateCwIcon } from "lucide-react"
 
 import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { OfferLabelHelp } from "./offer-label-help"
 
 /** «+84912345678» → «0912 345 678»; số dạng khác giữ nguyên. */
 export function phoneText(e164: string): string {
   const m = /^\+84(\d{3})(\d{3})(\d{3,4})$/.exec(e164)
   return m ? `0${m[1]} ${m[2]} ${m[3]}` : e164
-}
-
-/** Nút ⓘ cạnh nhãn «Chưa xác minh»: bấm được cả trên điện thoại, nơi tooltip không mở. Chữ chỉ dựng khi mở, không nằm trong HTML. */
-export function UnverifiedHint({ children }: { children: ReactNode }) {
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={<Button variant="ghost" size="icon-xs" aria-label="Về nhãn Chưa xác minh" className="text-muted-foreground" />}
-      >
-        <InfoIcon aria-hidden="true" />
-      </PopoverTrigger>
-      <PopoverContent side="top">{children}</PopoverContent>
-    </Popover>
-  )
 }
 
 /**
@@ -56,10 +41,9 @@ export function OfferContact({ offerId, hasPhone, inferred }: { offerId: string;
   if (!hasPhone || state === "none") return <Badge variant="secondary">Chưa có số</Badge>
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      {(freshInferred ?? inferred) ? <Badge variant="warning-light">Chưa xác minh</Badge> : null}
-      {(freshInferred ?? inferred) ? (
-        <UnverifiedHint>Số không lấy trực tiếp từ chính tin này, có thể suy từ tin khác cùng tài khoản. Nên hỏi lại khi gọi.</UnverifiedHint>
-      ) : null}
+      <OfferLabelHelp what="phone">
+        {(freshInferred ?? inferred) ? <Badge variant="warning-light">Chưa xác minh</Badge> : null}
+      </OfferLabelHelp>
       {phone ? (
         <Button variant="outline" size="sm" nativeButton={false} render={<a href={`tel:${phone}`} />}>
           <PhoneIcon data-icon="inline-start" aria-hidden="true" />

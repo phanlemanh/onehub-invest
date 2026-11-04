@@ -4,6 +4,7 @@
 // db/migrations (scripts/lib/tier-a-source-names.mjs), không viết cứng. Báo bằng mã S0x + trang, KHÔNG in tên.
 // Dùng: node scripts/quet-ten-nguon-html.mjs [--base <url>] [--trang /a,/b]   (BASE_URL cũng được; mặc định :3456)
 // Thoát: 0 sạch · 1 còn tên · 2 không đo được (không tới được, mã khác 200, hoặc trang không phải HTML có <h1>).
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -169,7 +170,7 @@ export async function quetTrang({ base: goc, trang = TRANG, entries, log = conso
   return khongDo > 0 ? 2 : conTen > 0 ? 1 : 0;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const lay = (ten) => (args.includes(ten) ? args[args.indexOf(ten) + 1] : undefined);
   const base = lay("--base") ?? process.env.BASE_URL ?? "http://localhost:3456";

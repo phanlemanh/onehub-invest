@@ -45,13 +45,6 @@ evals:
     paths: [scripts/quet-ten-nguon-html.mjs, scripts/quet-ten-nguon-html.test.mjs]
     expected: "exit 0; ca 'CN-AC-4 câu sai, thiếu chữ, vượt trần' xanh: bốn đột biến thoát 1, ghim 'CÂU-SAI', 'THIẾU-CHỮ /methodology: nền tảng thuê ngắn hạn', 'VƯỢT-TRẦN'; đối chứng cùng máy chủ sạch thoát 0."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E5
-    criterion: AC-5
-    executor: test
-    cmd: config:executors.test.cn_app
-    paths: [app/tests/chu-nguon-tren-cong.test.tsx, app/src/components/listing/offer-card.tsx, app/src/components/listing/offer-contact.tsx]
-    expected: "exit 0; ca 'CN-AC-4 nút giải thích' với 5 hàng viết trước, số hàng ghim bằng 5; ca 'CN-AC-4 chiều đỏ': bản sao bỏ nút nêu tin-nhom, không nêu so-suy hay hàng không nhãn."
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
     executor: ui-check
@@ -59,14 +52,11 @@ evals:
     route: /vn/hanoi/listings/sale
     steps:
       - "Dev server từ gốc worktree ở cổng 3460, DB máy thu"
-      - "Truy vấn chỉ đọc DB máy thu hoặc gọi /api/v1/listings: một tin Hà Nội có unverified, một tin có phoneInferred; ghi mã tin, không ghi số. Không có tin phoneInferred thì ghi KHONG-DO cho nút số, không báo đạt"
-      - "Mở /vn/hanoi/listings/sale, bấm nút Về nhãn Chưa xác minh trên thẻ tin và ô liên hệ, chữ đúng nghĩa từng nút, chụp evidence/E6-the.png, evidence/E6-so.png"
-      - "Tab tới nút, Enter mở, Esc đóng; ở khổ 375 chạm mở được (touch emulation)"
-      - "Ma trận ba trang /vn/hanoi/listings/sale, /vn/hanoi, /methodology nhân sáng, tối, 375: scrollWidth bằng clientWidth, trang tin đo lúc popover mở; chụp evidence/E6-<trang>-<chế độ>.png"
-      - "Mở /vn/hanoi: nhãn MÔ PHỎNG nằm ở đầu bảng Lợi suất, chú thích nói giá rao; /methodology mục Nguồn dữ liệu đọc được"
-      - "Mở một /listing/<mã thật>: nút ghi Mở trang gốc, href còn nguyên; mở /yield?area=vn-hanoi: đầu trang nhãn MÔ PHỎNG, chú thích nói giá rao; chụp evidence/E6-listing.png, evidence/E6-yield.png"
-    paths: [app/src/components/listing/offer-card.tsx, app/src/components/listing/offer-contact.tsx, app/src/components/insight/insight-tables.tsx, app/src/components/marketing/methodology-definitions.tsx, app/src/components/listing/listing-hero.tsx, app/src/app/(app)/yield/page.tsx]
-    expected: "ảnh đủ ma trận chín ô cộng bốn ảnh riêng, đúng mô tả; scrollWidth bằng clientWidth mọi ô; hai popover mở được bằng bấm, bàn phím, chạm; KHONG-DO ghi rõ nếu có."
+      - "Ma trận bốn trang /vn/hanoi, /methodology, một /listing/<mã thật>, /yield?area=vn-hanoi nhân sáng, tối, 375: scrollWidth bằng clientWidth; chụp evidence/E6-<trang>-<chế độ>.png"
+      - "/vn/hanoi: nhãn MÔ PHỎNG nằm ở đầu bảng Lợi suất, chú thích nói giá rao; /methodology mục Nguồn dữ liệu đọc được, ô gia-rao nói giá rao"
+      - "/listing/<mã thật>: nút ghi Mở trang gốc, href còn nguyên; /yield?area=vn-hanoi: đầu trang nhãn MÔ PHỎNG, chú thích nói giá rao"
+    paths: [app/src/components/insight/insight-tables.tsx, app/src/components/marketing/methodology-definitions.tsx, app/src/components/listing/listing-hero.tsx, app/src/app/(app)/yield/page.tsx]
+    expected: "ảnh đủ ma trận mười hai ô, đúng mô tả; scrollWidth bằng clientWidth mọi ô."
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E7
     criterion: AC-7

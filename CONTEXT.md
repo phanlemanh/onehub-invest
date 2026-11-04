@@ -103,7 +103,7 @@ _Avoid_: tin đăng, offer, sale offer, rao vặt
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
-**Chưa xác minh**: Nhãn trên thẻ tin rao từ nguồn chưa đối chiếu với nguồn khác; hiện tại là tin từ nhóm cộng đồng. Tin vẫn lên cổng, người xem biết cần tự kiểm. Nút ⓘ cạnh nhãn mở lời giải thích.
+**Chưa xác minh**: Nhãn trên thẻ tin rao từ nguồn chưa đối chiếu với nguồn khác; hiện tại là tin từ nhóm cộng đồng. Tin vẫn lên cổng, người xem biết cần tự kiểm. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Tin chưa xác minh»; mục `/methodology#chua-xac-minh`. Thẻ không nhãn không có nghĩa là đã kiểm chứng.
 - Code: `unverified` (cờ trong phản hồi tin rao, thay cho mã nguồn) · RESO: không có, local extension.
 _Avoid_: chưa kiểm duyệt, tin chưa duyệt
 
@@ -149,7 +149,7 @@ _Avoid_: so khớp, kiểm chéo
 **Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
 - Code: `hasPhone = false`
 
-**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số. Nút ⓘ cạnh nhãn mở lời giải thích.
+**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
 - Code: `seller_phone_inferred` (view `sale_offers`, migration 070) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
 _Avoid_: chưa kiểm chứng, số nghi ngờ
 

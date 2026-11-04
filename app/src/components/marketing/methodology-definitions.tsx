@@ -73,6 +73,28 @@ export const YIELD: Definition[] = [
   },
 ];
 
+// Đích của lời giải thích trên thẻ tin (components/listing/offer-label-help.tsx): đổi id ở đây thì đổi cả bên đó.
+export const OFFER_LABELS: Definition[] = [
+  {
+    id: "chua-xac-minh",
+    question: "Nhãn “Chưa xác minh” trên thẻ tin",
+    answer:
+      "Tin đến từ nhóm cộng đồng và chưa được đối chiếu với nguồn khác. Tin vẫn được hiện để bạn thấy nhiều lựa chọn hơn; giá, diện tích và vị trí cần được bạn tự kiểm trước khi quyết định.",
+  },
+  {
+    id: "so-chua-xac-minh",
+    question: "Nhãn “Chưa xác minh” cạnh số điện thoại",
+    answer:
+      "Số không lấy trực tiếp từ chính tin đó: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Bạn vẫn xem được số; khi gọi, hãy hỏi lại có đúng người đăng tin không.",
+  },
+  {
+    id: "the-khong-nhan",
+    question: "Thẻ không có nhãn nghĩa là gì?",
+    answer:
+      "Tin không thuộc diện gắn nhãn ở trên, không có nghĩa là đã được kiểm chứng. Chúng tôi chưa kiểm tra từng tin; mọi thông tin trên thẻ vẫn là điều người đăng rao.",
+  },
+];
+
 export const SOURCES: Definition[] = [
   {
     id: "thu-ngan-han",

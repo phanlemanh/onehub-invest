@@ -6,7 +6,8 @@ import type { PublicOffer } from "@/lib/offers-filters"
 import { KIND, LABELS_VI, PROPERTY_TYPE } from "@/lib/vocab.generated"
 import { LISTING_LINK, ListingCardFrame } from "./listing-card"
 import { bedroomsVi } from "./listing-labels"
-import { OfferContact, UnverifiedHint } from "./offer-contact"
+import { OfferContact } from "./offer-contact"
+import { OfferLabelHelp } from "./offer-label-help"
 
 /** Thông số theo loại hình; trường thiếu thì bỏ, không in chữ «chưa có». */
 export function offerSpecs(o: PublicOffer): string[] {
@@ -39,14 +40,7 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
       price={`${fmtCompact(o.priceVnd)}${o.kind === KIND.rent_lt ? "/tháng" : ""}`}
       priceNote={o.kind === KIND.sale && o.pricePerm2 !== null ? `${fmtCompact(o.pricePerm2)}/m²` : null}
       meta={firstSeenVi(o.firstSeenDays)}
-      name={
-        o.unverified ? (
-          <div className="flex items-center gap-1">
-            <Badge variant="warning-light">Chưa xác minh</Badge>
-            <UnverifiedHint>Tin từ nhóm cộng đồng, chưa đối chiếu với nguồn khác. Nên tự kiểm trước khi giao dịch.</UnverifiedHint>
-          </div>
-        ) : null
-      }
+      name={o.unverified ? <div><OfferLabelHelp what="offer"><Badge variant="warning-light">Chưa xác minh</Badge></OfferLabelHelp></div> : null}
       specs={offerSpecs(o)}
       place={
         <p className="truncate">

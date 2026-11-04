@@ -41,47 +41,6 @@ còn ghi tập trung Hà Nội, nên chữ trên cổng không nêu tên thị t
   nhóm Lợi suất của So sánh. Hai đầu mục bỏ chữ «DỮ LIỆU» vì đầu vào là thật.
 - **Trang gốc.** Mạnh chốt 04/11 giữ nút mở trang gốc trên `/listing/[id]` cùng đường link trên miền S01, chữ trên nút dùng «Mở trang gốc». Prop đổi tên
   `originalUrl` vì lên dữ liệu nhúng của client component. Phép quét chỉ miễn đúng khuôn `https://www.<tên>.com/rooms/<số>` trên trang đó.
-- **Nhãn «Chưa xác minh».** Nút ⓘ cạnh nhãn, bấm mở `ui/popover`. Không dùng tooltip vì điện thoại không mở được. Dòng `Badge` giữ nguyên từng chữ, nên
-  các ca ghim của `s03-len-cong`, `so-ghep-s06-nhan-danh-ba` không đổi.
+- **Nhãn «Chưa xác minh».** PR #305 đã làm việc này trong lúc vòng chạy; bỏ nút của vòng này, giữ `OfferLabelHelp` trên main.
 - **Hai thước.** `scripts/quet-ten-nguon-html.mjs` đo HTML thật, cần bản chạy. `scripts/check-invest-tier-a.mjs` đi theo import của năm trang, dùng lại bộ
   quét chữ hiển thị của Ops, cộng biến chuỗi trong `.tsx`, chạy được ở CI. Cả hai rút tên từ `db/migrations`, báo bằng mã.
-
-## Đặc tả UX
-
-<!-- <<<UX-SPEC-TEMPLATE -->
-### 1. Luồng
-
-- Suôn sẻ: thẻ tin có nhãn «Chưa xác minh» → bấm nút ⓘ → đọc một câu giải thích → bấm ra ngoài hay Esc để đóng (điểm ra: vẫn ở thẻ).
-- Biên: thẻ không có nhãn thì không có nút; thẻ có cả hai nhãn thì có hai nút, mỗi nút một nghĩa.
-
-### 2. Kiểm kê màn
-
-| Màn | MỘT việc của màn | Vào từ / ra tới |
-|---|---|---|
-| Thẻ tin rao (`/vn/[market]/listings/sale`, `/rent`) | Cho biết tin và cách liên hệ, nay kèm nghĩa của nhãn | danh sách tin / liên hệ người đăng |
-
-### 3. Bảng trạng thái
-
-<!-- <<<UX-STATE-TABLE -->
-| Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
-|---|---|---|---|
-| ST-the-tin-dong | Thẻ tin rao | Nhãn cộng nút ⓘ; chữ giải thích không có trong HTML | bấm ⓘ |
-| ST-the-tin-mo | Thẻ tin rao | Popover: «Tin từ nhóm cộng đồng, chưa đối chiếu với nguồn khác. Nên tự kiểm trước khi giao dịch.» | đọc, đóng |
-| ST-the-so-mo | Ô liên hệ | Popover: «Số không lấy trực tiếp từ chính tin này, có thể suy từ tin khác cùng tài khoản. Nên hỏi lại khi gọi.» | đọc, đóng |
-<!-- UX-STATE-TABLE>>> -->
-
-### 4. Hành vi
-
-- Nút có `aria-label`, mở được bằng bàn phím và chạm; Esc đóng; hẹp 375 không tràn ngang.
-
-### 5. Xuất xứ component
-
-| Component | Nấc (dùng / ghép / mở rộng / tạo) | Vì sao (1 dòng) |
-|---|---|---|
-| `ui/popover` + `ui/button` (ghost, `icon-xs`) | ghép | Có sẵn, đúng cách của nút ⓘ trên `slice-legend`, đổi tooltip thành popover để bấm được trên điện thoại |
-
-### 6. Khuôn IA đã chọn + căn cứ
-
-Khuôn IA: danh-sách-chi-tiết (giữ nguyên).
-Căn cứ: nấc (ii), không đổi cấu trúc trang, chỉ thêm lời giải thích trong thẻ có sẵn.
-<!-- UX-SPEC-TEMPLATE>>> -->

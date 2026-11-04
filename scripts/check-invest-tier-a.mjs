@@ -2,7 +2,7 @@
 // check-invest-tier-a.mjs — hồ sơ chu-nguon-tren-cong: chữ hiển thị trong MÃ của các trang cổng Invest (đi theo mọi tệp mà
 // trang import, cả layout) không mang tên nguồn thật (AGENTS.md luật 6). Bản tĩnh chạy ở CI không cần máy chủ; phép đo trên HTML thật ở
 // scripts/quet-ten-nguon-html.mjs. Báo bằng mã S0x + tệp:dòng, không in tên. Thoát: 0 sạch · 1 còn tên.
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,7 +100,7 @@ export function checkInvestTierA({ root = ROOT, entries = ENTRY, seeds = sourceR
   return { files, hits, s02 };
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { files, hits, s02 } = checkInvestTierA();
   for (const f of s02) console.log(`FAIL đọc số S02 trong mã trang ${f}`);
   for (const h of hits) console.log(`FAIL tên nguồn thật (${h.code}) ở chữ hiển thị ${h.file}:${h.line}`);

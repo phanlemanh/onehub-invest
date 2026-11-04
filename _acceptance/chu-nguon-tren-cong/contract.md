@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Chữ hiện trên các trang công khai của cổng Invest không mang tên nguồn thật S01, S02, nói đúng giá rao là tin thật, và giải thích nhãn Chưa xác minh tại chỗ
+feature: Chữ hiện trên các trang công khai của cổng Invest không mang tên nguồn thật S01, S02, nói đúng giá rao là tin thật
 slug: chu-nguon-tren-cong
 owner: phanlemanh@gmail.com
 risk_tier: T2
@@ -17,8 +17,7 @@ design_doc: docs/superpowers/specs/2026-11-04-chu-nguon-tren-cong-design.md
 ## Context
 
 Cổng Invest ra mắt 05/11. Giám sát đo production sáng 04/11, thấy tên S01, S02 trong chữ hiện của năm trang, trái luật 6 của AGENTS.md. Trang Phương pháp, `/` và
-`/vn/[market]` còn ghi giá bán, thuê là tin rao giả lập, trong khi `market_asset_stats` tính từ tin thật. Nhãn «Chưa xác minh» chưa có lời giải thích nào cho
-người xem. Việc này chỉ đổi chữ hiện trên `app/`, không đổi dữ liệu, không đổi route. Số đo ở design doc.
+`/vn/[market]` còn ghi giá bán, thuê là tin rao giả lập, trong khi `market_asset_stats` tính từ tin thật. Việc này chỉ đổi chữ hiện trên `app/`, không đổi dữ liệu, không đổi route. Số đo ở design doc.
 
 **Mười hai trang**: `/`, `/vn`, `/vn/hanoi`, `/vn/hanoi/map`, `/vn/hanoi/listings/sale`, `/vn/hanoi/listings/rent`, `/vn/hanoi/listings/rent?term=short`, `/listing/<một listing thật>`, `/yield?area=vn-hanoi`, `/compare?areas=vn-hanoi,vn-hcmc`, `/register`, `/methodology`. Năm trang đầu của lời giao, bốn trang giám sát thêm 04/11, `/listing/[id]` theo quyết định của Mạnh.
 
@@ -28,8 +27,7 @@ người xem. Việc này chỉ đổi chữ hiện trên `app/`, không đổi 
 - AC-2: Given bản chạy từ cây này với DB máy thu, When chạy lệnh quét trên mười hai trang, Then 0 tên của mọi mã trong sổ, ở chữ hiện và toàn HTML, trừ hai ngoại lệ đếm riêng: tiêu đề listing ở ô thuê ngắn hạn và trang listing, đường link trang gốc trên trang listing. Đối chứng đỏ: cùng lệnh trên bản `main` trước sửa thoát 1, số ghi ở evidence. (cross-layer)
 - AC-3: Given mã nguồn cây này, When chạy `scripts/check-invest-tier-a.mjs` đi theo import của các trang và layout, Then 0 chỗ trúng và thước đi tới chân trang, hero, định nghĩa Phương pháp, Insight, thân trang tin, form Lợi suất, So sánh, form đăng ký, đầu trang listing; chiều đỏ trên fixture: chữ JSX, khoá object, biến chuỗi, `aria-label` mang tên thì đỏ đúng tệp, dòng, mã; comment, định danh, SQL, tệp trang không import thì không đỏ.
 - AC-4: Given sáu tệp chữ về giá (`(marketing)/page.tsx`, `methodology-definitions.tsx`, `insight-tables.tsx`, `(app)/yield/page.tsx`, `yield-form.tsx`, `comparison.tsx`), When đọc, Then không còn «giả lập», «dữ liệu mô phỏng»; đều có «giá rao», «chưa phải giá giao dịch»; số mô hình giữ nhãn: bảng Lợi suất, đầu trang `/yield`, ô Yield ròng dài hạn, nhóm Lợi suất của So sánh; ô `gia-rao` của Phương pháp là chữ thuần, không nhãn mô phỏng; `SupplyPoint` không còn `snapshotId`. Và When lệnh quét đọc HTML thật, Then chữ hiện không có câu sai trên mười hai trang; `/methodology` có hai nhãn nguồn và «chưa phải giá giao dịch»; `/vn/hanoi`, `/yield` có «chưa phải giá giao dịch», «MÔ PHỎNG»; chân trang còn OpenStreetMap. Chiều đỏ: câu sai, thiếu chữ, vượt trần tiêu đề đều thoát 1.
-- AC-5: Given bảng «Ma trận AC-5» dựng trên `OfferCard` thật trong jsdom, When bấm từng nút ⓘ, Then số nút và chữ mở ra đúng bảng, chữ giải thích không có trước khi bấm. Chiều đỏ: bản sao bỏ nút ở thẻ thì ca nêu `tin-nhom` và không nêu hàng khác.
-- AC-6: Given bản chạy, When mở `/vn/hanoi/listings/sale`, `/vn/hanoi`, `/methodology` ở sáng, tối, khổ 375, Then cả hai nút ⓘ (tin, số) mở được bằng bấm và bàn phím, chữ đọc được, không tràn ngang lúc popover mở; chân dung bằng ảnh. (judgment)
+- AC-6: Given bản chạy, When mở `/vn/hanoi`, `/methodology`, một `/listing/<mã thật>`, `/yield?area=vn-hanoi` ở sáng, tối, khổ 375, Then chữ mới đọc được, không tràn ngang; nút ghi Mở trang gốc, link còn nguyên; chân dung bằng ảnh. (judgment)
 - AC-7: Given cây này, When chạy thước cổng tĩnh và đọc mã các trang, Then không route mới, sổ bề mặt khớp; tệp nào trong tập import của các trang cũng không gọi hàm hay bảng số S02, chiều đỏ trên fixture gọi tên tệp.
 
 ## Câu hỏi cho Mạnh
@@ -55,16 +53,6 @@ người xem. Việc này chỉ đổi chữ hiện trên `app/`, không đổi 
 
 Link trang gốc: trên trang khai, đúng khuôn `https://www.<tên>.com/rooms/<số>` thì đếm riêng, không đỏ. Trang không khai, đường khác trên miền, miền khác mang tên, chữ trên nút, mã khác trong link thì đỏ.
 
-## Ma trận AC-5
-
-| Hàng | Tin | Nút | Chữ mở ra |
-|---|---|---|---|
-| `tin-da-doi-chieu-so-truc-tiep` | không nhãn | 0 | — |
-| `tin-nhom` | `unverified` | 1 | Tin từ nhóm cộng đồng |
-| `so-suy` | `phoneInferred` | 1 | Số không lấy trực tiếp từ chính tin này |
-| `ca-hai` | cả hai | 2 | hai câu, đúng thứ tự thẻ rồi số |
-| `tin-nhom-khong-so` | `unverified`, không số | 1 | Tin từ nhóm cộng đồng |
-
 ## Coverage
 
 Quét tay, không dùng khung quét: danh sách trang do lời giao chốt, trục ít (ghi ở sổ dòng descope).
@@ -75,10 +63,10 @@ Quét tay, không dùng khung quét: danh sách trang do lời giao chốt, tr�
 | Trang | mười hai trang | AC-2 |
 | Tầng đo | HTML thật · mã nguồn | AC-2, AC-3 |
 | Câu về giá | trang chủ · Phương pháp · bảng Lợi suất · `/yield` · So sánh | AC-4 |
-| Nghĩa của nhãn | tin · số · cả hai · không có | AC-5 |
 
 ## Out of scope
 
+- Giải thích nhãn «Chưa xác minh»: PR #305 (`giai-thich-nhan-chua-xac-minh`) đã làm trên thẻ và trang Phương pháp; bỏ bản của vòng này khi gộp main.
 - Đổi tên tệp, định danh, tên bảng, tiền tố `abnb_`, lịch sử git: Mạnh chốt dọn sau 05/11 (`AGENTS.md` luật 6, sổ ROADMAP).
 - Trang chỉ có khi đăng nhập hay trang cần phiên (`/saved`, `/login`): `/login` không có `<h1>`, `/saved` đòi phiên, thước tĩnh vẫn đi qua mã dùng chung.
 - Mã listing `abnb_…` trên URL và đầu trang `/listing/[id]`: lời giao không đổi route, dọn sau 05/11.
