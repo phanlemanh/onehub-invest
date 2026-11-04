@@ -1,0 +1,20 @@
+{
+ "feature_plain":"Máy nhận ra các tin viết «2PN», «1N+», «studio» là căn hộ, nên 1.684 đề xuất đang bị bỏ được áp mà không tốn tiền model.",
+ "will_do":[
+  {"id":"AC-1","p":"Sẽ nhận «2PN», «1n+», «2n2wc», «1 phòng ngủ», «studio» khi model đã nói căn hộ."},
+  {"id":"AC-3","p":"Sẽ áp lại đề xuất đã bỏ bằng nhãn đã đọc, không gọi model, không tạo thẻ, không đổi cột nào khác của tin."},
+  {"id":"AC-5","p":"Sẽ không đổi gì thêm khi chạy lệnh lần hai."},
+  {"id":"AC-7","p":"Sẽ hoàn tác được cả lượt: tin suy loại trở về loại suy, tin chưa rõ trở về chưa rõ."},
+  {"id":"AC-8","p":"Sẽ đếm đúng số AI đã áp, và tin mới cũng dùng luật mới."},
+  {"id":"AC-9","p":"Sẽ đo riêng nhánh mới trên 383 tin và in tỉ lệ dự kiến trước khi anh ký."}
+ ],
+ "wont_do":[
+  {"id":"AC-2","p":"Sẽ KHÔNG tự áp với «1+», «căn», «2 năm», «nhà 3pn», «cần mua 2pn», tên toà, hay bài có từ của loại nhà khác."},
+  {"id":"AC-4","p":"Sẽ KHÔNG đụng đề xuất lý do khác, đã hoàn tác, chữ đã đổi, ô người đã chốt, tin đã nghỉ."},
+  {"id":"AC-6","p":"Chặn ghi thật khi chưa có lượt đo đạt của đúng luật mới."},
+  {"id":"OOS-1","p":"Chưa ghi vào dữ liệu thật: đó là bước riêng sau chữ ký, sao lưu trước."},
+  {"id":"OOS-2","p":"Chưa chạy lượt hai đọc 136 tin còn lại: cần lời riêng của anh."},
+  {"id":"OOS-3","p":"Không đổi câu hỏi gửi model, không đọc lại bài đã đọc."},
+  {"id":"OOS-4","p":"Không đổi màn duyệt Ops, không đẩy lên cloud."}
+ ]
+}
