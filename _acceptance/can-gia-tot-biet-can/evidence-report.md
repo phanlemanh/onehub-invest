@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 099391b739bcd134a85495a68c17856240495f6f
+verified_commit: caeb166b3281c82d554ea55fc85d4486d8fd3b0b
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -216,3 +216,7 @@ Round 3: S4 vòng 3 chạm trần lượt; sau đó thu phạm vi (bỏ AC-9 và
 ### Re-pin lần 1 — 2026-11-03, do hoá cũ do gộp main eb7f7c07 (PR #294) và sửa dữ liệu thử
 run_id: repin-20261103T211734Z-51561
 sha: 099391b739bcd134a85495a68c17856240495f6f · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-04, do CGT-DC chạy song song có giới hạn, đo đủ 1.483 tin, không nới trần
+run_id: repin-20261104T024142Z-43402
+sha: caeb166b3281c82d554ea55fc85d4486d8fd3b0b · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 4/6
