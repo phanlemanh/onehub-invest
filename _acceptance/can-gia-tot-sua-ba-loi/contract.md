@@ -63,6 +63,7 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
   - Ngoài-6: Phép quét chữ giữ chỗ chỉ thử đỏ trên DOM viết tay, chưa thử đỏ trên màn hình thật.
   - Ngoài-7: Phép quét chữ giữ chỗ trên thẻ tin Invest chưa có chiều đỏ nên có thể bỏ sót khi chữ này nằm lẫn với chữ khác.
   - Ngoài-8: Vai Người xem chưa có đủ ma trận kiểm cho tên người đăng và lý do rời danh sách như hợp đồng khai.
+  - Ngoài-9: Năm ảnh bằng chứng chưa che ở commit cũ của #303 vẫn xem được trên kho công khai (chữ bài gốc, ảnh tin, SĐT, tên người bán); `main` không chứa chúng, ảnh mới đã che, Mạnh chốt giữ nguyên lịch sử.
   - Ngoài-10: Tài khoản có tên lẫn ký tự lạ ở cuối có thể bị thẻ tin hiện nhãn nhiều tên thay vì tên thật.
   - Ngoài-11: Có người sửa hai tệp phục vụ danh sách tin rao thì bằng chứng E8 vẫn được coi là còn mới dù chưa đo lại.
   - Ngoài-13: Một số đối chứng đỏ ở lượt 1 chỉ kiểm giá trị đột biến, chưa chạy phép kiểm thật.
