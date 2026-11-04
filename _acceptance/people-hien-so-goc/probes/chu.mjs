@@ -44,14 +44,23 @@ if (!biDanh) loi.push("CONTEXT.md không có dòng Bí danh")
 if (/đã che/.test(biDanh)) loi.push("CONTEXT.md dòng Bí danh còn «đã che»")
 if (!/Vận hành/.test(biDanh)) loi.push("CONTEXT.md dòng Bí danh chưa nói quyền vai Vận hành")
 
-// Khối 4 chạy trên bản chép hai tệp: trang đúng thì đạt, trang tính cổng sai thì đỏ đúng dòng.
+// Khối 4 chạy trên bản chép các tệp của nó: trang đúng thì đạt, trang tính cổng sai thì đỏ đúng dòng. Tệp đổi theo
+// can-gia-tot-biet-can (bảng + phần thân thay thẻ); ý của phép đo giữ nguyên.
 const PAGE = "app/src/app/ops/deals/page.tsx"
-const THE = "app/src/components/ops/deal-card.tsx"
-const CONG = "const showContact = xemNoiDungTin(user);"
-if (!doc(PAGE).includes(CONG)) loi.push(`${PAGE} không tính showContact từ xemNoiDungTin`)
+const TEP = [
+  PAGE,
+  "app/src/app/ops/deals/[offerId]/page.tsx",
+  "app/src/components/ops/deal-body.tsx",
+  "app/src/components/ops/deals-grid.tsx",
+  "app/src/components/ops/deal-sheet.tsx",
+  "app/src/components/ops/deal-similar.tsx",
+  "app/src/components/ops/deals-cells.tsx",
+]
+const CONG = "const xemNoiDung = xemNoiDungTin(user);"
+if (!doc(PAGE).includes(CONG)) loi.push(`${PAGE} không tính xemNoiDung từ xemNoiDungTin`)
 const tam = mkdtempSync(join(tmpdir(), "shs-chu-"))
 try {
-  for (const p of [PAGE, THE]) {
+  for (const p of TEP) {
     mkdirSync(dirname(join(tam, p)), { recursive: true })
     writeFileSync(join(tam, p), doc(p))
   }
@@ -60,9 +69,9 @@ try {
   const lanh = chay()
   if (lanh.status !== 0 || (lanh.stdout.match(/^ok /gm) ?? []).length < 7) loi.push("đối chứng dương: khối 4 không đạt trên bản chép lành")
   for (const [ten, tu, thanh, dong] of [
-    ["mở cho mọi vai vào Ops", CONG, "const showContact = true;", "FAIL ops/deals tính showContact từ xemNoiDungTin(user)"],
-    ["trở lại cổng admin", CONG, "const showContact = isAdmin(user);", "FAIL ops/deals tính showContact từ xemNoiDungTin(user)"],
-    ["bỏ lọc trường theo vai", "const rows = tho.map((d) => dealTheoVai(d, { lienHe: showContact, noiDung: isAdmin(user) }));", "const rows = tho;", "FAIL ops/deals lọc trường theo vai trước khi vào thẻ"],
+    ["mở cho mọi vai vào Ops", CONG, "const xemNoiDung = true;", "FAIL ops/deals tính xemNoiDung từ xemNoiDungTin(user)"],
+    ["trở lại cổng admin", CONG, "const xemNoiDung = isAdmin(user);", "FAIL ops/deals tính xemNoiDung từ xemNoiDungTin(user)"],
+    ["bỏ lọc trường theo vai", "dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung })", "d", "FAIL ops/deals lọc trường theo vai trước khi vào bảng"],
   ]) {
     if (!doc(PAGE).includes(tu)) loi.push(`đột biến không áp được: ${ten}`)
     writeFileSync(join(tam, PAGE), doc(PAGE).replace(tu, thanh))

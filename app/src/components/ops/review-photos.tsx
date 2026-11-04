@@ -28,10 +28,12 @@ import type { ReviewImage } from "@/lib/ops/review-media";
  * URL gốc; undefined thì không render gì. `chiGoc` = số ảnh chỉ có ở nguồn mà máy chủ chưa lấy hộ được — thẻ nói ra.
  * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
  */
-export function ReviewPhotos({ label, images, chiGoc = 0 }: {
+export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
   label: string;
   images: ReviewImage[] | undefined;
   chiGoc?: number;
+  /** Ảnh là nội dung chính của trang (trang một căn): lưới ảnh lớn thay dải ảnh nhỏ. */
+  lon?: boolean;
 }) {
   const [open, setOpen] = useState<number | null>(null);
   const [broken, setBroken] = useState<ReadonlySet<number>>(new Set());
@@ -48,6 +50,24 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
 
   return (
     <>
+      {lon ? (
+        <div role="group" aria-label={`Ảnh ${label}`} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {images.map((img, i) => (
+            // eslint-disable-next-line onehub-ui/no-raw-controls -- ô ảnh lấp đầy lưới theo tỉ lệ ảnh; Button không có size này và ReUI cấm đặt height, padding lên nó
+            <button
+              key={img.src}
+              type="button"
+              aria-label={`Phóng to ${label} ảnh ${i + 1}`}
+              onClick={() => setOpen(i)}
+              className="bg-muted text-muted-foreground flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md text-xs"
+            >
+              {broken.has(i) ? "Ảnh hỏng" : (
+                <PhotoImg img={img} alt={`${label} — ảnh ${i + 1}`} className="size-full object-cover" onError={() => markBroken(i)} />
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
       <AttachmentGroup role="group" aria-label={`Ảnh ${label}`}>
         {images.map((img, i) => (
           <Attachment
@@ -73,6 +93,7 @@ export function ReviewPhotos({ label, images, chiGoc = 0 }: {
           </Attachment>
         ))}
       </AttachmentGroup>
+      )}
       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
         {open !== null && (
           <DialogContent className="sm:max-w-3xl">

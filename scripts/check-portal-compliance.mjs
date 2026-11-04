@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Kiểm TĨNH ranh giới cổng (AGENTS.md luật 5, 6, 9): đo TRẠNG THÁI cây mã, không đo diff.
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
-//   - /ops/deals: khối liên hệ từ vai Vận hành trở lên (Hỏi-B), nội dung và ảnh tin chỉ admin, nguồn hiện bằng mã S0x;
+//   - /ops/deals và trang một căn: liên hệ, ảnh, chữ bài từ vai Vận hành trở lên (can-gia-tot-biet-can), nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn vai Vận hành trở lên trước khi đọc file, nhánh ?path= (OpenClaw) chặn admin (PL3); nhánh
 //     ?media= chặn vai trước tra DB và lấy ảnh gốc (anh-goc-qua-may-chu);
 //   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
@@ -42,25 +42,28 @@ function opsTierA(r) {
   check(hits.length === 0, `ops ngoài /ops/sources: chữ hiển thị chỉ mã S0x (${hits.length} chỗ trúng trong ${files.length} tệp)`);
   check(positive >= 1, `đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (${positive} chỗ)`);
 }
-// Mục 4 trên một cây: trả mã render của trang và thẻ cho mục 5.
+// Mục 4 trên một cây: trả mã render của hai trang và phần thân, bảng, sheet cho mục 5.
 function dealsGate(r) {
-  const doc = (p) => (existsSync(path.join(r, "app", p)) ? readFileSync(path.join(r, "app", p), "utf8") : "");
-  const dealsPage = code(doc("src/app/ops/deals/page.tsx"));
-  const deals = `${dealsPage}\n${code(doc("src/components/ops/deal-card.tsx"))}`;
-  check(/const showContact = xemNoiDungTin\(user\)/.test(dealsPage), "ops/deals tính showContact từ xemNoiDungTin(user)");
-  check(
-    /const rows = tho\.map\(\(d\) => dealTheoVai\(d, \{ lienHe: showContact, noiDung: isAdmin\(user\) \}\)\)/.test(dealsPage),
-    "ops/deals lọc trường theo vai trước khi vào thẻ",
-  );
-  check(/<DealCard\b[^>]*\bshowContact=\{showContact\}/.test(dealsPage), "ops/deals truyền showContact xuống DealCard");
+  const doc = (p) => (existsSync(path.join(r, "app", p)) ? code(readFileSync(path.join(r, "app", p), "utf8")) : "");
+  const page = doc("src/app/ops/deals/page.tsx");
+  const trang = doc("src/app/ops/deals/[offerId]/page.tsx");
+  const than = doc("src/components/ops/deal-body.tsx");
+  const luoi = doc("src/components/ops/deals-grid.tsx");
+  const deals = [page, trang, than, luoi, doc("src/components/ops/deal-sheet.tsx"), doc("src/components/ops/deal-similar.tsx"), doc("src/components/ops/deals-cells.tsx")].join("\n");
+  check(/const xemNoiDung = xemNoiDungTin\(user\)/.test(page), "ops/deals tính xemNoiDung từ xemNoiDungTin(user)");
+  check(/xemNoiDung=\{xemNoiDungTin\(user\)\}/.test(trang), "ops/deals/[offerId] tính xemNoiDung từ xemNoiDungTin(user)");
+  check(/dealTheoVai\(d, \{ lienHe: xemNoiDung, noiDung: xemNoiDung \}\)/.test(page), "ops/deals lọc trường theo vai trước khi vào bảng");
+  check(/dealTheoVai\(deal, \{ lienHe: xemNoiDung, noiDung: xemNoiDung \}\)/.test(trang), "ops/deals/[offerId] lọc trường theo vai trước khi vào trang");
+  check(/xemNoiDung \? COLUMNS : COLUMNS\.filter/.test(luoi), "ops/deals: cột Gọi ai chỉ render theo xemNoiDung");
   for (const [label, re] of [
-    ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
-    ["nội dung tin", /\{showContact && d\.postText/],
-    ["ảnh tin", /\{showContact && \(d\.mediaPath \|\| d\.mediaUrl\)/],
+    ["khối gọi ai", /const goiAi = xemNoiDung &&/],
+    ["ảnh và chữ bài chỉ ở máy thu", /const coNoiDung = xemNoiDung && mayThu/],
+    ["ảnh tin", /const anh = coNoiDung &&/],
+    ["chữ bài", /const chuBai = coNoiDung &&/],
   ]) {
-    check(re.test(deals), `ops/deals: ${label} chỉ render khi showContact`);
+    check(re.test(than), `ops/deals: ${label} chỉ render theo vai`);
   }
-  check((deals.match(/showContact &&/g) ?? []).length >= 3, "ops/deals: có đủ 3 khối gate theo vai");
+  check(!/dealMediaSrc|\?path=/.test(deals), "ops/deals: ảnh chỉ qua khoá, không đường ảnh gốc");
   return deals;
 }
 // `--only <mục> --root <dir>`: chỉ chạy một mục trên một cây khác, cho ca chiều đỏ: `ops-tier-a` (mục 12,
@@ -91,9 +94,9 @@ check(
   "next.config redirect /deals → /ops/deals",
 );
 
-// 4. /ops/deals: khối liên hệ chỉ khi showContact = xemNoiDungTin(user) (Hỏi-B, people-hien-so-goc); trường liên hệ và
-//    nội dung lọc theo vai trước khi vào thẻ, nội dung và ảnh giữ cho isAdmin. Thẻ tách ở components/ops/deal-card.tsx
-//    (ON11) — trang phải truyền đúng showContact xuống thẻ, và đo trên cả hai tệp.
+// 4. /ops/deals, /ops/deals/[offerId]: liên hệ, ảnh, chữ bài theo xemNoiDungTin(user) (people-hien-so-goc,
+//    can-gia-tot-biet-can Hỏi-5); trường lọc theo vai trước khi vào bảng hay trang, phần thân dùng chung ở
+//    components/ops/deal-body.tsx. Đo trên hai trang và các tệp giao diện.
 const deals = dealsGate(root);
 
 // 5. Ops chỉ dùng mã tầng B — không literal tên nguồn thật trong chữ hiển thị.
