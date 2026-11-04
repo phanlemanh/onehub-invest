@@ -118,3 +118,58 @@ wall: 1139s
 - **claude-opus-5-5**: 3 agent · 25 calls · out 73,667 · in 62 · cache_read 2,142,703 · cache_create 474,765
 - **claude-haiku-5-5**: 15 agent · 30 calls · out 23,026 · in 60 · cache_read 367,212 · cache_create 339,945
 
+### S4 round 3 — wf_4c588e9d-011 (32 agent, 229,792 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 15 | 43,583 | 30 | 1,944,481 | 455 |
+| review:conventions | claude-opus-5-5 | 9 | 30,690 | 18 | 785,050 | 306 |
+| review:measurement | claude-opus-5-5 | 6 | 26,388 | 12 | 382,116 | 264 |
+| ui:E4 | claude-sonnet-5-5 | 42 | 25,604 | 84 | 4,849,632 | 293 |
+| ui:E8 | claude-sonnet-5-5 | 41 | 21,929 | 84 | 4,715,150 | 325 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 17,027 | 4 | 51,543 | 100 |
+| ui:E17 | claude-sonnet-5-5 | 24 | 12,073 | 48 | 2,361,909 | 166 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 9,369 | 6 | 72,949 | 63 |
+| triage | claude-sonnet-5-5 | 2 | 7,269 | 4 | 28,876 | 50 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 3,128 | 4 | 21,422 | 27 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 2,895 | 4 | 24,587 | 16 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,576 | 4 | 24,560 | 196 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,265 | 4 | 24,610 | 10 |
+| refute:labels-nhom.test.tsx | claude-sonnet-5-5 | 4 | 2,093 | 8 | 82,388 | 20 |
+| refute:labels-nhom.test.tsx | claude-sonnet-5-5 | 6 | 2,084 | 12 | 134,881 | 31 |
+| refute:labels-nhom.test.tsx | claude-sonnet-5-5 | 3 | 2,069 | 6 | 57,296 | 25 |
+| machine:for f in app/src/app/ops/labels/page.tsx | claude-haiku-5-5 | 2 | 2,023 | 4 | 24,914 | 15 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,975 | 4 | 24,604 | 10 |
+| refute:labels-nhom.test.tsx | claude-sonnet-5-5 | 5 | 1,668 | 10 | 97,153 | 28 |
+| machine:node --test pipeline/lib/eval-labels.tes | claude-haiku-5-5 | 2 | 1,622 | 4 | 24,605 | 9 |
+| refute:labels-nhom.test.tsx | claude-sonnet-5-5 | 3 | 1,453 | 6 | 49,517 | 22 |
+| machine:node _acceptance/gan-nhan-theo-nhom-s03/ | claude-haiku-5-5 | 2 | 1,117 | 4 | 24,603 | 10 |
+| machine:node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME | claude-haiku-5-5 | 2 | 1,114 | 4 | 24,703 | 8 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,080 | 4 | 24,585 | 15 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,074 | 4 | 24,607 | 10 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,055 | 4 | 24,609 | 8 |
+| machine:node _acceptance/gan-nhan-theo-nhom-s03/ | claude-haiku-5-5 | 2 | 1,019 | 4 | 24,605 | 9 |
+| machine:node _acceptance/gan-nhan-theo-nhom-s03/ | claude-haiku-5-5 | 2 | 849 | 4 | 24,603 | 9 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 832 | 4 | 24,596 | 190 |
+| machine:node _acceptance/gan-nhan-theo-nhom-s03/ | claude-haiku-5-5 | 2 | 784 | 4 | 24,603 | 8 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 733 | 4 | 24,583 | 7 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 352 | 4 | 20,249 | 13 |
+
+
+wall: 996s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 9,369 | 72,949 | 63 | 12:14:34 | 12:15:37 |
+| ui | 3 | 59,606 | 11,926,691 | 789 | 12:14:34 | 12:27:43 |
+| machine | 17 | 26,141 | 415,399 | 461 | 12:14:34 | 12:22:15 |
+| review | 3 | 100,661 | 3,111,647 | 456 | 12:14:34 | 12:22:10 |
+| triage | 1 | 7,269 | 28,876 | 50 | 12:27:46 | 12:28:36 |
+| refute | 5 | 9,367 | 421,235 | 33 | 12:28:38 | 12:29:12 |
+| capture | 1 | 352 | 20,249 | 13 | 12:29:14 | 12:29:27 |
+| synthesize | 1 | 17,027 | 51,543 | 100 | 12:29:30 | 12:31:10 |
+
+- **claude-opus-5-5**: 3 agent · 30 calls · out 100,661 · in 60 · cache_read 3,111,647 · cache_create 533,219
+- **claude-sonnet-5-5**: 12 agent · 137 calls · out 102,990 · in 276 · cache_read 12,521,543 · cache_create 653,864
+- **claude-haiku-5-5**: 17 agent · 34 calls · out 26,141 · in 68 · cache_read 415,399 · cache_create 384,229
+

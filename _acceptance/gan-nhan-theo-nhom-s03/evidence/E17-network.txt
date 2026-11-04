@@ -1,0 +1,17 @@
+== E17 network/console (session e17n-13526) ==
+LYDO marker in DOM: ### Result
+false
+
+-- network --
+### Result
+
+Note: 34 static requests not shown, run with --static option to see them.
+
+-- console --
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+== server log >=400 ==
+(none >=400 above if empty)
