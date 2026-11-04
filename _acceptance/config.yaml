@@ -36,6 +36,9 @@ executors:
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
+    ls1b_thuan: "cd agent && node --import tsx --test tests/luat-trich-so-phong.test.ts"   # s03-noi-luat-trich-dan E1, E2
+    ls1b_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/xu-lai-trich-db.itest.ts"   # s03-noi-luat-trich-dan — model giả, ROLLBACK
+    ls1b_db_va_cu: "cd agent && node --import tsx --test --test-concurrency=1 tests/xu-lai-trich-db.itest.ts tests/doc-toan-bo.test.ts tests/doc-toan-bo-db.itest.ts"   # s03-noi-luat-trich-dan E8
     ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
@@ -186,6 +189,7 @@ executors:
     sg_ui: "cd app && node --import tsx --test tests/so-ghep-nhan-giao-dien.test.tsx"   # so-ghep-s06-nhan-danh-ba E8
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    ls1b_mau: "cd agent && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --mau 383 --nhan $HOME/dev/onehub-invest/research-local/s03-audit-0211/labels_all.json --thu && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --xu-lai-trich --thu"   # s03-noi-luat-trich-dan E9 — DB máy thu, nhãn đã có, 0 USD, không ghi
     can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
     sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest

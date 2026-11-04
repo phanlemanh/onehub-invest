@@ -3,6 +3,7 @@
 // chạy sau khi Mạnh ký hồ sơ, pg_dump trước. Khoá cloud: AI_GATEWAY_API_KEY (người chạy nạp .env).
 //
 // Chạy:
+//   npx tsx scripts/doc-toan-bo-s03.ts --xu-lai-trich [--thu]        # xét lại đề xuất bỏ vì khong-tu-khoa bằng nhãn đã đọc, không gọi model
 //   npx tsx scripts/doc-toan-bo-s03.ts --mau 383 --nhan <tệp nhãn>   # đo độ đúng, ghi nhãn và dòng mẫu, không ghi canonical
 //   npx tsx scripts/doc-toan-bo-s03.ts                               # lượt thật, cần dòng mẫu đạt; trần 3 USD, 500 thẻ mới
 //   npx tsx scripts/doc-toan-bo-s03.ts --thu                         # gọi model, không ghi dòng nào
@@ -18,15 +19,15 @@ import type { LanguageModel } from "ai";
 
 import { resetContextCache, resolveContext } from "../src/agents/context-resolver.js";
 import type { Nhan } from "../src/agents/nhan-bac-s03.js";
-import { chayLuot, CO_DO_USD_NGAY, coMauDat, demLuot, docTepNhan, doMau, NGUONG_DUNG_MAC_DINH, PROMPT_VERSION } from "../src/enrich/doc-toan-bo.js";
+import { chayLuot, CO_DO_USD_NGAY, coMauDat, demLuot, docTepNhan, doMau, LUAT_VERSION, NGUONG_DUNG_MAC_DINH, PROMPT_VERSION, xuLaiTrich } from "../src/enrich/doc-toan-bo.js";
 import type { GiaoDich, ResolveFn } from "../src/enrich/run.js";
 
 export const TRAN_USD_MAC_DINH = 3;
 export const TRAN_THE_MAC_DINH = 500;
 
-export type Co = { tranUsd: number; tranThe: number; thu: boolean; dem: boolean; mau: number | null; nhan: string | null; nguong: number };
+export type Co = { tranUsd: number; tranThe: number; thu: boolean; dem: boolean; xuLai: boolean; mau: number | null; nhan: string | null; nguong: number };
 
-const CO_BAT_TAT = new Set(["--thu", "--dem"]);
+const CO_BAT_TAT = new Set(["--thu", "--dem", "--xu-lai-trich"]);
 const CO_CO_GIA_TRI = new Set(["--tran-usd", "--tran-the", "--nguong-dung", "--mau", "--nhan"]);
 
 /**
@@ -59,7 +60,8 @@ export function docCo(argv: string[]): Co {
   if (!Number.isFinite(nguong) || nguong <= 0 || nguong > 1) throw new Error("doc-toan-bo-s03: --nguong-dung phải trong (0, 1]");
   if (mau !== null && (!Number.isInteger(mau) || mau <= 0)) throw new Error("doc-toan-bo-s03: --mau phải là số nguyên dương");
   if ((mau === null) !== (nhan === null)) throw new Error("doc-toan-bo-s03: --mau và --nhan phải đi cùng nhau");
-  return { tranUsd, tranThe, thu: daGap.has("--thu"), dem: daGap.has("--dem"), mau, nhan, nguong };
+  if (daGap.has("--xu-lai-trich") && (daGap.has("--dem") || mau !== null)) throw new Error("doc-toan-bo-s03: --xu-lai-trich không đi cùng --dem, --mau");
+  return { tranUsd, tranThe, thu: daGap.has("--thu"), dem: daGap.has("--dem"), xuLai: daGap.has("--xu-lai-trich"), mau, nhan, nguong };
 }
 
 export type Noi = {
@@ -88,6 +90,19 @@ export async function chayLenh(co: Co, n: Noi): Promise<number> {
     if (d.runIds.length) n.log(`run_id để hoàn tác: ${d.runIds.join(", ")}`);
     return 0;
   }
+  if (co.xuLai) {
+    // Không gọi model nên không cần khoá; --thu chỉ đọc nên không qua cổng mẫu.
+    if (!co.thu && !(await coMauDat(c))) {
+      n.log(`doc-toan-bo-s03: từ chối xử lại — chưa có mẫu đạt ngưỡng cho prompt ${PROMPT_VERSION}, luật ${LUAT_VERSION}; chạy --mau trước`);
+      return 6;
+    }
+    const kq = await xuLaiTrich({ client: c, runId: `doc-toan-bo-xu-lai-${new Date().toISOString()}`, thu: co.thu, cam: n.cam, chiTin: n.chiTin, resolve: n.resolve, giaoDich: n.giaoDich });
+    const d = await demLuot(c);
+    const sau = d.aiDaAp + (co.thu ? kq.dat : 0);
+    n.log(`${co.thu ? "[--thu, không ghi] " : ""}xét ${kq.xet} · qua luật ${kq.dat} · đã áp ${kq.daAp} · giữ nguyên ${JSON.stringify(kq.giuNguyen)} · lỗi ghi ${kq.loiGhi.length}`);
+    n.log(`AI đã áp ${co.thu ? "dự kiến " : ""}${sau}/${d.mau}${d.mau ? ` (${((sau / d.mau) * 100).toFixed(1)}%)` : ""}`);
+    return kq.loiGhi.length > 0 ? 1 : 0;
+  }
   if (!n.khoa && !n.hoi && !n.languageModel) {
     n.log("doc-toan-bo-s03: thiếu AI_GATEWAY_API_KEY — nạp .env rồi chạy lại; chưa gọi model lần nào");
     return 2;
@@ -100,12 +115,13 @@ export async function chayLenh(co: Co, n: Noi): Promise<number> {
     });
     const cd = kq.canDuoi === null ? "n/a" : kq.canDuoi.toFixed(3);
     n.log(`mẫu ${kq.n} bài · máy áp ${kq.ap} (${(kq.tiLeAp * 100).toFixed(1)}%) · đúng ${kq.dung} · cận dưới Wilson ${cd} · thẻ dự kiến ${kq.the} · chi ${kq.usd.toFixed(4)} USD · thiếu chữ ${kq.thieuChu}`);
+    n.log(`nhánh số phòng: máy áp ${kq.apMoi} · đúng ${kq.dungMoi} · cận dưới Wilson ${kq.canDuoiMoi === null ? "n/a" : kq.canDuoiMoi.toFixed(3)} · luật ${LUAT_VERSION}`);
     if (kq.chuaDoc > 0) n.log(`chưa đọc được ${kq.chuaDoc} bài, không tính vào phép đo; chạy lại để đọc lại`);
-    n.log(kq.dat ? `ĐẠT ngưỡng ${co.nguong}, prompt ${PROMPT_VERSION}` : `DƯỚI NGƯỠNG ${co.nguong} trên ít nhất 100 ca máy áp: lượt thật sẽ từ chối chạy`);
+    n.log(kq.dat ? `ĐẠT ngưỡng ${co.nguong}, prompt ${PROMPT_VERSION}, luật ${LUAT_VERSION}` : `DƯỚI NGƯỠNG ${co.nguong} (toàn mẫu ít nhất 100 ca, nhánh số phòng ít nhất 30 ca): lượt thật sẽ từ chối chạy`);
     return kq.dat ? 0 : 5;
   }
   if (!co.thu && !(await coMauDat(c))) {
-    n.log(`doc-toan-bo-s03: từ chối chạy thật — chưa có mẫu đạt ngưỡng cho prompt ${PROMPT_VERSION}; chạy --mau trước`);
+    n.log(`doc-toan-bo-s03: từ chối chạy thật — chưa có mẫu đạt ngưỡng cho prompt ${PROMPT_VERSION}, luật ${LUAT_VERSION}; chạy --mau trước`);
     return 6;
   }
   const kq = await chayLuot({

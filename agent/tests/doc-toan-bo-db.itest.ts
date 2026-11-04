@@ -105,7 +105,7 @@ test("LS1-AC-3 căn hộ, trích thật có từ khoá: ô được điền qua 
 const CHU_DUNG = "Chính chủ bán căn hộ 2PN Times City giá 3 tỷ";
 const MA_TRAN_AC4: [string, string, string, Record<string, unknown>, string | null][] = [
   ["trích giả", "t_ls1_gia", CHU_DUNG, { property_type: "apartment", quote_loai: "bán căn hộ 3PN" }, "trich-gia"],
-  ["không từ khoá", "t_ls1_ktk", "Cần bán gấp 2PN Times City giá 3 tỷ", { property_type: "apartment", quote_loai: "bán gấp 2PN" }, "khong-tu-khoa"],
+  ["không từ khoá", "t_ls1_ktk", "Cần bán gấp 2PN Times City giá 3 tỷ", { property_type: "apartment", quote_loai: "Times City" }, "khong-tu-khoa"],
   ["từ khoá loại khác", "t_ls1_lk", "Chính chủ bán nhà phố 4 tầng Minh Khai", { property_type: "apartment", quote_loai: "bán nhà phố" }, "tu-khoa-loai-khac"],
   ["gần X", "t_ls1_gan", "Cho thuê phòng gần chung cư Times City 3tr", { property_type: "apartment", quote_loai: "gần chung cư Times City" }, "ngu-canh-loai-tru"],
   ["cạnh X", "t_ls1_canh", "Bán lô cạnh căn hộ mẫu dự án Minh Khai", { property_type: "apartment", quote_loai: "cạnh căn hộ mẫu" }, "ngu-canh-loai-tru"],
@@ -289,7 +289,7 @@ test("LS1 Focus 2: enrich-run dựng lại evidence của thẻ, đối chiếu 
 // ---------- AC-8: trần, thử, cờ, thiếu khoá ----------
 import { MockLanguageModelV4 } from "ai/test";
 import { chayLenh, docCo, type Noi } from "../scripts/doc-toan-bo-s03.js";
-import { coMauDat, demLuot, doMau, CO_DO_USD_NGAY } from "../src/enrich/doc-toan-bo.js";
+import { coMauDat, demLuot, doMau, CO_DO_USD_NGAY, LUAT_VERSION } from "../src/enrich/doc-toan-bo.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { wilsonDuoi } from "../../pipeline/lib/eval-classify.mjs";
 
@@ -297,7 +297,7 @@ const noi = (c: pg.Client, o: Partial<Noi> = {}): Noi & { dong: string[] } => {
   const dong: string[] = [];
   return { client: c, khoa: "khoa-gia", resolve: E1_RONG, wilson: wilsonDuoi, log: (d) => dong.push(d), cam: [], dong, ...o };
 };
-const mauDat = (c: pg.Client) => c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test', 'doc-toan-bo:mau', $1)`, [{ prompt_version: PROMPT_VERSION, dat: true }]);
+const mauDat = (c: pg.Client) => c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test', 'doc-toan-bo:mau', $1)`, [{ prompt_version: PROMPT_VERSION, luat_version: LUAT_VERSION, dat: true }]);
 const BANG_THU = ["silver_labels", "enrichment_proposals", "review_queue", "ops_audit", "ai_calls", "field_assertions"];
 const demBang = async (c: pg.Client) => Object.fromEntries(await Promise.all(BANG_THU.map(async (b) => [b, (await c.query(`SELECT count(*)::int AS n FROM ${b}`)).rows[0].n])));
 
@@ -420,7 +420,7 @@ test("LS1-AC-9 --dem khớp đếm độc lập, phân biệt skipped và đã �
     const truoc = await demLuot(c);
     kiemDem(truoc, await demTay(c));
     const hoi = hoiGia((chu) => chu.includes("Chính chủ") ? traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" })
-      : chu.includes("Cần bán") ? traLoi({ property_type: "apartment", quote_loai: "bán gấp 2PN" }) : traLoi({}));
+      : chu.includes("Cần bán") ? traLoi({ property_type: "apartment", quote_loai: "Times City" }) : traLoi({}));
     const kq = await chay(c, [ap, bo, rong, s05], hoi);
     assert.equal(kq.daAp, 1);
     const sau = await demLuot(c);
@@ -474,7 +474,8 @@ const baiMau = async (c: pg.Client, n: number, sai: number) => {
 const bamCanon = async (c: pg.Client) => (await c.query(`SELECT
   (SELECT md5(coalesce(string_agg(offer_id || '|' || property_type || '|' || coalesce(price_vnd::text, '') || '|' || coalesce(area_m2::text, ''), ',' ORDER BY offer_id), '')) FROM sale_offer_records) AS tin,
   (SELECT count(*) FROM enrichment_proposals) AS de_xuat, (SELECT count(*) FROM review_queue) AS the`)).rows[0];
-const hoiCanHo = (goi: string[] = []) => hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" }), goi);
+// Cổng mẫu đòi nhánh số phòng tự đạt (s03-noi-luat-trich-dan): 60 bài đầu mỗi lượt trích `2PN`, còn lại trích `căn hộ`.
+const hoiCanHo = (goi: string[] = []) => { let i = 0; return hoiGia(() => traLoi({ property_type: "apartment", quote_loai: i++ < 60 ? "2PN" : "bán căn hộ 2PN" }), goi); };
 
 test("LS1-AC-10 mẫu đạt: Wilson khớp tính tay, in đủ số, ghi dòng mẫu, không chạm canonical; lượt thật dùng lại nhãn", async () => {
   await withTx(async (c) => {
