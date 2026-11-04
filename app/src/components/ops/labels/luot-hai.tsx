@@ -109,7 +109,7 @@ function GhiTruongHop({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
           </Field>
           <Field>
             <FieldLabel htmlFor="th-note">Diễn giải</FieldLabel>
-            <Textarea id="th-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="vd RB chưa có trong từ điển" />
+            <Textarea id="th-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Bí danh này chưa có trong từ điển" />
           </Field>
           {loi ? <LoiTruongHop loi={loi} onRetry={ghi} dangGhi={dangGhi} /> : null}
         </FieldGroup>

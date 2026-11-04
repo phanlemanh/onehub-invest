@@ -1,5 +1,6 @@
-// seed.mjs — mồi cho E4, E8, E17 (ui-check) trên DB thử: lát s03-theo-nhom lấy bằng lệnh thật, thêm ba nhóm thử cho lượt hai
-// (có máy đọc và thẻ, không máy không thẻ, bài ba tin), một bài chữ dài, và người thử vai ops, viewer. Cookie ghi vào tệp ở
+// seed.mjs — mồi cho E4, E8, E17 (ui-check) trên DB thử: lát s03-theo-nhom chỉ gồm bài mồi, lấy bằng lệnh thật qua --nhom-khop, để
+// ảnh chứng không mang chữ bài thật (tên miền nguồn trong URL ảnh là tầng A, luật 6). Ba nhóm thử cho lượt hai (có máy đọc và
+// thẻ, không máy không thẻ, bài ba tin), một bài chữ dài, và người thử vai ops, viewer. Cookie ghi vào tệp ở
 // đối số `--cookie <tệp>`, không in ra. Chạy lại được: xoá dữ liệu thử trước khi đặt. `--nhan` thêm nhãn và trường hợp cho E17.
 import { execFileSync } from "node:child_process"
 import { randomBytes } from "node:crypto"
@@ -19,9 +20,6 @@ try {
   await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'gcn-seed-%'`)
   await c.query(`DELETE FROM collection_units WHERE source_code = 'S03' AND group_key LIKE 'gcn-seed-%'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@gcn-seed.test'`)
-  process.stdout.write(execFileSync("node", [path.join(ROOT, "pipeline/label-sample.mjs"), "--lat", LAT, "--seed", "gc0-seed", "--theo-nhom", "--moi-nhom-lon", "30", "--moi-nhom-nho", "5", "--so-nhom-lon", "10"],
-    { cwd: ROOT, env: { ...process.env, DATABASE_URL: URL_THU }, encoding: "utf8" }).split("\n").slice(0, 6).join("\n") + "\n")
-
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__zalo__gcnseed', 'hcm', 'zalo', '{}'::jsonb) ON CONFLICT DO NOTHING`)
   const NHOM = [
     ["co-may", "GCN thử có máy đọc", "Nhóm môi giới chuyên Vinhomes Grand Park. Thành viên hiểu ngầm dự án nên bài thường không ghi tên."],
@@ -43,9 +41,9 @@ try {
   for (const [id, k, text] of BAI) {
     await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($1, 'hcm__zalo__gcnseed', $2, $3, $4, now())`,
       [id, NHOM.find((n) => n[0] === k)[1], `gcn-seed-${k}`, text])
-    await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $2, $3, 'dev', false, 'gc0-seed', $4)`,
-      [LAT, id, `h-${id}`, ma[k]])
   }
+  process.stdout.write(execFileSync("node", [path.join(ROOT, "pipeline/label-sample.mjs"), "--lat", LAT, "--seed", "gc0-seed", "--theo-nhom", "--moi-nhom-lon", "30", "--moi-nhom-nho", "5", "--so-nhom-lon", "10", "--nhom-khop", "^GCN thử"],
+    { cwd: ROOT, env: { ...process.env, DATABASE_URL: URL_THU }, encoding: "utf8" }).split("\n").slice(0, 6).join("\n") + "\n")
   const TIN = [["gcn-seed-a", "gcn-seed-1", 8000000], ["gcn-seed-b1", "gcn-seed-4", 6000000], ["gcn-seed-b2", "gcn-seed-4", 8000000], ["gcn-seed-b3", "gcn-seed-4", 12000000]]
   for (const [o, p, gia] of TIN) {
     await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw) VALUES ($1, 'rent_lt', now(), now(), ARRAY[$2], $3, 2, 'RB')`, [o, p, gia])

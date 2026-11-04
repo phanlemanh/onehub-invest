@@ -29,7 +29,7 @@ export const KHOI: Khoi[] = [
   {
     id: "vi-tri",
     title: "Vị trí",
-    hint: "Ghi tên đầy đủ; bí danh như RB ghi vào Lý do.",
+    hint: "Ghi tên đầy đủ; bí danh ghi vào Lý do.",
     fields: [
       { id: "project", kind: "chu", placeholder: "Tên đầy đủ" },
       { id: "subzone", kind: "chu", placeholder: "Tên đầy đủ" },
