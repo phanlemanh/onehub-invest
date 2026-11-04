@@ -9,6 +9,7 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { extractPhones } from "./transform-zalo.mjs";
+import { TIN_VAO_DANH_BA } from "./lib/danh-ba-nguoi.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 import { ALIAS_KIND } from "./lib/vocab.generated.mjs";
 
@@ -20,6 +21,13 @@ export const MUI_GIO = "Asia/Ho_Chi_Minh";
 /** Ngưỡng đạt (Hỏi-1, Mạnh duyệt 31/10). */
 export const NGUONG_N2 = 10;
 const TRAN_SO_MOI_BAI = 3; // trần của extractPhones
+/** N3: sellers so với số trên tin đáng có dòng sellers: tin có quyền sinh bí danh, hoặc số đã có bí danh (bí danh không rút khi số chỉ
+ * còn trên tin ghép). Không dùng cột nhãn của 070 vì kiểm chạy cả trên DB chưa áp (kiem-do-sau-ap-070-sua). */
+export const SQL_N3 = `SELECT (SELECT count(*) FROM sellers)::int AS sellers,
+       (SELECT count(DISTINCT o.seller_phone_hash) FROM sale_offers o
+         WHERE o.seller_phone_hash IS NOT NULL
+           AND (${TIN_VAO_DANH_BA}
+                OR EXISTS (SELECT 1 FROM registry_aliases a WHERE a.kind = 'sdt' AND a.retired_at IS NULL AND a.value = o.seller_phone)))::int AS sdt`;
 
 /** Bộ dò rộng của audit §7: chữ số xen tối đa 3 ký tự tách, nhận «o» thay «0», gom về 10 số đầu di động, trả dạng E.164. */
 const DO_RONG = /(?<!\d)(?:\(?\+?84\)?|0|[oO])(?:[\s.\-_,/()·•*]{0,3}[\doO]){8,10}(?!\d)/g;
@@ -189,9 +197,7 @@ export async function docDuLieu(client) {
     const { rows: gop } = await client.query(`SELECT party_key FROM parties WHERE status = 'merged'`);
     const { rows: tach } = await client.query(`SELECT party_key FROM parties WHERE status = 'split'`);
     const { rows: vai } = await client.query(`SELECT DISTINCT party_key FROM party_roles WHERE retracted_at IS NULL`);
-    const { rows: [n3] } = await client.query(
-      `SELECT (SELECT count(*) FROM sellers)::int AS sellers,
-              (SELECT count(DISTINCT seller_phone_hash) FROM sale_offers WHERE seller_phone_hash IS NOT NULL)::int AS sdt`);
+    const { rows: [n3] } = await client.query(SQL_N3);
     await client.query("COMMIT");
     return {
       tin, bai, biDanh,
