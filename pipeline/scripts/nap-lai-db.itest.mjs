@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { napPhatBieu } from "../lib/nap-045.mjs";
+import { sqlNapLai } from "../lib/nap-view-song.mjs";
 import { writeOffers } from "../lib/write-offers.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { chupMaTran, gieoQuyetDinh, gieoTinKhoaCu, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
@@ -70,7 +71,7 @@ test("ND-AC-1 áp 044 (hai lần): bảng bản ghi + view sống, 6 FK RESTRICT
   truoc = { tin: await relkind("sale_offers"), listing: await relkind("listings"), fk: (await c.query(
     "SELECT conname, confdeltype FROM pg_constraint WHERE conname = ANY($1) ORDER BY 1", [FK.map((f) => f[1])])).rows };
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     assert.equal(await relkind("sale_offer_records"), "r");
     assert.equal(await relkind("listing_records"), "r");
     assert.equal(await relkind("sale_offers"), "v", "sale_offers phải là VIEW");
@@ -97,7 +98,7 @@ test("ND-AC-1 áp 044 (hai lần): bảng bản ghi + view sống, 6 FK RESTRICT
       assert.ok(r.n > 0, `${v} phải đọc qua view sống sale_offers`);
     }
     const n = (await one("SELECT count(*)::int AS n FROM sale_offer_records")).n;
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     assert.equal((await one("SELECT count(*)::int AS n FROM sale_offer_records")).n, n, "áp lần hai đổi số dòng");
   });
 });
@@ -109,7 +110,7 @@ test("ND-AC-1 đối chứng: view phụ tạo trước 044 trên sale_offers b�
       await c.query("CREATE VIEW v_thu_phu AS SELECT offer_id FROM sale_offer_records");
     } else {
       await c.query("CREATE VIEW v_thu_phu AS SELECT offer_id FROM sale_offers");
-      await c.query(MIG);
+      await c.query(await sqlNapLai(c, MIG));
     }
     const ds = await viewPhuThuoc();
     assert.ok(ds.includes("v_thu_phu"), `phải bắt view phụ: ${ds.join(",")}`);
@@ -121,7 +122,7 @@ test("ND-AC-2 view sống trả đúng tập khoá như bảng trước 044; đ�
   await trongGiaoDich(c, async () => {
     const tin0 = sha((await c.query(`SELECT offer_id FROM ${await bangTin()} ${(await relkind("sale_offer_records")) ? "WHERE retired_at IS NULL" : ""}`)).rows);
     const ls0 = sha((await c.query(`SELECT id FROM ${await bangListing()} ${(await relkind("listing_records")) ? "WHERE retired_at IS NULL" : ""}`)).rows);
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     assert.equal(sha((await c.query("SELECT offer_id FROM sale_offers")).rows), tin0);
     assert.equal(sha((await c.query("SELECT id FROM listings")).rows), ls0);
     const k = (await one("SELECT min(offer_id) AS k FROM sale_offers")).k;
@@ -148,7 +149,7 @@ async function deXuat(offerId, field, status) {
 
 test("ND-AC-3 tin vắng lượt nghỉ (không xoá); dòng con chuyển sang tin kế; không kế thì giữ nguyên; quay lại thì sống lại", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const x = tst("p1", ["p1", "p2"]); const u = tst("u1", ["u1"]); const w = tst("w1", ["w1"]);
     await writeOffers(c, TST, [x, u, w]);
     const P = await canThu(); const P2 = await canThu();
@@ -192,7 +193,7 @@ test("ND-AC-3 tin vắng lượt nghỉ (không xoá); dòng con chuyển sang t
 
 test("ND-AC-3 tin khoá cũ (băm nội dung) vắng lượt → lý do doi_khoa", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const cu = { ...tst("q1", ["q1"]), offer_id: "offer_00000000deadbeef", originating_system_key: "q1" };
     await writeOffers(c, TST, [cu]);
     await writeOffers(c, TST, [tst("q1", ["q1"])]);
@@ -203,7 +204,7 @@ test("ND-AC-3 tin khoá cũ (băm nội dung) vắng lượt → lý do doi_khoa
 
 test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ nghỉ 'doi_khoa', ma trận quyết định/liên kết không mất", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     // Đối chứng dương: chắc chắn có quyết định đã gieo và có tin khoá cũ ở mỗi nguồn — ca không được qua rỗng.
     const fx = {};
     for (const s of ["S03", "S05"]) {
@@ -263,7 +264,7 @@ const conLai = async (id) => ({
 
 test("ND-AC-6 reassign-areas: listing ngoài mọi phường nghỉ 'ngoai_phuong', đêm + thống kê còn; quay lại phường thì sống lại", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const l = await listingCoDem();
     assert.ok(l, "fixture: cần một listing sống có nights và listing_stats");
     const city = Object.keys(MARKETS).find((k) => MARKETS[k].id === l.parent_id);
@@ -284,7 +285,7 @@ test("ND-AC-6 reassign-areas: listing ngoài mọi phường nghỉ 'ngoai_phuon
 
 test("ND-AC-6 transform-airbnb (ghiListing) và 200_transform: nghỉ thay xoá, đêm của listing đã nghỉ còn nguyên", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const l = await listingCoDem();
     const truoc = await conLai(l.id);
     const ex = { name: l.name, roomType: l.room_type, bedrooms: l.bedrooms, personCapacity: l.accommodates,
@@ -306,7 +307,7 @@ test("ND-AC-6 transform-airbnb (ghiListing) và 200_transform: nghỉ thay xoá,
 
 test("ND-AC-9 sync-cloud: tập chép không có tin/listing đã nghỉ, bảng con không có dòng trỏ cha đã nghỉ; gỡ nghỉ thì có lại", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const l = await listingCoDem();
     const o = await one(`SELECT offer_id FROM sale_offers o WHERE EXISTS (SELECT 1 FROM property_offers p WHERE p.offer_id = o.offer_id)
       ORDER BY offer_id LIMIT 1`);
@@ -363,7 +364,7 @@ for (const src of ["S03", "S05"]) {
     let o = 0;
     for (const [ten, doi] of MA_TRAN_NL4) {
       await trongGiaoDich(c, async () => {
-        await c.query(MIG);
+        await c.query(await sqlNapLai(c, MIG));
         await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`, [SNAP_THU]);
         const p = { p1: await chenPost(src, tin("71.3", "3.95", 2), "2026-10-20T08:00:00Z") };
         p.p2 = await chenPost(src, tin("71.3", "3.95", 2), "2026-10-21T08:00:00Z");
@@ -383,7 +384,7 @@ for (const src of ["S03", "S05"]) {
     assert.equal(o, MA_TRAN_NL4.length);
     // Đối chứng: post mới hoàn toàn (không chung post với tin nào) → tin mới, khoá khác.
     await trongGiaoDich(c, async () => {
-      await c.query(MIG);
+      await c.query(await sqlNapLai(c, MIG));
       await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`, [SNAP_THU]);
       const a = await chenPost(src, tin("71.3", "3.95", 2), "2026-10-20T08:00:00Z");
       const b = await chenPost(src, tin("88.1", "5.15", 3), "2026-10-22T08:00:00Z");
@@ -398,7 +399,7 @@ for (const src of ["S03", "S05"]) {
 
 test("NL-AC-4 S06: originating_system_key = list_id và offer_id = băm 'S06|<list_id>' cho mọi tin S06 (sau 044)", async () => {
   await trongGiaoDich(c, async () => {
-    await c.query(MIG);
+    await c.query(await sqlNapLai(c, MIG));
     const r = await one(`SELECT count(*)::int AS n,
         count(*) FILTER (WHERE originating_system_key IS NULL
           OR offer_id <> 'offer_' || substr(encode(digest('S06|' || originating_system_key, 'sha256'), 'hex'), 1, 16))::int AS lech

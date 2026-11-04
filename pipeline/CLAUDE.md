@@ -92,3 +92,5 @@ airdna_markets / airdna_scores / airdna_market_metrics
 8. **SĐT lưu số gốc E.164 (SD3, 060)**: bộ bóc trả `+84…`; `sellers` là view — không INSERT/UPDATE/DELETE. Test và
    thước trong giao dịch: `napSdtE164(c)` (`lib/nap-060.mjs`) nạp 060 khi DB chưa áp. Áp 060 lên DB máy thu là bước triển khai
    riêng (Mạnh duyệt, `pg_dump` trước).
+9. **Nạp lại migration cũ sau 070**: 044, 045, 059, 061 dựng view `sale_offers` bằng `SELECT *`, còn view sau 070 có thêm cột nhãn nên câu đó báo
+   «cannot drop columns from view». Test và thước nạp lại các tệp này qua `sqlNapLai(c, sql)` (`lib/nap-view-song.mjs`); `napDacTrung` đã đi qua nó.
