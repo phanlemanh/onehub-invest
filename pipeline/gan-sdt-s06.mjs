@@ -83,7 +83,7 @@ SELECT (SELECT count(*) FROM upd)::int AS doi,
        (SELECT count(*) FROM upd WHERE viec = 'truc_tiep')::int AS truc_tiep,
        (SELECT count(*) FROM upd WHERE viec = 'ghep')::int AS ghep,
        (SELECT count(*) FROM upd WHERE viec = 'rut')::int AS rut,
-       (SELECT count(*) FROM muc WHERE con_so AND NOT co_khoa AND lop <> 'khong_ro')::int AS khoi_phuc,
+       (SELECT count(*) FROM quyet WHERE con_so AND NOT co_khoa AND lop <> 'khong_ro' AND viec <> 'giu')::int AS khoi_phuc,
        (SELECT count(*) FROM muc WHERE lop = 'khong_ro')::int AS khong_ro,
        (SELECT count(*) FROM tk_so WHERE n >= 2)::int AS tai_khoan_hai_so,
        (SELECT count(*) FROM dung WHERE tho IS NOT NULL AND so IS NULL)::int AS sai_e164
@@ -233,6 +233,8 @@ async function chayThu() {
   try {
     const md5_truoc = await md5Sdt(c2);
     await c.query("BEGIN");
+    // Băm song song của các câu đo vượt /dev/shm 64 MB của container khi planner chọn; lượt đo không cần nhanh.
+    await c.query("SET LOCAL max_parallel_workers_per_gather = 0");
     let so;
     try {
       await nap068(c);

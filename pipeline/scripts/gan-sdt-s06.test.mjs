@@ -1012,6 +1012,19 @@ test("KP-AC-7 hàm còn bị ghi đè thì không đổi gì, báo tên, không 
   m.mock.restore();
 });
 
+test("KP-AC-8 chưa có cột nhãn 070: tin ghép được giữ nguyên không tính là đã khôi phục", async (t) => {
+  const m = imLog(t);
+  await withTx(async (c) => {
+    await chuoiCoSo(c);
+    await apLai068(c);
+    const { rows: [r] } = await c.query(SQL_GAN, [false]);
+    assert.equal((await docOffer(c, 81)).field_provenance.seller_phone, undefined, "KP-AC-8 tin ghép phải giữ nguyên khi chưa có cột");
+    assert.equal((await docOffer(c, 80)).field_provenance.seller_phone.rule_id, "s06-so-tren-tin", "KP-AC-8 số trực tiếp vẫn dựng lại");
+    assert.equal(r.khoi_phuc, 1, "KP-AC-8 chỉ đếm tin thật sự được dựng lại");
+  });
+  m.mock.restore();
+});
+
 test("KP-AC-8 nhật ký và dòng lệnh đo mang đúng hai số đếm, không lộ số; số lọt vào dòng thì ném", async (t) => {
   await withTx(async (c) => {
     const so = soBia();
