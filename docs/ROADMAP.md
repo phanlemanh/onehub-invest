@@ -112,6 +112,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
   Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
+  Nới luật (`_acceptance/s03-noi-luat-trich-dan`, 04/11): `LUAT_VERSION = trich-v2` nhận thêm dạng số phòng, `studio`, `stu` (mã `trich-dan:so-phong`), loại khi thân bài có từ loại khác; cổng mẫu gắn phiên bản luật và đòi nhánh mới tự đạt. `--xu-lai-trich` dùng lại nhãn đã đọc. Lượt ghi thật chờ chữ ký.
 - S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
@@ -165,6 +166,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   và bản mẫu. `getDeals`, `getDeal` trả căn kèm cờ `mayThu`; `dealHang` tính sẵn tên căn, phần còn thiếu, lý do rời phía máy chủ, giao diện dùng chung `DealBody`. Ảnh, chữ bài
   hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
   ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
+- Sửa ba lỗi của Căn giá tốt (`_acceptance/can-gia-tot-sua-ba-loi`, Mạnh ký 04/11): chữ giữ chỗ `unknown` không còn hiện như tên ở `/ops/deals` và ở trang Bán, Cho thuê công khai (`lib/ten-tin.ts`, thẻ hiện «Chưa có tên», `unknown` không tính khi đếm tài khoản nhiều tên); căn đắt hơn thước ghi đúng lý do «Đắt hơn thước phường <số>%, không phải căn giá tốt»; crumb «Căn giá tốt» chỉ mang `?can=` khi căn còn trong kết quả `getDeals()`, nên không quay lại chính trang. Không migration, không đổi bố cục.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -474,6 +476,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | SO-GHEP-S06 | Danh bạ chỉ nhận số S06 có dấu trực tiếp, số còn lại mang nhãn «Chưa xác minh» tới cloud và thẻ tin — `_acceptance/so-ghep-s06-nhan-danh-ba` (T3, 070; Ngoài-1, Ngoài-4 của SDT-S06) | 🔶 đang làm, chưa ký; chưa áp 070, 068, chưa áp cột cloud. Thứ tự năm mốc: gộp → kéo về → áp cột cloud → áp 070 → áp 068 |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
 | CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | ✅ Mạnh ký 03/11, chờ gộp; căn chỉ còn link ảnh gốc đã hết hạn hiện «Ảnh hỏng», E10 đếm riêng; AC-9 đưa ra hạn chế đã biết (bảng ở 390 px còn thanh cuộn ngang bên trong); ba lỗi người vận hành thấy chờ hợp đồng mới |
+| CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, chờ gộp (#303); Ngoài-9 Mạnh chọn mở hợp đồng mới, chưa có hàng |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

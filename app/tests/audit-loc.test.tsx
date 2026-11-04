@@ -205,9 +205,10 @@ test("dấu mỗi tin của lệnh đọc toàn bộ nằm trong danh sách lọ
   const src = readFileSync(join(APP, "../agent/src/enrich/doc-toan-bo.ts"), "utf8")
   const { DAU_MAY } = await import(pathToFileURL(join(APP, "src/lib/ops/audit-loc.ts")).href)
   const ghi = [...src.matchAll(/INSERT INTO ops_audit[^`]*?'(doc-toan-bo:[a-z-]+)'/g)].map((m) => m[1]).sort()
-  assert.deepEqual(ghi, ["doc-toan-bo:da-xu", "doc-toan-bo:mau"], `bên ghi đổi tên dấu: ${JSON.stringify(ghi)}`)
+  assert.deepEqual(ghi, ["doc-toan-bo:da-xu", "doc-toan-bo:mau", "doc-toan-bo:xu-lai"], `bên ghi đổi tên dấu: ${JSON.stringify(ghi)}`)
   assert.ok((DAU_MAY as readonly string[]).includes("doc-toan-bo:da-xu"))
   assert.ok(!(DAU_MAY as readonly string[]).includes("doc-toan-bo:mau"))
+  assert.ok(!(DAU_MAY as readonly string[]).includes("doc-toan-bo:xu-lai"), "dấu xử lại một lần mỗi lượt phải hiện trên nhật ký")
 })
 
 test("LA-AC-5 chiều đỏ: bên ghi đổi tên dấu → bên ghi lệch bên lọc", async () => {
