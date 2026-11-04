@@ -345,6 +345,9 @@ async function main() {
     const n4 = viec.filter((v) => new Date(v.thay_gan_nhat).getTime() >= moc4ngay).length - n2;
     console.log(`[nhóm tuổi] ≤2 ngày: ${n2} · 2-4 ngày: ${n4} · >4 ngày: ${viec.length - n2 - n4}`);
   }
+  // 0411-24(2): đầu lượt kiểm innerWidth TRƯỚC khi gọi nguồn — cửa sổ hẹp
+  // dưới 1024 làm trang dàn bản hẹp, nút ẩn → mọi lời gọi thành khong-nut lãng
+  // phí; dừng lượt ngay (thoát 3) để vòng ngoài mở Chrome mới.
   if (MINUTES <= 0) {
     // 0311-3: đo số việc pha 1 KHÔNG mở trình duyệt, KHÔNG gọi nguồn
     console.log(`[đo] việc pha 1 còn lại: ${viec.length}`);
@@ -413,7 +416,11 @@ async function main() {
   } catch {
     chromeProc = spawn(CHROME_BIN, [
       `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profileDir}`,
+      // 0411-24: LUÔN đè cỡ cửa sổ 1400x900 — profile giữ window_placement hẹp
+      // 968px làm trang dàn bản hẹp (min-width 1024) → khối nút display:none →
+      // waitForSelector (visible) miss 10s → khong-nut hàng loạt từ 17:23.
       "--no-first-run", "--no-default-browser-check", "--window-position=-2400,100",
+      "--window-size=1400,900",
       "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding",
       "--disable-background-timer-throttling", "about:blank",
     ], { stdio: "ignore", detached: true });
@@ -491,6 +498,17 @@ async function main() {
   let dungNguongLoiNhanh = false;
   let lanThayTab = 0;        // 0411-6: số lần thay tab liên tiếp (Chrome chết thật?)
   try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
+  // 0411-24(2): kiểm innerWidth trên tab thật trước lời gọi nguồn đầu tiên
+  {
+    const tabKiem = tabs[0] ?? (await contexts[0].newPage());
+    const rong = await tabKiem.evaluate(() => window.innerWidth).catch(() => null);
+    console.log(`[innerWidth] ${rong}px ${rong && rong < 1024 ? "— HẸP dưới 1024, trang sẽ dàn bản hẹp: DỪNG lượt không gọi nguồn" : "— đủ rộng"}`);
+    if (rong && rong < 1024) {
+      process.exitCode = 3;
+      console.log("[innerWidth] dừng lượt — vòng ngoài mở Chrome mới (cửa sổ đã đè 1400x900)");
+      process.exit(3);
+    }
+  }
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
     try {
