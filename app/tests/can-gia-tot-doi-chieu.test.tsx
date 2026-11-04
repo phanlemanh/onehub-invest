@@ -110,11 +110,15 @@ test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 600_000 }, asy
   const p1 = (await pool.query<{ offer_id: string }>("SELECT offer_id FROM sale_offers WHERE price_tier = 'P1' AND kind = 'sale'")).rows.map((r) => r.offer_id)
   const trong = new Set(ids)
   const batDau = Date.now()
+  let soGoi = 0
   const lech = await demLech(p1, async (id) => {
+    soGoi++
     const { deal } = await thuLai(() => getDeal(id))
     return trong.has(id) === (deal !== null && deal.roiDanhSach === null)
   })
   console.log(`CGT-DC đối chiếu ${p1.length} tin trong ${Math.round((Date.now() - batDau) / 1000)} giây, giới hạn ${GIOI_HAN_SONG_SONG}`)
+  const { rows: demP1 } = await pool.query<{ n: number }>("SELECT count(*)::int AS n FROM sale_offers WHERE price_tier = 'P1' AND kind = 'sale'")
+  assert.equal(soGoi, demP1[0].n, "CGT-DC không đo đủ mọi tin của kho")
   assert.equal(lech, 0, "CGT-DC getDeals và getDeal lệch nhau")
 
   const hang = rows.map((d) => dealHang(d, VAI))

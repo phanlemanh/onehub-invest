@@ -1073,7 +1073,7 @@ test("CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc 
       const sheet = document.querySelector('[role="dialog"]')
       assert.ok(sheet, `CGB-AC-1 ?can=${m.id} không mở sheet`)
       assert.ok(!coChuGiuCho(sheet.textContent ?? ""), `CGB-AC-1 chữ giữ chỗ hiện như tên: sheet ${m.id}`)
-      if (m.ten === null) assert.match(sheet.textContent ?? "", /Người đăng chưa có tên/, `CGB-AC-1 sheet ${m.id} thiếu chữ thiếu tên`)
+      assert.equal(sheet.querySelector('span.truncate.font-medium[translate="no"]')?.textContent, m.ten ?? "Người đăng chưa có tên", `CGB-AC-1 sheet ${m.id} sai tên`)
       const trang = await vaoTrang(can, "ops", { offerId: m.id })
       assert.ok(!coChuGiuCho(trang.text()), `CGB-AC-1 chữ giữ chỗ hiện như tên: trang ${m.id}`)
       if (m.ten === null) assert.equal(soDong("Tên"), 0, `CGB-AC-1 trang ${m.id} có dòng Tên rỗng`)

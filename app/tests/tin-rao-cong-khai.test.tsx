@@ -492,10 +492,17 @@ test("CGB-AC-6 ma trận tên qua hàm, route và vùng máy chủ thật; unkno
   await nap(tenCuaDong())
   await kiemTenInvest(offers)
   const api = await danh("kind=sale&limit=50")
-  assert.equal(lay(api.data, "ten-0").sellerName, null)
-  assert.equal(lay(api.data, "ten-5").sellerName, "Bán Thật")
   const html = await veVung(TT, "Thành phố X")
-  assert.ok(html.includes("Bán Thật") && html.includes("Chưa có tên"), "đối chứng dương: thẻ có tên thật và chữ thiếu tên")
+  const the = (id: string) => {
+    const tu = html.indexOf(`data-listing-id="${id}"`)
+    assert.ok(tu >= 0, `thiếu thẻ ${id}`)
+    const sau = html.indexOf('data-listing-id="', tu + 1)
+    return html.slice(tu, sau < 0 ? undefined : sau)
+  }
+  MA_TRAN_TEN.forEach(([, mong], i) => {
+    assert.equal(lay(api.data, `ten-${i}`).sellerName, mong, `route dòng ${i}`)
+    assert.ok(the(`ten-${i}`).includes(mong === null ? "Chưa có tên" : `>${mong}<`), `thẻ dòng ${i}`)
+  })
   assert.ok(!/>\s*unknown\s*</i.test(html), "CGB-AC-6 unknown trong HTML")
 })
 
