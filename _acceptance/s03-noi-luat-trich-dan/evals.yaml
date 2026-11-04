@@ -1,0 +1,57 @@
+schema_version: 1
+feature_slug: s03-noi-luat-trich-dan
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ls1b_thuan
+    paths: ["agent/src/enrich/luat-trich-dan.ts", "agent/tests/luat-trich-so-phong.test.ts"]
+    expected: "Ma trận dương viết trước: mỗi dạng một assert, ra đúng mã; đỏ khi bỏ `n` khỏi bảng, thông điệp ghim ca `2n2wc`."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ls1b_thuan
+    paths: ["agent/src/enrich/luat-trich-dan.ts", "agent/tests/luat-trich-so-phong.test.ts"]
+    expected: "Ma trận âm viết trước, mỗi ca ghim lý do, đi cặp với ca dương cùng câu không có chữ gây loại; đỏ khi gỡ chốt thân bài, thông điệp ghim ca `view biệt thự`."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ls1b_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
+    expected: "Đề xuất do chayLuot cũ thật sinh rồi mới xử lại, không viết tay dòng khuôn; đếm ai_calls, review_queue, băm giá và diện tích trước sau bằng nhau; đỏ khi xử lại gọi hoi, thông điệp ghim."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ls1b_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
+    expected: "Sáu ca âm cùng lượt với một ca dương làm đối chứng; ca dương đổi, sáu ca không đổi."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ls1b_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
+    expected: "Chạy hai lần: lần hai báo áp 0, đếm dòng đề xuất, phát biểu, nhật ký bằng nhau; lần một áp ít nhất 1 làm đối chứng."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ls1b_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
+    expected: "Dòng mẫu do doMau thật ghi; luật cũ thoát 6, luật hiện tại thoát 0; --thu đếm dòng bảng trước sau bằng nhau mà số dự kiến lớn hơn 0."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ls1b_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
+    expected: "Sau áp hai tin đều là căn hộ có căn cứ, sau hoàn tác đúng trạng thái cũ từng tin gồm tầng trong field_provenance."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ls1b_db_va_cu
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/xu-lai-trich-db.itest.ts", "agent/tests/doc-toan-bo-db.itest.ts", "agent/tests/doc-toan-bo.test.ts"]
+    expected: "--dem bằng truy vấn đếm độc lập trong test; bài mới `2PN` qua chayLuot áp với mã mới; bộ LS1 cũ xanh."
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ls1b_mau
+    paths: ["agent/src/enrich/luat-trich-dan.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts"]
+    expected: "Thoát 0, in «ĐẠT», chi 0.0000 USD, máy áp ít nhất 100, không ghi dòng nào vì --thu; ngưỡng 1,0 trên cùng dữ liệu phải thoát 5 (đối chứng ghi trong bằng chứng)."
