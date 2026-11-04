@@ -112,6 +112,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
   Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
+  Nới luật (`_acceptance/s03-noi-luat-trich-dan`, 04/11): `LUAT_VERSION = trich-v2` nhận thêm dạng số phòng, `studio`, `stu` (mã `trich-dan:so-phong`), loại khi thân bài có từ loại khác; cổng mẫu gắn phiên bản luật và đòi nhánh mới tự đạt. `--xu-lai-trich` dùng lại nhãn đã đọc. Lượt ghi thật chờ chữ ký.
 - S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
@@ -151,11 +152,21 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
   068 giữ khoá này qua phân xử bằng cách vá định nghĩa hàm đang chạy. Chưa áp 068 thì bộ gán bỏ qua và in `CHUA-AP-068`. Tin có số mà mất khoá xuất xứ (hàm phân xử từng bị migration sau ghi đè) được dựng lại bằng cách so với stg, nên tin ẩn số không còn giữ số ghép; không khớp stg thì giữ nguyên và đếm là không rõ gốc (`_acceptance/sdt-s06-khoi-phuc-xuat-xu`). Đo: `node pipeline/gan-sdt-s06.mjs --thu` (ROLLBACK).
+- Số ghép S06 và nhãn (`_acceptance/so-ghep-s06-nhan-danh-ba`, migration 070): danh bạ Người và `sellers` chỉ nhận số S06 có dấu `s06-so-tren-tin`. Cột tính
+  `seller_phone_inferred` của view `sale_offers` đúng với tin S06 có số mà không mang dấu đó; cột lên cloud (`CLOUD_ALLOW`), `field_provenance` ở lại máy. Hai route
+  `/api/v1/listings*` trả `phoneInferred`, `inferred`, thiếu cột hay cột NULL đều coi là chưa xác minh; thẻ tin hiện Badge «Chưa xác minh». Chưa áp 070 thì bộ gán in
+  `CHUA-AP-070`, số trực tiếp vẫn ghi, số ghép mới thì không. Năm mốc triển khai ở `docs/ops/cloud-schema-catchup-2026-11-03-so-ghep.sql`: gộp → kéo về → áp cột cloud →
+  áp 070 → áp 068; **070 trước 068** để số ghép không lên trang khi chưa có nhãn. Đo trên DB thử: `pipeline/do-so-ghep-s06.mjs`; theo dõi: kiểm `so-chua-xac-minh` ở 450.
 - Danh bạ hiện số gốc (SD4, `_acceptance/people-hien-so-goc`, Hỏi-B 30/10, §3 mục 24): ở máy thu, `/ops/people` và trang một người
   hiện số tách nhóm và liên kết `tel:` cho vai Vận hành và `admin`; ô tìm khớp đủ số ở sáu dạng gõ (`chuanHoaSdtTim`); người có số lên
   trước cho hai vai này, vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số. `/ops/deals`: khối liên hệ hạ từ `isAdmin` xuống
   `xemNoiDungTin`, ảnh và chữ bài giữ `admin` (route `?path=`); `dealTheoVai` lọc trường trước khi vào thẻ, nên vai Người xem không có
   trường liên hệ trong cây phần tử. Bảng danh bạ vẽ đủ hàng máy chủ gửi (trước đó DataGrid dừng ở 10 hàng). Lúc đó số gốc chưa lên cloud; mục 25 của §3 mở sau.
+- Căn giá tốt biết căn (CG1, `_acceptance/can-gia-tot-biet-can`, 03/11): `/ops/deals` là bảng có tab và bộ lọc, sheet một căn, trang `/ops/deals/<offerId>`; thay lưới thẻ
+  và bản mẫu. `getDeals`, `getDeal` trả căn kèm cờ `mayThu`; `dealHang` tính sẵn tên căn, phần còn thiếu, lý do rời phía máy chủ, giao diện dùng chung `DealBody`. Ảnh, chữ bài
+  hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
+  ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
+- Sửa ba lỗi của Căn giá tốt (`_acceptance/can-gia-tot-sua-ba-loi`, Mạnh ký 04/11): chữ giữ chỗ `unknown` không còn hiện như tên ở `/ops/deals` và ở trang Bán, Cho thuê công khai (`lib/ten-tin.ts`, thẻ hiện «Chưa có tên», `unknown` không tính khi đếm tài khoản nhiều tên); căn đắt hơn thước ghi đúng lý do «Đắt hơn thước phường <số>%, không phải căn giá tốt»; crumb «Căn giá tốt» chỉ mang `?can=` khi căn còn trong kết quả `getDeals()`, nên không quay lại chính trang. Không migration, không đổi bố cục.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -195,6 +206,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Chữ về nguồn trên Invest (CN1 `chu-nguon-tren-cong`, 04/11): các trang công khai gọi S01 là «nền tảng thuê ngắn hạn», S02 là «nguồn tham chiếu trả phí»; giá bán, thuê là trung vị giá rao của tin thật. Thước: `scripts/quet-ten-nguon-html.mjs` (HTML thật), `scripts/check-invest-tier-a.mjs` (mã, chạy ở CI).
 - Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
   `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
   cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
@@ -463,7 +475,11 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
 | SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
 | SDT-S06-KP | Khôi phục xuất xứ SĐT S06 sau khi hàm phân xử bị ghi đè; tin ẩn số không còn giữ số ghép; nhật ký thêm số khôi phục và không rõ gốc — `_acceptance/sdt-s06-khoi-phuc-xuat-xu` (T2, không migration) | 🔶 chờ Mạnh ký Cổng Bằng chứng |
+| SO-GHEP-S06 | Danh bạ chỉ nhận số S06 có dấu trực tiếp, số còn lại mang nhãn «Chưa xác minh» tới cloud và thẻ tin — `_acceptance/so-ghep-s06-nhan-danh-ba` (T3, 070; Ngoài-1, Ngoài-4 của SDT-S06) | 🔶 đang làm, chưa ký; chưa áp 070, 068, chưa áp cột cloud. Thứ tự năm mốc: gộp → kéo về → áp cột cloud → áp 070 → áp 068 |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
+| CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | ✅ Mạnh ký 03/11, chờ gộp; căn chỉ còn link ảnh gốc đã hết hạn hiện «Ảnh hỏng», E10 đếm riêng; AC-9 đưa ra hạn chế đã biết (bảng ở 390 px còn thanh cuộn ngang bên trong); ba lỗi người vận hành thấy chờ hợp đồng mới |
+| CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, chờ gộp (#303); Ngoài-9 Mạnh chọn mở hợp đồng mới, chưa có hàng |
+| CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

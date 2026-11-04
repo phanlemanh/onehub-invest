@@ -1,4 +1,4 @@
-import { repostLabel } from "@/lib/deals"
+import { repostLabel } from "@/lib/deals-chi-tiet"
 import { fmtVnDate } from "@/lib/format"
 
 /** Dòng «thấy <ngày VN> · đăng N lần» dưới mỗi căn giá tốt (/ops/deals) — ngày theo giờ VN (ON8). */

@@ -15,7 +15,7 @@ const FAQ: FaqItem[] = [
     id: "nguon",
     question: "Số liệu lấy từ đâu?",
     answer:
-      "Từ lịch đặt phòng Airbnb do chúng tôi tự thu thập (Hà Nội, TP. Hồ Chí Minh). Listing được gán vào phường theo toạ độ trên ranh giới OpenStreetMap.",
+      "Từ lịch đặt phòng trên nền tảng thuê ngắn hạn, do chúng tôi tự thu thập (Hà Nội, TP. Hồ Chí Minh). Listing được gán vào phường theo toạ độ trên ranh giới OpenStreetMap.",
   },
   {
     id: "lich",
@@ -27,7 +27,7 @@ const FAQ: FaqItem[] = [
     id: "loi-suat",
     question: "Ước tính lợi suất có đáng tin không?",
     answer:
-      "Mỗi ước tính đi kèm độ tin cậy (số listing so sánh, độ phân tán giá) và khoảng p25–p75. Giá bán và giá thuê dài hạn hiện là dữ liệu mô phỏng — có nhãn rõ ràng.",
+      "Mỗi ước tính đi kèm độ tin cậy (số listing so sánh, độ phân tán giá) và khoảng p25–p75. Giá bán và giá thuê dài hạn là trung vị giá rao của tin thật theo phường, chưa phải giá giao dịch.",
   },
   {
     id: "mien-phi",
@@ -58,7 +58,7 @@ export default async function HomePage() {
       <Hero
         entries={entries}
         proofPoints={[
-          `${fmtInt(vnListings)} listing Airbnb tại Việt Nam đang theo dõi`,
+          `${fmtInt(vnListings)} listing thuê ngắn hạn tại Việt Nam đang theo dõi`,
           `${fmtInt(wards)} phường/xã ở ${vn.map((m) => m.name).join(" và ")}`,
         ]}
         preview={lead ? { market: lead, topAreas, currency: currencyFor(lead.id) } : null}

@@ -227,7 +227,7 @@ export function AreaComparison({ areas, groups }: { areas: CompareArea[]; groups
             <InfoIcon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
             <span>
               Số tự thu trên lịch đặt các tháng tới, bình quân theo đêm. Ô xanh là khu vực tốt nhất của hàng. Ảnh đầu cột là ảnh một listing tự thu trong khu vực.
-              Giá bán và thuê dài hạn là dữ liệu mô phỏng.
+              Giá bán và thuê dài hạn là trung vị giá rao của tin thật, chưa phải giá giao dịch.
             </span>
           </p>
         )}

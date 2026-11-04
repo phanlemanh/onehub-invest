@@ -58,7 +58,7 @@ export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_ch
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
 
-export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
+export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
 
 /** Nhãn tiếng Việt từng giá trị (label_vi của sổ). */
 export const LABELS_VI = {

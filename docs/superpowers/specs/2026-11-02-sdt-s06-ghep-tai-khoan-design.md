@@ -78,6 +78,12 @@ Trả lời ADR-0013: (1) lớp tin, ngữ nghĩa Member, không thuộc căn. (
 - `do-danh-ba-sdt` chỉ đo S03, S05: không đỏ vì S06.
 - PR #274 mở SĐT lên Invest: khi vào main, số ghép sẽ hiện như số thường vì `field_provenance` không lên cloud. Nhãn «chưa xác minh» là việc của vòng đó.
 
+**Đính chính 03/11** (hồ sơ `_acceptance/so-ghep-s06-nhan-danh-ba`, thiết kế `2026-11-03-so-ghep-s06-nhan-danh-ba-design.md`). Mục này và OOS-2 của hợp
+đồng sai ba chỗ, đo lại trên mã: (1) `dungNguoi` đã chạy trong job qua `buocDem` của `refresh-bait-gap.mjs`, không phải «chưa có trong lịch», nên lượt S06 ghi thật
+sẽ đưa mọi số S06, kể cả số ghép, vào danh bạ và `sellers` ngay. Nay danh bạ chỉ nhận số có dấu `s06-so-tren-tin`. (2) `seller_phone` không còn trong `PII_EXCLUDE`:
+tên và số người bán lên cloud theo quyết định 02/11, nên số ghép lên cloud cùng cột. (3) Nhãn không phải việc của PR #274: nó nằm ở cột tính `seller_phone_inferred`
+của view (070), là thứ duy nhất của xuất xứ lên cloud; `field_provenance` vẫn ở lại máy.
+
 ## Không làm
 
 Lên cloud số gốc, hiển thị, nhãn chưa xác minh, chạy `dung-nguoi`, gọi nguồn S06, chạy bộ thu, sửa importer (làn ZCode).

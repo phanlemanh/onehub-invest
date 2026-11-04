@@ -81,7 +81,7 @@ export function Hero({
         <div className="@container flex flex-col items-start justify-center gap-6">
           <Badge variant="outline" size="xl" radius="full" className="text-foreground h-7">
             <DatabaseIcon className="size-3.5 shrink-0" aria-hidden="true" />
-            Dữ liệu Airbnb tự thu thập
+            Dữ liệu tự thu thập
           </Badge>
 
           <h1 id="hero-title" className="text-foreground text-4xl leading-tight font-semibold tracking-tight @lg:text-5xl @lg:leading-none">

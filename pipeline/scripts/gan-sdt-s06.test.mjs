@@ -13,6 +13,7 @@ import { demDocLap, doSdtS06, ganSdtS06, inKhongSo, kiemBatBien, md5Sdt, SQL_GAN
 import { resolveOffers, writeAssertions } from "../lib/assert.mjs";
 import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 import { daCoPhanGiu068, MIG_068, nap068 } from "../lib/nap-068.mjs";
+import { nap070 } from "../lib/nap-070.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 import { readFileSync } from "node:fs";
@@ -43,6 +44,7 @@ async function withTx(fn) {
     await c.query(`INSERT INTO ops_audit (actor, action) VALUES ('test', 'phat-bieu:cat-chuyen')`);
     const truoc068 = await hamTruoc068(c, sc);
     await c.query(truoc068);
+    await nap070(c);
     return await fn(c, { sc, truoc068 });
   } finally {
     await c.query("ROLLBACK").catch(() => {});

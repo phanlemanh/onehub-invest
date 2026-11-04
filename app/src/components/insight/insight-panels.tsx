@@ -57,7 +57,7 @@ export function SupplyPanel({
           Nguồn cung qua các lần quét
         </FrameTitle>
         <FrameDescription>
-          Mỗi lần quét tìm kiếm Airbnb thấy một phần thị trường; thứ tự kết quả
+          Mỗi lần quét tìm kiếm thấy một phần thị trường; thứ tự kết quả
           xáo trộn nên &ldquo;mới&rdquo; là mới xuất hiện, không hẳn là mới đăng.
         </FrameDescription>
       </FrameHeader>
@@ -76,8 +76,8 @@ export function SupplyPanel({
           )}
         </div>
         <ul aria-label="Các lần quét" className="flex flex-wrap gap-1.5">
-          {points.map((point) => (
-            <li key={point.snapshotId}>
+          {points.map((point, i) => (
+            <li key={`${point.date}-${i}`}>
               <Badge variant="outline" className="tabular-nums">
                 {point.date} · {fmtInt(point.seen)}
               </Badge>

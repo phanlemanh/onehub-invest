@@ -7,6 +7,7 @@ import { KIND, LABELS_VI, PROPERTY_TYPE } from "@/lib/vocab.generated"
 import { LISTING_LINK, ListingCardFrame } from "./listing-card"
 import { bedroomsVi } from "./listing-labels"
 import { OfferContact } from "./offer-contact"
+import { OfferLabelHelp } from "./offer-label-help"
 
 /** Thông số theo loại hình; trường thiếu thì bỏ, không in chữ «chưa có». */
 export function offerSpecs(o: PublicOffer): string[] {
@@ -39,7 +40,7 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
       price={`${fmtCompact(o.priceVnd)}${o.kind === KIND.rent_lt ? "/tháng" : ""}`}
       priceNote={o.kind === KIND.sale && o.pricePerm2 !== null ? `${fmtCompact(o.pricePerm2)}/m²` : null}
       meta={firstSeenVi(o.firstSeenDays)}
-      name={o.unverified ? <div><Badge variant="warning-light">Chưa xác minh</Badge></div> : null}
+      name={o.unverified ? <div><OfferLabelHelp what="offer"><Badge variant="warning-light">Chưa xác minh</Badge></OfferLabelHelp></div> : null}
       specs={offerSpecs(o)}
       place={
         <p className="truncate">
@@ -54,8 +55,8 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
         </p>
       }
       footer={
-        <>
-          <p className="min-w-0 truncate text-sm">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
+          <p className="min-w-0 grow basis-32 truncate text-sm">
             {o.sellerName ? (
               <>
                 <span className="text-muted-foreground">Đăng bởi </span>
@@ -65,10 +66,10 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
               <span className="text-muted-foreground">{o.sellerManyNames ? "Tài khoản nhiều tên" : "Chưa có tên"}</span>
             )}
           </p>
-          <div className="flex-none">
-            <OfferContact offerId={o.offerId} hasPhone={o.hasPhone} />
+          <div className="ml-auto max-w-full">
+            <OfferContact offerId={o.offerId} hasPhone={o.hasPhone} inferred={o.phoneInferred} />
           </div>
-        </>
+        </div>
       }
     />
   )

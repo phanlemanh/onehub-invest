@@ -68,6 +68,8 @@ export type PublicOffer = {
   sellerName: string | null;
   sellerManyNames: boolean;
   hasPhone: boolean;
+  /** Số chưa xác minh: suy ra từ tin khác cùng tài khoản, hoặc thiếu bằng chứng trực tiếp. */
+  phoneInferred: boolean;
   /** Tin chưa đối chiếu nguồn: cờ thay cho mã nguồn, mã nguồn không rời máy chủ. */
   unverified: boolean;
   updatedAt: string;

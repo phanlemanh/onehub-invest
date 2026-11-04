@@ -17,6 +17,7 @@ import {
   type OfferWard,
   type PublicOffer,
 } from "./offers-filters";
+import { tenTin } from "./ten-tin";
 import { KIND, PROPERTY_TYPE } from "./vocab.generated";
 
 /**
@@ -35,6 +36,12 @@ const VISIBLE = `o.kind IN ('${KIND.sale}', '${KIND.rent_lt}')
   AND (o.kind <> '${KIND.rent_lt}' OR (o.price_vnd >= ${OFFER_RENT_MIN_VND} AND o.price_vnd < ${OFFER_RENT_MAX_VND}))
   AND o.source <> ALL(ARRAY[${OFFER_HIDDEN_SOURCES.map((s) => `'${s}'`).join(", ")}])
   AND o.last_seen >= now() - interval '${OFFER_RECENT_DAYS} days'`;
+
+/**
+ * Có số mà chưa xác minh (070). Đọc qua to_jsonb để cloud chưa có cột vẫn không lỗi: thiếu cột hay cột NULL đều coi là chưa
+ * xác minh, vì thiếu bằng chứng thì kèm nhãn. Không số thì không có gì để gắn nhãn.
+ */
+const PHONE_INFERRED = `(o.seller_phone IS NOT NULL AND coalesce(to_jsonb(o) ->> 'seller_phone_inferred', 'true') <> 'false')`;
 
 const ORDER: Record<OfferSort, string> = {
   newest: "o.last_seen DESC, o.offer_id",
@@ -97,13 +104,15 @@ export async function getPublicOffers(
     sourceEntries(),
     pool.query(
       `WITH nhieu_ten AS (
-         SELECT seller_ref FROM sale_offers WHERE seller_ref IS NOT NULL AND seller_ref <> ''
+         SELECT seller_ref FROM sale_offers
+         WHERE seller_ref IS NOT NULL AND seller_ref <> '' AND lower(btrim(seller_name)) NOT IN ('unknown', '')
          GROUP BY seller_ref HAVING count(DISTINCT seller_name) >= ${OFFER_MANY_NAMES}
        )
        SELECT o.offer_id, o.kind, o.property_type, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
               o.bathrooms, o.stories, o.frontage_length,
               o.area_id, a.name AS area_name, o.street_raw, o.seller_name,
               n.seller_ref IS NOT NULL AS many_names, o.seller_phone IS NOT NULL AS has_phone,
+              ${PHONE_INFERRED} AS phone_inferred,
               o.source = '${OFFER_UNVERIFIED_SOURCE}' AS unverified,
               o.last_seen::text AS updated_at,
               GREATEST(0, (now() AT TIME ZONE '${VN_TZ}')::date - (o.first_seen AT TIME ZONE '${VN_TZ}')::date)::int AS first_seen_days
@@ -121,26 +130,30 @@ export async function getPublicOffers(
   return {
     total: counts[0].total,
     withPhone: counts[0].with_phone,
-    rows: rows.map((r) => ({
-      offerId: r.offer_id,
-      kind: r.kind,
-      propertyType: r.property_type,
-      priceVnd: Number(r.price_vnd),
-      areaM2: Number(r.area_m2),
-      pricePerm2: r.price_perm2 === null ? null : Number(r.price_perm2),
-      bedrooms: r.bedrooms,
-      bathrooms: r.bathrooms,
-      stories: r.stories !== null && r.stories <= OFFER_MAX_STORIES ? r.stories : null,
-      frontageLength: frontage(r.frontage_length),
-      ward: { id: r.area_id, name: r.area_name },
-      street: streetOf(r.street_raw),
-      sellerName: r.many_names || (r.seller_name !== null && mangDinhDanh(r.seller_name, entries)) ? null : r.seller_name,
-      sellerManyNames: r.many_names,
-      hasPhone: r.has_phone,
-      unverified: r.unverified,
-      updatedAt: r.updated_at,
-      firstSeenDays: r.first_seen_days,
-    })),
+    rows: rows.map((r) => {
+      const ten = tenTin(r.seller_name);
+      return {
+        offerId: r.offer_id,
+        kind: r.kind,
+        propertyType: r.property_type,
+        priceVnd: Number(r.price_vnd),
+        areaM2: Number(r.area_m2),
+        pricePerm2: r.price_perm2 === null ? null : Number(r.price_perm2),
+        bedrooms: r.bedrooms,
+        bathrooms: r.bathrooms,
+        stories: r.stories !== null && r.stories <= OFFER_MAX_STORIES ? r.stories : null,
+        frontageLength: frontage(r.frontage_length),
+        ward: { id: r.area_id, name: r.area_name },
+        street: streetOf(r.street_raw),
+        sellerName: r.many_names || (ten !== null && mangDinhDanh(ten, entries)) ? null : ten,
+        sellerManyNames: r.many_names,
+        hasPhone: r.has_phone,
+        phoneInferred: r.phone_inferred,
+        unverified: r.unverified,
+        updatedAt: r.updated_at,
+        firstSeenDays: r.first_seen_days,
+      };
+    }),
   };
 }
 
@@ -169,13 +182,14 @@ export async function hasPublicOffers(marketId: string, kind: OfferFilters["kind
 }
 
 /** Số của đúng một tin đang hiện công khai; null khi tin không hiện hoặc chưa có số. */
-export async function getOfferPhone(offerId: string): Promise<string | null> {
+export async function getOfferPhone(offerId: string): Promise<{ phone: string; inferred: boolean } | null> {
   const { rows } = await pool.query(
-    `SELECT o.seller_phone FROM sale_offers o WHERE o.offer_id = $1 AND ${VISIBLE}`,
+    `SELECT o.seller_phone, ${PHONE_INFERRED} AS phone_inferred FROM sale_offers o WHERE o.offer_id = $1 AND ${VISIBLE}`,
     [offerId],
   );
   const phone: string | null = rows[0]?.seller_phone ?? null;
-  return phone !== null && mangDinhDanh(phone, await sourceEntries()) ? null : phone;
+  if (phone === null || mangDinhDanh(phone, await sourceEntries())) return null;
+  return { phone, inferred: rows[0].phone_inferred };
 }
 
 /** Mã thị trường đọc từ query (`market`), mã dài cũ đổi sang mã ngắn. */

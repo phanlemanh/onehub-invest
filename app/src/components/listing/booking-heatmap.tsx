@@ -176,7 +176,7 @@ export function BookingHeatmap({
         {lastSeen && (
           <SummaryItem
             label={`Quét ${dateLabel(lastSeen)}`}
-            description="Lần gần nhất collector thấy lịch của listing này trên Airbnb."
+            description="Lần gần nhất collector thấy lịch của listing này trên nền tảng."
             variant="success-light"
           />
         )}

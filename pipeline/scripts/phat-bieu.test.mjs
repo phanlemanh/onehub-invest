@@ -18,14 +18,16 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const NAM_COT = VOCAB.enrich_field;
 
 // Test đột biến chạy song song (gia-ty-sau-khoang-trang, gia-ty-chan-dong, cam-mau-s03, gop-anh) ghi bản sao ẩn .xx-mut-*.mjs
-// trong pipeline/ rồi xoá; bộ quét đọc tên trước rồi mới stat/đọc nên gặp ENOENT. Chỉ quét lại khi tệp mất là tệp ẩn —
-// ENOENT tệp thường và lỗi khác ném ngay, nên lượt quét thành công vẫn đọc trọn cây thật.
-export function quetChiuTepTam(fn, lan = 100) {
+// trong pipeline/ rồi xoá; bộ quét đọc tên trước rồi mới stat/đọc nên gặp ENOENT. Nhóm khác (seller-ref, boc-sdt…) ghi bản sao
+// không ẩn mang `.dotbien-`. Chỉ quét lại khi tệp mất là một trong hai dạng tạm này — ENOENT tệp thường và lỗi khác ném ngay,
+// nên lượt quét thành công vẫn đọc trọn cây thật.
+export function quetChiuTepTam(fn, lan = 2000) {
   for (let i = 1; ; i++) {
     try {
       return fn();
     } catch (e) {
-      if (i >= lan || e?.code !== "ENOENT" || !basename(e?.path ?? "").startsWith(".")) throw e;
+      const ten = basename(e?.path ?? "");
+      if (i >= lan || e?.code !== "ENOENT" || !(ten.startsWith(".") || ten.includes(".dotbien-"))) throw e;
     }
   }
 }
@@ -175,6 +177,7 @@ function kiemLopBoc(boc) {
     ["EACCES", () => loi("EACCES", "/x/pipeline/.gs-mut-1.mjs"), { nem: "EACCES", goi: 1 }],
     ["ENOENT tệp ẩn mãi", () => loi("ENOENT", "/x/pipeline/.gs-mut-1.mjs"), { nem: "ENOENT", goi: 5 }],
     ["ENOENT tệp ẩn một lần", (i) => (i === 1 ? loi("ENOENT", "/x/pipeline/.gs-mut-2.mjs") : null), { tra: "ok", goi: 2 }],
+    ["ENOENT bản sao đột biến không ẩn một lần", (i) => (i === 1 ? loi("ENOENT", "/x/pipeline/transform-zalo.dotbien-sr-1-2.mjs") : null), { tra: "ok", goi: 2 }],
   ];
   for (const [ten, loiLan, muon] of MA_TRAN) {
     let goi = 0;

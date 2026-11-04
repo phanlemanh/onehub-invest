@@ -305,7 +305,7 @@ export function YieldTable({
       description="Một căn 60 m²: giá bán, thuê dài hạn (tin rao) so với doanh thu ngắn hạn (trung vị giá × công suất 90 đêm đầu)"
       badge={
         <div className="flex items-center gap-2">
-          <Badge variant="warning-light">DỮ LIỆU MÔ PHỎNG</Badge>
+          <Badge variant="warning-light">MÔ PHỎNG</Badge>
           <Button
             variant="outline"
             size="sm"
@@ -322,7 +322,7 @@ export function YieldTable({
       columns={columns}
       getRowId={(r) => r.areaId}
       initialSort={[{ id: "yieldStr", desc: true }]}
-      footnote="Tin rao bán và thuê đang là dữ liệu giả lập để dựng tính năng (G1). Không dùng để ra quyết định đầu tư."
+      footnote="Giá bán, giá thuê là trung vị giá rao của tin thật trong phường, chưa phải giá giao dịch. Lợi suất dựng từ mô hình một căn 60 m², chỉ để tham khảo."
     />
   )
 }
