@@ -11,7 +11,7 @@ import { JSDOM } from "jsdom"
 import pg from "pg"
 
 import { pool } from "../src/lib/db"
-import { getOfferComps, getOfferPhone, getPublicOffer, type PublicOfferDetail } from "../src/lib/offers-public"
+import { getOfferComps, getOfferPhone, getPublicOffer, getPublicOffers, parseOfferFilters, type PublicOfferDetail } from "../src/lib/offers-public"
 
 const DB_URL = process.env.DATABASE_URL ?? ""
 const skip = /\/oneinvest_[a-z0-9_]+$/.test(DB_URL) ? false : "cần DATABASE_URL trỏ DB thử oneinvest_<việc>"
@@ -384,6 +384,17 @@ test("TCT-AC-3, TCT-AC-4, TCT-AC-5 qua phản hồi HTTP thật", { skip, timeou
     assert.equal(tenThat.status, 200, "TCT-AC-4: tin mang tên nguồn vẫn phải 200")
     assert.equal(tenThat.body.includes(TEN_NGUON), false, "TCT-AC-4: tên nguồn thật lọt ra trang")
     assert.ok(tenThat.body.includes("Chưa có tên"), "TCT-AC-4: tên bị che phải về «Chưa có tên»")
+  })
+
+  await t.test("TCT-AC-4 danh sách công khai che đường mang tên nguồn, đường thường giữ nguyên", async () => {
+    const { rows } = await getPublicOffers(TT, parseOfferFilters(new URLSearchParams("limit=50")))
+    const theoMa = new Map(rows.map((r) => [r.offerId, r]))
+    assert.equal(theoMa.get(che)?.street, null, "TCT-AC-4 danh sách: đường mang tên nguồn phải về null")
+    assert.equal(theoMa.get(idNguon.get("S06")!)?.street, "Đường Thử", "TCT-AC-4 danh sách: đối chứng dương, đường thường phải giữ nguyên")
+    const trang = await tai(m, `/vn/tct${process.pid}/listings/sale`)
+    assert.equal(trang.status, 200, "TCT-AC-4 danh sách: trang Bán phải 200")
+    assert.equal(trang.body.includes(TEN_NGUON), false, "TCT-AC-4 danh sách: tên nguồn lọt ra trang Bán")
+    assert.ok(trang.body.includes("Đường Thử"), "TCT-AC-4 danh sách: đối chứng dương, trang Bán phải có đường thường")
   })
 
   await t.test("TCT-AC-5 mọi ca không hiện cùng 404 và cùng thân", async () => {
