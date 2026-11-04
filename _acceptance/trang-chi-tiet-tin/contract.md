@@ -5,7 +5,9 @@ slug: trang-chi-tiet-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # route đọc trên cổng công khai; không chạm t3_paths, không đổi dữ liệu hay đường lên cloud
 surfaces: [web]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-04
 design_doc: docs/superpowers/specs/2026-11-04-trang-chi-tiet-tin-design.md
 ---
 
@@ -28,7 +30,7 @@ Tiêu chí dưới viết theo lối máy khuyên; Mạnh chọn khác thì sử
 
 ## Acceptance criteria
 
-- AC-1 (cross-layer): Given thẻ trên trang Bán, Cho thuê dài hạn và trong khối tin cùng tiêu chí, When bấm thân, giá, tên người đăng, địa chỉ của thẻ, Then URL thành `/listing/<offer_id>`; bấm liên kết phường thì tới trang phường; bấm nhãn, Xem số thì URL không đổi.
+- AC-1: Given thẻ trên trang Bán, Cho thuê dài hạn và trong khối tin cùng tiêu chí, When bấm thân, giá, tên người đăng, địa chỉ của thẻ, Then URL thành `/listing/<offer_id>`; bấm liên kết phường thì tới trang phường; bấm nhãn, Xem số thì URL không đổi.
 - AC-2 (cross-layer): Given ma trận loại hình (căn hộ, nhà, đất) × kind × đủ hoặc thiếu trường ghi vào DB thử, When mở trang tin, Then hiện đúng giá, đơn giá, nhãn tin, thông số gồm block, tầng, vị trí, tuổi tin, người đăng; trường thiếu thì bỏ dòng; tin cấp thị trường có tên thị trường, không liên kết phường; mọi cột trang đọc đều có trong `CLOUD_ALLOW`.
 - AC-3 (cross-layer): Given tin có số, When tải trang qua máy chủ Next và chưa bấm, Then phản hồi HTTP, kể cả dữ liệu nhúng `__next_f`, không chứa số; bấm Xem số gọi đúng `/api/v1/listings/<id>/contact`; mọi trạng thái `ST-lien-he-*` và nhãn số giống trên thẻ.
 - AC-4 (cross-layer): Given tin của S03, S05, S06 mang giá trị đánh dấu ở mọi cột cấm (`source`, `listing_url`, `post_ids`, `seller_ref`, `field_provenance`, `street_number`, `unit_number`, toạ độ) và tên nguồn thật giả trong tên người đăng, block, tầng, đường, When tải trang chưa đăng nhập qua máy chủ Next, Then phản hồi HTTP gồm thẻ head, meta description, dữ liệu nhúng, cả thẻ trong khối tin cùng tiêu chí, không có giá trị đánh dấu nào; bản sao lộ một cột, kể cả chỉ truyền qua props mà không in, thì đỏ và gọi tên cột.
