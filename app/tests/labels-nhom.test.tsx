@@ -2,9 +2,9 @@
 // phần tử. Phần chuẩn hoá không DB; phần route dùng lược đồ tạm, migration 054 + 072 thật, handler thật.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import pg from "pg"
 import { renderToStaticMarkup } from "react-dom/server"
 import type { ReactNode } from "react"
@@ -25,6 +25,27 @@ import {
   type RawCell,
   type RawLabels,
 } from "../src/lib/labels-normalize"
+
+/** Bản chép một tệp nguồn của app sang thư mục tạm, đổi đúng một chỗ: chiều đỏ của phép đo. Import trỏ về tệp thật. */
+async function banDot<T>(tep: string, tu: string, thanh: string): Promise<T> {
+  const goc = readFileSync(join(APP, tep), "utf8")
+  assert.ok(goc.includes(tu), `đột biến không áp được: ${tu}`)
+  const thu = dirname(join(APP, tep))
+  const giai = (ten: string) => {
+    if (!ten.startsWith(".") && !ten.startsWith("@/")) return ten
+    const g = ten.startsWith("@/") ? join(APP, "src", ten.slice(2)) : join(thu, ten)
+    const f = [".ts", ".tsx", "/index.ts", "/index.tsx", ""].map((d) => g + d).find((x) => existsSync(x) && !statSync(x).isDirectory())
+    return pathToFileURL(f ?? g).href
+  }
+  const dot = goc.replace(tu, thanh).replace(/from "([^"]+)"/g, (_m, ten: string) => `from "${giai(ten)}"`)
+  const f = join(APP, "tests", `.gcn-dot-${process.pid}-${tep.split("/").pop()}`)
+  writeFileSync(f, dot)
+  try {
+    return (await import(pathToFileURL(f).href)) as T
+  } finally {
+    rmSync(f, { force: true })
+  }
+}
 
 /** jsdom cho các ca bấm trên màn thật, gỡ khỏi global sau mỗi ca để các ca render tĩnh giữ nguyên. */
 async function dungDom() {
@@ -96,7 +117,7 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".silver_labels (LIKE public.silver_labels INCLUDING DEFAULTS)`)
   await admin.query(`CREATE TABLE "${S}".collection_units (LIKE public.collection_units INCLUDING DEFAULTS)`)
   await sc.connect()
-  for (const m of ["054_labels.sql", "072_labels_nhom.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
+  for (const m of ["054_labels.sql", "072_labels_nhom.sql", "073_labels_nhom_sua.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
 })
 
 after(async () => {
@@ -216,7 +237,15 @@ test("GCN-AC-4 coTrongChu: ranh giới số và chữ, dấu, thập phân", () 
   const CA: [string, string, boolean][] = [
     ["12", "trục 12 đẹp", true],
     ["12", "giá 120 triệu", false],
-    ["12", "S5.12", false],
+    ["12", "S5.12", true],
+    ["03", "toà S5.03", true],
+    ["15", "Bán 2 căn trục 12,15", true],
+    ["12", "Bán 2 căn trục 12,15", true],
+    ["59", "DT 59,64,70m2", true],
+    ["64", "DT 59,64,70m2", true],
+    ["70", "DT 59,64,70m2", true],
+    ["5", "64,5 m2", false],
+    ["13", "trục 12,15", false],
     ["59", "59m2", true],
     ["59", "590 triệu", false],
     ["64.5", "64,50 m2", true],
@@ -416,23 +445,23 @@ test("GCN-AC-6 truong hop khong doi nhan: băm nhãn trước sau bằng nhau, t
   const a = await nguoiDaLuu(1)
   const { POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
   const truoc = await banhNhan(1)
-  const res = await POST(postTruongHop(a.cookie, 1, { case_kind: "bi-danh", note: "RB", the_nhom_dung: "dung" }), reviewCtx(1))
+  const res = await POST(postTruongHop(a.cookie, 1, { case_kind: "bi-danh", note: "RB", group_card_verdict: "correct" }), reviewCtx(1))
   assert.equal(res.status, 200, await res.clone().text())
   assert.equal(await banhNhan(1), truoc)
-  const { rows } = await sc.query(`SELECT case_kind, note, the_nhom_dung, labeler_id FROM eval_label_cases WHERE item_id = 1`)
-  assert.deepEqual(rows, [{ case_kind: "bi-danh", note: "RB", the_nhom_dung: "dung", labeler_id: a.id }])
+  const { rows } = await sc.query(`SELECT case_kind, note, group_card_verdict, labeler_id FROM eval_label_cases WHERE item_id = 1`)
+  assert.deepEqual(rows, [{ case_kind: "bi-danh", note: "RB", group_card_verdict: "correct", labeler_id: a.id }])
 })
 
 test("GCN-AC-6 tra loi the: đúng, sai, chưa xét lưu và đọc lại; giá trị lạ 400", async () => {
   await datLat()
   const a = await nguoiDaLuu(1)
   const { GET, POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
-  for (const v of ["dung", "sai", "chua"]) assert.equal((await POST(postTruongHop(a.cookie, 1, { the_nhom_dung: v }), reviewCtx(1))).status, 200, v)
-  assert.equal((await POST(postTruongHop(a.cookie, 1, { the_nhom_dung: "co" }), reviewCtx(1))).status, 400)
+  for (const v of ["correct", "wrong", "unsure"]) assert.equal((await POST(postTruongHop(a.cookie, 1, { group_card_verdict: v }), reviewCtx(1))).status, 200, v)
+  assert.equal((await POST(postTruongHop(a.cookie, 1, { group_card_verdict: "co" }), reviewCtx(1))).status, 400)
   assert.equal((await POST(postTruongHop(a.cookie, 1, { case_kind: "la" }), reviewCtx(1))).status, 400)
   const res = await GET(new Request("http://localhost/x", { headers: { cookie: a.cookie } }), reviewCtx(1))
-  const j = (await res.json()) as { truongHop: { theNhomDung: string }[] }
-  assert.deepEqual(j.truongHop.map((t) => t.theNhomDung), ["dung", "sai", "chua"])
+  const j = (await res.json()) as { truongHop: { groupCardVerdict: string }[] }
+  assert.deepEqual(j.truongHop.map((t) => t.groupCardVerdict), ["correct", "wrong", "unsure"])
 })
 
 test("GCN-AC-6 thân rỗng gửi thẳng route: 400, không thêm dòng", async () => {
@@ -773,13 +802,124 @@ test("GCN-AC-6 bo qua trên màn thật: nút Bỏ qua không gửi gì và sang
     assert.deepEqual(gui.map((g) => g.url), ["/api/v1/ops/labels/7/review"])
     assert.equal((gui[0].body as { note: string }).note, "RB viết tắt")
     assert.equal(di.length, 3)
-    loi = true
+    // Ghi xong nút khoá tới khi trang chuyển: bấm nữa không gửi thêm.
+    const nutGhi = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Đang ghi…")
+    assert.ok(nutGhi?.disabled, "NUT CON BAM DUOC SAU KHI GHI")
+    await dom.bam("Đang ghi…")
+    assert.equal(gui.length, 1, "NUT CON BAM DUOC SAU KHI GHI")
+    await dom.xong()
+    const dom2 = await dungDom()
+    try {
+      loi = true
+      await dom2.render(<LuotHai d={d} hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+      await dom2.go("th-note", "lần sau")
+      await dom2.bam("Ghi và sang tin kế")
+      assert.equal(di.length, 3, "lỗi ghi thì ở lại")
+      assert.match(document.body.textContent ?? "", /Nhãn đã lưu an toàn/)
+      assert.ok([...document.querySelectorAll("button")].some((b) => b.textContent?.includes("Thử lại")))
+    } finally {
+      await dom2.xong()
+    }
+  } finally {
+    globalThis.fetch = gocFetch
+  }
+})
+
+const CA_SO_THANH_PHAN: [string, string, boolean][] = [
+  ["03", "Bán căn S5.03", true], ["15", "trục 12,15", true], ["59", "DT 59,64,70m2", true], ["59", "giá 590 triệu", false], ["64", "DT 64,5m2", false], ["64.5", "DT 64,5m2", true],
+]
+function kiemSoThanhPhan(f: (v: string, t: string) => boolean): string[] {
+  return CA_SO_THANH_PHAN.filter(([v, t, ky]) => f(v, t) !== ky).map(([v, t]) => `${v} trong «${t}»`)
+}
+
+test("GCN-AC-11 co trong chu so thanh phan: ma trận, qua route, đột biến bị bắt", async () => {
+  assert.deepEqual(kiemSoThanhPhan(coTrongChu), [])
+  await datLat()
+  await sc.query(`UPDATE stg_zalo_posts SET text = $1 WHERE post_id = 'zalo-gcn-3'`, ["Bán 2 căn trục 12,15 S5.03 Rainbow Vinhomes Grand Park 64,5m2 giá 4,35 tỷ"])
+  const a = await taoNguoi(sc, "ops")
+  const { POST } = await import("../src/app/api/v1/ops/labels/route")
+  assert.equal((await POST(postNhan(a.cookie, 3, { ...DU, stack: chu("15") }))).status, 200, "trục 15 của bài 12,15 có trong chữ")
+  const b = await taoNguoi(sc, "ops")
+  const sai = await POST(postNhan(b.cookie, 4, { ...DU, stack: chu("99") }))
+  assert.equal(sai.status, 400)
+  assert.equal(((await sai.json()) as { loi: { stack: string } }).loi.stack, MSG_KHONG_TRONG_CHU)
+  const dot = await banDot<{ coTrongChu: (v: string, t: string) => boolean }>("src/lib/labels-normalize.ts", "return !thapPhan && phan.length > 1 && !v.includes(\".\") && phan.some((x) => nguyen(x) === nguyen(v))", "return false")
+  assert.notDeepEqual(kiemSoThanhPhan(dot.coTrongChu), [], "đối chứng không đỏ: bản bỏ so số thành phần vẫn xanh")
+})
+
+test("GCN-AC-12 bang so khong bao khac khi may khong doc: ô trống, unknown không tô; không suy ra được mà máy có giá trị thì tô; đột biến bị bắt", async () => {
+  await datLat()
+  await sc.query(`INSERT INTO sale_offers (offer_id, kind, first_seen, last_seen, post_ids, property_type) VALUES ('o-u', 'sale', now(), now(), ARRAY['zalo-gcn-1'], 'unknown')`)
+  await sc.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'zalo-gcn-1', 'h', 'm', 'v', 'unknown', 'sale', true, 'r')`)
+  const a = await nguoiDaLuu(1)
+  const { doiChieu } = await import("../src/lib/labels-luot-hai")
+  const d = await doiChieu(a.id, 1, sc)
+  assert.ok(d)
+  assert.equal(d.boDoc!.property_type, undefined, "unknown của máy là ô trống")
+  assert.equal(d.aiDoc!.listing_intent, undefined)
+  // Người gắn không suy ra được toà, máy đọc ra: vẫn là chỗ khác.
+  const voiCua = { ...d, boDoc: { ...d.boDoc, building: "s1" } }
+  type Mod = { BangSo: (p: { d: typeof voiCua }) => React.ReactElement }
+  const { BangSo } = await import("../src/components/ops/labels/bang-so") as unknown as Mod
+  const kiem = (M: Mod) => {
+    const html = renderToStaticMarkup(<M.BangSo d={voiCua} />)
+    const o = (f: string) => (html.match(new RegExp(`<tr[^>]*data-field="${f}"[^>]*>(.*?)</tr>`))?.[1] ?? "").split("<td").slice(1).map((c) => c.slice(c.indexOf(">") + 1))
+    return {
+      tangTo: o("floor")[2]?.includes("<span"), wcTo: o("bathrooms")[2]?.includes("<span"), loaiHinhTo: o("property_type")[2]?.includes("<span"),
+      yDinhAiTo: o("listing_intent")[3]?.includes("<span"), toaTo: o("building")[2]?.includes("<span"), khongUnknown: !html.includes("unknown"), so: html.match(/(\d+) trường khác máy/)?.[1],
+    }
+  }
+  const kq = kiem({ BangSo } as Mod)
+  assert.deepEqual(kq, { tangTo: false, wcTo: false, loaiHinhTo: false, yDinhAiTo: false, toaTo: true, khongUnknown: true, so: "1" }, JSON.stringify(kq))
+  const dot = await banDot<Mod>("src/components/ops/labels/bang-so.tsx", "khacBo: bo !== null && bo !== toi,", "khacBo: !!d.boDoc && bo !== toi,")
+  assert.notEqual(kiem(dot).so, "1", "đối chứng không đỏ: bản coi ô trống là khác vẫn xanh")
+})
+
+test("GCN-AC-14 thu lai khong ghi trung: máy thu đã ghi rồi mất phản hồi, Thử lại ra một dòng; đổi nội dung ra dòng mới; đột biến bị bắt", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const hai = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const { LuotHai } = await import("../src/components/ops/labels/luot-hai")
+  const { bangTruongHop } = await import("../src/lib/labels-luot-hai")
+  const dem = async () => (await sc.query(`SELECT count(*)::int AS n FROM eval_label_cases WHERE item_id = 1`)).rows[0].n
+  const gocFetch = globalThis.fetch
+  let matPhanHoi = true
+  globalThis.fetch = (async (url: string, init: RequestInit) => {
+    const res = await hai.POST(postTruongHop(a.cookie, 1, JSON.parse(String(init.body))), reviewCtx(1))
+    if (matPhanHoi) { matPhanHoi = false; throw new Error("mất mạng sau khi đã ghi") }
+    void url
+    return res
+  }) as unknown as typeof fetch
+  const dom = await dungDom()
+  const di: string[] = []
+  const d = { itemId: 1, lat: LAT, text: "chữ", groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the: null }
+  try {
+    await dom.render(<LuotHai d={d} hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.go("th-note", "RB viết tắt")
     await dom.bam("Ghi và sang tin kế")
-    assert.equal(di.length, 3, "lỗi ghi thì ở lại")
-    assert.match(document.body.textContent ?? "", /Nhãn đã lưu an toàn/)
-    assert.ok([...document.querySelectorAll("button")].some((b) => b.textContent?.includes("Thử lại")))
+    await dom.cho(() => (document.body.textContent ?? "").includes("Thử lại"))
+    assert.equal(await dem(), 1, "máy thu đã ghi dù mất phản hồi")
+    assert.equal(di.length, 0)
+    await dom.bam("Thử lại")
+    await dom.cho(() => di.length === 1)
+    assert.deepEqual(di, ["/tin-ke"])
+    assert.equal(await dem(), 1, "GHI TRUNG KHI THU LAI")
+    const bang = (await bangTruongHop(LAT, sc)).find((x) => x.unitCode === "U-A")
+    assert.ok(bang)
   } finally {
     globalThis.fetch = gocFetch
     await dom.xong()
   }
+  // Cùng route: khoá khác là dòng mới, không khoá vẫn thêm được.
+  assert.equal((await hai.POST(postTruongHop(a.cookie, 1, { note: "khác", request_id: "k2" }), reviewCtx(1))).status, 200)
+  assert.equal((await hai.POST(postTruongHop(a.cookie, 1, { note: "khác", request_id: "k2" }), reviewCtx(1))).status, 200)
+  assert.equal(await dem(), 2)
+  assert.equal((await hai.POST(postTruongHop(a.cookie, 1, { note: "không khoá" }), reviewCtx(1))).status, 200)
+  assert.equal(await dem(), 3)
+  // Đột biến: bỏ ON CONFLICT và bỏ khoá thì Thử lại ra hai dòng.
+  type Mod = { ghiTruongHop: (c: unknown, u: string, i: number, g: Record<string, unknown>) => Promise<unknown> }
+  const dot = await banDot<Mod>("src/lib/labels-luot-hai.ts", "const khoa = typeof g.request_id === \"string\" && g.request_id ? g.request_id : null", "const khoa = null")
+  await dot.ghiTruongHop(sc, a.id, 1, { note: "đột biến", request_id: "k3" })
+  await dot.ghiTruongHop(sc, a.id, 1, { note: "đột biến", request_id: "k3" })
+  assert.equal(await dem(), 5, "đối chứng không đỏ: bản bỏ khoá vẫn không ghi trùng")
 })

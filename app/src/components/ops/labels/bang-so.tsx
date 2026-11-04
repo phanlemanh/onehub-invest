@@ -9,12 +9,6 @@ import { hienGiaTri, nhanTruong } from "./nhom-fields"
 
 /** Bảng «Anh gắn · Bộ đọc · AI đọc» của lượt hai. Khổ hẹp xếp thành từng dòng trường, không tràn ngang trang. */
 
-/** Trường bộ đọc có đọc. Năm trường còn lại nó chưa có cột, nên «—» ở đó không phải chỗ khác. */
-const BO_DOC_CO_TRUONG = new Set<LabelField>([
-  "listing_intent", "kind", "property_type", "building", "floor", "bedrooms", "bathrooms", "area_m2",
-  "price_min_vnd", "price_max_vnd", "seller_name", "seller_phone",
-])
-
 type DongSo = { f: LabelField; toi: string; bo: string; ai: string; khacBo: boolean; khacAi: boolean }
 
 function dongSo(d: DoiChieu): DongSo[] {
@@ -29,8 +23,9 @@ function dongSo(d: DoiChieu): DongSo[] {
       toi: r.notStated ? "Không suy ra được" : hienGiaTri(f, r.value),
       bo: hienGiaTri(f, bo),
       ai: hienGiaTri(f, ai),
-      khacBo: !!d.boDoc && BO_DOC_CO_TRUONG.has(f) && bo !== toi,
-      khacAi: !!d.aiDoc && ai !== null && ai !== toi,
+      // Máy không đọc được thì không phải chỗ khác; máy đọc ra giá trị khác nhãn mới tô, kể cả khi người gắn không suy ra được.
+      khacBo: bo !== null && bo !== toi,
+      khacAi: ai !== null && ai !== toi,
     }
   })
 }

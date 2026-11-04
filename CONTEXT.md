@@ -617,6 +617,9 @@ _Avoid_: chưa so
 - Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
 _Avoid_: nguồn nhãn
 
+**Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
+- Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`
+
 **Trường hợp**: Loại tình huống người gắn ghi sau khi so nhãn của mình với máy đọc, như bí danh viết tắt hay mặc định theo nhóm. Không làm đổi nhãn đã lưu; là đầu vào để viết quy ước nhóm.
 - Code: `eval_label_cases.case_kind`
 _Avoid_: tình huống gắn

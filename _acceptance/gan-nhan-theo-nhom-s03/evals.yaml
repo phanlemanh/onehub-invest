@@ -162,3 +162,35 @@ evals:
     paths: [db/migrations/072_*.sql, pipeline/label-sample.mjs, app/src/app/api/v1/ops/labels/**, pipeline/label-cases.mjs, pipeline/lib/eval-classify.mjs, _acceptance/gan-nhan-theo-nhom-s03/probes/round-trip.mjs]
     expected: "exit 0; DB thử áp migration thật, không chèn tay: lệnh mẫu, route lưu, route trường hợp, label-cases, eval-classify; 'ok moi buoc doc duoc dong cua buoc truoc'. Chiều đỏ cùng fixture: gửi trường ngoài CHECK thì thoát 1 với 'loi rang buoc truong'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E19
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-normalize.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'co trong chu so thanh phan' xanh trên ma trận viết trước gồm S5.03, 12,15, 59,64,70m2, 590, 64,5; qua route lưu được trục 15 của bài 12,15. Chiều đỏ: bản đột biến bỏ so số thành phần thì ma trận đỏ, nêu ca"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E20
+    criterion: AC-12
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/components/ops/labels/bang-so.tsx, app/src/lib/labels-luot-hai.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'bang so khong bao khac khi may khong doc' xanh: ô máy trống và unknown không Badge, không tính số khác; nhãn Không suy ra được mà máy có giá trị thì có Badge. Chiều đỏ: bản đột biến coi ô trống là khác thì ca đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E21
+    criterion: AC-13
+    executor: script
+    cmd: config:executors.script.gcn_migration
+    layer: backend-effect
+    paths: [db/migrations/07*_*.sql, _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs, CONTEXT.md]
+    expected: "exit 0; 'ok cot group_card_verdict', 'ok doi gia tri dong cu', 'ok chan case_kind la', 'ok chan verdict la', 'ok thuat ngu the nhom'. Chiều đỏ cùng fixture: bản migration bỏ CHECK case_kind thì thoát 1 với 'loi khong chan case_kind la'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E22
+    criterion: AC-14
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/luot-hai.tsx, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'thu lai khong ghi trung' xanh trên màn thật trong jsdom và route thật: máy thu đã ghi rồi mất phản hồi, Thử lại cùng nội dung ra một dòng, số bảng trường hợp không đổi; đổi nội dung ra dòng mới; nút khoá sau khi ghi xong. Chiều đỏ: bản đột biến bỏ ON CONFLICT thì ca đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
-import { CASE_KINDS, THE_NHOM_DUNG, chuanChu, type Basis, type CaseKind, type LabelField, type TheNhomDung } from "./labels-normalize"
+import { CASE_KINDS, GROUP_CARD_VERDICTS, chuanChu, type Basis, type CaseKind, type GroupCardVerdict, type LabelField } from "./labels-normalize"
 
 /**
  * Lượt hai của màn gắn nhãn (GC0 `gan-nhan-theo-nhom-s03`): so nhãn với máy đọc, ghi trường hợp, bảng số theo nhóm.
@@ -12,7 +12,7 @@ import { CASE_KINDS, THE_NHOM_DUNG, chuanChu, type Basis, type CaseKind, type La
 type Q = Pick<PoolClient, "query">
 
 export type NhanCuaToi = { field: LabelField; value: string | null; notStated: boolean; basis: Basis | null }
-export type TruongHopDaGhi = { caseKind: CaseKind | null; note: string | null; theNhomDung: TheNhomDung | null }
+export type TruongHopDaGhi = { caseKind: CaseKind | null; note: string | null; groupCardVerdict: GroupCardVerdict | null }
 export type MayDoc = Partial<Record<LabelField, string>>
 export type DoiChieu = {
   itemId: number
@@ -29,7 +29,8 @@ export type DoiChieu = {
   truongHop: TruongHopDaGhi[]
 }
 
-const so = (v: unknown) => (v == null ? undefined : String(v))
+/** «unknown» của máy nghĩa là máy không đọc được, nên coi như ô trống. */
+const so = (v: unknown) => (v == null || v === "unknown" ? undefined : String(v))
 const chu = (v: unknown) => (v == null || v === "" ? undefined : chuanChu(String(v)))
 
 /** Bảng so của một bài. Bài nhiều tin so với tin có `offer_id` nhỏ nhất, `soTin` nói rõ tổng số. */
@@ -53,7 +54,7 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
       ? q.query(`SELECT note FROM collection_units WHERE source_code = 'S03' AND unit_code = $1`, [b.stratum])
       : Promise.resolve({ rows: [] as { note: string | null }[] }),
     q.query(`SELECT reason FROM eval_label_reasons WHERE item_id = $1 AND labeler_id = $2`, [itemId, userId]),
-    q.query(`SELECT case_kind, note, the_nhom_dung FROM eval_label_cases WHERE item_id = $1 AND labeler_id = $2 ORDER BY id`, [itemId, userId]),
+    q.query(`SELECT case_kind, note, group_card_verdict FROM eval_label_cases WHERE item_id = $1 AND labeler_id = $2 ORDER BY id`, [itemId, userId]),
   ])
   const o = tin.rows[0]
   const boDoc: MayDoc | null = o
@@ -82,29 +83,32 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
     cuaToi: nhan.map((r) => ({ field: r.field, value: r.value, notStated: r.not_stated, basis: r.basis })),
     lyDo: lyDo.rows[0]?.reason ?? null,
     boDoc,
-    aiDoc: a ? { listing_intent: a.listing_intent, kind: so(a.kind) } : null,
+    aiDoc: a ? { listing_intent: so(a.listing_intent), kind: so(a.kind) } : null,
     soTin: tin.rows.length,
     the: the.rows[0]?.note || null,
-    truongHop: tv.rows.map((r) => ({ caseKind: r.case_kind, note: r.note, theNhomDung: r.the_nhom_dung })),
+    truongHop: tv.rows.map((r) => ({ caseKind: r.case_kind, note: r.note, groupCardVerdict: r.group_card_verdict })),
   }
 }
 
-export type GhiTruongHop = { case_kind?: unknown; note?: unknown; the_nhom_dung?: unknown }
+export type GhiTruongHop = { case_kind?: unknown; note?: unknown; group_card_verdict?: unknown; request_id?: unknown }
 export type KetQuaTruongHop = { ok: true } | { ok: false; status: 400 | 403; error: string }
 
-/** Thêm một dòng trường hợp. Không đụng `eval_labels`; chưa lưu nhãn bài này thì 403. Bỏ qua là không gọi hàm này. */
+/** Thêm một dòng trường hợp. Không đụng `eval_labels`; chưa lưu nhãn bài này thì 403. Bỏ qua là không gọi hàm này. `request_id` là
+ * khoá của một lần bấm Ghi: lỗi mạng có thể xảy ra sau khi đã ghi, nên «Thử lại» cùng khoá không sinh dòng thứ hai. */
 export async function ghiTruongHop(c: Q, userId: string, itemId: number, g: GhiTruongHop): Promise<KetQuaTruongHop> {
   const kind = g.case_kind == null || g.case_kind === "" ? null : String(g.case_kind)
-  const the = g.the_nhom_dung == null || g.the_nhom_dung === "" ? null : String(g.the_nhom_dung)
+  const the = g.group_card_verdict == null || g.group_card_verdict === "" ? null : String(g.group_card_verdict)
+  const khoa = typeof g.request_id === "string" && g.request_id ? g.request_id : null
   const note = typeof g.note === "string" ? g.note.trim() || null : null
   if (kind && !CASE_KINDS.some((k) => k.value === kind)) return { ok: false, status: 400, error: "Loại trường hợp không hợp lệ" }
-  if (the && !(THE_NHOM_DUNG as readonly string[]).includes(the)) return { ok: false, status: 400, error: "Trả lời thẻ nhóm không hợp lệ" }
+  if (the && !(GROUP_CARD_VERDICTS as readonly string[]).includes(the)) return { ok: false, status: 400, error: "Trả lời thẻ nhóm không hợp lệ" }
   if (!kind && !the && !note) return { ok: false, status: 400, error: "Chưa có gì để ghi" }
   const { rows } = await c.query(`SELECT 1 FROM eval_labels WHERE item_id = $1 AND labeler_id = $2 LIMIT 1`, [itemId, userId])
   if (rows.length === 0) return { ok: false, status: 403, error: "Chỉ ghi được sau khi đã lưu nhãn bài này" }
   await c.query(
-    `INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, note, the_nhom_dung) VALUES ($1, $2, $3, $4, $5)`,
-    [itemId, userId, kind, note, the])
+    `INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, note, group_card_verdict, request_id) VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (item_id, labeler_id, request_id) DO NOTHING`,
+    [itemId, userId, kind, note, the, khoa])
   return { ok: true }
 }
 

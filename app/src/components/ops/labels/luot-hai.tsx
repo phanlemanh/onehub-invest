@@ -19,10 +19,13 @@ import { diTrang } from "./luu-nhan"
 /** Lượt hai: bảng «Anh gắn · Bộ đọc · AI đọc», thẻ nhóm, ô trường hợp. Không có đường đổi nhãn đã lưu. Bỏ qua được. */
 
 const THE_OPTIONS = [
-  { value: "dung", label: "Đúng" },
-  { value: "sai", label: "Sai" },
-  { value: "chua", label: "Chưa xét được" },
+  { value: "correct", label: "Đúng" },
+  { value: "wrong", label: "Sai" },
+  { value: "unsure", label: "Chưa xét được" },
 ]
+
+/** Khoá của một lần bấm Ghi; đổi nội dung thì đổi khoá, «Thử lại» giữ nguyên khoá. */
+const moiKhoa = () => [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, "0")).join("")
 
 /** Lỗi khi ghi trường hợp: nhãn đã an toàn, có «Thử lại». */
 export function LoiTruongHop({ loi, onRetry, dangGhi }: { loi: string; onRetry: () => void; dangGhi: boolean }) {
@@ -47,6 +50,11 @@ function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string;
   const [note, setNote] = useState("")
   const [dangGhi, setDangGhi] = useState(false)
   const [loi, setLoi] = useState<string | null>(null)
+  const [khoa, setKhoa] = useState(moiKhoa)
+  const doi = <T,>(dat: (v: T) => void) => (v: T) => {
+    dat(v)
+    setKhoa(moiKhoa())
+  }
   const sangTinKe = () => diToi(hrefTinKe)
 
   async function ghi() {
@@ -57,14 +65,15 @@ function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string;
       const res = await fetch(`/api/v1/ops/labels/${d.itemId}/review`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ case_kind: kind, note, the_nhom_dung: the }),
+        body: JSON.stringify({ case_kind: kind, note, group_card_verdict: the, request_id: khoa }),
       })
+      // Ghi xong giữ nút khoá tới khi trang chuyển, để không bấm được lần nữa.
       if (res.ok) return sangTinKe()
       const b = (await res.json().catch(() => ({}))) as { error?: string }
       setLoi(b.error ?? "Không ghi được trường hợp")
+      setDangGhi(false)
     } catch {
       setLoi("Mất kết nối tới máy thu")
-    } finally {
       setDangGhi(false)
     }
   }
@@ -87,7 +96,7 @@ function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string;
           {d.the ? (
             <Field>
               <FieldLabel htmlFor="th-the">Thẻ đúng với bài này không?</FieldLabel>
-              <Select value={the} items={THE_OPTIONS} onValueChange={(v) => setThe(String(v))}>
+              <Select value={the} items={THE_OPTIONS} onValueChange={(v) => doi(setThe)(String(v))}>
                 <SelectTrigger id="th-the" className="w-full"><SelectValue placeholder="Chọn" /></SelectTrigger>
                 <SelectContent align="start" alignItemWithTrigger={false}>
                   <SelectGroup>
@@ -99,7 +108,7 @@ function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string;
           ) : null}
           <Field>
             <FieldLabel htmlFor="th-kind">Loại trường hợp</FieldLabel>
-            <Select value={kind} items={[...CASE_KINDS]} onValueChange={(v) => setKind(String(v))}>
+            <Select value={kind} items={[...CASE_KINDS]} onValueChange={(v) => doi(setKind)(String(v))}>
               <SelectTrigger id="th-kind" className="w-full"><SelectValue placeholder="Chọn" /></SelectTrigger>
               <SelectContent align="start" alignItemWithTrigger={false}>
                 <SelectGroup>
@@ -110,13 +119,13 @@ function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string;
           </Field>
           <Field>
             <FieldLabel htmlFor="th-note">Diễn giải</FieldLabel>
-            <Textarea id="th-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Bí danh này chưa có trong từ điển" />
+            <Textarea id="th-note" value={note} onChange={(e) => doi(setNote)(e.target.value)} placeholder="Bí danh này chưa có trong từ điển" />
           </Field>
           {loi ? <LoiTruongHop loi={loi} onRetry={ghi} dangGhi={dangGhi} /> : null}
         </FieldGroup>
       </FramePanel>
       <FrameFooter className="flex flex-row items-center justify-end gap-2">
-        <Button variant="outline" onClick={sangTinKe}>Bỏ qua</Button>
+        <Button variant="outline" onClick={sangTinKe} disabled={dangGhi}>Bỏ qua</Button>
         <Button onClick={ghi} disabled={dangGhi}>{dangGhi ? "Đang ghi…" : "Ghi và sang tin kế"}</Button>
       </FrameFooter>
     </Frame>

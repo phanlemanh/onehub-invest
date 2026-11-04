@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 
-import { M054, M072, ROOT, SERVER, kiem, pg } from "./_db.mjs"
+import { M054, M072, M073, ROOT, SERVER, kiem, pg } from "./_db.mjs"
 
 const DB = "oneinvest_gcn_nhan_mig"
 const TRUONG_MOI = ["subzone", "stack", "floor", "bathrooms", "bedrooms_plus", "multi_unit", "seller_name", "seller_phone"]
@@ -35,7 +35,7 @@ const bam = async (c) =>
      SELECT concat_ws(',', 'i', item_id, lat, ref_id, split, double_label) AS x FROM eval_label_items
      UNION ALL SELECT concat_ws(',', 'l', item_id, labeler_id, field, value, not_stated) FROM eval_labels) t`)).rows[0].b
 
-async function kiemBan(sql, { sync = null } = {}) {
+async function kiemBan(sql, { sync = null, sua = M073 } = {}) {
   const loi = []
   const c = await dbRong()
   try {
@@ -71,6 +71,21 @@ async function kiemBan(sql, { sync = null } = {}) {
     let chan = false
     try { await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value, basis) VALUES (1,'u9','kind','sale','doan')`) } catch { chan = true }
     kiem(loi, chan, "chan can cu la", "loi khong chan can cu la")
+    // AC-13: dòng cũ theo tên cột của 072, áp 073 hai lần.
+    await c.query(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, the_nhom_dung) VALUES (1,'u1','khac','dung'),(1,'u2','khac','sai'),(1,'u3','khac','chua'),(1,'u4','khac',NULL)`)
+    await c.query(sua)
+    await c.query(sua)
+    const cotTh = await cot("eval_label_cases")
+    kiem(loi, cotTh.has("group_card_verdict") && !cotTh.has("the_nhom_dung") && cotTh.has("request_id"), "cot group_card_verdict", "loi cot tra loi the")
+    const { rows: tl } = await c.query(`SELECT labeler_id, group_card_verdict AS v FROM eval_label_cases ORDER BY labeler_id`)
+    kiem(loi, JSON.stringify(tl.map((r) => r.v)) === JSON.stringify(["correct", "wrong", "unsure", null]), "doi gia tri dong cu", `loi doi gia tri: ${JSON.stringify(tl)}`)
+    const biChan = async (cauSql) => { try { await c.query(cauSql); return false } catch { return true } }
+    kiem(loi, await biChan(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind) VALUES (1,'u9','la')`), "chan case_kind la", "loi khong chan case_kind la")
+    kiem(loi, await biChan(`INSERT INTO eval_label_cases (item_id, labeler_id, group_card_verdict) VALUES (1,'u9','dung')`), "chan verdict la", "loi khong chan verdict la")
+    kiem(loi, !(await biChan(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, group_card_verdict) VALUES (1,'u9','bi-danh','wrong')`)), "doi chung duong: gia tri hop le ghi duoc", "loi chan ca gia tri hop le")
+    await c.query(`INSERT INTO eval_label_cases (item_id, labeler_id, note, request_id) VALUES (1,'u9','a','k1')`)
+    kiem(loi, await biChan(`INSERT INTO eval_label_cases (item_id, labeler_id, note, request_id) VALUES (1,'u9','a','k1')`), "chan trung request_id", "loi khong chan trung request_id")
+    kiem(loi, /\*\*Thẻ nhóm\*\*:/.test(readFileSync(path.join(ROOT, "CONTEXT.md"), "utf8")), "thuat ngu the nhom", "loi thieu thuat ngu the nhom")
   } finally {
     await c.end()
   }
@@ -102,6 +117,8 @@ try {
 }
 const banThieu = M072.replace(", ('seller_phone')\n", "\n")
 const dView = banThieu === M072 ? [] : await kiemBan(banThieu)
+const banBoCheck = M073.replace(/ALTER TABLE eval_label_cases ADD CONSTRAINT eval_label_cases_case_kind_check[\s\S]*?'khac'\)\);/, "")
+const dCheck = banBoCheck === M073 ? [] : await kiemBan(M072, { sua: banBoCheck })
 console.log = out
 kiem(loi, dSync.includes("loi bang nhan tren duong day"), "doi chung: sync co bang nhan bi bat", "DOI CHUNG KHONG DO: sync")
 // Đối chứng bao đóng: module nạp gián tiếp có câu đọc bảng nhãn, hàm phải đi tới nó.
@@ -113,6 +130,7 @@ const conDoDong = [...baoDong(path.join(TAM, "a.mjs"))].filter((f) => /eval_labe
 rmSync(TAM, { recursive: true, force: true })
 kiem(loi, conDoDong.length === 1, "doi chung: bao dong gian tiep bi bat", "DOI CHUNG KHONG DO: bao dong")
 kiem(loi, dView.includes("loi view thieu truong"), "doi chung: view thieu truong bi bat", "DOI CHUNG KHONG DO: view")
+kiem(loi, dCheck.includes("loi khong chan case_kind la"), "doi chung: bo CHECK case_kind bi bat", "DOI CHUNG KHONG DO: case_kind")
 const a = new pg.Client({ connectionString: `${SERVER}/postgres` })
 await a.connect()
 await a.query(`DROP DATABASE IF EXISTS ${DB}`)

@@ -19,7 +19,7 @@ try {
   const [a, b] = rows.map((r) => r.item_id)
   await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value, not_stated, basis) VALUES ($1, 'usr_gcncases', 'subzone', 'rainbow', false, 'ngu_canh_nhom'), ($1, 'usr_gcncases', 'bedrooms', '2', false, 'chu_bai')`, [a])
   await c.query(`INSERT INTO eval_label_reasons (item_id, labeler_id, reason) VALUES ($1, 'usr_gcncases', 'RB = Rainbow')`, [a])
-  await c.query(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, note, the_nhom_dung) VALUES ($1, 'usr_gcncases', 'bi-danh', 'viết tắt', 'sai')`, [a])
+  await c.query(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, note, group_card_verdict) VALUES ($1, 'usr_gcncases', 'bi-danh', 'viết tắt', 'wrong')`, [a])
   void b
   const r1 = chay("--lat", LAT, "--json")
   k(r1.status === 0, "lenh chay", `loi lenh: ${r1.stderr}`)
@@ -27,7 +27,7 @@ try {
   const ua = j.nhom?.find((n) => n.unit_code === "U-A") ?? {}
   k(ua.ly_do?.[0]?.ly_do === "RB = Rainbow", "co ly do", "loi thieu ly do")
   k(ua.truong_hop?.[0]?.loai === "bi-danh" && ua.truong_hop?.[0]?.dien_giai === "viết tắt", "co truong hop", "loi thieu truong hop")
-  k(ua.the_nhom?.[0]?.tra_loi === "sai", "tra loi the", "loi thieu tra loi the")
+  k(ua.the_nhom?.[0]?.tra_loi === "wrong", "tra loi the", "loi thieu tra loi the")
   k(ua.gia_tri_ngu_canh?.length === 1 && ua.gia_tri_ngu_canh[0].gia_tri === "rainbow", "gia tri ngu canh", "loi gia tri ngu canh")
   k(j.nhom?.some((n) => n.unit_code === "U-B"), "nhom chua gan van co dong", "loi mat nhom chua gan")
   k(!/usr_gcncases|labeler/.test(r1.stdout), "khong co labeler", "loi lo dinh danh nguoi gan")

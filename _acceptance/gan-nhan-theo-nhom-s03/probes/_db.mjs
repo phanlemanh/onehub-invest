@@ -12,14 +12,16 @@ export const DB_THU = process.env.GCN_DB ?? "oneinvest_gcn_nhan"
 export const URL_THU = `${SERVER}/${DB_THU}`
 export const M054 = readFileSync(path.join(ROOT, "db/migrations/054_labels.sql"), "utf8")
 export const M072 = readFileSync(path.join(ROOT, "db/migrations/072_labels_nhom.sql"), "utf8")
+export const M073 = readFileSync(path.join(ROOT, "db/migrations/073_labels_nhom_sua.sql"), "utf8")
 if (!/^oneinvest_gcn_nhan[a-z0-9_]*$/.test(DB_THU)) throw new Error(`tên DB thử sai: ${DB_THU}`)
 
-/** Client nối DB thử, đã áp 054 và 072 (idempotent). */
+/** Client nối DB thử, đã áp 054, 072, 073 (idempotent). */
 export async function noiDbThu() {
   const c = new pg.Client({ connectionString: URL_THU })
   await c.connect()
   await c.query(M054)
   await c.query(M072)
+  await c.query(M073)
   return c
 }
 

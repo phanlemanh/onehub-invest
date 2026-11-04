@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 /**
  * /api/v1/ops/labels/<itemId>/review — lượt hai của màn gắn nhãn (GC0). Quyền `label.write`.
  * GET → bảng so của người gọi; 403 khi họ chưa lưu bài này, để lượt một vẫn mù.
- * POST { case_kind, note, the_nhom_dung } → thêm một dòng trường hợp, không đụng nhãn đã lưu.
+ * POST { case_kind, note, group_card_verdict, request_id } → thêm một dòng trường hợp, không đụng nhãn đã lưu.
  * Bảng chỉ ở máy thu: trên cloud (VERCEL=1) trả 503 «Chỉ ở máy thu» trước mọi truy vấn.
  */
 type Ctx = { params: Promise<{ itemId: string }> }

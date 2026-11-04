@@ -35,7 +35,7 @@ export function gomTruongHop({ lat, items, reasons, cases, values }) {
     const v = vao(r);
     if (!v) continue;
     if (r.case_kind || r.note) v[0].truong_hop.push({ ref_id: v[1], loai: r.case_kind ?? null, dien_giai: r.note ?? null });
-    if (r.the_nhom_dung) v[0].the_nhom.push({ ref_id: v[1], tra_loi: r.the_nhom_dung });
+    if (r.group_card_verdict) v[0].the_nhom.push({ ref_id: v[1], tra_loi: r.group_card_verdict });
   }
   for (const r of values) {
     const v = vao(r);
@@ -63,7 +63,7 @@ export async function xuatTruongHop(client, lat, nhom = null) {
   const doc = async (sql) => (await client.query(sql, [ma])).rows;
   const [reasons, cases, values] = await Promise.all([
     doc(`SELECT item_id::text AS item_id, reason FROM eval_label_reasons WHERE item_id = ANY ($1::bigint[])`),
-    doc(`SELECT item_id::text AS item_id, case_kind, note, the_nhom_dung FROM eval_label_cases WHERE item_id = ANY ($1::bigint[])`),
+    doc(`SELECT item_id::text AS item_id, case_kind, note, group_card_verdict FROM eval_label_cases WHERE item_id = ANY ($1::bigint[])`),
     doc(`SELECT item_id::text AS item_id, field, value, basis FROM eval_labels
          WHERE item_id = ANY ($1::bigint[]) AND basis IN ('ngu_canh_nhom', 'kien_thuc_nghe')`),
   ]);

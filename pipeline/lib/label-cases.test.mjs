@@ -13,8 +13,8 @@ const DAU = {
   ],
   reasons: [{ item_id: "3", reason: "z", labeler_id: "usr_a" }, { item_id: "1", reason: "RB = Rainbow", labeler_id: "usr_b" }],
   cases: [
-    { item_id: "1", case_kind: "bi-danh", note: "RB", the_nhom_dung: "dung", labeler_id: "usr_a" },
-    { item_id: "1", case_kind: null, note: null, the_nhom_dung: "sai", labeler_id: "usr_b" },
+    { item_id: "1", case_kind: "bi-danh", note: "RB", group_card_verdict: "correct", labeler_id: "usr_a" },
+    { item_id: "1", case_kind: null, note: null, group_card_verdict: "wrong", labeler_id: "usr_b" },
   ],
   values: [{ item_id: "1", field: "subzone", value: "rainbow", basis: "ngu_canh_nhom", labeler_id: "usr_a" }],
 };
@@ -25,7 +25,7 @@ test("gom theo nhóm, đúng bốn danh sách, nhóm chưa có gì vẫn hiện"
   const a = kq.nhom[0];
   assert.deepEqual(a.ly_do, [{ ref_id: "p1", ly_do: "RB = Rainbow" }, { ref_id: "p3", ly_do: "z" }]);
   assert.deepEqual(a.truong_hop, [{ ref_id: "p1", loai: "bi-danh", dien_giai: "RB" }]);
-  assert.deepEqual(a.the_nhom, [{ ref_id: "p1", tra_loi: "dung" }, { ref_id: "p1", tra_loi: "sai" }]);
+  assert.deepEqual(a.the_nhom, [{ ref_id: "p1", tra_loi: "correct" }, { ref_id: "p1", tra_loi: "wrong" }]);
   assert.deepEqual(a.gia_tri_ngu_canh, [{ ref_id: "p1", truong: "subzone", gia_tri: "rainbow", can_cu: "ngu_canh_nhom" }]);
   assert.deepEqual(kq.nhom[1].ly_do, []);
 });

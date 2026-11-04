@@ -29,6 +29,10 @@ approved_at: 2026-11-04
 - AC-8: Given lát có lý do và trường hợp, When chạy `label-cases --json`, Then đầu ra theo từng nhóm gồm lý do, trường hợp, trả lời thẻ nhóm và các giá trị căn cứ ngữ cảnh, không chứa định danh người gắn; đây là nơi duy nhất đọc chữ lý do; chuỗi thật lấy mẫu, lưu qua route, xuất, chấm chạy được trên DB thử đã áp migration thật; chạy lại ra y nguyên; lát không tồn tại thoát khác 0 kèm thông điệp.
 - AC-9: Given bộ đo cũ, When chạy `eval-classify`, `label-agreement`, các test nhãn cũ trên dữ liệu có cả trường mới, Then chín trường cũ chấm không đổi, trường mới không làm sai số cũ, phút công vẫn tính, và lát `?lat=` đời trước vẫn mở với biểu mẫu đúng.
 - AC-10 (cross-layer): Given `VERCEL=1`, chưa đăng nhập, vai viewer, DB lỗi và lát rỗng, When gọi màn và API lượt hai, trường hợp, Then cloud trả «Chỉ ở máy thu» không truy vấn bảng nhãn; chưa đăng nhập, viewer bị chặn ghi; lỗi có «Thử lại»; rỗng có lệnh lấy mẫu; tin vừa có người gắn chuyển tin kế; người đã gắn hết thấy số bài chờ người thứ hai; đúng các trạng thái trong Đặc tả UX.
+- AC-11: Given chữ bài ghi số trong mã hay danh sách như «S5.03», «trục 12,15», «DT 59,64,70m2», When khai trục, diện tích bằng «Chữ bài» với số thành phần đó, Then lưu được; «59» với «590» và số không có trong chữ vẫn trả 400 với câu «Chữ bài không có giá trị này — chọn căn cứ khác»; số thập phân «64,5» chỉ khớp 64,5, không khớp 64 hay 5. Phạm vi nâng 04/11, giám sát uỷ quyền.
+- AC-12: Given bài có ô máy không đọc được hoặc đọc «unknown», When mở lượt hai, Then ô đó hiện «—», không tô khác máy và không tính vào số trường khác; ô máy đọc ra giá trị khác nhãn, kể cả khi người gắn chọn «Không suy ra được», vẫn tô khác. Phạm vi nâng 04/11, giám sát uỷ quyền.
+- AC-13: Given DB thử áp 054, 072 và migration kế tiếp hai lần, When ghi trường hợp, Then cột trả lời thẻ tên tiếng Anh `group_card_verdict` nhận `correct`, `wrong`, `unsure`, loại trường hợp ngoài danh sách và giá trị trả lời lạ bị DB từ chối, dòng cũ đổi đúng giá trị, «Thẻ nhóm» có trong `CONTEXT.md`. Phạm vi nâng 04/11, giám sát uỷ quyền.
+- AC-14: Given ghi trường hợp lỗi mạng sau khi máy thu đã ghi, When bấm «Thử lại» với cùng nội dung, Then bảng chỉ có một dòng và số trên bảng trường hợp không tăng thêm; đổi nội dung rồi ghi là một dòng mới; ghi xong nút không bấm được lần nữa trước khi sang tin kế. Phạm vi nâng 04/11, giám sát uỷ quyền.
 
 ## Coverage
 
@@ -60,4 +64,5 @@ approved_at: 2026-11-04
 - Bố cục: bản D Mạnh chọn 04/11 (`design-pass.md`).
 - Bài nhiều căn: gắn cho căn đầu tiên theo thứ tự chữ bài; tin máy so là tin có `offer_id` nhỏ nhất trong các tin chứa bài.
 - Dự án, phân khu ghi tên đầy đủ, không ghi bí danh; bí danh ghi vào Lý do. Nếu không thì «RB» và «Rainbow» thành bất đồng giả.
+- Phạm vi nâng 04/11: AC-11 đến AC-14 do giám sát quyết theo uỷ quyền của Mạnh (sổ quyết định), Mạnh đọc ở Cổng Bằng chứng.
 - Số migration 072, LL đã cấp trong sổ (071 dành cho SV2). S4 và đường nền chạy dưới khoá s4, không chạy khi job S06 còn chạy; áp lên DB thật cần Mạnh duyệt kèm `pg_dump`. Mọi phép đo chạy trên DB thử `oneinvest_gcn_nhan`, không chạy migration chưa gộp trên `oneinvest`.

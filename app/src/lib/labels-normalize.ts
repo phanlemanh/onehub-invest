@@ -95,8 +95,8 @@ export const CASE_KINDS = [
 ] as const
 export type CaseKind = (typeof CASE_KINDS)[number]["value"]
 /** Trả lời «thẻ nhóm đúng không» ở lượt hai. */
-export const THE_NHOM_DUNG = ["dung", "sai", "chua"] as const
-export type TheNhomDung = (typeof THE_NHOM_DUNG)[number]
+export const GROUP_CARD_VERDICTS = ["correct", "wrong", "unsure"] as const
+export type GroupCardVerdict = (typeof GROUP_CARD_VERDICTS)[number]
 
 export const PRICE_UNITS = ["ty", "trieu"] as const
 export type PriceUnit = (typeof PRICE_UNITS)[number]
@@ -165,15 +165,22 @@ export function veE164(s: string): string | null {
 const chuSo = (s: string) =>
   s.normalize("NFKC").normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/\s+/g, " ").trim()
 
-/** Giá trị có trong chữ bài không. Số so theo cả số («64.5» khớp «64,50», «59» không khớp «590»); chữ khớp theo ranh giới
- * để «12» không khớp «120», «park» không khớp «parking». */
+/** Giá trị có trong chữ bài không. Số so theo cả số («64.5» khớp «64,50», «59» không khớp «590») và theo từng số trong mã hay
+ * danh sách («03» trong «S5.03», «15» trong «12,15»); «64,5» một chữ số sau dấu là số thập phân nên không tách. Chữ khớp theo ranh
+ * giới để «12» không khớp «120», «park» không khớp «parking». */
 export function coTrongChu(value: string, text: string): boolean {
   const v = chuSo(value)
   const t = chuSo(text)
   if (!v || !t) return false
   if (/^\d+(?:\.\d+)?$/.test(v)) {
     const so = (x: string) => (x.includes(".") ? x.replace(/0+$/, "").replace(/\.$/, "") : x)
-    return [...t.matchAll(/\d+(?:[.,]\d+)?/g)].some((m) => so(m[0].replace(",", ".")) === so(v))
+    const nguyen = (x: string) => x.replace(/^0+(?=\d)/, "")
+    return [...t.matchAll(/\d+(?:[.,]\d+)*/g)].some((m) => {
+      if (so(m[0].replace(",", ".")) === so(v)) return true
+      const phan = m[0].split(/[.,]/)
+      const thapPhan = phan.length === 2 && phan[1].length === 1
+      return !thapPhan && phan.length > 1 && !v.includes(".") && phan.some((x) => nguyen(x) === nguyen(v))
+    })
   }
   const dau = /^\p{L}/u.test(v) ? "\\p{L}" : /^\d/.test(v) ? "\\d" : null
   const cuoi = /\p{L}$/u.test(v) ? "\\p{L}" : /\d$/.test(v) ? "\\d" : null
