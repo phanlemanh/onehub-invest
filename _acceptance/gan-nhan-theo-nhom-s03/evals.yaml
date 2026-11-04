@@ -1,0 +1,163 @@
+schema_version: 1
+feature_slug: gan-nhan-theo-nhom-s03
+# DB: mọi phép đo chạy trên DB thử `oneinvest_gcn_nhan`, không chạy migration chưa gộp trên oneinvest :5433.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.gcn_migration
+    layer: backend-effect
+    paths: [db/migrations/072_*.sql, pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs]
+    expected: "exit 0; DB thử có sẵn nhãn và mẫu đời trước, áp migration hai lần: 'ok truong moi 8', 'ok cot basis', 'ok stratum', 'ok bang ly do', 'ok bang truong hop', 'ok view 17 truong', 'ok dong thuan 8 truong moi 16 assert' (mỗi trường mới một cặp khớp và một cặp lệch, so kết quả view), 'ok bam dong cu khong doi', 'ok khong tren duong day'. Chiều đỏ cùng fixture: bản sao sync-cloud thêm eval_label_cases vào FILL thì thoát 1 với 'loi bang nhan tren duong day'; xoá một trường khỏi view thì thoát 1 với 'loi view thieu truong'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.gcn_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, pipeline/lib/test-posts.mjs, _acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs]
+    expected: "exit 0; lệnh thật bằng tiến trình con trên fixture 3 nhóm lớn, 2 nhóm nhỏ: 'ok nhom lon 30', 'ok nhom nho toi 5', 'ok ma nhom moi dong', 'ok trung 20 trong nhom', 'ok 0 post thu', 'ok noi dung trung thuoc nhom truoc', 'ok nhom sau bu du', 'ok in so bo vi trung', 'ok chay lai them 0', 'ok --thu khong ghi'. Chiều đỏ cùng fixture: đổi seed trên lát có sẵn thoát khác 0 với thông điệp 'không trộn hai mẫu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gcn_pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
+    expected: "exit 0; ca thuần 'chon theo nhom' xanh trên ma trận viết trước, fixture có nội dung trùng giữa hai nhóm; cùng đầu vào và seed cho cùng kết quả; đổi nhóm xếp sau không đổi mẫu của nhóm xếp trước"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3460/ops/labels"
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts]
+    steps:
+      - "Bản chạy: dev server của worktree ở cổng 3460 của dãy mượn, DATABASE_URL của DB thử oneinvest_gcn_nhan, seed bằng probes/seed.mjs. Đăng nhập tài khoản thử vai ops."
+      - "Mở /ops/labels không tham số, chụp evidence/E4-step1.png khổ rộng: bộ chọn nhóm, bài gốc, năm khối biểu mẫu, ô căn cứ, ô Lý do"
+      - "Chọn nhóm thứ hai, chụp evidence/E4-step2.png: chỉ bài của nhóm đó, tiến độ theo nhóm"
+      - "Cùng màn khổ 390x844 tối, chụp evidence/E4-step3.png, ghi bề rộng trang"
+      - "Điền đủ biểu mẫu, đặt Dự án căn cứ Ngữ cảnh nhóm và để trống Lý do, bấm Lưu, chụp evidence/E4-step4.png: lỗi dưới ô Lý do, chữ đã gõ còn nguyên"
+    expected: "Đủ trường, nhãn tiếng Việt theo CONTEXT.md, dòng hướng dẫn nói ghi điều người trong nhóm hiểu, không còn «Ghi theo đúng chữ của tin»; không tràn ngang ở khổ hẹp; lỗi đúng ô"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'luu 17 truong va ly do' xanh: handler thật, lược đồ tạm, một lượt ghi đúng 17 dòng và một dòng lý do; ca 'loi giua giao dich' làm cả lượt không ghi dòng nào; ca 'tin ke cung nhom' chỉ trả bài đúng nhóm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-normalize.ts, app/src/app/api/v1/ops/labels/**, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ma trận viết trước (số ca assert bằng số phần tử) các ca: toàn chữ bài không lý do → 200; ngữ cảnh nhóm, kiến thức nghề mà lý do trống → 400 đúng ô, 0 dòng ghi, thông điệp 'Có trường không từ chữ bài — ghi lý do'; không suy ra được → basis rỗng; căn cứ lạ, SĐT sai khuôn, WC chữ → 400 đúng ô; '0912 345 678' → '+84912345678'; đối chứng dương: Phân khu Rainbow căn cứ ngữ cảnh nhóm kèm lý do → 200, đọc lại đúng giá trị và basis; dự án, phân khu, toà, trục, diện tích khai chữ bài mà không có trong chữ → 400 với thông điệp 'Chữ bài không có giá trị này', có trong chữ → 200"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.gcn_mu
+    layer: backend-effect
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, app/src/app/api/v1/ops/labels/**, _acceptance/gan-nhan-theo-nhom-s03/probes/mu.mjs]
+    expected: "exit 0; giá trị máy và thẻ nhóm dùng chuỗi đánh dấu riêng trong fixture: 'ok chua luu khong co gia tri may' trên HTML, RSC, API; 'ok luot hai 403 khi chua luu'; 'ok da luu thay ba cot'; 'ok nguoi hai khong thay nhan nguoi truoc'; chuỗi đánh dấu đặt thêm ở lý do và ghi chú của người A: 'ok nguoi B 0 chuoi tren HTML RSC API', 'ok viewer 0 chuoi tren HTML RSC', đối chứng dương 'ok label-cases thay chuoi'; 'ok tep luot mot khong doc bang may' quét import và SQL. Chiều đỏ cùng fixture: bản sao tinKe thêm JOIN sale_offers thì thoát 1 với 'loi luot mot doc bang may'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3460/ops/labels"
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-luot-hai.ts]
+    steps:
+      - "Seed như E4. Lưu một bài có bản máy đọc, chụp evidence/E8-step1.png: bảng Anh gắn, Bộ đọc, AI đọc, Badge chỗ khác, thẻ nhóm"
+      - "Lưu một bài chưa có bản máy đọc thuộc nhóm chưa có thẻ, chụp evidence/E8-step2.png: «Máy chưa đọc bài này», «Nhóm chưa có thẻ»"
+      - "Lưu bài của fixture có 3 tin, chụp evidence/E8-step3.png: «Bài có 3 tin; đang so với tin đầu»"
+      - "Lượt hai khổ 390x844 tối, chụp evidence/E8-step4.png, ghi bề rộng trang"
+    expected: "Lượt hai chỉ hiện sau khi lưu; ba cột rõ, chỗ khác nhìn ra được; hai trạng thái thiếu và ca nhiều tin có câu riêng; khổ hẹp bề rộng trang bằng khổ màn"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E9
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-luot-hai.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'truong hop khong doi nhan': băm eval_labels của bài trước và sau bằng nhau, thêm đúng một dòng trường hợp; ca 'tra loi the' lưu và đọc lại đúng, sai, chưa xét; ca 'bo qua' không thêm dòng, sang tin kế; ca 'luu lai nhan 409'; ca 'chua luu khong ghi duoc truong hop' 403; ca 'loi truong hop nhan con nguyen'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/**, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'bang truong hop khop sql doc lap': số do hàm trả bằng đếm SQL viết riêng trong test trên fixture ba nhóm; nhóm chưa gắn 'chưa có'; viewer có số, 0 chuỗi lý do đánh dấu trong kết quả"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.gcn_cases
+    layer: backend-effect
+    paths: [pipeline/label-cases.mjs, pipeline/lib/label-cases.mjs, _acceptance/gan-nhan-theo-nhom-s03/probes/cases.mjs]
+    expected: "exit 0; lệnh thật: 'ok co ly do', 'ok co truong hop', 'ok tra loi the', 'ok gia tri ngu canh', 'ok khong co labeler', 'ok chay lai y nguyen'. Chiều đỏ: lát không tồn tại thoát khác 0 với thông điệp 'lát không có mẫu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.gcn_do_cu
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/label-agreement.mjs, db/migrations/072_*.sql, _acceptance/gan-nhan-theo-nhom-s03/probes/do-cu.mjs]
+    expected: "exit 0; cùng fixture nhãn chín trường, trước và sau khi thêm trường mới: 'ok cham chin truong khong doi', 'ok dong thuan cu khong doi', 'ok phut cong', 'ok lat cu mo bieu mau dung'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/tests/labels.test.tsx, app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts]
+    expected: "exit 0; bộ test của PL7 xanh, chỉ sửa chỗ số trường và câu hướng dẫn đã đổi có chủ ý"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/labels/**, app/src/components/ops/labels/**, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca bảng vai và nơi: VERCEL=1 trả 503 và không truy vấn; chưa đăng nhập 401; viewer ghi 403; render trạng thái rỗng, lỗi, nhóm hết, chờ người thứ hai, tin vừa có người gắn, viewer, cloud đúng câu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.gcn_gate
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**]
+    expected: "exit 0; cổng thiết kế P0 không báo lỗi trên các tệp màn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E17
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3460/ops/labels"
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-luot-hai.ts]
+    steps:
+      - "Seed nhãn và trường hợp ở ba nhóm, mở màn, chụp evidence/E17-step1.png bảng trường hợp khổ rộng: nhóm chưa gắn ghi «chưa có», không có chữ lý do"
+      - "Cùng màn khổ 390x844, chụp evidence/E17-step2.png, ghi bề rộng trang"
+    expected: "Bảng chỉ có số, đọc được theo nhóm; khổ hẹp bề rộng trang bằng khổ màn"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E18
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.gcn_round_trip
+    layer: backend-effect
+    paths: [db/migrations/072_*.sql, pipeline/label-sample.mjs, app/src/app/api/v1/ops/labels/**, pipeline/label-cases.mjs, pipeline/lib/eval-classify.mjs, _acceptance/gan-nhan-theo-nhom-s03/probes/round-trip.mjs]
+    expected: "exit 0; DB thử áp migration thật, không chèn tay: lệnh mẫu, route lưu, route trường hợp, label-cases, eval-classify; 'ok moi buoc doc duoc dong cua buoc truoc'. Chiều đỏ cùng fixture: gửi trường ngoài CHECK thì thoát 1 với 'loi rang buoc truong'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
