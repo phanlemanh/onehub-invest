@@ -1,7 +1,8 @@
 // migration.mjs — E1 (AC-1): 072 trên DB rỗng riêng có sẵn nhãn và mẫu đời trước. Áp hai lần, băm dòng cũ không đổi, đồng thuận đo bằng
 // kết quả view (mỗi trường mới một cặp khớp, một cặp lệch), không bảng nhãn nào trên đường đẩy lên cloud. Đối chứng cùng fixture.
-import { readFileSync } from "node:fs"
+import { readFileSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 
 import { M054, M072, ROOT, SERVER, kiem, pg } from "./_db.mjs"
 
@@ -62,10 +63,12 @@ async function kiemBan(sql, { sync = null } = {}) {
   } finally {
     await c.end()
   }
-  for (const tep of ["pipeline/sync-cloud.mjs", "pipeline/push-ops-facts.mjs"]) {
-    const noi = sync && tep.includes("sync-cloud") ? sync : readFileSync(path.join(ROOT, tep), "utf8")
-    kiem(loi, !/eval_label/.test(noi), `khong tren duong day: ${tep}`, "loi bang nhan tren duong day")
-  }
+  // Tập bảng thật của đường đẩy: giá trị FILL và CLOUD_ALLOW nạp từ module, không đọc chữ. push-ops-facts không có danh sách bảng nên đọc câu SQL.
+  const m = await import(pathToFileURL(sync ?? path.join(ROOT, "pipeline/sync-cloud.mjs")).href)
+  const allow = m.CLOUD_ALLOW instanceof Map ? [...m.CLOUD_ALLOW.keys()] : Object.keys(m.CLOUD_ALLOW)
+  kiem(loi, m.FILL.length > 0 && allow.length > 0, `doc duoc tap bang that: FILL ${m.FILL.length}, CLOUD_ALLOW ${allow.length}`, "loi khong doc duoc tap bang")
+  kiem(loi, ![...m.FILL, ...allow].some((t) => /^eval_label/.test(t)), "khong tren duong day: pipeline/sync-cloud.mjs", "loi bang nhan tren duong day")
+  kiem(loi, !/eval_label/.test(readFileSync(path.join(ROOT, "pipeline/push-ops-facts.mjs"), "utf8")), "khong tren duong day: pipeline/push-ops-facts.mjs", "loi bang nhan tren duong day")
   return loi
 }
 
@@ -73,7 +76,16 @@ const out = console.log
 const loi = await kiemBan(M072)
 // Đối chứng cùng fixture: bản sync có bảng trường hợp, bản view thiếu một trường phải bị bắt đúng thông điệp.
 console.log = () => {}
-const dSync = await kiemBan(M072, { sync: "const FILL = ['eval_label_cases']" })
+const GOC_SYNC = readFileSync(path.join(ROOT, "pipeline/sync-cloud.mjs"), "utf8")
+const BAN_SYNC = path.join(ROOT, "pipeline", `.gcn-sync-dot-${process.pid}.mjs`)
+const DOT_SYNC = GOC_SYNC.replace("export const FILL = [", 'export const FILL = [\n  "eval_label_cases",')
+writeFileSync(BAN_SYNC, DOT_SYNC)
+let dSync = []
+try {
+  dSync = DOT_SYNC === GOC_SYNC ? [] : await kiemBan(M072, { sync: BAN_SYNC })
+} finally {
+  rmSync(BAN_SYNC, { force: true })
+}
 const banThieu = M072.replace(", ('seller_phone')\n", "\n")
 const dView = banThieu === M072 ? [] : await kiemBan(banThieu)
 console.log = out

@@ -43,6 +43,9 @@ export async function guiNhan(
   return { kind: "loi-may-chu", error: b.error ?? "Không lưu được nhãn — thử lại" }
 }
 
+/** Toast khi tin vừa có người gắn: màn tự sang tin kế. */
+export const cauTinKe = (error: string) => `${error} — chuyển tin kế`
+
 /** Lỗi mạng khi Lưu: tại chỗ, có «Lưu lại» (luật ReUI: lỗi vùng dữ liệu kèm Thử lại). */
 export function LuuLoiAlert({ onRetry, dangLuu }: { onRetry: () => void; dangLuu: boolean }) {
   return (

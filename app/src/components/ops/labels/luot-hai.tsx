@@ -23,6 +23,23 @@ const THE_OPTIONS = [
   { value: "chua", label: "Chưa xét được" },
 ]
 
+/** Lỗi khi ghi trường hợp: nhãn đã an toàn, có «Thử lại». */
+export function LoiTruongHop({ loi, onRetry, dangGhi }: { loi: string; onRetry: () => void; dangGhi: boolean }) {
+  return (
+    <Alert variant="destructive" data-labels-loi-truong-hop="">
+      <CircleAlertIcon aria-hidden="true" />
+      <AlertTitle>{loi}</AlertTitle>
+      <AlertDescription>Nhãn đã lưu an toàn. Thử lại, hoặc sang tin kế.</AlertDescription>
+      <AlertAction>
+        <Button variant="outline" size="sm" onClick={onRetry} disabled={dangGhi}>
+          <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
+          Thử lại
+        </Button>
+      </AlertAction>
+    </Alert>
+  )
+}
+
 function GhiTruongHop({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
   const [the, setThe] = useState<string | null>(null)
   const [kind, setKind] = useState<string | null>(null)
@@ -94,19 +111,7 @@ function GhiTruongHop({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
             <FieldLabel htmlFor="th-note">Diễn giải</FieldLabel>
             <Textarea id="th-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="vd RB chưa có trong từ điển" />
           </Field>
-          {loi ? (
-            <Alert variant="destructive" data-labels-loi-truong-hop="">
-              <CircleAlertIcon aria-hidden="true" />
-              <AlertTitle>{loi}</AlertTitle>
-              <AlertDescription>Nhãn đã lưu an toàn. Thử lại, hoặc sang tin kế.</AlertDescription>
-              <AlertAction>
-                <Button variant="outline" size="sm" onClick={ghi} disabled={dangGhi}>
-                  <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
-                  Thử lại
-                </Button>
-              </AlertAction>
-            </Alert>
-          ) : null}
+          {loi ? <LoiTruongHop loi={loi} onRetry={ghi} dangGhi={dangGhi} /> : null}
         </FieldGroup>
       </FramePanel>
       <FrameFooter className="flex flex-row items-center justify-end gap-2">

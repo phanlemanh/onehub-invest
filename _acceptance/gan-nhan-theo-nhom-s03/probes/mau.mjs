@@ -57,6 +57,13 @@ kiem(loi, /bỏ vì trùng [1-9]/.test(r1.stdout) && /không có đơn vị tron
 const truoc = await dem()
 chay(...ARGS)
 kiem(loi, (await dem()) === truoc, "chay lai them 0", "loi chay lai them dong")
+// Bài mới có thể đẩy bài cũ ra khỏi tập chọn theo băm: lát đã có dòng phải giữ nguyên, không nở quá hạn mức.
+for (let i = 0; i < 40; i++) await them(`gcn-mau-M-${i}`, SNAP, "conv-gcn-L1", "GCN L1", `GCN bài mới L1 số ${i}`)
+for (let i = 0; i < 60; i++) await them(`gcn-mau-M2-${i}`, SNAP, "conv-gcn-N2", "GCN N2", `GCN bài mới N2 số ${i}`)
+const rMoi = chay(...ARGS)
+const { rows: sauMoi } = await c.query(`SELECT stratum, count(*)::int n FROM eval_label_items WHERE lat = $1 GROUP BY 1`, [LAT])
+const soSau = Object.fromEntries(sauMoi.map((x) => [x.stratum, x.n]))
+kiem(loi, rMoi.status === 0 && (await dem()) === truoc && soSau[MA.L1] === 30 && soSau[MA.N2] === 3, "co bai moi chay lai them 0", `loi lat no khi co bai moi: ${JSON.stringify(soSau)}`)
 const r2 = chay("--lat", LAT, "--seed", "khac", "--theo-nhom", "--nhom-khop", "^GCN")
 kiem(loi, r2.status !== 0 && /không trộn hai mẫu/.test(r2.stderr), "doi chung: doi seed bi chan", `loi doi seed: ${r2.status} ${r2.stderr}`)
 await don()

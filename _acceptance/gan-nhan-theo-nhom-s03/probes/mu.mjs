@@ -32,7 +32,8 @@ const nhanRoute = await nap("app/src/app/api/v1/ops/labels/route.ts")
 const haiRoute = await nap("app/src/app/api/v1/ops/labels/[itemId]/review/route.ts")
 
 const LAT = "gcn-mu"
-const MAY = ["toamaydoan", "tenmaydoan", "THE-MAY-DAU", "9,876"]
+// Cả dạng thô ở bảng máy lẫn dạng đã qua hiển thị, cộng chuỗi riêng của silver_labels và khoá dữ liệu lượt hai.
+const MAY = ["TOAMAYDOAN", "toamaydoan", "TENMAYDOAN", "tenmaydoan", "THE-MAY-DAU", "9876000000", "9,876", "AI-TRICH-DAU", "boDoc", "aiDoc"]
 const NGUOI_A = ["LYDO-A-DAU", "GHICHEP-A-DAU", "nhan-a-dau"]
 const CHU = "CHUGOC-GCN Bán căn 2PN trục 12 64,5m2"
 const c = await noiDbThu()
@@ -76,7 +77,7 @@ try {
   const { rows: it } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', 'gcn-mu-1', 'h', 'dev', true, 's', $2) RETURNING item_id`, [LAT, unit])
   const item = Number(it[0].item_id)
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw, seller_name) VALUES ('gcn-mu-o', 'sale', now(), now(), ARRAY['gcn-mu-1'], 9876000000, 7, 'TOAMAYDOAN', 'TENMAYDOAN')`)
-  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'gcn-mu-1', 'h', 'gcn-mu', 'v', 'offer', 'sale', true, 'gcn-mu')`)
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, quote, json_ok, run_id) VALUES ('S03', 'gcn-mu-1', 'h', 'gcn-mu', 'v', 'inquiry', 'rent_lt', 'AI-TRICH-DAU', true, 'gcn-mu')`)
   const a = await taoNguoi(c, "ops", { email: "a@gcn-mu.test" })
   const b = await taoNguoi(c, "ops", { email: "b@gcn-mu.test" })
   const v = await taoNguoi(c, "viewer", { email: "v@gcn-mu.test" })
@@ -94,7 +95,17 @@ try {
   k(luu.status === 200, "A luu duoc", `loi A luu: ${luu.status} ${await luu.clone().text()}`)
   await haiRoute.POST(new Request("http://localhost/x", { method: "POST", headers: { "content-type": "application/json", cookie: a.cookie }, body: JSON.stringify({ case_kind: "khac", note: "GHICHEP-A-DAU" }) }), ctx(item))
   const m1 = await manCua(nguoiCua(a, "ops"), unit, item)
-  k(["Anh gắn", "Bộ đọc", "AI đọc", "toamaydoan", "THE-MAY-DAU"].every((d) => m1.html.includes(d)), "da luu thay ba cot", "loi da luu khong thay ba cot")
+  // Quan hệ: giá trị của nguồn nào nằm ở cột nào, trường nào; ô AI khác nhãn mang Badge, ô Bộ đọc trùng nhãn thì không.
+  const dong = (f) => {
+    const m = m1.html.match(new RegExp(`<tr[^>]*data-field="${f}"[^>]*>(.*?)</tr>`))
+    return (m?.[1] ?? "").split("<td").slice(1).map((o) => o.slice(o.indexOf(">") + 1))
+  }
+  const chuO = (o) => (o ?? "").replace(/<[^>]+>/g, "").trim()
+  const so = (f) => dong(f).slice(1).map(chuO).join(" | ")
+  k(so("kind") === "Bán | Bán | Cho thuê" && so("listing_intent") === "Tin rao | Tin rao | Yêu cầu" && so("building") === "Không suy ra được | toamaydoan | —",
+    "da luu thay ba cot", `loi da luu khong thay ba cot: ${so("kind")} · ${so("listing_intent")} · ${so("building")}`)
+  k(m1.html.includes("THE-MAY-DAU"), "da luu thay the nhom", "loi da luu khong thay the nhom")
+  k(dong("kind")[3]?.includes("<span") && !dong("kind")[2]?.includes("<span"), "o khac may mang badge, o trung thi khong", "loi badge cho khac")
 
   // B chưa lưu: không thấy gì của máy, không thấy gì của A.
   const CHUOI = [...MAY, ...NGUOI_A]
@@ -108,6 +119,7 @@ try {
   k(mB2.html.includes("toamaydoan") && khongCo(mB2.html + mB2.rsc + apiB2, NGUOI_A).length === 0, "nguoi hai khong thay nhan nguoi truoc", `NGUOI HAI THAY: ${khongCo(mB2.html + mB2.rsc + apiB2, NGUOI_A)}`)
 
   const mV = await manCua(nguoiCua(v, "viewer"), unit, item)
+  k(mV.html.includes("Cần vai ops") && /data-nhom="[^"]+"[^>]*>.*?1\/1.*?Khác 1/.test(mV.html), "doi chung duong: viewer thay so cua bang truong hop", "loi viewer khong thay so")
   k(khongCo(mV.html + mV.rsc, CHUOI).length === 0 && !mV.html.includes("CHUGOC-GCN"), "viewer 0 chuoi tren HTML RSC", `LO CHO VIEWER: ${khongCo(mV.html + mV.rsc, CHUOI)}`)
 
   const xuat = spawnSync("node", [path.join(ROOT, "pipeline/label-cases.mjs"), "--lat", LAT, "--json"], { cwd: ROOT, env: process.env, encoding: "utf8" })

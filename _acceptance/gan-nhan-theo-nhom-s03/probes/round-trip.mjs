@@ -84,7 +84,9 @@ try {
     const xuat = lenh("label-cases.mjs", "--lat", LAT, "--json")
     const j = JSON.parse(xuat.stdout || "{}")
     const n = j.nhom?.find((x) => x.unit_code === it.stratum) ?? {}
-    k(j.nhom?.length === 2 && n.truong_hop?.some((t) => t.loai === "bi-danh") && n.ly_do?.length === 6 && n.gia_tri_ngu_canh?.every((v) => v.truong === "subzone"), "buoc xuat: label-cases doc dung", `loi buoc xuat: ${xuat.stderr} ${xuat.stdout.slice(0, 300)}`)
+    k(j.nhom?.length === 2 && n.truong_hop?.some((t) => t.loai === "bi-danh") && n.ly_do?.length === 6 && n.ly_do.every((l) => l.ly_do === "RB = Rainbow")
+      && n.gia_tri_ngu_canh?.length === 6 && n.gia_tri_ngu_canh.every((v) => v.truong === "subzone" && v.gia_tri === "rainbow" && v.can_cu === "ngu_canh_nhom")
+      && n.the_nhom?.length === 1 && n.the_nhom[0].tra_loi === "chua", "buoc xuat: label-cases doc du ly do, truong hop, the, gia tri ngu canh", `loi buoc xuat: ${xuat.stderr} ${xuat.stdout.slice(0, 300)}`)
     k(!xuat.stdout.includes(a.id), "buoc xuat: khong co nguoi gan", "loi lo nguoi gan")
     const split = items.some((i) => i.split === "test") ? "test" : "dev"
     const cham = lenh("eval-classify.mjs", "--lat", LAT, "--split", split, "--dry")

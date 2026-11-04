@@ -226,7 +226,7 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined, nhom?: { text: s
       else if (!d) loi[f] = "Diện tích phải là số, vd 64,5"
       else if (d.so <= BigInt(0)) loi[f] = "Diện tích phải lớn hơn 0"
       else rows.push({ field: f, value: chuanThapPhan(d), not_stated: false, basis: null })
-    } else if (f === "bedrooms" || f === "bathrooms") {
+    } else if (f === ENRICH_FIELD.bedrooms || f === ENRICH_FIELD.bathrooms) {
       if (!/^\d+$/.test(v)) loi[f] = `${FIELD_LABEL[f]} phải là số nguyên không âm`
       else rows.push({ field: f, value: BigInt(v).toString(), not_stated: false, basis: null })
     }

@@ -85,7 +85,7 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
     throw new Error(`label-sample: lát «${lat}» đã lấy mẫu với seed khác (${cu[0].seeds.join(", ")}) — không trộn hai mẫu`);
   }
   const { posts, rejected } = await loadStgPosts(client, "zalo");
-  if (theoNhom) return layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, posts: nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts, rejected });
+  if (theoNhom) return layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo: cu[0].so, posts: nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts, rejected });
   const cuaLat = nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts;
   const tangs = LAT_PHAN_TANG[lat];
   const { chon, khac_nhau, moiTang } = tangs
@@ -118,8 +118,9 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
   };
 }
 
-/** Mẫu theo nhóm (GC0): đơn vị của bài đọc từ sổ collection_units; chạy lại không thêm dòng nhờ khoá (lat, text_hash), (lat, ref_id). */
-async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, posts, rejected }) {
+/** Mẫu theo nhóm (GC0): đơn vị của bài đọc từ sổ collection_units. Lát đã có dòng thì giữ nguyên: bài mới có thể đẩy bài cũ ra
+ * khỏi tập chọn, nên khoá (lat, text_hash), (lat, ref_id) một mình không chặn được lát nở quá hạn mức. */
+async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo, posts, rejected }) {
   const { rows: so } = await client.query("SELECT unit_code, group_key FROM collection_units WHERE source_code = 'S03'");
   const donVi = new Map(so.map((r) => [r.group_key, r.unit_code]));
   const { chon, moiNhom, bo_khong_don_vi } = chonMauTheoNhom(
@@ -128,7 +129,7 @@ async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom,
     ? ["SAVEPOINT label_sample", "RELEASE SAVEPOINT label_sample", "ROLLBACK TO SAVEPOINT label_sample"]
     : ["BEGIN", "COMMIT", "ROLLBACK"];
   let them = 0;
-  if (!thu) {
+  if (!thu && daCo === 0) {
     await client.query(mo);
     try {
       for (const r of chon) {

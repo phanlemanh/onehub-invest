@@ -17,9 +17,7 @@ import {
   LABEL_FIELDS,
   LABEL_FIELDS_NHOM,
   MSG_CAN_CU,
-  MSG_KHONG_TRONG_CHU,
   MSG_SDT,
-  MSG_THIEU_LY_DO,
   veE164,
   type LabelField,
   type RawCell,
@@ -74,6 +72,9 @@ const postNhan = (cookie: string, item: number, values: unknown, reason?: string
     body: JSON.stringify({ lat: LAT, item_id: item, values, reason }),
   })
 
+// Câu hợp đồng, ghim nguyên văn ở đây: không nhập hằng từ chính code đang kiểm.
+const MSG_THIEU_LY_DO = "Có trường không từ chữ bài — ghi lý do"
+const MSG_KHONG_TRONG_CHU = "Chữ bài không có giá trị này — chọn căn cứ khác"
 const CHU = "Bán căn 2PN S5.03 trục 12 phân khu Rainbow, Vinhomes Grand Park, 64,5m2, giá 4,35 tỷ"
 const chu = (value: string): RawCell => ({ value, basis: "chu_bai" })
 const DU: RawLabels = {
@@ -512,18 +513,25 @@ test("GCN-AC-10 bảng vai và nơi: cloud 503 không truy vấn; chưa đăng n
   assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_cases`)).rows[0].n, 0)
   const { pool } = await import("../src/lib/db")
   const goc = pool.query.bind(pool)
-  let goi = 0
-  ;(pool as unknown as { query: unknown }).query = (...x: unknown[]) => { goi++; return (goc as (...y: unknown[]) => unknown)(...x) }
-  process.env.VERCEL = "1"
+  const cau: string[] = []
+  ;(pool as unknown as { query: unknown }).query = (...x: unknown[]) => { cau.push(String(x[0])); return (goc as (...y: unknown[]) => unknown)(...x) }
+  const { LabelsContent } = await import("../src/components/ops/labels/labels-content")
+  const nguoiA = { id: a.id, email: a.email, plan: "free" as const, role: "ops" as const }
+  const docBangNhan = () => cau.filter((q) => /eval_label|sale_offers|silver_labels|collection_units/.test(q))
   try {
-    const { LabelsContent } = await import("../src/components/ops/labels/labels-content")
-    const html = renderToStaticMarkup(await LabelsContent({ user: { id: a.id, email: a.email, plan: "free", role: "ops" }, lat: LAT, nhom: "U-A", xem: 1 }))
+    // Mốc dương: ngoài cloud cùng lời gọi có đọc bảng nhãn, tức bộ đếm bắt được.
+    await LabelsContent({ user: nguoiA, lat: LAT, nhom: "U-A", xem: 1 })
+    assert.ok(docBangNhan().length > 0, "bộ đếm không bắt được truy vấn nên số 0 bên dưới vô nghĩa")
+    cau.length = 0
+    process.env.VERCEL = "1"
+    const html = renderToStaticMarkup(await LabelsContent({ user: nguoiA, lat: LAT, nhom: "U-A", xem: 1 }))
     assert.match(html, /Chỉ ở máy thu/)
     assert.doesNotMatch(html, /data-labels-luot-hai|data-labels-form/)
-    assert.equal(goi, 0, "trên cloud không được đọc bảng nhãn")
     const r1 = await hai.GET(new Request("http://localhost/x", { headers: { cookie: a.cookie } }), reviewCtx(1))
     assert.equal(r1.status, 503)
     assert.equal((await hai.POST(req(a.cookie), reviewCtx(1))).status, 503)
+    assert.equal((await nhan.POST(postNhan(a.cookie, 2, DU))).status, 503)
+    assert.deepEqual(docBangNhan(), [], "trên cloud không được đọc bảng nhãn, sau mọi lời gọi màn và route")
   } finally {
     delete process.env.VERCEL
     ;(pool as unknown as { query: unknown }).query = goc
@@ -536,17 +544,49 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   const T = { tong: 4, cuaToi: 4, conChoToi: 0, trungDu: 0, trungTong: 1 }
   const N = (cho: number) => [{ unitCode: "U-A", ten: "Nhóm A", tong: 4, cuaToi: 4, conChoToi: 0, choNguoiHai: cho }]
   const nhom = (cho: number) => ({ nhom: N(cho), chon: "U-A", bang: [{ unitCode: "U-A", ten: "Nhóm A", tong: 4, daGan: 0, canNguCanh: 0, theoLoai: {} }] })
+  // Bảng trạng thái của E14 viết trước: cuối ca đối chiếu đủ từng phần tử.
+  const TRANG_THAI = ["rỗng", "lỗi", "nhóm hết", "chờ người thứ hai", "tin vừa có người gắn", "viewer", "cloud"]
+  const da = new Set<string>()
   const rong = renderToStaticMarkup(<LabelsView mode="local" lat={LAT_THEO_NHOM} coGhi tienDo={T0} dongThuan={[]} tin={null} />)
   assert.match(rong, /Chưa có tin nào của lát để gắn/)
   assert.match(rong, /--theo-nhom/)
+  da.add("rỗng")
   assert.match(renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={null} {...nhom(0)} />), /Đã gắn hết nhóm này/)
+  da.add("nhóm hết")
   const cho = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={null} {...nhom(2)} />)
   assert.match(cho, /Anh đã gắn hết phần của mình; 2 bài chờ người thứ hai/)
   assert.match(cho, /chưa có/)
+  da.add("chờ người thứ hai")
   const viewer = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi={false} tienDo={T} dongThuan={[]} tin={null} {...nhom(0)} />)
   assert.match(viewer, /Cần vai ops để gắn nhãn/)
   assert.doesNotMatch(viewer, /data-labels-form/)
   assert.match(viewer, /data-labels-cases/)
+  da.add("viewer")
+  assert.match(renderToStaticMarkup(<LabelsView mode="cloud" lat="x" />), /Chỉ ở máy thu/)
+  da.add("cloud")
+  // Lỗi: vùng dữ liệu bọc RegionError có «Thử lại»; lỗi ghi trường hợp có «Thử lại» và nói nhãn an toàn; mất kết nối có «Lưu lại».
+  const { LoiTruongHop } = await import("../src/components/ops/labels/luot-hai")
+  const { LuuLoiAlert, cauTinKe, guiNhan } = await import("../src/components/ops/labels/luu-nhan")
+  const loiTh = renderToStaticMarkup(<LoiTruongHop loi="Mất kết nối tới máy thu" onRetry={() => {}} dangGhi={false} />)
+  assert.match(loiTh, /Thử lại/)
+  assert.match(loiTh, /Nhãn đã lưu an toàn/)
+  assert.match(renderToStaticMarkup(<LuuLoiAlert onRetry={() => {}} dangLuu={false} />), /Lưu lại/)
+  assert.match(readFileSync(join(APP, "src/components/states/region-error.tsx"), "utf8"), /Thử lại/)
+  assert.match(readFileSync(join(APP, "src/app/ops/labels/page.tsx"), "utf8"), /<RegionError what="tin để gắn nhãn">/)
+  da.add("lỗi")
+  // Tin vừa có người gắn: phản hồi thật của route đi qua guiNhan ra đúng kết cục và đúng câu.
+  await datLat()
+  const nguoiTruoc = await nguoiDaLuu(1)
+  const nguoiSau = await taoNguoi(sc, "ops")
+  const { POST } = await import("../src/app/api/v1/ops/labels/route")
+  const qua = ((url: string, init: RequestInit) =>
+    POST(new Request(`http://localhost${url}`, { ...init, headers: { ...(init.headers as Record<string, string>), cookie: nguoiSau.cookie } }))) as unknown as typeof fetch
+  const kq = await guiNhan(qua, { lat: LAT, item_id: 1, values: DU })
+  assert.equal(kq.kind, "da-co-nguoi")
+  assert.equal(kq.kind === "da-co-nguoi" ? cauTinKe(kq.error) : "", "Tin này vừa có người gắn — chuyển tin kế")
+  void nguoiTruoc
+  da.add("tin vừa có người gắn")
+  assert.deepEqual([...da].sort(), [...TRANG_THAI].sort())
   const tin = { itemId: 7, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ bài RB", groupName: "Nhóm A", postedAt: null }
   const mau = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} />)
   assert.match(mau, /data-labels-form="7"/)
@@ -562,4 +602,40 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   const ba = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={null} {...nhom(0)} luotHai={{ ...d, boDoc: { kind: "sale" }, aiDoc: null, soTin: 3, the: "THE" }} />)
   assert.match(ba, /Bài có 3 tin; đang so với tin đầu/)
   assert.match(ba, /Thẻ đúng với bài này không/)
+})
+
+test("GCN-AC-7 viewer đi đường thật: LabelsContent → bảng trường hợp có số, 0 chuỗi lý do; đối chứng ops cũng thấy cùng số", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const hai = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  assert.equal((await hai.POST(postTruongHop(a.cookie, 1, { case_kind: "bi-danh", note: "GHICHEP-VIEWER" }), reviewCtx(1))).status, 200)
+  await sc.query(`UPDATE eval_label_reasons SET reason = 'LYDO-VIEWER' WHERE item_id = 1`)
+  const v = await taoNguoi(sc, "viewer")
+  const { LabelsContent } = await import("../src/components/ops/labels/labels-content")
+  const html = renderToStaticMarkup(await LabelsContent({ user: { id: v.id, email: v.email, plan: "free", role: "viewer" }, lat: LAT, nhom: "U-A" }))
+  const dong = html.match(/<tr[^>]*data-nhom="U-A"[^>]*>(.*?)<\/tr>/)?.[1] ?? ""
+  assert.match(dong, /1\/4/, "viewer phải thấy số đã gắn")
+  assert.match(dong, /Bí danh viết tắt 1/, "viewer phải thấy số theo loại")
+  assert.doesNotMatch(html, /LYDO-VIEWER|GHICHEP-VIEWER/, "BANG LO CHU LY DO")
+  assert.doesNotMatch(html, /data-labels-form/)
+})
+
+test("GCN-AC-5 bảng so đặt đúng cột, đúng trường; khác máy mới có Badge; trường bộ đọc chưa có cột không tính khác", async () => {
+  const { LuotHai } = await import("../src/components/ops/labels/luot-hai")
+  const nhan = (field: LabelField, value: string | null) => ({ field, value, notStated: value === null, basis: null })
+  const d = {
+    itemId: 1, lat: "x", text: "chữ", groupName: "N", postedAt: null, lyDo: null, truongHop: [], soTin: 1, the: "THE",
+    cuaToi: [nhan("kind", "sale"), nhan("building", null), nhan("project", "ocean park"), nhan("bedrooms", "2")],
+    boDoc: { kind: "sale", building: "s1", bedrooms: "3" },
+    aiDoc: { kind: "rent_lt" },
+  }
+  const html = renderToStaticMarkup(<LuotHai d={d} hrefTinKe="/x" />)
+  const o = (f: string) => (html.match(new RegExp(`<tr[^>]*data-field="${f}"[^>]*>(.*?)</tr>`))?.[1] ?? "").split("<td").slice(1).map((c) => c.slice(c.indexOf(">") + 1))
+  const chu = (c?: string) => (c ?? "").replace(/<[^>]+>/g, "")
+  assert.deepEqual(o("kind").map(chu), ["Loại tin", "Bán", "Bán", "Cho thuê"])
+  assert.ok(!o("kind")[2].includes("<span") && o("kind")[3].includes("<span"), "chỉ ô khác nhãn mang Badge")
+  assert.deepEqual(o("building").map(chu), ["Toà", "Không suy ra được", "s1", "—"])
+  assert.ok(o("bedrooms")[2].includes("<span"), "bộ đọc 3 khác nhãn 2 phải mang Badge")
+  assert.ok(!o("project")[2].includes("<span"), "bộ đọc chưa có cột dự án thì không tính khác")
+  assert.match(html, /3 trường khác máy/)
 })

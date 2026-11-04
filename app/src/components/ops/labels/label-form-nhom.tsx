@@ -17,7 +17,7 @@ import type { TinGan } from "@/lib/labels-queries"
 
 import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
-import { guiNhan, LuuLoiAlert } from "./luu-nhan"
+import { cauTinKe, guiNhan, LuuLoiAlert } from "./luu-nhan"
 
 /**
  * Biểu mẫu 17 trường của lát theo nhóm (bản D): bài gốc dính ở đầu, năm khối hai cột, mỗi ô một căn cứ, chân dính giữ nút
@@ -60,7 +60,7 @@ export function LabelFormNhom({ lat, tin, hrefXem, hrefTinKe }: { lat: string; t
         setLoi(kq.loi)
         requestAnimationFrame(() => document.querySelector("[data-loi]")?.scrollIntoView({ block: "center" }))
       } else if (kq.kind === "da-co-nguoi") {
-        toast.info(`${kq.error} — chuyển tin kế`)
+        toast.info(cauTinKe(kq.error))
         window.location.assign(hrefTinKe)
       } else if (kq.kind === "loi-may-chu") toast.error(kq.error)
       else if (kq.kind === "da-luu") window.location.assign(hrefXem)
