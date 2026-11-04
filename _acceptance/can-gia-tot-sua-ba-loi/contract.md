@@ -5,7 +5,7 @@ slug: can-gia-tot-sua-ba-loi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-03T22:01:42Z
 approved_by:
