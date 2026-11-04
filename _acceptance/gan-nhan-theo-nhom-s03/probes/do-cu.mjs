@@ -22,10 +22,10 @@ const don = async () => {
 }
 try {
   await don()
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__zalo__gcndocu', 'hcm', 'zalo', '{}'::jsonb) ON CONFLICT DO NOTHING`)
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__s03__gcndocu', 'hcm', 's03', '{}'::jsonb) ON CONFLICT DO NOTHING`)
   const items = []
   for (let i = 1; i <= 12; i++) {
-    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text) VALUES ($1, 'hcm__zalo__gcndocu', 'GCN đo cũ', $2)`, [`gcn-docu-${i}`, `Bán căn 2PN 60m2 giá 4 tỷ tin ${i}`])
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text) VALUES ($1, 'hcm__s03__gcndocu', 'GCN đo cũ', $2)`, [`gcn-docu-${i}`, `Bán căn 2PN 60m2 giá 4 tỷ tin ${i}`])
     const { rows } = await c.query(
       `INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed) VALUES ($1, 'S03', $2, $3, 'test', true, 's') RETURNING item_id`,
       [LAT, `gcn-docu-${i}`, `h${i}`])
@@ -60,7 +60,7 @@ try {
   k(m.chin && m.khongNhom && m.cauCu, "lat cu mo bieu mau dung", `loi lat cu: ${man.stdout} ${man.stderr.slice(0, 300)}`)
 } finally {
   await don()
-  await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id = 'hcm__zalo__gcndocu'`)
+  await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id = 'hcm__s03__gcndocu'`)
   await c.end()
 }
 console.log(loi.length ? `DO-CU FAIL (${loi.length})` : "DO-CU OK")

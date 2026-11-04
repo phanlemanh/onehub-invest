@@ -148,8 +148,8 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: wont-fix
 
-- **Mẫu theo nhóm tách một nhóm Zalo thật thành hai tầng vì so khớp group_key nguyên văn (r3)**
-  Người dùng thấy gì: Ba nhóm Zalo thật bị đăng ký hai lần trong sổ nguồn, nên khi lấy mẫu mỗi nhóm đó bị tính thành hai nhóm: số bài vượt hạn mức, tiến độ và bảng trường hợp bị chia đôi mà không có cảnh báo.
+- **Mẫu theo nhóm tách một nhóm S03 thật thành hai tầng vì so khớp group_key nguyên văn (r3)**
+  Người dùng thấy gì: Ba nhóm S03 thật bị đăng ký hai lần trong sổ nguồn, nên khi lấy mẫu mỗi nhóm đó bị tính thành hai nhóm: số bài vượt hạn mức, tiến độ và bảng trường hợp bị chia đôi mà không có cảnh báo.
   Căn cứ: Làm lệch số liệu và hạn mức của một số nhóm thật, người gắn nhãn khó tự phát hiện, nhưng chưa mất dữ liệu và sửa được trước khi gắn nhãn thật quy mô lớn.
   file: `pipeline/label-sample.mjs`
   severity: medium

@@ -20,7 +20,7 @@ try {
   await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'gcn-seed-%'`)
   await c.query(`DELETE FROM collection_units WHERE source_code = 'S03' AND group_key LIKE 'gcn-seed-%'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@gcn-seed.test'`)
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__zalo__gcnseed', 'hcm', 'zalo', '{}'::jsonb) ON CONFLICT DO NOTHING`)
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__s03__gcnseed', 'hcm', 's03', '{}'::jsonb) ON CONFLICT DO NOTHING`)
   const NHOM = [
     ["co-may", "GCN thử có máy đọc", "Nhóm môi giới chuyên Vinhomes Grand Park. Thành viên hiểu ngầm dự án nên bài thường không ghi tên."],
     ["khong-may", "GCN thử chưa có máy", null],
@@ -39,7 +39,7 @@ try {
     ["gcn-seed-4", "ba-tin", "Quỹ căn: 1PN 6tr, 2PN 8tr, 3PN 12tr, liên hệ em Lan"],
   ]
   for (const [id, k, text] of BAI) {
-    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($1, 'hcm__zalo__gcnseed', $2, $3, $4, now())`,
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($1, 'hcm__s03__gcnseed', $2, $3, $4, now())`,
       [id, NHOM.find((n) => n[0] === k)[1], `gcn-seed-${k}`, text])
   }
   process.stdout.write(execFileSync("node", [path.join(ROOT, "pipeline/label-sample.mjs"), "--lat", LAT, "--seed", "gc0-seed", "--theo-nhom", "--moi-nhom-lon", "30", "--moi-nhom-nho", "5", "--so-nhom-lon", "10", "--nhom-khop", "^GCN thử"],
