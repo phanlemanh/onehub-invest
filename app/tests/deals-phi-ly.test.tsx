@@ -1,7 +1,7 @@
 // deals-phi-ly.test.tsx — hồ sơ deals-loai-tin-phi-ly (ON11): danh sách «Căn giá tốt».
 // Ca DB chạy ĐÚNG câu dealsSql() app gửi, trên fixture trong BEGIN…ROLLBACK (Postgres local :5433): mỗi ca dựng lược đồ
 // riêng (bản rỗng các bảng, view tin như 044, thước 034, sellers 060 — pipeline/lib/luoc-do-rieng.mjs) — không xếp hàng
-// khoá 33033, không chạm dữ liệu dùng chung, không để lại dòng nào. Ca thẻ vẽ DealCard trong jsdom.
+// khoá 33033, không chạm dữ liệu dùng chung, không để lại dòng nào. Ca thân căn vẽ DealBody trong jsdom.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { JSDOM } from "jsdom";
 import pg from "pg";
 
-import { dealsSql, repostLabel, toDealRow } from "../src/lib/deals";
+import { dealHang, dealsSql, repostLabel, toDealRow } from "../src/lib/deals";
 import { CLOUD_ALLOW, PII_EXCLUDE } from "../../pipeline/sync-cloud.mjs";
 import { luocDoRieng, neuLaBang } from "../../pipeline/lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../../pipeline/lib/nap-060.mjs";
@@ -184,20 +184,22 @@ async function renderCard(over: Record<string, unknown>): Promise<string> {
   Object.assign(globalThis, { React });
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
-  const { DealCard } = await import("../src/components/ops/deal-card");
+  const { DealBody } = await import("../src/components/ops/deal-body");
   const d = toDealRow({
     offer_id: "t", source: "S03", price_vnd: 4e9, area_m2: 80, price_perm2: 5e7, bedrooms: 2,
     area_id: "vn-hanoi-x", phuong: "Phường X", median_perm2: 8e7, ruler_n: 9, discount_pct: 30,
     suspect: false, confidence: "high", first_seen: "2026-10-18", last_seen: "2026-10-24", n_reposts: 1,
     ...over,
   });
+  const h = dealHang(d, { xemNoiDung: false, mayThu: true });
   const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
   document.body.innerHTML = "<div id=root></div>";
   const root = createRoot(document.getElementById("root")!);
   await React.act(async () => {
     root.render(
       <AppRouterContext.Provider value={router as never}>
-        <DealCard d={d} showContact={false} />
+        <DealBody d={h} xemNoiDung={false} mayThu={true} beMat="sheet" />
+        
       </AppRouterContext.Provider>,
     );
   });
@@ -215,6 +217,6 @@ test("DP-AC-6 thẻ", async () => {
   assert.match(mot, /đăng 1 lần/, "DP-AC-6 thẻ đăng một lần");
   assert.match(ba, /đăng 3 lần/, "DP-AC-6 thẻ đăng ba lần");
   for (const t of [mot, ba]) assert.doesNotMatch(t, /(^|[^\p{L}])mới([^\p{L}]|$)/u, "DP-AC-6 thẻ còn chữ «mới»");
-  assert.match(await renderCard({ suspect: true, discount_pct: 45 }), /cần xác minh/, "DP-AC-6 tin cần xác minh thiếu nhãn");
-  assert.doesNotMatch(await renderCard({ suspect: false }), /cần xác minh/, "DP-AC-6 tin thường mang nhãn cần xác minh");
+  assert.match(await renderCard({ suspect: true, discount_pct: 45 }), /cần gọi xác minh/, "DP-AC-6 tin cần xác minh thiếu nhãn");
+  assert.doesNotMatch(await renderCard({ suspect: false }), /cần gọi xác minh/, "DP-AC-6 tin thường mang nhãn cần xác minh");
 });
