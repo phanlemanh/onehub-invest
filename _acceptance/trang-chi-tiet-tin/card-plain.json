@@ -1,0 +1,124 @@
+{
+ "feature_plain": "Nhà đầu tư bấm vào một tin bán hoặc tin thuê dài hạn của bất kỳ nguồn nào là mở được một trang riêng để xem đủ thông tin và liên hệ người đăng.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ mở trang tin khi bấm vào thân, giá, tên người đăng hoặc địa chỉ trên thẻ; liên kết phường, nhãn và Xem số vẫn làm đúng việc của chúng."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ hiện giá, đơn giá, nhãn, thông số gồm block và tầng, vị trí, tuổi tin, người đăng; thiếu trường nào thì bỏ dòng đó."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ giữ Xem số như trên thẻ: số chỉ về khi bấm, tải trang không mang theo số."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ KHÔNG lộ nguồn, liên kết bài gốc, số nhà, số căn hay toạ độ ở bất kỳ đâu trong trang tải về, kể cả phần dữ liệu ẩn."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ hiện tối đa 6 tin cùng phường, cùng loại tin, cùng loại hình, diện tích chênh trong 25%."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ chặn máy tìm kiếm lập chỉ mục trang tin lúc đầu, tiêu đề trang không có tên người đăng."
+  }
+ ],
+ "scope_plain": "Những thứ vòng này không làm, mỗi thứ một lý do:",
+ "wont_do": [
+  {
+   "id": "AC-5",
+   "p": "Sẽ KHÔNG phân biệt tin ẩn, hết hạn hay đường dẫn sai: mọi ca cùng trang «Tin này không còn hiện», nên không ai dò được tin ẩn."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ KHÔNG đổi trang listing thuê ngắn hạn đang có."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Chưa có ảnh: hàng ảnh tin làm riêng, trang không để ô trống."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Chưa có bản đồ, số nhà, số căn: các thông tin này chưa lên cloud."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không có bài gốc, liên kết nguồn, tên hay mã nguồn: luật cấm trên cổng công khai; người xem vẫn chưa biết tin từ nguồn nào."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không có mô tả do máy viết lại từ bài gốc: cần quyết định riêng."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Chưa có lưu tin, nút chia sẻ, tin khác của người đăng, lịch sử giá, báo tin sai."
+  },
+  {
+   "id": "OOS-6",
+   "p": "Không gộp các tin của cùng một căn nhà."
+  },
+  {
+   "id": "OOS-7",
+   "p": "Chưa so giá với phường: số hiện có trộn nhà, căn hộ, đất nên dễ đọc nhầm."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Mọi lối vào trang tin đều được đo: thẻ Bán, thẻ Cho thuê, đường dẫn gửi trực tiếp, tin cùng tiêu chí (AC-1 mở trang, AC-5 tin không hiện)."
+  },
+  {
+   "i": 1,
+   "p": "Tin bán và tin thuê của cả ba nguồn đang lên cổng đều vào phép đo (AC-2 nội dung, AC-4 không lộ, AC-5 tin không hiện)."
+  },
+  {
+   "i": 2,
+   "p": "Tin đủ, thiếu trường, chỉ biết thị trường, tên bị che, tin không hiện đều có ca riêng, dựa trên số đo dữ liệu (AC-2, AC-4, AC-5, AC-7)."
+  },
+  {
+   "i": 3,
+   "p": "Cả sáu trạng thái của ô liên hệ giống hệt trên thẻ (AC-3 Xem số)."
+  },
+  {
+   "i": 4,
+   "p": "Danh sách thông tin cấm viết sẵn, quét trên chính trang tải về khi chưa đăng nhập (AC-3, AC-4)."
+  },
+  {
+   "i": 5,
+   "p": "Xem bằng mắt ở điện thoại và màn rộng, sáng và tối (AC-9)."
+  },
+  {
+   "i": 6,
+   "p": "Zillow, Rightmove có lưu tin, chia sẻ, lịch sử giá; vòng này để sau, Mạnh gạch nếu muốn đổi."
+  },
+  {
+   "i": 7,
+   "p": "Giả định chưa đo: người xem thấy trang đủ giá trị dù thiếu bài gốc và ảnh; phiên lái thử sau khi ra sẽ trả lời."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Đường dẫn trang là lựa chọn của Mạnh vì gửi ra ngoài rồi khó đổi, nhưng sổ ghi máy tự quyết. Đã chuyển thành câu hỏi; đã đo thêm rằng /listing thuộc cổng Invest công khai, và phép đo không lộ quét đúng đường này."
+  },
+  {
+   "i": 1,
+   "p": "Bản đồ, ảnh, tin hết hạn có lối khác mà sổ ghi như không có, hợp đồng lại thiếu mục câu hỏi. Đã thêm mục câu hỏi, gộp ảnh và bản đồ thành một câu, thêm câu «Tin này không còn hiện». Không đổi nhãn khó-đảo của dòng Xem số vì cách cũ giữ nguyên."
+  },
+  {
+   "i": 2,
+   "p": "Mở trang chỉ đo trong môi trường giả, không biết bấm thật có trúng không, nên có thể lặp lại đúng vấp cũ. Đã thêm phép bấm thật trên trình duyệt theo bảng ca."
+  },
+  {
+   "i": 3,
+   "p": "Phép đo nội dung dùng dữ liệu tự dựng, phép đo không lộ không bắt được thông tin giấu trong dữ liệu ẩn của trang. Đã đổi sang đo trên trang tải về thật, thêm block, tầng, mô tả trang."
+  },
+  {
+   "i": 4,
+   "p": "Chưa xét số trung vị phường và chưa đo cột trang đọc có trên cloud. Đo lại thấy số trung vị trộn loại hình nên đã dời khối so phường thành câu hỏi, và thêm phép đo mọi cột phải có trên cloud."
+  }
+ ]
+}
