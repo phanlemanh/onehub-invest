@@ -37,6 +37,8 @@ const sach = (s) => (typeof s === "string" && s.trim() !== "" ? s.trim() : null)
 
 /** Dấu xuất xứ của số S06 đọc trực tiếp trên chính tin (gan-sdt-s06). Danh bạ S06 chỉ nhận số mang đúng dấu này. */
 export const RULE_TRUC_TIEP = "s06-so-tren-tin";
+/** Tin có quyền sinh bí danh SĐT, viết với bí danh bảng `o`: số S06 phải mang dấu trực tiếp, nguồn khác không xét dấu. */
+export const TIN_VAO_DANH_BA = `NOT (o.source = 'S06' AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_TRUC_TIEP}')`;
 
 /** Luật dương: số ghép theo tài khoản hay mất dấu đều không tính là bằng chứng của số trên tin. */
 export const coBangChungSdt = (tin) => tin.field_provenance?.seller_phone?.rule_id === RULE_TRUC_TIEP;
@@ -331,7 +333,7 @@ export const SQL = Object.freeze({
   // Đối chiếu trên SĐT của tin, không trên sellers (SD1): sellers từng thiếu dòng nên phép đối chiếu luôn xanh.
   sellersThieu: `SELECT DISTINCT o.seller_phone_hash || ':' || o.source AS k FROM sale_offers o
                   WHERE o.seller_phone IS NOT NULL
-                    AND NOT (o.source = 'S06' AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_TRUC_TIEP}')
+                    AND ${TIN_VAO_DANH_BA}
                     AND NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt'
                                       AND a.source = o.source AND a.value = o.seller_phone)
                   ORDER BY 1`,

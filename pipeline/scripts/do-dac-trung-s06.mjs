@@ -6,7 +6,9 @@
 //      bị loại là rác kèm ba giá trị rác phổ biến · có ô), tỉ lệ có ô / hợp lệ ≥ 95% (Hỏi-1: mẫu số hợp lệ); mọi ô mới khác
 //      rỗng có phát biểu sống cùng giá trị;
 //   3. AC-8: tập tin sống, năm cột cũ + offer_status của mọi tin sống, bathrooms của S03/S05 trước = sau; CLOUD_ALLOW không có
-//      cột mới; đối chứng dương: đổi property_type một tin trên bản chép thì thước gọi tên tin.
+//      cột mới; đối chứng dương: đổi property_type một tin trên bản chép thì thước gọi tên tin. street_raw của S06 đổi có chủ ý
+//      từ DS1 (s06-duong-du-an-len-tin), nên xét riêng: ô đổi phải khớp phát biểu sống payload.street_name, hoặc về trống vì
+//      phát biểu bị rút lý do chua-sdt (sdt-trong-ten-duong); có đối chứng dương.
 // Không in số thật: chỉ số đếm, mã tin, hình dạng giá trị rác (chữ số → d). Sai → exit 1.
 import { execFileSync } from "node:child_process";
 import { rmSync, writeFileSync } from "node:fs";
@@ -15,6 +17,7 @@ import { pathToFileURL } from "node:url";
 
 import pg from "pg";
 
+import { retractRule } from "../lib/assert.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
 import { CLOUD_ALLOW } from "../sync-cloud.mjs";
@@ -82,17 +85,33 @@ async function chup(c) {
     WHERE source IN ('S03','S05','S06') ORDER BY offer_id`);
   return rows;
 }
-/** Lệch cột cũ giữa hai chụp — mỗi phần tử gọi tên tin + cột. bathrooms chỉ xét S03/S05 (S06 nhận WC mới từ toilets). */
+/** Lệch cột cũ giữa hai chụp — mỗi phần tử gọi tên tin + cột. bathrooms chỉ xét S03/S05 (S06 nhận WC mới từ toilets); street_raw của S06 xét ở duongLechLa. */
 function lechCot(a, b) {
   const mb = new Map(b.map((t) => [t.offer_id, t]));
   const lech = [];
   for (const t of a) {
     const u = mb.get(t.offer_id);
     if (!u) { lech.push(`mất ${t.offer_id}`); continue; }
-    for (const k of [...COT_CU, ...(t.source === "S06" ? [] : ["bathrooms"])]) if (String(t[k]) !== String(u[k])) lech.push(`${t.offer_id}.${k}`);
+    const cot = t.source === "S06" ? COT_CU.filter((k) => k !== A.street_raw) : [...COT_CU, "bathrooms"];
+    for (const k of cot) if (String(t[k]) !== String(u[k])) lech.push(`${t.offer_id}.${k}`);
   }
   for (const u of b) if (!a.some((t) => t.offer_id === u.offer_id)) lech.push(`thêm ${u.offer_id}`);
   return lech;
+}
+
+/** Ô street_raw của S06 đổi giữa hai chụp: { doi: số ô đổi, la: ô đổi không do DS1 hay sdt-trong-ten-duong }. */
+async function duongLechLa(c, a, b) {
+  const mb = new Map(b.map((t) => [t.offer_id, t]));
+  const doi = a.filter((t) => t.source === "S06" && mb.has(t.offer_id) && String(t[A.street_raw]) !== String(mb.get(t.offer_id)[A.street_raw])).map((t) => t.offer_id);
+  const { rows } = await c.query(`
+    SELECT o.offer_id FROM sale_offers o
+     WHERE o.offer_id = ANY($1) AND NOT CASE WHEN o.street_raw IS NOT NULL
+       THEN EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.subject_key = 'S06:' || o.originating_system_key AND fa.field = $2
+              AND fa.rule_id = 'payload.street_name' AND fa.retracted_at IS NULL AND fa.value_key = assertion_value_key(o.street_raw))
+       ELSE EXISTS (SELECT 1 FROM field_assertions fa WHERE fa.subject_key = 'S06:' || o.originating_system_key AND fa.field = $2
+              AND fa.retract_reason = 'chua-sdt') END
+     ORDER BY o.offer_id`, [doi, A.street_raw]);
+  return { doi, la: rows.map((r) => `${r.offer_id}.street_raw`) };
 }
 
 let hong = 0;
@@ -152,6 +171,16 @@ try {
   const doi = truoc.map((t, i) => (i === 0 ? { ...t, property_type: `${t.property_type}-x` } : t));
   const lechDoi = lechCot(truoc, doi);
   bao(lechDoi.length === 1 && lechDoi[0] === `${truoc[0].offer_id}.property_type`, `DT-AC-8 đối chứng: đổi property_type một tin thì thước gọi tên (${lechDoi.join("; ")})`);
+  const duong = await duongLechLa(c, truoc, sau);
+  bao(duong.la.length === 0, `DT-AC-8 đường S06 đổi đúng theo nguồn: ${duong.doi.length} ô đổi · lạ ${duong.la.length}${duong.la.length ? ` (${duong.la.slice(0, 10).join("; ")})` : ""}`);
+  // Đối chứng dương: rút phát biểu đường của một ô đã đổi (SAVEPOINT, không phân xử lại) thì ô ấy mất căn cứ, thước phải gọi tên.
+  await c.query("SAVEPOINT doi_chung_8");
+  const { rows: [moc] } = await c.query(`SELECT offer_id, originating_system_key AS k FROM sale_offers
+    WHERE offer_id = ANY($1) AND street_raw IS NOT NULL ORDER BY offer_id LIMIT 1`, [duong.doi]);
+  await retractRule(c, [`S06:${moc.k}`], A.street_raw, "payload.street_name", "nguon-bo-trong");
+  const duongRut = await duongLechLa(c, truoc, sau);
+  await c.query("ROLLBACK TO SAVEPOINT doi_chung_8");
+  bao(duongRut.la.length === 1 && duongRut.la[0] === `${moc.offer_id}.street_raw`, `DT-AC-8 đối chứng: rút phát biểu đường của một ô đổi thì thước gọi tên (${duongRut.la.slice(0, 3).join("; ")})`);
   const loCloud = (CLOUD_ALLOW.sale_offers ?? []).filter((c2) => BAY.includes(c2));
   bao(loCloud.length === 0, `DT-AC-8 CLOUD_ALLOW.sale_offers không có cột mới${loCloud.length ? ` — có ${loCloud.join(", ")}` : ""}`);
 } finally {
