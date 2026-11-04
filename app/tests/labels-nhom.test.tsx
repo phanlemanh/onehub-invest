@@ -7,6 +7,8 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import pg from "pg"
 import { renderToStaticMarkup } from "react-dom/server"
+import type { ReactNode } from "react"
+import { JSDOM } from "jsdom"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
@@ -23,6 +25,59 @@ import {
   type RawCell,
   type RawLabels,
 } from "../src/lib/labels-normalize"
+
+/** jsdom cho các ca bấm trên màn thật, gỡ khỏi global sau mỗi ca để các ca render tĩnh giữ nguyên. */
+async function dungDom() {
+  const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3460/ops/labels", pretendToBeVisual: true })
+  const them: Record<string, unknown> = {
+    window: dom.window, self: dom.window, document: dom.window.document, HTMLElement: dom.window.HTMLElement, HTMLInputElement: dom.window.HTMLInputElement,
+    HTMLTextAreaElement: dom.window.HTMLTextAreaElement, Element: dom.window.Element, Node: dom.window.Node, IS_REACT_ACT_ENVIRONMENT: true,
+    requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0), cancelAnimationFrame: (id: number) => clearTimeout(id),
+    getComputedStyle: dom.window.getComputedStyle.bind(dom.window), MutationObserver: dom.window.MutationObserver,
+    ResizeObserver: class { observe() {} unobserve() {} disconnect() {} },
+    matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
+  }
+  const cu = Object.fromEntries(Object.keys(them).map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]))
+  const cuNav = Object.getOwnPropertyDescriptor(globalThis, "navigator")
+  Object.assign(globalThis, them)
+  Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
+  const React = await import("react")
+  Object.assign(globalThis, { React })
+  const { createRoot } = await import("react-dom/client")
+  const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+  const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
+  let root: { unmount: () => void; render: (n: ReactNode) => void } | null = null
+  return {
+    render: async (node: ReactNode) => {
+      root = createRoot(document.getElementById("root")!, { onCaughtError() {}, onUncaughtError() {} })
+      await React.act(async () => root!.render(<AppRouterContext.Provider value={router as never}>{node}</AppRouterContext.Provider>))
+      return document.getElementById("root")!
+    },
+    bam: async (chu: string) => {
+      const nut = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === chu)
+      assert.ok(nut, `không thấy nút ${chu}`)
+      await React.act(async () => { nut.click(); await new Promise((r) => setTimeout(r, 20)) })
+    },
+    cho: async (dk: () => boolean) => {
+      for (let i = 0; i < 100 && !dk(); i++) await React.act(async () => { await new Promise((r) => setTimeout(r, 30)) })
+    },
+    go: async (id: string, giaTri: string) => {
+      const o = document.getElementById(id) as HTMLTextAreaElement
+      await React.act(async () => {
+        Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(o, giaTri)
+        o.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      })
+    },
+    xong: async () => {
+      if (root) await React.act(async () => root!.unmount())
+      for (const [k, d] of Object.entries(cu)) {
+        if (d) Object.defineProperty(globalThis, k, d)
+        else delete (globalThis as Record<string, unknown>)[k]
+      }
+      if (cuNav) Object.defineProperty(globalThis, "navigator", cuNav)
+    },
+  }
+}
 
 const S = `gcn_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
@@ -380,14 +435,12 @@ test("GCN-AC-6 tra loi the: đúng, sai, chưa xét lưu và đọc lại; giá 
   assert.deepEqual(j.truongHop.map((t) => t.theNhomDung), ["dung", "sai", "chua"])
 })
 
-test("GCN-AC-6 bo qua: thân rỗng không thêm dòng; tin kế vẫn sang bài sau", async () => {
+test("GCN-AC-6 thân rỗng gửi thẳng route: 400, không thêm dòng", async () => {
   await datLat()
   const a = await nguoiDaLuu(1)
   const { POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
   assert.equal((await POST(postTruongHop(a.cookie, 1, {}), reviewCtx(1))).status, 400)
   assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_cases`)).rows[0].n, 0)
-  const { tinKe } = await import("../src/lib/labels-queries")
-  assert.equal((await tinKe(a.id, LAT, sc, "U-A"))?.itemId, 2)
 })
 
 test("GCN-AC-6 luu lai nhan 409: có trường hợp rồi vẫn 409, nhãn không đổi", async () => {
@@ -450,7 +503,14 @@ test("GCN-AC-5 lượt hai: chưa lưu 403; đã lưu thấy ba cột, tin đầ
   // Người hai của bài trùng: chưa lưu 403; lưu rồi vẫn chỉ thấy phần của mình.
   assert.equal((await goi(b.cookie)).status, 403)
   assert.equal((await nhan.POST(postNhan(b.cookie, 4, DU))).status, 200)
-  const cuaB = await (await goi(b.cookie)).text()
+  const resB = await goi(b.cookie)
+  assert.equal(resB.status, 200, "người hai đã lưu phải đọc được phần của mình")
+  const cuaB = await resB.text()
+  const jB = JSON.parse(cuaB) as { cuaToi: { field: string; value: string }[]; lyDo: string | null; soTin: number }
+  assert.equal(jB.cuaToi.length, 17, "đối chứng dương: có đủ nhãn của chính B")
+  assert.equal(jB.cuaToi.find((r) => r.field === "project")?.value, "vinhomes grand park", "giá trị của B, không phải của A")
+  assert.equal(jB.lyDo, null)
+  assert.equal(jB.soTin, 3)
   assert.ok(!cuaB.includes("LYDO-A-CHU") && !cuaB.toLowerCase().includes("lydo-a-dau"), "NGUOI HAI THAY NHAN NGUOI TRUOC")
 })
 
@@ -566,26 +626,37 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   da.add("cloud")
   // Lỗi: vùng dữ liệu bọc RegionError có «Thử lại»; lỗi ghi trường hợp có «Thử lại» và nói nhãn an toàn; mất kết nối có «Lưu lại».
   const { LoiTruongHop } = await import("../src/components/ops/labels/luot-hai")
-  const { LuuLoiAlert, cauTinKe, guiNhan } = await import("../src/components/ops/labels/luu-nhan")
+  const { LuuLoiAlert } = await import("../src/components/ops/labels/luu-nhan")
   const loiTh = renderToStaticMarkup(<LoiTruongHop loi="Mất kết nối tới máy thu" onRetry={() => {}} dangGhi={false} />)
   assert.match(loiTh, /Thử lại/)
   assert.match(loiTh, /Nhãn đã lưu an toàn/)
   assert.match(renderToStaticMarkup(<LuuLoiAlert onRetry={() => {}} dangLuu={false} />), /Lưu lại/)
-  assert.match(readFileSync(join(APP, "src/components/states/region-error.tsx"), "utf8"), /Thử lại/)
-  assert.match(readFileSync(join(APP, "src/app/ops/labels/page.tsx"), "utf8"), /<RegionError what="tin để gắn nhãn">/)
-  da.add("lỗi")
-  // Tin vừa có người gắn: phản hồi thật của route đi qua guiNhan ra đúng kết cục và đúng câu.
-  await datLat()
-  const nguoiTruoc = await nguoiDaLuu(1)
-  const nguoiSau = await taoNguoi(sc, "ops")
-  const { POST } = await import("../src/app/api/v1/ops/labels/route")
-  const qua = ((url: string, init: RequestInit) =>
-    POST(new Request(`http://localhost${url}`, { ...init, headers: { ...(init.headers as Record<string, string>), cookie: nguoiSau.cookie } }))) as unknown as typeof fetch
-  const kq = await guiNhan(qua, { lat: LAT, item_id: 1, values: DU })
-  assert.equal(kq.kind, "da-co-nguoi")
-  assert.equal(kq.kind === "da-co-nguoi" ? cauTinKe(kq.error) : "", "Tin này vừa có người gắn — chuyển tin kế")
-  void nguoiTruoc
-  da.add("tin vừa có người gắn")
+  // Lỗi vùng dữ liệu: DB lỗi làm LabelsContent ném lên, RegionError thật vẽ «Thử lại» dưới ranh giới lỗi trong jsdom.
+  const dbMod = await import("../src/lib/db")
+  const gocQ = dbMod.pool.query.bind(dbMod.pool)
+  ;(dbMod.pool as unknown as { query: unknown }).query = () => Promise.reject(new Error("DB lỗi"))
+  const { LabelsContent } = await import("../src/components/ops/labels/labels-content")
+  let loiDb: unknown = null
+  try {
+    await LabelsContent({ user: { id: "usr_x", email: "x@local.test", plan: "free", role: "ops" }, lat: LAT })
+  } catch (e) {
+    loiDb = e
+  } finally {
+    ;(dbMod.pool as unknown as { query: unknown }).query = gocQ
+  }
+  assert.match(String(loiDb), /DB lỗi/, "lỗi DB phải ném lên ranh giới lỗi, không nuốt")
+  const dom = await dungDom()
+  try {
+    const { RegionError } = await import("../src/components/states/region-error")
+    const Boom = (): never => { throw loiDb }
+    const goc = await dom.render(<RegionError what="tin để gắn nhãn"><Boom /></RegionError>)
+    assert.match(goc.textContent ?? "", /Không tải được tin để gắn nhãn/)
+    assert.ok([...goc.querySelectorAll("button")].some((b) => b.textContent?.includes("Thử lại")), "có nút Thử lại")
+    da.add("lỗi")
+  } finally {
+    await dom.xong()
+  }
+  da.add("tin vừa có người gắn") // đo ở ca «tin vua co nguoi gan» bên dưới, trên biểu mẫu thật
   assert.deepEqual([...da].sort(), [...TRANG_THAI].sort())
   const tin = { itemId: 7, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ bài RB", groupName: "Nhóm A", postedAt: null }
   const mau = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} />)
@@ -638,4 +709,81 @@ test("GCN-AC-5 bảng so đặt đúng cột, đúng trường; khác máy mới
   assert.ok(o("bedrooms")[2].includes("<span"), "bộ đọc 3 khác nhãn 2 phải mang Badge")
   assert.ok(!o("project")[2].includes("<span"), "bộ đọc chưa có cột dự án thì không tính khác")
   assert.match(html, /3 trường khác máy/)
+})
+
+test("GCN-AC-10 tin vua co nguoi gan: biểu mẫu thật nhận 409 của route, hiện đúng câu, sang tin kế; bài còn chỗ thì sang lượt hai", async () => {
+  await datLat()
+  await nguoiDaLuu(1)
+  const sau = await taoNguoi(sc, "ops")
+  const { POST } = await import("../src/app/api/v1/ops/labels/route")
+  const { LabelFormNhom } = await import("../src/components/ops/labels/label-form-nhom")
+  const { toast } = await import("sonner")
+  const gocInfo = toast.info
+  const gocFetch = globalThis.fetch
+  const dom = await dungDom()
+  const cau: string[] = []
+  toast.info = ((m: string) => { cau.push(m); return 0 }) as typeof toast.info
+  // Fetch đi qua route thật, thân thay bằng lượt hợp lệ: ca này đo kết cục của route trên biểu mẫu, không đo khâu điền.
+  globalThis.fetch = (async (url: string, init: RequestInit) =>
+    POST(new Request(`http://localhost${url}`, {
+      method: "POST", headers: { "content-type": "application/json", cookie: sau.cookie },
+      body: JSON.stringify({ ...JSON.parse(String(init.body)), values: DU }),
+    }))) as unknown as typeof fetch
+  try {
+    const tin = (itemId: number) => ({ itemId, lat: LAT, doubleLabel: false, soNguoi: 0, text: CHU, groupName: "N", postedAt: null })
+    const di: string[] = []
+    await dom.render(<LabelFormNhom lat={LAT} tin={tin(1)} hrefXem="/xem-1" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.bam("Lưu và xem máy đọc")
+    await dom.cho(() => di.length === 1)
+    assert.deepEqual(cau, ["Tin này vừa có người gắn — chuyển tin kế"])
+    assert.deepEqual(di, ["/tin-ke"])
+    // Đối chứng dương: bài 2 còn chỗ, cùng biểu mẫu sang lượt hai, không có câu trên.
+    document.body.innerHTML = "<div id=root></div>"
+    await dom.render(<LabelFormNhom lat={LAT} tin={tin(2)} hrefXem="/xem-2" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.bam("Lưu và xem máy đọc")
+    await dom.cho(() => di.length === 2)
+    assert.deepEqual(di, ["/tin-ke", "/xem-2"])
+    assert.equal(cau.length, 1)
+  } finally {
+    toast.info = gocInfo
+    globalThis.fetch = gocFetch
+    await dom.xong()
+  }
+})
+
+test("GCN-AC-6 bo qua trên màn thật: nút Bỏ qua không gửi gì và sang tin kế; có diễn giải thì gửi một lần; lỗi ghi thì ở lại, có Thử lại", async () => {
+  const { LuotHai } = await import("../src/components/ops/labels/luot-hai")
+  const gocFetch = globalThis.fetch
+  const gui: { url: string; body: unknown }[] = []
+  let loi = false
+  globalThis.fetch = (async (url: string, init: RequestInit) => {
+    gui.push({ url, body: JSON.parse(String(init.body)) })
+    if (loi) throw new Error("mất mạng")
+    return new Response("{}", { status: 200 })
+  }) as unknown as typeof fetch
+  const dom = await dungDom()
+  const d = { itemId: 7, lat: "x", text: "chữ", groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the: null }
+  const di: string[] = []
+  try {
+    await dom.render(<LuotHai d={d} hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.bam("Bỏ qua")
+    assert.deepEqual(di, ["/tin-ke"], "Bỏ qua phải sang tin kế")
+    assert.equal(gui.length, 0, "Bỏ qua không gửi gì")
+    await dom.bam("Ghi và sang tin kế")
+    assert.deepEqual(di, ["/tin-ke", "/tin-ke"])
+    assert.equal(gui.length, 0, "chưa điền gì thì không có dòng để ghi")
+    await dom.go("th-note", "RB viết tắt")
+    await dom.bam("Ghi và sang tin kế")
+    assert.deepEqual(gui.map((g) => g.url), ["/api/v1/ops/labels/7/review"])
+    assert.equal((gui[0].body as { note: string }).note, "RB viết tắt")
+    assert.equal(di.length, 3)
+    loi = true
+    await dom.bam("Ghi và sang tin kế")
+    assert.equal(di.length, 3, "lỗi ghi thì ở lại")
+    assert.match(document.body.textContent ?? "", /Nhãn đã lưu an toàn/)
+    assert.ok([...document.querySelectorAll("button")].some((b) => b.textContent?.includes("Thử lại")))
+  } finally {
+    globalThis.fetch = gocFetch
+    await dom.xong()
+  }
 })

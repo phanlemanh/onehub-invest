@@ -17,7 +17,7 @@ import type { TinGan } from "@/lib/labels-queries"
 
 import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
-import { cauTinKe, guiNhan, LuuLoiAlert } from "./luu-nhan"
+import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
 
 /**
  * Biểu mẫu 17 trường của lát theo nhóm (bản D): bài gốc dính ở đầu, năm khối hai cột, mỗi ô một căn cứ, chân dính giữ nút
@@ -31,7 +31,19 @@ const DON_VI: { value: PriceUnit; label: string }[] = [
 /** Bài dài hơn ba dòng ở khổ hẹp thì gấp; dưới ngưỡng này không có gì để mở. */
 const baiDai = (t: string) => t.length > 120 || t.split("\n").length > 3
 
-export function LabelFormNhom({ lat, tin, hrefXem, hrefTinKe }: { lat: string; tin: TinGan; hrefXem: string; hrefTinKe: string }) {
+export function LabelFormNhom({
+  lat,
+  tin,
+  hrefXem,
+  hrefTinKe,
+  diToi = diTrang,
+}: {
+  lat: string
+  tin: TinGan
+  hrefXem: string
+  hrefTinKe: string
+  diToi?: (href: string) => void
+}) {
   const [cells, setCells] = useState<Partial<Record<LabelField, O>>>({})
   const [donVi, setDonVi] = useState<PriceUnit>("ty")
   const [lyDo, setLyDo] = useState("")
@@ -61,9 +73,9 @@ export function LabelFormNhom({ lat, tin, hrefXem, hrefTinKe }: { lat: string; t
         requestAnimationFrame(() => document.querySelector("[data-loi]")?.scrollIntoView({ block: "center" }))
       } else if (kq.kind === "da-co-nguoi") {
         toast.info(cauTinKe(kq.error))
-        window.location.assign(hrefTinKe)
+        diToi(hrefTinKe)
       } else if (kq.kind === "loi-may-chu") toast.error(kq.error)
-      else if (kq.kind === "da-luu") window.location.assign(hrefXem)
+      else if (kq.kind === "da-luu") diToi(hrefXem)
     } finally {
       setDangLuu(false)
     }

@@ -14,6 +14,7 @@ import type { DoiChieu } from "@/lib/labels-luot-hai"
 import { CASE_KINDS } from "@/lib/labels-normalize"
 
 import { BangSo } from "./bang-so"
+import { diTrang } from "./luu-nhan"
 
 /** Lượt hai: bảng «Anh gắn · Bộ đọc · AI đọc», thẻ nhóm, ô trường hợp. Không có đường đổi nhãn đã lưu. Bỏ qua được. */
 
@@ -40,13 +41,13 @@ export function LoiTruongHop({ loi, onRetry, dangGhi }: { loi: string; onRetry: 
   )
 }
 
-function GhiTruongHop({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
+function GhiTruongHop({ d, hrefTinKe, diToi }: { d: DoiChieu; hrefTinKe: string; diToi: (href: string) => void }) {
   const [the, setThe] = useState<string | null>(null)
   const [kind, setKind] = useState<string | null>(null)
   const [note, setNote] = useState("")
   const [dangGhi, setDangGhi] = useState(false)
   const [loi, setLoi] = useState<string | null>(null)
-  const sangTinKe = () => window.location.assign(hrefTinKe)
+  const sangTinKe = () => diToi(hrefTinKe)
 
   async function ghi() {
     if (!the && !kind && !note.trim()) return sangTinKe()
@@ -122,7 +123,7 @@ function GhiTruongHop({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
   )
 }
 
-export function LuotHai({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
+export function LuotHai({ d, hrefTinKe, diToi = diTrang }: { d: DoiChieu; hrefTinKe: string; diToi?: (href: string) => void }) {
   return (
     <div className="flex min-w-0 flex-col gap-6" data-labels-luot-hai={d.itemId}>
       <Frame variant="default" spacing="sm" className="w-full min-w-0">
@@ -139,7 +140,7 @@ export function LuotHai({ d, hrefTinKe }: { d: DoiChieu; hrefTinKe: string }) {
       </Frame>
       <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <BangSo d={d} />
-        <GhiTruongHop d={d} hrefTinKe={hrefTinKe} />
+        <GhiTruongHop d={d} hrefTinKe={hrefTinKe} diToi={diToi} />
       </div>
     </div>
   )

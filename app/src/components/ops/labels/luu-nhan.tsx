@@ -43,6 +43,9 @@ export async function guiNhan(
   return { kind: "loi-may-chu", error: b.error ?? "Không lưu được nhãn — thử lại" }
 }
 
+/** Rời trang bằng tải lại đầy đủ, để server xếp tin kế. Tách ra để test quan sát được đích đến. */
+export const diTrang = (href: string) => window.location.assign(href)
+
 /** Toast khi tin vừa có người gắn: màn tự sang tin kế. */
 export const cauTinKe = (error: string) => `${error} — chuyển tin kế`
 
