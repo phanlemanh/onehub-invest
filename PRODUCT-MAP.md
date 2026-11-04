@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>1 việc"]
+  GD --> B["Sắp mở vòng<br/>chưa có"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>10 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>12 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>132 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>96 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>97 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -22,10 +22,6 @@ flowchart TD
 > đã đủ và đúng chưa · **Cổng Bằng chứng** đã làm đúng thứ đã hứa chưa ·
 > **Cổng Giá trị** thứ đã giao có ăn thua không.
 
-## Sắp mở vòng
-
-- Người vận hành mở một căn trên Căn giá tốt và biết căn nào, ở đâu, ảnh gì, vì sao giá tốt: giá/m² so với thước, số tin dựng thước, mức giảm so với ngưỡng; căn thiếu dữ liệu ghi rõ thiếu gì (`can-gia-tot-biet-can`)
-
 ## Chờ duyệt phạm vi
 
 - ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế (`adr-duong-lenh-keo`)
@@ -33,10 +29,12 @@ flowchart TD
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
 - đầu dò của hồ sơ chuyen-huong-ma-thi-truong gỡ đúng worktree tạm của nó, bỏ lệnh prune trên kho dùng chung (`chm-dau-do-khong-prune`)
 - CI bỏ qua ca «DF-AC-3 DB thật» cần tin rao thật ở DB local (chỉ chạy ở máy thu) (`ci-bo-qua-df-ac-3`)
+- giải thích hai nhãn «Chưa xác minh» ngay trên thẻ tin và trên trang Phương pháp (`giai-thich-nhan-chua-xac-minh`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+- harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
 ## Đã giao — chờ phiên nghiệm thu
@@ -46,6 +44,7 @@ flowchart TD
 - Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx (`auth-hop-chuan`)
 - Bộ bóc SĐT của S03/S05 bắt đủ bốn dạng viết tách lạ, bỏ số 11 chữ số, và tin chọn SĐT theo luật rõ trên mọi bài của tin — dạng số ra giữ nguyên (`boc-sdt-du-va-chon-ro`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
+- Người vận hành quét Căn giá tốt trên một bảng có tab và lọc, mở sheet một căn để biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai, so với các căn cùng tiêu chí; căn thiếu dữ liệu ghi rõ thiếu gì; vai Người xem không nhận ảnh, chữ bài, liên hệ (`can-gia-tot-biet-can`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
 - Luật ghép căn và bảng so thẻ duyệt so ô đường theo tên đường — bỏ ngõ/ngách/hẻm/số nhà và đuôi địa chỉ, không còn loại oan «đường khác» (`chuan-hoa-o-duong`)
