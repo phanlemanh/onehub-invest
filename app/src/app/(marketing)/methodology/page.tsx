@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRightIcon, ChartColumnIcon, MapIcon } from "lucide-react";
 
 import { DefinitionGrid } from "@/components/marketing/definition-grid";
-import { METRICS, SOURCES, YIELD } from "@/components/marketing/methodology-definitions";
+import { METRICS, OFFER_LABELS, SOURCES, YIELD } from "@/components/marketing/methodology-definitions";
 import { Badge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
 import { Item, ItemMedia } from "@/components/ui/item";
@@ -34,6 +34,7 @@ export default function MethodologyPage() {
           {[
             ["chi-so", "Chỉ số"],
             ["loi-suat", "Lợi suất"],
+            ["nhan-tin", "Nhãn trên tin"],
             ["nguon", "Nguồn dữ liệu"],
           ].map(([id, label]) => (
             <Badge key={id} variant="outline" render={<a href={`#${id}`} />} className="hover:bg-accent transition-colors">
@@ -45,6 +46,7 @@ export default function MethodologyPage() {
 
       <DefinitionGrid id="chi-so" title="Chỉ số" items={METRICS} />
       <DefinitionGrid id="loi-suat" title="Mô hình lợi suất" items={YIELD} />
+      <DefinitionGrid id="nhan-tin" title="Nhãn trên tin" items={OFFER_LABELS} />
       <DefinitionGrid id="nguon" title="Nguồn dữ liệu" items={SOURCES} />
 
       {/* Hàng hỗ trợ của faq-3: sản phẩm không có bàn hỗ trợ/tài liệu riêng → hai việc chính của Invest. */}
