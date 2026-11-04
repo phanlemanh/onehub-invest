@@ -5,6 +5,7 @@ import { PhoneIcon, RotateCwIcon } from "lucide-react"
 
 import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
+import { OfferLabelHelp } from "./offer-label-help"
 
 /** «+84912345678» → «0912 345 678»; số dạng khác giữ nguyên. */
 export function phoneText(e164: string): string {
@@ -40,7 +41,9 @@ export function OfferContact({ offerId, hasPhone, inferred }: { offerId: string;
   if (!hasPhone || state === "none") return <Badge variant="secondary">Chưa có số</Badge>
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      {(freshInferred ?? inferred) ? <Badge variant="warning-light">Chưa xác minh</Badge> : null}
+      <OfferLabelHelp what="phone">
+        {(freshInferred ?? inferred) ? <Badge variant="warning-light">Chưa xác minh</Badge> : null}
+      </OfferLabelHelp>
       {phone ? (
         <Button variant="outline" size="sm" nativeButton={false} render={<a href={`tel:${phone}`} />}>
           <PhoneIcon data-icon="inline-start" aria-hidden="true" />
