@@ -503,7 +503,7 @@ test("CGB-AC-6 đối chứng: gỡ tenTin đỏ, đếm cả unknown đỏ", as
   await nap(tenCuaDong())
   const boLoc = await banSao((s) => s.replace("tenTin(r.seller_name)", "r.seller_name"))
   await assert.rejects(kiemTenInvest(boLoc), /CGB-AC-6 chữ giữ chỗ hiện như tên/)
-  const demCa = await banSao((s) => s.replace(" FILTER (WHERE lower(btrim(seller_name)) NOT IN ('unknown', ''))", ""))
+  const demCa = await banSao((s) => s.replace(" AND lower(btrim(seller_name)) NOT IN ('unknown', '')", ""))
   await assert.rejects(kiemTenInvest(demCa), /CGB-AC-6 chữ giữ chỗ tính là một tên/)
 })
 

@@ -14,7 +14,7 @@ import {
 } from "./deals-chi-tiet";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { fmtPhone, telHref } from "./ops/people";
-import { tenTin } from "./ops/review-context";
+import { tenTin } from "./ten-tin";
 import { buildMediaImages, loadOfferMedia } from "./ops/review-media";
 import { docSourceNameEntries } from "./source-roles";
 
