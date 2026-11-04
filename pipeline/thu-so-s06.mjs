@@ -323,6 +323,7 @@ async function main() {
   console.log(`việc cần thu: ${viec.length} (đã có state: ${Object.keys(state.da_thu).length})`);
   // 0411-9: số việc theo nhóm tuổi (≤2 ngày · 2-4 ngày · >4 ngày)
   {
+    const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000; // 0411-10: khai trong main — docViec có const riêng scope hàm
     const moc2 = Date.now() - 2 * 24 * 3600 * 1000;
     const n2 = viec.filter((v) => new Date(v.thay_gan_nhat).getTime() >= moc2).length;
     const n4 = viec.filter((v) => new Date(v.thay_gan_nhat).getTime() >= moc4ngay).length - n2;
