@@ -410,10 +410,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 29. **S01 thu theo ID có trong danh sách S02** (03/11, Mạnh chốt «Cho dùng ID S02», sửa luật 5 và ADR-0009): tìm kiếm S01 chạm
     trần 15 trang nên chỉ phủ khoảng 2,3% số căn hoạt động ở 3 thành phố. Mở thẳng trang chi tiết theo ID; số S02 không lên cổng, doanh thu
     S02 chỉ xếp thứ tự. Đo thử 100 căn trước (`claudedp-0311-13`), chạy lớn theo nấc 200 → 500 → 1.000 → 2.000 căn/đêm sau 05/11, đứng trên hàng ZC5.
-30. **Gắn tin S03 vào căn làm đầu tiên sau 05/11, diện tích đi theo** (04/11, Mạnh chốt «Gộp, làm đầu tiên»): chuỗi `GC1`, `DN1`, `DB1`,
+30. **Gắn tin S03 vào căn làm đầu tiên sau 05/11, diện tích đi theo** (04/11, Mạnh chốt «Gộp, làm đầu tiên»): chuỗi `GC0`, `GC1`, `DN1`, `DB1`,
     `PL13`, `PL20`, `GC2`, `GC3` (mốc `GCM1`), bắt đầu từ Ocean Park. Đo 04/11: 0/3.708 tin S03 gắn căn; chỉ 45/2.175 tin thiếu m² có trục.
     Diện tích tin ghi thành phát biểu, tin khác nhận dải kèm nhãn «suy ra», không vào `area_m2`, giá/m², thước giá. S08 chỉ đối chiếu nội
     bộ, luật 5 và ADR-0016 §9 không đổi. Ba câu còn mở chốt ở Cổng Phạm vi của `GC3`: `docs/plan/pham-vi-gan-can-s03-0411.md`.
+    Mạnh và đội kiểm tay theo từng nhóm trước, thống kê trường hợp rồi mới làm bộ đọc: đo 04/11 chưa có nhãn người nào.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

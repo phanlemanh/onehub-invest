@@ -90,6 +90,7 @@
       "loai": "phat-hanh",
       "dot": "gan-can-s03-0411",
       "hang": [
+        "GC0",
         "GC1",
         "DN1",
         "DB1",
@@ -291,7 +292,8 @@
       "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
       "hang": "T2",
       "dung_tren": [
-        "PL6"
+        "PL6",
+        "GC0"
       ],
       "slug": "doc-ma-can-gia-khoang",
       "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
@@ -300,7 +302,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở."
     },
     {
       "ma": "PL14",
@@ -3591,6 +3593,33 @@
         "CONTEXT.md"
       ],
       "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng."
+    },
+    {
+      "ma": "GC0",
+      "slug": "gan-nhan-theo-nhom-s03",
+      "hang": "T3",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "PL7"
+      ],
+      "phu": [
+        "GC0"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels, gắn mù cả trục, tầng, bài nhiều căn, người bán và SĐT, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
+      "bat_khi": "Chọn mẫu theo nhóm chạy lại không thêm dòng; lượt xem máy đọc không đổi được nhãn mù; bảng trường hợp khớp đếm SQL độc lập; 0 nhãn rời máy thu",
+      "vi_sao": "Đo 04/11: chưa có nhãn người nào, số độ đúng đều do tác tử Claude gắn. Màn PL7 đã có nhưng thiếu các trường trên và chưa có lượt ghi trường hợp. PL13, PL20, GC2 đều chấm trên tập test có nhãn người.",
+      "vung": [
+        "app/src/app/ops/labels",
+        "app/src/app/api/v1/ops/labels",
+        "app/src/lib/labels-normalize.ts",
+        "db/migrations",
+        "pipeline/label-sample.mjs",
+        "pipeline/lib/eval-labels.mjs"
+      ],
+      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật."
     }
   ],
   "chan_troi": [
