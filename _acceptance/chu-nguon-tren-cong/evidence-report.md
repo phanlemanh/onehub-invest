@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fbaa5dff2dac3098f51797d191819c79b1ce5cef
+verified_commit: 50f7022c5917808a40ebda818ac6257f7d143d02
 human_signoff:
 ---
 
@@ -28,72 +28,73 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-chu-nguon-tren-cong-E1-r2
+  run_id: minted-chu-nguon-tren-cong-E1-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.cn_quet
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     node --test scripts/quet-ten-nguon-html.test.mjs
-    ℹ duration_ms 3021.164917
+    ℹ duration_ms 2645.859708
 
 - eval: E3
-  run_id: minted-chu-nguon-tren-cong-E3-r2
+  run_id: minted-chu-nguon-tren-cong-E3-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.cn_quet
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     node --test scripts/quet-ten-nguon-html.test.mjs
-    ℹ duration_ms 3021.164917
+    ℹ duration_ms 2645.859708
 
 - eval: E4b
-  run_id: minted-chu-nguon-tren-cong-E4b-r2
+  run_id: minted-chu-nguon-tren-cong-E4b-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.cn_quet
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     node --test scripts/quet-ten-nguon-html.test.mjs
-    ℹ duration_ms 3021.164917
+    ℹ duration_ms 2645.859708
 
 - eval: E7b
-  run_id: minted-chu-nguon-tren-cong-E7b-r2
+  run_id: minted-chu-nguon-tren-cong-E7b-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.cn_quet
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     node --test scripts/quet-ten-nguon-html.test.mjs
-    ℹ duration_ms 3021.164917
+    ℹ duration_ms 2645.859708
 
 - eval: E2
-  run_id: minted-chu-nguon-tren-cong-E2-r2
+  run_id: minted-chu-nguon-tren-cong-E2-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.cn_song
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     tổng: 12 trang · còn tên 0 · không đo được 0
 
 - eval: E3b
   run_id: minted-chu-nguon-tren-cong-E3b-r2
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.script.cn_tinh
   verified_at: 2026-11-04T04:47:35Z
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
   output: |
     invest-tier-a: 0 chỗ trúng trong 241 tệp
 
 - eval: E4
-  run_id: minted-chu-nguon-tren-cong-E4-r2
+  run_id: minted-chu-nguon-tren-cong-E4-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.cn_app
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
   output: |
     cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx
-    ℹ duration_ms 337.7595
+    ℹ duration_ms 501.715625
 
 - eval: E6
   run_id: minted-chu-nguon-tren-cong-E6-r1
@@ -122,34 +123,34 @@ human_signoff:
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__bb6271-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-chu-nguon-tren-cong-SUITE-lint-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 - cmd: cd app && npm test
-  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__bd9a35-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__bd9a35-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__13563d-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-chu-nguon-tren-cong-SUITE-test_lint_rules-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-chu-nguon-tren-cong-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-chu-nguon-tren-cong-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-11-04T04:47:35Z
+  verified_at: 2026-11-04T05:24:04Z
 
 ## Known limits
 
@@ -157,14 +158,13 @@ human_signoff:
 
 ## Analyst
 
-none — không eval tính năng nào được đo là green-on-both ở round này (các eval mới đều baseline n-a, xem dưới).
+none — mọi eval tính năng chạy ở round này đều có baseline n-a (eval mới, không đo được trên code cũ), không có eval nào được đo là green-on-both.
 
 Baseline khong do:
 
-- node --test scripts/quet-ten-nguon-html.test.mjs: bo qua baseline: tep scripts/quet-ten-nguon-html.test.mjs co o cay dang kiem nhung chua co o merge-base daccb40340558dd819beca8927d897ba90bfeddf — eval moi, chay tren code cu khong phan biet gi
-- BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs: bo qua baseline: tep scripts/quet-ten-nguon-html.mjs co o cay dang kiem nhung chua co o merge-base daccb40340558dd819beca8927d897ba90bfeddf — eval moi, chay tren code cu khong phan biet gi
-- node scripts/check-invest-tier-a.mjs: bo qua baseline: tep scripts/check-invest-tier-a.mjs co o cay dang kiem nhung chua co o merge-base daccb40340558dd819beca8927d897ba90bfeddf — eval moi, chay tren code cu khong phan biet gi
-- cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx: bo qua baseline: tep app/tests/chu-nguon-tren-cong.test.tsx co o cay dang kiem nhung chua co o merge-base daccb40340558dd819beca8927d897ba90bfeddf — eval moi, chay tren code cu khong phan biet gi
+- node --test scripts/quet-ten-nguon-html.test.mjs: bo qua baseline: tep scripts/quet-ten-nguon-html.test.mjs co o cay dang kiem nhung chua co o merge-base 0b323ebf509202bdd6eec3f77e07f25a87a94381 — eval moi, chay tren code cu khong phan biet gi
+- BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs: bo qua baseline: tep scripts/quet-ten-nguon-html.mjs co o cay dang kiem nhung chua co o merge-base 0b323ebf509202bdd6eec3f77e07f25a87a94381 — eval moi, chay tren code cu khong phan biet gi
+- cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx: bo qua baseline: tep app/tests/chu-nguon-tren-cong.test.tsx co o cay dang kiem nhung chua co o merge-base 0b323ebf509202bdd6eec3f77e07f25a87a94381 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
@@ -173,4 +173,5 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 ## Iterations
 
 Round 1: bốn mục trong hợp đồng AC-2 và AC-3 phải sửa (ngoại lệ tiêu đề tin không có tác dụng trên trang listing, thước tĩnh bỏ sót layout/biến/template, fixture viết tay không round-trip, ma trận trang so với chính nó). Returned to implementation.
-Round 2: mọi eval chạy lại xanh trên commit fbaa5dff; E6 và E7 mang từ round 1 vì delta không chạm paths của chúng. Phát hiện còn lại nằm ở review-findings.md. Ghi chú: verified_at của các eval round 2 là mốc xấp xỉ lúc soạn báo cáo; thời điểm chạy chính xác nằm ở run-log.jsonl.
+Round 2: mọi eval chạy lại xanh trên commit fbaa5dff; E6 và E7 mang từ round 1 vì delta không chạm paths của chúng. Phát hiện còn lại nằm ở review-findings.md.
+Round 3: mọi eval chạy lại xanh trên commit 50f7022c; E3b mang từ round 2, E6 và E7 mang từ round 1 vì delta không chạm paths của chúng. Phát hiện còn lại nằm ở review-findings.md. Ghi chú: verified_at của các eval round 3 là mốc xấp xỉ lúc soạn báo cáo; thời điểm chạy chính xác nằm ở run-log.jsonl.

@@ -90,3 +90,52 @@ wall: 746s
 - **claude-sonnet-5-5**: 7 agent · 26 calls · out 38,189 · in 52 · cache_read 642,519 · cache_create 254,381
 - **claude-haiku-5-5**: 10 agent · 20 calls · out 17,439 · in 40 · cache_read 237,594 · cache_create 224,135
 
+### S4 round 3 — wf_950a6e65-37d (27 agent, 153,519 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 13 | 36,116 | 26 | 1,096,270 | 561 |
+| review:bugs | claude-opus-5-5 | 14 | 31,689 | 30 | 1,364,340 | 335 |
+| review:conventions | claude-opus-5-5 | 10 | 19,293 | 22 | 727,444 | 398 |
+| synthesize:report | claude-sonnet-5-5 | 8 | 13,512 | 16 | 377,013 | 87 |
+| triage | claude-sonnet-5-5 | 3 | 11,466 | 6 | 62,950 | 71 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 4,179 | 6 | 57,132 | 37 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 3,149 | 4 | 20,908 | 31 |
+| refute:E6-assertions.json | claude-sonnet-5-5 | 5 | 2,920 | 10 | 101,423 | 28 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,684 | 4 | 24,046 | 297 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,373 | 4 | 24,066 | 9 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,305 | 4 | 3,140 | 340 |
+| machine:node --test scripts/quet-ten-nguon-html. | claude-haiku-5-5 | 2 | 2,179 | 4 | 24,075 | 12 |
+| refute:chu-nguon-tren-cong.test.tsx | claude-sonnet-5-5 | 4 | 1,994 | 8 | 81,074 | 22 |
+| refute:config.yaml | claude-sonnet-5-5 | 4 | 1,967 | 8 | 80,781 | 22 |
+| refute:chu-nguon-tren-cong.test.tsx | claude-sonnet-5-5 | 3 | 1,880 | 6 | 51,223 | 22 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,834 | 4 | 24,060 | 8 |
+| refute:quet-ten-nguon-html.test.mjs | claude-sonnet-5-5 | 4 | 1,688 | 8 | 90,019 | 20 |
+| machine:BASE_URL=${BASE_URL:-http://localhost:34 | claude-haiku-5-5 | 2 | 1,560 | 4 | 24,100 | 12 |
+| refute:quet-ten-nguon-html.test.mjs | claude-sonnet-5-5 | 4 | 1,534 | 8 | 74,943 | 17 |
+| refute:quet-ten-nguon-html.test.mjs | claude-sonnet-5-5 | 4 | 1,458 | 8 | 77,253 | 16 |
+| refute:chu-nguon-tren-cong.test.tsx | claude-sonnet-5-5 | 4 | 1,414 | 8 | 78,715 | 18 |
+| refute:evals.yaml | claude-sonnet-5-5 | 3 | 1,309 | 6 | 51,319 | 16 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,277 | 4 | 24,079 | 8 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,150 | 4 | 24,071 | 16 |
+| refute:quet-ten-nguon-html.test.mjs | claude-sonnet-5-5 | 4 | 1,134 | 8 | 70,000 | 14 |
+| refute:quet-ten-nguon-html.mjs | claude-sonnet-5-5 | 3 | 1,127 | 6 | 46,607 | 12 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 328 | 4 | 19,706 | 5 |
+
+
+wall: 913s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 4,179 | 57,132 | 37 | 05:26:32 | 05:27:09 |
+| machine | 9 | 18,511 | 192,545 | 713 | 05:26:32 | 05:38:24 |
+| review | 3 | 87,098 | 3,188,054 | 561 | 05:26:32 | 05:35:53 |
+| triage | 1 | 11,466 | 62,950 | 71 | 05:38:26 | 05:39:37 |
+| refute | 11 | 18,425 | 803,357 | 30 | 05:39:39 | 05:40:09 |
+| capture | 1 | 328 | 19,706 | 5 | 05:40:11 | 05:40:16 |
+| synthesize | 1 | 13,512 | 377,013 | 87 | 05:40:18 | 05:41:45 |
+
+- **claude-opus-5-5**: 3 agent · 37 calls · out 87,098 · in 78 · cache_read 3,188,054 · cache_create 374,673
+- **claude-sonnet-5-5**: 15 agent · 58 calls · out 47,910 · in 116 · cache_read 1,320,158 · cache_create 470,337
+- **claude-haiku-5-5**: 9 agent · 18 calls · out 18,511 · in 36 · cache_read 192,545 · cache_create 224,080
+
