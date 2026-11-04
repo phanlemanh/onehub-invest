@@ -28,9 +28,11 @@ if [ "${SKIP_COLLECT:-0}" != "1" ]; then
     # 3110-7 MỞ LẠI vòng 3: tách stdout/stderr — stdout là danh sách query, stderr
     # ghi tệp tạm và CHỈ in khi thoát khác 0. Thoát 0 mà có stderr (cảnh báo node)
     # không lọt vào danh sách query nữa.
+    # 3110-7 vòng 4: set -euo pipefail làm gán-lệnh-thất-bại thoát cả script —
+    # dùng || RC_SHARDS=$? để bắt lỗi, kèm pipefail | head -1 cũng cần || bảo vệ.
     SHARDS_ERR="$(mktemp)"
-    SHARDS="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>"$SHARDS_ERR" | head -1)"
-    RC_SHARDS=$?
+    RC_SHARDS=0
+    SHARDS="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>"$SHARDS_ERR" | head -1)" || RC_SHARDS=$?
     if [ $RC_SHARDS -ne 0 ]; then
       echo "cảnh báo: s01-shards lỗi rc=$RC_SHARDS ($(tail -1 "$SHARDS_ERR")) — chạy query thành phố như cũ"
       SHARDS=""
