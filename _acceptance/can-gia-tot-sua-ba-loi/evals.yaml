@@ -71,3 +71,11 @@ evals:
     paths: [app/src/lib/offers-public.ts, app/src/lib/ten-tin.ts, app/src/lib/ops/review-context.ts, app/src/components/listing/offer-card.tsx, app/tests/tin-rao-cong-khai.test.tsx]
     expected: "exit 0; ca CGB-AC-6 ma trận viết trước tám dòng (seller_name → tên): unknown, ' UNKNOWN ', rỗng, toàn khoảng trắng, NULL → không tên; Bán Thật, Na, Anh Unknown → giữ nguyên. So qua getPublicOffers, route /api/v1/listings và vùng máy chủ thật: HTML có Bán Thật và «Chưa có tên», 0 chữ unknown đứng làm nội dung. Tài khoản Hai A, Hai B, unknown: sellerManyNames false, giữ Hai A; đối chứng dương: tài khoản ba tên thật vẫn về nhãn. Đối chứng đỏ: bản chép offers-public.ts gỡ tenTin → ném ('CGB-AC-6 chữ giữ chỗ hiện như tên'); bản chép bỏ điều kiện lọc chữ giữ chỗ khi đếm → ném ('CGB-AC-6 chữ giữ chỗ tính là một tên')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.can_gia_tot_doi_chieu
+    paths: [app/tests/can-gia-tot-doi-chieu.test.tsx, app/src/lib/deals.ts, app/src/lib/db.ts]
+    expected: "exit 0; dòng in «CGT-DC đối chiếu <n> tin trong <giây> giây, giới hạn 5» có n bằng «tin P1 bán» và giây không quá 300 khi chạy một mình; lech 0; DB không đổi sau đối chiếu. Ca bộ đếm bằng dữ liệu giả 40 mã: đủ mọi mã đúng một lần, tin cuối lệch được đếm, đỉnh song song trên 1 và không quá 5. Đối chứng đỏ cùng ca: lấy mẫu → ném ('CGT-DC không đo đủ mọi tin'); giới hạn 1 → ném ('CGT-DC không chạy song song'); giới hạn 40 → ném ('CGT-DC quá giới hạn song song')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

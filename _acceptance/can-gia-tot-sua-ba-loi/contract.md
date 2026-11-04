@@ -17,7 +17,7 @@ design_doc: docs/superpowers/specs/2026-11-04-can-gia-tot-sua-ba-loi-design.md
 
 ## Context
 
-Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng của `can-gia-tot-biet-can` ngày 03/11 (sổ quyết định của hồ sơ đó, dòng 47, 51, 52). Mạnh chọn làm luôn trước 05/11 việc lọc cùng chữ giữ chỗ ở trang Invest công khai (AC-6). Không đổi bố cục, không đổi dữ liệu.
+Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng của `can-gia-tot-biet-can` ngày 03/11 (sổ quyết định của hồ sơ đó, dòng 47, 51, 52). Mạnh chọn làm luôn trước 05/11 việc lọc cùng chữ giữ chỗ ở trang Invest công khai (AC-6). Giám sát giao thêm ca `CGT-DC` quá trần 600 giây sau khi kho có 1.483 tin P1 bán, chặn mọi làn `app` (AC-7). Không đổi bố cục, không đổi dữ liệu.
 
 ## Criteria
 
@@ -28,6 +28,7 @@ Ba mục Ngoài-5, Ngoài-9, Ngoài-10 mà Mạnh chọn «mở hợp đồng m�
 
 - AC-5: Given bản đang chạy trên DB máy thu, chỉ đọc, When vai Vận hành mở trang một căn có `seller_name` là `unknown`, trang một căn có số giảm âm, và trang một căn còn trong danh sách, ở khổ 390 px và khổ màn hình, Then ô tên không hiện «unknown»; nhãn lý do đọc đủ câu mới, không vỡ khung hay sinh thanh cuộn ngang; bấm crumb của căn trong danh sách mở sheet đúng căn, bấm crumb của căn đã rời về bảng.
 - AC-6 (cross-layer): Given lược đồ tạm có các tin hiện được với `seller_name` là `unknown`, ` UNKNOWN `, chuỗi rỗng, chuỗi toàn khoảng trắng, NULL, tên thật, `Na`, `Anh Unknown`, một tài khoản có hai tên thật và một `unknown`, và một tài khoản có ba tên thật, When khách gọi hàm danh sách, route `/api/v1/listings` và vẽ vùng máy chủ thật của trang tin rao, Then chữ giữ chỗ không hiện như tên ở cả ba đường, thẻ hiện «Chưa có tên»; tên khác giữ nguyên, kể cả `Na` và `Anh Unknown`; `unknown` không tính là một tên khi đếm tài khoản nhiều tên, nên tài khoản hai tên thật vẫn giữ tên còn tài khoản ba tên thật vẫn về nhãn.
+- AC-7: Given DB máy thu chỉ đọc có 1.483 tin P1 bán, When chạy ca `CGT-DC` một mình, Then ca đối chiếu đủ mọi tin qua `getDeal`, không lấy mẫu, tối đa 5 lời gọi cùng lúc, xong trong tối đa 300 giây để trần 600 giây còn dư ít nhất 2 lần; đối chứng đỏ khi lấy mẫu, chạy tuần tự, hoặc vượt giới hạn.
 
 ## Coverage
 
@@ -38,6 +39,7 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
 - Trục C — Vị trí căn: hạng đầu | hạng 30 | hạng 31 | cần xác minh ngoài giới hạn | đã rời → AC-3.
 - Trục D — Nơi chạy, vai: máy thu | cloud | Vận hành | Người xem → AC-1, AC-2, AC-3.
 - Trục E — Khổ nhìn: 390 px | màn hình → AC-5.
+- Trục G — Cách đếm CGT-DC: đủ | lấy mẫu | tuần tự | quá giới hạn → AC-7.
 - Trục F — Đường đọc Invest: hàm | route | vùng máy chủ; đếm nhiều tên có và không có chữ giữ chỗ → AC-6.
 
 ## Out of scope

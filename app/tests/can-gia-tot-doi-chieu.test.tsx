@@ -36,6 +36,49 @@ async function thuLai<T>(fn: () => Promise<T>, lan = 5): Promise<T> {
   }
 }
 
+// Đo 04/11, DB rảnh, 250 tin: giới hạn 1 ≈ 632 giây cho 1.483 tin; 2 ≈ 389; 3 ≈ 261; 4 ≈ 212; 5 ≈ 189; 8 ≈ 200. Quá 5 không nhanh hơn
+// vì pool của app có 5 kết nối, nên lấy 5.
+const GIOI_HAN_SONG_SONG = 5
+
+/** Hỏi `hop` đúng một lần cho mọi mã, tối đa `gioiHan` lời gọi cùng lúc; `hop` trả true khi tin đó khớp. */
+async function demLech(ids: string[], hop: (id: string) => Promise<boolean>, gioiHan = GIOI_HAN_SONG_SONG) {
+  let ke = 0
+  let lech = 0
+  const tho = async () => {
+    while (ke < ids.length) {
+      if (!(await hop(ids[ke++]))) lech++
+    }
+  }
+  await Promise.all(Array.from({ length: gioiHan }, tho))
+  return lech
+}
+
+/** Bộ đếm phải đo đủ mọi mã, đúng một lần, thật sự song song và không quá giới hạn. */
+async function kiemDem(dem: typeof demLech) {
+  const ids = Array.from({ length: 40 }, (_, i) => `t${i}`)
+  const daHoi: string[] = []
+  let dang = 0
+  let dinh = 0
+  const lech = await dem(ids, async (id) => {
+    daHoi.push(id)
+    dinh = Math.max(dinh, ++dang)
+    await new Promise((r) => setTimeout(r, 1))
+    dang--
+    return id !== "t39"
+  })
+  if (daHoi.length !== ids.length || new Set(daHoi).size !== ids.length) throw new Error("CGT-DC không đo đủ mọi tin")
+  assert.equal(lech, 1, "tin cuối lệch phải được đếm")
+  if (dinh <= 1) throw new Error("CGT-DC không chạy song song")
+  if (dinh > GIOI_HAN_SONG_SONG) throw new Error("CGT-DC quá giới hạn song song")
+}
+
+test("CGT-DC bộ đếm đo đủ mọi tin; đối chứng: lấy mẫu, tuần tự, không giới hạn đều đỏ", async () => {
+  await kiemDem(demLech)
+  await assert.rejects(kiemDem((ids, hop) => demLech(ids.slice(0, 20), hop)), /CGT-DC không đo đủ mọi tin/)
+  await assert.rejects(kiemDem((ids, hop) => demLech(ids, hop, 1)), /CGT-DC không chạy song song/)
+  await assert.rejects(kiemDem((ids, hop) => demLech(ids, hop, 40)), /CGT-DC quá giới hạn song song/)
+})
+
 after(async () => {
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
@@ -66,11 +109,12 @@ test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 600_000 }, asy
   // Có trong getDeals ⇔ getDeal không nêu lý do rời.
   const p1 = (await pool.query<{ offer_id: string }>("SELECT offer_id FROM sale_offers WHERE price_tier = 'P1' AND kind = 'sale'")).rows.map((r) => r.offer_id)
   const trong = new Set(ids)
-  let lech = 0
-  for (const id of p1) {
+  const batDau = Date.now()
+  const lech = await demLech(p1, async (id) => {
     const { deal } = await thuLai(() => getDeal(id))
-    if (trong.has(id) !== (deal !== null && deal.roiDanhSach === null)) lech++
-  }
+    return trong.has(id) === (deal !== null && deal.roiDanhSach === null)
+  })
+  console.log(`CGT-DC đối chiếu ${p1.length} tin trong ${Math.round((Date.now() - batDau) / 1000)} giây, giới hạn ${GIOI_HAN_SONG_SONG}`)
   assert.equal(lech, 0, "CGT-DC getDeals và getDeal lệch nhau")
 
   const hang = rows.map((d) => dealHang(d, VAI))
