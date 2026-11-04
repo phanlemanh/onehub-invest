@@ -38,6 +38,9 @@ before(async () => {
   await admin.query(`CREATE SCHEMA "${S}"`)
   await dungBangPhien(admin, S)
   await admin.query(`CREATE TABLE "${S}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
+  await admin.query(`CREATE TABLE "${S}".sale_offers (LIKE public.sale_offer_records INCLUDING DEFAULTS)`)
+  await admin.query(`CREATE TABLE "${S}".silver_labels (LIKE public.silver_labels INCLUDING DEFAULTS)`)
+  await admin.query(`CREATE TABLE "${S}".collection_units (LIKE public.collection_units INCLUDING DEFAULTS)`)
   await sc.connect()
   for (const m of ["054_labels.sql", "072_labels_nhom.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
 })
@@ -53,7 +56,7 @@ after(async () => {
 /** Hai nhóm: U-A bốn bài (i4 gắn trùng), U-B hai bài. Mỗi bài chứa đủ giá trị «chữ bài» của DU. */
 async function datLat() {
   await sc.query(`TRUNCATE eval_labels, eval_label_reasons, eval_label_cases, eval_label_items RESTART IDENTITY CASCADE`)
-  await sc.query(`TRUNCATE stg_zalo_posts`)
+  await sc.query(`TRUNCATE stg_zalo_posts, sale_offers, silver_labels, collection_units`)
   const BAI: [number, string, boolean][] = [[1, "U-A", false], [2, "U-A", false], [3, "U-A", false], [4, "U-A", true], [5, "U-B", false], [6, "U-B", false]]
   for (const [i, nhom, trung] of BAI) {
     await sc.query(
@@ -334,4 +337,162 @@ test("GCN-AC-9 lát đời trước qua route: bài không stratum nhận chín 
   assert.equal(rows.length, 9)
   assert.ok(rows.every((r) => r.basis === null))
   assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_reasons`)).rows[0].n, 0)
+})
+
+const reviewCtx = (id: number) => ({ params: Promise.resolve({ itemId: String(id) }) })
+const banhNhan = async (item: number) =>
+  (await sc.query(`SELECT md5(string_agg(labeler_id || field || coalesce(value, '') || not_stated::text || coalesce(basis, ''), '|' ORDER BY labeler_id, field)) AS h FROM eval_labels WHERE item_id = $1`, [item])).rows[0].h
+const postTruongHop = (cookie: string, item: number, body: unknown) =>
+  new Request(`http://localhost/api/v1/ops/labels/${item}/review`, { method: "POST", headers: { "content-type": "application/json", cookie }, body: JSON.stringify(body) })
+
+async function nguoiDaLuu(item: number) {
+  const a = await taoNguoi(sc, "ops")
+  const ch = chuanHoaLuot(DU, { text: CHU })
+  assert.ok(ch.ok)
+  const { ghiNhan } = await import("../src/lib/labels-queries")
+  assert.deepEqual(await ghiNhan(sc, a.id, LAT, item, ch.rows, "lý do A"), { ok: true })
+  return a
+}
+
+test("GCN-AC-6 truong hop khong doi nhan: băm nhãn trước sau bằng nhau, thêm đúng một dòng", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const { POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const truoc = await banhNhan(1)
+  const res = await POST(postTruongHop(a.cookie, 1, { case_kind: "bi-danh", note: "RB", the_nhom_dung: "dung" }), reviewCtx(1))
+  assert.equal(res.status, 200, await res.clone().text())
+  assert.equal(await banhNhan(1), truoc)
+  const { rows } = await sc.query(`SELECT case_kind, note, the_nhom_dung, labeler_id FROM eval_label_cases WHERE item_id = 1`)
+  assert.deepEqual(rows, [{ case_kind: "bi-danh", note: "RB", the_nhom_dung: "dung", labeler_id: a.id }])
+})
+
+test("GCN-AC-6 tra loi the: đúng, sai, chưa xét lưu và đọc lại; giá trị lạ 400", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const { GET, POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  for (const v of ["dung", "sai", "chua"]) assert.equal((await POST(postTruongHop(a.cookie, 1, { the_nhom_dung: v }), reviewCtx(1))).status, 200, v)
+  assert.equal((await POST(postTruongHop(a.cookie, 1, { the_nhom_dung: "co" }), reviewCtx(1))).status, 400)
+  assert.equal((await POST(postTruongHop(a.cookie, 1, { case_kind: "la" }), reviewCtx(1))).status, 400)
+  const res = await GET(new Request("http://localhost/x", { headers: { cookie: a.cookie } }), reviewCtx(1))
+  const j = (await res.json()) as { truongHop: { theNhomDung: string }[] }
+  assert.deepEqual(j.truongHop.map((t) => t.theNhomDung), ["dung", "sai", "chua"])
+})
+
+test("GCN-AC-6 bo qua: thân rỗng không thêm dòng; tin kế vẫn sang bài sau", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const { POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  assert.equal((await POST(postTruongHop(a.cookie, 1, {}), reviewCtx(1))).status, 400)
+  assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_cases`)).rows[0].n, 0)
+  const { tinKe } = await import("../src/lib/labels-queries")
+  assert.equal((await tinKe(a.id, LAT, sc, "U-A"))?.itemId, 2)
+})
+
+test("GCN-AC-6 luu lai nhan 409: có trường hợp rồi vẫn 409, nhãn không đổi", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const nhan = await import("../src/app/api/v1/ops/labels/route")
+  const hai = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  await hai.POST(postTruongHop(a.cookie, 1, { case_kind: "khac" }), reviewCtx(1))
+  const truoc = await banhNhan(1)
+  assert.equal((await nhan.POST(postNhan(a.cookie, 1, { ...DU, bedrooms: chu("3") }))).status, 409)
+  assert.equal(await banhNhan(1), truoc)
+})
+
+test("GCN-AC-6 chua luu khong ghi duoc truong hop: 403, 0 dòng", async () => {
+  await datLat()
+  const b = await taoNguoi(sc, "ops")
+  const { POST } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const res = await POST(postTruongHop(b.cookie, 1, { case_kind: "khac" }), reviewCtx(1))
+  assert.equal(res.status, 403)
+  assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_cases`)).rows[0].n, 0)
+})
+
+test("GCN-AC-6 loi truong hop nhan con nguyen: chèn hỏng ném lỗi, băm nhãn không đổi", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(1)
+  const truoc = await banhNhan(1)
+  const { ghiTruongHop } = await import("../src/lib/labels-luot-hai")
+  const hong = { query: async (sql: string, v?: unknown[]) => {
+    if (sql.startsWith("INSERT")) throw new Error("mất kết nối")
+    return sc.query(sql, v as unknown[])
+  } } as unknown as Parameters<typeof ghiTruongHop>[0]
+  await assert.rejects(ghiTruongHop(hong, a.id, 1, { case_kind: "khac" }), /mất kết nối/)
+  assert.equal(await banhNhan(1), truoc)
+})
+
+test("GCN-AC-5 lượt hai: chưa lưu 403; đã lưu thấy ba cột, tin đầu, tổng số tin, thẻ; người hai không thấy nhãn người trước", async () => {
+  await datLat()
+  await sc.query(`INSERT INTO collection_units (source_code, group_key, name, unit_code, unit_type, note) VALUES ('S03', 'g-a', 'Nhóm U-A', 'U-A', 'thu', 'THE-NHOM-DAU')`)
+  for (const [ma, gia] of [["o-b", 7000000000], ["o-a", 6000000000], ["o-c", 8000000000]] as const) {
+    await sc.query(`INSERT INTO sale_offers (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw, area_m2) VALUES ($1, 'sale', now(), now(), ARRAY['zalo-gcn-4'], $2, 3, 'S1.01', 64.50)`, [ma, gia])
+  }
+  await sc.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'zalo-gcn-4', 'h', 'm', 'v', 'offer', 'sale', true, 'r')`)
+  const a = await taoNguoi(sc, "ops")
+  const b = await taoNguoi(sc, "ops")
+  const { GET } = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const goi = (cookie: string) => GET(new Request("http://localhost/x", { headers: { cookie } }), reviewCtx(4))
+  const chua = await goi(a.cookie)
+  assert.equal(chua.status, 403)
+  assert.ok(!(await chua.text()).includes("THE-NHOM-DAU"))
+  const nhan = await import("../src/app/api/v1/ops/labels/route")
+  assert.equal((await nhan.POST(postNhan(a.cookie, 4, { ...DU, project: { value: "LYDO-A-DAU", basis: "ngu_canh_nhom" } }, "LYDO-A-CHU"))).status, 200)
+  const da = (await (await goi(a.cookie)).json()) as { soTin: number; the: string; boDoc: Record<string, string>; aiDoc: Record<string, string>; cuaToi: unknown[]; lyDo: string }
+  assert.equal(da.soTin, 3)
+  assert.equal(da.boDoc.price_min_vnd, "6000000000", "so với tin có offer_id nhỏ nhất")
+  assert.deepEqual([da.boDoc.building, da.boDoc.area_m2, da.boDoc.bedrooms], ["s1.01", "64.5", "3"])
+  assert.equal(da.aiDoc.kind, "sale")
+  assert.equal(da.the, "THE-NHOM-DAU")
+  assert.equal(da.cuaToi.length, 17)
+  assert.equal(da.lyDo, "LYDO-A-CHU")
+  // Người hai của bài trùng: chưa lưu 403; lưu rồi vẫn chỉ thấy phần của mình.
+  assert.equal((await goi(b.cookie)).status, 403)
+  assert.equal((await nhan.POST(postNhan(b.cookie, 4, DU))).status, 200)
+  const cuaB = await (await goi(b.cookie)).text()
+  assert.ok(!cuaB.includes("LYDO-A-CHU") && !cuaB.toLowerCase().includes("lydo-a-dau"), "NGUOI HAI THAY NHAN NGUOI TRUOC")
+})
+
+test("GCN-AC-5 lượt hai thiếu máy và thẻ: boDoc, aiDoc, the đều null", async () => {
+  await datLat()
+  const a = await nguoiDaLuu(2)
+  const { doiChieu } = await import("../src/lib/labels-luot-hai")
+  const kq = await doiChieu(a.id, 2, sc)
+  assert.deepEqual([kq?.boDoc, kq?.aiDoc, kq?.the, kq?.soTin], [null, null, null, 0])
+})
+
+test("GCN-AC-7 bang truong hop khop sql doc lap: ba nhóm, nhóm chưa gắn, 0 chuỗi lý do", async () => {
+  await datLat()
+  await sc.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text, posted_at) VALUES ('zalo-gcn-7', 'hcm__zalo__gcn7', 'Nhóm U-C', 'bài', now())`)
+  await sc.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', 'zalo-gcn-7', 'h7', 'dev', false, 'thu', 'U-C')`, [LAT])
+  const nhan = await import("../src/app/api/v1/ops/labels/route")
+  const hai = await import("../src/app/api/v1/ops/labels/[itemId]/review/route")
+  const [a, b] = [await taoNguoi(sc, "ops"), await taoNguoi(sc, "ops")]
+  const ngu = { ...DU, project: { value: "Ocean Park", basis: "ngu_canh_nhom" } }
+  assert.equal((await nhan.POST(postNhan(a.cookie, 1, ngu, "LYDO-BANG"))).status, 200)
+  assert.equal((await nhan.POST(postNhan(a.cookie, 2, DU))).status, 200)
+  assert.equal((await nhan.POST(postNhan(a.cookie, 5, ngu, "LYDO-BANG"))).status, 200)
+  assert.equal((await nhan.POST(postNhan(b.cookie, 6, DU))).status, 200)
+  const ghi = (u: { cookie: string }, i: number, k: string, note?: string) => hai.POST(postTruongHop(u.cookie, i, { case_kind: k, note }), reviewCtx(i))
+  await ghi(a, 1, "bi-danh", "GHICHEP-BANG")
+  await ghi(a, 1, "mac-dinh-nhom")
+  await ghi(a, 2, "bi-danh")
+  await ghi(b, 6, "khac")
+  const { bangTruongHop } = await import("../src/lib/labels-luot-hai")
+  const bang = await bangTruongHop(LAT, sc)
+  // Đếm độc lập theo từng nhóm, câu riêng, không dùng CTE của hàm.
+  for (const d of bang) {
+    const dem = async (sql: string) => (await sc.query(sql, [LAT, d.unitCode])).rows[0].n
+    assert.equal(d.tong, await dem(`SELECT count(*)::int AS n FROM eval_label_items WHERE lat = $1 AND stratum = $2`))
+    assert.equal(d.daGan, await dem(`SELECT count(DISTINCT l.item_id)::int AS n FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND i.stratum = $2`))
+    assert.equal(d.canNguCanh, await dem(`SELECT count(DISTINCT l.item_id)::int AS n FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND i.stratum = $2 AND l.basis <> 'chu_bai'`))
+    const tong = Object.values(d.theoLoai).reduce((x, y) => x + y!, 0)
+    assert.equal(tong, await dem(`SELECT count(*)::int AS n FROM eval_label_cases c JOIN eval_label_items i USING (item_id) WHERE i.lat = $1 AND i.stratum = $2 AND c.case_kind IS NOT NULL`))
+  }
+  assert.deepEqual(bang.map((d) => [d.unitCode, d.ten, d.tong, d.daGan, d.canNguCanh, d.theoLoai]), [
+    ["U-A", "Nhóm U-A", 4, 2, 1, { "bi-danh": 2, "mac-dinh-nhom": 1 }],
+    ["U-B", "Nhóm U-B", 2, 2, 1, { khac: 1 }],
+    ["U-C", "Nhóm U-C", 1, 0, 0, {}],
+  ])
+  const chuoi = JSON.stringify(bang)
+  assert.ok(!chuoi.includes("LYDO-BANG") && !chuoi.includes("GHICHEP-BANG"), "BANG LO CHU LY DO")
 })

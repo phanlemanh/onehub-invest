@@ -33,7 +33,7 @@ const CHO_PHEP = `CASE WHEN i.double_label THEN 2 ELSE 1 END`
 /** Tin kế cho người này: chưa do họ gắn, còn chỗ; tin trùng đã có một người đứng trước (cặp mau đủ), rồi theo thứ tự.
  * `nhom` là `unit_code`: chỉ lấy bài của nhóm đó. */
 export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: string | null = null): Promise<TinGan | null> {
-  const { rows } = await q.query(
+  const sql =
     `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, p.text, p.group_name, p.posted_at
      FROM eval_label_items i
      LEFT JOIN LATERAL (SELECT count(DISTINCT labeler_id) AS so, bool_or(labeler_id = $1) AS cua_toi
@@ -41,11 +41,12 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
      JOIN LATERAL (SELECT text, group_name, posted_at FROM stg_zalo_posts
                    WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP}
-       AND ($3::text IS NULL OR i.stratum = $3)
      ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.item_id
-     LIMIT 1`,
-    [userId, lat, nhom],
-  )
+     LIMIT 1`
+  // Câu không nhóm giữ nguyên hai tham số: phép đo mù của PL7 rút chính câu này để chạy lại.
+  const { rows } = nhom
+    ? await q.query(sql.replace("WHERE i.lat = $2", "WHERE i.stratum = $3 AND i.lat = $2"), [userId, lat, nhom])
+    : await q.query(sql, [userId, lat])
   const r = rows[0]
   if (!r) return null
   return {

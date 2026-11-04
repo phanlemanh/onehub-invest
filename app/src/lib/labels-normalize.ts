@@ -81,6 +81,23 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   seller_phone: "SĐT",
 }
 
+/** Loại trường hợp ghi ở lượt hai. Danh sách khởi đầu; lượt thử sẽ sửa nó. */
+export const CASE_KINDS = [
+  { value: "bi-danh", label: "Bí danh viết tắt" },
+  { value: "mac-dinh-nhom", label: "Mặc định theo nhóm" },
+  { value: "ma-trung-du-an", label: "Mã trùng giữa khu đô thị" },
+  { value: "nhieu-can", label: "Bài nhiều căn" },
+  { value: "che-tang", label: "Che tầng" },
+  { value: "so-ngoai-bai", label: "Số ngoài chữ bài" },
+  { value: "khong-phai-tin-rao", label: "Không phải tin rao" },
+  { value: "the-nhom-sai", label: "Thẻ nhóm sai" },
+  { value: "khac", label: "Khác" },
+] as const
+export type CaseKind = (typeof CASE_KINDS)[number]["value"]
+/** Trả lời «thẻ nhóm đúng không» ở lượt hai. */
+export const THE_NHOM_DUNG = ["dung", "sai", "chua"] as const
+export type TheNhomDung = (typeof THE_NHOM_DUNG)[number]
+
 export const PRICE_UNITS = ["ty", "trieu"] as const
 export type PriceUnit = (typeof PRICE_UNITS)[number]
 
