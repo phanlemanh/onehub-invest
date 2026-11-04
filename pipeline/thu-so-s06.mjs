@@ -443,6 +443,8 @@ async function main() {
   let iViec = 0;
   let khongNutLien = 0;      // 0311-20 Việc 3: ngưỡng riêng 20 lần liền
   let dungNguongKhongNut = false;
+  let dem300 = 0;            // 0411-1: đếm lời gọi sạch liên tiếp (lên 2 luồng khi đủ 300)
+  let daLen2Luong = process.env.S06_THREADS_2 === "1"; // dem6 (2 luồng) không đếm nữa
   try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
@@ -474,16 +476,30 @@ async function main() {
       try {
         kq = await laySoTrang(tab, v);
       } catch (e) {
+        // 0411-2(1): in e.message khi loi-trang (che URL) — phân biệt tab chết /
+        // Chrome chết / lỗi gì khác; ms 0-1 = ném ngay, không có lời gọi tới nguồn
+        if (!e.message?.includes("Timeout")) {
+          console.log(`[loi-trang] ${String(e.message).slice(0, 160).replace(/https?:\/\/[^\s]+/g, "«che»")}`);
+        }
         kq = { status: e.message?.includes("Timeout") ? "timeout" : "loi-trang" };
       }
       const ms = Date.now() - tBat;
-      thu++;
+      if (!(kq.status === "loi-trang" && ms < 100)) thu++; // 0411-2: lỗi <100ms không phải lời gọi
 
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
       // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
       // 5 lần LIỀN dừng lượt (trước đây 125 loi-trang liền không dừng được)
-      if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) chanLienTiep++;
-      else chanLienTiep = 0;
+      // 0411-2(2)(3): loi-trang < 100ms là lỗi ném NGAY (tab/Chrome chết, 0 lời
+      // gọi tới nguồn) — không tính lời gọi, không vào chuỗi chặn; ≥100ms là lỗi
+      // nguồn thật: vào chuỗi chặn và đặt lại đếm 300.
+      const loiTrangNhanh = kq.status === "loi-trang" && ms < 100;
+      if (loiTrangNhanh) {
+        khongNutLien = 0; // lỗi nhanh không tích luỹ ngưỡng khác
+      } else if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) {
+        chanLienTiep++;
+      } else {
+        chanLienTiep = 0;
+      }
       // 0311-20 Việc 3: khong-nut không vào chuỗi chặn nhưng có ngưỡng riêng —
       // 20 lần LIỀN (nguồn đổi giao diện/giấu nút) thì dừng lượt + BÁO.
       if (kq.status === "khong-nut") {
@@ -504,6 +520,17 @@ async function main() {
       if (kq.status === "co-so") ketQua.co_so++;
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
       else errors[kq.status] = (errors[kq.status] ?? 0) + 1;
+
+      // 0411-1: đếm 300 lời gọi SẠCH liên tiếp (Mạnh «Lên khi đủ 300») — sạch =
+      // không timeout/captcha/403/429/loi-trang≥100ms; het-han/khong-nut/
+      // trang-khac/loi-trang<100ms không phải lỗi nguồn, không reset
+      const loiNguon = ["timeout", "chan-captcha"].some((x) => kq.status.startsWith(x)) ||
+        /^chan-4/.test(kq.status) || (kq.status === "loi-trang" && ms >= 100);
+      if (loiNguon) dem300 = 0;
+      else if (!loiTrangNhanh) dem300++; // lời gọi thật tới nguồn mà lành
+      if (dem300 >= 300 && !daLen2Luong) {
+        console.log(`[len-2-luong] đủ ${dem300} lời gọi sạch liên tiếp — Mạnh «Lên khi đủ 300»`);
+      }
 
       // state + mẫu đo
       const soTin1 = state.da_thu[v.list_id1 ?? v.list_id]?.phone;
