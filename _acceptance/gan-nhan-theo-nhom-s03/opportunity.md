@@ -5,7 +5,7 @@ feature: Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/label
 owner: phanlemanh@gmail.com
 stage: decided              # discovery | decided | archived
 decision: build         # Mạnh gõ «Làm luôn GC0» trong phiên, chiều 04/11
-decided_by: Mạnh 04/11 «Làm luôn GC0»; ngưỡng dưới là đề xuất của máy, chưa được duyệt riêng
+decided_by: Mạnh 04/11 «Làm luôn GC0»; ngưỡng dưới duyệt ở Cổng Phạm vi 04/11
 decided_at: 2026-11-04T09:00:00Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
@@ -27,6 +27,6 @@ Vì sao: Đo 04/11: chưa có nhãn người nào, số độ đúng đều do t
 ## Ngưỡng chết / ngưỡng UAT
 
 - Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Chọn mẫu theo nhóm chạy lại không thêm dòng; lượt xem máy đọc không đổi được nhãn mù; bảng trường hợp khớp đếm SQL độc lập; 0 nhãn rời máy thu» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Mạnh và đội gắn trọn 30 bài của một nhóm trên màn mới, đủ phân khu, trục, tầng, WC, người bán, SĐT, căn cứ và lý do, không phải dùng bảng tính; bảng trường hợp theo nhóm ra được danh sách để viết quy ước.
-- Kết quả nào là CHẾT: [đề xuất] người gắn vẫn phải ghi ngoài màn, hoặc nhãn mù bị đổi sau khi xem máy đọc, hoặc nhãn rời máy thu.
-- Timebox: [đề xuất] đọc kết quả ngay sau lượt gắn đầu tiên trên màn mới.
+- Kết quả nào là SỐNG: Mạnh và đội gắn trọn 30 bài của một nhóm trên màn mới, đủ phân khu, trục, tầng, WC, người bán, SĐT, căn cứ và lý do, không phải dùng bảng tính; bảng trường hợp theo nhóm ra được danh sách để viết quy ước.
+- Kết quả nào là CHẾT: người gắn vẫn phải ghi ngoài màn, hoặc nhãn mù bị đổi sau khi xem máy đọc, hoặc nhãn rời máy thu.
+- Timebox: đọc kết quả ngay sau lượt gắn đầu tiên trên màn mới.
