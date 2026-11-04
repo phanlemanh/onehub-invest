@@ -18,13 +18,13 @@ evals:
     executor: test
     cmd: config:executors.test.ls1b_db
     paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
-    expected: "Đề xuất do chayLuot cũ thật sinh rồi mới xử lại, không viết tay dòng khuôn; đếm ai_calls, review_queue, băm giá và diện tích trước sau bằng nhau; đỏ khi xử lại gọi hoi, thông điệp ghim."
+    expected: "Đề xuất do chayLuot thật sinh qua tuỳ chọn kiemLoai luật cũ, không viết tay dòng khuôn; đếm ai_calls, review_queue, băm mọi cột của tin trừ loại hình, provenance, mốc cập nhật; đỏ khi xử lại gọi hoi, thông điệp ghim."
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.ls1b_db
     paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
-    expected: "Sáu ca âm cùng lượt với một ca dương làm đối chứng; ca dương đổi, sáu ca không đổi."
+    expected: "Chín ca âm đi qua lệnh thật cùng lượt với một ca dương; ca dương đổi, chín ca không đổi; đỏ khi lệnh không truyền thân bài vào luật, thông điệp ghim ca «biệt thự»."
   - id: E5
     criterion: AC-5
     executor: test
@@ -36,7 +36,7 @@ evals:
     executor: test
     cmd: config:executors.test.ls1b_db
     paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/xu-lai-trich-db.itest.ts"]
-    expected: "Dòng mẫu do doMau thật ghi; luật cũ thoát 6, luật hiện tại thoát 0; --thu đếm dòng bảng trước sau bằng nhau mà số dự kiến lớn hơn 0."
+    expected: "Ba ca cùng thoát 6 và không ghi gì: dòng đạt không có trường phiên bản đúng khuôn dòng 03/11, dòng phiên bản cũ, dòng rớt phiên bản hiện tại; dòng đạt phiên bản hiện tại do doMau thật ghi thì thoát 0; --thu đếm dòng bảng trước sau bằng nhau mà số dự kiến lớn hơn 0."
   - id: E7
     criterion: AC-7
     executor: test
@@ -54,4 +54,4 @@ evals:
     executor: script
     cmd: config:executors.script.ls1b_mau
     paths: ["agent/src/enrich/luat-trich-dan.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts"]
-    expected: "Thoát 0, in «ĐẠT», chi 0.0000 USD, máy áp ít nhất 100, không ghi dòng nào vì --thu; ngưỡng 1,0 trên cùng dữ liệu phải thoát 5 (đối chứng ghi trong bằng chứng)."
+    expected: "Thoát 0, in «ĐẠT», chi 0.0000 USD, in riêng số nhánh trich-dan:so-phong, không ghi dòng nào vì --thu, rồi in số dự kiến của --xu-lai-trich --thu. Chiều đỏ ở test E6: nhánh mới dưới 30 ca hoặc dưới ngưỡng thì dòng mẫu không đạt dù toàn mẫu đạt."
