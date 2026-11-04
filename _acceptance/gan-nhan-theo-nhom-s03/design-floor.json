@@ -11,12 +11,32 @@
       "byte": 21239,
       "token": 5310
     },
-    "tep": []
+    "tep": [
+      {
+        "id": "component-catalog",
+        "path": "knowledge/component-catalog.md",
+        "diem": 5,
+        "byte": 9231,
+        "token": 2308
+      },
+      {
+        "id": "verification-honesty",
+        "path": "knowledge/verification-honesty.md",
+        "diem": 2,
+        "byte": 7501,
+        "token": 1876
+      }
+    ]
   },
-  "reuse_plan": null,
+  "reuse_plan": {
+    "ket": "chua-nguon",
+    "ma": null,
+    "n": null
+  },
   "flow": null,
   "dong": [
     "Bậc kho: M1 — có giao diện (290 tệp khớp design.surface_globs), chưa khai nguồn — design_floor.tokens chưa khai; design_floor.registry chưa khai",
-    "Tri thức thiết kế: chỉ chỉ mục (5310 token) — không mục nào khớp chữ của hồ sơ"
+    "Tri thức thiết kế: chỉ mục (5310 token) + knowledge/component-catalog.md (2308 token), knowledge/verification-honesty.md (1876 token)",
+    "Kế hoạch dùng lại: chưa khai nguồn — không kiểm"
   ]
 }

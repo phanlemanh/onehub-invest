@@ -31,10 +31,20 @@ Vì chưa có nhãn người nào nên đổi nghĩa này không làm lẫn dữ
    - `eval_label_cases`: chỉ thêm, gồm `item_id`, `labeler_id`, `case_kind`, `note`, `the_nhom_dung` (đúng, sai, chưa xét), `created_at`.
    - View `eval_label_agreement` thêm tám trường mới.
 2. **Mẫu theo nhóm** — `label-sample.mjs --lat s03-theo-nhom --seed <s> --theo-nhom --moi-nhom-lon 30 --moi-nhom-nho 5 --so-nhom-lon 10`. Xếp nhóm theo số nội dung khác nhau, giảm dần, hoà theo `unit_code`; chọn tất định trong từng nhóm bằng `chonMau`, 20% gắn trùng tính trong từng nhóm. Nội dung trùng thuộc về nhóm xếp trước, nhóm sau bù từ phần còn lại; lệnh in số nội dung bị bỏ vì trùng và nhóm thiếu. Chạy lại không thêm dòng.
-3. **Màn `/ops/labels`** — lát mặc định đổi sang `s03-theo-nhom` (giữ `?lat=` cho lát cũ); thêm bộ chọn nhóm kèm tiến độ; biểu mẫu chia năm khối (Tin · Vị trí · Căn · Giá · Người bán), mỗi ô có căn cứ, mặc định «Chữ bài»; thêm ô Lý do. Dự án, phân khu, toà, trục, diện tích khai «Chữ bài» mà chữ bài không có giá trị đó thì bị từ chối, để căn cứ không bị để nhầm mặc định.
+3. **Màn `/ops/labels`** — lát mặc định đổi sang `s03-theo-nhom` (giữ `?lat=` cho lát cũ); thêm bộ chọn nhóm kèm tiến độ; biểu mẫu theo **bản D** Mạnh chọn 04/11 (mục dưới): năm khối hai cột trong một `Frame stacked`, mỗi ô có căn cứ, mặc định «Chữ bài»; ô Lý do trong biểu mẫu. Dự án, phân khu, toà, trục, diện tích khai «Chữ bài» mà chữ bài không có giá trị đó thì bị từ chối, để căn cứ không bị để nhầm mặc định.
 4. **Lượt hai** — sau khi lưu mới hiện bảng «Anh gắn · Bộ đọc · AI đọc», thẻ nhóm kèm câu «thẻ đúng không», ô loại trường hợp và ghi chú. Bỏ qua được. Không có đường đổi nhãn đã lưu. Bài có nhiều tin thì so với tin có `offer_id` nhỏ nhất và nói rõ tổng số tin; người gắn gắn căn đầu tiên theo thứ tự chữ.
 5. **Bảng trường hợp theo nhóm** trên cùng màn, chỉ có số. Chữ lý do và ghi chú không hiện ở bảng, để người gắn trùng không bị dẫn dắt; chỉ đọc qua lệnh `pipeline/label-cases.mjs --lat <lát> [--nhom <mã>] --json`, xuất lý do, trường hợp, trả lời thẻ cho `GCQ1`, không mang định danh người gắn.
 6. **Từ vựng** — «Căn cứ nhãn», «Trường hợp», «Phân khu» nếu thiếu, trong `CONTEXT.md`.
+
+## Bố cục đã chọn: bản D
+
+Mạnh chọn 04/11 sau khi so bốn bản thử trên dữ liệu giả (`_acceptance/gan-nhan-theo-nhom-s03/figures/so-sanh-bon-cach.html`, `design-pass.md`). Mẫu mã: nhánh cục bộ `spike/man-gan-nhan-3-cach`, không đẩy.
+
+- Khung `Frame stacked` theo khuôn `@reui/form-2`, không cài block; đầu Frame dính giữ bài gốc nguyên văn, gấp sau ba dòng, kèm một dòng chú giải căn cứ.
+- Năm khối hai cột ở `xl`, một cột dưới đó. Mỗi hàng: nhãn · giá trị · căn cứ · ô «Không suy ra được». Lựa chọn ngắn dùng `ToggleGroup`, bấm một lần; số và chữ dùng `Input`.
+- Trạng thái đã chọn dùng nền `primary` qua `className` ở chỗ gọi, không sửa tệp vendor. Ô không suy ra được thì căn cứ không còn trạng thái chọn.
+- Chân Frame dính giữ tiến độ ô đã điền và nút Lưu; ô Lý do ở cột trái.
+- Số đo bản thử ở 1440×900: đủ 17 ô, Lý do và nút Lưu không cần cuộn, biểu mẫu 657 px, 14 lần bấm cho tin RB so với 24 của khuôn PL7 nối thêm trường.
 
 ## Loại trường hợp khởi đầu
 
@@ -55,7 +65,7 @@ Danh sách lấy từ phần đọc 30 tin và các ca Mạnh nêu ngày 04/11; 
 - **Hỏi-1, thẻ nhóm hiện lúc nào.** Khuyến nghị: chỉ hiện ở lượt hai. Hiện từ lượt một thì nhãn bị thẻ dẫn dắt, và `GCQ1` sẽ đo thẻ bằng chính nhãn đã nhìn thẻ (phép thử 02/11 đã vướng đúng lỗi này: 114/115 chỉ đo mức làm theo thẻ). Giá: người mới vào đội phải tự biết nhóm. Câu giao của hàng và bản đề xuất trước viết «cùng thẻ nhóm», nên đây là thay đổi cần anh gật.
 - **Hỏi-2, đội làm ở đâu.** Khuyến nghị: vòng này chỉ trên máy thu, đúng ranh giới bảng nhãn. Ai không ngồi máy thu thì mở việc riêng về đường truy cập; đưa nhãn lên cloud đi ngược ADR-0015 và cần sửa luật.
 
-- **Hỏi-3, bấm thử lúc nào.** Khuyến nghị: duyệt bố cục qua bản vẽ tĩnh ở cổng này, dựng biểu mẫu đầu tiên trong S3 trên DB thử và anh bấm thử sớm; biểu mẫu 17 ô mỗi ô một căn cứ có thể chậm, nên cần biết sớm. Lối khác: dựng bản bấm được trước khi duyệt, thêm chừng nửa ngày máy.
+- **Hỏi-3, đã xong.** Mạnh xem bốn bản bấm được và chọn bản D.
 - **Hỏi-4, nhãn trong bảng tính.** Khuyến nghị: không nhập; 30 bài thử chỉ cho số phút và lý do đầu tiên, về sau nhóm đó gắn lại trên màn. Lối khác: thêm lệnh nhập một lần, tốn thêm việc và nhãn thử không có căn cứ từng ô.
 - **Hỏi-5, ngưỡng sống chết** ở ô cơ hội là máy đề xuất, anh chưa duyệt riêng. Khuyến nghị: giữ nguyên, sống là gắn trọn 30 bài một nhóm trên màn và ra danh sách viết quy ước.
 - **Hỏi-6, cỡ mẫu.** Mức đề xuất là 380 bài, thêm khoảng 76 lượt gắn trùng, tức khoảng 456 lượt × 17 ô, khoảng 7.750 ô. Khuyến nghị: lệnh nhận tham số, chưa chốt con số; đo số phút trên một nhóm rồi mới chốt.
@@ -103,17 +113,20 @@ Quy ước nhóm (`GCQ1`) · ghi suy ra (`GCQ2`) · dải diện tích (`GC2`) �
 ### 4. Hành vi
 
 - Căn cứ mặc định «Chữ bài»; đổi sang loại khác làm ô Lý do thành bắt buộc.
+- Ở 1440×900 thấy đủ 17 ô, Lý do và nút Lưu mà không cuộn; bài dài gấp sau ba dòng, «Xem hết bài» mở ra.
 - «Không suy ra được» khoá ô nhập và ô căn cứ.
 - Dự án, phân khu ghi tên đầy đủ; bí danh như `RB` ghi vào Lý do. Câu hướng dẫn nằm dưới ô.
 - Bảng so ở khổ hẹp xếp thành từng dòng trường, không tràn ngang trang.
-- Khổ hẹp (< 768): bài trên, biểu mẫu dưới; rộng: hai cột, bài dính khi cuộn.
+- Khổ hẹp: một cột, đầu Frame có bài gốc dính khi cuộn, chân Frame có nút Lưu dính; từ `xl`: hai cột khối.
 - Enter ở ô cuối không tự lưu, vì biểu mẫu dài; phải bấm nút.
 
 ### 5. Xuất xứ component
 
 | Component | Nấc | Vì sao |
 |---|---|---|
-| PageHeader, Frame, Field, Input, Select, Checkbox, Textarea, Button | dùng | khuôn biểu mẫu PL7 |
+| PageHeader, Frame, Field, Input, Checkbox, Textarea, Button, Tooltip | dùng | đã cài |
+| ToggleGroup | dùng | lựa chọn ngắn và căn cứ bấm một lần; nền đã chọn đặt ở chỗ gọi |
+| Khung Frame stacked theo `@reui/form-2` | ghép | lấy khuôn, không cài block |
 | Combobox hoặc Select nhóm | dùng | 26 nhóm, có tiến độ |
 | Badge, Alert (reui) | dùng | khác máy, lỗi |
 | Table | dùng | bảng so ≤ 17 dòng, bảng trường hợp theo nhóm ≤ 30 dòng, dưới ngưỡng cần data-grid |
@@ -122,7 +135,7 @@ Quy ước nhóm (`GCQ1`) · ghi suy ra (`GCQ2`) · dải diện tích (`GC2`) �
 ### 6. Khuôn IA đã chọn + căn cứ
 
 Khuôn IA: danh-sách-chi-tiết (master-detail)
-Căn cứ: (ii) giữ khuôn đã có của `/ops/labels` và `/ops/review`; thêm bộ chọn nhóm làm bậc lọc. Không tra mẫu ngoài: luồng hiển nhiên.
+Căn cứ: (i) đã tra Mobbin 04/11, không có màn gắn nhãn cùng loại nên không rút được gì; (ii) giữ khuôn hàng chờ của `/ops/labels`, `/ops/review`, thêm bộ chọn nhóm làm bậc lọc; bố cục biểu mẫu chốt bằng so bốn bản thử.
 
 ### 7. Thẻ việc
 

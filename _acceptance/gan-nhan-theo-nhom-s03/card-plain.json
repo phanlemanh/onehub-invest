@@ -1,35 +1,104 @@
 {
- "feature_plain":"Anh và đội gắn nhãn bài S03 theo từng nhóm trên màn gắn nhãn, ghi được điều người trong nhóm hiểu và vì sao, rồi so với máy đọc và thấy thống kê trường hợp theo nhóm.",
- "will_do":[
-  {"id":"AC-1","p":"Sẽ lưu thêm tám trường nhãn, căn cứ, lý do và trường hợp ở máy thu, nhãn cũ giữ nguyên và không có gì lên cloud."},
-  {"id":"AC-2","p":"Sẽ lấy mẫu theo từng nhóm: nhóm lớn 30 bài, nhóm nhỏ tới 5 bài, 20% bài do hai người gắn, chạy lại không thêm bài."},
-  {"id":"AC-3","p":"Sẽ mở màn đúng mẫu theo nhóm, chọn nhóm và gắn đủ trường cho từng bài; mỗi lượt lưu đủ hoặc không lưu gì."},
-  {"id":"AC-5","p":"Sẽ chỉ hiện máy đọc và thẻ nhóm sau khi người gắn đã lưu bài đó; người gắn thứ hai không thấy nhãn, lý do của người trước."},
-  {"id":"AC-7","p":"Sẽ có bảng số theo nhóm: bài đã gắn, bài cần ngữ cảnh, số lần từng loại trường hợp."},
-  {"id":"AC-8","p":"Sẽ có lệnh xuất lý do, trường hợp và trả lời về thẻ nhóm để viết quy ước, không kèm tên người gắn."}
+ "feature_plain": "Anh và đội gắn nhãn bài S03 theo từng nhóm trên màn bản D anh đã chọn, ghi được điều người trong nhóm hiểu và vì sao, rồi so với máy đọc và thấy thống kê trường hợp theo nhóm.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ lưu thêm tám trường nhãn, căn cứ, lý do và trường hợp ở máy thu, nhãn cũ giữ nguyên và không có gì lên cloud."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ lấy mẫu theo từng nhóm: nhóm lớn 30 bài, nhóm nhỏ tới 5 bài, 20% bài do hai người gắn, chạy lại không thêm bài."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ mở màn đúng mẫu theo nhóm, thấy đủ 17 ô, lý do và nút lưu trên một màn máy tính; mỗi lượt lưu đủ hoặc không lưu gì."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ chỉ hiện máy đọc và thẻ nhóm sau khi người gắn đã lưu bài đó; người gắn thứ hai không thấy nhãn, lý do của người trước."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ có bảng số theo nhóm: bài đã gắn, bài cần ngữ cảnh, số lần từng loại trường hợp."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ có lệnh xuất lý do, trường hợp và trả lời về thẻ nhóm để viết quy ước, không kèm tên người gắn."
+  }
  ],
- "wont_do":[
-  {"id":"AC-4","p":"Chặn lưu khi có ô không từ chữ bài mà thiếu lý do, hoặc khai «Chữ bài» trong khi chữ bài không có giá trị đó."},
-  {"id":"AC-6","p":"Sẽ KHÔNG cho sửa nhãn đã lưu sau khi xem máy đọc; ghi trường hợp không đụng tới nhãn."},
-  {"id":"AC-9","p":"Sẽ KHÔNG làm đổi số chấm và số đồng thuận của chín trường cũ; lát đời trước vẫn mở được."},
-  {"id":"AC-10","p":"Sẽ KHÔNG chạy trên cloud; người chưa đăng nhập và vai chỉ xem không ghi được."},
-  {"id":"OOS-1","p":"Chưa viết hay đo quy ước nhóm, chưa ghi giá trị suy ra (hai hàng sau)."},
-  {"id":"OOS-2","p":"Chưa nhập nhãn trong bảng tính lượt thử vào tập đo."},
-  {"id":"OOS-3","p":"Chưa gắn từ xa và không đưa nhãn lên cloud."},
-  {"id":"OOS-4","p":"Không sửa, xoá nhãn đã lưu."},
-  {"id":"OOS-5","p":"Chưa có nhãn khoảng diện tích; khoảng ghi vào Lý do."},
-  {"id":"OOS-6","p":"Không sửa việc trang đăng nhập làm mất địa chỉ lát; lát mặc định đã xử lý ca này."}
+ "wont_do": [
+  {
+   "id": "AC-4",
+   "p": "Chặn lưu khi có ô không từ chữ bài mà thiếu lý do, hoặc khai «Chữ bài» trong khi chữ bài không có giá trị đó."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ KHÔNG cho sửa nhãn đã lưu sau khi xem máy đọc; ghi trường hợp không đụng tới nhãn."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ KHÔNG làm đổi số chấm và số đồng thuận của chín trường cũ; lát đời trước vẫn mở được."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ KHÔNG chạy trên cloud; người chưa đăng nhập và vai chỉ xem không ghi được."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Chưa viết hay đo quy ước nhóm, chưa ghi giá trị suy ra (hai hàng sau)."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Chưa nhập nhãn trong bảng tính lượt thử vào tập đo."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Chưa gắn từ xa và không đưa nhãn lên cloud."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không sửa, xoá nhãn đã lưu."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Chưa có nhãn khoảng diện tích; khoảng ghi vào Lý do."
+  },
+  {
+   "id": "OOS-6",
+   "p": "Không sửa việc trang đăng nhập làm mất địa chỉ lát; lát mặc định đã xử lý ca này."
+  }
  ],
- "coverage_plain":[
-  {"i":0,"p":"Đã soát bốn trục: lượt gắn (mù, xem máy, tổng hợp), nhóm trường (tin, vị trí, căn, giá, người bán), căn cứ (chữ bài, ngữ cảnh nhóm, kiến thức nghề, không suy ra được), vai và nơi chạy; mỗi trục có tiêu chí đo."},
-  {"i":1,"p":"Thước đối chiếu là đề bài của anh, thiết kế màn cũ và cách gắn hai người của Label Studio; danh sách loại trường hợp chưa kiểm chứng, lượt thử của anh sẽ sửa nó."}
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Đã soát bốn trục: lượt gắn (mù, xem máy, tổng hợp), nhóm trường (tin, vị trí, căn, giá, người bán), căn cứ (chữ bài, ngữ cảnh nhóm, kiến thức nghề, không suy ra được), vai và nơi chạy; mỗi trục có tiêu chí đo."
+  },
+  {
+   "i": 1,
+   "p": "Thước đối chiếu là đề bài của anh, thiết kế màn cũ và cách gắn hai người của Label Studio; danh sách loại trường hợp chưa kiểm chứng, lượt thử của anh sẽ sửa nó."
+  }
  ],
- "gap_probe_plain":[
-  {"i":0,"p":"Máy đã tự quyết ba chỗ với căn cứ sai: bỏ bước bấm thử, không nhập bảng tính, bảng riêng cho lý do. Đã sửa căn cứ, hai chỗ thành câu hỏi Hỏi-3, Hỏi-4 cho anh."},
-  {"i":1,"p":"Ngưỡng sống chết và cỡ mẫu khoảng 7.750 ô là việc của anh mà chưa được hỏi. Đã thành Hỏi-5, Hỏi-6; đã định nghĩa «gắn trọn 30 bài» và thêm trạng thái chờ người thứ hai."},
-  {"i":2,"p":"Lý do của người trước có thể lộ cho người gắn sau qua bảng trên màn. Đã đổi: bảng chỉ có số, chữ lý do chỉ đọc qua lệnh xuất; thêm phép đo trên trang thật và khổ điện thoại."},
-  {"i":3,"p":"Phần ngữ cảnh nhóm chưa được đo: để nguyên «Chữ bài» vẫn lưu được. Đã thêm luật so giá trị với chữ bài, ca đúng, ca thẻ nhóm và một phép đo cả chuỗi thật."},
-  {"i":4,"p":"Bài nhiều căn chưa có luật, «RB» và «Rainbow» thành bất đồng giả, hai phép đo mẫu mâu thuẫn. Đã chốt: gắn căn đầu, dự án và phân khu ghi tên đầy đủ, đo đồng thuận bằng kết quả thật."}
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Máy đã tự quyết ba chỗ với căn cứ sai: bỏ bước bấm thử, không nhập bảng tính, bảng riêng cho lý do. Đã sửa căn cứ; anh đã bấm thử và chọn bản D, câu về bảng tính là Hỏi-4."
+  },
+  {
+   "i": 1,
+   "p": "Ngưỡng sống chết và cỡ mẫu khoảng 7.750 ô là việc của anh mà chưa được hỏi. Đã thành Hỏi-5, Hỏi-6; đã định nghĩa «gắn trọn 30 bài» và thêm trạng thái chờ người thứ hai."
+  },
+  {
+   "i": 2,
+   "p": "Lý do của người trước có thể lộ cho người gắn sau qua bảng trên màn. Đã đổi: bảng chỉ có số, chữ lý do chỉ đọc qua lệnh xuất; thêm phép đo trên trang thật và khổ điện thoại."
+  },
+  {
+   "i": 3,
+   "p": "Phần ngữ cảnh nhóm chưa được đo: để nguyên «Chữ bài» vẫn lưu được. Đã thêm luật so giá trị với chữ bài, ca đúng, ca thẻ nhóm và một phép đo cả chuỗi thật."
+  },
+  {
+   "i": 4,
+   "p": "Bài nhiều căn chưa có luật, «RB» và «Rainbow» thành bất đồng giả, hai phép đo mẫu mâu thuẫn. Đã chốt: gắn căn đầu, dự án và phân khu ghi tên đầy đủ, đo đồng thuận bằng kết quả thật."
+  }
  ],
- "scope_plain":"Vòng này chỉ mở màn và lấy mẫu; việc viết quy ước, ghi suy ra, hiện diện tích nằm ở các hàng sau."
+ "scope_plain": "Vòng này chỉ mở màn và lấy mẫu; việc viết quy ước, ghi suy ra, hiện diện tích nằm ở các hàng sau."
 }

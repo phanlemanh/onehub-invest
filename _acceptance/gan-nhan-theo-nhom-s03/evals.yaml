@@ -35,11 +35,12 @@ evals:
     paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts]
     steps:
       - "Bản chạy: dev server của worktree ở cổng 3460 của dãy mượn, DATABASE_URL của DB thử oneinvest_gcn_nhan, seed bằng probes/seed.mjs. Đăng nhập tài khoản thử vai ops."
-      - "Mở /ops/labels không tham số, chụp evidence/E4-step1.png khổ rộng: bộ chọn nhóm, bài gốc, năm khối biểu mẫu, ô căn cứ, ô Lý do"
+      - "Mở /ops/labels không tham số ở 1440x900, chụp evidence/E4-step1.png: bộ chọn nhóm, bài gốc, năm khối hai cột, ô căn cứ, ô Lý do, nút Lưu; ghi số hàng biểu mẫu nằm trọn trong màn và nút Lưu có nằm trong màn không"
+      - "Mở bài có chữ dài trên ba dòng, chụp evidence/E4-step1b.png: bài gấp, bấm Xem hết bài thấy nguyên văn, cuộn biểu mẫu thì bài vẫn thấy"
       - "Chọn nhóm thứ hai, chụp evidence/E4-step2.png: chỉ bài của nhóm đó, tiến độ theo nhóm"
       - "Cùng màn khổ 390x844 tối, chụp evidence/E4-step3.png, ghi bề rộng trang"
       - "Điền đủ biểu mẫu, đặt Dự án căn cứ Ngữ cảnh nhóm và để trống Lý do, bấm Lưu, chụp evidence/E4-step4.png: lỗi dưới ô Lý do, chữ đã gõ còn nguyên"
-    expected: "Đủ trường, nhãn tiếng Việt theo CONTEXT.md, dòng hướng dẫn nói ghi điều người trong nhóm hiểu, không còn «Ghi theo đúng chữ của tin»; không tràn ngang ở khổ hẹp; lỗi đúng ô"
+    expected: "Đủ 17 hàng và nút Lưu trong màn 1440x900 không cuộn; trạng thái đã chọn nhìn rõ ở cả sáng lẫn tối; đủ trường, nhãn tiếng Việt theo CONTEXT.md, dòng hướng dẫn nói ghi điều người trong nhóm hiểu, không còn «Ghi theo đúng chữ của tin»; không tràn ngang ở khổ hẹp; lỗi đúng ô"
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E5
     criterion: AC-3
