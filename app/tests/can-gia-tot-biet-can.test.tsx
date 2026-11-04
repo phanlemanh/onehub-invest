@@ -1053,11 +1053,24 @@ const dungTenMaTran = async (c: pg.Client) => {
     if (m.sender !== null) await doiNguoiGui(c, m.id, m.sender)
   }
 }
-const coChuGiuCho = (s: string) => /(^|[^\p{L}])unknown([^\p{L}]|$)/iu.test(s.replaceAll("Anh Unknown", ""))
+/** Quét từng nút chữ, không quét textContent: textContent nối các ô thành «TênunknownSĐT» nên bỏ sót đúng chỗ cần bắt. */
+const coChuGiuCho = (goc: Node | null): boolean => {
+  if (!goc) return false
+  if (goc.nodeType === 3) return /(^|[^\p{L}])unknown([^\p{L}]|$)/iu.test((goc.textContent ?? "").replaceAll("Anh Unknown", ""))
+  return Array.from(goc.childNodes).some(coChuGiuCho)
+}
+const dongTrong = (goc: Element, nhan: string) => goc.querySelector(`[data-deal-dong="${nhan}"] dd`)?.textContent ?? null
 const oTenHang = (id: string) => hang(id)?.querySelector("span.truncate[translate='no']")?.textContent ?? null
 
 test("CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc thế chỗ, Na và tên thật giữ nguyên", { timeout: 300_000 }, async () => {
   await withTx(async (c) => {
+    // Đối chứng đỏ của phép quét: chữ giữ chỗ ngay sau nhãn phải bị bắt, tên chứa chữ đó thì không.
+    const mau = document.createElement("dl")
+    mau.innerHTML = "<dt>Tên</dt><dd>unknown</dd><dt>SĐT</dt>"
+    assert.ok(coChuGiuCho(mau), "CGB-AC-1 phép quét mù với chữ sau nhãn")
+    mau.innerHTML = "<dt>Tên</dt><dd>Anh Unknown</dd>"
+    assert.ok(!coChuGiuCho(mau), "CGB-AC-1 phép quét bắt nhầm tên thật")
+
     await dungTenMaTran(c)
     const that = await dsThat()
     const { rows } = await that.getDeals()
@@ -1067,15 +1080,19 @@ test("CGB-AC-1 chữ giữ chỗ không hiện như tên, tên trong bài gốc 
     // Đủ ba bề mặt cho từng dòng: ô tên trên hàng, phần thân trong sheet, dòng «Tên» trên trang.
     const ds = await banPage(PAGE_DS), can = await chiTiet()
     await vaoTrang(ds, "ops")
-    for (const m of TEN_MA_TRAN) assert.equal(oTenHang(m.id), m.ten ?? "Chưa có tên", `CGB-AC-1 chữ giữ chỗ hiện như tên: hàng ${m.id}`)
+    for (const m of TEN_MA_TRAN) {
+      assert.equal(oTenHang(m.id), m.ten ?? "Chưa có tên", `CGB-AC-1 chữ giữ chỗ hiện như tên: hàng ${m.id}`)
+      assert.ok(!coChuGiuCho(hang(m.id)), `CGB-AC-1 chữ giữ chỗ hiện như tên: hàng ${m.id} quét`)
+    }
     for (const m of TEN_MA_TRAN) {
       await vaoTrang(ds, "ops", { can: m.id })
       const sheet = document.querySelector('[role="dialog"]')
       assert.ok(sheet, `CGB-AC-1 ?can=${m.id} không mở sheet`)
-      assert.ok(!coChuGiuCho(sheet.textContent ?? ""), `CGB-AC-1 chữ giữ chỗ hiện như tên: sheet ${m.id}`)
+      assert.ok(!coChuGiuCho(sheet), `CGB-AC-1 chữ giữ chỗ hiện như tên: sheet ${m.id}`)
+      assert.equal(dongTrong(sheet, "Tên"), m.ten ?? "chưa có", `CGB-AC-1 thân sheet ${m.id} sai tên`)
       assert.equal(sheet.querySelector('span.truncate.font-medium[translate="no"]')?.textContent, m.ten ?? "Người đăng chưa có tên", `CGB-AC-1 sheet ${m.id} sai tên`)
-      const trang = await vaoTrang(can, "ops", { offerId: m.id })
-      assert.ok(!coChuGiuCho(trang.text()), `CGB-AC-1 chữ giữ chỗ hiện như tên: trang ${m.id}`)
+      await vaoTrang(can, "ops", { offerId: m.id })
+      assert.ok(!coChuGiuCho(document.body), `CGB-AC-1 chữ giữ chỗ hiện như tên: trang ${m.id}`)
       if (m.ten === null) assert.equal(soDong("Tên"), 0, `CGB-AC-1 trang ${m.id} có dòng Tên rỗng`)
       else assert.equal(dong("Tên"), m.ten, `CGB-AC-1 trang ${m.id} sai tên`)
     }
@@ -1115,6 +1132,33 @@ test("CGB-AC-1 tên trong bài gốc qua bộ che tên nguồn; trên cloud ch�
   })
 })
 
+test("CGB-AC-1 trên cloud đủ ma trận tên qua hàng, sheet và trang", { timeout: 300_000 }, async () => {
+  await withTx(async (c, sc) => {
+    await dungTenMaTran(c)
+    await dungCloud(c, sc)
+    const ds = await banPage(PAGE_DS), can = await chiTiet()
+    // Cloud không có bài gốc nên không có tên người gửi: chỉ còn tên thật ở seller_name.
+    const tenCloud = (m: (typeof TEN_MA_TRAN)[number]) => ([BAN, "Na", "Anh Unknown"] as (string | null)[]).includes(m.seller) ? m.seller : null
+    await vaoTrang(ds, "ops")
+    for (const m of TEN_MA_TRAN) {
+      assert.equal(oTenHang(m.id), tenCloud(m) ?? "Chưa có tên", `CGB-AC-1 cloud hàng ${m.id}`)
+      assert.ok(!coChuGiuCho(hang(m.id)), `CGB-AC-1 chữ giữ chỗ hiện như tên: cloud hàng ${m.id}`)
+    }
+    for (const m of TEN_MA_TRAN) {
+      await vaoTrang(ds, "ops", { can: m.id })
+      const sheet = document.querySelector('[role="dialog"]')
+      assert.ok(sheet, `CGB-AC-1 cloud ?can=${m.id} không mở sheet`)
+      assert.ok(!coChuGiuCho(sheet), `CGB-AC-1 chữ giữ chỗ hiện như tên: cloud sheet ${m.id}`)
+      assert.equal(dongTrong(sheet, "Tên"), tenCloud(m) ?? "chưa có", `CGB-AC-1 cloud thân sheet ${m.id}`)
+      await vaoTrang(can, "ops", { offerId: m.id })
+      assert.ok(!coChuGiuCho(document.body), `CGB-AC-1 chữ giữ chỗ hiện như tên: cloud trang ${m.id}`)
+      const ten = tenCloud(m)
+      if (ten === null) assert.equal(soDong("Tên"), 0, `CGB-AC-1 cloud trang ${m.id} có dòng Tên rỗng`)
+      else assert.equal(dong("Tên"), ten, `CGB-AC-1 cloud trang ${m.id}`)
+    }
+  })
+})
+
 const LY_DO_MA_TRAN: { id: string; gap: number; cau: string }[] = [
   { id: "g-20", gap: -20, cau: "Đắt hơn thước phường 20%, không phải căn giá tốt" },
   { id: "g-05", gap: -0.5, cau: "Đắt hơn thước phường 0.5%, không phải căn giá tốt" },
@@ -1136,19 +1180,27 @@ test("CGB-AC-2 lý do rời danh sách đúng nghĩa với căn đắt hơn thư
       assert.equal(deal?.roiDanhSach, m.cau, `CGB-AC-2 loader ${m.id}`)
       kiemLyDo(m.gap, deal?.roiDanhSach ?? null)
       await vaoTrang(can, "ops", { offerId: m.id })
-      const nhan = document.querySelector("[data-deal-roi]")?.textContent ?? ""
-      assert.ok(nhan.includes(m.cau), `CGB-AC-2 trang ${m.id}: ${nhan}`)
-      assert.match(nhan, /Đã rời danh sách/, `CGB-AC-2 trang ${m.id} mất nhãn`)
+      assert.equal(cauDaVe(), m.cau, `CGB-AC-2 trang ${m.id}`)
+      kiemLyDo(m.gap, cauDaVe())
     }
     // Đối chứng đỏ trên cùng số: gỡ nhánh số âm thì câu cũ quay lại, kiemLyDo phải ném.
     const hong = await banLib<typeof import("../src/lib/deals-chi-tiet")>("src/lib/deals-chi-tiet.ts", [[NHANH_SO_AM, ""]])
     assert.throws(() => kiemLyDo(-20, hong.lyDoRoi({ discountPct: -20, medianPerm2: M }, false)), /CGB-AC-2 lý do tự mâu thuẫn/)
 
     await dungCloud(c, sc)
-    await vaoTrang(can, "ops", { offerId: "g-20" })
-    assert.ok((document.querySelector("[data-deal-roi]")?.textContent ?? "").includes(LY_DO_MA_TRAN[0].cau), "CGB-AC-2 cloud sai câu")
+    for (const m of LY_DO_MA_TRAN) {
+      await vaoTrang(can, "ops", { offerId: m.id })
+      assert.equal(cauDaVe(), m.cau, `CGB-AC-2 cloud ${m.id}`)
+      kiemLyDo(m.gap, cauDaVe())
+    }
   })
 })
+/** Nguyên câu đã vẽ trong Alert: nhãn là tiêu đề, phần còn lại phải đúng bằng câu lý do, không ghép thêm chữ. */
+const cauDaVe = () => {
+  const nhan = document.querySelector("[data-deal-roi]")?.textContent ?? ""
+  assert.ok(nhan.startsWith("Đã rời danh sách"), `CGB-AC-2 mất nhãn: ${nhan}`)
+  return nhan.slice("Đã rời danh sách".length)
+}
 const NHANH_SO_AM = "if (d.discountPct < 0) return `Đắt hơn thước phường ${soPct(d.discountPct)}%, không phải căn giá tốt`;"
 
 const crumbDs = () => document.querySelector('nav[aria-label="Đường dẫn trang"] a[href^="/ops/deals"]')?.getAttribute("href") ?? null
@@ -1162,6 +1214,8 @@ async function kiemCrumb(can: PageMod, ds: PageMod, role: string, ids: string[],
     const moCan = new URL(href, "http://x").searchParams.get("can")
     const toi = moCan ? await vaoRedirect(ds, role, moCan) : ""
     assert.equal(toi, "", `CGB-AC-3 crumb quay lại chính trang: ${id} ${role} chuyển về ${toi}`)
+    // ?can= của căn ngoài danh sách giữ nguyên quyết định của CG1, ở mọi vai và mọi nơi chạy.
+    if (!trong.has(id)) assert.equal(await vaoRedirect(ds, role, id), `/ops/deals/${id}`, `CGB-AC-3 ?can= ngoài danh sách không chuyển: ${id} ${role}`)
   }
 }
 const dungBaMuoiBa = async (c: pg.Client) => {
@@ -1183,9 +1237,7 @@ test("CGB-AC-3 crumb về danh sách không quay lại chính trang, trên cả 
     assert.ok(trong.has("b30") && !trong.has("b31") && !trong.has("s-xm"), "CGB-AC-3 sai dữ liệu ranh")
     assert.equal(BA_MUOI_BA.length, 33)
     await kiemCrumb(can, ds, "ops", BA_MUOI_BA, trong)
-    // ?can= của căn ngoài danh sách giữ nguyên quyết định của CG1.
-    assert.equal(await vaoRedirect(ds, "ops", "b31"), "/ops/deals/b31", "CGB-AC-3 ?can= ngoài danh sách không chuyển")
-    await kiemCrumb(can, ds, "viewer", ["b01", "b31", "r-roi"], trong)
+    await kiemCrumb(can, ds, "viewer", BA_MUOI_BA, trong)
 
     // Đối chứng đỏ: câu kiểm luôn đúng thì căn hạng 31 quay lại chính trang.
     const luonDung = chep("src/lib/deals.ts", [["return rows.length > 0;", "return true;"]])
@@ -1204,6 +1256,7 @@ test("CGB-AC-3 crumb về danh sách không quay lại chính trang, trên cả 
     await dungCloud(c, sc)
     const trongCloud = new Set((await that.getDeals()).rows.map((r) => r.offerId))
     assert.deepEqual(trongCloud, trong, "CGB-AC-3 cloud chọn tập căn khác máy thu")
-    await kiemCrumb(can, ds, "ops", ["b01", "b30", "b31", "s-xm", "r-roi"], trongCloud)
+    await kiemCrumb(can, ds, "ops", BA_MUOI_BA, trongCloud)
+    await kiemCrumb(can, ds, "viewer", BA_MUOI_BA, trongCloud)
   })
 })

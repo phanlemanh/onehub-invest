@@ -471,13 +471,16 @@ const tenCuaDong = () => [
   tin("hai-that-1", { seller_ref: "S05:hai", seller_name: "Hai A" }),
   tin("hai-that-2", { seller_ref: "S05:hai", seller_name: "Hai B" }),
   tin("hai-that-3", { seller_ref: "S05:hai", seller_name: "unknown" }),
+  tin("hai-that-4", { seller_ref: "S05:hai", seller_name: " UNKNOWN " }),
+  tin("hai-that-5", { seller_ref: "S05:hai", seller_name: "" }),
+  tin("hai-that-6", { seller_ref: "S05:hai", seller_name: "   " }),
   tin("ba-that-1", { seller_ref: "S05:ba", seller_name: "Ba A" }),
   tin("ba-that-2", { seller_ref: "S05:ba", seller_name: "Ba B" }),
   tin("ba-that-3", { seller_ref: "S05:ba", seller_name: "Ba C" }),
 ]
 async function kiemTenInvest(m: typeof offers) {
   const { rows } = await m.getPublicOffers(TT, locTrang({ limit: 50 }))
-  assert.equal(rows.length, MA_TRAN_TEN.length + 6)
+  assert.equal(rows.length, MA_TRAN_TEN.length + 9)
   MA_TRAN_TEN.forEach(([, mong], i) => {
     const thay = lay(rows, `ten-${i}`).sellerName
     if (mong === null && thay !== null) throw new Error("CGB-AC-6 chữ giữ chỗ hiện như tên")
@@ -504,6 +507,13 @@ test("CGB-AC-6 ma trận tên qua hàm, route và vùng máy chủ thật; unkno
     assert.ok(the(`ten-${i}`).includes(mong === null ? "Chưa có tên" : `>${mong}<`), `thẻ dòng ${i}`)
   })
   assert.ok(!/>\s*unknown\s*</i.test(html), "CGB-AC-6 unknown trong HTML")
+  // Đếm nhiều tên qua route và thẻ: hai tên thật giữ tên, ba tên thật về nhãn.
+  assert.equal(lay(api.data, "hai-that-1").sellerManyNames, false, "route: chữ giữ chỗ tính là một tên")
+  assert.equal(lay(api.data, "hai-that-1").sellerName, "Hai A")
+  assert.equal(lay(api.data, "ba-that-1").sellerManyNames, true, "route: ba tên thật vẫn về nhãn")
+  assert.equal(lay(api.data, "ba-that-1").sellerName, null)
+  assert.ok(the("hai-that-1").includes(">Hai A<") && !the("hai-that-1").includes("Tài khoản nhiều tên"), "thẻ hai tên")
+  assert.ok(the("ba-that-1").includes("Tài khoản nhiều tên") && !the("ba-that-1").includes(">Ba A<"), "thẻ ba tên")
 })
 
 test("CGB-AC-6 đối chứng: gỡ tenTin đỏ, đếm cả unknown đỏ", async () => {
@@ -512,6 +522,8 @@ test("CGB-AC-6 đối chứng: gỡ tenTin đỏ, đếm cả unknown đỏ", as
   await assert.rejects(kiemTenInvest(boLoc), /CGB-AC-6 chữ giữ chỗ hiện như tên/)
   const demCa = await banSao((s) => s.replace(" AND lower(btrim(seller_name)) NOT IN ('unknown', '')", ""))
   await assert.rejects(kiemTenInvest(demCa), /CGB-AC-6 chữ giữ chỗ tính là một tên/)
+  const demHoaKhoang = await banSao((s) => s.replace("lower(btrim(seller_name)) NOT IN ('unknown', '')", "seller_name <> 'unknown'"))
+  await assert.rejects(kiemTenInvest(demHoaKhoang), /CGB-AC-6 chữ giữ chỗ tính là một tên/)
 })
 
 // ---- E8b: bộ dựng URL → API ----
