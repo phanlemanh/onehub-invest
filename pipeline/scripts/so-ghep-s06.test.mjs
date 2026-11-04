@@ -15,7 +15,7 @@ import { docMoc, docNhanhSoGhep, doTrenDb, kiemBatBienSoGhep, tuChoiDb, veDong }
 import { ganSdtS06 } from "../gan-sdt-s06.mjs";
 import { resolveOffers } from "../lib/assert.mjs";
 import { coBangChungSdt, dungNguoi, RULE_TRUC_TIEP, rutDinhDanh, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
-import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
+import { khoaNgoaiDanhSach, khoaNguon, luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 import { nap068 } from "../lib/nap-068.mjs";
 import { MIG_070, nap070 } from "../lib/nap-070.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
@@ -24,8 +24,12 @@ import { runTransformChotot } from "../transform-chotot.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+// properties, property_offers, review_queue: view sellers và bước dựng danh bạ đọc ở public, phải khoá cùng câu NOWAIT đầu giao dịch
+// (xem kiem-do-sau-070.test.mjs).
 const BANG = ["stg_chotot_ads", "stg_zalo_posts", "sale_offer_records", "field_assertions", "ops_audit",
-  "parties", "registry_aliases", "registry_events", "party_roles"];
+  "parties", "registry_aliases", "registry_events", "party_roles", "properties", "property_offers", "review_queue"];
+// Transform thật đọc phường ở public nên chỉ khoá, không chép rỗng.
+const CHI_KHOA = ["areas"];
 
 /** View của public dựng lại trong lược đồ riêng: lấy định nghĩa khi search_path chỉ có public để tên bảng không gắn lược đồ. */
 async function chepView(c, sc, ten) {
@@ -47,6 +51,7 @@ async function withTx(fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
+    await khoaNguon(c, [...BANG, ...CHI_KHOA]);
     const sc = await luocDoRieng(c, BANG, { tienTo: "sg" });
     await chepView(c, sc, "sale_offers");
     await chepView(c, sc, "sellers");
@@ -54,7 +59,9 @@ async function withTx(fn) {
     await nap068(c);
     await nap070(c);
     await c.query(`INSERT INTO ops_audit (actor, action) VALUES ('test', 'phat-bieu:cat-chuyen')`);
-    return await fn(c, { sc });
+    const kq = await fn(c, { sc });
+    assert.deepEqual(await khoaNgoaiDanhSach(c, [...BANG, ...CHI_KHOA]), [], "SG ca xin khoá bảng public giữa giao dịch: thêm bảng đó vào BANG");
+    return kq;
   } finally {
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
