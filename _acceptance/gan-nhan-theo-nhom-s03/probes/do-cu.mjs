@@ -55,7 +55,7 @@ try {
   k(dt2.truong.filter((t) => t.field in MOI && t.cap_du === 12).length === 8, "dong thuan co them 8 truong moi", "loi thieu truong moi trong dong thuan")
   k(dt1.phut_cong.usr_gcndocu_a > 0 && JSON.stringify(dt1.phut_cong) === JSON.stringify(dt2.phut_cong), "phut cong", `loi phut cong ${JSON.stringify(dt1.phut_cong)} ${JSON.stringify(dt2.phut_cong)}`)
   await c.query(`DELETE FROM eval_labels WHERE item_id = $1`, [items[0]])
-  const man = spawnSync("node", ["--import", "tsx", path.join(ROOT, "_acceptance/gan-nhan-theo-nhom-s03/probes/do-cu-man.tsx"), LAT], { cwd: path.join(ROOT, "app"), env, encoding: "utf8" })
+  const man = spawnSync("node", ["--import", "tsx", path.join(ROOT, "_acceptance/gan-nhan-theo-nhom-s03/probes/do-cu-man.mjs"), LAT], { cwd: path.join(ROOT, "app"), env, encoding: "utf8" })
   const m = JSON.parse(man.stdout.trim().split("\n").pop() || "{}")
   k(m.chin && m.khongNhom && m.cauCu, "lat cu mo bieu mau dung", `loi lat cu: ${man.stdout} ${man.stderr.slice(0, 300)}`)
 } finally {

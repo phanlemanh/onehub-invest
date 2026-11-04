@@ -228,6 +228,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Độ phủ API trên máy chủ (AU12 `coverage-cloud-got-tang-a`, 25/10): `GET /api/v1/ops/coverage` trên máy chủ đọc khối
   `freshness` máy thu đẩy lên, trả cờ `state` tươi / cũ / không số; không số thì `rows: null` + «Chỉ đo ở máy thu» (trước
   trả `[]` như thể không nguồn nào); phản hồi chỉ trường độ tươi, không tên nguồn thật.
+- Gắn nhãn theo nhóm S03 (GC0 `gan-nhan-theo-nhom-s03`, 04/11; migration 072 **chưa áp DB thật**, chỉ máy thu): `/ops/labels` mặc định lát `s03-theo-nhom`, biểu mẫu
+  17 trường bản D, mỗi ô một căn cứ, bài dùng ngữ cảnh bắt buộc lý do; lượt hai so với máy đọc rồi ghi trường hợp; bảng trường hợp theo nhóm chỉ có số; `pipeline/label-cases.mjs`
+  xuất lý do cho `GCQ1`, không mang người gắn. Lát đời trước giữ biểu mẫu chín trường của PL7. Đọc giá trị máy chỉ ở `app/src/lib/labels-luot-hai.ts`.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
