@@ -7,7 +7,7 @@ import { ROOT, URL_THU, kiem, noiDbThu } from "./_db.mjs"
 
 const LENH = path.join(ROOT, "pipeline/label-sample.mjs")
 const LAT = "gcn-mau"
-const SNAP = "hanoi__zalo__gcnmau"
+const SNAP = "hanoi__s03__gcnmau"
 const c = await noiDbThu()
 const don = async () => {
   await c.query(`DELETE FROM eval_label_items WHERE lat = $1`, [LAT])
@@ -16,7 +16,7 @@ const don = async () => {
   await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id LIKE '%gcnmau'`)
 }
 await don()
-for (const [id, src] of [[SNAP, "zalo"], ["hanoi__zalo-mock__gcnmau", "zalo-mock"]])
+for (const [id, src] of [[SNAP, "s03"], ["hanoi__s03-mock__gcnmau", "s03-mock"]])
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1,'hanoi',$2,'{}'::jsonb) ON CONFLICT DO NOTHING`, [id, src])
 const NHOM = [["L1", 45], ["L2", 40], ["L3", 35], ["N1", 8], ["N2", 3]]
 const MA = {}
@@ -31,7 +31,7 @@ const them = (id, snap, conv, nhom, text) =>
 for (const [m, n] of NHOM) for (let i = 0; i < n; i++) await them(`gcn-mau-${m}-${i}`, SNAP, `conv-gcn-${m}`, `GCN ${m}`, `GCN bài ${m} số ${i}`)
 // L2 có 5 bài trùng chữ với L1; L1 xếp trước nên giữ, L2 bù từ phần còn lại.
 for (let i = 0; i < 5; i++) await them(`gcn-mau-T-${i}`, SNAP, "conv-gcn-L2", "GCN L2", `GCN bài L1 số ${i}`)
-await them("gcn-mau-t0", "hanoi__zalo-mock__gcnmau", "conv-gcn-L1", "GCN L1", "POSTTHU mock")
+await them("gcn-mau-t0", "hanoi__s03-mock__gcnmau", "conv-gcn-L1", "GCN L1", "POSTTHU mock")
 await them("gcn-mau-x0", SNAP, "conv-khong-so", "GCN lạ", "GCN bài không đơn vị")
 
 const chay = (...a) => spawnSync("node", [LENH, ...a], { cwd: ROOT, env: { ...process.env, DATABASE_URL: URL_THU }, encoding: "utf8" })

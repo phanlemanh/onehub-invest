@@ -41,11 +41,11 @@ const don = async () => {
 let thoat = 0
 try {
   await don()
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__zalo__gcnrt', 'hcm', 'zalo', '{}'::jsonb) ON CONFLICT DO NOTHING`)
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__s03__gcnrt', 'hcm', 's03', '{}'::jsonb) ON CONFLICT DO NOTHING`)
   for (const g of ["a", "b"]) {
     await c.query(`INSERT INTO collection_units (source_code, name, group_key) VALUES ('S03', $1, $2)`, [`${NHOM} ${g}`, `${TIEN}-${g}`])
     for (let i = 1; i <= 6; i++) {
-      await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($1, 'hcm__zalo__gcnrt', $2, $3, $4, now())`,
+      await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($1, 'hcm__s03__gcnrt', $2, $3, $4, now())`,
         [`${TIEN}-${g}${i}`, `${NHOM} ${g}`, `${TIEN}-${g}`, `Bán căn 2PN S5.03 trục 12 Vinhomes Grand Park 64,5m2 giá 4,35 tỷ, bài ${g}${i}`])
     }
   }

@@ -77,10 +77,10 @@ async function don() {
 let thoat = 0
 try {
   await don()
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__zalo__gcnmu', 'hcm', 'zalo', '{}'::jsonb) ON CONFLICT DO NOTHING`)
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hcm__s03__gcnmu', 'hcm', 's03', '{}'::jsonb) ON CONFLICT DO NOTHING`)
   const { rows: u } = await c.query(`INSERT INTO collection_units (source_code, name, group_key, note) VALUES ('S03', 'GCN mù', $1, 'THE-MAY-DAU') RETURNING unit_code`, [NHOM_K])
   const unit = u[0].unit_code
-  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($2, 'hcm__zalo__gcnmu', 'GCN mù', $3, $1, now())`, [CHU, BAI, NHOM_K])
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at) VALUES ($2, 'hcm__s03__gcnmu', 'GCN mù', $3, $1, now())`, [CHU, BAI, NHOM_K])
   const { rows: it } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $3, 'h', 'dev', true, 's', $2) RETURNING item_id`, [LAT, unit, BAI])
   const item = Number(it[0].item_id)
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw, seller_name) VALUES ($1, 'sale', now(), now(), ARRAY[$2], 9876000000, 7, 'TOAMAYDOAN', 'TENMAYDOAN')`, [OFFER, BAI])
@@ -160,7 +160,7 @@ try {
   }
 } finally {
   await don()
-  await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id = 'hcm__zalo__gcnmu'`)
+  await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id = 'hcm__s03__gcnmu'`)
   await c.end()
   const { pool } = await nap("app/src/lib/db.ts")
   await pool.end().catch(() => {})
