@@ -1,6 +1,25 @@
-== E17 network/console (session e17n-13526) ==
-LYDO marker in DOM: ### Result
-false
+== 1440x900 ==
+### Result
+{
+  "path": "/ops/labels",
+  "w": 1440,
+  "bodyW": 1440,
+  "hasTable": true,
+  "rows": [
+    "GCN thử có máy đọc 1/2 1 Mặc định theo nhóm 1",
+    "GCN thử chưa có máy chưa có — —",
+    "GCN thử bài ba tin 1/1 1 Mặc định theo nhóm 1"
+  ],
+  "lydo": false,
+  "wideCheck": {
+    "c": 1200,
+    "s": 1200
+  }
+}
+### Ran Playwright code
+```js
+await page.evaluate('() => ({path: location.pathname, w: innerWidth, bodyW: document.documentElement.scrollWidth, hasTable: !!document.querySelector(\'[data-labels-cases]\'), rows: [...document.querySelectorAll(\'[data-labels-cases] tbody tr\')].map(r => r.innerText.replace(/\\s+/g,\' \')), lydo: document.body.innerText.includes(\'LYDO-KHONG-LEN-BANG\'), wideCheck: (()=>{let el=document.querySelector(\'h1\');while(el&&!/(auto|scroll)/.test(getComputedStyle(el).overflowY))el=el.parentElement;return el?{c:el.clientWidth,s:el.scrollWidth}:null})() })');
+```
 
 -- network --
 ### Result
@@ -13,5 +32,42 @@ Total messages: 2 (Errors: 0, Warnings: 0)
 
 [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
 [LOG] [HMR] connected @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+
+== 390x844 ==
+### Result
+{
+  "path": "/ops/labels",
+  "w": 390,
+  "bodyW": 390,
+  "hasTable": true,
+  "rows": [
+    "GCN thử có máy đọc 1/2 1 Mặc định theo nhóm 1",
+    "GCN thử chưa có máy chưa có — —",
+    "GCN thử bài ba tin 1/1 1 Mặc định theo nhóm 1"
+  ],
+  "lydo": false,
+  "wideCheck": {
+    "c": 390,
+    "s": 390
+  }
+}
+### Ran Playwright code
+```js
+await page.evaluate('() => ({path: location.pathname, w: innerWidth, bodyW: document.documentElement.scrollWidth, hasTable: !!document.querySelector(\'[data-labels-cases]\'), rows: [...document.querySelectorAll(\'[data-labels-cases] tbody tr\')].map(r => r.innerText.replace(/\\s+/g,\' \')), lydo: document.body.innerText.includes(\'LYDO-KHONG-LEN-BANG\'), wideCheck: (()=>{let el=document.querySelector(\'h1\');while(el&&!/(auto|scroll)/.test(getComputedStyle(el).overflowY))el=el.parentElement;return el?{c:el.clientWidth,s:el.scrollWidth}:null})() })');
+```
+
+-- network --
+### Result
+
+Note: 34 static requests not shown, run with --static option to see them.
+
+-- console --
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+
 == server log >=400 ==
-(none >=400 above if empty)
+(none)
+NOTE: lan 1 (seed --nhan day du, ca ba nhom co nhan) luu E17-step1-du-nhan.png; lan 2 xoa nhan 1 nhom thu (gcn-seed-3) de nhom khong-may chua gan -> E17-step1.png, E17-step2.png

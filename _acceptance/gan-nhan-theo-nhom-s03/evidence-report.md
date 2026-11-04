@@ -1,28 +1,28 @@
 ---
 schema_version: 2
 feature_slug: gan-nhan-theo-nhom-s03
-verdict: REJECT
-failed_evals: [E4]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 63d6c75c3d7a54a961fab1104bb86634dc8d8bdf
+verified_commit: a378a5e4162c3a744d1cd573d4ec544f1f2fbcb6
 human_signoff:
 ---
 
 # Evidence Report: gan-nhan-theo-nhom-s03
 
-Round 3. Nội dung thay toàn bộ round cũ; lịch sử round nằm ở mục Iterations.
+Round 4. Nội dung thay toàn bộ round cũ; lịch sử round nằm ở mục Iterations.
 
-Lệnh fail không gắn eval: không có. Lệnh ui-check của E4 kết thúc khác không và đã gắn vào E4. Phần giao diện của E4 đạt hết Expected; chỉ luật network của eval ui-check làm E4 đỏ (xem khối E4).
+Lệnh fail không gắn eval: không có.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | script | PASS |
 | E2 | AC-2 | script | PASS |
 | E3 | AC-2 | test | PASS |
-| E4 | AC-3 | ui-check | FAIL |
+| E4 | AC-3 | ui-check | PASS |
 | E5 | AC-3 | test | PASS |
 | E6 | AC-4 | test | PASS |
 | E7 | AC-5 | script | PASS |
@@ -45,258 +45,245 @@ Lệnh fail không gắn eval: không có. Lệnh ui-check của E4 kết thúc 
 ## Evidence
 
 - eval: E1
-  run_id: minted-gan-nhan-theo-nhom-s03-E1-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_migration
-  verified_at: 2026-11-04T12:14:29Z
-  output: |
-    MIGRATION OK
-
-- eval: E21
-  run_id: minted-gan-nhan-theo-nhom-s03-E21-r3
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.gcn_migration
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     MIGRATION OK
 
 - eval: E2
-  run_id: minted-gan-nhan-theo-nhom-s03-E2-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_mau
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     MAU OK
 
 - eval: E3
-  run_id: minted-gan-nhan-theo-nhom-s03-E3-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_pipeline
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 59.252375
+    ℹ duration_ms 67.615292
 
 - eval: E4
-  run_id: minted-gan-nhan-theo-nhom-s03-E4-r3
-  exit_code: 1
+  run_id: E4-gcn-20261104-1400
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   screenshot: evidence/E4-step1.png
   observed: |
-    E4-step1.png (1440x900 sáng): bộ chọn nhóm «GCN thử có máy đọc» kèm tiến độ 0/2, bài gốc, câu hướng dẫn mới, các khối Tin, Vị trí, Căn, Giá, Người bán hai cột, ô Lý do; 17 hàng đủ, nút «Lưu và xem máy đọc» nằm trong màn, không cuộn. Nút Chủ/Nhóm/Nghề (Chủ đang chọn) nhìn rõ.
-    E4-step1b: bài dài gấp còn 3 dòng, có «Xem hết bài», bấm ra đủ 5 dòng, thẻ bài dính trên cùng khi cuộn. E4-step2: chọn nhóm «GCN thử chưa có máy» chỉ còn bài của nhóm, tiến độ 0/1.
-    E4-step3 (390x844 tối): một cột, không tràn ngang (khung 390 = nội dung 390), trạng thái đã chọn nhìn rõ trên nền tối. E4-step4: Lý do trống có viền đỏ, nhãn «Lý do (bắt buộc)», câu báo ngay dưới ô «Có trường không từ chữ bài — ghi lý do», chữ đã gõ còn nguyên, không sang lượt hai. Không thấy chuỗi cũ «Ghi theo đúng chữ của tin». Khớp Expected về giao diện; chỉ vi phạm luật network (POST lưu bị từ chối 4xx do Lý do trống, có chủ ý).
-  network_observed: app-fail
-  output: |
-    Kết luận của người chạy: phần giao diện đạt hết Expected; eval đỏ CHỈ vì luật network. Không sửa code.
-    Bản chạy: dev server worktree cổng 3460 (DB thử oneinvest_gcn_nhan), seed bằng probes/seed.mjs, đã tắt server sau khi xong.
-    Assertion bằng DOM: 17 hàng (16 hàng có nhóm «căn cứ» và hàng Nhiều căn), cả 17 nằm trong 1440x900, nút Lưu trong màn, không cuộn; câu hướng dẫn đúng chuỗi mới, chuỗi cũ không còn; bộ chọn nhóm đúng tiến độ riêng từng nhóm; khổ 390 không tràn ngang, có cả nền sáng lẫn tối; Lý do trống báo lỗi đúng ô (aria-invalid, thông điệp role=alert ngay dưới ô), giá trị đã gõ giữ nguyên.
-    Network (evidence/E4-network.txt): phản hồi lỗi có chủ ý của bước Lý do trống (route lưu từ chối 4xx trên origin của dev server). Expected của E4 không khai trạng thái này nên theo luật network eval bị đỏ; không có lỗi 5xx hay lỗi kết nối. Người chốt nên xem: nếu cho phép, sửa expected của E4 khai rõ phản hồi từ chối này (E6 đã khai lỗi đúng ô) rồi chạy lại.
-    Frame đã lưu: E4-step1.png, E4-step1b.png, E4-step1b-mo-cuon.png, E4-step2.png, E4-step3.png, E4-step3-chon.png, E4-step4.png, E4-step4-toi.png, E4-network.txt.
+    E4-step1.png (1440x900 sáng, nhóm "GCN thử có máy đọc"): tiêu đề Gắn nhãn, ba huy hiệu tiến độ, dòng hướng dẫn "ghi điều người trong nhóm hiểu, kèm căn cứ từng ô"; bộ chọn nhóm góc phải + thanh tiến độ 0/2; khung bài gốc "RB 2PN1WC full nội thất Giá: 8tr" kèm dòng giải thích căn cứ Chữ/Nhóm/Nghề và ô vuông; biểu mẫu hai cột: trái Tin (Ý định tin, Loại tin, Loại hình, Nhiều căn) và Căn (Phòng ngủ, Có «+», WC, Diện tích) rồi ô Lý do; phải Vị trí (5 hàng), Giá (tỷ/triệu, 2 hàng), Người bán (Tên, SĐT); thanh dưới "Đã điền 0/17" + nút "Lưu và xem máy đọc" ở y~809, trong màn; bên dưới lộ đầu khối "Trường hợp theo nhóm". Đủ 17 hàng trong màn, không cuộn.
+    E4-step1b.png: bài dài gấp 3 dòng kết thúc "LH 0912 345 678....", nút link "Xem hết bài"; toàn bộ biểu mẫu và nút Lưu (y~849) vẫn trong màn. E4-step1b-mo-cuon.png: bài mở đủ 5 dòng nguyên văn kèm nút "Thu gọn", biểu mẫu đã cuộn lên, header bài dính ở trên cùng vẫn thấy; một dải mảnh phía trên header còn lộ nội dung cuộn (thẩm mỹ nhỏ).
+    E4-step2.png: bộ chọn "GCN thử chưa có máy", huy hiệu "Tôi đã gắn 0/1 tin của nhóm", tiến độ 0/1, chỉ bài "Bán căn 1PN giá tốt, nhắn riêng", biểu mẫu trống 0/17, không có bài nhóm khác.
+    E4-step3.png (390x844 tối): nền tối, một cột; tiêu đề, huy hiệu xuống dòng, bộ chọn nhóm full-width, bài, khối Tin xếp dọc; nút "Chữ" đang chọn trắng nổi trên nền tối; không có thanh cuộn ngang, nút Lưu dính đáy; bề rộng đo 390 = khổ màn.
+    E4-step4-chon.png (sáng, 17/17): Tin rao, Cho thuê, Căn hộ, Có, triệu, Nhóm (Khu đô thị) đều nền đen chữ trắng rõ; ô "không suy ra được" tick làm ô chữ mờ; nhãn "Lý do (bắt buộc)" hiện. E4-step4-chon-toi.png (tối): các lựa chọn đã chọn nền sáng chữ tối, rõ trên nền tối.
+    E4-step4.png: sau Lưu với Lý do trống: ô Lý do viền đỏ, nhãn đỏ "Lý do (bắt buộc)", dòng lỗi đỏ "Có trường không từ chữ bài — ghi lý do" ngay dưới ô; các giá trị đã gõ (2, 59, 8,5, 8,5, 0912 345 678, Nhóm, tick WC/Tên/Tầng) còn nguyên, huy hiệu 17/17. Khớp Expected, không mâu thuẫn.
+  network_observed: clean
 
 - eval: E5
-  run_id: minted-gan-nhan-theo-nhom-s03-E5-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E6
-  run_id: minted-gan-nhan-theo-nhom-s03-E6-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E6-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E7
-  run_id: minted-gan-nhan-theo-nhom-s03-E7-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E7-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_mu
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     MU OK
 
 - eval: E8
-  run_id: E8-verifier-20261104
+  run_id: e8-gcn-r4-20261104
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   screenshot: evidence/E8-step1.png
   observed: |
-    E8-step1.png (1440x1500 sáng, nhóm «GCN thử có máy đọc», đã lưu bài «RB 2PN1WC», 17/17): có «Bài gốc», khối «So với máy» bảng 4 cột Trường | Anh gắn | Bộ đọc | AI đọc (17 hàng), mô tả «1 trường khác máy», hàng Toà khác nhìn ra nhờ badge vàng «rb»; bên phải khối «Ghi trường hợp» với «Thẻ nhóm», ô «Thẻ đúng với bài này không?», nút Bỏ qua và «Ghi và sang tin kế»; phía dưới bảng «Trường hợp theo nhóm» và «Đồng thuận». Trước khi lưu, trang không có «So với máy», «Bộ đọc», «Thẻ nhóm» (đo bằng DOM).
-    E8-step2.png (nhóm chưa có máy): «0 trường khác máy. Máy chưa đọc bài này.», cột Bộ đọc và AI đọc toàn «—», thẻ nhóm ghi «Nhóm chưa có thẻ». E8-step3.png (bài ba tin): «3 trường khác máy. Bài có 3 tin; đang so với tin đầu. AI chưa đọc bài này.», ba ô khác (Toà, Phòng ngủ, Giá cao nhất) có badge vàng.
-    E8-step4.png (390x844 tối): bảng xếp dọc, badge vàng rõ trên nền tối, không có thanh cuộn ngang; E8-step4-cao.png (ảnh phụ) không tràn ngang. Khớp Expected. Ghi chú nhỏ: ở khổ hẹp giá trị Anh gắn là dòng đầu mỗi hàng và không có nhãn «Anh gắn» riêng; badge «khác» khá nhạt ở nền sáng.
+    E8-step1.png (1440x900, sáng): sau khi Lưu bài có bản máy đọc (nhóm co-may, bài RB 2PN1WC 8tr), khối "So với máy" hiện với phụ đề "Nhãn đã lưu, không sửa được. 3 trường khác máy." Bảng có ba cột rõ Trường | Anh gắn | Bộ đọc | AI đọc, 17 hàng. Chỗ khác nhìn ra được: ô máy Phòng ngủ "2" (anh gắn 3), Giá thấp nhất "8 triệu" và Giá cao nhất "8 triệu" (anh gắn 9 triệu) có huy hiệu vàng. Cột phải "Ghi trường hợp" có khối "Thẻ nhóm" với chữ thẻ của nhóm, ô Thẻ đúng với bài này không?, Loại trường hợp, Diễn giải, nút Bỏ qua, Ghi và sang tin kế. Bên dưới có bảng "Trường hợp theo nhóm". E8-step2.png: phụ đề "0 trường khác máy. Máy chưa đọc bài này."; cột Bộ đọc và AI đọc toàn "—"; ô Thẻ nhóm ghi "Nhóm chưa có thẻ" và không có ô hỏi thẻ đúng không. E8-step3.png: phụ đề "3 trường khác máy. Bài có 3 tin; đang so với tin đầu. AI chưa đọc bài này." Huy hiệu vàng ở Toà "rb", Phòng ngủ "2", Giá cao nhất "6 triệu" (anh gắn 12 triệu); thẻ nhóm hiện chữ. E8-step4.png (390x844, tối, html có class dark): khối "So với máy" xếp chồng, mỗi trường gồm tên trường, giá trị anh gắn rồi hai dòng "Bộ đọc", "AI đọc" bên dưới; không tràn ngang, mép phải khớp màn. Lưu ý nhỏ: ở khổ hẹp giá trị anh gắn không có nhãn "Anh gắn" riêng, chỉ Bộ đọc và AI đọc có nhãn; ảnh khổ hẹp chụp ở đầu khối nên các ô huy hiệu chỗ khác nằm dưới màn, không lên khung. Còn một tệp cũ E8-step4-cao.png (19:24) không thuộc lượt chạy này, bỏ qua.
   network_observed: clean
-  output: |
-    PASS: mạng: 4 POST lưu nhãn đều thành công trong log máy chủ (1 lần lưu bị bỏ, 3 lần lưu chính thức). Console 0 lỗi, 1 cảnh báo preload font (không thuộc phạm vi). Không có request 4xx hay 5xx.
-    Frame đã lưu: E8-step1.png, E8-step2.png, E8-step3.png, E8-step4.png, E8-step4-cao.png (ảnh phụ); network: E8-network.txt.
 
 - eval: E9
-  run_id: minted-gan-nhan-theo-nhom-s03-E9-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E9-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E10
-  run_id: minted-gan-nhan-theo-nhom-s03-E10-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E10-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E11
-  run_id: minted-gan-nhan-theo-nhom-s03-E11-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E11-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_cases
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     CASES OK
 
 - eval: E12
-  run_id: minted-gan-nhan-theo-nhom-s03-E12-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E12-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_do_cu
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     DO-CU OK
 
 - eval: E13
-  run_id: minted-gan-nhan-theo-nhom-s03-E13-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E13-r4
   exit_code: 0
   baseline: green
   verifier: config:executors.test.mgn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 1566.809042
+    ℹ duration_ms 1777.369834
 
 - eval: E14
-  run_id: minted-gan-nhan-theo-nhom-s03-E14-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E14-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E15
-  run_id: minted-gan-nhan-theo-nhom-s03-E15-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E15-r4
   exit_code: 0
   baseline: green
   verifier: config:executors.design.floor
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    (sàn thiết kế bậc M1: không báo hex thô mới)
+    (sàn thiết kế M1 không báo hex thô mới; lệnh không in thêm dòng nào)
 
 - eval: E16
-  run_id: design-gate-badd12f7c2
+  run_id: design-gate-c40c5cf2ea
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.gcn_gate
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    (cổng thiết kế P0 không báo lỗi trên 10 tệp màn trong danh sách lệnh)
+    (cổng thiết kế P0 chạy lần lượt 10 tệp màn, không tệp nào báo lỗi)
 
 - eval: E17
-  run_id: E17-gan-nhan-theo-nhom-s03-20261104
+  run_id: e17-20261104-2111
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   screenshot: evidence/E17-step1.png
   observed: |
-    E17-step1.png (1440x900): màn Gắn nhãn cuộn tới khối «Trường hợp theo nhóm», chú thích «Chỉ có số. Chữ lý do đọc qua lệnh xuất ở máy thu.». Bảng 4 cột (Nhóm, Đã gắn, Cần ngữ cảnh, Trường hợp), 3 hàng: «GCN thử có máy đọc» 1/2, 1, «Mặc định theo nhóm 1»; «GCN thử chưa có máy» chữ xám «chưa có», «—», «—»; «GCN thử bài ba tin» 1/1, 1, «Mặc định theo nhóm 1». Không có chữ lý do nào trong DOM. Mép trên ảnh có thẻ bài sticky đè lên biểu mẫu do cuộn, là artefact cuộn, không thuộc bảng.
-    E17-step2.png (390x844): cùng bảng, đủ 4 cột và 3 hàng, nhóm «chưa có» vẫn ghi «chưa có», tên nhóm xuống dòng, không cắt hay cuộn ngang; bề rộng trang đo bằng DOM: khung 390, vùng cuộn 390, nội dung 390. Khớp Expected. Ghi chú seed: để có nhóm «chưa gắn», người chạy xoá nhãn và trường hợp của bài gcn-seed-3 trên DB thử oneinvest_gcn_nhan, không sửa code.
-  network_observed: no-app-traffic
-  output: |
-    Console: 0 lỗi, 0 cảnh báo; log máy chủ không có dòng 4xx hay 5xx.
-    Ghi chú: ui-capture.sh chỉ chụp viewport đầu trang nên chụp bằng playwright-cli, cuộn tới bảng. Chỉ thấy request static, không có fetch hay XHR của app nên ghi no-app-traffic.
-    Frame đã lưu: E17-step1.png, E17-step2.png; network/console: E17-network.txt.
+    Đã mở từng tệp bằng Read. E17-step1.png (1440x900, đã cuộn tới bảng): bảng «Trường hợp theo nhóm» có cột Nhóm / Đã gắn / Cần ngữ cảnh / Trường hợp; dòng «GCN thử có máy đọc» 1/2, cần ngữ cảnh 1, «Mặc định theo nhóm 1»; dòng «GCN thử chưa có máy» ghi «chưa có», «—», «—»; dòng «GCN thử bài ba tin» 1/1, 1, «Mặc định theo nhóm 1». Dòng mô tả «Chỉ có số. Chữ lý do đọc qua lệnh xuất ở máy thu.» Không thấy chữ lý do (marker LYDO-KHONG-LEN-BANG vắng khỏi DOM). Chỉ có số và nhãn loại, đọc được theo nhóm; bảng «Đồng thuận» nằm ngay dưới. Thẻ bài gốc dính (sticky) phủ phần trên khi cuộn — hành vi thiết kế, không che bảng. E17-step1-du-nhan.png (lần seed đầy đủ): cả ba nhóm đều 1/2, 1/1, 1/1, không nhóm nào «chưa có» — đúng mô tả seed --nhan. E17-step2.png (390x844, đã cuộn tới bảng): cùng bảng bốn cột vừa khung, tên nhóm xuống dòng, «chưa có» ở dòng nhóm chưa gắn, không chữ lý do, không cuộn ngang; đo: innerWidth 390, documentElement.scrollWidth 390, vùng cuộn thân trang client 390 / scroll 390.
+  network_observed: clean
 
 - eval: E18
-  run_id: minted-gan-nhan-theo-nhom-s03-E18-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E18-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gcn_round_trip
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
     ROUND-TRIP OK
 
 - eval: E19
-  run_id: minted-gan-nhan-theo-nhom-s03-E19-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E19-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 - eval: E20
-  run_id: minted-gan-nhan-theo-nhom-s03-E20-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E20-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
+
+- eval: E21
+  run_id: minted-gan-nhan-theo-nhom-s03-E21-r4
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.gcn_migration
+  verified_at: 2026-11-04T13:58:29Z
+  output: |
+    MIGRATION OK
 
 - eval: E22
-  run_id: minted-gan-nhan-theo-nhom-s03-E22-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-E22-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
   output: |
-    ℹ duration_ms 3630.951708
+    ℹ duration_ms 13329.826208
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__bb6271-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__bb6271-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-lint-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 - cmd: cd app && npm test
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__bd9a35-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__bd9a35-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__13563d-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-npm_test__13563d-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-test_lint_rules-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r3
+  run_id: minted-gan-nhan-theo-nhom-s03-SUITE-node_scripts_check_portal_compliance_mjs-r4
   exit_code: 0
-  verified_at: 2026-11-04T12:14:29Z
+  verified_at: 2026-11-04T13:58:29Z
 
 ## Known limits
 
@@ -304,9 +291,11 @@ Lệnh fail không gắn eval: không có. Lệnh ui-check của E4 kết thúc 
 
 ## Analyst
 
-Eval không phân biệt (xanh trên cả HEAD lẫn baseline): E13 (bộ test PL7, regression-guard có chủ ý), E15 (sàn thiết kế M1, regression-guard có chủ ý).
+Eval không phân biệt (xanh trên cả HEAD lẫn baseline), cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
+- E13 (cd app && node --import tsx --test tests/labels.test.tsx): bộ test PL7, xanh cả hai phía; là regression-guard có chủ ý theo Expected (chỉ sửa chỗ số trường và câu hướng dẫn đã đổi).
+- E15 (sàn thiết kế M1, design-floor-s4): xanh cả hai phía; là regression-guard có chủ ý (không thêm hex thô mới).
 
-Baseline không đo:
+Baseline khong do:
 - node _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs: bo qua baseline: tep _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs co o cay dang kiem nhung chua co o merge-base 7ec64b7816d9d29d03acccdc988d76cece46685f — eval moi, chay tren code cu khong phan biet gi
 - node _acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs: bo qua baseline: tep _acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs co o cay dang kiem nhung chua co o merge-base 7ec64b7816d9d29d03acccdc988d76cece46685f — eval moi, chay tren code cu khong phan biet gi
 - node --test pipeline/lib/eval-labels.test.mjs pipeline/lib/label-cases.test.mjs: bo qua baseline: tep pipeline/lib/label-cases.test.mjs co o cay dang kiem nhung chua co o merge-base 7ec64b7816d9d29d03acccdc988d76cece46685f — eval moi, chay tren code cu khong phan biet gi
@@ -317,6 +306,10 @@ Baseline không đo:
 - for f in app/src/app/ops/labels/page.tsx app/src/components/ops/labels/labels-view.tsx app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/label-form-nhom.tsx app/src/components/ops/labels/nhom-row.tsx app/src/components/ops/labels/luot-hai.tsx app/src/components/ops/labels/bang-so.tsx app/src/components/ops/labels/chon-nhom.tsx app/src/components/ops/labels/bang-truong-hop.tsx app/src/components/ops/labels/agreement-table.tsx; do node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs" --jsdom app "$f" || exit $?; done: bo qua baseline: tep app/src/components/ops/labels/label-form-nhom.tsx co o cay dang kiem nhung chua co o merge-base 7ec64b7816d9d29d03acccdc988d76cece46685f — eval moi, chay tren code cu khong phan biet gi
 - cd app && node --import tsx ../_acceptance/gan-nhan-theo-nhom-s03/probes/round-trip.mjs: bo qua baseline: tep _acceptance/gan-nhan-theo-nhom-s03/probes/round-trip.mjs co o cay dang kiem nhung chua co o merge-base 7ec64b7816d9d29d03acccdc988d76cece46685f — eval moi, chay tren code cu khong phan biet gi
 
+Ghi chú phụ của bước chụp ui-check (không làm đổi kết quả):
+- E4: phiên thử đầu có một phản hồi lạc đề do điền giá trị không có trong chữ bài; phiên đó bị bỏ, DB thử được seed lại và mọi số mạng thuộc phiên đo sạch. Bước 4 làm ở khổ 1440x900 sáng trên bài dài của nhóm đầu. Dải 24px phía trên header dính còn lộ nội dung cuộn (thẩm mỹ).
+- E17: giá trị network_observed chép nguyên văn là clean dù không thấy request XHR của app nào, chỉ có phản hồi trang SSR hợp lệ; nếu đọc chặt hơn thì tương đương no-app-traffic, kết quả không đổi. Chi tiết thô ở evidence/E17-network.txt.
+
 ## Variance
 
 none — every multi-run eval is uniform
@@ -324,4 +317,5 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1, 2: lịch sử nằm trong run-log.jsonl và các commit vòng trước (xem commit 10159ecb, ghi lượt S4 vòng 1, 2).
-Round 3: E4 failed — phần giao diện đạt hết Expected, đỏ vì luật network (POST lưu với Lý do trống bị từ chối 4xx có chủ ý, Expected của E4 không khai). Chờ người chốt: sửa expected của E4 rồi chạy lại, hoặc trả về triển khai. Escalate to user, verdict REJECT.
+Round 3: E4 failed — phần giao diện đạt hết Expected, đỏ vì luật network (lượt lưu với Lý do trống bị từ chối có chủ ý, Expected của E4 chưa khai). Trả về để sửa expected của E4.
+Round 4: E4 khai đường từ chối có chủ ý, 22 eval và 6 lệnh suite đều xanh, verdict PASS.

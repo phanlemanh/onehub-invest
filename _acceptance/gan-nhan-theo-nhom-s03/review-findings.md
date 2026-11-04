@@ -1,123 +1,165 @@
-# Review findings: gan-nhan-theo-nhom-s03 (round 3)
-
-Review incomplete (finder chết): không có.
+# Review findings: gan-nhan-theo-nhom-s03 (round 4)
 
 ## Trong hợp đồng
 
-- **Hình dạng 3 — assert có mặt trong khi lời hứa là quan hệ: «số bảng trường hợp không đổi» chỉ kiểm dòng nhóm tồn tại**
-  file: `app/tests/labels-nhom.test.tsx:907`
-  severity: high
-  source: measurement
-  AC: AC-14
-  detail: AC-14 và E22 hứa Thử lại không làm tăng số trên bảng trường hợp, tức một quan hệ trước và sau. Dòng 907-908 chỉ có `const bang = ...find(U-A); assert.ok(bang)`: không lấy số trước khi Thử lại, không so giá trị nào. Fixture cũng không thể đo lời hứa này. Màn gửi chỉ `note` (dòng 898), `case_kind` là null, còn `bangTruongHop` chỉ đếm `c.case_kind IS NOT NULL` (labels-luot-hai.ts). Ghi trùng hai dòng thì bảng vẫn không đổi. Muốn đo được, ca phải chọn loại trường hợp rồi so `theoLoai` trước và sau.
-
-- **Hình dạng 2 — fixture viết tay: «đổi nội dung ra dòng mới» dùng request_id tự đặt, không lấy từ màn sinh khoá**
-  file: `app/tests/labels-nhom.test.tsx:914`
-  severity: high
-  source: measurement
-  AC: AC-14
-  detail: E22 hứa «đổi nội dung ra dòng mới» xanh trên màn thật trong jsdom và route thật; AC-14 cũng hứa điều này. Bên sinh khoá là `doi()`/`setKhoa(moiKhoa())` trong luot-hai.tsx. Dòng 914-915 lại gọi thẳng route với `request_id: "k2"` viết tay và không gõ đổi nội dung trên màn. Phần màn của ca (dòng 897-905) chỉ đi một đường: gõ, Ghi, Thử lại. Nếu bỏ `setKhoa(moiKhoa())` khỏi `doi`, người dùng đổi nội dung sẽ bị ON CONFLICT DO NOTHING nuốt mất dòng mà vẫn nhận thành công, trong khi ca này vẫn xanh.
-
-- **Hình dạng 2 — fixture viết tay: câu trả lời thẻ nhóm chỉ đo bằng thân gửi tay, không có phép đo nào đi từ ô chọn trên màn**
-  file: `app/tests/labels-nhom.test.tsx:459`
-  severity: medium
-  source: measurement
-  AC: AC-6
-  detail: Ca «tra loi the» (dòng 459), ca bí danh (dòng 448) và round-trip.mjs đều gửi `group_card_verdict` viết tay vào route. Giá trị thật do hằng `THE_OPTIONS` viết riêng trong luot-hai.tsx phát ra, tách khỏi `GROUP_CARD_VERDICTS` mà route đọc. Không test nào đụng `th-the` hoặc `th-kind`: các ca jsdom chỉ gõ `th-note` (dòng 800, 815, 898). Các bước E8 cũng chỉ chụp ảnh, không gửi câu trả lời thẻ. Đổi `correct` thành `dung` trong `THE_OPTIONS` thì mọi phép đo vẫn xanh, còn người dùng nhận 400.
-
-- **Hình dạng 2 — fixture viết tay: giá trị biểu mẫu 17 trường bị thay bằng DU trước khi tới route**
-  file: `app/tests/labels-nhom.test.tsx:756`
-  severity: medium
-  source: measurement
-  AC: AC-3
-  detail: Ca jsdom duy nhất render `LabelFormNhom` đè thân gửi bằng `values: DU` (dòng 756, comment dòng 752 thừa nhận không đo khâu điền). Mọi ca route và round-trip.mjs cũng dùng `DU` viết tay theo đúng khuôn `chuanHoaLuot` đọc. Vì vậy đoạn `luu()` dựng `values` (bỏ basis khi noBasis, gắn unit cho giá, not_stated) không được phép đo tự động nào đưa vào route. Chuỗi E18 ghi «không chèn tay» nhưng bắt đầu từ route, không từ biểu mẫu. Đường này chỉ còn được đi qua ở ui-check E4, E8.
-
-- **Hình dạng 3 — lời hứa quan hệ không được dựng: ca AC-12 «không suy ra được mà máy có giá trị» dùng nhãn có giá trị**
-  file: `app/tests/labels-nhom.test.tsx:860`
-  severity: medium
-  source: measurement
-  AC: AC-12
-  detail: Tên ca, comment dòng 860 và E20 đều nói người gắn chọn Không suy ra được còn máy có giá trị thì tô. Nhưng nhãn đến từ `nguoiDaLuu(1)`, tức `DU` có `building: chu("S5.03")`, nên `toi` là `s5.03` chứ không phải not_stated. `toaTo: true` (dòng 873) chỉ đo hai giá trị khác nhau. Nhánh `toi = null` không được dựng trong ca này. Nó chỉ được bắt gián tiếp qua số `3 trường khác máy` ở ca AC-5 (dòng 740), và ca đó không assert Badge trên ô building.
+Không có.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Chữ tự do và request_id từ client không có trần độ dài, request_id quá dài làm route trả 500 thay vì 400**
-  Người dùng thấy gì: Nếu ai đó dán một đoạn chữ rất dài vào ô ghi chú hoặc gửi mã yêu cầu quá dài, máy báo lỗi chung chung thay vì báo gọn là nhập sai. Người gắn nhãn thông thường không gặp tình huống này.
-  Căn cứ: Chỉ xảy ra khi nhập chữ quá dài bất thường, không mất nhãn đã lưu, người dùng gỡ được bằng cách rút ngắn chữ và gửi lại.
-  file: `app/src/lib/labels-luot-hai.ts`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Mã enum mới lưu trong DB vẫn là tiếng Việt, migration 073 chỉ sửa một trong ba enum**
-  Người dùng thấy gì: Một số mã lưu trong cơ sở dữ liệu cho loại trường hợp và căn cứ vẫn viết bằng tiếng Việt, không thống nhất với quy ước đặt tên. Người gắn nhãn không thấy khác biệt gì trên màn hình.
-  Căn cứ: Không ảnh hưởng người dùng; chỉ gây lộn xộn khi đọc dữ liệu, nhưng càng để lâu sau khi có nhãn thật thì sửa càng tốn.
+- **Mã enum mới lưu trong DB vẫn là tiếng Việt: migration 073 chỉ đổi một trong ba enum**
+  Người dùng thấy gì: Người gắn nhãn không thấy khác biệt nào: màn hình và dữ liệu vẫn đúng. Chỉ là một số mã lưu trong cơ sở dữ liệu còn bằng tiếng Việt, lệch quy ước đặt tên của dự án.
+  Căn cứ: Không ảnh hưởng người dùng và chưa có nhãn thật nào lưu theo mã này; đổi sau khi có nhãn thật sẽ tốn thêm một bước chuyển dữ liệu nên ghi lại để quyết sớm.
   file: `db/migrations/073_labels_nhom_sua.sql`
   severity: medium
   Đề xuất: known-limits
 
-- **CONTEXT.md chưa có thuật ngữ cho các nhãn UI mới, định nghĩa «Gắn nhãn» còn nói chín trường, «Trục» lệch nhãn chuẩn**
-  Người dùng thấy gì: Một vài nhãn trên màn gắn nhãn chưa có trong bảng thuật ngữ chung, và định nghĩa «Gắn nhãn» vẫn nói chín trường trong khi nay là mười bảy. Người gắn nhãn vẫn dùng được màn bình thường, chỉ tài liệu lệch.
-  Căn cứ: Chỉ là tài liệu, không làm sai dữ liệu hay màn hình, và sửa chữ trong tệp rất rẻ bất cứ lúc nào.
+- **`reason` và `note` không có trần độ dài, lệch khuôn 1.000 ký tự của route duyệt; `request_id` cũng không có trần**
+  Người dùng thấy gì: Nếu ai đó dán một đoạn chữ cực dài vào ô Lý do hay Ghi chú, hệ thống có thể báo lỗi chung thay vì nhắc gọn gàng; người gắn nhãn chỉ gặp khi cố tình dán rất nhiều chữ.
+  Căn cứ: Người dùng bình thường không chạm tới, không mất hay lộ dữ liệu, và gặp lỗi thì rút ngắn chữ rồi lưu lại được.
+  file: `app/src/lib/labels-luot-hai.ts`
+  severity: medium
+  Đề xuất: known-limits
+
+- **`docMa` nhận `1e30`, `0x10` làm mã tin, trong khi `?xem=` cùng màn dùng khuôn chặt**
+  Người dùng thấy gì: Nếu tự gõ một mã tin kỳ lạ vào địa chỉ trang xem máy đọc, người dùng có thể nhận lỗi chung thay vì thông báo mã tin không hợp lệ.
+  Căn cứ: Chỉ xảy ra khi tự sửa địa chỉ bằng tay, không làm mất hay ghi sai dữ liệu, và quay lại màn gắn nhãn là dùng tiếp được.
+  file: `app/src/app/api/v1/ops/labels/[itemId]/review/route.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **`chuanHoaLuot` ném TypeError khi `value` không phải chuỗi: POST /labels trả 500 thay vì 400 theo trường**
+  Người dùng thấy gì: Chỉ chương trình tự dựng yêu cầu sai khuôn mới gặp lỗi chung thay vì thông báo đúng ô; người gắn nhãn dùng biểu mẫu trên màn hình không bao giờ gặp.
+  Căn cứ: Lỗi xảy ra trước khi ghi nên không có dữ liệu sai nào được lưu, và người dùng biểu mẫu thật không chạm tới.
+  file: `app/src/lib/labels-normalize.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **CONTEXT.md chưa khớp nhãn mới: «Gắn nhãn» còn nói chín trường, «Trục» lệch «Trục căn», nhiều nhãn chưa có thuật ngữ**
+  Người dùng thấy gì: Tài liệu từ vựng chung còn mô tả màn gắn nhãn là chín trường trong khi màn nay có mười bảy, và vài nhãn mới chưa có mục giải thích. Người dùng màn hình không thấy gì sai.
+  Căn cứ: Chỉ làm người đọc tài liệu hiểu lệch, không ảnh hưởng thao tác hay dữ liệu, và sửa chữ trong tài liệu rất rẻ lúc nào cũng làm được.
   file: `CONTEXT.md`
   severity: low
   Đề xuất: known-limits
 
-- **Chú thích gcn_gate chép nhầm mã hồ sơ man-gan-nhan-mu E11**
+- **Kiểm «Chữ bài» nhận phần thập phân hai chữ số của giá làm diện tích, trục: khai sai căn cứ mà không báo lỗi**
+  Người dùng thấy gì: Khi bài ghi giá như «4,35 tỷ», người gắn nhãn có thể khai diện tích hay trục là 35 với căn cứ «Chữ bài» mà hệ thống không chặn, nên một nhãn có căn cứ sai có thể được lưu.
+  Căn cứ: Cần người gắn nhãn khai nhầm đúng như vậy, nhưng nhãn đã lưu không sửa được nên số sai nằm lại trong bộ đo; mức nhẹ vì hiếm và còn đường đối chiếu ở lượt hai.
+  file: `app/src/lib/labels-normalize.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — tuyên quét lớp nhưng không có ma trận viết trước: «chín loại» của E9 lặp theo CASE_KINDS nhập từ chính code đang kiểm**
+  Người dùng thấy gì: Nếu sau này ai bỏ bớt một loại trường hợp khỏi danh sách chọn, bài kiểm tự động vẫn báo xanh nên có thể không ai hay biết.
+  Căn cứ: Màn hình hiện tại đang đúng chín loại; rủi ro chỉ nằm ở lần sửa tương lai, và bổ sung kiểm tra là việc rẻ, làm lúc nào cũng được.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — tuyên ổn định thứ tự cho cả lớp nhưng chỉ có điểm-case: hai trong bốn danh sách của label-cases chỉ có một phần tử**
+  Người dùng thấy gì: Danh sách trường hợp xuất ra có thể đổi thứ tự giữa hai lần chạy mà bài kiểm tự động không phát hiện, làm người viết quy ước thấy bản xuất lúc thế này lúc thế khác.
+  Căn cứ: Chưa thấy lệch thật, chỉ là kiểm chưa đủ chặt; nếu xảy ra thì chạy lại xuất ra là xong, không mất dữ liệu.
+  file: `pipeline/lib/label-cases.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — âm tính một mình: «dong thuan cu khong doi» so bằng nhau mà không có đối chứng dương trên chín trường cũ**
+  Người dùng thấy gì: Nếu chín trường nhãn cũ biến mất khỏi bảng đồng thuận, phép kiểm vẫn có thể báo là không đổi nên lỗi có thể không bị bắt.
+  Căn cứ: Chỉ là rủi ro bỏ sót trong phép kiểm, không phải lỗi đang xảy ra với người dùng, và có thể gia cố sau mà không đụng tới dữ liệu.
+  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/do-cu.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — ma trận viết trước không toàn phần: TRANG_THAI 7 phần tử trong khi AC-10 hứa đủ bảng 14 trạng thái, ST-labels-loading không được đo**
+  Người dùng thấy gì: Màn khung chờ khi trang đang tải chưa được kiểm tự động, nên nếu bố cục khung chờ lệch so với màn thật thì sẽ không ai bị cảnh báo.
+  Căn cứ: Khung chờ chỉ hiện thoáng qua rồi biến mất, người dùng tự khỏi bằng tải lại, và chưa thấy lỗi thật.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — tuyên quét lớp nhưng danh sách điểm: E16 khai labels/** mà gcn_gate chỉ chạy 10 tệp, bỏ ba tệp vòng này sửa**
+  Người dùng thấy gì: Ba phần giao diện mới sửa không được máy kiểm lỗi thiết kế tự động, nên một lỗi trình bày ở đó có thể lọt qua mà không báo.
+  Căn cứ: Là khoảng trống của công cụ kiểm, không phải lỗi đang hiện trước người dùng; bổ sung danh sách tệp là việc nhỏ làm sau.
+  file: `_acceptance/config.yaml`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 — assert chuỗi có mặt thay vì đúng số: lệnh in «số nhóm thiếu» của AC-2 không được đo, «bỏ vì trùng» chỉ khớp một chữ số bất kỳ**
+  Người dùng thấy gì: Lệnh lấy mẫu có thể in sai số bài bỏ vì trùng hoặc số nhóm thiếu mà phép kiểm vẫn báo đạt, làm người vận hành hiểu sai số bài thực sự lấy được.
+  Căn cứ: Chỉ ảnh hưởng dòng báo tóm tắt, không đổi dữ liệu mẫu đã lấy, và người vận hành đối chiếu lại được bằng số đếm.
+  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 — assert chuỗi có mặt trong khi lời hứa là quan hệ nhãn với ô: nhãn trường kiểm trên toàn HTML**
+  Người dùng thấy gì: Nếu hai nhãn ô bị đổi chỗ cho nhau, phép kiểm tự động vẫn xanh và người gắn nhãn có thể điền nhầm ô.
+  Căn cứ: Màn hiện đúng và đã có ảnh chụp kiểm bằng mắt; chỉ là nguy cơ ở lần sửa sau và người gắn thấy ngay nhãn lệch.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 2 — fixture viết tay đúng khuôn bên đọc: trạng thái nhóm hết và chờ người hai dùng prop tự dựng, không đi từ nhomCuaLat qua LabelsContent**
+  Người dùng thấy gì: Câu báo số bài chờ người thứ hai khi đã gắn hết nhóm chưa được thử từ đầu đến cuối, nên một chỗ nối sai có thể làm câu này không hiện mà không ai biết.
+  Căn cứ: Câu báo chỉ là thông tin phụ, không làm mất dữ liệu hay chặn người gắn, và các phần riêng lẻ đã được thử.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 5 — ma trận tự đánh dấu: phần tử «tin vừa có người gắn» được tick không qua assert**
+  Người dùng thấy gì: Không có hậu quả trực tiếp cho người dùng: trạng thái tin vừa có người gắn vẫn được kiểm thật ở một ca khác.
+  Căn cứ: Hiện không có lỗi nào lọt, chỉ là bảng độ phủ trông đầy hơn thực tế một chút.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — âm tính một mình: phép quét tĩnh «tep luot mot khong doc bang may» không có chiều đỏ của chính nó**
+  Người dùng thấy gì: Phép kiểm chặn việc màn lượt một đọc giá trị máy chưa từng được thử với một ca vi phạm cố ý, nên có thể không bắt được nếu có ai vô tình nối thêm đường đọc.
+  Căn cứ: Vẫn còn phép kiểm đầu ra bắt được giá trị máy lộ ra, nên rủi ro lọt thấp.
+  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/mu.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — đối chứng dương chỉ có trên tên ca: «đối chứng ops cũng thấy cùng số» không có assert nào**
+  Người dùng thấy gì: Chưa có phép kiểm nào xác nhận vai ops thấy cùng số liệu bảng trường hợp với vai khác, dù hiện tại số vẫn đúng.
+  Căn cứ: Không có lỗi thật nào được chỉ ra và chỉ là khoảng trống trong kiểm tra, không ảnh hưởng dữ liệu.
+  file: `app/tests/labels-nhom.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3 — dòng bằng chứng có mặt vô điều kiện: «ok truong moi 8» là kiem(loi, true, ...)**
+  Người dùng thấy gì: Một dòng báo «đạt» trong biên bản kiểm không tự đo gì, nhưng việc tám trường mới được nhận vẫn được kiểm thật ở bước khác nên không ảnh hưởng người dùng.
+  Căn cứ: Không phải lỗ hổng phủ kiểm, sửa chỉ làm biên bản gọn hơn nên chấp nhận và ghi vết là đủ.
+  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Hình dạng 5 — tuyên quét lớp chữ hiển thị nhưng danh sách đóng bỏ nguồn nhãn mới: labels-normalize.ts và labels-luot-hai.ts không được quét**
+  Người dùng thấy gì: Một từ bị cấm hoặc chữ tiếng Anh lẫn vào nhãn ô hay câu báo lỗi lượt hai có thể không bị máy quét chữ phát hiện, nên người gắn nhãn có thể thấy chữ sai chuẩn.
+  Căn cứ: Chỉ là chữ hiển thị lệch chuẩn nếu có xảy ra, không mất dữ liệu, và sửa chữ hay thêm tệp vào danh sách quét là việc rẻ.
+  file: `app/tests/ops-nhan/visible-strings.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Chú thích gcn_gate chép nhầm mã hồ sơ man-gan-nhan-mu E11 (r3)**
   Người dùng thấy gì: Một dòng chú thích trong cấu hình nghiệm thu ghi nhầm tên hồ sơ, có thể làm người tra cứu đi nhầm hướng. Người dùng cuối không thấy gì.
   Căn cứ: Hậu quả gần bằng không, chỉ là chữ chú thích; không đáng mở việc riêng.
   file: `_acceptance/config.yaml`
   severity: low
   Đề xuất: wont-fix
 
-- **Mẫu theo nhóm tách một nhóm Zalo thật thành hai tầng vì so khớp group_key nguyên văn**
+- **Mẫu theo nhóm tách một nhóm Zalo thật thành hai tầng vì so khớp group_key nguyên văn (r3)**
   Người dùng thấy gì: Ba nhóm Zalo thật bị đăng ký hai lần trong sổ nguồn, nên khi lấy mẫu mỗi nhóm đó bị tính thành hai nhóm: số bài vượt hạn mức, tiến độ và bảng trường hợp bị chia đôi mà không có cảnh báo.
   Căn cứ: Làm lệch số liệu và hạn mức của một số nhóm thật, người gắn nhãn khó tự phát hiện, nhưng chưa mất dữ liệu và sửa được trước khi gắn nhãn thật quy mô lớn.
   file: `pipeline/label-sample.mjs`
   severity: medium
   Đề xuất: new-contract
 
-- **Ô Nhiều căn để trống báo chọn «Không suy ra được», nhưng hàng này không có ô đó**
+- **Ô Nhiều căn để trống báo chọn «Không suy ra được», nhưng hàng này không có ô đó (r3)**
   Người dùng thấy gì: Khi để trống ô Nhiều căn rồi bấm Lưu, máy bảo chọn «Không suy ra được» nhưng ô đó không có và máy cũng không nhận. Người gắn nhãn bị chỉ sai hướng một lúc rồi tự chọn Không hoặc Có.
   Căn cứ: Chỉ gây bối rối nhẹ, không mất dữ liệu, người dùng tự sửa ngay bằng cách chọn Không hoặc Có.
   file: `app/src/lib/labels-normalize.ts`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5 — tuyên quét lớp nhưng danh sách điểm: E16 khai `labels/**` mà gcn_gate chỉ chạy 10 tệp**
-  Người dùng thấy gì: Phép kiểm giao diện chỉ quét mười tệp màn, bỏ sót ba tệp cũng thuộc màn gắn nhãn, nên lỗi trình bày ở ba tệp đó có thể lọt qua không bị báo.
-  Căn cứ: Chỉ làm kiểm tra giao diện bớt chặt, không làm sai dữ liệu; lỗi trình bày nếu có người dùng vẫn thấy và báo được.
-  file: `_acceptance/config.yaml`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 5 — ma trận tự đánh dấu: phần tử «tin vừa có người gắn» được tick mà không có assert**
-  Người dùng thấy gì: Bảng kiểm các trạng thái màn hình đánh dấu sẵn một trạng thái là đã đo dù chính chỗ đó không kiểm gì. Nếu ca đo riêng bị xoá, bảng vẫn báo đủ.
-  Căn cứ: Chỉ làm bảng kiểm tự tin hơn thực tế, trạng thái đó hiện vẫn có ca đo riêng; người dùng không bị ảnh hưởng.
-  file: `app/tests/labels-nhom.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4 — âm tính một mình: phép quét tĩnh «tep luot mot khong doc bang may» không có chiều đỏ của chính nó**
-  Người dùng thấy gì: Phép kiểm tự động bảo đảm lượt gắn đầu không đọc bảng của máy chưa từng được thử cho ra kết quả đỏ, nên chưa chắc nó bắt được lỗi nếu có người lỡ viết sai.
-  Căn cứ: Chỉ giảm độ tin cậy của một lớp kiểm; việc không lộ giá trị máy ở lượt đầu vẫn được đo bằng đường khác.
-  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/mu.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4 — đối chứng đỏ không đo đúng assert: E22 hứa bỏ ON CONFLICT thì ca đỏ, nhưng đột biến là bỏ khoá và không chạy qua ca**
-  Người dùng thấy gì: Thử nghiệm cố ý phá cơ chế chống ghi trùng khi Thử lại chưa đi qua đúng ca kiểm trên màn, nên chưa chứng minh được ca đó thật sự bắt lỗi ghi trùng.
-  Căn cứ: Chỉ làm bằng chứng yếu hơn mô tả; cơ chế chống trùng vẫn có assert riêng nên rủi ro cho người dùng thấp.
-  file: `app/tests/labels-nhom.test.tsx`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 3 — dòng bằng chứng có mặt vô điều kiện: 'ok truong moi 8' là kiem(loi, true, ...)**
-  Người dùng thấy gì: Một dòng xác nhận trong kết quả kiểm tra luôn hiện ra dù không đo gì. Người đọc bằng chứng có thể tưởng nó là một phép đo riêng.
-  Căn cứ: Việc tám trường mới được nhận vẫn được kiểm bằng cách khác, nên chỉ là dòng chữ gây hiểu nhầm nhẹ và sửa không mang lại gì cho người dùng.
-  file: `_acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs`
-  severity: low
-  Đề xuất: wont-fix
-
-⚠ Cụm ngoài vùng phủ: 2/16 lỗi rơi vào file không bộ đo nào phủ (_acceptance/config.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 3/19 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/label-cases.test.mjs, _acceptance/config.yaml, app/tests/ops-nhan/visible-strings.ts) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
