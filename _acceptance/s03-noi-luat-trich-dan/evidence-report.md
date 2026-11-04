@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6561f974071dd72fb558ed7e2b56564f70773cc3
-human_signoff:
+human_signoff: Mạnh 2026-11-04
 ---
 
 # Evidence Report: s03-noi-luat-trich-dan

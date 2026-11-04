@@ -5,7 +5,7 @@ slug: s03-noi-luat-trich-dan
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-04-s03-noi-luat-trich-dan-design.md
 approved_by: Mạnh
 approved_at: 2026-11-04
@@ -56,3 +56,22 @@ Bỏ quét không gian (dòng `descope` trong sổ) — ba trục liệt tay:
 - Lượt hai đọc 136 tin còn lại: lời riêng của Mạnh.
 - Sửa `PROMPT_VERSION`, gọi lại model cho bài đã đọc.
 - Đổi giao diện `/ops/review`; đẩy Supabase.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-04:
+  - Ngoài-1: Hạ `--nguong-dung` khi đo mẫu vẫn mở được ghi thật cho nhánh số phòng dưới mức 0,85; chỉ xảy ra khi có người cố ý hạ cờ.
+  - Ngoài-3: Lời hứa mỗi lượt xử lại chỉ ghi một dòng nhật ký được kiểm trên mã nguồn, chưa kiểm trên dòng nhật ký thật.
+  - Ngoài-4: Loại hình của tin đổi đúng lúc lượt xử lại đang chạy thì đề xuất có thể về bỏ qua mà mất lý do, và lượt sau không xét lại tin đó.
+  - Ngoài-5: Tin có cả bài thử lẫn bài thật có thể bị xét dấu thử trên bài mới nhất thay vì bài đang lọc.
+  - Ngoài-6: Lệnh của E8 không tự chạy hai nhóm kiểm tra hình dạng thẻ duyệt mà AC-8 nhắc tới; chúng chỉ được bộ test chung quét tới.
+  - Ngoài-7: Tin «Bán nhà 3PN» mà model chỉ trích `3PN` vẫn có thể tự ghi nhầm là căn hộ; trên dữ liệu hiện có đo 16/1.937 đề xuất có chữ «nhà» ngay trước câu trích, rủi ro nhà phố chưa đo độc lập.
+  - Ngoài-8: Đề xuất không áp được vẫn có thể bị ghi đã xử lý trong khi lệnh báo thành công; chỉ lộ qua chênh lệch số «qua luật» với số «đã áp».
+  - Ngoài-9: Khi lượt xử lại gặp lỗi ghi, lệnh chỉ in số lỗi, không in tin nào lỗi.
+  - Ngoài-10: Test cam kết xử lại không gọi model yếu hơn vẻ ngoài, lời gọi thêm về sau có thể không bị bắt ngay.
+  - Ngoài-11: Số «AI đã áp dự kiến» mới được test kiểm là có in ra, chưa kiểm đúng giá trị; hiện đối chiếu tay 1.936/3.708.
+  - Ngoài-12: Ca tin do người chốt trong test dùng dữ liệu mẫu không giống cách hệ thống ghi thật.
+  - Ngoài-13: Test hoàn tác chưa ghim chắc căn cứ của tin loại suy sau khi áp.
+  - Ngoài-14: Test chưa đối chứng cùng một câu trích giữa model nói căn hộ và model nói loại khác.
+  - Ngoài-15: Một số dữ liệu mẫu trong test được viết tay thay vì sinh bằng đường chạy thật.
+  - Ngoài-16: Phép đo E9 phụ thuộc tệp nhãn nằm ở checkout chính trên máy thu, máy khác chạy lại có thể không ra cùng kết quả.
