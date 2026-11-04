@@ -112,11 +112,15 @@ async function ghiState(state) {
 async function docViec(client, state) {
   const q = `
     SELECT (payload->>'account_id') AS account_id, count(*)::int AS so_tin,
-      (array_agg(list_id ORDER BY list_time DESC))[1]   AS list_id1,
-      (array_agg(list_id ORDER BY list_time DESC))[2]   AS list_id2,
-      (array_agg(area_name ORDER BY list_time DESC))[1] AS area,
-      (array_agg(payload->>'region_name' ORDER BY list_time DESC))[1] AS region,
-      (array_agg(ad_type ORDER BY list_time DESC))[1]   AS st
+      -- 0411-9: chọn tin theo captured_at (lần THẤY) giảm dần — tin thấy gần
+      -- nhất có nhiều khả năng còn số hơn tin list_time mới (đo 04/11: >4 ngày
+      -- chỉ còn 28,9% có số vs 93% nhóm 2 ngày)
+      (array_agg(list_id ORDER BY captured_at DESC))[1]   AS list_id1,
+      (array_agg(list_id ORDER BY captured_at DESC))[2]   AS list_id2,
+      (array_agg(area_name ORDER BY captured_at DESC))[1] AS area,
+      (array_agg(payload->>'region_name' ORDER BY captured_at DESC))[1] AS region,
+      (array_agg(ad_type ORDER BY captured_at DESC))[1]   AS st,
+      max(captured_at) AS thay_gan_nhat
     FROM stg_chotot_ads
     WHERE (payload->>'phone_hidden') IS DISTINCT FROM 'true'
     GROUP BY 1 ORDER BY so_tin DESC`;
@@ -159,6 +163,12 @@ async function docViec(client, state) {
     const lid = chonTinChuaHetHan(r, state);
     if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
+  // 0411-9: tài khoản có tin thấy gần nhất QUÁ 4 NGÀY xếp sau cùng (vẫn nằm
+  // trong hàng việc — không bỏ) — giữ so_tin giảm dần trong từng nhóm.
+  const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000;
+  const cuHon = (r) => new Date(r.thay_gan_nhat).getTime() < moc4ngay;
+  viec.sort((a, b) => (cuHon(a) ? 1 : 0) - (cuHon(b) ? 1 : 0)); // nhóm mới đứng trước
+
   // 0311-19 (b) + 0311-20 (Hỏi): khoá lỗi xuống CUỐI hàng — demLoiLien đếm bản
   // thân + lan_truoc (state chỉ giữ MỘT cấp lan_truoc) nên tối đa 2, nghĩa là
   // khoá sai lần THỨ HAI trở xuống mới xuống cuối, lần đầu vẫn giữ chỗ.
@@ -174,6 +184,16 @@ async function docViec(client, state) {
 
 /** 0311-3 MỞ LẠI (4): tin mới nhất chưa het-han của tài khoản (state theo list_id).
  * Export cho test. */
+/** 0411-7(1): chọn tab mới từ pages — loại tab luồng khác đang giữ (dangGiu)
+ * và các tab có trước createTarget (daCo). Hai luồng thay gần nhau không trúng
+ * cùng page (lỗi 0211-11). Export cho test. */
+export function chonTabMoiPages(pages, dangGiu, daCo) {
+  for (const p of pages) {
+    if (!dangGiu.has(p) && !daCo.has(p)) return p;
+  }
+  return undefined;
+}
+
 export function chonTinChuaHetHan(row, state) {
   for (const lid of [row.list_id1, row.list_id2]) {
     if (!lid) continue;
@@ -301,6 +321,13 @@ async function main() {
   let viec = await docViec(client, state);
   if (LIMIT > 0) viec = viec.slice(0, LIMIT);
   console.log(`việc cần thu: ${viec.length} (đã có state: ${Object.keys(state.da_thu).length})`);
+  // 0411-9: số việc theo nhóm tuổi (≤2 ngày · 2-4 ngày · >4 ngày)
+  {
+    const moc2 = Date.now() - 2 * 24 * 3600 * 1000;
+    const n2 = viec.filter((v) => new Date(v.thay_gan_nhat).getTime() >= moc2).length;
+    const n4 = viec.filter((v) => new Date(v.thay_gan_nhat).getTime() >= moc4ngay).length - n2;
+    console.log(`[nhóm tuổi] ≤2 ngày: ${n2} · 2-4 ngày: ${n4} · >4 ngày: ${viec.length - n2 - n4}`);
+  }
   if (MINUTES <= 0) {
     // 0311-3: đo số việc pha 1 KHÔNG mở trình duyệt, KHÔNG gọi nguồn
     console.log(`[đo] việc pha 1 còn lại: ${viec.length}`);
@@ -468,11 +495,14 @@ async function main() {
     throw new Error(`tab trùng nhau: ${new Set(tabs).size}/${THREADS} — không chạy`);
   }
 
+  const chonTabMoi = chonTabMoiPages; // 0411-7(1): hàm thuần module-scope, export cho test
   // 0411-6(2): đếm theo TỪNG LUỒNG — mỗi luồng theo dõi tab riêng, tự mở tab mới
   // khi tab/CDP hỏng (không đợi cả lượt chết); biến tổng (loiNhanhTong/chanLienTiep)
   // chỉ tổng hợp cho [nấc].
+  const tabDangGiu = new Map(); // idx → page (luồng nào giữ tab nào)
   async function tabMoi(idx) {
     const ctx0s = contexts[0];
+    const dangGiu = new Set([...tabDangGiu.values()]);
     const truoc = new Set(ctx0s.pages());
     try {
       const ss = await browser.newBrowserCDPSession();
@@ -480,14 +510,23 @@ async function main() {
       await ss.detach();
       for (let lan = 0; lan < 40; lan++) {
         await sleep(250);
-        const t = ctx0s.pages().find((pg) => !truoc.has(pg));
-        if (t) return t;
+        const t = chonTabMoi(ctx0s.pages(), dangGiu, truoc);
+        if (t) { tabDangGiu.set(idx, t); return t; }
       }
-    } catch {}
-    return ctx0s.newPage();
+    } catch (e) {
+      // 0411-7(2): mất CDP — tabMoi ném ra ngoài sẽ làm lượt thoát 1 im lặng;
+      // chuyển thành ngưỡng loi-nhanh: thoát 3 đúng thiết kế, [nấc] vẫn in.
+      console.log(`[loi-nhanh] tabMoi lỗi: ${String(e.message).slice(0, 100)} — dừng lượt`);
+      dungNguongLoiNhanh = true;
+      return null;
+    }
+    const np = await ctx0s.newPage();
+    tabDangGiu.set(idx, np);
+    return np;
   }
   async function motLuong(idx) {
     let tab = tabs[idx % tabs.length];
+    tabDangGiu.set(idx, tab); // 0411-7(1): đăng ký tab luồng này đang giữ
     let loiNhanhLienToi = 0; // chuỗi loi-nhanh THEO LUỒNG này
     while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429 && !dungNguongKhongNut && !dungNguongLoiNhanh) {
       const v = viec[iViec++];
@@ -520,7 +559,8 @@ async function main() {
           try {
             const tabHong = tab?.isClosed();
             const ketNoi = browser?.isConnected();
-            return tabHong && !ketNoi ? "chrome-chet" : tabHong ? "tab-dong" : "cdp-mat";
+            // 0411-7: tab chưa đóng mà browser vẫn kết nối → khong-ro (đừng gọi cdp-mat)
+            return tabHong && !ketNoi ? "chrome-chet" : tabHong ? "tab-dong" : "khong-ro";
           } catch { return "khong-ro"; }
         })();
         console.log(`[loi-nhanh] ${trangThai} (luồng ${idx}, lần ${loiNhanhLienToi + 1})`);
@@ -536,7 +576,10 @@ async function main() {
             dungNguongLoiNhanh = true;
           } else {
             console.log(`[loi-nhanh] mở tab mới cho luồng ${idx}`);
-            tab = await tabMoi(idx);
+            const tabM = await tabMoi(idx);
+            if (!tabM || tabM.isClosed()) return; // 0411-7(2): CDP chết — lượt thoát 3 ở luồng chính
+            tab = tabM;
+            tabs[idx % tabs.length] = tab; // 0411-7(1): cập nhật sau khi thay
             loiNhanhLienToi = 0;
           }
         }

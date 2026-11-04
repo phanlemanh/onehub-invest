@@ -1,5 +1,5 @@
 import test from "node:test"; import assert from "node:assert/strict";
-import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh, xetKhongNut } from "../thu-so-s06.mjs";
+import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh, xetKhongNut, chonTabMoiPages } from "../thu-so-s06.mjs";
 
 // 0311-3 MỞ LẠI (1): 403/429 dừng cả lượt NGAY từ lần đầu — Mạnh chốt; nhãn
 // chan-429 kèm Retry-After (-ra-Ns) vẫn phải bắt được.
@@ -128,4 +128,39 @@ test("poll chờ node thoát: dừng ngay khi tiến trình giả thoát, quá 1
     assert.deepEqual(choThoat(() => (t++, t <= 3)), { ok: true, giay: 4 }, "thoát sau 4 giây");
   }
   assert.deepEqual(choThoat(() => true, 5), { ok: false, giay: 5 }, "quá hạn → không ok (BÁO, không vào dem6)");
+});
+
+// 0411-7(1): hai luồng thay tab gần nhau — chọn tab mới không trúng cùng page
+test("chonTabMoiPages: loại tab luồng khác đang giữ và tab cũ — hai luồng không trùng page", () => {
+  const tA = {}, tB = {}, tC = {}, tD = {}; // giả page objects
+  const pages = [tA, tB, tC, tD];
+  const daCo = new Set([tA, tB]);           // có trước createTarget
+  // luồng 0 giữ tC (tab mới từ lần trước), luồng 1 giữ tA
+  const giu = new Set([tC]);
+  const chon1 = chonTabMoiPages(pages, giu, daCo);
+  assert.equal(chon1, tD, "luồng thay kế tiếp nhận tab tD — không trúng tC của luồng khác");
+  const giu2 = new Set([tC, tD]);           // sau khi luồng kia nhận tD
+  const chon2 = chonTabMoiPages(pages, giu2, daCo);
+  assert.equal(chon2, undefined, "hết tab mới → undefined (rơi newPage)");
+  const giu3 = new Set([tC]);
+  const chon3 = chonTabMoiPages([tC, tA], giu3, new Set());
+  assert.equal(chon3, tA, "bỏ qua daCo rỗng vẫn loại tab đang giữ");
+});
+
+// 0411-9: docViec — captured_at giảm dần + tài khoản >4 ngày xếp sau (không bỏ)
+// Kiểm qua hàm sắp xếp thuần mô phỏng: mô hình kết quả rows
+test("sắp xếp nhóm tuổi: tài khoản >4 ngày xếp sau cùng, không bị bỏ", () => {
+  const hay = (d) => new Date(Date.now() - d * 24 * 3600 * 1000).toISOString();
+  const rows = [
+    { id: "moi-nhieu-tin", so_tin: 9, thay_gan_nhat: hay(0.5) },
+    { id: "cu-nhieu-tin", so_tin: 8, thay_gan_nhat: hay(6) },
+    { id: "moi-it-tin", so_tin: 2, thay_gan_nhat: hay(1) },
+    { id: "cu-it-tin", so_tin: 1, thay_gan_nhat: hay(9) },
+  ];
+  const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000;
+  const cuHon = (r) => new Date(r.thay_gan_nhat).getTime() < moc4ngay;
+  const sorted = [...rows].sort((a, b) => (cuHon(a) ? 1 : 0) - (cuHon(b) ? 1 : 0));
+  assert.equal(sorted.length, 4, "không tài khoản nào bị bỏ");
+  assert.deepEqual(sorted.map((r) => r.id).slice(0, 2).sort(), ["moi-nhieu-tin", "moi-it-tin"].sort(), "nhóm mới (≤4 ngày) đứng trước");
+  assert.deepEqual(sorted.map((r) => r.id).slice(2).sort(), ["cu-nhieu-tin", "cu-it-tin"].sort(), "nhóm >4 ngày xếp sau cùng");
 });
