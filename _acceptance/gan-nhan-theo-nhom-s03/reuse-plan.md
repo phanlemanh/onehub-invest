@@ -4,7 +4,7 @@ Pattern: none — ReUI không có block gắn nhãn; bố cục biểu mẫu l�
 | Slot | Rung | Use | Reason |
 |---|---|---|---|
 | đầu trang | 3 | PageHeader | — |
-| bộ chọn nhóm, tiến độ | 5 | reui/frame + ui/select + ui/progress | — |
+| bộ chọn nhóm, tiến độ | 5 | ui/select + ui/progress | đặt ở `actions` của PageHeader, không bọc Frame: đo trên bài thật, Frame riêng làm biểu mẫu tràn 1440×900 |
 | khung biểu mẫu | 3 | reui/frame | — |
 | bài gốc | 3 | reui/frame | — |
 | nhãn và lỗi ô | 3 | ui/field | — |

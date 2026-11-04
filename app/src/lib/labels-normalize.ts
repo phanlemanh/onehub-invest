@@ -66,7 +66,7 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   kind: "Loại tin",
   property_type: "Loại hình",
   multi_unit: "Nhiều căn",
-  project: "Dự án",
+  project: "Khu đô thị",
   subzone: "Phân khu",
   building: "Toà",
   stack: "Trục",
@@ -77,7 +77,7 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   bedrooms: "Phòng ngủ",
   bedrooms_plus: "Có «+»",
   bathrooms: "WC",
-  seller_name: "Người bán",
+  seller_name: "Tên",
   seller_phone: "SĐT",
 }
 

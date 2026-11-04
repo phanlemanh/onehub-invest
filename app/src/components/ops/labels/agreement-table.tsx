@@ -10,8 +10,8 @@ export const NGUONG_DONG_THUAN = 0.9
 
 const fmtTiLe = (v: number) => new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(v)
 
-/** Bảng đồng thuận chín trường trên phần gắn trùng (view eval_label_agreement). Chưa có cặp → «chưa đủ cặp», không 0. */
-export function AgreementTable({ rows }: { rows: DongThuanTruong[] }) {
+/** Bảng đồng thuận trên phần gắn trùng (view eval_label_agreement), mặc định chín trường của PL7. Chưa có cặp → «chưa đủ cặp», không 0. */
+export function AgreementTable({ rows, fields = LABEL_FIELDS }: { rows: DongThuanTruong[]; fields?: readonly LabelField[] }) {
   const theoTruong = new Map(rows.map((r) => [r.field, r]))
   return (
     <Frame variant="default" spacing="sm" className="w-full" data-labels-agreement="">
@@ -33,7 +33,7 @@ export function AgreementTable({ rows }: { rows: DongThuanTruong[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {LABEL_FIELDS.map((f: LabelField) => {
+            {fields.map((f: LabelField) => {
               const r = theoTruong.get(f)
               const tiLe = r?.tiLe ?? null
               return (

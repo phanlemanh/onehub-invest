@@ -613,6 +613,14 @@ _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 - Code: `khong_so`
 _Avoid_: chưa so
 
+**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô khác Chữ bài thì bài bắt buộc ghi Lý do.
+- Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
+_Avoid_: nguồn nhãn, bằng chứng
+
+**Trường hợp**: Loại tình huống người gắn ghi sau khi so nhãn của mình với máy đọc, như bí danh viết tắt hay mặc định theo nhóm. Không làm đổi nhãn đã lưu; là đầu vào để viết quy ước nhóm.
+- Code: `eval_label_cases.case_kind`
+_Avoid_: lỗi, ca
+
 ## Cổng & tính năng
 
 **Cổng Invest**: Cổng công khai, chỉ đọc, cho nhà đầu tư (`docs/architecture/portals.md`).
