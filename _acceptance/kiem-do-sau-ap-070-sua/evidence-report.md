@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0f47508f5e4e2d82637f05f973ac286937731ac0
+verified_commit: 36e0fb56f80faec7e19c90d04f7108c75feb46c7
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -128,3 +128,7 @@ none — every multi-run eval is uniform
 Round 3: REJECT — S4 vòng 3 không đạt, trình lối ra ở trần lượt.
 Round 4: REJECT — một ca deadlock; Mạnh chọn chấm thêm một lượt vượt trần.
 Round 5: PASS — sửa kèm test số ghép khoá đủ bảng public ngay đầu giao dịch (commit 0f47508f); E1–E5 và các lệnh suite đều xanh.
+
+### Re-pin lần 1 — 2026-11-04, do gộp main a5bac629 có #306 sửa ca CGT-DC
+run_id: repin-20261104T031358Z-90212
+sha: 36e0fb56f80faec7e19c90d04f7108c75feb46c7 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
