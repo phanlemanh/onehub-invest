@@ -25,7 +25,13 @@ if [ "${SKIP_COLLECT:-0}" != "1" ]; then
     echo "--- $CITY: discovery ---"
     # 3110-7: query khu vực xoay vòng theo đêm (s01-shards.mjs đọc bảng areas,
     # stateless theo chỉ số ngày); collector tự chạy query thành phố trước.
-    SHARDS="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>/dev/null | head -1)"
+    # 3110-7 MỞ LẠI (3): KHÔNG nuốt stderr — shards lỗi thì in MỘT dòng cảnh báo
+    # (kèm dòng lỗi cuối) và chạy query thành phố như cũ, không dừng lượt.
+    SHARDS_OUT="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>&1)" || {
+      echo "cảnh báo: s01-shards lỗi ($(printf '%s' "$SHARDS_OUT" | tail -1)) — chạy query thành phố như cũ"
+      SHARDS_OUT=""
+    }
+    SHARDS="$(printf '%s' "$SHARDS_OUT" | head -1)"
     export AIRBNB_DISCOVERY_QUERIES="$SHARDS"
     (cd "$COLLECTOR_DIR" && npm run collect -- collect --city "$CITY" --source airbnb-discovery)
     unset AIRBNB_DISCOVERY_QUERIES
@@ -71,8 +77,11 @@ done
 # rollup lại sau transform/gán vùng của city ngoài hanoi
 if [ "${#CITIES[@]}" -gt 1 ] || [ "${CITIES[0]}" != "hanoi" ]; then
   (cd "$DB_DIR" \
-    && "${PSQL[@]}" -q < ../pipeline/sql/300_metrics.sql \
-    && "${PSQL[@]}" -q < ../pipeline/sql/400_breakdowns.sql)
+    && "${PSQL[@]}" -v ON_ERROR_STOP=1 -q < ../pipeline/sql/300_metrics.sql \
+    && "${PSQL[@]}" -v ON_ERROR_STOP=1 -q < ../pipeline/sql/400_breakdowns.sql \
+    && "${PSQL[@]}" -v ON_ERROR_STOP=1 -q < ../pipeline/sql/410_listing_stats.sql)
+  # 3110-7 MỞ LẠI (2): 410 chạy SAU khi city ngoài hanoi đã transform — số HCM
+  # không còn trễ một ngày; ON_ERROR_STOP cho cả 3 khối.
 fi
 
 echo "=== $(date) done ==="
