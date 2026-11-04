@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 85c59f8eae023465b266d391bbbd568afe8ded6b
-human_signoff:
+human_signoff: Mạnh 2026-11-04
 ---
 
 # Evidence Report: can-gia-tot-sua-ba-loi
@@ -31,7 +31,7 @@ human_signoff:
   run_id: minted-can-gia-tot-sua-ba-loi-E7-r4
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3462); sửa nhãn lúc ký vì kho không có khoá executors.ui-check
   verified_at: 2026-11-04T05:07:01Z
   screenshot: evidence/E7-ten.png
   observed: |

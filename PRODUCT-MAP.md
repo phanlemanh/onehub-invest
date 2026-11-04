@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>12 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>132 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>133 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>97 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -36,10 +36,6 @@ flowchart TD
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -155,6 +151,7 @@ flowchart TD
 - Khi trang đăng nhập hoặc đăng ký lỗi lúc dựng, nút «Thử lại» tải lại phần trang từ server (retry) thay vì chỉ vẽ lại phía client (reset); _acceptance/config.yaml thành YAML chuẩn (`auth-error-thu-lai-retry`)
 - backfill ảnh Zalo xét cả snapshot zalo-agent schemaVersion 3, không chỉ v2 (`backfill-zalo-media-v3`)
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
+- Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)

@@ -5,7 +5,7 @@ slug: can-gia-tot-sua-ba-loi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-03T22:01:42Z
 approved_by:
@@ -54,3 +54,15 @@ Bỏ quét không gian: entry `descope` «bỏ coverage-scan» trong `decisions.
 
 - Giới hạn đo: hạng 31 không có trên DB máy thu (3 căn đủ ngưỡng ngày 04/11), nên đường crumb về bảng của căn ngoài 30 chỉ đo qua page thật trên lược đồ tạm, không có frame.
 - Giới hạn đo AC-6: DB máy thu có 0 tin `unknown` lọt điều kiện hiện công khai, nên AC-6 chỉ đo trên lược đồ tạm với vùng máy chủ thật, không có frame.
+- Giới hạn đo AC-5: E7 đo căn số âm ở cả hai khổ; ô Tên và bấm crumb chỉ đo ở khổ màn hình, chưa đo ở 390 px.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-04:
+  - Ngoài-1: Có người sửa một số tệp của trang tin rao và trang một căn thì hồ sơ vẫn báo còn mới dù chưa đo lại.
+  - Ngoài-2: Có người sửa phần quyết định chữ tên người đăng hoặc phần mở chi tiết căn thì kết quả E7, E2 cũ vẫn được coi là còn hiệu lực.
+  - Ngoài-4: Bước E7 từng cho phép chép chữ ô Tên vào báo cáo trong khi cùng bước đó đòi che tên; đã đổi ở lượt 4 nhưng tài liệu các lượt trước còn nguyên.
+  - Ngoài-5: Ba đối chứng đỏ của E1, E3 chưa chứng minh phép kiểm bắt đúng thông điệp khi chữ giữ chỗ hay tên nguồn quay lại.
+  - Ngoài-6: Phép quét chữ giữ chỗ chỉ thử đỏ trên DOM viết tay, chưa thử đỏ trên màn hình thật.
+  - Ngoài-7: Phép quét chữ giữ chỗ trên thẻ tin Invest chưa có chiều đỏ nên có thể bỏ sót khi chữ này nằm lẫn với chữ khác.
+  - Ngoài-8: Vai Người xem chưa có đủ ma trận kiểm cho tên người đăng và lý do rời danh sách như hợp đồng khai.
+  - Ngoài-10: Tài khoản có tên lẫn ký tự lạ ở cuối có thể bị thẻ tin hiện nhãn nhiều tên thay vì tên thật.
+  - Ngoài-11: Có người sửa hai tệp phục vụ danh sách tin rao thì bằng chứng E8 vẫn được coi là còn mới dù chưa đo lại.
+  - Ngoài-13: Một số đối chứng đỏ ở lượt 1 chỉ kiểm giá trị đột biến, chưa chạy phép kiểm thật.
