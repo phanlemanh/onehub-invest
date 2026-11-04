@@ -214,9 +214,11 @@ test("CD-AC-7 thẻ và luật cùng khoá đường", () => {
 
 // ---------- CD-AC-8: probe DB máy thu (chỉ SELECT) ----------
 /** Bộ tách độc lập: bỏ cụm vị trí ở đầu, cắt từ dấu phẩy — regex riêng, không dùng khoaDuong. */
-const CUM = /^((số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d\S*?[\s,]+)+/iu;
+// Cụm cuối chuỗi cũng là cụm: «Ngách 84, ngõ 255» (dữ liệu thật 04/11) không có tên đường nào để so, ngoài diện AC-8.
+const CUM = /^((số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d\S*?(?:[\s,]+|$))+/iu;
 const phanTen = (v: string) => v.normalize("NFC").replace(CUM, "").split(",")[0].trim();
-const coCum = (v: string) => CUM.test(v.normalize("NFC")) && /\p{L}/u.test(phanTen(v));
+// «Đường 297» chỉ có chữ ở tiền tố: đường đánh số không có khoá (khoaDuong bỏ khoá toàn số), soDuong ra Thiếu, không ra Lệch.
+const coCum = (v: string) => CUM.test(v.normalize("NFC")) && /\p{L}/u.test(phanTen(v).replace(/^(?:đường|phố)(?=[\s-]|$)/iu, ""));
 const dbUrl = () => process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 type Ben = Record<string, unknown>;
 const so = (v: unknown) => (v === null || v === undefined || v === "" ? null : Number(v));
@@ -233,9 +235,17 @@ function tuEvidence(a: Ben, b: Ben): PairData {
 const odDuongDacBiet = (v: string | null) => !!v && (coCum(v) || /^\d/.test(v.trim()) || v.includes(","));
 
 function kiemAc8(mod: Mod, giaTri: string[], the: { id: number; p: PairData }[]) {
-  for (const v of giaTri) assert.equal(mod.soDuong(v, phanTen(v)), "khop", `CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch: ${v}`);
+  // Đếm hết rồi mới báo: dừng ở giá trị đầu thì không biết dữ liệu lệch bao nhiêu.
+  const sai = giaTri.filter((v) => mod.soDuong(v, phanTen(v)) !== "khop");
+  assert.equal(sai.length, 0, `CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch: ${sai.length}/${giaTri.length} giá trị: ${sai.join(" | ")}`);
   for (const t of the) assert.equal(coDuong(mod.apNguong(t.p)).length, 0, `CD-AC-8 thẻ người nhận cùng căn bị loại theo đường: #${t.id}`);
 }
+test("CD-AC-8 bộ tách: cụm vị trí không kèm tên đường thì ngoài diện, có tên đường thì vẫn so", () => {
+  for (const v of ["Ngách 84, ngõ 255", "Ngõ 10", "Hẻm 3m", "số 3 đường 297", "hẻm 80 đường 13"]) assert.equal(coCum(v), false, `CD-AC-8 không có tên đường: ${v}`);
+  assert.equal(that.soDuong("số 3 đường 297", "đường 297"), "thieu", "CD-AC-8 đường đánh số phải ra Thiếu, không ra Lệch");
+  for (const v of ["Ngõ 10 Minh Khai", "Ngách 84, ngõ 255 Lạc Long Quân", "Số 5 Đường Láng"]) assert.equal(coCum(v), true, `CD-AC-8 có tên đường phải so: ${v}`);
+  assert.equal(phanTen("Ngách 84, ngõ 255 Lạc Long Quân"), "Lạc Long Quân");
+});
 test("CD-AC-8 probe ô đường thật", async (t) => {
   if (process.env.CI) return t.skip("cần DB máy thu có tin thật — CI chỉ có lược đồ");
   const c = new pg.Client({ connectionString: dbUrl() });

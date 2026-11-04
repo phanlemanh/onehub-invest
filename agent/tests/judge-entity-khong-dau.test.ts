@@ -156,6 +156,14 @@ function biLoai(v: string): boolean {
     .replace(/^\d[\w/-]*\s+/, "");
   return /^(duong|pho)[\s-]/.test(s);
 }
+/**
+ * Tiền tố vị trí gõ sai dấu kèm số («kiêt 90 trần duy chiến», dữ liệu thật 04/11): khoaDuong chỉ nhận đúng dấu hoặc không dấu ở cụm kèm số, nên có dấu
+ * giữ cả cụm còn không dấu thì bỏ. Đây là giới hạn đã biết, đếm riêng; các lớp dị biệt khác vẫn đỏ.
+ */
+const goSaiDauTienTo = (v: string) => {
+  const m = v.normalize("NFC").trim().toLowerCase().match(/^(\p{L}+)\.?\s*\d/u);
+  return !!m && /^(?:so|ngo|ngach|hem|kiet)$/.test(boDauTest(m[1])) && !/^(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)$/.test(m[1]);
+};
 const khoa = (mod: Mod, v: string) => JSON.stringify([...mod.khoaDuong(v)].sort());
 function kiemAc6(mod: Mod, ds: string[]): { so: number; loai: number; lech: string[] } {
   let so = 0;
@@ -178,14 +186,19 @@ test("KD-AC-6 có dấu = không dấu", async (t) => {
   assert.ok(kiemAc6(khongTran, ["Ngõ"]).lech.length === 1, "KD-AC-6 khoá đổi khi bỏ dấu: Ngõ");
   assert.throws(() => assert.deepEqual(kiemAc6(khongTran, ["Ngõ"]).lech, [], "KD-AC-6 khoá đổi khi bỏ dấu: Ngõ"), /KD-AC-6 khoá đổi khi bỏ dấu: Ngõ/);
   assert.throws(() => assert.deepEqual(kiemAc6(khongThang, ["30 Tháng 4"]).lech, [], "KD-AC-6 khoá đổi khi bỏ dấu: 30 Tháng 4"), /KD-AC-6 khoá đổi khi bỏ dấu: 30 Tháng 4/);
+  // Lớp loại trừ hẹp: đúng tiền tố gõ sai dấu kèm số; dạng đúng dấu, không dấu và «Ngõ» trần vẫn phải so.
+  assert.equal(goSaiDauTienTo("kiêt 90 trần duy chiến"), true);
+  for (const v of ["kiệt 90 Trần Duy Chiến", "kiet 90 tran duy chien", "Ngõ", "Ngỏ", "Trần Duy Chiến"]) assert.equal(goSaiDauTienTo(v), false, `KD-AC-6 không được loại: ${v}`);
+  assert.ok(kiemAc6(that, ["kiêt 90 trần duy chiến"]).lech.length === 1, "KD-AC-6 đối chứng: giá trị này thật sự lệch khi không loại");
   // (b) dữ liệu thật trên máy thu.
   if (process.env.CI) return t.skip("cần DB máy thu có tin thật — CI chỉ có lược đồ");
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
   await c.connect();
   try {
     const { rows } = await c.query<{ v: string }>("SELECT DISTINCT street_raw AS v FROM sale_offers WHERE street_raw IS NOT NULL");
-    const kq = kiemAc6(that, rows.map((r) => r.v));
-    t.diagnostic(`KD-AC-6: ${kq.so} giá trị so · ${kq.loai} giá trị loại · ${kq.lech.length} lệch`);
+    const saiDau = rows.map((r) => r.v).filter(goSaiDauTienTo);
+    const kq = kiemAc6(that, rows.map((r) => r.v).filter((v) => !goSaiDauTienTo(v)));
+    t.diagnostic(`KD-AC-6: ${kq.so} giá trị so · ${kq.loai} giá trị loại · ${kq.lech.length} lệch · ${saiDau.length} tiền tố gõ sai dấu đếm riêng`);
     assert.ok(kq.so >= 100, `KD-AC-6 bàn đo quá ít: ${kq.so} giá trị`);
     assert.deepEqual(kq.lech, [], "KD-AC-6 khoá đổi khi bỏ dấu trên dữ liệu thật");
     assert.ok(kiemAc6(khongTran, rows.map((r) => r.v)).lech.length > 0 || kiemAc6(khongThang, rows.map((r) => r.v)).lech.length > 0, "KD-AC-6 dữ liệu thật không phân biệt bản trước vòng");
