@@ -187,8 +187,12 @@ executors:
     sg_sync: "node --test pipeline/sync-cloud.test.mjs && cd pipeline && node --test scripts/so-ghep-s06-cloud.itest.mjs"   # so-ghep-s06-nhan-danh-ba E6
     sg_api: "cd app && node --import tsx --test tests/so-ghep-nhan.test.tsx"   # so-ghep-s06-nhan-danh-ba E7 — hai route thật, lược đồ tạm
     sg_ui: "cd app && node --import tsx --test tests/so-ghep-nhan-giao-dien.test.tsx"   # so-ghep-s06-nhan-danh-ba E8
+    cn_quet: "node --test scripts/quet-ten-nguon-html.test.mjs"   # chu-nguon-tren-cong E1, E3, E4b, E7b — hai thước tên nguồn, máy chủ giả, không DB
+    cn_app: "cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx"   # chu-nguon-tren-cong E4 — chữ giá rao, ca thẻ thật của ngoại lệ tiêu đề; không DB
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của mười hai trang trên bản chạy; không đo được thì thoát 2
+    cn_tinh: "node scripts/check-invest-tier-a.mjs"   # chu-nguon-tren-cong E3b — chuỗi trong mã của mọi trang công khai và tệp chúng import
     ls1b_mau: "cd agent && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --mau 383 --nhan $HOME/dev/onehub-invest/research-local/s03-audit-0211/labels_all.json --thu && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --xu-lai-trich --thu"   # s03-noi-luat-trich-dan E9 — DB máy thu, nhãn đã có, 0 USD, không ghi
     can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật

@@ -1,4 +1,3 @@
-import { Badge } from "@/components/reui/badge";
 import { COST_DEFAULTS, LT_TAX_PCT } from "@/lib/yield";
 import type { Definition } from "./definition-grid";
 
@@ -18,7 +17,7 @@ export const METRICS: Definition[] = [
     id: "da-dat",
     question: "Thế nào là một đêm “đã đặt”?",
     answer:
-      "Đêm mà lịch Airbnb không còn cho đặt. Con số này có thể gồm cả đêm chủ nhà tự khoá lịch, nên công suất là cận trên của số đêm có khách thật.",
+      "Đêm mà lịch trên nền tảng không còn cho đặt. Con số này có thể gồm cả đêm chủ nhà tự khoá lịch, nên công suất là cận trên của số đêm có khách thật.",
   },
   {
     id: "cong-suat",
@@ -29,7 +28,7 @@ export const METRICS: Definition[] = [
     id: "adr",
     question: "Giá phòng (ADR)",
     answer:
-      "Doanh thu ÷ đêm đã đặt. Doanh thu ở đây là giá NIÊM YẾT của đêm, chưa trừ giảm giá, chưa gồm phí dọn dẹp và phí dịch vụ Airbnb. Khi một khu vực có đêm đặt nhưng chưa thu được giá, ADR hiển thị là “—”, không phải 0.",
+      "Doanh thu ÷ đêm đã đặt. Doanh thu ở đây là giá NIÊM YẾT của đêm, chưa trừ giảm giá, chưa gồm phí dọn dẹp và phí dịch vụ của nền tảng. Khi một khu vực có đêm đặt nhưng chưa thu được giá, ADR hiển thị là “—”, không phải 0.",
   },
   {
     id: "revpar",
@@ -54,7 +53,7 @@ export const YIELD: Definition[] = [
     id: "doanh-thu-mot-can",
     question: "Doanh thu ngắn hạn của một căn được ước tính thế nào?",
     answer:
-      "Lấy các listing so sánh: cùng phường và cùng số phòng ngủ (cần ít nhất 5); không đủ thì lấy cả thị trường cùng số phòng ngủ; vẫn không đủ thì lấy cả thị trường. Với mỗi listing: giá niêm yết × công suất 90 đêm đầu của lịch × 365. Kết quả là trung vị, kèm khoảng p25–p75. Diện tích không ảnh hưởng doanh thu vì Airbnb không công bố diện tích.",
+      "Lấy các listing so sánh: cùng phường và cùng số phòng ngủ (cần ít nhất 5); không đủ thì lấy cả thị trường cùng số phòng ngủ; vẫn không đủ thì lấy cả thị trường. Với mỗi listing: giá niêm yết × công suất 90 đêm đầu của lịch × 365. Kết quả là trung vị, kèm khoảng p25–p75. Diện tích không ảnh hưởng doanh thu vì nền tảng không công bố diện tích.",
   },
   {
     id: "chi-phi",
@@ -98,10 +97,10 @@ export const OFFER_LABELS: Definition[] = [
 
 export const SOURCES: Definition[] = [
   {
-    id: "airbnb",
-    question: "Airbnb (tự thu thập)",
+    id: "thu-ngan-han",
+    question: "Listing thuê ngắn hạn (tự thu thập)",
     answer:
-      "Hà Nội và TP. Hồ Chí Minh: collector duyệt tìm kiếm Airbnb bằng trình duyệt thật rồi đọc lịch và giá của từng listing, chạy định kỳ. Mỗi lần quét chỉ thấy một phần thị trường, nên số listing “mới” là mới xuất hiện trong kết quả, không hẳn mới đăng.",
+      "Hà Nội và TP. Hồ Chí Minh: collector duyệt tìm kiếm trên nền tảng thuê ngắn hạn bằng trình duyệt thật rồi đọc lịch và giá của từng listing, chạy định kỳ. Mỗi lần quét chỉ thấy một phần thị trường, nên số listing “mới” là mới xuất hiện trong kết quả, không hẳn mới đăng.",
   },
   {
     id: "ranh-gioi",
@@ -109,20 +108,15 @@ export const SOURCES: Definition[] = [
     answer: "Từ OpenStreetMap (đơn vị hành chính sau sáp nhập 2025). Listing được gán vào phường theo toạ độ.",
   },
   {
-    id: "mo-phong",
+    id: "gia-rao",
     question: "Giá bán và giá thuê dài hạn",
-    answer: (
-      <p>
-        <Badge variant="warning-light" className="me-1.5">Mô phỏng</Badge>
-        Hiện là tin rao giả lập để dựng tính năng lợi suất; sẽ thay bằng tin rao thật. Mọi chỗ dùng số này đều gắn nhãn
-        “Mô phỏng”.
-      </p>
-    ),
+    answer:
+      "Trung vị giá rao của tin bán, tin thuê thật theo phường, từ 3 tin trở lên, chưa phủ mọi thị trường. Đây là giá rao, chưa phải giá giao dịch. Tin từ nhóm cộng đồng chưa đối chiếu với nguồn khác mang nhãn “Chưa xác minh”.",
   },
   {
-    id: "airdna",
-    question: "Có dùng AirDNA không?",
+    id: "hieu-chuan",
+    question: "Có dùng nguồn tham chiếu trả phí không?",
     answer:
-      "Chỉ nội bộ, để đối chiếu và hiệu chuẩn phương pháp. Số liệu AirDNA không hiển thị trên các trang dành cho nhà đầu tư.",
+      "Chỉ nội bộ, để đối chiếu và hiệu chuẩn phương pháp. Số của nguồn này không hiển thị trên các trang dành cho nhà đầu tư.",
   },
 ];

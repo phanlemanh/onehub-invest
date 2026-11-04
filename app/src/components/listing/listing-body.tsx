@@ -26,7 +26,7 @@ const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam" };
  */
 export function ListingBody({ listing }: { listing: ListingDetail }) {
   const marketId = listing.marketPath ? listing.marketPath.slice(1).replace("/", "-") : null;
-  const airbnbUrl = airbnbUrlOf(listing.id);
+  const originalUrl = airbnbUrlOf(listing.id);
 
   const cc = marketId?.split("-")[0] ?? "vn";
   const crumbs: Crumb[] = [
@@ -48,7 +48,7 @@ export function ListingBody({ listing }: { listing: ListingDetail }) {
         crumbs={crumbs}
         title={listing.name ?? listing.id}
         stats={roomType ? [roomType] : []}
-        description={`Airbnb · ${listing.id}${listing.lastSeen ? ` · quét gần nhất ${listing.lastSeen.split("-").reverse().join("/")}` : ""}`}
+        description={`Tự thu thập · ${listing.id}${listing.lastSeen ? ` · quét gần nhất ${listing.lastSeen.split("-").reverse().join("/")}` : ""}`}
       />
 
       <ListingHero
@@ -66,7 +66,7 @@ export function ListingBody({ listing }: { listing: ListingDetail }) {
           areaPath: listing.areaPath,
           marketName: listing.marketName,
           marketPath: listing.marketPath,
-          airbnbUrl,
+          originalUrl,
         }}
       />
 
@@ -89,7 +89,7 @@ export function ListingBody({ listing }: { listing: ListingDetail }) {
           {listing.calendar.length > 0 ? (
             <BookingHeatmap nights={listing.calendar} currency={listing.currency} lastSeen={listing.lastSeen} />
           ) : (
-            <ListingCalendarEmpty airbnbUrl={airbnbUrl} />
+            <ListingCalendarEmpty originalUrl={originalUrl} />
           )}
         </FramePanel>
       </Frame>

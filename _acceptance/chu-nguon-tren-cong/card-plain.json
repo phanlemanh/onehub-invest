@@ -1,0 +1,51 @@
+{
+  "feature_plain": "Người xem cổng Invest không còn thấy tên thật của nguồn thu, và đọc đúng rằng giá bán, thuê là giá rao của tin thật.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ có phép quét đọc HTML thật của từng trang, đỏ khi còn tên nguồn, không coi trang lỗi là sạch."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ cho kết quả sạch trên mười hai trang công khai với dữ liệu thật ở máy thu, trừ hai ngoại lệ đếm riêng."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ chặn tên nguồn thêm mới ngay ở CI, không cần máy chủ đang chạy."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-4",
+      "p": "Sẽ KHÔNG còn câu nói tin rao là giả lập; giá bán, thuê ghi là trung vị giá rao của tin thật, số mô hình vẫn mang nhãn MÔ PHỎNG."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG thêm route nào, KHÔNG thêm số nào của nguồn hiệu chuẩn lên cổng."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Không làm lại phần giải thích nhãn «Chưa xác minh»: một việc khác đã gộp vào main sáng nay."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không đổi tên tệp, tên bảng, tiền tố mã listing, lịch sử git: Mạnh đã chốt dọn sau 05/11."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đo trang chỉ có khi đăng nhập; phần mã dùng chung vẫn được thước tĩnh kiểm."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Mã listing trên URL và đầu trang listing vẫn giữ tiền tố cũ: lời giao không đổi route."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Ảnh listing vẫn tải từ CDN của nguồn: xem Hỏi-2."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Tiêu đề listing do chủ nhà gõ không bị che: xem Hỏi-1."
+    }
+  ]
+}
