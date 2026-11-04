@@ -274,8 +274,12 @@ async function napRanhGioiGia(ca, khoa, thiTruong, tenPhuong) {
   if (n.n !== items.length) throw new Error(`importer nạp ${n.n}/${items.length} ranh giới`);
 }
 
-/** Cô lập: bỏ ranh giới S04 thật của thành phố mới khỏi bản chép để ca chỉ đo fixture (bản gốc có thể đã có danang/haiphong thật). */
-const boRanhGioiMoi = (c) => c.query(`DELETE FROM stg_osm_boundaries WHERE snapshot_id LIKE 'danang\\_\\_%' OR snapshot_id LIKE 'haiphong\\_\\_%'`);
+/** Cô lập: bỏ ranh giới S04 thật của thành phố mới khỏi bản chép để ca chỉ đo fixture (bản gốc có thể đã có danang/haiphong thật).
+ * Phường thật đã nạp vào areas được tách khỏi thị trường (giữ dòng vì có khoá ngoại), không thì chốt an toàn của reassign thấy 2/93 và dừng. */
+const boRanhGioiMoi = async (c) => {
+  await c.query(`DELETE FROM stg_osm_boundaries WHERE snapshot_id LIKE 'danang\\_\\_%' OR snapshot_id LIKE 'haiphong\\_\\_%'`);
+  await c.query(`UPDATE areas SET parent_id = NULL, meta = meta - 'source' WHERE parent_id IN ('vn-da-nang', 'vn-hai-phong') AND meta->>'source' = 'osm-phuong'`);
+};
 
 const chayReassign = (ca) => {
   const r = spawnSync("node", [join(ROOT, "pipeline/reassign-areas.mjs")], { env: { ...process.env, DATABASE_URL: ca.url }, encoding: "utf8", maxBuffer: 64 << 20 });
@@ -330,7 +334,7 @@ function chayTransform(ca, banMain = false) {
     T = mkdtempSync(join(tmpdir(), "svm-main-"));
     const { mkdirSync, symlinkSync } = require_fs();
     mkdirSync(join(T, "pipeline"));
-    for (const f of ["lib", "node_modules", "transform-zalo.mjs", "package.json"]) symlinkSync(join(ROOT, "pipeline", f), join(T, "pipeline", f));
+    for (const f of ["lib", "node_modules", "transform-zalo.mjs", "gan-sdt-s06.mjs", "package.json"]) symlinkSync(join(ROOT, "pipeline", f), join(T, "pipeline", f));
     const goc = spawnSync("git", ["-C", ROOT, "show", `${process.env.SVM_BASE ?? "origin/main"}:pipeline/transform-chotot.mjs`], { encoding: "utf8" });
     if (goc.status !== 0) throw new Error(`không lấy được transform-chotot của main: ${goc.stderr}`);
     file = join(T, "pipeline/transform-chotot.mjs");
@@ -353,7 +357,7 @@ function chayTransformModuleGia(ca, maGia, thiTruong) {
   }
   writeFileSync(join(T, "pipeline/lib/thi-truong.mjs"), readFileSync(join(ROOT, "pipeline/lib/thi-truong.mjs"), "utf8")
     .replace("export const SAP_NHAP = {", `export const SAP_NHAP = {\n  "${maGia}": "${thiTruong}",`));
-  for (const f of ["node_modules", "transform-zalo.mjs", "package.json"]) symlinkSync(join(ROOT, "pipeline", f), join(T, "pipeline", f));
+  for (const f of ["node_modules", "transform-zalo.mjs", "gan-sdt-s06.mjs", "package.json"]) symlinkSync(join(ROOT, "pipeline", f), join(T, "pipeline", f));
   cpSync(join(ROOT, "pipeline/transform-chotot.mjs"), join(T, "pipeline/transform-chotot.mjs"));
   const r = spawnSync("node", [join(T, "pipeline/transform-chotot.mjs")], { env: { ...process.env, DATABASE_URL: ca.url }, encoding: "utf8", maxBuffer: 64 << 20 });
   rmSync(T, { recursive: true, force: true });

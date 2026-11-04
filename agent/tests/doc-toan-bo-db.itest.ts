@@ -319,6 +319,32 @@ test("LS1-AC-8 trần nhỏ: dừng trước bài vượt trần, in đã đọc
   });
 });
 
+test("docCo từ chối cờ lạ, cờ gõ nhầm, cờ thiếu giá trị, chữ thừa: không rơi vào lượt thật", () => {
+  for (const sai of [["--thử"], ["-thu"], ["thu"], ["--thu=1"], ["--tran-usd"], ["--tran-usd", "--thu"], ["--tran-usd", ""], ["--mau"], ["--nhan", "--mau", "5"], ["--dem", "--du"], ["--thu", "--thu"], ["--tran-usd", "1", "--tran-usd", "2"]]) {
+    assert.throws(() => docCo(sai), /doc-toan-bo-s03:/, `phải từ chối: ${sai.join(" ")}`);
+  }
+  assert.deepEqual([docCo(["--thu"]).thu, docCo(["--dem"]).dem, docCo(["--tran-usd", "0.25"]).tranUsd, docCo(["--mau", "5", "--nhan", "t.json"]).mau], [true, true, 0.25, 5]);
+});
+
+test("lỗi gọi hàng loạt: không báo đã đọc hết, còn lại đúng số bài, thoát 3; đọc được hết thì thoát 0", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const ids: string[] = [];
+    for (let i = 0; i < 3; i++) ids.push(await moiTin(c, { id: `t_ls1_sap${i}`, text: `Bán căn số ${i} rộng rãi khu Minh Khai giá tốt` }));
+    await mauDat(c);
+    const sap = async (): Promise<Nhan> => ({ model: "m", listing_intent: "unknown", kind: null, probability: null, probabilities: null, quote: null, quote_ok: null, json_ok: false, error_kind: "GatewayError", latency_ms: 1, cost_usd: 0 });
+    const n = noi(c, { hoi: sap, chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), n), 3, "lỗi gọi hàng loạt không được thoát 0");
+    assert.ok(n.dong.some((d) => d.includes("đã đọc 0") && d.includes("còn lại 3")), `phải báo đúng tiến độ: ${n.dong}`);
+    const m = noi(c, { hoi: hoiGia(() => "{\"intent\":\"off"), chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), m), 3, "JSON hỏng cũng là chưa đọc được");
+    assert.ok(m.dong.some((d) => d.includes("đã đọc 0") && d.includes("còn lại 3")), `${m.dong}`);
+    const k = noi(c, { hoi: hoiGia(() => traLoi({})), chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), k), 0);
+    assert.ok(k.dong.some((d) => d.includes("đã đọc 3") && d.includes("còn lại 0")), `${k.dong}`);
+  });
+});
+
 test("LS1-AC-8 --thu không ghi dòng nào kể cả ai_calls; đối chứng: lượt thường có ghi", async () => {
   await withTx(async (c) => {
     await nen(c);
