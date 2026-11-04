@@ -717,12 +717,9 @@ test("GCN-AC-10 tin vua co nguoi gan: biểu mẫu thật nhận 409 của route
   const sau = await taoNguoi(sc, "ops")
   const { POST } = await import("../src/app/api/v1/ops/labels/route")
   const { LabelFormNhom } = await import("../src/components/ops/labels/label-form-nhom")
-  const { toast } = await import("sonner")
-  const gocInfo = toast.info
   const gocFetch = globalThis.fetch
   const dom = await dungDom()
   const cau: string[] = []
-  toast.info = ((m: string) => { cau.push(m); return 0 }) as typeof toast.info
   // Fetch đi qua route thật, thân thay bằng lượt hợp lệ: ca này đo kết cục của route trên biểu mẫu, không đo khâu điền.
   globalThis.fetch = (async (url: string, init: RequestInit) =>
     POST(new Request(`http://localhost${url}`, {
@@ -732,20 +729,19 @@ test("GCN-AC-10 tin vua co nguoi gan: biểu mẫu thật nhận 409 của route
   try {
     const tin = (itemId: number) => ({ itemId, lat: LAT, doubleLabel: false, soNguoi: 0, text: CHU, groupName: "N", postedAt: null })
     const di: string[] = []
-    await dom.render(<LabelFormNhom lat={LAT} tin={tin(1)} hrefXem="/xem-1" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.render(<LabelFormNhom lat={LAT} tin={tin(1)} hrefXem="/xem-1" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} baoTin={(m) => cau.push(m)} />)
     await dom.bam("Lưu và xem máy đọc")
     await dom.cho(() => di.length === 1)
     assert.deepEqual(cau, ["Tin này vừa có người gắn — chuyển tin kế"])
     assert.deepEqual(di, ["/tin-ke"])
     // Đối chứng dương: bài 2 còn chỗ, cùng biểu mẫu sang lượt hai, không có câu trên.
     document.body.innerHTML = "<div id=root></div>"
-    await dom.render(<LabelFormNhom lat={LAT} tin={tin(2)} hrefXem="/xem-2" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
+    await dom.render(<LabelFormNhom lat={LAT} tin={tin(2)} hrefXem="/xem-2" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} baoTin={(m) => cau.push(m)} />)
     await dom.bam("Lưu và xem máy đọc")
     await dom.cho(() => di.length === 2)
     assert.deepEqual(di, ["/tin-ke", "/xem-2"])
     assert.equal(cau.length, 1)
   } finally {
-    toast.info = gocInfo
     globalThis.fetch = gocFetch
     await dom.xong()
   }

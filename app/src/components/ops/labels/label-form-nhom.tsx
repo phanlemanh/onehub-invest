@@ -37,12 +37,14 @@ export function LabelFormNhom({
   hrefXem,
   hrefTinKe,
   diToi = diTrang,
+  baoTin = toast.info,
 }: {
   lat: string
   tin: TinGan
   hrefXem: string
   hrefTinKe: string
   diToi?: (href: string) => void
+  baoTin?: (cau: string) => unknown
 }) {
   const [cells, setCells] = useState<Partial<Record<LabelField, O>>>({})
   const [donVi, setDonVi] = useState<PriceUnit>("ty")
@@ -72,7 +74,7 @@ export function LabelFormNhom({
         setLoi(kq.loi)
         requestAnimationFrame(() => document.querySelector("[data-loi]")?.scrollIntoView({ block: "center" }))
       } else if (kq.kind === "da-co-nguoi") {
-        toast.info(cauTinKe(kq.error))
+        baoTin(cauTinKe(kq.error))
         diToi(hrefTinKe)
       } else if (kq.kind === "loi-may-chu") toast.error(kq.error)
       else if (kq.kind === "da-luu") diToi(hrefXem)
