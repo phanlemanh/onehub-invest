@@ -10,7 +10,7 @@ import { Item, ItemMedia } from "@/components/ui/item";
 
 export const metadata: Metadata = {
   title: "Phương pháp & thuật ngữ",
-  description: "Cách One Invest thu thập dữ liệu Airbnb và tính công suất, ADR, RevPAR, lợi suất.",
+  description: "Cách One Invest thu thập dữ liệu thuê ngắn hạn và tính công suất, ADR, RevPAR, lợi suất.",
 };
 
 /**

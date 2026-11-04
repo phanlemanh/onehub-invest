@@ -88,7 +88,7 @@ export default async function FinderPage({
           </div>
         </div>
         <p className="text-muted-foreground text-xs">
-          Xếp hạng theo số liệu Airbnb tự thu thập · lịch đặt các tháng tới · bấm một dòng
+          Xếp hạng theo số liệu tự thu thập · lịch đặt các tháng tới · bấm một dòng
           hoặc một vùng trên bản đồ để xem Insight
         </p>
       </div>

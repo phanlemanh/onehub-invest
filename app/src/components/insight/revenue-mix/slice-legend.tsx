@@ -31,7 +31,7 @@ export function InfoTooltip() {
         {CHART_ICONS.info}
       </TooltipTrigger>
       <TooltipContent side="top">
-        Tổng giá niêm yết các đêm đã đặt, chia theo loại phòng Airbnb.
+        Tổng giá niêm yết các đêm đã đặt, chia theo loại phòng.
       </TooltipContent>
     </Tooltip>
   )

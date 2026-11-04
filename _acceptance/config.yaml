@@ -183,8 +183,12 @@ executors:
     sg_sync: "node --test pipeline/sync-cloud.test.mjs && cd pipeline && node --test scripts/so-ghep-s06-cloud.itest.mjs"   # so-ghep-s06-nhan-danh-ba E6
     sg_api: "cd app && node --import tsx --test tests/so-ghep-nhan.test.tsx"   # so-ghep-s06-nhan-danh-ba E7 — hai route thật, lược đồ tạm
     sg_ui: "cd app && node --import tsx --test tests/so-ghep-nhan-giao-dien.test.tsx"   # so-ghep-s06-nhan-danh-ba E8
+    cn_quet: "node --test scripts/quet-ten-nguon-html.test.mjs"   # chu-nguon-tren-cong E1, E3 — hai thước tên nguồn, máy chủ giả, không DB
+    cn_app: "cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx"   # chu-nguon-tren-cong E4, E5 — chữ giá rao, nút giải thích nhãn; jsdom, không DB
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của sáu trang trên bản chạy; không đo được thì thoát 2
+    cn_tinh: "node scripts/check-invest-tier-a.mjs"   # chu-nguon-tren-cong E3 — chữ hiển thị trong mã của năm trang và tệp chúng import
     can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
     sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest

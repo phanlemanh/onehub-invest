@@ -159,7 +159,7 @@ function SummaryBanner({
               {inputs.bedrooms === 0 ? "Studio" : `${inputs.bedrooms} phòng ngủ`} · {fmtInt(inputs.sqm)} m²
             </h2>
             <p className="mt-1 line-clamp-1 text-sm text-white/75">
-              {area ? `${area.name} · ${fmtInt(area.listings)} listing Airbnb trong phường` : "Chọn phường"}
+              {area ? `${area.name} · ${fmtInt(area.listings)} listing trong phường` : "Chọn phường"}
             </p>
           </div>
         </div>
@@ -246,7 +246,7 @@ export function YieldForm({
             <FieldGroup className="gap-0">
               <FormRow
                 title="Phường"
-                description="Listing Airbnb của phường dùng làm mẫu so sánh."
+                description="Listing của phường dùng làm mẫu so sánh."
                 htmlFor="yield-area"
               >
                 <Select
@@ -265,7 +265,7 @@ export function YieldForm({
                             <span className="font-medium">{a.name}</span>
                             <small className="text-muted-foreground line-clamp-1 text-xs">
                               {fmtInt(a.listings)} listing
-                              {a.medianPerm2 ? ` · ${fmtMoneyCompact(a.medianPerm2, currency)}/m² (mô phỏng)` : ""}
+                              {a.medianPerm2 ? ` · ${fmtMoneyCompact(a.medianPerm2, currency)}/m² (giá rao)` : ""}
                             </small>
                           </span>
                         </SelectItem>
@@ -288,7 +288,7 @@ export function YieldForm({
                 description={
                   suggested ? (
                     <>
-                      Gợi ý theo giá/m² mô phỏng của phường:{" "}
+                      Gợi ý theo giá rao/m² của phường:{" "}
                       <Button
                         type="button"
                         variant="link"
@@ -328,7 +328,7 @@ export function YieldForm({
                 <Num id="yield-mgmt" value={Math.round(inputs.mgmtPct * 100)} min={0} max={50} step={1} suffix="% doanh thu" onChange={(v) => patch({ mgmtPct: v / 100 })} />
               </FormRow>
               <InsetSeparator />
-              <FormRow title="Phí nền tảng" description="Phí host của Airbnb." htmlFor="yield-platform">
+              <FormRow title="Phí nền tảng" description="Phí host của nền tảng." htmlFor="yield-platform">
                 <Num id="yield-platform" value={Math.round(inputs.platformPct * 100)} min={0} max={20} step={1} suffix="% doanh thu" onChange={(v) => patch({ platformPct: v / 100 })} />
               </FormRow>
               <InsetSeparator />
@@ -370,7 +370,7 @@ export function YieldForm({
 
         <FrameFooter className="flex-row flex-wrap items-center justify-between gap-2">
           <span className="text-muted-foreground text-xs">
-            * Giá bán, giá thuê dài hạn là dữ liệu mô phỏng (G1).
+            * Giá bán, giá thuê dài hạn là trung vị giá rao của tin thật, chưa phải giá giao dịch.
           </span>
           <div className="flex gap-2">
             <Button

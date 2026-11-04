@@ -59,7 +59,7 @@ export function RegisterForm({
                 Đầu tư cho thuê ngắn hạn bằng số liệu, không bằng cảm tính.
               </h1>
               <p className="text-muted-foreground max-w-xl text-base leading-relaxed text-pretty sm:text-lg">
-                Công suất, giá phòng và lợi suất theo từng phường, từ lịch Airbnb
+                Công suất, giá phòng và lợi suất theo từng phường, từ lịch đặt
                 tự thu thập. Tài khoản miễn phí để lưu khu vực và quay lại sau.
               </p>
             </div>
