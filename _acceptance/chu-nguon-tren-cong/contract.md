@@ -5,7 +5,7 @@ slug: chu-nguon-tren-cong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-04
 veto_state: mo
@@ -85,3 +85,35 @@ Known limits:
 - Đường link trang gốc trên miền S01 của `/listing/[id]` giữ nguyên, ngoại lệ có tên do Mạnh chốt 04/11. Phép quét đếm riêng đúng khuôn link trên đúng trang đó.
 - Tiêu đề listing do chủ nhà gõ có thể mang tên S01 (1/838 ở DB máy thu). Tiêu đề đó hiện đúng như chủ nhà gõ ở thẻ listing và trang của listing, gồm `<h1>`, `<title>`, `alt`. Phép quét đếm riêng ở ô thuê ngắn hạn và trang listing, in ở báo cáo, không đỏ; chữ của cổng trên hai trang đó vẫn đỏ nếu có tên.
 - Ảnh listing vẫn trỏ CDN của S01; miền CDN không khớp sổ tên nên phép quét không đo.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-04:
+  - Ngoài-1: Nếu sau này có người cho một trang công khai gọi hàm đọc số liệu nguồn S02 mà tên hàm không chứa tên nguồn, bộ kiểm tự động sẽ không báo, và số S02 có thể lên cổng mà không ai hay.
+  - Ngoài-2: Bộ kiểm tự động của phép quét có thể chạy theo hai nhánh khác nhau tùy máy có cơ sở dữ liệu hay không, nên kết quả xanh trên máy này chưa chắc nói được điều giống hệt trên máy khác.
+  - Ngoài-3: Nếu Next đổi cách đóng gói dữ liệu nhúng trong trang, bộ kiểm có thể vẫn xanh trong khi phép quét thật đọc sai tiêu đề được miễn.
+  - Ngoài-4: Khi phép quét gặp lỗi lập trình thay vì trang không tới được, nó vẫn báo giống nhau là không đo được, nên người kiểm có thể mất công đoán nguyên nhân.
+  - Ngoài-5: Câu nói giá là giá rao, chưa phải giá giao dịch trên trang So sánh và trang chủ chưa được kiểm trên trang đã hiển thị, nên có thể thiếu trên màn hình thật mà bộ kiểm vẫn xanh.
+  - Ngoài-7: Khi sau này sửa bộ nhận diện tên nguồn, hồ sơ nghiệm thu của một phép kiểm có thể không tự báo là cũ. Người dùng cổng không bị ảnh hưởng.
+  - Ngoài-8: Hồ sơ kiểm giao diện ghi sai trang được đo, nhưng ảnh bằng chứng vẫn chụp đúng bốn trang cần xem. Người dùng cổng không bị ảnh hưởng.
+  - Ngoài-9: Nếu sau này lập trình viên gán chữ có tên nguồn bằng một dạng viết tắt hiếm, bộ kiểm mã nguồn sẽ không báo. Hiện trên cổng chưa có chỗ nào như vậy.
+  - Ngoài-10: Sửa bộ nhận diện tên nguồn sau này có thể không làm một số phép kiểm cũ bị đánh dấu cần chạy lại. Người dùng cổng không bị ảnh hưởng.
+  - Ngoài-11: Nếu có người sửa nhầm để mọi trang đều được miễn tên, bộ test hiện tại sẽ không báo ngay. Hiện hành vi trên cổng vẫn đúng.
+  - Ngoài-12: Nhãn «Mô phỏng» có thể bị chuyển nhầm sang ô khác mà bộ test không phát hiện. Hiện các nhãn đang đặt đúng chỗ.
+  - Ngoài-13: Bộ test có thể xanh dù mã snapshot lại bị đưa ra trình duyệt nếu đổi tên kiểu dữ liệu. Hiện chưa có mã nào bị đưa ra.
+  - Ngoài-14: Nếu ai đó thay ba trang trong danh sách quét bằng trang khác, bộ test sẽ không báo, và ba trang đó có thể bị bỏ sót khi kiểm.
+  - Ngoài-15: Rào chặn đọc số của nguồn S02 trên cổng có thể mất tác dụng với hai dạng gọi mà không ai biết. Hiện cổng không gọi S02.
+  - Ngoài-16: Nếu ngoại lệ cho đường link trang gốc bị nới quá rộng, bộ kiểm mã nguồn có thể cho tên nguồn lọt ở các tệp khác mà test không báo.
+  - Ngoài-17: Nếu danh sách chữ bắt buộc bị xoá bớt, bộ test vẫn xanh và hai trang Tổng quan Hà Nội, Lợi suất có thể không còn được kiểm câu «chưa phải giá giao dịch».
+  - Ngoài-18: Chưa có phép đo xác nhận người dùng thực sự thấy câu «giá rao, chưa phải giá giao dịch» trên trang So sánh và trang chủ, dù câu có trong mã.
+  - Ngoài-19: Phép quét tên nguồn có thể đo nhầm một bản chạy khác thay vì bản đang nghiệm thu mà vẫn báo sạch. Lần quét trên bản thật sau triển khai vẫn bù lại.
+  - Ngoài-20: Bộ kiểm mã nguồn có thể bỏ sót một số tệp được nạp theo kiểu hiếm mà test không báo. Hiện chưa thấy tệp nào bị bỏ sót.
+  - Ngoài-21: Bộ test không phân biệt được thẻ tin có hiện tiêu đề hay thiếu chữ mô tả ảnh, nên có thể bỏ sót một thay đổi nhỏ ở thẻ.
+  - Ngoài-22: Khi không kết nối được tới trang, thước vẫn báo lỗi đúng nhưng nội dung thông báo không được kiểm, nên có thể khó đọc hơn mong đợi.
+  - Ngoài-23: Người đọc hồ sơ nghiệm thu có thể lần theo nhầm tiêu chí khi tra bằng chứng. Người dùng cổng Invest không thấy ảnh hưởng nào.
+  - Ngoài-24: Chú thích trong sổ lệnh kiểm mô tả sai phạm vi một số phép đo, nên người vận hành có thể hiểu nhầm phép đo làm gì. Người dùng cổng không bị ảnh hưởng.
+  - Ngoài-25: Nếu chạy phép quét ở máy không có cơ sở dữ liệu, nó có thể báo sạch trong khi chưa kiểm tên của một nguồn. Người dùng có thể tưởng cổng đã được kiểm đủ.
+  - Ngoài-28: Phép kiểm tự động về việc bỏ qua chữ trong câu lệnh dữ liệu có thể xanh dù không thực sự đo. Người dùng cổng không thấy ảnh hưởng ngay.
+  - Ngoài-29: Bài kiểm đảm bảo mã phiên thu không lộ ra trình duyệt có thể không còn bắt được lỗi nếu cấu trúc mã đổi. Hiện người dùng chưa thấy ảnh hưởng.
+  - Ngoài-30: Nếu sau này ai đó chuyển nhãn «Mô phỏng» sang nhầm ô, bài kiểm tự động sẽ không báo, và người dùng có thể thấy số mô hình không có nhãn. Hiện tại nhãn vẫn ở đúng chỗ.
+  - Ngoài-31: Bài kiểm không phát hiện nếu ai đó bỏ nhầm ba trang khỏi phép quét tên nguồn, khiến các trang đó không được kiểm. Hiện danh sách vẫn đủ.
+  - Ngoài-32: Nếu danh sách chữ bắt buộc như «chưa phải giá giao dịch» bị rút bớt, phép kiểm vẫn xanh và trang có thể thiếu câu cảnh báo giá. Hiện các câu này vẫn có trên trang.
+  - Ngoài-33: Nếu ngoại lệ cho phép tên nguồn bị nới nhầm ra nhiều trang, phép kiểm tự động sẽ không đỏ và tên có thể lọt lên cổng. Hiện ngoại lệ vẫn giới hạn đúng trang.
+  - Ngoài-34: Nếu sau này ai gọi thẳng bảng số S02 từ trang công khai, bài kiểm tự động có thể không đỏ và số S02 có thể lên cổng. Hiện chưa có trang nào làm vậy.

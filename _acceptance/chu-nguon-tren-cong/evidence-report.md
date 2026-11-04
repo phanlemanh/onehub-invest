@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 50f7022c5917808a40ebda818ac6257f7d143d02
-human_signoff:
+human_signoff: Mạnh 2026-11-04
 ---
 
 # Evidence Report: chu-nguon-tren-cong
@@ -99,7 +99,7 @@ human_signoff:
 - eval: E6
   run_id: minted-chu-nguon-tren-cong-E6-r1
   exit_code: 0
-  verifier: ui-check
+  verifier: config:capture.ui
   verified_at: 2026-11-04T04:07:20Z
   carried_from_round: 1
   note: carry-forward tu round 1 — delta khong cham paths cua eval
