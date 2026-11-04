@@ -5,7 +5,7 @@ slug: gan-nhan-theo-nhom-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-04-gan-nhan-theo-nhom-s03-design.md
 approved_by: Mạnh
 approved_at: 2026-11-04
@@ -66,3 +66,23 @@ approved_at: 2026-11-04
 - Dự án, phân khu ghi tên đầy đủ, không ghi bí danh; bí danh ghi vào Lý do. Nếu không thì «RB» và «Rainbow» thành bất đồng giả.
 - Phạm vi nâng 04/11: AC-11 đến AC-14 do giám sát quyết theo uỷ quyền của Mạnh (sổ quyết định), Mạnh đọc ở Cổng Bằng chứng.
 - Số migration 072, LL đã cấp trong sổ (071 dành cho SV2). S4 và đường nền chạy dưới khoá s4, không chạy khi job S06 còn chạy; áp lên DB thật cần Mạnh duyệt kèm `pg_dump`. Mọi phép đo chạy trên DB thử `oneinvest_gcn_nhan`, không chạy migration chưa gộp trên `oneinvest`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-04:
+  - Ngoài-1: Một số mã lưu trong cơ sở dữ liệu còn bằng tiếng Việt, lệch quy ước đặt tên; người gắn nhãn không thấy khác biệt.
+  - Ngoài-2: Nếu ai đó dán một đoạn chữ cực dài vào ô Lý do hay Ghi chú, hệ thống có thể báo lỗi chung thay vì nhắc gọn gàng; người gắn nhãn chỉ gặp khi cố tình dán rất nhiều chữ.
+  - Ngoài-3: Nếu tự gõ một mã tin kỳ lạ vào địa chỉ trang xem máy đọc, người dùng có thể nhận lỗi chung thay vì thông báo mã tin không hợp lệ.
+  - Ngoài-4: Chỉ chương trình tự dựng yêu cầu sai khuôn mới gặp lỗi chung thay vì thông báo đúng ô; người gắn nhãn dùng biểu mẫu trên màn hình không bao giờ gặp.
+  - Ngoài-5: Tài liệu từ vựng chung còn tả màn gắn nhãn là chín trường trong khi màn nay có mười bảy, và vài nhãn mới chưa có mục giải thích.
+  - Ngoài-6: Khi bài ghi giá như «4,35 tỷ», người gắn nhãn có thể khai diện tích hay trục là 35 với căn cứ «Chữ bài» mà hệ thống không chặn, nên một nhãn có căn cứ sai có thể được lưu.
+  - Ngoài-7: Nếu sau này ai bỏ bớt một loại trường hợp khỏi danh sách chọn, bài kiểm tự động vẫn báo xanh nên có thể không ai hay biết.
+  - Ngoài-8: Danh sách trường hợp xuất ra có thể đổi thứ tự giữa hai lần chạy mà bài kiểm tự động không phát hiện, làm người viết quy ước thấy bản xuất lúc thế này lúc thế khác.
+  - Ngoài-9: Nếu chín trường nhãn cũ biến mất khỏi bảng đồng thuận, phép kiểm vẫn có thể báo là không đổi nên lỗi có thể không bị bắt.
+  - Ngoài-10: Màn khung chờ khi trang đang tải chưa được kiểm tự động, nên nếu bố cục khung chờ lệch so với màn thật thì sẽ không ai bị cảnh báo.
+  - Ngoài-11: Ba phần giao diện mới sửa không được máy kiểm lỗi thiết kế tự động, nên một lỗi trình bày ở đó có thể lọt qua mà không báo.
+  - Ngoài-12: Lệnh lấy mẫu có thể in sai số bài bỏ vì trùng hoặc số nhóm thiếu mà phép kiểm vẫn báo đạt, làm người vận hành hiểu sai số bài thực sự lấy được.
+  - Ngoài-13: Nếu hai nhãn ô bị đổi chỗ cho nhau, phép kiểm tự động vẫn xanh và người gắn nhãn có thể điền nhầm ô.
+  - Ngoài-14: Câu báo số bài chờ người thứ hai khi đã gắn hết nhóm chưa được thử từ đầu đến cuối, nên một chỗ nối sai có thể làm câu này không hiện mà không ai biết.
+  - Ngoài-15: Không có hậu quả trực tiếp cho người dùng: trạng thái tin vừa có người gắn vẫn được kiểm thật ở một ca khác.
+  - Ngoài-16: Phép kiểm chặn việc màn lượt một đọc giá trị máy chưa từng được thử với một ca vi phạm cố ý, nên có thể không bắt được nếu có ai vô tình nối thêm đường đọc.
+  - Ngoài-17: Chưa có phép kiểm nào xác nhận vai ops thấy cùng số liệu bảng trường hợp với vai khác, dù hiện tại số vẫn đúng.
+  - Ngoài-19: Một từ bị cấm hoặc chữ tiếng Anh lẫn vào nhãn ô hay câu báo lỗi lượt hai có thể không bị máy quét chữ phát hiện, nên người gắn nhãn có thể thấy chữ sai chuẩn.
+  - Ngoài-22: Khi để trống ô Nhiều căn rồi bấm Lưu, máy bảo chọn «Không suy ra được» trong khi ô đó không có; người gắn nhãn tự chọn Không hoặc Có là xong.
