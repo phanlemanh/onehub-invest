@@ -305,7 +305,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn."
     },
     {
       "ma": "PL14",
@@ -3567,7 +3567,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được."
+      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²)."
     },
     {
       "ma": "GC3",
@@ -3611,7 +3611,7 @@
       ],
       "dot": "gan-can-s03-0411",
       "nhom": "gan-can",
-      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels cùng thẻ nhóm, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
+      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels cùng thẻ nhóm, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
       "bat_khi": "Chọn mẫu theo nhóm chạy lại không thêm dòng; lượt xem máy đọc không đổi được nhãn mù; bảng trường hợp khớp đếm SQL độc lập; 0 nhãn rời máy thu",
       "vi_sao": "Đo 04/11: chưa có nhãn người nào, số độ đúng đều do tác tử Claude gắn. Màn PL7 đã có nhưng thiếu các trường trên và chưa có lượt ghi trường hợp. PL13, PL20, GC2 đều chấm trên tập test có nhãn người. Mạnh 04/11: chỉ nhìn chữ thì không biết tin thuộc đâu (`RB` là Rainbow, nhóm mặc định Grand Park); 2.629/3.583 tin căn hộ không nêu dự án trong chữ.",
       "vung": [
@@ -3622,7 +3622,7 @@
         "pipeline/label-sample.mjs",
         "pipeline/lib/eval-labels.mjs"
       ],
-      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật. Nhãn ghi điều người trong nhóm hiểu, không phải chỉ chữ bài; căn cứ chia chữ bài, ngữ cảnh nhóm, kiến thức nghề. 11 tiêu chí vì thẻ nhóm, trường mới và căn cứ phải giao cùng nhau mới gắn được một bài trọn vẹn."
+      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật. Nhãn ghi điều người trong nhóm hiểu, không phải chỉ chữ bài; căn cứ chia chữ bài, ngữ cảnh nhóm, kiến thức nghề. 11 tiêu chí vì thẻ nhóm, trường mới và căn cứ phải giao cùng nhau mới gắn được một bài trọn vẹn. Số WC do Mạnh phát hiện thiếu khi gắn thử 04/11."
     },
     {
       "ma": "GCQ1",
