@@ -25,13 +25,17 @@ if [ "${SKIP_COLLECT:-0}" != "1" ]; then
     echo "--- $CITY: discovery ---"
     # 3110-7: query khu vực xoay vòng theo đêm (s01-shards.mjs đọc bảng areas,
     # stateless theo chỉ số ngày); collector tự chạy query thành phố trước.
-    # 3110-7 MỞ LẠI (3): KHÔNG nuốt stderr — shards lỗi thì in MỘT dòng cảnh báo
-    # (kèm dòng lỗi cuối) và chạy query thành phố như cũ, không dừng lượt.
-    SHARDS_OUT="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>&1)" || {
-      echo "cảnh báo: s01-shards lỗi ($(printf '%s' "$SHARDS_OUT" | tail -1)) — chạy query thành phố như cũ"
-      SHARDS_OUT=""
-    }
-    SHARDS="$(printf '%s' "$SHARDS_OUT" | head -1)"
+    # 3110-7 MỞ LẠI vòng 3: tách stdout/stderr — stdout là danh sách query, stderr
+    # ghi tệp tạm và CHỈ in khi thoát khác 0. Thoát 0 mà có stderr (cảnh báo node)
+    # không lọt vào danh sách query nữa.
+    SHARDS_ERR="$(mktemp)"
+    SHARDS="$(node "$PIPELINE_DIR/s01-shards.mjs" "$CITY" 2>"$SHARDS_ERR" | head -1)"
+    RC_SHARDS=$?
+    if [ $RC_SHARDS -ne 0 ]; then
+      echo "cảnh báo: s01-shards lỗi rc=$RC_SHARDS ($(tail -1 "$SHARDS_ERR")) — chạy query thành phố như cũ"
+      SHARDS=""
+    fi
+    rm -f "$SHARDS_ERR"
     export AIRBNB_DISCOVERY_QUERIES="$SHARDS"
     (cd "$COLLECTOR_DIR" && npm run collect -- collect --city "$CITY" --source airbnb-discovery)
     unset AIRBNB_DISCOVERY_QUERIES
