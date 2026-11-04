@@ -3611,7 +3611,7 @@
       ],
       "dot": "gan-can-s03-0411",
       "nhom": "gan-can",
-      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels cùng thẻ nhóm, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
+      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels cùng thẻ nhóm, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
       "bat_khi": "Chọn mẫu theo nhóm chạy lại không thêm dòng; lượt xem máy đọc không đổi được nhãn mù; bảng trường hợp khớp đếm SQL độc lập; 0 nhãn rời máy thu",
       "vi_sao": "Đo 04/11: chưa có nhãn người nào, số độ đúng đều do tác tử Claude gắn. Màn PL7 đã có nhưng thiếu các trường trên và chưa có lượt ghi trường hợp. PL13, PL20, GC2 đều chấm trên tập test có nhãn người. Mạnh 04/11: chỉ nhìn chữ thì không biết tin thuộc đâu (`RB` là Rainbow, nhóm mặc định Grand Park); 2.629/3.583 tin căn hộ không nêu dự án trong chữ.",
       "vung": [
@@ -3622,7 +3622,7 @@
         "pipeline/label-sample.mjs",
         "pipeline/lib/eval-labels.mjs"
       ],
-      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật. Nhãn ghi điều người trong nhóm hiểu, không phải chỉ chữ bài; căn cứ chia chữ bài, ngữ cảnh nhóm, kiến thức nghề. 11 tiêu chí vì thẻ nhóm, trường mới và căn cứ phải giao cùng nhau mới gắn được một bài trọn vẹn. Số WC do Mạnh phát hiện thiếu khi gắn thử 04/11."
+      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật. Nhãn ghi điều người trong nhóm hiểu, không phải chỉ chữ bài; căn cứ chia chữ bài, ngữ cảnh nhóm, kiến thức nghề. 11 tiêu chí vì thẻ nhóm, trường mới và căn cứ phải giao cùng nhau mới gắn được một bài trọn vẹn. Số WC do Mạnh phát hiện thiếu khi gắn thử 04/11. Mạnh nêu 04/11 màn chưa có chỗ giải thích: thêm ô lý do cho từng bài, bắt buộc khi có trường căn cứ không phải chữ bài, ghi trước khi xem máy đọc để không bị máy dẫn dắt."
     },
     {
       "ma": "GCQ1",
@@ -3646,7 +3646,7 @@
         "pipeline/lib/eval-labels.mjs",
         "pipeline/label-sample.mjs"
       ],
-      "ghi_chu": "Nạp từ tệp đã duyệt qua đường khai-so-nhom sẵn có, không chờ màn ON20. Nháp do máy viết, người duyệt; tệp ở research-local, không vào kho. Ngưỡng chốt ở Cổng Phạm vi: review Q4(b) ghi precision ≥95%, cận dưới 0,95 cần ít nhất 73 bài đúng hết mỗi nhóm; cận dưới 0,80 cần 29/30."
+      "ghi_chu": "Nạp từ tệp đã duyệt qua đường khai-so-nhom sẵn có, không chờ màn ON20. Nháp do máy viết, người duyệt; tệp ở research-local, không vào kho. Ngưỡng chốt ở Cổng Phạm vi: review Q4(b) ghi precision ≥95%, cận dưới 0,95 cần ít nhất 73 bài đúng hết mỗi nhóm; cận dưới 0,80 cần 29/30. Nháp quy ước lấy từ lý do người gắn ghi ở GC0; LLM chỉ được gợi ý gom, người duyệt."
     },
     {
       "ma": "GCQ2",

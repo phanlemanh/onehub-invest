@@ -29,7 +29,7 @@ dot: gan-can-s03-0411
 dang: chuoi
 nguon: onehub-invest-tri-thuc:wiki/chu-de/gan-can-s03.md#6c0cf105d554e17be3322218d457f5e33e85bc97
 
-- `GC0` — mở rộng màn gắn nhãn: mẫu theo nhóm, thêm trường gồm số WC, lượt ghi trường hợp, bảng trường hợp theo nhóm
+- `GC0` — mở rộng màn gắn nhãn: mẫu theo nhóm, thêm trường gồm số WC và lý do, lượt ghi trường hợp, bảng trường hợp theo nhóm
 - `GCQ1` — quy ước chuẩn hoá theo từng nhóm, có phiên bản, đo trên nhãn người, đạt mới bật
 - `GCQ2` — ghi dự án, phân khu, toà từ quy ước đã bật thành phát biểu suy ra; chữ bài thắng
 - `GC1` — đọc đủ số m² bộ đọc đang sót: nhãn «Diện tích» không đơn vị, chữ kiểu Unicode
