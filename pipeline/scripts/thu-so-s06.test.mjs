@@ -81,3 +81,51 @@ test("loi-trang nhanh 5 lần liền là ngưỡng riêng (thoát 3), không c�
   for (let i = 0; i < 4; i++) st3 = buoc("loi-trang", 1, st3);
   assert.equal(st3.loiNhanhLien, 4, "4 lần chưa đạt ngưỡng 5");
 });
+
+// 0411-6(2): đếm theo TỪNG LUỒNG — 3 loi-nhanh liền của MỘT luồng mở tab mới
+// (không dừng lượt), 2 lần thay tab liên tiếp vẫn hỏng mới thoát 3.
+test("loi-nhanh theo luồng: 3 lần liền mở tab mới, 2 lần thay tab liên tiếp mới dừng lượt", () => {
+  function buoc(st, trangThai, ms) {
+    if (trangThai === "loi-trang" && ms < 100) {
+      const lien = st.loiNhanhLienToi + 1;
+      if (lien >= 3) {
+        const lanThay = st.lanThayTab + 1;
+        return lanThay > 2
+          ? { ...st, dung: true }
+          : { ...st, lanThayTab: lanThay, loiNhanhLienToi: 0 };
+      }
+      return { ...st, loiNhanhLienToi: lien };
+    }
+    return { lanThayTab: 0, loiNhanhLienToi: 0, dung: st.dung };
+  }
+  // 3 lần liền → thay tab, chưa dừng
+  let st = { lanThayTab: 0, loiNhanhLienToi: 0, dung: false };
+  st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1);
+  assert.equal(st.lanThayTab, 1, "3 lần liền → thay tab lần 1");
+  assert.equal(st.dung, false, "chưa dừng lượt");
+  // tab mới cũng hỏng: 3 lần nữa → thay lần 2 (vẫn chưa); 3 lần nữa → dừng
+  st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1);
+  assert.equal(st.lanThayTab, 2); assert.equal(st.dung, false);
+  st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1); st = buoc(st, "loi-trang", 1);
+  assert.equal(st.dung, true, "2 lần thay tab vẫn hỏng → Chrome chết thật → dừng");
+  // lỗi nguồn xen vào reset chuỗi thay tab
+  let st2 = { lanThayTab: 1, loiNhanhLienToi: 0, dung: false };
+  st2 = buoc(st2, "co-so", 3000);
+  assert.equal(st2.lanThayTab, 0, "lời gọi tốt reset bộ đếm thay tab");
+});
+
+// 0411-6(3) — test poll chờ node thoát của len-2-luong: hàm chờ với pgrep giả
+test("poll chờ node thoát: dừng ngay khi tiến trình giả thoát, quá 180s thì BÁO không vào dem6", () => {
+  // mô phỏng vòng chờ của len-2-luong.sh: mỗi giây kiểm tra; ở đây gọi trực tiếp
+  const choThoat = (conSong, gioiHan = 180) => {
+    for (let i = 1; i <= gioiHan; i++) {
+      if (!conSong()) return { ok: true, giay: i };
+    }
+    return { ok: false, giay: gioiHan };
+  };
+  {
+    let t = 0;
+    assert.deepEqual(choThoat(() => (t++, t <= 3)), { ok: true, giay: 4 }, "thoát sau 4 giây");
+  }
+  assert.deepEqual(choThoat(() => true, 5), { ok: false, giay: 5 }, "quá hạn → không ok (BÁO, không vào dem6)");
+});

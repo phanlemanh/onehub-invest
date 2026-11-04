@@ -443,9 +443,9 @@ async function main() {
   let iViec = 0;
   let khongNutLien = 0;      // 0311-20 Việc 3: ngưỡng riêng 20 lần liền
   let dungNguongKhongNut = false;
-  let loiNhanhLien = 0;      // 0411-3: chuỗi loi-trang <100ms (Chrome chết)
-  let loiNhanhTong = 0;      // để tính lời gọi thật trong [nấc]
+  let loiNhanhTong = 0;      // tổng loi-nhanh mọi luồng — [nấc] tính lời gọi thật
   let dungNguongLoiNhanh = false;
+  let lanThayTab = 0;        // 0411-6: số lần thay tab liên tiếp (Chrome chết thật?)
   try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
@@ -468,8 +468,27 @@ async function main() {
     throw new Error(`tab trùng nhau: ${new Set(tabs).size}/${THREADS} — không chạy`);
   }
 
+  // 0411-6(2): đếm theo TỪNG LUỒNG — mỗi luồng theo dõi tab riêng, tự mở tab mới
+  // khi tab/CDP hỏng (không đợi cả lượt chết); biến tổng (loiNhanhTong/chanLienTiep)
+  // chỉ tổng hợp cho [nấc].
+  async function tabMoi(idx) {
+    const ctx0s = contexts[0];
+    const truoc = new Set(ctx0s.pages());
+    try {
+      const ss = await browser.newBrowserCDPSession();
+      await ss.send("Target.createTarget", { url: "about:blank", background: true });
+      await ss.detach();
+      for (let lan = 0; lan < 40; lan++) {
+        await sleep(250);
+        const t = ctx0s.pages().find((pg) => !truoc.has(pg));
+        if (t) return t;
+      }
+    } catch {}
+    return ctx0s.newPage();
+  }
   async function motLuong(idx) {
-    const tab = tabs[idx % tabs.length];
+    let tab = tabs[idx % tabs.length];
+    let loiNhanhLienToi = 0; // chuỗi loi-nhanh THEO LUỒNG này
     while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429 && !dungNguongKhongNut && !dungNguongLoiNhanh) {
       const v = viec[iViec++];
       const tBat = Date.now();
@@ -496,17 +515,34 @@ async function main() {
       // nguồn thật: vào chuỗi chặn và đặt lại đếm 300.
       const loiTrangNhanh = kq.status === "loi-trang" && ms < 100;
       if (loiTrangNhanh) {
-        // 0411-3 Lỗi 1: Chrome/tab chết giữa lượt — lỗi nhanh ném NGAY, không lời
-        // gọi; 5 lần LIỀN thì lượt này đã vô dụng (mọi lời gọi đều ném) → dừng
-        // lượt THOÁT 3 (vòng ngoài: BÁO + nghỉ 20s + lượt mới mở Chrome mới,
-        // không tốn lần nghỉ 30′). Không cộng chuỗi chặn 5-lần của lỗi nguồn.
-        loiNhanhLien++;
-        if (loiNhanhLien >= 5) {
-          console.log(`[loi-nhanh] 5 lần loi-trang <100ms liền — Chrome/tab chết, dừng lượt`);
-          dungNguongLoiNhanh = true;
+        // 0411-6(1): phân loại CHÍNH XÁC cái gì hỏng: tab đóng / CDP mất / Chrome chết
+        const trangThai = await (() => {
+          try {
+            const tabHong = tab?.isClosed();
+            const ketNoi = browser?.isConnected();
+            return tabHong && !ketNoi ? "chrome-chet" : tabHong ? "tab-dong" : "cdp-mat";
+          } catch { return "khong-ro"; }
+        })();
+        console.log(`[loi-nhanh] ${trangThai} (luồng ${idx}, lần ${loiNhanhLienToi + 1})`);
+        loiNhanhTong++;
+        loiNhanhLienToi++;
+        if (loiNhanhLienToi >= 3) {
+          // 0411-6(2): 3 lần liền THEO LUỒNG → tab này vô dụng, mở TAB MỚI thay
+          // thế (không đợi cả lượt chết); nếu tab mới cũng hỏng ngay → sau 2 lần
+          // thay tab liên tiếp thì Chrome chết thật → dừng lượt thoát 3.
+          lanThayTab++;
+          if (lanThayTab > 2) {
+            console.log(`[loi-nhanh] thay tab 2 lần vẫn hỏng — Chrome chết thật, dừng lượt`);
+            dungNguongLoiNhanh = true;
+          } else {
+            console.log(`[loi-nhanh] mở tab mới cho luồng ${idx}`);
+            tab = await tabMoi(idx);
+            loiNhanhLienToi = 0;
+          }
         }
       } else {
-        loiNhanhLien = 0;
+        loiNhanhLienToi = 0;
+        lanThayTab = 0;
         if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) {
           chanLienTiep++;
         } else {
@@ -534,7 +570,6 @@ async function main() {
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
       else errors[kq.status] = (errors[kq.status] ?? 0) + 1;
 
-      if (loiTrangNhanh) loiNhanhTong++; // [nấc] dùng: lời gọi thật = thu - loiNhanhTong
 
       // state + mẫu đo
       const soTin1 = state.da_thu[v.list_id1 ?? v.list_id]?.phone;
