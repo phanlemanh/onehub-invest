@@ -6,7 +6,7 @@ import { kiem, noiDbThu, ROOT, URL_THU } from "../../gan-nhan-theo-nhom-s03/prob
 import { docThiTruongNhom } from "../../../pipeline/transform-zalo.mjs"
 import { LENH, voiDotBien } from "./_dot.mjs"
 
-const SNAP = "hanoi__zalo__ndkmau"
+const SNAP = "hanoi__s03__ndkmau"
 const c = await noiDbThu()
 const don = async () => {
   await c.query(`DELETE FROM eval_label_items WHERE lat LIKE 'ndk-%'`)
@@ -15,7 +15,7 @@ const don = async () => {
   await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id = $1`, [SNAP])
 }
 await don()
-await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1,'hanoi','zalo','{}'::jsonb)`, [SNAP])
+await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1,'hanoi','s03','{}'::jsonb)`, [SNAP])
 const { rows: [{ id: thiTruong }] } = await c.query(`SELECT id FROM areas WHERE region_type = 'market' ORDER BY id LIMIT 1`)
 const MA = {}
 const dangKy = async (ten, khoa, { note = null, market = [] } = {}) => {
@@ -136,7 +136,7 @@ kiem(loi, sach.status === 0 && !/tầng phụ/.test(sach.stdout), "AC-5 lat sach
 
 // AC-6: lệnh không đổi sổ và bài; thước băm đỏ khi chính probe đổi một dòng rồi hoàn lại.
 const bamSo = async () => (await c.query(`SELECT md5(string_agg(u::text, '|' ORDER BY id)) h FROM collection_units u`)).rows[0].h
-const bamBai = async () => (await c.query(`SELECT md5(string_agg(post_id || coalesce(conversation_id, ''), '|' ORDER BY post_id)) h FROM stg_zalo_posts`)).rows[0].h
+const bamBai = async () => (await c.query(`SELECT md5(string_agg(p::text, '|' ORDER BY post_id)) h FROM stg_zalo_posts p`)).rows[0].h
 const [so0, bai0] = [await bamSo(), await bamBai()]
 await c.query(`DELETE FROM eval_label_items WHERE lat = 'ndk-bam'`)
 const ghi = chay(LENH, ...co("ndk-bam"))
@@ -146,6 +146,13 @@ const tenCu = "NDK L2"
 await c.query(`UPDATE collection_units SET name = 'NDK đổi thử' WHERE unit_code = $1`, [MA.L2])
 kiem(loi, (await bamSo()) !== so0, "do: loi bam so", "loi thuoc bam khong do")
 await c.query(`UPDATE collection_units SET name = $2 WHERE unit_code = $1`, [MA.L2, tenCu])
+kiem(loi, (await bamSo()) === so0, "do: bam so ve goc sau hoan lai", "loi hoan lai so")
+// Đổi cột ngoài khoá: thước băm phải đỏ với cả dòng, không chỉ post_id và conversation_id.
+const { rows: [{ text: chuCu }] } = await c.query(`SELECT text FROM stg_zalo_posts WHERE post_id = 'ndk-1'`)
+await c.query(`UPDATE stg_zalo_posts SET text = 'NDK đổi thử' WHERE post_id = 'ndk-1'`)
+kiem(loi, (await bamBai()) !== bai0, "do: loi bam bai", "loi thuoc bam bai khong do")
+await c.query(`UPDATE stg_zalo_posts SET text = $1 WHERE post_id = 'ndk-1'`, [chuCu])
+kiem(loi, (await bamBai()) === bai0, "do: bam bai ve goc sau hoan lai", "loi hoan lai bai")
 const tt = await docThiTruongNhom(c)
 kiem(loi, tt.get("ndk-d")?.includes(thiTruong) && tt.get("ndkk:group:ndk-d")?.includes(thiTruong), "AC-6 thi truong ca hai dang", "loi thi truong mat dang khoa")
 

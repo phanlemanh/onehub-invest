@@ -107,31 +107,33 @@ test("chon theo nhom: tất định; đổi nhóm xếp sau không đổi mẫu 
   assert.deepEqual(lay(r2), lay(r1));
 });
 
-// Bảng dạng khoá của AC-4 (nhom-dang-ky-hai-lan-s03), viết tay trước khi có mã. `bai`: khoá của bài → đơn vị kỳ vọng.
+// Bảng dạng khoá của AC-4 (nhom-dang-ky-hai-lan-s03), viết tay trước khi có mã. `bai`: khoá của bài → đơn vị kỳ vọng; `that`: khoá → khoá thật kỳ vọng.
 const BANG_NHOM_THAT = [
-  { o: 1, so: [["x", "A"]], bai: { x: "A" }, gop: [] },
-  { o: 2, so: [["group:x", "A"]], bai: { x: "A", "group:x": "A" }, gop: [] },
-  { o: 3, so: [["k:group:x", "A"]], bai: { x: "A", "k:group:x": "A" }, gop: [] },
-  { o: 4, so: [["x", "A"], ["k:group:x", "B"]], bai: { x: "A", "k:group:x": "A" }, gop: [["A", ["B"]]] },
-  { o: 5, so: [["k:group:x", "A"], ["x", "B"]], bai: { x: "B", "k:group:x": "B" }, gop: [["B", ["A"]]] },
-  { o: 6, so: [["x", "A"], ["group:x", "B"], ["k:group:x", "C"]], bai: { x: "A", "group:x": "A", "k:group:x": "A" }, gop: [["A", ["B", "C"]]] },
-  { o: 7, so: [["k1:group:x", "A"], ["k2:group:x", "B"]], bai: { "k1:group:x": "A", "k2:group:x": "A" }, gop: [["A", ["B"]]] },
-  { o: 8, so: [["x", "A", "paused"], ["k:group:x", "B", "active"]], bai: { x: "A", "k:group:x": "A" }, gop: [["A", ["B"]]] },
-  { o: 9, so: [["conv-x", "A"]], bai: { "conv-x": "A" }, gop: [] },
-  { o: 10, so: [["a:b:group:x", "A"], ["x", "B"]], bai: { "a:b:group:x": "A", x: "B" }, gop: [] },
-  { o: 11, so: [["conv:x", "A"], ["x", "B"]], bai: { "conv:x": "A", x: "B" }, gop: [] },
-  { o: 12, so: [["k:group:", "A"]], bai: { "k:group:": "A" }, gop: [] },
-  { o: 13, so: [["x", "A"]], bai: { "khoa-la": null }, gop: [] },
+  { o: 1, so: [["x", "A"]], bai: { x: "A" }, that: { x: "x" }, gop: [] },
+  { o: 2, so: [["group:x", "A"]], bai: { x: "A", "group:x": "A" }, that: { x: "x", "group:x": "x" }, gop: [] },
+  { o: 3, so: [["k:group:x", "A"]], bai: { x: "A", "k:group:x": "A" }, that: { x: "x", "k:group:x": "x" }, gop: [] },
+  { o: 4, so: [["x", "A"], ["k:group:x", "B"]], bai: { x: "A", "k:group:x": "A" }, that: { x: "x", "k:group:x": "x" }, gop: [["A", ["B"]]] },
+  { o: 5, so: [["k:group:x", "A"], ["x", "B"]], bai: { x: "B", "k:group:x": "B" }, that: { x: "x", "k:group:x": "x" }, gop: [["B", ["A"]]] },
+  { o: 6, so: [["x", "A"], ["group:x", "B"], ["k:group:x", "C"]], bai: { x: "A", "group:x": "A", "k:group:x": "A" }, that: { x: "x", "group:x": "x", "k:group:x": "x" }, gop: [["A", ["B", "C"]]] },
+  { o: 7, so: [["k1:group:x", "A"], ["k2:group:x", "B"]], bai: { "k1:group:x": "A", "k2:group:x": "A" }, that: { "k1:group:x": "x", "k2:group:x": "x" }, gop: [["A", ["B"]]] },
+  { o: 8, so: [["x", "A", "paused"], ["k:group:x", "B", "active"]], bai: { x: "A", "k:group:x": "A" }, that: { x: "x", "k:group:x": "x" }, gop: [["A", ["B"]]] },
+  { o: 9, so: [["conv-x", "A"]], bai: { "conv-x": "A" }, that: { "conv-x": "conv-x" }, gop: [] },
+  { o: 10, so: [["a:b:group:x", "A"], ["x", "B"]], bai: { "a:b:group:x": "A", x: "B" }, that: { "a:b:group:x": "a:b:group:x", x: "x" }, gop: [] },
+  { o: 11, so: [["conv:x", "A"], ["x", "B"]], bai: { "conv:x": "A", x: "B" }, that: { "conv:x": "conv:x", x: "x" }, gop: [] },
+  { o: 12, so: [["k:group:", "A"]], bai: { "k:group:": "A" }, that: { "k:group:": "k:group:" }, gop: [] },
+  { o: 13, so: [["x", "A"]], bai: { "khoa-la": null }, that: { "khoa-la": "khoa-la" }, gop: [] },
 ];
 
 function kiemBangNhomThat(mod) {
   let dem = 0;
-  for (const { o, so, bai, gop } of BANG_NHOM_THAT) {
+  for (const { o, so, bai, that, gop } of BANG_NHOM_THAT) {
     const r = mod.donViTheoNhomThat(so.map(([group_key, unit_code, status]) => ({ group_key, unit_code, status })));
     const thuc = Object.fromEntries(Object.keys(bai).map((k) => [k, mod.donViCuaBai(r.donVi, k)]));
     const cungBai = JSON.stringify(thuc) === JSON.stringify(bai);
     const cungGop = JSON.stringify(r.gop.map((g) => [g.unit_code, g.gop_tu])) === JSON.stringify(gop);
-    if (!cungBai || !cungGop) throw new Error(`NHOM THAT SAI: ô ${o} bài ${JSON.stringify(thuc)} gộp ${JSON.stringify(r.gop.map((g) => [g.unit_code, g.gop_tu]))}`);
+    const khoaThat = Object.fromEntries(Object.keys(that).map((k) => [k, mod.khoaNhomThat(k)]));
+    const cungKhoa = JSON.stringify(khoaThat) === JSON.stringify(that);
+    if (!cungBai || !cungGop || !cungKhoa) throw new Error(`NHOM THAT SAI: ô ${o} bài ${JSON.stringify(thuc)} gộp ${JSON.stringify(r.gop.map((g) => [g.unit_code, g.gop_tu]))} khoá ${JSON.stringify(khoaThat)}`);
     dem++;
   }
   return dem;
@@ -151,7 +153,14 @@ async function banDotEvalLabels(a, b) {
 }
 
 test("nhom that: đúng 13 ô của bảng dạng khoá", () => {
-  assert.equal(kiemBangNhomThat({ donViTheoNhomThat, donViCuaBai }), 13);
+  assert.equal(kiemBangNhomThat({ donViTheoNhomThat, donViCuaBai, khoaNhomThat }), 13);
+});
+
+test("nhom that: hai dòng chỉ có tiền tố không gộp với nhau", () => {
+  const { gop, donVi } = donViTheoNhomThat([{ group_key: "k1:group:", unit_code: "A" }, { group_key: "k2:group:", unit_code: "B" }]);
+  assert.deepEqual(gop, []);
+  assert.equal(donViCuaBai(donVi, "k1:group:"), "A");
+  assert.equal(donViCuaBai(donVi, "k2:group:"), "B");
 });
 
 test("nhom that: bài không có khoá không ném, trả null, được đếm là bỏ", () => {
@@ -179,11 +188,14 @@ test("nhom that: sổ và bài toàn khoá trần hoặc khoá lạ → mẫu y 
     chonMauTheoNhom(bai.map((p) => ({ ...p, unit_code: nguyenVan.get(p.conversation_id) ?? null })), opt));
 });
 
-test("nhom that chiều đỏ: bản khoá nguyên văn và bản gộp quá tay làm bảng ném thông điệp ghim", async () => {
+test("nhom that chiều đỏ: bản khoá nguyên văn, bản gộp quá tay và bản bỏ chốt khoá rỗng làm bảng ném thông điệp ghim", async () => {
   assert.equal(khoaNhomThat("k:group:x"), "x");
   const moc = 'String(khoa).replace(/^(?:[^:]+:)?group:(?=.)/, "")';
   const nguyenVan = await banDotEvalLabels(moc, "String(khoa)");
   assert.throws(() => kiemBangNhomThat(nguyenVan), /NHOM THAT SAI: ô 2 /);
   const quaTay = await banDotEvalLabels(moc, 'String(khoa).replace(/^.*:/, "")');
   assert.throws(() => kiemBangNhomThat(quaTay), /NHOM THAT SAI: ô 10 /);
+  const boChot = await banDotEvalLabels(moc, 'String(khoa).replace(/^(?:[^:]+:)?group:/, "")');
+  assert.throws(() => kiemBangNhomThat(boChot), /NHOM THAT SAI: ô 12 /);
+  assert.equal(boChot.donViTheoNhomThat([{ group_key: "k1:group:", unit_code: "A" }, { group_key: "k2:group:", unit_code: "B" }]).gop.length, 1);
 });

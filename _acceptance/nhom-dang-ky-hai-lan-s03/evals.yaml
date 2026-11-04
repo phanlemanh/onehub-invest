@@ -32,7 +32,7 @@ evals:
     cmd: config:executors.test.gcn_pipeline
     layer: backend-effect
     paths: [pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
-    expected: "exit 0; ca 'nhom that' xanh trên bảng dạng khoá của AC-4, 13 ô, mỗi ô một phần tử viết tay trong tệp test, số assert bằng số ô; sổ và bài toàn khoá trần hoặc khoá lạ cho mẫu y hệt so khớp nguyên văn; chiều đỏ trong cùng tệp: bản đột biến khoá nguyên văn và bản gộp quá tay làm bảng ném thông điệp ghim 'NHOM THAT SAI'"
+    expected: "exit 0; ca 'nhom that' xanh trên bảng dạng khoá của AC-4, 13 ô, mỗi ô so đơn vị, gộp và khoá thật, mỗi ô một phần tử viết tay trong tệp test, số assert bằng số ô; sổ và bài toàn khoá trần hoặc khoá lạ cho mẫu y hệt so khớp nguyên văn; chiều đỏ trong cùng tệp: bản đột biến khoá nguyên văn, bản gộp quá tay và bản bỏ chốt khoá rỗng (đỏ ở ô 12) làm bảng ném thông điệp ghim 'NHOM THAT SAI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -48,7 +48,7 @@ evals:
     cmd: config:executors.script.ndk_mau
     layer: backend-effect
     paths: [pipeline/label-sample.mjs, pipeline/transform-zalo.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
-    expected: "exit 0; 'ok AC-6 bam so khong doi', 'ok AC-6 bam bai khong doi', 'ok AC-6 thi truong ca hai dang'; đối chứng: thước băm đỏ với 'loi bam so' khi chính probe đổi một dòng sổ của fixture rồi hoàn lại"
+    expected: "exit 0; 'ok AC-6 bam so khong doi', 'ok AC-6 bam bai khong doi', 'ok AC-6 thi truong ca hai dang'; băm bài trên cả dòng; đối chứng: thước băm đỏ với 'ok do: loi bam so' khi chính probe đổi một dòng sổ của fixture và 'ok do: loi bam bai' khi đổi chữ một bài của fixture, rồi hoàn lại về đúng băm gốc"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
