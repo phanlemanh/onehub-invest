@@ -443,8 +443,9 @@ async function main() {
   let iViec = 0;
   let khongNutLien = 0;      // 0311-20 Việc 3: ngưỡng riêng 20 lần liền
   let dungNguongKhongNut = false;
-  let dem300 = 0;            // 0411-1: đếm lời gọi sạch liên tiếp (lên 2 luồng khi đủ 300)
-  let daLen2Luong = process.env.S06_THREADS_2 === "1"; // dem6 (2 luồng) không đếm nữa
+  let loiNhanhLien = 0;      // 0411-3: chuỗi loi-trang <100ms (Chrome chết)
+  let loiNhanhTong = 0;      // để tính lời gọi thật trong [nấc]
+  let dungNguongLoiNhanh = false;
   try { // 0311-3 vòng 3 (b) + vòng 4: try bọc tạo tab + vòng lặp, finally dùng biến ngoài
   for (let i = 0; i < THREADS; i++) {
     let tab = null;
@@ -469,7 +470,7 @@ async function main() {
 
   async function motLuong(idx) {
     const tab = tabs[idx % tabs.length];
-    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429 && !dungNguongKhongNut) {
+    while (iViec < viec.length && Date.now() < deadline && chanLienTiep < 5 && !dungNgay403429 && !dungNguongKhongNut && !dungNguongLoiNhanh) {
       const v = viec[iViec++];
       const tBat = Date.now();
       let kq;
@@ -484,7 +485,8 @@ async function main() {
         kq = { status: e.message?.includes("Timeout") ? "timeout" : "loi-trang" };
       }
       const ms = Date.now() - tBat;
-      if (!(kq.status === "loi-trang" && ms < 100)) thu++; // 0411-2: lỗi <100ms không phải lời gọi
+      thu++; // 0411-3: tin_thu tính CẢ loi-trang nhanh — không rơi HẾT VIỆC khi
+             // Chrome chết ngay từ đầu lượt (lời gọi thật = thu - loiNhanhTong)
 
       if (process.env.S06_DEBUG) console.log(`[dbg] tin ${v.list_id} → ${kq.status}${kq.phone ? " (có số)" : ""} · ${ms}ms`);
       // 0211-9 (1): loi-trang/timeout cũng là dấu hiệu đường chết — đếm chung,
@@ -494,11 +496,22 @@ async function main() {
       // nguồn thật: vào chuỗi chặn và đặt lại đếm 300.
       const loiTrangNhanh = kq.status === "loi-trang" && ms < 100;
       if (loiTrangNhanh) {
-        khongNutLien = 0; // lỗi nhanh không tích luỹ ngưỡng khác
-      } else if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) {
-        chanLienTiep++;
+        // 0411-3 Lỗi 1: Chrome/tab chết giữa lượt — lỗi nhanh ném NGAY, không lời
+        // gọi; 5 lần LIỀN thì lượt này đã vô dụng (mọi lời gọi đều ném) → dừng
+        // lượt THOÁT 3 (vòng ngoài: BÁO + nghỉ 20s + lượt mới mở Chrome mới,
+        // không tốn lần nghỉ 30′). Không cộng chuỗi chặn 5-lần của lỗi nguồn.
+        loiNhanhLien++;
+        if (loiNhanhLien >= 5) {
+          console.log(`[loi-nhanh] 5 lần loi-trang <100ms liền — Chrome/tab chết, dừng lượt`);
+          dungNguongLoiNhanh = true;
+        }
       } else {
-        chanLienTiep = 0;
+        loiNhanhLien = 0;
+        if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(kq.status)) {
+          chanLienTiep++;
+        } else {
+          chanLienTiep = 0;
+        }
       }
       // 0311-20 Việc 3: khong-nut không vào chuỗi chặn nhưng có ngưỡng riêng —
       // 20 lần LIỀN (nguồn đổi giao diện/giấu nút) thì dừng lượt + BÁO.
@@ -521,16 +534,7 @@ async function main() {
       else if (kq.status === "so-khong-hop-le") ketQua.khac_so++;
       else errors[kq.status] = (errors[kq.status] ?? 0) + 1;
 
-      // 0411-1: đếm 300 lời gọi SẠCH liên tiếp (Mạnh «Lên khi đủ 300») — sạch =
-      // không timeout/captcha/403/429/loi-trang≥100ms; het-han/khong-nut/
-      // trang-khac/loi-trang<100ms không phải lỗi nguồn, không reset
-      const loiNguon = ["timeout", "chan-captcha"].some((x) => kq.status.startsWith(x)) ||
-        /^chan-4/.test(kq.status) || (kq.status === "loi-trang" && ms >= 100);
-      if (loiNguon) dem300 = 0;
-      else if (!loiTrangNhanh) dem300++; // lời gọi thật tới nguồn mà lành
-      if (dem300 >= 300 && !daLen2Luong) {
-        console.log(`[len-2-luong] đủ ${dem300} lời gọi sạch liên tiếp — Mạnh «Lên khi đủ 300»`);
-      }
+      if (loiTrangNhanh) loiNhanhTong++; // [nấc] dùng: lời gọi thật = thu - loiNhanhTong
 
       // state + mẫu đo
       const soTin1 = state.da_thu[v.list_id1 ?? v.list_id]?.phone;
@@ -599,7 +603,7 @@ async function main() {
     await tatChrome();
   }
 
-  const giayMoiTin = thu > 0 ? (Date.now() - t0) / 1000 / thu : 0;
+  const giayMoiTin = thu > 0 ? (Date.now() - t0) / 1000 / thu : 0; // tb trên tin (gồm nhanh); [nấc] đổi ra lời-gọi-thật
   const tong = viec.length + Object.keys(state.da_thu).length;
   const conLai = Math.max(0, tong - thu);
   const duKienGio = (conLai * giayMoiTin * 1.0) / 3600; // cùng số luồng hiện tại
@@ -607,7 +611,9 @@ async function main() {
   const tongCoSo = Object.values(state.da_thu).filter((x) => x.phone).length;
   console.log(
     `[nấc] ${JSON.stringify({
-      pha: PHASE, luong: THREADS, tin_thu: thu, giay_moi_tin: +giayMoiTin.toFixed(1),
+      pha: PHASE, luong: THREADS, tin_thu: thu, loi_nhanh: loiNhanhTong,
+      loi_goi_that: thu - loiNhanhTong,
+      giay_moi_tin: +(thu - loiNhanhTong > 0 ? giayMoiTin * thu / (thu - loiNhanhTong) : 0).toFixed(1),
       co_so_luot: ketQua.co_so, tong_co_so_state: tongCoSo, errors,
       mau_1tk_1so: mau.da_do ? { da_do: mau.da_do, trung_so: mau.trung, khac_so: mau.khac, ti_le_trung_phan_tram: tiLeTrung } : null,
       con_lai: conLai, gio_du_kien_xong: +duKienGio.toFixed(1), chan_lien_tiep: chanLienTiep,
@@ -623,7 +629,7 @@ async function main() {
     const st = Object.values(state.da_thu).filter((x) => x.phone).length;
     console.log(`[đối chiếu] state ${st} số · stg ${stg} số · lệch ${st - stg}${st !== stg ? " — CHẠY: node bu-seller-v5.mjs" : ""}`);
   } catch (e) { console.log('[đối chiếu] lỗi:', e.message); }
-  process.exit(chanLienTiep >= 5 || dungNgay403429 || dungNguongKhongNut ? 2 : 0); // 403/429 + ngưỡng khong-nut cũng thoát 2
+  process.exit(dungNguongLoiNhanh ? 3 : chanLienTiep >= 5 || dungNgay403429 || dungNguongKhongNut ? 2 : 0); // 3 = Chrome chết, vòng ngoài mở lượt mới
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {

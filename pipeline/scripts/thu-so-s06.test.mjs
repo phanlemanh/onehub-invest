@@ -57,3 +57,24 @@ test("demLoiLien qua lan_truoc chỉ đạt tối đa 2 (state giữ 1 cấp)", 
   // (Hàm demLoiLien là hàm nội bộ; kiểm gián tiếp qua chú thích + hành vi docViec.)
   assert.ok(true);
 });
+
+// 0411-3 Lỗi 1: 5 loi-trang <100ms LIỀN → dừng lượt thoát 3 (Chrome chết);
+// tin_thu tính cả lỗi nhanh (không rơi HẾT VIỆC) — kiểm qua hàm phân loại chuỗi.
+test("loi-trang nhanh 5 lần liền là ngưỡng riêng (thoát 3), không cộng chuỗi chặn nguồn", () => {
+  // mô phỏng logic vòng: mỗi kq → cập nhật loiNhanhLien/chanLienTiep
+  const buoc = (trangThai, ms) => {
+    let loiNhanhLien = arguments[2]?.loiNhanhLien ?? 0, chanLienTiep = arguments[2]?.chanLienTiep ?? 0;
+    const nhanh = trangThai === "loi-trang" && ms < 100;
+    if (nhanh) { loiNhanhLien++; } else { loiNhanhLien = 0; if (/^(chan|khong-ra-so|loi-trang|timeout)/.test(trangThai)) chanLienTiep++; else chanLienTiep = 0; }
+    return { loiNhanhLien, chanLienTiep };
+  };
+  let st = { loiNhanhLien: 0, chanLienTiep: 0 };
+  for (let i = 0; i < 5; i++) st = buoc("loi-trang", 1, st);
+  assert.equal(st.loiNhanhLien, 5, "5 loi-trang <100ms liền đạt ngưỡng");
+  assert.equal(st.chanLienTiep, 0, "không cộng vào chuỗi chặn nguồn");
+  // lỗi nhanh xen giữa không giữ chuỗi nguồn
+  let st2 = { loiNhanhLien: 0, chanLienTiep: 2 };
+  st2 = buoc("loi-trang", 0, st2);
+  assert.equal(st2.chanLienTiep, 2, "chuỗi nguồn giữ nguyên khi lỗi nhanh xen vào");
+  assert.equal(st2.loiNhanhLien, 1);
+});
