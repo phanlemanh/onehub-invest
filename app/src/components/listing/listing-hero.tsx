@@ -25,7 +25,7 @@ export type ListingHeroData = {
   areaPath: string | null
   marketName: string | null
   marketPath: string | null
-  airbnbUrl: string | null
+  originalUrl: string | null
 }
 
 type Fact = { label: string; value: string; href?: string | null }
@@ -40,7 +40,7 @@ export function listingFacts(l: ListingHeroData): Fact[] {
     l.bathrooms !== null ? { label: "Phòng tắm", value: `${l.bathrooms} phòng tắm` } : null,
     l.accommodates !== null ? { label: "Sức chứa", value: `${l.accommodates} khách` } : null,
     l.minimumNights !== null ? { label: "Đặt tối thiểu", value: `${l.minimumNights} đêm` } : null,
-    l.reviewCount !== null ? { label: "Đánh giá", value: `${fmtInt(l.reviewCount)} đánh giá trên Airbnb` } : null,
+    l.reviewCount !== null ? { label: "Đánh giá", value: `${fmtInt(l.reviewCount)} đánh giá trên nền tảng` } : null,
     l.areaName ? { label: "Phường", value: l.areaName, href: l.areaPath } : null,
     l.marketName ? { label: "Thị trường", value: l.marketName, href: l.marketPath } : null,
   ]
@@ -50,7 +50,7 @@ export function listingFacts(l: ListingHeroData): Fact[] {
 /**
  * Đầu trang listing — chuyển thể hero của @reui/product-detail-5: gallery (trái, dính khi cuộn) + hộp
  * thông tin (phải). Khác bản gốc: hộp không có giá/biến thể/giỏ hàng — giá và số đã nằm ở hàng KPI
- * ngay dưới; hộp là bảng đặc điểm (khuôn «Specs» của block) + một nút «Mở trên Airbnb».
+ * ngay dưới; hộp là bảng đặc điểm (khuôn «Specs» của block) + một nút «Mở trang gốc».
  * Không có ảnh tự thu (hoặc mọi ảnh chết trên CDN) → không gallery, hộp chiếm cả bề ngang.
  */
 export function ListingHero({ listing }: { listing: ListingHeroData }) {
@@ -95,15 +95,15 @@ export function ListingHero({ listing }: { listing: ListingHeroData }) {
             </div>
           ))}
         </dl>
-        {listing.airbnbUrl && (
+        {listing.originalUrl && (
           <Button
             variant="outline"
             className={cn(!withGallery && "sm:self-start")}
             nativeButton={false}
-            render={<a href={listing.airbnbUrl} target="_blank" rel="noopener noreferrer" />}
+            render={<a href={listing.originalUrl} target="_blank" rel="noopener noreferrer" />}
           >
             <ExternalLinkIcon data-icon="inline-start" aria-hidden="true" />
-            Mở trên Airbnb
+            Mở trang gốc
           </Button>
         )}
       </div>

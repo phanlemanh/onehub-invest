@@ -206,6 +206,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Chữ về nguồn trên Invest (CN1 `chu-nguon-tren-cong`, 04/11): các trang công khai gọi S01 là «nền tảng thuê ngắn hạn», S02 là «nguồn tham chiếu trả phí»; giá bán, thuê là trung vị giá rao của tin thật. Thước: `scripts/quet-ten-nguon-html.mjs` (HTML thật), `scripts/check-invest-tier-a.mjs` (mã, chạy ở CI).
 - Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
   `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
   cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
@@ -477,6 +478,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
 | CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | ✅ Mạnh ký 03/11, chờ gộp; căn chỉ còn link ảnh gốc đã hết hạn hiện «Ảnh hỏng», E10 đếm riêng; AC-9 đưa ra hạn chế đã biết (bảng ở 390 px còn thanh cuộn ngang bên trong); ba lỗi người vận hành thấy chờ hợp đồng mới |
 | CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, chờ gộp (#303); Ngoài-9 Mạnh chọn mở hợp đồng mới, chưa có hàng |
+| CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

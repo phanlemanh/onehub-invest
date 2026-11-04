@@ -40,7 +40,7 @@ export function SiteFooter({ portal }: { portal: Portal }) {
           ))}
         </nav>
         <p className="text-muted-foreground text-xs">
-          © 2026 One Invest · Dữ liệu: Airbnb (tự thu thập), Inside Airbnb, OpenStreetMap
+          © 2026 One Invest · Dữ liệu: tự thu thập, OpenStreetMap
         </p>
       </div>
     </footer>

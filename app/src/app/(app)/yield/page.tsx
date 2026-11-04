@@ -37,7 +37,7 @@ const num = (v: string | undefined, fallback: number, min: number, max: number) 
 
 /**
  * Ước tính lợi suất một căn (IA §3.2, "Rentalizer" VN). Báo cáo tính ở server
- * từ tham số URL → chia sẻ được. Giá bán/thuê dài hạn là dữ liệu MÔ PHỎNG (G1).
+ * từ tham số URL → chia sẻ được. Giá bán/thuê dài hạn là trung vị giá rao của tin thật.
  * Mục «Dòng tiền vốn vay» (#financing, tham số eq/rate/term) nhận phần của bộ Mô phỏng đầu tư cũ;
  * link cũ của Mô phỏng đầu tư (slug dau-tu dưới mỗi thị trường) chuyển 301 về đây với `area=<mã thị trường>`.
  */
@@ -165,10 +165,10 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
     : null;
 
   const assumptions = [
-    "Giá/đêm = giá niêm yết trên Airbnb (chưa trừ giảm giá, chưa gồm phí dọn dẹp)",
+    "Giá/đêm = giá niêm yết trên nền tảng (chưa trừ giảm giá, chưa gồm phí dọn dẹp)",
     "Công suất = tỉ lệ đêm không còn trống trong 90 đêm đầu của lịch",
     `Chi phí: quản lý ${fmtPct(inputs.mgmtPct, 0)}, nền tảng ${fmtPct(inputs.platformPct, 0)}, thuế ${fmtPct(inputs.taxPct, 0)} doanh thu, cố định ${fmtMoneyCompact(inputs.fixedMonthly, currency)}/tháng`,
-    "Giá bán và giá thuê dài hạn của phường là dữ liệu mô phỏng — chỉ để dựng tính năng",
+    "Giá bán và giá thuê dài hạn của phường là trung vị giá rao của tin thật, chưa phải giá giao dịch",
   ];
 
   return (
@@ -177,8 +177,8 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
         crumbs={[{ label: market.name, href: `/${market.id.split("-")[0]}/${market.id.split("-").slice(1).join("-")}` }, { label: "Lợi suất" }]}
         title="Ước tính lợi suất"
         stats={[market.name, `${fmtInt(areas.length)} phường`]}
-        description="Cho thuê ngắn hạn (Airbnb) so với cho thuê dài hạn — một căn cụ thể"
-        actions={<Badge variant="warning-light">DỮ LIỆU MÔ PHỎNG</Badge>}
+        description="Cho thuê ngắn hạn so với cho thuê dài hạn — một căn cụ thể"
+        actions={<Badge variant="warning-light">MÔ PHỎNG</Badge>}
       />
 
       <YieldForm key={JSON.stringify({ inputs, loan })} areas={areas} initial={inputs} initialLoan={loan} currency={currency} />

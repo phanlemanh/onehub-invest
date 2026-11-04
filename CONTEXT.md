@@ -481,6 +481,18 @@ _Avoid_: tên nguồn thật ở mọi trang Ops ngoài `/ops/sources`, kể c�
 **Tự thu**: Số tính từ dữ liệu nền tảng tự thu (không phải AirDNA) — nhãn tầng C trên cổng Invest.
 - Code: `self-collected` · RESO: —
 
+**Nền tảng thuê ngắn hạn**: Cách cổng Invest gọi nơi listing thuê ngắn hạn được tự thu (S01), thay cho tên thật; viết tắt «nền tảng» khi câu đã rõ.
+- Code: — · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật ở mọi trang Invest, kể cả metadata, aria và dữ liệu nhúng trong HTML
+
+**Trang gốc**: Trang của một listing thuê ngắn hạn trên nền tảng thu về. Nút «Mở trang gốc», «Xem lịch trên trang gốc» trên `/listing/[id]` giữ đường link trên miền S01; đây là ngoại lệ duy nhất của tên nguồn trong HTML cổng Invest (Mạnh chốt 04/11), chữ trên nút không mang tên nguồn.
+- Code: `originalUrl` · RESO: OriginatingSystemURL (local) · Slug URL: —
+_Avoid_: tên nguồn thật trên nút
+
+**Nguồn tham chiếu trả phí**: Cách cổng Invest nói về nguồn hiệu chuẩn (S02) khi cần nói có dùng nó: không tên, không số.
+- Code: — · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật, mọi số của nguồn này
+
 **Hiệu chuẩn**: Số AirDNA dùng để đối chiếu số tự thu — chỉ ở `/ops/quality`, không bao giờ lên cổng Invest (ToS, luật 5).
 - Code: `calibration (S02)` · RESO: —
 _Avoid_: calibration

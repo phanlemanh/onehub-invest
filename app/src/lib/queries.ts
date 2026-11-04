@@ -369,7 +369,6 @@ export async function getCountryMarkets(country: string) {
 // ---------- P2: supply growth (từ stg discovery snapshots) ----------
 
 export type SupplyPoint = {
-  snapshotId: string;
   date: string;
   seen: number; // listings snapshot thấy
   newVsPrev: number; // id mới so với snapshot trước đó
@@ -403,7 +402,6 @@ export async function getSupplyHistory(
     for (const id of ids) if (!seen.has(id)) fresh++;
     ids.forEach((i) => seen.add(i));
     points.push({
-      snapshotId: r.snapshot_id,
       date: r.date,
       seen: ids.length,
       newVsPrev: fresh,
@@ -806,7 +804,7 @@ export type YieldArea = {
   rentLt: number | null;
 };
 
-/** Thị trường có dữ liệu bán/thuê (hiện là mô phỏng G1) — /yield chỉ chạy ở đó. */
+/** Thị trường có dữ liệu bán/thuê (trung vị giá rao, 500_asset_stats.sql) — /yield chỉ chạy ở đó. */
 export async function getYieldMarkets() {
   const { rows } = await pool.query<{ id: string; name: string }>(
     `SELECT DISTINCT m.id, m.name
@@ -818,7 +816,7 @@ export async function getYieldMarkets() {
   return rows;
 }
 
-/** Phường của một thị trường cho form: số listing + giá bán/m², giá thuê (mô phỏng). */
+/** Phường của một thị trường cho form: số listing + giá bán/m², giá thuê (trung vị giá rao). */
 export async function getYieldAreas(marketId: string): Promise<YieldArea[]> {
   const { rows } = await pool.query(
     `SELECT a.id, a.name,

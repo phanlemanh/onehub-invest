@@ -108,7 +108,7 @@ const heroData = (over: Partial<ListingDetail> = {}) => {
     areaPath: l.areaPath,
     marketName: l.marketName,
     marketPath: l.marketPath,
-    airbnbUrl: "https://www.airbnb.com/rooms/123",
+    originalUrl: "https://www.airbnb.com/rooms/123",
   };
 };
 
@@ -260,7 +260,7 @@ test("LD-AC-1 dữ liệu ảnh bẩn: URL trùng bị khử, URL có query nố
 
 // ── LD-AC-5: hộp Đặc điểm ──────────────────────────────────────────────────────────────────────────
 
-test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì không có dòng; link Phường/Thị trường; nút Airbnb khi có link", async () => {
+test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì không có dòng; link Phường/Thị trường; nút mở trang gốc khi có link", async () => {
   const { ListingHero, listingFacts } = await import("../src/components/listing/listing-hero");
   const full = listingFacts(heroData());
   assert.deepEqual(
@@ -271,7 +271,7 @@ test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì kh�
       "Phòng tắm: 1.5 phòng tắm",
       "Sức chứa: 4 khách",
       "Đặt tối thiểu: 2 đêm",
-      `Đánh giá: ${(await import("../src/lib/format")).fmtInt(1234)} đánh giá trên Airbnb`,
+      `Đánh giá: ${(await import("../src/lib/format")).fmtInt(1234)} đánh giá trên nền tảng`,
       "Phường: Tây Hồ",
       "Thị trường: Thành phố Hà Nội",
     ],
@@ -283,7 +283,7 @@ test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì kh�
   const host = await render(<ListingHero listing={heroData()} />);
   const links = [...host.querySelectorAll("dl a")].map((a) => a.getAttribute("href"));
   assert.deepEqual(links, ["/vn/hanoi/tay-ho", "/vn/hanoi"]);
-  const cta = [...host.querySelectorAll("a")].filter((a) => /Mở trên Airbnb/.test(a.textContent ?? ""));
+  const cta = [...host.querySelectorAll("a")].filter((a) => /Mở trang gốc/.test(a.textContent ?? ""));
   assert.equal(cta.length, 1);
   assert.equal(cta[0].getAttribute("href"), "https://www.airbnb.com/rooms/123");
   // PageHeader chỉ còn một badge loại phòng — đặc điểm khác nằm trong hộp, không lặp hai chỗ.
@@ -299,9 +299,9 @@ test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì kh�
   assert.ok(header, "không thấy PageHeader");
   assert.deepEqual(header.props.stats, ["Nguyên căn"], "PageHeader phải còn đúng một badge loại phòng");
   assert.deepEqual(find(ListingBody({ listing: { ...LISTING, roomType: null } }))!.props.stats, [], "không loại phòng → không badge");
-  // Không có link Airbnb (id không dạng abnb_) → không nút.
-  const none = await render(<ListingHero listing={{ ...heroData(), airbnbUrl: null }} />);
-  assert.equal([...none.querySelectorAll("a")].filter((a) => /Airbnb/.test(a.textContent ?? "")).length, 0);
+  // Không có link trang gốc (id không dạng abnb_) → không nút.
+  const none = await render(<ListingHero listing={{ ...heroData(), originalUrl: null }} />);
+  assert.equal([...none.querySelectorAll("a")].filter((a) => /trang gốc/.test(a.textContent ?? "")).length, 0);
 });
 
 // ── LD-AC-6: lịch form-5 hết điều khiển thô ──────────────────────────────────────────────────────
@@ -358,14 +358,14 @@ test("LD-AC-6 lịch: không <button> tay, không cỡ chữ tự đặt; baseli
 
 // ── LD-AC-7: lịch trống ───────────────────────────────────────────────────────────────────────────
 
-test("LD-AC-7 lịch trống: Empty một hành động (Xem lịch trên Airbnb; không link thì Tìm thị trường); ListingBody dùng nó khi 0 đêm", async () => {
+test("LD-AC-7 lịch trống: Empty một hành động (Xem lịch trên trang gốc; không link thì Tìm thị trường); ListingBody dùng nó khi 0 đêm", async () => {
   const { ListingCalendarEmpty } = await import("../src/components/listing/listing-calendar-empty");
-  let host = await render(<ListingCalendarEmpty airbnbUrl="https://www.airbnb.com/rooms/123" />);
+  let host = await render(<ListingCalendarEmpty originalUrl="https://www.airbnb.com/rooms/123" />);
   assert.equal(host.querySelector('[data-slot="empty-title"]')?.textContent, "Chưa có lịch cho listing này");
   let acts = host.querySelectorAll("a, button");
   assert.equal(acts.length, 1);
   assert.equal(acts[0].getAttribute("href"), "https://www.airbnb.com/rooms/123");
-  host = await render(<ListingCalendarEmpty airbnbUrl={null} />);
+  host = await render(<ListingCalendarEmpty originalUrl={null} />);
   acts = host.querySelectorAll("a, button");
   assert.equal(acts.length, 1);
   assert.equal(acts[0].getAttribute("href"), "/vn");
@@ -522,7 +522,7 @@ test("LD-AC-9 bốn ô KPI giữ công thức cũ: bậc giá theo p30/p60/p90, 
   // Chưa báo giá: footer công suất nói rõ; không peers: footer giá mặc định; doanh thu 0 → "—".
   const noPrice = listingTiles({ ...LISTING, priceListed: null, stats: { ...LISTING.stats, revenue: 0, occupancy: null } }, null);
   assert.equal(noPrice[1].footer, "Listing chưa báo giá — lịch kín có thể do chủ nhà chặn, không tính công suất");
-  assert.equal(noPrice[0].footer, "Giá một đêm trên Airbnb");
+  assert.equal(noPrice[0].footer, "Giá một đêm trên nền tảng");
   assert.equal(noPrice[3].value, "—");
   assert.equal(listingTiles(LISTING, { ...(peers as object), scope: "market" } as never)[0].footer.includes("cùng thị trường"), true);
 });

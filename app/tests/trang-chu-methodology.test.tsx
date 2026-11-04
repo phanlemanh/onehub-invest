@@ -137,10 +137,12 @@ test("TCM-AC-3 định nghĩa mở sẵn: 1 h1, 3 mục có id, 15 ô có id + c
     assert.ok(m[1].includes(esc(d.question)), `ô ${d.id} thiếu câu hỏi`);
     assert.ok(m[1].includes(esc(firstText(d.answer))), `ô ${d.id} thiếu câu trả lời lúc tải`);
   }
-  for (const id of ["revpar", "adr", "mo-phong"]) assert.match(out, new RegExp(`id="${id}"`));
+  for (const id of ["revpar", "adr", "gia-rao"]) assert.match(out, new RegExp(`id="${id}"`));
   assert.equal((out.match(/\saria-expanded="/g) ?? []).length, 0, "trang Phương pháp không được có nút mở/đóng");
-  const moPhong = out.match(/<div id="mo-phong"[\s\S]*?<\/div><\/div>/)![0];
-  assert.match(moPhong, /data-slot="badge"[^>]*>Mô phỏng</);
+  // Giá bán, thuê là giá rao của tin thật: ô này không còn nhãn «Mô phỏng» (chu-nguon-tren-cong AC-4).
+  const giaRao = out.match(/<div id="gia-rao"[\s\S]*?<\/div><\/div>/)![0];
+  assert.match(giaRao, /giá rao/);
+  assert.doesNotMatch(giaRao, /mô phỏng|giả lập/i);
 
   // Đối chứng: accordion faq-6 (FaqSection) cùng dữ liệu CÓ aria-expanded — phép đếm phân biệt được accordion.
   const { FaqSection } = await import("../src/components/marketing/faq-section");
@@ -165,7 +167,7 @@ test("TCM-AC-4 lưới faq-3: grid md:grid-cols-2 (không grid-cols-2 trần), �
 test("TCM-AC-4 hàng hai nút: sau ô cuối đúng 2 link Xem thị trường → /vn, Ước tính lợi suất → /yield", async () => {
   const { default: MethodologyPage } = await import("../src/app/(marketing)/methodology/page");
   const out = await html(<MethodologyPage />);
-  const tail = out.slice(out.indexOf('id="airdna"'));
+  const tail = out.slice(out.indexOf('id="hieu-chuan"'));
   const links = [...tail.matchAll(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => [
     m[1],
     m[2].replace(/<[^>]+>/g, "").trim(),
