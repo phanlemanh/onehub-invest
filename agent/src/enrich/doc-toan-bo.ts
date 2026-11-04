@@ -17,6 +17,8 @@ import { routeFields, type EnrichField, type Routed } from "./route.js";
 import { giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
 export const PROMPT_VERSION = "dtb-s03-v1";
+/** Đổi bảng trong luat-trich-dan.ts thì tăng số này: dòng mẫu đạt của luật cũ không mở được luật mới (s03-noi-luat-trich-dan AC-6). */
+export const LUAT_VERSION = "trich-v2";
 /** Model mặc định của lượt; không có cờ đổi (Hỏi-2). */
 export const modelMacDinh = () => getModel("haiku");
 export const VIEC = "doc-toan-bo-s03";
@@ -141,6 +143,8 @@ export function quyetTin(i: {
   /** Bài có từ hai tin: giá, diện tích của model không biết thuộc tin nào, nên không so. */
   chungBai: boolean;
   held: ReadonlySet<EnrichField>;
+  /** Thay luật trong test; mặc định luật hiện tại. */
+  kiemLoai?: typeof kiemTrichLoai;
 }): QuyetTin {
   const laTinRao = i.intent === LISTING_INTENT.offer;
   const rs = routeFields({
@@ -157,7 +161,7 @@ export function quyetTin(i: {
     if (!laTinRao && (r.route === "direct" || r.route === "corroborated")) return { ...r, route: "review", corroboratedBy: null, status: "skipped", lyDo: "y-dinh-khac" };
     if (r.source !== "e2_llm" || r.route !== "review") return { ...r, status: "queued" };
     if (!laTinRao) return { ...r, status: "skipped", lyDo: "y-dinh-khac" };
-    const kq = kiemTrichLoai(r.value, i.them?.quote_loai ?? null, i.chuDaGat);
+    const kq = (i.kiemLoai ?? kiemTrichLoai)(r.value, i.them?.quote_loai ?? null, i.chuDaGat);
     if (kq.ok) return { ...r, route: "corroborated", corroboratedBy: kq.ma, status: "queued" };
     // Loại khác căn hộ: trích dẫn có thật vẫn không tự điền, lên thẻ cho người (AC-4).
     if (r.value !== PROPERTY_TYPE.apartment && kq.lyDo === "tu-khoa-loai-khac") return { ...r, status: "queued" };
@@ -246,6 +250,7 @@ export async function chayLuot(o: {
   languageModel?: LanguageModel;
   resolve: ResolveFn;
   giaoDich?: GiaoDich;
+  kiemLoai?: typeof kiemTrichLoai;
 }): Promise<TomTat> {
   const c = o.client;
   const giaoDich = o.giaoDich ?? giaoDichSavepoint(c);
@@ -296,7 +301,7 @@ export async function chayLuot(o: {
     const q = quyetTin({
       hienTai: t, e1Loai: ctx.propertyType, intent: n.listing_intent, quoteOk: n.quote_ok, quoteYDinh: n.quote,
       them: n.json_ok ? (n.probabilities as DocThem | null) : null, chuDaGat: chu,
-      chungBai: (soTinCuaBai.get(t.post_id!) ?? 0) > 1, held: await heldFields(c, t.offer_id),
+      chungBai: (soTinCuaBai.get(t.post_id!) ?? 0) > 1, held: await heldFields(c, t.offer_id), kiemLoai: o.kiemLoai,
     });
     const canThe = q.doi_chieu.length > 0 || q.de_xuat.some((d) => d.status === "queued" && d.route === "review");
     const coThe = canThe && (await c.query(
@@ -356,6 +361,73 @@ export async function chayLuot(o: {
   return kq;
 }
 
+// ==== xử lại đề xuất đã bỏ (s03-noi-luat-trich-dan) ====
+export const MA_SO_PHONG = "trich-dan:so-phong";
+export type TomTatXuLai = { xet: number; dat: number; daAp: number; giuNguyen: Record<string, number>; loiGhi: string[] };
+
+/**
+ * Xét lại đề xuất loại hình bị bỏ vì `khong-tu-khoa`, bằng nhãn đã đọc, không gọi model, không tạo thẻ. Đi qua quyetTin với trạng thái hiện tại
+ * của tin nên giữ đúng chốt của lượt thường (thân bài, ô người chốt, E1 trái). Chỉ đổi đúng dòng đề xuất ấy; giá, diện tích, ý định không xét lại.
+ */
+export async function xuLaiTrich(o: {
+  client: pg.Client; runId: string; thu: boolean; cam?: string[]; chiTin?: string[]; resolve: ResolveFn; giaoDich?: GiaoDich; kiemLoai?: typeof kiemTrichLoai;
+}): Promise<TomTatXuLai> {
+  const c = o.client;
+  const giaoDich = o.giaoDich ?? giaoDichSavepoint(c);
+  const cam = o.cam ?? (await docTenCam(c));
+  const tins = new Map((await chonTin(c)).filter((t) => !testMarker(t) && t.post_id && coChu(t.text)).map((t) => [t.offer_id, t]));
+  const soTinCuaBai = new Map<string, number>();
+  for (const t of tins.values()) soTinCuaBai.set(t.post_id!, (soTinCuaBai.get(t.post_id!) ?? 0) + 1);
+  const { rows: deXuat } = await c.query(
+    `SELECT id, offer_id, value, run_id FROM enrichment_proposals
+     WHERE source = 'e2_llm' AND field = 'property_type' AND status = 'skipped' AND evidence->>'ly_do' = 'khong-tu-khoa' AND evidence->>'prompt_version' = $1
+     ORDER BY id`, [PROMPT_VERSION]);
+  const kq: TomTatXuLai = { xet: 0, dat: 0, daAp: 0, giuNguyen: {}, loiGhi: [] };
+  const giu = (ly: string) => { kq.giuNguyen[ly] = (kq.giuNguyen[ly] ?? 0) + 1; };
+  for (const ep of deXuat) {
+    if (o.chiTin && !o.chiTin.includes(ep.offer_id)) continue;
+    kq.xet++;
+    const t = tins.get(ep.offer_id);
+    if (!t) { giu("tin-nghi-hoac-khong-chu"); continue; }
+    const { rows: [n] } = await c.query<NhanDoc>(
+      `SELECT listing_intent, probabilities, quote, quote_ok, json_ok, error_kind FROM silver_labels
+       WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND post_id = $3 AND text_hash = $4 AND json_ok`,
+      [TEN_MODEL.haiku, PROMPT_VERSION, t.post_id, textHash(t.text!)]);
+    if (!n) { giu("chu-doi"); continue; }
+    const ctx: ContextResult = await o.resolve(t.group_name, t.text!);
+    const q = quyetTin({
+      hienTai: t, e1Loai: ctx.propertyType, intent: n.listing_intent, quoteOk: n.quote_ok, quoteYDinh: n.quote,
+      them: n.probabilities as DocThem | null, chuDaGat: gatChu(t.text!, [...cam, ...(t.group_name ? [t.group_name] : [])]),
+      chungBai: (soTinCuaBai.get(t.post_id!) ?? 0) > 1, held: await heldFields(c, t.offer_id), kiemLoai: o.kiemLoai,
+    });
+    const d = q.de_xuat.find((x) => x.source === "e2_llm" && x.field === "property_type" && x.value === ep.value);
+    if (!d || d.status !== "queued" || d.route !== "corroborated" || !d.corroboratedBy?.startsWith("trich-dan:")) {
+      giu(d?.lyDo ?? "khong-con-de-xuat");
+      continue;
+    }
+    kq.dat++;
+    if (o.thu) continue;
+    try {
+      kq.daAp += await giaoDich(async () => {
+        await c.query(
+          `UPDATE enrichment_proposals SET status = 'queued', route = 'corroborated', corroborated_by = $2, run_id = $3,
+             evidence = (evidence - 'ly_do') || jsonb_build_object('xu_lai_tu_run', $4::text, 'luat_version', $5::text)
+           WHERE id = $1 AND status = 'skipped'`, [ep.id, d.corroboratedBy, o.runId, ep.run_id, LUAT_VERSION]);
+        const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [[ep.id], `doc-toan-bo:${o.runId}`]);
+        return Number(rows[0].n ?? 0);
+      });
+    } catch (e) {
+      const err = e as { code?: string; name?: string };
+      kq.loiGhi.push(`${ep.offer_id}:${err.code ?? err.name ?? "Error"}`);
+    }
+  }
+  if (!o.thu && kq.daAp > 0) {
+    await c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ($1, 'doc-toan-bo:xu-lai', $2)`,
+      [`doc-toan-bo:${o.runId}`, { run_id: o.runId, luat_version: LUAT_VERSION, xet: kq.xet, dat: kq.dat, da_ap: kq.daAp }]);
+  }
+  return kq;
+}
+
 // ==== đếm (AC-9) ====
 export const CO_DO_USD_NGAY = 5;
 export type SoDem = {
@@ -391,8 +463,10 @@ export async function demLuot(c: pg.Client): Promise<SoDem> {
 // ==== mẫu đo độ đúng (AC-10) ====
 export const NGUONG_DUNG_MAC_DINH = 0.85;
 export const SO_CA_TOI_THIEU = 100;
+/** Nhánh số phòng phải tự đạt: gộp với nhánh cũ thì nhánh mới đúng 59% vẫn qua (gap-probe P0). */
+export const SO_CA_TOI_THIEU_NHANH_MOI = 30;
 export type NhanMau = { post_id: string; property_type: string | null };
-export type KetMau = { n: number; ap: number; dung: number; canDuoi: number | null; tiLeAp: number; the: number; usd: number; dat: boolean; thieuChu: number; chuaDoc: number };
+export type KetMau = { n: number; ap: number; dung: number; canDuoi: number | null; tiLeAp: number; the: number; usd: number; dat: boolean; thieuChu: number; chuaDoc: number; apMoi: number; dungMoi: number; canDuoiMoi: number | null };
 
 /** Đọc tệp nhãn dạng [[post_id, {property_type, …}], …] — chỉ giữ khoá bài và loại hình. */
 export function docTepNhan(noiDung: string): NhanMau[] {
@@ -408,6 +482,7 @@ export async function doMau(o: {
   client: pg.Client; runId: string; nhan: NhanMau[]; n: number; nguong: number; tranUsd: number; thu: boolean; cam?: string[];
   hoi?: (chuDaGat: string) => Promise<Nhan>; languageModel?: LanguageModel; resolve: ResolveFn;
   wilson: (dung: number, n: number) => number | null;
+  kiemLoai?: typeof kiemTrichLoai;
 }): Promise<KetMau> {
   const c = o.client;
   const cam = o.cam ?? (await docTenCam(c));
@@ -433,7 +508,7 @@ export async function doMau(o: {
   });
   for (const d of lo.nhan) if (!d.error_kind) daCo.set(khoaNhan(d.post_id, d.text_hash), d);
 
-  let ap = 0, dung = 0, the = 0, chuaDoc = 0;
+  let ap = 0, dung = 0, the = 0, chuaDoc = 0, apMoi = 0, dungMoi = 0;
   for (const x of coBai) {
     const b = chuBai.get(x.post_id)!;
     const l = daCo.get(khoaNhan(x.post_id, textHash(b.text)));
@@ -442,27 +517,33 @@ export async function doMau(o: {
     const q = quyetTin({
       hienTai: { property_type: "unknown", price_vnd: null, area_m2: null }, e1Loai: ctx.propertyType, intent: l.listing_intent,
       quoteOk: l.quote_ok, quoteYDinh: l.quote, them: l.json_ok ? (l.probabilities as DocThem | null) : null, chuDaGat: gat(x),
-      chungBai: false, held: new Set(),
+      chungBai: false, held: new Set(), kiemLoai: o.kiemLoai,
     });
     const mayAp = q.de_xuat.filter((d) => d.status === "queued" && d.route !== "review");
-    if (mayAp.length > 0) { ap++; if (mayAp[0].value === x.property_type) dung++; }
+    if (mayAp.length > 0) {
+      const dungCa = mayAp[0].value === x.property_type;
+      ap++; if (dungCa) dung++;
+      if (mayAp[0].corroboratedBy === MA_SO_PHONG) { apMoi++; if (dungCa) dungMoi++; }
+    }
     if (q.doi_chieu.length > 0 || q.de_xuat.some((d) => d.status === "queued" && d.route === "review")) the++;
   }
   const canDuoi = o.wilson(dung, ap);
-  const dat = !lo.dungTran && ap >= SO_CA_TOI_THIEU && canDuoi !== null && canDuoi >= o.nguong;
+  const canDuoiMoi = o.wilson(dungMoi, apMoi);
+  const dat = !lo.dungTran && ap >= SO_CA_TOI_THIEU && canDuoi !== null && canDuoi >= o.nguong
+    && apMoi >= SO_CA_TOI_THIEU_NHANH_MOI && canDuoiMoi !== null && canDuoiMoi >= o.nguong;
   const kq: KetMau = {
-    n: coBai.length, ap, dung, canDuoi, tiLeAp: coBai.length ? ap / coBai.length : 0, the, usd: lo.tongUsd, dat, thieuChu: chon.length - coBai.length, chuaDoc,
+    n: coBai.length, ap, dung, canDuoi, tiLeAp: coBai.length ? ap / coBai.length : 0, the, usd: lo.tongUsd, dat, thieuChu: chon.length - coBai.length, chuaDoc, apMoi, dungMoi, canDuoiMoi,
   };
   if (!o.thu) {
     await c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ($1, 'doc-toan-bo:mau', $2)`,
-      [`doc-toan-bo:${o.runId}`, { prompt_version: PROMPT_VERSION, nguong: o.nguong, ...kq }]);
+      [`doc-toan-bo:${o.runId}`, { prompt_version: PROMPT_VERSION, luat_version: LUAT_VERSION, nguong: o.nguong, ...kq }]);
   }
   return kq;
 }
 
-/** Có dòng mẫu đạt ngưỡng cho prompt này chưa: lượt thật từ chối chạy khi chưa có (AC-10). */
-export async function coMauDat(c: pg.Client, promptVersion: string = PROMPT_VERSION): Promise<boolean> {
+/** Có dòng mẫu đạt ngưỡng cho prompt và luật này chưa: lượt thật từ chối chạy khi chưa có (AC-10). */
+export async function coMauDat(c: pg.Client, promptVersion: string = PROMPT_VERSION, luat: string = LUAT_VERSION): Promise<boolean> {
   const { rows } = await c.query(
-    `SELECT 1 FROM ops_audit WHERE action = 'doc-toan-bo:mau' AND detail->>'prompt_version' = $1 AND detail->>'dat' = 'true' LIMIT 1`, [promptVersion]);
+    `SELECT 1 FROM ops_audit WHERE action = 'doc-toan-bo:mau' AND detail->>'prompt_version' = $1 AND detail->>'luat_version' = $2 AND detail->>'dat' = 'true' LIMIT 1`, [promptVersion, luat]);
   return rows.length > 0;
 }
