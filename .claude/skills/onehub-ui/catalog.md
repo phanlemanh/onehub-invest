@@ -92,6 +92,7 @@ Ma trận trang → block máy kiểm: `scripts/ui-standards/b1-block-map.json`.
 
 | Component | File | Why not ReUI? | previewUrl |
 |-----------|------|---------------|------------|
+| LabelFormNhom / NhomRow / LuotHai / BangSo / ChonNhom / BangTruongHop | components/ops/labels/ | Màn gắn nhãn theo nhóm (bản D, GC0): ReUI không có block gắn nhãn; ghép `reui/frame` (stacked, khuôn @reui/form-2 không cài), `ui/toggle-group`, `ui/field`, `ui/table`, không vẽ tay điều khiển | — |
 | DealBody | components/ops/deal-body.tsx | Phần thân một căn dùng chung cho sheet và trang `/ops/deals/[offerId]` (`beMat`): Không có block ReUI cho hồ sơ một tin ở cả hai bề mặt; ráp từ Frame, Alert, ReviewPhotos | |
 | DiscountBar / DealThumb | components/ops/deals-cells.tsx | MetricBarCell của @reui/data-grid-base-2 cộng vạch ngưỡng; ảnh đầu 40 px có HoverCard. Hai ô chỉ riêng cho Căn giá tốt | |
 | DealSimilar | components/ops/deal-similar.tsx | Bảng so căn cùng tiêu chí trong sheet: `ui/table` + Empty, không đủ lý do dùng data-grid cho tối đa 20 hàng | |

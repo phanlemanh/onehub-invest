@@ -22,6 +22,7 @@ process.env.OPS_API_TOKEN = TOKEN
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const MIG = join(APP, "../db/migrations/054_labels.sql")
+const MIG_072 = join(APP, "../db/migrations/072_labels_nhom.sql")
 const LAT = "mgn-thu"
 /** Bản đột biến của labels-queries.ts (chép sang thư mục tạm, đổi đúng một chỗ) — chiều đỏ của phép đo trên cùng fixture. */
 async function banDot(tu: string, thanh: string): Promise<typeof import("../src/lib/labels-queries")> {
@@ -77,6 +78,7 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
   await sc.connect()
   await sc.query(readFileSync(MIG, "utf8"))
+  await sc.query(readFileSync(MIG_072, "utf8"))
 })
 
 after(async () => {
@@ -101,7 +103,7 @@ test("MGN-AC-3 lưu chín trường: 9 dòng mang labeler_id người gọi, gi�
     area_m2: "64.5", bedrooms: "∅", building: "ld2", kind: "sale", listing_intent: "offer",
     price_max_vnd: "4350000000", price_min_vnd: "4350000000", project: "vinhomes ocean park", property_type: "apartment",
   })  // Chiều đỏ trên cùng fixture: bản ghi bỏ labeler_id (ghi chuỗi rỗng) → phép đo phải bắt «NHAN KHONG CO NGUOI GAN».
-  const dot = await banDot("[itemId, userId, r.field, r.value, r.not_stated]", '[itemId, "", r.field, r.value, r.not_stated]')
+  const dot = await banDot("[itemId, userId, r.field, r.value, r.not_stated, r.basis]", '[itemId, "", r.field, r.value, r.not_stated, r.basis]')
   const { chuanHoaLuot } = await import("../src/lib/labels-normalize")
   const ch = chuanHoaLuot(DU)
   assert.ok(ch.ok)

@@ -1,0 +1,18 @@
+== requests (session e4v2, vai ops) — trang /ops/labels?nhom=S03-N170 sau bước Lưu Lý do trống ==
+### Result
+35. [POST] http://localhost:3460/api/v1/ops/labels => [400] Bad Request
+
+Note: 34 static requests not shown, run with --static option to see them.
+
+== console (trang /ops/labels?nhom=S03-N170 tai buoc Luu) ==
+[    3241ms] [WARNING] The resource http://localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an approp
+[  116410ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3460/api/v1/ops/labels:0
+[  119413ms] [WARNING] The resource http://localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an approp
+
+== console, moi tep cua phien do e4v2 (14:00 tro di): dong ERROR ==
+[  116410ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3460/api/v1/ops/labels:0
+
+== log may chu dev: POST /api/v1/ops/labels (dong 14 thuoc phien thu dau da bo truoc khi seed lai; 17 la luu moi bai 1 -> 200; 24 la buoc Ly do trong -> 400) ==
+14: POST /api/v1/ops/labels 400 in 61ms (next.js: 26ms, application-code: 35ms)
+17: POST /api/v1/ops/labels 200 in 46ms (next.js: 0.6ms, application-code: 45ms)
+24: POST /api/v1/ops/labels 400 in 11ms (next.js: 0.4ms, application-code: 11ms)

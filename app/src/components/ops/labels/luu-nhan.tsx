@@ -4,14 +4,14 @@ import { CircleAlertIcon, RotateCwIcon } from "lucide-react"
 
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Button } from "@/components/ui/button"
-import { DA_GAN_CUA_TOI, type LabelField, type RawLabels } from "@/lib/labels-normalize"
+import { DA_GAN_CUA_TOI, type LoiLuot, type RawLabels } from "@/lib/labels-normalize"
 
 /**
  * Một lượt lưu nhãn của biểu mẫu /ops/labels (hàng nhan-gia-va-luu-loi-mang): năm kết cục tách khỏi component để đo
  * được bằng phản hồi thật của route, và Alert tại chỗ khi mất kết nối.
  */
 
-type LoiTheoO = Partial<Record<LabelField, string>>
+type LoiTheoO = LoiLuot
 /** Năm kết cục của một lượt lưu — tách khỏi component để đo được bằng phản hồi thật của route. */
 export type KetCuc =
   | { kind: "da-luu" }
@@ -22,7 +22,7 @@ export type KetCuc =
 
 export async function guiNhan(
   fetchFn: typeof fetch,
-  body: { lat: string; item_id: number; values: RawLabels },
+  body: { lat: string; item_id: number; values: RawLabels; reason?: string },
 ): Promise<KetCuc> {
   let res: Response
   try {
@@ -42,6 +42,12 @@ export async function guiNhan(
   if (res.status === 409) return b.error === DA_GAN_CUA_TOI ? { kind: "da-luu" } : { kind: "da-co-nguoi", error: b.error ?? "Tin này vừa có người gắn" }
   return { kind: "loi-may-chu", error: b.error ?? "Không lưu được nhãn — thử lại" }
 }
+
+/** Rời trang bằng tải lại đầy đủ, để server xếp tin kế. Tách ra để test quan sát được đích đến. */
+export const diTrang = (href: string) => window.location.assign(href)
+
+/** Toast khi tin vừa có người gắn: màn tự sang tin kế. */
+export const cauTinKe = (error: string) => `${error} — chuyển tin kế`
 
 /** Lỗi mạng khi Lưu: tại chỗ, có «Lưu lại» (luật ReUI: lỗi vùng dữ liệu kèm Thử lại). */
 export function LuuLoiAlert({ onRetry, dangLuu }: { onRetry: () => void; dangLuu: boolean }) {
