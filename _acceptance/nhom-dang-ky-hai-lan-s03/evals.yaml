@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: nhom-dang-ky-hai-lan-s03
+# DB: mọi phép đo chạy trên DB thử `oneinvest_gcn_nhan`; mau-hai-khoa dọn fixture của mình, that-chi-doc chỉ đọc.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ndk_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
+    expected: "exit 0; lệnh thật trên fixture hai dạng khoá: 'ok AC-1 mot tang', 'ok AC-1 dung ma khoa tran', 'ok AC-1 khong vuot han muc'; chiều đỏ cùng fixture: đột biến khoá nguyên văn cho 'ok do M1: loi tach tang', đột biến đại diện sai cho 'ok do M2: loi dai dien', đột biến gộp quá tay cho 'ok do M4: loi gop qua tay'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ndk_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
+    expected: "exit 0; fixture có nhiều nhóm hơn số nhóm lớn, nhóm hai dòng chỉ vào nhóm lớn khi tính gộp, số nội dung của hợp tính tay trong probe: 'ok AC-2 bai khoa phu vao tang dai dien', 'ok AC-2 so noi dung la hop hai dang', 'ok AC-2 xep theo so gop'; chiều đỏ ghim riêng từng lời hứa: 'ok do M1: loi bai khoa phu', 'ok do M5: loi xep', 'ok do M6: loi hop'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ndk_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
+    expected: "exit 0; 'ok AC-3 bao gop ca --thu', 'ok AC-3 so bai khoa phu dung', 'ok AC-3 canh bao khac the', 'ok AC-3 khong co cap thi khong bao', 'ok AC-3 khong in khoa'; chiều đỏ: 'ok do M3: loi khong bao gop'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gcn_pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
+    expected: "exit 0; ca 'nhom that' xanh trên bảng dạng khoá của AC-4, 13 ô, mỗi ô một phần tử viết tay trong tệp test, số assert bằng số ô; sổ và bài toàn khoá trần hoặc khoá lạ cho mẫu y hệt so khớp nguyên văn; chiều đỏ trong cùng tệp: bản đột biến khoá nguyên văn và bản gộp quá tay làm bảng ném thông điệp ghim 'NHOM THAT SAI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ndk_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
+    expected: "exit 0; lát do đột biến khoá nguyên văn ghi ra, không INSERT tay: 'ok AC-5 lat moi co tang phu', 'ok AC-5 khong them khong doi', 'ok AC-5 cau bao dung nguyen van', 'ok AC-5 khong khuyen xoa'; đối chứng cùng fixture: lát do bản thật ghi ra thì 'ok AC-5 lat sach khong bao'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ndk_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/transform-zalo.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
+    expected: "exit 0; 'ok AC-6 bam so khong doi', 'ok AC-6 bam bai khong doi', 'ok AC-6 thi truong ca hai dang'; đối chứng: thước băm đỏ với 'loi bam so' khi chính probe đổi một dòng sổ của fixture rồi hoàn lại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ndk_that
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs]
+    expected: "exit 0; DB thử có ≥1 cặp đọc từ sổ, kết nối chỉ đọc: 'ok AC-7 khong tang phu', 'ok AC-7 khong vuot han muc', 'ok AC-7 so dong gop bang so cap', 'ok AC-7 khong in khoa that'; chiều đỏ cùng dữ liệu: bản đột biến khoá nguyên văn cho 'loi tang phu'; DB thử không có cặp thì exit 1 với 'loi DB thu khong co cap'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ndk_that
+    layer: backend-effect
+    paths: [docs/superpowers/specs/2026-11-04-nhom-dang-ky-hai-lan-s03-design.md, _acceptance/nhom-dang-ky-hai-lan-s03/**, pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
+    expected: "exit 0; khoá đọc từ sổ DB thử lúc chạy, cả dạng nguyên văn và đã bỏ tiền tố: 'ok AC-8 tep doi 0 khop', 'ok AC-8 dau ra 0 khop'; đối chứng dương: khoá mồi trong tệp tạm cho 'ok do: loi khoa trong tep', chuỗi mồi trong đầu ra cho 'ok do: loi khoa trong dau ra'; lệnh chỉ in số lượng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

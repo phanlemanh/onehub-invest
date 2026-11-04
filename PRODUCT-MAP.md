@@ -10,7 +10,7 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>chưa có"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>12 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>13 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>136 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>98 việc"] --> GG{"Cổng Giá trị"}
@@ -34,6 +34,7 @@ flowchart TD
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
+- Lấy mẫu gắn nhãn theo nhóm S03 coi một nhóm thật đăng ký hai lần trong sổ là một tầng, không sửa dữ liệu thật (`nhom-dang-ky-hai-lan-s03`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
