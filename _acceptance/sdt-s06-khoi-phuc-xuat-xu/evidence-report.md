@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 70b7a174646a0a09c8546e012987fe4fd092724b
-human_signoff:
+human_signoff: Mạnh 2026-11-04
 ---
 
 # Evidence Report: sdt-s06-khoi-phuc-xuat-xu

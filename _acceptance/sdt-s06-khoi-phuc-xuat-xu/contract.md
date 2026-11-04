@@ -5,7 +5,7 @@ slug: sdt-s06-khoi-phuc-xuat-xu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/, không khớp t3_paths; không migration
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-03
 design_doc: docs/superpowers/specs/2026-11-03-sdt-s06-khoi-phuc-xuat-xu-design.md
@@ -86,3 +86,5 @@ Bốn trục: số riêng (hợp lệ · không) × ẩn số (không · ẩn) �
 - #294 cũng sửa `pipeline/gan-sdt-s06.mjs` và tệp test, khác dòng; gộp sau phải chạy lại `gs_test`.
 - #294 không phá luật ẩn số: dòng nó thêm nằm sau hai nhánh ẩn số trong CTE `quyet`, nên tin ẩn số được dựng lớp ghép vẫn bị rút khi view chưa có 070; chỉ tin không ẩn mới giữ số chờ 070.
 - Hồ sơ `sdt-s06-ghep-tai-khoan` đã ký có eval trỏ `pipeline/gan-sdt-s06.mjs`, nên PR này có thể phải ghim lại hồ sơ đó.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-04:
+  - Ngoài-1: Dòng cảnh báo chưa áp lại bản sửa số điện thoại có thể mất mà bài kiểm tra vẫn xanh, vì ca kiểm đọc gộp cả log của bước dựng dữ liệu thử.
