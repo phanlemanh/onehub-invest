@@ -8,9 +8,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type pg from "pg";
 
-import type { Nhan } from "../src/agents/nhan-bac-s03.js";
+import { TEN_MODEL, type Nhan } from "../src/agents/nhan-bac-s03.js";
 import type { ContextResult } from "../src/agents/context-resolver.js";
 import { chayLuot, coMauDat, demLuot, docTraLoi, doMau, LUAT_VERSION, PROMPT_VERSION, xuLaiTrich } from "../src/enrich/doc-toan-bo.js";
+// @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
+import { textHash } from "../../pipeline/lib/eval-labels.mjs";
 import { kiemTrichLoai } from "../src/enrich/luat-trich-dan.js";
 import type { ResolveFn } from "../src/enrich/run.js";
 import { chayLenh, docCo, type Noi } from "../scripts/doc-toan-bo-s03.js";
@@ -152,6 +154,38 @@ test("AC-4 chín ca âm cùng lượt với một ca dương: ca dương đổi,
     }
     assert.equal(kq.giuNguyen["ngu-canh-loai-tru"], 2, `AC-4 biệt thự, nhà 3pn dính chốt: ${JSON.stringify(kq.giuNguyen)}`);
     assert.equal(kq.giuNguyen["chu-doi"], 1, `AC-4 chữ đổi phải giữ: ${JSON.stringify(kq.giuNguyen)}`);
+  });
+});
+
+// «Bài mới nhất» không cố định khi nhiều bài trùng captured_at; đo trên DB máy thu 04/11: 153 đề xuất rơi vào ca này.
+test("AC-3 tin có bài khác đứng trước bài đã đọc: vẫn tìm đúng nhãn, thân bài xét trên bài đã đọc", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const a = "t_xl_haibai";
+    await luotCu(c, [{ t: { id: a, text: "Sẵn 2PN S2.09 full đồ 10tr" }, quote: "2PN" }]);
+    const postMoi = `t_xl_p_${process.pid}_${++dem}`;
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at, captured_at)
+      VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi', 'xl', 'Bài khác của tin, chưa ai đọc', '2026-11-01T08:00:00Z', now() + interval '1 hour')`, [postMoi, SNAP]);
+    await c.query(`UPDATE sale_offers SET post_ids = post_ids || $2::text WHERE offer_id = $1`, [a, postMoi]);
+    const kq = await xuLai(c, [a]);
+    assert.equal(kq.daAp, 1, `AC-3 phải tìm được nhãn của bài đã đọc: ${JSON.stringify(kq)}`);
+    assert.equal((await deXuat(c, a))[0].corroborated_by, "trich-dan:so-phong");
+  });
+});
+
+test("AC-3 tin có bài khác cũng đã đọc, câu trích khác: chỉ xét bài sinh đề xuất", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const a = "t_xl_haibaidoc";
+    await luotCu(c, [{ t: { id: a, text: "Sẵn 2PN S2.10 full đồ 10tr" }, quote: "2PN" }]);
+    const postMoi = `t_xl_p_${process.pid}_${++dem}`, chuMoi = "Có 3PN, khu có biệt thự song lập";
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, conversation_id, text, posted_at, captured_at)
+      VALUES ($1, $2, 'openclaw-hook', 'Nhóm mồi', 'xl', $3, '2026-11-01T08:00:00Z', now() + interval '1 hour')`, [postMoi, SNAP, chuMoi]);
+    await c.query(`UPDATE sale_offers SET post_ids = post_ids || $2::text WHERE offer_id = $1`, [a, postMoi]);
+    await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, json_ok, probabilities, run_id)
+      VALUES ('S03', $1, $2, $3, $4, 'offer', true, $5, 'r')`, [postMoi, textHash(chuMoi), TEN_MODEL.haiku, PROMPT_VERSION, { property_type: "apartment", quote_loai: "3PN" }]);
+    const kq = await xuLai(c, [a]);
+    assert.equal(kq.daAp, 1, `AC-3 phải xét bài có câu trích của đề xuất, không phải bài đứng đầu: ${JSON.stringify(kq)}`);
   });
 });
 

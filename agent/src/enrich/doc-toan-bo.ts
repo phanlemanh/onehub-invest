@@ -375,11 +375,23 @@ export async function xuLaiTrich(o: {
   const c = o.client;
   const giaoDich = o.giaoDich ?? giaoDichSavepoint(c);
   const cam = o.cam ?? (await docTenCam(c));
-  const tins = new Map((await chonTin(c)).filter((t) => !testMarker(t) && t.post_id && coChu(t.text)).map((t) => [t.offer_id, t]));
-  const soTinCuaBai = new Map<string, number>();
-  for (const t of tins.values()) soTinCuaBai.set(t.post_id!, (soTinCuaBai.get(t.post_id!) ?? 0) + 1);
+  const tins = new Map((await chonTin(c)).map((t) => [t.offer_id, t]));
+  // Tin nhiều bài cùng captured_at thì «bài mới nhất» của chonTin không cố định giữa hai lần chạy; nhãn phải tìm trên mọi bài còn nguyên chữ của tin.
+  const baiCuaTin = new Map<string, { post_id: string; text: string; group_name: string | null }[]>();
+  for (const b of (await c.query(
+    `SELECT o.offer_id, s.post_id, s.text, s.group_name FROM sale_offers o JOIN stg_zalo_posts s ON s.post_id = ANY (o.post_ids)
+     WHERE o.source = 'S03' AND o.retired_at IS NULL ORDER BY o.offer_id, s.captured_at DESC NULLS LAST, s.post_id`)).rows) {
+    if (testMarker({ ...tins.get(b.offer_id)!, text: b.text }) || !coChu(b.text)) continue;
+    baiCuaTin.set(b.offer_id, [...(baiCuaTin.get(b.offer_id) ?? []), b]);
+  }
+  const nhan = new Map<string, NhanDoc>();
+  for (const r of (await c.query(
+    `SELECT post_id, text_hash, listing_intent, probabilities, quote, quote_ok, json_ok, error_kind FROM silver_labels
+     WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND json_ok`, [TEN_MODEL.haiku, PROMPT_VERSION])).rows) {
+    nhan.set(khoaNhan(r.post_id, r.text_hash), r);
+  }
   const { rows: deXuat } = await c.query(
-    `SELECT id, offer_id, value, run_id FROM enrichment_proposals
+    `SELECT id, offer_id, value, run_id, evidence->>'trich' AS trich FROM enrichment_proposals
      WHERE source = 'e2_llm' AND field = 'property_type' AND status = 'skipped' AND evidence->>'ly_do' = 'khong-tu-khoa' AND evidence->>'prompt_version' = $1
      ORDER BY id`, [PROMPT_VERSION]);
   const kq: TomTatXuLai = { xet: 0, dat: 0, daAp: 0, giuNguyen: {}, loiGhi: [] };
@@ -388,17 +400,20 @@ export async function xuLaiTrich(o: {
     if (o.chiTin && !o.chiTin.includes(ep.offer_id)) continue;
     kq.xet++;
     const t = tins.get(ep.offer_id);
-    if (!t) { giu("tin-nghi-hoac-khong-chu"); continue; }
-    const { rows: [n] } = await c.query<NhanDoc>(
-      `SELECT listing_intent, probabilities, quote, quote_ok, json_ok, error_kind FROM silver_labels
-       WHERE source_code = 'S03' AND model = $1 AND prompt_version = $2 AND post_id = $3 AND text_hash = $4 AND json_ok`,
-      [TEN_MODEL.haiku, PROMPT_VERSION, t.post_id, textHash(t.text!)]);
-    if (!n) { giu("chu-doi"); continue; }
-    const ctx: ContextResult = await o.resolve(t.group_name, t.text!);
+    const bais = baiCuaTin.get(ep.offer_id);
+    if (!t || !bais) { giu("tin-nghi-hoac-khong-chu"); continue; }
+    // Đúng bài đã sinh đề xuất: cùng chữ, cùng giá trị, cùng câu trích.
+    const hop = bais.map((b) => ({ b, n: nhan.get(khoaNhan(b.post_id, textHash(b.text))) })).find(({ n }) => {
+      const them = n?.probabilities as DocThem | null | undefined;
+      return them?.property_type === ep.value && (them?.quote_loai ?? null) === ep.trich;
+    });
+    if (!hop?.n) { giu("chu-doi"); continue; }
+    const { b, n } = hop;
+    const ctx: ContextResult = await o.resolve(b.group_name, b.text);
     const q = quyetTin({
       hienTai: t, e1Loai: ctx.propertyType, intent: n.listing_intent, quoteOk: n.quote_ok, quoteYDinh: n.quote,
-      them: n.probabilities as DocThem | null, chuDaGat: gatChu(t.text!, [...cam, ...(t.group_name ? [t.group_name] : [])]),
-      chungBai: (soTinCuaBai.get(t.post_id!) ?? 0) > 1, held: await heldFields(c, t.offer_id), kiemLoai: o.kiemLoai,
+      them: n.probabilities as DocThem | null, chuDaGat: gatChu(b.text, [...cam, ...(b.group_name ? [b.group_name] : [])]),
+      chungBai: false, held: await heldFields(c, t.offer_id), kiemLoai: o.kiemLoai,
     });
     const d = q.de_xuat.find((x) => x.source === "e2_llm" && x.field === "property_type" && x.value === ep.value);
     if (!d || d.status !== "queued" || d.route !== "corroborated" || !d.corroboratedBy?.startsWith("trich-dan:")) {
