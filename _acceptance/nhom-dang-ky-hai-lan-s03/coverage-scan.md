@@ -10,7 +10,7 @@ Preset test-matrix, chỉnh trục theo bài toán.
 ## Trục
 
 - **Dạng dòng của một nhóm**: một dòng khoá trần | một dòng có tiền tố | một khoá lạ | hai dòng trần và tiền tố | hai dòng khác kênh | ba dòng. Thước CE: sổ thật đo 04/11 `[SUY-TỪ-REPO: scripts/lib/ops-local.mjs]`.
-- **Dạng khoá của bài**: khoá trần | có tiền tố | không có khoá | không có trong sổ. Thước CE: `stg_zalo_posts` đo 04/11 `[SUY-TỪ-REPO: pipeline/import-airbnb.mjs]`.
+- **Dạng khoá của bài**: khoá trần | có tiền tố | không có khoá | không có trong sổ. Thước CE: bảng bài S03 (`stg_*`) đo 04/11 `[SUY-TỪ-REPO: pipeline/import-airbnb.mjs]`.
 - **Lát và chế độ chạy**: lát mới ghi | `--thu` | lát sạch đã có | lát có tầng phụ. Thước CE: luật lát đã có dòng của GC0 `[SUY-TỪ-REPO: pipeline/label-sample.mjs]`.
 
 Trục trạng thái dòng không tách riêng: đổi trạng thái không đổi kết quả, chỉ cần một ô chứng điều đó.
@@ -30,7 +30,7 @@ Trục trạng thái dòng không tách riêng: đổi trạng thái không đ�
 
 ## Never
 
-- Sửa `conversation_id` trong `stg_zalo_posts`: lượt nạp lại từ raw bất biến đảo ngược.
+- Sửa `conversation_id` trong bảng bài S03 (`stg_*`): lượt nạp lại từ raw bất biến đảo ngược.
 
 ## Áp mọi ô Core
 

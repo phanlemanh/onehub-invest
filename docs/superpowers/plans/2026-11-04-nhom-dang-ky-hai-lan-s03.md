@@ -14,7 +14,7 @@
 
 - Không ghi vào DB `oneinvest`; không áp 072, 073 lên DB thật. Phép đo chạy trên `oneinvest_gcn_nhan`.
 - Không ghi tên kênh hay khoá nhóm thật vào tệp kho; fixture dùng tiền tố giả `ndkk:`.
-- Không đổi sổ, `stg_zalo_posts`, transform, hook, đường thu, `/ops/sources`.
+- Không đổi sổ, bảng bài S03 (`stg_*`), transform, hook, đường thu, `/ops/sources`.
 
 ## Review Focus
 

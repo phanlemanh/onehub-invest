@@ -29,7 +29,7 @@ Source input: `_acceptance/gan-nhan-theo-nhom-s03/review-findings.md`, `decision
 - AC-3: Given sổ có cặp trùng, When chạy lệnh có hoặc không `--thu`, Then stdout có dòng `gộp đơn vị trùng: <đại diện> ← <phụ> · bài ở khoá phụ <n>`, với n đúng và không chứa khoá nhóm; hai dòng khác thẻ thì có thêm dòng cảnh báo «khác thẻ»; sổ không có cặp thì không có dòng nào như vậy.
 - AC-4: Given bảng dạng khoá dưới đây (viết trước khi có mã, A < B < C là `unit_code`), When tính đơn vị cho từng ô, Then mỗi ô cho đúng khoá thật, đại diện và tầng như bảng; và sổ cùng bài toàn khoá trần hoặc khoá lạ thì mẫu y hệt so khớp nguyên văn với cùng seed.
 - AC-5: Given lát do bản so khớp nguyên văn ghi ra có dòng ở tầng phụ, When chạy lại lệnh, Then 0 dòng thêm hay đổi, stdout có đúng câu `lát đã có <n> dòng ở tầng phụ <mã> — giữ nguyên, gắn tiếp được; số của nhóm này đang chia hai tầng, muốn một tầng thì lấy mẫu lát tên mới`, không có lời khuyên xoá.
-- AC-6: Given DB thử có cặp trùng, When chạy lệnh có ghi, Then băm toàn bộ `collection_units` và `stg_zalo_posts` không đổi, `docThiTruongNhom` vẫn trả thị trường cho cả hai dạng khoá.
+- AC-6: Given DB thử có cặp trùng, When chạy lệnh có ghi, Then băm toàn bộ `collection_units` và bảng bài S03 (`stg_*`) không đổi, `docThiTruongNhom` vẫn trả thị trường cho cả hai dạng khoá.
 - AC-7: Given bản sao dữ liệu thật ở DB thử `oneinvest_gcn_nhan` có các cặp trùng đọc từ sổ, When chạy `--thu` với 30/5, Then không dòng `nhóm <mã phụ>:` nào được in, mỗi đại diện không vượt hạn mức, số dòng gộp bằng số cặp đọc từ sổ, stdout không chứa khoá nhóm thật.
 - AC-8: Given mọi khoá S03 đọc từ sổ DB thử lúc chạy, ở dạng nguyên văn và dạng đã bỏ tiền tố, When quét các tệp vòng này đổi (design, hồ sơ, probe, mã) cùng stdout và stderr của bản thật lẫn bản đột biến, Then số khớp bằng 0, kết quả chỉ in số lượng, và một khoá mồi trong tệp tạm làm phép quét đỏ.
 
@@ -59,8 +59,8 @@ Source input: `_acceptance/gan-nhan-theo-nhom-s03/review-findings.md`, `decision
 
 ## Out of scope
 
-- Không sửa dữ liệu thật: không xoá, gộp hay đổi trạng thái dòng trong `collection_units`, không đổi `conversation_id` trong `stg_zalo_posts`. Việc đó cần lời Mạnh và thuộc việc riêng sau mốc.
-- Không đổi `transform-zalo`, `do-cam-mau-s03`, `mucDichNhom`, `loaiHinhNhom`, `gop-anh`: chúng vẫn so khoá nguyên văn, số tin trên cổng không đổi trong việc này.
+- Không sửa dữ liệu thật: không xoá, gộp hay đổi trạng thái dòng trong `collection_units`, không đổi `conversation_id` trong bảng bài S03 (`stg_*`). Việc đó cần lời Mạnh và thuộc việc riêng sau mốc.
+- Không đổi bước transform của S03, `do-cam-mau-s03`, `mucDichNhom`, `loaiHinhNhom`, `gop-anh`: chúng vẫn so khoá nguyên văn, số tin trên cổng không đổi trong việc này.
 - Không đổi đường thu và không đổi hook, `sync-don-vi.mjs`, `khai-so-nhom.mjs`.
 - Không đổi `/ops/sources`: khu sổ vẫn hiện đủ 30 đơn vị.
 - Không thêm migration, không thêm ràng buộc chặn khoá trùng.

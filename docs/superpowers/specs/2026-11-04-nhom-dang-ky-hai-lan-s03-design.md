@@ -20,7 +20,7 @@ Cắt từ nhánh `feat/gan-nhan-theo-nhom-s03` vì GC0 chưa gộp.
 | Chỗ | Dựa vào gì | Kết luận |
 |---|---|---|
 | Đường thu (hook, `import-airbnb.mjs`) | Không đọc sổ; khoá lấy từ sự kiện. Sổ S03 là bản soi của gateway | Không dựa, không cần đổi đường thu |
-| `transform-zalo.docThiTruongNhom` | So `group_key` nguyên văn với bài, không lọc trạng thái | 91 bài cũ lấy thị trường qua dòng có tiền tố. Xoá dòng thì mất |
+| `docThiTruongNhom` trong bước transform của S03 | So `group_key` nguyên văn với bài, không lọc trạng thái | 91 bài cũ lấy thị trường qua dòng có tiền tố. Xoá dòng thì mất |
 | `do-cam-mau-s03.mjs` | Như trên | Như trên |
 | `khai-so-nhom.mjs` | Đòi khai đủ mọi đơn vị, tên theo khoá | Đang khai đủ sáu dòng, cùng thẻ, cùng thị trường |
 | `sync-don-vi.mjs` | Dòng vắng khỏi gateway → `paused` | Lượt chạy kế sẽ đổi ba dòng có tiền tố sang `paused` |
@@ -28,7 +28,7 @@ Cắt từ nhánh `feat/gan-nhan-theo-nhom-s03` vì GC0 chưa gộp.
 | `labels-luot-hai.ts` | Đọc `note` theo `stratum` | Chỉ cần đại diện có thẻ; sáu dòng đang cùng một thẻ |
 | Tin trên cổng | 87/91 bài có tiền tố đã thành 66 tin | Sửa `stg` hay sổ làm đổi số tin ngay trước mốc 05/11 |
 
-`conversation_id` đọc từ raw snapshot bất biến và import ghi đè bằng giá trị từ snapshot, nên sửa `stg_zalo_posts` sẽ bị lượt
+`conversation_id` đọc từ raw snapshot bất biến và import ghi đè bằng giá trị từ snapshot, nên sửa bảng bài S03 (`stg_*`) sẽ bị lượt
 nạp lại đảo ngược. Gốc lỗi nằm ở dữ liệu của sổ; đường thu hiện đã đúng. Việc này không đổi đường thu nên không cần giao ZCode.
 
 ## Thiết kế
