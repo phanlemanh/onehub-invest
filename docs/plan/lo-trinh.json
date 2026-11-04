@@ -83,6 +83,24 @@
         "LS1",
         "DS1"
       ]
+    },
+    {
+      "ma": "GCM1",
+      "ten": "Việc đầu tiên sau 05/11: tin căn hộ S03 gắn được toà hoặc trục, diện tích suy ra hiện có nhãn, bắt đầu từ Ocean Park",
+      "loai": "phat-hanh",
+      "dot": "gan-can-s03-0411",
+      "hang": [
+        "GC0",
+        "GCQ1",
+        "GCQ2",
+        "GC1",
+        "DN1",
+        "DB1",
+        "PL13",
+        "PL20",
+        "GC2",
+        "GC3"
+      ]
     }
   ],
   "hang": [
@@ -276,7 +294,9 @@
       "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
       "hang": "T2",
       "dung_tren": [
-        "PL6"
+        "PL6",
+        "GC0",
+        "GCQ2"
       ],
       "slug": "doc-ma-can-gia-khoang",
       "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
@@ -285,7 +305,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn."
     },
     {
       "ma": "PL14",
@@ -434,7 +454,7 @@
       "phu": [
         "C2.7"
       ],
-      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md."
+      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1."
     },
     {
       "ma": "PL21",
@@ -1785,7 +1805,7 @@
       "nhom": "so-nhom",
       "dot": "ops-noi-that-2410",
       "phu": [],
-      "ghi_chu": "Cần số migration NNN — xin ở sổ SO-MIGRATION qua phiên liên làn, không tự lấy số. Đứng trên PL12 (sổ nhóm một nơi) để thêm trường vào đúng một sổ; nếu Mạnh muốn sớm hơn PL12 thì gộp hai trường vào PL12 ở Cổng Phạm vi của PL12. Tên nhóm là tầng C (ON1) nên tiêu đề, mô tả được lên cloud. Dưới mục tiêu cỡ: hàng nền tách khỏi màn sửa (ON20) theo luật 3 — lớp dữ liệu + quyền ghi ở hàng T3 riêng, màn sửa ở T2."
+      "ghi_chu": "Cần số migration NNN — xin ở sổ SO-MIGRATION qua phiên liên làn, không tự lấy số. Đứng trên PL12 (sổ nhóm một nơi) để thêm trường vào đúng một sổ; nếu Mạnh muốn sớm hơn PL12 thì gộp hai trường vào PL12 ở Cổng Phạm vi của PL12. Tên nhóm là tầng C (ON1) nên tiêu đề, mô tả được lên cloud. Dưới mục tiêu cỡ: hàng nền tách khỏi màn sửa (ON20) theo luật 3 — lớp dữ liệu + quyền ghi ở hàng T3 riêng, màn sửa ở T2. Lượt cắt 04/11: GCQ1 chạy trước qua tệp đã duyệt; hàng này và ON20 giữ phần sửa trên màn."
     },
     {
       "ma": "ON20",
@@ -1825,7 +1845,7 @@
       "phu": [
         "QD1c"
       ],
-      "ghi_chu": "Còn chờ RV-M2 (review §0.4): gửi tiêu đề/mô tả cho model cloud hay chỉ luật local — hỏi ở Cổng Phạm vi. Chung agent/src/agents/context-resolver.ts với PL18 (E1/E2 theo lớp) — chạy liền. Dưới mục tiêu cỡ: một đường đọc của agent; không gộp với ON20 (màn sửa của người, khác kết quả)."
+      "ghi_chu": "Còn chờ RV-M2 (review §0.4): gửi tiêu đề/mô tả cho model cloud hay chỉ luật local — hỏi ở Cổng Phạm vi. Chung agent/src/agents/context-resolver.ts với PL18 (E1/E2 theo lớp) — chạy liền. Dưới mục tiêu cỡ: một đường đọc của agent; không gộp với ON20 (màn sửa của người, khác kết quả). Mạnh chốt 04/11 sửa Q4/H5: quy ước đã qua người và đạt eval được tự ghi nhãn suy ra (GCQ2); ngữ cảnh chưa qua eval vẫn không tự quyết."
     },
     {
       "ma": "TV0",
@@ -3408,7 +3428,7 @@
         "db/migrations",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Tên dự án và bảng nối từ S08 chỉ ở local (luật 5). Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §3."
+      "ghi_chu": "Tên dự án và bảng nối từ S08 chỉ ở local (luật 5). Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §3. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md)."
     },
     {
       "ma": "DB1",
@@ -3432,7 +3452,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5."
+      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md)."
     },
     {
       "ma": "DN2",
@@ -3503,6 +3523,155 @@
         "app/src/app/ops/registry"
       ],
       "ghi_chu": "Hạng T3: đổi đường dữ liệu lên cloud, chạm luật 5."
+    },
+    {
+      "ma": "GC1",
+      "slug": "doc-so-m2-bi-sot",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [],
+      "phu": [
+        "GC1"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Bài S03 ghi diện tích không đơn vị sau nhãn «Diện tích» hay bằng chữ kiểu Unicode được đọc ra area_m2 như bài ghi m² thường",
+      "bat_khi": "14 tin đo 04/11 có đúng số trong bài; băm area_m2 của các tin khác không đổi; «hdt 21 triệu» không thành diện tích",
+      "vi_sao": "Đo 04/11: 14/2.175 tin thiếu m² thật ra có số trong chữ. Sửa rẻ, không phụ thuộc chuỗi gắn căn.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/parse.test.mjs"
+      ],
+      "ghi_chu": "5 tiêu chí, giữ riêng: gộp vào GC2 sẽ bắt việc nhỏ này chờ cả chuỗi Danh bạ."
+    },
+    {
+      "ma": "GC2",
+      "slug": "dien-tich-suy-ra-toa-truc",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "PL20"
+      ],
+      "phu": [
+        "GC2"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Tin căn hộ S03 thiếu số m² mà gắn được toà, trục hoặc phân khu nhận một phát biểu diện tích suy ra dạng dải, dựng từ tin có ghi số cùng chỗ và cùng loại căn, không đổi area_m2, giá/m² và thước giá",
+      "bat_khi": "Thử ngược giấu số, tách bán và thuê, đạt ngưỡng chốt ở Cổng Phạm vi; băm area_m2, price_perm2 và thước trước sau bằng nhau; 0 giá trị chỉ từ S08; S08 lệch dải thì có thẻ ở /ops",
+      "vi_sao": "Đo 04/11: chỉ 45/2.175 tin thiếu m² có trục. Dải từ tin có ghi số đúng hơn dải từ S08 ở mọi mức, và chỉ 1 tin có S08 mà không có dải.",
+      "vung": [
+        "db/migrations",
+        "pipeline/sql",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²)."
+    },
+    {
+      "ma": "GC3",
+      "slug": "dien-tich-suy-ra-len-cong",
+      "hang": "T3",
+      "vai": "Người xem",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "GC2"
+      ],
+      "phu": [
+        "GC3"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Người xem mở danh sách Bán, Cho thuê trên cổng Invest và thấy tin S03 chưa ghi số m² hiện dải kèm nhãn «suy ra», tin này không vào lọc diện tích và không có giá/m²",
+      "bat_khi": "Số tin thêm khớp đếm SQL độc lập; 0 tin đi tìm mua hay không phải tin rao lọt lên; 0 giá trị chỉ từ S08 rời máy; lọc và sắp theo m² không đổi với tin có số",
+      "vi_sao": "Đo 04/11: 2.100 tin S03 chỉ thiếu m² nên chưa lên cổng, đang hiện 1.259. Bỏ điều kiện m² cũng bỏ một lớp lọc vô tình, nên phải đi cùng nhãn ý định.",
+      "vung": [
+        "app/src/lib/offers-public.ts",
+        "app/src/lib/offers-filters.ts",
+        "app/src/lib/data-level.ts",
+        "app/src/components/listing",
+        "app/src/app/(app)/[country]/[market]/listings",
+        "pipeline/sync-cloud.mjs",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng."
+    },
+    {
+      "ma": "GC0",
+      "slug": "gan-nhan-theo-nhom-s03",
+      "hang": "T3",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 11,
+      "dung_tren": [
+        "PL7"
+      ],
+      "phu": [
+        "GC0"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels cùng thẻ nhóm, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm",
+      "bat_khi": "Chọn mẫu theo nhóm chạy lại không thêm dòng; lượt xem máy đọc không đổi được nhãn mù; bảng trường hợp khớp đếm SQL độc lập; 0 nhãn rời máy thu",
+      "vi_sao": "Đo 04/11: chưa có nhãn người nào, số độ đúng đều do tác tử Claude gắn. Màn PL7 đã có nhưng thiếu các trường trên và chưa có lượt ghi trường hợp. PL13, PL20, GC2 đều chấm trên tập test có nhãn người. Mạnh 04/11: chỉ nhìn chữ thì không biết tin thuộc đâu (`RB` là Rainbow, nhóm mặc định Grand Park); 2.629/3.583 tin căn hộ không nêu dự án trong chữ.",
+      "vung": [
+        "app/src/app/ops/labels",
+        "app/src/app/api/v1/ops/labels",
+        "app/src/lib/labels-normalize.ts",
+        "db/migrations",
+        "pipeline/label-sample.mjs",
+        "pipeline/lib/eval-labels.mjs"
+      ],
+      "ghi_chu": "Mạnh chốt 04/11: Mạnh và đội gắn nhãn, không thuê người. Cỡ mẫu đề xuất: 30 bài mỗi nhóm trong 10 nhóm lớn, khoảng 5 bài mỗi nhóm nhỏ, dừng sớm khi 15 bài liền không có trường hợp mới; chốt sau khi thử một nhóm. Hạng T3 vì đổi ràng buộc field của eval_labels. Bảng nhãn chỉ ở máy thu: nếu thành viên đội không làm trực tiếp trên máy thu thì chốt đường truy cập ở Cổng Phạm vi, không đưa labeler_id lên cloud khi chưa sửa luật. Nhãn ghi điều người trong nhóm hiểu, không phải chỉ chữ bài; căn cứ chia chữ bài, ngữ cảnh nhóm, kiến thức nghề. 11 tiêu chí vì thẻ nhóm, trường mới và căn cứ phải giao cùng nhau mới gắn được một bài trọn vẹn. Số WC do Mạnh phát hiện thiếu khi gắn thử 04/11. Mạnh nêu 04/11 màn chưa có chỗ giải thích: thêm ô lý do cho từng bài, bắt buộc khi có trường căn cứ không phải chữ bài, ghi trước khi xem máy đọc để không bị máy dẫn dắt."
+    },
+    {
+      "ma": "GCQ1",
+      "slug": "quy-uoc-nhom-do-theo-nhom",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "GC0"
+      ],
+      "phu": [
+        "GCQ1"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Mỗi nhóm S03 có một quy ước chuẩn hoá theo khuôn (dự án mặc định, bí danh phân khu và toà, cách viết giá, che tầng, ngoại lệ), có phiên bản, được chạy thử không ghi trên nhãn người và chỉ bật khi đạt ngưỡng của nhóm đó",
+      "bat_khi": "Chạy thử không đổi dữ liệu và báo số đúng theo từng nhóm, tách bài chữ nêu và bài chữ im; nhóm dưới ngưỡng không bật; sửa quy ước thành phiên bản mới, phải đo lại mới bật",
+      "vi_sao": "Đo 02/11: thẻ nháp nâng toà 68→85%, mã căn 55→76%, loại 88→96% nhưng thêm ca gán sai dự án; với bài chữ im thì chưa có đáp án độc lập. Đề xuất của Mạnh, nay đo bằng nhãn người.",
+      "vung": [
+        "pipeline/khai-so-nhom.mjs",
+        "pipeline/lib/eval-labels.mjs",
+        "pipeline/label-sample.mjs"
+      ],
+      "ghi_chu": "Nạp từ tệp đã duyệt qua đường khai-so-nhom sẵn có, không chờ màn ON20. Nháp do máy viết, người duyệt; tệp ở research-local, không vào kho. Ngưỡng chốt ở Cổng Phạm vi: review Q4(b) ghi precision ≥95%, cận dưới 0,95 cần ít nhất 73 bài đúng hết mỗi nhóm; cận dưới 0,80 cần 29/30. Nháp quy ước lấy từ lý do người gắn ghi ở GC0; LLM chỉ được gợi ý gom, người duyệt."
+    },
+    {
+      "ma": "GCQ2",
+      "slug": "ghi-suy-ra-tu-quy-uoc-nhom",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "GCQ1"
+      ],
+      "phu": [
+        "GCQ2"
+      ],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Tin S03 của nhóm có quy ước đã bật nhận dự án, phân khu, toà từ quy ước thành phát biểu suy ra kèm trích quy ước và phiên bản; chữ bài nói khác thì chữ bài thắng; tắt quy ước thì giá trị rút theo",
+      "bat_khi": "Trên nhãn người đạt ngưỡng đã chốt; 0 ô do quy ước đè giá trị chữ bài; tắt một nhóm thì phát biểu của nhóm đó rút hết, chạy lại ra y nguyên; nhóm chưa bật không đổi một dòng",
+      "vi_sao": "Mạnh chốt 04/11 «Cho ghi suy ra», sửa Q4/H5: 73% tin căn hộ không nêu dự án trong chữ, chỉ phá hoà thì các tin đó không bao giờ có dự án và PL20 không biết gắn vào đâu.",
+      "vung": [
+        "agent/src/agents/context-resolver.ts",
+        "agent/src/enrich/doc-toan-bo.ts",
+        "db/migrations",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Luật 7: quy ước là luật xác định do người duyệt, LLM không tự ghi. ADR-0013: ghi FieldAssertion tier inferred, chỉ bộ phân xử ghi cột chuẩn. Tin hiện chưa có cột dự án và ASSERTION_FIELD chưa có dự án, phân khu: chốt nơi chứa ở Cổng Phạm vi. Đo 02/11: LLM đọc thẻ cũng nâng toà, mã căn, đường đó dùng cùng phiên bản quy ước."
     }
   ],
   "chan_troi": [
@@ -4046,6 +4215,26 @@
         "DN7"
       ],
       "mo_lai_khi": "DN6 giao và có từ 2 công ty gửi xác nhận trong cùng một dự án"
+    },
+    {
+      "ma": "GCH1",
+      "dot": "gan-can-s03-0411",
+      "cau_giao": "Tin Grand Park gắn tới trục bằng tín hiệu ngoài chữ bài: ảnh trùng, cùng người đăng, hướng, tầng cao hay thấp",
+      "ly_do": "Đo 04/11 chỉ 17/2.284 tin ghi trục; các tín hiệu này chưa đo nên chưa viết được câu giao có ngưỡng",
+      "phu": [
+        "GCH1"
+      ],
+      "mo_lai_khi": "PL20 giao xong và có số đo tỉ lệ gắn toà của Grand Park trên tin thật"
+    },
+    {
+      "ma": "GCH2",
+      "dot": "gan-can-s03-0411",
+      "cau_giao": "Tin S06 có ghi m² làm thêm nguồn dựng dải diện tích theo toà, phân khu và loại căn",
+      "ly_do": "Chưa đo: không quét stg_chotot_ads khi job S06 đang ghi, và tin S06 chưa có dự án (DS2)",
+      "phu": [
+        "GCH2"
+      ],
+      "mo_lai_khi": "DS2 giao xong và GC2 có số thử ngược để so"
     }
   ],
   "da_bac": []

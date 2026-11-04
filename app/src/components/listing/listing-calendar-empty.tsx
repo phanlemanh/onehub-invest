@@ -11,8 +11,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 
-/** Lịch trống (collector chưa thu lịch của listing) — một hành động: xem lịch gốc trên Airbnb. */
-export function ListingCalendarEmpty({ airbnbUrl }: { airbnbUrl: string | null }) {
+/** Lịch trống (collector chưa thu lịch của listing) — một hành động: xem lịch trên trang gốc. */
+export function ListingCalendarEmpty({ originalUrl }: { originalUrl: string | null }) {
   return (
     <Empty>
       <EmptyHeader>
@@ -23,15 +23,15 @@ export function ListingCalendarEmpty({ airbnbUrl }: { airbnbUrl: string | null }
         <EmptyDescription>Collector chưa thu được lịch đặt phòng; số đêm đã đặt và công suất sẽ hiện khi có lịch.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        {airbnbUrl ? (
+        {originalUrl ? (
           <Button
             variant="outline"
             size="sm"
             nativeButton={false}
-            render={<a href={airbnbUrl} target="_blank" rel="noopener noreferrer" />}
+            render={<a href={originalUrl} target="_blank" rel="noopener noreferrer" />}
           >
             <ExternalLinkIcon data-icon="inline-start" aria-hidden="true" />
-            Xem lịch trên Airbnb
+            Xem lịch trên trang gốc
           </Button>
         ) : (
           <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/vn" />}>

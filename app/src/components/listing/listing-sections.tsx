@@ -46,7 +46,7 @@ export function listingTiles(listing: ListingDetail, peers: Peers | null): StatT
       title: "Giá niêm yết",
       value: fmtMoney(listing.priceListed, currency),
       tier: priceTier(listing.priceListed, peers?.price),
-      footer: peers ? `Trung vị ${peerScope}: ${fmtMoney(peers.price[1], currency)}` : "Giá một đêm trên Airbnb",
+      footer: peers ? `Trung vị ${peerScope}: ${fmtMoney(peers.price[1], currency)}` : "Giá một đêm trên nền tảng",
     },
     {
       title: "Công suất",

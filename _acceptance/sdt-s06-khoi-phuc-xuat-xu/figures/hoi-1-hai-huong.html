@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-1: hai hướng giữ dấu nguồn gốc của số</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Hỏi-1 · AC-1, AC-2, AC-6</p>
+    <h1>Kiểm trước trong lượt S06, hay dựng lại dấu từ stg?</h1>
+
+    <svg viewBox="0 0 1000 512" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="Đường lỗi năm bước từ migration ghi đè hàm phân xử đến tin ẩn vẫn giữ số ghép, với hai hướng chen vào: A kiểm trước trong lượt S06, B dựng lại dấu từ stg.">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+        </marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+        </marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+        </marker>
+        <marker id="arrow-ink" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#2d3142"/>
+        </marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Đường lỗi: nối giữa năm nút -->
+      <line x1="196" y1="244" x2="228" y2="244" stroke="#2d3142" stroke-width="1.2" marker-end="url(#arrow-ink)"/>
+      <line x1="388" y1="244" x2="420" y2="244" stroke="#2d3142" stroke-width="1.2" marker-end="url(#arrow-ink)"/>
+      <line x1="580" y1="244" x2="612" y2="244" stroke="#2d3142" stroke-width="1.2" marker-end="url(#arrow-ink)"/>
+      <line x1="772" y1="244" x2="804" y2="244" stroke="#2d3142" stroke-width="1.2" marker-end="url(#arrow-ink)"/>
+
+      <!-- Hướng A chen vào bước xoá -->
+      <line x1="308" y1="152" x2="308" y2="208" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- Phần hướng A không chặn được, đi tới nút lỗi -->
+      <path d="M 436 92 L 876 92 Q 884 92 884 100 L 884 208" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+      <!-- Hướng B rẽ sau bước áp lại -->
+      <line x1="500" y1="280" x2="500" y2="336" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="564" y1="356" x2="684" y2="356" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="564" y1="416" x2="684" y2="416" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- Nhãn trên đường nối -->
+      <rect x="316" y="172" width="84" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="320" y="184" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">TẠI BƯỚC NÀY</text>
+
+      <rect x="616" y="68" width="80" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="656" y="80" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VẪN TỚI LỖI</text>
+
+      <rect x="508" y="300" width="84" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="512" y="312" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">SAU BƯỚC NÀY</text>
+
+      <rect x="592" y="332" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="624" y="344" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHỚP STG</text>
+
+      <rect x="588" y="392" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="624" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG KHỚP</text>
+
+      <!-- Hướng A -->
+      <rect x="36" y="32" width="400" height="120" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="32" width="400" height="120" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="48" y="44" width="60" height="16" rx="2" fill="transparent" stroke="#4f5d75" stroke-width="0.8"/>
+      <text x="78" y="56" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HƯỚNG A</text>
+      <text x="116" y="57" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Kiểm trước trong lượt S06</text>
+      <text x="48" y="84" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">Chặn được ở bước xoá khi lượt S06 gọi</text>
+      <text x="48" y="108" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Còn hở: ba lệnh công cụ và duyệt enrich vẫn xoá</text>
+      <text x="48" y="132" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Còn hở: dấu đã mất không về</text>
+
+      <!-- Năm nút của đường lỗi -->
+      <rect x="36" y="208" width="160" height="72" rx="20" fill="#f5f5f5"/>
+      <rect x="36" y="208" width="160" height="72" rx="20" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="116" y="240" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Migration sau ghi đè</text>
+      <text x="116" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">hàm phân xử</text>
+
+      <rect x="228" y="208" width="160" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="228" y="208" width="160" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="308" y="240" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lượt phân xử xoá dấu</text>
+      <text x="308" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">nguồn gốc của số</text>
+
+      <rect x="420" y="208" width="160" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="420" y="208" width="160" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="500" y="240" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp lại 068:</text>
+      <text x="500" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">dấu không tự về</text>
+
+      <rect x="612" y="208" width="160" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="612" y="208" width="160" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="692" y="248" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tin chuyển sang ẩn số</text>
+
+      <!-- Nút lỗi: điểm nhấn duy nhất -->
+      <rect x="804" y="208" width="160" height="72" rx="20" fill="#f5f5f5"/>
+      <rect x="804" y="208" width="160" height="72" rx="20" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="884" y="240" fill="#ba4513" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tin ẩn vẫn giữ số ghép,</text>
+      <text x="884" y="256" fill="#ba4513" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">không ai biết</text>
+
+      <text x="36" y="304" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ĐƯỜNG LỖI NẾU KHÔNG LÀM GÌ</text>
+
+      <!-- Hướng B: máy khuyên -->
+      <rect x="324" y="336" width="240" height="100" rx="6" fill="#f5f5f5"/>
+      <rect x="324" y="336" width="240" height="100" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.4"/>
+      <rect x="336" y="348" width="60" height="16" rx="2" fill="transparent" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="366" y="360" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HƯỚNG B</text>
+      <rect x="404" y="348" width="80" height="16" rx="2" fill="#2d3142"/>
+      <text x="444" y="360" fill="#f5f5f5" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MÁY KHUYÊN</text>
+      <text x="336" y="400" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Dựng lại dấu từ stg</text>
+
+      <!-- Hai kết quả của hướng B -->
+      <rect x="684" y="336" width="280" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="684" y="336" width="280" height="40" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="824" y="360" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Được dựng lại dấu, tin ẩn bị rút số</text>
+
+      <rect x="684" y="396" width="280" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="684" y="396" width="280" height="40" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+      <text x="824" y="420" fill="#4f5d75" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Số giữ nguyên và được đếm</text>
+
+      <!-- Chú giải -->
+      <line x1="36" y1="464" x2="964" y2="464" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="36" y1="488" x2="68" y2="488" stroke="#2d3142" stroke-width="1.2" marker-end="url(#arrow-ink)"/>
+      <text x="76" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">đường lỗi</text>
+      <line x1="184" y1="488" x2="216" y2="488" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="224" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">chỗ một hướng chen vào và kết quả</text>
+      <line x1="472" y1="488" x2="504" y2="488" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="512" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">phần hướng đó không chặn được</text>
+      <rect x="736" y="480" width="24" height="16" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="768" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">kết cục cần tránh</text>
+    </svg>
+  </div>
+</body>
+</html>

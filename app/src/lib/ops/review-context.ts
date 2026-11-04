@@ -1,4 +1,5 @@
 import { pool } from "@/lib/db";
+import { tenTin } from "@/lib/ten-tin";
 
 import { chonNguoiNeo, docCanCu, type BenGhepCan, type BenNguoi, type CanCuTin, type NguoiDang } from "./review-can-cu";
 
@@ -130,8 +131,6 @@ function sidesOf(item: ReviewContextItem): { key: keyof ReviewContext; offerId: 
 }
 
 const rong = (v: string | null) => (v !== null && v.trim() !== "" ? v : null);
-/** Tên trên tin: S05 ghi chữ «unknown» khi nguồn không có tên — không phải một tên. */
-const tenTin = (v: string | null) => (rong(v)?.trim().toLowerCase() === "unknown" ? null : rong(v));
 
 function nguoiCuaTin(r: NguoiRow): NguoiDang {
   return {

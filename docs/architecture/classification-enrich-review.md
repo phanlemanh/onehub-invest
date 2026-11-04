@@ -916,6 +916,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | Hỏi-1: **Q2, Q3, Q5, Q11 theo §0.2 F** — khoá tin gốc và phát biểu `căn` (T4); bảng phát biểu + phân xử (T3+T7); chỉ tự áp ô đã đo (T6); đo trong lát dọc | §0.2 F |
 | Hỏi-2: **lát đầu = Vinhomes Ocean Park 1**, một dự án (F1) | §0.3 F1 |
 | Hỏi-3: **Q4, Q9** — ngữ cảnh nhóm chỉ là suy luận, không tự quyết; thẻ duyệt **không hiện độ tự tin** (áp ngay cho UI1) | §0.2 F |
+| Sửa 04/11 (Mạnh chốt, ROADMAP §3 mục 30): **Q4 chuyển sang (b)** cho nhóm có quy ước đã qua người và đạt eval theo nhóm: tự ghi giá trị kèm nhãn suy ra, chữ bài thắng. Ngữ cảnh chưa qua eval vẫn là H5. Ngưỡng chốt ở `GCQ1` | §0.2 F |
 | Hỏi-4: **M1 = local mặc định**, chỉ dùng model cloud khi số đo cho thấy local không đủ (khớp §4.8 #6 của ROADMAP §3.18 — thay khuyến nghị (a) ở §0.4); **M3 (cổng / AI Gateway) hoãn tới PH4**; PL29 (sổ cuộc gọi AI) làm trước mọi bộ đọc LLM | §0.4 |
 | Hỏi-5: **Mạnh và đội gắn nhãn lát** (~200 tin + ~100 cặp, 20% gắn trùng), bắt đầu khi PL7 xong (F5) | §0.3 F5 |
 | Hỏi-6: **chạy F6** — hoàn tác 639/644, bác thẻ 159/161, duyệt lại review 24 (làn Claude, DB local, có audit, từng lệnh chờ Mạnh gõ đồng ý); xoá 1.260 post mock ở stg là làn ZCode (raw giữ nguyên) | §0.3 F6 |

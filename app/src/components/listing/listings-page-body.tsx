@@ -48,7 +48,7 @@ export function ListingsPageBody({
         description={
           kind !== LISTING_KIND.rent_st
             ? "Tin tự thu từ nhiều nguồn · bấm Xem số để liên hệ người đăng"
-            : "Airbnb tự thu thập · công suất và doanh thu tính trên lịch đặt các tháng tới"
+            : "Tự thu thập · công suất và doanh thu tính trên lịch đặt các tháng tới"
         }
       />
       {/* key: ranh giới lỗi chỉ tự xoá khi đường dẫn đổi, mà đổi thời hạn chỉ đổi query. */}

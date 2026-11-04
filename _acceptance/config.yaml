@@ -36,6 +36,9 @@ executors:
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
+    ls1b_thuan: "cd agent && node --import tsx --test tests/luat-trich-so-phong.test.ts"   # s03-noi-luat-trich-dan E1, E2
+    ls1b_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/xu-lai-trich-db.itest.ts"   # s03-noi-luat-trich-dan — model giả, ROLLBACK
+    ls1b_db_va_cu: "cd agent && node --import tsx --test --test-concurrency=1 tests/xu-lai-trich-db.itest.ts tests/doc-toan-bo.test.ts tests/doc-toan-bo-db.itest.ts"   # s03-noi-luat-trich-dan E8
     ls1_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts tests/doc-toan-bo-the.test.ts && cd ../app && node --import tsx --test --test-name-pattern=LS1-AC-7 tests/the-duyet-du-can-cu.test.tsx"   # s03-llm-doc-toan-bo — model giả; agent ROLLBACK, route thật trên lược đồ tạm td_<pid>
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
@@ -46,6 +49,7 @@ executors:
     ecw_pipeline: "node --test pipeline/lib/eval-classify.test.mjs"   # eval-classify-wilson E1, E2, E3, E4, E6, E8 — lõi thuần + lệnh --tap-mau, không DB
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
+    kd_test: "node --test pipeline/scripts/kiem-do-sau-070.test.mjs"   # kiem-do-sau-ap-070-sua E1, E2, E3 — lược đồ riêng BEGIN…ROLLBACK trên :5433
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
@@ -127,6 +131,8 @@ executors:
     api_surface_ops: "cd app && node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx"   # api-surface-anh-vai-ops — sổ zalo-media ≥ mã (ma trận 6 người gọi × 2 chế độ), route chặn canAccessOps bằng 404
     zalo_media_core: "cd app && node --import tsx --test tests/zalo-media.test.tsx"   # lõi serveZaloMedia (PL3 + review-media-backend) — hồi quy quyền thật
     can_gia_tot: "cd app && node --import tsx --test tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-biet-can — /ops/deals và trang một căn trên lược đồ tạm, page thật, vai giả
+    can_gia_tot_sua_ba_loi: "cd app && node --import tsx --test --test-name-pattern=CGB-AC tests/can-gia-tot-biet-can.test.tsx"   # can-gia-tot-sua-ba-loi — ba mục Ngoài-5, 9, 10 của CG1, cùng bộ dựng
+    can_gia_tot_ten_invest: "cd app && node --import tsx --test --test-name-pattern=CGB-AC-6 tests/tin-rao-cong-khai.test.tsx"   # can-gia-tot-sua-ba-loi AC-6 — tên trên cổng Invest, lược đồ tạm, route và vùng máy chủ thật
     can_gia_tot_doi_chieu: "cd app && node --import tsx --test tests/can-gia-tot-doi-chieu.test.tsx"   # can-gia-tot-biet-can AC-8 — DB máy thu chỉ đọc
     danh_ba_ops: "cd app && node --import tsx --test tests/danh-ba-nguoi-tren-ops.test.tsx"   # danh-ba-nguoi-tren-ops — /ops/people trên lược đồ tạm có 055, page thật, vai giả
     danh_ba_doi_chieu: "cd app && node --import tsx --test tests/danh-ba-nguoi-doi-chieu.test.tsx"   # danh-ba-nguoi-tren-ops E15 — đối chiếu chỉ-đọc trên DB máy thu :5433 (READ ONLY), chỉ in số
@@ -185,14 +191,21 @@ executors:
     sg_sync: "node --test pipeline/sync-cloud.test.mjs && cd pipeline && node --test scripts/so-ghep-s06-cloud.itest.mjs"   # so-ghep-s06-nhan-danh-ba E6
     sg_api: "cd app && node --import tsx --test tests/so-ghep-nhan.test.tsx"   # so-ghep-s06-nhan-danh-ba E7 — hai route thật, lược đồ tạm
     sg_ui: "cd app && node --import tsx --test tests/so-ghep-nhan-giao-dien.test.tsx"   # so-ghep-s06-nhan-danh-ba E8
+    cn_quet: "node --test scripts/quet-ten-nguon-html.test.mjs"   # chu-nguon-tren-cong E1, E3, E4b, E7b — hai thước tên nguồn, máy chủ giả, không DB
+    cn_app: "cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx"   # chu-nguon-tren-cong E4 — chữ giá rao, ca thẻ thật của ngoại lệ tiêu đề; không DB
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
   script:
+    can_gia_tot_ca_cu: "bash _acceptance/can-gia-tot-sua-ba-loi/probes/ca-cu-khong-doi.sh"   # can-gia-tot-sua-ba-loi AC-4 — tệp test CG1 chỉ được thêm dòng
+    cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của mười hai trang trên bản chạy; không đo được thì thoát 2
+    cn_tinh: "node scripts/check-invest-tier-a.mjs"   # chu-nguon-tren-cong E3b — chuỗi trong mã của mọi trang công khai và tệp chúng import
+    ls1b_mau: "cd agent && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --mau 383 --nhan $HOME/dev/onehub-invest/research-local/s03-audit-0211/labels_all.json --thu && node --env-file=../.env --import tsx scripts/doc-toan-bo-s03.ts --xu-lai-trich --thu"   # s03-noi-luat-trich-dan E9 — DB máy thu, nhãn đã có, 0 USD, không ghi
     can_gia_tot_quet_ma: "! grep -rn dealMediaSrc app/src && node scripts/check-portal-compliance.mjs --only deals-gate --root . && grep -q '/ops/deals/\\[offerId\\]' .claude/skills/onehub-ui/routes.md && node --test scripts/can-gia-tot-quet-ma.test.mjs && cd app && npm run -s test:lint-rules"   # can-gia-tot-biet-can AC-3
     can_gia_tot_ba_vai: "node scripts/can-gia-tot-ba-vai.mjs"   # can-gia-tot-biet-can AC-10 — đăng nhập thật ba vai trên bản chạy :3460; không in giá trị thật
     sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest
     sg_be_mat: "node scripts/check-api-surface.mjs"   # so-ghep-s06-nhan-danh-ba E7b
     gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
     gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
+    kp_ranh_gioi: "bash _acceptance/sdt-s06-khoi-phuc-xuat-xu/probes/ranh-gioi.sh"   # sdt-s06-khoi-phuc-xuat-xu E9
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
     lich_chotot: "node _acceptance/s06-hai-luot-ngay-gop-main/rang/lich-chotot.mjs"   # s06-hai-luot-ngay-gop-main AC-1..3 — plist chotot 05:30 + 14:00, không va mốc plist khác, bản cài + launchd khớp
     can_theo_tin_ap_hai_lan: "node _acceptance/can-theo-tin-khi-phan-xu-lai/rang/ap-hai-lan.mjs"   # can-theo-tin-khi-phan-xu-lai E5 — DB thử dựng từ đủ migration, áp 066 lần hai không đổi gì, oneinvest không bị chạm
@@ -595,6 +608,7 @@ executors:
     sd3_cloud: "node _acceptance/sdt-luu-goc-e164/probes/do.mjs cloud"   # sdt-luu-goc-e164 E7 — câu đọc sync-cloud, không đẩy (DB thử)
     sd3_doc: "bash _acceptance/sdt-luu-goc-e164/probes/people.sh"   # sdt-luu-goc-e164 E8 — loader /ops/people ba vai (DB thử)
     sd3_pham_vi: "bash _acceptance/sdt-luu-goc-e164/probes/pham-vi.sh"   # sdt-luu-goc-e164 E9
+    kd_that: "node _acceptance/kiem-do-sau-ap-070-sua/probes/doi-chieu-that.mjs"   # kiem-do-sau-ap-070-sua E4, E5 — năm bộ trên bản chép đã áp 070, 068 (DB thử)
     ldb_n6_db: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs n6"   # sd3-lam-chat-do-danh-ba E4 — N6 trước/sau 060 (DB thử)
     ldb_anh: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs anh"   # sd3-lam-chat-do-danh-ba E5 — đúng ảnh người → số (DB thử)
     ldb_ten: "node _acceptance/sd3-lam-chat-do-danh-ba/probes/chuyen.mjs ten"   # sd3-lam-chat-do-danh-ba E6 — tên đúng người (DB thử)
