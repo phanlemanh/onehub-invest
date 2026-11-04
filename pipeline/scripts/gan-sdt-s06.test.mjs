@@ -792,9 +792,10 @@ test("KP-AC-3 xuất xứ dựng lại giống hệt bản bộ gán thật ghi,
 test("KP-AC-3 chiều đỏ: tu_tin tính khác công thức cũ thì lệch bản gốc", async (t) => {
   const m = imLog(t);
   await withTx(async (c) => {
-    const { goc } = await chuoiCoSo(c);
+    const { so, goc } = await chuoiCoSo(c);
+    await themStg(c, { id: 90, tk: "K", so });
     await apLai068(c);
-    await ganSdtS06(c, { sql: dotBien("min(d.list_id) AS tu_tin", "min(d.list_id) + 1 AS tu_tin") });
+    await ganSdtS06(c, { sql: dotBien("min(d.list_id) AS tu_tin", "max(d.list_id) AS tu_tin") });
     const sau = await docOffer(c, 81);
     assert.throws(() => assert.deepEqual(sau.field_provenance.seller_phone, goc.t81.field_provenance.seller_phone, "XUAT-XU-KHAC-GOC t81"), /XUAT-XU-KHAC-GOC/);
   });
