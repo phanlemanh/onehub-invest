@@ -113,8 +113,8 @@ async function docViec(client, state) {
   const q = `
     SELECT (payload->>'account_id') AS account_id, count(*)::int AS so_tin,
       -- 0411-9: chọn tin theo captured_at (lần THẤY) giảm dần — tin thấy gần
-      -- nhất có nhiều khả năng còn số hơn tin list_time mới (đo 04/11: >4 ngày
-      -- chỉ còn 28,9% có số vs 93% nhóm 2 ngày)
+      -- nhất có nhiều khả năng còn số hơn tin list_time mới (đo 04/11: nhóm >4
+      -- ngày tỉ lệ HẾT HẠN 28,9% — không phải «có số»)
       (array_agg(list_id ORDER BY captured_at DESC))[1]   AS list_id1,
       (array_agg(list_id ORDER BY captured_at DESC))[2]   AS list_id2,
       (array_agg(area_name ORDER BY captured_at DESC))[1] AS area,
@@ -503,7 +503,6 @@ async function main() {
   const tabDangGiu = new Map(); // idx → page (luồng nào giữ tab nào)
   async function tabMoi(idx) {
     const ctx0s = contexts[0];
-    const dangGiu = new Set([...tabDangGiu.values()]);
     const truoc = new Set(ctx0s.pages());
     try {
       const ss = await browser.newBrowserCDPSession();
@@ -511,6 +510,8 @@ async function main() {
       await ss.detach();
       for (let lan = 0; lan < 40; lan++) {
         await sleep(250);
+        // 0411-10 phụ: tính MỖI vòng poll — luồng khác set tab mới giữa chừng vẫn bị loại
+        const dangGiu = new Set([...tabDangGiu.values()]);
         const t = chonTabMoi(ctx0s.pages(), dangGiu, truoc);
         if (t) { tabDangGiu.set(idx, t); return t; }
       }
