@@ -1,0 +1,99 @@
+schema_version: 1
+feature_slug: sdt-s06-khoi-phuc-xuat-xu
+# Ca DB «KP-AC-n» ở cuối pipeline/scripts/gan-sdt-s06.test.mjs: BEGIN…ROLLBACK trên lược đồ riêng (lib/luoc-do-rieng.mjs), số bịa. Mỗi kiểm có ca đỏ bằng đột biến bỏ nhánh khôi phục của SQL_GAN trên cùng fixture, ghim thông điệp.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/transform-chotot.mjs, pipeline/lib/nap-068.mjs, db/migrations/068_*.sql, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-1 xanh qua runTransformChotot thật, MIG_068 thật, phần resolve_offer_fields trích từ tệp 061 thật (assert không chứa fp_sdt, có fp_chao): khoá mất sau lượt bị ghi đè (assert dương), sau khi áp lại và chuyển ẩn số thì seller_phone, seller_phone_hash về NULL, đọc thẳng cột. Ca đỏ cùng fixture: SQL_GAN bỏ hai nhánh khôi phục thì số còn trên tin, thông điệp TIN-AN-GIU-SO-GHEP."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-2 xanh: chuyển ẩn số trong lúc bị ghi đè, sau khi áp lại tin ẩn về NULL, tin ghép không ẩn và tin trực tiếp còn số. Ca đỏ: bỏ nhánh khôi phục thì TIN-AN-GIU-SO-GHEP."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-3 xanh: xuất xứ lấy ở bản do bộ gán thật ghi trước khi mất, deepEqual với bản dựng lại cho cả tin ghép và trực tiếp, kể cả tu_tin; số và băm không đổi; lượt kế doi = 0, khoi_phuc = 0. Ca đỏ: đổi min(d.list_id) thành max trong tk_so thì lệch, thông điệp XUAT-XU-KHAC-GOC."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-4 xanh: sinh ô bằng tích Đề-các bốn trục, assert 48 ô, 22 ô gạch, 26 ô còn lại, kỳ vọng từng ô đọc từ bảng K1-K7 viết tay trong test, tổng số ô từng dòng khớp bảng hợp đồng; tu_tin ô K4 kiểm bằng truy vấn stg (cùng tài khoản, đang mang đúng số); cả ma trận khoi_phuc = 12, khong_ro = 14. Hai ca đỏ cùng fixture, mỗi ca bỏ một nhánh khôi phục, thông điệp KO-LECH kèm tên dòng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-5 xanh: tin rule_id lạ và tin không khớp stg đi qua hai bước, chuyển ẩn số rồi tài khoản thêm số thứ hai; sau mỗi bước đọc cột: số giữ nguyên, không sinh khoá, khong_ro = 2. Đối chứng dương trên cùng fixture: một tin không khoá khớp số tài khoản bị rút ở bước ẩn số, khoi_phuc = 1. Ca đỏ: bỏ điều kiện không-có-khoá thì tin rule_id lạ bị đổi, thông điệp KHOA-LA-BI-DOI."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-6 xanh: khoá bị xoá bằng SELECT resolve_offer_fields(NULL) trên hàm ghi đè, không qua transform; áp lại 068, ganSdtS06 khôi phục và rút tin ẩn số. Ca đỏ: bỏ nhánh khôi phục thì TIN-AN-GIU-SO-GHEP."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-7 xanh: hàm bị ghi đè, runTransformChotot không ném, log có CHUA-AP-068, số và băm từng tin không đổi, không tin nào có khoá seller_phone, khoi_phuc = 0, khong_ro = 0; cùng fixture sau khi áp lại 068 thì khoi_phuc > 0 (đối chứng dương). Ca GS-AC-6 có từ trước vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8a
+    criterion: AC-8
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-8 xanh: bắt log của runTransformChotot và dòng do dongGan dựng từ kết quả bộ gán thật, trên fixture đúng một tin khôi phục, một tin không rõ gốc: mang khoi_phuc=1, khong_ro=1, không có dạng số. Đối chứng dương: inKhongSo cho qua dòng này. Hai ca đỏ riêng, số dạng +84 và số dạng 0 trong dòng thì ném RO-SO."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gs_thu
+    paths: [pipeline/gan-sdt-s06.mjs]
+    expected: "exit 0; đầu ra có khoi_phuc= và khong_ro=, md5_khop=true, không có dạng số điện thoại. Lệnh này đo sự có mặt của hai số đếm; quan hệ giữa nhãn và số đếm do E8a đo. Từ 04/11 DB local có tin mang số thật, giá trị in ra là số đo thật và được chép vào bằng chứng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.kp_ranh_gioi
+    paths: [_acceptance/sdt-s06-khoi-phuc-xuat-xu/probes/ranh-gioi.sh]
+    expected: "exit 0, in ranh-gioi: xanh; diff so với merge-base không có tệp dưới db/migrations, app, data-api, collector, không sync-cloud, push-ops-facts, collect-, import-; không ca nào có từ trước trong gan-sdt-s06.test.mjs bị xoá hay sửa (diff chỉ thêm dòng). Chiều đỏ cùng lệnh: RANH_GIOI_THEM=db/migrations/071_x.sql thoát 1, in RANH-GIOI."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; mọi ca GS-* xanh, gồm ma trận 88 ô và ca đột biến của nó."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.gs_test
+    paths: [pipeline/gan-sdt-s06.mjs, pipeline/scripts/gan-sdt-s06.test.mjs]
+    expected: "exit 0; ca KP-AC-10 «G1 giới hạn đã khai» xanh, hai nhánh cùng fixture: tin nguồn đổi số thì tin ẩn còn số cũ, không khoá, khong_ro = 1; tin nguồn không đổi thì tin ẩn về NULL. Nhánh sau là chiều đỏ của nhánh trước: hai nhánh chỉ khác đúng bước đổi số."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
