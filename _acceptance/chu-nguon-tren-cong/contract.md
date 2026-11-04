@@ -34,8 +34,8 @@ người xem. Việc này chỉ đổi chữ hiện trên `app/`, không đổi 
 
 ## Câu hỏi cho Mạnh
 
-- **Hỏi-1. Ảnh listing trỏ CDN của S01 có giữ tới sau 05/11 không?** Mọi ảnh listing thuê ngắn hạn tải từ miền CDN của S01; miền đó không chứa tên S01 nhưng người biết sẽ nhận ra. Máy khuyên: giữ, ghi hạn chế đã biết, xử ở việc dọn sau 05/11. Lối khác: chuyển ảnh qua máy chủ mình trước 05/11, giá là một lớp ảnh mới và cước tải, không kịp hạn gộp.
-- **Hỏi-2. Tiêu đề listing chủ nhà gõ có tên S01 có giữ tới sau 05/11 không?** Đo 04/11 ở DB máy thu: 1/838 tiêu đề; hiện trên ô thuê ngắn hạn và trang listing đó. Máy khuyên: giữ, đếm riêng ở phép quét, trần 5 tiêu đề mỗi trang, che ở `sync-cloud.mjs` thành việc T3 riêng sau 05/11. Lối khác: che ngay ở `sync-cloud.mjs` trong hôm nay, giá là một hồ sơ T3 chen vào hàng khoá trước 22:00.
+- **Hỏi-1. Tiêu đề listing chủ nhà gõ có tên S01 có giữ tới sau 05/11 không?** Đo 04/11 ở DB máy thu: 1/838 tiêu đề; hiện trên ô thuê ngắn hạn và trang listing đó. Máy khuyên: giữ, đếm riêng ở phép quét, trần 5 tiêu đề mỗi trang, che ở `sync-cloud.mjs` thành việc T3 riêng sau 05/11. Lối khác: che ngay ở `sync-cloud.mjs` trong hôm nay, giá là một hồ sơ T3 chen vào hàng khoá trước 22:00.
+- **Hỏi-2. Ảnh listing trỏ CDN của S01 có giữ tới sau 05/11 không?** Mọi ảnh listing thuê ngắn hạn tải từ miền CDN của S01; miền đó không chứa tên S01 nhưng người biết sẽ nhận ra. Máy khuyên: giữ, ghi hạn chế đã biết, xử ở việc dọn sau 05/11. Lối khác: chuyển ảnh qua máy chủ mình trước 05/11, giá là một lớp ảnh mới và cước tải, không kịp hạn gộp.
 
 ## Ma trận AC-1
 
