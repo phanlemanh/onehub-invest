@@ -63,7 +63,7 @@ try {
   if (tepCookie) writeFileSync(tepCookie, JSON.stringify(Object.fromEntries(Object.entries(nguoi).map(([k, v]) => [k, v.cookie]))), { mode: 0o600 })
 
   if (argv.includes("--nhan")) {
-    const { rows: items } = await c.query(`SELECT item_id, stratum FROM eval_label_items WHERE lat = $1 AND ref_id IN ('gcn-seed-1', 'gcn-seed-3')`, [LAT])
+    const { rows: items } = await c.query(`SELECT item_id, stratum FROM eval_label_items WHERE lat = $1 AND ref_id IN ('gcn-seed-1', 'gcn-seed-3', 'gcn-seed-4')`, [LAT])
     for (const it of items) {
       await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value, not_stated, basis) VALUES ($1, $2, 'project', 'vinhomes grand park', false, 'ngu_canh_nhom')`, [it.item_id, nguoi.ops2.id])
       await c.query(`INSERT INTO eval_label_cases (item_id, labeler_id, case_kind, note) VALUES ($1, $2, 'mac-dinh-nhom', 'LYDO-KHONG-LEN-BANG')`, [it.item_id, nguoi.ops2.id])
@@ -71,6 +71,9 @@ try {
   }
   console.log(`seed xong: nhóm thử ${Object.values(ma).join(", ")}`)
   console.log(JSON.stringify(ma))
+  console.log(`mở nhóm: /ops/labels?nhom=<mã>. co-may có bản máy đọc, thẻ, bài chữ dài · khong-may không máy, không thẻ · ba-tin bài ba tin${argv.includes("--nhan") ? " · --nhan: cả ba nhóm thử đã có nhãn và trường hợp của người khác, chỉ dùng cho bảng trường hợp (E17)" : ""}`)
+  const { rows: tk } = await c.query(`SELECT role FROM users WHERE email = 'ops-test@local.test'`)
+  console.log(tk[0] ? `tài khoản thử ops-test@local.test có trên DB thử, vai ${tk[0].role}` : "THIẾU tài khoản ops-test@local.test trên DB thử: chạy DATABASE_URL=<DB thử> node scripts/dev-ops-account.mjs")
 } finally {
   await c.end()
 }
