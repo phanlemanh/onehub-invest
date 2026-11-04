@@ -163,11 +163,8 @@ async function docViec(client, state) {
     const lid = chonTinChuaHetHan(r, state);
     if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }
-  // 0411-9: tài khoản có tin thấy gần nhất QUÁ 4 NGÀY xếp sau cùng (vẫn nằm
-  // trong hàng việc — không bỏ) — giữ so_tin giảm dần trong từng nhóm.
-  const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000;
-  const cuHon = (r) => new Date(r.thay_gan_nhat).getTime() < moc4ngay;
-  viec.sort((a, b) => (cuHon(a) ? 1 : 0) - (cuHon(b) ? 1 : 0)); // nhóm mới đứng trước
+  // 0411-11: điểm so_tin × hệ số tuổi giảm dần (thay nhóm-tuổi-block 0411-9 —
+  // ngưỡng 4 ngày chưa cắt được nhóm 2-4 ngày và đẩy cứng tin mới lên trước).
 
   // 0311-19 (b) + 0311-20 (Hỏi): khoá lỗi xuống CUỐI hàng — demLoiLien đếm bản
   // thân + lan_truoc (state chỉ giữ MỘT cấp lan_truoc) nên tối đa 2, nghĩa là
@@ -178,7 +175,12 @@ async function docViec(client, state) {
     while (x && laLoi(x.status)) { n++; x = x.lan_truoc ? { status: x.lan_truoc.status } : null; }
     return n;
   };
-  viec.sort((a, b) => demLoiLien(a.list_id) - demLoiLien(b.list_id));
+  // khoá lỗi xuống cuối giữ nguyên; nhóm lành xếp theo điểm giảm dần
+  viec.sort((a, b) => {
+    const la = demLoiLien(a.list_id), lb = demLoiLien(b.list_id);
+    if (la !== lb) return la - lb;
+    return diemSapXep(b) - diemSapXep(a);
+  });
   return viec;
 }
 
@@ -192,6 +194,20 @@ export function chonTabMoiPages(pages, dangGiu, daCo) {
     if (!dangGiu.has(p) && !daCo.has(p)) return p;
   }
   return undefined;
+}
+
+/** 0411-11: điểm sắp xếp = so_tin × hệ số tuổi lần-thấy-gần-nhất — tài khoản
+ * nhiều tin dù cũ hơn vẫn đáng gọi hơn tài khoản 1 tin (45.000 tính theo TIN).
+ * Hệ số: <1 ngày 1,0 · 1-2 ngày 0,9 · 2-4 ngày 0,75 · >4 ngày 0,7. Export cho test. */
+export function heSoTuoi(thayGanNhat, nowMs = Date.now()) {
+  const d = (nowMs - new Date(thayGanNhat).getTime()) / 86400000; // số ngày
+  if (d < 1) return 1.0;
+  if (d < 2) return 0.9;
+  if (d < 4) return 0.75;
+  return 0.7;
+}
+export function diemSapXep(row, nowMs = Date.now()) {
+  return (row.so_tin ?? 1) * heSoTuoi(row.thay_gan_nhat, nowMs);
 }
 
 export function chonTinChuaHetHan(row, state) {

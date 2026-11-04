@@ -1,5 +1,5 @@
 import test from "node:test"; import assert from "node:assert/strict";
-import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh, xetKhongNut, chonTabMoiPages } from "../thu-so-s06.mjs";
+import { canDungNgay, chonTinChuaHetHan, laChromeBoThuCuaLenh, xetKhongNut, chonTabMoiPages, heSoTuoi, diemSapXep } from "../thu-so-s06.mjs";
 
 // 0311-3 MỞ LẠI (1): 403/429 dừng cả lượt NGAY từ lần đầu — Mạnh chốt; nhãn
 // chan-429 kèm Retry-After (-ra-Ns) vẫn phải bắt được.
@@ -163,4 +163,20 @@ test("sắp xếp nhóm tuổi: tài khoản >4 ngày xếp sau cùng, không b�
   assert.equal(sorted.length, 4, "không tài khoản nào bị bỏ");
   assert.deepEqual(sorted.map((r) => r.id).slice(0, 2).sort(), ["moi-nhieu-tin", "moi-it-tin"].sort(), "nhóm mới (≤4 ngày) đứng trước");
   assert.deepEqual(sorted.map((r) => r.id).slice(2).sort(), ["cu-nhieu-tin", "cu-it-tin"].sort(), "nhóm >4 ngày xếp sau cùng");
+});
+
+// 0411-11: điểm = so_tin × hệ số tuổi — nhiều tin cũ hơn vẫn trên 1 tin mới
+test("heSoTuoi/diemSapXep: hệ số bậc tuổi đúng; 10 tin 3 ngày cũ (7,5) > 1 tin nửa ngày (1,0)", () => {
+  const ngay = (d) => new Date(Date.now() - d * 86400000).toISOString();
+  assert.equal(heSoTuoi(ngay(0.5)), 1.0);
+  assert.equal(heSoTuoi(ngay(1.5)), 0.9);
+  assert.equal(heSoTuoi(ngay(3)), 0.75);
+  assert.equal(heSoTuoi(ngay(6)), 0.7);
+  const nhieuTinCu = diemSapXep({ so_tin: 10, thay_gan_nhat: ngay(3) });
+  const motTinMoi = diemSapXep({ so_tin: 1, thay_gan_nhat: ngay(0.5) });
+  assert.ok(nhieuTinCu > motTinMoi, `10 tin 3 ngày (${nhieuTinCu}) phải trên 1 tin nửa ngày (${motTinMoi})`);
+  // sắp giảm dần: điểm cao đứng trước
+  const ds = [{ so_tin: 2, thay_gan_nhat: ngay(0.5) }, { so_tin: 9, thay_gan_nhat: ngay(1.5) }, { so_tin: 1, thay_gan_nhat: ngay(6) }];
+  ds.sort((a, b) => diemSapXep(b) - diemSapXep(a));
+  assert.deepEqual(ds.map((x) => x.so_tin), [9, 2, 1], "9 tin×0,9 > 2 tin×1,0 > 1 tin×0,7");
 });
