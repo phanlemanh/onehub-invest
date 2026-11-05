@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: trang-chi-tiet-tin
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1743b1d6c29a4aca1f5652a22ad861f4ed580374
+verified_commit: 3dfa8dcb202a82c211ed926e136b505bda7bc7b1
 human_signoff:
 ---
 
 # Evidence Report: trang-chi-tiet-tin
-
-Round 1. Mọi eval gắn AC đều xanh. Verdict REJECT vì hai lệnh suite hồi quy không gắn eval (`cd app && npm test`, `cd pipeline && npm test`) chạy đỏ, xem mục «Lệnh suite (hồi quy)».
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -36,199 +34,203 @@ Round 1. Mọi eval gắn AC đều xanh. Verdict REJECT vì hai lệnh suite h�
 ## Evidence
 
 - eval: E1
-  run_id: minted-trang-chi-tiet-tin-E1-r1
+  run_id: minted-trang-chi-tiet-tin-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_ui
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
     cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx
-    duration_ms 3846.870834
+    ca TCT-AC-1 xanh
+    ℹ duration_ms 1019.925375
 
 - eval: E2
-  run_id: minted-trang-chi-tiet-tin-E2-r1
+  run_id: minted-trang-chi-tiet-tin-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_ui
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E1 (tests/trang-chi-tiet-tin.test.tsx)
-    duration_ms 3846.870834
+    cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx
+    ca TCT-AC-2-ve xanh
+    ℹ duration_ms 1019.925375
 
 - eval: E6b
-  run_id: minted-trang-chi-tiet-tin-E6b-r1
+  run_id: minted-trang-chi-tiet-tin-E6b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_ui
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E1 (tests/trang-chi-tiet-tin.test.tsx)
-    duration_ms 3846.870834
+    cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx
+    ca TCT-AC-6 xanh
+    ℹ duration_ms 1019.925375
 
 - eval: E8
-  run_id: minted-trang-chi-tiet-tin-E8-r1
+  run_id: minted-trang-chi-tiet-tin-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_ui
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E1 (tests/trang-chi-tiet-tin.test.tsx)
-    duration_ms 3846.870834
+    cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx
+    ca TCT-AC-8 xanh
+    ℹ duration_ms 1019.925375
 
 - eval: E10
-  run_id: minted-trang-chi-tiet-tin-E10-r1
+  run_id: minted-trang-chi-tiet-tin-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_ui
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E1 (tests/trang-chi-tiet-tin.test.tsx)
-    duration_ms 3846.870834
+    cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx
+    ca TCT-AC-9 xanh
+    ℹ duration_ms 1019.925375
 
 - eval: E2b
-  run_id: minted-trang-chi-tiet-tin-E2b-r1
+  run_id: minted-trang-chi-tiet-tin-E2b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_db
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    bash db/db-thu.sh oneinvest_tct --neu-chua-co && cd app && node --import tsx --test tests/trang-chi-tiet-tin-db.test.tsx
-    duration_ms 41849.769375
+    tests/trang-chi-tiet-tin-db.test.tsx trên DB thử oneinvest_tct
+    ℹ duration_ms 63972.229042
 
 - eval: E3
-  run_id: minted-trang-chi-tiet-tin-E3-r1
+  run_id: minted-trang-chi-tiet-tin-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_db
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E2b (tests/trang-chi-tiet-tin-db.test.tsx)
-    duration_ms 41849.769375
+    tests/trang-chi-tiet-tin-db.test.tsx trên DB thử oneinvest_tct
+    ℹ duration_ms 63972.229042
 
 - eval: E4
-  run_id: minted-trang-chi-tiet-tin-E4-r1
+  run_id: minted-trang-chi-tiet-tin-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_db
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E2b (tests/trang-chi-tiet-tin-db.test.tsx)
-    duration_ms 41849.769375
+    tests/trang-chi-tiet-tin-db.test.tsx trên DB thử oneinvest_tct
+    ℹ duration_ms 63972.229042
 
 - eval: E5
-  run_id: minted-trang-chi-tiet-tin-E5-r1
+  run_id: minted-trang-chi-tiet-tin-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_db
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E2b (tests/trang-chi-tiet-tin-db.test.tsx)
-    duration_ms 41849.769375
+    tests/trang-chi-tiet-tin-db.test.tsx trên DB thử oneinvest_tct
+    ℹ duration_ms 63972.229042
 
 - eval: E7
-  run_id: minted-trang-chi-tiet-tin-E7-r1
+  run_id: minted-trang-chi-tiet-tin-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tct_db
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    cùng lệnh với E2b (tests/trang-chi-tiet-tin-db.test.tsx)
-    duration_ms 41849.769375
+    tests/trang-chi-tiet-tin-db.test.tsx trên DB thử oneinvest_tct
+    ℹ duration_ms 63972.229042
 
 - eval: E6
-  run_id: minted-trang-chi-tiet-tin-E6-r1
+  run_id: minted-trang-chi-tiet-tin-E6-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.script.listing_static
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
     listing-no-airdna: ĐẠT
 
 - eval: E11
-  run_id: design-gate-cfc60bac74
+  run_id: design-gate-53e3b7bebc
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.tct_gate
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
-    design-gate --jsdom app app/src/components/listing/offer-body.tsx: không vi phạm chặn
+    design-gate trên app/src/components/listing/offer-body.tsx: không vi phạm P0
 
 - eval: E12
-  run_id: minted-trang-chi-tiet-tin-E12-r1
+  run_id: minted-trang-chi-tiet-tin-E12-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.design.floor
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
   output: |
     design-floor-s4 --root . : không hex thô
 
 - eval: E1u
-  run_id: minted-trang-chi-tiet-tin-E1u-r1
+  run_id: minted-trang-chi-tiet-tin-E1u-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
-  verified_at: 2026-11-04T23:56:48Z
-  screenshot: evidence/E1u-ban-than.png
+  verifier: scripts/ui-capture.sh
+  verified_at: 2026-11-05T01:25:42Z
+  screenshot: evidence/E1u-sale-than.png
   observed: |
-    Da mo doc tung frame (24 anh trong /Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/). BAN-than/gia/ten/diachi: ca bon anh la trang tin «Can ho · 55 m² · 2 PN», breadcrumb Ban > Tin, gia 3,3 ty 60 tr/m², nguoi dang Lien Smart City, duong Dai Mo, khoi «Tin cung tieu chi» o duoi (khop the da bam). BAN-phuong: trang phuong «Tay Mo» (4 listing, KPI). BAN-nhan: van o danh sach «Tin ban tai Thanh pho Ha Noi», popover «Tin chua xac minh — Tin tu nhom cong dong, chua doi chieu...»; BAN-nhanso: van o danh sach, popover «So chua xac minh — So khong lay truc tiep tu chinh tin nay...»; BAN-xemso: van o danh sach, nut Xem so cua the 3,3 ty doi thanh so dien thoai. THUE-than/gia/ten/diachi: trang tin 10 tr/thang, Nha rieng 30 m², nguoi dang Linh Bao, duong Pho Khuong Trung, phuong Khuong Dinh. THUE-phuong: trang phuong «Khuong Dinh». THUE-nhan: van o danh sach «Tin cho thue tai Thanh pho Ha Noi», popover «Tin chua xac minh»; THUE-nhanso: popover «So chua xac minh» canh the Linh Bao, van o danh sach; THUE-xemso: van o danh sach, nut Xem so cua the Linh Bao thanh so dien thoai. CUNGTC-than/gia/ten/diachi: trang tin «Nha rieng · 30 m² · 3 PN» 10 tr/thang, nguoi dang Quang Khai, duong Ngo Quan Tho 1 (la the dich trong khoi comps, khong phai trang goc 12 tr/thang). CUNGTC-phuong: trang phuong «Van Mieu - Quoc Tu Giam». CUNGTC-nhan: van tren trang tin 3,3 ty (Lien Smart City), popover «Tin chua xac minh» mo ngay canh the 8,5 ty trong khoi comps; CUNGTC-nhanso: van tren trang tin 12 tr/thang goc, popover «So chua xac minh» canh the Quang Khai; CUNGTC-xemso: van tren trang goc, the 10 tr/thang Quang Khai da hien so dien thoai. Tat ca khop Expected: than/gia/ten/dia chi -> /listing/<offer_id>; phuong -> trang phuong; nhan -> popover giai thich, URL khong doi; Xem so -> URL khong doi.
-  network_observed: clean   # 55 fetch app-origin deu thanh cong, 0 pageerror; 11 request huy do prefetch khi dieu huong (note-only); chi tiet trong evidence/E1u-network.txt
+    Đã mở bằng Read cả 21 frame (lượt chạy đầu), rồi chạy lại với che rộng hơn và mở lại các frame có tên người đăng. Thân/giá/tên/địa chỉ (3 lối x 4): frame là trang tin /listing/<id> của đúng thẻ vừa bấm: Bán «Căn hộ · 55 m² · 2 PN», 3,3 tỷ, 60 tr/m², phường Tây Mỗ, đường Đại Mỗ; Thuê «Nhà riêng · 30 m² · 4 tầng», 10 tr/tháng, Khương Đình, Phố Khương Trung; comps «Nhà riêng · 40 m² · 4 tầng», 6,3 tỷ, 157,5 tr/m², Ngọc Hồi. Khớp thẻ nguồn, khối Người đăng trống (đã che); khối Tin cùng tiêu chí còn skeleton lúc chụp. Phường: Bán -> trang «Tây Mỗ» (vn/hanoi/tay-mo), Thuê -> «Khương Đình», comps -> «Ngọc Hồi». Nhãn: ở cả ba lối còn nguyên trang danh sách / trang tin cũ và hiện popover «Số chưa xác minh. Số không lấy trực tiếp từ chính tin này… Xem phương pháp». Xem số: ở cả ba lối còn nguyên trang danh sách / trang tin cũ, nút đổi thành ô có biểu tượng điện thoại và số đã trong suốt. Tên người đăng ở mọi thẻ trong frame là ô trống («Đăng bởi» + vạch mờ). Khớp Expected, không ô nào thiếu.
+  network_observed: clean   # raw trong evidence/E1u-network.txt
 
 - eval: E9
-  run_id: minted-trang-chi-tiet-tin-E9-r1
+  run_id: minted-trang-chi-tiet-tin-E9-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
-  verified_at: 2026-11-04T23:56:48Z
+  verifier: scripts/ui-capture.sh
+  verified_at: 2026-11-05T01:25:42Z
   screenshot: evidence/E9-s06.png
   observed: |
-    E9-s06.png (1280, sáng): tiêu đề "Căn hộ · 90 m² · 3 PN", giá 7,6 tỷ. Có khối "Người đăng" ở cột phụ (Trần Minh Trí, nhãn «Chưa xác minh» kèm nút Xem số), bảng Thông số, rồi "Tin cùng tiêu chí" 6 thẻ. Chữ rõ nét. E9-s06-dark.png: cùng bố cục, nền tối, chữ và nhãn vàng đọc rõ.
-    E9-s03.png và E9-s03-dark.png: tin S03, giá 2,8 tỷ kèm nhãn «Chưa xác minh», người đăng "Huyền Vinhomes" với nút Xem số, Thông số có Block PR6. Các thẻ cùng tiêu chí hiện «Chưa có số» và «Tài khoản nhiều tên». Đọc được ở cả hai chủ đề.
-    E9-375.png và E9-375-dark.png: khối Người đăng, nhãn và nút Xem số nằm ở y≈330-366 trong khung 812, trên nếp gấp. Một cột, không tràn ngang, chữ đọc được ở cả sáng và tối.
-    E9-thitruong.png (và dark): ở dòng địa điểm hiện "Thị trường: Thành phố Hà Nội" thay cho Phường và không có liên kết. Không có khối "Tin cùng tiêu chí". Có nhãn «Chưa xác minh».
-    E9-thieu-truong.png: chỉ hiện Loại hình, Diện tích, Phường; các dòng thiếu bị bỏ, không có ô trống. Người đăng "Tài khoản nhiều tên", nhãn «Chưa có số».
-    E9-khong-so.png (và 375 dark): người đăng "Jiang Kim", nhãn «Chưa có số», không có nút Xem số.
-    E9-so-ghep.png và E9-so-ghep-dark.png: sau khi bấm Xem số, nút thành ô số điện thoại bị che xám, nhãn «Chưa xác minh» (kèm biểu tượng thông tin) đứng cạnh. E9-so-xacminh.png: số đã xác minh hiện ô số mà không có nhãn «Chưa xác minh».
-    E9-404.png và E9-404-dark.png: tiêu đề "Tin này không còn hiện", câu chung, nút "Xem tin đang bán". Hiện ở cả 1280 và 375, chữ rõ.
-  network_observed: clean
+    Tôi đã mở từng frame bằng Read.
+    - E9-s06.png (1280, sáng): tin S06 «Nhà riêng · 174 m² · 5 tầng», breadcrumb Việt Nam > Thành phố Hồ Chí Minh > Bán > Tin. Giá 20,8 tỷ. Hai cột: bên trái giá và Thông số, bên phải Người đăng. Tên người đăng bị che bằng ô xám. Chỉ có nút «Xem số», không có nhãn (ST-lien-he-truc-tiep). Phường là liên kết gạch chân. Có khối «Tin cùng tiêu chí» với các thẻ có «Đăng bởi» bị che, nhãn «Chưa xác minh» kèm biểu tượng thông tin, và nút «Xem số». Chữ đọc rõ.
+    - E9-s06-dark.png: cùng bố cục trên nền tối. Chữ trắng đọc rõ, badge vàng «Chưa xác minh» vẫn đủ tương phản, ô che hiện ra là xám tối.
+    - E9-s03.png (sáng): tin S03 «Căn hộ · 60 m² · 2 PN». Giá 3,3 tỷ có badge «Chưa xác minh» kèm biểu tượng thông tin (ST-tin-chua-xac-minh). Có Người đăng với «Xem số». Thông số gồm Loại hình, Diện tích, Phòng ngủ, Block, Phường. Thẻ cùng tiêu chí có «Tài khoản nhiều tên» và «Chưa có số». E9-s03-dark.png tương tự, đọc được.
+    - E9-375.png và E9-375-dark.png: một cột. Thứ tự là tiêu đề, giá, Người đăng kèm «Xem số» (y≈366, trên nếp gấp), rồi Thông số. Không có cuộn ngang. Cả hai chủ đề đọc được.
+    - E9-375-ghep.png và E9-375-ghep-dark.png: Người đăng có nhãn «Chưa xác minh» kèm biểu tượng thông tin và nút «Xem số» nằm trong khung 375, không tràn (ST-lien-he-ghep).
+    - E9-thi-truong.png: tin S03 cấp thị trường. Dòng «Thị trường: Thành phố Hà Nội» không phải liên kết, không có khối «Tin cùng tiêu chí» (ST-tin-cap-thi-truong).
+    - E9-thieu-truong.png: tin «Đất · 80 m² · Mặt tiền 5 m». Thông số bỏ hẳn dòng Phòng ngủ, không có chữ «chưa có» (ST-tin-thieu-truong).
+    - E9-khong-so.png: khối Người đăng chỉ có badge «Chưa có số», không nhãn, không nút (ST-lien-he-chua-co-so).
+    - E9-ghep.png: nhãn «Chưa xác minh» kèm nút Xem số.
+    - E9-truc-tiep-da-lay.png và E9-ghep-da-lay.png: nút thành liên kết gọi có biểu tượng điện thoại, số bị che. Bản ghép vẫn giữ nhãn «Chưa xác minh».
+    - E9-404.png: nền sáng, khối rỗng ở giữa, tiêu đề «Tin này không còn hiện», mô tả «Tin có thể đã cũ, hoặc đường dẫn không đúng…», nút «Xem tin đang bán». HTTP 404. Có lớp phủ dev «1 Issue» ở góc dưới trái.
+    - E9-404-375-dark.png: cùng nội dung ở 375 nền tối, đọc được, không tràn.
+    Đối chiếu Expected: các trạng thái ST-tin-* và ST-lien-he-* khớp bảng Đặc tả UX. Liên hệ không tràn ngang ở 375 và nằm trên nếp gấp. Chữ đọc được ở cả hai chủ đề. Không frame nào mâu thuẫn với Expected.
+  network_observed: clean   # raw trong evidence/E9-network.txt
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__bb6271-r1
+  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-trang-chi-tiet-tin-SUITE-lint-r1
+  run_id: minted-trang-chi-tiet-tin-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
 
 - cmd: cd app && npm test
-  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-04T23:56:48Z
-  output: |
-    tests 929, pass 917, fail 1, cancelled 1, skipped 10
-    tests/hieu-chuan.test.tsx: «HC-AC-1 fixture: hai lần cùng market đại diện» quá hạn 120000ms
-    tests/tin-rao-cong-khai.test.tsx: «E7 đối chứng: ngưỡng 4 đỏ NHIEU TEN, đếm sau lọc đỏ DEM SAU LOC» ReferenceError: f is not defined, tại app/src/lib/__ban_sao_tir_37514_3.ts:103
+  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-05T01:25:42Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-11-04T23:56:48Z
-  output: |
-    tests 524, pass 523, fail 0, cancelled 1
-    scripts/luoc-do-rieng.test.mjs: «LDR bản chép rỗng mang đủ ràng buộc, chỉ mục, cột sinh, dãy riêng và search_path trỏ vào nó» quá hạn 120000ms
+  run_id: minted-trang-chi-tiet-tin-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-11-05T01:25:42Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-trang-chi-tiet-tin-SUITE-test_lint_rules-r1
+  run_id: minted-trang-chi-tiet-tin-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-trang-chi-tiet-tin-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-trang-chi-tiet-tin-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-04T23:56:48Z
+  verified_at: 2026-11-05T01:25:42Z
 
 ## Known limits
 
@@ -236,23 +238,20 @@ Round 1. Mọi eval gắn AC đều xanh. Verdict REJECT vì hai lệnh suite h�
 
 ## Analyst
 
-Lệnh fail không gắn eval (nguyên nhân REJECT; failed_evals để trống vì không eval nào đỏ):
-- `cd app && npm test`: thoát khác 0. Hai ca đỏ nằm ngoài các tệp của hồ sơ này (hieu-chuan, tin-rao-cong-khai), một ca quá hạn 120 giây, một ca lỗi tham chiếu trong bản sao thử nghiệm. Cần người xác định có phải hồi quy do nhánh này hay đã đỏ sẵn trên main.
-- `cd pipeline && npm test`: thoát khác 0 do một ca quá hạn 120 giây (luoc-do-rieng); 523 ca còn lại đạt, không ca nào fail. Có dấu hiệu máy chậm hoặc DB dùng chung, cần chạy lại với hạn dài hơn.
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline), chỉ chứng minh harness hoặc là regression-guard có chủ ý:
+- E6: node scripts/check-listing-no-airdna.mjs
+- E12: node design-floor-s4.mjs --root .
 
-Eval không phân biệt (xanh cả trên nhánh lẫn baseline):
-- E6 (`node scripts/check-listing-no-airdna.mjs`): xanh trên baseline, là rào hồi quy có chủ ý cho listing thuê ngắn hạn.
-- E12 (`design-floor-s4.mjs --root .`): xanh trên baseline, là rào hồi quy hex thô.
-
-Baseline không đo
+Baseline không đo:
 - cd app && node --import tsx --test tests/trang-chi-tiet-tin.test.tsx: bo qua baseline: tep app/tests/trang-chi-tiet-tin.test.tsx co o cay dang kiem nhung chua co o merge-base 9976fb0125defa7e4c2e56013c0bd66e114d1e9c — eval moi, chay tren code cu khong phan biet gi
 - bash db/db-thu.sh oneinvest_tct --neu-chua-co && cd app && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_tct node --import tsx --test tests/trang-chi-tiet-tin-db.test.tsx: bo qua baseline: tep app/tests/trang-chi-tiet-tin-db.test.tsx co o cay dang kiem nhung chua co o merge-base 9976fb0125defa7e4c2e56013c0bd66e114d1e9c — eval moi, chay tren code cu khong phan biet gi
-- for f in app/src/components/listing/offer-body.tsx; do node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs" --jsdom app "$f" || exit $?; done: bo qua baseline: tep app/src/components/listing/offer-body.tsx co o cay dang kiem nhung chua co o merge-base 9976fb0125defa7e4c2e56013c0bd66e114d1e9c — eval moi, chay tren code cu khong phan biet gi
+- for f in app/src/components/listing/offer-body.tsx (design-gate --jsdom app): bo qua baseline: tep app/src/components/listing/offer-body.tsx co o cay dang kiem nhung chua co o merge-base 9976fb0125defa7e4c2e56013c0bd66e114d1e9c — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, xác định).
 
 ## Iterations
 
-Round 1: mọi eval gắn AC xanh; `cd app && npm test` và `cd pipeline && npm test` chạy đỏ (hai ca quá hạn và một ca lỗi tham chiếu ngoài hồ sơ). Review còn 12 phát hiện trong hợp đồng về độ chặt của thước đo (xem review-findings.md). Trả về triển khai.
+Round 1: có lượt chấm r1 siết thước (commit 3dfa8dcb, đo HTTP trên bản build), trả về triển khai.
+Round 2: toàn bộ 15 eval và 6 lệnh suite xanh trên 3dfa8dcb; verdict PASS.

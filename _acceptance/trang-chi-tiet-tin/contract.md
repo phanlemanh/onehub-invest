@@ -5,7 +5,7 @@ slug: trang-chi-tiet-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # route đọc trên cổng công khai; không chạm t3_paths, không đổi dữ liệu hay đường lên cloud
 surfaces: [web]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-04
 design_doc: docs/superpowers/specs/2026-11-04-trang-chi-tiet-tin-design.md
