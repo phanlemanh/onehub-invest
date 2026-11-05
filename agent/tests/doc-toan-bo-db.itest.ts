@@ -613,3 +613,24 @@ test("LS1-AC-9 lùi cả lượt: id lấy theo run_id --dem in ra, mọi tin c�
     assert.deepEqual([await loaiHinh(c, a), await loaiHinh(c, b), await loaiHinh(c, giu)], ["unknown", "unknown", "apartment"], "LS1-AC-9 lùi lượt sai tin");
   });
 });
+
+// Sự cố lượt 05/11: cắt ở ký tự 300 làm đôi emoji, Postgres từ chối evidence (22P02), tin bị bỏ lại.
+test("emoji đúng điểm cắt 300: đề xuất và thẻ đều ghi được, evidence không có nửa emoji", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const dau = "Chính chủ bán căn hộ 2PN Times City giá 3 tỷ ";
+    const chu = dau + "x".repeat(299 - dau.length) + "🏠 hết bài";
+    const a = await moiTin(c, { id: "t_ls1_emoji_ap", text: chu });
+    const ka = await chay(c, [a], hoiGia(() => traLoi({ quote: "Chính chủ bán", property_type: "apartment", quote_loai: "bán căn hộ 2PN" })));
+    assert.deepEqual(ka.loiGhi, [], "đề xuất có emoji ở điểm cắt không được lỗi ghi");
+    const [d] = await deXuat(c, a);
+    assert.equal(d.status, "applied");
+    assert.equal(d.evidence.text, chu.slice(0, 299));
+
+    const b = await moiTin(c, { id: "t_ls1_emoji_the", text: chu + " căn xung đột" });
+    const kb = await chay(c, [b], hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "câu bịa" })), { resolve: async () => ctx({ propertyType: "land", typeBasis: "luật mồi" }) });
+    assert.deepEqual(kb.loiGhi, [], "thẻ có emoji ở điểm cắt không được lỗi ghi");
+    const [the] = await theCua(c, b);
+    assert.equal(the.evidence.text, chu.slice(0, 299));
+  });
+});

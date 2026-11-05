@@ -304,3 +304,19 @@ test("EC-AC-9 dấu đã thử: LLM ném lỗi → không dấu; LLM sống → 
     assert.equal(await daThu(c, b), 1, "EC-AC-9 tin LLM sống phải có đúng một dấu đã thử");
   });
 });
+
+// Sự cố lượt 05/11: evidence cắt ở ký tự 300 làm đôi emoji, Postgres từ chối (22P02).
+test("emoji đúng điểm cắt 300: runEnrich ghi được đề xuất, evidence không có nửa emoji", async () => {
+  await withTx(async (c) => {
+    const chu = TEXT_LLM + " " + "x".repeat(298 - TEXT_LLM.length) + "🏠 hết bài";
+    const a = await tin(c, chu);
+    const { dem } = await runEnrich({
+      client: c, runId: "test-emoji", dry: false, limit: 50, offerIds: [a],
+      llm: llmTheo(["ok"], () => 0, []), resolve: CAN_LLM, buildings: [],
+    });
+    assert.deepEqual(dem.loiGhi, [], "tin có emoji ở điểm cắt không được lỗi ghi");
+    const { rows } = await c.query(`SELECT evidence FROM enrichment_proposals WHERE offer_id = $1`, [a]);
+    assert.ok(rows.length > 0, "phải có đề xuất");
+    for (const r of rows) assert.equal(r.evidence.text, chu.slice(0, 299));
+  });
+});

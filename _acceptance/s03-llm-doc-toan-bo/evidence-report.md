@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b208bbbfeda169a4f35b8a582acade219c9f8ff5
+verified_commit: d3ff786a11e78419a4cd18241ea10a63a29a9a2f
 human_signoff: Mạnh 2026-11-03
 ---
 
@@ -186,3 +186,7 @@ sha: 3bb3b50eaabd0864ffcf11149dc2934d0bfb2305 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 5 — 2026-11-04, do sửa bốn lỗi lệnh doc-toan-bo và hai phép đo đường trên dữ liệu thật
 run_id: repin-20261104T003949Z-85404
 sha: b208bbbfeda169a4f35b8a582acade219c9f8ff5 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E12
+
+### Re-pin lần 6 — 2026-11-05, do bản sửa cắt chữ emoji ở ba chỗ evidence
+run_id: repin-20261105T043318Z-59398
+sha: d3ff786a11e78419a4cd18241ea10a63a29a9a2f · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E12 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6

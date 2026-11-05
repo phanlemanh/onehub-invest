@@ -1,3 +1,4 @@
+import { chuKhongLink, danhSachAnh, duongAnh } from "./labels-anh"
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
@@ -17,7 +18,10 @@ export type MayDoc = Partial<Record<LabelField, string>>
 export type DoiChieu = {
   itemId: number
   lat: string
+  /** Chữ hiện trên thẻ, đã bỏ link. */
   text: string
+  anh: string[]
+  soLinkKhac: number
   groupName: string | null
   postedAt: string | null
   cuaToi: NhanCuaToi[]
@@ -39,9 +43,9 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
     `SELECT field, value, not_stated, basis FROM eval_labels WHERE item_id = $1 AND labeler_id = $2`, [itemId, userId])
   if (nhan.length === 0) return null
   const { rows: bai } = await q.query(
-    `SELECT i.lat, i.ref_id, i.stratum, p.text, p.group_name, p.posted_at
+    `SELECT i.lat, i.ref_id, i.stratum, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
      FROM eval_label_items i
-     LEFT JOIN LATERAL (SELECT text, group_name, posted_at FROM stg_zalo_posts
+     LEFT JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id FROM stg_zalo_posts
                         WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.item_id = $1`, [itemId])
   const b = bai[0]
@@ -74,10 +78,14 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
       }
     : null
   const a = ai.rows[0]
+  const nguon = danhSachAnh(b.media, b.media_files, b.snapshot_id)
+  const hien = chuKhongLink(b.text, nguon)
   return {
     itemId,
     lat: b.lat,
-    text: b.text ?? "",
+    text: hien.chu,
+    anh: nguon.map((_, i) => duongAnh(itemId, i)),
+    soLinkKhac: hien.soLinkKhac,
     groupName: b.group_name,
     postedAt: b.posted_at ? new Date(b.posted_at).toISOString() : null,
     cuaToi: nhan.map((r) => ({ field: r.field, value: r.value, notStated: r.not_stated, basis: r.basis })),

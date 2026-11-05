@@ -70,6 +70,7 @@ export const TAT_CA_O = KHOI.flatMap((k) => k.fields)
 
 export const BASIS_NGAN: { value: Basis; short: string }[] = [
   { value: "chu_bai", short: "Chữ" },
+  { value: "anh", short: "Ảnh" },
   { value: "ngu_canh_nhom", short: "Nhóm" },
   { value: "kien_thuc_nghe", short: "Nghề" },
 ]

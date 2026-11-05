@@ -229,6 +229,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Độ phủ API trên máy chủ (AU12 `coverage-cloud-got-tang-a`, 25/10): `GET /api/v1/ops/coverage` trên máy chủ đọc khối
   `freshness` máy thu đẩy lên, trả cờ `state` tươi / cũ / không số; không số thì `rows: null` + «Chỉ đo ở máy thu» (trước
   trả `[]` như thể không nguồn nào); phản hồi chỉ trường độ tươi, không tên nguồn thật.
+- Ảnh trên thẻ gắn nhãn (`anh-tren-the-gan-nhan`, 05/11; migration 075 **chưa áp DB thật**, chỉ máy thu, phải áp trước khi gộp): `/ops/labels` hiện ảnh bài trong thẻ, tệp đã lưu trước, không có tệp thì máy chủ lấy hộ qua `/api/zalo-media?nhan=&anh=` nên URL gốc không xuống trình duyệt; chữ hiện bỏ mọi link, chữ lưu và băm chữ không đổi; căn cứ thứ tư «Ảnh». 36/84 bài chỉ có URL đã mất ảnh ở nguồn, giữ trong mẫu với «Ảnh không tải được». Tối đa 3/367 bài mất số điện thoại khỏi thẻ (link S03, danh thiếp JSON): việc riêng.
 - Đọc số m² bị sót của S03 (GC1 `doc-so-m2-bi-sot`, 05/11): `parsePost` đọc «Diện tích: 45.7» không đơn vị và số, m2 chữ kiểu Unicode; số đọc được trên chữ gốc không đổi, chỉ khâu diện tích qua NFKC. Đo trên bản sao: 15 tin có thêm số, 0 tin có số bị đổi, 0 nhóm gom đổi. S05 dùng chung bộ đọc, 0 bài đổi. Giá viết chữ kiểu Unicode: hàng `GC1G`.
 - Nối dự án S08 của lát vào khu đô thị (DN1 `noi-du-an-s08-khu-do-thi`, 05/11; migration 074 **chưa áp DB thật**): bảng local `s08_project_links`, không sync cloud, ghi bằng `pipeline/noi-du-an-s08.mjs` từ tệp ở máy thu; Ocean Park 1 có 3 dự án, Grand Park 5. Bỏ bí danh `s7`, `s10` trùng mã toà và bí danh sai địa danh, mã vùng OCP1 là Gia Lâm, OCP2, OCP3 cấp tỉnh Hưng Yên. Còn 16 cặp mã vùng chết ở nút khác.
 - Gắn nhãn theo nhóm S03 (GC0 `gan-nhan-theo-nhom-s03`, 04/11; migration 072 **chưa áp DB thật**, chỉ máy thu): `/ops/labels` mặc định lát `s03-theo-nhom`, biểu mẫu
@@ -427,6 +428,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Mạnh và đội kiểm tay theo từng nhóm trước, thống kê trường hợp rồi mới làm bộ đọc: đo 04/11 chưa có nhãn người nào.
     **Sửa Q4/H5** (Mạnh chốt «Cho ghi suy ra»): mỗi nhóm có quy ước chuẩn hoá; quy ước đã qua người và đạt eval theo nhóm được tự ghi giá trị kèm nhãn
     «suy ra» và căn cứ, chữ bài nói khác thì chữ bài thắng; người duyệt một lần cho mỗi phiên bản. Ngữ cảnh chưa qua eval vẫn không tự quyết. Hàng `GCQ1`, `GCQ2`.
+31. **Gom, tách, gộp tin S03** (05/11, Mạnh duyệt «Theo khuyến nghị», `docs/plan/pham-vi-gom-tach-gop-tin-0511.md`): S03 thiếu đơn vị «bài đăng» giữa sự kiện thô và tin.
+    Khử trùng ảnh `GT1` làm ngay. Tách bài nhiều căn là hàng có sẵn `PL18`, kéo lên đứng trước `GCQ1`. Lớp bài đăng `GT2`, kiểm định gộp trùng `GT4` đứng sau `GCQ1`.
+    Lưu bảng riêng hay tính lại quyết sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Chưa mở thu Nhật ký của S03, hỏi ZCode trước (mục chờ `GTH1`).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
