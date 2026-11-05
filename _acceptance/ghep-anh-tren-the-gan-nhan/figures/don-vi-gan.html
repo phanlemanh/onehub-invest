@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đơn vị gắn nhãn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper:#f5f5f5; --color-ink:#2d3142; }
+    body { background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <svg viewBox="0 0 960 524" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <text x="40" y="36" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">HỎI-1 · ĐƠN VỊ GẮN NHÃN</text>
+      <text x="40" y="68" fill="#2d3142" font-size="24" font-family="'Instrument Serif', 'Lora', serif" letter-spacing="-0.02em">Một thẻ ứng với một dòng mẫu hay một tin?</text>
+
+      <!-- Arrows first -->
+      <line x1="304" y1="152" x2="400" y2="152" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="304" y1="268" x2="400" y2="268" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="304" y1="384" x2="400" y2="384" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Source: số đo của lát -->
+      <rect x="40" y="104" width="264" height="328" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="104" width="264" height="328" rx="6" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="56" y="128" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LÁT MẪU · S03</text>
+      <text x="56" y="156" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif">367 dòng mẫu</text>
+      <text x="56" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Tính theo tin còn 356 đơn vị.</text>
+      <text x="56" y="200" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">8 đơn vị có từ 2 dòng mẫu, gồm</text>
+      <text x="56" y="216" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">19 dòng, tức 11 dòng thừa.</text>
+      <line x1="56" y1="240" x2="288" y2="240" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="56" y="264" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">GHI KÈM</text>
+      <text x="56" y="292" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Nhãn người đã gắn</text>
+      <text x="288" y="292" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">0 dòng</text>
+      <text x="56" y="320" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Tin có ảnh trong lát</text>
+      <text x="288" y="320" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">43%</text>
+      <text x="56" y="348" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Tin có ảnh trên toàn S03</text>
+      <text x="288" y="348" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">20%</text>
+      <text x="56" y="384" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Lát lệch về phía tin có ảnh.</text>
+
+      <!-- Lối 1 -->
+      <rect x="400" y="104" width="520" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="104" width="520" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="416" y="128" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LỐI 1 · GIỮ NGUYÊN</text>
+      <text x="416" y="152" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Giữ 367 thẻ</text>
+      <text x="416" y="172" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Mỗi dòng mẫu một thẻ, như hiện nay.</text>
+      <text x="416" y="188" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Tin có nhiều dòng bị gắn lại.</text>
+      <text x="904" y="150" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">367 thẻ</text>
+      <text x="904" y="168" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">gắn lại 11 lần</text>
+
+      <!-- Lối 2 (focal) -->
+      <rect x="400" y="220" width="520" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="220" width="520" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="416" y="244" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LỐI 2 · KHUYẾN NGHỊ</text>
+      <text x="416" y="268" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Giữ dòng, bỏ 11 dòng trùng</text>
+      <text x="416" y="288" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Dòng trùng cụm không vào hàng gắn,</text>
+      <text x="416" y="304" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">không tính tiến độ, không xoá dòng nào.</text>
+      <text x="904" y="266" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">356 thẻ</text>
+      <text x="904" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">bỏ 11 dòng trùng</text>
+
+      <!-- Lối 3 -->
+      <rect x="400" y="336" width="520" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="400" y="336" width="520" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="416" y="360" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LỐI 3 · LÀM LẠI</text>
+      <text x="416" y="384" fill="#2d3142" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Sinh lại lát theo cả tin</text>
+      <text x="416" y="404" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Mẫu đúng hơn, nhưng phải xoá lát</text>
+      <text x="416" y="420" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">và sửa cách chọn mẫu.</text>
+      <text x="904" y="382" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="end">Lát mới</text>
+      <text x="904" y="400" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">cần lời Mạnh</text>
+
+      <!-- Legend -->
+      <line x1="40" y1="456" x2="920" y2="456" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="480" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">KÝ HIỆU</text>
+      <rect x="132" y="470" width="24" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="164" y="480" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Số đo của lát</text>
+      <rect x="276" y="470" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="308" y="480" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối chọn</text>
+      <rect x="392" y="470" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="424" y="480" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối khuyến nghị</text>
+    </svg>
+  </div>
+</body>
+</html>
