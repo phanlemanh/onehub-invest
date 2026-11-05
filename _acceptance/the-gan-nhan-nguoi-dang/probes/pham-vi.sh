@@ -9,7 +9,7 @@ duoc() {
   case "$1" in
     app/src/lib/labels-queries.ts|app/src/lib/labels-cum.ts|app/src/components/ops/labels/labels-view.tsx|\
     app/src/components/ops/labels/label-form-nhom.tsx|app/src/components/ops/labels/nguoi-dang.tsx|\
-    app/tests/labels-nguoi-dang.test.tsx|_acceptance/config.yaml|_acceptance/the-gan-nhan-nguoi-dang/*|docs/*|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
+    app/tests/labels-nguoi-dang.test.tsx|app/tests/labels-nhom.test.tsx|_acceptance/config.yaml|_acceptance/the-gan-nhan-nguoi-dang/*|docs/*|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -21,7 +21,8 @@ while IFS= read -r f; do
 done <<< "$tep"
 printf '%s\n' "$tep" | grep -qx "app/src/lib/labels-queries.ts" || { echo "THIEU TEP labels-queries.ts"; bad=1; }
 duoc "app/src/app/api/v1/ops/labels/route.ts" && { echo "LOI DOI CHUNG: route lot danh sach"; bad=1; } || echo "ok doi chung: tep ngoai danh sach bi bat"
-if printf '%s\n' "$tep" | grep -E '\.(ts|tsx)$' | xargs grep -l 'public\.' 2>/dev/null | grep -v '^app/tests/labels-nguoi-dang.test.tsx$' | grep -q .; then
+# Mã nguồn (không phải test: test dựng bảng bằng LIKE public.<bảng>) không được ghim lược đồ public.
+if printf '%s\n' "$tep" | grep -E '^app/src/.*\.(ts|tsx)$' | xargs grep -l 'public\.' 2>/dev/null | grep -q .; then
   echo "TEP DOI GHIM LUOC DO public"; bad=1
 else echo "ok khong ghim public"; fi
 head -25 app/tests/labels-nguoi-dang.test.tsx | grep -n 'process.env.DATABASE_URL = schemaUrl(S)' | head -1 | grep -q . \

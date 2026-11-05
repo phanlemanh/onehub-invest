@@ -1121,3 +1121,43 @@ test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên m�
     globalThis.fetch = gocFetch
   }
 })
+
+test("TND-AC-6 lỗi theo ô: sửa ô thì lỗi ô đó mất, giá xoá cả hai đầu, ô khác giữ lỗi", async () => {
+  const LOI = { area_m2: "Diện tích phải là số", price_min_vnd: "Giá thấp nhất sai", price_max_vnd: "Giá cao nhất sai", building: "Toà sai" }
+  const gocFetch = globalThis.fetch
+  globalThis.fetch = (async () => new Response(JSON.stringify({ error: "Có trường sai", loi: LOI }), { status: 400 })) as unknown as typeof fetch
+  type Mod = typeof import("../src/components/ops/labels/label-form-nhom")
+  // Bảng kỳ vọng viết trước: sau mỗi bước, các ô còn mang lỗi.
+  const KY_VONG = [
+    ["area_m2", "building", "price_max_vnd", "price_min_vnd"],
+    ["building", "price_max_vnd", "price_min_vnd"],
+    ["building"],
+  ]
+  const chay = async (mod: Mod) => {
+    const dom = await dungDom()
+    try {
+      const tin = { itemId: 1, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null }
+      await dom.render(<mod.LabelFormNhom lat="x" tin={tin} hrefXem="/xem" hrefTinKe="/ke" diToi={() => {}} baoTin={() => {}} />)
+      const coLoi = () => [...document.querySelectorAll("[data-o][data-loi]")].map((e) => e.getAttribute("data-o")!).filter((o) => o !== "reason").sort()
+      const thay: string[][] = []
+      await dom.bam("Lưu và xem máy đọc")
+      await dom.cho(() => coLoi().length > 0)
+      thay.push(coLoi())
+      await dom.nhan(document.querySelector('[aria-label="Diện tích: không suy ra được"]'), "ô Không suy ra được của Diện tích")
+      thay.push(coLoi())
+      await dom.go("nhan-price_min_vnd", "4,35")
+      thay.push(coLoi())
+      return thay
+    } finally {
+      await dom.xong()
+    }
+  }
+  try {
+    assert.deepEqual(await chay(await import("../src/components/ops/labels/label-form-nhom")), KY_VONG, "LOI CU CON SAU KHI SUA O")
+    // Chiều đỏ: bản không bỏ lỗi khi sửa ô giữ nguyên lỗi cũ.
+    const dot = await banDot<Mod>("src/components/ops/labels/label-form-nhom.tsx", "    boLoi(O_GIA.includes(f) ? O_GIA : [f])\n", "")
+    assert.notDeepEqual(await chay(dot), KY_VONG, "đối chứng không đỏ: LOI CU CON SAU KHI SUA O")
+  } finally {
+    globalThis.fetch = gocFetch
+  }
+})

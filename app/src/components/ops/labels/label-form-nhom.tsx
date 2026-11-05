@@ -21,6 +21,8 @@ import { NhomRow } from "./nhom-row"
 import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
 import { NguoiDang } from "./nguoi-dang"
 
+const O_GIA: readonly LabelField[] = ["price_min_vnd", "price_max_vnd"]
+
 /**
  * Biểu mẫu 17 trường của lát theo nhóm (bản D): bài gốc dính ở đầu, năm khối hai cột, mỗi ô một căn cứ, chân dính giữ nút
  * Lưu. Enter không tự lưu vì biểu mẫu dài. Lưu xong sang lượt hai (`?xem=<itemId>`), nên tải lại trang vẫn đúng chỗ.
@@ -58,7 +60,13 @@ export function LabelFormNhom({
   // Bài chỉ có ảnh thì căn cứ mặc định là Ảnh, khỏi ghi sai là Chữ.
   const oTrong: O = !tin.text && tin.anh.length ? { ...O_TRONG, basis: "anh" } : O_TRONG
   const cell = (f: LabelField) => cells[f] ?? oTrong
-  const dat = (f: LabelField, patch: Partial<O>) => setCells((c) => ({ ...c, [f]: { ...(c[f] ?? oTrong), ...patch } }))
+  // Lỗi của lần lưu trước chỉ đúng với giá trị lúc đó: sửa ô nào thì bỏ lỗi ô đó; hai đầu giá kiểm cùng nhau nên bỏ cả hai.
+  const boLoi = (fs: readonly LabelField[]) =>
+    setLoi((l) => (fs.some((f) => l[f]) ? Object.fromEntries(Object.entries(l).filter(([k]) => !fs.includes(k as LabelField))) : l))
+  const dat = (f: LabelField, patch: Partial<O>) => {
+    setCells((c) => ({ ...c, [f]: { ...(c[f] ?? oTrong), ...patch } }))
+    boLoi(O_GIA.includes(f) ? O_GIA : [f])
+  }
   const daDien = TAT_CA_O.filter((d) => cell(d.id).unknown || cell(d.id).value.trim()).length
   const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh")
   const xong = daDien === TAT_CA_O.length
@@ -135,7 +143,10 @@ export function LabelFormNhom({
                           <ToggleGroup
                             value={[donVi]}
                             onValueChange={(v: string[]) => {
-                              if (v[0]) setDonVi(v[0] as PriceUnit)
+                              if (v[0]) {
+                                setDonVi(v[0] as PriceUnit)
+                                boLoi(O_GIA)
+                              }
                             }}
                             variant="outline"
                             size="sm"

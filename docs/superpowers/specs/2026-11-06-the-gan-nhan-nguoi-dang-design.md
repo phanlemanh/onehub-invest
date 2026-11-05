@@ -15,6 +15,10 @@ Thẻ `/ops/labels` hiện nhóm và giờ đăng nhưng không hiện người 
 
 Không migration, không đổi route (`app/src/app/api/v1/ops/labels/route.ts` chỉ chuyển `tin`), không khởi động lại dev :3456.
 
+## Thêm: lỗi theo ô sau lần lưu
+
+Mạnh gặp khi gắn: ô Diện tích đã tick «Không suy ra được» mà vẫn hiện «Diện tích phải là số» từ lần lưu trước, tưởng màn từ chối. `label-form-nhom.tsx` chỉ đặt `loi` khi lưu, không xoá khi sửa ô. Sửa: `dat(f, …)` bỏ lỗi của đúng ô; hai đầu giá kiểm cùng nhau nên sửa một đầu hay đổi đơn vị giá bỏ lỗi cả hai. Luật kiểm của `labels-normalize.ts` không đổi. Giám sát giao thêm vào cùng lượt, 06/11.
+
 ## Không làm
 
 - Lượt hai (`luot-hai.tsx`): dòng đầu bảng so giữ nguyên; người gắn đã thấy người đăng ở lượt một.

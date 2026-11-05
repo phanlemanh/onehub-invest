@@ -27,7 +27,8 @@ Source input: câu hỏi của Mạnh khi gắn nhãn, giám sát giao trước 
 - AC-2: Given dòng ghép có tin chữ, When mở thẻ, Then tên, ID và giờ đăng (tới phút) cùng là của tin chữ, không phải của bài ảnh, để Mạnh tìm đúng một bài trong nhóm bằng tên cùng giờ; dòng ghép không có tin chữ thì là của chính bài. (cross-layer)
 - AC-3: Given `sender_name` chứa tên nguồn thật, When mở thẻ, Then tên nguồn hiện thành mã S0x; danh sách tên nguồn rỗng hay không đọc được (bảng vắng) thì không hiện tên và route vẫn trả 200; tên rỗng hay NULL thì chỉ còn «Người đăng: ID <sender_id>»; không có cả tên lẫn ID thì không có đoạn «Người đăng». (cross-layer)
 - AC-4: Given thẻ có người đăng, When đọc HTML và JSON route, Then không có `conversation_id` (stg không có cột SĐT người đăng; vòng này không thêm SĐT nào ngoài chữ bài đã hiện từ trước); ID người đăng chỉ nằm trong màn `/ops/labels` và route `/api/v1/ops/labels`; phép đo gắn mù của PL7 vẫn xanh.
-- AC-5: Given mã và hồ sơ, When quét diff so với nhánh chính, Then chỉ các tệp trong danh sách được phép đổi: `app/src/lib/labels-queries.ts`, `app/src/lib/labels-cum.ts`, `app/src/components/ops/labels/labels-view.tsx`, `app/src/components/ops/labels/label-form-nhom.tsx`, `app/src/components/ops/labels/nguoi-dang.tsx`, `app/tests/labels-nguoi-dang.test.tsx`, `_acceptance/config.yaml`, `_acceptance/the-gan-nhan-nguoi-dang/**`, `docs/**`, `PRODUCT-MAP.md`, `LO-TRINH.html` (route, `db/migrations/`, `collector/`, hook đều không); test chỉ chạy trên lược đồ tạm.
+- AC-6: Given biểu mẫu theo nhóm đang hiện lỗi từ lần lưu trước, When người sửa một ô (gõ, chọn, tick «Không suy ra được»), Then lỗi của đúng ô đó mất; sửa một đầu giá hay đổi đơn vị giá thì mất lỗi của cả hai đầu giá; ô chưa sửa giữ lỗi; luật kiểm của `labels-normalize.ts` không đổi.
+- AC-5: Given mã và hồ sơ, When quét diff so với nhánh chính, Then chỉ các tệp trong danh sách được phép đổi: `app/src/lib/labels-queries.ts`, `app/src/lib/labels-cum.ts`, `app/src/components/ops/labels/labels-view.tsx`, `app/src/components/ops/labels/label-form-nhom.tsx`, `app/src/components/ops/labels/nguoi-dang.tsx`, `app/tests/labels-nguoi-dang.test.tsx`, `app/tests/labels-nhom.test.tsx`, `_acceptance/config.yaml`, `_acceptance/the-gan-nhan-nguoi-dang/**`, `docs/**`, `PRODUCT-MAP.md`, `LO-TRINH.html` (route, `db/migrations/`, `collector/`, hook đều không); test chỉ chạy trên lược đồ tạm.
 
 ## Coverage
 
@@ -36,6 +37,7 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: hai trục liệt
 - Loại dòng: không ghép · ghép có tin chữ · ghép không tin chữ (AC-1, AC-2).
 - Tên và ID: tên thường · tên chứa tên nguồn · tên rỗng · tên NULL · danh sách nguồn rỗng · danh sách nguồn không đọc được · không tên không ID (AC-3).
 - Màn: chín trường · theo nhóm (AC-1).
+- Lỗi theo ô sau lần lưu: ô thường · hai đầu giá · đơn vị giá · ô chưa sửa (AC-6).
 
 ## Out of scope
 
