@@ -54,6 +54,7 @@ const { rows: tenDb } = await c.query(`SELECT current_database() AS d`)
 if (tenDb[0].d !== DB_THU) { console.log(`FAIL sai DB ${tenDb[0].d}`); process.exit(1) }
 
 const nutProject = async () => (await c.query(`SELECT slug, name, aliases, area_ids FROM asset_nodes WHERE node_type = 'project' ORDER BY slug`)).rows
+const nutMoi = async () => (await c.query(`SELECT slug, name, area_ids FROM asset_nodes ORDER BY slug`)).rows
 const dongToa = async () => {
   const { rows: a } = await c.query(`SELECT DISTINCT block_raw AS v FROM sale_offers WHERE block_raw IS NOT NULL`)
   const { rows: b } = await c.query(`SELECT DISTINCT subdivision_name AS v FROM stg_s08_inventory WHERE subdivision_name IS NOT NULL`)
@@ -64,6 +65,7 @@ const coMa = async (ids) => (await c.query(`SELECT id FROM areas WHERE id = ANY(
 
 // Trước 074
 const nutTruoc = await nutProject()
+const moiNutTruoc = await nutMoi()
 const maToa = await dongToa()
 kiem(JSON.stringify(trungToa(nutTruoc, maToa)) === JSON.stringify(["s10", "s7"]), "doi chung: truoc 074 thay dung s7 s10", `loi truoc 074 thay ${trungToa(nutTruoc, maToa)}`)
 const ocp = (nut, n) => nut.find((x) => x.slug === `vinhomes-ocean-park-${n}`)
@@ -100,12 +102,17 @@ kiem(JSON.stringify(ocp(nutSau, 1).area_ids) === JSON.stringify(["vn-hanoi-gia-l
 kiem([2, 3].every((n) => JSON.stringify(ocp(nutSau, n).area_ids) === JSON.stringify(["vn-hung-yen"])), "area_ids ocp2 ocp3")
 kiem((await coMa(["vn-hanoi-gia-lam", "vn-hung-yen"])) === 2, "moi ma ocp co trong areas")
 kiem([1, 2, 3].every((n) => !/vũ yên/i.test(ocp(nutSau, n).name)), "ten nut khong con Vu Yen")
-kiem(nutTruoc.filter((t) => !t.slug.startsWith("vinhomes-ocean-park-")).every((t) => JSON.stringify(t.area_ids) === JSON.stringify(nutSau.find((n) => n.slug === t.slug).area_ids) && t.name === nutSau.find((n) => n.slug === t.slug).name), "area_ids nut khac khong doi")
-const docMa = spawnSync("git", ["grep", "-l", "area_ids", "--", "app/src", "data-api/src"], { cwd: ROOT, encoding: "utf8" }).stdout.trim()
-kiem(docMa === "", "khong ma cong doc area_ids", `loi co ma doc area_ids: ${docMa}`)
+const moiNutSau = await nutMoi()
+const khacOcp = (ds) => JSON.stringify(ds.filter((t) => !/^vinhomes-ocean-park-[123]$/.test(t.slug)))
+kiem(moiNutTruoc.length === 23 && khacOcp(moiNutTruoc) === khacOcp(moiNutSau), `area_ids nut khac khong doi ${moiNutSau.length - 3}`, "loi nut khac bi doi")
+const tim = (...duong) => { const r = spawnSync("git", ["grep", "-l", "area_ids", "--", ...duong], { cwd: ROOT, encoding: "utf8" }); return { status: r.status, ra: r.stdout.trim() } }
+const cong = tim("app/src", "data-api/src")
+kiem(cong.status === 1 && cong.ra === "", "khong ma cong doc area_ids", `loi git grep thoat ${cong.status}: ${cong.ra}`)
+const doiChungGrep = tim("agent/src")
+kiem(doiChungGrep.status === 0 && doiChungGrep.ra !== "", "doi chung: lenh tim thay area_ids o agent", "loi doi chung: lenh tim khong thay area_ids")
 
 // E9: lệnh thật với tệp sai, tệp giả nằm trong thư mục gitignored. Bảng phải không đổi.
-const bam = async () => md5((await c.query(`SELECT project_id, asset_node_id, status, ly_do FROM s08_project_links ORDER BY project_id`)).rows)
+const bam = async () => md5((await c.query(`SELECT project_id, asset_node_id, status, ly_do, updated_at::text AS u FROM s08_project_links ORDER BY project_id`)).rows)
 const envThu = { ...process.env, DATABASE_URL: URL_THU }
 const chay = (tep, ...them) => spawnSync("node", [LENH, "--tep", tep, ...them], { cwd: ROOT, env: envThu, encoding: "utf8" })
 const bangLanh = JSON.parse(fs.readFileSync(TEP_BANG, "utf8"))
@@ -118,7 +125,28 @@ const CA_SAI = [
   ["bang-rong", (b) => { b.noi = [] }],
   ["tin-hieu-khong-khop", (b) => { b.noi[0].tin_hieu = "khong khop gi" }],
   ["ung-vien-bi-sot", (b) => { b.noi.pop() }],
+  ["loai-thieu-ly-do", (b) => { b.loai[0].ly_do = "" }],
 ]
+// E4: tệp thật, hai lần
+const r1 = chay(TEP_BANG)
+kiem(r1.status === 0 && r1.stdout.includes("da ghi"), "tep lanh cung luong qua duoc", `loi tep lanh: ${r1.stdout.slice(0, 120)}`)
+const { rows: theoKhu } = await c.query(`SELECT n.slug, count(*)::int AS n FROM s08_project_links l JOIN asset_nodes n ON n.id = l.asset_node_id WHERE l.status = 'noi' GROUP BY 1`)
+const dem = (s) => theoKhu.find((x) => x.slug === s)?.n ?? 0
+kiem(dem("vinhomes-ocean-park-1") === 3, "ocp1 3 du an", `loi ocp1 ${dem("vinhomes-ocean-park-1")}`)
+kiem(dem("vinhomes-grand-park") === 5, "grand park 5 du an", `loi grand park ${dem("vinhomes-grand-park")}`)
+const { rows: [soDuAn] } = await c.query(`SELECT count(DISTINCT project_id)::int AS n FROM stg_s08_inventory`)
+const { rows: lech } = await c.query(`SELECT count(*)::int AS n FROM (SELECT project_id::text FROM stg_s08_inventory EXCEPT SELECT project_id FROM s08_project_links UNION ALL SELECT project_id FROM s08_project_links EXCEPT SELECT project_id::text FROM stg_s08_inventory) q`)
+const { rows: capDb } = await c.query(`SELECT l.project_id, n.slug FROM s08_project_links l JOIN asset_nodes n ON n.id = l.asset_node_id WHERE l.status = 'noi'`)
+const capKhoa = (ds) => ds.map((d) => `${d.project_id}>${d.slug}`).sort()
+kiem(JSON.stringify(capKhoa(capDb)) === JSON.stringify(capKhoa(bangLanh.noi)), "cap du an khu tren db dung bang noi", "loi cap du an khu tren db lech bang noi")
+const { rows: [soDong] } = await c.query(`SELECT count(*)::int AS n, count(DISTINCT project_id)::int AS k, (count(*) FILTER (WHERE status = 'chua_noi'))::int AS cn, (count(*) FILTER (WHERE status = 'chua_noi' AND ly_do IS NOT NULL))::int AS cl FROM s08_project_links`)
+kiem(soDong.n === soDong.k && lech[0].n === 0, "moi du an s08 mot dong", `loi tap du an lech ${lech[0].n}`)
+kiem(soDong.cn === soDong.cl && soDong.cn === soDuAn.n - 8, `con lai chua_noi co ly do ${soDong.cn}`, `loi chua_noi ${soDong.cn}, co ly do ${soDong.cl}`)
+kiem(soDong.n === soDuAn.n, `tong bang so du an s08 ${soDuAn.n}`, `loi tong ${soDong.n} khac ${soDuAn.n}`)
+const b1 = await bam()
+const r2 = chay(TEP_BANG)
+kiem(r2.status === 0 && r2.stdout.includes("da ghi") && b1 === (await bam()), "chay lai khong doi", `loi chay lai: thoat ${r2.status}`)
+
 const truocSai = await bam()
 for (const [ma, pha] of CA_SAI) {
   const b = structuredClone(bangLanh)
@@ -136,26 +164,16 @@ fs.writeFileSync(tepNgoai, JSON.stringify(bangLanh))
 const rn = chay(tepNgoai)
 fs.rmSync(tepNgoai, { force: true })
 kiem(rn.status !== 0 && rn.stdout.includes("loi: tep-ngoai-kho") && (await bam()) === truocSai, "sai tep-ngoai-kho thoat khac 0, bang khong doi")
+const khoKhac = fs.mkdtempSync(path.join(os.tmpdir(), "dn1-kho-"))
+execFileSync("git", ["init", "-q", khoKhac])
+fs.writeFileSync(path.join(khoKhac, ".gitignore"), "*.json\n")
+const tepKhoKhac = path.join(khoKhac, "bang.json")
+fs.writeFileSync(tepKhoKhac, JSON.stringify(bangLanh))
+const rk = chay(tepKhoKhac)
+fs.rmSync(khoKhac, { recursive: true, force: true })
+kiem(rk.status !== 0 && rk.stdout.includes("loi: tep-ngoai-kho") && (await bam()) === truocSai, "sai tep trong kho git khac thoat khac 0, bang khong doi")
 const rThu = chay(TEP_BANG, "--thu")
 kiem(rThu.status === 0 && rThu.stdout.includes("thu: khong ghi") && (await bam()) === truocSai, "thu khong ghi", `loi --thu: ${rThu.status}`)
-
-// E4: tệp thật, hai lần
-const r1 = chay(TEP_BANG)
-kiem(r1.status === 0, "tep lanh cung luong qua duoc", `loi tep lanh: ${r1.stdout.slice(0, 120)}`)
-const { rows: theoKhu } = await c.query(`SELECT n.slug, count(*)::int AS n FROM s08_project_links l JOIN asset_nodes n ON n.id = l.asset_node_id WHERE l.status = 'noi' GROUP BY 1`)
-const dem = (s) => theoKhu.find((x) => x.slug === s)?.n ?? 0
-kiem(dem("vinhomes-ocean-park-1") === 3, "ocp1 3 du an", `loi ocp1 ${dem("vinhomes-ocean-park-1")}`)
-kiem(dem("vinhomes-grand-park") === 5, "grand park 5 du an", `loi grand park ${dem("vinhomes-grand-park")}`)
-const { rows: [soDuAn] } = await c.query(`SELECT count(DISTINCT project_id)::int AS n FROM stg_s08_inventory`)
-const { rows: [soDong] } = await c.query(`SELECT count(*)::int AS n, count(DISTINCT project_id)::int AS k, (count(*) FILTER (WHERE status = 'chua_noi'))::int AS cn, (count(*) FILTER (WHERE status = 'chua_noi' AND ly_do IS NOT NULL))::int AS cl FROM s08_project_links`)
-kiem(soDong.n === soDong.k, "moi du an s08 mot dong")
-kiem(soDong.cn === soDong.cl && soDong.cn === soDuAn.n - 8, `con lai chua_noi co ly do ${soDong.cn}`, `loi chua_noi ${soDong.cn}, co ly do ${soDong.cl}`)
-kiem(soDong.n === soDuAn.n, `tong bang so du an s08 ${soDuAn.n}`, `loi tong ${soDong.n} khac ${soDuAn.n}`)
-const b1 = await bam()
-const { rows: [t1] } = await c.query(`SELECT max(updated_at) AS m FROM s08_project_links`)
-chay(TEP_BANG)
-const { rows: [t2] } = await c.query(`SELECT max(updated_at) AS m FROM s08_project_links`)
-kiem(b1 === (await bam()) && String(t1.m) === String(t2.m), "chay lai khong doi")
 
 // E10: quan hệ trên bảng thật, cùng hàm kiểm của lệnh
 const { kiemBangNoi } = await import(pathToFileURL(LENH).href)

@@ -29,10 +29,9 @@ test("DN1-AC-1 boDau bo dau va thuong hoa", () => {
 test("DN1-AC-1 dung so dong theo nut, ngoai bang thanh chua_noi", () => {
   const { loi, dong } = kiem(BANG);
   assert.deepEqual(loi, []);
-  assert.equal(dong.filter((d) => d.slug === "khu-a").length, 2);
-  assert.equal(dong.filter((d) => d.slug === "khu-b").length, 1);
+  assert.deepEqual(dong.filter((d) => d.status === "noi").map((d) => [d.project_id, d.slug]), [["1", "khu-a"], ["2", "khu-a"], ["3", "khu-b"]]);
   assert.deepEqual(dong.find((d) => d.project_id === "4"), { project_id: "4", slug: null, status: "chua_noi", ly_do: "ngoai-lat" });
-  assert.equal(dong.find((d) => d.project_id === "5").ly_do, "loai-khoi-lat");
+  assert.equal(dong.find((d) => d.project_id === "5").ly_do, "ở nơi khác");
   assert.equal(dong.length, DU_AN.length);
 });
 
@@ -51,6 +50,8 @@ const SAI = [
   ["tin-hieu-khong-khop", (b) => { b.noi[0].tin_hieu = "khac han"; }],
   ["tin-hieu-khong-khop", (b) => { [b.noi[0].slug, b.noi[2].slug] = [b.noi[2].slug, b.noi[0].slug]; }],
   ["ung-vien-bi-sot", (b) => { b.noi.splice(2, 1); }],
+  ["loai-thieu-ly-do", (b) => { b.loai = [{ project_id: "5" }]; }],
+  ["loai-thieu-ly-do", (b) => { b.loai = [{ project_id: "5", ly_do: "  " }]; }],
 ];
 for (const [ma, pha] of SAI) {
   test(`DN1-AC-2 tu choi ${ma}: ${pha.toString().slice(0, 44)}`, () => {

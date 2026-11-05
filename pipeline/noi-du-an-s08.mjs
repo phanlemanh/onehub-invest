@@ -27,7 +27,8 @@ const chuDuAn = (d) => boDau([d.ten, d.ma, d.phan_khu].join(" | "));
 export function kiemBangNoi({ bang, duAn, nut }) {
   const noi = bang.noi ?? [];
   const tuKhoa = bang.tu_khoa_lat ?? {};
-  const loai = new Set((bang.loai ?? []).map((l) => l.project_id));
+  const lyDoLoai = new Map((bang.loai ?? []).map((l) => [l.project_id, l.ly_do]));
+  const loai = new Set(lyDoLoai.keys());
   const theoId = new Map(duAn.map((d) => [d.project_id, d]));
   const loi = new Set();
   if (noi.length === 0) loi.add("bang-rong");
@@ -43,7 +44,10 @@ export function kiemBangNoi({ bang, duAn, nut }) {
     const hieu = boDau(d.tin_hieu);
     if (!hieu || !chuDuAn(da).includes(hieu) || !(tuKhoa[d.slug] ?? []).map(boDau).includes(hieu)) loi.add("tin-hieu-khong-khop");
   }
-  for (const id of loai) if (!theoId.has(id)) loi.add("project-id-la");
+  for (const [id, lyDo] of lyDoLoai) {
+    if (!theoId.has(id)) loi.add("project-id-la");
+    if (!lyDo?.trim()) loi.add("loai-thieu-ly-do");
+  }
   const moiTuKhoa = Object.values(tuKhoa).flat().map(boDau);
   for (const d of duAn) {
     if (daGap.has(d.project_id) || loai.has(d.project_id)) continue;
@@ -54,13 +58,20 @@ export function kiemBangNoi({ bang, duAn, nut }) {
   const slugCua = new Map(noi.map((d) => [d.project_id, d.slug]));
   const dong = duAn.map((d) => {
     if (slugCua.has(d.project_id)) return { project_id: d.project_id, slug: slugCua.get(d.project_id), status: "noi", ly_do: null };
-    return { project_id: d.project_id, slug: null, status: "chua_noi", ly_do: loai.has(d.project_id) ? "loai-khoi-lat" : "ngoai-lat" };
+    return { project_id: d.project_id, slug: null, status: "chua_noi", ly_do: lyDoLoai.get(d.project_id) ?? "ngoai-lat" };
   });
   return { loi: [], dong };
 }
 
-/** Tệp bảng nối phải nằm trong kho và bị git bỏ qua. `check-ignore` thoát 0 bỏ qua · 1 không · 128 ngoài kho. */
+const khoGit = (thuMuc) => {
+  const r = spawnSync("git", ["-C", thuMuc, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" });
+  return r.status === 0 ? r.stdout.trim() : null;
+};
+
+/** Tệp bảng nối phải nằm trong chính kho này (mọi worktree chung một kho) và bị git bỏ qua. `check-ignore` thoát 0 bỏ qua · 1 không. */
 export function kiemTep(tep) {
+  const kho = khoGit(path.dirname(tep));
+  if (!kho || kho !== khoGit(path.dirname(fileURLToPath(import.meta.url)))) return "tep-ngoai-kho";
   const r = spawnSync("git", ["-C", path.dirname(tep), "check-ignore", "-q", tep]);
   if (r.status === 0) return null;
   return r.status === 1 ? "tep-khong-bi-bo-qua" : "tep-ngoai-kho";

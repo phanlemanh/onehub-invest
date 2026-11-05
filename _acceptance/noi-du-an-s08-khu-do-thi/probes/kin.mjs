@@ -32,12 +32,14 @@ export function quetTen(chu, tenSet) {
 
 const c = new pg.Client({ connectionString: URL_DOC, options: "-c default_transaction_read_only=on" })
 await c.connect()
-const { rows } = await c.query(`SELECT DISTINCT payload->>'project_id' AS id, payload->>'project_name' AS ten FROM public.stg_s08_inventory`)
+const { rows } = await c.query(`SELECT DISTINCT payload->>'project_id' AS id, payload->>'project_name' AS ten, payload->>'project_code' AS ma FROM public.stg_s08_inventory`)
 const { rows: [{ n: soDuAn }] } = await c.query(`SELECT count(DISTINCT project_id)::int AS n FROM public.stg_s08_inventory`)
 await c.end()
 
 const tatCa = new Set(rows.map((r) => boHauTo(r.ten)).filter(Boolean))
-kiem(tatCa.size > 0 && rows.length >= soDuAn, `tap ten s08 bang so du an ${soDuAn}`, `loi tap ten ${tatCa.size}, du an ${soDuAn}`)
+const moiId = new Set(rows.map((r) => r.id))
+// Hậu tố gộp vài tên về một (05/11: 150 dự án, 143 tên), nên đòi đủ mã, không dòng nào thiếu tên, và tập tên không teo.
+kiem(moiId.size === soDuAn && rows.every((r) => r.ten) && tatCa.size >= soDuAn * 0.9, `tap ten s08 bang so du an ${soDuAn}, ${tatCa.size} ten sau chuan hoa`, `loi tap ten ${tatCa.size}, ma ${moiId.size}, du an ${soDuAn}`)
 // Miễn trừ khai trước: tên ngắn dễ khớp nhầm, và tên đã có trong migration công khai trước vòng này.
 const migCu = chuan(git("ls-tree", "-r", "--name-only", GOC, "db/migrations").trim().split("\n").map((f) => git("show", `${GOC}:${f}`)).join("\n"))
 const canQuet = new Set([...tatCa].filter((t) => t.length >= 6 && !migCu.includes(t)))
@@ -58,7 +60,17 @@ const themDiff = git("diff", "-U0", coso, "HEAD", "--", ".", ":(exclude)LO-TRINH
 const hoSo = git("ls-files", `_acceptance/${SLUG}`).trim().split("\n").filter(Boolean).filter((f) => fs.existsSync(path.join(ROOT, f)) && !f.endsWith(".png")).map((f) => fs.readFileSync(path.join(ROOT, f), "utf8")).join("\n")
 const soTrung = quetTen(`${themDiff}\n${hoSo}`, canQuet)
 kiem(soTrung === 0, "diff va ho so khong co ten s08", `loi ${soTrung} ten s08 trong diff hoac ho so`)
-kiem(!/"project_id":\s*"?\d/.test(`${themDiff}\n${hoSo}`), "diff va ho so khong co ma s08", "loi co ma du an s08 trong diff hoac ho so")
+// Mã: số dự án chỉ khớp khi đứng sau khoá project_id ở mọi khuôn (JSON, bảng, CSV), vì số trần trùng ngẫu nhiên; mã chữ khớp đúng hoa thường, từ 4 ký tự, trừ mã đã có trong migration trước vòng.
+const migGoc = git("ls-tree", "-r", "--name-only", GOC, "db/migrations").trim().split("\n").map((f) => git("show", `${GOC}:${f}`)).join("\n")
+const maChu = new Set(rows.map((r) => r.ma).filter((m) => m && m.length >= 4 && !migGoc.includes(m)))
+const SO_SAU_KHOA = /project_id["'\s]*[:=|,]\s*["']?(\d+)/g
+const soThat = (chu) => [...chu.matchAll(SO_SAU_KHOA)].filter((m) => moiId.has(m[1])).length
+export const quetMa = (chu) => soThat(chu) + [...maChu].filter((m) => new RegExp(`(?<![\\p{L}\\p{N}_])${thoat(m)}(?![\\p{L}\\p{N}_])`, "u").test(chu)).length
+const soMa = quetMa(`${themDiff}\n${hoSo}`)
+kiem(soMa === 0, `diff va ho so khong co ma s08, quet ${maChu.size} ma chu`, `loi ${soMa} ma s08 trong diff hoac ho so`)
+const mauMa = [...maChu][0]
+const mauSo = [...moiId][0]
+kiem(quetMa(`| project_id | ${mauSo} |`) === 1 && quetMa(`project_id: ${mauSo}`) === 1 && quetMa(`"project_id": "${mauSo}"`) === 1 && quetMa(`dong co ${mauMa} o day`) === 1 && quetMa("dong lanh, project_id: 0") === 0, "doi chung: dong co ma bi bat", "loi doi chung: khong bat duoc ma")
 const mauTen = [...canQuet][0]
 kiem(quetTen(`dong co ${mauTen.toUpperCase()} o day`, canQuet) >= 1, "doi chung: dong co ten bi bat", "loi doi chung: khong bat duoc ten")
 kiem(quetTen("dong khong co gi", canQuet) === 0, "doi chung: dong lanh khong bi bat")
@@ -68,17 +80,26 @@ const env = { ...process.env, DATABASE_URL: URL_DOC, PGOPTIONS: "-c default_tran
 const THU_MUC = path.join(ROOT, ".acceptance-runs", SLUG, `kin-${process.pid}`)
 fs.mkdirSync(THU_MUC, { recursive: true })
 const bang = JSON.parse(fs.readFileSync(TEP_BANG, "utf8"))
-const mau = { lanh: bang, "bang-rong": { ...bang, noi: [] }, "project-id-la": { ...bang, noi: [{ ...bang.noi[0], project_id: "khong-co" }, ...bang.noi.slice(1)] }, "ung-vien": { ...bang, noi: bang.noi.slice(1) } }
-const dauRa = Object.entries(mau).map(([k, b]) => {
+const mau = [
+  ["lanh", bang, "thu: khong ghi", 0],
+  ["bang-rong", { ...bang, noi: [] }, "loi: bang-rong", 1],
+  ["project-id-la", { ...bang, noi: [{ ...bang.noi[0], project_id: "khong-co" }, ...bang.noi.slice(1)] }, "loi: project-id-la", 1],
+  ["ung-vien", { ...bang, noi: bang.noi.slice(1) }, "loi: ung-vien-bi-sot", 1],
+]
+const dauRa = mau.map(([k, b, cho, thoatMa]) => {
   const f = path.join(THU_MUC, `${k}.json`)
   fs.writeFileSync(f, JSON.stringify(b))
   const r = spawnSync("node", [LENH, "--tep", f, "--thu"], { cwd: ROOT, env, encoding: "utf8" })
+  kiem(r.status === thoatMa && r.stdout.includes(cho), `nhanh ${k} chay toi noi`, `loi nhanh ${k}: thoat ${r.status}`)
   return r.stdout + r.stderr
 }).join("\n")
 fs.rmSync(THU_MUC, { recursive: true, force: true })
 kiem(quetTen(dauRa, tatCa) === 0, "dau ra lenh khong co ten", "loi dau ra co ten s08")
-const maDuAn = new Set(bang.noi.map((d) => d.project_id))
-const coMa = [...maDuAn].some((m) => new RegExp(`(?<![\\d.])${m}(?![\\d.])`).test(dauRa.replace(/noi \d+ · chua_noi \d+/g, "").replace(/"[^"]+":\d+/g, "")))
-kiem(!coMa, "dau ra lenh khong co ma", "loi dau ra co ma du an")
+const biSo = (chu) => chu.replace(/noi \d+ · chua_noi \d+/g, "").replace(/"[^"]+":\d+/g, "")
+const moiMa = [...moiId, ...rows.map((r) => r.ma).filter(Boolean)]
+const coMaRa = (chu) => moiMa.filter((m) => new RegExp(`(?<![\\p{L}\\p{N}_.])${thoat(m)}(?![\\p{L}\\p{N}_.])`, "u").test(biSo(chu))).length
+const maTrongRa = coMaRa(dauRa)
+kiem(maTrongRa === 0, `dau ra lenh khong co ma, quet ${moiMa.length} ma`, `loi dau ra co ${maTrongRa} ma`)
+kiem(coMaRa(`loi: ${[...moiId][0]}`) === 1, "doi chung: dau ra co ma bi bat", "loi doi chung: khong bat duoc ma o dau ra")
 if (loi.length) process.exit(1)
 console.log("KIN OK")
