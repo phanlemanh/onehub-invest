@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 478e6b4002ac5421b291b888fc0b81fd9db02772
-human_signoff:
+human_signoff: Mạnh 2026-11-06
 ---
 
 # Evidence Report: eval-classify-theo-chu-ref

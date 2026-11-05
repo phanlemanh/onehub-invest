@@ -5,7 +5,7 @@ slug: eval-classify-theo-chu-ref
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-05-eval-classify-theo-chu-ref-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -47,3 +47,15 @@ Later: nhãn có căn cứ Ảnh, Nhóm, Nghề so với bộ đọc chữ · hi
 ## Notes
 
 - DB thử `oneinvest_eval_ghep`, không ghi DB thật.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-1: chấm khi chưa chạy bước ghép thì bài chỉ có ảnh (`ghep` NULL) vẫn bị chấm trên đường dẫn ảnh, cho điểm thấp giả mà không cảnh báo.
+  - Ngoài-4: phép đo trên DB thử chỉ thử chiều đỏ của AC-3 với bài ảnh, không thử với dòng trùng cụm; ca thử thuần vẫn phủ ý này.
+  - Ngoài-6: phép quét tên nguồn thật bỏ qua một số từ ngắn và tệp chưa theo dõi, nên có thể sót một dạng tên.
+  - Ngoài-7: phép quét chữ bài thật chỉ so với một mẫu nhỏ, nên đoạn chữ ngoài mẫu có thể không bị phát hiện.
+  - Ngoài-9: `card-plain.json` xếp AC-2, AC-3, AC-5, AC-6 vào nhóm sẽ làm sai chỗ, nên thẻ in câu Given/When/Then thô thay câu dịch.
+  - Ngoài-11: giống Ngoài-1 (lượt 1): bài chỉ có ảnh mà `ghep` NULL vẫn bị chấm trên URL và ghi vào `dq_check_results`.
+  - Ngoài-12: thẻ Cổng Phạm vi đã duyệt xếp bốn tiêu chí vào mục «sẽ không làm» và hiện chữ kỹ thuật thô.
+  - Ngoài-13: một ca thử dùng dòng vừa trùng vừa không chữ mà bước ghép thật không sinh ra, nên chỉ có giá trị phòng thủ.
+  - Ngoài-14: giống Ngoài-4 (lượt 1): chiều đỏ của AC-3 trên DB thử không đo dòng trùng cụm.
+  - Ngoài-15: giống Ngoài-7 (lượt 1): quét chữ bài thật chỉ phủ khoảng 7% mẫu.
+  - Ngoài-16: giống Ngoài-6 (lượt 1): quét tên nguồn chỉ dùng 6/19 token của danh sách nguồn.
