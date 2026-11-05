@@ -57,13 +57,24 @@ function kiemAc1(fn, mk) {
 
 test("KTA-AC-1 mỗi băm một dòng, giữ lần đầu, thứ tự liền nhau, khoá theo tệp đầu", () => {
   kiemAc1(mediaRowsFromPosts, mediaKey);
-  // Cùng băm ở hai tin khác nhau vẫn là hai dòng: khử chỉ trong một tin.
+  assert.equal(AC1.length, 5, "KTA-AC-1 ma trận đổi số dòng");
+});
+
+/** Khử chỉ trong một tin: cùng băm ở hai tin thì mỗi tin giữ dòng của mình. */
+function kiemHaiTin(fn) {
   const posts = [bai("p1", [tep("a", sha("a"))])];
-  assert.notEqual(mediaRowsFromPosts("o1", "S03", posts)[0].media_key, mediaRowsFromPosts("o2", "S03", posts)[0].media_key);
+  for (const o of ["o1", "o2"]) {
+    assert.deepEqual(fn(o, "S03", posts).map((r) => r.resource_record_key), [o], "KTA-AC-1 hai tin: mỗi tin một dòng");
+  }
+}
+test("KTA-AC-1 cùng băm ở hai tin vẫn là hai dòng của hai tin", () => kiemHaiTin(mediaRowsFromPosts));
+test("KTA-AC-1 ca đỏ: khử xuyên tin", async () => {
+  const dot = await banSao([["  const giuTheoSha = new Map();\n", ""], ["const record = (v)", "const giuTheoSha = new Map();\nconst record = (v)"]]);
+  assert.throws(() => kiemHaiTin(dot.mediaRowsFromPosts), /KTA-AC-1 hai tin: mỗi tin một dòng/);
 });
 
 test("KTA-AC-1 ca đỏ: bỏ khử băm thì báo tên dòng", async () => {
-  const dot = await banSao([["(sha && seenSha.has(sha))", "false"]]);
+  const dot = await banSao([["const giu = sha ? giuTheoSha.get(sha) : null;", "const giu = null;"]]);
   assert.throws(() => kiemAc1(dot.mediaRowsFromPosts, dot.mediaKey), /KTA-AC-1 lệch: trong một bài/);
 });
 
@@ -84,21 +95,19 @@ const kiemAc2 = (fn) => {
 
 test("KTA-AC-2 thiếu băm khử theo tệp, chỉ URL khử theo URL; hàm không đọc đĩa, không gọi mạng", () => {
   kiemAc2(mediaRowsFromPosts);
+  assert.equal(AC2.length, 8, "KTA-AC-2 ma trận đổi số dòng");
   const nhap = [...readFileSync(MR, "utf8").matchAll(/^import .* from "([^"]+)";$/gm)].map((m) => m[1]);
   assert.deepEqual(nhap, ["node:crypto"], "KTA-AC-2 media-rows.mjs chỉ được import node:crypto");
   assert.doesNotMatch(readFileSync(MR, "utf8"), /\bfetch\(/);
 });
 
 test("KTA-AC-2 ca đỏ: URL của tệp đã khử quay lại", async () => {
-  const dot = await banSao([
-    ["if (url) seenUrl.add(url);\n      const sha = shaTep(e);\n      if (seenLocal.has(local) || (sha && seenSha.has(sha))) continue;",
-     "const sha = shaTep(e);\n      if (seenLocal.has(local) || (sha && seenSha.has(sha))) continue;\n      if (url) seenUrl.add(url);"],
-  ]);
+  const dot = await banSao([["if (url) seenUrl.add(url);\n      const sha = shaTep(e);", "const sha = shaTep(e);\n      if (url && !(sha && giuTheoSha.has(sha))) seenUrl.add(url);"]]);
   assert.throws(() => kiemAc2(dot.mediaRowsFromPosts), /KTA-AC-2 lệch: URL của tệp đã khử/);
 });
 
 test("KTA-AC-2 ca đỏ: tệp lần sau có băm sinh hai dòng cùng khoá", async () => {
-  const dot = await banSao([["if (seenLocal.has(local) || (sha && seenSha.has(sha))) continue;", "if (seenSha.has(sha ?? local)) continue;"], ["if (sha) seenSha.add(sha);", "seenSha.add(sha ?? local);"]]);
+  const dot = await banSao([["if (seenLocal.has(local)) continue;", "if (seenLocal.has(local) && !sha) continue;"]]);
   assert.throws(() => kiemAc2(dot.mediaRowsFromPosts), /KTA-AC-2 lệch: cùng tệp, lần sau mới có băm/);
 });
 
@@ -116,7 +125,10 @@ const kiemAc9 = (fn) => {
     assert.equal(mot[0].local_file.split("/media/")[1], giu, `KTA-AC-9 bản giữ sai: ${ten}`);
   }
 };
-test("KTA-AC-9 cùng đầu vào cùng kết quả, bản giữ là lần đầu theo post_ids", () => kiemAc9(mediaRowsFromPosts));
+test("KTA-AC-9 cùng đầu vào cùng kết quả, bản giữ là lần đầu theo post_ids", () => {
+  kiemAc9(mediaRowsFromPosts);
+  assert.equal(AC9.length, 4, "KTA-AC-9 ma trận đổi số dòng");
+});
 test("KTA-AC-9 ca đỏ: chọn bản giữ theo tên tệp nhỏ nhất", async () => {
   const dot = await banSao([["const out = [];\n  const seenLocal", "posts = posts.map((p) => ({ ...p, media_files: p.media_files })).sort((a, b) => JSON.stringify(a.media_files).localeCompare(JSON.stringify(b.media_files)));\n  const out = [];\n  const seenLocal"]]);
   assert.throws(() => kiemAc9(dot.mediaRowsFromPosts), /KTA-AC-9 bản giữ sai: tệp lần sau nhỏ hơn/);

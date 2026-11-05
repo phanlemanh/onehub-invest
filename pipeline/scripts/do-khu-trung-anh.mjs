@@ -63,6 +63,8 @@ export function kiem({ truoc, sau, vao, truocS06, sauS06 }) {
     for (const r of t) if (r.local_file && !d.shaTheoTep.has(r.local_file)) so.bam_truoc_loai++;
     const urlSau = new Set(s.filter((r) => !r.local_file).map((r) => r.media_url));
     for (const u of d.urlMong) if (!urlSau.has(u)) so.url_lech++;
+    // Thừa: URL của tệp đã khử quay lại thành dòng, ảnh trùng lấy lại chỗ trong trần.
+    for (const u of urlSau) if (!d.urlMong.has(u)) so.url_lech++;
     const khoaSau = new Map(s.map((r) => [r.media_key, r.media_order]));
     for (const r of t) {
       if (!khoaSau.has(r.media_key)) so.xoa++;

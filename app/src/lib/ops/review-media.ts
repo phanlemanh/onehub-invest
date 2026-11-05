@@ -94,8 +94,10 @@ export function buildOfferImages(posts: PostMediaRow[], evidenceImageUrl?: unkno
       const src = localSrc(e, post.snapshot_id);
       if (!src) continue;
       const sha = shaTep(e);
-      if (!sha || !daCoSha.has(sha)) push({ src, origin: "local", expiring: false });
-      if (sha) daCoSha.add(sha);
+      if (!seen.has(src) && !(sha && daCoSha.has(sha))) {
+        push({ src, origin: "local", expiring: false });
+        if (sha) daCoSha.add(sha);
+      }
       const orig = remoteImage(e.url);
       if (orig) seen.add(orig.src);
     }

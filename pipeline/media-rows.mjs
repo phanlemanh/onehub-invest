@@ -42,7 +42,7 @@ export function mediaKey(offerId, local, url) {
   return createHash("md5").update(`${offerId}|${local ?? url}`).digest("hex");
 }
 
-// `sha256` chỉ sống trong bộ nhớ cho noiSau của transform-media; không phải cột của bảng.
+// `sha256`, `url_da_khu` (URL của các bản đã khử vào dòng này) chỉ sống trong bộ nhớ cho noiSau của transform-media; không phải cột của bảng.
 const row = (offerId, source, originKey, url, order, local, sha256 = null) => ({
   media_key: mediaKey(offerId, local, url),
   resource_record_key: offerId,
@@ -52,6 +52,7 @@ const row = (offerId, source, originKey, url, order, local, sha256 = null) => ({
   media_order: order,
   local_file: local,
   sha256,
+  url_da_khu: [],
 });
 
 /**
@@ -63,7 +64,7 @@ const row = (offerId, source, originKey, url, order, local, sha256 = null) => ({
 export function mediaRowsFromPosts(offerId, source, posts) {
   const out = [];
   const seenLocal = new Set();
-  const seenSha = new Set();
+  const giuTheoSha = new Map();
   const seenUrl = new Set();
   for (const p of posts) {
     for (const e of list(p.media_files).map(record)) {
@@ -72,10 +73,16 @@ export function mediaRowsFromPosts(offerId, source, posts) {
       const url = httpUrl(e.url);
       if (url) seenUrl.add(url);
       const sha = shaTep(e);
-      if (seenLocal.has(local) || (sha && seenSha.has(sha))) continue;
+      if (seenLocal.has(local)) continue;
+      const giu = sha ? giuTheoSha.get(sha) : null;
+      if (giu) {
+        if (url) giu.url_da_khu.push(url);
+        continue;
+      }
       seenLocal.add(local);
-      if (sha) seenSha.add(sha);
-      out.push(row(offerId, source, p.post_id, url, out.length, local, sha));
+      const r = row(offerId, source, p.post_id, url, out.length, local, sha);
+      if (sha) giuTheoSha.set(sha, r);
+      out.push(r);
     }
   }
   for (const p of posts) {

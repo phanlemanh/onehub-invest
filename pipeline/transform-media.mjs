@@ -88,7 +88,7 @@ export async function baiAnhCuaTin(c) {
  */
 function noiSau(cua, them) {
   const tep = new Set(cua.map((r) => r.local_file).filter(Boolean));
-  const url = new Set(cua.map((r) => r.media_url).filter(Boolean));
+  const url = new Set(cua.flatMap((r) => [r.media_url, ...(r.url_da_khu ?? [])]).filter(Boolean));
   const sha = new Set(cua.map((r) => r.sha256).filter(Boolean));
   return them
     .filter((r) => !(r.local_file && tep.has(r.local_file)) && !(r.media_url && url.has(r.media_url)) && !(r.sha256 && sha.has(r.sha256)))

@@ -8,14 +8,14 @@ evals:
     executor: test
     cmd: config:executors.test.kta_pipeline
     paths: [pipeline/media-rows.mjs, pipeline/scripts/khu-trung-anh.test.mjs]
-    expected: "exit 0; ca 'KTA-AC-1' xanh trên 6 dòng ma trận (trong bài, giữa hai bài, băm viết hoa, ba lần trùng, hai băm xen kẽ, cùng băm ở hai tin vẫn là hai dòng của hai tin), so `media_key` với mediaKey(offer, tệp đầu); ca đỏ trên bản sao bỏ bước khử băm báo 'KTA-AC-1' và tên dòng ma trận."
+    expected: "exit 0; ca 'KTA-AC-1' xanh trên 5 dòng ma trận (trong bài, giữa hai bài, băm viết hoa, ba lần trùng, hai băm xen kẽ) và ca cùng băm ở hai tin vẫn là hai dòng của hai tin, so `media_key` với mediaKey(offer, tệp đầu); ca đỏ trên bản sao bỏ bước khử băm báo 'KTA-AC-1' và tên dòng ma trận."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.kta_pipeline
     paths: [pipeline/media-rows.mjs, pipeline/scripts/khu-trung-anh.test.mjs]
-    expected: "exit 0; ca 'KTA-AC-2' xanh trên 6 dòng ma trận (thiếu băm, băm 63 ký tự, băm không phải hex, tải lỗi, chỉ URL lặp, URL của tệp đã khử nằm ở cột media); kiểm tĩnh: media-rows.mjs chỉ import node:crypto; ca đỏ trên bản sao để URL của tệp đã khử quay lại báo tên dòng."
+    expected: "exit 0; ca 'KTA-AC-2' xanh trên 8 dòng ma trận (thiếu băm hai tệp, thiếu băm cùng tệp, băm 63 ký tự, băm không phải hex, cùng tệp lần sau mới có băm, tải lỗi, chỉ URL lặp, URL của tệp đã khử nằm ở cột media); kiểm tĩnh: media-rows.mjs chỉ import node:crypto; ca đỏ trên bản sao để URL của tệp đã khử quay lại báo tên dòng."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kta_db
     paths: [pipeline/transform-media.mjs, pipeline/media-rows.mjs, pipeline/scripts/khu-trung-anh.itest.mjs]
-    expected: "exit 0; ca 'KTA-AC-3' xanh trên DB thử: rows ghi từ runTransformMedia thật, ảnh trùng băm của bài chỉ-ảnh không có dòng, ảnh khác băm có media_order lớn hơn mọi ảnh bài chữ; ca đỏ trên bản sao noiSau không xét băm báo 'KTA-AC-3'."
+    expected: "exit 0; ca 'KTA-AC-3' xanh trên DB thử: rows ghi từ runTransformMedia thật, ảnh trùng băm của bài chỉ-ảnh không có dòng, ảnh khác băm có media_order lớn hơn mọi ảnh bài chữ; hai ca đỏ trên bản sao noiSau: không xét băm, và URL của tệp đã khử quay lại; đều báo 'KTA-AC-3'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -39,7 +39,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kta_db
     paths: [pipeline/transform-media.mjs, pipeline/media-rows.mjs, pipeline/scripts/khu-trung-anh.itest.mjs]
-    expected: "exit 0; ca 'KTA-AC-4' xanh: tin S06 thử có hai URL trùng nhau, dòng sau transform trùng từng cột với mediaRowsFromAd; ca đỏ trên bản sao mediaRowsFromAd đổi thứ tự báo 'KTA-AC-4'."
+    expected: "exit 0; ca 'KTA-AC-4' xanh: tin S06 thử có hai URL trùng nhau, dòng sau transform trùng từng cột với đáp án viết tay theo luật NH1 (khoá md5 tính độc lập); ca đỏ trên bản sao mediaRowsFromAd đổi thứ tự báo 'KTA-AC-4'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5
@@ -48,7 +48,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kta_do
     paths: [pipeline/scripts/do-khu-trung-anh.mjs, pipeline/transform-media.mjs, pipeline/media-rows.mjs]
-    expected: "exit 0; giao dịch READ ONLY trên DB máy thu; in mẫu số (tin so được, băm so được, băm bị loại vì lệch thời gian), bảng trước và sau theo nguồn (dòng, ảnh khác nội dung, tin còn trùng, ảnh khác nội dung trong trần 12), số dòng sẽ xoá, số dòng đổi thứ tự, riêng các tin vượt 12 ảnh khác nhau. So được dưới 1.700 tin có tệp thì exit 1 báo 'mẫu số'. Mất băm 0, tin còn trùng 0, dòng S06 lệch 0, dòng chỉ URL lệch 0. Bốn đối chứng luôn chạy, mỗi cái ghim thông điệp: 'mất băm', 'còn trùng', 'S06 lệch', 'URL lệch'."
+    expected: "exit 0; giao dịch READ ONLY trên DB máy thu; in mẫu số (tin so được, băm so được, băm bị loại vì lệch thời gian), bảng trước và sau theo nguồn (dòng, ảnh khác nội dung, tin còn trùng, ảnh khác nội dung trong trần 12), số dòng sẽ xoá, số dòng đổi thứ tự, riêng các tin vượt 12 ảnh khác nhau. So được dưới 1.700 tin có tệp thì exit 1 báo 'mẫu số'. Mất băm 0, tin còn trùng 0, dòng S06 lệch 0, dòng chỉ URL lệch 0 cả hai chiều (thiếu và thừa). Bốn đối chứng luôn chạy, mỗi cái ghim thông điệp: 'mất băm', 'còn trùng', 'S06 lệch', 'URL lệch'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
@@ -56,14 +56,14 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kta_db
     paths: [pipeline/transform-media.mjs, pipeline/scripts/khu-trung-anh.itest.mjs]
-    expected: "exit 0; ca 'KTA-AC-6' xanh trên ma trận dòng trùng ở đầu, giữa, cuối tin, có dòng khác băm đứng sau: sau lượt đầu media_order liền nhau trong bảng thật, media_key không đổi, dòng dời chỗ có dấu thời gian mới, dòng không dời giữ dấu 2000-01-01; lượt hai thêm 0 đổi 0 xoá 0; ca đỏ trên bản sao khoá dòng theo băm thay vì tệp báo đổi khoá."
+    expected: "exit 0; ca 'KTA-AC-6' xanh trên ma trận dòng trùng ở đầu, giữa, cuối tin, có dòng khác băm đứng sau: 4 dòng ma trận, mỗi dòng một tin: sau lượt đầu media_order liền nhau trong bảng thật, media_key không đổi, dòng dời chỗ có dấu thời gian mới, dòng không dời giữ dấu 2000-01-01; lượt hai thêm 0 đổi 0 xoá 0; hai ca đỏ đi qua runTransformMedia: khoá dòng theo băm báo đổi khoá, ghi đè mọi dòng báo dấu thời gian sai."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-7
     executor: script
     layer: backend-effect
     cmd: config:executors.script.kta_app_db
-    paths: [app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts, app/src/lib/deals.ts, pipeline/media-rows.mjs, pipeline/transform-media.mjs, app/tests/khu-trung-anh.itest.tsx]
+    paths: [app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts, app/src/lib/deals.ts, pipeline/media-rows.mjs, pipeline/transform-media.mjs, app/tests/khu-trung-anh.itest.tsx, app/tests/khu-trung-anh.test.tsx, app/tests/media-canonical.test.tsx]
     expected: "exit 0; ca 'KTA-AC-7' xanh trên DB thử: 20 entry 13 băm ghi qua runTransformMedia thật, loadReviewMedia, loadFlowMedia và loader Căn giá tốt mỗi nơi trả đúng 12 ảnh khác băm theo media_order; ma trận NH-AC-3 cộng ca trùng băm xanh; ca đỏ: bản sao buildOfferImages không khử băm lệch với bên ghi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
@@ -71,7 +71,7 @@ evals:
     executor: test
     cmd: config:executors.test.kta_app
     paths: [app/src/lib/labels-anh.ts, app/src/lib/ops/zalo-media.ts, app/tests/khu-trung-anh.test.tsx]
-    expected: "exit 0; ca 'KTA-AC-8' xanh trên 5 dòng ma trận của danhSachAnh; serveZaloMedia thật với tệp giả trả đúng byte theo từng số anh, ngoài khoảng 404; dữ liệu thẻ không có khoá sha256 hay giá trị băm; ca đỏ trên bản sao bỏ bước khử báo tên dòng."
+    expected: "exit 0; ca 'KTA-AC-8' xanh trên 5 dòng ma trận: danhSachAnh khớp đáp án viết tay và khớp bên ghi thật; serveZaloMedia thật với tệp giả trả đúng byte theo từng số anh, ngoài khoảng 404; đầu ra thật của tinKe, doiChieu không có khoá sha256 hay giá trị băm; ca đỏ: bỏ bước khử báo tên dòng, bộ dựng thẻ để lọt nguồn ảnh báo 'lộ khoá băm'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-9

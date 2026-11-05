@@ -12,6 +12,8 @@ import type { User } from "../src/lib/auth"
 import { chuKhongLink, danhSachAnh, shaTep } from "../src/lib/labels-anh"
 import { buildMediaImages, buildOfferImages, type MediaRow, type PostMediaRow } from "../src/lib/ops/review-media"
 import { serveZaloMedia, type BaiAnhRow } from "../src/lib/ops/zalo-media"
+import { doiChieu } from "../src/lib/labels-luot-hai"
+import { tinKe } from "../src/lib/labels-queries"
 
 const APP = resolve(import.meta.dirname, "..")
 const SNAP = "hanoi__s03__kta"
@@ -61,8 +63,13 @@ const AC8: [string, unknown, unknown, string[]][] = [
 ]
 type Ds = typeof danhSachAnh
 const kiemAc8 = (fn: Ds) => {
+  assert.equal(AC8.length, 5, "KTA-AC-8 ma trận đổi số dòng")
   for (const [ten, mf, m, mong] of AC8) {
-    assert.deepEqual(fn(m, mf, SNAP).map((n) => (n.kind === "tep" ? n.file : n.url)), mong, `KTA-AC-8 lệch: ${ten}`)
+    const ds = fn(m, mf, SNAP).map((n) => (n.kind === "tep" ? n.file : n.url))
+    assert.deepEqual(ds, mong, `KTA-AC-8 lệch: ${ten}`)
+    // Quan hệ «cùng luật»: cùng bài qua bên ghi thật phải ra cùng ảnh, cùng thứ tự.
+    const ghi = mediaRowsFromPosts("o1", "S03", [{ post_id: "p", snapshot_id: SNAP, media_files: mf, media: m }]).map((r: { local_file: string | null; media_url: string }) => (r.local_file ? r.local_file.slice(SNAP.length + 1) : r.media_url))
+    assert.deepEqual(ds, ghi, `KTA-AC-8 lệch bên ghi: ${ten}`)
   }
 }
 test("KTA-AC-8 danhSachAnh khử cùng luật với bên ghi", () => kiemAc8(danhSachAnh))
@@ -91,16 +98,29 @@ test("KTA-AC-8 mỗi số anh trả đúng tệp của vị trí đó, ngoài kh
   assert.equal((await goi(3)).status, 404, "KTA-AC-8 ngoài khoảng phải 404")
 })
 
-test("KTA-AC-8 dữ liệu thẻ không mang băm", () => {
-  // Bên dựng thẻ chỉ dùng số thứ tự và chữ; chữ qua chuKhongLink không được chứa băm, mã nguồn thẻ không đọc trường băm.
-  const anh = danhSachAnh(null, [tep("a", sha("a"))], SNAP)
-  assert.equal((anh[0] as { sha256?: string }).sha256, sha("a"), "đối chứng: bên máy chủ có băm")
-  assert.doesNotMatch(JSON.stringify(chuKhongLink("Bán căn", anh)), /a{64}/, "KTA-AC-8 lộ băm qua chữ")
-  for (const rel of ["src/lib/labels-queries.ts", "src/lib/labels-luot-hai.ts"]) {
-    const src = readFileSync(join(APP, rel), "utf8")
-    assert.match(src, /anh: nguon\.map\(\(_, i\) => duongAnh\(/, `KTA-AC-8 ${rel} không còn dựng đường ảnh theo thứ tự`)
-    assert.doesNotMatch(src, /sha256/, `KTA-AC-8 ${rel} đọc trường băm`)
-  }
+// Bài thẻ gắn nhãn: có hai tệp cùng băm, chữ có link ảnh, để băm có đường đi xuống thẻ nếu bộ dựng để lọt.
+const SHA_THE = sha("e")
+const baiThe = {
+  item_id: 7, lat: "a", double_label: false, so: 0, text: `Bán căn\n${U("a")}`, group_name: "n", posted_at: null, lat_: null, ref_id: "r", stratum: null,
+  media: null, media_files: [tep("a", SHA_THE), tep("b", SHA_THE)], snapshot_id: SNAP,
+}
+const qThe = { query: async (sql: string) => ({ rows: /FROM eval_labels WHERE item_id = \$1 AND labeler_id/.test(sql) ? [{ field: "kind", value: "sale", not_stated: false, basis: null }] : /eval_label_items i/.test(sql) ? [baiThe] : [] }) } as never
+const kiemKhongBam = (ten: string, the: unknown) => {
+  const json = JSON.stringify(the)
+  assert.ok(json, `${ten}: không dựng được thẻ`)
+  assert.doesNotMatch(json, /sha256/, `KTA-AC-8 lộ khoá băm: ${ten}`)
+  assert.ok(!json.includes(SHA_THE), `KTA-AC-8 lộ giá trị băm: ${ten}`)
+}
+test("KTA-AC-8 dữ liệu thẻ gửi xuống trình duyệt không mang băm, ảnh đã khử", async () => {
+  const the = await tinKe("u", "a", qThe)
+  kiemKhongBam("tinKe", the)
+  assert.equal(the!.anh.length, 1, "KTA-AC-8 thẻ phải còn một ảnh")
+  kiemKhongBam("doiChieu", await doiChieu("u", 7, qThe))
+})
+test("KTA-AC-8 ca đỏ: bộ dựng thẻ để lọt nguồn ảnh thì thước kêu", async () => {
+  const dot = await banSao("src/lib/labels-queries.ts", [["anh: nguon.map((_, i) => duongAnh(r.item_id, i)),", "anh: nguon.map((_, i) => duongAnh(r.item_id, i)), nguon,"]])
+  const the = await dot.tinKe("u", "a", qThe)
+  assert.throws(() => kiemKhongBam("tinKe", the), /KTA-AC-8 lộ khoá băm: tinKe/)
 })
 
 // Phần tương đương của KTA-AC-7: dòng rút từ bên ghi thật, so với thước đã ký.
@@ -112,12 +132,13 @@ const MA_TRAN: [string, PostMediaRow[]][] = [
   ["trùng băm giữa hai bài", [bai("p1", [tep("a", sha("a"))]), bai("p2", [tep("b", sha("a")), tep("c", sha("c"))])]],
   ["13 băm, 20 tệp", [bai("p1", Array.from({ length: 20 }, (_, i) => tep(`n${i}`, (i % 13).toString(16).repeat(64))))]],
   ["thiếu băm và trùng băm", [bai("p1", [tep("a"), tep("b", sha("b")), tep("c", sha("b"))])]],
+  ["cùng tệp, lần sau mới có băm", [bai("p1", [tep("a"), tep("a", sha("x".replace("x", "c"))), tep("b", sha("c"))])]],
 ]
 const kiemTuongDuong = (fn: typeof buildOfferImages) => {
   for (const [ten, posts] of MA_TRAN) assert.deepEqual(chiTep(buildMediaImages(qua(posts))), chiTep(fn(posts)), `KTA-AC-7 thước lệch bên ghi: ${ten}`)
 }
 test("KTA-AC-7 buildOfferImages đổi theo cùng luật, khớp bên ghi trên ma trận", () => kiemTuongDuong(buildOfferImages))
 test("KTA-AC-7 ca đỏ: thước không khử băm thì lệch bên ghi", async () => {
-  const dot = await banSao("src/lib/ops/review-media.ts", [[`if (!sha || !daCoSha.has(sha)) push(`, `push(`]])
+  const dot = await banSao("src/lib/ops/review-media.ts", [[`if (!seen.has(src) && !(sha && daCoSha.has(sha))) {`, `if (!seen.has(src)) {`]])
   assert.throws(() => kiemTuongDuong(dot.buildOfferImages), /KTA-AC-7 thước lệch bên ghi: trùng băm giữa hai bài/)
 })
