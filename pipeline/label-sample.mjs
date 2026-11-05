@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { loadStgPosts } from "./lib/test-posts.mjs";
+import { ghepLat } from "./label-ghep.mjs";
 import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, LAT_NHOM, textHash } from "./lib/eval-labels.mjs";
 import { tangLoai } from "./transform-zalo.mjs";
 
@@ -105,6 +106,7 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
           [lat, r.ref_id, r.text_hash, r.split, r.double_label, seed]);
         them += res.rowCount;
       }
+      await ghepLat(client, { lat });
       await client.query(xong);
     } catch (e) {
       await client.query(lui).catch(() => {});
@@ -149,6 +151,7 @@ async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom,
           [lat, r.ref_id, r.text_hash, r.split, r.double_label, seed, r.stratum]);
         them += res.rowCount;
       }
+      await ghepLat(client, { lat });
       await client.query(xong);
     } catch (e) {
       await client.query(lui).catch(() => {});

@@ -32,6 +32,43 @@ export function danhSachAnh(media: unknown, mediaFiles: unknown, snapshotBai: st
   return [...tep, ...con.map((url): NguonAnh => ({ kind: "url", url }))]
 }
 
+/** Một dòng của cột `eval_label_items.ghep`, do pipeline/label-ghep.mjs ghi bằng luật PL28. App không tính ghép, chỉ đọc. */
+export type Ghep = { chu_ref: string | null; anh_refs: string[]; so_chu_gan: number; trung_voi: string | null }
+
+/** Thông tin ghép xuống trình duyệt: không có mã bài. */
+export type GhepHien = { suyRa: boolean; soChuGan: number; khongChu: boolean }
+
+export function docGhep(v: unknown): Ghep | null {
+  const g = banGhi(v)
+  if (!Array.isArray(g.anh_refs)) return null
+  return {
+    chu_ref: typeof g.chu_ref === "string" ? g.chu_ref : null,
+    anh_refs: g.anh_refs.filter((x): x is string => typeof x === "string"),
+    so_chu_gan: typeof g.so_chu_gan === "number" ? g.so_chu_gan : 0,
+    trung_voi: typeof g.trung_voi === "string" ? g.trung_voi : null,
+  }
+}
+
+export const ghepHien = (g: Ghep | null): GhepHien | null =>
+  g ? { suyRa: Boolean(g.chu_ref) && g.anh_refs.length > 0, soChuGan: g.so_chu_gan, khongChu: !g.chu_ref } : null
+
+/** Các bài của một dòng mẫu theo thứ tự hiện: tin chữ trước, rồi ảnh của cụm. */
+export const refsCuaDong = (refId: string, g: Ghep | null): string[] =>
+  g ? [...new Set([...(g.chu_ref ? [g.chu_ref] : []), ...g.anh_refs])] : [refId]
+
+type BaiCoAnh = { media: unknown; media_files: unknown; snapshot_id: string | null }
+
+/** Ảnh của nhiều bài nối theo thứ tự bài; thứ tự này là số `anh` trên đường ảnh. Cùng một ảnh ở hai bài chỉ tính một lần. */
+export function danhSachAnhCum(bai: BaiCoAnh[]): NguonAnh[] {
+  const da = new Set<string>()
+  return bai.flatMap((b) => danhSachAnh(b.media, b.media_files, b.snapshot_id)).filter((n) => {
+    const k = n.kind === "tep" ? `${n.snapshot}|${n.file}` : n.url
+    if (da.has(k)) return false
+    da.add(k)
+    return true
+  })
+}
+
 /** Đường ảnh cho trình duyệt: chỉ mã bài và thứ tự, không URL gốc. */
 export const duongAnh = (itemId: number, thuTu: number) => `/api/zalo-media?nhan=${itemId}&anh=${thuTu}`
 

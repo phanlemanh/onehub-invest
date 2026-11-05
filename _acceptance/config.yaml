@@ -588,7 +588,7 @@ executors:
     anh_nap: "cd app && node --import tsx ../_acceptance/anh-tren-the-gan-nhan/probes/nap.mjs"   # anh-tren-the-gan-nhan E6, E8 — DB thử oneinvest_anh_nhan
     anh_that: "cd app && node --import tsx ../_acceptance/anh-tren-the-gan-nhan/probes/that.mjs"   # anh-tren-the-gan-nhan E9 — 367 bài thật, chỉ đọc, chỉ báo số
     anh_kin: "node _acceptance/anh-tren-the-gan-nhan/probes/kin.mjs"   # anh-tren-the-gan-nhan E7 — tên miền nguồn không vào kho
-    ghep_lenh: "cd pipeline && node --test tests/label-ghep.test.mjs"
+    ghep_lenh: "cd pipeline && node --test scripts/label-ghep.test.mjs"
     ghep_thuan: "cd app && node --import tsx --test tests/labels-ghep.test.ts"
     ghep_nap: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs"
     ghep_that: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/that.mjs"

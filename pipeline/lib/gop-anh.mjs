@@ -47,6 +47,16 @@ export function ganBaiAnh(baiChu, baiAnh, { cuaSoGiay = CUA_SO_GIAY } = {}) {
   return out;
 }
 
+/**
+ * Số bài chữ cùng nhóm, cùng người trong cửa sổ của một bài ảnh: cùng điều kiện với `ganBaiAnh`, không chọn bài nào.
+ * Từ 2 trở lên là ca máy phải chọn gần nhất, nên dễ ghép nhầm hơn.
+ */
+export function soChuGan(baiChu, baiAnh, { cuaSoGiay = CUA_SO_GIAY } = {}) {
+  if (!baiAnh.sender_id || !baiAnh.conversation_id) return 0;
+  const k = khoa(baiAnh), ta = giay(baiAnh.posted_at);
+  return baiChu.filter((c) => c.sender_id && c.conversation_id && khoa(c) === k && Math.abs(giay(c.posted_at) - ta) < cuaSoGiay).length;
+}
+
 /** Hoà khoảng cách: bài chữ đứng sau ảnh thắng; cùng phía thì post_id nhỏ hơn thắng. */
 function totHon(tc, id, best, ta) {
   const sau = tc > ta, bestSau = best.tc > ta;

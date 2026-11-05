@@ -123,7 +123,7 @@ function TinFrame({ tin }: { tin: TinGan }) {
       </FrameHeader>
       <FramePanel>
         <div className="flex min-w-0 flex-col gap-2">
-          <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} />
+          <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} ghep={tin.ghep} />
           {tin.text ? (
             <p className="text-sm whitespace-pre-line wrap-anywhere" data-labels-chu-goc="">
               {tin.text}

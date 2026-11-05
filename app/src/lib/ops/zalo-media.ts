@@ -6,7 +6,8 @@ import { pool } from "@/lib/db";
 import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 import { isLoginQrFile } from "@/lib/zalo-admin";
 
-import { danhSachAnh } from "@/lib/labels-anh";
+import { danhSachAnhCum, docGhep } from "@/lib/labels-anh";
+import { docBaiCum } from "@/lib/labels-cum";
 
 import { HEADER_ANH_AN_TOAN, layAnhGoc } from "./lay-anh-goc";
 
@@ -140,15 +141,13 @@ async function sendImage(resolved: string, roots: string[], mediaOnly: boolean):
 const notFound = () => new Response("not found", { status: 404 });
 
 export type BaiAnhRow = { media: unknown; media_files: unknown; snapshot_id: string | null };
-export type BaiAnhQuery = (itemId: string) => Promise<BaiAnhRow | null>;
+/** Một bài, hoặc mọi bài của cụm đã ghép theo thứ tự hiện. */
+export type BaiAnhQuery = (itemId: string) => Promise<BaiAnhRow | BaiAnhRow[] | null>;
 
 const traBaiMacDinh: BaiAnhQuery = async (itemId) => {
-  const { rows } = await pool.query<BaiAnhRow>(
-    `SELECT p.media, p.media_files, p.snapshot_id FROM eval_label_items i
-     JOIN LATERAL (SELECT media, media_files, snapshot_id FROM stg_zalo_posts
-                   WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
-     WHERE i.item_id = $1`, [itemId]);
-  return rows[0] ?? null;
+  const { rows } = await pool.query<{ ref_id: string; ghep: unknown }>(
+    `SELECT ref_id, ghep FROM eval_label_items WHERE item_id = $1`, [itemId]);
+  return rows[0] ? docBaiCum(pool, rows[0].ref_id, docGhep(rows[0].ghep)) : null;
 };
 
 const SO = /^\d{1,12}$/;
@@ -156,7 +155,7 @@ const SO = /^\d{1,12}$/;
 /** Chế độ `?nhan=&anh=`: tệp đã lưu qua hai lớp kiểm đường dẫn, không có tệp thì máy chủ lấy hộ. Không có đường ghi nào. */
 async function serveAnhBai(nhan: string, anh: string, traBai: BaiAnhQuery, layAnh: typeof layAnhGoc): Promise<Response> {
   if (!SO.test(nhan) || !SO.test(anh)) return notFound();
-  let bai: BaiAnhRow | null;
+  let bai: BaiAnhRow | BaiAnhRow[] | null;
   try {
     bai = await traBai(nhan);
   } catch (err) {
@@ -164,7 +163,7 @@ async function serveAnhBai(nhan: string, anh: string, traBai: BaiAnhQuery, layAn
     throw err;
   }
   if (!bai) return notFound();
-  const nguon = danhSachAnh(bai.media, bai.media_files, bai.snapshot_id)[Number(anh)];
+  const nguon = danhSachAnhCum(Array.isArray(bai) ? bai : [bai])[Number(anh)];
   if (!nguon) return notFound();
   if (nguon.kind === "url") return layAnh(nguon.url);
   const joined = snapshotMediaPath(nguon.snapshot, nguon.file);
