@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-11-05T10:15:13Z",
-  "generated_sha": "41f4bcc54b81866cbc4966464cc55bb919dce942",
+  "generated_at": "2026-11-05T10:34:43Z",
+  "generated_sha": "54c2060299e5e67ec74064f48321c6ced99daffa",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "khu-trung-anh-tin",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
       "id": "E1",
       "criterion": "AC-1",
       "cmd": "node --test pipeline/scripts/khu-trung-anh.test.mjs",
-      "expected": "\"exit 0; ca 'KTA-AC-1' xanh trên 6 dòng ma trận (trong bài, giữa hai bài, băm viết hoa, ba lần trùng, hai băm xen kẽ, cùng băm ở hai tin vẫn là hai dòng của hai tin), so `media_key` với mediaKey(offer, tệp đầu); ca đỏ trên bản sao bỏ bước khử băm báo 'KTA-AC-1' và tên dòng ma trận.\"",
+      "expected": "\"exit 0; ca 'KTA-AC-1' xanh trên 5 dòng ma trận (trong bài, giữa hai bài, băm viết hoa, ba lần trùng, hai băm xen kẽ) và ca cùng băm ở hai tin vẫn là hai dòng của hai tin, so `media_key` với mediaKey(offer, tệp đầu); ca đỏ trên bản sao bỏ bước khử băm báo 'KTA-AC-1' và tên dòng ma trận.\"",
       "executor": "test",
       "expectedExit": 0,
       "paths": [
@@ -33,7 +33,7 @@
       "id": "E2",
       "criterion": "AC-2",
       "cmd": "node --test pipeline/scripts/khu-trung-anh.test.mjs",
-      "expected": "\"exit 0; ca 'KTA-AC-2' xanh trên 6 dòng ma trận (thiếu băm, băm 63 ký tự, băm không phải hex, tải lỗi, chỉ URL lặp, URL của tệp đã khử nằm ở cột media); kiểm tĩnh: media-rows.mjs chỉ import node:crypto; ca đỏ trên bản sao để URL của tệp đã khử quay lại báo tên dòng.\"",
+      "expected": "\"exit 0; ca 'KTA-AC-2' xanh trên 8 dòng ma trận (thiếu băm hai tệp, thiếu băm cùng tệp, băm 63 ký tự, băm không phải hex, cùng tệp lần sau mới có băm, tải lỗi, chỉ URL lặp, URL của tệp đã khử nằm ở cột media); kiểm tĩnh: media-rows.mjs chỉ import node:crypto; ca đỏ trên bản sao để URL của tệp đã khử quay lại báo tên dòng.\"",
       "executor": "test",
       "expectedExit": 0,
       "paths": [
@@ -52,8 +52,8 @@
     {
       "id": "E3",
       "criterion": "AC-3",
-      "cmd": "bash db/db-thu.sh oneinvest_n1_kta && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
-      "expected": "\"exit 0; ca 'KTA-AC-3' xanh trên DB thử: rows ghi từ runTransformMedia thật, ảnh trùng băm của bài chỉ-ảnh không có dòng, ảnh khác băm có media_order lớn hơn mọi ảnh bài chữ; ca đỏ trên bản sao noiSau không xét băm báo 'KTA-AC-3'.\"",
+      "cmd": "bash db/db-thu.sh oneinvest_n1_kta --neu-chua-co && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
+      "expected": "\"exit 0; ca 'KTA-AC-3' xanh trên DB thử: rows ghi từ runTransformMedia thật, ảnh trùng băm của bài chỉ-ảnh không có dòng, ảnh khác băm có media_order lớn hơn mọi ảnh bài chữ; hai ca đỏ trên bản sao noiSau: không xét băm, và URL của tệp đã khử quay lại; đều báo 'KTA-AC-3'.\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -95,8 +95,8 @@
     {
       "id": "E5",
       "criterion": "AC-4",
-      "cmd": "bash db/db-thu.sh oneinvest_n1_kta && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
-      "expected": "\"exit 0; ca 'KTA-AC-4' xanh: tin S06 thử có hai URL trùng nhau, dòng sau transform trùng từng cột với mediaRowsFromAd; ca đỏ trên bản sao mediaRowsFromAd đổi thứ tự báo 'KTA-AC-4'.\"",
+      "cmd": "bash db/db-thu.sh oneinvest_n1_kta --neu-chua-co && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
+      "expected": "\"exit 0; ca 'KTA-AC-4' xanh: tin S06 thử có hai URL trùng nhau, dòng sau transform trùng từng cột với đáp án viết tay theo luật NH1 (khoá md5 tính độc lập); ca đỏ trên bản sao mediaRowsFromAd đổi thứ tự báo 'KTA-AC-4'.\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -117,7 +117,7 @@
       "id": "E6",
       "criterion": "AC-5",
       "cmd": "cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest node scripts/do-khu-trung-anh.mjs",
-      "expected": "\"exit 0; giao dịch READ ONLY trên DB máy thu; in mẫu số (tin so được, băm so được, băm bị loại vì lệch thời gian), bảng trước và sau theo nguồn (dòng, ảnh khác nội dung, tin còn trùng, ảnh khác nội dung trong trần 12), số dòng sẽ xoá, số dòng đổi thứ tự, riêng các tin vượt 12 ảnh khác nhau. So được dưới 1.700 tin có tệp thì exit 1 báo 'mẫu số'. Mất băm 0, tin còn trùng 0, dòng S06 lệch 0, dòng chỉ URL lệch 0. Bốn đối chứng luôn chạy, mỗi cái ghim thông điệp: 'mất băm', 'còn trùng', 'S06 lệch', 'URL lệch'.\"",
+      "expected": "\"exit 0; giao dịch READ ONLY trên DB máy thu; in mẫu số (tin so được, băm so được, băm bị loại vì lệch thời gian), bảng trước và sau theo nguồn (dòng, ảnh khác nội dung, tin còn trùng, ảnh khác nội dung trong trần 12), số dòng sẽ xoá, số dòng đổi thứ tự, riêng các tin vượt 12 ảnh khác nhau. So được dưới 1.700 tin có tệp thì exit 1 báo 'mẫu số'. Mất băm 0, tin còn trùng 0, dòng S06 lệch 0, dòng chỉ URL lệch 0 cả hai chiều (thiếu và thừa). Bốn đối chứng luôn chạy, mỗi cái ghim thông điệp: 'mất băm', 'còn trùng', 'S06 lệch', 'URL lệch'.\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -137,8 +137,8 @@
     {
       "id": "E7",
       "criterion": "AC-6",
-      "cmd": "bash db/db-thu.sh oneinvest_n1_kta && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
-      "expected": "\"exit 0; ca 'KTA-AC-6' xanh trên ma trận dòng trùng ở đầu, giữa, cuối tin, có dòng khác băm đứng sau: sau lượt đầu media_order liền nhau trong bảng thật, media_key không đổi, dòng dời chỗ có dấu thời gian mới, dòng không dời giữ dấu 2000-01-01; lượt hai thêm 0 đổi 0 xoá 0; ca đỏ trên bản sao khoá dòng theo băm thay vì tệp báo đổi khoá.\"",
+      "cmd": "bash db/db-thu.sh oneinvest_n1_kta --neu-chua-co && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --test scripts/khu-trung-anh.itest.mjs",
+      "expected": "\"exit 0; ca 'KTA-AC-6' xanh trên ma trận dòng trùng ở đầu, giữa, cuối tin, có dòng khác băm đứng sau: 4 dòng ma trận, mỗi dòng một tin: sau lượt đầu media_order liền nhau trong bảng thật, media_key không đổi, dòng dời chỗ có dấu thời gian mới, dòng không dời giữ dấu 2000-01-01; lượt hai thêm 0 đổi 0 xoá 0; hai ca đỏ đi qua runTransformMedia: khoá dòng theo băm báo đổi khoá, ghi đè mọi dòng báo dấu thời gian sai.\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -157,7 +157,7 @@
     {
       "id": "E8",
       "criterion": "AC-7",
-      "cmd": "bash db/db-thu.sh oneinvest_n1_kta && cd app && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --import tsx --test tests/khu-trung-anh.itest.tsx",
+      "cmd": "bash db/db-thu.sh oneinvest_n1_kta --neu-chua-co && cd app && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_n1_kta node --import tsx --test tests/khu-trung-anh.itest.tsx tests/khu-trung-anh.test.tsx tests/media-canonical.test.tsx",
       "expected": "\"exit 0; ca 'KTA-AC-7' xanh trên DB thử: 20 entry 13 băm ghi qua runTransformMedia thật, loadReviewMedia, loadFlowMedia và loader Căn giá tốt mỗi nơi trả đúng 12 ảnh khác băm theo media_order; ma trận NH-AC-3 cộng ca trùng băm xanh; ca đỏ: bản sao buildOfferImages không khử băm lệch với bên ghi.\"",
       "executor": "script",
       "expectedExit": 0,
@@ -167,7 +167,9 @@
         "app/src/lib/deals.ts",
         "pipeline/media-rows.mjs",
         "pipeline/transform-media.mjs",
-        "app/tests/khu-trung-anh.itest.tsx"
+        "app/tests/khu-trung-anh.itest.tsx",
+        "app/tests/khu-trung-anh.test.tsx",
+        "app/tests/media-canonical.test.tsx"
       ],
       "evidence_required": [
         "run_id",
@@ -182,7 +184,7 @@
       "id": "E9",
       "criterion": "AC-8",
       "cmd": "cd app && node --import tsx --test tests/khu-trung-anh.test.tsx",
-      "expected": "\"exit 0; ca 'KTA-AC-8' xanh trên 5 dòng ma trận của danhSachAnh; serveZaloMedia thật với tệp giả trả đúng byte theo từng số anh, ngoài khoảng 404; dữ liệu thẻ không có khoá sha256 hay giá trị băm; ca đỏ trên bản sao bỏ bước khử báo tên dòng.\"",
+      "expected": "\"exit 0; ca 'KTA-AC-8' xanh trên 5 dòng ma trận: danhSachAnh khớp đáp án viết tay và khớp bên ghi thật; serveZaloMedia thật với tệp giả trả đúng byte theo từng số anh, ngoài khoảng 404; đầu ra thật của tinKe, doiChieu không có khoá sha256 hay giá trị băm; ca đỏ: bỏ bước khử báo tên dòng, bộ dựng thẻ để lọt nguồn ảnh báo 'lộ khoá băm'.\"",
       "executor": "test",
       "expectedExit": 0,
       "paths": [
@@ -234,17 +236,19 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/khu-trung-anh-tin/contract.md",
-  "invokedAt": "2026-11-05T10:15:13Z",
-  "invokedSha": "41f4bcc54b81866cbc4966464cc55bb919dce942",
+  "invokedAt": "2026-11-05T10:34:43Z",
+  "invokedSha": "54c2060299e5e67ec74064f48321c6ced99daffa",
   "vungVat": [
     "_acceptance/config.yaml",
     "_acceptance/khu-trung-anh-tin/card-plain.json",
     "_acceptance/khu-trung-anh-tin/card.html",
     "_acceptance/khu-trung-anh-tin/evals.yaml",
+    "_acceptance/khu-trung-anh-tin/s4-args.json",
     "app/src/lib/labels-anh.ts",
     "app/src/lib/ops/review-media.ts",
     "app/tests/khu-trung-anh.itest.tsx",
     "app/tests/khu-trung-anh.test.tsx",
+    "app/tests/media-canonical.test.tsx",
     "pipeline/media-rows.mjs",
     "pipeline/scripts/do-gop-anh.mjs",
     "pipeline/scripts/do-khu-trung-anh.mjs",
@@ -272,7 +276,11 @@
     "_acceptance/khu-trung-anh-tin/contract.md",
     "_acceptance/khu-trung-anh-tin/decisions.jsonl",
     "_acceptance/khu-trung-anh-tin/duong-nen.md",
+    "_acceptance/khu-trung-anh-tin/evidence-report.md",
     "_acceptance/khu-trung-anh-tin/gap-probe.md",
+    "_acceptance/khu-trung-anh-tin/review-findings.md",
+    "_acceptance/khu-trung-anh-tin/run-log.jsonl",
+    "_acceptance/khu-trung-anh-tin/usage-report.md",
     "docs/ROADMAP.md",
     "docs/superpowers/plans/2026-11-05-khu-trung-anh-tin.md",
     "docs/superpowers/specs/2026-11-05-khu-trung-anh-tin-design.md"
@@ -287,11 +295,17 @@
     "_acceptance/khu-trung-anh-tin/decisions.jsonl",
     "_acceptance/khu-trung-anh-tin/duong-nen.md",
     "_acceptance/khu-trung-anh-tin/evals.yaml",
+    "_acceptance/khu-trung-anh-tin/evidence-report.md",
     "_acceptance/khu-trung-anh-tin/gap-probe.md",
+    "_acceptance/khu-trung-anh-tin/review-findings.md",
+    "_acceptance/khu-trung-anh-tin/run-log.jsonl",
+    "_acceptance/khu-trung-anh-tin/s4-args.json",
+    "_acceptance/khu-trung-anh-tin/usage-report.md",
     "app/src/lib/labels-anh.ts",
     "app/src/lib/ops/review-media.ts",
     "app/tests/khu-trung-anh.itest.tsx",
     "app/tests/khu-trung-anh.test.tsx",
+    "app/tests/media-canonical.test.tsx",
     "docs/ROADMAP.md",
     "docs/superpowers/plans/2026-11-05-khu-trung-anh-tin.md",
     "docs/superpowers/specs/2026-11-05-khu-trung-anh-tin-design.md",
@@ -307,10 +321,12 @@
     "_acceptance/khu-trung-anh-tin/card-plain.json",
     "_acceptance/khu-trung-anh-tin/card.html",
     "_acceptance/khu-trung-anh-tin/evals.yaml",
+    "_acceptance/khu-trung-anh-tin/s4-args.json",
     "app/src/lib/labels-anh.ts",
     "app/src/lib/ops/review-media.ts",
     "app/tests/khu-trung-anh.itest.tsx",
     "app/tests/khu-trung-anh.test.tsx",
+    "app/tests/media-canonical.test.tsx",
     "pipeline/media-rows.mjs",
     "pipeline/scripts/do-gop-anh.mjs",
     "pipeline/scripts/do-khu-trung-anh.mjs",
@@ -323,6 +339,7 @@
     "app/src/lib/ops/review-media.ts",
     "app/tests/khu-trung-anh.itest.tsx",
     "app/tests/khu-trung-anh.test.tsx",
+    "app/tests/media-canonical.test.tsx",
     "pipeline/media-rows.mjs",
     "pipeline/scripts/do-gop-anh.mjs",
     "pipeline/scripts/do-khu-trung-anh.mjs",
@@ -331,15 +348,90 @@
     "pipeline/transform-media.mjs"
   ],
   "coEvalPaths": true,
-  "evalsHash": "e2ba2dd9e5f5b1360a1947f61fd6918a5e38111c3ca51d94a547dc0bc23a3353",
+  "evalsHash": "aa75667198358d9990d70dcf690c665c61d7d99a496ec0a337528b7fdc4a53b8",
   "runBaseline": true,
+  "carriedFindings": [
+    {
+      "file": "_acceptance/config.yaml",
+      "title": "kta_db và kta_app_db cùng dựng lại một DB thử mà không dùng --neu-chua-co",
+      "severity": "medium",
+      "plain": "Khi hai bài kiểm chạy cùng lúc, một bài có thể xoá DB thử của bài kia và báo đỏ giả. Người dùng thật không bị ảnh hưởng.",
+      "can_cu": "Chỉ làm kết quả kiểm chập chờn cho đội, không mất dữ liệu; chạy lại là qua, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "_acceptance/config.yaml",
+      "title": "Hai lệnh chấm kta_db và kta_app_db cùng xoá rồi dựng lại một DB thử, chạy song song sẽ đụng nhau",
+      "severity": "medium",
+      "plain": "Hai bài kiểm chạy song song có thể giẫm lên DB thử của nhau và báo đỏ giả. Người dùng không thấy gì.",
+      "can_cu": "Chỉ gây nhiễu khi kiểm, không mất dữ liệu; chạy lại được và sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "app/src/lib/labels-anh.ts",
+      "title": "Link của ảnh đã khử trùng bị đếm thành «liên kết khác» trên thẻ gắn nhãn",
+      "severity": "low",
+      "plain": "Trên thẻ gắn nhãn, bài có hai ảnh giống hệt có thể hiện dòng «có 1 liên kết khác» thừa. Hiện chưa bài nào gặp.",
+      "can_cu": "Chỉ là dòng chữ thừa, không mất dữ liệu, hôm nay chưa có bài nào dính; người gắn nhãn bỏ qua được.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "_acceptance/khu-trung-anh-tin/evals.yaml",
+      "title": "Hình dạng 5 — không ghim số dòng ma trận, số trong eval lệch số trong test, ca đỏ chỉ chứng minh dòng đầu",
+      "severity": "medium",
+      "plain": "Bộ kiểm có thể vẫn xanh dù một số dòng trong ma trận bị xoá hay chưa từng được chứng minh đỏ. Người dùng chưa thấy ảnh hưởng.",
+      "can_cu": "Chỉ làm bộ kiểm lỏng hơn mong muốn, dữ liệu không mất; bổ sung dòng ma trận sau không đắt.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "pipeline/scripts/do-gop-anh.mjs",
+      "title": "Hình dạng 3 — «số offer có ảnh không giảm» so với bản nền trước PL28, không so với trước khử trùng",
+      "severity": "medium",
+      "plain": "Phép đo có thể không phát hiện nếu khử trùng làm vài tin mất hết ảnh so với bản đang chạy. Chưa có dấu hiệu xảy ra.",
+      "can_cu": "Thước AC-5 đã kiểm mỗi tin còn đủ băm nên rủi ro thấp; chỉ là phép đo bổ sung thiếu mốc.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/scripts/khu-trung-anh.itest.mjs",
+      "title": "Hình dạng 2 — fixture media_files viết tay, không rút từ bên ghi mediaFilesOf",
+      "severity": "low",
+      "plain": "Các ca thử trên DB dùng dữ liệu ảnh dựng tay thay vì đi từ bên thu về, nên nếu khuôn dữ liệu bên thu đổi, bộ kiểm có thể không nhận ra. Hiện khuôn đang khớp.",
+      "can_cu": "Khuôn hiện khớp và phép đo trên dữ liệu thật bắt được phần lớn sai lệch; chỉ là lỗ hổng bộ kiểm, sửa sau không gấp.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/config.yaml",
+    "_acceptance/khu-trung-anh-tin/evals.yaml",
+    "_acceptance/khu-trung-anh-tin/s4-args.json",
+    "app/src/lib/ops/review-media.ts",
+    "app/tests/khu-trung-anh.test.tsx",
+    "app/tests/media-canonical.test.tsx",
+    "pipeline/media-rows.mjs",
+    "pipeline/scripts/do-khu-trung-anh.mjs",
+    "pipeline/scripts/khu-trung-anh.itest.mjs",
+    "pipeline/scripts/khu-trung-anh.test.mjs",
+    "pipeline/transform-media.mjs"
+  ],
   "thuocChup": {
-    "sha": "41f4bcc54b81866cbc4966464cc55bb919dce942",
+    "sha": "54c2060299e5e67ec74064f48321c6ced99daffa",
     "n": 260,
-    "digest": "7c6e45a1fa71891555b739b1654e0f2f0d5a7cdef28ea15c3195d63931db8266",
+    "digest": "df5135cd47fb9a0601e6df768ff7f04c64c456ba382b2501a18cd536c63e1d90",
     "tep": {
-      "_acceptance/config.yaml": "cd0b87f8555c709aeb8f6ddf7653d642507510e0a2c58fbf3ae30c6c8278613a",
-      "_acceptance/khu-trung-anh-tin/evals.yaml": "e2ba2dd9e5f5b1360a1947f61fd6918a5e38111c3ca51d94a547dc0bc23a3353",
+      "_acceptance/config.yaml": "9950da46e956bfc98abfb0aa7dcb020e78c1a2eb8986045207dbf5b0e00835da",
+      "_acceptance/khu-trung-anh-tin/evals.yaml": "aa75667198358d9990d70dcf690c665c61d7d99a496ec0a337528b7fdc4a53b8",
       "agent/tests/ai-call-log.test.ts": "ec1671d58ec1ca4c35ae90d48bf18dc70e53f0556478a46a5ef19e06d8754800",
       "agent/tests/cat-chu.test.ts": "ee25ff528d95bf8fe50c908c1c91c4a3787d562f079c483ffdbd6851dbc763db",
       "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
@@ -425,7 +517,7 @@
       "app/tests/go-tai-khoan-kiem-cfg.test.tsx": "8bd18c3e2d35cd8347904057857df2b5cdfc6e6dbbabe54bd0a3b23514484362",
       "app/tests/go-tai-khoan-kiem-id.test.tsx": "87587e0489da2f8e2274b33f0dbdc58788cececa6f6ced84a1bef28a408222a7",
       "app/tests/hieu-chuan.test.tsx": "cf6fab90b3c0d6acbb8dac3c11d572ad1beab744c5abb3b0dc08658841ffb17f",
-      "app/tests/khu-trung-anh.test.tsx": "112f86be2312dff8158fca72c78643aa581527266d7f20dc235296aa5ec9784b",
+      "app/tests/khu-trung-anh.test.tsx": "b1c853874cb9110ee720b0c868f46651c1b0d8c9daf7c64f68f9528d8c2f1a03",
       "app/tests/labels-anh-ci.test.tsx": "d20f334df5576516b8faaa911e83a5b69808ec3efaaf64e5a4f649825c0af000",
       "app/tests/labels-anh.test.ts": "d2492778a02b600f70a6857ede1a19f3ffecf32589c8675f7741206ee1c2cb55",
       "app/tests/labels-gia.test.tsx": "5bfdf43b29431a177de39754f4c3c9714a81ddc37428e1418819664667e7c23e",
@@ -439,7 +531,7 @@
       "app/tests/login-kiem-id.test.tsx": "743aaf92f3b60b4f1c6e0d8b05985e4dcf8060caf4feaf6c0e4244d02f281187",
       "app/tests/luong-7-ngay-dung-so.test.tsx": "8c77a53068d9396783f9b3ce46a313dd710a04607fa3d4393a741775d40c5b5d",
       "app/tests/ma-thi-truong-dai.test.tsx": "e4f78a329f76f3c11915b72a42ef261e18f0059d6c8b706613c782ad03d14a29",
-      "app/tests/media-canonical.test.tsx": "95a46bae80876d3beea28dacbcd783230a6c9a1aa318681db22d22d372360ae6",
+      "app/tests/media-canonical.test.tsx": "185c0858596b121264bfa114d2de8c340f2d47f63bf730b6830cb681ec80d722",
       "app/tests/nhom-moi-requiremention.test.tsx": "81af294d81dbeddeb7ac974778913379e43f68713370d72d9d7dc32b0ad65c66",
       "app/tests/nhom-s03-tren-cloud.test.tsx": "bb0e73ec9dfc17ac3809bf26591c7886347c5fefae5aab03684b491d7bc0f96e",
       "app/tests/o-kpi-chi-do-local.test.tsx": "962fe30f44f91e3409f3581529f571f0df1cdfb3824dea0f3c30225c374078ee",
@@ -528,7 +620,7 @@
       "pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs": "8215e7845a1d71ea5a185df02e53e247b701c2434455c2462309a1a0fe306d09",
       "pipeline/scripts/importer-schema-v5.test.mjs": "6c97bb80a84d8ab126b2dc693d203cd9ed5f320b7b02a053a41c8c193c46af1e",
       "pipeline/scripts/install-collector-api.test.mjs": "2475b6c527d3f3b8cee9b42065f00878baac917a81c35682f1329a4de23e7abb",
-      "pipeline/scripts/khu-trung-anh.test.mjs": "7bd83d4dcc26b01acb3593849845def6cbae302301cdba60c9aef9a194dacdaf",
+      "pipeline/scripts/khu-trung-anh.test.mjs": "054390f56191d72f008fb962782eb5ee2d956b9b21098ac699fc96ed5c3cf047",
       "pipeline/scripts/kiem-do-sau-070.test.mjs": "a3e57f9f54563b08173ae70f7accab8290191e97971e12aae6731ee210f7efcb",
       "pipeline/scripts/last-log-line.test.mjs": "1f22f358521d221dbe7d3d7fc154f97f707e71c079a0c05bde3347c9df49e3ad",
       "pipeline/scripts/luoc-do-rieng.test.mjs": "7753110e6756fda3f9244ff179d5100eaf6abc0317072cad1f5f040aed1080e0",
@@ -601,7 +693,7 @@
     }
   },
   "cayChup": {
-    "sha": "41f4bcc54b81866cbc4966464cc55bb919dce942",
+    "sha": "54c2060299e5e67ec74064f48321c6ced99daffa",
     "ban": {},
     "chuaTheoDoi": []
   }
