@@ -1,19 +1,13 @@
-E8 network (driver ego-browser khong co duong doc network; trich tu log dev server :3463 + curl)
-2  GET /ops/labels?nhom=S03-N043 200
-2  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N043&xem=10710 200
-2  GET /api/zalo-media?nhan=10710&anh=2 200
-2  GET /api/zalo-media?nhan=10710&anh=1 200
-2  GET /api/zalo-media?nhan=10710&anh=0 200
-1  POST /api/v1/ops/labels/10710/review 200
-1  POST /api/v1/ops/labels 200
-1  GET /ops/login 404
-1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N043 200
-1  GET /api/zalo-media?nhan=10712&anh=0 200
-1  GET /api/zalo-media?nhan=10710&anh=3 404
-1  GET /api/v1/ops/labels/10710/review 403
-1  GET /api/v1/ops/labels 400
+E8 network (driver ego-browser khong co duong doc network; trich tu log dev server :3463 sau lan seed cuoi + curl)
+   2 GET /ops/labels?nhom=S03-N051 200
+   2 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N051&xem=10804 200
+   2 GET /api/zalo-media?nhan=10804&anh=2 200
+   2 GET /api/zalo-media?nhan=10804&anh=1 200
+   2 GET /api/zalo-media?nhan=10804&anh=0 200
+   1 POST /api/v1/ops/labels/10804/review 200
+   1 POST /api/v1/ops/labels 200
+   1 GET /ops/labels?nhom=S03-N050 200
+   1 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N051 200
+   1 GET /api/zalo-media?nhan=10806&anh=0 200
 # 4xx/5xx:
- GET /api/v1/ops/labels 400 in 37ms (next.js: 22ms, application-code: 15ms)
- GET /api/v1/ops/labels/10710/review 403 in 364ms (next.js: 358ms, application-code: 6ms)
- GET /api/zalo-media?nhan=10710&anh=3 404 in 6ms (next.js: 0.4ms, application-code: 5ms)
- GET /ops/login 404 in 462ms (next.js: 356ms, proxy.ts: 4ms, application-code: 102ms)
+# (het)

@@ -103,3 +103,50 @@ wall: 1158s
 - **claude-opus-5-5**: 3 agent · 27 calls · out 75,414 · in 60 · cache_read 2,005,777 · cache_create 402,976
 - **claude-haiku-5-5**: 11 agent · 22 calls · out 19,730 · in 44 · cache_read 228,361 · cache_create 299,776
 
+### S4 round 3 — wf_a8a875ba-139 (24 agent, 199,412 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 10 | 33,814 | 22 | 1,046,582 | 349 |
+| review:conventions | claude-opus-5-5 | 12 | 29,337 | 24 | 1,095,946 | 286 |
+| ui:E8 | claude-sonnet-5-5 | 47 | 28,235 | 94 | 5,992,616 | 420 |
+| review:bugs | claude-opus-5-5 | 13 | 27,563 | 28 | 1,178,245 | 295 |
+| ui:E5 | claude-sonnet-5-5 | 32 | 26,213 | 66 | 3,791,505 | 357 |
+| synthesize:report | claude-sonnet-5-5 | 4 | 13,564 | 8 | 156,409 | 81 |
+| triage | claude-sonnet-5-5 | 2 | 5,500 | 4 | 30,249 | 36 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 5,432 | 6 | 63,752 | 45 |
+| refute:nap.mjs | claude-sonnet-5-5 | 6 | 3,227 | 14 | 214,047 | 26 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 3,143 | 4 | 22,478 | 30 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,678 | 4 | 3,140 | 395 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,547 | 4 | 3,140 | 361 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,084 | 4 | 26,388 | 9 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,890 | 4 | 26,382 | 9 |
+| refute:seed.mjs | claude-sonnet-5-5 | 3 | 1,796 | 6 | 56,287 | 15 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,789 | 4 | 25,642 | 10 |
+| refute:labels-ghep.test.ts | claude-sonnet-5-5 | 4 | 1,779 | 8 | 104,074 | 16 |
+| refute:label-ghep.test.mjs | claude-sonnet-5-5 | 4 | 1,766 | 8 | 94,302 | 15 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,736 | 4 | 25,665 | 30 |
+| machine:cd pipeline && node --test scripts/label | claude-haiku-5-5 | 2 | 1,483 | 4 | 25,642 | 9 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,287 | 4 | 25,664 | 18 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,217 | 4 | 25,641 | 16 |
+| machine:node _acceptance/ghep-anh-tren-the-gan-n | claude-haiku-5-5 | 2 | 991 | 4 | 25,660 | 8 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 341 | 4 | 22,027 | 7 |
+
+
+wall: 991s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 5,432 | 63,752 | 45 | 09:57:47 | 09:58:33 |
+| ui | 2 | 54,448 | 9,784,121 | 780 | 09:57:47 | 10:10:47 |
+| machine | 11 | 20,845 | 235,442 | 832 | 09:57:47 | 10:11:39 |
+| review | 3 | 90,714 | 3,320,773 | 350 | 09:57:47 | 10:03:37 |
+| triage | 1 | 5,500 | 30,249 | 36 | 10:11:42 | 10:12:18 |
+| refute | 4 | 8,568 | 468,710 | 26 | 10:12:20 | 10:12:46 |
+| capture | 1 | 341 | 22,027 | 7 | 10:12:48 | 10:12:55 |
+| synthesize | 1 | 13,564 | 156,409 | 81 | 10:12:57 | 10:14:18 |
+
+- **claude-opus-5-5**: 3 agent · 35 calls · out 90,714 · in 74 · cache_read 3,320,773 · cache_create 448,469
+- **claude-sonnet-5-5**: 10 agent · 107 calls · out 87,853 · in 218 · cache_read 10,525,268 · cache_create 617,943
+- **claude-haiku-5-5**: 11 agent · 22 calls · out 20,845 · in 44 · cache_read 235,442 · cache_create 311,057
+
