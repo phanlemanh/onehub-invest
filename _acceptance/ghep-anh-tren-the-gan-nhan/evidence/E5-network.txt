@@ -1,72 +1,52 @@
-# E5 network (CDP Network.* qua ego-browser, lần chạy sạch trên nhóm S03-N055) — origin app http://localhost:3463
-tổng phản hồi/lỗi ghi được: 580; app-origin: 580; ngoài origin: 0
-
-16x GET /_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css 200
-5x GET /_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css 200
-11x GET /_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css 304
-9x GET /_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js 200
-7x GET /_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js 304
-9x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js 200
-7x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js 304
-9x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js 200
-7x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js 304
-9x GET /_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js 200
-7x GET /_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js 304
-9x GET /_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js 200
-7x GET /_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js 304
-9x GET /_next/static/chunks/_1anvha4rlo79g._.js 200
-7x GET /_next/static/chunks/_1anvha4rlo79g._.js 304
-9x GET /_next/static/chunks/_1g--mohl7s-9f._.js 200
-7x GET /_next/static/chunks/_1g--mohl7s-9f._.js 304
-9x GET /_next/static/chunks/_1x_e391htnmld._.js 200
-7x GET /_next/static/chunks/_1x_e391htnmld._.js 304
-9x GET /_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js 200
-7x GET /_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js 304
-9x GET /_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js 200
-7x GET /_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js 304
-9x GET /_next/static/chunks/node_modules_02uxlv6kujl17._.js 200
-7x GET /_next/static/chunks/node_modules_02uxlv6kujl17._.js 304
-9x GET /_next/static/chunks/node_modules_14b_hroe7y71h._.js 200
-7x GET /_next/static/chunks/node_modules_14b_hroe7y71h._.js 304
-9x GET /_next/static/chunks/node_modules_1l3m3iglgy1xq._.js 200
-7x GET /_next/static/chunks/node_modules_1l3m3iglgy1xq._.js 304
-9x GET /_next/static/chunks/node_modules_1svwq83k1gnsf._.js 200
-7x GET /_next/static/chunks/node_modules_1svwq83k1gnsf._.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js 304
-9x GET /_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js 200
-7x GET /_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js 304
-9x GET /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js 200
-7x GET /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js 304
-9x GET /_next/static/chunks/src_0rw3ib9yb_fx0._.js 200
-7x GET /_next/static/chunks/src_0rw3ib9yb_fx0._.js 304
-9x GET /_next/static/chunks/src_17_6n6f522exz._.js 200
-7x GET /_next/static/chunks/src_17_6n6f522exz._.js 304
-9x GET /_next/static/chunks/src_components_1l9nwmkpkd7cn._.js 200
-7x GET /_next/static/chunks/src_components_1l9nwmkpkd7cn._.js 304
-9x GET /_next/static/chunks/turbopack-_06rkbud3pyrlm._.js 200
-7x GET /_next/static/chunks/turbopack-_06rkbud3pyrlm._.js 304
-16x GET /_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2 200
-16x GET /_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2 200
-16x GET /_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2 200
-16x GET /_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2 200
-16x GET /_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2 200
-39x GET /api/zalo-media 200
-4x GET /api/zalo-media 404
-2x GET /favicon.ico 200
-16x GET /ops/labels 200
-7x POST /api/v1/ops/labels 200
-
-ĐÁNH GIÁ: app-origin status>=400 hoặc failed:
- - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
- - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
- - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
- - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=het
+# E5 network (nguon: log may chu dev :3463, driver ego-browser khong co read_network_requests; ghi lai lan chay thu hai, sach)
+# --- lan chay dau (dong 1-      65) co 1 POST 400 do driver bam Luu thieu o Nhieu can (validation hop le) -> chay lai sach
+## lan chay sach (sau dong       65)
+ GET /ops/labels?nhom=S03-N062 200 in 133ms (next.js: 2ms, proxy.ts: 3ms, application-code: 128ms)
+ GET /api/zalo-media?nhan=11030&anh=0 200 in 27ms (next.js: 0.6ms, application-code: 26ms)
+ GET /api/zalo-media?nhan=11030&anh=1 200 in 25ms (next.js: 0.6ms, application-code: 24ms)
+ GET /api/zalo-media?nhan=11030&anh=2 200 in 23ms (next.js: 0.4ms, application-code: 22ms)
+ GET /ops/labels?nhom=S03-N062 200 in 114ms (next.js: 3ms, proxy.ts: 2ms, application-code: 110ms)
+ GET /ops/labels?nhom=S03-N062 200 in 98ms (next.js: 2ms, proxy.ts: 2ms, application-code: 94ms)
+ POST /api/v1/ops/labels 200 in 43ms (next.js: 0.5ms, application-code: 43ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11030 200 in 130ms (next.js: 3ms, proxy.ts: 1.9ms, application-code: 125ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 85ms (next.js: 3ms, proxy.ts: 3ms, application-code: 80ms)
+ GET /api/zalo-media?nhan=11032&anh=0 200 in 7ms (next.js: 0.6ms, application-code: 7ms)
+ POST /api/v1/ops/labels 200 in 27ms (next.js: 0.6ms, application-code: 27ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11032 200 in 110ms (next.js: 2ms, proxy.ts: 1.8ms, application-code: 106ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 87ms (next.js: 3ms, proxy.ts: 3ms, application-code: 81ms)
+ GET /api/zalo-media?nhan=11033&anh=0 200 in 17ms (next.js: 0.6ms, application-code: 16ms)
+ GET /api/zalo-media?nhan=11033&anh=5 200 in 10ms (next.js: 0.3ms, application-code: 10ms)
+ GET /api/zalo-media?nhan=11033&anh=8 200 in 8ms (next.js: 0.3ms, application-code: 7ms)
+ GET /api/zalo-media?nhan=11033&anh=3 200 in 28ms (next.js: 0.4ms, application-code: 28ms)
+ GET /api/zalo-media?nhan=11033&anh=6 200 in 15ms (next.js: 0.4ms, application-code: 15ms)
+ GET /api/zalo-media?nhan=11033&anh=2 200 in 34ms (next.js: 0.3ms, application-code: 34ms)
+ GET /api/zalo-media?nhan=11033&anh=1 200 in 37ms (next.js: 0.3ms, application-code: 37ms)
+ GET /api/zalo-media?nhan=11033&anh=4 200 in 37ms (next.js: 0.4ms, application-code: 36ms)
+ GET /api/zalo-media?nhan=11033&anh=7 200 in 17ms (next.js: 0.5ms, application-code: 17ms)
+ POST /api/v1/ops/labels 200 in 43ms (next.js: 1.0ms, application-code: 42ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11033 200 in 155ms (next.js: 3ms, proxy.ts: 3ms, application-code: 149ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 86ms (next.js: 2.0ms, proxy.ts: 1.5ms, application-code: 83ms)
+ GET /api/zalo-media?nhan=11034&anh=0 200 in 10ms (next.js: 0.5ms, application-code: 10ms)
+ POST /api/v1/ops/labels 200 in 24ms (next.js: 0.5ms, application-code: 24ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11034 200 in 124ms (next.js: 2ms, proxy.ts: 1.5ms, application-code: 120ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 101ms (next.js: 1.7ms, proxy.ts: 1.4ms, application-code: 97ms)
+ POST /api/v1/ops/labels 200 in 15ms (next.js: 0.4ms, application-code: 15ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11035 200 in 104ms (next.js: 2ms, proxy.ts: 1.7ms, application-code: 100ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 86ms (next.js: 3ms, proxy.ts: 3ms, application-code: 80ms)
+ GET /api/zalo-media?nhan=11036&anh=0 200 in 12ms (next.js: 0.8ms, application-code: 11ms)
+ GET /api/zalo-media?nhan=11036&anh=1 200 in 23ms (next.js: 0.5ms, application-code: 23ms)
+ POST /api/v1/ops/labels 200 in 18ms (next.js: 0.7ms, application-code: 18ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11036 200 in 118ms (next.js: 2ms, proxy.ts: 2.0ms, application-code: 114ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 81ms (next.js: 1.5ms, proxy.ts: 1.2ms, application-code: 78ms)
+ GET /api/zalo-media?nhan=11037&anh=1 404 in 9ms (next.js: 0.5ms, application-code: 8ms)
+ GET /api/zalo-media?nhan=11037&anh=0 200 in 11ms (next.js: 0.6ms, application-code: 11ms)
+ GET /api/zalo-media?nhan=11037&anh=2 200 in 15ms (next.js: 0.3ms, application-code: 15ms)
+ GET /api/zalo-media?nhan=11037&anh=1 404 in 6ms (next.js: 0.4ms, application-code: 5ms)
+ POST /api/v1/ops/labels 200 in 18ms (next.js: 0.8ms, application-code: 17ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063&xem=11037 200 in 110ms (next.js: 3ms, proxy.ts: 3ms, application-code: 105ms)
+ GET /api/zalo-media?nhan=11037&anh=1 404 in 8ms (next.js: 0.7ms, application-code: 8ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N063 200 in 55ms (next.js: 3ms, proxy.ts: 3ms, application-code: 49ms)
+## tom tat
+  35 GET 200
+   3 GET 404
+   7 POST 200
