@@ -91,6 +91,7 @@
       "dot": "gan-can-s03-0411",
       "hang": [
         "GC0",
+        "PL18",
         "GCQ1",
         "GCQ2",
         "GC1",
@@ -406,7 +407,8 @@
       "vi_sao": "L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.",
       "hang": "T2",
       "dung_tren": [
-        "PL15"
+        "PL15",
+        "GC0"
       ],
       "slug": "e1-e2-theo-lop",
       "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
@@ -415,7 +417,7 @@
       "phu": [
         "C2.4"
       ],
-      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30."
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước."
     },
     {
       "ma": "PL19",
@@ -3652,7 +3654,8 @@
       "vai": "nen",
       "tieu_chi": 9,
       "dung_tren": [
-        "GC0"
+        "GC0",
+        "PL18"
       ],
       "phu": [
         "GCQ1"
@@ -3667,7 +3670,7 @@
         "pipeline/lib/eval-labels.mjs",
         "pipeline/label-sample.mjs"
       ],
-      "ghi_chu": "Nạp từ tệp đã duyệt qua đường khai-so-nhom sẵn có, không chờ màn ON20. Nháp do máy viết, người duyệt; tệp ở research-local, không vào kho. Ngưỡng chốt ở Cổng Phạm vi: review Q4(b) ghi precision ≥95%, cận dưới 0,95 cần ít nhất 73 bài đúng hết mỗi nhóm; cận dưới 0,80 cần 29/30. Nháp quy ước lấy từ lý do người gắn ghi ở GC0; LLM chỉ được gợi ý gom, người duyệt."
+      "ghi_chu": "Nạp từ tệp đã duyệt qua đường khai-so-nhom sẵn có, không chờ màn ON20. Nháp do máy viết, người duyệt; tệp ở research-local, không vào kho. Ngưỡng chốt ở Cổng Phạm vi: review Q4(b) ghi precision ≥95%, cận dưới 0,95 cần ít nhất 73 bài đúng hết mỗi nhóm; cận dưới 0,80 cần 29/30. Nháp quy ước lấy từ lý do người gắn ghi ở GC0; LLM chỉ được gợi ý gom, người duyệt. Mạnh chốt 05/11: PL18 đứng trước hàng này vì bài nhiều căn là chỗ sai nặng đã đo (docs/plan/pham-vi-gom-tach-gop-tin-0511.md)."
     },
     {
       "ma": "GCQ2",
@@ -3693,6 +3696,74 @@
         "pipeline/mappings.yaml"
       ],
       "ghi_chu": "Luật 7: quy ước là luật xác định do người duyệt, LLM không tự ghi. ADR-0013: ghi FieldAssertion tier inferred, chỉ bộ phân xử ghi cột chuẩn. Tin hiện chưa có cột dự án và ASSERTION_FIELD chưa có dự án, phân khu: chốt nơi chứa ở Cổng Phạm vi. Đo 02/11: LLM đọc thẻ cũng nâng toà, mã căn, đường đó dùng cùng phiên bản quy ước."
+    },
+    {
+      "ma": "GT1",
+      "slug": "khu-trung-anh-theo-noi-dung",
+      "hang": "T2",
+      "vai": "Người duyệt",
+      "tieu_chi": 7,
+      "dung_tren": [],
+      "phu": [
+        "GT1"
+      ],
+      "dot": "gom-tach-gop-0511",
+      "nhom": "gom-tach-gop",
+      "cau_giao": "Người duyệt mở một tin S03 nhiều ảnh và thấy các ảnh khác nội dung nhau, không bị một ảnh đăng lại lấp đầy trần 12 ảnh",
+      "bat_khi": "Số ảnh khác nội dung mỗi tin trước và sau khớp đếm độc lập; 0 ảnh mất hẳn khỏi tin; ảnh chưa có tệp vẫn khử theo URL như cũ",
+      "vi_sao": "Đo 05/11: trong nhóm tin nhiều ảnh nhất, 82% ảnh là ảnh trùng vì mỗi lần đăng lại có URL mới mà bảng media chỉ khử theo URL.",
+      "vung": [
+        "pipeline/media-rows.mjs",
+        "pipeline/transform-media.mjs",
+        "app/src/lib/ops/review-media.ts"
+      ],
+      "ghi_chu": "Mạnh chốt 05/11 làm ngay. Khử theo sha256 có sẵn trong media_files, chưa cần DDL theo đọc mã. 7 tiêu chí, giữ riêng vì rẻ và độc lập; gộp vào GT2 sẽ bắt việc này chờ ZCode và nhãn. Có thể chồng tệp với việc ghép ảnh trên thẻ gắn nhãn: làm tuần tự."
+    },
+    {
+      "ma": "GT2",
+      "slug": "lop-bai-dang-chung",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "GCQ1"
+      ],
+      "phu": [
+        "GT2"
+      ],
+      "dot": "gom-tach-gop-0511",
+      "nhom": "gom-tach-gop",
+      "cau_giao": "Một lớp duy nhất quyết định sự kiện S03 nào thuộc một lần đăng: dùng mã album nếu nguồn có, không có thì ghép theo luật hiện có và ghi rõ là suy ra; transform-media, đọc ảnh bằng model và màn gắn nhãn cùng đọc từ đó",
+      "bat_khi": "Ba nơi đọc ra cùng một kết quả ghép trên cùng dữ liệu; tỉ lệ nhãn người «Ghép sai» và số bài ảnh không có bài đăng báo được trước và sau",
+      "vi_sao": "Mỗi nơi đang ghép một kiểu. Đọc tay 30 cụm ghép theo thời gian 05/11: 16 đúng, 2 sai, 2 không phán được, 10 không có ảnh; mẫu nhỏ, chỉ định hướng.",
+      "vung": [
+        "pipeline/lib/gop-anh.mjs",
+        "db/migrations"
+      ],
+      "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1. Lưu bảng riêng hay tính lại mỗi lần: quyết ở Cổng Phạm vi, sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Dùng lại luật của ghep-anh-tren-the-gan-nhan, không viết luật thứ hai. Phía thu mã album thuộc làn ZCode."
+    },
+    {
+      "ma": "GT4",
+      "slug": "kiem-dinh-gop-trung",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "PL18",
+        "GCQ1"
+      ],
+      "phu": [
+        "GT4"
+      ],
+      "dot": "gom-tach-gop-0511",
+      "nhom": "gom-tach-gop",
+      "cau_giao": "Khoá gộp trùng repostKey có tỉ lệ gộp nhầm đo được trên mẫu đọc tay, và chỉ được sửa khi số đo cho thấy sai",
+      "bat_khi": "Báo được tỉ lệ gộp nhầm kèm khoảng tin cậy và số tin gom nhiều người gửi; đổi khoá thì mọi offer_id cũ có đường nối sang mới",
+      "vi_sao": "Nhánh đủ phường và diện tích gộp theo nội dung kể cả bài của người khác, nên hai căn khác nhau cùng giá, diện tích, số phòng có thể thành một tin. Chưa đo.",
+      "vung": [
+        "pipeline/transform-zalo.mjs"
+      ],
+      "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1; đứng trên PL18 vì tách sai thì khoá gộp cũng sai. T3 vì offer_id dính vào khoá gộp, nếu đo ra không sai thì không đổi khoá. SV2 và PL18 sửa cùng tệp."
     }
   ],
   "chan_troi": [
@@ -4256,6 +4327,26 @@
         "GCH2"
       ],
       "mo_lai_khi": "DS2 giao xong và GC2 có số thử ngược để so"
+    },
+    {
+      "ma": "GTH1",
+      "dot": "gom-tach-gop-0511",
+      "cau_giao": "Thu Nhật ký của S03",
+      "ly_do": "Mở nguồn thu mới, không phải sửa lỗi; chưa kiểm chứng các bài thiếu ảnh có phải từ Nhật ký không. Mạnh chốt 05/11 chưa mở",
+      "phu": [
+        "GTH1"
+      ],
+      "mo_lai_khi": "ZCode trả lời có thu được không và Mạnh quyết mở"
+    },
+    {
+      "ma": "GTH2",
+      "dot": "gom-tach-gop-0511",
+      "cau_giao": "Thu lại các bài chỉ có ảnh đã thu thiếu mã album",
+      "ly_do": "Làn ZCode, chưa biết làm được không",
+      "phu": [
+        "GTH2"
+      ],
+      "mo_lai_khi": "ZCode trả lời có mã album và có thu lại được không"
     }
   ],
   "da_bac": []
