@@ -5,7 +5,7 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.pl18_db
-    paths: ["agent/src/agents/context-resolver.ts", "agent/src/enrich/route.ts", "db/migrations/077_*.sql", "pipeline/lib/assert.mjs", "agent/tests/e1-theo-lop.itest.ts"]
+    paths: ["agent/src/agents/context-resolver.ts", "agent/src/enrich/route.ts", "db/migrations/078_*.sql", "pipeline/lib/assert.mjs", "agent/tests/e1-theo-lop.itest.ts"]
     expected: "Ma trận ba lớp × hai đường ghi trên DB thử, đọc evidence_tier và rule_id từ field_assertions thật; assert riêng routeFields không ra direct cho hai lớp suy, đối chứng lớp chữ bài vẫn direct. Đỏ khi apply_enrichment về observed cố định, thông điệp ghim ca «tên nhóm thành quan sát»."
   - id: E2
     criterion: AC-2
@@ -47,7 +47,7 @@ evals:
     criterion: AC-8
     executor: test
     cmd: config:executors.test.pl18_db
-    paths: ["db/migrations/077_*.sql", "pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    paths: ["db/migrations/078_*.sql", "pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
     expected: "Hai tin chung bài với phát biểu ba phương pháp; so từng ô với truy vấn độc lập; xoá cột rồi gọi resolve_offer_fields ra y nguyên; tin không tách so trước, sau migration trên cùng dữ liệu. Đỏ khi offer_subject_keys bỏ nhánh unit_refs, thông điệp ghim ca «phát biểu chảy sang tin chung bài»."
   - id: E9
     criterion: AC-9

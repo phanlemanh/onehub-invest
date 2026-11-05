@@ -28,5 +28,5 @@ Vì sao: L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.
 
 - Câu hỏi phép đo trả lời: bài nhiều căn chiếm bao nhiêu, và tách có đúng không?
 - SỐNG: từ 125 nhãn `multi_unit`, trong đó từ 30 nhãn Có và từ 30 bài máy nhận, độ chính xác và độ phủ có cận dưới Wilson từ 0,80; đọc tay từ 27/30 bài đúng cả quan hệ căn, giá, diện tích; không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; nạp lại không đổi `offer_id`.
-- CHẾT phần tách: cận trên Wilson của tỉ lệ bài nhiều căn dưới 3% trên từ 125 nhãn. Khi đó giao E1 và đọc mù, bỏ phần tách và migration 077. Mức này chờ Mạnh duyệt ở Cổng Phạm vi.
+- CHẾT phần tách: cận trên Wilson của tỉ lệ bài nhiều căn dưới 3% trên từ 125 nhãn. Khi đó giao E1 và đọc mù, bỏ phần tách và migration 078. Mức này chờ Mạnh duyệt ở Cổng Phạm vi.
 - Timebox: đọc số ngay khi đủ nhãn; thi công chưa bắt đầu trước lúc đó.

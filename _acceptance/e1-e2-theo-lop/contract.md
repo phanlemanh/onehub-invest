@@ -52,7 +52,7 @@ Bỏ quét không gian (dòng `descope` trong sổ) — ba trục liệt tay:
 ## Out of scope
 
 - Lượt ghi tin thật trên DB máy thu: bước riêng sau chữ ký, `pg_dump` trước, cần lời riêng của Mạnh.
-- Áp migration 077 lên máy thu hoặc cloud: cần lời duyệt riêng.
+- Áp migration 078 lên máy thu hoặc cloud: cần lời duyệt riêng.
 - Đổi luật gom `repostKey`: hàng `GT4`.
 - Lớp bài đăng và ghép ảnh: hàng `GT2`, `gop-anh`.
 - Sửa `/ops/labels`, `label-sample`: phiên GC đang giữ.
@@ -62,4 +62,4 @@ Bỏ quét không gian (dòng `descope` trong sổ) — ba trục liệt tay:
 ## Notes
 
 - Thi công (S3) chỉ bắt đầu khi đủ điều kiện ở câu hỏi về ngưỡng trên thẻ. Duyệt phạm vi không phải lệnh chạy.
-- Số migration 077 giám sát đã dành; DDL thật do Mạnh duyệt riêng.
+- Số migration 078 giám sát đã dành; DDL thật do Mạnh duyệt riêng.

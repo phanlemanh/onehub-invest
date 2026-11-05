@@ -44,7 +44,7 @@ S03 đang coi mỗi bài là một căn. Bài rao nhiều căn thành một tin 
 
 - Lớp `tin`: phát biểu quan sát, `rule_id` `loai-hinh-chu`, như hôm nay.
 - Lớp `nhom`, `du-an`: phát biểu suy luận, `rule_id` `loai-hinh-nhom` và `loai-hinh-du-an`, không tự áp thành đề xuất `direct`.
-- `apply_enrichment` đọc lớp từ `evidence` của đề xuất, thay cho `observed` cố định. Migration 077 sửa hàm này.
+- `apply_enrichment` đọc lớp từ `evidence` của đề xuất, thay cho `observed` cố định. Migration 078 sửa hàm này.
 
 ### E2 mù, ra mảng căn
 
@@ -70,7 +70,7 @@ Prompt mới `dtb-s03-v2`, lưu ở `silver_labels` như LS1, không thêm bản
 - Thứ tự căn `n` là thứ tự vị trí câu trích đầu của căn trong chữ bài.
 - `originating_system_key` của tin mới: `<post_id>#<n>`. `offer_id` vẫn là `mintOfferId` (PL14).
 - Chủ thể phát biểu: `S03:<post_id>#<n>`. `apply_enrichment` đã dùng khoá tin làm chủ thể nên không phải đổi phần này.
-- Migration 077 thêm `sale_offer_records.unit_refs text[]` và sửa `offer_subject_keys`: tin có `unit_refs` chỉ nhận phát biểu của các căn đó, không nhận phát biểu cấp bài.
+- Migration 078 thêm `sale_offer_records.unit_refs text[]` và sửa `offer_subject_keys`: tin có `unit_refs` chỉ nhận phát biểu của các căn đó, không nhận phát biểu cấp bài.
 - `post_ids` giữ nguyên là mã bài, vì khoảng 25 tệp đang đọc cột này (ảnh, thẻ duyệt, đồng bộ cloud).
 - Mọi cột loại hình, phòng ngủ đi qua `resolve_offer_fields`, không ghi thẳng.
 
