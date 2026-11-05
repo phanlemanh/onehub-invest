@@ -5,7 +5,7 @@ slug: anh-tren-the-gan-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-05-anh-tren-the-gan-nhan-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -54,3 +54,19 @@ Later: nhiều ảnh mỗi bài đang là 1, vẫn hiện dải được. Never:
 - Dùng cổng dev 3463 của dãy P4 cho phép đo giao diện, DB thử `oneinvest_anh_nhan`.
 - 36/84 bài chỉ có URL đã mất ảnh ở nguồn (URL gốc trả 400), không phục hồi được; các bài này hiện «Ảnh không tải được».
 - Thứ tự triển khai: áp 075 trên DB thật trước khi gộp, xin giám sát kèm `pg_dump`. Nhãn đang gắn dùng `chu_bai` không bị ảnh hưởng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Bước đo E10 đòi hai khổ màn hình nhưng chỉ đặt tên một tệp ảnh; lượt 3 tự chụp thêm `E10-step1-375.png`, nên người ký có ảnh, chỉ lời bước chưa ghim tên tệp đó.
+  - Ngoài-2: Lúc rà soát, ảnh chứng E10 còn là bản cũ bị cắt chữ; lượt 3 đã chụp lại, tệp đang lưu là ảnh mới đọc trọn câu.
+  - Ngoài-3: Nếu sau này ai đó đưa câu «Ảnh không tải được» về lại trong ô ảnh, chữ có thể lại bị cắt mà phép kiểm tự động vẫn xanh. Người dùng khi đó sẽ chỉ thấy một nửa câu báo lỗi.
+  - Ngoài-4: Bước đo E10 không có ma trận khổ màn hình; khổ 375 chỉ có một ảnh do lượt 3 tự chụp, chưa được máy buộc phải có.
+  - Ngoài-5: Phép kiểm tên nguồn thật bỏ qua một nhóm tên giả quá rộng, nên về lý thuyết một tên nguồn thật bắt đầu bằng chữ đó có thể lọt vào dữ liệu mẫu mà không bị bắt. Hiện chưa có trường hợp nào như vậy.
+  - Ngoài-6: Phép kiểm chỉ nhận ra tên miền theo một danh sách đuôi cố định, nên một tên miền đuôi lạ trong dữ liệu mẫu có thể không bị bắt. Hiện không có trường hợp thật nào.
+  - Ngoài-7: Người dùng không thấy gì khác: màn gắn nhãn chạy bình thường. Chỉ người đọc tệp cấu trúc dữ liệu sau này sẽ mất công tìm tài liệu thiết kế đi kèm.
+  - Ngoài-9: Nếu ảnh không tải được lúc bấm xem lớn, người gắn chỉ thấy ảnh vỡ mà không có câu báo hay nút Thử lại, dù ô ảnh nhỏ bên ngoài đang hiện bình thường.
+  - Ngoài-10: Bằng chứng kiểm tra rằng địa chỉ ảnh gốc không lộ ra trình duyệt còn lỏng; nếu sau này có thay đổi làm lộ địa chỉ trong nội dung phản hồi, bài kiểm tra này có thể vẫn báo xanh.
+  - Ngoài-11: Chưa có dấu hiệu ảnh lấy hộ bị ghi vào kho ảnh gốc, nhưng bài kiểm tra chứng minh điều đó mới ở mức đọc mã, chưa đo trực tiếp.
+  - Ngoài-12: Nếu đường lấy ảnh hộ hỏng hoàn toàn, phép đo trên dữ liệu thật vẫn có thể báo đạt dù không lấy được ảnh nào; người duyệt phải tự đọc số in ra mới thấy.
+  - Ngoài-13: Người chấm đọc tiêu chí kiểm tra có thể đối chiếu với bộ giá trị mồi cũ nên luôn đếm ra 0, dễ hiểu nhầm là đã sạch dù chưa thật sự soi đúng bộ mồi.
+  - Ngoài-14: Một bài kiểm tra ghi là bảo vệ việc không lộ địa chỉ ảnh gốc thực ra chưa chạm vào dữ liệu thật; nếu sau này bị lộ, bài này vẫn xanh nhưng một bài đo khác sẽ bắt.
+  - Ngoài-15: Nếu bài mới chứa tên miền với đuôi lạ như .shop hay .xyz, thẻ có thể vẫn hiện tên miền đó trong chữ và phép đo không phát hiện.
+  - AC-7: Phép quét máy chỉ đọc tệp chữ, không đọc được chữ trong ảnh chứng; ảnh chứng được xem bằng mắt và chỉ chứa dữ liệu giả của seed. Số đếm mồi trên phản hồi HTTP của E4 nằm trong nhật ký lượt chấm, chưa vào báo cáo.
