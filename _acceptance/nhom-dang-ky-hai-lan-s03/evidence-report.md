@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8feba73fe8c22099c9e1eaad0e0bd5f50d19ad9d
+verified_commit: 7583db2b74b84fd22c781f7adb40e64e7fc50da8
 human_signoff: Mạnh 2026-11-05
 ---
 
@@ -162,3 +162,7 @@ none — every multi-run eval is uniform
 Round 1: bị trả lại — phép đo AC-4, AC-6 chưa đủ chặt; siết lại phép đo rồi trả về thực thi.
 Round 2: bị trả lại, dừng-vá chờ chọn lối — thêm khoá riêng cho DB thử, siết phép đo AC-1 và AC-4.
 Round 3: tất cả 8 eval và 6 lệnh suite xanh trên commit 8feba73fe8c22099c9e1eaad0e0bd5f50d19ad9d; verdict PASS.
+
+### Re-pin lần 1 — 2026-11-05, do gộp main có GC1 đổi bước transform của S03
+run_id: repin-20261105T020913Z-73163
+sha: 7583db2b74b84fd22c781f7adb40e64e7fc50da8 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
