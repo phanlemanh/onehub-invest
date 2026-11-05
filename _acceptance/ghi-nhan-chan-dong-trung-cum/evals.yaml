@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: ghi-nhan-chan-dong-trung-cum
+# Lược đồ tạm gtc_<pid>, chữ bài giả, tên miền example.test. Mỗi ca có bản đột biến của labels-queries.ts đỏ trên cùng fixture.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.gtc_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts, app/tests/labels-trung-cum.test.tsx]
+    expected: "exit 0; ca 'GTC-AC-1': cột ghep sinh bằng ghepLat thật (pipeline/label-ghep.mjs) trên bài giả; ma trận viết trước: dòng trùng cụm chưa gắn → route thật trả 409 với câu TRUNG_CUM, eval_labels và eval_label_reasons giữ nguyên số dòng; tập item_id nhận TRUNG_CUM bằng đúng tập dòng tinKe, nhomCuaLat, tienDo loại khỏi hàng (so tập, buộc khác rỗng). Chiều đỏ: bản bỏ điều kiện trung_voi trả 200 và thêm dòng, ca đỏ với thông điệp 'GHI VAO DONG TRUNG CUM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gtc_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-trung-cum.test.tsx]
+    expected: "exit 0; ca 'GTC-AC-2': ghep sinh bằng ghepLat thật; ba loại dòng (ghep NULL, đại diện cụm, bài ảnh không tin chữ) × ba trạng thái (chưa ai gắn → 200 đủ dòng; người khác đủ → 409 câu cũ; chính mình → 409 DA_GAN_CUA_TOI), bảng kỳ vọng viết trước. Chiều đỏ: bản coi mọi ghep khác NULL là trùng cụm thì đại diện cụm trả 409, ca đỏ với 'CHAN NHAM DONG KHONG TRUNG'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels.test.tsx]
+    expected: "exit 0; test cũ của màn gắn nhãn (MGN-AC-3, AC-5..AC-8) còn xanh, gồm ghi đồng thời và 409 đủ người."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; test cũ của lát theo nhóm (GC0) còn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.gtc_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-trung-cum.test.tsx]
+    expected: "exit 0; ca 'GTC-AC-3': A gắn dòng khi lát chưa ghép, rồi chạy ghepLat thật (dòng đó thành trùng cụm); A gửi lại → 409 DA_GAN_CUA_TOI, B gửi → 409 TRUNG_CUM; nhãn của A giữ nguyên số dòng và giá trị. Chiều đỏ: bản xét trùng cụm trước đã gắn trả TRUNG_CUM cho A, ca đỏ với 'LUOT GUI LAI KHONG CON LA DA LUU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gtc_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-trung-cum.test.tsx]
+    expected: "exit 0; ca 'GTC-AC-4': client 1 BEGIN, chạy ghepLat thật ghi trung_voi (giữ khoá); ghiNhan ở client 2 chưa trả sau 300 ms (đang chờ khoá); client 1 COMMIT → ghiNhan trả 409 TRUNG_CUM, 0 dòng. Chiều đỏ: bản đọc trung_voi bằng câu riêng không khoá, chạy trước câu FOR UPDATE, trả 200 và ca đỏ với 'GHI LOT SAU KHI GHEP COMMIT'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.gtc_app
+    layer: backend-effect
+    paths: [app/src/components/ops/labels/luu-nhan.tsx, app/src/lib/labels-normalize.ts, app/tests/labels-trung-cum.test.tsx]
+    expected: "exit 0; ca 'GTC-AC-5': guiNhan nhận phản hồi THẬT của route (fetch giả chuyển yêu cầu vào POST của route) cho dòng trùng cụm → { kind: 'da-co-nguoi', error: TRUNG_CUM }, cauTinKe ra '<câu> — chuyển tin kế'. Chiều đỏ: cùng phản hồi với câu đổi thành DA_GAN_CUA_TOI cho kết cục da-luu, ca đỏ với 'MAN COI TRUNG CUM LA DA LUU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.gtc_pham_vi
+    layer: backend-effect
+    paths: [_acceptance/ghi-nhan-chan-dong-trung-cum/probes/pham-vi.sh, app/src/lib/labels-queries.ts, app/src/lib/labels-normalize.ts, app/tests/labels-trung-cum.test.tsx, CONTEXT.md]
+    expected: "exit 0; 'ok chi tep duoc phep doi' (mọi tệp đổi so với merge-base thuộc danh sách: labels-queries.ts, labels-normalize.ts, CONTEXT.md, app/tests/labels-trung-cum.test.tsx, _acceptance/config.yaml, _acceptance/ghi-nhan-chan-dong-trung-cum/**, docs/**, PRODUCT-MAP.md, LO-TRINH.html), 'ok thuat ngu' (CONTEXT.md có mục «Dòng trùng cụm» kèm code trung_voi), 'ok khong ten nguon that' (tên từ source_registry local, buộc khác rỗng, không in), 'ok public khong ghi' (n_tup_ins, n_tup_upd, n_tup_del của eval_labels, eval_label_items, eval_label_reasons ở public trước và sau khi chạy gtc_app bằng nhau). Chiều đỏ: 'ok doi chung: tep ngoai danh sach bi bat' (bản sao cây sửa một tệp dưới app/src/app/ops), 'ok doi chung: thieu thuat ngu bi bat', 'ok doi chung: ten nguon bi bat', 'ok doi chung: bo dem bat update va insert-delete' (một UPDATE và một cặp INSERT, DELETE trên bảng lược đồ thử làm bộ đếm cùng loại tăng)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
