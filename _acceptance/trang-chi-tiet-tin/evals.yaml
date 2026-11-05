@@ -1,0 +1,126 @@
+schema_version: 1
+feature_slug: trang-chi-tiet-tin
+# Ca mang tiền tố «TCT-AC-n». jsdom: app/tests/trang-chi-tiet-tin.test.tsx. Route và truy vấn thật trên DB thử: app/tests/trang-chi-tiet-tin-db.test.tsx.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tct_ui
+    paths: [app/src/components/listing/offer-card.tsx, app/tests/trang-chi-tiet-tin.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-1' xanh: thẻ có một liên kết chính tới /listing/<offer_id>, ba phần tử có việc riêng không nằm trong liên kết chính; bản sao bỏ liên kết chính đỏ, thông điệp ghim TCT-AC-1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1u
+    criterion: AC-1
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/sale
+    paths: [app/src/components/listing/offer-card.tsx, app/src/components/listing/listing-card.tsx]
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3462, DATABASE_URL trỏ DB thử oneinvest_tct"
+      - "Ghi trước ma trận: ba lối vào (thẻ Bán, thẻ Cho thuê dài hạn, khối tin cùng tiêu chí) × bảy điểm bấm (thân, giá, tên người đăng, địa chỉ, liên kết phường, nhãn, Xem số)"
+      - "Bấm bằng toạ độ thật từng ô; ghi URL sau khi bấm; trước mỗi lần chụp, chèn style làm trong suốt tên người đăng và số điện thoại (như lệ che ảnh chứng, kho công khai); chụp evidence/E1u-<lối>-<điểm>.png"
+    expected: "Thân, giá, tên, địa chỉ: URL thành /listing/<offer_id>. Liên kết phường: tới trang phường. Nhãn: mở lời giải thích, URL không đổi. Xem số: URL không đổi. Đủ mọi ô của ma trận"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tct_ui
+    paths: [app/src/components/listing/offer-body.tsx, app/tests/trang-chi-tiet-tin.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-2-ve' xanh: ma trận viết trước, số assert bằng số dòng; trường thiếu không để lại nhãn trơ; bản sao in chữ «chưa có» đỏ, thông điệp ghim dòng ma trận"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tct_db
+    paths: [app/src/lib/offers-public.ts, pipeline/sync-cloud.mjs, app/tests/trang-chi-tiet-tin-db.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-2-doc' xanh: ghi qua INSERT, đọc qua getPublicOffer, mỗi trường về đúng giá trị; danh sách cột trang đọc là tập con của CLOUD_ALLOW.sale_offers lấy từ chính sync-cloud; bản sao đọc thêm một cột ngoài danh sách đỏ, thông điệp ghim tên cột"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tct_db
+    paths: [app/src/lib/offers-public.ts, app/src/components/listing/offer-body.tsx, "app/src/app/(app)/listing/[id]/page.tsx", app/tests/trang-chi-tiet-tin-db.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-3' xanh: phản hồi HTTP thật của máy chủ Next chạy trên DB thử có số biết trước, số không có trong toàn thân phản hồi kể cả __next_f; đối chứng dương: route liên hệ của cùng máy chủ trả đúng số đó; bấm nút gọi đúng đường; sáu trạng thái ST-lien-he-* đúng bảng; bản sao truyền số qua props đỏ, thông điệp ghim TCT-AC-3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tct_db
+    paths: [app/src/lib/offers-public.ts, app/src/lib/offers-filters.ts, app/src/components/listing/offer-body.tsx, "app/src/app/(app)/listing/[id]/page.tsx", app/tests/trang-chi-tiet-tin-db.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-4' xanh: ma trận viết trước ba nguồn × từng cột cấm, số assert bằng số phần tử; quét phản hồi HTTP thật của máy chủ Next chạy trên DB thử, chưa đăng nhập, gồm thẻ head và __next_f; giá trị đánh dấu ghi qua INSERT của DB thử; đối chứng dương: chính giá trị đó đọc lại được từ DB, và trang trả 200; hai bản sao đỏ, thông điệp ghim tên cột: bản in cột ra trang, bản chỉ truyền cột qua props của client component"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tct_db
+    paths: [app/src/lib/offers-public.ts, "app/src/app/(app)/listing/[id]/page.tsx", app/tests/trang-chi-tiet-tin-db.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-5' xanh: mỗi dòng ma trận cùng trạng thái 404, thân phản hồi giống nhau sau khi bỏ mã id, và getOfferPhone trả null; tin hiện được cùng DB trả 200 làm đối chứng dương; bản sao bỏ VISIBLE đỏ, thông điệp ghim dòng ma trận"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.listing_static
+    paths: ["app/src/app/(app)/listing/[id]/page.tsx", app/src/components/listing/listing-body.tsx]
+    expected: "exit 0; trang listing thuê ngắn hạn vẫn không có số S02"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6b
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tct_ui
+    paths: ["app/src/app/(app)/listing/[id]/page.tsx", app/tests/trang-chi-tiet-tin.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-6' xanh: id abnb_ đi nhánh cũ, id offer_ đi nhánh tin, hàm chọn nhánh là hàm thuần có ma trận; bản sao đảo nhánh đỏ, thông điệp ghim TCT-AC-6"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.tct_db
+    paths: [app/src/lib/offers-public.ts, app/tests/trang-chi-tiet-tin-db.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-7' xanh: ma trận biên diện tích đúng 75%, 125% và ngoài biên; khác phường, loại tin, loại hình bị loại; tin ẩn bị loại; không có chính nó; tối đa 6; tin cấp thị trường không có khối; bản sao bỏ điều kiện loại hình đỏ, thông điệp ghim dòng ma trận"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tct_ui
+    paths: ["app/src/app/(app)/listing/[id]/page.tsx", app/tests/trang-chi-tiet-tin.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-8' xanh: generateMetadata của tin có robots noindex, tiêu đề không có tên người đăng; listing thuê ngắn hạn không có noindex; bản sao bỏ noindex đỏ, thông điệp ghim TCT-AC-8"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    route: /listing/<offer_id>
+    paths: [app/src/components/listing/offer-body.tsx, app/src/components/listing/offer-card.tsx, "app/src/app/(app)/listing/[id]/page.tsx"]
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3462, DATABASE_URL trỏ DB thử oneinvest_tct có đủ các ca của bảng Đặc tả UX; không ghi DB dùng chung"
+      - "Trước khi chụp, chèn style che số và tên người đăng: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}, và làm trong suốt dòng tên trong khối Người đăng cùng thẻ tin cùng tiêu chí (như lệ che ảnh chứng, kho công khai)"
+      - "Mở một tin S06 và một tin S03, chụp evidence/E9-s06.png, evidence/E9-s03.png; rộng, sáng rồi tối"
+      - "Ở khổ 375: liên hệ nằm trên nếp gấp, không tràn ngang, chụp evidence/E9-375.png; làm lại ở chủ đề tối"
+      - "Mở tin cấp thị trường, tin thiếu trường, tin không số, tin có số ghép, chụp mỗi ca một ảnh; mở một id lạ, chụp 404"
+    expected: "Mỗi trạng thái ST-tin-*, ST-lien-he-* đúng bảng Đặc tả UX; không tràn ngang ở 375; chữ đọc được ở cả hai chủ đề; ST-cung-tieu-chi-loi, ST-cung-tieu-chi-loading đo ở E10"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tct_ui
+    paths: [app/src/components/listing/offer-body.tsx, app/tests/trang-chi-tiet-tin.test.tsx]
+    expected: "exit 0; ca 'TCT-AC-9' xanh: khối lỗi có Thử lại, khối đang tải có Skeleton, khối trống có Empty kèm nút; bản sao bỏ RegionError đỏ, thông điệp ghim ST-cung-tieu-chi-loi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.tct_gate
+    paths: [app/src/components/listing/offer-body.tsx]
+    expected: "exit 0; không vi phạm P0 của cổng thiết kế trên tệp mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/listing/offer-body.tsx, app/src/components/listing/offer-card.tsx]
+    expected: "exit 0; không hex thô trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -63,8 +63,8 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       hrefFor: listingsHref("rent"),
       pinned: true,
       icon: icon(KeyRoundIcon),
-      // Chi tiết listing hiện chỉ có ở thuê ngắn hạn.
-      match: (p) => p.endsWith("/listings/rent") || p.startsWith("/listing/"),
+      // Chi tiết listing thuê ngắn hạn; đường dẫn tin rao không cho biết bán hay thuê nên không tô mục nào.
+      match: (p) => p.endsWith("/listings/rent") || (p.startsWith("/listing/") && !p.startsWith("/listing/offer_")),
     },
     {
       id: "yield",
