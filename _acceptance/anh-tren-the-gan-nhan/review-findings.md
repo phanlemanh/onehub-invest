@@ -83,8 +83,8 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: wont-fix
 
-- **Link dạng zalo.me/<SĐT> bị xoá khỏi chữ hiện, số điện thoại mất khỏi thẻ mà không có dấu hiệu nào (r2)**
-  Người dùng thấy gì: Khi bài rao dán số điện thoại dưới dạng đường link Zalo, thẻ không còn hiện số đó. Người gắn nhãn có thể chọn «không suy ra được» cho ô SĐT người bán dù bài có nêu số.
+- **Link dạng S03/<SĐT> bị xoá khỏi chữ hiện, số điện thoại mất khỏi thẻ mà không có dấu hiệu nào (r2)**
+  Người dùng thấy gì: Khi bài rao dán số điện thoại dưới dạng đường link S03, thẻ không còn hiện số đó. Người gắn nhãn có thể chọn «không suy ra được» cho ô SĐT người bán dù bài có nêu số.
   Căn cứ: Gặp ít (2 trên 367 bài đo được) nhưng nhãn sai khó phát hiện sau khi lưu; chữ gốc vẫn còn nguyên nên không mất dữ liệu, và việc giữ số trong link cần được quyết như một hành vi mới.
   file: `app/src/lib/labels-anh.ts`
   severity: medium
