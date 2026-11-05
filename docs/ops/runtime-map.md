@@ -146,6 +146,8 @@ nêu đường + mã `S0x`, không bao giờ in tên.
   CHỈ ĐỌC (biến `ONEHUB_GATEWAY_CONFIG` để trỏ tệp khác), không gọi lệnh gateway; nhóm tắt → tạm dừng «tắt ở gateway»,
   nhóm biến mất → tạm dừng «không còn ở gateway» (giữ mã). Tệp thiếu/hỏng → thoát 1, sổ không đổi. Chạy lại không đổi gì.
 - Sau khi gộp: áp 048 lên DB local (`/new-migration` bước 5) rồi chạy `sync-don-vi` một lần.
+- Nhóm S03 đăng ký hai lần: `node pipeline/don-nhom-hai-lan.mjs` chỉ in, `--ghi` chuyển dòng phụ sang «Đã gỡ», giữ dòng và mã, ghi `ops_audit`;
+  `--hoan-lai --ghi` trả về trạng thái cũ. Chỉ chạy `--ghi` trên DB local máy thu khi Mạnh nói rõ.
 
 ## Số tổng hợp Ops lên cloud (chốt 2026-10-24, `_acceptance/ops-facts-so-tong-hop/`, ADR-0014)
 

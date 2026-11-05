@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7583db2b74b84fd22c781f7adb40e64e7fc50da8
+verified_commit: 3663ebb934ac8376c3daf14e4afd51b6ee587aa1
 human_signoff: Mạnh 2026-11-05
 ---
 
@@ -166,3 +166,7 @@ Round 3: tất cả 8 eval và 6 lệnh suite xanh trên commit 8feba73fe8c22099
 ### Re-pin lần 1 — 2026-11-05, do gộp main có GC1 đổi bước transform của S03
 run_id: repin-20261105T020913Z-73163
 sha: 7583db2b74b84fd22c781f7adb40e64e7fc50da8 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-05, do hoá cũ do transform-zalo và đầu dò đổi trong PR 324 nhom-hai-lan-s03-xu-goc
+run_id: repin-20261105T134731Z-25625
+sha: 3663ebb934ac8376c3daf14e4afd51b6ee587aa1 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

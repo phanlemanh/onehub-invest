@@ -1,0 +1,84 @@
+schema_version: 1
+feature_slug: nhom-hai-lan-s03-xu-goc
+# DB: fixture và bản sao thật trên DB thử `oneinvest_nhl_xu`, mọi lần ghi trong BEGIN…ROLLBACK; E8, E9 chạy đầu dò của hồ sơ trước trên `oneinvest_gcn_nhan`, chỉ đọc; E10 lấy khoá từ cả hai.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.nhl_transform
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/eval-labels.mjs, pipeline/scripts/nhom-hai-lan-transform.itest.mjs]
+    expected: "exit 0; lượt chính gọi runTransformZalo không truyền tham số: 'ok AC-1 muc dich tinh tren hop', 'ok AC-1 loai hinh tinh tren hop', 'ok AC-1 tangLoai cung ket qua'; chiều đỏ cùng fixture: khoaNhom nguyên văn cho 'ok do: khoa nguyen van tach doi muc dich', 'ok do: khoa nguyen van tach doi loai hinh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.nhl_transform
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/nhom-hai-lan-transform.itest.mjs]
+    expected: "exit 0; 'ok AC-2 bai tien to nhan thi truong dong tran', 'ok AC-2 dong tran thang', 'ok AC-2 chi dong tien to khai', 'ok AC-2 tra theo khoa nguyen van ca hai dong'; chiều đỏ cùng fixture: khoaNhom nguyên văn cho 'ok do: khoa nguyen van mat thi truong'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.nhl_transform
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/eval-labels.mjs, pipeline/scripts/nhom-hai-lan-transform.itest.mjs]
+    expected: "exit 0; 'ok AC-3 khoa la khong gop', 'ok AC-3 khong co khoa khong vao nhom', 'ok AC-3 y het nguyen van'; chiều đỏ cùng fixture: hàm bỏ tới dấu hai chấm cuối cho 'ok do: gop qua tay'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.nhl_cong
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-nhom-hai-lan.mjs, app/src/lib/offers-public.ts, app/src/lib/offers-filters.ts]
+    expected: "exit 0; dòng 'cong truoc: tin <n> hien <n> ban <n> thue <n>', 'cong sau: …', 'cong lech: roi <n> them <n> doi <n>' với số thật; 'ok AC-4 so bai doi khoa bang dem doc lap' số khác 0, 'ok AC-4 moi bai ve mot khoa tran', 'ok AC-4 khong tin roi cong', 'ok AC-4 khong tin them', 'ok AC-4 tin doi deu thuoc nhom co cap', 'ok AC-4 dieu kien hien doc tu ma cong'; chiều đỏ: bài mồi dạng tiền tố đọc từ dòng thật, lệnh mặc định cho 'ok do: thuoc thay tin doi'; bộ so trên ca viết trước cho 'ok do: loi tin roi cong', 'ok do: loi tin doi ngoai nhom'; DB thử không có cặp thì exit 1 'loi DB thu khong co cap'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.nhl_so
+    layer: backend-effect
+    paths: [pipeline/don-nhom-hai-lan.mjs, pipeline/scripts/don-nhom-hai-lan.itest.mjs]
+    expected: "exit 0; 'ok AC-5 chay thu khong doi', 'ok AC-5 in dung ma', 'ok AC-5 khong in khoa', 'ok AC-5 ghi dung dong phu', 'ok AC-5 dong phu paused cung duoc don', 'ok AC-5 dong giu la khoa tran', 'ok AC-5 mot dong nhat ky moi dong co trang thai cu', 'ok AC-5 lan hai 0 thay doi', 'ok AC-5 hoan lai dung bam'; chiều đỏ: chữ mồi trong đầu ra cho 'ok do: loi khoa trong dau ra', đổi một dòng sổ cho 'ok do: loi bam so'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.nhl_so
+    layer: backend-effect
+    paths: [pipeline/don-nhom-hai-lan.mjs, pipeline/scripts/don-nhom-hai-lan.itest.mjs]
+    expected: "exit 0; 'ok AC-6 khong co dong tran thi bo qua', 'ok AC-6 lech the thi bo qua', 'ok AC-6 lech thi truong thi bo qua', 'ok AC-6 lech du an thi bo qua', 'ok AC-6 dai dien da go thi bo qua', 'ok AC-6 cap con lai van don', 'ok AC-6 loi giua chung khong doi gi', 'ok do: loi tiem da no'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.nhl_cong
+    layer: backend-effect
+    paths: [pipeline/don-nhom-hai-lan.mjs, pipeline/scripts/do-nhom-hai-lan.mjs, pipeline/sync-don-vi.mjs, pipeline/label-sample.mjs]
+    expected: "exit 0; 'ok do: truoc don co cap hai dong', 'ok AC-7 moi nhom mot dong hieu luc', 'ok AC-7 so tin khong doi', 'ok AC-7 dong bo khong cham dong da don', 'ok do: dong bo that su chay', 'ok AC-7 mau mot tang', 'ok AC-7 lat s03-theo-nhom khong doi'; chiều đỏ: đổi một stratum trong giao dịch cho 'ok do: loi bam lat'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ndk_that
+    layer: backend-effect
+    paths: [_acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs, pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs]
+    expected: "exit 0; 'ok AC-7 khong vuot han muc' trên bản thật; chiều đỏ cùng dữ liệu: 'ok do M1: loi vuot han muc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ndk_that
+    layer: backend-effect
+    paths: [_acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/_quet.mjs]
+    expected: "exit 0; 'ok AC-8 tep theo git diff' kèm số tệp; 'ok AC-8 co ba tep ban cu bo sot'; 'ok AC-8 tep doi 0 khop'; chiều đỏ: 'ok do: danh sach rong thi do', 'ok do: loi khoa trong commit kho tam'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.nhl_quet
+    layer: backend-effect
+    paths: [pipeline/scripts/do-nhom-hai-lan.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/_quet.mjs]
+    expected: "exit 0; 'ok AC-10 tep doi 0 khop' kèm số tệp khác 0, gồm tệp chưa commit; 'ok AC-10 dau ra 0 khop' kèm số lệnh và số byte khác 0; 'ok AC-10 token kenh va ten don vi 0 khop'; chiều đỏ: khoá mồi trong tệp tạm cho 'ok do: loi khoa trong tep', chữ mồi trong đầu ra cho 'ok do: loi trong dau ra', tên đơn vị mồi cho 'ok do: loi ten don vi'; chỉ in số lượng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

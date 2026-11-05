@@ -238,7 +238,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   17 trường bản D, mỗi ô một căn cứ, bài dùng ngữ cảnh bắt buộc lý do; lượt hai so với máy đọc rồi ghi trường hợp; bảng trường hợp theo nhóm chỉ có số; `pipeline/label-cases.mjs`
   xuất lý do cho `GCQ1`, không mang người gắn. Lát đời trước giữ biểu mẫu chín trường của PL7. Đọc giá trị máy chỉ ở `app/src/lib/labels-luot-hai.ts`.
 - Nhóm S03 đăng ký hai lần là một tầng khi lấy mẫu (`nhom-dang-ky-hai-lan-s03`, 05/11): `pipeline/label-sample.mjs` gộp lúc đọc theo khoá thật, báo «gộp đơn vị trùng»; sổ, bài,
-  bước transform và số trên cổng không đổi. Ba dòng thừa trong sổ chưa dọn, chuẩn hoá khoá ở transform chưa làm: cần lời Mạnh, làm sau mốc.
+  số trên cổng không đổi.
+- Xử gốc nhóm S03 đăng ký hai lần (`nhom-hai-lan-s03-xu-goc`, 05/11): `transform-zalo` gom bài theo khoá thật, một chỗ, đo trên bản sao thật 0 tin rời, 0 tin thêm, 0 tin đổi; lệnh
+  `pipeline/don-nhom-hai-lan.mjs` (Hỏi-1 lối A) chuyển dòng phụ sang «Đã gỡ», giữ dòng và mã, hoàn lại được. **Chưa chạy `--ghi` trên DB thật**: ba dòng thừa còn đó, chờ lời Mạnh, sớm nhất 06/11.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
