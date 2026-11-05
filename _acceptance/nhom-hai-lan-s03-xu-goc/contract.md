@@ -5,7 +5,7 @@ slug: nhom-hai-lan-s03-xu-goc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-05
 design_doc: docs/superpowers/specs/2026-11-05-nhom-hai-lan-s03-xu-goc-design.md
@@ -55,3 +55,15 @@ Source input: Out of scope và Notes của `_acceptance/nhom-dang-ky-hai-lan-s03
 - Chạy thử trên DB thử `oneinvest_nhl_xu`; riêng E8, E9 chạy đầu dò của hồ sơ trước trên DB thử `oneinvest_gcn_nhan` của nó, E10 lấy khoá từ cả hai. S4 chạy dưới khoá s4 của dãy U1 mượn, tránh chấm từ 13:50 tới khi job 14:00 xong.
 - Lát `s03-theo-nhom` đo 05/11: 367 bài, 25 tầng, 0 dòng ở mã phụ, 65 dòng ở ba mã đại diện. Dọn sổ theo lối nào cũng không đổi `stratum`.
 - Mã và tệp kho không ghi tên kênh và không ghi khoá nhóm thật. Kho công khai.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Phép đo so sánh với cách tính cũ chỉ hiện số trên màn hình cho người đọc. Nếu có tin rao nào bị mất khỏi cổng so với trước, phép đo vẫn báo xanh, nên phải có người đọc số mới biết.
+  - Ngoài-2: Lời hứa là không tin nào rời hay thêm vào cổng so với trước, nhưng phép đo chỉ in số ra chứ không tự báo đỏ khi lệch. Một tin rao biến mất khỏi cổng có thể lọt qua mà không ai bị cảnh báo.
+  - Ngoài-3: Một vài ô kiểm cho bài không có khoá chưa từng được thử làm đỏ, nên nếu hỏng đúng chỗ đó thì phép kiểm có thể không báo. Nguy cơ là bài không khoá bị xếp nhầm loại hình mà không ai hay.
+  - Ngoài-5: Nếu người vận hành gõ sai tên cờ hoàn lại khi đang ghi, lệnh sẽ chạy chiều dọn sổ thay vì chiều hoàn lại mà họ định làm.
+  - Ngoài-6: Công cụ đo của lượt này dựa vào mã nằm trong thư mục của một hồ sơ nghiệm thu khác, nên nếu hồ sơ kia bị đổi tên hay dọn thì công cụ đo sẽ hỏng.
+  - Ngoài-8: Phép quét rò rỉ có thể lặng lẽ bỏ qua tệp có tên tiếng Việt có dấu mà vẫn báo đã quét xong và xanh.
+  - Ngoài-9: Phần kiểm tra rằng tên đơn vị không lọt vào đầu ra chưa có bằng chứng nó thật sự bắt được tên, nên có thể báo xanh dù không quét gì.
+  - Ngoài-10: Khi chạy thử trước khi ghi, bài kiểm chưa chặn được trường hợp in đảo mã giữ và mã phụ, hoặc in mã sang nhầm nhóm.
+  - Ngoài-11: Phép quét rò rỉ có thể vẫn báo đủ ba tệp ngay cả khi lỡ bỏ phần thay đổi của lượt trước, nên độ phủ của nó chưa được chứng minh chặt.
+  - Ngoài-12: Phép đo «không có tin nào bị thêm vào cổng» chưa được thử bằng ca cố ý sai nên chưa chứng minh nó bắt được lỗi này.
+  - Ngoài-13: Khi hoàn lại việc dọn sổ, lịch hẹn tiếp tục của một đơn vị đang tạm dừng có thể không được trả về, và bài kiểm hiện chưa bắt được điều này.

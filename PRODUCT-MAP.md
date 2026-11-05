@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>13 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>139 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>140 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>100 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -37,10 +37,6 @@ flowchart TD
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Xử gốc nhóm S03 đăng ký hai lần — dọn sổ theo lời Mạnh, transform so khoá đã chuẩn hoá, vá hai lỗ phép đo của hồ sơ trước (`nhom-hai-lan-s03-xu-goc`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -224,6 +220,7 @@ flowchart TD
 - Lệnh nhãn bạc S03 — model lớn (Claude Haiku 5.5, OpenAI Decisions, Qwen 27B local) đọc bài S03 và ghi ý định tin, bán/thuê, xác suất, câu trích vào bảng nhãn bạc riêng (migration 065), kèm chế độ đo trên tập vàng — không ghi dữ liệu canonical (`nhan-bac-model-lon-s03`)
 - Dòng kiểm chất lượng ảnh tin media:local-file có nhãn tiếng Việt trên /ops/quality (`nhan-dq-media-local-file`)
 - Lấy mẫu gắn nhãn theo nhóm S03 coi một nhóm thật đăng ký hai lần trong sổ là một tầng, không sửa dữ liệu thật (`nhom-dang-ky-hai-lan-s03`)
+- Xử gốc nhóm S03 đăng ký hai lần — dọn sổ theo lời Mạnh, transform so khoá đã chuẩn hoá, vá hai lỗ phép đo của hồ sơ trước (`nhom-hai-lan-s03-xu-goc`)
 - Tick bật nhóm trên /ops/sources luôn ghi requireMention true, và bộ ghi cấu hình OpenClaw từ chối mọi bản cấu hình phạm bất biến bộ canh trước khi ghi (`nhom-moi-requiremention`)
 - Vùng giao diện của design-floor liệt kê dương (loại thư mục vendor), có test bắt thư mục sót, và sàn thiết kế S4 được nối (`noi-design-floor`)
 - hai việc nối tiếp ZC4 — script cài collector tạo thư mục log và không để plist rỗng; lượt thu bị bỏ qua không để lại thư mục ẩn rỗng (`noi-tiep-zc4`)
