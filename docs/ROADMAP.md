@@ -207,6 +207,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
 - Chữ về nguồn trên Invest (CN1 `chu-nguon-tren-cong`, 04/11): các trang công khai gọi S01 là «nền tảng thuê ngắn hạn», S02 là «nguồn tham chiếu trả phí»; giá bán, thuê là trung vị giá rao của tin thật. Thước: `scripts/quet-ten-nguon-html.mjs` (HTML thật), `scripts/check-invest-tier-a.mjs` (mã, chạy ở CI).
+- Trang tin (`trang-chi-tiet-tin`, 05/11): thẻ tin bán, tin thuê dài hạn mở được `/listing/<offer_id>`; đọc qua `getPublicOffer`, `getOfferComps` dùng chung `VISIBLE`; `noindex`; tin không hiện 404 chung câu. Chưa có ảnh, bản đồ, so giá phường.
 - Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
   `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
   cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
@@ -233,6 +234,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Gắn nhãn theo nhóm S03 (GC0 `gan-nhan-theo-nhom-s03`, 04/11; migration 072 **chưa áp DB thật**, chỉ máy thu): `/ops/labels` mặc định lát `s03-theo-nhom`, biểu mẫu
   17 trường bản D, mỗi ô một căn cứ, bài dùng ngữ cảnh bắt buộc lý do; lượt hai so với máy đọc rồi ghi trường hợp; bảng trường hợp theo nhóm chỉ có số; `pipeline/label-cases.mjs`
   xuất lý do cho `GCQ1`, không mang người gắn. Lát đời trước giữ biểu mẫu chín trường của PL7. Đọc giá trị máy chỉ ở `app/src/lib/labels-luot-hai.ts`.
+- Nhóm S03 đăng ký hai lần là một tầng khi lấy mẫu (`nhom-dang-ky-hai-lan-s03`, 05/11): `pipeline/label-sample.mjs` gộp lúc đọc theo khoá thật, báo «gộp đơn vị trùng»; sổ, bài,
+  bước transform và số trên cổng không đổi. Ba dòng thừa trong sổ chưa dọn, chuẩn hoá khoá ở transform chưa làm: cần lời Mạnh, làm sau mốc.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.

@@ -103,6 +103,10 @@ _Avoid_: tin đăng, offer, sale offer, rao vặt
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
+**Trang tin**: Trang chi tiết của một tin rao, code `OfferBody`, slug `/listing/<offer_id>` dùng chung route với listing thuê ngắn hạn. Tin không hiện thì 404 chung câu «Tin này không còn hiện». _Avoid_: trang listing (nghĩa đó là thuê ngắn hạn), trang nguồn.
+
+**Tin cùng tiêu chí**: Tin đang hiện cùng phường, loại tin, loại hình, diện tích chênh không quá 25%, tối đa 6 tin, trên Trang tin. Code `getOfferComps`. _Avoid_: tin tương tự, comps.
+
 **Chưa xác minh**: Nhãn trên thẻ tin rao từ nguồn chưa đối chiếu với nguồn khác; hiện tại là tin từ nhóm cộng đồng. Tin vẫn lên cổng, người xem biết cần tự kiểm. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Tin chưa xác minh»; mục `/methodology#chua-xac-minh`. Thẻ không nhãn không có nghĩa là đã kiểm chứng.
 - Code: `unverified` (cờ trong phản hồi tin rao, thay cho mã nguồn) · RESO: không có, local extension.
 _Avoid_: chưa kiểm duyệt, tin chưa duyệt

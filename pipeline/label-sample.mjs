@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { loadStgPosts } from "./lib/test-posts.mjs";
-import { chonMau, chonMauTheoNhom, LAT_NHOM, textHash } from "./lib/eval-labels.mjs";
+import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, LAT_NHOM, textHash } from "./lib/eval-labels.mjs";
 import { tangLoai } from "./transform-zalo.mjs";
 
 /** Lát phân tầng theo loại tin (s03-nhan-loai-tin-rong AC-10): ba tầng bằng nhau, mọi nhóm, không lọc tên nhóm. */
@@ -121,10 +121,20 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
 /** Mẫu theo nhóm (GC0): đơn vị của bài đọc từ sổ collection_units. Lát đã có dòng thì giữ nguyên: bài mới có thể đẩy bài cũ ra
  * khỏi tập chọn, nên khoá (lat, text_hash), (lat, ref_id) một mình không chặn được lát nở quá hạn mức. */
 async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo, posts, rejected }) {
-  const { rows: so } = await client.query("SELECT unit_code, group_key FROM collection_units WHERE source_code = 'S03'");
-  const donVi = new Map(so.map((r) => [r.group_key, r.unit_code]));
+  const { rows: so } = await client.query("SELECT unit_code, group_key, note FROM collection_units WHERE source_code = 'S03'");
+  const { donVi, gop } = donViTheoNhomThat(so);
   const { chon, moiNhom, bo_khong_don_vi } = chonMauTheoNhom(
-    posts.map((p) => ({ ...p, unit_code: donVi.get(p.conversation_id) ?? null })), { seed, ...theoNhom });
+    posts.map((p) => ({ ...p, unit_code: donViCuaBai(donVi, p.conversation_id) })), { seed, ...theoNhom });
+  // Nhóm trùng mà lát không có bài thì không có gì để báo: --nhom-khop đã loại nó.
+  const gop_trung = gop.flatMap(({ khoa, khoa_dai_dien, unit_code, gop_tu, the_lech }) => {
+    const bai = posts.filter((p) => p.conversation_id != null && khoaNhomThat(p.conversation_id) === khoa);
+    return bai.length ? [{ unit_code, gop_tu, the_lech, bai_khoa_phu: bai.filter((p) => p.conversation_id !== khoa_dai_dien).length }] : [];
+  });
+  const maPhu = gop.flatMap((g) => g.gop_tu);
+  const tang_phu_da_co = daCo > 0 && maPhu.length
+    ? (await client.query(
+      "SELECT stratum, count(*)::int AS so FROM eval_label_items WHERE lat = $1 AND stratum = ANY ($2) GROUP BY 1 ORDER BY 1", [lat, maPhu])).rows
+    : [];
   const [mo, xong, lui] = trongGiaoDich
     ? ["SAVEPOINT label_sample", "RELEASE SAVEPOINT label_sample", "ROLLBACK TO SAVEPOINT label_sample"]
     : ["BEGIN", "COMMIT", "ROLLBACK"];
@@ -148,7 +158,7 @@ async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom,
   return {
     lat, gat_post_thu: rejected.total, tin_cua_lat: posts.length, khac_nhau: moiNhom.reduce((a, x) => a + x.khac_nhau, 0), chon: chon.length,
     trung: chon.filter((r) => r.double_label).length, dev: chon.filter((r) => r.split === "dev").length,
-    them, thieu: 0, thu, moiNhom, bo_khong_don_vi,
+    them, thieu: 0, thu, moiNhom, bo_khong_don_vi, gop_trung, tang_phu_da_co,
   };
 }
 
@@ -164,6 +174,11 @@ async function main() {
     if (kq.moiNhom) {
       for (const x of kq.moiNhom) console.log(`nhóm ${x.unit_code}: chọn ${x.chon}/${x.can}, nội dung ${x.khac_nhau}, bỏ vì trùng ${x.bo_vi_trung}${x.chon < x.can ? " · thiếu" : ""}`);
       console.log(`bỏ vì không có đơn vị trong sổ: ${kq.bo_khong_don_vi}`);
+      for (const g of kq.gop_trung) {
+        console.log(`gộp đơn vị trùng: ${g.unit_code} ← ${g.gop_tu.join(", ")} · bài ở khoá phụ ${g.bai_khoa_phu}`);
+        if (g.the_lech) console.log(`cảnh báo: ${g.unit_code} và ${g.gop_tu.join(", ")} khác thẻ nhóm — màn dùng thẻ của ${g.unit_code}`);
+      }
+      for (const t of kq.tang_phu_da_co) console.log(`lát đã có ${t.so} dòng ở tầng phụ ${t.stratum} — giữ nguyên, gắn tiếp được; số của nhóm này đang chia hai tầng, muốn một tầng thì lấy mẫu lát tên mới`);
     }
     if (kq.thieu > 0) console.log(`thieu ${kq.thieu} — lát chỉ có ${kq.khac_nhau} nội dung khác nhau`);
   } finally {
