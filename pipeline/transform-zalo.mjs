@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
+import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
@@ -448,6 +449,9 @@ export function mucDichTheoTen(ten) {
   return ban && !thue ? KIND.sale : thue && !ban ? KIND.rent_lt : null;
 }
 
+/** Bài mang khoá nhóm đã chuẩn hoá: mọi phép gom theo nhóm đọc khoá này, một nhóm đăng ký hai dạng khoá không bị chia đôi. */
+const veKhoaNhom = (p, khoaNhom) => (p.conversation_id == null ? p : { ...p, conversation_id: khoaNhom(p.conversation_id) });
+
 /**
  * Mục đích từng nhóm (khoá conversation_id): theo tên, rồi theo tỉ lệ loại chữ bài trên mọi bài của lượt (lượt nạp lại
  * toàn bộ stg nên là lịch sử nhóm) — ≥ 20 bài chữ bài và ≥ 85% một loại; còn lại «ca-hai».
@@ -457,7 +461,8 @@ export function mucDichTheoTen(ten) {
 export function mucDichNhom(bai) {
   const dem = new Map();
   for (const b of bai) {
-    const k = b.conversation_id ?? "";
+    const k = b.conversation_id;
+    if (!k) continue; // Bài không có khoá không thuộc nhóm nào, như loaiHinhNhom.
     const e = dem.get(k) ?? { ten: b.group_name ?? null, sale: 0, rent_lt: 0 };
     if (!e.ten && b.group_name) e.ten = b.group_name;
     if (b.kind === KIND.sale || b.kind === KIND.rent_lt) e[b.kind]++;
@@ -522,8 +527,8 @@ export function demNguonLoai(nguon) {
  * @param {{ post_id: string, text: string, conversation_id?: string|null, group_name?: string|null }[]} posts
  * @returns {Map<string, "chu-bai"|"moi-nhan"|"van-bo">}
  */
-export function tangLoai(posts, { parse = parsePost } = {}) {
-  const docBai = posts.map((p) => ({ p, pr: parse(p.text) }));
+export function tangLoai(posts, { parse = parsePost, khoaNhom = khoaNhomThat } = {}) {
+  const docBai = posts.map((p) => ({ p: veKhoaNhom(p, khoaNhom), pr: parse(p.text) }));
   const mucDich = mucDichNhom(docBai.map(({ p, pr }) => ({ conversation_id: p.conversation_id, group_name: p.group_name, kind: pr.kind })));
   const out = new Map();
   for (const { p, pr } of docBai) {
@@ -708,17 +713,23 @@ export function lyDoGiaPhiLy(pr) {
 
 /**
  * Thị trường khai của từng nhóm S03 ở sổ nhóm (collection_units, PL12): group_key (= stg_zalo_posts.conversation_id) →
- * market_codes. Sổ chưa có (DB chưa áp 048) → bảng rỗng, mọi nhóm đi nhánh «chưa khai».
+ * market_codes. Sổ chưa có (DB chưa áp 048) → bảng rỗng, mọi nhóm đi nhánh «chưa khai». Tra được cả theo khoá nguyên văn của
+ * từng dòng lẫn theo khoá thật; hai dòng của một nhóm khác thị trường thì khoá thật theo dòng khoá trần.
  * @param {import("pg").Client} client
  * @returns {Promise<Map<string, string[]>>}
  */
-export async function docThiTruongNhom(client) {
+export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
   const { rows: co } = await client.query("SELECT to_regclass('collection_units') IS NOT NULL AS ok");
   if (!co[0].ok) return new Map();
   const { rows } = await client.query(
-    "SELECT group_key, market_codes FROM collection_units WHERE source_code = 'S03' AND cardinality(market_codes) > 0",
+    "SELECT group_key, market_codes FROM collection_units WHERE source_code = 'S03' AND cardinality(market_codes) > 0 ORDER BY unit_code",
   );
-  return new Map(rows.map((r) => [r.group_key, r.market_codes]));
+  const out = new Map(rows.map((r) => [r.group_key, r.market_codes]));
+  for (const r of rows) {
+    const khoa = khoaNhom(r.group_key);
+    if (!out.has(khoa)) out.set(khoa, r.market_codes);
+  }
+  return out;
 }
 
 /**
@@ -728,7 +739,8 @@ export async function docThiTruongNhom(client) {
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true } = {}) {
+// `khoaNhom` chỉ để thước truyền hàm đột biến (nhom-hai-lan-s03-xu-goc); đường chạy thật luôn dùng khoaNhomThat.
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -742,14 +754,16 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     }
     return entriesCua.get(k);
   };
-  const thiTruongNhom = await docThiTruongNhom(client);
+  const thiTruongNhom = await docThiTruongNhom(client, khoaNhom);
   const { rows: dongTT } = await client.query("SELECT id FROM areas WHERE region_type = 'market'");
   const maCoThat = new Set(dongTT.map((r) => r.id));
 
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
   // Post thử (zalo-mock, e2e, nhóm TEST) bị gạt tại đây — L19.
-  const { posts, rejected } = await loadStgPosts(client, "zalo");
+  const { posts: baiTho, rejected } = await loadStgPosts(client, "zalo");
+  const posts = baiTho.map((p) => veKhoaNhom(p, khoaNhom));
+  const baiDoiKhoa = posts.filter((p, i) => p.conversation_id !== baiTho[i].conversation_id).length;
   console.log(`posts: ${posts.length} (gạt ${rejected.total} post thử ${JSON.stringify(rejected.by_marker)})`);
 
   // ---- Bước 2+3: parse + confidence ----
@@ -881,7 +895,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa };
 }
 
 /** Thị trường có phường và danh sách phường của chúng, để đối chiếu tên phường trong chữ bài. */
