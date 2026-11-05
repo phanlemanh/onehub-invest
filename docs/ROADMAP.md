@@ -170,6 +170,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
+- Khử trùng ảnh (GT1 `khu-trung-anh-tin`, 05/11): `media-rows.mjs` khử theo `sha256` của tệp trong một tin, giữ lần đầu theo `post_ids`, rồi bên đọc mới áp trần 12; ảnh chưa có tệp khử theo URL; S06 không đổi. Màn gắn nhãn cùng luật ở `labels-anh.ts`. Lượt đêm đầu sau gộp xoá khoảng 8.500 dòng trùng.
 - Ảnh tin canonical (NH1, migration 053): bảng `media` theo resource Media của RESO DD 2.1, một dòng mỗi ảnh khác nhau của
   một tin (`resource_record_key` = offer_id). `pipeline/transform-media.mjs` dựng lại theo nguồn ngay sau transform
   (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và

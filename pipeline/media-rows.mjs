@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 // Chép nguyên hai regex của app/src/lib/ops/zalo-media.ts (route /api/zalo-media) — test «NH-AC-3 hai bản regex» so hai bản.
 export const SNAPSHOT_ID = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/;
 export const MEDIA_FILE = /^media\/[A-Za-z0-9][A-Za-z0-9_.-]*$/;
+const SHA256 = /^[0-9a-f]{64}$/i;
 
 const record = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
 const list = (v) => (Array.isArray(v) ? v : []);
@@ -31,12 +32,18 @@ export function localFile(entry, postSnapshot) {
   return `${snapshot}/${entry.file}`;
 }
 
+/** Băm nội dung của entry đã tải, viết thường; thiếu hay sai khuôn → null. Cùng luật với shaTep ở app/src/lib/labels-anh.ts. */
+export function shaTep(entry) {
+  return typeof entry.sha256 === "string" && SHA256.test(entry.sha256) ? entry.sha256.toLowerCase() : null;
+}
+
 /** MediaKey: md5(offer_id | local_file ?? media_url) — ổn định qua các lượt nạp. */
 export function mediaKey(offerId, local, url) {
   return createHash("md5").update(`${offerId}|${local ?? url}`).digest("hex");
 }
 
-const row = (offerId, source, originKey, url, order, local) => ({
+// `sha256`, `url_da_khu` (URL của các bản đã khử vào dòng này) chỉ sống trong bộ nhớ cho noiSau của transform-media; không phải cột của bảng.
+const row = (offerId, source, originKey, url, order, local, sha256 = null) => ({
   media_key: mediaKey(offerId, local, url),
   resource_record_key: offerId,
   originating_system_name: source,
@@ -44,16 +51,20 @@ const row = (offerId, source, originKey, url, order, local) => ({
   media_url: url,
   media_order: order,
   local_file: local,
+  sha256,
+  url_da_khu: [],
 });
 
 /**
  * Dòng media của một tin S03/S05 từ các bài theo thứ tự post_ids — đúng luật ghép đã ký của buildOfferImages:
  * lượt 1 ảnh đã tải (URL gốc của chúng coi như đã có), lượt 2 URL gốc (entry không tải được rồi cột media cũ), không trùng.
+ * Trùng ở lượt 1 theo tệp hoặc băm nội dung (tin đăng lại có URL và tên tệp mới): giữ lần đầu theo thứ tự bài.
  * Không cắt ở 12: trần là việc của bên đọc.
  */
 export function mediaRowsFromPosts(offerId, source, posts) {
   const out = [];
   const seenLocal = new Set();
+  const giuTheoSha = new Map();
   const seenUrl = new Set();
   for (const p of posts) {
     for (const e of list(p.media_files).map(record)) {
@@ -61,9 +72,17 @@ export function mediaRowsFromPosts(offerId, source, posts) {
       if (!local) continue;
       const url = httpUrl(e.url);
       if (url) seenUrl.add(url);
+      const sha = shaTep(e);
       if (seenLocal.has(local)) continue;
+      const giu = sha ? giuTheoSha.get(sha) : null;
+      if (giu) {
+        if (url) giu.url_da_khu.push(url);
+        continue;
+      }
       seenLocal.add(local);
-      out.push(row(offerId, source, p.post_id, url, out.length, local));
+      const r = row(offerId, source, p.post_id, url, out.length, local, sha);
+      if (sha) giuTheoSha.set(sha, r);
+      out.push(r);
     }
   }
   for (const p of posts) {

@@ -84,18 +84,19 @@ export async function baiAnhCuaTin(c) {
 /**
  * PL28: ảnh của bài chỉ-ảnh xếp SAU mọi ảnh của chính các bài chữ của offer — kể cả khi bài chữ chỉ có ảnh từ xa còn bài
  * ảnh có ảnh đã tải (luật ghép NH1 đưa ảnh đã tải của mọi bài lên trước, nên không trộn chung một danh sách bài). Bỏ ảnh
- * trùng tệp hay URL với ảnh đã có; media_order nối tiếp.
+ * trùng tệp, URL hay băm nội dung với ảnh đã có; media_order nối tiếp.
  */
 function noiSau(cua, them) {
   const tep = new Set(cua.map((r) => r.local_file).filter(Boolean));
-  const url = new Set(cua.map((r) => r.media_url).filter(Boolean));
+  const url = new Set(cua.flatMap((r) => [r.media_url, ...(r.url_da_khu ?? [])]).filter(Boolean));
+  const sha = new Set(cua.map((r) => r.sha256).filter(Boolean));
   return them
-    .filter((r) => !(r.local_file && tep.has(r.local_file)) && !(r.media_url && url.has(r.media_url)))
+    .filter((r) => !(r.local_file && tep.has(r.local_file)) && !(r.media_url && url.has(r.media_url)) && !(r.sha256 && sha.has(r.sha256)))
     .map((r, i) => ({ ...r, media_order: cua.length + i }));
 }
 
-/** Tập dòng muốn có của các nguồn (tin sống). */
-async function dungDong(c, sources) {
+/** Tập dòng muốn có của các nguồn (tin sống). Chỉ đọc; scripts/do-khu-trung-anh.mjs dùng lại để đo trước khi ghi. */
+export async function dungDong(c, sources) {
   const rows = [];
   const bai = sources.filter((s) => NGUON_BAI.includes(s));
   if (bai.length) {
