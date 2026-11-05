@@ -63,7 +63,7 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.kta_app_db
-    paths: [app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts, app/src/lib/deals.ts, pipeline/media-rows.mjs, pipeline/transform-media.mjs, app/tests/khu-trung-anh-db.test.tsx]
+    paths: [app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts, app/src/lib/deals.ts, pipeline/media-rows.mjs, pipeline/transform-media.mjs, app/tests/khu-trung-anh.itest.tsx]
     expected: "exit 0; ca 'KTA-AC-7' xanh trên DB thử: 20 entry 13 băm ghi qua runTransformMedia thật, loadReviewMedia, loadFlowMedia và loader Căn giá tốt mỗi nơi trả đúng 12 ảnh khác băm theo media_order; ma trận NH-AC-3 cộng ca trùng băm xanh; ca đỏ: bản sao buildOfferImages không khử băm lệch với bên ghi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9

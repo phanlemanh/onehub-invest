@@ -1,5 +1,6 @@
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { shaTep } from "@/lib/labels-anh";
 import { xemNoiDungTin } from "@/lib/ops-access";
 
 import { mediaKeyUrl, snapshotMediaUrl } from "./zalo-media";
@@ -86,12 +87,15 @@ export function buildOfferImages(posts: PostMediaRow[], evidenceImageUrl?: unkno
     out.push(img);
   };
 
-  // Lượt 1 — file local; URL gốc của chúng đánh dấu đã có để lượt 2 không lặp.
+  // Lượt 1 — file local, khử theo băm nội dung; URL gốc của chúng đánh dấu đã có để lượt 2 không lặp.
+  const daCoSha = new Set<string>();
   for (const post of posts) {
     for (const e of list(post.media_files).map(record)) {
       const src = localSrc(e, post.snapshot_id);
       if (!src) continue;
-      push({ src, origin: "local", expiring: false });
+      const sha = shaTep(e);
+      if (!sha || !daCoSha.has(sha)) push({ src, origin: "local", expiring: false });
+      if (sha) daCoSha.add(sha);
       const orig = remoteImage(e.url);
       if (orig) seen.add(orig.src);
     }
@@ -117,8 +121,8 @@ function localMediaSrc(localFile: string | null): string | null {
 /** Dòng chỉ có URL gốc mà không có khoá đúng khuôn — không lấy hộ được. */
 export const khongLayHoDuoc = (r: MediaRow) => !localMediaSrc(r.local_file) && Boolean(r.media_url) && !mediaKeyUrl(r.media_key ?? "");
 
-/** Danh sách ảnh của một tin từ dòng `media` (đã theo media_order): ảnh đã tải trước, rồi ảnh lấy hộ theo khoá; không
- *  trùng; tối đa 12. Không bao giờ trả URL gốc. */
+/** Danh sách ảnh của một tin từ dòng `media` (đã theo media_order, bên ghi đã khử trùng băm): ảnh đã tải trước, rồi ảnh
+ *  lấy hộ theo khoá; không trùng; tối đa 12. Không bao giờ trả URL gốc. */
 export function buildMediaImages(rows: MediaRow[]): ReviewImage[] {
   const out: ReviewImage[] = [];
   const seen = new Set<string>();

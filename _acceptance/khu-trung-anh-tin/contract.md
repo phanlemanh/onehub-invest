@@ -5,7 +5,7 @@ slug: khu-trung-anh-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # pipeline/media-rows.mjs, transform-media.mjs, app/src/lib — không khớp t3_paths; không migration
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-05
 design_doc: docs/superpowers/specs/2026-11-05-khu-trung-anh-tin-design.md
