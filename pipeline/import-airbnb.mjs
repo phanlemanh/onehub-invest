@@ -66,6 +66,16 @@ export function mediaFilesOf(item, snapshotId) {
   return mf.map((m) => ({ ...m, snapshotId }));
 }
 
+// ma-album-s03 (AC-5): meta.albumMeta (v6, kênh S03) → cột album_meta.
+// Chuẩn hoá: giữ nguyên object hợp lệ (group_layout_id + id_in_group dạng
+// chuỗi); sai dạng → null (SQL NULL, COALESCE giữ bản cũ).
+export function albumMetaOf(item) {
+  const a = item?.meta?.albumMeta;
+  if (!a || typeof a !== "object" || Array.isArray(a)) return null;
+  if (typeof a.group_layout_id !== "string" || typeof a.id_in_group !== "string") return null;
+  return a;
+}
+
 // PL1 (claudedp-2310-4 mở lại lần 2): ALLOWLIST nguồn thật thay denylist
 // nguồn thử — denylist không bắt được nguồn lạ mới (vd 'example' có thật trên
 // đĩa). Mỗi importer chỉ nhận DANH SÁCH TRẮNG nguồn nó phụ trách; nguồn khác
@@ -88,7 +98,8 @@ export function isAllowedSource(source) {
 // v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn,
 // đọc items y như cũ — cùng mảng với import-chotot.mjs, test đối chiếu hai bản.
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
-export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5];
+// ma-album-s03: 6 = RawItem.meta.albumMeta (kênh S03); 1–5 giữ nguyên
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
   const m = String(name).match(/__([^_]+)__/);
@@ -169,6 +180,21 @@ async function main() {
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
+  // ma-album-s03: DB chưa có migration 077 (cột album_meta) → vẫn nạp được,
+  // bỏ trường + in cảnh báo MỘT lần (AC-5). Không dừng chuỗi nạp.
+  let coAlbumMeta = false;
+  try {
+    const r = await client.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema()
+         AND table_name = 'stg_zalo_posts' AND column_name = 'album_meta'`,
+    );
+    coAlbumMeta = r.rowCount === 1;
+  } catch {
+    coAlbumMeta = false;
+  }
+  if (!coAlbumMeta) {
+    console.warn("WARN ma-album-s03: stg_zalo_posts chưa có cột album_meta — nạp tiếp, bỏ trường albumMeta (migration 077 chưa áp)");
+  }
   try {
     await client.query("BEGIN");
     await client.query(
@@ -196,11 +222,20 @@ async function main() {
     for (const it of items) {
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         const mediaFiles = mediaFilesOf(it, manifest.snapshotId);
+        const albumMeta = coAlbumMeta ? albumMetaOf(it) : null;
+        // cột album_meta chỉ xuất hiện khi DB đã có 077 — SQL động để bản nạp
+        // này chạy được cả trước khi migration áp (AC-5)
+        const coAlbum = coAlbumMeta ? ", album_meta" : "";
+        const giaTriAlbum = coAlbumMeta ? ", $14::jsonb" : "";
+        const thamSoAlbum = coAlbumMeta ? [albumMeta ? JSON.stringify(albumMeta) : null] : [];
+        const capNhatAlbum = coAlbumMeta
+          ? ", album_meta = COALESCE(EXCLUDED.album_meta, stg_zalo_posts.album_meta)"
+          : "";
         await client.query(
           `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text,
                                        sender_name, sender_id, conversation_id, media, agent_id,
-                                       media_files, captured_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb,$13)
+                                       media_files, captured_at${coAlbum})
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb,$13${giaTriAlbum})
            ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text,
              -- 2410-1 v2 (luật claudedp): captured_at = GIỜ THU snapshot (manifest.finishedAt
              -- = airbnb_snapshots.collected_at), không bao giờ now(). Bảng giữ snapshot ĐẦU
@@ -213,7 +248,7 @@ async function main() {
              conversation_id = COALESCE(EXCLUDED.conversation_id, stg_zalo_posts.conversation_id),
              media = COALESCE(EXCLUDED.media, stg_zalo_posts.media),
              agent_id = COALESCE(EXCLUDED.agent_id, stg_zalo_posts.agent_id),
-             media_files = COALESCE(EXCLUDED.media_files, stg_zalo_posts.media_files)`,
+             media_files = COALESCE(EXCLUDED.media_files, stg_zalo_posts.media_files)${capNhatAlbum}`,
           [
             it.sourceId,
             manifest.snapshotId,
@@ -228,6 +263,7 @@ async function main() {
             stripNullBytes(it.payload?.agent_id ?? null),
             mediaFiles ? JSON.stringify(stripNullBytes(mediaFiles)) : null,
             manifest.finishedAt, // 2410-1 v2: giờ thu snapshot — không rơi DEFAULT now()
+            ...thamSoAlbum,
           ],
         );
         zalo++;

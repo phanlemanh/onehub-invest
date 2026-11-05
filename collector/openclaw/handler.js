@@ -176,6 +176,7 @@ export default async function (context) {
   try {
     const mediaish = {};
     for (const k of Object.keys(ev)) {
+      if (k === "media") continue; // ma-album-s03: media đã map (albumMeta + mediaFacts) — không cần bắt nữa
       if (/media|attach|image|photo|file|thumb/i.test(k)) {
         mediaish[k] = JSON.stringify(ev[k])?.slice(0, 300);
       }
@@ -189,12 +190,21 @@ export default async function (context) {
   } catch {}
 
   const text = (ev.content ?? "").trim();
+  // ma-album-s03 (AC-3): mục media CHỈ chứa albumMeta (không mediaPath/
+  // mediaUrl) là khoá album của tin ảnh từ monitor mới — tách riêng, KHÔNG
+  // tính thành ảnh; ev.media không phải mảng hoặc albumMeta sai kiểu thì bỏ
+  // qua (tin vẫn đi tiếp), không kích dbg-media.
+  const mediaRaw = Array.isArray(ev.media) ? ev.media : (Array.isArray(ev.originalMedia) ? ev.originalMedia : []);
+  const albumMeta = mediaRaw
+    .filter((m) => m && typeof m === "object" && m.albumMeta && typeof m.albumMeta === "object"
+      && typeof m.albumMeta.group_layout_id === "string" && typeof m.albumMeta.id_in_group === "string")
+    .map((m) => m.albumMeta)[0] ?? null;
   // Media Zalo: môi giới dán URL ảnh zdn.vn TRỰC TIẾP trong text (khám phá
   // 2026-10-22 nhờ pregate __raw) — extract bổ sung vào media facts.
   const textImageUrls = [...new Set(
-    (text.match(/https?:\/\/[a-z0-9.-]+\/(?:[^\s"]+)\.(?:jpe?g|png|webp)(?:\?[^\s]*)?/gi) ?? [])
+    (text.match(/https?:\/\/[a-z0-9.-]+\/(?:[^\s"]+)\.(?:jpe?g|png|webp)(?:\?[^\s"]*)?/gi) ?? [])
   )].slice(0, 5);
-  const mediaFacts = (ev.media ?? ev.originalMedia ?? [])
+  const mediaFacts = mediaRaw
     .filter((m) => m && (m.mediaPath || m.mediaUrl))
     .slice(0, 10)
     .map((m) => ({ path: m.mediaPath ?? null, url: m.mediaUrl ?? null, type: m.mediaType ?? null }));
@@ -229,6 +239,8 @@ export default async function (context) {
     senderId: ev.metadata?.senderId ?? ev.from ?? null,
     conversationId: ev.conversationId ?? null,
     media: mediaFacts.length ? mediaFacts : undefined,
+    // ma-album-s03: khoá album đi cùng tin qua API (AC-4 ghi RawItem.meta)
+    albumMeta,
     kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
   };
 

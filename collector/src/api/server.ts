@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-import { SnapshotWriter } from "../core/storage.js";
+import { SnapshotWriter, ZALO_AGENT_SCHEMA_VERSION } from "../core/storage.js";
 import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
@@ -33,6 +33,8 @@ export type AgentMessage = {
   conversationId?: string | null;
   media?: AgentMediaFact[];
   kev?: AgentKevFact | null;
+  // ma-album-s03 (AC-4): khoá album từ handler — sai dạng bị bỏ ở albumMetaOf
+  albumMeta?: unknown;
 };
 
 export type AgentReportBody = {
@@ -178,6 +180,16 @@ export async function createAgentServer(opts: AgentServerOptions) {
         return { status: 400, body: { error: "mỗi message cần text + ts" } };
       }
     }
+    // ma-album-s03 (AC-4): khoá album hợp lệ = object có group_layout_id +
+    // id_in_group dạng chuỗi (handler đã lọc thô; đây là lớp cuối). Sai dạng
+    // → bỏ trường, bài VẪN được nhận.
+    const albumMetaOf = (m: { albumMeta?: unknown }) => {
+      const a = m?.albumMeta;
+      if (!a || typeof a !== "object" || Array.isArray(a)) return null;
+      const r = a as Record<string, unknown>;
+      if (typeof r.group_layout_id !== "string" || typeof r.id_in_group !== "string") return null;
+      return r as Record<string, unknown>;
+    };
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
@@ -226,6 +238,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
           // Kev-nhãn: điểm gate là DỮ LIỆU đi cùng tin (p=null = gate down),
           // quyết định dùng p ở đâu nằm ở transform — không lọc ở collector.
           ...(m.kev ? { kev: m.kev } : {}),
+          ...(albumMetaOf(m) ? { albumMeta: albumMetaOf(m) } : {}),
         },
       });
       accepted++;
@@ -239,7 +252,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
   ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
-    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
+    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent", { schemaVersion: ZALO_AGENT_SCHEMA_VERSION });
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
     // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
     const items = buffer.slice();

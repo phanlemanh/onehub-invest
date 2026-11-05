@@ -1,0 +1,329 @@
+From 87afe987b3406e1656d6020d6b5f86aca93bb5c7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?M=E1=BA=A1nh?= <phanlemanh@gmail.com>
+Date: Fri, 6 Nov 2026 05:48:39 +0700
+Subject: [PATCH] =?UTF-8?q?feat(zalouser):=20ma-album-s03=20AC-1=20?=
+ =?UTF-8?q?=E2=80=94=20gi=E1=BB=AF=20kho=C3=A1=20album=20t=E1=BB=9Bi=20pay?=
+ =?UTF-8?q?load=20hook?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+normalizeZaloInboundMessage thêm albumMeta (extractAlbumMeta từ
+content.params: group_layout_id + id_in_group bắt buộc, total_item_in_group/
+is_group_layout/child_number/msg_type tuỳ chọn có thì giữ; params hỏng hoặc
+thiếu khoá → undefined, tin đi tiếp). Payload hook canonical thêm đúng MỘT
+mục media chỉ chứa albumMeta khi có (tin chữ/ảnh đơn giống hệt trước vá) —
+đường DUY NHẤT tới handler: providerUpdate rơi ở
+toInternalMessageReceivedContext (đã đo mapper runtime phát hành + E2:
+media[].albumMeta chép nguyên). Cast Parameters<> ở 3 chỗ gọi mapper vì
+media mượn trường (lõi không sửa theo hồ sơ). Test zalo-js.album 10/10.
+---
+ extensions/zalouser/src/monitor.ts            |  16 ++-
+ extensions/zalouser/src/types.ts              |  15 +++
+ extensions/zalouser/src/zalo-js.album.test.ts | 116 ++++++++++++++++++
+ extensions/zalouser/src/zalo-js.ts            |  57 +++++++++
+ 4 files changed, 201 insertions(+), 3 deletions(-)
+ create mode 100644 extensions/zalouser/src/zalo-js.album.test.ts
+
+diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
+index 651798ebb..636cbe6a1 100644
+--- a/extensions/zalouser/src/monitor.ts
++++ b/extensions/zalouser/src/monitor.ts
+@@ -1,4 +1,5 @@
+ import { mergeAllowlist, summarizeMapping } from "openclaw/plugin-sdk/allow-from";
++import type { ZaloAlbumMeta } from "./types.js";
+ import type { ChannelAccountSnapshot } from "openclaw/plugin-sdk/channel-contract";
+ import {
+   createAcceptedChannelDeliveryResult,
+@@ -202,6 +203,9 @@ function emitZalouserMessageReceivedHooksIfEnabled(params: {
+   timestampMs: number;
+   messageId: string | undefined;
+   sessionKey: string;
++  // ma-album-s03 (AC-1): khoá album của tin ảnh; undefined → canonical
++  // GIỐNG HỆT bản trước vá (không thêm media).
++  albumMeta?: ZaloAlbumMeta;
+ }): void {
+   if (!params.enabled) {
+     return;
+@@ -220,14 +224,19 @@ function emitZalouserMessageReceivedHooksIfEnabled(params: {
+     ...(params.messageId ? { messageId: params.messageId } : {}),
+     senderId: params.senderId,
+     ...(params.senderName ? { senderName: params.senderName } : {}),
++    // ma-album-s03: ĐƯỜNG DUY NHẤT đưa khoá album tới handler — mục media
++    // chỉ chứa albumMeta (không mediaPath/mediaUrl nên handler không tính
++    // thành ảnh). providerUpdate rơi ở toInternalMessageReceivedContext
++    // (đã đo 05/11) — đừng dùng.
++    ...(params.albumMeta ? { media: [{ albumMeta: params.albumMeta }] } : {}),
+   };
+   const hookRunner = getGlobalHookRunner();
+   if (hookRunner?.hasHooks("message_received")) {
+     fireAndForgetBoundedHook(
+       () =>
+         hookRunner.runMessageReceived(
+-          toPluginMessageReceivedEvent(canonical),
+-          toPluginMessageContext(canonical),
++          toPluginMessageReceivedEvent(canonical as Parameters<typeof toPluginMessageReceivedEvent>[0]),
++          toPluginMessageContext(canonical as Parameters<typeof toPluginMessageContext>[0]),
+         ),
+       "zalouser: message_received plugin hook failed",
+       undefined,
+@@ -241,7 +250,7 @@ function emitZalouserMessageReceivedHooksIfEnabled(params: {
+           "message",
+           "received",
+           params.sessionKey,
+-          toInternalMessageReceivedContext(canonical),
++          toInternalMessageReceivedContext(canonical as Parameters<typeof toInternalMessageReceivedContext>[0]),
+         ),
+       ),
+     "zalouser: message_received internal hook failed",
+@@ -517,6 +526,7 @@ async function processMessage(
+       timestampMs: message.timestampMs,
+       messageId: messageSid,
+       sessionKey: route.sessionKey,
++      ...(message.albumMeta ? { albumMeta: message.albumMeta } : {}),
+     });
+   }
+   if (!rawBody) {
+diff --git a/extensions/zalouser/src/types.ts b/extensions/zalouser/src/types.ts
+index d7c3ba7f2..1597b0b3e 100644
+--- a/extensions/zalouser/src/types.ts
++++ b/extensions/zalouser/src/types.ts
+@@ -55,9 +55,24 @@ export type ZaloInboundMessage = {
+   quotedOwnerId?: string;
+   quotedBody?: string;
+   eventMessage?: ZaloEventMessage;
++  // ma-album-s03 (AC-1): khoá gom album của tin ảnh — undefined với tin chữ,
++  // ảnh đơn không khoá, hay params hỏng; tin vẫn đi tiếp bình thường.
++  albumMeta?: ZaloAlbumMeta;
+   raw: unknown;
+ };
+ 
++// ma-album-s03: group_layout_id + id_in_group bắt buộc (đủ gom ảnh cùng
++// bài); các khoá còn lại có thì giữ, thiếu vẫn nhận (đo 05/11: có lần gặp
++// không có total_item_in_group).
++export type ZaloAlbumMeta = {
++  group_layout_id: string;
++  id_in_group: string;
++  total_item_in_group?: number;
++  is_group_layout?: boolean;
++  child_number?: number;
++  msg_type?: string;
++};
++
+ export type ZcaUserInfo = ZcaFriend;
+ 
+ export type ZaloSendHandoff = Pick<
+diff --git a/extensions/zalouser/src/zalo-js.album.test.ts b/extensions/zalouser/src/zalo-js.album.test.ts
+new file mode 100644
+index 000000000..85538d740
+--- /dev/null
++++ b/extensions/zalouser/src/zalo-js.album.test.ts
+@@ -0,0 +1,116 @@
++import { describe, expect, it, vi } from "vitest";
++// khuôn zalo-js.listener.test.ts: mock zca-client để không kéo nguyên thư viện
++// nguồn (tough-cookie v.v.) vào vitest
++const createZalo = vi.hoisted(() => vi.fn());
++vi.mock("./zca-client.js", async (importOriginal) => ({
++  ...(await importOriginal<typeof import("./zca-client.js")>()),
++  createZalo,
++}));
++import { ThreadType } from "./zca-constants.js";
++import { extractAlbumMeta, normalizeZaloInboundMessage } from "./zalo-js.js";
++import type { Message } from "./zca-client.js";
++
++// ma-album-s03 (E1/AC-1): extractAlbumMeta đúng các tập khoá đã thấy (đo
++// A/A-v2 05/11: đủ khoá · thiếu total · thiếu is_group_layout · params
++// object phòng hờ · params hỏng · tin chữ · ảnh đơn không khoá), và
++// normalizeZaloInboundMessage GIỮ albumMeta khi có, KHÔNG thêm khi không.
++
++const paramsDayDu = JSON.stringify({
++  id_in_group: "123",
++  is_group_layout: true,
++  width: 1200,
++  height: 800,
++  group_layout_id: "g-456",
++  total_item_in_group: 3,
++  hd: true,
++  convertible: false,
++});
++const tinAnh = (params: unknown, childnumber?: number, msgType = "chat.photo"): Message => ({
++  type: ThreadType.Group,
++  data: {
++    msgId: "m1",
++    cliMsgId: "c1",
++    uidFrom: "100",
++    idTo: "200",
++    dName: "S",
++    content: {
++      title: "",
++      description: "",
++      href: "https://cdn.example/anh.jpg",
++      thumb: "https://cdn.example/thumb.jpg",
++      childnumber: childnumber ?? 1,
++      action: "action",
++      params,
++      type: "photo",
++    },
++    msgType,
++    ts: "1793328800000",
++  } as unknown as Message["data"],
++});
++
++describe("extractAlbumMeta — các tập khoá đã thấy", () => {
++  it("đủ khoá: giữ cả nhóm tuỳ chọn, bỏ thuộc tính ảnh", () => {
++    expect(extractAlbumMeta(tinAnh(paramsDayDu, 2).data)).toEqual({
++      group_layout_id: "g-456",
++      id_in_group: "123",
++      total_item_in_group: 3,
++      is_group_layout: true,
++      child_number: 2,
++      msg_type: "chat.photo",
++    });
++  });
++  it("thiếu total_item_in_group (11/70 lần gặp 05/11): vẫn nhận, không có khoá đó", () => {
++    const p = JSON.stringify({ id_in_group: "7", group_layout_id: "g-1" });
++    const m = extractAlbumMeta(tinAnh(p).data);
++    expect(m?.group_layout_id).toBe("g-1");
++    expect(m?.id_in_group).toBe("7");
++    expect(m?.total_item_in_group).toBeUndefined();
++    expect(m?.is_group_layout).toBeUndefined();
++  });
++  it("is_group_layout dạng chuỗi 'true': chuẩn hoá boolean", () => {
++    const p = JSON.stringify({ id_in_group: "7", group_layout_id: "g-1", is_group_layout: "true" });
++    expect(extractAlbumMeta(tinAnh(p).data)?.is_group_layout).toBe(true);
++  });
++  it("params là object (phòng hờ): vẫn bóc được", () => {
++    const m = extractAlbumMeta(tinAnh({ id_in_group: 9, group_layout_id: 77 } as unknown as string, undefined).data);
++    expect(m).toEqual({ group_layout_id: "77", id_in_group: "9", child_number: 1, msg_type: "chat.photo" });
++  });
++  it("params hỏng (chuỗi không JSON): undefined — tin vẫn đi tiếp", () => {
++    expect(extractAlbumMeta(tinAnh("{hong-json").data)).toBeUndefined();
++  });
++  it("thiếu group_layout_id hoặc id_in_group: undefined (ảnh đơn)", () => {
++    expect(extractAlbumMeta(tinAnh(JSON.stringify({ width: 1 })).data)).toBeUndefined();
++    expect(extractAlbumMeta(tinAnh(JSON.stringify({ group_layout_id: "g" })).data)).toBeUndefined();
++  });
++  it("content là chuỗi (tin chữ): undefined", () => {
++    const msg: Message = {
++      type: ThreadType.User,
++      data: { msgId: "m", cliMsgId: "c", uidFrom: "1", idTo: "2", content: "xin chào", ts: "1" } as unknown as Message["data"],
++    };
++    expect(extractAlbumMeta(msg.data)).toBeUndefined();
++  });
++});
++
++describe("normalizeZaloInboundMessage — albumMeta (AC-1)", () => {
++  it("tin ảnh có khoá: message.albumMeta giữ, mọi trường cũ nguyên", () => {
++    const m = normalizeZaloInboundMessage(tinAnh(paramsDayDu, 2), "999");
++    expect(m?.albumMeta).toBeDefined();
++    expect(m?.msgId).toBe("m1");
++    expect(m?.threadId).toBe("200");
++    expect(m?.content).toContain("anh.jpg");
++  });
++  it("tin chữ: GIỐNG HỆT bản trước vá — không có khoá albumMeta", () => {
++    const msg: Message = {
++      type: ThreadType.User,
++      data: { msgId: "m", cliMsgId: "c", uidFrom: "1", idTo: "2", dName: "S", content: "bán nhà", ts: "1793328800000" } as unknown as Message["data"],
++    };
++    const m = normalizeZaloInboundMessage(msg, "999");
++    expect(m).toBeDefined();
++    expect("albumMeta" in (m ?? {})).toBe(false);
++    expect(m?.content).toBe("bán nhà");
++  });
++  it("ảnh đơn không khoá: không có albumMeta", () => {
++    const m = normalizeZaloInboundMessage(tinAnh(JSON.stringify({ width: 5 })), "999");
++    expect("albumMeta" in (m ?? {})).toBe(false);
++  });
++});
+diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
+index bb43699dd..548f3f538 100644
+--- a/extensions/zalouser/src/zalo-js.ts
++++ b/extensions/zalouser/src/zalo-js.ts
+@@ -41,6 +41,7 @@ import type {
+   ZaloGroupContext,
+   ZaloGroup,
+   ZaloGroupMember,
++  ZaloAlbumMeta,
+   ZaloInboundMessage,
+   ZaloSendOptions,
+   ZaloSendHandoff,
+@@ -573,6 +574,60 @@ function extractGroupMembersFromInfo(groupInfo: GroupInfo | undefined): string[]
+   return members;
+ }
+ 
++// ma-album-s03 (AC-1): bóc khoá album từ content.params của tin ảnh.
++// params là CHUỖI JSON (đo A/A-v2 05/11) nhưng phòng hờ object; group_layout_id
++// và id_in_group bắt buộc — thiếu một trong hai là ảnh đơn/không gom được
++// (undefined), các khoá tuỳ chọn có thì giữ. params hỏng → undefined, tin
++// vẫn đi tiếp.
++export function extractAlbumMeta(data: Message["data"]): ZaloAlbumMeta | undefined {
++  const content = data.content;
++  if (!content || typeof content !== "object") {
++    return undefined; // tin chữ (content string) hoặc rỗng
++  }
++  const record = content as Record<string, unknown>;
++  const rawParams = record.params;
++  let params: Record<string, unknown> | undefined;
++  if (typeof rawParams === "string" && rawParams.length > 0) {
++    try {
++      const parsed: unknown = JSON.parse(rawParams);
++      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
++        params = parsed as Record<string, unknown>;
++      }
++    } catch {
++      return undefined; // params hỏng — không albumMeta
++    }
++  } else if (rawParams && typeof rawParams === "object" && !Array.isArray(rawParams)) {
++    params = rawParams as Record<string, unknown>;
++  }
++  if (!params) {
++    return undefined;
++  }
++  const gli = params.group_layout_id;
++  const iig = params.id_in_group;
++  if (gli === undefined || gli === null || iig === undefined || iig === null) {
++    return undefined;
++  }
++  const total = params.total_item_in_group;
++  const totalNum =
++    typeof total === "number" && Number.isFinite(total)
++      ? total
++      : typeof total === "string" && total !== "" && Number.isFinite(Number(total))
++        ? Number(total)
++        : undefined;
++  return {
++    group_layout_id: String(gli),
++    id_in_group: String(iig),
++    ...(totalNum !== undefined ? { total_item_in_group: totalNum } : {}),
++    ...(params.is_group_layout !== undefined
++      ? { is_group_layout: params.is_group_layout === true || params.is_group_layout === "true" }
++      : {}),
++    ...(typeof record.childnumber === "number" && Number.isFinite(record.childnumber)
++      ? { child_number: record.childnumber }
++      : {}),
++    ...(typeof data.msgType === "string" && data.msgType ? { msg_type: data.msgType } : {}),
++  };
++}
++
+ export function normalizeZaloInboundMessage(
+   message: Message,
+   ownUserId?: string,
+@@ -610,6 +665,7 @@ export function normalizeZaloInboundMessage(
+     normalizedOwnUserId && quoteOwnerId && quoteOwnerId === normalizedOwnUserId,
+   );
+   const eventMessage = buildEventMessage(data);
++  const albumMeta = extractAlbumMeta(data);
+   return {
+     threadId,
+     isGroup,
+@@ -629,6 +685,7 @@ export function normalizeZaloInboundMessage(
+     quotedOwnerId: quoteOwnerId || undefined,
+     quotedBody: quotedBody || undefined,
+     eventMessage,
++    ...(albumMeta ? { albumMeta } : {}),
+     raw: message,
+   };
+ }
+-- 
+2.54.0 (Apple Git-157)
+
