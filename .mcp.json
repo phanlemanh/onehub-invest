@@ -2,7 +2,11 @@
   "mcpServers": {
     "reui": {
       "type": "http",
-      "url": "https://mcp.reui.io/api/mcp"
+      "url": "https://mcp.reui.io/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${REUI_LICENSE_KEY:-}",
+        "X-Reui-Style": "base-nova"
+      }
     }
   }
 }
