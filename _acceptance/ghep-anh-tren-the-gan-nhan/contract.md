@@ -5,10 +5,10 @@ slug: ghep-anh-tren-the-gan-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-05-ghep-anh-tren-the-gan-nhan-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-05
 ---
 
 # Acceptance Contract: ghep-anh-tren-the-gan-nhan
