@@ -5,7 +5,7 @@ slug: trang-chi-tiet-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # route đọc trên cổng công khai; không chạm t3_paths, không đổi dữ liệu hay đường lên cloud
 surfaces: [web]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-04
 design_doc: docs/superpowers/specs/2026-11-04-trang-chi-tiet-tin-design.md
@@ -60,3 +60,10 @@ Tiêu chí dưới viết theo lối máy khuyên; Mạnh chọn khác thì sử
 - OOS-5: Lưu tin, chia sẻ, tin khác của người đăng, lịch sử giá, báo cáo tin sai.
 - OOS-7: So giá với phường: `market_asset_stats` chưa có loại hình, thêm là migration hạng T3 (Hỏi-5).
 - OOS-6: Gộp bảng `sale_offers` với `listings`, gộp tin theo căn nhà.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Trang tin gọi trường này là «Block» còn khu quản trị gọi là «Toà», nên cùng một thông tin có hai tên giữa hai cổng.
+  - Ngoài-2: Tin thuê dài hạn có sẵn đơn giá trên mỗi m² có thể hiện đơn giá đó, và kiểm thử hiện chưa bắt được ca này.
+  - Ngoài-3: Màn «Tin này không còn hiện» chưa được bước kiểm thiết kế tự động quét.
