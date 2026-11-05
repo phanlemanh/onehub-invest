@@ -5,7 +5,7 @@ slug: the-gan-nhan-nguoi-dang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-05T23:16:00Z
 approved_by:

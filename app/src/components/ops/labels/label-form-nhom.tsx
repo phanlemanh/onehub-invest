@@ -19,6 +19,7 @@ import { AnhBai } from "./anh-bai"
 import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
 import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
+import { NguoiDang } from "./nguoi-dang"
 
 /**
  * Biểu mẫu 17 trường của lát theo nhóm (bản D): bài gốc dính ở đầu, năm khối hai cột, mỗi ô một căn cứ, chân dính giữ nút
@@ -93,6 +94,7 @@ export function LabelFormNhom({
           <div className="flex min-w-0 flex-col gap-1">
             <FrameDescription className="text-xs text-pretty">
               S03 · {tin.groupName ?? "nhóm không rõ"}
+              <NguoiDang ten={tin.nguoiDang} id={tin.nguoiDangId} />
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
