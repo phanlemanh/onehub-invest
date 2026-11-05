@@ -1,17 +1,17 @@
 E8 network (driver ego-browser khong co duong doc network; trich tu log may chu dev :3463 lan chay nay; gia tri cookie khong in)
-   4  GET /ops/labels?nhom=S03-N064 200
-   3  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N064 200
-   2  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N064&xem=11038 200
-   2  GET /login 200
-   2  GET /api/zalo-media?nhan=11038&anh=2 200
-   2  GET /api/zalo-media?nhan=11038&anh=1 200
-   2  GET /api/zalo-media?nhan=11038&anh=0 200
-   2  GET /api/v1/ops/labels?lat=s03-theo-nhom&nhom=S03-N064 200
-   1  POST /api/v1/ops/labels/11038/review 200
-   1  POST /api/v1/ops/labels 200
-   1  GET /api/zalo-media?nhan=11040&anh=0 200
-   1  GET /api/v1/ops/labels/11038/review 403
+   5 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N066 200
+   2 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N066&xem=11054 200
+   2 GET /login 200
+   2 GET /api/zalo-media?nhan=11054&anh=2 200
+   2 GET /api/zalo-media?nhan=11054&anh=1 200
+   2 GET /api/zalo-media?nhan=11054&anh=0 200
+   2 GET /api/v1/ops/labels?lat=s03-theo-nhom&nhom=S03-N066 200
+   1 POST /api/v1/ops/labels/11054/review 200
+   1 POST /api/v1/ops/labels 200
+   1 GET /ops/labels?nhom=S03-N066 200
+   1 GET /api/zalo-media?nhan=11056&anh=0 200
+   1 GET /api/v1/ops/labels/11054/review 403
 # 4xx/5xx trong log:
- GET /api/v1/ops/labels/11038/review 403
-# curl truoc luu: page 200 x3, GET /api/v1/ops/labels 200, zalo-media anh 0-2 200, GET .../review truoc luu 403 (hop le: 'Chi xem duoc sau khi da luu nhan bai nay')
+   1 GET /api/v1/ops/labels/11054/review 403
+# curl truoc luu: page 200 x3, api list 200, zalo-media anh 0-2 200, GET .../11054/review truoc luu 403 (hop le: 'Chi xem duoc sau khi da luu nhan bai nay')
 # (het)

@@ -93,5 +93,6 @@
       "i": 6,
       "p": "Ranh giới: gắn mù, tên nguồn, làn thu, DB thật."
     }
-  ]
+  ],
+  "analyst_plain": "Mọi phép đo của vòng là mới nên không có đối chứng trên mã cũ; độ phân biệt nằm ở các ca đối chứng trong từng phép đo."
 }

@@ -5,7 +5,7 @@ slug: ghep-anh-tren-the-gan-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-05-ghep-anh-tren-the-gan-nhan-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -62,6 +62,9 @@ Later: phím mũi tên trong hộp xem ảnh lớn · ghép các bài ảnh khô
 
 - Known limits — thu phạm vi sau lượt chấm 2, Mạnh chọn lối 1 ngày 2026-11-05:
   - Phím mũi tên trong hộp xem ảnh lớn không chuyển ảnh: hộp thoại của thư viện chặn phím này. Người gắn chuyển ảnh bằng nút Ảnh trước, Ảnh sau.
+- Known limits — lỗ phép đo của lượt chấm 6, thu theo lời Mạnh «Cho chấm thêm», không vá, ngày 2026-11-05:
+  - Phần so chữ của ca `ghep` null ở E3 dùng chữ không có link nên hai vế luôn bằng nhau; phần so ảnh của ca đó và phép so từng trường với mốc ở E4 vẫn đo.
+  - AC-8 đo ba trong bốn chỗ lọc dòng trùng cụm, chưa đo danh sách nhóm `nhomCuaLat`; số thẻ, tiến độ và bảng trường hợp vẫn đo.
 - Known limits — sau lượt chấm 5, ngày 2026-11-05, Mạnh quyết khi ký:
   - `E4b` trong `app/tests/tin-rao-doi-chieu.test.tsx` đòi đường đọc tin công khai dưới 1000 ms, đỏ 1072 ms lúc máy tải cao trong lượt chấm 5, chạy riêng xanh 3/3 ở 176–198 ms. Test ngoài hồ sơ, không đổi trong nhánh này.
 - Known limits — Mạnh duyệt sau lượt chấm 4, ngày 2026-11-05:

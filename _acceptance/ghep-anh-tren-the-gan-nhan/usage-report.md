@@ -239,3 +239,46 @@ wall: 1045s
 - **claude-sonnet-5-5**: 6 agent · 72 calls · out 78,150 · in 144 · cache_read 7,542,330 · cache_create 446,991
 - **claude-haiku-5-5**: 11 agent · 22 calls · out 17,779 · in 44 · cache_read 230,794 · cache_create 295,921
 
+### S4 round 6 — wf_44116806-39f (21 agent, 173,632 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 11 | 28,732 | 22 | 912,029 | 299 |
+| review:measurement | claude-opus-5-5 | 8 | 28,377 | 18 | 735,546 | 286 |
+| ui:E5 | claude-sonnet-5-5 | 25 | 22,000 | 50 | 2,608,991 | 318 |
+| review:conventions | claude-opus-5-5 | 9 | 21,571 | 20 | 680,482 | 216 |
+| ui:E8 | claude-sonnet-5-5 | 35 | 21,286 | 70 | 3,973,516 | 272 |
+| synthesize:report | claude-sonnet-5-5 | 7 | 18,884 | 14 | 376,203 | 120 |
+| triage | claude-sonnet-5-5 | 2 | 8,343 | 4 | 30,946 | 61 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 3,068 | 4 | 21,617 | 29 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,654 | 4 | 3,140 | 431 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,429 | 4 | 3,140 | 432 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,340 | 4 | 25,474 | 11 |
+| refute:nap.mjs | claude-sonnet-5-5 | 6 | 2,208 | 12 | 138,734 | 44 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,764 | 4 | 24,781 | 9 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,703 | 4 | 25,468 | 9 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,584 | 4 | 24,804 | 36 |
+| refute:labels-ghep.test.ts | claude-sonnet-5-5 | 3 | 1,429 | 6 | 57,378 | 26 |
+| machine:cd pipeline && node --test scripts/label | claude-haiku-5-5 | 2 | 1,367 | 4 | 24,781 | 9 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,263 | 4 | 24,780 | 18 |
+| machine:cd app && node --import tsx ../_acceptan | claude-haiku-5-5 | 2 | 1,231 | 4 | 24,803 | 17 |
+| machine:node _acceptance/ghep-anh-tren-the-gan-n | claude-haiku-5-5 | 2 | 1,060 | 4 | 24,799 | 8 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 339 | 4 | 21,113 | 24 |
+
+
+wall: 1205s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| ui | 2 | 43,286 | 6,582,507 | 592 | 14:03:03 | 14:12:55 |
+| machine | 11 | 20,463 | 227,587 | 942 | 14:03:03 | 14:18:45 |
+| review | 3 | 78,680 | 2,328,057 | 300 | 14:03:03 | 14:08:04 |
+| triage | 1 | 8,343 | 30,946 | 61 | 14:18:47 | 14:19:49 |
+| refute | 2 | 3,637 | 196,112 | 49 | 14:19:51 | 14:20:40 |
+| capture | 1 | 339 | 21,113 | 24 | 14:20:42 | 14:21:06 |
+| synthesize | 1 | 18,884 | 376,203 | 120 | 14:21:08 | 14:23:08 |
+
+- **claude-opus-5-5**: 3 agent · 28 calls · out 78,680 · in 60 · cache_read 2,328,057 · cache_create 440,251
+- **claude-sonnet-5-5**: 7 agent · 80 calls · out 74,489 · in 160 · cache_read 7,206,881 · cache_create 469,063
+- **claude-haiku-5-5**: 11 agent · 22 calls · out 20,463 · in 44 · cache_read 227,587 · cache_create 299,516
+

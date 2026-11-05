@@ -1,116 +1,130 @@
-# Review findings: ghep-anh-tren-the-gan-nhan (round 5)
+# Review findings: ghep-anh-tren-the-gan-nhan (round 6)
 
 ## Trong hợp đồng
 
-Không có.
+- **Hình dạng 4 (assertion không có đối chứng dương): phép so chữ của nhánh ghep null luôn xanh**
+  AC: AC-3
+  file: `app/tests/labels-ghep.test.ts:84`
+  severity: medium
+  source: measurement
+  detail: Dòng 84 so `chuKhongLink("Bán căn", danhSachAnhCum([r]))` với `chuKhongLink("Bán căn", khongGhep)`. Chuỗi vào không có link, nên `chuKhongLink` (app/src/lib/labels-anh.ts) đi nhánh `if (!co) return { chu: goc, soLinkKhac: 0 }` và không dùng danh sách ảnh. Hai vế vì thế luôn là `{chu: "Bán căn", soLinkKhac: 0}`, danh sách ảnh sai đến đâu assert cũng không đỏ. Đối chứng ở dòng 86 chỉ áp cho danh sách ảnh, không áp cho chữ, trong khi E3 hứa «danh sách ảnh và chữ bằng hàm không ghép từng trường». Ca này cũng không gọi `docThe` với g null, là nhánh thật mà `tinKe` và `doiChieu` đi qua. Các phép đo khác của hồ sơ không bù được nhánh bỏ link: dòng T5 trong MA_TRAN không có link; hai bài so với mốc ở E4, E7 (`t4`, `t6` trong probes/nap.mjs dòng 95, 97) cũng không có link. Đối chứng dòng 200 của nap.mjs chỉ buộc có chữ và có ảnh. Nếu `docThe` truyền sai danh sách ảnh cho `chuKhongLink` ở bài `ghep` null, `soLinkKhac` và chữ sẽ lệch khỏi bản trước mà các phép đo này vẫn xanh.
+  rationale: AC-3 đòi 'ghep NULL thì giống hệt bản trước', mà phép so chữ trong test này luôn xanh nên không chứng minh được điều đó cho phần chữ.
+
+- **Hình dạng 5 (lớp chỉ đo bằng điểm-case): AC-8 đo ba trong bốn chỗ lọc trung_voi, bỏ sót nhomCuaLat**
+  AC: AC-8
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:20`
+  severity: medium
+  source: measurement
+  detail: AC-8 hứa cho cả lớp: dòng có `trung_voi` không hiện và không tính tiến độ. Vòng này thêm cùng một điều kiện `(ghep->>'trung_voi') IS NULL` vào bốn chỗ đọc: `tinKe`, `nhomCuaLat`, `tienDo` (app/src/lib/labels-queries.ts) và `bangTruongHop` (app/src/lib/labels-luot-hai.ts). E10 không có ma trận liệt kê các chỗ đọc này, chỉ có điểm-case cho ba chỗ: dòng 305 đo `tinKe`, dòng 292 và 308 đo `tienDo`, dòng 295 đo `bangTruongHop`. nap.mjs không import `nhomCuaLat` (dòng 20). `LabelsContent` có gọi nó ở dòng 206, nhưng kết quả chỉ được quét mồi, mã bài, link và chữ seed, không xét số đếm của nhóm. Trong app/tests/labels-nhom.test.tsx, `nhomCuaLat` chỉ chạy trên dữ liệu không có `trung_voi`; từ `ghep` ở đó chỉ là `ghep: null` trong props và tên tệp migration. Observed của E5 cũng chỉ ghi «Đã gắn hết nhóm này», câu này do `tin` null quyết định (labels-view.tsx dòng 180), không đọc `tong` hay `conChoToi`. Bỏ điều kiện lọc ở `nhomCuaLat` thì dòng trùng vẫn tính vào `tong` và `conChoToi` của nhóm, mà labels-content.tsx dòng 21 dùng `conChoToi` để chọn nhóm mặc định, nhưng không phép máy nào đỏ.
+  rationale: AC-8 hứa dòng trùng cụm không hiện và không tính tiến độ khi gắn hết một nhóm; chỗ đếm của nhóm không có phép đo nào nên AC chưa được chứng minh đủ.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **eval-classify vẫn lấy chữ theo ref_id, trong khi nhãn vàng nay gắn theo chữ tin ghép**
-  Người dùng thấy gì: Khi bắt đầu chấm máy đọc bằng nhãn người, máy bị chấm trên đường dẫn ảnh chứ không phải chữ của tin mà người đã gắn nhãn. Điểm chất lượng sẽ thấp hơn thực tế mà không có cảnh báo.
-  Căn cứ: Điểm sai lặng lẽ có thể làm người ra quyết định hiểu nhầm chất lượng máy đọc, nhưng hiện chưa có nhãn nên chưa có số sai nào được ghi, và sửa trước lần chấm đầu thì rẻ.
+- **eval-classify vẫn chấm máy trên chữ của ref_id, trong khi nhãn vàng nay gắn theo chữ tin ghép**
+  Người dùng thấy gì: Khi chấm độ đúng của máy đọc tin, với các bài chỉ có ảnh máy sẽ bị chấm trên đường dẫn ảnh thay vì chữ của tin ghép, nên điểm hiện ra thấp hơn thực tế mà không có cảnh báo.
+  Căn cứ: Chưa có nhãn nào được gắn nên chưa có số sai nào được ghi, và điểm chấm chạy lại được sau khi sửa, nhưng nếu không quyết trước lần chấm đầu thì con số đầu tiên người ký nhìn thấy sẽ sai.
   file: `pipeline/lib/eval-classify.mjs`
   severity: high
   Đề xuất: new-contract
 
-- **label-sample bỏ kết quả ghepLat: thiếu cột 076 vẫn báo thành công, lấy thêm vào lát đã ghép thì dòng mới giữ ghep NULL**
-  Người dùng thấy gì: Nếu cơ sở dữ liệu chưa được nâng cấp, lệnh lấy mẫu vẫn báo xong nhưng lát không có ghép ảnh. Khi lấy thêm vào lát đã ghép, bài ảnh mới hiện như thẻ một ảnh không chữ và cùng một cụm có thể bị gắn hai lần.
-  Căn cứ: Chỉ xảy ra khi người vận hành làm sai thứ tự hoặc lấy thêm vào lát cũ, người gắn nhãn có thể chạy lại lệnh ghép để sửa, nên ghi thành hạn chế đã biết là đủ.
-  file: `pipeline/label-sample.mjs`
+- **Cột và khoá JSON mới đặt tiếng Việt, trái quy ước tên cột tiếng Anh**
+  Người dùng thấy gì: Tên dữ liệu mới của tính năng ghép ảnh đặt bằng tiếng Việt, khác quy ước tên tiếng Anh của dự án. Người dùng cuối không thấy gì, nhưng về sau đổi tên sẽ tốn thêm một lần chuyển dữ liệu.
+  Căn cứ: Không ảnh hưởng người dùng hay mất dữ liệu, nhưng sửa càng muộn càng đắt vì sau khi ghi 191 dòng thật thì đổi tên phải chạy thêm một đợt chuyển đổi, nên cần quyết trước khi áp lên dữ liệu thật.
+  file: `db/migrations/076_labels_ghep.sql`
   severity: medium
   Đề xuất: known-limits
 
-- **CLI label-ghep ghi từng dòng ngoài giao dịch; đứt giữa chừng để lại lát dở, lần chạy sau báo giữ nguyên và exit 0**
-  Người dùng thấy gì: Nếu lệnh ghép bị đứt giữa chừng, một phần lát có ghép ảnh và phần còn lại không, nhưng lần chạy sau lại báo giữ nguyên như đã xong. Người gắn sẽ thấy lẫn thẻ ghép và thẻ không ghép.
-  Căn cứ: Hiếm gặp và có lối lùi bằng chạy lại với cờ làm lại, nhưng người vận hành dễ không nhận ra lát đang dở nên cần ghi rõ để họ biết.
+- **label-sample bỏ kết quả ghepLat: thiếu cột vẫn báo thành công, lấy thêm thì dòng mới không có ghép hoặc dòng đã gắn bị ghi ghép**
+  Người dùng thấy gì: Khi lấy thêm mẫu vào một lát đã có, bài ảnh mới có thể hiện như thẻ một ảnh không chữ, cùng một cụm có thể bị gắn hai lần, và có trường hợp dòng đã gắn nhãn bị đổi chữ hiển thị.
+  Căn cứ: Chỉ xảy ra khi lấy thêm vào lát đang dùng và lát hiện tại chưa có nhãn nên chưa có dữ liệu bị lệch, nhưng một khi người gắn đã làm việc thì lỗi này làm lệch nhãn khó gỡ.
+  file: `pipeline/label-sample.mjs`
+  severity: medium
+  Đề xuất: new-contract
+
+- **CLI label-ghep không kiểm đầu vào như label-sample: cờ gõ sai bị bỏ qua và có thể ghi thật**
+  Người dùng thấy gì: Người vận hành gõ nhầm cờ chạy thử có thể vô tình ghi thật vào dữ liệu, và gõ sai tên lát vẫn báo xong với 0 dòng.
+  Căn cứ: Chỉ người vận hành có quyền chạy lệnh này gặp, lệnh có thể hoàn tác bằng lệnh lùi đã ghi trong hồ sơ, nhưng nếu ghi nhầm lên lát đã gắn nhãn thì hai người gắn có thể thấy cụm khác nhau.
   file: `pipeline/label-ghep.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **CLI label-ghep không kiểm đầu vào như label-sample: cờ gõ sai bị bỏ qua, có thể ghi thật khi người chạy tưởng đang chạy thử**
-  Người dùng thấy gì: Gõ sai cờ chạy thử cùng cờ ghi thật có thể khiến lệnh ghi thật vào dữ liệu trong khi người chạy tưởng chỉ đang xem thử. Tên lát sai cũng báo thành công với 0 dòng.
-  Căn cứ: Hậu quả giới hạn ở người vận hành gõ nhầm và đã có yêu cầu khai rõ đích thật, lệnh lại có lối lùi đặt ghép về rỗng nên không mất dữ liệu gốc.
+- **label-ghep ghi từng dòng ngoài giao dịch; đứt giữa chừng thì lần sau báo giữ nguyên và exit 0**
+  Người dùng thấy gì: Nếu lệnh ghép bị đứt giữa chừng khi chạy trên dữ liệu thật, lần chạy lại báo là đã xong dù phần còn lại chưa ghép, và người gắn sẽ thấy lẫn thẻ có ghép với thẻ không ghép.
+  Căn cứ: Chỉ xảy ra khi lệnh bị đứt, lệnh lùi trong hồ sơ xoá sạch rồi chạy lại được, nên không mất dữ liệu gốc, nhưng sẽ khó nhận ra nếu không ai đối chiếu số dòng.
   file: `pipeline/label-ghep.mjs`
   severity: medium
   Đề xuất: known-limits
 
 - **Route ghi nhãn không chặn dòng trung_voi: POST item_id của dòng trùng cụm vẫn được ghi**
-  Người dùng thấy gì: Một tab cũ đang mở hoặc yêu cầu dựng tay vẫn lưu được nhãn vào dòng đã bị ẩn vì trùng cụm. Khi đó cùng một tin có hai bộ nhãn và tiến độ không đếm bộ thứ hai.
-  Căn cứ: Chỉ xảy ra khi tab cũ còn mở sau khi chạy lại lệnh ghép hoặc có người cố tình gọi thẳng, nhãn thừa không làm hỏng nhãn đã có và có thể bỏ khi chấm.
+  Người dùng thấy gì: Một tab gắn nhãn mở từ trước vẫn có thể lưu nhãn vào dòng đã bị ẩn vì trùng cụm, khiến một tin có hai bộ nhãn mà tiến độ không đếm bộ thứ hai.
+  Căn cứ: Chỉ xảy ra khi tab cũ còn mở sau khi chạy lại lệnh ghép, nhưng nhãn thừa đi vào bộ chấm điểm mà tiến độ không thấy, nên khó phát hiện sau này.
   file: `app/src/lib/labels-queries.ts`
   severity: medium
-  Đề xuất: known-limits
-
-- **Cột và khoá JSON mới đặt tiếng Việt, trái quy ước tên cột tiếng Anh**
-  Người dùng thấy gì: Một số tên trường dữ liệu mới viết bằng tiếng Việt, trái quy ước tên tiếng Anh của dự án. Đổi tên sau khi đã ghi dữ liệu thật sẽ tốn công hơn nhiều.
-  Căn cứ: Không ảnh hưởng người dùng cuối nhưng chi phí đổi tên tăng mạnh sau khi ghi 191 dòng thật, nên cần quyết định trước khi áp lên dữ liệu thật.
-  file: `db/migrations/076_labels_ghep.sql`
-  severity: medium
   Đề xuất: new-contract
 
-- **eval-classify chấm máy trên chữ của ref_id, còn nhãn người nay gắn theo chữ tin ghép**
-  Người dùng thấy gì: Khi chấm lần đầu, máy đọc bị chấm trên đường dẫn ảnh trong khi người gắn nhãn dựa trên chữ của tin ghép. Điểm chất lượng thấp giả được ghi lại mà không có cảnh báo.
-  Căn cứ: Sai số lặng lẽ có thể dẫn tới đánh giá sai máy đọc, nhưng chưa có nhãn nên chưa ra số sai và sửa trước lần chấm đầu thì rẻ.
-  file: `pipeline/lib/eval-classify.mjs`
-  severity: high
-  Đề xuất: new-contract
-
-- **Đường lấy thêm của layMau gọi ghepLat sai ngữ cảnh: dòng mới không có ghép, hoặc dòng đã có nhãn bị ghi ghép**
-  Người dùng thấy gì: Lấy thêm mẫu vào lát cũ có thể làm bài ảnh mới không có ghép, hoặc làm dòng đã gắn nhãn đổi chữ hiển thị và rời khỏi tiến độ. Lệnh vẫn báo thành công.
-  Căn cứ: Chỉ xảy ra ở thao tác lấy thêm vào lát cũ, là việc hiếm, nhưng có thể làm lệch nhãn đã gắn nên cần ghi để người vận hành tránh.
-  file: `pipeline/label-sample.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **label-sample nuốt thieu_cot của ghepLat: thiếu migration 076 vẫn báo lấy mẫu thành công**
-  Người dùng thấy gì: Nếu chưa áp bản nâng cấp cơ sở dữ liệu, lệnh lấy mẫu vẫn báo xong nhưng lát không có ghép ảnh. Lát sẽ hiện thẻ không ghép cho tới khi có người chạy lệnh ghép.
-  Căn cứ: Người gắn không mất dữ liệu và chạy lệnh ghép sau đó là khắc phục được, chỉ là dễ bị bỏ sót.
-  file: `pipeline/label-sample.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **label-ghep ghi từng dòng ngoài giao dịch: đứt giữa chừng thì lần sau báo «giữ nguyên» và exit 0**
-  Người dùng thấy gì: Nếu lệnh ghép bị đứt giữa chừng, lần chạy sau báo giữ nguyên dù lát còn dở. Người gắn sẽ thấy lẫn thẻ ghép và không ghép.
-  Căn cứ: Hiếm gặp và khắc phục được bằng chạy lại với cờ làm lại, không mất dữ liệu gốc, chỉ cần người vận hành biết.
-  file: `pipeline/label-ghep.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **CLI label-ghep bỏ qua cờ gõ sai và lát không tồn tại vẫn exit 0**
-  Người dùng thấy gì: Gõ sai cờ chạy thử có thể dẫn tới ghi thật, và tên lát sai vẫn báo thành công với 0 dòng. Chỉ có con số 0 trong dòng ghi làm dấu hiệu.
-  Căn cứ: Hậu quả giới hạn ở người vận hành gõ nhầm và có lối lùi bằng đặt ghép về rỗng, nên chấp nhận và ghi lại.
-  file: `pipeline/label-ghep.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **danhSachAnhCum không khử trùng ảnh giữa hai bài như chú thích đã hứa**
-  Người dùng thấy gì: Khi cùng một ảnh được lưu ở hai dạng khác nhau, dải ảnh có thể lặp một tấm và nhãn số ảnh đếm dư. Thứ tự ảnh khi xem vẫn khớp.
-  Căn cứ: Chỉ là hiển thị dư một tấm, không mất hay lộ dữ liệu, chưa đo được tần suất, và người gắn vẫn gắn đúng được.
-  file: `app/src/lib/labels-anh.ts`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hộp xem lớn không xử lý ảnh lỗi: chuyển tới ảnh hỏng chỉ thấy biểu tượng vỡ, không có câu báo và Thử lại**
-  Người dùng thấy gì: Khi xem lớn rồi chuyển tới một ảnh hỏng, người gắn chỉ thấy biểu tượng ảnh vỡ, không có câu báo lỗi và không có nút Thử lại.
-  Căn cứ: Nhẹ vì dải ảnh đã báo lỗi và có Thử lại, người gắn đóng hộp xem rồi thử lại từ dải ảnh được.
+- **Hộp xem ảnh lớn không có Skeleton và lỗi kèm Thử lại, trái luật ReUI 5**
+  Người dùng thấy gì: Khi người gắn mở xem lớn một ảnh hỏng, họ chỉ thấy biểu tượng ảnh vỡ, không có câu báo lỗi hay nút thử lại, dù dải ảnh bên ngoài có báo.
+  Căn cứ: Không chặn việc gắn nhãn vì dải ảnh phía sau vẫn báo lỗi và đóng hộp là xem lại được, mất dữ liệu không có, nhưng người gắn có thể bối rối với một ảnh hỏng.
   file: `app/src/components/ops/labels/anh-bai.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 3 (lời hứa là quan hệ giữa các giá trị, nhưng phép so không thể lệch): chữ và soLinkKhac của `ghep` NULL là hằng số ở cả hai vế**
-  Người dùng thấy gì: Một phép kiểm quan trọng không phát hiện được nếu dòng báo «bài có N liên kết khác» bị làm sai. Người dùng hiện chưa gặp lỗi, nhưng sau này sửa nhầm có thể không bị bắt.
-  Căn cứ: Không ảnh hưởng người dùng hôm nay, chỉ làm giảm khả năng bắt lỗi sau này, và bổ sung phép kiểm có thể làm lúc khác.
-  file: `app/tests/labels-ghep.test.ts`
+- **eval-classify chấm máy trên chữ của ref_id, trong khi nhãn người nay gắn theo chữ tin ghép**
+  Người dùng thấy gì: Điểm đánh giá máy đọc tin sẽ thấp giả với khoảng 133 bài chỉ có ảnh, vì máy bị chấm trên đường dẫn ảnh thay cho chữ của tin ghép.
+  Căn cứ: Chưa có nhãn nên chưa có số sai được ghi và chạy chấm lại được, nhưng nếu để nguyên thì con số đo chất lượng máy đầu tiên sẽ sai mà không ai được cảnh báo.
+  file: `pipeline/lib/eval-classify.mjs`
+  severity: high
+  Đề xuất: new-contract
+
+- **label-sample bỏ qua kết quả ghepLat: thiếu migration 076 vẫn báo lấy mẫu thành công**
+  Người dùng thấy gì: Nếu chưa áp bản cập nhật cấu trúc dữ liệu, lệnh lấy mẫu vẫn báo thành công nhưng các bài ảnh không có thông tin ghép.
+  Căn cứ: Chỉ xảy ra khi người vận hành quên áp bản cập nhật, không làm hỏng dữ liệu và chạy lại sau khi áp là đúng, nhưng thông báo thành công gây hiểu lầm.
+  file: `pipeline/label-sample.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 (tuyên quét lớp nhưng chỉ là danh sách điểm viết tay): «phải quét đủ đường đọc cụm của app» chỉ kiểm bằng ngưỡng >10 và bỏ sót các route đọc thật**
-  Người dùng thấy gì: Phép quét chống luật ghép thứ hai bỏ sót vài tệp nên một luật thời gian riêng đặt ở đó có thể lọt qua mà không bị phát hiện. Hiện chưa có tệp nào vi phạm.
-  Căn cứ: Hiện không có sai và giới hạn của phép quét đã được Mạnh chấp nhận một phần, nên chỉ cần ghi lại phạm vi tệp chưa phủ.
-  file: `pipeline/scripts/label-ghep.test.mjs`
+- **Lấy thêm vào lát cũ: dòng mới không có ghép, hoặc dòng đã có nhãn bị ghi ghép**
+  Người dùng thấy gì: Lấy thêm mẫu vào lát đã có có thể làm bài ảnh mới hiện không chữ, hoặc làm đổi chữ hiển thị và ẩn mất dòng đã được gắn nhãn khỏi tiến độ.
+  Căn cứ: Lát hiện tại chưa có nhãn nên chưa có dữ liệu lệch, nhưng một khi người gắn đã làm việc thì nhãn cũ có thể bị đặt cạnh chữ khác với chữ lúc họ gắn.
+  file: `pipeline/label-sample.mjs`
+  severity: medium
+  Đề xuất: new-contract
+
+- **label-ghep ghi từng dòng ngoài giao dịch: đứt giữa chừng thì lần sau báo giữ nguyên và exit 0**
+  Người dùng thấy gì: Nếu lệnh ghép bị đứt giữa chừng, lần chạy lại báo đã xong dù một phần lát chưa được ghép, nên người gắn thấy lẫn thẻ ghép và không ghép và cụm có thể bị gắn trùng.
+  Căn cứ: Chỉ xảy ra khi lệnh bị đứt và có lệnh lùi để làm lại, nhưng số in ra trông như đã đủ nên dễ bỏ sót nếu không đối chiếu.
+  file: `pipeline/label-ghep.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **CLI label-ghep bỏ qua cờ gõ sai: gõ nhầm --thu có thể thành ghi thật, lát không tồn tại vẫn exit 0**
+  Người dùng thấy gì: Gõ nhầm cờ chạy thử vẫn có thể ghi thật vào dữ liệu, và gõ sai tên lát vẫn báo xong với 0 dòng như thể đã làm đúng.
+  Căn cứ: Chỉ người vận hành gặp và ghi nhầm gỡ được bằng lệnh lùi, nhưng người chạy tưởng đang xem thử nên có thể ghi thật mà không biết.
+  file: `pipeline/label-ghep.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Route ghi nhãn không chặn dòng trung_voi: tạo được nhãn thừa mà tiến độ và bảng số không đếm**
+  Người dùng thấy gì: Có thể lưu được nhãn vào một dòng đã bị ẩn vì trùng cụm, và cột Trường hợp trong bảng số vẫn đếm dòng ẩn trong khi cột Đã gắn thì không, nên hai số không khớp nhau.
+  Căn cứ: Chỉ xảy ra khi tab cũ còn mở hoặc gọi tay, nhưng nhãn thừa đi vào chấm điểm mà tiến độ không đếm nên khó phát hiện sau này và làm lệch báo cáo.
+  file: `app/src/lib/labels-queries.ts`
+  severity: medium
+  Đề xuất: new-contract
+
+- **danhSachAnhCum không khử trùng ảnh giữa dạng tệp và dạng URL, trái lời chú thích**
+  Người dùng thấy gì: Nếu cùng một ảnh xuất hiện ở hai bài, một bài có tệp và một bài chỉ có đường dẫn, dải ảnh sẽ lặp một tấm và nhãn 'Ghép suy ra' đếm dư một ảnh.
+  Căn cứ: Chỉ sai phần hiển thị, người gắn vẫn gắn đúng và không mất dữ liệu, chưa đo tần suất nên chưa đáng sửa.
+  file: `app/src/lib/labels-anh.ts`
   severity: low
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 2/15 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/eval-classify.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+- **Hộp xem ảnh lớn không xử lý ảnh lỗi: chuyển tới ảnh hỏng chỉ thấy biểu tượng vỡ**
+  Người dùng thấy gì: Bấm qua một ảnh thiếu tệp trong hộp xem lớn chỉ thấy biểu tượng ảnh vỡ, tiêu đề vẫn ghi số ảnh như bình thường, không có câu báo lỗi hay nút thử lại.
+  Căn cứ: Dải ảnh bên ngoài vẫn báo lỗi và đóng hộp là xem lại được, không mất dữ liệu, chỉ gây khó hiểu cho người gắn.
+  file: `app/src/components/ops/labels/anh-bai.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+⚠ Cụm ngoài vùng phủ: 2/17 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/eval-classify.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
