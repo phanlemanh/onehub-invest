@@ -5,7 +5,7 @@ slug: test-suite-db-thu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ci]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-05T12:00:00Z
 approved_by:
@@ -80,3 +80,15 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 - Bản mẫu chạy `VACUUM ANALYZE` trước khi khoá kết nối: `pg_dump` không mang thống kê và visibility map, DB khoá kết nối thì autovacuum không tự làm. Lượt đo đầu không có bước này: `E4b` vượt trần 300 giây và bộ app kéo dài 98 phút (đo 05/11).
 - Đo lượt đầu lộ hai đường còn vào DB chung mà bộ quét cũ không thấy: `localDbUrl()` trong `capture-ops-facts.mjs` (172 kết nối từ app, 6 từ pipeline) và `judge-chung.ts` (1 từ agent). Nay cả hai theo biến môi trường và bộ quét đọc cả tệp helper.
 - Tên DB `oneinvest_suite_*` khớp khuôn «DB thử» của vài tệp test. `s03-len-cong` nhờ đó chạy thêm trong `npm test` (trong giao dịch ROLLBACK, xanh). `trang-chi-tiet-tin-db` loại DB `oneinvest_suite_*` khỏi khuôn vì ca đó tự dựng `next build`, chỉ chạy theo hồ sơ của nó.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-1: Test trỏ tới DB chung bằng một cách viết địa chỉ khác hai cách đã chặn vẫn chạy thẳng trên DB chung.
+  - Ngoài-2: Lần đo đầu trên máy chưa có bản mẫu có thể dùng bản mẫu thiếu thống kê, nên phép đo chậm hoặc lệch.
+  - Ngoài-3: Một ca test của S06 có thể đỏ oan khi địa chỉ DB đã kèm tham số.
+  - Ngoài-4: Bộ đếm deadlock báo 0 ca khi không đọc được nhật ký máy chủ, nên số 0 chỉ tin được khi chắc nhật ký đã đọc.
+  - Ngoài-6: DB `oneinvest_suite_sellers_chip` còn trên máy chủ, việc dọn tự động không xoá nó, phải xoá tay.
+  - Ngoài-7: Lượt đỏ có nhiều lỗi dài mất số ca hỏng trong bằng chứng (hiện -1); kết quả đỏ vẫn đúng.
+  - Ngoài-8: Bộ quét test tự nối DB chung có thể bỏ sót kiểu viết mã cố tình lắt léo.
+  - Ngoài-9: Phép đo «không chạm DB chung» không ràng buộc kết nối với DB của lượt, nên bằng chứng dùng DB riêng kém chặt hơn chữ.
+  - Ngoài-10: Phép thử tải E3, E4 có thể xanh khi một trong hai bên ghi giả lập đã chết.
+  - Ngoài-11: Ca «mẫu mới không dump» không bắt được lỗi dừng sớm của lệnh.
+  - Ngoài-12: Đối chứng «bên ghi không chạy» chỉ có ở lượt E3, lượt E4 không chạy nó.
