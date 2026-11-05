@@ -83,3 +83,43 @@ wall: 815s
 - **claude-sonnet-5-5**: 6 agent · 17 calls · out 19,004 · in 34 · cache_read 348,499 · cache_create 212,073
 - **claude-haiku-5-5**: 9 agent · 18 calls · out 17,191 · in 36 · cache_read 198,170 · cache_create 230,664
 
+### S4 round 3 — wf_a130d06e-120 (18 agent, 102,006 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:conventions | claude-opus-5-5 | 12 | 23,865 | 26 | 1,009,324 | 242 |
+| review:bugs | claude-opus-5-5 | 9 | 23,145 | 20 | 727,306 | 233 |
+| review:measurement | claude-opus-5-5 | 6 | 19,517 | 14 | 321,799 | 193 |
+| synthesize:report | claude-sonnet-5-5 | 8 | 9,637 | 16 | 311,099 | 61 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 4,304 | 6 | 59,046 | 39 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,742 | 4 | 24,814 | 299 |
+| triage | claude-sonnet-5-5 | 2 | 2,395 | 4 | 25,204 | 20 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,365 | 4 | 24,820 | 259 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,247 | 4 | 24,834 | 11 |
+| refute:that-chi-doc.mjs | claude-sonnet-5-5 | 3 | 2,137 | 6 | 48,549 | 21 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,979 | 4 | 24,828 | 11 |
+| machine:node --test pipeline/lib/eval-labels.tes | claude-haiku-5-5 | 2 | 1,926 | 4 | 24,859 | 12 |
+| refute:that-chi-doc.mjs | claude-sonnet-5-5 | 3 | 1,541 | 6 | 49,999 | 15 |
+| machine:node _acceptance/nhom-dang-ky-hai-lan-s0 | claude-haiku-5-5 | 2 | 1,152 | 4 | 24,867 | 20 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,066 | 4 | 24,839 | 16 |
+| machine:node _acceptance/nhom-dang-ky-hai-lan-s0 | claude-haiku-5-5 | 2 | 841 | 4 | 24,865 | 12 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 810 | 4 | 21,676 | 96 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 337 | 4 | 20,475 | 6 |
+
+
+wall: 817s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 4,304 | 59,046 | 39 | 01:44:19 | 01:44:58 |
+| machine | 9 | 15,128 | 220,402 | 701 | 01:44:19 | 01:56:00 |
+| review | 3 | 66,527 | 2,058,429 | 242 | 01:44:19 | 01:48:21 |
+| triage | 1 | 2,395 | 25,204 | 20 | 01:56:02 | 01:56:22 |
+| refute | 2 | 3,678 | 98,548 | 21 | 01:56:24 | 01:56:45 |
+| capture | 1 | 337 | 20,475 | 6 | 01:56:47 | 01:56:53 |
+| synthesize | 1 | 9,637 | 311,099 | 61 | 01:56:55 | 01:57:56 |
+
+- **claude-opus-5-5**: 3 agent · 27 calls · out 66,527 · in 60 · cache_read 2,058,429 · cache_create 365,659
+- **claude-sonnet-5-5**: 6 agent · 21 calls · out 20,351 · in 42 · cache_read 514,372 · cache_create 196,336
+- **claude-haiku-5-5**: 9 agent · 18 calls · out 15,128 · in 36 · cache_read 220,402 · cache_create 209,443
+

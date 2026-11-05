@@ -1,22 +1,40 @@
+# Review findings: nhom-dang-ky-hai-lan-s03 (round 3)
+
 ## Trong hợp đồng
 
-- **Hình dạng 5 (kèm 4) — vế «sổ và bài toàn khoá trần hoặc khoá lạ → mẫu y hệt» của AC-4 tuyên cả lớp khoá nhưng chỉ thử ba khoá không có dấu hai chấm, nên không đột biến khoá nào làm nó đỏ**
-  file: `pipeline/lib/eval-labels.test.mjs:181`
+- **Hình dạng 4 — «AC-7 khong vuot han muc» là assert âm tính một mình và không thể đỏ, kể cả với bản đột biến gây đúng lỗi vượt hạn mức**
+  AC: AC-7
+  file: `_acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs:45`
   severity: medium
-  AC: AC-4
   source: measurement
-  detail: AC-4 và E4 (evals.yaml dòng 35) hứa: sổ cùng bài toàn khoá trần hoặc khoá lạ thì mẫu y hệt so khớp nguyên văn. Ca ở dòng 180-189 chỉ dùng `ka`, `kb`, `conv-c`, và mọi bài đều có khoá trong sổ (dòng 182). Lớp khoá lạ trong chính bảng AC-4 không xuất hiện: `conv:x` (ô 11), `a:b:group:x` (ô 10), `k:group:` (ô 12), khoá không có trong sổ (ô 13). Vì vậy `bo_khong_don_vi` luôn bằng 0 ở cả hai vế, và phép chuẩn hoá khoá không có gì để làm sai. Đã chép nguyên ca này chạy với bản đột biến ở scratchpad: khoá nguyên văn (M1), gộp quá tay `replace(/^.*:/, "")` (M4), bỏ chốt `(?=.)`, và thêm bản bỏ cả tiền tố tới dấu gạch `replace(/^.*[:-]/, "")`. Cả bốn bản đều xanh, giống bản thật. Chiều đỏ của E4 và ca ở dòng 191-201 chỉ áp lên `kiemBangNhomThat`, không chạy lại vế này. Đây là khẳng định về lớp dựa trên vài điểm-case, và phép so «y hệt» chưa từng được thấy đỏ. Phần đơn vị của các dạng khoá này vẫn được bảng 13 ô đo; cái chưa được đo là quan hệ cả mẫu giống so khớp nguyên văn khi có khoá lạ mang dấu hai chấm hoặc khoá ngoài sổ. Round 1 chưa ghi mục này trong run-log.
+  detail: Dòng 45 tính `vuot` bằng `Number(d[1]) > Number(d[2]) || ![5, 30].includes(Number(d[2]))`, trên chính dòng `nhóm <mã>: chọn <chon>/<can>` mà lệnh in cho từng đại diện. Cả hai vế đều không thể đúng. `chon` sinh từ `chonMau(...).slice(0, n)` với n = `can` (eval-labels.mjs dòng 39, 105-107), nên luôn `chon <= can`. `can` luôn là 5 hoặc 30 vì probe truyền cờ cố định 30/5 (dòng 35). Lỗi gốc của AC-7 là một nhóm vượt hạn mức khi bị tách hai tầng (30 + 5 = 35), nhưng phép đo chỉ xét riêng từng dòng đại diện, không cộng tầng phụ. Đã chạy `chonMauTheoNhom` với hai tầng tách 30 và 5 nội dung ở scratchpad: kết quả `30/30` và `5/5`, công thức cho `vuot=false` ở cả hai. Chiều đỏ ở dòng 60-61 cũng chỉ đọc `dot.tangPhu`, không đọc `dot.vuot`, và E7 trong evals.yaml dòng 59 chỉ ghim 'loi tang phu'. Vì vậy 'ok AC-7 khong vuot han muc' xanh ở mọi trường hợp và chưa từng được thấy đỏ. Lượt trước đã sửa đúng lớp lỗi này cho AC-1 ở mau-hai-khoa.mjs dòng 93 (cộng V + Vp, có 'do M1: loi vuot han muc'), nhưng AC-7 chưa được sửa. Run-log chưa ghi mục này.
+  rationale: AC-7 nêu rõ «mỗi đại diện không vượt hạn mức» trên bản sao dữ liệu thật, mà phép đo hiện tại không thể đỏ khi nhóm bị tách hai tầng 30+5, nên vế này của AC-7 chưa được chứng minh.
 
-- **Hình dạng 4 — cận `so[MA.D] <= 30` của «AC-1 khong vuot han muc» không thể đỏ vì fixture chỉ có 24 nội dung, nên ca nhóm lớn đăng ký hai lần không được đo**
-  file: `_acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs:87`
+- **Hình dạng 5 — AC-8 tuyên quét «các tệp vòng này đổi» nhưng dùng danh sách viết tay, bỏ sót ba tệp có trong diff**
+  AC: AC-8
+  file: `_acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs:66`
   severity: low
-  AC: AC-1
   source: measurement
-  detail: Theo chú thích fixture ở dòng 49-52, hợp hai dạng khoá của D là 24 nội dung, nên số bài của mọi tầng D không thể vượt 30 dù mã sai thế nào. Vế `so[MA.D] <= 30` vì vậy luôn đúng và không có đối chứng dương. AC-1 hứa hạn mức nhóm lớn 30, và lỗi gốc trong design doc (dòng 15-16) là N004 30 + N022 5 = 35 trên hạn mức 30. Fixture không có nhóm hai dòng nào mà hợp vượt 30, nên triệu chứng đó ở nhóm lớn không tái hiện được. Hai vế còn lại không thay thế được: `so[MA.L1] === 30` là nhóm một dòng, `so[MA.S] === 5` là nhóm nhỏ. `so[MA.D] === 24` ở dòng 90 chỉ ghim số của hợp, cũng dưới hạn mức. Danh sách đột biến ở dòng 110 cũng không có mục nào ghim «loi vuot han muc». Finding round 1 về ma trận đột biến chỉ nói thiếu chiều đỏ ở mức chung; điểm này khác ở chỗ chính fixture khiến vế này không thể đỏ, nên có thêm đột biến cũng không làm nó đỏ.
+  detail: Chú thích dòng 63 và thông điệp 'AC-8 tep doi 0 khop (N tep)' ở dòng 73 tuyên quét cả lớp tệp vòng này đổi. Nhưng `TEP` ở dòng 66-70 chỉ gồm thư mục hồ sơ của slug cộng năm đường dẫn ghi tay, không rút từ `git diff` nên không có ma trận theo diff thật. Đối chiếu `git diff --name-only 9976fb01...HEAD`: `_acceptance/config.yaml`, `LO-TRINH.html` và `PRODUCT-MAP.md` đều đổi trong vòng này mà không được quét. `_acceptance/config.yaml` chính là tệp vòng này thêm hai executor `ndk_mau`, `ndk_that`. Một khoá thật ghi vào các tệp đó, hay vào bất kỳ tệp mới nào ngoài danh sách, vẫn cho 'ok AC-8 tep doi 0 khop'. Con số `TEP.length` in ra chỉ là độ dài danh sách viết tay, không phải số tệp đã đổi. Đối chứng mồi ở dòng 78-85 chỉ kiểm hàm `quet` trên tệp tạm, không kiểm độ phủ của danh sách.
+  rationale: AC-8 đòi quét các tệp vòng này đổi để số khớp khoá thật bằng 0, nhưng danh sách viết tay bỏ sót config.yaml, LO-TRINH.html và PRODUCT-MAP.md có trong diff, nên khoá lọt vào các tệp đó vẫn cho kết quả xanh.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
+
+- **paths của E1–E7 thiếu _dot.mjs, paths của E3, E5, E6 thiếu lib/eval-labels.mjs, nên lượt sửa sau có thể mang màu xanh cũ sang**
+  Người dùng thấy gì: Nếu lần sửa sau chỉ chạm vào một vài tệp phụ trợ của bộ kiểm, một số phép kiểm cũ có thể được coi là vẫn đạt mà không chạy lại. Lần này chưa gây sai lệch nào cho người dùng.
+  Căn cứ: Chỉ ảnh hưởng độ chắc của lượt kiểm sau chứ không làm sai kết quả lấy mẫu hôm nay, không mất dữ liệu, và thêm hai dòng khai báo khi có lượt sửa hẹp là rẻ.
+  file: `_acceptance/nhom-dang-ky-hai-lan-s03/evals.yaml`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3 — lời hứa quan hệ «hai đầu dò giữ chung khoá riêng DB thử» chỉ được đo ở một đầu dò**
+  Người dùng thấy gì: Nếu ai đó vô tình bỏ cơ chế khoá ở một phía, hai bước kiểm có thể đụng nhau trên dữ liệu thử và cho kết quả sai khi chạy lại. Không ảnh hưởng tới dữ liệu thật hay tới người dùng cổng.
+  Căn cứ: Chỉ là rủi ro khi chạy bộ kiểm trên máy thử, dữ liệu thật không bị đụng, và sự cố nếu xảy ra sẽ lộ ra ngay ở lần chạy lại.
+  file: `_acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs`
+  severity: low
+  Đề xuất: known-limits
 
 - **Probe thêm mới tên nguồn thật vào khoá snapshot và giá trị nguồn của fixture, thay vì dùng mã S03 (r1 · tệp đã đổi)**
   Người dùng thấy gì: Tệp kiểm thử của vòng này có ghi tên thật của một kênh nguồn vào dữ liệu giả, trong khi kho mã đang công khai và quy ước là chỉ gọi nguồn bằng mã. Người dùng cuối không thấy gì, nhưng tên nguồn nằm lộ trên kho công khai.
