@@ -46,7 +46,7 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 - AC-6: Given chạy `npm test` của từng bộ app, pipeline, agent, When lấy mẫu `pg_stat_activity` theo `application_name` riêng của lượt mỗi 100 ms, Then bộ xanh,
   0 kết nối của lượt vào DB `oneinvest`, có kết nối ở DB khác (đối chứng dương của bộ đếm), và in số ca pass, skip.
 - AC-7: Given `package.json` của ba bộ và mọi tệp test của chúng, When quét, Then `npm test` đi qua `db-thu --chay`, không tệp test nào (mỗi bộ quét ≥ 20 tệp) tự trỏ DB chung bỏ qua
-  `DATABASE_URL` (chuỗi URL cứng, cả dạng kèm `?options=`, URL ghép từ biến máy chủ, URL dựng bằng `new URL`) hay xoá biến đó khỏi tiến trình con mà không gán lại, tính cả mọi tệp mà test import; đối chứng: bộ quét bắt đúng mười một dạng lọt và bỏ qua bảy dạng lành.
+  `DATABASE_URL` (chuỗi URL cứng, cả dạng kèm `?options=`, URL ghép từ biến máy chủ, URL dựng bằng `new URL`) hay xoá biến đó khỏi tiến trình con mà không gán lại, tính cả mọi tệp mà test import; đối chứng: bộ quét bắt đúng mười một dạng lọt và bỏ qua tám dạng lành.
 
 ## Coverage
 

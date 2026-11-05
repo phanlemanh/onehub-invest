@@ -85,5 +85,5 @@ evals:
     executor: test
     cmd: config:executors.test.tsdt_mot
     paths: [scripts/db-thu.test.mjs, app/package.json, pipeline/package.json, agent/package.json, app/tests/**, agent/tests/**, pipeline/scripts/**, pipeline/*.test.mjs]
-    expected: "exit 0; ca DT-AC-7: ba script test mở đầu bash ../db/db-thu.sh oneinvest_suite_<bộ> --chay; mỗi bộ quét ≥ 20 tệp, dongLot rỗng trên mọi tệp test và mọi tệp chúng import (capture-ops-facts, judge-chung, helpers/db có mặt trong danh sách quét). Đối chứng cùng hàm quét: bắt đúng mười một dạng lọt, bỏ qua bảy dạng lành, thông điệp «phải bắt», «không được bắt»."
+    expected: "exit 0; ca DT-AC-7: ba script test mở đầu bash ../db/db-thu.sh oneinvest_suite_<bộ> --chay; mỗi bộ quét ≥ 20 tệp, dongLot rỗng trên mọi tệp test và mọi tệp chúng import (capture-ops-facts, judge-chung, helpers/db có mặt trong danh sách quét). Đối chứng cùng hàm quét: bắt đúng mười một dạng lọt, bỏ qua tám dạng lành, thông điệp «phải bắt», «không được bắt»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

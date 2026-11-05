@@ -260,7 +260,7 @@ export function dongLot(noiDung) {
     if (dong.trimStart().startsWith("//")) return;
     const m = /(5433|\}|placeholder)\/oneinvest(?![_a-z0-9])|database:\s*["']oneinvest["']|pathname\s*=\s*["']\/oneinvest["']/.exec(dong);
     if (m) {
-      const lanh = BIEN.test(dong.slice(0, m.index)) || BIEN.test(ds[i - 1] ?? "")
+      const lanh = BIEN.test(dong.slice(0, m.index)) || BIEN.test(ds[i - 1] ?? "") || /^\s*\[.*\],?\s*$/.test(dong) // dòng bảng dữ liệu của ca, không phải chuỗi kết nối
         || /if \(process\.env\.TEST_DATABASE_URL_ADMIN\) return/.test(ds[i - 1] ?? "") || /port = "1"/.test(ds.slice(i, i + 3).join("\n"));
       if (!lanh) out.push(`${i + 1}: ${dong.trim()}`);
     }
@@ -301,7 +301,7 @@ test("DT-AC-7 đối chứng: bộ quét bắt đúng các dạng lọt, bỏ qu
   const bat = ['const U = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = `postgres://o:o@localhost:5433/oneinvest?options=-c`", "const U = `${PG_SERVER}/oneinvest`", 'const u = new URL("postgres://placeholder/oneinvest")', "  delete env.DATABASE_URL",
     'process.env.DATABASE_URL = "postgres://o:o@localhost:5433/oneinvest"', "env: { ...process.env, DATABASE_URL: `${PG}/oneinvest` }", "delete process.env.DATABASE_URL", "env: { ...process.env, DATABASE_URL: undefined }", '{ port: 5433, database: "oneinvest" }', "const { DATABASE_URL: _, ...con } = process.env"];
   for (const d of bat) assert.equal(dongLot(d).length, 1, `phải bắt: ${d}`);
-  const lanh = ['const U = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = process.env.DATABASE_URL ?? `${PG_SERVER}/oneinvest`", 'const U = "postgres://o:o@localhost:5433/oneinvest_tct"', "// 5433/oneinvest", 'if (process.env.TEST_DATABASE_URL_ADMIN) return process.env.TEST_DATABASE_URL_ADMIN\nconst u = new URL("postgres://placeholder/oneinvest")', 'const u = new URL("postgres://placeholder/oneinvest")\nu.hostname = "127.0.0.1"; u.port = "1"', "  if (x) env.DATABASE_URL = x\n  else delete env.DATABASE_URL"];
+  const lanh = ['  ["DB chung", "postgres://localhost:5433/oneinvest", false],', 'const U = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = process.env.DATABASE_URL ?? `${PG_SERVER}/oneinvest`", 'const U = "postgres://o:o@localhost:5433/oneinvest_tct"', "// 5433/oneinvest", 'if (process.env.TEST_DATABASE_URL_ADMIN) return process.env.TEST_DATABASE_URL_ADMIN\nconst u = new URL("postgres://placeholder/oneinvest")', 'const u = new URL("postgres://placeholder/oneinvest")\nu.hostname = "127.0.0.1"; u.port = "1"', "  if (x) env.DATABASE_URL = x\n  else delete env.DATABASE_URL"];
   for (const d of lanh) assert.deepEqual(dongLot(d), [], `không được bắt: ${d}`);
   assert.equal(dongLot(`// đọc DATABASE_URL trước\nconst U = "${CHUNG}"`).length, 1, "chữ DATABASE_URL trong chú thích không làm URL cứng thành lành");
 });
