@@ -42,10 +42,10 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **chotot-thieu-moc nối chuỗi ?options= vào DATABASE_URL thay vì dùng searchParams như pattern có sẵn**
+- **Tệp test thiếu mốc của S06 nối chuỗi ?options= vào DATABASE_URL thay vì dùng searchParams như pattern có sẵn**
   Người dùng thấy gì: Khi địa chỉ DB đã kèm tham số, một bài kiểm thử của nguồn S06 có thể báo đỏ oan dù code không hỏng. Không ghi nhầm dữ liệu vào đâu.
   Căn cứ: Chỉ gây báo đỏ giả, không mất hay lộ dữ liệu, và chạy lại với địa chỉ không kèm tham số là qua.
-  file: `pipeline/scripts/chotot-thieu-moc.test.mjs`
+  file: `pipeline/scripts/` (tệp test thiếu mốc của S06)
   severity: low
   Đề xuất: known-limits
 
