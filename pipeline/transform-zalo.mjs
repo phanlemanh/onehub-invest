@@ -461,7 +461,8 @@ const veKhoaNhom = (p, khoaNhom) => (p.conversation_id == null ? p : { ...p, con
 export function mucDichNhom(bai) {
   const dem = new Map();
   for (const b of bai) {
-    const k = b.conversation_id ?? "";
+    const k = b.conversation_id;
+    if (!k) continue; // Bài không có khoá không thuộc nhóm nào, như loaiHinhNhom.
     const e = dem.get(k) ?? { ten: b.group_name ?? null, sale: 0, rent_lt: 0 };
     if (!e.ten && b.group_name) e.ten = b.group_name;
     if (b.kind === KIND.sale || b.kind === KIND.rent_lt) e[b.kind]++;

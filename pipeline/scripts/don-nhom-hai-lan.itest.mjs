@@ -1,5 +1,9 @@
 // don-nhom-hai-lan.itest.mjs — hồ sơ _acceptance/nhom-hai-lan-s03-xu-goc E5, E6: lệnh dọn sổ trên fixture.
 // Chỉ trên DB thử, BEGIN…ROLLBACK, xoá dòng S03 thật trong giao dịch để chỉ còn fixture. Khoá fixture `nhl-…`, không có khoá thật.
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
 import pg from "pg";
 
 import { donNhomHaiLan, hoanLaiDon } from "../don-nhom-hai-lan.mjs";
@@ -110,13 +114,18 @@ await trongGiaoDich(async (c) => {
   await dong(c, tt("nhl-da"), { duAn: [nut.id] });
   await dong(c, "nhl-go", { status: "retired" });
   await dong(c, tt("nhl-go"));
+  await dong(c, "nhl-xong", { status: "completed" });
+  await dong(c, tt("nhl-xong"));
+  const phuTran = await dong(c, "nhl-phuxong");
+  const phuXong = await dong(c, tt("nhl-phuxong"), { status: "completed" });
+  const phuCon = await dong(c, "group:nhl-phuxong");
   const lanh = await dong(c, "nhl-lanh");
   const lanhPhu = await dong(c, tt("nhl-lanh"));
 
   const ghi = ghiChu();
-  const soBo = await c.query("SELECT unit_code, group_key FROM collection_units WHERE group_key NOT LIKE '%nhl-lanh'");
+  const soBo = await c.query("SELECT unit_code, group_key FROM collection_units WHERE group_key NOT LIKE '%nhl-lanh' AND group_key NOT LIKE '%nhl-phuxong'");
   const bamNhom = async () => (await c.query(
-    `SELECT md5(string_agg((to_jsonb(t) - 'updated_at')::text, '|' ORDER BY t.id)) AS h FROM collection_units t WHERE group_key NOT LIKE '%nhl-lanh'`)).rows[0].h;
+    `SELECT md5(string_agg((to_jsonb(t) - 'updated_at')::text, '|' ORDER BY t.id)) AS h FROM collection_units t WHERE group_key NOT LIKE '%nhl-lanh' AND group_key NOT LIKE '%nhl-phuxong'`)).rows[0].h;
   const truoc = await bamNhom();
   const dem = await donNhomHaiLan(c, { ghi: true, out: ghi.out });
   const chu = ghi.chu();
@@ -126,8 +135,10 @@ await trongGiaoDich(async (c) => {
   kiem(coLyDo("nhl-the", "lech the"), "AC-6 lech the thi bo qua", "loi lech the");
   kiem(coLyDo("nhl-tt", "lech thi truong"), "AC-6 lech thi truong thi bo qua", "loi lech thi truong");
   kiem(coLyDo("nhl-da", "lech du an"), "AC-6 lech du an thi bo qua", "loi lech du an");
-  kiem(coLyDo("nhl-go", "dai dien da go"), "AC-6 dai dien da go thi bo qua", "loi dai dien da go");
-  kiem(await bamNhom() === truoc && dem.bo_qua === 5, "AC-6 cap bo qua khong doi", `loi cap bo qua doi: ${JSON.stringify(dem)}`);
+  kiem(coLyDo("nhl-go", "dai dien da go") && coLyDo("nhl-xong", "dai dien da go"), "AC-6 dai dien da go thi bo qua", "loi dai dien da go");
+  kiem(await bamNhom() === truoc && dem.bo_qua === 6, "AC-6 cap bo qua khong doi", `loi cap bo qua doi: ${JSON.stringify(dem)}`);
+  const trangThaiPhu = [(await trangThai(c, phuTran)).status, (await trangThai(c, phuXong)).status, (await trangThai(c, phuCon)).status].join();
+  kiem(trangThaiPhu === "active,completed,retired", "AC-5 dong phu completed khong doi", `loi dong phu completed: ${trangThaiPhu}`);
   kiem((await trangThai(c, lanhPhu)).status === "retired" && (await trangThai(c, lanh)).status === "active", "AC-6 cap con lai van don", "loi cap con lai");
 });
 
@@ -148,6 +159,21 @@ await trongGiaoDich(async (c) => {
   try { await donNhomHaiLan(c, { ghi: true, out() {} }); } catch (e) { no = e.message; }
   kiem(no === "loi tiem nhl", "do: loi tiem da no", `loi tiem khong no: ${no}`);
   kiem(await bamSo(c) === truoc && (await nhatKy(c)).length === 0, "AC-6 loi giua chung khong doi gi", "loi giua chung van doi");
+});
+
+// Chiều đỏ của lớp trạng thái cuối: bỏ `completed` khỏi CUOI thì đại diện `completed` bị coi là còn hiệu lực và dòng phụ bị dọn.
+const fDot = join(import.meta.dirname, `../.nhl-don-dot-${process.pid}.mjs`);
+const srcDon = readFileSync(join(import.meta.dirname, "../don-nhom-hai-lan.mjs"), "utf8");
+const MOC_CUOI = 'const CUOI = ["retired", "completed"];';
+if (!srcDon.includes(MOC_CUOI)) throw new Error("chỗ đột biến CUOI không còn");
+writeFileSync(fDot, srcDon.replace(MOC_CUOI, 'const CUOI = ["retired"];'));
+let dot;
+try { dot = await import(pathToFileURL(fDot).href); } finally { rmSync(fDot, { force: true }); }
+await trongGiaoDich(async (c) => {
+  await dong(c, "nhl-xong", { status: "completed" });
+  const phu = await dong(c, tt("nhl-xong"));
+  await dot.donNhomHaiLan(c, { ghi: true, out() {} });
+  kiem((await trangThai(c, phu)).status === "retired", "do: rut completed thi dong phu bi don", "loi thuoc completed khong do");
 });
 
 console.log(loi.length ? `DON NHOM HAI LAN FAIL (${loi.length})` : "DON NHOM HAI LAN OK");

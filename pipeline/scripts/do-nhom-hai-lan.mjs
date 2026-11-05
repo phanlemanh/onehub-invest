@@ -6,13 +6,14 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import pg from "pg";
 
 import { demKhop, dayNhanh, quetTep, tepTheoDiff, tepThemMoi } from "../../_acceptance/nhom-dang-ky-hai-lan-s03/probes/_quet.mjs";
 import { donNhomHaiLan } from "../don-nhom-hai-lan.mjs";
 import { layMau } from "../label-sample.mjs";
+import { KENH_NGUON } from "../lib/danh-ba-nguoi.mjs";
 import { khoaNhomThat } from "../lib/eval-labels.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { loadStgPosts } from "../lib/test-posts.mjs";
@@ -23,7 +24,8 @@ import { dieuKienVisible } from "./do-s03-len-cong.mjs";
 const GOC = join(import.meta.dirname, "../..");
 const DB_URL = process.env.DATABASE_URL ?? "";
 const DB_THU = ["oneinvest_nhl_xu", "oneinvest_gcn_nhan"];
-const SNAP = "hanoi__zalo-agent__2099-01-06T000000";
+const KENH_S03 = "stg_zalo_posts".split("_")[1]; // khoá kênh S03 của loadStgPosts, lấy theo tên bảng stg
+const AGENT_NGOAI = Object.keys(KENH_NGUON).filter((k) => KENH_NGUON[k] !== "S03");
 const LAT = "s03-theo-nhom";
 const NGUYEN_VAN = (k) => k;
 const NGOAI_FIXTURE = "group_key NOT LIKE '%ndk-%' AND group_key NOT LIKE 'conv-gcn-%'";
@@ -100,13 +102,24 @@ const tomTat = (rows) => {
 const bamLat = async (c) => (await c.query(
   `SELECT count(*)::int AS n, md5(coalesce(string_agg(to_jsonb(t)::text, '|' ORDER BY t.item_id), '')) AS h FROM eval_label_items t WHERE lat = $1`, [LAT])).rows[0];
 
-/** Bài mồi ở đúng dạng tiền tố đọc từ sổ, nhóm mà khoá nguyên văn và khoá thật cho loại hình khác nhau: lượt mặc định phải khác lượt nguyên văn. */
+/** Bài mồi ở đúng dạng tiền tố đọc từ sổ, nhóm mà khoá nguyên văn và khoá thật cho loại hình khác nhau: lượt mặc định phải khác lượt nguyên văn. Lô và agent chép từ một bài thật của nhóm. */
 async function napBaiMoi(c, khoaMoi) {
-  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
   await c.query(
     `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, sender_id, conversation_id)
-     SELECT 'nhl_moi_1', $1, 'openclaw-hook', (SELECT group_name FROM stg_zalo_posts WHERE conversation_id = $2 LIMIT 1),
-            'Bán 2PN 93m2 giá 6.3 tỷ', '2099-01-06T01:00:00Z', 'nhl_moi_nguoi', $2`, [SNAP, khoaMoi]);
+     SELECT 'nhl_moi_1', snapshot_id, agent_id, group_name, 'Bán 2PN 93m2 giá 6.3 tỷ', '2099-01-06T01:00:00Z', 'nhl_moi_nguoi', conversation_id
+       FROM stg_zalo_posts WHERE conversation_id = $1 LIMIT 1`, [khoaMoi]);
+}
+
+/** Transform ở điểm rẽ với nhánh chính: lượt nền thật của mã cũ, chép cạnh tệp thật để ./lib còn giải được, xoá ngay sau khi nạp. */
+async function transformNen() {
+  const base = execFileSync("git", ["-C", GOC, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+  const f = join(import.meta.dirname, `../.nhl-nen-${process.pid}.mjs`);
+  writeFileSync(f, execFileSync("git", ["-C", GOC, "show", `${base}:pipeline/transform-zalo.mjs`], { encoding: "utf8", maxBuffer: 1 << 28 }));
+  try {
+    return (await import(pathToFileURL(f).href)).runTransformZalo;
+  } finally {
+    rmSync(f, { force: true });
+  }
 }
 
 async function doCong() {
@@ -127,16 +140,16 @@ async function doCong() {
     process.exit(1);
   }
   console.log(`so cap trong so: ${cap.length}`);
-  const { posts } = await loadStgPosts(doc, "zalo");
+  const { posts } = await loadStgPosts(doc, KENH_S03);
   const baiCap = new Set(posts.filter((p) => p.conversation_id != null && theoKhoa.get(khoaNhomThat(p.conversation_id))?.length > 1).map((p) => p.post_id));
   // Đếm độc lập bằng SQL, cùng định nghĩa post thử với test-posts.mjs.
   const { rows: [{ n: soDoi }] } = await doc.query(
     `SELECT count(*)::int AS n FROM (
        SELECT DISTINCT ON (post_id) post_id, conversation_id, snapshot_id, agent_id, group_name FROM stg_zalo_posts
-        WHERE agent_id IS NULL OR agent_id <> 'apify-facebook' ORDER BY post_id, captured_at DESC) p
+        WHERE agent_id IS NULL OR NOT agent_id = ANY ($1) ORDER BY post_id, captured_at DESC) p
       WHERE conversation_id ~ '^([^:]+:)?group:.'
         AND split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)' AND split_part(snapshot_id, '__', 2) <> 'example'
-        AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND coalesce(btrim(group_name), '') !~* '^test([^[:alpha:]]|$)'`);
+        AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND coalesce(btrim(group_name), '') !~* '^test([^[:alpha:]]|$)'`, [AGENT_NGOAI]);
   const { rows: [{ thieu, tong }] } = await doc.query(
     `WITH k AS (SELECT DISTINCT ${CHUAN("conversation_id")} AS khoa FROM stg_zalo_posts WHERE conversation_id ~ '^([^:]+:)?group:.')
      SELECT count(*)::int AS tong, count(*) FILTER (WHERE (SELECT count(*) FROM collection_units u WHERE u.source_code = 'S03' AND u.group_key = k.khoa) <> 1)::int AS thieu FROM k`);
@@ -161,6 +174,14 @@ async function doCong() {
   console.log(`cong sau: ${tomTat(mac.rows)}`);
   const lech = soCong(van.rows, mac.rows, baiCap);
   console.log(`cong lech: roi ${lech.roi} them ${lech.them} doi ${lech.doi}`);
+  const chayNen = await transformNen();
+  const nen = await trongGiaoDich(async (c) => {
+    await imLog(() => chayNen(c));
+    return docTin(c);
+  });
+  const lechNen = soCong(nen, mac.rows, baiCap);
+  console.log(`cong nen ma cu: ${tomTat(nen)}`);
+  console.log(`cong lech ma cu: roi ${lechNen.roi} them ${lechNen.them} doi ${lechNen.doi} ngoai nhom co cap ${lechNen.doi_ngoai}`);
   kiem(soDoi > 0 && mac.r.bai_doi_khoa === soDoi && van.r.bai_doi_khoa === 0, `AC-4 so bai doi khoa bang dem doc lap (${soDoi})`, `loi so bai doi khoa: ${mac.r.bai_doi_khoa}/${soDoi}`);
   kiem(tong > 0 && thieu === 0, "AC-4 moi bai ve mot khoa tran", `loi khoa khong ve mot dong tran: ${thieu}/${tong}`);
   kiem(lech.roi === 0, "AC-4 khong tin roi cong", `loi tin roi cong: ${lech.roi}`);
