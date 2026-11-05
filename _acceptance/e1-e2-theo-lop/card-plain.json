@@ -1,0 +1,127 @@
+{
+ "feature_plain": "Một bài rao nhiều căn trong nhóm S03 sẽ thành nhiều tin, mỗi tin đúng giá và diện tích của căn đó, thay vì một tin với một giá ngẫu nhiên.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ ghi rõ loại hình đến từ đâu: đọc từ chữ bài là quan sát; suy từ tên nhóm hay khu đô thị chỉ là suy luận và không tự áp."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ đọc mỗi bài ra danh sách căn; câu trả lời hỏng thì không có căn nào; bỏ hẳn số độ tự tin do máy tự khai."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ chỉ tính giá trị có câu trích thật trong bài; số do luật đọc lại từ câu trích; một căn lệch thì cả bài không tách và lên một thẻ cho người."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ tách bài đủ điều kiện thành đủ số tin, mỗi tin đúng cặp giá, diện tích; bài một căn giữ nguyên."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ giữ nguyên mã tin khi nạp lại, không tốn lượt gọi model."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ nghỉ tin gộp cũ, trỏ sang căn đầu, đóng thẻ chờ có lý do, giữ lịch sử; đường dẫn cũ không báo lỗi máy chủ."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ giữ giá trị của mỗi tin tách biệt dù hai tin chung một bài; tin không tách cho kết quả như cũ."
+  },
+  {
+   "id": "AC-11",
+   "p": "Sẽ dừng đúng trần tiền và đọc tiếp được; in bảng để anh đọc tay; chỉ tính kết quả đọc tay khi từ 27/30 bài đúng."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ chỉ tách khi đã mở cổng; thiếu nhãn, số đo dưới ngưỡng hoặc đọc tay chưa đạt thì không mở được; có lệnh in tỉ lệ bài nhiều căn."
+  },
+  {
+   "id": "AC-12",
+   "p": "Sẽ hoàn tác được: tin cũ sống lại y nguyên, không xoá dòng nào, lượt nạp sau không tách lại, cloud không còn tin căn."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ KHÔNG gửi tên nhóm, khu đô thị, khu vực hay đáp án của luật cho model đọc, để hai bên kiểm chéo thật."
+  },
+  {
+   "id": "AC-9",
+   "p": "Chặn hai căn của một bài gộp vào nhau khi bài đăng lại; cột mới không mang tên nguồn thật hay tên nhóm lên cloud."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Chưa ghi tin thật: đó là bước sau chữ ký, sao lưu trước, cần lời riêng của anh."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Chưa áp thay đổi cấu trúc dữ liệu lên máy thu hay cloud: cần lời duyệt riêng."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không đổi luật gộp bài đăng lại: để hàng kiểm định gộp trùng."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không làm lớp bài đăng và ghép ảnh: để hàng sau."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Không sửa màn gắn nhãn: phiên gắn căn đang giữ."
+  },
+  {
+   "id": "OOS-6",
+   "p": "Không tạo bản ghi căn thật, không nối toà: để chuỗi gắn căn."
+  },
+  {
+   "id": "OOS-7",
+   "p": "Không sửa nhãn và đề xuất cũ của tin không tách."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Phủ mọi căn cứ của một giá trị: chữ bài, tên nhóm, khu đô thị, trích dẫn thật, giả, số lệch (AC-1, AC-2, AC-4)."
+  },
+  {
+   "i": 1,
+   "p": "Phủ mọi hình dạng bài: một căn, nhiều căn, thiếu trích dẫn, đăng lại, tin cũ đã có đề xuất (AC-3, AC-5, AC-7, AC-9)."
+  },
+  {
+   "i": 2,
+   "p": "Phủ vận hành: nạp lại, chọn giá trị, cổng đo, chạm trần tiền, hoàn tác, đồng bộ (AC-6, AC-8, AC-10, AC-11, AC-12)."
+  },
+  {
+   "i": 3,
+   "p": "Để sau: nhãn từng căn trên màn gắn nhãn, bảng lưu căn riêng nếu mã tin rung, lớp bài đăng dùng chung."
+  },
+  {
+   "i": 4,
+   "p": "Không bao giờ: model ghi thẳng giá, diện tích; gọi model khi nạp lại."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Thiếu chốt: chỉ cần có nhãn thử là lượt đêm đã tách hàng loạt, và hoàn tác xong lại bị tách. Đã thêm dấu mở cổng và dấu chặn tách lại."
+  },
+  {
+   "i": 1,
+   "p": "Ngưỡng cũ 100 nhãn không thể đạt về toán. Đã đổi thành 125 nhãn, tối thiểu 30 nhãn Có; mức ngưỡng do anh chốt."
+  },
+  {
+   "i": 2,
+   "p": "Độ đúng từng căn không có mức đạt và lúc ký chỉ có dữ liệu giả. Đã thêm lượt đọc thật trước Cổng Bằng chứng, mức 27/30; mức do anh chốt."
+  },
+  {
+   "i": 3,
+   "p": "Phép đo bỏ sót nhiều vế, kể cả ca đổi giá giữa các căn. Đã viết lại từng phép đo."
+  },
+  {
+   "i": 4,
+   "p": "Một số lựa chọn máy tự quyết có căn cứ yếu, gồm việc tin cũ trên cổng đổi giá. Đã chuyển thành câu hỏi cho anh."
+  }
+ ]
+}
