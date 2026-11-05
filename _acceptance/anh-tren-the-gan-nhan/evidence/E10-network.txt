@@ -1,23 +1,23 @@
-E10 network: driver ego-browser. CDP Network.enable + page.events() bat trong luc bam Thu lai (khong co read_console_messages); phan con lai lay tu nhat ky may chu dev :3463 (chay lai tu dau luc 12:42-12:50).
---- CDP trong luc bam Thu lai (bai 10367):
- Network.requestWillBeSent GET http://localhost:3463/api/zalo-media?nhan=10367&anh=0&lan=1 type=Image
- Network.responseReceived 502 Bad Gateway text/plain (anh hong co chu y trong seed: file error http-500, khong co tep) -> route duoc goi lai, src doi lan=1
---- Nhat ky may chu dev :3463:
- GET /ops/labels?nhom=S03-N046 200 in 576ms (next.js: 206ms, proxy.ts: 3ms, application-code: 367ms)
- GET /ops/labels?nhom=S03-N046 200 in 174ms (next.js: 5ms, proxy.ts: 4ms, application-code: 165ms)
- GET /api/zalo-media?nhan=10366&anh=0 200 in 57ms (next.js: 27ms, application-code: 29ms)
- GET /ops/labels?nhom=S03-N046 200 in 134ms (next.js: 13ms, proxy.ts: 2ms, application-code: 118ms)
- POST /api/v1/ops/labels 400 in 34ms (next.js: 16ms, application-code: 18ms)
- POST /api/v1/ops/labels 200 in 19ms (next.js: 0.5ms, application-code: 18ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046&xem=10366 200 in 134ms (next.js: 3ms, proxy.ts: 1.7ms, application-code: 130ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046 200 in 99ms (next.js: 3ms, proxy.ts: 3ms, application-code: 93ms)
- GET /api/zalo-media?nhan=10367&anh=0 502 in 17ms (next.js: 0.6ms, application-code: 16ms)
- GET /api/zalo-media?nhan=10367&anh=0&lan=1 502 in 13ms (next.js: 0.5ms, application-code: 12ms)
- POST /api/v1/ops/labels 200 in 22ms (next.js: 0.6ms, application-code: 21ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046&xem=10367 200 in 122ms (next.js: 1.8ms, proxy.ts: 3ms, application-code: 118ms)
- GET /api/zalo-media?nhan=10367&anh=0 502 in 6ms (next.js: 0.3ms, application-code: 6ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046 200 in 92ms (next.js: 1.7ms, proxy.ts: 1.4ms, application-code: 89ms)
+E10 network (lan chay lai doc lap): driver ego-browser; CDP Network.enable + page.events() bat luc bam Thu lai; khong co read_console_messages (console errors: khong doc duoc).
+--- CDP trong luc bam Thu lai (bai anh hong, nhan=10382):
+ Network.requestWillBeSent GET http://localhost:3463/api/zalo-media?nhan=10382&anh=0&lan=1 type=Image
+ Network.responseReceived 502 type=Image (anh hong co chu y trong seed: file error http-500, khong co tep) -> route duoc goi lai voi lan=1. Tai nguyen anh: chi note, khong tinh fail.
+--- Nhat ky may chu dev :3463 (app-origin):
+ GET /ops/labels?nhom=S03-N049 200 in 552ms (next.js: 233ms, proxy.ts: 8ms, application-code: 311ms)
+ GET /api/zalo-media?nhan=10380&anh=0 200 in 51ms (next.js: 25ms, application-code: 26ms)
+ POST /api/v1/ops/labels 200 in 45ms (next.js: 15ms, application-code: 30ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049&xem=10380 200 in 158ms (next.js: 3ms, proxy.ts: 2ms, application-code: 153ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049 200 in 81ms (next.js: 1.8ms, proxy.ts: 4ms, application-code: 76ms)
+ GET /api/zalo-media?nhan=10381&anh=0 200 in 5ms (next.js: 0.6ms, application-code: 5ms)
+ POST /api/v1/ops/labels 200 in 16ms (next.js: 0.8ms, application-code: 15ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049&xem=10381 200 in 113ms (next.js: 2ms, proxy.ts: 3ms, application-code: 108ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049 200 in 78ms (next.js: 1.4ms, proxy.ts: 1.1ms, application-code: 75ms)
+ GET /api/zalo-media?nhan=10382&anh=0 502 in 10ms (next.js: 0.6ms, application-code: 9ms)
+ GET /api/zalo-media?nhan=10382&anh=0&lan=1 502 in 16ms (next.js: 1.1ms, application-code: 15ms)
+ POST /api/v1/ops/labels 200 in 18ms (next.js: 0.8ms, application-code: 17ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049&xem=10382 200 in 127ms (next.js: 1.6ms, proxy.ts: 4ms, application-code: 122ms)
+ GET /api/zalo-media?nhan=10382&anh=0 502 in 6ms (next.js: 0.4ms, application-code: 6ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049 200 in 81ms (next.js: 2ms, proxy.ts: 3ms, application-code: 76ms)
  POST /api/v1/ops/labels 200 in 19ms (next.js: 0.4ms, application-code: 19ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046&xem=10368 200 in 107ms (next.js: 2ms, proxy.ts: 2ms, application-code: 102ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046 200 in 67ms (next.js: 1.4ms, proxy.ts: 1.3ms, application-code: 64ms)
---- Ghi chu: POST /api/v1/ops/labels 400 (dong 16) la lan luu dau tien cua bai 2 khi toi quen chon Nhieu can (tien de dua toi bai 3, truoc buoc 1 cua E10); luu lai thi 200. Loi console: khong doc duoc (driver khong co).
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049&xem=10383 200 in 113ms (next.js: 2ms, proxy.ts: 3ms, application-code: 108ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N049 200 in 63ms (next.js: 1.3ms, proxy.ts: 1.4ms, application-code: 61ms)
