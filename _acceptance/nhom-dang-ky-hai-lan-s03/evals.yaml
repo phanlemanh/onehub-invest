@@ -8,7 +8,7 @@ evals:
     cmd: config:executors.script.ndk_mau
     layer: backend-effect
     paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs]
-    expected: "exit 0; lệnh thật trên fixture hai dạng khoá: 'ok AC-1 mot tang', 'ok AC-1 dung ma khoa tran', 'ok AC-1 khong vuot han muc'; chiều đỏ cùng fixture: đột biến khoá nguyên văn cho 'ok do M1: loi tach tang', đột biến đại diện sai cho 'ok do M2: loi dai dien', đột biến gộp quá tay cho 'ok do M4: loi gop qua tay'"
+    expected: "exit 0; lệnh thật trên fixture hai dạng khoá: 'ok AC-1 mot tang', 'ok AC-1 dung ma khoa tran', 'ok AC-1 khong vuot han muc' trên cả nhóm lớn hai dòng có hợp 35 nội dung; chiều đỏ cùng fixture: đột biến khoá nguyên văn cho 'ok do M1: loi tach tang' và 'ok do M1: loi vuot han muc', đột biến đại diện sai cho 'ok do M2: loi dai dien', đột biến gộp quá tay cho 'ok do M4: loi gop qua tay'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -32,7 +32,7 @@ evals:
     cmd: config:executors.test.gcn_pipeline
     layer: backend-effect
     paths: [pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
-    expected: "exit 0; ca 'nhom that' xanh trên bảng dạng khoá của AC-4, 13 ô, mỗi ô so đơn vị, gộp và khoá thật, mỗi ô một phần tử viết tay trong tệp test, số assert bằng số ô; sổ và bài toàn khoá trần hoặc khoá lạ cho mẫu y hệt so khớp nguyên văn; chiều đỏ trong cùng tệp: bản đột biến khoá nguyên văn, bản gộp quá tay và bản bỏ chốt khoá rỗng (đỏ ở ô 12) làm bảng ném thông điệp ghim 'NHOM THAT SAI'"
+    expected: "exit 0; ca 'nhom that' xanh trên bảng dạng khoá của AC-4, 13 ô, mỗi ô so đơn vị, gộp và khoá thật, mỗi ô một phần tử viết tay trong tệp test, số assert bằng số ô; sổ và bài toàn khoá trần hoặc khoá lạ, kể cả khoá mang dấu hai chấm và khoá ngoài sổ, cho mẫu y hệt so khớp nguyên văn, bản gộp quá tay, bản bỏ chốt khoá rỗng, bản bỏ tới dấu gạch làm phép so ném 'MAU LECH'; chiều đỏ trong cùng tệp: bản đột biến khoá nguyên văn, bản gộp quá tay và bản bỏ chốt khoá rỗng (đỏ ở ô 12) làm bảng ném thông điệp ghim 'NHOM THAT SAI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -64,5 +64,5 @@ evals:
     cmd: config:executors.script.ndk_that
     layer: backend-effect
     paths: [docs/superpowers/specs/2026-11-04-nhom-dang-ky-hai-lan-s03-design.md, _acceptance/nhom-dang-ky-hai-lan-s03/**, pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
-    expected: "exit 0; khoá đọc từ sổ DB thử lúc chạy, cả dạng nguyên văn và đã bỏ tiền tố: 'ok AC-8 tep doi 0 khop', 'ok AC-8 dau ra 0 khop'; đối chứng dương: khoá mồi trong tệp tạm cho 'ok do: loi khoa trong tep', chuỗi mồi trong đầu ra cho 'ok do: loi khoa trong dau ra'; lệnh chỉ in số lượng"
+    expected: "exit 0; khoá đọc từ sổ DB thử lúc chạy, cả dạng nguyên văn và đã bỏ tiền tố: 'ok AC-8 tep doi 0 khop', 'ok AC-8 dau ra 0 khop'; đối chứng dương: khoá mồi trong tệp tạm cho 'ok do: loi khoa trong tep', chuỗi mồi trong đầu ra cho 'ok do: loi khoa trong dau ra'; lệnh chỉ in số lượng; hai đầu dò giữ chung khoá riêng DB thử: 'ok do: khoa rieng DB thu'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -5,8 +5,9 @@ import os from "node:os"
 import path from "node:path"
 
 import { kiem, pg, ROOT, URL_THU } from "../../gan-nhan-theo-nhom-s03/probes/_db.mjs"
-import { LENH, voiDotBien } from "./_dot.mjs"
+import { chiemDuocDbThu, giuDbThu, LENH, voiDotBien } from "./_dot.mjs"
 
+await giuDbThu()
 const CHI_DOC = `${URL_THU}?options=-c%20default_transaction_read_only%3Don`
 const c = new pg.Client({ connectionString: CHI_DOC })
 await c.connect()
@@ -24,6 +25,7 @@ const KHOA = [...new Set(khoaSo.flatMap((r) => [r.group_key, r.khoa]))]
 await c.end()
 
 const loi = []
+kiem(loi, !(await chiemDuocDbThu()), "do: khoa rieng DB thu", "loi khoa rieng DB thu khong chan dau do khac")
 if (cap.length === 0 || KHOA.length === 0) {
   console.log("loi DB thu khong co cap")
   process.exit(1)

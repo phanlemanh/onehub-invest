@@ -4,8 +4,9 @@ import { spawnSync } from "node:child_process"
 
 import { kiem, noiDbThu, ROOT, URL_THU } from "../../gan-nhan-theo-nhom-s03/probes/_db.mjs"
 import { docThiTruongNhom } from "../../../pipeline/transform-zalo.mjs"
-import { LENH, voiDotBien } from "./_dot.mjs"
+import { giuDbThu, LENH, voiDotBien } from "./_dot.mjs"
 
+await giuDbThu()
 const SNAP = "hanoi__s03__ndkmau"
 const c = await noiDbThu()
 const don = async () => {
@@ -28,6 +29,8 @@ const THE = "Thẻ nhóm NDK"
 // Dòng có tiền tố đăng ký trước để mã nhỏ hơn dòng khoá trần: đại diện vẫn phải là dòng khoá trần.
 await dangKy("Dp", "ndkk:group:ndk-d", { note: THE, market: [thiTruong] })
 await dangKy("D", "ndk-d", { note: THE, market: [thiTruong] })
+await dangKy("Vp", "ndkk:group:ndk-v")
+await dangKy("V", "ndk-v")
 await dangKy("Sp", "ndkk:group:ndk-s")
 await dangKy("S", "ndk-s")
 await dangKy("Tp", "ndkk:group:ndk-t", { note: "Thẻ một" })
@@ -50,6 +53,9 @@ await loat("ndk-l2", "L2", 0, 20)
 await loat("ndk-d", "D", 0, 12)
 await loat("ndkk:group:ndk-d", "D", 12, 12)
 await loat("ndkk:group:ndk-d", "D", 0, 3)
+// V: khoá trần 30, khoá phụ 5 nội dung khác. Hợp = 35 nội dung, trên hạn mức nhóm lớn: tách đôi thì 30 + 5 = 35 bài.
+await loat("ndk-v", "V", 0, 30)
+await loat("ndkk:group:ndk-v", "V", 30, 5)
 // S: khoá trần 2, khoá phụ 6, cộng 8 nội dung: vẫn là nhóm nhỏ, hạn mức 5.
 await loat("ndk-s", "S", 0, 2)
 await loat("ndkk:group:ndk-s", "S", 2, 6)
@@ -62,12 +68,12 @@ await loat("ndka:ndkb:group:ndk-m", "M", 0, 2)
 await loat("ndk-m", "M", 2, 2)
 
 const chay = (lenh, ...a) => spawnSync("node", [lenh, ...a], { cwd: ROOT, env: { ...process.env, DATABASE_URL: URL_THU }, encoding: "utf8" })
-const co = (lat, mau = "^NDK") => ["--lat", lat, "--seed", "ndk", "--theo-nhom", "--moi-nhom-lon", "30", "--moi-nhom-nho", "5", "--so-nhom-lon", "2", "--nhom-khop", mau]
+const co = (lat, mau = "^NDK") => ["--lat", lat, "--seed", "ndk", "--theo-nhom", "--moi-nhom-lon", "30", "--moi-nhom-nho", "5", "--so-nhom-lon", "3", "--nhom-khop", mau]
 const soTang = async (lat) => Object.fromEntries((await c.query(
   `SELECT stratum, count(*)::int n FROM eval_label_items WHERE lat = $1 GROUP BY 1`, [lat])).rows.map((x) => [x.stratum, x.n]))
 const bao = (a, b, n) => `gộp đơn vị trùng: ${MA[a]} ← ${MA[b]} · bài ở khoá phụ ${n}`
 // Tên lát cũng bắt đầu bằng `ndk-` và được in, nên khớp đúng các khoá một chữ cái của fixture.
-const KHOA_FIXTURE = /ndkk:|ndkz:|ndka:|ndk-[dstklm]\d?\b/
+const KHOA_FIXTURE = /ndkk:|ndkz:|ndka:|ndk-[dstklmv]\d?\b/
 
 /** Một lượt đầy đủ trên một lát; trả về [khoá lời hứa, đạt?, thông điệp đỏ]. Bản thật in `ok <khoá>`, đột biến đọc thông điệp đỏ. */
 async function doMau(lenh, lat) {
@@ -82,9 +88,9 @@ async function doMau(lenh, lat) {
   const dongL2 = ghi.stdout.match(new RegExp(`nhóm ${MA.L2}: chọn (\\d+)/(\\d+)`))
   const thayBao = (s) => s.includes(bao("D", "Dp", 15)) && s.includes(bao("S", "Sp", 6)) && s.includes(bao("T", "Tp", 1))
   return [
-    ["AC-1 mot tang", !so[MA.Dp] && !so[MA.Sp] && !so[MA.Tp] && so[MA.D] > 0, "loi tach tang"],
+    ["AC-1 mot tang", !so[MA.Dp] && !so[MA.Vp] && !so[MA.Sp] && !so[MA.Tp] && so[MA.D] > 0, "loi tach tang"],
     ["AC-1 dung ma khoa tran", so[MA.S] > 0 && so[MA.T] > 0, "loi dai dien"],
-    ["AC-1 khong vuot han muc", so[MA.L1] === 30 && so[MA.D] <= 30 && so[MA.S] === 5 && so[MA.T] === 3, "loi vuot han muc"],
+    ["AC-1 khong vuot han muc", so[MA.L1] === 30 && (so[MA.V] ?? 0) + (so[MA.Vp] ?? 0) === 30 && so[MA.S] === 5 && so[MA.T] === 3, "loi vuot han muc"],
     ["AC-1 khong gop qua tay", so[MA.Ka] === 3 && so[MA.Kb] === 3 && so[MA.Ma] === 2 && so[MA.Mb] === 2, "loi gop qua tay"],
     ["AC-2 bai khoa phu vao tang dai dien", phu === 12, "loi bai khoa phu"],
     ["AC-2 so noi dung la hop hai dang", dongD?.[3] === "24" && so[MA.D] === 24, "loi hop"],
@@ -107,7 +113,7 @@ const r = chay(LENH, ...co("ndk-sach", "^NDK L"))
 kiem(loi, r.status === 0 && !/gộp đơn vị trùng|khác thẻ|tầng phụ/.test(r.stdout), "AC-3 khong co cap thi khong bao", `loi bao khi khong co cap: ${r.stdout.slice(-200)}`)
 
 // Chiều đỏ: mỗi đột biến phải làm đỏ đúng lời hứa nó phá, trên cùng fixture.
-for (const [ma, do_] of [["M1", "loi tach tang"], ["M1", "loi bai khoa phu"], ["M2", "loi dai dien"], ["M3", "loi khong bao gop"], ["M4", "loi gop qua tay"], ["M5", "loi xep"], ["M6", "loi hop"]]) {
+for (const [ma, do_] of [["M1", "loi tach tang"], ["M1", "loi vuot han muc"], ["M1", "loi bai khoa phu"], ["M2", "loi dai dien"], ["M3", "loi khong bao gop"], ["M4", "loi gop qua tay"], ["M5", "loi xep"], ["M6", "loi hop"]]) {
   const lat = `ndk-dot-${ma.toLowerCase()}`
   await c.query(`DELETE FROM eval_label_items WHERE lat = $1`, [lat])
   const kq = await voiDotBien(ma, (lenh) => doMau(lenh, lat))

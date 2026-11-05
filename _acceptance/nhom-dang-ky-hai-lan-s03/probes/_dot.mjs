@@ -3,12 +3,32 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from "nod
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 
-import { ROOT } from "../../gan-nhan-theo-nhom-s03/probes/_db.mjs"
+import { pg, ROOT, URL_THU } from "../../gan-nhan-theo-nhom-s03/probes/_db.mjs"
 
 export const LENH = path.join(ROOT, "pipeline/label-sample.mjs")
 const PIPE = path.join(ROOT, "pipeline")
 const MOC_KHOA = 'String(khoa).replace(/^(?:[^:]+:)?group:(?=.)/, "")'
 const MOC_XEP = "khac_nhau: new Set(ds.map((x) => x.h)).size"
+
+const KHOA_DB_THU = 7315
+
+/** Giữ khoá riêng của DB thử tới hết tiến trình: hai đầu dò cùng chạy thì đầu dò sau chờ, không thấy fixture đang dựng của đầu dò trước. Chờ quá 5 phút thì ném. */
+export async function giuDbThu() {
+  const k = new pg.Client({ connectionString: URL_THU })
+  await k.connect()
+  await k.query(`SET lock_timeout = '300s'`)
+  await k.query(`SELECT pg_advisory_lock($1)`, [KHOA_DB_THU])
+  return k
+}
+
+/** Một kết nối khác có chiếm được khoá riêng không; chiếm được thì nhả ngay. */
+export async function chiemDuocDbThu() {
+  const k = new pg.Client({ connectionString: URL_THU })
+  await k.connect()
+  const { rows: [{ duoc }] } = await k.query(`SELECT pg_try_advisory_lock($1) AS duoc`, [KHOA_DB_THU])
+  await k.end()
+  return duoc
+}
 
 /** Mỗi đột biến: [tệp, chỗ cũ, chỗ mới]. Chỗ cũ không còn thì ném: thước không được xanh vì đột biến không áp được. */
 export const DOT_BIEN = {

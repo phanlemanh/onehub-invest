@@ -177,15 +177,33 @@ test("nhom that: hai dòng khác thẻ thì the_lech; cùng thẻ hay không có
   assert.equal(lech(null, null), false);
 });
 
-test("nhom that: sổ và bài toàn khoá trần hoặc khoá lạ → mẫu y hệt so nguyên văn", () => {
-  const so = [["ka", "A"], ["kb", "B"], ["conv-c", "C"]].map(([group_key, unit_code]) => ({ group_key, unit_code }));
-  const bai = Array.from({ length: 60 }, (_, i) => ({ post_id: `n${i}`, text: `bài số ${i}`, conversation_id: ["ka", "kb", "conv-c"][i % 3] }));
+// Khoá trần và khoá lạ của bảng AC-4, không có cặp nào thật sự là một nhóm; `ngoai:x` không có trong sổ. Mỗi khoá 10 bài.
+function kiemMauYHet(mod) {
+  const so = [["ka", "A"], ["kb", "B"], ["conv-c", "C"], ["conv:x", "D"], ["x", "E"], ["a:b:group:y", "F"], ["y", "G"], ["k1:group:", "H"], ["k2:group:", "I"]]
+    .map(([group_key, unit_code]) => ({ group_key, unit_code }));
+  const khoa = [...so.map((r) => r.group_key), "ngoai:x"];
+  const bai = Array.from({ length: 100 }, (_, i) => ({ post_id: `n${i}`, text: `bài số ${i}`, conversation_id: khoa[i % 10] }));
   const nguyenVan = new Map(so.map((r) => [r.group_key, r.unit_code]));
-  const { donVi } = donViTheoNhomThat(so);
+  const { donVi } = mod.donViTheoNhomThat(so);
   const opt = { seed: "s", moiNhomLon: 12, moiNhomNho: 5, soNhomLon: 1 };
-  assert.deepEqual(
-    chonMauTheoNhom(bai.map((p) => ({ ...p, unit_code: donViCuaBai(donVi, p.conversation_id) })), opt),
-    chonMauTheoNhom(bai.map((p) => ({ ...p, unit_code: nguyenVan.get(p.conversation_id) ?? null })), opt));
+  const thuc = mod.chonMauTheoNhom(bai.map((p) => ({ ...p, unit_code: mod.donViCuaBai(donVi, p.conversation_id) })), opt);
+  const chuan = mod.chonMauTheoNhom(bai.map((p) => ({ ...p, unit_code: nguyenVan.get(p.conversation_id) ?? null })), opt);
+  if (JSON.stringify(thuc) !== JSON.stringify(chuan)) throw new Error("MAU LECH: khoá trần hoặc khoá lạ không cho mẫu y hệt so nguyên văn");
+  return thuc.bo_khong_don_vi;
+}
+
+test("nhom that: sổ và bài toàn khoá trần hoặc khoá lạ → mẫu y hệt so nguyên văn", () => {
+  assert.equal(kiemMauYHet({ chonMauTheoNhom, donViTheoNhomThat, donViCuaBai }), 10);
+});
+
+test("nhom that chiều đỏ: mẫu y hệt đỏ với bản gộp quá tay, bản bỏ chốt khoá rỗng, bản bỏ tới dấu gạch", async () => {
+  const moc = 'String(khoa).replace(/^(?:[^:]+:)?group:(?=.)/, "")';
+  for (const b of ['String(khoa).replace(/^.*:/, "")', 'String(khoa).replace(/^(?:[^:]+:)?group:/, "")', 'String(khoa).replace(/^.*[:-]/, "")']) {
+    const banDot = await banDotEvalLabels(moc, b);
+    assert.throws(() => kiemMauYHet(banDot), /MAU LECH/, b);
+  }
+  // Bản khoá nguyên văn chính là chuẩn so sánh của ca này nên phải xanh; chiều đỏ của nó nằm ở bảng 13 ô.
+  assert.equal(kiemMauYHet(await banDotEvalLabels(moc, "String(khoa)")), 10);
 });
 
 test("nhom that chiều đỏ: bản khoá nguyên văn, bản gộp quá tay và bản bỏ chốt khoá rỗng làm bảng ném thông điệp ghim", async () => {
