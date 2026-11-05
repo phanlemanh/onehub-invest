@@ -1,14 +1,72 @@
-E5 network (driver ego-browser khong co duong doc network; ban sau day la log may chu next dev :3463, dong GET co status)
---- dem status ---
-   1 / 200
-  46 /api/zalo-media 200
-   5 /api/zalo-media 404
-   1 /login 200
-  27 /ops/labels 200
---- 4xx/5xx ---
- GET /api/zalo-media?nhan=10795&anh=1 404 in 69ms (next.js: 0.6ms, application-code: 69ms)
- GET /api/zalo-media?nhan=10795&anh=1 404 in 25ms (next.js: 0.6ms, application-code: 25ms)
- GET /api/zalo-media?nhan=10795&anh=1 404 in 14ms (next.js: 0.7ms, application-code: 13ms)
- GET /api/zalo-media?nhan=10795&anh=1&lan=1 404 in 12ms (next.js: 0.6ms, application-code: 11ms)
- GET /api/zalo-media?nhan=10795&anh=1 404 in 11ms (next.js: 1.2ms, application-code: 10ms)
---- console errors: khong doc duoc (driver) ---
+# E5 network (CDP Network.* qua ego-browser, lần chạy sạch trên nhóm S03-N055) — origin app http://localhost:3463
+tổng phản hồi/lỗi ghi được: 580; app-origin: 580; ngoài origin: 0
+
+16x GET /_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css 200
+5x GET /_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css 200
+11x GET /_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css 304
+9x GET /_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js 200
+7x GET /_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js 304
+9x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js 200
+7x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js 304
+9x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js 200
+7x GET /_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js 304
+9x GET /_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js 200
+7x GET /_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js 304
+9x GET /_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js 200
+7x GET /_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js 304
+9x GET /_next/static/chunks/_1anvha4rlo79g._.js 200
+7x GET /_next/static/chunks/_1anvha4rlo79g._.js 304
+9x GET /_next/static/chunks/_1g--mohl7s-9f._.js 200
+7x GET /_next/static/chunks/_1g--mohl7s-9f._.js 304
+9x GET /_next/static/chunks/_1x_e391htnmld._.js 200
+7x GET /_next/static/chunks/_1x_e391htnmld._.js 304
+9x GET /_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js 200
+7x GET /_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js 304
+9x GET /_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js 200
+7x GET /_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js 304
+9x GET /_next/static/chunks/node_modules_02uxlv6kujl17._.js 200
+7x GET /_next/static/chunks/node_modules_02uxlv6kujl17._.js 304
+9x GET /_next/static/chunks/node_modules_14b_hroe7y71h._.js 200
+7x GET /_next/static/chunks/node_modules_14b_hroe7y71h._.js 304
+9x GET /_next/static/chunks/node_modules_1l3m3iglgy1xq._.js 200
+7x GET /_next/static/chunks/node_modules_1l3m3iglgy1xq._.js 304
+9x GET /_next/static/chunks/node_modules_1svwq83k1gnsf._.js 200
+7x GET /_next/static/chunks/node_modules_1svwq83k1gnsf._.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js 304
+9x GET /_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js 200
+7x GET /_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js 304
+9x GET /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js 200
+7x GET /_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js 304
+9x GET /_next/static/chunks/src_0rw3ib9yb_fx0._.js 200
+7x GET /_next/static/chunks/src_0rw3ib9yb_fx0._.js 304
+9x GET /_next/static/chunks/src_17_6n6f522exz._.js 200
+7x GET /_next/static/chunks/src_17_6n6f522exz._.js 304
+9x GET /_next/static/chunks/src_components_1l9nwmkpkd7cn._.js 200
+7x GET /_next/static/chunks/src_components_1l9nwmkpkd7cn._.js 304
+9x GET /_next/static/chunks/turbopack-_06rkbud3pyrlm._.js 200
+7x GET /_next/static/chunks/turbopack-_06rkbud3pyrlm._.js 304
+16x GET /_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2 200
+16x GET /_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2 200
+16x GET /_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2 200
+16x GET /_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2 200
+16x GET /_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2 200
+39x GET /api/zalo-media 200
+4x GET /api/zalo-media 404
+2x GET /favicon.ico 200
+16x GET /ops/labels 200
+7x POST /api/v1/ops/labels 200
+
+ĐÁNH GIÁ: app-origin status>=400 hoặc failed:
+ - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
+ - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
+ - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=tiep
+ - GET /api/zalo-media?nhan=10895&anh=1 -> 404 [Image] tag=het

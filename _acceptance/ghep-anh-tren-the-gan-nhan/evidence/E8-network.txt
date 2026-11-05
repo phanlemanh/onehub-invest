@@ -1,13 +1,19 @@
-E8 network (driver ego-browser khong co duong doc network; trich tu log dev server :3463 sau lan seed cuoi + curl)
-   2 GET /ops/labels?nhom=S03-N051 200
-   2 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N051&xem=10804 200
-   2 GET /api/zalo-media?nhan=10804&anh=2 200
-   2 GET /api/zalo-media?nhan=10804&anh=1 200
-   2 GET /api/zalo-media?nhan=10804&anh=0 200
-   1 POST /api/v1/ops/labels/10804/review 200
+E8 network (driver ego-browser khong co duong doc network; trich tu log dev server :3463 lan chay nay + curl; gia tri cookie khong in)
+   2 GET /ops/labels?nhom=S03-N056 200
+   2 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N056 200
+   2 GET /api/zalo-media?nhan=10896&anh=2 200
+   2 GET /api/zalo-media?nhan=10896&anh=1 200
+   2 GET /api/zalo-media?nhan=10896&anh=0 200
+   1 POST /api/v1/ops/labels/10896/review 200
    1 POST /api/v1/ops/labels 200
-   1 GET /ops/labels?nhom=S03-N050 200
-   1 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N051 200
-   1 GET /api/zalo-media?nhan=10806&anh=0 200
-# 4xx/5xx:
+   1 GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N056&xem=10896 200
+   1 GET /login?next=%2Fops%2Flabels 200
+   1 GET /api/zalo-media?nhan=10898&anh=0 200
+   1 GET /api/zalo-media?nhan=10896&anh=4 404
+   1 GET /api/zalo-media?nhan=10896&anh=3 404
+   1 GET /api/v1/ops/labels?lat=s03-theo-nhom&nhom=S03-N056 200
+# 4xx/5xx trong log:
+GET /api/zalo-media?nhan=10896&anh=3 404
+GET /api/zalo-media?nhan=10896&anh=4 404
+# curl: zalo-media anh=3,4 => 404 (ngoai khoang cua bai 3 anh, ky vong); con lai 200
 # (het)
