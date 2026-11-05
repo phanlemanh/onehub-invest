@@ -585,7 +585,7 @@ executors:
     mgn_migration: "node _acceptance/man-gan-nhan-mu/probes/migration.mjs"   # man-gan-nhan-mu E1 — DB rỗng riêng oneinvest_p4_mgn_mig
     gcn_migration: "node _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs"   # gan-nhan-theo-nhom-s03 E1 — DB thử oneinvest_gcn_nhan_mig
     anh_thuan: "cd app && node --import tsx --test tests/labels-anh.test.ts"   # anh-tren-the-gan-nhan E1, E2, E3, E5 — hàm thuần, route thật với tệp giả, render jsdom
-    anh_nap: "node _acceptance/anh-tren-the-gan-nhan/probes/nap.mjs"   # anh-tren-the-gan-nhan E6, E8 — DB thử oneinvest_anh_nhan
+    anh_nap: "cd app && node --import tsx ../_acceptance/anh-tren-the-gan-nhan/probes/nap.mjs"   # anh-tren-the-gan-nhan E6, E8 — DB thử oneinvest_anh_nhan
     anh_that: "cd app && node --import tsx ../_acceptance/anh-tren-the-gan-nhan/probes/that.mjs"   # anh-tren-the-gan-nhan E9 — 367 bài thật, chỉ đọc, chỉ báo số
     anh_kin: "node _acceptance/anh-tren-the-gan-nhan/probes/kin.mjs"   # anh-tren-the-gan-nhan E7 — tên miền nguồn không vào kho
     dn1_thuan: "node --test pipeline/noi-du-an-s08.test.mjs"   # noi-du-an-s08-khu-do-thi E1, E2 — hàm thuần, không DB

@@ -1,12 +1,13 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
+import { chuKhongLink, danhSachAnh, duongAnh } from "./labels-anh"
 import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
 
 /**
  * Gắn nhãn đánh giá (PL7 `man-gan-nhan-mu`) — truy vấn của trang /ops/labels và route /api/v1/ops/labels.
  * MÙ (AC-4): chỉ đọc eval_label_items, eval_labels, view đồng thuận và chữ gốc của tin ở stg (text, nhóm, giờ đăng) —
- * không đọc bảng hay cột nào mang giá trị máy đã đọc ra. Bảng chỉ ở máy thu (054_labels.sql); trên cloud trang không gọi.
+ * và cột ảnh của bài (`media`, `media_files`, không phải kết quả đọc ảnh); không đọc bảng hay cột nào mang giá trị máy đã đọc ra. Bảng chỉ ở máy thu (054_labels.sql); trên cloud trang không gọi.
  */
 
 type Q = Pick<PoolClient, "query">
@@ -16,7 +17,11 @@ export type TinGan = {
   lat: string
   doubleLabel: boolean
   soNguoi: number
+  /** Chữ hiện trên thẻ, đã bỏ link. Chữ gốc chỉ ở máy chủ (`baiDeGhi`). */
   text: string
+  /** Đường `/api/zalo-media?nhan=&anh=`, không có URL gốc. */
+  anh: string[]
+  soLinkKhac: number
   groupName: string | null
   postedAt: string | null
 }
@@ -34,11 +39,11 @@ const CHO_PHEP = `CASE WHEN i.double_label THEN 2 ELSE 1 END`
  * `nhom` là `unit_code`: chỉ lấy bài của nhóm đó. */
 export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: string | null = null): Promise<TinGan | null> {
   const sql =
-    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, p.text, p.group_name, p.posted_at
+    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
      FROM eval_label_items i
      LEFT JOIN LATERAL (SELECT count(DISTINCT labeler_id) AS so, bool_or(labeler_id = $1) AS cua_toi
                         FROM eval_labels WHERE item_id = i.item_id) n ON true
-     JOIN LATERAL (SELECT text, group_name, posted_at FROM stg_zalo_posts
+     JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id FROM stg_zalo_posts
                    WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP}
      ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.item_id
@@ -49,12 +54,16 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
     : await q.query(sql, [userId, lat])
   const r = rows[0]
   if (!r) return null
+  const nguon = danhSachAnh(r.media, r.media_files, r.snapshot_id)
+  const { chu, soLinkKhac } = chuKhongLink(r.text, nguon)
   return {
     itemId: r.item_id,
     lat: r.lat,
     doubleLabel: r.double_label,
     soNguoi: r.so,
-    text: r.text,
+    text: chu,
+    anh: nguon.map((_, i) => duongAnh(r.item_id, i)),
+    soLinkKhac,
     groupName: r.group_name,
     postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : null,
   }

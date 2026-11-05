@@ -15,6 +15,7 @@ import { fmtVnDateTime } from "@/lib/format"
 import type { LabelField, LoiLuot, PriceUnit, RawLabels } from "@/lib/labels-normalize"
 import type { TinGan } from "@/lib/labels-queries"
 
+import { AnhBai } from "./anh-bai"
 import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
 import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
@@ -53,10 +54,12 @@ export function LabelFormNhom({
   const [moRong, setMoRong] = useState(false)
   const [dangLuu, setDangLuu] = useState(false)
   const [matKetNoi, setMatKetNoi] = useState(false)
-  const cell = (f: LabelField) => cells[f] ?? O_TRONG
-  const dat = (f: LabelField, patch: Partial<O>) => setCells((c) => ({ ...c, [f]: { ...(c[f] ?? O_TRONG), ...patch } }))
+  // Bài chỉ có ảnh thì căn cứ mặc định là Ảnh, khỏi ghi sai là Chữ.
+  const oTrong: O = !tin.text && tin.anh.length ? { ...O_TRONG, basis: "anh" } : O_TRONG
+  const cell = (f: LabelField) => cells[f] ?? oTrong
+  const dat = (f: LabelField, patch: Partial<O>) => setCells((c) => ({ ...c, [f]: { ...(c[f] ?? oTrong), ...patch } }))
   const daDien = TAT_CA_O.filter((d) => cell(d.id).unknown || cell(d.id).value.trim()).length
-  const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai")
+  const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh")
   const xong = daDien === TAT_CA_O.length
 
   async function luu() {
@@ -93,11 +96,14 @@ export function LabelFormNhom({
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
-            <p className={`text-sm whitespace-pre-line wrap-anywhere ${moRong ? "" : "line-clamp-3"}`} data-labels-chu-goc="">
-              {tin.text || "Bài không có chữ."}
-            </p>
+            <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} />
+            {tin.text ? (
+              <p className={`text-sm whitespace-pre-line wrap-anywhere ${moRong ? "" : "line-clamp-3"}`} data-labels-chu-goc="">
+                {tin.text}
+              </p>
+            ) : null}
             <FrameDescription className="text-xs text-pretty">
-              Ghi điều người trong nhóm hiểu. Căn cứ: Chữ là chữ bài · Nhóm là ngữ cảnh nhóm · Nghề là kiến thức nghề. Ô vuông: không suy ra được.
+              Ghi điều người trong nhóm hiểu. Căn cứ: Chữ là chữ bài · Ảnh là ảnh trong bài · Nhóm là ngữ cảnh nhóm · Nghề là kiến thức nghề. Ô vuông: không suy ra được.
             </FrameDescription>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end sm:gap-1">

@@ -296,6 +296,13 @@
       "tokensUsed": []
     },
     {
+      "name": "AnhBai",
+      "category": "app",
+      "description": "components/ops/labels/anh-bai.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
       "name": "AreaThumbnail",
       "category": "app",
       "description": "components/page/area-thumbnail.tsx + `getAreaThumbnails` (lib/queries.ts)",

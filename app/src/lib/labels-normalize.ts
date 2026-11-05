@@ -43,10 +43,11 @@ export const LABEL_FIELDS_NHOM = [
 export type LabelField = (typeof LABEL_FIELDS_NHOM)[number]
 
 /** Căn cứ của một ô: nhãn là điều người trong nhóm hiểu, nên phải biết hiểu từ đâu. */
-export const BASIS = ["chu_bai", "ngu_canh_nhom", "kien_thuc_nghe"] as const
+export const BASIS = ["chu_bai", "anh", "ngu_canh_nhom", "kien_thuc_nghe"] as const
 export type Basis = (typeof BASIS)[number]
 export const BASIS_LABEL: Record<Basis, string> = {
   chu_bai: "Chữ bài",
+  anh: "Ảnh trong bài",
   ngu_canh_nhom: "Ngữ cảnh nhóm",
   kien_thuc_nghe: "Kiến thức nghề",
 }
@@ -278,7 +279,8 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined, nhom?: { text: s
       r.basis = b as Basis
       if (r.basis === "chu_bai" && PHAI_TRONG_CHU.includes(r.field) && !coTrongChu(r.value!, nhom.text)) loi[r.field] = MSG_KHONG_TRONG_CHU
     }
-    if (!reason && rows.some((r) => r.basis && r.basis !== "chu_bai")) loi.reason = MSG_THIEU_LY_DO
+    // Chữ và ảnh đều nằm trong chính bài nên không cần giải thích; chỉ căn cứ ngoài bài mới đòi lý do.
+    if (!reason && rows.some((r) => r.basis && r.basis !== "chu_bai" && r.basis !== "anh")) loi.reason = MSG_THIEU_LY_DO
   }
   if (Object.keys(loi).length > 0) return { ok: false, loi }
   return { ok: true, rows, reason }
