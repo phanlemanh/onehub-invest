@@ -1,93 +1,115 @@
-# Review findings: test-suite-db-thu (round 2)
-
 ## Trong hợp đồng
 
-- **Rào DB chung của --chay bị lọt khi DATABASE_URL không có user:pass**
-  file: `db/db-thu.sh:24`
-  severity: low
-  source: bugs
-  AC: AC-1
-  detail: Dòng 24 tách host bằng `noi="${u%/*}"; noi="${noi##*@}"`. Chỉ phần `*@` được cắt, nên URL không có userinfo giữ nguyên scheme: `postgres://localhost:5433/oneinvest` cho `noi=postgres://localhost:5433`. Giá trị này khác `localhost:5433`, nên script coi là máy chủ khác, đặt TEST_DATABASE_URL_ADMIN bằng chính URL đó rồi `exec "$@"` trên DB chung. Đã chạy thật với docker giả: vào `postgres://localhost:5433/oneinvest` thì lệnh nhận CMD_URL và ADMIN đều là URL DB chung, không đổi sang DB riêng; vào URL có `oneinvest:oneinvest@` thì đổi đúng sang `oneinvest_suite_app_<pid>`. Điều này trái AC-1 («DATABASE_URL trỏ DB oneinvest thì đổi sang DB của lượt»). Lỗi này chỉ gây hại khi có PGUSER/PGPASSWORD hoặc .pgpass để kết nối được, nên xác suất thấp, nhưng khi xảy ra thì test ghi thẳng vào DB chung mà không có cảnh báo. Ca DT-AC-1 và DT-AC-2 chỉ thử URL có userinfo nên không bắt được. Hướng sửa: cắt thêm scheme, `noi="${noi##*/}"`, trước hoặc sau khi cắt `*@`, và thêm ca này vào DT-AC-1.
-
-- **Hình 5 (tuyên quét LỚP, chỉ có điểm-case): tepNap không đi theo `@/`, import trần và đường tính lúc chạy, sót 125 tệp dù AC-7 hứa «mọi tệp mà test import»**
-  file: `scripts/db-thu.test.mjs:246`
+- **Thước E2 nhận 0 lần dựng trong khi AC-3 và expected của E2 vẫn ghi «đúng một lần»**
+  file: `_acceptance/test-suite-db-thu/probes/that.sh:62`
   severity: medium
+  AC: AC-3
+  source: conventions
+  detail: Sau lượt chấm 2, `that.sh` đổi thành `[ "$so_dung" -le 1 ]` (quyết định d-20261105T161456Z-16), nhưng hợp đồng không được cập nhật theo. AC-3 vẫn ghi «dựng lại đúng một lần», và evals.yaml dòng 33 của E2 vẫn ghi «đúng một lần dựng». Người ký đọc expected sẽ hiểu chặt hơn điều probe thật sự đo. `so_dung` đếm bằng cách grep chuỗi «dựng xong» trong stdout, nên nếu đổi câu thông báo thì số này luôn là 0 và vế đếm vẫn đạt. Khi đó chỉ còn các kiểm dấu mẫu và mau_moi sót, không kiểm nào phát hiện được dựng nhiều lần. Cần cho contract, evals và probe nói cùng một thước.
+  rationale: AC-3 viết «dựng lại đúng một lần» nhưng phép đo chấp nhận cả 0 lần, nên điều AC hứa không được kiểm đúng như chữ.
+
+- **Eval E2 và AC-3 hứa «đúng một lần dựng», còn that.sh nhận 0 hoặc 1 và không in số đếm**
+  file: `_acceptance/test-suite-db-thu/probes/that.sh:61`
+  severity: low
+  AC: AC-3
+  source: bugs
+  detail: Commit cfacf45e nới thước thành `[ "$so_dung" -le 1 ]`. evals.yaml E2 vẫn ghi «ba lượt thấy mẫu lệch dấu cùng lúc thì đúng một lần dựng», contract.md AC-3 vẫn ghi «dựng lại đúng một lần». Dòng in «E2 đạt» không có so_dung, nên người chấm không phân biệt được lượt đã thật sự thử tranh khoá dựng mẫu (1) với lượt bên khác dựng hộ (0). Khi so_dung = 0, phần tranh khoá của ba lượt không tự dựng lần nào mà E2 vẫn đạt. Hướng sửa: đổi chữ của eval và in so_dung vào dòng đạt.
+  rationale: AC-3 hứa «dựng lại đúng một lần» còn phép đo nhận cả 0 lần và không in số đếm, nên người chấm không phân biệt được lượt đã thật sự tranh khoá.
+
+- **Hình 4 (âm-tính-một-mình): that.sh chỉ chặn trên số lần dựng nên 0 lần cũng đạt, trong khi E2 và AC-3 ghi «đúng một lần»**
+  file: `_acceptance/test-suite-db-thu/probes/that.sh:61`
+  severity: medium
+  AC: AC-3
   source: measurement
-  AC: AC-7
-  detail: Regex dòng 246 chỉ nhận `from` hoặc `import(` theo sau là đường bắt đầu `./` hoặc `../`. Nó bỏ qua alias `@/` (chuỗi import trong app/src), import trần (`import "./labels-anh.test"` ở app/tests/labels-anh-ci.test.tsx:2), và đường tính bằng `join(PIPE, ...)` như `refresh-bait-gap.mjs`, `lib/nap-060.mjs` trong sellers-chip.test.tsx dòng 21 và 73. Chú thích dòng 238 chỉ thừa nhận phần import động tính lúc chạy, không nhắc `@/`. Tôi chạy thử bản BFS mở rộng ba đường trên: thêm được 125 tệp ngoài danh sách quét. Trong đó hit duy nhất của dongLot là `pipeline/push-ops-facts.mjs:22`, tức LOCAL_URL làm fallback sau `process.env.DATABASE_URL ??` ở dòng 217, chưa phải lọt thật. Assert dòng 295 chỉ ghim ba tên tệp nên không phát hiện được phần thiếu này: một tệp chỉ nạp qua `@/` đổi sang URL cứng thì DT-AC-7 vẫn xanh.
+  detail: Dòng 61 chỉ kiểm `[ "$so_dung" -le 1 ]`, chú thích dòng 60 nhận cả 0 lần. evals.yaml E2 vẫn ghi «đúng một lần dựng», AC-3 ghi «dựng lại đúng một lần ... cả khi ba lượt thấy mẫu cũ cùng lúc». Khi so_dung = 0, bản dựng đến từ lượt khác, nên không có bằng chứng rằng chính ba lượt này đã tranh khoá và chỉ một bên dựng. Dòng 63 chỉ khớp khuôn COMMENT, chứng được mẫu đã bị thay nhưng không chứng được điều đó. Nhánh này không có đối chứng dương và không in lý do, nên «E2 đạt» trông giống nhau ở cả hai trường hợp. Quyết định d-20261105T161456Z-16 chấp nhận 0 hoặc 1, nhưng lời hứa trong evals.yaml và contract.md chưa đổi theo.
+  rationale: AC-3 viết «dựng lại đúng một lần ... cả khi ba lượt thấy mẫu cũ cùng lúc» nhưng phép đo đạt cả khi không lượt nào dựng, nên điều AC hứa không được chứng.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Thước đã ký «trang đầu dưới 1 giây» của hồ sơ khác bị đổi thành lượt nhanh nhất trong sáu, hồ sơ đó không được cập nhật**
-  Người dùng thấy gì: Phép kiểm «trang đầu dưới 1 giây» giờ lấy lượt nhanh nhất trong tối đa sáu lượt, nên có thể báo đạt dù người đọc đầu tiên vẫn gặp độ chậm lúc máy còn nguội. Hồ sơ đã ký trước đó chưa được cập nhật để nói rõ cách đo mới.
-  Căn cứ: Chỉ làm kết quả kiểm có thể đẹp hơn thực tế, không làm mất hay sai dữ liệu của ai; ghi rõ cách đo mới cho người ký là đủ và rẻ.
-  file: `app/tests/tin-rao-doi-chieu.test.tsx`
-  severity: medium
+- **Rào DB chung của --chay mở theo hướng cho qua: mọi dạng viết host khác hai chuỗi đã liệt kê đều chạy thẳng trên URL đó**
+  Người dùng thấy gì: Nếu ai đó trỏ bài kiểm thử tới DB chung bằng một cách viết địa chỉ lạ, bài kiểm thử vẫn chạy thẳng trên DB chung thay vì được chuyển sang DB riêng của lượt. Hiện chưa nơi nào trong dự án viết địa chỉ theo kiểu đó.
+  Căn cứ: Xác suất gặp thấp vì dự án chỉ dùng hai cách viết đã được chặn, và chưa chứng minh được máy này thật sự nối tới DB chung qua các cách kia.
+  file: `db/db-thu.sh`
+  severity: low
   Đề xuất: known-limits
 
-- **Nhánh giữ URL máy chủ khác đẩy kết nối quản trị sang máy chủ đó, nhưng hai tệp test vẫn nối DB tạm ở localhost:5433**
-  Người dùng thấy gì: Khi ai đó chạy bộ kiểm với một máy chủ cơ sở dữ liệu khác máy mặc định, hai nhóm kiểm sẽ báo lỗi không tìm thấy cơ sở dữ liệu thử. Chạy bình thường trên máy này và trên CI thì không gặp.
-  Căn cứ: Chỉ gây đỏ giả khi chạy với máy chủ lạ, không ảnh hưởng dữ liệu thật và người chạy thử lại với cấu hình mặc định là qua, nên ghi lại là đủ.
-  file: `pipeline/scripts/cong-tac-that.test.mjs`
-  severity: medium
+- **nhanMau dựng bản mẫu bằng chế độ thường, bỏ qua các điều kiện của bản mẫu mà chính việc này đặt ra**
+  Người dùng thấy gì: Lần đo đầu tiên trên một máy chưa có bản mẫu có thể dùng bản mẫu thiếu thống kê, làm phép đo chạy chậm hoặc lệch. Người dùng cuối của ứng dụng không bị ảnh hưởng.
+  Căn cứ: Chỉ ảnh hưởng lần đo đầu trên máy mới, tự hết sau khi bản mẫu chuẩn được dựng, và không chạm tới dữ liệu hay người dùng.
+  file: `_acceptance/test-suite-db-thu/probes/song-song.mjs`
+  severity: low
   Đề xuất: known-limits
 
-- **dem-deadlock.mjs nuốt lỗi docker, in 0 ca và thoát 0**
-  Người dùng thấy gì: Khi không đọc được nhật ký máy chủ, công cụ đếm số lần kẹt khoá vẫn báo «0 ca» như thể đã hết lỗi, có thể làm người đọc bỏ qua việc cần làm tiếp.
-  Căn cứ: Chỉ là công cụ đo nội bộ, không ảnh hưởng người dùng cổng; người xem chạy lại hoặc đối chiếu nhật ký là phát hiện được, sửa rẻ nhưng không gấp.
+- **chotot-thieu-moc nối chuỗi ?options= vào DATABASE_URL thay vì dùng searchParams như pattern có sẵn**
+  Người dùng thấy gì: Khi địa chỉ DB đã kèm tham số, một bài kiểm thử của nguồn S06 có thể báo đỏ oan dù code không hỏng. Không ghi nhầm dữ liệu vào đâu.
+  Căn cứ: Chỉ gây báo đỏ giả, không mất hay lộ dữ liệu, và chạy lại với địa chỉ không kèm tham số là qua.
+  file: `pipeline/scripts/chotot-thieu-moc.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **dem-deadlock.mjs nuốt lỗi docker: không đọc được log vẫn báo 0 ca và thoát 0**
+  Người dùng thấy gì: Công cụ đếm số ca deadlock trên DB chung có thể báo 0 ca khi thực ra nó không đọc được nhật ký. Người xem số đó có thể tưởng deadlock đã hết và bỏ qua việc xử lý tiếp. Người dùng cuối của sản phẩm không bị ảnh hưởng, chỉ có quyết định nội bộ về việc tiếp theo bị lệch.
+  Căn cứ: Hậu quả nhẹ và không mất dữ liệu: chỉ khiến một con số theo dõi nội bộ sai khi máy thiếu công cụ đọc nhật ký, và chạy lại trên máy đủ công cụ là có số đúng. Ghi thành hạn chế đã biết là đủ, vì người đọc số chỉ cần biết không tin con số 0 khi chưa chắc nhật ký đã đọc được.
   file: `_acceptance/test-suite-db-thu/probes/dem-deadlock.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Dấu lược đồ bản mẫu bỏ sót constraint, index, trigger và giá trị enum, trái lời hứa «lược đồ đổi thì dựng lại ngay»**
-  Người dùng thấy gì: Nếu một thay đổi cấu trúc dữ liệu chỉ đụng ràng buộc hoặc chỉ mục, bộ kiểm có thể chạy trên bản mẫu cũ tới 24 giờ, làm một số ca kiểm xanh giả hoặc đỏ giả.
-  Căn cứ: Chỉ ảnh hưởng độ tin cậy của phép kiểm trong tối đa một ngày, không chạm dữ liệu thật và tự hết khi bản mẫu được dựng lại.
+- **Dấu lược đồ bỏ sót constraint, index, trigger, giá trị enum và độ dài kiểu, nên mẫu cũ dùng tới 24 giờ dù lược đồ đã đổi**
+  Người dùng thấy gì: Sau khi đổi cấu trúc DB theo một số kiểu (thêm ràng buộc, chỉ mục, giá trị liệt kê), bài kiểm thử có thể chạy trên cấu trúc cũ tới 24 giờ, nên báo đỏ oan hoặc xanh oan.
+  Căn cứ: Kết quả kiểm thử sai tới 24 giờ có thể che lỗi thật hoặc gây báo động giả, nhưng tự hết khi bản mẫu hết tuổi và xoá tay bản mẫu là xử lý được ngay; sửa không đắt.
   file: `db/db-thu.sh`
   severity: medium
+  Đề xuất: new-contract
+
+- **DB oneinvest_suite_sellers_chip còn sót trên máy chủ, don_mo_coi không bao giờ dọn vì tên không có đuôi pid**
+  Người dùng thấy gì: Một bản sao DB thử còn nằm trên máy chủ, chiếm chỗ đĩa cho tới khi có người xoá tay. Việc dọn tự động không xử lý được bản này.
+  Căn cứ: Chỉ tốn một ít đĩa, nguồn gốc là lượt chạy trên bản cũ nên không lặp lại, và xoá tay bằng một lệnh là xong.
+  file: `db/db-thu.sh`
+  severity: low
   Đề xuất: known-limits
 
-- **Hình 5 (tuyên quét LỚP, chỉ có điểm-case): dongLot không bắt các dạng trỏ DB chung cùng lớp, kể cả «URL ghép từ biến máy chủ» mà AC-7 gọi tên**
-  Người dùng thấy gì: Bộ rà soát tự động chưa bắt được một số cách viết lạ khiến một test lén nối vào cơ sở dữ liệu chung. Hiện chưa có test nào viết như vậy.
-  Căn cứ: Chưa có vi phạm nào đang chạy, rủi ro chỉ xuất hiện nếu sau này có người viết theo kiểu lạ; có thể bổ sung lưới khi gặp.
+- **lay-mau.mjs chỉ giữ 2000 ký tự đuôi nên lượt đỏ in ca.tests và ca.fail bằng -1**
+  Người dùng thấy gì: Khi bộ kiểm thử đỏ với nhiều lỗi dài, báo cáo bằng chứng mất số ca hỏng và hiện -1. Kết quả đỏ vẫn đúng, không có xanh giả.
+  Căn cứ: Chỉ làm bằng chứng của lượt đỏ thiếu con số, không gây xanh giả hay mất dữ liệu, và người đọc có thể xem đầy đủ trong nhật ký gốc.
+  file: `_acceptance/test-suite-db-thu/probes/lay-mau.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình 3 (assert chuỗi có mặt trong khi lời hứa là QUAN HỆ): dongLot suy ra URL đã trỏ đúng hoặc biến đã được gán lại từ chữ ở dòng kề, không từ quan hệ thật**
+  Người dùng thấy gì: Bộ quét phát hiện test tự nối DB chung có thể bỏ sót vài kiểu viết mã cố tình lắt léo. Hiện chưa thấy bài kiểm thử thật nào lọt.
+  Căn cứ: Rủi ro chỉ xuất hiện khi có người viết mã đúng kiểu lách đó trong tương lai, và bộ quét vẫn bắt phần lớn các dạng phổ biến.
   file: `scripts/db-thu.test.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình 5 (tuyên quét LỚP, chỉ có điểm-case): hai miễn trừ ở dòng 263 coi URL cứng là lành theo hình dáng dòng, không có ca đối chứng ngược**
-  Người dùng thấy gì: Bộ rà soát bỏ qua một số dòng trông giống bảng dữ liệu, nên có thể bỏ sót một chuỗi kết nối thật nếu ai đó viết đúng dạng đó. Hiện chưa có trường hợp nào như vậy.
-  Căn cứ: Chưa có vi phạm đang chạy; chỉ là lỗ nhỏ của lưới rà soát, sửa sau không mất gì.
-  file: `scripts/db-thu.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình 4 (âm-tính-một-mình): ghiDbChung chỉ được assert rỗng, không có đối chứng dương, và mù với lệnh ghi nhắm oneinvest đi qua `-d postgres`**
-  Người dùng thấy gì: Phép kiểm «không ghi vào cơ sở dữ liệu chung» chưa chứng tỏ nó bắt được lệnh ghi, nên nếu sau này có người thêm lệnh ghi kiểu gián tiếp, phép kiểm vẫn xanh.
-  Căn cứ: Hiện không có lệnh ghi nào như vậy nên không ai bị ảnh hưởng; chỉ là phép kiểm lỏng, bổ sung sau khi cần.
-  file: `scripts/db-thu.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình 3 (assert chuỗi có mặt trong khi lời hứa là QUAN HỆ): ca dựng lại mẫu không ghim nguồn dump, cũng không ghim thứ tự dựng mẫu rồi mới chép**
-  Người dùng thấy gì: Phép kiểm chưa khoá chặt việc bản mẫu phải được dựng từ cơ sở dữ liệu chung và dựng xong mới chép, nên nếu sau này ai đó đảo thứ tự, bộ kiểm vẫn xanh trong khi mẫu có thể cũ.
-  Căn cứ: Hành vi hiện tại đúng, rủi ro chỉ ở lần sửa sau; hậu quả là một ngày kiểm trên mẫu cũ, không mất dữ liệu.
-  file: `scripts/db-thu.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình 3 (assert chuỗi có mặt trong khi lời hứa là QUAN HỆ): đối chứng dương của lay-mau nhận bất kỳ DB nào khác oneinvest, không ràng buộc với DB của lượt**
-  Người dùng thấy gì: Bộ đo kết nối chấp nhận bất kỳ cơ sở dữ liệu nào khác bản chung làm bằng chứng, chưa kiểm đúng đó là cơ sở dữ liệu riêng của lượt chạy.
-  Căn cứ: Chỉ làm bằng chứng đo lỏng hơn lời hứa, người chấm đọc dòng kết quả vẫn thấy được; không ảnh hưởng người dùng.
+- **Hình 3 (assert chuỗi có mặt trong khi lời hứa là QUAN HỆ): thước của lay-mau và ba-bo không ràng buộc kết nối với DB của lượt, cũng không đọc ca.pass và ca.fail mà E5-E7 ghi**
+  Người dùng thấy gì: Phép đo xác nhận bài kiểm thử không chạm DB chung có thể xanh dù không thật sự dùng DB riêng của lượt. Con số bằng chứng lúc đó kém chặt hơn lời mô tả.
+  Căn cứ: Điều quan trọng nhất, không có kết nối vào DB chung, vẫn được đo đúng, nên chỉ là bằng chứng phụ kém chặt.
   file: `_acceptance/test-suite-db-thu/probes/lay-mau.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình 4 (âm-tính-một-mình): dem-deadlock in «0 ca» và exit 0 khi không đọc được log, trong khi số này quyết định có làm việc tiếp**
-  Người dùng thấy gì: Khi không đọc được nhật ký máy chủ, công cụ đếm kẹt khoá vẫn báo «0 ca», dễ bị hiểu là đã hết lỗi và bỏ lỡ việc cần làm tiếp.
-  Căn cứ: Chỉ là công cụ đo nội bộ, người dùng cổng không bị ảnh hưởng; chạy lại hoặc đối chiếu nhật ký là phát hiện, sửa rẻ nhưng không gấp.
-  file: `_acceptance/test-suite-db-thu/probes/dem-deadlock.mjs`
+- **Hình 3 (assert chuỗi có mặt trong khi lời hứa là QUAN HỆ): bộ đếm bên ghi gộp hai bước, refresh-bait-gap chết hẳn thì E3, E4 vẫn xanh**
+  Người dùng thấy gì: Phép thử tải có thể xanh dù một trong hai tiến trình giả lập tải ghi đã chết. Khi đó bằng chứng «chịu được tải thật» yếu hơn lời mô tả.
+  Căn cứ: Chỉ làm bằng chứng tải nhẹ đi chứ không làm sai kết quả cách ly DB, và vẫn còn một bên ghi được chứng minh là hoạt động.
+  file: `_acceptance/test-suite-db-thu/probes/song-song.mjs`
   severity: medium
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 2/12 lỗi rơi vào file không bộ đo nào phủ (_acceptance/test-suite-db-thu/probes/dem-deadlock.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+- **Hình 4 (âm-tính-một-mình): ca «mẫu mới không dump» bỏ qua kết quả lệnh, script dừng sớm vẫn xanh**
+  Người dùng thấy gì: Một bài kiểm thử có thể xanh dù lệnh dừng sớm giữa chừng, nên không bắt được lỗi dừng sớm đó ở riêng ca này.
+  Căn cứ: Chỉ làm một ca kiểm yếu hơn mong muốn, không ảnh hưởng người dùng, và các ca khác vẫn kiểm hành vi dựng lại mẫu.
+  file: `scripts/db-thu.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình 4 (âm-tính-một-mình): E4 ghi đối chứng «bên ghi không chạy» nhưng lệnh của E4 không bao giờ chạy đối chứng đó**
+  Người dùng thấy gì: Lượt chấm E4 không có đầu ra cho đối chứng mà mô tả hứa, nên người chấm phải xem sang lượt E3 để thấy đối chứng. Kết quả chính không đổi.
+  Căn cứ: Rủi ro thấp vì hai lượt dùng chung mã đo và đối chứng vẫn chạy ở lượt kia; chỉ là mô tả và đầu ra lệch nhau.
+  file: `_acceptance/test-suite-db-thu/probes/song-song.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
