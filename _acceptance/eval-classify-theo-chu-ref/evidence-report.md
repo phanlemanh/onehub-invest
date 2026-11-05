@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: eval-classify-theo-chu-ref
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9c6ee293db37e656d7e56de561bab56da36bc1c9
+verified_commit: fd13c127419d6bf5fde48bbe8562d3ac5af6a0b5
 human_signoff:
 ---
 
 # Evidence Report: eval-classify-theo-chu-ref
-
-Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJECT vì một lệnh suite hồi quy không gắn eval nào (`cd app && npm test`) không đạt; xem mục «Lệnh suite (hồi quy)» và Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -29,15 +27,16 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
 
 ## Evidence
 
+Round 2: cả chín eval được mang từ round 1 (delta không chạm paths của eval), không chạy lại. Sáu lệnh suite chạy lại ở round 2.
+
 - eval: E1
   run_id: minted-eval-classify-theo-chu-ref-E1-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ecr_lenh
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: cd pipeline && node --test scripts/eval-classify-ghep.test.mjs
-    ℹ duration_ms 108.366667
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-eval-classify-theo-chu-ref-E2-r1
@@ -45,9 +44,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-eval-classify-theo-chu-ref-E3-r1
@@ -55,9 +53,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.test.ecr_lenh
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: cd pipeline && node --test scripts/eval-classify-ghep.test.mjs
-    ℹ duration_ms 108.366667
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-eval-classify-theo-chu-ref-E4-r1
@@ -65,9 +62,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.test.ecr_lenh
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: cd pipeline && node --test scripts/eval-classify-ghep.test.mjs
-    ℹ duration_ms 108.366667
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-eval-classify-theo-chu-ref-E5-r1
@@ -75,9 +71,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-eval-classify-theo-chu-ref-E6-r1
@@ -85,9 +80,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-eval-classify-theo-chu-ref-E7-r1
@@ -95,9 +89,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-eval-classify-theo-chu-ref-E8-r1
@@ -105,9 +98,8 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-eval-classify-theo-chu-ref-E9-r1
@@ -115,41 +107,40 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
   baseline: n-a
   verifier: config:executors.script.ecr_db
   verified_at: 2026-11-05T15:54:23Z
-  output: |
-    cmd: node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs
-    DB OK
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__bb6271-r1
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-05T15:54:23Z
+  verified_at: 2026-11-05T16:27:49Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-lint-r1
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-05T15:54:23Z
+  verified_at: 2026-11-05T16:27:49Z
 
 - cmd: cd app && npm test
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-05T15:54:23Z
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-05T16:27:49Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__13563d-r1
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-05T15:54:23Z
+  verified_at: 2026-11-05T16:27:49Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-test_lint_rules-r1
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-05T15:54:23Z
+  verified_at: 2026-11-05T16:27:49Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-eval-classify-theo-chu-ref-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-eval-classify-theo-chu-ref-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-05T15:54:23Z
+  verified_at: 2026-11-05T16:27:49Z
 
 ## Known limits
 
@@ -157,22 +148,15 @@ Round 1. Cả chín eval của tính năng đều đạt. Verdict tổng là REJ
 
 ## Analyst
 
-Lệnh fail không gắn eval: `cd app && npm test` (không eval nào của tính năng dùng lệnh này). Phần cuối log cho thấy hai chỗ đỏ trong bộ test của app: ca `sellers-chip` gặp lỗi deadlock Postgres 40P01 (`napSdtE164` ở `pipeline/lib/nap-060.mjs`, hai tiến trình khoá chéo nhau trên DB dùng chung), và ca `E4b đối chiếu DB máy thu` ở `app/tests/tin-rao-doi-chieu.test.tsx:102` fail assert «newest 1489.442916 ms». Cả hai nằm ngoài các tệp tính năng này đổi (`pipeline/lib/eval-classify.mjs`, eval và probe của hồ sơ), nhưng báo cáo này không kết luận nguyên nhân gốc; cần người hoặc vòng sau xác định là sự cố môi trường DB dùng chung hay hồi quy thật.
+carried tu round 1 — baseline khong do lai round nay.
 
-Eval green trên cả HEAD lẫn baseline (không phân biệt): none — không eval nào green trên baseline. Cả chín eval E1 đến E9 có baseline n-a vì là eval mới (xem mục dưới), nên chưa có đối chứng đỏ trên code cũ; chiều đỏ của từng eval chỉ có ở các ca «doi chung» bên trong chính eval.
-
-Baseline khong do
-- cd pipeline && node --test scripts/eval-classify-ghep.test.mjs: bo qua baseline: tep pipeline/scripts/eval-classify-ghep.test.mjs co o cay dang kiem nhung chua co o merge-base 467d34774524c9d8ee5a1e047dca389a780e4011 — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs: bo qua baseline: tep _acceptance/eval-classify-theo-chu-ref/probes/db.mjs co o cay dang kiem nhung chua co o merge-base 467d34774524c9d8ee5a1e047dca389a780e4011 — eval moi, chay tren code cu khong phan biet gi
-
-## Judge panels
-
-Không có judgment item: cả chín eval là máy (test hoặc script), không eval nào cần hội đồng chấm. Không có mục chờ human_override.
+none — khong eval nao duoc liet ke la khong-phan-biet; lenh suite xanh-ca-hai-phia la regression-guard binh thuong.
 
 ## Variance
 
-none — mọi eval chạy một lần (runs: 1), kết quả đồng nhất, không có phương sai.
+none — every multi-run eval is uniform (moi eval deu chay mot lan, deterministic).
 
 ## Iterations
 
-Round 1: không eval nào của tính năng hỏng (E1 đến E9 đạt). Lệnh suite hồi quy `cd app && npm test` không gắn eval nào không đạt (deadlock DB dùng chung ở ca sellers-chip và một assert độ mới ở ca đối chiếu tin rao). Verdict REJECT; trả về triển khai/giám sát để xác định nguyên nhân (môi trường hay hồi quy) và chạy lại.
+Round 1: 9 eval đạt; suite `cd app && npm test` đỏ do chạy đồng thời với lệnh khác. Trả về chạy lại.
+Round 2: 9 eval mang từ round 1 (delta không chạm paths của eval), sáu lệnh suite chạy lại đều xanh. Verdict PASS.

@@ -39,11 +39,13 @@ const CHU2 = "Bán căn hộ 70m2 giá 4 tỷ"
 
 const that = new pg.Client({ connectionString: `${SERVER}/oneinvest`, options: "-c default_transaction_read_only=on" })
 await that.connect()
-const dauVet = async (k) => (await k.query(`SELECT
-  (SELECT count(*) FROM eval_label_items WHERE lat LIKE 'ecr-thu%')::int
-  + (SELECT count(*) FROM stg_zalo_posts WHERE post_id LIKE 'ecr-thu-%')::int
-  + (SELECT count(*) FROM users WHERE email LIKE '%@ecr-thu.test')::int
-  + (SELECT count(*) FROM dq_check_results WHERE check_name = 'eval-classify' AND entity LIKE 'ecr-thu%')::int AS n`)).rows[0].n
+const vetTungBang = async (k) => Object.values((await k.query(`SELECT
+  (SELECT count(*) FROM eval_label_items WHERE lat LIKE 'ecr-thu%')::int AS nhan,
+  (SELECT count(*) FROM stg_zalo_posts WHERE post_id LIKE 'ecr-thu-%')::int AS bai,
+  (SELECT count(*) FROM users WHERE email LIKE '%@ecr-thu.test')::int AS nguoi,
+  (SELECT count(*) FROM dq_check_results WHERE check_name = 'eval-classify' AND entity LIKE 'ecr-thu%')::int AS dq,
+  (SELECT count(*) FROM airbnb_snapshots WHERE snapshot_id = $1)::int AS snap`, [SNAP])).rows[0])
+const dauVet = async (k) => (await vetTungBang(k)).reduce((a, b) => a + b, 0)
 const vetTruoc = await dauVet(that)
 
 const r = spawnSync("bash", [path.join(ROOT, "db/db-thu.sh"), DB, "--neu-chua-co"], { encoding: "utf8" })
@@ -157,6 +159,9 @@ try {
   await docNhanNguoi({ query: (s, v) => (cau.push(String(s).trim()), c.query(s, v)) }, { lat: LAT, split: "test" })
   const giua = cau.slice(1, -1).join(" ")
   kiem(cau[0] === "BEGIN TRANSACTION READ ONLY" && cau.at(-1) === "COMMIT" && giua.includes("i.ghep") && giua.includes("stg_zalo_posts"), "doc trong giao dich chi doc", `loi thu tu cau ${cau.length}`)
+  // Đối chứng dương: cùng bộ đếm, trên DB thử đang có đủ fixture, từng bảng phải > 0.
+  const vetThu = await vetTungBang(c)
+  kiem(vetThu.every((n) => n > 0), "doi chung: bo dem dau vet thay fixture tung bang", `loi bo dem dau vet ${vetThu}`)
 } finally {
   await don().catch(() => {})
   await c.end()
