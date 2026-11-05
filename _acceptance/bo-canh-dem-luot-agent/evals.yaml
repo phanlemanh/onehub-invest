@@ -1,0 +1,103 @@
+schema_version: 1
+feature_slug: bo-canh-dem-luot-agent
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; dòng tổng PASS; ca lượt mới không dòng timing tắt gateway, lý do nêu tên agent; ca max tăng tắt; should-NOT-fire: kho phiên không đổi không tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3_l4b_scan
+    expected: "exit 0; phép thử quét L4b cũ vẫn đạt với script mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; should-NOT-fire: lần chạy đầu với lịch sử không tắt, mỗi kho đúng một mốc; chạy lại không đổi không tắt; lần đầu bị tắt giữa vòng vì một kho lỗi, bật lại, kho đã có mốc có dòng mới thì tắt và mốc giữ nguyên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; agent không liệt kê sẵn có dòng mới thì tắt; kho phiên mới có dòng sau lần đầu thì tắt, không ghi mốc; should-NOT-fire: kho phiên mới rỗng không tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; should-NOT-fire: số giảm, max giữ thì WARN, cập nhật mốc, không tắt; số giảm, max tăng thì tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; kho hỏng, thiếu bảng, cột đổi tên, đầu ra lệch khuôn đều tắt và lý do phân biệt được; kho rollback bị khoá dài hơn tổng chờ thì tắt; kho giả mặc định là WAL, giữ một ca rollback; should-NOT-fire: kho rollback khoá ngắn hơn tổng chờ không tắt; kho WAL không kết nối, không tệp phụ đọc đúng số, không tắt; có tiến trình đang ghi WAL suốt lúc đọc không tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; xoá nhật ký gọi giữa hai lần chạy rồi lần chạy lại vẫn tắt, mốc giữ nguyên, dòng cảnh báo nêu đường mốc; mốc rỗng hoặc sai khuôn thì tắt, nêu mốc hỏng, tệp mốc giữ nguyên; should-NOT-fire: người đã xử mốc và không có dòng mới thì không tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; kiểm trên dòng gọi sqlite3, không tính chú thích: câu truy vấn chỉ COUNT, MAX(created_at), chế độ chỉ đọc; không có event_json, event_zstd, navigation_json; kho giả đúng schema thật có cột nội dung; băm kho chính không đổi; danh sách tệp trước, sau chỉ được thêm -shm khi đã có -wal; should-NOT-fire: chuỗi canary trong cột nội dung không xuất hiện ở cảnh báo và log"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; có bước command -v kiểm bản giả thắng trước khi chạy, ca PATH sai thoát 2; should-NOT-fire: so trước, sau launchd gateway thật, PID gateway thật và tệp cảnh báo thật không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.bcdl_doc_that
+    expected: "exit 0; gọi đúng hàm đọc rút từ script trong môi trường launchd, trên kho thật và trên bản chép đã đóng sạch tệp phụ; mỗi lần in đúng số|số; should-NOT-fire: không in nội dung, không tạo tệp mốc thật, không gọi alert"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.bcdl_tai_lieu
+    expected: "exit 0; cả runtime-map và runbook đều có transcript_events, first-done, thư mục mốc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-10
+    executor: judgment
+    inputs:
+      - docs/ops/runtime-map.md
+      - docs/ops/runbook-openclaw-hook.md
+      - _acceptance/bo-canh-dem-luot-agent/contract.md
+    question: "Một người chưa làm việc này, gặp một lần bộ canh tắt vì L4d lúc nửa đêm, có đủ thông tin trong runtime-map và runbook để biết phải kiểm gì, ai được quyết, xử mốc ra sao và không bật lại khi chưa điều tra không, và chỗ nào còn phải đoán?"
+    evidence_required: [verdict, rationale]
+
+  - id: E13
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3_gateway
+    expected: "exit 0; chế độ gateway của phép thử cũ chạm đường tắt thật của script bản chép, dòng timing vẫn tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.bcdl_tho
+    expected: "exit 0; khối 400 KB có dòng timing ở đầu trên /bin/bash 3.2 với pipefail vẫn tắt, cả log gateway và log theo ngày; should-NOT-fire: khối 400 KB không có dòng timing không tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
