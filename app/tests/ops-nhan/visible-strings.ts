@@ -70,6 +70,7 @@ export const SCAN_FILES = [
   "src/components/ops/design/catalog-samples.tsx",
   "src/components/ops/facts-status.tsx",
   "src/components/ops/labels/agreement-table.tsx",
+  "src/components/ops/labels/anh-bai.tsx",
   "src/components/ops/labels/label-form.tsx",
   "src/components/ops/labels/bang-so.tsx",
   "src/components/ops/labels/bang-truong-hop.tsx",

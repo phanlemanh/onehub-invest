@@ -13,6 +13,7 @@ import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import type { DoiChieu } from "@/lib/labels-luot-hai"
 import { CASE_KINDS } from "@/lib/labels-normalize"
 
+import { AnhBai } from "./anh-bai"
 import { BangSo } from "./bang-so"
 import { diTrang } from "./luu-nhan"
 
@@ -144,7 +145,10 @@ export function LuotHai({ d, hrefTinKe, diToi = diTrang }: { d: DoiChieu; hrefTi
           </FrameDescription>
         </FrameHeader>
         <FramePanel>
-          <p className="text-sm whitespace-pre-line wrap-anywhere">{d.text || "Bài không có chữ."}</p>
+          <div className="flex min-w-0 flex-col gap-2">
+            <AnhBai anh={d.anh} soLinkKhac={d.soLinkKhac} coChu={Boolean(d.text)} />
+            {d.text ? <p className="text-sm whitespace-pre-line wrap-anywhere">{d.text}</p> : null}
+          </div>
         </FramePanel>
       </Frame>
       <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-2">

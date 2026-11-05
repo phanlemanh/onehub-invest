@@ -13,6 +13,7 @@ import { LABEL_FIELDS_NHOM } from "@/lib/labels-normalize"
 import type { DongThuanTruong, NhomCuaLat, TienDo, TinGan } from "@/lib/labels-queries"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 
+import { AnhBai } from "./anh-bai"
 import { AgreementTable } from "./agreement-table"
 import { BangTruongHop } from "./bang-truong-hop"
 import { ChonNhom } from "./chon-nhom"
@@ -121,9 +122,14 @@ function TinFrame({ tin }: { tin: TinGan }) {
         </FrameDescription>
       </FrameHeader>
       <FramePanel>
-        <p className="text-sm whitespace-pre-line wrap-anywhere" data-labels-chu-goc="">
-          {tin.text}
-        </p>
+        <div className="flex min-w-0 flex-col gap-2">
+          <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} />
+          {tin.text ? (
+            <p className="text-sm whitespace-pre-line wrap-anywhere" data-labels-chu-goc="">
+              {tin.text}
+            </p>
+          ) : null}
+        </div>
       </FramePanel>
     </Frame>
   )

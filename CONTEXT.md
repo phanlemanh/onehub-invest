@@ -617,7 +617,7 @@ _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 - Code: `khong_so`
 _Avoid_: chưa so
 
-**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô khác Chữ bài thì bài bắt buộc ghi Lý do.
+**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
 - Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
 _Avoid_: nguồn nhãn
 
