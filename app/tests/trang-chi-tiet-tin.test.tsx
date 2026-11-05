@@ -133,28 +133,49 @@ test("TCT-AC-1 thẻ có một liên kết chính, ba phần tử riêng nằm t
   assert.throws(() => kiemThe(nhanTut, o.offerId), /TCT-AC-1: nhãn không nổi trên lớp phủ/)
 })
 
-// Ma trận viết trước: loại hình × loại tin × độ đủ. `co` là nhãn phải có, `khong` là nhãn phải bỏ.
+// Ma trận viết trước, sinh từ tích ba trục: loại hình × loại tin × độ đủ, cộng tin cấp thị trường.
+const DU = { bedrooms: 3, bathrooms: 2, stories: 4, frontageLength: 6, block: "B2", floor: "12", street: "Đường Láng" }
 const THIEU = { bedrooms: null, bathrooms: null, stories: null, frontageLength: null, block: null, floor: null, street: null }
-const MA_TRAN_VE: { ten: string; o: Partial<PublicOfferDetail>; gia: string; co: string[]; khong: string[] }[] = [
-  { ten: "căn hộ bán đủ", o: {}, gia: "/m²", co: ["Loại hình", "Diện tích", "Phòng ngủ", "WC", "Block", "Tầng", "Đường", "Phường"], khong: ["Số tầng", "Mặt tiền", "Thị trường"] },
-  { ten: "căn hộ thuê đủ", o: { kind: "rent_lt", priceVnd: 15_000_000, pricePerm2: null }, gia: "/tháng", co: ["Phòng ngủ", "WC", "Block", "Tầng"], khong: ["Số tầng", "Mặt tiền"] },
-  { ten: "căn hộ bán thiếu", o: THIEU, gia: "/m²", co: ["Loại hình", "Diện tích", "Phường"], khong: ["Phòng ngủ", "WC", "Block", "Tầng", "Đường", "Số tầng", "Mặt tiền"] },
-  { ten: "nhà bán đủ", o: { propertyType: "house", stories: 4, block: null, floor: null }, gia: "/m²", co: ["Số tầng", "Phòng ngủ", "Đường"], khong: ["Block", "Tầng", "Mặt tiền"] },
-  { ten: "nhà thuê thiếu", o: { ...THIEU, propertyType: "house", kind: "rent_lt", priceVnd: 20_000_000, pricePerm2: null }, gia: "/tháng", co: ["Loại hình", "Diện tích"], khong: ["Số tầng", "Phòng ngủ", "Đường", "Block"] },
-  { ten: "đất bán đủ", o: { ...THIEU, propertyType: "land", frontageLength: 6, street: "Đường Láng" }, gia: "/m²", co: ["Mặt tiền", "Đường"], khong: ["Phòng ngủ", "WC", "Số tầng", "Block"] },
-  { ten: "đất bán thiếu", o: { ...THIEU, propertyType: "land" }, gia: "/m²", co: ["Loại hình", "Diện tích"], khong: ["Mặt tiền", "Đường"] },
-  { ten: "tin cấp thị trường", o: { atMarketLevel: true, ward: { id: "vn-hanoi", name: "Hà Nội" } }, gia: "/m²", co: ["Thị trường"], khong: ["Phường"] },
+const LOAI_HINH = [["apartment", "Căn hộ"], ["house", "Nhà riêng"], ["land", "Đất"]] as const
+const LOAI_TIN = [
+  { kind: "sale", priceVnd: 3_000_000_000, pricePerm2: 40_000_000, gia: "3 tỷ", donGia: "40 tr/m²" },
+  { kind: "rent_lt", priceVnd: 15_000_000, pricePerm2: null, gia: "15 tr/tháng", donGia: null },
+] as const
+const O_DU: Record<string, string> = { "Phòng ngủ": "3", WC: "2", "Số tầng": "4", "Mặt tiền": "6 m", Block: "B2", Tầng: "12", Đường: "Đường Láng" }
+type DongVe = { ten: string; o: Partial<PublicOfferDetail>; gia: string; donGia: string | null; o_dd: Record<string, string> }
+const MA_TRAN_VE: DongVe[] = [
+  ...LOAI_HINH.flatMap(([propertyType, nhan]) =>
+    LOAI_TIN.flatMap(({ gia, donGia, ...tin }) =>
+      ([["đủ", DU, O_DU], ["thiếu", THIEU, {}]] as const).map(([do_du, truong, o_dd]) => ({
+        ten: `${nhan} ${tin.kind} ${do_du}`,
+        o: { propertyType, ...tin, ...truong },
+        gia,
+        donGia,
+        o_dd: { "Loại hình": nhan, "Diện tích": "75 m²", Phường: "Phường Một", ...o_dd },
+      })),
+    ),
+  ),
+  {
+    ten: "tin cấp thị trường",
+    o: { atMarketLevel: true, ward: { id: "vn-hanoi", name: "Hà Nội" } },
+    gia: "3 tỷ",
+    donGia: "40 tr/m²",
+    o_dd: { "Loại hình": "Căn hộ", "Diện tích": "75 m²", "Phòng ngủ": "3", WC: "2", Block: "B2", Tầng: "12", Đường: "Đường Láng", "Thị trường": "Hà Nội" },
+  },
 ]
+const SO_DONG_VE = 3 * 2 * 2 + 1
 
-function nhanCua(el: HTMLElement) {
-  return [...el.querySelectorAll("dt")].map((d) => d.textContent ?? "")
+/** Cặp nhãn → giá trị đúng như đang vẽ. */
+function dongCua(el: HTMLElement) {
+  return Object.fromEntries([...el.querySelectorAll("dt")].map((d) => [d.textContent ?? "", d.nextElementSibling?.textContent ?? ""]))
 }
-function kiemVe(dong: (typeof MA_TRAN_VE)[number], el: HTMLElement) {
-  const nhan = nhanCua(el)
+function kiemVe(dong: DongVe, el: HTMLElement) {
+  assert.deepEqual(dongCua(el), dong.o_dd, `TCT-AC-2-ve ${dong.ten}: nhãn và giá trị sai`)
   const chu = el.textContent ?? ""
-  for (const c of dong.co) assert.ok(nhan.includes(c), `TCT-AC-2-ve ${dong.ten}: thiếu dòng ${c}`)
-  for (const k of dong.khong) assert.ok(!nhan.includes(k), `TCT-AC-2-ve ${dong.ten}: dòng ${k} phải bỏ`)
-  assert.ok(chu.includes(dong.gia), `TCT-AC-2-ve ${dong.ten}: thiếu đơn vị giá ${dong.gia}`)
+  assert.ok(chu.includes(dong.gia), `TCT-AC-2-ve ${dong.ten}: thiếu giá ${dong.gia}`)
+  if (dong.donGia) assert.ok(chu.includes(dong.donGia), `TCT-AC-2-ve ${dong.ten}: thiếu đơn giá ${dong.donGia}`)
+  else assert.ok(!chu.includes("/m²"), `TCT-AC-2-ve ${dong.ten}: tin thuê không có đơn giá`)
+  assert.ok(chu.includes("Thấy từ 2 ngày trước"), `TCT-AC-2-ve ${dong.ten}: thiếu tuổi tin`)
   assert.doesNotMatch(chu, /chưa có(?! tên| số)|undefined|null|NaN/i, `TCT-AC-2-ve ${dong.ten}: có chữ trơ cho trường thiếu`)
 }
 
@@ -169,18 +190,25 @@ function boKhoi(node: ReactNode, type: unknown): ReactNode {
 
 test("TCT-AC-2-ve ma trận thông số của thân trang", async () => {
   const { OfferBody, OfferCompsRegion } = await import("../src/components/listing/offer-body")
-  let so = 0
+  assert.equal(MA_TRAN_VE.length, SO_DONG_VE, "TCT-AC-2-ve: thiếu ô của tích ba trục")
+  assert.equal(new Set(MA_TRAN_VE.map((d) => d.ten)).size, SO_DONG_VE, "TCT-AC-2-ve: trùng ô")
   for (const dong of MA_TRAN_VE) {
     const el = await ve(boKhoi(OfferBody({ offer: mau(dong.o) }), OfferCompsRegion))
     kiemVe(dong, el)
-    so++
     const lienKetPhuong = el.querySelector('dd a[href="/vn/hanoi/phuong-mot"]')
     assert.equal(Boolean(lienKetPhuong), !dong.o.atMarketLevel, `TCT-AC-2-ve ${dong.ten}: liên kết phường sai`)
   }
-  assert.equal(so, MA_TRAN_VE.length, "TCT-AC-2-ve: thiếu dòng ma trận")
-  // Bản phá: in chữ «chưa có» cho trường thiếu.
-  const el = await ve(<dl><dt>Loại hình</dt><dt>Diện tích</dt><dt>Phường</dt><dd>/m² Block: chưa có</dd></dl>)
-  assert.throws(() => kiemVe(MA_TRAN_VE[2], el), /TCT-AC-2-ve căn hộ bán thiếu: có chữ trơ/)
+  // Ca cấp thị trường: thân trang thật không dựng khối tin cùng tiêu chí, ca phường thì có.
+  const { OfferCompsRegion: Vung } = await import("../src/components/listing/offer-body")
+  assert.equal(tim(OfferBody({ offer: mau({ atMarketLevel: true }) }), Vung), null, "TCT-AC-7: tin cấp thị trường không được có khối")
+  assert.ok(tim(OfferBody({ offer: mau() }), Vung), "TCT-AC-7: tin ở phường phải có khối")
+  // Bản phá: đổi lẫn giá trị WC và Phòng ngủ; in chữ «chưa có» cho trường thiếu.
+  const dongDu = MA_TRAN_VE.find((d) => d.ten === "Căn hộ sale đủ")!
+  const lan = await ve(boKhoi(OfferBody({ offer: mau({ ...dongDu.o, bedrooms: 2, bathrooms: 3 }) }), OfferCompsRegion))
+  assert.throws(() => kiemVe(dongDu, lan), /TCT-AC-2-ve Căn hộ sale đủ: nhãn và giá trị sai/)
+  const dongThieu = MA_TRAN_VE.find((d) => d.ten === "Căn hộ sale thiếu")!
+  const tro = await ve(<div>3 tỷ 40 tr/m² Thấy từ 2 ngày trước <dl><dt>Loại hình</dt><dd>Căn hộ</dd><dt>Diện tích</dt><dd>75 m²</dd><dt>Phường</dt><dd>Phường Một</dd></dl> Block: chưa có</div>)
+  assert.throws(() => kiemVe(dongThieu, tro), /TCT-AC-2-ve Căn hộ sale thiếu: có chữ trơ/)
 })
 
 test("TCT-AC-2-ve tiêu đề, người đăng và nhãn tin", async () => {
@@ -269,11 +297,12 @@ function tim(node: ReactNode, type: unknown): ReactElement<Record<string, unknow
 }
 
 test("TCT-AC-9 khối tin cùng tiêu chí có đủ lỗi, đang tải, trống", async () => {
-  const { OfferCompsEmpty, OfferCompsRegion, OfferCompsSkeleton, OfferComps } = await import("../src/components/listing/offer-body")
+  const { OfferCompsRegion, OfferCompsSkeleton, OfferComps } = await import("../src/components/listing/offer-body")
   const { RegionError } = await import("../src/components/states/region-error")
   const kiemVung = (tree: ReactNode) => {
     const loi = tim(tree, RegionError)
     assert.ok(loi, "ST-cung-tieu-chi-loi: khối không nằm trong RegionError")
+    assert.equal(loi.props.what, "tin cùng tiêu chí", "ST-cung-tieu-chi-loi: câu báo sai vùng")
     const cho = tim(loi, Suspense)
     assert.ok(cho, "ST-cung-tieu-chi-loading: khối không có Suspense")
     assert.equal((cho.props.fallback as ReactElement).type, OfferCompsSkeleton, "ST-cung-tieu-chi-loading: fallback sai")
@@ -287,7 +316,11 @@ test("TCT-AC-9 khối tin cùng tiêu chí có đủ lỗi, đang tải, trống
   const dangTai = await ve(<OfferCompsSkeleton />)
   assert.ok(dangTai.querySelector('[data-slot="skeleton"]'), "ST-cung-tieu-chi-loading: thiếu Skeleton")
 
-  const trong = await ve(<OfferCompsEmpty offer={mau()} />)
+  // Nhánh rỗng đi qua OfferComps thật: pool không trả dòng nào.
+  const { pool } = await import("../src/lib/db")
+  ;(pool as unknown as { query: unknown }).query = async (sql: string) => (sql.includes("to_regclass") ? { rows: [{ r: null }] } : { rows: [] })
+  const trong = await ve(await OfferComps({ offer: mau() }))
+  assert.ok(trong.textContent?.includes("Chưa có tin cùng tiêu chí"), "ST-cung-tieu-chi-trong: thiếu câu")
   const nut = trong.querySelector("a")
   assert.equal(nut?.textContent, "Xem tin ở phường này", "ST-cung-tieu-chi-trong: thiếu nút")
   assert.equal(nut?.getAttribute("href"), "/vn/hanoi/listings/sale?ward=vn-hanoi-p1", "ST-cung-tieu-chi-trong: nút sai đích")
@@ -296,7 +329,8 @@ test("TCT-AC-9 khối tin cùng tiêu chí có đủ lỗi, đang tải, trống
   const goc = console.error
   console.error = () => {}
   try {
-    const loi = await ve(<RegionError what="tin cùng tiêu chí"><Hong /></RegionError>)
+    const what = tim(tree, RegionError)!.props.what as string
+    const loi = await ve(<RegionError what={what}><Hong /></RegionError>)
     assert.ok(loi.textContent?.includes("Không tải được tin cùng tiêu chí"), "ST-cung-tieu-chi-loi: thiếu câu báo")
     assert.ok(loi.textContent?.includes("Thử lại"), "ST-cung-tieu-chi-loi: thiếu Thử lại")
   } finally {

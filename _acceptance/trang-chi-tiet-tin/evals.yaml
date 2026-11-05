@@ -18,7 +18,7 @@ evals:
     steps:
       - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3462, DATABASE_URL trỏ DB thử oneinvest_tct"
       - "Ghi trước ma trận: ba lối vào (thẻ Bán, thẻ Cho thuê dài hạn, khối tin cùng tiêu chí) × bảy điểm bấm (thân, giá, tên người đăng, địa chỉ, liên kết phường, nhãn, Xem số)"
-      - "Bấm bằng toạ độ thật từng ô; ghi URL sau khi bấm; chụp evidence/E1u-<lối>-<điểm>.png"
+      - "Bấm bằng toạ độ thật từng ô; ghi URL sau khi bấm; trước mỗi lần chụp, chèn style làm trong suốt tên người đăng và số điện thoại (như lệ che ảnh chứng, kho công khai); chụp evidence/E1u-<lối>-<điểm>.png"
     expected: "Thân, giá, tên, địa chỉ: URL thành /listing/<offer_id>. Liên kết phường: tới trang phường. Nhãn: mở lời giải thích, URL không đổi. Xem số: URL không đổi. Đủ mọi ô của ma trận"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E2
@@ -97,7 +97,7 @@ evals:
     paths: [app/src/components/listing/offer-body.tsx, app/src/components/listing/offer-card.tsx, "app/src/app/(app)/listing/[id]/page.tsx"]
     steps:
       - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3462, DATABASE_URL trỏ DB thử oneinvest_tct có đủ các ca của bảng Đặc tả UX; không ghi DB dùng chung"
-      - "Trước khi chụp, chèn style che số: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Trước khi chụp, chèn style che số và tên người đăng: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}, và làm trong suốt dòng tên trong khối Người đăng cùng thẻ tin cùng tiêu chí (như lệ che ảnh chứng, kho công khai)"
       - "Mở một tin S06 và một tin S03, chụp evidence/E9-s06.png, evidence/E9-s03.png; rộng, sáng rồi tối"
       - "Ở khổ 375: liên hệ nằm trên nếp gấp, không tràn ngang, chụp evidence/E9-375.png; làm lại ở chủ đề tối"
       - "Mở tin cấp thị trường, tin thiếu trường, tin không số, tin có số ghép, chụp mỗi ca một ảnh; mở một id lạ, chụp 404"
