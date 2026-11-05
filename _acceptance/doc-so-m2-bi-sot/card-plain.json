@@ -1,21 +1,4 @@
 {
-  "feature_plain": "Tin S03 ghi diện tích không kèm đơn vị hoặc viết bằng chữ đậm sẽ có số m² như tin ghi thường; 15 tin đang thiếu số có số đúng, mọi tin khác giữ nguyên.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ đọc ra số m² khi bài ghi nhãn «Diện tích» rồi số, không có đơn vị."},
-    {"id": "AC-2", "p": "Sẽ đọc ra số m² khi bài viết số và m2 bằng chữ đậm; giá, số phòng, SĐT, loại tin của bài giữ nguyên."},
-    {"id": "AC-3", "p": "Sẽ để trống diện tích khi số không phải diện tích, như «hdt 21 triệu», «Diện tích: 5x20», «Diện tích: 60-70»."},
-    {"id": "AC-4", "p": "Sẽ chứng minh trên toàn bộ 80.317 bài thật, chỉ đọc: đúng 141 bài đã đọc tay có thêm số, không số đã có nào đổi."},
-    {"id": "AC-5", "p": "Sẽ chứng minh trên bản sao dữ liệu, chạy đúng lệnh chạy đêm: 15 tin có đúng số, không tin nào đang có số bị đổi, không nhóm tin nào đổi."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Sẽ KHÔNG sửa giá và số phòng viết chữ đậm trong việc này, dù đo được 303 bài có giá chỉ đọc ra sau chuẩn hoá: đổi giá kéo theo thước giá và gom tin."},
-    {"id": "OOS-2", "p": "Sẽ KHÔNG nhận nhãn «DT» trần và «65 mét vuông»: «dt» còn là doanh thu và nằm trong «hdt»."},
-    {"id": "OOS-3", "p": "Sẽ KHÔNG chạy trên dữ liệu thật trong vòng này: tin có số sau lần chạy đêm kế tiếp, khi đã gộp."},
-    {"id": "OOS-4", "p": "Sẽ KHÔNG suy diện tích từ tin cùng toà, trục: đó là GC2, GC3."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Cách viết số: nhãn không đơn vị (AC-1), chữ đậm (AC-2), m² thường giữ như cũ (AC-4). Đủ vì đo trên toàn bộ 80.317 bài thật."},
-    {"i": 1, "p": "Thứ theo sau số: hết dòng hay biểu tượng thì đọc (AC-1); chữ, dải, kích thước, đơn vị tiền, ngoài khoảng 15–500 thì không (AC-3)."},
-    {"i": 2, "p": "Tầng đo: từng chuỗi (AC-1, AC-2, AC-3), toàn bộ bài thật chỉ đọc (AC-4), và qua bước dựng tin trên bản sao dữ liệu (AC-5)."}
-  ]
+  "feature_plain": "Tin S03 ghi diện tích không kèm đơn vị hoặc viết bằng chữ đậm nay có số m²; 15 tin đang thiếu số có số đúng, không tin nào đang có số bị đổi.",
+  "analyst_plain": "Lượt này không có câu cần phán xét riêng: mọi tiêu chí đều do máy đo."
 }
