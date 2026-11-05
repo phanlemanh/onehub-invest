@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng trang tin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5;
+      --color-ink: #2d3142;
+      --color-muted: #4f5d75;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Lora', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1384px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 1000px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Wireflow · Cổng Phạm vi · trang-chi-tiet-tin</p>
+    <h1>Từ thẻ tin đến cuộc gọi, và hai nhánh rẽ</h1>
+    <svg viewBox="0 0 1384 628" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<path d="M 304 136 L 400 136" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M 304 292 L 400 292" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M 184 340 L 184 428" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M 64 532 L 40 532 A 8 8 0 0 1 32 524 L 32 144 A 8 8 0 0 1 40 136 L 64 136" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M 1176 240 L 1240 240" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<text x="400" y="28" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Một việc của màn: quyết có gọi người đăng tin này không</text>
+<rect x="64" y="76" width="240" height="120" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="76" width="240" height="120" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 65 100 L 65 82 A 5 5 0 0 1 70 77 L 298 77 A 5 5 0 0 1 303 82 L 303 100 Z" fill="#ececec"/>
+<line x1="64" y1="100" x2="304" y2="100" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="76" y="92" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Thẻ tin</text>
+<text x="292" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-1</text>
+<text x="76" y="118" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">listings/sale · listings/rent</text>
+<text x="76" y="134" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Bán, Cho thuê dài hạn: bấm thân thẻ</text>
+<text x="76" y="148" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">thì mở trang tin.</text>
+<text x="76" y="162" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Liên kết phường, nhãn, Xem số</text>
+<text x="76" y="176" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">vẫn làm việc riêng.</text>
+<rect x="64" y="244" width="240" height="96" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="244" width="240" height="96" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 65 268 L 65 250 A 5 5 0 0 1 70 245 L 298 245 A 5 5 0 0 1 303 250 L 303 268 Z" fill="#ececec"/>
+<line x1="64" y1="268" x2="304" y2="268" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="76" y="260" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Đường dẫn trực tiếp</text>
+<text x="292" y="260" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-5</text>
+<text x="76" y="286" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">/listing/&lt;offer_id&gt;</text>
+<text x="76" y="304" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Gửi cho người khác,</text>
+<text x="76" y="318" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">vào thẳng trang tin.</text>
+<rect x="64" y="428" width="240" height="132" rx="6" fill="#f5f5f5"/>
+<rect x="64" y="428" width="240" height="132" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 65 452 L 65 434 A 5 5 0 0 1 70 429 L 298 429 A 5 5 0 0 1 303 434 L 303 452 Z" fill="#ececec"/>
+<line x1="64" y1="452" x2="304" y2="452" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="76" y="444" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">404 chung</text>
+<text x="292" y="444" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-5</text>
+<text x="76" y="470" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Tin này không còn hiện</text>
+<text x="76" y="488" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Mọi ca một câu: id lạ, S02, S08, quá 30 ngày,</text>
+<text x="76" y="502" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">kind khác, giá phi lý, không có loại hình.</text>
+<rect x="76" y="516" width="96" height="32" rx="4" fill="#4f5d75"/>
+<text x="124" y="536" fill="#ffffff" font-size="10" font-family="'Geist', sans-serif" font-weight="600" text-anchor="middle">Về danh sách</text>
+<rect x="400" y="40" width="400" height="464" rx="6" fill="#f5f5f5"/>
+<rect x="400" y="40" width="400" height="464" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 401 64 L 401 46 A 5 5 0 0 1 406 41 L 794 41 A 5 5 0 0 1 799 46 L 799 64 Z" fill="#ececec"/>
+<line x1="400" y1="64" x2="800" y2="64" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="412" y="56" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Trang tin</text>
+<text x="788" y="56" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">/listing/&lt;offer_id&gt;</text>
+<rect x="416" y="76" width="368" height="60" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="428" y="94" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Đầu trang</text>
+<text x="428" y="110" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Lối về Việt Nam › thị trường › Bán, Cho thuê › Tin.</text>
+<text x="428" y="124" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Tiêu đề từ thông số («Căn hộ 75 m² · 3 PN»), tuổi tin.</text>
+<rect x="740" y="82" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+<text x="758.0" y="94" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-2</text>
+<rect x="416" y="144" width="368" height="60" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="428" y="162" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Giá, đơn giá, nhãn tin</text>
+<text x="428" y="178" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Nhãn tin có lời giải thích.</text>
+<rect x="416" y="212" width="368" height="60" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+<text x="428" y="230" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Người đăng và Xem số</text>
+<text x="428" y="246" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Tên, hoặc «Tài khoản nhiều tên», «Chưa có tên».</text>
+<text x="428" y="260" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Ô liên hệ giữ nguyên như trên thẻ, kèm nhãn số.</text>
+<rect x="696" y="218" width="80" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+<text x="736.0" y="230" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-2 · AC-3</text>
+<rect x="416" y="280" width="368" height="60" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="428" y="298" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Thông số</text>
+<text x="428" y="314" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Loại hình, diện tích, PN, WC, số tầng, mặt tiền, block, tầng.</text>
+<text x="428" y="328" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Trường thiếu thì bỏ dòng, không in «chưa có».</text>
+<rect x="740" y="286" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+<text x="758.0" y="298" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-2</text>
+<rect x="416" y="348" width="368" height="60" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="428" y="366" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Vị trí</text>
+<text x="428" y="382" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Phường (liên kết), đường.</text>
+<rect x="740" y="354" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+<text x="758.0" y="366" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-2</text>
+<rect x="416" y="416" width="368" height="76" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="428" y="434" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Tin cùng tiêu chí</text>
+<text x="428" y="450" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Cùng phường, loại tin, loại hình, diện tích ±25%, tối đa 6 thẻ.</text>
+<text x="428" y="464" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Không có tin thì Empty, nút «Xem tin ở phường này».</text>
+<text x="428" y="478" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Lỗi thì báo trong vùng kèm Thử lại.</text>
+<rect x="696" y="422" width="80" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+<text x="736.0" y="434" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-1 · AC-7</text>
+<rect x="912" y="76" width="264" height="188" rx="6" fill="#f5f5f5"/>
+<rect x="912" y="76" width="264" height="188" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 913 100 L 913 82 A 5 5 0 0 1 918 77 L 1170 77 A 5 5 0 0 1 1175 82 L 1175 100 Z" fill="#ececec"/>
+<line x1="912" y1="100" x2="1176" y2="100" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="924" y="92" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Xem số</text>
+<text x="1164" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-3</text>
+<text x="924" y="118" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">/api/v1/listings/&lt;id&gt;/contact</text>
+<text x="924" y="136" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Bấm mới lấy, HTML không có số.</text>
+<line x1="924" y1="148" x2="1164" y2="148" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="924" y="168" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" font-weight="600">Chưa có số</text>
+<text x="1000" y="168" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">«Chưa có số», không nhãn</text>
+<text x="924" y="188" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" font-weight="600">Trực tiếp</text>
+<text x="1000" y="188" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">nút Xem số, không nhãn</text>
+<text x="924" y="208" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" font-weight="600">Ghép</text>
+<text x="1000" y="208" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">nhãn số kèm nút Xem số</text>
+<text x="924" y="228" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" font-weight="600">Ghép đã lấy</text>
+<text x="1000" y="228" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">nhãn số, số thành liên kết gọi</text>
+<text x="924" y="248" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" font-weight="600">Ghép lỗi</text>
+<text x="1000" y="248" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">nhãn số kèm «Thử lại»</text>
+<rect x="1240" y="192" width="112" height="96" rx="6" fill="#f5f5f5"/>
+<rect x="1240" y="192" width="112" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+<path d="M 1241 216 L 1241 198 A 5 5 0 0 1 1246 193 L 1346 193 A 5 5 0 0 1 1351 198 L 1351 216 Z" fill="rgba(235,108,54,0.12)"/>
+<line x1="1240" y1="216" x2="1352" y2="216" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="1252" y="208" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Gọi</text>
+<text x="1340" y="208" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">tel:</text>
+<text x="1252" y="236" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Điểm ra</text>
+<text x="1252" y="254" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">của luồng</text>
+<rect x="912" y="320" width="440" height="164" rx="6" fill="#f5f5f5"/>
+<rect x="912" y="320" width="440" height="164" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<path d="M 913 344 L 913 326 A 5 5 0 0 1 918 321 L 1346 321 A 5 5 0 0 1 1351 326 L 1351 344 Z" fill="#ececec"/>
+<line x1="912" y1="344" x2="1352" y2="344" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="924" y="336" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" font-weight="600">Tin cấp thị trường</text>
+<text x="1340" y="336" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-2 · AC-7</text>
+<rect x="924" y="356" width="416" height="44" rx="4" fill="#f5f5f5" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+<text x="936" y="374" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Vị trí</text>
+<text x="936" y="390" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Tên thị trường, không liên kết phường.</text>
+<rect x="924" y="408" width="416" height="44" rx="4" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="936" y="426" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Tin cùng tiêu chí</text>
+<text x="936" y="442" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Không có khối.</text>
+<text x="924" y="472" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Các khối còn lại như trang tin. Việc tiếp: về danh sách.</text>
+<text x="400" y="536" fill="#2d3142" font-size="14" font-family="'Instrument Serif','Lora',serif" font-style="italic">Không ảnh, không bản đồ, không bài gốc, chưa so giá phường.</text>
+<text x="400" y="560" fill="#4f5d75" font-size="14" font-family="'Instrument Serif','Lora',serif" font-style="italic">Màn hẹp một cột, liên hệ ngay dưới giá; rộng hai cột, liên hệ ở cột phụ.</text>
+<path d="M 784 240 L 912 240" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M 784 380 L 912 380" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M 416 452 L 368 452 A 8 8 0 0 1 360 444 L 360 376 A 8 8 0 0 1 368 368 L 400 368" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<rect x="324" y="112" width="56" height="16" rx="2" fill="#f5f5f5"/>
+<text x="352.0" y="124" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BẤM THẺ</text>
+<rect x="308" y="268" width="88" height="16" rx="2" fill="#f5f5f5"/>
+<text x="352.0" y="280" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">MỞ ĐƯỜNG DẪN</text>
+<rect x="192" y="372" width="88" height="16" rx="2" fill="#f5f5f5"/>
+<text x="236.0" y="384" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">TIN KHÔNG HIỆN</text>
+<rect x="40" y="372" width="88" height="16" rx="2" fill="#f5f5f5"/>
+<text x="84.0" y="384" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VỀ DANH SÁCH</text>
+<rect x="268" y="396" width="84" height="16" rx="2" fill="#f5f5f5"/>
+<text x="310.0" y="408" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BẤM THẺ KHÁC</text>
+<rect x="808" y="356" width="96" height="16" rx="2" fill="#f5f5f5"/>
+<text x="856.0" y="368" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CẤP THỊ TRƯỜNG</text>
+<rect x="824" y="216" width="48" height="16" rx="2" fill="#f5f5f5"/>
+<text x="848.0" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">XEM SỐ</text>
+<rect x="1180" y="216" width="56" height="16" rx="2" fill="#f5f5f5"/>
+<text x="1208.0" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BẤM GỌI</text>
+<line x1="32" y1="584" x2="1352" y2="584" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="32" y="608" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CHÚ GIẢI</text>
+<rect x="108" y="598" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+<text x="136" y="608" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Hành động chính và điểm ra</text>
+<line x1="316" y1="604" x2="348" y2="604" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<text x="356" y="608" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Luồng suôn sẻ</text>
+<line x1="460" y1="604" x2="492" y2="604" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="500" y="608" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Nhánh rẽ, quay lại</text>
+<rect x="628" y="598" width="20" height="12" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="656" y="608" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Khối không có</text>
+<text x="764" y="608" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">AC-n</text>
+<text x="796" y="608" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">Tiêu chí trong hợp đồng</text>
+</svg>
+  </div>
+</body>
+</html>

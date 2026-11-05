@@ -1,0 +1,253 @@
+E9 network/console dump (playwright-cli, dev server http://localhost:3462)
+
+===== E9-s06 /listing/offer_00014006364f432f 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+
+
+===== E9-s03 /listing/offer_0cf9c1927ea8c6db 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_0cf9c1927ea8c6db:0
+
+
+===== E9-375 /listing/offer_00014006364f432f 375x812 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+
+
+===== E9-375-ghep /listing/offer_000ab2f7063abf30 375x812 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000ab2f7063abf30:0
+
+
+===== E9-s06-dark /listing/offer_00014006364f432f 1280x900 dark
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+
+
+===== E9-s03-dark /listing/offer_0cf9c1927ea8c6db 1280x900 dark
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_0cf9c1927ea8c6db:0
+
+
+===== E9-375-dark /listing/offer_00014006364f432f 375x812 dark
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+
+
+===== E9-375-ghep-dark /listing/offer_000ab2f7063abf30 375x812 dark
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000ab2f7063abf30:0
+
+
+===== E9-thi-truong /listing/offer_000db9e080631a5b 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000db9e080631a5b:0
+
+
+===== E9-thieu-truong /listing/offer_009c99e68aed157f 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_009c99e68aed157f:0
+
+
+===== E9-khong-so /listing/offer_000311a2917fc8d8 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000311a2917fc8d8:0
+
+
+===== E9-ghep /listing/offer_000ab2f7063abf30 1280x900 light
+--- requests
+### Result
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000ab2f7063abf30:0
+
+
+===== E9-truc-tiep-da-lay /listing/offer_00014006364f432f 1280x900 light
+--- requests
+### Result
+36. [GET] http://localhost:3462/api/v1/listings/offer_00014006364f432f/contact => [200] OK
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 4 (Errors: 0, Warnings: 2)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_00014006364f432f:0
+
+
+===== E9-ghep-da-lay /listing/offer_000ab2f7063abf30 1280x900 light
+--- requests
+### Result
+36. [GET] http://localhost:3462/api/v1/listings/offer_000ab2f7063abf30/contact => [200] OK
+
+Note: 35 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 4 (Errors: 0, Warnings: 2)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000ab2f7063abf30:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_000ab2f7063abf30:0
+
+
+===== E9-404 /listing/offer_khongtontai123 1280x900 light
+--- requests
+### Result
+1. [GET] http://localhost:3462/listing/offer_khongtontai123 => [404] Not Found
+35. [POST] http://localhost:3462/__nextjs_original-stack-frames => [200] OK
+
+Note: 34 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 5 (Errors: 2, Warnings: 1)
+
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3462/listing/offer_khongtontai123:0
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[ERROR] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:995
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_khongtontai123:0
+
+
+===== E9-404-375-dark /listing/offer_khongtontai123 375x812 dark
+--- requests
+### Result
+1. [GET] http://localhost:3462/listing/offer_khongtontai123 => [404] Not Found
+35. [POST] http://localhost:3462/__nextjs_original-stack-frames => [200] OK
+
+Note: 34 static requests not shown, run with --static option to see them.
+
+--- console
+### Result
+Total messages: 5 (Errors: 2, Warnings: 1)
+
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3462/listing/offer_khongtontai123:0
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[ERROR] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:995
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/listing/offer_khongtontai123:0
+

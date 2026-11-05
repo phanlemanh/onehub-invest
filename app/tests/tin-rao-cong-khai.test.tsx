@@ -449,8 +449,8 @@ test("E7 đối chứng: ngưỡng 4 đỏ NHIEU TEN, đếm sau lọc đỏ DEM
   const nguong4 = await banSao((s) => s.replace("HAVING count(DISTINCT seller_name) >= ${OFFER_MANY_NAMES}", "HAVING count(DISTINCT seller_name) >= 4"))
   await assert.rejects(kiemNhieuTen(nguong4), /NHIEU TEN/)
   const sauLoc = await banSao((s) => s.replace(
-    "WHERE seller_ref IS NOT NULL AND seller_ref <> ''",
-    `WHERE seller_ref IS NOT NULL AND seller_ref <> '' AND ($\{f.wards.length} = 0 OR area_id = ANY(ARRAY['${P1}']))`,
+    "`${NHIEU_TEN}\n       SELECT ${OFFER_COLUMNS}\n       ${from}",
+    `\`$\{f.wards.length ? NHIEU_TEN.replace("WHERE seller_ref IS NOT NULL", "WHERE area_id = ANY(ARRAY['${P1}']) AND seller_ref IS NOT NULL") : NHIEU_TEN}\n       SELECT $\{OFFER_COLUMNS}\n       $\{from}`,
   ))
   await assert.rejects(kiemNhieuTen(sauLoc), /DEM SAU LOC/)
 })

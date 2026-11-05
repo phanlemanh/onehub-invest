@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { cn } from "cn"
 
 import { Badge } from "@/components/reui/badge"
 import { fmtCompact, fmtInt } from "@/lib/format"
@@ -32,20 +33,42 @@ export function firstSeenVi(days: number): string {
   return `Thấy từ ${days === 0 ? "hôm nay" : days === 1 ? "hôm qua" : `${fmtInt(days)} ngày trước`}`
 }
 
-/** Thẻ tin bán, tin thuê dài hạn: khung thẻ chung, hàng cuối là người đăng và nút lấy số. Chưa có ô ảnh (hàng anh-tin-cong-khai). */
+/** Tiêu đề của tin dựng từ thông số, không dùng tên người đăng: «Căn hộ 75 m² · 3 PN». */
+export function offerTitle(o: PublicOffer): string {
+  return offerSpecs(o).slice(0, 3).join(" · ")
+}
+
+/** Giá của tin theo loại tin; thuê thì theo tháng. */
+export function offerPrice(o: PublicOffer): string {
+  return `${fmtCompact(o.priceVnd)}${o.kind === KIND.rent_lt ? "/tháng" : ""}`
+}
+
+/**
+ * Thẻ tin bán, tin thuê dài hạn: khung thẻ chung, hàng cuối là người đăng và nút lấy số. Chưa có ô ảnh (hàng anh-tin-cong-khai).
+ * Liên kết ở giá phủ cả thân thẻ; liên kết phường, nhãn, Xem số nằm trên nó vì mỗi thứ có việc riêng.
+ */
 export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref: string | null }) {
   return (
     <ListingCardFrame
       data-listing-id={o.offerId}
-      price={`${fmtCompact(o.priceVnd)}${o.kind === KIND.rent_lt ? "/tháng" : ""}`}
+      price={
+        <Link
+          prefetch={false}
+          href={`/listing/${o.offerId}`}
+          aria-label={`${offerPrice(o)}, xem tin ${offerTitle(o)}`}
+          className="focus-visible:ring-ring rounded-sm outline-none after:absolute after:inset-0 hover:underline focus-visible:ring-2"
+        >
+          {offerPrice(o)}
+        </Link>
+      }
       priceNote={o.kind === KIND.sale && o.pricePerm2 !== null ? `${fmtCompact(o.pricePerm2)}/m²` : null}
       meta={firstSeenVi(o.firstSeenDays)}
-      name={o.unverified ? <div><OfferLabelHelp what="offer"><Badge variant="warning-light">Chưa xác minh</Badge></OfferLabelHelp></div> : null}
+      name={o.unverified ? <div className="relative z-10 w-fit"><OfferLabelHelp what="offer"><Badge variant="warning-light">Chưa xác minh</Badge></OfferLabelHelp></div> : null}
       specs={offerSpecs(o)}
       place={
         <p className="truncate">
           {wardHref ? (
-            <Link prefetch={false} href={wardHref} className={LISTING_LINK}>
+            <Link prefetch={false} href={wardHref} className={cn(LISTING_LINK, "relative z-10")}>
               {o.ward.name}
             </Link>
           ) : (
@@ -66,7 +89,7 @@ export function OfferCard({ offer: o, wardHref }: { offer: PublicOffer; wardHref
               <span className="text-muted-foreground">{o.sellerManyNames ? "Tài khoản nhiều tên" : "Chưa có tên"}</span>
             )}
           </p>
-          <div className="ml-auto max-w-full">
+          <div className="relative z-10 ml-auto max-w-full">
             <OfferContact offerId={o.offerId} hasPhone={o.hasPhone} inferred={o.phoneInferred} />
           </div>
         </div>
