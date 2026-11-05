@@ -1,0 +1,26 @@
+{
+  "feature_plain": "Người gắn nhãn thấy ảnh bài ngay trong thẻ và xem lớn được để đọc chữ trên ảnh, không còn dòng link; vẫn gắn mù.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ẩn mọi link khỏi chữ bài trên thẻ; bài có chữ lẫn ảnh hiện cả hai, chữ gốc lưu không đổi."},
+    {"id": "AC-2", "p": "Sẽ dùng tệp đã lưu trước, không có tệp mới lấy từ nguồn, và không để link gốc xuống trình duyệt."},
+    {"id": "AC-3", "p": "Sẽ phục vụ ảnh sau đăng nhập ops, chặn đi vòng đường dẫn, không ghi vào snapshot."},
+    {"id": "AC-4", "p": "Sẽ hiện ô tải rồi ảnh, bấm ảnh xem lớn, dùng được bằng bàn phím, lượt hai cũng thấy ảnh."},
+    {"id": "AC-5", "p": "Sẽ báo rõ khi ảnh hỏng kèm Thử lại, báo số liên kết khác, và vẫn lưu được nhãn."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG đưa giá trị máy đọc lên màn, kể cả kết quả đọc ảnh."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG để tên miền nguồn vào kho hay ảnh chứng, và không đổi mẫu đã sinh."},
+    {"id": "AC-8", "p": "Sẽ thêm căn cứ «Ảnh» nếu anh chọn ở Hỏi-1, nhãn cũ không đổi."},
+    {"id": "AC-9", "p": "Sẽ chứng minh trên 367 bài thật: 199 tệp hiện được, số ảnh lấy được từ nguồn in ra, không bài nào còn tên miền."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Sẽ KHÔNG sửa /ops/review."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG tải lại ảnh lỗi về snapshot: snapshot bất biến; 36 bài đã mất ảnh ở nguồn sẽ báo hỏng."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG xoá hay sửa mẫu đã sinh và nhãn đã lưu."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG áp 075 lên dữ liệu thật trong vòng này: áp trước khi gộp, xin giám sát."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Loại bài: chỉ link, chữ lẫn ảnh, có tệp, chỉ URL, lỗi tải, không gì, link khác. Đo trên 367 bài thật."},
+    {"i": 1, "p": "Trạng thái ảnh: tải, có, lỗi, trống, xem lớn."},
+    {"i": 2, "p": "Ranh giới: vai, cloud, đường dẫn, gắn mù, tên nguồn."},
+    {"i": 3, "p": "Dữ liệu thật: khuôn ảnh và đường lấy hộ trên 367 bài."}
+  ]
+}
