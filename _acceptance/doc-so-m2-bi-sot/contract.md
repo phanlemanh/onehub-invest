@@ -5,7 +5,7 @@ slug: doc-so-m2-bi-sot
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-05-doc-so-m2-bi-sot-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -54,3 +54,12 @@ Later: giá và số phòng viết kiểu Unicode (đo được 303 bài có gi�
 
 - Danh sách 14 tin của đo 04/11 không được lưu; danh sách chuẩn là 15 tin đo lại 05/11.
 - Đo nháp trên DB thử: 15 tin có thêm `area_m2` và `price_perm2`, 0 tin có số bị đổi, 0 nhóm gom đổi, 0 `confidence` đổi. Lên dữ liệu thật ở transform đêm sau khi gộp.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Con số «80.317 bài» gồm 78.954 bài S03, 100 bài S05 và 1.263 bài thử; 141 bài đổi đều là bài S03.
+  - Ngoài-2: Bài mới ghi diện tích kiểu «20*30» hay «65%» có thể bị đọc nhầm số đầu làm diện tích; hiện chưa bài nào mắc.
+  - Ngoài-3: Phép đo «4 tin giữ rỗng» của E4 có thể báo đạt khi tin đã biến mất; hiện cả 4 tin còn.
+  - Ngoài-4: Ca «SĐT đậm không thành diện tích» vẫn xanh khi bỏ lớp gạt SĐT, nên không bắt được lỗi ở lớp đó về sau.
+  - Ngoài-5: Bộ kiểm không chứng minh được «Diện tích: 120.000» không thành 120 m² nếu chặn số dài bị bỏ nhầm.
+  - Ngoài-6: Dải viết bằng gạch dài hay dấu ngã không có ca kiểm riêng, nên sửa nhầm luật ở đó không bị bắt.
+  - Ngoài-7: Trùng Ngoài-3, phép đo giữ rỗng của E4 đếm cả tin không tồn tại.
+  - Ngoài-8: Phép kiểm «không nhóm tin nào đổi thành viên» chưa có ca cố tình làm sai để xem nó có kêu không.
