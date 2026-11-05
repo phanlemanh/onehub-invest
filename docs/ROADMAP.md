@@ -230,6 +230,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `freshness` máy thu đẩy lên, trả cờ `state` tươi / cũ / không số; không số thì `rows: null` + «Chỉ đo ở máy thu» (trước
   trả `[]` như thể không nguồn nào); phản hồi chỉ trường độ tươi, không tên nguồn thật.
 - Đọc số m² bị sót của S03 (GC1 `doc-so-m2-bi-sot`, 05/11): `parsePost` đọc «Diện tích: 45.7» không đơn vị và số, m2 chữ kiểu Unicode; số đọc được trên chữ gốc không đổi, chỉ khâu diện tích qua NFKC. Đo trên bản sao: 15 tin có thêm số, 0 tin có số bị đổi, 0 nhóm gom đổi. S05 dùng chung bộ đọc, 0 bài đổi. Giá viết chữ kiểu Unicode: hàng `GC1G`.
+- Nối dự án S08 của lát vào khu đô thị (DN1 `noi-du-an-s08-khu-do-thi`, 05/11; migration 074 **chưa áp DB thật**): bảng local `s08_project_links`, không sync cloud, ghi bằng `pipeline/noi-du-an-s08.mjs` từ tệp ở máy thu; Ocean Park 1 có 3 dự án, Grand Park 5. Bỏ bí danh `s7`, `s10` trùng mã toà và bí danh sai địa danh, mã vùng OCP1 là Gia Lâm, OCP2, OCP3 cấp tỉnh Hưng Yên. Còn 16 cặp mã vùng chết ở nút khác.
 - Gắn nhãn theo nhóm S03 (GC0 `gan-nhan-theo-nhom-s03`, 04/11; migration 072 **chưa áp DB thật**, chỉ máy thu): `/ops/labels` mặc định lát `s03-theo-nhom`, biểu mẫu
   17 trường bản D, mỗi ô một căn cứ, bài dùng ngữ cảnh bắt buộc lý do; lượt hai so với máy đọc rồi ghi trường hợp; bảng trường hợp theo nhóm chỉ có số; `pipeline/label-cases.mjs`
   xuất lý do cho `GCQ1`, không mang người gắn. Lát đời trước giữ biểu mẫu chín trường của PL7. Đọc giá trị máy chỉ ở `app/src/lib/labels-luot-hai.ts`.
