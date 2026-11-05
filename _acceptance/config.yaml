@@ -48,6 +48,7 @@ executors:
     ngl_app: "cd app && node --import tsx --test tests/labels-gia.test.tsx"   # nhan-gia-va-luu-loi-mang AC-1..AC-3 — ma trận + route thật trên lược đồ tạm
     tnm_pipeline: "node --test pipeline/lib/tap-mau.test.mjs"   # tap-nhan-mau-ocp1 E1, E2, E4, E7, E8 — hàm thuần, không DB
     tnm_app: "cd app && node --import tsx --test tests/labels-mau.test.tsx"   # tap-nhan-mau-ocp1 E3 — chuanHoaLuot thật, không DB
+    ecr_lenh: "cd pipeline && node --test scripts/eval-classify-ghep.test.mjs"   # eval-classify-theo-chu-ref E1, E3, E4
     ecw_pipeline: "node --test pipeline/lib/eval-classify.test.mjs"   # eval-classify-wilson E1, E2, E3, E4, E6, E8 — lõi thuần + lệnh --tap-mau, không DB
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
@@ -595,6 +596,7 @@ executors:
     anh_that: "cd app && node --import tsx ../_acceptance/anh-tren-the-gan-nhan/probes/that.mjs"   # anh-tren-the-gan-nhan E9 — 367 bài thật, chỉ đọc, chỉ báo số
     anh_kin: "node _acceptance/anh-tren-the-gan-nhan/probes/kin.mjs"   # anh-tren-the-gan-nhan E7 — tên miền nguồn không vào kho
     ghep_lenh: "cd pipeline && node --test scripts/label-ghep.test.mjs"
+    ecr_db: "node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs"   # eval-classify-theo-chu-ref E2, E5, E6, E7, DB thử oneinvest_eval_ghep
     ghep_thuan: "cd app && node --import tsx --test tests/labels-ghep.test.ts"
     ghep_nap: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs"
     ghep_that: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/that.mjs"

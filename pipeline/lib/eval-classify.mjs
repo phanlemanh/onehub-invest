@@ -150,14 +150,15 @@ export function docTapMau(noiDung) {
 /**
  * Nhãn vàng từ người cho một lát + split (mặc định test), trong giao dịch chỉ đọc. Một trường: một người, hoặc nhiều
  * người cùng nhãn → nhãn đó; khác nhau → loại, đếm `bat_dong`. Tin có nhãn mà mất chữ ở stg → loại, đếm `mat_chu`.
+ * Chữ chấm là chữ người đã đọc: của tin chữ ghép khi dòng có `ghep.chu_ref`, cùng khoá với `baiDeGhi` của app.
  */
 export async function docNhanNguoi(client, { lat, split = "test" }) {
   await client.query("BEGIN TRANSACTION READ ONLY");
   try {
     const { rows: tins } = await client.query(
-      `SELECT i.item_id::text AS item_id, i.ref_id, p.text
+      `SELECT i.item_id::text AS item_id, i.ref_id, i.ghep, p.text
        FROM eval_label_items i
-       LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
+       LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = coalesce(i.ghep->>'chu_ref', i.ref_id) ORDER BY captured_at DESC LIMIT 1) p ON true
        WHERE i.lat = $1 AND i.split = $2
        ORDER BY i.item_id`,
       [lat, split],
@@ -176,7 +177,10 @@ export async function docNhanNguoi(client, { lat, split = "test" }) {
   }
 }
 
-/** Gộp dòng nhãn thành nhãn vàng từng tin (hàm thuần của docNhanNguoi). */
+/**
+ * Gộp dòng nhãn thành nhãn vàng từng tin (hàm thuần của docNhanNguoi). Dòng đã ghép: trùng cụm thì đại diện đã chấm, đếm
+ * `trung_co_nhan`; bài ảnh không có tin chữ thì bộ đọc không có chữ để đọc, đếm `khong_chu`.
+ */
 export function gopNhan(tins, nhans) {
   const theoTin = new Map();
   for (const r of nhans) {
@@ -187,10 +191,20 @@ export function gopNhan(tins, nhans) {
   }
   let bat_dong = 0;
   let mat_chu = 0;
+  let khong_chu = 0;
+  let trung_co_nhan = 0;
   const tin = [];
   for (const t of tins) {
     const f = theoTin.get(t.item_id);
     if (!f) continue; // chưa ai gắn
+    if (t.ghep?.trung_voi) {
+      trung_co_nhan++;
+      continue;
+    }
+    if (t.ghep && !t.ghep.chu_ref) {
+      khong_chu++;
+      continue;
+    }
     if (t.text == null || t.text.trim() === "") {
       mat_chu++;
       continue;
@@ -203,7 +217,7 @@ export function gopNhan(tins, nhans) {
     }
     tin.push({ id: t.ref_id, text: t.text, nhan });
   }
-  return { tin, bat_dong, mat_chu };
+  return { tin, bat_dong, mat_chu, khong_chu, trung_co_nhan };
 }
 
 /** Ghi mỗi ô một dòng dq_check_results trong MỘT giao dịch; lỗi giữa chừng → không dòng nào ở lại. */
