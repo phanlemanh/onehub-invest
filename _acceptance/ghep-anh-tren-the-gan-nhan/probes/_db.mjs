@@ -8,8 +8,10 @@ import { fileURLToPath } from "node:url"
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
 export const pg = createRequire(path.join(ROOT, "app/package.json"))("pg")
 export const SERVER = "postgres://oneinvest:oneinvest@localhost:5433"
-export const DB_THU = process.env.GHEP_DB ?? "oneinvest_ghep_nhan"
-if (DB_THU !== "oneinvest_ghep_nhan") { console.log(`tu choi: DB dich ${DB_THU}`); process.exit(3) }
+// Phép nạp xoá cột và băm cả bảng nhãn nên có DB riêng: lượt chấm chạy nó song song với bản chạy của E5, E8.
+export const DB_MAC_DINH = path.basename(process.argv[1] ?? "") === "nap.mjs" ? "oneinvest_ghep_nap" : "oneinvest_ghep_nhan"
+export const DB_THU = process.env.GHEP_DB ?? DB_MAC_DINH
+if (DB_THU !== DB_MAC_DINH) { console.log(`tu choi: DB dich ${DB_THU}`); process.exit(3) }
 export const URL_THU = `${SERVER}/${DB_THU}`
 export const M076 = fs.readFileSync(path.join(ROOT, "db/migrations/076_labels_ghep.sql"), "utf8")
 export const THU_MUC = path.join(ROOT, ".acceptance-runs/ghep-anh-tren-the-gan-nhan")

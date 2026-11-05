@@ -6,11 +6,12 @@ import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
-import { M076, ROOT, SERVER, THU_MUC, URL_THU, banGhiKiem, noiDbThu, pg } from "./_db.mjs"
+import { DB_THU, M076, ROOT, SERVER, THU_MUC, URL_THU, banGhiKiem, noiDbThu, pg } from "./_db.mjs"
 
 process.env.DATABASE_URL = URL_THU
 delete process.env.VERCEL
 const { loi, kiem } = banGhiKiem()
+kiem(DB_THU === "oneinvest_ghep_nap", "DB rieng cua phep nap", `loi phep nap chay tren ${DB_THU}`)
 const nap = (p) => import(pathToFileURL(path.join(ROOT, p)).href)
 const tuApp = createRequire(path.join(ROOT, "app/package.json"))
 const { renderToStaticMarkup } = await import(pathToFileURL(tuApp.resolve("react-dom/server")).href)
@@ -210,6 +211,8 @@ try {
 
   // E4, AC-3: ma trận đủ sáu loại bài qua tinKe thật, mỗi loại một tầng; bài thiếu người gửi có sender rỗng.
   await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, sender_id, sender_name, text, posted_at, media) VALUES ('ghep-nap-a7', $1, 'Nhóm nạp ghép', 'ghep-nap-g', NULL, 'Người thử', $2, $3, $4::jsonb)`, [SNAP, U("a7"), new Date(goc + 6000000), JSON.stringify([{ url: U("a7") }])])
+  // Cụm có mã ngược thời gian: sắp theo mã hay bỏ sắp đều lệch khỏi thứ tự đúng.
+  await bai("t7", "n7", 7000, "Tin cụm ngược mã"); await anh("c9", "n7", 7001); await anh("c5", "n7", 7002); await anh("c1", "n7", 7003)
   const MT = [
     ["GM1", "a2", CHU, 3, { suyRa: true, soChuGan: 1, khongChu: false }],
     ["GM2", "a4", "Bán 1PN", 1, { suyRa: true, soChuGan: 2, khongChu: false }],
@@ -224,6 +227,7 @@ try {
     const { rows: [r] } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $2, $3, 'dev', false, 'ghep-nap', $4) RETURNING item_id::int`, [LAT_MT, `ghep-nap-${ref}`, `m-${ref}`, tang])
     dongMt[ref] = r.item_id
   }
+  const { rows: [dongNguoc] } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', 'ghep-nap-c5', 'm-c5', 'dev', false, 'ghep-nap', 'GMN') RETURNING item_id::int`, [LAT_MT])
   await ghepLat(c, { lat: LAT_MT })
   let matranDung = 0
   for (const [tang, ref, chu, nAnh, cua] of MT) {
@@ -240,6 +244,9 @@ try {
   for (let i = 0; i < 3; i++) await serveZaloMedia(new Request(`http://localhost/api/zalo-media?nhan=${dongMt.a2}&anh=${i}`), OPS, { layAnh: layGia })
   const ngoai = await serveZaloMedia(new Request(`http://localhost/api/zalo-media?nhan=${dongMt.a2}&anh=3`), OPS, { layAnh: layGia })
   kiem(JSON.stringify(daGoi) === JSON.stringify([U("a1"), U("a2"), U("a3")]) && ngoai.status === 404, "thu tu anh qua duong doc that", `loi thu tu ${daGoi.length} ${ngoai.status}`)
+  daGoi.length = 0
+  for (let i = 0; i < 3; i++) await serveZaloMedia(new Request(`http://localhost/api/zalo-media?nhan=${dongNguoc.item_id}&anh=${i}`), OPS, { layAnh: layGia })
+  kiem(JSON.stringify(daGoi) === JSON.stringify([U("c9"), U("c5"), U("c1")]), "thu tu anh theo thoi gian, nguoc thu tu ma", `loi thu tu nguoc ma ${daGoi.length}`)
 
   // E9: lưu qua route thật.
   const KN = { not_stated: true }
@@ -307,7 +314,7 @@ try {
   await c.end()
 }
 function DU_T4(du) { return { ...du, area_m2: { not_stated: true }, kind: { value: "sale", basis: "chu_bai" } } }
-for (const ten of ["oneinvest", "oneinvest_khac", "postgres"]) {
+for (const ten of ["oneinvest", "oneinvest_khac", "postgres", "oneinvest_ghep_nhan"]) {
   const r = spawnSync("node", ["--import", "tsx", fileURLToPath(import.meta.url)], { cwd: path.join(ROOT, "app"), env: { ...process.env, GHEP_DB: ten }, encoding: "utf8" })
   kiem(r.status === 3 && r.stdout.includes("tu choi"), ten === "oneinvest" ? "doi chung: tro vao oneinvest bi tu choi" : `doi chung: tro vao ${ten} bi tu choi`, `loi tu choi ${ten}: ${r.status}`)
 }

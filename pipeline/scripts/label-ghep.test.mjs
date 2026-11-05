@@ -101,6 +101,30 @@ test("GHEP-AC-1 cach 119 giay do khi doi cua so sang 60: doi chung ban sao dot b
   }
 });
 
+test("GHEP-AC-3 anh_refs theo thoi gian khi nguoc thu tu ma: doi chung ban sao dot bien", async () => {
+  const moc = [bai("T", "Bán", 0, "m"), bai("A9", U, 5, "m"), bai("A5", U, 6, "m"), bai("A1", U, 7, "m")];
+  const it = [{ item_id: "1", ref_id: "A5" }];
+  assert.deepEqual(ghepChoMau(it, moc).get("1").anh_refs, ["A9", "A5", "A1"]);
+  const SAP = "const ds = [...(cum.get(chuId) ?? [])].sort((x, y) => giay(theoId.get(x).posted_at) - giay(theoId.get(y).posted_at) || x.localeCompare(y));";
+  const goc = readFileSync(join(LIB, "ghep-mau.mjs"), "utf8");
+  assert.ok(goc.includes(SAP), "đột biến phải trúng đúng dòng sắp");
+  const d = mkdtempSync(join(tmpdir(), "ghep-sap-"));
+  try {
+    copyFileSync(join(LIB, "gop-anh.mjs"), join(d, "gop-anh.mjs"));
+    for (const [ten, thay, thu] of [
+      ["theo-ma.mjs", "const ds = [...(cum.get(chuId) ?? [])].sort((x, y) => x.localeCompare(y));", [...moc]],
+      ["bo-sap.mjs", "const ds = [...(cum.get(chuId) ?? [])];", [moc[0], moc[3], moc[1], moc[2]]],
+    ]) {
+      writeFileSync(join(d, ten), goc.replace(SAP, thay));
+      const m = await import(join(d, ten));
+      assert.notDeepEqual(m.ghepChoMau(it, thu).get("1").anh_refs, ["A9", "A5", "A1"], `đột biến ${ten} phải đổi kết quả`);
+      assert.deepEqual(ghepChoMau(it, thu).get("1").anh_refs, ["A9", "A5", "A1"], "bản thật không phụ thuộc thứ tự đầu vào");
+    }
+  } finally {
+    rmSync(d, { recursive: true, force: true });
+  }
+});
+
 // Quét lớp: mã của vòng này không có cửa sổ thời gian riêng.
 const tepQuet = (goc) => {
   const out = [];

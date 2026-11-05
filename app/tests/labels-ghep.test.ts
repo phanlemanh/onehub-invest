@@ -32,8 +32,9 @@ const POSTS = [
   bai("T4", "Bán studio", 3000, "n4"), bai("A5", U("a5"), 3010, "n4"),
   bai("T5", "Cho thuê studio", 4000, "n5"),
   { ...bai("A6", U("a6"), 5000), sender_id: null },
+  bai("T6", "Bán căn cụm ngược mã", 6000, "n6"), bai("Z9", U("z9"), 6001, "n6"), bai("Z1", U("z1"), 6002, "n6"),
 ]
-const G = ghepChoMau([["1", "A1"], ["2", "A3"], ["3", "A4"], ["4", "T4"], ["5", "T5"], ["6", "A2"], ["7", "A6"]].map(([item_id, ref_id]) => ({ item_id, ref_id })), POSTS)
+const G = ghepChoMau([["1", "A1"], ["2", "A3"], ["3", "A4"], ["4", "T4"], ["5", "T5"], ["6", "A2"], ["7", "A6"], ["8", "Z1"]].map(([item_id, ref_id]) => ({ item_id, ref_id })), POSTS)
 const doc = (k: string) => docGhep(G.get(k))
 // Đường đọc thật của thẻ (`docBaiCum`, `docThe`); chỉ câu SQL thay bằng bảng giả, trả ngược thứ tự để đo được thứ tự đọc. SQL thật ở E4.
 const hang = (p: (typeof POSTS)[number]) => ({ post_id: p.post_id, ref_id: p.post_id, text: p.text, media: p.text.startsWith("https://") ? [{ url: p.text }] : null, media_files: null, snapshot_id: SNAP })
@@ -62,6 +63,12 @@ for (const [ten, k, ref, refs, hien, chu, anh] of MA_TRAN) {
     assert.deepEqual(nguon.map((d) => (d.kind === "url" ? d.url : d.file)), anh)
   })
 }
+
+test("GHEP-AC-3 anh theo thoi gian khi nguoc thu tu ma", async () => {
+  const g = doc("8")
+  assert.deepEqual(refsCuaDong("Z1", g), ["T6", "Z9", "Z1"])
+  assert.deepEqual(danhSachAnhCum(await docBaiCum(q, "Z1", g)).map((d) => (d.kind === "url" ? d.url : d.file)), [U("z9"), U("z1")])
+})
 
 test("GHEP-AC-3 dong trung cum cung cum voi dong dai dien", () => {
   assert.deepEqual(refsCuaDong("A2", doc("6")), ["T1", "A1", "A2"])
