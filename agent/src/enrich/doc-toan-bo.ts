@@ -14,7 +14,7 @@ import { getModel } from "../runtime/models.js";
 import { KIND, LISTING_INTENT, PROPERTY_TYPE } from "../vocab.generated.js";
 import { kiemTrichLoai, trichCoThat } from "./luat-trich-dan.js";
 import { routeFields, type EnrichField, type Routed } from "./route.js";
-import { giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
+import { catChu, giaoDichSavepoint, heldFields, syncReview, type GiaoDich, type ResolveFn } from "./run.js";
 
 export const PROMPT_VERSION = "dtb-s03-v1";
 /** Đổi bảng trong luat-trich-dan.ts thì tăng số này: dòng mẫu đạt của luật cũ không mở được luật mới (s03-noi-luat-trich-dan AC-6). */
@@ -327,7 +327,7 @@ export async function chayLuot(o: {
             o.runId, t.offer_id, d.field, d.value, d.source, d.route, d.corroboratedBy,
             d.source === "e2_llm" ? TEN_MODEL.haiku : "context-resolver",
             {
-              text: chu.slice(0, 300), group_name: t.group_name, prompt_version: PROMPT_VERSION,
+              text: catChu(chu, 300), group_name: t.group_name, prompt_version: PROMPT_VERSION,
               trich: d.source === "e2_llm" ? ((n.probabilities as DocThem | null)?.quote_loai ?? null) : null,
               ...(d.lyDo ? { ly_do: d.lyDo } : {}),
               basis: d.source === "e2_llm" ? `AI ${TEN_MODEL.haiku} · trích dẫn` : (ctx.typeBasis ?? "luật E1"),
