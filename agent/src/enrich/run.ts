@@ -26,6 +26,12 @@ export type GiaoDich = <T>(fn: () => Promise<T>) => Promise<T>;
 /** Cửa sổ không bốc lại tin đã thử (Hỏi-3, Mạnh duyệt 30/10). */
 export const CUA_SO_THU_NGAY = 30;
 
+/** Cắt chữ cho evidence, không để lại nửa emoji: Postgres từ chối JSON có nửa cặp surrogate (22P02) và tin bị bỏ lại. */
+export function catChu(s: string, n: number): string {
+  const cuoi = s.charCodeAt(n - 1);
+  return s.slice(0, cuoi >= 0xd800 && cuoi <= 0xdbff ? n - 1 : n);
+}
+
 /**
  * Giao dịch bằng SAVEPOINT — mặc định của runEnrich. Test chạy trong withTx (BEGIN ngoài cùng): BEGIN/COMMIT lồng
  * sẽ đóng giao dịch của test và ghi thật lên DB, nên ở đó chỉ dùng SAVEPOINT. CLI tiêm bản BEGIN/COMMIT.
@@ -210,7 +216,7 @@ export async function syncReview(
   const doiChieuGop = [...doiChieuCu.filter((x) => !doiChieu.some((m) => m.loai === x.loai)), ...doiChieu];
   const evidence = {
     offer_id: o.offer_id,
-    text: o.text ? o.text.slice(0, 300) : null,
+    text: o.text ? catChu(o.text, 300) : null,
     group_name: o.group_name,
     run_id: meta.runId,
     model: meta.model,
@@ -279,7 +285,7 @@ export async function runEnrich(opts: RunEnrichOpts): Promise<{
     if (opts.dry) continue;
 
     const evidence = {
-      text: text.slice(0, 300), group_name: o.group_name,
+      text: catChu(text, 300), group_name: o.group_name,
       matchedBy: ctx.matchedBy, projectSlug: ctx.projectSlug,
     };
     const llmMeta = llmRes?.result
