@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fd13c127419d6bf5fde48bbe8562d3ac5af6a0b5
+verified_commit: 478e6b4002ac5421b291b888fc0b81fd9db02772
 human_signoff:
 ---
 
@@ -160,3 +160,7 @@ none — every multi-run eval is uniform (moi eval deu chay mot lan, determinist
 
 Round 1: 9 eval đạt; suite `cd app && npm test` đỏ do chạy đồng thời với lệnh khác. Trả về chạy lại.
 Round 2: 9 eval mang từ round 1 (delta không chạm paths của eval), sáu lệnh suite chạy lại đều xanh. Verdict PASS.
+
+### Re-pin lần 1 — 2026-11-05, do đầu dò dấu vết AC-6 đổi sau lượt chấm 2, chứng lại ở HEAD
+run_id: repin-20261105T182950Z-22801
+sha: 478e6b4002ac5421b291b888fc0b81fd9db02772 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
