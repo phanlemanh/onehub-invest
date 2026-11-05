@@ -5,7 +5,7 @@ slug: khu-trung-anh-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2      # pipeline/media-rows.mjs, transform-media.mjs, app/src/lib — không khớp t3_paths; không migration
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-05
 design_doc: docs/superpowers/specs/2026-11-05-khu-trung-anh-tin-design.md
@@ -52,3 +52,11 @@ Người gắn nhãn chưa thấy khác trong vòng này: màn đó đọc từn
 - OOS-6: Chạy lên DB thật trong vòng này; lượt đêm sau gộp tự áp.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Khi hai bài kiểm chạy cùng lúc, một bài có thể giẫm lên DB thử của bài kia; đã thêm `--neu-chua-co` ở lượt 2, ghi để lưu vết.
+  - Ngoài-2: Cùng lỗi với Ngoài-1, do một bước soát khác báo; đã sửa cùng lúc.
+  - Ngoài-3: Trên thẻ gắn nhãn, bài có hai ảnh giống hệt có thể hiện thừa dòng «có 1 liên kết khác»; hôm nay chưa bài nào gặp.
+  - Ngoài-4: Bộ kiểm có thể vẫn xanh dù một số dòng ma trận bị xoá hay chưa từng được chứng minh đỏ.
+  - Ngoài-5: Thước PL28 so số tin có ảnh với bản nền trước PL28, không so với trước khử trùng; thước AC-5 đã kiểm mỗi tin còn đủ băm.
+  - Ngoài-6: Ca thử trên DB dùng dữ liệu ảnh dựng tay thay vì đi từ bên thu về, nên khuôn bên thu đổi thì bộ kiểm có thể không nhận ra.
