@@ -91,6 +91,7 @@ export const CASE_KINDS = [
   { value: "che-tang", label: "Che tầng" },
   { value: "so-ngoai-bai", label: "Số ngoài chữ bài" },
   { value: "khong-phai-tin-rao", label: "Không phải tin rao" },
+  { value: "ghep-sai", label: "Ghép sai" },
   { value: "the-nhom-sai", label: "Thẻ nhóm sai" },
   { value: "khac", label: "Khác" },
 ] as const

@@ -1,7 +1,8 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
-import { chuKhongLink, danhSachAnh, duongAnh } from "./labels-anh"
+import { docGhep, type GhepHien } from "./labels-anh"
+import { docThe } from "./labels-cum"
 import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
 
 /**
@@ -22,6 +23,8 @@ export type TinGan = {
   /** Đường `/api/zalo-media?nhan=&anh=`, không có URL gốc. */
   anh: string[]
   soLinkKhac: number
+  /** Ghép suy ra từ luật PL28. Không có mã bài. Null là bài không ghép. */
+  ghep: GhepHien | null
   groupName: string | null
   postedAt: string | null
 }
@@ -39,13 +42,13 @@ const CHO_PHEP = `CASE WHEN i.double_label THEN 2 ELSE 1 END`
  * `nhom` là `unit_code`: chỉ lấy bài của nhóm đó. */
 export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: string | null = null): Promise<TinGan | null> {
   const sql =
-    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
+    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, i.ref_id, i.ghep, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
      FROM eval_label_items i
      LEFT JOIN LATERAL (SELECT count(DISTINCT labeler_id) AS so, bool_or(labeler_id = $1) AS cua_toi
                         FROM eval_labels WHERE item_id = i.item_id) n ON true
      JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id FROM stg_zalo_posts
                    WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
-     WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP}
+     WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP} AND (i.ghep->>'trung_voi') IS NULL
      ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.item_id
      LIMIT 1`
   // Câu không nhóm giữ nguyên hai tham số: phép đo mù của PL7 rút chính câu này để chạy lại.
@@ -54,16 +57,17 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
     : await q.query(sql, [userId, lat])
   const r = rows[0]
   if (!r) return null
-  const nguon = danhSachAnh(r.media, r.media_files, r.snapshot_id)
-  const { chu, soLinkKhac } = chuKhongLink(r.text, nguon)
+  const g = docGhep(r.ghep)
+  const the = await docThe(q, r.item_id, r, g)
   return {
     itemId: r.item_id,
     lat: r.lat,
     doubleLabel: r.double_label,
     soNguoi: r.so,
-    text: chu,
-    anh: nguon.map((_, i) => duongAnh(r.item_id, i)),
-    soLinkKhac,
+    text: the.text,
+    anh: the.anh,
+    soLinkKhac: the.soLinkKhac,
+    ghep: the.ghep,
     groupName: r.group_name,
     postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : null,
   }
@@ -76,7 +80,7 @@ export async function nhomCuaLat(userId: string, lat: string, q: Q = pool): Prom
        SELECT i.item_id, i.stratum, i.ref_id, i.double_label, count(DISTINCT l.labeler_id) AS so,
               coalesce(bool_or(l.labeler_id = $1), false) AS cua_toi
        FROM eval_label_items i LEFT JOIN eval_labels l USING (item_id)
-       WHERE i.lat = $2 AND i.stratum IS NOT NULL
+       WHERE i.lat = $2 AND i.stratum IS NOT NULL AND (i.ghep->>'trung_voi') IS NULL
        GROUP BY i.item_id, i.stratum, i.ref_id, i.double_label
      ), ten AS (
        SELECT DISTINCT ON (n.stratum) n.stratum, p.group_name
@@ -98,11 +102,11 @@ export async function nhomCuaLat(userId: string, lat: string, q: Q = pool): Prom
   }))
 }
 
-/** Chữ bài và nhóm của một tin, để route chuẩn hoá trước khi ghi. Chỉ chữ gốc: lượt một vẫn mù giá trị máy. */
+/** Chữ bài và nhóm của một tin, để route chuẩn hoá trước khi ghi. Chỉ chữ gốc, của tin chữ đã ghép khi có: lượt một vẫn mù giá trị máy. */
 export async function baiDeGhi(itemId: number, q: Q = pool): Promise<{ text: string; stratum: string | null } | null> {
   const { rows } = await q.query(
-    `SELECT i.stratum, p.text FROM eval_label_items i
-     LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
+    `SELECT i.stratum, i.ghep, p.text FROM eval_label_items i
+     LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = coalesce(i.ghep->>'chu_ref', i.ref_id) ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.item_id = $1`, [itemId])
   return rows[0] ? { text: rows[0].text ?? "", stratum: rows[0].stratum } : null
 }
@@ -154,7 +158,7 @@ export async function tienDo(userId: string, lat: string, q: Q = pool, nhom: str
     `WITH n AS (
        SELECT i.item_id, i.double_label, count(DISTINCT l.labeler_id) AS so, coalesce(bool_or(l.labeler_id = $1), false) AS cua_toi
        FROM eval_label_items i LEFT JOIN eval_labels l USING (item_id)
-       WHERE i.lat = $2 AND ($3::text IS NULL OR i.stratum = $3) GROUP BY i.item_id, i.double_label)
+       WHERE i.lat = $2 AND (i.ghep->>'trung_voi') IS NULL AND ($3::text IS NULL OR i.stratum = $3) GROUP BY i.item_id, i.double_label)
      SELECT count(*)::int AS tong,
             (count(*) FILTER (WHERE cua_toi))::int AS cua_toi,
             (count(*) FILTER (WHERE NOT cua_toi AND so < CASE WHEN double_label THEN 2 ELSE 1 END))::int AS con,
