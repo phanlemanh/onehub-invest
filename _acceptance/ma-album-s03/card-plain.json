@@ -18,6 +18,10 @@
    "p": "Sẽ báo mỗi ngày bao nhiêu album từ 2 ảnh về thiếu ảnh: trên 2% cảnh báo, trên 5% báo dừng mở rộng. Chỉ báo, không chặn ghi."
   },
   {
+   "id": "AC-8",
+   "p": "Sẽ dừng, không bật lại và gọi Mạnh khi agent có lượt mới, kể cả lượt nhanh, hoặc bộ canh báo cấu hình nguy hiểm. Kênh tự nối lại như 26 và 27/10 thì không lùi."
+  },
+  {
    "id": "AC-9",
    "p": "Sẽ diễn tập cả đường cài và đường lùi trên một gateway thử riêng, không đụng gateway đang thu."
   }
@@ -34,10 +38,6 @@
   {
    "id": "AC-7",
    "p": "Chặn khởi động lại khi kiểm cấu hình đỏ, thiếu dấu an toàn, có đường gửi tin mới, bản build lệch bản đang chạy, hoặc agent có lượt dở hay lượt mới trong 60 phút."
-  },
-  {
-   "id": "AC-8",
-   "p": "Sẽ KHÔNG lùi nhầm khi kênh tự nối lại như 26 và 27/10. Agent có lượt mới, kể cả lượt nhanh, hoặc bộ canh báo cấu hình nguy hiểm thì dừng, không bật lại, gọi Mạnh."
   },
   {
    "id": "OOS-1",
