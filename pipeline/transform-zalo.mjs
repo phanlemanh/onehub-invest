@@ -148,6 +148,24 @@ export function dienTichMetTran(so) {
   return null;
 }
 
+/** Diện tích có đơn vị: "65m2", "65m²", rồi "<số>m" đứng một mình. */
+function dienTichCoDonVi(so) {
+  const area = so.match(/(\d+(?:[.,]\d+)?)\s*m[²2]/i);
+  return area ? parseFloat(area[1].replace(",", ".")) : dienTichMetTran(so);
+}
+
+// «Diện tích: 45.7» không đơn vị (GC1). Bỏ dấu cách rồi ký tự kế không được là chữ hay số: «65 triệu», «3pn2wc», «20 x 30» không
+// qua; dải và kích thước cũng không. Chỉ nhãn đầy đủ: «dt» còn là doanh thu và nằm trong «hdt».
+const NHAN_DIEN_TICH = /(?:diện\s*tích|dien\s*tich)\s*[:=\-–]?\s*(\d{1,3}(?:[.,]\d{1,2})?)(?![\d.,]*\d)(?!\s*[-–~\/x×]\s*\d)[ \t]*(?:$|[^\p{L}\p{N}\s])/imu;
+
+/** Diện tích sau nhãn, không đơn vị, cùng khoảng 15–500 m² với dienTichMetTran; hoặc null. */
+export function dienTichSauNhan(so) {
+  const m = so.match(NHAN_DIEN_TICH);
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(",", "."));
+  return v >= 15 && v <= 500 ? v : null;
+}
+
 /** SĐT di động VN từ text tin rao: "0973034567", "0973 034 567",
  * "0973.034.567", "+84973…". Chuẩn hoá về dạng 0xxxxxxxxx(x); chỉ nhận đầu
  * số mobile (3,5,7,8,9) — môi giới gần như luôn dùng mobile, lọc luôn giúp
@@ -354,10 +372,10 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
     else if (giaKhongDonVi) out.priceVnd = docGiaKhongDonVi(so, out.kind);
   }
 
-  // diện tích: "65m2", "65m²", "DT 45m"
-  const area = so.match(/(\d+(?:[.,]\d+)?)\s*m[²2]/i);
-  if (area) out.areaM2 = parseFloat(area[1].replace(",", "."));
-  else out.areaM2 = dienTichMetTran(so);
+  // diện tích: "65m2", "65m²", "DT 45m". Số đọc được trên chữ gốc giữ nguyên; còn rỗng mới đọc chữ kiểu Unicode rồi nhãn (GC1).
+  // Chỉ diện tích đi qua NFKC: đổi giá kéo theo thước giá và gom tin, việc riêng.
+  const soKieu = gatSo((text ?? "").normalize("NFKC"));
+  out.areaM2 = dienTichCoDonVi(so) ?? dienTichCoDonVi(soKieu) ?? dienTichSauNhan(soKieu);
 
   // bedrooms: "2PN", "2 phòng ngủ", "2BR"
   const bd = so.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);

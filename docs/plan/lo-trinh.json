@@ -3546,6 +3546,27 @@
       "ghi_chu": "5 tiêu chí, giữ riêng: gộp vào GC2 sẽ bắt việc nhỏ này chờ cả chuỗi Danh bạ."
     },
     {
+      "ma": "GC1G",
+      "slug": "doc-gia-chu-kieu-unicode",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "GC1"
+      ],
+      "phu": [],
+      "dot": "gan-can-s03-0411",
+      "nhom": "gan-can",
+      "cau_giao": "Bài S03 viết giá bằng chữ kiểu Unicode được đọc ra giá như bài ghi thường",
+      "bat_khi": "Bài có giá chỉ đọc ra sau chuẩn hoá có đúng số; số đã đọc không đổi; thước giá và gom tin được đo trước khi gộp",
+      "vi_sao": "Đo 05/11 ở GC1: 303 bài có giá chỉ đọc ra sau chuẩn hoá chữ. GC1 chỉ chuẩn hoá khâu diện tích vì đổi giá kéo theo thước giá và gom tin.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/parse.test.mjs"
+      ],
+      "ghi_chu": "Giám sát 05/11 chốt ghi vào lộ trình, không làm trong GC1."
+    },
+    {
       "ma": "GC2",
       "slug": "dien-tich-suy-ra-toa-truc",
       "hang": "T3",
