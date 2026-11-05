@@ -272,6 +272,8 @@ sources:
     policy: "không tái xuất nguyên văn lên cổng Invest / API công khai; chỉ dựng danh mục căn + hiệu chuẩn"
     checked_on: "2026-10-24"  # tra research-local/reso/dd-2.1.json
     fields:
+      project_id: "khoá nối sang khu đô thị qua s08_project_links (migration 074), không phải field RESO; chỉ local"
+      project_name: "→ Building.ComplexName khi đối chiếu tay (DN1), không ghi vào asset_nodes vì asset_nodes lên cloud; chỉ local"
       product_code: "→ UnitNumber (mã căn; tầng/toà tách ở transform — ADR-0013 §2)"
       subdivision_name: "→ Building.ComplexName (phân khu); high_rise lẫn toà → BuildingName"
       apartment_type_name: "→ PropertySubType (chữ nguồn không đồng nhất — chuẩn hoá ở transform)"
