@@ -426,6 +426,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Mạnh và đội kiểm tay theo từng nhóm trước, thống kê trường hợp rồi mới làm bộ đọc: đo 04/11 chưa có nhãn người nào.
     **Sửa Q4/H5** (Mạnh chốt «Cho ghi suy ra»): mỗi nhóm có quy ước chuẩn hoá; quy ước đã qua người và đạt eval theo nhóm được tự ghi giá trị kèm nhãn
     «suy ra» và căn cứ, chữ bài nói khác thì chữ bài thắng; người duyệt một lần cho mỗi phiên bản. Ngữ cảnh chưa qua eval vẫn không tự quyết. Hàng `GCQ1`, `GCQ2`.
+31. **Gom, tách, gộp tin S03** (05/11, Mạnh duyệt «Theo khuyến nghị», `docs/plan/pham-vi-gom-tach-gop-tin-0511.md`): S03 thiếu đơn vị «bài đăng» giữa sự kiện thô và tin.
+    Khử trùng ảnh `GT1` làm ngay. Tách bài nhiều căn là hàng có sẵn `PL18`, kéo lên đứng trước `GCQ1`. Lớp bài đăng `GT2`, kiểm định gộp trùng `GT4` đứng sau `GCQ1`.
+    Lưu bảng riêng hay tính lại quyết sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Chưa mở thu Nhật ký của S03, hỏi ZCode trước (mục chờ `GTH1`).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
