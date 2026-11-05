@@ -1,8 +1,8 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
-import { chuKhongLink, danhSachAnhCum, docGhep, duongAnh, ghepHien, type GhepHien } from "./labels-anh"
-import { docBaiCum } from "./labels-cum"
+import { docGhep, type GhepHien } from "./labels-anh"
+import { docThe } from "./labels-cum"
 import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
 
 /**
@@ -58,18 +58,16 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
   const r = rows[0]
   if (!r) return null
   const g = docGhep(r.ghep)
-  const bai = g ? await docBaiCum(q, r.ref_id, g) : [r]
-  const nguon = danhSachAnhCum(bai)
-  const { chu, soLinkKhac } = chuKhongLink(g?.chu_ref ? bai.find((b) => b.post_id === g.chu_ref)?.text : r.text, nguon)
+  const the = await docThe(q, r.item_id, r, g)
   return {
     itemId: r.item_id,
     lat: r.lat,
     doubleLabel: r.double_label,
     soNguoi: r.so,
-    text: chu,
-    anh: nguon.map((_, i) => duongAnh(r.item_id, i)),
-    soLinkKhac,
-    ghep: ghepHien(g),
+    text: the.text,
+    anh: the.anh,
+    soLinkKhac: the.soLinkKhac,
+    ghep: the.ghep,
     groupName: r.group_name,
     postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : null,
   }

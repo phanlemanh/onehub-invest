@@ -1,5 +1,5 @@
-import { chuKhongLink, danhSachAnhCum, docGhep, duongAnh, ghepHien, type GhepHien } from "./labels-anh"
-import { docBaiCum } from "./labels-cum"
+import { docGhep, type GhepHien } from "./labels-anh"
+import { docThe } from "./labels-cum"
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
@@ -83,16 +83,14 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
       }
     : null
   const a = ai.rows[0]
-  const baiCum = g ? await docBaiCum(q, b.ref_id, g) : [b]
-  const nguon = danhSachAnhCum(baiCum)
-  const hien = chuKhongLink(g?.chu_ref ? baiCum.find((x) => x.post_id === g.chu_ref)?.text : b.text, nguon)
+  const hien = await docThe(q, itemId, b, g)
   return {
     itemId,
     lat: b.lat,
-    text: hien.chu,
-    anh: nguon.map((_, i) => duongAnh(itemId, i)),
+    text: hien.text,
+    anh: hien.anh,
     soLinkKhac: hien.soLinkKhac,
-    ghep: ghepHien(g),
+    ghep: hien.ghep,
     groupName: b.group_name,
     postedAt: b.posted_at ? new Date(b.posted_at).toISOString() : null,
     cuaToi: nhan.map((r) => ({ field: r.field, value: r.value, notStated: r.not_stated, basis: r.basis })),

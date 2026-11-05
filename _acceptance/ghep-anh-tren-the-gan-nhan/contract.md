@@ -62,6 +62,7 @@ Later: phím mũi tên trong hộp xem ảnh lớn · ghép các bài ảnh khô
 
 - Known limits — thu phạm vi sau lượt chấm 2, Mạnh chọn lối 1 ngày 2026-11-05:
   - Phím mũi tên trong hộp xem ảnh lớn không chuyển ảnh: hộp thoại của thư viện chặn phím này. Người gắn chuyển ảnh bằng nút Ảnh trước, Ảnh sau.
+- Phép quét «không có luật thứ hai» của AC-1 đọc chữ của mã, phạm vi đúng các dạng trong bảng đối chứng của E1; không chứng minh được mọi cách viết (Mạnh chọn lối 2 sau lượt chấm 3).
 - Dùng cổng dev 3463 của dãy P4, DB thử `oneinvest_ghep_nhan`.
 - Thứ tự triển khai, cần lời Mạnh (Hỏi-4): sao lưu, áp 076, chạy lệnh ghép `--lat s03-theo-nhom` trên DB thật, ghi vào 191 dòng của lát đã qua Cổng GC0 (176 dòng còn NULL), rồi gộp mã. Lùi: `UPDATE eval_label_items SET ghep = NULL`.
 - Migration số 076, giám sát cấp 05/11. Áp lên DB thật cần lời Mạnh ở Cổng Phạm vi (Hỏi-4), kèm sao lưu.

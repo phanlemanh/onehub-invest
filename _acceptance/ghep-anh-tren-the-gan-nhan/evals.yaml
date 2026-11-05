@@ -8,7 +8,7 @@ evals:
     cmd: config:executors.script.ghep_lenh
     layer: unit
     paths: [pipeline/label-ghep.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/label-ghep.test.mjs, pipeline/lib/ghep-mau.mjs]
-    expected: "exit 0; ca 'GHEP-AC-1' ma trận viết trước đủ sáu loại bài và ca cụm lệch số tin chữ gần: mỗi dòng `ghep` bằng kết quả gọi trực tiếp ganBaiAnh trên cùng dữ liệu, có chữ không cụm là null, số phần tử ma trận khớp số assert. Chiều đỏ: bản sao hàm đổi cửa sổ 120 thành 60 thì ca 'cach 119 giay' đỏ. Quét mã: label-ghep.mjs không có số 120; toàn app/src không có tên hàm luật, cửa sổ thời gian dạng SQL hay '120 giây'; đường đọc cụm của app còn không có số 120 trần và so sánh posted_at; 'ok khong co luat thu hai'. Đối chứng: chèn thật vào tệp năm dạng (hằng 120, interval SQL, gọi ganBaiAnh, '120 giây', so posted_at) rồi qua đúng phép quét thì đỏ."
+    expected: "exit 0; ca 'GHEP-AC-1' ma trận viết trước đủ sáu loại bài và ca cụm lệch số tin chữ gần: mỗi dòng `ghep` bằng kết quả gọi trực tiếp ganBaiAnh trên cùng dữ liệu, có chữ không cụm là null, số phần tử ma trận khớp số assert. Chiều đỏ: bản sao hàm đổi cửa sổ 120 thành 60 thì ca 'cach 119 giay' đỏ. Quét mã bằng chữ, phạm vi đúng các dạng trong bảng đối chứng, không chứng minh mọi cách viết: label-ghep.mjs không có số 120; toàn app/src không có tên hàm luật, cửa sổ thời gian dạng SQL hay '120 giây'; đường đọc cụm của app còn không có số 120 hay 120000 trần, biểu thức 2 * 60 và so sánh cột thời gian hai chiều; 'ok khong co luat thu hai'. Đối chứng: chèn thật vào tệp mười dạng trong bảng rồi qua đúng phép quét thì đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -16,15 +16,15 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [pipeline/label-ghep.mjs, pipeline/label-sample.mjs, db/migrations/*_labels_ghep.sql, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; trên DB thử: 'ok ghep hai lan khong doi' (lần hai thật sự tính lại, không rơi vào nhánh giữ), 'ok lat moi co ghep', 'ok bon cot mau khong doi', 'ok nhan cu khong doi', 'ok thu khong ghi'. Chiều đỏ: 'ok doi chung: lam lai ghi dung dong lech', 'ok doi chung: tro vao oneinvest bi tu choi' và 'ok doi chung: doi mot dong thi phep bam do'."
+    expected: "exit 0; trên DB thử: 'ok ghep hai lan khong doi' (lần hai thật sự tính lại, không rơi vào nhánh giữ), 'ok lat moi co ghep' và 'ok lat moi theo nhom co ghep' (số dòng ghép khác 0 ở cả hai đường lấy mẫu, bằng số tính lại), 'ok bon cot mau khong doi', 'ok nhan cu khong doi', 'ok thu khong ghi'. Chiều đỏ: 'ok doi chung: lam lai ghi dung dong lech', 'ok doi chung: tro vao oneinvest bi tu choi' và 'ok doi chung: doi mot dong thi phep bam do'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.script.ghep_thuan
     layer: unit
-    paths: [app/src/lib/labels-anh.ts, app/src/lib/labels-queries.ts, app/tests/labels-ghep.test.ts]
-    expected: "exit 0; ca 'GHEP-AC-3' ma trận đủ sáu loại bài, kiểm số loại: chữ đúng tuyệt đối, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần; `ghep` null thì danh sách ảnh và chữ bằng hàm không ghép từng trường, đối chứng bài khác ảnh thì đỏ. Chiều đỏ: bản ghi có URL gốc hay mã bài trong kết quả thì phép quét đỏ."
+    paths: [app/src/lib/labels-anh.ts, app/src/lib/labels-cum.ts, app/src/lib/labels-queries.ts, app/tests/labels-ghep.test.ts]
+    expected: "exit 0; ca 'GHEP-AC-3' ma trận đủ sáu loại bài, kiểm số loại, qua hàm thật docBaiCum và docThe mà tinKe, doiChieu cùng gọi, chỉ câu SQL thay bằng bảng giả: chữ đúng tuyệt đối, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần; `ghep` null thì danh sách ảnh và chữ bằng hàm không ghép từng trường, đối chứng bài khác ảnh thì đỏ. Chiều đỏ: bản ghi có URL gốc hay mã bài thì phép quét đỏ. SQL thật đo ở E4."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -77,7 +77,7 @@ evals:
     target: "http://localhost:3463/ops/labels"
     paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, _acceptance/ghep-anh-tren-the-gan-nhan/probes/seed.mjs]
     steps:
-      - "Cùng bản chạy với E5. Trước khi lưu bài có mồi seed in: lấy phản hồi HTTP thật của trang và mọi route thẻ gọi bằng curl kèm cookie, ghi vào observed status 200, số lần có chữ tin chữ seed (phải lớn hơn 0), số đếm từng mồi không phân biệt hoa thường, từng mã bài của cụm và example.test (phải bằng 0); đọc DB thử, ghi vào observed số dòng có các giá trị đó (phải lớn hơn 0)"
+      - "Cùng bản chạy với E5. Trước khi lưu bài có mồi seed in: lấy phản hồi HTTP thật của trang và mọi route thẻ gọi bằng curl kèm cookie, ghi vào observed status 200, số lần có chữ tin chữ seed (phải lớn hơn 0), số đếm từng mồi seed in, gồm mồi riêng của ba bài ảnh, không phân biệt hoa thường, từng mã bài của cụm và example.test (phải bằng 0); đọc DB thử, ghi vào observed số dòng có các giá trị đó (phải lớn hơn 0)"
       - "Chọn trường hợp 'Ghép sai' trên màn sau khi lưu một bài, đọc DB thử, ghi vào observed dòng case_kind"
       - "Điền đủ biểu mẫu, Lưu; chụp evidence/E8-luot-hai.png: bảng So với máy hiện giá trị của tin chữ ghép, vẫn thấy cả dải ảnh"
     expected: "Observed có đủ status, số đếm mồi, số đếm mã bài và số dòng đối chứng. Sau lưu bảng So với máy có giá trị bộ đọc. Ghép sai lưu được từ màn."

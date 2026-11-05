@@ -10,7 +10,8 @@ import { join } from "node:path"
 import { JSDOM } from "jsdom"
 import { createElement } from "react"
 
-import { chuKhongLink, danhSachAnh, danhSachAnhCum, docGhep, duongAnh, ghepHien, refsCuaDong, type Ghep } from "../src/lib/labels-anh"
+import { chuKhongLink, danhSachAnh, danhSachAnhCum, docGhep, ghepHien, refsCuaDong, type Ghep } from "../src/lib/labels-anh"
+import { docBaiCum, docThe } from "../src/lib/labels-cum"
 import { serveZaloMedia, type BaiAnhRow } from "../src/lib/ops/zalo-media"
 import type { User } from "../src/lib/auth"
 
@@ -34,14 +35,10 @@ const POSTS = [
 ]
 const G = ghepChoMau([["1", "A1"], ["2", "A3"], ["3", "A4"], ["4", "T4"], ["5", "T5"], ["6", "A2"], ["7", "A6"]].map(([item_id, ref_id]) => ({ item_id, ref_id })), POSTS)
 const doc = (k: string) => docGhep(G.get(k))
-const baiTheoMa = new Map(POSTS.map((p) => [p.post_id, p]))
-// Chữ và ảnh của thẻ theo đúng cách đường đọc ghép: chữ của tin chữ bỏ link ảnh cả cụm, ảnh theo thứ tự anh_refs.
-const theCua = (ref: string, g: Ghep | null) => {
-  const refAnh = g ? g.anh_refs : [ref]
-  const nguon = danhSachAnhCum(refAnh.filter((r) => baiTheoMa.get(r)!.text.startsWith("https://")).map((r) => chiUrl(r.toLowerCase())))
-  const goc = g ? (g.chu_ref ? baiTheoMa.get(g.chu_ref)!.text : "") : baiTheoMa.get(ref)!.text
-  return { chu: chuKhongLink(goc, nguon).chu, anh: nguon.map((d) => (d.kind === "url" ? d.url : d.file)), duong: nguon.map((_, i) => duongAnh(9, i)) }
-}
+// Đường đọc thật của thẻ (`docBaiCum`, `docThe`); chỉ câu SQL thay bằng bảng giả, trả ngược thứ tự để đo được thứ tự đọc. SQL thật ở E4.
+const hang = (p: (typeof POSTS)[number]) => ({ post_id: p.post_id, ref_id: p.post_id, text: p.text, media: p.text.startsWith("https://") ? [{ url: p.text }] : null, media_files: null, snapshot_id: SNAP })
+const q = { query: async (_: string, [refs]: [string[]]) => ({ rows: POSTS.filter((p) => refs.includes(p.post_id)).reverse().map(hang) }) } as unknown as Parameters<typeof docThe>[0]
+const dongCua = (ref: string) => hang(POSTS.find((p) => p.post_id === ref)!)
 
 const MA_TRAN = [
   ["chi anh mot tin chu", "1", "A1", ["T1", "A1", "A2"], { suyRa: true, soChuGan: 1, khongChu: false }, "Cho thuê 2PN", [U("a1"), U("a2")]],
@@ -54,14 +51,15 @@ const MA_TRAN = [
 
 test("GHEP-AC-3 ma tran du sau loai bai", () => assert.equal(new Set(MA_TRAN.map((m) => m[0])).size, 6))
 for (const [ten, k, ref, refs, hien, chu, anh] of MA_TRAN) {
-  test(`GHEP-AC-3 ${ten}: chu, duong anh, thu tu bai va co ghep`, () => {
+  test(`GHEP-AC-3 ${ten}: chu, duong anh, thu tu bai va co ghep`, async () => {
     const g = doc(k)
     assert.deepEqual(refsCuaDong(ref, g), refs)
-    assert.deepEqual(ghepHien(g), hien)
-    const the = theCua(ref, g)
-    assert.equal(the.chu, chu)
-    assert.deepEqual(the.anh, anh)
-    assert.deepEqual(the.duong, anh.map((_, i) => `/api/zalo-media?nhan=9&anh=${i}`))
+    const the = await docThe(q, 9, dongCua(ref), g)
+    assert.deepEqual(the.ghep, hien)
+    assert.equal(the.text, chu)
+    assert.deepEqual(the.anh, anh.map((_, i) => `/api/zalo-media?nhan=9&anh=${i}`))
+    const nguon = danhSachAnhCum(g ? await docBaiCum(q, ref, g) : [dongCua(ref)])
+    assert.deepEqual(nguon.map((d) => (d.kind === "url" ? d.url : d.file)), anh)
   })
 }
 
@@ -86,10 +84,9 @@ test("GHEP-AC-3 thu tu anh: tin chu truoc, cum theo thoi gian, trung anh tinh mo
   assert.deepEqual(ds.map((d) => (d.kind === "tep" ? d.file : d.url)), ["media/t.jpg", "media/a.jpg", U("b")])
 })
 
-test("GHEP-AC-3 du lieu xuong trinh duyet khong co ma bai, doi chung phep quet do", () => {
-  const xuong = JSON.stringify({ ghep: ghepHien(doc("1")), anh: [duongAnh(7, 0)] })
+test("GHEP-AC-3 du lieu the khong co ma bai hay URL goc, doi chung phep quet do", async () => {
   const coMa = (s: string) => /T1|A1|A2|example\.test|https?:/.test(s)
-  assert.ok(!coMa(xuong), xuong)
+  for (const [, k, ref] of MA_TRAN) assert.ok(!coMa(JSON.stringify(await docThe(q, 9, dongCua(ref), doc(k)))), ref)
   assert.ok(coMa(JSON.stringify(doc("1"))), "đối chứng: bản ghi thô có mã bài thì phép quét đỏ")
 })
 

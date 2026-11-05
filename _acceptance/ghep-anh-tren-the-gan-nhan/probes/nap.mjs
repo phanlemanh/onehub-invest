@@ -144,9 +144,17 @@ try {
   kiem((await bamMau("ghep-nap%")) !== mauSau, "doi chung: doi mot dong thi phep bam do", "loi phep bam khong do")
   await c.query(`UPDATE eval_label_items SET stratum = 'GNR' WHERE item_id = $1`, [dong.t4])
   kiem((await bamNhan()) === nhanTruoc, "nhan cu khong doi", "loi nhan cu doi")
-  const kqMoi = await layMau(c, { lat: "ghep-nap-moi", n: 3, seed: "ghep-nap-moi", nhom: /Nhóm nạp ghép/, thu: false })
-  const { rows: [moiLat] } = await c.query(`SELECT count(*)::int AS n, count(*) FILTER (WHERE ghep IS NOT NULL)::int AS g FROM eval_label_items WHERE lat = 'ghep-nap-moi'`)
-  kiem(kqMoi.them === 3 && moiLat.n === 3 && (await ghepLat(c, { lat: "ghep-nap-moi", thu: true })).co_ghep === moiLat.g, "lat moi co ghep", `loi lat moi ${JSON.stringify(moiLat)}`)
+  // Lấy 10 trong 13 bài: nhóm chỉ có 3 bài `ghep` null nên lát mới buộc phải có dòng ghép, phép đo không thể là 0 bằng 0.
+  const kqMoi = await layMau(c, { lat: "ghep-nap-moi", n: 10, seed: "ghep-nap-moi", nhom: /Nhóm nạp ghép/, thu: false })
+  const demLat = async (l) => (await c.query(`SELECT count(*)::int AS n, count(*) FILTER (WHERE ghep IS NOT NULL)::int AS g FROM eval_label_items WHERE lat = $1`, [l])).rows[0]
+  const moiLat = await demLat("ghep-nap-moi")
+  const thuMoi = await ghepLat(c, { lat: "ghep-nap-moi", thu: true })
+  kiem(kqMoi.them === 10 && moiLat.n === 10 && moiLat.g >= 7 && thuMoi.co_ghep === moiLat.g, "lat moi co ghep", `loi lat moi ${JSON.stringify(moiLat)} tinh lai ${thuMoi.co_ghep}`)
+  // Đường theo nhóm, đường thật của lát hiện dùng.
+  const kqNhom = await layMau(c, { lat: "ghep-nap-nhom", seed: "ghep-nap-nhom", nhom: /Nhóm nạp ghép/, thu: false, theoNhom: { moiNhomLon: 10, moiNhomNho: 10, soNhomLon: 1 } })
+  const nhomLat = await demLat("ghep-nap-nhom")
+  const thuNhom = await ghepLat(c, { lat: "ghep-nap-nhom", thu: true })
+  kiem(kqNhom.them === 10 && nhomLat.n === 10 && nhomLat.g >= 7 && thuNhom.co_ghep === nhomLat.g, "lat moi theo nhom co ghep", `loi lat theo nhom ${JSON.stringify(nhomLat)} them ${kqNhom.them}`)
 
   // Mồi giá trị máy ở mọi bài của cụm và tin chữ.
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-nap-o', 'sale', now(), now(), ARRAY['ghep-nap-t1'], 'TOAMAYGHEP')`)

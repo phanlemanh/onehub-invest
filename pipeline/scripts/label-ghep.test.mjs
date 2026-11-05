@@ -112,7 +112,8 @@ test("GHEP-AC-1 khong co luat thu hai", () => {
   const goc = join(import.meta.dirname, "../..");
   // Toàn app/src: tên hàm, tên hằng của luật, cửa sổ thời gian dạng SQL. Đường đọc cụm: thêm cả số 120 trần.
   const LUAT = /ganBaiAnh|cuaSoGiay|CUA_SO_GIAY|interval\s*'\s*\d+\s*(?:s|sec|second|minute|min)|120\s*(?:giây|seconds?)/i;
-  const LUAT_CUM = new RegExp(`${LUAT.source}|\\b120\\b|posted_at\\s*(?:[<>-]|BETWEEN)`, "i");
+  // Phạm vi phép quét là đúng các dạng trong bảng đối chứng dưới đây: giây, mili-giây, biểu thức 2 * 60, so sánh cột thời gian hai chiều. Quét chữ không chứng minh được mọi cách viết.
+  const LUAT_CUM = new RegExp(`${LUAT.source}|\\b120(?:[_,]?000)?\\b|\\b2\\s*\\*\\s*60\\b|posted_?at\\b[^\\n]{0,40}(?:[<>]|BETWEEN|getTime|\\s-\\s)|[<>]=?\\s*[\\w.]*posted_?at\\b`, "i");
   // `t.length > 120` là ngưỡng gấp chữ dài trên thẻ, không phải cửa sổ thời gian.
   const boChuThich = (s) => s.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n").replace("t.length > 120", "");
   const quet = (tep, mau) => tep.filter((f) => mau.test(boChuThich(readFileSync(f, "utf8"))));
@@ -133,6 +134,11 @@ test("GHEP-AC-1 khong co luat thu hai", () => {
       ["goi.ts", "ganBaiAnh(a, b)", LUAT],
       ["giay.tsx", "const c = '120 giây'", LUAT],
       ["so-sanh.ts", "const s = `WHERE p.posted_at < a`", LUAT_CUM],
+      ["mili.ts", "if (Math.abs(a.postedAt - b.postedAt) < 120_000) gan()", LUAT_CUM],
+      ["mili2.ts", "if (Math.abs(ta - tb) < 120000) gan()", LUAT_CUM],
+      ["bieu-thuc.ts", "if (hieu < 2 * 60 * 1000) gan()", LUAT_CUM],
+      ["get-time.ts", "if (new Date(p.posted_at).getTime() - t < 120_000) gan()", LUAT_CUM],
+      ["dao-ve.ts", "const s = `WHERE a < p.posted_at`", LUAT_CUM],
     ];
     for (const [ten, chu, mau] of nhiem) {
       const f = join(d, ten);

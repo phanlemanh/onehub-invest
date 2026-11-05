@@ -45,7 +45,7 @@ try {
   await c.query(`DELETE FROM eval_label_items WHERE lat = $1`, [LAT])
   await c.query(`DELETE FROM silver_labels WHERE post_id LIKE 'ghep-seed-%'`)
   await c.query(`DELETE FROM enrichment_proposals WHERE offer_id = 'ghep-seed-o'`)
-  await c.query(`DELETE FROM sale_offer_records WHERE offer_id = 'ghep-seed-o'`)
+  await c.query(`DELETE FROM sale_offer_records WHERE offer_id LIKE 'ghep-seed-o%'`)
   await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'ghep-seed-%'`)
   await c.query(`DELETE FROM collection_units WHERE group_key = 'ghep-seed-g'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@ghep-seed.test'`)
@@ -86,7 +86,10 @@ try {
   const kq = await ghepLat(c, { lat: LAT, lamLai: true })
   // Mồi giá trị máy ở tin chữ và bài ảnh của cụm đầu: E8 soi phản hồi HTTP thật.
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw, area_m2) VALUES ('ghep-seed-o', 'sale', now(), now(), ARRAY['ghep-seed-t1'], 'TOAMAYSEED', 64.5)`)
-  for (const id of ["t1", "a1"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', 'ghep-seed', 'v', 'inquiry', 'rent_lt', true, 'ghep-seed')`, [`ghep-seed-${id}`])
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'ghep-seed-t1', 'h', 'ghep-seed', 'v', 'inquiry', 'rent_lt', true, 'ghep-seed')`)
+  // Mồi riêng từng bài ảnh của cụm, khác tin chữ: phép đếm qua HTTP mới phân biệt được rò từ bài nào.
+  for (const id of ["a1", "a2", "a3"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', $2, 'v', 'not_listing', 'sale', true, 'ghep-seed')`, [`ghep-seed-${id}`, `moiseed${id}`])
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-seed-o-anh', 'sale', now(), now(), ARRAY['ghep-seed-a1', 'ghep-seed-a2', 'ghep-seed-a3'], 'TOAMAYANHSEED')`)
   await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at) SELECT 'S03:ghep-seed-o', 'block_raw', '"MOIASSERTSEED"', 'inferred', 'e2_llm', now() WHERE NOT EXISTS (SELECT 1 FROM field_assertions WHERE subject_key = 'S03:ghep-seed-o')`)
   await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('ghep-seed', 'ghep-seed-o', 'block_raw', '"MOIPROPSEED"', 'moi', 'e2_llm', 'review')`)
   const id = `usr_${randomBytes(6).toString("hex")}`
@@ -97,7 +100,7 @@ try {
   fs.writeFileSync(path.join(THU_MUC, "cookie.txt"), `oi_session=${token}\n`, { mode: 0o600 })
   console.log(`seed xong: nhom ${u.unit_code}, ${so} dong, nhan ghep ${kq.nhan_ghep}, trung ${kq.trung}`)
   console.log("thu tu the: mot tin chu (co moi) | nhieu tin chu | cum 21 anh | khong tin chu | co chu khong cum | co chu co cum | co anh loi")
-  console.log("moi may cua bai dau: TOAMAYSEED MOIASSERTSEED MOIPROPSEED rent_lt; chu seed: Cho thuê 2PN toà thử")
+  console.log("moi may cua bai dau: TOAMAYSEED MOIASSERTSEED MOIPROPSEED rent_lt moiseeda1 moiseeda2 moiseeda3 TOAMAYANHSEED; moi moiseed* o cot model cua silver_labels, TOAMAYANHSEED o block_raw; chu seed: Cho thuê 2PN toà thử")
   console.log(`ban chay: cd app && DATABASE_URL=${URL_THU} SNAPSHOTS_DIR=${SNAP_GOC} npm run dev -- -p 3463`)
   console.log(`cookie o ${path.join(THU_MUC, "cookie.txt")}; mo /ops/labels?nhom=${u.unit_code}`)
 } finally {
