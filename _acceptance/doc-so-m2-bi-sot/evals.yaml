@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: doc-so-m2-bi-sot
+# Không phép đo nào ghi DB oneinvest: E3 chỉ đọc, E4 chạy trên DB thử oneinvest_gc1_m2 (bash db/db-thu.sh oneinvest_gc1_m2 --neu-chua-co).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.gc1_parse
+    layer: unit
+    paths: [pipeline/transform-zalo.mjs, pipeline/parse.test.mjs]
+    expected: "exit 0; các ca 'GC1-AC-1 nhan khong don vi' với «Diện tích: 45.7», «Diện tích : 27.2», «Diện tích 64», «Diện tích: 86,5», theo sau là xuống dòng hoặc biểu tượng, cho đúng số. Chiều đỏ: E2 phá bản sao thì ca này đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.gc1_parse
+    layer: unit
+    paths: [pipeline/transform-zalo.mjs, pipeline/parse.test.mjs]
+    expected: "exit 0; các ca 'GC1-AC-2 chu kieu unicode': số và m2 đậm, `㎡` cho đúng areaM2; bài có giá viết đậm thì priceVnd vẫn null, bài có SĐT đậm thì số đó không thành diện tích; giá thường, số phòng, loại tin của cùng bài giữ nguyên. Chiều đỏ: E2 bỏ NFKC thì ca này đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.gc1_parse
+    layer: unit
+    paths: [pipeline/transform-zalo.mjs, pipeline/parse.test.mjs]
+    expected: "exit 0; các ca 'GC1-AC-3 khong doc nham', mỗi chuỗi một ca: «hdt 21 triệu», «DT 21 triệu», «DT 65», «Diện tích: 3pn2wc», «Diện tích: 5x20», «Diện tích: 20 x 30», «Diện tích: 5×20», «Diện tích: 60-70», «Diện tích: 60 - 70», «Diện tích: 60/70», «Diện tích: 65 triệu», «Diện tích: 65 pn», «Diện tích: 14.9», «Diện tích: 501», «Diện tích: 1200», link chứa M2: areaM2 null. Đối chứng dương cùng tệp: «Diện tích: 21», «Diện tích: 65», «Diện tích: 15», «Diện tích: 500», «Diện tích: 64, 2pn» cho đúng số. Ca 'GC1-AC-4 khong doi so da doc': bài có «200M2» đậm và 173 m² thường vẫn đọc 173. Chiều đỏ: E2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.gc1_dot_bien
+    layer: unit
+    paths: [pipeline/transform-zalo.mjs, pipeline/parse.test.mjs, _acceptance/doc-so-m2-bi-sot/probes/dot-bien.mjs]
+    expected: "exit 0; bản sao nguyên vẹn xanh ('ok ban sao lanh'); mỗi đột biến trên bản sao đỏ đúng ca được ghim: 'ok dot bien bo NFKC do GC1-AC-2', 'ok dot bien bo chan chu sau so do GC1-AC-3', 'ok dot bien bo chan dai do GC1-AC-3', 'ok dot bien bo chan nhan do GC1-AC-3', 'ok dot bien bo khoang do GC1-AC-3', 'ok dot bien mo nhan sang dt do GC1-AC-3', 'ok dot bien bo luat nhan do GC1-AC-1', 'ok dot bien dao thu tu do GC1-AC-4'. Không tìm thấy mỏ neo đột biến thì thoát 1 và gọi tên, không xanh lặng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.gc1_so_bo_doc
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, _acceptance/doc-so-m2-bi-sot/probes/so-bo-doc.mjs, _acceptance/doc-so-m2-bi-sot/probes/mau-do.json, _acceptance/doc-so-m2-bi-sot/probes/mau-bai-doi.json]
+    expected: "exit 0; bộ đọc mới và bộ đọc tại 9976fb01 chạy trên bài có captured_at tới mốc trong mau-bai-doi.json, kết nối đặt default_transaction_read_only=on: 'ok quet du 80317 bai', 'ok tap bai doi khop danh sach 141', 'ok 15 tin dung so', 'ok 4 tin giu rong', 'ok 0 gia tri cu doi', 'ok gia phong sdt loai khong doi' kèm số giá trị khác null của mỗi trường. Chiều đỏ trên cùng dữ liệu: 'ok doi chung: bo doc cu thieu 15/15 tin', 'ok doi chung: them bai ngoai danh sach bi bat', phá riêng từng trường giá, phòng, SĐT, loại đều bị bắt ('ok doi chung: pha <trường> bi bat')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.gc1_transform
+    layer: backend-effect
+    paths: [pipeline/transform-zalo.mjs, scripts/zalo-import-daily.sh, _acceptance/doc-so-m2-bi-sot/probes/transform-thu.mjs, _acceptance/doc-so-m2-bi-sot/probes/mau-do.json]
+    expected: "exit 0; dựng lại DB thử oneinvest_gc1_m2 từ đầu, in và đối chiếu lệnh transform với scripts/zalo-import-daily.sh, chạy bản 9976fb01 rồi bản mới: 'ok doi chung: ban cu 15/15 rong', 'ok 15 tin dung so', 'ok 0 tin co so bi doi', 'ok tap tin doi khop danh sach', 'ok offer_id khong mat', 'ok nhom gom khong doi', 'ok moi ket noi vao db thu' (mẫu pg_stat_activity theo application_name, có ít nhất một mẫu trên DB thử, không mẫu nào ở DB khác). Từ chối chạy khi tên DB không phải oneinvest_gc1_m2. Chiều đỏ: 'ok doi chung: sua dien tich mot tin bi bat', 'ok doi chung: xoa mot tin bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
