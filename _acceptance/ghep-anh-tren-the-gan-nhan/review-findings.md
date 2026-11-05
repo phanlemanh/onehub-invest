@@ -1,89 +1,98 @@
 ## Trong hợp đồng
 
-- **bangTruongHop vẫn đếm dòng trung_voi, nên bảng trường hợp lệch tiến độ và không bao giờ đủ**
-  file: `app/src/lib/labels-luot-hai.ts:143` — severity: medium — AC: AC-8 — source: conventions
-  Quyết định Hỏi-1 và AC-8 yêu cầu dòng có `trung_voi` không hiện và không tính tiến độ. `tinKe`, `nhomCuaLat`, `tienDo` đều đã thêm `(i.ghep->>'trung_voi') IS NULL`. CTE `i` của `bangTruongHop` thì không lọc: `SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL`. `bang-truong-hop.tsx` hiện `daGan/tong` theo từng nhóm, nên `tong` thừa 11 dòng trên toàn lát. Dòng trùng không bao giờ vào hàng gắn, nên nhóm có dòng trùng gắn hết vẫn hiện thiếu, ví dụ 28/30, trong khi `chon-nhom` cùng màn báo đủ. Đầu dò `nap.mjs` chỉ đối chứng `trung_voi` qua `tienDo`, không phủ hàm này. Hướng xử lý: thêm cùng điều kiện lọc vào CTE `i`.
+- **Hình dạng 4 (âm tính một mình): «tinKe khong co gia tri may» không nhìn thấy mồi ở bài ảnh của cụm**
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:174` — severity: high — AC: AC-6 — source: measurement
+  AC: AC-6
+  E7 và AC-6 hứa mù với «mồi ở mọi bài của cụm». Dòng 145 chèn silver_labels cho a1, a2, a3 với listing_intent='not_listing', kind='sale'. Tập quét MOI ở dòng 58 chỉ có TOAMAYGHEP, MOI-ASSERT-GHEP, MOI-PROP-GHEP, rent_lt; rent_lt chỉ gắn với t1 (dòng 144). Đã chạy thử: coMoi(JSON.stringify({listing_intent:'not_listing',kind:'sale'})) trả 0. Nếu tinKe hoặc trang lộ AI đọc của bài ảnh, các assert coMoi(...)===0 ở dòng 174 và 177 vẫn xanh. Offer cũng chỉ nối với t1 (dòng 142), nên phép đo âm tính chỉ phủ mồi của tin chữ. Đối chứng dòng 149 chỉ đếm dòng có trong bảng (moi.s===4), không chứng minh phép quét bắt được giá trị đó. Đối chứng dòng 179 chỉ chèn TOAMAYGHEP là mồi của t1.
 
-- **bangTruongHop vẫn tính dòng trung_voi, nhóm không bao giờ đủ «Đã gắn»**
-  file: `app/src/lib/labels-luot-hai.ts:143` — severity: medium — AC: AC-8 — source: bugs
-  AC-8 yêu cầu dòng có trung_voi không tính tiến độ. tinKe, nhomCuaLat, tienDo đã lọc `(i.ghep->>'trung_voi') IS NULL`, nhưng CTE `i` của bangTruongHop vẫn là `SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL`. Dòng trùng không vào hàng gắn nên không bao giờ có nhãn, mà vẫn nằm trong `tong`. BangTruongHop (bang-truong-hop.tsx) hiện `daGan/tong`, nên nhóm có dòng trùng dừng ở dạng 29/30 dù đã gắn hết. Hai số tiến độ trên cùng màn lệch nhau. Theo số đo trong design doc, lát s03-theo-nhom có 11 dòng thừa thuộc 8 đơn vị. nap.mjs (E10) chỉ kiểm tienDo và tinKe nên không bắt được. Bằng chứng ui-check E5 (E5-het-nhom.png) thấy đúng lỗi này: header 7/7, bảng «Nhóm thử ghép 7/8».
+- **Hình dạng 4 (âm tính một mình): hai phép so với mốc chạy trên bài không có giá trị máy và không có ảnh, nên trường vừa đổi chỉ so rỗng với rỗng**
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:237` — severity: medium — AC: AC-6 — source: measurement
+  AC: AC-6
+  AC-6, E4, E7 hứa bài không ghép giống hệt hàm trước vòng. Cả «ghep rong giong ban truoc» (dòng 171) và «doiChieu khong ghep giong moc» (dòng 237) đều dùng dòng t4. Dòng 93 tạo t4 với media = null; offer chỉ gắn t1 (dòng 142); silver_labels chỉ gắn t1, a1, a2, a3 (dòng 144-145). Vòng này đổi đúng hai chỗ ở nhánh không ghép: refMay trong truy vấn sale_offers, silver_labels và danhSachAnh sang danhSachAnhCum. Với t4, boDoc, aiDoc, soTin, anh đều là null, 0 hoặc rỗng ở cả hai phía. Đọc từ mã: đột biến refMay = g?.chu_ref ?? null hoặc [b] thành [] vẫn cho JSON bằng nhau. Đối chứng dòng 238 chỉ ghi đè boDoc trên kết quả đã lấy, không phải fixture có giá trị máy và ảnh để phép so phân biệt được.
 
-- **Hình dạng 3 (assert giá trị trong khi lời hứa là quan hệ): ca «cụm lệch» không hề lệch, nên «lớn nhất trên cụm» không được đo**
-  file: `pipeline/scripts/label-ghep.test.mjs:21` — severity: high — AC: AC-1 — source: measurement
-  AC-1 và E1 hứa quan hệ: so_chu_gan là số lớn nhất trên cụm, kèm «ca cụm lệch số tin chữ gần». Fixture có T2=1000, A3=1001, A4=1040, T3=1100. Comment ghi T3 chỉ nằm trong cửa sổ của A4, nhưng A3 cách T3 99 giây, dưới 120, nên soChuGan(A3)=2 và soChuGan(A4)=2 (đã chạy thử). Hai bài ảnh bằng nhau, nên các dòng 38 và 43 chỉ ghim literal so_chu_gan: 2 và không phân biệt được Math.max với một bài bất kỳ. Đột biến trên bản sao ở scratchpad: đổi `Math.max(...ds.map(chuGan))` thành `chuGan(ds[0])`, mọi ca GHEP-AC-1 về ghép vẫn xanh; chỉ ca quét mã đỏ, do đường dẫn của bản sao, không liên quan đột biến. Cần fixture có bài ảnh N=1 và bài ảnh N=2 trong cùng cụm.
+- **Hình dạng 3 (assert chuỗi có mặt trong khi lời hứa là quan hệ): cột chữ của ma trận sáu loại bài luôn đúng ở hai loại không tin chữ**
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:201` — severity: medium — AC: AC-3 — source: measurement
+  AC: AC-3
+  E4 «ok ma tran sau loai bai» và AC-3 hứa chữ của thẻ đúng theo từng loại. Dòng 201 assert t.text.startsWith(chu), mà MT dòng 186 (GM3) và 189 (GM6) đặt chu = "". startsWith("") luôn true; đã chạy thử với URL ảnh. Hai bài a5 và a7 có text chính là URL ảnh example.test, nên nếu thẻ trả URL ấy làm chữ thì ca vẫn đếm là đúng. Điều kiện còn lại của dòng 201 là coMaBai, chỉ bắt 'ghep-nap-', không bắt URL; coLink không được gọi trong vòng này. Phép đo cần là t.text === "" hoặc bằng chữ kỳ vọng.
 
-- **Hình dạng 4 (âm tính một mình, không đối chứng dương): «ok cum lech co co» đúng theo cấu trúc, không thể đỏ**
-  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/that.mjs:47` — severity: high — AC: AC-9 — source: measurement
-  `lech` lọc dòng đại diện có so_chu_gan < 2 mà có dòng y cùng chu_ref với so_chu_gan > 1, rồi assert lech.length === 0. Mọi dòng cùng chu_ref nhận so_chu_gan từ cùng `cuaCum(chuId)` trong ghep-mau.mjs, nên cùng cụm luôn cùng số và `lech` luôn rỗng trên mọi dữ liệu. Phép đo không gọi soChuGan cho từng bài trong anh_refs để so với cờ, và không có đối chứng. Lời hứa của AC-9 («mọi cụm có tin chữ gần từ 2 đều có cờ trên đơn vị đại diện») và mục P1 trong gap-probe.md («fixed ... E11 ok cum lech co co») vì thế không được đo trên dữ liệu thật. Dòng «the co co N» chỉ in ra, không assert. Cộng với finding về fixture cụm lệch, không phép đo tự động nào trong diff bắt được việc bỏ Math.max.
+- **Hình dạng 5 (tuyên quét lớp nhưng phủ không đủ): E1 tuyên app/src không có hằng 120, nhưng phép quét app không tìm 120 và không phủ app/src**
+  file: `pipeline/scripts/label-ghep.test.mjs:113` — severity: medium — AC: AC-1 — source: measurement
+  AC: AC-1
+  E1 ghi «label-ghep.mjs và app/src không có hằng 120 của luật ghép, 'ok khong co luat thu hai', đối chứng chèn hằng thì phép quét đỏ». CUA_MAU có 120 nhưng dòng 118 chỉ áp cho hai tệp pipeline. Tệp app đi qua CUA_APP ở dòng 113, regex này không có 120 hay interval. Đã chạy thử: 'const CUA = 120' và "p.posted_at BETWEEN a - interval '120 seconds' AND b" đều lọt, nên luật ghép thứ hai dạng SQL trong labels-queries.ts vẫn xanh. Tập tệp ở dòng 119 chỉ gồm components/ops/labels và sáu tệp lib, không phải app/src. Đối chứng dòng 115-116 chỉ khớp regex với chuỗi literal, không chèn hằng vào tệp rồi chạy qua bước quét như E1 mô tả.
 
-- **Hình dạng 3 (assert giá trị trong khi lời hứa là quan hệ): AI đọc «theo tin chữ ghép» dùng cùng một mồi ở mọi bài**
-  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:193` — severity: high — AC: AC-6 — source: measurement
-  AC-6 và E7 hứa AI đọc lấy theo tin chữ ghép, tức quan hệ với refMay = g.chu_ref. Dòng 142 chèn silver_labels kind='rent_lt' cho cả t1, a1, a2, a3, rồi dòng 193 assert d.aiDoc?.kind === 'rent_lt' trên dòng a1. Nếu truy vấn silver_labels trong doiChieu quay về đọc b.ref_id (a1) thì vẫn nhận 'rent_lt' và phép đo vẫn xanh. Đối chứng với mốc ở dòng 196 chỉ kiểm dMoc.boDoc === null, không kiểm aiDoc. Chỉ boDoc phân biệt được nguồn, vì sale_offer_records chỉ gắn với t1. Muốn phân biệt, bài ảnh và tin chữ phải mang giá trị khác nhau. seed.mjs cho E8 cũng cùng mồi 'rent_lt' ở t1 và a1.
-
-- **Hình dạng 5 (tuyên quét lớp nhưng chỉ phủ một phần): «không có luật thứ hai» bỏ sót các file app đọc cụm và không bắt hằng 120 ở app**
-  file: `pipeline/scripts/label-ghep.test.mjs:92` — severity: high — AC: AC-1 — source: measurement
-  E1 tuyên «label-ghep.mjs và app/src không có hằng 120 của luật ghép, đối chứng chèn hằng thì phép quét đỏ»; contract ghi «Never: luật ghép thứ hai ở app». Dòng 92 chỉ quét components/ops/labels, labels-anh.ts và labels-cum.ts. Nó bỏ labels-queries.ts, labels-luot-hai.ts và ops/zalo-media.ts, đều là file vòng này sửa, trong đó hai file đầu chứa SQL trên stg_zalo_posts. Regex CUA_APP ở dòng 86 không có 120 hay `interval`, nên `const CUA = 120` hoặc `interval '120 seconds'` trong file app đều lọt. CUA_MAU có \b120\b nhưng chỉ áp cho hai file pipeline. Đối chứng ở các dòng 88-89 chỉ assert regex khớp chuỗi literal, không phải chèn hằng vào file được quét rồi thấy phép quét đỏ.
-
-- **Hình dạng 5 (tuyên ma trận nhưng chỉ có điểm-case): «ma trận sáu loại bài» của AC-3 thiếu loại và chỉ hai loại đi qua tinKe thật**
+- **Hình dạng 5 (tuyên ma trận nhưng chỉ có điểm-case): E3 tuyên ma trận sáu loại bài, nhưng thiếu loại thiếu người gửi và không assert chữ hay đường ảnh**
   file: `app/tests/labels-ghep.test.ts:37` — severity: medium — AC: AC-3 — source: measurement
-  E3 tuyên «ma trận sáu loại bài: chữ, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần». Ma trận ở các dòng 37-43 cộng ca null ở dòng 51 không có loại «thiếu người gửi», dù contract liệt kê nó trong sáu loại; chỗ đó bị «dòng trùng cụm» chiếm, mà dòng trùng không phải một loại bài. Mỗi ca chỉ assert refsCuaDong và ghepHien, không assert chữ hay đường ảnh, và không có phép kiểm số phần tử bằng số assert như MA_TRAN bên pipeline. E3 còn hứa `ghep` null «bằng hàm không ghép từng trường», nhưng dòng 51-56 chỉ kiểm refsCuaDong. Bên E4, nap.mjs dòng 161-168 chỉ assert nội dung thẻ tinKe cho a1 và t4; dòng nhiều tin chữ, không tin chữ, có chữ có cụm có seed nhưng vòng tinKe ở dòng 218-223 chỉ thu itemId. Trong khi đó AC-3 ghi «Given sáu loại bài ..., When tải thẻ».
+  AC: AC-3
+  E3 ghi «ca 'GHEP-AC-3' ma trận sáu loại bài: chữ, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần; ghep null thì kết quả bằng hàm không ghép từng trường». Bảng dòng 37-43 cùng ca null dòng 51 không có loại «thiếu người gửi» mà AC-1 liệt kê: POSTS dòng 27-33 không có bài nào thiếu sender. Vị trí đó thuộc «dong trung cum», vốn không phải loại bài. Mỗi ca chỉ assert refsCuaDong và ghepHien, không có chữ hay đường ảnh của từng loại. Không có assert số phần tử bằng số loại, khác với MA_TRAN bên pipeline. Ca ghep null dòng 51-56 chỉ kiểm refsCuaDong và ghepHien, không so từng trường với hàm không ghép. Ma trận qua tinKe nằm ở nap.mjs thuộc E4, nên lệnh ghep_thuan của E3 không chạy nó.
 
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): thứ tự ảnh của cụm không đi qua đường đọc thật, «theo thứ tự» chỉ đo bằng số lượng**
-  file: `app/tests/labels-ghep.test.ts:111` — severity: medium — AC: AC-3 — source: measurement
-  Hàm `goi` tiêm `traBai: async () => rows`, với rows là mảng BaiAnhRow chép tay đúng khuôn serveZaloMedia đọc (dòng 116 và 136). Vì vậy traBaiMacDinh, đoạn nối cột `ghep` trong DB qua docBaiCum sang số `anh`, là thay đổi của vòng này nhưng không được chạy: grep `docBaiCum|traBaiMacDinh` trong app/tests, thư mục hồ sơ và pipeline đều rỗng, và không đầu dò nào gọi /api/zalo-media. tinKe có gọi docBaiCum nhưng chỉ trả đường theo chỉ số, nên thứ tự không quan sát được: nap.mjs dòng 162 chỉ kiểm tin.anh.length === 3 trong khi AC-3 hứa «đủ đường ảnh theo thứ tự». Thiếu một phép round-trip: ghepLat ghi, route thật đọc, anh=i trả đúng tệp của bài thứ i. E5 chỉ ghi số «Ảnh n/N» đổi đúng, không đối chiếu ảnh với thứ tự bài.
+- **Hình dạng 4 (âm tính một mình): «ghep hai lan khong doi» xanh cả khi --lam-lai bị bỏ qua, và không có ca chứng minh --lam-lai ghi lại**
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:128` — severity: low — AC: AC-2 — source: measurement
+  AC: AC-2
+  Dòng 127-128 gọi ghepLat({lat, lamLai:true}) rồi chỉ assert lan2.ghi === 0. Trong label-ghep.mjs, nhánh daCo && !lamLai trả {...kq, giu:true} với ghi = 0. Nếu cờ lamLai bị bỏ qua, phép so idempotent qua giongNhau không chạy mà lan2 vẫn có ghi = 0. Assert không kiểm lan2.giu !== true. Cũng không có đối chứng: sửa một giá trị ghep cho lệch rồi chạy --lam-lai phải được ghi > 0. Vì vậy cả nhánh tính lại và giongNhau có thể hỏng mà phép đo vẫn xanh. Điều duy nhất dương là lan1.ghi > 0, thuộc nhánh ghi từ null.
 
-- **Hình dạng 5 (tuyên lớp nhưng chỉ có điểm-case): lời hứa «đích khác DB thử thì từ chối» chỉ đo đúng một tên DB**
-  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs:239` — severity: medium — AC: AC-2 — source: measurement
-  AC-2 hứa cho cả lớp: «đích khác DB thử khi chưa khai rõ thì từ chối». Phép đo của lệnh ghép ở dòng 239-240 chỉ thử DATABASE_URL trỏ `/oneinvest`. Phép đo ở dòng 237-238 đo chốt GHEP_DB trong chính _db.mjs của đầu dò, không phải mã sản phẩm. Bên được đo, pipeline/label-ghep.mjs dòng 49, chỉ so `pathname === "/oneinvest"`, nên mọi DB khác, kể cả DB cloud, đều được ghi mà không cần --db-that và phép đo vẫn xanh. Không có ca âm với tên DB khác nào để thể hiện lớp đã tuyên.
-
-- **Hình dạng 4 (âm tính một mình): «dong them khong co ten nguon» và «collector hook khong doi» không ghim tập vào khác rỗng**
-  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/kin.mjs:54` — severity: low — AC: AC-10 — source: measurement
-  Dòng 32 (quet(them) === 0) và dòng 54 (doi.length === 0) đều lấy từ `git diff coso HEAD`, với coso là merge-base của HEAD và origin/main. Probe buộc tập tên khác rỗng và có đối chứng cho `quet`, nhưng không assert `them` khác rỗng. Nếu merge-base trùng HEAD, ví dụ chạy lại sau khi gộp, diff rỗng và cả hai dòng xanh mà không đo gì. Dòng 54 cũng không có đối chứng rằng bộ lọc `^collector/|^\.claude/hooks/|^\.claude/settings` bắt được một đường dẫn đã đổi. Trên nhánh hiện tại diff khác rỗng nên kết quả lần này vẫn có nghĩa.
+- **Hình dạng 4 (âm tính một mình): «doc tay khong co chu» không có đối chứng và không kiểm giá trị của item, tang**
+  file: `_acceptance/ghep-anh-tren-the-gan-nhan/probes/kin.mjs:47` — severity: low — AC: AC-10 — source: measurement
+  AC: AC-10
+  AC-10 hứa bảng đọc tay không có chữ hay mã bài thật. Biến lanh ở dòng 47 chỉ kiểm tên khoá, giá trị ket, và ly_do dài tối đa 90 ký tự, không có chuỗi 6 chữ số trở lên hay https?:. Giá trị của item và tang không được kiểm, nên mã bài thật đặt vào item vẫn qua. Một đoạn chữ bài thật ngắn trong ly_do cũng qua, vì quet ở dòng 48 chỉ tìm tên nguồn. Khác với các phép quét khác trong tệp, dòng 47-48 không có đối chứng đưa bảng có mã bài hoặc chữ bài vào để thấy đỏ, nên giá trị ok của phép đo chưa được chứng minh.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Thước eval-classify vẫn đọc chữ theo ref_id, nên chấm bài ghép trên chữ khác với chữ người gắn đã đọc**
-  Người dùng thấy gì: Khi bắt đầu chấm độ đúng của bộ đọc trên lát này, các bài ảnh ghép sẽ bị chấm trên chữ khác với chữ người gắn đã đọc, nên điểm độ đúng thấp giả. Hiện lát chưa có nhãn nào nên chưa ra số sai.
-  Căn cứ: Chưa gây sai số nào vì lát có 0 nhãn, nhưng nếu không sửa trước khi chấm thì số độ đúng ghi lại sẽ sai mà không báo; sửa nhỏ nhưng phải làm trước lần chấm đầu tiên.
+- **eval-classify vẫn đọc chữ theo ref_id, lệch với chữ tin ghép mà người gắn đã đọc**
+  Người dùng thấy gì: Khi bắt đầu chấm độ đúng của bộ đọc tự động, các bài chỉ có ảnh sẽ bị chấm trên đường dẫn ảnh thay vì chữ của tin ghép, nên điểm hiện thấp hơn thực tế và được ghi lại mà không có cảnh báo.
+  Căn cứ: Chưa có nhãn nào được gắn nên chưa ra số sai, nhưng lần chấm đầu sẽ cho điểm tụt giả đúng vào chỉ số cần chứng minh; sửa trước lần chấm đầu thì rẻ.
   file: `pipeline/lib/eval-classify.mjs`
   severity: high
   Đề xuất: new-contract
 
-- **label-ghep ghi nhiều dòng ngoài giao dịch, lỗi giữa chừng để lại lát dở mà lần chạy lại vẫn giữ nguyên**
-  Người dùng thấy gì: Nếu lệnh ghép bị lỗi giữa chừng khi chạy trên dữ liệu thật, lát có thể ở trạng thái ghép dở và lần chạy lại vẫn báo đã có ghép nên không tự lành.
-  Căn cứ: Chỉ xảy ra khi lệnh lỗi giữa chừng trong một lần chạy có người theo dõi, và đã có cách lùi bằng một lệnh xoá cột ghép rồi chạy lại nên không mất dữ liệu.
+- **Cột và khoá JSON mới đặt tiếng Việt, trái quy ước tên bảng/cột tiếng Anh**
+  Người dùng thấy gì: Một số tên trong cơ sở dữ liệu mới đặt bằng tiếng Việt, lệch quy ước tiếng Anh của dự án; người dùng cuối không thấy gì khác.
+  Căn cứ: Không ảnh hưởng người dùng hay dữ liệu hiện tại, chỉ là lệch quy ước; đổi tên lúc này còn rẻ nhưng sau khi ghi dữ liệu thật thì tốn thêm một đợt chuyển.
+  file: `db/migrations/076_labels_ghep.sql`
+  severity: medium
+  Đề xuất: known-limits
+
+- **label-sample bỏ qua kết quả ghepLat: dòng lấy thêm giữ ghep NULL, thiếu cột 076 cũng im lặng**
+  Người dùng thấy gì: Nếu lấy thêm tin vào một lát đã có, các tin mới không được ghép ảnh nên cùng một tin có thể bị gắn nhãn hai lần; lệnh vẫn báo thành công.
+  Căn cứ: Chỉ xảy ra khi chủ động lấy thêm vào lát cũ, một thao tác hiếm của người vận hành; hậu quả là nhãn trùng, phát hiện và dọn được, không mất dữ liệu.
+  file: `pipeline/label-sample.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **POST nhãn không chặn dòng trung_voi, ghi được vào dòng đã bỏ khỏi hàng và tiến độ**
+  Người dùng thấy gì: Nếu một biểu mẫu mở từ trước hoặc một yêu cầu tự dựng gửi nhãn cho tin đã bị bỏ vì trùng, nhãn vẫn được lưu và có thể bị tính hai lần khi chấm.
+  Căn cứ: Không có đường thao tác bình thường nào dẫn tới; chỉ gặp khi biểu mẫu cũ còn mở lúc chạy lại ghép, và nhãn thừa dọn được.
+  file: `app/src/lib/labels-queries.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **eval-classify vẫn chấm theo chữ của ref_id, nên dòng bài ảnh bị chấm trên URL trong khi nhãn gắn theo tin chữ ghép**
+  Người dùng thấy gì: Điểm độ đúng của bộ đọc sẽ bị kéo thấp giả vì các bài chỉ có ảnh bị chấm trên đường dẫn ảnh, và con số sai này được lưu lại không kèm cảnh báo.
+  Căn cứ: Gây số liệu sai ở đúng chỉ số dùng để chứng minh mô hình, dù chưa có điểm nào được ghi; nên sửa trước lần chấm đầu tiên.
+  file: `pipeline/lib/eval-classify.mjs`
+  severity: high
+  Đề xuất: new-contract
+
+- **label-sample bỏ kết quả ghepLat: dòng lấy thêm giữ ghep NULL, thiếu cột 076 cũng báo thành công**
+  Người dùng thấy gì: Khi lấy thêm tin hoặc khi cơ sở dữ liệu chưa cập nhật, lệnh vẫn báo xong trong khi tin mới chưa được ghép ảnh, nên người gắn nhãn có thể thấy tin ảnh lẻ không có chữ.
+  Căn cứ: Chỉ gặp ở thao tác vận hành hiếm, hậu quả là vài tin hiện thiếu chữ hoặc gắn trùng, tự phát hiện được và chạy lại ghép là khắc phục.
+  file: `pipeline/label-sample.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **CLI label-ghep ghi ngoài giao dịch; lỗi giữa chừng để lại lát dở mà lần chạy lại vẫn giữ nguyên**
+  Người dùng thấy gì: Nếu lệnh ghép ảnh bị lỗi giữa chừng, một phần tin được ghép và phần còn lại thì không, và lần chạy lại báo là đã xong nên người vận hành dễ tưởng đã hoàn tất.
+  Căn cứ: Phải có lỗi đúng lúc ghi mới gặp, và cờ chạy lại sửa được hoàn toàn; không làm mất dữ liệu gốc.
   file: `pipeline/label-ghep.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **label-sample bỏ qua kết quả ghepLat: lấy mẫu bổ sung để dòng mới không có ghép, thiếu cột cũng không báo**
-  Người dùng thấy gì: Khi lấy thêm tin vào một lát đã có, các tin mới có thể hiện một ảnh không có chữ và cùng một tin có thể bị gắn hai lần; lệnh lấy mẫu cũng không báo khi chưa áp cột mới.
-  Căn cứ: Chỉ dính khi lấy mẫu bổ sung vào lát cũ, không phải đường dùng chính của lát mới, và người gắn nhãn thấy ngay thẻ thiếu chữ để báo lại.
-  file: `pipeline/label-sample.mjs`
-  severity: medium
+- **Link trong bài ảnh của cụm không được đếm vào soLinkKhac và mất khỏi thẻ không báo gì**
+  Người dùng thấy gì: Hiếm khi một bài ảnh trong cụm chứa đường link mà thẻ không báo có link khác, nên người gắn nhãn có thể bỏ sót nội dung đó.
+  Căn cứ: Đo thực tế chỉ khoảng 2 trên 549 bài ảnh ở lát chính và 0 ở lát kia, tác động rất nhỏ và không làm sai nhãn.
+  file: `app/src/lib/labels-queries.ts`
+  severity: low
   Đề xuất: known-limits
 
-- **Thêm cột i.ghep làm 5 ca test cũ đỏ, job test app trong CI sẽ đỏ**
-  Người dùng thấy gì: Không ảnh hưởng người dùng cuối, nhưng kiểm thử tự động của app sẽ đỏ nên PR này không qua được kiểm tra trước khi gộp.
-  Căn cứ: Không làm hỏng dữ liệu hay màn hình nào, chỉ chặn việc gộp mã, và sửa rẻ vì chỉ cần nạp thêm bản cập nhật cột vào hai tệp kiểm thử.
-  file: `app/tests/labels.test.tsx`
-  severity: high
-  Đề xuất: new-contract
-
-- **label-sample bỏ kết quả ghepLat: dòng lấy thêm giữ ghep NULL, thiếu cột 076 cũng im lặng**
-  Người dùng thấy gì: Khi lấy thêm tin vào lát đã có hoặc chạy trên DB chưa áp cột mới, tin mới không có chữ ghép và lệnh vẫn báo thành công mà không cảnh báo.
-  Căn cứ: Chỉ dính ở đường lấy mẫu bổ sung hoặc chưa áp cột mới, người dùng thấy thẻ thiếu chữ và có thể chạy lại lệnh ghép sau khi áp cột.
-  file: `pipeline/label-sample.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **eval-classify chấm bộ đọc trên URL của bài ảnh, trong khi nhãn nay gắn theo chữ của tin ghép**
-  Người dùng thấy gì: Khi chấm độ đúng của bộ đọc, các bài ảnh ghép bị chấm trên đường dẫn ảnh thay vì chữ của tin, làm điểm tụt giả tạo và được ghi lại không cảnh báo.
-  Căn cứ: Lát chưa có nhãn nên chưa có số sai, nhưng số sai sẽ được ghi lặng lẽ khi bắt đầu chấm, nên cần sửa trước lần chấm đầu tiên.
-  file: `pipeline/lib/eval-classify.mjs`
-  severity: medium
-  Đề xuất: new-contract
-
-⚠ Cụm ngoài vùng phủ: 3/16 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/eval-classify.mjs, app/tests/labels.test.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+⚠ Cụm ngoài vùng phủ: 2/15 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/eval-classify.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.

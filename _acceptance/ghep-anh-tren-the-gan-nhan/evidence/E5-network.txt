@@ -1,10 +1,38 @@
-# Driver ego-browser khong co duong doc network; day la trich nhat ky may chu dev :3463 (4xx/5xx)
- GET /ops/login 404 in 1929ms (next.js: 1645ms, proxy.ts: 6ms, application-code: 278ms)
- POST /api/v1/ops/labels 400 in 58ms (next.js: 20ms, application-code: 38ms)
- GET /api/zalo-media?nhan=10613&anh=1 404 in 33ms (next.js: 0.7ms, application-code: 32ms)
- GET /api/zalo-media?nhan=10613&anh=1 404 in 23ms (next.js: 1.1ms, application-code: 22ms)
- GET /api/zalo-media?nhan=10613&anh=1 404 in 15ms (next.js: 0.8ms, application-code: 14ms)
- GET /api/zalo-media?nhan=10613&anh=1&lan=1 404 in 10ms (next.js: 0.9ms, application-code: 9ms)
- GET /api/zalo-media?nhan=10613&anh=1 404 in 24ms (next.js: 0.9ms, application-code: 23ms)
- GET /api/zalo-media?nhan=10613&anh=1 404 in 9ms (next.js: 0.5ms, application-code: 9ms)
-# tong so request /api/zalo-media: 30 (24x200, 6x404 deu la anh seed thieu tep nhan=10613 anh=1)
+E5 network (driver ego-browser khong co duong doc network; trich tu log dev server :3463)
+  12  GET /ops/labels?nhom=S03-N042 200
+   7  POST /api/v1/ops/labels 200
+   7  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042 200
+   6  GET /api/zalo-media?nhan=10709&anh=1 404
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10709 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10708 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10707 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10706 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10705 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10704 200
+   1  GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N042&xem=10702 200
+   1  GET /api/zalo-media?nhan=10709&anh=2 200
+   1  GET /api/zalo-media?nhan=10709&anh=0 200
+   1  GET /api/zalo-media?nhan=10708&anh=1 200
+   1  GET /api/zalo-media?nhan=10708&anh=0 200
+   1  GET /api/zalo-media?nhan=10706&anh=0 200
+   1  GET /api/zalo-media?nhan=10705&anh=9 200
+   1  GET /api/zalo-media?nhan=10705&anh=8 200
+   1  GET /api/zalo-media?nhan=10705&anh=7 200
+   1  GET /api/zalo-media?nhan=10705&anh=6 200
+   1  GET /api/zalo-media?nhan=10705&anh=5 200
+   1  GET /api/zalo-media?nhan=10705&anh=4 200
+   1  GET /api/zalo-media?nhan=10705&anh=3 200
+   1  GET /api/zalo-media?nhan=10705&anh=2 200
+   1  GET /api/zalo-media?nhan=10705&anh=13 200
+   1  GET /api/zalo-media?nhan=10705&anh=12 200
+   1  GET /api/zalo-media?nhan=10705&anh=11 200
+   1  GET /api/zalo-media?nhan=10705&anh=10 200
+   1  GET /api/zalo-media?nhan=10705&anh=1 200
+   1  GET /api/zalo-media?nhan=10705&anh=0 200
+   1  GET /api/zalo-media?nhan=10704&anh=0 200
+   1  GET /api/zalo-media?nhan=10702&anh=2 200
+   1  GET /api/zalo-media?nhan=10702&anh=1 200
+   1  GET /api/zalo-media?nhan=10702&anh=0 200
+
+Ghi chu: 404 /api/zalo-media?nhan=10709&anh=1 la ANH CO Y THIEU TEP (seed), static/anh -> chi note, khong fail. Khong co 4xx/5xx nao khac.
+Console: ego-browser khong doc console.
