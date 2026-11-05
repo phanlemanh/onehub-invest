@@ -1,0 +1,36 @@
+{
+  "feature_plain": "Sổ nhóm S03 thôi báo một nhóm thành hai, bước đọc tin coi mỗi nhóm là một, và hai phép đo còn hở của việc trước được vá.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ tính mục đích và loại hình của một nhóm trên toàn bộ bài của nhóm, dù bài cũ và bài mới ghi tên nhóm khác dạng."},
+    {"id": "AC-2", "p": "Sẽ cho bài cũ nhận đúng thị trường của nhóm; hai dòng sổ khác thị trường thì dòng chính thắng."},
+    {"id": "AC-4", "p": "Sẽ đo số tin trên cổng trước và sau trên bản sao dữ liệu thật, và đòi 0 tin rời cổng, 0 tin thêm."},
+    {"id": "AC-5", "p": "Sẽ có lệnh dọn sổ mặc định chỉ in danh sách; chỉ khi thêm cờ ghi mới đổi, mỗi dòng đổi có một dòng nhật ký để hoàn lại."},
+    {"id": "AC-7", "p": "Sẽ chứng minh trên bản sao thật: sau dọn mỗi nhóm còn một dòng hiệu lực, số tin không đổi, lượt đồng bộ không bật lại dòng đã dọn, mẫu 367 bài của Mạnh giữ nguyên."},
+    {"id": "AC-9", "p": "Sẽ quét khoá nhóm theo đúng danh sách tệp mà git báo đã đổi, không còn danh sách viết tay."},
+    {"id": "AC-10", "p": "Sẽ chứng minh tệp và đầu ra của việc này không chứa khoá nhóm thật, tên kênh hay tên đơn vị."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG gộp nhầm các khoá lạ có dấu hai chấm hay bài không có khoá vào một nhóm."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG dọn cặp nào làm mất thông tin: thiếu dòng chính, lệch thẻ, lệch thị trường, lệch dự án, hay dòng chính đã gỡ thì bỏ qua và báo."},
+    {"id": "AC-8", "p": "Chặn việc phép đo hạn mức của mẫu luôn xanh: tách một nhóm thành hai tầng thì phép đo phải đỏ."},
+    {"id": "OOS-1", "p": "KHÔNG chạy lệnh ghi trên sổ thật trong việc này: sớm nhất 06/11 và cần một lời riêng của Mạnh."},
+    {"id": "OOS-2", "p": "KHÔNG đổi mẫu 367 bài đang chờ Mạnh gắn, KHÔNG đụng màn gắn nhãn."},
+    {"id": "OOS-3", "p": "KHÔNG sửa khoá nhóm trong bảng bài, vì lượt nạp lại từ dữ liệu gốc sẽ đảo ngược."},
+    {"id": "OOS-4", "p": "KHÔNG đổi đường thu, bước ghép ảnh, thước cũ, lệnh đồng bộ và khai sổ."},
+    {"id": "OOS-5", "p": "KHÔNG thêm thay đổi lược đồ, KHÔNG thêm ràng buộc chặn dòng trùng."},
+    {"id": "OOS-6", "p": "KHÔNG đổi trang nguồn của Ops: dòng đã dọn hiện bằng nhãn trạng thái có sẵn."},
+    {"id": "OOS-7", "p": "KHÔNG xử 94 bài bị bỏ vì không có khoá nhóm."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đã phủ dạng khoá (AC-1 đến AC-3), mọi chỗ bước đọc tin dùng khoá (AC-1, AC-2), trạng thái dòng phụ (AC-5 đến AC-7), và cả dữ liệu giả lẫn bản sao thật."},
+    {"i": 1, "p": "Giữ bản ghi trùng ở trạng thái hết hiệu lực là thực hành chuẩn của quản trị danh mục; đây chỉ là đề xuất, Mạnh chọn ở Hỏi-1."},
+    {"i": 2, "p": "Áp cho mọi phần: không lộ khoá nhóm (AC-5, AC-10), không đổi dữ liệu thật trong vòng này."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Đổi bước đọc tin là đổi đường dữ liệu lên cổng, mà hồ sơ ghi máy tự quyết và không nêu 74 bài đổi giá trị suy. Đã sửa: thành Hỏi-2, kèm hai lối khác và số đo."},
+    {"i": 1, "p": "Lời trả Hỏi-1 có thể bị máy hiểu là cho phép ghi sổ thật. Đã sửa: Hỏi-1 chỉ chọn lối; chạy cần lời riêng, sớm nhất 06/11, trên máy thu, không có bước trên cloud, lối xoá phải xuất dòng trước."},
+    {"i": 2, "p": "Phép đo có thể xanh dù tính năng không làm gì, vì đáp án đúng là 0 tin đổi. Đã sửa: đo lệnh thật mặc định, đếm số bài đổi khoá độc lập, bài mồi lấy dạng từ dòng thật, có ca đỏ riêng cho tin rời cổng và tin đổi ngoài nhóm. Yêu cầu gắn nhãn liên lớp bị từ chối vì việc này không đổi màn nào."},
+    {"i": 3, "p": "Nếu lượt đồng bộ đổi dòng phụ sang tạm dừng trước ngày chạy, lệnh dọn có thể bỏ sót. Đã sửa: định nghĩa dòng hiệu lực, thêm ca tạm dừng và dòng chính đã gỡ, đo hoàn lại đúng nguyên trạng, xác nhận lỗi tiêm đã nổ. Công tắc không đo lại vì đã có phép đo ở hồ sơ công tắc."},
+    {"i": 4, "p": "Phép quét chỉ tìm khoá, bước bắt đầu ra hỏng vẫn xanh, và hai bản sao dùng khoá khác nhau. Đã sửa: quét thêm tên kênh, tên đơn vị, in số lệnh và byte đã bắt, quét cả tệp chưa commit, lấy khoá từ cả hai bản sao."}
+  ]
+}

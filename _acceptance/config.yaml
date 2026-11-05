@@ -594,6 +594,10 @@ executors:
     gcn_mau: "node _acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs"   # gan-nhan-theo-nhom-s03 E2 — DB thử oneinvest_gcn_nhan, lệnh thật
     ndk_mau: "node _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs"   # nhom-dang-ky-hai-lan-s03 E1, E2, E3, E5, E6 — DB thử oneinvest_gcn_nhan, lệnh thật + bản đột biến
     ndk_that: "node _acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs"   # nhom-dang-ky-hai-lan-s03 E7 — cặp thật của DB thử, chỉ đọc
+    nhl_transform: "bash db/db-thu.sh oneinvest_nhl_xu --neu-chua-co && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_nhl_xu node pipeline/scripts/nhom-hai-lan-transform.itest.mjs"   # nhom-hai-lan-s03-xu-goc E1, E2, E3 — fixture trong giao dịch lùi
+    nhl_cong: "bash db/db-thu.sh oneinvest_nhl_xu --neu-chua-co && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_nhl_xu node pipeline/scripts/do-nhom-hai-lan.mjs --cong"   # nhom-hai-lan-s03-xu-goc E4, E7 — bản sao thật, giao dịch lùi
+    nhl_so: "bash db/db-thu.sh oneinvest_nhl_xu --neu-chua-co && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_nhl_xu node pipeline/scripts/don-nhom-hai-lan.itest.mjs"   # nhom-hai-lan-s03-xu-goc E5, E6 — fixture trong giao dịch lùi
+    nhl_quet: "bash db/db-thu.sh oneinvest_nhl_xu --neu-chua-co && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_nhl_xu node pipeline/scripts/do-nhom-hai-lan.mjs --quet"   # nhom-hai-lan-s03-xu-goc E10 — chỉ đọc sổ, chỉ in số
     gcn_mu: "cd app && node --import tsx ../_acceptance/gan-nhan-theo-nhom-s03/probes/mu.mjs"   # gan-nhan-theo-nhom-s03 E7 — hai chiều mù
     gcn_cases: "node _acceptance/gan-nhan-theo-nhom-s03/probes/cases.mjs"   # gan-nhan-theo-nhom-s03 E11 — lệnh xuất thật
     gcn_do_cu: "node _acceptance/gan-nhan-theo-nhom-s03/probes/do-cu.mjs"   # gan-nhan-theo-nhom-s03 E12 — đo cũ không đổi
