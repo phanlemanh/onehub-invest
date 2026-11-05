@@ -7,7 +7,7 @@
 //          Thước đòi 0 kết nối của lượt vào oneinvest THẬT và vào bản chép, có kết nối vào DB của lượt, cả ba lượt xanh, bên ghi vẫn ghi.
 //          «0 deadlock trên bản chép» ở chế độ này đúng sẵn vì lượt test ở DB khác; số đó chỉ để so, thước chính là số kết nối theo DB.
 // In một dòng JSON kết quả; thoát 0 khi đúng kỳ vọng của chế độ.
-import { spawn, execFileSync } from "node:child_process";
+import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,14 +43,15 @@ const chayLenh = (cmd, args, opts) => new Promise((res) => {
 });
 
 const benGhi = [];
-let dung = false, soLuotGhi = 0;
+let dung = false, soLuotGhi = 0, soLuotXanh = 0;
+const HONG = Boolean(process.env.SONG_SONG_HONG); // đối chứng: bên ghi không chạy được thì thước phải đỏ
 // Job thật theo đúng hai bước liên nguồn của job S06: refresh-bait-gap (giữ nhiều bảng trong một giao dịch) và resolve-properties
 // (ghi property_offers theo từng cụm). Vòng chờ thật 05/11: resolve giữ property_offers chờ sale_offer_records, ca test giữ DDL chờ property_offers.
 function chayBuoc(tep) {
   if (dung) return;
-  const p = spawn("node", [path.join(ROOT, "pipeline", tep)], { env: { ...process.env, DATABASE_URL: URL_GIA }, stdio: "ignore" });
+  const p = spawn("node", [path.join(ROOT, "pipeline", HONG ? `${tep}.khong-co` : tep)], { env: { ...process.env, DATABASE_URL: URL_GIA }, stdio: "ignore" });
   benGhi.push(p);
-  p.on("exit", () => { soLuotGhi++; chayBuoc(tep); });
+  p.on("exit", (code) => { soLuotGhi++; if (code === 0) soLuotXanh++; setTimeout(() => chayBuoc(tep), code === 0 ? 0 : 500); });
 }
 
 async function main() {
@@ -62,7 +63,6 @@ async function main() {
   const ghi = async () => (await c.query(`SELECT COALESCE(n_tup_ins + n_tup_upd + n_tup_del, 0) AS n, COALESCE(seq_scan, 0) + COALESCE(idx_scan, 0) AS quet FROM pg_stat_user_tables WHERE relname = 'property_offers'`)).rows[0];
   const luot = [];
   const dl0 = await dl();
-  const ghi0 = await ghi();
   if (MODE === "chung") {
     // Hai giao dịch đảo thứ tự khoá tư vấn: Postgres huỷ một bên, bộ đếm deadlock phải tăng.
     const b = new pg.Client({ connectionString: URL_GIA });
@@ -86,6 +86,9 @@ async function main() {
   }, 200);
   // Bản chép đã khớp dữ liệu nên INSERT … ON CONFLICT không ghi gì: bỏ một phần liên kết để resolve thật sự ghi lại property_offers.
   await c.query(`DELETE FROM property_offers WHERE random() < 0.3`);
+  // Mốc đo chụp SAU câu DELETE của chính probe, chờ bộ đếm đẩy lên: tăng từ đây là của bên ghi, không phải của probe.
+  await new Promise((r) => setTimeout(r, 1500));
+  const ghi0 = await ghi();
   chayBuoc("resolve-properties.mjs");
   chayBuoc("refresh-bait-gap.mjs");
   await new Promise((r) => setTimeout(r, 3000));
@@ -109,11 +112,11 @@ async function main() {
   const ketNoiLuot = [...moiDb].filter(([d]) => /^oneinvest_suite_sdac6_\d+$/.test(d)).reduce((t, [, n]) => t + n, 0);
   const kq = { che_do: MODE, luot, deadlock_tren_db_chung: dl1 - dlSauDoiChung, mau_cho_khoa: cho,
     mau_ket_noi_cua_test_toi_db_chung: ketNoiGia, mau_ket_noi_toi_oneinvest_that: ketNoiThat, mau_ket_noi_toi_db_cua_luot: ketNoiLuot,
-    ben_ghi: { luot_xong: soLuotGhi, tang_ghi: Number(ghi1.n) - Number(ghi0.n), tang_quet: Number(ghi1.quet) - Number(ghi0.quet) } };
+    ben_ghi: { luot_xong: soLuotGhi, luot_xanh: soLuotXanh, tang_ghi: Number(ghi1.n) - Number(ghi0.n), tang_quet: Number(ghi1.quet) - Number(ghi0.quet) } };
   console.log(JSON.stringify(kq));
   await c.end();
   const xanh = luot.every((l) => l.exit === 0);
-  const coBenGhi = kq.ben_ghi.tang_quet > 0;
+  const coBenGhi = kq.ben_ghi.luot_xanh > 0 && kq.ben_ghi.tang_ghi > 0;
   if (!coBenGhi) { console.error("thước hỏng: bên ghi không chạy"); return 3; }
   if (MODE === "rieng") {
     if (!xanh) { console.error("SD-AC-6 đỏ dù đã trên bản riêng"); return 1; }
@@ -123,6 +126,11 @@ async function main() {
   }
   // chiều đỏ: cùng DB với bên ghi thì phải thấy lượt test chạm DB đó (nếu không, thước rieng không chứng được gì)
   if (kq.mau_ket_noi_cua_test_toi_db_chung === 0) { console.error("thước hỏng: chế độ chung không thấy kết nối test"); return 3; }
+  if (HONG) return 0;
+  // Cùng thước, bên ghi không chạy được thì phải đỏ đúng thông điệp.
+  const hong = spawnSync("node", [fileURLToPath(import.meta.url), "chung"], { env: { ...process.env, SONG_SONG_HONG: "1", SO_LUOT: "1" }, encoding: "utf8" });
+  if (hong.status !== 3 || !/thước hỏng: bên ghi không chạy/.test(hong.stderr)) { console.error(`đối chứng hỏng: bên ghi chết mà thước trả ${hong.status}`); return 3; }
+  console.log("đối chứng: bên ghi không chạy → thước đỏ «thước hỏng: bên ghi không chạy»");
   return 0;
 }
 

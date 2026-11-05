@@ -22,8 +22,11 @@ if [ "${2:-}" = "--chay" ]; then
   if [ -n "${DATABASE_URL:-}" ]; then
     u="${DATABASE_URL%%\?*}"
     noi="${u%/*}"; noi="${noi##*@}"
-    [ "${u##*/}" = "oneinvest" ] || exec "$@"
-    [ "$noi" = "localhost:5433" ] || [ "$noi" = "127.0.0.1:5433" ] || exec "$@"  # cùng tên DB ở máy chủ khác (Postgres của CI cục bộ) không phải DB chung
+    if [ "${u##*/}" != "oneinvest" ] || { [ "$noi" != "localhost:5433" ] && [ "$noi" != "127.0.0.1:5433" ]; }; then
+      # Cùng tên DB ở máy chủ khác (Postgres của CI cục bộ) không phải DB chung. Kết nối quản trị của test đi theo URL này.
+      export TEST_DATABASE_URL_ADMIN="${TEST_DATABASE_URL_ADMIN:-$DATABASE_URL}"
+      exec "$@"
+    fi
   fi
   if [ "$(docker inspect -f '{{.State.Running}}' one-invest-db 2>/dev/null || true)" != "true" ]; then
     # CI có Postgres riêng dựng từ migration. Trên máy mà thiếu container thì dừng, không được rơi về DB chung.
@@ -51,10 +54,10 @@ if [ "${2:-}" = "--chay" ]; then
   }
   dung_mau() {
     local moi="oneinvest_suite_mau_moi_$$" dau
-    dau=$(dau_chung)
-    bash "$0" "$moi"
+    dau=$(dau_chung) || return $?
+    bash "$0" "$moi" || return $?
     # pg_dump không mang thống kê và visibility map, DB khoá kết nối thì autovacuum không tự làm: bản chép chọn kế hoạch tệ tới mức treo ca test.
-    "${PSQL[@]}" -d "$moi" -c "VACUUM ANALYZE"
+    "${PSQL[@]}" -d "$moi" -c "VACUUM ANALYZE" || return $?
     "${PSQL[@]}" -d postgres -c "COMMENT ON DATABASE $moi IS '$dau $(date +%s)'" -c "ALTER DATABASE $moi ALLOW_CONNECTIONS false" \
       -c "DROP DATABASE IF EXISTS $MAU WITH (FORCE)" -c "ALTER DATABASE $moi RENAME TO $MAU"
   }
@@ -65,7 +68,8 @@ if [ "${2:-}" = "--chay" ]; then
       if mkdir "$KHOA" 2>/dev/null; then
         echo $$ > "$KHOA/pid"
         local r=0
-        dung_mau || r=$?
+        # Bên vừa dựng xong có thể nhả khoá ngay trước mkdir: xem lại rồi mới dựng.
+        mau_con_tot || dung_mau || r=$?
         rm -rf "$KHOA"
         [ "$r" -eq 0 ] || { echo "db-thu: dựng bản mẫu lỗi"; return "$r"; }
         return 0

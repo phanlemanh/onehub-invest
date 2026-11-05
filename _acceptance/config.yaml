@@ -652,9 +652,7 @@ executors:
     tsdt_that: "bash _acceptance/test-suite-db-thu/probes/that.sh"   # test-suite-db-thu E2 — :5433 thật, chỉ DB thử
     tsdt_chung: "node _acceptance/test-suite-db-thu/probes/song-song.mjs chung"   # test-suite-db-thu E3 — đối chứng, bản chép đóng vai DB chung
     tsdt_rieng: "node _acceptance/test-suite-db-thu/probes/song-song.mjs rieng"   # test-suite-db-thu E4 — SD-AC-6 trên DB riêng khi bên ghi chạy
-    tsdt_app: "node _acceptance/test-suite-db-thu/probes/lay-mau.mjs app npm test"   # test-suite-db-thu E5 — 0 kết nối vào DB chung
-    tsdt_pipeline: "node _acceptance/test-suite-db-thu/probes/lay-mau.mjs pipeline npm test"   # test-suite-db-thu E6
-    tsdt_agent: "node _acceptance/test-suite-db-thu/probes/lay-mau.mjs agent npm test"   # test-suite-db-thu E7
+    tsdt_ba_bo: "bash _acceptance/test-suite-db-thu/probes/ba-bo.sh"   # test-suite-db-thu E5, E6, E7 — ba bộ lần lượt, 0 kết nối vào DB chung
     svc_cloud_gia: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh"   # sellers-view-len-cloud E2, E7 — DB thử vai cloud: chốt view + tráo thật DDL 022
     svc_doc_local: "bash _acceptance/sellers-view-len-cloud/probes/cloud-gia.sh doc"   # sellers-view-len-cloud E3 — đọc view máy thu đúng cột cho phép
     svc_catchup: "bash _acceptance/sellers-view-len-cloud/probes/catchup.sh"   # sellers-view-len-cloud E4 — tệp catch-up 060 không DDL + ĐO TRƯỚC phân biệt

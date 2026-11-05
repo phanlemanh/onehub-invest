@@ -46,7 +46,7 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 - AC-6: Given chạy `npm test` của từng bộ app, pipeline, agent, When lấy mẫu `pg_stat_activity` theo `application_name` riêng của lượt mỗi 100 ms, Then bộ xanh,
   0 kết nối của lượt vào DB `oneinvest`, có kết nối ở DB khác (đối chứng dương của bộ đếm), và in số ca pass, skip.
 - AC-7: Given `package.json` của ba bộ và mọi tệp test của chúng, When quét, Then `npm test` đi qua `db-thu --chay`, không tệp test nào (mỗi bộ quét ≥ 20 tệp) tự trỏ DB chung bỏ qua
-  `DATABASE_URL` (chuỗi URL cứng, cả dạng kèm `?options=`, URL ghép từ biến máy chủ, URL dựng bằng `new URL`) hay xoá biến đó khỏi tiến trình con mà không gán lại, tính cả tệp helper mà test nạp; đối chứng: bộ quét bắt đúng năm dạng lọt và bỏ qua bảy dạng lành.
+  `DATABASE_URL` (chuỗi URL cứng, cả dạng kèm `?options=`, URL ghép từ biến máy chủ, URL dựng bằng `new URL`) hay xoá biến đó khỏi tiến trình con mà không gán lại, tính cả mọi tệp mà test import; đối chứng: bộ quét bắt đúng mười một dạng lọt và bỏ qua bảy dạng lành.
 
 ## Coverage
 
@@ -70,7 +70,10 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 ## Notes
 
 - Số đo sau khi sửa, ba bộ chạy song song trên máy đang có job (05/11, 20:36): app 987 ca, 982 xanh, 5 bỏ qua, 6,1 phút; pipeline 563 xanh, 6,1 phút; agent 287 xanh, 0,9 phút; cả ba 0 kết nối của lượt vào `oneinvest`.
-- Bộ đếm `lay-mau` không thấy kết nối dưới 100 ms và tiến trình con bị bỏ biến môi trường; hai đường đó do quét tĩnh AC-7 chặn, và soát tay `env: {…}` trong ba bộ không có ca nào vừa bỏ biến vừa nối DB.
+- Bộ đếm `lay-mau` không thấy kết nối dưới 100 ms và tiến trình con bị bỏ biến môi trường; hai đường đó do quét tĩnh AC-7 chặn. Riêng `env` liệt kê dương (`{ PATH, HOME }`) quét tĩnh không phân biệt được với tiến trình không nối DB: soát tay trong ba bộ không có ca nào vừa bỏ biến vừa nối DB, đường này còn là giới hạn.
+- Diễn tập tải chấm sau khi sửa (05/11, 22:21): pipeline hai bộ, app một bộ và E3 chạy cùng lúc đều xanh; pipeline 572 ca 7 phút, app 995 ca 7,6 phút, 0 kết nối của lượt vào `oneinvest`.
+- Lượt chấm 1 đỏ vì deadlock trong DB của lượt: chiều đỏ của `SD-AC-6` dựng lại `public.sellers` trong giao dịch, test đọc cùng lúc giữ view chờ bảng. Chiều đỏ nay dựng view đột biến ở lược đồ riêng. Ca chờ khoá 33033 vượt trần vì sáu bộ chạy cùng lúc: `E5`, `E6`, `E7` nay đo lần lượt, `npm test` của pipeline chạy từng tệp một vì các tệp giữ khoá độc quyền trên bảng thật cả phút, câu dư lượng giữ khoá gần 2 phút nay gom trước rồi nối.
+- `E4b` lấy lượt nhanh nhất trong tối đa sáu, nghỉ 5 giây giữa các lượt, để thước 1 giây đo câu truy vấn, không đo tải máy.
 - Không áp migration, không ghi `oneinvest`; phép đo «DB chung» dùng bản chép đóng vai. Lượt job thật đầu tiên sau khi gộp chưa đo được trong hồ sơ này.
 - Tệp test «thiếu mốc» của S06 trong `pipeline/scripts/` thuộc làn ZCode: sửa một dòng lấy URL từ env vì là lỗi tích hợp của việc này.
 - Bản mẫu chạy `VACUUM ANALYZE` trước khi khoá kết nối: `pg_dump` không mang thống kê và visibility map, DB khoá kết nối thì autovacuum không tự làm. Lượt đo đầu không có bước này: `E4b` vượt trần 300 giây và bộ app kéo dài 98 phút (đo 05/11).

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -11,7 +11,7 @@ const SH = path.join(import.meta.dirname, "../db/db-thu.sh");
 const CHUNG = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 /** Thư mục có docker giả; `dia`: chỗ trống VM. `mau`: nội dung COMMENT của bản mẫu («dấu giờ»), `dau`: dấu lược đồ DB chung; `chay`: container có chạy không. */
-function dung({ mau = `d1 ${Math.floor(Date.now() / 1000)}`, dau = "d1", chay = true, moCoi = "", dia = "46G" } = {}) {
+function dung({ mau = `d1 ${Math.floor(Date.now() / 1000)}`, mauLan2 = null, dau = "d1", chay = true, moCoi = "", dia = "46G", vacuumLoi = false } = {}) {
   const d = mkdtempSync(path.join(tmpdir(), "db-thu-"));
   const log = path.join(d, "docker.log");
   writeFileSync(log, "");
@@ -19,7 +19,10 @@ function dung({ mau = `d1 ${Math.floor(Date.now() / 1000)}`, dau = "d1", chay = 
 printf '%s\\n' "$*" >> ${JSON.stringify(log)}
 case "$*" in
   inspect*) ${chay ? 'echo true' : 'exit 1'} ;;
-  *shobj_description*) printf '%s\\n' ${JSON.stringify(mau)} ;;
+  *shobj_description*)
+    # Lần đọc đầu trả mau, từ lần hai trả mauLan2 (bên khác vừa dựng xong).
+    if ${mauLan2 ? "[ -e " + JSON.stringify(log + ".doc") + " ]" : "false"}; then printf '%s\\n' ${JSON.stringify(mauLan2 ?? "")}; else : > ${JSON.stringify(log + ".doc")}; printf '%s\\n' ${JSON.stringify(mau)}; fi ;;
+  *"VACUUM ANALYZE"*) ${vacuumLoi ? "echo vacuum-hong >&2; exit 2" : ":"} ;;
   *md5*) echo ${JSON.stringify(dau)} ;;
   *"datname ~"*) printf '%s' ${JSON.stringify(moCoi)} ;;
   *" df "*) printf 'Avail\\n%s\\n' ${JSON.stringify(dia)} ;;
@@ -69,7 +72,7 @@ test("DT-AC-1 URL đang trỏ DB chung thì vẫn đổi sang DB riêng", () => 
 test("DT-AC-1 đối chứng: bản script bỏ nhánh đổi URL thì DB chung lọt và ca trên phải đỏ", () => {
   const { d } = dung();
   const goc = readFileSync(SH, "utf8");
-  const dot = goc.replace('[ "${u##*/}" = "oneinvest" ] || exec "$@"', 'exec "$@"');
+  const dot = goc.replace('if [ "${u##*/}" != "oneinvest" ] || {', 'if true || {');
   assert.notEqual(dot, goc, "đột biến không đổi mã — chiều đỏ rỗng");
   const tep = path.join(d, "db-thu-dot.sh");
   writeFileSync(tep, dot);
@@ -113,7 +116,7 @@ test("DT-AC-2 cùng tên oneinvest ở máy chủ khác cổng thì giữ nguyê
   const khac = urlTai("127.0.0.1:55001");
   const a = dung();
   const r = chay(a.d, { DATABASE_URL: khac });
-  assert.match(r.stdout, new RegExp(`URL=${khac}`));
+  assert.match(r.stdout, new RegExp(`URL=${khac} ADMIN=${khac}`), "kết nối quản trị phải theo URL đã giữ, không rơi về DB chung");
   assert.deepEqual(dong(a.log), [], "không được gọi docker");
   const b = dung();
   const r2 = chay(b.d, { DATABASE_URL: urlTai("127.0.0.1:5433") });
@@ -202,6 +205,23 @@ test("DT-AC-3 mẫu quá 24 giờ hoặc chưa có: dựng lại", () => {
   }
 });
 
+test("DT-AC-3 VACUUM ANALYZE lỗi: không đổi tên vào chỗ mẫu, lệnh không chạy", () => {
+  const { d, log } = dung({ mau: "", dau: "moi", vacuumLoi: true });
+  const r = chay(d);
+  assert.notEqual(r.status, 0);
+  assert.doesNotMatch(r.stdout, /^URL=/m, "lệnh không được chạy trên bản mẫu thiếu thống kê");
+  assert.match(r.stdout, /dựng bản mẫu lỗi/);
+  assert.ok(!dong(log).some((x) => /RENAME TO oneinvest_suite_mau/.test(x)), "bản hỏng không được vào chỗ mẫu");
+});
+
+test("DT-AC-3 bên khác dựng xong ngay trước khi xin khoá: không dựng lần hai", () => {
+  const moi = `d1 ${Math.floor(Date.now() / 1000)}`;
+  const { d, log } = dung({ mau: "", mauLan2: moi, dau: "d1" });
+  const r = chay(d);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.equal(dumpLenh(log).length, 0, "đã có mẫu mới thì không pg_dump");
+});
+
 test("DT-AC-3 DB của lượt đã chết được dọn, DB của lượt đang sống thì giữ", () => {
   const { d, log } = dung({ moCoi: `oneinvest_suite_app_999999\noneinvest_suite_agent_${process.pid}\n` });
   chay(d);
@@ -215,23 +235,37 @@ const GOC = path.join(import.meta.dirname, "..");
 const BO = { app: ["app/tests", /\.test\.tsx$/], pipeline: ["pipeline", /\.test\.mjs$/], agent: ["agent/tests", /\.test\.ts$/] };
 const tepTest = (dir, re) => readdirSync(path.join(GOC, dir), { recursive: true, encoding: "utf8" })
   .filter((f) => re.test(f) && !f.includes("node_modules")).map((f) => path.join(dir, f));
-/** Tệp helper mà test của ba bộ nạp, không mang đuôi .test nên glob của bộ không thấy. */
-const tepHelper = () => [
-  ...readdirSync(path.join(GOC, "agent/tests")).filter((f) => /\.ts$/.test(f) && !/\.(test|itest)\.ts$/.test(f)).map((f) => `agent/tests/${f}`),
-  ...readdirSync(path.join(GOC, "app/tests"), { recursive: true, encoding: "utf8" }).filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx$/.test(f)).map((f) => `app/tests/${f}`),
-  ...readdirSync(path.join(GOC, "pipeline/scripts")).filter((f) => /fixture.*\.mjs$|^capture-.*\.mjs$/.test(f)).map((f) => `pipeline/scripts/${f}`),
-];
-/** Dòng tự trỏ DB chung, ba cách viết: URL trọn, URL ghép từ biến máy chủ, URL dựng bằng new URL(placeholder). Lành khi có DATABASE_URL đứng trước làm đường chính,
- *  hay dòng ngay sau đổi sang cổng 1 (DB chết có chủ ý). Thêm: xoá DATABASE_URL khỏi env tiến trình con mà không gán lại. */
+/** Mọi tệp trong kho mà `tep` import, tính đệ quy: helper mang đuôi khác .test nên glob của bộ không thấy. Import động theo đường tính lúc chạy không đọc được. */
+function tepNap(dsGoc) {
+  const thay = new Set();
+  const ngan = [...dsGoc];
+  while (ngan.length) {
+    const f = ngan.pop();
+    if (thay.has(f)) continue;
+    thay.add(f);
+    for (const [, duong] of readFileSync(path.join(GOC, f), "utf8").matchAll(/(?:from|import\()\s*["'](\.\.?\/[^"']+)["']/g)) {
+      const goc = path.join(path.dirname(f), duong);
+      const tim = [goc, goc.replace(/\.js$/, ".ts"), `${goc}.ts`, `${goc}.tsx`, `${goc}.mjs`, `${goc}.js`, `${goc}/index.ts`].find((x) => existsSync(path.join(GOC, x)) && !statSync(path.join(GOC, x)).isDirectory());
+      if (tim && /\.(ts|tsx|mjs|js)$/.test(tim)) ngan.push(tim);
+    }
+  }
+  return [...thay];
+}
+/** Dòng tự trỏ DB chung. URL (trọn, ghép từ biến máy chủ, dựng bằng new URL, tách host/database) chỉ lành khi biến môi trường đứng ngay trước làm đường chính
+ *  (`process.env.DATABASE_URL ?? "…"`), hoặc dòng sau đổi sang cổng 1 (DB chết có chủ ý). Thêm: bỏ DATABASE_URL khỏi env mà không gán lại. */
 export function dongLot(noiDung) {
   const out = [];
+  const BIEN = /process\.env\.(TEST_DATABASE_URL_ADMIN|DATABASE_URL)\s*(\?\?|\|\|)/;
   noiDung.split("\n").forEach((dong, i, ds) => {
     if (dong.trimStart().startsWith("//")) return;
-    const truoc = ds.slice(Math.max(0, i - 2), i + 1).join("\n");
-    const sau = ds.slice(i, i + 3).join("\n");
-    const lanh = /DATABASE_URL/.test(truoc) || /port = "1"/.test(sau);
-    if (/(5433|\}|placeholder)\/oneinvest(?![_a-z0-9])/.test(dong) && !lanh) out.push(`${i + 1}: ${dong.trim()}`);
-    if (/^\s*delete env\.DATABASE_URL/.test(dong) && !/else\s*$|else /.test(`${ds[i - 1] ?? ""}${dong}`)) out.push(`${i + 1}: ${dong.trim()}`);
+    const m = /(5433|\}|placeholder)\/oneinvest(?![_a-z0-9])|database:\s*["']oneinvest["']|pathname\s*=\s*["']\/oneinvest["']/.exec(dong);
+    if (m) {
+      const lanh = BIEN.test(dong.slice(0, m.index)) || BIEN.test(ds[i - 1] ?? "")
+        || /if \(process\.env\.TEST_DATABASE_URL_ADMIN\) return/.test(ds[i - 1] ?? "") || /port = "1"/.test(ds.slice(i, i + 3).join("\n"));
+      if (!lanh) out.push(`${i + 1}: ${dong.trim()}`);
+    }
+    const boBien = /delete\s+[\w.]+\.DATABASE_URL\b/.test(dong) || /\bDATABASE_URL:\s*(undefined|null|"")/.test(dong) || /\{[^}]*\bDATABASE_URL\b[^}]*\.\.\.\w+[^}]*\}\s*=/.test(dong);
+    if (boBien && !/else\s*$|else /.test(`${ds[i - 1] ?? ""}${dong}`)) out.push(`${i + 1}: ${dong.trim()}`);
   });
   return out;
 }
@@ -249,22 +283,25 @@ test("DT-AC-5 executor sellers_chip đi qua db-thu", () => {
   assert.match(dong, /db-thu\.sh oneinvest_suite_\w+ --chay/, "sellers_chip không đi qua db-thu");
 });
 
-test("DT-AC-7 không tệp test nào của ba bộ tự trỏ DB chung", () => {
+test("DT-AC-7 không tệp test nào của ba bộ, kể cả tệp chúng import, tự trỏ DB chung", () => {
   const lot = [];
+  const tatCa = [];
   for (const [dir, re] of Object.values(BO)) {
     const tep = tepTest(dir, re);
     assert.ok(tep.length >= 20, `${dir}: quét ${tep.length} tệp — glob của bộ quét sai`);
-    for (const f of tep) for (const d of dongLot(readFileSync(path.join(GOC, f), "utf8"))) lot.push(`${f}:${d}`);
+    tatCa.push(...tep);
   }
-  const helper = tepHelper();
-  assert.ok(helper.includes("pipeline/scripts/capture-ops-facts.mjs") && helper.includes("agent/tests/judge-chung.ts"), "bộ quét không thấy tệp helper");
-  for (const f of helper) for (const d of dongLot(readFileSync(path.join(GOC, f), "utf8"))) lot.push(`${f}:${d}`);
+  const nap = tepNap(tatCa);
+  for (const f of ["pipeline/scripts/capture-ops-facts.mjs", "agent/tests/judge-chung.ts", "agent/tests/helpers/db.ts"]) assert.ok(nap.includes(f), `bộ quét không thấy ${f}`);
+  for (const f of nap) for (const d of dongLot(readFileSync(path.join(GOC, f), "utf8"))) lot.push(`${f}:${d}`);
   assert.deepEqual(lot, []);
 });
 
 test("DT-AC-7 đối chứng: bộ quét bắt đúng các dạng lọt, bỏ qua các dạng lành", () => {
-  const bat = ['const U = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = `postgres://o:o@localhost:5433/oneinvest?options=-c`", "const U = `${PG_SERVER}/oneinvest`", 'const u = new URL("postgres://placeholder/oneinvest")', "  delete env.DATABASE_URL"];
+  const bat = ['const U = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = `postgres://o:o@localhost:5433/oneinvest?options=-c`", "const U = `${PG_SERVER}/oneinvest`", 'const u = new URL("postgres://placeholder/oneinvest")', "  delete env.DATABASE_URL",
+    'process.env.DATABASE_URL = "postgres://o:o@localhost:5433/oneinvest"', "env: { ...process.env, DATABASE_URL: `${PG}/oneinvest` }", "delete process.env.DATABASE_URL", "env: { ...process.env, DATABASE_URL: undefined }", '{ port: 5433, database: "oneinvest" }', "const { DATABASE_URL: _, ...con } = process.env"];
   for (const d of bat) assert.equal(dongLot(d).length, 1, `phải bắt: ${d}`);
   const lanh = ['const U = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"', "const U = process.env.DATABASE_URL ?? `${PG_SERVER}/oneinvest`", 'const U = "postgres://o:o@localhost:5433/oneinvest_tct"', "// 5433/oneinvest", 'if (process.env.TEST_DATABASE_URL_ADMIN) return process.env.TEST_DATABASE_URL_ADMIN\nconst u = new URL("postgres://placeholder/oneinvest")', 'const u = new URL("postgres://placeholder/oneinvest")\nu.hostname = "127.0.0.1"; u.port = "1"', "  if (x) env.DATABASE_URL = x\n  else delete env.DATABASE_URL"];
   for (const d of lanh) assert.deepEqual(dongLot(d), [], `không được bắt: ${d}`);
+  assert.equal(dongLot(`// đọc DATABASE_URL trước\nconst U = "${CHUNG}"`).length, 1, "chữ DATABASE_URL trong chú thích không làm URL cứng thành lành");
 });
