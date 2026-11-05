@@ -1,0 +1,25 @@
+{
+  "feature_plain": "Máy biết dự án S08 nào thuộc Ocean Park 1 và Grand Park, sổ dự án hết bí danh trùng mã toà, và mã vùng của Ocean Park 1–3 có thật; dữ liệu S08 vẫn chỉ ở máy thu.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghi mỗi dự án S08 đúng một dòng: nối vào khu đô thị, hoặc chưa nối kèm lý do."},
+    {"id": "AC-4", "p": "Sẽ nối 3 dự án vào Ocean Park 1 và 5 dự án vào Grand Park, mọi dự án còn lại ghi chưa nối, chạy lại không đổi."},
+    {"id": "AC-5", "p": "Sẽ bỏ bí danh s7, s10 trùng mã toà khỏi sổ dự án, mọi bí danh khác giữ nguyên trừ các bí danh ở Hỏi-1."},
+    {"id": "AC-6", "p": "Sẽ sửa mã vùng Ocean Park 1 thành Gia Lâm, Ocean Park 2 và 3 thành Hưng Yên, và bỏ chữ «Vũ Yên» khỏi tên."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG để tên hay mã dự án S08 rời máy thu: bảng không lên cloud, kho công khai và đầu ra lệnh không có chúng."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG ghi gì vào dữ liệu thật trong lúc đo, phép đo từ chối chạy nếu trỏ nhầm."},
+    {"id": "AC-9", "p": "Sẽ kiểm từng cặp nối với chữ S08 và quét dự án bị sót; tráo hai dòng hay xoá một dòng thì phép đo đỏ."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Chặn bảng nối sai: sai nút, sai mã, trùng dòng, rỗng, thiếu tín hiệu, sót dự án, tệp không được giấu đều bị từ chối và bảng không đổi."},
+    {"id": "AC-3", "p": "Chặn dòng thiếu thông tin ngay ở DB: nối phải có khu, chưa nối phải có lý do."},
+    {"id": "OOS-1", "p": "Sẽ KHÔNG ghi bảng nối hay áp migration lên dữ liệu thật trong vòng này: sau khi gộp mới xin giám sát."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG dựng toà, trục, căn từ S08: đó là DB1."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG sửa 16 cặp mã vùng chết còn lại, gồm một mã của Grand Park: chưa có nguồn xác minh, cần việc riêng."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG sửa màn nào: tên mới chỉ hiện ở danh mục khai đơn vị của Ops sau lần sync kế, cổng Invest không đọc mã vùng."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Vật được dọn: dự án S08 (AC-1, AC-2, AC-4, AC-9), bí danh (AC-5), mã vùng và tên (AC-6). Đủ vì đo trên 150 dự án và 23 nút thật."},
+    {"i": 1, "p": "Đường vào: tệp đúng, tệp sai nhiều kiểu, chạy lại (AC-1 đến AC-4)."},
+    {"i": 2, "p": "Ranh giới S08: bảng local, kho công khai, cloud, đầu ra lệnh (AC-7, AC-8)."}
+  ]
+}
