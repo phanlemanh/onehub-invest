@@ -3,12 +3,18 @@
  * URL gốc mang tên miền nguồn (tầng A, ADR-0007): chỉ dùng ở máy chủ, trình duyệt chỉ nhận đường `/api/zalo-media?nhan=&anh=`.
  */
 
-/** `url` của tệp chỉ để nhận ra link ảnh trong chữ bài; không rời máy chủ. */
-export type NguonAnh = { kind: "tep"; snapshot: string; file: string; url?: string } | { kind: "url"; url: string }
+/** `url` của tệp chỉ để nhận ra link ảnh trong chữ bài, `sha256` chỉ để khử trùng; cả hai không rời máy chủ. */
+export type NguonAnh = { kind: "tep"; snapshot: string; file: string; url?: string; sha256?: string } | { kind: "url"; url: string }
 
 const mang = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const banGhi = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {})
 const urlHopLe = (v: unknown): string | null => (typeof v === "string" && /^https?:\/\//i.test(v) ? v : null)
+
+const SHA256 = /^[0-9a-f]{64}$/i
+
+/** Băm nội dung của entry đã tải, viết thường; thiếu hay sai khuôn → null. Cùng luật với shaTep ở pipeline/media-rows.mjs. */
+export const shaTep = (entry: Record<string, unknown>): string | null =>
+  typeof entry.sha256 === "string" && SHA256.test(entry.sha256) ? entry.sha256.toLowerCase() : null
 
 /** Ảnh của một bài theo thứ tự cố định: tệp đã lưu trước, rồi URL chưa có tệp. Thứ tự này là số `anh` trên đường ảnh. */
 export function danhSachAnh(media: unknown, mediaFiles: unknown, snapshotBai: string | null): NguonAnh[] {
@@ -19,9 +25,10 @@ export function danhSachAnh(media: unknown, mediaFiles: unknown, snapshotBai: st
     const url = urlHopLe(e.url)
     const snapshot = typeof e.snapshotId === "string" ? e.snapshotId : snapshotBai
     if (!e.error && typeof e.file === "string" && snapshot) {
-      if (tep.some((t) => t.kind === "tep" && t.snapshot === snapshot && t.file === e.file)) continue
-      tep.push(url ? { kind: "tep", snapshot, file: e.file, url } : { kind: "tep", snapshot, file: e.file })
       if (url) daCoTep.add(url)
+      const sha = shaTep(e)
+      if (tep.some((t) => t.kind === "tep" && ((t.snapshot === snapshot && t.file === e.file) || (sha && t.sha256 === sha)))) continue
+      tep.push({ kind: "tep", snapshot, file: e.file, ...(url ? { url } : {}), ...(sha ? { sha256: sha } : {}) })
     } else if (url) urlCho.push(url)
   }
   for (const m of mang(media).map(banGhi)) {
