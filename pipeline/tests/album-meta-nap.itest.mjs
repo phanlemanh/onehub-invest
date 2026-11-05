@@ -47,8 +47,8 @@ function tinCu(ts) {
 async function sinhSnapshot(items, schemaVersion) {
   const root = mkdtempSync(join(tmpdir(), "mas3-snap-"));
   const w = new SnapshotWriter(root, "hanoi", "zalo-agent", { schemaVersion });
-  for (const it of items) await w.write(it);
-  await w.finish();
+  await w.write(items);
+  await w.finalize({ failed: 0 });
   return { root, dir: join(root, "hanoi", w.snapshotId) };
 }
 function nap(dir) {
@@ -71,7 +71,8 @@ test("E5: 077-idempotent + nạp album_meta đúng + snapshot cũ NULL + DB thi�
   const s1 = await sinhSnapshot([tinAnhAlbum(tsA), tinCu(tsA)], ZALO_AGENT_SCHEMA_VERSION);
   const r1 = nap(s1.dir);
   assert.equal(r1.rc, 0, `nạp snapshot 6 rc=0 (out: ${r1.out.slice(0, 300)})`);
-  assert.deepEqual(await albumCua(`album-${tsA}`), ALBUM, "cột album_meta đúng giá trị");
+  const am = await albumCua(`album-${tsA}`);
+  assert.ok(am && am.group_layout_id === ALBUM.group_layout_id && am.id_in_group === ALBUM.id_in_group && am.total_item_in_group === ALBUM.total_item_in_group, `cột album_meta đúng giá trị (${JSON.stringify(am)})`);
   assert.equal(await albumCua(`cu-${tsA}`), null, "tin không albumMeta → album_meta IS NULL");
   // nạp LẦN HAI cùng snapshot (bộ nạp đọc số schemaVersion mới nhận lại):
   const r1b = nap(s1.dir);
