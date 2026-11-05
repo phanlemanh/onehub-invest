@@ -5,9 +5,9 @@ slug: bo-canh-dem-luot-agent
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-06
 ---
 
 # Acceptance Contract: bo-canh-dem-luot-agent
