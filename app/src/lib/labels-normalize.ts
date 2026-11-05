@@ -106,6 +106,9 @@ export type PriceUnit = (typeof PRICE_UNITS)[number]
 /** Chữ lỗi khi người gắn ghi lại tin CHÍNH MÌNH đã gắn (409). Một chỗ: truy vấn ghi trả nó, biểu mẫu nhận ra nó để coi
  * lượt trước đã vào (lỗi mạng sau khi máy thu đã ghi) — hàng nhan-gia-va-luu-loi-mang. */
 export const DA_GAN_CUA_TOI = "Anh đã gắn tin này"
+/** Chữ lỗi khi ghi vào dòng trùng cụm (`ghep.trung_voi`): dòng đã bỏ khỏi hàng gắn, cụm gắn ở dòng đại diện. Biểu mẫu nhận
+ * như mọi 409 khác: báo rồi chuyển tin kế — hàng ghi-nhan-chan-dong-trung-cum. */
+export const TRUNG_CUM = "Tin này trùng cụm với một tin khác"
 
 /** Số mơ hồ: một dấu `.`/`,` theo sau đúng ba chữ số — ngăn nghìn hay thập phân? Từ chối, không đoán (Ngoài-7 của PL7). */
 export const MSG_NGAN_NGHIN = "Dấu ngăn nghìn không được nhận — gõ 4350 hoặc 4,35"

@@ -3,7 +3,7 @@ import type { PoolClient } from "pg"
 import { pool } from "./db"
 import { docGhep, type GhepHien } from "./labels-anh"
 import { docThe } from "./labels-cum"
-import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
+import { DA_GAN_CUA_TOI, TRUNG_CUM, type LabelRow } from "./labels-normalize"
 
 /**
  * Gắn nhãn đánh giá (PL7 `man-gan-nhan-mu`) — truy vấn của trang /ops/labels và route /api/v1/ops/labels.
@@ -116,12 +116,14 @@ export type KetQuaGhi = { ok: true } | { ok: false; status: 400 | 409; error: st
 /**
  * Ghi một lượt (đủ các trường đã chuẩn hoá, kèm lý do nếu có) trong MỘT giao dịch. Khoá dòng tin (FOR UPDATE) trước khi đếm
  * người đã gắn, nên hai người ghi cùng lúc thì người sau thấy số đã đổi → 409. `c` là client riêng (pool.connect()).
+ * Dòng trùng cụm (`ghep.trung_voi`) không nhận nhãn → 409 `TRUNG_CUM`; đọc trong cùng câu khoá nên lệnh ghép (UPDATE cùng
+ * dòng) commit trước thì lượt ghi luôn thấy. Xét sau «đã gắn của tôi»: lượt gửi lại sau mất phản hồi vẫn là đã lưu.
  */
 export async function ghiNhan(c: Q, userId: string, lat: string, itemId: number, rows: LabelRow[], reason: string | null = null): Promise<KetQuaGhi> {
   await c.query("BEGIN")
   try {
     const { rows: tin } = await c.query(
-      `SELECT lat, double_label FROM eval_label_items WHERE item_id = $1 FOR UPDATE`, [itemId])
+      `SELECT lat, double_label, ghep->>'trung_voi' AS trung_voi FROM eval_label_items WHERE item_id = $1 FOR UPDATE`, [itemId])
     if (!tin[0] || tin[0].lat !== lat) {
       await c.query("ROLLBACK")
       return { ok: false, status: 400, error: "Tin không thuộc lát" }
@@ -132,6 +134,10 @@ export async function ghiNhan(c: Q, userId: string, lat: string, itemId: number,
     if (da[0].cua_toi) {
       await c.query("ROLLBACK")
       return { ok: false, status: 409, error: DA_GAN_CUA_TOI }
+    }
+    if (tin[0].trung_voi) {
+      await c.query("ROLLBACK")
+      return { ok: false, status: 409, error: TRUNG_CUM }
     }
     if (da[0].so >= (tin[0].double_label ? 2 : 1)) {
       await c.query("ROLLBACK")

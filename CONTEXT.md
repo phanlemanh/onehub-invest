@@ -619,6 +619,10 @@ _Avoid_: chưa so
 
 **Ghép suy ra** (code `ghep`): tin chữ và các bài ảnh cùng người, cùng nhóm, cách dưới 2 phút do luật PL28 nối lại vì nguồn S03 không có mã album. Là suy đoán, có thể sai. _Avoid_: album.
 
+**Dòng trùng cụm**: Dòng mẫu gắn nhãn mà Ghép suy ra trỏ về cùng tin chữ với một dòng đứng trước nó. Cả cụm gắn một lần ở dòng đại diện; dòng trùng cụm không vào hàng gắn, không nhận nhãn.
+- Code: `ghep.trung_voi`
+_Avoid_: dòng trùng, tin trùng
+
 **Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
 - Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
 _Avoid_: nguồn nhãn
