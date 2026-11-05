@@ -5,7 +5,7 @@ slug: nhom-dang-ky-hai-lan-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-04-nhom-dang-ky-hai-lan-s03-design.md
 approved_by: Mạnh
 approved_at: 2026-11-04
@@ -68,6 +68,13 @@ Source input: `_acceptance/gan-nhan-theo-nhom-s03/review-findings.md`, `decision
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Nếu lần sửa sau chỉ chạm tệp phụ trợ của bộ kiểm, một số phép kiểm cũ có thể được coi là vẫn đạt mà không chạy lại.
+  - Ngoài-2: Nếu ai bỏ khoá riêng ở một đầu dò, hai bước kiểm có thể đụng nhau trên dữ liệu thử; phép đo hiện chỉ thấy khoá ở một phía.
+  - Ngoài-3: Mục đã hết từ lượt 1, dữ liệu giả đã dùng mã S03; ghi để đóng mục.
+  - Ngoài-4: Hai phép kiểm âm tính khi chạy lại lát cũ chưa từng được thử làm đỏ.
+  - Ngoài-5: Đầu tệp kiểm nói mọi lời hứa có chiều đỏ riêng, thực tế còn vài lời hứa chưa có.
+- Mạnh ký khi còn hai lỗ phép đo trong hợp đồng, không sửa vì hết trần 3 lượt: vế không vượt hạn mức của AC-7 trên bản sao thật không thể đỏ; AC-8 quét theo danh sách viết tay, bỏ sót ba tệp trong diff.
 - Chạy thử chỉ trên DB thử `oneinvest_gcn_nhan`. S4 chạy dưới khoá s4.
 - Mã và tệp kho không ghi tên kênh và không ghi khoá nhóm thật.
 - PR nhắm nhánh GC0 cho tới khi GC0 vào main; không gộp trước GC0.
