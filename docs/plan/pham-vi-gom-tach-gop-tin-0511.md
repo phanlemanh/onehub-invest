@@ -30,7 +30,7 @@
 ```
 dot: gom-tach-gop-0511
 dang: chuoi
-nguon: khảo sát DB máy thu 05/11, Mạnh duyệt «Theo khuyến nghị»
+nguon: onehub-invest-tri-thuc:wiki/chu-de/gom-tach-gop-tin-s03.md#e155973f65b396dce340affaafc41eb2962b0c02
 
 - `GT1` — khử trùng ảnh trong một tin theo băm tệp đã có, rồi mới áp trần 12 ảnh
 - `GT2` — một lớp «bài đăng» dùng chung quyết định sự kiện nào thuộc một lần đăng
