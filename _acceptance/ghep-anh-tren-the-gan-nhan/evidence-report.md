@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9522531471e61c7b040eab94a6f85b6c45b76cea
+verified_commit: 6970450fa1938c79deea5ead59ebcb9ff71b002e
 human_signoff:
 ---
 
@@ -213,3 +213,7 @@ none — every multi-run eval is uniform
 
 Round 4: REJECT (theo commit 410a1f82 «bằng chứng lượt chấm 4 ghép ảnh trên thẻ gắn nhãn, REJECT»; nguyên nhân chi tiết nằm ở round đó, không có trong đầu vào của bước này).
 Round 5: REJECT — E1 đến E12 đều đạt; lệnh suite `cd app && npm test` không đạt ở ca `E4b đối chiếu DB máy thu` (assert thời gian), không gắn eval nào. Trả lại để điều tra ca này, và các lỗi ngoài hợp đồng nằm ở review-findings.md để người quyết ở Gate 2.
+
+### Re-pin lần 1 — 2026-11-05, do thu phạm vi E4b, gộp main và đổi khoá cụm sau lượt chấm 5
+run_id: repin-20261105T130722Z-50735
+sha: 6970450fa1938c79deea5ead59ebcb9ff71b002e · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E5, E8 · AC không có chốt máy: AC-4
