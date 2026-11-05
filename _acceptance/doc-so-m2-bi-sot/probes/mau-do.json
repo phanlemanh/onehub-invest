@@ -1,0 +1,98 @@
+{
+  "ghi_chu": "Đo lại trên DB máy thu 05/11: tin S03 thiếu m² có số trong chữ. Giá trị người đọc từ chữ bài, viết trước khi sửa bộ đọc. Đo 04/11 ghi 14 tin (13 bán, 1 thuê) nhưng không lưu danh sách.",
+  "tin": [
+    {
+      "offer_id": "offer_103655af636f046e",
+      "kind": "sale",
+      "area_m2": 52
+    },
+    {
+      "offer_id": "offer_1695f77493d6dfbf",
+      "kind": "sale",
+      "area_m2": 59
+    },
+    {
+      "offer_id": "offer_63172091c9152d9d",
+      "kind": "sale",
+      "area_m2": 45.7
+    },
+    {
+      "offer_id": "offer_66680b406fa1f775",
+      "kind": "sale",
+      "area_m2": 27.2
+    },
+    {
+      "offer_id": "offer_7318cdaf275b1ba9",
+      "kind": "sale",
+      "area_m2": 45.7
+    },
+    {
+      "offer_id": "offer_ad02b1767bafa2d3",
+      "kind": "sale",
+      "area_m2": 45.7
+    },
+    {
+      "offer_id": "offer_8e91a9e4000cf22f",
+      "kind": "sale",
+      "area_m2": 86.5
+    },
+    {
+      "offer_id": "offer_a36e0f42fc7e1d7a",
+      "kind": "sale",
+      "area_m2": 64
+    },
+    {
+      "offer_id": "offer_77cfbc2ecb863c4d",
+      "kind": "rent_lt",
+      "area_m2": 67
+    },
+    {
+      "offer_id": "offer_44b9b045837b890c",
+      "kind": "sale",
+      "area_m2": 30.6
+    },
+    {
+      "offer_id": "offer_ea5e847d89a3bd83",
+      "kind": "sale",
+      "area_m2": 30.6
+    },
+    {
+      "offer_id": "offer_91daa202308ea153",
+      "kind": "sale",
+      "area_m2": 82
+    },
+    {
+      "offer_id": "offer_fc3745c5b6472968",
+      "kind": "sale",
+      "area_m2": 59
+    },
+    {
+      "offer_id": "offer_f9dcd287fa371059",
+      "kind": "sale",
+      "area_m2": 34
+    },
+    {
+      "offer_id": "offer_3cae954f4af97c5d",
+      "kind": "sale",
+      "area_m2": 46
+    }
+  ],
+  "giu_rong": [
+    {
+      "offer_id": "offer_abe3be10a7016346",
+      "ly_do": "chữ m2 chỉ nằm trong đường link"
+    },
+    {
+      "offer_id": "offer_d5b3ea10b8837c04",
+      "ly_do": "chữ m2 chỉ nằm trong đường link"
+    },
+    {
+      "offer_id": "offer_11b1cb081a41a596",
+      "ly_do": "chữ m2 chỉ nằm trong đường link"
+    },
+    {
+      "offer_id": "offer_149e267486d2aa19",
+      "ly_do": "Diện tích: 3pn2wc, không phải số m²"
+    }
+  ]
+}
