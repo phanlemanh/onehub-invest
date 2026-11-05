@@ -21,7 +21,7 @@ const { rows } = await c.query(
 await c.end()
 const OPS = { id: "1", email: "o@x.vn", plan: "pro", role: "ops" }
 kiem(rows.length === 367, "367 bai", `loi so bai ${rows.length}`)
-const MIEN = /https?:\/\/|www\.|[a-z0-9-]+\.(vn|com|net|org)\b/i
+const MIEN = /https?:\/\/|www\.|[a-z0-9-]+\.(vn|com|net|org|me|link|ly|io|info|biz)(?![\p{L}\p{N}])/iu
 let linkKhac = 0, coAnh = 0, coTep = 0, tepTra = 0, chiUrl = 0, conMien = 0, duoc = 0, khong = 0
 const can = []
 for (const r of rows) {
@@ -47,7 +47,7 @@ kiem(coTep === 199, "199 co tep", `loi co tep ${coTep}`)
 kiem(tepTra === 199, "199 tep tra anh", `loi tep tra ${tepTra}`)
 kiem(chiUrl === 84, "84 chi url", `loi chi url ${chiUrl}`)
 kiem(conMien === 0, "0 bai con ten mien trong chu hien", `loi con ${conMien} bai`)
-kiem(MIEN.test("xem abc.com.vn"), "doi chung: chu con ten mien bi bat")
+kiem(["vn", "com", "net", "org", "me", "link", "ly", "io", "info", "biz"].every((d) => MIEN.test(`xem abc.${d}/a`)), "doi chung: chu con ten mien bi bat", "loi doi chung: mot duoi ten mien lot")
 let i = 0
 await Promise.all(Array.from({ length: 6 }, async () => {
   while (i < can.length) {

@@ -13,16 +13,19 @@ const c = new pg.Client({ connectionString: `${SERVER}/oneinvest`, options: "-c 
 await c.connect()
 const { rows: urls } = await c.query(`SELECT DISTINCT substring(media_url from 'https?://([^/]+)') AS h FROM media WHERE media_url IS NOT NULL`)
 const { rows: mau } = await c.query(`SELECT item_id, ref_id, text_hash, stratum FROM eval_label_items WHERE lat = 's03-theo-nhom' ORDER BY item_id`)
-const { rows: reg } = await c.query(`SELECT string_agg(distinct x, ' ') AS s FROM source_registry r, LATERAL (SELECT r.real_name AS x UNION ALL SELECT unnest(r.source_ids)) q`).catch(() => ({ rows: [{ s: "" }] }))
+const { rows: reg } = await c.query(`SELECT string_agg(distinct x, ' ') AS s FROM source_registry r, LATERAL (SELECT r.real_name AS x UNION ALL SELECT unnest(r.source_ids)) q`)
 await c.end()
 const mien = new Set()
 for (const { h } of urls) if (h) { const d = h.toLowerCase().split("."); mien.add(d.slice(-2).join(".")); if (d.at(-2)?.length <= 3) mien.add(d.slice(-3).join(".")) }
-for (const t of (reg[0].s ?? "").toLowerCase().split(/\s+/)) if (t.includes(".")) mien.add(t)
+const tuSo = (reg[0].s ?? "").toLowerCase().split(/\s+/).filter((t) => t.includes("."))
+for (const t of tuSo) mien.add(t)
+kiem(urls.length > 0 && tuSo.length > 0, `ca hai nguon cua tap ten mien khac rong: media ${urls.length}, so nguon ${tuSo.length}`, "loi mot nguon cua tap ten mien rong")
 mien.delete("com.vn"); mien.delete("example.test")
 kiem(mien.size > 0, `tap ten mien khac rong ${mien.size}`, "loi tap ten mien rong")
 const coso = git("merge-base", "HEAD", "origin/main").trim()
 const them = git("diff", "-U0", coso, "HEAD", "--", ".", ":(exclude)LO-TRINH.html", ":(exclude)PRODUCT-MAP.md").split("\n").filter((l) => l.startsWith("+") && !l.startsWith("+++")).join("\n").toLowerCase()
-const quet = (chu) => [...mien].filter((m) => new RegExp(`(?<![a-z0-9.-])${m.replace(/\./g, "\\.")}(?![a-z0-9-])`).test(chu)).length
+// Trước miền được là dấu chấm: bắt cả tên miền con.
+const quet = (chu) => [...mien].filter((m) => new RegExp(`(?<![a-z0-9-])${m.replace(/\./g, "\\.")}(?![a-z0-9-])`).test(chu)).length
 kiem(quet(them) === 0, "dong them khong co ten mien nguon", `loi ${quet(them)} ten mien trong dong them`)
 const goc = path.join(ROOT, "_acceptance", SLUG)
 const tepHoSo = []
@@ -33,7 +36,9 @@ kiem(quet(chuHoSo) === 0, "ho so khong co ten mien nguon", `loi ${quet(chuHoSo)}
 const tepMoi = ["seed.mjs", "nap.mjs"].map((f) => fs.readFileSync(path.join(goc, "probes", f), "utf8")).concat(fs.readFileSync(path.join(ROOT, "app/tests/labels-anh.test.ts"), "utf8")).join("\n")
 const urlFixture = [...tepMoi.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map((m) => m[1]).filter((h) => !h.endsWith("example.test") && h !== "localhost" && h !== "www.w3.org")
 kiem(urlFixture.length === 0, "fixture chi example.test", `loi fixture co ${urlFixture.length} ten may khac`)
-kiem(quet("dong co abc." + [...mien][0] + "/x") >= 1 || quet(`dong co ${[...mien][0]}/x`) === 1, "doi chung: dong co ten mien bi bat", "loi doi chung ten mien")
+const mau1 = [...mien][0]
+const moiDang = [`https://cdn.${mau1}/x`, `www.${mau1}`, `abc.${mau1}/x`, `https://${mau1}/x`, `${mau1}/x`]
+kiem(moiDang.every((d) => quet(`dong co ${d}`) >= 1), "doi chung: dong co ten mien bi bat", "loi doi chung: mot dang ten mien lot")
 kiem(quet("dong lanh example.test") === 0, "doi chung: dong lanh khong bi bat")
 const bam = createHash("sha256").update(JSON.stringify(mau)).digest("hex")
 const tepBam = path.join(goc, "probes/mau-bam.txt")

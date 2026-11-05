@@ -1,0 +1,25 @@
+E10 network: ego-browser khong co duong doc network cua trinh duyet (n-a driver). Bang chung thay the: nhat ky may chu dev :3463 (app-scope) + performance.getEntriesByType('resource') trong trang.
+Trang bai anh hong: /api/zalo-media?nhan=10347&anh=0 responseStatus=502 (ca 3 lan nap: dieu huong client, 2 lan reload); KHONG co yeu cau thu lai nao sau do vi khong co nut Thu lai.
+console errors: khong doc duoc qua driver
+--- dev server log ---
+ GET / 200 in 517ms (next.js: 145ms, application-code: 373ms)
+ GET / 200 in 133ms (next.js: 1.8ms, application-code: 131ms)
+ GET /ops/labels?nhom=S03-N040 200 in 258ms (next.js: 41ms, proxy.ts: 28ms, application-code: 189ms)
+ GET /api/zalo-media?nhan=10345&anh=0 200 in 59ms (next.js: 28ms, application-code: 32ms)
+ POST /api/v1/ops/labels 200 in 65ms (next.js: 18ms, application-code: 48ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040&xem=10345 200 in 271ms (next.js: 9ms, proxy.ts: 2ms, application-code: 259ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040 200 in 112ms (next.js: 2ms, proxy.ts: 2ms, application-code: 108ms)
+ GET /api/zalo-media?nhan=10346&anh=0 200 in 7ms (next.js: 0.7ms, application-code: 6ms)
+ POST /api/v1/ops/labels 200 in 55ms (next.js: 0.9ms, application-code: 54ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040&xem=10346 200 in 299ms (next.js: 5ms, proxy.ts: 3ms, application-code: 292ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040 200 in 104ms (next.js: 3ms, proxy.ts: 3ms, application-code: 97ms)
+ GET /api/zalo-media?nhan=10347&anh=0 502 in 43ms (next.js: 0.8ms, application-code: 42ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040 200 in 151ms (next.js: 3ms, proxy.ts: 3ms, application-code: 145ms)
+ GET /api/zalo-media?nhan=10347&anh=0 502 in 24ms (next.js: 0.7ms, application-code: 23ms)
+ POST /api/v1/ops/labels 200 in 44ms (next.js: 0.9ms, application-code: 43ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040&xem=10347 200 in 224ms (next.js: 3ms, proxy.ts: 3ms, application-code: 218ms)
+ GET /api/zalo-media?nhan=10347&anh=0 502 in 7ms (next.js: 0.5ms, application-code: 6ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040 200 in 106ms (next.js: 4ms, proxy.ts: 5ms, application-code: 98ms)
+ POST /api/v1/ops/labels 200 in 41ms (next.js: 1.0ms, application-code: 40ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040&xem=10348 200 in 266ms (next.js: 2.0ms, proxy.ts: 2ms, application-code: 262ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N040 200 in 120ms (next.js: 2ms, proxy.ts: 5ms, application-code: 113ms)

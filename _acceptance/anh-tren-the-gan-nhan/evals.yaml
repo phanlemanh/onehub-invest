@@ -39,7 +39,7 @@ evals:
       - "Bấm ô ảnh, chụp evidence/E4-step2.png: hộp xem lớn hiện trọn ảnh không cắt; bấm Esc, ghi hộp đã đóng"
       - "Tab tới ô ảnh rồi Enter: hộp mở lại, ghi tên ô ảnh; đóng hộp"
       - "Khổ 375, chụp evidence/E4-step3.png, ghi bề rộng trang không tràn ngang"
-      - "Điền đủ biểu mẫu thẻ đầu rồi Lưu; ở màn đối chiếu lượt hai chụp evidence/E4-step4.png: vẫn thấy ảnh. Soi HTML và phản hồi trang trước khi lưu: không có giá trị máy đọc"
+      - "Trước khi lưu: lấy phản hồi HTTP thật của trang bằng curl kèm cookie, đếm bốn mồi seed in (TOAMAYSEED MOIASSERTSEED MOIPROPSEED rent_lt) phải bằng 0; đối chứng: đọc DB thử thấy các mồi đó có trong sale_offer_records, field_assertions, enrichment_proposals, silver_labels của bài đầu. Điền đủ biểu mẫu thẻ đầu rồi Lưu; ở màn đối chiếu lượt hai chụp evidence/E4-step4.png: vẫn thấy ảnh"
     expected: "Bản chạy: cổng 3463, DATABASE_URL của oneinvest_anh_nhan, SNAPSHOTS_DIR thư mục tạm, seed bằng probes/seed.mjs. Mở /ops/labels nhóm có bài chỉ ảnh: thấy ảnh giả, không có dòng link. Bấm ô ảnh: hộp xem lớn hiện trọn ảnh. Esc đóng. Tab tới ô ảnh rồi Enter cũng mở. Lượt hai cũng thấy ảnh. HTML và phản hồi trang không có giá trị mồi của E6. Ảnh chứng ở khổ 1280 và 375."
     evidence_required: [run_id, screenshot, observed]
   - id: E5

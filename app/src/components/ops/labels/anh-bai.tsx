@@ -50,9 +50,10 @@ function OAnh({ src, thuTu, onXem }: { src: string; thuTu: number; onXem: () => 
   const [trangThai, setTrangThai] = useState<"tai" | "co" | "loi">("tai")
   const [lan, setLan] = useState(0)
   const anhRef = useRef<HTMLImageElement>(null)
-  // Ảnh đã có trong bộ nhớ đệm có thể xong trước khi React gắn onLoad.
+  // Ảnh có thể xong hay hỏng trước khi React gắn onLoad, onError: sự kiện đó không phát lại.
   useEffect(() => {
-    if (anhRef.current?.complete && anhRef.current.naturalWidth > 0) setTrangThai("co")
+    const a = anhRef.current
+    if (a?.complete) setTrangThai(a.naturalWidth > 0 ? "co" : "loi")
   }, [lan])
   if (trangThai === "loi") {
     return (

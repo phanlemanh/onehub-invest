@@ -41,6 +41,9 @@ const c = await noiDbThu()
 try {
   await c.query(M075)
   await c.query(`DELETE FROM eval_label_items WHERE lat = $1`, [LAT])
+  await c.query(`DELETE FROM silver_labels WHERE post_id LIKE 'anh-seed-%'`)
+  await c.query(`DELETE FROM enrichment_proposals WHERE offer_id = 'anh-seed-o'`)
+  await c.query(`DELETE FROM sale_offer_records WHERE offer_id = 'anh-seed-o'`)
   await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'anh-seed-%'`)
   await c.query(`DELETE FROM collection_units WHERE group_key = 'anh-seed-g'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@anh-seed.test'`)
@@ -59,6 +62,12 @@ try {
     await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, text, posted_at, media, media_files) VALUES ($1, $2, 'Nhóm thử ảnh', 'anh-seed-g', $3, now(), $4::jsonb, $5::jsonb)`, [post, SNAP, text, media, files])
     await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $2, $3, 'dev', false, 'anh-seed', $4)`, [LAT, post, `h-${id}`, u.unit_code])
   }
+  // Mồi giá trị máy đọc của bài đầu, để E4 soi phản hồi HTTP thật: trước khi lưu không được thấy các chữ này.
+  const DAU = "anh-seed-1-chi-anh"
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('anh-seed-o', 'sale', now(), now(), ARRAY[$1], 'TOAMAYSEED')`, [DAU])
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', 'anh-seed', 'v', 'inquiry', 'rent_lt', true, 'anh-seed')`, [DAU])
+  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at) SELECT 'S03:anh-seed-o', 'block_raw', '"MOIASSERTSEED"', 'inferred', 'e2_llm', now() WHERE NOT EXISTS (SELECT 1 FROM field_assertions WHERE subject_key = 'S03:anh-seed-o')`)
+  await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('anh-seed', 'anh-seed-o', 'block_raw', '"MOIPROPSEED"', 'moi', 'e2_llm', 'review')`)
   const id = `usr_${randomBytes(6).toString("hex")}`
   const token = randomBytes(32).toString("hex")
   await c.query(`INSERT INTO users (id, email, password_hash, role) VALUES ($1, 'ops@anh-seed.test', 'x$y', 'ops')`, [id])
@@ -66,6 +75,7 @@ try {
   fs.mkdirSync(THU_MUC, { recursive: true })
   fs.writeFileSync(path.join(THU_MUC, "cookie.txt"), `oi_session=${token}\n`, { mode: 0o600 })
   console.log(`seed xong: nhom ${u.unit_code}, 5 bai`)
+  console.log("moi may cua bai dau: TOAMAYSEED MOIASSERTSEED MOIPROPSEED rent_lt")
   console.log(`ban chay: cd app && DATABASE_URL=${URL_THU} SNAPSHOTS_DIR=${SNAP_GOC} npm run dev -- -p 3463`)
   console.log(`cookie o ${path.join(THU_MUC, "cookie.txt")}; mo /ops/labels?nhom=${u.unit_code}`)
 } finally {

@@ -26,12 +26,15 @@ for (const [ten, vao, ra, dem, anh] of [
   ["link trung anh va link la", `${U}\nhttps://khac.example.test/x`, "", 1, [{ kind: "url", url: U }]],
   ["www", "Xem www.khac.example.test/a ngay", "Xem ngay", 1, []],
   ["ten mien tran", "Xem khac.com.vn/a ngay", "Xem ngay", 1, []],
+  // Cả lớp đuôi của LINK, từng đuôi một.
+  ...["vn", "com", "net", "org", "me", "link", "ly", "io", "info", "biz"].map((duoi): [string, string, string, number, NguonAnh[]] => [`duoi .${duoi}`, `Xem khac.${duoi}/a ngay`, "Xem ngay", 1, []]),
+  ["ten mien con", "Xem cdn.khac.me/a ngay", "Xem ngay", 1, []],
 ] as [string, string, string, number, NguonAnh[]][]) {
   test(`ANH-AC-1 ${ten}`, () => {
     const kq = chuKhongLink(vao, anh)
     assert.equal(kq.chu, ra)
     assert.equal(kq.soLinkKhac, dem)
-    assert.ok(!/https?:|www\.|example\.test|\.com/.test(kq.chu))
+    assert.ok(!/https?:|www\.|example\.test|\.(?:vn|com|net|org|me|link|ly|io|info|biz)\b/.test(kq.chu))
   })
 }
 
@@ -81,6 +84,7 @@ const BI_MAT = Buffer.from("BI-MAT-KHONG-RA")
 const user = (role: User["role"]): User => ({ id: "1", email: `${role}@x.vn`, plan: "pro", role })
 const OPS = user("ops")
 let tmp = ""
+let cayMoc: string
 let cu: string | undefined
 
 const bamCay = (goc: string): string => {
@@ -105,8 +109,12 @@ before(() => {
   mkdirSync(join(tmp, "ngoai"), { recursive: true })
   writeFileSync(join(tmp, "ngoai", "bi-mat.jpg"), BI_MAT)
   symlinkSync(join(tmp, "ngoai", "bi-mat.jpg"), join(dir, "symlink.jpg"))
+  // Mồi nằm đúng nơi mỗi đường dẫn xấu trỏ tới: bỏ lớp chặn thì ca đỏ vì nhận được mồi.
+  mkdirSync(join(tmp, "snapshots", "hanoi", SNAP, "other"), { recursive: true })
+  writeFileSync(join(tmp, "snapshots", "hanoi", SNAP, "other", "a.jpg"), BI_MAT)
   cu = process.env.SNAPSHOTS_DIR
   process.env.SNAPSHOTS_DIR = join(tmp, "snapshots")
+  cayMoc = bamCay(join(tmp, "snapshots"))
 })
 after(() => {
   if (cu === undefined) delete process.env.SNAPSHOTS_DIR
@@ -156,18 +164,24 @@ for (const [ten, qs, row] of [
   })
 }
 
-for (const [ten, file] of [
-  ["file co ..", "media/../../../ngoai/bi-mat.jpg"],
-  ["file tuyet doi", "/etc/passwd"],
-  ["ngoai thu muc media", "other/a.jpg"],
-  ["symlink ra ngoai", "media/symlink.jpg"],
-] as [string, string][]) {
+for (const [ten, tepCua] of [
+  ["file co ..", () => "media/../../../../ngoai/bi-mat.jpg"],
+  ["file tuyet doi", () => join(tmp, "ngoai", "bi-mat.jpg")],
+  ["ngoai thu muc media", () => "other/a.jpg"],
+  ["symlink ra ngoai", () => "media/symlink.jpg"],
+] as [string, () => string][]) {
   test(`ANH-AC-3 chan duong dan trong DB: ${ten}`, async () => {
-    const r = await goi("nhan=1&anh=0", bai([{ file, snapshotId: SNAP }]))
-    assert.ok(r.status === 403 || r.status === 404, `status ${r.status}`)
+    const r = await goi("nhan=1&anh=0", bai([{ file: tepCua(), snapshotId: SNAP }]))
+    assert.equal(r.status, 403)
     assert.ok(!Buffer.from(await r.arrayBuffer()).includes(BI_MAT))
   })
 }
+
+test("ANH-AC-3 doi chung: moi cua cac ca chan co that tren dia", () => {
+  assert.deepEqual(readFileSync(join(tmp, "ngoai", "bi-mat.jpg")), BI_MAT)
+  assert.deepEqual(readFileSync(join(tmp, "snapshots", "hanoi", SNAP, "other", "a.jpg")), BI_MAT)
+  assert.deepEqual(readFileSync(join(tmp, "snapshots", "hanoi", SNAP, "media", "../../../../ngoai/bi-mat.jpg")), BI_MAT)
+})
 
 for (const [ten, u] of [["vai nguoi xem", user("viewer")], ["chua dang nhap", null]] as [string, User | null][]) {
   test(`ANH-AC-3 chan: ${ten}`, async () => {
@@ -182,17 +196,19 @@ test("ANH-AC-3 bang vang tren cloud tra 404", async () => {
   assert.equal(r.status, 404)
 })
 
-test("ANH-AC-3 cay khong doi qua moi ca, doi chung ghi them thi phep bam do", async () => {
+// Ca này đứng sau mọi ca ANH-AC-3 và so với mốc của `before`, nên phủ cả các ca trên. node:test chạy tuần tự trong một tệp.
+test("ANH-AC-3 cay khong doi qua moi ca, doi chung ghi them thi phep bam do", () => {
   const goc = join(tmp, "snapshots")
-  const truoc = bamCay(goc)
-  await goi("nhan=1&anh=0", bai(TEP))
-  await goi("nhan=1&anh=0", bai([{ url: U }]), OPS, async () => new Response(JPG, { headers: { "content-type": "image/jpeg" } }))
-  await goi("nhan=1&anh=0", bai([{ file: "media/../x.jpg", snapshotId: SNAP }]))
-  assert.equal(bamCay(goc), truoc)
+  assert.equal(bamCay(goc), cayMoc)
   const them = join(goc, "hanoi", SNAP, "media", "them.jpg")
   writeFileSync(them, JPG)
-  assert.notEqual(bamCay(goc), truoc)
+  assert.notEqual(bamCay(goc), cayMoc)
   rmSync(them)
+})
+
+test("ANH-AC-3 lay ho khong ghi dia: lay-anh-goc khong dung fs", () => {
+  const nguon = readFileSync(join(import.meta.dirname, "../src/lib/ops/lay-anh-goc.ts"), "utf8")
+  assert.doesNotMatch(nguon, /from "(?:node:)?fs(?:\/promises)?"|require\(/)
 })
 
 // Render thành phần ảnh: nạp trong jsdom vì Base UI đọc `document` lúc nạp.
@@ -226,6 +242,28 @@ test("ANH-AC-5 truoc khi tai co o cho, tai xong het o cho, doi chung", async () 
   assert.ok(d.q("[data-labels-anh-tai]"), "phai co o cho")
   await d.ban(d.q("img")!, "load")
   assert.equal(d.q("[data-labels-anh-tai]"), null)
+  await d.dong()
+})
+
+test("ANH-AC-5 anh hong truoc khi React gan su kien van hien cau loi", async () => {
+  const d = await mo()
+  const proto = d.dom.window.HTMLImageElement.prototype
+  Object.defineProperty(proto, "complete", { configurable: true, get: () => true })
+  await d.render({ anh: [DUONG], soLinkKhac: 0, coChu: false })
+  assert.equal(d.q("[data-labels-anh-tai]"), null)
+  assert.match(d.q("[data-labels-anh-loi]")!.textContent!, /Ảnh không tải được/)
+  await d.dong()
+})
+
+test("ANH-AC-5 doi chung: anh xong truoc khi React gan su kien thi hien anh, khong bao loi", async () => {
+  const d = await mo()
+  const proto = d.dom.window.HTMLImageElement.prototype
+  Object.defineProperty(proto, "complete", { configurable: true, get: () => true })
+  Object.defineProperty(proto, "naturalWidth", { configurable: true, get: () => 480 })
+  await d.render({ anh: [DUONG], soLinkKhac: 0, coChu: false })
+  assert.equal(d.q("[data-labels-anh-loi]"), null)
+  assert.equal(d.q("[data-labels-anh-tai]"), null)
+  assert.ok(d.q("img"))
   await d.dong()
 })
 
