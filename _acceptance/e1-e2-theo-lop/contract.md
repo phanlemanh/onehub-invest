@@ -5,8 +5,10 @@ slug: e1-e2-theo-lop
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-05-e1-e2-theo-lop-design.md
+approved_by: Mạnh
+approved_at: 2026-11-05
 ---
 
 # Acceptance Contract: e1-e2-theo-lop
