@@ -1,0 +1,8 @@
+# Driver ego-browser khong co duong doc network; day la trich nhat ky may chu dev :3463 (4xx/5xx) + curl
+ GET /api/zalo-media?nhan=10614&anh=3 404 in 6ms (next.js: 0.5ms, application-code: 5ms)
+ GET /api/v1/ops/labels/10614/review 403 in 371ms (next.js: 365ms, application-code: 6ms)
+ GET /ops/login 404 in 373ms (next.js: 266ms, proxy.ts: 5ms, application-code: 103ms)
+ POST /api/v1/ops/labels 400 in 26ms (next.js: 14ms, application-code: 13ms)
+ POST /api/v1/ops/labels 400 in 15ms (next.js: 1.0ms, application-code: 14ms)
+# curl: GET /api/v1/ops/labels/10614/review -> 403 (route chi nhan POST); GET /api/zalo-media?nhan=10614&anh=3 -> 404 (ngoai cum 3 anh)
+# tong request /api/zalo-media: 8

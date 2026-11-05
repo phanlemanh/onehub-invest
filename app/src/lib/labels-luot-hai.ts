@@ -140,7 +140,7 @@ export type DongTruongHop = {
 export async function bangTruongHop(lat: string, q: Q = pool): Promise<DongTruongHop[]> {
   const { rows } = await q.query(
     `WITH i AS (
-       SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL
+       SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL AND (ghep->>'trung_voi') IS NULL
      ), ten AS (
        SELECT DISTINCT ON (i.stratum) i.stratum, p.group_name
        FROM i JOIN stg_zalo_posts p ON p.post_id = i.ref_id

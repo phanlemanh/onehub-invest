@@ -29,7 +29,7 @@ const quet = (goc) => { const chu = boTenMa(goc); return [...mien].filter((m) =>
   + [...tenTran].filter((m) => new RegExp(`(?<![\\p{L}\\p{N}_/.-])${m}(?![\\p{L}\\p{N}_-])`, "u").test(chu)).length }
 const coso = git("merge-base", "HEAD", "origin/main").trim()
 const them = git("diff", "-U0", coso, "HEAD", "--", ".", ":(exclude)LO-TRINH.html", ":(exclude)PRODUCT-MAP.md").split("\n").filter((l) => l.startsWith("+") && !l.startsWith("+++")).join("\n").toLowerCase()
-kiem(quet(them) === 0, "dong them khong co ten nguon", `loi ${quet(them)} ten trong dong them`)
+kiem(them.length > 5000 && quet(them) === 0, "dong them khong co ten nguon", `loi ${quet(them)} ten trong dong them, dai ${them.length}`)
 const goc = path.join(ROOT, "_acceptance", SLUG)
 const tepHoSo = []
 const di = (d) => { for (const t of fs.readdirSync(d)) { const p = path.join(d, t); if (fs.statSync(p).isDirectory()) di(p); else tepHoSo.push(p) } }
@@ -50,8 +50,10 @@ const tepMoi = ["seed.mjs", "nap.mjs"].map((f) => fs.readFileSync(path.join(goc,
 const tenMayLa = (chu) => [...chu.matchAll(/https?:\/\/([a-z0-9.-]+)|(?<![a-z0-9@.-])((?:[a-z0-9-]+\.)+(?:vn|com|net|org|me|link|ly|io|info|biz))(?![a-z0-9-])/gi)].map((m) => (m[1] ?? m[2]).toLowerCase()).filter((h) => !h.endsWith("example.test") && h !== "localhost" && h !== "www.w3.org")
 kiem(tenMayLa(tepMoi).length === 0, "fixture chi example.test", `loi fixture co ${tenMayLa(tepMoi).length} ten may khac`)
 kiem(tenMayLa("Xem cdn.that.com/a").length === 1 && tenMayLa("https://that.vn/a").length === 1, "doi chung: fixture co ten mien khac bi bat", "loi doi chung fixture")
-const doi = git("diff", "--name-only", coso, "HEAD").split("\n").filter((f) => /^collector\/|^\.claude\/hooks\/|^\.claude\/settings/.test(f))
-kiem(doi.length === 0, "collector hook khong doi", `loi lan thu doi ${doi.length} tep`)
+const laLanThu = (f) => /^collector\/|^\.claude\/hooks\/|^\.claude\/settings/.test(f)
+const tepDoi = git("diff", "--name-only", coso, "HEAD").split("\n").filter(Boolean)
+kiem(tepDoi.length > 10 && tepDoi.filter(laLanThu).length === 0, "collector hook khong doi", `loi lan thu doi ${tepDoi.filter(laLanThu).length} tep`)
+kiem(["collector/src/a.ts", ".claude/hooks/x.sh"].every(laLanThu) && !laLanThu("pipeline/a.mjs"), "doi chung: tep lan thu bi bat", "loi doi chung lan thu")
 if (loi.length) process.exit(1)
 console.log("KIN OK")
 process.exit(0)

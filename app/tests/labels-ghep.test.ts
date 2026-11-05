@@ -167,7 +167,9 @@ async function mo() {
   const root = createRoot(dom.window.document.getElementById("root")!)
   const q = (s: string) => dom.window.document.querySelector(s) as unknown as HTMLElement | null
   const render = (p: Parameters<typeof AnhBai>[0]) => act(async () => { root.render(createElement(AnhBai, p)) })
-  return { q, render, dong: () => act(async () => root.unmount()) }
+  const bam = (el: Element) => act(async () => { el.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })) })
+  const phim = (key: string) => act(async () => { dom.window.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key })) })
+  return { q, render, bam, phim, dom, dong: () => act(async () => root.unmount()) }
 }
 const DUONG = ["/api/zalo-media?nhan=1&anh=0", "/api/zalo-media?nhan=1&anh=1"]
 
@@ -186,3 +188,22 @@ test("GHEP-AC-4 nhan ghep, co nhieu tin chu, cau khong tin chu, bai khong ghep k
   assert.equal(d.q("[data-labels-ghep-khong-chu]"), null)
   await d.dong()
 })
+
+test("GHEP-AC-4 phim mui ten chuyen anh ke ca khi tieu diem da roi khoi hop, dung o dau mut", async () => {
+  const d = await mo()
+  await d.render({ anh: [...DUONG, "/api/zalo-media?nhan=1&anh=2"], soLinkKhac: 0, coChu: true, ghep: { suyRa: true, soChuGan: 1, khongChu: false } })
+  await d.bam(d.q('[aria-label="Xem lớn ảnh 1"]')!)
+  const tieuDe = () => d.dom.window.document.querySelector("[data-labels-anh-lon] [data-slot=dialog-title]")?.textContent ?? d.q("[data-labels-anh-lon]")?.textContent ?? ""
+  assert.match(tieuDe(), /Ảnh 1\/3/)
+  ;(d.dom.window.document.activeElement as unknown as HTMLElement | null)?.blur?.()
+  await d.phim("ArrowLeft")
+  assert.match(tieuDe(), /Ảnh 1\/3/, "đầu mút không lùi nữa")
+  await d.phim("ArrowRight")
+  await d.phim("ArrowRight")
+  await d.phim("ArrowRight")
+  assert.match(tieuDe(), /Ảnh 3\/3/, "đầu mút không tiến nữa")
+  await d.phim("ArrowLeft")
+  assert.match(tieuDe(), /Ảnh 2\/3/, "sau đầu mút phím vẫn chạy")
+  await d.dong()
+})
+

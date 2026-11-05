@@ -32,7 +32,7 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; trên DB thử, `ghep` sinh bằng cách chạy label-ghep.mjs thật, 'ok ghep tu ben ghi' (đối chứng: đổi tên một khoá của bên ghi thì phép đọc đỏ); gọi tinKe thật: 'ok the ghep co chu tin chu', 'ok the ghep du anh', 'ok ghep rong giong ban truoc' (so từng trường với hàm tinKe ở commit mốc), 'ok the khong co ma bai'."
+    expected: "exit 0; trên DB thử, `ghep` sinh bằng cách chạy label-ghep.mjs thật, 'ok ghep tu ben ghi' (đối chứng: đổi tên một khoá của bên ghi thì phép đọc đỏ); gọi tinKe thật: 'ok the ghep co chu tin chu', 'ok the ghep du anh', 'ok ghep rong giong ban truoc' (so từng trường với hàm tinKe ở commit mốc), 'ok the khong co ma bai', 'ok ma tran sau loai bai', 'ok thu tu anh qua duong doc that'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-4
@@ -96,7 +96,7 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; 'ok dong trung khong hien', 'ok tien do tru dong trung', 'ok so dong lat khong doi', 'ok lat ghep rong tinh nhu cu'. Chiều đỏ: bỏ cột trung_voi của một dòng thì số thẻ tăng đúng 1."
+    expected: "exit 0; 'ok dong trung khong hien', 'ok tien do tru dong trung', 'ok bang truong hop tru dong trung', 'ok so dong lat khong doi', 'ok lat ghep rong tinh nhu cu'. Chiều đỏ: bỏ cột trung_voi của một dòng thì số thẻ tăng đúng 1."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-9

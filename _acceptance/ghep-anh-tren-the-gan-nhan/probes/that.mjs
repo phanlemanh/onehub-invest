@@ -44,8 +44,14 @@ kiem(items.length - so.trung === 356, "356 don vi", `loi don vi ${items.length -
 kiem(so.lon === 21, "cum lon nhat 21", `loi cum lon nhat ${so.lon}`)
 // Cụm có bài ảnh nào nhiều tin chữ gần thì dòng đại diện phải mang cờ.
 const daiDien = ds.filter((x) => x.g?.chu_ref && !x.g.trung_voi)
-const lech = daiDien.filter((x) => x.g.so_chu_gan < 2 && ds.some((y) => y.g?.chu_ref === x.g.chu_ref && y.g.so_chu_gan > 1))
-kiem(lech.length === 0, "cum lech co co", `loi ${lech.length} the mat co`)
+// Tính lại độc lập từ từng bài ảnh của cụm, không đọc số đã ghi.
+const lonNhat = (x) => Math.max(...x.g.anh_refs.map((a) => soChuGan(chu, theoId.get(a))))
+const soLech = (ds) => ds.filter((x) => (lonNhat(x) > 1) !== (x.g.so_chu_gan > 1)).length
+kiem(soLech(daiDien) === 0, "cum lech co co", `loi ${soLech(daiDien)} the mat co`)
+const mauCo = daiDien.find((x) => lonNhat(x) > 1)
+kiem(soLech([{ ...mauCo, g: { ...mauCo.g, so_chu_gan: 1 } }]) === 1, "doi chung: the mat co thi phep so do", "loi doi chung phep so co")
+// Thẻ chỉ có cờ nhờ lấy số lớn nhất trên cụm: nếu tính theo bài của dòng thì các thẻ này mất cờ.
+console.log(`the chi co co nho cum ${daiDien.filter((x) => laChiAnh(x.p?.text) && soChuGan(chu, x.p) < 2 && lonNhat(x) > 1).length}`)
 console.log(`the co co ${daiDien.filter((x) => x.g.so_chu_gan > 1).length}`)
 const tepDt = path.join(ROOT, "_acceptance/ghep-anh-tren-the-gan-nhan/probes/doc-tay.json")
 const bam = createHash("sha256").update(fs.readFileSync(tepDt)).digest("hex")

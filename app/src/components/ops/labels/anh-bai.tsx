@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, ImageOffIcon } from "lucide-react"
 
 import { Badge } from "@/components/reui/badge"
@@ -18,7 +18,18 @@ import type { GhepHien } from "@/lib/labels-anh"
  */
 export function AnhBai({ anh, soLinkKhac, coChu, ghep = null }: { anh: string[]; soLinkKhac: number; coChu: boolean; ghep?: GhepHien | null }) {
   const [xem, setXem] = useState<number | null>(null)
-  const chuyen = (buoc: number) => setXem((i) => (i === null ? i : Math.min(anh.length - 1, Math.max(0, i + buoc))))
+  const chuyen = useCallback((buoc: number) => setXem((i) => (i === null ? i : Math.min(anh.length - 1, Math.max(0, i + buoc)))), [anh.length])
+  const dangXem = xem !== null
+  // Nghe ở window: nút đang giữ tiêu điểm bị tắt khi chạm đầu mút thì tiêu điểm rơi ra ngoài hộp.
+  useEffect(() => {
+    if (!dangXem) return
+    const nghe = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") chuyen(-1)
+      if (e.key === "ArrowRight") chuyen(1)
+    }
+    window.addEventListener("keydown", nghe)
+    return () => window.removeEventListener("keydown", nghe)
+  }, [dangXem, chuyen])
   if (anh.length === 0 && soLinkKhac === 0) {
     return coChu ? null : <p className="text-muted-foreground text-sm" data-labels-anh-trong="">Bài không có chữ và không có ảnh.</p>
   }
@@ -47,14 +58,7 @@ export function AnhBai({ anh, soLinkKhac, coChu, ghep = null }: { anh: string[];
       ) : null}
       <Dialog open={xem !== null} onOpenChange={(o) => !o && setXem(null)}>
         {xem !== null ? (
-          <DialogContent
-            className="sm:max-w-3xl"
-            data-labels-anh-lon=""
-            onKeyDown={(e) => {
-              if (e.key === "ArrowLeft") chuyen(-1)
-              if (e.key === "ArrowRight") chuyen(1)
-            }}
-          >
+          <DialogContent className="sm:max-w-3xl" data-labels-anh-lon="">
             <DialogHeader>
               <DialogTitle>Ảnh {fmtInt(xem + 1)}/{fmtInt(anh.length)} của bài</DialogTitle>
               <DialogDescription>Đọc chữ trên ảnh rồi đóng để gắn nhãn tiếp.</DialogDescription>

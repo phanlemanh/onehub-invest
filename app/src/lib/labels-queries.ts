@@ -48,7 +48,7 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
                         FROM eval_labels WHERE item_id = i.item_id) n ON true
      JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id FROM stg_zalo_posts
                    WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
-     WHERE i.lat = $2 AND (i.ghep->>'trung_voi') IS NULL AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP}
+     WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP} AND (i.ghep->>'trung_voi') IS NULL
      ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.item_id
      LIMIT 1`
   // Câu không nhóm giữ nguyên hai tham số: phép đo mù của PL7 rút chính câu này để chạy lại.

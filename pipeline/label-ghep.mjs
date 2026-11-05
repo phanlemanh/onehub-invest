@@ -2,7 +2,7 @@
 // label-ghep.mjs — hồ sơ ghep-anh-tren-the-gan-nhan: ghi cột `eval_label_items.ghep` của một lát.
 // node pipeline/label-ghep.mjs --lat <lát> [--thu] [--lam-lai] [--db-that]
 // Ghi một lần để hai người gắn cùng thấy một cụm dù sau đó thu thêm bài: lát đã có ghép thì giữ, muốn tính lại phải `--lam-lai`.
-// Chỉ đọc và ghi cột này, không đổi dòng mẫu. DB `oneinvest` phải khai `--db-that`.
+// Chỉ đọc và ghi cột này, không đổi dòng mẫu. Đích không phải DB thử thì phải khai `--db-that`.
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -11,6 +11,12 @@ import { ghepChoMau } from "./lib/ghep-mau.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+
+/** DB thử: máy này, tên `oneinvest_<việc>` (db/db-thu.sh). */
+export function laDbThu(url) {
+  const u = new URL(url);
+  return ["localhost", "127.0.0.1"].includes(u.hostname) && /^\/oneinvest_\w+$/.test(u.pathname);
+}
 
 // jsonb không giữ thứ tự khoá.
 const giongNhau = (a, b) => {
@@ -46,8 +52,8 @@ async function main() {
   const lat = i >= 0 ? argv[i + 1] : null;
   if (!lat) throw new Error("label-ghep: thiếu --lat");
   const thu = argv.includes("--thu");
-  if (new URL(DATABASE_URL).pathname === "/oneinvest" && !thu && !argv.includes("--db-that")) {
-    throw new Error("label-ghep: đích là DB oneinvest — khai --db-that nếu chủ ý ghi DB thật");
+  if (!laDbThu(DATABASE_URL) && !thu && !argv.includes("--db-that")) {
+    throw new Error("label-ghep: đích không phải DB thử — khai --db-that nếu chủ ý ghi DB thật");
   }
   const client = new pg.Client({ connectionString: DATABASE_URL });
   await client.connect();

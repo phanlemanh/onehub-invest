@@ -17,7 +17,8 @@ const { renderToStaticMarkup } = await import(pathToFileURL(tuApp.resolve("react
 const { taoNguoi } = await nap("app/tests/helpers/phien-thu.ts")
 const { LabelsContent } = await nap("app/src/components/ops/labels/labels-content.tsx")
 const { tinKe, baiDeGhi, tienDo } = await nap("app/src/lib/labels-queries.ts")
-const { doiChieu, ghiTruongHop } = await nap("app/src/lib/labels-luot-hai.ts")
+const { doiChieu, ghiTruongHop, bangTruongHop } = await nap("app/src/lib/labels-luot-hai.ts")
+const { serveZaloMedia } = await nap("app/src/lib/ops/zalo-media.ts")
 const { docGhep, ghepHien } = await nap("app/src/lib/labels-anh.ts")
 const nhanRoute = await nap("app/src/app/api/v1/ops/labels/route.ts")
 const { ghepLat } = await nap("pipeline/label-ghep.mjs")
@@ -139,7 +140,9 @@ try {
 
   // Mồi giá trị máy ở mọi bài của cụm và tin chữ.
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-nap-o', 'sale', now(), now(), ARRAY['ghep-nap-t1'], 'TOAMAYGHEP')`)
-  for (const id of ["t1", "a1", "a2", "a3"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', 'ghep-nap', 'v', 'inquiry', 'rent_lt', true, 'ghep-nap')`, [`ghep-nap-${id}`])
+  // AI đọc của tin chữ khác của các bài ảnh, để phân biệt đọc đúng bài nào.
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'ghep-nap-t1', 'h', 'ghep-nap', 'v', 'inquiry', 'rent_lt', true, 'ghep-nap')`)
+  for (const id of ["a1", "a2", "a3"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', 'ghep-nap', 'v', 'not_listing', 'sale', true, 'ghep-nap')`, [`ghep-nap-${id}`])
   await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at) SELECT 'S03:ghep-nap-o', 'block_raw', '"MOI-ASSERT-GHEP"', 'inferred', 'e2_llm', now() WHERE NOT EXISTS (SELECT 1 FROM field_assertions WHERE subject_key = 'S03:ghep-nap-o')`)
   await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('ghep-nap', 'ghep-nap-o', 'block_raw', '"MOI-PROP-GHEP"', 'moi', 'e2_llm', 'review')`)
   const { rows: [moi] } = await c.query(`SELECT (SELECT count(*) FROM silver_labels WHERE post_id LIKE 'ghep-nap-%')::int AS s, (SELECT count(*) FROM field_assertions WHERE subject_key = 'S03:ghep-nap-o' AND value::text LIKE '%MOI-ASSERT-GHEP%')::int AS f, (SELECT count(*) FROM enrichment_proposals WHERE offer_id = 'ghep-nap-o' AND value::text LIKE '%MOI-PROP-GHEP%')::int AS e`)
@@ -175,6 +178,39 @@ try {
   kiem(trang.includes("CHUGOC-GHEP"), "doi chung: trang co chu tin chu", "loi trang khong co chu seed")
   kiem(coMoi(`${chuoi}TOAMAYGHEP`).length === 1, "doi chung: chen gia tri may thi bat")
 
+  // E4, AC-3: ma trận đủ sáu loại bài qua tinKe thật, mỗi loại một tầng; bài thiếu người gửi có sender rỗng.
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, sender_id, sender_name, text, posted_at, media) VALUES ('ghep-nap-a7', $1, 'Nhóm nạp ghép', 'ghep-nap-g', NULL, 'Người thử', $2, $3, $4::jsonb)`, [SNAP, U("a7"), new Date(goc + 6000000), JSON.stringify([{ url: U("a7") }])])
+  const MT = [
+    ["GM1", "a2", "CHUGOC-GHEP", 3, { suyRa: true, soChuGan: 1, khongChu: false }],
+    ["GM2", "a4", "Bán 1PN", 1, { suyRa: true, soChuGan: 2, khongChu: false }],
+    ["GM3", "a5", "", 1, { suyRa: false, soChuGan: 0, khongChu: true }],
+    ["GM4", "t5", "Có chữ có cụm", 1, { suyRa: true, soChuGan: 1, khongChu: false }],
+    ["GM5", "t4", "Không có ảnh", 0, null],
+    ["GM6", "a7", "", 1, { suyRa: false, soChuGan: 0, khongChu: true }],
+  ]
+  const LAT_MT = "ghep-nap-mt"
+  const dongMt = {}
+  for (const [tang, ref] of MT) {
+    const { rows: [r] } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $2, $3, 'dev', false, 'ghep-nap', $4) RETURNING item_id::int`, [LAT_MT, `ghep-nap-${ref}`, `m-${ref}`, tang])
+    dongMt[ref] = r.item_id
+  }
+  await ghepLat(c, { lat: LAT_MT })
+  let matranDung = 0
+  for (const [tang, ref, chu, nAnh, cua] of MT) {
+    const t = await tinKe(a.id, LAT_MT, c, tang)
+    const dung = t && t.text.startsWith(chu) && t.anh.length === nAnh && JSON.stringify(t.ghep) === JSON.stringify(cua) && !coMaBai(JSON.stringify({ ...t, lat: null }))
+    if (dung) matranDung++
+    else console.log(`FAIL ma tran ${tang}: ${t?.text?.slice(0, 20)} ${t?.anh.length} ${JSON.stringify(t?.ghep)}`)
+  }
+  kiem(matranDung === MT.length && MT.length === 6, "ma tran sau loai bai", `loi ma tran ${matranDung}/${MT.length}`)
+  // Thứ tự ảnh qua đường đọc thật: route gọi lấy hộ đúng thứ tự thời gian của cụm.
+  const OPS = { id: "x", email: "x@ghep-nap.test", plan: "pro", role: "ops" }
+  const daGoi = []
+  const layGia = async (url) => { daGoi.push(url); return new Response("x", { status: 200, headers: { "content-type": "image/jpeg" } }) }
+  for (let i = 0; i < 3; i++) await serveZaloMedia(new Request(`http://localhost/api/zalo-media?nhan=${dongMt.a2}&anh=${i}`), OPS, { layAnh: layGia })
+  const ngoai = await serveZaloMedia(new Request(`http://localhost/api/zalo-media?nhan=${dongMt.a2}&anh=3`), OPS, { layAnh: layGia })
+  kiem(JSON.stringify(daGoi) === JSON.stringify([U("a1"), U("a2"), U("a3")]) && ngoai.status === 404, "thu tu anh qua duong doc that", `loi thu tu ${daGoi.length} ${ngoai.status}`)
+
   // E9: lưu qua route thật.
   const KN = { not_stated: true }
   const chuB = (value) => ({ value, basis: "chu_bai" })
@@ -190,10 +226,10 @@ try {
   kiem(r2.status === 200, "nguoi hai luu duoc", `loi nguoi hai ${r2.status}`)
 
   const d = await doiChieu(a.id, dong.a1, c)
-  kiem(d.boDoc?.building?.toLowerCase() === "toamayghep" && d.aiDoc?.kind === "rent_lt", "doiChieu doc theo tin chu ghep", `loi doiChieu ${JSON.stringify(d.boDoc)?.slice(0, 80)}`)
+  kiem(d.boDoc?.building?.toLowerCase() === "toamayghep" && d.aiDoc?.kind === "rent_lt" && d.aiDoc?.listing_intent === "inquiry", "doiChieu doc theo tin chu ghep", `loi doiChieu ${JSON.stringify(d.aiDoc)}`)
   kiem(!coMaBai(JSON.stringify(d)) && !coLink(JSON.stringify(d)), "doiChieu khong co ma bai", "loi doiChieu co ma bai")
   const dMoc = await doiChieuMoc(a.id, dong.a1, c)
-  kiem(dMoc.boDoc === null, "doi chung: moc khong thay bo doc o bai anh", "loi moc thay bo doc")
+  kiem(dMoc.boDoc === null && dMoc.aiDoc?.listing_intent === "not_listing", "doi chung: moc doc bai anh, khac tin chu", `loi moc ${JSON.stringify(dMoc.aiDoc)}`)
   await post(a, dong.t4, DU_T4(DU))
   const dk = await doiChieu(a.id, dong.t4, c)
   const dkMoc = await doiChieuMoc(a.id, dong.t4, c)
@@ -213,6 +249,8 @@ try {
   const td = await tienDo(a.id, LAT, c, u.unit_code)
   kiem(dem.n === 5 && td.tong === 4, "tien do tru dong trung", `loi tien do ${td.tong}/${dem.n}`)
   kiem(dem.n === 5, "so dong lat khong doi", `loi so dong ${dem.n}`)
+  const bang = (await bangTruongHop(LAT, c)).find((x) => x.unitCode === u.unit_code || x.stratum === u.unit_code)
+  kiem(bang?.tong === 4, "bang truong hop tru dong trung", `loi bang ${bang?.tong}`)
   const daThay = []
   for (const nguoi of [await taoNguoi(c, "ops", { email: "x@ghep-nap.test" })]) {
     for (let i = 0; i < 6; i++) {
@@ -234,10 +272,16 @@ try {
   await c.end()
 }
 function DU_T4(du) { return { ...du, area_m2: { not_stated: true }, kind: { value: "sale", basis: "chu_bai" } } }
-const tuChoi = spawnSync("node", ["--import", "tsx", fileURLToPath(import.meta.url)], { cwd: path.join(ROOT, "app"), env: { ...process.env, GHEP_DB: "oneinvest" }, encoding: "utf8" })
-kiem(tuChoi.status === 3 && tuChoi.stdout.includes("tu choi"), "doi chung: tro vao oneinvest bi tu choi", `loi tu choi: ${tuChoi.status}`)
-const lenh = spawnSync("node", [path.join(ROOT, "pipeline/label-ghep.mjs"), "--lat", "khong-co"], { env: { ...process.env, DATABASE_URL: `${SERVER}/oneinvest` }, encoding: "utf8" })
-kiem(lenh.status === 1 && lenh.stderr.includes("--db-that"), "doi chung: lenh ghep tu choi DB that khi chua khai", `loi lenh ghep: ${lenh.status}`)
+for (const ten of ["oneinvest", "oneinvest_khac", "postgres"]) {
+  const r = spawnSync("node", ["--import", "tsx", fileURLToPath(import.meta.url)], { cwd: path.join(ROOT, "app"), env: { ...process.env, GHEP_DB: ten }, encoding: "utf8" })
+  kiem(r.status === 3 && r.stdout.includes("tu choi"), ten === "oneinvest" ? "doi chung: tro vao oneinvest bi tu choi" : `doi chung: tro vao ${ten} bi tu choi`, `loi tu choi ${ten}: ${r.status}`)
+}
+for (const dich of [`${SERVER}/oneinvest`, `${SERVER}/postgres`, "postgres://db.example.test:5432/oneinvest_ghep_nhan"]) {
+  const r = spawnSync("node", [path.join(ROOT, "pipeline/label-ghep.mjs"), "--lat", "khong-co"], { env: { ...process.env, DATABASE_URL: dich }, encoding: "utf8" })
+  kiem(r.status === 1 && r.stderr.includes("--db-that"), `doi chung: lenh ghep tu choi ${new URL(dich).pathname}`, `loi lenh ghep ${r.status}`)
+}
+const lanhDb = spawnSync("node", [path.join(ROOT, "pipeline/label-ghep.mjs"), "--lat", "khong-co"], { env: { ...process.env, DATABASE_URL: URL_THU }, encoding: "utf8" })
+kiem(lanhDb.status === 0, "doi chung: lenh ghep chay duoc tren DB thu", `loi DB thu ${lanhDb.status}`)
 const vetSau = coVet(await dauVet(that))
 kiem(vetTruoc.length === 0 && vetSau.length === 0, "oneinvest khong doi", `loi oneinvest co dau vet: ${vetTruoc} ${vetSau}`)
 await that.end()
