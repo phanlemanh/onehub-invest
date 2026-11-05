@@ -24,14 +24,18 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const WATCHDOG = join(ROOT, "scripts/zalo-watchdog.sh");
-const STUB_NAMES = ["launchctl", "pkill", "pgrep", "osascript", "curl", "sleep"];
-const WD_LINE = 'L4D_AGENTS_DIR="$HOME/.openclaw/agents"';
-// SPL (0511-16 điểm nhỏ): tên thật của nguồn chỉ ở ĐÚNG một hằng — mọi chỗ
-// khác ghép chuỗi từ đây.
+// SPL (0511-16 điểm nhỏ + 0511-18 điểm 1): tên thật của nguồn chỉ ở ĐÚNG một
+// hằng S03 — mọi chỗ khác (kể cả tên tệp bộ canh, tên marker) ghép từ đây.
 const S03 = "zalo";
 const S03U = `${S03}user`;
 const S03LOG = `[${S03U}]`;
+const WD_FILE = `${S03}-watchdog.sh`;   // tên tệp bộ canh (cố định trên đĩa)
+const WD_LOG = `${S03}-watchdog.log`;
+const WD_ALERTS = `${S03}-watchdog-alerts.log`;
+const WD_MARK_DIR = `${S03}-watchdog-agentdb.d`;
+const WATCHDOG = join(ROOT, "scripts", WD_FILE);
+const STUB_NAMES = ["launchctl", "pkill", "pgrep", "osascript", "curl", "sleep"];
+const WD_LINE = 'L4D_AGENTS_DIR="$HOME/.openclaw/agents"';
 
 let failures = 0;
 function check(ok, line) {
@@ -98,15 +102,15 @@ function makeSandbox(tag) {
   if (a.length !== b.length || a.filter((l, i) => l !== b[i]).length !== 3) {
     console.error("bản chép: phải đổi đúng 3 dòng"); process.exit(2);
   }
-  writeFileSync(join(repo, "scripts/zalo-watchdog.sh"), copy);
-  chmodSync(join(repo, "scripts/zalo-watchdog.sh"), 0o755);
+  writeFileSync(join(repo, "scripts", WD_FILE), copy);
+  chmodSync(join(repo, "scripts", WD_FILE), 0o755);
   const agentsDir = join(home, ".openclaw/agents");
   mkdirSync(agentsDir, { recursive: true });
   return { S, repo, home, stub, calls, agentsDir };
 }
 
 function runWd(sb) {
-  const r = spawnSync("bash", [join(sb.repo, "scripts/zalo-watchdog.sh")], {
+  const r = spawnSync("bash", [join(sb.repo, "scripts", WD_FILE)], {
     env: {
       ...process.env,
       HOME: sb.home,
@@ -121,10 +125,10 @@ function runWd(sb) {
   return { code: r.status, out: (r.stdout || "") + (r.stderr || "") };
 }
 const killed = (sb) => read(sb.calls).includes("launchctl bootout");
-const okLog = (sb) => read(join(sb.repo, "pipeline/logs/zalo-watchdog.log")).trim().split("\n").pop() || "";
-const marker = (sb, ag) => read(join(sb.repo, "pipeline/logs/zalo-watchdog-agentdb.d", ag)).trim();
-const alerts = (sb) => read(join(sb.repo, "pipeline/logs/zalo-watchdog-alerts.log"));
-const firstFlag = (sb) => existsSync(join(sb.repo, "pipeline/logs/zalo-watchdog-agentdb.d/.first-done"));
+const okLog = (sb) => read(join(sb.repo, "pipeline/logs", WD_LOG)).trim().split("\n").pop() || "";
+const marker = (sb, ag) => read(join(sb.repo, "pipeline/logs", WD_MARK_DIR, ag)).trim();
+const alerts = (sb) => read(join(sb.repo, "pipeline/logs", WD_ALERTS));
+const firstFlag = (sb) => existsSync(join(sb.repo, "pipeline/logs", WD_MARK_DIR, ".first-done"));
 
 const MS_3010 = (h, m) => Date.UTC(2026, 9, 30, h - 7, m); // 30/10 giờ VN → ms
 const EV8 = [MS_3010(9, 52), MS_3010(9, 52), MS_3010(9, 53), MS_3010(9, 53), MS_3010(9, 53), MS_3010(9, 53), MS_3010(9, 53), MS_3010(9, 53)];
@@ -285,7 +289,7 @@ function holdExclusive(path, ms) {
   const row = dbNow.prepare("SELECT COUNT(*) || '|' || COALESCE(MAX(created_at),0) FROM transcript_events").get();
   dbNow.close();
   const vals = Object.values(row)[0];
-  writeFileSync(join(sb.repo, "pipeline/logs/zalo-watchdog-agentdb.d/main"), String(vals) + "\n");
+  writeFileSync(join(sb.repo, "pipeline/logs", WD_MARK_DIR, "main"), String(vals) + "\n");
   rmSync(sb.calls); // calls.log tích lũy từ các lần kill trước — xoá để kiểm lượt này
   const r4 = runWd(sb);
   check(r4.code === 0 && !killed(sb), "k6: sau khi NGƯỜI xử marker (ghi lại theo hiện trạng) → không kill nữa");
