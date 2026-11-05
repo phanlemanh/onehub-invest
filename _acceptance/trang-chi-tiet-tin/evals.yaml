@@ -65,7 +65,7 @@ evals:
     executor: script
     cmd: config:executors.script.listing_static
     paths: ["app/src/app/(app)/listing/[id]/page.tsx", app/src/components/listing/listing-body.tsx]
-    expected: "exit 0; trang listing thuê ngắn hạn vẫn không có AirDNA"
+    expected: "exit 0; trang listing thuê ngắn hạn vẫn không có số S02"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6b
     criterion: AC-6

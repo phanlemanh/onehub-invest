@@ -162,7 +162,7 @@
       "id": "E6",
       "criterion": "AC-6",
       "cmd": "node scripts/check-listing-no-airdna.mjs",
-      "expected": "\"exit 0; trang listing thuê ngắn hạn vẫn không có AirDNA\"",
+      "expected": "\"exit 0; trang listing thuê ngắn hạn vẫn không có số S02\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
