@@ -582,6 +582,10 @@ executors:
     sca_pham_vi: "bash _acceptance/so-cuoc-goi-ai/probes/pham-vi.sh"
     mgn_migration: "node _acceptance/man-gan-nhan-mu/probes/migration.mjs"   # man-gan-nhan-mu E1 — DB rỗng riêng oneinvest_p4_mgn_mig
     gcn_migration: "node _acceptance/gan-nhan-theo-nhom-s03/probes/migration.mjs"   # gan-nhan-theo-nhom-s03 E1 — DB thử oneinvest_gcn_nhan_mig
+    gc1_parse: "node --test pipeline/parse.test.mjs"   # doc-so-m2-bi-sot E1 — hàm thuần, không DB
+    gc1_dot_bien: "node _acceptance/doc-so-m2-bi-sot/probes/dot-bien.mjs"   # doc-so-m2-bi-sot E2 — phá thử bản sao bộ đọc
+    gc1_so_bo_doc: "node _acceptance/doc-so-m2-bi-sot/probes/so-bo-doc.mjs"   # doc-so-m2-bi-sot E3 — bộ đọc cũ và mới trên bài thật, chỉ đọc oneinvest
+    gc1_transform: "node _acceptance/doc-so-m2-bi-sot/probes/transform-thu.mjs"   # doc-so-m2-bi-sot E4 — hai lượt transform trên DB thử oneinvest_gc1_m2
     gcn_mau: "node _acceptance/gan-nhan-theo-nhom-s03/probes/mau.mjs"   # gan-nhan-theo-nhom-s03 E2 — DB thử oneinvest_gcn_nhan, lệnh thật
     ndk_mau: "node _acceptance/nhom-dang-ky-hai-lan-s03/probes/mau-hai-khoa.mjs"   # nhom-dang-ky-hai-lan-s03 E1, E2, E3, E5, E6 — DB thử oneinvest_gcn_nhan, lệnh thật + bản đột biến
     ndk_that: "node _acceptance/nhom-dang-ky-hai-lan-s03/probes/that-chi-doc.mjs"   # nhom-dang-ky-hai-lan-s03 E7 — cặp thật của DB thử, chỉ đọc
