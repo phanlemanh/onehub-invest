@@ -48,7 +48,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.mas3_tien_kiem
-    expected: "exit 0; bản đúng qua tiền kiểm; bảy ca hỏng (validate đỏ, thiếu marker, cấu hình đổi băm, mã có lấy tin cũ hoặc đường gửi mới, có phiên agent dở, transcript_events tăng trong 60 phút, build chưa vá lệch dist đang chạy) đều thoát khác 0 và in không được khởi động lại"
+    expected: "exit 0; bản đúng qua tiền kiểm; tám ca hỏng (validate đỏ, thiếu marker, bộ canh chưa vá đếm transcript_events hoặc lần chạy gần nhất không đạt, cấu hình đổi băm, mã có lấy tin cũ hoặc đường gửi mới, có phiên agent dở, transcript_events tăng trong 60 phút, build chưa vá lệch dist đang chạy) đều thoát khác 0 và in không được khởi động lại"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
