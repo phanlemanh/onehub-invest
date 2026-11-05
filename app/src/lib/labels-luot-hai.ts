@@ -1,4 +1,5 @@
-import { chuKhongLink, danhSachAnh, duongAnh } from "./labels-anh"
+import { docGhep, type GhepHien } from "./labels-anh"
+import { docThe } from "./labels-cum"
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
@@ -22,6 +23,7 @@ export type DoiChieu = {
   text: string
   anh: string[]
   soLinkKhac: number
+  ghep: GhepHien | null
   groupName: string | null
   postedAt: string | null
   cuaToi: NhanCuaToi[]
@@ -43,17 +45,20 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
     `SELECT field, value, not_stated, basis FROM eval_labels WHERE item_id = $1 AND labeler_id = $2`, [itemId, userId])
   if (nhan.length === 0) return null
   const { rows: bai } = await q.query(
-    `SELECT i.lat, i.ref_id, i.stratum, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
+    `SELECT i.lat, i.ref_id, i.stratum, i.ghep, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id
      FROM eval_label_items i
      LEFT JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id FROM stg_zalo_posts
                         WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.item_id = $1`, [itemId])
   const b = bai[0]
   if (!b) return null
+  // Máy đọc tra theo tin chữ đã ghép: bài ảnh rời không có offer, và người gắn đọc chính tin chữ ấy.
+  const g = docGhep(b.ghep)
+  const refMay = g?.chu_ref ?? b.ref_id
   const [tin, ai, the, lyDo, tv] = await Promise.all([
-    q.query(`SELECT * FROM sale_offers WHERE $1 = ANY (post_ids) ORDER BY offer_id`, [b.ref_id]),
+    q.query(`SELECT * FROM sale_offers WHERE $1 = ANY (post_ids) ORDER BY offer_id`, [refMay]),
     q.query(`SELECT listing_intent, kind FROM silver_labels WHERE source_code = 'S03' AND post_id = $1 AND json_ok
-             ORDER BY labeled_at DESC, label_id DESC LIMIT 1`, [b.ref_id]),
+             ORDER BY labeled_at DESC, label_id DESC LIMIT 1`, [refMay]),
     b.stratum
       ? q.query(`SELECT note FROM collection_units WHERE source_code = 'S03' AND unit_code = $1`, [b.stratum])
       : Promise.resolve({ rows: [] as { note: string | null }[] }),
@@ -78,14 +83,14 @@ export async function doiChieu(userId: string, itemId: number, q: Q = pool): Pro
       }
     : null
   const a = ai.rows[0]
-  const nguon = danhSachAnh(b.media, b.media_files, b.snapshot_id)
-  const hien = chuKhongLink(b.text, nguon)
+  const hien = await docThe(q, itemId, b, g)
   return {
     itemId,
     lat: b.lat,
-    text: hien.chu,
-    anh: nguon.map((_, i) => duongAnh(itemId, i)),
+    text: hien.text,
+    anh: hien.anh,
     soLinkKhac: hien.soLinkKhac,
+    ghep: hien.ghep,
     groupName: b.group_name,
     postedAt: b.posted_at ? new Date(b.posted_at).toISOString() : null,
     cuaToi: nhan.map((r) => ({ field: r.field, value: r.value, notStated: r.not_stated, basis: r.basis })),
@@ -133,7 +138,7 @@ export type DongTruongHop = {
 export async function bangTruongHop(lat: string, q: Q = pool): Promise<DongTruongHop[]> {
   const { rows } = await q.query(
     `WITH i AS (
-       SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL
+       SELECT item_id, stratum, ref_id FROM eval_label_items WHERE lat = $1 AND stratum IS NOT NULL AND (ghep->>'trung_voi') IS NULL
      ), ten AS (
        SELECT DISTINCT ON (i.stratum) i.stratum, p.group_name
        FROM i JOIN stg_zalo_posts p ON p.post_id = i.ref_id

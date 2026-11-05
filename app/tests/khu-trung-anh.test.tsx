@@ -118,7 +118,10 @@ test("KTA-AC-8 dữ liệu thẻ gửi xuống trình duyệt không mang băm, 
   kiemKhongBam("doiChieu", await doiChieu("u", 7, qThe))
 })
 test("KTA-AC-8 ca đỏ: bộ dựng thẻ để lọt nguồn ảnh thì thước kêu", async () => {
-  const dot = await banSao("src/lib/labels-queries.ts", [["anh: nguon.map((_, i) => duongAnh(r.item_id, i)),", "anh: nguon.map((_, i) => duongAnh(r.item_id, i)), nguon,"]])
+  const dot = await banSao("src/lib/labels-queries.ts", [
+    ['import { docGhep, type GhepHien } from "./labels-anh"', 'import { danhSachAnh, docGhep, type GhepHien } from "./labels-anh"'],
+    ["anh: the.anh,", "anh: the.anh, nguon: danhSachAnh(r.media, r.media_files, r.snapshot_id),"],
+  ])
   const the = await dot.tinKe("u", "a", qThe)
   assert.throws(() => kiemKhongBam("tinKe", the), /KTA-AC-8 lộ khoá băm: tinKe/)
 })

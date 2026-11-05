@@ -23,6 +23,7 @@ process.env.OPS_API_TOKEN = TOKEN
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const MIG = join(APP, "../db/migrations/054_labels.sql")
 const MIG_072 = join(APP, "../db/migrations/072_labels_nhom.sql")
+const MIG_076 = join(APP, "../db/migrations/076_labels_ghep.sql")
 const LAT = "mgn-thu"
 /** Bản đột biến của labels-queries.ts (chép sang thư mục tạm, đổi đúng một chỗ) — chiều đỏ của phép đo trên cùng fixture. */
 async function banDot(tu: string, thanh: string): Promise<typeof import("../src/lib/labels-queries")> {
@@ -79,6 +80,7 @@ before(async () => {
   await sc.connect()
   await sc.query(readFileSync(MIG, "utf8"))
   await sc.query(readFileSync(MIG_072, "utf8"))
+  await sc.query(readFileSync(MIG_076, "utf8"))
 })
 
 after(async () => {

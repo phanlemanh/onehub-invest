@@ -144,7 +144,7 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".silver_labels (LIKE public.silver_labels INCLUDING DEFAULTS)`)
   await admin.query(`CREATE TABLE "${S}".collection_units (LIKE public.collection_units INCLUDING DEFAULTS)`)
   await sc.connect()
-  for (const m of ["054_labels.sql", "072_labels_nhom.sql", "073_labels_nhom_sua.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
+  for (const m of ["054_labels.sql", "072_labels_nhom.sql", "073_labels_nhom_sua.sql", "075_labels_can_cu_anh.sql", "076_labels_ghep.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
 })
 
 after(async () => {
@@ -714,14 +714,14 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   }
   da.add("tin vừa có người gắn") // đo ở ca «tin vua co nguoi gan» bên dưới, trên biểu mẫu thật
   assert.deepEqual([...da].sort(), [...TRANG_THAI].sort())
-  const tin = { itemId: 7, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ bài RB", anh: [], soLinkKhac: 0, groupName: "Nhóm A", postedAt: null }
+  const tin = { itemId: 7, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ bài RB", anh: [], soLinkKhac: 0, ghep: null, groupName: "Nhóm A", postedAt: null }
   const mau = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} />)
   assert.match(mau, /data-labels-form="7"/)
   assert.equal((mau.match(/data-o="/g) ?? []).length, 18, "17 ô và ô Lý do")
   for (const c of ["Khu đô thị", "Phân khu", "Trục", "Tầng", "WC", "Nhiều căn", "SĐT", "không suy ra được"]) assert.ok(mau.includes(c), c)
   assert.doesNotMatch(mau, /Ghi theo đúng chữ của tin/)
   assert.match(mau, /Ghi điều người trong nhóm hiểu/)
-  const d = { itemId: 7, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, groupName: "Nhóm A", postedAt: null, cuaToi: [], lyDo: null, truongHop: [] }
+  const d = { itemId: 7, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "Nhóm A", postedAt: null, cuaToi: [], lyDo: null, truongHop: [] }
   const khong = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} luotHai={{ ...d, boDoc: null, aiDoc: null, soTin: 0, the: null }} />)
   assert.match(khong, /Máy chưa đọc bài này/)
   assert.match(khong, /Nhóm chưa có thẻ/)
@@ -751,7 +751,7 @@ test("GCN-AC-5 bảng so đặt đúng cột, đúng trường; khác máy mới
   const { LuotHai } = await import("../src/components/ops/labels/luot-hai")
   const nhan = (field: LabelField, value: string | null) => ({ field, value, notStated: value === null, basis: null })
   const d = {
-    itemId: 1, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, groupName: "N", postedAt: null, lyDo: null, truongHop: [], soTin: 1, the: "THE",
+    itemId: 1, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null, lyDo: null, truongHop: [], soTin: 1, the: "THE",
     cuaToi: [nhan("kind", "sale"), nhan("building", null), nhan("project", "ocean park"), nhan("bedrooms", "2")],
     boDoc: { kind: "sale", building: "s1", bedrooms: "3" },
     aiDoc: { kind: "rent_lt" },
@@ -783,7 +783,7 @@ test("GCN-AC-10 tin vua co nguoi gan: biểu mẫu thật nhận 409 của route
       body: JSON.stringify({ ...JSON.parse(String(init.body)), values: DU }),
     }))) as unknown as typeof fetch
   try {
-    const tin = (itemId: number) => ({ itemId, lat: LAT, doubleLabel: false, soNguoi: 0, text: CHU, anh: [], soLinkKhac: 0, groupName: "N", postedAt: null })
+    const tin = (itemId: number) => ({ itemId, lat: LAT, doubleLabel: false, soNguoi: 0, text: CHU, anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null })
     const di: string[] = []
     await dom.render(<LabelFormNhom lat={LAT} tin={tin(1)} hrefXem="/xem-1" hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} baoTin={(m) => cau.push(m)} />)
     await dom.bam("Lưu và xem máy đọc")
@@ -814,7 +814,7 @@ test("GCN-AC-6 bo qua trên màn thật: nút Bỏ qua không gửi gì và sang
     return new Response("{}", { status: 200 })
   }) as unknown as typeof fetch
   const dom = await dungDom()
-  const d = { itemId: 7, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the: null }
+  const d = { itemId: 7, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the: null }
   const di: string[] = []
   try {
     await dom.render(<LuotHai d={d} hrefTinKe="/tin-ke" diToi={(h) => di.push(h)} />)
@@ -908,7 +908,7 @@ test("GCN-AC-12 bang so khong bao khac khi may khong doc: ô trống, unknown kh
 })
 
 type ManLuotHai = { LuotHai: (p: { d: never; hrefTinKe: string; diToi: (h: string) => void }) => React.ReactElement }
-const dLuotHai = (the: string | null) => ({ itemId: 1, lat: LAT, text: "chữ", anh: [], soLinkKhac: 0, groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the }) as never
+const dLuotHai = (the: string | null) => ({ itemId: 1, lat: LAT, text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null, cuaToi: [], lyDo: null, truongHop: [], soTin: 0, boDoc: null, aiDoc: null, the }) as never
 
 /** Kịch bản Thử lại trên màn thật: chọn loại, gõ diễn giải, mất phản hồi sau khi đã ghi, Thử lại; rồi lần khác đổi nội dung sau lỗi. */
 async function kichBanThuLai(M: ManLuotHai, ghi: (body: Record<string, unknown>) => Promise<Response>) {
@@ -1059,7 +1059,7 @@ test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên m�
     }))) as unknown as typeof fetch
     const dom = await dungDom()
     const di: string[] = []
-    const tin = { itemId: 1, lat: LAT, doubleLabel: false, soNguoi: 0, text: `${CHU} tin 1`, anh: [], soLinkKhac: 0, groupName: "N", postedAt: null }
+    const tin = { itemId: 1, lat: LAT, doubleLabel: false, soNguoi: 0, text: `${CHU} tin 1`, anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null }
     const nut = (f: string, chu: string) => [...document.querySelectorAll(`[data-o="${f}"] button`)].find((b) => b.textContent?.trim() === chu || b.getAttribute("aria-label") === chu)
     const hop = (f: string) => document.querySelector(`[data-o="${f}"] [role="checkbox"]`)
     try {
