@@ -140,7 +140,8 @@ function holdExclusive(path, ms) {
     const { DatabaseSync } = require("node:sqlite");
     const db = new DatabaseSync(${JSON.stringify(path)});
     db.exec("BEGIN EXCLUSIVE");
-    setTimeout(() => { db.exec("COMMIT"); db.close(); }, ${ms});
+    db.exec("INSERT INTO transcript_events VALUES ('lock', NULL, 1)"); // sinh -journal → script chọn mode=ro (kho đang mở)
+    setTimeout(() => { db.exec("ROLLBACK"); db.close(); }, ${ms});
   `], { stdio: "ignore" });
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 700); // cho khóa chắc chắn
   return c;
