@@ -8,7 +8,7 @@ evals:
     cmd: config:executors.script.ghep_lenh
     layer: unit
     paths: [pipeline/label-ghep.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/label-ghep.test.mjs, pipeline/lib/ghep-mau.mjs]
-    expected: "exit 0; ca 'GHEP-AC-1' ma trận viết trước đủ sáu loại bài và ca cụm lệch số tin chữ gần: mỗi dòng `ghep` bằng kết quả gọi trực tiếp ganBaiAnh trên cùng dữ liệu, có chữ không cụm là null, số phần tử ma trận khớp số assert. Chiều đỏ: bản sao hàm đổi cửa sổ 120 thành 60 thì ca 'cach 119 giay' đỏ. Quét mã: label-ghep.mjs và app/src không có hằng 120 của luật ghép, 'ok khong co luat thu hai', đối chứng chèn hằng thì phép quét đỏ."
+    expected: "exit 0; ca 'GHEP-AC-1' ma trận viết trước đủ sáu loại bài và ca cụm lệch số tin chữ gần: mỗi dòng `ghep` bằng kết quả gọi trực tiếp ganBaiAnh trên cùng dữ liệu, có chữ không cụm là null, số phần tử ma trận khớp số assert. Chiều đỏ: bản sao hàm đổi cửa sổ 120 thành 60 thì ca 'cach 119 giay' đỏ. Quét mã: label-ghep.mjs không có số 120; toàn app/src không có tên hàm luật, cửa sổ thời gian dạng SQL hay '120 giây'; đường đọc cụm của app còn không có số 120 trần và so sánh posted_at; 'ok khong co luat thu hai'. Đối chứng: chèn thật vào tệp năm dạng (hằng 120, interval SQL, gọi ganBaiAnh, '120 giây', so posted_at) rồi qua đúng phép quét thì đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -16,7 +16,7 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [pipeline/label-ghep.mjs, pipeline/label-sample.mjs, db/migrations/*_labels_ghep.sql, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; trên DB thử: 'ok ghep hai lan khong doi', 'ok lat moi co ghep', 'ok bon cot mau khong doi', 'ok nhan cu khong doi', 'ok thu khong ghi'. Chiều đỏ: 'ok doi chung: tro vao oneinvest bi tu choi' và 'ok doi chung: doi mot dong thi phep bam do'."
+    expected: "exit 0; trên DB thử: 'ok ghep hai lan khong doi' (lần hai thật sự tính lại, không rơi vào nhánh giữ), 'ok lat moi co ghep', 'ok bon cot mau khong doi', 'ok nhan cu khong doi', 'ok thu khong ghi'. Chiều đỏ: 'ok doi chung: lam lai ghi dung dong lech', 'ok doi chung: tro vao oneinvest bi tu choi' và 'ok doi chung: doi mot dong thi phep bam do'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -24,7 +24,7 @@ evals:
     cmd: config:executors.script.ghep_thuan
     layer: unit
     paths: [app/src/lib/labels-anh.ts, app/src/lib/labels-queries.ts, app/tests/labels-ghep.test.ts]
-    expected: "exit 0; ca 'GHEP-AC-3' ma trận sáu loại bài: chữ, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần; `ghep` null thì kết quả bằng hàm không ghép từng trường. Chiều đỏ: bản ghi có URL gốc hay mã bài trong kết quả thì phép quét đỏ."
+    expected: "exit 0; ca 'GHEP-AC-3' ma trận đủ sáu loại bài, kiểm số loại: chữ đúng tuyệt đối, đường ảnh đúng thứ tự, cờ ghép, số tin chữ gần; `ghep` null thì danh sách ảnh và chữ bằng hàm không ghép từng trường, đối chứng bài khác ảnh thì đỏ. Chiều đỏ: bản ghi có URL gốc hay mã bài trong kết quả thì phép quét đỏ."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -32,7 +32,7 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; trên DB thử, `ghep` sinh bằng cách chạy label-ghep.mjs thật, 'ok ghep tu ben ghi' (đối chứng: đổi tên một khoá của bên ghi thì phép đọc đỏ); gọi tinKe thật: 'ok the ghep co chu tin chu', 'ok the ghep du anh', 'ok ghep rong giong ban truoc' (so từng trường với hàm tinKe ở commit mốc), 'ok the khong co ma bai', 'ok ma tran sau loai bai', 'ok thu tu anh qua duong doc that'."
+    expected: "exit 0; trên DB thử, `ghep` sinh bằng cách chạy label-ghep.mjs thật, 'ok ghep tu ben ghi' (đối chứng: đổi tên một khoá của bên ghi thì phép đọc đỏ); gọi tinKe thật: 'ok the ghep co chu tin chu', 'ok the ghep du anh', 'ok ghep rong giong ban truoc' (so từng trường với hàm tinKe ở commit mốc, trên bài có chữ và ảnh thật: 'ok doi chung: bai so voi moc co chu va anh that'), 'ok the khong co ma bai', 'ok ma tran sau loai bai' (chữ bằng tuyệt đối, không có link), 'ok thu tu anh qua duong doc that'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-4
@@ -46,7 +46,7 @@ evals:
       - "Bài một tin chữ, khổ 1280: chụp evidence/E5-ghep-1280.png; đọc trên ảnh chụp nhãn 'Ghép suy ra', số ảnh, chữ tin chữ, dải ảnh"
       - "Cùng bài, khổ 375: chụp evidence/E5-ghep-375.png; ghi bề rộng trang không tràn ngang"
       - "Bài cụm 21 ảnh, khổ 1280: chụp evidence/E5-cum-lon.png; ghi dải một hàng cuộn ngang, nút Lưu trong màn"
-      - "Bấm một ảnh: chụp evidence/E5-lon.png, ghi 'Ảnh n/N'; bấm Sau, phím mũi tên trái phải, ghi số đổi đúng; Esc đóng"
+      - "Bấm một ảnh: chụp evidence/E5-lon.png, ghi 'Ảnh n/N'; bấm Ảnh sau, Ảnh trước, ghi số đổi đúng; Esc đóng"
       - "Bài nhiều tin chữ: chụp evidence/E5-nhieu-chu.png, đọc cờ trên ảnh chụp. Bài không tin chữ: chụp evidence/E5-khong-chu.png, đọc câu trên ảnh chụp. Bài có chữ không cụm: ghi không có nhãn ghép"
       - "Bài có một ảnh thiếu tệp giữa cụm: chụp evidence/E5-anh-loi.png, đọc trọn 'Ảnh không tải được' và Thử lại; xem lớn vẫn chuyển sang ảnh khác"
       - "Đọc căn cứ mặc định: bài có chữ ghép là Chữ, bài không tin chữ là Ảnh, ghi vào observed"
@@ -67,7 +67,7 @@ evals:
     cmd: config:executors.script.ghep_nap
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, _acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs]
-    expected: "exit 0; mồi ở mọi bài của cụm: 'ok tinKe khong co gia tri may', 'ok doiChieu doc theo tin chu ghep', 'ok doiChieu khong ghep giong moc' (so từng trường với hàm doiChieu ở commit mốc). Chiều đỏ: 'ok doi chung: chen gia tri may thi bat', 'ok doi chung: moi nam trong bang'."
+    expected: "exit 0; mồi riêng ở từng bài của cụm: 'ok tinKe khong co gia tri may', 'ok trang khong co gia tri may', 'ok doiChieu doc theo tin chu ghep', 'ok doiChieu khong ghep giong moc' (so từng trường với hàm doiChieu ở commit mốc, trên bài có giá trị máy và ảnh: 'ok doi chung: bai so voi moc co gia tri may va anh'). Chiều đỏ: 'ok doi chung: chen gia tri may thi bat', 'ok doi chung: moi nam trong bang', 'ok doi chung: phep quet thay moi cua tung bai anh'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-6
@@ -112,5 +112,5 @@ evals:
     cmd: config:executors.script.ghep_kin
     layer: backend-effect
     paths: [_acceptance/ghep-anh-tren-the-gan-nhan/probes/kin.mjs]
-    expected: "exit 0; 'ok dong them khong co ten nguon' (tập gồm tên miền từ media, tên miền và từ của tên thật từ source_registry, buộc cả hai khác rỗng, bắt tên miền con), 'ok ho so khong co ten nguon', 'ok doc tay khong co chu', 'ok fixture chi example.test', 'ok collector hook khong doi'. Chiều đỏ: 'ok doi chung: moi dang ten bi bat' gồm dạng tên miền con và tên thật trần. Tệp ảnh không đọc được bằng máy: in 'anh chung khong quet duoc N tep', xem bằng mắt ở E5, E8."
+    expected: "exit 0; 'ok dong them khong co ten nguon' (tập gồm tên miền từ media, tên miền và từ của tên thật từ source_registry, buộc cả hai khác rỗng, bắt tên miền con), 'ok ho so khong co ten nguon', 'ok doc tay khong co chu' (mã mục là số có trong lát, tầng và kết thuộc danh sách, lý do không có URL, số dài hay bốn từ liền trùng chữ bài quanh mục đó; đối chứng 'ok doi chung: bang doc tay co ma bai hay chu bai bi bat'), 'ok fixture chi example.test', 'ok collector hook khong doi'. Chiều đỏ: 'ok doi chung: moi dang ten bi bat' gồm dạng tên miền con và tên thật trần. Tệp ảnh không đọc được bằng máy: in 'anh chung khong quet duoc N tep', xem bằng mắt ở E5, E8."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

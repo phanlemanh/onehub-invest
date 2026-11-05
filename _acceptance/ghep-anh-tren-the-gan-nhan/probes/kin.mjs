@@ -12,6 +12,10 @@ const c = new pg.Client({ connectionString: `${SERVER}/oneinvest`, options: "-c 
 await c.connect()
 const { rows: urls } = await c.query(`SELECT DISTINCT substring(media_url from 'https?://([^/]+)') AS h FROM media WHERE media_url IS NOT NULL`)
 const { rows: reg } = await c.query(`SELECT string_agg(distinct x, ' ') AS s FROM source_registry r, LATERAL (SELECT r.real_name AS x UNION ALL SELECT unnest(r.source_ids)) q`)
+const dt = JSON.parse(fs.readFileSync(path.join(ROOT, "_acceptance", SLUG, "probes/doc-tay.json"), "utf8"))
+// Chữ của các bài quanh từng mục đọc tay, chỉ giữ trong bộ nhớ để đối chiếu, không in.
+const { rows: quanh } = await c.query(`SELECT i.item_id::int AS item, p.text FROM eval_label_items i JOIN stg_zalo_posts b ON b.post_id = i.ref_id
+  JOIN stg_zalo_posts p ON p.conversation_id = b.conversation_id AND abs(extract(epoch FROM p.posted_at - b.posted_at)) <= 300 WHERE i.lat = 's03-theo-nhom' AND i.item_id = ANY($1::bigint[])`, [dt.cum.map((x) => x.item)])
 await c.end()
 const mien = new Set()
 for (const { h } of urls) if (h) { const d = h.toLowerCase().split("."); mien.add(d.slice(-2).join(".")); if (d.at(-2)?.length <= 3) mien.add(d.slice(-3).join(".")) }
@@ -42,10 +46,17 @@ const mau1 = [...mien][0], ten1 = [...tenTran][0]
 const moiDang = [`https://cdn.${mau1}/x`, `www.${mau1}`, `abc.${mau1}/x`, `${mau1}/x`, `dang ${ten1} day`, `${ten1}.me/09`]
 kiem(moiDang.every((d) => quet(`dong co ${d}`) >= 1), "doi chung: moi dang ten bi bat", "loi doi chung: mot dang ten lot")
 kiem(quet("dong lanh example.test, tep /api/x-media") === 0, "doi chung: dong lanh khong bi bat")
-const dt = JSON.parse(fs.readFileSync(path.join(goc, "probes/doc-tay.json"), "utf8"))
-const KHOA = new Set(["item", "tang", "ket", "ly_do"]), KET = new Set(["dung", "sai", "khong-phan", "khong-tep"])
-const lanh = dt.cum.every((x) => Object.keys(x).every((k) => KHOA.has(k)) && KET.has(x.ket) && (x.ly_do ?? "").length <= 90 && !/\d{6,}|https?:/.test(x.ly_do ?? ""))
-kiem(lanh && quet(JSON.stringify(dt).toLowerCase()) === 0, "doc tay khong co chu", "loi bang doc tay co chu bai")
+const KHOA = new Set(["item", "tang", "ket", "ly_do"]), KET = new Set(["dung", "sai", "khong-phan", "khong-tep"]), TANG = new Set(["mot", "nhieu", "lon"])
+const chuanHoa = (s) => s.toLowerCase().normalize("NFC").replace(/\s+/g, " ")
+const chuQuanh = new Map()
+for (const { item, text } of quanh) chuQuanh.set(item, `${chuQuanh.get(item) ?? ""} ${chuanHoa(text ?? "")}`)
+// Bốn từ liền nhau trùng chữ bài quanh mục đó thì coi là chép chữ.
+const chepChu = (x) => { const tu4 = chuanHoa(x.ly_do ?? "").split(" "); return tu4.slice(0, -3).some((_, i) => (chuQuanh.get(x.item) ?? "").includes(tu4.slice(i, i + 4).join(" "))) }
+const mucLanh = (x) => Object.keys(x).every((k) => KHOA.has(k)) && Number.isInteger(x.item) && chuQuanh.has(x.item) && TANG.has(x.tang) && KET.has(x.ket) && (x.ly_do ?? "").length <= 90 && !/\d{6,}|https?:/.test(x.ly_do ?? "") && !chepChu(x)
+kiem(chuQuanh.size === dt.cum.length && dt.cum.every(mucLanh) && quet(JSON.stringify(dt).toLowerCase()) === 0, "doc tay khong co chu", "loi bang doc tay co chu bai")
+const mau = dt.cum[0], chuMau = (chuQuanh.get(mau.item) ?? "").trim().split(" ").slice(0, 4).join(" ")
+const moiDocTay = [{ ...mau, item: "abc-1234567" }, { ...mau, item: 999999999 }, { ...mau, tang: "Bán căn hộ" }, { ...mau, ly_do: "xem https://x" }, { ...mau, ly_do: "mã 1234567" }, { ...mau, them: "x" }, { ...mau, ly_do: chuMau }]
+kiem(chuMau.split(" ").length === 4 && moiDocTay.every((x) => !mucLanh(x)), "doi chung: bang doc tay co ma bai hay chu bai bi bat", `loi doi chung doc tay: lot ${moiDocTay.filter(mucLanh).length}`)
 const tepMoi = ["seed.mjs", "nap.mjs"].map((f) => fs.readFileSync(path.join(goc, "probes", f), "utf8")).concat(["app/tests/labels-ghep.test.ts", "pipeline/scripts/label-ghep.test.mjs"].map((f) => fs.readFileSync(path.join(ROOT, f), "utf8"))).join("\n")
 const tenMayLa = (chu) => [...chu.matchAll(/https?:\/\/([a-z0-9.-]+)|(?<![a-z0-9@.-])((?:[a-z0-9-]+\.)+(?:vn|com|net|org|me|link|ly|io|info|biz))(?![a-z0-9-])/gi)].map((m) => (m[1] ?? m[2]).toLowerCase()).filter((h) => !h.endsWith("example.test") && h !== "localhost" && h !== "www.w3.org")
 kiem(tenMayLa(tepMoi).length === 0, "fixture chi example.test", `loi fixture co ${tenMayLa(tepMoi).length} ten may khac`)

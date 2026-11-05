@@ -5,10 +5,10 @@ slug: ghep-anh-tren-the-gan-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: implemented
+status: draft
 design_doc: docs/superpowers/specs/2026-11-05-ghep-anh-tren-the-gan-nhan-design.md
-approved_by: Mạnh
-approved_at: 2026-11-05
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: ghep-anh-tren-the-gan-nhan
@@ -24,7 +24,7 @@ Source input: lời Mạnh 05/11 qua giám sát.
 - AC-1: Given mọi bài của lát thử gồm ca một tin chữ, nhiều tin chữ, không tin chữ, có chữ có cụm, có chữ không cụm, thiếu người gửi, cụm có số tin chữ gần lệch nhau, When lệnh ghép chạy, Then `ghep` của từng dòng khớp kết quả gọi trực tiếp `ganBaiAnh`, có chữ không cụm là NULL, số tin chữ gần là lớn nhất trên cụm, và mã app, lệnh ghép không có cửa sổ thời gian riêng.
 - AC-2: Given DB thử, When chạy lệnh ghép hai lần rồi lấy mẫu một lát mới, Then lần hai không đổi dòng nào, lát mới có `ghep`, bốn cột `item_id, ref_id, text_hash, stratum` và nhãn đã có không đổi, `--thu` không ghi; đích khác DB thử khi chưa khai rõ thì từ chối. (cross-layer)
 - AC-3: Given sáu loại bài với `ghep` do lệnh ghép thật sinh, When tải thẻ, Then dữ liệu trả về đúng chữ của tin chữ, đủ đường ảnh theo thứ tự, cờ ghép, số tin chữ gần; `ghep` NULL thì giống hệt bản trước; phản hồi HTTP của trang không có URL gốc hay mã bài. (cross-layer)
-- AC-4: Given các bài trên, When mở thẻ, Then thấy nhãn «Ghép suy ra · N ảnh», chữ và dải ảnh một hàng, cờ nhiều tin chữ khi có, câu «Không có tin chữ trong 2 phút» khi không có, không có nhãn ghép ở bài có chữ không cụm; cụm 21 ảnh vẫn thấy nút Lưu; một ảnh lỗi trong cụm hiện «Ảnh không tải được» kèm Thử lại mà các ảnh khác vẫn xem được; xem lớn chuyển ảnh bằng Trước, Sau, phím mũi tên, Esc đóng; đọc được cả ở khổ 1280 và 375.
+- AC-4: Given các bài trên, When mở thẻ, Then thấy nhãn «Ghép suy ra · N ảnh», chữ và dải ảnh một hàng, cờ nhiều tin chữ khi có, câu «Không có tin chữ trong 2 phút» khi không có, không có nhãn ghép ở bài có chữ không cụm; cụm 21 ảnh vẫn thấy nút Lưu; một ảnh lỗi trong cụm hiện «Ảnh không tải được» kèm Thử lại mà các ảnh khác vẫn xem được; xem lớn chuyển ảnh bằng nút Ảnh trước, Ảnh sau, Esc đóng; đọc được cả ở khổ 1280 và 375.
 - AC-5: Given `?nhan=&anh=i`, When i chạy khắp cụm, Then mỗi ảnh trả đúng tệp đã lưu hoặc lấy hộ, ngoài khoảng trả 404, đường dẫn xấu ở bất kỳ bài nào của cụm vẫn bị chặn, cây snapshot không đổi. (cross-layer)
 - AC-6: Given mồi giá trị máy ở mọi bài của cụm và ở tin chữ, When tải thẻ qua HTTP thật, Then không có mồi trước khi lưu; sau khi lưu, bộ đọc và AI đọc lấy theo tin chữ ghép, bài không ghép giống hệt hàm trước vòng trừ trường mới. (cross-layer)
 - AC-7: Given bài ghép, When lưu nhãn, Then căn cứ Chữ so với chữ của tin ghép, căn cứ mặc định là Chữ khi có chữ ghép và Ảnh khi không có; trường hợp «Ghép sai» lưu được, giá trị lạ bị từ chối, migration áp hai lần không lỗi và nhãn cũ không đổi. (cross-layer)
@@ -44,7 +44,7 @@ Thước là đo 05/11 trên 367 bài (design doc).
 - Đơn vị mẫu: dòng trùng cụm, lát cũ, lát mới (AC-2, AC-8).
 - Ranh giới: mù, tên nguồn, làn ZCode, DB thật (AC-6, AC-9, AC-10).
 
-Later: ghép các bài ảnh không có tin chữ · sửa lệch mẫu bằng trọng số · đếm ghép nhầm từ trường hợp «Ghép sai» · mã album từ làn thu. Never: luật ghép thứ hai ở app.
+Later: phím mũi tên trong hộp xem ảnh lớn · ghép các bài ảnh không có tin chữ · sửa lệch mẫu bằng trọng số · đếm ghép nhầm từ trường hợp «Ghép sai» · mã album từ làn thu. Never: luật ghép thứ hai ở app.
 
 ## Đường đo
 
@@ -56,9 +56,12 @@ Later: ghép các bài ảnh không có tin chữ · sửa lệch mẫu bằng t
 - Xoá, sinh lại lát, đổi hàm chọn mẫu: chưa có lời Mạnh (Hỏi-1).
 - Áp migration và ghi `ghep` lên DB thật: xin giám sát kèm `pg_dump`.
 - Giữ số điện thoại khi bỏ link: hàng riêng.
+- Phím mũi tên trong hộp xem ảnh lớn: hộp thoại của thư viện chặn phím này, Known limits; người gắn dùng nút Ảnh trước, Ảnh sau.
 
 ## Notes
 
+- Known limits — thu phạm vi sau lượt chấm 2, Mạnh chọn lối 1 ngày 2026-11-05:
+  - Phím mũi tên trong hộp xem ảnh lớn không chuyển ảnh: hộp thoại của thư viện chặn phím này. Người gắn chuyển ảnh bằng nút Ảnh trước, Ảnh sau.
 - Dùng cổng dev 3463 của dãy P4, DB thử `oneinvest_ghep_nhan`.
 - Thứ tự triển khai, cần lời Mạnh (Hỏi-4): sao lưu, áp 076, chạy lệnh ghép `--lat s03-theo-nhom` trên DB thật, ghi vào 191 dòng của lát đã qua Cổng GC0 (176 dòng còn NULL), rồi gộp mã. Lùi: `UPDATE eval_label_items SET ghep = NULL`.
 - Migration số 076, giám sát cấp 05/11. Áp lên DB thật cần lời Mạnh ở Cổng Phạm vi (Hỏi-4), kèm sao lưu.

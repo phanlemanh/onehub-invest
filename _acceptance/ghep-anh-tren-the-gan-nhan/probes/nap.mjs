@@ -44,7 +44,7 @@ const dauVet = async (k) => (await k.query(`SELECT
   (SELECT count(*) FROM silver_labels WHERE post_id LIKE 'ghep-nap-%')::int AS silver,
   (SELECT count(*) FROM field_assertions WHERE subject_key = 'S03:ghep-nap-o')::int AS fa,
   (SELECT count(*) FROM enrichment_proposals WHERE offer_id = 'ghep-nap-o')::int AS ep,
-  (SELECT count(*) FROM sale_offer_records WHERE offer_id = 'ghep-nap-o')::int AS offer,
+  (SELECT count(*) FROM sale_offer_records WHERE offer_id LIKE 'ghep-nap-o%')::int AS offer,
   (SELECT count(*) FROM collection_units WHERE group_key = 'ghep-nap-g')::int AS nhom,
   (SELECT count(*) FROM users WHERE email LIKE '%@ghep-nap.test')::int AS nguoi,
   (SELECT count(*) FROM eval_labels l JOIN users u ON u.id = l.labeler_id WHERE u.email LIKE '%@ghep-nap.test')::int AS nhan`)).rows[0]
@@ -55,7 +55,8 @@ const LAT = "ghep-nap"
 const U = (n) => `https://cdn.example.test/nap/${n}.jpg`
 const SNAP = "hanoi__s03__ghepnap"
 const CHU = "CHUGOC-GHEP Bán căn 64,5m2"
-const MOI = ["TOAMAYGHEP", "MOI-ASSERT-GHEP", "MOI-PROP-GHEP", "rent_lt"]
+const MOI_ANH = ["moi_ai_a1", "moi_ai_a2", "moi_ai_a3", "TOAMAYANH"]
+const MOI = ["TOAMAYGHEP", "MOI-ASSERT-GHEP", "MOI-PROP-GHEP", "rent_lt", ...MOI_ANH]
 const cay = (el) => JSON.stringify(el, (key, v) => (key.startsWith("_") || typeof v === "function" || typeof v === "symbol" ? undefined : v))
 // Không phân biệt hoa thường: màn hạ chữ giá trị máy.
 const coMoi = (s) => MOI.filter((m) => s.toLowerCase().includes(m.toLowerCase()))
@@ -67,7 +68,7 @@ const don = async () => {
   await c.query(`DELETE FROM eval_label_items WHERE lat LIKE 'ghep-nap%'`)
   await c.query(`DELETE FROM silver_labels WHERE post_id LIKE 'ghep-nap-%'`)
   await c.query(`DELETE FROM enrichment_proposals WHERE offer_id = 'ghep-nap-o'`)
-  await c.query(`DELETE FROM sale_offer_records WHERE offer_id = 'ghep-nap-o'`)
+  await c.query(`DELETE FROM sale_offer_records WHERE offer_id LIKE 'ghep-nap-o%'`)
   await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'ghep-nap-%'`)
   await c.query(`DELETE FROM collection_units WHERE group_key = 'ghep-nap-g'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@ghep-nap.test'`)
@@ -92,6 +93,7 @@ try {
   await anh("a5", "n3", 2000)
   await bai("t4", "n4", 3000, "Không có ảnh, không ghép, bán 2PN")
   await bai("t5", "n5", 4000, "Có chữ có cụm"); await anh("a6", "n5", 4005)
+  await bai("t6", "n6", 5000, "Tin có chữ có ảnh riêng, bán 2PN", JSON.stringify([{ url: U("t6") }]))
   const dong = {}
   const them = async (ref, stratum = u.unit_code, double = false, lat = LAT) => {
     const { rows: [r] } = await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum) VALUES ($1, 'S03', $2, $3, 'dev', $4, 'ghep-nap', $5) RETURNING item_id::int`,
@@ -101,6 +103,7 @@ try {
   }
   await them("a1", u.unit_code, true); await them("a2"); await them("a4"); await them("a5"); await them("t5")
   await them("t4", "GNR")
+  await them("t6", "GNA")
 
   // Nhãn có trước 076: bài riêng, người riêng, không chiếm chỗ cặp gắn trùng.
   const cu = await taoNguoi(c, "ops", { email: "cu@ghep-nap.test" })
@@ -125,7 +128,14 @@ try {
   kiem(thu.nhan_ghep >= 4 && sauThu.n === 0, "thu khong ghi", `loi --thu ghi ${sauThu.n} dong`)
   const lan1 = await ghepLat(c, { lat: LAT })
   const lan2 = await ghepLat(c, { lat: LAT, lamLai: true })
-  kiem(lan1.ghi > 0 && lan2.ghi === 0, "ghep hai lan khong doi", `loi lan hai ghi ${lan2.ghi}`)
+  kiem(lan1.ghi > 0 && lan2.ghi === 0 && lan2.giu !== true, "ghep hai lan khong doi", `loi lan hai ghi ${lan2.ghi} giu ${lan2.giu}`)
+  // --lam-lai thật sự tính lại: làm lệch một dòng thì nó ghi đúng dòng đó và trả về như cũ.
+  const { rows: [truocLech] } = await c.query(`SELECT ghep FROM eval_label_items WHERE item_id = $1`, [dong.a1])
+  await c.query(`UPDATE eval_label_items SET ghep = jsonb_set(ghep, '{so_chu_gan}', '99') WHERE item_id = $1`, [dong.a1])
+  const lanGiuLech = await ghepLat(c, { lat: LAT })
+  const lanLamLai = await ghepLat(c, { lat: LAT, lamLai: true })
+  const { rows: [sauLamLai] } = await c.query(`SELECT ghep FROM eval_label_items WHERE item_id = $1`, [dong.a1])
+  kiem(lanGiuLech.giu === true && lanLamLai.ghi === 1 && sauLamLai.ghep.so_chu_gan === truocLech.ghep.so_chu_gan, "doi chung: lam lai ghi dung dong lech", `loi lam lai ghi ${lanLamLai.ghi}`)
   const lan3 = await ghepLat(c, { lat: LAT })
   kiem(lan3.giu === true && lan3.ghi === 0, "lat da co ghep thi giu", "loi lat da co ghep bi ghi lai")
   const mauSau = await bamMau("ghep-nap%")
@@ -142,11 +152,18 @@ try {
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-nap-o', 'sale', now(), now(), ARRAY['ghep-nap-t1'], 'TOAMAYGHEP')`)
   // AI đọc của tin chữ khác của các bài ảnh, để phân biệt đọc đúng bài nào.
   await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'ghep-nap-t1', 'h', 'ghep-nap', 'v', 'inquiry', 'rent_lt', true, 'ghep-nap')`)
-  for (const id of ["a1", "a2", "a3"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', 'ghep-nap', 'v', 'not_listing', 'sale', true, 'ghep-nap')`, [`ghep-nap-${id}`])
+  for (const id of ["a1", "a2", "a3"]) await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', $1, 'h', $2, 'v', 'not_listing', 'sale', true, 'ghep-nap')`, [`ghep-nap-${id}`, `moi_ai_${id}`])
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-nap-o-anh', 'sale', now(), now(), ARRAY['ghep-nap-a1', 'ghep-nap-a2', 'ghep-nap-a3'], 'TOAMAYANH')`)
+  // Bài có chữ không cụm, có ảnh riêng và đủ giá trị máy: phép so với mốc mới có cái để so.
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, block_raw) VALUES ('ghep-nap-o-t6', 'sale', now(), now(), ARRAY['ghep-nap-t6'], 'TOAMOCT6')`)
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, run_id) VALUES ('S03', 'ghep-nap-t6', 'h', 'ghep-nap', 'v', 'offer', 'sale', true, 'ghep-nap')`)
   await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at) SELECT 'S03:ghep-nap-o', 'block_raw', '"MOI-ASSERT-GHEP"', 'inferred', 'e2_llm', now() WHERE NOT EXISTS (SELECT 1 FROM field_assertions WHERE subject_key = 'S03:ghep-nap-o')`)
   await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('ghep-nap', 'ghep-nap-o', 'block_raw', '"MOI-PROP-GHEP"', 'moi', 'e2_llm', 'review')`)
   const { rows: [moi] } = await c.query(`SELECT (SELECT count(*) FROM silver_labels WHERE post_id LIKE 'ghep-nap-%')::int AS s, (SELECT count(*) FROM field_assertions WHERE subject_key = 'S03:ghep-nap-o' AND value::text LIKE '%MOI-ASSERT-GHEP%')::int AS f, (SELECT count(*) FROM enrichment_proposals WHERE offer_id = 'ghep-nap-o' AND value::text LIKE '%MOI-PROP-GHEP%')::int AS e`)
-  kiem(moi.s === 4 && moi.f >= 1 && moi.e === 1, "doi chung: moi nam trong bang", `loi moi ${JSON.stringify(moi)}`)
+  kiem(moi.s === 5 && moi.f >= 1 && moi.e === 1, "doi chung: moi nam trong bang", `loi moi ${JSON.stringify(moi)}`)
+  // Mồi của bài ảnh đọc ngược từ DB qua chính phép quét: mọi mồi phải bị bắt, nếu không phép âm tính phía dưới vô nghĩa.
+  const { rows: moiAnh } = await c.query(`SELECT model AS v FROM silver_labels WHERE post_id IN ('ghep-nap-a1', 'ghep-nap-a2', 'ghep-nap-a3') UNION ALL SELECT block_raw FROM sale_offer_records WHERE offer_id = 'ghep-nap-o-anh'`)
+  kiem(moiAnh.length === 4 && new Set(moiAnh.flatMap((r) => coMoi(r.v))).size === MOI_ANH.length, "doi chung: phep quet thay moi cua tung bai anh", `loi quet moi anh ${moiAnh.length}`)
   kiem(coVet(await dauVet(c)).length >= 7, "doi chung: phep dem dau vet thay du lieu tren DB thu", "loi phep dem dau vet khong thay gi")
 
   const a = await taoNguoi(c, "ops", { email: "a@ghep-nap.test" })
@@ -168,10 +185,15 @@ try {
   const tinKhong = await tinKe(a.id, LAT, c, "GNR")
   const tinKhongMoc = await tinKeMoc(a.id, LAT, c, "GNR")
   const { ghep: gRong, ...conLai } = tinKhong
-  kiem(gRong === null && JSON.stringify(conLai) === JSON.stringify(tinKhongMoc), "ghep rong giong ban truoc", `loi ghep rong lech moc`)
+  const tinAnhRieng = await tinKe(a.id, LAT, c, "GNA")
+  const tinAnhRiengMoc = await tinKeMoc(a.id, LAT, c, "GNA")
+  const { ghep: gAnhRieng, ...conAnhRieng } = tinAnhRieng
+  kiem(tinAnhRieng.anh.length === 1 && tinAnhRieng.text.startsWith("Tin có chữ"), "doi chung: bai so voi moc co chu va anh that", `loi bai so moc ${tinAnhRieng.anh.length}`)
+  kiem(gRong === null && gAnhRieng === null && JSON.stringify(conLai) === JSON.stringify(tinKhongMoc) && JSON.stringify(conAnhRieng) === JSON.stringify(tinAnhRiengMoc), "ghep rong giong ban truoc", `loi ghep rong lech moc`)
 
   // E7: mù trên cả cụm, đọc theo tin chữ sau khi lưu.
-  kiem(coMoi(chuoi).length === 0, "tinKe khong co gia tri may", `loi tinKe co ${coMoi(chuoi)}`)
+  // `not_listing` là AI đọc của các bài ảnh; biểu mẫu có giá trị này làm lựa chọn nên chỉ quét ở dữ liệu thẻ.
+  kiem(coMoi(chuoi).length === 0 && !chuoi.includes("not_listing"), "tinKe khong co gia tri may", `loi tinKe co ${coMoi(chuoi)}`)
   const el = await LabelsContent({ user: nguoiCua(a), lat: LAT, nhom: u.unit_code })
   const trang = cay(el) + renderToStaticMarkup(el)
   kiem(coMoi(trang).length === 0 && !coMaBai(trang) && !coLink(trang), "trang khong co gia tri may", "loi trang lo gia tri may hoac ma bai")
@@ -181,11 +203,11 @@ try {
   // E4, AC-3: ma trận đủ sáu loại bài qua tinKe thật, mỗi loại một tầng; bài thiếu người gửi có sender rỗng.
   await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, conversation_id, sender_id, sender_name, text, posted_at, media) VALUES ('ghep-nap-a7', $1, 'Nhóm nạp ghép', 'ghep-nap-g', NULL, 'Người thử', $2, $3, $4::jsonb)`, [SNAP, U("a7"), new Date(goc + 6000000), JSON.stringify([{ url: U("a7") }])])
   const MT = [
-    ["GM1", "a2", "CHUGOC-GHEP", 3, { suyRa: true, soChuGan: 1, khongChu: false }],
+    ["GM1", "a2", CHU, 3, { suyRa: true, soChuGan: 1, khongChu: false }],
     ["GM2", "a4", "Bán 1PN", 1, { suyRa: true, soChuGan: 2, khongChu: false }],
     ["GM3", "a5", "", 1, { suyRa: false, soChuGan: 0, khongChu: true }],
     ["GM4", "t5", "Có chữ có cụm", 1, { suyRa: true, soChuGan: 1, khongChu: false }],
-    ["GM5", "t4", "Không có ảnh", 0, null],
+    ["GM5", "t4", "Không có ảnh, không ghép, bán 2PN", 0, null],
     ["GM6", "a7", "", 1, { suyRa: false, soChuGan: 0, khongChu: true }],
   ]
   const LAT_MT = "ghep-nap-mt"
@@ -198,7 +220,7 @@ try {
   let matranDung = 0
   for (const [tang, ref, chu, nAnh, cua] of MT) {
     const t = await tinKe(a.id, LAT_MT, c, tang)
-    const dung = t && t.text.startsWith(chu) && t.anh.length === nAnh && JSON.stringify(t.ghep) === JSON.stringify(cua) && !coMaBai(JSON.stringify({ ...t, lat: null }))
+    const dung = t && t.text === chu && t.anh.length === nAnh && JSON.stringify(t.ghep) === JSON.stringify(cua) && !coMaBai(JSON.stringify({ ...t, lat: null })) && !coLink(JSON.stringify(t))
     if (dung) matranDung++
     else console.log(`FAIL ma tran ${tang}: ${t?.text?.slice(0, 20)} ${t?.anh.length} ${JSON.stringify(t?.ghep)}`)
   }
@@ -229,12 +251,17 @@ try {
   kiem(d.boDoc?.building?.toLowerCase() === "toamayghep" && d.aiDoc?.kind === "rent_lt" && d.aiDoc?.listing_intent === "inquiry", "doiChieu doc theo tin chu ghep", `loi doiChieu ${JSON.stringify(d.aiDoc)}`)
   kiem(!coMaBai(JSON.stringify(d)) && !coLink(JSON.stringify(d)), "doiChieu khong co ma bai", "loi doiChieu co ma bai")
   const dMoc = await doiChieuMoc(a.id, dong.a1, c)
-  kiem(dMoc.boDoc === null && dMoc.aiDoc?.listing_intent === "not_listing", "doi chung: moc doc bai anh, khac tin chu", `loi moc ${JSON.stringify(dMoc.aiDoc)}`)
+  kiem(dMoc.boDoc?.building?.toLowerCase() === "toamayanh" && dMoc.aiDoc?.listing_intent === "not_listing", "doi chung: moc doc bai anh, khac tin chu", `loi moc ${JSON.stringify(dMoc.aiDoc)}`)
   await post(a, dong.t4, DU_T4(DU))
   const dk = await doiChieu(a.id, dong.t4, c)
   const dkMoc = await doiChieuMoc(a.id, dong.t4, c)
   const { ghep: gk, ...conK } = dk
-  kiem(gk === null && JSON.stringify(conK) === JSON.stringify(dkMoc), "doiChieu khong ghep giong moc", `loi lech moc: ${Object.keys(conK).filter((x) => JSON.stringify(conK[x]) !== JSON.stringify(dkMoc[x]))}`)
+  await post(a, dong.t6, DU_T4(DU))
+  const d6 = await doiChieu(a.id, dong.t6, c)
+  const d6Moc = await doiChieuMoc(a.id, dong.t6, c)
+  const { ghep: g6, ...con6 } = d6
+  kiem(d6.boDoc?.building?.toLowerCase() === "toamoct6" && d6.aiDoc?.kind === "sale" && d6.aiDoc?.listing_intent === "offer" && d6.anh.length === 1, "doi chung: bai so voi moc co gia tri may va anh", `loi bai so moc ${JSON.stringify(d6.aiDoc)} ${d6.anh?.length}`)
+  kiem(gk === null && g6 === null && JSON.stringify(conK) === JSON.stringify(dkMoc) && JSON.stringify(con6) === JSON.stringify(d6Moc), "doiChieu khong ghep giong moc", `loi lech moc: ${Object.keys(con6).filter((x) => JSON.stringify(con6[x]) !== JSON.stringify(d6Moc[x]))}`)
   kiem(JSON.stringify({ ...conK, boDoc: { x: 1 } }) !== JSON.stringify(dkMoc), "doi chung: doi mot truong thi phep so moc do")
   const kqSai = await ghiTruongHop(c, a.id, dong.a1, { case_kind: "ghep-sai" })
   const { rows: ds } = await c.query(`SELECT case_kind FROM eval_label_cases WHERE item_id = $1 AND labeler_id = $2`, [dong.a1, a.id])

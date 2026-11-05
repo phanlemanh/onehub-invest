@@ -110,15 +110,39 @@ const tepQuet = (goc) => {
 };
 test("GHEP-AC-1 khong co luat thu hai", () => {
   const goc = join(import.meta.dirname, "../..");
-  const CUA_APP = /ganBaiAnh|cuaSoGiay|CUA_SO_GIAY|posted_at\s*[<>-]/;
-  const CUA_MAU = /\b120\b/;
-  assert.match("const c = 120", CUA_MAU, "đối chứng: hằng cửa sổ bị bắt");
-  assert.match("ganBaiAnh(a, b)", CUA_APP, "đối chứng: gọi luật ở app bị bắt");
-  const boChuThich = (f) => readFileSync(f, "utf8").split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
-  for (const f of ["pipeline/lib/ghep-mau.mjs", "pipeline/label-ghep.mjs"]) assert.doesNotMatch(boChuThich(join(goc, f)), CUA_MAU, `${f} có hằng cửa sổ riêng`);
-  const tepApp = [...tepQuet(join(goc, "app/src/components/ops/labels")), ...["labels-anh", "labels-cum", "labels-queries", "labels-luot-hai", "labels-normalize", "ops/zalo-media"].map((t) => join(goc, `app/src/lib/${t}.ts`))];
-  assert.ok(tepApp.length > 10, "phải quét đủ đường đọc cụm của app");
-  assert.ok(tepApp.every((f) => statSync(f).isFile()));
-  assert.ok(tepApp.some((f) => f.endsWith("labels-cum.ts")) && tepApp.some((f) => f.endsWith("zalo-media.ts")));
-  for (const f of tepApp) assert.doesNotMatch(boChuThich(f), CUA_APP, `${f} có luật ghép riêng`);
+  // Toàn app/src: tên hàm, tên hằng của luật, cửa sổ thời gian dạng SQL. Đường đọc cụm: thêm cả số 120 trần.
+  const LUAT = /ganBaiAnh|cuaSoGiay|CUA_SO_GIAY|interval\s*'\s*\d+\s*(?:s|sec|second|minute|min)|120\s*(?:giây|seconds?)/i;
+  const LUAT_CUM = new RegExp(`${LUAT.source}|\\b120\\b|posted_at\\s*(?:[<>-]|BETWEEN)`, "i");
+  // `t.length > 120` là ngưỡng gấp chữ dài trên thẻ, không phải cửa sổ thời gian.
+  const boChuThich = (s) => s.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n").replace("t.length > 120", "");
+  const quet = (tep, mau) => tep.filter((f) => mau.test(boChuThich(readFileSync(f, "utf8"))));
+  const tepCum = [...tepQuet(join(goc, "app/src/components/ops/labels")), ...["labels-anh", "labels-cum", "labels-queries", "labels-luot-hai", "labels-normalize", "ops/zalo-media"].map((t) => join(goc, `app/src/lib/${t}.ts`))];
+  assert.ok(tepCum.length > 10 && tepCum.every((f) => statSync(f).isFile()), "phải quét đủ đường đọc cụm của app");
+  assert.ok(tepCum.some((f) => f.endsWith("labels-cum.ts")) && tepCum.some((f) => f.endsWith("zalo-media.ts")));
+  const tepApp = tepQuet(join(goc, "app/src"));
+  assert.ok(tepApp.length > 200, "phải quét toàn app/src");
+  assert.deepEqual(quet(["pipeline/lib/ghep-mau.mjs", "pipeline/label-ghep.mjs"].map((f) => join(goc, f)), /\b120\b/), []);
+  assert.deepEqual(quet(tepCum, LUAT_CUM), []);
+  assert.deepEqual(quet(tepApp, LUAT), []);
+  // Đối chứng: chèn thật vào một tệp rồi cho qua đúng phép quét.
+  const d = mkdtempSync(join(tmpdir(), "ghep-luat-"));
+  try {
+    const nhiem = [
+      ["hang.ts", "const CUA = 120", LUAT_CUM],
+      ["sql.ts", "const s = `p.posted_at BETWEEN a - interval '120 seconds' AND b`", LUAT],
+      ["goi.ts", "ganBaiAnh(a, b)", LUAT],
+      ["giay.tsx", "const c = '120 giây'", LUAT],
+      ["so-sanh.ts", "const s = `WHERE p.posted_at < a`", LUAT_CUM],
+    ];
+    for (const [ten, chu, mau] of nhiem) {
+      const f = join(d, ten);
+      writeFileSync(f, `${chu}\n`);
+      assert.deepEqual(quet([f], mau), [f], `đối chứng ${ten} phải đỏ`);
+    }
+    const lanh = join(d, "lanh.ts");
+    writeFileSync(lanh, "// 120 giây trong chú thích\nconst x = 1\n");
+    assert.deepEqual(quet([lanh], LUAT_CUM), [], "chú thích không tính");
+  } finally {
+    rmSync(d, { recursive: true, force: true });
+  }
 });

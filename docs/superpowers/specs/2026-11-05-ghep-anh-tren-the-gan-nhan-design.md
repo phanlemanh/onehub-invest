@@ -42,7 +42,7 @@ Hai ca sai rõ đều ở tầng nhiều tin chữ. Một cụm chứa ảnh c�
    | Có chữ, không cụm | 176 | NULL, đường đọc như trước |
 
    Nhãn «Ghép suy ra» hiện khi `chu_ref` có và `anh_refs` khác rỗng: 144 dòng trước khi trừ dòng trùng. Lối lùi trên DB: `UPDATE eval_label_items SET ghep = NULL` đưa màn về như cũ.
-3. **Thẻ:** chữ của tin chữ, dải ảnh cả cụm, nhãn «Ghép suy ra» và số ảnh. Dải một hàng cuộn ngang, nên cụm lớn không đẩy biểu mẫu khỏi màn. Xem lớn có Trước, Sau và phím mũi tên. Không cắt bớt ảnh: lớn nhất của lát là 21.
+3. **Thẻ:** chữ của tin chữ, dải ảnh cả cụm, nhãn «Ghép suy ra» và số ảnh. Dải một hàng cuộn ngang, nên cụm lớn không đẩy biểu mẫu khỏi màn. Xem lớn có nút Ảnh trước, Ảnh sau; phím mũi tên thu khỏi phạm vi sau lượt chấm 2 vì hộp thoại của thư viện chặn phím này. Không cắt bớt ảnh: lớn nhất của lát là 21.
 4. **Ca nhiều tin chữ:** vẫn ghép theo tin gần nhất, kèm cờ «Có N tin chữ trong 2 phút, máy chọn tin gần nhất». Ghép sai thì ghi trường hợp «Ghép sai» ở lượt hai, để sau này đếm được từ nhãn người.
 5. **Không có tin chữ (47 bài):** hiện ảnh của chính bài, kèm «Không có tin chữ trong 2 phút». Không ghép các bài ảnh với nhau: đó là luật thứ hai.
 6. **Lưu nhãn:** căn cứ Chữ so với chữ của tin ghép. Bài có chữ ghép thì căn cứ mặc định là Chữ; không có chữ thì là Ảnh.
@@ -64,7 +64,7 @@ Phục vụ ảnh: `/api/zalo-media?nhan=&anh=` duyệt cả cụm theo cột `g
 | ST-nhieu-chu | đầu thẻ | Thêm cờ «Có N tin chữ trong 2 phút, máy chọn tin gần nhất» | điền, ghi Ghép sai ở lượt hai |
 | ST-khong-chu | đầu thẻ | Ảnh của bài, «Không có tin chữ trong 2 phút» | điền |
 | ST-cum-lon | dải ảnh | Một hàng cuộn ngang | cuộn, xem lớn |
-| ST-lon | hộp xem lớn | «Ảnh n/N», Trước, Sau, phím mũi tên | Esc |
+| ST-lon | hộp xem lớn | «Ảnh n/N», Ảnh trước, Ảnh sau | Esc |
 | ST-anh-loi | ô ảnh trong dải | «Ảnh không tải được», Thử lại, các ảnh khác của cụm vẫn xem được | thử lại, chuyển ảnh |
 <!-- /ux-spec -->
 

@@ -1,93 +1,97 @@
 {
- "feature_plain": "Người gắn nhãn thấy tin chữ cùng cả cụm ảnh đã ghép bằng luật có sẵn, biết rõ đây là ghép suy ra; vẫn gắn mù.",
- "will_do": [
-  {
-   "id": "AC-1",
-   "p": "Sẽ tính ghép bằng đúng luật đang dùng ở pipeline, không viết luật thứ hai."
-  },
-  {
-   "id": "AC-2",
-   "p": "Sẽ ghi kết quả ghép vào mẫu, chạy lại không đổi gì, không đụng danh sách mẫu và nhãn."
-  },
-  {
-   "id": "AC-3",
-   "p": "Sẽ đưa chữ của tin chữ và đủ ảnh của cụm xuống thẻ; bài không ghép giữ nguyên như hôm nay."
-  },
-  {
-   "id": "AC-4",
-   "p": "Sẽ hiện nhãn «Ghép suy ra», dải ảnh một hàng, xem lớn chuyển được ảnh, ảnh lỗi không chặn ảnh khác."
-  },
-  {
-   "id": "AC-5",
-   "p": "Sẽ phục vụ mọi ảnh của cụm sau đăng nhập ops, vẫn chặn đi vòng đường dẫn."
-  },
-  {
-   "id": "AC-6",
-   "p": "Sẽ giữ gắn mù trên cả cụm; sau khi lưu mới so với máy, đúng tin chữ đã ghép."
-  },
-  {
-   "id": "AC-7",
-   "p": "Sẽ so căn cứ Chữ với chữ của tin ghép, và cho ghi trường hợp «Ghép sai»."
-  },
-  {
-   "id": "AC-8",
-   "p": "Sẽ gắn theo cả tin: 11 dòng trùng cụm không hiện, 356 thẻ, không xoá dòng nào."
-  },
-  {
-   "id": "AC-9",
-   "p": "Sẽ đo trên 367 bài thật bằng kết nối chỉ đọc và giữ bảng đọc tay 30 cụm làm số ghép nhầm."
-  },
-  {
-   "id": "AC-10",
-   "p": "Sẽ không để tên nguồn, chữ bài thật lọt vào kho, không đụng phần thu của ZCode."
-  }
- ],
- "wont_do": [
-  {
-   "id": "OOS-1",
-   "p": "Sẽ KHÔNG sửa phần thu, hook, luật ghép, cửa sổ 2 phút; mã album do giám sát lo qua làn thu."
-  },
-  {
-   "id": "OOS-2",
-   "p": "Sẽ KHÔNG xoá hay sinh lại lát, đổi cách chọn mẫu khi chưa có lời Mạnh."
-  },
-  {
-   "id": "OOS-3",
-   "p": "Sẽ KHÔNG áp 076 hay ghi cột ghép lên DB thật trước khi có lời Mạnh ở Hỏi-4, kèm sao lưu."
-  },
-  {
-   "id": "OOS-4",
-   "p": "Sẽ KHÔNG làm việc giữ số điện thoại khi bỏ link ở vòng này: hàng riêng."
-  }
- ],
- "coverage_plain": [
-  {
-   "i": 0,
-   "p": "Loại bài: chỉ ảnh một tin chữ, nhiều tin chữ, không tin chữ, có chữ có cụm, thiếu người gửi."
-  },
-  {
-   "i": 1,
-   "p": "Có chữ không cụm: 176 dòng, giữ như hôm nay."
-  },
-  {
-   "i": 2,
-   "p": "Cỡ cụm: một ảnh, trung vị 2, lớn nhất 21."
-  },
-  {
-   "i": 3,
-   "p": "Trạng thái ảnh: có tệp, thiếu tệp giữa cụm."
-  },
-  {
-   "i": 4,
-   "p": "Đường đi: lệnh ghép, lấy mẫu, thẻ, ảnh, lưu nhãn, đối chiếu."
-  },
-  {
-   "i": 5,
-   "p": "Đơn vị mẫu: dòng trùng cụm, lát cũ, lát mới."
-  },
-  {
-   "i": 6,
-   "p": "Ranh giới: gắn mù, tên nguồn, làn thu, DB thật."
-  }
- ]
+  "feature_plain": "Người gắn nhãn thấy tin chữ cùng cả cụm ảnh đã ghép bằng luật có sẵn, biết rõ đây là ghép suy ra; vẫn gắn mù.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ tính ghép bằng đúng luật đang dùng ở pipeline, không viết luật thứ hai."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ ghi kết quả ghép vào mẫu, chạy lại không đổi gì, không đụng danh sách mẫu và nhãn."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đưa chữ của tin chữ và đủ ảnh của cụm xuống thẻ; bài không ghép giữ nguyên như hôm nay."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ hiện nhãn «Ghép suy ra», dải ảnh một hàng, xem lớn chuyển ảnh bằng nút Ảnh trước, Ảnh sau, ảnh lỗi không chặn ảnh khác."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ phục vụ mọi ảnh của cụm sau đăng nhập ops, vẫn chặn đi vòng đường dẫn."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ giữ gắn mù trên cả cụm; sau khi lưu mới so với máy, đúng tin chữ đã ghép."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ so căn cứ Chữ với chữ của tin ghép, và cho ghi trường hợp «Ghép sai»."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ gắn theo cả tin: 11 dòng trùng cụm không hiện, 356 thẻ, không xoá dòng nào."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ đo trên 367 bài thật bằng kết nối chỉ đọc và giữ bảng đọc tay 30 cụm làm số ghép nhầm."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ không để tên nguồn, chữ bài thật lọt vào kho, không đụng phần thu của ZCode."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "Sẽ KHÔNG sửa phần thu, hook, luật ghép, cửa sổ 2 phút; mã album do giám sát lo qua làn thu."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Sẽ KHÔNG xoá hay sinh lại lát, đổi cách chọn mẫu khi chưa có lời Mạnh."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Sẽ KHÔNG áp 076 hay ghi cột ghép lên DB thật trước khi có lời Mạnh ở Hỏi-4, kèm sao lưu."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Sẽ KHÔNG làm việc giữ số điện thoại khi bỏ link ở vòng này: hàng riêng."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Sẽ KHÔNG làm phím mũi tên trong hộp xem ảnh lớn: thu khỏi phạm vi sau hai lượt chấm đỏ, ghi Known limits; người gắn bấm nút để chuyển ảnh."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Loại bài: chỉ ảnh một tin chữ, nhiều tin chữ, không tin chữ, có chữ có cụm, thiếu người gửi."
+    },
+    {
+      "i": 1,
+      "p": "Có chữ không cụm: 176 dòng, giữ như hôm nay."
+    },
+    {
+      "i": 2,
+      "p": "Cỡ cụm: một ảnh, trung vị 2, lớn nhất 21."
+    },
+    {
+      "i": 3,
+      "p": "Trạng thái ảnh: có tệp, thiếu tệp giữa cụm."
+    },
+    {
+      "i": 4,
+      "p": "Đường đi: lệnh ghép, lấy mẫu, thẻ, ảnh, lưu nhãn, đối chiếu."
+    },
+    {
+      "i": 5,
+      "p": "Đơn vị mẫu: dòng trùng cụm, lát cũ, lát mới."
+    },
+    {
+      "i": 6,
+      "p": "Ranh giới: gắn mù, tên nguồn, làn thu, DB thật."
+    }
+  ]
 }
