@@ -35,6 +35,11 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    pl18_thuan: "cd agent && node --import tsx --test tests/e2-mu.test.ts tests/doc-mang-can.test.ts"   # e1-e2-theo-lop — model giả, không DB
+    pl18_cong: "cd agent && node --import tsx --test --test-concurrency=1 tests/cong-tach.itest.ts"   # e1-e2-theo-lop E3, E10, E11 — DB thử, model giả
+    pl18_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/e1-theo-lop.itest.ts && cd ../pipeline && node --test --test-concurrency=1 scripts/tach-nhieu-can.itest.mjs"   # e1-e2-theo-lop — DB thử, model giả
+    pl18_db_cloud: "cd pipeline && node --test --test-concurrency=1 scripts/tach-nhieu-can.itest.mjs"   # e1-e2-theo-lop E9 — ảnh, thẻ, leak gate
+    pl18_db_va_cu: "cd pipeline && node --test --test-concurrency=1 scripts/tach-nhieu-can.itest.mjs scripts/phat-bieu-db.itest.mjs && cd ../agent && node --import tsx --test --test-concurrency=1 tests/doc-toan-bo-db.itest.ts"   # e1-e2-theo-lop E12
     ls1_thuan: "cd agent && node --import tsx --test tests/doc-toan-bo.test.ts"   # s03-llm-doc-toan-bo E2 — model giả, không DB
     ls1b_thuan: "cd agent && node --import tsx --test tests/luat-trich-so-phong.test.ts"   # s03-noi-luat-trich-dan E1, E2
     ls1b_db: "cd agent && node --import tsx --test --test-concurrency=1 tests/xu-lai-trich-db.itest.ts"   # s03-noi-luat-trich-dan — model giả, ROLLBACK

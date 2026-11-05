@@ -1,0 +1,75 @@
+schema_version: 1
+feature_slug: e1-e2-theo-lop
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["agent/src/agents/context-resolver.ts", "agent/src/enrich/route.ts", "db/migrations/077_*.sql", "pipeline/lib/assert.mjs", "agent/tests/e1-theo-lop.itest.ts"]
+    expected: "Ma trận ba lớp × hai đường ghi trên DB thử, đọc evidence_tier và rule_id từ field_assertions thật; assert riêng routeFields không ra direct cho hai lớp suy, đối chứng lớp chữ bài vẫn direct. Đỏ khi apply_enrichment về observed cố định, thông điệp ghim ca «tên nhóm thành quan sát»."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pl18_thuan
+    paths: ["agent/src/agents/enrich-text.ts", "agent/src/enrich/doc-toan-bo.ts", "agent/tests/e2-mu.test.ts"]
+    expected: "Bắt prompt thật qua model giả ở mọi đường gọi, dùng chuỗi lính canh cho từng giá trị E1; đối chứng dương: chữ bài chứa đúng chuỗi đó thì được giữ. Đỏ khi thêm lại dòng mồi, thông điệp ghim tên giá trị bị lộ."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pl18_cong
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/tests/cong-tach.itest.ts"]
+    expected: "Bốn hình dạng trả lời viết trước đi qua đường ghi thật trên DB thử; đọc cột probabilities thật để chứng confidence không được lưu, mỗi căn một assert. Đỏ khi lưu lại trường này, thông điệp ghim."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/src/enrich/luat-trich-dan.ts", "pipeline/parse.mjs", "agent/tests/doc-mang-can.test.ts", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Ma trận toàn phần: quote_loai, quote_gia, quote_dt, quote_pn, quote_ma × giả, lệch, khớp, cộng ca chồng câu trích; mỗi ô một assert ghim lý do; số ô bằng số assert. Trên DB thử đếm đúng một thẻ khi một trong ba căn lệch và bài ra một tin. Đỏ khi bỏ bước parser đọc lại, thông điệp ghim ô «số lệch»; đỏ khi bỏ thẻ, thông điệp ghim."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/offer-key.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Nhãn đi qua đường ghi thật của lượt đọc, không viết tay dòng silver_labels; so từng cặp khoá, giá, diện tích với truy vấn độc lập; ca hai căn giống hệt ra hai tin; đối chứng hai ca không tách. Đỏ khi hoán vị giá giữa các căn, thông điệp ghim khoá căn."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/lib/offer-key.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Băm offer_id, số phát biểu sau lần nạp 1, 2, 3 bằng nhau; đếm lời gọi model giả bằng 0; đỏ khi transform đọc nhãn mới nhất thay vì TACH_VERSION, thông điệp ghim."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["pipeline/lib/offer-key.mjs", "pipeline/transform-zalo.mjs", "pipeline/lib/write-offers.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Tin cũ do lượt transform thật sinh trước khi có nhãn, có đề xuất, thẻ chờ và phát biểu người; assert riêng từng vế: lý do nghỉ, superseded_by, khoá mới, thẻ đóng có lý do, căn không nhận giá trị của người trên tin cũ; duyệt thẻ tạo mới sau tách vẫn áp được; hai vòng đảo thứ tự đầu vào ra cùng kết quả. Trang tin cũ trả dưới 500 qua hàm đọc thật. Đỏ khi căn thừa kế khoá tin gộp, thông điệp ghim."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pl18_db
+    paths: ["db/migrations/077_*.sql", "pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Hai tin chung bài với phát biểu ba phương pháp; so từng ô với truy vấn độc lập; xoá cột rồi gọi resolve_offer_fields ra y nguyên; tin không tách so trước, sau migration trên cùng dữ liệu. Đỏ khi offer_subject_keys bỏ nhánh unit_refs, thông điệp ghim ca «phát biểu chảy sang tin chung bài»."
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pl18_db_cloud
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/media-rows.mjs", "pipeline/sync-cloud.mjs", "app/src/lib/ops/review-context.ts", "pipeline/scripts/tach-nhieu-can.itest.mjs"]
+    expected: "Bài đăng lại: so post_ids từng căn, hai căn không gộp; đọc ảnh và ngữ cảnh thẻ qua hàm thật cho cả hai tin; leak gate chạy trên cột mới với chuỗi lính canh, đối chứng chuỗi đó bị bắt khi cố ý chèn. Đỏ khi post_ids nhận khoá căn, thông điệp ghim."
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pl18_cong
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "pipeline/transform-zalo.mjs", "agent/tests/cong-tach.itest.ts"]
+    expected: "Có nhãn, chưa có dấu: chạy transform thật, băm offer_id không đổi. Mỗi điều kiện cổng một ca đi qua lệnh thật, đọc mã thoát 5 và đếm dòng trước, sau; nhãn do hàm ghi nhãn thật sinh, dòng mẫu do --mau thật sinh. Ca biên: 0/124 và 0/125 cho nhánh đóng; 28/30 và 29/30 cho độ chính xác, độ phủ. Đầu ra --mau được so với số tính độc lập. Đỏ khi cổng đọc sai phiên bản, thông điệp ghim mã 5."
+  - id: E11
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.pl18_cong
+    paths: ["agent/src/enrich/doc-toan-bo.ts", "agent/scripts/doc-toan-bo-s03.ts", "agent/tests/cong-tach.itest.ts"]
+    expected: "Model giả có giá cố định, kiểm tổng chi và số lời gọi hai lượt; đếm dòng DB trước, sau --bang-doi-chieu; đường ra qua git check-ignore. Tệp đọc tay: run_id lạ, 29 bài, 26/30 đều bị từ chối, 27/30 đạt. Đỏ khi đọc lại nhãn tốt, thông điệp ghim."
+  - id: E12
+    criterion: AC-12
+    executor: test
+    cmd: config:executors.test.pl18_db_va_cu
+    paths: ["pipeline/transform-zalo.mjs", "pipeline/sync-cloud.mjs", "pipeline/scripts/tach-nhieu-can.itest.mjs", "agent/tests/doc-toan-bo-db.itest.ts", "pipeline/scripts/phat-bieu-db.itest.mjs"]
+    expected: "Băm mọi cột của tin cũ trước khi tách và sau khi hoàn tác, trừ mốc cập nhật; đếm dòng không giảm; chạy lại không đổi; transform hai lần sau đó băm không đổi; bản đồng bộ dựng từ hàm thật không còn tin căn; bộ test cũ xanh. Đỏ khi thiếu dấu chặn tách lại, thông điệp ghim; đỏ khi hoàn tác xoá dòng, thông điệp ghim."
