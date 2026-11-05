@@ -178,42 +178,80 @@ if [ -f "$OC_LOG_GLOB" ]; then
   fi
 fi
 
-# L4d — AGENT TURN THEO DB (0511-16): lượt agent NGẮN không in dòng timing
-# (totalWarnMs 1e4 / stageWarnMs 5e3) nên L4b bỏ sót lượt <5 giây — bộ canh đã
-# từng chỉ bắt được 30/10 vì lượt đó kịp in timing. Đếm bảng
-# transcript_events trong MỌI ~/.openclaw/agents/*/agent/openclaw-agent.sqlite
-# (glob — không liệt kê cứng agent). Chỉ SELECT COUNT(*)/MAX(created_at) qua
-# sqlite3 "file:…?mode=ro" — KHÔNG đụng cột nội dung (event_json,
-# event_zstd, navigation_json), không in nội dung phiên. Khuôn marker L4b:
-# lượt chạy ĐẦU ghi baseline từng DB — lượt LỊCH SỬ (8 events 30/10 đã xử lý)
-# không kill; lượt sau kill khi count HOẶC max tăng. DB không mở được / thiếu
-# bảng / cột đổi tên → alert ĐỎ fail-closed, KHÔNG im lặng coi là 0. Giữ L4b
-# dò chuỗi timing song song: hai nguồn độc lập — session bị xoá khỏi DB vẫn
-# còn dấu trong log gateway, và ngược lại lượt ngắn chỉ thấy ở DB.
+# L4d — AGENT TURN THEO DB (0511-16): lượt agent với tổng dưới 10 giây và
+# không giai đoạn nào từ 5 giây KHÔNG in dòng timing (totalWarnMs 1e4 /
+# stageWarnMs 5e3) nên L4b bỏ sót — bộ canh đã từng chỉ bắt được 30/10 vì
+# lượt đó kịp in timing. Đếm bảng transcript_events trong MỌI
+# ~/.openclaw/agents/*/agent/openclaw-agent.sqlite (glob — không liệt kê
+# cứng agent). Chỉ SELECT COUNT(*)/MAX(created_at) qua sqlite3
+# "file:…?mode=ro" — KHÔNG đụng cột nội dung (event_json, event_zstd,
+# navigation_json), không in nội dung phiên.
+#   baseline: CHỈ lần chạy đầu của L4d (cờ .first-done chưa có) — mọi DB
+#   hiện hữu được ghi baseline, lượt LỊCH SỬ (30/10 đã xử lý) không kill.
+#   Từ lượt thứ hai: DB MỚI xuất hiện có count>0 là KILL ngay (DB đó sinh ra
+#   vì chính lượt đầu của agent — 0511-16 mở lại), chỉ DB mới rỗng 0|0 mới
+#   baseline; count TĂNG hoặc max TĂNG so marker → KILL. count GIẢM mà max
+#   không tăng → WARN + cập nhật marker (dòng bị chuyển sang archives —
+#   kho có session_transcript_archives/cold_archives), không kill.
+#   marker cố ý KHÔNG tự tiến sau khi KILL: bật lại gateway là lượt kế kill
+#   tiếp cho tới khi người đọc xử marker — luật 8 cần người đọc trước khi
+#   bật lại (0511-16 mở lại; runbook của liên làn).
+#   DB không đọc được sau 3 lần thử (mỗi lần timeout 5s, cách 2s — một lần
+#   busy/migration thoáng qua KHÔNG tắt gateway) / thiếu bảng / cột đổi tên
+#   / đầu ra lệch khuôn ^count|max$ → alert ĐỎ fail-closed, KHÔNG im lặng
+#   coi là 0. Giữ L4b dò chuỗi timing song song: hai nguồn độc lập —
+#   session bị xoá khỏi DB vẫn còn dấu trong log gateway, và ngược lại lượt
+#   ngắn chỉ thấy ở DB.
 L4D_AGENTS_DIR="$HOME/.openclaw/agents"
 L4D_MARK_DIR="$ROOT/pipeline/logs/zalo-watchdog-agentdb.d"
+L4D_FIRST="$L4D_MARK_DIR/.first-done"
 mkdir -p "$L4D_MARK_DIR"
-l4d_read_db() { # $1=DB → in "count|max_created_at"; lỗi mở/bảng/cột → exit≠0
-  sqlite3 "file:$1?mode=ro" \
-    "SELECT COUNT(*) || '|' || COALESCE(MAX(created_at), 0) FROM transcript_events;" 2>/dev/null
+l4d_read_db() { # $1=DB → in "count|max_created_at"; hỏng/khóa/trái khuôn → exit≠0
+  local db="$1" out i
+  for i in 1 2 3; do
+    out=$(sqlite3 -cmd '.timeout 5000' "file:$db?mode=ro" \
+      "SELECT COUNT(*) || '|' || COALESCE(MAX(created_at), 0) FROM transcript_events;" 2>/dev/null)
+    if [ -n "$out" ] && [[ "$out" =~ ^[0-9]+\|[0-9]+$ ]]; then
+      printf '%s\n' "$out"
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
 }
+l4d_cnt() { echo "${1%%|*}"; }
+l4d_max() { echo "${1##*|}"; }
 for L4D_DB in "$L4D_AGENTS_DIR"/*/agent/openclaw-agent.sqlite; do
   [ -e "$L4D_DB" ] || continue # chưa có agent nào — bình thường
   L4D_NOW=$(l4d_read_db "$L4D_DB") \
-    || alert "L4d: không đọc được $L4D_DB (DB hỏng/bị khóa/thiếu bảng transcript_events/cột đổi tên) — fail-closed, không coi là 0"
+    || alert "L4d: không đọc được $L4D_DB sau 3 lần thử (DB hỏng/bị khóa kéo dài/thiếu bảng transcript_events/cột đổi tên) — fail-closed, không coi là 0"
   L4D_AG=$(basename "$(dirname "$(dirname "$L4D_DB")")")
   L4D_MK="$L4D_MARK_DIR/$L4D_AG"
   L4D_PREV=$(cat "$L4D_MK" 2>/dev/null || echo "")
-  if [ -z "$L4D_PREV" ]; then
-    # lần đầu thấy DB này: ghi baseline, KHÔNG kill vì lượt lịch sử (0511-16)
+  if [ ! -e "$L4D_FIRST" ]; then
+    # lần chạy ĐẦU của L4d: mọi DB hiện hữu ghi baseline (lịch sử không kill)
     echo "$L4D_NOW" > "$L4D_MK"
+  elif [ -z "$L4D_PREV" ] && [ "$(l4d_cnt "$L4D_NOW")" = "0" ]; then
+    # DB mới xuất hiện nhưng chưa có event nào — baseline 0|0, không kill
+    echo "$L4D_NOW" > "$L4D_MK"
+  elif [ -z "$L4D_PREV" ]; then
+    # DB mới xuất hiện ĐÃ CÓ events từ lượt sau trở đi — chính là lượt chạy
+    # của agent đó (0511-16 mở lại điểm 3): KILL, KHÔNG baseline
+    alert "L4d: agent '$L4D_AG' mới có transcript_events ($L4D_NOW) — lượt agent chạy dù config an toàn, hành vi sự cố 2026-10-20 — SAU KHI ĐIỀU TRA: xử marker $L4D_MK rồi mới bật lại (marker cố ý không tự tiến)"
+  elif [ "$(l4d_cnt "$L4D_NOW")" -gt "$(l4d_cnt "$L4D_PREV")" ] || [ "$(l4d_max "$L4D_NOW")" -gt "$(l4d_max "$L4D_PREV")" ]; then
+    alert "L4d: agent '$L4D_AG' có transcript_events MỚI ($L4D_PREV → $L4D_NOW) — lượt agent chạy dù config an toàn, hành vi sự cố 2026-10-20 — SAU KHI ĐIỀU TRA: xử marker $L4D_MK rồi mới bật lại (marker cố ý không tự tiến)"
   elif [ "$L4D_NOW" != "$L4D_PREV" ]; then
-    alert "L4d: agent '$L4D_AG' có transcript_events MỚI ($L4D_PREV → $L4D_NOW) — lượt agent chạy dù config an toàn, hành vi sự cố 2026-10-20"
+    # count GIẢM mà max không tăng: dòng bị chuyển sang archives — WARN, ghi
+    # lại marker, KHÔNG kill (0511-16 mở lại điểm 1)
+    echo "$(date -Iseconds) WARN: L4d agent '$L4D_AG' count giảm $L4D_PREV → $L4D_NOW (dòng chuyển sang archives?) — cập nhật marker, không kill" >> "$ALERT_LOG"
+    echo "$L4D_NOW" > "$L4D_MK"
   fi
 done
+# cờ lần-đầu đặt SAU vòng quét: lượt đầu không DB nào cũng coi đã baseline
+[ -e "$L4D_FIRST" ] || touch "$L4D_FIRST"
 # marker còn mà DB mất (agent bị xoá?) — WARN để truy vết, không kill
 for L4D_MK in "$L4D_MARK_DIR"/*; do
-  [ -e "$L4D_MK" ] || continue
+  [ -f "$L4D_MK" ] || continue
   L4D_AG=$(basename "$L4D_MK")
   [ -e "$L4D_AGENTS_DIR/$L4D_AG/agent/openclaw-agent.sqlite" ] \
     || echo "$(date -Iseconds) WARN: L4d marker '$L4D_AG' còn nhưng DB biến mất — agent bị xoá?" >> "$ALERT_LOG"
