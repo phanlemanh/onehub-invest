@@ -69,7 +69,7 @@ type BaiCoAnh = { media: unknown; media_files: unknown; snapshot_id: string | nu
 export function danhSachAnhCum(bai: BaiCoAnh[]): NguonAnh[] {
   const da = new Set<string>()
   return bai.flatMap((b) => danhSachAnh(b.media, b.media_files, b.snapshot_id)).filter((n) => {
-    const k = n.kind === "tep" ? `${n.snapshot}|${n.file}` : n.url
+    const k = n.kind === "tep" ? (n.sha256 ?? `${n.snapshot}|${n.file}`) : n.url
     if (da.has(k)) return false
     da.add(k)
     return true

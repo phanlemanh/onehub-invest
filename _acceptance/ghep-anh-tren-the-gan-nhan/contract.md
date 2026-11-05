@@ -62,6 +62,8 @@ Later: phím mũi tên trong hộp xem ảnh lớn · ghép các bài ảnh khô
 
 - Known limits — thu phạm vi sau lượt chấm 2, Mạnh chọn lối 1 ngày 2026-11-05:
   - Phím mũi tên trong hộp xem ảnh lớn không chuyển ảnh: hộp thoại của thư viện chặn phím này. Người gắn chuyển ảnh bằng nút Ảnh trước, Ảnh sau.
+- Known limits — sau lượt chấm 5, ngày 2026-11-05, Mạnh quyết khi ký:
+  - `E4b` trong `app/tests/tin-rao-doi-chieu.test.tsx` đòi đường đọc tin công khai dưới 1000 ms, đỏ 1072 ms lúc máy tải cao trong lượt chấm 5, chạy riêng xanh 3/3 ở 176–198 ms. Test ngoài hồ sơ, không đổi trong nhánh này.
 - Known limits — Mạnh duyệt sau lượt chấm 4, ngày 2026-11-05:
   - Phép quét mã bài của E3 chỉ biết mã của cụm đầu; quét mã bài tổng quát trên sáu loại bài nằm ở E4.
   - Mồi riêng của từng bài ảnh ở E7, E8 nằm ở cột `model`, đường đọc không lấy cột này nên số đếm 0 chưa chứng minh được rò từ bài ảnh qua HTTP; mồi ở `block_raw` và phần so với mốc mới đo được đường đọc.

@@ -91,6 +91,16 @@ test("GHEP-AC-3 thu tu anh: tin chu truoc, cum theo thoi gian, trung anh tinh mo
   assert.deepEqual(ds.map((d) => (d.kind === "tep" ? d.file : d.url)), ["media/t.jpg", "media/a.jpg", U("b")])
 })
 
+test("GHEP-AC-3 hai bai cung noi dung anh tinh mot lan theo sha256, khac sha hay thieu sha giu rieng", () => {
+  const coSha = (ten: string, sha: string | null): BaiAnhRow => ({ media: null, media_files: [{ url: U(ten), file: `media/${ten}.jpg`, snapshotId: SNAP, ...(sha ? { sha256: sha } : {}) }], snapshot_id: SNAP })
+  const A = "a".repeat(64), B = "b".repeat(64)
+  const ten = (bai: BaiAnhRow[]) => danhSachAnhCum(bai).map((d) => (d.kind === "tep" ? d.file : d.url))
+  assert.deepEqual(ten([coSha("x", A), coSha("y", A)]), ["media/x.jpg"])
+  assert.deepEqual(ten([coSha("x", A), coSha("y", B)]), ["media/x.jpg", "media/y.jpg"])
+  assert.deepEqual(ten([coSha("x", null), coSha("y", null)]), ["media/x.jpg", "media/y.jpg"])
+  assert.deepEqual(ten([coSha("x", null), coSha("x", null)]), ["media/x.jpg"], "thiếu sha thì khoá vẫn là snapshot và tệp")
+})
+
 test("GHEP-AC-3 du lieu the khong co ma bai hay URL goc, doi chung phep quet do", async () => {
   const coMa = (s: string) => /T1|A1|A2|example\.test|https?:/.test(s)
   for (const [, k, ref] of MA_TRAN) assert.ok(!coMa(JSON.stringify(await docThe(q, 9, dongCua(ref), doc(k)))), ref)
