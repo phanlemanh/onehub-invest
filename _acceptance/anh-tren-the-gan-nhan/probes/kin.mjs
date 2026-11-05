@@ -34,8 +34,10 @@ di(goc)
 const chuHoSo = tepHoSo.filter((p) => !/\.(png|jpe?g|webp)$/i.test(p)).map((p) => fs.readFileSync(p, "utf8")).join("\n").toLowerCase()
 kiem(quet(chuHoSo) === 0, "ho so khong co ten mien nguon", `loi ${quet(chuHoSo)} ten mien trong ho so`)
 const tepMoi = ["seed.mjs", "nap.mjs"].map((f) => fs.readFileSync(path.join(goc, "probes", f), "utf8")).concat(fs.readFileSync(path.join(ROOT, "app/tests/labels-anh.test.ts"), "utf8")).join("\n")
-const urlFixture = [...tepMoi.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map((m) => m[1]).filter((h) => !h.endsWith("example.test") && h !== "localhost" && h !== "www.w3.org")
-kiem(urlFixture.length === 0, "fixture chi example.test", `loi fixture co ${urlFixture.length} ten may khac`)
+// Cả dạng có scheme lẫn tên miền trần. Ngoại lệ có tên: `khac.<đuôi>` là tên giả để thử từng đuôi của bộ lọc link.
+const tenMayLa = (chu) => [...chu.matchAll(/https?:\/\/([a-z0-9.-]+)|(?<![a-z0-9@.-])((?:[a-z0-9-]+\.)+(?:vn|com|net|org|me|link|ly|io|info|biz))(?![a-z0-9-])/gi)].map((m) => (m[1] ?? m[2]).toLowerCase()).filter((h) => !h.endsWith("example.test") && h !== "localhost" && h !== "www.w3.org" && !/^(?:cdn\.)?khac\./.test(h))
+kiem(tenMayLa(tepMoi).length === 0, "fixture chi example.test va ten gia khac.<duoi>", `loi fixture co ${tenMayLa(tepMoi).length} ten may khac`)
+kiem(tenMayLa("Xem cdn.that.com/a") .length === 1 && tenMayLa("https://that.vn/a").length === 1, "doi chung: fixture co ten mien khac bi bat", "loi doi chung fixture")
 const mau1 = [...mien][0]
 const moiDang = [`https://cdn.${mau1}/x`, `www.${mau1}`, `abc.${mau1}/x`, `https://${mau1}/x`, `${mau1}/x`]
 kiem(moiDang.every((d) => quet(`dong co ${d}`) >= 1), "doi chung: dong co ten mien bi bat", "loi doi chung: mot dang ten mien lot")

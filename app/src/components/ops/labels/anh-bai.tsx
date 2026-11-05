@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { ImageOffIcon } from "lucide-react"
 
-import { Attachment, AttachmentContent, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
+import { Attachment, AttachmentGroup, AttachmentMedia, AttachmentTrigger } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -57,11 +57,12 @@ function OAnh({ src, thuTu, onXem }: { src: string; thuTu: number; onXem: () => 
   }, [lan])
   if (trangThai === "loi") {
     return (
-      <div className="flex items-center gap-2" data-labels-anh-loi="">
+      <div className="flex flex-wrap items-center gap-2" data-labels-anh-loi="">
         <Attachment orientation="vertical" state="error">
           <AttachmentMedia><ImageOffIcon aria-hidden /></AttachmentMedia>
-          <AttachmentContent><AttachmentTitle>Ảnh không tải được</AttachmentTitle></AttachmentContent>
         </Attachment>
+        {/* Không để trong AttachmentTitle: ô rộng 96px cắt câu thành «Ảnh không t…». */}
+        <span className="text-sm">Ảnh không tải được</span>
         <Button variant="outline" size="xs" onClick={() => { setTrangThai("tai"); setLan((n) => n + 1) }}>Thử lại</Button>
       </div>
     )

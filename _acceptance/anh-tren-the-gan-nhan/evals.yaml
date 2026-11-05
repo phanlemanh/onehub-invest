@@ -58,7 +58,7 @@ evals:
     target: "http://localhost:3463/ops/labels"
     paths: [app/src/components/ops/labels/anh-bai.tsx, app/src/components/ops/labels/label-form-nhom.tsx, _acceptance/anh-tren-the-gan-nhan/probes/seed.mjs]
     steps:
-      - "Cùng bản chạy với E4, sau khi E4 đã lưu; đi tới từng bài tiếp theo bằng cách lưu bài trước. Bài ảnh hỏng: chụp evidence/E10-step1.png, thấy 'Ảnh không tải được' và Thử lại; bấm Thử lại, ghi yêu cầu tới /api/zalo-media được gọi lại trên mạng"
+      - "Cùng bản chạy với E4, sau khi E4 đã lưu; đi tới từng bài tiếp theo bằng cách lưu bài trước. Bài ảnh hỏng: chụp evidence/E10-step1.png, đọc trên ảnh chụp thấy trọn câu 'Ảnh không tải được', không bị cắt, và Thử lại, ở cả khổ 1280 và 375; bấm Thử lại, ghi yêu cầu tới /api/zalo-media được gọi lại trên mạng"
       - "Chọn ô không suy ra cho mọi trường bài ảnh hỏng, Lưu; đọc DB thử oneinvest_anh_nhan, ghi số dòng eval_labels của bài đó"
       - "Bài chỉ có link khác: chụp evidence/E10-step2.png, thấy 'Bài có 1 liên kết khác', không thấy câu trống"
       - "Bài không có gì: chụp evidence/E10-step3.png, thấy câu trống, biểu mẫu vẫn dùng được"
