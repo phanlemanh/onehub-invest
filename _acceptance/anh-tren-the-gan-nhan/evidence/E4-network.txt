@@ -1,13 +1,6 @@
-E4 network: ego-browser khong co duong doc network cua trinh duyet (n-a driver). Thay bang nhat ky may chu dev :3463 (app-scope), 0 dong loi, moi yeu cau 200:
- GET / 200 in 292ms (next.js: 48ms, application-code: 244ms)
- GET /ops/labels?nhom=S03-N039 200 in 197ms (next.js: 68ms, proxy.ts: 2ms, application-code: 127ms)
- GET /api/zalo-media?nhan=10340&anh=0 200 in 45ms (next.js: 23ms, application-code: 23ms)
- GET /ops/labels?nhom=S03-N039 200 in 87ms (next.js: 13ms, proxy.ts: 1.5ms, application-code: 73ms)
- GET /ops/labels?nhom=S03-N039 200 in 168ms (next.js: 4ms, proxy.ts: 3ms, application-code: 162ms)
- GET /ops/labels?nhom=S03-N039 200 in 172ms (next.js: 4ms, proxy.ts: 3ms, application-code: 165ms)
- GET /ops/labels?nhom=S03-N039 200 in 120ms (next.js: 2ms, proxy.ts: 2ms, application-code: 115ms)
- GET /ops/labels?nhom=S03-N039 200 in 191ms (next.js: 7ms, proxy.ts: 4ms, application-code: 180ms)
- POST /api/v1/ops/labels 200 in 71ms (next.js: 18ms, application-code: 53ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N039&xem=10340 200 in 271ms (next.js: 4ms, proxy.ts: 2.0ms, application-code: 265ms)
- GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N039&xem=10340 200 in 247ms (next.js: 3ms, proxy.ts: 2ms, application-code: 241ms)
-console errors: khong doc duoc qua driver
+E4 network: driver ego-browser (khong co tool doc network). Thay bang nhat ky may chu dev :3463 (khong co 4xx/5xx), khong co loi console do khong doc duoc.
+ GET /ops/labels?nhom=S03-N046 200 in 805ms (next.js: 545ms, proxy.ts: 2ms, application-code: 258ms)
+ GET /ops/labels?nhom=S03-N046 200 in 123ms (next.js: 2ms, proxy.ts: 4ms, application-code: 117ms)
+ GET /api/zalo-media?nhan=10365&anh=0 200 in 45ms (next.js: 22ms, application-code: 24ms)
+ POST /api/v1/ops/labels 200 in 55ms (next.js: 15ms, application-code: 40ms)
+ GET /ops/labels?lat=s03-theo-nhom&nhom=S03-N046&xem=10365 200 in 165ms (next.js: 10ms, proxy.ts: 3ms, application-code: 152ms)

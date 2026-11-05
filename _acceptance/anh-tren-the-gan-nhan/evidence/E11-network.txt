@@ -1,40 +1,12 @@
-# E11 network (lượt bấm Lưu bài 2 -> tải lại màn đối chiếu), giá trị cookie không ghi
-method	status	type	url
-POST	200	Fetch	http://localhost:3463/api/v1/ops/labels
-GET	200	Document	http://localhost:3463/ops/labels?lat=s03-theo-nhom&nhom=S03-N041&xem=10351
-GET	200	Font	http://localhost:3463/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
-GET	200	Font	http://localhost:3463/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
-GET	200	Font	http://localhost:3463/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
-GET	200	Font	http://localhost:3463/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
-GET	200	Font	http://localhost:3463/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
-GET	200	Stylesheet	http://localhost:3463/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
-GET	200	Script	http://localhost:3463/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/_1anvha4rlo79g._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/_1x_e391htnmld._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_14b_hroe7y71h._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/src_0rw3ib9yb_fx0._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_02uxlv6kujl17._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/_1g--mohl7s-9f._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_1l3m3iglgy1xq._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/src_17_6n6f522exz._.js
-GET	200	Script	http://localhost:3463/_next/static/chunks/node_modules_079lv6ew5brwr._.js
-GET	200	Stylesheet	http://localhost:3463/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css
-GET	200	Script	http://localhost:3463/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
-GET	200	Image	http://localhost:3463/api/zalo-media?nhan=10351&anh=0
-
-requests=35 fail_or_4xx5xx=0
-console: khong co API doc console o ego-browser; khong thu duoc
+# E11 network (driver ego-browser khong co duong doc network; ghi log may chu dev :3463 sau lan chay)
+ GET / 200 in 290ms (next.js: 49ms, application-code: 241ms)
+ GET /ops/labels 200 in 165ms (next.js: 30ms, proxy.ts: 1.9ms, application-code: 133ms)
+ GET /api/zalo-media 200 in 40ms (next.js: 22ms, application-code: 19ms)
+ POST /api/v1/ops/labels 200 in 54ms (next.js: 13ms, application-code: 41ms)
+ GET /ops/labels 200 in 134ms (next.js: 1.9ms, proxy.ts: 1.9ms, application-code: 130ms)
+ GET /ops/labels 200 in 100ms (next.js: 3ms, proxy.ts: 4ms, application-code: 92ms)
+ GET /api/zalo-media 200 in 6ms (next.js: 0.5ms, application-code: 6ms)
+ POST /api/v1/ops/labels 200 in 28ms (next.js: 1.2ms, application-code: 27ms)
+ GET /ops/labels 200 in 128ms (next.js: 2ms, proxy.ts: 3ms, application-code: 122ms)
+--- dem status >=400:
+       0
