@@ -5,7 +5,7 @@ slug: noi-du-an-s08-khu-do-thi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-05-noi-du-an-s08-khu-do-thi-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -57,3 +57,23 @@ Later: lát khác của S08 (thêm dòng vào bảng nối) · xã của OCP2, O
 
 - Bảng nối ở `research-local/s08-noi-du-an.json` của máy thu, không commit; bản đọc được cho người ở `research-local/s08-noi-du-an-xem.md`.
 - Đường lên cloud: áp 074 ở máy thu (xin giám sát) rồi lần `sync-cloud` kế chép `asset_nodes`; `s08_project_links` không đi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-1: Một câu kiểm trong bộ đo có thể bỏ sót trường hợp dự án S08 thiếu dòng trong bảng nối, nhưng một câu kiểm khác trong cùng bộ đo vẫn báo đỏ nên kết quả cuối không bị xanh nhầm.
+  - Ngoài-2: Phép kiểm chấp nhận cả trường hợp tín hiệu chỉ khớp mã dự án, rộng hơn lời hứa là khớp tên hoặc phân khu. Với bảng nối hiện tại chưa có dòng nào bị ảnh hưởng.
+  - Ngoài-3: Một câu kiểm dự án thiếu dòng chỉ đo được một chiều, nhưng phép kiểm tổng số dòng đi kèm vẫn bắt được trường hợp đó nên không làm lọt lỗi.
+  - Ngoài-4: Bộ kiểm chưa có ca nào buộc tín hiệu của mỗi dòng phải khớp tên dự án của chính nó, nên nếu ai làm hỏng riêng điều kiện đó thì kiểm tự động vẫn xanh.
+  - Ngoài-5: Hai kiểu sai ở danh sách dự án bị loại (vừa nối vừa loại, mã dự án lạ) chưa có ca kiểm riêng, nên nếu mã xử lý hai kiểu này bị xoá thì kiểm tự động vẫn xanh.
+  - Ngoài-6: Phép quét tìm mã dự án S08 lộ ra ngoài không bắt được khi mã nằm trong bảng có dòng tiêu đề hoặc tệp CSV, dù chú thích nói là bắt mọi khuôn.
+  - Ngoài-7: Phép kiểm «không dòng nào vừa bị loại vừa được nối» chưa từng được thử với một dòng sai để chứng minh nó thật sự báo đỏ.
+  - Ngoài-8: Câu so hai tập dự án nói là so hai chiều nhưng thật ra chỉ so một chiều; phép so tổng số dòng đi kèm vẫn bảo đảm kết quả cuối đúng.
+  - Ngoài-9: Sau khi ghi bảng, chưa có phép kiểm nào đọc nội dung lý do loại để chắc rằng từng dự án mang đúng lý do đã duyệt, chỉ kiểm là có lý do.
+  - Ngoài-10: Bảng nối dự án với khu đô thị đặt tên cột và giá trị bằng tiếng Việt, lệch quy ước đặt tên tiếng Anh của kho. Người dùng cuối không thấy gì; chỉ người làm tiếp sẽ thấy tên không đồng bộ.
+  - Ngoài-11: Nếu phép đo bị ngắt giữa chừng, một tệp tạm chứa mã dự án thật có thể nằm lại trong thư mục không được git bỏ qua và vô tình bị đưa lên kho công khai.
+  - Ngoài-12: Bộ test của phần nối dự án không chạy trong kiểm tra tự động khi gộp, nên một thay đổi sau này làm hỏng nó có thể không bị phát hiện ngay.
+  - Ngoài-13: Khi tệp bảng nối sai cấu trúc, lệnh vẫn dừng an toàn nhưng báo như lỗi cơ sở dữ liệu, khiến người vận hành đi tìm sai chỗ.
+  - Ngoài-14: Tệp bảng nối sai cấu trúc bị báo là lỗi cơ sở dữ liệu, làm người vận hành khó biết lỗi nằm ở tệp của mình.
+  - Ngoài-15: Phép kiểm không để lộ tên dự án có một số tên được bỏ qua theo quy tắc tự tính, nên danh sách bỏ qua có thể phình ra mà không ai hay.
+  - Ngoài-16: Phép kiểm không để lộ tên dự án chỉ thử lại được cách viết hoa viết thường, chưa thử bỏ dấu hay bỏ hậu tố, nên có thể bỏ lọt một cách viết khác của tên.
+  - Ngoài-17: Phép kiểm việc dọn bí danh dự án chỉ thấy bí danh đã biến mất, chưa chứng minh năm bí danh kia từng tồn tại trước khi dọn.
+  - Ngoài-18: Phép kiểm xem tệp bảng nối có được git bỏ qua đang đọc luật của thư mục chính chứ không phải nhánh đang chấm, nên nhánh gỡ luật bỏ qua có thể không bị phát hiện.
+  - Ngoài-19: Tệp khai báo nguồn dự án có ghi chú «chỉ local» nhưng phép kiểm chỉ dò chữ, không phải một cấu hình mà hệ thống thực sự đọc; chặn đồng bộ thật nằm ở chỗ khác.
