@@ -5,7 +5,7 @@ slug: ghep-anh-tren-the-gan-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-05-ghep-anh-tren-the-gan-nhan-design.md
 approved_by: Mạnh
 approved_at: 2026-11-05
@@ -60,6 +60,16 @@ Later: phím mũi tên trong hộp xem ảnh lớn · ghép các bài ảnh khô
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-05:
+  - Ngoài-2: Tên dữ liệu mới của tính năng ghép ảnh đặt bằng tiếng Việt, khác quy ước tên tiếng Anh của dự án. Người dùng cuối không thấy gì, nhưng về sau đổi tên sẽ tốn thêm một lần chuyển dữ liệu.
+  - Ngoài-4: Người vận hành gõ nhầm cờ chạy thử có thể vô tình ghi thật vào dữ liệu, và gõ sai tên lát vẫn báo xong với 0 dòng.
+  - Ngoài-5: Nếu lệnh ghép bị đứt giữa chừng khi chạy trên dữ liệu thật, lần chạy lại báo là đã xong dù phần còn lại chưa ghép, và người gắn sẽ thấy lẫn thẻ có ghép với thẻ không ghép.
+  - Ngoài-7: Khi người gắn mở xem lớn một ảnh hỏng, họ chỉ thấy biểu tượng ảnh vỡ, không có câu báo lỗi hay nút thử lại, dù dải ảnh bên ngoài có báo.
+  - Ngoài-9: Nếu chưa áp bản cập nhật cấu trúc dữ liệu, lệnh lấy mẫu vẫn báo thành công nhưng các bài ảnh không có thông tin ghép.
+  - Ngoài-11: Nếu lệnh ghép bị đứt giữa chừng, lần chạy lại báo đã xong dù một phần lát chưa được ghép, nên người gắn thấy lẫn thẻ ghép và không ghép và cụm có thể bị gắn trùng.
+  - Ngoài-12: Gõ nhầm cờ chạy thử vẫn có thể ghi thật vào dữ liệu, và gõ sai tên lát vẫn báo xong với 0 dòng như thể đã làm đúng.
+  - Ngoài-14: Nếu cùng một ảnh xuất hiện ở hai bài, một bài có tệp và một bài chỉ có đường dẫn, dải ảnh sẽ lặp một tấm và nhãn 'Ghép suy ra' đếm dư một ảnh.
+  - Ngoài-15: Bấm qua một ảnh thiếu tệp trong hộp xem lớn chỉ thấy biểu tượng ảnh vỡ, tiêu đề vẫn ghi số ảnh như bình thường, không có câu báo lỗi hay nút thử lại.
 - Known limits — thu phạm vi sau lượt chấm 2, Mạnh chọn lối 1 ngày 2026-11-05:
   - Phím mũi tên trong hộp xem ảnh lớn không chuyển ảnh: hộp thoại của thư viện chặn phím này. Người gắn chuyển ảnh bằng nút Ảnh trước, Ảnh sau.
 - Known limits — lỗ phép đo của lượt chấm 6, thu theo lời Mạnh «Cho chấm thêm», không vá, ngày 2026-11-05:

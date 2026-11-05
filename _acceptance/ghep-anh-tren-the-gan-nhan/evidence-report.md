@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 516c4c85f6751502d3a2e24b51d50d400fca5ddb
-human_signoff:
+human_signoff: Mạnh 2026-11-05
 ---
 
 # Evidence Report: ghep-anh-tren-the-gan-nhan
