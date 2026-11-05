@@ -5,8 +5,10 @@ slug: eval-classify-theo-chu-ref
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-05-eval-classify-theo-chu-ref-design.md
+approved_by: Mạnh
+approved_at: 2026-11-05
 ---
 
 # Acceptance Contract: eval-classify-theo-chu-ref
