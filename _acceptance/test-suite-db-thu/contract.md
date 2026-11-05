@@ -29,7 +29,7 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 
 ## Criteria
 
-- AC-1: Given chạy `--chay` khi `DATABASE_URL` trống hoặc trỏ DB `oneinvest` (cả dạng có `?options=`), When lệnh chạy, Then lệnh nhận `DATABASE_URL` và
+- AC-1: Given chạy `--chay` khi `DATABASE_URL` trống hoặc trỏ DB `oneinvest` (cả dạng có `?options=` và dạng không có tên đăng nhập), When lệnh chạy, Then lệnh nhận `DATABASE_URL` và
   `TEST_DATABASE_URL_ADMIN` trỏ DB `oneinvest_suite_<bộ>_<pid>` chép từ bản mẫu, mã thoát của lệnh giữ nguyên, DB của lượt bị xoá khi lệnh xanh, đỏ hay
   nhận SIGTERM, và không lệnh `createdb`, `dropdb`, ghi nào nhằm vào `oneinvest`.
 - AC-2: Given `DATABASE_URL` đã trỏ DB khác (kể cả tên chỉ bắt đầu bằng `oneinvest`, hoặc cùng tên `oneinvest` ở máy chủ, cổng khác `localhost:5433`), hoặc `CI=true` không có container, When chạy `--chay`, Then lệnh chạy thẳng trên URL
@@ -73,6 +73,7 @@ Source input: lời giao của giám sát 05/11 (phiên local_08504d44), khu v�
 - Bộ đếm `lay-mau` không thấy kết nối dưới 100 ms và tiến trình con bị bỏ biến môi trường; hai đường đó do quét tĩnh AC-7 chặn. Riêng `env` liệt kê dương (`{ PATH, HOME }`) quét tĩnh không phân biệt được với tiến trình không nối DB: soát tay trong ba bộ không có ca nào vừa bỏ biến vừa nối DB, đường này còn là giới hạn.
 - Diễn tập tải chấm sau khi sửa (05/11, 22:21): pipeline hai bộ, app một bộ và E3 chạy cùng lúc đều xanh; pipeline 572 ca 7 phút, app 995 ca 7,6 phút, 0 kết nối của lượt vào `oneinvest`.
 - Lượt chấm 1 đỏ vì deadlock trong DB của lượt: chiều đỏ của `SD-AC-6` dựng lại `public.sellers` trong giao dịch, test đọc cùng lúc giữ view chờ bảng. Chiều đỏ nay dựng view đột biến ở lược đồ riêng. Ca chờ khoá 33033 vượt trần vì sáu bộ chạy cùng lúc: `E5`, `E6`, `E7` nay đo lần lượt, `npm test` của pipeline chạy từng tệp một vì các tệp giữ khoá độc quyền trên bảng thật cả phút, câu dư lượng giữ khoá gần 2 phút nay gom trước rồi nối.
+- Bộ quét theo import tương đối và bí danh `@/`; import dựng đường lúc chạy (`pathToFileURL(join(…))`) không đọc được, đường đó là giới hạn. `CGT-DC` đọc từng tin một trên dữ liệu thật, dưới tải lượt chấm vượt trần 10 phút nên trần nay 20 phút; ca chỉ đọc, trần không chứng hiệu năng.
 - `E4b` lấy lượt nhanh nhất trong tối đa sáu, nghỉ 5 giây giữa các lượt, để thước 1 giây đo câu truy vấn, không đo tải máy.
 - Không áp migration, không ghi `oneinvest`; phép đo «DB chung» dùng bản chép đóng vai. Lượt job thật đầu tiên sau khi gộp chưa đo được trong hồ sơ này.
 - Tệp test «thiếu mốc» của S06 trong `pipeline/scripts/` thuộc làn ZCode: sửa một dòng lấy URL từ env vì là lỗi tích hợp của việc này.

@@ -21,7 +21,7 @@ if [ "${2:-}" = "--chay" ]; then
   # Lệnh đã trỏ DB khác DB chung (hồ sơ tự dựng DB thử, máy khác) thì giữ nguyên.
   if [ -n "${DATABASE_URL:-}" ]; then
     u="${DATABASE_URL%%\?*}"
-    noi="${u%/*}"; noi="${noi##*@}"
+    noi="${u%/*}"; noi="${noi##*@}"; noi="${noi##*/}"
     if [ "${u##*/}" != "oneinvest" ] || { [ "$noi" != "localhost:5433" ] && [ "$noi" != "127.0.0.1:5433" ]; }; then
       # Cùng tên DB ở máy chủ khác (Postgres của CI cục bộ) không phải DB chung. Kết nối quản trị của test đi theo URL này.
       export TEST_DATABASE_URL_ADMIN="${TEST_DATABASE_URL_ADMIN:-$DATABASE_URL}"

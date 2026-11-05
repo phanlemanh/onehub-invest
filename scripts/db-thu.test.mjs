@@ -69,6 +69,14 @@ test("DT-AC-1 URL đang trỏ DB chung thì vẫn đổi sang DB riêng", () => 
   }
 });
 
+test("DT-AC-1 URL DB chung không có tên đăng nhập vẫn đổi sang DB riêng", () => {
+  const { d, log } = dung();
+  const r = chay(d, { DATABASE_URL: "postgres://localhost:5433/oneinvest" });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /URL=postgres:\/\/oneinvest:oneinvest@localhost:5433\/oneinvest_suite_app_\d+/, "DB chung lọt qua");
+  assert.deepEqual(ghiDbChung(log), []);
+});
+
 test("DT-AC-1 đối chứng: bản script bỏ nhánh đổi URL thì DB chung lọt và ca trên phải đỏ", () => {
   const { d } = dung();
   const goc = readFileSync(SH, "utf8");
@@ -243,8 +251,8 @@ function tepNap(dsGoc) {
     const f = ngan.pop();
     if (thay.has(f)) continue;
     thay.add(f);
-    for (const [, duong] of readFileSync(path.join(GOC, f), "utf8").matchAll(/(?:from|import\()\s*["'](\.\.?\/[^"']+)["']/g)) {
-      const goc = path.join(path.dirname(f), duong);
+    for (const [, duong] of readFileSync(path.join(GOC, f), "utf8").matchAll(/(?:from|import\()\s*["']((?:\.\.?|@)\/[^"']+)["']/g)) {
+      const goc = duong.startsWith("@/") ? path.join("app/src", duong.slice(2)) : path.join(path.dirname(f), duong);
       const tim = [goc, goc.replace(/\.js$/, ".ts"), `${goc}.ts`, `${goc}.tsx`, `${goc}.mjs`, `${goc}.js`, `${goc}/index.ts`].find((x) => existsSync(path.join(GOC, x)) && !statSync(path.join(GOC, x)).isDirectory());
       if (tim && /\.(ts|tsx|mjs|js)$/.test(tim)) ngan.push(tim);
     }
@@ -292,7 +300,7 @@ test("DT-AC-7 không tệp test nào của ba bộ, kể cả tệp chúng impor
     tatCa.push(...tep);
   }
   const nap = tepNap(tatCa);
-  for (const f of ["pipeline/scripts/capture-ops-facts.mjs", "agent/tests/judge-chung.ts", "agent/tests/helpers/db.ts"]) assert.ok(nap.includes(f), `bộ quét không thấy ${f}`);
+  for (const f of ["pipeline/scripts/capture-ops-facts.mjs", "agent/tests/judge-chung.ts", "agent/tests/helpers/db.ts", "app/src/lib/db.ts", "app/src/lib/deals.ts"]) assert.ok(nap.includes(f), `bộ quét không thấy ${f}`);
   for (const f of nap) for (const d of dongLot(readFileSync(path.join(GOC, f), "utf8"))) lot.push(`${f}:${d}`);
   assert.deepEqual(lot, []);
 });

@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.tsdt_mot
     paths: [db/db-thu.sh, scripts/db-thu.test.mjs]
-    expected: "exit 0; các ca DT-AC-1 trên docker giả: URL của lệnh khớp /oneinvest_suite_app_\\d+$ khi thiếu biến, khi vào bằng URL DB chung và cả dạng kèm ?options=; mã 7 giữ nguyên, SIGTERM thoát 143 dưới 5 giây; có lệnh dropdb DB của lượt ở cả ba kết cục; ghiDbChung rỗng. Chiều đỏ chạy ngay trong ca: bản chép script bỏ nhánh đổi URL để lộ URL DB chung, kèm thông điệp ghim «DB chung lọt qua»."
+    expected: "exit 0; các ca DT-AC-1 trên docker giả: URL của lệnh khớp /oneinvest_suite_app_\\d+$ khi thiếu biến, khi vào bằng URL DB chung, dạng kèm ?options= và dạng không có tên đăng nhập; mã 7 giữ nguyên, SIGTERM thoát 143 dưới 5 giây; có lệnh dropdb DB của lượt ở cả ba kết cục; ghiDbChung rỗng. Chiều đỏ chạy ngay trong ca: bản chép script bỏ nhánh đổi URL để lộ URL DB chung, kèm thông điệp ghim «DB chung lọt qua»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E1b
     criterion: AC-2
@@ -26,6 +26,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.tsdt_that
+    long_running: 20
     layer: backend-effect
     paths: [db/db-thu.sh, _acceptance/test-suite-db-thu/probes/that.sh]
     expected: "exit 0, in «E2 đạt»; trên :5433 thật hai lượt song song có hai DB khác nhau cùng tồn tại, có dữ liệu sale_offer_records, sau khi xong 0 DB sót; datallowconn của mẫu = f; COMMENT khớp ^[0-9a-f]{32} [0-9]+$; lệnh đỏ và SIGTERM với lệnh giữ kết nối không để sót DB; ba lượt thấy mẫu lệch dấu cùng lúc thì đúng một lần dựng, cả ba exit 0, 0 DB mau_moi sót; SIGKILL để lại DB (đối chứng), lượt kế dọn. Đo bằng pg_database, không bằng lệnh đã gọi. Chiều đỏ: thông điệp ghim «E2 DB mồ côi», «E2 hai lượt chung một DB»."
