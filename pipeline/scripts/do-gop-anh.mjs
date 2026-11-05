@@ -12,6 +12,7 @@ import { pathToFileURL } from "node:url";
 
 import pg from "pg";
 
+import { httpUrl, localFile, shaTep } from "../media-rows.mjs";
 import { KHOA } from "../transform-media.mjs";
 
 const NEN = "c3751eab";
@@ -91,9 +92,41 @@ const SQL_MONG_DOI = `
   SELECT gan.anh_id, o.offer_id
   FROM gan JOIN LATERAL (SELECT offer_id FROM sale_offers WHERE source = 'S03' AND gan.chu_id = ANY(post_ids) LIMIT 1) o ON true`;
 
-// Cặp thật đọc từ bảng media: dòng có bài nguồn là bài chỉ-ảnh của ngày mẫu; cộng bài mà mọi URL ảnh đã có sẵn ở offer
-// (bỏ trùng của luật ghép NH1 — bài ảnh đăng lại không sinh dòng mới).
-async function capThat(c, mongDoi) {
+/**
+ * khu-trung-anh-tin: bài chỉ-ảnh đã có trong tin khi mọi ảnh của nó có băm trùng hoặc URL trùng với dòng của tin. Một ảnh
+ * chưa có ở cả hai → chưa gộp. Bài không ảnh tính là đã có, như thước cũ.
+ */
+export function baiDaCoTrongTin(bai, urlTin, shaTin) {
+  const files = Array.isArray(bai.media_files) ? bai.media_files : [];
+  const coFile = files.filter((e) => localFile(e ?? {}, bai.snapshot_id));
+  const urlCoFile = new Set(coFile.map((e) => httpUrl(e.url)).filter(Boolean));
+  const conUrl = [...files.filter((e) => !coFile.includes(e)), ...(Array.isArray(bai.media) ? bai.media : [])]
+    .map((e) => httpUrl(e?.url)).filter((u) => u && !urlCoFile.has(u));
+  return (
+    coFile.every((e) => (shaTep(e) && shaTin.has(shaTep(e))) || (httpUrl(e.url) && urlTin.has(httpUrl(e.url)))) &&
+    conUrl.every((u) => urlTin.has(u))
+  );
+}
+
+/** Băm của các tệp thuộc offer, tra qua bảng nạp vì bảng media không có cột băm. */
+async function shaCuaOffer(c, offerIds) {
+  const { rows } = await c.query(
+    `SELECT m.resource_record_key AS offer_id, lower(e->>'sha256') AS sha
+     FROM media m
+     JOIN stg_zalo_posts p ON p.post_id = m.originating_system_resource_record_key
+     CROSS JOIN LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(p.media_files) = 'array' THEN p.media_files ELSE '[]'::jsonb END) e
+     WHERE m.resource_record_key = ANY($1::text[]) AND m.local_file IS NOT NULL AND e ? 'sha256'
+       AND coalesce(e->>'snapshotId', p.snapshot_id) || '/' || (e->>'file') = m.local_file`,
+    [offerIds],
+  );
+  const out = new Map();
+  for (const r of rows) out.set(r.offer_id, (out.get(r.offer_id) ?? new Set()).add(r.sha));
+  return out;
+}
+
+// Cặp thật đọc từ bảng media: dòng có bài nguồn là bài chỉ-ảnh của ngày mẫu; cộng bài mà mọi ảnh đã có sẵn ở offer theo
+// URL hay băm (bỏ trùng của luật ghép NH1 và khu-trung-anh-tin — bài ảnh đăng lại không sinh dòng mới).
+async function capThat(c, mongDoi, baoCao = false) {
   const anhIds = mongDoi.map((x) => x.anh_id);
   const { rows: tu } = await c.query(
     `SELECT DISTINCT originating_system_resource_record_key AS anh_id, resource_record_key AS offer_id
@@ -104,16 +137,31 @@ async function capThat(c, mongDoi) {
     [NGAY],
   );
   const cap = new Set(tu.map((r) => `${r.anh_id}|${r.offer_id}`));
-  const { rows: trung } = await c.query(
-    `SELECT x.anh_id, x.offer_id FROM unnest($1::text[], $2::text[]) AS x(anh_id, offer_id)
-     WHERE NOT EXISTS (SELECT 1 FROM media m WHERE m.originating_system_resource_record_key = x.anh_id AND m.resource_record_key = x.offer_id)
-       AND NOT EXISTS (
-         SELECT 1 FROM (SELECT DISTINCT ON (post_id) media FROM stg_zalo_posts WHERE post_id = x.anh_id ORDER BY post_id, captured_at DESC) p,
-                jsonb_array_elements(CASE WHEN jsonb_typeof(p.media) = 'array' THEN p.media ELSE '[]'::jsonb END) e
-         WHERE NOT EXISTS (SELECT 1 FROM media m WHERE m.resource_record_key = x.offer_id AND m.media_url = e->>'url'))`,
-    [anhIds, mongDoi.map((x) => x.offer_id)],
+  const con = mongDoi.filter((x) => !cap.has(`${x.anh_id}|${x.offer_id}`));
+  if (!con.length) return cap;
+  const ids = [...new Set(con.map((x) => x.offer_id))];
+  const { rows: dong } = await c.query(`SELECT resource_record_key AS offer_id, media_url FROM media WHERE resource_record_key = ANY($1::text[])`, [ids]);
+  const urlTin = new Map();
+  for (const r of dong) if (r.media_url) urlTin.set(r.offer_id, (urlTin.get(r.offer_id) ?? new Set()).add(r.media_url));
+  const shaTin = await shaCuaOffer(c, ids);
+  const { rows: bai } = await c.query(
+    `SELECT post_id, snapshot_id, media, media_files FROM stg_zalo_posts WHERE post_id = ANY($1::text[])`,
+    [con.map((x) => x.anh_id)],
   );
-  for (const r of trung) cap.add(`${r.anh_id}|${r.offer_id}`);
+  const baiCua = new Map(bai.map((b) => [b.post_id, b]));
+  const RONG = new Set();
+  let theoUrl = 0;
+  let theoSha = 0;
+  for (const x of con) {
+    const b = baiCua.get(x.anh_id);
+    if (!b) continue;
+    const u = urlTin.get(x.offer_id) ?? RONG;
+    if (baiDaCoTrongTin(b, u, RONG)) theoUrl++;
+    else if (baiDaCoTrongTin(b, u, shaTin.get(x.offer_id) ?? RONG)) theoSha++;
+    else continue;
+    cap.add(`${x.anh_id}|${x.offer_id}`);
+  }
+  if (baoCao) console.log(`bài không sinh dòng: tính đã có theo URL (cách cũ) ${theoUrl} · chênh so với cách cũ, nhờ trùng băm ${theoSha}`);
   return cap;
 }
 
@@ -142,12 +190,18 @@ try {
   if (pt(sau) < nguong) loi.push(`tỉ lệ sau ${pt(sau)}% < ngưỡng ${nguong}%`);
 
   const { rows: mongDoi } = await c.query(SQL_MONG_DOI, [NGAY]);
-  const lech = soCap(mongDoi, await capThat(c, mongDoi));
+  const lech = soCap(mongDoi, await capThat(c, mongDoi, true));
   console.log(`ngày mẫu ${NGAY}: ${mongDoi.length} cặp mong đợi · thiếu ${lech.thieu.length} · thừa ${lech.thua.length}`);
   for (const k of lech.thieu) console.log(`  thiếu ${k}`);
   for (const k of lech.thua) console.log(`  thừa ${k}`);
   if (mongDoi.length === 0) loi.push(`ngày mẫu ${NGAY} không có cặp nào — so vô nghĩa`);
   if (lech.thieu.length || lech.thua.length) loi.push(`ngày mẫu lệch ${lech.thieu.length + lech.thua.length} cặp`);
+
+  // Đối chứng khu-trung-anh-tin: một băm chưa vào tin, URL cũng không có ở bảng → chưa gộp, thước không được nới quá tay.
+  const SHA_A = "a".repeat(64);
+  const baiMau = { snapshot_id: "snap", media: [], media_files: [{ url: "https://x.example/a.jpg", file: "media/a.jpg", sha256: SHA_A }, { url: "https://x.example/b.jpg", file: "media/b.jpg", sha256: "b".repeat(64) }] };
+  if (baiDaCoTrongTin(baiMau, new Set(), new Set([SHA_A]))) loi.push("do-gop-anh: lệch — bài còn một băm chưa vào tin mà thước tính đã gộp");
+  if (!baiDaCoTrongTin(baiMau, new Set(["https://x.example/b.jpg"]), new Set([SHA_A]))) loi.push("do-gop-anh: lệch — bài đủ băm hoặc URL mà thước tính chưa gộp");
 
   const dc = await napDoiChung();
   await dc.runTransformMedia(c, ["S03"]);

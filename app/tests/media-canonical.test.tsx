@@ -101,6 +101,8 @@ const MA_TRAN: [string, PostMediaRow[], unknown][] = [
   ["snapshot có '..'", [post([{ url: ZDN(6), file: "media/6.jpg", snapshotId: "a..b" }])], undefined],
   ["file ngoài media/", [post([{ url: ZDN(6), file: "x/6.jpg", snapshotId: SNAP }, { url: ZDN(6), file: "media/6.jpg", snapshotId: SNAP }])], undefined],
   ["tin không bài", [], undefined],
+  // khu-trung-anh-tin: cùng nội dung, khác URL và tên tệp.
+  ["trùng băm giữa hai bài", [post([{ url: ZDN(7), file: "media/7.jpg", snapshotId: SNAP, sha256: "a".repeat(64) }]), post([{ url: ZDN(8), file: "media/8.jpg", snapshotId: SNAP, sha256: "A".repeat(64) }], [{ url: ZDN(8) }])], undefined],
 ]
 
 /** Luật ghép đã ký, đổi theo anh-goc-qua-may-chu: ảnh URL gốc → ảnh máy chủ lấy hộ theo khoá của dòng media cùng URL;
