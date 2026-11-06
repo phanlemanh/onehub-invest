@@ -1,386 +1,9 @@
-diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6a1..4216d21c9 100644
---- a/extensions/zalouser/src/monitor.ts
-+++ b/extensions/zalouser/src/monitor.ts
-@@ -1,4 +1,5 @@
- import { mergeAllowlist, summarizeMapping } from "openclaw/plugin-sdk/allow-from";
-+import { dungBoHenGio, taoDepsMacDinh } from "./seller-lookup.js";
- import type { ZaloAlbumMeta } from "./types.js";
- import type { ChannelAccountSnapshot } from "openclaw/plugin-sdk/channel-contract";
- import {
-@@ -846,12 +847,31 @@ async function deliverZalouserReply(params: {
-   return { visibleReplySent };
- }
- 
-+// link-nguoi-ban-s03: vòng hẹn giờ bộ tra hồ sơ người bán — singleton tiến trình.
-+let boTraDung: (() => void) | null = null;
-+function khoiDongBoTra(runtime: { log?: (message: string) => void; error?: (message: string) => void }): void {
-+  if (boTraDung) return;
-+  const dir = process.env.S03_LOOKUP_DIR?.trim();
-+  if (!dir) return; // chưa cấu hình thư mục việc — bộ tra tắt (xoá tệp yêu cầu đồng nghĩa tắt)
-+  const collectorUrl = process.env.S03_COLLECTOR_URL?.trim() ?? "";
-+  const deps = taoDepsMacDinh(dir, collectorUrl);
-+  boTraDung = dungBoHenGio(deps, (line) => {
-+    runtime.log?.(line); // dùng lại đường log monitor — không mở cổng/log riêng
-+  });
-+}
-+
- export async function monitorZalouserProvider(
-   options: ZalouserMonitorOptions,
- ): Promise<ZalouserMonitorResult> {
-   const { config } = options;
-   let { account } = options;
-   const { abortSignal, statusSink, runtime } = options;
-+
-+  // link-nguoi-ban-s03 (AC-1): MỘT vòng hẹn giờ duy nhất cho cả tiến trình dù
-+  // listener khởi động lại — móc đầu monitor, không phụ thuộc vòng đời listener.
-+  // Đường dẫn việc + collector nhận qua biến môi trường (không đổi cấu hình
-+  // OpenClaw); bỏ trống dir = không chạy.
-+  khoiDongBoTra(runtime);
-   // Name resolution below copies the map; retain its authored scope before that projection.
-   const groupsConfigPath = resolveChannelGroupsConfigPath({
-     cfg: config,
-diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
-new file mode 100644
-index 000000000..6123cea21
---- /dev/null
-+++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,329 @@
-+import { describe, expect, it, vi } from "vitest";
-+// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
-+// Không mock vớiZaloApi bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
-+// API giả ở đây có đủ các hàm cấm (login/createZalo/requestOldMessages…)
-+// gắn spy để khẳng định không bao giờ được gọi.
-+
-+import { chayVong, phanLoai, trongKhung, boHauSo, TRAN, type LookupDeps } from "./seller-lookup.js";
-+
-+// Chuỗi đánh dấu PII (AC-5): API giả nhét vào tên/SĐT/ảnh/ngày sinh + giá trị
-+// dạng cookie — phải KHÔNG bao giờ xuất hiện trong snapshot/spool/tệp chặn.
-+const PII = {
-+  ten: "TEN_CAN_DAI__canary",
-+  sdt: "SDT_CAN_DAI__canary",
-+  anh: "ANH_CAN_DAI__canary",
-+  sinh: "SINH_CAN_DAI__canary",
-+  loi: "LOI_THO_CAN_DAI__canary",
-+  cookie: "zpw_en=__CANARY_COOKIE__",
-+};
-+
-+type FsFake = {
-+  files: Map<string, string>;
-+};
-+
-+function taoFsFake(): FsFake & Pick<LookupDeps, "docFile" | "ghiFile" | "noiFile" | "doiTen" | "tonTai" | "xoaFile"> {
-+  const files = new Map<string, string>();
-+  return {
-+    files,
-+    docFile: async (p) => files.get(p) ?? null,
-+    ghiFile: async (p, d) => {
-+      files.set(p, d);
-+    },
-+    noiFile: async (p, d) => {
-+      files.set(p, (files.get(p) ?? "") + d);
-+    },
-+    doiTen: async (a, b) => {
-+      const v = files.get(a);
-+      files.delete(a);
-+      if (v !== undefined) files.set(b, v);
-+    },
-+    tonTai: async (p) => files.has(p),
-+    xoaFile: async (p) => {
-+      files.delete(p);
-+    },
-+  };
-+}
-+
-+type ApiGia = {
-+  dem: { getUserInfo: number };
-+  voi: number[]; // số mã mỗi lời
-+  lanSai?: (lan: number) => never;
-+  ketQuaThe: (mas: string[]) => unknown;
-+  login: ReturnType<typeof vi.fn>;
-+  loginQR: ReturnType<typeof vi.fn>;
-+  createZalo: ReturnType<typeof vi.fn>;
-+  requestOldMessages: ReturnType<typeof vi.fn>;
-+  sendZaloTextMessage: ReturnType<typeof vi.fn>;
-+};
-+
-+function taoApiGia(): ApiGia {
-+  return {
-+    dem: { getUserInfo: 0 },
-+    voi: [],
-+    ketQuaThe: (mas) => ({
-+      changed_profiles: Object.fromEntries(
-+        mas.slice(0, 2).map((m, i) => [
-+          `${m}_0`,
-+          {
-+            userId: m,
-+            username: `user_${m}`,
-+            displayName: PII.ten,
-+            phoneNumber: PII.sdt,
-+            avatar: PII.anh,
-+            dob: PII.sinh,
-+            userKey: PII.cookie,
-+          },
-+        ]),
-+      ),
-+      unchanged_profiles: Object.fromEntries(
-+        mas.slice(2, 3).map((m) => [`${m}_0`, { isFr: 0 }]),
-+      ),
-+      phonebook_version: 1,
-+    }),
-+    login: vi.fn(),
-+    loginQR: vi.fn(),
-+    createZalo: vi.fn(),
-+    requestOldMessages: vi.fn(),
-+    sendZaloTextMessage: vi.fn(),
-+  };
-+}
-+
-+function taoDeps(
-+  _apiGia: ApiGia | undefined,
-+  fsFake: ReturnType<typeof taoFsFake>,
-+  gioVN: number,
-+  collectorOk = true,
-+): LookupDeps & { spoolText(): string } {
-+  // Giờ VN điều khiển bằng tham số: dựng now sao cho giờ VN (UTC+7) = gioVN.
-+  const now = new Date(Date.UTC(2026, 10, 8, gioVN - 7, 30, 0));
-+  return {
-+    dir: "/f",
-+    collectorUrl: "http://collector.test/s03",
-+    now: () => now,
-+    treMs: () => new Promise((r) => setTimeout(r, 0)),
-+    layApi: () => undefined, // mỗi test gắn lại bằng API giả riêng
-+    fetchImpl: (async () => ({ ok: collectorOk }) as unknown as Response) as unknown as typeof fetch,
-+    docFile: fsFake.docFile,
-+    ghiFile: fsFake.ghiFile,
-+    noiFile: fsFake.noiFile,
-+    doiTen: fsFake.doiTen,
-+    tonTai: fsFake.tonTai,
-+    xoaFile: fsFake.xoaFile,
-+    spoolText: () => fsFake.files.get("/f/spool-ho-so.jsonl") ?? "",
-+  };
-+}
-+
-+// Wrapper gọn: api giả có dem + các hàm cấm; getUserInfo bẫy đếm.
-+function gắnApiGia(apiGia: ApiGia) {
-+  return {
-+    getUserInfo: async (uids: string[] | string) => {
-+      apiGia.dem.getUserInfo++;
-+      const mas = Array.isArray(uids) ? uids : [uids];
-+      apiGia.voi.push(mas.length);
-+      if (apiGia.lanSai) return apiGia.lanSai(apiGia.dem.getUserInfo);
-+      return apiGia.ketQuaThe(mas);
-+    },
-+    login: apiGia.login,
-+    loginQR: apiGia.loginQR,
-+    createZalo: apiGia.createZalo,
-+    requestOldMessages: apiGia.requestOldMessages,
-+    sendZaloTextMessage: apiGia.sendZaloTextMessage,
-+  };
-+}
-+
-+describe("link-nguoi-ban-s03 — phanLoai (AC-1)", () => {
-+  it("_0 được bóc khi khớp; 4 loại phân đúng; chỉ giữ userId+username", () => {
-+    const kq = phanLoai(
-+      {
-+        changed_profiles: {
-+          "111_0": { userId: "111", username: "u111" },
-+          "222_0": { userId: "222" },
-+        },
-+        unchanged_profiles: { "333_0": { isFr: 0 } },
-+      },
-+      ["111", "222", "333", "444"],
-+    );
-+    expect(kq).toEqual([
-+      { ma: "111", loai: "co-username", username: "u111" },
-+      { ma: "222", loai: "khong-username", username: "" },
-+      { ma: "333", loai: "khong-username", username: "" },
-+      { ma: "444", loai: "khong-tim-thay", username: "" },
-+    ]);
-+  });
-+
-+  it("userId trả về khác mã gửi → khong-ro (khác không gian mã)", () => {
-+    const kq = phanLoai({ changed_profiles: { "111_0": { userId: "999", username: "x" } } }, ["111"]);
-+    expect(kq[0].loai).toBe("khong-ro");
-+  });
-+
-+  it("trongKhung đúng khung 01–05 giờ VN; boHauSo cắt _0", () => {
-+    expect(trongKhung(new Date(Date.UTC(2026, 10, 8, 18, 30, 0)))).toBe(true); // 01:30 VN
-+    expect(trongKhung(new Date(Date.UTC(2026, 10, 8, 22, 0, 0)))).toBe(false); // 05:00 VN
-+    expect(boHauSo("123_0")).toBe("123");
-+    expect(boHauSo("123")).toBe("123");
-+    expect(TRAN.maMoiLoi).toBe(20);
-+  });
-+});
-+
-+describe("link-nguoi-ban-s03 — chayVong với API giả (AC-1..AC-4)", () => {
-+  function chuanBi(gio = 2) {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    const deps = taoDeps(undefined, fs, gio);
-+    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
-+    return { fs, api, deps };
-+  }
-+  const ghiYeuCau = (fs: FsFake, mas: string[], doiChung: string[]) =>
-+    fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas, doi_chung: doiChung }));
-+
-+  it("không có tệp yêu cầu → 0 lời gọi, không tệp chặn", async () => {
-+    const { api, deps } = chuanBi();
-+    const v = await chayVong(deps);
-+    expect(v.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(0);
-+    expect(await deps.tonTai("/f/chan.txt")).toBe(false);
-+  });
-+
-+  it("không có phiên (listener chết) → tệp chặn khong-co-phien, 0 lời, 0 login", async () => {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    const deps = taoDeps(undefined, fs, 2);
-+    (deps as unknown as { layApi: unknown }).layApi = () => undefined;
-+    await ghiYeuCau(fs, ["1"], ["1"]);
-+    const v = await chayVong(deps);
-+    expect(v.chan).toBe("khong-co-phien");
-+    expect(api.dem.getUserInfo).toBe(0);
-+    expect(api.login).not.toHaveBeenCalled();
-+    expect(api.createZalo).not.toHaveBeenCalled();
-+  });
-+
-+  it("lượt thử: đúng 1 lời ≤20 mã + dấu đã-thu; chạy lại 0 lời; tệp đổi tên đã-xử", async () => {
-+    const { fs, api, deps } = chuanBi();
-+    const mas = Array.from({ length: 25 }, (_, i) => String(100 + i)); // 25 mã → trần 20
-+    await ghiYeuCau(fs, mas, mas.slice(0, 2));
-+    const v1 = await chayVong(deps);
-+    expect(v1.loi_goi).toBe(1);
-+    expect(api.dem.getUserInfo).toBe(1);
-+    expect(api.voi[0]).toBe(TRAN.maMoiLoi); // đúng 20 mã trong lời
-+    expect(v1.dem["co-username"]).toBe(2);
-+    expect(v1.dem["khong-username"]).toBe(1);
-+    expect(v1.dem["khong-tim-thay"]).toBe(17);
-+    expect(await deps.tonTai("/f/da-thu.txt")).toBe(true);
-+    expect(await deps.tonTai("/f/yeu-cau.da-xu.json")).toBe(true);
-+    expect(await deps.tonTai("/f/yeu-cau.json")).toBe(false);
-+    // tệp yêu cầu MỚI xuất hiện nhưng dấu đã-thu còn → 0 lời (chế độ thử)
-+    await ghiYeuCau(fs, ["5", "6"], ["5", "6"]);
-+    const v2 = await chayVong(deps);
-+    expect(v2.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(1);
-+  });
-+
-+  it("mốc 60 giây sống qua 'khởi động lại': vòng 2 ngay sau → 0 lời", async () => {
-+    const { fs, api, deps } = chuanBi();
-+    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["1", "2", "3"], doi_chung: ["1", "2"] }));
-+    await chayVong(deps);
-+    // mô phỏng khởi động lại: deps MỚI (mốc nằm trên đĩa chung fs)
-+    const deps2 = { ...deps, layApi: () => gắnApiGia(api) };
-+    const v = await chayVong(deps2 as LookupDeps);
-+    expect(v.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(1);
-+  });
-+
-+  it("lỗi HTTP 429 → dừng cả lượt, tệp chặn chỉ mã+số (không thông điệp thô), không thử lại", async () => {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    api.lanSai = () => {
-+      throw new Error(`HTTP 429: ${PII.loi}`);
-+    };
-+    const deps = taoDeps(undefined, fs, 2);
-+    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
-+    const v = await chayVong(deps);
-+    expect(v.chan).toBe("http-429");
-+    const chan = await fs.docFile("/f/chan.txt");
-+    expect(chan).toBe("http-429 429");
-+    expect(chan).not.toContain(PII.loi);
-+    // tệp chặn còn → 0 lời mãi tới khi xoá
-+    await chayVong(deps);
-+    expect(api.dem.getUserInfo).toBe(1);
-+  });
-+
-+  it("đối chứng ra khong-tim-thay → tệp chặn khac-khong-gian-ma", async () => {
-+    const { fs, api, deps } = chuanBi();
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "444"]); // 444 không có trong trả về
-+    const v = await chayVong(deps);
-+    expect(v.chan).toBe("khac-khong-gian-ma");
-+    expect(await fs.docFile("/f/chan.txt")).toBe("khac-khong-gian-ma");
-+    expect(api.dem.getUserInfo).toBe(1);
-+  });
-+
-+  it("đặt tệp chặn giữa lượt (trước lời) → 0 lời và KHÔNG đốt dấu đã-thu", async () => {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    const deps = taoDeps(undefined, fs, 2);
-+    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
-+    await fs.ghiFile("/f/chan.txt", "nguoi-dat-thu");
-+    const v = await chayVong(deps);
-+    expect(v.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(0);
-+    expect(await deps.tonTai("/f/da-thu.txt")).toBe(false);
-+  });
-+
-+  it("ngoài khung 01–05 giờ VN → 0 lời", async () => {
-+    const { fs, api, deps } = chuanBi(9); // 09:30 VN — ngoài khung
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
-+    const v = await chayVong(deps);
-+    expect(v.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(0);
-+  });
-+
-+  it("collector không nhận → spool nối dần; PII canary KHÔNG xuất hiện ở bất kỳ đâu", async () => {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    const deps = taoDeps(undefined, fs, 2, false); // collector fail
-+    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
-+    await chayVong(deps);
-+    const spool = fs.files.get("/f/spool-ho-so.jsonl") ?? "";
-+    expect(spool).toContain('"ma_tai_khoan":"1"');
-+    expect(spool).toContain('"username":"user_1"');
-+    for (const v of Object.values(PII)) expect(spool).not.toContain(v);
-+    for (const text of fs.files.values()) {
-+      for (const v of Object.values(PII)) expect(text).not.toContain(v);
-+    }
-+  });
-+
-+  it("AC-4: lời gọi API MỚI duy nhất là getUserInfo — các hàm cấm 0 lần", async () => {
-+    const { fs, api, deps } = chuanBi();
-+    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
-+    await chayVong(deps);
-+    expect(api.dem.getUserInfo).toBe(1);
-+    expect(api.login).not.toHaveBeenCalled();
-+    expect(api.loginQR).not.toHaveBeenCalled();
-+    expect(api.createZalo).not.toHaveBeenCalled();
-+    expect(api.requestOldMessages).not.toHaveBeenCalled();
-+    expect(api.sendZaloTextMessage).not.toHaveBeenCalled();
-+  });
-+
-+  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
-+    const { fs, api, deps } = chuanBi();
-+    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["1", "2", "3"], doi_chung: ["1", "2"] }));
-+    await fs.ghiFile("/f/dem-2026-11-08.txt", "30"); // ngày VN của mốc giờ 2
-+    await fs.ghiFile("/f/luot-lon.txt", "bat"); // bật lượt lớn để không vướng dấu đã-thu
-+    const v = await chayVong(deps);
-+    expect(v.loi_goi).toBe(0);
-+    expect(api.dem.getUserInfo).toBe(0);
-+  });
-+
-+  it("tệp sai khuôn → tệp chặn sai-khuon-yeu-cau, 0 lời", async () => {
-+    const fs = taoFsFake();
-+    const api = taoApiGia();
-+    const deps = taoDeps(undefined, fs, 2);
-+    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
-+    await fs.ghiFile("/f/yeu-cau.json", '{"mas": ["abc"]}'); // không toàn chữ số
-+    const v = await chayVong(deps);
-+    expect(v.chan).toBe("sai-khuon-yeu-cau");
-+    expect(api.dem.getUserInfo).toBe(0);
-+  });
-+});
 diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 000000000..5848544b0
+index 000000000..7e00a1000
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,395 @@
+@@ -0,0 +1,408 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -776,74 +399,387 @@ index 000000000..5848544b0
 +    noiFile: (p, d) => {
 +      return fsp.appendFile(p, d, "utf8");
 +    },
-+    doiTen: (a, b) => fsp.rename(a, b),
-+    tonTai: async (p) => {
-+      try {
-+        await fsp.stat(p);
-+        return true;
-+      } catch {
-+        return false;
-+      }
-+    },
-+    xoaFile: (p) => fsp.unlink(p),
 +  };
 +}
-diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
-index 548f3f538..000031069 100644
---- a/extensions/zalouser/src/zalo-js.ts
-+++ b/extensions/zalouser/src/zalo-js.ts
-@@ -98,9 +98,23 @@ const activeQrLogins = new Map<string, ActiveZaloQrLogin>();
- type ActiveZaloListener = {
-   accountId: string;
-   stop: () => void;
-+  // link-nguoi-ban-s03 AC-1: giữ tham chiếu API của phiên bộ nghe tin đang nối
-+  // để bộ tra gọi trực tiếp — không bao giờ đi qua withZaloApi (tự tạo client
-+  // + đăng nhập lại khi cache trống) theo hợp đồng.
-+  api: API;
- };
- 
- const activeListeners = new Map<string, ActiveZaloListener>();
 +
-+/**
-+ * link-nguoi-ban-s03 AC-1: trả API của bộ nghe tin ĐANG NỐI cho profile, hoặc
-+ * undefined khi không có listener sống. Thuần đọc — không tạo client, không
-+ * đăng nhập, không chạm cache API. Bộ tra chỉ được gọi kênh qua hàm này.
-+ */
-+export function getConnectedZaloApi(profileInput?: string | null): API | undefined {
-+  const profile = normalizeProfile(profileInput);
-+  return activeListeners.get(profile)?.api;
++/** Móc monitor: đúng MỘT vòng hẹn giờ dù listener khởi động lại. */
++let boTraTimer: ReturnType<typeof setInterval> | undefined;
++
++export function khoiDongBoTra(dir: string, collectorUrl: string): void {
++  if (boTraTimer) return;
++  boTraTimer = setInterval(() => {
++    chayVongLookup(taoDepsMacDinh(dir, collectorUrl)).catch(() => {});
++  }, 60_000);
++  boTraTimer.unref?.();
 +}
- const groupContextCache = new Map<string, { value: ZaloGroupContext; expiresAt: number }>();
- 
- type AccountInfoResponse = Awaited<ReturnType<API["fetchAccountInfo"]>>;
-@@ -1433,7 +1447,7 @@ export async function startZaloListener(params: {
-   api.listener.on("closed", onClosed);
-   api.listener.on("connected", onConnected);
-   params.abortSignal.addEventListener("abort", cleanup, { once: true });
--  activeListeners.set(profile, { accountId: params.accountId, stop: cleanup });
-+  activeListeners.set(profile, { accountId: params.accountId, stop: cleanup, api });
-   try {
-     api.listener.start({ retryOnClose: false });
-   } catch (error) {
-diff --git a/extensions/zalouser/src/zca-client.ts b/extensions/zalouser/src/zca-client.ts
-index ab016ff37..81bfd000a 100644
---- a/extensions/zalouser/src/zca-client.ts
-+++ b/extensions/zalouser/src/zca-client.ts
-@@ -121,6 +121,17 @@ type AttachmentSource =
- 
- export type API = {
-   listener: Listener;
-+  // link-nguoi-ban-s03 AC-1: bộ tra gọi getUserInfo với MẢNG mã trên API của
-+  // bộ nghe tin đang nối. Kiểu thu hẹp về trường bộ tra đọc (userId, username)
-+  // — bản thật của zca-js trả thêm trường nhưng chỉ hai trường này được giữ.
-+  getUserInfo(
-+    userId: string | string[],
-+    avatarSize?: number,
-+  ): Promise<{
-+    changed_profiles: Record<string, { userId?: string; username?: string }>;
-+    unchanged_profiles: Record<string, unknown>;
-+    phonebook_version: number;
-+  }>;
-   getContext(): {
-     imei: string;
-     userAgent: string;
+diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
+new file mode 100644
+index 000000000..16a8775a8
+--- /dev/null
++++ b/extensions/zalouser/src/seller-lookup.test.ts
+@@ -0,0 +1,365 @@
++import { describe, expect, it, vi } from "vitest";
++// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
++// Không mock vớiZaloApi bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
++// API giả ở đây có đủ các hàm cấm (login/createZalo/requestOldMessages…)
++// gắn spy để khẳng định không bao giờ được gọi.
++
++import { chayVong, phanLoai, trongKhung, boHauSo, TRAN, type LookupDeps } from "./seller-lookup.js";
++
++// Chuỗi đánh dấu PII (AC-5): API giả nhét vào tên/SĐT/ảnh/ngày sinh + giá trị
++// dạng cookie — phải KHÔNG bao giờ xuất hiện trong snapshot/spool/tệp chặn.
++const PII = {
++  ten: "TEN_CAN_DAI__canary",
++  sdt: "SDT_CAN_DAI__canary",
++  anh: "ANH_CAN_DAI__canary",
++  sinh: "SINH_CAN_DAI__canary",
++  loi: "LOI_THO_CAN_DAI__canary",
++  cookie: "zpw_en=__CANARY_COOKIE__",
++};
++
++type FsFake = {
++  files: Map<string, string>;
++};
++
++function taoFsFake(): FsFake & Pick<LookupDeps, "docFile" | "ghiFile" | "noiFile" | "doiTen" | "tonTai" | "xoaFile"> {
++  const files = new Map<string, string>();
++  return {
++    files,
++    docFile: async (p) => files.get(p) ?? null,
++    ghiFile: async (p, d) => {
++      files.set(p, d);
++    },
++    noiFile: async (p, d) => {
++      files.set(p, (files.get(p) ?? "") + d);
++    },
++    doiTen: async (a, b) => {
++      const v = files.get(a);
++      files.delete(a);
++      if (v !== undefined) files.set(b, v);
++    },
++    tonTai: async (p) => files.has(p),
++    xoaFile: async (p) => {
++      files.delete(p);
++    },
++  };
++}
++
++type ApiGia = {
++  dem: { getUserInfo: number };
++  voi: number[]; // số mã mỗi lời
++  lanSai?: (lan: number) => never;
++  ketQuaThe: (mas: string[]) => unknown;
++  login: ReturnType<typeof vi.fn>;
++  loginQR: ReturnType<typeof vi.fn>;
++  createZalo: ReturnType<typeof vi.fn>;
++  requestOldMessages: ReturnType<typeof vi.fn>;
++  sendZaloTextMessage: ReturnType<typeof vi.fn>;
++};
++
++function taoApiGia(): ApiGia {
++  return {
++    dem: { getUserInfo: 0 },
++    voi: [],
++    ketQuaThe: (mas) => ({
++      changed_profiles: Object.fromEntries(
++        mas.slice(0, 2).map((m, i) => [
++          `${m}_0`,
++          {
++            userId: m,
++            username: `user_${m}`,
++            displayName: PII.ten,
++            phoneNumber: PII.sdt,
++            avatar: PII.anh,
++            dob: PII.sinh,
++            userKey: PII.cookie,
++          },
++        ]),
++      ),
++      unchanged_profiles: Object.fromEntries(
++        mas.slice(2, 3).map((m) => [`${m}_0`, { isFr: 0 }]),
++      ),
++      phonebook_version: 1,
++    }),
++    login: vi.fn(),
++    loginQR: vi.fn(),
++    createZalo: vi.fn(),
++    requestOldMessages: vi.fn(),
++    sendZaloTextMessage: vi.fn(),
++  };
++}
++
++function taoDeps(
++  _apiGia: ApiGia | undefined,
++  fsFake: ReturnType<typeof taoFsFake>,
++  gioVN: number,
++  collectorOk = true,
++): LookupDeps & { spoolText(): string } {
++  // Giờ VN điều khiển bằng tham số: dựng now sao cho giờ VN (UTC+7) = gioVN.
++  const now = new Date(Date.UTC(2026, 10, 8, gioVN - 7, 30, 0));
++  return {
++    dir: "/f",
++    collectorUrl: "http://collector.test/s03",
++    now: () => now,
++    treMs: () => new Promise((r) => setTimeout(r, 0)),
++    layApi: () => undefined, // mỗi test gắn lại bằng API giả riêng
++    fetchImpl: (async () => ({ ok: collectorOk }) as unknown as Response) as unknown as typeof fetch,
++    docFile: fsFake.docFile,
++    ghiFile: fsFake.ghiFile,
++    noiFile: fsFake.noiFile,
++    doiTen: fsFake.doiTen,
++    tonTai: fsFake.tonTai,
++    xoaFile: fsFake.xoaFile,
++    spoolText: () => fsFake.files.get("/f/spool-ho-so.jsonl") ?? "",
++  };
++}
++
++// Wrapper gọn: api giả có dem + các hàm cấm; getUserInfo bẫy đếm.
++function gắnApiGia(apiGia: ApiGia) {
++  return {
++    getUserInfo: async (uids: string[] | string) => {
++      apiGia.dem.getUserInfo++;
++      const mas = Array.isArray(uids) ? uids : [uids];
++      apiGia.voi.push(mas.length);
++      if (apiGia.lanSai) return apiGia.lanSai(apiGia.dem.getUserInfo);
++      return apiGia.ketQuaThe(mas);
++    },
++    login: apiGia.login,
++    loginQR: apiGia.loginQR,
++    createZalo: apiGia.createZalo,
++    requestOldMessages: apiGia.requestOldMessages,
++    sendZaloTextMessage: apiGia.sendZaloTextMessage,
++  };
++}
++
++describe("link-nguoi-ban-s03 — phanLoai (AC-1)", () => {
++  it("_0 được bóc khi khớp; 4 loại phân đúng; chỉ giữ userId+username", () => {
++    const kq = phanLoai(
++      {
++        changed_profiles: {
++          "111_0": { userId: "111", username: "u111" },
++          "222_0": { userId: "222" },
++        },
++        unchanged_profiles: { "333_0": { isFr: 0 } },
++      },
++      ["111", "222", "333", "444"],
++    );
++    expect(kq).toEqual([
++      { ma: "111", loai: "co-username", username: "u111" },
++      { ma: "222", loai: "khong-username", username: "" },
++      { ma: "333", loai: "khong-username", username: "" },
++      { ma: "444", loai: "khong-tim-thay", username: "" },
++    ]);
++  });
++
++  it("userId trả về khác mã gửi → khong-ro (khác không gian mã)", () => {
++    const kq = phanLoai({ changed_profiles: { "111_0": { userId: "999", username: "x" } } }, ["111"]);
++    expect(kq[0].loai).toBe("khong-ro");
++  });
++
++  it("trongKhung đúng khung 01–05 giờ VN; boHauSo cắt _0", () => {
++    expect(trongKhung(new Date(Date.UTC(2026, 10, 8, 18, 30, 0)))).toBe(true); // 01:30 VN
++    expect(trongKhung(new Date(Date.UTC(2026, 10, 8, 22, 0, 0)))).toBe(false); // 05:00 VN
++    expect(boHauSo("123_0")).toBe("123");
++    expect(boHauSo("123")).toBe("123");
++    expect(TRAN.maMoiLoi).toBe(20);
++  });
++});
++
++describe("link-nguoi-ban-s03 — chayVong với API giả (AC-1..AC-4)", () => {
++  function chuanBi(gio = 2) {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, gio);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    return { fs, api, deps };
++  }
++  const ghiYeuCau = (fs: FsFake, mas: string[], doiChung: string[]) =>
++    fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas, doi_chung: doiChung }));
++
++  it("không có tệp yêu cầu → 0 lời gọi, không tệp chặn", async () => {
++    const { api, deps } = chuanBi();
++    const v = await chayVong(deps);
++    expect(v.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(0);
++    expect(await deps.tonTai("/f/chan.txt")).toBe(false);
++  });
++
++  it("không có phiên (listener chết) → tệp chặn khong-co-phien, 0 lời, 0 login", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => undefined;
++    await ghiYeuCau(fs, ["1"], ["1"]);
++    const v = await chayVong(deps);
++    expect(v.chan).toBe("khong-co-phien");
++    expect(api.dem.getUserInfo).toBe(0);
++    expect(api.login).not.toHaveBeenCalled();
++    expect(api.createZalo).not.toHaveBeenCalled();
++  });
++
++  it("lượt thử: đúng 1 lời ≤20 mã + dấu đã-thu; chạy lại 0 lời; tệp đổi tên đã-xử", async () => {
++    const { fs, api, deps } = chuanBi();
++    const mas = Array.from({ length: 25 }, (_, i) => String(100 + i)); // 25 mã → trần 20
++    await ghiYeuCau(fs, mas, mas.slice(0, 2));
++    const v1 = await chayVong(deps);
++    expect(v1.loi_goi).toBe(1);
++    expect(api.dem.getUserInfo).toBe(1);
++    expect(api.voi[0]).toBe(TRAN.maMoiLoi); // đúng 20 mã trong lời
++    expect(v1.dem["co-username"]).toBe(2);
++    expect(v1.dem["khong-username"]).toBe(1);
++    expect(v1.dem["khong-tim-thay"]).toBe(17);
++    expect(await deps.tonTai("/f/da-thu.txt")).toBe(true);
++    expect(await deps.tonTai("/f/yeu-cau.da-xu.json")).toBe(true);
++    expect(await deps.tonTai("/f/yeu-cau.json")).toBe(false);
++    // tệp yêu cầu MỚI xuất hiện nhưng dấu đã-thu còn → 0 lời (chế độ thử)
++    await ghiYeuCau(fs, ["5", "6"], ["5", "6"]);
++    const v2 = await chayVong(deps);
++    expect(v2.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(1);
++  });
++
++  it("mốc 60 giây sống qua 'khởi động lại': vòng 2 ngay sau → 0 lời", async () => {
++    const { fs, api, deps } = chuanBi();
++    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["1", "2", "3"], doi_chung: ["1", "2"] }));
++    await chayVong(deps);
++    // mô phỏng khởi động lại: deps MỚI (mốc nằm trên đĩa chung fs)
++    const deps2 = { ...deps, layApi: () => gắnApiGia(api) };
++    const v = await chayVong(deps2 as LookupDeps);
++    expect(v.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(1);
++  });
++
++  it("lỗi HTTP 429 → dừng cả lượt, tệp chặn chỉ mã+số (không thông điệp thô), không thử lại", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    api.lanSai = () => {
++      throw new Error(`HTTP 429: ${PII.loi}`);
++    };
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    const v = await chayVong(deps);
++    expect(v.chan).toBe("http-429");
++    const chan = await fs.docFile("/f/chan.txt");
++    expect(chan).toBe("http-429 429");
++    expect(chan).not.toContain(PII.loi);
++    // tệp chặn còn → 0 lời mãi tới khi xoá
++    await chayVong(deps);
++    expect(api.dem.getUserInfo).toBe(1);
++  });
++
++  it("đối chứng ra khong-tim-thay → tệp chặn khac-khong-gian-ma", async () => {
++    const { fs, api, deps } = chuanBi();
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "444"]); // 444 không có trong trả về
++    const v = await chayVong(deps);
++    expect(v.chan).toBe("khac-khong-gian-ma");
++    expect(await fs.docFile("/f/chan.txt")).toBe("khac-khong-gian-ma");
++    expect(api.dem.getUserInfo).toBe(1);
++  });
++
++  // MỞ LẠI claudedp-0611-35 ca (a): mas 20 + doi_chung 2 NGOÀI mas → đúng
++  // 1 lời 22 mã, không chặn, dòng gửi collector chỉ 20 mã mas
++  it("mas 20 + doi_chung 2 ngoài mas → 1 lời 22 mã, không chặn, collector chỉ 20 dòng", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    api.ketQuaThe = (mas) => ({
++      changed_profiles: Object.fromEntries(mas.map((m) => [`${m}_0`, { userId: m, username: `u${m}` }])),
++    });
++    const bodys: string[] = [];
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    (deps as unknown as { fetchImpl: unknown }).fetchImpl = (async (_u: string, init?: RequestInit) => {
++      bodys.push(String(init?.body ?? ""));
++      return { ok: true } as unknown as Response;
++    }) as unknown as typeof fetch;
++    const mas = Array.from({ length: 20 }, (_, i) => String(500 + i));
++    await ghiYeuCau(fs, mas, ["901", "902"]);
++    const v = await chayVong(deps);
++    expect(v.chan).toBeUndefined();
++    expect(api.dem.getUserInfo).toBe(1);
++    expect(api.voi).toEqual([22]);
++    const dong = (JSON.parse(bodys[0] ?? "{}").dong ?? []) as Array<{ ma_tai_khoan: string }>;
++    expect(dong.length).toBe(20);
++    expect(dong.every((d) => mas.includes(d.ma_tai_khoan))).toBe(true);
++  });
++
++  // MỞ LẠI claudedp-0611-35 ca (b): doi_chung không toàn chữ số →
++  // chan sai-khuon-yeu-cau, 0 lời, không ghi da-thu
++  it("doi_chung có chữ → chan sai-khuon-yeu-cau, 0 lời, không ghi da-thu", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["90a", "902"]);
++    const v = await chayVong(deps);
++    expect(v.chan).toBe("sai-khuon-yeu-cau");
++    expect(await fs.docFile("/f/chan.txt")).toBe("sai-khuon-yeu-cau");
++    expect(api.dem.getUserInfo).toBe(0);
++    expect(await fs.tonTai("/f/da-thu.txt")).toBe(false);
++  });
++
++  it("đặt tệp chặn giữa lượt (trước lời) → 0 lời và KHÔNG đốt dấu đã-thu", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    await fs.ghiFile("/f/chan.txt", "nguoi-dat-thu");
++    const v = await chayVong(deps);
++    expect(v.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(0);
++    expect(await deps.tonTai("/f/da-thu.txt")).toBe(false);
++  });
++
++  it("ngoài khung 01–05 giờ VN → 0 lời", async () => {
++    const { fs, api, deps } = chuanBi(9); // 09:30 VN — ngoài khung
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    const v = await chayVong(deps);
++    expect(v.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(0);
++  });
++
++  it("collector không nhận → spool nối dần; PII canary KHÔNG xuất hiện ở bất kỳ đâu", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2, false); // collector fail
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    await chayVong(deps);
++    const spool = fs.files.get("/f/spool-ho-so.jsonl") ?? "";
++    expect(spool).toContain('"loai":"ho-so"');
++    expect(spool).not.toContain(PII.canary);
++  });
++
++  it("AC-4: lời gọi API MỚI duy nhất là getUserInfo — các hàm cấm 0 lần", async () => {
++    const { fs, api, deps } = chuanBi();
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    await chayVong(deps);
++    expect(api.dem.getUserInfo).toBe(1);
++    expect(api.login).not.toHaveBeenCalled();
++    expect(api.loginQR).not.toHaveBeenCalled();
++    expect(api.createZalo).not.toHaveBeenCalled();
++    expect(api.requestOldMessages).not.toHaveBeenCalled();
++    expect(api.sendZaloTextMessage).not.toHaveBeenCalled();
++  });
++
++  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
++    const { fs, api, deps } = chuanBi();
++    await fs.noiFile("/f/luot-lon.txt", "30");
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    const v = await chayVong(deps);
++    expect(v.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(0);
++  });
++
++  it("tệp sai khuôn → tệp chặn sai-khuon-yeu-cau, 0 lời", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await fs.ghiFile("/f/yeu-cau.json", '{"mas": ["abc"]}');
++    const v = await chayVong(deps);
++    expect(v.chan).toBe("sai-khuon-yeu-cau");
++    expect(api.dem.getUserInfo).toBe(0);
++  });
++});
