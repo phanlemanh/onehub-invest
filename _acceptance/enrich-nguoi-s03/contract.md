@@ -5,7 +5,7 @@ slug: enrich-nguoi-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (079) — khớp t3_paths
 surfaces: [cli, api, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-06
 design_doc: docs/superpowers/specs/2026-11-06-enrich-nguoi-s03-design.md

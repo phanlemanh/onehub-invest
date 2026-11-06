@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: enrich-nguoi-s03
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 4825bd7e03750acc185e1d9aef087b4732f8fa88
-human_signoff:
+human_signoff: Mạnh 2026-11-06
 ---
 
 # Evidence Report: enrich-nguoi-s03
@@ -237,13 +237,13 @@ Vòng 2 chạy lại cả sáu lệnh trong `suiteCommands` trên HEAD 7f489c30.
   judged_by: Acceptance Judge v1 (tác tử tươi, chỉ đọc contract.md + evidence/doc-mu-30.md)
   verdict: PASS
   rationale: Đủ 30 dòng; 27 dòng dung, đạt ngưỡng ≥ 27/30; một dòng sai (M23) chỉ ghi nghi ngờ nên số «rõ là số người khác» là 0; không lý do nào chứa chuỗi dạng SĐT, tên người hay chữ bài gốc.
-  human_override:
+  human_override: Mạnh 2026-11-06 — Đạt
 
 - eval: E10
   judged_by: Acceptance Judge v1 (tác tử tươi, chấm trên HEAD 7f489c30; lượt trước khi sửa mappings.yaml cho UNCERTAIN vì thiếu dẫn kiểm DQ)
   verdict: PASS
   rationale: mappings.yaml khai contact_kind, contact_rule đủ sáu điều kiện (dd_field null, lý do tra DD 2.1, checked_on, migration 079 có CHECK, kiểm DQ enum-vocab ghi dq_check_results) và dấu s03-qua-nguoi-dang qua seller_phone_inferred; CONTEXT.md có «Liên lạc của Người» và mục «Chưa xác minh» nói tin hoặc bài khác; ADR-0016 §8 có sửa đổi 06/11; ROADMAP có as-built và việc chờ.
-  human_override:
+  human_override: Mạnh 2026-11-06 — Đạt
 
 ## Known limits
 
