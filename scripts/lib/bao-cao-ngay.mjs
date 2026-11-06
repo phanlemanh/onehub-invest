@@ -86,6 +86,22 @@ export function oBacGiam(truoc, sau, { nguongPct = 2, toiThieu = 50, giamToiThie
 }
 
 /**
+ * Tách ô «đã biết» khỏi số tính đỏ: liên lạc hay giám sát đã nhận và đang xử lý thì báo cáo không đánh đỏ lại mỗi
+ * sáng. `daBietCfg` = [{ id, o, ly_do, den }] trong muc-tieu.json; `o` khớp nguyên văn trường `nhan` của mục; hết hạn
+ * (`den` < ngày báo cáo) thì tính lại.
+ */
+export function tachDaBiet(items, id, daBietCfg, ngay) {
+  const tinh = [];
+  const daBiet = [];
+  for (const it of items) {
+    const k = daBietCfg.find((d) => d.id === id && d.o === it.nhan && (!d.den || d.den >= ngay));
+    if (k) daBiet.push({ ...it, ly_do: k.ly_do, den: k.den ?? "—" });
+    else tinh.push(it);
+  }
+  return { tinh, daBiet };
+}
+
+/**
  * Gợi ý hành động theo luật — ứng viên cho phần «Kiến nghị»; phiên chạy lịch chọn lọc, viết lại thành câu tự đủ
  * nghĩa. Không tự làm hành động nào. `cho`: "manh" (chỉ cổng, tiền, quyết định chưa chốt) | "dieu-phoi".
  */
@@ -181,6 +197,7 @@ export function dungMarkdown(ctx) {
     L.push("", `Dự án: ${fmt(ctx.lat.canCoDuAn)} căn gắn dự án / ${fmt(ctx.lat.tongCan)} — còn lại «chưa gắn». ` +
       `Toà: danh mục có ${fmt(ctx.lat.toaDanhMuc)} toà; ${fmt(ctx.lat.s03CoChuToa)} tin S03 có chữ toà thô, chưa nối (chờ DB1/PL20).`);
   }
+  if (ctx.daBiet?.length) L.push("", "## Đã biết, đang xử lý (không tính đỏ)", "", ...ctx.daBiet.map((x) => `- ${x}`));
   if (ctx.audit) L.push("", `## audit-all`, "", ctx.audit);
   L.push("", "## Gợi ý của máy (ứng viên cho kiến nghị — không tự làm)", "");
   const m = ctx.goiY.filter((g) => g.cho === "manh");

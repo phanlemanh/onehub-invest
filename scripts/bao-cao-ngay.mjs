@@ -24,7 +24,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFi
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isBad, readFreshness } from "./lib/freshness.mjs";
-import { chamBang, dungMarkdown, goiY, oBacGiam } from "./lib/bao-cao-ngay.mjs";
+import { chamBang, dungMarkdown, goiY, oBacGiam, tachDaBiet } from "./lib/bao-cao-ngay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -48,11 +48,16 @@ export function stateDirMacDinh() {
   return path.join(ROOT, "state", "bao-cao-ngay");
 }
 
+/** 00:00 giờ VN của ngày sau `day` (YYYY-MM-DD), dạng epoch ms. */
+export function ngayTron(day) {
+  return Date.parse(`${day}T00:00:00+07:00`) + 24 * 3.6e6;
+}
+
 const pct = (a, b) => (b > 0 ? Math.round((1000 * a) / b) / 10 : null);
 const num = (v) => (v === null || v === undefined ? null : Number(v));
 
 /** Gom mọi số trong một giao dịch chỉ đọc. Trả { so, ngu, lat, oGiam, homQuaSnap }. */
-export async function gom(client, { now = new Date() } = {}) {
+export async function gom(client, { now = new Date(), daBietCfg = [] } = {}) {
   const q = async (sql, args = []) => (await client.query(sql, args)).rows;
   const so = {};
   const ngu = {};
@@ -78,6 +83,15 @@ export async function gom(client, { now = new Date() } = {}) {
     const [g] = await q(`SELECT count(DISTINCT po.offer_id)::int n FROM property_offers po JOIN sale_offers o USING (offer_id) WHERE o.source = 'S03'`);
     so.NS2 = g.n;
 
+    // Độ tươi — đọc lại định nghĩa của liên lạc, không đo lại. Ô liên lạc đã nhận (muc-tieu.json `da_biet`) tách riêng.
+    const fr = await readFreshness(client, { now });
+    const { tinh, daBiet } = tachDaBiet(fr.filter(isBad).map((r) => ({ ...r, nhan: `${r.code}/${r.city ?? "-"}` })), "P1", daBietCfg, ngayVN(now));
+    so.P1 = tinh.length;
+    ngu.freshnessBad = tinh.map((r) => `${r.nhan} ${r.ageHours ?? "?"}h>${r.sloHours}h`);
+    ngu.daBiet = daBiet.map((r) => `${r.nhan} ${r.ageHours ?? "?"}h>${r.sloHours}h — ${r.ly_do} (tới ${r.den})`);
+    const s06Thu = fr.filter((r) => r.code === "S06" && r.last).map((r) => new Date(r.last).getTime());
+    const s06ThuCuoi = s06Thu.length ? Math.max(...s06Thu) : null;
+
     // Phễu — data_flow_snapshot (job đêm, ngày theo giờ VN). «Ngày đủ gần nhất» = ngày < hôm nay.
     const homNay = ngayVN(now);
     const [df] = await q(`SELECT facts->'days' days, computed_at::text c FROM data_flow_snapshot WHERE time_window = '7d' ORDER BY computed_at DESC LIMIT 1`);
@@ -88,10 +102,15 @@ export async function gom(client, { now = new Date() } = {}) {
     ngu.phieuNgay = s03[0]?.day ?? null;
     so.F1 = s03[0] ? num(s03[0].received) : null;
     so.F2 = s03[0] ? num(s03[0].offers) : null;
-    if (s06.length) {
-      const tb = s06.slice(1, 8).reduce((s, d) => s + Number(d.received), 0) / Math.max(1, Math.min(7, s06.length - 1));
-      so.P3 = tb > 0 ? pct(Number(s06[0].received), tb) : null;
-      ngu.s06Nhan = Number(s06[0].received);
+    // S06 đếm theo ngày đăng; ngày d chỉ trọn khi lần thu cuối đã qua 00:00 (giờ VN) của ngày d+1 — lượt thu 14:05 của
+    // chính ngày d để lại phần chiều chưa thu (báo nhầm «S06 tụt» 07/11).
+    const s06Tron = s06.filter((d) => s06ThuCuoi !== null && s06ThuCuoi >= ngayTron(d.day));
+    if (s06Tron.length) {
+      const nen = s06Tron.slice(1, 8);
+      const tb = nen.reduce((s, d) => s + Number(d.received), 0) / Math.max(1, nen.length);
+      so.P3 = tb > 0 ? pct(Number(s06Tron[0].received), tb) : null;
+      ngu.s06Ngay = s06Tron[0].day;
+      ngu.s06Nhan = Number(s06Tron[0].received);
     }
 
     // Tin S03 sống: bậc, thiếu diện tích, tới phường.
@@ -118,20 +137,15 @@ export async function gom(client, { now = new Date() } = {}) {
     so.P2c = v.s01;
     so.P2d = v.s08;
 
-    // Độ tươi — đọc lại định nghĩa của liên lạc, không đo lại.
-    const fr = await readFreshness(client, { now });
-    const bad = fr.filter(isBad);
-    so.P1 = bad.length;
-    ngu.freshnessBad = bad.map((r) => `${r.code}/${r.city} ${r.ageHours ?? "?"}h>${r.sloHours}h`);
-
     // DQ: trạng thái mới nhất mỗi (check, entity) trong 26 giờ — chỉ tên kiểm + entity, không in detail.
     const dq = await q(`
       SELECT DISTINCT ON (check_name, entity) check_name, entity, status
         FROM dq_check_results WHERE checked_at >= now() - interval '26 hours'
        ORDER BY check_name, entity, checked_at DESC`);
-    const dqDo = dq.filter((r) => r.status === "fail").map((r) => `${r.check_name}:${r.entity}`);
-    so.Q1 = dqDo.length;
-    ngu.dqDo = dqDo;
+    const dqTach = tachDaBiet(dq.filter((r) => r.status === "fail").map((r) => ({ nhan: `${r.check_name}:${r.entity}` })), "Q1", daBietCfg, ngayVN(now));
+    so.Q1 = dqTach.tinh.length;
+    ngu.dqDo = dqTach.tinh.map((r) => r.nhan);
+    ngu.daBiet.push(...dqTach.daBiet.map((r) => `${r.nhan} — ${r.ly_do} (tới ${r.den})`));
 
     // Đọc tin — silver_labels của ngày VN gần nhất có số (trước hôm nay).
     const [sl] = await q(`
@@ -255,16 +269,16 @@ async function main() {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
   await client.connect();
   const now = new Date();
+  const mucTieu = JSON.parse(readFileSync(path.join(HERE, "bao-cao-ngay/muc-tieu.json"), "utf8"));
   let kq;
   try {
-    kq = await gom(client, { now });
+    kq = await gom(client, { now, daBietCfg: mucTieu.da_biet ?? [] });
   } finally {
     await client.end();
   }
   const gcm = demHangGCM1();
   kq.so.H3 = gcm ? gcm.ky : null;
 
-  const mucTieu = JSON.parse(readFileSync(path.join(HERE, "bao-cao-ngay/muc-tieu.json"), "utf8"));
   const ngay = ngayVN(now);
   const stateDir = args.stateDir ?? stateDirMacDinh();
   const homQua = docHomQua(stateDir, ngay);
@@ -281,6 +295,7 @@ async function main() {
     goiY: gy,
     lat: kq.lat,
     oGiam: kq.oGiam,
+    daBiet: kq.ngu.daBiet,
     audit: args.audit ? chayAudit() : null,
   };
   const md = dungMarkdown(ctx);

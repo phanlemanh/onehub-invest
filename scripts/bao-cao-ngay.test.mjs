@@ -129,3 +129,19 @@ describe("gom() trên DB local (chỉ đọc)", async () => {
     }
   });
 });
+
+describe("ô đã biết và ngày thu trọn (07/11, liên lạc soát báo cáo ngày đầu)", async () => {
+  const { tachDaBiet } = await import("./lib/bao-cao-ngay.mjs");
+  const { ngayTron } = await import("./bao-cao-ngay.mjs");
+  const cfg = [{ id: "P1", o: "S01/vn", ly_do: "đang thử", den: "2026-11-14" }];
+  test("ô đã biết còn hạn không tính đỏ; hết hạn thì tính lại; khác chỉ số thì không áp", () => {
+    const it = [{ nhan: "S01/vn" }, { nhan: "S06/hcmc" }];
+    assert.deepEqual(tachDaBiet(it, "P1", cfg, "2026-11-07").tinh.map((x) => x.nhan), ["S06/hcmc"]);
+    assert.equal(tachDaBiet(it, "P1", cfg, "2026-11-15").tinh.length, 2);
+    assert.equal(tachDaBiet(it, "Q1", cfg, "2026-11-07").tinh.length, 2);
+  });
+  test("ngày d trọn khi lần thu cuối đã qua 00:00 giờ VN ngày d+1", () => {
+    assert.equal(ngayTron("2026-11-06"), Date.parse("2026-11-06T17:00:00Z"));
+    assert.ok(Date.parse("2026-11-06T07:05:00Z") < ngayTron("2026-11-06"), "thu 14:05 VN cùng ngày → chưa trọn");
+  });
+});
