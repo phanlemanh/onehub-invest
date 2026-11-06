@@ -8,7 +8,7 @@ Thẻ `/ops/labels` hiện nhóm và giờ đăng nhưng không hiện người 
 
 ## Cách làm
 
-1. `tinKe` (`app/src/lib/labels-queries.ts`) lấy thêm `sender_name`, `sender_id` của bài; `docThe` (`app/src/lib/labels-cum.ts`) chọn người đăng: dòng ghép có tin chữ thì của tin chữ (`ghep.chu_ref`), còn lại của chính bài. Giờ đăng trên thẻ đi theo cùng bài đó (thẻ ghép: giờ của tin chữ), vì Mạnh tìm người trong nhóm Zalo bằng tên cùng giờ đăng tới phút (app Zalo không hiện ID); `fmtVnDateTime` đã in tới phút.
+1. `tinKe` (`app/src/lib/labels-queries.ts`) lấy thêm `sender_name`, `sender_id` của bài; `docThe` (`app/src/lib/labels-cum.ts`) chọn người đăng: dòng ghép có tin chữ thì của tin chữ (`ghep.chu_ref`), còn lại của chính bài. Giờ đăng trên thẻ đi theo cùng bài đó (thẻ ghép: giờ của tin chữ), vì Mạnh tìm người trong nhóm S03 bằng tên cùng giờ đăng tới phút (app của kênh S03 không hiện ID); `fmtVnDateTime` đã in tới phút.
 2. Tên qua `maskSourceNames` với danh sách của `getSourceNameEntries` (`app/src/lib/source-roles.ts`), như các chỗ che chữ chạy khác: tên thật của nguồn thành mã S0x; danh sách rỗng hay không đọc được thì bộ che trả null và thẻ không hiện người đăng (đóng chặt). Tên rỗng cũng không hiện. ID không qua bộ che (chỉ là số).
 3. `TinGan` thêm `nguoiDang: string | null` và `nguoiDangId: string | null`. Hai màn lượt một (`labels-view.tsx`, `label-form-nhom.tsx`) chèn « · Người đăng: <tên> · ID <id>» vào dòng đầu thẻ, giữa nhóm và giờ đăng; thiếu tên thì « · Người đăng: ID <id>», thiếu cả hai thì không có đoạn này. ID nằm trong `span` có `select-all tabular-nums` để chọn trọn bằng một chạm. Không component mới.
 4. Không SĐT, không `conversation_id` lên trình duyệt.

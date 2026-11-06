@@ -17,7 +17,7 @@ design_doc: docs/superpowers/specs/2026-11-06-the-gan-nhan-nguoi-dang-design.md
 
 ## Context
 
-Mạnh đang gắn nhãn và hỏi «Ko lấy được Người đăng bài hả?». Thẻ hiện nhóm và giờ đăng mà không hiện người đăng, ô `seller_name` lại gợi ý «Như người đăng». 367/367 dòng lát `s03-theo-nhom` có `sender_name` ở stg. Mạnh hỏi tiếp «Xem coi có lấy được id ko?»: 367/367 dòng có `sender_id`, 2 tên mang nhiều ID, 1 ID mang nhiều tên, nên ID mới là định danh; Mạnh tìm người trong nhóm Zalo bằng tên cùng giờ đăng vì app Zalo không hiện ID. Vòng này hiện tên và ID trên dòng đầu thẻ, che tên nguồn thật bằng mã.
+Mạnh đang gắn nhãn và hỏi «Ko lấy được Người đăng bài hả?». Thẻ hiện nhóm và giờ đăng mà không hiện người đăng, ô `seller_name` lại gợi ý «Như người đăng». 367/367 dòng lát `s03-theo-nhom` có `sender_name` ở stg. Mạnh hỏi tiếp «Xem coi có lấy được id ko?»: 367/367 dòng có `sender_id`, 2 tên mang nhiều ID, 1 ID mang nhiều tên, nên ID mới là định danh; Mạnh tìm người trong nhóm S03 bằng tên cùng giờ đăng vì app của kênh S03 không hiện ID. Vòng này hiện tên và ID trên dòng đầu thẻ, che tên nguồn thật bằng mã.
 
 Source input: câu hỏi của Mạnh khi gắn nhãn, giám sát giao trước việc chặn dòng trùng cụm, 06/11.
 
