@@ -33,7 +33,7 @@ hằng ngày, và đối chiếu với mã đang chạy. Nó không lật quyế
 4. Căn **làm giàu qua thời gian**: mỗi lần xuất hiện lại là thêm phát biểu (giá, trạng thái, người bán, nội thất), lên
    bậc khi có bằng chứng mới và tụt bậc khi bằng chứng cũ đi. Trường thuộc căn đi xuống tin; trường thuộc tin không
    quay lên nuôi căn.
-5. **Đo hằng ngày bằng bốn tầng**: phễu chặng · độ đúng trên mẫu mù cuốn chiếu · chi phí và độ tươi · phân bố căn theo
+5. **Đo hằng ngày bằng bốn tầng**: phễu chặng · độ đúng trên mẫu soát cuốn chiếu · chi phí và độ tươi · phân bố căn theo
    bậc (north star). Mọi thay đổi (model, prompt, luật) được phán bằng các số này.
 
 **Ba số nền 07/11.**
@@ -133,7 +133,7 @@ thị trường × loại hình × ngày. Không có bảng nào đọc nội du
 |---|---|---|
 | C1 | Bài thu | Bài thật (đã loại bài thử) |
 | C2 | Bài khác nội dung | Sau khử trùng chữ và ảnh |
-| C3 | Là tin rao (ước) | Bài khác nội dung × tỉ lệ tin rao đo trên mẫu mù |
+| C3 | Là tin rao (ước) | Bài khác nội dung × tỉ lệ tin rao đo trên mẫu soát cuốn chiếu |
 | C3 | Đọc thành tin | Tin có phát biểu ý định = rao; **recall** = đọc thành tin / là tin rao (ước) |
 | C5 | Đạt B1 | Đủ năm trường lõi (DF0): bán/thuê, loại, giá, diện tích, phường |
 | C6 | Gắn vật thể theo mức | Số và % tin gắn mức căn / trục / toà / dự án |
@@ -145,10 +145,15 @@ biểu, không suy lại.
 
 ### Tầng 2 — Độ đúng
 
-- **Mẫu mù cuốn chiếu.**
-  - Mỗi ngày rút ngẫu nhiên 20 bài đã qua C3, đưa vào màn gắn nhãn ở chế độ mù (không hiện giá trị máy).
-  - Mỗi tuần tính độ đúng theo (cách đọc × ô) với cận dưới Wilson, và recall của ý định tin.
-  - Mẫu này thay lát vàng cố định, chữa lỗ «quy ước viết từ chính thẻ đang đo». Công người khoảng 30 phút/ngày.
+- **Mẫu soát cuốn chiếu — theo cách «máy nháp, Mạnh feedback» (Mạnh chốt 06/11, bỏ gắn mù).**
+  - Mỗi ngày rút ngẫu nhiên 20 bài đã qua C3, kể cả bài máy không nhận là tin rao. Màn gắn nhãn hiện sẵn giá trị máy
+    làm nháp; người giữ hoặc sửa từng ô, như cách gắn nhãn đang làm.
+  - Mỗi tuần tính, theo (cách đọc × ô), tỉ lệ giữ nháp với cận dưới Wilson, và tỉ lệ tin rao bị máy bỏ sót.
+  - Mẫu này thay lát vàng cố định, chữa lỗ «quy ước viết từ chính thẻ đang đo». Công người ước 10–15 phút/ngày;
+    lượt gắn 06/11 giữ 98,4% nháp nên duyệt nhanh.
+  - **Giới hạn:** người thấy nháp nên số đo có neo. Nó là tỉ lệ giữ nháp, không phải độ đúng mù, và có thể cao hơn độ
+    đúng thật. Dùng để thấy trôi theo tuần và so cách đọc với nhau; không dùng làm bằng chứng độ đúng tuyệt đối. Đo mù
+    chỉ quay lại khi Mạnh quyết (ví dụ lúc chốt lớp nhãn bạc GNH2).
 - **Độ đúng gắn căn**: trên cùng mẫu, người gắn mức (căn/trục/toà) và nút đúng. So với gắn của máy thì ra tỉ lệ gắn
   đúng và gắn nhầm.
 - **Tín hiệu không cần nhãn** (cảnh báo khi trôi quá 2 độ lệch chuẩn so với 14 ngày):
@@ -157,12 +162,12 @@ biểu, không suy lại.
   - độ phủ từng ô;
   - bất đồng giữa hai cách đọc trên ô chung;
   - tỉ lệ ô người sửa trên thẻ.
-- **Cổng tự áp** (PL21): ô (cách đọc × trường × phân khúc) chỉ được tự áp khi cận dưới Wilson trên mẫu cuốn chiếu đạt
+- **Cổng tự áp** (PL21): ô (cách đọc × trường × phân khúc) chỉ được tự áp khi cận dưới Wilson trên mẫu soát cuốn chiếu đạt
   ngưỡng F3:
   - nhóm A 0,95: ý định, loại, dự án, toà;
   - nhóm B 0,90: giá, diện tích, phòng ngủ.
 
-  Tụt ngưỡng thì ô tự về thẻ duyệt.
+  Tụt ngưỡng thì ô tự về thẻ duyệt. Vì mẫu có neo, ngưỡng của cổng này cần Mạnh chốt lại khi làm PL21.
 
 ### Tầng 3 — Chi phí và độ tươi
 
@@ -218,8 +223,8 @@ biểu, không suy lại.
 | Bộ phân xử | 045 `resolve_offer_fields`, 063 | **Giữ**, **sửa**: thêm cổng «ô đã đo» (PL21) thay `measured:false` |
 | Cột chuẩn ngoài 5 trường | `transform-chotot.mjs:97-110`, `write-offers.mjs` ghi thẳng giá, diện tích, khu vực | **Sửa** dần qua PL17 |
 | Bộ đọc luật S03 | `transform-zalo.mjs` | **Giữ** làm một cách đọc (rẻ, đúng trên tin nó nhận) |
-| Đọc gộp model | PL30 (đang ở Cổng Phạm vi), `agent/scripts/doc-gop-3-model-s03.ts` | **Thêm**: trước ghi nhãn bạc; bước sau ghi phát biểu `observed/e2_llm` kèm câu trích (hợp nhất với §5 dòng dưới) |
-| Hai kho trung gian | `enrichment_proposals` (033) và `silver_labels` (065) song song với `field_assertions` | **Sửa**: hợp nhất. Nhãn bạc → phát biểu; đề xuất thành khung nhìn hàng đợi trên phát biểu |
+| Đọc gộp model | PL30 (đang ở Cổng Phạm vi), `agent/scripts/doc-gop-3-model-s03.ts` | **Thêm**: PL30 chỉ ghi bảng `silver_labels` (kết quả máy đọc); thành phát biểu `observed/e2_llm` kèm câu trích ở PL18 (E2 mù ra mảng phát biểu) |
+| Hai kho trung gian | `enrichment_proposals` (033) và bảng `silver_labels` (065) song song với `field_assertions` | **Sửa**: hợp nhất. Kết quả máy đọc → phát biểu (PL18); đề xuất thành khung nhìn hàng đợi trên phát biểu |
 | E2 thấy đáp án E1 | `agent/src/enrich/route.ts`, `enrich-text.ts` | **Sửa**: E2 chạy mù (PL18) |
 | Thẻ duyệt | `run.ts:144-160` vẫn hiện độ tự tin model | **Sửa**: thẻ theo bậc căn cứ, tô câu trích (PL23) |
 | Lớp «căn» | `resolve-properties.mjs:16-20` khoá ô toạ độ + bán/thuê + loại + diện tích + giá; 027, 031, 066 ghi thẳng `properties` | **Thay**: danh bạ vật thể (DB1), `properties` thành view (ADR-0016) |
@@ -228,30 +233,34 @@ biểu, không suy lại.
 | Lịch sử, sự kiện căn | 059 `history_transactional` cho tin | **Thiếu** cho vật thể |
 | Phễu Ops | `600_data_flow.sql` → `data_flow_snapshot`, `/ops/data-flow` | **Giữ**, **sửa**: thêm chặng bài khác nội dung, recall ước, gắn theo mức, lý do rơi |
 | Bậc căn | `data_level_snapshot` (056) | **Giữ**, **thêm** dòng chuyển bậc mỗi ngày |
-| Độ đúng | `pipeline/lib/eval-classify.mjs` (Wilson), `eval_labels`, `label-agreement.mjs`; chạy tay trên lát cố định | **Thêm**: mẫu mù cuốn chiếu hằng ngày + lịch chạy |
+| Độ đúng | `pipeline/lib/eval-classify.mjs` (Wilson), `eval_labels`, `label-agreement.mjs`; chạy tay trên lát cố định | **Thêm**: mẫu soát cuốn chiếu hằng ngày + lịch chạy |
 | Chi phí | `ai_calls`, `ai_model_prices`, `/ops/ai-calls` | **Giữ**, **thêm** chi phí trên tin B1 và trên căn lên bậc |
 | Độ tươi | `check-freshness.mjs`, khối `freshness` | **Giữ**, **thêm** độ trễ ba quãng |
 
-## 6. Thứ tự đề xuất (đường tới hạn của Một Căn Nhà)
+## 6. Thứ tự — theo lộ trình đã chốt, cộng hai việc mới
 
-| Thứ tự | Việc | Hàng | Vì sao ở đây |
-|---|---|---|---|
-| 1 | Danh bạ toà–trục–căn Ocean Park 1 từ S08 + từ điển + phát biểu toà/mã căn | DB1 (T3, có trong lộ trình) | Đòn bẩy lớn nhất; hiện mỏng nhất (3 toà) |
-| 1′ | Đọc gộp, bảng chọn model | PL30 (đang ở Cổng Phạm vi) | Song song DB1; cho ô định danh |
-| 2 | Đo hằng ngày: mẫu mù cuốn chiếu + phễu mở rộng + chuyển bậc + chi phí trên bậc | **hàng mới** đề xuất `do-hieu-qua-hang-ngay` | Thiếu thì mọi thay đổi sau không phán được |
-| 3 | Đọc mã căn, giá khoảng | PL13 | Mở khoá gắn mức căn |
-| 4 | Ghép tin vào danh mục theo mức | PL20 | Tin S03 lên B2 thật |
-| 5 | Mở phát biểu cho mọi trường lõi + hợp nhất nhãn bạc, đề xuất vào phát biểu | PL17 (+ việc hợp nhất) | Một kho căn cứ |
-| 6 | E2 mù, cổng tự áp theo đo, thẻ theo bậc | PL18, PL21, PL23 | Lên B3; người chỉ xử ca dưới ngưỡng |
-| 7 | Diện tích suy ra, trang độ phủ danh bạ, danh bạ lên cloud | GC2, GC3, DN2–DN4 | Phục vụ trên nền đã gắn |
+Chuỗi S03 giữ đúng lộ trình (#335, Mạnh chốt 05/11). Tài liệu này không đổi thứ tự của chuỗi; chỉ thêm hai việc nằm
+ngoài chuỗi (Q2, Q3).
+
+| Chuỗi | Thứ tự (theo `dung_tren` của lộ trình) | Ghi chú |
+|---|---|---|
+| S03 đọc và quy ước | PL30 → PL18 → GCQ1 → GCQ2 → PL13 | PL18 trước GCQ1; PL13 cần GCQ2 và PL30 |
+| S03 bài đăng | GT2 (sau GCQ1, GT0) · GT4 (sau PL18, GCQ1) | GT4 đứng sau PL18 vì tách sai thì khoá gộp sai |
+| Danh bạ căn | DN1 (xong) → **DB1** → PL20 (cần PL13 + DB1) → DN2 → DN3 → DN4 | DB1 chỉ cần DN1, nên bắt đầu được ngay (Q3) |
+| Diện tích suy ra | PL20 → GC2 → GC3 | |
+| Nền phát biểu | PL17 (parser ghi phát biểu) · PL21 (tự áp theo số đo) · PL23 (thẻ duyệt v2) | Dựa PL15/PL16 đã xong; xếp theo lộ trình |
+| **Mới** | `do-hieu-qua-hang-ngay`: mẫu soát cuốn chiếu + phễu mở rộng + dòng chuyển bậc + chi phí trên bậc | Q2; không chặn chuỗi nào, nên đứng sớm để các hàng sau có số so |
+
+Đường tới hạn của Một Căn Nhà: PL30 → PL18 → GCQ1 → GCQ2 → PL13 → PL20 (∥ DB1) → GC2, DN2. DB1 bắt đầu ngay thì không
+thành chỗ chờ khi PL13 xong.
 
 ## 7. Quyết định cho Mạnh
 
 | Câu | Khuyến nghị | Lối khác — giá |
 |---|---|---|
 | **Q1** Duyệt tài liệu này làm mô hình chuẩn của đường ống, các tài liệu nguồn giữ làm chi tiết | Duyệt | Giữ rải rác như hiện nay — mỗi hàng tự ghép lại, dễ lệch |
-| **Q2** Thêm hàng `do-hieu-qua-hang-ngay` (mẫu mù 20 bài/ngày, ~30 phút người/ngày) | Thêm, đứng thứ 2 | Không thêm — chọn model, prompt, luật theo cảm nhận; không biết B-phân bố có tụt |
-| **Q3** DB1 chạy song song PL30, không chờ sau | Song song | PL30 trước — có toà đọc được mà không có chỗ gắn |
-| **Q4** PL30 trước ghi nhãn bạc (Hỏi-2), bước hợp nhất vào phát biểu đi cùng PL17 | Đồng ý | Ghi thẳng phát biểu ngay ở PL30 — PL30 lớn hơn, phải mở `field` ở 045 trước |
+| **Q2** Thêm hàng `do-hieu-qua-hang-ngay`, độ đúng đo bằng mẫu soát 20 bài/ngày theo cách «máy nháp, Mạnh feedback» (~10–15 phút/ngày), không quay lại gắn mù | Thêm, theo cách nháp + feedback | (a) Không thêm — chọn model, prompt, luật theo cảm nhận, không biết phân bố bậc có tụt · (b) Quay lại gắn mù — số không neo nhưng đảo quyết định 06/11, ~30 phút/ngày và Mạnh thấy vất vả |
+| **Q3** DB1 bắt đầu ngay, song song chuỗi S03, không chờ PL13 | Bắt đầu ngay | Chờ tới khi PL13 xong — PL20 phải đợi DB1, đường tới hạn dài thêm cỡ một hàng T3 |
+| **Q4** PL30 chỉ ghi bảng `silver_labels` (kết quả máy đọc, như Hỏi-2 của PL30); thành phát biểu ở PL18 theo lộ trình. Bảng này khác «lớp nhãn bạc» GNH2 (nhãn Opus trong `eval_labels`), việc Mạnh chưa chốt | Đồng ý | PL30 ghi thẳng phát biểu — PL30 lớn hơn, chồng phần việc của PL18 |
 
-Thứ tự và cắt hàng do giám sát điều phối sau khi Mạnh ký (đã báo yêu cầu P2-122).
+Thứ tự và cắt hàng do giám sát điều phối sau khi Mạnh ký (yêu cầu P2-122, P2-123).
