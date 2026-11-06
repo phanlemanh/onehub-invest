@@ -23,7 +23,7 @@ Hậu quả: migration kiểu đó vào DB chung thì test vẫn chạy trên c�
    - `s` schema · `x` extension + phiên bản · `r` quan hệ (bảng, view, matview, bảng ngoài, kiểu composite; bật RLS, ép RLS, quyền `relacl`);
    - `c` cột: `format_type(atttypid, atttypmod)` (có độ dài, độ chính xác, kiểu PostGIS kèm SRID), `attnotnull`, `attidentity`, `attgenerated`,
      collation khác mặc định, biểu thức DEFAULT/generated;
-   - `k` constraint: `pg_get_constraintdef` + `convalidated` · `i` index: `pg_get_indexdef` · `t` trigger: `pg_get_triggerdef` + `tgenabled`, bỏ trigger nội bộ của FK;
+   - `k` constraint: `pg_get_constraintdef` (đã in `NOT VALID`) · `i` index: `pg_get_indexdef` · `t` trigger: `pg_get_triggerdef` + `tgenabled`, bỏ trigger nội bộ của FK;
    - `k` cũng gồm CHECK của domain · `d` domain: kiểu nền, NOT NULL, DEFAULT · `q` sequence: kiểu, start, increment, min, max, cycle (không `last_value`);
    - `p` policy RLS · `v` view/matview: md5 `pg_get_viewdef` · `e` enum: nhãn theo `enumsortorder` · `f` hàm: tên + đối số định danh + kiểu trả + quyền + md5 thân.
 3. **Phạm vi schema:** mọi schema trừ hệ thống (`pg_*`, `information_schema`), schema thuộc extension (`cron`, `topology`) và **schema rác của test** — tên đuôi
@@ -47,7 +47,8 @@ Hậu quả: migration kiểu đó vào DB chung thì test vẫn chạy trên c�
   Tên DB mang đuôi pid nên `don_mo_coi` dọn khi lượt chết giữa chừng.
 - Docker giả trả md5 cố định nên không đo được câu dấu — giữ nó cho các ca luồng (dựng lại hay không), thêm kiểm lời gọi dấu mang cờ chỉ đọc.
 - Đối chứng: chạy cùng ma trận với **câu dấu cũ** (chép trong test, ghi rõ là bản trước vòng này) — kết quả phải khớp từng ô cột «câu cũ». Thêm hai bản
-  đột biến của câu mới (bỏ `convalidated`, bỏ `tgenabled`): mỗi bản làm đúng một ca sai, để hai phần tinh của câu có ca riêng chứng minh. Thiếu đối chứng thì ma trận xanh không phân biệt
+  đột biến của câu mới (bỏ `tgenabled`; bỏ typmod của `format_type`): mỗi bản làm đúng các ca của phần ấy sai, để hai phần tinh của câu có ca riêng chứng minh.
+  `convalidated` không cần: `pg_get_constraintdef` đã in `NOT VALID`. Thiếu đối chứng thì ma trận xanh không phân biệt
   được «câu mới phủ» với «ma trận không chạy».
 - Máy không có server Postgres → ca bỏ qua có lời; `CI=true` mà không nối được → đỏ.
 

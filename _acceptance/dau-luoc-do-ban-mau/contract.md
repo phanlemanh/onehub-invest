@@ -46,8 +46,8 @@ dấu sau `ROLLBACK` bằng dấu gốc. Số ca chạy bằng số phần tử 
   một dấu 32 ký tự hex, hai lần liên tiếp bằng nhau, mỗi lần dưới 3 giây; các ca luồng dựng mẫu đã có (`DT-AC-3`) vẫn xanh.
 - AC-9: Given máy có Postgres :5433 hoặc job CI `scripts`, When chạy ma trận AC-1–AC-7, Then test chỉ nối DB `postgres` và DB `oneinvest_suite_dau_<pid>` của nó (không
   nối `oneinvest`), xoá DB của nó khi xong; `CI=true` mà không nối được thì đỏ, máy không có server thì bỏ qua kèm lý do; mỗi ca trong ma trận khai trước «câu cũ:
-  bắt» hay «câu cũ: sót», và câu dấu trước vòng này chạy cùng ma trận khớp đúng từng ô; hai bản đột biến của câu mới (bỏ `convalidated`, bỏ `tgenabled`) làm đúng ca
-  `VALIDATE` và ca `DISABLE TRIGGER` đỏ.
+  bắt» hay «câu cũ: sót», và câu dấu trước vòng này chạy cùng ma trận khớp đúng từng ô; hai bản đột biến của câu mới (bỏ `tgenabled`; bỏ typmod
+  của `format_type`) làm đúng ca `DISABLE TRIGGER`, và đúng ba ca độ dài `varchar`, độ chính xác `numeric`, SRID đỏ.
 
 ## Coverage
 

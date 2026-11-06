@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.dau_luoc_do
     paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
-    expected: "exit 0; ca «DL-AC-1» trên Postgres thật (lược đồ mẫu có PostGIS và một CHECK NOT VALID): thêm CHECK, đổi biểu thức CHECK, thêm FOREIGN KEY, thêm UNIQUE, xoá PRIMARY KEY, VALIDATE constraint NOT VALID có sẵn, thêm CHECK cho domain — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Chiều đỏ ở DL-AC-9: bản đột biến bỏ convalidated làm ca VALIDATE đỏ, thông điệp ghim «câu dấu bỏ sót: <ca>»."
+    expected: "exit 0; ca «DL-AC-1» trên Postgres thật (lược đồ mẫu có PostGIS và một CHECK NOT VALID): thêm CHECK, đổi biểu thức CHECK, thêm FOREIGN KEY, thêm UNIQUE, xoá PRIMARY KEY, VALIDATE constraint NOT VALID có sẵn, thêm CHECK cho domain — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Ca VALIDATE bắt qua chữ NOT VALID của pg_get_constraintdef. Chiều đỏ ở DL-AC-9: câu dấu cũ sót các ca này đúng như cột kỳ vọng, thông điệp ghim «câu dấu bỏ sót: <ca>»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -70,5 +70,5 @@ evals:
     executor: test
     cmd: config:executors.test.dau_luoc_do
     paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
-    expected: "exit 0; ca «DL-AC-9»: mỗi phần tử ma trận khai «câu cũ: bắt» hay «câu cũ: sót» trước khi chạy; câu dấu cũ (bản trước vòng, chép trong test) chạy cùng ma trận khớp đúng từng ô, số assert bằng số phần tử; bản đột biến bỏ convalidated chỉ làm ca VALIDATE sai, bỏ tgenabled chỉ làm ca DISABLE TRIGGER sai; mọi kết nối của test có database là postgres hoặc oneinvest_suite_dau_<pid>; sau khi xong pg_database không còn oneinvest_suite_dau_<pid>. Không nối được server: CI=true thì đỏ, máy thì ca bỏ qua với lý do «không có Postgres :5433»."
+    expected: "exit 0; ca «DL-AC-9»: mỗi phần tử ma trận khai «câu cũ: bắt» hay «câu cũ: sót» trước khi chạy; câu dấu cũ (bản trước vòng, chép trong test) chạy cùng ma trận khớp đúng từng ô, số assert bằng số phần tử; bản đột biến bỏ tgenabled chỉ làm ca DISABLE TRIGGER sai, bỏ typmod của format_type chỉ làm ba ca varchar, numeric, SRID sai; mọi kết nối của test có database là postgres hoặc oneinvest_suite_dau_<pid>; sau khi xong pg_database không còn oneinvest_suite_dau_<pid>. Không nối được server: CI=true thì đỏ, máy thì ca bỏ qua với lý do «không có Postgres :5433»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
