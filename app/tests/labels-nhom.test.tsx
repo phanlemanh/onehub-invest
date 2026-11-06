@@ -1175,3 +1175,59 @@ test("TND-AC-6 lỗi theo ô: sửa ô thì lỗi ô đó mất, giá xoá cả 
     globalThis.fetch = gocFetch
   }
 })
+
+test("THN-AC-1 tin hai người chưa ai gắn xếp cuối nhóm: tin đơn ra trước, người hai vẫn nhận tin trùng trước, tiến độ không đổi", async () => {
+  // Hai tin trùng đứng đầu và giữa nhóm U-A (i1, i3), tin đơn i2, i4; U-B hai tin đơn (i5, i6).
+  const datTrung = async () => {
+    await datLat()
+    await sc.query(`UPDATE eval_label_items SET double_label = (item_id IN (1, 3)) WHERE lat = $1`, [LAT])
+  }
+  const ch = chuanHoaLuot(DU, { text: CHU })
+  assert.ok(ch.ok)
+  type Mod = typeof import("../src/lib/labels-queries")
+  const chay = async (m: Mod, u: string, nhom: string | null) => {
+    const thay: (number | null)[] = []
+    for (let k = 0; k < 8; k++) {
+      const id = (await m.tinKe(u, LAT, sc, nhom))?.itemId ?? null
+      thay.push(id)
+      if (id === null) break
+      assert.deepEqual(await m.ghiNhan(sc, u, LAT, id, ch.rows, "lý do"), { ok: true })
+    }
+    return thay
+  }
+  const q = await import("../src/lib/labels-queries")
+  const soNhom = async (u: string) => (await q.nhomCuaLat(u, LAT, sc)).filter((n) => n.unitCode === "U-A").map((n) => [n.tong, n.conChoToi, n.choNguoiHai])
+  // Bảng kỳ vọng viết trước. Theo nhóm: tin đơn tăng dần rồi tin trùng tăng dần. Không nhóm: cả lát, tin trùng cuối.
+  const KY_NHOM = [2, 4, 1, 3, null]
+  const KY_CA_LAT = [2, 4, 5, 6, 1, 3, null]
+  await datTrung()
+  const a = await taoNguoi(sc, "ops")
+  const truoc = await q.tienDo(a.id, LAT, sc, "U-A")
+  assert.deepEqual([truoc.tong, truoc.conChoToi, truoc.trungTong], [4, 4, 2], "tiến độ đếm đủ tin trùng")
+  assert.deepEqual(await soNhom(a.id), [[4, 4, 0]])
+  assert.deepEqual(await chay(q, a.id, "U-A"), KY_NHOM, "THE HAI NGUOI CHAN NHOM")
+  const sau = await q.tienDo(a.id, LAT, sc, "U-A")
+  assert.deepEqual([sau.tong, sau.cuaToi, sau.conChoToi, sau.trungTong], [4, 4, 0, 2])
+  assert.deepEqual(await soNhom(a.id), [[4, 0, 2]], "hai tin trùng chờ người thứ hai")
+  assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_items WHERE lat = $1 AND double_label`, [LAT])).rows[0].n, 2, "không xoá, không đổi cờ tin trùng")
+  // Không chọn nhóm: cùng luật trên cả lát.
+  await datTrung()
+  const a2 = await taoNguoi(sc, "ops")
+  assert.deepEqual(await chay(q, a2.id, null), KY_CA_LAT, "THE HAI NGUOI CHAN LAT KHI KHONG CHON NHOM")
+  // Người hai nhận tin trùng đã một người gắn trước tin đơn còn trống của nhóm.
+  await datTrung()
+  const a3 = await taoNguoi(sc, "ops")
+  const b = await taoNguoi(sc, "ops")
+  assert.deepEqual(await q.ghiNhan(sc, a3.id, LAT, 3, ch.rows, "lý do"), { ok: true })
+  assert.equal((await q.tinKe(b.id, LAT, sc, "U-A"))?.itemId, 3, "CAP TRUNG KHONG DUNG TRUOC")
+  // Chiều đỏ: bản xếp cũ (chỉ theo item_id) và bản bỏ khoá cặp-trước, mỗi bản ra kết quả khác.
+  await datTrung()
+  const cu = await banDot<Mod>("src/lib/labels-queries.ts", "= 1) DESC, i.double_label, i.item_id", "= 1) DESC, i.item_id")
+  assert.notDeepEqual(await chay(cu, (await taoNguoi(sc, "ops")).id, "U-A"), KY_NHOM, "đối chứng không đỏ: THE HAI NGUOI CHAN NHOM")
+  await datTrung()
+  const boCap = await banDot<Mod>("src/lib/labels-queries.ts", "ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.double_label, i.item_id", "ORDER BY i.double_label, i.item_id")
+  const a4 = await taoNguoi(sc, "ops")
+  const b4 = await taoNguoi(sc, "ops")
+  assert.deepEqual(await q.ghiNhan(sc, a4.id, LAT, 3, ch.rows, "lý do"), { ok: true })
+  assert.notEqual((await boCap.tinKe(b4.id, LAT, sc, "U-A"))?.itemId, 3, "đối chứng không đỏ: CAP TRUNG KHONG DUNG TRUOC")
+})

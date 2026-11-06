@@ -45,7 +45,8 @@ export type DongThuanTruong = { field: string; capDu: number; khop: number; tiLe
 /** Số người được gắn một tin: tin gắn trùng hai người, tin đơn một. */
 const CHO_PHEP = `CASE WHEN i.double_label THEN 2 ELSE 1 END`
 
-/** Tin kế cho người này: chưa do họ gắn, còn chỗ; tin trùng đã có một người đứng trước (cặp mau đủ), rồi theo thứ tự.
+/** Tin kế cho người này: chưa do họ gắn, còn chỗ; tin trùng đã có một người đứng trước (cặp mau đủ), rồi tin đơn, tin
+ * trùng chưa ai gắn xếp cuối để khi chỉ có một người gắn, chúng không chặn cả nhóm (Mạnh chốt 06/11), rồi theo thứ tự.
  * `nhom` là `unit_code`: chỉ lấy bài của nhóm đó. */
 export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: string | null = null): Promise<TinGan | null> {
   const sql =
@@ -56,7 +57,7 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
      JOIN LATERAL (SELECT text, group_name, posted_at, media, media_files, snapshot_id, sender_name, sender_id FROM stg_zalo_posts
                    WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
      WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND coalesce(n.so, 0) < ${CHO_PHEP} AND (i.ghep->>'trung_voi') IS NULL
-     ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.item_id
+     ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.double_label, i.item_id
      LIMIT 1`
   // Câu không nhóm giữ nguyên hai tham số: phép đo mù của PL7 rút chính câu này để chạy lại.
   const { rows } = nhom
