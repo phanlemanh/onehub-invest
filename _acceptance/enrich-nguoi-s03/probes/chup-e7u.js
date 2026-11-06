@@ -1,5 +1,5 @@
-// chup-e7u.cjs — enrich-nguoi-s03 E7u: chụp ô liên hệ của một tin S03 nhận số qua người đăng, trên dev server chạy DB thử.
-// Dùng: node _acceptance/enrich-nguoi-s03/probes/chup-e7u.cjs <offer_id> <thư mục ảnh> <tệp nhật ký mạng> [base_url]
+// chup-e7u.js — enrich-nguoi-s03 E7u: chụp ô liên hệ của một tin S03 nhận số qua người đăng, trên dev server chạy DB thử.
+// Dùng: node _acceptance/enrich-nguoi-s03/probes/chup-e7u.js <offer_id> <thư mục ảnh> <tệp nhật ký mạng> [base_url]
 // Che số trước mỗi lần chụp (style của evals.yaml); in ra số đếm nút và nhãn, không in số điện thoại. Chrome headless của máy,
 // playwright-core mượn của checkout chính (worktree không có node_modules của collector).
 const { execFileSync } = require('node:child_process');
@@ -10,7 +10,7 @@ const goc = path.resolve(execFileSync('git', ['rev-parse', '--git-common-dir'], 
 const { chromium } = require(require.resolve('playwright-core', { paths: [path.join(process.cwd(), 'collector'), path.join(goc, 'collector')] }));
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const [,, offerId, outDir, netFile, base = 'http://localhost:3463'] = process.argv;
-if (!offerId || !outDir || !netFile) { console.error('dùng: chup-e7u.cjs <offer_id> <thư mục ảnh> <tệp mạng> [base_url]'); process.exit(2); }
+if (!offerId || !outDir || !netFile) { console.error('dùng: chup-e7u.js <offer_id> <thư mục ảnh> <tệp mạng> [base_url]'); process.exit(2); }
 const MASK = 'a[href^="tel:"] span{color:transparent!important;background:var(--muted)}';
 const PHONE = /(\+84|\b0)\d{9}\b|\b0\d{3} \d{3} \d{3,4}\b/;
 
