@@ -73,7 +73,7 @@ export function mediaFilesOf(item, snapshotId) {
 // sai bảng). Export để test.
 const AIRBNB_IMPORTER_SOURCES = new Set([
   "zalo-agent", // stg_zalo_posts (nhánh chính)
-  "zalo-ho-so", // stg_zalo_ho_so (link-nguoi-ban-s03 v7 — bảng 080, mốc 4b)
+  "s03-ho-so", // stg_s03_ho_so (link-nguoi-ban-s03 v7 — bảng 080, mốc 4b)
   "airbnb-listing",
   "airbnb-discovery",
   "airdna-research",
@@ -89,7 +89,7 @@ export function isAllowedSource(source) {
 // v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn,
 // đọc items y như cũ — cùng mảng với import-chotot.mjs, test đối chiếu hai bản.
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
-// link-nguoi-ban-s03 (v7): nguồn zalo-ho-so + kind ho-so — {6,7} S03 bất kể
+// link-nguoi-ban-s03 (v7): nguồn s03-ho-so + kind ho-so — {6,7} S03 bất kể
 // thứ tự gộp với nhánh album (v6); bên import chấp nhận {1..7}
 export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
@@ -99,8 +99,8 @@ export function isTestSnapshot(name) {
 }
 
 // 0611-6 mốc 4b: bảng stg hồ sơ (migration 080 của làn Claude, chưa có trên
-// nhánh này) — tên mặc định stg_zalo_ho_so; 080 đặt tên khác thì sửa hằng này.
-const STG_HO_SO = "stg_zalo_ho_so";
+// nhánh này) — tên mặc định stg_s03_ho_so; 080 đặt tên khác thì sửa hằng này.
+const STG_HO_SO = "stg_s03_ho_so";
 let hoSoDaChua080 = false; // chỉ in CHUA-AP-080 một lần mỗi lượt nạp
 
 async function coBangHoSo(client) {
@@ -221,7 +221,7 @@ async function main() {
   let s08Detail = 0;
   let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
     for (const it of items) {
-      if (it.source === "zalo-ho-so") {
+      if (it.source === "s03-ho-so") {
         if (coBang) { await napHoSo(client, it); hoSo++; }
         else { hoSoBo++; }
         continue;

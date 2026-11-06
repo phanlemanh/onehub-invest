@@ -617,6 +617,17 @@ index 000000000..5848544b0
 +
 +  // Trần ≤20 mã một lời (AC-1).
 +  const mas = yeuCau.mas.slice(0, TRAN.maMoiLoi);
++  const doiChungYeuCau = yeuCau.doi_chung.slice(0, TRAN.doiChung);
++  // MỞ LẠI claudedp-0611-6: mã đối chứng sai khuôn (không toàn chữ số) →
++  // sai-khuon-yeu-cau, KHÔNG đốt lời thử duy nhất
++  if (doiChungYeuCau.some((ma) => !/^\d{1,32}$/.test(ma))) {
++    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
++    return bayLoi("sai-khuon-yeu-cau");
++  }
++  // MỞ LẠI: MỘT lời gồm cả mã người bán lẫn mã đối chứng (khử trùng) —
++  // trước đây gọi getUserInfo(mas) rồi tìm đối chứng trong kết quả không
++  // chứa nó → luôn khong-tim-thay → chặn nhầm khac-khong-gian-ma.
++  const masGoi = [...new Set([...mas, ...doiChungYeuCau])];
 +
 +  // Cách lời trước ≥60 giây kể cả qua khởi động lại listener — mốc đĩa (AC-1).
 +  const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
@@ -641,12 +652,12 @@ index 000000000..5848544b0
 +    // Lời gọi MỚI duy nhất của tính năng này (AC-4): getUserInfo với mảng mã.
 +    // 15 giây không trả → coi như lỗi, kết quả muộn bị bỏ (AC-2).
 +    const resp = await Promise.race([
-+      api.getUserInfo(mas) as Promise<unknown>,
++      api.getUserInfo(masGoi) as Promise<unknown>,
 +      deps.treMs(TRAN.treMs).then(() => {
 +        throw new Error("het-15s");
 +      }),
 +    ]);
-+    ketQua = phanLoai((resp ?? {}) as Parameters<typeof phanLoai>[0], mas);
++    ketQua = phanLoai((resp ?? {}) as Parameters<typeof phanLoai>[0], masGoi);
 +  } catch (e) {
 +    // Dừng cả lượt, không thử lại; tệp chặn chỉ chứa mã lý do + số (AC-2).
 +    const { ma, so } = maLoiChanTuError(e);
@@ -657,7 +668,7 @@ index 000000000..5848544b0
 +  for (const kq of ketQua) demRong[kq.loai]++;
 +
 +  // Đối chứng (AC-3): 2 mã người đã gửi tin 24h qua; sai không gian mã → chặn.
-+  const doiChung = yeuCau.doi_chung.slice(0, TRAN.doiChung).map((ma) => {
++  const doiChung = doiChungYeuCau.map((ma) => {
 +    const kq = ketQua.find((k) => k.ma === ma);
 +    return { ma, loai: kq?.loai ?? ("khong-tim-thay" as LookupLoai) };
 +  });
@@ -671,7 +682,8 @@ index 000000000..5848544b0
 +
 +  // Kết quả → API collector thành snapshot hồ sơ S03 (AC-5); collector không
 +  // nhận thì vào spool, không mất.
-+  const dong = ketQua.map((kq) => ({
++  const tapMas = new Set(mas);
++  const dong = ketQua.filter((kq) => tapMas.has(kq.ma)).map((kq) => ({
 +    ma_tai_khoan: kq.ma,
 +    username: kq.username,
 +    loai: kq.loai,

@@ -110,13 +110,13 @@ chấp nhận cả hai.
 ## Lịch sử phiên bản
 
 - **schemaVersion 7 (2026-11-06, link-nguoi-ban-s03/claudedp-0611-6)**: thêm
-  nguồn `zalo-ho-so` + kind `ho-so` (hồ sơ người bán S03 tra theo mã tài khoản
+  nguồn `s03-ho-so` + kind `ho-so` (hồ sơ người bán S03 tra theo mã tài khoản
   qua phiên kênh đang nối — chỉ đọc, có trần, tự dừng). Mỗi lô kết quả thành
   MỘT snapshot riêng: `RawItem` = `sourceId = "<ma_tai_khoan>__<lay_luc ISO>"`,
   `payload = {ma_tai_khoan (số), username (chuỗi ≤120, rỗng khi không có),
   loai (co-username|khong-username|khong-ro|khong-tim-thay)}`, `meta =
   {city, loai_ket_qua, ts}` — KHÔNG PII nào khác (không SĐT/tên/ảnh/ngày sinh
-  lên snapshot). Chỉ nguồn `zalo-ho-so` ghi kind này; các nguồn khác giữ
+  lên snapshot). Chỉ nguồn `s03-ho-so` ghi kind này; các nguồn khác giữ
   version cũ. **7 là số kế tiếp sau 6 (`album_meta`, nhánh ma-album-s03 chưa
   gộp) — bên import phải chấp nhận `{1..7}`, với {6,7} phía S03 bất kể thứ tự
   gộp hai nhánh.** Bảng stg hồ sơ + ghi liên lạc theo migration 080 (làn

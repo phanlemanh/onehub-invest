@@ -344,7 +344,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
 
   /** Bọc http: parse JSON, gọi ingest, auto-flush khi đủ flushAfterItems. */
   /** link-nguoi-ban-s03 (AC-5): nhận lô kết quả tra hồ sơ người bán — mỗi lô
-   * thành MỘT snapshot S03 RIÊNG loại hồ sơ (source zalo-ho-so), ghi mới
+   * thành MỘT snapshot S03 RIÊNG loại hồ sơ (source s03-ho-so), ghi mới
    * không sửa bản cũ; mỗi dòng chỉ mã tài khoản + username (hoặc rỗng) +
    * loại kết quả + thời điểm lấy — không PII nào khác (AC-4/AC-5). */
   async function handleHoSo(
@@ -376,7 +376,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         return { status: 422, body: { error: "dong sai khuôn: cần ma_tai_khoan (số), username (chuỗi ≤120), loai (4 loại hợp lệ), lay_luc (ISO)" } };
       }
       items.push({
-        source: "zalo-ho-so",
+        source: "s03-ho-so",
         sourceId: `${r.ma_tai_khoan}__${r.lay_luc}`,
         kind: "ho-so",
         fetchedAt: r.lay_luc,
@@ -384,7 +384,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         meta: { city, loai_ket_qua: r.loai, ts: r.lay_luc },
       });
     }
-    const writer = new SnapshotWriter(snapshotRoot, city, "zalo-ho-so");
+    const writer = new SnapshotWriter(snapshotRoot, city, "s03-ho-so");
     await writer.write(items);
     await writer.finalize({
       discovered: items.length,
