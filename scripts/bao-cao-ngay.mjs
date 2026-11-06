@@ -24,6 +24,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFi
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isBad, readFreshness } from "./lib/freshness.mjs";
+import { VOCAB } from "../pipeline/lib/vocab.generated.mjs";
 import { chamBang, dungMarkdown, goiY, oBacGiam, tachDaBiet } from "./lib/bao-cao-ngay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -76,7 +77,7 @@ export async function gom(client, { now = new Date(), daBietCfg = [] } = {}) {
     so.NS1 = sau.filter((r) => capB(r.data_level) >= (r.property_type === "apartment" ? 5 : 3)).reduce((s, r) => s + r.n, 0);
     so.NS1b = sau.filter((r) => capB(r.data_level) >= 3).reduce((s, r) => s + r.n, 0);
     ngu.tongDonVi = sau.reduce((s, r) => s + r.n, 0);
-    ngu.phanBo = Object.fromEntries(["B0", "B1", "B2", "B3", "B4", "B5"].map((b) => [b, sau.filter((r) => r.data_level === b).reduce((s, r) => s + r.n, 0)]));
+    ngu.phanBo = Object.fromEntries(VOCAB.data_level.map((b) => [b, sau.filter((r) => r.data_level === b).reduce((s, r) => s + r.n, 0)]));
     const oGiam = truoc.length ? oBacGiam(truoc, sau) : { nghi: [], roi: [] };
     so.NS3 = truoc.length ? oGiam.nghi.length : null;
 

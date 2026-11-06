@@ -9,6 +9,7 @@
  *   theo  — không có đích (chỉ theo dõi)
  *   thieu — không đo được hôm nay (giá trị null)
  */
+import { VOCAB } from "../../pipeline/lib/vocab.generated.mjs";
 
 /** Chấm một giá trị theo khai báo mục tiêu. */
 export function danhGia(giaTri, mt) {
@@ -54,7 +55,7 @@ export function chamBang(so, homQua, mucTieu) {
  * (dưới mức đó là nhiễu của tin vào, tin nghỉ trong ngày).
  */
 export function oBacGiam(truoc, sau, { nguongPct = 2, toiThieu = 50, giamToiThieu = 20 } = {}) {
-  const BAC = ["B0", "B1", "B2", "B3", "B4", "B5"];
+  const BAC = VOCAB.data_level;
   const gom = (rows) => {
     const m = new Map();
     for (const r of rows) {
