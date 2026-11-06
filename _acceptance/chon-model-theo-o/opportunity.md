@@ -3,13 +3,13 @@ schema_version: 1
 slug: chon-model-theo-o
 feature: Bộ đánh giá chạy ba model Haiku, GLM-5.3 Flash, DeepSeek V4.1 Flash qua AI Gateway trên cùng tập nhãn vàng S03 (chữ, mọi ảnh, thẻ nhóm) và sinh bảng chọn model theo ô (rẻ nhất đạt ngưỡng và độ trễ)
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build           # Mạnh 07/11 ở phiên thợ P2: «Cổng Đáng chon-model-theo-o: decision build · disposition archive · ngưỡng theo đề xuất»
+decided_by: Mạnh
+decided_at: 2026-11-06T20:25:44Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
-  disposition:     # keep | archive
+  disposition: archive
 lo_trinh_ma: PL30
 lo_trinh_tep: docs/plan/lo-trinh.json
 ---
@@ -45,10 +45,10 @@ pipeline cần đọc đủ 17 ô từ chữ + ảnh + thẻ nhóm để gắn t
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] Đổi model của một ô (hay mọi ô) chỉ bằng bảng cấu hình, không sửa code bộ đọc, và bộ đọc mặc định Haiku giữ được độ đúng đã đo trên vàng không?
-- Kết quả nào là SỐNG: [đề xuất] Đổi model của một ô trong bảng → lượt chấm trên vàng gọi đúng model mới, diff chỉ chạm tệp cấu hình; Haiku qua đường mới đạt ≥ 92% gộp 17 ô trên 23 thẻ test (mốc đo 96%, trừ 1 thẻ nhiễu); chi phí đo ≤ 0,0025 USD/bài.
-- Kết quả nào là CHẾT: [đề xuất] Đổi model phải sửa code bộ đọc; hoặc Haiku qua đường mới < 90% gộp 17 ô trên test; hoặc hết timebox.
-- Timebox: [đề xuất] 3 ngày làm (tới 10/11/2026).
+- Câu hỏi phép đo trả lời: Đổi model của một ô (hay mọi ô) chỉ bằng bảng cấu hình, không sửa code bộ đọc, và bộ đọc mặc định Haiku giữ được độ đúng đã đo trên vàng không?
+- Kết quả nào là SỐNG: Đổi model của một ô trong bảng → lượt chấm trên vàng gọi đúng model mới, diff chỉ chạm tệp cấu hình; Haiku qua đường mới đạt ≥ 92% gộp 17 ô trên 23 thẻ test (mốc đo 96%, trừ 1 thẻ nhiễu); chi phí đo ≤ 0,0025 USD/bài.
+- Kết quả nào là CHẾT: Đổi model phải sửa code bộ đọc; hoặc Haiku qua đường mới < 90% gộp 17 ô trên test; hoặc hết timebox.
+- Timebox: 3 ngày làm (tới 10/11/2026).
 
 ## Kết quả prototype
 
@@ -62,9 +62,9 @@ Prototype đã dựng là script đo (`agent/scripts/doc-gop-3-model-s03.ts`, co
 
 ## Cổng 0
 
-- **decision = …** Căn cứ: …
-- **disposition = …** Căn cứ: …
-- **Ngưỡng UAT chốt cùng lúc ký:** …
+- **decision = build** Căn cứ: lời Mạnh 07/11 «xây dựng tính năng để có thể dễ dàng thay đổi các model và hiện tại sử dụng haiku»; số đo 07/11 (Haiku 96% gộp 17 ô trên test).
+- **disposition = archive** Căn cứ: script đo `agent/scripts/doc-gop-3-model-s03.ts` giữ làm công cụ đo; đường đọc dựng mới theo hợp đồng.
+- **Ngưỡng UAT chốt cùng lúc ký:** theo mục «Ngưỡng chết / ngưỡng UAT» (Mạnh: «ngưỡng theo đề xuất»).
 
 ## Thước đo thành công → ứng viên criterion
 
