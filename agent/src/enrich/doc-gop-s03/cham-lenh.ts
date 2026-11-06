@@ -23,7 +23,7 @@ export async function chamLuot(o: {
   const log = o.log ?? console.log;
   const cau = napCauHinh(o.cauHinh);
   const kh = keHoach(cau.cauHinh);
-  const the = (await docTheTheoLat(o.client, o.lat, o.split)).filter((t) => t.item_id !== undefined);
+  const the = (await docTheTheoLat(o.client, o.lat, o.split, { chiCoNhan: true })).filter((t) => t.item_id !== undefined);
   const { rows } = await o.client.query(
     `SELECT item_id::int, field, value, not_stated FROM eval_labels WHERE item_id = ANY ($1)`, [the.map((t) => t.item_id)]);
   const vang = new Map<number, Map<Field, string | null>>();

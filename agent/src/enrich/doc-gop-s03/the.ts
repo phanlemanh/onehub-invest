@@ -51,11 +51,13 @@ function dungThe(neo: string, chuRef: string | null, refs: string[], bai: Map<st
   };
 }
 
-/** Thẻ của một lát nhãn (bỏ thẻ trung_voi), theo item_id; `split` lọc dev/test. */
-export async function docTheTheoLat(c: Q, lat: string, split?: "dev" | "test"): Promise<The[]> {
+/** Thẻ của một lát nhãn (bỏ thẻ trung_voi), theo item_id; `split` lọc dev/test; `chiCoNhan` chỉ lấy thẻ đã gắn nhãn
+ * (thẻ vàng — lệnh chấm). */
+export async function docTheTheoLat(c: Q, lat: string, split?: "dev" | "test", o: { chiCoNhan?: boolean } = {}): Promise<The[]> {
   const { rows: items } = await c.query(
-    `SELECT item_id::int, split, ref_id, ghep FROM eval_label_items
-     WHERE lat = $1 AND ghep->>'trung_voi' IS NULL AND ($2::text IS NULL OR split = $2) ORDER BY item_id`, [lat, split ?? null]);
+    `SELECT item_id::int, split, ref_id, ghep FROM eval_label_items i
+     WHERE lat = $1 AND ghep->>'trung_voi' IS NULL AND ($2::text IS NULL OR split = $2)
+       AND (NOT $3 OR EXISTS (SELECT 1 FROM eval_labels l WHERE l.item_id = i.item_id)) ORDER BY item_id`, [lat, split ?? null, !!o.chiCoNhan]);
   const refs = (items as { item_id: number; split: string; ref_id: string; ghep: unknown }[]).map((it) => ({ it, g: docGhep(it.ghep) }));
   const bai = await docBai(c, [...new Set(refs.flatMap(({ it, g }) => refsCuaDong(it.ref_id, g)))]);
   const nhom = await theNhom(c, [...new Set([...bai.values()].flatMap((b) => b.conversation_id ?? []))]);

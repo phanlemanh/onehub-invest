@@ -196,3 +196,15 @@ test("DGS-AC-9 chấm trên lát vàng tạm khớp bảng tính tay, không ghi
     for (const cam of ["bai mot", "bai hai", "bai ba", "NGUOI_DANG_X", "Nhóm thử DGS", ...ids]) assert.ok(!s.includes(cam), `tóm tắt lộ ${cam}`);
   });
 });
+
+test("DGS-AC-9 lệnh chấm chỉ lấy thẻ đã gắn nhãn", async () => {
+  await withTx(async (c) => {
+    const { lat } = await dungLat(c, [{ text: "bai co nhan" }, { text: "bai chua nhan" }]);
+    const items = (await c.query(`SELECT item_id::int FROM eval_label_items WHERE lat = $1 ORDER BY item_id`, [lat])).rows;
+    await c.query(`DELETE FROM eval_labels WHERE item_id = $1`, [items[1].item_id]);
+    const ghi: Ghi[] = [];
+    const { tomTat } = await chamLuot({ client: c, lat, tranUsd: 1, taoModel: gatewayGia(() => json17(), ghi), log: () => {} });
+    assert.equal(tomTat.so_the, 1);
+    assert.equal(ghi.length, 1, "CHAM GOI THE CHUA CO NHAN");
+  });
+});
