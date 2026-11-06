@@ -53,6 +53,8 @@ const COT_ENUM_THEO_BANG: Record<string, string> = {
   "registry_aliases.kind": "loại bí danh",
   "registry_events.kind": "sự kiện danh bạ",
   "party_roles.role": "vai của người",
+  "party_contacts.kind": "loại liên lạc",
+  "party_contacts.rule_id": "luật liên lạc",
 }
 
 /** Tên kiểm của bên ghi → tên tiếng Việt. `entity` (bảng) phân biệt cột enum trùng tên giữa các bảng. */
@@ -74,6 +76,7 @@ const DOI_TUONG: Record<string, string> = {
   registry_aliases: "Bí danh người",
   registry_events: "Sự kiện danh bạ người",
   party_roles: "Vai trò của người",
+  party_contacts: "Liên lạc của người",
   regex: "Bộ đọc theo luật",
   llm: "Bộ đọc AI",
   all: "Mọi thị trường",
@@ -124,12 +127,14 @@ const chuaCo = (s: string) => (s === "null" || s === "n/a" ? "chưa có" : s)
 /** Kỳ «2026-09» → «09/2026». */
 const ky = (s: string) => (/^\d{4}-\d{2}$/.test(s) ? `${s.slice(5)}/${s.slice(0, 4)}` : chuaCo(s))
 
-/** Nhãn giá trị của bốn trục danh bạ (sổ từ vựng, không viết tay). */
+/** Nhãn giá trị của sáu trục danh bạ (sổ từ vựng, không viết tay). */
 const NHAN_DANH_BA: Record<string, string> = {
   ...LABELS_VI.registry_status,
   ...LABELS_VI.alias_kind,
   ...LABELS_VI.registry_event_kind,
   ...LABELS_VI.party_role,
+  ...LABELS_VI.contact_kind,
+  ...LABELS_VI.contact_rule,
 }
 
 const GIA_TRI_ENUM = (v: string): string => {

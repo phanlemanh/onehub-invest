@@ -12,6 +12,7 @@ import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { normText } from "./lib/norm-text.mjs";
@@ -740,7 +741,7 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
 // `khoaNhom` chỉ để thước truyền hàm đột biến (nhom-hai-lan-s03-xu-goc); đường chạy thật luôn dùng khoaNhomThat.
-export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat } = {}) {
+export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
@@ -893,6 +894,10 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const { reconcile } = await writeOffers(client, "S03", rows, {
     assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai],
   });
+  // enrich-nguoi-s03: writeOffers vừa upsert seller_phone về số riêng của tin, nên tin đang mang số qua người đăng được gán lại
+  // ngay trong giao dịch này — không có khoảng tin rơi về «Chưa có số» cho cloud-sync chép. Số mới do lượt sau dungNguoi.
+  // `ganSo` thay bộ gán CHỈ cho đối chứng của thước.
+  await ganSo(client, { rieng: new Map(rows.map((r) => [r.offer_id, r.seller_phone])) });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
   return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, nguonLoai, bai_doi_khoa: baiDoiKhoa };

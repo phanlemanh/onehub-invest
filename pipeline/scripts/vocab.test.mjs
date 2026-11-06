@@ -14,7 +14,7 @@ const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
   "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
-  "registry_status", "alias_kind", "registry_event_kind", "party_role",
+  "registry_status", "alias_kind", "registry_event_kind", "party_role", "contact_kind", "contact_rule",
   "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
 ];
 
@@ -48,6 +48,9 @@ const NHAN = [
   ["alias_kind", "tai_khoan_nguon", "Tài khoản tại nguồn"], ["alias_kind", "sdt_bam", "SĐT băm"], ["alias_kind", "ten", "Tên hiển thị"], ["alias_kind", "sdt", "SĐT số gốc"],
   ["registry_event_kind", "gop", "Gộp"], ["registry_event_kind", "tach", "Tách"], ["registry_event_kind", "nghi", "Nghỉ"],
   ["party_role", "nguoi_dang", "Người đăng"],
+  // enrich-nguoi-s03 (079): sổ liên lạc của Người.
+  ["contact_kind", "sdt", "Số điện thoại"], ["contact_kind", "chat_profile", "Hồ sơ chat"],
+  ["contact_rule", "so_tren_tin", "Số trên tin của chính người đăng"], ["contact_rule", "so_trong_bai", "Số trong bài khác của người đăng"],
   ["listing_intent", "offer", "Tin rao"], ["listing_intent", "inquiry", "Yêu cầu"],
   ["listing_intent", "not_listing", "Không phải tin rao"], ["listing_intent", "unknown", "Chưa rõ"],
   ["offer_status", "active", "Đang chào"], ["offer_status", "active_under_contract", "Đã cọc"],
@@ -68,11 +71,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 17 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 19 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 79); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt
+  assert.equal(NHAN.length, 83); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

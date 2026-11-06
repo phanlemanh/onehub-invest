@@ -22,6 +22,9 @@ export const KIEM_ENUM = Object.freeze([
   { bang: "registry_aliases", cot: "kind", truc: "alias_kind" },
   { bang: "registry_events", cot: "kind", truc: "registry_event_kind" },
   { bang: "party_roles", cot: "role", truc: "party_role" },
+  // Sổ liên lạc của Người (enrich-nguoi-s03, 079).
+  { bang: "party_contacts", cot: "kind", truc: "contact_kind" },
+  { bang: "party_contacts", cot: "rule_id", truc: "contact_rule" },
 ]);
 
 /**
