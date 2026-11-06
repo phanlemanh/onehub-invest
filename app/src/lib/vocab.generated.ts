@@ -14,6 +14,8 @@ export const VOCAB = {
   alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt"],
   registry_event_kind: ["gop", "tach", "nghi"],
   party_role: ["nguoi_dang"],
+  contact_kind: ["sdt", "chat_profile"],
+  contact_rule: ["so_tren_tin", "so_trong_bai", "s03_ho_so_theo_tai_khoan"],
   listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
   offer_status: ["active", "active_under_contract", "closed", "withdrawn", "unknown"],
   change_type: ["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"],
@@ -34,6 +36,8 @@ export type RegistryStatus = (typeof VOCAB.registry_status)[number];
 export type AliasKind = (typeof VOCAB.alias_kind)[number];
 export type RegistryEventKind = (typeof VOCAB.registry_event_kind)[number];
 export type PartyRole = (typeof VOCAB.party_role)[number];
+export type ContactKind = (typeof VOCAB.contact_kind)[number];
+export type ContactRule = (typeof VOCAB.contact_rule)[number];
 export type ListingIntent = (typeof VOCAB.listing_intent)[number];
 export type OfferStatus = (typeof VOCAB.offer_status)[number];
 export type ChangeType = (typeof VOCAB.change_type)[number];
@@ -52,6 +56,8 @@ export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "spl
 export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" } as const;
 export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;
 export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
+export const CONTACT_KIND = { sdt: "sdt", chat_profile: "chat_profile" } as const;
+export const CONTACT_RULE = { so_tren_tin: "so_tren_tin", so_trong_bai: "so_trong_bai", s03_ho_so_theo_tai_khoan: "s03_ho_so_theo_tai_khoan" } as const;
 export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;
 export const OFFER_STATUS = { active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" } as const;
 export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" } as const;
@@ -74,6 +80,8 @@ export const LABELS_VI = {
   alias_kind: { tai_khoan_nguon: "Tài khoản tại nguồn", sdt_bam: "SĐT băm", ten: "Tên hiển thị", sdt: "SĐT số gốc" },
   registry_event_kind: { gop: "Gộp", tach: "Tách", nghi: "Nghỉ" },
   party_role: { nguoi_dang: "Người đăng" },
+  contact_kind: { sdt: "Số điện thoại", chat_profile: "Hồ sơ chat" },
+  contact_rule: { so_tren_tin: "Số trên tin của chính người đăng", so_trong_bai: "Số trong bài khác của người đăng", s03_ho_so_theo_tai_khoan: "Hồ sơ chat theo mã tài khoản" },
   listing_intent: { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
   offer_status: { active: "Đang chào", active_under_contract: "Đã cọc", closed: "Đã bán", withdrawn: "Đã gỡ", unknown: "Chưa rõ" },
   change_type: { new_listing: "Tin mới", price_change: "Đổi giá", withdrawn: "Gỡ tin", back_on_market: "Chào lại", active_under_contract: "Đã cọc", closed: "Đã bán" },

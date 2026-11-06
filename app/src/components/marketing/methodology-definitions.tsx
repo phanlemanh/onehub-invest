@@ -85,7 +85,7 @@ export const OFFER_LABELS: Definition[] = [
     id: "so-chua-xac-minh",
     question: "Nhãn “Chưa xác minh” cạnh số điện thoại",
     answer:
-      "Số không lấy trực tiếp từ chính tin đó: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Bạn vẫn xem được số; khi gọi, hãy hỏi lại có đúng người đăng tin không.",
+      "Số không lấy trực tiếp từ chính tin đó: suy từ tin hoặc bài khác của cùng tài khoản, hoặc chưa đủ bằng chứng. Bạn vẫn xem được số; khi gọi, hãy hỏi lại có đúng người đăng tin không.",
   },
   {
     id: "the-khong-nhan",

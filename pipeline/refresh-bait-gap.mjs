@@ -13,6 +13,9 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
+import { dungLienLac } from "./lib/lien-lac-nguoi.mjs";
+import { ghiLienLacHoSo } from "./lib/lien-lac-ho-so.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
 
 const DB_URL =
@@ -95,7 +98,8 @@ export async function loaiTinPhiLy(c, rows) {
  * Bước đêm: bait gap + sellers (tự-commit như trước), rồi danh bạ Người (DB2b) trong giao dịch RIÊNG — bộ dựng lỗi
  * không kéo lùi bait gap/sellers, và lỗi được ném lại (không nuốt). `savepoint: true` khi người gọi đã mở giao dịch
  * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng. Bộ dựng đọc công tắc gộp
- * ops_audit (mặc định tắt); `dung` thay bộ dựng CHỈ cho đối chứng của thước — job đêm không truyền.
+ * ops_audit (mặc định tắt); `dung` thay bộ dựng CHỈ cho đối chứng của thước — job đêm không truyền. Sau bộ dựng: sổ liên lạc của
+ * Người và gán số qua người đăng (enrich-nguoi-s03), cùng giao dịch.
  * @param {import("pg").Client} c
  */
 export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } = {}) {
@@ -110,8 +114,14 @@ export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } 
   await c.query(mo);
   try {
     const nguoi = await dung(c, { runId });
+    // enrich-nguoi-s03: sổ liên lạc dựng sau Người của cùng đêm, rồi tin S03 không số nhận số qua người đăng. Chưa áp 079 thì
+    // hai bước in CHUA-AP-079 và không ghi; bộ dựng Người vẫn commit như hôm nay.
+    const lienLac = await dungLienLac(c, { runId });
+    // link-nguoi-ban-s03: liên lạc hồ sơ chat từ kết quả tra theo mã tài khoản; chưa áp 080 thì in CHUA-AP-080, không ghi.
+    const hoSo = await ghiLienLacHoSo(c, { runId });
+    const ganSo = await ganSdtQuaNguoi(c);
     await c.query(xong);
-    return { ...kq, nguoi };
+    return { ...kq, nguoi, lienLac, hoSo, ganSo };
   } catch (e) {
     await c.query(lui);
     throw e;

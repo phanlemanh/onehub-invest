@@ -9,7 +9,7 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { extractPhones } from "./transform-zalo.mjs";
-import { TIN_VAO_DANH_BA } from "./lib/danh-ba-nguoi.mjs";
+import { RULE_QUA_NGUOI, TIN_VAO_DANH_BA } from "./lib/danh-ba-nguoi.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 import { ALIAS_KIND } from "./lib/vocab.generated.mjs";
 
@@ -28,6 +28,15 @@ export const SQL_N3 = `SELECT (SELECT count(*) FROM sellers)::int AS sellers,
          WHERE o.seller_phone_hash IS NOT NULL
            AND (${TIN_VAO_DANH_BA}
                 OR EXISTS (SELECT 1 FROM registry_aliases a WHERE a.kind = 'sdt' AND a.retired_at IS NULL AND a.value = o.seller_phone)))::int AS sdt`;
+
+/** Cột SĐT của tin coi số suy qua người đăng là không số (enrich-nguoi-s03): số ấy lấy từ liên lạc của Người, không phải từ
+ * chữ tin, nên không được thành cặp một–một hay «tin có số» của phép đo. */
+const SO_KHONG_SUY = (cot) =>
+  `CASE WHEN field_provenance->'seller_phone'->>'rule_id' = '${RULE_QUA_NGUOI}' THEN NULL ELSE ${cot} END AS ${cot}`;
+
+/** Tin sống của S03, S05 cho năm số đo; số suy qua người đăng đọc ra NULL. */
+export const SQL_TIN_SD5 = `SELECT source, ${SO_KHONG_SUY("seller_phone")}, ${SO_KHONG_SUY("seller_phone_hash")}, post_ids
+                              FROM sale_offers WHERE source = ANY ($1)`;
 
 /** Bộ dò rộng của audit §7: chữ số xen tối đa 3 ký tự tách, nhận «o» thay «0», gom về 10 số đầu di động, trả dạng E.164. */
 const DO_RONG = /(?<!\d)(?:\(?\+?84\)?|0|[oO])(?:[\s.\-_,/()·•*]{0,3}[\doO]){8,10}(?!\d)/g;
@@ -181,8 +190,7 @@ export function inBang(kq) {
 export async function docDuLieu(client) {
   await client.query("BEGIN TRANSACTION READ ONLY");
   try {
-    const { rows: tin } = await client.query(
-      `SELECT source, seller_phone, seller_phone_hash, post_ids FROM sale_offers WHERE source = ANY ($1)`, [NGUON]);
+    const { rows: tin } = await client.query(SQL_TIN_SD5, [NGUON]);
     const bai = {};
     for (const nguon of NGUON) {
       const { posts } = await loadStgPosts(client, KENH[nguon]);
@@ -193,7 +201,8 @@ export async function docDuLieu(client) {
        WHERE retired_at IS NULL AND kind = ANY ($1) AND source = ANY ($2)`, [KIEU_BI_DANH_SDT, NGUON]);
     const { rows: banGhi } = await client.query(
       `SELECT source, array_agg(DISTINCT seller_phone) AS so FROM sale_offer_records
-       WHERE source = ANY ($1) AND seller_phone IS NOT NULL GROUP BY source`, [NGUON]);
+       WHERE source = ANY ($1) AND seller_phone IS NOT NULL
+         AND field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_QUA_NGUOI}' GROUP BY source`, [NGUON]);
     const { rows: gop } = await client.query(`SELECT party_key FROM parties WHERE status = 'merged'`);
     const { rows: tach } = await client.query(`SELECT party_key FROM parties WHERE status = 'split'`);
     const { rows: vai } = await client.query(`SELECT DISTINCT party_key FROM party_roles WHERE retracted_at IS NULL`);

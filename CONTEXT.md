@@ -153,9 +153,13 @@ _Avoid_: so khớp, kiểm chéo
 **Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
 - Code: `hasPhone = false`
 
-**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
-- Code: `seller_phone_inferred` (view `sale_offers`, migration 070) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
+**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin hoặc bài khác của cùng tài khoản (số ghép S06, số qua người đăng S03), hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
+- Code: `seller_phone_inferred` (view `sale_offers`, migration 070, 079) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
 _Avoid_: chưa kiểm chứng, số nghi ngờ
+
+**Liên lạc của Người**: Số điện thoại (sau này link hồ sơ kênh S03) mà một Người dùng để được liên hệ, ghi thành phát biểu có bằng chứng: số người đăng ghi trên tin của chính họ, hoặc số họ nêu trong bài khác như bài trả lời trong nhóm. Khác bí danh: một số dùng chung liên lạc được nhiều Người mà không làm họ thành một. Số dùng chung giữa nhiều người gửi không thành liên lạc của ai. Tin không có số nhận số qua người đăng, kèm nhãn «Chưa xác minh».
+- Code: `party_contacts` (migration 079) · `contact_kind` (`sdt`, `chat_profile`) · `contact_rule` (`so_tren_tin`, `so_trong_bai`) · dấu tin `s03-qua-nguoi-dang` · RESO: `Contacts.MobilePhone`, `SocialMedia` — extension local
+_Avoid_: bí danh SĐT (đó là khoá định danh), số phụ
 
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
@@ -243,6 +247,14 @@ _Avoid_: accuracy, độ chính xác
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker
+
+**ID người đăng**: Mã tài khoản của người đăng bài ở nguồn S03, hiện cạnh tên trên thẻ gắn nhãn để phân biệt những người trùng tên trong cùng nhóm. Tầng C như tên người bán; chỉ hiện ở `/ops/**`.
+- Code: `sender_id` (stg) · `nguoiDangId` (thẻ gắn nhãn)
+_Avoid_: UID
+
+**Username người bán**: Tên tài khoản công khai của người đăng S03 trên kênh chat, lấy bằng cách tra hồ sơ theo ID người đăng (bộ tra trong gateway, chỉ đọc, có trần). Lưu trần — không phải link — thành liên lạc «Hồ sơ chat» của Người; link hồ sơ dựng lúc hiển thị từ sổ nguồn ở máy thu, kho không giữ mẫu link. Tầng C như tên người bán; chỉ ở máy thu, chưa hiện trên cổng hay `/ops`.
+- Code: `party_contacts.kind = chat_profile`, `rule_id = s03_ho_so_theo_tai_khoan` · stg `stg_s03_ho_so.username` · hồ sơ `link-nguoi-ban-s03`
+_Avoid_: link người bán, tên đăng nhập, nick
 
 **Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
 - Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
@@ -405,6 +417,8 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» |
 | Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
+| Loại liên lạc | `contact_kind` | local | `party_contacts.kind` | `sdt` «Số điện thoại» · `chat_profile` «Hồ sơ chat» |
+| Luật liên lạc | `contact_rule` | local | `party_contacts.rule_id` | `so_tren_tin` «Số trên tin của chính người đăng» · `so_trong_bai` «Số trong bài khác của người đăng» · `s03_ho_so_theo_tai_khoan` «Hồ sơ chat theo mã tài khoản» |
 | Ý định tin | `listing_intent` | local | `silver_labels.listing_intent` | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
