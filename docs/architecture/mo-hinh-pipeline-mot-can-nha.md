@@ -1,7 +1,7 @@
 # Mô hình dòng chảy dữ liệu — bài vào, căn nhà sống qua thời gian, đo hằng ngày
 
-Ngày: 2026-11-07 · Người soạn: Claude (phiên thợ P2, theo lời Mạnh 07/11) · Bản 3 (đã soát xung đột) · Trạng thái:
-**chờ Mạnh ký**
+Ngày: 2026-11-07 · Người soạn: Claude (phiên thợ P2, theo lời Mạnh 07/11) · Bản 4 · Trạng thái: **Mạnh duyệt 07/11**
+(«Đồng ý với khuyến nghị khi rà soát tài liệu»; Q3 hoãn tới PL21 — §7)
 
 > Lời giao (Mạnh, 07/11): «tổng hợp lại đi từ Phân tích kỹ lưỡng thành mô hình hoàn chỉnh cho toàn bộ pipeline bao gồm cách
 > đo lường hiệu quả trong hoạt động hàng ngày tạo ra tin và mô hình một ngôi nhà được phân loại và enrich qua thời gian…
@@ -12,8 +12,8 @@ Ngày: 2026-11-07 · Người soạn: Claude (phiên thợ P2, theo lời Mạnh
 - **Là căn cứ kiến trúc** (ROADMAP §0: `docs/architecture/` là căn cứ). Tài liệu ghép các quyết định đã chốt thành một
   mô hình đi từ đầu tới cuối, rồi đối chiếu với mã đang chạy.
 - **Không là nơi thứ hai** cho thước đo hay thứ tự việc:
-  - Thước đo sống ở `docs/product/FRAMING.md` §5. Mục §3 dưới đây là **đề xuất sửa FRAMING §5**; khi Mạnh ký thì chép
-    vào FRAMING kèm nhật ký §9 (Q1).
+  - Thước đo sống ở `docs/product/FRAMING.md` §5 — đã chép từ §3 dưới đây khi Mạnh duyệt (Q1, FRAMING §9 dòng 07/11).
+    §3 giữ làm giải thích; số liệu chính thức đọc ở FRAMING.
   - Việc và thứ tự sống ở `docs/plan/lo-trinh.json`. Mục §6 chỉ đọc `dung_tren`, không xếp lại.
 - **Chỗ nào đề xuất khác một quyết định đã chốt đều thành câu hỏi ở §7**, không nằm chìm trong bảng.
 
@@ -184,12 +184,12 @@ các phát biểu kế thừa đi theo bị rút dây chuyền.
   tích không» đang mở ở `ghi_chu` của GC3.
 - Bậc đích: căn hộ có danh mục B5; nhà phố B3; tin S06 dùng làm thước B3.
 
-## 3. Đo hằng ngày — đề xuất sửa FRAMING §5
+## 3. Đo hằng ngày (đã chép vào FRAMING §5)
 
 Các số tính sẵn ở pipeline (luật 10) và đẩy lên Ops qua kênh số tổng hợp có sẵn (`push-ops-facts`, ADR-0014). Không bảng
 nào mang nội dung tin lên cloud.
 
-### 3.1 Phễu dòng chảy — mở rộng `/ops/data-flow`
+### 3.1 Phễu dòng chảy — mở rộng `/ops/data-flow` (DF1, DF3)
 
 - Thêm số **bài khác nội dung** (cần GT2 hoặc gộp trùng theo nội dung).
 - Thêm tỉ lệ tin rao **bị bỏ sót**, ước từ mẫu soát (§3.2).
@@ -204,8 +204,8 @@ nào mang nội dung tin lên cloud.
   - Tập phải gắn mù và không trộn nhãn lệch mẫu. Ở `research-local/do-mu-s03` mới có danh sách niêm phong và 10 nhãn Opus,
     chưa phải tập người gắn mù.
   - Nhóm A cần khoảng 200 tin mỗi phân khúc, gắn một lần, đo lại mỗi tuần.
-  - Đây là chỗ đụng quyết định 06/11 bỏ gắn mù (Q3).
-- **Mẫu soát cuốn chiếu — để thấy trôi, không để mở cổng.**
+  - Đây là chỗ đụng quyết định 06/11 bỏ gắn mù: **Q3 hoãn, quyết lại khi mở PL21**.
+- **Mẫu soát cuốn chiếu — để thấy trôi, không để mở cổng** (hàng DO1; độ đúng gắn căn ở DO2, làm giàu ở DO3).
   - Mỗi ngày rút ngẫu nhiên 20 bài từ bài nhận (gồm cả bài máy không nhận là tin rao). Màn hiện nháp máy, người giữ
     hoặc sửa, theo cách «máy nháp, Mạnh feedback» chốt 06/11.
   - Ra tỉ lệ giữ nháp theo (cách đọc × ô) và ước tỉ lệ tin rao bị bỏ sót, theo tuần.
@@ -226,7 +226,7 @@ nào mang nội dung tin lên cloud.
 ### 3.4 North star
 
 - Phân bố căn theo bậc B0–B5 theo thị trường × loại; số chính là số căn đạt bậc đích (`data_level_snapshot` đã có).
-- **Thêm dòng chuyển bậc mỗi ngày**: bao nhiêu căn lên, tụt, vì sao.
+- **Thêm dòng chuyển bậc mỗi ngày** (DO1): bao nhiêu căn lên, tụt, vì sao.
 - Bậc năng lực N0–N4 theo phân khúc.
 
 ### 3.5 Bất biến (test trong CI)
@@ -300,14 +300,17 @@ Theo `dung_tren` của `docs/plan/lo-trinh.json`. Tài liệu không xếp lại
 | Danh bạ | DN1 (xong) → DB1 → PL20 (cần PL13, PL15, DB1) → DN2 → DN3 → DN4 |
 | Diện tích suy ra | PL20 → GC2 → GC3 |
 | Nền phân xử | PL17 · PL21 · PL23 · PL31 · PL22 |
+| Đo hằng ngày (cắt 07/11, #336) | PL30 → DO1 (+ DF1) → DO3; DO1 + DB1 → DO2; PL18 đứng sau DO1 |
 
-**Đường tới hạn tới căn S03 đầu tiên ở B2:** PL30 → PL18 → GCQ1 → GCQ2 → PL13 (+ GN1) → PL20, với DB1 sẵn sàng trước PL20.
+**Đường tới hạn tới căn S03 đầu tiên ở B2:** PL30 → DO1 → PL18 → GCQ1 → GCQ2 → PL13 (+ GN1) → PL20, với DB1 sẵn sàng trước PL20.
 Lên B3 cần thêm PL17 và PL21.
 
-Lộ trình tự lệch ở một chỗ, thành Q4: `ghi_chu` của PL13 nói DB1 dựng từ phát biểu của PL13 nên PL13 đứng trước DB1,
-trong khi `dung_tren` của DB1 chỉ có DN1, và ROADMAP §3 mục 30 xếp DB1 trước PL13.
+Chỗ lệch DB1 ↔ PL13 đã quyết ở Q4: DB1 lượt đầu không chờ PL13; câu `ghi_chu` cũ của PL13 bỏ khi giám sát sửa lộ trình.
 
-## 7. Câu hỏi cho Mạnh — mọi chỗ đụng quyết định đã chốt
+## 7. Câu hỏi cho Mạnh — đã trả lời 07/11
+
+Mạnh 07/11 (qua giám sát): «Đồng ý với khuyến nghị khi rà soát tài liệu». Kết quả: Q1, Q2, Q4, Q5, Q6, Q7 theo khuyến
+nghị; **Q3 hoãn, quyết lại khi mở PL21** (khuyến nghị của giám sát). Hàng đo Q2 đã cắt thành DO1–DO3 (#336).
 
 | Câu | Khuyến nghị | Lối khác — giá |
 |---|---|---|
@@ -319,8 +322,9 @@ trong khi `dung_tren` của DB1 chỉ có DN1, và ROADMAP §3 mục 30 xếp DB
 | **Q6** Ghi mục ROADMAP §3 «đọc tin S03 dùng ba model cloud qua Gateway (ADR-0007 sửa 06/11)» và thêm ngoại lệ vào §1.6 «Local-first AI»; Hỏi-4 cũ (M1 local mặc định, cổng Gateway hoãn tới PH4) coi như đã thay | Ghi | Không ghi — hiến pháp và quyết định sau lệch nhau, hàng sau phải tự đoán |
 | **Q7** Từ vựng: «nhãn bạc» = bảng `silver_labels` (như KC1, KC3 đang dùng); GNH2 gọi «nhãn nháp Opus». Thêm vào CONTEXT các thuật ngữ: nhãn bạc, mẫu soát cuốn chiếu, tập test mù đóng băng, bài khác nội dung, đơn vị bài đăng, dòng chuyển bậc | Đồng ý | Đổi tên `silver_labels` thành «kết quả máy đọc» — phải sửa KC1, KC3, ROADMAP §2 |
 
-Sau khi ký, giám sát cắt hàng và sửa lộ trình (yêu cầu P2-122, P2-123). Các sửa ROADMAP, FRAMING, CONTEXT kèm câu trả lời
-Q1, Q3, Q6, Q7 làm cùng một commit, có câu trả lời của Mạnh làm căn cứ.
+Đã làm cùng commit với bản 4: ROADMAP §3 mục 32, 33 và §1.6; FRAMING §5, §9; CONTEXT (nhãn bạc, nhãn nháp Opus, mẫu soát
+cuốn chiếu, tập test mù đóng băng, bài khác nội dung, đơn vị bài đăng, dòng chuyển bậc; ghi chú «Gắn nhãn»). Sửa hàng
+PL13, GNH2 và chữ OOS-2 của PL30 do giám sát và phiên PL30 làm.
 
 ## Nhật ký
 
@@ -328,4 +332,5 @@ Q1, Q3, Q6, Q7 làm cùng một commit, có câu trả lời của Mạnh làm c
 |---|---|---|
 | 1 | 07/11 | Bản đầu |
 | 2 | 07/11 | Giữ chuỗi S03 theo lộ trình; đo bằng nháp + feedback; tách `silver_labels` khỏi GNH2 (theo giám sát) |
+| 4 | 07/11 | Mạnh duyệt (Q3 hoãn); chép đo vào FRAMING §5; ROADMAP §3 mục 32, 33, §1.6; CONTEXT; trỏ hàng DO1–DO3 |
 | 3 | 07/11 | Soát độc lập hai lượt (kỹ thuật so ADR/mã; xung đột so quyết định, lộ trình, từ vựng). Sửa: vật thể khác vùng · cổng tự áp đo trên tập test mù, mẫu nháp chỉ thấy trôi · trạng thái phân xử thật (12 cột + trạng thái tin) · ý định tin, yêu cầu · ngữ cảnh nhóm là suy luận · đủ ba nhóm F3 và bốn luật phân xử · tin nhiều căn ở chặng đọc · diện tích kế thừa không vào cột · đủ luật tụt bậc, điều kiện B4, bậc dòng danh mục · xác nhận Quỹ hàng là quan sát · hàng đo thu hẹp, không trùng PL31, PL22, DF3, GNH2 · GN1 vào chuỗi · chi phí theo hiện trạng · từ vựng theo CONTEXT · bảy câu hỏi |
