@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   cheDinhDanhThu,
+  getCloudFlowDays,
   getFlowDays,
   getZaloAccountsFromFacts,
   getZaloGroups,
@@ -12,12 +13,14 @@ import {
   readZaloHealth,
 } from "@/lib/collections-queries";
 import type { User } from "@/lib/auth";
+import { getCloudOpsView } from "@/lib/ops-cloud";
 import { xemDinhDanhThu } from "@/lib/ops-access";
+import { freshnessLocalOnly } from "@/lib/ops-queries";
 
 /** Thân `GET /api/v1/ops/collections` (bề mặt máy của trang "Thu thập", ADR-0007 DCA). */
-export async function docThuThap(days: number) {
+export async function docThuThap(days: number, { laCloud }: { laCloud?: boolean } = {}) {
   const [flow, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, zaloAccounts] = await Promise.all([
-    getFlowDays(days),
+    docLuong(days, laCloud ?? (await freshnessLocalOnly())),
     readGateFunnel(),
     readSchedulerStatus(),
     readRotationPreview(),
@@ -27,6 +30,17 @@ export async function docThuThap(days: number) {
     getZaloAccountsFromFacts(),
   ]);
   return { generatedAt: new Date().toISOString(), flow, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, zaloAccounts };
+}
+
+/**
+ * «Luồng N ngày» theo nơi chạy, như trang Thu thập (collections-content.tsx): máy thu đếm thẳng bảng thô; trên cloud (bảng tầng A
+ * vắng) dựng từ khối `luong7` của bản tin + `listings` đã đồng bộ (`getCloudFlowDays`), không đọc bảng chỉ có ở máy thu — bảng
+ * stg trên cloud không đồng bộ lược đồ, đọc nó là 500 (audit-all 07/11: thiếu cột agent_id). Chưa có bản tin thì rỗng.
+ */
+async function docLuong(days: number, laCloud: boolean) {
+  if (!laCloud) return getFlowDays(days);
+  const cloud = await getCloudOpsView();
+  return cloud.state === "none" ? [] : getCloudFlowDays(cloud.luong7, { n: days });
 }
 
 export type ThuThapPayload = Awaited<ReturnType<typeof docThuThap>>;
