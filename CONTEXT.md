@@ -420,6 +420,11 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
 | Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
+| Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
+| Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |
+| View | `view` | View | — | `city` «Thành phố» · `lake` «Hồ» · `river` «Sông» · `park_greenbelt` «Công viên» · `garden` «Vườn, nội khu» · `pool` «Bể bơi» · `panoramic` «Toàn cảnh» · `other` «Khác» |
+| Phí đã gồm | `rent_includes` | RentIncludes | — | `management` «Phí quản lý» · `electricity` «Điện» · `water` «Nước» · `internet` «Internet» · `none` «Không gồm gì» · `other` «Khác» |
+| Cơ sở giá | `price_basis` | local | — | `net` «Thu về (NET)» · `gom_phi` «Đã gồm phí» · `chua_gom_phi` «Chưa gồm phí» |
 
 <!-- VOCAB:END -->
 
