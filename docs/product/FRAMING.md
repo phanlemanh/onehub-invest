@@ -160,20 +160,25 @@ người đăng đã giấu.
 - quyết định của người mất khi nạp lại;
 - lộ tầng A (tên nguồn thật, hồ sơ người dùng app).
 
-## 5. Thước đo [đề xuất]
+## 5. Thước đo (Mạnh duyệt 07/11)
 
-| Tầng | Thước đo | Ghi chú |
+Bốn tầng tính sẵn ở pipeline, đẩy lên Ops qua kênh số tổng hợp; xem theo nguồn × thị trường × loại hình × ngày. Giải thích
+đầy đủ: `docs/architecture/mo-hinh-pipeline-mot-can-nha.md` §3.
+
+| Tầng | Thước đo | Ghi chú · hàng |
 |---|---|---|
-| **North star** | **Phân bố căn theo bậc B0–B5** (§3.4), theo thị trường × loại; số chính = số căn **đạt bậc đích của phân khúc mình** | Mục tiêu là đẩy phân bố lên và **giữ không tụt**; tách B3 «suy ra có số» với B4–B5 «xác minh» |
-| Lõi (sớm) | Tỉ lệ tin gắn được vào căn · độ đúng gộp trùng · độ đúng trường lõi theo nguồn · độ tươi · tỉ lệ tin thật lọt vào hệ thống | Đo trên tập nhãn (review phân loại §3.5) |
+| **North star** | **Phân bố căn theo bậc B0–B5** (§3.4), theo thị trường × loại; số chính = số căn **đạt bậc đích của phân khúc mình**; **dòng chuyển bậc mỗi ngày** (lên, tụt, vì sao) | Đẩy phân bố lên và **giữ không tụt**; tách B3 «suy ra có số» với B4–B5 «xác minh». Dòng chuyển bậc: DO1 |
+| Dòng chảy | Bài nhận → bài khác nội dung → tin rao (ước tỉ lệ bị bỏ sót) → đọc được (B1) → gắn căn theo mức (căn · trục · toà · chỉ vùng) → lên cổng; mỗi chặng có lý do rơi | `/ops/data-flow`; DF1, DF3 |
+| Độ đúng — để mở cổng | Cận dưới Wilson theo (cách đọc × trường × phân khúc) trên **tập test mù đóng băng**; ngưỡng F3 ba nhóm | Cổng tự áp PL21; tập mù hay mẫu nháp: **hoãn, quyết khi mở PL21** |
+| Độ đúng — để thấy trôi | Mẫu soát cuốn chiếu 20 bài/ngày «máy nháp, Mạnh feedback»: tỉ lệ giữ nháp, tỉ lệ tin rao bị bỏ sót, độ đúng gắn căn, làm giàu bị sửa/rút; tín hiệu không cần nhãn (JSON hỏng, trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, ô người sửa) | Số có neo — chỉ so tuần với tuần. DO1, DO2, DO3 |
 | Môi giới | Số kênh họ không phải tự đăng · tỉ lệ tin của họ hiện đúng và gộp đúng · phản hồi «tin sai» | Phản hồi cần kênh báo sai trên trang hiển thị |
 | Nhà đầu tư | Số thị trường đủ thước theo loại · độ đúng danh sách «Căn giá tốt» · sai số ước giá thuê / giá trị khi có số thật | Câu 1–3 |
 | Năng lực (§3.4) | Bậc N0–N4 của từng phân khúc | Phân khúc nào lên N3 thì mới mở rộng ra cổng công khai rộng |
-| Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Phải tăng dần; đo trên tập test đóng băng |
-| Độ tươi (D4) | **Phút** từ lúc tin được đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95) | Mục tiêu cụ thể: câu hỏi mở |
-| Chi phí (D6) | Chi phí model + phút người **để đưa một căn lên bậc**, theo phân khúc · chi phí trợ lý theo người dùng | Sổ cuộc gọi AI (review §0.4) |
+| Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Đo trên tập test đóng băng |
+| Độ tươi (D4) | **Phút** từ lúc tin được đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95), thêm hai quãng B1 → gắn căn, gắn căn → lên cổng | PL22 |
+| Chi phí (D6) | Chi phí model + phút người **để đưa một căn lên bậc**, theo phân khúc; USD model mỗi bài và mỗi tin B1 · chi phí trợ lý theo người dùng | PL31; sổ `ai_calls` |
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
-| **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud | Chặn ở CI |
+| **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud (lời gọi model đọc tin là ngoại lệ có tên, ADR-0007 sửa 06/11) · 0 khoá vật thể chứa giá, loại hay bán/thuê | Chặn ở CI |
 
 ## 6. Hệ quả cho cách làm
 
@@ -229,3 +234,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-10-27 | Chỉ đổi chữ, không đổi nghĩa: «tin đăng» → «tin rao» / «tin», «mạng lưới listing» → «mạng lưới tin rao» (luật «listing» = thuê ngắn hạn, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`) | Mạnh giao quyết · Claude ghi |
 | 2026-10-27 | Hướng B (Mạnh chốt): «listing» là mọi tin niêm yết theo RESO — trả «mạng lưới listing» về như bản gốc; lớp giữa §3.1 gọi «Listing (tin)» | Mạnh chốt · Claude ghi |
 | 2026-11-02 | Thêm §0 sứ mệnh và chỉ nam; tám chỉ số ra mắt 05/11 ở `docs/plan/ra-mat-0511-so-luong-chat-luong.md`; ngưỡng chất lượng chỉ đo, không chặn | Mạnh chốt · Claude ghi |
+| 2026-11-07 | §5 thôi «[đề xuất]»: chép bốn tầng đo của tài liệu mô hình dòng chảy (dòng chuyển bậc, phễu theo mức gắn, độ đúng để mở cổng tách khỏi mẫu soát để thấy trôi, bất biến khoá vật thể); hàng DO1–DO3, DF1/DF3, PL21/22/31; tập test mù hay mẫu nháp cho cổng tự áp hoãn tới PL21 (ROADMAP §3 mục 32) | Mạnh duyệt · Claude ghi |
