@@ -14,6 +14,7 @@
         "GN0b",
         "GN0c",
         "PL30",
+        "DO1",
         "PL18",
         "GCQ1",
         "GCQ2",
@@ -395,7 +396,8 @@
       "dung_tren": [
         "PL15",
         "GC0",
-        "PL30"
+        "PL30",
+        "DO1"
       ],
       "slug": "e1-e2-theo-lop",
       "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
@@ -3948,6 +3950,31 @@
       "bat_khi": "Bài nhiều ảnh sau khi bật có mã album trên mọi ảnh; đường lùi phai-lui chạy được",
       "vi_sao": "Ghép ảnh theo thời gian sai hoặc không phán được ~40% cụm đọc tay 05/11.",
       "ghi_chu": "Mạnh duyệt Cổng Phạm vi 05/11. Làn ZCode (nhánh zcode/ma-album-s03); khởi động lại gateway gộp với EN2."
+    },
+    {
+      "ma": "DO1",
+      "slug": "do-hieu-qua-hang-ngay",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PL30",
+        "DF1"
+      ],
+      "phu": [
+        "DO1"
+      ],
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "cau_giao": "Người vận hành mở /ops và thấy mỗi ngày: tỉ lệ giữ nháp theo (cách đọc × ô) từ mẫu soát cuốn chiếu 20 bài, ước tỉ lệ tin rao bị bỏ sót, các tín hiệu không cần nhãn (JSON hỏng, câu trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, tỉ lệ ô người sửa) và dòng chuyển bậc căn (lên, tụt, vì sao)",
+      "bat_khi": "Bảy ngày liên tiếp có số tuần-so-tuần cho mọi ô của đọc gộp S03; một thay đổi model hoặc prompt cho thấy được chênh trên các số này trước và sau",
+      "vi_sao": "Mạnh 07/11: «Đo lường là quan trọng». Tài liệu mô hình pipeline Q2 (Mạnh duyệt 07/11): thiếu số đo hằng ngày thì mọi thay đổi model, prompt, luật chỉ phán bằng cảm nhận.",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ghi_chu": "Thu hẹp theo Q2: chi phí lên bậc thuộc PL31, độ tươi thuộc PL22, lý do rơi đi cùng DF3; không thay GNH2. Mẫu soát theo cách «máy nháp, Mạnh feedback» (~10–15 phút/ngày), số có neo — chỉ so tuần với tuần, không dùng mở cổng tự áp (Q3 hoãn tới PL21). Số tính sẵn ở pipeline (luật 10), lên Ops qua push-ops-facts (ADR-0014). Căn cứ: docs/architecture/mo-hinh-pipeline-mot-can-nha.md §3."
     }
   ],
   "chan_troi": [
