@@ -36,6 +36,36 @@ export function boDuongExtension(text) {
   }).join("\n");
 }
 
+const HOP_DONG = `${HO_SO}/contract.md`;
+const VUNG_DINH_DANH = (f) => f === PATCH || f.startsWith("collector/openclaw/");
+
+/** Danh sách định danh upstream miễn có tên, đọc từ dòng Notes «Định danh upstream miễn có tên» của hợp đồng (một nguồn). */
+export function dinhDanhUpstream(hopDong) {
+  const dong = hopDong.split("\n").find((l) => l.startsWith("- Định danh upstream miễn có tên"));
+  if (!dong) return [];
+  const dau = dong.indexOf("Danh sách:");
+  const cuoi = dong.indexOf("Chỉ áp", dau);
+  if (dau < 0 || cuoi < 0) return [];
+  // Mỗi định danh phải có chữ ngoài chỗ thế: chỗ thế đứng riêng sẽ miễn chính tên kênh.
+  return [...dong.slice(dau, cuoi).matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((d) => d.replace(/\{S\d\d\}/g, "").length >= 2);
+}
+
+/** Dòng chú thích (kể cả dòng nội dung của .patch mở đầu bằng +, -, khoảng trắng). */
+const laChuThich = (l) => /^[+\- ]?\s*(\/\/|\/\*|\*|#)/.test(l);
+
+/**
+ * Thay mọi định danh upstream đã khai (chỗ thế {Sxx} → tên thật của mã đó trong sổ, không phân hoa thường) bằng «_ID_», khớp nguyên
+ * từ, chỉ trên dòng mã. Dòng chú thích giữ nguyên nên vẫn bị quét.
+ */
+export function boDinhDanhUpstream(text, dinhDanh, tenTheoMa) {
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const res = dinhDanh.map((d) => new RegExp(`(?<![A-Za-z0-9_$])${d.split(/(\{S\d\d\})/).map((p) => {
+    const m = p.match(/^\{(S\d\d)\}$/);
+    return m ? `(?:${(tenTheoMa.get(m[1]) ?? ["\\u0000"]).map(esc).join("|")})` : esc(p);
+  }).join("")}(?![A-Za-z0-9_$])`, "gi"));
+  return text.split("\n").map((l) => (laChuThich(l) ? l : res.reduce((x, re) => x.replace(re, "_ID_"), l))).join("\n");
+}
+
 function dem(text, entries) {
   const m = new Map();
   for (const t of [text, noiChuoi(text)]) {
@@ -73,6 +103,9 @@ export async function chay(argv) {
   }
   k.kiem("sổ tên đọc được từ source_registry", entries.length > 0);
 
+  const tenTheoMa = new Map();
+  for (const e of entries) tenTheoMa.set(e.code, [...(tenTheoMa.get(e.code) ?? []), e.realName]);
+  const dinhDanh = dinhDanhUpstream(readFileSync(join(ROOT, HOP_DONG), "utf8"));
   const base = argv.includes("--base") ? argv[argv.indexOf("--base") + 1] : git("merge-base", "HEAD", "origin/main").trim();
   const doi = [...git("diff", "--name-only", "--diff-filter=AMR", base, "--").split("\n"),
     ...git("ls-files", "--others", "--exclude-standard").split("\n")].filter(Boolean);
@@ -81,7 +114,10 @@ export async function chay(argv) {
   const moi = [];
   const link = [];
   for (const f of tep) {
-    const mien = f === PATCH ? boDuongExtension : (x) => x;
+    const mien = (x) => {
+      const a = f === PATCH ? boDuongExtension(x) : x;
+      return VUNG_DINH_DANH(f) ? boDinhDanhUpstream(a, dinhDanh, tenTheoMa) : a;
+    };
     const sau = mien(readFileSync(join(ROOT, f), "utf8"));
     let truoc = "";
     try { truoc = mien(git("show", `${base}:${f}`)); } catch { /* tệp mới */ }
@@ -106,6 +142,14 @@ export async function chay(argv) {
     const mau = `diff --git a/extensions/${ten2}/x.ts b/extensions/${ten2}/x.ts\n+++ b/extensions/${ten2}/x.ts\n+// ${ten2}\n`;
     k.kiem("đối chứng: miễn chỉ đường đầu khối diff, dòng nội dung .patch vẫn bị bắt",
       dem(boDuongExtension(mau), entries).size > 0 && dem(boDuongExtension(mau.split("\n").slice(0, 2).join("\n")), entries).size === 0);
+    k.kiem("danh sách định danh upstream đọc được từ Notes hợp đồng", dinhDanh.length > 0);
+    const s03 = tenTheoMa.get("S03")?.[0] ?? "";
+    const ma = `+const api = getConnected${s03}Api();\n`;
+    const chu = `+// gọi getConnected${s03}Api của kênh ${s03}\n`;
+    k.kiem("đối chứng: định danh upstream trên dòng mã được miễn", dem(boDinhDanhUpstream(ma, dinhDanh, tenTheoMa), entries).size === 0);
+    k.kiem("đối chứng: chú thích mang tên kênh (kể cả định danh upstream) vẫn bị bắt", dem(boDinhDanhUpstream(chu, dinhDanh, tenTheoMa), entries).size > 0);
+    k.kiem("đối chứng: tên kênh đứng riêng trên dòng mã vẫn bị bắt",
+      dem(boDinhDanhUpstream(`+const nguon = "${s03}";\n`, dinhDanh, tenTheoMa), entries).size > 0);
     k.kiem("đối chứng: mẫu link ghép username bị bắt", MAU_LINK.test("const u = `http" + "s://x.example/$" + "{username}`"));  // tách chuỗi: tệp này không tự mang mẫu link
   } finally {
     rmSync(tam, { recursive: true, force: true });
