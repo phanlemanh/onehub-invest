@@ -14,8 +14,8 @@ import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 // trước khi bất kỳ kênh nào bắt đầu ghi seller; hai mảng phải đồng bộ với nhau
 // và với dòng «bên import phải chấp nhận» trong DATA-CONTRACT.md.
 test("schemaVersion: cả hai importer chấp nhận {1..5} — v4 và v5 cùng lúc", () => {
-  assert.deepEqual(AIRBNB_V, [1, 2, 3, 4, 5]);
-  assert.deepEqual(CHOTOT_V, [1, 2, 3, 4, 5], "hai importer không được lệch nhau");
+  assert.deepEqual(AIRBNB_V, [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(CHOTOT_V, [1, 2, 3, 4, 5, 6, 7], "hai importer không được lệch nhau");
   assert.ok(AIRBNB_V.includes(4), "v4 vẫn phải nạp — kênh chưa ghi seller giữ version cũ");
   assert.ok(AIRBNB_V.includes(5) && CHOTOT_V.includes(5), "v5 phải nạp ngay từ vòng này");
 });
@@ -68,11 +68,13 @@ test("readSnapshot: manifest v5 + item có seller đọc qua (giữ seller trong
   }
 });
 
-test("readSnapshot: v6 chưa khai vẫn bị từ chối rõ ràng", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "ct-v6-"));
+// link-nguoi-ban-s03: v6/v7 ĐÃ khai — đổi ca: v8 chưa khai bị từ chối rõ ràng
+test("readSnapshot: v8 chưa khai bị từ chối rõ ràng", async () => {
+  assert.ok(CHOTOT_V.includes(6) && CHOTOT_V.includes(7), "v6/v7 phải nằm trong SUPPORTED");
+  const dir = mkdtempSync(join(tmpdir(), "ct-v8-"));
   try {
-    writeFileSync(join(dir, "manifest.json"), JSON.stringify({ schemaVersion: 6, source: "chotot-ads" }));
-    await assert.rejects(() => readSnapshot(dir), /schemaVersion 6 chưa hỗ trợ/);
+    writeFileSync(join(dir, "manifest.json"), JSON.stringify({ schemaVersion: 8, source: "chotot-ads" }));
+    await assert.rejects(() => readSnapshot(dir), /manifest thiếu finishedAt|schemaVersion 8 chưa hỗ trợ/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
