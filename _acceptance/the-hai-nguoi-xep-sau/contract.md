@@ -5,7 +5,7 @@ slug: the-hai-nguoi-xep-sau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-06T04:27:33Z
 approved_by:
