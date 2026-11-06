@@ -25,3 +25,17 @@ test("khuôn lệch của hai dòng kiểm PL16 vẫn rơi về «chưa diễn g
   assert.equal(dqDetail("enrich:proposal-assertion", "applied=4").known, false, "thiếu missing phải là khuôn lạ")
   assert.equal(dqDetail("data-level:distribution", "units=10 B0=1 B1=2").known, false, "thiếu bậc B2–B5 phải là khuôn lạ")
 })
+
+// Kiểm 450 so-chua-xac-minh (070): #329 (enrich-nguoi-s03, 079) thêm vế «S03 qua người đăng». Đầu vào chép đúng chuỗi 450 ghi.
+test("nhãn kiểm so-chua-xac-minh: dạng 079 có vế S03 qua người đăng và dạng 070 cũ đều diễn giải được", () => {
+  assert.deepEqual(dqDetail("so-chua-xac-minh", "S06 có số: 57667, chưa xác minh: 44664, nguồn khác có nhãn: 0, S03 qua người đăng: 758"), {
+    text: "57.667 tin S06 có số · 44.664 số chưa xác minh · 0 tin nguồn khác mang nhãn · 758 tin S03 có số qua người đăng",
+    known: true,
+  })
+  assert.deepEqual(dqDetail("so-chua-xac-minh", "S06 có số: 57667, chưa xác minh: 44664, nguồn khác có nhãn: 0"), {
+    text: "57.667 tin S06 có số · 44.664 số chưa xác minh · 0 tin nguồn khác mang nhãn",
+    known: true,
+  })
+  assert.equal(dqDetail("so-chua-xac-minh", "S06 có số: 1, chưa xác minh: 2").known, false, "thiếu vế nguồn khác phải là khuôn lạ")
+  assert.equal(dqDetail("vocab:x", "S06 có số: 1, chưa xác minh: 2, nguồn khác có nhãn: 0").known, false, "chỉ đọc cho đúng kiểm so-chua-xac-minh")
+})

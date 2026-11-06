@@ -213,6 +213,20 @@ export function dqDetail(check: string, detail: string | null): DqText {
     if (kiem === "n4" && (m = d.match(/^nhieu=(\d+) rong=(\d+) tong=(\d+)$/)))
       return { text: `${nguyen(m[1])} tin nhiều số · ${nguyen(m[2])} tin trống số dù bài có số · ${nguyen(m[3])} tin`, known: true }
   }
+  // Nhãn số chưa xác minh (450, 070); vế «S03 qua người đăng» thêm ở 079 (enrich-nguoi-s03) — DB chạy 450 trước 079 còn dạng cũ.
+  if (
+    check === "so-chua-xac-minh" &&
+    (m = d.match(/^S06 có số: (\d+), chưa xác minh: (\d+), nguồn khác có nhãn: (\d+)(?:, S03 qua người đăng: (\d+))?$/))
+  )
+    return {
+      text: [
+        `${nguyen(m[1])} tin S06 có số`,
+        `${nguyen(m[2])} số chưa xác minh`,
+        `${nguyen(m[3])} tin nguồn khác mang nhãn`,
+        ...(m[4] === undefined ? [] : [`${nguyen(m[4])} tin S03 có số qua người đăng`]),
+      ].join(" · "),
+      known: true,
+    }
   if (/^the-duyet:(roi-kho|anh-ops|anh-admin)$/.test(check) && (m = d.match(/^tong=(\d+) so=(\d+) ben=(\d+)$/)))
     return { text: `${nguyen(m[2])}/${nguyen(m[1])} thẻ chờ · ${nguyen(m[3])} bên`, known: true }
   if (
