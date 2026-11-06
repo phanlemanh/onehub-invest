@@ -3928,7 +3928,7 @@
       "dot": "gan-nhan-s03-0611",
       "nhom": "danh-ba-nguoi",
       "cau_giao": "Người bán S03 không có SĐT có hồ sơ chat (username) trong sổ liên lạc, tra qua phiên gateway đang sống, không đăng nhập phiên thứ hai",
-      "bat_khi": "Lượt thử 20 mã + 2 đối chứng qua gateway ra đúng loại kết quả; không có phiên đăng nhập mới; bộ canh Zalo yên",
+      "bat_khi": "Lượt thử 20 mã + 2 đối chứng qua gateway ra đúng loại kết quả; không có phiên đăng nhập mới; bộ canh kênh S03 yên",
       "vi_sao": "~700/1.205 người bán S03 không có SĐT.",
       "ghi_chu": "Mạnh 06/11 «Qua gateway, gộp album»; Cổng Phạm vi đã duyệt. Phần tra/nạp làn ZCode (nhánh feat/s03-link-nguoi-ban), migration 080 làn Claude. Không thử ngoài gateway."
     },
