@@ -6,7 +6,7 @@
  * GC0 `gan-nhan-theo-nhom-s03`: lát theo nhóm gắn 17 trường, mỗi ô một căn cứ, kèm lý do; lát đời trước giữ chín trường.
  * GN1 `truong-nhan-s03-081`: thêm bảy trường (mã căn, nội thất, hướng, view, ngày vào ở, cơ sở giá, phí đã gồm), căn cứ Danh mục CĐT.
  */
-import { ENRICH_FIELD, LABELS_VI, VOCAB } from "./vocab.generated"
+import { ASSERTION_FIELD, ENRICH_FIELD, LABELS_VI, VOCAB } from "./vocab.generated"
 
 /** Chín trường lõi (Hỏi-3), theo thứ tự trên màn. Hai trường trùng tên trường làm giàu lấy từ sổ từ vựng. */
 export const LABEL_FIELDS = [
@@ -61,7 +61,14 @@ export const BASIS_LABEL: Record<Basis, string> = {
   danh_muc_cdt: "Danh mục CĐT",
 }
 /** Trường mà danh mục CĐT (S08) có cột tương ứng — căn cứ «Danh mục CĐT» chỉ nhận ở các trường này (labels-s08.ts). */
-export const CDT_FIELDS = ["unit_number", "subzone", "direction_faces", "area_m2", "bedrooms", "bathrooms"] as const
+export const CDT_FIELDS = [
+  ASSERTION_FIELD.unit_number,
+  "subzone",
+  "direction_faces",
+  "area_m2",
+  ASSERTION_FIELD.bedrooms,
+  ASSERTION_FIELD.bathrooms,
+] as const
 /** Hai ô có/không: mã lưu trong `eval_labels.value`. */
 export const CO_KHONG = ["no", "yes"] as const
 

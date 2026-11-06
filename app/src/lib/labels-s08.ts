@@ -6,6 +6,7 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
+import { DIRECTION_FACES } from "./vocab.generated"
 import { CDT_FIELDS, chuanChu, type LabelRow, type LoiLuot } from "./labels-normalize"
 
 type Q = Pick<PoolClient, "query">
@@ -17,14 +18,14 @@ export const MSG_CDT_KHONG_DOC = "Không đọc được danh mục CĐT ở má
 
 /** Tên hướng của danh mục (chữ hoa có dấu) → mã trục `direction_faces` của sổ từ vựng. */
 export const HUONG_S08: Record<string, string> = {
-  "ĐÔNG": "east",
-  "TÂY": "west",
-  "NAM": "south",
-  "BẮC": "north",
-  "ĐÔNG BẮC": "northeast",
-  "ĐÔNG NAM": "southeast",
-  "TÂY BẮC": "northwest",
-  "TÂY NAM": "southwest",
+  "ĐÔNG": DIRECTION_FACES.east,
+  "TÂY": DIRECTION_FACES.west,
+  "NAM": DIRECTION_FACES.south,
+  "BẮC": DIRECTION_FACES.north,
+  "ĐÔNG BẮC": DIRECTION_FACES.northeast,
+  "ĐÔNG NAM": DIRECTION_FACES.southeast,
+  "TÂY BẮC": DIRECTION_FACES.northwest,
+  "TÂY NAM": DIRECTION_FACES.southwest,
 }
 
 export type DongS08 = {

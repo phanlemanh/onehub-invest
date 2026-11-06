@@ -1579,6 +1579,8 @@ test("TN081-AC-5 thẻ gắn trước vòng (17 trường): vẫn tính đã g�
     "count(DISTINCT l.labeler_id) AS so, (count(l.field) FILTER (WHERE l.labeler_id = $1) >= 24) AS cua_toi")
   assert.equal((await doiDu.tienDo(a.id, LAT, sc)).cuaToi, 1, "THE CU BI TINH CHUA GAN")
   // Chiều đỏ: bảng so chỉ hiện trường đã gắn — bảy ô mới biến mất thay vì «—».
+  // Bản chép đột biến dịch JSX kiểu cổ điển (tệp .tsx ngoài tsconfig của app) → cần React toàn cục.
+  ;(globalThis as Record<string, unknown>).React = (await import("react")).default
   const anO = await banDot<ModBang>("src/components/ops/labels/bang-so.tsx", "return LABEL_FIELDS_NHOM.map((f) => {", "return LABEL_FIELDS_NHOM.filter((f) => cua.has(f)).map((f) => {")
   assert.equal(oBang(renderToStaticMarkup(<anO.BangSo d={d as never} />), "view").length, 0, "THIEU O MOI THE CU")
 })

@@ -1,6 +1,7 @@
 // eval-classify-can-cu.test.mjs — hồ sơ _acceptance/truong-nhan-s03-081 E6 (AC-6): eval-classify đọc bảy trường mới theo nhóm F3 và
 // loại ô căn cứ «Danh mục CĐT», qua truy vấn thật trên DB thử. Nhãn ghi bằng bên ghi thật của app (chuanHoaLuot), không viết tay.
-// Chạy từ app/ để có tsx: cd app && node --import tsx --test ../pipeline/scripts/eval-classify-can-cu.test.mjs
+// Chạy từ app/ để có tsx: cd app && node --import tsx --test tests/eval-classify-can-cu.test.mjs
+// Nằm ở app/tests (đuôi .mjs, ngoài glob tests/*.test.tsx của suite app) vì nạp tệp .ts của app: suite pipeline chạy node không tsx.
 // DB thử oneinvest_tn081 (db/db-thu.sh --neu-chua-co, bản chép DB máy thu) áp thêm 081; lát riêng 'tn081-cls', xoá cuối lượt.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -10,8 +11,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
-const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ROOT = join(PIPE, "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
+const PIPE = join(ROOT, "pipeline");
 const DB = "oneinvest_tn081";
 const URL_THU = `postgres://oneinvest:oneinvest@localhost:5433/${DB}`;
 const LAT = "tn081-cls";
@@ -42,7 +43,7 @@ async function chay(lib, c) {
 test("TN081-AC-6 eval-classify đọc bảy trường mới theo F3 và loại ô căn cứ Danh mục CĐT", async () => {
   execFileSync("bash", [join(ROOT, "db/db-thu.sh"), DB, "--neu-chua-co"], { stdio: "inherit" });
   const { chuanHoaLuot, LABEL_FIELDS_NHOM } = await import(join(ROOT, "app/src/lib/labels-normalize.ts"));
-  const lib = await import("../lib/eval-classify.mjs");
+  const lib = await import(pathToFileURL(join(PIPE, "lib/eval-classify.mjs")).href);
   const c = new pg.Client({ connectionString: URL_THU });
   await c.connect();
   try {

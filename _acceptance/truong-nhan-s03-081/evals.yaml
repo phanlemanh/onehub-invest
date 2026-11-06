@@ -48,7 +48,7 @@ evals:
     executor: test
     cmd: config:executors.test.tn081_classify
     layer: backend-effect
-    paths: [pipeline/lib/eval-classify.mjs, db/migrations/081_*.sql, pipeline/scripts/eval-classify-can-cu.test.mjs]
+    paths: [pipeline/lib/eval-classify.mjs, db/migrations/081_*.sql, app/tests/eval-classify-can-cu.test.mjs]
     expected: "exit 0; ca 'TN081-AC-6' trên DB thử oneinvest_tn081 (db/db-thu.sh, bản chép DB máy thu) áp thêm 081: ghi nhãn của hai tin qua chuanHoaLuot (bên ghi thật) rồi chèn eval_labels, có ba ô căn cứ danh_muc_cdt; gọi docNhanNguoi thật rồi chấm như lệnh eval-classify: danh_muc_cdt = 3, ba ô đó vắng trong nhãn vàng; bảy trường mới mỗi trường một ô kết quả với nhóm [unit_number A, price_basis B, năm trường C] và ngưỡng [0.95, 0.9, 0.8], trạng thái 'skip' lý do 'chua-co-cach-doc'; chín trường cũ cho cùng kết quả với bản trước vòng (so deepEqual với đầu ra chép trong test). Chiều đỏ: bản truy vấn bỏ cột basis ('BASIS KHONG DUOC DOC'); bản không lọc căn cứ ('O CDT VAO PHEP CHAM'); bản thiếu nhóm C ('THIEU NHOM C')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
