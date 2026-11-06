@@ -15,6 +15,7 @@
         "GN0c",
         "PL30",
         "DO1",
+        "DO3",
         "PL18",
         "GCQ1",
         "GCQ2",
@@ -26,7 +27,8 @@
         "PL13",
         "PL20",
         "GC2",
-        "GC3"
+        "GC3",
+        "DO2"
       ]
     },
     {
@@ -3966,7 +3968,7 @@
       ],
       "dot": "mo-hinh-pipeline-0711",
       "nhom": "do-luong",
-      "cau_giao": "Người vận hành mở /ops và thấy mỗi ngày: tỉ lệ giữ nháp theo (cách đọc × ô) từ mẫu soát cuốn chiếu 20 bài, ước tỉ lệ tin rao bị bỏ sót, các tín hiệu không cần nhãn (JSON hỏng, câu trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, tỉ lệ ô người sửa) và dòng chuyển bậc căn (lên, tụt, vì sao)",
+      "cau_giao": "Người vận hành mở /ops và thấy mỗi ngày: tỉ lệ giữ nháp theo (cách đọc × ô) từ mẫu soát cuốn chiếu 20 bài, ước tỉ lệ tin rao bị bỏ sót, các tín hiệu không cần nhãn (JSON hỏng, câu trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, tỉ lệ ô người sửa) và dòng chuyển bậc căn (lên, tụt, vì sao); mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
       "bat_khi": "Bảy ngày liên tiếp có số tuần-so-tuần cho mọi ô của đọc gộp S03; một thay đổi model hoặc prompt cho thấy được chênh trên các số này trước và sau",
       "vi_sao": "Mạnh 07/11: «Đo lường là quan trọng». Tài liệu mô hình pipeline Q2 (Mạnh duyệt 07/11): thiếu số đo hằng ngày thì mọi thay đổi model, prompt, luật chỉ phán bằng cảm nhận.",
       "vung": [
@@ -3974,7 +3976,56 @@
         "pipeline/**",
         "app/src/app/ops/**"
       ],
-      "ghi_chu": "Thu hẹp theo Q2: chi phí lên bậc thuộc PL31, độ tươi thuộc PL22, lý do rơi đi cùng DF3; không thay GNH2. Mẫu soát theo cách «máy nháp, Mạnh feedback» (~10–15 phút/ngày), số có neo — chỉ so tuần với tuần, không dùng mở cổng tự áp (Q3 hoãn tới PL21). Số tính sẵn ở pipeline (luật 10), lên Ops qua push-ops-facts (ADR-0014). Căn cứ: docs/architecture/mo-hinh-pipeline-mot-can-nha.md §3."
+      "ghi_chu": "Thu hẹp theo Q2: chi phí lên bậc thuộc PL31, độ tươi thuộc PL22, lý do rơi đi cùng DF3; không thay GNH2. Mẫu soát theo cách «máy nháp, Mạnh feedback» (~10–15 phút/ngày), số có neo — chỉ so tuần với tuần, không dùng mở cổng tự áp (Q3 hoãn tới PL21). Số tính sẵn ở pipeline (luật 10), lên Ops qua push-ops-facts (ADR-0014). Căn cứ: docs/architecture/mo-hinh-pipeline-mot-can-nha.md §3. Mạnh 07/11: «Có thể nhìn trên từng phường/xã, dự án, từng toà» — lát theo phường/xã, dự án, toà áp cho DO1, DO2, DO3; mức toà/trục phụ thuộc DN1, DB1 (danh bạ), S03 hiện chỉ ~1% có phường nên ô «chưa gắn» phải hiện rõ."
+    },
+    {
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ma": "DO2",
+      "slug": "do-mot-can-nha",
+      "dung_tren": [
+        "DO1",
+        "DB1"
+      ],
+      "phu": [
+        "DO2"
+      ],
+      "cau_giao": "Người vận hành thấy mỗi ngày độ đúng của Một Căn Nhà: tỉ lệ tin gắn đúng căn theo mức (căn, trục, toà) từ mẫu soát cặp tin–căn, tỉ lệ tách nhầm (một căn thành nhiều) và gộp nhầm (nhiều căn thành một), độ trễ ghi nhận tin nghỉ; mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
+      "bat_khi": "Bảy ngày liên tiếp có số theo tuần cho ba tỉ lệ và độ trễ tin nghỉ; ca hai môi giới rao cùng một căn (vd offer_3cbed8a9ffbec502 / offer_33cd107365c787fc) hiện trong đếm tách nhầm",
+      "vi_sao": "Mạnh 07/11 «Đo lường là quan trọng» · «Có thể nhìn trên từng phường/xã, dự án, từng toà». PL20 và GT4 chỉ đo một lần lúc dựng; chưa có số đo đều cho gắn căn, tách nhầm và độ trễ tin nghỉ (việc Mạnh cho làm sau 05/11, chưa có hàng).",
+      "ghi_chu": "Dùng chung màn soát với DO1 (máy nháp, Mạnh feedback, thêm ~5 phút/ngày); số có neo, chỉ so tuần với tuần. Gộp nhầm dùng thước của GT4; không đổi khoá gộp (việc của GT4)."
+    },
+    {
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ma": "DO3",
+      "slug": "do-lam-giau",
+      "dung_tren": [
+        "DO1"
+      ],
+      "phu": [
+        "DO3"
+      ],
+      "cau_giao": "Người vận hành thấy mỗi ngày, theo từng đường làm giàu (số qua người đăng, diện tích suy ra, quy ước nhóm, danh mục CĐT): bao nhiêu giá trị được thêm, bao nhiêu bị người sửa hay rút, và kết quả kiểm ngược định kỳ (giấu giá trị có sẵn rồi so); mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
+      "bat_khi": "Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson",
+      "vi_sao": "Mạnh 07/11: đo làm giàu theo phường/xã, dự án, toà. C2b chỉ đo độ phủ (field-yield), PL31 đo chi phí, GC2 kiểm ngược một lần lúc dựng; chưa có độ đúng làm giàu đo đều (vd 758 tin vừa nhận số qua người đăng 07/11).",
+      "ghi_chu": "Dùng chung màn soát với DO1; kiểm ngược chạy ở pipeline (luật 10), không gọi model khi không cần."
     }
   ],
   "chan_troi": [
