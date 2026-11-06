@@ -288,3 +288,14 @@ test("DGS-AC-10 chiều đỏ: tóm tắt cũ hay dưới ngưỡng bị bắt �
   assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.91 }, hien), /VUNG XAM — MANH PHAN/);
   assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.85 }, hien), /CHET DUOI 90/);
 });
+
+test("DGS-RF ô trống trả gọn `null` (bài không phải tin rao) vẫn là JSON đọc được", async () => {
+  const o: Record<string, unknown> = {};
+  for (const f of FIELDS) o[f] = null;
+  o.listing_intent = { v: "not_listing", cc: "chu_bai", trich: "Ngân hàng" };
+  o.multi_unit = { v: "no", cc: "chu_bai", trich: "" };
+  const k = await hoiGop({ gateway: HAI, gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(o) }, []), recordCall: async () => {} });
+  assert.equal(k.json_ok, true, "O TRONG NULL BI COI LA JSON HONG");
+  assert.equal(k.json?.listing_intent?.v, "not_listing");
+  assert.equal(k.json?.price_min_vnd?.v, null);
+});

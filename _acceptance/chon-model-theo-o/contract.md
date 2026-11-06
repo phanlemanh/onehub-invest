@@ -54,7 +54,7 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`; trục ghi tay:
 ## Out of scope
 
 - Chạy đọc gộp trên toàn S03 hằng ngày (Hỏi-1: quyết định tiền của Mạnh).
-- Sinh đề xuất theo ô (`enrichment_proposals`), thẻ duyệt, gắn căn từ nhãn bạc (Hỏi-2; hàng GC2/GC3).
+- Sinh đề xuất theo ô (`enrichment_proposals`), thẻ duyệt, gắn căn từ kết quả đọc gộp (Hỏi-2; sửa chữ 07/11 theo Q5 của tài liệu mô hình: PL18 biến `silver_labels` thành phát biểu, GC2/GC3 đọc phát biểu).
 - Tải ảnh chỉ có URL (làn thu thập).
 - Màn Ops đổi bảng chọn; bảng chọn trong DB.
 - Ô WC tự điền (chưa model nào đạt).

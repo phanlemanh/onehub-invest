@@ -42,9 +42,12 @@ export function tachJson(raw: string): Record<string, unknown> | null {
   }
 }
 
-/** Ô từ JSON model: object {v, cc, trich}; khác khuôn thì null. trich_ok điền ở gop. */
+/** Ô từ JSON model: object {v, cc, trich}; `null` hay giá trị trần (model hay trả gọn cho ô trống, như bài không phải tin
+ * rao) nhận như ô có giá trị đó, không trích. Mảng hay object khác khuôn thì null. trich_ok điền ở gop. */
 function docO(x: unknown): O | null {
-  if (!x || typeof x !== "object" || Array.isArray(x)) return null;
+  if (x === null) return { v: null, cc: null, trich: "", trich_ok: null };
+  if (typeof x === "string" || typeof x === "number") return { v: x, cc: null, trich: "", trich_ok: null };
+  if (typeof x !== "object" || Array.isArray(x)) return null;
   const o = x as Record<string, unknown>;
   const v = typeof o.v === "string" || typeof o.v === "number" ? o.v : null;
   return { v, cc: typeof o.cc === "string" ? o.cc : null, trich: typeof o.trich === "string" ? o.trich : "", trich_ok: null };
