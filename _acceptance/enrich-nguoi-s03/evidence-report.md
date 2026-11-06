@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4825bd7e03750acc185e1d9aef087b4732f8fa88
+verified_commit: b655415cd178b50d0c3dd11ebc079f479063a846
 human_signoff: Mạnh 2026-11-06
 ---
 
@@ -271,3 +271,7 @@ Không eval nào chạy nhiều lần. Có hai chỗ lật do môi trường, đ
 Round 1: mọi eval máy và ui-check đạt (E1–E8, E7u), nhưng suite `cd app && npm test` có hồi quy mới GT-AC-1. Commit 6d06fa35 đổi chữ lời giải thích nhãn số mà không sửa ca test cũ vẫn đòi «suy từ tin khác». E9, E10 chờ hội đồng. Trả về vòng code.
 Round 2: commit 7f489c30 sửa ca GT-AC-1 theo câu mới và thêm chú thích DQ trong mappings.yaml. E1–E8, E7u carried (diff-fix không chạm paths của eval nào). Suite app xanh trọn, các suite agent, tsc+lint, lint-rules và portal cũng xanh. Suite pipeline chỉ đỏ ở ca AC-8 hết giờ, là giới hạn có từ trước; ca LDR hết giờ do khoá DB ở lượt 1 đã xanh ở lượt 2. E9, E10 chờ hội đồng, nên verdict là PENDING-JUDGMENT.
 Round 3: chạy lại E7u bằng script chụp đã commit trong hồ sơ (verifier của vòng 1 là script tạm ngoài kho). Năm ảnh đúng mô tả, hai popover hai tên khác nhau, không lộ số; tệp mạng ghi vào `evidence/E7u-network.txt`, chỉ có lưu lượng của app và đều thành công. Mọi khối khác giữ nguyên; E9, E10 vẫn chờ người (T3), verdict giữ PENDING-JUDGMENT. Chạy lại lần hai với script đổi đuôi .js; kết quả như lần một.
+
+### Re-pin lần 1 — 2026-11-06, do hoá cũ sau khi gộp main; E8 đo trên bản dump đóng băng
+run_id: repin-20261106T094541Z-91198
+sha: b655415cd178b50d0c3dd11ebc079f479063a846 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10
