@@ -23,13 +23,22 @@ Nguyên nhân là `textHash` băm `normText` của chữ còn nguyên link ảnh
 | cùng chữ đã gạt URL; pipeline tách thành hai tin khác nhau | 3 |
 | không khớp luật nào | 0 |
 
-- Luật «khử theo tin trước, chỉ bài chưa thành tin mới so chữ» chỉ bắt 27/33 thẻ, tức 38 thẻ ẩn.
-- Luật «cùng tin HOẶC cùng chữ đã gạt URL», gom bắc cầu, bắt đủ 33. Luật này còn bắt thêm bốn nhóm Mạnh chưa ẩn:
-  - #9947 trùng #9932: chữ ngắn, giống hệt. #9932 đã có nhãn nên được giữ.
-  - #10222 trùng #10029: cùng tin, chữ sửa nhẹ.
-  - #10077 trùng #10062: cùng tin, cùng chữ.
-  - #10156 trùng #10151: cùng tin, chữ lệch một ký tự.
-- Tổng theo luật là 48 thẻ ẩn (Hỏi-1).
+Hai luật đã đo, cả hai đều giữ mọi dấu ẩn tay:
+- «Tin trước, chữ sau» — đúng câu giao: bài đã thành tin khử theo tin, bài chưa thành tin so chữ.
+- «Cùng tin HOẶC cùng chữ», gom bắc cầu.
+
+Kết quả trên lát:
+- Cả hai luật cho cùng 48 thẻ ẩn. Ba cặp cùng chữ mà pipeline tách thành hai tin, và ba cặp chỉ một bên thành tin, đều đã được dấu ẩn tay nối lại.
+- Không cặp chữ ngắn nào của hai người gửi khác nhau bị gộp.
+- Hai luật chỉ khác nhau ở lát mới: «tin trước» không gộp hai bài cùng chữ khi pipeline đã coi là hai tin.
+
+Vòng này theo câu giao. Bốn nhóm mới:
+- #9947 trùng #9932: chữ ngắn, giống hệt. #9932 đã có nhãn nên được giữ.
+- #10222 trùng #10029: cùng tin, chữ sửa nhẹ.
+- #10077 trùng #10062: cùng tin, cùng chữ.
+- #10156 trùng #10151: cùng tin, chữ lệch một ký tự.
+
+Tổng 48 thẻ ẩn (Hỏi-1).
 
 Sự kiện dạng JSON trong `stg_zalo_posts`:
 - 14 bài là sự kiện thu hồi (`clientDelMsgId`);
@@ -47,22 +56,20 @@ Dấu bài thử của Mạnh:
 
 Thêm vào `pipeline/lib/eval-labels.mjs` hai hàm thuần:
 - `chuGatUrl(text)`: bỏ mọi `http(s)://…` rồi chạy `normText`.
-- `nhomTrung(bai, tinCua)`: gom các bài bằng union-find trên hai khoá:
-  - `o:<offer_id>`, khi bài có trong `sale_offer_records.post_ids` của S03;
-  - `c:<chuGatUrl>`, khi chữ đã gạt URL không rỗng.
+- `khoaTrung(bai, tinCua)`: mỗi bài một khoá.
+  - `o:<offer_id>` khi bài có trong `sale_offer_records.post_ids` của S03;
+  - không có thì `c:<chuGatUrl>` khi chữ đã gạt URL không rỗng;
+  - không có khoá thì bài đứng riêng.
 
-  Hàm trả về mã nhóm của từng bài.
-
-`chonMau` và `chonMauTheoNhom` khử trùng theo mã nhóm thay cho `textHash`. `textHash` vẫn ghi vào `eval_label_items.text_hash` như cũ. Bài đại diện của nhóm là bài có `post_id` nhỏ nhất, giữ luật cũ.
+`chonMau` và `chonMauTheoNhom` khử trùng theo khoá này thay cho `textHash`. `textHash` vẫn ghi vào `eval_label_items.text_hash` như cũ. Bài đại diện là bài có `post_id` nhỏ nhất.
 
 ### Gạt sự kiện và bài thử
 
-- `laSuKien(text)`: chữ đã trim mở đầu bằng `[` hoặc `{` và `JSON.parse` được thành object hay mảng object. Sampler bỏ các bài này và đếm ở `bo_su_kien`. Transform không đổi: sự kiện không thành tin vì không có giá.
-- `lib/test-posts.mjs` là định nghĩa duy nhất của bài thử, transform cũng dùng.
-  - Thêm dấu thứ tư `noi-dung`: chữ có link `trycloudflare.com` hoặc có chuỗi «[Tên sàn]».
-  - `GROUP_TEST` nhận thêm tên nhóm toàn chữ số.
-  - `TEST_MARKERS` thêm `noi-dung`; `testMarker` đọc thêm `text`.
-  - Transform S03 tự gạt các bài này, và tin đã sinh từ chúng sẽ nghỉ ở lượt kế (luật PL14, không xoá).
+- `laSuKien(text)`: chữ đã trim mở đầu bằng `[` hoặc `{` và `JSON.parse` được thành object hay mảng object. Sampler bỏ các bài này và đếm ở `bo_su_kien`. Transform không đổi.
+- `lib/test-posts.mjs` là định nghĩa duy nhất của bài thử; transform đọc qua `loadStgPosts` với cột `text` có sẵn. Dấu mới `noi-dung`: chữ có link `trycloudflare.com` hoặc chuỗi «[Tên sàn]».
+  - Dấu này cũng làm transform gạt bài. Hai tin đang sống trên canonical sinh từ bài thử sẽ nghỉ ở lượt kế (PL14, không xoá).
+  - Đây là thay đổi tới canonical, nên là Hỏi-2: gạt ở cả transform lẫn sampler, hay chỉ ở sampler.
+- «Nhóm tên toàn chữ số» không làm dấu mặc định. Đo lại thì năm nhóm này là mã nhóm chưa có tên (chuỗi 18–19 chữ số), có thể là nhóm thật; một tin đang sống thuộc các nhóm này. Hỏi-2 nêu lối thêm dấu này.
 
 ### `label-ghep` dựng lại dấu trùng
 
@@ -78,7 +85,7 @@ Bên đọc không đổi:
 
 ### Chạy trên lát thật
 
-Vòng này chỉ chạy trên DB thử có bản chép của lát. Chạy `label-ghep --lam-lai --db-that` lên DB máy thu ghi dữ liệu thật, nên cần lời Mạnh (Hỏi-2). Trước khi chạy phải sao lưu `eval_label_items` của lát.
+Vòng này chỉ chạy trên DB thử có bản chép của lát. Chạy `label-ghep --lam-lai --db-that` lên DB máy thu ghi dữ liệu thật, nên cần lời Mạnh (Hỏi-3). Trước khi chạy phải sao lưu `eval_label_items` của lát.
 
 ## Ngoài vòng
 

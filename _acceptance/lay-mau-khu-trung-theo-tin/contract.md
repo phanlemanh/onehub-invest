@@ -22,21 +22,20 @@ Lát `s03-theo-nhom` có ba lỗi lấy mẫu:
 
 Mạnh cho ẩn tay 33 thẻ và hỏi «làm cơ chế cho pipeline chưa?». Hiện `label-ghep --lam-lai` xoá dấu ẩn tay.
 
-Đo lại 33 thẻ ẩn tay:
-- Luật «cùng tin của pipeline HOẶC cùng chữ đã gạt URL» giải thích đủ 33 thẻ.
-- Luật «tin trước, chữ sau» chỉ bắt được 27 thẻ.
+Luật khử trùng theo câu giao: bài đã thành tin khử theo tin của pipeline, bài chưa thành tin so chữ đã gạt URL. Giữ mọi dấu ẩn tay
+thì luật này cho 48 thẻ ẩn trên lát (44 cũ + 4 nhóm mới, Hỏi-1).
 
 Source input: hàng GN2 của `docs/plan/lo-trinh.json` (#335), giám sát đợt dot0-cam-mau giao ngày 06/11.
 
 ## Criteria
 
-- AC-1: Given các cặp bài viết trước, When gom bằng `nhomTrung`, Then hai bài cùng nhóm khi và chỉ khi nối được bằng một trong hai khoá, kể cả bắc cầu qua bài thứ ba. Ma trận ca:
-  - cùng chữ khác link ảnh → cùng nhóm;
-  - cùng tin khác chữ → cùng nhóm;
-  - cùng chữ nhưng hai tin khác nhau → cùng nhóm;
-  - A cùng tin với B, B cùng chữ với C → một nhóm;
-  - khác tin khác chữ → hai nhóm;
-  - chữ rỗng sau khi gạt URL không nối ai.
+- AC-1: Given các cặp bài viết trước, When tính khoá trùng bằng `khoaTrung`, Then mỗi bài có đúng một khoá: bài đã thành tin dùng `o:<offer_id>`, bài chưa thành tin dùng `c:<chữ đã gạt URL>`, chữ rỗng thì không có khoá. Ma trận ca:
+  - cùng chữ khác link ảnh, chưa thành tin → cùng khoá;
+  - cùng tin khác chữ → cùng khoá;
+  - cùng chữ nhưng hai tin khác nhau → hai khoá;
+  - một bài đã thành tin, một bài chưa, cùng chữ → hai khoá;
+  - khác tin khác chữ → hai khoá;
+  - chữ chỉ có URL → không khoá.
 - AC-2: Given bài S03 và sổ tin trên DB thử, When chạy `label-sample` thật (cả lát thường lẫn lát theo nhóm), Then:
   - không hai thẻ của lát chung một nhóm trùng;
   - đầu ra in số bài bỏ vì trùng;
@@ -44,17 +43,15 @@ Source input: hàng GN2 của `docs/plan/lo-trinh.json` (#335), giám sát đợ
 - AC-3: Given bài có chữ là sự kiện JSON (thu hồi `clientDelMsgId`, nhãn dán, thẻ link), When lấy mẫu, Then:
   - các bài đó không vào lát và được đếm ở `bo_su_kien`;
   - bài có chữ mở đầu bằng «[» mà không phải JSON vẫn được lấy.
-- AC-4: Given bài thử của Mạnh, When transform S03 và lấy mẫu cùng đọc qua `lib/test-posts.mjs`, Then:
-  - các ca sau bị gạt:
-    - link `trycloudflare.com` → dấu `noi-dung`;
-    - chữ «[Tên sàn]» → dấu `noi-dung`;
-    - nhóm tên toàn chữ số → dấu `group`;
-  - nhóm tên có chữ số lẫn chữ cái («Ocean Park 2») không bị gạt;
-  - bài thật không bị gạt;
-  - dấu ghi vào `ops_audit` đúng tên.
+- AC-4: Given bài thử của Mạnh, When lấy mẫu (và transform S03, theo lối Mạnh chọn ở Hỏi-2) đọc qua `lib/test-posts.mjs`, Then:
+  - bài có link `trycloudflare.com` hoặc chữ «[Tên sàn]» bị gạt với dấu `noi-dung`;
+  - nhóm tên toàn chữ số chỉ bị gạt khi Mạnh chọn như vậy ở Hỏi-2;
+  - bài thật không bị gạt (link ảnh, chữ «tên sàn» không ngoặc, nhóm có chữ số lẫn chữ);
+  - `ops_audit` ghi dấu đúng tên `noi-dung`;
+  - trên bản chép, số tin canonical sẽ nghỉ vì dấu mới được in ra.
 - AC-5: Given một lát có dấu ẩn tay, When `label-ghep` chạy (thường và `--lam-lai`), Then:
   - mọi nhóm trùng còn đúng một thẻ hiện;
-  - thẻ giữ là thẻ có nhiều dòng nhãn nhất, hoà thì `item_id` nhỏ nhất;
+  - thẻ giữ chọn theo ba bậc: nhiều dòng nhãn nhất; hoà thì thẻ đang được dấu ẩn tay trỏ tới; hoà nữa thì `item_id` nhỏ nhất;
   - thẻ ẩn mới mang `trung_voi` và `khu_trung`;
   - mọi dòng có `an_tay` giữ nguyên `trung_voi` và `an_tay`;
   - không thẻ có nhãn nào mất nhãn;
@@ -73,14 +70,14 @@ Source input: hàng GN2 của `docs/plan/lo-trinh.json` (#335), giám sát đợ
 
 Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục liệt kê đủ từ luật.
 
-- Khoá nối: tin · chữ đã gạt URL · bắc cầu · rỗng (AC-1).
+- Khoá: tin · chữ đã gạt URL · cùng chữ khác tin · rỗng (AC-1).
 - Nơi dùng khoá: lát thường · lát theo nhóm · label-ghep thường · label-ghep `--lam-lai` (AC-2, AC-5, AC-6).
 - Bài bị gạt: sự kiện JSON · ba dấu bài thử · bài thật trông giống («[» không JSON, nhóm có số) (AC-3, AC-4).
 - Thẻ: có nhãn · không nhãn · ẩn tay · ẩn cụm (AC-5, AC-6, AC-7).
 
 ## Out of scope
 
-- Chạy `label-ghep --lam-lai --db-that` lên DB máy thu (Hỏi-2) và lấy lại mẫu lát.
+- Chạy `label-ghep --lam-lai --db-that` lên DB máy thu (Hỏi-3) và lấy lại mẫu lát.
 - Gỡ ẩn thẻ hay đổi thẻ giữ của dấu ẩn tay.
 - Dấu bài thử khác ngoài ba dấu đã đo.
 
