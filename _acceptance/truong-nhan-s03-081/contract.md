@@ -79,7 +79,7 @@ Nguồn yêu cầu:
 - AC-8: Given sổ từ vựng, When chạy bộ sinh và hai lệnh kiểm, Then:
   - `furnished`, `view`, `rent_includes` khai `dd_field` và `dd_lookup` đúng lookup RESO DD 2.1;
   - `price_basis` khai extension đủ sáu điều kiện ADR-0011, alias `ListingAgreement.Net`;
-  - `direction_faces` khai theo nghĩa Hỏi-4 đã ký: hướng cửa thì `dd_field DirectionFaces`; hướng ban công thì extension đủ sáu điều kiện, alias gần nhất `DirectionFaces`;
+  - `direction_faces` khai theo nghĩa Mạnh chọn ở Hỏi-2 (Cổng Phạm vi): hướng cửa thì `dd_field DirectionFaces`; hướng ban công thì extension đủ sáu điều kiện, alias gần nhất `DirectionFaces`;
   - `vocab.mjs --check` và `--lint` xanh;
   - CONTEXT.md có thuật ngữ cho bảy trường và «Danh mục CĐT».
 - AC-9: Given thẻ đã gắn đủ trường mới, When mở lượt hai và bảng đồng thuận của lát, Then:
@@ -119,14 +119,14 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục dư�
 
 ## Out of scope
 
-- Các ô sau chờ Hỏi-2, mặc định ghi vào Lý do:
+- Các ô sau chờ Hỏi-1, mặc định ghi vào Lý do:
   - phí quản lý theo số tiền (`AssociationFee`);
   - pháp lý;
   - vay;
   - cọc;
   - ban công, căn góc;
   - giá theo phương thức thanh toán.
-- Áp 081 lên DB máy thu (Hỏi-5) và gắn bù thẻ đã gắn. Phiên trợ lý gắn bù 7 thẻ.
+- Áp 081 lên DB máy thu (Hỏi-3) và gắn bù thẻ đã gắn. Phiên trợ lý gắn bù 7 thẻ.
 - Bộ đọc máy ra bảy trường mới; phép đo enrich qua mã căn (GC2, GC3).
 - Khử trùng lúc lấy mẫu: hàng GN2 `lay-mau-khu-trung-theo-tin`, hồ sơ riêng.
 - Biểu mẫu chín trường `label-form.tsx`.

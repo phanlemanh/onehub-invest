@@ -31,11 +31,11 @@ Tính trên 322 thẻ đang hiện (`trung_voi IS NULL`). Chữ lấy từ tin c
 | Mã căn (kiểu toà+số) | 91 | 28% | ~34% | thêm ô `unit_number` |
 | – trong đó mã có che «xx» | 39 | 12% | 17% | (cùng ô) |
 | Phí (PQL, bao phí, điện nước) | ~10 | ~3% | 24% | thêm ô `rent_includes` theo câu giao GN1 |
-| Pháp lý | 14 | 4% | 10% | Hỏi-2 |
-| Vay | 21 | 7% | 7% | Hỏi-2 |
-| Cọc | 6 | 2% | 3% | Hỏi-2 |
-| Ban công, lô gia, căn góc | 20 | 6% | 11% | Hỏi-2 |
-| Giá theo phương thức thanh toán | 10 | 3% | 6% | Hỏi-2 |
+| Pháp lý | 14 | 4% | 10% | Hỏi-1 |
+| Vay | 21 | 7% | 7% | Hỏi-1 |
+| Cọc | 6 | 2% | 3% | Hỏi-1 |
+| Ban công, lô gia, căn góc | 20 | 6% | 11% | Hỏi-1 |
+| Giá theo phương thức thanh toán | 10 | 3% | 6% | Hỏi-1 |
 
 Lệnh đếm nằm trong `_acceptance/truong-nhan-s03-081/probes/dem-y.sql` (chỉ đọc). Phí lệch xa nhất (3% so với 24%). Câu giao GN1 vẫn nêu «Phí đã gồm», nên ô vào phạm vi; số lệch ghi ở đây để Mạnh thấy.
 
@@ -48,14 +48,14 @@ Tra bằng `research-local/reso/dd-2.1.json`, bản ghim SHA256 ngày 23/10.
 | Trường (`eval_labels.field`) | RESO DD 2.1 | Kiểu | Giá trị trên màn |
 |---|---|---|---|
 | `furnished` | `Furnished` (Property) | một lựa chọn, lookup `Furnished` 4 giá trị | Đủ nội thất · Nội thất cơ bản · Nhà trống · Thoả thuận (`Furnished`, `Partially`, `Unfurnished`, `Negotiable`) |
-| `direction_faces` | `DirectionFaces` (hướng cửa chính) nếu Hỏi-4 chọn hướng cửa; extension alias `DirectionFaces` nếu chọn hướng ban công | một lựa chọn, 8 hướng | Đông · Tây · Nam · Bắc · Đông Bắc · Đông Nam · Tây Bắc · Tây Nam |
+| `direction_faces` | `DirectionFaces` (hướng cửa chính) nếu Hỏi-2 chọn hướng cửa; extension alias `DirectionFaces` nếu chọn hướng ban công | một lựa chọn, 8 hướng | Đông · Tây · Nam · Bắc · Đông Bắc · Đông Nam · Tây Bắc · Tây Nam |
 | `view` | `View` (isCollection, lookup mở) | nhiều lựa chọn | Thành phố · Hồ · Sông · Công viên · Vườn, nội khu · Bể bơi · Toàn cảnh · Khác (`City`, `Lake`, `River`, `ParkGreenbelt`, `Garden`, `Pool`, `Panoramic`, `Other`) |
 | `availability_date` | `AvailabilityDate` (Edm.Date) | chữ có khuôn | `ngay` (vào ở ngay), `YYYY-MM` hoặc `YYYY-MM-DD` |
 | `rent_includes` «Phí đã gồm» | `RentIncludes` (isCollection, 13 giá trị) | nhiều lựa chọn | Phí quản lý · Điện · Nước · Internet · Không gồm gì · Khác (`Management`, `Electricity`, `Water`, `Internet`, `None`, `Other`) |
 | `price_basis` | không có; gần nhất `ListingAgreement=Net`, nghĩa không trùng | extension `PriceBasis` (reso-khung-phan-loai §8) | Thu về (NET) · Đã gồm phí · Chưa gồm phí (`net`, `gom_phi`, `chua_gom_phi`) |
 | `unit_number` | `UnitNumber` (Edm.String) | chữ nguyên văn | giữ cả dấu che «xx» và cách viết của bài, «PR6.xx10» |
 
-- **Một nguồn từ vựng.** Năm trục chọn (`furnished`, `direction_faces`, `view`, `rent_includes`, `price_basis`) vào `pipeline/mappings.yaml` `enums:` (PL6). Từ đó sinh `vocab.generated.ts` và khối CONTEXT.md. Trục `price_basis` khai đủ sáu điều kiện extension của ADR-0011, ghi alias gần nhất là `ListingAgreement.Net`. Các trục RESO giữ `dd_lookup` đúng tên lookup. `direction_faces` khai theo nhánh Hỏi-4.
+- **Một nguồn từ vựng.** Năm trục chọn (`furnished`, `direction_faces`, `view`, `rent_includes`, `price_basis`) vào `pipeline/mappings.yaml` `enums:` (PL6). Từ đó sinh `vocab.generated.ts` và khối CONTEXT.md. Trục `price_basis` khai đủ sáu điều kiện extension của ADR-0011, ghi alias gần nhất là `ListingAgreement.Net`. Các trục RESO giữ `dd_lookup` đúng tên lookup. `direction_faces` khai theo nhánh Hỏi-2.
 - **View, Phí đã gồm.** RESO cho hai trường này là danh sách nhiều giá trị, nên ô cho chọn nhiều. Giá trị lưu là các mã đã sắp xếp, nối bằng dấu phẩy. Hai người chọn cùng tập thì đồng thuận so khớp được bằng chữ (view 054/072 so chuỗi).
 - **Ngày vào ở.** RESO dùng kiểu ngày, còn bài thường viết «vào ở ngay» hay «bàn giao tháng 12». Nhãn giữ `ngay` hoặc ngày, tháng theo ISO. Đổi sang kiểu `Date` là việc của bộ đọc khi đưa lên canonical, không thuộc vòng này.
 - **Mã căn.** Lưu sau khi bỏ khoảng trắng thừa và đổi về NFC, không đổi chữ hoa thường. Khi căn cứ là «Chữ bài», mã phải có trong chữ bài (thêm vào `PHAI_TRONG_CHU`). `building`, `stack`, `floor` vẫn là các phần tách riêng.
@@ -98,7 +98,7 @@ flowchart LR
 2. Nới `eval_labels_basis_check` thêm `danh_muc_cdt`.
 3. Dựng lại view đồng thuận của 072, thêm bảy trường vào danh sách. Cặp và khớp tính như cũ, `basis` không tham gia so.
 
-Chạy lại nhiều lần không lỗi, dòng cũ giữ nguyên. Vòng này chỉ áp lên DB thử. Áp lên DB máy thu cần lời Mạnh và sao lưu ba bảng nhãn trước (Hỏi-5).
+Chạy lại nhiều lần không lỗi, dòng cũ giữ nguyên. Vòng này chỉ áp lên DB thử. Áp lên DB máy thu cần lời Mạnh và sao lưu ba bảng nhãn trước (Hỏi-3).
 
 ### Biểu mẫu theo nhóm
 
@@ -173,8 +173,8 @@ Căn cứ: biểu mẫu theo nhóm đã là một cột cuộn hai cột khối 
 
 ## Ngoài vòng
 
-- Phí quản lý theo số tiền, pháp lý, vay, cọc, ban công, căn góc, giá theo phương thức thanh toán: chờ Hỏi-2. Mặc định không thêm ô mà ghi vào Lý do (luật 11, đo trước khi dựng).
-- Áp 081 lên DB máy thu (Hỏi-5) và gắn bù thẻ cũ.
+- Phí quản lý theo số tiền, pháp lý, vay, cọc, ban công, căn góc, giá theo phương thức thanh toán: chờ Hỏi-1. Mặc định không thêm ô mà ghi vào Lý do (luật 11, đo trước khi dựng).
+- Áp 081 lên DB máy thu (Hỏi-3) và gắn bù thẻ cũ.
 - Bộ đọc máy (`parsePost`, LLM) ra bảy trường mới. Vòng này chỉ có nhãn vàng.
 - Khử trùng lúc lấy mẫu: hàng GN2 `lay-mau-khu-trung-theo-tin`, hồ sơ riêng.
 - Biểu mẫu chín trường `label-form.tsx` (lát đời trước).
