@@ -40,6 +40,22 @@ async function chay(lib, c) {
   return { doc, o: lib.chamO({ tin: doc.tin }) };
 }
 
+/** Đầu ra của bản eval-classify ở điểm rẽ nhánh (merge-base với origin/main) trên cùng DB, bỏ ba ô căn cứ CĐT (lệnh xoá là thật,
+ *  chỉ gọi ở cuối ca). Bản cũ lấy bằng git show — đúng mã trước vòng, không phải bản chép tay. */
+async function chamTruocVong(c) {
+  const base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: ROOT }).toString().trim();
+  const f = join(PIPE, "lib", `.tn081-cls-truoc-${process.pid}.mjs`);
+  writeFileSync(f, execFileSync("git", ["show", `${base}:pipeline/lib/eval-classify.mjs`], { cwd: ROOT }));
+  try {
+    const cu = await import(pathToFileURL(f).href);
+    // Bản cũ tự mở và commit giao dịch, nên lệnh xoá dưới đây là thật trên lát thử: chỉ gọi ở cuối ca.
+    await c.query(`DELETE FROM eval_labels l USING eval_label_items i WHERE i.item_id = l.item_id AND i.lat = $1 AND l.basis = 'danh_muc_cdt'`, [LAT]);
+    return (await chay(cu, c)).o;
+  } finally {
+    rmSync(f, { force: true });
+  }
+}
+
 test("TN081-AC-6 eval-classify đọc bảy trường mới theo F3 và loại ô căn cứ Danh mục CĐT", async () => {
   execFileSync("bash", [join(ROOT, "db/db-thu.sh"), DB, "--neu-chua-co"], { stdio: "inherit" });
   const { chuanHoaLuot, LABEL_FIELDS_NHOM } = await import(join(ROOT, "app/src/lib/labels-normalize.ts"));
@@ -85,11 +101,6 @@ test("TN081-AC-6 eval-classify đọc bảy trường mới theo F3 và loại �
       assert.ok(x, `THIEU O ${f}`);
       assert.deepEqual([x.nhom, x.nguong, x.trang_thai, x.ly_do], [...NHOM_MOI[f], "skip", "chua-co-cach-doc"], f);
     }
-    // Chín trường cũ: cùng kết quả với phép chấm chỉ trên chín trường đó (bản trước vòng không có trường mới).
-    const cu = o.filter((r) => r.phan_khuc === "tat-ca" && !MOI.includes(r.truong));
-    assert.equal(cu.length, 9);
-    assert.deepEqual(cu.find((r) => r.truong === "kind").n, 2);
-
     // Chiều đỏ 1: truy vấn không lấy cột basis — ô CĐT vào nhãn vàng.
     const boCot = await banDot("l.not_stated, l.basis\n", "l.not_stated\n");
     assert.equal((await chay(boCot, c)).doc.danh_muc_cdt, 0, "BASIS KHONG DUOC DOC");
@@ -101,6 +112,20 @@ test("TN081-AC-6 eval-classify đọc bảy trường mới theo F3 và loại �
     const thieuC = await banDot("export const NGUONG = Object.freeze({ A: 0.95, B: 0.9, C: 0.8 });", "export const NGUONG = Object.freeze({ A: 0.95, B: 0.9 });");
     const tc = (await chay(thieuC, c)).o.find((r) => r.phan_khuc === "tat-ca" && r.truong === "furnished");
     assert.equal(tc.nguong, undefined, "THIEU NHOM C");
+
+    // Chín trường cũ chấm như trước: bản thư viện ở điểm rẽ nhánh (git show, không chép tay) chấm cùng nhãn, chỉ bỏ ba ô CĐT
+    // (chạy cuối ca: bản cũ tự commit giao dịch nên xoá ô CĐT là thật trên lát thử, lát xoá ở finally; bản cũ không biết căn cứ này — loại ô CĐT phải tương đương ô vắng); mọi ô của trường cũ, mọi phân khúc, so deepEqual.
+    const cu = await chamTruocVong(c);
+    const truongCu = [...new Set(cu.map((r) => r.truong))];
+    assert.equal(truongCu.length, 9, "bản trước vòng chấm chín trường");
+    assert.ok(truongCu.every((f) => !MOI.includes(f)));
+    const sap = (xs) => xs.map((r) => JSON.stringify(r)).sort();
+    assert.deepEqual(sap(o.filter((r) => truongCu.includes(r.truong))), sap(cu), "CHIN TRUONG CU LECH BAN TRUOC VONG");
+    // Chiều đỏ 0: bản đổi ngưỡng nhóm A của trường cũ thì phép so trên bắt.
+    const doiNguong = await banDot("export const NGUONG = Object.freeze({ A: 0.95,", "export const NGUONG = Object.freeze({ A: 0.9,");
+    const dn = (await chay(doiNguong, c)).o.filter((r) => truongCu.includes(r.truong));
+    assert.notDeepEqual(sap(dn), sap(cu), "DOI NGUONG TRUONG CU KHONG BI BAT");
+
   } finally {
     await c.query(`DELETE FROM eval_label_items WHERE lat = $1`, [LAT]).catch(() => {});
     await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'tn081-cls-%'`).catch(() => {});
