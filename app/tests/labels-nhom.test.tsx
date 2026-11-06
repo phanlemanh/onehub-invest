@@ -725,7 +725,7 @@ test("GCN-AC-10 trạng thái render: rỗng, nhóm hết, chờ người hai, v
   const tin = { itemId: 7, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ bài RB", anh: [], soLinkKhac: 0, ghep: null, groupName: "Nhóm A", postedAt: null }
   const mau = renderToStaticMarkup(<LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={tin} {...nhom(0)} />)
   assert.match(mau, /data-labels-form="7"/)
-  assert.equal((mau.match(/data-o="/g) ?? []).length, 18, "17 ô và ô Lý do")
+  assert.equal((mau.match(/data-o="/g) ?? []).length, 25, "24 ô và ô Lý do")
   for (const c of ["Khu đô thị", "Phân khu", "Trục", "Tầng", "WC", "Nhiều căn", "SĐT", "không suy ra được"]) assert.ok(mau.includes(c), c)
   assert.doesNotMatch(mau, /Ghi theo đúng chữ của tin/)
   assert.match(mau, /Ghi điều người trong nhóm hiểu/)
@@ -1052,7 +1052,7 @@ test("GCN-AC-6 tra loi the tren man: chọn ở ô Thẻ nhóm, Loại trường
   }
 })
 
-test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên màn, lý do trống bị chặn dưới ô, lưu ra đúng giá trị, căn cứ, đơn vị; đột biến bị bắt", async () => {
+test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 24 ô trên màn, lý do trống bị chặn dưới ô, lưu ra đúng giá trị, căn cứ, đơn vị; đột biến bị bắt", async () => {
   const { POST } = await import("../src/app/api/v1/ops/labels/route")
   const { LabelFormNhom } = await import("../src/components/ops/labels/label-form-nhom")
   const { selectOptions } = await import("../src/lib/labels-normalize")
@@ -1092,6 +1092,10 @@ test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên m�
       await dom.go("nhan-price_max_vnd", "4350")
       await dom.nhan(hop("seller_name"), "ô không suy ra được của tên")
       await dom.go("nhan-seller_phone", "0912 345 678")
+      // truong-nhan-s03-081: bảy ô mới bắt buộc; View chọn hai giá trị, sáu ô còn lại không suy ra được.
+      await dom.nhan(nut("view", "Hồ"), "view hồ")
+      await dom.nhan(nut("view", "Thành phố"), "view thành phố")
+      for (const f of ["unit_number", "furnished", "direction_faces", "availability_date", "price_basis", "rent_includes"]) await dom.nhan(hop(f), `ô không suy ra được của ${f}`)
       await dom.bam("Lưu và xem máy đọc")
       await dom.cho(() => !!document.querySelector('[data-o="reason"] [data-slot="field-error"]') || !!document.querySelector("[data-o] [data-loi]") || !!document.querySelector("[data-loi]"))
       const loiLyDo = document.querySelector('[data-o="reason"]')?.textContent ?? ""
@@ -1117,9 +1121,11 @@ test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên m�
       project: ["vinhomes grand park", false, "chu_bai"], subzone: ["sapphire", false, "ngu_canh_nhom"], building: ["s5.03", false, "chu_bai"], stack: ["12", false, "chu_bai"], floor: [null, true, null],
       bedrooms: ["2", false, "chu_bai"], bedrooms_plus: ["no", false, "chu_bai"], bathrooms: ["1", false, "kien_thuc_nghe"], area_m2: ["64.5", false, "chu_bai"],
       price_min_vnd: ["4350000000", false, "chu_bai"], price_max_vnd: ["4350000000", false, "chu_bai"], seller_name: [null, true, null], seller_phone: ["+84912345678", false, "chu_bai"],
+      view: ["city,lake", false, "chu_bai"], unit_number: [null, true, null], furnished: [null, true, null], direction_faces: [null, true, null],
+      availability_date: [null, true, null], price_basis: [null, true, null], rent_includes: [null, true, null],
     }
     assert.deepEqual(kq.nhan, KY_NHAN)
-    assert.equal(Object.keys(kq.nhan).length, 17)
+    assert.equal(Object.keys(kq.nhan).length, 24)
     // Đột biến khâu dựng thân gửi: mỗi bản phải làm kết quả khác.
     const boDonVi = await banDot<ManForm>("src/components/ops/labels/label-form-nhom.tsx", "...(d.kind === \"gia\" ? { unit: donVi } : {})", "...(d.kind === \"gia\" ? { unit: \"ty\" } : {})")
     assert.notDeepEqual((await chay(boDonVi)).nhan, KY_NHAN, "đối chứng không đỏ: bản bỏ đơn vị đã chọn vẫn xanh")
@@ -1457,5 +1463,80 @@ test("DVG-AC-3 mã thẻ «#<item_id>» mở đầu dòng mô tả ở lượt m
     }
   } finally {
     hai.forEach((t, i) => { t.error = goc[i] })
+  }
+})
+
+// ---- truong-nhan-s03-081 E2 (AC-2): khối, thứ tự hàng, căn cứ CĐT, lựa chọn theo sổ, View chọn nhiều ----
+const THU_TU_KHOI: Record<string, string[]> = {
+  "mo-ta": ["furnished", "direction_faces", "view", "availability_date"],
+  "vi-tri": ["project", "subzone", "unit_number", "building", "stack", "floor"],
+  gia: ["price_min_vnd", "price_max_vnd", "price_basis", "rent_includes"],
+}
+const CAN_CU_5 = ["Chữ bài", "Ảnh trong bài", "Ngữ cảnh nhóm", "Kiến thức nghề", "Danh mục CĐT"]
+const MOI_7 = ["unit_number", "furnished", "direction_faces", "view", "availability_date", "price_basis", "rent_includes"]
+
+/** Lỗi cấu trúc của biểu mẫu đang hiện (thông điệp ghim); rỗng là đạt. */
+function kiemMan(VOCAB: Record<string, readonly string[]>): string[] {
+  const loi: string[] = []
+  for (const [k, ds] of Object.entries(THU_TU_KHOI)) {
+    const khoi = document.querySelector(`[data-khoi="${k}"]`)
+    if (!khoi) { loi.push(k === "mo-ta" ? "THIEU KHOI MO TA CAN" : `THIEU KHOI ${k}`); continue }
+    const hang = [...khoi.querySelectorAll("[data-o]")].map((x) => x.getAttribute("data-o"))
+    if (JSON.stringify(hang) !== JSON.stringify(ds)) loi.push(`THU TU HANG ${k}: ${hang.join(",")}`)
+  }
+  for (const f of MOI_7) {
+    const h = document.querySelector(`[data-o="${f}"]`)
+    if (!h) { loi.push(`THIEU HANG ${f}`); continue }
+    const canCu = [...h.querySelectorAll('[aria-label$=": căn cứ"] button')].map((b) => b.getAttribute("aria-label"))
+    if (JSON.stringify(canCu) !== JSON.stringify(CAN_CU_5)) loi.push(canCu.includes("Danh mục CĐT") ? `CAN CU ${f}` : "THIEU CAN CU CDT")
+    if (!h.querySelector('[role="checkbox"]')) loi.push(`THIEU KHONG SUY RA ${f}`)
+    if (f in VOCAB) {
+      const lc = [...h.querySelectorAll('[role="group"]:not([aria-label$=": căn cứ"]) button')].length
+      if (lc !== VOCAB[f].length) loi.push(`LUA CHON ${f}: ${lc}/${VOCAB[f].length}`)
+    }
+  }
+  return loi
+}
+
+test("TN081-AC-2 biểu mẫu theo nhóm: khối Mô tả căn, mã căn, cơ sở giá, phí đã gồm, căn cứ CĐT, View chọn nhiều", async () => {
+  const { LabelFormNhom } = await import("../src/components/ops/labels/label-form-nhom")
+  const { VOCAB } = await import("../src/lib/vocab.generated")
+  const SO = { furnished: VOCAB.furnished, direction_faces: VOCAB.direction_faces, view: VOCAB.view, price_basis: VOCAB.price_basis, rent_includes: VOCAB.rent_includes }
+  type ManForm = { LabelFormNhom: typeof LabelFormNhom }
+  const tin = { itemId: 1, lat: LAT, doubleLabel: false, soNguoi: 0, text: `${CHU} tin 1`, anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null }
+  const moVaKiem = async (M: ManForm) => {
+    const dom = await dungDom()
+    try {
+      await dom.render(<M.LabelFormNhom lat={LAT} tin={tin} hrefXem="/xem-1" hrefTinKe="/tin-ke" diToi={() => {}} baoTin={() => {}} />)
+      const loi = kiemMan(SO)
+      const nutView = (chu: string) => [...document.querySelectorAll('[data-o="view"] [role="group"]:not([aria-label$=": căn cứ"]) button')].find((b) => b.textContent?.trim() === chu)
+      if (!nutView("Hồ")) return loi // bản thiếu khối: lỗi đã ghi ở kiemMan
+      await dom.nhan(nutView("Hồ"), "view hồ")
+      await dom.nhan(nutView("Thành phố"), "view thành phố")
+      const sang = ["Hồ", "Thành phố"].filter((c) => nutView(c)?.hasAttribute("data-pressed")).length
+      if (sang !== 2) loi.push("VIEW KHONG CHON NHIEU")
+      return loi
+    } finally {
+      await dom.xong()
+    }
+  }
+  assert.deepEqual(await moVaKiem({ LabelFormNhom }), [])
+  // Chiều đỏ trên cùng thẻ.
+  const thieuKhoi = await banDot<ManForm>("src/components/ops/labels/label-form-nhom.tsx", "{cot.map((id) => {", "{cot.filter((id) => id !== \"mo-ta\").map((id) => {")
+  assert.ok((await moVaKiem(thieuKhoi)).includes("THIEU KHOI MO TA CAN"), "THIEU KHOI MO TA CAN")
+  const motLuaChon = await banDot<ManForm>("src/components/ops/labels/label-form-nhom.tsx", "<NhomRow key={d.id} d={d}", "<NhomRow key={d.id} d={d.kind === \"chon-nhieu\" ? { ...d, kind: \"chon\" } : d}")
+  assert.ok((await moVaKiem(motLuaChon)).includes("VIEW KHONG CHON NHIEU"), "VIEW KHONG CHON NHIEU")
+  // CĐT: một hàng của bản NhomRow bỏ nút CĐT.
+  const { KHOI } = await import("../src/components/ops/labels/nhom-fields")
+  type ManRow = { NhomRow: (p: { d: (typeof KHOI)[number]["fields"][number]; o: { value: string; basis: "chu_bai"; unknown: boolean }; onChange: () => void }) => ReactNode }
+  const boCdt = await banDot<ManRow>("src/components/ops/labels/nhom-row.tsx", "{BASIS_NGAN.map((b) => (", "{BASIS_NGAN.filter((b) => b.value !== \"danh_muc_cdt\").map((b) => (")
+  const dom = await dungDom()
+  try {
+    const d = KHOI.flatMap((k) => k.fields).find((x) => x.id === "furnished")!
+    await dom.render(<boCdt.NhomRow d={d} o={{ value: "", basis: "chu_bai", unknown: false }} onChange={() => {}} />)
+    const canCu = [...document.querySelectorAll('[aria-label$=": căn cứ"] button')].map((b) => b.getAttribute("aria-label"))
+    assert.ok(!canCu.includes("Danh mục CĐT") && canCu.length === 4, "THIEU CAN CU CDT")
+  } finally {
+    await dom.xong()
   }
 })
