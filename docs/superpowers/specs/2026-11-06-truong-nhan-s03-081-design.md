@@ -75,6 +75,18 @@ Tra bằng `research-local/reso/dd-2.1.json`, bản ghim SHA256 ngày 23/10.
   | WC | `number_of_wc` |
 
   Trường khác, mã căn không có trong danh mục hay bị che «xx», giá trị lệch, hay bảng không đọc được thì lỗi dưới đúng ô. Có 214 mã căn trùng giữa dự án: chỉ cần khớp một dòng.
+```mermaid
+flowchart LR
+  A[Ô chọn căn cứ CĐT] --> B{Đọc được stg_s08_inventory?}
+  B -- không --> X1[Lỗi: Không đọc được danh mục CĐT ở máy này]
+  B -- có --> C{Trường có cột danh mục?}
+  C -- không --> X2[Lỗi: Danh mục CĐT không có trường này]
+  C -- có --> D{Mã căn của thẻ có trong danh mục, không che xx?}
+  D -- không --> X3[Lỗi: Mã căn chưa có trong danh mục CĐT]
+  D -- có --> E{Giá trị bằng một dòng cùng mã?}
+  E -- không --> X4[Lỗi: Giá trị khác danh mục CĐT]
+  E -- có --> OK[Ghi basis = danh_muc_cdt]
+```
 - Giá trị truy được về dòng danh mục, nên căn cứ này không đòi Lý do.
 - `eval-classify` đọc thêm cột `basis` và loại các ô có căn cứ này khỏi phép chấm máy đọc tin, vì máy đọc tin không thấy S08. Số ô bị loại đếm vào `danh_muc_cdt`. Bảy trường mới vào danh sách chấm theo nhóm F3: mã căn nhóm A, cơ sở giá nhóm B, năm trường mô tả nhóm C với ngưỡng 0,80 (thêm vào `NGUONG`). Bộ đọc chưa ra các trường này nên ô ghi `skip`, lý do `chua-co-cach-doc` — «đọc được các ô mới» theo câu giao. Phép đo enrich qua mã căn (GC2, GC3) sẽ dùng các ô CĐT ở việc sau.
 - S08 chỉ dùng nội bộ (AGENTS.md luật 5). `eval_labels` vốn không sync cloud (072). Vòng này thêm một phép quét để giữ điều đó: không đường cloud nào đọc `eval_labels`.
