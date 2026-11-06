@@ -1,6 +1,7 @@
 // AC-1 trên lát thật s03-theo-nhom, chỉ đọc (giao dịch READ ONLY): với từng người đã gắn và một người mới, từng nhóm,
 // tinKe thật không được trả tin hai người chưa ai gắn khi nhóm còn tin đơn người đó gắn được. Đối chứng dương: thứ tự cũ
-// (chỉ theo item_id sau khoá cặp-trước) kẹt ít nhất một nhóm với người mới. Không ghi gì; không in chữ bài hay định danh.
+// (chỉ theo item_id sau khoá cặp-trước, chép trong đầu dò) kẹt ít nhất một nhóm. Số tin đơn với tới tính trên thứ tự chép
+// tay, không qua tinKe, nên chỉ in để đọc, không là điều kiện đạt. Không ghi gì; không in chữ bài hay định danh.
 import { createRequire } from "node:module"
 
 const pg = createRequire(new URL("../../../app/package.json", import.meta.url))("pg")
@@ -42,10 +43,9 @@ try {
   }
   console.log(`lat ${LAT}: ${nhom.length} nhom, ${nguoi.length} nguoi da gan + 1 nguoi moi`)
   console.log(`nhom ket (tin hai nguoi chua ai gan chan tin don): moi ${ketMoi}, cu ${ketCu}`)
-  console.log(`tin don nguoi moi voi toi truoc khi cham tin hai nguoi: moi ${donMoi}, cu ${donCu}`)
+  console.log(`chi de doc (thu tu chep tay, khong qua tinKe): tin don nguoi moi voi toi truoc khi cham tin hai nguoi: moi ${donMoi}, cu ${donCu}`)
   if (ketMoi !== 0) { console.log("THE HAI NGUOI CON CHAN NHOM"); loi = 1 }
   if (ketCu === 0) { console.log("DOI CHUNG KHONG DO: thu tu cu khong ket nhom nao — phep do khong phan biet"); loi = 1 }
-  if (donMoi <= donCu) { console.log("SO TIN DON VOI TOI KHONG TANG"); loi = 1 }
   await c.query("ROLLBACK")
 } finally {
   await c.end()

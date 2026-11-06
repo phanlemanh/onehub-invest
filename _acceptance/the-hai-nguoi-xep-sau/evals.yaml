@@ -48,5 +48,5 @@ evals:
     cmd: config:executors.script.thn_lat_that
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, _acceptance/the-hai-nguoi-xep-sau/probes/lat-that.mjs]
-    expected: "exit 0; trên lát thật s03-theo-nhom (giao dịch READ ONLY): 'nhom ket ... moi 0', thứ tự cũ kẹt > 0 nhóm, số tin đơn người mới với tới tăng; cuối 'LAT-THAT OK'."
+    expected: "exit 0; trên lát thật s03-theo-nhom (giao dịch READ ONLY): thẻ đầu tinKe thật trả cho mỗi cặp người–nhóm, 'nhom ket ... moi 0'; đối chứng thứ tự cũ chép trong đầu dò kẹt > 0 nhóm; dòng số tin đơn với tới ghi 'chi de doc'; cuối 'LAT-THAT OK'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
