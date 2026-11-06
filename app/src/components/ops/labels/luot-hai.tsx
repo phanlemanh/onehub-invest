@@ -146,7 +146,7 @@ export function LuotHai({ d, hrefTinKe, diToi = diTrang }: { d: DoiChieu; hrefTi
         </FrameHeader>
         <FramePanel>
           <div className="flex min-w-0 flex-col gap-2">
-            <AnhBai anh={d.anh} soLinkKhac={d.soLinkKhac} coChu={Boolean(d.text)} />
+            <AnhBai anh={d.anh} soLinkKhac={d.soLinkKhac} coChu={Boolean(d.text)} ghep={d.ghep} />
             {d.text ? <p className="text-sm whitespace-pre-line wrap-anywhere">{d.text}</p> : null}
           </div>
         </FramePanel>

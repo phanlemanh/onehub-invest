@@ -32,13 +32,15 @@ async function withTx<T>(sql060: string | undefined, fn: (c: pg.Client) => Promi
   }
 }
 
-/** Bản đột biến của 060: view nối bí danh theo khoá băm như đời trước, không theo số gốc. */
+/** Bản đột biến của view sellers trong 060: nối bí danh theo khoá băm như đời trước, không theo số gốc. Dựng ở lược đồ riêng của ca:
+ *  DDL trên `public.sellers` giữ khoá độc quyền trong giao dịch, deadlock với test đọc cùng lúc trên cùng DB (đo S4 05/11). */
 async function banNoiKhoaBam(): Promise<string> {
   const { MIG_060 } = (await import(pathToFileURL(join(PIPE, "lib/nap-060.mjs")).href)) as Nap060;
-  const ma = MIG_060.replace("JOIN sdt ON sdt.value = so.seller_phone", "JOIN sdt ON sdt.value = so.h")
-    .replace("CREATE OR REPLACE VIEW sellers", "DROP VIEW IF EXISTS sellers; CREATE VIEW sellers");
-  assert.notEqual(ma, MIG_060, "đột biến không đổi mã — chiều đỏ rỗng");
-  return ma;
+  const view = MIG_060.slice(MIG_060.indexOf("CREATE OR REPLACE VIEW sellers"));
+  const ma = view.replace("JOIN sdt ON sdt.value = so.seller_phone", "JOIN sdt ON sdt.value = so.h");
+  assert.notEqual(ma, view, "đột biến không đổi mã — chiều đỏ rỗng");
+  const sc = `sd6_${process.pid}`;
+  return `CREATE SCHEMA ${sc}; SET LOCAL search_path = ${sc}, public; ${ma}`;
 }
 
 /** Một tin Căn giá tốt mang SĐT mới (chưa có người), ở phường có thước — bảo đảm chiều đỏ không rỗng trên mọi dữ liệu. */

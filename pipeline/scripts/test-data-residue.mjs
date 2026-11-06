@@ -55,11 +55,13 @@ export async function measureResidue(c) {
   );
   // Người bán từ post thử = SĐT trong post thử mà không offer sạch nào mang.
   const { rows: [s] } = await c.query(
-    `SELECT count(*) FILTER (WHERE x.phone_hash = ANY($1::text[]) AND NOT EXISTS (
-              SELECT 1 FROM sale_offers o WHERE o.seller_phone_hash = x.phone_hash AND NOT (o.post_ids && $2::text[])))::int AS from_test,
-            count(*) FILTER (WHERE NOT EXISTS (
-              SELECT 1 FROM sale_offers o WHERE o.seller_phone_hash = x.phone_hash))::int AS orphan
-     FROM sellers x`,
+    // Gom trước rồi nối: NOT EXISTS trong FILTER quét lại sale_offers cho từng người bán, ca test giữ khoá 33033 gần 2 phút (đo 05/11).
+    `WITH tin AS (
+       SELECT seller_phone_hash AS h, bool_or(NOT (post_ids && $2::text[])) AS co_tin_sach
+       FROM sale_offers WHERE seller_phone_hash IS NOT NULL GROUP BY 1)
+     SELECT count(*) FILTER (WHERE x.phone_hash = ANY($1::text[]) AND t.co_tin_sach IS NOT TRUE)::int AS from_test,
+            count(*) FILTER (WHERE t.h IS NULL)::int AS orphan
+     FROM sellers x LEFT JOIN tin t ON t.h = x.phone_hash`,
     [[...testHashes], testIds],
   );
   // Đếm độc lập bằng SQL (không qua testMarker) — đối chiếu để thước không mù cùng một lỗi.
