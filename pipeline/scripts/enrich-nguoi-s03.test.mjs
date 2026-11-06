@@ -93,14 +93,14 @@ test("EN-AC-3 chiều đỏ: đảo ưu tiên tin/bài thì ô 1-tin-1-bai đỏ
 
 
 const DO_XANH = {
-  md5_truoc: "a", md5_sau: "a", truoc: { co_so: 2553 }, sau: { co_so: 3295, tin_song: MOC_0611.tin_song },
-  suy_truoc: 0, suy_sau: 742, gan: { so_tren_tin: 662, so_trong_bai: 80, thue: 586, ban: 156 },
+  md5_truoc: "a", md5_sau: "a", truoc: { co_so: 2553 }, sau: { co_so: 3308, tin_song: MOC_0611.tin_song },
+  suy_truoc: 0, suy_sau: 755, gan: { so_tren_tin: 662, so_trong_bai: 93, thue: 594, ban: 161 },
 };
 test("EN-AC-8 thuần: lượt đo xanh không có mã lỗi; mỗi mã đỏ có ca của nó", () => {
   assert.deepEqual(kiemBatBien(DO_XANH), []);
   const ca = [
     ["DB-DOI", { md5_sau: "b" }],
-    ["GAN-LECH-SO", { sau: { ...DO_XANH.sau, co_so: 3290 } }],
+    ["GAN-LECH-SO", { sau: { ...DO_XANH.sau, co_so: 3300 } }],
     ["KHONG-GAN", { suy_sau: 0, sau: { ...DO_XANH.sau, co_so: 2553 }, gan: { so_tren_tin: 0, so_trong_bai: 0, thue: 0, ban: 0 } }],
     ["LECH-MOC:so_trong_bai", { gan: { ...DO_XANH.gan, so_trong_bai: 0 } }], // tắt rule bài trả lời
     ["LECH-MOC:thue", { gan: { ...DO_XANH.gan, thue: 400 } }],
@@ -108,5 +108,5 @@ test("EN-AC-8 thuần: lượt đo xanh không có mã lỗi; mỗi mã đỏ c�
   for (const [ma, doi] of ca) assert.ok(kiemBatBien({ ...DO_XANH, ...doi }).includes(ma), `EN-AC-8: thiếu mã ${ma}`);
   // quy đổi theo số tin sống: bản sao lớn gấp đôi thì gán gấp đôi vẫn xanh
   const doi = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v * 2]));
-  assert.deepEqual(kiemBatBien({ ...DO_XANH, sau: { co_so: 2553 + 1484, tin_song: 2 * MOC_0611.tin_song }, suy_sau: 1484, gan: doi(DO_XANH.gan) }), []);
+  assert.deepEqual(kiemBatBien({ ...DO_XANH, sau: { co_so: 2553 + 1510, tin_song: 2 * MOC_0611.tin_song }, suy_sau: 1510, gan: doi(DO_XANH.gan) }), []);
 });

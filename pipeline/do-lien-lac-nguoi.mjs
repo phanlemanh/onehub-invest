@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // do-lien-lac-nguoi.mjs — enrich-nguoi-s03 (AC-8, AC-9): đo sổ liên lạc của Người S03 và gán số qua người đăng trên DB THỬ.
-//   bash db/db-thu.sh oneinvest_en && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en node pipeline/do-lien-lac-nguoi.mjs
+//   bash _acceptance/enrich-nguoi-s03/probes/db-dong-bang.sh oneinvest_en_do && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en_do node pipeline/do-lien-lac-nguoi.mjs
 //   … --mau 30 --ra <research-local/…/phieu.md>   ghi phiếu đọc mù 30 Người (có số, chữ bài — tầng C, chỉ ở research-local/)
 // Trong MỘT giao dịch ROLLBACK: tự áp 068, 070, 079 nếu thiếu, chạy dungNguoi → dungLienLac → ganSdtQuaNguoi, in số trước và sau.
 // md5 cột số S03 đo bằng client thứ hai, ngoài giao dịch, để chứng ROLLBACK thật. Đầu ra không mang số. Bất biến sai thì thoát 1;
@@ -23,8 +23,9 @@ import { CONTACT_RULE } from "./lib/vocab.generated.mjs";
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const GOC = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Mốc đo 06/11 (design §1, Cổng Phạm vi) và ngưỡng lệch. */
-export const MOC_0611 = Object.freeze({ tin_song: 4359, so_tren_tin: 662, so_trong_bai: 80, thue: 586, ban: 156 });
+/** Mốc đo 06/11 và ngưỡng lệch. Mốc chốt từ bản dump đóng băng e8-0611.dump (giám sát 06/11: đo trên DB sống thì số trôi
+ *  theo dữ liệu thu); mốc Cổng Phạm vi buổi sáng đo trên DB sống là so_trong_bai 80, thue 586, ban 156. */
+export const MOC_0611 = Object.freeze({ tin_song: 4359, so_tren_tin: 662, so_trong_bai: 93, thue: 594, ban: 161 });
 export const LECH_TOI_DA = 0.15;
 export const HAT_MAU = 20261106;
 
