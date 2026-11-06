@@ -11,14 +11,14 @@ import * as goc from "../transform-zalo.mjs";
 
 const PIPE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Bản chép tạm của transform-zalo.mjs (import tương đối trỏ về pipeline/), đổi từng cặp [cũ, mới]. */
+/** Bản chép tạm của transform-zalo.mjs (mọi import tương đối trỏ về pipeline/), đổi từng cặp [cũ, mới]. */
 async function banDot(thay) {
   let src = readFileSync(path.join(PIPE, "transform-zalo.mjs"), "utf8");
   for (const [a, b] of thay) {
     assert.ok(src.includes(a), `chỗ đột biến không còn trong transform-zalo.mjs: ${a}`);
     src = src.replace(a, b);
   }
-  src = src.replace(/from "\.\/(lib\/[^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(path.join(PIPE, rel)).href)}`);
+  src = src.replace(/from "\.\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(path.join(PIPE, rel)).href)}`);
   const dir = mkdtempSync(path.join(PIPE, "scripts", ".slt-dot-"));
   const f = path.join(dir, "transform-zalo.mjs");
   writeFileSync(f, src);

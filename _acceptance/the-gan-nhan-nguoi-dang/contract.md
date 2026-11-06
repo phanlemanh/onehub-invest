@@ -5,7 +5,7 @@ slug: the-gan-nhan-nguoi-dang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-05T23:16:00Z
 approved_by:
@@ -48,3 +48,8 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: hai trục liệt
 ## Notes
 
 - Lược đồ tạm `tnd_<pid>` có `source_registry` giả; không ghi `public`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-2: với tin ghép, giờ đăng ở thẻ lượt một có thể khác giờ ở lượt hai, và thẻ có thể không hiện giờ khi không tìm thấy tin chữ.
+  - Ngoài-3: phép kiểm chữ in trên thẻ chưa phân biệt được giờ của tin chữ với giờ của bài ảnh, vì dữ liệu thử để hai giờ cùng một phút.
+  - Ngoài-4: đối chứng đỏ của phép kiểm «không lộ mã nhóm» chưa chạy qua chính phép quét, nên chưa chứng được phép kiểm sẽ báo khi mã nhóm lọt ra.
+  - Ngoài-5: đầu dò «test chỉ chạy trên lược đồ tạm» đọc thứ tự dòng chữ, nên có thể báo qua nhầm nếu sau này có một import tĩnh nối DB.

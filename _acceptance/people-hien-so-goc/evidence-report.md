@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 099391b739bcd134a85495a68c17856240495f6f
+verified_commit: 4872ec78f147ee37b4f9fe0a588116b817bdd321
 human_signoff: Mạnh 2026-11-02
 ---
 
@@ -233,3 +233,7 @@ sha: 47085d64b7a3b18a89798f9abe9b7b8195f6144c · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 4 — 2026-11-03, do hoá cũ do gộp main eb7f7c07 (PR #294) và sửa dữ liệu thử
 run_id: repin-20261103T211734Z-51561
 sha: 099391b739bcd134a85495a68c17856240495f6f · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · diff chạm vật đo ngoài làn máy: E10 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
+
+### Re-pin lần 5 — 2026-11-06, do SHS-DC đổi cách gọi sang song song (giám sát quyết 06/11)
+run_id: repin-20261106T102535Z-59438
+sha: 4872ec78f147ee37b4f9fe0a588116b817bdd321 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E10, E12 · diff chạm vật đo ngoài làn máy: E10, E12 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
