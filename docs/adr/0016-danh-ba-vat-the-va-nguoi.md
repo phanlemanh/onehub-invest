@@ -1,7 +1,7 @@
 # ADR-0016: Danh bạ vật thể và người — căn là nút vật thể, listing gắn ở mức sâu nhất biết được
 
 Ngày: 2026-10-27 · Trạng thái: **accepted** (Mạnh duyệt 27/10: «Duyệt khung đã sửa ba điểm, theo các mặc định của em»)
-· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
+· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
 `docs/product/FRAMING.md`, `CONTEXT.md`, ROADMAP §3 mục 22
 
 > Câu hỏi của Mạnh (27/10): «Mô hình của chúng ta là một bất động sản duy nhất và nhiều listing. Có nên tạo một bảng
@@ -137,6 +137,12 @@ và phát biểu theo vật thể.
 - Chủ đầu tư trước mắt là `Building.BuilderName`; thành `parties` khi cần thực thể tổ chức.
 - **Không vào danh bạ Người**: người dùng app (tầng A) và tài khoản thu của mình (tầng A).
 - Gộp người liên nguồn chưa làm (0 tin S06 có SĐT); khi làm, hồ sơ đã gộp chỉ hiện ở `/ops`.
+- **Sửa đổi 06/11 (enrich-nguoi-s03, Mạnh duyệt Cổng Phạm vi 06/11)**: **liên lạc** của Người là phát biểu, không phải bí danh. Bí danh
+  (`registry_aliases`) là khoá định danh — một giá trị thuộc đúng một Người, hai Người cùng giá trị là một lần gộp (HD13). Số liên lạc khác
+  nghĩa: số sàn dùng chung liên lạc được nhiều Người mà không làm họ thành một. Liên lạc ở bảng chỉ-thêm `party_contacts` (079: `kind`
+  `sdt` · `chat_profile`, lớp bằng chứng, luật `so_tren_tin` · `so_trong_bai`, rút có lý do); số thấy ở nhiều người gửi không thành liên lạc của
+  ai. Tin không số nhận số qua người đăng bằng cơ chế số ghép S06 (dấu `s03-qua-nguoi-dang`, nhãn «Chưa xác minh»); số suy không bao giờ
+  quay lại làm bằng chứng (§7 điểm 3 áp cho Người).
 
 ### 9. SPL và S08
 

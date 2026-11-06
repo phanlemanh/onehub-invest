@@ -35,6 +35,7 @@ export function writeMutant(file, source) {
 
 /** Chuỗi kết nối DB local dựng bằng URL — literal có user bị hook bí mật bắt nhầm. */
 export function localDbUrl() {
+  if (process.env.TEST_DATABASE_URL_ADMIN) return process.env.TEST_DATABASE_URL_ADMIN; // lượt qua db-thu --chay không nối vào DB chung
   const u = new URL("postgres://placeholder/oneinvest");
   u.hostname = "localhost"; u.port = "5433"; u.username = "oneinvest"; u.password = "oneinvest";
   return u.toString();

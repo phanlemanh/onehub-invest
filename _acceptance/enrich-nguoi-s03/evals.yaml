@@ -1,0 +1,98 @@
+schema_version: 1
+feature_slug: enrich-nguoi-s03
+# Ca «EN-AC-n»: thuần ở pipeline/scripts/enrich-nguoi-s03.test.mjs; DB ở enrich-nguoi-s03.itest.mjs trên DB thử oneinvest_en (transform S03 thật, BEGIN…ROLLBACK), số bịa.
+# Mỗi phép đo có ca đỏ trên bản đột biến cùng fixture, ghim thông điệp. Thước dữ liệu thật E8 chạy trên DB thử từ db/db-thu.sh.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [pipeline/lib/lien-lac-nguoi.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-1: bảng 7 ô viết trước (so-tren-tin, so-trong-bai, so-chung-hai-nguoi, so-da-suy, chua-co-nguoi, sai-dang, hai-rule-cung-so), số ô assert bằng 7; bài nạp vào stg_zalo_posts và tin ghi bằng writeOffers thật; mỗi ô assert phát biểu (rule, evidence_tier=observed, method=parser, evidence chỉ có post_ids/offer_ids/số đếm) hoặc đếm so_chung/khong_nguoi đúng. Chiều đỏ cùng fixture: tắt luật số chung thì ca đỏ nêu ô so-chung-hai-nguoi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [db/migrations/079_*.sql, pipeline/lib/lien-lac-nguoi.mjs, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-2: 079 nạp hai lần không lỗi; INSERT sdt E.164 và chat_profile nhận, sdt sai dạng và chat_profile rỗng bị CHECK từ chối; DELETE, TRUNCATE, UPDATE đổi value bị trigger chặn với thông điệp ghim; rút không lý do bị chặn; lượt 2 trả lien_lac_moi=0 lien_lac_rut=0; thêm bài của người gửi thứ hai mang số ấy thì lượt kế rút đúng một dòng lý do so-chung; xoá bài bằng chứng khỏi stg thì liên lạc còn sống"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [pipeline/lib/lien-lac-nguoi.mjs, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-3 thuần: ma trận 8 ô viết trước (0-so, 1-tin, 1-bai, 1-tin-1-bai, 2-tin, 0-tin-2-bai, da-gop, ho-so-chat-va-da-rut), số assert bằng 8, kết quả chonSoNguoi đúng từng ô. Chiều đỏ: đảo ưu tiên tin/bài thì ca nêu ô 1-tin-1-bai"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [pipeline/gan-sdt-qua-nguoi.mjs, pipeline/transform-zalo.mjs, pipeline/refresh-bait-gap.mjs, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-4 qua runTransformZalo thật trên lược đồ riêng: bảng 7 ô (rieng, nhan-so, khong-chon, suy-nay-rieng, suy-het-so, s06, s05) sống và nghỉ, assert seller_phone, seller_phone_hash, field_provenance.seller_phone (rule_id, party_key) từng ô; md5 dòng S06/S05 trước bằng sau; lượt gán thứ hai doi=0; đọc từ client thứ hai sau COMMIT của lượt transform thứ hai: không tin nào đang nhận số suy có seller_phone NULL. Chiều đỏ: bỏ lời gọi gán trong transform thì ca nêu ô nhan-so rơi về NULL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [db/migrations/079_*.sql, pipeline/gan-sdt-qua-nguoi.mjs, pipeline/lib/lien-lac-nguoi.mjs, pipeline/refresh-bait-gap.mjs, pipeline/transform-zalo.mjs, pipeline/sql/450_dq_checks.sql, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-5: ma trận 6 ô (s03-suy, s03-truc-tiep, s06-truc-tiep, s06-ghep, s06-mat-dau, khong-so) cho seller_phone_inferred đúng, số assert bằng 6; danh sách cột view trước và sau 079 bằng nhau trừ biểu thức cột cuối; md5 các cột cũ của view bằng nhau; ghi đè view về bản 070 thì ganSdtQuaNguoi in CHUA-AP-079 và không ghi số suy mới; bỏ phần giữ 068 thì in CHUA-AP-068 và đổi 0 dòng; không ném; lược đồ riêng ở bản 078 (không bảng party_contacts, view 070): runTransformZalo và buocDem thật thoát 0, log chứa CHUA-AP-079, md5 tin S03 trước bằng sau, parties có người mới của lượt; chiều đỏ: bỏ rào dò bảng thì ca đỏ nêu ô chua-ap-079 với lỗi relation; chạy khối so-chua-xac-minh của 450_dq_checks.sql trên lược đồ riêng: tin S03 có dấu → pass, thêm một tin S05 mang nhãn không dấu (view đột biến) → fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_test
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/lib/lien-lac-nguoi.mjs, pipeline/do-danh-ba-sdt.mjs, pipeline/scripts/enrich-nguoi-s03.test.mjs, pipeline/scripts/enrich-nguoi-s03.itest.mjs]
+    expected: "exit 0; ca EN-AC-6: sau gán, dungNguoi + dungLienLac lượt kế: đếm registry_aliases kind sdt, parties, party_contacts trước bằng sau; capMotMot, sellersThieuNguoi, nhomNhieuNhieu và tinhSo của do-danh-ba-sdt (N1–N5) trả cùng kết quả như trước gán. Chiều đỏ cùng fixture: bản rutDinhDanh bỏ chặn dấu s03-qua-nguoi-dang sinh bí danh mới và ca nêu ô nhan-so"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.en_api
+    paths: [app/src/lib/offers-public.ts, app/src/app/api/v1/listings/**, app/src/components/listing/offer-label-help.tsx, app/src/components/marketing/methodology-definitions.tsx, app/tests/enrich-nguoi-s03.test.tsx]
+    expected: "exit 0; hai route thật trên lược đồ tạm có view 079: tin S03 số suy → danh sách hasPhone true, phoneInferred true, JSON danh sách không khớp mẫu SĐT; /contact trả inferred true; tin S03 số trực tiếp trả inferred false; OFFER_LABEL_HELP.phone.body và mục so-chua-xac-minh chứa «tin hoặc bài khác». Chiều đỏ: view 070 (không luật S03) thì ca nêu phoneInferred của tin s03-suy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7u
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    route: /vn/hanoi/listings/rent
+    steps:
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3463, DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en_ui (DB thử đã áp 079 và đã ghi thật bước đêm: Người, liên lạc, gán số — dựng sẵn trước lượt chấm); không ghi DB dùng chung"
+      - "Trước khi chụp, chèn style che số: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
+      - "Truy vấn chỉ đọc DB thử: một tin thuê S03 hiện công khai mang dấu s03-qua-nguoi-dang; ghi mã tin, không ghi số"
+      - "Mở trang tin đó (/vn/listing/<id> hoặc thẻ trên trang Cho thuê): Badge «Chưa xác minh» cạnh Xem số, chụp evidence/E7u-truoc.png; bấm Xem số, số hiện thành link gọi, Badge còn, chụp evidence/E7u-sau.png"
+      - "Chụp nguyên thẻ S03 có cả nhãn cấp tin và nhãn cạnh số, evidence/E7u-hai-nhan.png"
+      - "Rê chuột lên Badge số, popover «Số chưa xác minh» nói «tin hoặc bài khác», chụp evidence/E7u-giai-thich.png; rê lên nhãn cấp tin, popover «Tin chưa xác minh» nói về tin nhóm cộng đồng, chụp evidence/E7u-giai-thich-tin.png"
+    paths: [app/src/components/listing/offer-contact.tsx, app/src/components/listing/offer-label-help.tsx]
+    expected: "năm ảnh đúng mô tả; hai popover mang hai tên khác nhau; ảnh không lộ số"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.en_do
+    paths: [pipeline/do-lien-lac-nguoi.mjs, pipeline/lib/lien-lac-nguoi.mjs, pipeline/gan-sdt-qua-nguoi.mjs, db/migrations/079_*.sql]
+    expected: "exit 0; trên DB thử: in dòng truoc/sau theo ban, thue; dòng gan theo rule; so_chung, nhieu_so, khong_nguoi; sau - truoc = gan và gan > 0; gan theo rule so_tren_tin, so_trong_bai và theo ban/thue lệch ≤ 15% so với mốc 06/11 (662, 80; thuê 586, bán 156) quy đổi theo số tin S03 sống của bản sao, lệch thì thoát 1 và in rule lệch; ca đột biến tắt rule so_trong_bai thì thoát 1 nêu rule; md5_khop=true; từ chối DB tên oneinvest (thoát 2); đầu ra không khớp mẫu SĐT dạng +84 lẫn 0; ca đột biến trong test cho bất biến sai thì thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: judgment
+    inputs: [_acceptance/enrich-nguoi-s03/evidence/doc-mu-30.md]
+    question: "Tệp ghi kết quả đọc mù 30 Người (mỗi dòng: mã mẫu, nhãn dung/sai/khong_ro, lý do một câu không chứa số hay tên). Đếm có đủ 30 dòng không, số dung có ≥ 27 không, số sai mà lý do nói rõ là số của người khác có ≤ 1 không, và tệp có chứa chuỗi dạng SĐT hay chữ bài gốc không?"
+    expected: "30 dòng; dung ≥ 27; sai-rõ-người-khác ≤ 1; không có SĐT hay chữ bài"
+    evidence_required: [verdict, rationale]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    inputs: [docs/adr/0011-reso-first-data-law.md, docs/adr/0016-danh-ba-vat-the-va-nguoi.md, CONTEXT.md, pipeline/mappings.yaml, docs/ROADMAP.md]
+    question: "Các tệp này có đủ: mappings.yaml khai contact_kind, contact_rule và luật s03-qua-nguoi-dang đủ sáu điều kiện ADR-0011 Qđ 3; CONTEXT.md có thuật ngữ «Liên lạc của Người» theo khuôn (nhãn, code, định nghĩa, _Avoid_) và mục «Chưa xác minh» cạnh Xem số nói tin hoặc bài khác; ADR-0016 §8 có dòng sửa đổi tách liên lạc khỏi bí danh định danh; ROADMAP ghi as-built và việc chờ áp 079, liên lạc hồ sơ kênh S03 của ZCode?"
+    expected: "bốn vế đều có trong tệp"
+    evidence_required: [verdict, rationale]

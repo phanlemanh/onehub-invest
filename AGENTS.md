@@ -131,6 +131,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    `/ops/**` ở cloud và đi qua `ops_heartbeat`; không đánh `data-tier-a`. Tên nguồn thật vẫn tầng A — ngoài
    `/ops/sources` chỉ mã `S0x` kèm vai trò, ở cả cloud lẫn máy thu; dạng `S08-<tên thật>` chỉ ở `/ops/sources`
    của máy thu (Mạnh chốt 26/10).
+   **Gửi model đọc tin** (Mạnh chốt 2026-11-06, sửa đổi ADR-0007): chữ bài, ảnh, tên nhóm và tên nguồn in sẵn trong bài
+   được gửi nguyên văn, không che, tới đúng ba model Haiku, DeepSeek V4.1 Flash, GLM-5.3 Flash. Không gửi hồ sơ user app,
+   định danh tài khoản thu, phiên/khoá/QR, bảng giải mã nguồn. Mọi chỗ khác tầng A giữ nguyên.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
@@ -187,7 +190,7 @@ cd collector && npm run check && npm run build && npm run collect -- list-source
 cd collector && npm test
 
 # pipeline (Node .mjs)
-cd pipeline && npm test
+cd pipeline && npm test                   # npm test của app, pipeline, agent tự chạy trên DB của riêng lượt (db/db-thu.sh --chay); thiếu container thì dừng, không rơi về DB chung
 cd pipeline && bash finalize-hanoi.sh     # import → transform → metrics (Hà Nội)
 
 # data-api — :3001

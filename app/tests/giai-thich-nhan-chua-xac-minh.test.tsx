@@ -92,7 +92,7 @@ async function moNhan(the: Card, tenNhan: string, o: Partial<PublicOffer>) {
 
 const CA = [
   { ten: "Tin chưa xác minh", o: { unverified: true }, doan: "nhóm cộng đồng", muc: "/methodology#chua-xac-minh" },
-  { ten: "Số chưa xác minh", o: { phoneInferred: true }, doan: "suy từ tin khác", muc: "/methodology#so-chua-xac-minh" },
+  { ten: "Số chưa xác minh", o: { phoneInferred: true }, doan: "suy từ tin hoặc bài khác", muc: "/methodology#so-chua-xac-minh" },
 ]
 
 test("GT-AC-1 bấm nhãn trên thẻ ra đúng lời giải thích và đúng mục Phương pháp", async () => {

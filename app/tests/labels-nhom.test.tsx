@@ -1121,3 +1121,333 @@ test("GCN-AC-3 bieu mau that gui gia tri qua route: điền đủ 17 ô trên m�
     globalThis.fetch = gocFetch
   }
 })
+
+test("TND-AC-6 lỗi theo ô: sửa ô thì lỗi ô đó mất, giá xoá cả hai đầu, ô khác giữ lỗi", async () => {
+  const LOI = { area_m2: "Diện tích phải là số", price_min_vnd: "Giá thấp nhất sai", price_max_vnd: "Giá cao nhất sai", building: "Toà sai", kind: "Loại tin sai" }
+  const gocFetch = globalThis.fetch
+  globalThis.fetch = (async () => new Response(JSON.stringify({ error: "Có trường sai", loi: LOI }), { status: 400 })) as unknown as typeof fetch
+  type Mod = typeof import("../src/components/ops/labels/label-form-nhom")
+  // Bảng kỳ vọng viết trước: sau mỗi bước, các ô còn mang lỗi.
+  // Bốn cách sửa của trục Coverage: gõ giá (cả hai đầu), tick, chọn, đổi đơn vị giá (lưu lại để có lỗi giá mới trước khi đổi).
+  const KY_VONG = [
+    ["area_m2", "building", "kind", "price_max_vnd", "price_min_vnd"],
+    ["area_m2", "building", "kind"],
+    ["building", "kind"],
+    ["building"],
+    ["area_m2", "building", "kind", "price_max_vnd", "price_min_vnd"],
+    ["area_m2", "building", "kind"],
+  ]
+  const chay = async (mod: Mod) => {
+    const dom = await dungDom()
+    try {
+      const tin = { itemId: 1, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null }
+      await dom.render(<mod.LabelFormNhom lat="x" tin={tin} hrefXem="/xem" hrefTinKe="/ke" diToi={() => {}} baoTin={() => {}} />)
+      const coLoi = () => [...document.querySelectorAll("[data-o][data-loi]")].map((e) => e.getAttribute("data-o")!).filter((o) => o !== "reason").sort()
+      const thay: string[][] = []
+      await dom.bam("Lưu và xem máy đọc")
+      await dom.cho(() => coLoi().length > 0)
+      thay.push(coLoi())
+      await dom.go("nhan-price_min_vnd", "4,35")
+      thay.push(coLoi())
+      await dom.nhan(document.querySelector('[aria-label="Diện tích: không suy ra được"]'), "ô Không suy ra được của Diện tích")
+      thay.push(coLoi())
+      await dom.nhan(document.querySelector('[data-o="kind"] button'), "lựa chọn đầu của Loại tin")
+      thay.push(coLoi())
+      await dom.bam("Lưu và xem máy đọc")
+      await dom.cho(() => coLoi().length > 1)
+      thay.push(coLoi())
+      await dom.nhan([...document.querySelectorAll('[aria-label="Đơn vị giá"] button')].find((b) => b.textContent?.trim() === "triệu"), "đơn vị triệu")
+      thay.push(coLoi())
+      return thay
+    } finally {
+      await dom.xong()
+    }
+  }
+  try {
+    assert.deepEqual(await chay(await import("../src/components/ops/labels/label-form-nhom")), KY_VONG, "LOI CU CON SAU KHI SUA O")
+    // Chiều đỏ: bản không bỏ lỗi khi sửa ô giữ nguyên lỗi cũ.
+    const dot = await banDot<Mod>("src/components/ops/labels/label-form-nhom.tsx", "    boLoi(O_GIA.includes(f) ? O_GIA : [f])\n", "")
+    assert.notDeepEqual(await chay(dot), KY_VONG, "đối chứng không đỏ: LOI CU CON SAU KHI SUA O")
+    // Chiều đỏ riêng của nút đơn vị giá: bản đổi đơn vị mà không bỏ lỗi giá.
+    const dotDonVi = await banDot<Mod>("src/components/ops/labels/label-form-nhom.tsx", "setDonVi(v[0] as PriceUnit)\n                                boLoi(O_GIA)", "setDonVi(v[0] as PriceUnit)")
+    assert.notDeepEqual(await chay(dotDonVi), KY_VONG, "đối chứng không đỏ: LOI GIA CON SAU KHI DOI DON VI")
+  } finally {
+    globalThis.fetch = gocFetch
+  }
+})
+
+test("THN-AC-1 tin hai người chưa ai gắn xếp cuối nhóm: tin đơn ra trước, người hai vẫn nhận tin trùng trước, tiến độ không đổi", async () => {
+  // Hai tin trùng đứng đầu và giữa nhóm U-A (i1, i3), tin đơn i2, i4; U-B hai tin đơn (i5, i6).
+  const datTrung = async () => {
+    await datLat()
+    await sc.query(`UPDATE eval_label_items SET double_label = (item_id IN (1, 3)) WHERE lat = $1`, [LAT])
+  }
+  const ch = chuanHoaLuot(DU, { text: CHU })
+  assert.ok(ch.ok)
+  type Mod = typeof import("../src/lib/labels-queries")
+  const chay = async (m: Mod, u: string, nhom: string | null) => {
+    const thay: (number | null)[] = []
+    for (let k = 0; k < 8; k++) {
+      const id = (await m.tinKe(u, LAT, sc, nhom))?.itemId ?? null
+      thay.push(id)
+      if (id === null) break
+      assert.deepEqual(await m.ghiNhan(sc, u, LAT, id, ch.rows, "lý do"), { ok: true })
+    }
+    return thay
+  }
+  const q = await import("../src/lib/labels-queries")
+  const soNhom = async (u: string) => (await q.nhomCuaLat(u, LAT, sc)).filter((n) => n.unitCode === "U-A").map((n) => [n.tong, n.conChoToi, n.choNguoiHai])
+  // Bảng kỳ vọng viết trước. Theo nhóm: tin đơn tăng dần rồi tin trùng tăng dần. Không nhóm: cả lát, tin trùng cuối.
+  const KY_NHOM = [2, 4, 1, 3, null]
+  const KY_CA_LAT = [2, 4, 5, 6, 1, 3, null]
+  await datTrung()
+  const a = await taoNguoi(sc, "ops")
+  const truoc = await q.tienDo(a.id, LAT, sc, "U-A")
+  assert.deepEqual([truoc.tong, truoc.conChoToi, truoc.trungTong], [4, 4, 2], "tiến độ đếm đủ tin trùng")
+  assert.deepEqual(await soNhom(a.id), [[4, 4, 0]])
+  assert.deepEqual(await chay(q, a.id, "U-A"), KY_NHOM, "THE HAI NGUOI CHAN NHOM")
+  const sau = await q.tienDo(a.id, LAT, sc, "U-A")
+  assert.deepEqual([sau.tong, sau.cuaToi, sau.conChoToi, sau.trungTong], [4, 4, 0, 2])
+  assert.deepEqual(await soNhom(a.id), [[4, 0, 2]], "hai tin trùng chờ người thứ hai")
+  assert.equal((await sc.query(`SELECT count(*)::int AS n FROM eval_label_items WHERE lat = $1 AND double_label`, [LAT])).rows[0].n, 2, "không xoá, không đổi cờ tin trùng")
+  // Không chọn nhóm: cùng luật trên cả lát.
+  await datTrung()
+  const a2 = await taoNguoi(sc, "ops")
+  assert.deepEqual(await chay(q, a2.id, null), KY_CA_LAT, "THE HAI NGUOI CHAN LAT KHI KHONG CHON NHOM")
+  // Người hai nhận tin trùng đã một người gắn trước tin đơn còn trống của nhóm.
+  await datTrung()
+  const a3 = await taoNguoi(sc, "ops")
+  const b = await taoNguoi(sc, "ops")
+  assert.deepEqual(await q.ghiNhan(sc, a3.id, LAT, 3, ch.rows, "lý do"), { ok: true })
+  assert.equal((await q.tinKe(b.id, LAT, sc, "U-A"))?.itemId, 3, "CAP TRUNG KHONG DUNG TRUOC")
+  // Chiều đỏ: bản xếp cũ (chỉ theo item_id) và bản bỏ khoá cặp-trước, mỗi bản ra kết quả khác.
+  await datTrung()
+  const cu = await banDot<Mod>("src/lib/labels-queries.ts", "= 1) DESC, i.double_label, i.item_id", "= 1) DESC, i.item_id")
+  assert.notDeepEqual(await chay(cu, (await taoNguoi(sc, "ops")).id, "U-A"), KY_NHOM, "đối chứng không đỏ: THE HAI NGUOI CHAN NHOM")
+  await datTrung()
+  const boCap = await banDot<Mod>("src/lib/labels-queries.ts", "ORDER BY (i.double_label AND coalesce(n.so, 0) = 1) DESC, i.double_label, i.item_id", "ORDER BY i.double_label, i.item_id")
+  const a4 = await taoNguoi(sc, "ops")
+  const b4 = await taoNguoi(sc, "ops")
+  assert.deepEqual(await q.ghiNhan(sc, a4.id, LAT, 3, ch.rows, "lý do"), { ok: true })
+  assert.notEqual((await boCap.tinKe(b4.id, LAT, sc, "U-A"))?.itemId, 3, "đối chứng không đỏ: CAP TRUNG KHONG DUNG TRUOC")
+})
+
+// ---------- don-vi-gia-theo-loai-tin ----------
+const TIN_DVG = { itemId: 4321, lat: "x", doubleLabel: false, soNguoi: 0, text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null }
+type ManNhom = typeof import("../src/components/ops/labels/label-form-nhom")
+const NHOM_FORM = "src/components/ops/labels/label-form-nhom.tsx"
+const tenLoai = async (ma: string) => (await import("../src/lib/labels-normalize")).selectOptions("kind").find((o) => o.value === ma)!.label
+const nutLoai = (ten: string) => [...document.querySelectorAll('[data-o="kind"] button')].find((b) => b.textContent?.trim() === ten)
+const nutDonVi = (chu: string) => [...document.querySelectorAll('[aria-label="Đơn vị giá"] button')].find((b) => b.textContent?.trim() === chu)
+const donViSang = () => [...document.querySelectorAll('[aria-label="Đơn vị giá"] button')].find((b) => b.getAttribute("aria-pressed") === "true")?.textContent?.trim()
+
+test("DVG-AC-1 đơn vị giá theo Loại tin: Cho thuê là triệu, Bán là tỷ, bỏ chọn giữ nguyên; người tự bấm đơn vị (kể cả nút đang sáng) thì Loại tin không ghi đè", async () => {
+  const [THUE, BAN] = [await tenLoai("rent_lt"), await tenLoai("sale")]
+  // Bảng kỳ vọng viết trước. Lượt A: khởi đầu, Cho thuê, bỏ chọn, Bán, bấm tay triệu, Bán (bỏ rồi chọn lại), Cho thuê.
+  // Lượt B (biểu mẫu mới): bấm lại «tỷ» đang sáng, rồi Cho thuê.
+  const KY = { a: ["tỷ", "triệu", "triệu", "tỷ", "triệu", "triệu", "triệu"], b: ["tỷ", "tỷ"] }
+  const chay = async (mod: ManNhom) => {
+    const kq: { a: (string | undefined)[]; b: (string | undefined)[] } = { a: [], b: [] }
+    for (const luot of ["a", "b"] as const) {
+      const dom = await dungDom()
+      try {
+        await dom.render(<mod.LabelFormNhom lat="x" tin={TIN_DVG} hrefXem="/xem" hrefTinKe="/ke" diToi={() => {}} baoTin={() => {}} />)
+        const t = kq[luot]
+        if (luot === "a") {
+          t.push(donViSang())
+          await dom.nhan(nutLoai(THUE), "Cho thuê")
+          t.push(donViSang())
+          await dom.nhan(nutLoai(THUE), "bỏ chọn Cho thuê")
+          t.push(donViSang())
+          await dom.nhan(nutLoai(BAN), "Bán")
+          t.push(donViSang())
+          await dom.nhan(nutDonVi("triệu"), "đơn vị triệu bấm tay")
+          t.push(donViSang())
+          await dom.nhan(nutLoai(BAN), "bỏ chọn Bán")
+          await dom.nhan(nutLoai(BAN), "Bán")
+          t.push(donViSang())
+          await dom.nhan(nutLoai(THUE), "Cho thuê")
+          t.push(donViSang())
+        } else {
+          await dom.nhan(nutDonVi("tỷ"), "bấm lại tỷ đang sáng")
+          t.push(donViSang())
+          await dom.nhan(nutLoai(THUE), "Cho thuê")
+          t.push(donViSang())
+        }
+      } finally {
+        await dom.xong()
+      }
+    }
+    return kq
+  }
+  assert.deepEqual(await chay(await import("../src/components/ops/labels/label-form-nhom")), KY, "DON VI KHONG THEO LOAI TIN")
+  const khongTheo = await banDot<ManNhom>(NHOM_FORM, "const theoLoai = f === \"kind\"", "const theoLoai = false && f === \"kind\"")
+  assert.notDeepEqual((await chay(khongTheo)).a, KY.a, "đối chứng không đỏ: DON VI KHONG THEO LOAI TIN")
+  const deTay = await banDot<ManNhom>(NHOM_FORM, "patch.value !== undefined && !donViTay ?", "patch.value !== undefined ?")
+  assert.notDeepEqual((await chay(deTay)).a, KY.a, "đối chứng không đỏ: LOAI TIN DE LUA CHON TAY")
+  const sangKhongTinh = await banDot<ManNhom>(NHOM_FORM, "                              setDonViTay(true)\n                              if (v[0]) {", "                              if (v[0]) {\n                                setDonViTay(true)")
+  assert.notDeepEqual((await chay(sangKhongTinh)).b, KY.b, "đối chứng không đỏ: BAM LAI NUT SANG KHONG TINH LA TAY")
+})
+
+test("DVG-AC-2 giá lạ so với Loại tin: hỏi lại một lần nêu giá và đơn vị, Sửa lại không gửi, Vẫn lưu gửi đúng; đổi giá thì hỏi lại; giá thường và ô không suy ra được không hỏi", async () => {
+  type ManGia = typeof import("../src/components/ops/labels/gia-la")
+  // Biên viết trước của cauGiaLa: [loại, [thấp, cao], đơn vị] → có hỏi.
+  const BIEN: [string | undefined, string[], "ty" | "trieu", boolean][] = [
+    ["rent_lt", ["999", ""], "trieu", false], ["rent_lt", ["1000", ""], "trieu", true], ["rent_lt", ["0,999", ""], "ty", false], ["rent_lt", ["1", ""], "ty", true],
+    ["rent_lt", ["15", "15000"], "trieu", true], ["sale", ["99", ""], "trieu", true], ["sale", ["100", ""], "trieu", false], ["sale", ["5", "5"], "ty", false],
+    ["sale", ["0", ""], "ty", true], ["sale", ["5", "50"], "trieu", true], [undefined, ["11000", ""], "ty", false], ["rent_lt", ["11.000", ""], "ty", false],
+  ]
+  const bien = (m: ManGia) => BIEN.map(([k, g, u]) => m.cauGiaLa(k, g, u) !== null)
+  const goc = await import("../src/components/ops/labels/gia-la")
+  assert.deepEqual(bien(goc), BIEN.map((b) => b[3]), "NGUONG GIA LA SAI")
+  assert.match(goc.cauGiaLa("rent_lt", ["11000", ""], "ty")!, /11000 tỷ một tháng/)
+  assert.match(goc.cauGiaLa("sale", ["50", ""], "trieu")!, /50 triệu/)
+  for (const [tu, thanh, ten] of [
+    ["v >= MOT_TY", "v > MOT_TY", ">= thanh >"], ["BigInt(1_000_000_000)", "BigInt(10_000_000_000)", "nguong thue 10 ty"],
+    ["BigInt(100_000_000)", "BigInt(60_000_000)", "nguong ban 60 trieu"], ["for (const s of gia)", "for (const s of gia.slice(0, 1))", "chi xet gia thap nhat"],
+    ["${TEN[unit]} một tháng", "${TEN.ty} một tháng", "sai ten don vi"],
+  ] as const) {
+    const dot = await banDot<ManGia>("src/components/ops/labels/gia-la.ts", tu, thanh)
+    const khac = JSON.stringify(bien(dot)) !== JSON.stringify(BIEN.map((b) => b[3])) || !/1500 triệu một tháng/.test(dot.cauGiaLa("rent_lt", ["1500", ""], "trieu") ?? "")
+    assert.ok(khac, `đối chứng không đỏ: ${ten}`)
+  }
+  const [THUE, BAN] = [await tenLoai("rent_lt"), await tenLoai("sale")]
+  const gocFetch = globalThis.fetch
+  const gui: { min?: { value?: string; unit?: string; not_stated?: boolean } }[] = []
+  globalThis.fetch = (async (_u: string, init: RequestInit) => {
+    gui.push({ min: JSON.parse(String(init.body)).values.price_min_vnd })
+    return new Response("{}", { status: 200 })
+  }) as unknown as typeof fetch
+  // Bảng kỳ vọng viết trước: sau mỗi bước [hộp mở, chữ hộp có giá và đơn vị, số lần gửi].
+  const KY = [
+    [true, "11000 tỷ", 0], // thuê, tỷ bấm tay, 11000: hỏi
+    [false, "", 0], // Sửa lại
+    [true, "11000 tỷ", 0], // lưu lại: vẫn hỏi
+    [false, "", 1], // Vẫn lưu
+    [false, "", 2], // lưu lại đúng bộ đã xác nhận: không hỏi
+    [true, "12000 tỷ", 2], // đổi giá sau khi xác nhận: hỏi lại
+    [false, "", 2], // Sửa lại
+    [false, "", 3], // tick giá không suy ra được: không hỏi, gửi not_stated
+    [false, "", 4], // bỏ tick, thuê 15 triệu: không hỏi
+    [false, "", 5], // Bán, 5 tỷ: không hỏi
+    [true, "50 triệu", 5], // Bán 50 triệu: hỏi
+  ]
+  const chay = async (mod: ManNhom) => {
+    gui.length = 0
+    const dom = await dungDom()
+    try {
+      await dom.render(<mod.LabelFormNhom lat="x" tin={TIN_DVG} hrefXem="/xem" hrefTinKe="/ke" diToi={() => {}} baoTin={() => {}} />)
+      const hop = () => document.querySelector("[data-labels-hoi-gia]")
+      const buoc: [boolean, string, number][] = []
+      const ghi = (canChu = "") => buoc.push([!!hop(), hop() && canChu && hop()!.textContent?.includes(canChu) ? canChu : "", gui.length])
+      const luu = async (n: number) => { await dom.bam("Lưu và xem máy đọc"); await dom.cho(() => !!hop() || gui.length >= n) }
+      await dom.nhan(nutLoai(THUE), "Cho thuê")
+      await dom.nhan(nutDonVi("tỷ"), "tỷ bấm tay")
+      await dom.go("nhan-price_min_vnd", "11000")
+      await luu(1); ghi("11000 tỷ")
+      if (hop()) await dom.bam("Sửa lại")
+      ghi()
+      await luu(1); ghi("11000 tỷ")
+      if (hop()) await dom.bam("Vẫn lưu")
+      await dom.cho(() => gui.length >= 1); ghi()
+      await luu(2); ghi()
+      await dom.go("nhan-price_min_vnd", "12000")
+      await luu(3); ghi("12000 tỷ")
+      if (hop()) await dom.bam("Sửa lại")
+      ghi()
+      const tickGia = () => document.querySelector('[data-o="price_min_vnd"] [role="checkbox"]')
+      await dom.nhan(tickGia(), "giá không suy ra được")
+      await luu(3); ghi()
+      await dom.nhan(tickGia(), "bỏ tick giá")
+      await dom.go("nhan-price_min_vnd", "15")
+      await dom.nhan(nutDonVi("triệu"), "triệu")
+      await luu(4); ghi()
+      await dom.nhan(nutLoai(BAN), "Bán")
+      await dom.nhan(nutDonVi("tỷ"), "tỷ")
+      await dom.go("nhan-price_min_vnd", "5")
+      await luu(5); ghi()
+      await dom.go("nhan-price_min_vnd", "50")
+      await dom.nhan(nutDonVi("triệu"), "triệu")
+      await luu(6); ghi("50 triệu")
+      return { buoc, gui: [...gui] }
+    } finally {
+      await dom.xong()
+    }
+  }
+  try {
+    const kq = await chay(await import("../src/components/ops/labels/label-form-nhom"))
+    assert.deepEqual(kq.buoc, KY, "GIA LA KHONG HOI LAI")
+    assert.deepEqual(kq.gui[0].min, { value: "11000", unit: "ty", basis: "chu_bai" }, "Vẫn lưu gửi đúng giá và đơn vị người chọn")
+    assert.deepEqual(kq.gui[2].min, { not_stated: true }, "ô không suy ra được gửi not_stated, không hỏi giá cũ")
+    for (const [tu, thanh, ten] of [
+      ["if (cau && !xacNhan && daXacNhan !== khoa) {", "if (false) {", "GIA LA KHONG HOI LAI"],
+      ["if (cau && !xacNhan && daXacNhan !== khoa) {", "if (cau && !xacNhan) {", "HOI LAI SAU KHI DA XAC NHAN"],
+      ["const khoa = JSON.stringify([tin.itemId, kind, gia, donVi])", "const khoa = JSON.stringify([kind])", "KHOA XAC NHAN THO"],
+      ["const gia = O_GIA.map((f) => (cell(f).unknown ? \"\" : cell(f).value))", "const gia = O_GIA.map((f) => cell(f).value)", "HOI GIA DA TICK KHONG SUY RA"],
+    ] as const) {
+      const dot = await banDot<ManNhom>(NHOM_FORM, tu, thanh)
+      assert.notDeepEqual((await chay(dot)).buoc, KY, `đối chứng không đỏ: ${ten}`)
+    }
+  } finally {
+    globalThis.fetch = gocFetch
+  }
+})
+
+test("DVG-AC-3 mã thẻ «#<item_id>» mở đầu dòng mô tả ở lượt một (hai lát) và lượt hai, bấm thì chép đúng mã, bảng tạm bị chặn thì báo", async () => {
+  type ManView = typeof import("../src/components/ops/labels/labels-view")
+  type ManHai = typeof import("../src/components/ops/labels/luot-hai")
+  const T = { tong: 4, cuaToi: 0, conChoToi: 4, trungDu: 0, trungTong: 0 }
+  const d = { itemId: 4321, lat: "x", text: "chữ", anh: [], soLinkKhac: 0, ghep: null, groupName: "N", postedAt: null, lyDo: null, truongHop: [], soTin: 0, the: null, cuaToi: [], boDoc: null, aiDoc: null }
+  // Mã là con đầu của đúng dòng mô tả chứa «S03 · », trong khối có lớp text-xs.
+  const dauDong = (html: string) => {
+    const m = /<(div|p)\b([^>]*)><button\b([^>]*)>#4321(?:(?!<\/button>)[\s\S])*<\/button> · S03 · /.exec(html)
+    return !!m && /class="[^"]*\btext-xs\b/.test(m[2]) && /data-labels-ma-the="4321"/.test(m[3])
+  }
+  const ba = async (v: ManView, n: ManNhom, h: ManHai) => [
+    dauDong(renderToStaticMarkup(<v.LabelsView mode="local" lat="x" coGhi tienDo={T} dongThuan={[]} tin={TIN_DVG} />)),
+    dauDong(renderToStaticMarkup(<n.LabelFormNhom lat="x" tin={TIN_DVG} hrefXem="/xem" hrefTinKe="/ke" />)),
+    dauDong(renderToStaticMarkup(<h.LuotHai d={d} hrefTinKe="/x" />)),
+  ]
+  const [v, n, h] = [await import("../src/components/ops/labels/labels-view"), await import("../src/components/ops/labels/label-form-nhom"), await import("../src/components/ops/labels/luot-hai")]
+  assert.deepEqual(await ba(v, n, h), [true, true, true], "THIEU MA THE DAU DONG")
+  // Bản chép đột biến biên dịch JSX theo kiểu cũ: cần React ở global khi ca chạy riêng.
+  Object.assign(globalThis, { React: await import("react") })
+  const vDot = await banDot<ManView>("src/components/ops/labels/labels-view.tsx", "<MaThe itemId={tin.itemId} /> · S03 ·", "S03 ·")
+  const nDot = await banDot<ManNhom>(NHOM_FORM, "<MaThe itemId={tin.itemId} /> · S03 ·", "S03 ·")
+  const hDot = await banDot<ManHai>("src/components/ops/labels/luot-hai.tsx", "<MaThe itemId={d.itemId} /> · S03 ·", "S03 ·")
+  assert.deepEqual(await ba(vDot, nDot, hDot), [false, false, false], "đối chứng không đỏ: THIEU MA THE DAU DONG")
+  // sonner có hai bản (ESM và CJS) tuỳ đường nạp: thay toast.error ở cả hai để bắt lời báo của MaThe.
+  const { createRequire } = await import("node:module")
+  const hai = [(await import("sonner")).toast, createRequire(import.meta.url)("sonner").toast] as { error: (m: string) => unknown }[]
+  const goc = hai.map((t) => t.error)
+  const bao: string[] = []
+  for (const t of hai) t.error = (m: string) => { bao.push(m) }
+  try {
+    for (const kieu of ["chep", "tu-choi", "khong-co"] as const) {
+      const dom = await dungDom()
+      try {
+        const chep: string[] = []
+        const clip = kieu === "khong-co" ? undefined : { writeText: async (t: string) => { if (kieu === "tu-choi") throw new Error("chặn"); chep.push(t) } }
+        Object.defineProperty(globalThis.navigator, "clipboard", { value: clip, configurable: true })
+        const { MaThe } = await import("../src/components/ops/labels/ma-the")
+        await dom.render(<MaThe itemId={4321} />)
+        const nut = () => document.querySelector('[data-labels-ma-the="4321"]')
+        assert.equal(nut()?.getAttribute("aria-label"), "Chép mã thẻ 4321")
+        const truoc = bao.length
+        await dom.nhan(nut(), "mã thẻ")
+        await dom.cho(() => chep.length > 0 || bao.length > truoc)
+        if (kieu === "chep") {
+          assert.deepEqual(chep, ["4321"], "CHEP SAI MA THE")
+          assert.equal(nut()?.getAttribute("aria-label"), "Đã chép mã thẻ 4321")
+        } else {
+          assert.deepEqual([chep.length, bao.slice(truoc)], [0, ["Không chép được mã thẻ"]], `BANG TAM BI CHAN KHONG BAO (${kieu})`)
+          assert.equal(nut()?.getAttribute("aria-label"), "Chép mã thẻ 4321", "không báo đã chép khi không chép được")
+        }
+      } finally {
+        await dom.xong()
+      }
+    }
+  } finally {
+    hai.forEach((t, i) => { t.error = goc[i] })
+  }
+})

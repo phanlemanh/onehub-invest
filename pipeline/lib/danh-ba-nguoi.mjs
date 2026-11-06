@@ -4,6 +4,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { ALIAS_KIND, ASSERTION_METHOD, EVIDENCE_TIER, PARTY_ROLE } from "./vocab.generated.mjs";
 import { SQL_THE, dungThe, lanGopTheoThe, nhomNhieuNhieu, theChoAp } from "./the-duyet-nguoi.mjs";
+import { RULE_QUA_NGUOI } from "./nap-079.mjs";
 
 /** Vai bộ dựng được ghi — không vai suy luận (môi giới, sàn) ở hàng này (AC-9). */
 export const VAI_GHI = Object.freeze([PARTY_ROLE.nguoi_dang]);
@@ -37,15 +38,22 @@ const sach = (s) => (typeof s === "string" && s.trim() !== "" ? s.trim() : null)
 
 /** Dấu xuất xứ của số S06 đọc trực tiếp trên chính tin (gan-sdt-s06). Danh bạ S06 chỉ nhận số mang đúng dấu này. */
 export const RULE_TRUC_TIEP = "s06-so-tren-tin";
-/** Tin có quyền sinh bí danh SĐT, viết với bí danh bảng `o`: số S06 phải mang dấu trực tiếp, nguồn khác không xét dấu. */
-export const TIN_VAO_DANH_BA = `NOT (o.source = 'S06' AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_TRUC_TIEP}')`;
+/** Dấu số suy qua người đăng (enrich-nguoi-s03, gan-sdt-qua-nguoi): số lấy từ liên lạc của Người, không đọc từ chính tin. */
+export { RULE_QUA_NGUOI };
+/** Tin có quyền sinh bí danh SĐT, viết với bí danh bảng `o`: số S06 phải mang dấu trực tiếp; số mang dấu suy qua người đăng thì
+ * không bao giờ (ADR-0016 §7 không tự nuôi); nguồn khác không xét dấu. */
+export const TIN_VAO_DANH_BA = `(NOT (o.source = 'S06' AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_TRUC_TIEP}')
+     AND o.field_provenance->'seller_phone'->>'rule_id' IS DISTINCT FROM '${RULE_QUA_NGUOI}')`;
 
 /** Luật dương: số ghép theo tài khoản hay mất dấu đều không tính là bằng chứng của số trên tin. */
 export const coBangChungSdt = (tin) => tin.field_provenance?.seller_phone?.rule_id === RULE_TRUC_TIEP;
+/** Số trên tin là số suy qua người đăng — không bao giờ là bằng chứng, ở mọi nguồn. */
+export const laSoSuy = (tin) => tin.field_provenance?.seller_phone?.rule_id === RULE_QUA_NGUOI;
 
 /**
  * Định danh người đăng của một tin.
  * S06: tài khoản = phần số của seller_ref `ct:<số>`; số chỉ tính khi có dấu trực tiếp. S03/S05: người gửi của từng bài trong post_ids, cùng nguồn.
+ * Số mang dấu suy qua người đăng không tính ở mọi nguồn.
  * @param {{ source: string, seller_ref?: string|null, seller_name?: string|null, seller_phone?: string|null, post_ids?: string[]|null, field_provenance?: object|null }} tin
  * @param {Map<string, { source: string, sender_id: string|null, sender_name: string|null }>} baiTheoId
  */
@@ -69,7 +77,7 @@ export function rutDinhDanh(tin, baiTheoId) {
     taiKhoan.push(...theo.values());
     if (taiKhoan.length) field = "post_ids";
   }
-  const sdt = tin.source === "S06" && !coBangChungSdt(tin) ? null : sach(tin.seller_phone);
+  const sdt = (tin.source === "S06" && !coBangChungSdt(tin)) || laSoSuy(tin) ? null : sach(tin.seller_phone);
   return { taiKhoan, sdt, field };
 }
 

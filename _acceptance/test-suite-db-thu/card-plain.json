@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Chạy bộ kiểm thử của ứng dụng, đường ống dữ liệu và tác tử không còn làm chậm job đêm, và các phiên làm việc thôi phải chờ nhau vì tranh khoá trên DB chung.",
+  "scope_plain": "Các lệnh kiểm từng tệp lẻ của hồ sơ khác chưa đổi, nên vẫn có thể tranh khoá với job; việc đó tách riêng theo số đo sau ba ngày."
+}

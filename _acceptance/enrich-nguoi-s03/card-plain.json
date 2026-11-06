@@ -1,0 +1,136 @@
+{
+  "feature_plain": "Tin cho thuê, tin bán S03 không ghi số sẽ có số liên lạc lấy từ chính người đăng (số họ ghi ở tin khác hoặc khi trả lời trong nhóm), hiện qua nút Xem số kèm nhãn «Chưa xác minh» — ước 742 tin, trong đó 586 tin thuê.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ ghi cho mỗi người đăng những số chỉ thuộc riêng họ, phân biệt số họ ghi trên tin với số chỉ có trong bài trả lời; số xuất hiện ở bài của người khác thì không gán cho ai."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ giữ sổ số liên lạc chỉ thêm, rút phải có lý do; chạy lại không sinh dòng mới; số trở thành số chung thì tự rút; bài gốc tạm vắng thì không rút. Chừa sẵn ô cho link hồ sơ kênh S03."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ chọn số cho người đăng theo một luật: đúng một số trên tin của chính họ, không có thì đúng một số trong bài; còn lại không gán."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ gắn số đã chọn vào tin không có số của người đó, ghi rõ số này suy qua người đăng; tin tự có số thì giữ số của tin; tin S06, S05 không đổi; lượt nạp S03 hằng đêm không làm tin rơi về «Chưa có số»."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ không để số đã suy quay lại làm bằng chứng cho danh bạ hay sổ liên lạc, và các số đo danh bạ hằng đêm không đổi vì việc này."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ hiện số suy qua người đăng ở nút Xem số với nhãn «Chưa xác minh» như số ghép S06; danh sách tin không chứa số; lời giải thích nhãn nói số có thể suy từ tin hoặc bài khác của cùng tài khoản."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có lệnh đo trên bản sao DB máy thu: số tin có số trước và sau, theo thuê và bán, theo từng luật; lệch quá 15% so với số đo hôm nay thì báo đỏ; DB thật không đổi."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ đọc mù 30 người đăng ngẫu nhiên xem số được chọn có đúng là của chính họ không — đạt khi ít nhất 27 đúng và nhiều nhất 1 số rõ của người khác."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ ghi từ vựng, khai báo dữ liệu theo chuẩn RESO, sửa đổi nhỏ ở quyết định kiến trúc danh bạ Người, và ghi trạng thái vào lộ trình."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-5",
+      "p": "Chặn hỏng lượt đêm khi máy thu chưa áp bản cập nhật DB (079): nạp S03 và dựng danh bạ vẫn chạy như hôm nay, không gán số nào; nhãn chỉ bật cho đúng tin mang dấu suy, và kiểm chất lượng dữ liệu không đỏ oan."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG gọi hồ sơ chat hay lấy link hồ sơ người gửi — việc của làn ZCode, có rào an toàn kênh chat và lời anh trước khi gọi thật."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG áp lên DB máy thu, không chạy gán thật, không đẩy lên cloud — đó là lời riêng của anh, có sao lưu trước."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG bật gộp người, không gộp liên nguồn, không làm số liên lạc cho S05, S06."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG làm trang danh bạ Ops hiện số liên lạc, thẻ duyệt người nhiều số, hay gọi thử để xác minh."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Số đến từ đâu: trên tin của chính người đăng, chỉ trong bài trả lời, đã suy, hay không có — phủ bởi AC-1 (ghi số theo người) và AC-6 (không tự nuôi)."
+    },
+    {
+      "i": 1,
+      "p": "Số riêng hay số chung của nhiều người gửi — AC-1 và AC-2 (sổ liên lạc)."
+    },
+    {
+      "i": 2,
+      "p": "Người có 0, 1 hay nhiều số — AC-3 (luật chọn số); dữ liệu hôm nay có người tới 6 số."
+    },
+    {
+      "i": 3,
+      "p": "Tin sống hay nghỉ, tự có số, không số, hay đang mang số suy — AC-4 (gắn số vào tin)."
+    },
+    {
+      "i": 4,
+      "p": "Mọi lớp số đi qua: sổ liên lạc, tin, bảng xem, API, chữ giao diện — AC-2, AC-4, AC-5, AC-7; đường lên cloud không đổi (đã chứng ở việc số ghép S06)."
+    },
+    {
+      "i": 5,
+      "p": "Máy thu chưa áp bản cập nhật DB, hoặc bị một bản sau ghi đè — AC-5 (chạy an toàn khi chưa áp)."
+    },
+    {
+      "i": 6,
+      "p": "Chạy lại, nạp lại S03, lượt danh bạ kế không sinh thêm gì — AC-2, AC-4, AC-6."
+    },
+    {
+      "i": 7,
+      "p": "Chỉ tin S03 đổi; tin S05, S06 giữ nguyên — AC-4."
+    },
+    {
+      "i": 8,
+      "p": "Làm trong vòng này: AC-1 đến AC-9. Để sau: link hồ sơ kênh S03 (ZCode lấy), S05, trang danh bạ Ops, thẻ duyệt người nhiều số. Không bao giờ: đoán số từ tên người gửi; gọi hồ sơ chat trong vòng này."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Việc ghi số suy vào chính tin (thay vì chỉ đọc qua người đăng lúc bấm Xem số) lẽ ra là quyết định của anh, máy đã tự chọn — nay thành Hỏi-6."
+    },
+    {
+      "i": 1,
+      "p": "Chưa có phép thử cho đêm đầu sau khi gộp mà máy thu chưa áp bản cập nhật DB — đã thêm: lượt đêm phải chạy như cũ, không lỗi."
+    },
+    {
+      "i": 2,
+      "p": "Thẻ tin S03 sẽ có hai nhãn cùng chữ «Chưa xác minh» (tin và số) — tổ hợp chưa từng có, máy đã tự bỏ bản mẫu — nay thành Hỏi-7, và phép chụp màn hình thêm ảnh nguyên thẻ cùng hai lời giải thích."
+    },
+    {
+      "i": 3,
+      "p": "Lo số rút ở máy mà cloud vẫn giữ — bác: đồng bộ cloud chép lại toàn bộ bảng tin mỗi lượt, không chọn dòng, và cột nhãn đã được chứng ở việc số ghép S06."
+    },
+    {
+      "i": 4,
+      "p": "Lệnh đo chỉ đòi «có gán» — đã sửa: so từng luật và thuê/bán với số đo hôm nay, lệch quá 15% là đỏ."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E9",
+      "q": "Đọc mù 27/30 đúng, không số nào rõ của người khác — đủ để lên cổng?",
+      "why": "Đúng ngưỡng anh chốt ở Hỏi-4; ca sai duy nhất là nghi ngờ bài quảng cáo, hai ca không rõ do phiếu cắt chữ bài."
+    },
+    {
+      "id": "E10",
+      "q": "Từ vựng, khai báo RESO, ADR và lộ trình đã ghi đủ?",
+      "why": "Hội đồng đọc lại sau khi thêm dẫn kiểm chất lượng dữ liệu cho hai trục liên lạc và cho PASS."
+    }
+  ],
+  "analyst_plain": ""
+}
