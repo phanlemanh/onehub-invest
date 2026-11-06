@@ -9,7 +9,7 @@ evals:
     cmd: config:executors.script.tn081_migration
     layer: backend-effect
     paths: [db/migrations/081_*.sql, app/src/lib/labels-normalize.ts, _acceptance/truong-nhan-s03-081/probes/migration.mjs]
-    expected: "exit 0; probe dựng DB thử oneinvest_tn081 bằng các tệp db/migrations tới 079, chèn 17 trường cũ cho hai người, chụp view đồng thuận, áp 081 hai lần; danh sách trường và căn cứ để INSERT nạp từ hằng xuất LABEL_FIELDS_NHOM và BASIS của app/src/lib/labels-normalize.ts (không gõ trong probe); in 'ok ap hai lan', 'ok nhan 24 truong cua app', 'ok nhan 5 can cu cua app', 'ok tu choi truong la', 'ok tu choi can cu la' (CHECK violation), 'ok dong thuan 17 truong khong doi' (so từng cột với ảnh chụp trước), 'ok dong thuan co 7 truong moi', 'ok dong cu nguyen ven' (băm trước == sau); cuối 'MIGRATION OK', rồi xoá DB thử. Chiều đỏ trên cùng fixture: bản 081 đổi tên một trường ('TRUONG APP KHONG QUA CHECK 081'); bản 081 bỏ danh_muc_cdt ('CAN CU DANH MUC BI TU CHOI'); bản 081 thiếu một trường trong view ('VIEW THIEU TRUONG MOI')."
+    expected: "exit 0; probe dựng DB rỗng oneinvest_tn081_mig bằng các tệp migration nhãn (bảng ref của 043, 054, 072, 073, 075, 076), chèn 17 trường cũ cho hai người, chụp view đồng thuận, áp 081 hai lần; danh sách trường và căn cứ để INSERT nạp từ hằng xuất LABEL_FIELDS_NHOM và BASIS của app/src/lib/labels-normalize.ts (không gõ trong probe); in 'ok ap hai lan', 'ok nhan 24 truong cua app', 'ok nhan 5 can cu cua app', 'ok tu choi truong la', 'ok tu choi can cu la' (CHECK violation), 'ok dong thuan 17 truong khong doi' (so từng cột với ảnh chụp trước), 'ok dong thuan co 7 truong moi', 'ok dong cu nguyen ven' (băm trước == sau); cuối 'MIGRATION OK', rồi xoá DB thử. Chiều đỏ trên cùng fixture: bản 081 đổi tên một trường ('TRUONG APP KHONG QUA CHECK 081'); bản 081 bỏ danh_muc_cdt ('CAN CU DANH MUC BI TU CHOI'); bản 081 thiếu một trường trong view ('VIEW THIEU TRUONG MOI')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -41,7 +41,7 @@ evals:
     cmd: config:executors.test.tn081_cu
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/luot-hai.tsx, app/tests/labels-nhom.test.tsx]
-    expected: "exit 0; ca 'TN081-AC-5' trên lược đồ tạm: một thẻ chèn sẵn 17 trường (dòng trước vòng) và một thẻ đủ 23 trường; tienDo đếm cả hai là đã gắn; lượt hai của thẻ cũ render, sáu ô mới hiện '—'; số dòng và băm eval_labels của thẻ cũ trước == sau mọi lệnh của ca. Chiều đỏ: bản tính thẻ thiếu trường mới là chưa gắn ('THE CU BI TINH CHUA GAN')."
+    expected: "exit 0; ca 'TN081-AC-5' trên lược đồ tạm: một thẻ chèn sẵn 17 trường (dòng trước vòng, rút từ chuanHoaLuot rồi bỏ bảy trường mới) và một thẻ đủ 24 trường qua route; tienDo đếm cả hai là đã gắn; bảng so lượt hai của thẻ cũ render, bảy ô mới hiện '—'; số dòng và băm eval_labels của thẻ cũ trước == sau mọi lệnh của ca. Chiều đỏ: bản tính thẻ thiếu trường mới là chưa gắn ('THE CU BI TINH CHUA GAN')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
