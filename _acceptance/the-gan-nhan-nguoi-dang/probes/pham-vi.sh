@@ -10,7 +10,7 @@ duoc() {
     app/src/lib/labels-queries.ts|app/src/lib/labels-cum.ts|app/src/components/ops/labels/labels-view.tsx|\
     app/src/components/ops/labels/label-form-nhom.tsx|app/src/components/ops/labels/nguoi-dang.tsx|\
     app/tests/labels-nguoi-dang.test.tsx|app/tests/labels-nhom.test.tsx|app/tests/ops-nhan/visible-strings.ts|CONTEXT.md|\
-    _acceptance/man-gan-nhan-mu/probes/mu.mjs|_acceptance/config.yaml|_acceptance/the-gan-nhan-nguoi-dang/*|docs/*|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
+    _acceptance/config.yaml|_acceptance/the-gan-nhan-nguoi-dang/*|docs/*|PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
     *) return 1 ;;
   esac
 }

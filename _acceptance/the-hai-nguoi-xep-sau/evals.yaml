@@ -29,9 +29,9 @@ evals:
   - id: E4
     criterion: AC-2
     executor: script
-    cmd: config:executors.script.mgn_mu
+    cmd: config:executors.script.tnd_mu
     layer: backend-effect
-    paths: [app/src/lib/labels-queries.ts, _acceptance/man-gan-nhan-mu/probes/mu.mjs]
+    paths: [app/src/lib/labels-queries.ts, _acceptance/the-gan-nhan-nguoi-dang/probes/mu.mjs]
     expected: "exit 0; phép đo gắn mù PL7 còn xanh, cuối 'MU OK'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5

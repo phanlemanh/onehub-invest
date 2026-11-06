@@ -601,6 +601,7 @@ executors:
     ghep_lenh: "cd pipeline && node --test scripts/label-ghep.test.mjs"
     ecr_db: "node _acceptance/eval-classify-theo-chu-ref/probes/db.mjs"   # eval-classify-theo-chu-ref E2, E5, E6, E7, DB thử oneinvest_eval_ghep
     tnd_pham_vi: "bash _acceptance/the-gan-nhan-nguoi-dang/probes/pham-vi.sh"   # the-gan-nhan-nguoi-dang E8 — tệp được phép đổi
+    tnd_mu: "cd app && node --import tsx ../_acceptance/the-gan-nhan-nguoi-dang/probes/mu.mjs"   # the-gan-nhan-nguoi-dang E5 — bản chép phép đo gắn mù PL7, ghi observed_at
     thn_pham_vi: "bash _acceptance/the-hai-nguoi-xep-sau/probes/pham-vi.sh"   # the-hai-nguoi-xep-sau E5 — tệp được phép đổi
     thn_lat_that: "cd app && node --import tsx ../_acceptance/the-hai-nguoi-xep-sau/probes/lat-that.mjs"   # the-hai-nguoi-xep-sau E6 — lát thật s03-theo-nhom, chỉ đọc
     ghep_thuan: "cd app && node --import tsx --test tests/labels-ghep.test.ts"

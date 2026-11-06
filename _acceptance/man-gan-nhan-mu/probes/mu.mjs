@@ -43,7 +43,7 @@ try {
   await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed) VALUES ($1, 'S03', 'mgn-mu-1', 'mgn-mu-h', 'dev', false, 'mu')`, [LAT])
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw)
                  VALUES ('mgn-mu-offer', 'sale', now(), now(), ARRAY['mgn-mu-1'], 9876543210, 7, 'TOAMAYDOAN')`)
-  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at) VALUES ('S03:mgn-mu-1', 'block_raw', 'DAUPHATBIEU', 'observed', 'parser', now()) ON CONFLICT DO NOTHING`)
+  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method) VALUES ('S03:mgn-mu-1', 'block_raw', 'DAUPHATBIEU', 'observed', 'parser') ON CONFLICT DO NOTHING`)
   await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('mgn-mu', 'mgn-mu-offer', 'block_raw', 'DAUDEXUAT', 'daudexuat', 'e1_rule', 'direct')`)
   const ops = await taoNguoi(c, "ops", { email: "ops@mgn.test" })
   const user = { id: ops.id, email: ops.email, plan: "free", role: "ops" }

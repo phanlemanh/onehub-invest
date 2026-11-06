@@ -37,10 +37,10 @@ evals:
   - id: E5
     criterion: AC-4
     executor: script
-    cmd: config:executors.script.mgn_mu
+    cmd: config:executors.script.tnd_mu
     layer: backend-effect
-    paths: [app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, _acceptance/man-gan-nhan-mu/probes/mu.mjs]
-    expected: "exit 0; phép đo gắn mù PL7 còn xanh, cuối 'MU OK'."
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, _acceptance/the-gan-nhan-nguoi-dang/probes/mu.mjs]
+    expected: "exit 0; bản chép phép đo gắn mù PL7 (chỉ khác câu chèn field_assertions ghi observed_at) còn xanh, cuối 'MU OK'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-1
