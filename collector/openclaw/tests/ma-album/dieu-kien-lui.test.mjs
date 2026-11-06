@@ -1,6 +1,8 @@
 // E8 (mas3_lui) — test lệnh phán lùi phai-lui.mjs. Mẫu log 0 tên/ID thật.
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+globalThis.__mas3Require ??= createRequire(import.meta.url);
 import { phanLui } from "./phai-lui.mjs";
 
 const MOC = { transcript: { main: "754|1793328829957", watcher: "3886|1792577264438" }, cfgSha: "x", batLuc: "2026-11-06T03:00:00+07:00" };
@@ -55,4 +57,40 @@ test("E8h: log đổi inode giữa chừng vẫn đọc đủ — đọc theo đ
   const r1 = phanLui(MOC, { gateway: "2026-11-06T03:05:00.000+07:00 closed (3003)", hook: "", canh: "" });
   const r2 = phanLui(MOC, { gateway: "2026-11-06T03:05:00.000+07:00 closed (3003)\n2026-11-06T03:06:00.000+07:00 dòng thêm sau xoay inode", hook: "", canh: "" });
   assert.equal(r1.phan, r2.phan, "kết quả nhất quán trước/sau xoay");
+});
+
+
+// 0611-11 điểm (5)-(8) — ca thử riêng từng điểm bổ sung
+test("E8i (5): cảnh báo/listener TRƯỚC batLuc không tính; SAU batLuc mới tính", () => {
+  const moc = { ...MOC, batLuc: "2026-11-06T03:00:00+07:00" };
+  // cảnh báo KILL TRƯỚC khi bật (02:00) — KHÔNG dung-goi-Manh
+  const r1 = phanLui(moc, { gateway: "", hook: "", canh: "2026-11-06T02:00:00+07:00 KILL: cu" });
+  assert.notEqual(r1.phan, "dung-goi-Manh", "KILL trước lúc bật là chuyện cũ");
+  // cảnh báo KILL SAU khi bật (03:30) → dung-goi-Manh
+  const r2 = phanLui(moc, { gateway: "", hook: "", canh: "2026-11-06T03:30:00+07:00 KILL: L4d" });
+  assert.equal(r2.phan, "dung-goi-Manh", "KILL sau lúc bật phải dừng");
+  // listener đóng TRƯỚC batLuc không tính
+  const r3 = phanLui(moc, { gateway: "2026-11-06T02:50:00.000+07:00 [zalouser] closed (3003)", hook: "2026-11-06T03:01:00.000Z post 202", canh: "", hienTai: Date.parse("2026-11-06T03:05:00+07:00") });
+  assert.notEqual(r3.phan, "lui-bat-lai", "đóng trước lúc bật không lùi");
+});
+test("E8j (7): tiến trình không lên / thoát ≤2′ sau batLuc → lui-bat-lai; hết lượt auto-restart → lui-bat-lai", () => {
+  const moc = { ...MOC, batLuc: new Date(Date.now() - 60_000).toISOString() }; // vừa bật 1′
+  const lcKhongPid = "\n0\t-\tai.openclaw.gateway\n";
+  const r1 = phanLui(moc, { gateway: "", hook: "post 202 vua nay", canh: "", launchctlList: lcKhongPid });
+  assert.equal(r1.phan, "lui-bat-lai", "PID không lên trong 2′ → lui");
+  const r2 = phanLui({ ...MOC, batLuc: new Date(Date.now() - 60_000).toISOString() },
+    { gateway: "2026-11-06T" , hook: "", canh: "", launchctlList: "12345\t0\tai.openclaw.gateway\n" });
+  // gateway có PID và không dấu thoát → không rơi nhánh này (kết quả khác lui vì lý do tiến trình)
+  assert.notEqual((r2.phan === "lui-bat-lai" && r2.vi.includes("tiến trình")) ? "x" : r2.phan, "x");
+  const r3 = phanLui({ ...MOC, batLuc: "2026-11-06T03:00:00+07:00" },
+    { gateway: "2026-11-06T03:10:00.000+07:00 [gateway] retry exceeded max — gave up", hook: "bai", canh: "", launchctlList: "999\t0\tai.openclaw.gateway\n" });
+  assert.equal(r3.phan, "lui-bat-lai", "hết lượt tự nối lại → lui");
+});
+test("E8k (8): chạy CLI thật với batLuc = giờ hiện tại → chua-ro (máy thật đang lành)", () => {
+  const { execFileSync } = globalThis.__mas3Require("node:child_process");
+  const { writeFileSync } = globalThis.__mas3Require("node:fs");
+  const moc = { transcript: {}, cfgSha: "x", batLuc: new Date().toISOString() };
+  writeFileSync("/tmp/mas3-moc-hien-tai.json", JSON.stringify(moc));
+  const out = execFileSync("node", [process.cwd() + "/collector/openclaw/tests/ma-album/phai-lui.mjs", "/tmp/mas3-moc-hien-tai.json"], { encoding: "utf8", env: { ...process.env } }).trim();
+  assert.equal(out, "chua-ro", `CLI thật với mốc=hiện tại phải chua-ro, được ${out}`);
 });
