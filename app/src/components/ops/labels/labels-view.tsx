@@ -20,6 +20,7 @@ import { ChonNhom } from "./chon-nhom"
 import { LabelForm } from "./label-form"
 import { LabelFormNhom } from "./label-form-nhom"
 import { LuotHai } from "./luot-hai"
+import { NguoiDang } from "./nguoi-dang"
 
 /**
  * /ops/labels «Gắn nhãn» (PL7 `man-gan-nhan-mu`) — khuôn danh sách-chi-tiết như /ops/review: hàng chờ ngầm (tin kế do
@@ -117,6 +118,7 @@ function TinFrame({ tin }: { tin: TinGan }) {
         <FrameTitle>Tin cần gắn</FrameTitle>
         <FrameDescription className="text-xs text-pretty">
           S03 · {tin.groupName ?? "nhóm không rõ"}
+          <NguoiDang ten={tin.nguoiDang} id={tin.nguoiDangId} />
           {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
           {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
         </FrameDescription>

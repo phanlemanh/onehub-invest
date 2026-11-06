@@ -248,6 +248,10 @@ _Avoid_: accuracy, độ chính xác
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker
 
+**ID người đăng**: Mã tài khoản của người đăng bài ở nguồn S03, hiện cạnh tên trên thẻ gắn nhãn để phân biệt những người trùng tên trong cùng nhóm. Tầng C như tên người bán; chỉ hiện ở `/ops/**`.
+- Code: `sender_id` (stg) · `nguoiDangId` (thẻ gắn nhãn)
+_Avoid_: UID
+
 **Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
 - Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
 - Ghi chú: vai đang ghi là «Người đăng» (`nguoi_dang`, DB2b) — từ trường tài khoản của nguồn hoặc từ SĐT trong tin.
