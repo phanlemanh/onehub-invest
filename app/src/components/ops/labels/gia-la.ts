@@ -1,8 +1,9 @@
 import { veVnd, type PriceUnit } from "@/lib/labels-normalize"
+import { KIND } from "@/lib/vocab.generated"
 
 /** Đơn vị giá mặc định theo Loại tin: thuê tính theo tháng nên triệu, bán tính tỷ. Loại khác: không đổi. */
 export function donViTheoLoai(kind: string | undefined): PriceUnit | null {
-  return kind === "rent_lt" ? "trieu" : kind === "sale" ? "ty" : null
+  return kind === KIND.rent_lt ? "trieu" : kind === KIND.sale ? "ty" : null
 }
 
 const MOT_TY = BigInt(1_000_000_000)
@@ -17,8 +18,8 @@ export function cauGiaLa(kind: string | undefined, gia: string[], unit: PriceUni
   for (const s of gia) {
     const v = s.trim() ? veVnd(s, unit) : null
     if (typeof v !== "bigint") continue
-    if (kind === "rent_lt" && v >= MOT_TY) return `Giá thuê ${s.trim()} ${TEN[unit]} một tháng — cao bất thường. Đơn vị có đúng không?`
-    if (kind === "sale" && v < TRAM_TRIEU) return `Giá bán ${s.trim()} ${TEN[unit]} — thấp bất thường. Đơn vị có đúng không?`
+    if (kind === KIND.rent_lt && v >= MOT_TY) return `Giá thuê ${s.trim()} ${TEN[unit]} một tháng — cao bất thường. Đơn vị có đúng không?`
+    if (kind === KIND.sale && v < TRAM_TRIEU) return `Giá bán ${s.trim()} ${TEN[unit]} — thấp bất thường. Đơn vị có đúng không?`
   }
   return null
 }
