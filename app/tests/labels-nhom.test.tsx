@@ -1540,3 +1540,80 @@ test("TN081-AC-2 biểu mẫu theo nhóm: khối Mô tả căn, mã căn, cơ s�
     await dom.xong()
   }
 })
+
+// ---- truong-nhan-s03-081 E5 (AC-5), E11 (AC-9): thẻ gắn trước vòng, lượt hai, đồng thuận ----
+const MOI_BAY = ["unit_number", "furnished", "direction_faces", "view", "availability_date", "price_basis", "rent_includes"]
+type ModBang = { BangSo: (p: { d: never }) => React.ReactElement }
+const oBang = (html: string, f: string) =>
+  (html.match(new RegExp(`<tr[^>]*data-field="${f}"[^>]*>(.*?)</tr>`))?.[1] ?? "").split("<td").slice(1).map((c) => c.slice(c.indexOf(">") + 1).replace(/<[^>]+>/g, ""))
+
+test("TN081-AC-5 thẻ gắn trước vòng (17 trường): vẫn tính đã gắn, lượt hai hiện «—» ở bảy ô mới, dòng cũ không đổi", async () => {
+  await datLat()
+  const a = await taoNguoi(sc, "ops")
+  const { ghiNhan, tienDo } = await import("../src/lib/labels-queries")
+  // Thẻ 1: dòng trước vòng — đúng 17 trường, rút từ bên ghi thật rồi bỏ bảy trường mới.
+  const ch = chuanHoaLuot(DU, { text: CHU })
+  assert.ok(ch.ok)
+  const cu = ch.rows.filter((r) => !MOI_BAY.includes(r.field))
+  assert.equal(cu.length, 17)
+  const c = new pg.Client({ connectionString: schemaUrl(S) })
+  await c.connect()
+  try { assert.deepEqual(await ghiNhan(c, a.id, LAT, 1, cu, null), { ok: true }) } finally { await c.end() }
+  const bam = async () => (await sc.query(`SELECT md5(string_agg(concat_ws(',', field, value, not_stated, basis), '|' ORDER BY field)) AS b, count(*)::int AS n FROM eval_labels WHERE item_id = 1`)).rows[0]
+  const truoc = await bam()
+  // Thẻ 2: đủ 24 trường qua route thật.
+  const { POST } = await import("../src/app/api/v1/ops/labels/route")
+  assert.equal((await POST(postNhan(a.cookie, 2, DU))).status, 200)
+  const t = await tienDo(a.id, LAT, sc)
+  const { doiChieu } = await import("../src/lib/labels-luot-hai")
+  const d = await doiChieu(a.id, 1, sc)
+  assert.ok(d)
+  const { BangSo } = (await import("../src/components/ops/labels/bang-so")) as unknown as ModBang
+  const html = renderToStaticMarkup(<BangSo d={d as never} />)
+  assert.equal(t.cuaToi, 2, "THE CU BI TINH CHUA GAN")
+  for (const f of MOI_BAY) assert.equal(oBang(html, f)[1], "—", `THIEU O MOI THE CU ${f}`)
+  assert.equal(oBang(html, "kind")[1], "Bán", "trường cũ hiện như trước")
+  assert.deepEqual(await bam(), truoc, "dòng cũ không đổi")
+  // Chiều đỏ: tiến độ đòi đủ 24 trường mới tính đã gắn.
+  const doiDu = await banDot<{ tienDo: typeof tienDo }>("src/lib/labels-queries.ts", "count(DISTINCT l.labeler_id) AS so, coalesce(bool_or(l.labeler_id = $1), false) AS cua_toi",
+    "count(DISTINCT l.labeler_id) AS so, (count(l.field) FILTER (WHERE l.labeler_id = $1) >= 24) AS cua_toi")
+  assert.equal((await doiDu.tienDo(a.id, LAT, sc)).cuaToi, 1, "THE CU BI TINH CHUA GAN")
+  // Chiều đỏ: bảng so chỉ hiện trường đã gắn — bảy ô mới biến mất thay vì «—».
+  const anO = await banDot<ModBang>("src/components/ops/labels/bang-so.tsx", "return LABEL_FIELDS_NHOM.map((f) => {", "return LABEL_FIELDS_NHOM.filter((f) => cua.has(f)).map((f) => {")
+  assert.equal(oBang(renderToStaticMarkup(<anO.BangSo d={d as never} />), "view").length, 0, "THIEU O MOI THE CU")
+})
+
+test("TN081-AC-9 lượt hai và đồng thuận hiện bảy trường mới bằng nhãn sổ, căn cứ Danh mục CĐT đúng nhãn", async () => {
+  await datLat()
+  await admin.query(`DROP TABLE IF EXISTS "${S}".stg_s08_inventory`)
+  await admin.query(`CREATE TABLE "${S}".stg_s08_inventory (LIKE public.stg_s08_inventory INCLUDING DEFAULTS)`)
+  await sc.query(`INSERT INTO stg_s08_inventory (source_id, snapshot_id, project_id, state, product_code, payload, captured_at) VALUES ('s1','snap','du-an-a','notSold','ZZ9-01','{}',now())`)
+  const a = await taoNguoi(sc, "ops")
+  const { POST } = await import("../src/app/api/v1/ops/labels/route")
+  const day = { ...DU, unit_number: { value: "ZZ9-01", basis: "danh_muc_cdt" }, furnished: chu("furnished"), view: chu("lake,city"),
+    rent_includes: chu("water,management"), price_basis: chu("net"), direction_faces: chu("southeast"), availability_date: chu("2026-12") }
+  const res = await POST(postNhan(a.cookie, 1, day))
+  assert.equal(res.status, 200, await res.clone().text())
+  const { doiChieu } = await import("../src/lib/labels-luot-hai")
+  const d = await doiChieu(a.id, 1, sc)
+  assert.ok(d)
+  const { BangSo } = (await import("../src/components/ops/labels/bang-so")) as unknown as ModBang
+  const ky = (M: ModBang) => {
+    const html = renderToStaticMarkup(<M.BangSo d={d as never} />)
+    return Object.fromEntries(MOI_BAY.map((f) => [f, oBang(html, f).slice(0, 2)]))
+  }
+  assert.deepEqual(ky({ BangSo }), {
+    unit_number: ["Mã căn", "ZZ9-01 · Danh mục CĐT"], furnished: ["Nội thất", "Đủ nội thất"], direction_faces: ["Hướng", "Đông Nam"],
+    view: ["View", "Thành phố, Hồ"], availability_date: ["Ngày vào ở", "2026-12"], price_basis: ["Cơ sở giá", "Thu về (NET)"],
+    rent_includes: ["Phí đã gồm", "Phí quản lý, Nước"],
+  })
+  const { AgreementTable } = await import("../src/components/ops/labels/agreement-table")
+  const { LABEL_FIELDS_NHOM: TRUONG, FIELD_LABEL } = await import("../src/lib/labels-normalize")
+  const bang = renderToStaticMarkup(<AgreementTable rows={[]} fields={TRUONG} />)
+  for (const f of MOI_BAY) assert.ok(bang.includes(`>${FIELD_LABEL[f as keyof typeof FIELD_LABEL]}<`), `đồng thuận thiếu hàng ${f}`)
+  // Chiều đỏ: bỏ dịch chọn nhiều → hiện mã thô.
+  type ModO = { hienGiaTri: (f: string, v: string) => string }
+  const ma = await banDot<ModO>("src/components/ops/labels/nhom-fields.ts",
+    'if (def?.kind === "chon-nhieu") return v.split(",").map((m) => def.options?.find((o) => o.value === m)?.label ?? m).join(", ")', "")
+  assert.equal(ma.hienGiaTri("view", "city,lake"), "city,lake", "HIEN MA THO THAY NHAN")
+})

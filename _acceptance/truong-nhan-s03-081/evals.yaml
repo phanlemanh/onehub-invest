@@ -40,7 +40,7 @@ evals:
     executor: test
     cmd: config:executors.test.tn081_cu
     layer: backend-effect
-    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/luot-hai.tsx, app/tests/labels-truong-moi-cu.test.tsx]
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/luot-hai.tsx, app/tests/labels-nhom.test.tsx]
     expected: "exit 0; ca 'TN081-AC-5' trên lược đồ tạm: một thẻ chèn sẵn 17 trường (dòng trước vòng) và một thẻ đủ 23 trường; tienDo đếm cả hai là đã gắn; lượt hai của thẻ cũ render, sáu ô mới hiện '—'; số dòng và băm eval_labels của thẻ cũ trước == sau mọi lệnh của ca. Chiều đỏ: bản tính thẻ thiếu trường mới là chưa gắn ('THE CU BI TINH CHUA GAN')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
@@ -88,7 +88,7 @@ evals:
     executor: test
     cmd: config:executors.test.tn081_hien
     layer: ui-structure
-    paths: [app/src/components/ops/labels/luot-hai.tsx, app/src/components/ops/labels/agreement-table.tsx, app/src/lib/labels-normalize.ts, app/tests/labels-truong-moi-cu.test.tsx]
+    paths: [app/src/components/ops/labels/luot-hai.tsx, app/src/components/ops/labels/agreement-table.tsx, app/src/lib/labels-normalize.ts, app/tests/labels-nhom.test.tsx]
     expected: "exit 0; ca 'TN081-AC-9': lượt hai của thẻ đủ trường hiện bảy nhãn FIELD_LABEL mới và nhãn tiếng Việt của giá trị chọn (vd 'Đủ nội thất', 'Hồ, Thành phố', 'Phí quản lý, Nước'), không hiện mã thô ('Furnished', 'City', 'Management'); căn cứ CĐT hiện 'Danh mục CĐT'; bảng đồng thuận có bảy hàng mới. Chiều đỏ: bản hiện mã thô ('HIEN MA THO THAY NHAN')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
