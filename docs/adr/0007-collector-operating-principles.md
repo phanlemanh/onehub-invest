@@ -253,3 +253,22 @@ hay không) và làm xong việc nới `PII_EXCLUDE.sale_offers` nêu ở đó. 
 Không đổi: tên nguồn thật (kể cả trong `seller_ref`, `listing_url`) vẫn tầng A và không rời máy; `listing_url`, ảnh và
 nội dung bài gốc không theo đường này (ảnh đầu của tin là hàng riêng `anh-tin-cong-khai`); `/api/v1/offers` và
 `/api/v1/deals` vẫn ở chế độ `ops`.
+
+## Sửa đổi 2026-11-06 — nội dung bài gửi nguyên văn tới model đọc tin
+
+Mạnh chốt (06/11, khi chọn model cho phần đọc tin S03): «CHúng ta chỉ dùng các model sau để thực hiện: 1. Haiku 2.
+Deepseek v4.1 flash 3. vlm 5.3 flash. Bỏ luật lộ tầng A». Giám sát hỏi lại phạm vi, Mạnh chọn «Chỉ khi gửi model»; model
+thứ ba là GLM-5.3 Flash.
+
+- **Được gửi nguyên văn tới model đọc tin:** chữ bài, ảnh tin, tên nhóm, và tên nguồn thật khi nó in sẵn trong chữ hay
+  ảnh của bài. Không cần che tên nguồn (`gatChu`, `maskSourceNames`) trên đường gửi model. Sửa đổi 31/10 (phân loại được
+  gửi cloud) nay mở rộng cho cả tên nguồn in trong bài.
+- **Chỉ ba model:** Claude Haiku, DeepSeek V4.1 Flash, GLM-5.3 Flash. Model khác cần lời mới của Mạnh. Điều khoản dùng
+  cho pipeline của từng gói kiểm trước khi gọi lần đầu.
+- **Không gửi:** hồ sơ người dùng app, định danh tài khoản thu, phiên, khoá, ảnh QR, profile trình duyệt; bảng giải mã
+  `source_registry` (`real_name`, `source_ids`) không đi kèm lời gọi.
+
+Không đổi: bốn thứ tầng A ở sửa đổi 26/10 vẫn không lên kho công khai, cloud, cổng Invest hay API công khai; mọi bộ che
+và bộ soát trên đường lên cloud (`sync-cloud`, `push-ops-facts`, `tier-a-guard`) giữ nguyên. Kết quả model trả về đi
+vào DB máy thu như cũ; giá trị nào mang tên nguồn thật vẫn bị che khi rời máy. Luật 7 (LLM ngoài đường ghi dữ liệu)
+giữ nguyên.
