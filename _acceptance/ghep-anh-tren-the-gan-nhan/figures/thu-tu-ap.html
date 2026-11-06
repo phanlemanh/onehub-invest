@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thứ tự áp lên DB thật</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper:#f5f5f5; --color-ink:#2d3142; }
+    body { background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <svg viewBox="0 0 1108 452" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <text x="40" y="36" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">HỎI-4 · ÁP LÊN DB THẬT</text>
+      <text x="40" y="68" fill="#2d3142" font-size="24" font-family="'Instrument Serif', 'Lora', serif" letter-spacing="-0.02em">Bốn bước nối tiếp sau chữ ký của Mạnh</text>
+
+      <!-- Arrows first -->
+      <line x1="220" y1="160" x2="252" y2="160" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="432" y1="160" x2="464" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="644" y1="160" x2="676" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="856" y1="160" x2="888" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="766" y1="208" x2="766" y2="272" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+      <!-- Cổng: Mạnh ký (focal) -->
+      <rect x="40" y="112" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="112" width="180" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="56" y="136" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CỔNG · NGƯỜI KÝ</text>
+      <text x="56" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Mạnh ký</text>
+      <text x="56" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Duyệt áp lên DB thật.</text>
+
+      <!-- Bước 1 -->
+      <rect x="252" y="112" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="252" y="112" width="180" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="268" y="136" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BƯỚC 1</text>
+      <text x="268" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Sao lưu</text>
+      <text x="268" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Trước khi đổi schema.</text>
+
+      <!-- Bước 2 -->
+      <rect x="464" y="112" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="464" y="112" width="180" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="480" y="136" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BƯỚC 2</text>
+      <text x="480" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Áp migration 076</text>
+      <text x="480" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Thêm cột ghép ảnh.</text>
+      <text x="480" y="196" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">eval_label_items.ghep</text>
+
+      <!-- Bước 3 -->
+      <rect x="676" y="112" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="676" y="112" width="180" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="692" y="136" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BƯỚC 3</text>
+      <text x="692" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Chạy lệnh ghép</text>
+      <text x="692" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Ghi 191 dòng.</text>
+      <text x="692" y="196" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">label-ghep.mjs</text>
+
+      <!-- Bước 4 -->
+      <rect x="888" y="112" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="888" y="112" width="180" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="904" y="136" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BƯỚC 4</text>
+      <text x="904" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Gộp mã</text>
+      <text x="904" y="180" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">App máy thu chạy bản mới.</text>
+
+      <!-- Lối lùi -->
+      <rect x="676" y="272" width="180" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="676" y="272" width="180" height="96" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="692" y="296" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LỐI LÙI</text>
+      <text x="692" y="320" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Đặt cột về rỗng</text>
+      <text x="692" y="340" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Màn về như cũ.</text>
+      <text x="692" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">ghep = NULL</text>
+
+      <!-- Legend -->
+      <line x1="40" y1="396" x2="1068" y2="396" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="420" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">KÝ HIỆU</text>
+      <rect x="132" y="410" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="164" y="420" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Cổng của người</text>
+      <rect x="292" y="410" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="324" y="420" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước nối tiếp</text>
+      <rect x="432" y="410" width="24" height="12" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="464" y="420" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối lùi, chỉ dùng khi cần</text>
+    </svg>
+  </div>
+</body>
+</html>

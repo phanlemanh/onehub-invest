@@ -98,12 +98,12 @@ const PG_SERVER = process.env.SCA_PG_SERVER ?? "postgres://oneinvest:oneinvest@l
 /** Các cột của sale_offers mà câu SELECT của queryPair đọc. */
 export const COT_QUERY_PAIR = [
   "offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "property_type",
-  "seller_name", "post_ids", "street_raw", "block_raw", "floor_raw", "bathrooms",
+  "seller_name", "post_ids", "street_raw", "block_raw", "floor_raw", "bathrooms", "field_provenance",
 ];
 
 /** Dựng sale_offers trên DB thử theo kiểu cột của oneinvest — thiếu cột nào thì nêu tên. Dùng chung với lô thật. */
 export async function dungSaleOffers(db: pg.Client, ma = "JE-AC-2"): Promise<void> {
-  const goc = new pg.Client({ connectionString: `${PG_SERVER}/oneinvest` });
+  const goc = new pg.Client({ connectionString: process.env.DATABASE_URL ?? `${PG_SERVER}/oneinvest` });
   await goc.connect();
   try {
     const { rows } = await goc.query(

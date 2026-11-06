@@ -105,7 +105,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
     metrics.length > 0
       ? `${fmtMonth(metrics[0].month)} – ${fmtMonth(metrics[metrics.length - 1].month)}`
       : "chưa có tháng nào";
-  const source = "Airbnb tự thu thập"; // ADR-0008: chỉ VN
+  const source = "Tự thu thập"; // ADR-0008: chỉ VN
 
   const crumbs: Crumb[] = [
     { label: COUNTRY_VI[cc] ?? cc.toUpperCase(), href: COUNTRY_PAGES.has(cc) ? `/${cc}` : undefined },

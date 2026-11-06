@@ -6,16 +6,21 @@ import { pool } from "@/lib/db";
 import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 import { isLoginQrFile } from "@/lib/zalo-admin";
 
+import { danhSachAnhCum, docGhep } from "@/lib/labels-anh";
+import { docBaiCum } from "@/lib/labels-cum";
+
 import { HEADER_ANH_AN_TOAN, layAnhGoc } from "./lay-anh-goc";
 
 /**
  * Lõi của GET /api/zalo-media — phục vụ ảnh tin (PII tầng A, ADR-0007) cho trang /ops.
  * KHÔNG sync cloud (file chỉ có trên máy local → ở cloud route trả 404).
- * Ba chế độ:
+ * Bốn chế độ:
+ *   - `?nhan=<item_id>&anh=<thứ tự>`: ảnh của một bài trên thẻ gắn nhãn /ops/labels, vai Vận hành trở lên (anh-tren-the-gan-nhan).
+ *     Bài không thành tin thì không có dòng `media`, nên tra theo mẫu nhãn; chỉ nhận hai số, đường tệp đi qua đúng `snapshotMediaPath`.
  *   - `?media=<media_key>`: vai Vận hành trở lên (anh-goc-qua-may-chu); tra dòng bảng `media` (chỉ DB máy thu) —
  *     có `local_file` thì phục vụ như `?snapshot=`, chỉ có `media_url` thì máy chủ tự lấy ảnh (`lay-anh-goc.ts`).
  *     Trình duyệt chỉ thấy khoá, không thấy URL hay tên miền nguồn (tầng A).
- *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw cho /ops/deals (PR #5) — chỉ admin.
+ *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw (PR #5) — chỉ admin; /ops/deals nay đọc ảnh qua `?media=`, `?snapshot=`.
  *   - `?snapshot=<snapshotId>&file=media/<tên>`: vai Vận hành trở lên (PL3); ảnh N1 tải vào raw snapshot
  *     (`<SNAPSHOTS_DIR>/<market>/<snapshotId>/media/*`, DATA-CONTRACT v2) cho /ops/review.
  *     Route tự ghép đường dưới gốc snapshots — không nhận đường tuyệt đối từ ngoài.
@@ -135,6 +140,36 @@ async function sendImage(resolved: string, roots: string[], mediaOnly: boolean):
 
 const notFound = () => new Response("not found", { status: 404 });
 
+export type BaiAnhRow = { media: unknown; media_files: unknown; snapshot_id: string | null };
+/** Một bài, hoặc mọi bài của cụm đã ghép theo thứ tự hiện. */
+export type BaiAnhQuery = (itemId: string) => Promise<BaiAnhRow | BaiAnhRow[] | null>;
+
+const traBaiMacDinh: BaiAnhQuery = async (itemId) => {
+  const { rows } = await pool.query<{ ref_id: string; ghep: unknown }>(
+    `SELECT ref_id, ghep FROM eval_label_items WHERE item_id = $1`, [itemId]);
+  return rows[0] ? docBaiCum(pool, rows[0].ref_id, docGhep(rows[0].ghep)) : null;
+};
+
+const SO = /^\d{1,12}$/;
+
+/** Chế độ `?nhan=&anh=`: tệp đã lưu qua hai lớp kiểm đường dẫn, không có tệp thì máy chủ lấy hộ. Không có đường ghi nào. */
+async function serveAnhBai(nhan: string, anh: string, traBai: BaiAnhQuery, layAnh: typeof layAnhGoc): Promise<Response> {
+  if (!SO.test(nhan) || !SO.test(anh)) return notFound();
+  let bai: BaiAnhRow | BaiAnhRow[] | null;
+  try {
+    bai = await traBai(nhan);
+  } catch (err) {
+    if ((err as { code?: string }).code === "42P01") return notFound(); // undefined_table: cloud không có bảng nhãn
+    throw err;
+  }
+  if (!bai) return notFound();
+  const nguon = danhSachAnhCum(Array.isArray(bai) ? bai : [bai])[Number(anh)];
+  if (!nguon) return notFound();
+  if (nguon.kind === "url") return layAnh(nguon.url);
+  const joined = snapshotMediaPath(nguon.snapshot, nguon.file);
+  return joined ? sendImage(joined, [snapshotsRoot()], true) : outside();
+}
+
 /** Chế độ `?media=`: khoá đúng khuôn → dòng `media` → file local hoặc ảnh gốc qua máy chủ. Bảng vắng (cloud) → 404. */
 async function serveMediaKey(key: string, traMedia: MediaKeyQuery, layAnh: typeof layAnhGoc): Promise<Response> {
   if (!MEDIA_KEY.test(key)) return notFound();
@@ -158,11 +193,13 @@ async function serveMediaKey(key: string, traMedia: MediaKeyQuery, layAnh: typeo
 export async function serveZaloMedia(
   req: Request,
   user: User | null,
-  deps: { traMedia?: MediaKeyQuery; layAnh?: typeof layAnhGoc } = {},
+  deps: { traMedia?: MediaKeyQuery; layAnh?: typeof layAnhGoc; traBai?: BaiAnhQuery } = {},
 ): Promise<Response> {
   // Ảnh tin (đã tải, hoặc lấy hộ theo media_key): vai Vận hành trở lên (PL3, AGENTS.md luật 6). Chế độ ?path= (gốc OpenClaw) giữ admin.
   if (!xemNoiDungTin(user)) return notFound();
   const q = new URL(req.url).searchParams;
+  const nhan = q.get("nhan");
+  if (nhan !== null) return serveAnhBai(nhan, q.get("anh") ?? "", deps.traBai ?? traBaiMacDinh, deps.layAnh ?? layAnhGoc);
   const key = q.get("media");
   if (key !== null) return serveMediaKey(key, deps.traMedia ?? traMediaMacDinh, deps.layAnh ?? layAnhGoc);
   const snapshot = q.get("snapshot");

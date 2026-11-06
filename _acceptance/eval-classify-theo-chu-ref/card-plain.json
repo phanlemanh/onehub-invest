@@ -1,0 +1,21 @@
+{
+  "feature_plain": "Lần chấm đầu của máy đọc tin dùng đúng chữ mà người gắn đã đọc, thay vì chấm trên đường dẫn ảnh.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chấm bộ đọc trên chữ của tin ghép với mọi dòng có tin chữ ghép."},
+    {"id": "AC-2", "p": "Sẽ không chấm bài ảnh không có tin chữ, đếm riêng số bài này."},
+    {"id": "AC-3", "p": "Sẽ không chấm dòng trùng cụm, mỗi cụm tính tối đa một lần."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên kết quả với bài không ghép, so từng trường với bản trước."},
+    {"id": "AC-5", "p": "Sẽ in hai số mới ở lệnh chấm, dòng ghi vào kết quả giữ đúng khuôn cũ."},
+    {"id": "AC-6", "p": "Sẽ không để tên nguồn, chữ bài thật lọt vào kho, không đụng DB thật và phần thu."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Sẽ KHÔNG chặn ghi nhãn vào dòng trùng cụm ở vòng này: việc 2 của dãy."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG sửa đường lấy thêm của lệnh lấy mẫu ở vòng này: việc 3 của dãy."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG đổi khuôn kết quả, trang chất lượng hay thêm migration."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG tách điểm theo căn cứ: trường người gắn lấy từ ảnh hay ngữ cảnh nhóm vẫn so với bộ đọc chữ nên điểm ở đó vẫn có thể thấp giả."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Loại dòng: có tin chữ ghép, không tin chữ, trùng cụm, không ghép."},
+    {"i": 1, "p": "Đường đi: hàm thuần, đọc trên DB thử, lệnh chấm thật."}
+  ]
+}

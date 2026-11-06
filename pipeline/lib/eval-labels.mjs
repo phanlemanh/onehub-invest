@@ -47,6 +47,74 @@ export function chonMau(posts, { n, seed, tiLeTrung = TI_LE_TRUNG }) {
 }
 
 /**
+ * Khoá thật của một nhóm S03: bỏ một tiền tố `group:` hay `<kênh>:group:` khi sau đó còn chữ. Cổng thu khai `group:<khoá>`, bài
+ * từ 22/10 mang khoá trần, bài cũ và dòng sổ ghi tay mang tiền tố kênh; khoá khác giữ nguyên.
+ * @param {string} khoa
+ */
+export function khoaNhomThat(khoa) {
+  return String(khoa).replace(/^(?:[^:]+:)?group:(?=.)/, "");
+}
+
+/**
+ * Gom sổ theo khoá thật. Đại diện của nhóm là dòng khoá trần, không có thì mã nhỏ nhất; không xét trạng thái vì lượt đồng bộ sổ
+ * đổi dòng vắng ở cổng sang `paused` mà bài của nó vẫn thuộc nhóm đó.
+ * @param {{ unit_code: string, group_key: string, note?: string|null }[]} so
+ */
+export function donViTheoNhomThat(so) {
+  const theoKhoa = new Map();
+  for (const r of so) {
+    const khoa = khoaNhomThat(r.group_key);
+    if (!theoKhoa.has(khoa)) theoKhoa.set(khoa, []);
+    theoKhoa.get(khoa).push(r);
+  }
+  const donVi = new Map();
+  const gop = [];
+  for (const [khoa, ds] of theoKhoa) {
+    const [dau, ...phu] = [...ds].sort((a, b) => (a.group_key === khoa ? 0 : 1) - (b.group_key === khoa ? 0 : 1) || (a.unit_code < b.unit_code ? -1 : 1));
+    donVi.set(khoa, dau.unit_code);
+    if (phu.length) gop.push({ khoa, khoa_dai_dien: dau.group_key, unit_code: dau.unit_code, gop_tu: phu.map((r) => r.unit_code), the_lech: new Set(ds.map((r) => r.note ?? "")).size > 1 });
+  }
+  return { donVi, gop: gop.sort((a, b) => (a.unit_code < b.unit_code ? -1 : 1)) };
+}
+
+/** Đơn vị của một bài; bài không có khoá hay khoá không có trong sổ trả `null`. */
+export function donViCuaBai(donVi, khoa) {
+  return khoa == null ? null : donVi.get(khoaNhomThat(khoa)) ?? null;
+}
+
+/**
+ * Mẫu theo nhóm (GC0): `soNhomLon` nhóm nhiều nội dung nhất lấy `moiNhomLon` bài, còn lại `moiNhomNho` bài. Nhóm xếp theo số nội dung
+ * khác nhau giảm dần, hoà theo unit_code. Nội dung trùng thuộc về nhóm xếp trước, nhóm sau bù từ phần còn lại của nó. Gắn trùng và
+ * dev/test tính trong từng nhóm. Bài không có đơn vị trong sổ bị bỏ, đếm ở `bo_khong_don_vi`.
+ * @param {{ post_id: string, text: string, unit_code: string|null }[]} posts
+ * @param {{ seed: string, moiNhomLon: number, moiNhomNho: number, soNhomLon: number, tiLeTrung?: number }} opts
+ */
+export function chonMauTheoNhom(posts, { seed, moiNhomLon, moiNhomNho, soNhomLon, tiLeTrung = TI_LE_TRUNG }) {
+  const theoNhom = new Map();
+  let boKhongDonVi = 0;
+  for (const p of posts) {
+    if (!p.unit_code) { boKhongDonVi++; continue; }
+    if (!theoNhom.has(p.unit_code)) theoNhom.set(p.unit_code, []);
+    theoNhom.get(p.unit_code).push({ ...p, h: textHash(p.text) });
+  }
+  const xep = [...theoNhom].map(([unit_code, ds]) => ({ unit_code, ds, khac_nhau: new Set(ds.map((x) => x.h)).size }))
+    .sort((a, b) => b.khac_nhau - a.khac_nhau || (a.unit_code < b.unit_code ? -1 : 1));
+  const daDung = new Set();
+  const chon = [];
+  const moiNhom = xep.map(({ unit_code, ds, khac_nhau }, i) => {
+    const can = i < soNhomLon ? moiNhomLon : moiNhomNho;
+    const con = ds.filter((x) => !daDung.has(x.h));
+    const r = chonMau(con, { n: can, seed, tiLeTrung });
+    for (const c of r.chon) {
+      daDung.add(c.text_hash);
+      chon.push({ ...c, stratum: unit_code });
+    }
+    return { unit_code, khac_nhau, can, chon: r.chon.length, bo_vi_trung: khac_nhau - new Set(con.map((x) => x.h)).size };
+  });
+  return { chon, moiNhom, bo_khong_don_vi: boKhongDonVi };
+}
+
+/**
  * Phút công theo người gắn: cộng khoảng giữa hai lượt lưu liên tiếp (mỗi lượt lưu là một mốc `labeled_at`), bỏ khoảng
  * nghỉ quá NGHI_PHUT phút.
  * @param {{ labeler_id: string, labeled_at: string|Date }[]} rows

@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Tin S06 lỡ mất dấu vết «số này từ đâu ra» được dựng lại, nên khi tin chuyển sang ẩn số thì số ghép theo tài khoản được rút khỏi tin.",
+  "analyst_plain": "Bộ test báo xanh cả trên bản chưa sửa vì bản đó chưa có các ca mới; hành vi được phân biệt bằng các ca đỏ cố ý ngay trong test."
+}

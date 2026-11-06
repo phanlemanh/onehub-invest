@@ -14,7 +14,7 @@ const DAT: [string, string, string][] = [
 const KHONG_DAT: [string, string, string | null, string, string][] = [
   ["không có trích", CHU, null, "apartment", "khong-co-trich"],
   ["trích giả", CHU, "bán căn hộ 3PN view hồ", "apartment", "trich-gia"],
-  ["không từ khoá", "S9.03 2PN 14tr full đồ", "2PN 14tr", "apartment", "khong-tu-khoa"],
+  ["không từ khoá", "S9.03 2PN 14tr full đồ", "S9.03", "apartment", "khong-tu-khoa"],
   ["từ khoá loại khác", "Chính chủ bán nhà phố 4 tầng", "bán nhà phố", "apartment", "tu-khoa-loai-khac"],
   ["gần X", "Cho thuê phòng gần chung cư Times City", "gần chung cư Times City", "apartment", "ngu-canh-loai-tru"],
   ["cạnh X", "Bán đất cạnh căn hộ mẫu dự án", "cạnh căn hộ mẫu", "apartment", "ngu-canh-loai-tru"],

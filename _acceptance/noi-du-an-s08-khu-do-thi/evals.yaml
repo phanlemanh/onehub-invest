@@ -1,0 +1,84 @@
+schema_version: 1
+feature_slug: noi-du-an-s08-khu-do-thi
+# Không phép đo nào ghi DB oneinvest: E3–E6 chạy trên DB thử oneinvest_dn1_noi dựng lại mỗi lần. Đầu ra chỉ có số và mã kho, không tên dự án S08.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.dn1_thuan
+    layer: unit
+    paths: [pipeline/noi-du-an-s08.mjs, pipeline/noi-du-an-s08.test.mjs]
+    expected: "exit 0; các ca 'DN1-AC-1' trên fixture giả: đúng số dòng noi theo nút, dự án ngoài bảng thành chua_noi lý do ngoai-lat, tổng dòng bằng số dự án đầu vào. Chiều đỏ: đối chứng thêm một dự án vào đầu vào thì tổng đổi đúng một."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.dn1_thuan
+    layer: unit
+    paths: [pipeline/noi-du-an-s08.mjs, pipeline/noi-du-an-s08.test.mjs]
+    expected: "exit 0; các ca 'DN1-AC-2', mỗi lỗi một ca, thông điệp ghim mã lỗi: nut-khong-phai-project, slug-khong-co, project-id-la, du-an-hai-dong, bang-rong, tin-hieu-khong-khop, ung-vien-bi-sot. Đối chứng dương: tệp lành trên cùng fixture qua được."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [db/migrations/074_*.sql, pipeline/noi-du-an-s08.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; 'ok db thu dung lai', 'ok ap 074 hai lan', 'ok check noi thieu nut', 'ok check chua_noi thieu ly do', 'ok check chua_noi co nut' (INSERT sai bị từ chối, thông điệp ghim tên ràng buộc), 'ok doi chung: dong lanh qua check'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [pipeline/noi-du-an-s08.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; 'ok ocp1 3 du an', 'ok grand park 5 du an', 'ok moi du an s08 mot dong', 'ok con lai chua_noi co ly do' kèm số, 'ok tong bang so du an s08', 'ok chay lai khong doi' (băm bảng hai lần khớp)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [db/migrations/074_*.sql, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; ma trận chuẩn hoá block_raw viết trước (bỏ tiền tố toà, chấm, cách, đuôi tầng, không phân biệt hoa thường) với ca riêng trong probe; 'ok doi chung: truoc 074 thay dung s7 s10', 'ok sau 074 0 bi danh trung ma toa', 'ok bi danh da khai da bo', 'ok bi danh khac giu nguyen' (so từng nút với bản trước 074)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [db/migrations/074_*.sql, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; 'ok doi chung: truoc 074 ma ocp khong co trong areas', 'ok area_ids ocp1', 'ok area_ids ocp2 ocp3', 'ok moi ma ocp co trong areas', 'ok ten nut khong con Vu Yen', 'ok area_ids nut khac khong doi', 'ok khong ma cong doc area_ids'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dn1_kin
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, pipeline/noi-du-an-s08.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/kin.mjs]
+    expected: "exit 0; 'ok tap ten s08 bang so du an' (không rỗng), 'ok chi ba tep nhac bang', 'ok bang khong trong danh sach sync', 'ok tep bang noi bi git bo qua', 'ok diff va ho so khong co ten s08', 'ok dau ra lenh khong co ten', 'ok dau ra lenh khong co ma' (nhánh lành và nhánh lỗi). Luật quét: casefold, bỏ dấu, bỏ hậu tố trong ngoặc và _CT, _TT; biên từ; danh sách miễn trừ khai trước cho tên trùng nút công khai đã có trong kho trước vòng này. Chiều đỏ: 'ok doi chung: dong co ten bi bat', 'ok doi chung: them bang vao danh sach sync bi bat'. Báo bằng số, không in tên."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [pipeline/mappings.yaml, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; 'ok mappings co project_id', 'ok mappings co project_name', 'ok mappings noi qua s08_project_links', 'ok mappings chi local', 'ok oneinvest khong doi' (băm asset_nodes và trạng thái có bảng s08_project_links lấy trước bước đầu và sau bước cuối của cùng lượt). Chiều đỏ: 'ok doi chung: tro vao oneinvest bi tu choi', 'ok doi chung: mappings thieu truong bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [pipeline/noi-du-an-s08.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs]
+    expected: "exit 0; lệnh thật bằng tiến trình con trên DB thử, tệp giả sinh trong thư mục gitignored: mỗi kiểu sai một dòng 'ok sai <mã lỗi> thoat khac 0, bang khong doi' với nut-khong-phai-project, slug-khong-co, project-id-la, du-an-hai-dong, bang-rong, tin-hieu-khong-khop, ung-vien-bi-sot, tep-khong-bi-bo-qua, tep-ngoai-kho (git thật); 'ok thu khong ghi'; đối chứng dương 'ok tep lanh cung luong qua duoc'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.dn1_nap
+    layer: backend-effect
+    paths: [pipeline/noi-du-an-s08.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/nap.mjs, _acceptance/noi-du-an-s08-khu-do-thi/probes/bang-noi.sha256]
+    expected: "exit 0; 'ok bang noi dung ban da duyet' (băm khớp), 'ok moi dong noi co tin hieu rieng' kèm số, 'ok ung vien tu khoa da xu ly' kèm số, 'ok khong dong nao bi loai ma van noi'. Chiều đỏ trên bảng thật trong bộ nhớ: 'ok doi chung: trao hai dong khac khu bi bat', 'ok doi chung: xoa mot dong bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

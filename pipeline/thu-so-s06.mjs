@@ -156,10 +156,16 @@ async function docViec(client, state) {
     }
   }
   const viec = [...mau];
+  // 0611-17: chỉ chọn tin có lần thấy gần nhất ≤ 4 ngày — tài khoản không còn
+  // tin nào ≤ 4 ngày RỜI hàng LƯỢT NÀY (không xoá state; lượt sau có tin mới
+  // thì thay_gan_nhat tăng lên, tài khoản tự vào lại). Đo 0611-16: nhóm >4
+  // ngày het-han 28,9-47% — bỏ hẳn thay vì tiêu lời gọi rồi ở lại hàng.
+  const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000;
   for (const r of rows) {
     if (tkDaSo.has(r.account_id)) continue; // đã có số ở tin bất kỳ — không gọi lại
-    // 0311-3 MỞ LẠI (4): tin mới nhất het-han làm tài khoản rơi khỏi việc —
-    // chọn tin mới nhất KHÔNG het-han của tài khoản (list_id1 → list_id2).
+    if (new Date(r.thay_gan_nhat).getTime() < moc4ngay) continue; // 0611-17: tin cũ khỏi hàng
+    // 0311-3 MỞ LẠI (4): chọn tin mới nhất KHÔNG het-han (list_id1 → list_id2)
+    // — list_id1 đã là tin thấy MỚI NHẤT (ORDER BY captured_at DESC).
     const lid = chonTinChuaHetHan(r, state);
     if (lid && !daTh(lid)) viec.push({ ...r, list_id: lid, mau: false });
   }

@@ -5,7 +5,7 @@ import { Frame, FramePanel } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getOfferWards, getPublicOffers, type ListingKind, type OfferFilters } from "@/lib/offers-public"
+import { getOfferWards, getPublicOffers, hasPublicOffers, type ListingKind, type OfferFilters } from "@/lib/offers-public"
 import { slugifyName } from "@/lib/queries"
 import { OffersExplorer } from "./offers-explorer"
 
@@ -26,19 +26,20 @@ export async function OffersRegion({
   /** Ô đứng đầu hàng công cụ (thời hạn thuê). */
   toolbarStart?: ReactNode
 }) {
-  const [{ rows, total, withPhone }, wards] = await Promise.all([
+  const [{ rows, total, withPhone }, wards, coTin] = await Promise.all([
     getPublicOffers(marketId, filters),
     getOfferWards(marketId, filters.kind),
+    hasPublicOffers(marketId, filters.kind),
   ])
   // Thị trường chưa có tin nào (không phải do bộ lọc) — khác «bộ lọc ra 0» (copy-vi.md).
-  if (wards.length === 0) {
+  if (!coTin) {
     return (
       <div className="flex flex-col gap-4">
         {toolbarStart && <div>{toolbarStart}</div>}
         <Empty className="border">
           <EmptyHeader>
             <EmptyTitle>Đang thu thập tin rao ở {marketName}</EmptyTitle>
-            <EmptyDescription>Chưa có tin đủ giá, diện tích và phường ở thị trường này; số liệu khu vực vẫn xem được ở Insight.</EmptyDescription>
+            <EmptyDescription>Chưa có tin đủ giá, diện tích và khu vực ở thị trường này; số liệu khu vực vẫn xem được ở Insight.</EmptyDescription>
           </EmptyHeader>
           <Button variant="outline" size="sm" nativeButton={false} render={<Link prefetch={false} href={marketPath} />}>
             Xem Insight {marketName}

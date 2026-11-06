@@ -67,6 +67,8 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
   await sc.connect()
   await sc.query(readFileSync(join(APP, "../db/migrations/054_labels.sql"), "utf8"))
+  await sc.query(readFileSync(join(APP, "../db/migrations/072_labels_nhom.sql"), "utf8"))
+  await sc.query(readFileSync(join(APP, "../db/migrations/076_labels_ghep.sql"), "utf8"))
   for (let i = 1; i <= 2; i++) {
     await sc.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text) VALUES ($1, 'hanoi__zalo__ngl', 'NGL', $2)`, [`zalo-ngl-${i}`, `tin ${i}`])
     await sc.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed) VALUES ($1, 'S03', $2, $3, 'dev', false, 'ngl')`,

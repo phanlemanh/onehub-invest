@@ -105,7 +105,7 @@ test("LS1-AC-3 căn hộ, trích thật có từ khoá: ô được điền qua 
 const CHU_DUNG = "Chính chủ bán căn hộ 2PN Times City giá 3 tỷ";
 const MA_TRAN_AC4: [string, string, string, Record<string, unknown>, string | null][] = [
   ["trích giả", "t_ls1_gia", CHU_DUNG, { property_type: "apartment", quote_loai: "bán căn hộ 3PN" }, "trich-gia"],
-  ["không từ khoá", "t_ls1_ktk", "Cần bán gấp 2PN Times City giá 3 tỷ", { property_type: "apartment", quote_loai: "bán gấp 2PN" }, "khong-tu-khoa"],
+  ["không từ khoá", "t_ls1_ktk", "Cần bán gấp 2PN Times City giá 3 tỷ", { property_type: "apartment", quote_loai: "Times City" }, "khong-tu-khoa"],
   ["từ khoá loại khác", "t_ls1_lk", "Chính chủ bán nhà phố 4 tầng Minh Khai", { property_type: "apartment", quote_loai: "bán nhà phố" }, "tu-khoa-loai-khac"],
   ["gần X", "t_ls1_gan", "Cho thuê phòng gần chung cư Times City 3tr", { property_type: "apartment", quote_loai: "gần chung cư Times City" }, "ngu-canh-loai-tru"],
   ["cạnh X", "t_ls1_canh", "Bán lô cạnh căn hộ mẫu dự án Minh Khai", { property_type: "apartment", quote_loai: "cạnh căn hộ mẫu" }, "ngu-canh-loai-tru"],
@@ -289,7 +289,7 @@ test("LS1 Focus 2: enrich-run dựng lại evidence của thẻ, đối chiếu 
 // ---------- AC-8: trần, thử, cờ, thiếu khoá ----------
 import { MockLanguageModelV4 } from "ai/test";
 import { chayLenh, docCo, type Noi } from "../scripts/doc-toan-bo-s03.js";
-import { coMauDat, demLuot, doMau, CO_DO_USD_NGAY } from "../src/enrich/doc-toan-bo.js";
+import { coMauDat, demLuot, doMau, CO_DO_USD_NGAY, LUAT_VERSION } from "../src/enrich/doc-toan-bo.js";
 // @ts-expect-error — mô-đun .mjs của pipeline, không có kiểu
 import { wilsonDuoi } from "../../pipeline/lib/eval-classify.mjs";
 
@@ -297,7 +297,7 @@ const noi = (c: pg.Client, o: Partial<Noi> = {}): Noi & { dong: string[] } => {
   const dong: string[] = [];
   return { client: c, khoa: "khoa-gia", resolve: E1_RONG, wilson: wilsonDuoi, log: (d) => dong.push(d), cam: [], dong, ...o };
 };
-const mauDat = (c: pg.Client) => c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test', 'doc-toan-bo:mau', $1)`, [{ prompt_version: PROMPT_VERSION, dat: true }]);
+const mauDat = (c: pg.Client) => c.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test', 'doc-toan-bo:mau', $1)`, [{ prompt_version: PROMPT_VERSION, luat_version: LUAT_VERSION, dat: true }]);
 const BANG_THU = ["silver_labels", "enrichment_proposals", "review_queue", "ops_audit", "ai_calls", "field_assertions"];
 const demBang = async (c: pg.Client) => Object.fromEntries(await Promise.all(BANG_THU.map(async (b) => [b, (await c.query(`SELECT count(*)::int AS n FROM ${b}`)).rows[0].n])));
 
@@ -316,6 +316,32 @@ test("LS1-AC-8 trần nhỏ: dừng trước bài vượt trần, in đã đọc
     assert.equal(await chayLenh({ ...co, tranUsd: 3 }, n), 0);
     assert.equal(goi.length, 5, "LS1-AC-8 lượt sau phải đọc đúng phần còn lại");
     assert.equal(new Set(goi).size, 5, "LS1-AC-8 có bài bị đọc lại");
+  });
+});
+
+test("docCo từ chối cờ lạ, cờ gõ nhầm, cờ thiếu giá trị, chữ thừa: không rơi vào lượt thật", () => {
+  for (const sai of [["--thử"], ["-thu"], ["thu"], ["--thu=1"], ["--tran-usd"], ["--tran-usd", "--thu"], ["--tran-usd", ""], ["--mau"], ["--nhan", "--mau", "5"], ["--dem", "--du"], ["--thu", "--thu"], ["--tran-usd", "1", "--tran-usd", "2"]]) {
+    assert.throws(() => docCo(sai), /doc-toan-bo-s03:/, `phải từ chối: ${sai.join(" ")}`);
+  }
+  assert.deepEqual([docCo(["--thu"]).thu, docCo(["--dem"]).dem, docCo(["--tran-usd", "0.25"]).tranUsd, docCo(["--mau", "5", "--nhan", "t.json"]).mau], [true, true, 0.25, 5]);
+});
+
+test("lỗi gọi hàng loạt: không báo đã đọc hết, còn lại đúng số bài, thoát 3; đọc được hết thì thoát 0", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const ids: string[] = [];
+    for (let i = 0; i < 3; i++) ids.push(await moiTin(c, { id: `t_ls1_sap${i}`, text: `Bán căn số ${i} rộng rãi khu Minh Khai giá tốt` }));
+    await mauDat(c);
+    const sap = async (): Promise<Nhan> => ({ model: "m", listing_intent: "unknown", kind: null, probability: null, probabilities: null, quote: null, quote_ok: null, json_ok: false, error_kind: "GatewayError", latency_ms: 1, cost_usd: 0 });
+    const n = noi(c, { hoi: sap, chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), n), 3, "lỗi gọi hàng loạt không được thoát 0");
+    assert.ok(n.dong.some((d) => d.includes("đã đọc 0") && d.includes("còn lại 3")), `phải báo đúng tiến độ: ${n.dong}`);
+    const m = noi(c, { hoi: hoiGia(() => "{\"intent\":\"off"), chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), m), 3, "JSON hỏng cũng là chưa đọc được");
+    assert.ok(m.dong.some((d) => d.includes("đã đọc 0") && d.includes("còn lại 3")), `${m.dong}`);
+    const k = noi(c, { hoi: hoiGia(() => traLoi({})), chiTin: ids });
+    assert.equal(await chayLenh(docCo([]), k), 0);
+    assert.ok(k.dong.some((d) => d.includes("đã đọc 3") && d.includes("còn lại 0")), `${k.dong}`);
   });
 });
 
@@ -394,7 +420,7 @@ test("LS1-AC-9 --dem khớp đếm độc lập, phân biệt skipped và đã �
     const truoc = await demLuot(c);
     kiemDem(truoc, await demTay(c));
     const hoi = hoiGia((chu) => chu.includes("Chính chủ") ? traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" })
-      : chu.includes("Cần bán") ? traLoi({ property_type: "apartment", quote_loai: "bán gấp 2PN" }) : traLoi({}));
+      : chu.includes("Cần bán") ? traLoi({ property_type: "apartment", quote_loai: "Times City" }) : traLoi({}));
     const kq = await chay(c, [ap, bo, rong, s05], hoi);
     assert.equal(kq.daAp, 1);
     const sau = await demLuot(c);
@@ -448,7 +474,8 @@ const baiMau = async (c: pg.Client, n: number, sai: number) => {
 const bamCanon = async (c: pg.Client) => (await c.query(`SELECT
   (SELECT md5(coalesce(string_agg(offer_id || '|' || property_type || '|' || coalesce(price_vnd::text, '') || '|' || coalesce(area_m2::text, ''), ',' ORDER BY offer_id), '')) FROM sale_offer_records) AS tin,
   (SELECT count(*) FROM enrichment_proposals) AS de_xuat, (SELECT count(*) FROM review_queue) AS the`)).rows[0];
-const hoiCanHo = (goi: string[] = []) => hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "bán căn hộ 2PN" }), goi);
+// Cổng mẫu đòi nhánh số phòng tự đạt (s03-noi-luat-trich-dan): 60 bài đầu mỗi lượt trích `2PN`, còn lại trích `căn hộ`.
+const hoiCanHo = (goi: string[] = []) => { let i = 0; return hoiGia(() => traLoi({ property_type: "apartment", quote_loai: i++ < 60 ? "2PN" : "bán căn hộ 2PN" }), goi); };
 
 test("LS1-AC-10 mẫu đạt: Wilson khớp tính tay, in đủ số, ghi dòng mẫu, không chạm canonical; lượt thật dùng lại nhãn", async () => {
   await withTx(async (c) => {
@@ -584,5 +611,26 @@ test("LS1-AC-9 lùi cả lượt: id lấy theo run_id --dem in ra, mọi tin c�
     assert.equal(ids.length, 2);
     await c.query(`SELECT revert_enrichment($1, $2, $3)`, [ids, "hitl:test", "lùi cả lượt"]);
     assert.deepEqual([await loaiHinh(c, a), await loaiHinh(c, b), await loaiHinh(c, giu)], ["unknown", "unknown", "apartment"], "LS1-AC-9 lùi lượt sai tin");
+  });
+});
+
+// Sự cố lượt 05/11: cắt ở ký tự 300 làm đôi emoji, Postgres từ chối evidence (22P02), tin bị bỏ lại.
+test("emoji đúng điểm cắt 300: đề xuất và thẻ đều ghi được, evidence không có nửa emoji", async () => {
+  await withTx(async (c) => {
+    await nen(c);
+    const dau = "Chính chủ bán căn hộ 2PN Times City giá 3 tỷ ";
+    const chu = dau + "x".repeat(299 - dau.length) + "🏠 hết bài";
+    const a = await moiTin(c, { id: "t_ls1_emoji_ap", text: chu });
+    const ka = await chay(c, [a], hoiGia(() => traLoi({ quote: "Chính chủ bán", property_type: "apartment", quote_loai: "bán căn hộ 2PN" })));
+    assert.deepEqual(ka.loiGhi, [], "đề xuất có emoji ở điểm cắt không được lỗi ghi");
+    const [d] = await deXuat(c, a);
+    assert.equal(d.status, "applied");
+    assert.equal(d.evidence.text, chu.slice(0, 299));
+
+    const b = await moiTin(c, { id: "t_ls1_emoji_the", text: chu + " căn xung đột" });
+    const kb = await chay(c, [b], hoiGia(() => traLoi({ property_type: "apartment", quote_loai: "câu bịa" })), { resolve: async () => ctx({ propertyType: "land", typeBasis: "luật mồi" }) });
+    assert.deepEqual(kb.loiGhi, [], "thẻ có emoji ở điểm cắt không được lỗi ghi");
+    const [the] = await theCua(c, b);
+    assert.equal(the.evidence.text, chu.slice(0, 299));
   });
 });

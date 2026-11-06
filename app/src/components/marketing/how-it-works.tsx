@@ -41,7 +41,7 @@ export function HowItWorks() {
                 Từ thị trường đến một căn
               </h2>
               <p className="text-muted-foreground max-w-[40rem] text-base">
-                Ba bước, cùng một nguồn số liệu: lịch đặt Airbnb tự thu thập, gán vào phường theo toạ độ.
+                Ba bước, cùng một nguồn số liệu: lịch đặt tự thu thập, gán vào phường theo toạ độ.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 @3xl:w-80 @3xl:justify-end">

@@ -92,6 +92,11 @@ Ma trận trang → block máy kiểm: `scripts/ui-standards/b1-block-map.json`.
 
 | Component | File | Why not ReUI? | previewUrl |
 |-----------|------|---------------|------------|
+| LabelFormNhom / NhomRow / LuotHai / BangSo / ChonNhom / BangTruongHop | components/ops/labels/ | Màn gắn nhãn theo nhóm (bản D, GC0): ReUI không có block gắn nhãn; ghép `reui/frame` (stacked, khuôn @reui/form-2 không cài), `ui/toggle-group`, `ui/field`, `ui/table`, không vẽ tay điều khiển | — |
+| AnhBai | components/ops/labels/anh-bai.tsx | Ảnh của bài trên thẻ gắn nhãn: ô tải, Thử lại, hộp xem lớn; đường ảnh theo `?nhan=&anh=`, không URL gốc |
+| DealBody | components/ops/deal-body.tsx | Phần thân một căn dùng chung cho sheet và trang `/ops/deals/[offerId]` (`beMat`): Không có block ReUI cho hồ sơ một tin ở cả hai bề mặt; ráp từ Frame, Alert, ReviewPhotos | |
+| DiscountBar / DealThumb | components/ops/deals-cells.tsx | MetricBarCell của @reui/data-grid-base-2 cộng vạch ngưỡng; ảnh đầu 40 px có HoverCard. Hai ô chỉ riêng cho Căn giá tốt | |
+| DealSimilar | components/ops/deal-similar.tsx | Bảng so căn cùng tiêu chí trong sheet: `ui/table` + Empty, không đủ lý do dùng data-grid cho tối đa 20 hàng | |
 | MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks. Nền xám nhạt (lib/map-style.ts), phường đang xem tô đậm | |
 | ChoroplethMap | components/finder/choropleth-map.tsx | MapLibre thuần (chỉ vẽ + popup + bấm); bộ chọn chỉ số và chú giải là ReUI bên ngoài. Màu bậc chung ở finder/bins.ts. Nền xám nhạt, lớp màu chèn DƯỚI lớp nhãn của nền | |
 | PageHeader / StatTiles | components/page/ | Không phải component mới: page-header của app-shell-30 và stats-1 gom lại để Insight, Listing, Duyệt listing dùng chung (`actions` slot; `tierOf` ở page/tiers.ts để trang server gọi được) | https://reui.io/preview/base/app-shell-30 · https://reui.io/preview/base/stats-1 |

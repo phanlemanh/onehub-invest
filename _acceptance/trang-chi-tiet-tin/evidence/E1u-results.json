@@ -1,0 +1,317 @@
+[
+ {
+  "lối": "sale",
+  "điểm": "than",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   1226,
+   416
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_1de4728856abc87f]",
+  "urlAfter": "/listing/offer_1de4728856abc87f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-than.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "gia",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   897,
+   415
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_1de4728856abc87f]",
+  "urlAfter": "/listing/offer_1de4728856abc87f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-gia.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "ten",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   988,
+   516
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_1de4728856abc87f]",
+  "urlAfter": "/listing/offer_1de4728856abc87f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-ten.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "dia-chi",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   950,
+   480
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_1de4728856abc87f]",
+  "urlAfter": "/listing/offer_1de4728856abc87f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-dia-chi.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "phuong",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   900,
+   480
+  ],
+  "hit": "A.hover:text-foreground -> A[/vn/hanoi/tay-mo]",
+  "urlAfter": "/vn/hanoi/tay-mo",
+  "dialog": null,
+  "hidden": 2,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-phuong.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "nhan",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   1082,
+   516
+  ],
+  "hit": "SPAN.relative -> BUTTON[Chưa xác minh]",
+  "urlAfter": "/vn/hanoi/listings/sale?page=2",
+  "dialog": "Số chưa xác minhSố không lấy trực tiếp từ chính tin này: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Khi gọi, hãy hỏi lại có đú",
+  "hidden": 31,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-nhan.png"
+ },
+ {
+  "lối": "sale",
+  "điểm": "xem-so",
+  "offer": "offer_1de4728856abc87f",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/sale?page=2",
+  "xy": [
+   1195,
+   516
+  ],
+  "hit": "BUTTON.group/button -> BUTTON[Xem số]",
+  "urlAfter": "/vn/hanoi/listings/sale?page=2",
+  "dialog": null,
+  "hidden": 32,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-sale-xem-so.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "than",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   1226,
+   339
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_855a70b914dbd747]",
+  "urlAfter": "/listing/offer_855a70b914dbd747",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-than.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "gia",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   919,
+   306
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_855a70b914dbd747]",
+  "urlAfter": "/listing/offer_855a70b914dbd747",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-gia.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "ten",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   966,
+   443
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_855a70b914dbd747]",
+  "urlAfter": "/listing/offer_855a70b914dbd747",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-ten.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "dia-chi",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   1023,
+   371
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_855a70b914dbd747]",
+  "urlAfter": "/listing/offer_855a70b914dbd747",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-dia-chi.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "phuong",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   918,
+   371
+  ],
+  "hit": "A.hover:text-foreground -> A[/vn/hanoi/khuong-dinh]",
+  "urlAfter": "/vn/hanoi/khuong-dinh",
+  "dialog": null,
+  "hidden": 2,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-phuong.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "nhan",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   1082,
+   443
+  ],
+  "hit": "SPAN.relative -> BUTTON[Chưa xác minh]",
+  "urlAfter": "/vn/hanoi/listings/rent?page=2",
+  "dialog": "Số chưa xác minhSố không lấy trực tiếp từ chính tin này: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Khi gọi, hãy hỏi lại có đú",
+  "hidden": 53,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-nhan.png"
+ },
+ {
+  "lối": "rent-dai-han",
+  "điểm": "xem-so",
+  "offer": "offer_855a70b914dbd747",
+  "ctx": "http://localhost:3462/vn/hanoi/listings/rent?page=2",
+  "xy": [
+   1195,
+   443
+  ],
+  "hit": "BUTTON.group/button -> BUTTON[Xem số]",
+  "urlAfter": "/vn/hanoi/listings/rent?page=2",
+  "dialog": null,
+  "hidden": 54,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-rent-dai-han-xem-so.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "than",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   394,
+   644
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_984384b635e3ad7f]",
+  "urlAfter": "/listing/offer_984384b635e3ad7f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-than.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "gia",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   65,
+   643
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_984384b635e3ad7f]",
+  "urlAfter": "/listing/offer_984384b635e3ad7f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-gia.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "ten",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   141,
+   744
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_984384b635e3ad7f]",
+  "urlAfter": "/listing/offer_984384b635e3ad7f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-ten.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "dia-chi",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   139,
+   708
+  ],
+  "hit": "A.focus-visible:ring-ring -> A[/listing/offer_984384b635e3ad7f]",
+  "urlAfter": "/listing/offer_984384b635e3ad7f",
+  "dialog": null,
+  "hidden": 3,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-dia-chi.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "phuong",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   75,
+   708
+  ],
+  "hit": "A.relative -> A[/vn/hanoi/ngoc-hoi]",
+  "urlAfter": "/vn/hanoi/ngoc-hoi",
+  "dialog": null,
+  "hidden": 2,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-phuong.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "nhan",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   250,
+   744
+  ],
+  "hit": "SPAN.relative -> BUTTON[Chưa xác minh]",
+  "urlAfter": "/listing/offer_8b4e3720c83552c6",
+  "dialog": "Số chưa xác minhSố không lấy trực tiếp từ chính tin này: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Khi gọi, hãy hỏi lại có đú",
+  "hidden": 12,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-nhan.png"
+ },
+ {
+  "lối": "comps",
+  "điểm": "xem-so",
+  "offer": "offer_984384b635e3ad7f",
+  "ctx": "http://localhost:3462/listing/offer_8b4e3720c83552c6",
+  "xy": [
+   363,
+   744
+  ],
+  "hit": "BUTTON.group/button -> BUTTON[Xem số]",
+  "urlAfter": "/listing/offer_8b4e3720c83552c6",
+  "dialog": null,
+  "hidden": 13,
+  "frame": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/ecstatic-wilbur-2c5c66/_acceptance/trang-chi-tiet-tin/evidence/E1u-comps-xem-so.png"
+ }
+]

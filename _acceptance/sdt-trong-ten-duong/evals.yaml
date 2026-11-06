@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: sdt-trong-ten-duong
+# Ca thuần pipeline/scripts/sdt-trong-duong.test.mjs; ca DB pipeline/scripts/sdt-trong-duong.itest.mjs (DB thử oneinvest_sdt); thước pipeline/scripts/do-sdt-trong-duong.mjs.
+# Mỗi phép đo có ca đỏ, ghim thông điệp: đột biến bản sao tệp thật cùng fixture; riêng E5 là cờ gài dữ liệu đầu vào của thước rồi qua đúng phép đếm, phép so. Số trong test là số bịa.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sdt_doc
+    paths: [pipeline/lib/sdt-trong-chuoi.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/sdt-trong-duong.test.mjs, pipeline/scripts/dac-trung-s06.test.mjs]
+    expected: "exit 0; ca 'SDT-AC-1' xanh: 17 hàng của bảng Ma trận AC-1 viết trước trong contract, số assert bằng 17; ca DS1-AC-1 xanh, vẫn 27 hàng. Chiều đỏ trên bản sao tệp thật: bỏ luật số thì ca đỏ gọi tên hàng 1; bỏ ngăn trong mẫu thì gọi tên hàng 4; hạ ngưỡng xuống 8 chữ số thì gọi tên hàng 11."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sdt_db
+    paths: [pipeline/lib/sdt-trong-chuoi.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
+    expected: "exit 0; ca 'SDT-AC-1 Postgres' xanh: 17 hàng khớp bằng toán tử ~ của Postgres với MAU_DAY_SO cho đúng cột viết trước, số assert bằng 17, mỗi hàng lệch gọi tên hàng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sdt_db
+    paths: [pipeline/lib/sdt-trong-chuoi.mjs, pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/lib/assert.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
+    expected: "exit 0; ca 'SDT-AC-2' xanh: fixture legacy sinh bằng catChuyen thật, phát biểu nguồn cũ sinh bằng writeAssertions thật; 12 hàng ra đúng cột viết trước, số assert bằng 12; ô NULL không có field_provenance.street_raw, ô có chữ trỏ phát biểu sống cùng giá trị; 0 phát biểu sống mang số; legacy mang số có retract_reason chua-sdt, dòng còn; lượt kế inserted 0, retracted 0, offers_changed 0, số phát biểu đã rút không đổi và lượt đầu có rút. Chiều đỏ: bản sao không rút legacy mang số thì ca ghim «legacy mang số còn sống»; bản sao bỏ rút phát biểu của bộ đọc thì ca đỏ gọi tên hàng 10."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sdt_db
+    paths: [pipeline/lib/duong-can.mjs, pipeline/resolve-properties.mjs, pipeline/lib/sdt-trong-chuoi.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
+    expected: "exit 0; ca 'SDT-AC-3' xanh: 12 ô ra đúng bảng viết trước qua resolve-properties thật, số assert bằng 12; mục go-sdt-duong đúng 1 ở ô có số, 0 ở ô khác; nhật ký đo bằng định nghĩa độc lập trên toàn nội dung mục trừ thời điểm và khoá tin; lượt hai không thêm; hoanTacDuong đảo ≥ 1 mục, 0 ô mang số; ô và mục log cũ sinh bằng dienDuongCan bản không lọc: ô về NULL, mục cũ bỏ giá trị, dòng còn, lượt hai không đổi log, hoàn tác không trả số. Chiều đỏ năm ca: không che mục log cũ thì ghim «log cũ còn mang số»; bỏ bước gỡ ô thì ghim «ô căn còn số»; bỏ điều kiện lọc ở bên điền thì ghim «căn nhận số từ tin»; ghi giá trị vào mục log thì ghim «log mang số»; hoàn tác trả số thì ghim «hoàn tác trả số». Đối chứng dương: bản thật cùng tiền đề không nhận số."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sdt_do
+    paths: [pipeline/scripts/do-sdt-trong-duong.mjs, scripts/chotot-daily.sh, db/db-thu.sh, pipeline/transform-chotot.mjs, pipeline/resolve-properties.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/lib/sdt-trong-chuoi.mjs, pipeline/lib/duong-can.mjs, pipeline/lib/assert.mjs]
+    expected: "exit 0 trên bản chép oneinvest_sdt_do đã qua bước --chay; băm mã trong bản chép khớp mã hiện tại, lệch thì thoát 1; in tên DB; đối chiếu hai dòng job đêm; trước: tin ≥ 1, căn ≥ 1, nguồn ≥ 1; rút chua-sdt ≥ 1, mục go-sdt-duong ≥ 1; sau = 0 ở tin, căn, nhật ký; số tin nguồn sạch lệch chữ = 0 trên mẫu số ≥ 40.000; ô căn sạch đổi hoặc mất = 0 trên ít nhất 1.000 ô sạch; dòng in chứa dãy số của cả lượt, kể cả log transform và resolve, = 0; in số chuỗi có chữ bị bỏ và số theo định nghĩa rộng. Đối chứng dòng job đã comment thì không khớp. Chiều đỏ cùng lệnh trên bản chép vừa chạy, mỗi ca thoát 1 và ghim thông điệp, stdout không chứa dãy số trừ ca gài in: ma trận --gai-sdt 3 bảng × 2 dạng = 6 ca ra «đường còn số», --gai-mat-duong bỏ đường một tin rồi qua phép so ra «tin nguồn sạch lệch chữ: 1», --gai-can-doi đổi một ô rồi qua phép so ra «ô căn đường sạch đổi hoặc mất: 1», --gai-in-so ra «dòng in chứa dãy số», --gai-bam ra «bản chép không phải của mã này». Trỏ thước vào DB oneinvest thì thoát 2, cả khi có --chay."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.sdt_db
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/duong-can.mjs, pipeline/transform-chotot.mjs, pipeline/scripts/sdt-trong-duong.itest.mjs]
+    expected: "exit 0; ca 'SDT-AC-5' xanh: lô đọc từ localReadSql, selectList thật chứa đúng tin và căn vừa về NULL, hai cột null; buildSwapSql thật có EXCLUDED cho hai cột khi upsert, không keep thì DELETE trắng đúng từng bảng đứng trước INSERT của bảng đó, có keep thì không xoá trắng; mục go-sdt-duong trong lô không chứa dãy số; FILL có sale_offers, properties, không có field_assertions; CLOUD_ALLOW không có field_assertions, sale_offers không có street_number, unit_number. Chiều đỏ: bản sao câu đọc lọc street_raw IS NOT NULL thì ca ghim «lô đồng bộ thiếu hàng về NULL»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

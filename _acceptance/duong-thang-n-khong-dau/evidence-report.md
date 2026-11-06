@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b4911d5026937b5e35beda6ac01e73040db881a8
+verified_commit: b208bbbfeda169a4f35b8a582acade219c9f8ff5
 human_signoff: Mạnh 2026-11-01
 ---
 
@@ -191,3 +191,7 @@ Round 3: PASS — sau commit d33ed027 (them ca KD-AC-7 vao judge-entity-khong-da
 ### Re-pin lần 1 — 2026-11-01, do KD-AC-7 so hai mốc cố định (kd-ac-7-moc-co-dinh)
 run_id: repin-20261101T072107Z-47831
 sha: b4911d5026937b5e35beda6ac01e73040db881a8 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-11-04, do sửa bốn lỗi lệnh doc-toan-bo và hai phép đo đường trên dữ liệu thật
+run_id: repin-20261104T003949Z-85404
+sha: b208bbbfeda169a4f35b8a582acade219c9f8ff5 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng

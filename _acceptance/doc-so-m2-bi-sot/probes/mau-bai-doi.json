@@ -1,0 +1,712 @@
+{
+"ghi_chu": "Mọi bài S03 có captured_at đến mốc này đổi từ rỗng sang có số khi sửa bộ đọc. Mã là md5 của post_id, không chứa chữ bài. Người đọc tay 27 nhóm bài 05/11 trước khi sửa bộ đọc.",
+"moc_captured_at": "2026-11-04T23:50:00Z",
+"so_bai_toi_thieu": 80317,
+"bai": [
+{
+"bai": "00c5a271e0808c33d0053213d767d61d",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "0196f3d54e16d0bfaf6eb9ca3519460a",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "0375dae9b56940776845e0e400e0d0aa",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "05672b1a839b9be4228c2717573c81ef",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "0d2152c2e13c69b82e30893ebb737f20",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "0d3d892a89137e65455fe4dc893af04b",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "0fde6d2d56be97e805de9687afce7362",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "13328af6aea3cc441f228e6fd340eb85",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "13762a4d7fda8cd197c4e43276cb16b7",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "13aee9215ba90bf730e9cbb48c9932a5",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "149624ca62a916748acccd1ba4721532",
+"area_m2": 46,
+"kieu": "m2"
+},
+{
+"bai": "158cac85c37e5225d55c64e40ae4963c",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "158f03d1898af98f328ba730aa447420",
+"area_m2": 46,
+"kieu": "m2"
+},
+{
+"bai": "1823a59730cf400c9b31cac159179a91",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "1a00a2aed7f354bde8693e8c059e396d",
+"area_m2": 79,
+"kieu": "m2"
+},
+{
+"bai": "2063a265d61928498218b58e1c789611",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "235757d590566f20ec034bcf435f6c15",
+"area_m2": 46,
+"kieu": "m2"
+},
+{
+"bai": "24145bbc8bfd9b78e6cd1952536b9c9f",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "24c58212c98418b65e2be22668d5b234",
+"area_m2": 60,
+"kieu": "nhan"
+},
+{
+"bai": "250c9210c3de039dfdbc1a930e878e29",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "2547bebaa5aaa8182411f47a079726c6",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "26b4bcfb63b7ddd8b479c3db10fa71c4",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "27cb51f9de8f0bdad40dc6b0d1a6f860",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "28bef37cd48558458663644d95534b12",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "28d85699e31f6dab386afcb5704f02c8",
+"area_m2": 29.2,
+"kieu": "nhan"
+},
+{
+"bai": "2b07f05062553f64c67de741034e3f1f",
+"area_m2": 69,
+"kieu": "m2"
+},
+{
+"bai": "2bfb83cb11c3eb191036b03abee3f619",
+"area_m2": 45.7,
+"kieu": "nhan"
+},
+{
+"bai": "2dcd0950044bdc3e6d3f9a679e38d5b8",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "3174c6687cdfef5490122f3b3f534dd1",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "34bedd4793b03828a3f1d539d8a7f97f",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "34f4acd16bf73f218f6e5387e889bc0f",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "3613a4298ee173c7bde5b6cbcbced642",
+"area_m2": 82,
+"kieu": "m2"
+},
+{
+"bai": "3a518ff3381034144b3e58d97f8b1566",
+"area_m2": 52,
+"kieu": "m2"
+},
+{
+"bai": "3c52112fb8bf2d0c5ae6347c576ff025",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "3c8aef2e32fe0fa396a372e1490dfa42",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "3e7b34f6a24a611b3f579ffaeed73e91",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "4085fb74b3dca6fee490b17381e80944",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "416c3b85567be0916f2834ffde4f97f8",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "48afa2cac6b9dcbc0439b36b4233620a",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "49f2a1a8076a73273a12e32378664e71",
+"area_m2": 64,
+"kieu": "nhan"
+},
+{
+"bai": "4aa07312f153d16b3fe58638a4898f7b",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "4b5a9ee9001ca36aa8619da700a37751",
+"area_m2": 82,
+"kieu": "m2"
+},
+{
+"bai": "4d9ec35f7b2590dc89a532fd611b4c7f",
+"area_m2": 45.7,
+"kieu": "nhan"
+},
+{
+"bai": "4e962c9ce31e5f1cb2ab45904abef164",
+"area_m2": 46,
+"kieu": "m2"
+},
+{
+"bai": "51813c868dc9937d2a844ffdd3d809d9",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "542b052d10b3d98eda20040a7c23e5bc",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "55d3deaeb81920737b00aacdd7ddcf6f",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "59491732978e90cda704264090312bd0",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "5d10eb71037340e69846684a2d9276e2",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "5e0a40fcc86b1d0e6726be4ac2f57844",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "5efa5bc4b4cdae84cdc7516d4d0c02ca",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "60c4393c5ca12bd3afb030ba672efae8",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "62081556d35b120e1fe5f46c5952be7d",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "62ec3f0186b7d09f7c5d34fbd418df64",
+"area_m2": 45.7,
+"kieu": "nhan"
+},
+{
+"bai": "64c13075c179a8f0a7b465bb4d5d04c8",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "6633dec57f14aeeaac7558fb42a64e09",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "6a08c769bec10178f204b79ce446ea2f",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "6aa0a081bf4ffe7bcc1d453f4cd1c308",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "6c9974fd8fd19d5dba74aae7f6252aaf",
+"area_m2": 79,
+"kieu": "m2"
+},
+{
+"bai": "6d5f98518ec27f40630ee1437637d77d",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "71d533acc86dc525ee1e15328a56278d",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "71dc3526e243729448e4c349a4edd902",
+"area_m2": 79,
+"kieu": "m2"
+},
+{
+"bai": "72a052f98a4b3d669017a92947ac0834",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "72f7b66a2e3e0a2d6caf0d816ec2f88e",
+"area_m2": 128,
+"kieu": "m2"
+},
+{
+"bai": "744b35be7e8795cb9ab9ad5ec492386b",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "7492ae64c5711f3ccd5722e7eaee63cb",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "75b2cc8bd9b19aa82ae9c2295dc7b6b8",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "77c4d0d53e98c263ae17062447cb83e3",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "77ff69fa9a11d7592372262c2f6105a2",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "7db83fc242a2fcc42893256d35886ea2",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "7dc7e4969a3bbb6e0dcb71e6bf71e054",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "85fc56725f2a60719f4fc841f2f2ab00",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "87471e18716a90ab19de3a69413a6561",
+"area_m2": 128,
+"kieu": "m2"
+},
+{
+"bai": "874c91f0f34d289ab25b6ed32d1e78f1",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "877fc2bb0ab107ab6acf741820b0d250",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "8eb635d60fdd6aa41433600b9a6ad8fe",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "92c4c6afabff0181d5544f34caa9a558",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "939568a8c68327a8e3d49b93ee65cda0",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "95e7f24b0b06633665cc1c1dec5f8171",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "96fddffff0d8ed12c29ac10d53bdb39d",
+"area_m2": 45.7,
+"kieu": "nhan"
+},
+{
+"bai": "988b68a8d8f6b7ea41ff69f3f962de58",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "9d758f1bd1b490267908ce963e8bde8d",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "9f6e6e8b93fbef062987416442c99186",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "a1468a9b636223be6a8a175e920d748b",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "a237cb05b3deadcde097c4e9a8062726",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "a3bc1f57b3f6830ab33ea99b55e332b8",
+"area_m2": 34,
+"kieu": "m2"
+},
+{
+"bai": "a4feaeea42d6bada7748ce69a8c4fbb5",
+"area_m2": 86.5,
+"kieu": "nhan"
+},
+{
+"bai": "a754284e3aa4d0a13b2caf8973636475",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "a7c97297dd6121f42217feb9a653db97",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "a7c9f76a46b2a2c44a2b7affa9bf842c",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "a960017fb27eec542ad7e7b0af2bd66f",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "aa4d13b4598c3b7323e5b87b1a58cb7f",
+"area_m2": 128,
+"kieu": "m2"
+},
+{
+"bai": "abf949ebfa760edabd6676c1afce83f1",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "b014c961ba347000c827bffaceade1a5",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "b1072fa1d6b7be0a693be1463e58220d",
+"area_m2": 69,
+"kieu": "m2"
+},
+{
+"bai": "b1470ed46d01beb41c8f66dd1ebe3fd9",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "b29e78d441e56a791b09b0aa723e1226",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "b5714962206030148b04cec618e1701a",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "b67df6c3ce1d5a8a7567c50310f543eb",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "b762a99e83a9a301eeeb4603e12c54cb",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "b88e3a8d2064c31d21a925af039c03f5",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "b8c0eac0072a5d3682f661fff4d8b8d7",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "bfaf68c9f16393ed4fb60fcf3ad2a7d2",
+"area_m2": 69,
+"kieu": "m2"
+},
+{
+"bai": "c01c29c8aa0be4b056c8b353df9d7fee",
+"area_m2": 69,
+"kieu": "m2"
+},
+{
+"bai": "c1e22b04047bcd7a0ad351c307313fc2",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "c30099d5594f6d512b0f9ffd6cdf99d6",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "c33dd9c248336723d75f43c9f7ecc629",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "c34f8645a21feb6f1d3acb99826599e9",
+"area_m2": 64,
+"kieu": "nhan"
+},
+{
+"bai": "c47017289423df25424c4bd9c790bdee",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "ca5e403f6e21608b268e23b990d3cddb",
+"area_m2": 82,
+"kieu": "m2"
+},
+{
+"bai": "cb49a308c1fffdaa9478a442b810d07c",
+"area_m2": 82,
+"kieu": "m2"
+},
+{
+"bai": "ce1119ee1382411b6ba5ace50c3690b9",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "d02ec922a8bae8f28e7e0338ded1bc0a",
+"area_m2": 64,
+"kieu": "nhan"
+},
+{
+"bai": "d054cfecf3aee5c9ec488b862a823c94",
+"area_m2": 30.6,
+"kieu": "nhan"
+},
+{
+"bai": "d38c21bdaf15fa6f426994950f2fa0e6",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "d44d86580ef0ec2d14d3ea4c6519b9ce",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "d510b4423742bc2f1e0b9d4ed791ffbe",
+"area_m2": 34,
+"kieu": "m2"
+},
+{
+"bai": "d7ca9e495da0a378eb7b0dd47436ac37",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "d96220eb5685d441782990fe398a9ebe",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "db309428f5573a40d9d16c968d899541",
+"area_m2": 82,
+"kieu": "m2"
+},
+{
+"bai": "dd77a89d7053331bc91b9350bb3ccbf1",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "dddce6c97f795e7376503496892e86d7",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "de1a2c1cb2593658e8c0fdea6b1e4db6",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "e29a14600a9eb121b95ea7b46368a711",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "e522357a418cf36084922793906d1398",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "e77848438e2ea1a8dbbf240fa29d0ec7",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "e820b066e12eea437569b6224d9a525e",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "ec7a33120ce321211f959f49810bffc3",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "eedb27171bad49c6abb2c0258b5a7b8e",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "ef7486119ce7e1265b2187e7965a6261",
+"area_m2": 47,
+"kieu": "m2"
+},
+{
+"bai": "f4675050410281efbf919b9f040c95a9",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "f4a72d4e202aa18dc624554c180be216",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "f5baf62fa3defcc81cb9881c734a501d",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "f7c7263e9c731bae6b4ab98d1009ab90",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "f962c791c449368a60f6fe5a80d82237",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "fa90942ea6a6778f29b6f0d9f37520f6",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "fb053f3f7c98b8526327878679329c8a",
+"area_m2": 27.2,
+"kieu": "nhan"
+},
+{
+"bai": "fc0aa926f8b1afc69a054825aa697d3a",
+"area_m2": 100,
+"kieu": "m2"
+},
+{
+"bai": "fce0d1c3d9f171213763ab09afa3e028",
+"area_m2": 67,
+"kieu": "m2"
+},
+{
+"bai": "fed5e2b57030f3f305c6231ec1afce4c",
+"area_m2": 59,
+"kieu": "m2"
+},
+{
+"bai": "ffcd23f4212851cc3f15565273f27002",
+"area_m2": 67,
+"kieu": "m2"
+}
+]
+}

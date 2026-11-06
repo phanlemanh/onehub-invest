@@ -1,12 +1,13 @@
 // danh-ba-nguoi-deals-lien-he.test.tsx — hồ sơ _acceptance/people-hien-so-goc, ca «SHS-AC-6»: /ops/deals qua page thật (bản
-// chép thay getSessionUser và getDeals), ma trận ba vai và bản cloud. Vai Vận hành thấy liên hệ, không ảnh và chữ bài; vai
-// Người xem không nhận trường liên hệ nào, cả trong cây phần tử. Số, tên, nhóm trong ca đều bịa.
+// chép thay getSessionUser và getDeals), ma trận ba vai và bản cloud. Lời mới của hồ sơ can-gia-tot-biet-can: vai Vận hành có
+// liên hệ, ảnh, chữ bài; cloud có liên hệ, không ảnh, chữ; vai Người xem không nhận trường nào, cả trong cây phần tử. Số, tên,
+// nhóm trong ca đều bịa.
 import { after, test, type TestContext } from "node:test"
 import assert from "node:assert/strict"
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import type { ReactElement } from "react"
+import { isValidElement, cloneElement, Suspense, type ReactElement, type ReactNode } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import type { User } from "../src/lib/auth"
@@ -15,12 +16,15 @@ import { fmtPhone } from "../src/lib/ops/people"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const PAGE = "src/app/ops/deals/page.tsx"
+const RegionErrorP = import("../src/components/states/region-error")
+let RegionError: unknown
 const QUET_SO = /(?<![\da-zA-Z])(?:\+?84[35789]\d{8}|0[35789]\d{8}|0[35789]\d{2}[ .-]?\d{3}[ .-]?\d{3})(?![\da-zA-Z])/g
 const demSo = (s: string) => s.match(QUET_SO)?.length ?? 0
 
 const TEN = "Người Bán Shs"
 const NHOM = "Nhóm Bán Nhà Shs"
 const BAI = "Chữ bài của tin thử shs"
+const ANH = "/api/zalo-media?media=" + "a".repeat(32)
 const DEAL: DealRow = {
   offerId: "S03:shs-1",
   source: "S03",
@@ -41,24 +45,32 @@ const DEAL: DealRow = {
   sellerName: TEN,
   sellerPhone: "+84912345678",
   groupName: NHOM,
-  mediaPath: "/thu/anh-shs.jpg",
-  mediaUrl: null,
-  postText: BAI,
   brokerNAds: 3,
   brokerMedianGap: 10,
+  propertyType: "apartment",
+  block: "Toà Shs",
+  floor: null,
+  unit: null,
+  streetNumber: null,
+  street: null,
+  district: null,
+  images: [{ src: ANH, origin: "proxy", expiring: false }],
+  postTextFull: BAI,
+  roiDanhSach: null,
 }
-const CLOUD: DealRow = { ...DEAL, sellerName: null, sellerPhone: null, groupName: null, mediaPath: null, mediaUrl: null, postText: null, brokerNAds: null, brokerMedianGap: null }
+// Cloud: tên, SĐT có (cột trong CLOUD_ALLOW); nhóm, ảnh, chữ bài ở lại máy thu.
+const CLOUD: DealRow = { ...DEAL, groupName: null, images: [], postTextFull: null }
 
-const g = globalThis as unknown as { __SHS_NGUOI: User | null; __SHS_DEALS: DealRow[] }
+const g = globalThis as unknown as { __SHS_NGUOI: User | null; __SHS_DEALS: DealRow[]; __SHS_MAY_THU: boolean }
 const user = (role: string) => ({ id: `usr_${role}`, email: `${role}@local.test`, plan: "free", role }) as User
 const thuMuc = join(APP, "tests", `.shs-deals-${process.pid}`)
 after(() => rmSync(thuMuc, { recursive: true, force: true }))
 
 const STUB: [string, string][] = [
   [`import { getSessionUser } from "@/lib/auth";`, `const getSessionUser = async () => (globalThis as unknown as { __SHS_NGUOI: unknown }).__SHS_NGUOI as never;`],
-  [`import { dealTheoVai, getDeals } from "@/lib/deals";`, `import { dealTheoVai } from "@/lib/deals";\nconst getDeals = async (..._a: unknown[]) => (globalThis as unknown as { __SHS_DEALS: never[] }).__SHS_DEALS;`],
+  [`import { dealHang, dealTheoVai, getDeals } from "@/lib/deals";`, `import { dealHang, dealTheoVai } from "@/lib/deals";\nconst getDeals = async (..._a: unknown[]) => { const t = globalThis as unknown as { __SHS_DEALS: never[]; __SHS_MAY_THU: boolean }; return { rows: t.__SHS_DEALS, mayThu: t.__SHS_MAY_THU } };`],
 ]
-type PageMod = { default: () => Promise<ReactElement> }
+type PageMod = { default: (p: unknown) => Promise<ReactElement> }
 let soBan = 0
 async function banChep(doi: [string, string][] = []): Promise<PageMod> {
   let src = readFileSync(join(APP, PAGE), "utf8")
@@ -72,48 +84,57 @@ async function banChep(doi: [string, string][] = []): Promise<PageMod> {
   writeFileSync(f, `import React from "react"\n${src}`)
   return import(pathToFileURL(f).href) as Promise<PageMod>
 }
-async function qua(mod: PageMod, role: string, deals: DealRow[] = [DEAL]) {
+/** Chạy phần máy chủ: DealsContent async được gọi; Suspense và ranh giới lỗi bóc đi vì renderToStaticMarkup dựng đồng bộ. */
+async function moRong(node: ReactNode): Promise<ReactNode> {
+  if (Array.isArray(node)) return Promise.all(node.map(moRong))
+  if (!isValidElement(node)) return node
+  const props = node.props as { children?: ReactNode }
+  if (typeof node.type === "function" && node.type.constructor.name === "AsyncFunction") return moRong(await (node.type as (p: unknown) => Promise<ReactNode>)(props))
+  if (node.type === Suspense || node.type === RegionError) return moRong(props.children)
+  if (props.children === undefined) return node
+  return cloneElement(node as ReactElement<{ children?: ReactNode }>, undefined, await moRong(props.children))
+}
+const json = (x: unknown) => JSON.stringify(x, (k, v) => (k.startsWith("_") || typeof v === "function" || (k === "type" && typeof v !== "string") ? undefined : v))
+async function qua(mod: PageMod, role: string, deals: DealRow[] = [DEAL], mayThu = true) {
+  RegionError ??= (await RegionErrorP).RegionError
   g.__SHS_NGUOI = user(role)
   g.__SHS_DEALS = deals
-  const cay = await mod.default()
-  return { html: renderToStaticMarkup(cay), json: JSON.stringify(cay) }
+  g.__SHS_MAY_THU = mayThu
+  const cay = await moRong(await mod.default({ searchParams: Promise.resolve({}) }))
+  return { html: renderToStaticMarkup(cay as ReactElement), json: json(cay) }
 }
 
 test("SHS-AC-6 ma trận ba vai và bản cloud qua page thật", async () => {
   const mod = await banChep()
-  const ops = await qua(mod, "ops")
-  assert.ok(ops.html.includes(TEN) && ops.html.includes(NHOM), "SHS-AC-6 ops không thấy liên hệ")
-  assert.ok(ops.html.includes('href="tel:+84912345678"') && ops.html.includes("0912 345 678"), "SHS-AC-6 ops không thấy liên hệ")
-  for (const s of [ops.html, ops.json]) assert.ok(!s.includes("<img") && !s.includes(BAI) && !s.includes("anh-shs"), "SHS-AC-6 ops thấy ảnh hay chữ bài")
-
-  const admin = await qua(mod, "admin")
-  assert.ok(admin.html.includes(TEN) && admin.html.includes("tel:+84912345678"), "SHS-AC-6 admin mất liên hệ")
-  assert.ok(admin.html.includes("<img") && admin.html.includes(BAI), "SHS-AC-6 admin mất ảnh hay chữ bài")
-
+  for (const role of ["ops", "admin"]) {
+    const v = await qua(mod, role)
+    assert.ok(v.html.includes(TEN) && v.html.includes('href="tel:+84912345678"') && v.html.includes("0912 345 678"), `SHS-AC-6 ${role} không thấy liên hệ`)
+    assert.ok(v.html.includes("<img") && v.json.includes(BAI) && v.json.includes(NHOM), `SHS-AC-6 ${role} mất ảnh, chữ bài hay nhóm`)
+    assert.doesNotMatch(v.html, /chỉ có ở máy thu/)
+  }
   const viewer = await qua(mod, "viewer")
   for (const s of [viewer.html, viewer.json]) {
     assert.equal(demSo(s), 0, "SHS-AC-6 viewer nhận số")
-    assert.ok(!s.includes(TEN) && !s.includes(NHOM) && !s.includes("tel:") && !s.includes(BAI), "SHS-AC-6 viewer nhận trường liên hệ")
+    assert.ok(!s.includes(TEN) && !s.includes(NHOM) && !s.includes("tel:") && !s.includes(BAI) && !s.includes("zalo-media"), "SHS-AC-6 viewer nhận trường liên hệ")
   }
   assert.ok(viewer.html.includes("Phường Thử"), "SHS-AC-6 viewer mất thẻ tin")
 
   for (const role of ["ops", "admin"]) {
-    const cloud = await qua(mod, role, [CLOUD])
-    assert.ok(!cloud.html.includes("tel:") && demSo(cloud.html) === 0, "SHS-AC-6 cloud có liên hệ")
+    const cloud = await qua(mod, role, [CLOUD], false)
+    assert.ok(cloud.html.includes("tel:+84912345678") && cloud.html.includes(TEN), "SHS-AC-6 cloud mất liên hệ")
+    assert.ok(!cloud.html.includes("<img") && !cloud.json.includes(BAI), "SHS-AC-6 cloud có ảnh hay chữ bài")
     assert.match(cloud.html, /chỉ có ở máy thu/, "SHS-AC-6 chú thích cloud")
   }
-  assert.match((await qua(mod, "viewer")).html, /chỉ có ở máy thu/, "SHS-AC-6 chú thích viewer")
-  // Đối chứng dương: chú thích máy thu đổi khi vai Vận hành có số thật.
-  assert.doesNotMatch(ops.html, /chỉ có ở máy thu/)
+  const viewerCloud = await qua(mod, "viewer", [CLOUD], false)
+  assert.equal(demSo(viewerCloud.json), 0, "SHS-AC-6 viewer cloud nhận số")
 })
 
 test("SHS-AC-6 đối chứng đỏ: lọc theo isAdmin; bỏ lọc viewer", async () => {
-  const theoAdmin = await banChep([["const showContact = xemNoiDungTin(user);", "const showContact = isAdmin(user);"]])
+  const theoAdmin = await banChep([["const xemNoiDung = xemNoiDungTin(user);", `const xemNoiDung = user.role === "admin";`]])
   const ops = await qua(theoAdmin, "ops")
   assert.throws(() => assert.ok(ops.html.includes("tel:+84912345678"), "SHS-AC-6 ops không thấy liên hệ"), /SHS-AC-6 ops không thấy liên hệ/)
-  const boLoc = await banChep([["const rows = tho.map((d) => dealTheoVai(d, { lienHe: showContact, noiDung: isAdmin(user) }));", "const rows = tho;"]])
+  const boLoc = await banChep([["dealHang(dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu })", "dealHang(d, { xemNoiDung, mayThu })"]])
   const viewer = await qua(boLoc, "viewer")
-  assert.equal(viewer.html.includes("tel:"), false, "bỏ lọc: thẻ vẫn không vẽ khối liên hệ, chỉ cây phần tử mang số")
   assert.throws(() => assert.equal(demSo(viewer.json), 0, "SHS-AC-6 viewer nhận số"), /SHS-AC-6 viewer nhận số/)
 })
 
@@ -126,7 +147,7 @@ test("SHS-AC-8 fmtPhone: số gốc E.164 và dạng 0… đều tách nhóm", (
 })
 
 // S4 r1 E12: deadlock ở máy thu bị nuốt thành bản cloud, trang đủ thẻ mà mất liên hệ. Pool thay bằng stub, không chạm DB.
-async function goiDeals(mod: { getDeals: () => Promise<unknown[]> }, code: string, t: TestContext) {
+async function goiDeals(mod: { getDeals: () => Promise<unknown> }, code: string, t: TestContext) {
   const { pool } = await import("../src/lib/db")
   const cauLenh: string[] = []
   const q = t.mock.method(pool, "query", (async (sql: string) => {
@@ -156,11 +177,11 @@ test("SHS-AC-6 getDeals chỉ rơi về bản cloud khi thiếu lược đồ m�
 
   // Đối chứng đỏ: bản chép bỏ lọc mã (catch trần đời trước) nuốt deadlock.
   const goc = readFileSync(join(APP, "src/lib/deals.ts"), "utf8")
-  const tu = `    if (!THIEU_LUOC_DO_MAY_THU.has((e as { code?: string }).code ?? "")) throw e;\n`
+  const tu = `    if (!thieuLuocDo(e)) throw e;\n    const { rows } = await pool.query(sql({ cloud: true }), values);`
   assert.ok(goc.includes(tu), "đột biến không áp được")
   mkdirSync(thuMuc, { recursive: true })
   const f = join(thuMuc, "deals-cu.ts")
-  writeFileSync(f, goc.replace(tu, "").replace(`from "./db"`, `from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`))
+  writeFileSync(f, goc.replace(tu, `    const { rows } = await pool.query(sql({ cloud: true }), values);`).replace(/from "\.\/([\w./-]+)"/g, (_m, ten: string) => `from "${pathToFileURL(join(APP, `src/lib/${ten}.ts`)).href}"`))
   const cu = (await import(pathToFileURL(f).href)) as typeof that
   const { kq } = await goiDeals(cu, "40P01", t)
   assert.throws(() => assert.equal(kq, "ném", "SHS-AC-6 40P01 bị nuốt thành bản cloud"), /SHS-AC-6 40P01 bị nuốt/)

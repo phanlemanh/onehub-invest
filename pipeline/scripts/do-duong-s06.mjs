@@ -12,6 +12,7 @@ import { join } from "node:path";
 import pg from "pg";
 
 import { docDuong } from "../lib/dac-trung-s06.mjs";
+import { chuaDaySo } from "../lib/sdt-trong-chuoi.mjs";
 import { chayResolve } from "../resolve-properties.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 
@@ -149,7 +150,8 @@ async function chay() {
     for (const { v } of thuc) {
       if (docDuong(v) !== null) continue;
       const dau = v.trim().split(/\s+/)[0].toLowerCase();
-      const k = dau.length >= 32 ? "mã-hoá" : dau;
+      // Chuỗi mang số điện thoại thì in nhãn, không in giá trị.
+      const k = chuaDaySo(v) ? "chua-sdt" : dau.length >= 32 ? "mã-hoá" : dau;
       bo.set(k, (bo.get(k) ?? 0) + 1);
     }
     console.log(`tin bị bỏ theo tiền tố: ${[...bo].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(" ") || "0"}`);

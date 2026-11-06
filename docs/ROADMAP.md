@@ -112,6 +112,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   Ý định, giá, diện tích chỉ đối chiếu: lên `evidence.doi_chieu` của thẻ `enrich:<offer_id>`, duyệt hay bỏ ghi `ops_audit` `enrich:doi-chieu`, không đổi tin. Cờ: `--tran-usd`
   (mặc định 3), `--tran-the` (500), `--thu` (không ghi), `--dem`, `--mau N` + tệp nhãn, `--nguong-dung` (0,85 trên ≥ 100 ca); lượt thật từ chối khi chưa có mẫu đạt cùng prompt.
   Đường lui: `--dem` in `run_id`, `revert_enrichment` nhận id các đề xuất `applied` của `run_id` đó. **Chưa chạy lượt thật:** chờ Mạnh ký, `pg_dump` trước; số đo chỉ có sau lượt đó.
+  Nới luật (`_acceptance/s03-noi-luat-trich-dan`, 04/11): `LUAT_VERSION = trich-v2` nhận thêm dạng số phòng, `studio`, `stu` (mã `trich-dan:so-phong`), loại khi thân bài có từ loại khác; cổng mẫu gắn phiên bản luật và đòi nhánh mới tự đạt. `--xu-lai-trich` dùng lại nhãn đã đọc. Lượt ghi thật chờ chữ ký.
+- S03 lên cổng (SL1 `_acceptance/s03-len-cong`, 03/11): tin không nói phường mang khu vực cấp thị trường qua `transform-zalo.mjs`, không ghép căn ở `resolve-properties.mjs` và tính vào đúng thị trường ở 500, 610; migration 069 cho riêng `property_type` nhận giá trị suy khi chỉ có một ứng viên (`tier: inferred`); thẻ tin S03 có nhãn «Chưa xác minh». Sổ nhóm nháp nằm ở `research-local/`, chưa được duyệt và chưa áp.
 - VLM đọc ảnh tin S03 (KC3 `_acceptance/vlm-anh-tin-s03`, 02/11): chọn bài mà chữ còn thiếu giá, loại hình hoặc dấu hiệu tin rao, đọc mỗi ảnh khác nhau một lần bằng
   Qwen trên máy (`agent/scripts/vlm-anh-run.ts`, chọn bài và đếm ở `pipeline/vlm-anh-s03.mjs`), ghi đề xuất vào `silver_labels` nguồn ảnh, không ghi canonical và không lên cloud.
   Lô thật 100 bài: tốt 48, rỗng 51, lỗi 1, lấp đúng lý do thiếu 9, chỉ 1 dòng có giá; JSON hỏng 0, `lo-url` 0, ước 2,3 giờ hết tập đọc 2.406 bài (`docs/research/s03-vlm-anh-do.md`).
@@ -149,15 +151,26 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
-  068 giữ khoá này qua phân xử bằng cách vá định nghĩa hàm đang chạy. Chưa áp 068 thì bộ gán bỏ qua và in `CHUA-AP-068`. Đo: `node pipeline/gan-sdt-s06.mjs --thu` (ROLLBACK).
+  068 giữ khoá này qua phân xử bằng cách vá định nghĩa hàm đang chạy. Chưa áp 068 thì bộ gán bỏ qua và in `CHUA-AP-068`. Tin có số mà mất khoá xuất xứ (hàm phân xử từng bị migration sau ghi đè) được dựng lại bằng cách so với stg, nên tin ẩn số không còn giữ số ghép; không khớp stg thì giữ nguyên và đếm là không rõ gốc (`_acceptance/sdt-s06-khoi-phuc-xuat-xu`). Đo: `node pipeline/gan-sdt-s06.mjs --thu` (ROLLBACK).
+- Số ghép S06 và nhãn (`_acceptance/so-ghep-s06-nhan-danh-ba`, migration 070): danh bạ Người và `sellers` chỉ nhận số S06 có dấu `s06-so-tren-tin`. Cột tính
+  `seller_phone_inferred` của view `sale_offers` đúng với tin S06 có số mà không mang dấu đó; cột lên cloud (`CLOUD_ALLOW`), `field_provenance` ở lại máy. Hai route
+  `/api/v1/listings*` trả `phoneInferred`, `inferred`, thiếu cột hay cột NULL đều coi là chưa xác minh; thẻ tin hiện Badge «Chưa xác minh». Chưa áp 070 thì bộ gán in
+  `CHUA-AP-070`, số trực tiếp vẫn ghi, số ghép mới thì không. Năm mốc triển khai ở `docs/ops/cloud-schema-catchup-2026-11-03-so-ghep.sql`: gộp → kéo về → áp cột cloud →
+  áp 070 → áp 068; **070 trước 068** để số ghép không lên trang khi chưa có nhãn. Đo trên DB thử: `pipeline/do-so-ghep-s06.mjs`; theo dõi: kiểm `so-chua-xac-minh` ở 450.
 - Danh bạ hiện số gốc (SD4, `_acceptance/people-hien-so-goc`, Hỏi-B 30/10, §3 mục 24): ở máy thu, `/ops/people` và trang một người
   hiện số tách nhóm và liên kết `tel:` cho vai Vận hành và `admin`; ô tìm khớp đủ số ở sáu dạng gõ (`chuanHoaSdtTim`); người có số lên
   trước cho hai vai này, vai Người xem giữ thứ tự số tin để thứ tự không lộ ai có số. `/ops/deals`: khối liên hệ hạ từ `isAdmin` xuống
   `xemNoiDungTin`, ảnh và chữ bài giữ `admin` (route `?path=`); `dealTheoVai` lọc trường trước khi vào thẻ, nên vai Người xem không có
   trường liên hệ trong cây phần tử. Bảng danh bạ vẽ đủ hàng máy chủ gửi (trước đó DataGrid dừng ở 10 hàng). Lúc đó số gốc chưa lên cloud; mục 25 của §3 mở sau.
+- Căn giá tốt biết căn (CG1, `_acceptance/can-gia-tot-biet-can`, 03/11): `/ops/deals` là bảng có tab và bộ lọc, sheet một căn, trang `/ops/deals/<offerId>`; thay lưới thẻ
+  và bản mẫu. `getDeals`, `getDeal` trả căn kèm cờ `mayThu`; `dealHang` tính sẵn tên căn, phần còn thiếu, lý do rời phía máy chủ, giao diện dùng chung `DealBody`. Ảnh, chữ bài
+  hạ từ `admin` xuống vai Vận hành (thay lời «ảnh và chữ bài giữ `admin`» của SD4), vẫn chỉ ở máy thu; `dealTheoVai` bỏ trường trước khi vào trang, vai Người xem không nhận
+  ảnh, chữ bài, tên, nhóm, số, toà, tầng, số căn, số nhà. Ngưỡng 5, 35, 50 và 45 ngày ở `lib/deals-chi-tiet.ts`, dùng chung cho SQL và chữ trên trang. Không migration, không thu thêm.
+- Sửa ba lỗi của Căn giá tốt (`_acceptance/can-gia-tot-sua-ba-loi`, Mạnh ký 04/11): chữ giữ chỗ `unknown` không còn hiện như tên ở `/ops/deals` và ở trang Bán, Cho thuê công khai (`lib/ten-tin.ts`, thẻ hiện «Chưa có tên», `unknown` không tính khi đếm tài khoản nhiều tên); căn đắt hơn thước ghi đúng lý do «Đắt hơn thước phường <số>%, không phải căn giá tốt»; crumb «Căn giá tốt» chỉ mang `?can=` khi căn còn trong kết quả `getDeals()`, nên không quay lại chính trang. Không migration, không đổi bố cục.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
+- Khử trùng ảnh (GT1 `khu-trung-anh-tin`, 05/11): `media-rows.mjs` khử theo `sha256` của tệp trong một tin, giữ lần đầu theo `post_ids`, rồi bên đọc mới áp trần 12; ảnh chưa có tệp khử theo URL; S06 không đổi. Màn gắn nhãn cùng luật ở `labels-anh.ts`. Lượt đêm đầu sau gộp xoá khoảng 8.500 dòng trùng.
 - Ảnh tin canonical (NH1, migration 053): bảng `media` theo resource Media của RESO DD 2.1, một dòng mỗi ảnh khác nhau của
   một tin (`resource_record_key` = offer_id). `pipeline/transform-media.mjs` dựng lại theo nguồn ngay sau transform
   (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và
@@ -194,6 +207,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
   soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
   bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Chữ về nguồn trên Invest (CN1 `chu-nguon-tren-cong`, 04/11): các trang công khai gọi S01 là «nền tảng thuê ngắn hạn», S02 là «nguồn tham chiếu trả phí»; giá bán, thuê là trung vị giá rao của tin thật. Thước: `scripts/quet-ten-nguon-html.mjs` (HTML thật), `scripts/check-invest-tier-a.mjs` (mã, chạy ở CI).
+- Trang tin (`trang-chi-tiet-tin`, 05/11): thẻ tin bán, tin thuê dài hạn mở được `/listing/<offer_id>`; đọc qua `getPublicOffer`, `getOfferComps` dùng chung `VISIBLE`; `noindex`; tin không hiện 404 chung câu. Chưa có ảnh, bản đồ, so giá phường.
 - Tin rao trên Invest (TR1 `tin-rao-tren-invest`, 02/11): `sale_offers.seller_name`, `seller_phone`, `stories`,
   `frontage_length` trong `CLOUD_ALLOW`; tên hay số chứa tên nguồn thật về `NULL` ngay trong câu đọc của sync (`maskedSourceExpr`,
   cảnh báo chỉ đếm), bộ soát tầng A vẫn là lưới cuối. Cloud chưa có bốn cột thì sync gửi cột có và cảnh báo; thêm cột bằng
@@ -215,6 +230,18 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Độ phủ API trên máy chủ (AU12 `coverage-cloud-got-tang-a`, 25/10): `GET /api/v1/ops/coverage` trên máy chủ đọc khối
   `freshness` máy thu đẩy lên, trả cờ `state` tươi / cũ / không số; không số thì `rows: null` + «Chỉ đo ở máy thu» (trước
   trả `[]` như thể không nguồn nào); phản hồi chỉ trường độ tươi, không tên nguồn thật.
+- Chấm bộ đọc theo chữ tin ghép (`eval-classify-theo-chu-ref`, 06/11; không migration): `pipeline/lib/eval-classify.mjs` đọc chữ theo `ghep.chu_ref` (vắng thì `ref_id`); bài ảnh không có tin chữ không vào tập chấm, đếm `khong_chu`; dòng trùng cụm đếm `trung_co_nhan`, mỗi cụm chấm tối đa một lần; `--dry` in hai số này, `dq_check_results` giữ khuôn cũ, `n` chỉ gồm dòng được chấm. Dòng chỉ ảnh mà `ghep` NULL (chưa chạy `label-ghep`) vẫn bị chấm trên URL, xem Known limits của hồ sơ.
+- Ghép ảnh trên thẻ gắn nhãn (`ghep-anh-tren-the-gan-nhan`, 05/11; migration 076 đã áp DB máy thu kèm sao lưu, chỉ máy thu): `pipeline/label-ghep.mjs` gọi đúng `ganBaiAnh` (PL28), ghi `eval_label_items.ghep`; `/ops/labels` hiện tin chữ cùng cả cụm ảnh, nhãn «Ghép suy ra · N ảnh», cờ khi có nhiều tin chữ trong 2 phút, trường hợp «Ghép sai»; vẫn gắn mù. Lát `s03-theo-nhom`: 191 dòng có ghép, 144 có nhãn ghép, 11 dòng trùng cụm không vào hàng, 356 thẻ. Đọc tay 30 cụm: 16 đúng, 2 sai rõ, 2 không phán, 10 không tệp. **Trước lần chấm đầu phải sửa `eval-classify`** (còn đọc chữ theo `ref_id`). Phím mũi tên trong hộp xem lớn không có, xem Known limits của hồ sơ.
+- Ảnh trên thẻ gắn nhãn (`anh-tren-the-gan-nhan`, 05/11; migration 075 **chưa áp DB thật**, chỉ máy thu, phải áp trước khi gộp): `/ops/labels` hiện ảnh bài trong thẻ, tệp đã lưu trước, không có tệp thì máy chủ lấy hộ qua `/api/zalo-media?nhan=&anh=` nên URL gốc không xuống trình duyệt; chữ hiện bỏ mọi link, chữ lưu và băm chữ không đổi; căn cứ thứ tư «Ảnh». 36/84 bài chỉ có URL đã mất ảnh ở nguồn, giữ trong mẫu với «Ảnh không tải được». Tối đa 3/367 bài mất số điện thoại khỏi thẻ (link S03, danh thiếp JSON): việc riêng.
+- Đọc số m² bị sót của S03 (GC1 `doc-so-m2-bi-sot`, 05/11): `parsePost` đọc «Diện tích: 45.7» không đơn vị và số, m2 chữ kiểu Unicode; số đọc được trên chữ gốc không đổi, chỉ khâu diện tích qua NFKC. Đo trên bản sao: 15 tin có thêm số, 0 tin có số bị đổi, 0 nhóm gom đổi. S05 dùng chung bộ đọc, 0 bài đổi. Giá viết chữ kiểu Unicode: hàng `GC1G`.
+- Nối dự án S08 của lát vào khu đô thị (DN1 `noi-du-an-s08-khu-do-thi`, 05/11; migration 074 **chưa áp DB thật**): bảng local `s08_project_links`, không sync cloud, ghi bằng `pipeline/noi-du-an-s08.mjs` từ tệp ở máy thu; Ocean Park 1 có 3 dự án, Grand Park 5. Bỏ bí danh `s7`, `s10` trùng mã toà và bí danh sai địa danh, mã vùng OCP1 là Gia Lâm, OCP2, OCP3 cấp tỉnh Hưng Yên. Còn 16 cặp mã vùng chết ở nút khác.
+- Gắn nhãn theo nhóm S03 (GC0 `gan-nhan-theo-nhom-s03`, 04/11; migration 072 **chưa áp DB thật**, chỉ máy thu): `/ops/labels` mặc định lát `s03-theo-nhom`, biểu mẫu
+  17 trường bản D, mỗi ô một căn cứ, bài dùng ngữ cảnh bắt buộc lý do; lượt hai so với máy đọc rồi ghi trường hợp; bảng trường hợp theo nhóm chỉ có số; `pipeline/label-cases.mjs`
+  xuất lý do cho `GCQ1`, không mang người gắn. Lát đời trước giữ biểu mẫu chín trường của PL7. Đọc giá trị máy chỉ ở `app/src/lib/labels-luot-hai.ts`.
+- Nhóm S03 đăng ký hai lần là một tầng khi lấy mẫu (`nhom-dang-ky-hai-lan-s03`, 05/11): `pipeline/label-sample.mjs` gộp lúc đọc theo khoá thật, báo «gộp đơn vị trùng»; sổ, bài,
+  số trên cổng không đổi.
+- Xử gốc nhóm S03 đăng ký hai lần (`nhom-hai-lan-s03-xu-goc`, 05/11): `transform-zalo` gom bài theo khoá thật, một chỗ, đo trên bản sao thật 0 tin rời, 0 tin thêm, 0 tin đổi; lệnh
+  `pipeline/don-nhom-hai-lan.mjs` (Hỏi-1 lối A) chuyển dòng phụ sang «Đã gỡ», giữ dòng và mã, hoàn lại được. **Chưa chạy `--ghi` trên DB thật**: ba dòng thừa còn đó, chờ lời Mạnh, sớm nhất 06/11.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
@@ -336,7 +363,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
 19. **Lát dọc Ocean Park 1** (26/10, Mạnh duyệt gói lát OCP1 «Hỏi-1..7: theo khuyến nghị», `classification-enrich-review.md`
    §7.0): Q2/Q3/Q5/Q11 theo §0.2 F (khoá tin gốc + phát biểu `căn`; bảng phát biểu + phân xử; chỉ tự áp ô đã đo; đo trong
-   lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
+   lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận, Q4 sửa bởi mục 30; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
    định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
    tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
    C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
@@ -397,6 +424,16 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 29. **S01 thu theo ID có trong danh sách S02** (03/11, Mạnh chốt «Cho dùng ID S02», sửa luật 5 và ADR-0009): tìm kiếm S01 chạm
     trần 15 trang nên chỉ phủ khoảng 2,3% số căn hoạt động ở 3 thành phố. Mở thẳng trang chi tiết theo ID; số S02 không lên cổng, doanh thu
     S02 chỉ xếp thứ tự. Đo thử 100 căn trước (`claudedp-0311-13`), chạy lớn theo nấc 200 → 500 → 1.000 → 2.000 căn/đêm sau 05/11, đứng trên hàng ZC5.
+30. **Gắn tin S03 vào căn làm đầu tiên sau 05/11, diện tích đi theo** (04/11, Mạnh chốt «Gộp, làm đầu tiên»): chuỗi `GC0`, `GCQ1`, `GCQ2`, `GC1`, `DN1`, `DB1`,
+    `PL13`, `PL20`, `GC2`, `GC3` (mốc `GCM1`), bắt đầu từ Ocean Park. Đo 04/11: 0/3.708 tin S03 gắn căn; chỉ 45/2.175 tin thiếu m² có trục.
+    Diện tích tin ghi thành phát biểu, tin khác nhận dải kèm nhãn «suy ra», không vào `area_m2`, giá/m², thước giá. S08 chỉ đối chiếu nội
+    bộ, luật 5 và ADR-0016 §9 không đổi. Ba câu còn mở chốt ở Cổng Phạm vi của `GC3`: `docs/plan/pham-vi-gan-can-s03-0411.md`.
+    Mạnh và đội kiểm tay theo từng nhóm trước, thống kê trường hợp rồi mới làm bộ đọc: đo 04/11 chưa có nhãn người nào.
+    **Sửa Q4/H5** (Mạnh chốt «Cho ghi suy ra»): mỗi nhóm có quy ước chuẩn hoá; quy ước đã qua người và đạt eval theo nhóm được tự ghi giá trị kèm nhãn
+    «suy ra» và căn cứ, chữ bài nói khác thì chữ bài thắng; người duyệt một lần cho mỗi phiên bản. Ngữ cảnh chưa qua eval vẫn không tự quyết. Hàng `GCQ1`, `GCQ2`.
+31. **Gom, tách, gộp tin S03** (05/11, Mạnh duyệt «Theo khuyến nghị», `docs/plan/pham-vi-gom-tach-gop-tin-0511.md`): S03 thiếu đơn vị «bài đăng» giữa sự kiện thô và tin.
+    Khử trùng ảnh `GT1` làm ngay. Tách bài nhiều căn là hàng có sẵn `PL18`, kéo lên đứng trước `GCQ1`. Lớp bài đăng `GT2`, kiểm định gộp trùng `GT4` đứng sau `GCQ1`.
+    Lưu bảng riêng hay tính lại quyết sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Chưa mở thu Nhật ký của S03, hỏi ZCode trước (mục chờ `GTH1`).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -408,6 +445,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
 > **LS1 (03/11):** lệnh đọc toàn bộ S03 đã viết, chưa chạy thật; mẫu 383 bài và lượt chính chờ chữ ký hồ sơ `s03-llm-doc-toan-bo`.
+>
+> **SL1 (03/11):** mã, migration 069 và nhãn đã ký hồ sơ `s03-len-cong`; số đo trên DB thử: 962 tin lên cổng, sai nặng 2/30 (nhãn do tác tử gắn). Trên cloud chưa đạt tới khi Mạnh duyệt sổ nhóm và giám sát xếp lượt áp 069, sổ, nạp lại.
 
 > **Sửa 02/11 (Mạnh chốt):** mốc S06 29.762 không phải tin bán; đo ngày 02/11: bán 20.873, thuê 27.626. S06 báo tách bán, thuê;
 > đích là độ phủ so với tổng nguồn báo, con số 45.000 chỉ để tham khảo. Chất lượng chỉ đo, không chặn. Tám chỉ số, kế hoạch ba
@@ -459,7 +498,12 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | KC3 | VLM đọc ảnh tin S03 ghi nhãn bạc nguồn ảnh — `_acceptance/vlm-anh-tin-s03` | 🔶 đã ký Cổng Bằng chứng 02/11; chờ chấm phiếu ba model ở Cổng Giá trị; việc riêng: `--gold` thiếu giá trị rơi sang chạy lô phải sửa trước lần chấm phiếu thật |
 | SDT-S06 | SĐT người bán S06 lên tin, ghép theo tài khoản có đúng một số, xuất xứ tách được — `_acceptance/sdt-s06-ghep-tai-khoan` (T3, 068) | 🔶 Mạnh ký 03/11, chờ gộp; chưa áp 068, chưa ghi thật. **Chưa áp 068 tới khi xong việc riêng Ngoài-1, 4**: lượt S06 ghi thật đưa số S06 kể cả số ghép vào danh bạ, `sellers` và băm lên cloud ngay trong job (`dungNguoi` đọc cả S06), trái mô tả OOS-2. Mở hợp đồng riêng thêm Ngoài-5 (mất xuất xứ khi hàm bị ghi đè), Ngoài-6 (harness s06-vung-moi). Thứ tự Mạnh duyệt 02/11: importer v5 vào main → gộp → `pg_dump` → áp 068 → lượt S06 kế ghi thật. Chưa làm: số gốc và xuất xứ lên cloud, hiển thị và nhãn «chưa xác minh» (Hỏi-3: PR #274 chỉ hiện số ghép khi có nhãn), `dung-nguoi` |
+| SDT-S06-KP | Khôi phục xuất xứ SĐT S06 sau khi hàm phân xử bị ghi đè; tin ẩn số không còn giữ số ghép; nhật ký thêm số khôi phục và không rõ gốc — `_acceptance/sdt-s06-khoi-phuc-xuat-xu` (T2, không migration) | 🔶 chờ Mạnh ký Cổng Bằng chứng |
+| SO-GHEP-S06 | Danh bạ chỉ nhận số S06 có dấu trực tiếp, số còn lại mang nhãn «Chưa xác minh» tới cloud và thẻ tin — `_acceptance/so-ghep-s06-nhan-danh-ba` (T3, 070; Ngoài-1, Ngoài-4 của SDT-S06) | 🔶 đang làm, chưa ký; chưa áp 070, 068, chưa áp cột cloud. Thứ tự năm mốc: gộp → kéo về → áp cột cloud → áp 070 → áp 068 |
 | SD4 | Danh bạ người hiện số gốc cho vai Vận hành: thấy, gọi, tìm theo SĐT, người có số lên trước; `/ops/deals` hạ cổng liên hệ; vai Người xem không nhận số — `_acceptance/people-hien-so-goc` | 🔶 Mạnh ký Cổng Bằng chứng 02/11, chờ gộp; số gốc không lên cloud; việc riêng Mạnh chọn mở: đổi cách chụp ảnh bằng chứng để không có số thật ngay từ đầu; tên người đăng và tên nhóm trên `/ops/deals` qua bộ che tên nguồn |
+| CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | ✅ Mạnh ký 03/11, chờ gộp; căn chỉ còn link ảnh gốc đã hết hạn hiện «Ảnh hỏng», E10 đếm riêng; AC-9 đưa ra hạn chế đã biết (bảng ở 390 px còn thanh cuộn ngang bên trong); ba lỗi người vận hành thấy chờ hợp đồng mới |
+| CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, đã gộp (#303); Ngoài-9 đổi sang Known limits, không mở việc mới |
+| CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -505,6 +549,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V20 | Vai viewer vào Ops nhưng không nhận nội dung tin: `xemNoiDungTin` (ops trở lên) ở `app/src/lib/ops-access.ts`; `/ops/review` cho viewer chỉ số thẻ chờ theo loại (không truy vấn cột nội dung), `/ops/data-flow` xoá bài gốc + tên nhóm trước khi gửi xuống trình duyệt; bảng kiểm kê 22 trang/route Ops; tài khoản thử `--vai viewer` — `_acceptance/viewer-khong-thay-the-duyet` (T3, Ngoài-9 của TV1). Định danh tài khoản thu ở `/ops/collections` để hàng riêng (P1-40): chưa cấp vai viewer cho người thật | 🔄 S4 chấm |
 | V21 | Định danh tài khoản thu theo vai: `xemDinhDanhThu` (ops trở lên) ở `app/src/lib/ops-access.ts` + `cheDinhDanhThu` (giữ số dòng, mã về null) — `GET /api/v1/ops/collections` (thân ở `lib/collections-api.ts`) và trang `/ops/collections` che mã tài khoản, hồ sơ, mã nhóm, tài khoản giữ nhóm với Người xem và bearer chung, cả máy thu lẫn cloud; bản tin `push-ops-facts` gửi `soNhomBat` thay mã nhóm, `factsChan` chặn mã nhóm — `_acceptance/dinh-danh-tai-khoan-thu-theo-vai` (T3, Hỏi-1 của V20) | 🔄 S4 chấm |
 | V22 | Cầm máu số liệu S03: transform-zalo đọc số không lẫn URL/SĐT, luật giá VN, DT «Nm», chặn giá phi lý, khoá gom có mã toà/căn, `seller_name`, phường theo thị trường của nhóm — `_acceptance/s03-cam-mau-so-lieu` (T2, N1) | 🔄 S4 chấm |
+| V23 | Bộ `npm test` của app, pipeline, agent tự chạy trên DB của riêng lượt: `db/db-thu.sh oneinvest_suite_<bộ> --chay` chép từ bản mẫu `oneinvest_suite_mau` (dấu lược đồ + 24 giờ, có VACUUM ANALYZE), xoá khi lệnh dừng; thiếu container thì dừng, đĩa VM dưới 10 GB thì dừng; executor `sellers_chip` cùng đường. 86 executor đơn tệp còn lại vẫn vào DB chung (24 mở giao dịch trên bảng thật), đọc `probes/dem-deadlock.mjs` sau ba ngày — `_acceptance/test-suite-db-thu` | 🔄 05/11 |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI

@@ -1,0 +1,111 @@
+schema_version: 1
+feature_slug: anh-tren-the-gan-nhan
+# DB thử oneinvest_anh_nhan, ảnh giả ở thư mục tạm, tên miền example.test. Không ghi DB oneinvest, không ghi snapshot thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.script.anh_thuan
+    layer: unit
+    paths: [app/src/lib/labels-anh.ts, app/tests/labels-anh.test.ts]
+    expected: "exit 0; ca 'ANH-AC-1': chỉ link → chữ rỗng; chữ lẫn link → giữ chữ, không còn http; nhiều dòng, link giữa câu, link cuối có dấu câu; www. và dạng tên miền cũng biến; cùng bài có link trùng ảnh và link lạ: chỉ link lạ được đếm. Đối chứng: chữ không link giữ nguyên từng byte."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.anh_thuan
+    layer: unit
+    paths: [app/src/lib/labels-anh.ts, app/src/lib/labels-queries.ts, app/tests/labels-anh.test.ts]
+    expected: "exit 0; ca 'ANH-AC-2': tệp trước URL; có tệp thì không dùng URL của cùng ảnh; dòng error vẫn dùng URL; media là null hay chuỗi không vỡ; đường trả về khớp /^\\/api\\/zalo-media\\?nhan=\\d+&anh=\\d+$/. Chiều đỏ: một bản ghi có URL gốc trong kết quả thì phép quét http đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.script.anh_thuan
+    layer: backend-effect
+    paths: [app/src/lib/ops/zalo-media.ts, app/src/app/api/zalo-media/route.ts, app/tests/labels-anh.test.ts]
+    expected: "exit 0; ca 'ANH-AC-3' gọi serveZaloMedia thật với tệp giả trên đĩa: 200 kèm nội dung tệp; không tệp thì layAnh giả được gọi đúng URL; mỗi ca chặn một dòng: tham số chữ, âm, ngoài khoảng, file có .., file tuyệt đối, symlink ra ngoài, vai Người xem, chưa đăng nhập, bảng vắng 42P01. Phản hồi và header không chứa URL gốc. Băm cây thư mục tệp giả trước, sau toàn bộ ca khớp ('ANH-AC-3 cay khong doi'), đối chứng: ghi thêm một tệp thì phép băm đỏ. Đối chứng dương: cùng bộ tham số hợp lệ qua được."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3463/ops/labels"
+    paths: [app/src/components/ops/labels/anh-bai.tsx, app/src/components/ops/labels/label-form-nhom.tsx, _acceptance/anh-tren-the-gan-nhan/probes/seed.mjs]
+    steps:
+      - "Bản chạy: node _acceptance/anh-tren-the-gan-nhan/probes/seed.mjs, rồi chạy đúng lệnh `ban chay` nó in (cổng 3463, DB thử oneinvest_anh_nhan, ảnh giả). Đăng nhập: dùng ego-browser, đặt cookie đọc từ tệp `cookie o` nó in bằng page.cdp Network.setCookie; không in giá trị cookie. Mở /ops/labels?nhom=<mã nhóm seed in>"
+      - "Thẻ đầu (bài chỉ ảnh) khổ 1280: chụp evidence/E4-step1.png; ghi có ảnh giả, không có dòng link, và nội dung trang không có http hay example.test"
+      - "Bấm ô ảnh, chụp evidence/E4-step2.png: hộp xem lớn hiện trọn ảnh không cắt; bấm Esc, ghi hộp đã đóng"
+      - "Tab tới ô ảnh rồi Enter: hộp mở lại, ghi tên ô ảnh; đóng hộp"
+      - "Khổ 375, chụp evidence/E4-step3.png, ghi bề rộng trang không tràn ngang"
+      - "Trước khi lưu: lấy phản hồi HTTP thật của trang bằng curl kèm cookie, đếm bốn mồi seed in (TOAMAYSEED MOIASSERTSEED MOIPROPSEED rent_lt) phải bằng 0; đối chứng: đọc DB thử thấy các mồi đó có trong sale_offer_records, field_assertions, enrichment_proposals, silver_labels của bài đầu. Điền đủ biểu mẫu thẻ đầu rồi Lưu; ở màn đối chiếu lượt hai chụp evidence/E4-step4.png: vẫn thấy ảnh"
+    expected: "Bản chạy: cổng 3463, DATABASE_URL của oneinvest_anh_nhan, SNAPSHOTS_DIR thư mục tạm, seed bằng probes/seed.mjs. Mở /ops/labels nhóm có bài chỉ ảnh: thấy ảnh giả, không có dòng link. Bấm ô ảnh: hộp xem lớn hiện trọn ảnh. Esc đóng. Tab tới ô ảnh rồi Enter cũng mở. Lượt hai cũng thấy ảnh. HTML và phản hồi trang không có giá trị mồi của E6. Ảnh chứng ở khổ 1280 và 375."
+    evidence_required: [run_id, screenshot, observed]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.script.anh_thuan
+    layer: unit
+    paths: [app/src/components/ops/labels/anh-bai.tsx, app/tests/labels-anh.test.ts]
+    expected: "exit 0; ca 'ANH-AC-5' render jsdom: trước onLoad có skeleton; sau onError có 'Ảnh không tải được' và nút Thử lại, bấm thì tải lại với src mới; bài không gì có câu trống. Đối chứng: onLoad thì không còn skeleton."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-5
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3463/ops/labels"
+    paths: [app/src/components/ops/labels/anh-bai.tsx, app/src/components/ops/labels/label-form-nhom.tsx, _acceptance/anh-tren-the-gan-nhan/probes/seed.mjs]
+    steps:
+      - "Cùng bản chạy với E4, sau khi E4 đã lưu; đi tới từng bài tiếp theo bằng cách lưu bài trước. Bài ảnh hỏng: chụp evidence/E10-step1.png, đọc trên ảnh chụp thấy trọn câu 'Ảnh không tải được', không bị cắt, và Thử lại, ở cả khổ 1280 và 375; bấm Thử lại, ghi yêu cầu tới /api/zalo-media được gọi lại trên mạng"
+      - "Chọn ô không suy ra cho mọi trường bài ảnh hỏng, Lưu; đọc DB thử oneinvest_anh_nhan, ghi số dòng eval_labels của bài đó"
+      - "Bài chỉ có link khác: chụp evidence/E10-step2.png, thấy 'Bài có 1 liên kết khác', không thấy câu trống"
+      - "Bài không có gì: chụp evidence/E10-step3.png, thấy câu trống, biểu mẫu vẫn dùng được"
+    expected: "Cùng bản chạy với E4. Bài có URL example.test: thấy 'Ảnh không tải được' và Thử lại, bấm thì route được gọi lại (network). Vẫn điền và lưu được nhãn, DB thử có dòng. Bài chỉ có link khác: thấy 'Bài có 1 liên kết khác', không thấy câu trống. Bài không gì: thấy câu trống."
+    evidence_required: [run_id, screenshot, observed]
+  - id: E11
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3463/ops/labels"
+    paths: [app/src/components/ops/labels/nhom-row.tsx, app/src/components/ops/labels/nhom-fields.ts, _acceptance/anh-tren-the-gan-nhan/probes/seed.mjs]
+    steps:
+      - "Cùng bản chạy với E4. Ở bài có chữ lẫn ảnh, chụp evidence/E11-step1.png: mỗi ô có đủ bốn nút căn cứ, gồm 'Ảnh'; dòng hướng dẫn có nhắc căn cứ Ảnh"
+      - "Bấm 'Ảnh' cho ô Diện tích, điền đủ biểu mẫu, Lưu; đọc DB thử oneinvest_anh_nhan, ghi có dòng basis = anh của bài đó"
+      - "Chụp evidence/E11-step2.png bảng so trên màn: bài đó vẫn được đếm"
+    expected: "Cùng bản chạy với E4. Thấy nút căn cứ thứ tư 'Ảnh'. Bấm cho một ô, lưu: DB thử có dòng basis = anh, bảng so trên màn vẫn đếm bài đó."
+    evidence_required: [run_id, screenshot, observed]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.anh_that
+    layer: backend-effect
+    paths: [app/src/lib/labels-anh.ts, app/src/lib/ops/zalo-media.ts, _acceptance/anh-tren-the-gan-nhan/probes/that.mjs]
+    expected: "exit 0; kết nối chỉ đọc oneinvest, chỉ báo số, không in URL: 'ok 367 bai', 'ok 283 co anh', 'ok 199 co tep', 'ok 199 tep tra anh' (đi qua serveZaloMedia với snapshot thật), 'ok 84 chi url', dòng 'lay ho duoc N khong duoc M' với N + M = 84, 'ok 0 bai con ten mien trong chu hien'. Chiều đỏ: 'ok doi chung: chu con ten mien bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.anh_nap
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, _acceptance/anh-tren-the-gan-nhan/probes/nap.mjs]
+    expected: "exit 0; trên DB thử mồi giá trị đặc trưng ở silver_labels, field_assertions, enrichment_proposals: 'ok tinKe khong co gia tri may', 'ok tinKe khong co http', 'ok doiChieu co anh', 'ok doiChieu khong co http', 'ok doiChieu giu nguyen tru anh', 'ok ghi nhan bam tren chu goc'. Chiều đỏ: 'ok doi chung: chen gia tri may vao ket qua bi bat', 'ok doi chung: ket qua co http bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.anh_kin
+    layer: backend-effect
+    paths: [app/src/lib/labels-anh.ts, _acceptance/anh-tren-the-gan-nhan/probes/kin.mjs]
+    expected: "exit 0; 'ok dong them khong co ten mien nguon', 'ok ho so khong co ten mien nguon', 'ok fixture chi example.test', 'ok mau da sinh khong doi' (đếm và băm eval_label_items của oneinvest trước, sau lượt đo). Tập tên miền lấy từ media, source_registry của DB bằng kết nối chỉ đọc, buộc khác rỗng, báo bằng số. Quét cả tệp evidence/ sau lượt chấm trước khi trình cổng. Chiều đỏ: 'ok doi chung: dong co ten mien bi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.anh_nap
+    layer: backend-effect
+    paths: [db/migrations/075_*.sql, app/src/lib/labels-normalize.ts, app/src/components/ops/labels/nhom-fields.ts, _acceptance/anh-tren-the-gan-nhan/probes/nap.mjs]
+    expected: "exit 0; 'ok ap 075 hai lan', 'ok check nhan anh', 'ok check tu choi gia tri la', 'ok nhan cu khong doi', 'ok luu qua route that voi anh', 'ok dong thuan khong xet can cu', 'ok oneinvest khong doi'. Từ chối chạy khi DB đích khác oneinvest_anh_nhan: 'ok doi chung: tro vao oneinvest bi tu choi'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

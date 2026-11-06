@@ -1,0 +1,8 @@
+Đo 04/11, CGT-DC trên DB máy thu, chỉ đọc, khi giữ khoá s4, không chạy suite khác; 1.483 tin P1 bán.
+Thời gian đo bằng dòng in «CGT-DC đối chiếu 1483 tin trong 178 giây, giới hạn 5» của app/tests/can-gia-tot-doi-chieu.test.tsx (commit a8384a21).
+Máy không rảnh hẳn: load average 7-8 lúc đo.
+
+Ước tính từ 250 tin cách đều cho 1.483 tin:
+giới hạn 1: 632 giây | 2: 389 | 3: 261 | 4: 212 | 5: 189 | 8: 200
+Lượt S4 r1 (chạy cùng các lệnh khác): toàn tệp 311 giây.
+Trần 600 giây còn dư 3,4 lần khi chạy một mình, 1,9 lần dưới tải của lượt S4.

@@ -180,3 +180,28 @@ test("heSoTuoi/diemSapXep: hệ số bậc tuổi đúng; 10 tin 3 ngày cũ (7,
   ds.sort((a, b) => diemSapXep(b) - diemSapXep(a));
   assert.deepEqual(ds.map((x) => x.so_tin), [9, 2, 1], "9 tin×0,9 > 2 tin×1,0 > 1 tin×0,7");
 });
+
+// 0611-17: bỏ tin cũ khỏi hàng chờ — tin/thành phần >4 ngày rời hàng lượt đó
+// (state không xoá); trong tài khoản chọn tin thấy mới nhất trước (list_id1
+// theo captured_at DESC — sẵn có; ca kiểm chonTinChuaHetHan vẫn nhảy tin kế
+// khi tin mới nhất het-han).
+test("0611-17: lọc ≤4 ngày — hàm chọn việc mô phỏng vòng docViec", () => {
+  const ngay = (d) => new Date(Date.now() - d * 86400000).toISOString();
+  const moc4ngay = Date.now() - 4 * 24 * 3600 * 1000;
+  const boLoc = (rows) => rows.filter((r) => new Date(r.thay_gan_nhat).getTime() >= moc4ngay);
+  // ca 1: tin 5 NGÀY bị bỏ
+  const r5 = { account_id: "a5", so_tin: 2, thay_gan_nhat: ngay(5) };
+  assert.ok(!boLoc([r5]).length, "tin 5 ngày bị bỏ khỏi hàng");
+  // ca 2: tin 4 ngày (chưa quá mốc) được chọn
+  const r4 = { account_id: "a4", so_tin: 1, thay_gan_nhat: ngay(3.9) };
+  assert.ok(boLoc([r4]).length === 1, "tin <4 ngày được chọn");
+  // ca 3: tài khoản nhiều tin — chọn tin thấy MỚI NHẤT trước (list_id1 theo
+  // captured_at DESC); tin mới nhất het-han → nhảy tin kế (giữ chonTinChuaHetHan)
+  const state = { da_thu: { "111": { status: "het-han" }, "222": { phone: "+84900000001" } } };
+  const row = { list_id1: 111, list_id2: 222 };
+  assert.equal(chonTinChuaHetHan(row, state), 222, "tin mới nhất het-han → chọn tin kế");
+  // biên: đúng 4.0 ngày (chưa quá) vẫn chọn; 4.1 ngày bị bỏ
+  const r40 = { account_id: "b", thay_gan_nhat: new Date(moc4ngay + 60_000).toISOString() };
+  const r41 = { account_id: "c", thay_gan_nhat: new Date(moc4ngay - 60_000).toISOString() };
+  assert.ok(boLoc([r40]).length === 1 && boLoc([r41]).length === 0, "biên 4 ngày đúng mốc");
+});

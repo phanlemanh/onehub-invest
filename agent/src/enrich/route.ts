@@ -114,12 +114,15 @@ export function routeFields(input: {
   buildings: BuildingNode[];
   /** Field đang có đề xuất queued trên thẻ xung đột — lượt này không áp gì cho chúng. */
   held?: ReadonlySet<EnrichField>;
+  /** Ô chỉ có giá trị suy (lớp inferred, s03-len-cong AC-11): coi là trống cho LLM, E1 không áp thẳng lên ô này. */
+  inferredFields?: ReadonlySet<EnrichField>;
 }): Routed[] {
   const out: Routed[] = [];
   for (const field of ENRICH_FIELDS) {
-    if (!isEmpty(field, input.current[field])) continue; // fill-gap: giá trị cũ thắng
+    const suy = input.inferredFields?.has(field) ?? false;
+    if (!suy && !isEmpty(field, input.current[field])) continue; // fill-gap: giá trị cũ thắng
 
-    const e1Raw = normalizeValue(field, input.e1[field]);
+    const e1Raw = suy ? null : normalizeValue(field, input.e1[field]);
     const llmRaw = input.llm ? normalizeValue(field, input.llm[field]) : null;
     // block_raw: CẢ HAI phía khớp node building → so/áp bằng TÊN CHUẨN của node. E1 thật trả
     // mã thô ("LBV", context-resolver buildingHint), LLM có thể trả mã hoặc tên — chuẩn hoá một

@@ -36,6 +36,10 @@ _Avoid_: tỉnh thành, thành phố, city, province
 - Ghi chú: Cấp huyện đã bỏ từ 07/2025: "quận" chỉ còn trong dữ liệu thô (`district_raw`).
 _Avoid_: quận, quận/huyện, huyện, ward, tiểu thị trường
 
+**Khu vực theo tin**: Chữ khu vực cấp trên phường mà người đăng ghi trong tin, giữ nguyên văn để người vận hành đối chiếu; không phải đơn vị hành chính hiện hành.
+- Code: `district_raw`, `district`
+_Avoid_: quận, huyện
+
 **Khu vực**: Một nút bất kỳ của cây địa lý (`areas`, khoá `area_id`, vd. `vn-hanoi-tay-ho`): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).
 - Code: `area` · RESO: Country / StateOrProvince / City tuỳ cấp
 - Tham số URL: `area` · `areas`
@@ -99,6 +103,14 @@ _Avoid_: tin đăng, offer, sale offer, rao vặt
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
+**Trang tin**: Trang chi tiết của một tin rao, code `OfferBody`, slug `/listing/<offer_id>` dùng chung route với listing thuê ngắn hạn. Tin không hiện thì 404 chung câu «Tin này không còn hiện». _Avoid_: trang listing (nghĩa đó là thuê ngắn hạn), trang nguồn.
+
+**Tin cùng tiêu chí**: Tin đang hiện cùng phường, loại tin, loại hình, diện tích chênh không quá 25%, tối đa 6 tin, trên Trang tin. Code `getOfferComps`. _Avoid_: tin tương tự, comps.
+
+**Chưa xác minh**: Nhãn trên thẻ tin rao từ nguồn chưa đối chiếu với nguồn khác; hiện tại là tin từ nhóm cộng đồng. Tin vẫn lên cổng, người xem biết cần tự kiểm. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Tin chưa xác minh»; mục `/methodology#chua-xac-minh`. Thẻ không nhãn không có nghĩa là đã kiểm chứng.
+- Code: `unverified` (cờ trong phản hồi tin rao, thay cho mã nguồn) · RESO: không có, local extension.
+_Avoid_: chưa kiểm duyệt, tin chưa duyệt
+
 **Listing thuê ngắn hạn**: Listing cho thuê theo đêm tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết. Mọi chỉ số ADR, công suất, «Listing hoạt động», «Listing so sánh», «Listing tự thu» đều nói về loại này.
 - Code: `listing` (bảng `listings`; `kind = rent_st` khi gộp bảng) · RESO: thuê theo ngày (PropertyType = ResidentialLease + LeaseAmountFrequency = Daily); lịch đêm, công suất, ADR là local extension (reso-standards.md)
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
@@ -141,6 +153,10 @@ _Avoid_: so khớp, kiểm chéo
 **Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
 - Code: `hasPhone = false`
 
+**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
+- Code: `seller_phone_inferred` (view `sale_offers`, migration 070) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
+_Avoid_: chưa kiểm chứng, số nghi ngờ
+
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
 
@@ -158,10 +174,26 @@ _Avoid_: DQ check, test dữ liệu
 - Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
 _Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 
-**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, thẻ mang nhãn «cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
-- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals.ts`) · RESO: không có — chỉ số nội bộ
-- Nhãn số lần đăng trên thẻ: «đăng 1 lần», «đăng n lần» (`repostLabel`)
+**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
+- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
+- Nhãn số lần đăng: «đăng 1 lần», «đăng n lần» (`repostLabel`)
 _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
+
+**Đủ để gọi**: Tab của bảng Căn giá tốt: căn không cần xác minh và không thiếu mục nào, người vận hành có thể gọi ngay. Hai tab còn lại là «Cần xác minh» (giảm trên 35%) và «Còn thiếu» (thiếu loại hình, địa chỉ, ảnh, chữ bài, SĐT…). Mỗi căn đúng một tab.
+- Code: `tabCua`, `TabDeal` = `du` · `xac-minh` · `thieu` (`app/src/lib/deals-chi-tiet.ts`) · RESO: không có — chỉ số nội bộ
+_Avoid_: căn đẹp, căn sạch
+
+**Một căn**: Trang riêng của một căn trong Căn giá tốt, cùng phần thân với sheet, có đường dẫn để gửi cho nhau. Mục trống thì bỏ dòng.
+- Code: `DealBody` beMat `"trang"` (`app/src/components/ops/deal-body.tsx`) · slug trang: `/ops/deals/<offerId>` · RESO: không có — chỉ số nội bộ
+_Avoid_: chi tiết deal
+
+**Căn cùng tiêu chí**: Tab trong sheet của Căn giá tốt: các căn cùng phường, cùng loại hình, diện tích trong ±25% quanh căn đang xem, để so giá. Căn cần xác minh đứng cuối.
+- Code: `canCungTieuChi` (`app/src/lib/deals-chi-tiet.ts`) · slug trang: không có — tab trong sheet · RESO: không có — chỉ số nội bộ
+_Avoid_: căn tương tự, comps
+
+**Đã rời danh sách**: Nhãn trên trang một căn khi căn không còn trong bảng Căn giá tốt, kèm lý do: quá 45 ngày chưa thấy lại, giảm dưới 5%, giảm trên 50%, hoặc không tính được mức giảm. Căn vẫn mở được để xem lại; chỉ mã không có mới báo «Không tìm thấy».
+- Code: `roiDanhSach`, `lyDoRoi` (`app/src/lib/deals-chi-tiet.ts`) · slug trang: `/ops/deals/<offerId>` · RESO: không có — chỉ số nội bộ
+_Avoid_: tin hết hạn, tin chết
 
 **Phát biểu**: Một lời khai về một trường của một tin: giá trị + lớp căn cứ + phương pháp + bằng chứng + ai/khi nào. Chỉ thêm, không sửa, không xoá; rút một phát biểu là đặt lúc rút + lý do (PL15, review phân loại §3.4).
 - Code: `field_assertions` · RESO: extension `FieldAssertion` (khuôn HistoryTransactional, ADR-0013 §6)
@@ -453,6 +485,18 @@ _Avoid_: tên nguồn thật ở mọi trang Ops ngoài `/ops/sources`, kể c�
 **Tự thu**: Số tính từ dữ liệu nền tảng tự thu (không phải AirDNA) — nhãn tầng C trên cổng Invest.
 - Code: `self-collected` · RESO: —
 
+**Nền tảng thuê ngắn hạn**: Cách cổng Invest gọi nơi listing thuê ngắn hạn được tự thu (S01), thay cho tên thật; viết tắt «nền tảng» khi câu đã rõ.
+- Code: — · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật ở mọi trang Invest, kể cả metadata, aria và dữ liệu nhúng trong HTML
+
+**Trang gốc**: Trang của một listing thuê ngắn hạn trên nền tảng thu về. Nút «Mở trang gốc», «Xem lịch trên trang gốc» trên `/listing/[id]` giữ đường link trên miền S01; đây là ngoại lệ duy nhất của tên nguồn trong HTML cổng Invest (Mạnh chốt 04/11), chữ trên nút không mang tên nguồn.
+- Code: `originalUrl` · RESO: OriginatingSystemURL (local) · Slug URL: —
+_Avoid_: tên nguồn thật trên nút
+
+**Nguồn tham chiếu trả phí**: Cách cổng Invest nói về nguồn hiệu chuẩn (S02) khi cần nói có dùng nó: không tên, không số.
+- Code: — · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật, mọi số của nguồn này
+
 **Hiệu chuẩn**: Số AirDNA dùng để đối chiếu số tự thu — chỉ ở `/ops/quality`, không bao giờ lên cổng Invest (ToS, luật 5).
 - Code: `calibration (S02)` · RESO: —
 _Avoid_: calibration
@@ -572,6 +616,19 @@ _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 **Không so được**: Nhãn So của hàng «Người đăng» trên thẻ ghép căn khi danh bạ chưa nói hai tin cùng người mà cũng không kết luận được là khác người, thường vì hai tin khác nguồn. Không phải Lệch; hai tin chung SĐT mà danh bạ chưa nối cũng mang nhãn này, kèm dòng phụ nêu số chung.
 - Code: `khong_so`
 _Avoid_: chưa so
+
+**Ghép suy ra** (code `ghep`): tin chữ và các bài ảnh cùng người, cùng nhóm, cách dưới 2 phút do luật PL28 nối lại vì nguồn S03 không có mã album. Là suy đoán, có thể sai. _Avoid_: album.
+
+**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
+- Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
+_Avoid_: nguồn nhãn
+
+**Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
+- Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`
+
+**Trường hợp**: Loại tình huống người gắn ghi sau khi so nhãn của mình với máy đọc, như bí danh viết tắt hay mặc định theo nhóm. Không làm đổi nhãn đã lưu; là đầu vào để viết quy ước nhóm.
+- Code: `eval_label_cases.case_kind`
+_Avoid_: tình huống gắn
 
 ## Cổng & tính năng
 
