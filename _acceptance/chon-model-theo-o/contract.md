@@ -5,10 +5,10 @@ slug: chon-model-theo-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-07-chon-model-theo-o-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-07
 ---
 
 # Acceptance Contract: chon-model-theo-o
