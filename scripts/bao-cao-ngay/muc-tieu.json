@@ -1,0 +1,40 @@
+{
+  "trang_thai": "da-duyet",
+  "ghi_chu": "Bảng mục tiêu số liệu của báo cáo ngày. Mạnh duyệt 07/11 «Theo khuyến nghị» (qua phiên giám sát): đích và hạn như đề xuất; suy phường cho tin S03 từ toà/dự án kèm nhãn «suy ra» ghép vào DB1/PL20; trần tiền ngày đặt cùng lời bật đọc gộp hằng ngày. Thước đo sống ở docs/product/FRAMING.md §5; tệp này chỉ giữ ĐÍCH và HẠN. huong: tang = càng cao càng tốt, giam = càng thấp càng tốt. do: ngưỡng đỏ (vượt qua là đỏ, chưa tới đích mà chưa vượt là vàng).",
+  "ngay_de_xuat": "2026-11-07",
+  "ngay_duyet": "2026-11-07",
+  "bien_dong_canh_pct": 5,
+  "da_biet": [
+    { "id": "P1", "o": "S01/vn", "ly_do": "S01 không chạy từ 01/11; liên lạc đang xếp lượt thử 100 căn với ZCode", "den": "2026-11-14", "ghi": "liên lạc qua giám sát 07/11" },
+    { "id": "Q1", "o": "freshness:S01/vn", "ly_do": "cùng ô độ tươi S01/vn — chờ lượt thử 100 căn", "den": "2026-11-14", "ghi": "liên lạc qua giám sát 07/11" }
+  ],
+  "chi_so": {
+    "NS1": { "ten": "Đơn vị đạt bậc đích (căn hộ B5, loại khác B3)", "nhom": "North star", "huong": "tang", "dich": 1, "han": "2026-12-31", "nguon": "data_level_snapshot" },
+    "NS1b": { "ten": "Đơn vị ở B3 trở lên", "nhom": "North star", "huong": "tang", "dich": null, "han": null, "nguon": "data_level_snapshot" },
+    "NS2": { "ten": "Tin S03 đã gắn căn", "nhom": "North star", "huong": "tang", "dich": null, "han": "2026-11-30", "nguon": "property_offers", "ghi_chu_dich": "≥ 30% tin căn hộ S03 Ocean Park 1 + Grand Park ở mức toà trở xuống — đo được khi PL20 ghi phát biểu liên kết" },
+    "NS3": { "ten": "Ô nghi tụt bậc (so ảnh chụp hôm trước)", "nhom": "North star", "huong": "giam", "dich": 0, "do": 0, "han": null, "nguon": "data_level_snapshot" },
+    "F1": { "ten": "S03 bài nhận (ngày đủ gần nhất)", "nhom": "Phễu", "huong": "tang", "dich": 7000, "do": 4000, "han": null, "nguon": "data_flow_snapshot" },
+    "F2": { "ten": "S03 tin rao mới (ngày đủ gần nhất)", "nhom": "Phễu", "huong": "tang", "dich": 250, "do": 100, "han": null, "nguon": "data_flow_snapshot" },
+    "F3": { "ten": "Tin S03 sống đạt B1 (%)", "nhom": "Phễu", "huong": "tang", "dich": 50, "han": "2026-11-30", "nguon": "offer_data_level" },
+    "F3b": { "ten": "Tin S03 sống thiếu diện tích (%)", "nhom": "Phễu", "huong": "giam", "dich": null, "han": null, "nguon": "sale_offers" },
+    "F4": { "ten": "Tin rao bị bỏ sót (%)", "nhom": "Phễu", "huong": "giam", "dich": 10, "han": "2026-11-30", "nguon": "mẫu soát DO1 (chưa có) — mốc 07/11 ~26% trên vàng 48 thẻ" },
+    "F5": { "ten": "Tin S03 sống có tới phường (%)", "nhom": "Phễu", "huong": "tang", "dich": 60, "han": "2026-11-30", "nguon": "sale_offers.area_id", "ghi_chu_dich": "suy phường từ toà/dự án kèm nhãn «suy ra», làm trong DB1/PL20 (Mạnh duyệt 07/11)" },
+    "D2": { "ten": "Thẻ nhãn người (tích luỹ, distinct)", "nhom": "Độ đúng", "huong": "tang", "dich": null, "han": null, "nguon": "eval_labels", "ghi_chu_dich": "≥ 80 thẻ mỗi phân khúc trước khi xét cổng nhóm A (PL21)" },
+    "D3a": { "ten": "Đọc tin: JSON hỏng (%)", "nhom": "Độ đúng", "huong": "giam", "dich": 1, "do": 2, "han": null, "nguon": "silver_labels" },
+    "D3b": { "ten": "Đọc tin: trích không có trong bài (%)", "nhom": "Độ đúng", "huong": "giam", "dich": 1, "do": 2, "han": null, "nguon": "silver_labels" },
+    "P1": { "ten": "Ô độ tươi quá SLO", "nhom": "Phủ & tươi", "huong": "giam", "dich": 0, "do": 0, "han": null, "nguon": "scripts/lib/freshness.mjs" },
+    "P2a": { "ten": "S06 tin bán sống", "nhom": "Phủ & tươi", "huong": "tang", "dich": 45000, "han": null, "nguon": "sale_offers" },
+    "P2b": { "ten": "S03 tin sống", "nhom": "Phủ & tươi", "huong": "tang", "dich": 2500, "han": null, "nguon": "sale_offers" },
+    "P2c": { "ten": "S01 căn", "nhom": "Phủ & tươi", "huong": "tang", "dich": 1000, "han": null, "nguon": "listing_records" },
+    "P2d": { "ten": "S08 dự án", "nhom": "Phủ & tươi", "huong": "tang", "dich": 200, "han": null, "nguon": "stg_s08_inventory" },
+    "P3": { "ten": "S06 nhận ngày đủ gần nhất / TB 7 ngày (%)", "nhom": "Phủ & tươi", "huong": "tang", "dich": 70, "do": 50, "han": null, "nguon": "data_flow_snapshot" },
+    "Q1": { "ten": "Dòng kiểm DQ đỏ (26 giờ)", "nhom": "Phủ & tươi", "huong": "giam", "dich": 0, "han": null, "nguon": "dq_check_results" },
+    "C1": { "ten": "USD đọc tin ngày qua", "nhom": "Chi phí", "huong": "giam", "dich": null, "do": null, "han": null, "nguon": "silver_labels.cost_usd", "ghi_chu_dich": "trần ngày đặt cùng lời bật đọc gộp hằng ngày (Mạnh duyệt 07/11)" },
+    "C2": { "ten": "USD mỗi bài đọc", "nhom": "Chi phí", "huong": "giam", "dich": 0.002, "han": null, "nguon": "silver_labels" },
+    "C4": { "ten": "Model trong ai_calls 7 ngày thiếu giá", "nhom": "Chi phí", "huong": "giam", "dich": 0, "han": null, "nguon": "ai_model_prices", "ghi_chu_dich": "thêm giá model Gateway trong PL30 (dãy P2)" },
+    "H1": { "ten": "Thẻ duyệt chờ", "nhom": "Công người", "huong": "giam", "dich": 200, "han": "2026-11-21", "nguon": "review_queue" },
+    "H1b": { "ten": "Thẻ được quyết trong 24 giờ", "nhom": "Công người", "huong": "tang", "dich": null, "han": null, "nguon": "review_queue" },
+    "H2": { "ten": "Dòng nhãn người ngày qua", "nhom": "Công người", "huong": "tang", "dich": null, "han": null, "nguon": "eval_labels" },
+    "H3": { "ten": "Hàng mốc GCM1 đã ký", "nhom": "Công người", "huong": "tang", "dich": 20, "han": "2026-11-30", "nguon": "_acceptance/ + lo-trinh.json" }
+  }
+}
