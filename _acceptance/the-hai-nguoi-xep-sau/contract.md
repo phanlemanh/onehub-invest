@@ -5,7 +5,7 @@ slug: the-hai-nguoi-xep-sau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-06T04:27:33Z
 approved_by:
@@ -45,3 +45,9 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: một trục ng�
 ## Notes
 
 - Nhánh cắt từ đầu nhánh #328 (cùng tệp `labels-queries.ts`); gộp sau #328.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-1: phép đo trên lát thật vẫn báo xanh khi tin kế trả rỗng cho một nhóm, nên một nhóm hết tin sớm sẽ không bị phép đo bắt.
+  - Ngoài-2: AC-4 chỉ chứng không nhóm nào kẹt ở thẻ hai người, chưa chứng mọi nhóm còn thẻ đơn đều nhận được tin.
+  - Ngoài-3: với tin ghép, giờ đăng ở màn gắn lượt một có thể khác giờ ở màn lượt hai.
+  - Ngoài-4: trên DB thử, tên người đăng có thể bị che sai hoặc để trống vì bước che tên nguồn đọc DB chính thay vì DB thử.
+  - Ngoài-5: chiều đỏ của test chỉ kiểm kết quả khác kết quả đúng, chưa ghim giá trị sai mong đợi.

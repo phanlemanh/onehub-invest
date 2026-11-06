@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 4dc14046116e7ce8015b047d29e4d81a44ca547b
-human_signoff:
+human_signoff: Mạnh 2026-11-06
 ---
 
 # Evidence Report: the-gan-nhan-nguoi-dang
