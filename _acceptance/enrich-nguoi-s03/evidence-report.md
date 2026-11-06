@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d78555cc4119c0d0416db2692f789bc24436ceca
+verified_commit: 8f2c1d16b77919a61432c2dec13d08ccf3d11fea
 human_signoff: Mạnh 2026-11-06
 ---
 
@@ -279,3 +279,7 @@ sha: b655415cd178b50d0c3dd11ebc079f479063a846 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-11-06, do lõi gán số qua người chuyển vào lib cho job-exit.test
 run_id: repin-20261106T104525Z-16629
 sha: d78555cc4119c0d0416db2692f789bc24436ceca · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10
+
+### Re-pin lần 3 — 2026-11-06, do hoá cũ sau khi gộp main (#331)
+run_id: repin-20261106T114943Z-44605
+sha: 8f2c1d16b77919a61432c2dec13d08ccf3d11fea · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7u, E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10
