@@ -83,6 +83,8 @@ export const SCAN_FILES = [
   "src/components/ops/labels/labels-skeleton.tsx",
   "src/components/ops/labels/labels-view.tsx",
   "src/components/ops/labels/luu-nhan.tsx",
+  "src/components/ops/labels/ma-the.tsx",
+  "src/components/ops/labels/gia-la.ts",
   "src/components/ops/labels/nguoi-dang.tsx",
   "src/components/ops/people/people-badges.tsx",
   "src/components/ops/people/people-content.tsx",
