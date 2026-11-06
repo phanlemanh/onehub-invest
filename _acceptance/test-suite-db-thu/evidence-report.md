@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: cfacf45e02ea7ffb8f307f794ee04c2c3cb70381
+verified_commit: e7a6ac242a572e91623a671a60295b6d13c2a256
 human_signoff: Mạnh 2026-11-06
 ---
 
@@ -194,3 +194,7 @@ none — every multi-run eval is uniform
 Round 1: E5, E6 đỏ (lay-mau app và pipeline) và có finding trong hợp đồng ở AC-2, AC-3, AC-5, AC-7. Returned to implementation.
 Round 2: BLOCKED — E2 (that.sh) không chạy được vì khung bọc lệnh lỗi tệp tạm; E5, E6, E7 đỏ vì ba-bo.sh thoát đỏ do ca CGT-DC của app quá thời gian.
 Round 3: mọi eval xanh (E1, E1b, E1c, E2, E3, E4, E5, E6, E7, E8, E9) và sáu lệnh suite xanh trên cfacf45e; E2 chạy lại được, ba-bo.sh xanh cả ba bộ. Mốc verified_at ghi chung theo lượt chạy E2, giờ chi tiết từng lệnh ở run-log.jsonl.
+
+### Re-pin lần 1 — 2026-11-06, do hoá cũ do gộp main (#327)
+run_id: repin-20261106T014512Z-70933
+sha: e7a6ac242a572e91623a671a60295b6d13c2a256 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
