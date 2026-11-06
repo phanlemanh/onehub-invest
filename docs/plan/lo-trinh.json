@@ -295,7 +295,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren. (Câu cũ «DB1 dựng từ phát biểu của hàng này, nên hàng này đứng trước DB1» hết hiệu lực theo Q4 07/11.) Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn. Q4 07/11 (ROADMAP §3 mục 32): DB1 lượt đầu không chờ hàng này; mã căn của hàng này bổ sung vào danh bạ sau."
     },
     {
       "ma": "PL14",
@@ -408,7 +408,7 @@
       "phu": [
         "C2.4"
       ],
-      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước."
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước. Biến silver_labels của đọc gộp PL30 thành phát biểu observed/e2_llm kèm câu trích (Q5 07/11). Đề xuất (quyết ở Cổng Phạm vi PL18): gánh luôn ý định tin (offer/inquiry/not_listing) làm trường phát biểu theo khoá bài — hiện chưa hàng nào nhận; không gộp thì cắt hàng riêng."
     },
     {
       "ma": "PL19",
@@ -466,7 +466,8 @@
       "phu": [
         "C2.5"
       ],
-      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2"
+      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2",
+      "ghi_chu": "Q3 hoãn 07/11: cổng tự áp và B3 đo trên tập test mù đóng băng hay mẫu nháp — quyết khi mở hàng này."
     },
     {
       "ma": "PL22",
@@ -3446,7 +3447,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md)."
+      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Lượt đầu dựng khung toà, trục từ S08 + phát biểu toà, trục của bộ đọc luật (Q4 07/11); mã căn từ PL13 bổ sung sau. Mạnh Cổng Đáng 07/11: «Build theo đề xuất»."
     },
     {
       "ma": "DN2",
@@ -3582,7 +3583,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²)."
+      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²). Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
     },
     {
       "ma": "GC3",
@@ -3610,7 +3611,7 @@
         "pipeline/sync-cloud.mjs",
         "CONTEXT.md"
       ],
-      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng."
+      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng. Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
     },
     {
       "ma": "GC0",
@@ -4623,8 +4624,8 @@
     {
       "ma": "GNH2",
       "dot": "gan-nhan-s03-0611",
-      "cau_giao": "Hai lớp nhãn: vàng do người duyệt, bạc do model lớn gắn dưới labeler_id riêng, người soát ngẫu nhiên ~20%",
-      "ly_do": "Đề xuất của trợ lý gắn nhãn 06/11; Mạnh bỏ đo mù, chọn «nháp rồi feedback», chưa chốt lớp bạc. Nhãn đo mù 10 thẻ đã niêm phong ở research-local/do-mu-s03",
+      "cau_giao": "Hai lớp nhãn: vàng do người duyệt, «nhãn nháp Opus» do model lớn gắn dưới labeler_id riêng, người soát ngẫu nhiên ~20%",
+      "ly_do": "Đề xuất của trợ lý gắn nhãn 06/11; Mạnh bỏ đo mù, chọn «nháp rồi feedback», chưa chốt lớp bạc. Nhãn đo mù 10 thẻ đã niêm phong ở research-local/do-mu-s03 Đổi tên theo Q7 07/11: «nhãn bạc» là bảng silver_labels, lớp này gọi «nhãn nháp Opus».",
       "phu": [
         "GNH2"
       ],

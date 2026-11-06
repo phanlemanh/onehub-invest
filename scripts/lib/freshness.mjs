@@ -64,6 +64,21 @@ export const PROBES = {
 };
 
 /**
+ * Gộp nhãn thành phố của bản thu: `vn-<tp>` (dạng mã thị trường, 064) và `<tp>` là cùng một nơi — lấy lần thu mới nhất.
+ * Không gộp thì một bản thu lẻ cũ dán `vn-hcmc` thành một ô «quá hạn» riêng, dù vùng thật dán `hcmc` vẫn thu đều
+ * (báo nhầm S06/vn-hcmc 07/11, ON17). Nhãn cấp quốc gia (`vn`) giữ nguyên.
+ */
+export function gopThanhPho(rows) {
+  const m = new Map();
+  for (const r of rows) {
+    const city = typeof r.city === "string" ? r.city.replace(/^vn-(?=.)/, "") : r.city;
+    const cur = m.get(city);
+    if (!cur || new Date(r.last).getTime() > new Date(cur.last).getTime()) m.set(city, { ...r, city });
+  }
+  return [...m.values()];
+}
+
+/**
  * @returns {Promise<Array<{code: string, city: string|null, last: string|null, ageHours: number|null,
  *   sloHours: number|null, status: "fresh"|"stale"|"none"|"no-slo"}>>}
  */
@@ -81,7 +96,7 @@ export async function readFreshness(client, { now = new Date() } = {}) {
     const probe = PROBES[code];
     const others = reg.filter((r) => r.code !== code).flatMap((r) => r.source_ids);
     const rows = probe ? (await client.query(probe.sql, probe.args(ids, others))).rows : [];
-    const seen = rows.filter((r) => r.last !== null);
+    const seen = gopThanhPho(rows.filter((r) => r.last !== null));
     if (seen.length === 0) {
       out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none" });
       continue;

@@ -123,3 +123,22 @@ describe("định nghĩa độ tươi app ↔ CLI (AU6)", () => {
   });
 });
 
+
+// ON17 (07/11): bản thu lẻ dán `vn-hcmc` không được thành ô «quá hạn» riêng khi vùng thật dán `hcmc` vẫn thu đều.
+describe("ON17 gộp nhãn thành phố vn-<tp> vào <tp>", () => {
+  const rows = [
+    { city: "hcmc", last: ago(3) },
+    { city: "vn-hcmc", last: ago(109) },
+    { city: "vn", last: ago(354) },
+    { city: "vn-da-nang", last: ago(2) },
+  ];
+  test("lấy lần thu mới nhất mỗi nơi; nhãn quốc gia giữ nguyên", () => {
+    const by = Object.fromEntries(cli.gopThanhPho(rows).map((r) => [r.city, r.last]));
+    assert.deepEqual(Object.keys(by).sort(), ["da-nang", "hcmc", "vn"]);
+    assert.equal(by.hcmc, ago(3));
+    assert.equal(by.vn, ago(354));
+  });
+  test("bản app và bản CLI cho cùng kết quả", () => {
+    assert.deepEqual(app.gopThanhPho(rows), cli.gopThanhPho(rows));
+  });
+});
