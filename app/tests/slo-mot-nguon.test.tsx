@@ -11,7 +11,7 @@ import type { FreshnessRow } from "../src/lib/freshness"
 import type { CoverageRow } from "../src/lib/ops-queries"
 
 const SCHEMA = `slo_test_${process.pid}`
-const BASE_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
+const BASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 // Pool của app (src/lib/db.ts) đọc DATABASE_URL lúc import — đặt TRƯỚC mọi import động bên dưới.
 {
   const u = new URL(BASE_URL)
