@@ -53,7 +53,7 @@ ADR-0013; spec `docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-des
 ## Ngưỡng chết / ngưỡng UAT
 
 - Câu hỏi phép đo trả lời: Danh bạ toà · trục · căn cao tầng của Ocean Park 1 và Grand Park dựng từ S08 và phát biểu trên tin có ổn định qua nhiều lần dựng, đủ toà cho các hàng gắn căn, và không đúc căn không có bằng chứng không?
-- Kết quả nào là SỐNG: Dựng lại hai lần trên DB thử: số toà, trục, căn và khoá không đổi; 0 căn không có bằng chứng (mỗi khoá căn trỏ ít nhất một mã S08 hoặc phát biểu trên tin); mọi toà cao tầng của hai khu trong S08 có khoá toà và UPI; ít nhất 90% mã căn S08 cao tầng của hai khu tách được toà · tầng · trục, phần còn lại nằm trong sổ lý do; 3 dòng toà cũ ở `asset_nodes` đã sang bảng toà, khoá cũ giữ làm bí danh
+- Kết quả nào là SỐNG: [SUPERSEDED 2026-11-07 — Mạnh duyệt Cổng Phạm vi «duyệt», nhận Hỏi-1: ba dòng `asset_nodes` building là phân khu, giữ ở họ Vùng, toà S08 con trỏ cha phân khu; vế «3 dòng toà cũ đã sang bảng toà, khoá cũ giữ làm bí danh» thay bằng «3 dòng phân khu giữ nguyên, toà của chúng trỏ đúng phân khu» (AC-10)] Bản gốc: Dựng lại hai lần trên DB thử: số toà, trục, căn và khoá không đổi; 0 căn không có bằng chứng (mỗi khoá căn trỏ ít nhất một mã S08 hoặc phát biểu trên tin); mọi toà cao tầng của hai khu trong S08 có khoá toà và UPI; ít nhất 90% mã căn S08 cao tầng của hai khu tách được toà · tầng · trục, phần còn lại nằm trong sổ lý do; 3 dòng toà cũ ở `asset_nodes` đã sang bảng toà, khoá cũ giữ làm bí danh
 - Kết quả nào là CHẾT: Dựng lần hai đổi số hay khoá; hoặc có căn đúc không bằng chứng; hoặc dưới 70% mã căn S08 tách được toà · tầng · trục (phải đổi sang nhập bảng tay)
 - Timebox: một vòng T3, tối đa 3 lượt chấm; áp migration 082 lên DB máy thu là lời riêng của Mạnh sau Cổng Bằng chứng
 
