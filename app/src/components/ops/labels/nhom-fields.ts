@@ -1,4 +1,4 @@
-import { CO_KHONG, FIELD_LABEL, selectOptions, type Basis, type LabelField, type SelectAxis } from "@/lib/labels-normalize"
+import { CO_KHONG, FIELD_LABEL, selectOptions, type Basis, type LabelField, type TrucChon } from "@/lib/labels-normalize"
 
 /** Năm khối của biểu mẫu theo nhóm (bản D), theo hai cột từ `xl`. Nhãn trường lấy từ FIELD_LABEL, lựa chọn từ sổ từ vựng. */
 export type FieldDef = {
@@ -12,7 +12,7 @@ export type FieldDef = {
 export type Khoi = { id: string; title: string; hint?: string; fields: FieldDef[] }
 
 /** Lựa chọn của sổ từ vựng, bỏ «Chưa rõ»: ô «Không suy ra được» đã nói điều đó, để hàng không xuống dòng. */
-const luaChon = (axis: SelectAxis) => selectOptions(axis).filter((o) => o.value !== "unknown")
+const luaChon = (axis: TrucChon) => selectOptions(axis).filter((o) => o.value !== "unknown")
 const CO_KHONG_OPTIONS = CO_KHONG.map((v) => ({ value: v, label: v === "yes" ? "Có" : "Không" }))
 
 export const KHOI: Khoi[] = [

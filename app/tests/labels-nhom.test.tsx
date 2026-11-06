@@ -144,7 +144,7 @@ before(async () => {
   await admin.query(`CREATE TABLE "${S}".silver_labels (LIKE public.silver_labels INCLUDING DEFAULTS)`)
   await admin.query(`CREATE TABLE "${S}".collection_units (LIKE public.collection_units INCLUDING DEFAULTS)`)
   await sc.connect()
-  for (const m of ["054_labels.sql", "072_labels_nhom.sql", "073_labels_nhom_sua.sql", "075_labels_can_cu_anh.sql", "076_labels_ghep.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
+  for (const m of ["054_labels.sql", "072_labels_nhom.sql", "073_labels_nhom_sua.sql", "075_labels_can_cu_anh.sql", "076_labels_ghep.sql", "081_labels_truong_moi.sql"]) await sc.query(readFileSync(join(APP, "../db/migrations", m), "utf8"))
 })
 
 after(async () => {
@@ -198,6 +198,14 @@ const DU: RawLabels = {
   price_max_vnd: { value: "4,35", unit: "ty", basis: "chu_bai" },
   seller_name: { not_stated: true },
   seller_phone: chu("0912 345 678"),
+  // truong-nhan-s03-081: bảy ô mới bắt buộc (Hỏi-4), bài mẫu không nói nên «Không suy ra được».
+  unit_number: { not_stated: true },
+  furnished: { not_stated: true },
+  direction_faces: { not_stated: true },
+  view: { not_stated: true },
+  availability_date: { not_stated: true },
+  price_basis: { not_stated: true },
+  rent_includes: { not_stated: true },
 }
 
 type Ca = { ten: string; doi: RawLabels; text?: string; reason?: unknown; loi?: [LabelField | "reason", string]; ky?: [LabelField, string | null, string | null] }
@@ -235,7 +243,7 @@ test("GCN-AC-4 ma trận chuẩn hoá: mỗi ca đúng ô, đúng thông điệp
     } else {
       assert.ok(kq.ok, `${c.ten}: ${JSON.stringify(kq)}`)
       if (kq.ok) {
-        assert.equal(kq.rows.length, 17, c.ten)
+        assert.equal(kq.rows.length, 24, c.ten)
         const r = kq.rows.find((x) => x.field === c.ky![0])!
         assert.deepEqual([r.value, r.basis], [c.ky![1], c.ky![2]], c.ten)
       }
@@ -303,7 +311,7 @@ test("GCN-AC-4 veE164: cùng luật extractPhones", () => {
 
 test("GCN-AC-9 lát đời trước: chín trường, không căn cứ, không lý do, câu cũ", () => {
   assert.equal(LABEL_FIELDS.length, 9)
-  assert.equal(LABEL_FIELDS_NHOM.length, 17)
+  assert.equal(LABEL_FIELDS_NHOM.length, 24) // 17 trường GC0 + bảy trường truong-nhan-s03-081
   for (const f of LABEL_FIELDS) assert.ok((LABEL_FIELDS_NHOM as readonly string[]).includes(f), f)
   const cu: RawLabels = Object.fromEntries(LABEL_FIELDS.map((f) => [f, { not_stated: true }]))
   const kq = chuanHoaLuot(cu)
@@ -321,7 +329,7 @@ test("GCN-AC-3 luu 17 truong va ly do: 17 dòng mang căn cứ, một dòng lý 
   const res = await POST(postNhan(a.cookie, 1, { ...DU, project: { value: "Ocean Park", basis: "ngu_canh_nhom" } }, "nhóm mặc định"))
   assert.equal(res.status, 200, await res.clone().text())
   const { rows } = await sc.query(`SELECT field, value, not_stated, basis, labeler_id FROM eval_labels WHERE item_id = 1`)
-  assert.equal(rows.length, 17)
+  assert.equal(rows.length, 24)
   assert.ok(rows.every((r) => r.labeler_id === a.id))
   const theo = Object.fromEntries(rows.map((r) => [r.field, r]))
   assert.deepEqual([theo.project.value, theo.project.basis], ["ocean park", "ngu_canh_nhom"])
@@ -381,7 +389,7 @@ test("GCN-AC-3 loi giua giao dich: một dòng hỏng thì cả lượt không g
   }
   const dem = async (b: string, i: number) => (await sc.query(`SELECT count(*)::int AS n FROM ${b} WHERE item_id = $1`, [i])).rows[0].n
   assert.deepEqual([await dem("eval_labels", 1), await dem("eval_label_reasons", 1)], [0, 0])
-  assert.deepEqual([await dem("eval_labels", 2), await dem("eval_label_reasons", 2)], [17, 1])
+  assert.deepEqual([await dem("eval_labels", 2), await dem("eval_label_reasons", 2)], [24, 1])
 })
 
 test("GCN-AC-3 tin ke cung nhom: chỉ trả bài của nhóm chọn; nhóm hết thì null; không nhóm thì như cũ", async () => {
@@ -554,7 +562,7 @@ test("GCN-AC-5 lượt hai: chưa lưu 403; đã lưu thấy ba cột, tin đầ
   assert.deepEqual([da.boDoc.building, da.boDoc.area_m2, da.boDoc.bedrooms], ["s1.01", "64.5", "3"])
   assert.equal(da.aiDoc.kind, "sale")
   assert.equal(da.the, "THE-NHOM-DAU")
-  assert.equal(da.cuaToi.length, 17)
+  assert.equal(da.cuaToi.length, 24)
   assert.equal(da.lyDo, "LYDO-A-CHU")
   // Người hai của bài trùng: chưa lưu 403; lưu rồi vẫn chỉ thấy phần của mình.
   assert.equal((await goi(b.cookie)).status, 403)
@@ -563,7 +571,7 @@ test("GCN-AC-5 lượt hai: chưa lưu 403; đã lưu thấy ba cột, tin đầ
   assert.equal(resB.status, 200, "người hai đã lưu phải đọc được phần của mình")
   const cuaB = await resB.text()
   const jB = JSON.parse(cuaB) as { cuaToi: { field: string; value: string }[]; lyDo: string | null; soTin: number }
-  assert.equal(jB.cuaToi.length, 17, "đối chứng dương: có đủ nhãn của chính B")
+  assert.equal(jB.cuaToi.length, 24, "đối chứng dương: có đủ nhãn của chính B")
   assert.equal(jB.cuaToi.find((r) => r.field === "project")?.value, "vinhomes grand park", "giá trị của B, không phải của A")
   assert.equal(jB.lyDo, null)
   assert.equal(jB.soTin, 3)
