@@ -5,7 +5,7 @@ slug: dau-luoc-do-ban-mau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ci]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-06T03:24:31Z
 approved_by:
@@ -71,3 +71,10 @@ dấu sau `ROLLBACK` bằng dấu gốc. Số ca chạy bằng số phần tử 
 ## Notes
 
 - Lần `--chay` đầu tiên sau gộp ở mỗi máy dựng lại bản mẫu một lần, vì công thức dấu đổi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-1: Khi bước dựng DB riêng cho bộ kiểm lược đồ gặp lỗi hiếm (thiếu quyền, DB trùng tên bỏ dở), lệnh kiểm có thể đứng im thay vì báo đỏ; người chạy phải tự dừng rồi chạy lại.
+  - Ngoài-2: Nhánh coi lỗi kết nối là «không có máy chủ» chưa có ca canh giữ, nên một lần sửa sau có thể làm máy sai mật khẩu bị bỏ qua và báo xanh.
+  - Ngoài-4: Bộ kiểm lược đồ đọc biến DL_PG_ADMIN riêng, nên trên máy dùng Postgres ở địa chỉ khác nó nối nhầm chỗ và không chạy được.
+  - Ngoài-5: Bài kiểm nhanh không bắt được việc bỏ dòng báo chế độ chỉ đọc khỏi lệnh in dấu; chỉ phép đo trên DB thật phát hiện.
+  - Ngoài-6: Xoá bớt một tình huống khỏi ma trận kiểm thì bộ kiểm vẫn xanh, không báo thiếu độ phủ.
+  - Ngoài-7: «Test chỉ nối DB của nó» dựa trên danh sách tự khai của hàm nối, không kiểm kết nối thật trên máy chủ.

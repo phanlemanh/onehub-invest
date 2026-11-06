@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: a403db661a9a675aaf42cbc0e93ef7aeaf9bac1d
-human_signoff:
+human_signoff: Mạnh 2026-11-06
 ---
 
 # Evidence Report: dau-luoc-do-ban-mau
