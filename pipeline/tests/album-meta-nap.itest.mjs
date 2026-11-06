@@ -19,7 +19,14 @@ const NAP = join(REPO, "pipeline/import-airbnb.mjs");
 const pg = await import("/Users/manhphan/dev/onehub-invest/pipeline/node_modules/pg/lib/index.js").then((m) => m.default ?? m);
 const { SnapshotWriter, ZALO_AGENT_SCHEMA_VERSION } = await import(join(REPO, "collector/dist/core/storage.js"));
 
-const DB = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03";
+// P0 (claudedp-0511-20): KHÔNG đọc DATABASE_URL (shell hai làn export trỏ DB
+// THẬT oneinvest) — biến riêng + chặn cứng tên DB thử trước MỌI câu lệnh,
+// vì itest ALTER/DROP cột: chạy nhầm là xoá cột thật sau khi 077 đã áp.
+const DB = process.env.ALBUM_ITEST_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03";
+if (!/_album_s03$/.test(new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "")) {
+  console.error("album-meta-nap: ALBUM_ITEST_DB phải là DB thử oneinvest_*_album_s03 — từ chối chạy trên DB khác");
+  process.exit(2);
+}
 const c = new pg.Client({ connectionString: DB });
 
 const ALBUM = { group_layout_id: "g-777", id_in_group: "5", total_item_in_group: 2 };
@@ -52,7 +59,7 @@ async function sinhSnapshot(items, schemaVersion) {
   return { root, dir: join(root, "hanoi", w.snapshotId) };
 }
 function nap(dir) {
-  const r = spawnSync(process.execPath, [NAP, dir], { encoding: "utf8", timeout: 120_000, env: { ...process.env, DATABASE_URL: DB } });
+  const r = spawnSync(process.execPath, [NAP, dir], { encoding: "utf8", timeout: 120_000, env: { ...process.env, DATABASE_URL: DB } }); // bộ nạp con nhận ĐÚNG biến DB-thử
   return { rc: r.status, out: (r.stdout || "") + (r.stderr || "") };
 }
 const albumCua = async (postId) =>
@@ -62,9 +69,21 @@ test("E5: 077-idempotent + nạp album_meta đúng + snapshot cũ NULL + DB thi�
   await c.connect();
   // dọn dấu vết lần chạy trước (nạp lại idempotent vẫn phải pass cả khi có sẵn)
   await c.query("DELETE FROM stg_zalo_posts WHERE post_id LIKE 'album-%' OR post_id LIKE 'cu-%'");
-  // (1) cột như 077: ADD IF NOT EXISTS HAI LẦN không lỗi
+  // (1) cột như 077: nếu migration thật có trên nhánh thì ÁP ĐÚNG TỆP ĐÓ hai
+  // lần (idempotent như AC-5), không thì ADD IF NOT EXISTS mô phỏng (077 của
+  // làn Claude chưa gộp xuống đây)
+  const fs = await import("node:fs");
+  const mig = fs.readdirSync(join(REPO, "db/migrations")).filter((f) => /^077_.*\.sql$/.test(f))[0];
+  const psql = (f) => spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db",
+    "psql", "-U", "oneinvest", "-h", "localhost", "-d", DB.split("/").pop(), "-v", "ON_ERROR_STOP=1", "-f", "-"],
+    { input: fs.readFileSync(join(REPO, "db/migrations", f)), encoding: "utf8", timeout: 60_000 });
   for (let i = 0; i < 2; i++) {
-    await c.query("ALTER TABLE stg_zalo_posts ADD COLUMN IF NOT EXISTS album_meta jsonb");
+    if (mig) {
+      const r = psql(mig);
+      if (r.status !== 0) throw new Error(`áp 077 thật (${mig}) lần ${i + 1} lỗi: ${(r.stderr || "").slice(0, 200)}`);
+    } else {
+      await c.query("ALTER TABLE stg_zalo_posts ADD COLUMN IF NOT EXISTS album_meta jsonb");
+    }
   }
   // (2) SnapshotWriter THẬT sinh snapshot v6 có meta.albumMeta → cột đúng
   const tsA = Date.now();
