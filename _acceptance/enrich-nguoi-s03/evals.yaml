@@ -65,7 +65,7 @@ evals:
     layer: ui-observed
     route: /vn/hanoi/listings/rent
     steps:
-      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3463, DATABASE_URL trỏ DB thử oneinvest_en đã áp 079 và đã chạy dung-nguoi + gan-sdt-qua-nguoi ghi thật trên DB thử; không ghi DB dùng chung"
+      - "Dev server từ gốc worktree đang kiểm, cổng riêng: npm --prefix app run dev -- -p 3463, DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en_ui (DB thử đã áp 079 và đã ghi thật bước đêm: Người, liên lạc, gán số — dựng sẵn trước lượt chấm); không ghi DB dùng chung"
       - "Trước khi chụp, chèn style che số: a[href^=\"tel:\"] span{color:transparent!important;background:var(--muted)}"
       - "Truy vấn chỉ đọc DB thử: một tin thuê S03 hiện công khai mang dấu s03-qua-nguoi-dang; ghi mã tin, không ghi số"
       - "Mở trang tin đó (/vn/listing/<id> hoặc thẻ trên trang Cho thuê): Badge «Chưa xác minh» cạnh Xem số, chụp evidence/E7u-truoc.png; bấm Xem số, số hiện thành link gọi, Badge còn, chụp evidence/E7u-sau.png"

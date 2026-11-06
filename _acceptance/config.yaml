@@ -211,7 +211,7 @@ executors:
     sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest
     sg_be_mat: "node scripts/check-api-surface.mjs"   # so-ghep-s06-nhan-danh-ba E7b
     gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
-    en_do: "bash db/db-thu.sh oneinvest_en >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en node pipeline/do-lien-lac-nguoi.mjs"   # enrich-nguoi-s03 E8 — DB thử, ROLLBACK, không chạm oneinvest
+    en_do: "bash db/db-thu.sh oneinvest_en_do >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en_do node pipeline/do-lien-lac-nguoi.mjs"   # enrich-nguoi-s03 E8 — DB thử, ROLLBACK, không chạm oneinvest
     gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
     kp_ranh_gioi: "bash _acceptance/sdt-s06-khoi-phuc-xuat-xu/probes/ranh-gioi.sh"   # sdt-s06-khoi-phuc-xuat-xu E9
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới
