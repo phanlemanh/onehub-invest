@@ -20,12 +20,14 @@ export function phanLui(moc, logs) {
   // logs = { gateway, hook, canh, hienTai? } — hienTai mặc định Date.now()
   // (test mô phỏng thời điểm phán truyền vào)
   // 1) transcript tăng so mốc → dung-goi-Manh (kể cả lượt nhanh không timing)
-  for (const [ag, v] of Object.entries(moc.transcript ?? {})) {
+  for (const ag of Object.keys(moc.transcript ?? {})) {
+    const v = moc.transcript[ag];
     const [c, max] = String(v).split("|").map(Number);
     const hien = logs.transcript?.[ag];
+    if (hien === null || hien === undefined) return { phan: "dung-goi-Manh", vi: `không đọc được số ${ag} — không chứng minh agent im` };
     if (hien) {
       const [c2, max2] = String(hien).split("|").map(Number);
-      if (c2 > c || max2 > max) return { phan: "dung-goi-Manh", vi: `transcript ${ag} tăng (${v} → ${hien}) kể cả khi không có dòng timing` };
+      if (Number.isFinite(c2) && Number.isFinite(max2) && (c2 > c || max2 > max)) return { phan: "dung-goi-Manh", vi: `transcript ${ag} tăng (${v} → ${hien}) kể cả khi không có dòng timing` };
     }
   }
   const bat = Date.parse(moc.batLuc ?? 0); // (0611-11 điểm 5) mốc lọc mọi log
@@ -81,7 +83,9 @@ export function phanLui(moc, logs) {
       const t = tachT(l);
       return Number.isFinite(t) && t >= bat && /retry.*max|exceeded.*retr|no more retries|gave up/i.test(l);
     }).length > 0;
-    if ((!pid || khoiDongLai) && Date.now() - bat <= 2 * 60_000) return { phan: "lui-bat-lai", vi: !pid ? "tiến trình gateway không lên trong 2′" : "gateway thoát lại trong 2′ sau khi bật" };
+    const hienTai = logs.hienTai ?? Date.now();
+    if (khoiDongLai) return { phan: "lui-bat-lai", vi: "gateway thoát lại trong 2′ sau khi bật" };
+    if (!pid && hienTai - bat >= 2 * 60_000) return { phan: "lui-bat-lai", vi: "tiến trình gateway không lên sau 2′" };
     if (hetLanTuNoi) return { phan: "lui-bat-lai", vi: "hết lượt tự khởi động lại" };
   }
   // 6) chỉ mất marker → lui-bat-lai
@@ -109,17 +113,20 @@ if (process.argv[1]?.endsWith("phai-lui.mjs") && process.argv[2]) {
         out[ag] = execFileSync("/usr/bin/sqlite3", [`file:${db}?${mode}`,
           "SELECT COUNT(*) || '|' || COALESCE(MAX(created_at),0) FROM transcript_events;"],
           { encoding: "utf8" }).trim();
-      } catch { out[ag] = "(lỗi đọc)"; }
+      } catch { out[ag] = null; } // (d) không đọc được → coi như có lượt (không chứng minh được im)
     }
     return out;
   };
+  // (0611-11 lần 3) KHÔNG đọc env đè số đếm — CLI LUÔN đếm thật (env mốc chỉ
+  // làm so mốc-với-mốc, không bao giờ bắt được lượt mới)
+  let launchctlList = null;
+  try { launchctlList = execFileSync("/bin/launchctl", ["list"], { encoding: "utf8" }); } catch {}
   const logs = {
     gateway: doc(`${homedir()}/Library/Logs/openclaw/gateway.log`),
     hook: doc(`${dir}/logs/oneinvest-zalo-pipe.log`),
     canh: doc(`/Users/manhphan/dev/onehub-invest/pipeline/logs/zalo-watchdog-alerts.log`),
-    transcript: Object.keys(process.env).some((k) => k === "E7_MOC_TRANSCRIPT_JSON")
-      ? JSON.parse(process.env.E7_MOC_TRANSCRIPT_JSON)
-      : demTranscript(),
+    transcript: demTranscript(),
+    launchctlList,
   };
   const r = phanLui(moc, logs);
   console.log(r.phan);
