@@ -3,8 +3,8 @@
 //       đọc một tập bài, ghi silver_labels + ai_calls (luật 7: không bảng nào khác). Không có đường chạy toàn S03.
 //   cham --split test|dev --tran-usd <USD> [--lat s03-theo-nhom] [--cau-hinh <tệp>] [--ra <bảng.md>] [--tom-tat <tệp.json>]
 //       chấm bộ đọc trên nhãn vàng; chỉ đọc DB, không ghi bảng nào.
-// Khoá Gateway: AI_GATEWAY_API_KEY (người chạy nạp .env bằng --env-file). Bảng chọn và cờ được kiểm trước khoá: sai thì
-// thoát 2, chưa gọi model lần nào.
+// Khoá Gateway: AI_GATEWAY_API_KEY (người chạy nạp .env bằng --env-file), đòi cả khi --thu. Bảng chọn và cờ được kiểm trước
+// khoá: sai thì thoát 2, chưa gọi model lần nào. Thoát: 0 xong · 1 mọi lời gọi hỏng · 2 đầu vào sai · 3 dừng vì trần.
 import pg from "pg";
 import { napCauHinh } from "../src/enrich/doc-gop-s03/cau-hinh.js";
 import { chayLuot, docCo } from "../src/enrich/doc-gop-s03/chay.js";
@@ -20,7 +20,8 @@ export async function lenhChay(argv: string[]): Promise<number> {
     console.error(`doc-gop-s03 chay: ${(e as Error).message}`);
     return 2;
   }
-  if (!co.thu && !process.env.AI_GATEWAY_API_KEY) {
+  // --thu vẫn gọi model (chỉ bỏ ghi silver_labels) nên cũng đòi khoá, như doc-toan-bo-s03 (S4-r1 t1).
+  if (!process.env.AI_GATEWAY_API_KEY) {
     console.error("doc-gop-s03 chay: thiếu AI_GATEWAY_API_KEY — nạp .env bằng --env-file rồi chạy lại; chưa gọi model lần nào");
     return 2;
   }
@@ -28,6 +29,7 @@ export async function lenhChay(argv: string[]): Promise<number> {
   await c.connect();
   try {
     const kq = await chayLuot({ client: c, co });
+    if (kq.goi > 0 && kq.loi === kq.goi) return 1; // mọi lời gọi đều hỏng — không giả làm lượt thành công (S4-r1 t6)
     return kq.dungTran ? 3 : 0;
   } finally {
     await c.end();

@@ -256,16 +256,18 @@ import { maSha } from "../src/enrich/doc-gop-s03/cham.js";
 import { PROMPT_SHA } from "../src/enrich/doc-gop-s03/prompt.js";
 
 /** Kiểm một tóm tắt chấm thật; ném với thông điệp ghim. Tách hàm để chiều đỏ chạy trên cùng khuôn. */
-export function kiemTomTat(t: Record<string, unknown>, hien: { prompt: string; bang: string; ma: string }): void {
+export function kiemTomTat(t: Record<string, unknown>, hien: { prompt: string; bang: string; ma: string; so_o: number }): void {
   assert.equal(t.split, "test");
   assert.equal(t.so_the, 23);
   assert.ok((t.model as string[]).includes("anthropic/claude-haiku-5.5"));
   assert.equal(t.prompt_sha, hien.prompt, "TOM TAT KHONG KHOP PROMPT");
   assert.equal(t.cau_hinh_sha, hien.bang, "TOM TAT KHONG KHOP BANG CHON");
   assert.equal(t.ma_sha, hien.ma, "TOM TAT KHONG KHOP MA");
-  assert.equal(t.mau_so, 23 * 16);
+  // Quan hệ, không phải giá trị chép sẵn (S4-r1 t9): mẫu số = số thẻ × số ô giao model của bảng hiện tại; tỉ lệ tính lại.
+  assert.equal(t.mau_so, (t.so_the as number) * hien.so_o, "MAU SO KHONG BANG SO THE x SO O GIAO");
   assert.ok(typeof t.anh_thieu === "object" && "dung_gop_bo_9991" in t);
-  const d = t.dung_gop as number;
+  const d = (t.dung as number) / (t.mau_so as number);
+  assert.ok(Math.abs(d - (t.dung_gop as number)) < 1e-9, `DUNG GOP KHONG KHOP DUNG/MAU SO (${t.dung}/${t.mau_so} ≠ ${t.dung_gop})`);
   assert.ok(d >= 0.9, `CHET DUOI 90 (${d})`);
   assert.ok(d >= 0.92, `VUNG XAM — MANH PHAN (${d})`);
   assert.ok((t.usd_the as number) <= 0.0025, `chi phí ${t.usd_the} > 0,0025 USD/thẻ`);
@@ -276,17 +278,22 @@ const TOM_TAT = join(GOC, "_acceptance/chon-model-theo-o/evidence/cham-test.json
 // để bộ test chung của agent đỏ vì thế. Có cờ mà thiếu tệp là đỏ, không bỏ qua.
 test("DGS-AC-10 tóm tắt chấm Haiku thật trên 23 thẻ test khớp mã hiện tại và đạt ngưỡng", { skip: process.env.DGS_SO_THAT !== "1" && "chạy qua executor dgs_so_that" }, () => {
   assert.ok(existsSync(TOM_TAT), "THIEU TOM TAT CHAM THAT");
-  kiemTomTat(JSON.parse(readFileSync(TOM_TAT, "utf8")), { prompt: PROMPT_SHA, bang: napCauHinh().sha, ma: maSha() });
+  const cau = napCauHinh();
+  const soO = FIELDS.length - keHoach(cau.cauHinh).nguoi.length; // 16 với bảng mặc định (17 ô, WC người duyệt)
+  kiemTomTat(JSON.parse(readFileSync(TOM_TAT, "utf8")), { prompt: PROMPT_SHA, bang: cau.sha, ma: maSha(), so_o: soO });
 });
 
 test("DGS-AC-10 chiều đỏ: tóm tắt cũ hay dưới ngưỡng bị bắt đúng thông điệp", () => {
-  const hien = { prompt: "p", bang: "b", ma: "m" };
-  const tot = { split: "test", so_the: 23, model: ["anthropic/claude-haiku-5.5"], prompt_sha: "p", cau_hinh_sha: "b", ma_sha: "m", mau_so: 368, anh_thieu: {}, dung_gop_bo_9991: 0.95, dung_gop: 0.95, usd_the: 0.0017 };
+  const hien = { prompt: "p", bang: "b", ma: "m", so_o: 16 };
+  const tot = { split: "test", so_the: 23, model: ["anthropic/claude-haiku-5.5"], prompt_sha: "p", cau_hinh_sha: "b", ma_sha: "m", dung: 350, mau_so: 368, anh_thieu: {}, dung_gop_bo_9991: 0.95, dung_gop: 350 / 368, usd_the: 0.0017 };
+  const voi = (dung: number) => ({ ...tot, dung, dung_gop: dung / 368 });
   kiemTomTat(tot, hien);
+  assert.throws(() => kiemTomTat({ ...tot, dung: 300 }, hien), /DUNG GOP KHONG KHOP DUNG\/MAU SO/);
+  assert.throws(() => kiemTomTat({ ...tot, mau_so: 300 }, hien), /MAU SO KHONG BANG SO THE x SO O GIAO/);
   assert.throws(() => kiemTomTat({ ...tot, prompt_sha: "cu" }, hien), /TOM TAT KHONG KHOP PROMPT/);
   assert.throws(() => kiemTomTat({ ...tot, ma_sha: "cu" }, hien), /TOM TAT KHONG KHOP MA/);
-  assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.91 }, hien), /VUNG XAM — MANH PHAN/);
-  assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.85 }, hien), /CHET DUOI 90/);
+  assert.throws(() => kiemTomTat(voi(335), hien), /VUNG XAM — MANH PHAN/); // 335/368 = 0,910
+  assert.throws(() => kiemTomTat(voi(313), hien), /CHET DUOI 90/); // 313/368 = 0,851
 });
 
 test("DGS-RF ô trống trả gọn `null` (bài không phải tin rao) vẫn là JSON đọc được", async () => {
@@ -298,4 +305,10 @@ test("DGS-RF ô trống trả gọn `null` (bài không phải tin rao) vẫn l�
   assert.equal(k.json_ok, true, "O TRONG NULL BI COI LA JSON HONG");
   assert.equal(k.json?.listing_intent?.v, "not_listing");
   assert.equal(k.json?.price_min_vnd?.v, null);
+});
+
+test("DGS-RF bảng chọn hai khoá cùng một mã Gateway bị từ chối trước mọi lời gọi", () => {
+  const x = { phien_ban: 1, mac_dinh: "haiku", model: {
+    haiku: { gateway: HAI, gia_vao: 1, gia_ra: 5 }, haiku2: { gateway: HAI, gia_vao: 1, gia_ra: 5 } }, o: { bathrooms: "nguoi" } };
+  assert.throws(() => kiemCauHinh(x), /haiku và haiku2 trùng gateway/);
 });

@@ -35,6 +35,13 @@ export function kiemCauHinh(x: unknown): CauHinh {
     if (!laSoKhongAm(m.gia_vao)) throw new Error(`bảng chọn: model ${k} thiếu gia_vao`);
     if (!laSoKhongAm(m.gia_ra)) throw new Error(`bảng chọn: model ${k} thiếu gia_ra`);
   }
+  // Hai khoá cùng một mã Gateway: kết quả gộp và nhãn của khoá sau đè khoá trước, lời gọi thừa vẫn tốn tiền (S4-r1 t4).
+  const daGap = new Map<string, string>();
+  for (const [k, m] of Object.entries(x.model) as [string, { gateway: string }][]) {
+    const truoc = daGap.get(m.gateway);
+    if (truoc) throw new Error(`bảng chọn: model ${truoc} và ${k} trùng gateway ${m.gateway}`);
+    daGap.set(m.gateway, k);
+  }
   const khoa = new Set(Object.keys(x.model));
   if (typeof x.mac_dinh !== "string" || !khoa.has(x.mac_dinh)) throw new Error(`bảng chọn: mac_dinh ${JSON.stringify(x.mac_dinh)} không phải khoá model đã khai`);
   const o = x.o ?? {};

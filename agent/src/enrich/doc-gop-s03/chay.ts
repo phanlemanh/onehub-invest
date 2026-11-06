@@ -3,6 +3,7 @@
 // hằng ngày là lời riêng của Mạnh). Luật 7: không ghi bảng nào khác. Ghi theo cùng luật với dtb-s03-v1: nhãn JSON hỏng
 // được đọc lại, nhãn tốt giữ nguyên, chi phí cộng dồn.
 import { SQL_GHI_DOC } from "../doc-toan-bo.js";
+import { KIND as KIND_SINH, LISTING_INTENT } from "../../vocab.generated.js";
 import type { RecordCall } from "../../runtime/ai-call-log.js";
 import { keHoach, napCauHinh, type KeHoach, type NhomGoi } from "./cau-hinh.js";
 import { hoiGop, kiemTrich, type KetQuaGoi, type TaoModel } from "./doc.js";
@@ -11,7 +12,7 @@ import { chuNguoiDung, HUONG_DAN, PROMPT_SHA, PROMPT_VERSION } from "./prompt.js
 import { docTheTheoLat, docTheTheoPost, type Q, type The } from "./the.js";
 
 export type CoChay = { lat?: string; split?: "dev" | "test"; post?: string[]; tranUsd: number; cauHinh?: string; runId?: string; thu?: boolean };
-export type TomTatChay = { the: number; goi: number; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number };
+export type TomTatChay = { the: number; goi: number; loi: number; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number };
 
 const CO = new Set(["--lat", "--split", "--post", "--tran-usd", "--cau-hinh", "--run-id", "--thu"]);
 
@@ -50,8 +51,9 @@ export const ghiAiCallQua = (c: Q): RecordCall => async (r) => {
     [r.khach ?? "pipeline", r.viec, r.model, r.inputTokens, r.outputTokens, Math.max(0, Math.round(r.latencyMs)), r.ok, r.loi, r.trace]);
 };
 
-const Y_DINH = new Set(["offer", "inquiry", "not_listing"]);
-const KIND = new Set(["sale", "rent_lt"]);
+// Mã hợp lệ lấy từ sổ chung (pipeline/mappings.yaml → vocab.generated); «unknown» là chỗ máy tự điền, model không được trả.
+const Y_DINH = new Set<string>(Object.values(LISTING_INTENT).filter((v) => v !== LISTING_INTENT.unknown));
+const KIND = new Set<string>(Object.values(KIND_SINH));
 
 /** Tham số SQL_GHI_DOC cho một lời gọi (một model, một bài). */
 export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string }, runId: string): unknown[] {
@@ -82,7 +84,7 @@ export async function chayLuot(o: {
   const uoc = o.uoc ?? uocThe;
   const tatCa = o.the ?? (o.co.lat ? await docTheTheoLat(o.client, o.co.lat, o.co.split) : await docTheTheoPost(o.client, o.co.post ?? []));
   const the = tatCa.filter((t) => t.text.trim() || t.anh.length);
-  const kq: TomTatChay = { the: the.length, goi: 0, ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length };
+  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length };
   if (kq.bo) log(`bo ${kq.bo} bai khong chu khong anh`);
 
   // Đã có nhãn đọc được cùng (bài, chữ, model, prompt) → không gọi lại.
@@ -112,9 +114,13 @@ export async function chayLuot(o: {
     const k = await hoiGop({ gateway: n.gateway, gia: n.gia, the: t, taoModel: o.taoModel, recordCall: record, trace: runId });
     kq.goi++;
     kq.usd += k.usd;
-    if (k.error_kind && k.error_kind !== "json-hong") continue; // lỗi gọi: không lưu, lượt sau gọi lại
+    if (k.error_kind && k.error_kind !== "json-hong") { // lỗi gọi: không lưu, lượt sau gọi lại; đếm để lệnh báo (S4-r1 t6)
+      kq.loi++;
+      log(`loi goi ${n.gateway} bai ${t.post_id}: ${k.error_kind}`);
+      continue;
+    }
     if (!o.co.thu) kq.ghi += (await o.client.query(SQL_GHI_DOC, dongNhan(t, n, k, cau, runId))).rowCount ?? 0;
   }
-  log(`xong: ${kq.goi} loi goi, ${kq.ghi} dong nhan, ${kq.usd.toFixed(4)} USD${kq.dungTran ? ", dung vi tran" : ""}`);
+  log(`xong: ${kq.goi} loi goi (${kq.loi} hong), ${kq.ghi} dong nhan, ${kq.usd.toFixed(4)} USD${kq.dungTran ? ", dung vi tran" : ""}`);
   return kq;
 }

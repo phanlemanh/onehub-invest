@@ -5,6 +5,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { ModelMessage } from "ai";
+import { PROPERTY_TYPE as PT } from "../../vocab.generated.js"; // mã loại nhà lấy từ sổ chung, như doc-toan-bo
 import { FIELDS } from "./o.js";
 import type { The } from "./the.js";
 
@@ -20,7 +21,7 @@ Mỗi ô là một object {"v": giá trị hoặc null, "cc": căn cứ hoặc n
 Các ô:
 - listing_intent: "offer" = tin rao bán hoặc cho thuê; "inquiry" = khách cần mua/thuê (yêu cầu); "not_listing" = không phải tin BĐS (quảng cáo dịch vụ như ngân hàng cho vay, chào hỏi, thu hồi, bài không có nội dung đọc được). Ô này luôn có giá trị. not_listing → multi_unit "no", MỌI ô khác null (kể cả tên, SĐT người quảng cáo).
 - kind: "sale" = bán, chuyển nhượng, sang nhượng HĐMB; "rent_lt" = cho thuê (giá theo tháng). Yêu cầu: dịch vụ khách cần (cần mua → sale, cần thuê → rent_lt). not_listing → null.
-- property_type: "apartment" (căn hộ, studio, duplex, penthouse chung cư) | "house" (nhà phố, liền kề, biệt thự, shophouse) | "land" | "room" (phòng trọ) | "commercial" (mặt bằng, văn phòng). not_listing → null.
+- property_type: "${PT.apartment}" (căn hộ, studio, duplex, penthouse chung cư) | "${PT.house}" (nhà phố, liền kề, biệt thự, shophouse) | "${PT.land}" | "${PT.room}" (phòng trọ) | "${PT.commercial}" (mặt bằng, văn phòng). not_listing → null.
 - multi_unit: "yes" khi một bài rao từ hai căn trở lên với thông số khác nhau (danh sách nhiều căn, bảng hàng); "no" khi một căn (kể cả bài rao một căn mà kèm nhiều ảnh). Ô này luôn có giá trị "yes" hoặc "no". Bài nhiều căn: các ô còn lại điền cho căn đầu tiên được nêu đủ nhất.
 - project: tên khu đô thị / đại đô thị, viết đủ như từ điển, vd "Vinhomes Ocean Park 1", "Vinhomes Grand Park", "Vinhomes Smart City", "Ecopark", "The Global City".
 - subzone: phân khu hoặc dự án con trong khu đô thị, vd "The Paris", "Origami", "The Beverly", "Masteri Waterfront", "The Canopy Residences".
