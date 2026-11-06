@@ -465,6 +465,7 @@ enums:
     local: true
     rationale: "extension ContactKind (enrich-nguoi-s03, ADR-0016 §3, §8) — DD 2.1 có Contacts.MobilePhone/OtherPhone, Member.MemberMobilePhone và resource SocialMedia (SocialMediaType, SocialMediaUrlOrId) là trường của bản ghi người, không có liên lạc là phát biểu nhiều giá trị kèm lớp bằng chứng; sdt ≈ MobilePhone, chat_profile ≈ SocialMediaUrlOrId (kênh chat của S03 không có trong lookup SocialMediaType)"
     checked_on: "2026-11-06"
+    # Migration 079 (CHECK). DQ: enum-vocab:kind, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
     columns: [party_contacts.kind]
     nullable: false
     values:
@@ -476,6 +477,7 @@ enums:
     local: true
     rationale: "extension luật sinh phát biểu liên lạc (enrich-nguoi-s03) — DD 2.1 không có xuất xứ cho số liên lạc; phân biệt số người đăng ghi trên tin của chính họ với số chỉ có trong bài khác (trả lời, bình luận), dùng cho luật chọn số"
     checked_on: "2026-11-06"
+    # Migration 079 (CHECK). DQ: enum-vocab:rule_id, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
     columns: [party_contacts.rule_id]
     nullable: false
     values:
