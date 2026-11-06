@@ -20,6 +20,7 @@ import { ChonNhom } from "./chon-nhom"
 import { LabelForm } from "./label-form"
 import { LabelFormNhom } from "./label-form-nhom"
 import { LuotHai } from "./luot-hai"
+import { MaThe } from "./ma-the"
 import { NguoiDang } from "./nguoi-dang"
 
 /**
@@ -117,7 +118,7 @@ function TinFrame({ tin }: { tin: TinGan }) {
       <FrameHeader>
         <FrameTitle>Tin cần gắn</FrameTitle>
         <FrameDescription className="text-xs text-pretty">
-          S03 · {tin.groupName ?? "nhóm không rõ"}
+          <MaThe itemId={tin.itemId} /> · S03 · {tin.groupName ?? "nhóm không rõ"}
           <NguoiDang ten={tin.nguoiDang} id={tin.nguoiDangId} />
           {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
           {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
