@@ -343,11 +343,73 @@ export async function createAgentServer(opts: AgentServerOptions) {
   }
 
   /** Bọc http: parse JSON, gọi ingest, auto-flush khi đủ flushAfterItems. */
+  /** link-nguoi-ban-s03 (AC-5): nhận lô kết quả tra hồ sơ người bán — mỗi lô
+   * thành MỘT snapshot S03 RIÊNG loại hồ sơ (source zalo-ho-so), ghi mới
+   * không sửa bản cũ; mỗi dòng chỉ mã tài khoản + username (hoặc rỗng) +
+   * loại kết quả + thời điểm lấy — không PII nào khác (AC-4/AC-5). */
+  async function handleHoSo(
+    body: unknown,
+    auth: string | null,
+  ): Promise<{ status: number; body: unknown }> {
+    if (!keyOk(keys, auth)) return { status: 401, body: { error: "unauthorized" } };
+    const dong = (body as { dong?: unknown } | null)?.dong;
+    if (!Array.isArray(dong) || dong.length === 0) {
+      return { status: 400, body: { error: "dong phải là mảng không rỗng" } };
+    }
+    if (dong.length > maxBatchItems) {
+      return { status: 413, body: { error: `lô quá lớn: ${dong.length} dòng vượt trần ${maxBatchItems}` } };
+    }
+    const LOAI = new Set(["co-username", "khong-username", "khong-ro", "khong-tim-thay"]);
+    const items: RawItem[] = [];
+    for (const row of dong) {
+      const r = row as Record<string, unknown>;
+      if (
+        typeof r?.ma_tai_khoan !== "string" ||
+        !/^\d{1,32}$/.test(r.ma_tai_khoan) ||
+        typeof r?.username !== "string" ||
+        r.username.length > 120 ||
+        typeof r?.loai !== "string" ||
+        !LOAI.has(r.loai) ||
+        typeof r?.lay_luc !== "string" ||
+        Number.isNaN(Date.parse(r.lay_luc))
+      ) {
+        return { status: 422, body: { error: "dong sai khuôn: cần ma_tai_khoan (số), username (chuỗi ≤120), loai (4 loại hợp lệ), lay_luc (ISO)" } };
+      }
+      items.push({
+        source: "zalo-ho-so",
+        sourceId: `${r.ma_tai_khoan}__${r.lay_luc}`,
+        kind: "ho-so",
+        fetchedAt: r.lay_luc,
+        payload: { ma_tai_khoan: r.ma_tai_khoan, username: r.username, loai: r.loai },
+        meta: { city, loai_ket_qua: r.loai, ts: r.lay_luc },
+      });
+    }
+    const writer = new SnapshotWriter(snapshotRoot, city, "zalo-ho-so");
+    await writer.write(items);
+    await writer.finalize({
+      discovered: items.length,
+      captured: items.length,
+      failed: 0,
+      methods: { sellerLookup: items.length },
+    });
+    return { status: 202, body: { accepted: items.length, snapshotId: writer.snapshotId } };
+  }
+
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const json = (status: number, body: unknown) => {
       res.writeHead(status, { "content-type": "application/json" });
       res.end(JSON.stringify(body));
     };
+    if (req.method === "POST" && req.url?.startsWith("/s03-ho-so")) {
+      let hoSoBody: unknown;
+      try {
+        hoSoBody = JSON.parse(await readBody(req as unknown as { on: Function }));
+      } catch {
+        return json(400, { error: "JSON không hợp lệ" });
+      }
+      const r = await handleHoSo(hoSoBody, req.headers.authorization ?? null);
+      return json(r.status, r.body);
+    }
     if (req.method !== "POST" || !req.url?.startsWith("/agent-report")) {
       return json(404, { error: "not found" });
     }
