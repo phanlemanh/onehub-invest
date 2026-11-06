@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8f62dec5a5cef6427d231fc2689affbb4ddddf37
-human_signoff:
+human_signoff: Mạnh 2026-11-06
 ---
 
 # Evidence Report: the-hai-nguoi-xep-sau
