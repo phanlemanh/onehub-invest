@@ -5,9 +5,9 @@ slug: truong-nhan-s03-081
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, db]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-07
 design_doc: docs/superpowers/specs/2026-11-06-truong-nhan-s03-081-design.md
 ---
 
