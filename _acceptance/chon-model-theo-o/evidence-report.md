@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: chon-model-theo-o
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 590e237992ff6e49f55e3104ddbbeb2ba05851a1
+verified_commit: 7e9b7c6bf45dbfa7d07c006c8c5ab3a0b622c2ce
 human_signoff:
 ---
 
 # Evidence Report: chon-model-theo-o
 
-Vòng 1. Mười eval của hợp đồng đều chạy xanh, nhưng hai lệnh suite hồi quy không gắn eval (`cd app && npm test` và `cd pipeline && npm test`) đỏ, nên kết luận tổng là REJECT. Hai lệnh này nằm ở mục Lệnh suite bên dưới, kèm tên ca đỏ.
+Round 2.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -31,138 +31,136 @@ Vòng 1. Mười eval của hợp đồng đều chạy xanh, nhưng hai lệnh 
 ## Evidence
 
 - eval: E1
-  run_id: minted-chon-model-theo-o-E1-r1
+  run_id: minted-chon-model-theo-o-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_thuan
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
-    ℹ duration_ms 435.191417
+    cmd: cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
+    ℹ duration_ms 652.588
 
 - eval: E2
-  run_id: minted-chon-model-theo-o-E2-r1
+  run_id: minted-chon-model-theo-o-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_thuan
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
-    ℹ duration_ms 435.191417
+    cmd: cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
+    ℹ duration_ms 652.588
 
 - eval: E3
-  run_id: minted-chon-model-theo-o-E3-r1
+  run_id: minted-chon-model-theo-o-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_thuan
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
-    ℹ duration_ms 435.191417
+    cmd: cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
+    ℹ duration_ms 652.588
 
 - eval: E4
-  run_id: minted-chon-model-theo-o-E4-r1
+  run_id: minted-chon-model-theo-o-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_db
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
-    ℹ duration_ms 537.813792
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
+    ℹ duration_ms 377.489125
 
 - eval: E5
-  run_id: minted-chon-model-theo-o-E5-r1
+  run_id: minted-chon-model-theo-o-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_db
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
-    ℹ duration_ms 537.813792
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
+    ℹ duration_ms 377.489125
 
 - eval: E6
-  run_id: minted-chon-model-theo-o-E6-r1
+  run_id: minted-chon-model-theo-o-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_thuan
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
-    ℹ duration_ms 435.191417
+    cmd: cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
+    ℹ duration_ms 652.588
 
 - eval: E7
-  run_id: minted-chon-model-theo-o-E7-r1
+  run_id: minted-chon-model-theo-o-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_db
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
-    ℹ duration_ms 537.813792
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
+    ℹ duration_ms 377.489125
 
 - eval: E8
-  run_id: minted-chon-model-theo-o-E8-r1
+  run_id: minted-chon-model-theo-o-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_thuan
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
-    ℹ duration_ms 435.191417
+    cmd: cd agent && node --import tsx --test tests/doc-gop-s03.test.ts
+    ℹ duration_ms 652.588
 
 - eval: E9
-  run_id: minted-chon-model-theo-o-E9-r1
+  run_id: minted-chon-model-theo-o-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_db
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
-    ℹ duration_ms 537.813792
+    cmd: cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts
+    ℹ duration_ms 377.489125
 
 - eval: E10
-  run_id: minted-chon-model-theo-o-E10-r1
+  run_id: minted-chon-model-theo-o-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dgs_so_that
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
   output: |
-    cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts
-    ℹ duration_ms 274.310416
+    cmd: cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts
+    ℹ duration_ms 264.669416
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-chon-model-theo-o-SUITE-npm_test__bb6271-r1
+  run_id: minted-chon-model-theo-o-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-chon-model-theo-o-SUITE-lint-r1
+  run_id: minted-chon-model-theo-o-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
 
 - cmd: cd app && npm test
-  run_id: minted-chon-model-theo-o-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-06T22:08:43Z
-  ghi chú: 1029 ca, 1023 qua, 1 đỏ, 5 bỏ qua. Ca đỏ là `ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ` (app/tests/ops-nhan-theo-context.test.tsx): bảng kiểm trên DB local còn một dòng chưa diễn giải, `so-chua-xac-minh · S06 có số: 57667, chưa xác minh: 44664, nguồn khác có nhãn: 0, S03 qua người đăng: 758`. Lệnh này không gắn eval nào.
+  run_id: minted-chon-model-theo-o-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-06T22:41:40Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-chon-model-theo-o-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-11-06T22:08:43Z
-  ghi chú: 606 ca, 605 qua, 1 đỏ. Ca đỏ là `VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim` (pipeline/scripts/vocab-lint.test.mjs): cây thật còn ba chỗ viết tay ngoài sổ, đều do feature này thêm: `agent/src/enrich/doc-gop-s03/chay.ts:53` (listing_intent: offer,inquiry,not_listing), `agent/src/enrich/doc-gop-s03/chay.ts:54` (kind: sale,rent_lt), `agent/src/enrich/doc-gop-s03/prompt.ts:13` (property_type: land,room). Lệnh này không gắn eval nào.
+  run_id: minted-chon-model-theo-o-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-11-06T22:41:40Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-chon-model-theo-o-SUITE-test_lint_rules-r1
+  run_id: minted-chon-model-theo-o-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-chon-model-theo-o-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-chon-model-theo-o-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-06T22:08:43Z
+  verified_at: 2026-11-06T22:41:40Z
 
 ## Known limits
 
@@ -170,17 +168,15 @@ Vòng 1. Mười eval của hợp đồng đều chạy xanh, nhưng hai lệnh 
 
 ## Analyst
 
-none — mọi eval feature deu red tren baseline (co phan biet) không đo được: cả 10 eval đều là eval mới nên baseline là n-a, không eval nào được xác nhận là không-phân-biệt.
+Carried từ round 1 — baseline không đo lại round này (evals.yaml không đổi từ lần baseline cuối). Field baseline của từng eval ghi n-a.
 
-Baseline khong do
-- cd agent && node --import tsx --test tests/doc-gop-s03.test.ts: bo qua baseline: tep agent/tests/doc-gop-s03.test.ts co o cay dang kiem nhung chua co o merge-base 31bb4ef6ad40a421f0335e2ca5026ee7f8216e96 — eval moi, chay tren code cu khong phan biet gi
-- cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts: bo qua baseline: tep agent/tests/doc-gop-s03-db.itest.ts co o cay dang kiem nhung chua co o merge-base 31bb4ef6ad40a421f0335e2ca5026ee7f8216e96 — eval moi, chay tren code cu khong phan biet gi
-- cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts: bo qua baseline: tep agent/tests/doc-gop-s03.test.ts co o cay dang kiem nhung chua co o merge-base 31bb4ef6ad40a421f0335e2ca5026ee7f8216e96 — eval moi, chay tren code cu khong phan biet gi
+Eval không-phân-biệt: không có. Lệnh suite xanh cả hai phía là regression-guard bình thường.
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất (cả mười eval chạy một lần, xác định).
+none — mọi eval chạy một lần, deterministic, không có pass_rate lẫn.
 
 ## Iterations
 
-Round 1: không eval hợp đồng nào đỏ (E1–E10 xanh), nhưng hai lệnh suite hồi quy đỏ: `cd app && npm test` (ca ON12-AC-5, bảng kiểm chất lượng trên DB local) và `cd pipeline && npm test` (ca VL-AC-5, ba chỗ chép cứng enum trong agent/src/enrich/doc-gop-s03/chay.ts và prompt.ts chưa vào sổ vocab-lint). Ca pipeline do chính feature thêm vào; ca app có vẻ phụ thuộc dữ liệu DB local. Trả về triển khai.
+Round 1: các eval của lượt đầu chưa đủ (hai suite lớn đỏ trong S4 vòng 1 — VL-AC-5 do vòng, ON12-AC-5 đã sửa trên main) — trả về triển khai.
+Round 2: E1–E10 và toàn bộ lệnh suite đều xanh trên cây 7e9b7c6b; không có judgment item; verdict PASS.

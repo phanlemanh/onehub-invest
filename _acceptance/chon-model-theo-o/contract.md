@@ -5,7 +5,7 @@ slug: chon-model-theo-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-07-chon-model-theo-o-design.md
 approved_by: Mạnh
 approved_at: 2026-11-07
