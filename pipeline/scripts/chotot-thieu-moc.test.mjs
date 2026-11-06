@@ -17,8 +17,8 @@ import pg from "pg";
 // Khuôn AU4: SCHEMA tạm trong DB chính (không CREATE DATABASE — đĩa VM hẹp,
 // tiến trình con thấy schema đã commit); importer nhận search_path qua URL.
 const SCHEMA = `zcode_ctmoc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-const DB = `postgres://oneinvest:oneinvest@localhost:5433/oneinvest?options=-csearch_path%3D${SCHEMA}`;
-const DB_Q = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const DB_Q = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const DB = `${DB_Q}?options=-csearch_path%3D${SCHEMA}`;
 const IMPORTER = join(import.meta.dirname, "../import-chotot.mjs");
 const tmps = [];
 

@@ -187,7 +187,7 @@ cd collector && npm run check && npm run build && npm run collect -- list-source
 cd collector && npm test
 
 # pipeline (Node .mjs)
-cd pipeline && npm test
+cd pipeline && npm test                   # npm test của app, pipeline, agent tự chạy trên DB của riêng lượt (db/db-thu.sh --chay); thiếu container thì dừng, không rơi về DB chung
 cd pipeline && bash finalize-hanoi.sh     # import → transform → metrics (Hà Nội)
 
 # data-api — :3001

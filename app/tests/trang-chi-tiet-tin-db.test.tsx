@@ -14,7 +14,8 @@ import { pool } from "../src/lib/db"
 import { getOfferComps, getOfferPhone, getPublicOffer, getPublicOffers, parseOfferFilters, type PublicOfferDetail } from "../src/lib/offers-public"
 
 const DB_URL = process.env.DATABASE_URL ?? ""
-const skip = /\/oneinvest_[a-z0-9_]+$/.test(DB_URL) ? false : "cần DATABASE_URL trỏ DB thử oneinvest_<việc>"
+// DB của lượt npm test (oneinvest_suite_*) không tính: ca dựng next build riêng, chỉ chạy theo hồ sơ của nó.
+const skip = /\/oneinvest_(?!suite_)[a-z0-9_]+$/.test(DB_URL) ? false : "cần DATABASE_URL trỏ DB thử oneinvest_<việc>"
 const APP = join(import.meta.dirname, "..")
 const TAG = `offer_tct${process.pid}`
 const TT = `vn-tct${process.pid}`

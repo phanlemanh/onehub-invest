@@ -1,0 +1,246 @@
+// labels-ghep.test.ts — hồ sơ _acceptance/ghep-anh-tren-the-gan-nhan, ca «GHEP-AC-n». Hàm thuần, `serveZaloMedia` thật với tệp giả trên đĩa,
+// thành phần ảnh trong jsdom. Không DB, không mạng. Tên miền thử chỉ dùng example.test.
+import { after, before, test } from "node:test"
+import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+
+import { JSDOM } from "jsdom"
+import { createElement } from "react"
+
+import { chuKhongLink, danhSachAnh, danhSachAnhCum, docGhep, ghepHien, refsCuaDong, type Ghep } from "../src/lib/labels-anh"
+import { docBaiCum, docThe } from "../src/lib/labels-cum"
+import { serveZaloMedia, type BaiAnhRow } from "../src/lib/ops/zalo-media"
+import type { User } from "../src/lib/auth"
+
+const U = (n: string) => `https://cdn.example.test/${n}.jpg`
+const SNAP = "hanoi__s03__ghepthu"
+const tep = (ten: string): BaiAnhRow => ({ media: null, media_files: [{ url: U(ten), file: `media/${ten}.jpg`, snapshotId: SNAP }], snapshot_id: SNAP })
+const chiUrl = (ten: string): BaiAnhRow => ({ media: [{ url: U(ten) }], media_files: null, snapshot_id: SNAP })
+
+// Bên đọc nhận đúng khuôn bên ghi: lấy từ ghepChoMau thật, không chép tay.
+import { ghepChoMau as ghepChoMauThat } from "../../pipeline/lib/ghep-mau.mjs"
+const ghepChoMau = ghepChoMauThat as unknown as (i: { item_id: string; ref_id: string }[], p: unknown[]) => Map<string, Ghep | null>
+const t = (s: number) => new Date(Date.UTC(2026, 10, 5, 3, 0, s)).toISOString()
+const bai = (post_id: string, text: string, s: number, sender_id: string | null = "n1") => ({ post_id, text, posted_at: t(s), sender_id, conversation_id: "g1" })
+const POSTS = [
+  bai("T1", "Cho thuê 2PN", 0), bai("A1", U("a1"), 5), bai("A2", U("a2"), 6),
+  bai("T2", "Bán 1PN", 1000, "n2"), bai("A3", U("a3"), 1001, "n2"), bai("T3", "Bán 3PN", 1010, "n2"),
+  bai("A4", U("a4"), 2000, "n3"),
+  bai("T4", "Bán studio", 3000, "n4"), bai("A5", U("a5"), 3010, "n4"),
+  bai("T5", "Cho thuê studio", 4000, "n5"),
+  { ...bai("A6", U("a6"), 5000), sender_id: null },
+  bai("T6", "Bán căn cụm ngược mã", 6000, "n6"), bai("Z9", U("z9"), 6001, "n6"), bai("Z1", U("z1"), 6002, "n6"),
+]
+const G = ghepChoMau([["1", "A1"], ["2", "A3"], ["3", "A4"], ["4", "T4"], ["5", "T5"], ["6", "A2"], ["7", "A6"], ["8", "Z1"]].map(([item_id, ref_id]) => ({ item_id, ref_id })), POSTS)
+const doc = (k: string) => docGhep(G.get(k))
+// Đường đọc thật của thẻ (`docBaiCum`, `docThe`); chỉ câu SQL thay bằng bảng giả, trả ngược thứ tự để đo được thứ tự đọc. SQL thật ở E4.
+const hang = (p: (typeof POSTS)[number]) => ({ post_id: p.post_id, ref_id: p.post_id, text: p.text, media: p.text.startsWith("https://") ? [{ url: p.text }] : null, media_files: null, snapshot_id: SNAP })
+const q = { query: async (_: string, [refs]: [string[]]) => ({ rows: POSTS.filter((p) => refs.includes(p.post_id)).reverse().map(hang) }) } as unknown as Parameters<typeof docThe>[0]
+const dongCua = (ref: string) => hang(POSTS.find((p) => p.post_id === ref)!)
+
+const MA_TRAN = [
+  ["chi anh mot tin chu", "1", "A1", ["T1", "A1", "A2"], { suyRa: true, soChuGan: 1, khongChu: false }, "Cho thuê 2PN", [U("a1"), U("a2")]],
+  ["nhieu tin chu", "2", "A3", ["T2", "A3"], { suyRa: true, soChuGan: 2, khongChu: false }, "Bán 1PN", [U("a3")]],
+  ["khong tin chu", "3", "A4", ["A4"], { suyRa: false, soChuGan: 0, khongChu: true }, "", [U("a4")]],
+  ["co chu co cum", "4", "T4", ["T4", "A5"], { suyRa: true, soChuGan: 1, khongChu: false }, "Bán studio", [U("a5")]],
+  ["co chu khong cum", "5", "T5", ["T5"], null, "Cho thuê studio", []],
+  ["thieu nguoi gui", "7", "A6", ["A6"], { suyRa: false, soChuGan: 0, khongChu: true }, "", [U("a6")]],
+] as [string, string, string, string[], object | null, string, string[]][]
+
+test("GHEP-AC-3 ma tran du sau loai bai", () => assert.equal(new Set(MA_TRAN.map((m) => m[0])).size, 6))
+for (const [ten, k, ref, refs, hien, chu, anh] of MA_TRAN) {
+  test(`GHEP-AC-3 ${ten}: chu, duong anh, thu tu bai va co ghep`, async () => {
+    const g = doc(k)
+    assert.deepEqual(refsCuaDong(ref, g), refs)
+    const the = await docThe(q, 9, dongCua(ref), g)
+    assert.deepEqual(the.ghep, hien)
+    assert.equal(the.text, chu)
+    assert.deepEqual(the.anh, anh.map((_, i) => `/api/zalo-media?nhan=9&anh=${i}`))
+    const nguon = danhSachAnhCum(g ? await docBaiCum(q, ref, g) : [dongCua(ref)])
+    assert.deepEqual(nguon.map((d) => (d.kind === "url" ? d.url : d.file)), anh)
+  })
+}
+
+test("GHEP-AC-3 anh theo thoi gian khi nguoc thu tu ma", async () => {
+  const g = doc("8")
+  assert.deepEqual(refsCuaDong("Z1", g), ["T6", "Z9", "Z1"])
+  assert.deepEqual(danhSachAnhCum(await docBaiCum(q, "Z1", g)).map((d) => (d.kind === "url" ? d.url : d.file)), [U("z9"), U("z1")])
+})
+
+test("GHEP-AC-3 dong trung cum cung cum voi dong dai dien", () => {
+  assert.deepEqual(refsCuaDong("A2", doc("6")), ["T1", "A1", "A2"])
+  assert.equal(doc("6")!.trung_voi, "A1")
+})
+
+test("GHEP-AC-3 ghep null: anh va chu bang duong khong ghep tung truong", () => {
+  assert.equal(G.get("5"), null)
+  assert.equal(ghepHien(null), null)
+  for (const r of [tep("x"), chiUrl("y"), { media: null, media_files: null, snapshot_id: SNAP }]) {
+    const khongGhep = danhSachAnh(r.media, r.media_files, r.snapshot_id)
+    assert.deepEqual(danhSachAnhCum([r]), khongGhep)
+    assert.deepEqual(chuKhongLink("Bán căn", danhSachAnhCum([r])), chuKhongLink("Bán căn", khongGhep))
+  }
+  assert.notDeepEqual(danhSachAnhCum([chiUrl("y")]), danhSachAnh(null, null, SNAP), "đối chứng: bài khác ảnh thì phép so đỏ")
+})
+
+test("GHEP-AC-3 thu tu anh: tin chu truoc, cum theo thoi gian, trung anh tinh mot lan", () => {
+  const ds = danhSachAnhCum([tep("t"), tep("a"), chiUrl("b"), tep("a")])
+  assert.deepEqual(ds.map((d) => (d.kind === "tep" ? d.file : d.url)), ["media/t.jpg", "media/a.jpg", U("b")])
+})
+
+test("GHEP-AC-3 hai bai cung noi dung anh tinh mot lan theo sha256, khac sha hay thieu sha giu rieng", () => {
+  const coSha = (ten: string, sha: string | null): BaiAnhRow => ({ media: null, media_files: [{ url: U(ten), file: `media/${ten}.jpg`, snapshotId: SNAP, ...(sha ? { sha256: sha } : {}) }], snapshot_id: SNAP })
+  const A = "a".repeat(64), B = "b".repeat(64)
+  const ten = (bai: BaiAnhRow[]) => danhSachAnhCum(bai).map((d) => (d.kind === "tep" ? d.file : d.url))
+  assert.deepEqual(ten([coSha("x", A), coSha("y", A)]), ["media/x.jpg"])
+  assert.deepEqual(ten([coSha("x", A), coSha("y", B)]), ["media/x.jpg", "media/y.jpg"])
+  assert.deepEqual(ten([coSha("x", null), coSha("y", null)]), ["media/x.jpg", "media/y.jpg"])
+  assert.deepEqual(ten([coSha("x", null), coSha("x", null)]), ["media/x.jpg"], "thiếu sha thì khoá vẫn là snapshot và tệp")
+})
+
+test("GHEP-AC-3 du lieu the khong co ma bai hay URL goc, doi chung phep quet do", async () => {
+  const coMa = (s: string) => /T1|A1|A2|example\.test|https?:/.test(s)
+  for (const [, k, ref] of MA_TRAN) assert.ok(!coMa(JSON.stringify(await docThe(q, 9, dongCua(ref), doc(k)))), ref)
+  assert.ok(coMa(JSON.stringify(doc("1"))), "đối chứng: bản ghi thô có mã bài thì phép quét đỏ")
+})
+
+test("GHEP-AC-3 chu hien cua cum bo link anh cua ca cum, khong dem la lien ket khac", () => {
+  const nguon = danhSachAnhCum([chiUrl("a"), chiUrl("b")])
+  assert.deepEqual(chuKhongLink(`Bán căn\n${U("b")}`, nguon), { chu: "Bán căn", soLinkKhac: 0 })
+})
+
+// Route ảnh
+const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])
+const noiDung = (ten: string) => Buffer.concat([JPG, Buffer.from(ten)])
+const BI_MAT = Buffer.from("BI-MAT-KHONG-RA")
+const user = (role: string) => ({ id: "1", email: "o@example.test", plan: "pro", role }) as unknown as User
+const OPS = user("ops")
+let tmp = ""
+let cayMoc = ""
+let cu: string | undefined
+const bamCay = (goc: string): string => {
+  const h = createHash("sha256")
+  const di = (d: string) => { for (const f of readdirSync(d).sort()) { const p = join(d, f); if (statSync(p).isDirectory()) di(p); else h.update(p).update(readFileSync(p)) } }
+  di(goc)
+  return h.digest("hex")
+}
+before(() => {
+  tmp = mkdtempSync(join(tmpdir(), "labels-ghep-"))
+  const dir = join(tmp, "snapshots", "hanoi", SNAP, "media")
+  mkdirSync(dir, { recursive: true })
+  for (const ten of ["a", "b", "c"]) writeFileSync(join(dir, `${ten}.jpg`), noiDung(ten))
+  mkdirSync(join(tmp, "ngoai"), { recursive: true })
+  writeFileSync(join(tmp, "ngoai", "bi-mat.jpg"), BI_MAT)
+  symlinkSync(join(tmp, "ngoai", "bi-mat.jpg"), join(dir, "symlink.jpg"))
+  mkdirSync(join(tmp, "snapshots", "hanoi", SNAP, "other"), { recursive: true })
+  writeFileSync(join(tmp, "snapshots", "hanoi", SNAP, "other", "a.jpg"), BI_MAT)
+  cu = process.env.SNAPSHOTS_DIR
+  process.env.SNAPSHOTS_DIR = join(tmp, "snapshots")
+  cayMoc = bamCay(join(tmp, "snapshots"))
+})
+after(() => {
+  if (cu === undefined) delete process.env.SNAPSHOTS_DIR
+  else process.env.SNAPSHOTS_DIR = cu
+  rmSync(tmp, { recursive: true, force: true })
+})
+const goi = (qs: string, rows: BaiAnhRow[] | null, layAnh?: (u: string) => Promise<Response>) =>
+  serveZaloMedia(new Request(`http://localhost/api/zalo-media?${qs}`), OPS, {
+    traBai: async () => rows,
+    layAnh: (layAnh ?? (async () => new Response("khong duoc goi", { status: 599 }))) as never,
+  })
+
+test("GHEP-AC-5 i chay khap cum tra dung tung tep, url thi lay ho dung url, ngoai khoang 404", async () => {
+  const rows = [tep("a"), tep("b"), chiUrl("x"), tep("c")]
+  const goiToi: string[] = []
+  const lay = async (u: string) => { goiToi.push(u); return new Response(noiDung("x"), { status: 200, headers: { "content-type": "image/jpeg" } }) }
+  for (const [i, ten] of ["a", "b", "x", "c"].entries()) {
+    const r = await goi(`nhan=1&anh=${i}`, rows, lay)
+    assert.equal(r.status, 200)
+    assert.deepEqual(Buffer.from(await r.arrayBuffer()), noiDung(ten))
+  }
+  assert.deepEqual(goiToi, [U("x")])
+  assert.equal((await goi("nhan=1&anh=4", rows, lay)).status, 404)
+})
+
+const XAU: [string, () => string][] = [
+  ["file co ..", () => "media/../../../../ngoai/bi-mat.jpg"],
+  ["file tuyet doi", () => join(tmp, "ngoai", "bi-mat.jpg")],
+  ["ngoai thu muc media", () => "other/a.jpg"],
+  ["symlink ra ngoai", () => "media/symlink.jpg"],
+]
+for (const [ten, tepCua] of XAU) {
+  test(`GHEP-AC-5 duong dan xau o bai thu hai cua cum: ${ten}`, async () => {
+    const rows = [tep("a"), { media: null, media_files: [{ file: tepCua(), snapshotId: SNAP }], snapshot_id: SNAP }]
+    const r = await goi("nhan=1&anh=1", rows)
+    assert.equal(r.status, 403)
+    assert.ok(!Buffer.from(await r.arrayBuffer()).includes(BI_MAT))
+    assert.equal((await goi("nhan=1&anh=0", rows)).status, 200, "bài đầu của cụm vẫn phục vụ được")
+  })
+}
+
+test("GHEP-AC-5 cay khong doi qua moi ca, doi chung ghi them thi phep bam do", () => {
+  const goc = join(tmp, "snapshots")
+  assert.equal(bamCay(goc), cayMoc)
+  const them = join(goc, "hanoi", SNAP, "media", "them.jpg")
+  writeFileSync(them, JPG)
+  assert.notEqual(bamCay(goc), cayMoc)
+  rmSync(them)
+})
+
+// Thành phần ảnh: nạp trong jsdom vì Base UI đọc `document` lúc nạp.
+async function mo() {
+  const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost/ops/labels", pretendToBeVisual: true })
+  const w = dom.window as unknown as Record<string, unknown>
+  Object.assign(globalThis, {
+    window: w, document: w.document, HTMLElement: w.HTMLElement, Element: w.Element, Node: w.Node, HTMLImageElement: w.HTMLImageElement,
+    getComputedStyle: w.getComputedStyle, MutationObserver: w.MutationObserver, Event: w.Event, MouseEvent: w.MouseEvent, KeyboardEvent: w.KeyboardEvent,
+    requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0), cancelAnimationFrame: clearTimeout,
+    ResizeObserver: class { observe() {} unobserve() {} disconnect() {} }, IS_REACT_ACT_ENVIRONMENT: true,
+  })
+  Object.defineProperty(globalThis, "navigator", { value: w.navigator, configurable: true })
+  const { act } = await import("react")
+  const { createRoot } = await import("react-dom/client")
+  const { AnhBai } = await import("../src/components/ops/labels/anh-bai")
+  const root = createRoot(dom.window.document.getElementById("root")!)
+  const q = (s: string) => dom.window.document.querySelector(s) as unknown as HTMLElement | null
+  const render = (p: Parameters<typeof AnhBai>[0]) => act(async () => { root.render(createElement(AnhBai, p)) })
+  const bam = (el: Element) => act(async () => { el.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })) })
+  return { q, render, bam, dom, dong: () => act(async () => root.unmount()) }
+}
+const DUONG = ["/api/zalo-media?nhan=1&anh=0", "/api/zalo-media?nhan=1&anh=1"]
+
+test("GHEP-AC-4 nhan ghep, co nhieu tin chu, cau khong tin chu, bai khong ghep khong co nhan", async () => {
+  const d = await mo()
+  await d.render({ anh: DUONG, soLinkKhac: 0, coChu: true, ghep: { suyRa: true, soChuGan: 3, khongChu: false } })
+  assert.match(d.q("[data-labels-ghep]")!.textContent!, /Ghép suy ra · 2 ảnh/)
+  assert.match(d.q("[data-labels-ghep-nhieu]")!.textContent!, /Có 3 tin chữ trong 2 phút/)
+  await d.render({ anh: DUONG, soLinkKhac: 0, coChu: true, ghep: { suyRa: true, soChuGan: 1, khongChu: false } })
+  assert.equal(d.q("[data-labels-ghep-nhieu]"), null)
+  await d.render({ anh: DUONG.slice(0, 1), soLinkKhac: 0, coChu: false, ghep: { suyRa: false, soChuGan: 0, khongChu: true } })
+  assert.equal(d.q("[data-labels-ghep]"), null)
+  assert.match(d.q("[data-labels-ghep-khong-chu]")!.textContent!, /Không có tin chữ trong 2 phút/)
+  await d.render({ anh: DUONG.slice(0, 1), soLinkKhac: 0, coChu: true, ghep: null })
+  assert.equal(d.q("[data-labels-ghep]"), null)
+  assert.equal(d.q("[data-labels-ghep-khong-chu]"), null)
+  await d.dong()
+})
+
+test("GHEP-AC-4 nut Anh sau, Anh truoc chuyen anh, dung o dau mut", async () => {
+  const d = await mo()
+  await d.render({ anh: [...DUONG, "/api/zalo-media?nhan=1&anh=2"], soLinkKhac: 0, coChu: true, ghep: { suyRa: true, soChuGan: 1, khongChu: false } })
+  await d.bam(d.q('[aria-label="Xem lớn ảnh 1"]')!)
+  const tieuDe = () => d.dom.window.document.querySelector("[data-labels-anh-lon] [data-slot=dialog-title]")?.textContent ?? d.q("[data-labels-anh-lon]")?.textContent ?? ""
+  const nut = (ten: string) => [...d.dom.window.document.querySelectorAll("[data-labels-anh-lon] button")].find((x) => x.textContent?.includes(ten)) as unknown as HTMLButtonElement
+  assert.match(tieuDe(), /Ảnh 1\/3/)
+  assert.equal(nut("Ảnh trước").disabled, true, "đầu mút không lùi nữa")
+  await d.bam(nut("Ảnh sau"))
+  await d.bam(nut("Ảnh sau"))
+  assert.match(tieuDe(), /Ảnh 3\/3/)
+  assert.equal(nut("Ảnh sau").disabled, true, "đầu mút không tiến nữa")
+  await d.bam(nut("Ảnh trước"))
+  assert.match(tieuDe(), /Ảnh 2\/3/)
+  await d.dong()
+})
