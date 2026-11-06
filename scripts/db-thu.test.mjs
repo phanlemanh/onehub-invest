@@ -429,8 +429,14 @@ const DB_DAU = `oneinvest_suite_dau_${process.pid}`;
 const daNoi = []; // database của mọi kết nối test mở
 let ketQua = null;
 let conSot = null; // số DB của lượt còn trên máy chủ sau khi dọn
+// Chỉ lỗi «máy chủ không nghe» mới được bỏ qua; sai mật khẩu, thiếu DB postgres hay thiếu module pg phải đỏ,
+// nếu không lệnh DL- thoát 0 khi không ca nào chạy (lượt chấm S4 r1, AC-9).
+const LOI_KHONG_NOI = new Set(["ECONNREFUSED", "ENOTFOUND", "ETIMEDOUT", "EAI_AGAIN", "EHOSTUNREACH"]);
+const laLoiKhongNoi = (e) =>
+  LOI_KHONG_NOI.has(e?.code) || (Array.isArray(e?.errors) && e.errors.length > 0 && e.errors.every((x) => LOI_KHONG_NOI.has(x?.code)));
+let pgMod = null;
 async function noi(database) {
-  const pg = createRequire(path.join(GOC, "app/package.json"))("pg");
+  const pg = pgMod;
   const u = new URL(MAY_CHU);
   u.pathname = `/${database}`;
   const c = new pg.Client({ connectionString: u.toString() });
@@ -441,11 +447,13 @@ async function noi(database) {
 /** Chạy ma trận một lần cho mọi ca DL-. Trả null khi máy không có Postgres (CI=true thì ném lỗi). */
 function chayMaTran() {
   ketQua ??= (async () => {
+    pgMod = createRequire(path.join(GOC, "app/package.json"))("pg"); // thiếu module thì ném, không bỏ qua
     let qt;
     try {
       qt = await noi("postgres");
     } catch (e) {
       if (process.env.CI === "true") throw new Error(`CI không nối được Postgres ${MAY_CHU}: ${e.message}`);
+      if (!laLoiKhongNoi(e)) throw e;
       return null;
     }
     await qt.query(`DROP DATABASE IF EXISTS ${DB_DAU} WITH (FORCE)`);
@@ -538,6 +546,14 @@ test("DL-AC-9 câu cũ khớp từng ô kỳ vọng, đột biến chỉ làm sa
   }
   assert.deepEqual([...new Set(daNoi)].sort(), [DB_DAU, "postgres"].sort(), "test chỉ được nối DB postgres và DB của nó");
   assert.equal(conSot, 0, `${DB_DAU} phải bị xoá khi xong`);
+});
+
+test("DL-AC-9b chỉ lỗi máy chủ không nghe mới cho bỏ qua ca DL-; sai mật khẩu, thiếu DB, thiếu module thì đỏ", () => {
+  const loi = (code) => Object.assign(new Error(code), { code });
+  for (const c of ["ECONNREFUSED", "ENOTFOUND", "ETIMEDOUT"]) assert.equal(laLoiKhongNoi(loi(c)), true, `bỏ qua được: ${c}`);
+  assert.equal(laLoiKhongNoi(Object.assign(new AggregateError([loi("ECONNREFUSED"), loi("ECONNREFUSED")]), {})), true, "cả ::1 lẫn 127.0.0.1 từ chối");
+  for (const c of ["28P01", "3D000", "MODULE_NOT_FOUND", undefined]) assert.equal(laLoiKhongNoi(loi(c)), false, `không được bỏ qua: ${c}`);
+  assert.equal(laLoiKhongNoi(new AggregateError([loi("ECONNREFUSED"), loi("28P01")])), false, "một nhánh lỗi khác thì không bỏ qua");
 });
 
 /** Lỗi chỉ đọc của lời gọi dấu trong log docker giả, hoặc null. Đọc từ argv docker ghi lại, không từ biến môi trường. */
