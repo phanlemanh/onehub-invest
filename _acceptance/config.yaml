@@ -79,7 +79,8 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
-    tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB
+    tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB; từ dau-luoc-do-ban-mau E8 tệp có thêm ca DL- cần Postgres :5433
+    dau_luoc_do: "node --test --test-name-pattern=^DL- scripts/db-thu.test.mjs"   # dau-luoc-do-ban-mau E1–E7, E9 — Postgres :5433 thật, chỉ DB postgres và oneinvest_suite_dau_<pid>
     design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     design_floor_gen: "node --test scripts/design-floor/*.test.mjs"   # dung-m2-song-song: hai lệnh sinh tokens/registry + reuse-plan check của kit — không cần DB
@@ -657,6 +658,7 @@ executors:
     sts_assert: "node _acceptance/sd3-test-chiu-song-song/probes/song-song.mjs assert"   # sd3-test-chiu-song-song E3 — thông điệp assert giữ nguyên
     sts_pham_vi: "bash _acceptance/sd3-test-chiu-song-song/probes/pham-vi.sh"   # sd3-test-chiu-song-song E4
     tsdt_that: "bash _acceptance/test-suite-db-thu/probes/that.sh"   # test-suite-db-thu E2 — :5433 thật, chỉ DB thử
+    dau_luoc_do_chung: "node _acceptance/dau-luoc-do-ban-mau/probes/dau-chung.mjs"   # dau-luoc-do-ban-mau E8b — dấu DB chung thật, chỉ đọc catalog
     tsdt_chung: "node _acceptance/test-suite-db-thu/probes/song-song.mjs chung"   # test-suite-db-thu E3 — đối chứng, bản chép đóng vai DB chung
     tsdt_rieng: "node _acceptance/test-suite-db-thu/probes/song-song.mjs rieng"   # test-suite-db-thu E4 — SD-AC-6 trên DB riêng khi bên ghi chạy
     tsdt_ba_bo: "bash _acceptance/test-suite-db-thu/probes/ba-bo.sh"   # test-suite-db-thu E5, E6, E7 — ba bộ lần lượt, 0 kết nối vào DB chung
