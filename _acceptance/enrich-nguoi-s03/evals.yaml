@@ -93,6 +93,6 @@ evals:
     criterion: AC-10
     executor: judgment
     inputs: [docs/adr/0011-reso-first-data-law.md, docs/adr/0016-danh-ba-vat-the-va-nguoi.md, CONTEXT.md, pipeline/mappings.yaml, docs/ROADMAP.md]
-    question: "Các tệp này có đủ: mappings.yaml khai contact_kind, contact_rule và luật s03-qua-nguoi-dang đủ sáu điều kiện ADR-0011 Qđ 3; CONTEXT.md có thuật ngữ «Liên lạc của Người» theo khuôn (nhãn, code, định nghĩa, _Avoid_) và mục «Chưa xác minh» cạnh Xem số nói tin hoặc bài khác; ADR-0016 §8 có dòng sửa đổi tách liên lạc khỏi bí danh định danh; ROADMAP ghi as-built và việc chờ áp 079, liên lạc hồ sơ chat của ZCode?"
+    question: "Các tệp này có đủ: mappings.yaml khai contact_kind, contact_rule và luật s03-qua-nguoi-dang đủ sáu điều kiện ADR-0011 Qđ 3; CONTEXT.md có thuật ngữ «Liên lạc của Người» theo khuôn (nhãn, code, định nghĩa, _Avoid_) và mục «Chưa xác minh» cạnh Xem số nói tin hoặc bài khác; ADR-0016 §8 có dòng sửa đổi tách liên lạc khỏi bí danh định danh; ROADMAP ghi as-built và việc chờ áp 079, liên lạc hồ sơ kênh S03 của ZCode?"
     expected: "bốn vế đều có trong tệp"
     evidence_required: [verdict, rationale]

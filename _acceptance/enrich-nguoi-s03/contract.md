@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: Enrich danh bạ Người S03 — số liên lạc theo tài khoản từ tin có số và bài của chính người gửi; tin không số lấy số qua người đăng, hiện qua «Xem số» kèm nhãn chưa xác minh (cơ chế S06); chừa chỗ liên lạc hồ sơ chat
+feature: Enrich danh bạ Người S03 — số liên lạc theo tài khoản từ tin có số và bài của chính người gửi; tin không số lấy số qua người đăng, hiện qua «Xem số» kèm nhãn chưa xác minh (cơ chế S06); chừa chỗ liên lạc hồ sơ kênh S03
 slug: enrich-nguoi-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (079) — khớp t3_paths

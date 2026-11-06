@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS party_contacts (
   retracted_at   timestamptz,
   retract_reason text,
   CONSTRAINT party_contacts_rut_chk CHECK ((retracted_at IS NULL) = (retract_reason IS NULL)),
-  -- sdt: số gốc E.164 (SD3); chat_profile: link hoặc mã hồ sơ, khác rỗng (làn ZCode ghi sau, vòng này chưa có bộ ghi)
+  -- sdt: số gốc E.164 (SD3); chat_profile: username trần của tài khoản kênh chat, khác rỗng — không link, không tên miền; link
+  -- dựng lúc hiển thị từ source_registry local (hồ sơ link-nguoi-ban-s03, 080, ghi sau với rule_id riêng; vòng này chưa có bộ ghi)
   CONSTRAINT party_contacts_value_chk CHECK (
     (kind = 'sdt' AND value ~ '^\+84[35789][0-9]{8}$') OR (kind = 'chat_profile' AND btrim(value) <> ''))
 );

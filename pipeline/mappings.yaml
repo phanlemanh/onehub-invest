@@ -469,7 +469,7 @@ enums:
     nullable: false
     values:
       - { code: sdt, label_vi: Số điện thoại }   # E.164 +84…, RESO MobilePhone
-      - { code: chat_profile, label_vi: Hồ sơ chat }           # link hồ sơ theo sender_id, làn ZCode ghi (chưa có bộ ghi)
+      - { code: chat_profile, label_vi: Hồ sơ chat }           # username trần của tài khoản kênh chat ≈ SocialMedia.SocialMediaUrlOrId; link dựng lúc hiển thị từ source_registry local; 080 ghi
   contact_rule:
     term_vi: Luật liên lạc
     dd_field: null

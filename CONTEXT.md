@@ -157,7 +157,7 @@ _Avoid_: so khớp, kiểm chéo
 - Code: `seller_phone_inferred` (view `sale_offers`, migration 070, 079) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
 _Avoid_: chưa kiểm chứng, số nghi ngờ
 
-**Liên lạc của Người**: Số điện thoại (sau này link hồ sơ chat) mà một Người dùng để được liên hệ, ghi thành phát biểu có bằng chứng: số người đăng ghi trên tin của chính họ, hoặc số họ nêu trong bài khác như bài trả lời trong nhóm. Khác bí danh: một số dùng chung liên lạc được nhiều Người mà không làm họ thành một. Số dùng chung giữa nhiều người gửi không thành liên lạc của ai. Tin không có số nhận số qua người đăng, kèm nhãn «Chưa xác minh».
+**Liên lạc của Người**: Số điện thoại (sau này link hồ sơ kênh S03) mà một Người dùng để được liên hệ, ghi thành phát biểu có bằng chứng: số người đăng ghi trên tin của chính họ, hoặc số họ nêu trong bài khác như bài trả lời trong nhóm. Khác bí danh: một số dùng chung liên lạc được nhiều Người mà không làm họ thành một. Số dùng chung giữa nhiều người gửi không thành liên lạc của ai. Tin không có số nhận số qua người đăng, kèm nhãn «Chưa xác minh».
 - Code: `party_contacts` (migration 079) · `contact_kind` (`sdt`, `chat_profile`) · `contact_rule` (`so_tren_tin`, `so_trong_bai`) · dấu tin `s03-qua-nguoi-dang` · RESO: `Contacts.MobilePhone`, `SocialMedia` — extension local
 _Avoid_: bí danh SĐT (đó là khoá định danh), số phụ
 

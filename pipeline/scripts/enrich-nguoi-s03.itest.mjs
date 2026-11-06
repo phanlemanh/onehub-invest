@@ -21,7 +21,7 @@ import { runTransformZalo } from "../transform-zalo.mjs";
 
 const PIPE = join(import.meta.dirname, "..");
 const DB_URL = process.env.DATABASE_URL ?? "";
-const SNAP = "hanoi__zalo-agent__2099-11-06T000000";
+const SNAP = "hanoi__s03-thu__2099-11-06T000000";
 const yen = { out: () => {} };
 const so = (n) => `+84399000${String(n).padStart(3, "0")}`; // E.164 của 0399000nnn
 const chu = (n) => `0399000${String(n).padStart(3, "0")}`;
@@ -35,7 +35,7 @@ async function withTx(fn) {
   try {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}')
+    await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 's03-thu', '{}')
                    ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
     if (!(await c.query("SELECT to_regclass('party_contacts') IS NOT NULL AS co")).rows[0].co) await c.query(MIG_079);
     return await fn(c);

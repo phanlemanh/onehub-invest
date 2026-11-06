@@ -2,7 +2,7 @@
   "feature_plain": "Tin cho thuê, tin bán S03 không ghi số sẽ có số liên lạc lấy từ chính người đăng (số họ ghi ở tin khác hoặc khi trả lời trong nhóm), hiện qua nút Xem số kèm nhãn «Chưa xác minh» — ước 742 tin, trong đó 586 tin thuê.",
   "will_do": [
     {"id": "AC-1", "p": "Sẽ ghi cho mỗi người đăng những số chỉ thuộc riêng họ, phân biệt số họ ghi trên tin với số chỉ có trong bài trả lời; số xuất hiện ở bài của người khác thì không gán cho ai."},
-    {"id": "AC-2", "p": "Sẽ giữ sổ số liên lạc chỉ thêm, rút phải có lý do; chạy lại không sinh dòng mới; số trở thành số chung thì tự rút; bài gốc tạm vắng thì không rút. Chừa sẵn ô cho link Zalo."},
+    {"id": "AC-2", "p": "Sẽ giữ sổ số liên lạc chỉ thêm, rút phải có lý do; chạy lại không sinh dòng mới; số trở thành số chung thì tự rút; bài gốc tạm vắng thì không rút. Chừa sẵn ô cho link hồ sơ kênh S03."},
     {"id": "AC-3", "p": "Sẽ chọn số cho người đăng theo một luật: đúng một số trên tin của chính họ, không có thì đúng một số trong bài; còn lại không gán."},
     {"id": "AC-4", "p": "Sẽ gắn số đã chọn vào tin không có số của người đó, ghi rõ số này suy qua người đăng; tin tự có số thì giữ số của tin; tin S06, S05 không đổi; lượt nạp S03 hằng đêm không làm tin rơi về «Chưa có số»."},
     {"id": "AC-6", "p": "Sẽ không để số đã suy quay lại làm bằng chứng cho danh bạ hay sổ liên lạc, và các số đo danh bạ hằng đêm không đổi vì việc này."},
@@ -27,7 +27,7 @@
     {"i": 5, "p": "Máy thu chưa áp bản cập nhật DB, hoặc bị một bản sau ghi đè — AC-5 (chạy an toàn khi chưa áp)."},
     {"i": 6, "p": "Chạy lại, nạp lại S03, lượt danh bạ kế không sinh thêm gì — AC-2, AC-4, AC-6."},
     {"i": 7, "p": "Chỉ tin S03 đổi; tin S05, S06 giữ nguyên — AC-4."},
-    {"i": 8, "p": "Làm trong vòng này: AC-1 đến AC-9. Để sau: link hồ sơ chat (ZCode lấy), S05, trang danh bạ Ops, thẻ duyệt người nhiều số. Không bao giờ: đoán số từ tên người gửi; gọi hồ sơ chat trong vòng này."}
+    {"i": 8, "p": "Làm trong vòng này: AC-1 đến AC-9. Để sau: link hồ sơ kênh S03 (ZCode lấy), S05, trang danh bạ Ops, thẻ duyệt người nhiều số. Không bao giờ: đoán số từ tên người gửi; gọi hồ sơ chat trong vòng này."}
   ],
   "gap_probe_plain": [
     {"i": 0, "p": "Việc ghi số suy vào chính tin (thay vì chỉ đọc qua người đăng lúc bấm Xem số) lẽ ra là quyết định của anh, máy đã tự chọn — nay thành Hỏi-6."},

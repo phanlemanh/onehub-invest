@@ -16,7 +16,7 @@
 - Nút: «Bài nhóm S03 của người gửi» → «Người theo tài khoản» → «Liên lạc của Người (party_contacts, rule s03-so-tren-tin / s03-so-trong-bai)» → «Luật chọn số» → «Tin không số: seller_phone + dấu s03-qua-nguoi-dang» → «View sale_offers: seller_phone_inferred» → «Invest: Xem số + Badge Chưa xác minh».
 - Nhánh phụ (đứt nét, ghi «lối khác Hỏi-1»): «Bí danh sdt của Người theo SĐT» —gộp HD13 (công tắc đang TẮT)→ «Người theo tài khoản».
 - Vòng cấm (mũi tên gạch chéo): «Tin mang dấu s03-qua-nguoi-dang» ↛ «Liên lạc / bí danh» (AC-6 không tự nuôi).
-- Ô chờ ZCode (xám): «Liên lạc hồ sơ chat theo sender_id — làn ZCode».
+- Ô chờ ZCode (xám): «Liên lạc hồ sơ kênh S03 theo sender_id — làn ZCode».
 - AC: AC-1, AC-2, AC-4, AC-5, AC-6, AC-7.
 
 ## Đề bài `luat-chon-so`
