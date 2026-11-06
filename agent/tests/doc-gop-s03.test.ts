@@ -79,3 +79,123 @@ test("DGS-AC-4-CO tuyChonGui: ZDR + không huấn luyện cho cả ba mã, DeepS
     else assert.equal(g.only, undefined);
   }
 });
+
+// ---------- gọi + gộp (AC-1, AC-4 cờ gửi, AC-6) ----------
+import { MockLanguageModelV4 } from "ai/test";
+import { FIELDS, type Field } from "../src/enrich/doc-gop-s03/o.js";
+import { gop, hoiGop, type KetQuaGoi, type TaoModel } from "../src/enrich/doc-gop-s03/doc.js";
+import type { The } from "../src/enrich/doc-gop-s03/the.js";
+
+type Ghi = { gateway: string; providerOptions: unknown; prompt: string };
+/** 17 ô đủ khuôn, đè vài ô theo `de`. */
+function json17(de: Partial<Record<Field, unknown>> = {}): string {
+  const o: Record<string, unknown> = {};
+  for (const f of FIELDS) o[f] = { v: null, cc: null, trich: "" };
+  for (const [f, v] of Object.entries(de)) o[f] = v;
+  return JSON.stringify(o);
+}
+/** Gateway giả: theo mã Gateway trả chữ dựng sẵn (hoặc ném), ghi mã + providerOptions + prompt mỗi lời gọi. */
+function gatewayGia(tra: Record<string, string | Error>, ghi: Ghi[], cost = "0.002"): TaoModel {
+  return (gateway) => new MockLanguageModelV4({
+    modelId: gateway,
+    doGenerate: async (o: { providerOptions?: unknown; prompt: unknown }) => {
+      ghi.push({ gateway, providerOptions: o.providerOptions, prompt: JSON.stringify(o.prompt) });
+      const t = tra[gateway];
+      if (t instanceof Error) throw t;
+      if (t === undefined) throw new Error(`gateway giả không có ${gateway}`);
+      return {
+        content: [{ type: "text", text: t }], finishReason: { unified: "stop", raw: "stop" },
+        usage: { inputTokens: { total: 5000, noCache: 5000, cacheRead: undefined, cacheWrite: undefined }, outputTokens: { total: 900, text: 900, reasoning: undefined } },
+        warnings: [], providerMetadata: { gateway: { cost } },
+      };
+    },
+  } as never) as never;
+}
+const THE: The = { post_id: "p1", text_hash: "h1", group_name: "Nhóm A", group_note: "[OCP] thẻ nhóm", text: "Bán căn 2PN giá 3,4 tỷ, 62m2", anh: [], anh_thieu: 0 };
+const HAI = "anthropic/claude-haiku-5.5", GLM = "zai/glm-5.3-flash", DS = "deepseek/deepseek-v4.1-flash-1017";
+const TRA = {
+  [HAI]: json17({ price_min_vnd: { v: 3400000000, cc: "chu_bai", trich: "3,4 tỷ" }, area_m2: { v: 62, cc: "chu_bai", trich: "62m2" }, bathrooms: { v: 2, cc: "kien_thuc_nghe", trich: "" } }),
+  [GLM]: json17({ price_min_vnd: { v: 1111, cc: "chu_bai", trich: "3,4 tỷ" } }),
+  [DS]: json17(),
+};
+async function docTheo(c: CauHinh, ghi: Ghi[], tra: Record<string, string | Error> = TRA) {
+  const kh = keHoach(c);
+  const kq = new Map<string, KetQuaGoi>();
+  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, gia: n.gia, the: THE, taoModel: gatewayGia(tra, ghi), recordCall: async () => {} }));
+  return gop(kq, kh, THE.text);
+}
+
+test("DGS-AC-1 cùng mã, hai bảng: ô lấy từ đúng model được giao", async () => {
+  const ghiA: Ghi[] = [];
+  const a = await docTheo(kiemCauHinh(bang({ price_min_vnd: "glm", bathrooms: NGUOI })), ghiA);
+  assert.deepEqual(ghiA.map((g) => g.gateway).sort(), [HAI, GLM], "bảng A gọi đúng hai model, mỗi model một lần");
+  assert.equal((a.price_min_vnd as { v: unknown }).v, 1111, "O KHONG LAY TU MODEL DUOC GIAO");
+  assert.equal((a.area_m2 as { v: unknown }).v, 62);
+  const ghiB: Ghi[] = [];
+  const b = await docTheo(kiemCauHinh(bang({ bathrooms: NGUOI })), ghiB);
+  assert.deepEqual(ghiB.map((g) => g.gateway), [HAI]);
+  assert.equal((b.price_min_vnd as { v: unknown }).v, 3400000000);
+});
+
+test("DGS-AC-2 giá trị WC model trả không vào kết quả gộp khi ô giao người", async () => {
+  const r = await docTheo(napCauHinh().cauHinh, []);
+  assert.deepEqual(r.bathrooms, { nguoi: true }, "WC PHAI LA NGUOI DUYET");
+});
+
+test("DGS-AC-4-CO lời gọi thật mang cờ ZDR, DeepSeek chỉ qua Baseten (ma trận ba mã)", async () => {
+  const ghi: Ghi[] = [];
+  await docTheo(kiemCauHinh(bang({ price_min_vnd: "glm", area_m2: "deepseek" })), ghi);
+  assert.equal(ghi.length, 3);
+  for (const g of ghi) {
+    const gw = (g.providerOptions as { gateway?: Record<string, unknown> }).gateway ?? {};
+    assert.equal(gw.zeroDataRetention, true, "THIEU ZDR");
+    assert.equal(gw.disallowPromptTraining, true, "THIEU ZDR");
+    if (g.gateway === DS) assert.deepEqual(gw.only, ["baseten"], "DEEPSEEK KHONG QUA BASETEN");
+    else assert.equal(gw.only, undefined);
+  }
+});
+
+test("DGS-AC-6 câu trích chữ bài không có thật thì trich_ok false, giá trị vẫn giữ", async () => {
+  const t = json17({
+    price_min_vnd: { v: 3400000000, cc: "chu_bai", trich: "3,4 tỷ" },
+    area_m2: { v: 62, cc: "chu_bai", trich: "65m2" },
+    building: { v: "PR2", cc: "anh", trich: "ảnh 1: PR2" },
+  });
+  const r = await docTheo(kiemCauHinh(bang({})), [], { [HAI]: t });
+  const o = (f: Field) => r[f] as { v: unknown; trich_ok: unknown };
+  assert.equal(o("price_min_vnd").trich_ok, true);
+  assert.equal(o("area_m2").trich_ok, false, "TRICH BIA KHONG BI DANH DAU");
+  assert.equal(o("area_m2").v, 62);
+  assert.equal(o("building").trich_ok, null);
+});
+
+test("DGS-RF JSON thiếu ô: json_ok false, ô thiếu null, không ném", async () => {
+  const thieu = JSON.parse(json17({ kind: { v: "sale", cc: "chu_bai", trich: "Bán" } }));
+  delete thieu.seller_phone;
+  const k = await hoiGop({ gateway: HAI, gia: { vao: 0.1, ra: 0.5 }, the: THE, taoModel: gatewayGia({ [HAI]: JSON.stringify(thieu) }, []), recordCall: async () => {} });
+  assert.equal(k.json_ok, false);
+  assert.equal(k.error_kind, "json-hong");
+  assert.equal(k.json?.seller_phone, undefined);
+  assert.equal(k.usd, 0.002, "chi phí của lời gọi hỏng vẫn tính");
+});
+
+test("DGS-RF một model lỗi: ô của nó null, ô model kia giữ; ai_calls ghi lỗi tên lớp", async () => {
+  const calls: { ok: boolean; loi: string | null }[] = [];
+  const kh = keHoach(kiemCauHinh(bang({ price_min_vnd: "glm" })));
+  const tm = gatewayGia({ [HAI]: TRA[HAI], [GLM]: new TypeError("mang") }, []);
+  const kq = new Map<string, KetQuaGoi>();
+  for (const n of kh.nhom) kq.set(n.gateway, await hoiGop({ gateway: n.gateway, gia: n.gia, the: THE, taoModel: tm, recordCall: async (r) => { calls.push({ ok: r.ok, loi: r.loi }); } }));
+  assert.equal(kq.get(GLM)!.error_kind, "TypeError");
+  const r = gop(kq, kh, THE.text);
+  assert.equal((r.price_min_vnd as { v: unknown }).v, null);
+  assert.equal((r.area_m2 as { v: unknown }).v, 62);
+  assert.deepEqual(calls.map((c) => c.ok).sort(), [false, true]);
+});
+
+test("DGS-AC-4 tin nhắn không mang tên tệp ảnh hay khoá ngoài nhóm, thẻ nhóm, chữ", async () => {
+  const ghi: Ghi[] = [];
+  await docTheo(kiemCauHinh(bang({})), ghi);
+  assert.match(ghi[0].prompt, /Nhóm A/);
+  assert.match(ghi[0].prompt, /\[OCP\] thẻ nhóm/);
+  assert.match(ghi[0].prompt, /Bán căn 2PN giá 3,4 tỷ, 62m2/);
+});
