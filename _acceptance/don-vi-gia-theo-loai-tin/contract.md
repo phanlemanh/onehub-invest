@@ -5,7 +5,7 @@ slug: don-vi-gia-theo-loai-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-06T06:25:27Z
 approved_by:
@@ -46,3 +46,9 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục ngắ
 ## Notes
 
 - Nhánh cắt từ đầu nhánh #330 (fix/the-hai-nguoi-xep-sau), nối sau #328 và #330.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-06:
+  - Ngoài-4: phép kiểm thẻ khi bảng nguồn rỗng hay vắng chỉ kiểm không có tên, chưa kiểm dòng «Người đăng: ID» vẫn còn.
+  - Ngoài-5: phép kiểm giờ trên thẻ ghép không phân biệt được giờ của tin chữ với giờ của bài ảnh.
+  - Ngoài-6: chữ «mã thẻ» trên màn chưa có định nghĩa trong từ vựng chung và trùng chữ với một nghĩa khác trong code.
+  - Ngoài-7: với thẻ ghép, lượt một và lượt hai có thể hiện hai giờ đăng khác nhau, có lúc thẻ không hiện giờ.
+  - Ngoài-8: cùng lỗi với Ngoài-7: thẻ ghép hiện giờ đăng khác nhau giữa hai lượt và có thể mất dòng giờ mà không báo.
