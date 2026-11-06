@@ -8,14 +8,14 @@
  "prompt_version": "dg3-s03-v3",
  "prompt_sha": "5c569ca27a311e58fa19256e82ac7f007422be2cf0bcdb74095c92b1e476c9fb",
  "cau_hinh_sha": "db2101818766b05c80246c068e3016862b551e17d4dc09b1dd9fb2bfbb5b91d9",
- "ma_sha": "4c0fbd3930156585127ec164e61a23237ecf2f22f146170974d29dd5520790ce",
- "dung": 343,
+ "ma_sha": "b369be33ba27a201b3dbda7de270285430f098952c3fc02b57f296002a88fddf",
+ "dung": 342,
  "mau_so": 368,
- "dung_gop": 0.9320652173913043,
- "dung_gop_bo_9991": 0.9659090909090909,
- "usd_the": 0.0016198695652173915,
+ "dung_gop": 0.9293478260869565,
+ "dung_gop_bo_9991": 0.9630681818181818,
+ "usd_the": 0.0016642826086956523,
  "json_hong": 0,
- "giay_trung_vi": 9.262,
+ "giay_trung_vi": 8.815,
  "anh_thieu": {
   "9991": 1,
   "10023": 1
@@ -36,10 +36,10 @@
    "thua": 0
   },
   "property_type": {
-   "dung": 22,
+   "dung": 21,
    "n": 23,
    "co_nhan": 21,
-   "phu": 20,
+   "phu": 19,
    "thua": 0
   },
   "multi_unit": {
@@ -57,7 +57,7 @@
    "thua": 0
   },
   "subzone": {
-   "dung": 19,
+   "dung": 20,
    "n": 23,
    "co_nhan": 20,
    "phu": 17,
@@ -68,14 +68,14 @@
    "n": 23,
    "co_nhan": 14,
    "phu": 12,
-   "thua": 1
+   "thua": 0
   },
   "stack": {
    "dung": 22,
    "n": 23,
    "co_nhan": 5,
    "phu": 5,
-   "thua": 0
+   "thua": 1
   },
   "floor": {
    "dung": 23,
@@ -109,14 +109,14 @@
    "dung": 21,
    "n": 23,
    "co_nhan": 20,
-   "phu": 19,
+   "phu": 18,
    "thua": 0
   },
   "price_max_vnd": {
-   "dung": 21,
+   "dung": 20,
    "n": 23,
    "co_nhan": 20,
-   "phu": 19,
+   "phu": 18,
    "thua": 0
   },
   "seller_name": {
@@ -134,5 +134,5 @@
    "thua": 0
   }
  },
- "luc": "2026-11-06T22:08:13.305Z"
+ "luc": "2026-11-06T22:39:24.734Z"
 }
