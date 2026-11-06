@@ -14,3 +14,10 @@
 {"ts": "2026-11-06T03:20:06Z", "round": 1, "evalId": "SUITE-ui_lint_rules", "run_id": "enrich-nguoi-s03-SUITE-ui_lint_rules-20261106T032006Z", "exit_code": 0, "cmd": "cd app && npm run test:lint-rules"}
 {"ts": "2026-11-06T03:20:06Z", "round": 1, "evalId": "SUITE-portal_static", "run_id": "enrich-nguoi-s03-SUITE-portal_static-20261106T032006Z", "exit_code": 0, "cmd": "node scripts/check-portal-compliance.mjs"}
 {"ts": "2026-11-06T04:00:03Z", "round": 1, "evalId": "SUITE-pipeline", "run_id": "enrich-nguoi-s03-SUITE-pipeline-20261106T034428Z", "exit_code": 0, "cmd": "cd pipeline && npm test"}
+{"ts": "2026-11-06T04:03:41Z", "round": 2, "evalId": "SUITE-agent", "run_id": "enrich-nguoi-s03-SUITE-agent-20261106T040326Z", "exit_code": 0, "cmd": "cd agent && npm test"}
+{"ts": "2026-11-06T04:04:03Z", "round": 2, "evalId": "SUITE-ui_lint_rules", "run_id": "enrich-nguoi-s03-SUITE-ui_lint_rules-20261106T040402Z", "exit_code": 0, "cmd": "cd app && npm run test:lint-rules"}
+{"ts": "2026-11-06T04:04:03Z", "round": 2, "evalId": "SUITE-portal_static", "run_id": "enrich-nguoi-s03-SUITE-portal_static-20261106T040403Z", "exit_code": 0, "cmd": "node scripts/check-portal-compliance.mjs"}
+{"ts": "2026-11-06T04:04:24Z", "round": 2, "evalId": "SUITE-app_tsc_lint", "run_id": "enrich-nguoi-s03-SUITE-app_tsc_lint-20261106T040408Z", "exit_code": 0, "cmd": "cd app && npx tsc --noEmit && npm run lint"}
+{"ts": "2026-11-06T04:29:38Z", "round": 2, "evalId": "SUITE-app_ui", "run_id": "enrich-nguoi-s03-SUITE-app_ui-20261106T040347Z", "exit_code": 0, "cmd": "cd app && npm test"}
+{"ts": "2026-11-06T04:41:48Z", "round": 2, "evalId": "SUITE-pipeline", "run_id": "enrich-nguoi-s03-SUITE-pipeline-20261106T042958Z", "exit_code": 1, "cmd": "cd pipeline && npm test"}
+{"ts": "2026-11-06T04:52:18Z", "round": 2, "evalId": "SUITE-pipeline", "run_id": "enrich-nguoi-s03-SUITE-pipeline-20261106T044211Z", "exit_code": 1, "cmd": "cd pipeline && npm test"}
