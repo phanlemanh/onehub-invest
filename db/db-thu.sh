@@ -8,11 +8,22 @@
 #   bash db/db-thu.sh <tên> --xoa    xoá DB thử
 #   bash db/db-thu.sh <tên> --neu-chua-co   có sẵn thì giữ nguyên (lượt chấm chạy song song nhiều lệnh trên một DB thử: dựng trước một lần)
 #   bash db/db-thu.sh oneinvest_suite_<bộ> --chay <lệnh…>   chạy lệnh trên DB của riêng lượt, chép từ bản mẫu, xoá khi lệnh dừng (hồ sơ test-suite-db-thu)
+#   bash db/db-thu.sh --dau          in dấu lược đồ hiện tại của DB chung, kèm chi_doc=on|off của chính lời gọi (hồ sơ dau-luoc-do-ban-mau)
 # Trỏ lệnh vào DB thử: DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/<tên>
 set -euo pipefail
+DX=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db)
+# Dấu lược đồ của DB chung, câu ở db/dau-luoc-do.sql (test đọc cùng tệp). Cờ chỉ đọc phải nằm trong đối số docker exec: biến môi trường
+# của tiến trình gọi không vào container.
+DOC_CHUNG=(docker exec -i -e PGPASSWORD=oneinvest -e "PGOPTIONS=-c default_transaction_read_only=on" one-invest-db
+  psql -U oneinvest -h localhost -q -At -v ON_ERROR_STOP=1 -d oneinvest)
+DAU_TEP="$(dirname "$0")/dau-luoc-do.sql"
+dau_chung() { local q; q=$(cat "$DAU_TEP") || return 1; "${DOC_CHUNG[@]}" "$@" -c "$q"; }
+if [ "${1:-}" = "--dau" ]; then
+  dau_chung -c "SELECT 'chi_doc=' || current_setting('default_transaction_read_only')"
+  exit
+fi
 TEN="${1:?thiếu tên DB thử}"
 [[ "$TEN" =~ ^oneinvest_[a-z0-9_]+$ ]] || { echo "db-thu: tên phải dạng oneinvest_<dãy>_<việc> (không được là oneinvest)"; exit 2; }
-DX=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db)
 
 if [ "${2:-}" = "--chay" ]; then
   [[ "$TEN" =~ ^oneinvest_suite_[a-z0-9_]+$ ]] || { echo "db-thu: --chay chỉ nhận tên oneinvest_suite_<bộ>"; exit 2; }
@@ -37,14 +48,6 @@ if [ "${2:-}" = "--chay" ]; then
   MAU=oneinvest_suite_mau
   KHOA=${DB_THU_KHOA:-/tmp/onehub-db-thu-mau.lock}
   TUOI_TOI_DA=86400  # dữ liệu không cần mới từng giờ; lược đồ đổi thì dựng lại ngay
-  # Dấu lược đồ public của DB chung, chỉ đọc catalog: bảng + cột, view, hàm ngoài extension.
-  DAU_SQL="SELECT md5(string_agg(x, '|' ORDER BY x)) FROM (
-    SELECT 'c' || table_name || '.' || column_name || ':' || data_type AS x FROM information_schema.columns WHERE table_schema = 'public'
-    UNION ALL SELECT 'v' || c.relname || md5(pg_get_viewdef(c.oid)) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname = 'public' AND c.relkind IN ('v', 'm') AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = c.oid AND d.deptype = 'e')
-    UNION ALL SELECT 'f' || p.proname || md5(p.prosrc) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-      WHERE n.nspname = 'public' AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')) t"
-  dau_chung() { "${PSQL[@]}" -d oneinvest -c "$DAU_SQL"; }
   # Mẫu còn dùng được khi cùng dấu lược đồ với DB chung và chưa quá tuổi. Dấu và giờ dựng nằm ở COMMENT, đọc không cần nối vào mẫu.
   mau_con_tot() {
     local ghi dau luc
