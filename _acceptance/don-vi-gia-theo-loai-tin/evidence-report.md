@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: don-vi-gia-theo-loai-tin
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: aaa16555ffd6685eb4ffa12f696709ba5f545008
+verified_commit: ed5b7a1ee5c88ca29278f8dfee84009cf4e5124d
 human_signoff:
 ---
 
 # Evidence Report: don-vi-gia-theo-loai-tin
-
-Verdict REJECT vì lệnh suite `cd pipeline && npm test` đỏ (không gắn eval nào). Cả sáu eval của hợp đồng (E1-E6) đều xanh.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -27,94 +25,96 @@ Verdict REJECT vì lệnh suite `cd pipeline && npm test` đỏ (không gắn ev
 ## Evidence
 
 - eval: E1
-  run_id: minted-don-vi-gia-theo-loai-tin-E1-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dvg_app
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
   output: |
-    ba ca DVG chạy, khớp 'pass 3'
-    ℹ duration_ms 15907.163084
+    Ba ca DVG chạy, 'pass 3' khớp; ca DVG-AC-1 xanh.
+    duration_ms 14848.154833
 
 - eval: E2
-  run_id: minted-don-vi-gia-theo-loai-tin-E2-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dvg_app
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
   output: |
-    cùng lệnh với E1 (ba ca DVG-AC, 'pass 3')
-    ℹ duration_ms 15907.163084
+    Ba ca DVG chạy, 'pass 3' khớp; ca DVG-AC-2 xanh.
+    duration_ms 14848.154833
 
 - eval: E3
   run_id: minted-don-vi-gia-theo-loai-tin-E3-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.dvg_app
   verified_at: 2026-11-06T11:19:03Z
   output: |
-    cùng lệnh với E1 (ba ca DVG-AC, 'pass 3')
-    ℹ duration_ms 15907.163084
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
-  run_id: minted-don-vi-gia-theo-loai-tin-E4-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.gcn_app
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
   output: |
-    ℹ duration_ms 28906.742375
+    Test của lát theo nhóm xanh, gồm TND-AC-6 và THN-AC-1.
+    duration_ms 27706.119708
 
 - eval: E5
-  run_id: minted-don-vi-gia-theo-loai-tin-E5-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ops_nhan
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
   output: |
-    ℹ duration_ms 14240.8295
+    Thước nhãn Ops xanh.
+    duration_ms 12990.043917
 
 - eval: E6
   run_id: minted-don-vi-gia-theo-loai-tin-E6-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.script.dvg_pham_vi
   verified_at: 2026-11-06T11:19:03Z
   output: |
-    PHAM-VI OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__bb6271-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-lint-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
 
 - cmd: cd app && npm test
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__bd9a35-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-11-06T11:19:03Z
-  note: 601 ca, 600 đạt, 1 hỏng, không gắn eval nào. Ca hỏng là scripts/vocab-lint.test.mjs:167 «VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim». Lỗi: «cây thật còn chỗ viết tay ngoài sổ», chỉ ra app/src/components/ops/labels/gia-la.ts:5 · kind · rent_lt,sale (tệp mới của lát này viết tay hằng kind, chưa có trong sổ ngoại lệ).
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-11-06T11:35:23Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-test_lint_rules-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-don-vi-gia-theo-loai-tin-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-06T11:19:03Z
+  verified_at: 2026-11-06T11:35:23Z
 
 ## Known limits
 
@@ -122,15 +122,11 @@ Verdict REJECT vì lệnh suite `cd pipeline && npm test` đỏ (không gắn ev
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay.
+carried tu round 1 — baseline khong do lai round nay
 
-Eval không phân biệt (pass trên cả HEAD lẫn baseline), cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
-- E4: `cd app && node --import tsx --test tests/labels-nhom.test.tsx`
-- E5: `cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx`
-
-Lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
-
-Không có panel judge nào trong round này (không có eval judgment).
+Eval không-phân-biệt (xanh cả trên HEAD lẫn baseline; regression-guard có chủ ý, hoặc cần viết lại để assert hành vi mới):
+- E4 (cd app && node --import tsx --test tests/labels-nhom.test.tsx)
+- E5 (cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx)
 
 ## Variance
 
@@ -138,4 +134,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: không eval nào đỏ; lệnh suite `cd pipeline && npm test` đỏ ở ca VL-AC-5 (gia-la.ts:5 viết tay hằng kind ngoài sổ ngoại lệ). Trả về bước triển khai.
+Round 1: suite pipeline đỏ ở VL-AC-5 (gia-la.ts gõ cứng chuỗi Loại tin) — REJECT, trả về implementation.
+Round 2: đã sửa bằng hằng KIND của sổ từ vựng (ed5b7a1e); E1, E2, E4, E5 và sáu lệnh suite chạy lại xanh, E3 và E6 carry-forward từ round 1 — PASS.
