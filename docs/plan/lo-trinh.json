@@ -4,26 +4,28 @@
   "ghi_chu": "Thêm việc bằng skill cắt lượt (/acceptance-gate:cat-luot), hoặc viết hàng theo khuôn skills/acceptance/references/lo-trinh-template.json của gói acceptance-gate; mở vòng bằng /feature-loop:feature-loop <mã>.",
   "moc": [
     {
-      "ma": "OM1",
-      "ten": "Đăng ký S08 vào source_registry ở DB local (tên miền thật chỉ nhập ở DB, không vào code hay commit)",
-      "loai": "ngoai",
-      "ai": "Phiên Claude điều phối liên làn (Mạnh duyệt)",
-      "dot": "ops-noi-that-2410",
-      "phu": [
-        "YC9c"
-      ],
-      "lap": false
-    },
-    {
-      "ma": "OM2",
-      "ten": "Người vận hành đặt tiêu đề chuẩn và viết mô tả cho các nhóm đang thu",
-      "loai": "ngoai",
-      "ai": "Người vận hành (Mạnh)",
-      "dot": "ops-noi-that-2410",
-      "phu": [],
-      "lap": false,
+      "ma": "GCM1",
+      "ten": "Việc đầu tiên sau 05/11: tin căn hộ S03 gắn được toà hoặc trục, diện tích suy ra hiện có nhãn, bắt đầu từ Ocean Park",
+      "loai": "phat-hanh",
+      "dot": "gan-can-s03-0411",
       "hang": [
-        "ON20"
+        "GC0",
+        "GN0",
+        "GN0b",
+        "GN0c",
+        "PL30",
+        "PL18",
+        "GCQ1",
+        "GCQ2",
+        "GC1",
+        "DN1",
+        "DB1",
+        "GN1",
+        "GN2",
+        "PL13",
+        "PL20",
+        "GC2",
+        "GC3"
       ]
     },
     {
@@ -82,26 +84,8 @@
         "SL1",
         "LS1",
         "DS1"
-      ]
-    },
-    {
-      "ma": "GCM1",
-      "ten": "Việc đầu tiên sau 05/11: tin căn hộ S03 gắn được toà hoặc trục, diện tích suy ra hiện có nhãn, bắt đầu từ Ocean Park",
-      "loai": "phat-hanh",
-      "dot": "gan-can-s03-0411",
-      "hang": [
-        "GC0",
-        "PL18",
-        "GCQ1",
-        "GCQ2",
-        "GC1",
-        "DN1",
-        "DB1",
-        "PL13",
-        "PL20",
-        "GC2",
-        "GC3"
-      ]
+      ],
+      "that": "2026-11-03"
     }
   ],
   "hang": [
@@ -297,7 +281,9 @@
       "dung_tren": [
         "PL6",
         "GC0",
-        "GCQ2"
+        "GCQ2",
+        "PL30",
+        "GN1"
       ],
       "slug": "doc-ma-can-gia-khoang",
       "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
@@ -408,7 +394,8 @@
       "hang": "T2",
       "dung_tren": [
         "PL15",
-        "GC0"
+        "GC0",
+        "PL30"
       ],
       "slug": "e1-e2-theo-lop",
       "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
@@ -601,14 +588,15 @@
     },
     {
       "ma": "PL30",
-      "cau_giao": "Bộ đánh giá chạy nhiều model trên cùng tập nhãn và sinh bảng chọn model theo ô (rẻ nhất đạt ngưỡng và độ trễ)",
+      "cau_giao": "Bộ đánh giá chạy ba model Haiku, GLM-5.3 Flash, DeepSeek V4.1 Flash qua AI Gateway trên cùng tập nhãn vàng S03 (chữ, mọi ảnh, thẻ nhóm) và sinh bảng chọn model theo ô (rẻ nhất đạt ngưỡng và độ trễ)",
       "vai": "nen",
       "tieu_chi": 9,
       "vi_sao": "§0.4: chọn model theo số đo.",
       "hang": "T2",
       "dung_tren": [
         "PL9",
-        "PL29"
+        "PL29",
+        "GC0"
       ],
       "slug": "chon-model-theo-o",
       "bat_khi": "Đổi model của một ô chỉ bằng bảng chọn, không sửa code bộ đọc",
@@ -617,7 +605,7 @@
       "phu": [
         "CM.2"
       ],
-      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ứng viên gồm Kev-4B/9B, Qwen 27B local, GLM-5.3, DeepSeek flash; hai ứng viên cloud chỉ chạy khi RV-M2 cho gửi chữ bài ra ngoài và đã kiểm điều khoản gói."
+      "ghi_chu": "Sửa 06/11: Mạnh chốt chỉ ba model, gọi qua Vercel AI Gateway, không kiểm điều khoản gói; nội dung bài gửi nguyên văn (ADR-0007 sửa ở #334). Lượt đo đầu trên 50 thẻ vàng đang chạy, trần tổng 20 USD. Nhãn vàng là «người duyệt nháp Opus» (có neo). Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ứng viên gồm Kev-4B/9B, Qwen 27B local, GLM-5.3, DeepSeek flash; hai ứng viên cloud chỉ chạy khi RV-M2 cho gửi chữ bài ra ngoài và đã kiểm điều khoản gói."
     },
     {
       "ma": "PL31",
@@ -3726,7 +3714,8 @@
       "vai": "nen",
       "tieu_chi": 10,
       "dung_tren": [
-        "GCQ1"
+        "GCQ1",
+        "GT0"
       ],
       "phu": [
         "GT2"
@@ -3764,6 +3753,201 @@
         "pipeline/transform-zalo.mjs"
       ],
       "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1; đứng trên PL18 vì tách sai thì khoá gộp cũng sai. T3 vì offer_id dính vào khoá gộp, nếu đo ra không sai thì không đổi khoá. SV2 và PL18 sửa cùng tệp."
+    },
+    {
+      "ma": "GN0",
+      "slug": "the-gan-nhan-nguoi-dang",
+      "hang": "T2",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "GC0"
+      ],
+      "phu": [
+        "GN0"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Người gắn nhãn mở một thẻ S03 và thấy tên, ID người đăng cạnh nhóm và giờ đăng",
+      "bat_khi": "367/367 bài của lát có tên và ID hiện trên thẻ",
+      "vi_sao": "Gắn nhãn 06/11: nhóm đông người, không có người đăng thì không phán được bài của ai.",
+      "ghi_chu": "PR #328, Mạnh ký 06/11."
+    },
+    {
+      "ma": "GN0b",
+      "slug": "the-hai-nguoi-xep-sau",
+      "hang": "T2",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "GC0"
+      ],
+      "phu": [
+        "GN0b"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Thẻ gắn hai người chưa ai gắn xếp cuối nhóm, không chặn người gắn duy nhất",
+      "bat_khi": "Không nhóm nào đứng ở thẻ hai người khi còn thẻ một người chưa gắn",
+      "vi_sao": "06/11: 23/24 nhóm đứng ở thẻ gắn hai người, trần khoảng 52 nhãn.",
+      "ghi_chu": "PR #330, Mạnh ký 06/11."
+    },
+    {
+      "ma": "GN0c",
+      "slug": "don-vi-gia-theo-loai-tin",
+      "hang": "T2",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "GC0"
+      ],
+      "phu": [
+        "GN0c"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép",
+      "bat_khi": "Ba ca đơn vị giá trên biểu mẫu thật lưu đúng; thẻ hiện #item_id",
+      "vi_sao": "Thẻ 9932 lưu 11.000 tỷ vì đơn vị mặc định «tỷ»; «10,545» tỷ lưu lệch.",
+      "ghi_chu": "PR #332, Mạnh ký 06/11. Ngoài-1 (thuật ngữ «Mã thẻ») và Ngoài-3 (đầu dò phạm vi nhánh xếp chồng) là GN3, GN4."
+    },
+    {
+      "ma": "GN1",
+      "slug": "truong-nhan-s03-081",
+      "hang": "T3",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "GN0c"
+      ],
+      "phu": [
+        "GN1"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Biểu mẫu nhãn S03 có thêm các ô Nội thất, Hướng, View, Ngày vào ở, Phí đã gồm, Cơ sở giá (PriceBasis), Mã căn (UnitNumber) và căn cứ «Danh mục CĐT», lưu qua migration 081",
+      "bat_khi": "Gắn được đủ các ô mới trên thẻ thật; căn cứ «Danh mục CĐT» chỉ nhận giá trị có trong S08; eval-classify đọc được các ô mới",
+      "vi_sao": "Gắn nhãn 06/11: nội thất 42%, mã căn 34%, hướng ~34%, view 29%, vào ở 25%, phí 24%, cơ sở giá ~17% số bài có mà biểu mẫu không ghi được; «thu về» 12,4%, «net» 4,8%.",
+      "vung": [
+        "db/migrations",
+        "app/src/app/ops/labels/**",
+        "pipeline/lib/eval-labels.mjs"
+      ],
+      "ghi_chu": "Mạnh chốt «Thêm vào 081» (căn cứ Danh mục CĐT, S08 chỉ đối chiếu nội bộ). Hỏi-n ở Cổng Phạm vi: pháp lý, vay, giá theo phương thức thanh toán (6% bài sơ cấp)."
+    },
+    {
+      "ma": "GN2",
+      "slug": "lay-mau-khu-trung-theo-tin",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "GN1"
+      ],
+      "phu": [
+        "GN2"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Lấy mẫu nhãn khử trùng theo tin của pipeline (cùng khoá gom bài đăng lại), bài chưa thành tin so chữ đã gạt URL ảnh; gạt bài thử và sự kiện thu hồi; label-ghep chạy lại giữ dấu ẩn trùng",
+      "bat_khi": "Hai bài cùng chữ khác link ảnh ra một thẻ; label-ghep --lam-lai trên lát s03-theo-nhom ra đúng 44 thẻ ẩn; không thẻ nào là bài thử hay sự kiện thu hồi",
+      "vi_sao": "06/11: 33 thẻ trùng (27 nhóm, 13 nhóm vắt dev/test) vì băm chữ có link ảnh; #10297 bài thử và #10172 sự kiện thu hồi lọt mẫu. 33 thẻ đã ẩn tay.",
+      "vung": [
+        "pipeline/label-sample.mjs",
+        "pipeline/lib/eval-labels.mjs",
+        "pipeline/label-ghep.mjs"
+      ],
+      "ghi_chu": "Mạnh cho ẩn 06/11 và hỏi «làm cơ chế cho pipeline chưa?» — đây là cơ chế. GC làm cùng lượt GN1."
+    },
+    {
+      "ma": "GN3",
+      "slug": "thuat-ngu-ma-the",
+      "hang": "T1",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "GN0c"
+      ],
+      "phu": [
+        "GN3"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Thuật ngữ «Mã thẻ» có trong CONTEXT.md, tách nghĩa với chữ cùng tên ở màn duyệt",
+      "bat_khi": "CONTEXT.md có mục Mã thẻ (nhãn · code · slug · định nghĩa · _Avoid_); review-queue.ts không còn dùng cùng chữ cho nghĩa khác",
+      "vi_sao": "#332 Ngoài-1, Mạnh chọn «mở hợp đồng mới».",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "GN4",
+      "slug": "dau-do-pham-vi-nhanh-xep-chong",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "phu": [
+        "GN4"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Đầu dò phạm vi của hồ sơ chỉ xét tệp do commit riêng của nhánh đổi, không báo đỏ oan khi nhánh xếp chồng trên nhánh khác hay khi main đi trước",
+      "bat_khi": "Trên hai nhánh xếp chồng, đầu dò của nhánh trên không tính tệp của nhánh dưới; đối chứng đỏ vẫn bắt tệp ngoài phạm vi của chính nhánh",
+      "vi_sao": "#332 Ngoài-3: đầu dò của #328, #330 báo đỏ oan trên nhánh xếp chồng.",
+      "ghi_chu": "Mạnh chọn «mở hợp đồng mới». Nếu đầu dò là bản chép từ kit thì gửi kit, không sửa tay (luật kit)."
+    },
+    {
+      "ma": "EN1",
+      "slug": "enrich-nguoi-s03",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [],
+      "phu": [
+        "EN1"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "danh-ba-nguoi",
+      "cau_giao": "Tin S03 không có số riêng nhận số liên lạc của người đăng qua sổ liên lạc của Người (party_contacts, migration 079), có dấu suy ra",
+      "bat_khi": "Áp 079 và chạy gán trên máy thu: tin S03 thiếu số giảm, nguồn khác không đổi số, nhãn «qua người đăng» đếm riêng ở 450",
+      "vi_sao": "Tin S03 thiếu SĐT: thuê 49,5%, bán 28,3%; ước 742 tin có số qua người đăng.",
+      "ghi_chu": "PR #329, Mạnh ký 06/11. Áp 079 trên máy thu chờ lời riêng của Mạnh (checklist 7 bước ở research-local)."
+    },
+    {
+      "ma": "EN2",
+      "slug": "link-nguoi-ban-s03",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "EN1",
+        "GT0"
+      ],
+      "phu": [
+        "EN2"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "danh-ba-nguoi",
+      "cau_giao": "Người bán S03 không có SĐT có hồ sơ chat (username) trong sổ liên lạc, tra qua phiên gateway đang sống, không đăng nhập phiên thứ hai",
+      "bat_khi": "Lượt thử 20 mã + 2 đối chứng qua gateway ra đúng loại kết quả; không có phiên đăng nhập mới; bộ canh kênh S03 yên",
+      "vi_sao": "~700/1.205 người bán S03 không có SĐT.",
+      "ghi_chu": "Mạnh 06/11 «Qua gateway, gộp album»; Cổng Phạm vi đã duyệt. Phần tra/nạp làn ZCode (nhánh feat/s03-link-nguoi-ban), migration 080 làn Claude. Không thử ngoài gateway."
+    },
+    {
+      "ma": "GT0",
+      "slug": "ma-album-s03",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "GT0"
+      ],
+      "dot": "gom-tach-gop-0511",
+      "nhom": "gom-tach-gop",
+      "cau_giao": "Snapshot S03 mang mã album của bài nhiều ảnh, lưu ở migration 077, để ghép ảnh vào bài theo mã thay vì theo thời gian",
+      "bat_khi": "Bài nhiều ảnh sau khi bật có mã album trên mọi ảnh; đường lùi phai-lui chạy được",
+      "vi_sao": "Ghép ảnh theo thời gian sai hoặc không phán được ~40% cụm đọc tay 05/11.",
+      "ghi_chu": "Mạnh duyệt Cổng Phạm vi 05/11. Làn ZCode (nhánh zcode/ma-album-s03); khởi động lại gateway gộp với EN2."
     }
   ],
   "chan_troi": [
@@ -4347,6 +4531,26 @@
         "GTH2"
       ],
       "mo_lai_khi": "ZCode trả lời có mã album và có thu lại được không"
+    },
+    {
+      "ma": "GNH1",
+      "dot": "gan-nhan-s03-0611",
+      "cau_giao": "Lấy mẫu có chủ đích cho PL18: lọc trước bài có dấu hiệu nhiều căn (nhiều mã căn, nhiều dòng giá, «quỹ căn», «bảng hàng») rồi mới gắn, chấm lại theo trọng số",
+      "ly_do": "«Có» nhiều căn 3/48 (6%); lấy ngẫu nhiên cần ~500 thẻ mới đủ 30, lát còn 322 thẻ. Mạnh chưa chốt",
+      "phu": [
+        "GNH1"
+      ],
+      "mo_lai_khi": "PL30 có số và Mạnh chốt cách lấy mẫu cho PL18"
+    },
+    {
+      "ma": "GNH2",
+      "dot": "gan-nhan-s03-0611",
+      "cau_giao": "Hai lớp nhãn: vàng do người duyệt, bạc do model lớn gắn dưới labeler_id riêng, người soát ngẫu nhiên ~20%",
+      "ly_do": "Đề xuất của trợ lý gắn nhãn 06/11; Mạnh bỏ đo mù, chọn «nháp rồi feedback», chưa chốt lớp bạc. Nhãn đo mù 10 thẻ đã niêm phong ở research-local/do-mu-s03",
+      "phu": [
+        "GNH2"
+      ],
+      "mo_lai_khi": "Mạnh chốt lớp bạc"
     }
   ],
   "da_bac": []
