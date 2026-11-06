@@ -22,7 +22,15 @@ git -c user.email=t@t -c user.name=t commit -qm "applied"
 # diff giới hạn đường dẫn đó; khác gì (kể cả dist/package.json local của môi
 # trường dev không nằm trong nhánh ext vì chưa commit) đều là FAIL của patch
 if git diff --quiet HEAD feat/s03-ma-album-ext -- extensions/zalouser; then
-  echo "E10 PASS: .patch áp lên $BASE ra đúng mã nhánh feat/s03-ma-album-ext (extensions/zalouser)"
+  # BÁO 0611-12: 2 kiểm tài liệu (E11 phần script) — không còn chữ «poll»
+# chưa đo trong runtime-map + runbook; cả hai có dòng chạy lại mapper-runtime
+for f in docs/ops/runtime-map.md docs/ops/runbook-openclaw-hook.md; do
+  if grep -qi "poll .*10 phút chưa đo\|10 phút chưa đo" "$T/repo/$f" 2>/dev/null; then
+    echo "E10 FAIL: $f vẫn còn «poll 10 phút chưa đo»"; exit 1
+  fi
+  grep -q "mapper-runtime.test.mjs" "$T/repo/$f" || { echo "E10 FAIL: $f thiếu dòng chạy lại mapper-runtime.test.mjs"; exit 1; }
+done
+echo "E10 PASS: .patch áp lên $BASE ra đúng mã nhánh feat/s03-ma-album-ext (extensions/zalouser) + tài liệu sạch poll / có mapper-runtime"
 else
   echo "E10 FAIL: base+patch KHÁC nhánh ext:"; git diff --stat HEAD feat/s03-ma-album-ext -- extensions/zalouser | tail -3
   exit 1

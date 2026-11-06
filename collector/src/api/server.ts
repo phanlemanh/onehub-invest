@@ -188,7 +188,13 @@ export async function createAgentServer(opts: AgentServerOptions) {
       if (!a || typeof a !== "object" || Array.isArray(a)) return null;
       const r = a as Record<string, unknown>;
       if (typeof r.group_layout_id !== "string" || typeof r.id_in_group !== "string") return null;
-      return r as Record<string, unknown>;
+      // chỉ giữ đúng 6 khoá DATA-CONTRACT khai — snapshot bất biến không mang khoá lạ
+      const kq: Record<string, unknown> = { group_layout_id: r.group_layout_id, id_in_group: r.id_in_group };
+      if (typeof r.total_item_in_group === "number") kq.total_item_in_group = r.total_item_in_group;
+      if (typeof r.is_group_layout === "boolean") kq.is_group_layout = r.is_group_layout;
+      if (typeof r.child_number === "number") kq.child_number = r.child_number;
+      if (typeof r.msg_type === "string") kq.msg_type = r.msg_type;
+      return kq;
     };
     let accepted = 0;
     let duplicates = 0;
