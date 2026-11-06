@@ -49,7 +49,7 @@ evals:
     executor: script
     cmd: config:executors.script.lnb_lien_lac
     layer: backend-effect
-    expected: "exit 0 trên DB thử có 079, 080; có username và userId khớp mã bí danh → một liên lạc S03 giá trị username trần, lớp fact, source_field, bằng chứng có mã và thời điểm; Người đã gộp → ghi vào Người đích một bước; chạy lại 0 mới; username đổi → rút cũ cùng rule_id lý do doi-username, thêm mới; lần sau khong-username hoặc khong-tim-thay → rút lý do bo-username; liên lạc hitl khác rule_id của cùng Người không đổi; should-NOT-fire: userId lệch mã, không khớp Người, khong-ro đều 0 dòng và có trong số đếm; thiếu 079 hoặc 080 in CHUA-AP-079 hoặc CHUA-AP-080, thoát 0; trước và sau: số bí danh, số Người, liên lạc sdt, băm sale_offers không đổi"
+    expected: "exit 0 trên DB thử có 079, 080; có username và userId khớp mã bí danh → một liên lạc chat_profile, rule_id s03_ho_so_theo_tai_khoan, giá trị username trần, lớp fact, source_field, bằng chứng có mã và thời điểm; Người đã gộp → ghi vào Người đích một bước; chạy lại 0 mới; username đổi → rút cũ cùng rule_id lý do doi-username, thêm mới; lần sau khong-username hoặc khong-tim-thay → rút lý do bo-username; liên lạc hitl khác rule_id của cùng Người không đổi; should-NOT-fire: userId lệch mã, không khớp Người, khong-ro đều 0 dòng và có trong số đếm; thiếu 079 hoặc 080 in CHUA-AP-079 hoặc CHUA-AP-080, thoát 0; trước và sau: số bí danh, số Người, liên lạc sdt, băm sale_offers không đổi"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
