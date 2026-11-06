@@ -91,7 +91,7 @@ Nguồn yêu cầu:
     - `db/migrations/081_*`;
     - `app/src/lib/labels-normalize.ts`, `app/src/lib/labels-queries.ts`, `app/src/lib/labels-luot-hai.ts`, `app/src/lib/labels-s08.ts`, `app/src/lib/vocab.generated.ts`;
     - `app/src/components/ops/labels/**`, `app/src/app/api/v1/ops/labels/**`, `app/tests/**`;
-    - `pipeline/mappings.yaml`, `pipeline/vocab*.mjs` và tệp sinh của nó, `pipeline/lib/eval-classify.mjs`, `pipeline/scripts/*.test.mjs`;
+    - `pipeline/mappings.yaml`, `pipeline/vocab*.mjs` và tệp sinh của nó, `pipeline/lib/eval-classify.mjs`, `pipeline/eval-classify.mjs`, `pipeline/lib/eval-classify.test.mjs`, `pipeline/scripts/*.test.mjs`;
     - tệp sinh từ vựng trong `agent/`;
     - `CONTEXT.md`, `docs/**`, `_acceptance/config.yaml`, `_acceptance/truong-nhan-s03-081/**`, `PRODUCT-MAP.md`, `LO-TRINH.html`;
   - không đụng `collector/`, hook hay `pipeline/sync-cloud.mjs`;
