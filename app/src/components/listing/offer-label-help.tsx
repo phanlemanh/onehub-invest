@@ -14,7 +14,7 @@ export const OFFER_LABEL_HELP = {
   },
   phone: {
     title: "Số chưa xác minh",
-    body: "Số không lấy trực tiếp từ chính tin này: suy từ tin khác cùng tài khoản, hoặc chưa đủ bằng chứng. Khi gọi, hãy hỏi lại có đúng người đăng tin không.",
+    body: "Số không lấy trực tiếp từ chính tin này: suy từ tin hoặc bài khác của cùng tài khoản, hoặc chưa đủ bằng chứng. Khi gọi, hãy hỏi lại có đúng người đăng tin không.",
     note: null,
     anchor: "so-chua-xac-minh",
   },

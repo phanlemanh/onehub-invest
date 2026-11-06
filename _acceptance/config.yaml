@@ -200,6 +200,8 @@ executors:
     cn_quet: "node --test scripts/quet-ten-nguon-html.test.mjs"   # chu-nguon-tren-cong E1, E3, E4b, E7b — hai thước tên nguồn, máy chủ giả, không DB
     cn_app: "cd app && node --import tsx --test tests/chu-nguon-tren-cong.test.tsx"   # chu-nguon-tren-cong E4 — chữ giá rao, ca thẻ thật của ngoại lệ tiêu đề; không DB
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
+    en_test: "bash db/db-thu.sh oneinvest_en --neu-chua-co >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en node --test --test-concurrency=1 pipeline/scripts/enrich-nguoi-s03.test.mjs pipeline/scripts/enrich-nguoi-s03.itest.mjs"   # enrich-nguoi-s03 E1–E6 — ca thuần + ca DB thử (transform S03 thật, BEGIN…ROLLBACK), số bịa
+    en_api: "cd app && node --import tsx --test tests/enrich-nguoi-s03.test.tsx"   # enrich-nguoi-s03 E7 — hai route thật, lược đồ tạm
   script:
     can_gia_tot_ca_cu: "bash _acceptance/can-gia-tot-sua-ba-loi/probes/ca-cu-khong-doi.sh"   # can-gia-tot-sua-ba-loi AC-4 — tệp test CG1 chỉ được thêm dòng
     cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của mười hai trang trên bản chạy; không đo được thì thoát 2
@@ -210,6 +212,7 @@ executors:
     sg_do: "bash db/db-thu.sh oneinvest_sg >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_sg node pipeline/do-so-ghep-s06.mjs"   # so-ghep-s06-nhan-danh-ba E9 — DB thử, không chạm oneinvest
     sg_be_mat: "node scripts/check-api-surface.mjs"   # so-ghep-s06-nhan-danh-ba E7b
     gs_thu: "node pipeline/gan-sdt-s06.mjs --thu"   # sdt-s06-ghep-tai-khoan E8 — DB local, ROLLBACK, đầu ra không mang số
+    en_do: "bash _acceptance/enrich-nguoi-s03/probes/db-dong-bang.sh oneinvest_en_do >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en_do node pipeline/do-lien-lac-nguoi.mjs"   # enrich-nguoi-s03 E8 — DB thử dựng từ bản dump đóng băng (research-local/), ROLLBACK, không chạm oneinvest
     gs_ranh_gioi: "bash _acceptance/sdt-s06-ghep-tai-khoan/probes/ranh-gioi.sh"   # sdt-s06-ghep-tai-khoan E9
     kp_ranh_gioi: "bash _acceptance/sdt-s06-khoi-phuc-xuat-xu/probes/ranh-gioi.sh"   # sdt-s06-khoi-phuc-xuat-xu E9
     shs_chu: "node _acceptance/people-hien-so-goc/probes/chu.mjs"   # people-hien-so-goc E8 — chữ về SĐT đúng quyền mới, khối 4 đo cổng mới

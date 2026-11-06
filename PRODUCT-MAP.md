@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>13 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>144 việc"]
+  GB --> DG["Đã giao<br/>145 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>100 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -189,6 +189,7 @@ flowchart TD
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
 - Hậu kỳ enrich-qua-de-xuat — đề xuất sống qua nạp lại, hoàn tác có audit, E1 không suy đất từ tên nhóm (`enrich-hau-ky`)
+- Enrich danh bạ Người S03 — số liên lạc theo tài khoản từ tin có số và bài của chính người gửi; tin không số lấy số qua người đăng, hiện qua «Xem số» kèm nhãn chưa xác minh (cơ chế S06); chừa chỗ liên lạc hồ sơ kênh S03 (`enrich-nguoi-s03`)
 - Enrichment qua đề xuất — giá trị LLM không ghi thẳng sale_offers/properties (`enrich-qua-de-xuat`)
 - eval-classify chấm bộ đọc trên chữ tin ghép mà người gắn đã đọc, bài ảnh không có tin chữ không chấm (`eval-classify-theo-chu-ref`)
 - Thẻ gắn nhãn hiện tin chữ cùng cả cụm ảnh đã ghép bằng luật PL28, ghi rõ là ghép suy ra, vẫn gắn mù (`ghep-anh-tren-the-gan-nhan`)
