@@ -5,15 +5,14 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)" || exit 2; cd "$ROOT" || exit 2
 echo "root $ROOT sha $(git rev-parse HEAD)"
-base=$(git merge-base origin/main HEAD) || { echo "KHONG TINH DUOC DIEM RE NHANH"; exit 2; }
-ly_do="main"
+# Tệp của vòng này = tệp do commit KHÔNG phải merge của nhánh đổi, trừ mọi commit đã có ở main và ở hai nhánh nền chưa gộp
+# (#328 feat/the-gan-nhan-nguoi-dang, #330 fix/the-hai-nguoi-xep-sau). Đúng cả khi nhánh đã gộp main mới hơn nhánh nền.
+loai=(origin/main)
 for nen in origin/feat/the-gan-nhan-nguoi-dang origin/fix/the-hai-nguoi-xep-sau; do
-  sha=$(git rev-parse -q --verify "$nen") || continue
-  git merge-base --is-ancestor "$sha" "$base" && continue
-  git merge-base --is-ancestor "$sha" HEAD || { echo "NHANH NEN CHUA CAP NHAT: $nen có commit chưa nằm trong HEAD"; exit 2; }
-  git merge-base --is-ancestor "$base" "$sha" && { base="$sha"; ly_do="dau $nen (chua gop vao main)"; }
+  git rev-parse -q --verify "$nen" >/dev/null && loai+=("$nen")
 done
-echo "diem re $base ($ly_do)"
+echo "tru ${loai[*]}"
+tep_vong() { git log --no-merges --name-only --format= HEAD "${loai[@]/#/^}" | sort -u; }
 duoc() {
   case "$1" in
     app/src/components/ops/labels/label-form-nhom.tsx|app/src/components/ops/labels/labels-view.tsx|\
@@ -23,7 +22,7 @@ duoc() {
     *) return 1 ;;
   esac
 }
-tep=$( { git diff --no-renames --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u) || { echo "GIT DIFF LOI"; exit 2; }
+tep=$( { tep_vong; git ls-files --others --exclude-standard; } | grep . | sort -u) || { echo "GIT LOG LOI"; exit 2; }
 bad=0
 while IFS= read -r f; do
   [ -z "$f" ] && continue
@@ -33,6 +32,6 @@ for f in app/src/components/ops/labels/label-form-nhom.tsx app/src/components/op
   printf '%s\n' "$tep" | grep -qx "$f" || { echo "THIEU TEP $f"; bad=1; }
 done
 duoc "app/src/lib/labels-normalize.ts" && { echo "LOI DOI CHUNG: luat kiem lot danh sach"; bad=1; } || echo "ok doi chung: tep ngoai danh sach bi bat"
-git diff --quiet "$base" -- app/src/lib/labels-normalize.ts && echo "ok luat kiem khong doi" || { echo "LUAT KIEM DOI: app/src/lib/labels-normalize.ts"; bad=1; }
+printf '%s\n' "$tep" | grep -qx "app/src/lib/labels-normalize.ts" && { echo "LUAT KIEM DOI: app/src/lib/labels-normalize.ts"; bad=1; } || echo "ok luat kiem khong doi"
 [ "$bad" -eq 0 ] && echo "PHAM-VI OK"
 exit $bad
