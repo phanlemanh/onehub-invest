@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7f489c3036403db156fd695e1abaf67eaf481d85
+verified_commit: e1544b836b967d259676800fe6bd1eb211e94a62
 human_signoff:
 ---
 
@@ -28,7 +28,7 @@ chờ hội đồng, nên verdict tối đa là PENDING-JUDGMENT.
 | E5 | AC-5 | test | PASS (carried từ vòng 1) |
 | E6 | AC-6 | test | PASS (carried từ vòng 1) |
 | E7 | AC-7 | test | PASS (carried từ vòng 1) |
-| E7u | AC-7 | ui-check | PASS (carried từ vòng 1) |
+| E7u | AC-7 | ui-check | PASS (chạy lại vòng 3) |
 | E8 | AC-8 | script | PASS (carried từ vòng 1) |
 | E9 | AC-9 | judgment | PASS (hội đồng; chờ người xác nhận, T3) |
 | E10 | AC-10 | judgment | PASS (hội đồng; chờ người xác nhận, T3) |
@@ -44,7 +44,7 @@ Tệp đổi từ 34318a48 đến HEAD ngoài `_acceptance/`: `app/tests/giai-th
 - E5: carried từ vòng 1 (paths không chạm diff-fix) — `079_*.sql`, `gan-sdt-qua-nguoi.mjs`, `lien-lac-nguoi.mjs`, `refresh-bait-gap.mjs`, `transform-zalo.mjs`, `450_dq_checks.sql`, hai tệp test; không đổi (`mappings.yaml` không nằm trong paths).
 - E6: carried từ vòng 1 (paths không chạm diff-fix) — `danh-ba-nguoi.mjs`, `lien-lac-nguoi.mjs`, `do-danh-ba-sdt.mjs`, hai tệp test; không đổi.
 - E7: carried từ vòng 1 (paths không chạm diff-fix) — `offers-public.ts`, `api/v1/listings/**`, `offer-label-help.tsx`, `methodology-definitions.tsx`, `app/tests/enrich-nguoi-s03.test.tsx`; tệp test đổi là tệp khác (`giai-thich-nhan-chua-xac-minh.test.tsx`), chạy lại trong suite app.
-- E7u: carried từ vòng 1 (paths không chạm diff-fix) — `offer-contact.tsx`, `offer-label-help.tsx`; không đổi, chữ trên giao diện giữ nguyên.
+- E7u: ở vòng 2 carried từ vòng 1 (paths không chạm diff-fix); vòng 3 chạy lại bằng script chụp đã commit trong hồ sơ (xem khối E7u).
 - E8: carried từ vòng 1 (paths không chạm diff-fix) — `do-lien-lac-nguoi.mjs`, `lien-lac-nguoi.mjs`, `gan-sdt-qua-nguoi.mjs`, `079_*.sql`; không đổi.
 
 ## Evidence
@@ -134,16 +134,16 @@ Mọi khối eval dưới đây carried từ vòng 1, giữ nguyên run_id và k
     ℹ tests 3 · pass 3 · fail 0
 
 - eval: E7u
-  run_id: enrich-nguoi-s03-E7u-20261106T031847Z
+  run_id: enrich-nguoi-s03-E7u-20261106T050645Z
   exit_code: 0
-  verifier: playwright-core (collector/node_modules) + Chrome headless, dev server :3463 trên DB thử oneinvest_en_ui
-  verified_at: 2026-11-06T03:19:30Z
+  verifier: _acceptance/enrich-nguoi-s03/probes/chup-e7u.cjs
+  verified_at: 2026-11-06T05:06:45Z
   screenshot: evidence/E7u-truoc.png
   frames: [evidence/E7u-truoc.png, evidence/E7u-sau.png, evidence/E7u-hai-nhan.png, evidence/E7u-giai-thich.png, evidence/E7u-giai-thich-tin.png]
   observed: |
-    Trang tin thuê S03 Hà Nội (offer_2d735797ab849665, dấu s03-qua-nguoi-dang): khối «Người đăng» có Badge vàng «Chưa xác minh» + ⓘ cạnh nút «Xem số»; sau khi bấm, nút thành link gọi (tel:) với số bị che bằng ô xám, Badge vẫn còn; cùng trang có nhãn cấp tin «Chưa xác minh» dưới giá.
+    Vòng 3, dev server :3463 trên DB thử oneinvest_en_ui, trang tin thuê S03 offer_2d735797ab849665 (dấu s03-qua-nguoi-dang): khối «Người đăng» có Badge vàng «Chưa xác minh» + ⓘ cạnh nút «Xem số»; sau khi bấm, nút thành link gọi (tel:) với số bị che bằng ô xám, Badge vẫn còn; cùng trang có nhãn cấp tin «Chưa xác minh» dưới giá (script đếm: 1 nút Xem số, 1 nhãn số, 1 nhãn tin, 1 link gọi, nhãn số còn sau khi bấm).
     Rê lên nhãn số: popover «Số chưa xác minh» nói số suy «từ tin hoặc bài khác của cùng tài khoản», kèm «Xem phương pháp»; rê lên nhãn cấp tin: popover «Tin chưa xác minh» nói tin từ nhóm cộng đồng — hai tên khác nhau.
-    Không ảnh nào lộ số điện thoại (thân trang trước khi bấm không khớp mẫu SĐT; số sau khi bấm bị che). Ảnh E7u-hai-nhan là cả trang tin (chứa đủ hai nhãn), không phải thẻ trên trang Cho thuê.
+    Không ảnh nào lộ số điện thoại (thân trang trước khi bấm không khớp mẫu SĐT; số sau khi bấm bị che); evidence/E7u-network.txt không chứa chuỗi dạng SĐT. Ảnh E7u-hai-nhan là cả trang tin (chứa đủ hai nhãn), không phải thẻ trên trang Cho thuê.
   network_observed: clean
 
 - eval: E8
@@ -249,10 +249,8 @@ Vòng 2 chạy lại cả sáu lệnh trong `suiteCommands` trên HEAD 7f489c30.
 
 - Suite `cd pipeline && npm test` không xanh trọn ở vòng 2. Lượt chạy lại đỏ đúng một ca: «AC-8 thước dư lượng» hết giờ 300 giây. Ca này hết giờ cả trên main (đối chứng 06/11, duong-nen.md), nên đây là giới hạn có từ trước, không phải lỗi của vòng. Vòng 1 ca này kịp trong 270 giây; vòng 2 lượt 1 cũng kịp (270 giây), lượt 2 thì không. Thời gian của ca sát trần 300 giây.
 - Hai khối suite pipeline không mang dòng mã thoát. Cả hai lượt thật ra đều đỏ (ghi đúng trong run-log), nhưng hồ sơ thuộc họ PASS không được chứa mã khác 0, nên kết quả được ghi bằng chữ trong `output` và `note`.
-- E1–E8 và E7u carried từ vòng 1 (đo trên 34318a48), không chạy lại trên HEAD 7f489c30. Cơ sở để carry: diff-fix không chạm `paths` của eval nào.
-- E7u: tệp mạng thô chỉ lưu ở scratchpad của phiên chấm vòng 1, không có trong `evidence/`; pre-merge có thể NOTE vì thiếu `evidence/E7u-network.txt`.
+- E1–E8 carried từ vòng 1 (đo trên 34318a48), không chạy lại trên HEAD sau đó. Cơ sở để carry: diff-fix không chạm `paths` của eval nào. E7u chạy lại ở vòng 3.
 - E7u chụp trên trang tin `/listing/<id>` (cả trang chứa hai nhãn), không chụp thẻ trên trang Cho thuê.
-- E7u: dòng `verifier` giữ nguyên chữ của vòng 1. Bộ kiểm `lib/evidence-core.cjs` không nhận dòng này là xác thực, vì nó không phải `config:<khoá>` hay đường dẫn script có trong kho: script chụp vòng 1 nằm ở scratchpad của phiên chấm. Khi nâng lên PASS ở Gate 2, hook sẽ báo lỗi xác thực cho E7u. Muốn qua thì cần chạy lại E7u bằng một verifier có trong kho (khoá `config:` hoặc script đã commit), hoặc để người xác nhận.
 - E9, E10 do hội đồng mù chấm PASS; hạng T3 nên cả hai vẫn chờ người xác nhận (`human_override`). E10 chấm trên HEAD 7f489c30.
 
 ## Ngoài hợp đồng
@@ -272,3 +270,4 @@ Không eval nào chạy nhiều lần. Có hai chỗ lật do môi trường, đ
 
 Round 1: mọi eval máy và ui-check đạt (E1–E8, E7u), nhưng suite `cd app && npm test` có hồi quy mới GT-AC-1. Commit 6d06fa35 đổi chữ lời giải thích nhãn số mà không sửa ca test cũ vẫn đòi «suy từ tin khác». E9, E10 chờ hội đồng. Trả về vòng code.
 Round 2: commit 7f489c30 sửa ca GT-AC-1 theo câu mới và thêm chú thích DQ trong mappings.yaml. E1–E8, E7u carried (diff-fix không chạm paths của eval nào). Suite app xanh trọn, các suite agent, tsc+lint, lint-rules và portal cũng xanh. Suite pipeline chỉ đỏ ở ca AC-8 hết giờ, là giới hạn có từ trước; ca LDR hết giờ do khoá DB ở lượt 1 đã xanh ở lượt 2. E9, E10 chờ hội đồng, nên verdict là PENDING-JUDGMENT.
+Round 3: chạy lại E7u bằng script chụp đã commit trong hồ sơ (verifier của vòng 1 là script tạm ngoài kho). Năm ảnh đúng mô tả, hai popover hai tên khác nhau, không lộ số; tệp mạng ghi vào `evidence/E7u-network.txt`, chỉ có lưu lượng của app và đều thành công. Mọi khối khác giữ nguyên; E9, E10 vẫn chờ người (T3), verdict giữ PENDING-JUDGMENT.
