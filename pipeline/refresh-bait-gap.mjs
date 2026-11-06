@@ -14,7 +14,7 @@ import pg from "pg";
 
 import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
 import { dungLienLac } from "./lib/lien-lac-nguoi.mjs";
-import { ganSdtQuaNguoi } from "./gan-sdt-qua-nguoi.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
 
 const DB_URL =

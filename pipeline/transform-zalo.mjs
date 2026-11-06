@@ -12,7 +12,7 @@ import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
-import { ganSdtQuaNguoi } from "./gan-sdt-qua-nguoi.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { normText } from "./lib/norm-text.mjs";

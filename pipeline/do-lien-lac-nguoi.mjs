@@ -11,8 +11,8 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { ganSdtQuaNguoi } from "./gan-sdt-qua-nguoi.mjs";
-import { inKhongSo } from "./gan-sdt-s06.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
+import { inKhongSo } from "./lib/in-khong-so.mjs";
 import { dungNguoi, RULE_QUA_NGUOI } from "./lib/danh-ba-nguoi.mjs";
 import { docNguoiCuaTaiKhoan, docSoNguoi, dungLienLac, KENH_LIEN_LAC } from "./lib/lien-lac-nguoi.mjs";
 import { nap068 } from "./lib/nap-068.mjs";
