@@ -50,6 +50,10 @@ executors:
     tnd_loi_o: "cd app && node --import tsx --test --test-name-pattern=TND-AC-6 tests/labels-nhom.test.tsx"   # the-gan-nhan-nguoi-dang E9 — biểu mẫu thật trong jsdom
     thn_app: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=THN-AC-1 tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # the-hai-nguoi-xep-sau E1 — tin hai người xếp cuối nhóm; đòi đúng một ca chạy
     dvg_app: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=DVG-AC tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 3$\" >/dev/null'"   # don-vi-gia-theo-loai-tin E1..E3 — biểu mẫu thật trong jsdom; đòi đúng ba ca chạy
+    gn2_khoa: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-1 lib/eval-labels.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E1 — khoá trùng nhomTrung
+    gn2_su_kien: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-3 lib/eval-labels.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E3 — gạt sự kiện JSON
+    gn2_bai_thu: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-4 lib/test-posts.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E4 — dấu bài thử mới
+    gn2_ghep: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-5 scripts/label-ghep.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E6 — label-ghep giữ dấu ẩn tay, DB thử
     tnm_pipeline: "node --test pipeline/lib/tap-mau.test.mjs"   # tap-nhan-mau-ocp1 E1, E2, E4, E7, E8 — hàm thuần, không DB
     tnm_app: "cd app && node --import tsx --test tests/labels-mau.test.tsx"   # tap-nhan-mau-ocp1 E3 — chuanHoaLuot thật, không DB
     ecr_lenh: "cd pipeline && node --test scripts/eval-classify-ghep.test.mjs"   # eval-classify-theo-chu-ref E1, E3, E4
@@ -610,6 +614,9 @@ executors:
     thn_pham_vi: "bash _acceptance/the-hai-nguoi-xep-sau/probes/pham-vi.sh"   # the-hai-nguoi-xep-sau E5 — tệp được phép đổi
     thn_lat_that: "cd app && node --import tsx ../_acceptance/the-hai-nguoi-xep-sau/probes/lat-that.mjs"   # the-hai-nguoi-xep-sau E6 — lát thật s03-theo-nhom, chỉ đọc
     dvg_pham_vi: "bash _acceptance/don-vi-gia-theo-loai-tin/probes/pham-vi.sh"   # don-vi-gia-theo-loai-tin E6 — tệp được phép đổi, luật kiểm không đổi
+    gn2_mau: "node _acceptance/lay-mau-khu-trung-theo-tin/probes/mau.mjs"   # lay-mau-khu-trung-theo-tin E2 — label-sample thật trên DB thử oneinvest_gn2
+    gn2_lat_that: "node _acceptance/lay-mau-khu-trung-theo-tin/probes/lat-that.mjs"   # lay-mau-khu-trung-theo-tin E7 — chép lát thật (chỉ đọc) sang DB thử, label-ghep --lam-lai
+    gn2_pham_vi: "bash _acceptance/lay-mau-khu-trung-theo-tin/probes/pham-vi.sh"   # lay-mau-khu-trung-theo-tin E10 — tệp được phép đổi
     ghep_thuan: "cd app && node --import tsx --test tests/labels-ghep.test.ts"
     ghep_nap: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs"
     ghep_that: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/that.mjs"
