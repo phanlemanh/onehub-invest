@@ -204,7 +204,7 @@ test("DGS-AC-9 lệnh chấm chỉ lấy thẻ đã gắn nhãn", async () => {
     await c.query(`DELETE FROM eval_labels WHERE item_id = $1`, [items[1].item_id]);
     const ghi: Ghi[] = [];
     const { tomTat } = await chamLuot({ client: c, lat, tranUsd: 1, taoModel: gatewayGia(() => json17(), ghi), log: () => {} });
-    assert.equal(tomTat.so_the, 1);
+    assert.equal(tomTat.so_the, 1, "CHAM GOI THE CHUA CO NHAN");
     assert.equal(ghi.length, 1, "CHAM GOI THE CHUA CO NHAN");
   });
 });
