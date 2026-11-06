@@ -249,3 +249,42 @@ test("DGS-AC-3 dòng lệnh: bảng sai thoát 2 gọi tên chỗ sai, chưa g�
   assert.equal(r.status, 2, r.stderr);
   assert.match(r.stderr, /qwen/);
 });
+
+// ---------- số thật trên test (AC-10) ----------
+import { existsSync } from "node:fs";
+import { maSha } from "../src/enrich/doc-gop-s03/cham.js";
+import { PROMPT_SHA } from "../src/enrich/doc-gop-s03/prompt.js";
+
+/** Kiểm một tóm tắt chấm thật; ném với thông điệp ghim. Tách hàm để chiều đỏ chạy trên cùng khuôn. */
+export function kiemTomTat(t: Record<string, unknown>, hien: { prompt: string; bang: string; ma: string }): void {
+  assert.equal(t.split, "test");
+  assert.equal(t.so_the, 23);
+  assert.ok((t.model as string[]).includes("anthropic/claude-haiku-5.5"));
+  assert.equal(t.prompt_sha, hien.prompt, "TOM TAT KHONG KHOP PROMPT");
+  assert.equal(t.cau_hinh_sha, hien.bang, "TOM TAT KHONG KHOP BANG CHON");
+  assert.equal(t.ma_sha, hien.ma, "TOM TAT KHONG KHOP MA");
+  assert.equal(t.mau_so, 23 * 16);
+  assert.ok(typeof t.anh_thieu === "object" && "dung_gop_bo_9991" in t);
+  const d = t.dung_gop as number;
+  assert.ok(d >= 0.9, `CHET DUOI 90 (${d})`);
+  assert.ok(d >= 0.92, `VUNG XAM — MANH PHAN (${d})`);
+  assert.ok((t.usd_the as number) <= 0.0025, `chi phí ${t.usd_the} > 0,0025 USD/thẻ`);
+}
+const TOM_TAT = join(GOC, "_acceptance/chon-model-theo-o/evidence/cham-test.json");
+
+// Chỉ chạy qua executor dgs_so_that (DGS_SO_THAT=1): mã đọc gộp đổi thì băm đổi và cần chấm thật lại (tốn tiền) — không
+// để bộ test chung của agent đỏ vì thế. Có cờ mà thiếu tệp là đỏ, không bỏ qua.
+test("DGS-AC-10 tóm tắt chấm Haiku thật trên 23 thẻ test khớp mã hiện tại và đạt ngưỡng", { skip: process.env.DGS_SO_THAT !== "1" && "chạy qua executor dgs_so_that" }, () => {
+  assert.ok(existsSync(TOM_TAT), "THIEU TOM TAT CHAM THAT");
+  kiemTomTat(JSON.parse(readFileSync(TOM_TAT, "utf8")), { prompt: PROMPT_SHA, bang: napCauHinh().sha, ma: maSha() });
+});
+
+test("DGS-AC-10 chiều đỏ: tóm tắt cũ hay dưới ngưỡng bị bắt đúng thông điệp", () => {
+  const hien = { prompt: "p", bang: "b", ma: "m" };
+  const tot = { split: "test", so_the: 23, model: ["anthropic/claude-haiku-5.5"], prompt_sha: "p", cau_hinh_sha: "b", ma_sha: "m", mau_so: 368, anh_thieu: {}, dung_gop_bo_9991: 0.95, dung_gop: 0.95, usd_the: 0.0017 };
+  kiemTomTat(tot, hien);
+  assert.throws(() => kiemTomTat({ ...tot, prompt_sha: "cu" }, hien), /TOM TAT KHONG KHOP PROMPT/);
+  assert.throws(() => kiemTomTat({ ...tot, ma_sha: "cu" }, hien), /TOM TAT KHONG KHOP MA/);
+  assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.91 }, hien), /VUNG XAM — MANH PHAN/);
+  assert.throws(() => kiemTomTat({ ...tot, dung_gop: 0.85 }, hien), /CHET DUOI 90/);
+});

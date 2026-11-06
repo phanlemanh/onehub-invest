@@ -162,3 +162,37 @@ test("DGS-AC-7 JSON hỏng ghi lại kèm tiền, lỗi mạng không ghi; lư�
     assert.ok(r[0].cost > 0.002, "chi phí cộng dồn qua hai lượt");
   });
 });
+
+// ---------- lệnh cham (AC-9) ----------
+import { chamLuot } from "../src/enrich/doc-gop-s03/cham-lenh.js";
+
+test("DGS-AC-9 chấm trên lát vàng tạm khớp bảng tính tay, không ghi DB, tóm tắt chỉ có số", async () => {
+  await withTx(async (c) => {
+    const { lat, ids } = await dungLat(c, [{ text: "bai mot DGS" }, { text: "bai hai DGS" }, { text: "bai ba DGS" }]);
+    // Vàng viết trước: ý định rao cả ba; giá 3,4 tỷ · 1 tỷ · 2 tỷ; diện tích 62 cả ba; WC 2 (ô người duyệt — không chấm).
+    const vang: [number, Field, string][] = [];
+    const items = (await c.query(`SELECT item_id::int, ref_id FROM eval_label_items WHERE lat = $1 ORDER BY item_id`, [lat])).rows;
+    await c.query(`DELETE FROM eval_labels WHERE item_id = ANY ($1)`, [items.map((r) => r.item_id)]);
+    const gia = ["3400000000", "1000000000", "2000000000"];
+    items.forEach((r, i) => { vang.push([r.item_id, "listing_intent", "offer"], [r.item_id, "price_min_vnd", gia[i]], [r.item_id, "area_m2", "62"], [r.item_id, "bathrooms", "2"]); });
+    for (const [id, f, v] of vang) await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value, basis) VALUES ($1, 'dgs', $2, $3, 'chu_bai')`, [id, f, v]);
+    // Máy trả: giá đúng ở bài một, hai; sai ở bài ba; diện tích «62.0» (chuỗi) cả ba.
+    const tra = (p: string) => json17({
+      listing_intent: { v: "offer", cc: "chu_bai", trich: "bai" },
+      price_min_vnd: { v: p.includes("bai mot") ? 3400000000 : p.includes("bai hai") ? 1000000000 : 999, cc: "chu_bai", trich: "bai" },
+      area_m2: { v: "62.0", cc: "chu_bai", trich: "bai" },
+    });
+    const truoc = [await dem(c, "silver_labels"), await dem(c, "ai_calls"), await dem(c, "eval_labels")];
+    const { tomTat } = await chamLuot({ client: c, lat, tranUsd: 1, taoModel: gatewayGia(tra, []), log: () => {} });
+    assert.deepEqual([tomTat.o.listing_intent?.dung, tomTat.o.listing_intent?.n], [3, 3]);
+    assert.deepEqual([tomTat.o.price_min_vnd?.dung, tomTat.o.price_min_vnd?.n], [2, 3], "BANG CHAM LECH BANG TINH TAY");
+    assert.deepEqual([tomTat.o.area_m2?.dung, tomTat.o.area_m2?.n], [3, 3], "BANG CHAM LECH BANG TINH TAY");
+    assert.equal(tomTat.o.bathrooms, undefined, "ô người duyệt không chấm");
+    assert.deepEqual([tomTat.dung, tomTat.mau_so], [8, 9]);
+    assert.equal(tomTat.json_hong, 0);
+    assert.ok(Math.abs(tomTat.usd_the - 0.002) < 1e-9);
+    assert.deepEqual([await dem(c, "silver_labels"), await dem(c, "ai_calls"), await dem(c, "eval_labels")], truoc, "lệnh chấm không ghi DB");
+    const s = JSON.stringify(tomTat);
+    for (const cam of ["bai mot", "bai hai", "bai ba", "NGUOI_DANG_X", "Nhóm thử DGS", ...ids]) assert.ok(!s.includes(cam), `tóm tắt lộ ${cam}`);
+  });
+});
