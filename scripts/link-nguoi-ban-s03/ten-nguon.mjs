@@ -10,7 +10,8 @@ import { findSourceNames } from "../../pipeline/lib/mask-source-names.mjs";
 import { ROOT, boKiem, noiDbThu } from "./chung.mjs";
 
 const HO_SO = "_acceptance/link-nguoi-ban-s03";
-const LUON_QUET = ["db/migrations/079_lien_lac_nguoi.sql", "db/migrations/080_ho_so_s03.sql", `${HO_SO}/extension.patch`];
+const PATCH = `${HO_SO}/extension.patch`;
+const LUON_QUET = ["db/migrations/079_lien_lac_nguoi.sql", "db/migrations/080_ho_so_s03.sql", PATCH];
 const TEN_MIEN = /\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.(?:vn|com|net|org|io|me|asia|app|co)\b/gi;
 // Mẫu link hồ sơ: một URL ghép với username (biến, chỗ thế hay phép cộng chuỗi).
 const MAU_LINK = /https?:\/\/[^\s'"`]*(?:\$\{[^}]*user|\{user|%s)|https?:\/\/[^\s'"`]*["'`]\s*\+\s*\w*user/i;
@@ -19,6 +20,21 @@ const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8"
 
 /** Bản gộp chuỗi: «"ab" + "cd"» → «abcd», để tên tách đôi vẫn bị bắt. */
 const noiChuoi = (s) => s.replace(/(["'`])\s*\+\s*\n?\s*\1/g, "");
+
+/**
+ * Miễn có tên (giám sát quyết 07/11, Notes hợp đồng): thư mục extension trong cây upstream OpenClaw không do kho đặt tên. Chỉ trong
+ * extension.patch, chỉ trên dòng đầu khối diff (`diff --git`, `---`, `+++`), chỉ tiền tố `extensions/<thư mục>/` mà dòng `diff --git`
+ * khai — thay bằng `extensions/_/`. Dòng nội dung của .patch vẫn bị quét như mọi tệp.
+ */
+export function boDuongExtension(text) {
+  const thuMuc = new Set([...text.matchAll(/^diff --git a\/extensions\/([^/\s]+)\//gm)].map((m) => m[1]));
+  return text.split("\n").map((l) => {
+    if (!/^(diff --git |--- a\/|\+\+\+ b\/)/.test(l)) return l;
+    let ra = l;
+    for (const d of thuMuc) ra = ra.split(`extensions/${d}/`).join("extensions/_/");
+    return ra;
+  }).join("\n");
+}
 
 function dem(text, entries) {
   const m = new Map();
@@ -65,9 +81,10 @@ export async function chay(argv) {
   const moi = [];
   const link = [];
   for (const f of tep) {
-    const sau = readFileSync(join(ROOT, f), "utf8");
+    const mien = f === PATCH ? boDuongExtension : (x) => x;
+    const sau = mien(readFileSync(join(ROOT, f), "utf8"));
     let truoc = "";
-    try { truoc = git("show", `${base}:${f}`); } catch { /* tệp mới */ }
+    try { truoc = mien(git("show", `${base}:${f}`)); } catch { /* tệp mới */ }
     const a = dem(truoc, entries);
     for (const [code, n] of dem(sau, entries)) if (n > (a.get(code) ?? 0)) moi.push(`${code} +${n - (a.get(code) ?? 0)} ${f}`);
     if (MAU_LINK.test(sau) && !MAU_LINK.test(truoc)) link.push(f);
@@ -85,6 +102,10 @@ export async function chay(argv) {
     const giua = Math.floor(ten.length / 2);
     writeFileSync(join(tam, "x.mjs"), `const a = "${ten.slice(0, giua)}" + "${ten.slice(giua)}";\n`);
     k.kiem("đối chứng: tên tách chuỗi trong tệp tạm bị bắt", dem(readFileSync(join(tam, "x.mjs"), "utf8"), entries).size > 0);
+    const ten2 = entries.find((e) => e.realName.length >= 4)?.realName ?? "";
+    const mau = `diff --git a/extensions/${ten2}/x.ts b/extensions/${ten2}/x.ts\n+++ b/extensions/${ten2}/x.ts\n+// ${ten2}\n`;
+    k.kiem("đối chứng: miễn chỉ đường đầu khối diff, dòng nội dung .patch vẫn bị bắt",
+      dem(boDuongExtension(mau), entries).size > 0 && dem(boDuongExtension(mau.split("\n").slice(0, 2).join("\n")), entries).size === 0);
     k.kiem("đối chứng: mẫu link ghép username bị bắt", MAU_LINK.test("const u = `http" + "s://x.example/$" + "{username}`"));  // tách chuỗi: tệp này không tự mang mẫu link
   } finally {
     rmSync(tam, { recursive: true, force: true });
