@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e1544b836b967d259676800fe6bd1eb211e94a62
+verified_commit: 4825bd7e03750acc185e1d9aef087b4732f8fa88
 human_signoff:
 ---
 
@@ -134,16 +134,16 @@ Mọi khối eval dưới đây carried từ vòng 1, giữ nguyên run_id và k
     ℹ tests 3 · pass 3 · fail 0
 
 - eval: E7u
-  run_id: enrich-nguoi-s03-E7u-20261106T050645Z
+  run_id: enrich-nguoi-s03-E7u-20261106T050859Z
   exit_code: 0
-  verifier: _acceptance/enrich-nguoi-s03/probes/chup-e7u.cjs
-  verified_at: 2026-11-06T05:06:45Z
+  verifier: _acceptance/enrich-nguoi-s03/probes/chup-e7u.js
+  verified_at: 2026-11-06T05:08:59Z
   screenshot: evidence/E7u-truoc.png
   frames: [evidence/E7u-truoc.png, evidence/E7u-sau.png, evidence/E7u-hai-nhan.png, evidence/E7u-giai-thich.png, evidence/E7u-giai-thich-tin.png]
   observed: |
-    Vòng 3, dev server :3463 trên DB thử oneinvest_en_ui, trang tin thuê S03 offer_2d735797ab849665 (dấu s03-qua-nguoi-dang): khối «Người đăng» có Badge vàng «Chưa xác minh» + ⓘ cạnh nút «Xem số»; sau khi bấm, nút thành link gọi (tel:) với số bị che bằng ô xám, Badge vẫn còn; cùng trang có nhãn cấp tin «Chưa xác minh» dưới giá (script đếm: 1 nút Xem số, 1 nhãn số, 1 nhãn tin, 1 link gọi, nhãn số còn sau khi bấm).
+    Vòng 3 (lần chạy thứ hai, script đổi đuôi .js), dev server :3463 trên DB thử oneinvest_en_ui, trang tin thuê S03 offer_2d735797ab849665 (dấu s03-qua-nguoi-dang): khối «Người đăng» có Badge vàng «Chưa xác minh» + ⓘ cạnh nút «Xem số»; sau khi bấm, nút thành link gọi (tel:) với số bị che bằng ô xám, Badge vẫn còn; cùng trang có nhãn cấp tin «Chưa xác minh» dưới giá (script đếm: 1 nút Xem số, 1 nhãn số, 1 nhãn tin, 1 link gọi, nhãn số còn sau khi bấm).
     Rê lên nhãn số: popover «Số chưa xác minh» nói số suy «từ tin hoặc bài khác của cùng tài khoản», kèm «Xem phương pháp»; rê lên nhãn cấp tin: popover «Tin chưa xác minh» nói tin từ nhóm cộng đồng — hai tên khác nhau.
-    Không ảnh nào lộ số điện thoại (thân trang trước khi bấm không khớp mẫu SĐT; số sau khi bấm bị che); evidence/E7u-network.txt không chứa chuỗi dạng SĐT. Ảnh E7u-hai-nhan là cả trang tin (chứa đủ hai nhãn), không phải thẻ trên trang Cho thuê.
+    Không ảnh nào lộ số điện thoại (thân trang trước khi bấm không khớp mẫu SĐT; số sau khi bấm bị che); evidence/E7u-network.txt không chứa chuỗi dạng SĐT, chỉ có lưu lượng của app (tải trang tin và gọi lấy liên hệ), đều thành công, không lỗi console. Ảnh E7u-hai-nhan là cả trang tin (chứa đủ hai nhãn), không phải thẻ trên trang Cho thuê.
   network_observed: clean
 
 - eval: E8
@@ -270,4 +270,4 @@ Không eval nào chạy nhiều lần. Có hai chỗ lật do môi trường, đ
 
 Round 1: mọi eval máy và ui-check đạt (E1–E8, E7u), nhưng suite `cd app && npm test` có hồi quy mới GT-AC-1. Commit 6d06fa35 đổi chữ lời giải thích nhãn số mà không sửa ca test cũ vẫn đòi «suy từ tin khác». E9, E10 chờ hội đồng. Trả về vòng code.
 Round 2: commit 7f489c30 sửa ca GT-AC-1 theo câu mới và thêm chú thích DQ trong mappings.yaml. E1–E8, E7u carried (diff-fix không chạm paths của eval nào). Suite app xanh trọn, các suite agent, tsc+lint, lint-rules và portal cũng xanh. Suite pipeline chỉ đỏ ở ca AC-8 hết giờ, là giới hạn có từ trước; ca LDR hết giờ do khoá DB ở lượt 1 đã xanh ở lượt 2. E9, E10 chờ hội đồng, nên verdict là PENDING-JUDGMENT.
-Round 3: chạy lại E7u bằng script chụp đã commit trong hồ sơ (verifier của vòng 1 là script tạm ngoài kho). Năm ảnh đúng mô tả, hai popover hai tên khác nhau, không lộ số; tệp mạng ghi vào `evidence/E7u-network.txt`, chỉ có lưu lượng của app và đều thành công. Mọi khối khác giữ nguyên; E9, E10 vẫn chờ người (T3), verdict giữ PENDING-JUDGMENT.
+Round 3: chạy lại E7u bằng script chụp đã commit trong hồ sơ (verifier của vòng 1 là script tạm ngoài kho). Năm ảnh đúng mô tả, hai popover hai tên khác nhau, không lộ số; tệp mạng ghi vào `evidence/E7u-network.txt`, chỉ có lưu lượng của app và đều thành công. Mọi khối khác giữ nguyên; E9, E10 vẫn chờ người (T3), verdict giữ PENDING-JUDGMENT. Chạy lại lần hai với script đổi đuôi .js; kết quả như lần một.
