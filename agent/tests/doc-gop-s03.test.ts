@@ -199,3 +199,53 @@ test("DGS-AC-4 tin nhắn không mang tên tệp ảnh hay khoá ngoài nhóm, t
   assert.match(ghi[0].prompt, /\[OCP\] thẻ nhóm/);
   assert.match(ghi[0].prompt, /Bán căn 2PN giá 3,4 tỷ, 62m2/);
 });
+
+// ---------- lệnh chay: trần tiền, cờ (AC-8, AC-3 dòng lệnh) ----------
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { chayLuot, docCo } from "../src/enrich/doc-gop-s03/chay.js";
+
+const muoiThe = (): The[] => Array.from({ length: 10 }, (_, i) => ({ ...THE, post_id: `p${i}`, text_hash: `h${i}` }));
+const clientGia = { query: async () => ({ rows: [], rowCount: 1 }) } as never;
+
+test("DGS-AC-8 ước vượt trần thì dừng với 0 lời gọi", async () => {
+  const ghi: Ghi[] = [], log: string[] = [];
+  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 0.01, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: (s) => log.push(s) });
+  assert.equal(kq.goi, 0);
+  assert.equal(ghi.length, 0);
+  assert.ok(log.some((l) => l.includes("uoc vuot tran")));
+});
+
+test("DGS-AC-8 chạm trần giữa lượt: trước mỗi lời gọi, đã chi + ước > trần thì dừng (đúng 3 lời gọi, còn 7)", async () => {
+  const log: string[] = [];
+  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 0.05, thu: true }, the: muoiThe(), uoc: () => 0.003, taoModel: gatewayGia(TRA, [], "0.02"), recordCall: async () => {}, log: (s) => log.push(s) });
+  assert.equal(kq.goi, 3);
+  assert.equal(kq.conLai, 7);
+  assert.equal(kq.dungTran, true);
+  assert.ok(log.some((l) => l.includes("con lai 7")));
+});
+
+test("DGS-AC-8 không có đường chạy toàn S03: --toan-bo, --all bị từ chối; cần đúng một tập", () => {
+  assert.throws(() => docCo(["--toan-bo", "--tran-usd", "1"]), /--toan-bo/);
+  assert.throws(() => docCo(["--all", "--tran-usd", "1"]), /--all/);
+  assert.throws(() => docCo(["--tran-usd", "1"]), /--lat hoặc --post/);
+  assert.deepEqual(docCo(["--lat", "s03-theo-nhom", "--split", "test", "--tran-usd", "0.2"]).split, "test");
+});
+
+test("DGS-RF bài không chữ không ảnh không gọi model", async () => {
+  const ghi: Ghi[] = [];
+  const kq = await chayLuot({ client: clientGia, co: { lat: "x", tranUsd: 1, thu: true }, the: [{ ...THE, text: "  ", anh: [] }, THE], taoModel: gatewayGia(TRA, ghi), recordCall: async () => {}, log: () => {} });
+  assert.equal(kq.bo, 1);
+  assert.equal(ghi.length, 1);
+});
+
+test("DGS-AC-3 dòng lệnh: bảng sai thoát 2 gọi tên chỗ sai, chưa gọi model", () => {
+  const d = mkdtempSync(join(tmpdir(), "dgs-"));
+  const tep = join(d, "bang.json");
+  writeFileSync(tep, JSON.stringify(bang({ price_min_vnd: "qwen" })));
+  const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/doc-gop-s03.ts", "chay", "--lat", "x", "--tran-usd", "0", "--cau-hinh", tep],
+    { cwd: join(import.meta.dirname, ".."), encoding: "utf8", env: { ...process.env, AI_GATEWAY_API_KEY: "" } });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /qwen/);
+});
