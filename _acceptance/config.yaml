@@ -825,6 +825,7 @@ risk_tiers:
     # .github/workflows/acceptance-gate.yml chạy bước đó.
     - "PRODUCT-MAP.md"
     - "LO-TRINH.html"
+    - "agent/config/doc-gop-s03.json"                # PL30 Hỏi-3 (Mạnh duyệt Cổng Phạm vi 07/11): bảng chọn model đọc gộp S03 — đổi model là PR nhỏ, không cần hồ sơ mới
   t3_paths:
     - "app/src/lib/auth.ts"                          # auth + cổng /ops
     - "app/src/lib/ops-access.ts"
