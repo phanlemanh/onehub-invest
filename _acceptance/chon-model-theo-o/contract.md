@@ -5,7 +5,7 @@ slug: chon-model-theo-o
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-07-chon-model-theo-o-design.md
 approved_by: Mạnh
 approved_at: 2026-11-07
@@ -64,3 +64,19 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`; trục ghi tay:
 
 - Ngưỡng 92% đo trên 48 thẻ mà quy ước và từ điển trong prompt được viết ra trong lúc gắn chính các thẻ này; nhãn vàng là «người duyệt nháp Opus». Số trên bài mới cần đo lại (giả định 3 của ô cơ hội).
 - Lượt đo 07/11 tải 9 ảnh chỉ có URL; đường mới không tải, nên thẻ 9991 (mọi ô đọc từ ảnh) có thể tụt điểm.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-07:
+  - Ngoài-1: Hai bản sửa vòng 2 (đòi khoá Gateway khi chạy thử, thoát 1 khi mọi lời gọi hỏng) chưa có bài kiểm tự động giữ lại.
+  - Ngoài-2: Chạy thử (--thu) vẫn ghi sổ chi phí gọi model, khác lệnh đọc toàn bộ S03; chú thích cần ghi rõ là khác có chủ ý.
+  - Ngoài-3: Khi mọi lời gọi trả JSON hỏng khuôn, lệnh vẫn thoát 0; người vận hành phải đọc dòng log cuối mới biết.
+  - Ngoài-4: Chạy thử thiếu khoá Gateway từng vẫn gọi model; đã sửa ở vòng 2 (đòi khoá cả khi chạy thử).
+  - Ngoài-5: Khi bảng chọn dùng từ hai model, dòng nhãn của model phụ ghi ý định đăng tin «không rõ» và màn gắn nhãn có thể đọc nhầm dòng đó.
+  - Ngoài-6: Mã ý định đăng tin và loại tin từng gõ tay; đã sửa ở vòng 2 (lấy từ sổ chung).
+  - Ngoài-7: Hai tên model trỏ cùng một mã Gateway từng lọt qua bảng chọn; đã sửa ở vòng 2 (từ chối lúc nạp).
+  - Ngoài-8: Chạy thử thiếu khoá từng gọi Gateway thật và ghi sổ lời gọi; khoá đã đòi ở vòng 2, sổ lời gọi vẫn ghi khi chạy thử (xem Ngoài-2).
+  - Ngoài-9: Lỗi gọi model từng bị nuốt không đếm; đã sửa ở vòng 2 (đếm, in, thoát 1 khi mọi lời gọi hỏng).
+  - Ngoài-10: Ô model trả sai khuôn bị coi là «không suy ra», không đọc lại, có thể làm điểm đo đẹp hơn thực tế.
+  - Ngoài-11: Thẻ có hai người gắn nhãn thì lệnh chấm lấy nhãn vàng tuỳ ý; hiện chỉ một người gắn.
+  - Ngoài-12: Bài kiểm «đổi bảng chọn không cần hồ sơ» khớp mẫu bằng cách riêng, không dùng bộ khớp của lưới trước gộp.
+  - Ngoài-13: Bài kiểm trần tiền đếm lời gọi bằng số tự báo của chương trình, không đếm lời gọi tới model giả.
+  - Ngoài-14: Bài kiểm cờ dòng lệnh chưa phủ đủ bảy cờ được nhận.
+  - Ngoài-15: Bài kiểm «đủ 17 ô» lấy danh sách ô từ chính mã đang kiểm.

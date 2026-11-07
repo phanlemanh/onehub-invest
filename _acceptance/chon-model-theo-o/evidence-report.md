@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7e9b7c6bf45dbfa7d07c006c8c5ab3a0b622c2ce
-human_signoff:
+human_signoff: Mạnh 2026-11-07
 ---
 
 # Evidence Report: chon-model-theo-o
