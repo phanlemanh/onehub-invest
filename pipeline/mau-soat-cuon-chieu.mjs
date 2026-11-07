@@ -84,13 +84,12 @@ export function dungNhap({ tin, silver, khoaGop, oNguoi, luc, dotBien }) {
   for (const r of silver) {
     const k = khoaSilver(r);
     if (!r.json_ok) { cach_doc[k] ??= { trang_thai: "vang", o: {} }; continue; }
-    const { o } = oCuaSilver(r);
-    for (const f of oNguoi) delete o[f];
+    const { o } = oCuaSilver(r); // ô giao người giữ trong nháp (đo giữ nháp); màn bỏ chúng theo draft.o_nguoi
     cach_doc[k] = { trang_thai: o.listing_intent === "offer" ? "co" : "khong-tin", o };
   }
   cach_doc[khoaGop] ??= { trang_thai: "vang", o: {} };
   const hien = cach_doc[khoaGop].trang_thai === "co" ? khoaGop : "bo-doc-luat";
-  return { hien, cach_doc, chup_luc: luc };
+  return { hien, cach_doc, o_nguoi: oNguoi, chup_luc: luc };
 }
 
 /**

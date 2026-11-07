@@ -31,6 +31,7 @@ import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
 import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
 import { MaThe } from "./ma-the"
+import { nhapVeO } from "./nhap-may"
 import { NguoiDang } from "./nguoi-dang"
 
 const O_GIA: readonly LabelField[] = ["price_min_vnd", "price_max_vnd"]
@@ -62,8 +63,10 @@ export function LabelFormNhom({
   diToi?: (href: string) => void
   baoTin?: (cau: string) => unknown
 }) {
-  const [cells, setCells] = useState<Partial<Record<LabelField, O>>>({})
-  const [donVi, setDonVi] = useState<PriceUnit>("ty")
+  // Lát mẫu soát (DO1): điền sẵn nháp máy của cách đọc hiện; người giữ hay sửa từng ô rồi lưu.
+  const [nhapDau] = useState(() => (tin.nhap ? nhapVeO(tin.nhap) : null))
+  const [cells, setCells] = useState<Partial<Record<LabelField, O>>>(nhapDau?.cells ?? {})
+  const [donVi, setDonVi] = useState<PriceUnit>(nhapDau?.donVi ?? "ty")
   // Người tự bấm đơn vị thì Loại tin không ghi đè lựa chọn đó.
   const [donViTay, setDonViTay] = useState(false)
   // Giá lạ so với Loại tin: hỏi lại một lần cho đúng bộ giá trị đó, không chặn lưu.
@@ -147,6 +150,11 @@ export function LabelFormNhom({
             </FrameDescription>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end sm:gap-1">
+            {tin.nhap ? (
+              <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="max-w-64 truncate">
+                Nháp máy · {tin.nhap.cachDoc}
+              </Badge>
+            ) : null}
             <Badge variant={xong ? "success-light" : "secondary"} className="tabular-nums">
               {xong ? <CheckCircle2Icon aria-hidden="true" /> : <CircleDashedIcon aria-hidden="true" />}
               {daDien}/{TAT_CA_O.length}
