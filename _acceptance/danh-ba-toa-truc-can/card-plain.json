@@ -147,5 +147,12 @@
       "i": 4,
       "p": "Phép đo «không làm vỡ danh bạ người» chỉ đếm số dòng, chưa so nội dung; chưa đo cách chọn giá trị của tin. Đã đổi sang so nội dung và thêm ca chèn trùng."
     }
+  ],
+  "decisions": [
+    {
+      "id": "E12",
+      "q": "Các trường, loại bí danh mới của danh bạ toà đã khai đủ theo chuẩn RESO chưa?",
+      "why": "Hội đồng ba góc nhìn đề xuất Đạt ở lượt 2: sổ extension, ngày tra, lý do và kiểm chất lượng đã đủ."
+    }
   ]
 }
