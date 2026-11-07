@@ -223,6 +223,7 @@ function gn2Kiem(the, anTayTruoc) {
   const an = (id) => the.get(id).ghep?.trung_voi != null;
   for (const ds of NHOM_GN2) if (ds.filter((id) => !an(id)).length !== 1) loi.push(`NHOM KHONG CON MOT THE: ${ds}`);
   if (an(7)) loi.push("THE CO NHAN BI AN");
+  if (an(9)) loi.push("THE GIU AN TAY BI AN");
   if (JSON.stringify(the.get(5).ghep) !== JSON.stringify(anTayTruoc)) loi.push("DAU AN TAY BI XOA");
   for (const [id, [tv, kt]] of Object.entries(AN_MONG)) {
     const g = the.get(Number(id)).ghep;
@@ -274,4 +275,5 @@ test("GN2-AC-5 label-ghep thường và --lam-lai: mỗi nhóm trùng một th�
   };
   assert.ok((await dot("  for (const it of anTay) out.set(String(it.item_id), it.ghep_cu);\n", "")).includes("DAU AN TAY BI XOA"), "DAU AN TAY BI XOA");
   assert.ok((await dot("    const [giu, ...con] = [...ung].sort((a, b) => nhan(b) - nhan(a)\n      || ", "    const [giu, ...con] = [...ung].sort((a, b) => ")).includes("THE CO NHAN BI AN"), "THE CO NHAN BI AN");
+  assert.ok((await dot("      || Number(duocTro.has(b.ref_id)) - Number(duocTro.has(a.ref_id))\n", "")).includes("THE GIU AN TAY BI AN"), "THE GIU AN TAY BI AN");
 });
