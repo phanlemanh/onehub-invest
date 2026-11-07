@@ -96,8 +96,9 @@ jobs:
           cache-dependency-path: |
             agent/package-lock.json
             app/package-lock.json
-      - name: cài phụ thuộc
-        run: (cd agent && npm ci) && (cd app && npm ci)
+            pipeline/package-lock.json
+      - name: cài phụ thuộc # agent nạp thư viện của pipeline (vd doc-gop-s03 → pipeline/lib/vlm-anh.mjs → pg)
+        run: (cd agent && npm ci) && (cd app && npm ci) && (cd pipeline && npm ci)
       - name: typecheck
         working-directory: agent
         run: npx tsc --noEmit
