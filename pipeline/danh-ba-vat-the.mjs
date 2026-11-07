@@ -5,7 +5,8 @@
 // Từ chối DB `oneinvest` dùng chung (áp 082 và chạy trên máy thu là lời riêng của Mạnh). Không in mã S08 ra stdout.
 //   node pipeline/danh-ba-vat-the.mjs --db <url> [--tu-dien <tệp json>] [--khu <slug,slug>]
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
   NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, phuongCuaToa, ungVienTuTin, upiToa,
@@ -214,7 +215,8 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// So bằng realpath: launchd và lệnh cũ gọi qua symlink ~/dev/one-invest (khuôn của scripts/entrypoint-symlink.test.mjs).
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
     console.error(`danh-ba-vat-the: ${e.message}`);
     process.exit(1);
