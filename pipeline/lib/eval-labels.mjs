@@ -18,31 +18,81 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
 /** Băm nội dung đã chuẩn hoá — hai post cùng chữ (khác dấu câu, hoa thường) cho cùng băm. */
 export const textHash = (text) => sha(normText(text));
 
+/** Chữ bài đã gạt mọi link `http(s)://…` rồi chuẩn hoá — hai bài cùng chữ khác link ảnh cho cùng chuỗi. */
+export const chuGatUrl = (text) => normText(String(text ?? "").replace(/https?:\/\/\S+/gi, " "));
+
 /**
- * Chọn mẫu tất định cho một lát: khử trùng theo nội dung, lấy n tin có băm (seed, nội dung) nhỏ nhất, đánh 20% gắn trùng
- * và chia đôi dev/test (lệch tối đa 1). Cùng đầu vào + seed → cùng kết quả.
- * @param {{ post_id: string, text: string }[]} posts tin đã gạt post thử và đã lọc nhóm
- * @param {{ n: number, seed: string, tiLeTrung?: number }} opts
- * @returns {{ chon: { ref_id: string, text_hash: string, double_label: boolean, split: "dev"|"test" }[], khac_nhau: number }}
+ * Khoá trùng của một bài (lay-mau-khu-trung-theo-tin): bài đã thành tin của pipeline dùng `o:<offer_id>`, bài chưa thành tin
+ * dùng `c:<chữ đã gạt URL>`; chữ rỗng thì không có khoá (bài đứng riêng). Định nghĩa duy nhất — sampler và label-ghep cùng dùng.
+ * @param {{ post_id: string, text?: string|null }} bai
+ * @param {Map<string, string>} tinCua post_id → offer_id (sale_offer_records.post_ids của S03)
+ * @returns {string|null}
  */
-export function chonMau(posts, { n, seed, tiLeTrung = TI_LE_TRUNG }) {
-  const theoBam = new Map();
-  for (const p of [...posts].sort((a, b) => (a.post_id < b.post_id ? -1 : a.post_id > b.post_id ? 1 : 0))) {
-    const h = textHash(p.text);
-    if (!theoBam.has(h)) theoBam.set(h, p.post_id); // bản trùng chữ: giữ post_id nhỏ nhất
+export function khoaTrung(bai, tinCua) {
+  const tin = tinCua?.get(bai.post_id);
+  if (tin) return `o:${tin}`;
+  const chu = chuGatUrl(bai.text);
+  return chu ? `c:${chu}` : null;
+}
+
+/**
+ * Sự kiện hệ thống lưu ở cột chữ (thu hồi `clientDelMsgId`, nhãn dán, thẻ link): chữ mở đầu «[» hoặc «{» mà là JSON của
+ * một object hay một mảng object. Tin rao mở đầu «[» mà không phải JSON vẫn là bài thật.
+ */
+export function laSuKien(text) {
+  const t = String(text ?? "").trim();
+  if (!/^[[{]/.test(t)) return false;
+  let v;
+  try { v = JSON.parse(t); } catch { return false; }
+  const laObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+  return Array.isArray(v) ? v.length > 0 && v.every(laObj) : laObj(v);
+}
+
+const theoPostId = (a, b) => (a.post_id < b.post_id ? -1 : a.post_id > b.post_id ? 1 : 0);
+
+/**
+ * Khử trùng một tập bài: gạt sự kiện, gom theo khoaTrung (bài không khoá đứng riêng), giữ post_id nhỏ nhất; rồi giữ một đại
+ * diện mỗi text_hash vì cột (lat, text_hash) của eval_label_items là khoá duy nhất. Trả đại diện kèm khoá.
+ * @returns {{ dai: { post_id: string, text: string, khoa: string, text_hash: string }[], bo_su_kien: number, bo_vi_trung: number }}
+ */
+export function khuTrung(posts, tinCua = new Map()) {
+  const theoKhoa = new Map();
+  const daBam = new Set();
+  let boSuKien = 0;
+  for (const p of [...posts].sort(theoPostId)) {
+    if (laSuKien(p.text)) { boSuKien++; continue; }
+    const khoa = khoaTrung(p, tinCua) ?? `p:${p.post_id}`;
+    if (theoKhoa.has(khoa)) continue;
+    const text_hash = textHash(p.text);
+    if (daBam.has(text_hash)) continue;
+    daBam.add(text_hash);
+    theoKhoa.set(khoa, { ...p, khoa, text_hash });
   }
+  const dai = [...theoKhoa.values()];
+  return { dai, bo_su_kien: boSuKien, bo_vi_trung: posts.length - boSuKien - dai.length };
+}
+
+/**
+ * Chọn mẫu tất định cho một lát: khử trùng theo khoaTrung (tin trước, chữ đã gạt URL sau), gạt sự kiện, lấy n bài có băm
+ * (seed, khoá) nhỏ nhất, đánh 20% gắn trùng và chia đôi dev/test (lệch tối đa 1). Cùng đầu vào + seed → cùng kết quả.
+ * @param {{ post_id: string, text: string }[]} posts tin đã gạt post thử và đã lọc nhóm
+ * @param {{ n: number, seed: string, tiLeTrung?: number, tinCua?: Map<string, string> }} opts
+ * @returns {{ chon: { ref_id: string, text_hash: string, khoa: string, double_label: boolean, split: "dev"|"test" }[], khac_nhau: number, bo_su_kien: number, bo_vi_trung: number }}
+ */
+export function chonMau(posts, { n, seed, tiLeTrung = TI_LE_TRUNG, tinCua = new Map() }) {
+  const { dai, bo_su_kien, bo_vi_trung } = khuTrung(posts, tinCua);
   const xep = (nhan) => (a, b) => {
-    const x = sha(`${seed}:${nhan}:${a.text_hash}`), y = sha(`${seed}:${nhan}:${b.text_hash}`);
+    const x = sha(`${seed}:${nhan}:${a.khoa}`), y = sha(`${seed}:${nhan}:${b.khoa}`);
     return x < y ? -1 : x > y ? 1 : 0;
   };
-  const tatCa = [...theoBam].map(([text_hash, ref_id]) => ({ ref_id, text_hash }));
+  const tatCa = dai.map((p) => ({ ref_id: p.post_id, text_hash: p.text_hash, khoa: p.khoa }));
   const chon = tatCa.sort(xep("chon")).slice(0, n);
   const soTrung = Math.round(chon.length * tiLeTrung);
-  const trung = new Set([...chon].sort(xep("trung")).slice(0, soTrung).map((r) => r.text_hash));
-  const dev = new Set([...chon].sort(xep("split")).slice(0, Math.ceil(chon.length / 2)).map((r) => r.text_hash));
+  const trung = new Set([...chon].sort(xep("trung")).slice(0, soTrung).map((r) => r.khoa));
+  const dev = new Set([...chon].sort(xep("split")).slice(0, Math.ceil(chon.length / 2)).map((r) => r.khoa));
   return {
-    chon: chon.map((r) => ({ ...r, double_label: trung.has(r.text_hash), split: dev.has(r.text_hash) ? "dev" : "test" })),
-    khac_nhau: theoBam.size,
+    chon: chon.map((r) => ({ ...r, double_label: trung.has(r.khoa), split: dev.has(r.khoa) ? "dev" : "test" })),
+    khac_nhau: dai.length, bo_su_kien, bo_vi_trung,
   };
 }
 
@@ -89,29 +139,32 @@ export function donViCuaBai(donVi, khoa) {
  * @param {{ post_id: string, text: string, unit_code: string|null }[]} posts
  * @param {{ seed: string, moiNhomLon: number, moiNhomNho: number, soNhomLon: number, tiLeTrung?: number }} opts
  */
-export function chonMauTheoNhom(posts, { seed, moiNhomLon, moiNhomNho, soNhomLon, tiLeTrung = TI_LE_TRUNG }) {
+export function chonMauTheoNhom(posts, { seed, moiNhomLon, moiNhomNho, soNhomLon, tiLeTrung = TI_LE_TRUNG, tinCua = new Map() }) {
   const theoNhom = new Map();
-  let boKhongDonVi = 0;
+  let boKhongDonVi = 0, boSuKien = 0;
   for (const p of posts) {
     if (!p.unit_code) { boKhongDonVi++; continue; }
+    if (laSuKien(p.text)) { boSuKien++; continue; }
     if (!theoNhom.has(p.unit_code)) theoNhom.set(p.unit_code, []);
-    theoNhom.get(p.unit_code).push({ ...p, h: textHash(p.text) });
+    theoNhom.get(p.unit_code).push(p);
   }
-  const xep = [...theoNhom].map(([unit_code, ds]) => ({ unit_code, ds, khac_nhau: new Set(ds.map((x) => x.h)).size }))
-    .sort((a, b) => b.khac_nhau - a.khac_nhau || (a.unit_code < b.unit_code ? -1 : 1));
-  const daDung = new Set();
+  // Khoá và băm của đại diện từng nhóm: nội dung (tin hay chữ) đã dùng ở nhóm trước thì nhóm sau không lấy lại.
+  const xep = [...theoNhom].map(([unit_code, ds]) => ({ unit_code, ...khuTrung(ds, tinCua) }))
+    .sort((a, b) => b.dai.length - a.dai.length || (a.unit_code < b.unit_code ? -1 : 1));
+  const daKhoa = new Set(), daBam = new Set();
   const chon = [];
-  const moiNhom = xep.map(({ unit_code, ds, khac_nhau }, i) => {
+  const moiNhom = xep.map(({ unit_code, dai, bo_vi_trung }, i) => {
     const can = i < soNhomLon ? moiNhomLon : moiNhomNho;
-    const con = ds.filter((x) => !daDung.has(x.h));
-    const r = chonMau(con, { n: can, seed, tiLeTrung });
+    const con = dai.filter((x) => !daKhoa.has(x.khoa) && !daBam.has(x.text_hash));
+    const r = chonMau(con, { n: can, seed, tiLeTrung, tinCua });
     for (const c of r.chon) {
-      daDung.add(c.text_hash);
+      daKhoa.add(c.khoa);
+      daBam.add(c.text_hash);
       chon.push({ ...c, stratum: unit_code });
     }
-    return { unit_code, khac_nhau, can, chon: r.chon.length, bo_vi_trung: khac_nhau - new Set(con.map((x) => x.h)).size };
+    return { unit_code, khac_nhau: dai.length, can, chon: r.chon.length, bo_vi_trung: bo_vi_trung + dai.length - con.length };
   });
-  return { chon, moiNhom, bo_khong_don_vi: boKhongDonVi };
+  return { chon, moiNhom, bo_khong_don_vi: boKhongDonVi, bo_su_kien: boSuKien, bo_vi_trung: moiNhom.reduce((a, x) => a + x.bo_vi_trung, 0) };
 }
 
 /**

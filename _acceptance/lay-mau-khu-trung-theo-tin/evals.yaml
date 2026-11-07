@@ -1,0 +1,85 @@
+schema_version: 1
+feature_slug: lay-mau-khu-trung-theo-tin
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+# DB: DB thử oneinvest_gn2_mau (E2), oneinvest_gn2_lat (E7) — hai tên vì lượt chấm chạy song song (db/db-thu.sh). Bản chép lát đọc chỉ đọc từ DB máy thu; không ghi DB máy thu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.gn2_khoa
+    layer: unit
+    paths: [pipeline/lib/eval-labels.mjs, pipeline/lib/eval-labels.test.mjs]
+    expected: "exit 0; ca 'GN2-AC-1' chạy khoaTrung trên ma trận viết trước 7 dòng (cùng chữ khác link chưa thành tin; cùng tin khác chữ; cùng chữ hai tin khác; một bài tin một bài chưa cùng chữ; khác cả hai; chữ chỉ có URL; chữ ngắn của hai người gửi khác chưa thành tin), so khoá từng bài bằng deepEqual với bảng; chuGatUrl('Bán căn https://x.y/a.jpg 2PN') == normText('Bán căn 2PN'). Chiều đỏ: bản dùng textHash cũ ('CUNG CHU KHAC LINK BI TACH'); bản bỏ khoá tin ('CUNG TIN KHAC CHU BI TACH'); bản union cả hai khoá ('HAI TIN KHAC BI GOP'); bản cho chữ rỗng một khoá ('CHU RONG CO KHOA')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.gn2_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/lay-mau-khu-trung-theo-tin/probes/mau.mjs]
+    expected: "exit 0; probe dựng DB thử oneinvest_gn2_mau bằng db/migrations, nạp bài giả (hai bài cùng chữ khác link chưa thành tin, ba bài một tin đăng lại, một bài trycloudflare, một bài «[Tên sàn]», một sự kiện thu hồi, bài khác) và sale_offer_records giả, chạy lệnh label-sample thật cho một lát thường và một lát theo nhóm; in 'ok khong hai the chung khoa' cho mỗi lát, 'ok bo vi trung = <n>' với n viết trước, 'ok bai thu bi gat = 2', 'ok bo_su_kien = 1', 'ok tat dinh' (chạy hai lần cùng seed, so ref_id); gọi loadStgPosts + auditRejected trên DB thử rồi đọc ops_audit: by_marker có 'noi-dung' = 2; cuối 'MAU OK', xoá DB thử. Chiều đỏ: bản sampler dùng textHash cũ → 'THE TRUNG TRONG LAT'; bản testMarker không đọc text → 'BAI THU VAO MAU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.gn2_su_kien
+    layer: unit
+    paths: [pipeline/lib/eval-labels.mjs, pipeline/label-sample.mjs, pipeline/lib/eval-labels.test.mjs]
+    expected: "exit 0; ca 'GN2-AC-3': laSuKien trên bảng 8 dòng viết trước (mảng thu hồi có clientDelMsgId; object nhãn dán catId; object thẻ link href; '[Ở được liền, NT mới]' không phải JSON; '{không đóng'; chuỗi số '123'; 'null'; chữ thường) → [true,true,true,false,false,false,false,false]; chonMau trên tập có hai sự kiện → không ref_id sự kiện nào trong chon, bo_su_kien = 2. Chiều đỏ: bản coi mọi chữ mở đầu '[' là sự kiện ('NGOAC VUONG KHONG PHAI SU KIEN'); bản không gạt sự kiện ('SU KIEN VAO MAU')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gn2_bai_thu
+    layer: unit
+    paths: [pipeline/lib/test-posts.mjs, pipeline/lib/test-posts.test.mjs]
+    expected: "exit 0; ca 'GN2-AC-4': testMarker trên bảng viết trước ≥ 10 dòng (link trycloudflare → 'noi-dung'; '[Tên sàn]' → 'noi-dung'; nhóm toàn chữ số → theo nhánh Hỏi-2 ghi trong decisions.jsonl gate1, mặc định null; nhóm 'Ocean Park 2' → null; nhóm 'TEST-G1' → 'group' như cũ; snapshot mock → 'snapshot-source' như cũ; bài thật có link ảnh zdn → null; chữ 'tên sàn' không ngoặc → null); TEST_MARKERS có 'noi-dung'. Chiều đỏ: bản bắt mọi nhóm có chữ số ('NHOM CO SO BI GAT'); bản không đọc text ('BAI THU NOI DUNG LOT')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: unit
+    paths: [pipeline/lib/test-posts.mjs]
+    expected: "exit 0; suite pipeline xanh, gồm 'AC-2 transform S03 từ chối post thử' (transform đọc qua loadStgPosts, hàng đã có cột text nên dấu mới áp không cần sửa transform-zalo.mjs)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.gn2_ghep
+    layer: backend-effect
+    paths: [pipeline/label-ghep.mjs, pipeline/lib/ghep-mau.mjs, pipeline/lib/eval-labels.mjs, pipeline/scripts/label-ghep.test.mjs]
+    expected: "exit 0; ca 'GN2-AC-5' trên DB thử dựng bằng db/migrations: lát giả 12 thẻ (một nhóm cùng chữ khác link, một nhóm cùng tin, một cặp đã an_tay A(5)→B(9) chưa nhãn kèm thẻ C(3) cùng khoá, một thẻ có nhãn trong nhóm trùng); ghepLat thường rồi --lam-lai; sau mỗi lượt: mỗi nhóm đúng một thẻ hiện; thẻ có nhãn được giữ; nhóm A–B–C giữ B (thẻ được dấu ẩn tay trỏ tới), C ẩn trỏ về B; dòng an_tay giữ nguyên trung_voi và an_tay (so deepEqual với trước); thẻ ẩn mới có khu_trung 'tin' hoặc 'chu'; eval_labels không đổi (băm trước == sau); kết quả in an_moi, an_tay_giu bằng số viết trước. Chiều đỏ: bản --lam-lai dựng lại từ đầu ('DAU AN TAY BI XOA'); bản giữ item_id nhỏ thay thẻ có nhãn ('THE CO NHAN BI AN'); bản bỏ bậc được trỏ tới ('THE GIU AN TAY BI AN')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.gn2_lat_that
+    layer: backend-effect
+    paths: [pipeline/label-ghep.mjs, pipeline/lib/eval-labels.mjs, _acceptance/lay-mau-khu-trung-theo-tin/probes/lat-that.mjs]
+    expected: "exit 0; probe đọc chỉ đọc lát s03-theo-nhom (eval_label_items, eval_labels, bài stg của các ref, sale_offer_records S03 chứa các ref) từ DB máy thu, chép vào DB thử oneinvest_gn2_lat, chạy label-ghep --lam-lai thật trên DB thử; in 'ok 44 the an cu van an' (cùng ref_id ẩn, cùng trung_voi), 'ok so the an = <N>' với N lấy từ dòng sổ gate1 Hỏi-1 của hồ sơ, mỗi thẻ ẩn thêm một dòng 'an them <item_id> <khoa>', 'ok lan hai khong doi'; in 'tin canonical se nghi vi dau moi = <n>' (đếm post mang dấu mới có trong sale_offer_records sống); chỉ in mã thẻ, khoá và số, không in chữ bài; cuối 'LAT-THAT OK', xoá DB thử. Chiều đỏ trên cùng bản chép: bản --lam-lai dựng lại từ đầu → 'AN TAY MAT: <n>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: ui-structure
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; test lát theo nhóm còn xanh (thẻ có trung_voi không vào tinKe, tiến độ, nhóm)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ecr_lenh
+    layer: unit
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/scripts/eval-classify-ghep.test.mjs]
+    expected: "exit 0; test eval-classify ghép còn xanh (dòng trung_voi bỏ qua, đếm trung_co_nhan)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.gn2_pham_vi
+    layer: backend-effect
+    paths: [_acceptance/lay-mau-khu-trung-theo-tin/probes/pham-vi.sh]
+    expected: "exit 0; tệp đổi tính từ commit riêng của nhánh (git log --no-merges HEAD ^origin/main); mỗi tệp in 'ok <tệp>', không 'NGOAI PHAM VI'; paths của mọi eval (trừ E8, E9 chỉ đọc bằng test cũ) trong danh sách, ngoài thì 'PATHS EVAL NGOAI PHAM VI'; 'ok doi chung: tep ngoai danh sach bi bat' (collector/x.ts); cuối 'PHAM-VI OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

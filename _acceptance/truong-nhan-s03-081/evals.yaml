@@ -1,0 +1,117 @@
+schema_version: 1
+feature_slug: truong-nhan-s03-081
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim (MEASURE-BIRTH).
+# DB: DB thử riêng oneinvest_tn081 (db/db-thu.sh), hoặc lược đồ tạm của test app; không ghi DB máy thu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tn081_migration
+    layer: backend-effect
+    paths: [db/migrations/081_*.sql, app/src/lib/labels-normalize.ts, _acceptance/truong-nhan-s03-081/probes/migration.mjs]
+    expected: "exit 0; probe dựng DB rỗng oneinvest_tn081_mig bằng các tệp migration nhãn (bảng ref của 043, 054, 072, 073, 075, 076), chèn 17 trường cũ cho hai người, chụp view đồng thuận, áp 081 hai lần; danh sách trường và căn cứ để INSERT nạp từ hằng xuất LABEL_FIELDS_NHOM và BASIS của app/src/lib/labels-normalize.ts (không gõ trong probe); in 'ok ap hai lan', 'ok nhan 24 truong cua app', 'ok nhan 5 can cu cua app', 'ok tu choi truong la', 'ok tu choi can cu la' (CHECK violation), 'ok dong thuan 17 truong khong doi' (so từng cột với ảnh chụp trước), 'ok dong thuan co 7 truong moi', 'ok dong cu nguyen ven' (băm trước == sau); cuối 'MIGRATION OK', rồi xoá DB thử. Chiều đỏ trên cùng fixture: bản 081 đổi tên một trường ('TRUONG APP KHONG QUA CHECK 081'); bản 081 bỏ danh_muc_cdt ('CAN CU DANH MUC BI TU CHOI'); bản 081 thiếu một trường trong view ('VIEW THIEU TRUONG MOI')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tn081_form
+    layer: ui-structure
+    paths: [app/src/components/ops/labels/nhom-fields.ts, app/src/components/ops/labels/nhom-row.tsx, app/src/components/ops/labels/label-form-nhom.tsx, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'TN081-AC-2' trên biểu mẫu thật trong jsdom: thứ tự hàng của từng khối khớp bảng viết trước (Mô tả căn = [furnished, direction_faces, view, availability_date]; Vị trí bắt đầu [project, subzone, unit_number, building]; Giá = [price_min_vnd, price_max_vnd, price_basis, rent_includes]); mỗi hàng mới có nhóm căn cứ năm nút [Chữ, Ảnh, Nhóm, Nghề, CĐT] và ô «Không suy ra được»; lựa chọn của năm trục bằng đúng VOCAB của sổ (so cả số lượng); bấm hai nút View thì cả hai sáng, bấm hai nút Phí đã gồm thì cả hai sáng. Chiều đỏ: bản thiếu khối Mô tả căn ('THIEU KHOI MO TA CAN'); bản View một lựa chọn ('VIEW KHONG CHON NHIEU'); bản thiếu nút CĐT ('THIEU CAN CU CDT')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tn081_chuan
+    layer: unit
+    paths: [app/src/lib/labels-normalize.ts, app/tests/labels-truong-moi-chuan.test.ts]
+    expected: "exit 0; ca 'TN081-AC-3' chạy chuanHoaLuot trên bảng viết trước ≥ 28 dòng (mỗi trường mới: giá trị hợp lệ, giá trị ngoài sổ, thiếu ô, tick không suy ra được; view [lake, city, lake] → 'city,lake'; phí đã gồm [water, management] → 'management,water'; ngày 'ngay', 'Ngay', '2026-12', '2026-12-15' nhận, '2026-02-30', '12/2026', 'tháng 12' từ chối; mã 'PR6.xx10' với chữ có 'PR6.xx10' nhận nguyên 'PR6.xx10', chữ không có thì MSG_KHONG_TRONG_CHU, căn cứ Nghề thì nhận); kết quả từng dòng so deepEqual với giá trị mong đợi viết tay. Chiều đỏ: bản hạ mã căn về chữ thường ('MA CAN BI DOI CHU'); bản nhận ngày không có thật ('NGAY KHONG CO THAT DUOC NHAN'); bản không sắp tập mã ('TAP MA KHONG CHUAN')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tn081_route
+    layer: backend-effect
+    paths: [app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/src/lib/labels-s08.ts, app/src/app/api/v1/ops/labels/**, db/migrations/081_*.sql, app/tests/labels-truong-moi-route.test.tsx]
+    expected: "exit 0; ca 'TN081-AC-4' trên lược đồ tạm dựng bằng chính các tệp migration nhãn 054–081, bảng stg_s08_inventory có dòng giả (mã 'ZZ9-01' hai dòng hai dự án, hướng 'ĐÔNG NAM', DT 70, 2 PN, 2 WC, phân khu 'Phân khu Giả'); gọi route POST thật theo ma trận viết trước 9 dòng: mã căn CĐT có trong danh mục → 200; hướng CĐT 'Southeast' khớp → 200; DT CĐT 70 khớp → 200; DT CĐT 71 lệch → 400 lỗi ô area_m2; nội thất CĐT (danh mục không có trường) → 400 lỗi ô furnished; mã 'ZZ9-99' không có → 400 lỗi ô unit_number; mã che 'ZZ9-xx' → 400; bảng stg_s08_inventory vắng → 400 'Không đọc được danh mục CĐT ở máy này'; 'zz9-01' chữ thường → 200. Mỗi dòng 400 thì đếm eval_labels của thẻ = 0; mỗi dòng 200 thì ô CĐT có basis 'danh_muc_cdt', các ô khác giữ căn cứ gửi lên. Chiều đỏ: bản không so giá trị với danh mục ('CDT KHONG SO DANH MUC'); bản để lỗi bảng vắng thành 500 ('BANG VANG KHONG BAO O')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tn081_cu
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-luot-hai.ts, app/src/components/ops/labels/luot-hai.tsx, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'TN081-AC-5' trên lược đồ tạm: một thẻ chèn sẵn 17 trường (dòng trước vòng, rút từ chuanHoaLuot rồi bỏ bảy trường mới) và một thẻ đủ 24 trường qua route; tienDo đếm cả hai là đã gắn; bảng so lượt hai của thẻ cũ render, bảy ô mới hiện '—'; số dòng và băm eval_labels của thẻ cũ trước == sau mọi lệnh của ca. Chiều đỏ: bản tính thẻ thiếu trường mới là chưa gắn ('THE CU BI TINH CHUA GAN')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tn081_classify
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, db/migrations/081_*.sql, app/tests/eval-classify-can-cu.test.mjs]
+    expected: "exit 0; ca 'TN081-AC-6' trên DB thử oneinvest_tn081 (db/db-thu.sh, bản chép DB máy thu) áp thêm 081: ghi nhãn của hai tin qua chuanHoaLuot (bên ghi thật) rồi chèn eval_labels, có ba ô căn cứ danh_muc_cdt; gọi docNhanNguoi thật rồi chấm như lệnh eval-classify: danh_muc_cdt = 3, ba ô đó vắng trong nhãn vàng; bảy trường mới mỗi trường một ô kết quả với nhóm [unit_number A, price_basis B, năm trường C] và ngưỡng [0.95, 0.9, 0.8], trạng thái 'skip' lý do 'chua-co-cach-doc'; chín trường cũ cho cùng kết quả với bản trước vòng: bản pipeline/lib/eval-classify.mjs ở điểm rẽ nhánh (git show merge-base, không chép tay) chấm cùng nhãn đã bỏ ba ô CĐT, mọi ô của chín trường cũ ở mọi phân khúc so deepEqual ('CHIN TRUONG CU LECH BAN TRUOC VONG'). Chiều đỏ: bản truy vấn bỏ cột basis ('BASIS KHONG DUOC DOC'); bản không lọc căn cứ ('O CDT VAO PHEP CHAM'); bản thiếu nhóm C ('THIEU NHOM C'); bản đổi ngưỡng nhóm A thì phép so chín trường cũ bắt ('DOI NGUONG TRUONG CU KHONG BI BAT')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.tn081_roi_may
+    layer: backend-effect
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, scripts/cloud-sync.sh, data-api/src/**, db/migrations/**, _acceptance/truong-nhan-s03-081/probes/roi-may.mjs]
+    expected: "exit 0; ma trận viết trước trong probe (rút từ docs/ops/runtime-map.md và mã): mỗi đường rời máy một dòng [sync-cloud, push-ops-facts, cloud-sync.sh, data-api] kèm cách rút bảng đích thật (hằng xuất danh sách bảng của script hay chế độ khô); probe rút bảng đích của từng đường, in 'ok <đường>: <số bảng> bang, khong co eval_labels'; đường nào duyệt bảng theo mẫu hay information_schema thì chạy mẫu đó trên lược đồ tạm có eval_labels và view đồng thuận, phải không khớp; số đường đã quét = số dòng ma trận; cuối 'ROI-MAY OK'. Đối chứng trên bản chép tạm: thêm eval_labels vào danh sách bảng của bản chép sync → 'LO EVAL_LABELS: <đường>' và probe con thoát 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.vocab
+    layer: unit
+    paths: [pipeline/mappings.yaml, pipeline/vocab.mjs, pipeline/scripts/vocab.test.mjs, pipeline/scripts/vocab-lint.test.mjs, _acceptance/truong-nhan-s03-081/decisions.jsonl]
+    expected: "exit 0; test sổ từ vựng xanh, gồm ca mới 'TN081-AC-8': trục furnished/view/rent_includes có dd_field Furnished/View/RentIncludes và mỗi giá trị có dd_lookup thuộc lookup RESO cùng tên (danh sách chép từ dd-2.1.json trong test, ghim số lượng 4/38/13); price_basis có local + rationale + đủ sáu khoá điều kiện + alias ListingAgreement.Net; direction_faces khai đúng nhánh Hỏi-2 ghi trong decisions.jsonl của hồ sơ (dòng gate1 mới nhất mang 'Hỏi-2'): hướng cửa → dd_field DirectionFaces, hướng ban công → local + sáu điều kiện + alias DirectionFaces. Chiều đỏ: sổ có dd_lookup 'Seaview' cho view ('DD LOOKUP KHONG CO TRONG RESO'); Hỏi-2 ban công mà sổ khai dd_field DirectionFaces ('HUONG LECH NGHIA RESO')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.vocab_check
+    layer: unit
+    paths: [pipeline/mappings.yaml, app/src/lib/vocab.generated.ts, CONTEXT.md]
+    expected: "exit 0; tệp sinh khớp sổ (gồm bốn trục mới và khối CONTEXT.md)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.vocab_lint
+    layer: unit
+    paths: [pipeline/mappings.yaml, app/src/components/ops/labels/**, app/src/lib/labels-normalize.ts]
+    expected: "exit 0; 0 enum viết tay ngoài sổ (lựa chọn của bốn trục mới không gõ tay trong biểu mẫu)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tn081_hien
+    layer: ui-structure
+    paths: [app/src/components/ops/labels/luot-hai.tsx, app/src/components/ops/labels/agreement-table.tsx, app/src/lib/labels-normalize.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'TN081-AC-9': lượt hai của thẻ đủ trường hiện bảy nhãn FIELD_LABEL mới và nhãn tiếng Việt của giá trị chọn (vd 'Đủ nội thất', 'Thành phố, Hồ', 'Phí quản lý, Nước'), không hiện mã thô ('furnished', 'city,lake', 'management'); căn cứ CĐT hiện 'Danh mục CĐT'; bảng đồng thuận có bảy hàng mới. Chiều đỏ: bản hiện mã thô ('HIEN MA THO THAY NHAN')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: ui-structure
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-normalize.ts, app/src/lib/labels-queries.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; test lát theo nhóm cũ còn xanh sau khi thêm trường (TND-AC-6, THN-AC-1, DVG-AC-1..3 và các ca GCN)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ops_nhan
+    layer: ui-structure
+    paths: [app/src/components/ops/labels/**, app/tests/ops-nhan/visible-strings.ts, CONTEXT.md]
+    expected: "exit 0; thước nhãn Ops còn xanh: chữ mới có trong CONTEXT.md, 0 từ _Avoid_."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.tn081_pham_vi
+    layer: backend-effect
+    paths: [_acceptance/truong-nhan-s03-081/probes/pham-vi.sh]
+    expected: "exit 0; tệp đổi tính từ commit riêng của nhánh (git log --no-merges HEAD ^origin/main); mỗi tệp in 'ok <tệp>', không 'NGOAI PHAM VI'; hợp paths của mọi eval trong evals.yaml nằm trong danh sách được phép, ngoài thì 'PATHS EVAL NGOAI PHAM VI'; 'ok doi chung: tep ngoai danh sach bi bat' (danh sách giả có collector/x.ts); cuối 'PHAM-VI OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
