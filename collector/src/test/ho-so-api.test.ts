@@ -10,7 +10,7 @@ import { createAgentServer } from "../api/server.js";
 /**
  * link-nguoi-ban-s03 E5 (MỞ LẠI 0611-6): POST /s03-ho-so — SnapshotWriter
  * thật; HOME giả (spool không lọt máy thật); canary PII không lọt
- * snapshot/spool; collector từ chối → spool, không mất; kênh khác (zalo-agent)
+ * snapshot/spool; collector từ chối → spool, không mất; kênh khác (S03-kenh)
  * vẫn giữ schemaVersion của nó; 401 khi sai key.
  */
 function fresh(): string {
@@ -44,7 +44,7 @@ test("s03-ho-so: lô hợp lệ → snapshot hồ sơ 202; kênh khác giữ sch
   assert.ok(manifest.schemaVersion >= 7, "snapshot hồ sơ mang schemaVersion 7+");
   const van = JSON.stringify(manifest);
   assert.ok(!van.includes(CANARY), "canary PII không lọt manifest");
-  // kênh khác cùng lượt vẫn schemaVersion riêng (zalo-agent v6/4)
+  // kênh khác cùng lượt vẫn schemaVersion riêng (S03-kenh v6/4)
   s.ingest({ agent_id: "a", group: "G", messages: [{ text: "x", ts: new Date().toISOString() }] }, "Bearer k1");
   const snap2 = (await s.flush()) as unknown as { snapshotId: string } | null;
   assert.ok(snap2, "flush kênh tin ra snapshot");

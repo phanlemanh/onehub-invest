@@ -34,7 +34,7 @@ test("chưa từng gọi (không mốc) → luật không phán", () => {
 test("đọc dòng đóng listener từ gateway.log +07:00 đúng giờ", () => {
   const log = [
     "2026-11-08 02:50:01 info listener error 3003 (không tính — trước lời)",
-    "2026-11-08 03:12:00 warn Zalo listener closed (1006)",
+    "2026-11-08 03:12:00 warn S03 listener closed (1006)",
     "gã dòng không thời gian",
   ].join("\n");
   const ds = docDongDongListener(log);
@@ -47,7 +47,7 @@ test("E2-phu: listener đóng 10s sau lời 1 → cảnh báo listener-dong-sau-
   const log = [
     "2026-11-08T03:00:00.000+07:00 [z] lời getUserInfo 1 gửi",
     "2026-11-08T03:00:10.000+07:00 [z] listener closed (3003)",
-    "2026-11-08T03:00:12.000+07:00 [z] starting zalouser provider",
+    "2026-11-08T03:00:12.000+07:00 [z] starting kênh-S03 provider",
     "2026-11-08T03:00:20.000+07:00 post 202 ok",
   ].join("\n");
   // luật: đóng trong 10s SAU lời gọi → cảnh báo riêng (không phải chặn nguồn)

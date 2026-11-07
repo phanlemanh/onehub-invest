@@ -14,8 +14,8 @@ import type { RawItem } from "../core/types.js";
 /**
  * Collector API — POST /agent-report (ADR-0006 sửa đổi bởi ADR-0007).
  *
- * Agent (OpenClaw) đẩy tin nhóm Zalo: KHÔNG ghi DB trực tiếp — buffer in-memory
- * rồi flush thành raw snapshot theo DATA-CONTRACT (source=zalo-agent, gzip +
+ * Agent (OpenClaw) đẩy tin nhóm S03: KHÔNG ghi DB trực tiếp — buffer in-memory
+ * rồi flush thành raw snapshot theo DATA-CONTRACT (source S03, gzip +
  * sha256 manifest). Transform/canonical là việc của pipeline, chạy trên raw.
  *
  * Fail closed: không có key nào được cấu hình → từ chối mọi request.
@@ -247,7 +247,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
     // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
     const items = buffer.slice();
-    // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
+    // N1 media: URL ảnh CDN S03 CÓ HẠN — tải về máy TRƯỚC khi gzip items
     // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
     // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
     // Shutdown: sát deadline → skipMedia (không bắt đầu tải); ĐANG tải thì

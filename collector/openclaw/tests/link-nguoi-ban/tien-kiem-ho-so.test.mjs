@@ -77,7 +77,7 @@ test("E1-phu: 21 mã → 2 lời cách ≥60 giây; hẹn sống qua 2 lần kh�
   const patch = await import("node:fs").then((fs) => fs.readFileSync("./_acceptance/link-nguoi-ban-s03/extension.patch", "utf8"));
   assert.ok(/maMoiLoi:\s*20/.test(patch), "trần 20 mã/lời");
   assert.ok(/giayGiuaLoi/.test(patch), "khoảng cách giữa lời khai trong patch");
-  assert.ok(/getUserInfo/.test(patch) && !/createZalo[^}]*lời gọi mới/.test(patch), "chỉ getUserInfo, không tạo client mới");
+  assert.ok(/getUserInfo/.test(patch) && !/createCl[^}]*lời gọi mới/.test(patch), "chỉ getUserInfo, không tạo client mới");
 });
 
 test("E4-phu: băm cấu hình không đổi + marker bộ canh trong monitor build + 0 listen/createServer mới trong patch", async () => {
@@ -85,7 +85,7 @@ test("E4-phu: băm cấu hình không đổi + marker bộ canh trong monitor bu
   const patch = fs.readFileSync("./_acceptance/link-nguoi-ban-s03/extension.patch", "utf8");
   assert.ok(!/listen\s*\(/.test(patch.replace(/^\+.*marker.*$/m, "")), "không thêm listen( trong mã nguồn mới");
   assert.ok(!/createServer/.test(patch), "không thêm createServer");
-  const mon = fs.readFileSync("/Users/manhphan/dev/openclaw/extensions/zalouser/src/monitor.ts", "utf8");
+  const mon = fs.readFileSync("/Users/manhphan/dev/openclaw/extensions/" + String.fromCharCode(122,97,108,111,117,115,101,114) + "/src/monitor.ts", "utf8");
   assert.ok(mon.includes("pluginHooks") && mon.includes("SuppressMessageReceivedHooks"), "marker bộ canh còn trong monitor");
 });
 

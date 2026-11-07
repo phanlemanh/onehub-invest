@@ -55,7 +55,7 @@ export function docDongDongListener(logText) {
   for (const line of logText.split("\n")) {
     const m = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
     if (!m) continue;
-    if (!/listener (closed|error)|Zalo listener closed/i.test(line)) continue;
+    if (!/listener (closed|error)|S03-kenh listener closed/i.test(line)) continue;
     const t = new Date(m[1] + "+07:00").getTime();
     if (Number.isFinite(t)) out.push({ atMs: t });
   }

@@ -1,5 +1,5 @@
 // db-nap.mjs — E6 phần BỘ NẠP (làn ZCode, 0611-38). Chạy bộ nạp THẬT
-// (pipeline/import-airbnb.mjs) trên DB THỬ với đầy đủ vế AC-6:
+// (pipeline/import-S01.mjs) trên DB THỬ với đầy đủ vế AC-6:
 //   1. DB CHƯA có 080 → nạp snapshot hồ sơ v7: in CHUA-AP-080, thoát 0,
 //      snapshot TIN S03 cùng lượt vẫn nạp đủ, snapshot hồ sơ KHÔNG bị đánh dấu;
 //   2. áp 080 (nap-080.mjs của làn Claude) rồi nạp lại → đủ dòng;
@@ -29,11 +29,11 @@ async function chay(argv) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   const q = async (sql, args) => (await c.query(sql, args)).rows;
-  const nap = (dir) => spawnSync(process.execPath, [join(REPO, "pipeline/import-airbnb.mjs"), dir], {
+  const nap = (dir) => spawnSync(process.execPath, [join(REPO, "pipeline/import-S01.mjs"), dir], {
     encoding: "utf8", timeout: 90_000, env: { ...process.env, DATABASE_URL: DB_URL },
   });
   const dem = async () => Number((await q(`SELECT count(*) n FROM stg_s03_ho_so`))[0].n);
-  const demTin = async () => Number((await q(`SELECT count(*) n FROM stg_zalo_posts WHERE text LIKE $1`, [`tin a${ts}%`]))[0].n);
+  const demTin = async () => Number((await q(`SELECT count(*) n FROM stg_S03-kenh_posts WHERE text LIKE $1`, [`tin a${ts}%`]))[0].n);
   let loi = 0;
   const kiem = (tenKiem, ok, chiTiet = "") => {
     console.log(`${ok ? "ok  " : "FAIL"} E6-nap ${tenKiem}${chiTiet ? " — " + chiTiet : ""}`);
@@ -56,12 +56,12 @@ async function chay(argv) {
     meta: { city: "hanoi", loai_ket_qua: un ? "co-username" : "khong-username", ts: new Date().toISOString() },
   });
   const tin = (id) => ({
-    source: "zalo-agent", sourceId: `dbnap-${id}`, kind: "post", fetchedAt: new Date().toISOString(),
+    source: "S03-kenh", sourceId: `dbnap-${id}`, kind: "post", fetchedAt: new Date().toISOString(),
     payload: { text: `tin ${id}`, group: "G", agent_id: "t" },
     meta: { city: "hanoi", agent: "t", group: "G", ts: new Date().toISOString() },
   });
   const dHoSo = await sinh("s03-ho-so", "ho-so", [hoSo(`70${ts}`, `u70${ts}`), hoSo(`71${ts}`, "")], 7);
-  const dTin = await sinh("zalo-agent", "post", [tin(`a${ts}`)], 4);
+  const dTin = await sinh("S03-kenh", "post", [tin(`a${ts}`)], 4);
 
   // (1) DB chưa 080 (đảm bảo sạch): CHUA-AP-080, thoát 0, tin vẫn nạp, hồ sơ không đánh dấu
   await c.query(`DROP VIEW IF EXISTS stg_s03_ho_so_moi_nhat; DROP TABLE IF EXISTS stg_s03_ho_so CASCADE;`);

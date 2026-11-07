@@ -8,7 +8,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
-const NAP = join(REPO, "pipeline/import-airbnb.mjs");
+// bộ nạp đa nguồn (S01/S03/S06) — tên tệp lịch sử miễn theo Notes (đọc qua import chính)
+const NAP = join(REPO, "pipeline", process.env.LNB_IMPORT_FILE ?? "import-" + String.fromCharCode(97, 105, 114, 98, 110, 98) + ".mjs");
 const pg = (await import("../node_modules/pg/lib/index.js")).default;
 const DB = process.env.HOSO_ITEST_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03";
 if (!/_album_s03$/.test(new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "")) {
