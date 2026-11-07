@@ -62,36 +62,30 @@ test("script có --danh-sach/--snapshot-root: thiếu danh sách → lỗi rõ, 
 });
 
 
-// 0711-9(1): 5 FAIL LIỀN giữa cụm (có căn tốt xen TRƯỚC) vẫn dừng — kiểm
-// logic đếm liền qua mô phỏng chuỗi log như collect in thật.
-test("0711-9(1)(2)(3): chuỗi log — 5-lien-FAIL / 3-lien-mat-gia / nhịp <8s đều dừng", async () => {
-  const { spawnSync } = await import("node:child_process");
-  const { writeFileSync, mkdtempSync, rmSync } = await import("node:fs");
-  const { tmpdir } = await import("node:os");
-  // dựng script nhỏ dùng ĐÚNG hàm chanCan — trích bằng cách chạy script thật với
-  // collector giả in chuỗi log định sẵn qua env
-  const kich = `
-    const s = await import("${new URL("../s01/thu-theo-danh-sach.mjs", import.meta.url).href}");
-  `;
-  // Cách trực tiếp: mô phỏng bộ đếm — đọc logic từ script (chanCan nội bộ) nên
-  // kiểm bằng hành vi: viết kịch bản log chạy QUA collect giả nhúng qua monkey-patch
-  // Thay thế: test hành vi chuỗi bằng mô-đun con tách? Không tách được — dùng
-  // spawn script thật với collector giả khó (import tĩnh). → kiểm bằng regex mô phỏng
-  // trên BẢN CHẤT luật: đếm liền reset khi gặp căn tốt.
-  function moPhong(dongs) {
-    let lienFail = 0, lienMatGia = 0, dung = null;
-    for (const d of dongs) {
-      if (/FAIL/.test(d)) { lienFail++; lienMatGia = 0; }
-      else if (/price=—/.test(d)) { lienMatGia++; lienFail = 0; }
-      else { lienFail = 0; lienMatGia = 0; }
-      if (lienFail >= 5) return "5-lien-FAIL";
-      if (lienMatGia >= 3) return "3-lien-mat-gia";
-    }
-    return null;
-  }
-  assert.equal(moPhong(["[1] ok price=1", "[2] FAIL", "[3] FAIL", "[4] ok price=2", "[5] FAIL", "[6] FAIL", "[7] FAIL", "[8] FAIL", "[9] FAIL"]), "5-lien-FAIL", "5 FAIL liền (có tốt xen trước nhóm) dừng");
-  assert.equal(moPhong(["[1] ok", "[2] price=—", "[3] price=—", "[4] price=—"]), "3-lien-mat-gia", "3 mất giá liền dừng");
-  assert.equal(moPhong(["[1] FAIL", "[2] FAIL", "[3] ok", "[4] FAIL", "[5] FAIL"]), null, "không đủ liền → không dừng");
+// 0711-11: test import CHÍNH luat-dung.mjs (không còn bản sao trong test)
+test("luat-dung: 5-FAIL liền (có tốt xen trước) dừng; 3-mất-giá dừng; không đủ liền không dừng", async () => {
+  const { taoBoDem } = await import(new URL("../s01/luat-dung.mjs", import.meta.url).href);
+  const b1 = taoBoDem();
+  ["[1/9] a price=1", "[2/9] b FAIL", "[3/9] c FAIL", "[4/9] d price=2", "[5/9] e FAIL", "[6/9] f FAIL", "[7/9] g FAIL", "[8/9] h FAIL", "[9/9] i FAIL"].forEach((d) => b1.can(d));
+  assert.equal(b1.state.vungDung, "5-lien-FAIL", "5 FAIL liền dừng");
+  const b2 = taoBoDem();
+  ["[1/3] a price=—", "[2/3] b price=—", "[3/3] c price=—"].forEach((d) => b2.can(d));
+  assert.equal(b2.state.vungDung, "3-lien-mat-gia", "3 mất giá liền dừng");
+  const b3 = taoBoDem();
+  ["[1] FAIL", "[2] FAIL", "[3] ok price=9", "[4] FAIL", "[5] FAIL"].forEach((d) => b3.can(d));
+  assert.equal(b3.state.vungDung, null, "không đủ liền → không dừng");
+});
+
+// 0711-11: spawn script THẬT với danh sách không tồn tại — chứng minh khởi
+// động được tới chỗ đọc danh sách (không ReferenceError ở khối import/luat-dung)
+test("script thật khởi động không ReferenceError (đến lỗi đọc danh sách)", () => {
+  const r = spawnSync("node", [join(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", "/tmp/khong-ton-tai-xyz.json"], {
+    encoding: "utf8", timeout: 20000,
+  });
+  assert.ok(r.status !== 0);
+  const err = (r.stderr || "") + (r.stdout || "");
+  assert.ok(!err.includes("ReferenceError"), `không được ReferenceError: ${err.slice(0, 200)}`);
+  assert.ok(err.includes("no such file") || err.includes("ENOENT"), "lỗi là ENOENT đọc danh sách — chứng minh chạy tới đó");
 });
 
 // 0711-9(4): đối chiếu đĩa thật — dựng 2 snapshot writer + đọc manifest cộng = đúng

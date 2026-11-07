@@ -17,6 +17,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((v, i, a) => (v.starts
 const DANH_SACH = args["danh-sach"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/id-500.json";
 const SNAP_ROOT = args["snapshot-root"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/snapshots";
 const ROOT = "/Users/manhphan/dev/onehub-invest-zcode";
+const REPO_S01 = new URL(".", import.meta.url).pathname; // pipeline/s01/
 const DO_DIR = dirname(fileURLToPath(import.meta.url));
 const TP = { hcm: "hcmc", hanoi: "hanoi", danang: "danang" };
 process.env.AIRBNB_LISTING_BATCH = "100";
@@ -33,6 +34,7 @@ const { SnapshotWriter } = await import(join(ROOT, "collector", "dist", "core", 
 // 0711-5: writer ghi THẬT xuống đĩa từng ≤20 căn (flush từng phần), mọi đường
 // thoát đều finalize; SIGTERM/SIGINT cũng flush rồi exit.
 let writerHienTai = null;
+const snapshotIdsLootNay = [];
 let itemsChuaGhi = [];
 async function flushItems(coverageBo = null) {
   if (!writerHienTai || itemsChuaGhi.length === 0) return;
@@ -107,7 +109,8 @@ for (const [k, cityId] of Object.entries(TP)) {
     });
     // 0711-5: ghi items XUỐNG ĐĨA ngay từng cụm + đối chiếu
     await writerHienTai.write(items);
-    await writerHienTai.finalize(coverage);
+    const man = await writerHienTai.finalize(coverage);
+    snapshotIdsLootNay.push(man.snapshotId);
     writerHienTai = null;
     const giay = (Date.now() - t0) / 1000;
     tongItems.items.push(...items);
@@ -164,14 +167,12 @@ bang.tong_cong = {
 // finalize dưới SNAP_ROOT, cộng counts.items, so số script đếm; lệch → thoát 1.
 import { readdirSync as _rd, readFileSync as _rf, existsSync as _ex } from "node:fs";
 let diaTong = 0;
-for (const v of _rd(SNAP_ROOT)) {
-  const dir = join(SNAP_ROOT, v);
-  for (const sn of _rd(dir).filter((x) => !x.startsWith("."))) {
-    if (!sn.includes("airbnb-listing")) continue;
-    const mp = join(dir, sn, "manifest.json");
-    if (!_ex(mp)) continue;
-    diaTong += JSON.parse(_rf(mp, "utf8")).counts?.items ?? 0;
-  }
+// 0711-11(b): CHỈ đếm snapshot lượt NÀY tạo (ghi snapshotId khi finalize)
+for (const sid of snapshotIdsLootNay) {
+  const [v] = sid.split("__");
+  const mp = join(SNAP_ROOT, v, sid, "manifest.json");
+  if (!_ex(mp)) continue;
+  diaTong += JSON.parse(_rf(mp, "utf8")).counts?.items ?? 0;
 }
 console.log("[ket-qua]", JSON.stringify(bang));
 console.log(`[doi-chieu] script đếm ${tongItems.items.length} item · đĩa ${diaTong}`);
