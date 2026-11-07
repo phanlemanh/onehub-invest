@@ -62,18 +62,29 @@ test("script có --danh-sach/--snapshot-root: thiếu danh sách → lỗi rõ, 
 });
 
 
-// 0711-11: test import CHÍNH luat-dung.mjs (không còn bản sao trong test)
-test("luat-dung: 5-FAIL liền (có tốt xen trước) dừng; 3-mất-giá dừng; không đủ liền không dừng", async () => {
+// 0711-11 dựng, 0711-29(1) sửa: test import CHÍNH luat-dung.mjs — luật tỉ lệ
+// có giá thay cho 3-liền-mất-giá; nhịp sàn 12s theo nghỉ 12–20 giây.
+test("luat-dung: 5-FAIL liền dừng; tỉ lệ có giá 20 căn đầu <40% dừng; ≥40% không dừng; nhịp sàn 12s", async () => {
   const { taoBoDem } = await import(new URL("../s01/luat-dung.mjs", import.meta.url).href);
   const b1 = taoBoDem();
   ["[1/9] a price=1", "[2/9] b FAIL", "[3/9] c FAIL", "[4/9] d price=2", "[5/9] e FAIL", "[6/9] f FAIL", "[7/9] g FAIL", "[8/9] h FAIL", "[9/9] i FAIL"].forEach((d) => b1.can(d));
   assert.equal(b1.state.vungDung, "5-lien-FAIL", "5 FAIL liền dừng");
-  const b2 = taoBoDem();
-  ["[1/3] a price=—", "[2/3] b price=—", "[3/3] c price=—"].forEach((d) => b2.can(d));
-  assert.equal(b2.state.vungDung, "3-lien-mat-gia", "3 mất giá liền dừng");
-  const b3 = taoBoDem();
-  ["[1] FAIL", "[2] FAIL", "[3] ok price=9", "[4] FAIL", "[5] FAIL"].forEach((d) => b3.can(d));
-  assert.equal(b3.state.vungDung, null, "không đủ liền → không dừng");
+  // 0711-29(1): 20 căn đầu chỉ 7 căn có giá (35% < 40%) → dừng đúng căn 20
+  // đồng hồ giả cách 15 giây/căn để KHÔNG vỉ sàn nhịp trước khi tới luật tỉ lệ
+  const dongHo = (batDau) => { let t = batDau; return () => (t += 15_000); };
+  const b2 = taoBoDem({ now: dongHo(0) });
+  for (let i = 1; i <= 13; i++) b2.can(`[${i}/20] x price=—`);
+  for (let i = 14; i <= 20; i++) b2.can(`[${i}/20] x price=9`);
+  assert.match(b2.state.vungDung ?? "", /ti-le-co-gia-7-tren-20-duoi-40phan-tram/, "7/20 có giá → dừng tỉ lệ");
+  // 8/20 có giá (40%) → KHÔNG dừng (luật cũ 3-liền-mất-giá đã BỎ)
+  const b3 = taoBoDem({ now: dongHo(0) });
+  for (let i = 1; i <= 12; i++) b3.can(`[${i}/20] x price=—`);
+  for (let i = 13; i <= 20; i++) b3.can(`[${i}/20] x price=9`);
+  assert.equal(b3.state.vungDung, null, "12 mất giá LIỀN nhưng 8/20 có giá ≥40% → không dừng (bỏ luật 3-liền)");
+  // 0711-29(2): sàn nhịp 12 giây — chạy 10 căn tức thì → trung bình ~0 < 12 → dừng
+  const b5 = taoBoDem();
+  for (let i = 1; i <= 10; i++) b5.can(`[${i}/10] x price=1`);
+  assert.equal(b5.state.vungDung, "nhip-duoi-12s", "10 căn quá nhanh (<12s trung bình) → dừng");
 });
 
 
