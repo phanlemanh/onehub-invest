@@ -189,3 +189,43 @@ test("--vung lọc đúng một vùng · --vung sai thoát 2 · --toi-da cắt d
   assert.ok(/\(1 căn\)/.test(co(r3)), "--toi-da 1 → cụm 1 căn");
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+
+// 0711-29(3): dấu vết khung hỏi giá — collector giả ghi meta.khungGia đủ 4 nhóm
+// thông tin (2 khung hỏi · có trường giá · đêm trống đúng khung mặc định);
+// script đưa meta nguyên vẹn vào snapshot ghi đĩa.
+test("khungGia: meta từng căn trong snapshot có đủ macDinh/thuLai/coGia/demTrongKhungMacDinh", async () => {
+  const { spawnSync: sp } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const { gunzipSync } = await import("node:zlib");
+  const { join: J } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const dir = fs.mkdtempSync(J(tmpdir(), "s01-khung-"));
+  fs.writeFileSync(J(dir, "id.json"), JSON.stringify({ hcm: ["abnb_1"] }));
+  fs.writeFileSync(J(dir, "gia.mjs"),
+    "export const airbnbListing = { requestsPerSecond: 1, async collect(ctx) {\n" +
+    "  ctx.log(\"[1/1] a price=9\");\n" +
+    "  return { items: [{ source: \"airbnb-listing\", sourceId: \"1\", kind: \"listing\", fetchedAt: \"2026-11-07T10:00:00Z\",\n" +
+    "    payload: { url: \"u\" }, meta: { hasPrice: true, khungGia: { macDinh: { ci: \"2026-12-07\", co: \"2026-12-09\" },\n" +
+    "      thuLai: { ci: \"2026-11-20\", co: \"2026-11-22\" }, coGia: true, demTrongKhungMacDinh: false } } }],\n" +
+    "    coverage: { discovered: 1, captured: 1, failed: 0, methods: {}, notes: [] } };\n" +
+    "} };\n");
+  const r = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps"), "--vung", "hcm"], {
+    encoding: "utf8", timeout: 30000,
+    env: { ...process.env, S01_COLLECTOR_GIA: J(dir, "gia.mjs") },
+  });
+  assert.equal(r.status, 0, `phải thoát 0: ${((r.stdout||"")+(r.stderr||"")).slice(0,300)}`);
+  // đọc items từ snapshot mới nhất dưới snaps/hcmc
+  const hcmc = J(dir, "snaps", "hcmc");
+  const snap = fs.readdirSync(hcmc).filter((d) => d.includes("airbnb-listing")).sort().pop();
+  const itemsGz = fs.readdirSync(J(hcmc, snap)).find((f) => f.startsWith("items-"));
+  const items = JSON.parse(gunzipSync(fs.readFileSync(J(hcmc, snap, itemsGz))).toString());
+  const k = items[0]?.meta?.khungGia;
+  assert.ok(k, "meta.khungGia phải có trong item trên đĩa");
+  assert.equal(k.macDinh.ci, "2026-12-07");
+  assert.equal(k.thuLai.co, "2026-11-22");
+  assert.equal(k.coGia, true);
+  assert.equal(k.demTrongKhungMacDinh, false);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

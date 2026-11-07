@@ -136,6 +136,7 @@ export const airbnbListing: Collector = {
       for (let i = 0; i < batch.length; i++) {
         const id = batch[i];
         try {
+          let khungThuLai: { ci: string; co: string } | null = null; // 0711-29(3)
           let r = await fetchOnce(id, defaultCi, defaultCo);
           let pdpStr = priceOf(r.pdp);
           if (!pdpStr && r.cal) {
@@ -143,6 +144,7 @@ export const airbnbListing: Collector = {
             const w = firstWindow(r.cal);
             if (w) {
               retried++;
+              khungThuLai = w;
               const r2 = await fetchOnce(id, w.ci, w.co);
               const p2 = priceOf(r2.pdp);
               if (p2) {
@@ -154,6 +156,14 @@ export const airbnbListing: Collector = {
           if (!r.state && !r.pdp && !r.cal) throw new Error("không bắt được nguồn nào");
           if (r.cal) hasCalendar++;
           if (pdpStr) hasPrice++;
+          // 0711-29(3): dấu vết khung hỏi giá — ghi vào SNAPSHOT (không in kênh):
+          // hai khung đã hỏi (mặc định hôm-nay+30/+32 + lần thử lại firstWindow),
+          // có/không trường giá, có/không đêm trống trong lịch ở ĐÚNG khung mặc định.
+          const demTrongKhung = (cal: unknown, ci: string, co: string): boolean => {
+            const months = (cal as any)?.data?.node?.pdpAvailabilityCalendar?.calendarMonths ?? [];
+            const days = ([] as any[]).concat(...months.map((m: any) => m.days ?? []));
+            return days.some((d) => d.available && d.calendarDate >= ci && d.calendarDate < co);
+          };
           items.push({
             source: "airbnb-listing",
             sourceId: id,
@@ -166,6 +176,12 @@ export const airbnbListing: Collector = {
               hasPdp: !!r.pdp,
               hasCalendar: !!r.cal,
               hasPrice: !!pdpStr,
+              khungGia: {
+                macDinh: { ci: defaultCi, co: defaultCo },
+                thuLai: khungThuLai ?? null,
+                coGia: !!pdpStr,
+                demTrongKhungMacDinh: r.cal ? demTrongKhung(r.cal, defaultCi, defaultCo) : null,
+              },
             },
           });
           doneIds.add(id);
