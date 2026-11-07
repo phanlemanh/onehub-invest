@@ -4150,6 +4150,186 @@
         "collector/**"
       ],
       "ghi_chu": "Làn ZCode; điều phối liên làn review và gửi lời «chạy». Mỗi lượt báo số về giám sát trước lượt kế."
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD1"
+      ],
+      "ma": "OD1",
+      "slug": "ops-duyet-nhip-va-chu",
+      "hang": "T2",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Hàng duyệt ghi giờ mở và giờ quyết từng thẻ (đo giây/thẻ theo hạng mục), chữ và nhãn khớp quyết định mới, thẻ không còn điểm hay mã thô, Căn giá tốt báo căn đang chờ ghép",
+      "bat_khi": "Có số giây/thẻ theo hạng mục của 7 ngày; 0 thẻ chờ có «score» hay số thập phân Stage B; mọi căn ở /ops/deals có thẻ Ghép căn chờ mang badge kèm liên kết",
+      "vi_sao": "ĐC6 (đi đầu để có số trước/sau) + ĐC1 + ĐC2 + ĐC7. Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/**",
+        "app/src/components/ops/**",
+        "app/src/lib/ops/**",
+        "CONTEXT.md"
+      ]
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD2"
+      ],
+      "ma": "OD2",
+      "slug": "ops-duyet-hop-hang-muc",
+      "hang": "T2",
+      "tieu_chi": 7,
+      "dung_tren": [
+        "OD1"
+      ],
+      "cau_giao": "Người duyệt chọn một hạng mục và quyết liền từng thẻ bằng phím, quyết xong tự sang thẻ kế, hoàn tác được trong 5 giây, xem lại quyết định gần đây",
+      "bat_khi": "Trung vị giây/thẻ giảm so số OD1 ở từng hạng mục; 0 lần đóng sheet giữa hai thẻ; quyết định vẫn có decision_note và ops_audit cùng giao dịch",
+      "vi_sao": "ĐC3 (khuôn ReUI solution-agents-9) + ĐC4 (c-dialog-9) + ĐC5; Q7 hoàn tác 5 giây mọi hạng mục. Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/review/**",
+        "app/src/components/ops/review/**",
+        "app/src/lib/ops/**"
+      ],
+      "ghi_chu": "Nấc 1 của PL23 (thẻ duyệt v2) cùng OD3–OD5; gồm HD8."
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD3"
+      ],
+      "ma": "OD3",
+      "slug": "ops-doi-chieu-lat-mau",
+      "hang": "T2",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "OD2"
+      ],
+      "cau_giao": "Thẻ Đối chiếu rời Hàng duyệt thành lát chấm mẫu khoảng 30 thẻ/tuần, mỗi thẻ trả lời bốn đáp án (Bộ đọc / AI / Cả hai sai / Bài nhiều căn), độ đúng báo ở /ops/quality",
+      "bat_khi": "0 thẻ chỉ-đối-chiếu ở trạng thái chờ của Hàng duyệt; 100% phán quyết đối chiếu ghi rõ bên đúng; 239 thẻ cũ chuyển trạng thái có vết audit, chạy lại không trùng",
+      "vi_sao": "ĐC8 (khuôn solution-agents-8), Q1. Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/**",
+        "app/src/lib/ops/**",
+        "pipeline/**"
+      ],
+      "ghi_chu": "Có thể cần migration nhỏ (giá trị trạng thái) — xin số qua giám sát."
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD4"
+      ],
+      "ma": "OD4",
+      "slug": "ops-bo-sung-tin-truoc-sau",
+      "hang": "T3",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "OD2"
+      ],
+      "cau_giao": "Thẻ Bổ sung tin hiện trước → sau từng trường, người duyệt nhận hay bỏ từng trường (✓/✗), máy rút thẻ có mọi trường đã bằng giá trị đang lưu",
+      "bat_khi": "0 thẻ chờ có mọi trường bằng giá trị đang lưu (82 thẻ hiện có được rút có tên); thẻ ghi đè luôn hiện giá trị cũ; quyết từng trường ghi audit theo trường",
+      "vi_sao": "ĐC9 (T3 vì route decide nhận lựa chọn theo trường) + phần rút thẻ trùng của G3; Q5 không trả lại hàng loạt. Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/review/**",
+        "app/src/app/api/ops/**",
+        "app/src/lib/ops/**"
+      ]
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD5"
+      ],
+      "ma": "OD5",
+      "slug": "ops-nguoi-ghep-can-hai-cot",
+      "hang": "T2",
+      "tieu_chi": 4,
+      "dung_tren": [
+        "OD2"
+      ],
+      "cau_giao": "Thẻ Người và thẻ Ghép căn hiện hai cột so, hàng khác nhau lên trước, có liên kết hồ sơ người và tin",
+      "bat_khi": "27/27 thẻ Người có nhãn tiếng Việt và liên kết; thẻ Ghép căn hiện hàng khác nhau trong 400 px đầu",
+      "vi_sao": "ĐC10 (mượn danh sách ứng viên của dialog-16, bỏ điểm khớp theo Q9). Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/components/ops/review/**",
+        "app/src/lib/ops/**"
+      ]
+    },
+    {
+      "vai": "Người duyệt",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD6"
+      ],
+      "ma": "OD6",
+      "slug": "ops-the-luat-e1",
+      "hang": "T2",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "OD4"
+      ],
+      "cau_giao": "Thẻ luật: quyết một lần cho cả loạt thẻ cùng một căn cứ luật E1, kèm năm bài mẫu, có nhật ký và đảo được",
+      "bat_khi": "Chỉ áp cho luật E1 và đủ bốn điều kiện của Q6; mỗi lần áp ghi một dòng sửa luật + danh sách thẻ bị ảnh hưởng; đảo lại trả đúng trạng thái cũ",
+      "vi_sao": "ĐC11 (khuôn solution-agents-4), Q6: sửa luật xác định theo luật 7, khác duyệt hàng loạt đã loại ở GD10. Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/**",
+        "pipeline/mappings.yaml",
+        "pipeline/**"
+      ]
+    },
+    {
+      "vai": "Người gắn nhãn",
+      "dot": "soat-ops-0711",
+      "nhom": "ops-duyet",
+      "phu": [
+        "OD7"
+      ],
+      "ma": "OD7",
+      "slug": "gan-nhan-lop-nhap",
+      "hang": "T2",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "OD1"
+      ],
+      "cau_giao": "Màn gắn nhãn co theo ý định tin, nháp của máy là lớp riêng ở mọi thẻ (Enter nhận, gõ đè thì sửa), tắt chế độ hai người, đo bằng tỉ lệ giữ/sửa nháp theo trường",
+      "bat_khi": "Bài «Không phải tin rao» lưu sau 1 ô + căn cứ; nháp không bao giờ ghi vào eval_labels dưới tên người khi chưa nhận; tỉ lệ sửa nháp theo trường có trên /ops/quality",
+      "vi_sao": "ĐC12, Q2, Q3 (bỏ gắn mù theo Mạnh 06/11; tập test mù hoãn tới PL21). Báo cáo docs/research/soat-ops-0711.md (Mạnh duyệt 07/11: «Đồng ý, tôi đã đăng nhập lại Reui pro» — Q1–Q7 và ĐC1–ĐC12).",
+      "vung": [
+        "app/src/app/ops/labels/**",
+        "app/src/components/ops/labels/**",
+        "app/src/lib/**"
+      ]
+    },
+    {
+      "ma": "DO1b",
+      "slug": "mau-soat-phan-tang",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 4,
+      "dung_tren": [
+        "DO1"
+      ],
+      "phu": [
+        "DO1b"
+      ],
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "cau_giao": "Mẫu soát cuốn chiếu của DO1 lấy mẫu phân tầng theo khu trọng tâm (Ocean Park, Grand Park…) có trọng số để lát dự án/toà có đủ thẻ mà tổng vẫn không lệch",
+      "bat_khi": "Mỗi khu trọng tâm có tối thiểu số thẻ/tuần đã khai; số tổng có trọng số khớp số không phân tầng trong sai số đã khai",
+      "vi_sao": "Mạnh 07/11 ở phiên P2: «Đồng ý tất cả theo khuyến nghị, nhưng phần khuyến nghị đo lường đưa vào lộ trình để chống quên» + «Phần chưa làm» (yêu cầu P2-128).",
+      "ghi_chu": "Quyết sau 2 tuần số thật của DO1 (xem độ dao động)."
     }
   ],
   "chan_troi": [
