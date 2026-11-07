@@ -112,6 +112,11 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    **S08 (danh mục dự án) cùng chính sách** (Mạnh duyệt 2026-10-24): chỉ đọc, thu tối đa một lần mỗi tuần, chỉ
    dùng nội bộ (dựng danh mục căn, hiệu chuẩn); không tái xuất nguyên văn lên cổng Invest hay API công khai;
    `stg_s08_inventory` chỉ ở local. Tên miền thật của S08 chỉ ở `source_registry` local.
+   **Sửa đổi: thông tin dự án là công khai** (Mạnh chốt 2026-11-08, ROADMAP §3 mục 38, sửa ADR-0016 §9): thông tin dự án
+   do chủ đầu tư hay nhà nước công bố (tên, địa chỉ, chủ đầu tư, pháp lý, quy mô, phân khu, toà, trục, căn, bàn giao, tiện
+   ích, mặt bằng) từ S07, S08, S09 và nguồn nhà nước **không còn chỉ dùng nội bộ**: được lên cloud, cổng Invest và API qua
+   danh bạ. Giữ nguyên: tên nguồn thật là tầng A; bảng `stg_*` thô không sync nguyên bảng; giá chủ đầu tư và trạng thái quỹ
+   căn của S08 theo chính sách cũ tới khi Mạnh chốt; S02 không đổi. Code (sync-cloud, bộ soát DN4) chưa đổi — mở theo hàng sau.
    **Chỉ số tổng hợp công khai của S06/S07** (giá trung bình theo khu, thay đổi theo thời gian — khác tin rao từng căn) tạm
    cùng chính sách nội bộ (ROADMAP §3 mục 27): chỉ hiệu chuẩn và kiểm chiều; hiện có nhãn khi có văn bản cho phép của
    nguồn hoặc ý kiến pháp lý.

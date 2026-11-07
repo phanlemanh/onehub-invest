@@ -188,8 +188,9 @@ chỉ có từ nhóm này ở lại máy thu, giá trị chỉ có từ nhóm n�
 
 Còn mở: giá chủ đầu tư và trạng thái quỹ căn của S08 (Q5).
 
-Văn bản phải sửa theo (hàng DA0): AGENTS luật 5 (đoạn S08), ADR-0016 §9 và câu 11, ROADMAP §3 mục mới, `CONTEXT.md` mục «Danh mục CĐT»
-(hiện ghi «chỉ ở máy thu, không lên cloud»), ghi chú của DN4, PX2.
+Văn bản đã sửa cùng tài liệu này: AGENTS luật 5 (đoạn S08), ADR-0016 §9, `.claude/rules/pii-spl.md`, ROADMAP §3 mục 38. Còn theo hàng
+DA0: `CONTEXT.md` mục «Danh mục CĐT» (hiện ghi «chỉ ở máy thu, không lên cloud»); ghi chú DN4, PX2 trong lộ trình (giám sát sửa); code
+`sync-cloud` và bộ soát DN4 (hàng code).
 
 Rủi ro đã ghi để Mạnh nắm: điều khoản S07 (kiểm 03/11) cấm dùng nội dung cho mục đích thương mại và cấm tạo sản phẩm phái sinh; S09
 chưa ai kiểm điều khoản. Quyết định 08/11 dựa trên bản chất công khai của thông tin dự án; nếu nguồn phản đối thì thông tin vẫn lấy lại
@@ -271,7 +272,7 @@ Q3 đã quyết (§3.1). Câu 2 và 3 gửi qua phiên liên làn khi Mạnh duy
 
 | Mã tạm | Việc | Làn | Hạng (ước) | Phụ thuộc | Lợi |
 |---|---|---|---|---|---|
-| **DA0** | Sửa `CONTEXT.md` (Dự án, Phân khu, Lô, Mức gắn, Danh mục dự án), AGENTS luật 5 (thông tin dự án công khai), ADR-0016 (dự án có cha, quy mô, §9 bỏ luật chỉ-S08), ROADMAP §3 mục mới, sổ extension §9.4 | Claude | T1 | Q1, Q2, Q5 | Một từ vựng chung |
+| **DA0** | Sửa `CONTEXT.md` (Dự án, Phân khu, Lô, Mức gắn, Danh mục dự án), ADR-0016 (dự án có cha, quy mô), sổ extension §9.4 — luật 5, ADR-0016 §9, ROADMAP mục 38 đã sửa 08/11 | Claude | T1 | Q1, Q2, Q5 | Một từ vựng chung |
 | **DA1** | Sửa bộ đọc S06: bỏ cờ `unitnumber_display`, bỏ «0» ở mã căn và số nhà, đọc `block` và tầng thành phát biểu; rút 11.526 phát biểu mã căn rác có lý do | Claude | T2 | — | Thêm khoảng 1.650 tin có toà; hết mã căn rác |
 | **DS2+** (mở rộng hàng DS2 sẵn có) | Trường phát biểu dự án/phân khu cho tin mọi nguồn (migration `field_chk`); dự án S06 đi tới tin | Claude | T3 | DA2 | Chỗ ghi mức gắn dự án/phân khu |
 | **DA2** | Sổ nối dự án S06: 282 dự án có ≥ 10 tin nối vào `asset_nodes` hoặc tạo mới (tên công khai từ tin), người duyệt từng cặp | Claude | T2 | DA0 | 8.394 tin có dự án |

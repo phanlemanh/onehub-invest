@@ -1,7 +1,7 @@
 # ADR-0016: Danh bạ vật thể và người — căn là nút vật thể, listing gắn ở mức sâu nhất biết được
 
 Ngày: 2026-10-27 · Trạng thái: **accepted** (Mạnh duyệt 27/10: «Duyệt khung đã sửa ba điểm, theo các mặc định của em»)
-· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
+· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 08/11: §9 (thông tin dự án công khai) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
 `docs/product/FRAMING.md`, `CONTEXT.md`, ROADMAP §3 mục 22
 
 > Câu hỏi của Mạnh (27/10): «Mô hình của chúng ta là một bất động sản duy nhất và nhiều listing. Có nên tạo một bảng
@@ -154,6 +154,11 @@ và phát biểu theo vật thể.
   **hoặc có ≥ 1 xác nhận của người** (Mạnh duyệt sửa đổi 03/11, ROADMAP §3 mục 28). Giá trị kế thừa có nguồn duy nhất S08 chỉ để bắt mâu
   thuẫn và hiện ở `/ops`, **không hiện trên Invest** khi chưa có nguồn khác xác nhận. Tên toà/trục được lên (tin cũng nói
   tới); bí danh mã căn S08 ở local.
+- **Sửa đổi 08/11 (Mạnh chốt «cứ bỏ các luật nội bộ», ROADMAP §3 mục 38)**: thông tin dự án do chủ đầu tư hay nhà nước công bố
+  là công khai. Vật thể và giá trị dựng từ danh mục S07, S08, S09 (dự án, phân khu, toà, trục, căn, chủ đầu tư, pháp lý, bàn giao)
+  **được lên cloud và Invest**, kể cả khi chưa có tin trỏ vào; hai gạch trên về «ở lại máy local» và «không hiện trên Invest» hết
+  hiệu lực cho loại dữ liệu này. Câu 11 đọc lại: chỉ giá chủ đầu tư và trạng thái quỹ căn S08 (chờ Mạnh chốt) cùng vai suy luận và
+  hồ sơ người đã gộp ở lại `/ops`. Mâu thuẫn tin ↔ danh mục vẫn lên thẻ (§7.4). Căn cứ: `docs/research/danh-ba-du-an-0811.md` §3.1.
 - ZCode và DATA-CONTRACT không đổi: danh bạ nằm sau `stg_*`.
 
 ### 10. Phân kỳ và thứ tự (luật 11: chỉ dựng cấp có dữ liệu lấp)
