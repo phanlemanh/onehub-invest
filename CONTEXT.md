@@ -489,8 +489,28 @@ _Avoid_: nhãn bạc, silver
 **Mẫu soát cuốn chiếu**: 20 bài rút ngẫu nhiên mỗi ngày từ bài nhận, kể cả bài máy không nhận là tin rao; màn hiện nháp máy,
 người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị bỏ sót theo tuần — số có neo, chỉ để thấy trôi, không mở cổng tự áp
 (DO1–DO3).
-- Code: DO1 `do-hieu-qua-hang-ngay` · RESO: —
+- Code: DO1 `do-hieu-qua-hang-ngay`, lát `s03-cuon-chieu`, `pipeline/mau-soat-cuon-chieu.mjs`, `eval_label_items.draft` · RESO: —
 _Avoid_: rolling sample, mẫu mù
+
+**Đo hằng ngày**: khối của «Chất lượng dữ liệu» hiện bốn nhóm số tính sẵn mỗi ngày — giữ nháp, bỏ sót, tín hiệu không cần
+nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Dự án · Toà (tham số `lat-do`).
+- Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
+_Avoid_: dashboard đo, KPI hằng ngày
+
+**So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
+4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.
+- Code: `pipeline/so-sanh-cach-doc.mjs`, `do1-so-sanh` · RESO: —
+_Avoid_: A/B, so hai tuần
+
+**Đổi khoá (chuyển bậc)**: cặp «mất + mới» trong dòng chuyển bậc do tin rời căn này sang căn khác vì khoá căn đổi (khoá căn
+S06 còn chứa giá) — tách khỏi biến động bậc thật.
+- Code: lý do `doi-khoa` của `data_level_change` · RESO: —
+_Avoid_: tụt bậc (khi chỉ là đổi khoá)
+
+**Không nêu chỗ · Chưa có trong danh bạ**: hai ô chưa gắn của lát địa lý — bài không nêu chỗ ở mức đó (việc của bộ đọc), và
+bài nêu tên toà/dự án mà danh bạ chưa có vật thể (việc của danh bạ).
+- Code: `khong-tin-hieu`, `chua-co-danh-ba` · RESO: —
+_Avoid_: chưa gắn (gộp chung hai ô)
 
 **Tập test mù đóng băng**: Tập nhãn người gắn không thấy giá trị máy, đóng băng, chỉ dùng để chấm cận dưới Wilson cho cổng tự
 áp và bậc B3; không trộn nhãn lệch mẫu. Cỡ ~200 tin mỗi phân khúc cho nhóm A. Có dùng hay không: quyết khi mở PL21.
