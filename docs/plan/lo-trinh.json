@@ -15,6 +15,7 @@
         "GN0c",
         "PL30",
         "DO1",
+        "PL34",
         "DO3",
         "PL18",
         "GCQ1",
@@ -4052,6 +4053,103 @@
         "pipeline/**"
       ],
       "ghi_chu": "Cần migration (seed) và một câu Hỏi cho Mạnh về tỉ giá cố định hay đổi đơn vị bảng (CHECK «VND/1M token»). Đi trước PL31."
+    },
+    {
+      "ma": "PL34",
+      "slug": "doc-gop-hang-ngay",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "PL30",
+        "GN2",
+        "PL31b"
+      ],
+      "phu": [
+        "PL34"
+      ],
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "model",
+      "cau_giao": "Đọc gộp S03 chạy hằng ngày bằng model của bảng chọn PL30 (mặc định Haiku) trên bài mới đã khử trùng theo tin, ưu tiên dự án của mốc GCM1, có trần tiền ngày 20 USD; ghi nhãn bạc và sổ cuộc gọi",
+      "bat_khi": "Một đêm thật: chạy hết bài mới trong phạm vi, tổng tiền ≤ trần, chạm trần thì dừng có tên và báo; chạy lại cùng ngày không gọi lại bài đã đọc",
+      "vi_sao": "Mạnh 07/11 «Đồng ý trần 20 usd/ngày. Còn lại theo khuyến nghị» — PL30 Hỏi-1 (bật chạy hằng ngày là lời riêng của Mạnh). S03 ~5.000–8.300 bài/ngày, Haiku 0,00166 USD/bài.",
+      "vung": [
+        "agent/scripts/**",
+        "agent/src/enrich/doc-gop-s03/**",
+        "pipeline/**"
+      ],
+      "ghi_chu": "Lịch chạy đêm (plist) thuộc làn ZCode: Claude dựng bước, giao ZCode gắn vào chuỗi đêm. PL31b song song để sổ cuộc gọi có tiền thật. Mở rộng ra toàn S03 sau một tuần xem tiền + độ đúng (DO1)."
+    },
+    {
+      "ma": "GN5",
+      "slug": "dau-noi-dung-sql-bai-thu",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 4,
+      "dung_tren": [
+        "GN2"
+      ],
+      "phu": [
+        "GN5"
+      ],
+      "dot": "gan-nhan-s03-0611",
+      "nhom": "gan-nhan-s03",
+      "cau_giao": "Các bản SQL chép định nghĩa bài thử (ops-flow, truy vấn collections của app, test-data-residue, 600_data_flow) nhận dấu noi-dung như testMarker, để số Ops và lệnh kiểm tin giả khớp tập transform đọc",
+      "bat_khi": "test-data-residue --simulate xanh ngay sau gộp; «Bài nhận» Luồng 7 ngày và trang Dòng chảy dữ liệu không đếm bài thử của Mạnh",
+      "vi_sao": "GN2 Ngoài-4, 5, 7, 8 — Mạnh ký «mở hợp đồng mới» ở Cổng Bằng chứng 07/11 (gộp một hàng, cùng gốc).",
+      "vung": [
+        "pipeline/lib/ops-flow.mjs",
+        "pipeline/scripts/test-data-residue.mjs",
+        "pipeline/sql/600_data_flow.sql",
+        "app/src/lib/ops/**"
+      ]
+    },
+    {
+      "ma": "DB1b",
+      "slug": "dung-danh-ba-may-thu",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 4,
+      "dung_tren": [
+        "DB1"
+      ],
+      "phu": [
+        "DB1b"
+      ],
+      "dot": "danh-ba-2910",
+      "nhom": "danh-ba",
+      "cau_giao": "Lệnh dựng danh bạ vật thể chạy được trên DB máy thu bằng cờ cho phép tường minh, kiểm slug khu, và có bước trong chạy đêm",
+      "bat_khi": "Dựng lần đầu trên DB máy thu ra đúng số toà/trục/căn như bản chép chỉ đọc của DB1; chạy lại ra 0 mã mới",
+      "vi_sao": "DB1 Ngoài-9 (Mạnh chọn «mở hợp đồng mới» 07/11) + Known limit Ngoài-7 (lệnh từ chối DB «oneinvest»). 082 đã áp máy thu 07/11.",
+      "vung": [
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/scripts/**"
+      ],
+      "ghi_chu": "Chạy lần đầu trên máy thu là lời riêng của Mạnh (sao lưu trước)."
+    },
+    {
+      "ma": "ZC10",
+      "slug": "s01-thu-lai-gia",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "ZC5"
+      ],
+      "phu": [
+        "ZC10"
+      ],
+      "dot": "zcode-2310",
+      "nhom": "airbnb",
+      "cau_giao": "S01 nấc 1 thử lại theo lịch Mạnh duyệt: luật dừng theo tỉ lệ có giá, nhịp 12–20 giây, dấu vết khung hỏi giá từng căn; lượt dò 20 căn đối chứng 10/11",
+      "bat_khi": "Lượt dò có tỉ lệ có giá ≥ 50% thì mở nấc 50 rồi 150 cách ngày; dưới 20% thì chỉ thu lịch/đêm và trình hướng giá khác",
+      "vi_sao": "07/11 lượt 1: 40 căn, 12.410 đêm, 24/30 căn không giá dù ngày hỏi còn trống (nghi chặn mềm); Mạnh «Dừng S01» rồi «duyệt lịch s01».",
+      "vung": [
+        "pipeline/collect-*",
+        "collector/**"
+      ],
+      "ghi_chu": "Làn ZCode; điều phối liên làn review và gửi lời «chạy». Mỗi lượt báo số về giám sát trước lượt kế."
     }
   ],
   "chan_troi": [
