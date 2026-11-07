@@ -24,6 +24,7 @@ Những chỗ ghi **[đề xuất]** là lựa chọn của phiên này, chờ M
 | Q4 | Thứ tự làm? | **Dùng dữ liệu đã có trước, chưa thu gì mới**: sửa lỗi đọc S06 (DA1), đưa dự án S06 vào tin (DS2 mở rộng), nối 282 dự án S06 có từ 10 tin trở lên (DA2). Sau đó mới thu thử S09. | 1.256 dự án và 11.140 tin có mã dự án nằm sẵn trong raw S06. Có 11.526 mã căn rác đang chờ sửa. Đây là số đo trước khi dựng (luật 11). |
 
 Nếu Mạnh duyệt cả bốn câu: các hàng ở §6 chuyển cho giám sát cắt vào lộ trình. Kèm sửa `CONTEXT.md` và một sửa đổi nhỏ của ADR-0016 (hàng DA0).
+Trần và nhịp từng nguồn để Mạnh chốt khi duyệt Q3: §8.2. Phần trả lời kế hoạch nháp của ZCode (vòng `zcode-0711-40`): §8.
 
 ---
 
@@ -78,7 +79,7 @@ Cột «Dữ liệu hôm nay» ghi bảng, cột hoặc enum đang có. «RESO»
 | **Quy mô dự án** | `project_scale` (`dai_do_thi` · `khu_do_thi` · `cum_toa` · `toa_don`) | — | Cỡ của một dự án; khu đô thị là một quy mô, không phải một cấp. | loại dự án |
 | **Lô** | `lot` (vật thể: `building` thấp tầng; mã lô: bí danh `ma_nguon`) | — | Một căn thấp tầng trong dự án (liền kề, shophouse, biệt thự) đứng trên phần đất riêng, gọi bằng mã lô của chủ đầu tư. Trong danh bạ là một toà nguyên căn. | ô đất (khi đã có số thửa thì gọi Thửa), plot |
 | **Mức gắn** | `attach_level` (`can` · `truc` · `toa` · `phan_khu` · `du_an` · `phuong` · `tinh`) | — | Cấp sâu nhất mà một tin gắn được có bằng chứng (§4.2). | độ sâu, level |
-| **Danh mục nội bộ** | `internal_catalog` (S08, S07-danh-mục, S09) | — | Nguồn danh sách dự án, toà, căn chỉ dùng nội bộ theo luật 5. Vật thể chỉ có từ nhóm này ở lại máy thu (ADR-0016 §9). | quỹ căn |
+| **Danh mục nội bộ** | `internal_catalog` (S08, S07-danh-mục, S09) | — | Nhóm nguồn cho danh sách dự án, toà, căn mà mình chỉ được dùng bên trong (dựng khung, nối tin, bắt mâu thuẫn, `/ops`), theo luật 5. Vật thể và giá trị chỉ có từ nhóm này không lên Invest (§3.1, ADR-0016 §9). | quỹ căn, danh mục dự án |
 
 ---
 
@@ -166,6 +167,24 @@ Số của S07 và S09 là số ZCode đo sáng 08/11 bằng trình duyệt th�
   đi trước vì không phải thu thêm, và dự án nào có tin mới là dự án cần gắn.
 - **Sự thật** = tin tự ghi, người duyệt và xác nhận Quỹ hàng. Danh mục nội bộ chỉ là bằng chứng dựng khung và bắt mâu thuẫn, không là
   giá trị hiện trên Invest khi chưa có nguồn khác xác nhận (ADR-0016 §9, §7.4).
+
+### 3.1 «Danh mục nội bộ» nghĩa là gì
+
+Danh mục nội bộ là một **nhóm nguồn**, không phải một bảng. Nhóm này gồm các nguồn cho mình danh sách dự án, phân khu, toà, căn mà
+mình chưa được phép đưa ra ngoài: S08 (luật 5), S07 phần danh mục (điều khoản cấm thương mại), S09 (chưa kiểm điều khoản). Cả nhóm
+dùng chung năm luật, chính là luật S08 đang theo (luật 5, ADR-0016 §9):
+
+1. **Dùng được**: dựng khung danh bạ (dự án nào có những toà nào), nối tin vào toà, bắt mâu thuẫn, hiệu chuẩn, xem ở `/ops`.
+2. **Không dùng được**: hiện nguyên văn trên cổng Invest hay API công khai, bán lại, xuất cho sàn.
+3. **Vật thể chỉ có từ nhóm này ở lại máy thu**. Nó chỉ lên cloud khi có ít nhất một tin trỏ vào, hoặc khi có người xác nhận.
+4. **Giá trị chỉ có từ nhóm này không hiện trên Invest** (ngày bàn giao, giá chủ đầu tư, số căn). Hiện được khi đã có nguồn khác nói
+   cùng điều: tin rao, người duyệt, Quỹ hàng.
+5. **Thu tối đa một lần mỗi tuần**, theo trần và nhịp Mạnh chốt (§8.2).
+
+Ví dụ: S09 cho biết Ocean Park 1 có toà «BE1», bàn giao năm 2020. Máy dùng điều đó để hiểu tin S03 ghi «BE1» là toà nào. Toà BE1 lên
+Invest vì đã có tin nói tới nó. Năm bàn giao 2020 thì chỉ nằm ở `/ops`, tới khi có nguồn khác xác nhận.
+
+Một nguồn ra khỏi nhóm khi có văn bản cho phép của nguồn hoặc ý kiến pháp lý, giống điều kiện của mục 27 ROADMAP.
 
 ---
 
@@ -268,3 +287,94 @@ và bí danh mã nguồn, không băm tên. Ai ghi: chỉ phát biểu, bộ ph�
 bảng nối có `updated_at`, gộp/tách qua `registry_events`. Nâng bậc: tin S06 và S03 từ B1 lên B2 ở mức dự án hoặc toà; căn khớp danh mục
 lên B4 khi có xác nhận. SPL: chỉ mã S0x trong kho; danh mục nội bộ không lên Invest. Mức gắn: §4.2. Không tự nuôi: kế thừa không làm
 bằng chứng ngược. Được lên đâu: §4.4.
+
+---
+
+## 8. Trả lời kế hoạch nháp của ZCode (vòng `zcode-0711-40`)
+
+ZCode giao 23:21Z 07/11: hoàn thiện kế hoạch danh bạ dự án GĐ0–GĐ4 thành văn bản để Mạnh quyết. Chưa code, chưa thu, chưa đổi
+DATA-CONTRACT. Trong kế hoạch nháp, «nguồn-A» (API nhẹ, có cây dự án → phân khu → toà) là **S09** ở tài liệu này, còn «nguồn-B» (sitemap,
+chặn bot) là **S07**.
+
+### 8.1 Ranh giới làn
+
+| Phần | Làn | Ghi chú |
+|---|---|---|
+| Collector S09, S07-danh-mục; snapshot raw; checkpoint | ZCode | `collector/` |
+| DATA-CONTRACT cho kind `du-an` · `phan-khu` · `toa` · `alias`, tăng `schemaVersion` | ZCode đề xuất, Claude duyệt | Như luật giáp ranh trong AGENTS |
+| Bộ nạp raw → `stg_*` (`import-*`) | ZCode | |
+| Migration các bảng `stg_*` mới | Claude | Claude giữ `db/migrations/` và sổ số |
+| Transform `stg_*` → `asset_nodes`, `buildings`; bảng nối mã đa nguồn; phát biểu gắn tin; quét ngược tin | Claude | GĐ2, GĐ3 của nháp |
+| `/ops/review` cho cặp nối, `CONTEXT.md`, ADR | Claude | |
+
+**Khác nháp ở một chỗ:** nháp đề xuất «bảng kết quả offer ↔ dự án kèm bằng chứng và độ tin». Kết quả gắn phải là **phát biểu** trong
+`field_assertions` để bộ phân xử chọn, không phải một bảng kết quả riêng (ADR-0013 câu 4, ADR-0016 §5). Đây vẫn là làn Claude.
+
+### 8.2 Trần và nhịp đề xuất từng nguồn (Mạnh chốt)
+
+Luật chung cho mọi nguồn: một luồng; User-Agent rõ; snapshot bất biến; **gặp thử thách chống bot, CAPTCHA, 403 hay 429 thì dừng cả lượt
+và báo**, không thử vượt; dừng giữa chừng thì lượt sau nối từ checkpoint.
+
+| Nguồn | Nháp ZCode | **Khuyến nghị** | Vì sao |
+|---|---|---|---|
+| S09 – thu thử | — | **Một lần, chỉ Ocean Park 1 và Grand Park, ≤ 60 lời gọi, nghỉ 3–5 giây**, sau khi kiểm điều khoản | Đủ để đo khớp toà (§8.4) trước khi cam kết thu toàn bộ |
+| S09 – toàn bộ | ~420 lời, 1 lần/tuần | **~420 lời, 1 lần/tuần, nghỉ ≥ 3 giây**, chỉ mở sau thu thử | Đồng ý với nháp; thêm điều kiện thu thử đạt |
+| S07 – sitemap | 12 lời/tuần | **12 lời/tuần** | Rẻ, dùng làm mốc phát hiện dự án mới |
+| S07 – trang chi tiết | theo nhu cầu, ≤ 500 trang/đêm, nhịp 10 giây | **≤ 300 trang/tuần trong tháng đầu**, nhịp 10 giây, chỉ dự án có tin mà chưa nối, xếp theo số tin | 500 trang/đêm là ~3.500 trang/tuần, quá mức «một lần mỗi tuần» của luật 5. Lại chưa chốt chuyện chặn bot |
+| S08 | giữ | **Giữ ≤ 1 lần/tuần** (DATA-CONTRACT v4) | Không đổi |
+| S06 | — | **Không thu thêm**: dự án đã có trong raw | §2.2 |
+
+### 8.3 RESO và ADR-0011: chỗ cần khai khi thêm field
+
+| Thêm gì | RESO DD 2.1 | Khai |
+|---|---|---|
+| Phát biểu dự án trên tin (`subdivision_node`) | `SubdivisionName` (Property), field chuẩn | Ghi `dd_version: 2.1` trong `mappings.yaml`; giá trị là khoá nút, tên chỉ để hiển thị |
+| Phân khu trên tin | DD 2.1 chỉ có `ComplexName` ở **Building**, không có ở Property | **Extension** (đủ 6 điều kiện ADR-0011 Qđ 3), hoặc chỉ suy từ toà khi tin gắn được toà |
+| Quy mô dự án `project_scale` | không có | Extension, 6 điều kiện; ghi vào sổ ADR-0016 §11 |
+| Dự án cha | không có field | Quan hệ cây `asset_nodes.parent_id`, không phải field; ghi trong sửa đổi ADR-0016 |
+| Chủ đầu tư ở cấp dự án | `BuilderName` (Property, Building) | Field chuẩn; kế thừa xuống toà bằng `registry_inherit` |
+| Trạng thái, năm bàn giao | `DevelopmentStatus`, `NewConstructionYN`, `YearBuilt` (Property, Building) | Field chuẩn trên Building |
+| Số căn của dự án | `NumberOfUnitsInCommunity` (Property) | Field chuẩn; trên dự án thì là phát biểu local |
+| Nhóm nguồn «danh mục nội bộ» | không có | Thuộc tính của nguồn ở `source_registry` (local), không phải field dữ liệu |
+| Bảng `stg_*` mới | không áp | Theo DATA-CONTRACT, không theo RESO |
+
+### 8.4 GĐ0 cần đo thêm
+
+Đo hôm nay: trong 15.425 tin căn hộ S06 **không có mã dự án**, **1.869 tin (12%) nhắc trong tiêu đề** đúng tên một dự án có trong
+danh sách của chính S06 (tên từ 8 ký tự). Cộng 10.416 tin có mã, khoảng 48% tin căn hộ S06 nhận được dự án trước khi dùng tới không gian.
+Quét cả thân bài bị quá thời gian (120 giây) khi chạy chỉ đọc, nên dời sang một lượt riêng.
+
+Còn phải đo, theo thứ tự:
+
+1. Thân bài S06 nhắc tên dự án: lượt quét riêng, ngoài giờ job 05:30.
+2. **Độ phủ của S09 và S07 trên 282 dự án S06 có từ 10 tin.** Với S09 chỉ cần một lời gọi danh sách 394 dự án. Đây là số quyết định S09
+   làm xương được tới đâu, và trả lời luôn rủi ro phủ lệch.
+3. Khớp `block_raw` S03 của Ocean Park 1 và Grand Park với danh sách toà S09 sau thu thử; tách mã toà, mã cụm («S1») và mã sai.
+4. Tỉ lệ dự án nằm trọn một xã/phường sau PX1: quyết định DA4 kéo được bao nhiêu tin S03 xuống phường.
+5. Tin không tên, không mã: bao nhiêu nằm trong đa giác dự án có sẵn. Chỉ để ước, không để gắn.
+
+### 8.5 Chỗ phương án này khác kế hoạch nháp
+
+| Nháp | Phương án | Căn cứ |
+|---|---|---|
+| «0% tin có tên dự án cấu trúc → phải đi qua chữ và không gian» | Đúng với bảng tin, nhưng **raw S06 có mã dự án cho 41% tin căn hộ** (10.416/25.393). Đòn bẩy đầu tiên là đưa mã đó vào tin (DS2+), không phải chữ | §2.2 |
+| Tin S06 không nhắc tên thì gắn bằng không gian (phường + bán kính toạ độ) | Không gian **chỉ xếp hàng thẻ**, không tự gắn | 53% tin S06 nằm ở điểm toạ độ chung (ADR-0016); câu 9 |
+| Bảng kết quả offer ↔ dự án | Phát biểu trong `field_assertions` | §8.1 |
+| S07 chi tiết ≤ 500 trang/đêm | ≤ 300 trang/tuần tháng đầu | §8.2 |
+
+Cùng hướng với nháp: neo mã bền của từng nguồn; bảng nối ba hệ mã theo tên chuẩn hoá cộng vùng, có độ tin, không tự gộp khi lệch vùng;
+từ điển bí danh từ tên dự án con, phân khu, toà; người duyệt cặp mơ hồ; chỉ số «% tin gắn được» và «tên chưa nối nhiều nhất» nuôi
+bí danh mỗi đêm. Nháp GĐ0 → DA0, Z1 bước 0; GĐ1 → Z1, Z2; GĐ2 → DA2, DA3, DA5; GĐ3 → DS2+, DA4; GĐ4 → chỉ số đêm trong DA3.
+
+### 8.6 Rủi ro
+
+| Rủi ro | Cách giữ |
+|---|---|
+| S09 phủ lệch về vài chủ đầu tư lớn | Đo phủ trên 282 dự án S06 trước khi coi S09 là xương (§8.4 mục 2) |
+| S09 là API không công bố, có thể đổi hay khoá bất cứ lúc nào | Snapshot bất biến; danh bạ không phụ thuộc lượt thu sau; ưu tiên xin thoả thuận dữ liệu |
+| S07 chặn bot; điều khoản cấm thương mại | Không vượt lớp chặn; nội bộ; nhịp thấp; Mạnh chốt riêng |
+| Tên dự án mơ hồ, trùng tên phân khu («The Rainbow») | Bảng nối có vùng và người duyệt; không tự gộp khi lệch vùng |
+| Mã toà trùng giữa dự án («S10») | Chỉ phân giải mã toà trong phạm vi một dự án đã biết |
+| Lộ tầng A qua tên nguồn trong mã, tên tệp, URL | Chỉ mã S0x trong kho; tên miền chỉ ở `source_registry` local |
+| Danh mục nội bộ rò lên Invest qua kế thừa | DN4 có bộ soát «0 giá trị chỉ-danh-mục-nội-bộ trên cloud», mở rộng từ S08 ra cả nhóm |
+| Mã căn rác S06 thắng chữ bài khi phân xử | DA1 trước mọi việc gắn căn |
