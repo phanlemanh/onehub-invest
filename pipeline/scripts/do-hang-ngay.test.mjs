@@ -295,3 +295,205 @@ test("tuần ISO giờ VN", () => {
   assert.equal(tuanIso("2026-11-01"), "2026-W44");
   assert.equal(wilson(0, 0), null);
 });
+
+// ================= Ca DB (DB thử của lượt; giao dịch ROLLBACK; 083 nạp trong giao dịch) =================
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import pg from "pg";
+
+import { chonMau as chonMauLib, textHash as bam } from "../lib/eval-labels.mjs";
+import { khoaDocGopMacDinh, LAT_CUON_CHIEU, rutMau } from "../mau-soat-cuon-chieu.mjs";
+
+const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+export const SQL_083 = readFileSync(path.join(GOC, "db/migrations/083_do_hang_ngay.sql"), "utf8");
+const DB = process.env.DATABASE_URL;
+const coDb = { skip: DB ? false : "thiếu DATABASE_URL — chạy qua npm test (DB thử của lượt)" };
+
+/** Một giao dịch trên DB thử: khoá 33033 (nạp migration song song), nạp 083, chạy fn, ROLLBACK. */
+export async function trongGiaoDich(fn) {
+  const c = new pg.Client({ connectionString: DB });
+  await c.connect();
+  try {
+    const { rows: [{ db }] } = await c.query("SELECT current_database() AS db");
+    if (db === "oneinvest") throw new Error("DATABASE_URL trỏ DB oneinvest dùng chung — dùng DB thử (db/db-thu.sh)");
+    await c.query("BEGIN");
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
+    await c.query(SQL_083);
+    await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('2025-01-15__s03', 'hanoi', 'zalo-agent', '{}')
+                   ON CONFLICT DO NOTHING`);
+    await fn(c);
+  } finally {
+    await c.query("ROLLBACK").catch(() => {});
+    await c.end();
+  }
+}
+/** Chạy fn trong SAVEPOINT rồi hoàn lại — để vật lành và bản đột biến đo trên cùng fixture. */
+export async function thu(c, fn) {
+  await c.query("SAVEPOINT do1");
+  try { return await fn(); } finally { await c.query("ROLLBACK TO SAVEPOINT do1"); }
+}
+
+const MODEL = "gateway:anthropic/claude-haiku-5.5";
+export async function themBai(c, { id, ngayGio, text, agent = null }) {
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, posted_at, captured_at, text, agent_id)
+                 VALUES ($1, '2025-01-15__s03', 'Nhóm DO1', $2, $2, $3, $4)`, [id, ngayGio, text, agent]);
+}
+export async function themTin(c, { id, pid, gia = 3400000000, dt = 62, kind = "sale" }) {
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, price_vnd, area_m2, first_seen, last_seen, post_ids, source)
+                 VALUES ($1, $2, $3, $4, now(), now(), ARRAY[$5], 'S03')`, [id, kind, gia, dt, pid]);
+}
+export async function themSilver(c, { pid, text, o, ok = true, usd = 0.001, run = "r-test-do1", pv = "dg3-s03-v3" }) {
+  const yd = o?.listing_intent?.v ?? "unknown";
+  await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok,
+                   error_kind, cost_usd, run_id, probabilities)
+                 VALUES ('S03', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING`,
+    [pid, bam(text), MODEL, pv, ok ? yd : "unknown", o?.kind?.v ?? null, ok, ok ? null : "json-hong", usd, run,
+      ok ? { nguon: "doc-gop", o_duoc_giao: Object.keys(o), o } : null]);
+}
+const O_GOP = { listing_intent: { v: "offer", cc: "chu_bai", trich: "bán", trich_ok: true }, kind: { v: "sale", cc: "chu_bai", trich: "bán", trich_ok: true },
+  bedrooms: { v: 2, cc: "chu_bai", trich: "2pn", trich_ok: true }, bathrooms: { v: 2, cc: "chu_bai", trich: "2wc", trich_ok: true } };
+
+const D = "2025-01-15";
+/** Fixture AC-1: 26 bài ngày D (3 thử, 2 cặp trùng chữ, 6 không thành tin, 1 lúc 00:30 giờ VN), 4 bài ngày D-1. */
+async function fixtureMau(c) {
+  const bai = [];
+  for (let i = 0; i < 26; i++) {
+    const id = `do1p${String(i).padStart(2, "0")}`;
+    const text = i === 21 ? "căn hộ mẫu 05" : i === 22 ? "căn hộ mẫu 06" : `căn hộ mẫu ${String(i).padStart(2, "0")} giá 3,4 tỷ`;
+    const ngayGio = i === 0 ? "2025-01-14T17:30:00Z" : `2025-01-15T0${(i % 9) + 1}:00:00Z`;
+    const agent = i >= 23 ? "test-do1" : null;
+    await themBai(c, { id, ngayGio, text: i === 21 ? "căn hộ mẫu 05 giá 3,4 tỷ" : i === 22 ? "căn hộ mẫu 06 giá 3,4 tỷ" : text, agent });
+    bai.push({ id, text: i === 21 ? "căn hộ mẫu 05 giá 3,4 tỷ" : i === 22 ? "căn hộ mẫu 06 giá 3,4 tỷ" : text, thu: i >= 23 });
+  }
+  for (let i = 0; i < 4; i++) await themBai(c, { id: `do1q${i}`, ngayGio: "2025-01-14T10:00:00Z", text: `bài hôm trước ${i}` });
+  const coTin = bai.filter((b, i) => !b.thu && i >= 6);
+  for (const b of coTin) await themTin(c, { id: `offer_do1_${b.id}`, pid: b.id });
+  for (const b of coTin.slice(0, 5)) await themSilver(c, { pid: b.id, text: b.text, o: O_GOP });
+  return { bai, coTin: new Set(coTin.map((b) => b.id)), thuSet: new Set(bai.filter((b) => b.thu).map((b) => b.id)) };
+}
+const goiGia = (c, { usd = 0.001, tran = 1 } = {}) => {
+  const da = [];
+  const f = async (ids, con) => {
+    let chi = 0, cham = false;
+    for (const id of ids) {
+      if (chi + usd > con + 1e-12) { cham = true; break; }
+      const { rows: [r] } = await c.query("SELECT text FROM stg_zalo_posts WHERE post_id = $1 LIMIT 1", [id]);
+      await themSilver(c, { pid: id, text: r.text, o: O_GOP, usd, run: `do1-mau-${D}` });
+      chi += usd; da.push(id);
+    }
+    return { goi: da.length, cham_tran: cham };
+  };
+  f.da = da;
+  return f;
+};
+
+function kiemMau(kq, fx, ky) {
+  const ids = kq.the.map((t) => t.post_id);
+  if (ids.some((id) => fx.thuSet.has(id))) throw new Error("MAU CO BAI THU");
+  if (ky.ids && JSON.stringify([...ids].sort()) !== JSON.stringify([...ky.ids].sort())) throw new Error("MAU KHONG TAT DINH");
+  if (!ids.some((id) => !fx.coTin.has(id))) throw new Error("MAU BO BAI KHONG NHAN");
+  for (const t of kq.the) {
+    if (!fx.coTin.has(t.post_id) && t.draft.cach_doc["bo-doc-luat"].trang_thai !== "khong-tin") throw new Error("NULL KHONG TIN THANH GIU");
+  }
+}
+
+test("DO1-AC-1 rút 20 bài ngày D, gạt bài thử, khử trùng, gồm bài không thành tin, chụp nháp mọi cách đọc, chạy lại 0 dòng", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    const fx = await fixtureMau(c);
+    const kg = khoaDocGopMacDinh();
+    assert.equal(kg.khoa, KHOA_GOP, "khoá đọc gộp suy từ agent/config + prompt.ts");
+    // Tập kỳ vọng: ứng viên khác nội dung, không thử, của ngày D; chọn tất định theo hạt giống cc-D.
+    const ungVien = fx.bai.filter((b) => !b.thu).map((b) => ({ post_id: b.id, text: b.text }));
+    const ky = { ids: chonMauLib(ungVien, { n: 20, seed: `cc-${D}`, tiLeTrung: 0, tinCua: new Map([...fx.coTin].map((id) => [id, `offer_do1_${id}`])) }).chon.map((x) => x.ref_id) };
+    await thu(c, async () => {
+      const g = goiGia(c);
+      const kq = await rutMau(c, { ngay: D, goiDocGop: g, log: () => {} });
+      assert.equal(kq.them, 20);
+      kiemMau(kq, fx, ky);
+      assert.ok(kq.the.every((t) => t.draft.cach_doc["bo-doc-luat"] && t.draft.cach_doc[KHOA_GOP] && t.draft.hien));
+      assert.ok(kq.the.some((t) => t.post_id === "do1p00"), "bài 00:30 giờ VN thuộc ngày D");
+      assert.ok(!kq.the.some((t) => t.post_id.startsWith("do1q")), "bài D-1 không vào");
+      const khongGop = kq.the.find((t) => t.draft.cach_doc[KHOA_GOP].trang_thai !== "co");
+      if (khongGop) assert.equal(khongGop.draft.hien, "bo-doc-luat");
+      const { rows } = await c.query("SELECT ref_id FROM eval_label_items WHERE lat = $1 AND stratum = $2 ORDER BY ref_id", [LAT_CUON_CHIEU, D]);
+      const lai = await rutMau(c, { ngay: D, goiDocGop: goiGia(c), log: () => {} });
+      assert.deepEqual([lai.them, lai.goi], [0, 0]);
+      const { rows: sau } = await c.query("SELECT ref_id FROM eval_label_items WHERE lat = $1 AND stratum = $2 ORDER BY ref_id", [LAT_CUON_CHIEU, D]);
+      assert.deepEqual(sau, rows);
+      // Đổi prompt_version → khoá cách đọc mới.
+      const b = kq.the[0];
+      const { rows: [{ text }] } = await c.query("SELECT text FROM stg_zalo_posts WHERE post_id = $1", [b.post_id]);
+      await themSilver(c, { pid: b.post_id, text, o: O_GOP, pv: "dg3-s03-v4" });
+      const { dungNhap } = await import("../mau-soat-cuon-chieu.mjs");
+      const { rows: sl } = await c.query("SELECT * FROM silver_labels WHERE post_id = $1", [b.post_id]);
+      assert.ok(Object.keys(dungNhap({ tin: null, silver: sl, khoaGop: KHOA_GOP, oNguoi: [], luc: "" }).cach_doc).includes(KHOA_GOP.replace("v3", "v4")));
+    });
+    for (const [dotBien, msg] of [["giu-bai-thu", /MAU CO BAI THU/], ["theo-thu-tu-chen", /MAU KHONG TAT DINH/], ["bo-bai-khong-nhan", /MAU BO BAI KHONG NHAN/], ["khong-tin-thanh-co", /NULL KHONG TIN THANH GIU/]]) {
+      await thu(c, async () => {
+        const kq = await rutMau(c, { ngay: D, goiDocGop: goiGia(c), log: () => {}, dotBien });
+        assert.throws(() => kiemMau(kq, fx, dotBien === "theo-thu-tu-chen" ? ky : {}), msg, dotBien);
+      });
+    }
+  });
+});
+
+const D2 = "2025-01-16";
+/** Fixture AC-1-GOI: đúng 20 bài khác nội dung ngày D2, 12 bài đã có kết quả đọc gộp. */
+async function fixtureGoi(c) {
+  const bai = [];
+  for (let i = 0; i < 20; i++) {
+    const id = `do1g${String(i).padStart(2, "0")}`, text = `bài gọi ${i} bán căn 2pn`;
+    await themBai(c, { id, ngayGio: `2025-01-16T0${(i % 9) + 1}:00:00Z`, text });
+    await themTin(c, { id: `offer_do1_${id}`, pid: id });
+    if (i < 12) await themSilver(c, { pid: id, text, o: O_GOP });
+    bai.push(id);
+  }
+  return { thieu: bai.slice(12) };
+}
+function kiemGoi(kq, g, fx, tran) {
+  if (g.da.length > fx.thieu.length || g.da.some((id) => !fx.thieu.includes(id))) throw new Error("GOI DOC GOP LAP");
+  for (const t of kq.the) {
+    if (g.da.includes(t.post_id) && t.draft.cach_doc[KHOA_GOP]?.trang_thai !== "co") throw new Error("NHAP THIEU DOC GOP");
+  }
+  if (tran !== undefined && g.da.length * 0.015 > tran + 1e-9) throw new Error("VUOT TRAN TIEN");
+}
+test("DO1-AC-1-GOI gọi đọc gộp đúng bài thiếu, một lần, trước khi chụp, dừng ở trần", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    const fx = await fixtureGoi(c);
+    await thu(c, async () => {
+      const g = goiGia(c);
+      const kq = await rutMau(c, { ngay: D2, goiDocGop: g, log: () => {} });
+      assert.equal(kq.them, 20);
+      assert.deepEqual([...g.da].sort(), fx.thieu);
+      kiemGoi(kq, g, fx);
+      assert.equal((await rutMau(c, { ngay: D2, goiDocGop: g, log: () => {} })).goi, 0);
+      assert.equal(g.da.length, 8, "chạy lại không gọi thêm");
+    });
+    await thu(c, async () => {
+      const g = goiGia(c, { usd: 0.015 });
+      const log = [];
+      const kq = await rutMau(c, { ngay: D2, goiDocGop: g, log: (s) => log.push(s) });
+      assert.equal(kq.them, 20);
+      assert.equal(g.da.length, 3, "0,015 × 4 > 0,05 → dừng ở lời thứ tư");
+      assert.equal(kq.the.filter((t) => t.draft.cach_doc[KHOA_GOP].trang_thai === "vang").length, 5);
+      assert.ok(log.some((s) => s.includes("CHAM TRAN DOC GOP")));
+      kiemGoi(kq, g, fx, 0.05);
+    });
+    await thu(c, async () => {
+      const g = goiGia(c);
+      const kq = await rutMau(c, { ngay: D2, goiDocGop: g, log: () => {}, dotBien: "chup-truoc-goi" });
+      assert.throws(() => kiemGoi(kq, g, fx), /NHAP THIEU DOC GOP/);
+    });
+    await thu(c, async () => {
+      const g = goiGia(c);
+      const kq = await rutMau(c, { ngay: D2, goiDocGop: g, log: () => {}, dotBien: "goi-lai" });
+      assert.throws(() => kiemGoi(kq, g, fx), /GOI DOC GOP LAP/);
+    });
+    await thu(c, async () => {
+      const g = goiGia(c, { usd: 0.015 });
+      const kq = await rutMau(c, { ngay: D2, goiDocGop: g, log: () => {}, dotBien: "bo-tran" });
+      assert.throws(() => kiemGoi(kq, g, fx, 0.05), /VUOT TRAN TIEN/);
+    });
+  });
+});
