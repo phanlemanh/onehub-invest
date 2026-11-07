@@ -1,6 +1,6 @@
 # Danh bạ dự án: từ vựng, hiện trạng, nguồn làm giàu, phương án gắn tin
 
-Ngày: 2026-11-08 · Trạng thái: **trình Mạnh duyệt** (thẻ quyết định §0; Q3 đã quyết 08/11) · Phiên: «Phân tích danh bạ dự án», ghép với khảo sát
+Ngày: 2026-11-08 · Trạng thái: **trình Mạnh duyệt** (thẻ quyết định §0; Q3, Q5 đã quyết 08/11) · Phiên: «Phân tích danh bạ dự án», ghép với khảo sát
 ZCode sáng 08/11 · Dựa trên: ADR-0013, ADR-0016, ADR-0017, `docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md`,
 `docs/plan/pham-vi-gan-can-s03-0411.md`, hàng DB1, DB1b, PX1, PX2, DN1–DN7, DS2, GC*, PL13, PL20 trong `docs/plan/lo-trinh.json`.
 
@@ -21,7 +21,7 @@ Những chỗ ghi **[đề xuất]** là lựa chọn của phiên này, chờ M
 | Q1 | Lấy «**Dự án**» làm đơn vị gốc thay «Khu đô thị»? | **Có.** Khu đô thị và đại đô thị thành *quy mô* của dự án. Một dự án được có **dự án cha**. | Thị trường, S06, S07, S08 và S09 đều gọi là «dự án», gồm cả dự án một toà. `CONTEXT.md` đang cấm chữ này. 20 dự án trong `asset_nodes` đang xếp chung một cấp dù có cái 271 ha, có cái chỉ 4 toà. |
 | Q2 | Ranh giới giữa «dự án con» và «phân khu»? | **Khác chủ đầu tư, hoặc mở bán như dự án riêng → dự án, có cha. Cùng chủ đầu tư, chỉ là đợt/khu bán hàng → phân khu.** Ví dụ: Lumiere Boulevard là dự án (cha Vinhomes Grand Park); The Zurich, Sapphire là phân khu của Ocean Park 1. | Các nguồn vạch khác nhau: S07 gọi Zurich, Pavilion là «dự án con» có mã riêng, còn S09 gọi chúng là phân khu. Phải có một luật của mình, còn nguồn chỉ là bí danh. |
 | Q3 | Phần danh mục của S07 và S09 theo chính sách nào? | **Đã quyết (Mạnh, 08/11): thông tin dự án là công khai, bỏ luật nội bộ** (§3.1). Còn lại: **thu thử S09 đúng hai dự án trước**, Ocean Park 1 và Grand Park, để đo khớp toà, rồi mới thu toàn bộ. | Lời Mạnh: thông tin dự án là dữ liệu chính phủ và chủ đầu tư công bố cho mọi người dân. Thu thử vẫn nên làm vì đây là số đo trước khi dựng: tên toà của S09 là thứ đang thiếu nhất (§2.4). |
-| Q5 | Giá chủ đầu tư và trạng thái quỹ căn của S08 có thuộc «thông tin dự án công khai» không? | **Có**, nếu chủ đầu tư công bố bảng giá cho người mua. **Không**, nếu đó là bảng hàng chủ đầu tư chỉ phát cho sàn. | Quyết định 08/11 nói về thông tin chủ đầu tư và nhà nước công bố cho người dân. Bảng hàng phát cho sàn có thể không nằm trong đó. |
+| Q5 | Giá chủ đầu tư và trạng thái quỹ căn của S08 có thuộc «thông tin dự án công khai» không? | **Đã quyết (Mạnh, 08/11): «Có, công khai».** | Mỗi căn đang bán sơ cấp thành một tin (`Property`) do chủ đầu tư chào, giá ở `ListPrice`, trạng thái ở `StandardStatus` (§9.3 G). |
 | Q4 | Thứ tự làm? | **Dùng dữ liệu đã có trước, chưa thu gì mới**: sửa lỗi đọc S06 (DA1), đưa dự án S06 vào tin (DS2 mở rộng), nối 282 dự án S06 có từ 10 tin trở lên (DA2). Sau đó mới thu thử S09. | 1.256 dự án và 11.140 tin có mã dự án nằm sẵn trong raw S06. Có 11.526 mã căn rác đang chờ sửa. Đây là số đo trước khi dựng (luật 11). |
 
 Nếu Mạnh duyệt: các hàng ở §6 chuyển cho giám sát cắt vào lộ trình. Kèm sửa `CONTEXT.md`, AGENTS luật 5 và ADR-0016 (hàng DA0).
@@ -153,7 +153,7 @@ Số của S07 và S09 là số ZCode đo sáng 08/11 bằng trình duyệt th�
 |---|---|---|---|
 | **S06** (đã thu, đang chạy) | dự án · toà · căn (trên tin) | 1.256 dự án có mã và tên, toà, mã căn, tầng, đường, toạ độ trên từng tin | Tin rao lên Invest như đã chốt (mục 25). Điều khoản cấm dùng thương mại chỉ số tổng hợp (mục 27): không ảnh hưởng tên dự án, vì tên dự án là sự kiện, có cả trong chữ tin. Mã dự án của S06 là bí danh `ma_nguon`. |
 | **S03** (đã thu) | dự án (qua quy ước nhóm) · phân khu · toà · trục · căn | Chữ bài, tên nhóm, mã căn che tầng | Tầng C cho tên nhóm. Gửi model theo ADR-0007 sửa 06/11. |
-| **S08** (đã thu) | dự án · phân khu · toà · trục · căn, cả thấp tầng | 150 dự án, 302 phân khu, 21.266 mã, giá chủ đầu tư, trạng thái dòng bán | Thông tin dự án: công khai từ 08/11 (§3.1). Giá chủ đầu tư, trạng thái quỹ căn: chờ Q5. Thu ≤ 1 lần/tuần (DATA-CONTRACT v4). |
+| **S08** (đã thu) | dự án · phân khu · toà · trục · căn, cả thấp tầng | 150 dự án, 302 phân khu, 21.266 mã, giá chủ đầu tư, trạng thái dòng bán | Công khai từ 08/11, kể cả giá chủ đầu tư và trạng thái quỹ căn (§3.1, Q5). Thu ≤ 1 lần/tuần (DATA-CONTRACT v4). |
 | **S07 – danh mục dự án** (chưa thu) | dự án · dự án con · địa chỉ · chủ đầu tư · trạng thái · số toà | 5.843 dự án toàn quốc qua sitemap theo 12 loại hình; trang chi tiết có địa chỉ bốn cấp cũ, pháp lý, số toà, lịch sử giá; mục «dự án con» có mã riêng; tiện ích quanh dự án (trường học, có toạ độ). **Không có tên toà.** | Điều khoản cấm thương mại và cấm sản phẩm phái sinh khi không có văn bản (kiểm 03/11). Chặn bot, chỉ qua bằng trình duyệt thật; robots cho phép với nhịp 10 giây. Thông tin dự án công khai từ 08/11 (§3.1); chỉ số giá tổng hợp vẫn theo mục 27. Thu toàn quốc chờ Mạnh chốt trần/nhịp (§8.2) và cách xử lớp chặn bot. |
 | **S09 – nguồn mới B, «Danh mục sàn»** (đề xuất cấp mã; chưa thu) | dự án · phân khu · **toà có tên** · căn, có ID quan hệ cả bốn cấp | 394 dự án; một dự án có khoảng 55 trường (địa chỉ có mã hành chính, toạ độ, chủ đầu tư, ngày bàn giao, số tầng, điểm hạ tầng); danh sách phân khu; **danh sách toà có tên và ngày bàn giao từng toà** (Ocean Park: 115 toà); quỹ căn có mã kiểu toà.tầng.căn, sơ cấp hoặc thứ cấp; từ điển tên → mã ba cấp | API không công bố, đọc không cần đăng nhập. **Chưa kiểm điều khoản.** Phủ lệch về vài chủ đầu tư lớn. Có thể đổi hay khoá bất cứ lúc nào. Thông tin dự án công khai từ 08/11 (§3.1). Nếu mình có quan hệ với chủ nguồn thì một thoả thuận dữ liệu bền hơn thu. |
 | **S04** OSM (đã có ranh giới) | phường · đa giác dự án | Ranh giới hành chính; có thể có `landuse=residential` / `building` mang tên | ODbL: ghi công, cơ sở dữ liệu phái sinh phân phối ra ngoài thì phải chia sẻ cùng giấy phép. Chưa đo độ phủ tên dự án. |
@@ -186,7 +186,7 @@ chỉ có từ nhóm này ở lại máy thu, giá trị chỉ có từ nhóm n�
 | | Phân xử vẫn theo lớp bằng chứng: danh mục chủ đầu tư là một nguồn mạnh, nhưng tin mâu thuẫn thì lên thẻ (ADR-0016 §7.4) |
 | | Nhịp thu vẫn nhẹ, gặp chặn thì dừng (§8.2) |
 
-Còn mở: giá chủ đầu tư và trạng thái quỹ căn của S08 (Q5).
+Giá chủ đầu tư và trạng thái quỹ căn của S08 cũng công khai (Q5, Mạnh «Có, công khai»).
 
 Văn bản đã sửa cùng tài liệu này: AGENTS luật 5 (đoạn S08), ADR-0016 §9, `.claude/rules/pii-spl.md`, ROADMAP §3 mục 38. Còn theo hàng
 DA0: `CONTEXT.md` mục «Danh mục CĐT» (hiện ghi «chỉ ở máy thu, không lên cloud»); ghi chú DN4, PX2 trong lộ trình (giám sát sửa); code
@@ -272,7 +272,7 @@ Q3 đã quyết (§3.1). Câu 2 và 3 gửi qua phiên liên làn khi Mạnh duy
 
 | Mã tạm | Việc | Làn | Hạng (ước) | Phụ thuộc | Lợi |
 |---|---|---|---|---|---|
-| **DA0** | Sửa `CONTEXT.md` (Dự án, Phân khu, Lô, Mức gắn, Danh mục dự án), ADR-0016 (dự án có cha, quy mô), sổ extension §9.4 — luật 5, ADR-0016 §9, ROADMAP mục 38 đã sửa 08/11 | Claude | T1 | Q1, Q2, Q5 | Một từ vựng chung |
+| **DA0** | Sửa `CONTEXT.md` (Dự án, Phân khu, Lô, Mức gắn, Danh mục dự án), ADR-0016 (dự án có cha, quy mô), sổ extension §9.4 — luật 5, ADR-0016 §9, ROADMAP mục 38 đã sửa 08/11 | Claude | T1 | Q1, Q2 | Một từ vựng chung |
 | **DA1** | Sửa bộ đọc S06: bỏ cờ `unitnumber_display`, bỏ «0» ở mã căn và số nhà, đọc `block` và tầng thành phát biểu; rút 11.526 phát biểu mã căn rác có lý do | Claude | T2 | — | Thêm khoảng 1.650 tin có toà; hết mã căn rác |
 | **DS2+** (mở rộng hàng DS2 sẵn có) | Trường phát biểu dự án/phân khu cho tin mọi nguồn (migration `field_chk`); dự án S06 đi tới tin | Claude | T3 | DA2 | Chỗ ghi mức gắn dự án/phân khu |
 | **DA2** | Sổ nối dự án S06: 282 dự án có ≥ 10 tin nối vào `asset_nodes` hoặc tạo mới (tên công khai từ tin), người duyệt từng cặp | Claude | T2 | DA0 | 8.394 tin có dự án |
@@ -523,11 +523,11 @@ Chú thích cột «Cấp»: DA dự án · PK phân khu · T toà · C căn · 
 
 | Thông tin | Nguồn | Hôm nay | RESO DD 2.1 | Cấp | Chuẩn hoá |
 |---|---|---|---|---|---|
-| Giá chủ đầu tư của một căn | S08 (`apartment_price`), S09 (sơ cấp) | — | `ListPrice` của **một tin sơ cấp** (người chào là chủ đầu tư) | Tin | Mỗi căn đang bán sơ cấp là một tin (`Property`); chờ Q5 |
+| Giá chủ đầu tư của một căn | S08 (`apartment_price`), S09 (sơ cấp) | — | `ListPrice` của **một tin sơ cấp** (người chào là chủ đầu tư) | Tin | Mỗi căn đang bán sơ cấp là một tin (`Property`) |
 | Giá thanh toán sớm | S08 (`early_payment_price`) | — | **không có** | Tin | Ext `EarlyPaymentPrice` |
 | Giá/m² | S08, S09, tin | `price_perm2` | `SalePricePerArea`, `PricePerAreaUnit` | Tin | |
 | Sơ cấp / thứ cấp | S09 (`classify`) | — | **không có** (`NewConstructionYN` là công trình mới, khác nghĩa) | Tin | Ext `MarketTier` (`so_cap` · `thu_cap`) |
-| Trạng thái căn trong quỹ (còn, giữ chỗ, đã bán) | S08 (`state_line`), S09 | — | `StandardStatus` của tin sơ cấp (Active · ActiveUnderContract · Closed) | Tin | Chờ Q5 |
+| Trạng thái căn trong quỹ (còn, giữ chỗ, đã bán) | S08 (`state_line`), S09 | — | `StandardStatus` của tin sơ cấp (Active · ActiveUnderContract · Closed) | Tin | |
 | Khoảng giá của dự án, phân khu | S07, S09 | — | không có | DA, PK | **Không nhận**; tự tính từ tin (luật 10) |
 | Lịch sử giá theo khu | S07 | — | không có | DA | Không nhận; mục 27 vẫn giữ |
 | Phí quản lý | S09, tin | — | `AssociationFee` + `AssociationFeeFrequency` | DA, T | Việt Nam báo theo m²/tháng → ext `AssociationFeePerArea` |
@@ -563,7 +563,7 @@ Chú thích cột «Cấp»: DA dự án · PK phân khu · T toà · C căn · 
 | `LandUseTerm` + `LandUseExpirationDate` | field | DA, T, C | `lau_dai` · `co_thoi_han` + ngày | `LandLease*` là thuê đất tách khỏi giao dịch, khác nghĩa | 2 |
 | `DeliveryStandard` | field | DA, PK, C | `tho` · `co_ban` · `hoan_thien` · `day_du_noi_that` | `Furnished` là trạng thái lúc chào | 2 |
 | `MarketTier` | field | Tin | `so_cap` · `thu_cap` | `NewConstructionYN` là công trình mới | 2 |
-| `EarlyPaymentPrice` | field | Tin | VND | không có | 2 (chờ Q5) |
+| `EarlyPaymentPrice` | field | Tin | VND | không có | 2 |
 | `BasementLevelsTotal` | field | T | số | `Basement` là kiểu hầm | 2 |
 | `UnitsPerFloorMin`, `UnitsPerFloorMax` | field | T | số | không có | 2 |
 | `BuildingCoverageRatio` | field | DA | % | `FloorToAreaRatioAsBuilt` là hệ số sử dụng đất | 2 |

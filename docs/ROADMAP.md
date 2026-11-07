@@ -498,7 +498,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     xếp và liên kết thông tin»): thông tin dự án (tên, địa chỉ, chủ đầu tư, pháp lý, quy mô, phân khu, toà, trục, căn, bàn giao,
     tiện ích, mặt bằng) từ S07, S08, S09 và nguồn nhà nước lên cloud, Invest và API qua danh bạ. Sửa AGENTS luật 5, ADR-0016 §9,
     `.claude/rules/pii-spl.md`. Giữ: tên nguồn thật tầng A; `stg_*` thô không sync nguyên bảng; S02 theo luật 5; chỉ số giá tổng
-    hợp S06/S07 theo mục 27; giá chủ đầu tư và trạng thái quỹ căn S08 chờ chốt. Rủi ro đã nêu: điều khoản S07 cấm thương mại, S09
+    hợp S06/S07 theo mục 27. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai», 08/11). Rủi ro đã nêu: điều khoản S07 cấm thương mại, S09
     chưa kiểm điều khoản. Code (sync-cloud, DN4) và `CONTEXT.md` đổi theo hàng sau. Căn cứ `docs/research/danh-ba-du-an-0811.md`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT

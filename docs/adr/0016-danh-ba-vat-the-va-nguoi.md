@@ -157,8 +157,8 @@ và phát biểu theo vật thể.
 - **Sửa đổi 08/11 (Mạnh chốt «cứ bỏ các luật nội bộ», ROADMAP §3 mục 38)**: thông tin dự án do chủ đầu tư hay nhà nước công bố
   là công khai. Vật thể và giá trị dựng từ danh mục S07, S08, S09 (dự án, phân khu, toà, trục, căn, chủ đầu tư, pháp lý, bàn giao)
   **được lên cloud và Invest**, kể cả khi chưa có tin trỏ vào; hai gạch trên về «ở lại máy local» và «không hiện trên Invest» hết
-  hiệu lực cho loại dữ liệu này. Câu 11 đọc lại: chỉ giá chủ đầu tư và trạng thái quỹ căn S08 (chờ Mạnh chốt) cùng vai suy luận và
-  hồ sơ người đã gộp ở lại `/ops`. Mâu thuẫn tin ↔ danh mục vẫn lên thẻ (§7.4). Căn cứ: `docs/research/danh-ba-du-an-0811.md` §3.1.
+  hiệu lực cho loại dữ liệu này. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai»). Câu 11 đọc lại: chỉ vai suy
+  luận và hồ sơ người đã gộp ở lại `/ops`. Mâu thuẫn tin ↔ danh mục vẫn lên thẻ (§7.4). Căn cứ: `docs/research/danh-ba-du-an-0811.md` §3.1.
 - ZCode và DATA-CONTRACT không đổi: danh bạ nằm sau `stg_*`.
 
 ### 10. Phân kỳ và thứ tự (luật 11: chỉ dựng cấp có dữ liệu lấp)
