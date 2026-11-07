@@ -5,7 +5,7 @@ slug: install-cron-chi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-07T08:57:44Z
 approved_by:
