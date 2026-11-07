@@ -5,8 +5,10 @@ slug: do-hieu-qua-hang-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T2; máy nâng T3 vì cần migration (db/migrations/** thuộc t3_paths)
 surfaces: [ui, db, script]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-07-do-hieu-qua-hang-ngay-design.md
+approved_by: Mạnh
+approved_at: 2026-11-07
 lo_trinh_ma: DO1
 duyet_lai: 2026-11-07   # Mạnh «Đồng ý tất cả theo khuyến nghị» — gộp gói rà soát (trước/sau, chênh có ý nghĩa, đổi khoá, tỉ lệ soát, nguyên tắc đo, thị trường, hai ô chưa gắn, dự án theo chữ bài)
 ---
