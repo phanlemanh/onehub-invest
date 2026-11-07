@@ -95,7 +95,7 @@ evals:
   - id: E12
     criterion: AC-1
     executor: judgment
-    inputs: [pipeline/mappings.yaml, docs/adr/0016-danh-ba-vat-the-va-nguoi.md, docs/adr/0011-reso-first-data-law.md, db/migrations/082_danh_ba_vat_the.sql]
+    inputs: [pipeline/mappings.yaml, docs/adr/0016-danh-ba-vat-the-va-nguoi.md, docs/adr/0011-reso-first-data-law.md, db/migrations/082_danh_ba_vat_the.sql, pipeline/dq-enum-vocab.mjs]
     question: "Các giá trị và extension mới mà 082 thêm (catalog_tier, alias_kind ma_nguon, resource Building/Stack/Unit trong field_assertions, field builder_name, field area_id cho Building, method registry_inherit) có được khai trong pipeline/mappings.yaml đúng luật ADR-0011: field RESO tra trước (BuilderName → Building.BuilderName), extension local khai đủ sáu điều kiện, khớp sổ extension ADR-0016 §11?"
     expected: "PASS khi mỗi giá trị mới trong 082 có dòng tương ứng trong mappings.yaml với dd_field hoặc local + rationale đủ sáu điều kiện, và không có giá trị local nào mà RESO DD 2.1 đã có field tương đương."
     evidence_required: [run_id, verdict, rationale, verified_at]

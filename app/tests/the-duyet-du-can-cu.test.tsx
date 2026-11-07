@@ -194,7 +194,7 @@ test("TD-AC-2 bảng so: ma trận 10 trường × khớp/lệch/thiếu, 10 hà
   await assert.rejects(kiemSo(sai), /TD-AC-2: giá thiếu cả hai bên phải là Thiếu/)
 })
 
-test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 6 phương pháp = 18 ô theo sổ từ vựng", () => {
+test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 7 phương pháp = 21 ô theo sổ từ vựng", () => {
   let n = 0
   for (const lop of VOCAB.evidence_tier) {
     for (const pp of VOCAB.assertion_method) {
@@ -205,7 +205,7 @@ test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 6 phương p
       n++
     }
   }
-  assert.equal(n, 18)
+  assert.equal(n, 21) // danh-ba-toa-truc-can (082): sổ thêm phương pháp registry_inherit
   assert.equal(canCu.nhanCanCu(undefined), "Chưa ghi căn cứ — đọc từ tin")
 })
 
