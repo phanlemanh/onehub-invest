@@ -290,6 +290,9 @@ export function chuyenBac(truoc, nay, { nghi = new Set(), dotBien } = {}) {
     }
     if (c.data_level === u.data_level && dotBien !== "dong-gia") continue;
     if (c.data_level === u.data_level) { ra.push(dong(u, c.data_level, u.data_level, ["khac"])); continue; }
+    // Căn mất tin vì tin đi sang căn khác (khoá «căn» S06 chứa giá) → đổi khoá, không phải biến động trường lõi.
+    if (u.unit === "can" && dotBien !== "doi-khoa-thanh-bien-dong"
+        && (c.core.tin ?? []).some((t) => canNay.has(t) && canNay.get(t) !== k)) { ra.push(dong(u, c.data_level, u.data_level, ["doi-khoa"])); continue; }
     const ly = [];
     for (const f of Object.keys(TEN_LOI)) {
       if (c.core[f] && !u.core[f]) ly.push(`thieu-${TEN_LOI[f]}`);

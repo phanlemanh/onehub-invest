@@ -497,3 +497,150 @@ test("DO1-AC-1-GOI gọi đọc gộp đúng bài thiếu, một lần, trước
     });
   });
 });
+
+// ---- AC-6 trên DB: bộ ghi thật, hai lần chạy ----
+import { resolveOffers, writeAssertions } from "../lib/assert.mjs";
+import { doHangNgay } from "../do-hang-ngay.mjs";
+import { FILL } from "../sync-cloud.mjs";
+
+async function tinDu(c, { ma, source = "S03", gia = 3400000000, dt = 62, area = null }) {
+  const oid = `offer_do1_${ma}`;
+  await c.query(`INSERT INTO sale_offer_records (offer_id, originating_system_key, kind, price_vnd, area_m2, area_id, first_seen, last_seen,
+                   post_ids, source) VALUES ($1, $2, 'sale', $3, $4, $5, now(), now(), ARRAY[$2], $6)`, [oid, `do1${ma}`, gia, dt, area, source]);
+  await writeAssertions(c, [{ subject_key: `${source}:do1${ma}`, field: "property_type", value: "apartment", evidence_tier: "observed",
+    method: "e1_rule", method_version: "do1-test", rule_id: "do1" }]);
+  return oid;
+}
+async function can(c, oids) {
+  const { rows: [{ id }] } = await c.query(`INSERT INTO properties (kind, property_type, first_seen, last_seen) VALUES ('sale', 'apartment', now(), now()) RETURNING id`);
+  for (const o of oids) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [id, o]);
+  return `can:${id}`;
+}
+test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    const { rows: [{ ward }] } = await c.query("SELECT id AS ward FROM areas WHERE region_type = 'submarket' LIMIT 1");
+    const o = {};
+    for (const m of ["A", "B", "C", "D", "E", "G", "f1"]) o[m] = await tinDu(c, { ma: m, area: ward, dt: m === "B" ? null : 62 });
+    o.h1 = await tinDu(c, { ma: "h1", source: "S06", area: ward });
+    await resolveOffers(c, Object.values(o));
+    const F = await can(c, [o.f1]), P = await can(c, [o.h1]);
+    await c.query("DELETE FROM data_level_unit");
+    const lan1 = await doHangNgay(c, { ngay: "2025-01-15", write: true });
+    assert.equal(lan1.lap_moc, true);
+    assert.equal(lan1.dq.find((r) => r.check_name === "do1-chuyen-bac").status, "skip");
+    const { rows: [{ n: n0 }] } = await c.query("SELECT count(*)::int AS n FROM data_level_change");
+    assert.equal(n0, 0);
+    // Đổi dữ liệu.
+    await c.query("UPDATE sale_offer_records SET price_vnd = NULL WHERE offer_id = $1", [o.A]);
+    await c.query("UPDATE sale_offer_records SET area_m2 = 62 WHERE offer_id = $1", [o.B]);
+    const K = await can(c, [o.C]);
+    await c.query("UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot' WHERE offer_id = $1", [o.D]);
+    await c.query(`UPDATE sale_offer_records SET field_provenance = (SELECT jsonb_object_agg(k, jsonb_build_object('measured', 'true'))
+                   FROM unnest(ARRAY['kind','property_type','price_vnd','area_m2','area_id']) k) WHERE offer_id = $1`, [o.f1]);
+    await c.query("UPDATE sale_offer_records SET price_vnd = NULL, area_m2 = NULL WHERE offer_id = $1", [o.G]);
+    const pId = Number(P.slice(4));
+    await c.query("DELETE FROM property_offers WHERE property_id = $1", [pId]);
+    await c.query("DELETE FROM properties WHERE id = $1", [pId]);
+    const Q = await can(c, [o.h1]);
+    const ky = {
+      [`tin:${o.A}`]: ["tut", ["thieu-gia"]], [`tin:${o.B}`]: ["len", ["du-dien-tich"]], [`tin:${o.C}`]: ["mat", ["gan-can"]], [K]: ["moi", ["gan-can"]],
+      [`tin:${o.D}`]: ["mat", ["tin-nghi"]], [F]: ["len", ["do-luong"]], [`tin:${o.G}`]: ["tut", ["thieu-gia", "thieu-dien-tich"]],
+      [P]: ["mat", ["doi-khoa"]], [Q]: ["moi", ["doi-khoa"]],
+    };
+    const kiem = async () => {
+      const { rows } = await c.query("SELECT unit_key, huong, ly_do FROM data_level_change WHERE snap_date = '2025-01-15'");
+      const by = Object.fromEntries(rows.map((r) => [r.unit_key, r]));
+      if (by[`tin:${o.E}`]) throw new Error("CHUYEN BAC GIA");
+      if (rows.some((r) => !r.ly_do.length)) throw new Error("THIEU LY DO");
+      if (!by[F]?.ly_do.includes("do-luong")) throw new Error("THIEU DO LUONG");
+      if (!by[P]?.ly_do.includes("doi-khoa")) throw new Error("DOI KHOA THANH BIEN DONG");
+      for (const [k, [h, ly]] of Object.entries(ky)) assert.deepEqual([by[k]?.huong, by[k]?.ly_do], [h, ly], k);
+      assert.equal(rows.length, Object.keys(ky).length, "chỉ đơn vị đổi bậc mới có dòng");
+    };
+    await thu(c, async () => {
+      const lan2 = await doHangNgay(c, { ngay: "2025-01-15", write: true });
+      await kiem();
+      const d = lan2.dq.find((r) => r.check_name === "do1-chuyen-bac").detail;
+      assert.equal(d.doi_khoa, 2);
+      assert.equal(d.theo_nguon.S06.doi_khoa, 2);
+      assert.equal(d.theo_huong_ly_do["tut:thieu-gia"], 2);
+      for (const [chieu, v] of Object.entries(d.lat)) assert.equal(Object.values(v.o).reduce((s, n) => s + n, 0), v.tong, `lát ${chieu}`);
+      // data_level_unit khớp hai hàm SQL ở mọi đơn vị.
+      const { rows: [{ lech }] } = await c.query(`
+        SELECT count(*)::int AS lech FROM data_level_unit u
+          LEFT JOIN property_data_level(NULL) b ON u.unit_key = 'can:' || b.property_id
+          LEFT JOIN sale_offers s ON u.unit_key = 'tin:' || s.offer_id
+          LEFT JOIN LATERAL offer_data_level(s.kind, s.property_type, s.price_vnd, s.area_m2, s.area_id, false) l ON s.offer_id IS NOT NULL
+         WHERE u.data_level IS DISTINCT FROM coalesce(b.data_level, l.data_level)`);
+      assert.equal(lech, 0);
+      await doHangNgay(c, { ngay: "2025-01-15", write: true });
+      await kiem(); // chạy lại không đổi dữ liệu: vẫn đúng các dòng ấy
+    });
+    for (const [dotBien, msg] of [["dong-gia", /CHUYEN BAC GIA/], ["bo-do-luong", /THIEU DO LUONG/], ["doi-khoa-thanh-bien-dong", /DOI KHOA THANH BIEN DONG/]]) {
+      await thu(c, async () => {
+        await doHangNgay(c, { ngay: "2025-01-15", write: true, dotBien });
+        await assert.rejects(kiem, msg, dotBien);
+      });
+    }
+  });
+});
+
+// ---- AC-3, AC-4, AC-5, AC-7, AC-9 qua bộ ghi thật ----
+test("DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trích, người đăng, labeler, tên nguồn; số đi qua writer", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    const fx = await fixtureMau(c);
+    await c.query("UPDATE stg_zalo_posts SET text = 'CHU_BAI_X căn hộ mẫu đặc biệt dài hơn hai mươi ký tự', sender_name = 'NGUOI_Z' WHERE post_id = 'do1p10'");
+    await c.query("UPDATE sale_offer_records SET seller_phone = '+84900000001', seller_name = 'NGUOI_Z' WHERE offer_id = 'offer_do1_do1p10'");
+    await c.query("INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S09', 'TEN_THAT_V', 'thử') ON CONFLICT DO NOTHING");
+    const kq = await rutMau(c, { ngay: D, goiDocGop: goiGia(c), log: () => {} });
+    // Mạnh gắn nhãn 14 thẻ: giữ nháp bộ đọc luật ở giá, sửa diện tích ở 4 thẻ.
+    let i = 0;
+    for (const t of kq.the.slice(0, 14)) {
+      const bo = t.draft.cach_doc["bo-doc-luat"];
+      const yd = bo.trang_thai === "co" ? "offer" : "not_listing";
+      const rows = [["listing_intent", yd], ["price_min_vnd", bo.o.price_min_vnd ?? null], ["area_m2", bo.o.area_m2 ? (i < 4 ? "70" : bo.o.area_m2) : null]];
+      for (const [f, v] of rows) {
+        await c.query("INSERT INTO eval_labels (item_id, labeler_id, field, value, not_stated) VALUES ($1, 'LABELER_W', $2, $3, $4)", [t.item_id, f, v, v === null]);
+      }
+      i++;
+    }
+    await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, quote, quote_ok,
+                     cost_usd, run_id, labeled_at) VALUES ('S03', 'do1p10', 'h', $1, 'dtb-s03-v1', 'offer', 'sale', true,
+                     'TRICH_Y câu trích dài', true, 0, 'r', '2025-01-15T05:00:00Z')`, [MODEL]);
+    await c.query("DELETE FROM data_level_unit");
+    const kqDo = await doHangNgay(c, { ngay: D, write: true });
+    const dq = Object.fromEntries(kqDo.dq.map((r) => [r.check_name, r]));
+    // AC-3 qua writer: giữ giá 100%, diện tích 10/14 trên bộ đọc luật ở thẻ có tin.
+    const giu = dq["do1-giu-nhap"];
+    assert.equal(giu.status, "pass");
+    const gia = giu.detail.dong.find((d) => d.cach_doc === "bo-doc-luat" && d.o === "price_min_vnd");
+    assert.equal(gia.tuan_nay.giu, gia.tuan_nay.n);
+    const dt = giu.detail.dong.find((d) => d.cach_doc === "bo-doc-luat" && d.o === "area_m2");
+    assert.equal(dt.tuan_nay.n - dt.tuan_nay.giu, kq.the.slice(0, 4).filter((t) => t.draft.cach_doc["bo-doc-luat"].o.area_m2).length);
+    assert.equal(giu.detail.ty_le_soat.tuan_nay.soat, 14);
+    assert.equal(giu.detail.ty_le_soat.tuan_nay.rut, 20);
+    assert.equal(giu.detail.canh_bao_soat, false);
+    // AC-4 qua writer.
+    assert.equal(dq["do1-bo-sot"].status, "pass");
+    // AC-5 qua writer: đọc chữ có lượt trong ngày D.
+    assert.ok(dq["do1-tin-hieu"].detail.cach_doc.some((x) => x.cach_doc.startsWith("doc-chu") && x.status === "pass"));
+    // AC-7 qua writer: mọi chiều tổng ô = tổng.
+    for (const [ten, r] of Object.entries(dq)) {
+      for (const [chieu, v] of Object.entries(r.detail?.lat ?? {})) {
+        if (Object.values(v.o).reduce((s, n) => s + n, 0) !== v.tong) throw new Error(`TONG LAT LECH: ${ten} ${chieu}`);
+      }
+    }
+    assert.ok("du_an_theo_chu" in giu.detail.lat && "thi_truong" in giu.detail.lat);
+    // AC-9: sáu chuỗi cấm không có trong JSON nào.
+    const { rows } = await c.query("SELECT detail FROM dq_check_results WHERE check_name LIKE 'do1-%' AND checked_at > now() - interval '1 minute'");
+    const json = rows.map((r) => r.detail).join("\n");
+    for (const x of ["CHU_BAI_X", "TRICH_Y", "NGUOI_Z", "0900000001", "LABELER_W", "TEN_THAT_V"]) assert.ok(!json.includes(x), `lộ ${x}`);
+    assert.ok(fx.coTin.size > 0);
+    await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-trich" }), /LO TRICH/));
+    await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-labeler" }), /LO LABELER/));
+  });
+});
+test("DO1-AC-9-FILL bảng 083 và thẻ nhãn không vào FILL của sync-cloud, dq_check_results có", () => {
+  assert.ok(FILL.includes("dq_check_results"));
+  for (const t of ["data_level_unit", "data_level_change", "eval_label_items", "eval_labels"]) assert.ok(!FILL.includes(t), t);
+});
