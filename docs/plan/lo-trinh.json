@@ -4070,9 +4070,9 @@
       ],
       "dot": "mo-hinh-pipeline-0711",
       "nhom": "model",
-      "cau_giao": "Đọc gộp S03 chạy hằng ngày bằng model của bảng chọn PL30 (mặc định Haiku) trên bài mới đã khử trùng theo tin, ưu tiên dự án của mốc GCM1, có trần tiền ngày 20 USD; ghi nhãn bạc và sổ cuộc gọi",
+      "cau_giao": "Đọc gộp S03 chạy hằng ngày bằng model của bảng chọn PL30 (mặc định Haiku) trên toàn bộ bài S03 mới đã khử trùng theo tin, có trần tiền ngày 20 USD; ghi nhãn bạc và sổ cuộc gọi",
       "bat_khi": "Một đêm thật: chạy hết bài mới trong phạm vi, tổng tiền ≤ trần, chạm trần thì dừng có tên và báo; chạy lại cùng ngày không gọi lại bài đã đọc",
-      "vi_sao": "Mạnh 07/11 «Đồng ý trần 20 usd/ngày. Còn lại theo khuyến nghị» — PL30 Hỏi-1 (bật chạy hằng ngày là lời riêng của Mạnh). S03 ~5.000–8.300 bài/ngày, Haiku 0,00166 USD/bài.",
+      "vi_sao": "Mạnh 07/11 «Đồng ý trần 20 usd/ngày. Còn lại theo khuyến nghị» — PL30 Hỏi-1 (bật chạy hằng ngày là lời riêng của Mạnh). S03 ~5.000–8.300 bài/ngày, Haiku 0,00166 USD/bài. 08/11 Mạnh «1. Bật toàn bộ bài 2. Nghiệm thu sau»: mở phạm vi ra toàn bộ bài S03 mới (~9.000 bài, ~15 USD/ngày); đọc lại kho cũ ước tiền và trình riêng; UAT chon-model-theo-o sau DO1.",
       "vung": [
         "agent/scripts/**",
         "agent/src/enrich/doc-gop-s03/**",
@@ -4341,6 +4341,55 @@
         "pipeline/lib/do-hang-ngay.mjs",
         "pipeline/**"
       ]
+    },
+    {
+      "ma": "PX1",
+      "slug": "danh-ba-phuong-xa-toan-quoc",
+      "hang": "T3",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "phu": [
+        "PX1"
+      ],
+      "dot": "danh-ba-0811",
+      "nhom": "danh-ba",
+      "cau_giao": "Mọi tin trên 34 tỉnh/thành gắn được tới xã/phường hiện hành: danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê, tên xã cũ đọc ra xã mới, ranh giới khớp vào mã",
+      "bat_khi": "areas có đủ 3.321 đơn vị cấp xã gắn đúng tỉnh; 10.033 tên cũ thành bí danh, 441 xã cũ bị tách báo «cần chọn xã» không đoán; tỉ lệ tin gắn được xã đo trước/sau theo tỉnh; chạy lại bộ nạp không đổi",
+      "vi_sao": "Mạnh 08/11 «Đồng ý»: hiện chỉ có 511 phường ở 4 thành phố (~15%), 30 tỉnh không có xã nào nên thước phường × loại, Căn giá tốt và TV11 trống ở đó.",
+      "vung": [
+        "db/migrations/**",
+        "pipeline/data/dvhc/**",
+        "pipeline/reassign-areas.mjs",
+        "pipeline/**",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Nguồn dữ liệu có sẵn ở repo riêng phanlemanh/onehub-quy-hang (clone ~/dev/onehub-quy-hang), packages/core/src/address/: du-lieu/xa.json (3.321), xa-cu.json (10.033), tinh-cu.json (63) sinh từ hai tệp gốc của Cục Thống kê (QĐ 19/2025, bảng chuyển đổi sửa 23/10/2025). Chép DỮ LIỆU kèm băm + sha nguồn, không chép code. Không có polygon: ranh giới lấy OSM khớp vào mã; tin không có toạ độ gắn theo tên. Sau nạp: reassign-areas rồi 300 + 400."
+    },
+    {
+      "ma": "PX2",
+      "slug": "danh-ba-du-an-toa-s08",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "DB1b",
+        "PX1"
+      ],
+      "phu": [
+        "PX2"
+      ],
+      "dot": "danh-ba-0811",
+      "nhom": "danh-ba",
+      "cau_giao": "Danh bạ dự án–toà–trục–căn mở ra toàn bộ 150 dự án của danh mục nội bộ S08, mỗi dự án gắn vào xã/phường hiện hành",
+      "bat_khi": "Lệnh dựng DB1 chạy cho cả 150 dự án trên DB máy thu, chạy lại ra 0 mã mới; mỗi dự án có xã/phường; số toà/trục/căn theo dự án có trên /ops",
+      "vi_sao": "Mạnh 08/11 «Đồng ý»: hiện mới có 20 dự án, 3 toà dùng chung; DB1 mới đo ở Ocean Park 1 và Grand Park. S08 có 39.888 căn của 150 dự án.",
+      "vung": [
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "pipeline/**"
+      ],
+      "ghi_chu": "S08 chỉ nội bộ (luật 5): vật thể chỉ có từ S08 ở lại máy thu tới khi có tin trỏ vào (ADR-0016 §9). Dự án ngoài S08 lấy từ tin rao làm hàng sau."
     }
   ],
   "chan_troi": [
