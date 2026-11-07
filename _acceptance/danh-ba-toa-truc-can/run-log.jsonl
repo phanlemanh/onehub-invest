@@ -77,3 +77,4 @@
 {"ts":"2026-11-07T01:25:05Z","sha":"f9e1a8c04b26fc63e2d3c5fcc89974d2b2bd0c82","round":2,"kind":"baseline","evals_hash":"760589b9d74fa54fe9d8409d5eb0ff547ce4155531d6f7ddf54a283f1d7640d8","non_discriminating":[]}
 {"ts":"2026-11-07T01:25:05Z","sha":"f9e1a8c04b26fc63e2d3c5fcc89974d2b2bd0c82","round":2,"kind":"round-tally","verdict":"REJECT","expected":7,"returned":7,"blocked":0}
 {"ts":"2026-11-07T01:25:05Z","sha":"f9e1a8c04b26fc63e2d3c5fcc89974d2b2bd0c82","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":1,"bypass_ack":0,"verified_at":7}
+{"kind":"thuoc-vat","ts":"2026-11-07T01:40:43Z","round":2,"san":"88eb592bb877f393df69ad3c709bc851ce987427","vat":[42,17],"thuoc":[1,1],"ho_so":[491,0],"nhat":0,"lan":1,"tep_thuoc":["_acceptance/danh-ba-toa-truc-can/evals.yaml"]}
