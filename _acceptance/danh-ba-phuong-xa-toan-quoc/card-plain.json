@@ -1,0 +1,36 @@
+{
+  "feature_plain": "Hệ thống biết đủ 3.321 xã, phường, đặc khu của cả nước theo mã chính thức, đọc được tên xã cũ trước sáp nhập, nên tin ở bất kỳ tỉnh nào cũng gắn được tới xã thay vì dừng ở tỉnh.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chỉ nạp danh bạ khi dữ liệu chép từ nguồn chính thức còn nguyên vẹn; lệch một byte là dừng, không ghi gì."},
+    {"id": "AC-2", "p": "Sẽ có đủ 3.321 xã dưới đúng 34 tỉnh, mỗi xã một mã riêng, số xã từng tỉnh khớp danh bạ."},
+    {"id": "AC-3", "p": "Sẽ giữ nguyên 511 khu vực đang có (tin, số liệu, mục người dùng đã lưu vẫn trỏ đúng chỗ) và chỉ thêm xã còn thiếu."},
+    {"id": "AC-4", "p": "Sẽ đọc được 10.033 tên xã cũ; tên cũ bị chia cho nhiều xã mới thì báo «cần chọn xã», không đoán."},
+    {"id": "AC-5", "p": "Sẽ cho kết quả y hệt khi chạy nạp lần hai."},
+    {"id": "AC-6", "p": "Sẽ không để bước dọn khu vực hằng tuần xoá mất xã danh bạ chưa có tin."},
+    {"id": "AC-7", "p": "Sẽ gắn tin vào xã ở mọi tỉnh khi tin ghi tên xã hiện hành, mà không kéo tin của nhóm chưa khai tỉnh sang tỉnh khác."},
+    {"id": "AC-8", "p": "Sẽ gắn tin theo tên xã cũ chỉ khi chắc chắn; tên cũ mơ hồ thì tin giữ ở cấp tỉnh."},
+    {"id": "AC-9", "p": "Sẽ đo số tin có xã của từng tỉnh trước và sau khi nạp, và dừng nếu tỉnh nào giảm hoặc tin nào bị đổi xã."},
+    {"id": "AC-10", "p": "Sẽ chạy đúng như cũ khi code đã gộp mà máy thu chưa nâng cấu trúc dữ liệu."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Chưa vẽ ranh giới cho xã ở 30 tỉnh — việc thu ranh giới thuộc ZCode."},
+    {"id": "OOS-2", "p": "Chưa hiện xã, tên cũ hay «cần chọn xã» trên màn Ops hay Invest."},
+    {"id": "OOS-3", "p": "Chưa gắn tin S05 và chỗ ở Airbnb theo tên xã; chưa dọn các khu tên quận cũ."},
+    {"id": "OOS-4", "p": "Chưa nâng cấu trúc và nạp danh bạ trên máy thu hay cloud — chờ lời riêng của anh, sao lưu trước."},
+    {"id": "OOS-5", "p": "Không chạy lại toàn bộ kho tin ngay — lượt đêm tự làm sau khi nạp."}
+  ],
+  "scope_plain": "Vòng này dựng danh bạ và cách tin đọc nó; hiển thị và ranh giới cho tỉnh mới để vòng sau.",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi loại khu vực đích đã phủ: phường đang có, khu tên cũ, xã thêm mới, xã chung chữ không dấu (AC-2, AC-3); đo thử trên 511 khu thật ngày 08/11."},
+    {"i": 1, "p": "Mọi đường tên vào đã phủ: tên mới và tên cũ, ở trường có cấu trúc của S06 và trong chữ bài S03; tên cũ chia bốn loại an toàn/mơ hồ (AC-4, AC-7, AC-8)."},
+    {"i": 2, "p": "Mọi phạm vi tỉnh của tin đã phủ: nhóm có khai tỉnh, nhóm chưa khai, tin S06 theo mã tỉnh (AC-7, AC-9)."},
+    {"i": 3, "p": "Mọi lượt chạy đã phủ: lần đầu, lần hai, dọn khu vực sau nạp, dữ liệu nguồn hỏng, code mới trên máy chưa nâng cấu trúc (AC-1, AC-5, AC-6, AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép đo trước/sau ban đầu so code mới với chính nó nên không bắt được lỗi do code mới gây ra — đã sửa: «trước» lấy từ khu vực đang lưu của tin thật, và tin bị đổi xã cũng làm phép đo dừng."},
+    {"i": 1, "p": "Chưa tính trường hợp code gộp trước khi máy thu nâng cấu trúc dữ liệu, làm lượt đêm gãy — đã sửa: code tự nhận ra và chạy như cũ, có tiêu chí riêng (AC-10)."},
+    {"i": 2, "p": "Tra tên xã cũ theo tên thì hai xã cũ cùng tên ở hai huyện cũ không phân biệt được — đã sửa: cùng tên mà khác đích thì báo «cần chọn xã»."},
+    {"i": 3, "p": "Chưa nói rõ 11 khu tên cũ ở Hà Nội xử thế nào, và phép đo dọn khu vực chỉ chạy ở Hà Nội — đã sửa: đo cả 11 khu (không tin nào trỏ vào), không nhận nhầm tên quận cũ, đo dọn khu vực ở cả ba thành phố."},
+    {"i": 4, "p": "Phần «tin được gắn thêm xã» trong ngưỡng đã ký chưa có số đo — đã sửa: phép đo in thêm số tin gắn mới theo tên mới và theo tên cũ, kèm tin mẫu."}
+  ]
+}
