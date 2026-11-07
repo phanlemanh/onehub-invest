@@ -82,7 +82,9 @@ và phát biểu theo vật thể.
   `field_assertions` (mở `resource_name` thêm `Parcel` · `Building` · `Stack` · `Unit` · người); bộ phân xử dựng cột
   chuẩn — câu 4 ADR-0013 áp cho vật thể như cho tin.
 - Tên bảng dự kiến: `parcels`, `buildings`, `stacks`, `units`, `parties` (+ `party_roles`), `registry_aliases`,
-  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` chuyển sang `buildings`.
+  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` là **phân khu**
+  (`dd_field = ComplexName` của Grand Park), không phải toà: ở lại họ Vùng, toà của chúng trỏ cha vùng là phân khu (sửa
+  07/11, Mạnh duyệt Hỏi-1 của DB1 `danh-ba-toa-truc-can`; trước đó câu này ghi «chuyển sang `buildings`»).
 
 ### 4. UPI (sửa ADR-0013 §3)
 
