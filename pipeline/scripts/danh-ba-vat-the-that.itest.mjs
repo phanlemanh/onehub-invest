@@ -23,6 +23,20 @@ let thu; // DB thử
 let urlThu;
 let maThat = new Set(); // mã căn đã chép (để soát đầu ra và kho)
 let tenPhanKhu = new Set();
+let ungVienTen = []; // mọi tên phân khu S08 (≥ 6 ký tự) trước khi lọc — để kiểm ca âm
+
+/** Phần riêng của một tên phân khu để tìm trong chữ bài: bỏ «The» đầu, đổi «_» thành khoảng trắng. */
+export const loiTen = (s) => s.replace(/_/g, " ").replace(/^the\s+/i, "").trim();
+
+/**
+ * Tên «chỉ S08 mới có» (luật 5, ADR-0016 §9): không có trong danh mục vùng (asset_nodes) VÀ phần riêng của tên không xuất
+ * hiện trong chữ bài tin rao. Tên đã có trên tin là tên công khai — tin cũng nói tới, được lên.
+ * @param {string} ten @param {Set<string>} congKhai tên, bí danh asset_nodes viết thường @param {(loi: string) => boolean} coTrongTin
+ */
+export function laTenChiS08(ten, congKhai, coTrongTin) {
+  if (!ten || ten.length < 6 || congKhai.has(ten.toLowerCase())) return false;
+  return !coTrongTin(loiTen(ten));
+}
 
 before(async () => {
   may = new pg.Client({ connectionString: `${MAY_CHU}/oneinvest`, options: "-c default_transaction_read_only=on" });
@@ -72,7 +86,13 @@ before(async () => {
   // Tên công khai: mọi tên, bí danh của asset_nodes (danh mục vùng đã lên cloud) — không tính là tên chỉ có từ S08.
   const { rows: an } = await may.query(`SELECT name, aliases FROM asset_nodes`);
   const congKhai = new Set(an.flatMap((n) => [n.name, ...(n.aliases ?? [])]).map((x) => x.toLowerCase()));
-  tenPhanKhu = new Set(s08.map((r) => r.subdivision_name).filter((s) => s && s.length >= 6 && !congKhai.has(s.toLowerCase())));
+  ungVienTen = [...new Set(s08.map((r) => r.subdivision_name).filter((x) => x && x.length >= 6))];
+  const trongTin = new Set();
+  for (const t of ungVienTen) {
+    const { rows: [r] } = await may.query(`SELECT EXISTS (SELECT 1 FROM stg_zalo_posts WHERE text ILIKE '%' || $1 || '%') AS co`, [loiTen(t)]);
+    if (r.co) trongTin.add(loiTen(t));
+  }
+  tenPhanKhu = new Set(ungVienTen.filter((t) => laTenChiS08(t, congKhai, (l) => trongTin.has(l))));
 });
 after(async () => {
   await may?.end().catch(() => {});
@@ -155,4 +175,23 @@ test("DBV-AC-11b kho không chứa mã căn S08 thật hay tên phân khu chỉ 
   const tam = join(mkdtempSync(join(tmpdir(), "dbv-quet-")), "x.txt");
   writeFileSync(tam, `q ${[...maThat][0]} q`);
   assert.equal(quetKho(tap, tam).khop.length, 1, "DBV-AC-11 mã S08 trong kho — đối chứng dương không bắt được");
+});
+
+test("DBV-AC-11b định nghĩa tên chỉ S08: tên công khai trên tin không bị bắt, tên chỉ S08 giả lập vẫn bị bắt", () => {
+  // Ca âm: ba tên phân khu công khai (tin rao S03 nói tới) — nếu có trong danh mục lát thì không thuộc tập quét.
+  for (const t of ["The Metropolitan", "Origami", "Glory Heights"]) {
+    if (ungVienTen.includes(t)) assert.ok(!tenPhanKhu.has(t), `DBV-AC-11 bắt nhầm tên công khai: ${t}`);
+  }
+  // Hàm thuần: tên có trong asset_nodes hay có trên tin thì không phải chỉ S08; tên không ở đâu cả thì là chỉ S08.
+  const congKhai = new Set(["q phan khu cong khai"]);
+  const trongTin = (l) => ["q tren tin", "metropolitan"].includes(l.toLowerCase()); // như ILIKE của truy vấn thật
+  assert.equal(laTenChiS08("Q Phan Khu Cong Khai", congKhai, trongTin), false);
+  assert.equal(laTenChiS08("The Metropolitan", congKhai, trongTin), false, "DBV-AC-11 bắt nhầm tên công khai: The Metropolitan");
+  assert.equal(laTenChiS08("Q_TREN_TIN", congKhai, trongTin), false);
+  assert.equal(laTenChiS08("Q Chi S08 Gia Lap", congKhai, trongTin), true, "DBV-AC-11 bỏ sót tên chỉ S08");
+  // Ca dương đầu-cuối: tên chỉ S08 giả lập cài vào tệp tạm thì bộ quét bắt được.
+  const tap = new Set([...tenPhanKhu, "Q Chi S08 Gia Lap"]);
+  const tam = join(mkdtempSync(join(tmpdir(), "dbv-quet-ten-")), "x.txt");
+  writeFileSync(tam, "q Q Chi S08 Gia Lap q");
+  assert.equal(quetKho(tap, tam).khop.length, 1, "DBV-AC-11 bỏ sót tên chỉ S08");
 });
