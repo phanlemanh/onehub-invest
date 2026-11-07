@@ -3,6 +3,8 @@
 // chữ tự do NFC + gộp khoảng trắng + chữ thường, mã căn giữ hoa thường, diện tích thập phân bỏ số 0 thừa, phòng số nguyên,
 // giá VND nguyên, SĐT E.164, ô nhiều giá trị sắp xếp nối phẩy. Test DO1-CHUAN-HOA đối chiếu bảng vào/ra.
 
+import { ENRICH_FIELD } from "./vocab.generated.mjs";
+
 const O_CHON = new Set(["listing_intent", "kind", "property_type", "furnished", "direction_faces", "price_basis"]);
 const O_NHIEU = new Set(["view", "rent_includes"]);
 const O_CO_KHONG = new Set(["multi_unit", "bedrooms_plus"]);
@@ -49,7 +51,7 @@ export function chuanHoa(o, v) {
     const n = typeof s === "number" ? s : Number(String(s).replace(",", "."));
     return Number.isFinite(n) && n > 0 ? { ok: true, v: chuoiThapPhan(n) } : { ok: false };
   }
-  if (o === "bedrooms" || o === "bathrooms") {
+  if (o === ENRICH_FIELD.bedrooms || o === ENRICH_FIELD.bathrooms) {
     const n = typeof s === "number" ? s : Number(s);
     return Number.isInteger(n) && n >= 0 ? { ok: true, v: String(n) } : { ok: false };
   }

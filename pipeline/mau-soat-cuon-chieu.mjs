@@ -88,7 +88,7 @@ export function dungNhap({ tin, silver, khoaGop, oNguoi, luc, dotBien }) {
     cach_doc[k] = { trang_thai: o.listing_intent === "offer" ? "co" : "khong-tin", o };
   }
   cach_doc[khoaGop] ??= { trang_thai: "vang", o: {} };
-  const hien = cach_doc[khoaGop].trang_thai === "co" ? khoaGop : "bo-doc-luat";
+  const hien = cach_doc[khoaGop].trang_thai === "co" || dotBien === "hien-luon-gop" ? khoaGop : "bo-doc-luat";
   return { hien, cach_doc, o_nguoi: oNguoi, chup_luc: luc };
 }
 

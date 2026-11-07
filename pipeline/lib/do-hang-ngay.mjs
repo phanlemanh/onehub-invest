@@ -374,8 +374,21 @@ export function soCap(cap) {
   return { n_cap: n, giu_cu: giuCu, giu_moi: giuMoi, chenh_cap: chenh, khoang, co_y_nghia: khoang.thap > 0 || khoang.cao < 0 };
 }
 
-/** Chặn rò: JSON của detail chứa một chuỗi cấm → ném `LO <nhãn>`. @param {{nhan: string, chuoi: string}[]} cam */
+/** Gập chuỗi để so rò: NFKD bỏ dấu, đ→d, chữ thường, gộp khoảng trắng (cùng tinh thần foldSql/nameVariants của sync-cloud). */
+export const gapChu = (s) => String(s).normalize("NFKD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** Chặn rò: một lá chuỗi hay khoá của detail (đã gập) chứa một chuỗi cấm (đã gập) → ném `LO <nhãn>`. Duyệt cây, không so trên
+ * JSON đã escape (chữ có xuống dòng hay dấu nháy vẫn bắt được). @param {{nhan: string, chuoi: string}[]} cam */
 export function chanLo(detail, cam) {
-  const s = JSON.stringify(detail);
-  for (const { nhan, chuoi } of cam) if (chuoi && s.includes(chuoi)) throw new Error(`LO ${nhan}`);
+  const la = [];
+  (function di(x) {
+    if (x === null || x === undefined) return;
+    if (typeof x === "string") { la.push(gapChu(x)); return; }
+    if (typeof x !== "object") return;
+    for (const [k, v] of Object.entries(x)) { la.push(gapChu(k)); di(v); }
+  })(detail);
+  for (const { nhan, chuoi } of cam) {
+    const g = chuoi ? gapChu(chuoi) : "";
+    if (g && la.some((x) => x.includes(g))) throw new Error(`LO ${nhan}`);
+  }
 }

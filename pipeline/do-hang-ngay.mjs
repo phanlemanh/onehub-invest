@@ -113,13 +113,19 @@ export async function docThe(client, ngay) {
   return rows.map((r) => ({ ...r, item_id: Number(r.item_id) }));
 }
 
-const KHOA_LAT_THE = {
+/** Giá trị ô của thẻ: nhãn người trước, rồi nháp của cách đọc hiện. */
+const oThe = (t, f) => t.nhan?.[f]?.value ?? t.draft?.cach_doc?.[t.draft?.hien]?.o?.[f] ?? null;
+/** Chưa có liên kết danh bạ cho thẻ: bài nêu tên (dự án/toà) → «chưa có trong danh bạ», không nêu → «không nêu chỗ». */
+const chuaThe = (t, f) => ({ chua: oThe(t, f) ? "chua-co-danh-ba" : "khong-tin-hieu" });
+export const KHOA_LAT_THE = {
   thi_truong: (t) => t.market_id ?? { chua: "khong-tin-hieu" },
   phuong: (t) => t.ward_id ?? { chua: "khong-tin-hieu" },
+  du_an: (t) => chuaThe(t, "project"),
   du_an_theo_chu: (t) => {
-    const v = t.nhan?.project?.value ?? t.draft?.cach_doc?.[t.draft?.hien]?.o?.project ?? null;
+    const v = oThe(t, "project");
     return v ? `theo-chu-bai:${v}` : { chua: "khong-tin-hieu" };
   },
+  toa: (t) => chuaThe(t, "building"),
 };
 
 /** Phân rã một tập thẻ theo mọi chiều: số thẻ và (n, giữ) của cách đọc hiện trên ô các thẻ đã soát. */
@@ -150,7 +156,9 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
     chuyen = chuyenBac(truoc, nay, { nghi: new Set(nghiRows.map((r) => r.offer_id)), dotBien });
     await ghiChuyen(client, ngay, chuyen);
     const { rows: ngayRows } = await client.query("SELECT * FROM data_level_change WHERE snap_date = $1", [ngay]);
-    const lat = Object.fromEntries(Object.entries(KHOA_LAT_DON_VI).map(([c, k]) => [c, phanRa(ngayRows, k, () => 1, 30, { dotBien })]));
+    // data_level_change không mang core: tra đơn vị (lần này, hoặc lần trước với đơn vị đã mất) để biết bài có nêu toà không.
+    const donVi = (r) => nay.get(r.unit_key) ?? truoc.get(r.unit_key) ?? r;
+    const lat = Object.fromEntries(Object.entries(KHOA_LAT_DON_VI).map(([c, k]) => [c, phanRa(ngayRows, (r) => k(dotBien === "lat-tren-dong" ? r : donVi(r)), () => 1, 30, { dotBien })]));
     ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "pass", detail: { ngay, ...demChuyenBac(ngayRows, { dotBien }), lat } });
   }
   await thayDonVi(client, nay, ngay);
@@ -186,9 +194,13 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
        FROM areas a WHERE a.id = ANY ($1)`, [[...new Set(tinSl.map((r) => r.area_id).filter(Boolean))]]);
   const kvCua = new Map(kv.map((r) => [r.id, r]));
   const viTri = new Map(tinSl.map((r) => [r.pid, kvCua.get(r.area_id) ?? {}]));
+  const toaChu = new Set(tinSl.filter((r) => r.block_raw).map((r) => r.pid));
+  const duAnChu = new Set(sl.filter((r) => r.probabilities?.o?.project?.v).map((r) => r.post_id));
   const latSl = {
     thi_truong: phanRa(sl, (r) => viTri.get(r.post_id)?.market_id ?? { chua: "khong-tin-hieu" }),
     phuong: phanRa(sl, (r) => viTri.get(r.post_id)?.ward_id ?? { chua: "khong-tin-hieu" }),
+    du_an: phanRa(sl, (r) => ({ chua: duAnChu.has(r.post_id) ? "chua-co-danh-ba" : "khong-tin-hieu" })),
+    toa: phanRa(sl, (r) => ({ chua: toaChu.has(r.post_id) ? "chua-co-danh-ba" : "khong-tin-hieu" })),
   };
   ra.push({ check_name: "do1-tin-hieu", entity: "S03", status: th.cach_doc.some((x) => x.status === "pass") ? "pass" : "skip", detail: { ngay, ...th, lat: latSl } });
   // Khoá đọc gộp mới chưa có dòng so cặp (AC-10): ghi skip «chưa so cặp» một lần.
@@ -201,6 +213,7 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
 
   // ---- Chặn rò (AC-9) rồi ghi ----
   const cam = await chuoiCam(client, the, sl, tinSl);
+  if (dotBien?.startsWith("lo:")) for (const r of ra) r.detail = { ...r.detail, x: dotBien.slice(3) };
   for (const r of ra) chanLo(dotBien === "lo-trich" ? { ...r.detail, trich: sl.find((x) => x.quote)?.quote } : dotBien === "lo-labeler" ? { ...r.detail, nguoi: cam.find((x) => x.nhan === "LABELER")?.chuoi } : r.detail, cam);
   if (write) {
     await client.query(

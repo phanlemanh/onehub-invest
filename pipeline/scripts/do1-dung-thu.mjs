@@ -10,6 +10,7 @@ import pg from "pg";
 
 import { doHangNgay } from "../do-hang-ngay.mjs";
 import { textHash } from "../lib/eval-labels.mjs";
+import { LISTING_INTENT as YD } from "../lib/vocab.generated.mjs";
 import { rutMau } from "../mau-soat-cuon-chieu.mjs";
 import { soSanh } from "../so-sanh-cach-doc.mjs";
 
@@ -27,7 +28,7 @@ async function main() {
     await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('do1-dung-thu__s03', 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`);
     const homNay = new Date();
     const ngays = [7, 1].map((n) => ngayVn(new Date(homNay.getTime() - n * 86400e3)));
-    const o = (pn, dt, gia, yd = "offer") => ({ listing_intent: { v: yd, cc: "chu_bai", trich: "bán", trich_ok: true }, kind: { v: "sale" },
+    const o = (pn, dt, gia, yd = YD.offer) => ({ listing_intent: { v: yd, cc: "chu_bai", trich: "bán", trich_ok: true }, kind: { v: "sale" },
       property_type: { v: "apartment" }, bedrooms: { v: pn }, bathrooms: { v: 2 }, area_m2: { v: dt }, price_min_vnd: { v: gia }, price_max_vnd: { v: gia },
       project: { v: "Vinhomes Ocean Park" } });
     for (const [k, ngay] of ngays.entries()) {
@@ -43,8 +44,8 @@ async function main() {
           const i = Number(id.slice(-2));
           await c.query(`INSERT INTO silver_labels (source_code, post_id, text_hash, model, prompt_version, listing_intent, kind, json_ok, cost_usd, run_id, probabilities, labeled_at)
                          VALUES ('S03', $1, $2, $3, 'dg3-s03-v3', $4, 'sale', $5, 0.0017, 'do1-dung-thu', $6, $7) ON CONFLICT DO NOTHING`,
-            [id, textHash(id), MODEL, i % 9 === 0 ? "inquiry" : "offer", i % 11 !== 5,
-              { nguon: "doc-gop", o_duoc_giao: Object.keys(o(2, 60, 3e9)), o: o(2, 60 + i + (i % 4 === 0 ? 3 : 0), 3e9 + i * 1e8, i % 9 === 0 ? "inquiry" : "offer") }, `${ngay}T05:00:00Z`]);
+            [id, textHash(id), MODEL, i % 9 === 0 ? YD.inquiry : YD.offer, i % 11 !== 5,
+              { nguon: "doc-gop", o_duoc_giao: Object.keys(o(2, 60, 3e9)), o: o(2, 60 + i + (i % 4 === 0 ? 3 : 0), 3e9 + i * 1e8, i % 9 === 0 ? YD.inquiry : YD.offer) }, `${ngay}T05:00:00Z`]);
         }
         return { goi: ids.length, cham_tran: false };
       };
@@ -52,7 +53,7 @@ async function main() {
       // Mạnh giả: soát 15/20 thẻ, giữ phần lớn nháp, sửa diện tích ở mỗi thẻ thứ tư.
       for (const [j, t] of kq.the.slice(0, 15).entries()) {
         const n = t.draft.cach_doc[t.draft.hien];
-        const nhan = { listing_intent: n.trang_thai === "co" ? "offer" : "not_listing", ...(n.trang_thai === "co" ? n.o : {}) };
+        const nhan = { listing_intent: n.trang_thai === "co" ? YD.offer : YD.not_listing, ...(n.trang_thai === "co" ? n.o : {}) };
         if (j % 4 === 0 && nhan.area_m2) nhan.area_m2 = String(Number(nhan.area_m2) + 5);
         for (const [f, v] of Object.entries(nhan)) {
           if (!["listing_intent", "kind", "property_type", "bedrooms", "area_m2", "price_min_vnd", "price_max_vnd", "project"].includes(f)) continue;

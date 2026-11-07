@@ -179,21 +179,18 @@ test("DO1-AC-5 tín hiệu không cần nhãn: JSON hỏng, trích lạc, phủ 
 });
 
 // ---- AC-7 ----
+/** Đơn vị đúng khuôn bộ ghi (donViHienTai): market_id, ward_id, building_key, core.toa_chu. */
 function donViLat() {
   const r = [];
-  for (let p = 0; p < 40; p++) for (let i = 0; i < 40 - p; i++) r.push({ market: p % 2 ? "vn-hanoi" : "vn-hcmc", ward: `vn-w${String(p).padStart(2, "0")}`, toa: null });
-  for (let i = 0; i < 3; i++) r.push({ market: "vn-hanoi", ward: null, toa: null });
-  for (let i = 0; i < 2; i++) r.push({ market: "vn-hanoi", ward: null, toa: { chu: "s8.02" } });
-  r.push({ market: "vn-hanoi", ward: null, toa: { key: "bld_X" } });
+  for (let p = 0; p < 40; p++) for (let i = 0; i < 40 - p; i++) r.push({ market_id: p % 2 ? "vn-hanoi" : "vn-hcmc", ward_id: `vn-w${String(p).padStart(2, "0")}`, building_key: null, project_key: null, core: { toa_chu: false } });
+  for (let i = 0; i < 3; i++) r.push({ market_id: "vn-hanoi", ward_id: null, building_key: null, project_key: null, core: { toa_chu: false } });
+  for (let i = 0; i < 2; i++) r.push({ market_id: "vn-hanoi", ward_id: null, building_key: null, project_key: null, core: { toa_chu: true } });
+  r.push({ market_id: "vn-hanoi", ward_id: null, building_key: "bld_X", project_key: null, core: { toa_chu: true } });
   return r;
 }
-const KHOA_LAT = {
-  thi_truong: (r) => r.market,
-  phuong: (r) => r.ward ?? { chua: r.toa?.chu ? "chua-co-danh-ba" : "khong-tin-hieu" },
-  toa: (r) => r.toa?.key ?? { chua: r.toa?.chu ? "chua-co-danh-ba" : "khong-tin-hieu" },
-};
+const KHOA_LAT = KHOA_LAT_DON_VI;
 function kiemLat(rows, dotBien) {
-  const lat = Object.fromEntries(Object.entries(KHOA_LAT).map(([k, f]) => [k, phanRa(rows, f, () => 1, 30, { dotBien })]));
+  const lat = Object.fromEntries(["thi_truong", "phuong", "toa"].map((k) => [k, phanRa(rows, KHOA_LAT[k], () => 1, 30, { dotBien })]));
   if (Object.keys(lat.thi_truong.o).filter((k) => k.startsWith("vn-")).length !== 2) throw new Error("THIEU THI TRUONG");
   for (const [k, v] of Object.entries(lat)) {
     const tong = Object.values(v.o).reduce((s, n) => s + n, 0);
@@ -207,12 +204,12 @@ test("DO1-AC-7 phân rã thị trường, phường (30 ô + khác), hai ô chư
   const lat = kiemLat(rows);
   assert.equal(Object.keys(lat.phuong.o).filter((k) => k.startsWith("vn-w")).length, 30);
   assert.equal(lat.phuong.o.khac, 10 + 9 + 8 + 7 + 6 + 5 + 4 + 3 + 2 + 1);
-  assert.equal(lat.phuong.o["khong-tin-hieu"], 4); // 3 không nêu + 1 có toà trong danh bạ mà không phường
-  assert.equal(lat.phuong.o["chua-co-danh-ba"], 2);
+  assert.equal(lat.phuong.o["khong-tin-hieu"], 6); // phường: không đơn vị nào có phường → không nêu chỗ (6)
+  assert.equal(lat.toa.o["khong-tin-hieu"], 1600 / 2 + 20 + 3); // 820 đơn vị có phường không nêu toà + 3 không nêu gì
   assert.equal(lat.toa.o.bld_X, 1);
   assert.throws(() => kiemLat(rows, "bo-khac"), /TONG LAT LECH/);
   assert.throws(() => kiemLat(rows, "gop-chua-gan"), /GOP HAI O CHUA GAN/);
-  assert.throws(() => kiemLat(rows.map((r) => ({ ...r, market: "x" }))), /THIEU THI TRUONG/);
+  assert.throws(() => kiemLat(rows.map((r) => ({ ...r, market_id: "x" }))), /THIEU THI TRUONG/);
 });
 
 // ---- Chuẩn hoá nháp về khuôn eval_labels (bản chép labels-normalize.ts) ----
@@ -304,6 +301,7 @@ import pg from "pg";
 
 import { chonMau as chonMauLib, textHash as bam } from "../lib/eval-labels.mjs";
 import { khoaDocGopMacDinh, LAT_CUON_CHIEU, rutMau } from "../mau-soat-cuon-chieu.mjs";
+import { KHOA_LAT_DON_VI } from "../do-hang-ngay.mjs";
 
 const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const SQL_083 = readFileSync(path.join(GOC, "db/migrations/083_do_hang_ngay.sql"), "utf8");
@@ -414,8 +412,6 @@ test("DO1-AC-1 rút 20 bài ngày D, gạt bài thử, khử trùng, gồm bài 
       assert.ok(kq.the.every((t) => t.draft.cach_doc["bo-doc-luat"] && t.draft.cach_doc[KHOA_GOP] && t.draft.hien));
       assert.ok(kq.the.some((t) => t.post_id === "do1p00"), "bài 00:30 giờ VN thuộc ngày D");
       assert.ok(!kq.the.some((t) => t.post_id.startsWith("do1q")), "bài D-1 không vào");
-      const khongGop = kq.the.find((t) => t.draft.cach_doc[KHOA_GOP].trang_thai !== "co");
-      if (khongGop) assert.equal(khongGop.draft.hien, "bo-doc-luat");
       const { rows } = await c.query("SELECT ref_id FROM eval_label_items WHERE lat = $1 AND stratum = $2 ORDER BY ref_id", [LAT_CUON_CHIEU, D]);
       const lai = await rutMau(c, { ngay: D, goiDocGop: goiGia(c), log: () => {} });
       assert.deepEqual([lai.them, lai.goi], [0, 0]);
@@ -428,6 +424,18 @@ test("DO1-AC-1 rút 20 bài ngày D, gạt bài thử, khử trùng, gồm bài 
       const { dungNhap } = await import("../mau-soat-cuon-chieu.mjs");
       const { rows: sl } = await c.query("SELECT * FROM silver_labels WHERE post_id = $1", [b.post_id]);
       assert.ok(Object.keys(dungNhap({ tin: null, silver: sl, khoaGop: KHOA_GOP, oNguoi: [], luc: "" }).cach_doc).includes(KHOA_GOP.replace("v3", "v4")));
+    });
+    // Nhánh không có đọc gộp (đọc gộp không trả gì): thẻ phải hiện bộ đọc luật, nháp đọc gộp «vang».
+    const kiemHien = (kq) => {
+      const vang = kq.the.filter((t) => t.draft.cach_doc[KHOA_GOP].trang_thai === "vang");
+      if (!vang.length) throw new Error("TIEN DE: không thẻ nào thiếu đọc gộp");
+      if (vang.some((t) => t.draft.hien !== "bo-doc-luat")) throw new Error("HIEN SAI KHI VANG");
+      return vang.length;
+    };
+    const khongTra = async (ids) => ({ goi: ids.length, cham_tran: false });
+    await thu(c, async () => assert.ok(kiemHien(await rutMau(c, { ngay: D, goiDocGop: khongTra, log: () => {} })) >= 10));
+    await thu(c, async () => {
+      await assert.rejects(async () => kiemHien(await rutMau(c, { ngay: D, goiDocGop: khongTra, log: () => {}, dotBien: "hien-luon-gop" })), /HIEN SAI KHI VANG/);
     });
     for (const [dotBien, msg] of [["giu-bai-thu", /MAU CO BAI THU/], ["theo-thu-tu-chen", /MAU KHONG TAT DINH/], ["bo-bai-khong-nhan", /MAU BO BAI KHONG NHAN/], ["khong-tin-thanh-co", /NULL KHONG TIN THANH GIU/]]) {
       await thu(c, async () => {
@@ -522,6 +530,7 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
     const o = {};
     for (const m of ["A", "B", "C", "D", "E", "G", "f1"]) o[m] = await tinDu(c, { ma: m, area: ward, dt: m === "B" ? null : 62 });
     o.h1 = await tinDu(c, { ma: "h1", source: "S06", area: ward });
+    await writeAssertions(c, [{ subject_key: "S03:do1A", field: "block_raw", value: "S8.02", evidence_tier: "observed", method: "e1_rule", method_version: "do1-test", rule_id: "do1" }]);
     await resolveOffers(c, Object.values(o));
     const F = await can(c, [o.f1]), P = await can(c, [o.h1]);
     await c.query("DELETE FROM data_level_unit");
@@ -565,6 +574,8 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
       assert.equal(d.theo_nguon.S06.doi_khoa, 2);
       assert.equal(d.theo_huong_ly_do["tut:thieu-gia"], 2);
       for (const [chieu, v] of Object.entries(d.lat)) assert.equal(Object.values(v.o).reduce((s, n) => s + n, 0), v.tong, `lát ${chieu}`);
+      // Lát toà đọc core của đơn vị (bộ ghi): tin A nêu toà S8.02 mà danh bạ chưa có → đúng 1 ô chua-co-danh-ba.
+      if (d.lat.toa.o["chua-co-danh-ba"] !== 1) throw new Error(`GOP HAI O CHUA GAN: toa ${JSON.stringify(d.lat.toa.o)}`);
       // data_level_unit khớp hai hàm SQL ở mọi đơn vị.
       const { rows: [{ lech }] } = await c.query(`
         SELECT count(*)::int AS lech FROM data_level_unit u
@@ -575,6 +586,11 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
       assert.equal(lech, 0);
       await doHangNgay(c, { ngay: "2025-01-15", write: true });
       await kiem(); // chạy lại không đổi dữ liệu: vẫn đúng các dòng ấy
+    });
+    await thu(c, async () => {
+      const r = await doHangNgay(c, { ngay: "2025-01-15", write: true, dotBien: "lat-tren-dong" });
+      const toa = r.dq.find((x) => x.check_name === "do1-chuyen-bac").detail.lat.toa.o;
+      assert.throws(() => { if (toa["chua-co-danh-ba"] !== 1) throw new Error("GOP HAI O CHUA GAN"); }, /GOP HAI O CHUA GAN/);
     });
     for (const [dotBien, msg] of [["dong-gia", /CHUYEN BAC GIA/], ["bo-do-luong", /THIEU DO LUONG/], ["doi-khoa-thanh-bien-dong", /DOI KHOA THANH BIEN DONG/]]) {
       await thu(c, async () => {
@@ -631,10 +647,21 @@ test("DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trí
       }
     }
     assert.ok("du_an_theo_chu" in giu.detail.lat && "thi_truong" in giu.detail.lat);
-    // AC-9: sáu chuỗi cấm không có trong JSON nào.
+    // AC-4 qua bộ ghi: số bỏ sót của bộ đọc luật = tính lại từ chính nháp đã chụp và nhãn vừa gắn.
+    const daGan = kq.the.slice(0, 14);
+    const tinRao = daGan.filter((t) => t.draft.cach_doc["bo-doc-luat"].trang_thai === "co");
+    const boLuat = dq["do1-bo-sot"].detail.cach_doc.find((x) => x.cach_doc === "bo-doc-luat").tuan_nay;
+    assert.deepEqual([boLuat.n, boLuat.bo], [tinRao.length, 0], "thẻ người gắn «offer» đều là thẻ bộ đọc luật có tin");
+    // AC-9: sáu chuỗi cấm không có trong JSON nào (dạng lưu: SĐT E.164).
+    const CAM = ["CHU_BAI_X", "TRICH_Y", "NGUOI_Z", "+84900000001", "LABELER_W", "TEN_THAT_V"];
     const { rows } = await c.query("SELECT detail FROM dq_check_results WHERE check_name LIKE 'do1-%' AND checked_at > now() - interval '1 minute'");
     const json = rows.map((r) => r.detail).join("\n");
-    for (const x of ["CHU_BAI_X", "TRICH_Y", "NGUOI_Z", "0900000001", "LABELER_W", "TEN_THAT_V"]) assert.ok(!json.includes(x), `lộ ${x}`);
+    for (const x of CAM) assert.ok(!json.includes(x), `lộ ${x}`);
+    // Đối chứng dương: mỗi chuỗi trong sáu chuỗi, cài vào detail, đều bị chặn — danh sách cấm thật sự chứa nó (kể cả viết thường).
+    const NGUON = ["CHU_BAI_X căn hộ mẫu đặc biệt dài hơn hai mươi ký tự", "TRICH_Y câu trích dài", "NGUOI_Z", "+84900000001", "LABELER_W", "TEN_THAT_V"];
+    for (const x of [...NGUON, "chu_bai_x căn hộ mẫu đặc biệt dài hơn hai mươi ký tự", "Ten_That_V"]) {
+      await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: `lo:${x}` }), /^Error: LO /, `không chặn ${x}`));
+    }
     assert.ok(fx.coTin.size > 0);
     await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-trich" }), /LO TRICH/));
     await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-labeler" }), /LO LABELER/));
