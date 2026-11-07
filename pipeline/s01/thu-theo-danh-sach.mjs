@@ -66,7 +66,7 @@ process.on("SIGINT", () => thoatSach(3));
 const danhSach = JSON.parse(readFileSync(DANH_SACH, "utf8"));
 
 async function duDiscovery(cityId, ids) {
-  const dir = join(DO_DIR, "snapshots", cityId, `${cityId}__airbnb-discovery__n1`);
+  const dir = join(SNAP_ROOT, cityId, `${cityId}__airbnb-discovery__n1`); // 0711-13-luot1: đồng bộ với paths.snapshotRoot của collect
   await mkdir(dir, { recursive: true });
   const items = ids.map((id) => ({
     source: "airbnb-discovery", sourceId: String(id).replace(/^abnb_/, ""), kind: "card",
