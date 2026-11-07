@@ -14,6 +14,8 @@
         "GN0b",
         "GN0c",
         "PL30",
+        "DO1",
+        "DO3",
         "PL18",
         "GCQ1",
         "GCQ2",
@@ -25,7 +27,8 @@
         "PL13",
         "PL20",
         "GC2",
-        "GC3"
+        "GC3",
+        "DO2"
       ]
     },
     {
@@ -292,7 +295,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren. (Câu cũ «DB1 dựng từ phát biểu của hàng này, nên hàng này đứng trước DB1» hết hiệu lực theo Q4 07/11.) Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Đo 04/11: nhóm Ocean Park 366/875 tin có trục, nhóm Grand Park 17/2.284. Lượt cắt 04/11 thêm GC0 vào dung_tren: tập test của hàng này cần nhãn trục, tầng do GC0 mở. Lượt cắt 04/11 thêm GCQ2: bộ đọc phải biết dự án của nhóm trước vì mã toà trùng giữa dự án. Đo 04/11: cột bathrooms của S03 trống 3.708/3.708 dù ít nhất 624 tin căn hộ ghi số WC và Haiku đã đọc 612 tin; hàng này đưa số WC vào phát biểu, cùng lượt với loại căn. Q4 07/11 (ROADMAP §3 mục 32): DB1 lượt đầu không chờ hàng này; mã căn của hàng này bổ sung vào danh bạ sau."
     },
     {
       "ma": "PL14",
@@ -395,7 +398,8 @@
       "dung_tren": [
         "PL15",
         "GC0",
-        "PL30"
+        "PL30",
+        "DO1"
       ],
       "slug": "e1-e2-theo-lop",
       "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
@@ -404,7 +408,7 @@
       "phu": [
         "C2.4"
       ],
-      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước."
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước. Biến silver_labels của đọc gộp PL30 thành phát biểu observed/e2_llm kèm câu trích (Q5 07/11). Đề xuất (quyết ở Cổng Phạm vi PL18): gánh luôn ý định tin (offer/inquiry/not_listing) làm trường phát biểu theo khoá bài — hiện chưa hàng nào nhận; không gộp thì cắt hàng riêng."
     },
     {
       "ma": "PL19",
@@ -462,7 +466,8 @@
       "phu": [
         "C2.5"
       ],
-      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2"
+      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2",
+      "ghi_chu": "Q3 hoãn 07/11: cổng tự áp và B3 đo trên tập test mù đóng băng hay mẫu nháp — quyết khi mở hàng này."
     },
     {
       "ma": "PL22",
@@ -3442,7 +3447,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md)."
+      "ghi_chu": "11 tiêu chí vì khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được. Không kéo asset_nodes xuống trục, căn (ADR-0016 §10). Gánh C1.5 và DBG theo mục chờ PL11, DBG. Thấp tầng và nhà phố ngoài lát. Căn cứ: docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md §5. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Lượt đầu dựng khung toà, trục từ S08 + phát biểu toà, trục của bộ đọc luật (Q4 07/11); mã căn từ PL13 bổ sung sau. Mạnh Cổng Đáng 07/11: «Build theo đề xuất»."
     },
     {
       "ma": "DN2",
@@ -3578,7 +3583,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²)."
+      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; S08 không vào giá trị. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²). Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
     },
     {
       "ma": "GC3",
@@ -3606,7 +3611,7 @@
         "pipeline/sync-cloud.mjs",
         "CONTEXT.md"
       ],
-      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng."
+      "ghi_chu": "Ba câu của Mạnh chốt ở Cổng Phạm vi: tin có dải có đủ điều kiện hiện không (VISIBLE và bậc B1 đang đòi area_m2); tin thuê cận dưới 88,7% có chấp nhận không; có nhận dải mức nhóm không. DDL cloud xin duyệt trước khi gộp, Claude tự chạy qua Management API. Thuật ngữ nhãn vào CONTEXT.md cùng hàng. Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
     },
     {
       "ma": "GC0",
@@ -3948,6 +3953,80 @@
       "bat_khi": "Bài nhiều ảnh sau khi bật có mã album trên mọi ảnh; đường lùi phai-lui chạy được",
       "vi_sao": "Ghép ảnh theo thời gian sai hoặc không phán được ~40% cụm đọc tay 05/11.",
       "ghi_chu": "Mạnh duyệt Cổng Phạm vi 05/11. Làn ZCode (nhánh zcode/ma-album-s03); khởi động lại gateway gộp với EN2."
+    },
+    {
+      "ma": "DO1",
+      "slug": "do-hieu-qua-hang-ngay",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PL30",
+        "DF1"
+      ],
+      "phu": [
+        "DO1"
+      ],
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "cau_giao": "Người vận hành mở /ops và thấy mỗi ngày: tỉ lệ giữ nháp theo (cách đọc × ô) từ mẫu soát cuốn chiếu 20 bài, ước tỉ lệ tin rao bị bỏ sót, các tín hiệu không cần nhãn (JSON hỏng, câu trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, tỉ lệ ô người sửa) và dòng chuyển bậc căn (lên, tụt, vì sao); mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
+      "bat_khi": "Bảy ngày liên tiếp có số tuần-so-tuần cho mọi ô của đọc gộp S03; một thay đổi model hoặc prompt cho thấy được chênh trên các số này trước và sau",
+      "vi_sao": "Mạnh 07/11: «Đo lường là quan trọng». Tài liệu mô hình pipeline Q2 (Mạnh duyệt 07/11): thiếu số đo hằng ngày thì mọi thay đổi model, prompt, luật chỉ phán bằng cảm nhận.",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ghi_chu": "Thu hẹp theo Q2: chi phí lên bậc thuộc PL31, độ tươi thuộc PL22, lý do rơi đi cùng DF3; không thay GNH2. Mẫu soát theo cách «máy nháp, Mạnh feedback» (~10–15 phút/ngày), số có neo — chỉ so tuần với tuần, không dùng mở cổng tự áp (Q3 hoãn tới PL21). Số tính sẵn ở pipeline (luật 10), lên Ops qua push-ops-facts (ADR-0014). Căn cứ: docs/architecture/mo-hinh-pipeline-mot-can-nha.md §3. Mạnh 07/11: «Có thể nhìn trên từng phường/xã, dự án, từng toà» — lát theo phường/xã, dự án, toà áp cho DO1, DO2, DO3; mức toà/trục phụ thuộc DN1, DB1 (danh bạ), S03 hiện chỉ ~1% có phường nên ô «chưa gắn» phải hiện rõ."
+    },
+    {
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ma": "DO2",
+      "slug": "do-mot-can-nha",
+      "dung_tren": [
+        "DO1",
+        "DB1"
+      ],
+      "phu": [
+        "DO2"
+      ],
+      "cau_giao": "Người vận hành thấy mỗi ngày độ đúng của Một Căn Nhà: tỉ lệ tin gắn đúng căn theo mức (căn, trục, toà) từ mẫu soát cặp tin–căn, tỉ lệ tách nhầm (một căn thành nhiều) và gộp nhầm (nhiều căn thành một), độ trễ ghi nhận tin nghỉ; mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
+      "bat_khi": "Bảy ngày liên tiếp có số theo tuần cho ba tỉ lệ và độ trễ tin nghỉ; ca hai môi giới rao cùng một căn (vd offer_3cbed8a9ffbec502 / offer_33cd107365c787fc) hiện trong đếm tách nhầm",
+      "vi_sao": "Mạnh 07/11 «Đo lường là quan trọng» · «Có thể nhìn trên từng phường/xã, dự án, từng toà». PL20 và GT4 chỉ đo một lần lúc dựng; chưa có số đo đều cho gắn căn, tách nhầm và độ trễ tin nghỉ (việc Mạnh cho làm sau 05/11, chưa có hàng).",
+      "ghi_chu": "Dùng chung màn soát với DO1 (máy nháp, Mạnh feedback, thêm ~5 phút/ngày); số có neo, chỉ so tuần với tuần. Gộp nhầm dùng thước của GT4; không đổi khoá gộp (việc của GT4)."
+    },
+    {
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "do-luong",
+      "vung": [
+        "pipeline/sql/450_dq_checks.sql",
+        "pipeline/**",
+        "app/src/app/ops/**"
+      ],
+      "ma": "DO3",
+      "slug": "do-lam-giau",
+      "dung_tren": [
+        "DO1"
+      ],
+      "phu": [
+        "DO3"
+      ],
+      "cau_giao": "Người vận hành thấy mỗi ngày, theo từng đường làm giàu (số qua người đăng, diện tích suy ra, quy ước nhóm, danh mục CĐT): bao nhiêu giá trị được thêm, bao nhiêu bị người sửa hay rút, và kết quả kiểm ngược định kỳ (giấu giá trị có sẵn rồi so); mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó",
+      "bat_khi": "Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson",
+      "vi_sao": "Mạnh 07/11: đo làm giàu theo phường/xã, dự án, toà. C2b chỉ đo độ phủ (field-yield), PL31 đo chi phí, GC2 kiểm ngược một lần lúc dựng; chưa có độ đúng làm giàu đo đều (vd 758 tin vừa nhận số qua người đăng 07/11).",
+      "ghi_chu": "Dùng chung màn soát với DO1; kiểm ngược chạy ở pipeline (luật 10), không gọi model khi không cần."
     }
   ],
   "chan_troi": [
@@ -4545,8 +4624,8 @@
     {
       "ma": "GNH2",
       "dot": "gan-nhan-s03-0611",
-      "cau_giao": "Hai lớp nhãn: vàng do người duyệt, bạc do model lớn gắn dưới labeler_id riêng, người soát ngẫu nhiên ~20%",
-      "ly_do": "Đề xuất của trợ lý gắn nhãn 06/11; Mạnh bỏ đo mù, chọn «nháp rồi feedback», chưa chốt lớp bạc. Nhãn đo mù 10 thẻ đã niêm phong ở research-local/do-mu-s03",
+      "cau_giao": "Hai lớp nhãn: vàng do người duyệt, «nhãn nháp Opus» do model lớn gắn dưới labeler_id riêng, người soát ngẫu nhiên ~20%",
+      "ly_do": "Đề xuất của trợ lý gắn nhãn 06/11; Mạnh bỏ đo mù, chọn «nháp rồi feedback», chưa chốt lớp bạc. Nhãn đo mù 10 thẻ đã niêm phong ở research-local/do-mu-s03 Đổi tên theo Q7 07/11: «nhãn bạc» là bảng silver_labels, lớp này gọi «nhãn nháp Opus».",
       "phu": [
         "GNH2"
       ],

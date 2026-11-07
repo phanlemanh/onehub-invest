@@ -464,10 +464,46 @@ _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 **Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
 loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
 (gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
-gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu.
+gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu. Từ 06/11 (Mạnh chốt) lát `s03-theo-nhom` gắn theo cách
+«máy nháp, Mạnh feedback» (có neo, bỏ gắn hai người trong đợt); gắn mù cho tập test đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32).
 - Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
 - Slug URL: `labels`
 _Avoid_: annotate, label UI, gán nhãn
+
+**Nhãn bạc**: Kết quả máy đọc một bài — ý định tin, loại tin và các ô đọc được kèm câu trích, theo model và phiên bản prompt;
+là đề xuất, không phải giá trị chuẩn (luật 7). PL18 biến nó thành phát biểu; GC2/GC3 đọc phát biểu, không đọc thẳng bảng này.
+- Code: `silver_labels` · RESO: —
+_Avoid_: lớp nhãn bạc (dành cho nhãn nháp Opus của GNH2, chưa chốt), nhãn AI
+
+**Nhãn nháp Opus**: Nhãn do model lớn gắn dưới `labeler_id` riêng trong `eval_labels` để người soát ngẫu nhiên (đề xuất GNH2,
+Mạnh chưa chốt). Khác nhãn bạc (kết quả máy đọc) và nhãn đánh giá (người gắn).
+- Code: `eval_labels` (labeler_id riêng, GNH2) · RESO: —
+_Avoid_: nhãn bạc, silver
+
+**Mẫu soát cuốn chiếu**: 20 bài rút ngẫu nhiên mỗi ngày từ bài nhận, kể cả bài máy không nhận là tin rao; màn hiện nháp máy,
+người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị bỏ sót theo tuần — số có neo, chỉ để thấy trôi, không mở cổng tự áp
+(DO1–DO3).
+- Code: DO1 `do-hieu-qua-hang-ngay` · RESO: —
+_Avoid_: rolling sample, mẫu mù
+
+**Tập test mù đóng băng**: Tập nhãn người gắn không thấy giá trị máy, đóng băng, chỉ dùng để chấm cận dưới Wilson cho cổng tự
+áp và bậc B3; không trộn nhãn lệch mẫu. Cỡ ~200 tin mỗi phân khúc cho nhóm A. Có dùng hay không: quyết khi mở PL21.
+- Code: PL21 · RESO: —
+_Avoid_: lát vàng (lát gắn theo nháp có neo), golden set
+
+**Bài khác nội dung**: Bài nhận sau khi gộp các bài cùng nội dung (đăng lại ở nhiều nhóm); đơn vị đếm của chặng giữa bài nhận
+và tin rao. 30/10–05/11: 44% số bài nhận.
+- Code: gộp theo nội dung (GT2) · RESO: —
+_Avoid_: bài unique, bài sạch
+
+**Đơn vị bài đăng**: Một lần đăng của S03 gồm chữ và ảnh đi cùng (ghép theo mã album hay cửa sổ thời gian), giữa sự kiện thô
+và tin rao (GT2).
+- Code: `eval_label_items.ghep` (lát), lớp bài đăng GT2 · RESO: —
+_Avoid_: post group, cụm bài
+
+**Dòng chuyển bậc**: Số căn lên bậc và tụt bậc B0–B5 mỗi ngày kèm lý do; đo «giữ không tụt» của north star (FRAMING §5).
+- Code: `data_level_snapshot` (so hai ngày), DO1 · RESO: —
+_Avoid_: level churn
 
 **Nhãn đánh giá**: Giá trị một người gắn cho một trường của một tin khi gắn nhãn — sự thật tham chiếu để chấm độ đúng
 của máy (PL9), không phải giá trị hiển thị; «tin không nêu» là một nhãn hợp lệ. Gắn với người gắn nên là tầng A, chỉ ở
