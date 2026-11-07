@@ -11,12 +11,12 @@
   `taoDepsMacDinh` thiếu `doiTen`, `tonTai`, `xoaFile` (trường bắt buộc), nên `chayVong` ném TypeError ở `deps.tonTai`. `khoiDongBoTra` (dòng 408–412) gọi `chayVongLookup`, hàm không được định nghĩa. Patch không có chỗ gọi `khoiDongBoTra` hay `dungBoHenGio`, và không đọc env `S03_LOOKUP_DIR` như runtime-map mô tả. Lệnh chấm `lnb_tra` chỉ chạy vitest (không typecheck) trên deps giả nên lọt. Vi phạm luật 12 của AGENTS.
 
 - **Snapshot hồ sơ vẫn bị đánh dấu đã nạp khi chưa áp 080, trái DATA-CONTRACT/AC-6, và thước db-nap không kiểm vế này**
-  file: `pipeline/import-airbnb.mjs:205` · severity: medium · source: conventions · AC: AC-6
-  Khi `coBang = false`, bộ nạp vẫn INSERT vào `airbnb_snapshots` rồi COMMIT. Bảng này là dấu «đã nạp» mà finalize-hanoi.sh:15 dùng. DATA-CONTRACT v7 và AC-6 ghi «KHÔNG đánh dấu snapshot hồ sơ đã nạp». Không lệnh `kiem` nào của scripts/link-nguoi-ban-s03/db-nap.mjs kiểm `airbnb_snapshots`.
+  file: `pipeline/import-S01.mjs:205` · severity: medium · source: conventions · AC: AC-6
+  Khi `coBang = false`, bộ nạp vẫn INSERT vào `S01_snapshots` rồi COMMIT. Bảng này là dấu «đã nạp» mà finalize-hanoi.sh:15 dùng. DATA-CONTRACT v7 và AC-6 ghi «KHÔNG đánh dấu snapshot hồ sơ đã nạp». Không lệnh `kiem` nào của scripts/link-nguoi-ban-s03/db-nap.mjs kiểm `S01_snapshots`.
 
-- **Snapshot zalo-agent bị nâng lên schemaVersion 6 mà DATA-CONTRACT trên nhánh không khai v6 và không thêm field nào**
+- **Snapshot S03 bị nâng lên schemaVersion 6 mà DATA-CONTRACT trên nhánh không khai v6 và không thêm field nào**
   file: `collector/src/api/server.ts:10` · severity: medium · source: conventions · AC: AC-5
-  `ZALO_AGENT_SCHEMA_VERSION = 6` làm mọi snapshot tin S03 ghi manifest v6, trong khi DATA-CONTRACT vẫn ghi «schemaVersion 5 — 1–5 đều hợp lệ». v6 thuộc nhánh ma-album-s03 chưa gộp (`meta.albumMeta`). Luật 4 của AGENTS không được giữ. Hằng cũng bị khai lại ở server.ts (nhánh album khai ở core/storage.ts), có thể trùng hoặc xung đột import khi gộp, và được đặt xen giữa các câu `import`.
+  `S03_AGENT_SCHEMA_VERSION = 6` làm mọi snapshot tin S03 ghi manifest v6, trong khi DATA-CONTRACT vẫn ghi «schemaVersion 5 — 1–5 đều hợp lệ». v6 thuộc nhánh ma-album-s03 chưa gộp (`meta.albumMeta`). Luật 4 của AGENTS không được giữ. Hằng cũng bị khai lại ở server.ts (nhánh album khai ở core/storage.ts), có thể trùng hoặc xung đột import khi gộp, và được đặt xen giữa các câu `import`.
 
 - **Bộ tra gửi kết quả tới collector không kèm Authorization: luôn bị 401 rồi lặng lẽ rơi xuống spool mà không có gì gửi lại**
   file: `_acceptance/link-nguoi-ban-s03/extension.patch:323` · severity: high · source: bugs · AC: AC-5
@@ -31,8 +31,8 @@
   `phanLoai` gán khoá trong unchanged_profiles thành `khong-username`, trong khi DATA-CONTRACT, migration 080 và runtime-map định nghĩa `khong-ro` là nhóm hồ sơ không đổi. `quyetLienLacHoSo` (pipeline/lib/lien-lac-ho-so.mjs ~711) gặp `khong-username` thì rút liên lạc chat_profile với lý do bo-username. Một mã đã có username, tra lại sau 30 ngày, nếu rơi vào unchanged_profiles thì username đúng bị rút.
 
 - **Bộ nạp đánh dấu snapshot hồ sơ đã nạp và vứt dữ liệu khi chưa áp 080, trái hợp đồng; lỗi dò bảng bị nuốt thành false**
-  file: `pipeline/import-airbnb.mjs:199` · severity: medium · source: bugs · AC: AC-6
-  Khi `coBang=false`, vòng lặp chỉ đếm `hoSoBo` rồi `continue`, nhưng snapshot vẫn INSERT vào airbnb_snapshots (dòng 207), COMMIT, thoát 0, trong khi thông điệp nói «KHÔNG đánh dấu đã nạp». finalize-hanoi.sh bỏ qua snapshot đã có trong airbnb_snapshots, zalo-import-daily.sh vẫn đẩy con trỏ khi thoát 0, nên sau khi áp 080 các dòng hồ sơ không được nạp lại. `coBangHoSo(client).catch(() => false)` biến mọi lỗi truy vấn thành «chưa có 080» và rơi vào đúng đường mất dữ liệu này.
+  file: `pipeline/import-S01.mjs:199` · severity: medium · source: bugs · AC: AC-6
+  Khi `coBang=false`, vòng lặp chỉ đếm `hoSoBo` rồi `continue`, nhưng snapshot vẫn INSERT vào S01_snapshots (dòng 207), COMMIT, thoát 0, trong khi thông điệp nói «KHÔNG đánh dấu đã nạp». finalize-hanoi.sh bỏ qua snapshot đã có trong S01_snapshots, S03-import-daily.sh vẫn đẩy con trỏ khi thoát 0, nên sau khi áp 080 các dòng hồ sơ không được nạp lại. `coBangHoSo(client).catch(() => false)` biến mọi lỗi truy vấn thành «chưa có 080» và rơi vào đúng đường mất dữ liệu này.
 
 - **Lỗi quá 15 giây bị ghi chặn là loi-la thay vì het-15s**
   file: `_acceptance/link-nguoi-ban-s03/extension.patch:174` · severity: low · source: bugs · AC: AC-2
@@ -40,7 +40,7 @@
 
 - **Hình dạng 2 — fixture viết tay lệch khuôn bên ghi: manifest source "S06" làm readSnapshot gọi process.exit(0), cả tệp test báo đạt mà không assert nào chạy**
   file: `pipeline/scripts/importer-schema-v5.test.mjs:44` · severity: high · source: measurement · AC: AC-5
-  `dirSnapshot()` viết tay manifest với `source: "S06"`. SnapshotWriter thật không ghi giá trị này. pipeline/import-chotot.mjs:62-65 gặp `manifest.source !== "chotot-ads"` thì `process.exit(0)`. Chạy `--test-name-pattern=readSnapshot` in «bỏ qua theo manifest.source=S06», 1 test đạt. Các assert `doc.length`, `seller.phone`, ca v8 và hai ca DB không bao giờ chạy mà tệp vẫn xanh.
+  `dirSnapshot()` viết tay manifest với `source: "S06"`. SnapshotWriter thật không ghi giá trị này. pipeline/import-S06.mjs:62-65 gặp `manifest.source !== "S06"` thì `process.exit(0)`. Chạy `--test-name-pattern=readSnapshot` in «bỏ qua theo manifest.source=S06», 1 test đạt. Các assert `doc.length`, `seller.phone`, ca v8 và hai ca DB không bao giờ chạy mà tệp vẫn xanh.
 
 - **Hình dạng 4 — assert âm-tính rỗng: `expect(spool).not.toContain(PII.canary)` so với khoá không tồn tại**
   file: `_acceptance/link-nguoi-ban-s03/extension.patch:751` · severity: high · source: measurement · AC: AC-5
@@ -76,11 +76,11 @@
 
 - **Hình dạng 5 — tiền kiểm «lời gọi mới ngoài getUserInfo» chỉ quét ba tên cấm, test chỉ có ca login(**
   file: `collector/openclaw/tests/link-nguoi-ban/tien-kiem-ho-so.mjs:37` · severity: medium · source: measurement · AC: AC-9
-  `cam = ["login(", "loginQR(", "createZalo("]`, trong khi ranh-gioi.mjs (E4) dùng danh sách rộng (send*, addReaction, sendTypingEvent, sendSeenEvent, sendDeliveredEvent, friend*, getAllFriends, requestOldMessages). Một .patch thêm `api.sendMessage(` hay `api.addReaction(` vẫn qua. Test (tien-kiem-ho-so.test.mjs:56) chỉ có điểm-case `login(`. Test «còn tệp yêu cầu / lượt lớn / chặn» (dòng 23) ghi hai tệp và assert `loi.length === 2`, nên chan.txt không được đo.
+  `cam = ["login(", "loginQR(", "createS03("]`, trong khi ranh-gioi.mjs (E4) dùng danh sách rộng (send*, addReaction, sendTypingEvent, sendSeenEvent, sendDeliveredEvent, friend*, getAllFriends, requestOldMessages). Một .patch thêm `api.sendMessage(` hay `api.addReaction(` vẫn qua. Test (tien-kiem-ho-so.test.mjs:56) chỉ có điểm-case `login(`. Test «còn tệp yêu cầu / lượt lớn / chặn» (dòng 23) ghi hai tệp và assert `loi.length === 2`, nên chan.txt không được đo.
 
 - **Hình dạng 5 — bẫy API giả cho AC-4 chỉ có 5 hàm cấm, không có lưới phủ lớp**
   file: `_acceptance/link-nguoi-ban-s03/extension.patch:754` · severity: medium · source: measurement · AC: AC-4
-  E4 hứa 0 lời cho cả lớp hàm bị cấm. `gắnApiGia` chỉ gắn spy cho login, loginQR, createZalo, requestOldMessages, sendZaloTextMessage, không dùng Proxy đếm mọi truy cập. Nếu mã gọi `api.addReaction(...)` sẽ ném TypeError, bị catch thành tệp chặn `loi-la`; test chỉ assert `getUserInfo === 1` cùng năm spy nên vẫn xanh.
+  E4 hứa 0 lời cho cả lớp hàm bị cấm. `gắnApiGia` chỉ gắn spy cho login, loginQR, createS03, requestOldMessages, sendS03TextMessage, không dùng Proxy đếm mọi truy cập. Nếu mã gọi `api.addReaction(...)` sẽ ném TypeError, bị catch thành tệp chặn `loi-la`; test chỉ assert `getUserInfo === 1` cùng năm spy nên vẫn xanh.
 
 - **Hình dạng 4 — canary của E5 nhét vào username (trường hợp lệ) và chỉ kiểm vắng trong manifest, nơi không bao giờ chứa dữ liệu dòng**
   file: `collector/src/test/ho-so-api.test.ts:46` · severity: high · source: measurement · AC: AC-5
@@ -88,7 +88,7 @@
 
 - **Hình dạng 3 — «kênh khác giữ schemaVersion» chỉ assert hai snapshotId khác nhau và `schemaVersion >= 7`**
   file: `collector/src/test/ho-so-api.test.ts:52` · severity: medium · source: measurement · AC: AC-5
-  Lời hứa là quan hệ giữa các giá trị. Test chỉ có `manifest.schemaVersion >= 7` và `notEqual(m2.snapshotId, manifest.snapshotId)`, không đọc `m2.schemaVersion`, không so với `HO_SO_SCHEMA_VERSION`, `ZALO_AGENT_SCHEMA_VERSION` hay DATA-CONTRACT. Hai kênh trùng số hoặc nhảy số vẫn xanh.
+  Lời hứa là quan hệ giữa các giá trị. Test chỉ có `manifest.schemaVersion >= 7` và `notEqual(m2.snapshotId, manifest.snapshotId)`, không đọc `m2.schemaVersion`, không so với `HO_SO_SCHEMA_VERSION`, `S03_AGENT_SCHEMA_VERSION` hay DATA-CONTRACT. Hai kênh trùng số hoặc nhảy số vẫn xanh.
 
 - **Hình dạng 4 — «nạp lại: +0 dòng» không kiểm mã thoát của lần nạp, bộ nạp sập vẫn đạt**
   file: `scripts/link-nguoi-ban-s03/db-nap.mjs:99` · severity: medium · source: measurement · AC: AC-6
@@ -109,7 +109,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
 - **Không job nào nạp snapshot `*__s03-ho-so__*`, nên stg_s03_ho_so luôn rỗng trên đường chạy đêm**
   Người dùng thấy gì: Dữ liệu hồ sơ người bán lấy về sẽ không tự vào kho mỗi đêm, nên link hồ sơ không xuất hiện nếu không ai nạp tay.
   Căn cứ: Không mất dữ liệu đã thu và người vận hành nạp tay được, nhưng thiếu bước này thì tính năng chạy đêm không có tác dụng; sửa rẻ nhưng thuộc làn khác nên cần việc riêng.
-  file: `scripts/zalo-import-daily.sh`
+  file: `scripts/S03-import-daily.sh`
   severity: high
   Đề xuất: new-contract
 
@@ -130,7 +130,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
 - **Không job nạp hằng đêm nào nhận snapshot nguồn s03-ho-so**
   Người dùng thấy gì: Hồ sơ người bán đã lấy về không tự vào kho, nên bước ghi liên lạc hằng đêm luôn thấy bảng trống.
   Căn cứ: Không mất dữ liệu đã thu và nạp tay được, nhưng tính năng không chạy tự động nếu thiếu; cần việc riêng ở làn thu thập.
-  file: `scripts/zalo-import-daily.sh`
+  file: `scripts/S03-import-daily.sh`
   severity: medium
   Đề xuất: new-contract
 

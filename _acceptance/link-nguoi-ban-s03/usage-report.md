@@ -19,7 +19,7 @@
 | refute:tien-kiem-ho-so.mjs | claude-sonnet-5-5 | 5 | 2,142 | 10 | 122,409 | 25 |
 | refute:chon.mjs | claude-sonnet-5-5 | 8 | 2,038 | 16 | 198,554 | 26 |
 | machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,822 | 4 | 26,601 | 8 |
-| refute:import-airbnb.mjs | claude-sonnet-5-5 | 5 | 1,821 | 10 | 114,651 | 25 |
+| refute:import-S01.mjs | claude-sonnet-5-5 | 5 | 1,821 | 10 | 114,651 | 25 |
 | machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,774 | 4 | 26,595 | 9 |
 | refute:server.ts | claude-sonnet-5-5 | 4 | 1,764 | 8 | 82,560 | 21 |
 | refute:extension.patch | claude-sonnet-5-5 | 7 | 1,726 | 14 | 175,345 | 25 |
@@ -36,7 +36,7 @@
 | refute:db-nap.mjs | claude-sonnet-5-5 | 2 | 1,176 | 4 | 25,179 | 11 |
 | refute:chon.mjs | claude-sonnet-5-5 | 4 | 1,047 | 8 | 80,730 | 14 |
 | refute:extension.patch | claude-sonnet-5-5 | 3 | 1,030 | 6 | 51,940 | 15 |
-| refute:import-airbnb.mjs | claude-sonnet-5-5 | 4 | 1,029 | 8 | 82,427 | 18 |
+| refute:import-S01.mjs | claude-sonnet-5-5 | 4 | 1,029 | 8 | 82,427 | 18 |
 | refute:phai-lui-ho-so.test.mjs | claude-sonnet-5-5 | 4 | 1,025 | 8 | 77,871 | 21 |
 | machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 963 | 4 | 26,617 | 50 |
 | machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 950 | 4 | 26,606 | 25 |
