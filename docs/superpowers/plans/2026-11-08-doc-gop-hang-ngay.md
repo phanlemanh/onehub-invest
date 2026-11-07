@@ -41,4 +41,26 @@ Verify mọi task: `cd agent && npm test` (DB của riêng lượt) + `cd agent 
 
 ## Phá thử
 
-(điền ở S3)
+08/11, DB thử `oneinvest_p2_pl34`, mỗi lượt sửa một chỗ trong vật thật, chạy đúng ca, rồi `git checkout` hoàn lại. 20/20 ca đỏ
+với đúng thông điệp ghim:
+
+| Vật sửa | Ca | Thông điệp |
+|---|---|---|
+| bỏ `testMarker` | PL34-AC-1 | BAI THU LOT VAO PHAM VI |
+| `tinCua` rỗng | PL34-AC-1 | TIN DOC HAI LAN |
+| bỏ dò đã đọc | PL34-AC-1 · PL34-AC-3 | DOC LAI BAI DA DOC · LUOT HAI GOI LAI |
+| dò đã đọc theo `text_hash` bất kể `post_id` | PL34-AC-1 · PL34-AC-3-DANG-LAI | BAI DANG LAI BI BO · DANG LAI KHONG CO NHAN |
+| cửa sổ ngày theo UTC | PL34-AC-1 | SAI NGAY GIO VN |
+| `run_id` bỏ ngày chi | PL34-AC-2 | RUN_ID THIEU NGAY CHI |
+| ghi thêm `eval_label_items` | PL34-AC-2 | GHI NGOAI NHAN BAC |
+| dò đã đọc bỏ `json_ok` | PL34-AC-3-HONG | JSON HONG KHONG DUOC DOC LAI |
+| `goiDenTran: false` | PL34-AC-4 | TU CHOI CA LUOT |
+| bỏ kiểm trần từng lời gọi | PL34-AC-4 | VUOT TRAN NGAY |
+| ước bỏ max với tiền thật | PL34-AC-4-DAT | CHI THAT VUOT TRAN |
+| cộng mọi `pl34-%` | PL34-AC-5 | CONG CHI NGAY KHAC |
+| trần không trừ chi trước | PL34-AC-5 | TRAN KHONG CHIA CHUNG NGAY |
+| mã thoát bỏ đếm JSON hỏng | PL34-AC-6 | JSON HONG CA LUOT VAN THOAT 0 |
+| bỏ kiểm khuôn ngày | PL34-AC-7 | NGAY SAI VAN CHAY |
+| bỏ đòi khoá | PL34-AC-7 | THIEU KHOA VAN CHAY |
+| bước đêm tính ngày theo UTC | PL34-AC-8 | NGAY BUOC DEM SAI GIO VN |
+| bước đêm dừng sau bước hỏng đầu | PL34-AC-8 | BUOC HOM KIA BI BO |

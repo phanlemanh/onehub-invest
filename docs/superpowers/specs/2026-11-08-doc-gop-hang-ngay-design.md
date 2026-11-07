@@ -16,6 +16,7 @@ lại an toàn, và một bước shell cho chuỗi đêm.
 |---|---|---|---|---|---|
 | 06/11 | 8.641 | 3.278 | 1.443 | 1.835 | 1,48 + 2,06 USD |
 | 04/11 | 10.522 | 3.849 | 1.621 | (chưa đo) | 1,68 USD phần có chữ |
+| 07/11 (lệnh `hang-ngay --thu`, sau khi code) | 7.483 | 2.942 (347 bỏ vì không chữ, không ảnh tệp) | — | — | 2.595 lời gọi, 2,84 USD |
 
 Bài chỉ ảnh không nằm trong tin nào của pipeline (06/11: 0/3.658), nên khử theo tin không bao giờ chọn bài ảnh thay bài chữ.
 Chi thật trung bình của Haiku trên `silver_labels` là 0,00041 USD/lời gọi (5.339 dòng). Con số «~9.000 bài, ~15 USD/ngày» của
