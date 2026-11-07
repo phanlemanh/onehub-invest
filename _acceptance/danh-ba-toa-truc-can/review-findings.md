@@ -1,54 +1,56 @@
-# Review findings: danh-ba-toa-truc-can (round 2)
+# Review findings: danh-ba-toa-truc-can (round 3)
 
 ## Trong hợp đồng
+
+Không có finding mới ở vòng này.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Tám dòng DQ mới của 082 hiện «Kiểm khác (chưa diễn giải)» trên /ops/quality vì dq-labels chưa có nhãn**
+- **Tám dòng DQ mới của 082 hiện «Kiểm khác (chưa diễn giải)» trên /ops/quality vì dq-labels chưa có nhãn (r2)**
   Người dùng thấy gì: Trên trang chất lượng dữ liệu của Ops, tám dòng kiểm mới về toà, trục, căn sẽ hiện chữ chung «Kiểm khác (chưa diễn giải)» kèm tên bảng và cột tiếng Anh thay vì nhãn tiếng Việt dễ hiểu.
   Căn cứ: Chỉ ảnh hưởng cách đọc của người vận hành Ops, số liệu vẫn đúng, không mất hay lộ dữ liệu; thêm nhãn sau rất rẻ và không cần làm lại gì.
   file: `pipeline/dq-enum-vocab.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Lệnh danh-ba-vat-the.mjs chạy qua đường symlink thì không làm gì mà vẫn thoát mã 0**
+- **Lệnh danh-ba-vat-the.mjs chạy qua đường symlink thì không làm gì mà vẫn thoát mã 0 (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu lệnh dựng danh bạ toà được gọi qua đường dẫn tắt (như cách máy chạy đêm đang gọi code), nó sẽ im lặng không làm gì mà vẫn báo thành công, nên danh bạ có thể không được cập nhật mà không ai hay.
   Căn cứ: Hiện chưa có lịch chạy đêm nào dùng lệnh này, nên chưa gây hại thật; nhưng khi đưa vào chạy tự động thì lỗi sẽ âm thầm, nên cần sửa trước đó, và sửa rất rẻ.
   file: `pipeline/danh-ba-vat-the.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Slug khu không tìm thấy thì bị bỏ qua, lệnh vẫn báo thành công với số 0; test AC-7 trên dữ liệu thật có thể qua mà không kiểm gì**
+- **Slug khu không tìm thấy thì bị bỏ qua, lệnh vẫn báo thành công với số 0; test AC-7 trên dữ liệu thật có thể qua mà không kiểm gì (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu tên khu bị gõ sai hoặc đổi, lệnh dựng danh bạ vẫn báo xong với toàn số 0, người chạy dễ tưởng là không có toà nào thay vì nhận ra mình nhập sai.
   Căn cứ: Chỉ gây hiểu nhầm khi chạy tay, không làm mất hay hỏng dữ liệu, chạy lại với tên đúng là xong; đã có một kiểm tra khác bắt được trường hợp rỗng hoàn toàn.
   file: `pipeline/danh-ba-vat-the.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Rào DB của lệnh dựng là danh sách cấm một tên, không phải danh sách cho phép DB thử (r1)**
+- **Rào DB của lệnh dựng là danh sách cấm một tên, không phải danh sách cho phép DB thử (r1 · tệp đã đổi)**
   Người dùng thấy gì: Nếu ai đó trỏ nhầm lệnh dựng danh bạ vào cơ sở dữ liệu đám mây, lệnh vẫn chạy và ghi dữ liệu danh mục nội bộ lên đó.
   Căn cứ: Chỉ xảy ra khi người chạy trỏ nhầm đích, hiện chưa có ai làm vậy và còn bước duyệt trước khi áp lên máy thật; nhưng nếu xảy ra thì dữ liệu nội bộ lên đám mây khó thu hồi.
   file: `pipeline/danh-ba-vat-the.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **pipeline/CLAUDE.md không ghi lệnh danh-ba-vat-the.mjs và ba bảng vật thể mới (r1)**
+- **pipeline/CLAUDE.md không ghi lệnh danh-ba-vat-the.mjs và ba bảng vật thể mới (r1 · tệp đã đổi)**
   Người dùng thấy gì: Người hoặc trợ lý làm việc sau sẽ không biết lệnh dựng danh bạ toà và ba bảng mới chỉ nằm ở máy local, nên dễ dùng sai.
   Căn cứ: Chỉ là thiếu ghi chú, không mất dữ liệu và bổ sung tài liệu sau rất rẻ.
   file: `pipeline/danh-ba-vat-the.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Gọi lệnh qua đường symlink (~/dev/one-invest) thì main() không chạy, lệnh thoát 0 mà không làm gì (r1)**
+- **Gọi lệnh qua đường symlink (~/dev/one-invest) thì main() không chạy, lệnh thoát 0 mà không làm gì (r1 · tệp đã đổi)**
   Người dùng thấy gì: Chạy lệnh dựng danh bạ qua đường dẫn cũ thì lệnh không làm gì mà vẫn báo thành công, nên người chạy tưởng đã dựng xong.
   Căn cứ: Lỗi im lặng dễ gây hiểu lầm nhưng không làm mất hay hỏng dữ liệu, chạy lại bằng đường thật là xong, và sửa rất rẻ.
   file: `pipeline/danh-ba-vat-the.mjs`
   severity: medium
   Đề xuất: new-contract
 
-- **Slug khu sai hoặc thiếu trong --khu thì lệnh âm thầm bỏ khu đó, vẫn COMMIT và báo thành công (r1)**
+- **Slug khu sai hoặc thiếu trong --khu thì lệnh âm thầm bỏ khu đó, vẫn COMMIT và báo thành công (r1 · tệp đã đổi)**
   Người dùng thấy gì: Gõ sai tên khu khi chạy lệnh dựng thì lệnh bỏ qua khu đó và vẫn báo xong, trông như không có gì mới.
   Căn cứ: Không hỏng dữ liệu, gõ lại đúng tên là chạy được, nhưng báo thành công giả có thể khiến người dùng bỏ sót khu cần dựng.
   file: `pipeline/danh-ba-vat-the.mjs`
@@ -62,7 +64,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 4 (thông điệp đỏ không ghim tên khuôn): ca âm báo «khuôn khong-tach» thay vì «khuôn <id>» (r1 · tệp đã đổi)**
+- **Hình dạng 4 (thông điệp đỏ không ghim tên khuôn): ca âm báo «khuôn khong-tach» thay vì «khuôn <id>» (r1)**
   Người dùng thấy gì: Khi phép kiểm tách mã báo đỏ, thông báo không nói khuôn nào bị hỏng, nên người sửa phải tự dò.
   Căn cứ: Chỉ làm chậm việc tìm lỗi khi có lỗi, không ảnh hưởng dữ liệu và sửa rất rẻ.
   file: `pipeline/lib/ma-can-s08.test.mjs`
