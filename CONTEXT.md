@@ -410,11 +410,12 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường của toà» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
-| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
-| Trạng thái danh bạ | `registry_status` | local | `parties.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
-| Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» |
+| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
+| Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
+| Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» · `ma_nguon` «Mã tại nguồn» |
+| Bậc dòng danh mục | `catalog_tier` | local | `buildings.catalog_tier`, `stacks.catalog_tier`, `units.catalog_tier` | `xac_minh` «Xác minh» · `suy_ra_manh` «Suy ra mạnh» · `mot_loi_khai` «Một lời khai» |
 | Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
 | Loại liên lạc | `contact_kind` | local | `party_contacts.kind` | `sdt` «Số điện thoại» · `chat_profile` «Hồ sơ chat» |
@@ -424,6 +425,11 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
 | Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
+| Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
+| Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |
+| View | `view` | View | — | `city` «Thành phố» · `lake` «Hồ» · `river` «Sông» · `park_greenbelt` «Công viên» · `garden` «Vườn, nội khu» · `pool` «Bể bơi» · `panoramic` «Toàn cảnh» · `other` «Khác» |
+| Phí đã gồm | `rent_includes` | RentIncludes | — | `management` «Phí quản lý» · `electricity` «Điện» · `water` «Nước» · `internet` «Internet» · `none` «Không gồm gì» · `other` «Khác» |
+| Cơ sở giá | `price_basis` | local | — | `net` «Thu về (NET)» · `gom_phi` «Đã gồm phí» · `chua_gom_phi` «Chưa gồm phí» |
 
 <!-- VOCAB:END -->
 
@@ -669,9 +675,26 @@ _Avoid_: chưa so
 
 **Ghép suy ra** (code `ghep`): tin chữ và các bài ảnh cùng người, cùng nhóm, cách dưới 2 phút do luật PL28 nối lại vì nguồn S03 không có mã album. Là suy đoán, có thể sai. _Avoid_: album.
 
-**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
-- Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
+**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm, Kiến thức nghề hay Danh mục CĐT. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
+- Code: `eval_labels.basis` (`chu_bai`, `anh`, `ngu_canh_nhom`, `kien_thuc_nghe`, `danh_muc_cdt`)
 _Avoid_: nguồn nhãn
+
+**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã; chỉ ở máy thu, không lên cloud. Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
+- Code: `eval_labels.basis = 'danh_muc_cdt'`, kiểm ở `app/src/lib/labels-s08.ts`
+_Avoid_: danh mục dự án, quỹ căn
+
+**Mô tả căn**: Khối thứ sáu của biểu mẫu theo nhóm: Nội thất, Hướng, View, Ngày vào ở.
+- Code: `KHOI` id `mo-ta` (`nhom-fields.ts`)
+
+**Ngày vào ở**: Ngày người thuê hay người mua dọn vào được, theo bài: «ngay», một tháng hay một ngày. RESO `AvailabilityDate`.
+- Code: `eval_labels.field = 'availability_date'` (giá trị `ngay`, `YYYY-MM`, `YYYY-MM-DD`)
+_Avoid_: ngày bàn giao (là một trường hợp của ngày vào ở)
+
+**Mã thẻ**: Số định danh một thẻ trên màn gắn nhãn. Hiện thành chip đơn sắc trên thẻ, bấm để chép, để Mạnh và phiên trợ lý gọi đúng một thẻ («thẻ 10247»).
+- Code: `eval_label_items.item_id`, chip `MaThe` (`app/src/components/ops/labels/ma-the.tsx`) · RESO: —
+- Slug URL: —
+- Ghi chú: Không gọi `review_queue.item_id` (dạng `nguoi:<S0x>:<băm>` của thẻ Người HD17 ở màn duyệt) là mã thẻ — đó là khoá dòng nguồn của thẻ duyệt, nghĩa khác. Chú thích ở `app/src/lib/ops/review-queue.ts` còn dùng chữ cũ, sửa khi có việc chạm tệp đó.
+_Avoid_: mã mẫu, ID thẻ, item id
 
 **Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
 - Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`

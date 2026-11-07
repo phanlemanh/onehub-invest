@@ -27,7 +27,7 @@ test("AC-9 tên kiểm eval-classify có nhãn", () => {
   assert.deepEqual(dqCheckName("eval-classify"), { text: "Độ đúng cách đọc", known: true })
 })
 
-test("AC-9 ma trận 3 phân khúc × 9 trường: đối tượng có nhãn tiếng Việt, nhãn trường của màn gắn nhãn («Dự án» theo CONTEXT.md là «Khu đô thị»)", () => {
+test("AC-9 ma trận 3 phân khúc × 16 trường: đối tượng có nhãn tiếng Việt, nhãn trường của màn gắn nhãn («Dự án» theo CONTEXT.md là «Khu đô thị»)", () => {
   let soAssert = 0
   for (const pk of PHAN_KHUC) {
     for (const truong of ben.TRUONG) {
@@ -39,7 +39,7 @@ test("AC-9 ma trận 3 phân khúc × 9 trường: đối tượng có nhãn ti�
       soAssert++
     }
   }
-  assert.equal(soAssert, PHAN_KHUC.length * 9)
+  assert.equal(soAssert, PHAN_KHUC.length * 16) // 9 trường PL9 + bảy trường truong-nhan-s03-081
   assert.equal(dqEntityLabel("ocp1|tat-ca|parser|kind", new Map()).text, "Lát OCP1 · mọi loại hình · Bộ đọc theo luật · Loại tin")
   assert.equal(dqEntityLabel("ocp1|apartment|parser|area_m2", new Map()).text, "Lát OCP1 · Căn hộ · Bộ đọc theo luật · Diện tích")
 })

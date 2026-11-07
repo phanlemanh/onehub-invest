@@ -50,6 +50,16 @@ executors:
     tnd_loi_o: "cd app && node --import tsx --test --test-name-pattern=TND-AC-6 tests/labels-nhom.test.tsx"   # the-gan-nhan-nguoi-dang E9 — biểu mẫu thật trong jsdom
     thn_app: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=THN-AC-1 tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # the-hai-nguoi-xep-sau E1 — tin hai người xếp cuối nhóm; đòi đúng một ca chạy
     dvg_app: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=DVG-AC tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 3$\" >/dev/null'"   # don-vi-gia-theo-loai-tin E1..E3 — biểu mẫu thật trong jsdom; đòi đúng ba ca chạy
+    gn2_khoa: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-1 lib/eval-labels.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E1 — khoá trùng nhomTrung
+    gn2_su_kien: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-3 lib/eval-labels.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E3 — gạt sự kiện JSON
+    gn2_bai_thu: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-4 lib/test-posts.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E4 — dấu bài thử mới
+    gn2_ghep: "bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=GN2-AC-5 scripts/label-ghep.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # lay-mau-khu-trung-theo-tin E6 — label-ghep giữ dấu ẩn tay, DB thử
+    tn081_form: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-2 tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E2 — biểu mẫu thật trong jsdom
+    tn081_chuan: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-3 tests/labels-truong-moi-chuan.test.ts | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E3 — chuanHoaLuot, bảng viết trước
+    tn081_route: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-4 tests/labels-truong-moi-route.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E4 — route thật, lược đồ tạm
+    tn081_cu: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-5 tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E5 — thẻ gắn trước vòng
+    tn081_hien: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-9 tests/labels-nhom.test.tsx | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E11 — lượt hai, đồng thuận
+    tn081_classify: "bash -o pipefail -c 'cd app && node --import tsx --test --test-name-pattern=TN081-AC-6 tests/eval-classify-can-cu.test.mjs | tee /dev/stderr | grep \"pass 1$\" >/dev/null'"   # truong-nhan-s03-081 E6 — gopNhan lọc căn cứ CĐT
     tnm_pipeline: "node --test pipeline/lib/tap-mau.test.mjs"   # tap-nhan-mau-ocp1 E1, E2, E4, E7, E8 — hàm thuần, không DB
     tnm_app: "cd app && node --import tsx --test tests/labels-mau.test.tsx"   # tap-nhan-mau-ocp1 E3 — chuanHoaLuot thật, không DB
     ecr_lenh: "cd pipeline && node --test scripts/eval-classify-ghep.test.mjs"   # eval-classify-theo-chu-ref E1, E3, E4
@@ -57,6 +67,9 @@ executors:
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
     kd_test: "node --test pipeline/scripts/kiem-do-sau-070.test.mjs"   # kiem-do-sau-ap-070-sua E1, E2, E3 — lược đồ riêng BEGIN…ROLLBACK trên :5433
+    dgs_thuan: "cd agent && node --import tsx --test tests/doc-gop-s03.test.ts"   # chon-model-theo-o E1, E2, E3, E6, E8, E10 — Gateway giả, không DB
+    dgs_db: "cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts"   # chon-model-theo-o E4, E5, E7, E9 — Gateway giả, DB của riêng lượt
+    dgs_so_that: "cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts"   # chon-model-theo-o E10 — đọc tóm tắt lượt chấm Haiku thật
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
@@ -101,6 +114,10 @@ executors:
     rtld_unit: "node --test pipeline/lib/thu-lai-deadlock.test.mjs"   # resolve-thu-lai-deadlock E1–E4, E7 — client giả + đọc tĩnh, không DB
     rtld_itest: "node --test pipeline/tests/resolve-properties-deadlock.itest.mjs"   # resolve-thu-lai-deadlock E5, E6, E8, E9 — deadlock thật trên DB thử oneinvest_p3_rtld_<pid> ở :5433, ngoài CI
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
+    dbv_tach: "node --test pipeline/lib/ma-can-s08.test.mjs"   # danh-ba-toa-truc-can E2 — bộ tách mã căn S08, ma trận mã tổng hợp, không DB
+    dbv_kho: "node --test pipeline/lib/danh-ba-vat-the.test.mjs"   # danh-ba-toa-truc-can E11 — lõi thuần + FILL sync-cloud, không DB
+    dbv_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the.itest.mjs"   # danh-ba-toa-truc-can E1, E3–E6, E8–E10 — DB thử oneinvest_dbv_<pid> ở :5433 áp 001…082, fixture tổng hợp
+    dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
@@ -610,6 +627,12 @@ executors:
     thn_pham_vi: "bash _acceptance/the-hai-nguoi-xep-sau/probes/pham-vi.sh"   # the-hai-nguoi-xep-sau E5 — tệp được phép đổi
     thn_lat_that: "cd app && node --import tsx ../_acceptance/the-hai-nguoi-xep-sau/probes/lat-that.mjs"   # the-hai-nguoi-xep-sau E6 — lát thật s03-theo-nhom, chỉ đọc
     dvg_pham_vi: "bash _acceptance/don-vi-gia-theo-loai-tin/probes/pham-vi.sh"   # don-vi-gia-theo-loai-tin E6 — tệp được phép đổi, luật kiểm không đổi
+    gn2_mau: "node _acceptance/lay-mau-khu-trung-theo-tin/probes/mau.mjs"   # lay-mau-khu-trung-theo-tin E2 — label-sample thật trên DB thử oneinvest_gn2
+    gn2_lat_that: "node _acceptance/lay-mau-khu-trung-theo-tin/probes/lat-that.mjs"   # lay-mau-khu-trung-theo-tin E7 — chép lát thật (chỉ đọc) sang DB thử, label-ghep --lam-lai
+    gn2_pham_vi: "bash _acceptance/lay-mau-khu-trung-theo-tin/probes/pham-vi.sh"   # lay-mau-khu-trung-theo-tin E10 — tệp được phép đổi
+    tn081_migration: "cd app && node --import tsx ../_acceptance/truong-nhan-s03-081/probes/migration.mjs"   # truong-nhan-s03-081 E1 — DB thử oneinvest_tn081, áp 081 hai lần
+    tn081_roi_may: "node _acceptance/truong-nhan-s03-081/probes/roi-may.mjs"   # truong-nhan-s03-081 E7 — không đường rời máy nào đọc eval_labels
+    tn081_pham_vi: "bash _acceptance/truong-nhan-s03-081/probes/pham-vi.sh"   # truong-nhan-s03-081 E14 — tệp được phép đổi
     ghep_thuan: "cd app && node --import tsx --test tests/labels-ghep.test.ts"
     ghep_nap: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/nap.mjs"
     ghep_that: "cd app && node --import tsx ../_acceptance/ghep-anh-tren-the-gan-nhan/probes/that.mjs"
@@ -834,6 +857,7 @@ risk_tiers:
     # .github/workflows/acceptance-gate.yml chạy bước đó.
     - "PRODUCT-MAP.md"
     - "LO-TRINH.html"
+    - "agent/config/doc-gop-s03.json"                # PL30 Hỏi-3 (Mạnh duyệt Cổng Phạm vi 07/11): bảng chọn model đọc gộp S03 — đổi model là PR nhỏ, không cần hồ sơ mới
   t3_paths:
     - "app/src/lib/auth.ts"                          # auth + cổng /ops
     - "app/src/lib/ops-access.ts"

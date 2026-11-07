@@ -5,25 +5,29 @@
 // Importer bỏ snapshot thử là PL1 (làn ZCode); transform tự gạt post thử ở đầu đọc để canonical sạch
 // dù stg còn hay không. Importer có thể import cùng hàm này sau.
 
-/** Ba dấu post thử, theo thứ tự xét. Tên là khoá của ops_audit và thước dư lượng. */
-export const TEST_MARKERS = Object.freeze(["snapshot-source", "agent", "group"]);
+/** Bốn dấu post thử, theo thứ tự xét. Tên là khoá của ops_audit và thước dư lượng. */
+export const TEST_MARKERS = Object.freeze(["snapshot-source", "agent", "group", "noi-dung"]);
 
 // snapshot_id = '<city>__<source>__<ts>'; nguồn 'example' là snapshot synthetic của collector.
 const SOURCE_TEST = /(mock|test|e2e)/i;
 const AGENT_TEST = /^(e2e|test|mock)/i;
 // «TEST», «TEST-G1» là nhóm thử; «TESTING…» là một từ khác nên không tính.
 const GROUP_TEST = /^test(?!\p{L})/iu;
+// lay-mau-khu-trung-theo-tin (Hỏi-2, Mạnh duyệt 07/11): bài thử của Mạnh mang link đường hầm thử hoặc chuỗi giữ chỗ «[Tên sàn]».
+// Nhóm tên toàn chữ số KHÔNG là dấu: đó là mã nhóm chưa có tên, có thể là nhóm thật.
+const NOI_DUNG_TEST = /trycloudflare\.com|\[tên sàn\]/iu;
 
 /**
  * Dấu thử của một hàng stg, hoặc null khi là post thật.
- * @param {{ snapshot_id?: string|null, agent_id?: string|null, group_name?: string|null }} row
- * @returns {"snapshot-source"|"agent"|"group"|null}
+ * @param {{ snapshot_id?: string|null, agent_id?: string|null, group_name?: string|null, text?: string|null }} row
+ * @returns {"snapshot-source"|"agent"|"group"|"noi-dung"|null}
  */
 export function testMarker(row) {
   const source = (row.snapshot_id ?? "").split("__")[1] ?? "";
   if (source === "example" || SOURCE_TEST.test(source)) return "snapshot-source";
   if (AGENT_TEST.test(row.agent_id ?? "")) return "agent";
   if (GROUP_TEST.test((row.group_name ?? "").trim())) return "group";
+  if (NOI_DUNG_TEST.test((row.text ?? "").normalize("NFC"))) return "noi-dung";
   return null;
 }
 

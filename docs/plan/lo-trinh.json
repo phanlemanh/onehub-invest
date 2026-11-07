@@ -621,7 +621,8 @@
       "hang": "T2",
       "dung_tren": [
         "PL16",
-        "PL29"
+        "PL29",
+        "PL31b"
       ],
       "slug": "chi-phi-len-bac",
       "nhom": "model",
@@ -4027,6 +4028,30 @@
       "bat_khi": "Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson",
       "vi_sao": "Mạnh 07/11: đo làm giàu theo phường/xã, dự án, toà. C2b chỉ đo độ phủ (field-yield), PL31 đo chi phí, GC2 kiểm ngược một lần lúc dựng; chưa có độ đúng làm giàu đo đều (vd 758 tin vừa nhận số qua người đăng 07/11).",
       "ghi_chu": "Dùng chung màn soát với DO1; kiểm ngược chạy ở pipeline (luật 10), không gọi model khi không cần."
+    },
+    {
+      "ma": "PL31b",
+      "slug": "gia-model-gateway",
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "PL30"
+      ],
+      "phu": [
+        "PL31b"
+      ],
+      "dot": "mo-hinh-pipeline-0711",
+      "nhom": "model",
+      "cau_giao": "Sổ cuộc gọi AI tính đúng tiền cho model gọi qua Vercel AI Gateway: ai_model_prices có giá ba model của bảng chọn PL30 (khoá khớp ai_calls.model «gateway:<mã>»), đồng bộ khi bảng chọn đổi giá, kèm tỉ giá USD→VND đã chốt",
+      "bat_khi": "Trang /ops/ai-calls và PL31 hiện chi phí khác 0 cho mọi lời gọi Gateway, khớp silver_labels.cost_usd trong sai số tỉ giá",
+      "vi_sao": "PL30 Ngoài-16 (Mạnh ký «mở hợp đồng mới» 07/11): ai_model_prices thiếu giá model Gateway nên ai_calls tính 0 USD; báo cáo số liệu ngày mục C4.",
+      "vung": [
+        "db/migrations",
+        "agent/config/**",
+        "pipeline/**"
+      ],
+      "ghi_chu": "Cần migration (seed) và một câu Hỏi cho Mạnh về tỉ giá cố định hay đổi đơn vị bảng (CHECK «VND/1M token»). Đi trước PL31."
     }
   ],
   "chan_troi": [

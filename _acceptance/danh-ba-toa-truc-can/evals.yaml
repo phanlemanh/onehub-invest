@@ -1,0 +1,101 @@
+schema_version: 1
+feature_slug: danh-ba-toa-truc-can
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [db/migrations/082_danh_ba_vat_the.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-1» trên DB thử oneinvest_dbv_<pid> áp 001…082 từ đầu: dấu lược đồ (db-thu.sh --dau) sau lần áp 082 thứ hai bằng sau lần một; ma trận viết trước: DELETE, TRUNCATE, đổi building_key, đổi upi, đổi sub_id trên từng bảng bị từ chối với thông điệp «chỉ thêm»; INSERT khoá sai tiền tố bị CHECK từ chối; bí danh kind ma_nguon nhận; field_assertions nhận (Building, bld_…, builder_name) và từ chối (Property, bld_…) với thông điệp ghim «resource không khớp khoá». Đối chứng quan hệ: ca danh bạ Người (ghi người qua pipeline/lib/danh-ba-nguoi.mjs thật) và hàm phân xử tin (đọc offer_subject_keys và bản tính cột chuẩn của 045) cho băm tập dòng đã sắp xếp giống hệt trước 082, và giống hệt sau khi đã ghi một phát biểu (Building, builder_name); chèn lại một bí danh Người sdt_bam trùng sau 082 bị từ chối với thông điệp ghim «DBV-AC-1 bí danh Người trùng». Chiều đỏ: bản chép 082 bỏ trigger chỉ-thêm thì ca DELETE đỏ với thông điệp «DBV-AC-1 xoá được vật thể»; bản chép 082 thay index bí danh bằng index có cột NULL thì ca bí danh trùng đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dbv_tach
+    paths: [pipeline/lib/ma-can-s08.mjs, pipeline/lib/ma-can-s08.test.mjs]
+    expected: "exit 0; ca «DBV-AC-2»: ma trận mã tổng hợp viết trước (không mã S08 thật), mỗi khuôn đã khai có ít nhất một ca dương (toà, tầng, trục, khuon_id đúng từng trường) và một ca âm (gần đúng khuôn nhưng sai — thiếu tầng, thừa ký tự, tầng một chữ số); số assert bằng số phần tử ma trận; mã không khớp khuôn nào trả khong_tach với lý do có tên; kiểm chéo mọi mã ma trận qua mọi khuôn: không mã nào khớp hai khuôn. Chiều đỏ: bản chép bộ tách nới một khuôn thành khớp tiền tố thì ca âm của khuôn đó đỏ với thông điệp «DBV-AC-2 khuôn <id> nhận mã sai»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/danh-ba-vat-the.mjs, db/migrations/082_danh_ba_vat_the.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-3» trên DB thử với fixture S08 tổng hợp (hai khu, ba dự án, hai khuôn mã, mã toà trùng tên giữa hai khu) nạp qua bảng stg_s08_inventory và s08_project_links thật của lược đồ: số toà, trục, căn bằng bảng kỳ vọng viết trước theo khu; mỗi toà một bld_, UPI đúng khuôn urn:onehub:upi:1:VN:<VN-HN|VN-SG>:<khoá toà> theo khu; region_node_id trỏ đúng khu hay phân khu; mỗi căn sub_id = <khoá trục>:<tầng>; toà trùng tên giữa hai khu là hai khoá; hai dự án cùng khu có cùng mã toà và cùng mã căn ra hai bld_ và hai unt_; mọi dự án cao tầng của fixture có ≥ 1 bld_. Chiều đỏ: bộ dựng bản chép bỏ phạm vi dự án khỏi bí danh thì ca đỏ với thông điệp «DBV-AC-3 hai dự án chung khoá»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-4»: chạy bộ dựng thật (đường lệnh pipeline/danh-ba-vat-the.mjs, không gọi hàm nội bộ) hai lần trên cùng DB thử; lần hai in khoa_moi=0; tập (khu, cấp, khoá) đọc từ ba bảng sau lần hai bằng hệt sau lần một; số dòng registry_aliases không đổi. Chiều đỏ: bản chép bộ dựng không tra bí danh trước khi đúc thì lần hai đúc khoá mới, ca đỏ với thông điệp «DBV-AC-4 dựng lại đổi khoá»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-5»: fixture một toà 3 trục × 10 tầng chỉ có 7 mã căn: units có đúng 7 dòng; mọi unt_ có ≥ 1 bí danh ma_nguon (câu đếm units không bí danh trả 0); không unt_ nào cho 23 ô còn lại. Chiều đỏ: bản chép bộ dựng đúc mọi ô trục × tầng thì ca đỏ với thông điệp «DBV-AC-5 đúc căn không bằng chứng: 23»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-6»: hai lần chụp fixture, lần sau thiếu mã M1 và thêm mã M2; sau lần dựng thứ hai khoá của M1 giữ nguyên, status active, bí danh còn retired_at NULL; M2 có khoá mới; tổng số dòng ba bảng và bí danh không giảm. Chiều đỏ: bản chép bộ dựng nghỉ căn vắng ở lần chụp mới thì ca đỏ với thông điệp «DBV-AC-6 căn vắng bị nghỉ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dbv_that
+    paths: [pipeline/lib/ma-can-s08.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-that.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-7»: chép chỉ đọc (phiên default_transaction_read_only) stg_s08_inventory cao tầng của dự án đã nối Ocean Park 1, Grand Park và s08_project_links từ DB máy thu sang DB thử oneinvest_dbv_that_<pid>; chạy bộ dựng; tỉ lệ mã căn tách được ≥ 0,90 trên tổng mã khác nhau của từng khu; số mã không tách bằng tổng các dòng sổ lý do; dựng lần hai khoa_moi=0; tập (dự án, mã toà) rút độc lập từ stg_s08_inventory bằng câu viết thẳng (không qua bộ tách) đối chiếu tập toà có bld_: in số dự án và số toà không có khoá, mọi dự án cao tầng đã nối có ≥ 1 bld_; số unt_ không có bí danh ma_nguon bằng 0; in số mã toà xuất hiện ở hơn một dự án cùng khu (ứng viên gộp, không tự gộp); đầu ra chỉ có số theo khu và mã khuôn, không chứa mã S08 nào (kiểm bằng so tập mã đã chép). Đối chứng: số mã đọc được khớp câu đếm độc lập viết thẳng trên DB máy thu. Chiều đỏ: tắt một khuôn đã khai thì tỉ lệ rơi và sổ lý do tăng đúng số mã của khuôn đó."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-8», ma trận viết trước trên fixture phát biểu block_raw ghi qua field_assertions thật: (a) tin có khu, tên «Pr6» khớp đúng toà PR6 của khu → bí danh ten nguồn S03; (b) tên khớp hai toà → chỉ ứng viên, không bí danh; (c) tên không khớp, hai người đăng → ứng viên, không đúc; (d) tên không khớp, ba người đăng khác nhóm → chỉ ứng viên với so_nguoi_dang=3, so_nhom=3, không đúc (theo khuyến nghị Hỏi-4; Mạnh chọn lối khác thì ca viết lại trước S3); (e) tin không có khu → không góp gì. Số assert bằng số phần tử ma trận. Chiều đỏ: bản chép bộ dựng đúc toà từ ứng viên thì ca (d) đỏ với thông điệp «DBV-AC-8 đúc toà từ tin»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/danh-ba-vat-the.mjs, db/migrations/082_danh_ba_vat_the.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-9»: từ điển tổng hợp (tệp tạm) có dòng cho hai trong ba toà: hai toà có đúng một phát biểu (Building, builder_name) lớp fact, method hitl, evidence.ban bằng băm sha256 tệp từ điển; toà thứ ba 0 phát biểu; chạy lại không thêm dòng; information_schema của buildings, stacks, units không có cột tên hay chủ đầu tư. Chiều đỏ: sửa một giá trị trong từ điển thì lần chạy sau ghi phát biểu mới với băm mới, phát biểu cũ còn nguyên (chỉ thêm); bản chép bộ dựng không kiểm phát biểu đã có thì chạy lại nhân dòng, ca đỏ với thông điệp «DBV-AC-9 nhân phát biểu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [db/migrations/082_danh_ba_vat_the.sql, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-10» (theo khuyến nghị Hỏi-1; nếu Mạnh chọn lối khác, ca viết lại trước S3): ba dòng asset_nodes building sau 082 và bộ dựng giống hệt trước (so toàn dòng); toà fixture thuộc phân khu có region_node_id trỏ đúng id phân khu; câu SQL đọc nguyên văn từ agent/src/enrich/run.ts (rút chuỗi trong tệp, không chép tay) chạy trên DB thử trả đúng ba dòng như trước. Chiều đỏ: bản chép 082 đổi node_type ba dòng thì câu của run.ts trả 0 dòng, ca đỏ với thông điệp «DBV-AC-10 enrich mất từ điển phân khu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DBV-AC-11a»: nhập FILL thật từ pipeline/sync-cloud.mjs, không chứa buildings, stacks, units; với registry_aliases và field_assertions: không có trong FILL, hoặc nếu có thì bộ chọn dòng thật của sync-cloud chạy trên fixture có bí danh ma_nguon S08, phát biểu Building và dòng Người trả 0 dòng vật thể và đủ dòng Người. Đối chứng dương: bản FILL thêm units thì hàm kiểm trả lỗi «DBV-AC-11 vật thể lên cloud: units»; bản FILL thêm registry_aliases không lọc dòng thì lỗi «DBV-AC-11 vật thể lên cloud: registry_aliases ma_nguon»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11b
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.dbv_that
+    paths: [pipeline/scripts/danh-ba-vat-the-that.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-11b»: lấy tập mã căn và tên phân khu chỉ có từ S08 (chép chỉ đọc từ máy thu; «tên chỉ S08» = không có trong asset_nodes VÀ phần riêng của tên — bỏ «The» đầu, «_» thành khoảng trắng — không xuất hiện trong chữ bài tin rao S03, Mạnh chọn lối 2 ngày 07/11), quét nội dung mọi tệp git ls-files của kho: 0 tệp đổi ở vòng này (git diff origin/main...HEAD) chứa mã nào, và mọi tệp khớp trên cả kho nằm trong danh sách có từ trước DA_CO_TU_TRUOC (hôm nay chỉ db/migrations/040_stg_s08_inventory.sql — migration đã commit, không sửa được); đầu ra chỉ in số tệp quét và số khớp, không in mã. Đối chứng dương: tệp tạm ngoài kho chứa một mã thật được quét cùng hàm thì bắt được, thông điệp ghim «DBV-AC-11 mã S08 trong kho». Ca định nghĩa: The Metropolitan, Origami, Glory Heights (có trên tin) không thuộc tập quét — chiều đỏ trả hàm về định nghĩa cũ thì đỏ «DBV-AC-11 bắt nhầm tên công khai: The Metropolitan»; một tên chỉ S08 giả lập cài vào tệp tạm vẫn bị bắt «DBV-AC-11 bỏ sót tên chỉ S08»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-12
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, db/migrations/082_danh_ba_vat_the.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBV-AC-12», ma trận viết trước trên fixture vùng: (a) khu một phường → mỗi toà đúng một phát biểu (Building, area_id) lớp inferred, method registry_inherit, evidence trỏ id nút vùng, giá trị là id phường; (b) khu hai phường → 0 phát biểu, một dòng sổ lý do «khu nhiều phường»; (c) phân khu một phường dưới khu hai phường → toà của phân khu nhận phường của phân khu; (d) khu có area_id cấp market không phải submarket → chỉ đếm submarket; (f) nút vùng có mã vùng không có trong areas → 0 phát biểu, lý do «vung-khong-ro»; (e) chạy lại không nhân phát biểu; không dòng nào của sale_offers hay phát biểu resource Property đổi (băm trước, sau). Chiều đỏ: bản chép bộ dựng lấy phần tử đầu của area_ids thì ca (b) đỏ với thông điệp «DBV-AC-12 đoán phường khu nhiều phường»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-1
+    executor: judgment
+    inputs: [pipeline/mappings.yaml, docs/adr/0016-danh-ba-vat-the-va-nguoi.md, docs/adr/0011-reso-first-data-law.md, db/migrations/082_danh_ba_vat_the.sql, pipeline/dq-enum-vocab.mjs]
+    question: "Các giá trị và extension mới mà 082 thêm (catalog_tier, alias_kind ma_nguon, resource Building/Stack/Unit trong field_assertions, field builder_name, field area_id cho Building, method registry_inherit) có được khai trong pipeline/mappings.yaml đúng luật ADR-0011: field RESO tra trước (BuilderName → Building.BuilderName), extension local khai đủ sáu điều kiện, khớp sổ extension ADR-0016 §11?"
+    expected: "PASS khi mỗi giá trị mới trong 082 có dòng tương ứng trong mappings.yaml với dd_field hoặc local + rationale đủ sáu điều kiện, và không có giá trị local nào mà RESO DD 2.1 đã có field tương đương."
+    evidence_required: [run_id, verdict, rationale, verified_at]

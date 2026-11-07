@@ -1,0 +1,158 @@
+{
+  "feature_plain": "Hệ thống có danh bạ toà, trục, căn chung cư cao tầng của Ocean Park 1 và Grand Park — mỗi căn một mã cố định, để các bước sau gắn tin rao vào đúng toà, đúng căn.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ thêm ba bảng toà, trục, căn chỉ cho thêm, không cho xoá, mà danh bạ người và cách chọn giá trị của tin vẫn cho đúng kết quả như cũ."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ đọc mã căn của danh mục chủ đầu tư theo từng kiểu viết có tên; mã không đọc được thì ghi lý do, không đoán."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho mỗi toà một mã cố định kèm mã định danh nhà (UPI), mỗi trục và mỗi căn có trong danh mục một mã cố định."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ dựng lại bao nhiêu lần cũng ra đúng số toà, trục, căn và đúng các mã cũ."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ chỉ tạo căn khi danh mục có mã căn đó — ô trống trên lưới trục × tầng không thành căn."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ giữ mã của căn đã biến khỏi danh mục ở lần thu sau (căn đã bán vẫn là căn), và tạo mã cho căn mới xuất hiện."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ đọc được ít nhất 90% mã căn thật của hai khu; phần còn lại có sổ lý do theo từng kiểu mã."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ nhận tên toà ghi trên tin rao làm tên gọi khác của toà khi tin có khu và tên khớp đúng một toà; toà chỉ thấy trên tin thì chỉ ghi là ứng viên."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ ghi chủ đầu tư của từng toà từ bảng anh Mạnh duyệt, toà không có trong bảng thì để trống."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ giữ nguyên ba phân khu cũ của Grand Park (The Beverly, Lumiere…) trong danh mục vùng; toà của chúng trỏ về đúng phân khu."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ để danh bạ toà, trục, căn ở lại máy thu, không lên cloud; kho mã công khai không chứa mã căn thật của danh mục."
+    },
+    {
+      "id": "AC-12",
+      "p": "Sẽ ghi phường (suy ra) cho toà khi khu của nó chỉ nằm trong một phường — Ocean Park 1 có, Grand Park hai phường thì chưa."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG làm nhà thấp tầng, nhà phố, đất, thửa ở lượt này."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG gắn tin rao vào toà, trục, căn — đó là việc kế tiếp (PL20)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đợi bộ đọc mã căn trên tin (PL13) — phần đó bổ sung sau."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG dựng khung đầy đủ số tầng, tầng bỏ, danh sách trục của từng toà."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG làm gộp, tách, nghỉ toà hay căn, chưa chọn giá trị chuẩn cho toà, chưa cho tin kế thừa giá trị từ toà."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG kéo danh mục vùng cũ xuống cấp trục, căn."
+    },
+    {
+      "id": "OOS-7",
+      "p": "KHÔNG ghi phường cho toà ở khu có nhiều phường (Grand Park) — cần toạ độ từng toà, để hàng riêng."
+    },
+    {
+      "id": "OOS-8",
+      "p": "KHÔNG đưa phường từ toà xuống tin rao — đó là việc của PL20, và phường đọc từ chữ bài vẫn thắng."
+    },
+    {
+      "id": "OOS-9",
+      "p": "KHÔNG thay bảng căn cũ bằng danh bạ và chưa có trang Ops xem danh bạ."
+    },
+    {
+      "id": "OOS-10",
+      "p": "KHÔNG đưa danh bạ lên cloud và KHÔNG chạy trên DB máy thu ở lượt này — việc đó chờ lời riêng của anh Mạnh."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Cấp vật thể: toà, trục, căn đều có tiêu chí (AC-3 mã cố định, AC-5 không tạo căn rỗng); thửa để sau vì chung cư không cần."
+    },
+    {
+      "i": 1,
+      "p": "Nguồn bằng chứng: danh mục chủ đầu tư, tên toà trên tin, bảng chủ đầu tư, phân khu cũ — mỗi nguồn một tiêu chí (AC-2, AC-3, AC-8, AC-9, AC-10)."
+    },
+    {
+      "i": 2,
+      "p": "Vòng đời khi dựng: tạo lần đầu, dựng lại, căn mới, căn biến mất, mã không đọc được đều có tiêu chí (AC-4 đến AC-7); gộp, tách để sau."
+    },
+    {
+      "i": 3,
+      "p": "Ranh giới dữ liệu: máy thu, cloud, kho mã công khai — AC-11 đo cả ba."
+    },
+    {
+      "i": 4,
+      "p": "Không làm vỡ thứ đang chạy: danh bạ người, cách chọn giá trị của tin (AC-1)."
+    },
+    {
+      "i": 5,
+      "p": "Phường của toà để bước sau suy phường cho tin (AC-12)."
+    },
+    {
+      "i": 6,
+      "p": "Đối chiếu ngành: chuẩn dữ liệu bất động sản RESO (toà, mã định danh nhà) và danh bạ nhà kiểu Beike (mỗi căn một mã bền kể cả khi không có tin)."
+    },
+    {
+      "i": 7,
+      "p": "Bảng quét đầy đủ các ô, ô làm ngay, ô để sau nằm trong tài liệu thiết kế mục 3."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Nặng nhất: máy tự quyết tạo toà từ tin rao khi đủ ba người đăng, nhưng căn cứ trích không nói điều đó — toà ma do gõ sai sẽ ở lại mãi. Đã đưa thành câu hỏi cho anh (Hỏi-4), bản nháp theo lối an toàn: chỉ ghi ứng viên."
+    },
+    {
+      "i": 1,
+      "p": "Ngưỡng sống đã ký có vế «ba dòng toà cũ sang bảng toà»; chọn giữ chúng làm phân khu là sửa ngưỡng đó. Đã ghi rõ trong Hỏi-1."
+    },
+    {
+      "i": 2,
+      "p": "Đo trên dữ liệu thật còn thiếu: toà nào cũng có mã, không căn nào thiếu bằng chứng, và hai dự án cùng khu trùng mã toà. Đã thêm phép đo và đổi phạm vi mã theo dự án."
+    },
+    {
+      "i": 3,
+      "p": "Phép đo «không lên cloud» chỉ xét tên bảng, chưa xét từng dòng trong hai bảng dùng chung. Đã thêm phép đo theo dòng."
+    },
+    {
+      "i": 4,
+      "p": "Phép đo «không làm vỡ danh bạ người» chỉ đếm số dòng, chưa so nội dung; chưa đo cách chọn giá trị của tin. Đã đổi sang so nội dung và thêm ca chèn trùng."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E12",
+      "q": "Các trường, loại bí danh mới của danh bạ toà đã khai đủ theo chuẩn RESO chưa?",
+      "why": "Hội đồng ba góc nhìn đề xuất Đạt ở lượt 2: sổ extension, ngày tra, lý do và kiểm chất lượng đã đủ."
+    }
+  ]
+}

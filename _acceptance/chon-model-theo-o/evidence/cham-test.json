@@ -1,0 +1,138 @@
+{
+ "lat": "s03-theo-nhom",
+ "split": "test",
+ "so_the": 23,
+ "model": [
+  "anthropic/claude-haiku-5.5"
+ ],
+ "prompt_version": "dg3-s03-v3",
+ "prompt_sha": "5c569ca27a311e58fa19256e82ac7f007422be2cf0bcdb74095c92b1e476c9fb",
+ "cau_hinh_sha": "db2101818766b05c80246c068e3016862b551e17d4dc09b1dd9fb2bfbb5b91d9",
+ "ma_sha": "b369be33ba27a201b3dbda7de270285430f098952c3fc02b57f296002a88fddf",
+ "dung": 342,
+ "mau_so": 368,
+ "dung_gop": 0.9293478260869565,
+ "dung_gop_bo_9991": 0.9630681818181818,
+ "usd_the": 0.0016642826086956523,
+ "json_hong": 0,
+ "giay_trung_vi": 8.815,
+ "anh_thieu": {
+  "9991": 1,
+  "10023": 1
+ },
+ "o": {
+  "listing_intent": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 23,
+   "phu": 23,
+   "thua": 0
+  },
+  "kind": {
+   "dung": 22,
+   "n": 23,
+   "co_nhan": 21,
+   "phu": 20,
+   "thua": 0
+  },
+  "property_type": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 21,
+   "phu": 19,
+   "thua": 0
+  },
+  "multi_unit": {
+   "dung": 23,
+   "n": 23,
+   "co_nhan": 23,
+   "phu": 23,
+   "thua": 0
+  },
+  "project": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 21,
+   "phu": 19,
+   "thua": 0
+  },
+  "subzone": {
+   "dung": 20,
+   "n": 23,
+   "co_nhan": 20,
+   "phu": 17,
+   "thua": 0
+  },
+  "building": {
+   "dung": 20,
+   "n": 23,
+   "co_nhan": 14,
+   "phu": 12,
+   "thua": 0
+  },
+  "stack": {
+   "dung": 22,
+   "n": 23,
+   "co_nhan": 5,
+   "phu": 5,
+   "thua": 1
+  },
+  "floor": {
+   "dung": 23,
+   "n": 23,
+   "co_nhan": 2,
+   "phu": 2,
+   "thua": 0
+  },
+  "bedrooms": {
+   "dung": 22,
+   "n": 23,
+   "co_nhan": 20,
+   "phu": 19,
+   "thua": 0
+  },
+  "bedrooms_plus": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 20,
+   "phu": 18,
+   "thua": 0
+  },
+  "area_m2": {
+   "dung": 22,
+   "n": 23,
+   "co_nhan": 15,
+   "phu": 14,
+   "thua": 0
+  },
+  "price_min_vnd": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 20,
+   "phu": 18,
+   "thua": 0
+  },
+  "price_max_vnd": {
+   "dung": 20,
+   "n": 23,
+   "co_nhan": 20,
+   "phu": 18,
+   "thua": 0
+  },
+  "seller_name": {
+   "dung": 21,
+   "n": 23,
+   "co_nhan": 8,
+   "phu": 7,
+   "thua": 1
+  },
+  "seller_phone": {
+   "dung": 22,
+   "n": 23,
+   "co_nhan": 12,
+   "phu": 11,
+   "thua": 0
+  }
+ },
+ "luc": "2026-11-06T22:39:24.734Z"
+}
