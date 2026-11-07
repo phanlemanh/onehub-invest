@@ -465,6 +465,22 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     GLM-5.3 Flash, gửi nội dung bài nguyên văn (ADR-0007 sửa 06/11), «Chọn AI Gateway của Vercel», «xây dựng tính năng để có thể
     dễ dàng thay đổi các model và hiện tại sử dụng haiku». Thay Hỏi-4 cũ của review phân loại §7.0 (M1 local mặc định, cổng
     Gateway hoãn tới PH4) cho việc đọc tin; ngoại lệ có tên của §1.6. Hàng PL30.
+34. **Đọc gộp S03 chạy hằng ngày, trần 20 USD/ngày** (07/11, Mạnh «Đồng ý trần 20 usd/ngày. Còn lại theo khuyến nghị»;
+    đóng Hỏi-1 của PL30): phạm vi bài S03 mới đã khử trùng theo tin, dự án của mốc GCM1 trước; chạm trần thì dừng có tên.
+    Mở ra toàn S03 sau một tuần xem tiền (PL31b) và độ đúng (DO1). Ước ~8–14 USD/ngày nếu chạy toàn S03 bằng Haiku. Hàng PL34.
+35. **Duyệt trên Ops theo hạng mục** (07/11, Mạnh duyệt báo cáo `docs/research/soat-ops-0711.md`, «Đồng ý, tôi đã đăng
+    nhập lại Reui pro»):
+    - Thẻ Đối chiếu (chỉ ghi nhật ký) rời Hàng duyệt thành lát chấm mẫu ~30 thẻ/tuần, đáp án bốn lựa chọn.
+    - Màn gắn nhãn: nháp của máy là lớp riêng ở mọi thẻ; tắt chế độ hai người; đo bằng tỉ lệ giữ/sửa nháp. Không gắn mù
+      (Mạnh 06/11; tập test mù hoãn tới PL21 theo mục 32).
+    - Hoãn và Không chắc không bắt lý do; đáp án hoặc chip tính là lý do. Hoàn tác 5 giây cho mọi hạng mục, kể cả Ghép căn.
+    - Thẻ luật: quyết một lần cho cả loạt thẻ cùng căn cứ luật E1, kèm năm bài mẫu, có nhật ký và đảo được — là sửa luật
+      xác định (§1 luật 7), khác duyệt hàng loạt đã loại ở GD10.
+    - Hàng tồn Bổ sung tin không trả lại hàng loạt: máy rút thẻ trùng giá trị đang lưu, phần còn lại duyệt tay.
+    - Khuôn giao diện lấy từ ReUI (gói Pro), không tự vẽ. Hàng OD1–OD7; OD2–OD5 là nấc 1 của PL23.
+36. **S01 dừng sau nấc 1, thử lại theo lịch** (07/11, Mạnh «Dừng S01» rồi «duyệt lịch s01»): lượt 1 thu 40 căn, 12.410 đêm
+    nhưng 24/30 căn không giá dù ngày hỏi còn trống (nghi chặn mềm). Nghỉ tới hết 09/11; 10/11 dò 20 căn đối chứng nhịp
+    12–20 giây; ≥50% có giá → 50 căn rồi 150 cách ngày; 20–50% → dò lại 13/11; <20% → chỉ thu lịch/đêm. Hàng ZC10.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
