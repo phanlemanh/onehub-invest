@@ -62,7 +62,8 @@ Source input: `_acceptance/dung-danh-ba-may-thu/opportunity.md` (hàng DB1b củ
   thu chưa dựng — chưa so» khi chưa; ca dữ liệu thật (bản chép chỉ đọc từ máy thu) dùng đúng hàm đó; không in mã S08 nào.
 - AC-9 (judgment): Given `pipeline/CLAUDE.md` và `docs/ops/runtime-map.md` sau vòng, When người làm sau đọc, Then họ biết
   lệnh dựng danh bạ vật thể chạy ở đâu, cờ nào mở DB máy thu, rằng đích ngoài máy luôn bị chặn, rằng bước đêm nằm trong
-  `refresh-bait-gap` và chỉ giữ tươi khu đã dựng tay, và rằng ba bảng vật thể chỉ ở máy thu (Ngoài-8).
+  `refresh-bait-gap` và chỉ giữ tươi khu đã dựng tay, và rằng ở bản này ba bảng vật thể chưa được đồng bộ lên cloud —
+  ghi là phạm vi của vòng, không phải luật dữ liệu (Ngoài-8).
 
 ## Coverage
 
@@ -105,6 +106,8 @@ of scope.
 
 - Mọi phép đo chạy trên DB thử (`pipeline/scripts/db-thu-dbv.mjs`, tên `oneinvest_dbv_*`); dữ liệu thật chỉ chép đọc từ
   máy thu (ca `dbv_that`, ngoài CI). Không ghi DB máy thu trong vòng.
-- S08 chỉ nội bộ (AGENTS luật 5): fixture là mã tổng hợp tiền tố Q; đầu ra chỉ in số.
+- Fixture là mã tổng hợp tiền tố Q; đầu ra phép đo chỉ in số (nếp của DB1). Chính sách dữ liệu dự án (S07, S08, S09, nguồn
+  nhà nước) Mạnh mở 08/11, văn bản sửa ở hàng DA0 — vòng này không dựa vào luật 5 cho tiêu chí nào; chặn đích ngoài máy
+  ở AC-2 là rào an toàn của lệnh ghi.
 - Vùng mã: `pipeline/danh-ba-vat-the.mjs`, `pipeline/lib/danh-ba-vat-the*`, `pipeline/scripts/danh-ba-vat-the*`, cộng
   (khai ở Cổng Phạm vi) `pipeline/refresh-bait-gap.mjs`, `pipeline/CLAUDE.md`, `docs/ops/runtime-map.md`.

@@ -1,5 +1,5 @@
 {
-  "feature_plain": "Danh bạ toà · trục · căn được dựng lần đầu trên máy thu một cách có chủ ý (cờ riêng, bắt buộc có bản sao lưu), không bao giờ ra khỏi máy, và từ đó mỗi đêm tự cập nhật những khu đã dựng.",
+  "feature_plain": "Danh bạ toà · trục · căn được dựng lần đầu trên máy thu một cách có chủ ý (cờ riêng, bắt buộc có bản sao lưu), lệnh không ghi được lên máy chủ khác, và từ đó mỗi đêm tự cập nhật những khu đã dựng.",
   "will_do": [
     {"id": "AC-1", "p": "Sẽ chỉ ghi vào DB máy thu khi người chạy gõ cờ riêng (--db-that); lần dựng đầu còn phải chỉ ra tệp sao lưu có thật, thiếu thì lệnh dừng và không ghi gì."},
     {"id": "AC-2", "p": "Sẽ từ chối mọi đích nằm ngoài máy này (đám mây, máy khác, kể cả URL trông như máy này mà thật ra nối đi chỗ khác), dù có cờ hay không, và không in mật khẩu ra màn hình."},
@@ -9,11 +9,11 @@
     {"id": "AC-6", "p": "Sẽ giữ nguyên danh bạ Người của đêm đó khi bước danh bạ toà hỏng giữa chừng; job báo đỏ gọi tên bước và không để lại dữ liệu nửa chừng."},
     {"id": "AC-7", "p": "Sẽ chạy thật khi được gọi qua đường dẫn tắt như máy chạy đêm vẫn gọi, không im lặng báo xong mà không làm gì."},
     {"id": "AC-8", "p": "Sẽ có phép so số toà, trục, căn từng khu giữa máy thu và bản chép chỉ đọc, đếm thẳng trên dữ liệu, để đo ngưỡng sau lần dựng đầu."},
-    {"id": "AC-9", "p": "Sẽ ghi vào tài liệu vận hành chỗ lệnh nằm, cờ nào mở máy thu, bước đêm làm gì, và rằng danh bạ toà chỉ ở máy thu."}
+    {"id": "AC-9", "p": "Sẽ ghi vào tài liệu vận hành chỗ lệnh nằm, cờ nào mở máy thu, bước đêm làm gì, và rằng ở bản này danh bạ toà chưa đưa lên cloud (phạm vi của vòng, không phải luật)."}
   ],
   "wont_do": [
     {"id": "OOS-1", "p": "KHÔNG dựng lần đầu trên máy thu trong vòng này — việc đó chờ lời riêng của anh sau khi ký và gộp, có sao lưu trước (Hỏi-2)."},
-    {"id": "OOS-2", "p": "KHÔNG mở ra 150 dự án của danh mục nội bộ — đó là hàng PX2."},
+    {"id": "OOS-2", "p": "KHÔNG mở ra 150 dự án của danh mục dự án (S08) — đó là hàng PX2."},
     {"id": "OOS-3", "p": "KHÔNG làm trang Ops xem danh bạ toà và KHÔNG đưa danh bạ toà lên đám mây."},
     {"id": "OOS-4", "p": "KHÔNG để lệnh tự chạy sao lưu — lệnh chỉ đòi tệp sao lưu có sẵn ở lần đầu; sao lưu vẫn do giám sát làm."},
     {"id": "OOS-5", "p": "KHÔNG sửa nhãn tiếng Việt của tám dòng kiểm chất lượng toà và các hạn chế đo khác đã ghi ở vòng DB1."}

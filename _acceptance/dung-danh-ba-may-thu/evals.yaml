@@ -75,5 +75,5 @@ evals:
     criterion: AC-9
     executor: judgment
     inputs: [pipeline/CLAUDE.md, docs/ops/runtime-map.md]
-    question: "Một người hay trợ lý mới chỉ đọc hai tệp này: có trả lời đúng được năm câu không — (1) lệnh dựng danh bạ vật thể là tệp nào; (2) cờ nào cho phép ghi DB máy thu; (3) có cách nào cho lệnh ghi lên một máy chủ ngoài máy này không (đúng: không); (4) bước đêm nằm ở đâu và nó dựng khu nào (đúng: trong refresh-bait-gap, chỉ khu đã dựng tay; chưa dựng lần đầu thì bỏ qua); (5) ba bảng buildings/stacks/units có lên cloud không (đúng: không, chỉ máy thu)? Thiếu hay sai câu nào thì FAIL và nêu câu đó."
+    question: "Một người hay trợ lý mới chỉ đọc hai tệp này: có trả lời đúng được năm câu không — (1) lệnh dựng danh bạ vật thể là tệp nào; (2) cờ nào cho phép ghi DB máy thu; (3) có cách nào cho lệnh ghi lên một máy chủ ngoài máy này không (đúng: không); (4) bước đêm nằm ở đâu và nó dựng khu nào (đúng: trong refresh-bait-gap, chỉ khu đã dựng tay; chưa dựng lần đầu thì bỏ qua); (5) ở bản này ba bảng buildings/stacks/units có được đồng bộ lên cloud không (đúng: chưa — tài liệu phải ghi đó là phạm vi của vòng, không phải luật vĩnh viễn; viết thành luật «chỉ ở máy thu» thì FAIL)? Thiếu hay sai câu nào thì FAIL và nêu câu đó."
     evidence_required: [run_id, verifier, verified_at, output]

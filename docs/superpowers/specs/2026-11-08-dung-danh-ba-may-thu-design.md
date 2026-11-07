@@ -13,8 +13,9 @@ máy thu 07/11, ba bảng vật thể còn rỗng. Hàng này đưa lệnh lên 
 Ba lỗ cần đóng cùng lúc, vì thiếu một cái thì cái kia nguy hiểm:
 
 1. **Cờ cho phép tường minh** — ghi DB thật phải là chủ ý (mẫu `label-ghep.mjs --db-that`).
-2. **Chặn máy chủ ngoài máy** (Ngoài-7) — S08 chỉ nội bộ, `stg_s08_inventory` chỉ ở local (AGENTS luật 5); không cờ
-   nào mở được đường ghi danh mục nội bộ lên một máy chủ khác.
+2. **Chặn máy chủ ngoài máy** (Ngoài-7) — rào an toàn của lệnh ghi: lệnh dựng chỉ ghi DB trên máy này; dữ liệu lên
+   cloud chỉ đi qua đường đồng bộ có kiểm của kho (`sync-cloud`), không qua lệnh dựng; không cờ nào mở được lệnh dựng ghi
+   lên một máy chủ khác. (Đây không phải luật dữ liệu: Mạnh 08/11 mở thông tin dự án khỏi luật nội bộ, văn bản sửa ở DA0.)
 3. **Kiểm slug khu** (Ngoài-6, Ngoài-10) — slug sai thì lệnh dừng và gọi tên, không «xong» với toàn số 0.
 
 Và một bước chạy đêm, có rào: đêm chỉ **giữ tươi** những khu đã được dựng tay bằng cờ; không bao giờ tự dựng lần đầu.
@@ -91,8 +92,9 @@ máy thu, rồi chạy ca dữ liệu thật để so (phải ở nhánh so, l�
 
 ### Tài liệu
 
-`pipeline/CLAUDE.md` thêm dòng `danh-ba-vat-the.mjs` (cờ, đích, bước đêm, chỉ local); `docs/ops/runtime-map.md` ghi bước
-đêm trong `refresh-bait-gap` và rằng ba bảng vật thể chỉ ở máy thu (Ngoài-8).
+`pipeline/CLAUDE.md` thêm dòng `danh-ba-vat-the.mjs` (cờ, đích, bước đêm, chỉ ghi DB trên máy này); `docs/ops/runtime-map.md`
+ghi bước đêm trong `refresh-bait-gap` và rằng ở bản này ba bảng vật thể chưa đồng bộ lên cloud — phạm vi của vòng, không
+phải luật (Ngoài-8).
 
 ## Phương án đã loại
 
@@ -100,7 +102,7 @@ máy thu, rồi chạy ca dữ liệu thật để so (phải ở nhánh so, l�
   `job_run` cũng chạm tệp ngoài ranh giới như phương án chọn mà kém nhịp hơn.
 - **Bước trong `scripts/cloud-sync.sh`** — tệp T3, chạy 15 phút một lần; đưa vòng lên T3 vì một bước không rời máy.
 - **Bỏ chặn tên `oneinvest` không thêm cờ** — một lệnh gõ sai `--db` là ghi thẳng máy thu; trái mẫu `label-ghep`.
-- **Cờ mở cả máy chủ ngoài** — S08 chỉ nội bộ; không có ca dùng hợp lệ.
+- **Cờ mở cả máy chủ ngoài** — đường lên cloud của kho là đồng bộ có kiểm, không phải lệnh dựng; không có ca dùng hợp lệ.
 - **Đêm tự dựng lần đầu** — lần đầu trên máy thu là lời riêng của Mạnh (ghi_chu hàng DB1b).
 - **Lệnh tự `pg_dump` trước khi ghi** — giám sát đã có nếp sao lưu trước mỗi lần áp (081, 082, 083); lệnh chỉ đòi
   tệp sao lưu ở lần dựng đầu (`--sao-luu`), không tự dump (Hỏi-2).
