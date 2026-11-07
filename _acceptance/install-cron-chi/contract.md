@@ -19,7 +19,7 @@ approved_at:
 audit-all FAIL «Backup tuần CHƯA cài»: DB máy thu (nhãn người, mọi quyết định duyệt) chưa có sao lưu tuần. `scripts/install-cron.sh`
 cài cùng lúc ba job (collector, smoke, backup) và bootout/bootstrap cả ba, nên cài job sao lưu sẽ khởi động lại job collector đang chạy.
 Lời giao `claudedp-0611-37` (giám sát xếp, làn ZCode): thêm cờ `--chi <job...>` để chỉ cài đúng job nêu tên. ZCode
-`zcode/install-cron-chi` @ 16c1eaf9. Nhánh nghiệm thu `claude/acceptance-install-cron-chi` = nhánh đó + hồ sơ này. Mạnh tự gõ lệnh cài
+`zcode/install-cron-chi` @ 16c1eaf9, vòng 2 thêm eb60ad59 (`--chi` trơn thoát 2, từ Ngoài-1 vòng 1). Nhánh nghiệm thu `claude/acceptance-install-cron-chi` = nhánh đó + hồ sơ này. Mạnh tự gõ lệnh cài
 trên máy sau khi gộp; máy không chạy cài thật.
 
 ## Criteria
@@ -27,7 +27,7 @@ trên máy sau khi gộp; máy không chạy cài thật.
 - AC-1: Given không có cờ, When chạy script cài, Then cài đủ ba job collector, smoke, backup như hành vi cũ.
 - AC-2: Given `--chi backup` và BACKUP_DIR, When chạy script cài, Then chỉ plist backup được ghi, launchctl chỉ được gọi với plist backup, BACKUP_DIR nằm trong plist backup; plist collector và smoke không được ghi, không bị bootout.
 - AC-3: Given BACKUP_PASS, When chạy `--chi backup`, Then mật khẩu đi vào Keychain (dịch vụ oneinvest-backup) qua stdin của `security`, không nằm trong plist, đối số lệnh, output hay lời gọi launchctl.
-- AC-4: Given tên job lạ hoặc cờ lạ, When chạy script cài, Then thoát 2 và không ghi plist nào.
+- AC-4: Given tên job lạ, cờ lạ, hoặc `--chi` không kèm tên job, When chạy script cài, Then thoát 2 và không ghi plist nào.
 - AC-5: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có script cài, test của nó, hồ sơ này và khoá lệnh chấm trong config.
 
 ## Coverage
@@ -38,7 +38,6 @@ trên máy sau khi gộp; máy không chạy cài thật.
 
 - Chạy cài thật trên máy (đụng ~/Library/LaunchAgents và Keychain thật): Mạnh tự gõ sau khi gộp.
 - Nội dung job sao lưu (`scripts/db-sao-luu.sh`, plist backup): không đổi trong vòng này.
-- Cờ `--chi` không kèm tên job: hiện rơi về cài đủ ba (xem review-findings).
 
 ## Notes
 
