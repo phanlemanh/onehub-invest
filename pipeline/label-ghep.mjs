@@ -8,7 +8,9 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-import { ghepChoMau, nhomTrung } from "./lib/ghep-mau.mjs";
+import { khoaTrung } from "./lib/eval-labels.mjs";
+import { ghepChoMau } from "./lib/ghep-mau.mjs";
+import { laChiAnh } from "./lib/gop-anh.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -23,6 +25,56 @@ export async function docTinCua(client) {
     `SELECT DISTINCT ON (pid) pid, offer_id FROM sale_offer_records, unnest(post_ids) AS pid
      WHERE source = 'S03' ORDER BY pid, (retired_at IS NULL) DESC, offer_id`);
   return new Map(rows.map((r) => [r.pid, r.offer_id]));
+}
+
+/**
+ * Dấu trùng theo khoá của lay-mau-khu-trung-theo-tin, chạy sau ghepChoMau. Khoá của thẻ = khoaTrung trên bài chữ (chu_ref của cụm,
+ * hay chính bài khi không có cụm). Mỗi nhóm khoá còn đúng một thẻ hiện.
+ * - Dòng có `an_tay` (Mạnh ẩn tay) giữ nguyên, không bao giờ bị gỡ hay đổi đích.
+ * - Thẻ đã ẩn vì cụm ảnh không xét lại.
+ * - Thẻ giữ: nhiều dòng nhãn nhất → được dấu ẩn tay trỏ tới → item_id nhỏ nhất.
+ * - Thẻ còn lại nhận `trung_voi` = ref_id thẻ giữ và `khu_trung` "tin" | "chu".
+ * @param {{ item_id: number|string, ref_id: string, ghep_cu?: object|null }[]} items
+ * @param {Map<string, object|null>} ghep kết quả ghepChoMau
+ * @param {{ posts: { post_id: string, text?: string|null }[], tinCua: Map<string, string>, soNhan: Map<string, number> }} opts
+ * @returns {{ ghep: Map<string, object|null>, an_moi: number, an_tay_giu: number, an_them: { item_id: string, khoa: string }[] }}
+ */
+export function nhomTrung(items, ghep, { posts, tinCua, soNhan }) {
+  const theoId = new Map(posts.map((p) => [p.post_id, p]));
+  const out = new Map(ghep);
+  const laAnTay = (it) => typeof it.ghep_cu?.an_tay === "string" && it.ghep_cu.an_tay !== "";
+  const anTay = items.filter(laAnTay);
+  for (const it of anTay) out.set(String(it.item_id), it.ghep_cu);
+  const duocTro = new Set(anTay.map((it) => it.ghep_cu.trung_voi).filter(Boolean));
+  const nhom = new Map();
+  for (const it of [...items].sort((a, b) => Number(a.item_id) - Number(b.item_id))) {
+    const g = out.get(String(it.item_id)) ?? null;
+    if (!laAnTay(it) && g?.trung_voi) continue;
+    const chuId = g ? g.chu_ref : it.ref_id;
+    const bai = chuId ? theoId.get(chuId) : null;
+    if (!bai || laChiAnh(bai.text)) continue;
+    const khoa = khoaTrung(bai, tinCua);
+    if (!khoa) continue;
+    if (!nhom.has(khoa)) nhom.set(khoa, []);
+    nhom.get(khoa).push(it);
+  }
+  const anThem = [];
+  for (const [khoa, ds] of nhom) {
+    const ung = ds.filter((it) => !laAnTay(it));
+    if (ds.length < 2 || ung.length === 0) continue;
+    const nhan = (it) => soNhan.get(String(it.item_id)) ?? 0;
+    const [giu, ...con] = [...ung].sort((a, b) => nhan(b) - nhan(a)
+      || Number(duocTro.has(b.ref_id)) - Number(duocTro.has(a.ref_id))
+      || Number(a.item_id) - Number(b.item_id));
+    // Nhóm có dấu ẩn tay mà mọi thẻ chưa ẩn đã là thẻ giữ duy nhất: không có gì để ẩn thêm.
+    for (const it of con) {
+      const id = String(it.item_id);
+      const g = out.get(id) ?? { chu_ref: it.ref_id, anh_refs: [], so_chu_gan: 0, trung_voi: null };
+      out.set(id, { ...g, trung_voi: giu.ref_id, khu_trung: khoa.startsWith("o:") ? "tin" : "chu" });
+      anThem.push({ item_id: id, khoa });
+    }
+  }
+  return { ghep: out, an_moi: anThem.length, an_tay_giu: anTay.length, an_them: anThem };
 }
 
 /** DB thử: máy này, tên `oneinvest_<việc>` (db/db-thu.sh). */

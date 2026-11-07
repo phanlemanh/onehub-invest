@@ -260,18 +260,14 @@ test("GN2-AC-5 label-ghep thường và --lam-lai: mỗi nhóm trùng một th�
   assert.deepEqual([k.r1.an_moi, k.r1.an_tay_giu, k.r2.an_moi, k.r2.an_tay_giu, k.r2.ghi], [4, 1, 4, 1, 0]);
   // Chiều đỏ trên cùng lát: bản chép nhomTrung bỏ giữ dấu ẩn tay; bản bỏ bậc «nhiều nhãn nhất».
   const dot = async (a, b) => {
-    const goc = join(LIB, "ghep-mau.mjs");
+    const goc = join(import.meta.dirname, "../label-ghep.mjs");
     const src = readFileSync(goc, "utf8");
     assert.ok(src.includes(a), `chỗ đột biến không còn: ${a}`);
-    const d = mkdtempSync(join(LIB, ".gn2-ghep-"));
+    const d = mkdtempSync(join(import.meta.dirname, "..", ".gn2-ghep-"));
     try {
-      copyFileSync(join(import.meta.dirname, "../label-ghep.mjs"), join(d, "label-ghep.mjs"));
-      writeFileSync(join(d, "ghep-mau.mjs"), src.replace(a, b).replace(/from "\.\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(join(LIB, rel)).href)}`));
-      const lg = readFileSync(join(d, "label-ghep.mjs"), "utf8").replace(/from "\.\/lib\/ghep-mau\.mjs"/, `from ${JSON.stringify(pathToFileURL(join(d, "ghep-mau.mjs")).href)}`)
-        .replace(/from "\.\/lib\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(join(LIB, rel)).href)}`);
-      writeFileSync(join(d, "label-ghep.mjs"), lg);
+      writeFileSync(join(d, "label-ghep.mjs"), src.replace(a, b).replace(/from "\.\/lib\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(join(LIB, rel)).href)}`));
       const m = await import(pathToFileURL(join(d, "label-ghep.mjs")).href);
-      return (await gn2ChayCa(m.ghepLat, `gn2_dot_${process.pid}_${Math.abs(a.length)}`)).loi;
+      return (await gn2ChayCa(m.ghepLat, `gn2_dot_${process.pid}_${a.length}`)).loi;
     } finally {
       rmSync(d, { recursive: true, force: true });
     }
