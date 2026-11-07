@@ -118,7 +118,11 @@ export async function chay(argv) {
       const a = f === PATCH ? boDuongExtension(x) : x;
       return VUNG_DINH_DANH(f) ? boDinhDanhUpstream(a, dinhDanh, tenTheoMa) : a;
     };
-    const sau = mien(readFileSync(join(ROOT, f), "utf8"));
+    // Tệp chưa theo dõi có thể biến mất giữa lúc liệt kê và lúc đọc (bộ test chạy song song tạo rồi xoá tệp tạm): không còn thì
+    // không có gì để quét — bỏ qua tệp ấy, không dừng cả phép quét. Lỗi đọc khác vẫn ném.
+    let noiDung;
+    try { noiDung = readFileSync(join(ROOT, f), "utf8"); } catch (e) { if (e?.code === "ENOENT") continue; throw e; }
+    const sau = mien(noiDung);
     let truoc = "";
     try { truoc = mien(git("show", `${base}:${f}`)); } catch { /* tệp mới */ }
     const a = dem(truoc, entries);
