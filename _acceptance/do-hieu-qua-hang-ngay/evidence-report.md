@@ -2,183 +2,194 @@
 schema_version: 2
 feature_slug: do-hieu-qua-hang-ngay
 verdict: REJECT
-failed_evals: [E1, E3, E4, E5, E6, E7, E10, E12, E2, E8, E9, E11]
+failed_evals: ["E9"]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0f7ad34b5ad62c2ad781af1d39ebd0adeba9cad5
+verified_commit: 4d638b9a6c144d8bdffe6286d526a14b3c98220d
 human_signoff:
 ---
 
 # Evidence Report: do-hieu-qua-hang-ngay
 
-Round 1. Verdict REJECT: 12 eval không đạt (E1, E3, E4, E5, E6, E7, E10, E12, E2, E8, E9, E11). Hai lệnh test cả cây và hai lượt ui-check cùng đỏ, nên các eval gắn với chúng đỏ chung.
+Round 2. Nội dung này thay trọn round cũ; lịch sử round nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | FAIL |
-| E2 | AC-2 | test | FAIL |
-| E3 | AC-3 | test | FAIL |
-| E4 | AC-4 | test | FAIL |
-| E5 | AC-5 | test | FAIL |
-| E6 | AC-6 | test | FAIL |
-| E7 | AC-7 | test | FAIL |
-| E8 | AC-8 | test | FAIL |
+| E1 | AC-1 | test | PASS |
+| E2 | AC-2 | test | PASS |
+| E3 | AC-3 | test | PASS |
+| E4 | AC-4 | test | PASS |
+| E5 | AC-5 | test | PASS |
+| E6 | AC-6 | test | PASS |
+| E7 | AC-7 | test | PASS |
+| E8 | AC-8 | test | PASS |
 | E9 | AC-8 | ui-check | FAIL |
-| E10 | AC-9 | test | FAIL |
-| E11 | AC-2 | ui-check | FAIL |
-| E12 | AC-10 | test | FAIL |
+| E10 | AC-9 | test | PASS |
+| E11 | AC-2 | ui-check | PASS |
+| E12 | AC-10 | test | PASS |
 
-Lệnh đỏ không gắn riêng eval nào: không có. Bốn lệnh đỏ đều gắn eval: `cd pipeline && npm test` (E1, E3, E4, E5, E6, E7, E10, E12), `cd app && npm test` (E2, E8), `ui-check:E9`, `ui-check:E11`.
+Lệnh fail không gắn eval: không có. Lệnh duy nhất ra mã khác 0 là `ui-check:E9`, và nó gắn với E9.
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-do-hieu-qua-hang-ngay-E1-r1
-  exit_code: 1
+  run_id: minted-do-hieu-qua-hang-ngay-E1-r2
+  exit_code: 0
   baseline: red
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
   output: |
-    Lệnh `cd pipeline && npm test` chạy cả cây, một lượt, đỏ. Phần đuôi log nêu hai ca đỏ ở vocab-lint (scripts/vocab-lint.test.mjs).
-    Ca VL-AC-5 ma trận kiểm kê: còn chỗ viết tay ngoài sổ ở pipeline/lib/chuan-hoa-nhan.mjs:52 và pipeline/scripts/do1-dung-thu.mjs:46, 47, 55.
-    Ca khớp mẫu gán khu vực: do-hang-ngay.mjs không có trong ma trận (chỉ transform-moi.mjs được chờ).
-    Đuôi log không nêu ca 'DO1-AC-1' hay 'DO1-AC-1-GOI'.
-
-- eval: E3
-  run_id: minted-do-hieu-qua-hang-ngay-E3-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1 (vocab-lint: do-hang-ngay.mjs ngoài ma trận; chỗ viết tay ở chuan-hoa-nhan.mjs và do1-dung-thu.mjs).
-
-- eval: E4
-  run_id: minted-do-hieu-qua-hang-ngay-E4-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
-
-- eval: E5
-  run_id: minted-do-hieu-qua-hang-ngay-E5-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
-
-- eval: E6
-  run_id: minted-do-hieu-qua-hang-ngay-E6-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
-
-- eval: E7
-  run_id: minted-do-hieu-qua-hang-ngay-E7-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
-
-- eval: E10
-  run_id: minted-do-hieu-qua-hang-ngay-E10-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
-
-- eval: E12
-  run_id: minted-do-hieu-qua-hang-ngay-E12-r1
-  exit_code: 1
-  baseline: red
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-11-07T11:59:12Z
-  output: |
-    Cùng lệnh `cd pipeline && npm test` đỏ như E1.
+    cd pipeline && npm test (chạy chung với E3, E4, E5, E6, E7, E10, E12)
+    ℹ duration_ms 456118.505625
 
 - eval: E2
-  run_id: minted-do-hieu-qua-hang-ngay-E2-r1
-  exit_code: 1
+  run_id: minted-do-hieu-qua-hang-ngay-E2-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
   output: |
-    Lệnh `cd app && npm test` chạy cả cây, một lượt, đỏ.
-    Ca ON12-AC-1 (tests/ops-nhan-theo-context.test.tsx): danh sách tệp quét có thêm src/components/ops/labels/nhap-may.ts, src/components/ops/quality/do-hang-ngay-bang.tsx, src/components/ops/quality/do-hang-ngay.tsx so với danh sách được chờ.
-    Đuôi log không nêu ca 'DO1-AC-2' hay 'DO1-RT'.
+    cd app && npm test (chạy chung với E8)
+    ℹ duration_ms 500358.401125
+
+- eval: E3
+  run_id: minted-do-hieu-qua-hang-ngay-E3-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
+
+- eval: E4
+  run_id: minted-do-hieu-qua-hang-ngay-E4-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
+
+- eval: E5
+  run_id: minted-do-hieu-qua-hang-ngay-E5-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
+
+- eval: E6
+  run_id: minted-do-hieu-qua-hang-ngay-E6-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
+
+- eval: E7
+  run_id: minted-do-hieu-qua-hang-ngay-E7-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
 
 - eval: E8
-  run_id: minted-do-hieu-qua-hang-ngay-E8-r1
-  exit_code: 1
+  run_id: minted-do-hieu-qua-hang-ngay-E8-r2
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
   output: |
-    Cùng lệnh `cd app && npm test` đỏ như E2 (ON12-AC-1: ba tệp mới của DO1 chưa có trong danh sách quét).
+    cd app && npm test (chạy chung)
+    ℹ duration_ms 500358.401125
 
 - eval: E9
-  run_id: minted-do-hieu-qua-hang-ngay-E9-r1
+  run_id: minted-do-hieu-qua-hang-ngay-E9-r2
   exit_code: 1
   baseline: n-a
-  verifier: config:executors.ui-check.default
-  verified_at: 2026-11-07T11:59:12Z
+  verifier: config:executors.ui-check
+  verified_at: 2026-11-07T13:08:24Z
   screenshot: evidence/E9-step1.png
   observed: |
-    step1 (sáng, tab Tổng): thấy 'Đo hằng ngày' + tab Tổng/Thị trường/Phường/xã/Dự án/Toà; bảng 'Giữ nháp theo cách đọc × ô' đủ cột Nhóm, Tuần này, Tuần trước, Chênh, Ngưỡng phát hiện, huy hiệu 'ít mẫu · n=4', Đọc gộp 100,0% n=13 vs 85,7% n=14 chênh +14,3%; bảng 'Ước tin rao bị bỏ sót' bắt đầu bên dưới. Không thấy dòng tỉ lệ soát. step2 (sáng, Phường/xã, ?lat-do=phuong): bốn bảng nhỏ 'Thẻ mẫu soát đã soát' (Không nêu chỗ 15, Tổng 15), 'Thẻ tin rao (mẫu bỏ sót)' (Không nêu chỗ 13), 'Lời đọc trong ngày' (Tổng 0), 'Đơn vị đổi bậc hôm nay' (Tổng 0); KHÔNG có dòng 'Chưa có trong danh bạ'. step3 (tối): cùng bảng giữ nháp trên nền tối, chữ và huy hiệu đọc rõ. step4 (375 sáng): khối thu hẹp, bảng giữ nháp cuộn ngang trong khung (cột Ô cắt mép), tab 'Toà' bị cắt ở mép; không tràn trang (scrollWidth 375 = clientWidth 375). Văn bản DOM (không có ảnh) cho thấy bảng 'Dòng chuyển bậc hôm nay' chỉ có header, rỗng, không có dòng Đổi khoá.
+    E9-step1.png (1280 sáng): khối «Đo hằng ngày» đầu khung, thẻ lát Tổng/Thị trường/Phường/xã/Khu đô thị/Toà (Tổng đang chọn), dòng «Tỉ lệ soát tuần này: 5/20 thẻ (25,0%)», cảnh báo vàng «Mới soát 5/20 thẻ…», bảng Giữ nháp có cột Cách đọc, Ô, Nhóm, Tuần này (huy hiệu «ít mẫu · n=1» ở Bộ đọc luật, «—» ở Đọc gộp), Tuần trước (46,2% n=13…), Chênh (toàn «—»), Ngưỡng phát hiện (±63,5%…). Không thấy huy hiệu «có ý nghĩa».
+    E9-step2.png (sáng, tab Phường/xã được chọn): ba bảng Ô/Số: «Thẻ mẫu soát đã soát» (vn-da-nang-an-hai 1, Không nêu chỗ 4, Chưa có trong danh bạ 0, Tổng 5), «Thẻ tin rao (mẫu bỏ sót)» và «Lời đọc trong ngày» cùng có các dòng đó.
+    E9-step3.png: cùng bố cục nền tối, chữ rõ, cảnh báo vàng đọc được, tab Phường/xã chọn. E9-step4.png (375 sáng): thẻ lát cuộn ngang trong khung, bảng Giữ nháp bị cắt bên phải trong khung bảng (cuộn nội bộ), không tràn trang. Các bảng bỏ sót, tín hiệu, chuyển bậc (Đổi khoá 2), so cặp nằm dưới nếp gấp, xác nhận qua text DOM chứ không nằm trong frame chụp.
   network_observed: n-a (driver)
   output: |
-    Ba assertion không khớp Expected: (1) không thấy dòng tỉ lệ soát ở tab Tổng; (2) bảng chuyển bậc có header nhưng không có dòng dữ liệu nào, nên không có dòng Đổi khoá; (3) tab Phường/xã không có dòng 'Chưa có trong danh bạ'.
-    Các phần khác khớp: bảng giữ nháp, bảng bỏ sót, bảng tín hiệu, bảng so cặp (8 dòng ô), đổi tab đổi URL, dòng 'Không nêu chỗ', nền tối, 375 không cuộn ngang trang.
-    Frame đã lưu: evidence/E9-step1.png đến E9-step4.png.
+    Driver ego-browser, dev server :3462 có sẵn, phiên Ops đã đăng nhập.
+    step1, step2, step3, step4 đạt phần bố cục: khối «Đo hằng ngày», đổi lát Thị trường và Phường/xã (có hai dòng «Không nêu chỗ», «Chưa có trong danh bạ»), nền tối, 375 px không cuộn ngang trang.
+    Không đạt: Badge [data-co-y-nghia] «có ý nghĩa» (do-hang-ngay-bang.tsx:26) không xuất hiện ở frame nào; cột Chênh toàn «—» (tuần này ít mẫu n=1 hoặc không có) nên dấu không hiện trên dữ liệu bịa này. Expected nêu dấu có ý nghĩa, không thấy, nên assertion đỏ.
+    Ghi chú của driver: có thể là thiếu dữ liệu mẫu (cần một hàng có tuần này đủ mẫu) chứ chưa chắc lỗi giao diện. Không ghi E9-network.txt vì driver không đọc được network.
+
+- eval: E10
+  run_id: minted-do-hieu-qua-hang-ngay-E10-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
 
 - eval: E11
-  run_id: minted-do-hieu-qua-hang-ngay-E11-r1
-  exit_code: 1
+  run_id: minted-do-hieu-qua-hang-ngay-E11-r2
+  exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check.default
-  verified_at: 2026-11-07T11:59:12Z
+  verifier: config:executors.ui-check
+  verified_at: 2026-11-07T13:08:24Z
   screenshot: evidence/E11-step1.png
   observed: |
-    E11-step1.png (sang, ~1422px): trang Gan nhan, the #11543 S03, huy hieu tim "Nhap may · doc-gop:gateway:anthropic/claude-haiku-5.5:dg3-s03-v3", anh bai + chu "GH5. 2PN+ Full go 10tr"; cac o hien gia tri that, khong phai goi y: Phong ngu 2, Dien tich 139, Gia thap/cao nhat 10,6 (ty), Khu do thi "vinhomes ocean park", nut Tin rao/Ban/Can ho dang chon (nen den); WC la o trong voi chu mo "vd 1"; thanh duoi "Da dien 8/24". Khop Expected anh 1. E11-step2.png: cung the #11543 (doc-gop), khong co huy hieu bo-doc-luat — khong dat Expected anh 2 (the khong toi duoc). E11-step3.png (sang): lat s03-cuon-chieu-trong, bieu tuong nhan, tieu de "Chua co tin nao cua lat de gan", mo ta "Chay lenh lay mau o may thu roi tai lai trang:" va lenh node pipeline/label-sample.mjs --lat s03-cuon-chieu-trong --n 200 --seed <chuoi>. Khop Expected anh 3 (khuon trong chung).
-  network_observed: no-app-traffic
+    step1.png (sáng, rộng thực ~1422): thẻ #12875 S03 Nhóm thu DO1, huy hiệu tím «Nháp máy · doc-gop:gateway:anthropic/claude-haiku-5.5:dg3-s03-v3»; các ô điền sẵn thấy được: Khu đô thị «vinhomes ocean park», Toà «s8.02», Phòng ngủ 2, Diện tích 61, Giá thấp nhất 3,1, Giá cao nhất 3,1 (đơn vị tỷ), các nút Tin rao/Bán/Căn hộ đang chọn; ô WC chỉ hiện chữ gợi ý «vd 1» (trống); chân «Đã điền 9/24». Khớp Expected.
+    step2.png: thẻ #12882 ngày 2025-06-06, huy hiệu «Nháp máy · bo-doc-luat»; Diện tích 69, Giá 3,9, Phòng ngủ/Mã căn/Toà/Tầng/Tên hiện «Không suy ra được» với ô vuông tick; WC trống; «Đã điền 12/24». Khớp Expected.
+    step3.png: không có thẻ, biểu tượng nhãn, tiêu đề «Chưa có tin nào của lát để gắn», hướng dẫn chạy lệnh label-sample.mjs --lat s03-cuon-chieu-trong --n 200 --seed <chuỗi>. Khớp Expected (khuôn trống chung, vì lát này không phải lát mẫu soát).
+  network_observed: n-a (driver)
   output: |
-    Ảnh 1 và ảnh 3 khớp Expected. Ảnh 2 (thẻ chỉ có bộ đọc luật, huy hiệu 'Nháp máy · bo-doc-luat') không tái hiện được qua giao diện: tham số ?xem= chỉ là lượt hai, không chọn thẻ; các thẻ mang huy hiệu này hoặc đã có nhãn, hoặc xếp sau các thẻ phải lưu trước.
-    Frame đã lưu: evidence/E11-step1.png đến E11-step3.png.
+    Dùng server sẵn có :3462, ego lite phiên Ops đã đăng nhập, không bấm Lưu, không sửa tệp ngoài evidence/.
+    step1: huy hiệu doc-gop đúng, các ô điền sẵn thấy trên màn, ô WC trống. step2: huy hiệu bo-doc-luat đúng. step3: khuôn trống chung kèm lệnh rút mẫu.
+    Lưu ý lệch bước: viewport thực của pane khoảng 1422-1630 px, không ép được 1280; pane mặc định nền tối nên ép sang sáng trước khi chụp. Kết luận không phụ thuộc độ rộng.
+
+- eval: E12
+  run_id: minted-do-hieu-qua-hang-ngay-E12-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-11-07T13:08:24Z
+  output: |
+    cd pipeline && npm test (chạy chung)
+    ℹ duration_ms 456118.505625
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-do-hieu-qua-hang-ngay-SUITE-npm_test-r1
+  run_id: minted-do-hieu-qua-hang-ngay-SUITE-npm_test-r2
   exit_code: 0
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-do-hieu-qua-hang-ngay-SUITE-lint-r1
+  run_id: minted-do-hieu-qua-hang-ngay-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-do-hieu-qua-hang-ngay-SUITE-test_lint_rules-r1
+  run_id: minted-do-hieu-qua-hang-ngay-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-do-hieu-qua-hang-ngay-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-do-hieu-qua-hang-ngay-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-07T11:59:12Z
+  verified_at: 2026-11-07T13:08:24Z
 
 ## Known limits
 
@@ -186,9 +197,9 @@ Lệnh đỏ không gắn riêng eval nào: không có. Bốn lệnh đỏ đề
 
 ## Analyst
 
-none — các eval có đo baseline (E1, E3, E4, E5, E6, E7, E10, E12) đều red trên code cũ (có phân biệt). E2, E8, E9, E11 baseline n-a (xem mục dưới).
+none — moi eval feature deu red tren baseline (co phan biet)
 
-Baseline khong do:
+Baseline khong do
 - cd app && npm test: baseline vuot tran 180 giay/lenh — da dung ca cay tien trinh; BLOCKED ha tang, khong phai ket qua cua code cu
 
 ## Variance
@@ -197,5 +208,6 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E1, E2, E3, E4, E5, E6, E7, E8, E9, E10, E11, E12 failed — hai lệnh test cả cây (pipeline, app) đỏ ở vocab-lint (VL-AC-5, ma trận khớp mẫu) và ON12-AC-1 (danh sách tệp quét), ui-check E9 thiếu dòng tỉ lệ soát, dòng Đổi khoá và ô 'Chưa có trong danh bạ', ui-check E11 không tới được thẻ bo-doc-luat. Returned to implementation.
+Round 1: lịch sử round đầu không nằm trong đầu vào của round này; xem lại bản cũ trong lịch sử git của evidence-report.md.
+Round 2: E9 failed — ui-check không thấy huy hiệu «có ý nghĩa» vì cột Chênh toàn «—» (tuần này chỉ n=1); dữ liệu mẫu thiếu hàng đủ mẫu hoặc khối chưa hiện dấu đúng. Returned to implementation.
 

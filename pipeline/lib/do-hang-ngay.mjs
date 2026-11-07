@@ -4,6 +4,7 @@
 import { createHash } from "node:crypto";
 
 import { chuanHoa } from "./chuan-hoa-nhan.mjs";
+import { entriesFromTokens, guardValues } from "./tier-a-guard.mjs";
 
 /** Nhóm ô theo F3 (classification-enrich-review.md): A định nhóm/định danh, B số, C còn lại. */
 export const NHOM_O = Object.freeze({
@@ -379,16 +380,22 @@ export function soCap(cap) {
 export const gapChu = (s) => String(s).normalize("NFKD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/\s+/g, " ").trim();
 
 /** Chặn rò: một lá chuỗi hay khoá của detail (đã gập) chứa một chuỗi cấm (đã gập) → ném `LO <nhãn>`. Duyệt cây, không so trên
- * JSON đã escape (chữ có xuống dòng hay dấu nháy vẫn bắt được). @param {{nhan: string, chuoi: string}[]} cam */
+ * JSON đã escape (chữ có xuống dòng hay dấu nháy vẫn bắt được). Tên nguồn thật (`nhan` «TEN NGUON», real_name ∪ source_ids) đi
+ * qua bộ soát tầng A dùng chung (`guardValues` → nameVariants: gập dấu, viết liền, từ đầu) trên cả giá trị lẫn khoá.
+ * @param {{nhan: string, chuoi: string}[]} cam */
 export function chanLo(detail, cam) {
-  const la = [];
+  const goc = [];
   (function di(x) {
     if (x === null || x === undefined) return;
-    if (typeof x === "string") { la.push(gapChu(x)); return; }
+    if (typeof x === "string") { goc.push(x); return; }
     if (typeof x !== "object") return;
-    for (const [k, v] of Object.entries(x)) { la.push(gapChu(k)); di(v); }
+    for (const [k, v] of Object.entries(x)) { goc.push(k); di(v); }
   })(detail);
+  const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi));
+  if (ten.length && guardValues(goc, ten).length) throw new Error("LO TEN NGUON");
+  const la = goc.map(gapChu);
   for (const { nhan, chuoi } of cam) {
+    if (nhan === "TEN NGUON") continue;
     const g = chuoi ? gapChu(chuoi) : "";
     if (g && la.some((x) => x.includes(g))) throw new Error(`LO ${nhan}`);
   }

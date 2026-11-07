@@ -113,8 +113,8 @@ export async function docThe(client, ngay) {
   return rows.map((r) => ({ ...r, item_id: Number(r.item_id) }));
 }
 
-/** Giá trị ô của thẻ: nhãn người trước, rồi nháp của cách đọc hiện. */
-const oThe = (t, f) => t.nhan?.[f]?.value ?? t.draft?.cach_doc?.[t.draft?.hien]?.o?.[f] ?? null;
+/** Giá trị ô của thẻ: người đã gắn ô (kể cả «Không suy ra được» = null) thì theo người; chưa gắn mới lấy nháp của cách đọc hiện. */
+const oThe = (t, f) => (t.nhan && f in t.nhan ? t.nhan[f].value : t.draft?.cach_doc?.[t.draft?.hien]?.o?.[f]) ?? null;
 /** Chưa có liên kết danh bạ cho thẻ: bài nêu tên (dự án/toà) → «chưa có trong danh bạ», không nêu → «không nêu chỗ». */
 const chuaThe = (t, f) => ({ chua: oThe(t, f) ? "chua-co-danh-ba" : "khong-tin-hieu" });
 export const KHOA_LAT_THE = {
@@ -232,8 +232,12 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
 /** Chuỗi không được có trong detail: tên nguồn thật, người gắn nhãn, chữ bài mẫu, câu trích dài, tên/SĐT người đăng. */
 export async function chuoiCam(client, the, sl, tinSl) {
   const cam = [];
-  const { rows: reg } = await client.query("SELECT real_name FROM source_registry");
-  for (const r of reg) if (r.real_name?.length >= 4) cam.push({ nhan: "TEN NGUON", chuoi: r.real_name });
+  // Tên nguồn thật và định danh nguồn (tầng A, cùng tập token với leak gate của sync-cloud). Rỗng = không soát được → dừng.
+  const { rows: reg } = await client.query(
+    `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry UNION ALL SELECT unnest(source_ids) FROM source_registry) s
+      WHERE length(x) > 0`);
+  if (!reg.length) throw new Error("LO TEN NGUON: source_registry không có tên nào để soát — không ghi");
+  for (const r of reg) cam.push({ nhan: "TEN NGUON", chuoi: r.x });
   const ids = the.map((t) => t.item_id);
   const { rows: lab } = await client.query("SELECT DISTINCT labeler_id FROM eval_labels WHERE item_id = ANY ($1)", [ids]);
   for (const r of lab) if (r.labeler_id?.length >= 6) cam.push({ nhan: "LABELER", chuoi: r.labeler_id });

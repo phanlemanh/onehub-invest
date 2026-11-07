@@ -285,6 +285,11 @@ test("DO1-AC-10 phần thuần: so cặp có ý nghĩa và không ý nghĩa", ()
 test("DO1-AC-9 phần thuần: chanLo bắt chuỗi cấm", () => {
   assert.doesNotThrow(() => chanLo({ n: 3 }, [{ nhan: "TRICH", chuoi: "TRICH_Y" }]));
   assert.throws(() => chanLo({ x: "…TRICH_Y…" }, [{ nhan: "TRICH", chuoi: "TRICH_Y" }]), /LO TRICH/);
+  // Tên nguồn qua bộ soát tầng A dùng chung: bản viết liền, gập dấu, nằm ở KHOÁ lát (theo-chu-bai:<tên>) vẫn bị bắt.
+  const ten = [{ nhan: "TEN NGUON", chuoi: "Tên Thật Vê" }];
+  assert.doesNotThrow(() => chanLo({ o: { "theo-chu-bai:ocean park": 2 } }, ten));
+  assert.throws(() => chanLo({ o: { "theo-chu-bai:tenthatve": 2 } }, ten), /LO TEN NGUON/);
+  assert.throws(() => chanLo({ ghi: "TÊN THẬT VÊ" }, ten), /LO TEN NGUON/);
 });
 test("tuần ISO giờ VN", () => {
   assert.equal(tuanIso("2026-11-07"), "2026-W45");
@@ -301,7 +306,7 @@ import pg from "pg";
 
 import { chonMau as chonMauLib, textHash as bam } from "../lib/eval-labels.mjs";
 import { khoaDocGopMacDinh, LAT_CUON_CHIEU, rutMau } from "../mau-soat-cuon-chieu.mjs";
-import { KHOA_LAT_DON_VI } from "../do-hang-ngay.mjs";
+import { chuoiCam, KHOA_LAT_DON_VI, KHOA_LAT_THE } from "../do-hang-ngay.mjs";
 
 const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const SQL_083 = readFileSync(path.join(GOC, "db/migrations/083_do_hang_ngay.sql"), "utf8");
@@ -507,6 +512,25 @@ test("DO1-AC-1-GOI gọi đọc gộp đúng bài thiếu, một lần, trước
 });
 
 // ---- AC-6 trên DB: bộ ghi thật, hai lần chạy ----
+test("DO1-AC-7 lát thẻ: người chọn «Không suy ra được» thì không lấy nháp máy", () => {
+  const draft = { hien: "doc-gop:m:p", cach_doc: { "doc-gop:m:p": { trang_thai: "co", o: { building: "s8.02", project: "vinhomes ocean park" } } } };
+  const nguoiKhong = { draft, nhan: { building: { value: null, not_stated: true }, project: { value: null, not_stated: true } } };
+  assert.deepEqual(KHOA_LAT_THE.toa(nguoiKhong), { chua: "khong-tin-hieu" });
+  assert.deepEqual(KHOA_LAT_THE.du_an(nguoiKhong), { chua: "khong-tin-hieu" });
+  // Người chưa gắn ô đó (chỉ gắn ô khác) → nháp máy vẫn là căn cứ; người gắn có giá trị → theo người.
+  assert.deepEqual(KHOA_LAT_THE.toa({ draft, nhan: { kind: { value: "sale" } } }), { chua: "chua-co-danh-ba" });
+  assert.deepEqual(KHOA_LAT_THE.toa({ draft, nhan: { building: { value: "s9.01" } } }), { chua: "chua-co-danh-ba" });
+});
+test("DO1-AC-9 chuoiCam dừng khi source_registry không có tên (không soát được thì không ghi)", async () => {
+  const rong = { query: async () => ({ rows: [] }) };
+  await assert.rejects(() => chuoiCam(rong, [], [], []), /LO TEN NGUON/);
+  // Có source_ids → vào danh sách soát (cùng tập token với leak gate sync-cloud).
+  let sql = "";
+  const co = { query: async (q) => { sql += q; return { rows: q.includes("source_registry") ? [{ x: "TEN_THAT_V" }, { x: "ma-nguon-v" }] : [] }; } };
+  const cam = await chuoiCam(co, [], [], []);
+  assert.match(sql, /unnest\(source_ids\)/);
+  assert.deepEqual(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi), ["TEN_THAT_V", "ma-nguon-v"]);
+});
 import { resolveOffers, writeAssertions } from "../lib/assert.mjs";
 import { doHangNgay } from "../do-hang-ngay.mjs";
 import { FILL } from "../sync-cloud.mjs";
@@ -533,7 +557,8 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
     await writeAssertions(c, [{ subject_key: "S03:do1A", field: "block_raw", value: "S8.02", evidence_tier: "observed", method: "e1_rule", method_version: "do1-test", rule_id: "do1" }]);
     await resolveOffers(c, Object.values(o));
     const F = await can(c, [o.f1]), P = await can(c, [o.h1]);
-    await c.query("DELETE FROM data_level_unit");
+    // Trong giao dịch (ROLLBACK): DB đã có dòng đo từ trước (vd DB thử dựng mẫu) thì bắt đầu từ hai bảng rỗng.
+    await c.query("DELETE FROM data_level_unit; DELETE FROM data_level_change");
     const lan1 = await doHangNgay(c, { ngay: "2025-01-15", write: true });
     assert.equal(lan1.lap_moc, true);
     assert.equal(lan1.dq.find((r) => r.check_name === "do1-chuyen-bac").status, "skip");

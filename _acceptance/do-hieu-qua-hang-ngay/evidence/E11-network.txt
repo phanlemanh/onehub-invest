@@ -1,3 +1,1 @@
-step2(xem=11567) {"w":1422,"res":[]}
-step3 {"w":1422,"res":[]}
-(source: performance resource entries; ego-browser has no network-log reader)
+E11 network: driver ego-browser (ego lite) khong co duong doc network/console -> n-a (driver). Cac trang SSR tra 200 qua trinh duyet (tieu de trang dung).
