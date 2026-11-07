@@ -52,8 +52,8 @@ chiếu + dòng chuyển bậc + tín hiệu không cần nhãn. Bảng mục ti
   đơn vị không đổi bậc không sinh dòng; lần chạy đầu chỉ lập mốc (`skip`, 0 dòng chuyển).
 - **AC-7** — Given số của AC-3..AC-6, When `detail` được ghi, Then mỗi nhóm số có phân rã theo thị trường, phường/xã, dự án, toà;
   mỗi chiều dưới thị trường có hai ô chưa gắn tách nhau — `khong-tin-hieu` (bài không nêu chỗ) và `chua-co-danh-ba` (bài nêu tên mà
-  danh bạ chưa có vật thể) — tối đa 30 ô lớn nhất + `khac`; tổng các ô của mỗi chiều bằng tổng chung; số trên mẫu soát (AC-3,
-  AC-4) có thêm chiều `du_an_theo_chu` (tên dự án đọc từ bài, nhãn «theo chữ bài, chưa qua danh bạ»).
+  danh bạ chưa có vật thể) — tối đa 30 ô lớn nhất + `khac`; tổng các ô của mỗi chiều bằng tổng chung; số giữ nháp và bỏ sót
+  trên mẫu soát có thêm chiều `du_an_theo_chu` (tên dự án đọc từ bài, nhãn «theo chữ bài, chưa qua danh bạ»).
 - **AC-8** (cross-layer) — Given dòng `do1-*` trong `dq_check_results`, When người vận hành mở `/ops/quality` (máy thu hay
   cloud), Then khối «Đo hằng ngày» hiện bảng giữ nháp tuần này/tuần trước theo cách đọc × ô (dấu «chênh có ý nghĩa», ngưỡng
   phát hiện, nhóm ô), tỉ lệ soát kèm cảnh báo, bỏ sót, tín hiệu, chuyển bậc (đổi khoá tách riêng), so cặp trước/sau; chọn lát
