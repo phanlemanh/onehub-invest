@@ -27,7 +27,6 @@ async function don(c) {
   await c.query("DELETE FROM silver_labels WHERE post_id LIKE 'do1dt%' OR run_id = 'do1-dung-thu'");
   await c.query("DELETE FROM property_offers WHERE offer_id LIKE 'offer_do1dt%'");
   await c.query("DELETE FROM properties WHERE stable_key LIKE 'do1dt%'");
-  await c.query("DELETE FROM sale_offer_records WHERE offer_id LIKE 'offer_do1dt%'");
   await c.query("DELETE FROM stg_zalo_posts WHERE post_id LIKE 'do1dt%'");
   await c.query("DELETE FROM data_level_change; DELETE FROM data_level_unit; DELETE FROM dq_check_results WHERE check_name LIKE 'do1-%'");
 }
@@ -59,8 +58,11 @@ async function main() {
         await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, posted_at, captured_at, text) VALUES ($1, 'do1-dung-thu__s03', 'Nhóm thử DO1', $2, $2, $3)`,
           [id, `${ngay}T03:00:00Z`, text]);
         if (i < 17) {
+          // Tin không bao giờ xoá (luật NL-AC-8): chạy lại thì đặt lại giá trị mẫu trên chính bản ghi.
           await c.query(`INSERT INTO sale_offer_records (offer_id, originating_system_key, kind, price_vnd, area_m2, area_id, first_seen, last_seen, post_ids, source)
-                         VALUES ($1, $2, 'sale', $3, $4, $5, now(), now(), ARRAY[$2], 'S03')`, [`offer_${id}`, id, 3e9 + i * 1e8, 60 + i, phuong]);
+                         VALUES ($1, $2, 'sale', $3, $4, $5, now(), now(), ARRAY[$2], 'S03')
+                         ON CONFLICT (offer_id) DO UPDATE SET price_vnd = EXCLUDED.price_vnd, area_m2 = EXCLUDED.area_m2, area_id = EXCLUDED.area_id,
+                           retired_at = NULL, retired_reason = NULL`, [`offer_${id}`, id, 3e9 + i * 1e8, 60 + i, phuong]);
           ids.push(`offer_${id}`);
         }
       }
