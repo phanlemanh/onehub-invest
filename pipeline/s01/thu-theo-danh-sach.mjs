@@ -102,7 +102,7 @@ for (const [k, cityId] of Object.entries(TP)) {
         const ms = 8000 + Math.floor(Math.random() * 7000);
         await new Promise((r) => setTimeout(r, ms));
       } },
-      log: (...a) => console.log("  ", ...a),
+      log: (...a) => { const dong = a.join(" "); console.log("  ", ...a); chanCan(dong); },
       paths: { snapshotRoot: SNAP_ROOT, stateDir: join(DO_DIR, "state") },
     });
     // 0711-5: ghi items XUỐNG ĐĨA ngay từng cụm + đối chiếu
@@ -114,8 +114,7 @@ for (const [k, cityId] of Object.entries(TP)) {
     tongItems.coverageN.discovered += coverage.discovered ?? nhom.length;
     tongItems.coverageN.captured += coverage.captured ?? items.length;
     tongItems.coverageN.failed += coverage.failed ?? 0;
-    const itemsDia = 0; // đối chiếu từng cụm đã finalize ở trên (writer tự verify sha)
-    console.log(`   cụm ${ci + 1}: ${items.length} item ĐÃ GHI ĐĨA (${writerDiDem ?? ""})`);
+    console.log(`   cụm ${ci + 1}: ${items.length} item đã finalize`);
     let duLich = 0;
     for (const it of items) {
       const p = JSON.stringify(it.payload ?? {});
@@ -143,11 +142,8 @@ for (const [k, cityId] of Object.entries(TP)) {
       console.log(`!! gỡ thật ${goThat}/${tongThat} đã thử > 10% — DỪNG (0711-1)`);
       chan = true;
     }
+    if (vungDung) { console.log(`!! DỪNG theo luật căn-liền: ${vungDung}`); chan = true; }
     // 0711-5(c): dừng khi 5 căn LIỀN FAIL trong cụm
-    if ((coverage.failed ?? 0) >= 5 && items.length === 0) {
-      console.log(`!! ${nhom.length} căn cụm này toàn FAIL — DỪNG`);
-      chan = true;
-    }
     if (chan) break;
   } catch (e) {
     chan = true;
@@ -164,8 +160,20 @@ bang.tong_cong = {
   song: Object.values(bang.vung).reduce((s, v) => s + (v.item ?? 0), 0),
   du_lich: Object.values(bang.vung).reduce((s, v) => s + (v.du_lich ?? 0), 0),
 };
-// 0711-5(c): đối chiếu item script đếm vs items đã finalize từng cụm
+// 0711-9(4): đối chiếu THẬT — đọc lại manifest mọi snapshot airbnb-listing vừa
+// finalize dưới SNAP_ROOT, cộng counts.items, so số script đếm; lệch → thoát 1.
+import { readdirSync as _rd, readFileSync as _rf, existsSync as _ex } from "node:fs";
+let diaTong = 0;
+for (const v of _rd(SNAP_ROOT)) {
+  const dir = join(SNAP_ROOT, v);
+  for (const sn of _rd(dir).filter((x) => !x.startsWith("."))) {
+    if (!sn.includes("airbnb-listing")) continue;
+    const mp = join(dir, sn, "manifest.json");
+    if (!_ex(mp)) continue;
+    diaTong += JSON.parse(_rf(mp, "utf8")).counts?.items ?? 0;
+  }
+}
 console.log("[ket-qua]", JSON.stringify(bang));
-console.log("[doi-chieu] script đếm tổng item:", tongItems.items.length,
-  "· đã ghi đĩa từng cụm qua writer (finalize xong từng cụm) — lệch sẽ thấy ở cụm chưa finalize");
+console.log(`[doi-chieu] script đếm ${tongItems.items.length} item · đĩa ${diaTong}`);
+if (diaTong !== tongItems.items.length) { console.error("ĐỎ: đĩa lệch số script đếm!"); process.exit(1); }
 if (chan) process.exit(2);
