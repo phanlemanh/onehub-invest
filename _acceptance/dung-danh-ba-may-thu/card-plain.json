@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Danh bạ toà · trục · căn được dựng lần đầu trên máy thu một cách có chủ ý (cờ riêng, bắt buộc có bản sao lưu), không bao giờ ra khỏi máy, và từ đó mỗi đêm tự cập nhật những khu đã dựng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chỉ ghi vào DB máy thu khi người chạy gõ cờ riêng (--db-that); lần dựng đầu còn phải chỉ ra tệp sao lưu có thật, thiếu thì lệnh dừng và không ghi gì."},
+    {"id": "AC-2", "p": "Sẽ từ chối mọi đích nằm ngoài máy này (đám mây, máy khác, kể cả URL trông như máy này mà thật ra nối đi chỗ khác), dù có cờ hay không, và không in mật khẩu ra màn hình."},
+    {"id": "AC-3", "p": "Sẽ dừng và gọi đúng tên khu khi người chạy gõ sai tên khu, không ghi khu nào; khu có thật mà chưa có danh mục thì vẫn chạy và cảnh báo riêng."},
+    {"id": "AC-4", "p": "Sẽ để chạy đêm bỏ qua (một dòng báo, không ghi) khi máy thu chưa nâng lược đồ hoặc chưa có lần dựng tay đầu tiên."},
+    {"id": "AC-5", "p": "Sẽ để chạy đêm cập nhật căn mới chỉ ở những khu đã dựng tay (kể cả phân khu), chạy lại thì không thêm gì, và không tự ghi chủ đầu tư."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên danh bạ Người của đêm đó khi bước danh bạ toà hỏng giữa chừng; job báo đỏ gọi tên bước và không để lại dữ liệu nửa chừng."},
+    {"id": "AC-7", "p": "Sẽ chạy thật khi được gọi qua đường dẫn tắt như máy chạy đêm vẫn gọi, không im lặng báo xong mà không làm gì."},
+    {"id": "AC-8", "p": "Sẽ có phép so số toà, trục, căn từng khu giữa máy thu và bản chép chỉ đọc, đếm thẳng trên dữ liệu, để đo ngưỡng sau lần dựng đầu."},
+    {"id": "AC-9", "p": "Sẽ ghi vào tài liệu vận hành chỗ lệnh nằm, cờ nào mở máy thu, bước đêm làm gì, và rằng danh bạ toà chỉ ở máy thu."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG dựng lần đầu trên máy thu trong vòng này — việc đó chờ lời riêng của anh sau khi ký và gộp, có sao lưu trước (Hỏi-2)."},
+    {"id": "OOS-2", "p": "KHÔNG mở ra 150 dự án của danh mục nội bộ — đó là hàng PX2."},
+    {"id": "OOS-3", "p": "KHÔNG làm trang Ops xem danh bạ toà và KHÔNG đưa danh bạ toà lên đám mây."},
+    {"id": "OOS-4", "p": "KHÔNG để lệnh tự chạy sao lưu — lệnh chỉ đòi tệp sao lưu có sẵn ở lần đầu; sao lưu vẫn do giám sát làm."},
+    {"id": "OOS-5", "p": "KHÔNG sửa nhãn tiếng Việt của tám dòng kiểm chất lượng toà và các hạn chế đo khác đã ghi ở vòng DB1."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đích ghi: DB thử, DB máy thu, DB khác trên máy, máy chủ ngoài, URL hỏng — đều có ô trong ma trận (AC-1 cờ máy thu, AC-2 chặn ngoài máy); đối chiếu với nếp «môi trường được bảo vệ phải có cờ» của Rails."},
+    {"i": 1, "p": "Đường gọi: gõ tay, gọi qua đường dẫn tắt, chạy đêm, phép so bản chép — mỗi đường một tiêu chí (AC-7 đường tắt, AC-4 đến AC-6 chạy đêm, AC-8 phép so)."},
+    {"i": 2, "p": "Trạng thái dữ liệu: chưa nâng lược đồ, chưa dựng, đã dựng một phần, có căn mới, tên khu sai, khu không danh mục — phủ bởi AC-3 đến AC-5, đối chiếu với các hạn chế đã ghi ở vòng DB1."},
+    {"i": 3, "p": "Cờ: có hoặc không có cờ riêng — mọi ô của ma trận AC-1 và AC-2 chạy cả hai."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Nặng nhất: em đã ghi «máy tự quyết» cho chuyện sao lưu trước lần đầu, trong khi đó là điều kiện của anh. Đã sửa: thành Hỏi-2, khuyến nghị thêm rào trong lệnh (lần đầu phải chỉ ra tệp sao lưu), có ca đo riêng."},
+    {"i": 1, "p": "Chạy đêm có thể tự dựng lần đầu nếu máy thu có sẵn bí danh mà chưa có toà. Đã sửa: rào đếm toà, không đếm bí danh; thêm ca đo đúng tình huống đó và ca phân khu."},
+    {"i": 2, "p": "Phép chặn đích ngoài máy có thể bị lừa bởi URL trông như máy này. Đã sửa: kiểm đúng máy chủ mà trình kết nối sẽ nối tới, thêm các ô đo cho các kiểu URL đó."},
+    {"i": 3, "p": "Ca đo bước đêm hỏng giữa chừng đang đo một bản chép chứ không đo mã thật, và có kẽ hở thay mô-đun qua biến môi trường. Đã sửa: ép hỏng ngay trong mã thật, bỏ kẽ hở biến môi trường."},
+    {"i": 4, "p": "Hai ngưỡng thành công không được đo trong vòng (lần dựng đầu nằm ngoài vòng). Đã sửa: thêm ca chứng phép so thật sự chạy khi máy thu đã dựng, ghi rõ bước đo ngay sau gộp và nơi ghi kết quả."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài vòng này:"
+}
