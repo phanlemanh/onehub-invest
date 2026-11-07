@@ -57,6 +57,9 @@ executors:
     ecw_app_mien: "cd app && node --import tsx --test tests/eval-classify-mien.test.tsx"   # eval-classify-wilson E4b — giá trị parser qua chuanHoaLuot thật
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
     kd_test: "node --test pipeline/scripts/kiem-do-sau-070.test.mjs"   # kiem-do-sau-ap-070-sua E1, E2, E3 — lược đồ riêng BEGIN…ROLLBACK trên :5433
+    dgs_thuan: "cd agent && node --import tsx --test tests/doc-gop-s03.test.ts"   # chon-model-theo-o E1, E2, E3, E6, E8, E10 — Gateway giả, không DB
+    dgs_db: "cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts"   # chon-model-theo-o E4, E5, E7, E9 — Gateway giả, DB của riêng lượt
+    dgs_so_that: "cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts"   # chon-model-theo-o E10 — đọc tóm tắt lượt chấm Haiku thật
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
     ddb_app_nhan: "cd app && node --import tsx --test tests/dq-danh-ba-sdt-label.test.tsx"   # do-danh-ba-sdt E5 — nhãn dq-labels
     dtd_pipeline: "node --test pipeline/do-the-duyet.test.mjs"   # do-the-duyet-du-du-lieu E1 — hàm thuần bốn kiểm, không DB
@@ -826,6 +829,7 @@ risk_tiers:
     # .github/workflows/acceptance-gate.yml chạy bước đó.
     - "PRODUCT-MAP.md"
     - "LO-TRINH.html"
+    - "agent/config/doc-gop-s03.json"                # PL30 Hỏi-3 (Mạnh duyệt Cổng Phạm vi 07/11): bảng chọn model đọc gộp S03 — đổi model là PR nhỏ, không cần hồ sơ mới
   t3_paths:
     - "app/src/lib/auth.ts"                          # auth + cổng /ops
     - "app/src/lib/ops-access.ts"

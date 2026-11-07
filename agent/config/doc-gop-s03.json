@@ -1,0 +1,12 @@
+{
+  "phien_ban": 1,
+  "mac_dinh": "haiku",
+  "model": {
+    "haiku": { "gateway": "anthropic/claude-haiku-5.5", "gia_vao": 0.1, "gia_ra": 0.5 },
+    "glm": { "gateway": "zai/glm-5.3-flash", "gia_vao": 0.15, "gia_ra": 0.5 },
+    "deepseek": { "gateway": "deepseek/deepseek-v4.1-flash-1017", "gia_vao": 0.3, "gia_ra": 1.2 }
+  },
+  "o": {
+    "bathrooms": "nguoi"
+  }
+}

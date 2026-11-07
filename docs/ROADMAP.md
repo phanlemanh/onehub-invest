@@ -48,7 +48,8 @@
 6. **Local-first AI**: Qwen 27B (MTPLX :8000) + Kev-4B gate (81ms) là mặc
    định; cloud (OpenAI Decisions) chỉ cho dữ liệu phi-PII.
    *(23/10: Mạnh nêu cần AI Gateway chọn model theo việc + biết chi phí — đề xuất sửa luật này ở review
-   phân loại §0.4 M1, chờ Mạnh chốt.)*
+   phân loại §0.4 M1, chờ Mạnh chốt.)* **Ngoại lệ có tên (07/11, §3 mục 33):** đọc tin S03 dùng ba model cloud
+   qua Vercel AI Gateway (ADR-0007 sửa 06/11), chọn model theo ô bằng bảng `agent/config/doc-gop-s03.json`.
 7. **Đơn vị nghĩ là CĂN NHÀ**: "Một Căn Nhà" (entity properties) là đơn vị
    phân tích; nguồn chỉ là evidence.
 8. **Đo trước khi build**: không graph/vector/infra mới trước khi số liệu
@@ -450,6 +451,20 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 31. **Gom, tách, gộp tin S03** (05/11, Mạnh duyệt «Theo khuyến nghị», `docs/plan/pham-vi-gom-tach-gop-tin-0511.md`): S03 thiếu đơn vị «bài đăng» giữa sự kiện thô và tin.
     Khử trùng ảnh `GT1` làm ngay. Tách bài nhiều căn là hàng có sẵn `PL18`, kéo lên đứng trước `GCQ1`. Lớp bài đăng `GT2`, kiểm định gộp trùng `GT4` đứng sau `GCQ1`.
     Lưu bảng riêng hay tính lại quyết sau khi có câu trả lời của ZCode về mã album và nhóm nhãn đầu tiên. Chưa mở thu Nhật ký của S03, hỏi ZCode trước (mục chờ `GTH1`).
+32. **Mô hình dòng chảy dữ liệu làm căn cứ kiến trúc** (07/11, Mạnh «Đồng ý với khuyến nghị khi rà soát tài liệu»,
+    `docs/architecture/mo-hinh-pipeline-mot-can-nha.md` bản 4): tám chặng bài → căn; Một Căn Nhà là nút họ Vật thể (thửa · toà ·
+    trục · căn), khu đô thị và phân khu là họ Vùng; đo bốn tầng chép vào FRAMING §5. Kèm:
+    - Hàng đo thu hẹp DO1–DO3 (#336): mẫu soát cuốn chiếu 20 bài/ngày theo cách «máy nháp, Mạnh feedback» (Mạnh chốt 06/11, thay
+      gắn mù cho việc gắn hằng ngày), số có neo chỉ để thấy trôi; không thay GNH2. Chi phí lên bậc ở PL31, độ tươi ở PL22, lý do
+      rơi cùng DF3.
+    - Cổng tự áp PL21 và bậc B3 đo trên tập test mù đóng băng hay mẫu nháp: **hoãn, quyết lại khi mở PL21**.
+    - DB1 lượt đầu dựng khung toà, trục từ S08 + phát biểu toà, trục của bộ đọc luật, không chờ PL13; mã căn từ PL13 bổ sung sau.
+    - Kết quả đọc gộp đi một đường: PL30 ghi `silver_labels` → PL18 thành phát biểu → GC2/GC3 đọc phát biểu.
+    - Từ vựng: «nhãn bạc» = bảng `silver_labels` (kết quả máy đọc); lớp nhãn của GNH2 gọi «nhãn nháp Opus».
+33. **Đọc tin S03 bằng ba model cloud qua Gateway, chọn theo ô** (06–07/11): Mạnh chốt chỉ ba model Haiku, DeepSeek V4.1 Flash,
+    GLM-5.3 Flash, gửi nội dung bài nguyên văn (ADR-0007 sửa 06/11), «Chọn AI Gateway của Vercel», «xây dựng tính năng để có thể
+    dễ dàng thay đổi các model và hiện tại sử dụng haiku». Thay Hỏi-4 cũ của review phân loại §7.0 (M1 local mặc định, cổng
+    Gateway hoãn tới PH4) cho việc đọc tin; ngoại lệ có tên của §1.6. Hàng PL30.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
