@@ -23,6 +23,10 @@ job_run cloud-sync trang-thai-chao node "$ROOT/pipeline/trang-thai-chao.mjs"
 # PL16 `de-xuat-thanh-phat-bieu-bac` (Hỏi-3): chụp phân bố bậc B0–B5 + hai dòng kiểm, chỉ ghi DB local — bước CUỐI để
 # không làm chậm nhịp tim /ops. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
 job_run cloud-sync bac-du-lieu node "$ROOT/pipeline/bac-du-lieu.mjs" --write
+# DO1 `do-hieu-qua-hang-ngay` (Hỏi-3): rút mẫu soát cuốn chiếu ngày hôm qua (đọc gộp có trần 0,05 USD/ngày) rồi ghi số đo
+# hằng ngày vào dq_check_results (do1-*); bảng 083 chỉ ở DB local. Chạy lại an toàn.
+job_run cloud-sync mau-soat node "$ROOT/pipeline/mau-soat-cuon-chieu.mjs" --ngay "$(TZ=Asia/Ho_Chi_Minh date -v-1d +%F)"
+job_run cloud-sync do-hang-ngay node "$ROOT/pipeline/do-hang-ngay.mjs" --write
 # SD5 `do-danh-ba-sdt` (Hỏi-3): năm kiểm trục SĐT của danh bạ Người, một dòng mỗi kiểm mỗi ngày (giờ máy thu), chỉ ghi DB
 # local; bước cuối. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
 job_run cloud-sync do-danh-ba-sdt node "$ROOT/pipeline/do-danh-ba-sdt.mjs" --write
