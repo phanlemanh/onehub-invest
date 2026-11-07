@@ -149,6 +149,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `seller_ref`, S03/S05 theo người gửi của bài; SĐT luôn là người riêng (Hỏi-4); rút vai chỉ khi có bằng chứng thay. Chạy
   cuối `refresh-bait-gap.mjs` (`buocDem`) trong giao dịch riêng, khoá advisory 55055; tay: `pipeline/dung-nguoi.mjs [--thu]`.
   Thước `pipeline/scripts/nap-lai-nguoi.mjs` (hai lượt, lượt 2 bằng 0, đối chứng bỏ tra bí danh). Chỉ local, không sync cloud.
+- Danh bạ vật thể toà · trục · căn cao tầng (DB1, `_acceptance/danh-ba-toa-truc-can`, migration 082, ADR-0016 §2–§4): ba bảng
+  chỉ-thêm `buildings` (khoá `bld_<ULID>`, UPI `urn:onehub:upi:1:VN:<VN-HN|VN-SG>:<khoá toà>`, cha vùng là khu hoặc phân khu) ·
+  `stacks` (`stk_`) · `units` (`unt_`, SubId `<khoá trục>:<tầng>`); bí danh `ma_nguon` S08 mang phạm vi dự án S08; tên toà và
+  cách viết trên tin (tin có khu theo sổ nhóm) là bí danh tên; chủ đầu tư `Building.BuilderName` (fact/hitl, từ điển local
+  `state/danh-ba-vat-the/chu-dau-tu.json`) và phường (inferred/`registry_inherit`, chỉ khi nút vùng có đúng một phường) là
+  phát biểu. Dựng: `pipeline/danh-ba-vat-the.mjs --db <DB thử>` (từ chối DB `oneinvest`), một giao dịch, tra bí danh trước
+  khi đúc; căn chỉ khi có mã căn; toà chỉ thấy trên tin là ứng viên. Đo trên bản chép thật 07/11: Ocean Park 1 18 toà ·
+  152 trục · 318 căn (95,8% mã tách được), Grand Park 51 · 259 · 1.417 (99,9%); dựng lại 0 khoá mới. Chỉ local, không sync
+  cloud; chưa áp 082 lên máy thu.
 - SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
@@ -527,6 +536,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | CG1 | Căn giá tốt biết căn: bảng, sheet, trang một căn trên dữ liệu thật; ảnh, chữ bài cho vai Vận hành ở máy thu — `_acceptance/can-gia-tot-biet-can` | ✅ Mạnh ký 03/11, chờ gộp; căn chỉ còn link ảnh gốc đã hết hạn hiện «Ảnh hỏng», E10 đếm riêng; AC-9 đưa ra hạn chế đã biết (bảng ở 390 px còn thanh cuộn ngang bên trong); ba lỗi người vận hành thấy chờ hợp đồng mới |
 | CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, đã gộp (#303); Ngoài-9 đổi sang Known limits, không mở việc mới |
 | CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
+| DB1 | Danh bạ toà · trục · căn cao tầng Ocean Park 1 và Grand Park từ S08 + bí danh tên toà trên tin; UPI neo toà; chủ đầu tư, phường là phát biểu cấp toà; ba dòng `asset_nodes building` là phân khu, ở lại họ Vùng — `_acceptance/danh-ba-toa-truc-can` (T3, 082) | 🔶 vòng S4; Mạnh duyệt Cổng Phạm vi và kế hoạch 07/11; sau gộp: áp 082 lên máy thu + chạy bộ dựng là lời riêng của Mạnh (`pg_dump` trước); Grand Park chưa có phường cấp toà (cần toạ độ toà, hàng riêng) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

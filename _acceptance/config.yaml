@@ -114,6 +114,10 @@ executors:
     rtld_unit: "node --test pipeline/lib/thu-lai-deadlock.test.mjs"   # resolve-thu-lai-deadlock E1–E4, E7 — client giả + đọc tĩnh, không DB
     rtld_itest: "node --test pipeline/tests/resolve-properties-deadlock.itest.mjs"   # resolve-thu-lai-deadlock E5, E6, E8, E9 — deadlock thật trên DB thử oneinvest_p3_rtld_<pid> ở :5433, ngoài CI
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
+    dbv_tach: "node --test pipeline/lib/ma-can-s08.test.mjs"   # danh-ba-toa-truc-can E2 — bộ tách mã căn S08, ma trận mã tổng hợp, không DB
+    dbv_kho: "node --test pipeline/lib/danh-ba-vat-the.test.mjs"   # danh-ba-toa-truc-can E11 — lõi thuần + FILL sync-cloud, không DB
+    dbv_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the.itest.mjs"   # danh-ba-toa-truc-can E1, E3–E6, E8–E10 — DB thử oneinvest_dbv_<pid> ở :5433 áp 001…082, fixture tổng hợp
+    dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB

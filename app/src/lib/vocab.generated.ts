@@ -7,11 +7,12 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
-  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id"],
   evidence_tier: ["fact", "observed", "inferred"],
-  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
+  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"],
   registry_status: ["active", "merged", "split", "retired"],
-  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt"],
+  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt", "ma_nguon"],
+  catalog_tier: ["xac_minh", "suy_ra_manh", "mot_loi_khai"],
   registry_event_kind: ["gop", "tach", "nghi"],
   party_role: ["nguoi_dang"],
   contact_kind: ["sdt", "chat_profile"],
@@ -39,6 +40,7 @@ export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
 export type RegistryStatus = (typeof VOCAB.registry_status)[number];
 export type AliasKind = (typeof VOCAB.alias_kind)[number];
+export type CatalogTier = (typeof VOCAB.catalog_tier)[number];
 export type RegistryEventKind = (typeof VOCAB.registry_event_kind)[number];
 export type PartyRole = (typeof VOCAB.party_role)[number];
 export type ContactKind = (typeof VOCAB.contact_kind)[number];
@@ -59,11 +61,12 @@ export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "la
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
-export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
-export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
+export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
-export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" } as const;
+export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt", ma_nguon: "ma_nguon" } as const;
+export const CATALOG_TIER = { xac_minh: "xac_minh", suy_ra_manh: "suy_ra_manh", mot_loi_khai: "mot_loi_khai" } as const;
 export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;
 export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
 export const CONTACT_KIND = { sdt: "sdt", chat_profile: "chat_profile" } as const;
@@ -88,11 +91,12 @@ export const LABELS_VI = {
   confidence: { high: "cao", medium: "trung bình", low: "thấp" },
   price_tier: { P0: "giá giao dịch (P0)", P1: "giá nội bộ (P1)", P2: "giá công khai (P2)" },
   enrich_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà" },
-  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ" },
+  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ", builder_name: "Chủ đầu tư", area_id: "Phường của toà" },
   evidence_tier: { fact: "Sự thật", observed: "Quan sát có trích dẫn", inferred: "Suy luận" },
-  assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước" },
+  assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước", registry_inherit: "Kế thừa từ danh bạ" },
   registry_status: { active: "Đang dùng", merged: "Đã gộp", split: "Đã tách", retired: "Đã nghỉ" },
-  alias_kind: { tai_khoan_nguon: "Tài khoản tại nguồn", sdt_bam: "SĐT băm", ten: "Tên hiển thị", sdt: "SĐT số gốc" },
+  alias_kind: { tai_khoan_nguon: "Tài khoản tại nguồn", sdt_bam: "SĐT băm", ten: "Tên hiển thị", sdt: "SĐT số gốc", ma_nguon: "Mã tại nguồn" },
+  catalog_tier: { xac_minh: "Xác minh", suy_ra_manh: "Suy ra mạnh", mot_loi_khai: "Một lời khai" },
   registry_event_kind: { gop: "Gộp", tach: "Tách", nghi: "Nghỉ" },
   party_role: { nguoi_dang: "Người đăng" },
   contact_kind: { sdt: "Số điện thoại", chat_profile: "Hồ sơ chat" },

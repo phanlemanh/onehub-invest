@@ -82,7 +82,9 @@ và phát biểu theo vật thể.
   `field_assertions` (mở `resource_name` thêm `Parcel` · `Building` · `Stack` · `Unit` · người); bộ phân xử dựng cột
   chuẩn — câu 4 ADR-0013 áp cho vật thể như cho tin.
 - Tên bảng dự kiến: `parcels`, `buildings`, `stacks`, `units`, `parties` (+ `party_roles`), `registry_aliases`,
-  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` chuyển sang `buildings`.
+  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` là **phân khu**
+  (`dd_field = ComplexName` của Grand Park), không phải toà: ở lại họ Vùng, toà của chúng trỏ cha vùng là phân khu (sửa
+  07/11, Mạnh duyệt Hỏi-1 của DB1 `danh-ba-toa-truc-can`; trước đó câu này ghi «chuyển sang `buildings`»).
 
 ### 4. UPI (sửa ADR-0013 §3)
 
@@ -171,9 +173,12 @@ hàng do phiên giám sát cắt vào `docs/plan/lo-trinh.json` (cat-luot); migr
 
 | Extension | Vì sao DD không đủ |
 |---|---|
-| resource `Parcel`, `Unit` (local) | DD 2.1 chỉ có field `ParcelNumber`, `UnitNumber`/SubId trên tin; không resource bền cho thửa, căn |
+| resource `Parcel`, `Stack`, `Unit` (local) | DD 2.1 chỉ có field `ParcelNumber`, `UnitNumber`/SubId trên tin; không resource bền cho thửa, trục, căn (`Stack` cũng là extension ở ADR-0013 §9) |
 | `ObjectStatus` (active · merged · split · retired) + sự kiện gộp/tách | DD không có vòng đời định danh vật thể |
 | phương pháp `registry_inherit` | phát biểu kế thừa từ danh bạ (§7) |
+| bậc dòng danh mục `catalog_tier` (xác minh · suy ra mạnh · một lời khai) | DD không có độ tin của danh mục vật thể (review phân loại F2); thêm ở DB1, 082 |
+| loại bí danh `ma_nguon` (mã toà, trục, căn tại nguồn, giá trị `<phạm vi>/<mã>`) | DD 2.1 `UnitNumber` chỉ là field trên tin, không định danh vật thể bền; thêm ở DB1, 082 |
+| trường `area_id` của `Building` (phường/xã, suy từ vùng) | DD 2.1 không có cấp phường/xã cho Building; thêm ở DB1, 082 (`BuilderName` là field DD 2.1 của Building, không phải extension) |
 | vai trò «người đăng», «tự nhận chính chủ» | DD chỉ có vai môi giới/sàn (`ListAgentKey`…), không có người đăng không phải môi giới |
 
 Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migration của nó.

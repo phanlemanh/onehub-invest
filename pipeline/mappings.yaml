@@ -366,8 +366,8 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061); dd_lookup = tên field RESO của trường"
-    checked_on: "2026-10-30"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    checked_on: "2026-11-07"
     columns: [field_assertions.field]
     nullable: false
     values:
@@ -384,6 +384,8 @@ enums:
       - { code: stories, label_vi: Số tầng, dd_lookup: Stories }
       - { code: latitude, label_vi: Vĩ độ, dd_lookup: Latitude }
       - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
+      - { code: builder_name, label_vi: Chủ đầu tư, dd_lookup: BuilderName }   # DB1 (082): resource Building, ADR-0016 §3
+      - { code: area_id, label_vi: Phường của toà }   # DB1 (082): resource Building, phường/xã (areas submarket) suy từ vùng; DD 2.1 không có cấp phường
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -400,8 +402,8 @@ enums:
     term_vi: Phương pháp phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
-    checked_on: "2026-10-26"
+    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15); registry_inherit (DB1, 082) là phát biểu kế thừa từ danh bạ, chỉ đi với lớp suy luận (ADR-0016 §7, §11) — DD 2.1 không có phương pháp tương đương; DQ: dq-enum-vocab field_assertions.method"
+    checked_on: "2026-11-07"
     columns: [field_assertions.method, party_roles.method]
     nullable: false
     values:
@@ -411,13 +413,14 @@ enums:
       - { code: e1_rule, label_vi: Luật E1 }
       - { code: e2_llm, label_vi: LLM E2 }
       - { code: legacy, label_vi: Giá trị có trước }
+      - { code: registry_inherit, label_vi: Kế thừa từ danh bạ }   # DB1 (082): lớp suy luận, ADR-0016 §7, §11
   registry_status:
     term_vi: Trạng thái danh bạ
     dd_field: null
     local: true
     rationale: "extension ObjectStatus của danh bạ vật thể và người (ADR-0016 §3) — DD 2.1 không có vòng đời gộp/tách cho Member/Office; StandardStatus chỉ cho tin"
     checked_on: "2026-10-30"
-    columns: [parties.status]
+    columns: [parties.status, buildings.status, stacks.status, units.status]
     nullable: false
     values:
       - { code: active, label_vi: Đang dùng }
@@ -428,8 +431,8 @@ enums:
     term_vi: Loại bí danh
     dd_field: null
     local: true
-    rationale: "extension AliasKind (ADR-0016 §3, §8) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ"
-    checked_on: "2026-10-30"
+    rationale: "extension AliasKind (ADR-0016 §3, §8, §11) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ; ma_nguon (DB1, 082): mã toà, trục, căn tại nguồn — DD 2.1 UnitNumber chỉ là field trên tin, không định danh vật thể bền; DQ: dq-enum-vocab registry_aliases.kind"
+    checked_on: "2026-11-07"
     columns: [registry_aliases.kind]
     nullable: false
     values:
@@ -437,6 +440,19 @@ enums:
       - { code: sdt_bam, label_vi: SĐT băm }
       - { code: ten, label_vi: Tên hiển thị }
       - { code: sdt, label_vi: SĐT số gốc }   # SD3 (Hỏi-A): E.164 +84…, RESO MemberMobilePhone
+      - { code: ma_nguon, label_vi: Mã tại nguồn }   # DB1 (082): mã toà, trục, căn của nguồn, giá trị <phạm vi>/<mã>; DD 2.1 UnitNumber chỉ nằm trên tin
+  catalog_tier:
+    term_vi: Bậc dòng danh mục
+    dd_field: null
+    local: true
+    rationale: "extension bậc của dòng danh mục toà/trục/căn (review phân loại F2, ADR-0016 §6, §11) — DD 2.1 không có độ tin của danh mục vật thể; đặc trưng VN: danh mục chủ đầu tư, môi giới, tin rao cùng mô tả một toà với độ tin khác nhau; DQ: dq-enum-vocab buildings/stacks/units.catalog_tier"
+    checked_on: "2026-11-07"
+    columns: [buildings.catalog_tier, stacks.catalog_tier, units.catalog_tier]
+    nullable: false
+    values:
+      - { code: xac_minh, label_vi: Xác minh }
+      - { code: suy_ra_manh, label_vi: Suy ra mạnh }
+      - { code: mot_loi_khai, label_vi: Một lời khai }
   registry_event_kind:
     term_vi: Sự kiện danh bạ
     dd_field: null
