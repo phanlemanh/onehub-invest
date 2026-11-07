@@ -17,6 +17,10 @@ không đưa vào kho. Báo cáo này chỉ trỏ tên tệp.
 > chứng nằm trên màn và UX để quyết trong vài giây. Thêm P0-3, P1-12, P1-13, gói G và câu hỏi Q6–Q7. Kịch bản e11: hàng
 > tồn 651 thẻ từ khoảng 9 giờ 24′ xuống khoảng 45′ (mục tiêu, chưa phải số đo).
 
+> **Lượt 3 (07/11, tối):** mục (f) gồm khuyến nghị cho Q1–Q7 và 12 hạng mục điều chỉnh (ĐC1–ĐC12) chia ba đợt. Mỗi
+> hạng mục chọn khuôn theo thứ tự kho → ReUI Pro → tự vẽ, có đối chứng sản phẩm hàng đầu. Kết quả: 9 hạng mục dùng khuôn
+> có sẵn trong kho, 3 hạng mục xem trước ReUI Pro, 0 phần nhìn phải tự vẽ.
+
 > Giới hạn: phiên trình duyệt dùng tài khoản vai **Quản trị**. Vai `ops` thấy ảnh khác (ảnh đã tải, không URL gốc)
 > và chưa được chụp riêng. Nút «N» nổi ở góc trái dưới trong ảnh mobile là chỉ báo của Next dev, không có ở bản build.
 
@@ -629,6 +633,193 @@ chưa phải số đo.
    loại ở GD10, không?
 7. **Hoàn tác 5 giây** thay cho hỏi lại trước khi quyết: lệnh gửi lùi 5 giây ở trình duyệt, không đổi API. Đồng ý dùng
    cho mọi hạng mục, kể cả Ghép căn?
+
+---
+
+## (f) Khuyến nghị cho các câu hỏi và các hạng mục điều chỉnh (lượt 3, 07/11)
+
+Mạnh yêu cầu thêm hai việc:
+- khuyến nghị cho từng câu hỏi ở (d);
+- gom mọi đề xuất thành hạng mục điều chỉnh. Mỗi hạng mục chọn khuôn theo thứ tự **có sẵn trong kho → ReUI Pro → tự
+  vẽ**, và chứng minh lựa chọn bằng sản phẩm hàng đầu về thẩm mỹ và UX.
+
+**Nguồn tra khuôn.**
+- *Kho*: `components/ui`, `components/reui`, bản gốc `components/blocks/*` (gồm các phần của `solution-agents-5` **đã
+  cài nhưng chưa dùng**: `approval-summary`, `recent-decisions`, `approval-policy`/`ReviewCoverage`, `decision-bar`,
+  `reject-dialog`), các bản chuyển thể ghi trong `catalog.md` của skill `onehub-ui`.
+- *ReUI Pro*: MCP ReUI báo lỗi xác thực (401) trong phiên này, nên tên block được **đối chiếu trên trang công khai
+  reui.io** (`/blocks`, `/blocks/solutions/agents`, `/blocks/application/dialog`). Trước khi cài phải đăng nhập lại MCP,
+  gọi `get_block` để đọc API, và chấm `previewUrl` theo luật `reui`.
+  - Không block nào của ReUI có bảng phím tắt hay khung so khác biệt (diff). Hai phần đó buộc phải tự làm (phần logic,
+    không phải phần nhìn).
+- *Đối chứng*: màn thật trên Mobbin.
+  - Superhuman, Notion Mail, Plain, Front: hộp duyệt, phím tắt, đi `J`/`K`, bảng phím `?`.
+  - folk, Calendly, Salesforce: so hai bản ghi để gộp.
+  - Semrush: chế độ duyệt bản gốc ↔ bản mới.
+
+### f1. Khuyến nghị cho câu hỏi Q1–Q7
+
+| # | Câu hỏi | Khuyến nghị | Vì sao |
+|---|---|---|---|
+| Q1 | Thẻ Đối chiếu (239) | **(a) rút khỏi Hàng duyệt, chuyển thành lát chấm mẫu 30 thẻ/tuần**, đáp án 4 lựa chọn (Bộ đọc đúng · AI đúng · Cả hai sai · Bài nhiều căn). Kết quả báo ở `/ops/quality` | Đối chiếu là phép đo, không chặn dữ liệu (framing 02/11). Duyệt hết mất khoảng 3 giờ 27′, mà với nút hiện tại cho ra 0 nhãn đo được (P0-3). 30 thẻ mẫu ngẫu nhiên đủ để thấy tỉ lệ đúng theo tuần |
+| Q2 | Lớp nháp ở Gắn nhãn | **Có, làm lớp riêng ở mọi thẻ.** Mỗi ô hiện giá trị nháp mờ kèm nhãn «Máy gợi ý»; Enter nhận, gõ đè thì sửa. **Đo bằng tỉ lệ giữ nháp / sửa nháp** theo ô và theo trường (DO1 đang đo đúng việc này) | Khớp lời Mạnh 06/11: người feedback trên nháp thay vì gắn từ đầu. Nháp ghi dưới `labeler_id` riêng, không bao giờ thành nhãn vàng nếu người chưa nhận. Mỗi ô bị sửa là một tín hiệu dạy máy, có tên trường và giá trị trước/sau |
+| Q3 | Thẻ gắn hai người khi chỉ có một người | **(a) tắt chế độ hai người tới khi có người thứ hai.** Thay chỉ số «đồng thuận» trên đầu trang bằng **tỉ lệ sửa nháp** theo trường | 73 thẻ không bao giờ đủ cặp. Tỉ lệ sửa nháp đo được ngay với một người và chỉ đúng trường nào máy hay sai |
+
+*Ghi chú (không phải khuyến nghị):* tỉ lệ giữ nháp không phải độ chính xác, vì có thiên lệch neo theo nháp (sổ gắn nhãn
+06/11). Tập test gắn mù để chấm độ chính xác thật **hoãn tới khi mở PL21** (Q3 của `mo-hinh-pipeline-mot-can-nha.md`
+§7, Mạnh duyệt 07/11). Báo cáo này không đề xuất gắn mù.
+| Q4 | Lý do khi Hoãn/Không chắc | **Không bắt buộc.** Lý do bắt buộc giữ cho quyết định ghi dữ liệu, nhưng **đáp án đã chọn và chip soạn sẵn tính là lý do**. Chỉ bắt gõ tay khi chọn «Cả hai sai» hoặc khi bác một đề xuất ghi đè | Hoãn không ghi dữ liệu. Bắt gõ chữ ở đây chỉ làm người né thẻ khó. Nhật ký vẫn có người, lúc nào, đáp án nào (PL3 vẫn đủ) |
+| Q5 | 617 thẻ Bổ sung tin tồn | **Không trả lại hàng loạt, không chờ sinh lại.** Bốn bước: máy rút 82 thẻ trùng giá trị → 239 thẻ đối chiếu sang lát mẫu (Q1) → 78 thẻ «nhà phố» thành 1 thẻ luật (Q6) → còn khoảng 218 thẻ duyệt bằng chế độ mới (khoảng 25′) | Sinh lại bằng bộ đọc mới tốn tiền model và vẫn ra cùng câu hỏi. Ba bước đầu xoá 399 thẻ mà không cần người duyệt từng thẻ |
+| Q6 | «Thẻ luật» có khác GD10 | **Có khác, nên làm, kèm bốn điều kiện:** (1) chỉ cho căn cứ là **luật E1 xác định**, không cho căn cứ LLM; (2) mẫu 5 bài ngẫu nhiên có seed; (3) quyết định ghi người, lý do, phiên bản luật; (4) mỗi thẻ con vẫn mở và trả lại riêng được | GD10 loại việc người bấm duyệt N thẻ một lần. Thẻ luật là người sửa **một luật xác định**, điều luật 7 cho phép, có mẫu làm bằng chứng. Căn cứ LLM thì không gom, vẫn từng thẻ |
+| Q7 | Hoàn tác 5 giây | **Có, mọi hạng mục kể cả Ghép căn.** Lệnh giữ ở trình duyệt 5 giây rồi mới gửi. Sau 5 giây, đảo bằng lệnh đảo (ADR-0015) từ «Quyết định gần đây» | Đây là khuôn của Gmail (hoàn tác gửi) và dialog-16 của ReUI (toast «Undo» huỷ trước khi handler chạy). Bỏ được bước dừng lại cân nhắc trước mỗi cú bấm: phần lớn thời gian tiết kiệm của chế độ một phím nằm ở đây |
+
+### f2. Các hạng mục điều chỉnh
+
+Gom mọi đề xuất từ (b), (c), (e) thành 12 hạng mục điều chỉnh (ĐC), chia ba đợt. Mỗi hạng mục ghi khuôn ở ba tầng và
+tầng được chọn.
+
+**Đợt 1 — không đổi API (T1/T2)**
+
+**ĐC1 · Chữ, nhãn, từ vựng** (P1-6, P2-1, P2-2, P2-3; gói E)
+- Thêm nhãn «Người» cho thẻ `data_quality`/`nguoi:`. Một cặp nhãn cho mỗi trạng thái. Xưng hô trung tính. Sửa
+  `CONTEXT.md` mục «Hàng duyệt», «Ảnh tin», «Gắn nhãn».
+- **Khuôn: kho.** `reui/badge` với biến thể `*-light` sẵn có. Không cần khuôn mới.
+
+**ĐC2 · Thẻ sạch** (P1-1, P1-2, P1-5)
+- Gọt điểm Stage B khỏi tiêu đề. So trên số đã làm tròn. Ảnh hỏng gom thành một dòng.
+- **Khuôn: kho.**
+  - Ảnh: `c-attachment-3` đã chuyển thể, theo luật khung ảnh của `catalog.md` («ảnh chết → bỏ ảnh, không ô vỡ»).
+  - Dòng báo ảnh hỏng: `reui/alert` biến thể nhẹ.
+
+**ĐC3 · Đầu trang Hàng duyệt và hộp theo hạng mục** (P1-3, P1-8, e1, e9)
+- Đầu trang ba số: chờ · quá 3 ngày · đã quyết hôm nay. Bên dưới là rail hạng mục H1…H9, mỗi mục có số thẻ chờ, tuổi
+  thẻ cũ nhất, giây/thẻ.
+- Khuôn ba tầng:
+  - *Kho*: `PageHeader` (bắt buộc theo `routes.md`) + **`approval-summary` của `solution-agents-5`** (đã cài, chưa
+    dùng: hàng số + chênh lệch) cho ba số. Rail: `ui/item` trong `reui/frame` kèm `reui/badge` đếm.
+  - *ReUI Pro*: **solution-agents-2** «Agent Run Queue» (nhóm gập Running/Waiting/Failed + bộ lọc «cần chú ý»,
+    https://reui.io/preview/base/solution-agents-2) và **solution-agents-9** (rail phạm vi + lưới,
+    https://reui.io/preview/base/solution-agents-9).
+  - *Tự vẽ*: không cần.
+- **Chọn:** kho cho đầu trang. Với rail: xem trước solution-agents-2; nếu khớp nhóm theo hạng mục thì chuyển thể (cùng
+  họ Solutions với khung UI1); nếu không, ghép `item` + `badge` từ kho.
+- Đối chứng: Plain (rail «Needs first response», «Next response»… có số đếm), Front (hộp thư nhóm có số), Superhuman
+  (tách hộp theo loại việc). Chung một nguyên tắc: người chọn **loại việc** trước, rồi làm liền một loại, không lọc một
+  bảng lớn.
+
+**ĐC4 · Chế độ duyệt và điều hướng** (P0-1, P1-13; HD8; e9)
+- Quyết xong tự sang thẻ kế. Thêm `?the=<id>` và `?hang-muc=`. Phím `J`/`K`, `1–4`, `⌘↵`, bảng phím `?`. Tiến độ
+  «12/133», tải trước thẻ kế.
+- Khuôn ba tầng:
+  - *Kho*: sheet hiện có (`review-detail-sheet`, chuyển thể `request-detail-sheet`), `ui/kbd` + `KbdGroup` cho gợi ý
+    phím, `ui/progress`, `ui/dialog` cho bảng phím, `ui/command` (⌘K của vỏ) để nhảy tới thẻ.
+  - *ReUI Pro*: không có block phím tắt (đã tra reui.io).
+  - *Tự vẽ*: chỉ **hook bàn phím** (logic). Không vẽ thành phần nhìn nào mới.
+- **Chọn: kho + hook.** Bảng phím là `Dialog` + danh sách `Kbd`, đúng dáng Notion Mail và Plain. Phím chữ chỉ chạy khi
+  tiêu điểm không ở ô nhập; tránh trùng ⌘K/⌘F của vỏ Ops.
+- Đối chứng: Superhuman (mỗi lệnh một phím, gợi ý phím ngay cạnh lệnh), Notion Mail và Plain (`J`/`K` để đi tới và lùi,
+  `?` mở bảng phím).
+
+**ĐC5 · Hoàn tác 5 giây và «Quyết định gần đây»** (Q7, P2-7)
+- Khuôn ba tầng:
+  - *Kho*: `sonner` với `action` «Hoàn tác» (agents-5 đã dùng `toast.success` khi duyệt và toast «Queue is clear» khi
+    hết hàng). **`recent-decisions` của `solution-agents-5`** (đã cài, chưa dùng; dựng trên `reui/timeline`) làm cột
+    nhật ký: ai, đáp án nào, lý do, nút «Đảo».
+  - *ReUI Pro*: **dialog-16** «Duplicate Check» (https://reui.io/preview/base/dialog-16), toast Undo huỷ trước khi
+    handler chạy. Lấy làm **mẫu hành vi**, không cài.
+- **Chọn: kho.** Hai phần đã nằm sẵn trong block của chính trang. Dùng chúng giữ trang trong một họ khung, không thêm
+  khuôn lạ.
+
+**ĐC6 · Ghi nhịp làm việc** (e9, tiêu chí gói G)
+- Ghi `mo_luc` và `quyet_luc` vào `ops_audit.detail`. Hiện giây/thẻ theo hạng mục trên rail ĐC3 và trên `approval-summary`.
+- **Khuôn: kho**, không có phần nhìn mới.
+
+**ĐC7 · Nối Căn giá tốt ↔ Ghép căn** (P1-11)
+- Badge «Đang chờ ghép» kèm liên kết `?the=`.
+- **Khuôn: kho** (`reui/badge` + `Button variant="link"`).
+
+**Đợt 2 — đáp án theo câu hỏi (T2; riêng ĐC9 là T3)**
+
+**ĐC8 · Thẻ Đối chiếu thành câu hỏi 4 đáp án + lát chấm mẫu + báo độ đúng** (P0-2, P0-3, Q1, e2, e3)
+- Khuôn ba tầng:
+  - *Kho*: `ui/toggle-group` (đang dùng cho trường xung đột) hoặc `ui/radio-group`, kèm `Kbd` số trên mỗi đáp án.
+    Câu trích tô trong toàn văn: `<mark>` theo token màu (phần tự làm nhỏ nhất). Chip «Lệch ×1000», «10 dòng giá»:
+    `reui/badge`.
+  - *ReUI Pro* cho trang báo: **solution-agents-8** «Agent Eval Report» (đường tỉ lệ đúng có mốc phiên bản, tiến độ
+    từng bộ, bảng hồi quy hai phiên bản, https://reui.io/preview/base/solution-agents-8). Rất khớp với «AI đúng / bộ
+    đọc đúng theo tuần và theo phiên bản prompt» trên `/ops/quality`.
+- **Chọn:** kho cho thẻ; solution-agents-8 cho trang báo (xem trước rồi mới quyết).
+- Đối chứng: các công cụ gắn nhãn chuyên dụng (khuôn quyết nhị phân hoặc nhiều lựa chọn bằng một phím), Superhuman
+  (câu trả lời là phím, không phải nút xác nhận).
+
+**ĐC9 · Thẻ Bổ sung tin «trước → sau», ✓/✗ từng trường** (P1-4, P1-12, e4, e5) · **T3** vì route decide nhận lựa
+chọn từng trường
+- Khuôn ba tầng:
+  - *Kho*: `ui/item` mỗi hàng `Căn hộ → Nhà riêng` + `ui/checkbox` (nhận/bỏ) + `reui/badge warning-light` «Ghi đè».
+    Trường xung đột giữ `ConflictField` hiện có, chọn bên là quyết luôn.
+  - *ReUI Pro*: không có block so khác biệt (reui.io: compare/comparison là bảng so giá, không phải khung khác biệt).
+  - *Tự vẽ*: không cần.
+- **Chọn: kho.**
+- Đối chứng:
+  - Semrush «Review mode»: bản gốc ↔ bản mới, tô phần đổi, hai nút «Giữ bản gốc / Dùng bản mới».
+  - Salesforce «Compare leads»: chọn từng trường bằng radio.
+  - Cả hai cho thấy người duyệt cần **thấy giá trị cũ** và **quyết từng trường**. Đó đúng là hai chỗ thẻ hiện thiếu.
+
+**ĐC10 · Thẻ Người và thẻ Ghép căn dạng hai cột, hàng khác nhau lên trước** (e6, e7)
+- Khuôn ba tầng:
+  - *Kho*: **`compare/comparison.tsx`** (chuyển thể comparison-1: cột là đối tượng, ô nổi bật được tô). Hàng khớp gập
+    bằng `ui/collapsible`, ảnh dùng `c-attachment-3`, liên kết hồ sơ là `Button variant="link"`. Tín hiệu loại trừ đặt
+    trong `reui/alert warning`.
+  - *ReUI Pro*: **dialog-16** «Duplicate Check» (ứng viên xếp hạng, nút Link từng hàng, có Undo) cho thẻ Người lớn
+    (3–7 tài khoản), chọn gộp từng hàng.
+- **Chọn:** kho (`comparison`) cho hai cột. Với thẻ Người lớn: xem trước dialog-16 và lấy khuôn **danh sách ứng viên +
+  một nút mỗi hàng** (đặt trong sheet, không mở dialog chồng).
+- Đối chứng:
+  - folk «Duplicates»: hai thẻ cạnh nhau + cột xem trước bản gộp có ô chọn, hai nút «Don't merge / Merge».
+  - Calendly «Merge contacts»: chọn giá trị giữ lại từng trường, xem trước bản gộp.
+
+**Đợt 3 — luật và gắn nhãn (T2/T3)**
+
+**ĐC11 · Thẻ luật và chế độ của từng luật E1** (Q6, e8)
+- Mỗi luật E1 có một chế độ: **Tự áp · Cần duyệt · Tắt**. Thẻ luật hiện căn cứ, số thẻ bị ảnh hưởng, 5 mẫu.
+- Khuôn ba tầng:
+  - *Kho*: **`approval-policy` + `ReviewCoverage` của `solution-agents-5`** (đã cài, chưa dùng: danh sách luật duyệt +
+    độ phủ).
+  - *ReUI Pro*: **solution-agents-4** «Tool Access Matrix» (mỗi công cụ một chế độ Auto Run / Approval / Blocked,
+    người duyệt, công tắc chính sách, lưu/huỷ, https://reui.io/preview/base/solution-agents-4). Gần như một-một với
+    «mỗi luật E1 một chế độ».
+- **Chọn: solution-agents-4 nếu xem trước khớp** (đúng việc, cùng họ Solutions). Nếu không, chuyển thể
+  `approval-policy` từ kho. Mọi đổi chế độ đi qua lệnh có khuôn (ADR-0015), không sửa thẳng.
+
+**ĐC12 · Gắn nhãn: co theo ý định, nháp làm lớp riêng, bôi để điền** (P1-9, P1-10, P2-8, Q2, Q3, e10)
+- Khuôn ba tầng:
+  - *Kho*: các phần đang có (`NhomRow`, `LabelFormNhom`, `AnhBai`) + `ui/collapsible` cho nhóm ô «Thêm» + `ui/popover`
+    hiện danh sách ô kèm `Kbd` khi bôi chữ. Nháp mờ dùng màu `text-muted-foreground` + nhãn `reui/badge`.
+  - *ReUI Pro*: không có block gắn nhãn (đã tra).
+  - *Tự vẽ*: **bôi để điền** (logic chọn chữ → điền ô, căn cứ «Chữ»). Phần nhìn vẫn là `popover` của kho.
+- **Chọn: kho + một phần logic tự làm.** Đây là thứ duy nhất phải tự làm trong cả 12 hạng mục, vì không thư viện nào
+  có.
+- Đối chứng: các công cụ gắn nhãn văn bản hàng đầu đều cho bôi một đoạn rồi gán vào trường, thay cho gõ lại.
+
+### f3. Tóm tắt lựa chọn khuôn
+
+| Tầng | Số hạng mục | Hạng mục |
+|---|---:|---|
+| Có sẵn trong kho (gồm phần chưa dùng của `solution-agents-5`) | 9 | ĐC1, ĐC2, ĐC4 (+ hook), ĐC5, ĐC6, ĐC7, ĐC9, ĐC10, ĐC12 (+ logic) |
+| ReUI Pro (xem trước rồi mới quyết) | 3 | ĐC3 rail (solution-agents-2/-9), ĐC8 trang báo (solution-agents-8), ĐC11 (solution-agents-4) |
+| Tự vẽ phần nhìn | 0 | Chỉ có hai phần logic: hook phím (ĐC4), bôi để điền (ĐC12) |
+
+**Ghép với gói ở (c).**
+- Đợt 1 = gói E + G1.
+- Đợt 2 = G2 + B.
+- Đợt 3 = G3 + D.
+- F (duyệt trên cloud) giữ nguyên, đi sau đợt 2.
+
+**Việc trước khi dựng:**
+1. Đăng nhập lại MCP ReUI, chạy `get_block` cho solution-agents-2/-4/-8/-9 và dialog-16, ghi `previewUrl` vào
+   `catalog.md` khi chọn.
+2. Mỗi hạng mục có UI qua design-pass trên bản bấm được trước Cổng 1 (kit nghiệm thu).
+3. Tiêu chí đo của mọi hạng mục là giây/thẻ theo hạng mục từ ĐC6, nên **ĐC6 đi đầu đợt 1** để có số trước, số sau.
 
 ## Phụ lục — câu đo (tái lập)
 
