@@ -1,6 +1,6 @@
-# Review findings: install-cron-chi (round 1)
+# Review findings: install-cron-chi (round 2)
 
-Phạm vi đọc: `git diff origin/main..16c1eaf9` gồm `scripts/install-cron.sh` (+26/−2) và `scripts/install-cron-chi.test.mjs` (+89).
+Phạm vi đọc: `git diff origin/main..eb60ad59` gồm `scripts/install-cron.sh` (+26/−2) và `scripts/install-cron-chi.test.mjs` (+89).
 Mọi phép thử chạy với HOME giả, `launchctl`/`security` giả; không cài job thật, không đụng Keychain thật.
 
 ## Trong hợp đồng
@@ -14,11 +14,4 @@ Mọi phép thử chạy với HOME giả, `launchctl`/`security` giả; không 
 
 ## Ngoài hợp đồng
 
-Các lỗi dưới đây nằm ngoài phạm vi đã duyệt và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa.
-
-- **Cờ --chi không kèm tên job thì cài lại cả ba job**
-  Người dùng thấy gì: Gõ `bash scripts/install-cron.sh --chi` (quên tên job) thì script cài lại đủ collector, smoke, backup — tức là khởi động lại job thu đang chạy, đúng điều cờ này sinh ra để tránh. Phiên chấm đã thử trên HOME giả: thoát 0, ba plist được ghi.
-  Căn cứ: Lệnh Mạnh sẽ gõ luôn kèm `backup`, nên không chạm ca này; sửa là một dòng (`--chi` trơn → thoát 2) nhưng không chặn việc cài sao lưu.
-  file: `scripts/install-cron.sh`
-  severity: low
-  Đề xuất: known-limits
+(không có. Mục vòng 1 «--chi không kèm tên job thì cài lại cả ba job» đã sửa ở eb60ad59 và nằm trong AC-4.)

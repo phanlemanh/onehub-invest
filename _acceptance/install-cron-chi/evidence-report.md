@@ -7,19 +7,19 @@ reason:
 verified_by: claudedp — điều phối liên làn (không viết mã này; mã của ZCode)
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 48b7535e23aa63bd0ee0a22dd62084c8abd7891e
+verified_commit: 48fdc3f36c32c848e94098ed9c222cb8d1e7874b
 human_signoff:
 ---
 
 # Evidence Report: install-cron-chi
 
-Vòng verify 1, cây `48b7535e`: `zcode/install-cron-chi` @ 16c1eaf9 (dựng trên origin/main) cộng hồ sơ này. Phiên chấm không viết
+Vòng verify 2, cây `48fdc3f3`: `zcode/install-cron-chi` @ eb60ad59 (16c1eaf9 + sửa `--chi` trơn) cộng hồ sơ này. Phiên chấm không viết
 script hay test của ZCode; chỉ viết hai probe trong `probes/`. Mọi lần chạy dùng HOME giả, `launchctl` và `security` giả đứng đầu PATH —
 không đụng `~/Library/LaunchAgents` hay Keychain thật, không cài job nào trên máy.
 
 Cả 5 eval đạt `expected`, kể cả các vế should-NOT-fire: vắng cờ vẫn cài đủ ba job; `--chi backup` chỉ ghi plist backup và chỉ gọi
 launchctl cho nó, BACKUP_DIR nằm trong plist; mật khẩu đi vào Keychain qua stdin và không lọt vào plist, đối số, output hay launchctl;
-tên job lạ thoát 2 không ghi plist; nhánh chỉ đổi tệp được phép. «Ngoài hợp đồng» có 1 mục mức low.
+tên job lạ và `--chi` trơn đều thoát 2 không ghi plist; nhánh chỉ đổi tệp được phép.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -32,36 +32,36 @@ tên job lạ thoát 2 không ghi plist; nhánh chỉ đổi tệp được phé
 ## Evidence
 
 - eval: E1
-  run_id: install-cron-chi-E1-r1-20261107T085758Z
+  run_id: install-cron-chi-E1-r2-20261107T091309Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.icc_test
-  verified_at: 2026-11-07T08:57:58Z
+  verified_at: 2026-11-07T09:13:09Z
   output: |
-    ✔ vắng cờ: đủ 3 job như hành vi cũ (344.730208ms)
-    ℹ tests 4
-    ℹ pass 4
+    ✔ vắng cờ: đủ 3 job như hành vi cũ (353.690375ms)
+    ℹ tests 5
+    ℹ pass 5
     ℹ fail 0
 
 - eval: E2
-  run_id: install-cron-chi-E2-r1-20261107T085759Z
+  run_id: install-cron-chi-E2-r2-20261107T091311Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.icc_test
-  verified_at: 2026-11-07T08:57:59Z
+  verified_at: 2026-11-07T09:13:11Z
   output: |
-    ✔ --chi backup: CHỈ backup được cài — không plist collector/smoke, launchctl không đụng chúng (310.452ms)
-    ✔ --chi backup: BACKUP_DIR vào plist backup qua PlistBuddy (plist đọc được) (298.968125ms)
-    ℹ tests 4
-    ℹ pass 4
+    ✔ --chi backup: CHỈ backup được cài — không plist collector/smoke, launchctl không đụng chúng (305.09575ms)
+    ✔ --chi backup: BACKUP_DIR vào plist backup qua PlistBuddy (plist đọc được) (293.486833ms)
+    ℹ tests 5
+    ℹ pass 5
     ℹ fail 0
 
 - eval: E3
-  run_id: install-cron-chi-E3-r1-20261107T085800Z
+  run_id: install-cron-chi-E3-r2-20261107T091312Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.icc_keychain
-  verified_at: 2026-11-07T08:58:00Z
+  verified_at: 2026-11-07T09:13:12Z
   output: |
     đạt: plist backup được cài
     đạt: security add-generic-password gọi đúng dịch vụ oneinvest-backup
@@ -75,26 +75,32 @@ tên job lạ thoát 2 không ghi plist; nhánh chỉ đổi tệp được phé
     KEYCHAIN OK
 
 - eval: E4
-  run_id: install-cron-chi-E4-r1-20261107T085800Z
+  run_id: install-cron-chi-E4-r2-20261107T091312Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.icc_test
-  verified_at: 2026-11-07T08:58:00Z
+  verified_at: 2026-11-07T09:13:12Z
   output: |
-    ✔ tên job lạ → thoát 2, KHÔNG ghi plist nào (3.298167ms)
-    ℹ tests 4
-    ℹ pass 4
+    ✔ tên job lạ → thoát 2, KHÔNG ghi plist nào (6.364458ms)
+    ✔ --chi trơn → thoát 2, không plist nào (5.177334ms)
+    ℹ tests 5
+    ℹ pass 5
     ℹ fail 0
 
 - eval: E5
-  run_id: install-cron-chi-E5-r1-20261107T085801Z
+  run_id: install-cron-chi-E5-r2-20261107T091313Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.icc_scope
-  verified_at: 2026-11-07T08:58:01Z
+  verified_at: 2026-11-07T09:13:13Z
   output: |
     SCOPE OK
 
+## Known limits
+
+## Ngoài hợp đồng
+
 ## Iterations
 
-- Vòng 1: PASS 5/5.
+- Vòng 1 (cây 48b7535e): PASS 5/5; review thấy một lỗi ngoài hợp đồng — `--chi` không kèm tên job rơi về cài cả ba job.
+- Vòng 2 (cây 48fdc3f3): ZCode sửa ở eb60ad59, hợp đồng nâng AC-4 phủ ca đó; PASS 5/5, không còn mục ngoài hợp đồng.
