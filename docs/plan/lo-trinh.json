@@ -4078,7 +4078,7 @@
         "agent/src/enrich/doc-gop-s03/**",
         "pipeline/**"
       ],
-      "ghi_chu": "Lịch chạy đêm (plist) thuộc làn ZCode: Claude dựng bước, giao ZCode gắn vào chuỗi đêm. PL31b song song để sổ cuộc gọi có tiền thật. Mở rộng ra toàn S03 sau một tuần xem tiền + độ đúng (DO1)."
+      "ghi_chu": "Lịch chạy đêm (plist) thuộc làn ZCode: Claude dựng bước, giao ZCode gắn vào chuỗi đêm. PL31b song song để sổ cuộc gọi có tiền thật. Mở rộng ra toàn S03 sau một tuần xem tiền + độ đúng (DO1). Căn cứ đọc trước: _acceptance/chon-model-theo-o/ (contract Notes 15 Known limits, Hỏi-1), agent/config/doc-gop-s03.json, ROADMAP §3 mục 33–34."
     },
     {
       "ma": "GN5",
@@ -4102,7 +4102,8 @@
         "pipeline/scripts/test-data-residue.mjs",
         "pipeline/sql/600_data_flow.sql",
         "app/src/lib/ops/**"
-      ]
+      ],
+      "ghi_chu": "Căn cứ: _acceptance/lay-mau-khu-trung-theo-tin/review-findings.md (Ngoài-4/5/7/8) và decisions.jsonl dòng gate2."
     },
     {
       "ma": "DB1b",
@@ -4126,7 +4127,7 @@
         "pipeline/lib/danh-ba-vat-the.mjs",
         "pipeline/scripts/**"
       ],
-      "ghi_chu": "Chạy lần đầu trên máy thu là lời riêng của Mạnh (sao lưu trước)."
+      "ghi_chu": "Chạy lần đầu trên máy thu là lời riêng của Mạnh (sao lưu trước). Căn cứ: _acceptance/danh-ba-toa-truc-can/ (contract Notes Known limits Ngoài-7, review-findings Ngoài-9), ADR-0016."
     },
     {
       "ma": "ZC10",
@@ -4149,7 +4150,7 @@
         "pipeline/collect-*",
         "collector/**"
       ],
-      "ghi_chu": "Làn ZCode; điều phối liên làn review và gửi lời «chạy». Mỗi lượt báo số về giám sát trước lượt kế."
+      "ghi_chu": "Làn ZCode; điều phối liên làn review và gửi lời «chạy». Mỗi lượt báo số về giám sát trước lượt kế. Căn cứ: ROADMAP §3 mục 36; kênh tin claudedp-0711-29/30."
     },
     {
       "vai": "Người duyệt",
@@ -4171,7 +4172,8 @@
         "app/src/components/ops/**",
         "app/src/lib/ops/**",
         "CONTEXT.md"
-      ]
+      ],
+      "ghi_chu": "Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người duyệt",
@@ -4195,7 +4197,7 @@
         "app/src/components/ops/review/**",
         "app/src/lib/ops/**"
       ],
-      "ghi_chu": "Nấc 1 của PL23 (thẻ duyệt v2) cùng OD3–OD5; gồm HD8."
+      "ghi_chu": "Nấc 1 của PL23 (thẻ duyệt v2) cùng OD3–OD5; gồm HD8. Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người duyệt",
@@ -4219,7 +4221,7 @@
         "app/src/lib/ops/**",
         "pipeline/**"
       ],
-      "ghi_chu": "Có thể cần migration nhỏ (giá trị trạng thái) — xin số qua giám sát."
+      "ghi_chu": "Có thể cần migration nhỏ (giá trị trạng thái) — xin số qua giám sát. Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người duyệt",
@@ -4242,7 +4244,8 @@
         "app/src/app/ops/review/**",
         "app/src/app/api/ops/**",
         "app/src/lib/ops/**"
-      ]
+      ],
+      "ghi_chu": "Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người duyệt",
@@ -4264,7 +4267,8 @@
       "vung": [
         "app/src/components/ops/review/**",
         "app/src/lib/ops/**"
-      ]
+      ],
+      "ghi_chu": "Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người duyệt",
@@ -4287,7 +4291,8 @@
         "app/src/app/ops/**",
         "pipeline/mappings.yaml",
         "pipeline/**"
-      ]
+      ],
+      "ghi_chu": "Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "vai": "Người gắn nhãn",
@@ -4310,7 +4315,8 @@
         "app/src/app/ops/labels/**",
         "app/src/components/ops/labels/**",
         "app/src/lib/**"
-      ]
+      ],
+      "ghi_chu": "Căn cứ đọc trước: docs/research/soat-ops-0711.md mục (f) (khuôn ReUI đã xác minh ở f4), ROADMAP §3 mục 35; thuật ngữ UI mới thêm vào CONTEXT.md cùng commit."
     },
     {
       "ma": "DO1b",
@@ -4329,7 +4335,12 @@
       "cau_giao": "Mẫu soát cuốn chiếu của DO1 lấy mẫu phân tầng theo khu trọng tâm (Ocean Park, Grand Park…) có trọng số để lát dự án/toà có đủ thẻ mà tổng vẫn không lệch",
       "bat_khi": "Mỗi khu trọng tâm có tối thiểu số thẻ/tuần đã khai; số tổng có trọng số khớp số không phân tầng trong sai số đã khai",
       "vi_sao": "Mạnh 07/11 ở phiên P2: «Đồng ý tất cả theo khuyến nghị, nhưng phần khuyến nghị đo lường đưa vào lộ trình để chống quên» + «Phần chưa làm» (yêu cầu P2-128).",
-      "ghi_chu": "Quyết sau 2 tuần số thật của DO1 (xem độ dao động)."
+      "ghi_chu": "Quyết sau 2 tuần số thật của DO1 (xem độ dao động).",
+      "vung": [
+        "pipeline/mau-soat-cuon-chieu.mjs",
+        "pipeline/lib/do-hang-ngay.mjs",
+        "pipeline/**"
+      ]
     }
   ],
   "chan_troi": [
