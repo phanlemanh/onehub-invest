@@ -125,3 +125,21 @@ test("0711-9(4): đối chiếu manifest — 2 snapshot cộng counts.items đú
   assert.equal(tong, 40, "manifest 2 cụm cộng đúng 40");
   rmSync(root, { recursive: true, force: true });
 });
+
+
+// 0711-21: discovery giả phải nằm dưới SNAP_ROOT đúng nơi collect đọc
+test("duDiscovery ghi dưới SNAP_ROOT (khớp paths.snapshotRoot của collect)", async () => {
+  const { spawnSync: sp } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = fs.mkdtempSync((await import("node:path")).default.join(tmpdir(), "s01-disc-"));
+  fs.writeFileSync((await import("node:path")).default.join(dir, "id.json"), JSON.stringify({ hcm: ["abnb_9"] }));
+  fs.writeFileSync((await import("node:path")).default.join(dir, "gia.mjs"), "export const airbnbListing = { requestsPerSecond: 1, async collect(ctx) { const fsx = await import('node:fs'); const dirs = fsx.readdirSync(ctx.paths.snapshotRoot + '/hcmc').filter(x => !x.startsWith('.')); ctx.log('discovery-dir=' + dirs.join(',')); return { items: [], coverage: { discovered: 1, captured: 0, failed: 0, methods: {}, notes: [] } }; } };");
+  const r = sp("node", [(await import("node:path")).default.join(REPO, "s01", "thu-theo-danh-sach.mjs"),
+    "--danh-sach", (await import("node:path")).default.join(dir, "id.json"), "--snapshot-root", (await import("node:path")).default.join(dir, "snaps")], {
+    encoding: "utf8", timeout: 30000, env: { ...process.env, S01_COLLECTOR_GIA: (await import("node:path")).default.join(dir, "gia.mjs") },
+  });
+  const out = (r.stdout || "") + (r.stderr || "");
+  assert.ok(out.includes("discovery-dir=hcmc__airbnb-discovery__n1"), `collect phải THẤY discovery dưới snapshot-root (log: ${out.slice(0, 250)})`);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
