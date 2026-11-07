@@ -112,7 +112,7 @@ test("AC-1 ma trận dấu", () => {
     n++;
   }
   assert.equal(n, 11, "AC-1 ma trận phải đủ 11 ô");
-  assert.deepEqual([...TEST_MARKERS], ["snapshot-source", "agent", "group"]);
+  assert.deepEqual([...TEST_MARKERS], ["snapshot-source", "agent", "group", "noi-dung"]); // noi-dung: lay-mau-khu-trung-theo-tin AC-4
 });
 
 test("AC-1 chiều đỏ: luật nhóm lỏng bị ma trận bắt", () => {
@@ -194,7 +194,7 @@ test("AC-5 lượt sạch và lượt toàn thử", { timeout: 300_000 }, async 
   await withTx(async (c) => {
     // (a) stg kênh Zalo không còn post thử (xoá trong giao dịch, ROLLBACK cuối).
     const { rows } = await c.query(
-      `SELECT post_id, snapshot_id, agent_id, group_name FROM stg_zalo_posts
+      `SELECT post_id, snapshot_id, agent_id, group_name, text FROM stg_zalo_posts
        WHERE agent_id IS NULL OR agent_id <> 'apify-facebook'`,
     );
     const testIds = rows.filter((r) => testMarker(r)).map((r) => r.post_id);
@@ -306,7 +306,7 @@ test("AC-6 bait gap tính lại", { timeout: 300_000 }, async () => {
     assert.notEqual(real.bait_gap_pct, null, "AC-6 tin thật mất bait gap");
     assert.equal((await offersWith(c, pTest)).length, 0, `AC-6 bait gap trên tin thử: ${pTest}`);
     // Không offer S03 nào giao với tập post thử của stg mang bait gap.
-    const { rows } = await c.query(`SELECT post_id, snapshot_id, agent_id, group_name FROM stg_zalo_posts`);
+    const { rows } = await c.query(`SELECT post_id, snapshot_id, agent_id, group_name, text FROM stg_zalo_posts`);
     const testIds = rows.filter((r) => testMarker(r)).map((r) => r.post_id);
     const leaked = (await c.query(
       `SELECT offer_id FROM sale_offers WHERE post_ids && $1::text[] AND bait_gap_pct IS NOT NULL`, [testIds],
