@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: dc9584c757ad19dbadc61e69f2df61f77e780089
+verified_commit: 8a23090051eb6b1ff5b2ddc2cbf31bfc14980146
 human_signoff: Mạnh 2026-11-07
 ---
 
@@ -168,3 +168,7 @@ none — every multi-run eval is uniform
 
 Round 1: BLOCKED — DB thu trung ten giua E2 va E7, suite pipeline va app do. Tra ve thi cong.
 Round 2: E2, E3, E5, E6, E7 va 5 lenh suite chay lai, tat ca xanh (E2 dung DB thu oneinvest_gn2_mau, E7 dung oneinvest_gn2_lat); E1, E4, E8, E9, E10 carry-forward tu round 1. Verdict PASS.
+
+### Re-pin lần 1 — 2026-11-07, do gộp main sau GN1 (#345) làm hoá cũ E8, E9
+run_id: repin-20261107T040434Z-94299
+sha: 8a23090051eb6b1ff5b2ddc2cbf31bfc14980146 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
