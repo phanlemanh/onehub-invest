@@ -414,10 +414,10 @@ index 000000000..7e00a1000
 +}
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 000000000..16a8775a8
+index 000000000..9064a799d
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,365 @@
+@@ -0,0 +1,366 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock vớiZaloApi bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -747,7 +747,7 @@ index 000000000..16a8775a8
 +    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
 +    await chayVong(deps);
 +    const spool = fs.files.get("/f/spool-ho-so.jsonl") ?? "";
-+    expect(spool).toContain('"loai":"ho-so"');
++    expect(spool).toContain("\"loai\":\"co-username\""); // dòng spool mang loai kết quả từng mã
 +    expect(spool).not.toContain(PII.canary);
 +  });
 +
@@ -765,11 +765,12 @@ index 000000000..16a8775a8
 +
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
 +    const { fs, api, deps } = chuanBi();
-+    await fs.noiFile("/f/luot-lon.txt", "30");
++    await fs.ghiFile("/f/dem-2026-11-08.txt", "30"); // đã dùng hết 30 lời trong ngày VN 2026-11-08 (now giả = 08/11 02:30 VN)
 +    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
 +    const v = await chayVong(deps);
 +    expect(v.loi_goi).toBe(0);
 +    expect(api.dem.getUserInfo).toBe(0);
++    expect(await fs.docFile("/f/yeu-cau.json")).toContain("mas"); // tệp yêu cầu còn nguyên (chưa xử)
 +  });
 +
 +  it("tệp sai khuôn → tệp chặn sai-khuon-yeu-cau, 0 lời", async () => {
