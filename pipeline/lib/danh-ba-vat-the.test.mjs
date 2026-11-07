@@ -73,7 +73,7 @@ test("DBV-AC-8 ứng viên từ tin: năm ca ma trận", () => {
       pb("S03:8", "QA6", null, "n1", "g1"), // (e) không có khu
     ],
   });
-  assert.deepEqual(kq.biDanhTen, [{ object_key: "bld_a", value: "QA6", source: "S03" }]);
+  assert.deepEqual(kq.biDanhTen, [{ object_key: "bld_a", value: "Qa6", source: "S03" }]);
   const uv = Object.fromEntries(kq.ungVien.map((u) => [u.ten, u]));
   assert.equal(uv.QB1.khop, 2);
   assert.deepEqual([uv.QZ9.so_nguoi_dang, uv.QZ9.so_nhom], [2, 1]);

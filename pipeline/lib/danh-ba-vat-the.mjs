@@ -126,8 +126,10 @@ export function ungVienTuTin({ phatBieu, toaTheoKhu }) {
     if (!ten) continue;
     const keys = toaTheoKhu.get(p.khu_id)?.get(ten) ?? [];
     if (keys.length === 1) {
+      // Bí danh giữ đúng cách viết trên tin (tên gọi khác); cách viết trùng tên đã có thì ràng buộc duy nhất bỏ qua.
       const source = p.subject_key.split(":")[0];
-      biDanhTen.set(`${keys[0]}|${ten}|${source}`, { object_key: keys[0], value: ten, source });
+      const value = p.value.trim().replace(/\s+/g, " ");
+      biDanhTen.set(`${keys[0]}|${value}|${source}`, { object_key: keys[0], value, source });
       continue;
     }
     const k = `${p.khu_id}|${ten}`;
