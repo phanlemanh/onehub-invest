@@ -685,6 +685,12 @@ _Avoid_: danh mục dự án, quỹ căn
 - Code: `eval_labels.field = 'availability_date'` (giá trị `ngay`, `YYYY-MM`, `YYYY-MM-DD`)
 _Avoid_: ngày bàn giao (là một trường hợp của ngày vào ở)
 
+**Mã thẻ**: Số định danh một thẻ trên màn gắn nhãn. Hiện thành chip đơn sắc trên thẻ, bấm để chép, để Mạnh và phiên trợ lý gọi đúng một thẻ («thẻ 10247»).
+- Code: `eval_label_items.item_id`, chip `MaThe` (`app/src/components/ops/labels/ma-the.tsx`) · RESO: —
+- Slug URL: —
+- Ghi chú: Không gọi `review_queue.item_id` (dạng `nguoi:<S0x>:<băm>` của thẻ Người HD17 ở màn duyệt) là mã thẻ — đó là khoá dòng nguồn của thẻ duyệt, nghĩa khác. Chú thích ở `app/src/lib/ops/review-queue.ts` còn dùng chữ cũ, sửa khi có việc chạm tệp đó.
+_Avoid_: mã mẫu, ID thẻ, item id
+
 **Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
 - Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`
 
