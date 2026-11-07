@@ -17,8 +17,9 @@ function TyLe({ t }: { t: TuanSo }) {
   return <span className="tabular-nums">{fmtPct(t.ty_le)} <span className="text-muted-foreground text-xs">n={fmtInt(t.n)}</span></span>
 }
 
-function Chenh({ chenh, coYNghia }: { chenh: number | null; coYNghia: boolean }) {
-  if (chenh === null) return <span className="text-muted-foreground">—</span>
+function Chenh({ chenh, coYNghia, itMau = false }: { chenh: number | null; coYNghia: boolean; itMau?: boolean }) {
+  // Một trong hai tuần dưới IT_MAU mẫu: chênh chỉ là nhiễu, không in.
+  if (chenh === null || itMau) return <span className="text-muted-foreground">—</span>
   return (
     <span className="flex items-center gap-1 tabular-nums">
       {chenh > 0 ? "+" : ""}{fmtPct(chenh)}
@@ -54,7 +55,7 @@ export function BangGiu({ dong }: { dong: DongGiu[] }) {
               <TableCell>{d.nhom}</TableCell>
               <TableCell><TyLe t={d.tuan_nay} /></TableCell>
               <TableCell><TyLe t={d.tuan_truoc} /></TableCell>
-              <TableCell><Chenh chenh={d.chenh} coYNghia={d.co_y_nghia} /></TableCell>
+              <TableCell><Chenh chenh={d.chenh} coYNghia={d.co_y_nghia} itMau={d.tuan_nay.n < IT_MAU || d.tuan_truoc.n < IT_MAU} /></TableCell>
               <TableCell className="tabular-nums">{d.nguong_phat_hien === null ? "—" : `±${fmtPct(d.nguong_phat_hien)}`}</TableCell>
             </TableRow>
           ))}
@@ -77,7 +78,7 @@ export function BangBoSot({ dong }: { dong: DongBoSot[] }) {
               <TableCell className="text-xs">{tenCachDoc(d.cach_doc)}</TableCell>
               <TableCell><TyLe t={d.tuan_nay} /></TableCell>
               <TableCell><TyLe t={d.tuan_truoc} /></TableCell>
-              <TableCell><Chenh chenh={d.chenh} coYNghia={d.co_y_nghia} /></TableCell>
+              <TableCell><Chenh chenh={d.chenh} coYNghia={d.co_y_nghia} itMau={d.tuan_nay.n < IT_MAU || d.tuan_truoc.n < IT_MAU} /></TableCell>
               <TableCell className="tabular-nums">{fmtInt(d.tuan_nay.thieu_nhap ?? 0)}</TableCell>
             </TableRow>
           ))}

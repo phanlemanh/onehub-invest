@@ -139,6 +139,13 @@ export function LabelFormNhom({
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
+            {tin.nhap ? (
+              <div className="flex">
+                <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="wrap-anywhere whitespace-normal">
+                  Nháp máy · {tin.nhap.cachDoc}
+                </Badge>
+              </div>
+            ) : null}
             <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} ghep={tin.ghep} />
             {tin.text ? (
               <p className={`text-sm whitespace-pre-line wrap-anywhere ${moRong ? "" : "line-clamp-3"}`} data-labels-chu-goc="">
@@ -150,11 +157,6 @@ export function LabelFormNhom({
             </FrameDescription>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end sm:gap-1">
-            {tin.nhap ? (
-              <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="max-w-64 truncate">
-                Nháp máy · {tin.nhap.cachDoc}
-              </Badge>
-            ) : null}
             <Badge variant={xong ? "success-light" : "secondary"} className="tabular-nums">
               {xong ? <CheckCircle2Icon aria-hidden="true" /> : <CircleDashedIcon aria-hidden="true" />}
               {daDien}/{TAT_CA_O.length}

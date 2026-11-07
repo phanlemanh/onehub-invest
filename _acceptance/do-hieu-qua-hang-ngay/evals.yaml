@@ -74,7 +74,7 @@ evals:
     target: "http://localhost:3462/ops/quality"
     paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**]
     steps:
-      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Đăng nhập bằng tài khoản ops thử của máy (scripts/dev-ops-account.mjs). KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/."
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser (task space «DO1 do-hieu-qua-hang-ngay soat man»), không đăng nhập lại, không dùng trình duyệt khác. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/."
       - "/ops/quality ở 1280 px sáng: cuộn tới khối «Đo hằng ngày», chụp → evidence/E9-step1.png"
       - "Bấm thẻ lát «Phường/xã» → evidence/E9-step2.png; ghi URL (có ?lat-do=phuong)"
       - "Cùng khối 1280 px tối (prefers-color-scheme: dark) → evidence/E9-step3.png"
@@ -88,7 +88,7 @@ evals:
     target: "http://localhost:3462/ops/labels?lat=s03-cuon-chieu"
     paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**]
     steps:
-      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Đăng nhập bằng tài khoản ops thử của máy. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/; KHÔNG bấm Lưu."
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser, không đăng nhập lại. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/; KHÔNG bấm Lưu."
       - "/ops/labels?lat=s03-cuon-chieu ở 1280 px sáng: thẻ đầu (có đọc gộp) → evidence/E11-step1.png; ghi chữ huy hiệu «Nháp máy · …», giá trị hiện ở các ô Phòng ngủ, Diện tích, Giá và ô WC"
       - "Tìm một thẻ có huy hiệu «Nháp máy · bo-doc-luat» bằng cách thêm &xem= hay tải lại sau khi người thử đã có (nếu không tới được, ghi rõ) → evidence/E11-step2.png"
       - "/ops/labels?lat=s03-cuon-chieu-trong (lát chưa rút) → evidence/E11-step3.png; ghi tiêu đề trạng thái trống"
