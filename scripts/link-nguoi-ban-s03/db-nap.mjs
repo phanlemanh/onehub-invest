@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const pg = require("/Users/manhphan/dev/onehub-invest/pipeline/node_modules/pg/lib/index.js");
+const pg = require("../node_modules/pg/lib/index.js");
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
 const DB_URL = process.env.LINK_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_link_db";

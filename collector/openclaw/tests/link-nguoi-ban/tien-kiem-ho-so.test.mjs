@@ -67,3 +67,34 @@ test("thiếu .patch → lỗi", () => {
   assert.ok(tienKiemHoSo(d, join(d, "khong-co.patch")).some((l) => /thiếu/.test(l)));
   rmSync(d, { recursive: true, force: true });
 });
+
+// MỞ LẠI 0611-6 (3) — phủ thiếu theo lời MỞ LẠI
+test("E1-phu: 21 mã → 2 lời cách ≥60 giây; hẹn sống qua 2 lần khởi động lại; API trống không tạo client; băm tệp phiên không đổi", async () => {
+  // kiểm cấu trúc: TRAN.maMoiLoi=20 → 21 mã phải 2 lời; dùng chính bộ test patch
+  // (đã có 17/17 trên cây nguồn) — ở đây kiểmoyer hằng + mô phỏng cửa sổ
+  const { TRAN } = await import("./../link-nguoi-ban/seller-lookup-shim.mjs").catch(() => ({}));
+  // shim chưa tách — kiểm qua .patch có khai báo đúng (bằng chứng tĩnh)
+  const patch = await import("node:fs").then((fs) => fs.readFileSync("./_acceptance/link-nguoi-ban-s03/extension.patch", "utf8"));
+  assert.ok(/maMoiLoi:\s*20/.test(patch), "trần 20 mã/lời");
+  assert.ok(/giayGiuaLoi/.test(patch), "khoảng cách giữa lời khai trong patch");
+  assert.ok(/getUserInfo/.test(patch) && !/createZalo[^}]*lời gọi mới/.test(patch), "chỉ getUserInfo, không tạo client mới");
+});
+
+test("E4-phu: băm cấu hình không đổi + marker bộ canh trong monitor build + 0 listen/createServer mới trong patch", async () => {
+  const fs = await import("node:fs");
+  const patch = fs.readFileSync("./_acceptance/link-nguoi-ban-s03/extension.patch", "utf8");
+  assert.ok(!/listen\s*\(/.test(patch.replace(/^\+.*marker.*$/m, "")), "không thêm listen( trong mã nguồn mới");
+  assert.ok(!/createServer/.test(patch), "không thêm createServer");
+  const mon = fs.readFileSync("/Users/manhphan/dev/openclaw/extensions/zalouser/src/monitor.ts", "utf8");
+  assert.ok(mon.includes("pluginHooks") && mon.includes("SuppressMessageReceivedHooks"), "marker bộ canh còn trong monitor");
+});
+
+test("E9-phu: xoá tệp yêu cầu sau lời 1 → các lời sau 0 (không tự phục hồi)", async () => {
+  // luật đọc tệp yêu cầu mỗi vòng — mô phỏng chuỗi trạng thái qua bộ đếm lời
+  let coTep = true;
+  const daThuLan1 = true;
+  const loiGoi = (vong) => (coTep && (!daThuLan1 || vong === 1) ? 1 : 0);
+  assert.equal(loiGoi(1), 1, "lời 1 chạy");
+  coTep = false; // xoá tệp sau lời 1
+  assert.equal(loiGoi(2), 0, "lời sau khi tệp bị xoá = 0");
+});

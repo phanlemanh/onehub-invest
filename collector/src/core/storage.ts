@@ -24,8 +24,10 @@ export class SnapshotWriter {
   private itemCount = 0;
   private itemFileCount = 0;
   private readonly startedAt = new Date().toISOString();
+  private readonly schemaVersion: number;
 
-  constructor(rootDir: string, city: string, source: string) {
+  constructor(rootDir: string, city: string, source: string, opts?: { schemaVersion?: number }) {
+    this.schemaVersion = opts?.schemaVersion ?? SNAPSHOT_SCHEMA_VERSION;
     // Giữ cả mili-giây: hai flush liên tiếp (single-flight dồn sát nhau) cùng
     // giây phải ra hai snapshot khác nhau — id theo giây sẽ đè nhau.
     const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 20); // yyyymmddThhmmssmmm
@@ -101,7 +103,7 @@ export class SnapshotWriter {
 
   async finalize(coverage: CoverageReport, error?: string): Promise<SnapshotManifest> {
     const manifest: SnapshotManifest = {
-      schemaVersion: SNAPSHOT_SCHEMA_VERSION,
+      schemaVersion: this.schemaVersion,
       snapshotId: this.snapshotId,
       city: dirname(this.dir).split("/").pop() ?? "",
       source: this.snapshotId.split("__")[1] ?? "",

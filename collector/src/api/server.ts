@@ -4,6 +4,10 @@ import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 import { SnapshotWriter } from "../core/storage.js";
+
+/** link-nguoi-ban-s03: kênh hồ sơ ghi schemaVersion 7 (v7). */
+export const HO_SO_SCHEMA_VERSION = 7;
+export const ZALO_AGENT_SCHEMA_VERSION = 6;
 import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
@@ -239,7 +243,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
   ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
-    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
+    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent", { schemaVersion: ZALO_AGENT_SCHEMA_VERSION });
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
     // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
     const items = buffer.slice();
@@ -384,7 +388,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         meta: { city, loai_ket_qua: r.loai, ts: r.lay_luc },
       });
     }
-    const writer = new SnapshotWriter(snapshotRoot, city, "s03-ho-so");
+    const writer = new SnapshotWriter(snapshotRoot, city, "s03-ho-so", { schemaVersion: HO_SO_SCHEMA_VERSION });
     await writer.write(items);
     await writer.finalize({
       discovered: items.length,
@@ -443,7 +447,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     return json(r.status, r.body);
   }
 
-  return { ingest, flush, handle, stats: () => ({ accepted: acceptedTotal, duplicates: duplicatesTotal, buffered: buffer.length }) };
+  return { ingest, flush, handle, stats: () => ({ accepted: acceptedTotal, duplicates: duplicatesTotal, buffered: buffer.length }), ingestHoSo: handleHoSo };
 }
 
 export type AgentServer = ReturnType<typeof createAgentServer>;

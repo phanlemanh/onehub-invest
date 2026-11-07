@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
 const NAP = join(REPO, "pipeline/import-airbnb.mjs");
-const pg = (await import("/Users/manhphan/dev/onehub-invest/pipeline/node_modules/pg/lib/index.js")).default;
+const pg = (await import("../node_modules/pg/lib/index.js")).default;
 const DB = process.env.HOSO_ITEST_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03";
 if (!/_album_s03$/.test(new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "")) {
   console.error("ho-so-nap: HOSO_ITEST_DB phải DB thử oneinvest_*_album_s03"); process.exit(2);
