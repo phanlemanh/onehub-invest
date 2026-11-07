@@ -83,14 +83,14 @@ evals:
     executor: test
     cmd: config:executors.test.dbv_that
     paths: [pipeline/scripts/danh-ba-vat-the-that.itest.mjs]
-    expected: "exit 0; ca «DBV-AC-11b»: lấy tập mã căn và tên phân khu chỉ có từ S08 (chép chỉ đọc từ máy thu), quét nội dung mọi tệp git ls-files của kho: 0 tệp chứa mã nào; đầu ra chỉ in số tệp quét và số khớp. Đối chứng dương: tệp tạm ngoài kho chứa một mã thật được quét cùng hàm thì bắt được, thông điệp ghim «DBV-AC-11 mã S08 trong kho»."
+    expected: "exit 0; ca «DBV-AC-11b»: lấy tập mã căn và tên phân khu chỉ có từ S08 (chép chỉ đọc từ máy thu), quét nội dung mọi tệp git ls-files của kho: 0 tệp đổi ở vòng này (git diff origin/main...HEAD) chứa mã nào, và mọi tệp khớp trên cả kho nằm trong danh sách có từ trước DA_CO_TU_TRUOC (hôm nay chỉ db/migrations/040_stg_s08_inventory.sql — migration đã commit, không sửa được); đầu ra chỉ in số tệp quét và số khớp, không in mã. Đối chứng dương: tệp tạm ngoài kho chứa một mã thật được quét cùng hàm thì bắt được, thông điệp ghim «DBV-AC-11 mã S08 trong kho»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-12
     executor: test
     cmd: config:executors.test.dbv_db
     paths: [pipeline/lib/danh-ba-vat-the.mjs, db/migrations/082_danh_ba_vat_the.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
-    expected: "exit 0; ca «DBV-AC-12», ma trận viết trước trên fixture vùng: (a) khu một phường → mỗi toà đúng một phát biểu (Building, area_id) lớp inferred, method registry_inherit, evidence trỏ id nút vùng, giá trị là id phường; (b) khu hai phường → 0 phát biểu, một dòng sổ lý do «khu nhiều phường»; (c) phân khu một phường dưới khu hai phường → toà của phân khu nhận phường của phân khu; (d) khu có area_id cấp market không phải submarket → 0 phát biểu; (e) chạy lại không nhân phát biểu; không dòng nào của sale_offers hay phát biểu resource Property đổi (băm trước, sau). Chiều đỏ: bản chép bộ dựng lấy phần tử đầu của area_ids thì ca (b) đỏ với thông điệp «DBV-AC-12 đoán phường khu nhiều phường»."
+    expected: "exit 0; ca «DBV-AC-12», ma trận viết trước trên fixture vùng: (a) khu một phường → mỗi toà đúng một phát biểu (Building, area_id) lớp inferred, method registry_inherit, evidence trỏ id nút vùng, giá trị là id phường; (b) khu hai phường → 0 phát biểu, một dòng sổ lý do «khu nhiều phường»; (c) phân khu một phường dưới khu hai phường → toà của phân khu nhận phường của phân khu; (d) khu có area_id cấp market không phải submarket → chỉ đếm submarket; (f) nút vùng có mã vùng không có trong areas → 0 phát biểu, lý do «vung-khong-ro»; (e) chạy lại không nhân phát biểu; không dòng nào của sale_offers hay phát biểu resource Property đổi (băm trước, sau). Chiều đỏ: bản chép bộ dựng lấy phần tử đầu của area_ids thì ca (b) đỏ với thông điệp «DBV-AC-12 đoán phường khu nhiều phường»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-1

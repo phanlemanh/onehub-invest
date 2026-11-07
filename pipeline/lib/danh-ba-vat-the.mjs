@@ -150,6 +150,8 @@ export function ungVienTuTin({ phatBieu, toaTheoKhu }) {
  */
 export function phuongCuaToa({ nutVung, khu, cap }) {
   const nut = (nutVung.area_ids ?? []).length ? nutVung : khu;
+  // Mã vùng không có trong areas (mã cũ, đã đổi sau sáp nhập) → không biết khu có mấy phường: không đoán.
+  if ((nut.area_ids ?? []).some((a) => !cap.has(a))) return { ly_do: "vung-khong-ro", nut_vung: nut.id };
   const phuong = [...new Set(nut.area_ids ?? [])].filter((a) => cap.get(a) === "submarket");
   if (phuong.length === 1) return { area_id: phuong[0], nut_vung: nut.id };
   return { ly_do: phuong.length > 1 ? "khu-nhieu-phuong" : "khong-co-phuong", nut_vung: nut.id };

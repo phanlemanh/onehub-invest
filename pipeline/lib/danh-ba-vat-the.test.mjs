@@ -81,7 +81,7 @@ test("DBV-AC-8 ứng viên từ tin: năm ca ma trận", () => {
   assert.equal(kq.ungVien.length, 3);
 });
 
-test("DBV-AC-12 phường của toà: năm ca ma trận", () => {
+test("DBV-AC-12 phường của toà: sáu ca ma trận", () => {
   const cap = new Map([["p1", "submarket"], ["p2", "submarket"], ["m1", "market"]]);
   assert.deepEqual(phuongCuaToa({ nutVung: { id: 1, area_ids: ["p1"] }, khu: { id: 1, area_ids: ["p1"] }, cap }), { area_id: "p1", nut_vung: 1 });
   assert.deepEqual(phuongCuaToa({ nutVung: { id: 1, area_ids: ["p1", "p2"] }, khu: { id: 1, area_ids: ["p1", "p2"] }, cap }),
@@ -89,6 +89,9 @@ test("DBV-AC-12 phường của toà: năm ca ma trận", () => {
   assert.deepEqual(phuongCuaToa({ nutVung: { id: 9, area_ids: ["p2"] }, khu: { id: 1, area_ids: ["p1", "p2"] }, cap }), { area_id: "p2", nut_vung: 9 });
   assert.deepEqual(phuongCuaToa({ nutVung: { id: 9, area_ids: [] }, khu: { id: 1, area_ids: ["m1"] }, cap }), { ly_do: "khong-co-phuong", nut_vung: 1 });
   assert.deepEqual(phuongCuaToa({ nutVung: { id: 1, area_ids: ["m1", "p1"] }, khu: { id: 1, area_ids: ["m1", "p1"] }, cap }), { area_id: "p1", nut_vung: 1 });
+  // (f) một mã vùng không có trong areas (mã cũ) → không đoán dù chỉ còn một phường biết được.
+  assert.deepEqual(phuongCuaToa({ nutVung: { id: 1, area_ids: ["p1", "p-cu"] }, khu: { id: 1, area_ids: ["p1", "p-cu"] }, cap }),
+    { ly_do: "vung-khong-ro", nut_vung: 1 }, "DBV-AC-12 đoán phường khi có mã vùng lạ");
 });
 
 test("DBV-AC-11a FILL thật của sync-cloud không chứa vật thể; đối chứng dương bắt được", () => {
