@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: doc-gop-hang-ngay
+# Mọi ca ở agent/tests/doc-gop-hang-ngay.test.ts, chạy qua `cd agent && npm test` (DB của riêng lượt, db/db-thu.sh --chay).
+# Ca DB đặt fixture vào một ngày bài xa (2001-01-0x giờ VN) trong BEGIN…ROLLBACK, chữ bài mang dấu riêng của lượt — dữ liệu chép
+# từ DB chung không chen vào. Gateway giả (MockLanguageModelV4) ghi mã model + chữ prompt, trả JSON dựng sẵn và tiền giả 0,002.
+# «Ngày chi» và «bây giờ» tiêm qua tham số `bayGio` (không đọc đồng hồ máy). Mỗi ca có chiều đỏ trên CÙNG fixture: thông điệp
+# ghim (chữ HOA trong expected) là message của assert; lượt phá-thử ở S3 sửa vật thật trong cây làm việc, chạy ca, thấy đúng
+# thông điệp đỏ, rồi hoàn lại — ghi ở phần «Phá thử» của kế hoạch.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-hang-ngay.test.ts, pipeline/lib/eval-labels.mjs, pipeline/lib/test-posts.mjs]
+    expected: "exit 0; ca 'PL34-AC-1' dựng fixture 13 bài (12 của ngày D, 1 của D−1) + một dòng sale_offer_records nối hai bài cùng tin; nhãn của R ghi bằng chayLuot thật (co.post [R], Gateway giả) trước khi đo, nhãn cho chữ của X ghi bằng chayLuot thật dưới một post khác ngày trước; gọi hang-ngay --thu: tóm tắt {tho 12, bai_thu 1, su_kien 1, trung 2, da_doc 1, bo 1, can_goi 6}; tập post_id sẽ gọi bằng đúng tập viết trước 6 phần tử (so tập, không so số đếm), R không có mặt, X có mặt; bài D−1 không có mặt; Gateway giả đếm 0 lời gọi trong lượt --thu; số dòng silver_labels và ai_calls không đổi qua lượt --thu; lệnh CLI `hang-ngay --thu` thoát 0 khi xoá AI_GATEWAY_API_KEY khỏi môi trường. Chiều đỏ trên cùng fixture: bỏ bước gạt bài thử → 'BAI THU LOT VAO PHAM VI'; bỏ khử trùng theo tin (tinCua rỗng) → 'TIN DOC HAI LAN'; bỏ dò nhãn đã đọc → 'DOC LAI BAI DA DOC'; dò đã đọc theo text_hash bất kể post_id → 'BAI DANG LAI BI BO'; cửa sổ ngày theo UTC thay giờ VN (bài 00:30 giờ VN nằm sai ngày) → 'SAI NGAY GIO VN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-2' trên fixture AC-1, chạy hang-ngay không --thu với Gateway giả: đúng 6 lời gọi, mỗi lời gọi mã 'anthropic/claude-haiku-5.5', tập post_id trong prompt bằng tập 6 phần tử của AC-1; silver_labels thêm đúng 6 dòng cho 6 post đó, mọi run_id khớp /^pl34-2001-01-05-b2001-01-02-/ (ngày chi tiêm 2001-01-05); ai_calls thêm đúng 6 dòng viec 'doc-gop-s03'; số dòng sale_offers, sale_offer_records, enrichment_proposals, review_queue, eval_labels, eval_label_items bằng trước lượt; thoát 0. Chiều đỏ: run_id không mang ngày chi → 'RUN_ID THIEU NGAY CHI'; ghi thêm một dòng vào bảng khác trong hàm thay thế → 'GHI NGOAI NHAN BAC'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-3' chạy hang-ngay hai lần cùng ngày chi trên fixture AC-1: lượt hai Gateway giả đếm 0 lời gọi, silver_labels không thêm dòng, tóm tắt can_goi 0 và da_doc 7 (6 vừa đọc + R), thoát 0. Ca 'PL34-AC-3-HONG': lượt một đơn vị A trả chữ không phải JSON, đơn vị B ném TypeError (lỗi mạng), còn lại JSON đủ; lượt hai Gateway giả chỉ nhận đúng hai prompt của A và B. Ca 'PL34-AC-3-DANG-LAI': lượt một ghi qua chayLuot thật cho bài P ở ngày D; ngày D+1 có bài P2 post_id mới cùng chữ với P; hang-ngay --ngay D+1 gọi đúng một lời cho P2 và silver_labels có nhãn dưới post_id P2. Chiều đỏ: dò đã đọc bỏ điều kiện json_ok → 'JSON HONG KHONG DUOC DOC LAI'; bỏ dò đã đọc → 'LUOT HAI GOI LAI'; dò theo text_hash bất kể post_id → 'DANG LAI KHONG CO NHAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-4' trên fixture AC-1 (can_goi 6), ước công thức cố định 0,01 USD/lời gọi (tham số uoc), tiền giả 0,002/lời gọi, trần 0,015: đúng 3 lời gọi (trước lời k+1 kiểm 0,002·k + 0,01 ≤ 0,015); dòng log stderr chứa 'CHAM TRAN DOC GOP HANG NGAY', '0.015' và 'con lai 3'; tóm tắt cham_tran true, con_lai 3; lệnh trả mã 3. Đối chứng cùng fixture: trần 1 → 6 lời gọi, cham_tran false, mã 0. Ca 'PL34-AC-4-DAT': tiền giả 0,03/lời gọi > ước 0,01, trần 0,05 → đúng 1 lời gọi, tổng usd 0,03 ≤ 0,05, mã 3. Chiều đỏ: giữ bước «ước tổng vượt trần thì không gọi gì» của PL30 → 'TU CHOI CA LUOT'; bỏ kiểm trần từng lời gọi → 'VUOT TRAN NGAY'; ước chỉ bằng công thức (bỏ max với tiền thật) → 2 lời gọi, tổng 0,06 → 'CHI THAT VUOT TRAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-5' chèn silver_labels tạm: cost 0,02 với run_id 'pl34-2001-01-05-b2001-01-01-x' (S, cùng ngày chi), cost 5 với run_id 'pl34-2001-01-04-b2001-01-01-y' (T, ngày chi khác); ước 0,01/lời gọi, tiền giả 0,002, trần 0,033: tóm tắt chi_ngay_truoc 0,02 (T không tính), đúng 2 lời gọi, mã 3. Ca 'PL34-AC-5-DA-CHAM': S = 0,05 ≥ trần 0,033 → 0 lời gọi, log chứa 'CHAM TRAN DOC GOP HANG NGAY', mã 3. Chiều đỏ: cộng mọi run_id 'pl34-%' bất kể ngày → 'CONG CHI NGAY KHAC'; bỏ chi_ngay_truoc → 'TRAN KHONG CHIA CHUNG NGAY'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-6' ma trận viết trước ba lượt trên fixture AC-1: (a) mọi lời gọi ném TypeError → mã 1, log chứa 'moi loi goi hong' và 'TypeError'; (b) mọi lời gọi trả chữ không phải JSON → mã 1, log chứa 'moi loi goi hong' và 'json-hong'; (c) một lời gọi TypeError, một JSON hỏng, ba tốt → mã 0, tóm tắt loi 1, json_hong 1. Chiều đỏ: mã thoát bỏ đếm JSON hỏng (luật cũ của chay) → 'JSON HONG CA LUOT VAN THOAT 0'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/config/doc-gop-s03.json, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-7' ma trận viết trước 7 đầu vào sai chạy CLI thật (spawn scripts/doc-gop-s03.ts hang-ngay, DATABASE_URL trỏ cổng đóng 127.0.0.1:9 để chứng việc kiểm đứng trước DB), mỗi ca thoát 2, stderr chứa đúng thông điệp ghim và KHÔNG chứa 'ECONNREFUSED': '--toan-bo' → 'co khong nhan: --toan-bo'; '--ngay 2026-13-40' → 'NGAY SAI KHUON: 2026-13-40'; '--ngay hom-qua' → 'NGAY SAI KHUON: hom-qua'; '--tran-ngay-usd -1' → 'TRAN SAI: -1'; '--tran-ngay-usd abc' → 'TRAN SAI: abc'; '--cau-hinh <tệp bảng có model qwen>' → stderr chứa 'qwen'; đầu vào đúng, không --thu, không AI_GATEWAY_API_KEY → stderr chứa 'AI_GATEWAY_API_KEY'. Ca 'PL34-AC-7-GLM': bảng tạm mac_dinh glm qua cauHinh → mọi lời gọi Gateway giả mang mã 'zai/glm-5.3-flash'. Chiều đỏ: bỏ kiểm khuôn ngày → 'NGAY SAI VAN CHAY'; bỏ đòi khoá → 'THIEU KHOA VAN CHAY'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [pipeline/doc-gop-hang-ngay.sh, scripts/lib/job-step.sh, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'PL34-AC-8' chạy `bash pipeline/doc-gop-hang-ngay.sh` với DOC_GOP_NODE trỏ tệp giả (ghi đối số vào tệp, trả mã theo biến) và DOC_GOP_BAY_GIO=2026-11-08T01:00:00+07:00: tệp giả nhận đúng hai lần gọi theo thứ tự, lần một chứa 'hang-ngay', '--ngay 2026-11-07', '--tran-ngay-usd 20', lần hai '--ngay 2026-11-06'; DOC_GOP_TRAN_NGAY_USD=7 → cả hai mang '--tran-ngay-usd 7'; ma trận mã (0,0)→0, (3,0)→3 và stderr có 'JOB FAIL [doc-gop-hang-ngay] bước hom-qua mã 3' và lần hai vẫn chạy, (0,1)→1 với 'bước hom-kia'. Bản sửa chữ: dòng JOB FAIL dùng đúng chữ của scripts/lib/job-step.sh ('bước <nhãn> mã <n>'). Chiều đỏ: ngày tính theo UTC (bản sao tệp với TZ=UTC) → 'NGAY BUOC DEM SAI GIO VN'; dừng sau bước hỏng đầu (set -e) → 'BUOC HOM KIA BI BO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
