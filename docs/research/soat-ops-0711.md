@@ -13,6 +13,10 @@ từ 23/10 đến 07/11, rồi đề xuất cải thiện. Phiên này **chỉ �
 Ảnh nằm ở `research-local/soat-ops-0711/` (gitignored, chỉ ở máy thu). Ảnh có chữ bài, tên và SĐT người bán, nên
 không đưa vào kho. Báo cáo này chỉ trỏ tên tệp.
 
+> **Lượt 2 (07/11, chiều):** mục (e) phân tích từng **hạng mục duyệt**. Mỗi hạng mục có câu hỏi thật, số đo, chỗ bằng
+> chứng nằm trên màn và UX để quyết trong vài giây. Thêm P0-3, P1-12, P1-13, gói G và câu hỏi Q6–Q7. Kịch bản e11: hàng
+> tồn 651 thẻ từ khoảng 9 giờ 24′ xuống khoảng 45′ (mục tiêu, chưa phải số đo).
+
 > Giới hạn: phiên trình duyệt dùng tài khoản vai **Quản trị**. Vai `ops` thấy ảnh khác (ảnh đã tải, không URL gốc)
 > và chưa được chụp riêng. Nút «N» nổi ở góc trái dưới trong ảnh mobile là chỉ báo của Next dev, không có ở bản build.
 
@@ -92,7 +96,28 @@ Mỗi mục ghi trang, chuyện gì, căn cứ và ảnh.
 - Căn cứ: framing 02/11, «chất lượng chỉ đo, không chặn». Đối chiếu là phép đo, nên được lấy mẫu để chấm chứ không phải
   xếp hàng để duyệt từng thẻ.
 
+**P0-3 · `/ops/review` thẻ Đối chiếu — đáp án không nói bên nào đúng (lượt 2).**
+- Nút là «Ghi phán quyết / Bỏ / Để sau». Phán quyết ghi vào `ops_audit` chỉ là `approved`/`rejected`. Người đọc nhật ký
+  không biết «Ghi phán quyết» nghĩa là AI đúng hay bộ đọc đúng.
+- Bài nhiều căn (#206667, 10 dòng giá) thì không đáp án nào đúng.
+- Hệ quả: 269 thẻ đối chiếu, dù duyệt hết, cũng không thành nhãn đo được.
+- Căn cứ: PL23 «mỗi quyết định thành nhãn đo», framing 02/11.
+- Xem e2, e3. Ảnh: `hm-d-doichieu_gia.png`.
+
 ### P1
+
+**P1-12 · `/ops/review` thẻ Bổ sung tin — «Áp dụng» là tất cả hoặc không, và 82 thẻ trùng giá trị đang lưu (lượt 2).**
+- Thẻ nhiều trường không có ✓/✗ cho từng trường (trừ trường xung đột). Ví dụ #213472: Loại hình đúng, Đường sai (tên
+  quận).
+- 82/378 thẻ có mọi trường đề xuất đã bằng giá trị đang lưu, quyết cũng không đổi gì.
+- 155 thẻ ghi đè giá trị đang có mà thẻ không cho thấy giá trị cũ.
+- Xem e4. Ảnh: `hm-d-conflict.png`.
+
+**P1-13 · `/ops/review` — không có đường đi nhanh giữa các thẻ (lượt 2).**
+- Không có `?the=`, không phím tắt nào (không có `onKeyDown` trong `components/ops/review*`), không hoàn tác.
+- Không lọc thì thẻ Ghép căn nằm ở trang 33/33.
+- Mọi sheet đã đo có 0 liên kết tới tin, người hay bài gốc.
+- Xem e0, e9.
 
 **P1-1 · `/ops/review` thẻ Ghép căn — tiêu đề lộ điểm Stage B «(score 0.945)».**
 - Tiêu đề thẻ hiện nguyên văn `Cùng căn? <slug phường> 76m² ↔ 68m² (score 0.945)` ở cả danh sách lẫn đầu sheet.
@@ -277,7 +302,307 @@ cắt trùng.
 - Thêm vào TV13 một tiêu chí: trang đọc nhật ký quyết định (P2-7) phải có trước khi đội vận hành từ xa duyệt, vì cần
   xem lại và đảo được.
 
-**Thứ tự gợi ý:** E (nhanh, gỡ chữ sai) → A → C → B → D. F theo lộ trình đã có.
+### Gói G — Duyệt theo hạng mục (lượt 2: e1–e9) · T2, phần ghi `mo_luc` · khoảng 3 ngày, cắt được thành 3 hàng
+
+- **Câu giao:** Người duyệt chọn một hạng mục (ý định, giá, điền ô, ghi đè, Người, Ghép căn) và quyết liền từng thẻ bằng
+  một phím: câu hỏi, câu trích đã tô và đáp án nằm trong 400 px đầu; quyết xong tự sang thẻ kế, hoàn tác được trong
+  5 giây.
+- **Ba hàng gợi ý:**
+  - **G1 — Hộp hạng mục + chế độ duyệt.** Gồm HD8; thêm `?the=`, phím `J`/`K`/`1–4`/`⌘↵`, hoàn tác 5 giây, ghi
+    `mo_luc`/`quyet_luc`.
+  - **G2 — Đáp án theo câu hỏi cho từng hạng mục.**
+    - Đối chiếu: Bộ đọc / AI / Cả hai sai / Bài nhiều căn.
+    - Bổ sung tin: hàng trước → sau, ✓/✗ từng trường.
+    - Người: hai cột so, có liên kết hồ sơ.
+    - Ghép căn: chỉ hàng khác nhau trước.
+    - Chip lý do theo hạng mục.
+    - Phần ✓/✗ từng trường cần đổi route decide, nên phần đó là T3.
+  - **G3 — Máy rút thẻ trùng giá trị đang lưu** (khuôn HD3) **+ «Thẻ luật»** (e8, chờ Q6).
+- **Tiêu chí:**
+  - đo bằng `mo_luc`/`quyet_luc` trên 7 ngày;
+  - trung vị giây/thẻ: H1 ≤ 5, H4 ≤ 6, H5 ≤ 12, H8 ≤ 30, H9 ≤ 45;
+  - 0 thẻ chờ có mọi trường đã bằng giá trị đang lưu;
+  - 100% phán quyết đối chiếu ghi rõ bên đúng;
+  - hàng tồn 651 thẻ về dưới 60 thẻ trong 2 tuần.
+- **Phụ thuộc:** gói A và C nằm trong G1 và G2. Nếu cắt G thì không cắt A và C riêng. Nên tách khỏi PL23 thành nấc 1
+  của PL23.
+
+**Thứ tự gợi ý:** E (nhanh, gỡ chữ sai) → G1 → G2 → G3 → B → D. F theo lộ trình đã có.
+
+---
+
+## (e) Phân tích sâu theo hạng mục duyệt (lượt 2, 07/11)
+
+Mạnh yêu cầu thêm: phân tích từng hạng mục duyệt. Với mỗi hạng mục, một người bình thường cần UX/UI gì để quyết nhanh
+và đi tiếp nhanh nhất, vì năng suất chính là số giây họ đứng ở mỗi màn cho tới khi quyết được.
+
+**Cách đo lượt 2.**
+- Tách 651 thẻ chờ thành hạng mục theo **câu hỏi mà người duyệt thật sự trả lời**, không theo `item_type`.
+- So giá trị đề xuất với giá trị đang lưu trong `sale_offers`.
+- Mở thẻ mẫu của từng hạng mục, đo vị trí bằng chứng trên màn (1440×900 và 375×812). Ảnh `hm-d-*.png`, `hm-m-*.png`.
+- Nhịp gắn nhãn tính từ `eval_labels.labeled_at`.
+
+### e0. Mô hình năng suất
+
+Thời gian một thẻ gồm ba phần:
+
+- **Tìm** = mở được thẻ cần làm. Hôm nay: đóng sheet → tìm hàng → bấm.
+- **Hiểu** = đọc đủ bằng chứng để biết câu trả lời.
+- **Ghi** = chọn đáp án → gõ lý do → bấm.
+
+Audit 30/10 đo tổng là 52 giây/thẻ. Hiện trạng làm cả ba phần chậm:
+
+- **Tìm.**
+  - Không có đường dẫn tới một thẻ (`?the=`), không phím tắt, không tự sang thẻ kế.
+  - Thẻ Ghép căn #105729 nằm ở **trang 33/33** khi không lọc: người duyệt phải bấm «Trang sau» 32 lần mới tới.
+  - Hạng mục giá trị nhất (Ghép căn nuôi «Một Căn Nhà») bị chôn dưới 617 thẻ Bổ sung tin.
+- **Hiểu.**
+  - 0 liên kết trong mọi sheet đã đo (không tới tin, người, bài gốc).
+  - Câu trích không được tô trong toàn văn.
+  - Thẻ Ghép căn dài **2,2 màn** ở desktop và **4,6 màn** ở mobile, toàn văn bắt đầu ở y = 1038 px, dưới nếp gập.
+- **Ghi.**
+  - Lý do bắt buộc bằng gõ tự do: 20–60 phím mỗi thẻ.
+  - Không có lý do soạn sẵn, không có cách hoàn tác.
+
+Ba nguyên tắc dùng cho mọi hạng mục bên dưới:
+
+1. **Câu hỏi – bằng chứng – đáp án nằm trong 400 px đầu.** Một dòng câu hỏi, câu trích đã tô, rồi các nút đáp án. Toàn
+   văn, ảnh, siêu dữ liệu gập lại, mở khi cần.
+2. **Một phím một quyết định.** Đáp án đánh số `1` `2` `3`, lý do soạn sẵn theo hạng mục (chip, cũng có số), `J`/`K` để
+   đi tới và lùi. Không phải rời bàn phím.
+3. **Đáp án đúng ngôn ngữ của câu hỏi.** Ví dụ «Bộ đọc đúng / AI đúng / Bài nhiều căn», không phải «Ghi phán quyết /
+   Bỏ». Nhãn đáp án chính là lý do mặc định.
+
+### e1. Bảng hạng mục
+
+| # | Hạng mục (câu hỏi thật) | Thẻ chờ | Hiện nay: màn · nút | Bằng chứng chính có trên nếp gập? | Mục tiêu giây/thẻ |
+|---|---|---:|---|---|---:|
+| H1 | **Đối chiếu ý định**: bài là tin rao, cần mua/thuê, hay không phải tin rao? | 133 | 1 màn · «Ghi phán quyết / Bỏ / Để sau» | Có, nhưng đáp án không nói bên nào đúng | 3–5 |
+| H2 | **Đối chiếu giá**: giá bộ đọc hay giá AI đúng? | 131 | 1–1,4 màn · như H1 | Có trích (trung vị 15 ký tự); không tô trong toàn văn | 4–6 |
+| H3 | **Đối chiếu diện tích** | 10 | như H2 | như H2 | 4–6 |
+| H4 | **Điền ô trống**: điền giá trị đề xuất vào trường đang trống? | 141 | 1 màn · «Áp dụng / Bỏ / Để sau» (cả thẻ) | Có giá trị đề xuất; **không** có chữ «đang trống» | 4–6 |
+| H5 | **Ghi đè**: thay giá trị đang có bằng giá trị mới? | 155 | như H4 | **Không** hiện giá trị đang có, nên người duyệt không biết mình đang ghi đè | 8–12 |
+| H6 | **Trùng giá trị đã có** (đề xuất = giá trị đang lưu) | 82 | như H4 | Không cần người | 0 (rút máy) |
+| H7 | **Luật và AI khác nhau**: chọn bên nào? (giao với H4/H5) | 87 | 1–2 màn · chọn bên rồi «Áp dụng» | Có hai giá trị + căn cứ luật; căn cứ AI chỉ là tên tệp trace | 6–10 |
+| H8 | **Gộp Người**: các tài khoản/SĐT này là một người? | 27 | 1–1,5 màn · «Gộp / Giữ tách / Hoãn» | Có bảng; **không** có chữ bài, không liên kết hồ sơ người | 15–30 |
+| H9 | **Ghép căn**: hai tin là cùng một căn? | 7 | 2,2 màn (mobile 4,6) · «Cùng căn / Khác căn / Không chắc» | Bảng so có; ảnh và toàn văn dưới nếp gập | 30–45 |
+| H10 | **Gắn nhãn S03** (màn khác: `/ops/labels`) | 316 chưa gắn | 24 ô × căn cứ | Bài và ảnh dính đầu | 90 (từ 220) |
+
+H1+H2+H3 = 274 lượt đối chiếu trên 269 thẻ (5 thẻ có hai khối). H4+H5+H6 = 378 thẻ có trường đề xuất. Tổng thẻ Bổ sung
+tin = 239 thẻ chỉ có đối chiếu + 378 = 617.
+
+### e2. H1 — Đối chiếu ý định (133 thẻ)
+
+**Số đo.**
+- 123/133 thẻ là cùng một kiểu: bộ đọc nói «tin rao», AI nói «cần mua/thuê».
+- 10 thẻ còn lại: AI nói «không phải tin rao».
+- Câu trích trung vị 15 ký tự, p90 35 ký tự.
+
+**Người thường cần**: câu trích (ví dụ «cần thuê gấp…»), dòng chứa nó và một dòng trước một dòng sau, tên nhóm.
+
+**Đề xuất.**
+- Câu hỏi một dòng: «Bài này là: tin rao · cần mua/thuê · không phải tin rao?». Ba đáp án `1` `2` `3` mang nhãn ý định
+  trong `CONTEXT.md`.
+- Bỏ khái niệm «bộ đọc/AI» khỏi mặt thẻ. Người chọn ý định đúng, máy tự suy ra bên nào đúng. Đáp án thành **nhãn đo**
+  (mục tiêu của PL23) thay vì «phán quyết» mơ hồ.
+- Toàn văn gập, câu trích tô vàng trong đoạn ±1 dòng.
+- Gom thẻ theo nhóm: nhóm cùng kiểu bài thì người đọc nhanh dần.
+- Lý do mặc định là nhãn đáp án; chỉ gõ khi muốn ghi thêm.
+- Vì là phép đo (mục P0-2), chỉ cần **mẫu 30 thẻ/tuần**, không cần duyệt hết 133 thẻ.
+
+**Mục tiêu**: 3–5 giây/thẻ, một phím.
+
+### e3. H2/H3 — Đối chiếu giá và diện tích (141 thẻ)
+
+**Số đo**: tỉ lệ giá AI/bộ đọc gom thành vài cụm rất rõ:
+
+| AI so với bộ đọc | Số thẻ | Người đọc là hiểu ngay |
+|---|---:|---|
+| gấp 1.000 lần | 27 | Đơn vị tỷ/triệu bị nhân |
+| nhỏ hơn 300–1.000 lần | 24 | Một bên đọc «tr» thành tỷ, hoặc ngược lại |
+| gần nhau (0,85–1,2) | khoảng 10 | Hai giá trong bài (giá thấp và giá cao, hay hai căn) |
+| khác hẳn | phần còn lại | Thường là **bài nhiều căn** (ví dụ #206667: bảng 5 căn thuê + 5 căn bán; bộ đọc lấy 4,50 tỷ, AI lấy 13 tr; cả hai «đúng» cho căn khác nhau) |
+
+**Người thường cần**:
+- hai giá trị **cùng một đơn vị** (ví dụ «4,50 tỷ · 0,013 tỷ») kèm một chữ «lệch ×1000»;
+- câu trích tô trong bài;
+- biết bài có nhiều dòng giá hay không (đếm số dòng có giá).
+
+**Đề xuất.**
+- Đáp án: `1` Bộ đọc đúng · `2` AI đúng · `3` Cả hai sai · `4` Bài nhiều căn.
+- Đáp án `4` nối với PL18 (nhiều căn) và GT2, đưa bài sang hàng tách căn thay vì đóng.
+- Đầu thẻ có chip tự sinh «Lệch ×1000», «Bài có 10 dòng giá».
+
+**Mục tiêu**: 4–6 giây/thẻ. Riêng cụm ×1000 có thể dồn thành một lần quyết về **luật đơn vị** (xem e8).
+
+### e4. H4/H5/H6 — Bổ sung tin: điền, ghi đè, trùng (378 thẻ)
+
+**Số đo** (so giá trị đề xuất với `sale_offers` hiện tại):
+
+| Trường | Đề xuất | Đang trống | Đã bằng giá trị đề xuất | Ghi đè giá trị khác |
+|---|---:|---:|---:|---:|
+| Loại hình | 340 | 34 | 164 | 142 |
+| WC | 83 | 83 | 0 | 0 |
+| Toà | 79 | 54 | 18 | 7 |
+| Phòng ngủ | 62 | 3 | 47 | 12 |
+| Đường | 6 | 6 | 0 | 0 |
+
+Ở cấp thẻ:
+- **82 thẻ** mọi trường đã bằng giá trị đang lưu: quyết hay không cũng không đổi gì (H6).
+- **155 thẻ** có ít nhất một trường ghi đè giá trị đang có (H5).
+- **141 thẻ** chỉ điền ô trống (H4).
+
+Mẫu ghi đè lớn nhất là «Căn hộ → Nhà riêng» với 108 trường. Trong đó **78 trường do một luật từ khoá đọc tên nhóm**
+(«nhà phố» trong tên nhóm → nhà riêng): cùng một căn cứ, lặp 78 lần.
+
+**Lỗi UX đo được trên màn.**
+- Thẻ **không hiện giá trị đang có**. Người duyệt thẻ ghi đè không biết mình đang đổi «Căn hộ» thành «Nhà riêng».
+- «Áp dụng» là **tất cả hoặc không**. Thẻ #213472 đề xuất Loại hình = Nhà riêng (đúng, bài «nhà 6 tầng») cùng
+  Đường = «Hoàng Mai». Hoàng Mai là tên quận, không phải đường, nên trường này sai. Người duyệt hoặc áp cả trường sai, hoặc
+  bỏ cả trường đúng. Ô chọn từng bên hiện chỉ có cho trường xung đột.
+- Căn cứ AI chỉ là «LLM qwen27b · trace …jsonl». Muốn biết vì sao phải tự dò toàn văn.
+
+**Đề xuất.**
+- H6: máy **rút** 82 thẻ trùng kèm lý do có tên «đã bằng giá trị đang lưu» (khuôn của HD3). Không đưa tới người.
+- Mỗi trường là một hàng **trước → sau**: `Căn hộ → Nhà riêng`, `— → 2 WC`. Mỗi hàng có ✓/✗ riêng, mặc định ✓ cho điền ô
+  trống, **không mặc định** cho ghi đè, buộc nhìn.
+- Câu trích AI dùng (khi có) đặt ngay dưới hàng, tô trong toàn văn.
+- Sắp hàng chờ: H5 (ghi đè, rủi ro cao) trước H4 (điền, rủi ro thấp).
+- Nút một phím: `A` áp các hàng đang ✓, `X` bỏ cả thẻ.
+
+**Mục tiêu**: H4 4–6 giây (đa số một trường, một phím), H5 8–12 giây.
+
+### e5. H7 — Luật và AI khác nhau (87 thẻ)
+
+**Màn hiện tại.**
+- Hai ô (Theo luật / Theo AI) rồi ba nút «Chọn luật / Chọn AI / Bỏ cả hai», rồi phải bấm «Áp dụng»: **2 bấm + lý do**.
+- Căn cứ luật đọc được ngay («từ khoá «chung cư» trong tên nhóm»). Căn cứ AI thì không.
+
+**Đề xuất.**
+- Chọn bên là quyết luôn: `1` luật, `2` AI, `3` bỏ cả hai. Không cần bấm «Áp dụng» thứ hai khi thẻ chỉ có trường xung đột.
+- Đặt đoạn bài mà AI dựa vào (ví dụ «Bán nhà … 6 tầng») cạnh căn cứ luật, để so hai câu thay vì một câu với một tên tệp.
+
+**Mục tiêu**: 6–10 giây/thẻ.
+
+### e6. H8 — Gộp Người (27 thẻ)
+
+**Số đo**: 12 thẻ «1 tài khoản · 2 SĐT», 11 thẻ «2 tài khoản · 1 SĐT», 4 thẻ lớn (3–7 tài khoản).
+
+Người thường quyết gộp hay tách dựa vào:
+- tên hai tài khoản có giống không;
+- SĐT có phải số tổng đài của một sàn không (một số, nhiều người, nhiều khu);
+- phong cách bài (chữ ký, mẫu bài) và khu vực rao có trùng không.
+
+Thẻ hiện chỉ có bảng tài khoản/SĐT + «Tin mẫu» dạng `offer_<băm>`. **Không có chữ bài, không có khu vực, không có liên
+kết** tới `/ops/people/[partyKey]`.
+
+**Đề xuất.**
+- Hai cột cạnh nhau, mỗi cột một tài khoản hoặc SĐT, cùng các hàng:
+  - tên, số tin;
+  - khu vực rao nhiều nhất;
+  - hai dòng đầu của 2 bài gần nhất;
+  - nhãn «Có thể là môi giới».
+- Tô chữ trùng giữa hai cột (tên, chữ ký cuối bài).
+- Thẻ lớn (3+ tài khoản) cho chọn từng hàng để gộp, không chỉ gộp hết hoặc tách hết.
+- Liên kết «Mở hồ sơ» cho từng người.
+
+**Mục tiêu**: 15–30 giây/thẻ.
+
+### e7. H9 — Ghép căn (7 thẻ, giá trị cao nhất)
+
+**Màn hiện tại** (#105729):
+- Bảng so 11 hàng lên trước; ảnh và toàn văn hai tin nằm dưới. Desktop dài 2,2 màn, mobile 4,6 màn.
+- Câu hỏi khó nhất (cùng căn?) cần nhìn ảnh và mô tả cùng lúc, mà hai thứ đó lại nằm xa nhau nhất.
+- Hàng «Lệch» do làm tròn (P1-2) và điểm Stage B trên tiêu đề (P1-1) đánh lạc hướng.
+
+**Đề xuất.**
+- Bố cục hai cột Tin A | Tin B: ảnh đầu tiên → 5 hàng chốt → hai dòng đầu bài. Hiện **chỉ hàng khác nhau** trước, hàng
+  khớp gập lại «8 hàng khớp».
+- Tín hiệu loại trừ đặt lên đầu thành Alert, khi có: «khác loại hình», «khác toà», «diện tích lệch >10%». Thẻ #105729 là
+  nhà tập thể so với chung cư, diện tích lệch 10,5%: người đọc một dòng là quyết «Khác căn».
+- Hàng chờ đặt **Ghép căn lên đầu** (ít thẻ, giá trị cao, tuổi 8 ngày).
+
+**Mục tiêu**: 30–45 giây/thẻ. Đây là hạng mục duy nhất đáng tốn thời gian đọc.
+
+### e8. Quyết theo căn cứ: một quyết định cho cả loạt
+
+Ba loạt thẻ có **cùng một căn cứ máy**:
+
+- 78 thẻ có cùng luật từ khoá tên nhóm «nhà phố → nhà riêng»;
+- 27 thẻ giá lệch đúng ×1000;
+- 123 thẻ cùng mẫu «tin rao ↔ cần mua».
+
+Duyệt từng thẻ trong các loạt này là bắt người làm lại một việc máy nên hỏi một lần: **luật này đúng không?**
+
+Đề xuất một loại thẻ mới, **«Thẻ luật»**:
+- Hiện căn cứ, số thẻ bị ảnh hưởng và 5 bài mẫu chọn ngẫu nhiên (có seed).
+- Người quyết luật:
+  - «Giữ luật»: các thẻ còn lại đi tiếp như đề xuất có căn cứ đã được người xác nhận;
+  - «Bỏ luật»: trả lại cả loạt, và luật E1 được sửa qua migration hoặc commit có tên.
+- Việc này khác «duyệt hàng loạt» (GD10, Mạnh đã loại): người không duyệt N thẻ mà sửa **một luật xác định** (luật 7
+  cho phép), có mẫu làm bằng chứng.
+
+Cần Mạnh xác nhận ranh giới này (câu hỏi Q6).
+
+### e9. Điều hướng: đi nhanh giữa các thẻ
+
+| Hiện nay | Đề xuất |
+|---|---|
+| Một bảng 651 dòng, hai bộ lọc thả xuống, mới nhất trước | **Hộp theo hạng mục**: cột trái liệt H1…H9, mỗi mục ghi số thẻ chờ, tuổi thẻ cũ nhất và giây/thẻ gần đây. Bấm một mục thì vào **chế độ duyệt** |
+| Sheet đè trên bảng, quyết xong vẫn đứng ở thẻ cũ | **Chế độ duyệt** toàn khung: một thẻ, tiến độ «12/133», tự sang thẻ kế (HD8), tải trước thẻ kế |
+| Không có đường dẫn tới thẻ | `/ops/review?the=<id>` và lọc theo hạng mục qua URL (slug phải thêm vào `CONTEXT.md`) |
+| Không phím tắt | `J`/`K` (hoặc `↓`/`↑`) đi tới và lùi, `1`–`4` chọn đáp án, `R` vào ô lý do, `⌘↵` gửi, `?` hiện bảng phím. Phím chữ chỉ chạy khi tiêu điểm không ở ô nhập |
+| Lý do gõ tay bắt buộc | Chip lý do soạn sẵn theo hạng mục (`Q`/`W`/`E`), nhãn đáp án là lý do mặc định. Ô tự do vẫn bắt buộc khi chọn «Cả hai sai» hay ghi đè |
+| Không hoàn tác; sai thì phải chờ UI12 | **Hoàn tác 5 giây**: toast «Đã ghi #123 · Hoàn tác». Lệnh gửi lùi 5 giây ở trình duyệt, nên không đổi API. Nhờ vậy bỏ được bước «nghĩ lại» trước khi bấm |
+| Không đo thời gian mỗi thẻ | Ghi `mo_luc` (lúc mở) và `quyet_luc` (lúc quyết) vào `ops_audit.detail`, để báo **giây/thẻ theo hạng mục** mỗi ngày (luật 11: đo trước khi dựng tiếp) |
+
+### e10. H10 — Gắn nhãn S03 (màn `/ops/labels`)
+
+**Số đo.**
+- Trung vị **220 giây/thẻ** (tứ phân vị 111–407 giây), tính trên 50 thẻ ngày 05–06/11, **có nháp điền sẵn**.
+- Biểu mẫu 24 ô, mỗi ô thêm 5 nút căn cứ và một ô «không suy ra được».
+- Tần suất bài có nêu từng trường, trên 50 nhãn:
+
+| Trường | Bài có nêu |
+|---|---:|
+| Ý định | 100% |
+| Dự án | 90% |
+| Phòng ngủ | 86% |
+| Toà | 66% |
+| Diện tích | 64% |
+| WC | 58% |
+| SĐT | 54% |
+| Trục | 32% |
+| Tên người bán | 30% |
+| Tầng | 16% |
+
+**Đề xuất.**
+- **Biểu mẫu co theo ý định.**
+  - «Không phải tin rao»: 1 ô rồi lưu (khoảng 10 giây).
+  - «Cần mua/thuê»: 8 ô.
+  - «Tin rao»: đủ ô.
+- **Xếp ô theo tần suất.** Các trường bài hiếm nêu (Tầng, Trục, Tên) gom vào «Thêm», mặc định gập. Chân dính tính
+  «đã điền» trên số ô đang hiện, không trên 24.
+- **Bôi để điền.** Bôi chữ trong bài rồi bấm ô (hoặc nhấn phím số của ô): ô nhận giá trị, căn cứ tự đặt «Chữ». Đây là
+  thao tác phổ biến nhất mà hôm nay phải gõ lại bằng tay.
+- `Tab` đi tới ô kế, phím số chọn đáp án trong nhóm nút, `⌘↵` lưu rồi sang bài kế. Ảnh bài phóng to được ở cột trái dính.
+
+**Mục tiêu**: 90 giây/thẻ cho tin rao, 10 giây cho bài không phải tin rao.
+
+### e11. Kịch bản: hàng tồn hôm nay mất bao lâu
+
+| Hạng mục | Thẻ | Hôm nay (52 giây/thẻ) | Sau đề xuất |
+|---|---:|---:|---:|
+| H6 trùng giá trị | 82 | 71′ | 0 (máy rút) |
+| H1–H3 đối chiếu | 239 | 3 giờ 27′ | 30 thẻ mẫu × 5 giây = 3′ mỗi tuần |
+| H4 điền ô trống | 141 | 2 giờ 2′ | 141 × 5 giây = 12′ |
+| H5 ghi đè | 155 | 2 giờ 14′ | 77 × 10 giây + 1 thẻ luật (78 thẻ) ≈ 14′ |
+| H8 Gộp Người | 27 | 23′ | 27 × 25 giây = 11′ |
+| H9 Ghép căn | 7 | 6′ | 7 × 40 giây = 5′ |
+| **Tổng** | **651** | **≈ 9 giờ 24′** | **≈ 45′** |
+
+H7 (xung đột) nằm trong H4/H5 nên không cộng riêng. Số «sau đề xuất» là mục tiêu để đo lại bằng `mo_luc`/`quyet_luc`,
+chưa phải số đo.
 
 ---
 
@@ -298,6 +623,12 @@ cắt trùng.
    ngày để bộ đọc mới (PL30, ba model) sinh lại?
 
 ---
+
+6. **«Thẻ luật» (e8):** quyết một lần cho cả loạt thẻ cùng một căn cứ luật E1 (ví dụ 78 thẻ «nhà phố» trong tên nhóm →
+   nhà riêng), có 5 bài mẫu. Mạnh có coi đây là sửa luật xác định (được phép theo luật 7), khác với duyệt hàng loạt đã
+   loại ở GD10, không?
+7. **Hoàn tác 5 giây** thay cho hỏi lại trước khi quyết: lệnh gửi lùi 5 giây ở trình duyệt, không đổi API. Đồng ý dùng
+   cho mọi hạng mục, kể cả Ghép căn?
 
 ## Phụ lục — câu đo (tái lập)
 
