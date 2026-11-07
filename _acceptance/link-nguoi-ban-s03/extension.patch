@@ -1,15 +1,15 @@
-diff --git a/extensions/S03-kenh-extension/src/seller-lookup.ts b/extensions/S03-kenh-extension/src/seller-lookup.ts
+diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
 index 000000000..7e00a1000
 --- /dev/null
-+++ b/extensions/S03-kenh-extension/src/seller-lookup.ts
++++ b/extensions/zalouser/src/seller-lookup.ts
 @@ -0,0 +1,408 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
 + * Luật cứng theo hợp đồng đã ký:
-+ * - CHỈ gọi API của bộ nghe tin đang nối (getConnectedS03-kenhApi) — không bao giờ
-+ *   qua withS03-kenhApi / login / loginQR / tạo client (AC-1, Out of scope).
++ * - CHỈ gọi API của bộ nghe tin đang nối (getConnectedS03Api, chỗ thế S03) —
++ *   không bao giờ qua withS03Api / login / loginQR / tạo client (AC-1).
 + * - Trần: mỗi lời ≤20 mã; hai lời cách nhau ≥60 giây (mốc LƯU ĐĨA, sống qua
 + *   khởi động lại listener); ≤30 lời/ngày; chỉ chạy khung 01:00–05:00 giờ VN;
 + *   một vòng hẹn giờ duy nhất dù listener khởi động lại (AC-1).
@@ -33,9 +33,9 @@ index 000000000..7e00a1000
 + */
 +
 +import * as fsp from "node:fs/promises";
-+import { getConnectedS03-kenhApi } from "./S03-kenh-js.js";
++import { getConnectedZaloApi } from "./zalo-js.js";
 +
-+// Kiểu API — import đúng đường S03-kenh-js đang dùng (bọc zca-js).
++// Kiểu API — import đúng đường module kênh S03 (bọc zca-js).
 +import type { API } from "./zca-client.js";
 +
 +export type LookupLoai = "co-username" | "khong-username" | "khong-ro" | "khong-tim-thay";
@@ -60,7 +60,7 @@ index 000000000..7e00a1000
 +  now: () => Date;
 +  fetchImpl: typeof fetch;
 +  collectorUrl: string; // API collector (AC-5); rỗng = chỉ spool
-+  layApi: () => API | undefined; // mặc định getConnectedS03-kenhApi() — test chèn API giả
++  layApi: () => API | undefined; // mặc định getConnectedZaloApi() — test chèn API giả
 +  treMs: (ms: number) => Promise<void>;
 +  docFile: (path: string) => Promise<string | null>;
 +  ghiFile: (path: string, data: string) => Promise<void>;
@@ -384,7 +384,7 @@ index 000000000..7e00a1000
 +    collectorUrl,
 +    now: () => new Date(),
 +    fetchImpl: fetch,
-+    layApi: () => getConnectedS03-kenhApi(),
++    layApi: () => getConnectedZaloApi(),
 +    treMs: (ms) => new Promise((r) => setTimeout(r, ms)),
 +    docFile: async (p) => {
 +      try {
@@ -412,16 +412,16 @@ index 000000000..7e00a1000
 +  }, 60_000);
 +  boTraTimer.unref?.();
 +}
-diff --git a/extensions/S03-kenh-extension/src/seller-lookup.test.ts b/extensions/S03-kenh-extension/src/seller-lookup.test.ts
+diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
 index 000000000..9064a799d
 --- /dev/null
-+++ b/extensions/S03-kenh-extension/src/seller-lookup.test.ts
++++ b/extensions/zalouser/src/seller-lookup.test.ts
 @@ -0,0 +1,366 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
-+// Không mock vớiS03-kenhApi bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
-+// API giả ở đây có đủ các hàm cấm (login/createS03-kenh/requestOldMessages…)
++// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
++// API giả ở đây có đủ các hàm cấm (login/createS03/requestOldMessages…)
 +// gắn spy để khẳng định không bao giờ được gọi.
 +
 +import { chayVong, phanLoai, trongKhung, boHauSo, TRAN, type LookupDeps } from "./seller-lookup.js";
@@ -471,9 +471,9 @@ index 000000000..9064a799d
 +  ketQuaThe: (mas: string[]) => unknown;
 +  login: ReturnType<typeof vi.fn>;
 +  loginQR: ReturnType<typeof vi.fn>;
-+  createS03-kenh: ReturnType<typeof vi.fn>;
++  createZalo: ReturnType<typeof vi.fn>;
 +  requestOldMessages: ReturnType<typeof vi.fn>;
-+  sendS03-kenhTextMessage: ReturnType<typeof vi.fn>;
++  sendZaloTextMessage: ReturnType<typeof vi.fn>;
 +};
 +
 +function taoApiGia(): ApiGia {
@@ -502,9 +502,9 @@ index 000000000..9064a799d
 +    }),
 +    login: vi.fn(),
 +    loginQR: vi.fn(),
-+    createS03-kenh: vi.fn(),
++    createZalo: vi.fn(),
 +    requestOldMessages: vi.fn(),
-+    sendS03-kenhTextMessage: vi.fn(),
++    sendZaloTextMessage: vi.fn(),
 +  };
 +}
 +
@@ -545,9 +545,9 @@ index 000000000..9064a799d
 +    },
 +    login: apiGia.login,
 +    loginQR: apiGia.loginQR,
-+    createS03-kenh: apiGia.createS03-kenh,
++    createZalo: apiGia.createZalo,
 +    requestOldMessages: apiGia.requestOldMessages,
-+    sendS03-kenhTextMessage: apiGia.sendS03-kenhTextMessage,
++    sendZaloTextMessage: apiGia.sendZaloTextMessage,
 +  };
 +}
 +
@@ -614,7 +614,7 @@ index 000000000..9064a799d
 +    expect(v.chan).toBe("khong-co-phien");
 +    expect(api.dem.getUserInfo).toBe(0);
 +    expect(api.login).not.toHaveBeenCalled();
-+    expect(api.createS03-kenh).not.toHaveBeenCalled();
++    expect(api.createZalo).not.toHaveBeenCalled();
 +  });
 +
 +  it("lượt thử: đúng 1 lời ≤20 mã + dấu đã-thu; chạy lại 0 lời; tệp đổi tên đã-xử", async () => {
@@ -758,9 +758,9 @@ index 000000000..9064a799d
 +    expect(api.dem.getUserInfo).toBe(1);
 +    expect(api.login).not.toHaveBeenCalled();
 +    expect(api.loginQR).not.toHaveBeenCalled();
-+    expect(api.createS03-kenh).not.toHaveBeenCalled();
++    expect(api.createZalo).not.toHaveBeenCalled();
 +    expect(api.requestOldMessages).not.toHaveBeenCalled();
-+    expect(api.sendS03-kenhTextMessage).not.toHaveBeenCalled();
++    expect(api.sendZaloTextMessage).not.toHaveBeenCalled();
 +  });
 +
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {

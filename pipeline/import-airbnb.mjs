@@ -100,7 +100,12 @@ export function isTestSnapshot(name) {
 
 // 0611-6 mốc 4b: bảng stg hồ sơ (migration 080 của làn Claude, chưa có trên
 // nhánh này) — tên mặc định stg_s03_ho_so; 080 đặt tên khác thì sửa hằng này.
-const STG_HO_SO = "stg_s03_ho_so";
+// link-nguoi-ban-s03 E6 (0711-20): export để db-nap đọc tên bảng/nguồn từ hằng
+// của bộ nạp — không viết tay chuỗi ở script chấm. (Tên bảng/nguồn TIN mang
+// tên kênh thật nên KHÔNG thành hằng ở đây — db-nap đọc từ env hay ánh xạ
+// ALLOWLIST của tệp này lúc chạy, kho không giữ chuỗi mới.)
+export const STG_HO_SO = "stg_s03_ho_so";
+export const NGUON_HO_SO_S03 = "s03-ho-so"; // nguồn hồ sơ kênh S03 trong ALLOWLIST
 let hoSoDaChua080 = false; // chỉ in CHUA-AP-080 một lần mỗi lượt nạp
 
 async function coBangHoSo(client) {
