@@ -3,13 +3,13 @@ schema_version: 1
 slug: danh-ba-phuong-xa-toan-quoc
 feature: "Mọi tin trên 34 tỉnh/thành gắn được tới xã/phường hiện hành: danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê, tên xã cũ đọc ra xã mới, ranh giới khớp vào mã"
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build
+decided_by: Mạnh
+decided_at: 2026-11-07T23:18:38Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
-  disposition:     # keep | archive
+  disposition: archive
 lo_trinh_ma: PX1
 lo_trinh_tep: docs/plan/lo-trinh.json
 ---
@@ -35,10 +35,10 @@ Vì sao: Mạnh 08/11 «Đồng ý»: hiện chỉ có 511 phường ở 4 thàn
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] Sau khi nạp, mỗi tỉnh trong 34 tỉnh có đủ xã/phường hiện hành mang mã 5 số chưa, và tin đọc được tên xã (mới hoặc cũ) có gắn tới xã không?
-- Kết quả nào là SỐNG: [đề xuất] `areas` có đúng 3.321 khu vực con mang mã 5 số, mỗi khu vực nằm dưới đúng thị trường của mã tỉnh; 10.033 tên xã cũ thành bí danh; 441 xã cũ bị tách trả «cần chọn xã», không đoán; tỉ lệ tin gắn được xã đo trước/sau theo tỉnh: không tỉnh nào giảm, tin đang chỉ gắn tỉnh mà bài nêu tên xã cũ được gắn xuống xã; chạy lại bộ nạp lần hai không đổi dòng nào; 511 khu vực con cũ giữ nguyên `id`.
-- Kết quả nào là CHẾT: [đề xuất] thiếu hoặc thừa đơn vị so với 3.321; một khu vực gắn sai tỉnh; tỉnh nào mất tin đang có xã; bộ nạp đoán xã cho tên cũ bị tách; chạy lại đổi dữ liệu; `id` khu vực cũ bị đổi.
-- Timebox: [đề xuất] hai ngày máy (S1 tới S4 hai lượt chấm), không tính thời gian chờ chữ ký.
+- Câu hỏi phép đo trả lời: Sau khi nạp, mỗi tỉnh trong 34 tỉnh có đủ xã/phường hiện hành mang mã 5 số chưa, và tin đọc được tên xã (mới hoặc cũ) có gắn tới xã không?
+- Kết quả nào là SỐNG: `areas` có đúng 3.321 khu vực con mang mã 5 số, mỗi khu vực nằm dưới đúng thị trường của mã tỉnh; 10.033 tên xã cũ thành bí danh; 441 xã cũ bị tách trả «cần chọn xã», không đoán; tỉ lệ tin gắn được xã đo trước/sau theo tỉnh: không tỉnh nào giảm, tin đang chỉ gắn tỉnh mà bài nêu tên xã cũ được gắn xuống xã; chạy lại bộ nạp lần hai không đổi dòng nào; 511 khu vực con cũ giữ nguyên `id`.
+- Kết quả nào là CHẾT: thiếu hoặc thừa đơn vị so với 3.321; một khu vực gắn sai tỉnh; tỉnh nào mất tin đang có xã; bộ nạp đoán xã cho tên cũ bị tách; chạy lại đổi dữ liệu; `id` khu vực cũ bị đổi.
+- Timebox: hai ngày máy (S1 tới S4 hai lượt chấm), không tính thời gian chờ chữ ký.
 
 ## Kết quả prototype
 
@@ -54,7 +54,7 @@ Không dựng prototype: việc là nạp danh bạ có nguồn chính thức, �
 
 ## Cổng 0
 
-- **decision = [đề xuất] build** Căn cứ: Mạnh 08/11 «Đồng ý» (ROADMAP §3 mục 34–37); 30 tỉnh hiện không có xã nào nên thước phường × loại, Căn giá tốt, TV11 trống ở đó.
+- **decision = build** (Mạnh gõ «build» ở phiên N1 08/11; ngưỡng theo đề xuất) Căn cứ: Mạnh 08/11 «Đồng ý» (ROADMAP §3 mục 34–37); 30 tỉnh hiện không có xã nào nên thước phường × loại, Căn giá tốt, TV11 trống ở đó.
 - **disposition = archive** Căn cứ: không có code prototype.
 - **Ngưỡng UAT chốt cùng lúc ký:** như mục Ngưỡng ở trên.
 
