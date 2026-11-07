@@ -179,7 +179,18 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
     `SELECT DISTINCT ON (pid) pid, r.* FROM sale_offer_records r, unnest(r.post_ids) pid
       WHERE r.source = 'S03' AND pid = ANY ($1) ORDER BY pid, (r.retired_at IS NULL) DESC, r.offer_id`, [pids]);
   const th = tinHieu(sl, daBiet, new Map(tinSl.map((r) => [r.pid, oBoDocLuat(r)])), { dotBien });
-  ra.push({ check_name: "do1-tin-hieu", entity: "S03", status: th.cach_doc.some((x) => x.status === "pass") ? "pass" : "skip", detail: { ngay, ...th } });
+  // Lát của tín hiệu: khu vực của tin mà bài thành (bài không thành tin → không nêu chỗ).
+  const { rows: kv } = await client.query(
+    `SELECT a.id, CASE WHEN a.region_type = 'submarket' THEN a.id END AS ward_id,
+            CASE WHEN a.region_type = 'market' THEN a.id ELSE a.parent_id END AS market_id
+       FROM areas a WHERE a.id = ANY ($1)`, [[...new Set(tinSl.map((r) => r.area_id).filter(Boolean))]]);
+  const kvCua = new Map(kv.map((r) => [r.id, r]));
+  const viTri = new Map(tinSl.map((r) => [r.pid, kvCua.get(r.area_id) ?? {}]));
+  const latSl = {
+    thi_truong: phanRa(sl, (r) => viTri.get(r.post_id)?.market_id ?? { chua: "khong-tin-hieu" }),
+    phuong: phanRa(sl, (r) => viTri.get(r.post_id)?.ward_id ?? { chua: "khong-tin-hieu" }),
+  };
+  ra.push({ check_name: "do1-tin-hieu", entity: "S03", status: th.cach_doc.some((x) => x.status === "pass") ? "pass" : "skip", detail: { ngay, ...th, lat: latSl } });
   // Khoá đọc gộp mới chưa có dòng so cặp (AC-10): ghi skip «chưa so cặp» một lần.
   const gopTheoDau = bietRows.filter((r) => String(r.prompt_version).startsWith("dg")).sort((a, b2) => a.dau - b2.dau).map(khoaSilver);
   for (const k of [...new Set(gopTheoDau)].slice(1)) {
