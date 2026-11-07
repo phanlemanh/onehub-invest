@@ -21,6 +21,11 @@ export const VOCAB = {
   change_type: ["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"],
   data_level: ["B0", "B1", "B2", "B3", "B4", "B5"],
   capability_level: ["N0", "N1", "N2", "N3", "N4"],
+  furnished: ["furnished", "partially", "unfurnished", "negotiable"],
+  direction_faces: ["east", "west", "south", "north", "northeast", "southeast", "northwest", "southwest"],
+  view: ["city", "lake", "river", "park_greenbelt", "garden", "pool", "panoramic", "other"],
+  rent_includes: ["management", "electricity", "water", "internet", "none", "other"],
+  price_basis: ["net", "gom_phi", "chua_gom_phi"],
 } as const;
 
 export type VocabAxis = keyof typeof VOCAB;
@@ -43,6 +48,11 @@ export type OfferStatus = (typeof VOCAB.offer_status)[number];
 export type ChangeType = (typeof VOCAB.change_type)[number];
 export type DataLevel = (typeof VOCAB.data_level)[number];
 export type CapabilityLevel = (typeof VOCAB.capability_level)[number];
+export type Furnished = (typeof VOCAB.furnished)[number];
+export type DirectionFaces = (typeof VOCAB.direction_faces)[number];
+export type View = (typeof VOCAB.view)[number];
+export type RentIncludes = (typeof VOCAB.rent_includes)[number];
+export type PriceBasis = (typeof VOCAB.price_basis)[number];
 
 export const KIND = { sale: "sale", rent_lt: "rent_lt" } as const;
 export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "land", room: "room", commercial: "commercial", unknown: "unknown" } as const;
@@ -63,6 +73,11 @@ export const OFFER_STATUS = { active: "active", active_under_contract: "active_u
 export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" } as const;
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
+export const FURNISHED = { furnished: "furnished", partially: "partially", unfurnished: "unfurnished", negotiable: "negotiable" } as const;
+export const DIRECTION_FACES = { east: "east", west: "west", south: "south", north: "north", northeast: "northeast", southeast: "southeast", northwest: "northwest", southwest: "southwest" } as const;
+export const VIEW = { city: "city", lake: "lake", river: "river", park_greenbelt: "park_greenbelt", garden: "garden", pool: "pool", panoramic: "panoramic", other: "other" } as const;
+export const RENT_INCLUDES = { management: "management", electricity: "electricity", water: "water", internet: "internet", none: "none", other: "other" } as const;
+export const PRICE_BASIS = { net: "net", gom_phi: "gom_phi", chua_gom_phi: "chua_gom_phi" } as const;
 
 export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
 

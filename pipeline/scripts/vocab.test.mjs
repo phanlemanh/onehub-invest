@@ -16,6 +16,7 @@ const AXES = [
   "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
   "registry_status", "alias_kind", "registry_event_kind", "party_role", "contact_kind", "contact_rule",
   "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
+  "furnished", "direction_faces", "view", "rent_includes", "price_basis",
 ];
 
 // Ma trận nhãn viết trước (71 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
@@ -62,6 +63,17 @@ const NHAN = [
   ["data_level", "B3", "Đã đo"], ["data_level", "B4", "Xác minh"], ["data_level", "B5", "Sống"],
   ["capability_level", "N0", "Thu được"], ["capability_level", "N1", "Đọc được"], ["capability_level", "N2", "Đo được"],
   ["capability_level", "N3", "Tự động ở ngưỡng"], ["capability_level", "N4", "Tự duy trì"],
+  // truong-nhan-s03-081 (GN1): năm trục nhãn mới, nhãn theo thiết kế đã duyệt 07/11.
+  ["furnished", "furnished", "Đủ nội thất"], ["furnished", "partially", "Nội thất cơ bản"],
+  ["furnished", "unfurnished", "Nhà trống"], ["furnished", "negotiable", "Thoả thuận"],
+  ["direction_faces", "east", "Đông"], ["direction_faces", "west", "Tây"], ["direction_faces", "south", "Nam"],
+  ["direction_faces", "north", "Bắc"], ["direction_faces", "northeast", "Đông Bắc"], ["direction_faces", "southeast", "Đông Nam"],
+  ["direction_faces", "northwest", "Tây Bắc"], ["direction_faces", "southwest", "Tây Nam"],
+  ["view", "city", "Thành phố"], ["view", "lake", "Hồ"], ["view", "river", "Sông"], ["view", "park_greenbelt", "Công viên"],
+  ["view", "garden", "Vườn, nội khu"], ["view", "pool", "Bể bơi"], ["view", "panoramic", "Toàn cảnh"], ["view", "other", "Khác"],
+  ["rent_includes", "management", "Phí quản lý"], ["rent_includes", "electricity", "Điện"], ["rent_includes", "water", "Nước"],
+  ["rent_includes", "internet", "Internet"], ["rent_includes", "none", "Không gồm gì"], ["rent_includes", "other", "Khác"],
+  ["price_basis", "net", "Thu về (NET)"], ["price_basis", "gom_phi", "Đã gồm phí"], ["price_basis", "chua_gom_phi", "Chưa gồm phí"],
 ];
 
 /** Nạp sổ thật, đột biến khối enums bằng `fn`, trả lại chuỗi YAML. */
@@ -71,11 +83,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 19 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 24 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 83); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc
+  assert.equal(NHAN.length, 112); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; truong-nhan-s03-081 +29 mã nhãn
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
@@ -254,4 +266,71 @@ test("VB-AC-9 --check-field-targets: khớp 0 · tên ngoài sổ 1 · tệp v�
     assert.match(re.stderr, /không nhận khuôn/);
   }
   assert.equal(bamCay(join(ROOT, "collector")), truoc, "lệnh đã ghi vào collector/");
+});
+
+// ---- truong-nhan-s03-081 AC-8: năm trục nhãn mới tra RESO DD 2.1 ----
+// Danh sách lookup chép từ research-local/reso/dd-2.1.json (bản ghim 23/10): Furnished 4, View 38, RentIncludes 13.
+const DD21 = {
+  Furnished: ["Furnished", "Negotiable", "Partially", "Unfurnished"],
+  View: ["Bay", "Beach", "Bridges", "Canal", "Canyon", "City", "CityLights", "CreekStream", "Desert", "Downtown", "Forest", "Garden",
+    "GolfCourse", "Hills", "Lake", "Marina", "Meadow", "Mountains", "Neighborhood", "None", "Ocean", "Orchard", "Other", "Panoramic",
+    "ParkGreenbelt", "Pasture", "Pond", "Pool", "Ridge", "River", "Rural", "SeeRemarks", "Skyline", "Territorial", "TreesWoods", "Valley",
+    "Vineyard", "Water"],
+  RentIncludes: ["AllUtilities", "CableTv", "Electricity", "Gardener", "Gas", "Internet", "Management", "None", "Other", "SeeRemarks",
+    "Sewer", "TrashCollection", "Water"],
+};
+const DIRECTION_FACES = ["East", "North", "Northeast", "Northwest", "South", "Southeast", "Southwest", "West"];
+const TRUC_RESO = { furnished: "Furnished", view: "View", rent_includes: "RentIncludes" };
+
+/** Nhánh Hỏi-2 người chọn ở Cổng Phạm vi: dòng sổ gate1 mới nhất mang «Hỏi-2». */
+function nhanhHuong() {
+  const so = readFileSync(join(PIPE, "..", "_acceptance", "truong-nhan-s03-081", "decisions.jsonl"), "utf8").trim().split("\n")
+    .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
+    .filter((d) => d.stage === "gate1" && /^Hỏi-2:/.test(d.decision ?? ""));
+  const d = so.at(-1)?.decision ?? "";
+  return /ban công/.test(d) ? "ban-cong" : "cua";
+}
+
+/** Lỗi của năm trục theo AC-8; mảng rỗng là đạt. */
+function kiemTrucNhan(doc, nhanh) {
+  const loi = [];
+  const e = doc.enums ?? {};
+  for (const [truc, dd] of Object.entries(TRUC_RESO)) {
+    const a = e[truc];
+    if (!a || a.dd_field !== dd) { loi.push(`DD FIELD SAI ${truc}`); continue; }
+    for (const v of a.values ?? []) if (!DD21[dd].includes(v.dd_lookup)) loi.push(`DD LOOKUP KHONG CO TRONG RESO ${truc}.${v.code}`);
+  }
+  const pb = e.price_basis;
+  if (!pb || pb.local !== true || pb.dd_field !== null || !pb.rationale || !pb.checked_on || pb.alias !== "ListingAgreement.Net")
+    loi.push("PRICE BASIS THIEU DIEU KIEN EXTENSION");
+  const h = e.direction_faces;
+  if (nhanh === "ban-cong") {
+    if (h?.dd_field) loi.push("HUONG LECH NGHIA RESO");
+    if (!(h?.local === true && h.rationale && h.checked_on && h.alias === "DirectionFaces")) loi.push("HUONG THIEU DIEU KIEN EXTENSION");
+  } else if (h?.dd_field !== "DirectionFaces") loi.push("HUONG PHAI LA DirectionFaces");
+  const maHuong = (h?.values ?? []).map((v) => v.code).sort();
+  const maRESO = DIRECTION_FACES.map((x) => x.toLowerCase()).sort();
+  if (JSON.stringify(maHuong) !== JSON.stringify(maRESO)) loi.push("HUONG KHONG DUNG TAM MA");
+  return loi;
+}
+
+test("TN081-AC-8 năm trục nhãn mới khớp RESO DD 2.1 và nhánh Hỏi-2", () => {
+  assert.equal(DD21.Furnished.length, 4);
+  assert.equal(DD21.View.length, 38);
+  assert.equal(DD21.RentIncludes.length, 13);
+  const doc = YAML.parse(SO_THAT);
+  const nhanh = nhanhHuong();
+  assert.equal(nhanh, "ban-cong", "Hỏi-2 của GN1 chọn hướng ban công cho căn hộ");
+  assert.deepEqual(kiemTrucNhan(doc, nhanh), []);
+  validateRegister(loadRegister(SO_THAT));
+  // Chiều đỏ trên cùng sổ.
+  const sai = structuredClone(doc);
+  sai.enums.view.values[0].dd_lookup = "Seaview";
+  assert.ok(kiemTrucNhan(sai, nhanh).some((m) => m.startsWith("DD LOOKUP KHONG CO TRONG RESO")), "DD LOOKUP KHONG CO TRONG RESO");
+  const lech = structuredClone(doc);
+  lech.enums.direction_faces.dd_field = "DirectionFaces";
+  assert.ok(kiemTrucNhan(lech, "ban-cong").includes("HUONG LECH NGHIA RESO"), "HUONG LECH NGHIA RESO");
+  const thieu = structuredClone(doc);
+  delete thieu.enums.price_basis.alias;
+  assert.ok(kiemTrucNhan(thieu, nhanh).includes("PRICE BASIS THIEU DIEU KIEN EXTENSION"), "PRICE BASIS THIEU DIEU KIEN EXTENSION");
 });

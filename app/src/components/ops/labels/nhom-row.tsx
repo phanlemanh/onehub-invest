@@ -24,8 +24,10 @@ export function NhomRow({ d, o, loi, onChange }: { d: FieldDef; o: O; loi?: stri
         {d.options ? (
           <ToggleGroup
             id={`nhan-${d.id}`}
-            value={o.value ? [o.value] : []}
-            onValueChange={(v: string[]) => onChange({ value: v[0] ?? "" })}
+            multiple={d.kind === "chon-nhieu"}
+            value={o.value ? o.value.split(",") : []}
+            // Chọn nhiều lưu mã nối dấu phẩy; chuẩn hoá sắp xếp, bỏ trùng ở labels-normalize.
+            onValueChange={(v: string[]) => onChange({ value: d.kind === "chon-nhieu" ? v.join(",") : (v[0] ?? "") })}
             variant="outline"
             size="sm"
             spacing={1}

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
 import { chuanHoaLuot, type RawLabels } from "@/lib/labels-normalize"
 import { baiDeGhi, ghiNhan, nhomCuaLat, tienDo, tinKe } from "@/lib/labels-queries"
+import { kiemDanhMuc } from "@/lib/labels-s08"
 import { kiemQuyen, xemNoiDungTin } from "@/lib/ops-access"
 
 export const dynamic = "force-dynamic"
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic"
  * /api/v1/ops/labels — gắn nhãn đánh giá (PL7 `man-gan-nhan-mu`). Quyền `label.write` (vai ops, không bearer).
  * GET ?lat=<lát>[&nhom=<mã>] → tin kế của người gọi + tiến độ + các nhóm (chỉ chữ gốc của tin — mù giá trị máy, AC-4).
  * POST { lat, item_id, values, reason } → chuẩn hoá + ghi trong một giao dịch: 400 nêu trường sai, 409 khi tin đã đủ người
- * gắn, 200 khi ghi xong. Bài có `stratum` đi luật 17 trường (GC0), lát đời trước chín trường.
+ * gắn, 200 khi ghi xong. Bài có `stratum` đi luật 24 trường (GC0 + GN1), lát đời trước chín trường; ô căn cứ «Danh mục CĐT»
+ * phải khớp danh mục S08 (labels-s08.ts).
  * Bảng chỉ ở máy thu: trên cloud (VERCEL=1) trả 503 «Chỉ ở máy thu».
  */
 const LAT_RE = /^[a-z0-9-]+$/
@@ -54,6 +56,9 @@ export async function POST(req: Request) {
   const bai = await baiDeGhi(itemId)
   const chuan = chuanHoaLuot(body?.values as RawLabels, bai?.stratum ? { text: bai.text, reason: body?.reason } : undefined)
   if (!chuan.ok) return NextResponse.json({ error: "Có trường sai", loi: chuan.loi }, { status: 400 })
+  // Căn cứ «Danh mục CĐT» chỉ nhận giá trị có trong S08 (truong-nhan-s03-081 AC-4).
+  const loiCdt = await kiemDanhMuc(chuan.rows)
+  if (Object.keys(loiCdt).length > 0) return NextResponse.json({ error: "Có trường sai", loi: loiCdt }, { status: 400 })
   const c = await pool.connect()
   try {
     const kq = await ghiNhan(c, q.nguoi!.id, lat, itemId, chuan.rows, chuan.reason)

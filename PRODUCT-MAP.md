@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>149 việc"]
+  GB --> DG["Đã giao<br/>150 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>101 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -288,6 +288,7 @@ flowchart TD
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
 - Nhà đầu tư tìm được tin rao kèm người bán và SĐT trên cổng Invest — tên, SĐT lên cloud, API Listing theo loại, trang Bán và Cho thuê với thẻ chung (`tin-rao-tren-invest`)
 - Nhà đầu tư mở được một tin bán, tin thuê dài hạn của mọi nguồn trên cổng Invest để xem đủ thông số và liên hệ người đăng (`trang-chi-tiet-tin`)
+- Màn gắn nhãn theo nhóm thêm bảy trường (nội thất, hướng, view, ngày vào ở, phí đã gồm, cơ sở giá, mã căn) và căn cứ «Danh mục CĐT», migration 081 (`truong-nhan-s03-081`)
 - hai ca test bước chụp (UC-TA-5, UC-BR) hết đỏ chập chờn khi bộ test scripts/ chạy song song (`uc-ta-5-tmp-rieng`)
 - Bộ chuẩn UI/UX ReUI — đợt B1 (dọn cổng Ops tới khi không còn UI tự vẽ tay) (`ui-clean-b1-ops`)
 - Chuẩn UI ReUI — đợt B3 thống nhất biểu đồ (bảng màu chuỗi chung, gom code chép trùng, tách file > 200 dòng) (`ui-clean-b3-charts`)
