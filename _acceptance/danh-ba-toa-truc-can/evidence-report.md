@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 20e3a7736a8f833f3aadd235cdc66549d2653fdd
+verified_commit: 8229a5588f5f6a51ef274aa4ae7d7bb7c05568b4
 human_signoff: Mạnh 2026-11-07
 ---
 
@@ -207,3 +207,7 @@ Round 1: các eval AC-1…AC-12 dựng lần đầu; bộ suite app và pipeline
 Round 2: suite pipeline còn đỏ; E2 xanh lại. Trả về triển khai.
 Round 3: E3, E4, E9 xanh lại; toàn bộ suite xanh.
 Round 4: E7 và E11b chạy lại sau khi định nghĩa «tên chỉ S08» đổi (Mạnh chọn lối 2); toàn bộ suite xanh; các eval còn lại mang từ vòng trước. Còn mục judgment E12 chờ người.
+
+### Re-pin lần 1 — 2026-11-07, do gộp main (#346) sau chữ ký
+run_id: repin-20261107T042925Z-45263
+sha: 8229a5588f5f6a51ef274aa4ae7d7bb7c05568b4 · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths)
