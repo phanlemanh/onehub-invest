@@ -23,6 +23,7 @@ import { type DealHang, loaiHinh, tabCua, type TabDeal, soPct } from "@/lib/deal
 import { fmtCompact, fmtInt, fmtVnDate } from "@/lib/format"
 
 import { DiscountBar, DealThumb } from "./deals-cells"
+import { DealChoGhep } from "./deal-cho-ghep"
 import { DealSheet } from "./deal-sheet"
 
 /**
@@ -38,7 +39,10 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "thieu", label: "Còn thiếu" },
 ]
 
-const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
+/** Hàng của lưới: căn kèm thẻ Ghép căn còn chờ (OD1 · ĐC7). */
+type DealHangGhep = DealHang & { choGhep?: number[] }
+
+const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
   {
     id: "can",
     accessorFn: (d) => d.ten,
@@ -52,6 +56,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHang>[] = [
             <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại hình", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
           </Button>
           <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong].filter(Boolean).join(" · ")}</span>
+          <div className="ps-2"><DealChoGhep ids={d.choGhep} /></div>
         </div>
       </div>
     ),
@@ -165,7 +170,16 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 }
 
 /** `rows` đến theo thứ tự của dealsSql (căn cần xác minh đứng cuối, ON11); người bấm tiêu đề cột mới đổi thứ tự. */
-export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu }: { rows: DealHang[]; moBanDau?: string | null; locBanDau?: FilterQuery; xemNoiDung: boolean; mayThu: boolean }) {
+export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = {} }: {
+  rows: DealHang[]
+  moBanDau?: string | null
+  locBanDau?: FilterQuery
+  xemNoiDung: boolean
+  mayThu: boolean
+  /** offerId → thẻ Ghép căn còn chờ (OD1 · ĐC7); vắng ở cloud. */
+  choGhep?: Record<string, number[]>
+}) {
+  const rows = useMemo<DealHangGhep[]>(() => tho.map((d) => (choGhep[d.offerId] ? { ...d, choGhep: choGhep[d.offerId] } : d)), [tho, choGhep])
   const [tab, setTab] = useState<Tab>("all")
   const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   // Nút Back khôi phục trang từ bộ đệm router, prop là của lần tải đầu; `datMo` chỉ đổi URL, nên URL mới biết căn đang xem.
@@ -280,7 +294,7 @@ export function DealsGrid({ rows, moBanDau = null, locBanDau, xemNoiDung, mayThu
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <DealSheet d={mo} rows={rows} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
+      <DealSheet d={mo} rows={rows} choGhep={mo?.choGhep} xemNoiDung={xemNoiDung} mayThu={mayThu} viTri={viTri} tong={thuTu.length} onChuyen={chuyen} onMoCan={moCan} onOpenChange={(o) => !o && datMo(null)} />
     </>
   )
 }

@@ -5,10 +5,8 @@ import { ChevronLeftIcon, ChevronRightIcon, ImageOffIcon } from "lucide-react";
 
 import {
   Attachment,
-  AttachmentContent,
   AttachmentGroup,
   AttachmentMedia,
-  AttachmentTitle,
   AttachmentTrigger,
 } from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
@@ -26,7 +24,8 @@ import type { ReviewImage } from "@/lib/ops/review-media";
  * Dải ảnh tin trên thẻ hàng duyệt (chuyển thể @reui/c-attachment-3) + hộp phóng to.
  * `images` từ loadReviewMedia: ảnh đã tải về máy thu và ảnh máy chủ lấy hộ theo khoá (anh-goc-qua-may-chu) — không có
  * URL gốc; undefined thì không render gì. `chiGoc` = số ảnh chỉ có ở nguồn mà máy chủ chưa lấy hộ được — thẻ nói ra.
- * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
+ * Ảnh tải lỗi (URL gốc fbcdn/zdn có hạn) rời dải, gom thành MỘT dòng «n ảnh không còn tải được» (OD1 · ĐC2, P1-5) — không ô
+ * vỡ chiếm chỗ; hộp phóng to chỉ duyệt ảnh còn tải được.
  */
 export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
   label: string;
@@ -46,60 +45,60 @@ export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
   if (images.length === 0) {
     return giu ?? <p className="text-muted-foreground text-xs">{label}: không có ảnh</p>;
   }
-  const markBroken = (i: number) => setBroken((s) => new Set(s).add(i));
+  // Chỉ số (trong `images`) của ảnh còn tải được — dải và hộp phóng to đi trên danh sách này.
+  const tot = images.flatMap((_, i) => (broken.has(i) ? [] : [i]));
+  const markBroken = (i: number) => {
+    setBroken((s) => new Set(s).add(i));
+    // Ảnh đang phóng to vừa lỗi: sang ảnh tốt kế (hay trước), hết ảnh tốt thì đóng hộp.
+    if (open === i) {
+      const con = tot.filter((j) => j !== i);
+      setOpen(con.find((j) => j > i) ?? con.at(-1) ?? null);
+    }
+  };
+  const viTri = open === null ? -1 : tot.indexOf(open);
+  const hong = broken.size > 0 ? (
+    <p className="text-muted-foreground flex items-center gap-1.5 text-xs" data-review-photos-hong={broken.size}>
+      <ImageOffIcon aria-hidden className="size-3.5" />
+      {label}: {broken.size} ảnh không còn tải được
+    </p>
+  ) : null;
 
   return (
     <>
-      {lon ? (
+      {tot.length === 0 ? null : lon ? (
         <div role="group" aria-label={`Ảnh ${label}`} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {images.map((img, i) => (
+          {tot.map((i) => (
             // eslint-disable-next-line onehub-ui/no-raw-controls -- ô ảnh lấp đầy lưới theo tỉ lệ ảnh; Button không có size này và ReUI cấm đặt height, padding lên nó
             <button
-              key={img.src}
+              key={images[i].src}
               type="button"
               aria-label={`Phóng to ${label} ảnh ${i + 1}`}
               onClick={() => setOpen(i)}
               className="bg-muted text-muted-foreground flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md text-xs"
             >
-              {broken.has(i) ? "Ảnh hỏng" : (
-                <PhotoImg img={img} alt={`${label} — ảnh ${i + 1}`} className="size-full object-cover" onError={() => markBroken(i)} />
-              )}
+              <PhotoImg img={images[i]} alt={`${label} — ảnh ${i + 1}`} className="size-full object-cover" onError={() => markBroken(i)} />
             </button>
           ))}
         </div>
       ) : (
       <AttachmentGroup role="group" aria-label={`Ảnh ${label}`}>
-        {images.map((img, i) => (
-          <Attachment
-            key={img.src}
-            orientation="vertical"
-            state={broken.has(i) ? "error" : "done"}
-          >
-            {broken.has(i) ? (
-              <>
-                <AttachmentMedia>
-                  <ImageOffIcon aria-hidden />
-                </AttachmentMedia>
-                <AttachmentContent>
-                  <AttachmentTitle>Ảnh hỏng</AttachmentTitle>
-                </AttachmentContent>
-              </>
-            ) : (
-              <AttachmentMedia variant="image">
-                <PhotoImg img={img} alt={`${label} — ảnh ${i + 1}`} size={96} onError={() => markBroken(i)} />
-              </AttachmentMedia>
-            )}
+        {tot.map((i) => (
+          <Attachment key={images[i].src} orientation="vertical" state="done">
+            <AttachmentMedia variant="image">
+              <PhotoImg img={images[i]} alt={`${label} — ảnh ${i + 1}`} size={96} onError={() => markBroken(i)} />
+            </AttachmentMedia>
             <AttachmentTrigger aria-label={`Phóng to ${label} ảnh ${i + 1}`} onClick={() => setOpen(i)} />
           </Attachment>
         ))}
       </AttachmentGroup>
       )}
-      <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
-        {open !== null && (
+      {hong}
+      <Dialog open={open !== null && viTri >= 0} onOpenChange={(o) => !o && setOpen(null)}>
+        {open !== null && viTri >= 0 && (
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>
-                {label} · ảnh {open + 1}/{images.length}
+                {label} · ảnh {viTri + 1}/{tot.length}
               </DialogTitle>
               <DialogDescription>
                 {images[open].origin === "local"
@@ -110,25 +109,18 @@ export function ReviewPhotos({ label, images, chiGoc = 0, lon = false }: {
                 {images[open].expiring ? " — URL có hạn, có thể đã hết." : "."}
               </DialogDescription>
             </DialogHeader>
-            {broken.has(open) ? (
-              <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                <ImageOffIcon aria-hidden className="size-4" />
-                Ảnh không tải được — URL gốc có thể đã hết hạn.
-              </p>
-            ) : (
-              <PhotoImg
-                img={images[open]}
-                alt={`${label} — ảnh ${open + 1}`}
-                className="max-h-[70vh] w-full object-contain"
-                onError={() => markBroken(open)}
-              />
-            )}
+            <PhotoImg
+              img={images[open]}
+              alt={`${label} — ảnh ${open + 1}`}
+              className="max-h-[70vh] w-full object-contain"
+              onError={() => markBroken(open)}
+            />
             <DialogFooter>
-              <Button variant="outline" size="sm" disabled={open === 0} onClick={() => setOpen(open - 1)}>
+              <Button variant="outline" size="sm" disabled={viTri === 0} onClick={() => setOpen(tot[viTri - 1])}>
                 <ChevronLeftIcon data-icon="inline-start" />
                 Ảnh trước
               </Button>
-              <Button variant="outline" size="sm" disabled={open === images.length - 1} onClick={() => setOpen(open + 1)}>
+              <Button variant="outline" size="sm" disabled={viTri === tot.length - 1} onClick={() => setOpen(tot[viTri + 1])}>
                 Ảnh sau
                 <ChevronRightIcon data-icon="inline-end" />
               </Button>

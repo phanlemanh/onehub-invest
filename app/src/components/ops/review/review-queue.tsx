@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { InboxIcon } from "lucide-react"
+import { InboxIcon, TriangleAlertIcon } from "lucide-react"
 import { useTable, type ColumnDef, type PaginationState } from "@tanstack/react-table"
 
 import {
@@ -14,6 +14,7 @@ import {
 import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
 import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
+import { Alert, AlertTitle } from "@/components/reui/alert"
 import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -44,14 +45,20 @@ const PAGE_SIZE = 20
  * Lọc theo loại thẻ + trạng thái phía client (hàng duyệt nhỏ); bấm hàng hoặc tên thẻ mở sheet chi tiết.
  * Không cột độ tự tin (Q9) — `ReviewItem` không mang số đó.
  */
-export function ReviewQueue({ items, media, context = {} }: {
+export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
   items: ReviewItem[]
   media: Record<number, ReviewMedia>
   context?: Record<number, ReviewContext>
+  /** `?card=<id>` (OD1 · ĐC7): thẻ có trong hàng duyệt → sheet mở sẵn, bất kể trang và bộ lọc; không có → Alert. */
+  moBanDau?: { id: number | null; raw: string } | null
 }) {
   const [type, setType] = useState<TypeFilter>(DEFAULT_TYPE_FILTER)
   const [status, setStatus] = useState<StatusFilter>(DEFAULT_STATUS_FILTER)
-  const [openId, setOpenId] = useState<number | null>(null)
+  // Tìm trong `items` (cả hàng duyệt), không trong hàng đang lọc — thẻ đã quyết vẫn mở được.
+  const [openId, setOpenId] = useState<number | null>(() =>
+    moBanDau?.id != null && items.some((i) => i.id === moBanDau.id) ? moBanDau.id : null,
+  )
+  const thieuThe = moBanDau !== null && (moBanDau.id === null || !items.some((i) => i.id === moBanDau.id))
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE })
 
   const rows = useMemo(() => filterReviewItems(items, type, status), [items, type, status])
@@ -82,8 +89,8 @@ export function ReviewQueue({ items, media, context = {} }: {
               <span className="text-muted-foreground text-xs tabular-nums">#{row.original.id}</span>
               {/* Màn hẹp: cột Loại/Trạng thái nằm ngoài khung nhìn (bảng cuộn ngang) — nhắc lại ngay dưới tên thẻ. */}
               <span className="flex items-center gap-1.5 sm:hidden">
-                <ReviewTypeBadge type={row.original.item_type} />
-                <ReviewStatusBadge status={row.original.status} />
+                <ReviewTypeBadge item={row.original} />
+                <ReviewStatusBadge item={row.original} />
               </span>
             </div>
           </div>
@@ -95,14 +102,14 @@ export function ReviewQueue({ items, media, context = {} }: {
         id: "type",
         accessorKey: "item_type",
         header: "Loại",
-        cell: ({ row }) => <ReviewTypeBadge type={row.original.item_type} />,
+        cell: ({ row }) => <ReviewTypeBadge item={row.original} />,
         size: 130,
       },
       {
         id: "status",
         accessorKey: "status",
         header: "Trạng thái",
-        cell: ({ row }) => <ReviewStatusBadge status={row.original.status} />,
+        cell: ({ row }) => <ReviewStatusBadge item={row.original} />,
         size: 120,
       },
       {
@@ -137,6 +144,13 @@ export function ReviewQueue({ items, media, context = {} }: {
   if (items.length === 0) return <ReviewQueueEmpty />
 
   return (
+    <>
+    {thieuThe && (
+      <Alert variant="warning" data-review-card-thieu>
+        <TriangleAlertIcon aria-hidden />
+        <AlertTitle>Không tìm thấy thẻ #{moBanDau?.raw}</AlertTitle>
+      </Alert>
+    )}
     <Frame spacing="default" className="w-full min-w-0">
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -209,6 +223,7 @@ export function ReviewQueue({ items, media, context = {} }: {
         onOpenChange={(o) => !o && setOpenId(null)}
       />
     </Frame>
+    </>
   )
 }
 

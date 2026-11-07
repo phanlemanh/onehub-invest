@@ -5,6 +5,7 @@ import { ghiAuditTrong, moiTruong } from "@/lib/audit";
 import { planEnrichApproval, type EnrichChoices } from "@/lib/enrich-choices";
 import { ghiPhanQuyetDoiChieu } from "@/lib/ops/doi-chieu";
 import { LY_DO_TOI_DA, lyDoHopLe } from "@/lib/ops/review-can-cu";
+import { reviewCategory } from "@/lib/ops/review-hang-muc";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,10 @@ export const dynamic = "force-dynamic";
  *   Thẻ có khối đối chiếu (evidence.doi_chieu): approved, rejected ghi thêm một dòng ops_audit `enrich:doi-chieu`, tin không đổi.
  * Quyền `review.decide` (vai ops, không bearer); quyết định, lý do (`decision_note`) và dòng audit (`detail.ly_do`) ghi
  * cùng transaction — audit hỏng thì ROLLBACK cả quyết định lẫn lý do.
+ * Nhịp (OD1 · ĐC6): body tuỳ chọn `elapsed_ms` (số nguyên 1…86.400.000, khoảng từ lúc thẻ dựng ở trình duyệt tới lúc bấm) →
+ * detail có `decided_at` (= now() của giao dịch, bằng review_queue.decided_at), `opened_at` = decided_at − elapsed, `seconds`;
+ * vắng hay sai → `timing: "khong-do"`, quyết định vẫn ghi. Mọi lượt ghi `category` (hạng mục duyệt của thẻ) và, khi cùng
+ * người có lượt review.decide trong 24 giờ trước, `since_prev_seconds` (giây giữa hai lượt — Hỏi-3).
  */
 export async function POST(
   req: Request,
@@ -41,7 +46,7 @@ export async function POST(
     return NextResponse.json({ error: "id không hợp lệ" }, { status: 400 });
   }
 
-  const body = (await req.json().catch(() => null)) as { status?: string; choices?: unknown; reason?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { status?: string; choices?: unknown; reason?: unknown; elapsed_ms?: unknown } | null;
   const status = body?.status;
   if (!status || !["approved", "rejected", "deferred"].includes(status)) {
     return NextResponse.json({ error: "status phải là approved|rejected|deferred" }, { status: 400 });
@@ -50,6 +55,7 @@ export async function POST(
   if (reason === null) {
     return NextResponse.json({ error: `lý do bắt buộc, 1–${LY_DO_TOI_DA.toLocaleString("vi-VN")} ký tự` }, { status: 400 });
   }
+  const elapsed = khoangHopLe(body?.elapsed_ms);
   const choices = parseChoices(body?.choices);
   if (choices === false) {
     return NextResponse.json({ error: "choices phải là { field: proposal_id | null }" }, { status: 400 });
@@ -122,9 +128,11 @@ export async function POST(
       ungVien = cham[0].id;
     }
 
-    // Cập nhật review_queue kèm lý do người duyệt (PL3)
-    await client.query(
-      `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now(), decision_note = $4 WHERE id = $3`,
+    // Cập nhật review_queue kèm lý do người duyệt (PL3). decided_at = now() của giao dịch — dòng audit dưới dùng chính giá trị
+    // này, nên giờ quyết của thẻ và của nhật ký là một (OD1).
+    const { rows: [quyet] } = await client.query<{ decided_at: Date }>(
+      `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now(), decision_note = $4 WHERE id = $3
+       RETURNING decided_at`,
       [status, user.id, id, reason],
     );
 
@@ -144,10 +152,19 @@ export async function POST(
         await ghiPhanQuyetDoiChieu(client, { reviewId: id, itemId: item.item_id, status: status as "approved" | "rejected", lyDo: reason, actor, env: moiTruong(), evidence: item.evidence });
       }
     }
+    // Giữa hai lượt (OD1 · Hỏi-3): lượt review.decide gần nhất trước đó của cùng người, trong 24 giờ.
+    const { rows: [truoc] } = await client.query<{ at: Date }>(
+      `SELECT at FROM ops_audit
+        WHERE action = 'review.decide' AND actor = $1 AND at < $2 AND at > $2::timestamptz - interval '24 hours'
+        ORDER BY at DESC LIMIT 1`,
+      [q.actor, quyet.decided_at],
+    );
     // Dòng audit trong CÙNG transaction: ghi hỏng → ROLLBACK cả quyết định.
     await ghiAuditTrong(client, q.actor, "review.decide", {
       thao_tac: "decide", reviewId: id, item_type: item.item_type, item_id: item.item_id,
       from: item.status, to: status, ly_do: reason,
+      category: reviewCategory(item),
+      ...nhip(quyet.decided_at, elapsed, truoc?.at ?? null),
       ...(ungVien !== null ? { ung_vien: ungVien } : {}),
       ...(applyIds ? { choices } : {}),
     });
@@ -161,6 +178,31 @@ export async function POST(
   } finally {
     client.release();
   }
+}
+
+/** Trần khoảng mở thẻ: một ngày. Ngoài 1…trần, hay không phải số nguyên → không đo (null). */
+const KHOANG_TOI_DA_MS = 86_400_000;
+
+function khoangHopLe(v: unknown): number | null {
+  return typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KHOANG_TOI_DA_MS ? v : null;
+}
+
+const motChuSo = (ms: number) => Math.round(ms / 100) / 10;
+
+/**
+ * Khoá nhịp của dòng audit: có khoảng → giờ mở, giờ quyết, giây ở thẻ (một chữ số thập phân); không → đánh dấu không đo.
+ * Có lượt trước của cùng người → giây giữa hai lượt (độc lập với khoảng ở thẻ: máy chủ tự đo).
+ */
+function nhip(decidedAt: Date, elapsed: number | null, truocAt: Date | null): Record<string, unknown> {
+  const decided_at = decidedAt.toISOString();
+  const giua = truocAt ? { since_prev_seconds: motChuSo(decidedAt.getTime() - truocAt.getTime()) } : {};
+  if (elapsed === null) return { decided_at, timing: "khong-do", ...giua };
+  return {
+    decided_at,
+    opened_at: new Date(decidedAt.getTime() - elapsed).toISOString(),
+    seconds: motChuSo(elapsed),
+    ...giua,
+  };
 }
 
 /** Cặp khoá của thẻ ghép căn: đúng khuôn `pair:<A>|<B>`, A và B khác rỗng, không phần thừa → [A, B]; khác → null. */

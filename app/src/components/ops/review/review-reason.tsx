@@ -27,7 +27,7 @@ export function ReviewReason({ value, onChange, disabled }: {
         onChange={(e) => onChange(e.target.value)}
         maxLength={LY_DO_TOI_DA}
         disabled={disabled}
-        placeholder="Vì sao bạn quyết như vậy — ghi vào nhật ký cùng quyết định"
+        placeholder="Vì sao quyết như vậy — ghi vào nhật ký cùng quyết định"
         className="min-h-20 resize-none"
         data-review-reason
       />

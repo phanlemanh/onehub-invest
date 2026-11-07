@@ -14,6 +14,7 @@ import { dealHang, dealTheoVai, dealTrongDanhSach, getDeal } from "@/lib/deals";
 import { chuGiam } from "@/lib/deals-chi-tiet";
 import { fmtCompact } from "@/lib/format";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
+import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Một căn" };
@@ -35,6 +36,7 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
   }
   const d = dealHang(dealTheoVai(deal, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu });
   // `?can=` của căn ngoài danh sách đã tải chuyển ngược về đây, nên crumb chỉ mở sheet khi căn có trong danh sách.
+  const choGhep = await loadPendingUnitMatches([d.offerId]);
   const veDanhSach = !d.roiDanhSach && (await dealTrongDanhSach(d.offerId)) ? `/ops/deals?can=${encodeURIComponent(d.offerId)}` : "/ops/deals";
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +47,7 @@ async function DealContent({ offerId, xemNoiDung }: { offerId: string; xemNoiDun
         description="Đủ để quyết có gọi người bán không. Chỉ đọc."
         actions={d.suspect ? <Badge variant="warning-light">Cần xác minh</Badge> : undefined}
       />
-      <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="trang" />
+      <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="trang" choGhep={choGhep[d.offerId]} />
     </div>
   );
 }
