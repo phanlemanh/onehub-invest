@@ -379,26 +379,47 @@ export function soCap(cap) {
 /** Gập chuỗi để so rò: NFKD bỏ dấu, đ→d, chữ thường, gộp khoảng trắng (cùng tinh thần foldSql/nameVariants của sync-cloud). */
 export const gapChu = (s) => String(s).normalize("NFKD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/\s+/g, " ").trim();
 
-/** Mã định danh của detail, không mang chữ người: mã khu vực (`vn-…`, khoá lát thị trường/phường) và khoá cách đọc. Chỉ bộ soát
- * tên nguồn thật đi qua chúng; chuỗi cấm khác (tên người đăng, chữ bài…) không so trên mã — «Hưng» không được trúng `vn-hung-yen`. */
-const LA_MA = (s) => /^vn(-[a-z0-9]+)+$/.test(s) || /^(bo-doc-luat$|doc-gop:|doc-chu:)/.test(s);
+/** Ba loại chuỗi của detail. «chu-bai»: ô lát mang chữ đọc từ bài (`theo-chu-bai:<tên>`) — đường duy nhất chữ bài đi vào số đo.
+ * «cau-truc»: nhãn do code sinh — tên ô, mã enum, khoá kebab (`khong-tin-hieu`, `vn-…`, `tut:thieu-gia`), khoá ghép `a|b`, khoá cách đọc, ngày,
+ * tuần ISO, mã băm thước. «chu»: mọi chuỗi còn lại — không đường ghi nào sinh ra nó, có là bất thường. */
+const CHU_BAI = "theo-chu-bai:";
+const CAU_TRUC = [
+  /^[a-z0-9_]+$/,
+  /^[a-z0-9]+(-[a-z0-9]+)*(:[a-z0-9]+(-[a-z0-9]+)*)?$/,
+  /^(doc-gop|doc-chu):\S+$/,
+  /^\d{4}-\d{2}-\d{2}$/,
+  /^\d{4}-W\d{2}$/,
+];
+const laCauTruc = (s) => CAU_TRUC.some((r) => r.test(s));
+/** Khoá ghép bằng «|» (cơ cấu mẫu `kind|loại nhà`) là cấu trúc khi mọi phần là cấu trúc. */
+export const loaiChuoi = (s) =>
+  s.startsWith(CHU_BAI) ? "chu-bai" : s.split("|").every((p) => p !== "" && laCauTruc(p)) ? "cau-truc" : "chu";
+
 const CHU_SO = "[\\p{L}\\p{N}]";
 /** Tên người ngắn (vài chữ) chỉ tính là rò khi đứng thành từ trọn, không trúng giữa một từ khác. */
 const NGAN_THEO_TU = new Set(["NGUOI DANG"]);
 const theoTu = (g) => new RegExp(`(^|(?!${CHU_SO}).)${g.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!${CHU_SO})`, "u");
+/** Định danh dài, riêng (người gắn nhãn, SĐT) mà lọt nguyên vào một nhãn cấu trúc vẫn bị bắt khi trùng trọn. */
+const TRUNG_TRON = new Set(["LABELER", "SDT"]);
 
-/** Nhãn chuỗi cấm mà `s` mang (null nếu sạch). Tên nguồn thật qua bộ soát tầng A dùng chung (`guardValues` → nameVariants: gập
- * dấu, viết liền, từ đầu) trên mọi chuỗi; chuỗi cấm khác bỏ qua mã định danh (`LA_MA`), tên người đăng so theo từ trọn.
+/** Nhãn chuỗi cấm mà `s` mang (null nếu sạch). Tên nguồn thật (tầng A) qua bộ soát dùng chung (`guardValues` → nameVariants: gập
+ * dấu, viết liền, từ đầu) trên MỌI chuỗi. Chuỗi cấm khác chỉ so trên chữ: phần tên của ô theo chữ bài và chuỗi «chu»; nhãn cấu
+ * trúc chỉ bị bắt khi trùng trọn một định danh dài (`TRUNG_TRON`) — tên người không bao giờ so trên nhãn do code sinh.
  * @param {string} s @param {{nhan: string, chuoi: string}[]} cam */
 export function trungCam(s, cam) {
   const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi));
   if (ten.length && guardValues([s], ten).length) return "TEN NGUON";
-  if (LA_MA(s)) return null;
-  const x = gapChu(s);
+  const loai = loaiChuoi(s);
+  const x = gapChu(loai === "chu-bai" ? s.slice(CHU_BAI.length) : s);
   for (const { nhan, chuoi } of cam) {
     if (nhan === "TEN NGUON" || !chuoi) continue;
     const g = gapChu(chuoi);
-    if (g && (NGAN_THEO_TU.has(nhan) ? theoTu(g).test(x) : x.includes(g))) return nhan;
+    if (!g) continue;
+    if (loai === "cau-truc") {
+      if (TRUNG_TRON.has(nhan) && x === g) return nhan;
+      continue;
+    }
+    if (NGAN_THEO_TU.has(nhan) ? theoTu(g).test(x) : x.includes(g)) return nhan;
   }
   return null;
 }

@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { chuanHoa } from "../lib/chuan-hoa-nhan.mjs";
 import {
-  boSot, chanLo, chuyenBac, demChuyenBac, gopOCam, giuNhap, giuO, nhomO, phanRa, PHIEN_BAN_THUOC, soCap, soTuan, tinHieu, tuanIso, wilson,
+  boSot, chanLo, chuyenBac, demChuyenBac, gopOCam, loaiChuoi, trungCam, giuNhap, giuO, nhomO, phanRa, PHIEN_BAN_THUOC, soCap, soTuan, tinHieu, tuanIso, wilson,
 } from "../lib/do-hang-ngay.mjs";
 
 /** Wilson tham chiếu viết lại độc lập (công thức chuẩn), để so hàm thật tới 4 chữ số. */
@@ -528,6 +528,14 @@ test("DO1-AC-9 chặn rò không báo giả: mã khu vực, mã cách đọc, t�
   assert.doesNotThrow(() => chanLo({ o: { "theo-chu-bai:hungthinh land": 1 } }, H));
   assert.throws(() => chanLo({ ghi: "anh Hưng bán" }, H), /LO NGUOI DANG/);
   assert.throws(() => chanLo({ o: { "theo-chu-bai:hung yen park": 1 } }, H), /LO NGUOI DANG/);
+  // Khuôn mới (S4-r4): tên người không so trên nhãn do code sinh — «Hiếu», «Danh», «Khắc» không trúng khoá cố định của mọi lát.
+  const latThat = { lat: { phuong: phanRa([{ k: "vn-hung-yen" }, { k: { chua: "khong-tin-hieu" } }], (r) => r.k) }, ly_do: "chua-co-the-soat", ngay: "2025-06-07" };
+  for (const ten of ["Hiếu", "Danh", "Khắc", "Hưng", "Phường"]) assert.doesNotThrow(() => chanLo(latThat, [{ nhan: "NGUOI DANG", chuoi: ten }]), ten);
+  assert.equal(loaiChuoi("khong-tin-hieu"), "cau-truc");
+  assert.equal(loaiChuoi("theo-chu-bai:hiếu land"), "chu-bai");
+  assert.equal(loaiChuoi("anh Hiếu bán"), "chu");
+  // Định danh dài lọt nguyên vào một nhãn cấu trúc vẫn bị bắt khi trùng trọn.
+  assert.throws(() => chanLo({ o: { phanlemanh: 1 } }, [{ nhan: "LABELER", chuoi: "phanlemanh" }]), /LO LABELER/);
   // Chuỗi cấm dài (chữ bài, trích) vẫn so chuỗi con; tên nguồn vẫn soát cả trên mã khu vực.
   assert.throws(() => chanLo({ x: "…TRICH_Y…" }, [{ nhan: "TRICH", chuoi: "TRICH_Y" }]), /LO TRICH/);
   assert.throws(() => chanLo({ o: { "vn-tenthatve": 1 } }, [{ nhan: "TEN NGUON", chuoi: "Tên Thật Vê" }]), /LO TEN NGUON/);
@@ -720,6 +728,40 @@ test("DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trí
       assert.ok(lai.dq.find((r) => r.check_name === "do1-giu-nhap").detail.lat.phuong.o[ma] > 0, "mã phường vẫn trong detail");
       // Cùng tên ấy đứng thành từ trong một chuỗi chữ của detail thì vẫn chặn.
       await assert.rejects(doHangNgay(c, { ngay: D, dotBien: `lo:anh ${doan} bán` }), /LO NGUOI DANG/);
+    });
+    // Tự soát: mọi từ (≥4 ký tự) của mọi nhãn do bộ ghi sinh ra, đem làm tên người đăng — không từ nào được làm dừng lượt đo.
+    const tu = new Set();
+    for (const r of kqDo.dq) {
+      (function di(x) {
+        if (typeof x === "string") { if (loaiChuoi(x) === "cau-truc") for (const w of x.split(/[^a-z0-9]+/)) if (w.length >= 4) tu.add(w); return; }
+        if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { di(k); di(v); }
+      })(r.detail);
+    }
+    assert.ok(tu.has("hieu") && tu.has("danh"), "có từ của khoá cố định trong tập tự soát");
+    const chuoiCua = (d) => { const o = []; (function di(x) { if (typeof x === "string") o.push(x); else if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { o.push(k); di(v); } })(d); return o; };
+    for (const r of kqDo.dq) {
+      for (const w of tu) {
+        const trung = chuoiCua(r.detail).filter((x) => trungCam(x, [{ nhan: "NGUOI DANG", chuoi: w }]));
+        assert.deepEqual(trung, [], `nhãn máy trúng tên «${w}» ở ${r.check_name}`);
+      }
+    }
+    await thu(c, async () => {
+      // Người đăng «Hiếu» cho mọi thẻ, qua bộ ghi thật: vẫn ghi đủ bốn nhóm số.
+      await c.query("UPDATE stg_zalo_posts SET sender_name = 'Hiếu' WHERE post_id = ANY ($1)", [kq.the.map((t) => t.post_id)]);
+      const lai = await doHangNgay(c, { ngay: D, write: true });
+      assert.equal(lai.dq.filter((r) => r.check_name.startsWith("do1-")).length >= 4, true);
+    });
+    // Ô theo chữ bài trùng tên người đăng (có dấu, chữ hoa) qua bộ ghi: gộp vào «khac», tổng giữ nguyên; bỏ bước gộp thì dừng.
+    await thu(c, async () => {
+      const t0 = kq.the[0];
+      await c.query("UPDATE stg_zalo_posts SET sender_name = 'Hiếu' WHERE post_id = $1", [t0.post_id]);
+      await c.query("INSERT INTO eval_labels (item_id, labeler_id, field, value, not_stated) VALUES ($1, 'LABELER_W', 'project', 'Hiếu Land', false)", [t0.item_id]);
+      const lai = await doHangNgay(c, { ngay: D, write: true });
+      const theoChu = lai.dq.find((r) => r.check_name === "do1-giu-nhap").detail.lat.du_an_theo_chu;
+      assert.ok(!Object.keys(theoChu.o).some((k) => k.startsWith("theo-chu-bai:")), `ô mang tên người đăng đã gộp: ${JSON.stringify(theoChu.o)}`);
+      assert.ok(theoChu.o.khac >= 1);
+      assert.equal(Object.values(theoChu.o).reduce((a, b) => a + b, 0), theoChu.tong);
+      await assert.rejects(doHangNgay(c, { ngay: D, dotBien: "bo-gop-o-cam" }), /LO NGUOI DANG/);
     });
   });
 });
