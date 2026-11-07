@@ -5,7 +5,7 @@ slug: truong-nhan-s03-081
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, db]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-07
 design_doc: docs/superpowers/specs/2026-11-06-truong-nhan-s03-081-design.md
@@ -135,3 +135,10 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục dư�
 
 - Test chạy trên lược đồ tạm dựng bằng chính `db/migrations`, hoặc trên DB thử `oneinvest_tn081`. Danh mục S08 trong test là dòng giả, không có mã căn thật. Không ghi DB máy thu.
 - Số đếm ý: `probes/dem-y.sql`, chỉ đọc, chỉ in số.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-07:
+  - Ngoài-1: phép kiểm «chín trường cũ vẫn chấm như trước» lấy mốc so bằng merge-base, nên chạy lại sau khi gộp vào nhánh chính sẽ báo đỏ giả.
+  - Ngoài-4: công cụ kiểm phạm vi có thể báo ổn khi không đọc được lịch sử thay đổi, nên có thể bỏ sót tệp đổi ngoài phạm vi.
+  - Ngoài-5: một số tình huống nhập của bảy trường mới chưa có bài kiểm riêng, lỗi ở đó sau này kiểm tự động không bắt được.
+  - Ngoài-7: nút lựa chọn trên màn gắn nhãn chỉ được kiểm bằng số lượng, sai tên mà đủ số thì không bị bắt.
+  - Ngoài-8: ô «Phí đã gồm» chưa được kiểm chọn nhiều giá trị, đổi thành chọn một thì không bị bắt.
+  - Ngoài-9: phép kiểm từ chối trường lạ và căn cứ lạ chưa ghim đúng loại lỗi CHECK, có thể báo đạt vì một lỗi khác.
