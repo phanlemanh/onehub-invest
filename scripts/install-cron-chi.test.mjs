@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, readdirSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 
 const REPO = new URL("../", import.meta.url).pathname.replace(/\/$/, "");
 
@@ -85,5 +85,19 @@ test("tên job lạ → thoát 2, KHÔNG ghi plist nào", () => {
   const dir = join(home, "Library/LaunchAgents");
   const soPlist = existsSync(dir) ? readdirSync(dir).length : 0;
   assert.equal(soPlist, 0);
+  rmSync(home, { recursive: true, force: true });
+});
+
+// 0711-27: --chi trơn (không tên job) → thoát 2, KHÔNG plist nào được ghi
+test("--chi trơn → thoát 2, không plist nào", () => {
+  const { home } = taoMoiTruong();
+  const r = spawnSync("bash", [join(REPO, "scripts/install-cron.sh"), "--chi"], {
+    env: { ...process.env, HOME: home, PATH: process.env.PATH },
+    encoding: "utf8",
+  });
+  assert.equal(r.status, 2, `thoát 2 (được ${r.status}): ${(r.stderr || "").slice(0, 150)}`);
+  const dir = join(home, "Library/LaunchAgents");
+  const plists = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".plist")) : [];
+  assert.equal(plists.length, 0, `không plist nào (thấy ${plists.join(",")})`);
   rmSync(home, { recursive: true, force: true });
 });
