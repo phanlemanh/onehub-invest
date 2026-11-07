@@ -12,6 +12,18 @@ import { loadStgPosts } from "./lib/test-posts.mjs";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+/**
+ * Tin của pipeline cho từng bài S03 (lay-mau-khu-trung-theo-tin): post_id → offer_id từ `sale_offer_records.post_ids`, kể cả tin
+ * đã nghỉ; bài có ở nhiều bản ghi thì bản ghi còn sống thắng, rồi offer_id nhỏ nhất. Chỉ đọc.
+ * @returns {Promise<Map<string, string>>}
+ */
+export async function docTinCua(client) {
+  const { rows } = await client.query(
+    `SELECT DISTINCT ON (pid) pid, offer_id FROM sale_offer_records, unnest(post_ids) AS pid
+     WHERE source = 'S03' ORDER BY pid, (retired_at IS NULL) DESC, offer_id`);
+  return new Map(rows.map((r) => [r.pid, r.offer_id]));
+}
+
 /** DB thử: máy này, tên `oneinvest_<việc>` (db/db-thu.sh). */
 export function laDbThu(url) {
   const u = new URL(url);
