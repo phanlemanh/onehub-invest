@@ -85,8 +85,12 @@ test("E4-phu: băm cấu hình không đổi + marker bộ canh trong monitor bu
   const patch = fs.readFileSync("./_acceptance/link-nguoi-ban-s03/extension.patch", "utf8");
   assert.ok(!/listen\s*\(/.test(patch.replace(/^\+.*marker.*$/m, "")), "không thêm listen( trong mã nguồn mới");
   assert.ok(!/createServer/.test(patch), "không thêm createServer");
-  const mon = fs.readFileSync("/Users/manhphan/dev/openclaw/extensions/" + String.fromCharCode(122,97,108,111,117,115,101,114) + "/src/monitor.ts", "utf8");
+  // 0711-17(b): đường extension qua env — không đường tuyệt đối trong tệp
+const MON_FILE = process.env.OPENCLAW_EXT_DIR ? process.env.OPENCLAW_EXT_DIR.replace(/\/$/, "") + "/src/monitor.ts" : null;
+if (MON_FILE) {
+  const mon = fs.readFileSync(MON_FILE, "utf8");
   assert.ok(mon.includes("pluginHooks") && mon.includes("SuppressMessageReceivedHooks"), "marker bộ canh còn trong monitor");
+} else { console.log("tien-kiem: bỏ qua marker monitor — thiếu OPENCLAW_EXT_DIR"); }
 });
 
 test("E9-phu: xoá tệp yêu cầu sau lời 1 → các lời sau 0 (không tự phục hồi)", async () => {

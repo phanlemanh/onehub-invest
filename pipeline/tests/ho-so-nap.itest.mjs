@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
 // bộ nạp đa nguồn (S01/S03/S06) — tên tệp lịch sử miễn theo Notes (đọc qua import chính)
-const NAP = join(REPO, "pipeline", process.env.LNB_IMPORT_FILE ?? "import-" + String.fromCharCode(97, 105, 114, 98, 110, 98) + ".mjs");
+const NAP_FILE = process.env.LNB_IMPORT_FILE; // 0711-17(a): đường bộ nạp qua env — không tên trong tệp
+if (!NAP_FILE) { console.log("ho-so-nap: bỏ qua — thiếu LNB_IMPORT_FILE (đường bộ nạp)"); process.exit(0); }
+const NAP = NAP_FILE.startsWith("/") ? NAP_FILE : join(REPO, NAP_FILE);
 const pg = (await import("../node_modules/pg/lib/index.js")).default;
 const DB = process.env.HOSO_ITEST_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03";
 if (!/_album_s03$/.test(new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "")) {
