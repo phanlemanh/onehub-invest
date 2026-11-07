@@ -96,6 +96,7 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    icc_test: "node --test scripts/install-cron-chi.test.mjs"   # install-cron-chi AC-1, AC-2, AC-4 — HOME giả + launchctl giả, không DB
     tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB; từ dau-luoc-do-ban-mau E8 tệp có thêm ca DL- cần Postgres :5433
     dau_luoc_do: "node --test --test-name-pattern=^DL- scripts/db-thu.test.mjs"   # dau-luoc-do-ban-mau E1–E7, E9 — Postgres :5433 thật, chỉ DB postgres và oneinvest_suite_dau_<pid>
     design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
@@ -225,6 +226,8 @@ executors:
     en_test: "bash db/db-thu.sh oneinvest_en --neu-chua-co >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en node --test --test-concurrency=1 pipeline/scripts/enrich-nguoi-s03.test.mjs pipeline/scripts/enrich-nguoi-s03.itest.mjs"   # enrich-nguoi-s03 E1–E6 — ca thuần + ca DB thử (transform S03 thật, BEGIN…ROLLBACK), số bịa
     en_api: "cd app && node --import tsx --test tests/enrich-nguoi-s03.test.tsx"   # enrich-nguoi-s03 E7 — hai route thật, lược đồ tạm
   script:
+    icc_keychain: "bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""   # install-cron-chi AC-3 — security/launchctl giả, HOME giả
+    icc_scope: "bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""   # install-cron-chi AC-5 — tệp đổi so với main
     can_gia_tot_ca_cu: "bash _acceptance/can-gia-tot-sua-ba-loi/probes/ca-cu-khong-doi.sh"   # can-gia-tot-sua-ba-loi AC-4 — tệp test CG1 chỉ được thêm dòng
     cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của mười hai trang trên bản chạy; không đo được thì thoát 2
     cn_tinh: "node scripts/check-invest-tier-a.mjs"   # chu-nguon-tren-cong E3b — chuỗi trong mã của mọi trang công khai và tệp chúng import
