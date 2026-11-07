@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: danh-ba-toa-truc-can
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 20e3a7736a8f833f3aadd235cdc66549d2653fdd
-human_signoff:
+human_signoff: Mạnh 2026-11-07
 ---
 
 # Evidence Report: danh-ba-toa-truc-can
@@ -152,7 +152,7 @@ Round 4. Verdict PENDING-JUDGMENT: mọi eval máy đạt, còn mục judgment E
     - domain-correctness: PASS (r2)
     - operational-feasibility: PASS (r2)
     - spec-alignment: PASS (r2)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-07 — Đạt
 
 ### Lệnh suite (hồi quy)
 

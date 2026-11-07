@@ -5,7 +5,7 @@ slug: danh-ba-toa-truc-can
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-07-danh-ba-toa-truc-can-design.md
 approved_by: Mạnh
 approved_at: 2026-11-06T23:54:21Z
@@ -111,3 +111,22 @@ Source input: `_acceptance/danh-ba-toa-truc-can/opportunity.md` (hàng DB1 của
   `pipeline/scripts/danh-ba-vat-the*`, `pipeline/mappings.yaml`, `pipeline/sync-cloud.test.mjs`. Không chạm `agent/`,
   `pipeline/lib/eval-labels.mjs`, `label-*`, `transform-zalo.mjs`.
 - Cỡ 12 tiêu chí (11 theo ghi_chu hàng, AC-12 theo Hỏi-5): khung chung, ba cấp vật thể và mở ràng buộc phát biểu phải giao cùng nhau mới có khoá dùng được (ghi_chu hàng DB1).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-07:
+  - Ngoài-1: Phép kiểm chống lộ tên toà chỉ có từ danh mục nội bộ có thể bỏ sót vài tên có phần riêng quá ngắn. Hôm nay chưa thấy tên nào bị lộ trong kho công khai.
+  - Ngoài-2: Nếu sau này có tệp trong kho ghi tên toà nội bộ theo cách viết khác (chữ thường, khoảng trắng thay gạch dưới), phép kiểm vẫn báo an toàn. Hiện chưa có tệp nào như vậy.
+  - Ngoài-3: Phép kiểm tên toà nội bộ có thể lặng lẽ thành vô nghĩa nếu danh sách tên cần quét rỗng mà vẫn báo xanh. Hôm nay danh sách có 5 tên nên vẫn hoạt động.
+  - Ngoài-4: Trên trang chất lượng dữ liệu của Ops, tám dòng kiểm mới về toà, trục, căn sẽ hiện chữ chung «Kiểm khác (chưa diễn giải)» kèm tên bảng và cột tiếng Anh thay vì nhãn tiếng Việt dễ hiểu.
+  - Ngoài-5: Nếu lệnh dựng danh bạ toà được gọi qua đường dẫn tắt (như cách máy chạy đêm đang gọi code), nó sẽ im lặng không làm gì mà vẫn báo thành công, nên danh bạ có thể không được cập nhật mà không ai hay. Đã sửa ở lượt chấm 2 (lối vào so bằng realpath, commit 948af5b1).
+  - Ngoài-6: Nếu tên khu bị gõ sai hoặc đổi, lệnh dựng danh bạ vẫn báo xong với toàn số 0, người chạy dễ tưởng là không có toà nào thay vì nhận ra mình nhập sai.
+  - Ngoài-7: Nếu ai đó trỏ nhầm lệnh dựng danh bạ vào cơ sở dữ liệu đám mây, lệnh vẫn chạy và ghi dữ liệu danh mục nội bộ lên đó.
+  - Ngoài-8: Người hoặc trợ lý làm việc sau sẽ không biết lệnh dựng danh bạ toà và ba bảng mới chỉ nằm ở máy local, nên dễ dùng sai.
+  - Ngoài-10: Gõ sai tên khu khi chạy lệnh dựng thì lệnh bỏ qua khu đó và vẫn báo xong, trông như không có gì mới.
+  - Ngoài-11: Khi một khu có hơn mười nghìn mã căn, phép kiểm có thể báo đỏ dù danh bạ dựng đúng.
+  - Ngoài-12: Khi phép kiểm tách mã báo đỏ, thông báo không nói khuôn nào bị hỏng, nên người sửa phải tự dò.
+  - Ngoài-13: Phép kiểm tích hợp không tự soi số người đăng và số nhóm của ứng viên toà, nên lỗi ở đó chỉ lộ qua bộ test khác.
+  - Ngoài-14: Ca khu không xác định được phường chưa được thử trên cơ sở dữ liệu thật của phép kiểm tích hợp, và việc tin không bị đổi cũng chưa được đo đầy đủ.
+  - Ngoài-15: Phép kiểm trên dữ liệu thật chưa chứng minh được mọi toà của dự án đều có khoá, chỉ chứng minh mỗi dự án có ít nhất một toà.
+  - Ngoài-16: Phép kiểm chưa tự phát hiện nếu toà hoặc trục bị mất dòng khi chụp lại danh mục.
+  - Ngoài-17: Khi sửa từ điển chủ đầu tư, phép kiểm chưa xác nhận dấu vết tệp mới được ghi lại đúng.
+  - Ngoài-18: Phép kiểm chống đồng bộ lên đám mây chưa chạy qua bộ chọn dòng thật, nên chưa chứng minh được thật sự không có dữ liệu toà lên đám mây nếu sau này đổi cấu hình.
+  - Ngoài-19: Số toà, trục, căn của khu thứ hai chưa được đếm độc lập, chỉ dựa vào số bộ dựng tự báo.
