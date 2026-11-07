@@ -118,36 +118,45 @@ test("DO1-AC-2 màn mẫu soát điền sẵn nháp máy của cách đọc hi�
   }
 })
 
-test("DO1-RT rút → điền sẵn → lưu không sửa → giữ nháp 100%; sửa một ô thì đúng ô đó không giữ", coDb, async () => {
+test("DO1-RT rút → điền sẵn → lưu qua bộ ghi của route → đọc lại bằng bộ đọc của do-hang-ngay → giữ nháp 100%; sửa một ô thì đúng ô đó", coDb, async () => {
   const c = new pg.Client({ connectionString: DB })
   await c.connect()
   try {
     await don(c)
     const the = await dung(c)
-    const t = the.find((x) => x.post_id === "do1rt01")!
-    const nhap = nhapTuDraft(t.draft)!
-    const { giuO } = await import("../../pipeline/lib/do-hang-ngay.mjs")
-    const tyLe = (sua: Record<string, string>, { tho = false } = {}) => {
-      const chuan = chuanHoaLuot(giaTriGui(nhap, sua), { text: "bán căn 2pn 62m2 giá 3,4 tỷ", reason: "thử" })
+    const { docThe } = await import("../../pipeline/do-hang-ngay.mjs")
+    const { giuNhap } = await import("../../pipeline/lib/do-hang-ngay.mjs")
+    const luu = async (postId: string, text: string, sua: Record<string, string>) => {
+      const t = the.find((x) => x.post_id === postId)!
+      const chuan = chuanHoaLuot(giaTriGui(nhapTuDraft(t.draft)!, sua), { text, reason: "thử DO1" })
       assert.ok(chuan.ok, JSON.stringify(!chuan.ok && chuan.loi))
-      const { cells } = nhapVeO(nhap)
-      const ra: Record<string, boolean> = {}
-      for (const r of chuan.ok ? chuan.rows : []) {
-        if (!(r.field in nhap.o)) continue
-        const goc = tho ? (cells[r.field]?.value ?? null) : nhap.o[r.field]
-        ra[r.field] = giuO(r.field, goc, { value: r.value, not_stated: r.not_stated })
-      }
-      return ra
+      assert.ok((await ghiNhan(c, `do1rt-${postId}`, LAT_CUON_CHIEU, t.item_id, chuan.ok ? chuan.rows : [], "thử DO1")).ok)
+      return t.item_id
     }
-    const kiem = (ra: Record<string, boolean>, sai: string[]) => {
-      for (const [f, giu] of Object.entries(ra)) {
-        if (giu === sai.includes(f)) throw new Error(sai.length ? `KHOA CACH DOC LECH KHUON: ${f}` : `CHUAN HOA LECH: ${f}`)
+    const idGop = await luu("do1rt01", "bán căn 2pn 62m2 giá 3,4 tỷ", {})
+    const idLuat = await luu("do1rt02", "bán căn hộ 62m2 giá 3,4 tỷ chính chủ", { area_m2: "70" })
+    // Đọc lại đúng như bước đo: docThe (nhãn mới nhất mỗi ô) rồi giuNhap trên nháp đã chụp.
+    const doc = await docThe(c, NGAY)
+    const tinh = (id: number, dotBien?: string) => {
+      const t = doc.find((x: { item_id: number }) => x.item_id === id)
+      const kq = giuNhap([t], NGAY, { dotBien })
+      return kq.dong.filter((d: { cach_doc: string; o: string }) => d.cach_doc === t.draft.hien && !(t.draft.o_nguoi ?? []).includes(d.o))
+    }
+    const kiem = (dong: { o: string; tuan_nay: { n: number; giu: number } }[], sai: string[]) => {
+      if (!dong.length) throw new Error("KHOA CACH DOC LECH KHUON: không ô nào của cách đọc hiện được đo")
+      for (const d of dong) {
+        const giu = d.tuan_nay.giu === d.tuan_nay.n
+        if (giu === sai.includes(d.o)) throw new Error(`CHUAN HOA LECH: ${d.o} ${d.tuan_nay.giu}/${d.tuan_nay.n}`)
       }
     }
-    kiem(tyLe({}), [])
-    kiem(tyLe({ bedrooms: "3" }), ["bedrooms"])
-    assert.ok(Object.keys(tyLe({})).length >= 5)
-    assert.throws(() => kiem(tyLe({}, { tho: true }), []), /CHUAN HOA LECH/)
+    kiem(tinh(idGop), [])
+    assert.ok(tinh(idGop).length >= 5)
+    kiem(tinh(idLuat), ["area_m2"])
+    // Chiều đỏ: bỏ dung sai/chuẩn hoá ô số khiến giá «3400000000» so với nhãn lệch khuôn → báo lệch.
+    await c.query("UPDATE eval_labels SET value = '3,4' WHERE item_id = $1 AND field = 'price_min_vnd'", [idGop])
+    const doc2 = await docThe(c, NGAY)
+    const t2 = doc2.find((x: { item_id: number }) => x.item_id === idGop)
+    assert.throws(() => kiem(giuNhap([t2], NGAY).dong.filter((d: { cach_doc: string; o: string }) => d.cach_doc === t2.draft.hien && !(t2.draft.o_nguoi ?? []).includes(d.o)), []), /CHUAN HOA LECH/)
   } finally {
     await don(c)
     await c.end()

@@ -1,2 +1,54 @@
 
 - design-floor S1 2026-11-07T09:33:50.293Z: chỉ mục 5310 token · component-catalog 2308 token · delivery-assets 1651 token (tổng 9269 token)
+### S4 round 1 — wf_8a076752-a8d (29 agent, 128,062 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 19 | 22,649 | 42 | 1,510,852 | 251 |
+| review:conventions | claude-opus-5-5 | 20 | 16,779 | 42 | 1,572,451 | 202 |
+| review:measurement | claude-opus-5-5 | 7 | 16,772 | 16 | 370,575 | 171 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 14,525 | 4 | 52,396 | 76 |
+| ui:E11 | claude-sonnet-5-5 | 24 | 12,450 | 48 | 2,326,973 | 175 |
+| ui:E9 | claude-sonnet-5-5 | 10 | 7,021 | 20 | 801,085 | 95 |
+| triage | claude-sonnet-5-5 | 2 | 5,875 | 4 | 33,616 | 35 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 3,213 | 6 | 60,030 | 230 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,683 | 4 | 26,808 | 32 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,048 | 4 | 26,826 | 10 |
+| refute:do-hang-ngay.test.mjs | claude-sonnet-5-5 | 7 | 1,881 | 14 | 176,609 | 27 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 1,839 | 4 | 0 | 511 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 1,725 | 4 | 3,189 | 584 |
+| refute:do-hang-ngay.test.mjs | claude-sonnet-5-5 | 5 | 1,722 | 10 | 117,275 | 24 |
+| refute:do-hang-ngay.mjs | claude-sonnet-5-5 | 6 | 1,585 | 12 | 132,799 | 21 |
+| refute:do-hang-ngay-labels.test.tsx | claude-sonnet-5-5 | 4 | 1,584 | 8 | 90,874 | 20 |
+| refute:do-hang-ngay.tsx | claude-sonnet-5-5 | 4 | 1,558 | 8 | 84,165 | 19 |
+| refute:do-hang-ngay.test.mjs | claude-sonnet-5-5 | 4 | 1,433 | 8 | 84,151 | 19 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,342 | 4 | 26,831 | 19 |
+| refute:do-hang-ngay.mjs | claude-sonnet-5-5 | 4 | 1,329 | 8 | 87,784 | 19 |
+| refute:do-hang-ngay-quality.test.tsx | claude-sonnet-5-5 | 4 | 1,164 | 10 | 90,681 | 18 |
+| refute:do-hang-ngay-quality.test.tsx | claude-sonnet-5-5 | 3 | 1,081 | 6 | 57,766 | 18 |
+| refute:do-hang-ngay-quality.test.tsx | claude-sonnet-5-5 | 3 | 1,032 | 6 | 52,022 | 13 |
+| refute:do-hang-ngay.mjs | claude-sonnet-5-5 | 5 | 1,025 | 10 | 105,420 | 16 |
+| refute:do-hang-ngay-quality.test.tsx | claude-sonnet-5-5 | 2 | 953 | 4 | 25,554 | 13 |
+| refute:do-hang-ngay.test.mjs | claude-sonnet-5-5 | 3 | 948 | 6 | 53,780 | 19 |
+| refute:do-hang-ngay.mjs | claude-sonnet-5-5 | 4 | 930 | 8 | 80,660 | 16 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 570 | 4 | 26,820 | 6 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 346 | 4 | 22,423 | 6 |
+
+
+wall: 1329s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 3,213 | 60,030 | 230 | 12:03:10 | 12:06:59 |
+| ui | 2 | 19,471 | 3,128,058 | 274 | 12:03:10 | 12:07:44 |
+| machine | 6 | 10,207 | 110,474 | 1175 | 12:03:10 | 12:22:45 |
+| review | 3 | 56,200 | 3,453,878 | 254 | 12:03:10 | 12:07:24 |
+| triage | 1 | 5,875 | 33,616 | 35 | 12:22:47 | 12:23:22 |
+| refute | 14 | 18,225 | 1,239,540 | 29 | 12:23:25 | 12:23:53 |
+| capture | 1 | 346 | 22,423 | 6 | 12:23:55 | 12:24:01 |
+| synthesize | 1 | 14,525 | 52,396 | 76 | 12:24:03 | 12:25:19 |
+
+- **claude-opus-5-5**: 3 agent · 46 calls · out 56,200 · in 100 · cache_read 3,453,878 · cache_create 333,177
+- **claude-sonnet-5-5**: 20 agent · 101 calls · out 61,655 · in 204 · cache_read 4,536,063 · cache_create 760,811
+- **claude-haiku-5-5**: 6 agent · 12 calls · out 10,207 · in 24 · cache_read 110,474 · cache_create 198,822
+

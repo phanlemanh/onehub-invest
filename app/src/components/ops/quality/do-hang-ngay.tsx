@@ -15,15 +15,15 @@ import { BangBoSot, BangChuyenBac, BangGiu, BangLat, BangSoCap, BangTinHieu } fr
 
 /**
  * Khối «Đo hằng ngày» (DO1) trên /ops/quality: giữ nháp tuần này so tuần trước, bỏ sót, tín hiệu không cần nhãn, dòng
- * chuyển bậc, so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Dự án · Toà (`?lat-do=`). Số tính sẵn ở pipeline.
+ * chuyển bậc, so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (`?lat-do=`). Số tính sẵn ở pipeline.
  */
 
 const MO_TA = "Số có neo theo nháp: chỉ so tuần với tuần và so các cách đọc với nhau, không phải độ đúng."
 /** Chiều của từng nhóm số ứng với một lát (mẫu soát lát dự án theo chữ bài). */
-const CHIEU: Record<Exclude<LatDo, "tong">, { giu: string; tin: string; bac: string }> = {
+const CHIEU: Record<Exclude<LatDo, "tong">, { giu: string; tin: string; bac: string; them?: string }> = {
   thi_truong: { giu: "thi_truong", tin: "thi_truong", bac: "thi_truong" },
   phuong: { giu: "phuong", tin: "phuong", bac: "phuong" },
-  du_an: { giu: "du_an_theo_chu", tin: "du_an", bac: "du_an" },
+  du_an: { giu: "du_an", tin: "du_an", bac: "du_an", them: "du_an_theo_chu" },
   toa: { giu: "toa", tin: "toa", bac: "toa" },
 }
 
@@ -66,6 +66,7 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
   const soat = data?.giuNhap?.ty_le_soat?.tuan_nay
   const bac = data?.chuyenBac
   const c = lat === "tong" ? null : CHIEU[lat]
+  const coLat = !!c && [data?.giuNhap?.lat?.[c.giu], data?.boSot?.lat?.[c.giu], data?.tinHieu?.lat?.[c.tin], data?.chuyenBac?.lat?.[c.bac]].some(Boolean)
   return (
     <Frame variant="default" spacing="sm" className="w-full" data-do1="">
       <FrameHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
@@ -82,6 +83,13 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
         </Tabs>
       </FrameHeader>
       {!data ? <FramePanel><TrongDo1 /></FramePanel> : null}
+      {soat ? (
+        <FramePanel>
+          <p className="text-sm tabular-nums" data-do1-ty-le-soat="">
+            Tỉ lệ soát tuần này: {fmtInt(soat.soat)}/{fmtInt(soat.rut)} thẻ ({fmtPct(soat.ty_le ?? null)})
+          </p>
+        </FramePanel>
+      ) : null}
       {data?.giuNhap?.canh_bao_soat ? (
         <FramePanel>
           <Alert variant="warning" data-do1-canh-bao-soat="">
@@ -100,13 +108,24 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
             <FramePanel><p className="text-muted-foreground text-sm" data-do1-lap-moc="">Dòng chuyển bậc: lần đầu — đã lập mốc {fmtInt(bac.don_vi ?? 0)} đơn vị, số chuyển có từ lần chạy sau.</p></FramePanel>
           ) : bac?.theo_nguon ? <BangChuyenBac theoNguon={bac.theo_nguon} /> : null}
           {data.soSanh.map((s) => (s.o ? <BangSoCap key={s.entity} entity={s.entity} cu={s.cu} o={s.o} /> : (
-            <FramePanel key={s.entity}><p className="text-muted-foreground text-sm">So cặp {s.entity}: chưa so trên cùng bài.</p></FramePanel>
+            <FramePanel key={s.entity}><p className="text-muted-foreground text-sm">So cặp {s.entity}: đang chờ lượt so trên cùng bài.</p></FramePanel>
           )))}
         </>
+      ) : null}
+      {data && c && !coLat ? (
+        <FramePanel>
+          <Empty data-do1-lat-trong="">
+            <EmptyHeader>
+              <EmptyTitle>Lát này chưa có số</EmptyTitle>
+              <EmptyDescription>Bước đo chưa ghi phân rã cho lát này. Chọn «Tổng» hoặc chạy lại bước đo ở máy thu.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </FramePanel>
       ) : null}
       {data && c ? (
         <>
           {data.giuNhap?.lat?.[c.giu] ? <BangLat title="Thẻ mẫu soát đã soát" lat={data.giuNhap.lat[c.giu]} areaNames={areaNames} /> : null}
+          {c.them && data.giuNhap?.lat?.[c.them] ? <BangLat title="Thẻ mẫu soát theo tên khu đô thị trong bài" lat={data.giuNhap.lat[c.them]} areaNames={areaNames} /> : null}
           {data.boSot?.lat?.[c.giu] ? <BangLat title="Thẻ tin rao (mẫu bỏ sót)" lat={data.boSot.lat[c.giu]} areaNames={areaNames} /> : null}
           {data.tinHieu?.lat?.[c.tin] ? <BangLat title="Lời đọc trong ngày" lat={data.tinHieu.lat[c.tin]} areaNames={areaNames} /> : null}
           {bac?.lat?.[c.bac] ? <BangLat title="Đơn vị đổi bậc hôm nay" lat={bac.lat[c.bac]} areaNames={areaNames} /> : null}

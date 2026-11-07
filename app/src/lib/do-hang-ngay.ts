@@ -59,7 +59,7 @@ export const LAT_DO = [
   { value: "tong", label: "Tổng" },
   { value: "thi_truong", label: "Thị trường" },
   { value: "phuong", label: "Phường/xã" },
-  { value: "du_an", label: "Dự án" },
+  { value: "du_an", label: "Khu đô thị" },
   { value: "toa", label: "Toà" },
 ] as const
 export type LatDo = (typeof LAT_DO)[number]["value"]

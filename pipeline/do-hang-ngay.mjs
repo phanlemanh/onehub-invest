@@ -216,12 +216,14 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
   if (dotBien?.startsWith("lo:")) for (const r of ra) r.detail = { ...r.detail, x: dotBien.slice(3) };
   for (const r of ra) chanLo(dotBien === "lo-trich" ? { ...r.detail, trich: sl.find((x) => x.quote)?.quote } : dotBien === "lo-labeler" ? { ...r.detail, nguoi: cam.find((x) => x.nhan === "LABELER")?.chuoi } : r.detail, cam);
   if (write) {
+    // Một dòng mỗi (kiểm, đối tượng, ngày đo): xoá theo ngày đo ghi trong detail (không theo giờ chạy), đóng dấu clock_timestamp()
+    // để các lần chạy trong cùng giao dịch vẫn xếp được trước sau.
     await client.query(
       `DELETE FROM dq_check_results WHERE check_name IN ('do1-chuyen-bac', 'do1-giu-nhap', 'do1-bo-sot', 'do1-tin-hieu')
-         AND checked_at >= $1 AND checked_at < $2`, [tu, den]);
+         AND (detail::jsonb ->> 'ngay' = $1 OR (checked_at >= $2 AND checked_at < $3))`, [ngay, tu, den]);
     for (const r of ra) {
-      await client.query(`INSERT INTO dq_check_results (check_name, entity, status, detail) VALUES ($1, $2, $3, $4)`,
-        [r.check_name, r.entity, r.status, JSON.stringify(r.detail)]);
+      await client.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail) VALUES (clock_timestamp(), $1, $2, $3, $4)`,
+        [r.check_name, r.entity, r.status, JSON.stringify({ ngay, ...r.detail })]);
     }
   }
   return { chuyen: chuyen.length, lap_moc: lapMoc, dq: ra };

@@ -89,8 +89,8 @@ evals:
     paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**]
     steps:
       - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser, không đăng nhập lại. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/; KHÔNG bấm Lưu."
-      - "/ops/labels?lat=s03-cuon-chieu ở 1280 px sáng: thẻ đầu (có đọc gộp) → evidence/E11-step1.png; ghi chữ huy hiệu «Nháp máy · …», giá trị hiện ở các ô Phòng ngủ, Diện tích, Giá và ô WC"
-      - "Tìm một thẻ có huy hiệu «Nháp máy · bo-doc-luat» bằng cách thêm &xem= hay tải lại sau khi người thử đã có (nếu không tới được, ghi rõ) → evidence/E11-step2.png"
+      - "/ops/labels?lat=s03-cuon-chieu&nhom=2025-06-01 ở 1280 px sáng: thẻ đầu (có đọc gộp) → evidence/E11-step1.png; ghi chữ huy hiệu «Nháp máy · …», giá trị hiện ở các ô Phòng ngủ, Diện tích, Giá và ô WC"
+      - "/ops/labels?lat=s03-cuon-chieu&nhom=2025-06-06 (ngày chỉ có bộ đọc luật): thẻ đầu mang huy hiệu «Nháp máy · bo-doc-luat» → evidence/E11-step2.png"
       - "/ops/labels?lat=s03-cuon-chieu-trong (lát chưa rút) → evidence/E11-step3.png; ghi tiêu đề trạng thái trống"
     expected: "Trang /ops/labels lát 's03-cuon-chieu' trên dev server nối DB thử có 083, thẻ rút bằng mau-soat-cuon-chieu thật trên bài bịa: ảnh 1 — thẻ có đọc gộp: các ô điền sẵn thấy được trên màn (select hiện giá trị, không phải chữ gợi ý) cùng huy hiệu 'Nháp máy · doc-gop:…', ô WC trống; ảnh 2 — thẻ chỉ có bộ đọc luật: huy hiệu 'Nháp máy · bo-doc-luat'; ảnh 3 — lát chưa rút mẫu: chữ trạng thái trống kèm lệnh rút (lát s03-cuon-chieu-trong dùng khuôn trống chung vì không phải lát mẫu soát — ghi rõ). Ảnh lưu ở evidence/."
     evidence_required: [screenshot, observed, verified_at]

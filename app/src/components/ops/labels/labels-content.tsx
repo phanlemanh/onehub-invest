@@ -19,13 +19,15 @@ export async function LabelsContent({ user, lat, nhom, xem }: { user: User; lat:
   // Lát mẫu soát (DO1) chia theo ngày, không theo nhóm: không có bộ chọn nhóm.
   const dsNhom = lat === LAT_CUON_CHIEU ? [] : await nhomCuaLat(user.id, lat)
   // Nhóm mặc định: nhóm đầu còn bài cho người này; ai gắn hết thì nhóm đầu.
+  // Lát mẫu soát: ?nhom=<YYYY-MM-DD> chọn ngày rút (stratum); vắng thì mọi ngày.
+  const ngayCc = lat === LAT_CUON_CHIEU && nhom && /^\d{4}-\d{2}-\d{2}$/.test(nhom) ? nhom : null
   const chon = dsNhom.length
     ? (dsNhom.find((n) => n.unitCode === nhom) ?? dsNhom.find((n) => n.conChoToi > 0) ?? dsNhom[0]).unitCode
     : null
   const [tien, dong, tin, bang, luotHai] = await Promise.all([
-    tienDo(user.id, lat, undefined, chon),
+    tienDo(user.id, lat, undefined, chon ?? ngayCc),
     dongThuan(lat),
-    coGhi ? tinKe(user.id, lat, undefined, chon) : Promise.resolve(null),
+    coGhi ? tinKe(user.id, lat, undefined, chon ?? ngayCc) : Promise.resolve(null),
     chon ? bangTruongHop(lat) : Promise.resolve([]),
     coGhi && xem ? doiChieu(user.id, xem) : Promise.resolve(null),
   ])

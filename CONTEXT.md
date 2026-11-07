@@ -493,7 +493,7 @@ người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị b�
 _Avoid_: rolling sample, mẫu mù
 
 **Đo hằng ngày**: khối của «Chất lượng dữ liệu» hiện bốn nhóm số tính sẵn mỗi ngày — giữ nháp, bỏ sót, tín hiệu không cần
-nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Dự án · Toà (tham số `lat-do`).
+nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (tham số `lat-do`).
 - Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
 _Avoid_: dashboard đo, KPI hằng ngày
 

@@ -119,7 +119,8 @@ export function giuNhap(the, ngay, { dotBien } = {}) {
         if (!o.has(key)) o.set(key, { cach_doc: cach, o: f, nhom: nhomO(f), [tNay]: { n: 0, k: 0 }, [tTruoc]: { n: 0, k: 0 } });
         const r = o.get(key)[tuan];
         r.n++; if (giu) r.k++;
-        if (cach === t.draft.hien) {
+        // Ô người sửa chỉ tính ô người THẤY nháp: ô bảng chọn giao người (draft.o_nguoi) màn để trống.
+        if (cach === t.draft.hien && !(t.draft.o_nguoi ?? []).includes(f)) {
           const s = nguoiSua.get(tuan) ?? { n: 0, k: 0 };
           s.n++; if (!giu) s.k++;
           nguoiSua.set(tuan, s);

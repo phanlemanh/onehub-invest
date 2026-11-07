@@ -93,7 +93,7 @@ export function BangTinHieu({ dong, ngay }: { dong: DongTinHieu[]; ngay?: string
     <Panel title={`Tín hiệu không cần nhãn${ngay ? ` · ${ngay}` : ""}`}>
       <Table data-bang="tin-hieu">
         <TableHeader>
-          <TableRow><TableHead>Cách đọc</TableHead><TableHead>Lời gọi</TableHead><TableHead>JSON hỏng</TableHead><TableHead>Trích không có trong bài</TableHead><TableHead>Ô sai khuôn</TableHead></TableRow>
+          <TableRow><TableHead>Cách đọc</TableHead><TableHead>Lời gọi</TableHead><TableHead>Lời đáp hỏng khuôn</TableHead><TableHead>Trích không có trong bài</TableHead><TableHead>Ô sai khuôn</TableHead></TableRow>
         </TableHeader>
         <TableBody>
           {dong.map((d) => (
@@ -162,7 +162,8 @@ export function BangSoCap({ entity, cu, o }: { entity: string; cu?: string; o: R
 }
 
 export function BangLat({ title, lat, areaNames }: { title: string; lat: Lat; areaNames: Record<string, string> }) {
-  const dong = Object.entries(lat.o).filter(([, n]) => n > 0)
+  // Hai ô chưa gắn luôn hiện (kể cả 0): thấy rõ phần chưa gắn được mức này là việc của bộ đọc hay của danh bạ.
+  const dong = Object.entries(lat.o).filter(([k, n]) => n > 0 || k === "khong-tin-hieu" || k === "chua-co-danh-ba")
   return (
     <Panel title={title}>
       <Table data-bang="lat">

@@ -1,0 +1,3 @@
+step2(xem=11567) {"w":1422,"res":[]}
+step3 {"w":1422,"res":[]}
+(source: performance resource entries; ego-browser has no network-log reader)
