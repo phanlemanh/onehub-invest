@@ -10,16 +10,26 @@ import { gzipSync } from "node:zlib";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 // tham số: --danh-sach <json> --snapshot-root <dir> (0711-6: không ghi cứng state/)
 // 0711-29(2): --toi-da <số căn mỗi vùng, mặc định 20> · --vung <hcm|hanoi|danang>
 // (một vùng duy nhất mỗi lượt — không chạy nhiều vùng cùng lượt).
+// 0711-29(4b): --khung-tu-lich <dir snapshot lịch đã thu> — hỏi giá ở khung
+// 2 đêm trống liền đầu tiên lấy từ lịch ĐÃ THU thay cho mặc định +30 (chỉ
+// code + test; chưa chạy lượt thật).
 const args = Object.fromEntries(process.argv.slice(2).map((v, i, a) => (v.startsWith("--") ? [v.slice(2), a[i + 1]] : [])).filter(x => x.length));
 const DANH_SACH = args["danh-sach"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/id-500.json";
 const SNAP_ROOT = args["snapshot-root"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/snapshots";
 const TOI_DA = Number(args["toi-da"] ?? 20);
 const VUNG = args["vung"] ?? null;
+if (args["khung-tu-lich"]) {
+  if (!existsSync(args["khung-tu-lich"])) {
+    console.error(`lỗi: --khung-tu-lich trỏ thư mục không tồn tại: ${args["khung-tu-lich"]}`);
+    process.exit(2);
+  }
+  process.env.S01_KHUNG_TU_LICH = args["khung-tu-lich"];
+}
 if (VUNG && !(VUNG in { hcm: 1, hanoi: 1, danang: 1 })) {
   console.error(`lỗi: --vung phải là hcm|hanoi|danang (được "${VUNG}")`);
   process.exit(2);

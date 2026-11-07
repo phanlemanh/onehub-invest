@@ -229,3 +229,41 @@ test("khungGia: meta từng căn trong snapshot có đủ macDinh/thuLai/coGia/d
   assert.equal(k.demTrongKhungMacDinh, false);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+
+// 0711-29(4b): --khung-tu-lich <dir> → script đặt env S01_KHUNG_TU_LICH cho
+// collector (collector giả in env ra chứng minh nhận được); dir không tồn tại
+// → thoát 2 TRƯỚC khi chạy lượt.
+test("--khung-tu-lich: đặt env S01_KHUNG_TU_LICH cho collector; dir thiếu thoát 2", async () => {
+  const { spawnSync: sp } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const J = (await import("node:path")).default.join;
+  const dir = fs.mkdtempSync(J(tmpdir(), "s01-ktl-"));
+  fs.mkdirSync(J(dir, "lich", "hcmc"), { recursive: true });
+  fs.writeFileSync(J(dir, "id.json"), JSON.stringify({ hcm: ["abnb_1"] }));
+  fs.writeFileSync(J(dir, "gia.mjs"),
+    "export const airbnbListing = { requestsPerSecond: 1, async collect(ctx) {\n" +
+    "  ctx.log(\"env-khung=\" + (process.env.S01_KHUNG_TU_LICH ?? \"TRỐNG\"));\n" +
+    "  ctx.log(\"[1/1] a price=9\");\n" +
+    "  return { items: [], coverage: { discovered: 1, captured: 0, failed: 0, methods: {}, notes: [] } };\n" +
+    "} };\n");
+  const r = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps"), "--vung", "hcm", "--khung-tu-lich", J(dir, "lich")], {
+    encoding: "utf8", timeout: 30000,
+    env: { ...process.env, S01_COLLECTOR_GIA: J(dir, "gia.mjs") },
+  });
+  const out = (r.stdout || "") + (r.stderr || "");
+  assert.equal(r.status, 0, `phải thoát 0: ${out.slice(0, 300)}`);
+  assert.ok(out.includes("env-khung=" + J(dir, "lich")), `collector phải nhận env S01_KHUNG_TU_LICH đúng dir: ${out.slice(0, 300)}`);
+  // dir không tồn tại → thoát 2 với lỗi rõ
+  const r2 = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps"), "--vung", "hcm", "--khung-tu-lich", J(dir, "khong-co")], {
+    encoding: "utf8", timeout: 20000,
+    env: { ...process.env, S01_COLLECTOR_GIA: J(dir, "gia.mjs") },
+  });
+  const out2 = (r2.stdout || "") + (r2.stderr || "");
+  assert.equal(r2.status, 2, `dir thiếu phải thoát 2 (được ${r2.status}): ${out2.slice(0, 200)}`);
+  assert.ok(out2.includes("không tồn tại"), `lỗi phải nói rõ dir thiếu: ${out2.slice(0, 200)}`);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

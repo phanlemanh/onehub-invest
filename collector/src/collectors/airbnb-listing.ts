@@ -17,6 +17,52 @@ import type { Collector, RawItem } from "../core/types.js";
 const BATCH = Number(process.env.AIRBNB_LISTING_BATCH ?? 25);
 const NAV_TIMEOUT = 45_000;
 
+/** Tìm 2 đêm liền kề còn trống đầu tiên trong calendar (từ hôm nay +7). */
+const firstWindow = (cal: unknown): { ci: string; co: string } | null => {
+  const months =
+    (cal as any)?.data?.node?.pdpAvailabilityCalendar?.calendarMonths ?? [];
+  const days = ([] as any[]).concat(...months.map((m: any) => m.days ?? []));
+  const minDate = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  for (let i = 0; i + 1 < days.length; i++) {
+    if (days[i].available && days[i + 1].available) {
+      if (days[i].calendarDate >= minDate) {
+        return { ci: days[i].calendarDate, co: days[i + 1].calendarDate };
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * 0711-29(4b): đọc map id → khung 2 đêm trống liền đầu tiên từ lịch ĐÃ THU
+ * (snapshot airbnb-listing cũ dưới <dir>/<vùng>/…airbnb-listing…).
+ * Bản sau đè bản trước (thư mục sort cũ → mới) — map giữ khung mới nhất mỗi id.
+ */
+export const docKhungTuLich = async (
+  dir: string,
+): Promise<Map<string, { ci: string; co: string }>> => {
+  const map = new Map<string, { ci: string; co: string }>();
+  for (const vung of (await readdir(dir).catch(() => [] as string[]))) {
+    const snaps = (await readdir(join(dir, vung)).catch(() => [] as string[]))
+      .filter((s) => s.includes("airbnb-listing"))
+      .sort();
+    for (const snap of snaps) {
+      const manPath = join(dir, vung, snap, "manifest.json");
+      const man = JSON.parse(await readFile(manPath, "utf8").catch(() => '{"files":[]}'));
+      for (const f of ((man.files ?? []) as { name: string }[]).filter((f) => f.name.startsWith("items-"))) {
+        const items: RawItem[] = JSON.parse(
+          gunzipSync(await readFile(join(dir, vung, snap, f.name))).toString("utf8"),
+        );
+        for (const it of items) {
+          const w = firstWindow((it.payload as any)?.calendar);
+          if (w) map.set(it.sourceId, w);
+        }
+      }
+    }
+  }
+  return map;
+};
+
 export const airbnbListing: Collector = {
   id: "airbnb-listing",
   description:
@@ -116,28 +162,23 @@ export const airbnbListing: Collector = {
       return m ? m[1] : null;
     };
 
-    /** Tìm 2 đêm liền kề còn trống đầu tiên trong calendar (từ hôm nay +7). */
-    const firstWindow = (cal: unknown): { ci: string; co: string } | null => {
-      const months =
-        (cal as any)?.data?.node?.pdpAvailabilityCalendar?.calendarMonths ?? [];
-      const days = ([] as any[]).concat(...months.map((m: any) => m.days ?? []));
-      const minDate = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
-      for (let i = 0; i + 1 < days.length; i++) {
-        if (days[i].available && days[i + 1].available) {
-          if (days[i].calendarDate >= minDate) {
-            return { ci: days[i].calendarDate, co: days[i + 1].calendarDate };
-          }
-        }
-      }
-      return null;
-    };
+    // 0711-29(4b): S01_KHUNG_TU_LICH=<dir snapshot lịch đã thu> — hỏi giá ở
+    // khung 2 đêm trống liền đầu tiên lấy THẲNG từ lịch đã thu (snapshot cũ)
+    // thay cho mặc định hôm-nay+30. Vắng env hoặc căn không có khung → mặc định.
+    const khungCu = process.env.S01_KHUNG_TU_LICH
+      ? await docKhungTuLich(process.env.S01_KHUNG_TU_LICH)
+      : null;
+    if (khungCu) log(`khung-tu-lich: ${khungCu.size} căn có khung từ lịch đã thu`);
 
     try {
       for (let i = 0; i < batch.length; i++) {
         const id = batch[i];
         try {
           let khungThuLai: { ci: string; co: string } | null = null; // 0711-29(3)
-          let r = await fetchOnce(id, defaultCi, defaultCo);
+          const kTuLich = khungCu?.get(id) ?? null; // 0711-29(4b): khung từ lịch đã thu
+          let r = kTuLich
+            ? await fetchOnce(id, kTuLich.ci, kTuLich.co)
+            : await fetchOnce(id, defaultCi, defaultCo);
           let pdpStr = priceOf(r.pdp);
           if (!pdpStr && r.cal) {
             // window mặc định hết chỗ → thử window available từ calendar
@@ -178,6 +219,7 @@ export const airbnbListing: Collector = {
               hasPrice: !!pdpStr,
               khungGia: {
                 macDinh: { ci: defaultCi, co: defaultCo },
+                tuLich: kTuLich, // 0711-29(4b): khung từ lịch đã thu — khi non-null là khung đã hỏi CHÍNH
                 thuLai: khungThuLai ?? null,
                 coGia: !!pdpStr,
                 demTrongKhungMacDinh: r.cal ? demTrongKhung(r.cal, defaultCi, defaultCo) : null,
