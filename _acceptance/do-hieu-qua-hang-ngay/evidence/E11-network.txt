@@ -1,1 +1,1 @@
-E11 network: driver ego-browser (ego lite) khong co duong doc network/console -> n-a (driver). Cac trang SSR tra 200 qua trinh duyet (tieu de trang dung).
+driver ego-browser: khong co duong doc network/console; n-a (driver)
