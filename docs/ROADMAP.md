@@ -466,8 +466,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     dễ dàng thay đổi các model và hiện tại sử dụng haiku». Thay Hỏi-4 cũ của review phân loại §7.0 (M1 local mặc định, cổng
     Gateway hoãn tới PH4) cho việc đọc tin; ngoại lệ có tên của §1.6. Hàng PL30.
 34. **Đọc gộp S03 chạy hằng ngày, trần 20 USD/ngày** (07/11, Mạnh «Đồng ý trần 20 usd/ngày. Còn lại theo khuyến nghị»;
-    đóng Hỏi-1 của PL30): phạm vi bài S03 mới đã khử trùng theo tin, dự án của mốc GCM1 trước; chạm trần thì dừng có tên.
-    Mở ra toàn S03 sau một tuần xem tiền (PL31b) và độ đúng (DO1). Ước ~8–14 USD/ngày nếu chạy toàn S03 bằng Haiku. Hàng PL34.
+    đóng Hỏi-1 của PL30): chạm trần thì dừng có tên. 08/11 Mạnh «1. Bật toàn bộ bài 2. Nghiệm thu sau»: phạm vi là toàn bộ bài
+    S03 mới đã khử trùng theo tin (~9.000 bài, ~15 USD/ngày), không chỉ dự án GCM1; đọc lại kho cũ ước tiền và trình riêng; phiên
+    nghiệm thu PL30 làm sau khi DO1 có số đo hằng ngày. Hàng PL34.
+37. **Danh bạ phường/xã toàn quốc và 150 dự án S08** (08/11, Mạnh «Đồng ý»): nạp đủ 3.321 xã, phường, đặc khu theo mã của
+    Cục Thống kê (dữ liệu công, sinh ở repo onehub-quy-hang), tên xã cũ là bí danh, ranh giới OSM khớp vào mã; mở danh bạ
+    toà–trục–căn ra 150 dự án của danh mục nội bộ S08. Hàng PX1, PX2.
 35. **Duyệt trên Ops theo hạng mục** (07/11, Mạnh duyệt báo cáo `docs/research/soat-ops-0711.md`, «Đồng ý, tôi đã đăng
     nhập lại Reui pro»):
     - Thẻ Đối chiếu (chỉ ghi nhật ký) rời Hàng duyệt thành lát chấm mẫu ~30 thẻ/tuần, đáp án bốn lựa chọn.
