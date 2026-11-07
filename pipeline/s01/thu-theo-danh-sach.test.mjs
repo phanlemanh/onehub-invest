@@ -76,6 +76,24 @@ test("luat-dung: 5-FAIL liền (có tốt xen trước) dừng; 3-mất-giá d�
   assert.equal(b3.state.vungDung, null, "không đủ liền → không dừng");
 });
 
+
+// 0711-12(2): spawn script THẬT + collector giả 5-FAIL — chạy QUA khối chính
+test("spawn thật + collector giả 5-FAIL liền → thoát 2, output có 5-lien-FAIL", async () => {
+  const fs = await import("node:fs");
+  const dir = fs.mkdtempSync(join(tmpdir(), "s01-gia-"));
+  fs.writeFileSync(join(dir, "id.json"), JSON.stringify({ hcm: ["abnb_1"] }));
+  fs.writeFileSync(join(dir, "gia.mjs"), "export const airbnbListing = { requestsPerSecond: 1,\n  async collect(ctx) {\n    for (const d of [\"[1/7] a price=1\", \"[2/7] b price=2\", \"[3/7] c FAIL x\", \"[4/7] d FAIL x\", \"[5/7] e FAIL x\", \"[6/7] f FAIL x\", \"[7/7] g FAIL x\"]) ctx.log(d);\n    return { items: [], coverage: { discovered: 7, captured: 0, failed: 7, methods: {}, notes: [] } };\n  } };\n");
+  const r = spawnSync("node", [join(REPO, "s01", "thu-theo-danh-sach.mjs"),
+    "--danh-sach", join(dir, "id.json"), "--snapshot-root", join(dir, "snaps")], {
+    encoding: "utf8", timeout: 30000,
+    env: { ...process.env, S01_COLLECTOR_GIA: join(dir, "gia.mjs") },
+  });
+  const out = (r.stdout || "") + (r.stderr || "");
+  assert.equal(r.status, 2, `phải thoát 2 (được ${r.status}): ${out.slice(0, 300)}`);
+  assert.ok(out.includes("5-lien-FAIL"), `output có 5-lien-FAIL: ${out.slice(0, 300)}`);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 // 0711-11: spawn script THẬT với danh sách không tồn tại — chứng minh khởi
 // động được tới chỗ đọc danh sách (không ReferenceError ở khối import/luat-dung)
 test("script thật khởi động không ReferenceError (đến lỗi đọc danh sách)", () => {

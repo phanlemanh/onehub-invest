@@ -28,13 +28,19 @@ const launchGoc = pw.chromium.launch.bind(pw.chromium);
 pw.chromium.launch = (opts = {}) =>
   launchGoc({ ...opts, args: [...(opts.args ?? []), "--window-position=-2400,100", "--window-size=1100,800"] });
 
-const { airbnbListing } = await import(join(ROOT, "collector", "dist", "collectors", "airbnb-listing.js"));
+// 0711-12(2): S01_COLLECTOR_GIA=<mjs> thay collector bằng bản giả (test chạy
+// QUA khối chính — chứng minh luật dừng + đối chiếu hoạt động thật)
+const { airbnbListing } = process.env.S01_COLLECTOR_GIA
+  ? await import(process.env.S01_COLLECTOR_GIA)
+  : await import(join(ROOT, "collector", "dist", "collectors", "airbnb-listing.js"));
 const { cityById } = await import(join(ROOT, "collector", "dist", "config", "cities.js"));
 const { SnapshotWriter } = await import(join(ROOT, "collector", "dist", "core", "storage.js"));
 // 0711-5: writer ghi THẬT xuống đĩa từng ≤20 căn (flush từng phần), mọi đường
 // thoát đều finalize; SIGTERM/SIGINT cũng flush rồi exit.
 let writerHienTai = null;
 const snapshotIdsLootNay = [];
+// 0711-12: tổng lũy kế TOÀN lượt (đối chiếu cuối dùng) — đưa ra ngoài vòng vùng
+const tongItems = { items: [], coverageN: { discovered: 0, captured: 0, failed: 0, methods: {}, notes: [] } };
 let itemsChuaGhi = [];
 async function flushItems(coverageBo = null) {
   if (!writerHienTai || itemsChuaGhi.length === 0) return;
@@ -87,13 +93,16 @@ for (const [k, cityId] of Object.entries(TP)) {
   // hoàn chỉnh (flush xuống đĩa sau mỗi cụm) — đứt giữa chừng chỉ mất cụm đang chạy.
   const cum = [];
   for (let i = 0; i < ids.length; i += 20) cum.push(ids.slice(i, i + 20));
-  const tongItems = { items: [], coverageN: { discovered: 0, captured: 0, failed: 0, methods: {}, notes: [] } };
   for (let ci = 0; ci < cum.length; ci++) {
     const nhom = cum[ci];
     await duDiscovery(cityId, nhom);
     console.log(`== ${cityId} cụm ${ci + 1}/${cum.length} (${nhom.length} căn) ==`);
   const t0 = Date.now();
   writerHienTai = new SnapshotWriter(SNAP_ROOT, cityId, "airbnb-listing");
+  // 0711-11/0711-12: luật dừng theo từng căn — import luat-dung.mjs (export)
+  const { taoBoDem } = await import(join(REPO_S01, "luat-dung.mjs"));
+  const bd = taoBoDem();
+  const chanCan = (dong) => { bd.can(dong); if (bd.state.nhip10) console.log(`   [nhịp] trung bình 10 căn đầu: ${bd.state.nhip10}s/căn`); };
   try {
     const { items, coverage } = await airbnbListing.collect({
       city: cityById(cityId),
@@ -139,13 +148,13 @@ for (const [k, cityId] of Object.entries(TP)) {
       notes: (coverage.notes ?? []).slice(0, 3),
     };
     // 0711-1(2): chỉ căn ĐÃ THỬ mà không dữ liệu mới tính gỡ; ngưỡng >10% sau 50 đã-thử
-    tongThat = (tongItems.coverageN.captured ?? 0) + (tongItems.coverageN.failed ?? 0);
+    const tongThat = (tongItems.coverageN.captured ?? 0) + (tongItems.coverageN.failed ?? 0);
     const goThat = tongItems.coverageN.failed ?? 0;
     if (tongThat >= 50 && goThat / tongThat > 0.1) {
       console.log(`!! gỡ thật ${goThat}/${tongThat} đã thử > 10% — DỪNG (0711-1)`);
       chan = true;
     }
-    if (vungDung) { console.log(`!! DỪNG theo luật căn-liền: ${vungDung}`); chan = true; }
+    if (bd.state.vungDung) { console.log(`!! DỪNG theo luật căn-liền: ${bd.state.vungDung}`); chan = true; }
     // 0711-5(c): dừng khi 5 căn LIỀN FAIL trong cụm
     if (chan) break;
   } catch (e) {
