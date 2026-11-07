@@ -117,6 +117,41 @@ và khoá vật thể). Bảng này đã nằm trong FILL của `sync-cloud.mjs`
 `/ops/quality` thêm khối «Đo hằng ngày» đọc các dòng `do1-*` mới nhất; bảng «Kiểm chất lượng» chung bỏ các dòng `do1-*` để
 không lặp JSON thô.
 
+## Bổ sung sau rà soát (Mạnh 07/11 «Đồng ý tất cả theo khuyến nghị»)
+
+### Nguyên tắc đo (ghi vào FRAMING §5 — một chỗ)
+
+1. **Đơn vị và mẫu số** đi cạnh mọi số: giữ nháp đo trên ô của thẻ có nháp `co`; bỏ sót đo trên thẻ người gắn «Tin rao»;
+   tín hiệu đo trên lời gọi/ô của ngày; chuyển bậc đo trên đơn vị (căn, tin lẻ).
+2. **«Giữ» với ô số có dung sai**: giá ±1%, diện tích ±1 m² (Mạnh duyệt theo khuyến nghị); ô chữ so sau chuẩn hoá.
+3. **Nhóm ô theo F3**: A — `listing_intent`, `kind`, `property_type`, `multi_unit`, `project`, `subzone`, `building`, `stack`,
+   `unit_number`; B — `price_min_vnd`, `price_max_vnd`, `area_m2`, `bedrooms`, `bedrooms_plus`, `bathrooms`, `floor`; C — còn
+   lại. Đích D4 đọc trên nhóm A.
+4. **Phiên bản thước**: mỗi dòng mang `phien_ban_thuoc` (băm danh sách ô + quy tắc chuẩn hoá + dung sai); đổi thước không lẫn
+   với đổi model.
+5. **Cơ cấu mẫu**: so tuần kèm cơ cấu bán/thuê × loại nhà của hai tuần; lệch cơ cấu không phải máy trôi.
+6. **Chênh có ý nghĩa**: chỉ khi hai khoảng Wilson 95% không chồng nhau; in kèm ngưỡng phát hiện được (độ rộng nửa khoảng × 2)
+   để biết chênh nhỏ hơn mức nào thì không thấy được.
+7. **Tỉ lệ soát**: thẻ đã soát / thẻ đã rút theo tuần; dưới 70% thì cảnh báo — số có thể đẹp giả vì bỏ thẻ khó.
+8. **So trước/sau trên cùng bài**: đổi model hay prompt thì chạy khoá mới trên thẻ mẫu soát 4 tuần gần nhất đã có nhãn rồi so
+   cặp (`pipeline/so-sanh-cach-doc.mjs`, trần 0,30 USD/lần); so hai tuần khác bài chỉ để thấy trôi.
+
+### Chuyển bậc: đổi khoá và nguồn
+
+Khoá «căn» S06 còn chứa giá (`resolve-properties.mjs`), nên tin đổi giá rời căn P sang căn Q. Lệnh đo nhận ra tin đi từ căn
+này sang căn khác (qua `property_offers` hai lần chạy) và gắn lý do `doi-khoa` cho cặp «mất P + mới Q», tách khỏi biến động
+thật. Mọi số chuyển bậc phân rã theo nguồn (S03, S05, S06) vì S06 áp đảo.
+
+### Địa lý
+
+- Thêm chiều **thị trường** (cấp đầu — 94% tin S03 chỉ tới đây). Mã thị trường theo bảng `areas` hiện hành.
+- **Hai ô chưa gắn**: `khong-tin-hieu` (bài/đơn vị không nêu chỗ ở mức đó) và `chua-co-danh-ba` (có chữ toà/dự án —
+  `block_raw`, ô `project`/`building` của nháp — mà danh bạ chưa có vật thể khớp). Ô đầu là việc của bộ đọc, ô sau là việc
+  của danh bạ.
+- **Dự án theo chữ bài** cho số trên mẫu soát: tên dự án lấy từ nhãn người (ưu tiên) hoặc nháp đọc gộp, nhãn «theo chữ bài,
+  chưa qua danh bạ» — có số cho Ocean Park, Grand Park ngay, không chờ PL20.
+- **Để sau** (giám sát ghi vào lộ trình): lấy mẫu phân tầng theo khu trọng tâm có trọng số, quyết sau 2 tuần số thật.
+
 ## Không làm (ranh giới)
 
 - Chi phí lên bậc (PL31), độ tươi p50/p95 (PL22), lý do rơi từng chặng (DF3), tập test mù đóng băng và cổng tự áp (PL21, Q3
