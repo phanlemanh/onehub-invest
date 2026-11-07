@@ -90,7 +90,7 @@ export function LabelFormNhom({
     }
   }
   const daDien = TAT_CA_O.filter((d) => cell(d.id).unknown || cell(d.id).value.trim()).length
-  const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh")
+  const canLyDo = TAT_CA_O.some((d) => !d.noBasis && !cell(d.id).unknown && cell(d.id).value.trim() && cell(d.id).basis !== "chu_bai" && cell(d.id).basis !== "anh" && cell(d.id).basis !== "danh_muc_cdt")
   const xong = daDien === TAT_CA_O.length
 
   async function luu(xacNhan = false) {
@@ -165,7 +165,7 @@ export function LabelFormNhom({
                 {cot.map((id) => {
                   const k = KHOI.find((x) => x.id === id)!
                   return (
-                    <div key={id} className="flex min-w-0 flex-col gap-2">
+                    <div key={id} className="flex min-w-0 flex-col gap-2" data-khoi={id}>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium">{k.title}</p>
                         {k.hint ? <p className="text-muted-foreground text-xs text-pretty">{k.hint}</p> : null}
