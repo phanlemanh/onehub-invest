@@ -26,6 +26,12 @@
       "port": 3461
     },
     {
+      "name": "app-3462-do1",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_do1", "SNAPSHOTS_DIR=../../../../collector/snapshots", "npm", "--prefix", "app", "run", "dev", "--", "-p", "3462"],
+      "port": 3462
+    },
+    {
       "name": "data-api",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "data-api", "run", "dev"],

@@ -263,6 +263,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
+- **Đo hằng ngày (DO1, 07/11)**: `pipeline/mau-soat-cuon-chieu.mjs` rút 20 bài S03/ngày vào lát `s03-cuon-chieu`, gọi đọc gộp
+  Haiku cho bài thiếu (trần 0,05 USD/ngày) rồi chụp nháp mọi cách đọc vào `eval_label_items.draft` (083); `/ops/labels` lát
+  đó điền sẵn nháp. `pipeline/do-hang-ngay.mjs --write` ghi `data_level_unit`/`data_level_change` (083, chỉ máy thu) và bốn
+  nhóm số `do1-*` vào `dq_check_results` (lên cloud sẵn) — giữ nháp, bỏ sót, tín hiệu, chuyển bậc, lát thị trường/phường/dự
+  án/toà; `pipeline/so-sanh-cach-doc.mjs` so cặp trước/sau. Xem ở `/ops/quality` khối «Đo hằng ngày». Nguyên tắc đo: FRAMING §5.
+  Áp 083 lên DB máy thu và thêm hai lệnh vào `scripts/cloud-sync.sh` sau `bac-du-lieu`: giám sát làm sau gộp (Hỏi-3).
+
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
 `draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).

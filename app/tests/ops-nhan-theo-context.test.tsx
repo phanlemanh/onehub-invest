@@ -327,10 +327,11 @@ test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ
   let rows: { check_name: string; entity: string; status: string; detail: string | null; checked_at: string }[]
   try {
     // Cùng cột, cùng cửa sổ 7 ngày với trang /ops/quality — nhưng KHÔNG LIMIT: lời hứa là MỌI dòng kiểm được diễn giải.
+    // Dòng do1-* (DO1) có khối «Đo hằng ngày» riêng, bảng chung bỏ chúng (dqLatestSql) — ca này cũng bỏ.
     rows = (
       await c.query(
         `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
-         WHERE checked_at > now() - interval '7 days' ORDER BY checked_at DESC`,
+         WHERE checked_at > now() - interval '7 days' AND check_name NOT LIKE 'do1-%' ORDER BY checked_at DESC`,
       )
     ).rows
   } finally {

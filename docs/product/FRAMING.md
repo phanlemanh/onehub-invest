@@ -180,6 +180,25 @@ Bốn tầng tính sẵn ở pipeline, đẩy lên Ops qua kênh số tổng h�
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
 | **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud (lời gọi model đọc tin là ngoại lệ có tên, ADR-0007 sửa 06/11) · 0 khoá vật thể chứa giá, loại hay bán/thuê | Chặn ở CI |
 
+### Nguyên tắc đo (DO1, Mạnh duyệt 07/11)
+
+Áp cho mọi số trên mẫu soát và mọi số đo hằng ngày (`/ops/quality` khối «Đo hằng ngày»):
+
+1. **Đơn vị và mẫu số đi cạnh số**: giữ nháp đo trên ô của thẻ có nháp; bỏ sót trên thẻ người gắn «Tin rao»; tín hiệu trên
+   lời gọi và ô của ngày; chuyển bậc trên đơn vị (căn, tin lẻ).
+2. **«Giữ» với ô số có dung sai**: giá ±1%, diện tích ±1 m²; ô chữ so sau chuẩn hoá. (Khác dung sai diện tích ±3% của F3 —
+   F3 là ngưỡng tự áp, đây là thước giữ nháp.)
+3. **Nhóm ô theo F3**: A định nhóm/định danh, B số, C mô tả; đích giữ nháp đọc trên nhóm A.
+4. **Phiên bản thước**: mỗi dòng mang mã phiên bản (ô + chuẩn hoá + dung sai); đổi thước không lẫn với đổi model.
+5. **Cơ cấu mẫu**: so tuần kèm cơ cấu bán/thuê × loại nhà; lệch cơ cấu không phải máy trôi.
+6. **Chênh có ý nghĩa** chỉ khi hai khoảng Wilson 95% không chồng nhau; luôn in ngưỡng phát hiện được.
+7. **Tỉ lệ soát**: thẻ đã soát / thẻ đã rút theo tuần; dưới 70% thì cảnh báo.
+8. **So trước/sau trên cùng bài**: đổi model hay prompt thì chạy cách đọc mới trên thẻ mẫu soát 4 tuần gần nhất rồi so cặp;
+   so hai tuần khác bài chỉ để thấy trôi.
+
+Địa lý: thị trường · phường/xã · dự án · toà; hai ô chưa gắn tách nhau — «Không nêu chỗ» (việc của bộ đọc) và «Chưa có
+trong danh bạ» (việc của danh bạ). Lấy mẫu phân tầng theo khu trọng tâm: chưa làm, quyết sau 2 tuần số thật (lộ trình).
+
 ## 6. Hệ quả cho cách làm
 
 - **Khoá của sự thật là căn** (số nhà / mã căn); **khoá của bằng chứng là id gốc của tin**. Review phân loại
@@ -235,3 +254,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-10-27 | Hướng B (Mạnh chốt): «listing» là mọi tin niêm yết theo RESO — trả «mạng lưới listing» về như bản gốc; lớp giữa §3.1 gọi «Listing (tin)» | Mạnh chốt · Claude ghi |
 | 2026-11-02 | Thêm §0 sứ mệnh và chỉ nam; tám chỉ số ra mắt 05/11 ở `docs/plan/ra-mat-0511-so-luong-chat-luong.md`; ngưỡng chất lượng chỉ đo, không chặn | Mạnh chốt · Claude ghi |
 | 2026-11-07 | §5 thôi «[đề xuất]»: chép bốn tầng đo của tài liệu mô hình dòng chảy (dòng chuyển bậc, phễu theo mức gắn, độ đúng để mở cổng tách khỏi mẫu soát để thấy trôi, bất biến khoá vật thể); hàng DO1–DO3, DF1/DF3, PL21/22/31; tập test mù hay mẫu nháp cho cổng tự áp hoãn tới PL21 (ROADMAP §3 mục 32) | Mạnh duyệt · Claude ghi |
+| 2026-11-07 | §5 thêm tám nguyên tắc đo của DO1 (đơn vị + mẫu số, dung sai ô số, nhóm ô F3, phiên bản thước, cơ cấu, chênh có ý nghĩa, tỉ lệ soát, so cặp trước/sau) và hai ô chưa gắn của địa lý | Mạnh duyệt · Claude ghi |
