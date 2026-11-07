@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const PIPE = path.join(ROOT, "pipeline");
 const pg = createRequire(path.join(PIPE, "package.json"))("pg");
-const DB = "oneinvest_gn2";
+const DB = "oneinvest_gn2_mau"; // tên riêng: lượt chấm chạy E2 và E7 song song
 const SCHEMA = "gn2_mau";
 const URL_DB = `postgres://oneinvest:oneinvest@localhost:5433/${DB}`;
 const URL_LENH = `${URL_DB}?options=${encodeURIComponent(`-c search_path=${SCHEMA},public`)}`;

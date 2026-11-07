@@ -1,7 +1,7 @@
 schema_version: 1
 feature_slug: lay-mau-khu-trung-theo-tin
 # Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
-# DB: DB thử oneinvest_gn2 (db/db-thu.sh). Bản chép lát đọc chỉ đọc từ DB máy thu; không ghi DB máy thu.
+# DB: DB thử oneinvest_gn2_mau (E2), oneinvest_gn2_lat (E7) — hai tên vì lượt chấm chạy song song (db/db-thu.sh). Bản chép lát đọc chỉ đọc từ DB máy thu; không ghi DB máy thu.
 evals:
   - id: E1
     criterion: AC-1
@@ -17,7 +17,7 @@ evals:
     cmd: config:executors.script.gn2_mau
     layer: backend-effect
     paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, _acceptance/lay-mau-khu-trung-theo-tin/probes/mau.mjs]
-    expected: "exit 0; probe dựng DB thử oneinvest_gn2 bằng db/migrations, nạp bài giả (hai bài cùng chữ khác link chưa thành tin, ba bài một tin đăng lại, một bài trycloudflare, một bài «[Tên sàn]», một sự kiện thu hồi, bài khác) và sale_offer_records giả, chạy lệnh label-sample thật cho một lát thường và một lát theo nhóm; in 'ok khong hai the chung khoa' cho mỗi lát, 'ok bo vi trung = <n>' với n viết trước, 'ok bai thu bi gat = 2', 'ok bo_su_kien = 1', 'ok tat dinh' (chạy hai lần cùng seed, so ref_id); gọi loadStgPosts + auditRejected trên DB thử rồi đọc ops_audit: by_marker có 'noi-dung' = 2; cuối 'MAU OK', xoá DB thử. Chiều đỏ: bản sampler dùng textHash cũ → 'THE TRUNG TRONG LAT'; bản testMarker không đọc text → 'BAI THU VAO MAU'."
+    expected: "exit 0; probe dựng DB thử oneinvest_gn2_mau bằng db/migrations, nạp bài giả (hai bài cùng chữ khác link chưa thành tin, ba bài một tin đăng lại, một bài trycloudflare, một bài «[Tên sàn]», một sự kiện thu hồi, bài khác) và sale_offer_records giả, chạy lệnh label-sample thật cho một lát thường và một lát theo nhóm; in 'ok khong hai the chung khoa' cho mỗi lát, 'ok bo vi trung = <n>' với n viết trước, 'ok bai thu bi gat = 2', 'ok bo_su_kien = 1', 'ok tat dinh' (chạy hai lần cùng seed, so ref_id); gọi loadStgPosts + auditRejected trên DB thử rồi đọc ops_audit: by_marker có 'noi-dung' = 2; cuối 'MAU OK', xoá DB thử. Chiều đỏ: bản sampler dùng textHash cũ → 'THE TRUNG TRONG LAT'; bản testMarker không đọc text → 'BAI THU VAO MAU'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -57,7 +57,7 @@ evals:
     cmd: config:executors.script.gn2_lat_that
     layer: backend-effect
     paths: [pipeline/label-ghep.mjs, pipeline/lib/eval-labels.mjs, _acceptance/lay-mau-khu-trung-theo-tin/probes/lat-that.mjs]
-    expected: "exit 0; probe đọc chỉ đọc lát s03-theo-nhom (eval_label_items, eval_labels, bài stg của các ref, sale_offer_records S03 chứa các ref) từ DB máy thu, chép vào DB thử oneinvest_gn2, chạy label-ghep --lam-lai thật trên DB thử; in 'ok 44 the an cu van an' (cùng ref_id ẩn, cùng trung_voi), 'ok so the an = <N>' với N lấy từ dòng sổ gate1 Hỏi-1 của hồ sơ, mỗi thẻ ẩn thêm một dòng 'an them <item_id> <khoa>', 'ok lan hai khong doi'; in 'tin canonical se nghi vi dau moi = <n>' (đếm post mang dấu mới có trong sale_offer_records sống); chỉ in mã thẻ, khoá và số, không in chữ bài; cuối 'LAT-THAT OK', xoá DB thử. Chiều đỏ trên cùng bản chép: bản --lam-lai dựng lại từ đầu → 'AN TAY MAT: <n>'."
+    expected: "exit 0; probe đọc chỉ đọc lát s03-theo-nhom (eval_label_items, eval_labels, bài stg của các ref, sale_offer_records S03 chứa các ref) từ DB máy thu, chép vào DB thử oneinvest_gn2_lat, chạy label-ghep --lam-lai thật trên DB thử; in 'ok 44 the an cu van an' (cùng ref_id ẩn, cùng trung_voi), 'ok so the an = <N>' với N lấy từ dòng sổ gate1 Hỏi-1 của hồ sơ, mỗi thẻ ẩn thêm một dòng 'an them <item_id> <khoa>', 'ok lan hai khong doi'; in 'tin canonical se nghi vi dau moi = <n>' (đếm post mang dấu mới có trong sale_offer_records sống); chỉ in mã thẻ, khoá và số, không in chữ bài; cuối 'LAT-THAT OK', xoá DB thử. Chiều đỏ trên cùng bản chép: bản --lam-lai dựng lại từ đầu → 'AN TAY MAT: <n>'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-7

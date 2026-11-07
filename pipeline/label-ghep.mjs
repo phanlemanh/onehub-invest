@@ -21,6 +21,9 @@ const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest
  * @returns {Promise<Map<string, string>>}
  */
 export async function docTinCua(client) {
+  // Lược đồ không có sổ tin (lược đồ tạm của test app chỉ dựng bảng nhãn): khử theo chữ đã gạt URL. DB máy thu luôn có bảng.
+  const { rows: [{ co }] } = await client.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS co`);
+  if (!co) return new Map();
   const { rows } = await client.query(
     `SELECT DISTINCT ON (pid) pid, offer_id FROM sale_offer_records, unnest(post_ids) AS pid
      WHERE source = 'S03' ORDER BY pid, (retired_at IS NULL) DESC, offer_id`);

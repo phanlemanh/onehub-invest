@@ -29,7 +29,9 @@ export function chonMauPhanTang(posts, tang, { n, seed, tangs, tinCua = new Map(
   // Khử trùng trên cả lô theo khoá trùng (tin của pipeline, rồi chữ đã gạt URL); tầng theo bài đại diện.
   const { dai, bo_su_kien, bo_vi_trung } = khuTrung(posts, tinCua);
   const theoTang = new Map(tangs.map((t) => [t, []]));
-  for (const p of dai) theoTang.get(tang.get(p.post_id))?.push(p);
+  for (const p of dai) {
+    theoTang.get(tang.get(p.post_id))?.push(p);
+  }
   const chon = [], moiTang = {};
   tangs.forEach((t, i) => {
     const can = Math.floor(n / tangs.length) + (i < n % tangs.length ? 1 : 0);
