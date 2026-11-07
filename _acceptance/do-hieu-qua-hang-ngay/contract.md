@@ -5,7 +5,7 @@ slug: do-hieu-qua-hang-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T2; máy nâng T3 vì cần migration (db/migrations/** thuộc t3_paths)
 surfaces: [ui, db, script]
-status: implemented
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-07-do-hieu-qua-hang-ngay-design.md
 approved_by: Mạnh
 approved_at: 2026-11-07
@@ -108,3 +108,9 @@ nhóm ô, phiên bản thước, cơ cấu, chênh có ý nghĩa, tỉ lệ soá
 - Lấy mẫu phân tầng theo khu trọng tâm có trọng số — hoãn sau 2 tuần số thật; giám sát ghi vào lộ trình (Mạnh 07/11 «Phần chưa làm»).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: Bộ chặn rò chưa bắt số điện thoại hay mã người gắn nhãn nếu chúng nằm trong một nhãn máy dạng ghép; hiện chưa đường ghi nào đưa chúng vào.
+  - Ngoài-2: Bài tự soát nhãn máy chưa có ca đối chứng chứng tỏ nó biết báo đỏ, nên lưới an toàn ở nhánh này yếu hơn.
+  - Ngoài-3: Ca thử tên «Khắc» không kiểm được ô «Khác» vì dữ liệu thử không có ô ấy.
+  - Ngoài-4: Chưa có ca thử nào cho nhánh chặn số điện thoại trên nhãn máy.

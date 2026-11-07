@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 83f2cd978f57e26f1f562fd0c588145034727e1b
-human_signoff:
+human_signoff: Mạnh 2026-11-08
 ---
 
 # Evidence Report: do-hieu-qua-hang-ngay
@@ -134,7 +134,7 @@ human_signoff:
   run_id: minted-do-hieu-qua-hang-ngay-E9-r5
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-07T21:22:58Z
   screenshot: evidence/E9-step1.png
   observed: |
@@ -149,7 +149,7 @@ human_signoff:
   run_id: minted-do-hieu-qua-hang-ngay-E11-r5
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-07T21:22:58Z
   screenshot: evidence/E11-step1.png
   observed: |
