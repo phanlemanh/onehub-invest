@@ -52,3 +52,43 @@ wall: 1329s
 - **claude-sonnet-5-5**: 20 agent · 101 calls · out 61,655 · in 204 · cache_read 4,536,063 · cache_create 760,811
 - **claude-haiku-5-5**: 6 agent · 12 calls · out 10,207 · in 24 · cache_read 110,474 · cache_create 198,822
 
+
+### S4 round 3 — wf_9f5fbb80-ef6 (16 agent, 51,992 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 16 | 9,447 | 34 | 716,696 | 145 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 7,395 | 4 | 40,684 | 41 |
+| ui:E9 | claude-sonnet-5-5 | 10 | 7,247 | 22 | 823,872 | 88 |
+| review:measurement | claude-opus-5-5 | 6 | 5,160 | 14 | 178,671 | 55 |
+| review:conventions | claude-opus-5-5 | 11 | 4,274 | 24 | 470,130 | 52 |
+| ui:E11 | claude-sonnet-5-5 | 5 | 3,570 | 10 | 382,974 | 46 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 3,213 | 6 | 60,192 | 221 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,312 | 4 | 0 | 474 |
+| triage | claude-sonnet-5-5 | 2 | 2,091 | 4 | 26,986 | 22 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,087 | 4 | 27,129 | 9 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,670 | 4 | 27,123 | 9 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 970 | 4 | 27,134 | 17 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 807 | 4 | 27,111 | 27 |
+| refute:do-hang-ngay.mjs | claude-sonnet-5-5 | 3 | 756 | 6 | 50,019 | 10 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 651 | 4 | 3,189 | 518 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 342 | 4 | 22,726 | 9 |
+
+
+wall: 1155s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 3,213 | 60,192 | 221 | 13:49:46 | 13:53:26 |
+| ui | 2 | 10,817 | 1,206,846 | 136 | 13:49:46 | 13:52:02 |
+| machine | 6 | 8,497 | 111,686 | 1065 | 13:49:46 | 14:07:31 |
+| review | 3 | 18,881 | 1,365,497 | 146 | 13:49:46 | 13:52:12 |
+| triage | 1 | 2,091 | 26,986 | 22 | 14:07:33 | 14:07:54 |
+| refute | 1 | 756 | 50,019 | 10 | 14:07:57 | 14:08:07 |
+| capture | 1 | 342 | 22,726 | 9 | 14:08:09 | 14:08:18 |
+| synthesize | 1 | 7,395 | 40,684 | 41 | 14:08:20 | 14:09:01 |
+
+- **claude-opus-5-5**: 3 agent · 33 calls · out 18,881 · in 72 · cache_read 1,365,497 · cache_create 178,587
+- **claude-sonnet-5-5**: 7 agent · 27 calls · out 24,614 · in 56 · cache_read 1,407,453 · cache_create 353,289
+- **claude-haiku-5-5**: 6 agent · 12 calls · out 8,497 · in 24 · cache_read 111,686 · cache_create 202,042
+
