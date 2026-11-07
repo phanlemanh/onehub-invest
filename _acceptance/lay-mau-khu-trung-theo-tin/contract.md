@@ -5,7 +5,7 @@ slug: lay-mau-khu-trung-theo-tin
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-07
 design_doc: docs/superpowers/specs/2026-11-07-lay-mau-khu-trung-theo-tin-design.md
@@ -84,3 +84,10 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục liệ
 ## Notes
 
 - Test trên DB thử `oneinvest_gn2` (db/db-thu.sh). Bản chép lát lấy từ DB máy thu bằng đọc chỉ đọc. Không ghi DB máy thu.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-07:
+  - Ngoài-1: một dòng ghi chú trong cấu hình nghiệm thu còn ghi tên DB thử cũ, người chấm có thể hiểu nhầm hai bài kiểm dùng chung một DB.
+  - Ngoài-2: lệnh gom trùng chạy nhầm nơi không có sổ tin thì âm thầm chỉ gom theo chữ, không báo gì.
+  - Ngoài-3: lệnh dựng lại dấu trùng chạy mà không thấy sổ tin vẫn báo thành công, một số thẻ từng bị ẩn có thể hiện lại.
+  - Ngoài-6: khi chấm, ca kiểm của gn2_ghep có thể chạy trên DB chung của máy thay vì bản thử, dù mọi thay đổi được hoàn lại.
+  - Ngoài-9: phép thử đối chứng chưa chứng minh chắc công cụ kiểm báo đỏ khi mẫu nhãn bị trùng hoặc lẫn bài thử.
+  - Ngoài-10: chưa có phép thử chạy thật cho thấy bài thử có link thử nghiệm không thành tin; việc bài thử bị loại ở bước xử lý mới chỉ được suy ra.
