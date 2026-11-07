@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import {
-  boSot, chanLo, chuyenBac, demChuyenBac, giuNhap, khoaSilver, ngayVn, phanRa, tinHieu, tuanIso,
+  boSot, chanLo, chuyenBac, gopOCam, demChuyenBac, giuNhap, khoaSilver, ngayVn, phanRa, tinHieu, tuanIso,
 } from "./lib/do-hang-ngay.mjs";
 import { khoangNgay, LAT_CUON_CHIEU, oBoDocLuat } from "./mau-soat-cuon-chieu.mjs";
 
@@ -214,6 +214,8 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
   // ---- Chặn rò (AC-9) rồi ghi ----
   const cam = await chuoiCam(client, the, sl, tinSl);
   if (dotBien?.startsWith("lo:")) for (const r of ra) r.detail = { ...r.detail, x: dotBien.slice(3) };
+  // Ô lát theo chữ bài trùng chuỗi cấm (vd tên khu đô thị trùng tên người đăng) gộp vào «khac» trước khi soát.
+  if (dotBien !== "bo-gop-o-cam") for (const r of ra) gopOCam(r.detail, cam);
   for (const r of ra) chanLo(dotBien === "lo-trich" ? { ...r.detail, trich: sl.find((x) => x.quote)?.quote } : dotBien === "lo-labeler" ? { ...r.detail, nguoi: cam.find((x) => x.nhan === "LABELER")?.chuoi } : r.detail, cam);
   if (write) {
     // Một dòng mỗi (kiểm, đối tượng, ngày đo): xoá theo ngày đo ghi trong detail (không theo giờ chạy), đóng dấu clock_timestamp()

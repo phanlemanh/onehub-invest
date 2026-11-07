@@ -379,9 +379,48 @@ export function soCap(cap) {
 /** Gập chuỗi để so rò: NFKD bỏ dấu, đ→d, chữ thường, gộp khoảng trắng (cùng tinh thần foldSql/nameVariants của sync-cloud). */
 export const gapChu = (s) => String(s).normalize("NFKD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/\s+/g, " ").trim();
 
-/** Chặn rò: một lá chuỗi hay khoá của detail (đã gập) chứa một chuỗi cấm (đã gập) → ném `LO <nhãn>`. Duyệt cây, không so trên
- * JSON đã escape (chữ có xuống dòng hay dấu nháy vẫn bắt được). Tên nguồn thật (`nhan` «TEN NGUON», real_name ∪ source_ids) đi
- * qua bộ soát tầng A dùng chung (`guardValues` → nameVariants: gập dấu, viết liền, từ đầu) trên cả giá trị lẫn khoá.
+/** Mã định danh của detail, không mang chữ người: mã khu vực (`vn-…`, khoá lát thị trường/phường) và khoá cách đọc. Chỉ bộ soát
+ * tên nguồn thật đi qua chúng; chuỗi cấm khác (tên người đăng, chữ bài…) không so trên mã — «Hưng» không được trúng `vn-hung-yen`. */
+const LA_MA = (s) => /^vn(-[a-z0-9]+)+$/.test(s) || /^(bo-doc-luat$|doc-gop:|doc-chu:)/.test(s);
+const CHU_SO = "[\\p{L}\\p{N}]";
+/** Tên người ngắn (vài chữ) chỉ tính là rò khi đứng thành từ trọn, không trúng giữa một từ khác. */
+const NGAN_THEO_TU = new Set(["NGUOI DANG"]);
+const theoTu = (g) => new RegExp(`(^|(?!${CHU_SO}).)${g.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!${CHU_SO})`, "u");
+
+/** Nhãn chuỗi cấm mà `s` mang (null nếu sạch). Tên nguồn thật qua bộ soát tầng A dùng chung (`guardValues` → nameVariants: gập
+ * dấu, viết liền, từ đầu) trên mọi chuỗi; chuỗi cấm khác bỏ qua mã định danh (`LA_MA`), tên người đăng so theo từ trọn.
+ * @param {string} s @param {{nhan: string, chuoi: string}[]} cam */
+export function trungCam(s, cam) {
+  const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi));
+  if (ten.length && guardValues([s], ten).length) return "TEN NGUON";
+  if (LA_MA(s)) return null;
+  const x = gapChu(s);
+  for (const { nhan, chuoi } of cam) {
+    if (nhan === "TEN NGUON" || !chuoi) continue;
+    const g = gapChu(chuoi);
+    if (g && (NGAN_THEO_TU.has(nhan) ? theoTu(g).test(x) : x.includes(g))) return nhan;
+  }
+  return null;
+}
+
+/** Ô lát mang chữ đọc từ bài (`theo-chu-bai:<tên>`) mà trùng chuỗi cấm thì gộp vào «khac» trước khi soát — tổng lát giữ nguyên,
+ * cả ngày đo không mất vì một tên khu đô thị trùng tên người đăng. Trả số ô đã gộp. Ô khác không đụng: rò ở đó vẫn dừng cả lượt. */
+export function gopOCam(detail, cam) {
+  let n = 0;
+  for (const lat of Object.values(detail?.lat ?? {})) {
+    if (!lat?.o) continue;
+    for (const k of Object.keys(lat.o)) {
+      if (!k.startsWith("theo-chu-bai:") || !trungCam(k, cam)) continue;
+      lat.o.khac = (lat.o.khac ?? 0) + lat.o[k];
+      delete lat.o[k];
+      n++;
+    }
+  }
+  return n;
+}
+
+/** Chặn rò: một lá chuỗi hay khoá của detail chứa chuỗi cấm (theo `trungCam`) → ném `LO <nhãn>`. Duyệt cây, không so trên JSON
+ * đã escape (chữ có xuống dòng hay dấu nháy vẫn bắt được).
  * @param {{nhan: string, chuoi: string}[]} cam */
 export function chanLo(detail, cam) {
   const goc = [];
@@ -391,12 +430,8 @@ export function chanLo(detail, cam) {
     if (typeof x !== "object") return;
     for (const [k, v] of Object.entries(x)) { goc.push(k); di(v); }
   })(detail);
-  const ten = entriesFromTokens(cam.filter((c) => c.nhan === "TEN NGUON").map((c) => c.chuoi));
-  if (ten.length && guardValues(goc, ten).length) throw new Error("LO TEN NGUON");
-  const la = goc.map(gapChu);
-  for (const { nhan, chuoi } of cam) {
-    if (nhan === "TEN NGUON") continue;
-    const g = chuoi ? gapChu(chuoi) : "";
-    if (g && la.some((x) => x.includes(g))) throw new Error(`LO ${nhan}`);
+  for (const s of goc) {
+    const nhan = trungCam(s, cam);
+    if (nhan) throw new Error(`LO ${nhan}`);
   }
 }

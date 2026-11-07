@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { chuanHoa } from "../lib/chuan-hoa-nhan.mjs";
 import {
-  boSot, chanLo, chuyenBac, demChuyenBac, giuNhap, giuO, nhomO, phanRa, PHIEN_BAN_THUOC, soCap, soTuan, tinHieu, tuanIso, wilson,
+  boSot, chanLo, chuyenBac, demChuyenBac, gopOCam, giuNhap, giuO, nhomO, phanRa, PHIEN_BAN_THUOC, soCap, soTuan, tinHieu, tuanIso, wilson,
 } from "../lib/do-hang-ngay.mjs";
 
 /** Wilson tham chiếu viết lại độc lập (công thức chuẩn), để so hàm thật tới 4 chữ số. */
@@ -521,6 +521,22 @@ test("DO1-AC-7 lát thẻ: người chọn «Không suy ra được» thì khôn
   assert.deepEqual(KHOA_LAT_THE.toa({ draft, nhan: { kind: { value: "sale" } } }), { chua: "chua-co-danh-ba" });
   assert.deepEqual(KHOA_LAT_THE.toa({ draft, nhan: { building: { value: "s9.01" } } }), { chua: "chua-co-danh-ba" });
 });
+test("DO1-AC-9 chặn rò không báo giả: mã khu vực, mã cách đọc, tên người đăng giữa từ; ô theo chữ bài trùng tên gộp vào khác", () => {
+  const H = [{ nhan: "NGUOI DANG", chuoi: "Hưng" }];
+  assert.doesNotThrow(() => chanLo({ lat: { thi_truong: { o: { "vn-hung-yen": 3 } } } }, H));
+  assert.doesNotThrow(() => chanLo({ dong: [{ cach_doc: "doc-gop:gateway:x/hung:v1" }] }, H));
+  assert.doesNotThrow(() => chanLo({ o: { "theo-chu-bai:hungthinh land": 1 } }, H));
+  assert.throws(() => chanLo({ ghi: "anh Hưng bán" }, H), /LO NGUOI DANG/);
+  assert.throws(() => chanLo({ o: { "theo-chu-bai:hung yen park": 1 } }, H), /LO NGUOI DANG/);
+  // Chuỗi cấm dài (chữ bài, trích) vẫn so chuỗi con; tên nguồn vẫn soát cả trên mã khu vực.
+  assert.throws(() => chanLo({ x: "…TRICH_Y…" }, [{ nhan: "TRICH", chuoi: "TRICH_Y" }]), /LO TRICH/);
+  assert.throws(() => chanLo({ o: { "vn-tenthatve": 1 } }, [{ nhan: "TEN NGUON", chuoi: "Tên Thật Vê" }]), /LO TEN NGUON/);
+  // Ô theo chữ bài trùng tên người đăng: gộp vào «khac», tổng giữ nguyên, rồi qua cổng; ô khác không đụng.
+  const d = { lat: { du_an_theo_chu: { o: { "theo-chu-bai:hung yen park": 2, "theo-chu-bai:ocean park": 3, khac: 1 }, tong: 6 } } };
+  assert.equal(gopOCam(d, H), 1);
+  assert.deepEqual(d.lat.du_an_theo_chu.o, { "theo-chu-bai:ocean park": 3, khac: 3 });
+  assert.doesNotThrow(() => chanLo(d, H));
+});
 test("DO1-AC-9 chuoiCam dừng khi source_registry không có tên (không soát được thì không ghi)", async () => {
   const rong = { query: async () => ({ rows: [] }) };
   await assert.rejects(() => chuoiCam(rong, [], [], []), /LO TEN NGUON/);
@@ -690,6 +706,21 @@ test("DO1-AC-9 detail các dòng do1-* qua bộ ghi không mang chữ bài, trí
     assert.ok(fx.coTin.size > 0);
     await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-trich" }), /LO TRICH/));
     await thu(c, async () => assert.rejects(doHangNgay(c, { ngay: D, dotBien: "lo-labeler" }), /LO LABELER/));
+    // Không báo rò giả (S4-r3 t1): người đăng tên trùng một đoạn mã khu vực của chính detail (như «Hưng» ↔ vn-hung-yen) —
+    // mã khu vực không mang chữ người, bước đo vẫn ghi đủ bốn nhóm số.
+    const { rows: [{ ma }] } = await c.query(
+      "SELECT id AS ma FROM areas WHERE region_type = 'submarket' AND id ~ '-[a-z]{4,}$' ORDER BY id LIMIT 1");
+    const doan = ma.split("-").at(-1);
+    await thu(c, async () => {
+      const { rowCount } = await c.query("UPDATE sale_offer_records SET area_id = $1 WHERE source = 'S03' AND post_ids && $2::text[]", [ma, kq.the.map((t) => t.post_id)]);
+      assert.ok(rowCount > 0, "có tin của thẻ để gán phường");
+      await c.query("UPDATE stg_zalo_posts SET sender_name = $1 WHERE post_id = ANY ($2)", [doan, kq.the.map((t) => t.post_id)]);
+      const lai = await doHangNgay(c, { ngay: D, write: true });
+      assert.equal(lai.dq.filter((r) => r.check_name.startsWith("do1-")).length >= 4, true);
+      assert.ok(lai.dq.find((r) => r.check_name === "do1-giu-nhap").detail.lat.phuong.o[ma] > 0, "mã phường vẫn trong detail");
+      // Cùng tên ấy đứng thành từ trong một chuỗi chữ của detail thì vẫn chặn.
+      await assert.rejects(doHangNgay(c, { ngay: D, dotBien: `lo:anh ${doan} bán` }), /LO NGUOI DANG/);
+    });
   });
 });
 test("DO1-AC-9-FILL bảng 083 và thẻ nhãn không vào FILL của sync-cloud, dq_check_results có", () => {
