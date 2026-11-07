@@ -225,6 +225,10 @@ executors:
     gs_test: "node --test pipeline/scripts/gan-sdt-s06.test.mjs"   # sdt-s06-ghep-tai-khoan E1–E7 — lược đồ riêng, số bịa
     en_test: "bash db/db-thu.sh oneinvest_en --neu-chua-co >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_en node --test --test-concurrency=1 pipeline/scripts/enrich-nguoi-s03.test.mjs pipeline/scripts/enrich-nguoi-s03.itest.mjs"   # enrich-nguoi-s03 E1–E6 — ca thuần + ca DB thử (transform S03 thật, BEGIN…ROLLBACK), số bịa
     en_api: "cd app && node --import tsx --test tests/enrich-nguoi-s03.test.tsx"   # enrich-nguoi-s03 E7 — hai route thật, lược đồ tạm
+    px1_thuan: "node --test pipeline/lib/dvhc.test.mjs"   # danh-ba-phuong-xa-toan-quoc E7, E8 — hàm thuần, không DB
+    px1_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1 --chay node --test --test-concurrency=1 scripts/nap-dvhc.test.mjs"   # danh-ba-phuong-xa-toan-quoc E1–E7 — DB của riêng lượt (bản chép máy thu), BEGIN…ROLLBACK
+    px1_cu: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1cu --chay node --test --test-concurrency=1 scripts/nap-dvhc-cu.test.mjs"   # danh-ba-phuong-xa-toan-quoc E10 — code mới trên DB chưa áp 084
+    px1_do: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1do --chay node scripts/nap-dvhc-do.mjs"   # danh-ba-phuong-xa-toan-quoc E9 — thước trước/sau theo tỉnh, ROLLBACK
   script:
     icc_keychain: "bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""   # install-cron-chi AC-3 — security/launchctl giả, HOME giả
     icc_scope: "bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""   # install-cron-chi AC-5 — tệp đổi so với main
