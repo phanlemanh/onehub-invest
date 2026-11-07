@@ -8,6 +8,8 @@ import { join } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 
 const REPO = new URL("../", import.meta.url).pathname.replace(/\/$/, "");
+// PlistBuddy, plutil, launchctl chỉ có trên macOS: ca nào chạy tới bước ghi plist thì bỏ qua có tên trên runner Linux.
+const CAN_MACOS = process.platform !== "darwin" && "cần macOS (PlistBuddy, plutil, launchctl)";
 
 function taoMoiTruong() {
   const home = mkdtempSync(join(tmpdir(), "cronchi-"));
@@ -33,7 +35,7 @@ function chay(home, bin, ...args) {
   });
 }
 
-test("--chi backup: CHỈ backup được cài — không plist collector/smoke, launchctl không đụng chúng", () => {
+test("--chi backup: CHỈ backup được cài — không plist collector/smoke, launchctl không đụng chúng", { skip: CAN_MACOS }, () => {
   const { home, bin, log } = taoMoiTruong();
   const out = chay(home, bin, "--chi", "backup");
   const plists = readdirSync(join(home, "Library/LaunchAgents")).sort();
@@ -47,7 +49,7 @@ test("--chi backup: CHỈ backup được cài — không plist collector/smoke,
   rmSync(home, { recursive: true, force: true });
 });
 
-test("vắng cờ: đủ 3 job như hành vi cũ", () => {
+test("vắng cờ: đủ 3 job như hành vi cũ", { skip: CAN_MACOS }, () => {
   const { home, bin, log } = taoMoiTruong();
   chay(home, bin);
   const plists = readdirSync(join(home, "Library/LaunchAgents")).sort();
@@ -63,7 +65,7 @@ test("vắng cờ: đủ 3 job như hành vi cũ", () => {
   rmSync(home, { recursive: true, force: true });
 });
 
-test("--chi backup: BACKUP_DIR vào plist backup qua PlistBuddy (plist đọc được)", () => {
+test("--chi backup: BACKUP_DIR vào plist backup qua PlistBuddy (plist đọc được)", { skip: CAN_MACOS }, () => {
   const { home, bin } = taoMoiTruong();
   chay(home, bin, "--chi", "backup"); // BACKUP_DIR unset → không có biến đó
   // plist phải hợp lệ (plutil -lint đã chạy trong script); kiểm tra PATH được ghi
