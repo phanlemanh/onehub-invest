@@ -131,6 +131,11 @@ test("PL34-AC-1 --thu: phạm vi ngày giờ VN, gạt thử và sự kiện, kh
     const ghi: Ghi[] = [];
     const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 20, thu: true }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
     const t = kq.tomTat;
+    assert.ok(!kq.seGoi.includes(ids.thu), "BAI THU LOT VAO PHAM VI");
+    assert.ok(!kq.seGoi.includes(ids.t2), "TIN DOC HAI LAN");
+    assert.ok(!kq.seGoi.includes(ids.r), "DOC LAI BAI DA DOC");
+    assert.ok(kq.seGoi.includes(ids.x), "BAI DANG LAI BI BO");
+    assert.ok(!kq.seGoi.includes(ids.truoc) && kq.seGoi.includes(ids.a) && kq.seGoi.includes(ids.b), "SAI NGAY GIO VN");
     assert.equal(t.tho, 12, "SAI NGAY GIO VN: tho phải là 12 bài của ngày D giờ VN");
     assert.equal(t.bai_thu, 1, "BAI THU LOT VAO PHAM VI");
     assert.equal(t.su_kien, 1);
@@ -139,11 +144,6 @@ test("PL34-AC-1 --thu: phạm vi ngày giờ VN, gạt thử và sự kiện, kh
     assert.equal(t.bo, 1);
     assert.equal(t.can_goi, 6);
     assert.deepEqual([...kq.seGoi].sort(), [...seGoi].sort(), "tập bài sẽ gọi khác tập viết trước");
-    assert.ok(!kq.seGoi.includes(ids.thu), "BAI THU LOT VAO PHAM VI");
-    assert.ok(!kq.seGoi.includes(ids.t2), "TIN DOC HAI LAN");
-    assert.ok(!kq.seGoi.includes(ids.r), "DOC LAI BAI DA DOC");
-    assert.ok(kq.seGoi.includes(ids.x), "BAI DANG LAI BI BO");
-    assert.ok(!kq.seGoi.includes(ids.truoc) && kq.seGoi.includes(ids.a) && kq.seGoi.includes(ids.b), "SAI NGAY GIO VN");
     assert.equal(ghi.length, 0, "--thu không được gọi model");
     assert.equal(kq.ma, 0);
     assert.deepEqual({ sl: await dem(c, "silver_labels"), ai: await dem(c, "ai_calls") }, truoc, "--thu không được ghi");
