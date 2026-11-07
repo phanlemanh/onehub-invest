@@ -73,6 +73,21 @@ export const PROBES: Record<string, { sql: string; args: (ids: string[], others:
   },
 }
 
+/**
+ * Gộp nhãn thành phố của bản thu: `vn-<tp>` (dạng mã thị trường, 064) và `<tp>` là cùng một nơi — lấy lần thu mới nhất.
+ * Không gộp thì một bản thu lẻ cũ dán `vn-hcmc` thành một ô «quá hạn» riêng, dù vùng thật dán `hcmc` vẫn thu đều
+ * (báo nhầm S06/vn-hcmc 07/11, ON17). Nhãn cấp quốc gia (`vn`) giữ nguyên. Bản chép của scripts/lib/freshness.mjs.
+ */
+export function gopThanhPho<T extends { city: string | null; last: unknown }>(rows: T[]): T[] {
+  const m = new Map<string | null, T>()
+  for (const r of rows) {
+    const city = typeof r.city === "string" ? r.city.replace(/^vn-(?=.)/, "") : r.city
+    const cur = m.get(city)
+    if (!cur || new Date(r.last as string).getTime() > new Date(cur.last as string).getTime()) m.set(city, { ...r, city })
+  }
+  return [...m.values()]
+}
+
 export async function readFreshness(client: QueryClient, { now = new Date() }: { now?: Date } = {}): Promise<FreshnessRow[]> {
   const { rows: reg } = await client.query(
     `SELECT code, source_ids FROM source_registry WHERE status = 'active' ORDER BY code`,
@@ -88,7 +103,7 @@ export async function readFreshness(client: QueryClient, { now = new Date() }: {
     const probe = PROBES[code]
     const others = registry.filter((r) => r.code !== code).flatMap((r) => r.source_ids)
     const rows = probe ? ((await client.query(probe.sql, probe.args(ids, others))).rows as { city: string; last: unknown }[]) : []
-    const seen = rows.filter((r) => r.last !== null)
+    const seen = gopThanhPho(rows.filter((r) => r.last !== null))
     if (seen.length === 0) {
       out.push({ code, city: null, last: null, ageHours: null, sloHours, status: "none" })
       continue
