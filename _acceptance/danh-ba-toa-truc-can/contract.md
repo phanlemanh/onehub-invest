@@ -5,7 +5,7 @@ slug: danh-ba-toa-truc-can
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-07-danh-ba-toa-truc-can-design.md
 approved_by: Mạnh
 approved_at: 2026-11-06T23:54:21Z
