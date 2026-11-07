@@ -3,11 +3,12 @@
 // node pipeline/label-ghep.mjs --lat <lát> [--thu] [--lam-lai] [--db-that]
 // Ghi một lần để hai người gắn cùng thấy một cụm dù sau đó thu thêm bài: lát đã có ghép thì giữ, muốn tính lại phải `--lam-lai`.
 // Chỉ đọc và ghi cột này, không đổi dòng mẫu. Đích không phải DB thử thì phải khai `--db-that`.
+import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-import { ghepChoMau } from "./lib/ghep-mau.mjs";
+import { ghepChoMau, nhomTrung } from "./lib/ghep-mau.mjs";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -36,19 +37,28 @@ const giongNhau = (a, b) => {
   return Object.keys(b).every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k])) && Object.keys(a).length === Object.keys(b).length;
 };
 
-/** @returns {Promise<{ lat: string, dong: number, co_ghep: number, nhan_ghep: number, trung: number, ghi: number, giu?: boolean, thieu_cot?: boolean }>} */
+/** @returns {Promise<{ lat: string, dong: number, co_ghep: number, nhan_ghep: number, trung: number, an_moi: number, an_tay_giu: number, an_them: { item_id: string, khoa: string }[], ghi: number, giu?: boolean, thieu_cot?: boolean }>} */
 export async function ghepLat(client, { lat, thu = false, lamLai = false }) {
   const { rows: cot } = await client.query(
     `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'eval_label_items' AND column_name = 'ghep'`);
-  if (!cot.length) return { lat, dong: 0, co_ghep: 0, nhan_ghep: 0, trung: 0, ghi: 0, thieu_cot: true };
+  if (!cot.length) return { lat, dong: 0, co_ghep: 0, nhan_ghep: 0, trung: 0, an_moi: 0, an_tay_giu: 0, an_them: [], ghi: 0, thieu_cot: true };
   const { rows: items } = await client.query(`SELECT item_id, ref_id, ghep FROM eval_label_items WHERE lat = $1 ORDER BY item_id`, [lat]);
   const daCo = items.some((i) => i.ghep != null);
   const { posts } = await loadStgPosts(client, "zalo");
-  const ghep = ghepChoMau(items, posts);
-  const gs = [...ghep.values()].filter(Boolean);
-  const kq = { lat, dong: items.length, co_ghep: gs.length, nhan_ghep: gs.filter((g) => g.chu_ref).length, trung: gs.filter((g) => g.trung_voi).length, ghi: 0 };
+  const cum = ghepChoMau(items, posts);
+  // lay-mau-khu-trung-theo-tin: dấu trùng theo tin và chữ đã gạt URL, giữ mọi dấu ẩn tay.
+  const { rows: nhanRows } = await client.query(
+    `SELECT item_id, count(*)::int AS so FROM eval_labels WHERE item_id = ANY ($1) GROUP BY item_id`, [items.map((i) => i.item_id)]);
+  const soNhan = new Map(nhanRows.map((r) => [String(r.item_id), r.so]));
+  const tinCua = await docTinCua(client);
+  // Lát đã có ghép mà không --lam-lai: giữ cụm cũ (hai người cùng thấy một cụm), chỉ thêm dấu trùng theo khoá.
+  const giu = daCo && !lamLai;
+  const nen = giu ? new Map(items.map((i) => [String(i.item_id), i.ghep ?? null])) : cum;
+  const { ghep, an_moi, an_tay_giu, an_them } = nhomTrung(items.map((i) => ({ ...i, ghep_cu: i.ghep })), nen, { posts, tinCua, soNhan });
+  const gs = [...cum.values()].filter(Boolean);
+  const kq = { lat, dong: items.length, co_ghep: gs.length, nhan_ghep: gs.filter((g) => g.chu_ref).length, trung: gs.filter((g) => g.trung_voi).length, an_moi, an_tay_giu, an_them, ghi: 0 };
+  if (giu) kq.giu = true;
   if (thu) return kq;
-  if (daCo && !lamLai) return { ...kq, giu: true };
   for (const it of items) {
     const g = ghep.get(String(it.item_id)) ?? null;
     if (giongNhau(it.ghep ?? null, g)) continue;
@@ -72,7 +82,9 @@ async function main() {
   try {
     const kq = await ghepLat(client, { lat, thu, lamLai: argv.includes("--lam-lai") });
     if (kq.thieu_cot) throw new Error("label-ghep: thiếu cột ghep — áp migration 076 trước");
-    console.log(`label-ghep: lát ${kq.lat} · ${kq.dong} dòng · có ghép ${kq.co_ghep} · nhãn ghép ${kq.nhan_ghep} · trùng cụm ${kq.trung} · ghi ${kq.ghi}${thu ? " (--thu)" : ""}${kq.giu ? " · lát đã có ghép, giữ nguyên, tính lại phải --lam-lai" : ""}`);
+    console.log(`label-ghep: lát ${kq.lat} · ${kq.dong} dòng · có ghép ${kq.co_ghep} · nhãn ghép ${kq.nhan_ghep} · trùng cụm ${kq.trung} · an_moi ${kq.an_moi} · an_tay_giu ${kq.an_tay_giu} · ghi ${kq.ghi}${thu ? " (--thu)" : ""}${kq.giu ? " · lát đã có ghép: giữ cụm cũ, chỉ thêm dấu trùng; tính lại cụm phải --lam-lai" : ""}`);
+    // Khoá chữ chở chữ bài: chỉ in 8 ký tự băm, không in chữ.
+    for (const x of kq.an_them) console.log(`an them ${x.item_id} ${x.khoa.startsWith("c:") ? `c:#${createHash("sha256").update(x.khoa).digest("hex").slice(0, 8)}` : x.khoa}`);
   } finally {
     await client.end();
   }
