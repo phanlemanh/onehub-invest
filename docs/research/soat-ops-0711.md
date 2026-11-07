@@ -821,6 +821,40 @@ chọn từng trường
 2. Mỗi hạng mục có UI qua design-pass trên bản bấm được trước Cổng 1 (kit nghiệm thu).
 3. Tiêu chí đo của mọi hạng mục là giây/thẻ theo hạng mục từ ĐC6, nên **ĐC6 đi đầu đợt 1** để có số trước, số sau.
 
+### f4. Mạnh duyệt và kết quả xác minh khuôn bằng MCP ReUI (lượt 4, 07/11)
+
+**Mạnh duyệt (07/11), nguyên văn:** «Đồng ý, tôi đã đăng nhập lại Reui pro». Lời duyệt áp cho các khuyến nghị f1 (bản
+đã sửa Q2/Q3 theo quyết định bỏ gắn mù) và 12 hạng mục f2.
+
+Sau khi Mạnh đăng nhập lại, `get_project_context` báo gói **pro**, style `base-nova` (bản Base). Em đã chạy `search`
+(bề mặt `frame`, như cổng Ops), `get_block` cho từng ứng viên, và `get_thumbnail` khi hai ứng viên điểm sát nhau.
+
+| ĐC | Ứng viên đã xác minh | Kết luận | Lý do |
+|---|---|---|---|
+| ĐC3 · Hộp theo hạng mục | **solution-agents-9** (Frame; cột trái có số đếm và mô tả từng mục, bên cạnh lưới; hàng ô số trên đầu) — https://reui.io/preview/base/solution-agents-9 · so với solution-agents-2 (bề mặt `none`; nhóm gập Running/Waiting/Failed + bộ đếm đầu trang) — https://reui.io/preview/base/solution-agents-2 · và data-grid-grouping-1 (giống -2) | **Chọn solution-agents-9.** Thay cho phương án tự ghép `approval-summary` + `item` | Cột trái của -9 chính là «hộp theo hạng mục»: mỗi mục có số, có dòng mô tả để ghi «thẻ cũ nhất n ngày». Bề mặt Frame, cùng họ khung Ops. -2 trải mọi thẻ trong một bảng nhóm gập: hợp để xem toàn cảnh, không hợp để làm liền từng loại. Đối chứng Plain, Front. **Phải bỏ** cột «Confidence» và thanh độ tự tin của block (Q9) |
+| ĐC4 · Bảng phím tắt | **c-dialog-9** (ví dụ miễn phí: Dialog liệt kê phím) — https://reui.io/preview/base/components/c-dialog-9 · so với sheet-3 (Pro: Sheet bên phải có tìm kiếm, nhóm theo mục) — https://reui.io/preview/base/sheet-3 | **Chọn c-dialog-9** | Thẻ duyệt đã mở trong một Sheet; mở thêm Sheet thứ hai chồng lên sẽ rối. Dialog nhỏ đúng dáng bảng `?` của Notion Mail và Plain. Danh sách phím dưới 15 dòng nên không cần ô tìm của sheet-3 |
+| ĐC5 · Nhật ký quyết định | Trong trang: `recent-decisions` của solution-agents-5 (kho). Trang `/ops/audit` sau này (P2-7, `portals.md`): **solution-dev-ops-2** (Frame; nhật ký có khung xem khác biệt, hàng các lần bị từ chối để xem lại hoặc đảo, dòng thời gian) — https://reui.io/preview/base/solution-dev-ops-2 | **Kho cho đợt 1; solution-dev-ops-2 khi mở hàng `/ops/audit`** | dev-ops-2 có sẵn khung khác biệt và luồng «xem lại rồi đảo», khớp yêu cầu «hoàn tác là một lệnh đảo» của ADR-0015. Nếu chỉ cần khung chi tiết một sự kiện thì `whenNotToUse` của block chỉ sang sheet-14 |
+| ĐC8 · Trang báo độ đúng đối chiếu | **solution-agents-8** (Frame; đường tỉ lệ đúng có mốc phiên bản, tiến độ từng bộ, bảng hồi quy, chỉ hiện hồi quy, xuất) — https://reui.io/preview/base/solution-agents-8 | **Chọn**, điểm 100, khớp 92% từ khoá | Mốc phiên bản = phiên bản prompt hoặc bộ đọc. «Bộ» = ý định, giá, diện tích. Bảng hồi quy = trường nào tụt so với phiên bản trước |
+| ĐC9 · Trước → sau, nhận/bỏ từng trường | Tìm «before/after field changes, accept or reject each» chỉ ra kết quả yếu (`weakMatch`); không có block khung khác biệt | **Giữ phương án kho** (`item` + `checkbox` + `badge`) | Đã xác minh: ReUI không có khuôn này. Ghép từ thành phần có sẵn, không vẽ tay |
+| ĐC10 · Thẻ Người lớn | **dialog-16** (ứng viên xếp hạng, nút Link mỗi hàng, «Create new», toast Undo) — https://reui.io/preview/base/dialog-16 | **Lấy khuôn danh sách ứng viên + một nút mỗi hàng, đặt trong Sheet** (không mở Dialog chồng). Hai cột vẫn dùng `comparison` của kho | **Phải bỏ** dải điểm «Strong / Likely / Weak» theo điểm khớp của block (Q9: không hiện độ tự tin). Ứng viên xếp theo số tin hoặc theo thời gian, không theo điểm |
+| ĐC11 · Thẻ luật | **solution-agents-4** (Frame; mỗi dòng một chế độ Auto Run / Approval / Blocked, người duyệt, công tắc chính sách, lưu/huỷ) — https://reui.io/preview/base/solution-agents-4 | **Chọn**, điểm 100, khớp 77% | Mỗi luật E1 = một dòng, ba chế độ Tự áp · Cần duyệt · Tắt. Nút lưu không ghi thẳng mà tạo lệnh có khuôn (ADR-0015). Bỏ cột giới hạn tần suất (không áp dụng) |
+
+**Bảng f3 sau khi xác minh:**
+
+| Tầng | Hạng mục |
+|---|---|
+| Có sẵn trong kho | ĐC1, ĐC2, ĐC5 (đợt 1), ĐC6, ĐC7, ĐC9, ĐC10 (`comparison`), ĐC12 |
+| ReUI (cài mới) | ĐC3 solution-agents-9 (Pro), ĐC4 c-dialog-9 (miễn phí), ĐC8 solution-agents-8 (Pro), ĐC11 solution-agents-4 (Pro); về sau: `/ops/audit` dùng solution-dev-ops-2 (Pro) |
+| Mượn khuôn hành vi, không cài | ĐC10 dialog-16 (danh sách ứng viên + Undo) |
+| Tự vẽ phần nhìn | 0. Logic tự viết: hook phím (ĐC4), bôi để điền (ĐC12) |
+
+**Khi cài** (luật `reui` + `catalog.md`):
+- `npx shadcn@latest add @reui/<tên> --dry-run` trước;
+- bỏ vỏ `min-h-svh` của block khi đặt trong vỏ Ops (`categoryGuidance`);
+- thay dữ liệu mẫu (`MEMORY_SCOPES`, `AGENT_RUNS`…);
+- ghi một dòng vào `catalog.md`, nói rõ chỗ đã đổi so với bản gốc (bỏ cột độ tự tin, chữ tiếng Việt);
+- chạy `validate_usage` và `get_audit_checklist` trước khi báo xong.
+
 ## Phụ lục — câu đo (tái lập)
 
 ```sql
