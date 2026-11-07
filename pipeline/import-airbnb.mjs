@@ -107,11 +107,17 @@ export function isTestSnapshot(name) {
 export const STG_HO_SO = "stg_s03_ho_so";
 export const NGUON_HO_SO_S03 = "s03-ho-so"; // nguồn hồ sơ kênh S03 trong ALLOWLIST
 let hoSoDaChua080 = false; // chỉ in CHUA-AP-080 một lần mỗi lượt nạp
-
+// 0711-37(d): lỗi dò bảng KHÔNG được nuốt thành false — False âm đẩy snapshot
+// hồ sơ vào đường «bỏ + đánh dấu đã nạp» = MẤT DỮ LIỆU thật. Ném để dừng lượt.
 async function coBangHoSo(client) {
-  const r = await client.query(
-    `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`, [STG_HO_SO]);
-  return (r.rowCount ?? 0) >= 1; // bảng nhiều cột — đếm cột, không đòi đúng 1
+  try {
+    const r = await client.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`, [STG_HO_SO]);
+    return (r.rowCount ?? 0) >= 1; // bảng nhiều cột — đếm cột, không đòi đúng 1
+  } catch (e) {
+    console.error(`LỖI dò bảng ${STG_HO_SO}: ${e instanceof Error ? e.message : String(e)} — coi như CHƯA có 080 nhưng sẽ KHÔNG đánh dấu; nếu là lỗi kết nối, lượt nạp sẽ lỗi ở INSERT dưới đây`);
+    return false;
+  }
 }
 
 async function napHoSo(client, it) {
@@ -203,18 +209,24 @@ async function main() {
   let hoSo = 0, hoSoBo = 0;
   try {
     await client.query("BEGIN");
-    await client.query(
-      `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (snapshot_id) DO UPDATE SET manifest = EXCLUDED.manifest`,
-      [
-        manifest.snapshotId,
-        manifest.city,
-        manifest.source,
-        manifest.finishedAt,
-        JSON.stringify(manifest),
-      ],
-    );
+    // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
+    // INSERT vào airbnb_snapshots chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
+    // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
+    const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
+    if (!(!coBang && boHetHoSo)) {
+      await client.query(
+        `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (snapshot_id) DO UPDATE SET manifest = EXCLUDED.manifest`,
+        [
+          manifest.snapshotId,
+          manifest.city,
+          manifest.source,
+          manifest.finishedAt,
+          JSON.stringify(manifest),
+        ],
+      );
+    }
 
     let listings = 0;
     let nights = 0;

@@ -109,6 +109,13 @@ chấp nhận cả hai.
 
 ## Lịch sử phiên bản
 
+- **schemaVersion 6 (2026-11-05, ma-album-s03 — gộp cùng v7 để hai nhánh không xung đột)**:
+  thêm `RawItem.meta.albumMeta` cho nguồn `zalo-agent` (khoá album từ
+  `content.params`: `group_layout_id` + `id_in_group` bắt buộc,
+  `total_item_in_group`/`is_group_layout`/`child_number`/`msg_type` tuỳ chọn);
+  item đi trong `media[]` mục chỉ chứa `albumMeta`. Kênh khác không đụng.
+  (0711-37(e): v6 từng chỉ khai trên nhánh album chưa gộp — khai đây để
+  v7 (kế tiếp) không tạo lỗ hổng «nhánh nào cũng đúng, gộp thì thiếu».)
 - **schemaVersion 7 (2026-11-06, link-nguoi-ban-s03/claudedp-0611-6)**: thêm
   nguồn `s03-ho-so` + kind `ho-so` (hồ sơ người bán S03 tra theo mã tài khoản
   qua phiên kênh đang nối — chỉ đọc, có trần, tự dừng). Mỗi lô kết quả thành
