@@ -71,17 +71,28 @@ evals:
     criterion: AC-8
     executor: ui-check
     layer: ui-observed
-    target: "http://localhost:3456/ops/quality"
+    target: "http://localhost:3462/ops/quality"
     paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**]
+    steps:
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Đăng nhập bằng tài khoản ops thử của máy (scripts/dev-ops-account.mjs). KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/."
+      - "/ops/quality ở 1280 px sáng: cuộn tới khối «Đo hằng ngày», chụp → evidence/E9-step1.png"
+      - "Bấm thẻ lát «Phường/xã» → evidence/E9-step2.png; ghi URL (có ?lat-do=phuong)"
+      - "Cùng khối 1280 px tối (prefers-color-scheme: dark) → evidence/E9-step3.png"
+      - "Khổ 375 px sáng → evidence/E9-step4.png; ghi document.documentElement.scrollWidth và clientWidth"
     expected: "Trang /ops/quality trên dev server nối DB thử có 083 và một lượt do-hang-ngay.mjs --write trên dữ liệu bịa: thấy khối 'Đo hằng ngày' với bảng giữ nháp (cột Nhóm, Tuần này, Tuần trước, Chênh, dấu có ý nghĩa), dòng tỉ lệ soát, bảng bỏ sót, bảng tín hiệu, bảng chuyển bậc có dòng Đổi khoá, bảng so cặp; bấm lát 'Thị trường' rồi 'Phường/xã' thì bảng đổi và có hai dòng 'Không nêu chỗ', 'Chưa có trong danh bạ'; ảnh chụp lưu ở evidence/."
     evidence_required: [screenshot, observed, verified_at]
   - id: E11
     criterion: AC-2
     executor: ui-check
     layer: ui-observed
-    target: "http://localhost:3456/ops/labels"
+    target: "http://localhost:3462/ops/labels?lat=s03-cuon-chieu"
     paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**]
-    expected: "Trang /ops/labels lát 's03-cuon-chieu' trên dev server nối DB thử có 083, thẻ rút bằng mau-soat-cuon-chieu thật trên bài bịa: ảnh 1 — thẻ có đọc gộp: các ô điền sẵn thấy được trên màn (select hiện giá trị, không phải chữ gợi ý) cùng huy hiệu 'Nháp máy · doc-gop:…', ô WC trống; ảnh 2 — thẻ chỉ có bộ đọc luật: huy hiệu 'Nháp máy · bo-doc-luat'; ảnh 3 — lát chưa rút mẫu ngày này: chữ 'Chưa rút mẫu soát hôm nay' kèm lệnh. Ảnh lưu ở evidence/."
+    steps:
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Đăng nhập bằng tài khoản ops thử của máy. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/; KHÔNG bấm Lưu."
+      - "/ops/labels?lat=s03-cuon-chieu ở 1280 px sáng: thẻ đầu (có đọc gộp) → evidence/E11-step1.png; ghi chữ huy hiệu «Nháp máy · …», giá trị hiện ở các ô Phòng ngủ, Diện tích, Giá và ô WC"
+      - "Tìm một thẻ có huy hiệu «Nháp máy · bo-doc-luat» bằng cách thêm &xem= hay tải lại sau khi người thử đã có (nếu không tới được, ghi rõ) → evidence/E11-step2.png"
+      - "/ops/labels?lat=s03-cuon-chieu-trong (lát chưa rút) → evidence/E11-step3.png; ghi tiêu đề trạng thái trống"
+    expected: "Trang /ops/labels lát 's03-cuon-chieu' trên dev server nối DB thử có 083, thẻ rút bằng mau-soat-cuon-chieu thật trên bài bịa: ảnh 1 — thẻ có đọc gộp: các ô điền sẵn thấy được trên màn (select hiện giá trị, không phải chữ gợi ý) cùng huy hiệu 'Nháp máy · doc-gop:…', ô WC trống; ảnh 2 — thẻ chỉ có bộ đọc luật: huy hiệu 'Nháp máy · bo-doc-luat'; ảnh 3 — lát chưa rút mẫu: chữ trạng thái trống kèm lệnh rút (lát s03-cuon-chieu-trong dùng khuôn trống chung vì không phải lát mẫu soát — ghi rõ). Ảnh lưu ở evidence/."
     evidence_required: [screenshot, observed, verified_at]
   - id: E10
     criterion: AC-9
