@@ -154,3 +154,38 @@ test("duDiscovery ghi dưới SNAP_ROOT (khớp paths.snapshotRoot của collect
   assert.ok(out.includes("discovery-dir=hcmc__airbnb-discovery__n1"), `collect phải THẤY discovery dưới snapshot-root (log: ${out.slice(0, 250)})`);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+
+// 0711-29(2): --vung chỉ MỘT vùng mỗi lượt; --toi-da cắt số căn; tên vùng sai thoát 2
+test("--vung lọc đúng một vùng · --vung sai thoát 2 · --toi-da cắt danh sách", async () => {
+  const { spawnSync: sp } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const { join: J } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const dir = fs.mkdtempSync(J(tmpdir(), "s01-vung-"));
+  fs.writeFileSync(J(dir, "id.json"), JSON.stringify({
+    hcm: ["abnb_1", "abnb_2"], hanoi: ["abnb_3"], danang: ["abnb_4"],
+  }));
+  fs.writeFileSync(J(dir, "gia.mjs"),
+    "export const airbnbListing = { requestsPerSecond: 1, async collect(ctx) {\n" +
+    "  for (const d of [\"[1/2] a price=1\", \"[2/2] b price=2\"]) ctx.log(d);\n" +
+    "  return { items: [], coverage: { discovered: 2, captured: 2, failed: 0, methods: {}, notes: [] } };\n" +
+    "} };\n");
+  const env = { ...process.env, S01_COLLECTOR_GIA: J(dir, "gia.mjs") };
+  const co = (r) => (r.stdout || "") + (r.stderr || "");
+  // --vung hcm: KHÔNG có dòng cụm của hanoi/danang
+  const r1 = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps"), "--vung", "hcm"], { encoding: "utf8", timeout: 30000, env });
+  const out1 = co(r1);
+  assert.ok(/== hcmc cụm/.test(out1), "phải chạy hcm");
+  assert.ok(!/== hanoi ==|== danang ==/.test(out1), "KHÔNG chạy hanoi/danang khi --vung hcm");
+  // --vung sai tên → thoát 2, không chạy gì
+  const r2 = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps"), "--vung", "saigon"], { encoding: "utf8", timeout: 30000, env });
+  assert.equal(r2.status, 2, `--vung sai phải thoát 2 (được ${r2.status}): ${co(r2).slice(0, 200)}`);
+  // --toi-da 1: mỗi vùng chỉ 1 căn (discovery giả của hcm chỉ 1 item)
+  const r3 = sp("node", [J(REPO, "s01", "thu-theo-danh-sach.mjs"), "--danh-sach", J(dir, "id.json"),
+    "--snapshot-root", J(dir, "snaps2"), "--vung", "hcm", "--toi-da", "1"], { encoding: "utf8", timeout: 30000, env });
+  assert.ok(/\(1 căn\)/.test(co(r3)), "--toi-da 1 → cụm 1 căn");
+  fs.rmSync(dir, { recursive: true, force: true });
+});

@@ -13,9 +13,17 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 
 // tham số: --danh-sach <json> --snapshot-root <dir> (0711-6: không ghi cứng state/)
+// 0711-29(2): --toi-da <số căn mỗi vùng, mặc định 20> · --vung <hcm|hanoi|danang>
+// (một vùng duy nhất mỗi lượt — không chạy nhiều vùng cùng lượt).
 const args = Object.fromEntries(process.argv.slice(2).map((v, i, a) => (v.startsWith("--") ? [v.slice(2), a[i + 1]] : [])).filter(x => x.length));
 const DANH_SACH = args["danh-sach"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/id-500.json";
 const SNAP_ROOT = args["snapshot-root"] ?? "/Users/manhphan/dev/onehub-invest-zcode/state/thu-so-s01-n1/snapshots";
+const TOI_DA = Number(args["toi-da"] ?? 20);
+const VUNG = args["vung"] ?? null;
+if (VUNG && !(VUNG in { hcm: 1, hanoi: 1, danang: 1 })) {
+  console.error(`lỗi: --vung phải là hcm|hanoi|danang (được "${VUNG}")`);
+  process.exit(2);
+}
 const ROOT = "/Users/manhphan/dev/onehub-invest-zcode";
 const REPO_S01 = new URL(".", import.meta.url).pathname; // pipeline/s01/
 const DO_DIR = dirname(fileURLToPath(import.meta.url));
@@ -87,7 +95,8 @@ async function duDiscovery(cityId, ids) {
 const bang = { vung: {}, ly_do_thieu_lich: { khong_mo_lich: 0, khong_khoi_lich: 0, tai_loi: 0, khac: 0 } };
 let chan = false;
 for (const [k, cityId] of Object.entries(TP)) {
-  const ids = danhSach[k] ?? [];
+  if (VUNG && k !== VUNG) continue; // 0711-29(2): mỗi lượt MỘT vùng
+  const ids = (danhSach[k] ?? []).slice(0, TOI_DA); // 0711-29(2): trần căn/vùng
   if (!ids.length) continue;
   // 0711-5(b): chia cụm 20 căn — MỖI cụm một discovery giả + collect + writer
   // hoàn chỉnh (flush xuống đĩa sau mỗi cụm) — đứt giữa chừng chỉ mất cụm đang chạy.
@@ -107,10 +116,10 @@ for (const [k, cityId] of Object.entries(TP)) {
     const { items, coverage } = await airbnbListing.collect({
       city: cityById(cityId),
       checkpoint: { get: () => undefined, set: () => {}, save: async () => {} },
-      // 0711-3(2): nhịp nghỉ 8-15 giây NGẪU NHIÊN mỗi căn (luật 0611-36) —
+      // 0711-29(2): nhịp nghỉ 12-20 giây NGẪU NHIÊN mỗi căn (sàn nhịp kiểm 12s) —
       // trước đây take rỗng → 0 nghỉ → ~3,6-6 giây/căn (quá nhanh, nguồn nghi chặn mềm)
       rateLimit: { take: async () => {
-        const ms = 8000 + Math.floor(Math.random() * 7000);
+        const ms = 12000 + Math.floor(Math.random() * 8000);
         await new Promise((r) => setTimeout(r, ms));
       } },
       log: (...a) => { const dong = a.join(" "); console.log("  ", ...a); chanCan(dong); },
