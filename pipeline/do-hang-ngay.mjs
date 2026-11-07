@@ -210,7 +210,7 @@ export async function chuoiCam(client, the, sl, tinSl) {
   for (const r of reg) if (r.real_name?.length >= 4) cam.push({ nhan: "TEN NGUON", chuoi: r.real_name });
   const ids = the.map((t) => t.item_id);
   const { rows: lab } = await client.query("SELECT DISTINCT labeler_id FROM eval_labels WHERE item_id = ANY ($1)", [ids]);
-  for (const r of lab) cam.push({ nhan: "LABELER", chuoi: r.labeler_id });
+  for (const r of lab) if (r.labeler_id?.length >= 6) cam.push({ nhan: "LABELER", chuoi: r.labeler_id });
   const { rows: bai } = await client.query(
     "SELECT DISTINCT ON (post_id) text, sender_name FROM stg_zalo_posts WHERE post_id = ANY ($1)", [the.map((t) => t.ref_id)]);
   for (const r of bai) {

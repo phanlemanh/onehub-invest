@@ -644,3 +644,94 @@ test("DO1-AC-9-FILL bảng 083 và thẻ nhãn không vào FILL của sync-cloud
   assert.ok(FILL.includes("dq_check_results"));
   for (const t of ["data_level_unit", "data_level_change", "eval_label_items", "eval_labels"]) assert.ok(!FILL.includes(t), t);
 });
+
+// ---- AC-10 trên DB: so cặp trước/sau ----
+import { soSanh } from "../so-sanh-cach-doc.mjs";
+
+const KHOA_MOI = KHOA_GOP.replace("v3", "v4");
+test("DO1-AC-10 so cặp trên cùng bài 4 tuần: gọi đúng bài thiếu, cặp đủ hai bên, ý nghĩa, dừng ở trần", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    const ngay = "2025-02-10";
+    const bai = [];
+    for (let i = 0; i < 35; i++) {
+      const id = `do1s${String(i).padStart(2, "0")}`;
+      const stratum = i < 30 ? `2025-0${i < 15 ? "1-2" : "2-0"}${(i % 9) + 1}` : "2024-12-01";
+      // bedrooms: cũ giữ ở 18/30, mới giữ ở 28/30 · area_m2: cũ giữ 24/30, mới giữ 25/30 (lệch một bài).
+      const cuPn = i < 18 ? 2 : 3, moiPn = i < 28 ? 2 : 3, cuDt = i < 24 ? 62 : 80, moiDt = i < 25 ? 62 : 80;
+      const draft = { hien: KHOA_GOP, cach_doc: { [KHOA_GOP]: { trang_thai: "co", o: { bedrooms: String(cuPn), area_m2: String(cuDt) } } } };
+      const { rows: [{ item_id }] } = await c.query(
+        `INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum, draft)
+         VALUES ($1, 'S03', $2, $3, 'dev', false, 'cc', $4, $5) RETURNING item_id`, [LAT_CUON_CHIEU, id, `h${id}`, stratum, draft]);
+      for (const [f, v] of [["bedrooms", "2"], ["area_m2", "62"]]) {
+        await c.query("INSERT INTO eval_labels (item_id, labeler_id, field, value) VALUES ($1, 'u', $2, $3)", [item_id, f, v]);
+      }
+      bai.push({ id, moi: { listing_intent: { v: "offer" }, bedrooms: { v: moiPn }, area_m2: { v: moiDt } } });
+    }
+    for (const b of bai.slice(0, 6)) await themSilver(c, { pid: b.id, text: b.id, o: b.moi, pv: "dg3-s03-v4" });
+    const goi = ({ usd = 0.001 } = {}) => {
+      const da = [];
+      const f = async (ids, tran) => {
+        let chi = 0, cham = false;
+        for (const id of ids) {
+          if (chi + usd > tran + 1e-12) { cham = true; break; }
+          await themSilver(c, { pid: id, text: id, o: bai.find((b) => b.id === id).moi, pv: "dg3-s03-v4", usd });
+          chi += usd; da.push(id);
+        }
+        return { goi: da.length, cham_tran: cham };
+      };
+      f.da = da;
+      return f;
+    };
+    const kiemCapDu = (kq, n) => { for (const r of Object.values(kq.dong.detail.o)) if (r.n_cap !== n) throw new Error(`SO SANH KHONG CAP: ${r.n_cap} ≠ ${n}`); };
+    const kiem = (kq, g) => {
+      if (g.da.some((id) => bai.slice(0, 6).some((b) => b.id === id))) throw new Error("GOI LAI BAI DA CO");
+      if (g.da.length * (g.usd ?? 0.001) > 0.3 + 1e-9) throw new Error("VUOT TRAN SO SANH");
+      const pn = kq.dong.detail.o.bedrooms, dt = kq.dong.detail.o.area_m2;
+      if (pn.n_cap !== 30 || dt.n_cap !== 30) throw new Error(`SO SANH KHONG CAP: ${pn.n_cap}/${dt.n_cap}`);
+      assert.deepEqual([pn.giu_cu, pn.giu_moi, pn.co_y_nghia], [18, 28, true]);
+      assert.deepEqual([dt.giu_cu, dt.giu_moi, dt.co_y_nghia], [24, 25, false]);
+      gan(pn.chenh_cap, 10 / 30, "chênh cặp");
+    };
+    await thu(c, async () => {
+      const g = goi();
+      const kq = await soSanh(c, { cu: KHOA_GOP, moi: KHOA_MOI, ngay, goiDocGop: g, log: () => {} });
+      assert.equal(g.da.length, 24);
+      assert.ok(g.da.every((id) => Number(id.slice(4)) >= 6 && Number(id.slice(4)) < 30));
+      kiem(kq, g);
+    });
+    await thu(c, async () => {
+      const g = goi({ usd: 0.031 });
+      g.usd = 0.031;
+      const log = [];
+      const kq = await soSanh(c, { cu: KHOA_GOP, moi: KHOA_MOI, ngay, goiDocGop: g, log: (s) => log.push(s) });
+      assert.equal(g.da.length, 9);
+      assert.ok(log.some((s) => s.includes("CHAM TRAN SO SANH")));
+      kiemCapDu(kq, 15); // chỉ cặp đủ hai bên: 6 sẵn + 9 vừa gọi
+    });
+    await thu(c, async () => {
+      const g = goi();
+      const kq = await soSanh(c, { cu: KHOA_GOP, moi: KHOA_MOI, ngay, goiDocGop: g, log: () => {}, dotBien: "goi-lai" });
+      assert.throws(() => kiem(kq, g), /GOI LAI BAI DA CO/);
+    });
+    await thu(c, async () => {
+      const g = goi({ usd: 0.031 }); g.usd = 0.031;
+      const kq = await soSanh(c, { cu: KHOA_GOP, moi: KHOA_MOI, ngay, goiDocGop: g, log: () => {}, dotBien: "bo-tran" });
+      assert.throws(() => kiem(kq, g), /VUOT TRAN SO SANH/);
+    });
+    await thu(c, async () => {
+      const g = goi({ usd: 0.031 }); g.usd = 0.031;
+      const kq = await soSanh(c, { cu: KHOA_GOP, moi: KHOA_MOI, ngay, goiDocGop: g, log: () => {}, dotBien: "khong-cap" });
+      assert.throws(() => kiemCapDu(kq, 15), /SO SANH KHONG CAP/);
+    });
+    // do-hang-ngay ghi skip «chưa so cặp» cho khoá mới chưa có dòng so sánh.
+    await thu(c, async () => {
+      await c.query("UPDATE silver_labels SET labeled_at = '2025-02-09T05:00:00Z' WHERE prompt_version = 'dg3-s03-v4' AND post_id LIKE 'do1s%'");
+      await themSilver(c, { pid: "do1s00", text: "khac", o: bai[0].moi });
+      await c.query("UPDATE silver_labels SET labeled_at = '2025-02-01T05:00:00Z' WHERE prompt_version = 'dg3-s03-v3' AND post_id = 'do1s00'");
+      await c.query("DELETE FROM data_level_unit");
+      const r = await doHangNgay(c, { ngay });
+      const ss = r.dq.find((x) => x.check_name === "do1-so-sanh" && x.entity === KHOA_MOI);
+      assert.deepEqual([ss?.status, ss?.detail.ly_do], ["skip", "chua-so-cap"]);
+    });
+  });
+});

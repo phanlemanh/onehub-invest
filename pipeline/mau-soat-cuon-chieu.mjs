@@ -47,10 +47,10 @@ export function oBoDocLuat(r) {
 }
 
 /** Gọi đọc gộp qua lệnh của agent cho đúng danh sách bài, với trần còn lại. Trả số lời gọi, USD, có chạm trần. */
-export async function goiDocGopThat(postIds, tranConLai, { runId }) {
+export async function goiDocGopThat(postIds, tranConLai, { runId, cauHinh }) {
   const env = path.join(ROOT, ".env");
   const args = [...(existsSync(env) ? [`--env-file=${env}`] : []), "--import", "tsx", "scripts/doc-gop-s03.ts", "chay",
-    "--post", postIds.join(","), "--tran-usd", String(tranConLai), "--run-id", runId];
+    "--post", postIds.join(","), "--tran-usd", String(tranConLai), "--run-id", runId, ...(cauHinh ? ["--cau-hinh", cauHinh] : [])];
   try {
     const { stdout } = await promisify(execFile)("node", args, { cwd: path.join(ROOT, "agent"), maxBuffer: 1 << 24 });
     process.stdout.write(stdout);
