@@ -2,10 +2,34 @@
 # install-cron.sh — cài 3 launchd job (collector tuần + smoke ngày + backup
 # tuần). Chạy MỘT LẦN bởi người dùng (đụng ~/Library/LaunchAgents — không tự
 # chạy trong build/plan):
-#   bash scripts/install-cron.sh
+#   bash scripts/install-cron.sh                # đủ 3 job (hành vi cũ)
+#   bash scripts/install-cron.sh --chi backup   # CHỈ job backup — không chạm
+#                                               # collector/smoke đang chạy
 # Env tùy chọn khi gọi: BACKUP_DIR (đĩa ngoài), BACKUP_PASS (passphrase raw).
 # BACKUP_PASS lưu vào macOS Keychain (ADR-0007 DR) — KHÔNG ghi vào plist.
 set -euo pipefail
+
+# --chi <job...> (0611-37): chỉ cài các job nêu tên (collector|smoke|backup);
+# vắng cờ thì cài đủ 3 như cũ. Nhiều tên cách nhau bởi khoảng trắng.
+JOBS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --chi)
+      shift
+      while [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; do
+        case "$1" in
+          collector|smoke|backup) JOBS+=("$1") ;;
+          *) echo "lỗi: job không biết '$1' (collector|smoke|backup)" >&2; exit 2 ;;
+        esac
+        shift
+      done
+      ;;
+    *) echo "lỗi: cờ không biết '$1'" >&2; exit 2 ;;
+  esac
+done
+if [ "${#JOBS[@]}" -eq 0 ]; then
+  JOBS=(collector smoke backup)
+fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="$HOME/Library/LaunchAgents"
@@ -24,7 +48,7 @@ if [ -n "${BACKUP_PASS:-}" ]; then
   echo "BACKUP_PASS → Keychain (oneinvest-backup)"
 fi
 
-for f in collector smoke backup; do
+for f in "${JOBS[@]}"; do
   SRC="$ROOT/pipeline/cron/com.oneinvest.$f.plist"
   OUT="$DEST/com.oneinvest.$f.plist"
   sed "s|__ROOT__|$ROOT|g" "$SRC" > "$OUT"
