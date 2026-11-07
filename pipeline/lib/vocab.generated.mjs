@@ -7,11 +7,12 @@ export const VOCAB = Object.freeze({
   confidence: Object.freeze(["high", "medium", "low"]),
   price_tier: Object.freeze(["P0", "P1", "P2"]),
   enrich_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"]),
-  assertion_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"]),
+  assertion_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id"]),
   evidence_tier: Object.freeze(["fact", "observed", "inferred"]),
-  assertion_method: Object.freeze(["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"]),
+  assertion_method: Object.freeze(["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"]),
   registry_status: Object.freeze(["active", "merged", "split", "retired"]),
-  alias_kind: Object.freeze(["tai_khoan_nguon", "sdt_bam", "ten", "sdt"]),
+  alias_kind: Object.freeze(["tai_khoan_nguon", "sdt_bam", "ten", "sdt", "ma_nguon"]),
+  catalog_tier: Object.freeze(["xac_minh", "suy_ra_manh", "mot_loi_khai"]),
   registry_event_kind: Object.freeze(["gop", "tach", "nghi"]),
   party_role: Object.freeze(["nguoi_dang"]),
   contact_kind: Object.freeze(["sdt", "chat_profile"]),
@@ -28,11 +29,12 @@ export const PROPERTY_TYPE = Object.freeze({ apartment: "apartment", house: "hou
 export const CONFIDENCE = Object.freeze({ high: "high", medium: "medium", low: "low" });
 export const PRICE_TIER = Object.freeze({ P0: "P0", P1: "P1", P2: "P2" });
 export const ENRICH_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" });
-export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude" });
+export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id" });
 export const EVIDENCE_TIER = Object.freeze({ fact: "fact", observed: "observed", inferred: "inferred" });
-export const ASSERTION_METHOD = Object.freeze({ hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" });
+export const ASSERTION_METHOD = Object.freeze({ hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" });
 export const REGISTRY_STATUS = Object.freeze({ active: "active", merged: "merged", split: "split", retired: "retired" });
-export const ALIAS_KIND = Object.freeze({ tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" });
+export const ALIAS_KIND = Object.freeze({ tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt", ma_nguon: "ma_nguon" });
+export const CATALOG_TIER = Object.freeze({ xac_minh: "xac_minh", suy_ra_manh: "suy_ra_manh", mot_loi_khai: "mot_loi_khai" });
 export const REGISTRY_EVENT_KIND = Object.freeze({ gop: "gop", tach: "tach", nghi: "nghi" });
 export const PARTY_ROLE = Object.freeze({ nguoi_dang: "nguoi_dang" });
 export const CONTACT_KIND = Object.freeze({ sdt: "sdt", chat_profile: "chat_profile" });
