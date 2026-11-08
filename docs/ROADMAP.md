@@ -516,6 +516,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Cùng ngày Mạnh «phê duyệt cả 4 khuyến nghị câu hỏi» của `danh-ba-du-an-0811.md` §0: thêm Q3 phần còn lại (thu thử S09 đúng Ocean Park 1
     và Grand Park, ≤ 60 lời gọi, rồi mới thu toàn bộ) và Q4 (làm với dữ liệu sẵn có trước: DA1, DS2+, DA2, chưa thu mới). Trần/nhịp
     §8.2 cho S09 toàn bộ và S07 chờ chốt riêng.
+    Sau đó Mạnh chốt nguyên tắc: «Phần thu thì tôn trọng giải pháp của ZCode, chỉ hỗ trợ khi ZCode không thể thực hiện hay không hiệu
+    quả». Trần, nhịp, đường thu (kể cả cách xử robots.txt của S09) do ZCode đề xuất và chọn; Claude chỉ góp ý và giữ phía sau `stg_*`.
+    Kế hoạch: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §8.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
