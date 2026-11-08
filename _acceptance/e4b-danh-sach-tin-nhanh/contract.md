@@ -91,3 +91,5 @@ Quét hình thái (preset test-matrix) ở `design_doc` mục «Không gian tiê
 - Hằng `NHIEU_TEN` và thân đếm tên sinh từ một hàm, nên danh sách và trang tin dùng chung một luật đếm tên.
 - Câu cũ của AC-3, AC-4 là chính tệp `offers-public.ts` ở commit e21a151e, đọc bằng `git show` và nạp thành module tạm cạnh tệp
   thật; ca cần lịch sử git nên bỏ qua trên CI như mọi ca DB máy thu của tệp.
+- AC-3, AC-4 là phép so một lần: test chỉ chạy chúng khi `offers-public.ts` và các tệp nó import còn đúng băm của hồ sơ;
+  hàng sau cố ý đổi các tệp ấy thì hai ca bỏ qua, gọi tên tệp. AC-7 so băm khối đo đã ghim, đổi có chủ ý thì cập nhật băm kèm lý do.

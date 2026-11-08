@@ -2,6 +2,7 @@
 // in giá trị. CI không có dữ liệu thu nên bỏ qua; ở máy thu mà thiếu DB thì đỏ THIEU DB MAY THU, không tính là đạt.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
+import { createHash } from "node:crypto"
 import { readFileSync, unlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { after, test } from "node:test"
@@ -141,6 +142,28 @@ test("E4b đối chiếu DB máy thu", { skip: process.env.CI ? "CI không có d
 // ---- e4b-danh-sach-tin-nhanh: đáp án «câu cũ» là chính offers-public.ts ở gốc nhánh, nạp thành module tạm cạnh tệp thật ----
 const GOC_NHANH = "e21a151eed711b8851fd1fca25f297d9c9acb0bc"
 const KHONG_DB = process.env.CI ? "CI không có dữ liệu thu, kho chép nông" : false
+const bam = (s: string | Buffer) => createHash("sha256").update(s).digest("hex")
+/**
+ * AC-3, AC-4 là phép so MỘT LẦN của hồ sơ này: bản mới so với bản trước vòng. Chúng chỉ chạy khi offers-public.ts và các tệp
+ * nó import (bản cũ nạp cạnh tệp thật nên dùng chung các tệp này) còn đúng bản của hồ sơ. Hàng sau cố ý đổi một tệp thì ca tự
+ * bỏ qua và gọi tên tệp — không đỏ giả; phép đo thời gian E4b ở trên vẫn chạy mọi lượt.
+ */
+const BAM_HO_SO: Record<string, string> = {
+  "offers-public": "49ecd4a8c29ac7aa",
+  "offers-filters": "da133811b0fc3469",
+  db: "c51d63957147e0c3",
+  format: "48528e0b1e91e312",
+  "ma-thi-truong": "2915d36ca22d9211",
+  "mask-source-names": "b0c2f7449520c106",
+  "ten-tin": "b5a6523ce7c22429",
+  "vocab.generated": "f060d448a68d623c",
+}
+const tepDaDoi = Object.entries(BAM_HO_SO)
+  .filter(([t, b]) => bam(readFileSync(join(import.meta.dirname, `../src/lib/${t}.ts`))).slice(0, 16) !== b)
+  .map(([t]) => `${t}.ts`)
+const BO_SO_MOT_LAN = KHONG_DB || (tepDaDoi.length
+  ? `phép so một lần của hồ sơ e4b-danh-sach-tin-nhanh: ${tepDaDoi.join(", ")} đã đổi sau hồ sơ`
+  : false)
 type Offers = typeof import("../src/lib/offers-public")
 const gitShow = (tep: string) =>
   execFileSync("git", ["show", `${GOC_NHANH}:${tep}`], { cwd: join(import.meta.dirname, "../.."), encoding: "utf8" })
@@ -179,7 +202,7 @@ async function coDbMayThu(ten: string) {
 type Duong = { ten: string; tt: string | null; qs: string }
 const qsSort = (d: Duong, sort: OfferSort) => `${d.qs}&sort=${sort}`
 
-test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp viết trước; bản phá đếm trong trang đỏ LECH CAU CU", { skip: KHONG_DB, timeout: 600_000 }, async () => {
+test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp viết trước; bản phá đếm trong trang đỏ LECH CAU CU", { skip: BO_SO_MOT_LAN, timeout: 600_000 }, async () => {
   const c = await coDbMayThu("E4B-AC-4")
   let ward: string
   try {
@@ -240,7 +263,7 @@ test("E4B-AC-4 cùng kết quả như bản trước vòng ở 20 tổ hợp vi�
   await assert.rejects(soVoiCu(pha), /LECH CAU CU/)
 })
 
-test("E4B-AC-3 biên: mỗi sort bản mới dưới 700 ms, đo xen kẽ với bản trước vòng", { skip: KHONG_DB, timeout: 300_000 }, async () => {
+test("E4B-AC-3 biên: mỗi sort bản mới dưới 700 ms, đo xen kẽ với bản trước vòng", { skip: BO_SO_MOT_LAN, timeout: 300_000 }, async () => {
   await (await coDbMayThu("E4B-AC-3")).end()
   const cu = await banCu()
   const loi: string[] = []
@@ -271,15 +294,26 @@ function khoiDo(src: string, nhan: string) {
   if (dau < 0 || tu < 0 || toi < 0) throw new Error(`KHONG CAT DUOC ${nhan}`)
   return src.slice(tu, src.indexOf("\n", toi))
 }
-const soTran = (moi: string, goc: string) => {
-  if (moi !== goc) throw new Error("TRAN BI NOI: khối đo thời gian của E4b khác bản trước vòng")
+/**
+ * Băm khối đo thời gian của E4b ở gốc nhánh e21a151e. Đổi khối là đổi trần hay cách đo của E4b: muốn đổi có chủ ý thì cập nhật
+ * băm này cùng lý do ghi ở hồ sơ của vòng đổi — không đổi lặng lẽ.
+ */
+const BAM_KHOI_E4B = "34cc9744be2b46df7d13350c60c56b55f5c2ad2e97bb70faac1252a905864fc9"
+const soTran = (khoi: string) => {
+  if (bam(khoi) !== BAM_KHOI_E4B) {
+    throw new Error("TRAN BI NOI: khối đo thời gian của E4b khác bản đã ghim — đổi có chủ ý thì cập nhật BAM_KHOI_E4B kèm lý do ở hồ sơ")
+  }
 }
 
-test("E4B-AC-7 khối đo thời gian của E4b giống hệt bản trước vòng; bản phá đổi trần đỏ TRAN BI NOI", { skip: KHONG_DB }, () => {
-  const goc = khoiDo(gitShow("app/tests/tin-rao-doi-chieu.test.tsx"), "bản gốc")
+test("E4B-AC-7 khối đo thời gian của E4b giống hệt bản trước vòng; bản phá đổi trần đỏ TRAN BI NOI", () => {
   const moi = khoiDo(readFileSync(import.meta.filename, "utf8"), "HEAD")
-  assert.ok(goc.includes("ms < 1000") && goc.includes("lan < 6"), "khối gốc phải chứa trần và số lượt: không đo được")
-  soTran(moi, goc)
-  assert.throws(() => soTran(moi.replace("ms < 1000", "ms < 1500"), goc), /TRAN BI NOI/)
+  // Có lịch sử git (ngoài CI chép nông) thì chứng luôn băm ghim đúng là của khối ở gốc nhánh.
+  if (!process.env.CI) {
+    const goc = khoiDo(gitShow("app/tests/tin-rao-doi-chieu.test.tsx"), "bản gốc")
+    assert.ok(goc.includes("ms < 1000") && goc.includes("lan < 6"), "khối gốc phải chứa trần và số lượt: không đo được")
+    assert.equal(bam(goc), BAM_KHOI_E4B, "băm ghim không phải băm khối của gốc nhánh")
+  }
+  soTran(moi)
+  assert.throws(() => soTran(moi.replace("ms < 1000", "ms < 1500")), /TRAN BI NOI/)
   assert.throws(() => khoiDo("không có ca E4b", "bản phá"), /KHONG CAT DUOC/)
 })
