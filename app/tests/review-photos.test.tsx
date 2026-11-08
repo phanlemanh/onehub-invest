@@ -127,16 +127,17 @@ test("AC-3 bấm ảnh n mở hộp thoại «ảnh n/N»; trước/sau chuyển
   await r.close();
 });
 
-test("AC-4 ảnh lỗi tải → ô «Ảnh hỏng», vẫn bấm được; hộp thoại báo hết hạn; ảnh khác giữ nguyên", async () => {
+// OD1 · ĐC2 (P1-5): ảnh lỗi rời dải, gom MỘT dòng «n ảnh không còn tải được»; hộp phóng to chỉ duyệt ảnh tốt.
+test("AC-4 ảnh lỗi tải → rời dải, một dòng đếm ảnh hỏng; ảnh khác giữ nguyên, phóng to được", async () => {
   const r = await render(MATCH, { offer_a: [FB(1), FB(2)], offer_b: [] });
   await r.fireError(imgsIn(strip("Tin A"))[0]);
   const a = strip("Tin A")!;
   assert.deepEqual(imgsIn(a).map((i) => i.getAttribute("src")), [FB(2).src], "ảnh hỏng không còn img, ảnh 2 giữ nguyên");
-  assert.match(a.textContent ?? "", /Ảnh hỏng/);
-  assert.equal(a.querySelectorAll("[data-state=error]").length, 1);
-  await r.click(document.querySelector('[aria-label="Phóng to Tin A ảnh 1"]')!);
-  assert.match(dialog()?.textContent ?? "", /Ảnh không tải được — URL gốc có thể đã hết hạn/);
-  assert.equal(dialog()!.querySelector("img"), null);
+  assert.doesNotMatch(a.textContent ?? "", /Ảnh hỏng/, "không còn ô «Ảnh hỏng»");
+  assert.equal(a.querySelectorAll("[data-state=error]").length, 0);
+  assert.equal(document.querySelector("[data-review-photos-hong]")?.textContent?.trim(), "Tin A: 1 ảnh không còn tải được");
+  await r.click(document.querySelector('[aria-label="Phóng to Tin A ảnh 2"]')!);
+  assert.match(dialog()?.textContent ?? "", /ảnh 1\/1/);
   await r.close();
 });
 

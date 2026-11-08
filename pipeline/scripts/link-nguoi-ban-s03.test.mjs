@@ -30,14 +30,16 @@ test("LNB-AC-7 không ghi: mã lệch (hậu tố), không khớp Người, khon
   assert.equal(dem.username_sai_khuon, 2);
 });
 
-test("LNB-AC-7 chạy lại giữ nguyên; đổi username rút doi-username rồi thêm; khong-tim-thay rút bo-username", () => {
+test("LNB-AC-7 chạy lại giữ nguyên; đổi username rút doi-username rồi thêm; khong-tim-thay và khong-username rút bo-username", () => {
   const song = [{ id: 10, party_key: "P1", value: "u.mot", evidence: { ma_tai_khoan: "1" } },
-    { id: 11, party_key: "P2", value: "u.hai", evidence: { ma_tai_khoan: "2" } }];
-  const lai = quyetLienLacHoSo([h("1", "co-username", "u.mot"), h("2", "co-username", "u.hai")], nguoi, song);
-  assert.deepEqual([lai.them, lai.rut, lai.dem.giu], [[], [], 2]);
-  const doi = quyetLienLacHoSo([h("1", "co-username", "u.moi"), h("2", "khong-tim-thay")], nguoi, song);
-  assert.deepEqual(doi.rut, [{ id: 10, ly_do: LY_DO_DOI }, { id: 11, ly_do: LY_DO_BO }]);
+    { id: 11, party_key: "P2", value: "u.hai", evidence: { ma_tai_khoan: "2" } },
+    { id: 12, party_key: "P3", value: "u.ba", evidence: { ma_tai_khoan: "3" } }];
+  const lai = quyetLienLacHoSo([h("1", "co-username", "u.mot"), h("2", "co-username", "u.hai"), h("3", "co-username", "u.ba")], nguoi, song);
+  assert.deepEqual([lai.them, lai.rut, lai.dem.giu], [[], [], 3]);
+  const doi = quyetLienLacHoSo([h("1", "co-username", "u.moi"), h("2", "khong-tim-thay"), h("3", "khong-username")], nguoi, song);
+  assert.deepEqual(doi.rut, [{ id: 10, ly_do: LY_DO_DOI }, { id: 11, ly_do: LY_DO_BO }, { id: 12, ly_do: LY_DO_BO }]);
   assert.deepEqual(doi.them.map((t) => t.value), ["u.moi"]);
+  assert.deepEqual([doi.dem.khong_tim_thay, doi.dem.khong_username, doi.dem.rut_bo], [1, 1, 2]);
   // khong-ro không rút gì.
   assert.deepEqual(quyetLienLacHoSo([h("1", "khong-ro")], nguoi, song).rut, []);
 });

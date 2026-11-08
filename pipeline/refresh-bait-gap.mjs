@@ -17,6 +17,7 @@ import { dungLienLac } from "./lib/lien-lac-nguoi.mjs";
 import { ghiLienLacHoSo } from "./lib/lien-lac-ho-so.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
+import { buocVatTheDem } from "./danh-ba-vat-the.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -133,6 +134,14 @@ async function main() {
   await c.connect();
   try {
     await buocDem(c);
+    // DB1b: danh bạ vật thể giữ tươi khu đã dựng tay, giao dịch riêng SAU khi bait gap + danh bạ Người đã commit — lỗi ở đây
+    // không lùi Người, nhưng job vẫn đỏ gọi tên bước. Chưa áp 082 / chưa dựng lần đầu thì bước tự bỏ qua một dòng.
+    try {
+      await buocVatTheDem(c);
+    } catch (e) {
+      console.error(`danh-ba-vat-the: ${e.message}`);
+      process.exitCode = 1;
+    }
   } finally {
     await c.end();
   }

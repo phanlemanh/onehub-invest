@@ -4,13 +4,12 @@ import type { ReactNode } from "react";
 import { CheckIcon, CircleHelpIcon, XIcon } from "lucide-react";
 
 import { Badge } from "@/components/reui/badge";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fmtInt, fmtMoney, fmtVnDate } from "@/lib/format";
 import type { ReviewItem } from "@/lib/ops/review-queue";
 
 import type { ReviewCardParts } from "./review-card";
-import { DoneState, PendingActions, useDecide } from "./review-card";
+import { DoneState, NutDapAn, PendingActions, useDecide } from "./review-card";
 
 /** Evidence thẻ Người (HD17, pipeline/lib/the-duyet-nguoi.mjs `evidenceThe`). */
 export type NguoiEvidence = {
@@ -20,11 +19,9 @@ export type NguoiEvidence = {
   tin_mau?: { offer_id: string; gia: number | null; dien_tich: number | null; ngay: string | null }[];
 };
 
-export const NGUOI_DONE_LABEL: Record<string, string> = { approved: "Đã gộp", rejected: "Giữ tách", deferred: "Hoãn" };
-
 /** Thẻ «Gộp Người?»: một nhóm tài khoản–SĐT không nối một–một; người duyệt quyết cả nhóm. */
 export function NguoiCard({ item, render }: { item: ReviewItem; render: (parts: ReviewCardParts) => ReactNode }) {
-  const d = useDecide(item.id);
+  const d = useDecide(item);
   const ev = (item.evidence ?? {}) as NguoiEvidence;
   const taiKhoan = ev.tai_khoan ?? [];
   const sdt = ev.sdt ?? [];
@@ -98,24 +95,23 @@ export function NguoiCard({ item, render }: { item: ReviewItem; render: (parts: 
       )}
     </div>
   );
-  const tat = d.pending || !d.ready;
   const actions = item.status === "pending" ? (
     <PendingActions d={d}>
-      <Button size="sm" onClick={() => d.decide("approved")} disabled={tat}>
+      <NutDapAn so={1} onClick={() => d.decide("approved")} disabled={d.pending || !d.sanSang("approved")}>
         <CheckIcon data-icon="inline-start" aria-hidden />
         Gộp thành một Người
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => d.decide("rejected")} disabled={tat}>
+      </NutDapAn>
+      <NutDapAn so={2} variant="outline" onClick={() => d.decide("rejected")} disabled={d.pending || !d.sanSang("rejected")}>
         <XIcon data-icon="inline-start" aria-hidden />
         Giữ tách
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => d.decide("deferred")} disabled={tat}>
+      </NutDapAn>
+      <NutDapAn so={3} variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.sanSang("deferred")}>
         <CircleHelpIcon data-icon="inline-start" aria-hidden />
         Hoãn
-      </Button>
+      </NutDapAn>
     </PendingActions>
   ) : (
-    <DoneState item={item} labels={NGUOI_DONE_LABEL} />
+    <DoneState item={item} />
   );
   return render({ body, actions });
 }

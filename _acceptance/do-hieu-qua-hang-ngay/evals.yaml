@@ -1,0 +1,112 @@
+schema_version: 1
+feature_slug: do-hieu-qua-hang-ngay
+# Ca DB chạy trên DB thử của suite (npm test tự dựng qua db/db-thu.sh --chay), số bịa; không gọi model thật (đọc gộp giả).
+# Mỗi ca mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/mau-soat-cuon-chieu.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/lib/eval-labels.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/do-hang-ngay.test.mjs, db/migrations/083_*]
+    expected: "exit 0; ca 'DO1-AC-1' trên DB thử: 26 bài stg_zalo_posts ngày D (3 bài thử, 2 cặp trùng chữ, 6 bài không thành tin), 4 bài ngày D-1; chạy --ngay D → đúng 20 thẻ lát s03-cuon-chieu stratum D, 0 bài thử, 0 cặp trùng, ≥1 bài không có tin, 0 bài ngày D-1; draft.cach_doc có khoá 'bo-doc-luat' cho mọi thẻ (bài không thành tin mang trang_thai 'khong-tin', không phải 'co' toàn null) và khoá 'doc-gop:gateway:anthropic/claude-haiku-5.5:dg3-s03-v3' cho các bài có silver_labels; bài không có đọc gộp có draft.hien = 'bo-doc-luat'; chạy lại → thêm 0 dòng, danh sách post_id y hệt; đổi prompt_version của silver_labels giả → khoá cách đọc mới. Ca 'DO1-AC-1-GOI' (đọc gộp giả có đếm lời gọi và giá giả): mẫu 20 bài, 12 bài đã có silver_labels → đúng 8 lời gọi cho đúng 8 post_id ấy, sau lệnh draft của 8 bài có khoá doc-gop trang_thai 'co'; chạy lại cùng ngày → 0 lời gọi; giá giả để lời thứ 4 chạm trần 0,05 USD → dừng ở lời đó, thẻ vẫn ghi đủ 20, nháp đọc gộp của bài chưa gọi là 'vang', log có 'CHAM TRAN DOC GOP'. Chiều đỏ: bỏ lọc bài thử → 'MAU CO BAI THU'; chọn theo thứ tự chèn thay hạt giống ngày → 'MAU KHONG TAT DINH'; bỏ bài không thành tin → 'MAU BO BAI KHONG NHAN'; chụp trước khi gọi → 'NHAP THIEU DOC GOP'; gọi lại khi chạy lại → 'GOI DOC GOP LAP'; bỏ trần → 'VUOT TRAN TIEN'; bài không tin ghi 'co' toàn null → 'NULL KHONG TIN THANH GIU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**, app/src/lib/labels*.ts, app/src/app/api/v1/ops/labels/**, app/tests/do-hang-ngay-labels.test.tsx, pipeline/mau-soat-cuon-chieu.mjs, pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs]
+    expected: "exit 0; ca 'DO1-AC-2' (biểu mẫu thật trong jsdom + route lưu thật trên lược đồ tạm; draft KHÔNG dựng tay mà rút bằng hàm ghi của mau-soat-cuon-chieu trên bài bịa có silver_labels đọc gộp kind 'sale', bedrooms 2, bathrooms 2): ô kind = 'sale', bedrooms = '2', ô bathrooms (giao người) trống, có chữ 'Nháp máy · doc-gop:'; thẻ chỉ có bộ đọc luật hiện 'Nháp máy · bo-doc-luat' và ô điền từ bộ đọc luật; người sửa bedrooms thành '3' rồi lưu → eval_labels có bedrooms '3', kind 'sale'; eval_label_items.draft trước = sau. Ca 'DO1-RT' (round-trip): cùng thẻ, lưu không sửa ô nào qua route thật rồi chạy hàm tính của do-hang-ngay → giữ nháp của cách đọc hien = 100% trên mọi ô có nháp; sửa đúng bedrooms → chỉ ô bedrooms thành 0. Chiều đỏ: bỏ điền sẵn → 'KHONG DIEN NHAP'; điền cả ô giao người → 'DIEN O GIAO NGUOI'; lưu ghi đè draft → 'DRAFT BI DOI'; tra nháp theo tiền tố thay khoá đầy đủ → 'KHOA CACH DOC LECH KHUON'; so giá trị chưa chuẩn hoá → 'CHUAN HOA LECH'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-3' ma trận viết trước: 2 cách đọc × 3 ô (listing_intent nhóm A, price_min_vnd nhóm B, area_m2 nhóm B) × 2 tuần với số giữ đặt trước (vd bo-doc-luat/price tuần này 8/10, tuần trước 6/10) → detail do1-giu-nhap có đúng 12 ô, mỗi ô nhom, n, giu, ty_le khớp bảng, wilson khớp hàm tham chiếu đến 4 chữ số, chenh = 0,2, co_y_nghia = false khi hai khoảng chồng và true ở ca đặt trước 19/20 so 5/20, nguong_phat_hien có mặt; dung sai: giá nháp 3.400.000.000 người lưu 3.420.000.000 (lệch 0,59%) → giữ, 3.450.000.000 (1,47%) → không giữ; diện tích 62 so 62,8 → giữ, 64 → không; detail có co_cau {tuan_nay, tuan_truoc} theo bán/thuê × loại nhà, ty_le_soat = đã soát/đã rút với canh_bao khi < 0,7 (ca 12/20), phien_ban_thuoc chuỗi khác rỗng; ô người sửa = 1 − giữ của cách đọc hien; thêm khoá prompt mới → dòng riêng. Chiều đỏ: so với giá trị sale_offers hiện tại thay draft → 'GIU NHAP SO SAI NHAP'; gộp hai khoá prompt → 'GOP CACH DOC'; bỏ dung sai → 'DUNG SAI O SO'; co_y_nghia true khi khoảng chồng → 'CHENH NHIEU THANH Y NGHIA'; bỏ cảnh báo tỉ lệ soát → 'THIEU CANH BAO SOAT'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-4' (thẻ rút bằng hàm ghi của mau-soat-cuon-chieu): 12 thẻ người gắn ý định offer, nháp bộ đọc luật 'khong-tin' ở 3, nháp đọc gộp 'khong-tin' (inquiry) ở 1 và 'vang' ở 2; 2 thẻ người gắn not_listing → detail do1-bo-sot: bo-doc-luat n=12 bo=3, doc-gop n=10 bo=1 thieu_nhap=2, khoảng Wilson khớp hàm tham chiếu, có chenh và co_y_nghia so tuần trước; thẻ not_listing không vào mẫu số; sửa sale_offers của một bài sau lúc rút → do1-bo-sot không đổi. Chiều đỏ: đếm cả thẻ not_listing → 'BO SOT SAI MAU SO'; tính 'vang' là bỏ sót → 'THIEU NHAP THANH BO SOT'; đọc lại sale_offers → 'BO SOT DOC LAI SALE_OFFERS'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-5' silver_labels ngày D: doc-gop 10 dòng (2 json_ok=false, 1 ô trích trich_ok=false trên 8 ô có trích, ô area_m2 có giá trị ở 6/8 dòng giao và 1 dòng trả sai khuôn), bộ đọc luật khác đọc gộp ở kind trên 2/7 bài cùng có giá trị; một lượt khác mọi lời gọi json_ok=false → detail do1-tin-hieu: json_hong 0,2; trich_lac 0,125; phu area_m2 6/8 với sai_khuon 1; bat_dong kind 2/7; lượt hỏng trọn ra json_hong 1,0 (không bỏ); doc-chu không có dòng ngày D → status 'skip', không có số 0. Chiều đỏ: ghi 0 cho cách đọc vắng → 'KHONG LUOT GHI SO 0'; tính sai khuôn là trống → 'SAI KHUON THANH TRONG'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs, db/migrations/083_*, db/migrations/056_data_level.sql]
+    expected: "exit 0; ca 'DO1-AC-6' trên DB thử có 056 + 083: lần 1 → data_level_unit = bậc của property_data_level/offer_data_level, data_level_change 0 dòng, do1-chuyen-bac status 'skip' «lập mốc»; sửa dữ liệu: tin A mất giá (B1→B0), tin B thêm diện tích (B0→B1), tin C gắn vào căn K (tin:C mất, can:K mới), tin D retired, tin E không đổi, căn F có mọi trường lõi bật cờ measured (B2→B3), tin G mất giá và mất diện tích cùng ngày (B1→B0); lần 2 → đúng 7 dòng chuyển {A tut [thieu-gia], B len [du-dien-tich], C mat [gan-can], K moi, D mat [tin-nghi], F len [do-luong], G tut [thieu-gia, thieu-dien-tich]}, 0 dòng cho E, G đúng MỘT dòng; thêm tin H (S06) rời căn P sang căn Q do đổi giá → dòng của tin không có, can:P mat [doi-khoa], can:Q moi [doi-khoa], detail tách cặp đổi khoá khỏi mất/mới thật; data_level_unit khớp hai hàm SQL ở mọi đơn vị; detail đếm theo nguồn × hướng × từng lý do khớp (G cộng vào hai ô). Chạy lại không đổi dữ liệu → 0 dòng chuyển mới. Chiều đỏ: sinh dòng cho đơn vị không đổi → 'CHUYEN BAC GIA'; bỏ lý do → 'THIEU LY DO'; F không có do-luong → 'THIEU DO LUONG'; G hai dòng → 'HAI DONG MOT DON VI'; P/Q không gắn doi-khoa → 'DOI KHOA THANH BIEN DONG'; bỏ chiều nguồn → 'THIEU NGUON'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-7' ma trận viết trước: 2 thị trường, 40 phường (số đơn vị 40..1), 3 đơn vị không nêu chỗ, 2 đơn vị nêu toà 'S8.02' mà danh bạ chưa có, 2 dự án trong danh bạ, 1 toà → chiều thi_truong đủ 2 ô; phân rã phường có 30 ô lớn nhất + khac (gộp 10 ô nhỏ) + khong-tin-hieu = 3; toà có chua-co-danh-ba = 2 tách khỏi khong-tin-hieu; thẻ mẫu soát có chiều du_an_theo_chu với nhãn 'theo-chu-bai'; với mỗi nhóm số và mỗi chiều, tổng các ô = tổng chung (kiểm quan hệ trên mọi nhóm của detail thật sinh từ hàm ghi, không trên fixture dựng tay). Chiều đỏ: gộp hai ô chưa gắn → 'GOP HAI O CHUA GAN'; cắt 30 ô không gộp khac → 'TONG LAT LECH'; bỏ chiều thị trường → 'THIEU THI TRUONG'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**, app/src/components/ops/quality-tables.tsx, app/src/lib/dq-checks.ts, app/src/lib/do-hang-ngay.ts, app/tests/do-hang-ngay-quality.test.tsx]
+    expected: "exit 0; ca 'DO1-AC-8' (trang thật render trong jsdom trên lược đồ tạm, dòng do1-* rút từ hàm ghi của pipeline, không dựng tay): khối 'Đo hằng ngày' có năm bảng (giữ nháp, bỏ sót, tín hiệu, chuyển bậc, so cặp); bảng giữ nháp có cột nhóm, tuần này, tuần trước, chênh, dấu 'có ý nghĩa' đúng ở ô co_y_nghia true, ngưỡng phát hiện; tỉ lệ soát < 70% hiện Alert cảnh báo; chuyển bậc có dòng 'Đổi khoá' tách riêng; chọn lát Thị trường hiện ô thị trường, lát Phường/xã hiện hai ô 'Không nêu chỗ' và 'Chưa có trong danh bạ'; ô n<5 hiện 'ít mẫu'; không dòng do1-* → chữ trạng thái trống kèm lệnh 'do-hang-ngay.mjs --write'; do1-chuyen-bac skip → 'đã lập mốc'; truy vấn ném lỗi → Alert + nút 'Thử lại'; bảng Kiểm chất lượng chung không có dòng check_name bắt đầu 'do1-'. Chiều đỏ: bảng chung còn dòng do1- → 'DO1 LAP TRONG BANG CHUNG'; bỏ ô chưa gắn → 'THIEU CHUA GAN TREN MAN'; dấu ý nghĩa hiện ở ô chồng khoảng → 'Y NGHIA SAI TREN MAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    target: "http://localhost:3462/ops/quality"
+    paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**]
+    steps:
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser (task space «DO1 do-hieu-qua-hang-ngay soat man»), không đăng nhập lại, không dùng trình duyệt khác. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/."
+      - "/ops/quality ở 1280 px sáng: cuộn tới khối «Đo hằng ngày», chụp → evidence/E9-step1.png"
+      - "Bấm thẻ lát «Phường/xã» → evidence/E9-step2.png; ghi URL (có ?lat-do=phuong)"
+      - "Cùng khối 1280 px tối (prefers-color-scheme: dark) → evidence/E9-step3.png"
+      - "Khổ 375 px sáng → evidence/E9-step4.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Trang /ops/quality trên dev server nối DB thử có 083 và một lượt do-hang-ngay.mjs --write trên dữ liệu bịa: thấy khối 'Đo hằng ngày' với bảng giữ nháp (cột Nhóm, Tuần này, Tuần trước, Chênh, dấu có ý nghĩa), dòng tỉ lệ soát, bảng bỏ sót, bảng tín hiệu, bảng chuyển bậc có dòng Đổi khoá, bảng so cặp; bấm lát 'Thị trường' rồi 'Phường/xã' thì bảng đổi và có hai dòng 'Không nêu chỗ', 'Chưa có trong danh bạ'; ảnh chụp lưu ở evidence/."
+    evidence_required: [screenshot, observed, verified_at]
+  - id: E11
+    criterion: AC-2
+    executor: ui-check
+    layer: ui-observed
+    target: "http://localhost:3462/ops/labels?lat=s03-cuon-chieu"
+    paths: [app/src/components/ops/labels/**, app/src/app/ops/labels/**]
+    steps:
+      - "Bản chạy: dev server :3462 nối DB thử oneinvest_do1 (cấu hình preview app-3462-do1; dữ liệu dựng bằng pipeline/scripts/do1-dung-thu.mjs). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser, không đăng nhập lại. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/; KHÔNG bấm Lưu."
+      - "/ops/labels?lat=s03-cuon-chieu&nhom=2025-06-01 ở 1280 px sáng: thẻ đầu (có đọc gộp) → evidence/E11-step1.png; ghi chữ huy hiệu «Nháp máy · …», giá trị hiện ở các ô Phòng ngủ, Diện tích, Giá và ô WC"
+      - "/ops/labels?lat=s03-cuon-chieu&nhom=2025-06-06 (ngày chỉ có bộ đọc luật): thẻ đầu mang huy hiệu «Nháp máy · bo-doc-luat» → evidence/E11-step2.png"
+      - "/ops/labels?lat=s03-cuon-chieu-trong (lát chưa rút) → evidence/E11-step3.png; ghi tiêu đề trạng thái trống"
+    expected: "Trang /ops/labels lát 's03-cuon-chieu' trên dev server nối DB thử có 083, thẻ rút bằng mau-soat-cuon-chieu thật trên bài bịa: ảnh 1 — thẻ có đọc gộp: các ô điền sẵn thấy được trên màn (select hiện giá trị, không phải chữ gợi ý) cùng huy hiệu 'Nháp máy · doc-gop:…', ô WC trống; ảnh 2 — thẻ chỉ có bộ đọc luật: huy hiệu 'Nháp máy · bo-doc-luat'; ảnh 3 — lát chưa rút mẫu: chữ trạng thái trống kèm lệnh rút (lát s03-cuon-chieu-trong dùng khuôn trống chung vì không phải lát mẫu soát — ghi rõ). Ảnh lưu ở evidence/."
+    evidence_required: [screenshot, observed, verified_at]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/sync-cloud.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-9' trên DB thử: bài chứa 'CHU_BAI_X', trích 'TRICH_Y', sender_name 'NGUOI_Z', sender_phone '0900000001', labeler_id 'LABELER_W', source_registry real_name 'TEN_THAT_V' → chạy --write, JSON mọi dòng do1-* không chứa một chuỗi nào trong sáu chuỗi trên; ca 'DO1-AC-9-FILL' đọc FILL của pipeline/sync-cloud.mjs: có dq_check_results, không có data_level_unit, data_level_change; eval_label_items không có trong FILL. Chiều đỏ: đưa câu trích vào detail → 'LO TRICH'; đưa labeler_id → 'LO LABELER'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/so-sanh-cach-doc.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/do-hang-ngay.mjs, pipeline/scripts/do-hang-ngay.test.mjs]
+    expected: "exit 0; ca 'DO1-AC-10' (đọc gộp giả có đếm lời gọi và giá giả; thẻ rút bằng hàm ghi của mau-soat-cuon-chieu trên 4 tuần): 30 thẻ đã gắn nhãn trong 4 tuần, 5 thẻ cũ hơn, 6 bài đã có kết quả khoá mới → đúng 24 lời gọi cho đúng 24 post_id còn thiếu, 0 lời cho thẻ ngoài 4 tuần; detail do1-so-sanh mỗi ô có n_cap = 30, giu_cu, giu_moi khớp số đặt trước, chenh_cap và khoảng 95% khớp hàm tham chiếu, co_y_nghia true ở ô đặt trước 28/30 so 18/30 và false ở ô 25/30 so 24/30; giá giả chạm trần 0,30 USD ở lời thứ 10 → dừng, n_cap chỉ tính cặp đủ hai bên, log 'CHAM TRAN SO SANH'; do-hang-ngay với khoá mới chưa so → dòng skip 'chưa so cặp'. Chiều đỏ: so trên hai tập bài khác nhau → 'SO SANH KHONG CAP'; gọi lại bài đã có → 'GOI LAI BAI DA CO'; bỏ trần → 'VUOT TRAN SO SANH'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

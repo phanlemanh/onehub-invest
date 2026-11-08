@@ -4,7 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FILL } from "../sync-cloud.mjs";
 import {
-  chuanHoaTenToa, keHoachDung, kiemFill, moiKhoa, phuongCuaToa, ungVienTuTin, upiToa,
+  THONG_DIEP, chuanHoaTenToa, keHoachDung, kiemDich, kiemFill, moiKhoa, nhanSo, phuongCuaToa, soDem, thamSoTuUrl,
+  ungVienTuTin, upiToa,
 } from "./danh-ba-vat-the.mjs";
 
 let dem = 0;
@@ -102,4 +103,101 @@ test("DBV-AC-11a FILL thật của sync-cloud không chứa vật thể; đối 
   assert.deepEqual(kiemFill([...FILL, "registry_aliases", "field_assertions"], { chonDong: loc }), []);
   assert.deepEqual(kiemFill([...FILL, "registry_aliases"], { chonDong: () => [] }),
     ["DBV-AC-11 bộ chọn dòng bỏ cả dòng không phải vật thể: registry_aliases"]);
+});
+
+// ---------------- DB1b dung-danh-ba-may-thu: đích ghi (DBM-AC-1, DBM-AC-2), so bản chép (DBM-AC-8) ----------------
+
+/** Đặt PGHOST trong lúc gọi fn rồi trả lại như cũ. */
+function voiPgHost(gt, fn) {
+  const cu = process.env.PGHOST;
+  if (gt === undefined) delete process.env.PGHOST; else process.env.PGHOST = gt;
+  try { return fn(); } finally { if (cu === undefined) delete process.env.PGHOST; else process.env.PGHOST = cu; }
+}
+
+// Ma trận viết trước (AC-1): 3 tên × 3 máy × 2 cờ = 18 ô; kỳ vọng ghi được hay không.
+const TEN_AC1 = [["oneinvest_dbv_x", "thu"], ["oneinvest", "that"], ["postgres", "that"]];
+const MAY_AC1 = ["localhost", "127.0.0.1", "[::1]"];
+const MA_TRAN_AC1 = TEN_AC1.flatMap(([ten, loai]) => MAY_AC1.flatMap((may) => [false, true].map((co) => ({
+  url: `postgres://${may}:5433/${ten}`, co, ghi: loai === "thu" || co, loai,
+}))));
+
+/** Soát AC-1 bằng một cặp (thamSoTuUrl, kiemDich); trả thông điệp lỗi ghim. */
+function soatAC1(kiem, thamSo = thamSoTuUrl) {
+  const loi = [];
+  for (const o of MA_TRAN_AC1) {
+    const kq = voiPgHost(undefined, () => kiem(thamSo(o.url), { dbThat: o.co }));
+    if (kq.ok !== o.ghi) loi.push(`DBM-AC-1 ${o.ghi ? "chặn nhầm" : "ghi DB máy thu không cờ"}: ${o.url} cờ=${o.co}`);
+    else if (kq.ok && kq.loai !== o.loai) loi.push(`DBM-AC-1 sai loại đích: ${o.url}`);
+    else if (!kq.ok && !kq.ly_do.includes("--db-that")) loi.push(`DBM-AC-1 thông điệp thiếu --db-that: ${o.url}`);
+  }
+  return loi;
+}
+
+test("DBM-AC-1 bảng đích: 18 ô, DB thử ghi không cờ, mọi đích khác chỉ ghi với --db-that", () => {
+  assert.equal(MA_TRAN_AC1.length, 18);
+  assert.deepEqual(soatAC1(kiemDich), []);
+  // Chiều đỏ: bản sai coi mọi tên trên máy này là DB thử.
+  const sai = (t, o) => (t ? { ok: true, loai: "thu" } : kiemDich(t, o));
+  assert.ok(soatAC1(sai).some((l) => l.startsWith("DBM-AC-1 ghi DB máy thu không cờ")), "DBM-AC-1 thước không bắt được bản sai");
+});
+
+const MK = "matkhau" + "-bi-mat"; // mật khẩu mẫu, nối chuỗi để bộ quét khoá không bắt nhầm
+const NGOAI = "db.abcd.supabase.co";
+// Ma trận viết trước (AC-2): 6 đích ngoài máy + 2 URL hỏng, × 2 cờ = 16 ô; thêm 2 đối chứng dương.
+const DICH_AC2 = [
+  { url: `postgres://u:${MK}@${NGOAI}:5432/postgres`, ly: THONG_DIEP.ngoai },
+  { url: `postgres://u:${MK}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`, ly: THONG_DIEP.ngoai },
+  { url: "postgres://10.0.0.5:5432/oneinvest", ly: THONG_DIEP.ngoai },
+  { url: "postgres://may-khac.local:5432/oneinvest", ly: THONG_DIEP.ngoai },
+  { url: `postgres://localhost/oneinvest_x?host=${NGOAI}`, ly: THONG_DIEP.ngoai },
+  { url: "postgres:///oneinvest_x", pghost: NGOAI, ly: THONG_DIEP.ngoai },
+  { url: "postgres://localhost:5433", ly: THONG_DIEP.hong },
+  { url: "khong-phai-url", ly: THONG_DIEP.hong },
+];
+const DUONG_AC2 = [
+  { url: "postgres:///oneinvest_x", pghost: "localhost" },
+  { url: "postgres://%2Ftmp/oneinvest_x" },
+];
+
+function soatAC2(kiem, thamSo = thamSoTuUrl) {
+  const loi = [];
+  let so = 0;
+  for (const d of DICH_AC2) for (const co of [false, true]) {
+    so++;
+    const kq = voiPgHost(d.pghost, () => kiem(thamSo(d.url), { dbThat: co }));
+    if (kq.ok) loi.push(co ? `DBM-AC-2 cờ mở đích ngoài máy: ${d.url}` : `DBM-AC-2 kiểm khác máy pg nối: ${d.url}`);
+    else if (kq.ly_do !== d.ly) loi.push(`DBM-AC-2 thông điệp sai: ${d.url}`);
+    else if (kq.ly_do.includes(MK) || kq.ly_do.includes(d.url)) loi.push(`DBM-AC-2 lộ URL hay mật khẩu: ${d.url}`);
+  }
+  for (const d of DUONG_AC2) {
+    so++;
+    const kq = voiPgHost(d.pghost, () => kiem(thamSo(d.url), { dbThat: false }));
+    if (!(kq.ok && kq.loai === "thu")) loi.push(`DBM-AC-2 chặn nhầm máy này: ${d.url}`);
+  }
+  return { loi, so };
+}
+
+test("DBM-AC-2 ngoài máy: 16 ô bị từ chối theo máy chủ pg thật, 2 đối chứng dương ghi được, không lộ mật khẩu", () => {
+  const { loi, so } = soatAC2(kiemDich);
+  assert.equal(so, 18);
+  assert.deepEqual(loi, []);
+  // Chiều đỏ 1: đọc máy chủ bằng new URL().hostname thay vì connectionParameters → ô ?host= và PGHOST lọt.
+  const thamSoUrl = (u) => {
+    try { const x = new URL(u); const db = x.pathname.slice(1); return db ? { host: x.hostname || "localhost", database: db } : null; } catch { return null; }
+  };
+  assert.ok(soatAC2(kiemDich, thamSoUrl).loi.some((l) => l.startsWith("DBM-AC-2 kiểm khác máy pg nối")),
+    "DBM-AC-2 thước không bắt được bản đọc URL thô");
+  // Chiều đỏ 2: --db-that mở máy chủ ngoài.
+  const moCo = (t, o) => (o.dbThat && t ? { ok: true, loai: "that" } : kiemDich(t, o));
+  assert.ok(soatAC2(moCo).loi.some((l) => l.startsWith("DBM-AC-2 cờ mở đích ngoài máy")), "DBM-AC-2 thước không bắt được cờ mở");
+});
+
+test("DBM-AC-8 soDem, nhanSo: hai chiều", () => {
+  const a = new Map([["q-khu-mot", { toa: 2, truc: 3, can: 7 }], ["q-khu-hai", { toa: 2, truc: 2, can: 3 }]]);
+  assert.deepEqual(soDem(a, new Map(a)), []);
+  const b = new Map(a); b.set("q-khu-mot", { toa: 2, truc: 3, can: 8 });
+  assert.deepEqual(soDem(a, b), [{ khu: "q-khu-mot", cap: "can", may: 7, ban: 8 }], "DBM-AC-8 lệch");
+  assert.equal(nhanSo(a), "so");
+  assert.equal(nhanSo(new Map()), "chua-so");
+  assert.equal(nhanSo(new Map([["x", { toa: 0, truc: 0, can: 0 }]])), "chua-so");
 });

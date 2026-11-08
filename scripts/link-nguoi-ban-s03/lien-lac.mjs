@@ -97,6 +97,7 @@ export async function chay() {
     await themStg(c, [
       { ma: n1.ma, username: "lnb.u1moi", loai: "co-username", luc: t2 },
       { ma: n2.ma, username: "", loai: "khong-tim-thay", luc: t2 },
+      { ma: n3.ma, username: "", loai: "khong-username", luc: t2 },
     ]);
     const r3 = await ghiLienLacHoSo(c, { runId: "lnb-3", out: im });
     const ll3 = await lienLacHoSo(c);
@@ -105,7 +106,9 @@ export async function chay() {
     k.kiem("username đổi → rút cũ lý do doi-username, thêm mới",
       cu1?.retract_reason === LY_DO_DOI && ll3.some((l) => l.value === "lnb.u1moi" && l.retracted_at === null && l.party_key === n1.p));
     k.kiem("tra lại ra khong-tim-thay → rút lý do bo-username", cu2?.retract_reason === LY_DO_BO);
-    k.kiem("lượt 3: thêm 1, rút đổi 1, rút bỏ 1", r3.them === 1 && r3.rut_doi === 1 && r3.rut_bo === 1);
+    const cu3 = ll3.find((l) => l.value === "lnb.u3");
+    k.kiem("tra lại ra khong-username → rút lý do bo-username", cu3?.retract_reason === LY_DO_BO);
+    k.kiem("lượt 3: thêm 1, rút đổi 1, rút bỏ 2", r3.them === 1 && r3.rut_doi === 1 && r3.rut_bo === 2);
     k.kiem("liên lạc hitl khác luật của cùng Người còn nguyên",
       (await c.query("SELECT retracted_at FROM party_contacts WHERE id = $1", [hitl])).rows[0].retracted_at === null);
 
