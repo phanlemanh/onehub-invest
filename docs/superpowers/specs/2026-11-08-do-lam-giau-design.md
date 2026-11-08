@@ -73,17 +73,23 @@ Chạy lại trong ngày (bước đêm chạy mỗi 15′) gộp vào dòng đ�
 
 **Người sửa hoặc rút** đọc từ chỗ đã có, không cần ảnh chụp:
 
-- **người rút**: phát biểu của đường bị rút trong ngày với lý do `hitl-thay` hay `hoan-tac:*` (045);
-- **người sửa**: nhãn người (`eval_labels`) gắn trong ngày, cùng ô, trên bài của tin đang mang giá trị của đường, mà khác giá trị
-  đó sau chuẩn hoá. Ô `seller_phone` so theo số E.164, ô `property_type` so theo mã loại hình.
+- **người rút**: phát biểu của đường bị rút trong ngày với lý do `hitl-thay` hay `hoan-tac:*` (045), chỉ trên đường mà sổ đường
+  khai có lối người rút;
+- **người sửa**, hai phần cộng lại:
+  - nhãn người (`eval_labels`) gắn trong ngày, cùng ô, trên bài của tin đang mang giá trị của đường, mà khác giá trị đó sau chuẩn
+    hoá. Ô `seller_phone` so theo số E.164, ô `property_type` so theo mã loại hình;
+  - phát biểu `hitl` (lối người của 045, `apply_enrichment`) ghi trong ngày, cùng chủ thể và ô với giá trị sống của đường, mà khác
+    giá trị đó. Phần này ghi riêng ở `nguoi_sua_de`; đường không có lối ghi đè không có khoá này.
 
-Đường không có lối người rút (số qua người đăng không có thẻ duyệt) ghi `duong_nguoi_rut: false`. Màn hiện «không có đường
-người rút», không hiện 0.
+Đường không có lối người rút ghi `duong_nguoi_rut: false`. Màn hiện «không có đường người rút», không hiện 0. Hôm nay là cả hai
+đường đang chạy: số qua người đăng không có thẻ duyệt; quy ước nhóm có thẻ duyệt, nhưng người sửa bằng cách ghi phát biểu `hitl`
+đè lên chứ không rút phát biểu nhóm (`apply_enrichment` chỉ rút phát biểu `hitl` cũ, `revert_enrichment` từ 069 giữ lớp
+`inferred`). Mạnh chốt 09/11.
 
 Dòng `do3-thay-doi`, `entity = duong`, `detail` gồm:
 
-- `ngay`, `song` (số giá trị sống cuối ngày), `them`, `doi`, `may_rut`, `nguoi_sua`, `nguoi_rut`;
-- `nhan_da_so` (số nhãn người cùng ô trên tin của đường, mẫu số của `nguoi_sua`);
+- `ngay`, `song` (số giá trị sống cuối ngày), `them`, `doi`, `may_rut`, `nguoi_sua`, `nguoi_sua_de`, `nguoi_rut`;
+- `nhan_da_so` (số nhãn người cùng ô trên tin của đường, mẫu số của phần nhãn `nguoi_sua − nguoi_sua_de`);
 - phân rã theo lát, `phien_ban_thuoc`.
 
 `status = 'pass'` khi ghi được số. `status = 'fail'` chỉ khi bộ tự soát lệch: `song` hôm nay khác `song` hôm qua + `them` −

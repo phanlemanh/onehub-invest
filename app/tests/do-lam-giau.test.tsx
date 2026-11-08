@@ -81,9 +81,11 @@ function kiemChuaChay(v: { q: (s: string) => Element[] }) {
 }
 /** Đường không có lối người rút: ô người rút là chữ, không là số 0. */
 function kiemKhongLoi(v: { q: (s: string) => Element[] }) {
-  const tr = hang(v, "lam-giau-ngay", "so-qua-nguoi-dang")!
-  const cuoi = [...tr.querySelectorAll("td")].at(-1)!
-  if (!cuoi.textContent?.includes("không có đường người rút")) throw new Error(`KHONG LOI HIEN 0: ${cuoi.textContent}`)
+  // Hai đường đang chạy đều không có lối người rút (Mạnh chốt 09/11: quy ước nhóm sửa bằng ghi đè, không rút).
+  for (const duong of ["so-qua-nguoi-dang", "quy-uoc-nhom"]) {
+    const cuoi = [...hang(v, "lam-giau-ngay", duong)!.querySelectorAll("td")].at(-1)!
+    if (!cuoi.textContent?.includes("không có đường người rút")) throw new Error(`KHONG LOI HIEN 0: ${duong} ${cuoi.textContent}`)
+  }
 }
 /** Bảng «Kiểm chất lượng» chung không lặp dòng do3-*. */
 async function kiemChung(c: pg.Client, sql: string) {
@@ -149,9 +151,12 @@ test("DO3-AC-7 khối Làm giàu: mỗi đường một hàng, chưa chạy, kh�
     }
     kiemKhongLoi(v)
     await assert.rejects(async () => kiemKhongLoi(await ve(data, "tong", "khong-loi-hien-0")), /KHONG LOI HIEN 0/)
-    // Quy ước nhóm có lối người rút: ô là số người rút của bộ ghi.
+    // Quy ước nhóm: người ghi đè vào ô «Người sửa» (số của bộ ghi, gồm phần ghi đè).
     const nh = data.duong.find((d) => d.duong === "quy-uoc-nhom")!
-    assert.ok(([...hang(v, "lam-giau-ngay", "quy-uoc-nhom")!.querySelectorAll("td")].at(-1)!.textContent ?? "").startsWith(fmtInt(nh.homNay!.nguoi_rut!)))
+    assert.equal(nh.homNay?.duong_nguoi_rut, false, "tiền đề: quy ước nhóm không có lối người rút")
+    assert.ok((nh.homNay?.nguoi_sua_de ?? 0) >= 1, "tiền đề: dựng thử có một lần người ghi đè")
+    const tdNh = [...hang(v, "lam-giau-ngay", "quy-uoc-nhom")!.querySelectorAll("td")].map((td) => td.textContent ?? "")
+    assert.ok(tdNh.at(-2)!.startsWith(fmtInt(nh.homNay!.nguoi_sua!)), `người sửa: ${tdNh.at(-2)}`)
     // Đường chưa chạy.
     kiemChuaChay(v)
     await assert.rejects(async () => kiemChuaChay(await ve(data, "tong", "chua-chay-hien-0")), /CHUA CHAY HIEN 0/)

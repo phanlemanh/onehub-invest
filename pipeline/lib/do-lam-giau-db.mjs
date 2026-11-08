@@ -78,6 +78,21 @@ export async function docNguoiRut(c, d, ngay, { dotBien } = {}) {
 }
 
 /**
+ * Phát biểu `hitl` (lối người của 045, `apply_enrichment`) ghi trong ngày VN trên tin (`resource_name = 'Property'`), kể cả đã bị
+ * phát biểu `hitl` sau thay. Khoá `<subject_key>|<field>` như giá trị sống của đường phát biểu. Đường không có lối ghi đè → rỗng.
+ * @returns {Promise<{k: string, value_key: string}[]>}
+ */
+export async function docNguoiDe(c, d, ngay, { dotBien } = {}) {
+  if (!d.nguoi_de || !d.rule_ids.length) return [];
+  const [tu, den] = khoangNgay(ngay);
+  const { rows } = await c.query(
+    `SELECT subject_key || '|' || field AS k, value_key FROM field_assertions
+      WHERE method = 'hitl' AND resource_name = 'Property' AND created_at >= $1::timestamptz AND created_at < $2::timestamptz`,
+    [dotBien === "de-ngoai-ngay" ? "-infinity" : tu, den]);
+  return rows;
+}
+
+/**
  * Nhãn người (`eval_labels`) gắn trong ngày VN, ô `d.o_nhan`, trên bài của tin S03 sống đang mang giá trị đường, kèm `gia_tri` của
  * đường. Với số: `gia_tri` là số thật, chỉ để so trong bộ nhớ — không bao giờ vào detail. Mỗi (thẻ, người gắn, ô) lấy nhãn mới nhất.
  * @returns {Promise<{value: string|null, not_stated: boolean, gia_tri: string, labeler_id: string, item_id: number, ref_id: string, offer_id: string}[]>}

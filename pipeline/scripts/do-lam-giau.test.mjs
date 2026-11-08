@@ -58,8 +58,8 @@ test("DO3-NAP 086 nạp trong giao dịch, chạy lại không lỗi, ROLLBACK t
 // ================= Task 2: sổ đường, ảnh chụp, thay đổi theo ngày, người sửa/rút, tự soát =================
 import { resolveOffers, retractRule, writeAssertions } from "../lib/assert.mjs";
 import { ngayVn } from "../lib/do-hang-ngay.mjs";
-import { docGiaTriSong, docNguoiRut, docNhanNgay } from "../lib/do-lam-giau-db.mjs";
-import { DUONG, demThayDoi, gopNgay, latPhang, nguoiSua, soAnh, tuSoat } from "../lib/do-lam-giau.mjs";
+import { docGiaTriSong, docNguoiDe, docNguoiRut, docNhanNgay } from "../lib/do-lam-giau-db.mjs";
+import { DUONG, demNguoiDe, demThayDoi, gopNgay, latPhang, nguoiSua, soAnh, tuSoat } from "../lib/do-lam-giau.mjs";
 import { bamSo, ganSdtQuaNguoi } from "../lib/gan-sdt-qua-nguoi.mjs";
 import { SQL_LL } from "../lib/lien-lac-nguoi.mjs";
 import { nap068 } from "../lib/nap-068.mjs";
@@ -77,7 +77,10 @@ test("DO3 sổ đường: bốn khoá nguyên văn, hai đường đang có mã 
   assert.deepEqual([[...by["so-qua-nguoi-dang"].rule_ids], by["so-qua-nguoi-dang"].o_nhan, by["so-qua-nguoi-dang"].nguoi_rut, by["so-qua-nguoi-dang"].kiem],
     [["s03-qua-nguoi-dang"], "seller_phone", false, "so"]);
   assert.deepEqual([[...by["quy-uoc-nhom"].rule_ids], by["quy-uoc-nhom"].o_nhan, by["quy-uoc-nhom"].nguoi_rut, by["quy-uoc-nhom"].kiem],
-    [["loai-hinh-nhom"], "property_type", true, "nhom"]);
+    [["loai-hinh-nhom"], "property_type", false, "nhom"]);
+  // Người sửa bằng ghi đè `hitl` chỉ có ở quy ước nhóm; không đường nào có lối người rút (Mạnh chốt 09/11).
+  assert.deepEqual(DUONG.map((d) => [d.duong, d.nguoi_de, d.nguoi_rut]),
+    [["so-qua-nguoi-dang", false, false], ["quy-uoc-nhom", true, false], ["dien-tich-suy-ra", false, false], ["danh-muc-cdt", false, false]]);
   for (const k of ["dien-tich-suy-ra", "danh-muc-cdt"]) assert.deepEqual([by[k].rule_ids.length, by[k].o_nhan, by[k].kiem], [0, null, null]);
 });
 
@@ -102,6 +105,12 @@ test("DO3 phần thuần: soAnh, gopNgay, demThayDoi, nguoiSua, tuSoat", () => {
     { value: null, not_stated: true, gia_tri: "+84912345678" }];
   assert.deepEqual(nguoiSua(nh, "seller_phone"), { nguoi_sua: 1, nhan_da_so: 2 });
   assert.deepEqual(nguoiSua(nh, "seller_phone", { dotBien: "sdt-chua-chuan" }), { nguoi_sua: 2, nhan_da_so: 2 });
+  // ghi đè: khác giá trị sống mới tính; cùng giá trị hay chủ thể ngoài đường thì không; một chủ thể đè hai lần tính một.
+  const nay = m({ "s1|property_type": "apartment", "s2|property_type": "apartment" });
+  const de = [{ k: "s1|property_type", value_key: "house" }, { k: "s1|property_type", value_key: "land" },
+    { k: "s2|property_type", value_key: "apartment" }, { k: "s9|property_type", value_key: "house" }];
+  assert.equal(demNguoiDe(nay, de), 1);
+  assert.equal(demNguoiDe(nay, de, { dotBien: "de-cung-gia-tri" }), 2);
   const lat = { song: { thi_truong: { o: { a: 2, "khong-tin-hieu": 1 }, tong: 3 } } };
   assert.equal(tuSoat({ song_hom_qua: 3, song: 3, them: 1, may_rut: 1, nguoi_rut: 0, lat: latPhang(lat) }), null);
   assert.equal(tuSoat({ song_hom_qua: 3, song: 4, them: 0, may_rut: 0, lat: latPhang(lat) }), "song-lech");
@@ -184,6 +193,15 @@ async function toa(c, area) {
  * không lối người nào của DB rút được phát biểu `loai-hinh-nhom` — apply_enrichment chỉ rút phát biểu `hitl` cũ (hitl-thay), còn
  * revert_enrichment từ 069 giữ lớp `inferred` — nên bộ đếm được kiểm trên đúng khuôn lý do mà lối người sẽ ghi. */
 const nguoiRutNhom = (c, mas, lyDo) => retractRule(c, mas.map((m) => `S03:do3${m}`), "property_type", "loai-hinh-nhom", lyDo);
+/** Sổ đường thử: quy ước nhóm khai có lối người rút. Sổ thật không có (Mạnh chốt 09/11) — bộ đếm rút vẫn giữ cho đường sau này có lối. */
+const DUONG_RUT = Object.freeze(DUONG.map((d) => (d.duong === "quy-uoc-nhom" ? Object.freeze({ ...d, nguoi_rut: true }) : d)));
+/** Người ghi đè loại hình trên tin bằng đúng lối người của 045: đề xuất xếp hàng rồi `apply_enrichment` với người `hitl:…`. */
+async function deNguoi(c, ma, value, ai = "hitl:LABELER_DO3") {
+  const { rows: [{ id }] } = await c.query(
+    `INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, evidence)
+     VALUES ('do3-test', $1, 'property_type', $2, lower($2), 'e2_llm', 'review', '{}'::jsonb) RETURNING id`, [`offer_do3_${ma}`, value]);
+  await c.query("SELECT apply_enrichment(ARRAY[$1]::bigint[], $2)", [id, ai]);
+}
 const dongDq = async (c, ten, khoa, gt) => (await c.query(
   `SELECT entity, status, detail::jsonb AS detail FROM dq_check_results WHERE check_name = $1 AND detail::jsonb ->> $2 = $3 ORDER BY entity, id`, [ten, khoa, gt])).rows;
 const songCua = (kq) => Object.fromEntries(kq.dq.filter((r) => r.check_name === "do3-thay-doi").map((r) => [r.entity, r.detail.song ?? 0]));
@@ -290,7 +308,7 @@ const detailCua = (kq, duong) => kq.dq.find((r) => r.check_name === "do3-thay-do
 test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rút, người rút không vào máy rút, gộp bốn lượt cùng ngày", coDb, async () => {
   await trongGiaoDich(async (c) => {
     await chuanBi(c);
-    const goc = await thu(c, async () => songCua(await doLamGiau(c, { ngay: D })));
+    const goc = await thu(c, async () => songCua(await doLamGiau(c, { ngay: D, duong: DUONG_RUT })));
     const { rows: [{ n: n0 }] } = await c.query("SELECT count(*)::int AS n FROM enrichment_value_state");
     // Số qua người đăng: A, C, E có số suy; B có Người chưa có số.
     const pk = {}, ll = {};
@@ -309,8 +327,8 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
       assert.equal(n - n0, 8 + goc[SO] + goc[NHOM] - n0, "ảnh chụp 8 dòng fixture");
       for (const k of [SO, NHOM]) assert.deepEqual([detailCua(kq, k).ly_do, kq.dq.find((r) => r.entity === k && r.check_name === "do3-thay-doi").status], ["lap-moc", "skip"]);
     };
-    await thu(c, async () => assert.rejects(async () => kiemLan1(await doLamGiau(c, { ngay: D, write: true, dotBien: "lap-moc-co-dong" })), /LAP MOC CO DONG/));
-    await kiemLan1(await doLamGiau(c, { ngay: D, write: true }));
+    await thu(c, async () => assert.rejects(async () => kiemLan1(await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true, dotBien: "lap-moc-co-dong" })), /LAP MOC CO DONG/));
+    await kiemLan1(await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true }));
     // Sửa dữ liệu qua bên ghi thật.
     await rutLL(c, [ll.A]); // A: Người hết số → tin mất số suy
     ll.B = await lienLac(c, pk.B, so(300)); // B: nhận số suy mới
@@ -318,7 +336,7 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
     await ganSdtQuaNguoi(c, yen);
     await ghiNhom(c, [pbNhom("a2P", "house")]); await ghiNhom(c, [pbNhom("a2P")]); // P: thay-boi-luot rồi ghi lại cùng giá trị
     await ghiNhom(c, [pbNhom("a2Q", "house")]); // Q: đổi loại hình
-    await nguoiRutNhom(c, ["a2R"], "hitl-thay"); // R: người thay
+    await nguoiRutNhom(c, ["a2R"], "hitl-thay"); // R: người rút (sổ thử khai lối người rút)
     const kiemLan2 = (rows, kq) => {
       if (rows.some((r) => /a2[PE]$/.test(r.subject_key.replace(/\|.*$/, "")))) throw new Error("DOI GIA");
       if (rows.some((r) => r.subject_key.startsWith("S03:do3a2R"))) throw new Error("NGUOI RUT DEM HAI LAN");
@@ -330,11 +348,11 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
     };
     for (const [dotBien, msg] of [["doi-gia", /DOI GIA/], ["nguoi-rut-hai-lan", /NGUOI RUT DEM HAI LAN/]]) {
       await thu(c, async () => {
-        const kq = await doLamGiau(c, { ngay: D, write: true, dotBien });
+        const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true, dotBien });
         await assert.rejects(async () => kiemLan2(await dongDoi(c, D), kq), msg, dotBien);
       });
     }
-    { const kq = await doLamGiau(c, { ngay: D, write: true }); kiemLan2(await dongDoi(c, D), kq); }
+    { const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true }); kiemLan2(await dongDoi(c, D), kq); }
     // Lần 3: C về số đầu ngày → dòng của C bị xoá.
     await rutLL(c, [ll.C2]); ll.C3 = await lienLac(c, pk.C, so(200 + "C".charCodeAt(0)));
     await ganSdtQuaNguoi(c, yen);
@@ -343,10 +361,10 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
       assert.equal(detailCua(kq, SO).doi, 0);
     };
     await thu(c, async () => {
-      const kq = await doLamGiau(c, { ngay: D, write: true, dotBien: "khong-xoa-ve-cu" });
+      const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true, dotBien: "khong-xoa-ve-cu" });
       await assert.rejects(async () => kiemLan3(await dongDoi(c, D), kq), /KHONG XOA KHI VE CU/);
     });
-    { const kq = await doLamGiau(c, { ngay: D, write: true }); kiemLan3(await dongDoi(c, D), kq); }
+    { const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true }); kiemLan3(await dongDoi(c, D), kq); }
     // Lần 4: B đổi sang số khác → vẫn một dòng them, from null, to số mới nhất.
     await rutLL(c, [ll.B]); ll.B2 = await lienLac(c, pk.B, so(302));
     await ganSdtQuaNguoi(c, yen);
@@ -358,22 +376,25 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
       assert.equal(detailCua(kq, SO).them, 1);
     };
     await thu(c, async () => {
-      const kq = await doLamGiau(c, { ngay: D, write: true, dotBien: "hai-dong" });
+      const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true, dotBien: "hai-dong" });
       await assert.rejects(async () => kiemLan4(await dongDoi(c, D), kq), /HAI DONG MOT CHU THE/);
     });
-    { const kq = await doLamGiau(c, { ngay: D, write: true }); kiemLan4(await dongDoi(c, D), kq); }
+    { const kq = await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true }); kiemLan4(await dongDoi(c, D), kq); }
   });
 });
 
 // ---- AC-3: người rút, người sửa ----
-test("DO3-AC-3 người rút (hitl-thay, hoan-tac) và người sửa theo nhãn ngày D sau chuẩn hoá; đường không lối người không ghi 0", coDb, async () => {
+test("DO3-AC-3 người sửa = nhãn ngày D khác giá trị + ghi đè hitl ngày D khác giá trị; không đường nào có lối người rút; bộ đếm rút đo trên sổ thử", coDb, async () => {
   await trongGiaoDich(async (c) => {
     await chuanBi(c);
     const by = Object.fromEntries(DUONG.map((d) => [d.duong, d]));
-    const goc = { rut: (await docNguoiRut(c, by[NHOM], D)).size, nhanN: nguoiSua(await docNhanNgay(c, by[NHOM], D), "property_type"),
-      nhanS: nguoiSua(await docNhanNgay(c, by[SO], D), "seller_phone") };
-    // Quy ước nhóm: H1, H2 (người thay), V1 (người hoàn tác), T1–T3 (máy thay), L1–L4 (mang giá trị để gắn nhãn).
-    const nhom = ["H1", "H2", "V1", "T1", "T2", "T3", "L1", "L2", "L3", "L4"];
+    const rutNhom = DUONG_RUT.find((d) => d.duong === NHOM);
+    const deGoc = async (ngay) => demNguoiDe(await docGiaTriSong(c, by[NHOM]), await docNguoiDe(c, by[NHOM], ngay));
+    const goc = { rut: (await docNguoiRut(c, rutNhom, D)).size, nhanN: nguoiSua(await docNhanNgay(c, by[NHOM], D), "property_type"),
+      nhanS: nguoiSua(await docNhanNgay(c, by[SO], D), "seller_phone"), de: await deGoc(D), de2: await deGoc(D2) };
+    // Quy ước nhóm: H1, H2 (người thay), V1 (người hoàn tác) — chỉ có nghĩa trên sổ thử; T1–T3 (máy thay); L1–L4 (gắn nhãn);
+    // D1, D2 (người ghi đè sang loại khác), K1 (người ghi đè cùng giá trị).
+    const nhom = ["H1", "H2", "V1", "T1", "T2", "T3", "L1", "L2", "L3", "L4", "D1", "D2", "K1"];
     for (const x of nhom) await tin(c, `a3${x}`);
     await ghiNhom(c, nhom.map((x) => pbNhom(`a3${x}`)));
     // Số qua người đăng: S1 suy +84912345678, S2, S3.
@@ -385,10 +406,13 @@ test("DO3-AC-3 người rút (hitl-thay, hoan-tac) và người sửa theo nhãn
     }
     await ganSdtQuaNguoi(c, yen);
     await doLamGiau(c, { ngay: D, write: true }); // lập mốc
-    // Rút ngày D.
+    // Ngày D: rút, máy thay, người ghi đè.
     await nguoiRutNhom(c, ["a3H1", "a3H2"], "hitl-thay");
     await nguoiRutNhom(c, ["a3V1"], "hoan-tac:sai-nhom");
     await ghiNhom(c, ["T1", "T2", "T3"].map((x) => pbNhom(`a3${x}`, "house"))); // thay-boi-luot, vẫn trên đường
+    await deNguoi(c, "a3D1", "house");
+    await deNguoi(c, "a3D2", "house");
+    await deNguoi(c, "a3K1", "apartment");
     // Nhãn người ngày D (và một nhãn D-1).
     const the = new Map();
     const nhanTren = async (ma, field, value, luc = "now()", ai = "LABELER_DO3") => {
@@ -407,21 +431,42 @@ test("DO3-AC-3 người rút (hitl-thay, hoan-tac) và người sửa theo nhãn
     await nhanTren("a3S1", "seller_phone", "0912 345 678");
     await nhanTren("a3S2", "seller_phone", soS.S2);
     await nhanTren("a3S3", "seller_phone", so(499));
+    // Sổ thật.
     const kiem = (kq) => {
       const s = detailCua(kq, SO), n = detailCua(kq, NHOM);
-      if ("nguoi_rut" in s) throw new Error("KHONG LOI NGUOI GHI 0");
-      assert.equal(s.duong_nguoi_rut, false);
-      if (n.nguoi_rut !== goc.rut + 3) throw new Error(`MAY RUT THANH NGUOI: nguoi_rut ${n.nguoi_rut}`);
+      if ("nguoi_rut" in s || "nguoi_rut" in n) throw new Error("KHONG LOI NGUOI GHI 0");
+      assert.deepEqual([s.duong_nguoi_rut, n.duong_nguoi_rut], [false, false]);
+      assert.ok(!("nguoi_sua_de" in s), "số qua người đăng không có lối ghi đè");
       if (s.nguoi_sua !== goc.nhanS.nguoi_sua + 1) throw new Error(`SDT CHUA CHUAN HOA: nguoi_sua ${s.nguoi_sua}`);
       assert.equal(s.nhan_da_so, goc.nhanS.nhan_da_so + 3);
-      if (n.nguoi_sua !== goc.nhanN.nguoi_sua + 1 || n.nhan_da_so !== goc.nhanN.nhan_da_so + 4) throw new Error(`NHAN NGOAI NGAY: ${n.nguoi_sua}/${n.nhan_da_so}`);
-      assert.equal(n.doi, 3, "máy thay bởi lượt vẫn trên đường → đổi");
+      if (n.nguoi_sua_de > goc.de + 2) throw new Error(`DE CUNG GIA TRI: nguoi_sua_de ${n.nguoi_sua_de}`);
+      if (!(n.nguoi_sua_de === goc.de + 2)) throw new Error(`BO QUA NGUOI DE: nguoi_sua_de ${n.nguoi_sua_de}`);
+      if (n.nguoi_sua - n.nguoi_sua_de !== goc.nhanN.nguoi_sua + 1 || n.nhan_da_so !== goc.nhanN.nhan_da_so + 4) {
+        throw new Error(`NHAN NGOAI NGAY: ${n.nguoi_sua - n.nguoi_sua_de}/${n.nhan_da_so}`);
+      }
+      assert.equal(n.doi, 3, "máy thay bởi lượt vẫn trên đường → đổi; ghi đè không làm đổi giá trị của đường");
+      assert.equal(n.may_rut, 3, "sổ thật không có lối người rút: phát biểu rút rời đường là máy rút");
+    };
+    // Ngày D+1 trên cùng dữ liệu: ghi đè của ngày D không vào.
+    const kiemD2 = (kq) => {
+      const n = detailCua(kq, NHOM);
+      if (n.nguoi_sua_de !== goc.de2) throw new Error(`DE NGOAI NGAY: nguoi_sua_de ${n.nguoi_sua_de}`);
+    };
+    // Sổ thử khai lối người rút: hitl-thay, hoan-tac vào người rút, thay-boi-luot không.
+    const kiemRut = (kq) => {
+      const n = detailCua(kq, NHOM);
+      if (n.nguoi_rut !== goc.rut + 3) throw new Error(`MAY RUT THANH NGUOI: nguoi_rut ${n.nguoi_rut}`);
       assert.equal(n.may_rut, 0, "người rút không vào máy rút");
     };
-    for (const [dotBien, msg] of [["may-rut-thanh-nguoi", /MAY RUT THANH NGUOI/], ["sdt-chua-chuan", /SDT CHUA CHUAN HOA/],
+    for (const [dotBien, msg] of [["de-cung-gia-tri", /DE CUNG GIA TRI/], ["bo-de", /BO QUA NGUOI DE/], ["sdt-chua-chuan", /SDT CHUA CHUAN HOA/],
       ["khong-loi-ghi-0", /KHONG LOI NGUOI GHI 0/], ["nhan-ngoai-ngay", /NHAN NGOAI NGAY/]]) {
       await thu(c, async () => assert.rejects(async () => kiem(await doLamGiau(c, { ngay: D, write: true, dotBien })), msg, dotBien));
     }
+    await thu(c, async () => assert.rejects(async () => kiemD2(await doLamGiau(c, { ngay: D2, write: true, dotBien: "de-ngoai-ngay" })), /DE NGOAI NGAY/));
+    await thu(c, async () => kiemD2(await doLamGiau(c, { ngay: D2, write: true })));
+    await thu(c, async () => assert.rejects(async () => kiemRut(await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true, dotBien: "may-rut-thanh-nguoi" })),
+      /MAY RUT THANH NGUOI/));
+    await thu(c, async () => kiemRut(await doLamGiau(c, { ngay: D, duong: DUONG_RUT, write: true })));
     kiem(await doLamGiau(c, { ngay: D, write: true }));
   });
 });

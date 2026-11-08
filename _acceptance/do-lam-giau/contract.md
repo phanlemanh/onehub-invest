@@ -31,15 +31,20 @@ Danh mục CĐT mới ghi ở mức toà (18 toà, chưa xuống tin). Thiết k
   lý do `chua-chay`, không có ô số 0. Chạy lại cùng ngày thay dòng của ngày D, không thêm dòng.
 - **AC-2** — Given ảnh chụp giá trị sống ở `enrichment_value_state` của lần chạy trước, When giá trị đổi rồi chạy
   `do-lam-giau.mjs --write`, Then `enrichment_value_change` có đúng một dòng mỗi chủ thể đổi trong ngày D, hướng `them`, `doi`
-  hoặc `may_rut`. Chủ thể rời đường vì phát biểu bị người rút trong ngày (`hitl-thay`, `hoan-tac:*`) chỉ đếm ở `nguoi_rut`
-  (AC-3), không vào `may_rut`. Hai lần chạy cùng ngày gộp về một dòng: giữ giá trị đầu ngày, lấy giá trị mới nhất, về lại giá
+  hoặc `may_rut`. Trên đường mà sổ đường khai có lối người rút, chủ thể rời đường vì phát biểu bị người rút trong ngày
+  (`hitl-thay`, `hoan-tac:*`) chỉ đếm ở `nguoi_rut` (AC-3), không vào `may_rut`. Hai lần chạy cùng ngày gộp về một dòng: giữ giá trị đầu ngày, lấy giá trị mới nhất, về lại giá
   trị đầu ngày thì xoá dòng. Detail `do3-thay-doi` có `song`, `them`, `doi`, `may_rut` khớp các dòng ấy. Lần chạy đầu chỉ lập mốc: 0 dòng
   đổi, dq `skip` «lập mốc». Chủ thể không đổi không sinh dòng.
-- **AC-3** — Given phát biểu của một đường bị rút trong ngày D với lý do `hitl-thay` hoặc `hoan-tac:*`, và nhãn người
-  (`eval_labels`) gắn ngày D cùng ô trên bài của tin đang mang giá trị của đường, When chạy `do-lam-giau.mjs --write`, Then
-  detail `do3-thay-doi` có `nguoi_rut` bằng số phát biểu rút ấy, `nguoi_sua` bằng số nhãn khác giá trị đường sau chuẩn hoá
-  (`seller_phone` theo E.164, `property_type` theo mã), `nhan_da_so` bằng số nhãn đã so. Rút với lý do `thay-boi-luot` không vào
-  `nguoi_rut`. Đường không có lối người rút ghi `duong_nguoi_rut: false` thay số `nguoi_rut`.
+- **AC-3** — Given trong ngày D: phát biểu `hitl` ghi bằng lối người của 045 (`apply_enrichment`) đè cùng chủ thể, cùng ô
+  với giá trị sống của một đường phát biểu; nhãn người (`eval_labels`) gắn ngày D cùng ô trên bài của tin đang mang giá trị
+  của đường; và, với đường mà sổ đường khai có lối người rút, phát biểu của đường bị rút với lý do `hitl-thay` hoặc
+  `hoan-tac:*`, When chạy `do-lam-giau.mjs --write`, Then detail `do3-thay-doi` có `nguoi_sua` bằng số nhãn khác giá trị
+  đường sau chuẩn hoá (`seller_phone` theo E.164, `property_type` theo mã) cộng số chủ thể có phát biểu `hitl` ngày D khác
+  giá trị đường; `nguoi_sua_de` bằng phần đè ấy; `nhan_da_so` bằng số nhãn đã so; `nguoi_rut` bằng số phát biểu người rút.
+  Phát biểu `hitl` cùng giá trị đường, hoặc ghi ngày khác, không vào `nguoi_sua`. Rút với lý do `thay-boi-luot` không vào
+  `nguoi_rut`. Đường không có lối người rút ghi `duong_nguoi_rut: false` thay số `nguoi_rut`; đường không có lối ghi đè không
+  có khoá `nguoi_sua_de`. Hôm nay cả `so-qua-nguoi-dang` (không có thẻ duyệt) lẫn `quy-uoc-nhom` (người sửa bằng cách ghi đè,
+  không rút phát biểu nhóm) đều không có lối người rút (Mạnh chốt 09/11).
 - **AC-4** — Given tin S03 có số riêng (không phải số suy) và có Người, When một lượt chạy trong tuần ISO W mà đường
   `so-qua-nguoi-dang` chưa có dòng `do3-kiem-nguoc` của tuần W, Then mỗi tin được suy lại bằng `rutLienLac` + `chonSoNguoi`
   trên bài và tin của Người, trừ chính tin đó, bài sinh ra nó và mọi tin khác của bài ấy (bỏ một ra). Dòng `do3-kiem-nguoc`
@@ -75,7 +80,7 @@ Quét hình thái (preset entity-feature, thực thể = giá trị làm giàu) 
 | Trục | Giá trị | AC |
 |---|---|---|
 | Đường | số qua người đăng · quy ước nhóm · diện tích suy ra (chưa chạy) · danh mục CĐT (chưa xuống tin) | AC-1, AC-4, AC-5 |
-| Thay đổi | thêm · đổi · máy rút · người sửa · người rút · không đổi · lập mốc | AC-2, AC-3 |
+| Thay đổi | thêm · đổi · máy rút · người sửa (nhãn, ghi đè) · người rút · không đổi · lập mốc | AC-2, AC-3 |
 | Kiểm ngược | đúng · sai · không ra · tuần trước · chưa có hàm · lượt sau trong tuần | AC-4, AC-5 |
 | Nhịp | lượt 15′ trong ngày · lượt đầu tuần · lần đầu | AC-1, AC-2, AC-4, AC-9 |
 | Lát | tổng · thị trường · phường/xã · dự án · toà · `khong-tin-hieu` · `chua-co-danh-ba` · `khac` | AC-6 |

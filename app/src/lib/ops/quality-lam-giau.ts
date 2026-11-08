@@ -26,6 +26,8 @@ export type DongNgay = {
   doi?: number
   may_rut?: number
   nguoi_sua?: number
+  /** Phần của `nguoi_sua` do người ghi đè phát biểu `hitl`; vắng = đường không có lối ghi đè. */
+  nguoi_sua_de?: number
   nhan_da_so?: number
   nguoi_rut?: number
   /** `false` = đường không có lối người rút (không có khoá `nguoi_rut`). */

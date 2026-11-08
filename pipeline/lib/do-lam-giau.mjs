@@ -15,13 +15,16 @@ import { testMarker } from "./test-posts.mjs";
  * Sổ đường làm giàu. `doc`: cách đọc giá trị sống — `so-tren-tin` (số suy ghi thẳng lên `sale_offer_records`, dấu ở
  * `field_provenance.seller_phone.rule_id`) hay `phat-bieu` (`field_assertions` sống, `resource_name = 'Property'`).
  * `rule_ids` rỗng = đường chưa có mã ghi (đọc ra Map rỗng → «chưa chạy»). `nguoi_rut`: đường có lối người rút hay không.
+ * `nguoi_de`: người sửa được bằng cách ghi phát biểu `hitl` đè lên (lối người của 045, `apply_enrichment`) hay không.
+ * Quy ước nhóm không có lối người rút (Mạnh chốt 09/11): `apply_enrichment` chỉ rút phát biểu `hitl` cũ, `revert_enrichment` từ 069
+ * giữ lớp `inferred` — người sửa loại hình nhóm bằng phát biểu `hitl` đè, đếm ở `nguoi_sua_de`.
  * `kiem`: hàm kiểm ngược bỏ-một-ra (`so` · `nhom`) hoặc null.
  */
 export const DUONG = Object.freeze([
-  Object.freeze({ duong: "so-qua-nguoi-dang", doc: "so-tren-tin", rule_ids: Object.freeze([RULE_QUA_NGUOI]), o_nhan: "seller_phone", nguoi_rut: false, kiem: "so" }),
-  Object.freeze({ duong: "quy-uoc-nhom", doc: "phat-bieu", rule_ids: Object.freeze(["loai-hinh-nhom"]), o_nhan: "property_type", nguoi_rut: true, kiem: "nhom" }),
-  Object.freeze({ duong: "dien-tich-suy-ra", doc: "phat-bieu", rule_ids: Object.freeze([]), o_nhan: null, nguoi_rut: false, kiem: null }),
-  Object.freeze({ duong: "danh-muc-cdt", doc: "phat-bieu", rule_ids: Object.freeze([]), o_nhan: null, nguoi_rut: false, kiem: null }),
+  Object.freeze({ duong: "so-qua-nguoi-dang", doc: "so-tren-tin", rule_ids: Object.freeze([RULE_QUA_NGUOI]), o_nhan: "seller_phone", nguoi_rut: false, nguoi_de: false, kiem: "so" }),
+  Object.freeze({ duong: "quy-uoc-nhom", doc: "phat-bieu", rule_ids: Object.freeze(["loai-hinh-nhom"]), o_nhan: "property_type", nguoi_rut: false, nguoi_de: true, kiem: "nhom" }),
+  Object.freeze({ duong: "dien-tich-suy-ra", doc: "phat-bieu", rule_ids: Object.freeze([]), o_nhan: null, nguoi_rut: false, nguoi_de: false, kiem: null }),
+  Object.freeze({ duong: "danh-muc-cdt", doc: "phat-bieu", rule_ids: Object.freeze([]), o_nhan: null, nguoi_rut: false, nguoi_de: false, kiem: null }),
 ]);
 
 export const PHIEN_BAN_THUOC = createHash("sha256")
@@ -92,6 +95,20 @@ export function nguoiSua(nhan, o, { dotBien } = {}) {
     if (a.v !== b.v) sua++;
   }
   return { nguoi_sua: sua, nhan_da_so: so };
+}
+
+/**
+ * Người sửa bằng ghi đè: số chủ thể (`<subject_key>|<field>`) có phát biểu `hitl` ghi trong ngày mà khác giá trị sống của đường.
+ * Đè cùng giá trị là người xác nhận, không phải sửa; chủ thể không mang giá trị sống của đường không tính.
+ * @param {Map<string, {value_key: string}>} nay giá trị sống @param {{k: string, value_key: string}[]} de phát biểu `hitl` trong ngày
+ */
+export function demNguoiDe(nay, de, { dotBien } = {}) {
+  const sua = new Set();
+  for (const r of de) {
+    const v = nay.get(r.k);
+    if (v && (v.value_key !== r.value_key || dotBien === "de-cung-gia-tri")) sua.add(r.k);
+  }
+  return sua.size;
 }
 
 /**

@@ -11,10 +11,10 @@ import pg from "pg";
 
 import { chanLo, gopOCam, ngayVn, phanRa, tuanIso, tuanTruoc } from "./lib/do-hang-ngay.mjs";
 import {
-  daCoLamGiau, docBaiNguoi, docBaiNhom, docGiaTriSong, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
+  daCoLamGiau, docBaiNguoi, docBaiNhom, docGiaTriSong, docNguoiDe, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
 } from "./lib/do-lam-giau-db.mjs";
 import {
-  demThayDoi, DUONG, gopNgay, kiemNguocNhom, kiemNguocSo, latPhang, NHOM_LAT_THAY_DOI, ngayDauTuan, nguoiSua, PHIEN_BAN_THUOC, soAnh,
+  demNguoiDe, demThayDoi, DUONG, gopNgay, kiemNguocNhom, kiemNguocSo, latPhang, NHOM_LAT_THAY_DOI, ngayDauTuan, nguoiSua, PHIEN_BAN_THUOC, soAnh,
   tongKiem, tuSoat,
 } from "./lib/do-lam-giau.mjs";
 import { chuoiCam, KHOA_LAT_DON_VI } from "./do-hang-ngay.mjs";
@@ -125,6 +125,12 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
     nhanCam.push(...nhan);
     for (const n of nhan) if (d.doc === "so-tren-tin") tinCam.add(n.offer_id);
     const ns = d.o_nhan ? nguoiSua(nhan, d.o_nhan, { dotBien }) : { nguoi_sua: 0, nhan_da_so: 0 };
+    // Người sửa bằng ghi đè (`hitl`) cộng vào `nguoi_sua`, ghi riêng ở `nguoi_sua_de`; đường không có lối ghi đè không có khoá.
+    if (d.nguoi_de) {
+      const de = dotBien === "bo-de" ? 0 : demNguoiDe(nay, await docNguoiDe(client, d, ngay, { dotBien }), { dotBien });
+      ns.nguoi_sua += de;
+      ns.nguoi_sua_de = de;
+    }
     const rut = d.nguoi_rut ? { nguoi_rut: nguoiRut.size } : dotBien === "khong-loi-ghi-0" ? { nguoi_rut: 0 } : { duong_nguoi_rut: false };
     // 9. Lát: tin của giá trị sống và tin của dòng đổi.
     const tinSong = [...nay.values()].map((v) => v.offer_id);

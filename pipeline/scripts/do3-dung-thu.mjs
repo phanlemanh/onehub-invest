@@ -99,7 +99,7 @@ export async function dungThu(c, { D = ngayVn(Date.now()), D1 = congNgay(D, -1),
   await ghiNhom(nhom.map((t) => pbNhom(t.sk)));
   log(`do3-dung-thu ${D1}: ${tom(await doLamGiau(c, { ngay: D1, write: true }))}`);
 
-  // Ngày D: số — A mất số (máy rút), C đổi số, D nhận số; nhóm — n1 đổi loại hình, n2 người thay, n3 máy rút, n7 mới.
+  // Ngày D: số — A mất số (máy rút), C đổi số, D nhận số; nhóm — n1 đổi loại hình, n2 người ghi đè, n3 máy rút, n7 mới.
   await c.query(SQL_LL.rut, [[ll.A], "so-chung"]);
   await c.query(SQL_LL.rut, [[ll.C], "so-chung"]);
   await lienLac(pk.C, so(4));
@@ -108,7 +108,11 @@ export async function dungThu(c, { D = ngayVn(Date.now()), D1 = congNgay(D, -1),
   await tin("sD", { sender: `${tag}sD`, i: 1 });
   await ganSdtQuaNguoi(c, yen);
   await ghiNhom([pbNhom(nhom[0].sk, "house")]);
-  await retractRule(c, [nhom[1].sk], "property_type", "loai-hinh-nhom", "hitl-thay");
+  // Người sửa loại hình nhóm bằng đúng lối người của 045: đề xuất rồi apply_enrichment với người `hitl:…` (ghi đè, không rút).
+  const { rows: [{ id: deXuat }] } = await c.query(
+    `INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, evidence)
+     VALUES ('do3-dung-thu', $1, 'property_type', 'house', 'house', 'e2_llm', 'review', '{}'::jsonb) RETURNING id`, [nhom[1].oid]);
+  await c.query("SELECT apply_enrichment(ARRAY[$1]::bigint[], $2)", [deXuat, "hitl:do3-dung-thu"]);
   await retractRule(c, [nhom[2].sk], "property_type", "loai-hinh-nhom", "thay-boi-luot");
   const n7 = await tin("n7", { i: 2 });
   await ghiNhom([pbNhom(n7.sk)]);
