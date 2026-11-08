@@ -1,32 +1,47 @@
-# Review findings: od2-phim-va-loi-ghi (round 1)
+# Review findings: od2-phim-va-loi-ghi (round 2)
 
 ## Trong hợp đồng
 
-- **Hình dạng 4 (âm tính một mình): ô phím '4' của OPL-AC-3 không đỏ được khi bỏ chặn lặp cho phím 4**
-  AC: AC-3
-  file: `app/tests/ops-duyet-phim-va-loi-ghi.test.tsx:326`
-  severity: medium
-  source: measurement
-  detail: Ở các phím 1–3 (dòng 316) lần lặp có kiểm `if (await phim(k, true)) assert.fail(...)`, tức bắt cả trường hợp hook đã gọi preventDefault. Ô '4' (dòng 325–327) bỏ qua giá trị trả về: `for (...) await phim("4", true)`, rồi chỉ kiểm điều kiện âm `!tin.some(... 'Đã ghi') && theMo() === 71`. Fixture ghép căn không có nút 4, nên ô này không có đối chứng dương nào cho thấy phím 4 thật sự chạy tới `dapAn`. Hệ quả: nếu đột biến chuyển `if (e.repeat) return` thành chỉ chặn '1'–'3', hook vẫn gọi `lam()` và `preventDefault` cho lần lặp phím 4, nhưng ô này vẫn xanh. Trong khi đó evals.yaml E3 viết rằng chiều đỏ «chặn lặp chỉ phím '1'» sẽ đỏ «ở phím 2–4», và ca đột biến (dòng 346) cũng chỉ ghim `phím 2`. Như vậy phần «cùng vậy với 4» của AC-3 được đếm vào n=8 nhưng không có ô nào đo được nó.
-  rationale: AC-3 nêu đích danh «cùng vậy với 1, 2, 3, 4» nhưng ca máy không có ô nào đo được riêng phím 4.
+(không có finding nào)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **ReviewQueue gọi useRouter() vô điều kiện: render không có AppRouterContext nay ném lỗi, làm đỏ test VT-AC-3 đang có**
-  Người dùng thấy gì: Trên bản chạy thật người dùng không thấy gì khác, vì trang luôn có sẵn bộ điều hướng. Nhưng một bộ thử cũ về quyền xem thẻ duyệt theo vai nay báo đỏ, nên có thể chặn việc gộp hoặc che mất lỗi thật về sau.
-  Căn cứ: Không ảnh hưởng người dùng cuối và không mất dữ liệu, chỉ làm bộ thử cũ đỏ; sửa rẻ nhưng ở ngoài các tiêu chí đã ký nên nên làm thành việc riêng.
+- **Code sản phẩm import module nội bộ của Next (next/dist/...) chỉ để chiều bộ thử; kho đã có sẵn hai cách đúng hơn**
+  Người dùng thấy gì: Nút «Mở thẻ» hiện dựa vào phần nội bộ của khung web; khi nâng phiên bản khung này nút có thể hỏng mà không báo trước. Hiện tại người dùng chưa thấy ảnh hưởng gì.
+  Căn cứ: Hậu quả chỉ xuất hiện khi nâng phiên bản sau này, không mất dữ liệu, và phát hiện ngay qua bộ thử nên ghi lại rồi sửa sau là đủ.
   file: `app/src/components/ops/review/review-queue.tsx`
-  severity: high
-  Đề xuất: new-contract
-
-- **E2 trong evals.yaml ghi tin '#62 …' / '#63 …' nhưng ca máy chỉ dùng thẻ #61 cho cả ba tình trạng**
-  Người dùng thấy gì: Người ký đọc mô tả kiểm tra thấy số thẻ khác với số thẻ ca máy thật sự dùng. Người dùng cuối không bị ảnh hưởng, chỉ gây hơi khó hiểu khi soát.
-  Căn cứ: Lệch chỉ nằm ở chữ mô tả, không đổi kết quả kiểm và không ảnh hưởng người dùng; ghi lại là đủ, sửa chữ sau cũng rẻ.
-  file: `_acceptance/od2-phim-va-loi-ghi/evals.yaml`
-  severity: low
+  severity: medium
   Đề xuất: known-limits
+
+- **«Mở thẻ» sau khi gỡ hàng duyệt nay có thể không làm gì mà không báo lỗi, và bằng chứng E6 được chụp trước khi sửa đúng đường này**
+  Người dùng thấy gì: Nếu vì lý do hiếm nào đó không có bộ điều hướng, bấm «Mở thẻ» trên tin lỗi sẽ không có phản ứng và không báo gì. Người dùng vẫn tìm lại thẻ được bằng cách vào Hàng duyệt.
+  Căn cứ: Là tình huống hiếm, không mất dữ liệu, người dùng tự mở lại thẻ từ Hàng duyệt được; chỉ cần ghi lại và chạy lại bằng chứng khi có dịp.
+  file: `app/src/components/ops/review/review-queue.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 6 (đo cây khác cây đang kiểm): bằng chứng E6 chụp trên bản code cũ, trước khi sửa đúng dòng điều hướng mà E6 đo**
+  Người dùng thấy gì: Ảnh chứng cho nút «Mở thẻ» được chụp trên bản mã trước lần sửa cuối, nên chưa xác nhận bản mới nhất chạy đúng trên trang thật. Người dùng chưa gặp lỗi nào.
+  Căn cứ: Không ảnh hưởng người dùng trực tiếp và chụp lại bằng chứng rẻ, nhưng đây là khoảng hở xác nhận nên ghi lại rõ để người ký biết.
+  file: `_acceptance/od2-phim-va-loi-ghi/evidence/E6-step3.png`
+  severity: medium
+  Đề xuất: known-limits
+
+- **ReviewQueue gọi useRouter() vô điều kiện: render không có AppRouterContext nay ném lỗi, làm đỏ test VT-AC-3 đang có (r1)**
+  Người dùng thấy gì: (mục mang từ round 1, không chấm lại)
+  Căn cứ: (xem round 1)
+  file: `app/src/components/ops/review/review-queue.tsx`
+  severity: n-a (mang từ round 1)
+  Đề xuất: (xem round 1)
+
+- **E2 trong evals.yaml ghi tin '#62 …' / '#63 …' nhưng ca máy chỉ dùng thẻ #61 cho cả ba tình trạng (r1)**
+  Người dùng thấy gì: (mục mang từ round 1, không chấm lại)
+  Căn cứ: (xem round 1)
+  file: `_acceptance/od2-phim-va-loi-ghi/evals.yaml`
+  severity: n-a (mang từ round 1)
+  Đề xuất: (xem round 1)
 
 ## Chưa adversarial-verify (refuter chết)
 

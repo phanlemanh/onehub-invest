@@ -1,3 +1,98 @@
-Driver ego-browser khong co read_network_requests/console. Chi co ket qua fetch tab B:
-POST /api/v1/ops/review/166537/decide -> 200 {"ok":true,"status":"deferred"}
-(Luot thu truoc: 166534, 166536 cung 200.) Khong doc duoc loi console/network khac.
+Driver: ego-browser (no read_network_requests). Page-level fetch wrapper + toast mutation timeline on tab A:
+{
+ "log": [
+  {
+   "u": "http://localhost:3463/ops/collections?_rsc=5nvJkzgxGI2feyx3",
+   "m": "GET",
+   "s": 200,
+   "t": 1794163646218
+  },
+  {
+   "u": "/api/v1/ops/review/166543/decide",
+   "m": "POST",
+   "s": 409,
+   "t": 1794163647773
+  },
+  {
+   "u": "http://localhost:3463/ops/review?card=166543&_rsc=QVsJYsaDgU_9fwv7",
+   "m": "GET",
+   "s": 200,
+   "t": 1794163648399
+  }
+ ],
+ "tl": [
+  {
+   "t": 1794163644765,
+   "href": "http://localhost:3463/ops/review?category=party_merge",
+   "n": []
+  },
+  {
+   "t": 1794163644772,
+   "href": "http://localhost:3463/ops/review?category=party_merge",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163644913,
+   "href": "http://localhost:3463/ops/review?category=party_merge",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163646110,
+   "href": "http://localhost:3463/ops/review?category=party_merge",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163647756,
+   "href": "http://localhost:3463/ops/collections",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163647767,
+   "href": "http://localhost:3463/ops/collections",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163647778,
+   "href": "http://localhost:3463/ops/collections",
+   "n": [
+    "Không ghi được #166543: Item đã quyết (deferred)\nMở thẻ",
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163648428,
+   "href": "http://localhost:3463/ops/review?card=166543",
+   "n": [
+    "Không ghi được #166543: Item đã quyết (deferred)\nMở thẻ",
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163648577,
+   "href": "http://localhost:3463/ops/review?card=166543",
+   "n": [
+    "Đã ghi #166543 · Hoãn\nHoàn tác"
+   ]
+  },
+  {
+   "t": 1794163650249,
+   "href": "http://localhost:3463/ops/review?card=166543",
+   "n": []
+  },
+  {
+   "t": 1794163650881,
+   "href": "http://localhost:3463/ops/review?card=166543",
+   "n": []
+  }
+ ]
+}
