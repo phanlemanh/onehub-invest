@@ -86,10 +86,25 @@ _Avoid_: hồ sơ người bán
 - Code: `registry_alias` · RESO: không có
 _Avoid_: alias (trên UI)
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện chứa cụm tin S06 do máy tự dựng (gom cụm) — cụm không phải căn đã gắn; bảng chuyển dần thành view trên danh bạ (FRAMING §3.4, 08/11).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
+
+**Gắn căn**: Tin khớp đúng một căn của danh bạ bằng định danh duy nhất — dự án + toà + mã căn, hoặc số nhà + đường + phường; là bậc B3 (FRAMING §3.4, Mạnh chốt 08/11: «gắn được căn là đã nhận diện duy nhất, như có số nhà, có mã căn»). Mã căn hay số nhà có trong chữ tin là điều kiện cần, chỉ tính khi khớp một căn có thật trong danh bạ; tin mang định danh mà chưa khớp là «chờ khớp». Gom trùng và gom cụm không phải gắn căn.
+- Code: `unitLinked` (khối `dataFlow`), chờ khớp: `uniqueIdPending` · RESO: `UnitNumber`, `StreetNumber` + UPI của căn
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn cụm, linked (trên UI)
+
+**Định vị**: Tin gắn vào một nút dự án, toà hoặc trục có trong danh bạ, kèm bằng chứng — biết tin nói về toà nào, trục nào mà chưa tới đúng một căn; là bậc B2 (FRAMING §3.4). Toà hay trục ghi trong chữ tin mà chưa khớp danh bạ là «chờ khớp».
+- Code: `located` (khối `dataFlow`), chờ khớp: `locatedPending` · RESO: `SubdivisionName`, `BuildingName`
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn toà, căn suy ra
+
+**Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
+- Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: căn tự dựng, cụm căn
 
 **Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
@@ -453,10 +468,11 @@ _Avoid_: bản chụp, dump
 - Slug URL: `collections`
 _Avoid_: cào, crawl
 
-**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → Gắn căn — kèm nhánh rơi
-(«Không đọc được», «Chưa gắn căn») và nhánh «Gộp vào tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
+**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → mức nhận diện (Gom cụm ·
+Định vị · Gắn căn, mỗi mức là phần trăm trên Tin rao) — kèm nhánh rơi («Không đọc được», «Chưa định vị») và nhánh «Gộp vào
+tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
 `/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
-- Code: `data flow (getDataFlow, StageCounts: received · readable · offers · linked)` · RESO: —
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked)` · RESO: —
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 

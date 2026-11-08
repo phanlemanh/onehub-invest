@@ -21,7 +21,7 @@ const STAGES: { key: StageKey; label: string; color: Exclude<SeriesKey, "rest">;
   { key: "received", label: "Bài nhận", color: "flowReceived" },
   { key: "readable", label: "Đọc được", color: "flowReadable", of: "received", ofLabel: "bài nhận" },
   { key: "offers", label: "Tin rao mới", color: "flowOffers", of: "readable", ofLabel: "bài đọc được" },
-  { key: "linked", label: "Gắn căn", color: "flowLinked", of: "offers", ofLabel: "tin rao" },
+  { key: "unitLinked", label: "Gắn căn", color: "flowLinked", of: "offers", ofLabel: "tin rao" },
 ]
 
 const chartConfig = Object.fromEntries(STAGES.map((s) => [s.key, { label: s.label, theme: themeOf(s.color) }])) satisfies ChartConfig
@@ -42,7 +42,7 @@ export function StageTrendChart({
   windowDays: number
 }) {
   const totals = Object.fromEntries(
-    STAGES.map((s) => [s.key, sources.reduce((acc, src) => acc + src[s.key], 0)]),
+    STAGES.map((s) => [s.key, sources.reduce((acc, src) => acc + (src[s.key] ?? 0), 0)]),
   ) as Record<StageKey, number>
 
   // Gộp mọi nguồn theo ngày; mọi ngày của cửa sổ đều có điểm, ngày trống là 0 để trục liền.

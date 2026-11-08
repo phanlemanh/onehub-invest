@@ -13,7 +13,7 @@ evals:
     executor: test
     cmd: config:executors.test.ggc_app
     paths: [docs/product/FRAMING.md, app/tests/gan-can-dinh-danh.test.tsx]
-    expected: "exit 0; ca «GGC-AC-2»: đọc FRAMING.md thật; bảng dưới tiêu đề «### 3.4» có đúng sáu dòng bậc mà cột Bậc + Tên theo thứ tự là [B0 Có lời khai, B1 Tin, B2 Định vị, B3 Gắn căn, B4 Làm giàu, B5 Sống] (so trọn mảng viết trước); §3.4 chứa «Gắn căn = nhận diện duy nhất», «không phải một bậc», «Đổi thang 08/11 là lần hạ một lần», «nhà phố, đất có số nhà thật → B4»; dòng North star chứa «tách B2 «định vị» với B3–B5»; dòng Độ tươi chứa «ba quãng»; nhật ký có dòng mở đầu «| 2026-11-08 | §3.4 viết lại thang bậc»; toàn tệp không còn «Gắn căn (suy ra)», «B2 «Gắn căn»», «Chợ Tốt làm thước B3». Chiều đỏ: bộ kiểm trên bản sao giữ dòng B2 cũ «| **B2** | Gắn căn |» → lỗi ghim «GGC-AC-2 bảng bậc lệch ở B2»."
+    expected: "exit 0; ca «GGC-AC-2»: đọc FRAMING.md thật; bảng dưới tiêu đề «### 3.4» có đúng sáu dòng bậc mà cột Bậc + Tên theo thứ tự là [B0 Có lời khai, B1 Tin, B2 Định vị, B3 Gắn căn, B4 Làm giàu, B5 Sống] (so trọn mảng viết trước); §3.4 chứa «Gắn căn = nhận diện duy nhất», «không phải một bậc», «Đổi thang 08/11 là lần hạ một lần», «nhà phố, đất có số nhà thật → B4»; dòng North star chứa «tách B2 «định vị» với B3–B5»; dòng Độ tươi chứa «ba quãng»; nhật ký có dòng mở đầu «| 2026-11-08 | §3.4 viết lại thang bậc»; toàn tệp không còn «Gắn căn (suy ra)» và dòng bảng «| **B2** | Gắn căn |»; dòng quyết định §8 có «Viết lại 08/11: B2 Định vị». Chiều đỏ: bộ kiểm trên bản sao giữ dòng B2 cũ «| **B2** | Gắn căn |» → lỗi ghim «GGC-AC-2 bảng bậc lệch ở B2»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3

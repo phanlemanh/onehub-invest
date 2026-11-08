@@ -7,7 +7,8 @@
 -- S06 «đọc được» = min(tin, quảng cáo) (chưa có khoá nối ngược), chuỗi ngày 30 ngày gần nhất cho mọi cửa sổ.
 -- Tên không mang tiền tố lược đồ: phép đo chạy tệp này trên lược đồ tạm mà không chạm bảng thật.
 -- Mốc «hôm nay» = `now()`; phép đo đặt `SET oneinvest.flow_now = '<ISO>'` trong phiên để ghim ngày (trống → now()).
--- Ba đoạn định nghĩa đứng trong cặp chú thích `/*<<<TÊN*/ … /*TÊN>>>*/` (IS_TEST · COMPLETE · ENRICH) để bài kiểm rút
+-- Năm đoạn định nghĩa đứng trong cặp chú thích `/*<<<TÊN*/ … /*TÊN>>>*/` (IS_TEST · COMPLETE · ENRICH · LOCATED_PENDING ·
+-- UNIQUE_ID) để bài kiểm rút
 -- đúng câu thật thay vì chép tay.
 
 BEGIN;
@@ -61,9 +62,41 @@ ads_daily AS (
          count(*) AS received, max(list_time)::text AS latest
   FROM stg_chotot_ads GROUP BY 2
 ),
+-- Mức nhận diện của tin (gan-can-dinh-danh-duy-nhat, FRAMING §3.4 viết lại 08/11). Gom cụm: tin nằm trong cụm
+-- `properties` có từ hai tin SỐNG (view sale_offers) — cụm một tin không tính. Định vị (B2) và Gắn căn (B3) chỉ tính khi
+-- tin khớp một nút của danh bạ; toà, trục, mã căn, số nhà trong chữ tin chỉ là «chờ khớp».
+cum AS (
+  SELECT po.property_id, count(DISTINCT po.offer_id) AS n
+  FROM property_offers po JOIN sale_offers o ON o.offer_id = po.offer_id
+  GROUP BY 1
+),
+-- Chưa có bảng nối tin → nút danh bạ (V9, chuỗi GC0–GC3): hai CTE rỗng này là chỗ DUY NHẤT phải đổi khi bộ gắn ra đời.
+dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),
+gan_can_link AS (SELECT NULL::text AS offer_id WHERE false),
+muc AS (
+  SELECT o.offer_id,
+         EXISTS (SELECT 1 FROM property_offers po JOIN cum c ON c.property_id = po.property_id
+                 WHERE po.offer_id = o.offer_id AND c.n >= 2) AS clustered,
+         EXISTS (SELECT 1 FROM dinh_vi_link l WHERE l.offer_id = o.offer_id) AS located,
+         EXISTS (SELECT 1 FROM gan_can_link l WHERE l.offer_id = o.offer_id) AS unit_linked,
+         coalesce(/*<<<LOCATED_PENDING*/nullif(btrim(o.block_raw), '') IS NOT NULL OR o.unit_number ~* 'xx'/*LOCATED_PENDING>>>*/, false) AS ghi_toa,
+         coalesce(/*<<<UNIQUE_ID*/(nullif(btrim(o.block_raw), '') IS NOT NULL AND o.unit_number !~* 'xx'
+                   AND o.unit_number NOT IN ('0', '1') AND length(o.unit_number) >= 3)
+                  OR (o.street_number NOT IN ('0', '1') AND nullif(btrim(o.street_raw), '') IS NOT NULL
+                   AND a.region_type = 'submarket')/*UNIQUE_ID>>>*/, false) AS dinh_danh
+  FROM sale_offers o LEFT JOIN areas a ON a.id = o.area_id
+  WHERE o.source IN ('S03', 'S05', 'S06')
+),
 offers_daily AS (
   SELECT o.source, (o.first_seen AT TIME ZONE 'Asia/Ho_Chi_Minh')::date AS d,
-         count(*) AS offers, count(po.offer_id) AS linked,
+         count(*) AS offers,
+         count(*) FILTER (WHERE m.clustered) AS clustered,
+         count(*) FILTER (WHERE m.located) AS located,
+         count(*) FILTER (WHERE m.unit_linked) AS unit_linked,
+         count(*) FILTER (WHERE m.ghi_toa AND NOT m.located) AS located_pending,
+         count(*) FILTER (WHERE m.dinh_danh AND NOT m.unit_linked) AS unique_id_pending,
+         count(*) FILTER (WHERE m.located AND NOT m.unit_linked) AS deep_located,
+         count(*) FILTER (WHERE m.clustered AND NOT m.located AND NOT m.unit_linked) AS deep_clustered,
          count(*) FILTER (WHERE o.area_id IS NOT NULL) AS with_ward,
          count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
          count(*) FILTER (WHERE o.price_vnd IS NOT NULL AND o.area_m2 IS NOT NULL) AS with_price_area,
@@ -72,8 +105,7 @@ offers_daily AS (
                           AND o.price_vnd > 0 AND o.area_m2 > 0 AND o.area_id IS NOT NULL/*COMPLETE>>>*/) AS complete,
          count(*) FILTER (WHERE o.kind = 'sale') AS sale,
          count(*) FILTER (WHERE o.kind = 'rent_lt') AS rent_lt
-  FROM sale_offers o LEFT JOIN (SELECT DISTINCT offer_id FROM property_offers) po USING (offer_id)
-  WHERE o.source IN ('S03', 'S05', 'S06')
+  FROM sale_offers o JOIN muc m USING (offer_id)
   GROUP BY 1, 2
 ),
 -- Tổng theo (cửa sổ, nguồn).
@@ -90,7 +122,10 @@ recv AS (
 ),
 offs AS (
   SELECT w.time_window, o.source,
-         sum(o.offers) AS offers, sum(o.linked) AS linked, sum(o.with_ward) AS with_ward, sum(o.with_type) AS with_type,
+         sum(o.offers) AS offers, sum(o.clustered) AS clustered, sum(o.located) AS located,
+         sum(o.unit_linked) AS unit_linked, sum(o.located_pending) AS located_pending,
+         sum(o.unique_id_pending) AS unique_id_pending, sum(o.deep_located) AS deep_located,
+         sum(o.deep_clustered) AS deep_clustered, sum(o.with_ward) AS with_ward, sum(o.with_type) AS with_type,
          sum(o.with_price_area) AS with_price_area, sum(o.complete) AS complete, sum(o.high_conf) AS high_conf,
          sum(o.sale) AS sale, sum(o.rent_lt) AS rent_lt
   FROM win w JOIN offers_daily o ON w.since_day IS NULL OR o.d >= w.since_day
@@ -104,7 +139,13 @@ sources_by_win AS (
            'readable', CASE WHEN s.source = 'S06' THEN least(coalesce(f.offers, 0), coalesce(r.received, 0))
                             ELSE coalesce(r.readable, 0) END,
            'offers', coalesce(f.offers, 0),
-           'linked', coalesce(f.linked, 0),
+           'clustered', coalesce(f.clustered, 0),
+           'located', coalesce(f.located, 0),
+           'unitLinked', coalesce(f.unit_linked, 0),
+           'locatedPending', coalesce(f.located_pending, 0),
+           'uniqueIdPending', coalesce(f.unique_id_pending, 0),
+           'deepest', jsonb_build_object('unitLinked', coalesce(f.unit_linked, 0), 'located', coalesce(f.deep_located, 0),
+                                         'clustered', coalesce(f.deep_clustered, 0)),
            'testRejected', coalesce(r.test_rejected, 0),
            'withWard', coalesce(f.with_ward, 0),
            'withType', coalesce(f.with_type, 0),
@@ -122,13 +163,14 @@ sources_by_win AS (
 ),
 -- Chuỗi 30 ngày theo (nguồn, ngày) — giống nhau ở mọi cửa sổ; chỉ ngày có số.
 days_raw AS (
-  SELECT source, d, sum(received) AS received, sum(readable) AS readable, sum(offers) AS offers, sum(linked) AS linked
+  SELECT source, d, sum(received) AS received, sum(readable) AS readable, sum(offers) AS offers,
+         sum(unit_linked) AS unit_linked
   FROM (
-    SELECT source, d, received, readable, 0 AS offers, 0 AS linked FROM posts_daily
+    SELECT source, d, received, readable, 0 AS offers, 0 AS unit_linked FROM posts_daily
     UNION ALL
     SELECT source, d, received, 0, 0, 0 FROM ads_daily
     UNION ALL
-    SELECT source, d, 0, 0, offers, linked FROM offers_daily
+    SELECT source, d, 0, 0, offers, unit_linked FROM offers_daily
   ) x
   WHERE d >= (SELECT from_day FROM series)
   GROUP BY 1, 2
@@ -137,7 +179,7 @@ days_json AS (
   SELECT coalesce(jsonb_agg(jsonb_build_object(
            'source', source, 'day', d::text, 'received', received,
            'readable', CASE WHEN source = 'S06' THEN least(offers, received) ELSE readable END,
-           'offers', offers, 'linked', linked
+           'offers', offers, 'unitLinked', unit_linked
          ) ORDER BY d, source), '[]'::jsonb) AS days
   FROM days_raw
 ),
