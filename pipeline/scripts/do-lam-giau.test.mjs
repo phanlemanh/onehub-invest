@@ -425,3 +425,226 @@ test("DO3-AC-3 người rút (hitl-thay, hoan-tac) và người sửa theo nhãn
     kiem(await doLamGiau(c, { ngay: D, write: true }));
   });
 });
+
+// ================= Task 3: kiểm ngược bỏ-một-ra theo tuần =================
+import { wilson } from "../lib/do-hang-ngay.mjs";
+import { kiemNguocNhom, kiemNguocSo, tongKiem } from "../lib/do-lam-giau.mjs";
+
+/** Wilson tham chiếu viết lại độc lập (công thức chuẩn), như DO1. */
+function wilsonThamChieu(k, n) {
+  const z = 1.959964, p = k / n;
+  const tam = p + (z * z) / (2 * n);
+  const can = z * Math.sqrt((p * (1 - p) + (z * z) / (4 * n)) / n);
+  const mau = 1 + (z * z) / n;
+  return { thap: (tam - can) / mau, cao: (tam + can) / mau };
+}
+const gan4 = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-4, `${msg}: ${a} ≠ ${b}`);
+const chu = (n) => `0399000${String(n).padStart(3, "0")}`;
+
+// ---- AC-4: ma trận viết trước. Số đặt trong CHỮ BÀI (rutLienLac đọc từ bài) và trên tin (số riêng do transform ghi). ----
+// N1: 3 bài, mỗi bài một tin, cùng số X (+ một tin mang số suy X, không vào tập) → 3 đúng.
+// N2: 3 bài số X2 + 1 bài số Y → tin Y suy lại ra X2: 1 sai; tin X2 còn hai số trên tin (X2, Y) → chonSoNguoi (đúng một số) không chọn: 3 không ra.
+// N3: 1 bài sinh HAI tin cùng số Z → bỏ tin thứ nhất kéo theo bài và tin thứ hai: 2 không ra.
+// N4: 2 bài số W, người gửi khác cũng đăng W (số chung, bị loại) → 2 không ra.
+// N5: 1 bài số V, một tin → bỏ tin + bài: 1 không ra (giữ bài thì thành đúng).
+// N6: 1 bài KHÔNG số, tin mang số U → bỏ tin: 1 không ra (không bỏ gì thì thành đúng).
+const MA_TRAN_SO = { N1a: "dung", N1b: "dung", N1c: "dung", N2a: "khong_ra", N2b: "khong_ra", N2c: "khong_ra", N2y: "sai",
+  N3a: "khong_ra", N3b: "khong_ra", N4a: "khong_ra", N4b: "khong_ra", N5: "khong_ra", N6: "khong_ra" };
+function fixtureSo() {
+  const bai = [], tins = [], nguoiCuaTaiKhoan = new Map();
+  const ng = (s) => nguoiCuaTaiKhoan.set(`do3k${s}`, `pty_k${s}`);
+  const b = (id, s, text) => bai.push({ post_id: `do3k${id}`, sender_id: `do3k${s}`, text });
+  const t = (id, s, phone, pids, fp = null) => tins.push({ offer_id: `offer_do3k${id}`, seller_ref: `do3k${s}`, seller_phone: phone, post_ids: pids.map((p) => `do3k${p}`),
+    field_provenance: fp ? { seller_phone: fp } : {}, song: true });
+  for (const s of [1, 2, 3, 4, 5, 6]) ng(s);
+  for (const x of ["a", "b", "c"]) { b(`N1${x}`, 1, `Bán 2PN lh ${chu(501)}`); t(`N1${x}`, 1, so(501), [`N1${x}`]); }
+  b("N1d", 1, "Bán 3PN"); t("N1d", 1, so(501), ["N1d"], { rule_id: "s03-qua-nguoi-dang", tier: "inferred" });
+  for (const x of ["a", "b", "c"]) { b(`N2${x}`, 2, `Bán nhà lh ${chu(502)}`); t(`N2${x}`, 2, so(502), [`N2${x}`]); }
+  b("N2y", 2, `Bán đất lh ${chu(512)}`); t("N2y", 2, so(512), ["N2y"]);
+  b("N3", 3, `Bán hai căn lh ${chu(503)}`); t("N3a", 3, so(503), ["N3"]); t("N3b", 3, so(503), ["N3"]);
+  for (const x of ["a", "b"]) { b(`N4${x}`, 4, `Cho thuê lh ${chu(504)}`); t(`N4${x}`, 4, so(504), [`N4${x}`]); }
+  b("N4z", 7, `ib ${chu(504)}`); // người gửi khác, không có Người
+  b("N5", 5, `Bán lh ${chu(505)}`); t("N5", 5, so(505), ["N5"]);
+  b("N6", 6, "Bán căn góc"); t("N6", 6, so(506), ["N6"]);
+  return { bai, tins, nguoiCuaTaiKhoan };
+}
+function kiemSo(k) {
+  const ket = (ma) => k.ket.get(`offer_do3k${ma}`);
+  if (ket("N1d") !== undefined) throw new Error("SO SUY VAO TAP KIEM");
+  if (ket("N6") === "dung") throw new Error("KHONG BO MOT RA");
+  if (ket("N5") === "dung") throw new Error("RO BAI CUA TIN");
+  if (ket("N3a") === "dung" || ket("N3b") === "dung") throw new Error("RO TIN CUNG BAI");
+  for (const [ma, x] of Object.entries(MA_TRAN_SO)) assert.equal(ket(ma), x, ma);
+  assert.deepEqual([k.tap_do, k.n, k.dung, k.sai, k.khong_ra], ["tin-co-so-rieng", 13, 3, 1, 9]);
+}
+function kiemTong(k, t, truoc) {
+  if (t.ty_le_dung !== k.dung / (k.dung + k.sai)) throw new Error(`KHONG RA VAO MAU SO: ${t.ty_le_dung}`);
+  const w = wilsonThamChieu(k.dung, k.dung + k.sai);
+  gan4(t.wilson.thap, w.thap, "wilson thấp"); gan4(t.wilson.cao, w.cao, "wilson cao");
+  assert.equal(t.phu, (k.dung + k.sai) / k.n);
+  if (truoc) {
+    gan4(t.chenh, t.ty_le_dung - truoc.dung / (truoc.dung + truoc.sai), "chênh");
+    const a = wilson(k.dung, k.dung + k.sai), b = wilson(truoc.dung, truoc.dung + truoc.sai);
+    assert.equal(t.co_y_nghia, a.cao < b.thap || b.cao < a.thap, "có ý nghĩa = hai khoảng không chồng");
+    gan4(t.nguong_phat_hien, (a.cao - a.thap) / 2 + (b.cao - b.thap) / 2, "ngưỡng phát hiện");
+  }
+}
+test("DO3-AC-4 phần thuần: bỏ-một-ra số qua người đăng trên ma trận viết trước, Wilson, so tuần trước", () => {
+  const { bai, tins, nguoiCuaTaiKhoan } = fixtureSo();
+  const k = kiemNguocSo(bai, tins, nguoiCuaTaiKhoan);
+  kiemSo(k);
+  const truoc = { dung: 1, sai: 9 };
+  kiemTong(k, tongKiem(k, truoc), truoc);
+  assert.equal(tongKiem({ n: 40, dung: 38, sai: 2 }, { dung: 2, sai: 38 }).co_y_nghia, true);
+  for (const [dotBien, msg] of [["khong-bo-ra", /KHONG BO MOT RA/], ["giu-bai", /RO BAI CUA TIN/], ["giu-tin-cung-bai", /RO TIN CUNG BAI/],
+    ["so-suy-vao-tap", /SO SUY VAO TAP KIEM/]]) {
+    assert.throws(() => kiemSo(kiemNguocSo(bai, tins, nguoiCuaTaiKhoan, { dotBien })), msg, dotBien);
+  }
+  assert.throws(() => kiemTong(k, tongKiem(k, truoc, { dotBien: "khong-ra-mau-so" }), truoc), /KHONG RA VAO MAU SO/);
+});
+
+// ---- AC-5: ngưỡng thật của loaiHinhNhom (≥ 20 bài nói rõ loại, ≥ 85% một loại) ----
+function fixtureNhom() {
+  const bai = [];
+  const b = (id, conv, text, x = {}) => bai.push({ post_id: `do3g${id}`, conversation_id: conv, text, snapshot_id: SNAP, agent_id: "openclaw-hook", group_name: "Nhóm DO3", ...x });
+  for (let i = 0; i < 24; i++) b(`1a${i}`, "do3:g1", `Bán căn hộ 2PN tầng ${i}`);
+  b("1h", "do3:g1", "Bán nhà phố mặt ngõ");
+  b("1t1", "do3:g1", "Bán căn hộ thử", { agent_id: "test-do3" });
+  b("1t2", "do3:g1", "Bán căn hộ thử", { group_name: "TEST nhóm" });
+  for (let i = 0; i < 20; i++) b(`2a${i}`, "do3:g2", `Bán căn hộ 1PN số ${i}`);
+  b("2x", "do3:g2", "Bán căn góc"); // không nói loại → ngoài tập, không vào ngưỡng
+  return bai;
+}
+function kiemNhom(k) {
+  const ket = (id) => k.ket.get(`do3g${id}`);
+  if (ket("1t1") || ket("1t2")) throw new Error("BAI THU VAO TAP");
+  if (ket("2a0") === "dung") throw new Error("KHONG BO MOT RA");
+  assert.equal(ket("1h"), "sai");
+  assert.deepEqual([k.tap_do, k.n, k.dung, k.sai, k.khong_ra], ["bai-co-chu-loai", 45, 24, 1, 20]);
+  const w = wilsonThamChieu(24, 25), t = tongKiem(k, null);
+  gan4(t.wilson.thap, w.thap, "wilson thấp");
+}
+test("DO3-AC-5 phần thuần: bỏ-một-ra loại hình theo nhóm, gọi đúng loaiHinhNhom/docLoaiHinh của transform-zalo", () => {
+  const bai = fixtureNhom();
+  kiemNhom(kiemNguocNhom(bai));
+  assert.throws(() => kiemNhom(kiemNguocNhom(bai, { dotBien: "khong-bo-bai" })), /KHONG BO MOT RA/);
+  assert.throws(() => kiemNhom(kiemNguocNhom(bai, { dotBien: "giu-bai-thu" })), /BAI THU VAO TAP/);
+});
+
+// ---- AC-4 + AC-5 qua bộ ghi: nhịp tuần, lỗi tiêm, tuần trước, đường không hàm kiểm ngược ----
+const T2 = "2026-11-02", T3 = "2026-11-03"; // thứ Hai, thứ Ba của 2026-W45
+const kiemCua = (kq, duong) => kq.dq.find((r) => r.check_name === "do3-kiem-nguoc" && r.entity === duong);
+const tru = (a, b) => ({ n: a.n - b.n, dung: a.dung - b.dung, sai: a.sai - b.sai, khong_ra: a.khong_ra - b.khong_ra });
+/** Ghi fixture AC-4 (bài kênh S03, Người, tin) và AC-5 (bài hai nhóm) vào DB thử; số suy của N1d qua ganSdtQuaNguoi. */
+async function ghiFixtureKiem(c) {
+  for (const n of [501, 502, 503, 504, 505, 506, 512]) {
+    const { rows: [{ k }] } = await c.query("SELECT count(*)::int AS k FROM stg_zalo_posts WHERE text LIKE '%' || $1 || '%'", [chu(n)]);
+    assert.equal(k, 0, `số bịa ${chu(n)} đã có trong dữ liệu — đổi số fixture`);
+  }
+  const { bai, tins } = fixtureSo();
+  const pk = new Map();
+  for (const s of [1, 2, 3, 4, 5, 6]) pk.set(`do3k${s}`, await nguoi(c, `do3k${s}`));
+  for (const b of bai) {
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, sender_id, sender_name)
+                   VALUES ($1, $2, 'openclaw-hook', 'Nhóm DO3', $3, now(), $4, 'Người thử')`, [b.post_id, SNAP, b.text, b.sender_id]);
+  }
+  for (const t of tins) {
+    const suy = t.field_provenance.seller_phone;
+    await c.query(`INSERT INTO sale_offer_records (offer_id, originating_system_key, kind, first_seen, last_seen, post_ids, source, seller_ref, seller_phone, seller_phone_hash)
+                   VALUES ($1, $2, 'sale', now(), now(), $3, 'S03', $4, $5, $6)`,
+    [t.offer_id, t.post_ids[0], t.post_ids, t.seller_ref, suy ? null : t.seller_phone, suy ? null : bamSo(t.seller_phone)]);
+  }
+  await lienLac(c, pk.get("do3k1"), so(501));
+  await ganSdtQuaNguoi(c, yen);
+  const { rows: [n1d] } = await c.query("SELECT field_provenance -> 'seller_phone' ->> 'rule_id' AS r FROM sale_offer_records WHERE offer_id = 'offer_do3kN1d'");
+  assert.equal(n1d.r, "s03-qua-nguoi-dang", "N1d mang số suy qua người đăng");
+  for (const b of fixtureNhom()) {
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, conversation_id)
+                   VALUES ($1, $2, $3, $4, $5, now(), $6)`, [b.post_id, SNAP, b.agent_id, b.group_name, b.text, b.conversation_id]);
+  }
+  // Đường quy ước nhóm đang chạy (CI: DB rỗng).
+  await tin(c, "k5n");
+  await ghiNhom(c, [pbNhom("k5n")]);
+}
+
+test("DO3-AC-4 nhịp tuần qua bộ ghi: lỗi tiêm không để dòng, lượt sau ghi đúng một dòng, lượt nữa không thêm; không gọi model", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    await chuanBi(c);
+    const by = Object.fromEntries(DUONG.map((d) => [d.duong, d]));
+    const goc = await thu(c, async () => {
+      await tin(c, "k5n"); await ghiNhom(c, [pbNhom("k5n")]); // đường nhóm chạy cả ở gốc
+      const kq = await doLamGiau(c, { ngay: T2 });
+      return { so: kiemCua(kq, SO)?.detail ?? { n: 0, dung: 0, sai: 0, khong_ra: 0 }, nhom: kiemCua(kq, NHOM).detail };
+    });
+    await ghiFixtureKiem(c);
+    // Tuần trước có dòng với tỉ lệ đặt trước.
+    await c.query(`INSERT INTO dq_check_results (check_name, entity, status, detail) VALUES ('do3-kiem-nguoc', $1, 'pass', $2)`,
+      [SO, JSON.stringify({ tuan: "2026-W44", n: 20, dung: 2, sai: 8, khong_ra: 10 })]);
+    const goiMang = [];
+    const fetchGoc = globalThis.fetch;
+    globalThis.fetch = async (...a) => { goiMang.push(a[0]); throw new Error("DO3 không được gọi mạng"); };
+    try {
+      const dongTuan = async () => (await dongDq(c, "do3-kiem-nguoc", "tuan", "2026-W45"));
+      const kiemLan2 = async () => {
+        const rows = await dongTuan();
+        if (!rows.some((r) => r.entity === SO)) throw new Error("MAT TUAN KHI LUOT DAU LOI");
+        if (rows.filter((r) => r.entity === SO).length !== 1) throw new Error("KIEM NGUOC LAP TUAN");
+        const d = rows.find((r) => r.entity === SO).detail;
+        assert.deepEqual(tru(d, goc.so), { n: 13, dung: 3, sai: 1, khong_ra: 9 }, "ma trận qua bộ ghi");
+        assert.equal(d.tap_do, "tin-co-so-rieng");
+        kiemTong(d, d, { dung: 2, sai: 8 });
+        for (const k of ["tuan", "tap_do", "n", "dung", "sai", "khong_ra", "ty_le_dung", "wilson", "phu", "chenh", "co_y_nghia", "nguong_phat_hien", "lat", "phien_ban_thuoc"]) {
+          assert.ok(k in d, `thiếu ${k}`);
+        }
+        return rows;
+      };
+      // Lượt 1 (thứ Hai) lỗi sau khi tính → rút giao dịch, 0 dòng tuần.
+      await c.query("SAVEPOINT luot1");
+      await assert.rejects(doLamGiau(c, { ngay: T2, write: true, loiTiem: "LOI TIEM DO3" }), /LOI TIEM DO3/);
+      await c.query("ROLLBACK TO SAVEPOINT luot1");
+      assert.equal((await dongTuan()).length, 0);
+      await thu(c, async () => {
+        await doLamGiau(c, { ngay: T3, write: true, dotBien: "chi-luot-dau" });
+        await assert.rejects(kiemLan2, /MAT TUAN KHI LUOT DAU LOI/);
+      });
+      // Lượt 2 (thứ Ba) → đúng một dòng mỗi đường đang chạy.
+      await doLamGiau(c, { ngay: T3, write: true });
+      const lan2 = await kiemLan2();
+      // Lượt 3 → không thêm dòng, detail không đổi.
+      await thu(c, async () => {
+        await doLamGiau(c, { ngay: T3, write: true, dotBien: "lap-tuan" });
+        await assert.rejects(kiemLan2, /KIEM NGUOC LAP TUAN/);
+      });
+      await doLamGiau(c, { ngay: T3, write: true });
+      const lan3 = await kiemLan2();
+      assert.deepEqual(lan3.map((r) => [r.entity, r.detail]), lan2.map((r) => [r.entity, r.detail]));
+      // AC-5 qua bộ ghi: nhóm G1, G2 vào đúng bảng viết trước (phần chênh so gốc).
+      const dn = lan2.find((r) => r.entity === NHOM).detail;
+      assert.deepEqual(tru(dn, goc.nhom), { n: 45, dung: 24, sai: 1, khong_ra: 20 });
+      kiemTong(dn, dn, null);
+      assert.equal(by[NHOM].kiem, "nhom");
+    } finally { globalThis.fetch = fetchGoc; }
+    assert.equal(goiMang.length, 0, "lời gọi model/mạng = 0");
+  });
+});
+
+test("DO3-AC-5 đường đang chạy chưa có hàm kiểm ngược ghi skip «chưa có kiểm ngược», không số 0", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    await chuanBi(c);
+    // Sổ đường của ca: diện tích suy ra «đang chạy» bằng một luật giả, chưa có hàm kiểm ngược.
+    const gia = DUONG.map((d) => (d.duong === "dien-tich-suy-ra" ? { ...d, rule_ids: ["do3-gia"] } : d));
+    await tin(c, "k5d");
+    await writeAssertions(c, [{ subject_key: "S03:do3k5d", field: "bedrooms", value: "2", evidence_tier: "inferred", method: "e1_rule",
+      method_version: "do3-test", rule_id: "do3-gia" }]);
+    const kiem = (kq) => {
+      const r = kiemCua(kq, "dien-tich-suy-ra");
+      assert.ok(r, "có dòng kiểm ngược cho đường đang chạy");
+      if (r.status !== "skip" || "n" in r.detail || "dung" in r.detail) throw new Error(`CHUA KIEM GHI SO 0: ${JSON.stringify(r.detail)}`);
+      assert.deepEqual([r.detail.ly_do, r.detail.tuan], ["chua-co-kiem-nguoc", "2026-W45"]);
+    };
+    await thu(c, async () => assert.rejects(async () => kiem(await doLamGiau(c, { ngay: T3, write: true, duong: gia, dotBien: "chua-kiem-so-0" })), /CHUA KIEM GHI SO 0/));
+    kiem(await doLamGiau(c, { ngay: T3, write: true, duong: gia }));
+    // Một lần mỗi tuần.
+    assert.equal(kiemCua(await doLamGiau(c, { ngay: T3, write: true, duong: gia }), "dien-tich-suy-ra"), undefined);
+  });
+});

@@ -9,12 +9,13 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-import { chanLo, gopOCam, ngayVn, phanRa } from "./lib/do-hang-ngay.mjs";
+import { chanLo, gopOCam, ngayVn, phanRa, tuanIso, tuanTruoc } from "./lib/do-hang-ngay.mjs";
 import {
-  daCoLamGiau, docGiaTriSong, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
+  daCoLamGiau, docBaiNguoi, docBaiNhom, docGiaTriSong, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
 } from "./lib/do-lam-giau-db.mjs";
 import {
-  demThayDoi, DUONG, gopNgay, latPhang, NHOM_LAT_THAY_DOI, nguoiSua, PHIEN_BAN_THUOC, soAnh, tuSoat,
+  demThayDoi, DUONG, gopNgay, kiemNguocNhom, kiemNguocSo, latPhang, NHOM_LAT_THAY_DOI, ngayDauTuan, nguoiSua, PHIEN_BAN_THUOC, soAnh,
+  tongKiem, tuSoat,
 } from "./lib/do-lam-giau.mjs";
 import { chuoiCam, KHOA_LAT_DON_VI } from "./do-hang-ngay.mjs";
 
@@ -78,14 +79,17 @@ async function gopVaoNgay(client, d, ngay, doi, { dotBien } = {}) {
 /**
  * Một lượt đo DO3 của ngày `ngay` (giờ VN). Ghi ảnh chụp và dòng đổi trong giao dịch của người gọi; `write` ghi dòng dq.
  * @param {import("pg").Client} client đang ở trong giao dịch
- * @param {{ ngay?: string, write?: boolean, dotBien?: string, duong?: typeof DUONG }} [o]
- *   `dotBien` chỉ cho thước (bản đột biến của từng phép đo); `duong` chỉ cho thước thay sổ đường.
+ * Kiểm ngược: mỗi đường đang chạy, tuần ISO (giờ VN) của `ngay` chưa có dòng `do3-kiem-nguoc` thì tính và ghi trong CÙNG giao dịch —
+ * lượt lỗi giữa chừng rút cả giao dịch, lượt kế trong tuần chạy lại. Đường đang chạy chưa có hàm kiểm ngược ghi skip một lần mỗi tuần.
+ * @param {{ ngay?: string, write?: boolean, dotBien?: string, duong?: typeof DUONG, kiemNguoc?: boolean, loiTiem?: string }} [o]
+ *   `dotBien` chỉ cho thước (bản đột biến của từng phép đo); `duong` chỉ cho thước thay sổ đường; `kiemNguoc: false` bỏ phần kiểm
+ *   ngược (thước của phần thay đổi); `loiTiem` chỉ cho thước — ném lỗi sau khi tính, trước khi ghi.
  * @returns {Promise<{dq: {check_name: string, entity: string, status: string, detail: object}[], chua_ap?: string,
  *   dong?: Record<string, object[]>}>}
  */
-export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = false, dotBien, duong = DUONG } = {}) {
+export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = false, dotBien, duong = DUONG, kiemNguoc = true, loiTiem } = {}) {
   if (!(await daCoLamGiau(client))) return { dq: [], chua_ap: SO_MIG };
-  const ra = [], dong = {}, tinCam = new Set(), nhanCam = [];
+  const ra = [], dong = {}, tinCam = new Set(), nhanCam = [], dangChay = new Set();
   const { rows: hq } = await client.query(
     `SELECT DISTINCT ON (entity) entity, detail FROM dq_check_results
       WHERE check_name = 'do3-thay-doi' AND detail::jsonb ->> 'ngay' = $1 ORDER BY entity, checked_at DESC`, [truNgay(ngay, 1)]);
@@ -100,6 +104,7 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
       ra.push({ check_name: "do3-thay-doi", entity: d.duong, status: "skip", detail: { ngay, ly_do: "chua-chay", ...so0, ...goc } });
       continue;
     }
+    dangChay.add(d.duong);
     if (d.doc === "so-tren-tin") for (const v of nay.values()) tinCam.add(v.offer_id);
     // 3. Ảnh chụp lần trước; chưa có → lập mốc.
     const { rows: tr } = await client.query("SELECT subject_key, value_key, offer_id FROM enrichment_value_state WHERE duong = $1", [d.duong]);
@@ -134,6 +139,9 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
     ra.push({ check_name: "do3-thay-doi", entity: d.duong, status: lech || dotBien === "fail-khong-ly-do" ? "fail" : "pass", detail });
   }
 
+  if (kiemNguoc) ra.push(...await kiemNguocTuan(client, duong.filter((d) => dangChay.has(d.duong)), ngay, { dotBien }));
+  if (loiTiem) throw new Error(loiTiem);
+
   // ---- Chặn rò (AC-8) rồi ghi ----
   await chanLoDo3(client, ra, { tinCam, nhanCam, dotBien });
   if (write) {
@@ -147,6 +155,48 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
     }
   }
   return { dq: ra, dong };
+}
+
+/** Dòng `do3-kiem-nguoc` của tuần ISO chứa `ngay` cho các đường đang chạy chưa có dòng tuần đó. */
+async function kiemNguocTuan(client, dangChay, ngay, { dotBien } = {}) {
+  const tuan = tuanIso(ngay), tTruoc = tuanTruoc(tuan, ngay);
+  const ra = [];
+  let nguoi, nhom;
+  for (const d of dangChay) {
+    const { rows: co } = await client.query(
+      `SELECT 1 FROM dq_check_results WHERE check_name = 'do3-kiem-nguoc' AND entity = $1 AND detail::jsonb ->> 'tuan' = $2 LIMIT 1`, [d.duong, tuan]);
+    if (co.length && dotBien !== "lap-tuan") continue;
+    if (dotBien === "chi-luot-dau" && ngay !== ngayDauTuan(ngay)) continue;
+    if (!d.kiem) {
+      const so0 = dotBien === "chua-kiem-so-0" ? { n: 0, dung: 0, sai: 0, khong_ra: 0 } : { ly_do: "chua-co-kiem-nguoc" };
+      ra.push({ check_name: "do3-kiem-nguoc", entity: d.duong, status: dotBien === "chua-kiem-so-0" ? "pass" : "skip", detail: { tuan, ...so0, phien_ban_thuoc: PHIEN_BAN_THUOC } });
+      continue;
+    }
+    let k, tinCua;
+    if (d.kiem === "so") {
+      nguoi ??= await docBaiNguoi(client);
+      if (!nguoi) continue; // chưa áp 079: đường số không chạy được
+      k = kiemNguocSo(nguoi.bai, nguoi.tins, nguoi.nguoiCuaTaiKhoan, { dotBien });
+      tinCua = (id) => id;
+    } else {
+      nhom ??= await docBaiNhom(client);
+      k = kiemNguocNhom(nhom.bai, { dotBien });
+      tinCua = (pid) => nhom.tinCuaBai.get(pid) ?? null;
+    }
+    const { rows: [tr] } = await client.query(
+      `SELECT detail FROM dq_check_results WHERE check_name = 'do3-kiem-nguoc' AND entity = $1 AND detail::jsonb ->> 'tuan' = $2
+        ORDER BY checked_at DESC LIMIT 1`, [d.duong, tTruoc]);
+    const truoc = tr ? JSON.parse(tr.detail) : null;
+    const theoKet = { dung: [], sai: [], khong_ra: [] };
+    for (const [id, x] of k.ket) theoKet[x].push(tinCua(id));
+    const viTri = await docViTriTin(client, Object.values(theoKet).flat());
+    const lat = Object.fromEntries(Object.entries(theoKet).map(([x, ids]) => [x, latTin(ids, viTri, { dotBien })]));
+    ra.push({
+      check_name: "do3-kiem-nguoc", entity: d.duong, status: "pass",
+      detail: { tuan, tap_do: k.tap_do, n: k.n, dung: k.dung, sai: k.sai, khong_ra: k.khong_ra, ...tongKiem(k, truoc, { dotBien }), lat, phien_ban_thuoc: PHIEN_BAN_THUOC },
+    });
+  }
+  return ra;
 }
 
 /**

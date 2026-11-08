@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { khoangNgay } from "../mau-soat-cuon-chieu.mjs";
+import { docNguoiCuaTaiKhoan, KENH_LIEN_LAC, SQL_LL } from "./lien-lac-nguoi.mjs";
+import { daCoBang079 } from "./nap-079.mjs";
 
 export const SO_MIG = "086";
 export const MIG_086 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/086_lam_giau.sql"), "utf8");
@@ -123,4 +125,30 @@ export async function docViTriTin(c, offerIds) {
     market_id: r.market_id, ward_id: r.ward_id, project_key: r.project_node ? `node:${r.project_node}` : null, building_key: null,
     core: { toa_chu: r.toa_chu },
   }]));
+}
+
+/**
+ * Đầu vào kiểm ngược số qua người đăng — đúng nguồn bộ dựng liên lạc đọc (bài kênh S03 có người gửi, tin S03 có số kể cả đã nghỉ;
+ * tập đo chỉ lấy tin sống). Chỉ dùng trong bộ nhớ: số và chữ bài không vào detail. Chưa áp 079 → null.
+ */
+export async function docBaiNguoi(c) {
+  if (!(await daCoBang079(c))) return null;
+  const bai = (await c.query(SQL_LL.bai, [KENH_LIEN_LAC])).rows;
+  const { rows: tins } = await c.query(
+    `SELECT offer_id, seller_ref, seller_phone, field_provenance, post_ids, retired_at IS NULL AS song
+       FROM sale_offer_records WHERE source = 'S03' AND seller_phone IS NOT NULL`);
+  return { bai, tins, nguoiCuaTaiKhoan: await docNguoiCuaTaiKhoan(c) };
+}
+
+/**
+ * Đầu vào kiểm ngược loại hình theo nhóm: bài S03 mới nhất mỗi post_id của kênh Zalo (cùng câu với loadStgPosts của transform; lọc bài
+ * thử nằm ở hàm thuần) và tin sống của từng bài để lát. Chữ bài chỉ dùng trong bộ nhớ.
+ */
+export async function docBaiNhom(c) {
+  const { rows: bai } = await c.query(
+    `SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, group_name, conversation_id, text
+       FROM stg_zalo_posts WHERE agent_id IS NULL OR agent_id <> 'apify-facebook' ORDER BY post_id, captured_at DESC`);
+  const { rows: tin } = await c.query(
+    `SELECT DISTINCT ON (pid) pid, offer_id FROM sale_offers, unnest(post_ids) pid WHERE source = 'S03' ORDER BY pid, offer_id`);
+  return { bai, tinCuaBai: new Map(tin.map((r) => [r.pid, r.offer_id])) };
 }
