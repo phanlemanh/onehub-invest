@@ -3519,7 +3519,7 @@
         "pipeline/sql",
         "app/src/app/ops/registry"
       ],
-      "ghi_chu": "Hạng T3: đổi đường dữ liệu lên cloud, chạm luật 5."
+      "ghi_chu": "Hạng T3: đổi đường dữ liệu lên cloud. Sửa 08/11 (PR #361): luật 5 và ADR-0016 §9 không còn giữ thông tin dự án chỉ-S08 ở máy thu, nên câu giao và bắt khi «0 giá trị chỉ có từ S08» hết căn cứ; viết lại ở Cổng Đáng của DN4 (bộ soát giữ phần tên nguồn thật tầng A)."
     },
     {
       "ma": "GC1",
@@ -4389,7 +4389,7 @@
         "pipeline/lib/danh-ba-vat-the.mjs",
         "pipeline/**"
       ],
-      "ghi_chu": "S08 chỉ nội bộ (luật 5): vật thể chỉ có từ S08 ở lại máy thu tới khi có tin trỏ vào (ADR-0016 §9). Dự án ngoài S08 lấy từ tin rao làm hàng sau."
+      "ghi_chu": "Sửa 08/11 (PR #361, Mạnh chốt «thông tin dự án công khai»): thông tin dự án của S08, kể cả giá CĐT và quỹ căn, không còn bị luật 5 giữ ở máy thu; tên nguồn thật vẫn tầng A. Dự án ngoài S08 lấy từ tin rao làm hàng sau."
     }
   ],
   "chan_troi": [
