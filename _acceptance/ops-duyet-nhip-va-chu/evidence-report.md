@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: cd0370c04bd939e1f0ccf334ae940454bebe5cc5
-human_signoff:
+human_signoff: Mạnh 2026-11-08
 ---
 
 # Evidence Report: ops-duyet-nhip-va-chu

@@ -5,7 +5,7 @@ slug: ops-duyet-nhip-va-chu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-ops-duyet-nhip-va-chu-design.md
 lo_trinh_ma: OD1
 approved_by: Mạnh
@@ -97,3 +97,9 @@ của báo cáo f2 đã Mạnh duyệt). Trục tự kê để người soát:
 
 - Không migration: `ops_audit.detail` là jsonb. Route decide chỉ thêm một trường tuỳ chọn `elapsed_ms` trong body.
 - Số OD1 là số trước của OD2 (`bat_khi` OD2: «Trung vị giây/thẻ giảm so số OD1 ở từng hạng mục»).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-2: Bản đồ trang `routes.md` chưa nhắc nhãn «Đang chờ ghép» và liên kết sang thẻ ghép ở hai dòng `/ops/deals`.
+  - Ngoài-3: Hàng duyệt hết thẻ chờ và 7 ngày không có lượt đo thì khung «Nhịp duyệt 7 ngày» chỉ có chữ trống, không có nút.
+  - Ngoài-6: Bài kiểm nút «Mở thẻ chờ cũ nhất» chỉ đo việc khung in lại số được truyền vào, chưa đo quan hệ với thẻ chờ tạo sớm nhất.
+  - Ngoài-7: Bài kiểm đồng hồ thẻ đọc lần gửi cuối mà không ràng nó với thẻ vừa bấm, có thể bỏ sót nút không gửi gì.
+  - Ngoài-8: Bài kiểm ẩn điểm Stage B trên DB chạy bản chép tay của đường nạp thẻ, không gọi bộ nạp thật của trang.
