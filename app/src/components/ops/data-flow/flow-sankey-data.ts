@@ -100,7 +100,8 @@ export function buildFlow(sources: SourceFlow[], roles: SourceRoles) {
     headers[top.id] = {
       title: "Gắn căn",
       value: known ? rate(unit, offers) : "—",
-      note: known && uniqueIdPending > 0 ? `${fmtInt(uniqueIdPending)} tin đủ định danh, chờ khớp danh bạ` : undefined,
+      // Ngắn để vừa lề phải của Sankey; câu đầy đủ nằm ở gợi ý nút «Chưa định vị».
+      note: known && uniqueIdPending > 0 ? `${fmtInt(uniqueIdPending)} chờ khớp` : undefined,
       focal: true,
       weak: known && offers > 0 && unit / offers < 0.8,
     }

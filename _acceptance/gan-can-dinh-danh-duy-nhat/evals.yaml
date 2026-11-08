@@ -71,7 +71,7 @@ evals:
     layer: ui-observed
     paths: [app/src/components/ops/data-flow/quality-grid.tsx, app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/flow-sankey-data.ts, app/src/components/ops/data-flow/flow-journey.tsx, app/src/components/ops/data-flow/stage-face.tsx, app/src/components/ops/data-flow/record-sheet.tsx]
     steps:
-      - "Bản chạy: dev server của worktree dãy N1 (cấu hình trong .claude/launch.json của worktree; cổng đọc từ preview_list), DB local đã làm tươi bằng 600_data_flow.sql của nhánh; đăng nhập tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json, không in); không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "Bản chạy: dev server của worktree dãy N1 ở http://localhost:3464 (next dev chạy từ worktree gan-can-ddn, DATABASE_URL = DB thử oneinvest_ggc đã làm tươi bằng 600_data_flow.sql của nhánh; công cụ xem trước của app chỉ chạy được từ checkout chính); đăng nhập tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json của worktree, không in); không có bản chạy thì FAIL với 'bản chạy không lên'"
       - "1280 px sáng: /ops/data-flow?window=all → ảnh cả Sankey evidence/E10-step1.png; ghi tên các nút cột cuối, tiêu đề cột cuối và chữ gợi ý của nút «Chưa định vị» (rê chuột)"
       - "1280 px sáng: cuộn tới lưới «Chất lượng từng chặng» → evidence/E10-step2.png; ghi thứ tự tiêu đề cột và ô ba cột của hàng S03, S06"
       - "1280 px tối: cùng trang → evidence/E10-step3.png"
