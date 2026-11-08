@@ -1,0 +1,79 @@
+schema_version: 1
+feature_slug: dung-danh-ba-may-thu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DBM-AC-1 bảng đích» của pipeline/lib/danh-ba-vat-the.test.mjs: ma trận viết trước {oneinvest_dbv_x (DB thử), oneinvest (máy thu), postgres (tên khác)} × {localhost, 127.0.0.1, [::1]} × {không cờ, --db-that}, số assert bằng số ô (3 tên × 3 máy × 2 cờ = 18); kiemDich trả ghi được cho DB thử ở cả hai cờ, cho tên khác chỉ khi dbThat, và trả lỗi có thông điệp chứa «--db-that» cho tên khác không cờ. Chiều đỏ ghim: bản chép kiemDich coi mọi tên trên máy này là DB thử thì ô (oneinvest, localhost, không cờ) đỏ với thông điệp «DBM-AC-1 ghi DB máy thu không cờ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1b
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-1 lệnh thật» chạy pipeline/danh-ba-vat-the.mjs bằng tiến trình con: (a) trên DB thử oneinvest_dbv_<pid> không cờ → in tong_ket, có khoá; (b) trên một DB thứ hai trên máy này tên KHÔNG khớp oneinvest_<việc> (tạo riêng, vd dbvm_<pid>, cùng fixture) không cờ → mã thoát 2, stderr chứa «--db-that», số dòng buildings/stacks/units/registry_aliases trước = sau; (c) cùng DB đó, --db-that mà thiếu --sao-luu (DB chưa có toà) → mã thoát 2, stderr chứa «--sao-luu», số dòng không đổi; (d) --db-that --sao-luu <tệp không có> và --sao-luu <tệp rỗng> → đều thoát 2, không ghi; (e) --db-that --sao-luu <tệp tạm không rỗng> → in tong_ket, khoa_moi > 0; (f) chạy lại --db-that KHÔNG --sao-luu trên DB đã có toà → in tong_ket, khoa_moi = 0. Chiều đỏ ghim: DBV_LENH (biến của phía test, chọn tệp lệnh để spawn) trỏ bản chép lệnh bỏ kiểm đích thì ca (b) đỏ với thông điệp «DBM-AC-1 ghi không cờ»; bản chép bỏ rào --sao-luu thì ca (c) đỏ với thông điệp «DBM-AC-1 lần đầu không sao lưu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DBM-AC-2 ngoài máy» của pipeline/lib/danh-ba-vat-the.test.mjs: ma trận viết trước, mỗi ô đọc máy chủ từ new pg.Client({connectionString}).connectionParameters THẬT (không connect) rồi qua kiemDich: {db.abcd.supabase.co, aws-0-ap-southeast-1.pooler.supabase.com, 10.0.0.5, may-khac.local, postgres://localhost/oneinvest_x?host=db.abcd.supabase.co, postgres:///oneinvest_x với PGHOST=db.abcd.supabase.co, URL thiếu tên DB, chuỗi không phải URL} × {không cờ, --db-that} (16 ô) → kiemDich trả lỗi ở mọi ô, thông điệp chứa «đích ngoài máy này» (sáu ca máy chủ) hoặc «URL không đọc được» (hai ca hỏng); đối chứng dương: postgres:///oneinvest_x với PGHOST=localhost và host là đường socket /tmp → ghi được (DB thử); số assert bằng số ô (18); không thông điệp nào chứa mật khẩu mẫu «matkhau-bi-mat» hay nguyên URL. Ca lệnh: tiến trình con pipeline/danh-ba-vat-the.mjs --db <URL tới db.abcd.supabase.co mang mật khẩu mẫu, dựng bằng nối chuỗi trong test> --db-that, và một lần chỉ qua biến DATABASE_URL, đều thoát 2 trong dưới 5 giây, stderr không chứa «matkhau-bi-mat». Ca đêm: buocVatTheDem nhận new pg.Client THẬT chưa nối tới db.abcd.supabase.co, query bị thay bằng hàm đếm → ném lỗi chứa «đích ngoài máy này», số câu đã gọi = 0. Chiều đỏ ghim: bản chép kiemDich đọc máy chủ bằng new URL(...).hostname thay vì connectionParameters thì ô ?host= đỏ với thông điệp «DBM-AC-2 kiểm khác máy pg nối»; bản chép để --db-that mở máy chủ ngoài thì ô (supabase, --db-that) đỏ với thông điệp «DBM-AC-2 cờ mở đích ngoài máy»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-3» trên DB thử với fixture tổng hợp hai khu của DB1: (a) --khu q-khu-mot,q-khu-sai → mã thoát 2, stderr chứa «q-khu-sai» và không chứa «q-khu-mot» như slug sai, ba bảng vật thể vẫn 0 dòng (khu đúng cũng không ghi); (b) thêm nút khu q-khu-trong (project, không dòng s08_project_links) rồi --khu q-khu-mot,q-khu-trong → thoát 0, tong_ket.khu_khong_s08 = [\"q-khu-trong\"], stderr có một dòng chứa «q-khu-trong», toà của q-khu-mot đúng bằng ca DBV-AC-3. Chiều đỏ ghim: DBV_LENH trỏ bản chép lệnh bỏ kiểm slug thì ca (a) đỏ với thông điệp «DBM-AC-3 slug sai mà xong»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/refresh-bait-gap.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-4» chạy pipeline/refresh-bait-gap.mjs THẬT bằng tiến trình con với DATABASE_URL trỏ DB thử: (a) DB thử dựng tới 081 (taoDbThu hetSo 81, trước 082) → thoát 0, stdout có đúng một dòng chứa «bỏ qua — DB chưa áp 082»; (b) DB thử đủ migration, có fixture S08 nhưng chưa chạy lệnh dựng → thoát 0, đúng một dòng chứa «bỏ qua — chưa dựng lần đầu», buildings/stacks/units = 0 dòng, registry_aliases kind ma_nguon = 0 dòng; (c) như (b) nhưng có sẵn hai bí danh ma_nguon (một nguồn danh mục, một nguồn khác) và 0 toà → thoát 0, đúng một dòng «bỏ qua — chưa dựng lần đầu», ba bảng 0 dòng, số dòng registry_aliases không đổi. Ca hàm: dung(c, {khuSlugs: []}) ném lỗi, không ghi. Chiều đỏ ghim: bản chép pipeline/danh-ba-vat-the.mjs đặt cạnh tệp thật, rào «chưa dựng lần đầu» đổi sang đếm bí danh, buocVatTheDem của bản chép gọi trực tiếp (không qua refresh-bait-gap) trên DB ca (c) → ghi toà, ca đỏ với thông điệp «DBM-AC-4 đêm tự dựng lần đầu»; bản chép để dung nhận [] rơi về KHU_MAC_DINH → đỏ với thông điệp «DBM-AC-4 đêm rơi khu mặc định»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/refresh-bait-gap.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-5»: DB thử fixture hai khu của DB1; lệnh tay --khu q-khu-hai (có toà gắn phân khu q-phan-khu) --tu-dien <từ điển tổng hợp có q3>; thêm một lần chụp S08 với một mã căn mới của q3 thuộc phân khu QPK (khuôn tách được) và một mã mới của q1 (khu một); chạy refresh-bait-gap.mjs thật hai lần. Lần một: tập khoá mới (đọc độc lập từ ba bảng, so trước/sau) = đúng các khoá của mã q3 mới, mỗi khoá toà mới (nếu có) có region_node_id = q-phan-khu; 0 khoá có region_node_id thuộc q-khu-mot; lần hai: tập khoá không đổi. Số phát biểu field_assertions field builder_name trước bước đêm = sau hai lượt đêm. Chiều đỏ ghim: bản chép bước đêm (gọi trực tiếp như E4) dùng KHU_MAC_DINH của fixture thay khu đã dựng thì ca đỏ với thông điệp «DBM-AC-5 đêm lan sang khu chưa dựng»; bản chép suy khu chỉ từ region_node_id (bỏ đường cha của phân khu) thì mã q3 mới không được đúc, ca đỏ với thông điệp «DBM-AC-5 phân khu không được giữ tươi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-6»: hai DB thử cùng fixture, cùng lệnh tay --khu q-khu-mot; một lần chụp S08 thêm mã mới của q1; DB ép hỏng có thêm trigger BEFORE INSERT trên units RAISE «ep-hong-dbm» (tạo trong ca, không sửa migration); chạy refresh-bait-gap.mjs THẬT trên cả hai DB. DB ép hỏng: mã thoát ≠ 0, stderr chứa «danh-ba-vat-the» và «ep-hong-dbm»; số dòng parties = số dòng parties của DB đối chứng sau lượt của nó; tập khoá buildings/stacks/units và số dòng registry_aliases trước = sau trên DB ép hỏng. Ca tĩnh: nguồn pipeline/refresh-bait-gap.mjs không chứa chuỗi «process.env.DBV_» và không import động theo biến môi trường. Chiều đỏ ghim: bản chép refresh-bait-gap.mjs đặt cạnh tệp thật, gọi bước vật thể trong cùng giao dịch với buocDem (truyền savepoint), chạy trên DB ép hỏng → số parties lệch đối chứng, ca đỏ với thông điệp «DBM-AC-6 lỗi vật thể lùi danh bạ Người»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-7»: tạo symlink tạm <tmp>/repo → gốc kho; chạy <tmp>/repo/pipeline/danh-ba-vat-the.mjs trên DB thử fixture → stdout có dòng tong_ket, khoa_moi > 0 và tập khoá đọc từ ba bảng bằng tập khoá của một DB thử đối chứng chạy bằng đường thật. Chiều đỏ ghim: bản chép lệnh so lối vào bằng chuỗi thô (process.argv[1] === fileURLToPath) đặt cạnh symlink thì ca đỏ với thông điệp «DBM-AC-7 lối vào câm qua symlink»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dbv_db
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-8»: hai DB thử cùng fixture, cùng lệnh dựng; demTheoKhu đếm bằng SQL trên buildings/stacks/units (không đọc tong_ket) và bằng bảng kỳ vọng viết trước theo khu của ca DBV-AC-3; soDem(a, b) = []; INSERT thêm một căn hợp lệ vào DB b → soDem trả đúng một dòng {khu: q-khu-mot, cap: can, may: n, ban: n+1}; thông điệp ghim «DBM-AC-8 lệch» khi ca đỏ. Hàm chọn nhánh (cùng hàm ca dữ liệu thật dùng) trên DB a đóng vai máy thu đã dựng → nhánh «so»; trên một DB thử chưa dựng → nhánh «chưa so». Chiều đỏ ghim: bản chép demTheoKhu đếm từ tong_ket thay vì ba bảng thì căn thêm tay không lộ, ca đỏ với thông điệp «DBM-AC-8 đếm không độc lập»; bản chép hàm chọn nhánh luôn trả «chưa so» thì ca DB a đỏ với thông điệp «DBM-AC-8 bỏ so khi máy thu đã dựng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dbv_that
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-that.itest.mjs]
+    expected: "exit 0; ca «DBM-AC-8 bản chép thật» (chép chỉ đọc từ DB máy thu, ngoài CI): máy thu chưa có toà nào → stdout có dòng «máy thu chưa dựng — chưa so» và không assert so; máy thu đã có toà → soDem(demTheoKhu(máy thu), demTheoKhu(bản chép)) = [] cho mọi khu đã dựng trên máy thu, lệch thì đỏ với thông điệp «DBM-AC-8 máy thu lệch bản chép: <khu>·<cấp>»; đầu ra không chứa mã S08 nào của bản chép (cùng soát với DBV-AC-7). Mọi ca DB1 cũ trong tệp vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: judgment
+    inputs: [pipeline/CLAUDE.md, docs/ops/runtime-map.md]
+    question: "Một người hay trợ lý mới chỉ đọc hai tệp này: có trả lời đúng được năm câu không — (1) lệnh dựng danh bạ vật thể là tệp nào; (2) cờ nào cho phép ghi DB máy thu; (3) có cách nào cho lệnh ghi lên một máy chủ ngoài máy này không (đúng: không); (4) bước đêm nằm ở đâu và nó dựng khu nào (đúng: trong refresh-bait-gap, chỉ khu đã dựng tay; chưa dựng lần đầu thì bỏ qua); (5) ở bản này ba bảng buildings/stacks/units có được đồng bộ lên cloud không (đúng: chưa — tài liệu phải ghi đó là phạm vi của vòng, không phải luật vĩnh viễn; viết thành luật «chỉ ở máy thu» thì FAIL)? Thiếu hay sai câu nào thì FAIL và nêu câu đó."
+    evidence_required: [run_id, verifier, verified_at, output]

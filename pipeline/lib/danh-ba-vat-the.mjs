@@ -3,6 +3,7 @@
 // Luật: khoá đúc một lần, tra bí danh trước (dựng lại không đúc thêm); căn chỉ khi có mã căn tách được; toà chỉ thấy
 // trên tin là ứng viên, không đúc (Hỏi-4); phường chỉ khi nút vùng có đúng một phường (Hỏi-5).
 import { randomBytes } from "node:crypto";
+import pg from "pg";
 import { tachMa } from "./ma-can-s08.mjs";
 
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -188,3 +189,94 @@ export function kiemFill(fill, { chonDong } = {}) {
   }
   return loi;
 }
+
+// ---------------- DB1b dung-danh-ba-may-thu: đích ghi, đếm độc lập, so bản chép ----------------
+
+const MAY_NAY = new Set(["localhost", "127.0.0.1", "::1"]);
+export const THONG_DIEP = Object.freeze({
+  ngoai: "đích ngoài máy này — lệnh dựng chỉ ghi DB trên máy này (không cờ nào mở)",
+  hong: "URL không đọc được — cần postgres://…/<tên DB>",
+  thieuCo: "đích không phải DB thử — khai --db-that nếu chủ ý ghi DB máy thu",
+});
+
+/**
+ * Tham số kết nối mà pg.Client THẬT sẽ dùng (chưa connect): máy chủ đọc từ connectionParameters, nên ?host= và PGHOST
+ * được tính như pg tính. URL không mở đầu postgres:// hay thiếu tên DB → null (pg tự điền tên người dùng làm tên DB).
+ * @param {string} url
+ * @returns {{ host: string, database: string } | null}
+ */
+export function thamSoTuUrl(url) {
+  if (typeof url !== "string" || !/^postgres(ql)?:\/\//i.test(url)) return null;
+  let ten;
+  try {
+    ten = decodeURIComponent(new URL(url).pathname.replace(/^\//, ""));
+  } catch {
+    return null;
+  }
+  if (!ten) return null;
+  try {
+    const p = new pg.Client({ connectionString: url }).connectionParameters;
+    return { host: String(p.host ?? ""), database: String(p.database ?? "") };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Đích ghi có được phép không. Máy này = localhost/127.0.0.1/::1 hoặc đường socket (mở đầu «/»); DB thử = máy này và tên
+ * `oneinvest_<việc>`. Đích ngoài máy luôn bị từ chối, kể cả dbThat. Thông điệp không mang URL hay mật khẩu.
+ * @param {{ host?: string, database?: string } | null} thamSo
+ * @param {{ dbThat?: boolean }} [opts]
+ * @returns {{ ok: true, loai: "thu" | "that" } | { ok: false, ly_do: string }}
+ */
+export function kiemDich(thamSo, { dbThat = false } = {}) {
+  if (!thamSo || !thamSo.database) return { ok: false, ly_do: THONG_DIEP.hong };
+  const host = String(thamSo.host ?? "").replace(/^\[|\]$/g, "");
+  if (!(MAY_NAY.has(host) || host.startsWith("/"))) return { ok: false, ly_do: THONG_DIEP.ngoai };
+  if (/^oneinvest_\w+$/.test(thamSo.database)) return { ok: true, loai: "thu" };
+  return dbThat ? { ok: true, loai: "that" } : { ok: false, ly_do: THONG_DIEP.thieuCo };
+}
+
+/** Khu của một toà: project của region_node_id, hoặc cha (project) của phân khu. */
+const SQL_KHU_CUA_TOA = `
+  SELECT b.building_key, COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug) AS khu
+    FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
+    LEFT JOIN asset_nodes p ON p.id = n.parent_id AND p.node_type = 'project'`;
+
+/**
+ * Đếm độc lập toà, trục, căn theo khu bằng SQL trên ba bảng (không đọc tổng kết bộ dựng).
+ * @param {import("pg").Client} c
+ * @returns {Promise<Map<string, { toa: number, truc: number, can: number }>>}
+ */
+export async function demTheoKhu(c) {
+  const { rows } = await c.query(`
+    WITH k AS (${SQL_KHU_CUA_TOA})
+    SELECT k.khu,
+           count(DISTINCT k.building_key)::int AS toa,
+           (SELECT count(*)::int FROM stacks s JOIN k k2 ON k2.building_key = s.building_key WHERE k2.khu = k.khu) AS truc,
+           (SELECT count(*)::int FROM units u JOIN k k3 ON k3.building_key = u.building_key WHERE k3.khu = k.khu) AS can
+      FROM k WHERE k.khu IS NOT NULL GROUP BY k.khu ORDER BY k.khu`);
+  return new Map(rows.map((r) => [r.khu, { toa: r.toa, truc: r.truc, can: r.can }]));
+}
+
+/** Khu đã dựng (có ít nhất một toà) — tập khu của bước đêm. */
+export async function khuDaDung(c) {
+  const { rows } = await c.query(`SELECT DISTINCT khu FROM (${SQL_KHU_CUA_TOA}) k WHERE khu IS NOT NULL ORDER BY 1`);
+  return rows.map((r) => r.khu);
+}
+
+/**
+ * So hai bảng đếm (máy thu · bản chép) trên mọi khu của máy thu; lệch trả từng (khu, cấp).
+ * @param {Map<string, {toa:number,truc:number,can:number}>} may @param {Map<string, {toa:number,truc:number,can:number}>} ban
+ */
+export function soDem(may, ban) {
+  const lech = [];
+  for (const [khu, a] of may) {
+    const b = ban.get(khu) ?? { toa: 0, truc: 0, can: 0 };
+    for (const cap of ["toa", "truc", "can"]) if (a[cap] !== b[cap]) lech.push({ khu, cap, may: a[cap], ban: b[cap] });
+  }
+  return lech;
+}
+
+/** Nhánh của phép so dữ liệu thật: máy thu đã có toà thì so, chưa thì «chưa so». */
+export const nhanSo = (demMay) => ([...demMay.values()].some((d) => d.toa > 0) ? "so" : "chua-so");
