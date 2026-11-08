@@ -1,9 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { InboxIcon, PlayIcon, TriangleAlertIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { toast } from "sonner"
 import { useTable, type ColumnDef, type PaginationState } from "@tanstack/react-table"
 
@@ -140,8 +140,10 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
       ganRef.current = false
     }
   }, [])
-  const router = useRouter()
-  const moQuaUrl = useCallback((id: number) => (moTheQuaUrl ? moTheQuaUrl(id) : router.push(`/ops/review?card=${id}`)), [moTheQuaUrl, router])
+  // Đọc router không bắt buộc (useRouter ném khi không có App Router — trang dựng tĩnh trong bộ thử theo vai): chỉ cần nó
+  // ở đường muộn «Mở thẻ» sau khi hàng duyệt đã gỡ, lúc ấy trang luôn chạy trong App Router.
+  const router = useContext(AppRouterContext)
+  const moQuaUrl = useCallback((id: number) => (moTheQuaUrl ? moTheQuaUrl(id) : router?.push(`/ops/review?card=${id}`)), [moTheQuaUrl, router])
   const moLai = useCallback((id: number) => (ganRef.current ? moThe(id) : moQuaUrl(id)), [moThe, moQuaUrl])
   const dong = () => {
     setOpenId(null)

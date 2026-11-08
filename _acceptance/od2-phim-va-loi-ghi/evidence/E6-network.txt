@@ -1,0 +1,3 @@
+Driver ego-browser khong co read_network_requests/console. Chi co ket qua fetch tab B:
+POST /api/v1/ops/review/166537/decide -> 200 {"ok":true,"status":"deferred"}
+(Luot thu truoc: 166534, 166536 cung 200.) Khong doc duoc loi console/network khac.

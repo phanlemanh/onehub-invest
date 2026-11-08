@@ -323,7 +323,7 @@ async function kiemLap(Q: Q) {
   // Ô '4': chưa thẻ nào có nút thứ tư — nhấn rồi lặp không được quyết nhầm nút khác.
   await moDau()
   await phim("4")
-  for (let i = 0; i < 3; i++) await phim("4", true)
+  for (let i = 0; i < 3; i++) if (await phim("4", true)) assert.fail("GIU PHIM QUYET NHIEU THE (phím 4: lần lặp bị nhận)")
   if (tin.some((x) => x.chu.startsWith("Đã ghi")) || theMo() !== 71) assert.fail("GIU PHIM QUYET NHIEU THE (phím 4)")
   n++
   // Phím đi thẻ lặp vẫn chạy như OD2.
@@ -344,6 +344,7 @@ test("OPL-AC-3 giữ phím số chỉ quyết một thẻ; giữ J/K/↓/↑ v�
 const DO_LAP: [string, (s: string) => string, RegExp][] = [
   ["bỏ chặn lặp", (s) => s.replace("          if (e.repeat) return\n", ""), /GIU PHIM QUYET NHIEU THE/],
   ["chặn lặp chỉ phím 1", (s) => s.replace("          if (e.repeat) return\n", "          if (e.repeat && e.key === \"1\") return\n"), /GIU PHIM QUYET NHIEU THE \(phím 2/],
+  ["chặn lặp chừa phím 4", (s) => s.replace("          if (e.repeat) return\n", "          if (e.repeat && e.key !== \"4\") return\n"), /GIU PHIM QUYET NHIEU THE \(phím 4/],
   ["chặn lặp cả phím đi thẻ", (s) => s.replace("      if (hopThoaiDe()) return\n", "      if (hopThoaiDe()) return\n      if (e.repeat) return\n"), /LAP DI THE BI CHAN/],
 ]
 for (const [ten, doi, mong] of DO_LAP) {
