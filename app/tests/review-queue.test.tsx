@@ -10,6 +10,14 @@ import { Fragment, isValidElement, Suspense, type ReactElement, type ReactNode }
 
 import type { ReviewMedia } from "../src/lib/ops/review-media";
 import { toReviewItem, type ReviewItem } from "../src/lib/ops/review-queue";
+/** OD1 · ĐC6: mọi lần quyết gửi thêm `elapsed_ms` (khoảng mở thẻ, số nguyên ≥ 0). Tách ra để phép so body cũ giữ nguyên nghĩa. */
+const tachElapsed = (b: unknown) => {
+  if (!b || typeof b !== "object" || !("status" in b)) return b;
+  const { elapsed_ms, ...rest } = b as Record<string, unknown>;
+  if (!(typeof elapsed_ms === "number" && Number.isInteger(elapsed_ms) && elapsed_ms >= 0)) throw new Error(`OD1: body quyết định thiếu elapsed_ms hợp lệ: ${JSON.stringify(b)}`);
+  return rest;
+};
+
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -42,7 +50,7 @@ type Sent = { url: string; body: unknown };
 const sent: Sent[] = [];
 let fetchReply: { ok: boolean; body: unknown } = { ok: true, body: { ok: true } };
 globalThis.fetch = (async (url: string, init?: RequestInit) => {
-  sent.push({ url, body: JSON.parse(String(init?.body ?? "null")) });
+  sent.push({ url, body: tachElapsed(JSON.parse(String(init?.body ?? "null"))) });
   const r = fetchReply;
   return { ok: r.ok, json: async () => r.body };
 }) as unknown as typeof fetch;
@@ -330,7 +338,8 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
   await click(byText(dialog()!, "button", "Cùng căn"), "nút «Cùng căn»");
   await rerender(await queue(ITEMS.map((i) => (i.id === 12 ? { ...i, status: "approved" } : i))));
   assert.equal(dialogs(), 1, "sheet phải giữ thẻ vừa quyết (không đóng/trắng)");
-  assert.ok(dialog()!.textContent?.includes("Đã duyệt"), "sheet phải hiện badge kết quả «Đã duyệt»");
+  // OD1 · ĐC1: nhãn trạng thái là nhãn đáp án đã bấm.
+  assert.ok(dialog()!.textContent?.includes("Cùng căn") && !dialog()!.textContent?.includes("Đã duyệt"), "sheet phải hiện badge kết quả «Cùng căn»");
   assert.equal([...dialog()!.querySelectorAll("button")].filter((b) => ["Cùng căn", "Khác căn", "Không chắc"].includes(b.textContent?.trim() ?? "")).length, 0, "thẻ đã quyết không còn nút quyết định");
   assert.ok(!rowIds().includes(12), "bảng mặc định không còn thẻ vừa quyết");
 

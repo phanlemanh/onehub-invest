@@ -1,0 +1,1 @@
+E11 network: n-a (driver) - ego-browser CLI khong co duong doc network/console; khong doc duoc failed requests. Origin dung: http://localhost:3463 (theo step 1; config dev_server.url ghi :3456).

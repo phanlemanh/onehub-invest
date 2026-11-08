@@ -189,7 +189,7 @@ test("TD-AC-2 bảng so: ma trận 10 trường × khớp/lệch/thiếu, 10 hà
     assert.equal(o?.textContent, "Chưa ghi căn cứ — đọc từ tin", `ô Trường của ${k}`)
   }
   const sai = await banChepTam<CanCuMod>("src/lib/ops/review-can-cu.ts", (s) =>
-    s.replace('if (trong(a) || trong(b)) return "thieu";', 'if (trong(a) && trong(b)) return "khop";\n  if (trong(a) || trong(b)) return "thieu";'),
+    s.replaceAll('if (trong(a) || trong(b)) return "thieu";', 'if (trong(a) && trong(b)) return "khop";\n  if (trong(a) || trong(b)) return "thieu";'),
   )
   await assert.rejects(kiemSo(sai), /TD-AC-2: giá thiếu cả hai bên phải là Thiếu/)
 })
@@ -980,7 +980,7 @@ test("TD-AC-9 vai viewer và nhánh cloud: 0 truy vấn toàn văn/căn cứ/ả
   const sai = await banChepTam<ContentMod>("src/components/ops/review-content.tsx", (s) =>
     s.replace(
       "  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ",
-      '  await loadReviewContext([{ id: 0, item_type: "agent_output", evidence: { offer_id: "td" } }]);\n  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ',
+      '  await (await import("@/lib/ops/review-context")).loadReviewContext([{ id: 0, item_type: "agent_output", evidence: { offer_id: "td" } }] as never);\n  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ',
     ),
   )
   await assert.rejects(kiemAc9(sai), /TD-AC-9: vai viewer chạy truy vấn toàn văn/)

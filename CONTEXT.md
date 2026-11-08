@@ -467,11 +467,11 @@ công hay lỗi; chi phí = token × đơn giá của model (model chạy local 
 - Slug URL: `ai-calls`
 _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 
-**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
-loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
-(gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
-gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu. Từ 06/11 (Mạnh chốt) lát `s03-theo-nhom` gắn theo cách
-«máy nháp, Mạnh feedback» (có neo, bỏ gắn hai người trong đợt); gắn mù cho tập test đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32).
+**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho 24 ô theo nhóm (ý định tin, loại
+tin, loại hình, dự án, toà, giá, diện tích, phòng, mô tả căn…). Từ 06/11 (Mạnh chốt) gắn theo cách «máy nháp, người feedback»:
+máy điền nháp, người giữ hay sửa từng ô; đo bằng tỉ lệ giữ/sửa nháp (DO1). Gắn mù và gắn hai người đã dừng; tập test gắn mù
+đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32, 35). Trang `/ops/labels` (PL7), chỉ ở máy thu. (Bản PL7 đầu: chín trường lõi,
+gắn mù, 20% tin hai người gắn — lát đời trước vẫn mở bằng `?lat=`.)
 - Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
 - Slug URL: `labels`
 _Avoid_: annotate, label UI, gán nhãn
@@ -573,10 +573,15 @@ _Avoid_: tên nguồn thật, mọi số của nguồn này
 - Code: `calibration (S02)` · RESO: —
 _Avoid_: calibration
 
-**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).
+**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent — LLM không ghi dữ liệu trực tiếp (luật 7). Ba loại thẻ có
+giao diện: Ghép căn (`entity_match`), Bổ sung tin (`agent_output` `enrich:`), Người (`data_quality` `nguoi:`, HD17); loại khác
+hiện mã nguyên văn. Mỗi thẻ thuộc một Hạng mục duyệt. Nhãn trạng thái sau khi quyết là nhãn đáp án đã bấm (Cùng căn, Khác căn,
+Đã áp, Đã gộp…). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
+- Tham số URL: `card`
+- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10). `/ops/review?card=<id>` mở thẳng sheet của thẻ `<id>`
+  (OD1), kể cả thẻ đã quyết.
 _Avoid_: Review Queue, hàng chờ
 
 **Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
@@ -586,6 +591,25 @@ _Avoid_: ghi chú, comment, note
 **Suy luận của AI** (trên thẻ ghép căn): Gợi ý cùng căn/khác căn và lời giải thích của bộ chấm LLM. Hiện tách khỏi căn cứ, không đổi thứ tự hay kiểu nút; không kèm điểm hay độ tự tin (Q9).
 - Code: `review_queue.ai_suggestion`, `ai_reasoning` · RESO: —
 _Avoid_: AI tự tin, điểm B, gợi ý mặc định
+
+**Hạng mục duyệt**: Câu hỏi người duyệt thật sự trả lời ở một thẻ, khác loại thẻ: Ghép căn, Gộp Người, Luật và AI khác nhau,
+Bổ sung tin, Đối chiếu ý định, Đối chiếu giá, Đối chiếu diện tích, Loại khác. Suy từ chính thẻ lúc quyết (báo cáo soát Ops
+07/11 §e1). «Bổ sung tin» còn gộp điền ô trống, ghi đè, trùng giá trị đang lưu tới khi thẻ hiện giá trị đang lưu (OD4).
+- Code: `reviewCategory` (`app/src/lib/ops/review-hang-muc.ts`) · `ops_audit.detail.category` (`unit_match`, `party_merge`,
+  `rule_vs_ai`, `fill`, `intent_check`, `price_check`, `area_check`, `other`) · RESO: —
+_Avoid_: loại thẻ (là `item_type`), nhóm thẻ
+
+**Nhịp duyệt**: Số giây người duyệt dành cho một thẻ, theo Hạng mục duyệt: giây ở thẻ (từ lúc thẻ mở tới lúc bấm đáp án) và
+giây giữa hai lượt quyết của cùng người. Báo trung vị 7 ngày trên `/ops/review`; lượt quá 30 phút không vào trung vị. Là số
+trước của OD2.
+- Code: `ops_audit.detail.seconds`, `since_prev_seconds`, `opened_at`, `decided_at` (route decide, body `elapsed_ms`) ·
+  `loadReviewPace` · RESO: —
+_Avoid_: tốc độ duyệt, năng suất (chưa nói đơn vị)
+
+**Đang chờ ghép**: Nhãn của một căn ở Căn giá tốt khi căn là Tin A hay Tin B của một thẻ Ghép căn còn chờ ở Hàng duyệt —
+người gọi điện biết căn có thể là một căn trùng. Kèm liên kết «Mở thẻ ghép #<id>». Chỉ ở máy thu.
+- Code: `loadPendingUnitMatches`, `DealChoGhep` · RESO: —
+_Avoid_: căn trùng (chưa quyết)
 
 ## Vận hành (cổng Ops)
 
@@ -769,7 +793,7 @@ _Avoid_: Rentalizer
 - Slug URL: —
 _Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
-**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này; chỉ admin thấy, không lên máy chủ. Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
+**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này: vai Vận hành trở lên thấy ảnh đã tải và ảnh máy chủ lấy hộ theo khoá, đường dẫn gốc chỉ Quản trị thấy. Ảnh thu nhỏ được lên máy chủ cho vai Vận hành trở lên (ADR-0007 sửa 26/10, ADR-0015). Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
 - Code: `media` (`transform-media.mjs`, `loadOfferMedia`), kiểm `media:local-file` · RESO: `Media` (DD 2.1)
 - Slug URL: —
 _Avoid_: media canonical (tên kỹ thuật, không dùng trên UI), ảnh khu vực
