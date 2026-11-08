@@ -1,0 +1,49 @@
+schema_version: 1
+feature_slug: od2-phim-va-loi-ghi
+# Ca máy ở app/tests/ops-duyet-phim-va-loi-ghi.test.tsx (tên ca mở đầu «OPL-AC-n»): ReviewQueue thật trong jsdom, fetch giả,
+# đồng hồ giả (setTimeout). Mỗi phép đo có chiều đỏ trên CÙNG fixture: bản chép tạm của tệp nguồn (tests/.opl-cu-*) đổi đúng
+# một chỗ, thông điệp ghim. AC-5 là bộ thử OD2 có sẵn, chạy trong cùng suite.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/hang-gui.tsx, app/src/components/ops/review/review-queue.tsx, app/tests/ops-duyet-phim-va-loi-ghi.test.tsx]
+    expected: "exit 0; ca 'OPL-AC-1': hạng mục fill 4 thẻ, Duyệt liền, bấm đáp án ở thẻ 51 và 52 (hai lệnh chờ); fetch giả trả 409 {error:'đã quyết'} cho #51, 200 cho #52; gỡ cây ReviewQueue → fetch đúng 2 lần, mỗi lần keepalive true; sau khi promise xong: có tin loai 'loi' chữ 'Không ghi được #51: đã quyết' nút 'Mở thẻ', KHÔNG có tin lỗi nào cho #52; bấm 'Mở thẻ' → hàm điều hướng (prop) nhận '/ops/review?card=51'. Lượt hai: fetch ném → tin 'Không ghi được #… : mất kết nối'. Lượt ba: pagehide thay gỡ, fetch 409 → tin lỗi cùng chữ. Sau gỡ và sau pagehide: vặn đồng hồ giả 6000 ms → số fetch không đổi (2 và 2), không thêm tin lỗi cho lệnh 200. Chiều đỏ: xả không huỷ hẹn giờ 5 giây → 'XA GUI HAI LAN'; xả bỏ kết quả như OD2 (gọi guiQuyet trần) → 'LOI XA BI NUOT'; 'Mở thẻ' sau khi gỡ gọi moThe thay điều hướng → 'MO THE SAU KHI GO CHET'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/hang-gui.tsx, app/src/components/ops/review/review-queue.tsx, app/tests/ops-duyet-phim-va-loi-ghi.test.tsx]
+    expected: "exit 0; ca 'OPL-AC-2' ma trận viết trước 3 tình trạng × 2 đường (số assert chữ = 6). Đường A (hết 5 giây, cây còn gắn): fetch giả treo (promise chưa xong) → hết 5 giây, bấm 'Hoàn tác' của tin 'Đã ghi #61' → tin '#61 đang gửi — không hoàn tác được'; fetch 200 → '#62 đã ghi — quá 5 giây, không hoàn tác được'; fetch 409 → '#63 chưa ghi được — thẻ vẫn chờ duyệt' kèm nút 'Mở thẻ'; cả ba: số lần fetch không tăng sau bấm, thẻ không trở lại hàng duyệt (vị trí 'k/N' không đổi). Đường B (bấm đáp án rồi gỡ ReviewQueue, lệnh xả keepalive): fetch treo / 200 / 409 → bấm 'Hoàn tác' của tin 'Đã ghi' còn lại → đúng ba chữ trên; ô 409 bấm 'Mở thẻ' → hàm điều hướng nhận '/ops/review?card=<id>'. Chỉ assert trên tin sinh ra SAU cú bấm 'Hoàn tác', so không phân biệt hoa thường: tin trả lời của ô treo và ô 409 không chứa 'đã ghi'. Chiều đỏ: tình trạng luôn trả 'da-ghi' → 'HOAN TAC BAO SAI DA GHI'; bảng tình trạng dọn khi gỡ → 'TINH TRANG MAT KHI GO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/use-phim-duyet.ts, app/tests/ops-duyet-phim-va-loi-ghi.test.tsx]
+    expected: "exit 0; ca 'OPL-AC-3' ma trận viết trước 8 phím (số assert = 8). Nhóm số '1','2','3','4' (thẻ fill có đủ nút 1–4 bật): với mỗi phím, mở thẻ đầu, keydown phím đó (repeat false) → tin 'Đã ghi #<thẻ đầu>' và thẻ kế hiện; tiếp 3 keydown cùng phím repeat true → không tin 'Đã ghi #<thẻ kế>', thẻ mở vẫn là thẻ kế, mỗi sự kiện lặp defaultPrevented false. Nhóm đi thẻ 'j','ArrowDown' (repeat true từ thẻ đầu) → sang thẻ sau; 'k','ArrowUp' (repeat true từ thẻ thứ hai) → về thẻ trước. Hết 5 giây mỗi ô nhóm số → fetch đúng 1 lần. Chiều đỏ: bỏ chặn lặp → 'GIU PHIM QUYET NHIEU THE'; chặn lặp chỉ phím '1' → 'GIU PHIM QUYET NHIEU THE' ở phím 2–4; chặn lặp cả phím đi thẻ → 'LAP DI THE BI CHAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/use-phim-duyet.ts, app/src/components/ops/review/review-queue.tsx, app/tests/ops-duyet-phim-va-loi-ghi.test.tsx]
+    expected: "exit 0; ca 'OPL-AC-4' ma trận viết trước 10 phím (1, 2, 3, 4, j, k, ArrowDown, ArrowUp, r, ? — số assert = số phím × số lớp) trên hai lớp đè: (a) hộp phóng ảnh thật của thẻ (bấm ô ảnh của ReviewPhotos trong sheet, Dialog mở); (b) một phần tử role=dialog không mang data-review-sheet gắn vào body → với mỗi phím: không tin 'Đã ghi', thẻ mở không đổi, không Dialog 'Phím tắt', defaultPrevented false; gỡ lớp đè → 'j' sang thẻ sau và '1' tạo tin 'Đã ghi' (đối chứng dương trên cùng fixture). Chiều đỏ: bỏ kiểm lớp đè → 'PHIM CHAY DUOI HOP THOAI'; coi sheet duyệt là lớp đè → 'SHEET TU CHAN PHIM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/tests/ops-duyet-hop-hang-muc.test.tsx]
+    expected: "exit 0; mọi ca 'OD2-AC-n' của app/tests/ops-duyet-hop-hang-muc.test.tsx xanh, gồm ca đột biến (chuỗi nguồn được thay còn khớp — assert 'đột biến … không đổi gì' không đỏ); route decide không đổi được canh bởi lưới t1-escape/T3 của pre-merge, không phải eval này. Chiều đỏ: ca OD2 tự mang (đột biến của chính nó)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-1
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:dev_server.start
+    paths: [app/src/components/ops/review/hang-gui.tsx, app/src/components/ops/review/review-queue.tsx]
+    expected: "Bản dev của worktree (DB thử, tài khoản ops thử) mở /ops/review ở tab A, chọn một hạng mục có thẻ chờ X, bấm 'Duyệt liền' rồi bấm một đáp án ở thẻ X (lệnh chờ 5 giây). Trong 5 giây: tab B (cùng phiên đăng nhập) quyết thẻ X qua route decide; tab A bấm sang một trang Ops khác trong vỏ Ops (chuyển route trong app). Frame tab A sau đó: toast 'Không ghi được #X: …' có nút 'Mở thẻ' hiện trên trang Ops mới; bấm 'Mở thẻ' → URL là /ops/review?card=X và sheet thẻ X mở. Ảnh theo phần tử (toast, sheet), không chụp thân thẻ, chữ bài, cột liên hệ hay thanh bên có email."
+    evidence_required: [run_id, verifier, verified_at, screenshot, observed]
