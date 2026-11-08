@@ -1,5 +1,5 @@
 diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6a1..82eb191d6 100644
+index 636cbe6..82eb191 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
 @@ -846,6 +846,10 @@ async function deliverZalouserReply(params: {
@@ -15,10 +15,10 @@ index 636cbe6a1..82eb191d6 100644
  ): Promise<ZalouserMonitorResult> {
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 000000000..b05df6a1c
+index 0000000..83bd490
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,366 @@
+@@ -0,0 +1,446 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -364,6 +364,86 @@ index 000000000..b05df6a1c
 +    expect(api.sendZaloTextMessage).not.toHaveBeenCalled();
 +  });
 +
++
++  // MỞ LẠI 0611-6 (7): mốc 60 giây — bật LƯỢT LỚN và ĐỔI ĐỒNG HỒ qua 60 giây
++  // thì lời KẾ được chạy (mốc trên đĩa sống qua "khởi động lại", không chặn vĩnh viễn).
++  it("mốc 60 giây: lượt lớn + đồng hồ qua 60 giây → lời kế được chạy", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    let t = Date.UTC(2026, 10, 8, 2 - 7, 0, 0); // 02:00 VN — trong khung
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { now: unknown }).now = () => new Date(t);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    const v1 = await chayVong(deps);
++    expect(v1.loi_goi).toBe(1);
++    expect(api.dem.getUserInfo).toBe(1);
++    // lượt lớn (bỏ chặn da-thu) + yêu cầu mới + đồng hồ +61 giây
++    await fs.ghiFile("/f/luot-lon.txt", "bat");
++    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["5", "6"], doi_chung: ["5", "6"] }));
++    t += 61_000;
++    const v2 = await chayVong(deps);
++    expect(v2.loi_goi).toBe(1);
++    expect(api.dem.getUserInfo).toBe(2);
++    // trong 60 giây (đồng hồ chưa tới) → 0 lời — mốc là đường chặn thật
++    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["7"], doi_chung: ["7"] }));
++    const v3 = await chayVong(deps);
++    expect(v3.loi_goi).toBe(0);
++    expect(api.dem.getUserInfo).toBe(2);
++  });
++
++  // MỞ LẠI 0611-6 (7) E2: ĐỦ loại lỗi máy chủ — mỗi lỗi dừng cả lượt với MÃ
++  // chặn đúng (bảng), không thử lại.
++  it.each([
++    ["http-401", "HTTP 401: unauthorized", "http-401 401"],
++    ["5xx máy chủ → loi-la kèm số", "HTTP 500: boom", "loi-la 500"],
++    ["giới hạn tần suất", "Too many requests — throttle", "rate-limit"],
++    ["lỗi lạ", "something odd happened", "loi-la"],
++    ["treo 15 giây (Error nội bộ)", "het-15s", "het-15s"],
++  ])("E2: %s → tệp chặn đúng mã, không thử lại", async (_ten, loiText, chanKyVong) => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    api.lanSai = () => {
++      throw new Error(loiText);
++    };
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    const v = await chayVong(deps);
++    expect(v.chan).toBe(chanKyVong.split(" ")[0]);
++    expect(await fs.docFile("/f/chan.txt")).toBe(chanKyVong);
++    // tệp chặn còn → mọi vòng sau 0 lời (không thử lại)
++    await chayVong(deps);
++    expect(api.dem.getUserInfo).toBe(1);
++  });
++
++  // MỞ LẠI 0611-6 (7) AC-4: bẫy Proxy đếm MỌI hàm của API ngoài getUserInfo —
++  // không cần biết trước tên hàm (hàm cấm mới thêm sau này cũng bị bắt).
++  it("AC-4 (Proxy): mọi hàm API ngoài getUserInfo đều 0 lần", async () => {
++    const fs = taoFsFake();
++    const apiGia = taoApiGia();
++    const daGoi = new Map<string, number>();
++    const apiProxy = new Proxy(gắnApiGia(apiGia) as Record<string, unknown>, {
++      get(muc, k) {
++        if (k === "getUserInfo") return muc[k];
++        const goc = muc[k];
++        if (typeof goc === "function") {
++          return (...ts: unknown[]) => {
++            daGoi.set(String(k), (daGoi.get(String(k)) ?? 0) + 1);
++            return (goc as (...a: unknown[]) => unknown)(...ts);
++          };
++        }
++        return goc;
++      },
++    });
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => apiProxy;
++    await ghiYeuCau(fs, ["1", "2", "3"], ["1", "2"]);
++    await chayVong(deps);
++    expect(apiGia.dem.getUserInfo).toBe(1);
++    expect([...daGoi.keys()]).toEqual([]); // KHÔNG hàm nào ngoài getUserInfo được gọi
++  });
++
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
 +    const { fs, api, deps } = chuanBi();
 +    await fs.ghiFile("/f/dem-2026-11-08.txt", "30"); // đã dùng hết 30 lời trong ngày VN 2026-11-08 (now giả = 08/11 02:30 VN)
@@ -387,7 +467,7 @@ index 000000000..b05df6a1c
 +});
 diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 000000000..a9f8ce008
+index 0000000..a9f8ce0
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
 @@ -0,0 +1,475 @@
