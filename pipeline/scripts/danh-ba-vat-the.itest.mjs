@@ -590,19 +590,36 @@ async function soatAC4c(chayDem) {
     const b0 = await demBang(d.c);
     const out = await chayDem(d);
     const b1 = await demBang(d.c);
-    if (Number(b1.v) !== 0) loi.push(Number(b1.v) > 0 && out.includes("roi") ? "DBM-AC-4 đêm rơi khu mặc định" : "DBM-AC-4 đêm tự dựng lần đầu");
+    if (Number(b1.v) !== 0) loi.push("DBM-AC-4 đêm tự dựng lần đầu");
     else if (b1.b !== b0.b) loi.push("DBM-AC-4 đêm đổi bí danh");
     else if (out.split("\n").filter((l) => l.includes("bỏ qua — chưa dựng lần đầu")).length !== 1) loi.push(`DBM-AC-4 thiếu dòng bỏ qua: ${out}`);
   } finally { await d.dong(); }
   return loi;
 }
 const demQuaRbg = async (d) => { const r = chayTep(RBG, [], { DATABASE_URL: d.url }); assert.equal(r.code, 0, `refresh-bait-gap: ${r.stderr}`); return r.stdout; };
-const demTrucTiep = (tep, nhan = "") => async (d) => {
+const demTrucTiep = (tep) => async (d) => {
   const { buocVatTheDem } = await import(tep);
   const dong = [];
   await buocVatTheDem(d.c, { log: (s) => dong.push(s) }).catch((e) => dong.push(String(e)));
-  return dong.join("\n") + nhan;
+  return dong.join("\n");
 };
+
+/** Bộ dựng nhận danh sách khu rỗng: phải ném lỗi gọi tên «danh sách khu rỗng» và KHÔNG ghi dòng nào (đếm trước/sau). */
+async function soatDungRong(tep) {
+  const loi = [];
+  const d = await dbCa("m4r");
+  try {
+    const { dung } = await import(tep);
+    const b0 = await demBang(d.c);
+    let nem = null;
+    try { await dung(d.c, { khuSlugs: [] }); } catch (e) { nem = e; }
+    const b1 = await demBang(d.c);
+    if (Number(b1.v) !== Number(b0.v) || b1.b !== b0.b) loi.push(`DBM-AC-4 đêm rơi khu mặc định: ghi ${Number(b1.v) - Number(b0.v)} dòng vật thể`);
+    else if (!nem) loi.push("DBM-AC-4 bộ dựng nhận danh sách khu rỗng mà không báo");
+    else if (!String(nem.message).includes("danh sách khu rỗng")) loi.push(`DBM-AC-4 thông điệp khu rỗng sai: ${nem.message}`);
+  } finally { await d.dong(); }
+  return loi;
+}
 
 test("DBM-AC-4 bước đêm: chưa áp 082 hay chưa có toà thì bỏ qua một dòng, không ghi; danh sách khu rỗng bị từ chối", async () => {
   // (a) DB trước 082.
@@ -621,20 +638,20 @@ test("DBM-AC-4 bước đêm: chưa áp 082 hay chưa có toà thì bỏ qua m�
     const v = await demBang(d.c);
     assert.equal(Number(v.v), 0, "DBM-AC-4 đêm tự dựng lần đầu");
     assert.equal((await d.c.query(`SELECT count(*)::int AS n FROM registry_aliases WHERE kind = 'ma_nguon'`)).rows[0].n, 0);
-    const { dung, LoiGoi } = await import(LENH);
-    await assert.rejects(dung(d.c, { khuSlugs: [] }), (e) => e instanceof LoiGoi);
   } finally { await d.dong(); }
+  // Ca hàm: danh sách khu rỗng bị từ chối, không ghi (đo bằng đếm dòng trước/sau).
+  assert.deepEqual(await soatDungRong(LENH), []);
   // (c) có bí danh ma_nguon, 0 toà — qua refresh-bait-gap thật.
   assert.deepEqual(await soatAC4c(demQuaRbg), []);
   // Chiều đỏ: rào đếm bí danh thay vì toà; dung nhận [] rơi về khu mặc định.
   const demBiDanh = banChep("dem-bi-danh", [["const khuSlugs = await khuDaDung(c);",
     "const khuSlugs = (await c.query(\"SELECT count(*)::int AS n FROM registry_aliases WHERE kind = 'ma_nguon'\")).rows[0].n ? [\"q-khu-mot\", \"q-khu-hai\"] : [];"]]);
   assert.ok((await soatAC4c(demTrucTiep(demBiDanh))).includes("DBM-AC-4 đêm tự dựng lần đầu"), "DBM-AC-4 thước không bắt được rào đếm bí danh");
+  // Bản chép chỉ đổi rào khu rỗng của bộ dựng (rào đêm giữ nguyên) — đo bằng số dòng bộ dựng ghi ra.
   const roiMacDinh = banChep("roi-mac-dinh", [
     ["if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi(\"danh sách khu rỗng — không dựng gì\");",
-      "if (!khuSlugs.length) khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"],
-    ["  if (khuSlugs.length === 0) {\n    log(", "  if (false) {\n    log("]]);
-  assert.ok((await soatAC4c(demTrucTiep(roiMacDinh, "\nroi"))).includes("DBM-AC-4 đêm rơi khu mặc định"), "DBM-AC-4 thước không bắt được rơi khu mặc định");
+      "if (!khuSlugs.length) khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"]]);
+  assert.ok((await soatDungRong(roiMacDinh)).some((l) => l.startsWith("DBM-AC-4 đêm rơi khu mặc định")), "DBM-AC-4 thước không bắt được rơi khu mặc định");
 });
 
 // ---------- DBM-AC-5 bước đêm giữ tươi khu đã dựng (kể cả phân khu) ----------
