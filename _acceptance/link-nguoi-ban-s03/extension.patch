@@ -15,7 +15,7 @@ index 636cbe6a1..82eb191d6 100644
  ): Promise<ZalouserMonitorResult> {
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 000000000..111a3a90c
+index 000000000..b05df6a1c
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
 @@ -0,0 +1,366 @@
@@ -167,7 +167,7 @@ index 000000000..111a3a90c
 +    expect(kq).toEqual([
 +      { ma: "111", loai: "co-username", username: "u111" },
 +      { ma: "222", loai: "khong-username", username: "" },
-+      { ma: "333", loai: "khong-username", username: "" },
++      { ma: "333", loai: "khong-ro", username: "" },
 +      { ma: "444", loai: "khong-tim-thay", username: "" },
 +    ]);
 +  });
@@ -227,7 +227,7 @@ index 000000000..111a3a90c
 +    expect(api.dem.getUserInfo).toBe(1);
 +    expect(api.voi[0]).toBe(TRAN.maMoiLoi); // đúng 20 mã trong lời
 +    expect(v1.dem["co-username"]).toBe(2);
-+    expect(v1.dem["khong-username"]).toBe(1);
++    expect(v1.dem["khong-ro"]).toBe(1);
 +    expect(v1.dem["khong-tim-thay"]).toBe(17);
 +    expect(await deps.tonTai("/f/da-thu.txt")).toBe(true);
 +    expect(await deps.tonTai("/f/yeu-cau.da-xu.json")).toBe(true);
