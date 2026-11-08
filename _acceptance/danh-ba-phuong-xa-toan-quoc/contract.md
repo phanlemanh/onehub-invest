@@ -83,13 +83,11 @@ Core: các ô trên. Later: S05 (chỉ HN/HCM), listing Airbnb theo tên, hiện
 
 ## Đường đo
 
-| Thước của ô | Số từ đâu | AC bảo đảm |
-|---|---|---|
-| Đủ 3.321 đơn vị gắn đúng tỉnh | đếm `areas` theo `admin_code`, thị trường | AC-2 |
-| 10.033 bí danh, 441 «cần chọn xã» | đếm `area_aliases`, bộ tra | AC-4 |
-| Tin có xã trước/sau theo tỉnh, gắn mới qua tên hiện hành và bí danh | `pipeline/scripts/nap-dvhc-do.mjs` | AC-9 |
-| Chạy lại không đổi | báo cáo lần hai của bộ nạp, băm nội dung | AC-5 |
-| 511 khu vực cũ giữ id | so tập id trước/sau | AC-3 |
+- Thước: đủ 3.321 đơn vị gắn đúng tỉnh · số từ: đếm `areas` theo `admin_code` và thị trường, so bảng rút từ danh bạ · bảo đảm bởi: AC-2
+- Thước: 10.033 bí danh, 441 xã cũ «cần chọn xã» · số từ: đếm `area_aliases` và bộ tra theo khoá · bảo đảm bởi: AC-4
+- Thước: tin có xã trước/sau theo tỉnh, tin gắn mới qua tên hiện hành và qua bí danh · số từ: `pipeline/scripts/nap-dvhc-do.mjs` trên bản chép DB máy thu · bảo đảm bởi: AC-9
+- Thước: chạy lại bộ nạp không đổi dòng nào · số từ: báo cáo lần hai của bộ nạp và băm nội dung · bảo đảm bởi: AC-5
+- Thước: 511 khu vực con cũ giữ nguyên id · số từ: so tập id trước/sau nạp · bảo đảm bởi: AC-3
 
 ## Out of scope
 
