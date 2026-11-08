@@ -5,9 +5,11 @@ slug: ops-duyet-hop-hang-muc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-08-ops-duyet-hop-hang-muc-design.md
 lo_trinh_ma: OD2
+approved_by: Mạnh
+approved_at: 2026-11-08
 ---
 
 # Acceptance Contract: ops-duyet-hop-hang-muc
