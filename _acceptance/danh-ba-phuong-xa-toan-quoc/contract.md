@@ -5,7 +5,7 @@ slug: danh-ba-phuong-xa-toan-quoc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-danh-ba-phuong-xa-toan-quoc-design.md
 approved_by: Mạnh
 approved_at: 2026-11-08T01:32:32Z
@@ -105,3 +105,6 @@ Core: các ô trên. Later: S05 (chỉ HN/HCM), listing Airbnb theo tên, hiện
   danh) trên toàn bộ tin stg, không chạy trọn transform + phân xử (S06 gần 2 giờ trên DB thử); bù lại có đối chứng code
   với `area_id` đang lưu. Tin S03 gộp nhiều bài không vào so sánh (bài nào thắng do bước gom quyết, ngoài hàm gán).
 - Gộp PR không kéo theo áp 084: code chạy được trên DB chưa áp (AC-10); áp 084 và chạy bộ nạp trên máy thu là lời riêng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: bộ khớp tên S03 khớp chuỗi con nên bài của nhóm khai một tỉnh mới có thể gắn nhầm xã có tên nằm trong từ khác; xem lại khi có nhóm khai tỉnh mới.
+  - Ngoài-2: sau khi thu ranh giới OSM cho 30 tỉnh, lần nạp danh bạ kế có thể dừng ở chỉ mục mã xã (không hỏng dữ liệu); sửa cùng lượt thu OSM.
