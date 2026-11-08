@@ -1,0 +1,1 @@
+network: ego-browser driver exposes no network/console reader; not collected
