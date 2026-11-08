@@ -5,7 +5,7 @@ slug: gan-can-dinh-danh-duy-nhat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-gan-can-dinh-danh-duy-nhat-design.md
 approved_by: Mạnh
 approved_at: 2026-11-08T16:08:54Z
@@ -88,3 +88,10 @@ Thước CE: bảng số đo DB chung 08/11 ở design doc §3 (mỗi nguồn c�
 ## Notes
 
 - Ba cột không lồng nhau (nhà phố gắn căn bằng số nhà không qua toà); Sankey chia theo mức sâu nhất để dòng bảo toàn.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-3: Ngăn chi tiết một tin còn câu cũ «Lên B2 cần gắn được tin về một căn» bên cạnh dòng «Mức nhận diện» mới, tới khi hàng thang-bac-moi-b0-b5 gộp.
+  - Ngoài-4: Mức nhận diện ở ngăn chi tiết tính bằng câu SQL riêng, không đọc hai bảng nối danh bạ của 600; khi có bộ gắn, ngăn tin có thể ghi mức khác lưới và Sankey.
+  - Ngoài-6: Cổng thiết kế E11 không quét flow-journey.tsx; tệp này chỉ được nhìn tay ở E10.
+  - Ngoài-7: Test ô Định vị, Gắn căn của lưới chỉ kiểm chữ có mặt, chưa kiểm số và phần trăm khớp nhau.
+  - Ngoài-8: Test gợi ý nút «Chưa định vị» chỉ kiểm hai số có mặt, chưa kiểm số nào đi với nhãn nào.
+  - Ngoài-9: Ca «tin đã nghỉ» ở test AC-3 là dòng dựng tay, không đi qua bước đánh dấu tin nghỉ thật của pipeline.

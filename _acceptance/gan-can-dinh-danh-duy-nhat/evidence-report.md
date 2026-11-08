@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 35d19c03ad0fe0e53174690fb535e4e776801116
-human_signoff:
+human_signoff: Mạnh 2026-11-09
 ---
 
 # Evidence Report: gan-can-dinh-danh-duy-nhat
@@ -115,7 +115,7 @@ human_signoff:
 - eval: E10
   run_id: minted-gan-can-dinh-danh-duy-nhat-E10-r1
   exit_code: 0
-  verifier: ui-check:E10
+  verifier: config:executors.design.ui_check   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3464); bản tổng hợp ghi nhãn ui-check:E10 không phải khoá config — sửa nhãn theo tiền lệ của kho
   verified_at: 2026-11-08T16:50:48Z
   carried_from_round: 1
   # carry-forward tu round 1 — delta khong cham paths cua eval

@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>157 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>158 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>104 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -41,10 +41,6 @@ flowchart TD
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- «Gắn căn» nghĩa là nhận diện duy nhất khớp danh bạ — FRAMING §3.4 viết lại theo thang Mạnh duyệt 08/11; CONTEXT.md có Gắn căn, Định vị, Gom cụm; /ops/data-flow thay cột Gắn căn bằng ba cột Gom cụm · Định vị · Gắn căn trên Tin rao, chữ trên tin chỉ là «chờ khớp», Sankey chia theo mức sâu nhất, chú thích nhánh rơi nói lý do thật (`gan-can-dinh-danh-duy-nhat`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -209,6 +205,7 @@ flowchart TD
 - Enrich danh bạ Người S03 — số liên lạc theo tài khoản từ tin có số và bài của chính người gửi; tin không số lấy số qua người đăng, hiện qua «Xem số» kèm nhãn chưa xác minh (cơ chế S06); chừa chỗ liên lạc hồ sơ kênh S03 (`enrich-nguoi-s03`)
 - Enrichment qua đề xuất — giá trị LLM không ghi thẳng sale_offers/properties (`enrich-qua-de-xuat`)
 - eval-classify chấm bộ đọc trên chữ tin ghép mà người gắn đã đọc, bài ảnh không có tin chữ không chấm (`eval-classify-theo-chu-ref`)
+- «Gắn căn» nghĩa là nhận diện duy nhất khớp danh bạ — FRAMING §3.4 viết lại theo thang Mạnh duyệt 08/11; CONTEXT.md có Gắn căn, Định vị, Gom cụm; /ops/data-flow thay cột Gắn căn bằng ba cột Gom cụm · Định vị · Gắn căn trên Tin rao, chữ trên tin chỉ là «chờ khớp», Sankey chia theo mức sâu nhất, chú thích nhánh rơi nói lý do thật (`gan-can-dinh-danh-duy-nhat`)
 - Thẻ gắn nhãn hiện tin chữ cùng cả cụm ảnh đã ghép bằng luật PL28, ghi rõ là ghép suy ra, vẫn gắn mù (`ghep-anh-tren-the-gan-nhan`)
 - Người vận hành đọc mọi mốc giờ trên cổng Ops theo giờ Việt Nam có ghi múi, ngày gom theo giờ Việt Nam, và nguồn quá hạn hiện đúng mức trễ thay vì tuổi bằng SLO (`gio-ops-gio-vn`)
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
