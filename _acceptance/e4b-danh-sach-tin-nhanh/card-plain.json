@@ -1,0 +1,33 @@
+{
+  "feature_plain": "Danh sách tin rao bán và cho thuê trên cổng Invest mở nhanh hơn rõ rệt (trang đầu TP.HCM từ 700–1800 ms xuống khoảng 300–550 ms khi máy bận), cùng tin, cùng thứ tự, cùng nhãn «tài khoản nhiều tên» như trước.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ mở trang đầu tin bán TP.HCM dưới 1 giây ở cả bốn kiểu sắp, đo trên dữ liệu thật của máy thu."},
+    {"id": "AC-2", "p": "Sẽ giữ toàn bộ bộ kiểm của app xanh, kể cả phép đo tốc độ khi tám nhóm kiểm chạy cùng lúc."},
+    {"id": "AC-3", "p": "Sẽ có biên an toàn: mỗi kiểu sắp dưới 700 ms, cả khi chạy riêng lẫn khi máy đang bận chạy bộ kiểm."},
+    {"id": "AC-4", "p": "Sẽ trả đúng cùng tin, cùng thứ tự, cùng nhãn nhiều tên, cùng tổng số như bản cũ ở 20 cách xem (bốn kiểu sắp × năm đường xem), so trên dữ liệu thật với chính mã của bản cũ."},
+    {"id": "AC-5", "p": "Sẽ vẫn gắn nhãn «tài khoản nhiều tên» theo mọi tin của tài khoản, kể cả tin nằm ở trang khác hay phường khác."},
+    {"id": "AC-6", "p": "Sẽ báo đúng tổng số tin và số tin có số điện thoại cả khi người dùng lật quá trang cuối."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG nới trần 1 giây của phép đo cũ: khối đo phải giống hệt bản trước vòng từng ký tự."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không thêm chỉ mục mới cho cơ sở dữ liệu ở vòng này: muốn dưới 300 ms thì cần Mạnh áp lên máy thu, làm thành việc riêng."},
+    {"id": "OOS-2", "p": "Trang chi tiết một tin chưa được tăng tốc theo cùng cách; để hồ sơ riêng."},
+    {"id": "OOS-3", "p": "Không dọn bảng phình trên máy thu (286 MB so với 120 MB bản gọn); đó là việc vận hành."},
+    {"id": "OOS-4", "p": "Không đổi tổng số tin sang số ước lượng; tổng vẫn là số đếm chính xác."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Tốc độ trên dữ liệu thật ở bốn kiểu sắp: AC-1 (dưới 1 giây khi chạy riêng), AC-3 (biên an toàn); khi máy bận: AC-2, AC-3."},
+    {"i": 1, "p": "Kết quả không đổi: AC-4 so 20 cách xem trên dữ liệu thật; AC-5 (nhãn nhiều tên) và AC-6 (tổng số, lật quá trang cuối) trên dữ liệu thử có đáp án."},
+    {"i": 2, "p": "Biên an toàn rộng bao nhiêu là câu hỏi cho Mạnh (Hỏi-1); chưa có thước nào chứng con số này là đủ."},
+    {"i": 3, "p": "Lời dặn «không nới trần» của người giao: AC-7 so khối đo với bản trước vòng."},
+    {"i": 4, "p": "Trang chi tiết tin dùng chung luật đếm tên và không đổi: kiểm trong bộ kiểm app (AC-2)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Độ rộng biên an toàn là khẩu vị rủi ro, máy không được tự đặt; đã chuyển thành Hỏi-1, giám sát trả tạm 700 ms, Mạnh chốt ở cổng này."},
+    {"i": 1, "p": "Biên lúc đầu chỉ đo khi chạy riêng, không đo lúc máy bận — đúng lúc phép đo cũ từng đỏ; đã sửa để đo cả hai."},
+    {"i": 2, "p": "Ca «không nới trần» lúc đầu chỉ dò chữ trong chính tệp kiểm, tự khớp với mình; đã sửa thành so với bản trước vòng."},
+    {"i": 3, "p": "Đáp án «bản cũ» lúc đầu là câu chép tay và thiếu đường xem không chọn thành phố; đã đổi sang nạp chính mã cũ và thêm đường đó."},
+    {"i": 4, "p": "Một ca trang rỗng viết sai (thực ra còn một tin); đã tách thành trang cuối một tin và trang rỗng."}
+  ]
+}
