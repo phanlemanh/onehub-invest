@@ -5,7 +5,7 @@ slug: doc-gop-hang-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script, db]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-07T23:35:01Z
 approved_by:
@@ -101,3 +101,15 @@ idempotent, chạy lại an toàn, catchup ngày lỡ).
   `khuTrung`; bài kia không có nhãn.
 - Mã ghi `usd = 0` cho lời gọi ném lỗi (không đọc được tiền); Gateway có tính tiền lời gọi hỏng hay không chưa đo.
 - Bài thu muộn hơn hai ngày không được đọc (bước đêm chỉ vớt hôm kia).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: Số tiền đã chi trong ngày có thể tính lệch: đếm dư khiến việc đọc bài dừng sớm hơn cần, hoặc đếm hụt khi bước kiểm mẫu chạy ngay sau đó, nên trần 20 USD không chính xác tuyệt đối.
+  - Ngoài-2: Người đọc mã sau này có thể tưởng hệ thống chưa có đường đọc toàn bộ bài S03 và tưởng chạy thử vẫn cần khoá, dẫn tới hiểu sai ranh giới an toàn.
+  - Ngoài-3: Bước đêm mới có gọi model trả tiền chưa có trên các bản đồ vận hành, nên người trực có thể không biết nó tồn tại khi tra sự cố hay chi phí.
+  - Ngoài-4: Nếu sau này luật chọn bài S03 ở nơi khác đổi, phạm vi đọc hằng ngày có thể lặng lẽ lệch, đọc thiếu hoặc thừa bài mà không có cảnh báo.
+  - Ngoài-5: Nếu việc tính ngày hôm qua bị lỗi thì bước đêm dừng mà không in dòng báo hỏng quen thuộc, nên người trực khó thấy đêm đó không đọc bài nào.
+  - Ngoài-6: Trên máy chạy lịch đêm bằng bash cũ của macOS, nếu thiếu tệp cấu hình thì bước đọc bài chết với mã lạ thay vì báo thiếu khoá rõ ràng.
+  - Ngoài-7: Khi cơ sở dữ liệu không lên, đêm đó báo giống như model hỏng hết, nên người trực dễ tìm sai chỗ khi xử lý.
+  - Ngoài-8: Chưa có phép kiểm nào chứng minh mã thoát khi cả hai ngày cùng hỏng là mã của ngày đầu, nên một thay đổi sai sau này có thể lọt mà không bị phát hiện.
+  - Ngoài-9: Chưa có phép kiểm nào chứng minh tiền do lượt đọc thật ghi ra được tính đúng vào trần của ngày, nên nếu ghi sai thì trần có thể không bao giờ chạm mà không ai biết.
+  - Ngoài-10: Phép kiểm trần 7 USD có thể vẫn xanh dù bước đêm không gọi lần nào, nên chưa chắc đã chứng minh trần được truyền cho cả hai ngày.
+  - Ngoài-11: Phép kiểm từ chối bảng chọn model sai chưa chứng minh được lý do từ chối, nên một lỗi đổi cách báo có thể lọt qua mà không ai biết.

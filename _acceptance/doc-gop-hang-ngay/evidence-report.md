@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d85c71ad42547afde7fc2cfa09e6cd76e34791b7
-human_signoff:
+human_signoff: Mạnh 2026-11-08
 ---
 
 # Evidence Report: doc-gop-hang-ngay
