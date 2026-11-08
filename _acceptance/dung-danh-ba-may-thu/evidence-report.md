@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 36c331252390dc9c2c6b73f5d694f4ca9b5d848b
+verified_commit: 721f21074ebd25aa2a1b947b1a76bfd74c1f8adc
 human_signoff: Mạnh 2026-11-08
 ---
 
@@ -190,3 +190,7 @@ none — every multi-run eval is uniform
 Round 1: E1, E2, E8b chạy lần đầu và xanh (carry-forward về sau).
 Round 2: hội đồng E9 chấm ba lăng kính, đều PASS (carried về sau).
 Round 4: E1b, E3-E8 và sáu lệnh suite chạy lại trên commit 36c33125, tất cả xanh.
+
+### Re-pin lần 1 — 2026-11-08, do hoá cũ do chính commit chữ ký và gộp main
+run_id: repin-20261108T132929Z-64630
+sha: 721f21074ebd25aa2a1b947b1a76bfd74c1f8adc · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths) · AC không có chốt máy: AC-9
