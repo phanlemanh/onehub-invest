@@ -1,0 +1,20 @@
+{
+  "nguon": "onehub-quy-hang packages/core/src/address/du-lieu (xa.json, xa-cu.json, tinh-cu.json) và bảng tinh của danh-muc.ts (tinh.json)",
+  "commit": "fbdad5ad519a5c154a0385f0c8d7f81ab4a59454",
+  "ngay_chep": "2026-11-08",
+  "van_ban": {
+    "tinh": "Quyết định 19/2025/QĐ-TTg, Phụ lục I — đọc qua danhmuchanhchinh.nso.gov.vn ngày 2026-11-06",
+    "xa": "Quyết định 19/2025/QĐ-TTg, Phụ lục II, cập nhật tới ngày tham chiếu 2026-11-06",
+    "xa_cu": "Bảng chuyển đổi đơn vị hành chính mới – cũ của Cục Thống kê (sửa lần cuối 23/10/2025), ngày tham chiếu 2025-07-01"
+  },
+  "tep_goc": {
+    "danh-muc-xa-06-11-2026.xml": "0ff480b1febabf7d3ea2e2dede4af923fc79427a1c967043d541ce0dc4925013",
+    "bang-chuyen-doi-moi-cu.xlsx": "213966723785859dedd7c88965d6f12f8c3c508c91796e003804cf60a1054fc2"
+  },
+  "sha256": {
+    "xa.json": "ca095540851d20dfc794cdc171e42db93ec93601f401118ab665cb5c88be605a",
+    "xa-cu.json": "41017f5f832e8d62d3019e8f29a63769c2abfe871efa82475ec8ada03bb35796",
+    "tinh-cu.json": "6af85e3cda34df710ff069c0b3599f3bd9170878d3ad8dc3bf72fa16ab6e4275",
+    "tinh.json": "46c3e6a66525112faea6bf50da7852250bcde21b300950c8469fd418a23b60f1"
+  }
+}
