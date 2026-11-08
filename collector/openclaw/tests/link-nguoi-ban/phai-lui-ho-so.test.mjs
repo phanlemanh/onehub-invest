@@ -42,33 +42,25 @@ test("đọc dòng đóng listener từ gateway.log +07:00 đúng giờ", () => 
   assert.equal(ds[1].atMs, Date.parse("2026-11-08T03:12:00+07:00"));
 });
 
-// MỞ LẠI 0611-6 (3) E2-phu: listener đóng 10 giây SAU lời 1 → chan listener-dong-sau-goi; handler vẫn nhận tin
-test("E2-phu: listener đóng 10s sau lời 1 → cảnh báo listener-dong-sau-goi, tin vẫn tới handler", () => {
+// MỞ LẠI 0611-6 (2): ca listener đóng 10 giây SAU lời 1 — gọi HÀM THẬT
+// docDongDongListener với dòng log đúng khuôn gateway.log (+07:00) rồi phán
+// bằng phanLuiHoSo (bỏ regex viết tay trên log); phần 401/5xx/429/het-15s là
+// kiểm vitest trong .patch (điểm 7), không nhân bản ở đây.
+test("E2-phu: listener đóng 10s sau lời 1 — docDongDongListener thật bắt được, phanLuiHoSo phán dung-goi-Manh", () => {
+  const moc = Date.parse("2026-11-08T03:00:00+07:00");
   const log = [
-    "2026-11-08T03:00:00.000+07:00 [z] lời getUserInfo 1 gửi",
-    "2026-11-08T03:00:10.000+07:00 [z] listener closed (3003)",
-    "2026-11-08T03:00:12.000+07:00 [z] starting kênh-S03 provider",
-    "2026-11-08T03:00:20.000+07:00 post 202 ok",
+    "2026-11-08 03:00:00 info [seller-lookup] lời getUserInfo 1 gửi", // dòng lời — không phải dòng đóng
+    "2026-11-08 03:00:10 warn listener closed (3003)", // khuôn gateway.log: đóng 10s sau lời
+    "2026-11-08 03:00:12 info starting kênh-S03 provider", // tự nối lại
+    "2026-11-08 03:00:20 info post 202 ok", // handler vẫn nhận tin
+    "gã dòng không thời gian",
   ].join("\n");
-  // luật: đóng trong 10s SAU lời gọi → cảnh báo riêng (không phải chặn nguồn)
-  assert.ok(/listener closed/.test(log), "phát hiện đóng sau lời 1");
-  assert.ok(/starting .*provider/.test(log), "tự nối lại");
-  assert.ok(/post 202/.test(log), "handler vẫn nhận tin");
-});
-
-// E2-phu tiếp: 401 / lỗi máy chủ / rate-limit / lỗi lạ / promise treo 15s → dừng không thử lại
-test("E2-phu: 401/lỗi-máy-chủ/rate-limit/lỗi-lạ/promise-treo-15s đều dừng (không thử lại)", () => {
-  const maChan = (err) => {
-    if (/HTTP 401/.test(err)) return "http-401";
-    if (/HTTP 5\d\d/.test(err)) return "http-5xx";
-    if (/429|rate.?limit/i.test(err)) return "http-429";
-    if (/het-15s/.test(err)) return "het-15s";
-    return /lỗi lạ/.test(err) ? "loi-la" : null;
-  };
-  assert.equal(maChan("HTTP 401: xxx"), "http-401");
-  assert.equal(maChan("HTTP 500: boom"), "http-5xx");
-  assert.equal(maChan("HTTP 429: rate limit"), "http-429");
-  assert.equal(maChan("het-15s"), "het-15s");
-  assert.equal(maChan("lỗi lạ gì đó"), "loi-la");
-  assert.equal(maChan("không rõ"), null);
+  const ds = docDongDongListener(log);
+  assert.equal(ds.length, 1, "bắt đúng 1 lần đóng listener (bỏ dòng lời + dòng không khuôn)");
+  assert.equal(ds[0].atMs, Date.parse("2026-11-08T03:00:10+07:00"));
+  const kq = phanLuiHoSo(moc, ds, moc + 60 * 60_000);
+  assert.equal(kq.phan, "dung-goi-Manh", "đóng 10s sau lời → phán thật ra dung-goi-Manh");
+  assert.match(kq.vi, /0′ sau lời/);
+  // tin vẫn chảy sau khi tự nối lại (bằng chứng trong cùng log)
+  assert.ok(/starting .*provider/.test(log) && /post 202/.test(log), "tự nối lại + handler vẫn nhận tin");
 });

@@ -1,13 +1,16 @@
 import test from "node:test"; import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
-import { gzipSync } from "node:zlib";
-import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import { SUPPORTED_SCHEMA_VERSIONS as S01_V } from "../import-airbnb.mjs";
 import { SUPPORTED_SCHEMA_VERSIONS as S06_V, readSnapshot, importDir } from "../import-chotot.mjs";
 import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
+// 0611-6 U1 (1): fixture dựng bằng SnapshotWriter THẬT của collector — manifest
+// sinh đúng chuẩn bộ nạp (source "chotot-ads"); bản viết tay nguồn "S06" khiến
+// readSnapshot process.exit(0) ngay tại nhánh ALLOWLIST (import-chotot dòng
+// bỏ-qua) → test runner tắt sạch, mọi assert không chạy.
+const { SnapshotWriter } = await import(join("..", "..", "collector", "dist", "core", "storage.js"));
 
 // claudedp-0211-1 (hợp đồng người bán): DATA-CONTRACT v5 thêm RawItem.seller
 // (tùy chọn) — không đổi hình dạng cũ. CẢ HAI importer phải chấp nhận v4 LẪN v5
@@ -34,27 +37,25 @@ const PAYLOAD_V5 = { list_id: 999888777, region_v2: "808", region_name: "hanoi",
   category: 1000, type: "s", account_id: 777001, account_name: "Môi giới A",
   full_name: "Môi giới A", seller_info: { live_ads: 3 } };
 
-function dirSnapshot(items, { schemaVersion = 5, finishedAt = "2026-11-02T08:05:00Z", hienSo = 0 } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), "ct-v5-"));
-  const gz = gzipSync(Buffer.from(JSON.stringify(items)));
-  const sha = createHash("sha256").update(gz).digest("hex");
-  writeFileSync(join(dir, "items-0001.json.gz"), gz);
-  writeFileSync(join(dir, "manifest.json"), JSON.stringify({
-    schemaVersion, snapshotId: `hanoi__chotot-ads__${finishedAt.replace(/[-:]/g, "").slice(0, 17)}`,
-    city: "hanoi", source: "S06",
-    startedAt: "2026-11-02T08:00:00Z", finishedAt,
-    counts: { items: items.length, failed: 0 },
-    coverage: { discovered: items.length, captured: items.length, failed: 0, methods: hienSo ? { hienSo } : { gatewayApi: items.length } },
-    files: [{ name: "items-0001.json.gz", sha256: sha, bytes: gz.length }],
-  }));
-  return dir;
+// U1(1): SnapshotWriter THẬT sinh dir snapshot đúng chuẩn (manifest đủ trường,
+// source "chotot-ads", items lọc qua được nhánh ALLOWLIST của readSnapshot).
+// finishedAt theo đồng hồ thật của writer — các test so TRƯỚC/SAU thay ngày cứng.
+async function dirSnapshot(items, { schemaVersion = 5, hienSo = 0 } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "ct-v5-"));
+  const w = new SnapshotWriter(root, "hanoi", "chotot-ads", { schemaVersion });
+  await w.write(items.map((it) => ({ ...it, source: "chotot-ads" })));
+  await w.finalize({
+    discovered: items.length, captured: items.length, failed: 0,
+    methods: hienSo ? { hienSo } : { gatewayApi: items.length },
+  });
+  return join(root, "hanoi", w.snapshotId);
 }
 
-// Đọc snapshot v5 THẬT từ dir tạm (verify sha256 + gunzip + lọc nguồn) — không
-// đụng DB: chứng minh đường đọc của importer nhận item có seller.
+// Đọc snapshot v5 THẬT từ dir SnapshotWriter (verify sha256 + gunzip + lọc
+// nguồn) — không đụng DB: chứng minh đường đọc của importer nhận item có seller.
 test("readSnapshot: manifest v5 + item có seller đọc qua (giữ seller trong payload)", async () => {
-  const dir = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  const dir = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T08:00:00Z",
     payload: PAYLOAD_V5, seller: SELLER_V5,
   }]);
@@ -68,13 +69,16 @@ test("readSnapshot: manifest v5 + item có seller đọc qua (giữ seller trong
   }
 });
 
-// link-nguoi-ban-s03: v6/v7 ĐÃ khai — đổi ca: v8 chưa khai bị từ chối rõ ràng
+// link-nguoi-ban-s03: v6/v7 ĐÃ khai — đổi ca: v8 chưa khai bị từ chối rõ ràng.
+// U1(1): fixture bằng SnapshotWriter (manifest ĐỦ trường) rồi chỉ đổi
+// schemaVersion=8 → GHIM ĐÚNG thông điệp từ chối, không phụ thuộc nhánh khác.
 test("readSnapshot: v8 chưa khai bị từ chối rõ ràng", async () => {
   assert.ok(S06_V.includes(6) && S06_V.includes(7), "v6/v7 phải nằm trong SUPPORTED");
-  const dir = mkdtempSync(join(tmpdir(), "ct-v8-"));
+  const dir = await dirSnapshot([{
+    sourceId: "1", kind: "listing", fetchedAt: "2026-11-02T08:00:00Z", payload: PAYLOAD_V5,
+  }], { schemaVersion: 8 });
   try {
-    writeFileSync(join(dir, "manifest.json"), JSON.stringify({ schemaVersion: 8, source: "S06" }));
-    await assert.rejects(() => readSnapshot(dir), /manifest thiếu finishedAt|schemaVersion 8 chưa hỗ trợ/);
+    await assert.rejects(() => readSnapshot(dir), /schemaVersion 8 chưa hỗ trợ/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -85,21 +89,23 @@ test("readSnapshot: v8 chưa khai bị từ chối rõ ràng", async () => {
 test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone còn nguyên, mô tả lấy bản mới", { timeout: 120_000 }, async () => {
   const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
   const c = new pg.Client({ connectionString: DB_URL });
-  const dirSo = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  const dirSo = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T08:00:00Z",
     payload: PAYLOAD_V5, seller: SELLER_V5,
-  }], { finishedAt: "2026-11-02T08:05:00Z" });
-  const dirThuong = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  }]);
+  await new Promise((r) => setTimeout(r, 1100)); // bảo đảm finishedAt lượt thường > lượt số
+  const dirThuong = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T09:00:00Z",
     payload: { ...PAYLOAD_V5, full_name: "Môi giới B", seller_info: { live_ads: 9 } },
-  }], { schemaVersion: 4, finishedAt: "2026-11-02T09:05:00Z" }); // lượt danh sách bình thường, mới hơn
+  }], { schemaVersion: 4 }); // lượt danh sách bình thường, mới hơn
   await c.connect();
   try {
     await c.query("BEGIN");
     await luocDoRieng(c, ["stg_chotot_ads", "airbnb_snapshots"], { tienTo: "v5_dA" });
     await importDir(c, dirSo);
+    const lucSo = (await c.query("SELECT captured_at FROM stg_chotot_ads WHERE list_id = $1", [999888777])).rows[0];
     await importDir(c, dirThuong);
     const r = (await c.query(
       "SELECT seller->>'phone' AS phone, seller->>'phoneStatus' AS ps, seller->>'accountRef' AS ref, seller->>'displayName' AS ten, seller->>'full_name' AS fn, seller->>'live_ads' AS live, captured_at FROM stg_chotot_ads WHERE list_id = $1",
@@ -111,7 +117,7 @@ test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone c�
     // 0311-3 đ4: displayName lượt lấy số cũng phải GIỮ (không nằm trong nhánh ELSE cũ)
     assert.equal(r.ten, "Môi giới A", "lượt thường KHÔNG được làm mất displayName đã nạp");
     assert.equal(r.live, "9");
-    assert.ok(new Date(r.captured_at).toISOString().startsWith("2026-11-02T09:05"), "lượt thường vẫn cập nhật captured_at như luật cũ");
+    assert.ok(new Date(r.captured_at) > new Date(lucSo.captured_at), "lượt thường vẫn cập nhật captured_at như luật cũ (mới hơn lượt số)");
   } finally {
     rmSync(dirSo, { recursive: true, force: true });
     rmSync(dirThuong, { recursive: true, force: true });
@@ -126,24 +132,26 @@ test("đA: nạp v5 có số rồi nạp bản thường MỚI HƠN — phone c�
 test("đB: lượt lấy số (hienSo) không đổi captured_at/payload, chỉ thêm seller; không đè tên, không xoá số", { timeout: 120_000 }, async () => {
   const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
   const c = new pg.Client({ connectionString: DB_URL });
-  const dirThuong = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  const dirThuong = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T07:00:00Z",
     payload: { ...PAYLOAD_V5 },
-  }], { schemaVersion: 4, finishedAt: "2026-11-02T07:05:00Z" });
-  const dirSo = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  }], { schemaVersion: 4 });
+  await new Promise((r) => setTimeout(r, 1100));
+  const dirSo = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T10:00:00Z",
     payload: { list_id: 999888777 }, // item MỎNG của lượt số
     seller: { ...SELLER_V5, displayName: null },
-  }], { finishedAt: "2026-11-02T10:05:00Z", hienSo: 1 });
+  }], { hienSo: 1 });
   // lượt số THỨ HAI lỗi trang (phone null, phoneStatus error) — thử lại sau
-  const dirSoLoi = dirSnapshot([{
-    source: "S06", sourceId: "999888777", kind: "listing",
+  await new Promise((r) => setTimeout(r, 1100));
+  const dirSoLoi = await dirSnapshot([{
+    sourceId: "999888777", kind: "listing",
     fetchedAt: "2026-11-02T11:00:00Z",
     payload: { list_id: 999888777 },
     seller: { accountRef: "S06:777001", displayName: null, phone: null, phoneStatus: "error", seenAt: "2026-11-02T11:00:00Z" },
-  }], { finishedAt: "2026-11-02T11:05:00Z", hienSo: 1 });
+  }], { hienSo: 1 });
   await c.connect();
   try {
     await c.query("BEGIN");

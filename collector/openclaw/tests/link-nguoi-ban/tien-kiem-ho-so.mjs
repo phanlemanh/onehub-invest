@@ -34,7 +34,14 @@ export function tienKiemHoSo(lookupDir, patchPath) {
     if (them.length - bot.length !== 1) {
       loi.push(`.patch thêm ${them.length - bot.length} điểm gọi api.getUserInfo (phải đúng 1)`);
     }
-    const cam = ["login(", "loginQR(", "createZalo("].filter((s) => {
+    // U1(4): cùng danh sách cấm RỘNG như vitest của ranh-gioi (bẫy trong
+    // seller-lookup.test.ts) — đủ login/loginQR/tạo client/requestOldMessages/
+    // send text/addReaction; chuỗi định danh upstream được miễn theo Notes
+    // hợp đồng (E10 chỉ áp vùng này trên DÒNG MÃ — tệp thuộc collector/openclaw/).
+    const cam = [
+      "login(", "loginQR(", "createZalo(",
+      "requestOldMessages(", "sendZaloTextMessage(", "addReaction(",
+    ].filter((s) => {
       const esc = s.replace(/[()]/g, "\\$&");
       return new RegExp("^\\+.*" + esc, "m").test(diff);
     });
