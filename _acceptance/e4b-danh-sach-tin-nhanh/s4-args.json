@@ -1,6 +1,6 @@
 {
   "slug": "e4b-danh-sach-tin-nhanh",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
@@ -178,13 +178,14 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813/_acceptance/e4b-danh-sach-tin-nhanh/contract.md",
-  "invokedAt": "2026-11-08T03:28:52Z",
-  "invokedSha": "240aece488817e44b79d3ba94a2a879f8593959e",
+  "invokedAt": "2026-11-08T03:55:09Z",
+  "invokedSha": "103f4d936a7bfa275bd17ba5d32f3c72d93c8b70",
   "vungVat": [
     "_acceptance/e4b-danh-sach-tin-nhanh/card-plain.json",
     "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
     "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
     "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
     "app/src/lib/offers-public.ts",
     "app/tests/tin-rao-cong-khai.test.tsx",
     "app/tests/tin-rao-doi-chieu.test.tsx"
@@ -210,7 +211,10 @@
     "_acceptance/e4b-danh-sach-tin-nhanh/contract.md",
     "_acceptance/e4b-danh-sach-tin-nhanh/decisions.jsonl",
     "_acceptance/e4b-danh-sach-tin-nhanh/duong-nen.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evidence-report.md",
     "_acceptance/e4b-danh-sach-tin-nhanh/gap-probe.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/review-findings.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/run-log.jsonl",
     "_acceptance/e4b-danh-sach-tin-nhanh/usage-report.md",
     "docs/superpowers/plans/2026-11-08-e4b-danh-sach-tin-nhanh.md",
     "docs/superpowers/specs/2026-11-08-e4b-danh-sach-tin-nhanh-design.md"
@@ -225,7 +229,11 @@
     "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
     "_acceptance/e4b-danh-sach-tin-nhanh/duong-nen.md",
     "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evidence-report.md",
     "_acceptance/e4b-danh-sach-tin-nhanh/gap-probe.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/review-findings.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/run-log.jsonl",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
     "_acceptance/e4b-danh-sach-tin-nhanh/usage-report.md",
     "app/src/lib/offers-public.ts",
     "app/tests/tin-rao-cong-khai.test.tsx",
@@ -238,6 +246,7 @@
     "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
     "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
     "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
     "app/src/lib/offers-public.ts",
     "app/tests/tin-rao-cong-khai.test.tsx",
     "app/tests/tin-rao-doi-chieu.test.tsx"
@@ -249,5 +258,37 @@
   ],
   "coEvalPaths": true,
   "evalsHash": "ebd0c89f54a33ed696dd9098d4dbc45b25ddf4e70703dddf6451b3bfff6a886c",
-  "runBaseline": true
+  "runBaseline": true,
+  "carriedEvals": [
+    {
+      "id": "E6",
+      "runId": "minted-e4b-danh-sach-tin-nhanh-E6-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-08T03:28:52Z",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"
+    },
+    {
+      "id": "E7",
+      "runId": "minted-e4b-danh-sach-tin-nhanh-E7-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-08T03:28:52Z",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "app/tests/tin-rao-doi-chieu.test.tsx",
+      "title": "Ca AC-4/AC-3/AC-7 ghim cứng vào gốc nhánh e21a151e nhưng nằm trong suite chạy mỗi lượt, nên lần sửa hợp lệ sau này sẽ làm suite đỏ",
+      "severity": "medium",
+      "plain": "Tính năng chạy đúng cho người dùng hôm nay. Nhưng về sau, khi đội cố ý đổi cách danh sách tin hoạt động, bộ kiểm tra sẽ báo đỏ dù không có lỗi thật, và phải có người gỡ hoặc sửa các ca so sánh cũ mới tiếp tục được.",
+      "can_cu": "Không ảnh hưởng người dùng cuối và không mất dữ liệu; chỉ làm chậm đội phát triển ở vòng sau, và người sửa tự gỡ được khi chạm vào đúng chỗ đó nên ghi lại hạn chế là đủ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "app/tests/tin-rao-doi-chieu.test.tsx"
+  ]
 }
