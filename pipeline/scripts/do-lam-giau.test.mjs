@@ -648,3 +648,121 @@ test("DO3-AC-5 đường đang chạy chưa có hàm kiểm ngược ghi skip «
     assert.equal(kiemCua(await doLamGiau(c, { ngay: T3, write: true, duong: gia }), "dien-tich-suy-ra"), undefined);
   });
 });
+
+// ================= Task 4: bất biến lát và chặn rò trên detail thật =================
+import * as DO1 from "../do-hang-ngay.mjs";
+import { phanRa as phanRaDo1 } from "../lib/do-hang-ngay.mjs";
+import { KHOA_LAT_DON_VI as KHOA_DO3, phanRa as phanRaDo3 } from "../do-lam-giau.mjs";
+import { FILL } from "../sync-cloud.mjs";
+
+/** Mọi nhóm số × mọi chiều của mọi dòng do3-*: có chiều thị trường; tổng các ô = tổng của chiều = số chung của nhóm. */
+function kiemLatMoiDong(rows) {
+  let so = 0;
+  for (const r of rows) {
+    for (const [nhom, chieu] of Object.entries(r.detail.lat ?? {})) {
+      if (!("thi_truong" in chieu)) throw new Error(`THIEU THI TRUONG: ${r.entity} ${nhom}`);
+      for (const [ten, v] of Object.entries(chieu)) {
+        const tong = Object.values(v.o).reduce((s, n) => s + n, 0);
+        if (tong !== v.tong || v.tong !== r.detail[nhom]) throw new Error(`TONG LAT LECH: ${r.entity} ${nhom}.${ten} ${tong}/${v.tong}/${r.detail[nhom]}`);
+        so++;
+      }
+    }
+  }
+  return so;
+}
+test("DO3-AC-6 lát của DO1 trên detail thật: thị trường, phường 30 ô + khác, hai ô chưa gắn tách nhau, dự án, tổng ô = tổng chung", coDb, async () => {
+  assert.equal(KHOA_DO3, DO1.KHOA_LAT_DON_VI, "KHOA_LAT_DON_VI là hàm của DO1 (import, không bản chép)");
+  assert.equal(phanRaDo3, phanRaDo1, "phanRa là hàm của DO1");
+  await trongGiaoDich(async (c) => {
+    await chuanBi(c);
+    const w = await khuThu(c, 35);
+    await tin(c, "k6seed"); await ghiNhom(c, [pbNhom("k6seed")]); // đường nhóm đang chạy cả trên DB rỗng
+    await doLamGiau(c, { ngay: T3, write: true, kiemNguoc: false }); // lập mốc
+    // Ma trận: phường i có 36 − i tin (35..1), 3 tin không area_id, 2 tin chỉ có thị trường và chữ toà «S8.02», 2 dự án (10 + 5 tin).
+    const ma = [];
+    for (let i = 1; i <= 35; i++) for (let j = 0; j < 36 - i; j++) { const m = `k6w${i}x${j}`; await tin(c, m, { area: w[i - 1] }); ma.push(m); }
+    for (let j = 0; j < 3; j++) { await tin(c, `k6n${j}`); ma.push(`k6n${j}`); }
+    for (let j = 0; j < 2; j++) { await tin(c, `k6t${j}`, { area: "vn-do3-ma" }); ma.push(`k6t${j}`); }
+    await writeAssertions(c, [0, 1].map((j) => ({ subject_key: `S03:do3k6t${j}`, field: "block_raw", value: "S8.02", evidence_tier: "observed",
+      method: "parser", method_version: "do3-test" })));
+    await resolveOffers(c, ["offer_do3_k6t0", "offer_do3_k6t1"]);
+    const node = [];
+    for (const k of [1, 2]) {
+      const { rows: [{ id }] } = await c.query(`INSERT INTO asset_nodes (node_type, name, slug) VALUES ('project', $1, $1) RETURNING id`, [`do3-du-an-${k}-${P}`]);
+      const { rows: [p] } = await c.query(`INSERT INTO properties (kind, property_type, project_node, first_seen, last_seen) VALUES ('sale', 'apartment', $1, now(), now()) RETURNING id`, [id]);
+      for (const m of ma.slice(k === 1 ? 0 : 10, k === 1 ? 10 : 15)) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [p.id, `offer_do3_${m}`]);
+      node.push(`node:${id}`);
+    }
+    await ghiNhom(c, ma.map((m) => pbNhom(m)));
+    const kiem = async (dotBien) => {
+      const kq = await doLamGiau(c, { ngay: T3, write: true, dotBien });
+      const rows = [...await dongDq(c, "do3-thay-doi", "ngay", T3), ...await dongDq(c, "do3-kiem-nguoc", "tuan", "2026-W45")];
+      assert.ok(kiemLatMoiDong(rows) >= 4 * 4, "đã duyệt mọi nhóm × chiều");
+      const them = detailCua(kq, NHOM).lat.them;
+      if (them.toa.o["chua-co-danh-ba"] !== 2) throw new Error(`GOP HAI O CHUA GAN: ${JSON.stringify(them.toa.o)}`);
+      assert.deepEqual(them.thi_truong.o, { "vn-do3-ma": 326, "vn-do3-mb": 306, "khong-tin-hieu": 3, "chua-co-danh-ba": 0 });
+      const phuong = Object.keys(them.phuong.o).filter((k) => k.startsWith("vn-do3-w"));
+      assert.deepEqual(phuong, w.slice(0, 30), "30 phường lớn nhất");
+      assert.deepEqual([them.phuong.o.khac, them.phuong.o["khong-tin-hieu"], them.phuong.o["chua-co-danh-ba"]], [15, 5, 0]);
+      assert.deepEqual([them.toa.o["khong-tin-hieu"], them.toa.tong], [633, 635]);
+      assert.deepEqual([them.du_an.o[node[0]], them.du_an.o[node[1]], them.du_an.o["khong-tin-hieu"]], [10, 5, 620]);
+      assert.ok(rows.some((r) => r.detail.tap_do), "có dòng kiểm ngược để duyệt lát dung/sai/khong_ra");
+    };
+    for (const [dotBien, msg] of [["gop-chua-gan", /GOP HAI O CHUA GAN/], ["bo-khac", /TONG LAT LECH/], ["bo-thi-truong", /THIEU THI TRUONG/]]) {
+      await thu(c, async () => assert.rejects(() => kiem(dotBien), msg, dotBien));
+    }
+    await kiem();
+  });
+});
+
+// ---- AC-8: chặn rò ----
+const TEN_THAT = "TEN_THAT_DO3_GIA";
+function kiemFill(fill) {
+  if (!fill.includes("dq_check_results")) throw new Error("THIEU dq_check_results trong FILL");
+  for (const t of ["enrichment_value_state", "enrichment_value_change"]) if (fill.includes(t)) throw new Error(`ANH CHUP LEN CLOUD: ${t}`);
+}
+test("DO3-AC-8 detail do3-* không mang SĐT, băm SĐT, người đăng, chữ bài, labeler, tên nguồn thật; bảng ảnh chụp không vào FILL; có rò thì dừng", coDb, async () => {
+  kiemFill(FILL);
+  assert.throws(() => kiemFill([...FILL, "enrichment_value_state"]), /ANH CHUP LEN CLOUD/);
+  await trongGiaoDich(async (c) => {
+    await chuanBi(c);
+    await c.query(`INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S09', $1, 'thử') ON CONFLICT (code) DO UPDATE SET real_name = EXCLUDED.real_name`, [TEN_THAT]);
+    const SDT = "+84912345678", BAM = bamSo(SDT);
+    const pk = await nguoi(c, "do3s8");
+    await lienLac(c, pk, SDT);
+    await tin(c, "a8", { sender: "do3s8", ten: "Nguyễn Văn Hiếu", text: `Bán căn hộ ${TEN_THAT} giá tốt, liên hệ anh Hiếu ngay hôm nay` });
+    await tin(c, "a8n"); await ghiNhom(c, [pbNhom("a8n")]);
+    await ganSdtQuaNguoi(c, yen);
+    await doLamGiau(c, { ngay: T3, write: true }); // lập mốc
+    const { rows: [{ item_id }] } = await c.query(
+      `INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, seed) VALUES ('do3-thu', 'S03', 'do3a8', 'h-do3-a8', 'dev', 'do3') RETURNING item_id`);
+    await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value, labeled_at) VALUES ($1, 'LABELER_DO3_X', 'seller_phone', $2, '${T3}T10:00:00+07:00')`, [item_id, so(899)]);
+    const CAM = ["912345678", BAM, "Hiếu", TEN_THAT, "LABELER_DO3_X"];
+    const quet = async () => {
+      const { rows } = await c.query("SELECT detail FROM dq_check_results WHERE check_name LIKE 'do3-%'");
+      assert.ok(rows.length >= 4);
+      const json = rows.map((r) => r.detail).join("\n");
+      for (const x of CAM) if (json.includes(x)) throw new Error(`LO DO3: detail chứa «${x}»`);
+    };
+    const dem = async () => (await c.query("SELECT count(*)::int AS n FROM dq_check_results WHERE check_name LIKE 'do3-%'")).rows[0].n;
+    const kq = await doLamGiau(c, { ngay: T3, write: true });
+    assert.equal(detailCua(kq, SO).nguoi_sua, 1, "nhãn của người gắn đã vào số — chuỗi cấm có labeler, chữ bài");
+    await quet();
+    // Đối chứng dương: băm số vào ô lát → dừng, không ghi dòng nào; source_registry rỗng → dừng.
+    const truoc = await dem();
+    await thu(c, async () => {
+      await assert.rejects(doLamGiau(c, { ngay: T3, write: true, dotBien: `lo:${BAM}` }), /LO DO3/);
+      assert.equal(await dem(), truoc);
+    });
+    await thu(c, async () => {
+      await c.query("UPDATE source_registry SET real_name = '', source_ids = '{}'");
+      await assert.rejects(doLamGiau(c, { ngay: T3, write: true }), /LO DO3/);
+      assert.equal(await dem(), truoc);
+    });
+    // Chiều đỏ: bỏ chặn rò → băm số lọt vào detail → quét đỏ.
+    await thu(c, async () => {
+      await doLamGiau(c, { ngay: T3, write: true, dotBien: `bo-chan-lo:${BAM}` });
+      await assert.rejects(quet, /LO DO3/);
+    });
+  });
+});
