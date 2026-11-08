@@ -39,7 +39,7 @@ export function ReviewHopHangMuc({ hop, chon, tongCho, onChon }: {
         aria-pressed={dangChon}
         data-review-hop-muc={ma}
         className={cn(
-          "hover:bg-muted min-w-48 shrink-0 cursor-pointer items-start border-0 text-left transition-colors @4xl:w-full @4xl:min-w-0",
+          "hover:bg-muted w-auto min-w-44 shrink-0 cursor-pointer items-start border-0 text-left transition-colors @4xl:w-full @4xl:min-w-0",
           dangChon && "bg-primary/5 hover:bg-primary/5",
         )}
         onClick={() => onChon(ma)}
