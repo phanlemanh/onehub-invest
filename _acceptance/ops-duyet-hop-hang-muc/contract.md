@@ -5,7 +5,7 @@ slug: ops-duyet-hop-hang-muc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-ops-duyet-hop-hang-muc-design.md
 lo_trinh_ma: OD2
 approved_by: Mạnh
@@ -102,3 +102,12 @@ Q4, Q7 của báo cáo f2 đã Mạnh duyệt). Trục tự kê để người s
   trống theo Q4). Ý của các tiêu chí đã ký giữ nguyên, chỉ đổi đường bấm và luật lý do mà Q4 đã chốt.
 - Bắt gõ lý do khi «Bỏ» ở Bổ sung tin là tạm, tới khi OD4 phân được ghi đè (Q4 chỉ giữ lý do gõ tay cho việc bác đề xuất
   ghi đè).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: Khối ReUI Pro `solution-agents-9` (kèm `reui/icon-stack`) nằm trên kho công khai, chờ quyết định giấy phép Pro trên repo public mà Mạnh đang hoãn.
+  - Ngoài-2: Lúc «Hàng duyệt» đang tải, khung chờ vẫn là bố cục cũ, nên trang nhảy sang bố cục mới khi tải xong.
+  - Ngoài-3: Định nghĩa «Hộp hạng mục» trong `CONTEXT.md` còn ghi chỉ liệt hạng mục có thẻ chờ, trong khi hộp liệt mọi hạng mục có thẻ.
+  - Ngoài-6: Phép thử lệch thẻ giữa các hạng mục chấp nhận mọi assert của ca, nên có thể đỏ vì lý do khác mà không bắt đúng lỗi đó.
+  - Ngoài-7: Phép thử phím `1` chỉ kiểm thẻ đã đổi, chưa kiểm phím bấm đúng đáp án số 1.
+  - Ngoài-8: «Ma trận 12 phím × vị trí tiêu điểm» trong bộ thử là bộ đếm, chưa thử hết các phím `2`–`4` và khi đang gõ ở ô lý do.
+  - Ngoài-10: Bộ thử chưa chứng minh «Quyết định gần đây» chọn đúng 20 lượt mới nhất, chỉ đếm số lượt.
+  - Ngoài-11: Nhánh lỗi route khi quyết từ sheet (RQ-AC-5) không còn phép thử dương: thông báo lỗi và thẻ trở lại hàng chờ chưa được kiểm.
