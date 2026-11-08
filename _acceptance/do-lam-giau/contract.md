@@ -5,10 +5,10 @@ slug: do-lam-giau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T2; máy nâng T3 vì sửa scripts/cloud-sync.sh và cần migration (cả hai thuộc t3_paths)
 surfaces: [ui, db, script]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-08-do-lam-giau-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-08
 lo_trinh_ma: DO3
 ---
 
