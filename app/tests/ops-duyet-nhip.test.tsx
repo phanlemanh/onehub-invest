@@ -718,9 +718,14 @@ describe("OD1 route decide (lược đồ tạm)", () => {
       const goc = pool.query.bind(pool)
       const cl = new pg.Client({ connectionString: u.toString() })
       await cl.connect()
-      ;(pool as unknown as { query: typeof pool.query }).query = ((...a: Parameters<typeof cl.query>) => cl.query(...a)) as never
+      const sqlDaChay: string[] = []
+      ;(pool as unknown as { query: typeof pool.query }).query = ((...a: Parameters<typeof cl.query>) => {
+        sqlDaChay.push(String(a[0]))
+        return cl.query(...a)
+      }) as never
       try {
         const kiemCloud = async (m: ContentMod) => {
+          sqlDaChay.length = 0
           let html = ""
           try {
             html = await htmlTinh(await m.ReviewContent({ user: ops }))
@@ -728,7 +733,7 @@ describe("OD1 route decide (lược đồ tạm)", () => {
             assert.fail("CLOUD GOI NHIP")
           }
           assert.ok(html.includes("TV13") && !html.includes("không lên máy chủ"), "OD1-AC-8-NHANH chữ cloud")
-          if (html.includes("data-review-nhip")) assert.fail("CLOUD GOI NHIP")
+          if (html.includes("data-review-nhip") || sqlDaChay.some((q) => /ops_audit/.test(q))) assert.fail("CLOUD GOI NHIP")
         }
         await kiemCloud(content)
         const goiNhip = await banChep<ContentMod>("src/components/ops/review-content.tsx", (s) => s.replace(

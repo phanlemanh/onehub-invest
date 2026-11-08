@@ -45,6 +45,9 @@ export const NHIP_SQL = `
 
 /** Số nhịp theo hạng mục trong `days` ngày gần nhất; hạng mục không có lượt đo nào thì vắng. */
 export async function loadReviewPace(days = NHIP_SO_NGAY, q: Pick<typeof pool, "query"> = pool): Promise<NhipHangMuc[]> {
+  // Bảng nhật ký vắng (lược đồ chưa có ops_audit) → không có lượt đo, không làm sập vùng hàng duyệt.
+  const { rows: [bang] } = await q.query<{ r: string | null }>(`SELECT to_regclass('ops_audit')::text AS r`);
+  if (!bang?.r) return [];
   const { rows } = await q.query<{ category: string | null; n: number; median: number | string | null; over_cap: number; median_prev: number | string | null }>(
     NHIP_SQL,
     [days, NHIP_TRAN_GIAY],

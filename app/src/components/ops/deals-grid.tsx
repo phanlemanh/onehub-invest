@@ -170,7 +170,10 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 }
 
 /** `rows` đến theo thứ tự của dealsSql (căn cần xác minh đứng cuối, ON11); người bấm tiêu đề cột mới đổi thứ tự. */
-export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = {} }: {
+/** Hằng ngoài component: mặc định `{}` mới mỗi lần vẽ làm `rows` đổi danh tính → bảng tự về trang 1. */
+const KHONG_CHO_GHEP: Record<string, number[]> = {}
+
+export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP }: {
   rows: DealHang[]
   moBanDau?: string | null
   locBanDau?: FilterQuery

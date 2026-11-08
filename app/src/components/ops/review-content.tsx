@@ -39,7 +39,7 @@ export async function ReviewContent({ user, card = null }: { user: User; card?: 
         </div>
         <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} />
         <LocalOnlyAlert title="Hàng duyệt chỉ có ở máy thu">
-          Hàng duyệt chưa lên máy chủ — duyệt trên cloud là hàng TV13. Duyệt ở cổng Ops trên máy thu.
+          Hàng duyệt chưa lên máy chủ — duyệt từ xa là hàng TV13. Duyệt ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
     );
