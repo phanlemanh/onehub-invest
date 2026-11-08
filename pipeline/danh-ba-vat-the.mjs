@@ -2,20 +2,26 @@
 // danh-ba-vat-the.mjs — DB1 danh-ba-toa-truc-can: dựng danh bạ vật thể toà · trục · căn cao tầng từ danh mục S08 đã nối
 // khu (s08_project_links, DN1) + bí danh tên toà từ phát biểu trên tin; chủ đầu tư và phường là phát biểu cấp toà.
 // Một giao dịch, khoá cố vấn; tra bí danh trước khi đúc nên chạy lại không đúc thêm (AC-4). Lõi: lib/danh-ba-vat-the.mjs.
-// Từ chối DB `oneinvest` dùng chung (áp 082 và chạy trên máy thu là lời riêng của Mạnh). Không in mã S08 ra stdout.
-//   node pipeline/danh-ba-vat-the.mjs --db <url> [--tu-dien <tệp json>] [--khu <slug,slug>]
+// Đích (DB1b, dung-danh-ba-may-thu): DB thử `oneinvest_<việc>` trên máy này ghi không cờ; DB khác trên máy này (gồm máy thu
+// `oneinvest`) chỉ với --db-that, và lần dựng đầu (chưa có toà) còn đòi --sao-luu <tệp pg_dump không rỗng>; máy chủ ngoài
+// máy này luôn bị từ chối — đọc máy chủ từ connectionParameters của pg (tính cả ?host=, PGHOST). Không in mã S08 ra stdout.
+// Bước đêm: buocVatTheDem(c), gọi từ refresh-bait-gap.mjs — chỉ giữ tươi khu đã có toà, không bao giờ dựng lần đầu.
+//   node pipeline/danh-ba-vat-the.mjs --db <url> [--db-that] [--sao-luu <tệp>] [--tu-dien <tệp json>] [--khu <slug,slug>]
 import { createHash } from "node:crypto";
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
-  NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, phuongCuaToa, ungVienTuTin, upiToa,
+  NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, khuDaDung, kiemDich, phuongCuaToa, thamSoTuUrl, ungVienTuTin, upiToa,
 } from "./lib/danh-ba-vat-the.mjs";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
 const KHOA_CO_VAN = "danh-ba-vat-the";
+
+/** Lỗi của người gọi (đích, cờ, slug khu) — lệnh thoát 2, khác lỗi chạy (thoát 1). */
+export class LoiGoi extends Error {}
 
 const arg = (ten, mac) => {
   const i = process.argv.indexOf(ten);
@@ -36,12 +42,15 @@ export function docTuDien(tep) {
  * @param {import("pg").Client} c
  */
 export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null }, runId = `dbv-${Date.now()}` } = {}) {
+  if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [KHOA_CO_VAN]);
     const { rows: khuRows } = await c.query(
       "SELECT id::int AS id, slug, area_ids, meta->>'city' AS city FROM asset_nodes WHERE node_type = 'project' AND slug = ANY($1)", [khuSlugs]);
     const khu = new Map(khuRows.map((k) => [k.id, k]));
+    const thieu = khuSlugs.filter((s) => !khuRows.some((k) => k.slug === s));
+    if (thieu.length) throw new LoiGoi(`khu không có: ${thieu.join(", ")} — kiểm lại slug (--khu)`);
     const khuIds = [...khu.keys()];
     const { rows: pkRows } = await c.query(
       "SELECT id::int AS id, parent_id::int AS parent_id, name, aliases, area_ids FROM asset_nodes WHERE node_type = 'building' AND parent_id = ANY($1)",
@@ -176,8 +185,11 @@ export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new 
     }
     const lyDo = {};
     for (const l of kh.soLyDo) lyDo[l.ly_do] = (lyDo[l.ly_do] ?? 0) + l.so;
+    const khuKhongS08 = [...khu.values()].filter((k) => !s08.some((d) => d.khu_id === k.id)).map((k) => k.slug);
+    for (const s of khuKhongS08) console.warn(`danh-ba-vat-the: cảnh báo — khu ${s} có nút nhưng 0 dòng danh mục cao tầng đã nối`);
     return {
       khu: theoKhu,
+      khu_khong_s08: khuKhongS08,
       khoa_moi: toaMoi.length + trucMoi.length + canMoi.length,
       ly_do: lyDo,
       bi_danh_ten_tu_tin: biDanhTuTin,
@@ -192,22 +204,58 @@ export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new 
   }
 }
 
+/**
+ * Bước đêm (gọi từ refresh-bait-gap.mjs sau danh bạ Người): giữ tươi khu đã có toà; không dựng lần đầu, không từ điển
+ * chủ đầu tư (phát biểu builder_name là hitl — chỉ lệnh tay ghi). Đích ngoài máy này → ném trước câu truy vấn đầu tiên.
+ * @param {import("pg").Client} c
+ */
+export async function buocVatTheDem(c, { log = console.log } = {}) {
+  const kq = kiemDich(c.connectionParameters, { dbThat: true });
+  if (!kq.ok) throw new Error(`danh-ba-vat-the: ${kq.ly_do}`);
+  if (!(await c.query("SELECT to_regclass('public.buildings') AS t")).rows[0].t) {
+    log("danh-ba-vat-the: bỏ qua — DB chưa áp 082");
+    return { bo_qua: "chua-ap-082" };
+  }
+  const khuSlugs = await khuDaDung(c);
+  if (khuSlugs.length === 0) {
+    log("danh-ba-vat-the: bỏ qua — chưa dựng lần đầu (lần đầu là lệnh tay --db-that --sao-luu)");
+    return { bo_qua: "chua-dung-lan-dau" };
+  }
+  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });
+  log(`danh-ba-vat-the: đêm ${JSON.stringify({ khu: khuSlugs.length, khoa_moi: tk.khoa_moi })}`);
+  return tk;
+}
+
+/** Tệp sao lưu dùng được: có thật, là tệp, không rỗng. */
+function tepSaoLuuDung(tep) {
+  try {
+    const st = statSync(tep);
+    return st.isFile() && st.size > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   const url = arg("--db", process.env.DATABASE_URL);
-  if (!url) {
-    console.error("danh-ba-vat-the: thiếu --db");
-    process.exit(2);
-  }
-  const ten = new URL(url).pathname.replace(/^\//, "");
-  if (ten === "oneinvest" || !ten) {
-    console.error("danh-ba-vat-the: từ chối DB dùng chung «oneinvest» — chạy trên DB thử; áp lên máy thu là lời riêng của Mạnh");
-    process.exit(2);
-  }
-  const khuSlugs = arg("--khu", null)?.split(",") ?? KHU_MAC_DINH;
+  const dbThat = process.argv.includes("--db-that");
+  const kq = kiemDich(thamSoTuUrl(url), { dbThat });
+  if (!kq.ok) throw new LoiGoi(url ? kq.ly_do : "thiếu --db");
+  const khuSlugs = (arg("--khu", null)?.split(",") ?? KHU_MAC_DINH).map((s) => s.trim()).filter(Boolean);
+  if (!khuSlugs.length) throw new LoiGoi("--khu rỗng");
   const tuDien = docTuDien(arg("--tu-dien", null));
   const c = new pg.Client({ connectionString: url });
   await c.connect();
   try {
+    if (kq.loai === "that") {
+      // Lần dựng đầu trên DB thật (chưa có toà): bắt buộc chỉ ra bản sao lưu — lời «sao lưu trước» của Mạnh thành rào máy.
+      const coBang = (await c.query("SELECT to_regclass('public.buildings') AS t")).rows[0].t;
+      const soToa = coBang ? (await c.query("SELECT count(*)::int AS n FROM buildings")).rows[0].n : 0;
+      const tep = arg("--sao-luu", null);
+      if (soToa === 0 && !(tep && tepSaoLuuDung(tep))) {
+        throw new LoiGoi("lần dựng đầu trên DB không phải DB thử — khai --sao-luu <tệp pg_dump không rỗng> đã làm trước");
+      }
+    }
     const tk = await dung(c, { khuSlugs, tuDien });
     console.log(`tong_ket ${JSON.stringify(tk)}`);
   } finally {
@@ -219,6 +267,6 @@ async function main() {
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
     console.error(`danh-ba-vat-the: ${e.message}`);
-    process.exit(1);
+    process.exit(e instanceof LoiGoi ? 2 : 1);
   });
 }
