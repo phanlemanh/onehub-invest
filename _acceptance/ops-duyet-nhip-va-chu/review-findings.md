@@ -1,54 +1,86 @@
+# Review findings: ops-duyet-nhip-va-chu (round 2)
+
 ## Trong hợp đồng
 
-- **Nút «Mở thẻ chờ cũ nhất» không mở được sheet khi bấm ngay trên /ops/review**
-  file: `app/src/components/ops/review/review-queue.tsx:929`
-  severity: medium
+- **Alert «Không tìm thấy thẻ» không hiện khi hàng duyệt rỗng**
   AC: AC-10
+  file: `app/src/components/ops/review/review-queue.tsx:971`
+  severity: low
   source: bugs
-  detail: ReviewNhip (app/src/components/ops/review/review-nhip.tsx:859-866) có một Link trỏ tới `/ops/review?card=<oldestPendingId>`, tức là chính trang đang mở. Next.js App Router (bản 16.4.2 đã cài) giữ nguyên cây client khi chỉ searchParams đổi: page segment vẫn là `__PAGE__` nên không remount. Trong ReviewQueue, `moBanDau` chỉ được đọc trong hàm khởi tạo của `useState` ở dòng 929-931 (`useState(() => moBanDau?.id != null && items.some(...) ? moBanDau.id : null)`), và không có `key` nào theo `card` (review-content.tsx:512 truyền `moBanDau={docCard(card)}` nhưng không đặt key). Bấm nút thì URL đổi, server render lại với `moBanDau` mới, nhưng `openId` vẫn là `null`, nên sheet không mở. Nút chỉ đổi URL mà không mở thẻ nào. Trạng thái trống này hiện mỗi khi chưa có lượt đo nào trong 7 ngày, nghĩa là lúc mới triển khai ai cũng gặp, nên đây là lối thoát chính của vùng trống. Test OD1-AC-4 (app/tests/ops-duyet-nhip.test.tsx:617) chỉ kiểm thuộc tính href nên không bắt được lỗi. Hướng sửa: đặt `key` cho ReviewQueue theo `card`, hoặc dùng useEffect để đồng bộ openId khi `moBanDau?.id` đổi, hoặc cho nút gọi thẳng setOpenId.
-  lý do vào hợp đồng: đi tới ?card=<id> phải mở sẵn sheet thẻ đó; bấm nút ngay trên trang chỉ đổi địa chỉ mà sheet không mở.
-
-- **Hình dạng 5: quét LỚP (xưng hô ở mọi tệp review*) nhưng chỉ có điểm-case, cộng hình dạng 4: không có chiều đỏ XUNG HO**
-  file: `app/tests/ops-duyet-nhip.test.tsx:377`
-  severity: high
-  AC: AC-8
-  source: measurement
-  detail: E8 hứa: «mọi tệp app/src/components/ops/review* không chứa từ 'bạn' hay 'anh' đứng riêng», chiều đỏ «chữ 'bạn' trở lại → 'XUNG HO'». Dòng 377–378 chỉ ghép `document.body.textContent` với HTML tĩnh của MỘT `ReviewCard` (MAU.ghep). Lúc đó body chỉ còn thẻ MAU.deXuat, vì `ve()` (dòng 81) đặt lại `document.body.innerHTML` mỗi lần dựng, nên chú thích «danh sách + sheet + thẻ» không đúng: danh sách ReviewQueue và sheet đã bị xoá khỏi body trước khi quét. Không có danh sách tệp viết trước để số assert bằng số tệp review*, cũng không đọc nguồn từng tệp. Các nhánh chữ không được dựng (thẻ Người, Đối chiếu, DoneState, Alert, ReviewNhip, review-photos…) lọt ngoài phép đo. Assert `!/(bạn|anh)/.test(chu)` cũng đứng một mình: không có bản chép đột biến chèn «bạn» để chứng minh regex bắt được, nên chiều đỏ 'XUNG HO' mà eval khai không tồn tại.
-  lý do vào hợp đồng: AC-8 đòi chữ hàng duyệt không xưng «bạn»/«anh», nhưng phép đo chỉ quét một thẻ nên chưa chứng minh được.
-
-- **Hình dạng 4: assert trung vị «Giữa hai lượt» có điều kiện, không có đối chứng dương nên có thể rỗng nghĩa; cột 'giua' không được kiểm**
-  file: `app/tests/ops-duyet-nhip.test.tsx:575`
-  severity: medium
-  AC: AC-4
-  source: measurement
-  detail: E4 hứa: fill có since_prev 20/30/40 s → trung vị giữa hai lượt 30, và Frame hiện '30' ở cột Giữa hai lượt. Trong ca: (a) fixture dòng 585–586 gọi route liên tiếp vài mili-giây, nên since_prev ≈ 0 chứ không phải 20/30/40, và không có assert nào ghim giá trị 30; (b) dòng 575 `if (ghi.length > 0) { … assert.equal(f.medianSincePrev, …) }`: nếu route không còn ghi since_prev_seconds thì `ghi` rỗng và phép so bị bỏ qua lặng lẽ, vì không có assert dương rằng `ghi.length > 0` hay `f.medianSincePrev !== null`; (c) phép so lấy kỳ vọng bằng cách tính lại trung vị từ chính các dòng DB, không phải từ ma trận viết trước; (d) phần render chỉ kiểm data-cot 'trung-vi', 'qua-tran', 'cho', không hề kiểm `[data-cot=giua]` (review-nhip.tsx:58). Lời hứa «trung vị giữa hai lượt 30» và «'30' ở cột Giữa hai lượt» vì vậy không được đo.
-  lý do vào hợp đồng: AC-4 nêu cột Trung vị giây giữa hai lượt, phép đo có thể bị bỏ qua lặng lẽ và không kiểm cột đó.
-
-- **Hình dạng 2: prop choGhep viết tay đúng khuôn bên đọc, không round-trip từ loadPendingUnitMatches qua trang**
-  file: `app/tests/ops-duyet-nhip.test.tsx:681`
-  severity: medium
-  AC: AC-9
-  source: measurement
-  detail: E9 hứa DealsGrid và «trang /ops/deals/[offerId] (server component render tĩnh)» có cùng badge và liên kết. Dòng 681 truyền tay `choGhep={{ offer_A: [701] }}` vào DealsGrid, dòng 690 truyền tay `choGhep={[701]}` vào DealBody. Không có ca nào dựng page.tsx thật, nên đường nối viết → đọc mà diff thêm vào không được đo: deals/page.tsx `loadPendingUnitMatches(rows.map(d => d.offerId))` → `choGhep={choGhep}` và deals/[offerId]/page.tsx `choGhep={choGhep[d.offerId]}`. Nếu trang quên truyền prop hay tra sai khoá (ví dụ offerId so với id) thì badge biến mất mà test vẫn xanh, vì fixture đã được nặn sẵn đúng hình dạng component chờ.
-  lý do vào hợp đồng: AC-9 đòi lưới, sheet và trang một căn đều hiện badge, nhưng đường nối từ trang tới thành phần chưa được đo.
-
-- **Hình dạng 4: assert âm tính đứng một mình cho bộ lọc «Loại khác»**
-  file: `app/tests/ops-duyet-nhip.test.tsx:364`
-  severity: medium
-  AC: AC-8
-  source: measurement
-  detail: Sau `chon("Loại thẻ", "Loại khác")`, assert duy nhất là `!ids().includes(2)` (không có thẻ Người). Bộ fixture có sẵn thẻ data_quality khác (MAU.dqKhac, id 10) đáng ra phải xuất hiện, nhưng không có đối chứng dương nào kiểm `ids()` chứa 10. Bộ lọc trả rỗng, hỏng, hay không áp gì mà vẫn loại được id 2 thì test vẫn xanh. Lời hứa của E8 «'Loại khác' ra 0 thẻ Người» chỉ có nghĩa khi đồng thời chứng minh «Loại khác» vẫn ra đúng thẻ loại khác.
-  lý do vào hợp đồng: AC-8 đòi bộ lọc «Loại khác» không nhận thẻ Người; test thiếu đối chứng rằng nó vẫn ra đúng thẻ loại khác.
+  detail: Lệnh `if (items.length === 0) return <ReviewQueueEmpty />` chạy trước khối thieuThe. Khi hàng duyệt chưa có thẻ nào mà người dùng mở /ops/review?card=123 (hoặc ?card=abc), trang chỉ hiện trạng thái rỗng, không có Alert. Như vậy là trái hợp đồng ghi ở prop moBanDau («không có → Alert») và ở docCard («danh sách báo Không tìm thấy thẻ»): liên kết sâu hỏng mà không có thông báo nào.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **launch.json: SNAPSHOTS_DIR dùng đường dẫn tuyệt đối riêng máy (/Users/manhphan/...) trên kho công khai, lệch khuôn tương đối của mục liền trước**
-  Người dùng thấy gì: Tệp cấu hình chạy thử có tên tài khoản máy của Mạnh, nên chỉ chạy được trên máy này và lộ tên thư mục cá nhân trên kho công khai. Người dùng cổng không bị ảnh hưởng.
-  Căn cứ: Không ảnh hưởng người dùng cuối, không lộ dữ liệu tầng A, và sửa hay bỏ sau khi gộp đều rẻ.
-  file: `.claude/launch.json`
+- **Comment mới ghi review_queue là tầng A, trái luật 6 đã sửa ngày 26/10**
+  Người dùng thấy gì: Một chú thích nội bộ cho lập trình viên còn ghi sai mức bí mật của thẻ duyệt. Người dùng không thấy gì trên màn hình.
+  Căn cứ: Không ảnh hưởng người dùng và không làm lộ dữ liệu nào, chỉ có thể gây hiểu nhầm cho người đọc mã về sau, sửa lúc nào cũng rẻ.
+  file: `app/src/lib/ops/review-nap.ts`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Bản đồ route chưa cập nhật nhãn «Đang chờ ghép» và liên kết sang /ops/review trên /ops/deals**
+  Người dùng thấy gì: Tài liệu mô tả các trang Ops chưa nhắc nhãn «Đang chờ ghép» và liên kết sang thẻ ghép. Màn hình chạy đúng, chỉ có tài liệu nội bộ lệch.
+  Căn cứ: Không đụng tới dữ liệu hay thao tác của người dùng, chỉ làm trợ lý và người làm sau đọc tài liệu cũ, cập nhật sau rất rẻ.
+  file: `.claude/skills/onehub-ui/routes.md`
   severity: low
   Đề xuất: known-limits
+
+- **Trạng thái trống của Frame «Nhịp duyệt 7 ngày» có thể không có hành động nào**
+  Người dùng thấy gì: Khi hàng duyệt đã hết thẻ chờ và 7 ngày qua không có lượt đo, khung Nhịp duyệt chỉ hiện chữ trống, không có nút nào để bấm.
+  Căn cứ: Trường hợp hiếm và vô hại, vì hết thẻ chờ thì người duyệt chẳng còn việc gì để làm tiếp.
+  file: `app/src/components/ops/review/review-nhip.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **fmtGiay có thể in «1 phút 60 giây»**
+  Người dùng thấy gì: Ở bảng Nhịp duyệt, một số thời gian gần tròn phút có thể hiện «1 phút 60 giây» thay vì «2 phút». Số liệu vẫn đúng nhưng cách viết trông sai.
+  Căn cứ: Chỉ là lỗi trình bày nhỏ trên số đo, không mất hay sai dữ liệu, người dùng vẫn hiểu được và sửa sau rất rẻ.
+  file: `app/src/components/ops/review/review-nhip.tsx`
+  severity: low
+  Đề xuất: new-contract
+
+- **Bấm lại liên kết ?card= trùng URL hiện tại không mở lại sheet**
+  Người dùng thấy gì: Sau khi đóng thẻ, bấm lại «Mở thẻ chờ cũ nhất» hay «Mở thẻ ghép» cho cùng thẻ có thể không làm gì. Người dùng phải tải lại trang hoặc bấm thẻ trong danh sách.
+  Căn cứ: Không mất dữ liệu và người dùng tự mở lại được bằng cách tải lại hoặc bấm thẻ trong danh sách, nhưng dễ gây khó chịu và nên sửa ở một việc riêng.
+  file: `app/src/components/ops/review/review-queue.tsx`
+  severity: low
+  Đề xuất: new-contract
+
+- **Hình dạng 3 (và 2): nút «Mở thẻ chờ cũ nhất» chỉ đo việc component lặp lại prop viết tay, không đo quan hệ với thẻ chờ tạo sớm nhất**
+  Người dùng thấy gì: Bài kiểm tự động cho nút «Mở thẻ chờ cũ nhất» chưa chặn được việc sau này nút trỏ nhầm sang thẻ khác. Hiện tại nút vẫn hoạt động đúng.
+  Căn cứ: Chưa có lỗi nào xảy ra với người dùng, chỉ là lưới an toàn còn lỏng, có thể bổ sung kiểm thử sau mà không ảnh hưởng ai.
+  file: `app/tests/ops-duyet-nhip.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3: OD1-AC-1-UI đọc `sent.at(-1)` mà không ràng lời gọi đó với thẻ vừa bấm**
+  Người dùng thấy gì: Bài kiểm tự động chưa chắc bắt được trường hợp một nút quyết định không gửi gì đi, vì nó có thể đọc nhầm lần gửi của thẻ trước. Chức năng hiện tại vẫn chạy.
+  Căn cứ: Chưa có hỏng hóc thực tế với người dùng, chỉ là kiểm thử bỏ sót một kiểu lỗi có thể xảy ra về sau và bổ sung lúc nào cũng rẻ.
+  file: `app/tests/ops-duyet-nhip.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 2: probe OD1-AC-5-DB tự chép lại đường nạp của trang thay vì gọi bộ nạp thật loadReviewQueue**
+  Người dùng thấy gì: Bài kiểm việc ẩn điểm Stage B chạy trên bản chép tay của cách nạp thẻ, nên nếu cách nạp thật đổi, bài kiểm có thể không báo. Trang hiện tại vẫn ẩn điểm đúng.
+  Căn cứ: Chưa có điểm nào lộ ra trên trang, chỉ là kiểm thử có thể bỏ sót về sau, và bổ sung kiểm thử không động tới người dùng.
+  file: `app/tests/ops-duyet-nhip.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: kiểm âm «không còn ô Ảnh hỏng» chưa từng được cho chạy đỏ, dù eval hứa chiều đỏ 'CON O ANH HONG'**
+  Người dùng thấy gì: Bài kiểm xác nhận không còn ô «Ảnh hỏng» chưa từng được thử cho chạy đỏ. Màn hình hiện tại vẫn đúng.
+  Căn cứ: Không ảnh hưởng người dùng, chỉ làm bằng chứng kiểm thử yếu hơn lời hứa, chi phí thêm ca đột biến nhỏ nhưng lợi ích thấp.
+  file: `app/tests/ops-duyet-nhip.test.tsx`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Hình dạng 4: chiều đỏ 'SAI DINH DANG SO' không ghim thông điệp, regex nhận mọi lỗi OD1-AC-6**
+  Người dùng thấy gì: Bài kiểm tra cột So («Khớp», «Lệch», «Thiếu») chấp nhận nhiều kiểu hỏng khác nhau mà không chỉ rõ lỗi nào. Cột So trên màn hình vẫn đúng.
+  Căn cứ: Không ảnh hưởng người dùng, chỉ làm thông báo lỗi của kiểm thử kém rõ khi có sự cố, sửa không đáng công.
+  file: `app/tests/ops-duyet-nhip.test.tsx`
+  severity: low
+  Đề xuất: wont-fix
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
