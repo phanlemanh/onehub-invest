@@ -5,7 +5,7 @@ slug: dung-danh-ba-may-thu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-dung-danh-ba-may-thu-design.md
 approved_by: Mạnh
 approved_at: 2026-11-07T23:51:50Z
@@ -109,5 +109,13 @@ of scope.
 - Fixture là mã tổng hợp tiền tố Q; đầu ra phép đo chỉ in số (nếp của DB1). Chính sách dữ liệu dự án (S07, S08, S09, nguồn
   nhà nước) Mạnh mở 08/11, văn bản sửa ở hàng DA0 — vòng này không dựa vào luật 5 cho tiêu chí nào; chặn đích ngoài máy
   ở AC-2 là rào an toàn của lệnh ghi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: bài kiểm bị ngắt giữa chừng có thể để sót trong `pipeline/` một bản chép tệp lệnh đã gỡ rào, chưa được gitignore.
+  - Ngoài-3: phép đo AC-8 không đối chiếu số trục của khu thứ hai với số viết trước (5/6 ô được kiểm).
+  - Ngoài-4: hình nghiệm thu `figures/buoc-dem.html` (và ảnh PNG) còn in tên thật của hai nguồn — để đợt dọn tên sau 05/11.
+  - Ngoài-5: `evals.yaml` mô tả chiều đỏ qua biến `DBV_LENH`, còn phép đo thật truyền thẳng đường dẫn bản chép.
+  - Ngoài-6: lời báo đỏ «DBM-AC-4 đêm rơi khu mặc định» chọn theo nhãn test, có thể gọi sai nguyên nhân.
+  - Ngoài-7: soát tĩnh `refresh-bait-gap` không có đối chứng dương, chỉ bắt một dạng viết đổi mô-đun qua biến môi trường.
+  - Ngoài-8: bảng kỳ vọng đếm theo khu của AC-8 thiếu ô trục ở khu có phân khu.
 - Vùng mã: `pipeline/danh-ba-vat-the.mjs`, `pipeline/lib/danh-ba-vat-the*`, `pipeline/scripts/danh-ba-vat-the*`, cộng
   (khai ở Cổng Phạm vi) `pipeline/refresh-bait-gap.mjs`, `pipeline/CLAUDE.md`, `docs/ops/runtime-map.md`.
