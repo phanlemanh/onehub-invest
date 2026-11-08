@@ -175,7 +175,7 @@ flowchart LR
 - Lối người duyệt hay rút số qua người đăng. DO3 chỉ đếm khi lối ấy có.
 - Kiểm ngược đường danh mục CĐT ở mức toà (Hỏi-1).
 - Chấm đạt/đỏ theo đích (báo cáo ngày).
-- Độ phủ (C2b), chi phí (PL31), đo gắn căn (DO2).
+- Độ phủ (C2b), chi phí (PL31), đo định vị và gắn căn (DO2).
 
 ## Rủi ro đã biết
 

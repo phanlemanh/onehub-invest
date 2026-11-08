@@ -16,7 +16,7 @@
     {"id": "OOS-2", "p": "Không dựng lối duyệt hay rút tay số qua người đăng."},
     {"id": "OOS-3", "p": "Không kiểm ngược danh mục CĐT ở mức toà (theo Hỏi-1)."},
     {"id": "OOS-4", "p": "Không chấm đạt/đỏ theo đích — báo cáo ngày làm việc đó."},
-    {"id": "OOS-5", "p": "Không đo độ phủ, chi phí hay gắn căn — đã có hàng riêng."}
+    {"id": "OOS-5", "p": "Không đo độ phủ, chi phí, định vị hay gắn căn — đã có hàng riêng."}
   ],
   "coverage_plain": [
     {"i": 0, "p": "Không gian tiêu chí quét theo bảy trục dưới đây; mỗi trục chỉ ra tiêu chí phủ nó."},

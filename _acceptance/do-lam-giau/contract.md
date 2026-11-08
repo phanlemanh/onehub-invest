@@ -100,9 +100,10 @@ Ngưỡng của `opportunity.md` (Mạnh 08/11):
 - Lối người duyệt hay rút số qua người đăng.
 - Kiểm ngược đường danh mục CĐT ở mức toà (Hỏi-1).
 - Chấm đạt/đỏ theo đích (báo cáo ngày làm).
-- Độ phủ (C2b), chi phí (PL31), đo gắn căn (DO2).
+- Độ phủ (C2b), chi phí (PL31), đo định vị và gắn căn (DO2).
 
 ## Notes
 
 - Lõi kiểm ngược gọi đúng hàm của bước ghi (`rutLienLac`, `chonSoNguoi`, `loaiHinhNhom`) để đo đúng thứ đang chạy, không
   một bản chép.
+- Chiều dự án, toà (và trục) của lát là **định vị** theo thang bậc mới (Mạnh «Đồng ý đổi» 08/11: B2 «Định vị», B3 «Gắn căn» = nhận diện duy nhất); DO3 không gọi chiều này là «gắn căn» và không dùng bậc B0–B5 làm mẫu số cho số nào.
