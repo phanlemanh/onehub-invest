@@ -27,17 +27,21 @@ export function docCategory(raw: string | null | undefined): HopChon {
   return (REVIEW_CATEGORIES as readonly string[]).includes(raw ?? "") ? (raw as ReviewCategory) : TAT_CA;
 }
 
-/** Mỗi hạng mục đang có thẻ chờ một mục, theo thứ tự `REVIEW_CATEGORIES` (không theo số chờ). */
+/**
+ * Mỗi hạng mục có thẻ (chờ hay đã quyết) một mục, theo thứ tự `REVIEW_CATEGORIES` (không theo số chờ). Hạng mục hết thẻ chờ
+ * vẫn có mục (số chờ 0) để lọc thẻ đã quyết của nó — hộp thay ô «Loại thẻ» nên không được làm mất việc lọc đó (gap-probe P0).
+ */
 export function hopHangMuc(items: ReviewItem[], pace: NhipHangMuc[], now = Date.now()): MucHop[] {
+  const co = new Set<ReviewCategory>();
   const cho = new Map<ReviewCategory, ReviewItem[]>();
   for (const i of items) {
-    if (i.status !== "pending") continue;
     const c = reviewCategory(i);
-    cho.set(c, [...(cho.get(c) ?? []), i]);
+    co.add(c);
+    if (i.status === "pending") cho.set(c, [...(cho.get(c) ?? []), i]);
   }
   const trungVi = new Map(pace.map((p) => [p.category, p.medianSeconds]));
-  return REVIEW_CATEGORIES.filter((c) => cho.has(c)).map((c) => {
-    const ds = cho.get(c)!;
+  return REVIEW_CATEGORIES.filter((c) => co.has(c)).map((c) => {
+    const ds = cho.get(c) ?? [];
     const moc = ds.map((i) => (i.created_at ? Date.parse(i.created_at) : NaN)).filter(Number.isFinite);
     return {
       ma: c,

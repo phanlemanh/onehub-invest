@@ -16,22 +16,25 @@ có số trước (giây/thẻ theo hạng mục); OD2 rút các bước quanh t
 
 1. **Đầu trang** (ĐC3): `PageHeader` với ba số: Chờ duyệt · Quá 3 ngày · Đã quyết hôm nay (giờ Việt Nam, mọi người).
 2. **Hộp hạng mục** (ĐC3, khuôn `@reui/solution-agents-9`): Frame «Danh sách thẻ» thêm cột trái liệt các Hạng mục duyệt
-   đang có thẻ chờ, mỗi mục: nhãn, số thẻ chờ, dòng «cũ nhất n ngày · trung vị x giây» (trung vị giây ở thẻ 7 ngày của
+   có thẻ (chờ hay đã quyết — mục hết thẻ chờ vẫn lọc được thẻ đã quyết), mỗi mục: nhãn, số thẻ chờ, dòng «cũ nhất n ngày ·
+   trung vị x giây» (hết thẻ chờ: «hết thẻ chờ · trung vị x») (trung vị giây ở thẻ 7 ngày của
    OD1). Mục «Tất cả» đứng đầu. Bấm mục → lọc bảng theo hạng mục, URL `?category=<mã>`. Màn hẹp: cột trái thành dải
    cuộn ngang trên bảng. Bỏ ô lọc «Loại thẻ» (hạng mục thay nó); giữ ô «Trạng thái».
 3. **Chế độ duyệt** (ĐC4): nút «Duyệt liền» trên hộp (hay bấm một thẻ chờ) mở sheet ở thẻ chờ đầu tiên của hạng mục
    đang chọn. Đầu sheet có thanh «12/133 · <hạng mục>», nút Trước/Sau và nút «Phím tắt». Quyết xong, sheet **không
    đóng**: thẻ kế cùng hạng mục hiện ngay (thẻ quyết rồi rời danh sách đi). Hết thẻ: thân sheet là Empty «Hết thẻ chờ
-   ở hạng mục này» + nút sang hạng mục kế còn thẻ. Thứ tự thẻ: Hỏi-1.
+   ở hạng mục này» + nút sang hạng mục kế còn thẻ. Thứ tự thẻ: Hỏi-1. Ô lọc «Loại thẻ» bỏ: hộp thay nó (thẻ Người ở mục
+   «Gộp Người»).
 4. **Phím** (ĐC4, bảng phím khuôn `@reui/c-dialog-9`): `J`/`↓` thẻ sau, `K`/`↑` thẻ trước, `1`–`4` theo thứ tự nút
-   đáp án ở chân thẻ (Hỏi-2: một phím quyết luôn, hay chọn rồi `⌘↵`/`Ctrl↵` gửi), `R` vào ô lý do, `?` mở bảng phím,
+   đáp án ở chân thẻ (số `Kbd` đứng cạnh nút, nút mang `aria-keyshortcuts` và giữ nguyên chữ đáp án; Hỏi-2: một phím quyết luôn, hay chọn rồi `⌘↵`/`Ctrl↵` gửi), `R` vào ô lý do, `?` mở bảng phím,
    `Esc` đóng sheet (mặc định của Sheet). Phím chữ và số chỉ chạy khi tiêu điểm không ở ô nhập; trong ô lý do chỉ
    `⌘↵`/`Ctrl↵` và `Esc` chạy. Không trùng `⌘K`/`⌘F` của vỏ Ops. Mỗi nút đáp án mang `Kbd` số của nó.
 5. **Hoàn tác 5 giây** (ĐC5, Q7): bấm đáp án → lệnh gửi giữ ở trình duyệt 5 giây; toast `sonner` «Đã ghi #id · <nhãn
    đáp án>» có nút «Hoàn tác»; sheet sang thẻ kế ngay. Hoàn tác trong 5 giây → không gửi gì, sheet quay về thẻ đó, lý do
    đã gõ còn nguyên. Hết 5 giây → gửi route decide như OD1 (`elapsed_ms` đo tới lúc **bấm**, không tính 5 giây chờ).
-   Gửi lỗi → toast lỗi kèm nút «Mở thẻ», thẻ trở lại danh sách chờ. Rời trang (đóng tab, chuyển trang) khi còn lệnh
-   chờ → gửi ngay bằng `fetch(…, { keepalive: true })` lúc `pagehide`, không bỏ quyết định nào.
+   Gửi lỗi → toast lỗi kèm nút «Mở thẻ», thẻ trở lại danh sách chờ. «Hoàn tác» bấm sau khi lệnh đã gửi (toast còn hiện vì
+   chuột đè lên) không đưa thẻ trở lại. Rời trang (đóng tab: `pagehide`; chuyển route trong app: hàng duyệt bị gỡ) khi còn
+   lệnh chờ → gửi ngay bằng `fetch(…, { keepalive: true })`, không bỏ quyết định nào.
 6. **Quyết định gần đây** (ĐC5, khuôn `recent-decisions` của `solution-agents-5` đã cài): Frame bên dưới danh sách, 20
    lượt `review.decide` gần nhất trong 7 ngày (Hỏi-3: của chính người duyệt, hay mọi người): #id · tiêu đề thẻ · nhãn
    đáp án · lý do · giờ; bấm #id → `?card=<id>` mở thẻ (thẻ đã quyết, xem lại). Đảo quyết định sau 5 giây là lệnh đảo

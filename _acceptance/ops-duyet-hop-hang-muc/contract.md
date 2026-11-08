@@ -32,24 +32,29 @@ Source input: hàng lộ trình OD2 (Cổng Đáng gom về giám sát, Mạnh d
   (thẻ `pending` có `created_at` cũ hơn 72 giờ), Đã quyết hôm nay (thẻ có `decided_at` từ 00:00 giờ Việt Nam, mọi người)
   — thẻ quyết lúc 23:30 hôm qua giờ Việt Nam không tính; vai Người xem và nhánh cloud giữ như OD1.
 - **AC-2** — Given thẻ chờ thuộc nhiều Hạng mục duyệt, When trang dựng, Then hộp hạng mục (khuôn cột trái
-  `solution-agents-9`) có mục «Tất cả» rồi một mục cho mỗi hạng mục đang có thẻ chờ theo thứ tự `REVIEW_CATEGORIES`, mỗi
-  mục mang số thẻ chờ, tuổi thẻ chờ cũ nhất (ngày) và trung vị giây ở thẻ 7 ngày của OD1 («—» khi chưa đo); bấm một mục
-  → bảng chỉ còn thẻ của mục đó, URL có `?category=<mã>`; mở `/ops/review?category=<mã>` → mục đó chọn sẵn;
-  `?category=` lạ → «Tất cả», không lỗi; ô lọc «Loại thẻ» không còn, ô «Trạng thái» giữ.
+  `solution-agents-9`) có mục «Tất cả» rồi một mục cho mỗi hạng mục có thẻ (chờ hay đã quyết) theo thứ tự
+  `REVIEW_CATEGORIES`, mỗi mục mang số thẻ chờ, tuổi thẻ chờ cũ nhất (ngày; mục hết thẻ chờ ghi «hết thẻ chờ») và trung vị
+  giây ở thẻ 7 ngày đọc từ `loadReviewPace` của OD1 («—» khi chưa đo); bấm một mục → bảng chỉ còn thẻ của mục đó, URL có
+  `?category=<mã>`; mục hết thẻ chờ + Trạng thái «Đã quyết» vẫn lọc ra thẻ đã quyết của mục đó; mở
+  `/ops/review?category=<mã>` → mục đó chọn sẵn; `?category=` lạ → «Tất cả», không lỗi; ô lọc «Loại thẻ» không còn (hộp thay
+  nó), ô «Trạng thái» giữ.
 - **AC-3** (cross-layer) — Given đang chọn một hạng mục có N thẻ chờ, When người bấm «Duyệt liền» rồi quyết lần lượt từng
   thẻ, Then sheet mở ở thẻ chờ đầu theo thứ tự cũ nhất trước (Hỏi-1), đầu sheet hiện «k/N · <hạng mục>», mỗi lượt quyết
   thì thẻ kế cùng hạng mục hiện ngay trong CÙNG sheet (sheet không đóng giữa hai thẻ), Trước/Sau đi lùi tới không quyết;
   quyết hết N thẻ → thân sheet là Empty «Hết thẻ chờ ở hạng mục này» kèm nút sang hạng mục kế còn thẻ (không còn → nút
   «Đóng»); mọi lượt đều tới route decide và ghi `review_queue` + `ops_audit` như OD1.
 - **AC-4** — Given sheet chế độ duyệt đang mở, When người gõ phím, Then `J`/`↓` sang thẻ sau, `K`/`↑` về thẻ trước, `1`–`4`
-  bấm đúng nút đáp án thứ n ở chân thẻ (mỗi nút mang `Kbd` số của nó; nút đang tắt thì phím không làm gì) và quyết luôn
+  bấm đúng nút đáp án thứ n ở chân thẻ (cạnh mỗi nút có `Kbd` số của nó, nút mang `aria-keyshortcuts` và giữ nguyên chữ đáp
+  án; nút đang tắt thì phím không làm gì) và quyết luôn
   (Hỏi-2), `R` đưa tiêu điểm vào ô lý do, `?` mở bảng phím (khuôn `c-dialog-9`, liệt đủ mọi phím trên); khi tiêu điểm ở ô
   nhập, phím chữ/số không làm gì; phím có `⌘`/`Ctrl`/`Alt` kèm phím chữ không bị bắt (giữ `⌘K` của vỏ Ops).
 - **AC-5** (cross-layer) — Given người bấm một đáp án ở chế độ duyệt, When chưa đủ 5 giây, Then chưa có yêu cầu nào tới
   route decide, toast «Đã ghi #<id> · <nhãn đáp án>» có nút «Hoàn tác», thẻ kế đã hiện; bấm «Hoàn tác» → không yêu cầu nào
   được gửi, sheet quay về thẻ đó với lý do đã gõ còn nguyên, `review_queue` không đổi; không hoàn tác → đúng một yêu cầu
   gửi lúc 5 giây với `elapsed_ms` đo tới lúc bấm (không cộng 5 giây chờ); route trả lỗi → toast lỗi kèm «Mở thẻ», thẻ trở
-  lại danh sách chờ; trang phát `pagehide` khi còn lệnh chờ → mọi lệnh chờ gửi ngay bằng `fetch` có `keepalive: true`.
+  lại danh sách chờ; «Hoàn tác» bấm SAU khi lệnh đã gửi (toast còn hiện vì chuột đè lên) → không đưa thẻ trở lại, không gửi
+  thêm; trang phát `pagehide`, hay hàng duyệt bị gỡ (chuyển route trong app) khi còn lệnh chờ → mọi lệnh chờ gửi ngay bằng
+  `fetch` có `keepalive: true`.
 - **AC-6** — Given `ops_audit` có lượt `review.decide` của người đang duyệt và của người khác, trong và ngoài 7 ngày, When
   trang dựng, Then Frame «Quyết định gần đây» liệt tối đa 20 lượt mới nhất trong 7 ngày của chính người đang duyệt
   (Hỏi-3), mỗi lượt: #id, tiêu đề thẻ (đã gọt điểm như OD1), nhãn đáp án, lý do, giờ Việt Nam; #id là liên kết
@@ -88,5 +93,10 @@ Q4, Q7 của báo cáo f2 đã Mạnh duyệt). Trục tự kê để người s
 
 - Không đổi route decide (`app/src/app/api/v1/ops/review/**` là đường T3 của kho), không migration, không API mới.
 - Hoàn tác quay về một thẻ thì đồng hồ thẻ (OD1) đặt lại: giây ở thẻ của lượt đó đo từ lúc quay về.
+- Ô «Loại thẻ» bỏ vì hộp hạng mục thay nó (thẻ Người lọc ở mục «Gộp Người»). Test cũ đã sửa theo: `ops-duyet-nhip.test.tsx`
+  ca OD1-AC-8 (bộ lọc thẻ Người — hồ sơ ops-duyet-nhip-va-chu AC-8), OD1-AC-1-UI, OD1-AC-10 (chỉ đổi chuỗi đột biến theo mã
+  mới); `review-queue.test.tsx` RQ-AC-2 (ma trận lọc, hồ sơ UI1), RQ-AC-5 (quyết từ sheet: chờ 5 giây, sang thẻ kế);
+  `review-card.test.tsx` AC-11, `review-nguoi.test.tsx` TN-AC-8, `the-duyet-du-can-cu.test.tsx` TD-AC-6, TD-AC-7 (lý do
+  trống theo Q4). Ý của các tiêu chí đã ký giữ nguyên, chỉ đổi đường bấm và luật lý do mà Q4 đã chốt.
 - Bắt gõ lý do khi «Bỏ» ở Bổ sung tin là tạm, tới khi OD4 phân được ghi đè (Q4 chỉ giữ lý do gõ tay cho việc bác đề xuất
   ghi đè).

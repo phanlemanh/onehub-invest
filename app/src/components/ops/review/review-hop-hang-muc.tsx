@@ -64,13 +64,15 @@ export function ReviewHopHangMuc({ hop, chon, tongCho, onChon }: {
     >
       <div className="flex items-center justify-between gap-3 px-(--frame-panel-header-px) py-2.5">
         <div className="text-foreground text-sm font-semibold">Hạng mục</div>
-        <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(hop.length)} hạng mục có thẻ chờ</span>
+        <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(hop.filter((m) => m.cho > 0).length)} hạng mục có thẻ chờ</span>
       </div>
       <div className="flex gap-1 overflow-x-auto p-1 @4xl:flex-col @4xl:overflow-visible">
         {muc(TAT_CA, "Tất cả", tongCho, null)}
         <Separator orientation="vertical" className="my-1 @4xl:hidden" />
         {hop.map((m) =>
-          muc(m.ma, m.nhan, m.cho, [m.cuNhatNgay === null ? null : `cũ nhất ${fmtInt(m.cuNhatNgay)} ngày`, `trung vị ${giay(m.trungViGiay)}`].filter(Boolean).join(" · ")),
+          muc(m.ma, m.nhan, m.cho, m.cho === 0
+            ? `hết thẻ chờ · trung vị ${giay(m.trungViGiay)}`
+            : [m.cuNhatNgay === null ? null : `cũ nhất ${fmtInt(m.cuNhatNgay)} ngày`, `trung vị ${giay(m.trungViGiay)}`].filter(Boolean).join(" · ")),
         )}
       </div>
     </aside>

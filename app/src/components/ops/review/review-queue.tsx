@@ -128,7 +128,7 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
   }
 
   // Ba nhịp của hàng chờ gửi. Thẻ vừa bấm rời hàng duyệt ngay; thẻ kế = thẻ đứng sau nó trong hàng lúc bấm.
-  const onXep = useCallback((lenh: LenhQuyet, hoanTac: () => void) => {
+  const onXep = useCallback((lenh: LenhQuyet, hoanTac: () => boolean) => {
     const truoc = hangRef.current
     const i = truoc.findIndex((t) => t.id === lenh.id)
     const con = truoc.filter((t) => t.id !== lenh.id)
@@ -143,7 +143,8 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
       action: {
         label: "Hoàn tác",
         onClick: () => {
-          hoanTac()
+          // Lệnh đã gửi (toast còn hiện vì chuột đè lên quá 5 giây) → không đưa thẻ trở lại; báo đã ghi.
+          if (!hoanTac()) return void toast(`#${lenh.id} đã ghi — quá 5 giây, không hoàn tác được`)
           setDangGui((s) => {
             const n = new Set(s)
             n.delete(lenh.id)

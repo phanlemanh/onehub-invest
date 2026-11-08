@@ -45,7 +45,8 @@ const guiQuyet = (lenh: LenhQuyet, keepalive = false) =>
  */
 export function HangGuiProvider({ children, onXep, onXong, onLoi }: {
   children: ReactNode
-  onXep: (lenh: LenhQuyet, hoanTac: () => void) => void
+  /** `hoanTac()` trả false khi lệnh đã gửi (toast còn hiện vì người đè chuột lên) — bên gọi không được đưa thẻ trở lại. */
+  onXep: (lenh: LenhQuyet, hoanTac: () => boolean) => void
   onXong: (lenh: LenhQuyet) => void
   onLoi: (lenh: LenhQuyet, loi: string) => void
 }) {
@@ -75,10 +76,11 @@ export function HangGuiProvider({ children, onXep, onXong, onLoi }: {
     giu.current.delete(lenh.id)
     onXep(lenh, () => {
       const c = cho.current.get(lenh.id)
-      if (!c) return
+      if (!c || c.lenh !== lenh) return false
       clearTimeout(c.hen)
       cho.current.delete(lenh.id)
       giu.current.set(lenh.id, lenh.lyDoGo)
+      return true
     })
   }, [gui, onXep])
 
@@ -90,8 +92,12 @@ export function HangGuiProvider({ children, onXep, onXong, onLoi }: {
       }
       cho.current.clear()
     }
+    // Rời trang (đóng tab) phát pagehide; chuyển route trong app không phát — thành phần bị gỡ thì cũng xả (gap-probe P1).
     window.addEventListener("pagehide", xa)
-    return () => window.removeEventListener("pagehide", xa)
+    return () => {
+      window.removeEventListener("pagehide", xa)
+      xa()
+    }
   }, [])
 
   const value = useMemo<HangGui>(() => ({
