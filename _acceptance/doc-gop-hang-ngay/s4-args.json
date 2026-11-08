@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-07T23:45:54Z",
-  "generated_sha": "e7e5d954d476034013307060da96d1f45db59ba8",
+  "generated_at": "2026-11-08T08:55:41Z",
+  "generated_sha": "d85c71ad42547afde7fc2cfa09e6cd76e34791b7",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "doc-gop-hang-ngay",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
@@ -187,17 +187,18 @@
     "cd app && npm run test:lint-rules",
     "node scripts/check-portal-compliance.mjs"
   ],
-  "diffBase": "d60c3fa1ab93f65e0d37230879c021646db53512",
+  "diffBase": "38d6b0ada0842d5cb4a7f9ece2fab86ca03de6da",
   "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813",
   "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/judge-personas.md",
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813/_acceptance/doc-gop-hang-ngay/contract.md",
-  "invokedAt": "2026-11-07T23:45:54Z",
-  "invokedSha": "e7e5d954d476034013307060da96d1f45db59ba8",
+  "invokedAt": "2026-11-08T08:55:41Z",
+  "invokedSha": "d85c71ad42547afde7fc2cfa09e6cd76e34791b7",
   "vungVat": [
     "_acceptance/doc-gop-hang-ngay/design-floor.json",
     "_acceptance/doc-gop-hang-ngay/evals.yaml",
+    "_acceptance/doc-gop-hang-ngay/s4-args.json",
     "agent/scripts/doc-gop-s03.ts",
     "agent/src/enrich/doc-gop-s03/chay.ts",
     "agent/src/enrich/doc-gop-s03/hang-ngay.ts",
@@ -220,21 +221,32 @@
     "_acceptance/*/**/*.jsonl"
   ],
   "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
     "_acceptance/doc-gop-hang-ngay/contract.md",
     "_acceptance/doc-gop-hang-ngay/decisions.jsonl",
     "_acceptance/doc-gop-hang-ngay/duong-nen.md",
+    "_acceptance/doc-gop-hang-ngay/evidence-report.md",
     "_acceptance/doc-gop-hang-ngay/gap-probe.md",
+    "_acceptance/doc-gop-hang-ngay/review-findings.md",
+    "_acceptance/doc-gop-hang-ngay/run-log.jsonl",
     "_acceptance/doc-gop-hang-ngay/usage-report.md",
     "docs/superpowers/plans/2026-11-08-doc-gop-hang-ngay.md",
     "docs/superpowers/specs/2026-11-08-doc-gop-hang-ngay-design.md"
   ],
   "diffFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
     "_acceptance/doc-gop-hang-ngay/contract.md",
     "_acceptance/doc-gop-hang-ngay/decisions.jsonl",
     "_acceptance/doc-gop-hang-ngay/design-floor.json",
     "_acceptance/doc-gop-hang-ngay/duong-nen.md",
     "_acceptance/doc-gop-hang-ngay/evals.yaml",
+    "_acceptance/doc-gop-hang-ngay/evidence-report.md",
     "_acceptance/doc-gop-hang-ngay/gap-probe.md",
+    "_acceptance/doc-gop-hang-ngay/review-findings.md",
+    "_acceptance/doc-gop-hang-ngay/run-log.jsonl",
+    "_acceptance/doc-gop-hang-ngay/s4-args.json",
     "_acceptance/doc-gop-hang-ngay/usage-report.md",
     "agent/scripts/doc-gop-s03.ts",
     "agent/src/enrich/doc-gop-s03/chay.ts",
@@ -247,6 +259,7 @@
   "fileDoTrongDiff": [
     "_acceptance/doc-gop-hang-ngay/design-floor.json",
     "_acceptance/doc-gop-hang-ngay/evals.yaml",
+    "_acceptance/doc-gop-hang-ngay/s4-args.json",
     "agent/scripts/doc-gop-s03.ts",
     "agent/src/enrich/doc-gop-s03/chay.ts",
     "agent/src/enrich/doc-gop-s03/hang-ngay.ts",
@@ -262,13 +275,229 @@
   ],
   "coEvalPaths": true,
   "evalsHash": "cdf6b515a6d048660cfaa75bc6a25ca16577c6d9a01f4ec07c2636b8c40bc333",
-  "runBaseline": true,
+  "runBaseline": false,
+  "carriedAnalyst": {
+    "fromRound": 1,
+    "nonDiscriminating": []
+  },
+  "carriedEvals": [
+    {
+      "id": "E1",
+      "runId": "minted-doc-gop-hang-ngay-E1-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E2",
+      "runId": "minted-doc-gop-hang-ngay-E2-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E3",
+      "runId": "minted-doc-gop-hang-ngay-E3-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-doc-gop-hang-ngay-E4-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E5",
+      "runId": "minted-doc-gop-hang-ngay-E5-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E6",
+      "runId": "minted-doc-gop-hang-ngay-E6-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E7",
+      "runId": "minted-doc-gop-hang-ngay-E7-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E8",
+      "runId": "minted-doc-gop-hang-ngay-E8-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-07T23:45:54Z",
+      "cmd": "cd agent && npm test"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "agent/src/enrich/doc-gop-s03/hang-ngay.ts",
+      "title": "Daily spend cap counts by silver_labels.run_id, but SQL_GHI_DOC rewrites run_id and adds cost onto the old value when it re-reads a json-hong label",
+      "severity": "medium",
+      "plain": "Số tiền đã chi trong ngày có thể tính lệch: đếm dư khiến việc đọc bài dừng sớm hơn cần, hoặc đếm hụt khi bước kiểm mẫu chạy ngay sau đó, nên trần 20 USD không chính xác tuyệt đối.",
+      "can_cu": "Lệch nhỏ vì mỗi lời gọi chỉ tốn cỡ vài phần nghìn USD và phần dư đã được ghi trong hợp đồng; không mất dữ liệu, chạy lại hôm sau là đọc tiếp được, còn sửa đúng cần đổi cách ghi sổ tiền nên đắt hơn hậu quả.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/src/enrich/doc-gop-s03/chay.ts",
+      "title": "Header comments still say there is no whole-S03 path and that --thu needs the key, which contradicts the new hang-ngay command",
+      "severity": "low",
+      "plain": "Người đọc mã sau này có thể tưởng hệ thống chưa có đường đọc toàn bộ bài S03 và tưởng chạy thử vẫn cần khoá, dẫn tới hiểu sai ranh giới an toàn.",
+      "can_cu": "Không ảnh hưởng người dùng cuối hay dữ liệu, chỉ gây hiểu nhầm cho người bảo trì; sửa rất rẻ bằng một lần chỉnh chữ ở lượt dọn sau.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/doc-gop-hang-ngay.sh",
+      "title": "New nightly script is not recorded in pipeline/CLAUDE.md, agent/CLAUDE.md or the ROADMAP as-built section",
+      "severity": "low",
+      "plain": "Bước đêm mới có gọi model trả tiền chưa có trên các bản đồ vận hành, nên người trực có thể không biết nó tồn tại khi tra sự cố hay chi phí.",
+      "can_cu": "Không gây mất dữ liệu hay lỗi cho người dùng; bước này chưa gắn lịch nên chưa chạy thật, và bổ sung tài liệu là việc rẻ làm cùng lượt gộp.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/src/enrich/doc-gop-s03/hang-ngay.ts",
+      "title": "phamViNgay re-copies the S03 channel predicate instead of using test-posts.mjs, which calls itself the single definition",
+      "severity": "low",
+      "plain": "Nếu sau này luật chọn bài S03 ở nơi khác đổi, phạm vi đọc hằng ngày có thể lặng lẽ lệch, đọc thiếu hoặc thừa bài mà không có cảnh báo.",
+      "can_cu": "Hiện hai định nghĩa đang khớp nên chưa có hậu quả; nếu lệch thì chỉ đọc thừa hoặc thiếu bài và sửa lại được, không mất dữ liệu gốc.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/doc-gop-hang-ngay.sh",
+      "title": "When the date calculation fails the script exits 2 without the JOB FAIL line the header promises",
+      "severity": "low",
+      "plain": "Nếu việc tính ngày hôm qua bị lỗi thì bước đêm dừng mà không in dòng báo hỏng quen thuộc, nên người trực khó thấy đêm đó không đọc bài nào.",
+      "can_cu": "Tình huống hiếm vì tính ngày gần như không hỏng; hậu quả chỉ là báo lỗi kém rõ, không mất dữ liệu, và đêm sau chạy lại được.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/doc-gop-hang-ngay.sh",
+      "title": "Mảng ENV_FILE rỗng dưới set -u làm bash 3.2 (macOS /bin/bash) chết khi không có .env, mã thoát không thuộc bảng mã đã khai",
+      "severity": "low",
+      "plain": "Trên máy chạy lịch đêm bằng bash cũ của macOS, nếu thiếu tệp cấu hình thì bước đọc bài chết với mã lạ thay vì báo thiếu khoá rõ ràng.",
+      "can_cu": "Chỉ xảy ra khi tệp cấu hình mất, lúc đó bước vốn không chạy được; người trực vẫn thấy dòng báo hỏng nhưng sai nguyên nhân, không mất dữ liệu, và sửa chỉ một dòng nên có thể làm sớm.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/scripts/doc-gop-s03.ts",
+      "title": "Lỗi bất ngờ (DB sập, lỗi SQL) thoát mã 1, trùng mã «mọi lời gọi hỏng» đã khai",
+      "severity": "low",
+      "plain": "Khi cơ sở dữ liệu không lên, đêm đó báo giống như model hỏng hết, nên người trực dễ tìm sai chỗ khi xử lý.",
+      "can_cu": "Chỉ làm chẩn đoán chậm hơn, không mất hay sai dữ liệu; đêm sau chạy lại là bài chưa đọc được đọc tiếp.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/tests/doc-gop-hang-ngay.test.ts",
+      "title": "Hình dạng 5 — tuyên «mã hỏng đầu tiên» nhưng ma trận mã của bước đêm thiếu ca hai bước cùng hỏng",
+      "severity": "medium",
+      "plain": "Chưa có phép kiểm nào chứng minh mã thoát khi cả hai ngày cùng hỏng là mã của ngày đầu, nên một thay đổi sai sau này có thể lọt mà không bị phát hiện.",
+      "can_cu": "Hành vi hiện tại chưa được chứng minh sai; rủi ro chỉ là lọt lỗi tương lai, người dùng không bị ảnh hưởng ngay và thêm ca kiểm rất rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/tests/doc-gop-hang-ngay.test.ts",
+      "title": "Hình dạng 2 — trần chia chung trong ngày chi chỉ đo trên dòng silver_labels viết tay đúng khuôn LIKE của bên đọc, không đo vòng ghi rồi đọc",
+      "severity": "medium",
+      "plain": "Chưa có phép kiểm nào chứng minh tiền do lượt đọc thật ghi ra được tính đúng vào trần của ngày, nên nếu ghi sai thì trần có thể không bao giờ chạm mà không ai biết.",
+      "can_cu": "Trần là chốt an toàn tiền nên đáng chú ý, nhưng hiện chưa thấy lỗi thật và chi phí mỗi lời gọi rất nhỏ; thêm ca kiểm vòng ghi rồi đọc là việc vừa phải, nên làm khi nghiệm thu đêm thật.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/tests/doc-gop-hang-ngay.test.ts",
+      "title": "Hình dạng 4 — assert `every` trên mảng có thể rỗng, không đối chứng số lần gọi",
+      "severity": "low",
+      "plain": "Phép kiểm trần 7 USD có thể vẫn xanh dù bước đêm không gọi lần nào, nên chưa chắc đã chứng minh trần được truyền cho cả hai ngày.",
+      "can_cu": "Chỉ là kiểm thử lỏng, không ảnh hưởng người dùng; một dòng đếm bổ sung là sửa xong, làm lúc nào cũng được.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/tests/doc-gop-hang-ngay.test.ts",
+      "title": "Hình dạng 3 — ca `--cau-hinh` chỉ kiểm chữ «qwen» có mặt trong stderr, mà chữ đó cũng nằm sẵn trong tên tệp fixture",
+      "severity": "low",
+      "plain": "Phép kiểm từ chối bảng chọn model sai chưa chứng minh được lý do từ chối, nên một lỗi đổi cách báo có thể lọt qua mà không ai biết.",
+      "can_cu": "Hành vi từ chối vẫn xảy ra theo kiểm thử hiện tại; rủi ro chỉ là bỏ sót hồi quy, không gây mất dữ liệu và sửa rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/config.yaml",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/card-plain.json",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/card.html",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/design-floor.json",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/doi-xa-khai-truoc.json",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/du-bao.json",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/evals.yaml",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/evidence-page.html",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/figures/gan-tin-theo-ten.html",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/figures/gan-tin-theo-ten.png",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/figures/hoi-1-len-cloud.html",
+    "_acceptance/danh-ba-phuong-xa-toan-quoc/figures/hoi-1-len-cloud.png",
+    "_acceptance/doc-gop-hang-ngay/s4-args.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card-plain.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
+    "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evidence-page.html",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "app/src/lib/offers-public.ts",
+    "app/tests/tin-rao-cong-khai.test.tsx",
+    "app/tests/tin-rao-doi-chieu.test.tsx",
+    "db/migrations/084_danh_ba_dvhc.sql",
+    "pipeline/data/dvhc/NGUON.json",
+    "pipeline/data/dvhc/tinh-cu.json",
+    "pipeline/data/dvhc/tinh.json",
+    "pipeline/data/dvhc/xa-cu.json",
+    "pipeline/data/dvhc/xa.json",
+    "pipeline/lib/dvhc.mjs",
+    "pipeline/lib/dvhc.test.mjs",
+    "pipeline/lib/osm.mjs",
+    "pipeline/nap-dvhc.mjs",
+    "pipeline/reassign-areas.mjs",
+    "pipeline/scripts/nap-dvhc-cu.test.mjs",
+    "pipeline/scripts/nap-dvhc-do.mjs",
+    "pipeline/scripts/nap-dvhc.test.mjs",
+    "pipeline/scripts/so-ghep-s06.test.mjs",
+    "pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs",
+    "pipeline/transform-chotot.mjs",
+    "pipeline/transform-zalo.mjs"
+  ],
   "thuocChup": {
-    "sha": "e7e5d954d476034013307060da96d1f45db59ba8",
-    "n": 282,
-    "digest": "151b13faba9b01abf2e1c28854293a83145420908fd71b6cd8b553b4cbfc50a3",
+    "sha": "d85c71ad42547afde7fc2cfa09e6cd76e34791b7",
+    "n": 285,
+    "digest": "715a39c685c026edd420d014ca3c700e8b40929a40ce3cdd013dd52e92cbeaf0",
     "tep": {
-      "_acceptance/config.yaml": "bb6aab7185b394582aa558ae884c547a0dc6d730bd20ef3fd78f570ef4aa0cbf",
+      "_acceptance/config.yaml": "00368bd5addae442600793d21e789936fad539c76f8cc2424f11f08a0b67bcd7",
       "_acceptance/doc-gop-hang-ngay/evals.yaml": "cdf6b515a6d048660cfaa75bc6a25ca16577c6d9a01f4ec07c2636b8c40bc333",
       "agent/tests/ai-call-log.test.ts": "ec1671d58ec1ca4c35ae90d48bf18dc70e53f0556478a46a5ef19e06d8754800",
       "agent/tests/cat-chu.test.ts": "ee25ff528d95bf8fe50c908c1c91c4a3787d562f079c483ffdbd6851dbc763db",
@@ -411,8 +640,8 @@
       "app/tests/the-duyet-hien-nguoi-dang.test.tsx": "d75db65175cdcbaadf515a215e9b61db99e325d9166b0ebb3d56304a971f013a",
       "app/tests/the-duyet-phuong-lech-gia.test.tsx": "7510912de284a74680ea6a09007387aacf1a84af5f5afd917590ddb4337ca1f2",
       "app/tests/the-so-gia-tri-song.test.tsx": "149867ec70a82a983549f151a71383a871bdee8f438316c2da54bc31d95aa4b0",
-      "app/tests/tin-rao-cong-khai.test.tsx": "2146291730aa10c88ac94aee53b1e8a11fcbd597fb524190776646d8f445bc11",
-      "app/tests/tin-rao-doi-chieu.test.tsx": "a1476c6fa0cc73c7e1e48e7352d96df0c9ae8b82dd4b6de8826d029873a63850",
+      "app/tests/tin-rao-cong-khai.test.tsx": "8972b4b1091b8bc003e39d39ee40e62ff221e6c54764bd5b85e25c1cfdca798a",
+      "app/tests/tin-rao-doi-chieu.test.tsx": "de1514a7c40353f2c5d4b0dd95f073f05c585dfa264a20c21907308ad21a8422",
       "app/tests/tin-rao-giao-dien.test.tsx": "a4ac02b1aeca304ff42ff3762e61c2ceabd6d29939ae9bd2b8dc7fb523aa2251",
       "app/tests/trang-chi-tiet-tin-db.test.tsx": "2cf7c1d01420f81cb7d52ae83bdf2f5be82aaaa5dc86f2c9b1e05ed3b4f64bf0",
       "app/tests/trang-chi-tiet-tin.test.tsx": "0f856814837af9ad24b1a600b521f6e8eb93d44852091f3b12d84c72e0590f6e",
@@ -441,6 +670,7 @@
       "pipeline/do-the-duyet.test.mjs": "f9a8ab850e5abb4c45445c32f68d0c2373d334c374689eac729cb7a4608062f6",
       "pipeline/lib/ai-calls.test.mjs": "3361182f7959b8485d13d6877df3dba0a76e6f16610ce56d7d13a327009659c4",
       "pipeline/lib/danh-ba-vat-the.test.mjs": "1b438196481748a7fe58d157646b66890df24a185d50503599dede659039d540",
+      "pipeline/lib/dvhc.test.mjs": "9cb2edcac0429cc48ff84a6704d8dbba546981497b428b98f6758b47b1e27547",
       "pipeline/lib/eval-classify.test.mjs": "a4263fa8d60a533016b17c24cbc3bf10d7c750d20dbcd0a1a55d0d03657ef6de",
       "pipeline/lib/eval-labels.test.mjs": "47bba808adf22737125c0546f52e80f2eb941f7124e8796c19e7a3169d58928e",
       "pipeline/lib/label-cases.test.mjs": "8ef8d1d63fafac06c438a62fea19459a47a1d058eb7ff49e0396a3f39730b4cb",
@@ -482,6 +712,8 @@
       "pipeline/scripts/last-log-line.test.mjs": "1f22f358521d221dbe7d3d7fc154f97f707e71c079a0c05bde3347c9df49e3ad",
       "pipeline/scripts/luoc-do-rieng.test.mjs": "7753110e6756fda3f9244ff179d5100eaf6abc0317072cad1f5f040aed1080e0",
       "pipeline/scripts/media-wiring.test.mjs": "5bf570de708a02d144f4a8c04c1a3527ef84d9de10b01453f40b71b879dd882a",
+      "pipeline/scripts/nap-dvhc-cu.test.mjs": "d328cedc298297d51acb8de18580e03edd29f0edec0b0531f5c2262522e47830",
+      "pipeline/scripts/nap-dvhc.test.mjs": "a14f021f83916f5320a5d666a8eaef2628a34b98005aba937ff381672941c440",
       "pipeline/scripts/nap-lai-ba-luot-fk.test.mjs": "d5d87441ccfdecad4af16dad7a4955721aeb55f1e82a08ee9b7b935885c16b38",
       "pipeline/scripts/nap-lai.test.mjs": "a7649e81c3542a69a8e914a41469df704da8a36297acc7e305be6e2121114fca",
       "pipeline/scripts/ops-facts-so-tong-hop.test.mjs": "6da4de722b7cb55957d2a65382899c6b1fb5fc4696887cbd2f077554c25ce091",
@@ -494,14 +726,14 @@
       "pipeline/scripts/s06-region-tinh.test.mjs": "d887f0e42027f4f4ca4363eacd575de76f2cf95dc01f10b2f590b48f0dc36387",
       "pipeline/scripts/sdt-trong-duong.test.mjs": "c34906bfae512e4861095cb0ce773c6a47af30f5def3423ed04dbd304409b636",
       "pipeline/scripts/seller-ref.test.mjs": "d1b88e9f58bd0330da2212c9f6443fbb3f0349c73571c78ea1362d1a2519018a",
-      "pipeline/scripts/so-ghep-s06.test.mjs": "bdcb7efc5776f0f3f75f5c32e60048c9dc21f98be933699ecd499ef786d0e5ea",
+      "pipeline/scripts/so-ghep-s06.test.mjs": "eb5dde144ff44345a0d5110cbef373a3277c14e4a87d431db3d7f67718206b1e",
       "pipeline/scripts/soat-tang-a.test.mjs": "73043cde1629a2fdfe1c770e44d8e02780888443880d4a8a97d452ee3d014270",
       "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
       "pipeline/scripts/test-posts.test.mjs": "f1d1f906990935042946c694e384f76b067043eed47b729a9a3cb9046ce25a3d",
       "pipeline/scripts/the-duyet-nguoi.test.mjs": "9a6157b7c552f6b3caec88083716d194a72a3e9c2d54f714176361b1603effff",
       "pipeline/scripts/thu-so-s06-viec.test.mjs": "10ed08a8f06b17a34181885d695fdfd2b4ef98ec2dc9769a04168eb0c76c2776",
       "pipeline/scripts/thu-so-s06.test.mjs": "a21fff66dcad037e7af163f5f43a4348e586fca1cbc51c5a2735d4ff0a430211",
-      "pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs": "e489f92c0552873dfe4e0f10a61188b428a7920a42a6517a1eb859d45c8e2322",
+      "pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs": "369b76605735e7df4db1c5e0e4d9284949aaeecf1d2903d35661da159192aabd",
       "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs": "ea5061e883fe5e97dfd1cb66d9319fa7a0196e773121a75f78b11213b759c852",
       "pipeline/scripts/transform-zalo-loai-tin.test.mjs": "55be671ddf1b785456160b0e107780d3f1d4010a12328597b89c2577aa7de553",
       "pipeline/scripts/va-doc-tin.test.mjs": "cbce328a2a4b339e1a1d884f98dbb5fba1ac39e38abc1636f57883389be6fea4",
@@ -553,7 +785,7 @@
     }
   },
   "cayChup": {
-    "sha": "e7e5d954d476034013307060da96d1f45db59ba8",
+    "sha": "d85c71ad42547afde7fc2cfa09e6cd76e34791b7",
     "ban": {},
     "chuaTheoDoi": []
   }

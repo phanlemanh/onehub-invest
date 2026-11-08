@@ -5,7 +5,7 @@ slug: doc-gop-hang-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script, db]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-07T23:35:01Z
 approved_by:

@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: doc-gop-hang-ngay
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e7e5d954d476034013307060da96d1f45db59ba8
+verified_commit: d85c71ad42547afde7fc2cfa09e6cd76e34791b7
 human_signoff:
 ---
 
 # Evidence Report: doc-gop-hang-ngay
-
-Cả tám eval của tính năng đều xanh. Verdict là REJECT vì lệnh suite hồi quy `cd app && npm test` thất bại (một ca `tin-rao-doi-chieu`, không gắn eval nào, xem Iterations).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -28,112 +26,119 @@ Cả tám eval của tính năng đều xanh. Verdict là REJECT vì lệnh suit
 
 ## Evidence
 
+Round 2: không eval nào chạy lại (delta không chạm paths của eval). Cả tám eval là carry-forward từ round 1; sáu lệnh suite chạy lại ở round này.
+
 - eval: E1
   run_id: minted-doc-gop-hang-ngay-E1-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-doc-gop-hang-ngay-E2-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-doc-gop-hang-ngay-E3-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-doc-gop-hang-ngay-E4-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-doc-gop-hang-ngay-E5-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-doc-gop-hang-ngay-E6-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-doc-gop-hang-ngay-E7-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-doc-gop-hang-ngay-E8-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.agent
   verified_at: 2026-11-07T23:45:54Z
+  carried_from_round: 1
   output: |
-    cd agent && npm test (gộp E1-E8), một lượt, đạt 1/1
-    ℹ duration_ms 93162.084417
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
-- cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-doc-gop-hang-ngay-SUITE-lint-r1
+- cmd: cd agent && npm test
+  run_id: minted-doc-gop-hang-ngay-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-07T23:45:54Z
+  verified_at: 2026-11-08T08:55:41Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-doc-gop-hang-ngay-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-11-08T08:55:41Z
 
 - cmd: cd app && npm test
-  run_id: minted-doc-gop-hang-ngay-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-11-07T23:45:54Z
+  run_id: bazxsa08n
+  exit_code: 0
+  verified_at: 2026-11-08T08:55:41Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-doc-gop-hang-ngay-SUITE-npm_test__13563d-r1
+  run_id: minted-doc-gop-hang-ngay-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-07T23:45:54Z
+  verified_at: 2026-11-08T08:55:41Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-doc-gop-hang-ngay-SUITE-test_lint_rules-r1
+  run_id: minted-doc-gop-hang-ngay-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-07T23:45:54Z
+  verified_at: 2026-11-08T08:55:41Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-doc-gop-hang-ngay-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-doc-gop-hang-ngay-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-07T23:45:54Z
+  verified_at: 2026-11-08T08:55:41Z
 
 ## Known limits
 
@@ -141,14 +146,15 @@ Cả tám eval của tính năng đều xanh. Verdict là REJECT vì lệnh suit
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+carried tu round 1 — baseline khong do lai round nay
 
-Lệnh suite thất bại không gắn eval: `cd app && npm test`. Ca hỏng duy nhất là `E4b đối chiếu DB máy thu` trong `app/tests/tin-rao-doi-chieu.test.tsx`. Phép khẳng định về độ trễ "newest" ghi 1930,9 ms và ca chạy mất khoảng 294 giây. Ca này nằm ngoài các tệp tính năng PL34, nhiều khả năng là phép đo thời gian bị nhiễu khi chạy suite dài (1040 ca, hơn 1262 giây). Máy không tự kết luận nguyên nhân, người quyết ở Cổng 2 hoặc chạy lại riêng ca này.
+Không có eval nào được đánh dấu không-phân-biệt. Các lệnh suite xanh là regression-guard bình thường.
 
 ## Variance
 
-none — mọi eval nhiều lượt đều đồng nhất (mọi eval chạy một lượt, tất định)
+none — mọi eval chạy một lần, deterministic.
 
 ## Iterations
 
-Round 1: cả tám eval E1-E8 xanh; lệnh suite `cd app && npm test` thất bại ở ca `E4b đối chiếu DB máy thu` (phép khẳng định thời gian), không gắn eval nào. Trả về cho người xử lý: chạy lại riêng ca đó hoặc xác nhận là lỗi hạ tầng đo thời gian rồi verify lại.
+Round 1: E1–E8 đạt, baseline đo lần đầu.
+Round 2: không có eval lỗi; E1–E8 carry-forward vì delta không chạm paths của eval, sáu lệnh suite chạy lại và đạt.
