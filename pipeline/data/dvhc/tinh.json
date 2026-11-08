@@ -1,0 +1,172 @@
+[
+ {
+  "ma": "01",
+  "ten": "Thành phố Hà Nội",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "04",
+  "ten": "Tỉnh Cao Bằng",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "08",
+  "ten": "Tỉnh Tuyên Quang",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "11",
+  "ten": "Tỉnh Điện Biên",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "12",
+  "ten": "Tỉnh Lai Châu",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "14",
+  "ten": "Tỉnh Sơn La",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "15",
+  "ten": "Tỉnh Lào Cai",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "19",
+  "ten": "Tỉnh Thái Nguyên",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "20",
+  "ten": "Tỉnh Lạng Sơn",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "22",
+  "ten": "Thành phố Quảng Ninh",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "24",
+  "ten": "Thành phố Bắc Ninh",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "25",
+  "ten": "Tỉnh Phú Thọ",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "31",
+  "ten": "Thành phố Hải Phòng",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "33",
+  "ten": "Tỉnh Hưng Yên",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "37",
+  "ten": "Tỉnh Ninh Bình",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "38",
+  "ten": "Tỉnh Thanh Hóa",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "40",
+  "ten": "Tỉnh Nghệ An",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "42",
+  "ten": "Tỉnh Hà Tĩnh",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "44",
+  "ten": "Tỉnh Quảng Trị",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "46",
+  "ten": "Thành phố Huế",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "48",
+  "ten": "Thành phố Đà Nẵng",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "51",
+  "ten": "Tỉnh Quảng Ngãi",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "52",
+  "ten": "Tỉnh Gia Lai",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "56",
+  "ten": "Tỉnh Khánh Hòa",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "66",
+  "ten": "Tỉnh Đắk Lắk",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "68",
+  "ten": "Tỉnh Lâm Đồng",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "75",
+  "ten": "Thành phố Đồng Nai",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "79",
+  "ten": "Thành phố Hồ Chí Minh",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "80",
+  "ten": "Tỉnh Tây Ninh",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "82",
+  "ten": "Tỉnh Đồng Tháp",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "86",
+  "ten": "Tỉnh Vĩnh Long",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "91",
+  "ten": "Tỉnh An Giang",
+  "loai": "Tỉnh"
+ },
+ {
+  "ma": "92",
+  "ten": "Thành phố Cần Thơ",
+  "loai": "Thành phố"
+ },
+ {
+  "ma": "96",
+  "ten": "Tỉnh Cà Mau",
+  "loai": "Tỉnh"
+ }
+]

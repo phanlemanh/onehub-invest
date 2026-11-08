@@ -10,7 +10,8 @@ import pg from "pg";
 
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
-import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
+import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa } from "./lib/osm.mjs";
+import { matchXaCuCoTienTo } from "./lib/dvhc.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
@@ -600,6 +601,29 @@ export function matchPhuongThiTruong(text, entries) {
 }
 
 /**
+ * Phường của một bài S03 (PX1): tên hiện hành trên danh sách của tập thị trường (nhóm khai → thị trường đã khai; chưa
+ * khai → thị trường có phường OSM, không mở ra 34 tỉnh — Hỏi-2); không khớp thì tên xã cũ an toàn, chỉ khi bài gọi đích
+ * danh «phường/xã/P. <tên cũ>» (Hỏi-3); hai thị trường ra hai xã khác nhau → không đoán.
+ * @param {string} text
+ * @param {string[]|null|undefined} khai thị trường nhóm khai
+ * @param {{ entries: (m: string[]) => { id: string, name: string, market: string }[], moiThiTruong: string[], biDanhCua: Map<string, Map<string, string>> }} o
+ * @returns {{ ph: { id: string, slug: string, market: string } | null, cach: "ten"|"bi-danh"|null }}
+ */
+export function ganPhuongS03(text, khai, { entries, moiThiTruong, biDanhCua }) {
+  const tap = khai?.length ? khai : moiThiTruong;
+  const ph = matchPhuongThiTruong(text, entries(tap));
+  if (ph) return { ph, cach: "ten" };
+  let thay = null;
+  for (const m of tap) {
+    const id = matchXaCuCoTienTo(text, biDanhCua?.get(m));
+    if (!id) continue;
+    if (thay && thay.id !== id) return { ph: null, cach: null };
+    thay = { id, slug: id.slice(m.length + 1), market: m };
+  }
+  return thay ? { ph: thay, cach: "bi-danh" } : { ph: null, cach: null };
+}
+
+/**
  * Khu vực của một bài (hồ sơ s03-len-cong). Khớp phường thì lấy phường. Không khớp mà nhóm khai đúng một thị trường có trong `areas`:
  * mã thị trường, `phuong` trống nên confidence không lên high. Chưa khai hay khai nhiều: trống.
  * @param {{ khai?: string[]|null, ph?: { id: string, slug: string }|null, maCoThat: Set<string> }} v
@@ -745,7 +769,11 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
   const moiThiTruong = await docThiTruongCoPhuong(client);
-  const areas = await docPhuongHopLe(client, moiThiTruong);
+  // PX1: danh sách tên phủ mọi thị trường có xã khớp tên được (nhóm khai tỉnh khác 4 thành phố); nhóm chưa khai vẫn chỉ
+  // đối chiếu moiThiTruong (Hỏi-2). Chưa áp 084 → docThiTruongCoXa = docThiTruongCoPhuong, không bí danh.
+  const coXa = await docThiTruongCoXa(client);
+  const areas = await docPhuongHopLe(client, coXa);
+  const biDanhCua = await docBiDanhAnToan(client, coXa);
   const entriesCua = new Map(); // khoá thị trường đã sắp → danh sách phường
   const entries = (markets) => {
     const k = [...markets].sort().join(",");
@@ -787,7 +815,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
     const lyDo = lyDoGiaPhiLy(pr);
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
     const khai = thiTruongNhom.get(p.conversation_id);
-    const ph = matchPhuongThiTruong(p.text, entries(khai?.length ? khai : moiThiTruong));
+    const { ph } = ganPhuongS03(p.text, khai, { entries, moiThiTruong, biDanhCua });
     const kv = ganKhuVuc({ khai, ph, maCoThat });
     if (kv.areaId) { pr.areaId = kv.areaId; pr.phuong = kv.phuong; }
     const loaiChu = docLoaiHinh(p.text);
