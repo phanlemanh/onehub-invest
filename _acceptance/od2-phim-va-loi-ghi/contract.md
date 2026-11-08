@@ -5,8 +5,10 @@ slug: od2-phim-va-loi-ghi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-08-od2-phim-va-loi-ghi-design.md
+approved_by: Mạnh
+approved_at: 2026-11-08
 ---
 
 # Acceptance Contract: od2-phim-va-loi-ghi
