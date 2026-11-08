@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f64c3e6a2faa65ab149a85039cd1f0d112ab70d0
-human_signoff:
+human_signoff: Mạnh 2026-11-09
 ---
 
 # Evidence Report: od2-phim-va-loi-ghi

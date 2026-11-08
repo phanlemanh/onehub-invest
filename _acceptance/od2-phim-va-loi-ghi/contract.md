@@ -5,7 +5,7 @@ slug: od2-phim-va-loi-ghi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-od2-phim-va-loi-ghi-design.md
 approved_by: Mạnh
 approved_at: 2026-11-08
@@ -71,3 +71,8 @@ lượt chấm 1). Trục tự kê để người soát:
 
 - Không route mới, không migration; route decide (`app/src/app/api/v1/ops/review/**`, T3) không đổi.
 - Hồ sơ OD2 hoá cũ theo `paths` (E3, E4 phủ `app/src/components/ops/review/**`) — ghim lại bằng làn máy trước PR.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-1: Nút «Mở thẻ» sau khi rời Hàng duyệt lấy bộ điều hướng qua phần nội bộ của Next (`next/dist/...`), nên có thể hỏng khi nâng phiên bản Next.
+  - Ngoài-2: Nếu trang không có bộ điều hướng, «Mở thẻ» trên tin lỗi sau khi rời Hàng duyệt không làm gì và không báo; người duyệt vẫn mở lại thẻ từ Hàng duyệt được.
+  - Ngoài-3: Người soát lượt 2 ghi ảnh chứng E6 chụp trên mã trước lần sửa cuối; E6 đã chạy lại trên mã mới ở lượt 2, mục giữ lại để người sau đối chiếu.
+  - Ngoài-5: Mô tả bài kiểm E2 ghi số thẻ #62/#63, trong khi ca máy dùng thẻ #61 cho cả ba tình trạng.
