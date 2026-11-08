@@ -55,9 +55,15 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
   const [type, setType] = useState<TypeFilter>(DEFAULT_TYPE_FILTER)
   const [status, setStatus] = useState<StatusFilter>(DEFAULT_STATUS_FILTER)
   // Tìm trong `items` (cả hàng duyệt), không trong hàng đang lọc — thẻ đã quyết vẫn mở được.
-  const [openId, setOpenId] = useState<number | null>(() =>
-    moBanDau?.id != null && items.some((i) => i.id === moBanDau.id) ? moBanDau.id : null,
-  )
+  const theCanMo = (m: typeof moBanDau) => (m?.id != null && items.some((i) => i.id === m.id) ? m.id : null)
+  const [openId, setOpenId] = useState<number | null>(() => theCanMo(moBanDau))
+  // Bấm liên kết `?card=` ngay trên trang (vd «Mở thẻ chờ cũ nhất»): App Router giữ cây client, chỉ đổi prop — mở theo prop
+  // mới trong lúc vẽ (khuôn «giữ prop trước» của React), không dùng effect.
+  const [cardTruoc, setCardTruoc] = useState(moBanDau?.raw ?? null)
+  if ((moBanDau?.raw ?? null) !== cardTruoc) {
+    setCardTruoc(moBanDau?.raw ?? null)
+    setOpenId(theCanMo(moBanDau))
+  }
   const thieuThe = moBanDau !== null && (moBanDau.id === null || !items.some((i) => i.id === moBanDau.id))
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE })
 

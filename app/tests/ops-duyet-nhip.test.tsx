@@ -80,6 +80,7 @@ async function ve(cay: ReactNode) {
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
   document.body.innerHTML = "<div id=root></div>"
   const root = createRoot(document.getElementById("root")!)
+  Object.assign(globalThis, { __od1Root: root })
   await React.act(async () => root.render(<AppRouterContext.Provider value={ROUTER as never}>{cay}</AppRouterContext.Provider>))
   goRoot = async () => {
     await React.act(async () => root.unmount())
@@ -362,6 +363,7 @@ test("OD1-AC-8 nhãn trạng thái là nhãn đáp án (15 ô), thẻ Người c
   assert.deepEqual(ids(), [2], "OD1-AC-8 bộ lọc «Người» sai")
   await chon("Loại thẻ", "Loại khác")
   assert.ok(!ids().includes(2), "OD1-AC-8 «Loại khác» còn nhận thẻ Người")
+  assert.deepEqual(ids(), [10], "OD1-AC-8 «Loại khác» phải ra đúng thẻ loại khác (đối chứng dương)")
   // Sheet thẻ đã bác: badge đầu sheet và DoneState đều «Khác căn».
   await ve(<queueMod.ReviewQueue items={items} media={{}} moBanDau={{ id: 12, raw: "12" }} />)
   const sheet = document.querySelector("[role=dialog]")!
@@ -373,9 +375,43 @@ test("OD1-AC-8 nhãn trạng thái là nhãn đáp án (15 ô), thẻ Người c
   await lyDo("đúng")
   await click(byText(document, "button", "Áp dụng"), "nút Áp dụng")
   assert.equal(document.querySelector("[role=status]")?.textContent, "Đã áp", "NHAN TRANG THAI LECH NUT (thông báo)")
-  // Xưng hô: chữ đã dựng của danh sách + sheet + thẻ không xưng «bạn»/«anh».
-  const chu = [document.body.textContent ?? "", await htmlTinh(<cardMod.ReviewCard item={MAU.ghep()} />)].join(" ").replace(/<[^>]+>/g, " ")
-  assert.ok(!/(^|[\s,.«(])(bạn|anh)([\s,.»)]|$)/iu.test(chu), "XUNG HO")
+  // Xưng hô: chữ hiển thị (chuỗi trong nháy + chữ JSX) của MỌI tệp review* — danh sách viết trước, số tệp = số lần quét.
+  const tep = TEP_REVIEW.map((rel) => [rel, readFileSync(path.join(APP, rel), "utf8")] as [string, string])
+  assert.equal(kiemXungHo(tep), TEP_REVIEW.length, "OD1-AC-8 phải quét đủ mọi tệp review*")
+  // Chiều đỏ trên cùng tệp: chữ «bạn» trở lại ô lý do → đỏ, thông điệp ghim.
+  const doiReason = tep.map(([r, src]) => [r, r.endsWith("review-reason.tsx") ? src.replace("Vì sao quyết như vậy", "Vì sao bạn quyết như vậy") : src] as [string, string])
+  assert.throws(() => kiemXungHo(doiReason), /XUNG HO: src\/components\/ops\/review\/review-reason\.tsx/)
+})
+
+/** Mọi tệp giao diện của hàng duyệt (viết trước; tệp mới phải thêm vào đây — ca đầu kiểm danh sách khớp đĩa). */
+const TEP_REVIEW = [
+  "src/components/ops/review-card.tsx", "src/components/ops/review-card-nguoi.tsx", "src/components/ops/review-content.tsx",
+  "src/components/ops/review-photos.tsx", "src/components/ops/review/review-badges.tsx", "src/components/ops/review/review-compare.tsx",
+  "src/components/ops/review/review-detail-sheet.tsx", "src/components/ops/review/review-full-text.tsx",
+  "src/components/ops/review/review-nhip.tsx", "src/components/ops/review/review-queue-skeleton.tsx",
+  "src/components/ops/review/review-queue.tsx", "src/components/ops/review/review-reason.tsx",
+]
+/** Chữ người đọc thấy trong một tệp: chuỗi trong nháy kép/đơn/backtick và chữ JSX giữa thẻ; bỏ chú thích và import. */
+function chuHienThi(src: string): string[] {
+  const bo = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^import .*$/gm, "")
+  const ra: string[] = []
+  for (const m of bo.matchAll(/"([^"\n]*)"|'([^'\n]*)'|`([^`]*)`|>([^<>{}]+)</g)) ra.push(m[1] ?? m[2] ?? m[3] ?? m[4] ?? "")
+  return ra
+}
+function kiemXungHo(tep: [string, string][]): number {
+  let n = 0
+  for (const [rel, src] of tep) {
+    for (const c of chuHienThi(src)) if (/(^|[\s,.«(])(bạn|anh)([\s,.»)?!]|$)/iu.test(c)) assert.fail(`XUNG HO: ${rel} «${c.trim().slice(0, 60)}»`)
+    n++
+  }
+  return n
+}
+test("OD1-AC-8 danh sách tệp review* viết trước khớp đĩa", () => {
+  const dia = [
+    ...readdirSync(path.join(APP, "src/components/ops")).filter((f) => /^review.*\.tsx$/.test(f)).map((f) => `src/components/ops/${f}`),
+    ...readdirSync(path.join(APP, "src/components/ops/review")).filter((f) => f.endsWith(".tsx")).map((f) => `src/components/ops/review/${f}`),
+  ].sort()
+  assert.deepEqual([...TEP_REVIEW].sort(), dia, "OD1-AC-8 danh sách tệp review* lệch đĩa — thêm tệp mới vào TEP_REVIEW")
 })
 
 // ==== Lược đồ tạm cho các ca route / DB ====
@@ -569,13 +605,9 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     assert.equal(f!.overCap, 1, "OD1-AC-4 fill quá trần")
     if (theo.get("intent_check")?.n) assert.fail("KHONG DO VAO SO")
     if (theo.has("price_check")) assert.fail("NGOAI 7 NGAY")
-    // Trung vị giữa hai lượt: quan hệ với số route đã ghi (không dựng tay).
-    const ghi = (await db.query(`SELECT (detail->>'since_prev_seconds')::numeric AS s FROM ops_audit WHERE action = 'review.decide' AND detail->>'category' = 'fill'
-       AND jsonb_typeof(detail->'since_prev_seconds') = 'number' AND (detail->>'since_prev_seconds')::numeric <= 1800 AND at > now() - interval '7 days' ORDER BY 1`)).rows.map((r) => Number(r.s))
-    if (ghi.length > 0) {
-      const m = ghi.length % 2 ? ghi[(ghi.length - 1) / 2] : (ghi[ghi.length / 2 - 1] + ghi[ghi.length / 2]) / 2
-      assert.equal(f!.medianSincePrev, Math.round(m * 10) / 10, "OD1-AC-4 trung vị giữa hai lượt lệch số đã ghi")
-    }
+    // Giữa hai lượt: route ghi 20/30/40 (+ 4000 quá trần) → trung vị 30, đúng ma trận viết trước.
+    if (f!.medianSincePrev === null) assert.fail("THIEU GIUA HAI LUOT")
+    assert.ok(Math.abs(f!.medianSincePrev - 30) <= 1, `OD1-AC-4 trung vị giữa hai lượt ${f!.medianSincePrev}, đợi 30`)
   }
   test("OD1-AC-4 nhịp 7 ngày theo hạng mục từ dòng route thật; Frame hiện đúng; trống có lối mở thẻ cũ nhất", async () => {
     ready()
@@ -583,7 +615,13 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     await db.query(`DELETE FROM ops_audit`)
     const { cookie } = await taoNguoi(db, "ops")
     for (const s of [40, 50, 70]) await goi(mod, await theMoi("entity_match"), { status: "deferred", reason: "x", elapsed_ms: s * 1000 }, cookie)
-    for (const s of [5, 6, 8, 2400]) await goi(mod, await theMoi("agent_output", { fields: [{ proposal_id: 1, field: "bedrooms", value: "3", source: "e2_llm" }] }), { status: "deferred", reason: "x", elapsed_ms: s * 1000 }, cookie)
+    // Giữa hai lượt tất định: trước mỗi lượt fill lùi mọi lượt đã ghi X giây → lượt gần nhất cách X giây → since_prev ≈ X.
+    const doiLuotTruoc = (giay: number) => db.query(
+      `UPDATE ops_audit SET at = at - make_interval(secs => $1) WHERE action = 'review.decide'`, [giay])
+    for (const [s, truoc] of [[5, 20], [6, 30], [8, 40], [2400, 4000]]) {
+      await doiLuotTruoc(truoc)
+      await goi(mod, await theMoi("agent_output", { fields: [{ proposal_id: 1, field: "bedrooms", value: "3", source: "e2_llm" }] }), { status: "deferred", reason: "x", elapsed_ms: s * 1000 }, cookie)
+    }
     await goi(mod, await theMoi("agent_output", { doi_chieu: [{ ...DOI("y_dinh"), ai: "offer", bo_doc: "inquiry" }] }), { status: "deferred", reason: "x" }, cookie)
     const cu = await theMoi("agent_output", { doi_chieu: [DOI("gia")] })
     await goi(mod, cu, { status: "deferred", reason: "x", elapsed_ms: 9000 }, cookie)
@@ -600,6 +638,8 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     const khongDo = await banChep<NhipMod>("src/lib/ops/review-nhip.ts", (s) => s.replace("count(*) FILTER (WHERE (detail->>'seconds')::numeric <= $2)::int AS n", "count(*) FILTER (WHERE coalesce((detail->>'seconds')::numeric, 0) <= $2)::int AS n").replace(
       "AND (jsonb_typeof(detail->'seconds') = 'number' OR jsonb_typeof(detail->'since_prev_seconds') = 'number')", ""))
     await assert.rejects(kiemNhip(khongDo), /KHONG DO VAO SO/)
+    const boGiua = await banChep<NhipMod>("src/lib/ops/review-nhip.ts", (s) => s.replace("const medianPrev = motChuSo(r.median_prev);", "const medianPrev = null as number | null; void r.median_prev;"))
+    await assert.rejects(kiemNhip(boGiua), /THIEU GIUA HAI LUOT/)
 
     // Frame trên trang: hàng nhịp ghép thẻ chờ của lược đồ.
     const { ReviewNhip } = await import("../src/components/ops/review/review-nhip")
@@ -609,6 +649,7 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     assert.equal(o("unit_match", "trung-vi"), "50 giây", "OD1-AC-4 hàng Ghép căn")
     assert.equal(o("fill", "trung-vi"), "6 giây", "OD1-AC-4 hàng Bổ sung tin")
     assert.equal(o("fill", "qua-tran"), "1", "OD1-AC-4 cột Quá 30 phút")
+    assert.match(o("fill", "giua") ?? "", /^(29|30|31)(,\d)? giây$/, "OD1-AC-4 cột Giữa hai lượt")
     assert.equal(o("intent_check", "cho"), "2", "OD1-AC-4 thẻ chờ Đối chiếu ý định")
     assert.equal(o("intent_check", "trung-vi"), "—", "OD1-AC-4 hạng mục không lượt đo phải «—»")
     // Trống: không lượt đo nào.
@@ -686,10 +727,42 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     const lk = document.querySelector("[role=dialog] [data-deal-cho-ghep-the='701']")
     assert.equal(lk?.getAttribute("href"), "/ops/review?card=701", "OD1-AC-9 sheet thiếu liên kết thẻ ghép")
     // Trang một căn: DealBody dáng trang mang cùng badge + liên kết.
+    // Đường nối trang → lưới/thân: chép page.tsx thật (thay phiên và bộ nạp tin bằng hàm giả, mở export phần nội dung),
+    // bộ tra căn chờ ghép là hàm thật chạy trên lược đồ tạm (thẻ 701, 702 còn chờ).
+    await kiemTrangChoGhep("src/app/ops/deals/page.tsx", "src/app/ops/deals/[offerId]/page.tsx")
+    const quen = (rel: string) => rel.endsWith("[offerId]/page.tsx") ? (s: string) => s.replace(" choGhep={choGhep[d.offerId]}", "") : (s: string) => s.replace(" choGhep={choGhep}", "")
+    await assert.rejects(kiemTrangChoGhep("src/app/ops/deals/page.tsx", "src/app/ops/deals/[offerId]/page.tsx", quen("src/app/ops/deals/page.tsx")), /TRANG QUEN CHO GHEP: danh sách/)
+    await assert.rejects(kiemTrangChoGhep("src/app/ops/deals/page.tsx", "src/app/ops/deals/[offerId]/page.tsx", undefined, quen("[offerId]/page.tsx")), /TRANG QUEN CHO GHEP: một căn/)
     const { DealBody } = await import("../src/components/ops/deal-body")
     const html = await htmlTinh(<DealBody d={hang("offer_A") as never} xemNoiDung mayThu beMat="trang" choGhep={[701]} />)
     assert.ok(html.includes("Đang chờ ghép") && html.includes('href="/ops/review?card=701"'), "OD1-AC-9 trang một căn thiếu badge hay liên kết")
   })
+
+  /** Chép hai trang Căn giá tốt, thay phiên + bộ nạp tin; dựng phần nội dung; badge phải tới từ bộ tra thật qua prop của trang. */
+  async function kiemTrangChoGhep(dsRel: string, canRel: string, doiDs?: (s: string) => string, doiCan?: (s: string) => string) {
+    const MOC = {
+      offerId: "offer_A", source: "S03", priceVnd: 2e9, areaM2: 50, pricePerm2: 4e7, bedrooms: 2, phuong: "Cầu Giấy", areaPath: "/vn/x", medianPerm2: 6e7,
+      rulerN: 5, discountPct: 30, suspect: false, confidence: "high", firstSeen: "2026-11-01", lastSeen: "2026-11-07", nReposts: 1, sellerName: null,
+      sellerPhone: null, groupName: null, brokerNAds: null, brokerMedianGap: null, propertyType: "apartment", block: null, floor: null, unit: null,
+      streetNumber: null, street: null, district: null, images: [], postTextFull: null, roiDanhSach: null,
+    }
+    Object.assign(globalThis, { __OD1_DEALS: { rows: [MOC, { ...MOC, offerId: "offer_F" }], mayThu: true }, __OD1_DEAL: { deal: MOC, mayThu: true } })
+    const giaPhien = (s: string) => s
+      .replace(`import { getSessionUser } from "@/lib/auth";`, "")
+      .replace(/import \{ dealHang, dealTheoVai, getDeals \} from "@\/lib\/deals";/, `import { dealHang, dealTheoVai } from "@/lib/deals";\nconst getDeals = async () => (globalThis as never as { __OD1_DEALS: never }).__OD1_DEALS;`)
+      .replace(/import \{ dealHang, dealTheoVai, dealTrongDanhSach, getDeal \} from "@\/lib\/deals";/, `import { dealHang, dealTheoVai } from "@/lib/deals";\nconst getDeal = async (_: string) => (globalThis as never as { __OD1_DEAL: never }).__OD1_DEAL;\nconst dealTrongDanhSach = async (_: string) => true;`)
+      + "\nexport { DealsContentMo as __noi };"
+    const ds = await banChep<{ __noi: (p: { xemNoiDung: boolean; can: string | null }) => Promise<ReactElement> }>(dsRel, (s) =>
+      (doiDs ?? ((x) => x))(giaPhien(s).replace("export { DealsContentMo as __noi };", "export { DealsContent as __noi };")))
+    const htmlDs = await htmlTinh(await ds.__noi({ xemNoiDung: true, can: null }))
+    const hangA = htmlDs.indexOf("data-deal-cho-ghep=")
+    if (hangA < 0) assert.fail("TRANG QUEN CHO GHEP: danh sách")
+    assert.ok(/data-deal-cho-ghep="701,702"/.test(htmlDs), `OD1-AC-9 lưới phải mang thẻ 701,702 của offer_A`)
+    const can = await banChep<{ __noi: (p: { offerId: string; xemNoiDung: boolean }) => Promise<ReactElement> }>(canRel, (s) =>
+      (doiCan ?? ((x) => x))(giaPhien(s).replace("export { DealsContentMo as __noi };", "export { DealContent as __noi };")))
+    const htmlCan = await htmlTinh(await can.__noi({ offerId: "offer_A", xemNoiDung: true }))
+    if (!htmlCan.includes('href="/ops/review?card=701"')) assert.fail("TRANG QUEN CHO GHEP: một căn")
+  }
 
   test("OD1-AC-8-NHANH vai Người xem và cloud không có Frame nhịp; cloud nói TV13", async () => {
     ready()
@@ -796,6 +869,14 @@ async function kiemCard(Q: QueueMod["ReviewQueue"]) {
   await ve(<Q items={items} media={{}} moBanDau={{ id: 999999, raw: "999999" }} />)
   assert.equal(document.querySelector("[role=dialog]"), null, "OD1-AC-10 id lạ mà mở sheet")
   if (document.querySelector("[data-review-card-thieu]")?.textContent?.trim() !== "Không tìm thấy thẻ #999999") assert.fail("IM LANG KHI THIEU THE")
+  // Bấm «Mở thẻ chờ cũ nhất» ngay trên trang: App Router giữ cây, chỉ đổi prop moBanDau — cùng root, không dựng lại.
+  await ve(<Q items={items} media={{}} moBanDau={null} />)
+  assert.equal(document.querySelector("[role=dialog]"), null)
+  const React = await import("react")
+  const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+  const root = (globalThis as unknown as { __od1Root: { render: (n: ReactNode) => void } }).__od1Root
+  await React.act(async () => root.render(<AppRouterContext.Provider value={ROUTER as never}><Q items={items} media={{}} moBanDau={{ id: 144, raw: "144" }} /></AppRouterContext.Provider>))
+  if (document.querySelector("[role=dialog] [data-slot=sheet-title]")?.textContent !== "Thẻ 144") assert.fail("MO THE CU KHONG MO SHEET")
 }
 test("OD1-AC-10 ?card= mở thẳng thẻ (đã quyết, ngoài trang 1); id lạ có Alert; chuỗi sai không ném", async () => {
   await kiemCard(queueMod.ReviewQueue)
@@ -804,8 +885,10 @@ test("OD1-AC-10 ?card= mở thẳng thẻ (đã quyết, ngoài trang 1); id l�
   assert.deepEqual(docCard("42"), { id: 42, raw: "42" })
   assert.equal(docCard(null), null)
   const rel = "src/components/ops/review/review-queue.tsx"
-  const loc = await banChep<QueueMod>(rel, (s) => s.replace("moBanDau?.id != null && items.some((i) => i.id === moBanDau.id)", "moBanDau?.id != null && filterReviewItems(items, DEFAULT_TYPE_FILTER, DEFAULT_STATUS_FILTER).some((i) => i.id === moBanDau.id)"))
+  const loc = await banChep<QueueMod>(rel, (s) => s.replace("m?.id != null && items.some((i) => i.id === m.id)", "m?.id != null && filterReviewItems(items, DEFAULT_TYPE_FILTER, DEFAULT_STATUS_FILTER).some((i) => i.id === m.id)"))
   await assert.rejects(kiemCard(loc.ReviewQueue), /CARD NGOAI BO LOC/)
   const im = await banChep<QueueMod>(rel, (s) => s.replace("    {thieuThe && (", "    {false && thieuThe && ("))
   await assert.rejects(kiemCard(im.ReviewQueue), /IM LANG KHI THIEU THE/)
+  const khongDoi = await banChep<QueueMod>(rel, (s) => s.replace("    setOpenId(theCanMo(moBanDau))\n", ""))
+  await assert.rejects(kiemCard(khongDoi.ReviewQueue), /MO THE CU KHONG MO SHEET/)
 })
