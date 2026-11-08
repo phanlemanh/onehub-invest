@@ -26,4 +26,19 @@ Mỗi phép đo mới chạy một lần trên bản phá để thấy đỏ đ�
 
 ## Phá thử
 
-(điền sau T4)
+08/11, DB máy thu cho các ca E4b/E4B-AC-3/4/7, lược đồ tạm cho E7/E4B-AC-6. Mỗi dòng: bản phá → phép đo đỏ đúng thông điệp ghim.
+
+| Phép đo | Bản phá | Kết quả |
+|---|---|---|
+| E4b (AC-1) | chèn chậm 1,1 s vào `getPublicOffers` (tạm, trả lại bản commit) | đỏ `newest 1352… ms` |
+| E4B-AC-3 | cùng bản chèn chậm | đỏ `BIEN newest 1332 ms`, `BIEN price-asc 1344 ms`, … đủ bốn sort |
+| E4B-AC-4 | đếm tên theo `offer_id` của trang thay vì `seller_ref` của trang (dựng sẵn trong ca) | đỏ `LECH CAU CU` |
+| E4B-AC-4 | không trang nào có cờ nhiều tên | ca đỏ `KHONG DO DUOC` (đo thật: 45 dòng mang cờ, không kích hoạt) |
+| E4B-AC-7 | khối đo đổi `ms < 1000` thành `ms < 1500` (dựng sẵn trong ca) | đỏ `TRAN BI NOI` |
+| E4B-AC-7 | tệp không có ca E4b | đỏ `KHONG CAT DUOC` |
+| E7 (AC-5) | ngưỡng 4 tên | đỏ `NHIEU TEN` |
+| E7 (AC-5) | đếm tên chỉ trong phường lọc | đỏ `DEM SAU LOC` |
+| E7 (AC-5) | đếm tên chỉ trong trang | đỏ `NHIEU TEN` |
+| E4B-AC-6 | bỏ câu đếm dự phòng cho trang rỗng | đỏ `TOTAL TRANG RONG vượt cuối offset 6` |
+
+Số đo lúc chạy phá thử (máy có tải): câu cũ 813–1083 ms, bản mới không chèn chậm 64–75 ms lúc máy rảnh.
