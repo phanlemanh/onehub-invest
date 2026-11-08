@@ -1,0 +1,124 @@
+schema_version: 1
+feature_slug: ops-duyet-nhip-va-chu
+# Mọi ca máy ở app/tests/ops-duyet-nhip.test.tsx (tên ca mở đầu «OD1-AC-n»): route decide thật trên lược đồ tạm od1_<pid>
+# (bảng LIKE public.*, dữ liệu viết trước, xoá cuối lượt), component thật trong jsdom, hàm thuần với ma trận viết trước.
+# Mỗi phép đo có chiều đỏ trên CÙNG fixture: bản chép tạm của tệp nguồn (tests/.od1-cu-*) đổi đúng một chỗ, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-card-nguoi.tsx, app/src/components/ops/review/**, app/src/lib/ops/review-hang-muc.ts, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-1-ROUTE': lược đồ tạm có 1 thẻ ghép căn chờ + 1 ứng viên pending, 1 thẻ bổ sung tin chờ; POST decide {status:'rejected', reason:'khác diện tích', elapsed_ms: 42000} → 200, ops_audit có đúng 1 dòng review.decide mới với detail.category='unit_match', detail.seconds=42, detail.decided_at bằng review_queue.decided_at (cùng giao dịch, so tới mili-giây), detail.opened_at = decided_at − 42 s; thẻ bổ sung tin {elapsed_ms: 6450} 90 giây sau lượt trước của cùng người → seconds 6.5, category 'fill', since_prev_seconds 90 (±1); thẻ Người nguoi:S03:x → category 'party_merge' có seconds; lượt đầu của một người khác → không khoá since_prev_seconds; lượt trước của cùng người cách 25 giờ → không khoá since_prev_seconds. Ca 'OD1-AC-1-UI' ma trận viết trước 4 component có nút quyết (thẻ Ghép căn, Bổ sung tin có trường, Bổ sung tin chỉ đối chiếu, Người — số assert = 4), performance.now() giả: dựng thẻ ở t=1000, gõ lý do, bấm nút đầu ở t=43500 → body fetch có elapsed_ms 42500; đóng, dựng thẻ khác ở t=50000, bấm ở t=53000 → elapsed_ms 3000 (đồng hồ đặt lại). Chiều đỏ: route bỏ ghi opened_at → 'THIEU OPENED_AT'; decided_at lấy Date.now() của Node thay now() của giao dịch → 'DECIDED_AT LECH GIAO DICH'; since_prev lấy lượt của người khác → 'SINCE_PREV KHAC NGUOI'; hook không đặt lại t0 theo thẻ → 'DONG HO KHONG DAT LAI'; thẻ Người không gửi elapsed → 'NGUOI KHONG GUI ELAPSED'; gửi giờ tuyệt đối thay khoảng → 'GUI GIO MAY KHACH'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/review/**, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-2' ma trận viết trước 7 body trên cùng thẻ bổ sung tin (mỗi body một thẻ mới): elapsed_ms vắng, null, '42000' (chuỗi), 1.5, 0, -5, 86400001 → mỗi lượt 200, review_queue.status đổi, detail.timing='khong-do', không khoá opened_at, không khoá seconds; 86400000 và 1 → có seconds (86400, 0) và không timing. Luật cũ trên cùng lược đồ: reason '   ' → 400 và review_queue, ops_audit không đổi; quyết lại thẻ đã quyết → 409; thẻ ghép căn có hai ứng viên pending → 422 code 'khong-cham-ung-vien' và 0 dòng audit mới. Chiều đỏ: chặn quyết khi elapsed sai → 'CHAN QUYET VI THIEU DO'; nhận chuỗi số → 'NHAN ELAPSED SAI KIEU'; bỏ kiểm trần → 'NHAN ELAPSED QUA TRAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-hang-muc.ts, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-3' ma trận viết trước 11 thẻ (số assert = 11): entity_match→unit_match; data_quality nguoi:S03:x→party_merge; data_quality không tiền tố→other; agent_output fields có conflict→rule_vs_ai; fields không conflict→fill; fields + doi_chieu→fill; chỉ doi_chieu y_dinh→intent_check; chỉ gia→price_check; chỉ dien_tich→area_check; doi_chieu [dien_tich, gia] theo thứ tự JSON→price_check; source_decision→other; mỗi mã có nhãn tiếng Việt khác rỗng trong bảng nhãn. Route ghi detail.category bằng chính hàm này (thẻ chỉ đối chiếu giá qua route thật → 'price_check'). Chiều đỏ: lấy loại đầu theo thứ tự JSON → 'LOAI DAU THEO JSON'; bỏ nhánh nguoi: → 'NGUOI ROI LOAI KHAC'; conflict sau fields → 'XUNG DOT THANH FILL'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-nhip.ts, app/src/lib/ops/review-hang-muc.ts, app/src/app/api/v1/ops/review/**, app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-4' (dòng ops_audit KHÔNG dựng tay: rút bằng route decide thật trên lược đồ tạm, rồi dời cột at bằng UPDATE để đặt tuổi): unit_match 3 lượt 40/50/70 s, fill 4 lượt 5/6/8/2400 s (2400 > 30 phút) với since_prev 20/30/40 s ở ba lượt đầu, intent_check 1 lượt timing khong-do, price_check 1 lượt 9 s có at lùi 8 ngày → loadReviewPace: unit_match n=3 trung vị 50 qua30=0; fill n=3 trung vị 6 qua30=1 trung vị giữa hai lượt 30; intent_check không hàng đo; price_check không có (ngoài 7 ngày). Frame «Nhịp duyệt 7 ngày» render trong jsdom với các thẻ chờ của lược đồ: hàng Ghép căn hiện '50', hàng Bổ sung tin hiện '6', '30' ở cột Giữa hai lượt và '1' ở cột Quá 30 phút, hàng Đối chiếu ý định có Thẻ chờ nhưng ô trung vị là '—'; không lượt đo nào → chữ 'Chưa có lượt quyết nào được đo trong 7 ngày' và nút 'Mở thẻ chờ cũ nhất' có href '/ops/review?card=<id thẻ chờ created_at sớm nhất>'. Chiều đỏ: trung bình thay trung vị → 'TRUNG BINH THAY TRUNG VI'; tính cả lượt > 30 phút → 'LUOT DAI VAO TRUNG VI'; bỏ lọc 7 ngày → 'NGOAI 7 NGAY'; tính lượt khong-do → 'KHONG DO VAO SO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-queue.ts, app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-5': toReviewItem trên dòng {title 'Cùng căn? cau-giay 80m² ↔ 84m² (score 0.93)', evidence.offer_a.phuong 'cau-giay', offer_b.phuong 'Phường Cầu Giấy', area 80/84, stage_b_score 0.93} → title 'Cùng căn? Phường Cầu Giấy · 80 m² và 84 m²', evidence không khoá stage_b_score; thiếu area → title gốc bỏ vế '(score 0.93)'; thẻ bổ sung tin có title '… (score 0.5)' → gọt. Probe 'OD1-AC-5-DB' trên DB của lượt (bản chép của DB máy thu): mọi dòng review_queue pending đi qua toReviewItem + stripEvidenceImages như trang, render ReviewQueue thành HTML (sheet mở lần lượt từng thẻ Ghép căn) → HTML và JSON thẻ không chứa /score/i, không chứa chuỗi stage_b_score của bất kỳ thẻ nào; 0 thẻ chờ thì t.skip có lý do. Chiều đỏ: bỏ gọt evidence → 'STAGE_B_SCORE TOI TRINH DUYET'; bỏ dựng lại tiêu đề → 'SCORE TREN TIEU DE'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-6' ma trận viết trước 7 cặp qua soTruongGhepCan thật (số assert = 7): price_perm2 72.3e6/71.8e6 → khop; 72e6/74e6 → lech; price_vnd 2.351e9/2.349e9 → khop; 2.35e9/2.40e9 → lech; 850.2e6/849.8e6 (cùng '850tr') → khop; area_m2 76/76.0 → khop; price_perm2 null/72e6 → thieu; và quan hệ: với mọi hàng Giá, Giá/m², chuỗi hiện hai bên bằng nhau ⇔ so = khop (kiểm trên bảng ReviewCompare render thật trong jsdom). Chiều đỏ: so trên số thô → 'SO SO THO'; so giá/m² bằng fmtGia → 'SAI DINH DANG SO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: ui-observed
+    paths: [app/src/components/ops/review-photos.tsx, app/tests/ops-duyet-nhip.test.tsx, app/tests/review-photos.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-7' ReviewPhotos thật trong jsdom, 5 ảnh, bắn sự kiện error lên ảnh 2 và 4 → còn 3 thẻ img, 0 phần tử chứa chữ 'Ảnh hỏng', một dòng 'Tin A: 2 ảnh không còn tải được'; bắn error cả 5 → 0 img, dòng '5 ảnh không còn tải được'; dáng lon (trang một căn) cùng kết quả; hộp phóng to chỉ duyệt 3 ảnh tốt. review-photos.test.tsx cũ cập nhật theo hành vi mới và vẫn xanh. Chiều đỏ: còn ô ảnh hỏng → 'CON O ANH HONG'; đếm sai → 'DEM ANH HONG SAI'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: ui-observed
+    paths: [app/src/lib/ops/review-queue.ts, app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-card-nguoi.tsx, app/src/components/ops/review-content.tsx, CONTEXT.md, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-8' ma trận viết trước 4 loại × 3 trạng thái + loại lạ (15 ô, số assert = 15): reviewStatusLabel(item) khớp bảng của thiết kế (Cùng căn/Khác căn/Không chắc; Đã áp/Đã bỏ/Để sau; chỉ đối chiếu Đã ghi/Đã bỏ/Để sau; Đã gộp/Giữ tách/Hoãn; Đã duyệt/Từ chối/Hoãn); ReviewQueue thật có thẻ Người → badge 'Người', không thẻ <code>data_quality</code>; chọn bộ lọc 'Người' ra đúng thẻ Người, 'Loại khác' ra 0 thẻ Người; sheet thẻ ghép căn đã bác → badge đầu sheet và DoneState đều 'Khác căn'; bấm 'Áp dụng' với fetch giả ok → thông báo 'Đã áp'. Quét chữ: mọi tệp app/src/components/ops/review* không chứa từ 'bạn' hay 'anh' đứng riêng. Ca 'OD1-AC-8-NHANH' dựng ReviewContent thật (server component render tĩnh) ba lần trên lược đồ tạm: vai ops → có Frame 'Nhịp duyệt 7 ngày'; vai viewer → 0 Frame nhịp, số thẻ chờ như cũ; lược đồ không có review_queue (như cloud) → HTML có 'TV13', không có 'không lên máy chủ', 0 Frame nhịp, không RegionError, loadReviewPace không được gọi (đếm lời gọi qua truy vấn ops_audit giả). CONTEXT.md: có khối in đậm 'Hạng mục duyệt', 'Nhịp duyệt', 'Đang chờ ghép'; dòng 'Tham số URL: `card`'; khối 'Gắn nhãn' không còn 'chín trường lõi'; khối 'Ảnh tin' không còn 'chỉ admin thấy, không lên máy chủ'; khối 'Hàng duyệt' nhắc thẻ Người. Chiều đỏ: thẻ Người về mã thô → 'NGUOI HIEN MA THO'; trạng thái chung thay nhãn đáp án → 'NHAN TRANG THAI LECH NUT'; chữ 'bạn' trở lại → 'XUNG HO'; Frame nhịp ở nhánh viewer → 'VIEWER THAY NHIP'; nhánh cloud gọi nhịp → 'CLOUD GOI NHIP'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-cho-ghep.ts, app/src/app/ops/deals/**, app/src/components/ops/deals-grid.tsx, app/src/components/ops/deal-sheet.tsx, app/src/components/ops/deal-body.tsx, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-9' lược đồ tạm: thẻ entity_match pending pair:offer_A|offer_B, thẻ pending pair:offer_C|offer_A (mới hơn), thẻ rejected pair:offer_D|offer_E, thẻ agent_output enrich:offer_D → loadPendingUnitMatches([A,B,C,D,E,F]) = {A:[id1,id2], B:[id1], C:[id2]}, D/E/F vắng; lược đồ không có bảng review_queue → {} không ném. DealsGrid thật trong jsdom với choGhep {A:[id1]} → hàng A có badge 'Đang chờ ghép', hàng F không; mở sheet A → liên kết 'Mở thẻ ghép #id1' href '/ops/review?card=id1'; trang /ops/deals/[offerId] (server component render tĩnh) cùng badge và liên kết. Chiều đỏ: lấy cả thẻ đã quyết → 'BADGE THE DA QUYET'; chỉ khớp vế A → 'BO SOT VE B'; ném khi vắng bảng → 'CLOUD NEM LOI'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/app/ops/review/**, app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/lib/ops/review-nap.ts, app/tests/ops-duyet-nhip.test.tsx]
+    expected: "exit 0; ca 'OD1-AC-10' ReviewQueue thật trong jsdom với 45 thẻ (thẻ đích là thẻ cũ nhất, nằm trang 3 khi PAGE_SIZE 20, và đã quyết — ngoài bộ lọc mặc định) và moBanDau = id đích → sheet mở với tiêu đề thẻ đích ngay lần dựng đầu; moBanDau = 999999 → không sheet, Alert 'Không tìm thấy thẻ #999999'; trang server đọc searchParams.card chuỗi '12abc' → coi như không có (Alert), không ném. Ca 'OD1-AC-10-DB': lược đồ tạm 260 thẻ (thẻ đích tạo sớm nhất, đã quyết), chạy bộ nạp thật của trang (loadReviewQueue ở lib/ops/review-nap.ts) rồi ReviewQueue với moBanDau = id đích → sheet mở đúng tiêu đề thẻ đích. Chiều đỏ: chỉ tìm trong hàng đang lọc → 'CARD NGOAI BO LOC'; bộ nạp thêm LIMIT 200 hay chỉ lấy pending → 'CARD NGOAI VUNG NAP'; bỏ Alert → 'IM LANG KHI THIEU THE'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-4
+    executor: ui-check
+    layer: ui-observed
+    target: "http://localhost:3463/ops/review"
+    paths: [app/src/app/ops/review/**, app/src/components/ops/review/**, app/src/components/ops/review-*.tsx, app/src/app/ops/deals/**, app/src/components/ops/deal*.tsx]
+    steps:
+      - "Bản chạy: dev server :3463 nối DB thử oneinvest_od1 (cấu hình preview app-3463-od1; DB chép bằng 'bash db/db-thu.sh oneinvest_od1 --neu-chua-co'). Phiên Ops đăng nhập sẵn trong trình duyệt ego lite — mở bằng ego-browser, không đăng nhập lại. KHÔNG tạo hay sửa tệp nào trong cây ngoài evidence/. Chụp THEO PHẦN TỬ được nêu, không chụp thân thẻ, chữ bài, cột liên hệ hay thanh bên có email."
+      - "/ops/review ở 1280 px sáng: chụp Frame «Nhịp duyệt 7 ngày» → evidence/E11-step1.png; ghi chữ trong Frame"
+      - "Lọc «Loại thẻ» = «Người»: chụp ba hàng đầu của bảng (cột Thẻ, Loại, Trạng thái) → evidence/E11-step2.png"
+      - "Lọc «Loại thẻ» = «Ghép căn»: mở thẻ đầu, gõ lý do «thử OD1», bấm «Không chắc»; chụp đầu sheet (tiêu đề + badge) và chân sheet → evidence/E11-step3.png; đóng sheet, tải lại trang, chụp Frame nhịp → evidence/E11-step4.png"
+      - "Lọc «Loại thẻ» = «Người»: mở thẻ đầu, gõ lý do «thử OD1», bấm «Hoãn»; đóng, tải lại, ghi hàng «Gộp Người» của Frame nhịp"
+      - "/ops/deals ở 1280 px: tìm hàng có badge «Đang chờ ghép», chụp riêng ô Căn của hàng đó → evidence/E11-step5.png; mở sheet căn, bấm «Mở thẻ ghép #…» → URL /ops/review?card=… và sheet mở; chụp đầu sheet → evidence/E11-step6.png"
+      - "/ops/review?card=999999 → chụp Alert → evidence/E11-step7.png"
+      - "Lặp step1 ở 375 px tối → evidence/E11-step8.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Trên DB thử chép từ máy thu: Frame «Nhịp duyệt 7 ngày» thấy được (bảng có cột Hạng mục, Thẻ chờ, Đã quyết có đo, Trung vị ở thẻ, Giữa hai lượt, Quá 30 phút, hoặc chữ trống kèm nút «Mở thẻ chờ cũ nhất»); thẻ Người mang badge «Người»; tiêu đề thẻ Ghép căn không có «score», có tên phường có dấu; sau khi bấm «Không chắc» badge đầu sheet và chân sheet là «Không chắc», và sau tải lại hàng Ghép căn và hàng Gộp Người của bảng nhịp mỗi hàng có ≥ 1 lượt đo; ô Căn ở /ops/deals mang «Đang chờ ghép», liên kết mở đúng thẻ; ?card lạ hiện Alert «Không tìm thấy thẻ #999999»; 375 px tối không cuộn ngang (scrollWidth = clientWidth). Ảnh ở evidence/."
+    evidence_required: [screenshot, observed, verified_at]
+  - id: E12
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**]
+    expected: "exit 0; tsc --noEmit sạch và npm run lint sạch (luật onehub-ui, không eslint-disable trần mới)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    paths: [CONTEXT.md, app/src/app/ops/**, app/eslint-plugin-onehub-ui/**]
+    expected: "exit 0; route-slugs và routes-map xanh: không route mới, tham số card nằm trong CONTEXT.md."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/ops/review-*.tsx, app/src/components/ops/review/**, app/src/components/ops/deal*.tsx, app/src/components/ops/deals-grid.tsx]
+    expected: "exit 0; sàn thiết kế M1: tệp giao diện vòng chạm không thêm mã màu hex thô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xã mới lên cloud hay giữ ở máy thu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-soft:    #636b80;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1240px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub { font-size: 0.875rem; color: var(--color-muted); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Luồng hai nhánh · danh-ba-phuong-xa-toan-quoc · Cổng Phạm vi</p>
+    <h1>Xã mới lên cloud hay giữ ở máy thu</h1>
+    <p class="sub">Ô Hỏi-1 (viền cam) là chỗ người quyết; mũi tên cam là lối khuyến nghị. AC liên quan: AC-10, OOS-4.</p>
+
+    <svg viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg" font-family="'Geist', sans-serif">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ CONNECTORS (vẽ trước, nằm dưới nút) ============ -->
+      <g fill="none" stroke="#4f5d75" stroke-width="1.2">
+        <!-- Gộp PR → Mạnh cho áp 084 -->
+        <path d="M224,144 L264,144" marker-end="url(#arrow)"/>
+        <!-- Áp 084 + nạp → areas -->
+        <path d="M456,144 L496,144" marker-end="url(#arrow)"/>
+        <!-- areas → Lượt đồng bộ (Hỏi-1) -->
+        <path d="M656,144 L696,144" marker-end="url(#arrow)"/>
+        <!-- Hỏi-1 → nhánh B -->
+        <path d="M816,192 L816,264" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      </g>
+      <!-- Hỏi-1 → nhánh A (lối khuyến nghị) -->
+      <path d="M936,144 L976,144" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+
+      <!-- ============ NÚT ============ -->
+
+      <!-- Gộp PR -->
+      <rect x="32" y="96" width="192" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="128" y="132" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Gộp PR</text>
+      <text x="128" y="150" fill="#636b80" font-size="9" text-anchor="middle">code chạy được khi chưa áp 084</text>
+      <text x="128" y="166" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">AC-10</text>
+
+      <!-- Mạnh cho áp 084 + chạy bộ nạp -->
+      <rect x="264" y="96" width="192" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="360" y="132" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Mạnh cho áp 084</text>
+      <text x="360" y="150" fill="#636b80" font-size="9" text-anchor="middle">+ chạy bộ nạp trên máy thu</text>
+      <text x="360" y="166" fill="#4f5d75" font-size="9" text-anchor="middle">(lời riêng)</text>
+
+      <!-- areas -->
+      <rect x="496" y="96" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="124" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">areas</text>
+      <text x="576" y="146" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">511 → khoảng 3.330</text>
+      <text x="576" y="164" fill="#636b80" font-size="9" text-anchor="middle">khu vực con</text>
+
+      <!-- Hỏi-1: Lượt đồng bộ cloud 15 phút -->
+      <rect x="696" y="96" width="240" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="696" y="96" width="240" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="704" y="104" width="44" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.60)" stroke-width="0.8"/>
+      <text x="726" y="116" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HỎI-1</text>
+      <text x="816" y="144" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Lượt đồng bộ cloud 15 phút</text>
+      <text x="816" y="162" fill="#636b80" font-size="9" text-anchor="middle">khoảng 2.820 xã mới</text>
+      <text x="816" y="176" fill="#636b80" font-size="9" text-anchor="middle">lên cloud / Invest?</text>
+
+      <!-- Nhánh A (khuyến nghị) -->
+      <rect x="976" y="64" width="192" height="160" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+      <rect x="984" y="72" width="112" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.60)" stroke-width="0.8"/>
+      <text x="1040" y="84" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">A · KHUYẾN NGHỊ</text>
+      <text x="992" y="112" fill="#2d3142" font-size="12" font-weight="600">Lên cloud</text>
+      <text x="992" y="134" fill="#4f5d75" font-size="10">Invest đếm khoảng 3.300</text>
+      <text x="992" y="148" fill="#4f5d75" font-size="10">phường, phần lớn chưa có</text>
+      <text x="992" y="162" fill="#4f5d75" font-size="10">số liệu</text>
+      <text x="992" y="184" fill="#636b80" font-size="10">Đảo được bằng lượt</text>
+      <text x="992" y="198" fill="#636b80" font-size="10">đồng bộ kế</text>
+
+      <!-- Nhánh B -->
+      <rect x="664" y="264" width="304" height="104" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="672" y="272" width="24" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="684" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">B</text>
+      <text x="680" y="312" fill="#2d3142" font-size="12" font-weight="600">Giữ xã mới ở máy thu</text>
+      <text x="680" y="332" fill="#4f5d75" font-size="10">Phải sửa <tspan font-family="'Geist Mono', monospace" font-size="9">sync-cloud</tspan> (vùng T3)</text>
+      <text x="680" y="348" fill="#4f5d75" font-size="10">Cloud không gắn tin 30 tỉnh</text>
+
+      <!-- ============ CHÚ GIẢI ============ -->
+      <line x1="32" y1="408" x2="1168" y2="408" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="32" y="428" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="32" y="444" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="454" fill="#4f5d75" font-size="9">Bước</text>
+
+      <rect x="128" y="444" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="160" y="454" fill="#4f5d75" font-size="9">Hỏi chờ người quyết (Cổng Phạm vi)</text>
+
+      <line x1="344" y1="452" x2="372" y2="452" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="380" y="454" fill="#4f5d75" font-size="9">Luồng chính</text>
+
+      <line x1="472" y1="452" x2="500" y2="452" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <text x="508" y="454" fill="#4f5d75" font-size="9">Lối khuyến nghị (A)</text>
+
+      <line x1="624" y1="452" x2="652" y2="452" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="660" y="454" fill="#4f5d75" font-size="9">Lối khác (B)</text>
+    </svg>
+  </div>
+</body>
+</html>

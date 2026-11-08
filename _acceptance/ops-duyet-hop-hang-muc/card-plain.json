@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Người duyệt chọn một loại câu hỏi ở cột trái rồi quyết liền từng thẻ bằng phím: quyết xong thẻ kế hiện ngay, bấm nhầm thì hoàn tác trong 5 giây, và xem lại được các quyết định vừa làm.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ hiện ba số ở đầu trang Hàng duyệt: thẻ đang chờ, thẻ chờ quá 3 ngày, thẻ đã quyết hôm nay theo giờ Việt Nam (AC-1, ba số đầu trang)."},
+    {"id": "AC-2", "p": "Sẽ có cột trái liệt các hạng mục duyệt kèm số thẻ chờ, thẻ cũ nhất và số giây trung vị; bấm một mục để lọc, đường dẫn nhớ mục đã chọn (AC-2, hộp hạng mục)."},
+    {"id": "AC-3", "p": "Sẽ mở thẻ chờ cũ nhất của hạng mục khi bấm «Duyệt liền», và quyết xong thì thẻ kế hiện ngay trong cùng khung, không phải đóng rồi mở lại (AC-3, chế độ duyệt)."},
+    {"id": "AC-4", "p": "Sẽ cho đi lại và quyết bằng phím: J, K để sang thẻ sau, trước; 1–4 bấm đáp án; R vào ô lý do; ? mở bảng phím (AC-4, phím tắt)."},
+    {"id": "AC-5", "p": "Sẽ giữ mỗi quyết định 5 giây trước khi ghi, có nút «Hoàn tác»; đóng tab hay sang trang khác trong lúc đó thì quyết định vẫn được ghi (AC-5, hoàn tác 5 giây)."},
+    {"id": "AC-6", "p": "Sẽ hiện 20 quyết định gần nhất trong 7 ngày của chính người đang duyệt, bấm vào để xem lại thẻ (AC-6, quyết định gần đây)."},
+    {"id": "AC-7", "p": "Sẽ không bắt gõ lý do nữa: để trống thì tên đáp án là lý do; riêng «Bỏ» ở thẻ Bổ sung tin vẫn phải gõ (AC-7, lý do mặc định)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Chưa làm đáp án riêng theo từng loại câu hỏi và chip lý do soạn sẵn (OD3), chưa tách Bổ sung tin thành điền, ghi đè, trùng (OD4)."},
+    {"id": "OOS-2", "p": "Chưa cho đảo một quyết định sau 5 giây — việc đó cần lệnh đảo riêng và trang nhật ký."},
+    {"id": "OOS-3", "p": "Không tải trước ảnh của thẻ kế — dữ liệu thẻ đã nạp sẵn cùng trang."},
+    {"id": "OOS-4", "p": "Giữ bảng «Nhịp duyệt 7 ngày» của OD1 — hồ sơ OD1 đã ký trên bảng đó."},
+    {"id": "OOS-5", "p": "Không duyệt hàng loạt — đã loại từ trước."},
+    {"id": "OOS-6", "p": "Không có hoàn tác trên máy chủ — hàng duyệt chưa lên máy chủ."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không chạy bước quét chống sót tiêu chí: phạm vi đã chốt ở hàng OD2 và báo cáo soát Ops Mạnh duyệt."},
+    {"i": 1, "p": "Bảng dưới là các trục tự kê để người soát."},
+    {"i": 3, "p": "Bốn việc của báo cáo đều có tiêu chí: đầu trang và hộp (AC-1, AC-2), chế độ duyệt và phím (AC-3, AC-4), hoàn tác và quyết định gần đây (AC-5, AC-6), lý do (AC-7)."},
+    {"i": 4, "p": "Mọi loại câu hỏi đều được thử, kể cả loại hết thẻ chờ và loại không có nút (AC-2, AC-3, AC-7)."},
+    {"i": 5, "p": "Mọi đường quyết đều được thử: chuột, phím, hoàn tác, hết 5 giây, lỗi ghi, đóng tab, chuyển trang (AC-3, AC-4, AC-5)."},
+    {"i": 6, "p": "Lý do được thử ở ba ca: để trống, gõ tay, «Bỏ» ở Bổ sung tin (AC-7)."},
+    {"i": 7, "p": "Mọi chỗ người thấy đều có tiêu chí: đầu trang, hộp, bảng, khung thẻ, thông báo, bảng phím, quyết định gần đây (AC-1..AC-6)."},
+    {"i": 8, "p": "Các môi trường biên: máy thu, máy chủ, vai Người xem, đường dẫn hạng mục lạ, hạng mục một thẻ, hàng rỗng (AC-1..AC-3)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản đầu bỏ ô lọc cũ mà cột trái chỉ có hạng mục còn thẻ chờ, nên mất cách lọc thẻ đã quyết; chỗ đặt số phím cũng lệch giữa tiêu chí và phép đo. Đã sửa: cột trái liệt cả hạng mục hết thẻ chờ, số phím đặt cạnh nút ở mọi nơi, và ghi rõ test cũ nào đã sửa."},
+    {"i": 1, "p": "Phép đo lý do mặc định thiếu vài nút (Giữ tách, thẻ Luật và AI khác nhau). Đã sửa: đo đủ mọi nút của mọi loại thẻ."},
+    {"i": 2, "p": "Chuyển trang trong ứng dụng khi quyết định còn chờ 5 giây có thể làm mất quyết định. Đã sửa: rời hàng duyệt bằng bất kỳ đường nào thì quyết định đang chờ được ghi ngay."},
+    {"i": 3, "p": "Bấm «Hoàn tác» khi quyết định đã ghi (thông báo còn hiện vì chuột đè lên) có thể đưa thẻ về như chưa quyết. Đã sửa: lúc đó không đưa thẻ trở lại, báo là đã ghi."},
+    {"i": 4, "p": "Số giây trung vị ở cột trái được đo bằng số viết tay. Đã sửa: đo bằng lượt quyết thật đi qua đường ghi thật."}
+  ]
+}

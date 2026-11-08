@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import pg from "pg";
 import { GOC, MAY_CHU, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
+import { demTheoKhu, nhanSo, soDem } from "../lib/danh-ba-vat-the.mjs";
 
 const chay = promisify(execFile);
 const TEN = `oneinvest_dbv_that_${process.pid}`;
@@ -144,6 +145,22 @@ test("DBV-AC-7 bản chép thật: ≥ 90% mã tách được mỗi khu, dựng 
   assert.equal(chk.can_khong_bi_danh, 0, "DBV-AC-5 căn không có bí danh");
   console.log(`DBV-AC-7 ${JSON.stringify({ khu: t1.khu, ly_do: t1.ly_do, ung_vien_gop: chk.ung_vien_gop,
     builder_name: t1.builder_name_moi, phuong: t1.phuong_moi, ly_do_phuong: t1.ly_do_phuong })}`);
+});
+
+// DB1b dung-danh-ba-may-thu AC-8: phép đo ngưỡng «dựng lần đầu trên máy thu ra đúng số toà/trục/căn như bản chép».
+// Máy thu (chỉ đọc) chưa có toà nào → «chưa so»; đã có → so từng khu của lát với bản chép, lệch là đỏ. Chỉ in số.
+test("DBM-AC-8 bản chép thật: so số toà, trục, căn từng khu giữa máy thu và bản chép khi máy thu đã dựng", async () => {
+  if (!(await thu.query("SELECT count(*)::int AS n FROM buildings")).rows[0].n) await dungLenh();
+  const demMayDu = await demTheoKhu(may);
+  const demMay = new Map([...demMayDu].filter(([k]) => KHU.includes(k)));
+  const demBan = await demTheoKhu(thu);
+  if (nhanSo(demMay) === "chua-so") {
+    console.log(`DBM-AC-8 máy thu chưa dựng — chưa so · bản chép ${JSON.stringify(Object.fromEntries(demBan))}`);
+    return;
+  }
+  const lech = soDem(demMay, demBan);
+  console.log(`DBM-AC-8 so · máy thu ${JSON.stringify(Object.fromEntries(demMay))} · bản chép ${JSON.stringify(Object.fromEntries(demBan))}`);
+  assert.deepEqual(lech, [], `DBM-AC-8 máy thu lệch bản chép: ${lech.map((l) => `${l.khu}·${l.cap}`).join(", ")}`);
 });
 
 // Tệp đã chứa mã S08 thật từ TRƯỚC vòng này (migration đã commit, không sửa được — AGENTS luật 2); khớp ngoài danh sách là đỏ.

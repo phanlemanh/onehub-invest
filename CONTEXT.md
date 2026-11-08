@@ -54,7 +54,7 @@ _Avoid_: dự án, đại đô thị
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
-**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; hiện 3 tòa còn ở `asset_nodes.node_type = building`, chuyển sang bảng tòa ở hàng code). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
+**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; 3 dòng `asset_nodes.node_type = building` thực là phân khu Grand Park, ở lại họ Vùng — ADR-0016 §3 sửa 07/11). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
 - Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
 _Avoid_: block, chung cư
 
@@ -207,7 +207,7 @@ _Avoid_: assertion, claim
 - Code: `evidence_tier` · RESO: không có — extension local
 _Avoid_: confidence, bậc H0–H5
 
-**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị năm cột loại hình, phòng ngủ, WC, đường, toà. Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
+**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị các cột chuẩn (12 cột từ migration 061: loại hình, phòng ngủ, WC, đường, toà…, xem `mo-hinh-pipeline-mot-can-nha.md`). Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
 - Code: `resolve_offer_fields` · RESO: không có — bộ phân xử local
 _Avoid_: fill-gap, ghi đè
 
@@ -471,11 +471,11 @@ công hay lỗi; chi phí = token × đơn giá của model (model chạy local 
 - Slug URL: `ai-calls`
 _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 
-**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
-loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
-(gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
-gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu. Từ 06/11 (Mạnh chốt) lát `s03-theo-nhom` gắn theo cách
-«máy nháp, Mạnh feedback» (có neo, bỏ gắn hai người trong đợt); gắn mù cho tập test đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32).
+**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho 24 ô theo nhóm (ý định tin, loại
+tin, loại hình, dự án, toà, giá, diện tích, phòng, mô tả căn…). Từ 06/11 (Mạnh chốt) gắn theo cách «máy nháp, người feedback»:
+máy điền nháp, người giữ hay sửa từng ô; đo bằng tỉ lệ giữ/sửa nháp (DO1). Gắn mù và gắn hai người đã dừng; tập test gắn mù
+đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32, 35). Trang `/ops/labels` (PL7), chỉ ở máy thu. (Bản PL7 đầu: chín trường lõi,
+gắn mù, 20% tin hai người gắn — lát đời trước vẫn mở bằng `?lat=`.)
 - Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
 - Slug URL: `labels`
 _Avoid_: annotate, label UI, gán nhãn
@@ -493,8 +493,28 @@ _Avoid_: nhãn bạc, silver
 **Mẫu soát cuốn chiếu**: 20 bài rút ngẫu nhiên mỗi ngày từ bài nhận, kể cả bài máy không nhận là tin rao; màn hiện nháp máy,
 người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị bỏ sót theo tuần — số có neo, chỉ để thấy trôi, không mở cổng tự áp
 (DO1–DO3).
-- Code: DO1 `do-hieu-qua-hang-ngay` · RESO: —
+- Code: DO1 `do-hieu-qua-hang-ngay`, lát `s03-cuon-chieu`, `pipeline/mau-soat-cuon-chieu.mjs`, `eval_label_items.draft` · RESO: —
 _Avoid_: rolling sample, mẫu mù
+
+**Đo hằng ngày**: khối của «Chất lượng dữ liệu» hiện bốn nhóm số tính sẵn mỗi ngày — giữ nháp, bỏ sót, tín hiệu không cần
+nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (tham số `lat-do`).
+- Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
+_Avoid_: dashboard đo, KPI hằng ngày
+
+**So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
+4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.
+- Code: `pipeline/so-sanh-cach-doc.mjs`, `do1-so-sanh` · RESO: —
+_Avoid_: A/B, so hai tuần
+
+**Đổi khoá (chuyển bậc)**: cặp «mất + mới» trong dòng chuyển bậc do tin rời căn này sang căn khác vì khoá căn đổi (khoá căn
+S06 còn chứa giá) — tách khỏi biến động bậc thật.
+- Code: lý do `doi-khoa` của `data_level_change` · RESO: —
+_Avoid_: tụt bậc (khi chỉ là đổi khoá)
+
+**Không nêu chỗ · Chưa có trong danh bạ**: hai ô chưa gắn của lát địa lý — bài không nêu chỗ ở mức đó (việc của bộ đọc), và
+bài nêu tên toà/dự án mà danh bạ chưa có vật thể (việc của danh bạ).
+- Code: `khong-tin-hieu`, `chua-co-danh-ba` · RESO: —
+_Avoid_: chưa gắn (gộp chung hai ô)
 
 **Tập test mù đóng băng**: Tập nhãn người gắn không thấy giá trị máy, đóng băng, chỉ dùng để chấm cận dưới Wilson cho cổng tự
 áp và bậc B3; không trộn nhãn lệch mẫu. Cỡ ~200 tin mỗi phân khúc cho nhóm A. Có dùng hay không: quyết khi mở PL21.
@@ -557,19 +577,65 @@ _Avoid_: tên nguồn thật, mọi số của nguồn này
 - Code: `calibration (S02)` · RESO: —
 _Avoid_: calibration
 
-**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).
+**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent — LLM không ghi dữ liệu trực tiếp (luật 7). Ba loại thẻ có
+giao diện: Ghép căn (`entity_match`), Bổ sung tin (`agent_output` `enrich:`), Người (`data_quality` `nguoi:`, HD17); loại khác
+hiện mã nguyên văn. Mỗi thẻ thuộc một Hạng mục duyệt. Nhãn trạng thái sau khi quyết là nhãn đáp án đã bấm (Cùng căn, Khác căn,
+Đã áp, Đã gộp…). Chọn thẻ theo Hộp hạng mục, quyết liền ở Chế độ duyệt (OD2). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
+- Tham số URL: `card` · `category`
+- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10). `/ops/review?card=<id>` mở thẳng sheet của thẻ `<id>`
+  (OD1), kể cả thẻ đã quyết. `/ops/review?category=<mã Hạng mục duyệt>` chọn sẵn một mục của Hộp hạng mục (OD2).
 _Avoid_: Review Queue, hàng chờ
 
-**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+**Lý do quyết định**: Câu ghi kèm khi quyết một thẻ ở Hàng duyệt, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Người để trống thì nhãn đáp án đã bấm là lý do (OD2, Q4), nên lý do không bao giờ rỗng; riêng «Bỏ» ở thẻ Bổ sung tin còn bắt gõ tay tới khi thẻ phân được ghi đè (OD4). Nhãn ô: «Lý do».
 - Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
 _Avoid_: ghi chú, comment, note
 
 **Suy luận của AI** (trên thẻ ghép căn): Gợi ý cùng căn/khác căn và lời giải thích của bộ chấm LLM. Hiện tách khỏi căn cứ, không đổi thứ tự hay kiểu nút; không kèm điểm hay độ tự tin (Q9).
 - Code: `review_queue.ai_suggestion`, `ai_reasoning` · RESO: —
 _Avoid_: AI tự tin, điểm B, gợi ý mặc định
+
+**Hạng mục duyệt**: Câu hỏi người duyệt thật sự trả lời ở một thẻ, khác loại thẻ: Ghép căn, Gộp Người, Luật và AI khác nhau,
+Bổ sung tin, Đối chiếu ý định, Đối chiếu giá, Đối chiếu diện tích, Loại khác. Suy từ chính thẻ lúc quyết (báo cáo soát Ops
+07/11 §e1). «Bổ sung tin» còn gộp điền ô trống, ghi đè, trùng giá trị đang lưu tới khi thẻ hiện giá trị đang lưu (OD4).
+- Code: `reviewCategory` (`app/src/lib/ops/review-hang-muc.ts`) · `ops_audit.detail.category` (`unit_match`, `party_merge`,
+  `rule_vs_ai`, `fill`, `intent_check`, `price_check`, `area_check`, `other`) · RESO: —
+_Avoid_: loại thẻ (là `item_type`), nhóm thẻ
+
+**Nhịp duyệt**: Số giây người duyệt dành cho một thẻ, theo Hạng mục duyệt: giây ở thẻ (từ lúc thẻ mở tới lúc bấm đáp án) và
+giây giữa hai lượt quyết của cùng người. Báo trung vị 7 ngày trên `/ops/review`; lượt quá 30 phút không vào trung vị. Là số
+trước của OD2.
+- Code: `ops_audit.detail.seconds`, `since_prev_seconds`, `opened_at`, `decided_at` (route decide, body `elapsed_ms`) ·
+  `loadReviewPace` · RESO: —
+_Avoid_: tốc độ duyệt, năng suất (chưa nói đơn vị)
+
+**Hộp hạng mục**: Cột trái của danh sách thẻ ở `/ops/review`: mục «Tất cả» rồi mỗi Hạng mục duyệt đang có thẻ chờ, kèm số thẻ
+chờ, tuổi thẻ chờ cũ nhất và trung vị giây ở thẻ 7 ngày. Bấm một mục để lọc và duyệt liền mục đó (OD2, khuôn
+`@reui/solution-agents-9`).
+- Code: `hopHangMuc`, `ReviewHopHangMuc` · Tham số URL `category` · RESO: —
+_Avoid_: rail, bộ lọc loại thẻ (ô «Loại thẻ» đã bỏ ở OD2)
+
+**Chế độ duyệt**: Cách quyết liền các thẻ chờ của một Hạng mục duyệt trong một sheet: cũ nhất trước, quyết xong thẻ kế hiện
+ngay (sheet không đóng giữa hai thẻ), đầu sheet ghi «k/N · hạng mục», đi lại và quyết bằng phím (`J`/`K`, `1`–`4`, `R`, `?`).
+Nút «Duyệt liền» mở chế độ này (OD2).
+- Code: `hangDuyet`, `usePhimDuyet`, `ReviewDetailSheet` (`dieuHuong`) · RESO: —
+_Avoid_: duyệt hàng loạt (GD10 đã loại — mỗi thẻ vẫn một quyết định), focus mode
+
+**Hoàn tác**: Huỷ một quyết định trong 5 giây sau khi bấm: lệnh giữ ở trình duyệt rồi mới gửi, toast «Đã ghi #id · <nhãn>»
+có nút «Hoàn tác». Quá 5 giây thì đảo là lệnh đảo (ADR-0015, việc sau). Rời trang khi còn lệnh chờ thì lệnh gửi ngay (OD2, Q7).
+- Code: `HangGuiProvider`, `HOAN_TAC_MS` · RESO: —
+_Avoid_: undo (trên UI), huỷ quyết định (sau 5 giây)
+
+**Quyết định gần đây**: 20 lượt quyết mới nhất trong 7 ngày của chính người đang duyệt, ở `/ops/review`: mã thẻ, tiêu đề, nhãn
+đáp án, lý do, giờ; bấm mã thẻ để xem lại thẻ (OD2).
+- Code: `loadRecentDecisions`, `ReviewGanDay` (`ops_audit` `review.decide`) · RESO: —
+_Avoid_: lịch sử duyệt, nhật ký (là `/ops/audit`)
+
+**Đang chờ ghép**: Nhãn của một căn ở Căn giá tốt khi căn là Tin A hay Tin B của một thẻ Ghép căn còn chờ ở Hàng duyệt —
+người gọi điện biết căn có thể là một căn trùng. Kèm liên kết «Mở thẻ ghép #<id>». Chỉ ở máy thu.
+- Code: `loadPendingUnitMatches`, `DealChoGhep` · RESO: —
+_Avoid_: căn trùng (chưa quyết)
 
 ## Vận hành (cổng Ops)
 
@@ -679,7 +745,7 @@ _Avoid_: chưa so
 - Code: `eval_labels.basis` (`chu_bai`, `anh`, `ngu_canh_nhom`, `kien_thuc_nghe`, `danh_muc_cdt`)
 _Avoid_: nguồn nhãn
 
-**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã; chỉ ở máy thu, không lên cloud. Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
+**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã. (Câu cũ «chỉ ở máy thu, không lên cloud» hết hiệu lực từ 08/11, ROADMAP §3 mục 38; luật hiển thị theo hàng DN4.) Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
 - Code: `eval_labels.basis = 'danh_muc_cdt'`, kiểm ở `app/src/lib/labels-s08.ts`
 _Avoid_: danh mục dự án, quỹ căn
 
@@ -753,7 +819,7 @@ _Avoid_: Rentalizer
 - Slug URL: —
 _Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
-**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này; chỉ admin thấy, không lên máy chủ. Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
+**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này: vai Vận hành trở lên thấy ảnh đã tải và ảnh máy chủ lấy hộ theo khoá, đường dẫn gốc chỉ Quản trị thấy. Ảnh thu nhỏ được lên máy chủ cho vai Vận hành trở lên (ADR-0007 sửa 26/10, ADR-0015). Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
 - Code: `media` (`transform-media.mjs`, `loadOfferMedia`), kiểm `media:local-file` · RESO: `Media` (DD 2.1)
 - Slug URL: —
 _Avoid_: media canonical (tên kỹ thuật, không dùng trên UI), ảnh khu vực

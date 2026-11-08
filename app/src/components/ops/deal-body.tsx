@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { ReviewPhotos } from "@/components/ops/review-photos"
+import { DealChoGhep } from "@/components/ops/deal-cho-ghep"
 import { DealSeenNote } from "@/components/ops/deal-seen-note"
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Frame, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
@@ -52,7 +53,14 @@ function Khoi({ tieuDe, beMat, children }: { tieuDe: string; beMat: BeMat; child
  * Phần thân một căn, dùng chung cho sheet và trang `/ops/deals/<offerId>`: đủ năm câu căn nào, ở đâu, ảnh gì, vì sao giá
  * tốt, gọi ai. Dữ liệu đến đã áp vai; các điều kiện ở đây chỉ quyết có vẽ khối hay không.
  */
-export function DealBody({ d, xemNoiDung, mayThu, beMat }: { d: DealHang; xemNoiDung: boolean; mayThu: boolean; beMat: BeMat }) {
+export function DealBody({ d, xemNoiDung, mayThu, beMat, choGhep }: {
+  d: DealHang
+  xemNoiDung: boolean
+  mayThu: boolean
+  beMat: BeMat
+  /** Thẻ Ghép căn còn chờ có căn này là một vế (OD1 · ĐC7): badge + liên kết tới hàng duyệt. */
+  choGhep?: number[]
+}) {
   const coNoiDung = xemNoiDung && mayThu
   const trang = beMat === "trang"
   const cach = trang ? null : <Separator />
@@ -145,6 +153,7 @@ export function DealBody({ d, xemNoiDung, mayThu, beMat }: { d: DealHang; xemNoi
 
   return (
     <div className={trang ? "flex flex-col gap-6" : "flex flex-col gap-6 p-4"}>
+      <DealChoGhep ids={choGhep} lienKet />
       {d.roiDanhSach && (
         <Alert variant="info" data-deal-roi>
           <InfoIcon aria-hidden="true" />

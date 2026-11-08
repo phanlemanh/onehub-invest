@@ -31,6 +31,7 @@ import { COT_KHOI, KHOI, O_TRONG, TAT_CA_O, type O } from "./nhom-fields"
 import { NhomRow } from "./nhom-row"
 import { cauTinKe, diTrang, guiNhan, LuuLoiAlert } from "./luu-nhan"
 import { MaThe } from "./ma-the"
+import { nhapVeO } from "./nhap-may"
 import { NguoiDang } from "./nguoi-dang"
 
 const O_GIA: readonly LabelField[] = ["price_min_vnd", "price_max_vnd"]
@@ -62,8 +63,10 @@ export function LabelFormNhom({
   diToi?: (href: string) => void
   baoTin?: (cau: string) => unknown
 }) {
-  const [cells, setCells] = useState<Partial<Record<LabelField, O>>>({})
-  const [donVi, setDonVi] = useState<PriceUnit>("ty")
+  // Lát mẫu soát (DO1): điền sẵn nháp máy của cách đọc hiện; người giữ hay sửa từng ô rồi lưu.
+  const [nhapDau] = useState(() => (tin.nhap ? nhapVeO(tin.nhap) : null))
+  const [cells, setCells] = useState<Partial<Record<LabelField, O>>>(nhapDau?.cells ?? {})
+  const [donVi, setDonVi] = useState<PriceUnit>(nhapDau?.donVi ?? "ty")
   // Người tự bấm đơn vị thì Loại tin không ghi đè lựa chọn đó.
   const [donViTay, setDonViTay] = useState(false)
   // Giá lạ so với Loại tin: hỏi lại một lần cho đúng bộ giá trị đó, không chặn lưu.
@@ -136,6 +139,13 @@ export function LabelFormNhom({
               {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
               {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
             </FrameDescription>
+            {tin.nhap ? (
+              <div className="flex">
+                <Badge variant="info-light" data-labels-nhap={tin.nhap.cachDoc} className="wrap-anywhere whitespace-normal">
+                  Nháp máy · {tin.nhap.cachDoc}
+                </Badge>
+              </div>
+            ) : null}
             <AnhBai anh={tin.anh} soLinkKhac={tin.soLinkKhac} coChu={Boolean(tin.text)} ghep={tin.ghep} />
             {tin.text ? (
               <p className={`text-sm whitespace-pre-line wrap-anywhere ${moRong ? "" : "line-clamp-3"}`} data-labels-chu-goc="">

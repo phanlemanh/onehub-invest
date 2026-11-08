@@ -1,0 +1,294 @@
+{
+  "slug": "e4b-danh-sach-tin-nhanh",
+  "round": 2,
+  "riskTier": "T2",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx",
+      "expected": "\"exit 0 trên DB máy thu (không có DB thì exit 1 THIEU DB MAY THU, không tính là đạt); ca E4b in vn-hcmc sale <sort>: <n> ms cho cả bốn sort, mỗi số dưới 1000; mọi khẳng định khác của E4b đạt; chiều đỏ: một sort từ 1000 ms đỏ với thông điệp `<sort> <ms> ms`\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-doi-chieu.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_doi_chieu"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; mọi tệp trong app/tests đạt, gồm E4b dưới tải tám tệp song song trên DB của riêng lượt, trang-chi-tiet-tin-db, tin-rao-cong-khai, so-ghep-nhan\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/**"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-2",
+      "cmd": "cd app && npx tsc --noEmit && npm run lint",
+      "expected": "\"exit 0: tsc --noEmit không lỗi, lint không lỗi\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-doi-chieu.test.tsx",
+        "app/tests/tin-rao-cong-khai.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-3",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx",
+      "expected": "\"exit 0; ca E4B-AC-3 nạp offers-public.ts của commit e21a151e (git show) thành module tạm, đo xen kẽ ba lượt mỗi sort trang đầu vn-hcmc tin bán, in mỗi sort `cũ <a> ms · mới <b> ms` với a, b là lượt nhanh nhất; b < 700 ở cả bốn sort; ca chạy cả khi E1 chạy riêng (DB máy thu) lẫn trong E2 (suite, DB của riêng lượt); chiều đỏ: b từ 700 đỏ `BIEN <sort> <b> ms`, liệt kê mọi sort vượt chứ không dừng ở sort đầu\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-doi-chieu.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_doi_chieu"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-4",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx",
+      "expected": "\"exit 0; ca E4B-AC-4 so 20 tổ hợp viết trước (bốn sort × vn-hcmc bán offset 0, vn-hcmc bán offset 480, vn-hanoi rent_lt offset 0, một phường vn-hcmc bán, không thị trường bán offset 0) giữa getPublicOffers mới và getPublicOffers của module tạm từ commit e21a151e; số khẳng định bằng 20 × bốn trường (dãy offerId, cờ nhiều tên từng dòng, total, withPhone); tổ hợp lệch thì đọc lại cả hai một lần, còn lệch mới đỏ; in số tổ hợp, số khẳng định, số dòng mang cờ nhiều tên; số đó bằng 0 thì đỏ KHONG DO DUOC; chiều đỏ cùng ca: bản sao offers-public đổi giới hạn đếm tên từ seller_ref của trang sang offer_id của trang đỏ LECH CAU CU\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-doi-chieu.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_doi_chieu"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-5",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx",
+      "expected": "\"exit 0; E7 trên lược đồ tạm: tài khoản ba tên đọc từng trang một dòng (hai trang) đều sellerManyNames true và sellerName null, cả khi lọc một phường; hai tên giữ tên; seller_ref rỗng không gộp; đối chứng cùng fixture: bản sao đếm tên chỉ trong trang đỏ NHIEU TEN, bản sao đếm tên chỉ trong phường lọc đỏ DEM SAU LOC, bản sao ngưỡng 4 đỏ NHIEU TEN; bản sao không áp được đột biến thì đỏ «đột biến không áp được»\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-cong-khai.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_api"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-6",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx",
+      "expected": "\"exit 0; ca E4B-AC-6 trên lược đồ tạm năm tin hiện được (hai có số) và một tin ẩn: trang đầu, limit 2 offset 4 (một dòng), limit 2 offset 6 và offset 960 (không dòng), bộ lọc giá không khớp (không dòng) — total 5 và withPhone 2 ở bốn ca đầu, 0 và 0 ở ca lọc rỗng, bằng câu đếm độc lập viết tay trong test; chiều đỏ cùng fixture: bản sao bỏ câu đếm dự phòng cho trang rỗng đỏ TOTAL TRANG RONG\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/offers-public.ts",
+        "app/tests/tin-rao-cong-khai.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_api"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-7",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx",
+      "expected": "\"exit 0 ngoài CI; ca E4B-AC-7 cắt khối đo thời gian của ca E4b (từ `for (const sort of OFFER_SORTS) {` tới dòng `dem.phiLy +=`) ở HEAD và ở `git show e21a151e:app/tests/tin-rao-doi-chieu.test.tsx`, hai khối bằng nhau từng ký tự; không cắt được mốc ở một bản thì đỏ KHONG CAT DUOC; chiều đỏ cùng ca: khối HEAD đã cắt đổi `ms < 1000` thành `ms < 1500` đỏ TRAN BI NOI\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/tests/tin-rao-doi-chieu.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.tir_doi_chieu"
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "e21a151eed711b8851fd1fca25f297d9c9acb0bc",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nhan-kit-2-36-0-7d7813/_acceptance/e4b-danh-sach-tin-nhanh/contract.md",
+  "invokedAt": "2026-11-08T03:55:09Z",
+  "invokedSha": "103f4d936a7bfa275bd17ba5d32f3c72d93c8b70",
+  "vungVat": [
+    "_acceptance/e4b-danh-sach-tin-nhanh/card-plain.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
+    "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "app/src/lib/offers-public.ts",
+    "app/tests/tin-rao-cong-khai.test.tsx",
+    "app/tests/tin-rao-doi-chieu.test.tsx"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "agent/config/doc-gop-s03.json",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/contract.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/decisions.jsonl",
+    "_acceptance/e4b-danh-sach-tin-nhanh/duong-nen.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evidence-report.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/gap-probe.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/review-findings.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/run-log.jsonl",
+    "_acceptance/e4b-danh-sach-tin-nhanh/usage-report.md",
+    "docs/superpowers/plans/2026-11-08-e4b-danh-sach-tin-nhanh.md",
+    "docs/superpowers/specs/2026-11-08-e4b-danh-sach-tin-nhanh-design.md"
+  ],
+  "diffFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card-plain.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
+    "_acceptance/e4b-danh-sach-tin-nhanh/contract.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/decisions.jsonl",
+    "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/duong-nen.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evidence-report.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/gap-probe.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/review-findings.md",
+    "_acceptance/e4b-danh-sach-tin-nhanh/run-log.jsonl",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/usage-report.md",
+    "app/src/lib/offers-public.ts",
+    "app/tests/tin-rao-cong-khai.test.tsx",
+    "app/tests/tin-rao-doi-chieu.test.tsx",
+    "docs/superpowers/plans/2026-11-08-e4b-danh-sach-tin-nhanh.md",
+    "docs/superpowers/specs/2026-11-08-e4b-danh-sach-tin-nhanh-design.md"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/e4b-danh-sach-tin-nhanh/card-plain.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/card.html",
+    "_acceptance/e4b-danh-sach-tin-nhanh/design-floor.json",
+    "_acceptance/e4b-danh-sach-tin-nhanh/evals.yaml",
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "app/src/lib/offers-public.ts",
+    "app/tests/tin-rao-cong-khai.test.tsx",
+    "app/tests/tin-rao-doi-chieu.test.tsx"
+  ],
+  "coverageFiles": [
+    "app/src/lib/offers-public.ts",
+    "app/tests/tin-rao-cong-khai.test.tsx",
+    "app/tests/tin-rao-doi-chieu.test.tsx"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "ebd0c89f54a33ed696dd9098d4dbc45b25ddf4e70703dddf6451b3bfff6a886c",
+  "runBaseline": true,
+  "carriedEvals": [
+    {
+      "id": "E6",
+      "runId": "minted-e4b-danh-sach-tin-nhanh-E6-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-08T03:28:52Z",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"
+    },
+    {
+      "id": "E7",
+      "runId": "minted-e4b-danh-sach-tin-nhanh-E7-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-11-08T03:28:52Z",
+      "cmd": "cd app && node --import tsx --test tests/tin-rao-cong-khai.test.tsx"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "app/tests/tin-rao-doi-chieu.test.tsx",
+      "title": "Ca AC-4/AC-3/AC-7 ghim cứng vào gốc nhánh e21a151e nhưng nằm trong suite chạy mỗi lượt, nên lần sửa hợp lệ sau này sẽ làm suite đỏ",
+      "severity": "medium",
+      "plain": "Tính năng chạy đúng cho người dùng hôm nay. Nhưng về sau, khi đội cố ý đổi cách danh sách tin hoạt động, bộ kiểm tra sẽ báo đỏ dù không có lỗi thật, và phải có người gỡ hoặc sửa các ca so sánh cũ mới tiếp tục được.",
+      "can_cu": "Không ảnh hưởng người dùng cuối và không mất dữ liệu; chỉ làm chậm đội phát triển ở vòng sau, và người sửa tự gỡ được khi chạm vào đúng chỗ đó nên ghi lại hạn chế là đủ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/e4b-danh-sach-tin-nhanh/s4-args.json",
+    "app/tests/tin-rao-doi-chieu.test.tsx"
+  ]
+}

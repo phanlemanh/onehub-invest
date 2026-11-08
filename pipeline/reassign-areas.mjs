@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { NGUON_PHUONG, phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
+import { coDanhBa, NGUON_PHUONG, phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
 import { THANH_PHO } from "./lib/thi-truong.mjs";
 
 // Tập thành phố lấy từ MỘT chỗ ánh xạ (lib/thi-truong.mjs) — khoá = tiền tố snapshot S04 của bộ thu.
@@ -225,10 +225,12 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   for (const d of dropped) log.log(`  - ${d.id} (${d.area_id}) @ ${d.latitude},${d.longitude}`);
 
   // ---- 4. Xoá submarket không phải phường OSM, không còn tham chiếu ----
-  // metrics/breakdowns là cache — 300/400 rebuild lại sau.
+  // metrics/breakdowns là cache — 300/400 rebuild lại sau. PX1: xã của danh bạ Cục Thống kê (admin_code, 084) không
+  // bao giờ bị xoá dù chưa có tin hay ranh giới; DB chưa áp 084 thì như cũ.
+  const coMa = await coDanhBa(client);
   const doomed = `SELECT a.id FROM areas a
      WHERE a.parent_id = ANY($1) AND a.region_type = 'submarket'
-       AND a.meta->>'source' IS DISTINCT FROM '${NGUON_PHUONG}'
+       AND a.meta->>'source' IS DISTINCT FROM '${NGUON_PHUONG}'${coMa ? "\n       AND a.admin_code IS NULL" : ""}
        AND NOT EXISTS (SELECT 1 FROM listing_records l WHERE l.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM sale_offer_records o WHERE o.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM market_asset_stats s WHERE s.area_id = a.id)
@@ -269,7 +271,13 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
     }
     return { moves, dropped, removed: removedOld, kept: [], stale, valid, ...out };
   }
-  const kept = giu.filter((r) => r.saved > 0 || r.properties > 0);
+  // PX1: khu vực lạc mang mã danh bạ là xã thật — giữ (vẫn mang meta.lac để point-in-polygon bỏ qua)
+  const coMaLac = coMa
+    ? (await client.query(`SELECT id FROM areas WHERE id = ANY($1) AND admin_code IS NOT NULL`, [stale])).rows.map((r) => r.id)
+    : [];
+  if (coMaLac.length) await client.query(`UPDATE areas SET meta = meta || '{"lac": true}'::jsonb WHERE id = ANY($1)`, [coMaLac]);
+  for (const id of coMaLac) log.warn(`  ! giữ khu vực lạc ${id} — xã danh bạ (admin_code)`);
+  const kept = giu.filter((r) => r.saved > 0 || r.properties > 0 || coMaLac.includes(r.id));
   for (const k of kept)
     log.warn(`  ! giữ khu vực lạc ${k.id} — ${k.saved} saved_markets, ${k.properties} properties trỏ vào`);
   const xoa = stale.filter((id) => !kept.some((k) => k.id === id));

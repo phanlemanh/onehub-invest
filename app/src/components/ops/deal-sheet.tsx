@@ -22,8 +22,10 @@ import { DiscountBar } from "./deals-cells"
  */
 const trM2 = (v: number | null) => (v ? `${fmtInt(v / 1e6)} tr/m²` : null)
 
-export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, onMoCan, onOpenChange }: {
+export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, onMoCan, onOpenChange, choGhep }: {
   d: DealHang | null
+  /** Thẻ Ghép căn còn chờ của căn đang mở (OD1 · ĐC7). */
+  choGhep?: number[]
   rows: DealHang[]
   xemNoiDung: boolean
   mayThu: boolean
@@ -90,7 +92,7 @@ export function DealSheet({ d, rows, xemNoiDung, mayThu, viTri, tong, onChuyen, 
             </SheetHeader>
             {/* key theo căn: đổi căn thì về đầu thân cuộn và trả lại trạng thái nới tiêu chí. */}
             <ScrollArea key={d.offerId} className="min-h-0 flex-1">
-              {tab === "chi-tiet" ? <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="sheet" /> : <DealSimilar d={d} rows={rows} onMo={onMoCan} />}
+              {tab === "chi-tiet" ? <DealBody d={d} xemNoiDung={xemNoiDung} mayThu={mayThu} beMat="sheet" choGhep={choGhep} /> : <DealSimilar d={d} rows={rows} onMo={onMoCan} />}
             </ScrollArea>
             {xemNoiDung && (
               <SheetFooter className="flex-row items-center justify-between gap-3 border-t">

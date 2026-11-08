@@ -3,6 +3,7 @@ import type { PoolClient } from "pg"
 import { pool } from "./db"
 import { docGhep, type GhepHien } from "./labels-anh"
 import { docThe } from "./labels-cum"
+import { nhapTuDraft, type NhapMay } from "./labels-cuon-chieu"
 import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
 import { maskSourceNames } from "./mask-source-names"
 import { getSourceNameEntries } from "./source-roles"
@@ -34,6 +35,8 @@ export type TinGan = {
   nguoiDangId?: string | null
   /** Giờ đăng của cùng bài với người đăng. */
   postedAt: string | null
+  /** Nháp máy của lát mẫu soát cuốn chiếu (DO1); lát khác null — lượt một vẫn mù. */
+  nhap?: NhapMay | null
 }
 
 /** Một nhóm của lát theo nhóm: `stratum` là `unit_code` trong sổ; tiến độ tính riêng cho người gọi. */
@@ -50,7 +53,7 @@ const CHO_PHEP = `CASE WHEN i.double_label THEN 2 ELSE 1 END`
  * `nhom` là `unit_code`: chỉ lấy bài của nhóm đó. */
 export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: string | null = null): Promise<TinGan | null> {
   const sql =
-    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, i.ref_id, i.ghep, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id, p.sender_name, p.sender_id
+    `SELECT i.item_id::int, i.lat, i.double_label, coalesce(n.so, 0)::int AS so, i.ref_id, i.ghep, to_jsonb(i) -> 'draft' AS draft, p.text, p.group_name, p.posted_at, p.media, p.media_files, p.snapshot_id, p.sender_name, p.sender_id
      FROM eval_label_items i
      LEFT JOIN LATERAL (SELECT count(DISTINCT labeler_id) AS so, bool_or(labeler_id = $1) AS cua_toi
                         FROM eval_labels WHERE item_id = i.item_id) n ON true
@@ -81,6 +84,7 @@ export async function tinKe(userId: string, lat: string, q: Q = pool, nhom: stri
     nguoiDang,
     nguoiDangId: the.nguoiDangId,
     postedAt: the.postedAt ? new Date(the.postedAt).toISOString() : null,
+    nhap: nhapTuDraft(r.draft),
   }
 }
 
