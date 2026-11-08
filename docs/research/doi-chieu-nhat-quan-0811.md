@@ -30,7 +30,7 @@ bộ phân xử ghi cột, LLM chỉ đề xuất: ADR-0013, ADR-0016, mục 32 
    chặn PX2 (150 dự án toàn quốc, mục 37): Đà Nẵng, Hải Phòng và các tỉnh khác không vào được bảng toà. Cần một migration
    mới trước khi PX2 chạy.
 
-**Năm câu cần Mạnh quyết** ở §5, kèm khuyến nghị. Các câu còn lại em tự chốt theo quyết định đã có, và ghi rõ là lựa chọn
+**Năm câu cần Mạnh quyết** ở §5: đã quyết 08/11 theo khuyến nghị (ROADMAP §3 mục 39). Các câu còn lại em tự chốt theo quyết định đã có, và ghi rõ là lựa chọn
 của em.
 
 ## 1. Mô hình chuẩn đang có hiệu lực
@@ -112,6 +112,11 @@ Phiên này chỉ phân tích. Mỗi dòng là một hàng đề xuất cho làn
 | C10 | `asset_nodes` không có vòng đời gộp/tách; ba cơ chế bí danh dự án (`aliases` của nút, `s08_project_links`, `registry_aliases.ma_nguon` 0 dòng) | ADR-0016 §3 chỉ áp khung cho vật thể và người | 8 nối / 142 chưa | Chốt ở DA0 cùng Hỏi-2: một cơ chế (`registry_aliases` mở cho nút vùng), `s08_project_links` thành view. |
 
 ## 5. Câu cần Mạnh quyết
+
+**Đã quyết 08/11**: Mạnh «Đồng ý với các khuyến nghị» cho cả năm câu (ROADMAP §3 mục 39). Làm rõ Hỏi-1: «nhãn» là **chữ hiển
+thị** (giao diện, văn xuôi, tiêu chí nghiệm thu, thuật ngữ CONTEXT), không phải trường dữ liệu. Mã `project`,
+`asset_nodes.node_type`, RESO `SubdivisionName`, tên bảng, cột và URL giữ nguyên. Chữ «nhãn» ở đây cũng khác «gắn nhãn» và
+«nhãn bạc» (`silver_labels`).
 
 Chỉ gồm những câu đổi khung đã chốt, hoặc mở chính sách cho bên ngoài.
 

@@ -501,6 +501,19 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     hợp S06/S07 theo mục 27. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai», 08/11). Rủi ro đã nêu: điều khoản S07 cấm thương mại, S09
     chưa kiểm điều khoản. Code (sync-cloud, DN4) và `CONTEXT.md` đổi theo hàng sau. Căn cứ `docs/research/danh-ba-du-an-0811.md`.
 
+39. **Đối chiếu nhất quán danh bạ dự án** (08/11, Mạnh «Đồng ý với các khuyến nghị», `docs/research/doi-chieu-nhat-quan-0811.md` §5):
+    - Hỏi-1: chữ hiển thị «**Dự án**» thay «Khu đô thị» (UI, văn xuôi, tiêu chí, CONTEXT); khu đô thị, đại đô thị là quy mô của dự án.
+      **Chỉ đổi nhãn**: mã `project`, `asset_nodes.node_type`, RESO `SubdivisionName`, tên bảng, cột, URL không đổi.
+    - Hỏi-2: khác chủ đầu tư hoặc mở bán riêng → dự án con có dự án cha (`parent_id`); cùng chủ đầu tư → phân khu. Ba nút Grand
+      Park đổi loại ở hàng DA1, không chặn DB1. ADR-0016 §7 mở kế thừa từ nút vùng (chủ đầu tư, phường).
+    - Hỏi-3: căn sơ cấp S08 **chưa** thành tin trong danh sách Bán, thước giá, metrics; giá chủ đầu tư và quỹ căn hiện ở trang dự án,
+      danh bạ. Câu «S02, S08 không tính là tin hiển thị được» giữ nguyên.
+    - Hỏi-4: gói Invest đẩy sang Quỹ hàng được mang thông tin dự án S08; vẫn không mang tên nguồn, đường dẫn bài gốc (sửa ADR-0017
+      khi hàng đẩy mở).
+    - Hỏi-5: thứ tự code — mở `buildings.iso_region` toàn quốc (migration mới) trước PX2; sửa mã căn S06 và khoá gộp căn ngay sau
+      GCM1; ghi thẳng cột, `mappings.yaml`, sync-cloud gộp vào DA0 và DN4.
+    Sửa văn bản (CONTEXT, ADR-0011 Qđ 2, ADR-0013 §2, ADR-0016 §1/§3/§7) theo hàng DA0.
+
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
