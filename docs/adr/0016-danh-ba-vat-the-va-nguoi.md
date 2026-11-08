@@ -107,7 +107,7 @@ và phát biểu theo vật thể.
 
 ### 6. Dựng vật thể
 
-- **Chung cư**: toà, trục, căn từ danh mục (S08 nội bộ — PL10 đã ký, ZC8 nạp) + phát biểu toà / mã căn từ tin (PL13).
+- **Chung cư**: toà, trục, căn từ danh mục (S08 — PL10 đã ký, ZC8 nạp; công khai từ 08/11, §9) + phát biểu toà / mã căn từ tin (PL13).
 - **Nhà phố, đất**: mỗi listing sinh **một vật thể tạm** (`pending`); chỉ gộp khi có bằng chứng: đăng lại cùng tài khoản +
   cùng diện tích + cùng phường, ảnh trùng (G-2.5), hoặc người duyệt «Cùng căn». **Toạ độ chỉ là tín hiệu phụ** (số đo:
   53% tin S06 nằm ở điểm chung). Số «căn» nhà phố lúc đầu ≈ số tin, giảm dần theo bằng chứng.
@@ -193,7 +193,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 9. **Gắn ở mức nào?** Listing gắn vật thể ở mức sâu nhất có bằng chứng; không đoán tầng, không gắn theo toạ độ đơn thuần.
 10. **Kế thừa có tự nuôi không?** Phát biểu `registry_inherit` không quay về làm bằng chứng cho vật thể; trường thuộc listing
     không kế thừa từ vật thể.
-11. **Được lên đâu?** Vật thể/giá trị chỉ từ S08 không lên Invest; vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`.
+11. **Được lên đâu?** Vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`. (Vế cũ «vật thể/giá trị chỉ từ S08 không lên Invest» bỏ từ 08/11, §9.)
 
 ## Hệ quả
 
@@ -201,7 +201,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 - `CONTEXT.md`: thêm Thửa, Căn, Danh bạ, Vai trò; sửa Căn nhà, Tòa nhà, Người bán (cùng PR này).
 - ROADMAP §3 mục 22; §5 chỉ mục ADR.
 - Hàng code (T3): migration bảng danh bạ + mở ràng buộc `field_assertions` (`resource_name`, `method`, `field`);
-  resolver mới thay `resolve-properties.mjs`; `sync-cloud` lọc vật thể chỉ-S08; bảng `sellers` cũ (19 dòng local) được
+  resolver mới thay `resolve-properties.mjs`; `sync-cloud` đẩy bảng danh bạ (bỏ lọc vật thể chỉ-S08 từ 08/11, §9); bảng `sellers` cũ (19 dòng local) được
   `parties` thay.
 - Con số «~19% căn là mảnh vỡ do khoá» trong thảo luận 27/10 **bị rút**: bỏ giá khỏi khoá vừa gộp đúng mảnh vỡ vừa gộp
   nhầm nhà khác nhau ở cùng điểm toạ độ.

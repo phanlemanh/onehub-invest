@@ -162,13 +162,13 @@ SingleFamilyResidence · Duplex · MultiFamily · UnimprovedLand · Office · Re
 
 | Extension | Đã tra DD (23/10) | Lý do | Ràng buộc / nơi khai | Trạng thái |
 |---|---|---|---|---|
-| `Stack` / `StackKey` (trục căn) | 2.0 + 2.1: không có; `PropertyUnitTypes` gắn tin, không gắn toà | Môi giới VN che tầng; trục là bản ghi gốc tạm | bảng tra + FK tới `Building`; mappings.yaml | đề xuất (PL11) |
+| `Stack` / `StackKey` (trục căn) | 2.0 + 2.1: không có; `PropertyUnitTypes` gắn tin, không gắn toà | Môi giới VN che tầng; trục là bản ghi gốc tạm | bảng tra + FK tới `Building`; mappings.yaml | **đã khai** (migration 082, DB1 thay PL11 — ADR-0016) |
 | `PriceBasis` (thu về · NET · gồm phí) | gần nhất `ListingAgreement=Net`, không trùng nghĩa | 42% tin Zalo thật (155/367) ghi nghĩa giá; sai nghĩa là so thước sai | CHECK enum; alias `ListingAgreement.Net` | đề xuất (PL6, PL13) |
 | `FieldAssertion` (resource) | không có; tiền lệ `*Source`, `HistoryTransactional`; RCP-50 đang đề xuất | Gom lời khai không xác thực từ nhiều nguồn — MLS không cần, mình cần | bảng append-only (PL15) | đề xuất |
 | `DataLevel` (B0–B5) và `CapabilityLevel` (N0–N4) | không có | FRAMING §3.4 | CHECK enum; DQ theo dõi phân bố | đề xuất (PL16) |
 | `ListingIntent` (offer · inquiry · not_listing) | gần nhất `SavedSearch` (tiêu chí người mua) | Kev/parser/bench lệch định nghĩa (L07) | CHECK enum | đề xuất (PL5, PL6) |
 | phòng trọ (`room`) | không có | VN | đã có CHECK 025, mappings.yaml | **đã khai** (cần VALIDATE CHECK) |
-| UPI kiểu VN (`urn:onehub:upi`) | UPI cần số thửa | VN không công bố số thửa | sinh xác định từ BuildingKey + StackKey | đề xuất (R3) |
+| UPI kiểu VN (`urn:onehub:upi`) | UPI cần số thửa | VN không công bố số thửa | đúc một lần khi dựng toà (ADR-0016 §4 thay «sinh xác định»), neo toà hoặc thửa | **đã khai** (082 `buildings.upi`) |
 
 Mỗi extension khi làm phải đủ: tra DD (ghi ngày tra), lý do VN, migration, CHECK/bảng tra, dòng mappings.yaml,
 DQ check — đúng sáu điều kiện ADR-0011.

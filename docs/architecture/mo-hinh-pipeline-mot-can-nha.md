@@ -138,7 +138,7 @@ Xếp phân khu, tầng, trục, mã căn như bảng trên là đề xuất c�
   - suy ra mạnh (từ ba môi giới độc lập trở lên cùng mô tả toà + trục với diện tích, phòng ngủ khớp): gắn trục, B2;
   - một lời khai (một tin): chỉ là ứng viên, không gắn.
 - **Nguồn dựng khung**:
-  - danh mục S08 (chỉ nội bộ; vật thể chỉ có từ S08 không lên Invest);
+  - danh mục S08 (từ 08/11 là thông tin dự án công khai, ROADMAP §3 mục 38);
   - từ điển toà, phân khu đã chốt khi gắn nhãn;
   - phát biểu toà, trục, mã căn từ tin (bộ đọc luật có sẵn; mã căn đủ hơn sau PL13).
 - Nhà phố và đất: mỗi tin một vật thể tạm, gộp theo bằng chứng. Toạ độ chỉ là tín hiệu phụ.
