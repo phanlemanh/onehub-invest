@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { InboxIcon, PlayIcon, TriangleAlertIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useTable, type ColumnDef, type PaginationState } from "@tanstack/react-table"
 
@@ -36,7 +37,7 @@ import {
   type StatusFilter,
 } from "@/lib/ops/review-queue"
 
-import { HangGuiProvider, HOAN_TAC_MS, type LenhQuyet } from "./hang-gui"
+import { HangGuiProvider, HOAN_TAC_MS, type LenhQuyet, type TinhTrangGui } from "./hang-gui"
 import { ReviewStatusBadge, ReviewTypeBadge } from "./review-badges"
 import { ReviewDetailSheet, type DieuHuong, type HetThe } from "./review-detail-sheet"
 import { ReviewGanDay } from "./review-gan-day"
@@ -51,6 +52,13 @@ export type BaoTin = (loai: "ghi" | "loi" | "tin", chu: string, hanh?: { label: 
 const baoSonner: BaoTin = (loai, chu, hanh) => {
   if (loai === "loi") return void toast.error(chu, hanh ? { action: hanh } : undefined)
   toast(chu, { ...(loai === "ghi" ? { duration: HOAN_TAC_MS } : {}), ...(hanh ? { action: hanh } : {}) })
+}
+
+/** Tin trả lời «Hoàn tác» bấm khi lệnh đã rời hàng chờ (od2-phim-va-loi-ghi AC-2): chỉ nói «đã ghi» khi route đã trả 200. */
+function tinHoanTacMuon(id: number, tt: TinhTrangGui, moLai: (id: number) => void): Parameters<BaoTin> {
+  if (tt === "da-ghi") return ["tin", `#${id} đã ghi — quá 5 giây, không hoàn tác được`]
+  if (tt === "loi") return ["loi", `#${id} chưa ghi được — thẻ vẫn chờ duyệt`, { label: "Mở thẻ", onClick: () => moLai(id) }]
+  return ["tin", `#${id} đang gửi — không hoàn tác được`]
 }
 
 /** Ghi `?category=` vào URL không tải lại trang (App Router đồng bộ với history API); «Tất cả» → bỏ tham số. */
@@ -69,7 +77,7 @@ function ghiCategory(chon: HopChon) {
  * (cũ nhất trước — Hỏi-1); phím J/K/1–4/R/?. Hoàn tác 5 giây (ĐC5): lệnh giữ ở trình duyệt (`HangGuiProvider`).
  * Không cột độ tự tin (Q9) — `ReviewItem` không mang số đó.
  */
-export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace = [], category = TAT_CA, ganDay = null, baoTin = baoSonner }: {
+export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace = [], category = TAT_CA, ganDay = null, baoTin = baoSonner, moTheQuaUrl }: {
   items: ReviewItem[]
   media: Record<number, ReviewMedia>
   context?: Record<number, ReviewContext>
@@ -83,6 +91,8 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
   ganDay?: QuyetGanDay[] | null
   /** Báo tin (mặc định toast sonner); test truyền hàm ghi lại để bấm thẳng «Hoàn tác». */
   baoTin?: BaoTin
+  /** «Mở thẻ» sau khi hàng duyệt đã gỡ — người đã sang trang Ops khác (mặc định router tới liên kết thẻ `/ops/review?card=<id>`). */
+  moTheQuaUrl?: (id: number) => void
 }) {
   const [chon, setChon] = useState<HopChon>(category)
   const [status, setStatus] = useState<StatusFilter>(DEFAULT_STATUS_FILTER)
@@ -122,6 +132,17 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
     setHet(false)
     setOpenId(id)
   }, [])
+  // Kết quả lệnh xả về SAU khi hàng duyệt bị gỡ (chuyển route trong app): «Mở thẻ» lúc ấy không còn sheet để mở.
+  const ganRef = useRef(false)
+  useEffect(() => {
+    ganRef.current = true
+    return () => {
+      ganRef.current = false
+    }
+  }, [])
+  const router = useRouter()
+  const moQuaUrl = useCallback((id: number) => (moTheQuaUrl ? moTheQuaUrl(id) : router.push(`/ops/review?card=${id}`)), [moTheQuaUrl, router])
+  const moLai = useCallback((id: number) => (ganRef.current ? moThe(id) : moQuaUrl(id)), [moThe, moQuaUrl])
   const dong = () => {
     setOpenId(null)
     setHet(false)
@@ -137,7 +158,7 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
   }
 
   // Ba nhịp của hàng chờ gửi. Thẻ vừa bấm rời hàng duyệt ngay; thẻ kế = thẻ đứng sau nó trong hàng lúc bấm.
-  const onXep = useCallback((lenh: LenhQuyet, hoanTac: () => boolean) => {
+  const onXep = useCallback((lenh: LenhQuyet, hoanTac: () => boolean, tinhTrang: () => TinhTrangGui) => {
     const truoc = hangRef.current
     const i = truoc.findIndex((t) => t.id === lenh.id)
     const con = truoc.filter((t) => t.id !== lenh.id)
@@ -150,8 +171,9 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
     baoTin("ghi", `Đã ghi #${lenh.id} · ${lenh.nhan}`, {
       label: "Hoàn tác",
       onClick: () => {
-        // Lệnh đã gửi (toast còn hiện vì chuột đè lên quá 5 giây) → không đưa thẻ trở lại; báo đã ghi.
-        if (!hoanTac()) return baoTin("tin", `#${lenh.id} đã ghi — quá 5 giây, không hoàn tác được`)
+        // Lệnh đã gửi (toast còn hiện vì chuột đè lên quá 5 giây, hay hàng duyệt đã gỡ) → không đưa thẻ trở lại; báo đúng
+        // tình trạng của lệnh — đang gửi, đã ghi, hay lỗi.
+        if (!hoanTac()) return baoTin(...tinHoanTacMuon(lenh.id, tinhTrang(), moLai))
         setDangGui((s) => {
           const n = new Set(s)
           n.delete(lenh.id)
@@ -160,7 +182,7 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
         moThe(lenh.id)
       },
     })
-  }, [moThe, baoTin])
+  }, [moThe, moLai, baoTin])
   const onXong = useCallback((lenh: LenhQuyet) => lenh.lamMoi(), [])
   const onLoi = useCallback((lenh: LenhQuyet, loi: string) => {
     setDangGui((s) => {
@@ -168,8 +190,8 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace 
       n.delete(lenh.id)
       return n
     })
-    baoTin("loi", `Không ghi được #${lenh.id}: ${loi}`, { label: "Mở thẻ", onClick: () => moThe(lenh.id) })
-  }, [moThe, baoTin])
+    baoTin("loi", `Không ghi được #${lenh.id}: ${loi}`, { label: "Mở thẻ", onClick: () => moLai(lenh.id) })
+  }, [moLai, baoTin])
 
   // Thanh điều hướng: chỉ khi thẻ đang mở nằm trong hàng duyệt (thẻ đã quyết mở để xem lại thì không).
   const viTri = open ? hang.findIndex((t) => t.id === open.id) : -1
