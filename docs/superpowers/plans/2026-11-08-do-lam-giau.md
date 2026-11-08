@@ -19,7 +19,7 @@
 
 ## Global Constraints
 
-- **Số migration:** do giám sát cấp (yêu cầu P2-141). Tệp `db/migrations/<NNN>_lam_giau.sql`. Khoá advisory của lệnh là `56<NNN>`. Không tự lấy số.
+- **Số migration:** giám sát cấp 086 (P2-141), viết bằng skill `/new-migration`. Tệp `db/migrations/086_lam_giau.sql`. Khoá advisory của lệnh là `56086`. Không tự lấy số.
 - **Lược đồ:** bảng `enrichment_value_state`, `enrichment_value_change` chỉ ở máy thu. Không vào FILL của `pipeline/sync-cloud.mjs`, không DDL cloud.
 - **Migration chưa gộp không áp lên DB `oneinvest` :5433** (luật đợt 27/10). Test nạp migration trong giao dịch, trên DB thử của lượt.
 - **Suite:** không chạy suite app/pipeline trọn (S4, đường nền) trước khi hàng `test-chiu-db-da-nap-dvhc` của N1 gộp (lời giám sát). Trong lúc làm, chỉ chạy tệp test của mình: `node --test pipeline/scripts/do-lam-giau.test.mjs`, `node --import tsx --test app/tests/do-lam-giau.test.tsx`, `node --test scripts/job-exit.test.mjs`.
@@ -39,7 +39,7 @@
 2. **Bài sinh hai tin cùng số.** Giấu tin A mà để tin B cùng bài thì số của A rò về qua B. Test ở Task 3 (N3, `RO TIN CUNG BAI`).
 3. **Lượt 15′ chạy qua nửa đêm VN.** Ngày đo phải là `ngayVn(now)`, không theo giờ UTC. Dòng của ngày cũ không bị ghi đè. Test ở Task 2: chạy hai lần với `ngay` khác nhau, dòng ngày trước giữ nguyên.
 4. **Nhóm có đúng ngưỡng 20 bài.** Bỏ một ra thì rơi dưới ngưỡng, và phải ra `khong_ra`, không ra `sai`. Test ở Task 3 (G2).
-5. **DB máy thu chưa áp migration DO3.** Lệnh in một dòng `CHUA-AP-<NNN>`, không ghi, thoát 0, để bước đêm không đỏ trước khi Mạnh áp. Test ở Task 2: DB thử không nạp migration.
+5. **DB máy thu chưa áp migration DO3.** Lệnh in một dòng `CHUA-AP-086`, không ghi, thoát 0, để bước đêm không đỏ trước khi Mạnh áp. Test ở Task 2: DB thử không nạp migration.
 
 ---
 
@@ -48,7 +48,7 @@
 `independent: false` (mọi task sau dựa vào nó) · phục vụ E1, E2 (nền)
 
 **Files:**
-- Create: `db/migrations/<NNN>_lam_giau.sql`
+- Create: `db/migrations/086_lam_giau.sql`
 - Create: `pipeline/lib/do-lam-giau-db.mjs` (chỉ phần nạp ở task này)
 - Test: `pipeline/scripts/do-lam-giau.test.mjs` (ca `DO3-NAP`)
 
@@ -66,7 +66,7 @@
 - [ ] **Step 2:** Chạy `node --test --test-name-pattern=DO3-NAP pipeline/scripts/do-lam-giau.test.mjs`. Kỳ vọng: FAIL (chưa có module).
 - [ ] **Step 3:** Viết migration. Header theo khuôn 083: nguồn hồ sơ, số do giám sát cấp, «KHÔNG sync cloud», idempotent `IF NOT EXISTS`. Viết `napLamGiau`, `daCoLamGiau`.
 - [ ] **Step 4:** Chạy lại lệnh ở Step 2. Kỳ vọng: PASS.
-- [ ] **Step 5:** Commit `feat(db): <NNN> bảng ảnh chụp và dòng đổi làm giàu (DO3)`.
+- [ ] **Step 5:** Commit `feat(db): 086 bảng ảnh chụp và dòng đổi làm giàu (DO3)`.
 
 ### Task 2: Sổ đường, giá trị sống, thay đổi theo ngày, người sửa/rút, tự soát
 
@@ -106,7 +106,7 @@
   - `docViTriTin(c, offerIds) → Map<offer_id,{ market_id, ward_id, project_key, building_key: null, core: { toa_chu } }>`: đúng khuôn đơn vị mà `KHOA_LAT_DON_VI` đọc.
 - Produces (`pipeline/do-lam-giau.mjs`):
   - `doLamGiau(client, { ngay = ngayVn(Date.now()), write = false, dotBien, kiemNguoc = true }) → Promise<{ dq: {check_name, entity, status, detail}[], chua_ap?: string }>`.
-  - CLI: `--write`, `--ngay YYYY-MM-DD`. Giao dịch có `pg_advisory_xact_lock(56<NNN>)`. Chưa áp migration thì in `CHUA-AP-<NNN>` và thoát 0, không ghi.
+  - CLI: `--write`, `--ngay YYYY-MM-DD`. Giao dịch có `pg_advisory_xact_lock(56086)`. Chưa áp migration thì in `CHUA-AP-086` và thoát 0, không ghi.
 
 - [ ] **Step 1: Viết ca `DO3-AC-1`** theo E1. Giá trị ghi bằng bên ghi thật:
   - `ganSdtQuaNguoi` (`pipeline/lib/gan-sdt-qua-nguoi.mjs`) trên `party_contacts` thử, sau `napSdtE164` + nạp 068/079 như ca của enrich-nguoi-s03;
@@ -131,7 +131,7 @@
 
   Thêm ca `DO3-AC-1-THAT`: chỉ đọc DB máy thu qua `DATABASE_URL_MAY_THU`. Bỏ qua kèm lý do khi `CI` hoặc vắng biến. `docGiaTriSong` của hai đường đang chạy phải > 0; in hai số đếm.
 
-  Thêm ca `DO3-CHUA-AP`: DB thử không nạp migration → `chua_ap: '<NNN>'`, 0 dòng dq.
+  Thêm ca `DO3-CHUA-AP`: DB thử không nạp migration → `chua_ap: '086'`, 0 dòng dq.
 - [ ] **Step 2: Viết ca `DO3-AC-2`** theo E2, bốn lượt cùng ngày. Kỳ vọng như bảng của E2, kể cả phát biểu R rút bằng `apply_enrichment` (045, lý do `hitl-thay`) vào `nguoi_rut = 1`, không vào `may_rut`. Đột biến:
 
   | `dotBien` | Thông điệp |
