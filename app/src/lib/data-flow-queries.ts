@@ -32,11 +32,29 @@ export type StageCounts = {
   readable: number;
   /** Tin rao mới (sau gộp trùng). */
   offers: number;
-  /** Tin đã gắn về một căn. */
-  linked: number;
 };
 
-export type SourceFlow = StageCounts & {
+/**
+ * Mức nhận diện của tin rao (gan-can-dinh-danh-duy-nhat, FRAMING §3.4 viết lại 08/11) — đếm trên Tin rao, ba cột độc
+ * lập. Định vị và Gắn căn chỉ tính khi tin khớp một nút của danh bạ; toà, trục, mã căn, số nhà trong chữ tin là «chờ
+ * khớp». `null` = khối tính sẵn đời trước chưa có khoá này (tới lượt làm tươi kế) — không bao giờ rơi về số cũ.
+ */
+export type Levels = {
+  /** Tin nằm trong cụm có từ hai tin sống. */
+  clustered: number | null;
+  /** Tin gắn vào một nút dự án, toà hoặc trục của danh bạ (B2). */
+  located: number | null;
+  /** Tin khớp đúng một căn của danh bạ bằng định danh duy nhất (B3). */
+  unitLinked: number | null;
+  /** Tin ghi toà hoặc trục trong chữ mà chưa Định vị. */
+  locatedPending: number | null;
+  /** Tin mang định danh duy nhất trong chữ mà chưa Gắn căn. */
+  uniqueIdPending: number | null;
+  /** Chia Tin rao theo mức SÂU NHẤT, loại trừ nhau (Sankey); phần còn lại là «Chưa định vị». */
+  deepest: { unitLinked: number; located: number; clustered: number } | null;
+};
+
+export type SourceFlow = StageCounts & Levels & {
   source: FlowSource;
   testRejected: number;
   withWard: number;
@@ -49,7 +67,7 @@ export type SourceFlow = StageCounts & {
   approx: boolean;
 };
 
-export type FlowDay = StageCounts & { day: string; source: FlowSource };
+export type FlowDay = StageCounts & { day: string; source: FlowSource; unitLinked: number };
 
 export type GroupFlow = {
   /** Tên nhóm thu S03/S05 — tầng C (ADR-0007 sửa đổi 24/10), hiện được ở /ops. */
@@ -77,13 +95,51 @@ export type FlowRecord = {
   market: string | null;
   confidence: string;
   nPosts: number;
+  /** Có dòng `property_offers` — chỉ khối bậc (B2 cũ) còn đọc, tới hàng thang-bac-moi-b0-b5. */
   linked: boolean;
+  /** Mức nhận diện sâu nhất của tin + cờ chờ khớp — cùng luật với 600_data_flow.sql. */
+  identification: Identification;
   firstSeen: string;
   lastSeen: string;
   /** Bài gốc sớm nhất (cắt 600 ký tự) — chỉ có ở S03/S05. */
   postText: string | null;
   postGroup: string | null;
 };
+
+export type IdentificationLevel = "unit" | "located" | "clustered" | "none";
+export type Identification = { level: IdentificationLevel; locatedPending: boolean; uniqueIdPending: boolean };
+
+const nOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+/** Khối `facts` (máy thu hay cloud) → đúng kiểu: khoá mức nhận diện vắng (khối đời trước) thành null, `days[].unitLinked`
+ * vắng thành 0; khoá `linked` của khối cũ bị bỏ, không bao giờ đọc lại dưới nhãn mới. */
+export function normalizeFacts(raw: FlowFacts): FlowFacts {
+  const src = (raw.sources ?? []) as (SourceFlow & Record<string, unknown>)[];
+  return {
+    ...raw,
+    sources: src.map(({ linked: _old, ...s }) => {
+      void _old;
+      const d = s.deepest as Record<string, unknown> | null | undefined;
+      const deepest =
+        d && nOrNull(d.unitLinked) !== null && nOrNull(d.located) !== null && nOrNull(d.clustered) !== null
+          ? { unitLinked: d.unitLinked as number, located: d.located as number, clustered: d.clustered as number }
+          : null;
+      return {
+        ...(s as SourceFlow),
+        clustered: nOrNull(s.clustered),
+        located: nOrNull(s.located),
+        unitLinked: nOrNull(s.unitLinked),
+        locatedPending: nOrNull(s.locatedPending),
+        uniqueIdPending: nOrNull(s.uniqueIdPending),
+        deepest,
+      };
+    }),
+    days: ((raw.days ?? []) as (FlowDay & Record<string, unknown>)[]).map(({ linked: _old, ...d }) => {
+      void _old;
+      return { ...(d as FlowDay), unitLinked: nOrNull(d.unitLinked) ?? 0 };
+    }),
+  };
+}
 
 /** Phần tổng hợp của DataFlow — đúng các khoá 600_data_flow.sql ghi vào `facts` (danh sách đóng, khối lên cloud). */
 export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending"] as const;
@@ -142,6 +198,17 @@ const recordsSql = (withPost: boolean) => `
          o.n_reposts, o.first_seen::text, o.last_seen::text,
          a.name AS ward, m.name AS market,
          EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id) AS linked,
+         -- Mức nhận diện cùng luật 600_data_flow.sql (đoạn LOCATED_PENDING, UNIQUE_ID). Định vị, Gắn căn: chưa có bảng nối
+         -- tin → nút danh bạ (V9) nên không tin nào tới. Cloud không có cột unit_number, street_number → đọc qua to_jsonb.
+         CASE WHEN EXISTS (SELECT 1 FROM property_offers po
+                           JOIN property_offers p2 ON p2.property_id = po.property_id AND p2.offer_id <> po.offer_id
+                           JOIN sale_offers s2 ON s2.offer_id = p2.offer_id
+                           WHERE po.offer_id = o.offer_id) THEN 'clustered' ELSE 'none' END AS muc,
+         coalesce(nullif(btrim(o.block_raw), '') IS NOT NULL OR (to_jsonb(o) ->> 'unit_number') ~* 'xx', false) AS ghi_toa,
+         coalesce((nullif(btrim(o.block_raw), '') IS NOT NULL AND (to_jsonb(o) ->> 'unit_number') !~* 'xx'
+                   AND (to_jsonb(o) ->> 'unit_number') NOT IN ('0', '1') AND length(to_jsonb(o) ->> 'unit_number') >= 3)
+                  OR ((to_jsonb(o) ->> 'street_number') NOT IN ('0', '1') AND nullif(btrim(o.street_raw), '') IS NOT NULL
+                   AND a.region_type = 'submarket'), false) AS dinh_danh,
          ${withPost ? "z.text AS post_text, z.group_name AS post_group" : "NULL::text AS post_text, NULL::text AS post_group"}
   FROM (
     SELECT *, row_number() OVER (PARTITION BY source ORDER BY first_seen DESC) AS rn
@@ -234,7 +301,7 @@ export async function getDataFlow(
   const records = await q(recordsSql(mode === "local"), [totalsStart]);
 
   return {
-    ...(f.facts ?? EMPTY_FACTS),
+    ...normalizeFacts(f.facts ?? EMPTY_FACTS),
     window,
     since: since ? since.toISOString() : null,
     records: records.rows.map((r) => ({
@@ -250,6 +317,11 @@ export async function getDataFlow(
       confidence: r.confidence,
       nPosts: num(r.n_reposts),
       linked: Boolean(r.linked),
+      identification: {
+        level: (r.muc ?? "none") as IdentificationLevel,
+        locatedPending: Boolean(r.ghi_toa),
+        uniqueIdPending: Boolean(r.dinh_danh),
+      },
       firstSeen: r.first_seen,
       lastSeen: r.last_seen,
       postText: r.post_text ?? null,

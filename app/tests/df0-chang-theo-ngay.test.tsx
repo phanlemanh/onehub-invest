@@ -34,7 +34,7 @@ const lib = () => import("../src/components/ops/data-flow/stage-trend-data")
 // 12:00 giờ VN ngày 26/10 → cửa sổ 7 ngày VN 20…26.
 const NOW = Date.parse("2026-10-26T05:00:00Z")
 const W7 = ["2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25", "2026-10-26"]
-const day = (d: string, source: FlowSource, received: number, readable = 0, offers = 0, linked = 0): FlowDay => ({ day: d, source, received, readable, offers, linked })
+const day = (d: string, source: FlowSource, received: number, readable = 0, offers = 0, unitLinked = 0): FlowDay => ({ day: d, source, received, readable, offers, unitLinked })
 type Row = [number, number, number, number]
 const ZERO: Row = [0, 0, 0, 0]
 
@@ -43,7 +43,7 @@ function oldKeys(days: FlowDay[], windowDays: number): string[] {
   return [...new Set(days.map((d) => d.day))].sort().slice(-windowDays)
 }
 
-// Ma trận viết trước: mẫu → dữ liệu → bảng mong đợi đủ 7 ngày [received, readable, offers, linked].
+// Ma trận viết trước: mẫu → dữ liệu → bảng mong đợi đủ 7 ngày [received, readable, offers, unitLinked] (chặng cuối = Gắn căn khớp danh bạ từ gan-can-dinh-danh-duy-nhat).
 const MAU: { ten: string; days: FlowDay[]; want: Record<string, Row> }[] = [
   {
     ten: "lỗ giữa",
@@ -73,7 +73,7 @@ describe("CN-AC-1 đủ ngày", () => {
     for (const m of MAU) {
       const s = dailySeries(m.days, NOW, 7)
       assert.deepEqual(s.map((p) => p.key), W7, `mẫu ${m.ten}: khoá ngày lệch`)
-      for (const p of s) assert.deepEqual([p.received, p.readable, p.offers, p.linked], m.want[p.key] ?? ZERO, `mẫu ${m.ten}: ngày ${p.key}`)
+      for (const p of s) assert.deepEqual([p.received, p.readable, p.offers, p.unitLinked], m.want[p.key] ?? ZERO, `mẫu ${m.ten}: ngày ${p.key}`)
     }
     console.log(`# CN-AC-1 ${MAU.length} mẫu × 7 ngày khớp bảng viết trước`)
     // Chiều đỏ cùng ca: thuật toán cũ trên mẫu «lỗ giữa» thiếu ngày.
@@ -89,7 +89,7 @@ describe("CN-AC-2 không lấy ngày ngoài cửa sổ", () => {
     const cuDays = [day("2026-10-14", "S03", 4, 3, 2, 1), day("2026-10-15", "S03", 6, 5, 2, 1), day("2026-10-16", "S06", 3, 3, 3, 0)]
     const s = dailySeries(cuDays, NOW, 7)
     assert.deepEqual(s.map((p) => p.key), W7)
-    assert.ok(s.every((p) => p.received + p.readable + p.offers + p.linked === 0), "mẫu số cũ: phải 7 điểm 0")
+    assert.ok(s.every((p) => p.received + p.readable + p.offers + p.unitLinked === 0), "mẫu số cũ: phải 7 điểm 0")
     const cu = oldKeys(cuDays, 7)
     console.log(`# CN-AC-2 thuật toán cũ ra ${cu.join(", ")}`)
     assert.ok(cu.some((k) => !W7.includes(k)), "mẫu số cũ: ngày ngoài cửa sổ lọt vào — thuật toán cũ phải lộ lỗi này")

@@ -130,6 +130,8 @@ export function FlowSankey({ sources, roles }: { sources: SourceFlow[]; roles: S
         <span className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
           <StageFace stage="journey" />
           <StageFace stage="linked" />
+          <StageFace stage="located" />
+          <StageFace stage="clustered" />
           <StageFace stage="merged" />
           <StageFace stage="dropped" />
         </span>

@@ -3,7 +3,9 @@ import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 /**
  * Hàng của lưới «Chất lượng từng chặng» và luật chấm nút thắt. Ngưỡng tạm (Mạnh duyệt dùng tới khi PL9 có số đo, 26/10):
- * đọc được < 30% hay trường lõi/phường/gắn căn < 50% là «Kẹt»; dưới 60% / 80% là «Theo dõi»; im quá 48 giờ là «Im».
+ * đọc được < 30% hay trường lõi/phường < 50% là «Kẹt»; dưới 60% / 80% là «Theo dõi»; im quá 48 giờ là «Im».
+ * Kiểm «gắn căn» bỏ từ 08/11 (gan-can-dinh-danh-duy-nhat, Hỏi-1): gắn căn nay là khớp danh bạ, bằng 0 ở mọi nguồn tới khi có
+ * bộ gắn — giữ kiểm thì mọi nguồn «Kẹt» và che nút thắt thật. Ba cột mức nhận diện vẫn hiện số.
  */
 
 export type Health = { tone: "success" | "warning" | "destructive"; label: string }
@@ -18,7 +20,14 @@ export type QualityRow = {
   /** null = không áp dụng cho hàng này (nhóm thu, listing ngắn hạn). */
   complete: number | null
   withWard: number | null
-  linked: number | null
+  /** Mức nhận diện (Levels của data-flow-queries) — null = không áp dụng (nhóm thu, S01) hoặc khối cũ chưa có số. */
+  clustered: number | null
+  located: number | null
+  unitLinked: number | null
+  locatedPending: number | null
+  uniqueIdPending: number | null
+  /** Khối tính sẵn đời trước: nguồn tin rao mà chưa có số mức nhận diện. */
+  levelsPending: boolean
   latestAt: string | null
   approx: boolean
   health: Health
@@ -33,7 +42,6 @@ export const NUT_THAT_CHECKS: readonly Check[] = [
   { name: "đọc", num: (r) => r.readable, den: (r) => r.received, stuck: 0.3, watch: 0.6 },
   { name: "trường lõi", num: (r) => r.complete, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
   { name: "phường", num: (r) => r.withWard, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
-  { name: "gắn căn", num: (r) => r.linked, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
 ]
 
 export function healthOf(r: Omit<QualityRow, "health">, nowMs: number, rules: readonly Check[] = NUT_THAT_CHECKS): Health {
@@ -48,6 +56,8 @@ export function healthOf(r: Omit<QualityRow, "health">, nowMs: number, rules: re
   return { tone: "success", label: "Khoẻ" }
 }
 
+const NO_LEVELS = { clustered: null, located: null, unitLinked: null, locatedPending: null, uniqueIdPending: null, levelsPending: false }
+
 export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): QualityRow[] {
   const rows: Omit<QualityRow, "health">[] = flow.sources
     .filter((s) => s.received > 0 || s.offers > 0)
@@ -60,7 +70,12 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       offers: s.offers,
       complete: s.complete,
       withWard: s.withWard,
-      linked: s.linked,
+      clustered: s.clustered,
+      located: s.located,
+      unitLinked: s.unitLinked,
+      locatedPending: s.locatedPending,
+      uniqueIdPending: s.uniqueIdPending,
+      levelsPending: s.clustered === null,
       latestAt: s.latestAt,
       approx: s.approx,
     }))
@@ -75,7 +90,7 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       offers: ss.stored,
       complete: null,
       withWard: ss.withWard,
-      linked: null,
+      ...NO_LEVELS,
       latestAt: ss.latestAt ? `${ss.latestAt}T00:00:00+07:00` : null,
       approx: false,
     })
@@ -94,7 +109,7 @@ export function groupRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Qu
       offers: g.offers,
       complete: null,
       withWard: null,
-      linked: null,
+      ...NO_LEVELS,
       latestAt: g.latestAt,
       approx: false,
     }
