@@ -1,6 +1,6 @@
 # Danh bạ dự án: từ vựng, hiện trạng, nguồn làm giàu, phương án gắn tin
 
-Ngày: 2026-11-08 · Trạng thái: **trình Mạnh duyệt** (thẻ quyết định §0; Q3, Q5 đã quyết 08/11) · Phiên: «Phân tích danh bạ dự án», ghép với khảo sát
+Ngày: 2026-11-08 · Trạng thái: **trình Mạnh duyệt** (thẻ quyết định §0; Q3, Q5 đã quyết 08/11; đối chiếu nhất quán và đính chính: `doi-chieu-nhat-quan-0811.md`) · Phiên: «Phân tích danh bạ dự án», ghép với khảo sát
 ZCode sáng 08/11 · Dựa trên: ADR-0013, ADR-0016, ADR-0017, `docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md`,
 `docs/plan/pham-vi-gan-can-s03-0411.md`, hàng DB1, DB1b, PX1, PX2, DN1–DN7, DS2, GC*, PL13, PL20 trong `docs/plan/lo-trinh.json`.
 
@@ -39,7 +39,7 @@ Cột «Dữ liệu hôm nay» ghi bảng, cột hoặc enum đang có. «RESO»
 | Việt Nam gọi | Dữ liệu hôm nay | RESO DD 2.1 | Thiếu / đề xuất |
 |---|---|---|---|
 | **Dự án** (Vinhomes Grand Park, Celadon City, Masteri Thảo Điền, Kingston Residence) | `asset_nodes.node_type = project` (20 dòng, `dd_field = SubdivisionName`); nhãn «Khu đô thị», `CONTEXT.md` cấm «dự án»; `s08_project_links` (8 nối / 142 chưa) | `SubdivisionName` (Property, Building): «neighborhood, community, complex or builder tract» | Đổi nhãn sang **Dự án** (code `project` giữ nguyên). Tin chưa có trường dự án (`field_assertions.field` không có, DS2 chưa làm). Chưa có bảng nối đa nguồn (§5.3). |
-| **Khu đô thị / đại đô thị** | trùng với dòng trên | không có field riêng | **Quy mô** của dự án: `meta.scale` ∈ `dai_do_thi` · `khu_do_thi` · `cum_toa` · `toa_don` **[đề xuất]**. Không thành một cấp riêng. |
+| **Khu đô thị / đại đô thị** | trùng với dòng trên | không có field riêng | **Quy mô** của dự án: phát biểu `ProjectScale` ∈ `dai_do_thi` · `khu_do_thi` · `cum_toa` · `toa_don` **[đề xuất, §9.4; sửa 08/11: không ghi vào `meta`]**. Không thành một cấp riêng. |
 | **Dự án cha / dự án trong dự án** (Lumiere Boulevard trong Grand Park; các dự án trong Phú Mỹ Hưng) | `asset_nodes.parent_id` có cột nhưng chưa dùng cho dự án. 3 dòng «building» Lumiere Boulevard, Lumiere Riverside, The Beverly đang là phân khu của Grand Park | không có. `SubdivisionName` chỉ một cấp | Quan hệ cây `parent_id` giữa hai dự án, tối đa hai tầng. Xuất API bằng đường dẫn cây, không thêm field RESO. |
 | **Phân khu** (The Zurich, Sapphire, The Rainbow, Pavilion) | `node_type = subzone`, hiện 0 dòng (3 dòng mang nhầm nhãn `building`) | `Building.ComplexName` / `ComplexId` (ADR-0013 §2) | Dựng từ S08 (302 phân khu) và S09; luật phân biệt với dự án con ở Q2. |
 | **Khu / cụm toà theo mã** («S1» ở Grand Park bao các toà S1.01, S1.02…) | lẫn trong `block_raw` («S1» 93 tin, «S5.03» 25 tin) | không có | **[đề xuất, cần Mạnh xác nhận nghĩa]** Không thêm cấp. Mã chỉ tới cụm thì gắn tin ở phân khu, không đoán toà. Cụm là bí danh trỏ tới một tập toà. |
@@ -48,7 +48,7 @@ Cột «Dữ liệu hôm nay» ghi bảng, cột hoặc enum đang có. «RESO»
 | **Căn / mã căn** (S5.03-1208, P3.21.05A, che tầng «LD2xx11») | `units` (082), `sub_id`; thô `unit_number`; bí danh `ma_nguon` | `UnitNumber` (Property) · `UniversalPropertySubId` (Property, Building) | Mã căn S06 đang rác (§2.2). |
 | **Tầng** («tầng 12», «tầng trung», «tầng cao») | `units.floor`; thô `floor_raw` (S06 747, S03 0) | `UnitFloorLocation`, `EntryLevel` (Property) · `StoriesTotal` (P, B) | «Tầng trung, tầng cao» là dải, chưa có chỗ → giữ trong phát biểu chữ, chưa dựng (luật 11). |
 | **Lô / ô đất / căn thấp tầng** (LK3-15, SH-12, BT2-08) | chưa có; S08 có 7.704 mã thấp tầng ở 67 dự án; `CONTEXT.md` «Thửa» cấm chữ «lô» | `ParcelNumber`, `TaxLot`, `TaxBlock` (P, B) | **[đề xuất]** Mỗi lô thấp tầng trong dự án là một **toà** (nhà phố, biệt thự, shophouse nguyên căn, ADR-0016 §2). Mã lô là bí danh `ma_nguon`. «Dãy» (LK3) chỉ là tiền tố mã, không thành cấp. Thửa chỉ dựng khi có số thửa. Thuật ngữ mới «Lô» ở §1.4. |
-| **Shophouse / liền kề / biệt thự / căn hộ / đất nền / condotel / NOXH** | `property_type` ∈ apartment · house · land · commercial · room · unknown | `PropertySubType`: Condominium, Apartment, Townhouse, SingleFamilyResidence, MixedUse, UnimprovedLand, HotelMotel | Bảng `reso-khung-phan-loai.md` §7 giữ nguyên. Shophouse → Townhouse + dùng thương mại (MixedUse). NOXH là cờ local, chưa có số đo nên chưa làm. |
+| **Shophouse / liền kề / biệt thự / căn hộ / đất nền / condotel / NOXH** | `property_type` ∈ apartment · house · land · commercial · room · unknown | `PropertySubType`: Condominium, Apartment, Townhouse, SingleFamilyResidence, MixedUse, UnimprovedLand, HotelMotel | Bảng `reso-khung-phan-loai.md` §7 giữ nguyên, kể cả shophouse (ca riêng mở ở Q7 của tài liệu đó; sửa 08/11). NOXH là cờ local, chưa có số đo nên chưa làm. |
 | **Chủ đầu tư** | `field_assertions.field = builder_name` (chỉ Building); chưa có dòng nào | `BuilderName` (Property, Building) | **[đề xuất]** Cho phép phát biểu ở cấp dự án và kế thừa xuống toà (`registry_inherit`). Lumiere Boulevard có chủ đầu tư khác Grand Park chính là lý do của Q2. |
 | **Trạng thái dự án** (đang mở bán, đã bàn giao, ngày bàn giao từng toà) | chưa có | `DevelopmentStatus`, `NewConstructionYN`, `YearBuilt` (P, B) | Có ở S07, S09 (ngày bàn giao từng toà). Làm sau DA5. |
 | **Quy mô** (ha, số toà, số căn) | chưa có | `NumberOfUnitsInCommunity` (Property), `LotSizeArea` | Phát biểu của dự án, từ S07 và S09; chưa vội. |
@@ -214,7 +214,7 @@ Tỉnh ─ Xã/phường                                 (họ Vùng: areas, PX1
 - Giữ hai họ như ADR-0016: dự án và phân khu là **vùng** (đa giác, một chủ đầu tư, nhiều xã). Toà, trục, căn là **vật thể** có khoá mờ và UPI.
   `buildings.region_node_id` trỏ tới phân khu khi biết, không thì tới dự án.
 - Không cấp nào bắt buộc: dự án một toà không có phân khu; nhà phố ngoài dự án không có dự án.
-- **[đề xuất]** Thêm vào `asset_nodes`: dự án được có `parent_id` là một dự án (tối đa hai tầng), cộng `meta.scale`. Không bảng mới.
+- **[đề xuất]** Thêm vào `asset_nodes`: dự án được có `parent_id` là một dự án (tối đa hai tầng); quy mô là phát biểu `ProjectScale` (§9.2). Không bảng mới.
 
 ### 4.2 Mức gắn của tin (sâu nhất có bằng chứng — ADR-0016 §5, câu 9)
 
@@ -228,8 +228,8 @@ Tỉnh ─ Xã/phường                                 (họ Vùng: areas, PX1
 | Chỉ địa chỉ | **xã/phường** | `area_id` như hôm nay |
 
 Ở mức dự án và phân khu, tin **không gắn vật thể** (giữ ADR-0016 §5). Chỉ có phát biểu vùng. Hôm nay chưa có chỗ ghi phát biểu này
-cho tin, nên DS2 và DA3 phải mở `field_assertions` thêm trường `subdivision_node` **[đề xuất tên; RESO `SubdivisionName` /
-`ComplexName`]**.
+cho tin, nên DS2 và DA3 phải mở `field_assertions` thêm **hai** trường theo §9.4: `SubdivisionName` (Property, có trong DD) cho dự án và
+extension `ComplexName` trên Property cho phân khu; giá trị là id nút vùng (sửa 08/11, bỏ tên gộp `subdivision_node`).
 
 ### 4.3 Luật gắn, theo thứ tự tin cậy (luật 7)
 
@@ -239,7 +239,7 @@ cho tin, nên DS2 và DA3 phải mở `field_assertions` thêm trường `subdiv
 2. **Chữ bài nêu tên** dự án, phân khu, toà, mã căn → `parser` dùng từ điển bí danh trong phạm vi dự án (PL13). Mã toà chỉ phân giải trong
    phạm vi một dự án đã biết; mã trùng giữa dự án mà không có dự án thì không gắn.
 3. **Quy ước nhóm S03** → lớp suy luận, chữ bài thắng (GCQ1, GCQ2).
-4. **Model đọc gộp** (PL30, PL34) → `e2_llm` **chỉ đề xuất** kèm trích dẫn có thật. Tự áp khi cận dưới Wilson đạt ngưỡng F3, còn lại lên thẻ.
+4. **Model đọc gộp** (PL30, PL34) → `e2_llm` **chỉ đề xuất** kèm trích dẫn có thật. Tự áp chỉ khi PL21 mở cổng cho ô đó (cổng tự áp đang hoãn, ROADMAP §3 mục 32); tới lúc ấy lên thẻ.
 5. **Toạ độ trong đa giác dự án** → chỉ là tín hiệu phụ để xếp thẻ, không tự gắn (53% tin S06 ở điểm chung).
 6. **Người** ở `/ops/review`: cặp nối mã nguồn mới, mâu thuẫn tin ↔ danh bạ (ADR-0016 §7.4), dự án ứng viên chưa có trong danh bạ.
 
@@ -252,7 +252,7 @@ cho tin, nên DS2 và DA3 phải mở `field_assertions` thêm trường `subdiv
 |---|---|---|---|
 | Dự án | S06 (dự án có tin) → S07, S09, S08 qua bảng nối | Người duyệt cặp nối | Lên cloud và Invest (§3.1) |
 | Phân khu | S08, S09; S07 «dự án con» qua luật Q2 | Người | Lên cloud và Invest |
-| Toà | S09 (tên), S08 (mã), tin (S03, S06 `block`) | ≥ 2 nguồn độc lập, hoặc người, hoặc Quỹ hàng | Lên cloud và Invest; độ chắc hiện theo bậc |
+| Toà | S09 (tên), S08 (mã), tin (S03, S06 `block`) | S08 một mình đủ (danh mục CĐT là xác minh, `mo-hinh-pipeline-mot-can-nha.md`); toà chỉ có từ tin hay S09 cần ≥ 2 nguồn độc lập, hoặc người, hoặc Quỹ hàng | Lên cloud và Invest; độ chắc hiện theo bậc |
 | Trục, căn | S08, S09 quỹ căn, mã căn trên tin | như trên | Không làm lộ mã đã che |
 
 ---
@@ -287,14 +287,14 @@ Q3 đã quyết (§3.1). Câu 2 và 3 gửi qua phiên liên làn khi Mạnh duy
 **Thứ tự khuyến nghị**: DA1 → DA0 → DA2 → DS2+ → DA3 → DA4 song song Z1 → DA5 → (Z2, Z3, DA6 khi có số đo cần).
 DA1, DA2, DS2+, DA4 không cần thu gì mới. Chuỗi GCM1 (GC0 … PL20) giữ nguyên, các hàng này bổ sung cho nó.
 
-**Không làm**: thêm cấp «cụm toà» hay «dãy» (chưa có số đo, luật 11); đưa giá chủ đầu tư S08 hay số S09 lên Invest; tự gộp dự án theo
+**Không làm**: thêm cấp «cụm toà» hay «dãy» (chưa có số đo, luật 11); tự gộp dự án theo
 tên khi lệch vùng; gắn tin theo toạ độ đơn thuần.
 
 ## 7. Kiểm 11 câu (ADR-0013, ADR-0016)
 
 Lớp: dự án, phân khu thuộc vùng; toà, trục, căn thuộc vật thể; tin chỉ mang phát biểu gắn. DD 2.1 đã tra (§1). Khoá bền: khoá mờ
 và bí danh mã nguồn, không băm tên. Ai ghi: chỉ phát biểu, bộ phân xử dựng. Nguồn gốc: bí danh và phát biểu mang mã S0x. Thời gian:
-bảng nối có `updated_at`, gộp/tách qua `registry_events`. Nâng bậc: tin S06 và S03 từ B1 lên B2 ở mức dự án hoặc toà; căn khớp danh mục
+bảng nối có `updated_at`, gộp/tách qua `registry_events`. Nâng bậc: gắn dự án hay toà chưa phải B2 (FRAMING: B2 là gắn căn), chỉ tăng mức gắn §4.2; căn khớp danh mục
 lên B4 khi có xác nhận. SPL: chỉ mã S0x trong kho; tên nguồn thật không rời máy thu. Mức gắn: §4.2. Không tự nuôi: kế thừa không làm
 bằng chứng ngược. Được lên đâu: §4.4.
 
@@ -459,7 +459,7 @@ Chú thích cột «Cấp»: DA dự án · PK phân khu · T toà · C căn · 
 
 | Thông tin | Nguồn | Hôm nay | RESO DD 2.1 | Cấp | Chuẩn hoá |
 |---|---|---|---|---|---|
-| Loại hình dự án (căn hộ, biệt thự liền kề, shophouse, đất nền, văn phòng, TTTM, nghỉ dưỡng, công nghiệp) | S07 (12 loại), S09, S08 (`project_type`) | — | `PropertySubtype` (Building, **một giá trị**, cùng lookup `PropertySubType` của Property) | PK, T | Condominium · Townhouse · SingleFamilyResidence · UnimprovedLand · Office · Retail · HotelMotel · Industrial; shophouse = Townhouse + MixedUse. Dự án nhiều loại hình: là tập loại của các phân khu, toà, không một field |
+| Loại hình dự án (căn hộ, biệt thự liền kề, shophouse, đất nền, văn phòng, TTTM, nghỉ dưỡng, công nghiệp) | S07 (12 loại), S09, S08 (`project_type`) | — | `PropertySubtype` (Building, **một giá trị**, cùng lookup `PropertySubType` của Property) | PK, T | Condominium · Townhouse · SingleFamilyResidence · UnimprovedLand · Office · Retail · HotelMotel · Industrial; shophouse: một giá trị theo `reso-khung-phan-loai.md` §7, ca riêng mở ở Q7 của tài liệu đó (sửa 08/11). Dự án nhiều loại hình: là tập loại của các phân khu, toà, không một field |
 | Officetel, condotel | S06, S07 | — | `PropertySubType` | C | Giá trị local `Officetel` (gần Condominium), `Condotel` (gần HotelMotel) |
 | Cao tầng / thấp tầng | S08, S09 | `project_type` (stg) | `BuildingType` (lookup mở) | PK, T | Giá trị local `high_rise`, `low_rise` |
 | Quy mô (đại đô thị, khu đô thị, cụm toà, toà đơn) | suy ra | — | **không có** | DA | Ext `ProjectScale` |

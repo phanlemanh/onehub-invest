@@ -49,7 +49,7 @@ cứ đăng ở nơi quen thuộc                      4 câu hỏi đầu tư
 
 | # | Câu hỏi | Trả lời | Hệ quả |
 |---|---|---|---|
-| D1 | Dùng / mua danh mục chuẩn dự án · toà · mã căn? | **Có** | Căn gốc dựng từ danh mục rồi ghép tin vào, không chỉ suy từ tin. Thêm việc thu danh mục (làn ZCode) và nạp vào cây `asset_nodes` (project → building → căn) |
+| D1 | Dùng / mua danh mục chuẩn dự án · toà · mã căn? | **Có** | Căn gốc dựng từ danh mục rồi ghép tin vào, không chỉ suy từ tin. Thêm việc thu danh mục (làn ZCode) và nạp vào danh bạ (khu đô thị/phân khu ở `asset_nodes`; toà · trục · căn ở `buildings`/`stacks`/`units` — ADR-0016 thay cây `asset_nodes` cũ) |
 | D2 | Ai phải tin mạng lưới trước? | **Tất cả** — chỉ là đổi vai; đội làm sản phẩm vừa là nhà đầu tư vừa là môi giới, và sản phẩm xây ra để làm điều đó | Người dùng đầu tiên là chính đội: dùng thật hằng ngày, phản hồi sai ngay trong lúc giao dịch |
 | D3 | Loại hình làm trước? | **Căn hộ** — có mã căn, toà; **người môi giới đang giữ chính mã căn** | Mã căn là trường lõi phải trích được từ tin (và từ môi giới); nhà phố đi sau, sống với «suy ra» |
 | D4 | Tin nhóm khép (P1) hiện công khai từng tin? | **Công khai** — đội giao dịch trên đó, tốc độ là thứ mong muốn, trao đổi phải **tức thời** | P1 là danh sách chính, không chỉ là tín hiệu. Độ tươi tính bằng **phút**, không phải ngày — trái với nhịp nạp đêm hiện nay. Vẫn giữ SPL: hiện nhãn tầng C, không tên nguồn thật |
