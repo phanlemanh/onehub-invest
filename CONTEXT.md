@@ -576,15 +576,15 @@ _Avoid_: calibration
 **Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent — LLM không ghi dữ liệu trực tiếp (luật 7). Ba loại thẻ có
 giao diện: Ghép căn (`entity_match`), Bổ sung tin (`agent_output` `enrich:`), Người (`data_quality` `nguoi:`, HD17); loại khác
 hiện mã nguyên văn. Mỗi thẻ thuộc một Hạng mục duyệt. Nhãn trạng thái sau khi quyết là nhãn đáp án đã bấm (Cùng căn, Khác căn,
-Đã áp, Đã gộp…). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
+Đã áp, Đã gộp…). Chọn thẻ theo Hộp hạng mục, quyết liền ở Chế độ duyệt (OD2). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Tham số URL: `card`
+- Tham số URL: `card` · `category`
 - Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10). `/ops/review?card=<id>` mở thẳng sheet của thẻ `<id>`
-  (OD1), kể cả thẻ đã quyết.
+  (OD1), kể cả thẻ đã quyết. `/ops/review?category=<mã Hạng mục duyệt>` chọn sẵn một mục của Hộp hạng mục (OD2).
 _Avoid_: Review Queue, hàng chờ
 
-**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+**Lý do quyết định**: Câu ghi kèm khi quyết một thẻ ở Hàng duyệt, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Người để trống thì nhãn đáp án đã bấm là lý do (OD2, Q4), nên lý do không bao giờ rỗng; riêng «Bỏ» ở thẻ Bổ sung tin còn bắt gõ tay tới khi thẻ phân được ghi đè (OD4). Nhãn ô: «Lý do».
 - Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
 _Avoid_: ghi chú, comment, note
 
@@ -605,6 +605,28 @@ trước của OD2.
 - Code: `ops_audit.detail.seconds`, `since_prev_seconds`, `opened_at`, `decided_at` (route decide, body `elapsed_ms`) ·
   `loadReviewPace` · RESO: —
 _Avoid_: tốc độ duyệt, năng suất (chưa nói đơn vị)
+
+**Hộp hạng mục**: Cột trái của danh sách thẻ ở `/ops/review`: mục «Tất cả» rồi mỗi Hạng mục duyệt đang có thẻ chờ, kèm số thẻ
+chờ, tuổi thẻ chờ cũ nhất và trung vị giây ở thẻ 7 ngày. Bấm một mục để lọc và duyệt liền mục đó (OD2, khuôn
+`@reui/solution-agents-9`).
+- Code: `hopHangMuc`, `ReviewHopHangMuc` · Tham số URL `category` · RESO: —
+_Avoid_: rail, bộ lọc loại thẻ (ô «Loại thẻ» đã bỏ ở OD2)
+
+**Chế độ duyệt**: Cách quyết liền các thẻ chờ của một Hạng mục duyệt trong một sheet: cũ nhất trước, quyết xong thẻ kế hiện
+ngay (sheet không đóng giữa hai thẻ), đầu sheet ghi «k/N · hạng mục», đi lại và quyết bằng phím (`J`/`K`, `1`–`4`, `R`, `?`).
+Nút «Duyệt liền» mở chế độ này (OD2).
+- Code: `hangDuyet`, `usePhimDuyet`, `ReviewDetailSheet` (`dieuHuong`) · RESO: —
+_Avoid_: duyệt hàng loạt (GD10 đã loại — mỗi thẻ vẫn một quyết định), focus mode
+
+**Hoàn tác**: Huỷ một quyết định trong 5 giây sau khi bấm: lệnh giữ ở trình duyệt rồi mới gửi, toast «Đã ghi #id · <nhãn>»
+có nút «Hoàn tác». Quá 5 giây thì đảo là lệnh đảo (ADR-0015, việc sau). Rời trang khi còn lệnh chờ thì lệnh gửi ngay (OD2, Q7).
+- Code: `HangGuiProvider`, `HOAN_TAC_MS` · RESO: —
+_Avoid_: undo (trên UI), huỷ quyết định (sau 5 giây)
+
+**Quyết định gần đây**: 20 lượt quyết mới nhất trong 7 ngày của chính người đang duyệt, ở `/ops/review`: mã thẻ, tiêu đề, nhãn
+đáp án, lý do, giờ; bấm mã thẻ để xem lại thẻ (OD2).
+- Code: `loadRecentDecisions`, `ReviewGanDay` (`ops_audit` `review.decide`) · RESO: —
+_Avoid_: lịch sử duyệt, nhật ký (là `/ops/audit`)
 
 **Đang chờ ghép**: Nhãn của một căn ở Căn giá tốt khi căn là Tin A hay Tin B của một thẻ Ghép căn còn chờ ở Hàng duyệt —
 người gọi điện biết căn có thể là một căn trùng. Kèm liên kết «Mở thẻ ghép #<id>». Chỉ ở máy thu.

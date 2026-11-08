@@ -1,6 +1,6 @@
 // review-queue.test.tsx — /ops/review sau UI1 (hồ sơ _acceptance/ops-review-khung-hang-cho, ca «RQ-AC-n»).
 // Bảng + bộ lọc + sheet vẽ trong jsdom (không DB): fetch và router giả; tệp pipeline đọc từ đĩa.
-import { test } from "node:test";
+import { mock, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -84,12 +84,19 @@ async function rerender(node: ReactNode) {
   const el = await wrap(node);
   await React.act(async () => currentRoot!.render(el));
 }
+/** Hẹn giờ thật, giữ trước khi ca nào bật đồng hồ giả (OD2: hàng chờ gửi 5 giây chạy trên đồng hồ giả). */
+const henThat = globalThis.setTimeout;
 async function act(fn: () => void | Promise<void>) {
   const React = await import("react");
   await React.act(async () => {
     await fn();
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => henThat(r, 20));
   });
+}
+/** OD2: lệnh quyết giữ 5 giây ở trình duyệt — chạy hết khoảng chờ trên đồng hồ giả để lệnh tới route. */
+async function het5Giay() {
+  await act(() => mock.timers.tick(5000));
+  await act(() => {});
 }
 const click = async (el: Element | null | undefined, what = "phần tử") => {
   assert.ok(el, `không tìm thấy ${what} để bấm`);
@@ -116,6 +123,11 @@ const rowIds = () =>
     .filter(Boolean)
     .map(Number);
 const queueCount = () => document.querySelector("[data-queue-count]")?.getAttribute("data-queue-count");
+/** OD2: ô «Loại thẻ» thay bằng hộp hạng mục — nhãn cũ của ma trận ứng với một mục của hộp. */
+const MUC_HOP: Record<string, string> = { "Mọi loại": "all", "Ghép căn": "unit_match", "Bổ sung tin": "fill", "Loại khác": "other" };
+async function chooseType(label: string) {
+  await click(document.querySelector(`[data-review-hop-muc='${MUC_HOP[label]}']`), `mục «${label}» của hộp hạng mục`);
+}
 async function choose(label: string, option: string) {
   const trig = document.querySelector(`button[aria-label='${label}']`) as HTMLElement | null;
   assert.ok(trig, `không thấy bộ lọc «${label}»`);
@@ -210,13 +222,13 @@ const MATRIX: [string, string, number[]][] = [
 test("RQ-AC-2 ma trận lọc", async () => {
   await render(await queue());
   for (const [type, status, ids] of MATRIX) {
-    await choose("Loại thẻ", type);
+    await chooseType(type);
     await choose("Trạng thái", status);
     assert.deepEqual(rowIds(), ids, `ô ${type} × ${status}: danh sách thẻ sai`);
     assert.equal(queueCount(), String(ids.length), `ô ${type} × ${status}: số ở đầu Frame phải bằng số dòng`);
   }
   // Ô ra 0 (Loại khác × Đã quyết): chữ + đúng một nút «Xoá lọc» về mặc định.
-  await choose("Loại thẻ", "Loại khác");
+  await chooseType("Loại khác");
   await choose("Trạng thái", "Đã quyết");
   const body = document.querySelector("#root tbody")!;
   assert.ok(body.textContent?.includes("Không có thẻ khớp bộ lọc"), "lọc ra 0 phải báo «Không có thẻ khớp bộ lọc»");
@@ -298,8 +310,10 @@ test("RQ-AC-4 ảnh trong sheet", async () => {
   assert.equal(dialog()!.querySelectorAll("img").length, 0);
 });
 
-test("RQ-AC-5 quyết định từ sheet", async () => {
+test("RQ-AC-5 quyết định từ sheet", async (t) => {
   fetchReply = { ok: true, body: { ok: true } };
+  mock.timers.enable({ apis: ["setTimeout"] });
+  t.after(() => mock.timers.reset());
   const cases: [number, string, unknown][] = [
     [12, "Cùng căn", { status: "approved", reason: "cùng toà" }],
     [12, "Khác căn", { status: "rejected", reason: "cùng toà" }],
@@ -313,7 +327,10 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
     await openRow(id);
     await lyDo("cùng toà");
     const before = refreshes;
+    const truocGui = sent.length;
     await click(byText(dialog()!, "button", label), `nút «${label}»`);
+    assert.equal(sent.length, truocGui, `nút «${label}»: chưa hết 5 giây mà đã gửi`);
+    await het5Giay();
     assert.equal(sent.at(-1)!.url, `/api/v1/ops/review/${id}/decide`, `nút «${label}»: sai route`);
     assert.deepEqual(sent.at(-1)!.body, body, `nút «${label}» phải gửi ${JSON.stringify(body)}`);
     assert.equal(refreshes - before, 1, `nút «${label}»: thành công phải làm mới bảng đúng một lần`);
@@ -328,19 +345,21 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
   await click(byText(dialog()!, "button", "Chọn AI"), "lựa chọn «Chọn AI»");
   await lyDo("ảnh là nhà riêng");
   await click(apply(), "nút «Áp dụng»");
+  await het5Giay();
   const llm = (CONFLICT.evidence.fields as { proposal_id: number; field: string; source: string }[]).find((f) => f.field === "property_type" && f.source === "e2_llm")!;
   assert.deepEqual(sent.at(-1)!.body, { status: "approved", choices: { property_type: llm.proposal_id }, reason: "ảnh là nhà riêng" });
 
-  // Sau khi quyết: router.refresh() đổi props — thẻ đang mở chuyển «approved», rời bộ lọc mặc định; sheet giữ thẻ.
+  // Sau khi quyết (OD2 · ĐC4): sheet KHÔNG đóng, sang ngay thẻ kế của hàng (cũ nhất trước: 14, 11, 12, 13 → sau 12 là 13);
+  // router.refresh() đổi props — thẻ vừa quyết rời bộ lọc mặc định, sheet vẫn đứng ở thẻ kế.
   await render(await queue());
   await openRow(12);
   await lyDo("cùng toà");
   await click(byText(dialog()!, "button", "Cùng căn"), "nút «Cùng căn»");
+  assert.equal(dialogs(), 1, "sheet phải mở tiếp (không đóng giữa hai thẻ)");
+  assert.ok(dialog()!.textContent?.includes("#13"), "sheet phải sang thẻ kế #13");
+  await het5Giay();
   await rerender(await queue(ITEMS.map((i) => (i.id === 12 ? { ...i, status: "approved" } : i))));
-  assert.equal(dialogs(), 1, "sheet phải giữ thẻ vừa quyết (không đóng/trắng)");
-  // OD1 · ĐC1: nhãn trạng thái là nhãn đáp án đã bấm.
-  assert.ok(dialog()!.textContent?.includes("Cùng căn") && !dialog()!.textContent?.includes("Đã duyệt"), "sheet phải hiện badge kết quả «Cùng căn»");
-  assert.equal([...dialog()!.querySelectorAll("button")].filter((b) => ["Cùng căn", "Khác căn", "Không chắc"].includes(b.textContent?.trim() ?? "")).length, 0, "thẻ đã quyết không còn nút quyết định");
+  assert.equal(dialogs(), 1, "sheet vẫn mở ở thẻ kế sau khi làm mới");
   assert.ok(!rowIds().includes(12), "bảng mặc định không còn thẻ vừa quyết");
 
   // Route trả lỗi → dòng lỗi trong sheet, nút bấm lại được.
@@ -349,7 +368,9 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
   await openRow(11);
   await lyDo("khác toà");
   await click(byText(dialog()!, "button", "Khác căn"), "nút «Khác căn»");
-  assert.ok(dialog()!.textContent?.includes("đã quyết"), "lỗi route phải hiện trong sheet");
+  await het5Giay();
+  // OD2: lỗi route → thẻ trở lại hàng duyệt (toast lỗi kèm «Mở thẻ»); mở lại thì nút bấm lại được.
+  await openRow(11);
   assert.equal((byText(dialog()!, "button", "Khác căn") as HTMLButtonElement).disabled, false, "sau lỗi nút phải bấm lại được");
   fetchReply = { ok: true, body: { ok: true } };
 });

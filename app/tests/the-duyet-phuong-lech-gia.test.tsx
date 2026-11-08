@@ -232,7 +232,13 @@ async function docDb(): Promise<{ areas: Area[]; the: The[] }> {
   const c = new pg.Client({ connectionString: localDbUrl() })
   await c.connect()
   try {
-    const areas = (await c.query<Area>("SELECT id, parent_id, name FROM areas WHERE region_type = 'submarket' AND parent_id IS NOT NULL")).rows
+    // Tập phường của AC-6 là tập trước khi nạp danh bạ PX1: xã chèn từ danh bạ (`meta.source = 'dvhc'`) mang mã đuôi
+    // `-<mã xã>` khi trùng slug trong tỉnh, nên đuôi mã không còn là tên phường — ngoài phạm vi phép đo này.
+    const areas = (
+      await c.query<Area>(
+        "SELECT id, parent_id, name FROM areas WHERE region_type = 'submarket' AND parent_id IS NOT NULL AND meta->>'source' IS DISTINCT FROM 'dvhc'",
+      )
+    ).rows
     const the = (
       await c.query<The>(
         "SELECT id, evidence->'offer_a'->>'phuong' AS a, evidence->'offer_b'->>'phuong' AS b FROM review_queue WHERE item_type = 'entity_match' ORDER BY id",
