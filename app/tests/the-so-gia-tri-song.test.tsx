@@ -316,7 +316,8 @@ async function kiemAc5(mod: CardMod) {
   const song = ghepCan(7, "gs_a", "gs_b")
   const ctx = await ngu(song)
   const trong = await nutSauKhiGoLyDo(mod, song, ctx, "")
-  assert.ok(trong.nut.every((x) => x.tat), "lý do trống: nút tắt")
+  // OD2 (Q4): lý do trống thì nhãn đáp án là lý do — thẻ ghép căn hai bên sống có nút bật.
+  assert.ok(trong.nut.every((x) => !x.tat), "lý do trống: nút ghép căn vẫn bật (OD2 · Q4)")
   const co = await nutSauKhiGoLyDo(mod, song, ctx, "đủ căn cứ")
   assert.equal(co.alert, null, "GS-AC-5 Alert rời kho trên thẻ không rời kho: hai bên sống")
   assert.ok(co.nut.every((x) => !x.tat), "có lý do: nút bật")

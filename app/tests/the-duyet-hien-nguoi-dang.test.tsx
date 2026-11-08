@@ -566,7 +566,8 @@ describe("the-duyet-hien-nguoi-dang", () => {
     // Nút quyết chỉ phụ thuộc lý do và tin rời kho.
     const nutChuaLyDo = await nutCuaThe(thatCard, itemZ, ctxZ, "")
     assert.ok(nutChuaLyDo.length >= 2, "ND-AC-7 không thấy nút quyết")
-    assert.ok(nutChuaLyDo.slice(0, 2).every(Boolean), "ND-AC-7 nút bật khi chưa có lý do")
+    // OD2 (Q4): lý do trống thì nhãn đáp án là lý do — nút ghép căn bật; chỉ tin rời kho còn khoá nút.
+    assert.ok(nutChuaLyDo.slice(0, 2).every((t) => !t), "ND-AC-7 nút tắt khi chưa có lý do (OD2 · Q4: phải bật)")
     const nutCoLyDo = await nutCuaThe(thatCard, itemZ, ctxZ, "cùng người đăng")
     assert.ok(nutCoLyDo.length >= 2, "ND-AC-7 không thấy nút quyết")
     assert.ok(nutCoLyDo.slice(0, 2).every((t) => !t), "ND-AC-7 nút tắt khi đã có lý do")
