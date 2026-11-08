@@ -493,6 +493,14 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     nhưng 24/30 căn không giá dù ngày hỏi còn trống (nghi chặn mềm). Nghỉ tới hết 09/11; 10/11 dò 20 căn đối chứng nhịp
     12–20 giây; ≥50% có giá → 50 căn rồi 150 cách ngày; 20–50% → dò lại 13/11; <20% → chỉ thu lịch/đêm. Hàng ZC10.
 
+38. **Thông tin dự án là công khai** (08/11, Mạnh: «Đây là dữ liệu thông tin dự án, dữ liệu công khai của chính phủ và chủ đầu tư
+    dự án cho toàn bộ người dân nắm thông tin, nên tôi quyết định cứ bỏ các luật nội bộ, để thuận lợi hơn cho mình trong việc sắp
+    xếp và liên kết thông tin»): thông tin dự án (tên, địa chỉ, chủ đầu tư, pháp lý, quy mô, phân khu, toà, trục, căn, bàn giao,
+    tiện ích, mặt bằng) từ S07, S08, S09 và nguồn nhà nước lên cloud, Invest và API qua danh bạ. Sửa AGENTS luật 5, ADR-0016 §9,
+    `.claude/rules/pii-spl.md`. Giữ: tên nguồn thật tầng A; `stg_*` thô không sync nguyên bảng; S02 theo luật 5; chỉ số giá tổng
+    hợp S06/S07 theo mục 27. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai», 08/11). Rủi ro đã nêu: điều khoản S07 cấm thương mại, S09
+    chưa kiểm điều khoản. Code (sync-cloud, DN4) và `CONTEXT.md` đổi theo hàng sau. Căn cứ `docs/research/danh-ba-du-an-0811.md`.
+
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
