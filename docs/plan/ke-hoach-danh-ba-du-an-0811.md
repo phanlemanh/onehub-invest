@@ -97,7 +97,7 @@ migration `stg_*`, transform, danh bạ, gắn tin. Ràng buộc chung của kho
 | **S06** | dự án, toà, căn trên tin | Đã chạy, không cần thu thêm | Tin rao công khai (mục 25) |
 | **S03** | toà, trục, căn; dự án qua quy ước nhóm | Đã chạy | Tên nhóm là tầng C |
 | **S08** | dự án, phân khu, toà, trục, căn, thấp tầng, giá chủ đầu tư | Đã chạy, ≤ 1 lần/tuần (DATA-CONTRACT v4) | Công khai từ 08/11 |
-| **S09** (nguồn mới, mã cấp ở Z1a) | dự án, phân khu, toà có tên; quỹ căn tuỳ đường thu | ZCode đang thu thử (vòng `claudedp-0811-6`) | robots.txt cho phép trang công khai và sitemap, cấm đường API nội bộ và đường quỹ căn; ba trang chính sách đang đọc. Đi đường robots cấm thì ZCode dừng trước khi thu và báo |
+| **S09** (nguồn mới, mã cấp ở Z1a) | dự án, phân khu, toà có tên; quỹ căn tuỳ đường thu | ZCode đang thu thử (vòng `claudedp-0811-6`) | robots.txt cho phép trang công khai và sitemap, cấm đường API nội bộ và đường quỹ căn; ba trang chính sách đang đọc. Mạnh duyệt 08/11 đi đường API bị cấm cho riêng danh sách toà các dự án S03 nói tới (một lần, không quỹ căn, raw local; vòng `claudedp-0811-13`), cùng trang chủ đầu tư và tìm kiếm web; quỹ căn qua đường cấm chưa duyệt |
 | **S07** (phần danh mục) | dự án toàn quốc, dự án con, địa chỉ, chủ đầu tư, pháp lý | Chưa thu | Điều khoản cấm dùng thương mại (kiểm 03/11); Mạnh chốt thông tin dự án là công khai |
 | **Nguồn nhà nước** | chủ đầu tư, pháp lý, dự án đủ điều kiện bán | Chưa khảo sát | Thông tin công khai |
 | **S04** OSM | đa giác dự án, phường | Có sẵn | ODbL: ghi công |
@@ -158,7 +158,7 @@ Quy ước:
 
 | Mã | Việc | Làn · hạng | Đứng trên | Xong khi |
 |---|---|---|---|---|
-| **Z1a** | ZCode chạy thu thử Ocean Park 1 + Grand Park theo cách ZCode chọn (đã giao, vòng `claudedp-0811-6`; ≤ 60 lời, dừng trước khi đi đường robots cấm) và nộp nháp DATA-CONTRACT S09 v1. Claude cấp mã S09 trong `source_registry`, duyệt hợp đồng, viết migration `stg_*` S09 | ZCode (thu) · Claude (mã, hợp đồng, migration) · T2 | Ba trang chính sách đã đọc | Một snapshot thô trong trần; hợp đồng v1 được duyệt; bảng `stg_*` S09 nạp lại không nhân dòng |
+| **Z1a** | ZCode chạy thu thử Ocean Park 1 + Grand Park theo cách ZCode chọn (đã giao, vòng `claudedp-0811-6`; ≤ 60 lời, dừng trước khi đi đường robots cấm; danh sách toà qua đường API được Mạnh duyệt 08/11, vòng `claudedp-0811-13`) và nộp nháp DATA-CONTRACT S09 v1. Claude cấp mã S09 trong `source_registry`, duyệt hợp đồng, viết migration `stg_*` S09 | ZCode (thu) · Claude (mã, hợp đồng, migration) · T2 | Ba trang chính sách đã đọc | Một snapshot thô trong trần; hợp đồng v1 được duyệt; bảng `stg_*` S09 nạp lại không nhân dòng |
 | **DA5** | Nạp phân khu, toà S09 vào danh bạ. Trước khi đúc UPI, khớp toà S09 với toà S08 cùng dự án theo mã, tên chuẩn hoá; khớp thì thêm bí danh, không đúc UPI mới; không khớp thì lên thẻ. Toà chỉ có từ S09: `catalog_tier` thấp nhất. Đo phân giải `block_raw` S03 | Claude · T2 | Z1a, DB1b, DA3 | 0 toà có hai UPI; có số **tỉ lệ phân giải** = số mã toà S03 khác nhau (đã chuẩn hoá, bỏ mã cụm như «S1») của hai dự án mà khớp được toà S09 hoặc S08, chia cho tổng số mã đó |
 | **DO-S09** | Đo phủ: tỉ lệ 282 dự án S06 có mặt trong danh sách dự án S09. ZCode lấy danh sách theo cách của mình; Claude ghép tên với nút | ZCode · Claude · T1 | Z1a, DA2 | Có số phủ, kèm danh sách dự án không phủ |
 
@@ -206,7 +206,7 @@ Kết quả gắn tin là **phát biểu**, không phải bảng kết quả ri�
 
 | Rủi ro | Cách giữ |
 |---|---|
-| S09 là API không công bố; robots.txt cấm đường API và quỹ căn | ZCode chọn đường và dừng trước khi đi đường bị cấm; snapshot bất biến; danh bạ không phụ thuộc lượt thu sau |
+| S09 là API không công bố; robots.txt cấm đường API và quỹ căn | ZCode chọn đường; đường bị cấm chỉ đi trong phạm vi Mạnh duyệt (08/11: danh sách toà các dự án S03 nói tới, một lần, không quỹ căn); snapshot bất biến; danh bạ không phụ thuộc lượt thu sau |
 | S09 phủ lệch về vài chủ đầu tư lớn | DO-S09 trước khi thu toàn bộ |
 | Điều khoản S07 cấm dùng thương mại; lớp chặn bot | Thông tin dự án là công khai (mục 38); còn đường chủ đầu tư và nhà nước (Z3) |
 | Tên dự án trùng tên phân khu; mã toà trùng giữa dự án | Bảng nối có vùng và người duyệt; mã toà chỉ phân giải trong phạm vi dự án |
