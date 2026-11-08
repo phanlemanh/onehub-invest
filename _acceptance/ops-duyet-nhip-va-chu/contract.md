@@ -5,11 +5,11 @@ slug: ops-duyet-nhip-va-chu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-08-ops-duyet-nhip-va-chu-design.md
 lo_trinh_ma: OD1
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-08
 ---
 
 # Acceptance Contract: ops-duyet-nhip-va-chu
