@@ -43,20 +43,20 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   Căn cứ: `matchPhuongThiTruong` dùng `textLower.includes(v)` với cả biến thể slug bỏ dấu, và chỉ coi là tranh khi khác thị trường (`pipeline/transform-zalo.mjs:586-598`) — có từ trước PX1, PX1 mở danh sách cho nhóm khai tỉnh. Đầu dò chỉ-đọc: nhóm khai ngoài 4 thành phố hôm nay chỉ có Hưng Yên, 480 bài, 2 lần khớp, cả hai đúng ranh giới từ.
   file: `pipeline/transform-zalo.mjs`
   severity: low
-  Đề xuất: known-limits; xem lại khi có nhóm khai tỉnh mới.
+  Đề xuất: known-limits — xem lại khi có nhóm khai tỉnh mới.
 
 - **Thu OSM cho 30 tỉnh về sau có thể làm bộ nạp va chỉ mục duy nhất của admin_code**
   Người dùng thấy gì: lần nạp danh bạ kế tiếp dừng bằng lỗi DB không tên thay vì thông điệp «PX1 …» — không hỏng dữ liệu (một giao dịch, ROLLBACK).
   Căn cứ: xã danh bạ chèn với id có hậu tố mã (`<thị trường>-<slug>-<mã>`) không trùng id phường OSM cùng tên được upsert sau này (`pipeline/reassign-areas.mjs` upsert theo `<thị trường>-<slug>`); `khopXa` ưu tiên phường OSM (`pipeline/lib/dvhc.mjs:72-80`) nên bộ nạp gán mã vào phường OSM trong khi dòng dvhc vẫn giữ mã đó → vi phạm `areas_admin_code_uq` (`db/migrations/084_danh_ba_dvhc.sql:10`). Chỉ xảy ra sau OOS-1.
   file: `pipeline/nap-dvhc.mjs`
   severity: low
-  Đề xuất: ghi vào việc thu OSM 30 tỉnh (OOS-1).
+  Đề xuất: known-limits — ghi vào việc thu OSM 30 tỉnh (OOS-1), sửa cùng lượt đó.
 
 - **Suite `cd app && npm test` đỏ một ca đo thời gian, có sẵn từ trước**
   Người dùng thấy gì: không có; lưới hồi quy của app đỏ khi máy bận.
   Căn cứ: ca «E4b đối chiếu DB máy thu» (`app/tests/tin-rao-doi-chieu.test.tsx:109`, trần 1000 ms) đỏ ở cả HEAD (1040 ms) lẫn baseline `d60c3fa1` (1076 ms) khi 8 tệp chạy song song; chạy riêng tại HEAD mọi câu dưới 400 ms. Diff không chạm `app/`.
   file: `app/tests/tin-rao-doi-chieu.test.tsx`
   severity: low
-  Đề xuất: việc riêng cho làn app (tách ca đo thời gian khỏi lượt song song).
+  Đề xuất: new-contract — việc riêng cho làn app (tách ca đo thời gian khỏi lượt song song).
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo — đường độc lập không chạy bộ quét cụm).
