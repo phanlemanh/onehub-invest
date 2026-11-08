@@ -2,17 +2,11 @@ diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monito
 index 636cbe6..82eb191 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
-@@ -846,6 +846,10 @@ async function deliverZalouserReply(params: {
-   return { visibleReplySent };
- }
- 
+@@ -848,0 +849,4 @@
 +// link-nguoi-ban-s03 (b): MỘT vòng hẹn giờ bộ tra hồ sơ — đọc S03_LOOKUP_DIR
 +// (bỏ trống = tắt); đúng MỘT vòng dù listener khởi động lại (AC-1).
 +import { khoiDongTuEnv } from "./seller-lookup.js";
 +
- export async function monitorZalouserProvider(
-   options: ZalouserMonitorOptions,
- ): Promise<ZalouserMonitorResult> {
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
 index 0000000..873ea9d

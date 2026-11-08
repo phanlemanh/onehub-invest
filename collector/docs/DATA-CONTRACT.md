@@ -110,7 +110,7 @@ chấp nhận cả hai.
 ## Lịch sử phiên bản
 
 - **schemaVersion 6 (2026-11-05, ma-album-s03 — gộp cùng v7 để hai nhánh không xung đột)**:
-  thêm `RawItem.meta.albumMeta` cho nguồn `zalo-agent` (khoá album từ
+  thêm `RawItem.meta.albumMeta` cho kênh tin S03 (khoá album từ
   `content.params`: `group_layout_id` + `id_in_group` bắt buộc,
   `total_item_in_group`/`is_group_layout`/`child_number`/`msg_type` tuỳ chọn);
   item đi trong `media[]` mục chỉ chứa `albumMeta`. Kênh khác không đụng.

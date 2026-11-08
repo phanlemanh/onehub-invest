@@ -3,10 +3,10 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-import { SnapshotWriter, HO_SO_SCHEMA_VERSION, ZALO_AGENT_SCHEMA_VERSION } from "../core/storage.js";
+import { SnapshotWriter, HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from "../core/storage.js";
 // U1(9): hằng schemaVersion hai kênh S03 khai ở core/storage.ts — server không
 // khai lại giá trị, chỉ re-export cho người dùng cũ của API này.
-export { HO_SO_SCHEMA_VERSION, ZALO_AGENT_SCHEMA_VERSION } from "../core/storage.js";
+export { HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from "../core/storage.js";
 import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
@@ -242,7 +242,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
   ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
-    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent", { schemaVersion: ZALO_AGENT_SCHEMA_VERSION });
+    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent", { schemaVersion: KENH_TIN_SCHEMA_VERSION });
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
     // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
     const items = buffer.slice();

@@ -210,7 +210,7 @@ async function main() {
   try {
     await client.query("BEGIN");
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
-    // INSERT vào airbnb_snapshots chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
+    // INSERT vào bảng snapshot đĩa chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
     // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
     const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
     if (!(!coBang && boHetHoSo)) {

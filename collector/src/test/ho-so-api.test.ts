@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import { test } from "node:test";
 
-import { createAgentServer, ZALO_AGENT_SCHEMA_VERSION } from "../api/server.js";
+import { createAgentServer, KENH_TIN_SCHEMA_VERSION } from "../api/server.js";
 
 /**
  * link-nguoi-ban-s03 E5 (MỞ LẠI 0611-6; U1 điểm 5): POST /s03-ho-so —
@@ -66,7 +66,7 @@ test("s03-ho-so: lô hợp lệ → 202; canary ở trường PHẢI BỎ vắng
   assert.ok(snap2, "flush kênh tin ra snapshot");
   const m2 = JSON.parse(readFileSync(join(root, "hanoi", snap2.snapshotId, "manifest.json"), "utf8"));
   assert.notEqual(m2.snapshotId, manifest.snapshotId, "snapshot kênh khác tách riêng");
-  assert.equal(m2.schemaVersion, ZALO_AGENT_SCHEMA_VERSION, "kênh tin dùng đúng hằng ZALO_AGENT_SCHEMA_VERSION");
+  assert.equal(m2.schemaVersion, KENH_TIN_SCHEMA_VERSION, "kênh tin dùng đúng hằng KENH_TIN_SCHEMA_VERSION");
 });
 
 test("s03-ho-so: sai key 401; dong sai khuôn 422 → KHÔNG sinh snapshot hồ sơ; thiếu dong 400", async () => {
