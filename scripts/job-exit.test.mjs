@@ -482,6 +482,10 @@ describe("AC-5 bước thật trên cổng canh", () => {
     const scripts = path.join(mutDir, "..", "scripts");
     if (!existsSync(scripts)) symlinkSync(path.join(REPO, "scripts"), scripts);
     const s = readFileSync(path.join(PIPE, src), "utf8");
+    // …và mọi tệp anh em mà bản gốc import (`./x.mjs`) — refresh-bait-gap import ./danh-ba-vat-the.mjs từ DB1b
+    for (const [, anh] of s.matchAll(/from\s+["']\.\/([\w.-]+\.mjs)["']/g)) {
+      if (!existsSync(path.join(mutDir, anh))) symlinkSync(path.join(PIPE, anh), path.join(mutDir, anh));
+    }
     const m = fn(s);
     assert.notEqual(m, s, `khuôn đột biến ${file} không khớp mã nguồn`);
     writeFileSync(path.join(mutDir, file), m);
