@@ -528,6 +528,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Mốc S09 hai thước (Mạnh, 08/11: «Điều quan trọng nhất của tôi là nguồn S03», chọn «cả hai»): nấc 1 thu S09 cho các dự án S03 nói
     tới khi phủ đo trên bài S03 ≥ 50% và phân giải ≥ 70%; nấc 2 thu toàn bộ khi thêm phủ 282 dự án S06 ≥ 50%. Số sơ bộ: thước S03 ≈ 99%,
     thước S06 ≈ 4,6% (S09 là danh mục Hà Nội). Hàng DA10, DAZ2.
+    Đường thu toà S09 (Mạnh, 08/11: «Dùng đường API, Trang Chủ đầu tư, Tìm từ Google Search để có thêm nguồn»; «Có ở đây là dùng
+    qua API»): đường công khai cộng S08 mới phân giải 51% mã toà S03 (thiếu toà Grand Park, Zurich OP1). Để tăng, dùng cả ba đường:
+    đường API mà robots.txt của S09 cấm (chỉ danh sách toà của các dự án S03 nói tới, một lần, không quỹ căn, raw local, ZCode chọn
+    trần và nhịp; vòng `claudedp-0811-13`), trang chủ đầu tư, và tìm kiếm web. Quỹ căn S09 qua đường cấm vẫn chưa được duyệt.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
