@@ -9,7 +9,7 @@ Ngày: 2026-11-08 · Trạng thái: **bản hoàn chỉnh trình Mạnh** · Gom
 - Mục 38: thông tin dự án là công khai, kể cả giá chủ đầu tư và quỹ căn.
 - Mục 39: Q1–Q4 và Hỏi-1 đến Hỏi-5.
 
-Còn hai câu chờ Mạnh, ở §8.
+Còn ba câu chờ Mạnh, ở §8.
 
 ## 0. Một trang
 
@@ -109,7 +109,7 @@ Luật chung cho mọi lượt thu:
 | **S06** | dự án, toà, căn trên tin | Đã chạy, **không thu thêm** | Giữ nguyên | Tin rao công khai (mục 25) |
 | **S03** | toà, trục, căn, dự án qua quy ước nhóm | Đã chạy | Giữ nguyên | Tầng C cho tên nhóm |
 | **S08** | dự án, phân khu, toà, trục, căn, thấp tầng, giá chủ đầu tư | Đã chạy | **≤ 1 lần/tuần** (giữ) | Công khai từ 08/11 |
-| **S09** | dự án, phân khu, **toà có tên**, căn; có ID cha cả bốn cấp | Thu thử → toàn bộ | Thu thử: **một lần, Ocean Park 1 + Grand Park, ≤ 60 lời, nghỉ 3–5 giây (đã duyệt)**. Toàn bộ: ~420 lời/tuần, nghỉ ≥ 3 giây, chỉ mở khi thu thử đạt (**chờ Mạnh, §8**) | **Chưa kiểm**: ZCode đang đọc điều khoản (vòng `claudedp-0811-3`) |
+| **S09** | dự án, phân khu, **toà có tên**, căn; có ID cha cả bốn cấp | Thu thử → toàn bộ | Thu thử: **một lần, Ocean Park 1 + Grand Park, ≤ 60 lời, nghỉ 3–5 giây (đã duyệt)**. Toàn bộ: ~420 lời/tuần, nghỉ ≥ 3 giây, chỉ mở khi thu thử đạt (**chờ Mạnh, §8**) | **robots.txt (đo 08/11)**: cho phép trang công khai và sitemap; **cấm đường API nội bộ mà khảo sát dùng, và cấm đường quỹ căn**; không có Crawl-delay; miền API riêng không có robots.txt. Ba trang chính sách chưa đọc (vòng `claudedp-0811-5` mở lại). Đường thu chờ Mạnh (§8 câu 3) |
 | **S07** (phần danh mục) | dự án toàn quốc, dự án con, địa chỉ, chủ đầu tư, pháp lý | Sau GĐ2 | Sitemap 12 lời/tuần; trang chi tiết ≤ 300 trang/tuần tháng đầu, 10 giây/trang, chỉ dự án có tin mà chưa nối (**chờ Mạnh, §8**) | Điều khoản cấm dùng thương mại (kiểm 03/11); Mạnh chốt 08/11 thông tin dự án là công khai, rủi ro đã nêu |
 | **Nguồn nhà nước** | chủ đầu tư, pháp lý, dự án đủ điều kiện bán | Khảo sát đọc trước (Z3) | Chưa thu | Thông tin công khai của nhà nước |
 | **S04** OSM | đa giác dự án, phường | Có sẵn | — | ODbL: ghi công |
@@ -175,9 +175,10 @@ mục 38/39.
 | **DO-S09** | Một lời gọi danh sách 394 dự án S09 để đo phủ trên 282 dự án S06 | ZCode | — | Z1a | Có số phủ; trả lời rủi ro S09 lệch về vài chủ đầu tư lớn |
 
 **ZCode trả lời 08/11 (vòng `claudedp-0811-3`)**:
-- Điều khoản S09: **chưa biết**. Liên làn đã giao ZCode đọc riêng robots.txt và trang điều khoản (≤ 5 lời gọi, không gọi API dự án,
-  vòng `claudedp-0811-5`). Z1a chưa giao cho tới khi có câu trả lời.
-- Ước thu thử: khoảng 9 lời gọi, dưới 2 phút, trong trần 60. Con số này giả định quỹ căn đọc theo phân khu; nếu phải đọc theo toà
+- Điều khoản S09: **chưa biết**. ZCode đã đọc robots.txt (vòng `claudedp-0811-5`): miền chính cho phép trang công khai và sitemap, nhưng
+  **cấm đúng đường API nội bộ mà khảo sát dùng, và cấm đường quỹ căn**. Miền API riêng không có robots.txt, nhưng mang cùng dữ liệu
+  mà miền chính chặn. Ba trang chính sách chưa đọc. **Z1a chưa giao cho tới khi Mạnh trả lời §8 câu 3.**
+- Ước thu thử theo đường API: khoảng 9 lời gọi, dưới 2 phút, trong trần 60. Con số này giả định quỹ căn đọc theo phân khu; nếu phải đọc theo toà
   (khoảng 20 toà mỗi phân khu) thì số lời gọi tăng nhưng vẫn phải nằm trong trần 60.
 
 **Ngưỡng mở GĐ3 cho S09 (khuyến nghị)**: S09 phủ ≥ 50% trong 282 dự án S06, **và** phân giải được ≥ 70% mã toà S03 có trong hai dự án
@@ -225,7 +226,7 @@ Kết quả gắn tin là **phát biểu** trong `field_assertions`, không ph�
 | Gộp căn sai lan sang danh bạ | DC1 trước khi `properties` thành view của danh bạ (ADR-0016 Đợt 2) |
 | Tên nguồn thật lọt lên cloud qua mã, URL, mô tả | Bộ soát tầng A ở cửa ra phủ cả bảng danh bạ mới (DN4) |
 
-## 8. Hai câu chờ Mạnh
+## 8. Ba câu chờ Mạnh
 
 **Câu 1. Trần, nhịp thu toàn bộ S09 và S07.**
 *Khuyến nghị*:
@@ -238,6 +239,20 @@ Kết quả gắn tin là **phát biểu** trong `field_assertions`, không ph�
 - Trạng thái hiện bằng huy hiệu bên cạnh tên: «Sắp mở bán», «Đang mở bán», «Đã bàn giao».
 - Dữ liệu dùng RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`.
 - Lý do: người dân vẫn gọi «dự án Ocean Park» sau bàn giao. Nhãn đổi theo thời gian thì URL, tìm kiếm và bộ lọc phải đổi theo.
+
+**Câu 3. Đường thu S09 khi robots.txt cấm đường API và quỹ căn.**
+*Khuyến nghị*: **tôn trọng robots.txt**.
+- Chỉ dùng sitemap và trang dự án công khai (robots cho phép).
+- Không dùng đường API bị cấm.
+- Không dùng miền API riêng để lấy cùng dữ liệu: về chữ thì không bị chặn, nhưng là đi vòng ý của chủ trang.
+- Bỏ quỹ căn của S09. Quỹ căn đã có từ S08.
+
+Thu thử Z1a đổi thành: đọc sitemap, rồi trang công khai của Ocean Park 1 và Grand Park (vẫn ≤ 60 lời), để đo xem trang công khai có tên
+phân khu và tên toà không. Có thì S09 vẫn làm được xương toà. Không có thì tên toà lấy từ S08, chữ tin và Quỹ hàng, còn S09 chỉ bọc
+dự án.
+Đọc nốt ba trang chính sách trước khi thu.
+
+Đường khác (không khuyến nghị): dùng API như khảo sát. Đầy đủ nhất, nhưng trái robots.txt và cùng rủi ro pháp lý với việc vượt chặn.
 
 ## 9. Việc đã quyết trong bản này (lựa chọn của em, Mạnh kiểm khi đọc)
 
