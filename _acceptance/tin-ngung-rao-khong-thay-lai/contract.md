@@ -5,10 +5,10 @@ slug: tin-ngung-rao-khong-thay-lai
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-08-tin-ngung-rao-khong-thay-lai-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-09
 ---
 
 # Acceptance Contract: tin-ngung-rao-khong-thay-lai
