@@ -13,6 +13,10 @@ import pg from "pg";
 
 import { DATA_DIR, docDanhBa, thiTruongCuaTinh } from "../lib/dvhc.mjs";
 import { napDvhc } from "../nap-dvhc.mjs";
+import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa, phuongHopLe } from "../lib/osm.mjs";
+import { ganPhuongS06 } from "../transform-chotot.mjs";
+import { ganPhuongS03 } from "../transform-zalo.mjs";
+import { chuanTen } from "../lib/dvhc.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const ROOT = join(import.meta.dirname, "../..");
@@ -202,6 +206,38 @@ test("PX1-AC-5 084 áp hai lần không đổi lược đồ", (t) => withTx(t, 
   const a = (await c.query(dau)).rows[0].d;
   await c.query(MIG_084);
   assert.equal((await c.query(dau)).rows[0].d, a);
+}));
+
+test("PX1-AC-7-db bộ đọc tên thật sau bộ nạp thật: S06, S03 khai và chưa khai", (t) => withTx(t, async (c) => {
+  const phuongTruoc = await docThiTruongCoPhuong(c);
+  await napDvhc(c, { log: IM });
+  const coXa = await docThiTruongCoXa(c);
+  assert.equal(coXa.length, 34);
+  assert.deepEqual(await docThiTruongCoPhuong(c), phuongTruoc);
+  const { rows: [pip] } = await c.query(`SELECT count(*)::int AS n FROM areas WHERE meta->>'source' = 'dvhc' AND ${phuongHopLe()}`);
+  assert.equal(pip.n, 0, "point-in-polygon không được nhận xã danh bạ");
+  const areas = await docPhuongHopLe(c, coXa);
+  const biDanhCua = await docBiDanhAnToan(c, coXa);
+  const entries = (ms) => areas.filter((a) => ms.includes(a.parent_id)).map((a) => ({ id: a.id, name: a.name, market: a.parent_id }));
+  // xã Nghệ An tên duy nhất cả nước
+  const dem = new Map();
+  for (const x of D.xa) dem.set(chuanTen(x.ten), (dem.get(chuanTen(x.ten)) ?? 0) + 1);
+  const xa = D.xa.find((x) => x.maTinh === "40" && dem.get(chuanTen(x.ten)) === 1 && x.ten.length > 6
+    && !D.xa.some((y) => y !== x && (chuanTen(y.ten).includes(chuanTen(x.ten)) || chuanTen(x.ten).includes(chuanTen(y.ten)))));
+  const { rows: [dich] } = await c.query(`SELECT id FROM areas WHERE admin_code = $1`, [xa.ma]);
+  const mk = "vn-nghe-an";
+  const conMk = areas.filter((a) => a.parent_id === mk);
+  const wardMap = new Map(conMk.map((a) => [a.name.normalize("NFC").toLowerCase(), a.id]));
+  const slugList = conMk.map((a) => [a.id.slice(mk.length + 1), a.name]);
+  const g = ganPhuongS06({ city_code: mk, ward_name_v3: `Xã ${xa.ten}`, ward_name: null, subject: "Bán đất thổ cư" },
+    { mk, wardMap, biDanh: biDanhCua.get(mk), slugList });
+  assert.equal(g.areaId, dich.id);
+  const bai = `Bán nhà xã ${xa.ten}, sổ đỏ chính chủ`;
+  assert.equal(ganPhuongS03(bai, [mk], { entries, moiThiTruong: phuongTruoc, biDanhCua }).ph?.id, dich.id);
+  const chuaKhai = ganPhuongS03(bai, null, { entries, moiThiTruong: phuongTruoc, biDanhCua });
+  assert.notEqual(chuaKhai.ph?.market, mk, "PX1-AC-7 nhóm chưa khai gắn tỉnh khác");
+  const hong = ganPhuongS03(bai, null, { entries, moiThiTruong: coXa, biDanhCua });
+  assert.equal(hong.ph?.market, mk, "chiều đỏ: tập chưa khai = mọi tỉnh có xã thì gắn sang Nghệ An");
 }));
 
 // Ca ghi thật đặt CUỐI tệp: các ca trên cần DB chưa nạp.

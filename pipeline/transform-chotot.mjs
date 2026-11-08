@@ -10,7 +10,8 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { mintOfferId } from "./lib/offer-key.mjs";
 import { matchPhuong } from "./transform-zalo.mjs";
-import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
+import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoXa } from "./lib/osm.mjs";
+import { chuanTen } from "./lib/dvhc.mjs";
 import { thiTruongCua } from "./lib/thi-truong.mjs";
 import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 import { kiemCatChuyen, resolveOffers, retractRule, subjectKey, writeAssertions } from "./lib/assert.mjs";
@@ -25,6 +26,25 @@ const norm = (s) =>
   (s ?? "").normalize("NFC").toLowerCase().replace(/^(phường|xã|thị trấn|thị xã)\s+/i, "").trim();
 
 /**
+ * Phường của một tin S06: ward_name_v3 (chuẩn 2025) → ward_name → khớp chữ subject → bí danh xã cũ an toàn của ward_name
+ * (PX1, cuối cùng: chỉ lấp tin mà các đường trước không gắn được, không đổi xã của tin đã gắn).
+ * @param {{ ward_name_v3?: string|null, ward_name?: string|null, subject?: string|null, area_name?: string|null }} ad
+ * @param {{ mk: string|null, wardMap?: Map<string,string>, biDanh?: Map<string,string>, slugList?: [string,string][] }} o
+ * @returns {{ areaId: string|null, phuongRaw: string|null, cach: "v3"|"ward"|"chu"|"bi-danh"|null }}
+ */
+export function ganPhuongS06(ad, { mk, wardMap, biDanh, slugList }) {
+  let areaId = wardMap?.get(norm(ad.ward_name_v3)) ?? null;
+  if (areaId) return { areaId, phuongRaw: ad.ward_name_v3 ?? ad.ward_name ?? null, cach: "v3" };
+  areaId = wardMap?.get(norm(ad.ward_name)) ?? null;
+  if (areaId) return { areaId, phuongRaw: ad.ward_name_v3 ?? ad.ward_name ?? null, cach: "ward" };
+  const m = matchPhuong(`${ad.subject ?? ""} ${ad.ward_name ?? ""} ${ad.area_name ?? ""}`, slugList ?? []);
+  if (m) return { areaId: `${mk}-${m.slug}`, phuongRaw: m.name, cach: "chu" };
+  areaId = ad.ward_name ? biDanh?.get(chuanTen(ad.ward_name)) ?? null : null;
+  if (areaId) return { areaId, phuongRaw: ad.ward_name, cach: "bi-danh" };
+  return { areaId: null, phuongRaw: null, cach: null };
+}
+
+/**
  * Thân transform S06 — main chạy không bọc transaction như trước; test và phép đo (thước nap-lai-ba-luot) bọc BEGIN…ROLLBACK.
  * @param {import("pg").Client} client
  */
@@ -32,8 +52,10 @@ export async function runTransformChotot(client) {
   await kiemCatChuyen(client);   // PL15: chưa cắt chuyển thì dừng trước mọi lần ghi (job đỏ có tên, không mất ô)
   // Phường hợp lệ của MỌI thị trường có phường (OSM đã migrate sáp nhập 2025) — bộ đọc chung với S03, bỏ khu vực lạc;
   // city_code của tin đi qua MỘT chỗ ánh xạ (lib/thi-truong.mjs: tỉnh cũ đã sáp nhập → thị trường mới).
-  const markets = await docThiTruongCoPhuong(client);
+  // PX1: thị trường có khu vực khớp tên được (phường OSM hoặc xã danh bạ 084); chưa áp 084 thì như cũ.
+  const markets = await docThiTruongCoXa(client);
   const areas = await docPhuongHopLe(client, markets);
+  const biDanhCua = await docBiDanhAnToan(client, markets);
   const byCity = new Map(markets.map((m) => [m, new Map(areas.filter((a) => a.parent_id === m).map((a) => [norm(a.name), a.id]))]));
   const slugLists = new Map(markets.map((m) => [m, areas.filter((a) => a.parent_id === m).map((a) => [a.id.slice(m.length + 1), a.name])]));
   const { rows: mkRows } = await client.query(`SELECT id FROM areas WHERE region_type = 'market'`);
@@ -45,7 +67,7 @@ export async function runTransformChotot(client) {
   );
   console.log(`stg có giá+DT: ${ads.length}`);
 
-  let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0;
+  let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0, nBiDanh = 0;
   // PL15: loại hình (category) và phòng ngủ (rooms) là trường có cấu trúc của nguồn → phát biểu lớp sự thật; năm cột
   // do bộ phân xử dựng cuối lượt, không ghi thẳng.
   const phatBieu = [];
@@ -64,21 +86,12 @@ export async function runTransformChotot(client) {
     // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
     const mk = thiTruongCua(ad.city_code, thiTruongCo);
     if (!mk) maLa.set(ad.city_code ?? "(rỗng)", (maLa.get(ad.city_code ?? "(rỗng)") ?? 0) + 1);
-    const wardMap = byCity.get(mk);
-    let areaId = wardMap?.get(norm(ad.ward_name_v3)) ?? null;
-    if (areaId) nWardV3++;
-    if (!areaId) {
-      areaId = wardMap?.get(norm(ad.ward_name)) ?? null;
-    }
-    let phuongRaw = areaId ? ad.ward_name_v3 ?? ad.ward_name : null;
-    if (!areaId) {
-      const m = matchPhuong(`${ad.subject ?? ""} ${ad.ward_name ?? ""} ${ad.area_name ?? ""}`, slugLists.get(mk) ?? []);
-      if (m) {
-        areaId = `${mk}-${m.slug}`;
-        phuongRaw = m.name;
-        nWardTxt++;
-      }
-    }
+    const g = ganPhuongS06(ad, { mk, wardMap: byCity.get(mk), biDanh: biDanhCua.get(mk), slugList: slugLists.get(mk) });
+    const areaId = g.areaId;
+    const phuongRaw = g.phuongRaw;
+    if (g.cach === "v3") nWardV3++;
+    if (g.cach === "chu") nWardTxt++;
+    if (g.cach === "bi-danh") nBiDanh++;
 
     const confidence = areaId ? CONFIDENCE.high : CONFIDENCE.medium;
     if (confidence === CONFIDENCE.high) nHigh++; else nMed++;
@@ -139,12 +152,12 @@ export async function runTransformChotot(client) {
   }
   console.log(
     `P2 offers: ${nHigh} high / ${nMed} medium / ${nSkip} skip — ` +
-    `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match` +
+    `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match + ${nBiDanh} bí danh xã cũ` +
     `${nHigh + nMed > 0 ? ` (match ${(((nWardV3 + nWardTxt) / (nHigh + nMed)) * 100).toFixed(1)}%)` : ""}`,
   );
   for (const [ma, n] of maLa) console.log(`city_code lạ: ${ma} (${n} tin) — không ánh xạ được thị trường, area_id NULL`);
   return {
-    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, maLa: Object.fromEntries(maLa), sdt,
+    high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt, biDanh: nBiDanh, maLa: Object.fromEntries(maLa), sdt,
     inserted: ghi.inserted, retracted: ghi.retracted, offersChanged: pxu.offers_changed,
   };
 }

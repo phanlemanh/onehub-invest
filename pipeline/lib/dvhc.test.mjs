@@ -170,3 +170,48 @@ test("PX1-AC-9 so sánh trước/sau: tỉnh giảm, mất xã, đổi xã đề
   const khai = soSanhTruocSau([{ ma: "o2", tinh: "vn-hanoi", truoc: "vn-hanoi-ba-dinh", sau: "vn-hanoi-ngoc-ha" }], { laXa, khaiTruoc: new Set(["o2"]) });
   assert.deepEqual(khai.do, []);
 });
+
+// ---- PX1-AC-7: hàm gán của transform trên danh sách dạng đầu ra docPhuongHopLe (không DB) ----
+import { ganPhuongS06 } from "../transform-chotot.mjs";
+import { ganPhuongS03 } from "../transform-zalo.mjs";
+
+const BON_TP = ["vn-hanoi", "vn-hcmc", "vn-da-nang", "vn-hai-phong"];
+// Xã Nghệ An có tên duy nhất cả nước (không trùng chuỗi con với tên nào khác) — để chiều đỏ gắn được, không bị tranh
+const demTen = new Map();
+for (const x of DB.xa) demTen.set(chuanTen(x.ten), (demTen.get(chuanTen(x.ten)) ?? 0) + 1);
+const XA_NGHE_AN = DB.xa.find((x) => x.maTinh === "40" && demTen.get(chuanTen(x.ten)) === 1 && x.ten.length > 6
+  && !DB.xa.some((y) => y !== x && (chuanTen(y.ten).includes(chuanTen(x.ten)) || chuanTen(x.ten).includes(chuanTen(y.ten)))));
+
+function dungDanhSach() {
+  const xa = DB.xa.map((x) => ({ id: `${thiTruongCuaTinh(x.maTinh)}-x${x.ma}`, name: x.ten, parent_id: thiTruongCuaTinh(x.maTinh) }));
+  const entries = (ms) => xa.filter((a) => ms.includes(a.parent_id)).map((a) => ({ id: a.id, name: a.name, market: a.parent_id }));
+  return { xa, entries };
+}
+
+test("PX1-AC-7 S06 khớp ward_name_v3 vào xã danh bạ của tỉnh khác 4 thành phố", () => {
+  const { xa } = dungDanhSach();
+  const mk = "vn-nghe-an";
+  const conMk = xa.filter((a) => a.parent_id === mk);
+  const wardMap = new Map(conMk.map((a) => [a.name.normalize("NFC").toLowerCase(), a.id]));
+  const slugList = conMk.map((a) => [a.id.slice(mk.length + 1), a.name]);
+  const g = ganPhuongS06({ ward_name_v3: `Xã ${XA_NGHE_AN.ten}`, ward_name: "Thị trấn Cũ Nào Đó", subject: "bán đất" }, { mk, wardMap, slugList });
+  assert.equal(g.areaId, `${mk}-x${XA_NGHE_AN.ma}`);
+  assert.equal(g.cach, "v3");
+  // Bí danh chỉ lấp khi mọi đường khác trượt
+  const bd = new Map([["trọn vẹn", `${mk}-x${XA_NGHE_AN.ma}`]]);
+  const h = ganPhuongS06({ ward_name_v3: null, ward_name: "Xã Trọn Vẹn", subject: "bán đất" }, { mk, wardMap, biDanh: bd, slugList });
+  assert.deepEqual([h.areaId, h.cach], [`${mk}-x${XA_NGHE_AN.ma}`, "bi-danh"]);
+});
+
+test("PX1-AC-7 S03: nhóm khai tỉnh khớp xã của tỉnh đó; nhóm chưa khai không bị kéo sang tỉnh khác", () => {
+  const { entries } = dungDanhSach();
+  const bai = `Bán nhà xã ${XA_NGHE_AN.ten}, sổ đỏ chính chủ, giá 2 tỷ`;
+  const khai = ganPhuongS03(bai, ["vn-nghe-an"], { entries, moiThiTruong: BON_TP, biDanhCua: new Map() });
+  assert.equal(khai.ph?.id, `vn-nghe-an-x${XA_NGHE_AN.ma}`);
+  const chuaKhai = ganPhuongS03(bai, null, { entries, moiThiTruong: BON_TP, biDanhCua: new Map() });
+  assert.notEqual(chuaKhai.ph?.market, "vn-nghe-an", "PX1-AC-7 nhóm chưa khai gắn tỉnh khác");
+  // Chiều đỏ: bản sao đặt tập chưa khai = mọi thị trường có xã → gắn sang Nghệ An
+  const moiTinh = [...new Set(DB.xa.map((x) => thiTruongCuaTinh(x.maTinh)))];
+  const hong = ganPhuongS03(bai, null, { entries, moiThiTruong: moiTinh, biDanhCua: new Map() });
+  assert.equal(hong.ph?.market, "vn-nghe-an", "bản hỏng phải gắn tỉnh khác — chiều đỏ của ca");
+});
