@@ -27,8 +27,10 @@ Code ở các đường dẫn này đưa dữ liệu RA KHỎI máy local (cloud
   `listing_url` theo domain nguồn) vẫn là tầng A — loại hoặc đổi sang mã `S0x` trước khi rời máy.
 - Tên nhóm là tầng C, NHƯNG tên/khoá nhóm nào mang tên nguồn thật (vd khoá nhóm là URL có tên miền nguồn) vẫn
   tầng A. Tên tài khoản thu chưa chốt — giữ như tầng A.
-- **S08 (danh mục dự án)**: dữ liệu chỉ dùng nội bộ như nguồn hiệu chuẩn (AGENTS.md cạnh luật 5) — không đưa bảng
-  `stg_s08_inventory` hay nội dung nguyên văn của S08 vào sync cloud, response API công khai hay repo public.
+- **S08 (danh mục dự án)**: không đưa nguyên bảng `stg_s08_inventory` vào sync cloud, response API công khai hay repo
+  public. **Từ 2026-11-08 (Mạnh chốt, AGENTS.md luật 5 sửa đổi, ROADMAP §3 mục 38) thông tin dự án là công khai**: tên,
+  địa chỉ, chủ đầu tư, pháp lý, quy mô, phân khu, toà, trục, căn từ S07, S08, S09 được lên cloud và Invest qua danh bạ, đã
+  thay tên nguồn bằng mã. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh chốt 2026-11-08).
 - `data-api/` và `app/` được `tools/sync-public.sh` đẩy ra repo PUBLIC: không hostname nội bộ,
   không secret, không query thật nhạy cảm (app dùng stub trong `tools/public-overlay/`).
 - Không hardcode literal nguồn — đọc mã từ `source_registry`.

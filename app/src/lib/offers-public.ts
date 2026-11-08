@@ -98,11 +98,16 @@ const frontage = (raw: string | null) => {
   return m !== null && m > 0 && m <= OFFER_MAX_FRONTAGE_M ? m : null;
 };
 
-const NHIEU_TEN = `WITH nhieu_ten AS (
+/**
+ * Tài khoản nhiều tên: đếm tên trên MỌI tin sống của tài khoản. `them` chỉ thu hẹp tập tài khoản cần xét (vd người bán của một
+ * trang) — kết quả của từng tài khoản trong tập không đổi, nên danh sách và trang tin dùng chung một luật.
+ */
+const nhieuTen = (them = "") => `nhieu_ten AS (
          SELECT seller_ref FROM sale_offers
-         WHERE seller_ref IS NOT NULL AND seller_ref <> '' AND lower(btrim(seller_name)) NOT IN ('unknown', '')
+         WHERE seller_ref IS NOT NULL AND seller_ref <> '' AND lower(btrim(seller_name)) NOT IN ('unknown', '')${them}
          GROUP BY seller_ref HAVING count(DISTINCT seller_name) >= ${OFFER_MANY_NAMES}
        )`;
+const NHIEU_TEN = `WITH ${nhieuTen()}`;
 
 const OFFER_COLUMNS = `o.offer_id, o.kind, o.property_type, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
               o.bathrooms, o.stories, o.frontage_length,
@@ -143,34 +148,45 @@ function toPublicOffer(r: any, entries: SourceNameEntry[] | null): PublicOffer {
   };
 }
 
-/** Một trang tin rao của thị trường (hoặc toàn bộ khi `marketId` null). `total`, `withPhone` tính trên cả tập lọc. */
+/**
+ * Một trang tin rao của thị trường (hoặc toàn bộ khi `marketId` null). `total`, `withPhone` tính trên cả tập lọc.
+ * Hồ sơ e4b-danh-sach-tin-nhanh: rút khoá của trang trước, total theo hàm cửa sổ trên cùng lượt quét, đếm tên chỉ cho người
+ * bán của trang — không quét toàn bảng cho nhiều tên ở mỗi lời gọi, không quét thêm một lượt cho câu đếm.
+ */
 export async function getPublicOffers(
   marketId: string | null,
   f: OfferFilters,
 ): Promise<{ rows: PublicOffer[]; total: number; withPhone: number }> {
   const { where, params } = whereOf(marketId, f);
   const from = `FROM sale_offers o JOIN areas a ON a.id = o.area_id`;
-  const [entries, { rows }, { rows: counts }] = await Promise.all([
+  const [entries, { rows }] = await Promise.all([
     sourceEntries(),
     pool.query(
-      `${NHIEU_TEN}
-       SELECT ${OFFER_COLUMNS}
-       ${from} LEFT JOIN nhieu_ten n ON n.seller_ref = o.seller_ref
-       WHERE ${where}
-       ORDER BY ${ORDER[f.sort]}
-       LIMIT ${f.limit} OFFSET ${f.offset}`,
-      params,
-    ),
-    pool.query(
-      `SELECT count(*)::int AS total, count(o.seller_phone)::int AS with_phone ${from} WHERE ${where}`,
+      `WITH khoa AS MATERIALIZED (
+         SELECT o.offer_id, o.seller_ref, count(*) OVER () AS total, count(o.seller_phone) OVER () AS with_phone
+         ${from} WHERE ${where}
+         ORDER BY ${ORDER[f.sort]}
+         LIMIT ${f.limit} OFFSET ${f.offset}
+       ), ${nhieuTen(" AND seller_ref IN (SELECT seller_ref FROM khoa)")}
+       SELECT ${OFFER_COLUMNS}, k.total, k.with_phone
+       FROM khoa k JOIN sale_offers o ON o.offer_id = k.offer_id JOIN areas a ON a.id = o.area_id
+         LEFT JOIN nhieu_ten n ON n.seller_ref = o.seller_ref
+       ORDER BY ${ORDER[f.sort]}`,
       params,
     ),
   ]);
-  return {
-    total: counts[0].total,
-    withPhone: counts[0].with_phone,
-    rows: rows.map((r) => toPublicOffer(r, entries)),
-  };
+  let total = rows.length ? Number(rows[0].total) : 0;
+  let withPhone = rows.length ? Number(rows[0].with_phone) : 0;
+  // Trang không dòng: offset 0 nghĩa là tập lọc rỗng; offset lớn hơn 0 thì hàm cửa sổ không còn dòng nào mang tổng — đếm riêng.
+  if (!rows.length && f.offset > 0) {
+    const { rows: counts } = await pool.query(
+      `SELECT count(*)::int AS total, count(o.seller_phone)::int AS with_phone ${from} WHERE ${where}`,
+      params,
+    );
+    total = counts[0].total;
+    withPhone = counts[0].with_phone;
+  }
+  return { total, withPhone, rows: rows.map((r) => toPublicOffer(r, entries)) };
 }
 
 /** Phường của thị trường có tin rao hiện được — lựa chọn của bộ lọc Phường. */
