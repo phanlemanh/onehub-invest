@@ -20,7 +20,9 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
 | vocab.mjs | Sổ từ vựng một nguồn (PL6): `--write` sinh hằng từ `mappings.yaml` `enums:` · `--check` · `--lint` (enum viết tay) · `--check-db` (ref_* + CHECK) · `--check-field-targets` |
-| reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, listing ngoài mọi phường NGHỈ (`ngoai_phuong`, không xoá), xoá area không phải phường OSM |
+| reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, listing ngoài mọi phường NGHỈ (`ngoai_phuong`, không xoá), xoá area không phải phường OSM — trừ xã danh bạ mang `admin_code` (PX1, 084), kể cả khi lạc |
+| nap-dvhc.mjs | PX1: nạp danh bạ 3.321 xã, phường, đặc khu của Cục Thống kê (`pipeline/data/dvhc`, băm ở `NGUON.json`; lệch → thoát 2) vào `areas` dưới 34 thị trường: khớp tên CÓ dấu, ưu tiên phường OSM, gắn `admin_code` mà giữ id/tên/ranh giới; xã thiếu chèn `meta.source='dvhc'`, `geom` rỗng; 10.033 xã cũ vào `area_aliases` (441 tách → «cần chọn xã»); chạy lại `doi=0`; `--thu` ROLLBACK; cần 084; xong chạy reassign-areas rồi 300 + 400 |
+| scripts/nap-dvhc-do.mjs | Thước PX1 AC-9 trên DB thử: tin có xã trước (area_id đang lưu) / sau (nạp + gán lại bằng hàm của transform) theo tỉnh, đối chứng code, đổi xã ngoài `doi-xa-khai-truoc.json` thì đỏ; `--doi-chung-hong`; ROLLBACK |
 | scripts/nap-lai-ba-luot.mjs | Thước PL14: ba lượt nạp S03→S05→S06→airbnb trong giao dịch ROLLBACK, ma trận quyết định/liên kết 7×2; `--doi-chung=039\|khong-chuyen` |
 | phat-bieu-cat-chuyen.mjs | PL15 bước chuyển: giá trị có sẵn của năm cột → phát biểu `legacy`, mở cổng phân xử; `--thu` ROLLBACK |
 | scripts/dung-lai-canonical.mjs | Thước PL15: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK (0 ô lệch); `--nguon-goc`; `--doi-chung=…` |
@@ -74,8 +76,11 @@ airdna_markets / airdna_scores / airdna_market_metrics
 - **City-parametric**: most scripts accept city as arg (`node transform-airbnb.mjs hcmc`)
 - **Staging → canonical**: raw data goes to stg_* tables first, then transforms to clean tables
 - **Point-in-polygon**: area của listing VN = phường OSM chứa tọa độ (ST_Covers). KHÔNG suy area từ title discovery
-  (title dùng tên quận cũ / tên tỉnh / tỉnh lân cận → area trùng, ngoài tỉnh — G0-b). Submarket VN chỉ là phường OSM
-  (`meta.source = 'osm-phuong'`); listing ngoài mọi phường nghỉ `ngoai_phuong` (rời view `listings`, đêm giữ nguyên; staging giữ nguyên).
+  (title dùng tên quận cũ / tên tỉnh / tỉnh lân cận → area trùng, ngoài tỉnh — G0-b). Point-in-polygon chỉ dùng phường OSM
+  (`phuongHopLe`, `meta.source = 'osm-phuong'`); listing ngoài mọi phường nghỉ `ngoai_phuong` (rời view `listings`, đêm giữ nguyên; staging giữ nguyên).
+- **Khớp tên khu vực (PX1)**: tin rao khớp tên trên `khuVucKhopTen` = phường OSM hoặc xã danh bạ (`admin_code`, 084);
+  S06 thêm bí danh xã cũ an toàn của `ward_name` (cuối cùng), S03 nhận tên cũ chỉ khi gọi đích danh; nhóm S03 chưa khai
+  thị trường vẫn chỉ đối chiếu thị trường có phường OSM. DB chưa áp 084 → mọi bộ đọc chạy như cũ (`coDanhBa`).
 - Sau MỌI transform VN (kể cả transform-hcmc-simple): `node reassign-areas.mjs` rồi 300 + 400.
 - **Idempotent**: scripts can run multiple times without duplicating data (ON CONFLICT)
 
