@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Trang Dòng chảy trên Ops thôi báo S06 «gắn căn» gần 100%: chỉ tin khớp đúng một căn trong danh bạ mới tính là gắn căn, và trang tách riêng Gom cụm, Định vị, Gắn căn; FRAMING và từ điển nói cùng một thang mới.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có ba mục từ điển Gắn căn, Định vị, Gom cụm; mục Căn nhà thôi gọi cụm S06 là căn."},
+    {"id": "AC-2", "p": "Sẽ viết lại thang bậc trong FRAMING đúng bản Mạnh duyệt: B2 Định vị, B3 Gắn căn, B4 Làm giàu."},
+    {"id": "AC-3", "p": "Sẽ đếm Gom cụm chỉ khi tin cùng cụm với tin khác; cụm một tin không tính."},
+    {"id": "AC-4", "p": "Sẽ để Định vị và Gắn căn bằng 0 cho tới khi có bộ gắn; toà, mã căn, số nhà trong chữ tin chỉ là «chờ khớp»."},
+    {"id": "AC-5", "p": "Sẽ thay cột Gắn căn của lưới chất lượng bằng ba cột Gom cụm · Định vị · Gắn căn, kèm số chờ khớp."},
+    {"id": "AC-6", "p": "Sẽ chia Tin rao trên Sankey theo mức sâu nhất và bỏ câu sai «Thiếu phường hoặc toạ độ»."},
+    {"id": "AC-8", "p": "Sẽ cho biểu đồ theo ngày và ngăn chi tiết tin nói cùng mức nhận diện."},
+    {"id": "AC-9", "p": "Sẽ đưa số mới lên trang Ops trên cloud; khối cloud cũ hiện «—», không hiện số cũ dưới nhãn mới."},
+    {"id": "AC-10", "p": "Sẽ trông gọn ở sáng, tối và màn hẹp."}
+  ],
+  "wont_do": [
+    {"id": "AC-7", "p": "Sẽ KHÔNG chấm nguồn nào «Kẹt» chỉ vì chưa có bộ gắn căn (theo Hỏi-1)."},
+    {"id": "OOS-1", "p": "KHÔNG đổi bậc chạy hằng ngày, nhãn B0–B5 trong DB và khối bậc ở ngăn tin — hàng riêng vì cần migration."},
+    {"id": "OOS-2", "p": "KHÔNG làm bộ gắn tin vào danh bạ — chuỗi gắn căn S03."},
+    {"id": "OOS-3", "p": "KHÔNG sửa khoá cụm, Stage B, cờ «0»/«1» của S06, trạng thái ngừng rao."},
+    {"id": "OOS-4", "p": "KHÔNG đọc dự án trên tin (chờ DS2)."}
+  ],
+  "scope_plain": "Bậc chạy hằng ngày tách thành hàng riêng; tới khi hàng đó xong, ngăn tin còn hiện «B2 · Gắn căn» cho tin S06.",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi mức — gom cụm, định vị, gắn căn, chờ khớp, chưa định vị — đều có ca đo (AC-3, AC-4, AC-6)."},
+    {"i": 1, "p": "Mỗi nguồn S03, S05, S06 có ca riêng; S01 hiện «—» (AC-3, AC-5)."},
+    {"i": 2, "p": "Mọi chỗ hiện thang — FRAMING, từ điển, lưới, Sankey, biểu đồ ngày, ngăn tin, cloud — có tiêu chí."},
+    {"i": 3, "p": "Ba cửa sổ thời gian và khối cloud cũ có ca đo (AC-3, AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "P0 — Gom cụm có tính tin đã nghỉ không là câu nghĩa sản phẩm: đưa lên thành Hỏi-2 (hôm nay hai cách cùng 14.806 tin)."},
+    {"i": 1, "p": "P0 — Lý do bỏ bước xem giao diện trước duyệt mượn từ hàng khác: đưa lên thành Hỏi-3."},
+    {"i": 2, "p": "P0 — Quét tay sót ca khối cloud cũ trên Sankey: đã thêm ca đo; giữ quét tay hay chạy skill là Hỏi-4."},
+    {"i": 3, "p": "P1 — Cloud thiếu cột mã căn nên cờ chờ khớp của vài tin lệch: đã khai ô lệch có chủ đích."},
+    {"i": 4, "p": "P1 — Tiêu chí giao diện đòi bốn nút trong khi nút 0 bị ẩn: đã sửa chữ tiêu chí."}
+  ]
+}

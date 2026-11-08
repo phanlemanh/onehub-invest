@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: gan-can-dinh-danh-duy-nhat
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [CONTEXT.md, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-1»: đọc CONTEXT.md thật, tách khối theo dòng in đậm `**<nhãn>**:`; ba khối «Gắn căn», «Định vị», «Gom cụm» nằm trong mục «## Tài sản & tin», mỗi khối có định nghĩa khác rỗng, dòng `- Code:`, dòng `- Slug URL:`, dòng `_Avoid_:`; định nghĩa «Gắn căn» chứa «danh bạ», «mã căn», «số nhà»; «Định vị» chứa «danh bạ» và «trục»; «Gom cụm» chứa «không phải một bậc»; khối «Căn nhà» không chứa «hiện là cụm tin S06»; khối «Dòng chảy dữ liệu» chứa «Gom cụm», «Định vị», «Gắn căn» và không chứa «Chưa gắn căn». Chiều đỏ cùng ca: bộ kiểm chạy trên bản sao chữ bỏ dòng `_Avoid_` của «Gom cụm» → lỗi ghim «GGC-AC-1 thiếu _Avoid_: Gom cụm»; bản sao định nghĩa «Gắn căn» thành «tin có dòng property_offers» → lỗi ghim «GGC-AC-1 định nghĩa Gắn căn thiếu: danh bạ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [docs/product/FRAMING.md, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-2»: đọc FRAMING.md thật; bảng dưới tiêu đề «### 3.4» có đúng sáu dòng bậc mà cột Bậc + Tên theo thứ tự là [B0 Có lời khai, B1 Tin, B2 Định vị, B3 Gắn căn, B4 Làm giàu, B5 Sống] (so trọn mảng viết trước); §3.4 chứa «Gắn căn = nhận diện duy nhất», «không phải một bậc», «Đổi thang 08/11 là lần hạ một lần», «nhà phố, đất có số nhà thật → B4»; dòng North star chứa «tách B2 «định vị» với B3–B5»; dòng Độ tươi chứa «ba quãng»; nhật ký có dòng mở đầu «| 2026-11-08 | §3.4 viết lại thang bậc»; toàn tệp không còn «Gắn căn (suy ra)», «B2 «Gắn căn»», «Chợ Tốt làm thước B3». Chiều đỏ: bộ kiểm trên bản sao giữ dòng B2 cũ «| **B2** | Gắn căn |» → lỗi ghim «GGC-AC-2 bảng bậc lệch ở B2»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [pipeline/sql/600_data_flow.sql, app/tests/gan-can-dinh-danh.test.tsx, app/tests/ops-dong-chay-fixture.ts]
+    expected: "exit 0; ca «GGC-AC-3»: lược đồ tạm (khuôn makeFlowSchema của ops-dong-chay-fixture, thêm properties, property_offers, cột block_raw, unit_number, street_number, street_raw, retired_at của bảng bản ghi tin) với ma trận viết trước, mỗi dòng một tin kèm kỳ vọng [cụm, chờ định vị, chờ định danh, mức sâu nhất]: S06 cụm 1 tin · S06 cụm 2 tin sống (hai tin) · S06 cụm 2 tin mà một tin nghỉ · S06 toà + mã «0» · S06 toà + mã «1205» · S06 số nhà «12» + đường + phường · S06 số nhà «1» + đường + phường · S06 số nhà + đường, khu là thị trường · S03 toà · S03 trục «LD2xx13» không toà · S03 toà + mã «H2.1129» · S05 không gì; tin rải ở ba mốc first_seen (hôm nay, 20 ngày trước, 60 ngày trước). Chạy 600_data_flow.sql THẬT (flowSql) với oneinvest.flow_now ghim; với mỗi cửa sổ 7d/30d/all và mỗi nguồn, {offers, clustered, located, unitLinked, locatedPending, uniqueIdPending, deepest.unitLinked, deepest.located, deepest.clustered} RÚT TỪ ma trận (lọc theo cửa sổ, luật cụm theo câu trả lời Hỏi-2, mặc định chỉ tin sống) so trọn với facts.sources; tin cụm một tin và tin còn sống của cụm có tin nghỉ không vào clustered; facts.sources[*], facts.days[*] không có khoá `linked`. Chiều đỏ cùng fixture: bản đột biến 600 đếm clustered = mọi tin có dòng property_offers → ca đỏ ghim «GGC-AC-3 cụm một tin tính là gom cụm»; bản đột biến đếm locatedPending chỉ theo block_raw → «GGC-AC-3 S03 7d locatedPending»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [pipeline/sql/600_data_flow.sql, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-4» trên fixture E3: located = 0 và unitLinked = 0 ở mọi nguồn × mọi cửa sổ và ở mọi phần tử facts.days; đối chứng dương cùng ca: locatedPending của S03 all > 0 và uniqueIdPending của S06 all > 0 (có chữ toà và định danh mà vẫn không vào hai cột danh bạ). Chiều đỏ: bản đột biến 600 đếm unit_linked = unique_id_pending → ca đỏ ghim «GGC-AC-4 chữ trên tin tính là gắn căn»; đếm located = located_pending → «GGC-AC-4 chữ trên tin tính là định vị»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [app/src/components/ops/data-flow/quality-grid.tsx, app/src/components/ops/data-flow/quality-rows.ts, app/src/lib/data-flow-queries.ts, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-5»: QualityGrid THẬT render trong jsdom với DataFlow dựng từ facts của fixture E3 (cửa sổ all); tiêu đề cột theo thứ tự DOM có dãy con liền nhau «Có phường», «Gom cụm», «Định vị», «Gắn căn» và đúng một tiêu đề «Gắn căn»; ô ba cột của hàng S06 và S03 hiện đúng số và phần trăm tính từ bảng kỳ vọng E3 (fmtInt, fmtPct trên Tin rao của hàng); ô Định vị hàng S03 có dòng phụ «<locatedPending> chờ khớp», ô Gắn căn hàng S06 có «<uniqueIdPending> chờ khớp»; hàng nhóm thu và hàng S01 hiện «—» ở ba cột. Chiều đỏ: hàng S06 dựng với clustered lấy nhầm từ locatedPending → ca đỏ «GGC-AC-5 S06 Gom cụm»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [app/src/components/ops/data-flow/flow-sankey-data.ts, app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/flow-journey.tsx, app/src/components/ops/data-flow/stage-face.tsx, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-6»: buildFlow THẬT trên ma trận viết trước bốn mẫu (mọi mức có số · chỉ cụm · chỉ chờ khớp · trống) → tập id nút đúng bảng, tổng amount các nút con của «offers» = offers (bảo toàn), headers của cột cuối title «Gắn căn», value = fmtPct(unitLinked/offers); hint nút «Chưa định vị» chứa fmtInt(locatedPending) và fmtInt(uniqueIdPending); quét chuỗi mọi hint, note của mọi mẫu và chữ DOM của FlowSankey, FlowJourney render jsdom: không chứa «Thiếu phường hoặc toạ độ». Chiều đỏ: buildFlow đột biến tính «Chưa định vị» = offers − deepest.located (bỏ gom cụm) → ca đỏ «GGC-AC-6 không bảo toàn: <mẫu>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [app/src/components/ops/data-flow/quality-rows.ts, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-7» (theo câu trả lời Hỏi-1, mặc định bỏ kiểm gắn căn): healthOf THẬT trên ma trận viết trước — đọc/lõi/phường khoẻ, Gắn căn 0 → «Khoẻ»; đọc 20% → «Kẹt · đọc»; phường 40% → «Kẹt · phường»; lõi 70% → «Theo dõi · trường lõi»; tên kiểm của NUT_THAT_CHECKS đúng bằng [đọc, trường lõi, phường]. Chiều đỏ: bộ luật truyền vào healthOf có thêm kiểm gắn căn ngưỡng 0,5 → hàng Gắn căn 0 ra «Kẹt · gắn căn», ca phụ đảo kỳ vọng xác nhận đỏ ghim «GGC-AC-7 kẹt vì gắn căn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ggc_app
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/src/components/ops/data-flow/stage-trend-chart.tsx, app/src/components/ops/data-flow/record-sheet.tsx, app/src/lib/data-flow-queries.ts, app/tests/gan-can-dinh-danh.test.tsx]
+    expected: "exit 0; ca «GGC-AC-8»: dailySeries THẬT trên days của fixture E3 → mỗi điểm có khoá unitLinked = 0, không còn khoá linked; câu đọc bản ghi tin THẬT (getDataFlow trên lược đồ máy thu, và chế độ cloud trên lược đồ máy chủ KHÔNG có cột unit_number, street_number) trả `identification` mỗi tin; ở máy thu so trọn với mức sâu nhất + cờ chờ khớp của ma trận E3 theo offer_id; ở máy chủ so trọn với bảng kỳ vọng riêng viết trước, trong đó tin «S03 trục LD2xx13 không toà» và tin số nhà là ô lệch có chủ đích (cloud không có cột mã căn, số nhà nên cờ chờ khớp của chúng là false) — mọi ô khác bằng máy thu; RecordSheet THẬT render jsdom có dòng «Mức nhận diện» với nhãn của mức và không còn dòng «Căn» Đã gắn/Chưa gắn. Chiều đỏ: câu bản ghi đột biến đọc `o.unit_number` trực tiếp → lược đồ máy chủ lỗi 42703, ca đỏ ghim «GGC-AC-8 máy chủ không có unit_number»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.ggc_app
+    paths: [pipeline/sql/600_data_flow.sql, app/src/lib/data-flow-queries.ts, app/src/components/ops/data-flow/quality-rows.ts, app/src/components/ops/data-flow/flow-sankey-data.ts, app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/gan-can-dinh-danh.test.tsx, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca «GGC-AC-9»: fixture E3 làm tươi ở lược đồ máy thu, captureOpsFacts THẬT dựng bản tin, POST qua handler ingest THẬT vào lược đồ máy chủ, getDataFlow chế độ cloud → sources[*].{clustered, located, unitLinked, locatedPending, uniqueIdPending, deepest} bằng đúng facts máy thu. Ca phụ khối cloud đời trước (facts có `linked`, không có sáu khoá mới): sourceRows trả null ở ba cột và lưới jsdom hiện «—» kèm dòng «Số mức nhận diện có ở lượt làm tươi kế»; buildFlow không sinh nút mức nhận diện nào có số, tiêu đề cột cuối giá trị «—», không chuỗi «NaN» trong nút, hint, tiêu đề; dailySeries cho unitLinked = 0 không NaN; không ô nào mang giá trị `linked` cũ. Danh sách khoá đóng của DC-AC-5 trong dong-chay-cloud.test.tsx cập nhật theo khoá mới và vẫn xanh. Chiều đỏ: bộ đọc đột biến rơi về `linked` khi thiếu `clustered` → ca đỏ «GGC-AC-9 số cũ dưới nhãn mới»; buildFlow đột biến coi deepest vắng là 0 → nút «Chưa định vị» = offers, ca đỏ «GGC-AC-9 Sankey khối cũ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/data-flow/quality-grid.tsx, app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/flow-sankey-data.ts, app/src/components/ops/data-flow/flow-journey.tsx, app/src/components/ops/data-flow/stage-face.tsx, app/src/components/ops/data-flow/record-sheet.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy N1 (cấu hình trong .claude/launch.json của worktree; cổng đọc từ preview_list), DB local đã làm tươi bằng 600_data_flow.sql của nhánh; đăng nhập tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json, không in); không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "1280 px sáng: /ops/data-flow?window=all → ảnh cả Sankey evidence/E10-step1.png; ghi tên các nút cột cuối, tiêu đề cột cuối và chữ gợi ý của nút «Chưa định vị» (rê chuột)"
+      - "1280 px sáng: cuộn tới lưới «Chất lượng từng chặng» → evidence/E10-step2.png; ghi thứ tự tiêu đề cột và ô ba cột của hàng S03, S06"
+      - "1280 px tối: cùng trang → evidence/E10-step3.png"
+      - "390 px sáng: cùng trang, cuộn qua Sankey và lưới → evidence/E10-step4.png; ghi có cuộn ngang toàn trang không (document.scrollingElement.scrollWidth so innerWidth)"
+      - "Mở ngăn chi tiết một tin S03 có toà ở bảng «Tin mới nhất» → evidence/E10-step5.png; ghi dòng «Mức nhận diện»"
+    expected: "Cột cuối Sankey có các nút mức nhận diện có số (Gắn căn và Định vị vắng khi 0; có «Gom cụm» và «Chưa định vị»), tiêu đề cột «Gắn căn» 0,0%, gợi ý «Chưa định vị» nêu số tin ghi toà/trục và số tin đủ định danh chờ khớp; lưới có ba cột Gom cụm · Định vị · Gắn căn ngay sau «Có phường», ô Định vị S03 có dòng phụ «chờ khớp»; chữ không đè nhau ở sáng và tối, hai nút màu phân biệt được ở cả hai; 390 px không cuộn ngang toàn trang; ngăn tin S03 có toà hiện «Mức nhận diện» kèm «ghi toà/trục, chờ khớp»."
+    evidence_required: [run_id, verdict, screenshot, observed]
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.ggc_gate
+    paths: [app/src/components/ops/data-flow/quality-grid.tsx, app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/record-sheet.tsx, app/src/components/ops/data-flow/stage-face.tsx]
+    expected: "exit 0 trên bốn tệp giao diện của vòng (a11y/slop P0 sạch). Chiều đỏ: thước có sẵn của kit (design-gate tự có ca đỏ); vòng không viết thước mới."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
