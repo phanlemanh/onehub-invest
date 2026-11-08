@@ -9,7 +9,8 @@
 // doi-xa-khai-truoc.json: mảng mã tin, hoặc luật {"luat":"v3-xa-moi"} — tin S06 có trường phường chuẩn 2025
 //   (ward_name_v3) trỏ đúng một xã vừa chèn từ danh bạ, trước đó bị khớp chữ vào xã khác vì xã ấy chưa có trong areas.
 //   --doi-chung-hong   đặt tập nhóm S03 chưa khai = mọi tỉnh có xã (chiều đỏ của thước, phải thoát 1)
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 import pg from "pg";
@@ -35,7 +36,7 @@ const normS06 = (s) => (s ?? "").normalize("NFC").toLowerCase().replace(/^(phư�
 const veKhoaNhom = (p) => (p.conversation_id == null ? p : { ...p, conversation_id: khoaNhomThat(p.conversation_id) });
 
 /** Bối cảnh gán của cả hai transform, đọc bằng chính bộ đọc của transform. */
-async function dungBoiCanh(c, { hong = false } = {}) {
+export async function dungBoiCanh(c, { hong = false } = {}) {
   const coXa = await docThiTruongCoXa(c);
   const areas = await docPhuongHopLe(c, coXa);
   const biDanhCua = await docBiDanhAnToan(c, coXa);
@@ -56,15 +57,47 @@ async function dungBoiCanh(c, { hong = false } = {}) {
   return { byCity, slugLists, biDanhCua, moiThiTruong, entries, maCoThat };
 }
 
-function ganS06(ad, bc) {
+export function ganS06(ad, bc) {
   const mk = thiTruongCua(ad.city_code, bc.maCoThat);
   return ganPhuongS06(ad, { mk, wardMap: bc.byCity.get(mk), biDanh: bc.biDanhCua.get(mk), slugList: bc.slugLists.get(mk) });
 }
 
-function ganS03(p, khai, bc) {
+export function ganS03(p, khai, bc) {
   const { ph, cach } = ganPhuongS03(p.text, khai, bc);
   const kv = ganKhuVuc({ khai, ph, maCoThat: bc.maCoThat });
   return { areaId: kv.areaId, cach: ph ? (cach === "bi-danh" ? "bi-danh" : "ten") : null };
+}
+
+/** Tin nối được giữa stg và sale_offer_records đang sống: S06 theo list_id, S03 tin một bài theo post_ids. */
+export async function docTinNoi(c) {
+    const { rows: ads } = await c.query(
+      `SELECT list_id, city_code, ward_name_v3, ward_name, subject, area_name FROM stg_chotot_ads WHERE price > 0 AND size_m2 > 0`,
+    );
+    const { rows: luu } = await c.query(`SELECT offer_id, area_id, post_ids FROM sale_offer_records WHERE retired_at IS NULL`);
+    const luuTheoOffer = new Map(luu.map((r) => [r.offer_id, r.area_id]));
+    const offerTheoBai = new Map();
+    for (const r of luu) if (Array.isArray(r.post_ids) && r.post_ids.length === 1) offerTheoBai.set(String(r.post_ids[0]), r);
+    const s06 = ads.map((ad) => ({ ad, offer: mintOfferId("S06", String(ad.list_id)) })).filter((x) => luuTheoOffer.has(x.offer));
+    const { posts } = await loadStgPosts(c, "zalo");
+    const s03 = posts.map(veKhoaNhom).map((p) => ({ p, o: offerTheoBai.get(String(p.post_id)) })).filter((x) => x.o);
+    const thiTruongNhom = await docThiTruongNhom(c, khoaNhomThat);
+
+  return { ads, s06, posts, s03, thiTruongNhom, luuTheoOffer };
+}
+
+/** Đối chứng code: hàm gán mới phải ra đúng area_id đang lưu (S06 ghi COALESCE(mới, cũ)). */
+export function doiChung(tin, bc) {
+  const lech = [];
+  for (const { ad, offer } of tin.s06) {
+    const g = ganS06(ad, bc);
+    const hieuLuc = g.areaId ?? tin.luuTheoOffer.get(offer);
+    if (hieuLuc !== tin.luuTheoOffer.get(offer)) lech.push(`S06 ${offer}: lưu ${tin.luuTheoOffer.get(offer)} · mới ${hieuLuc}`);
+  }
+  for (const { p, o } of tin.s03) {
+    const g = ganS03(p, tin.thiTruongNhom.get(p.conversation_id), bc);
+    if (g.areaId !== o.area_id) lech.push(`S03 ${o.offer_id}: lưu ${o.area_id} · mới ${g.areaId}`);
+  }
+  return lech;
 }
 
 async function main() {
@@ -79,31 +112,11 @@ async function main() {
     const { rows: [dem0] } = await c.query(`SELECT (SELECT count(*) FROM areas)::int AS a`);
     console.log(`trước: areas ${dem0.a}`);
 
-    // ---- Tin nối được với stg ----
-    const { rows: ads } = await c.query(
-      `SELECT list_id, city_code, ward_name_v3, ward_name, subject, area_name FROM stg_chotot_ads WHERE price > 0 AND size_m2 > 0`,
-    );
-    const { rows: luu } = await c.query(`SELECT offer_id, area_id, post_ids FROM sale_offer_records WHERE retired_at IS NULL`);
-    const luuTheoOffer = new Map(luu.map((r) => [r.offer_id, r.area_id]));
-    const offerTheoBai = new Map();
-    for (const r of luu) if (Array.isArray(r.post_ids) && r.post_ids.length === 1) offerTheoBai.set(String(r.post_ids[0]), r);
-    const s06 = ads.map((ad) => ({ ad, offer: mintOfferId("S06", String(ad.list_id)) })).filter((x) => luuTheoOffer.has(x.offer));
-    const { posts } = await loadStgPosts(c, "zalo");
-    const s03 = posts.map(veKhoaNhom).map((p) => ({ p, o: offerTheoBai.get(String(p.post_id)) })).filter((x) => x.o);
-    const thiTruongNhom = await docThiTruongNhom(c, khoaNhomThat);
+    const { ads, s06, posts, s03, thiTruongNhom, luuTheoOffer } = await docTinNoi(c);
 
     // ---- Đối chứng code: hàm mới trên DB chưa nạp = area_id đang lưu ----
     const bcTruoc = await dungBoiCanh(c);
-    const lech = [];
-    for (const { ad, offer } of s06) {
-      const g = ganS06(ad, bcTruoc);
-      const hieuLuc = g.areaId ?? luuTheoOffer.get(offer); // S06 ghi COALESCE(mới, cũ)
-      if (hieuLuc !== luuTheoOffer.get(offer)) lech.push(`S06 ${offer}: lưu ${luuTheoOffer.get(offer)} · mới ${hieuLuc}`);
-    }
-    for (const { p, o } of s03) {
-      const g = ganS03(p, thiTruongNhom.get(p.conversation_id), bcTruoc);
-      if (g.areaId !== o.area_id) lech.push(`S03 ${o.offer_id}: lưu ${o.area_id} · mới ${g.areaId}`);
-    }
+    const lech = doiChung({ s06, s03, thiTruongNhom, luuTheoOffer }, bcTruoc);
     console.log(`tin nối được: S06 ${s06.length}/${ads.length} · S03 ${s03.length} bài một-bài/${posts.length} bài`);
     console.log(`đối chứng code: lệch ${lech.length}`);
     for (const l of lech.slice(0, 10)) console.log(`  · ${l}`);
@@ -175,4 +188,4 @@ async function main() {
   console.log("PX1-AC-9 xanh");
 }
 
-await main();
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
