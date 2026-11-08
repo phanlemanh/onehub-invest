@@ -49,10 +49,54 @@ async function withTx(t, fn) {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     await c.query(MIG_084);
+    await veTruocNap(c);
     await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
     await c.end();
+  }
+}
+
+// 11 khu airbnb-discovery của Hà Nội mà Given của AC-3 nêu (7 tên quận cũ, 4 tên phường cũ), chép từ DB máy thu trước
+// lượt áp 08/11. Lượt reassign sau nạp xoá chúng (không còn tham chiếu, OOS-3), nên bản chép DB thử sau ngày đó thiếu.
+const AIRBNB_KHU = [
+  ["vn-hanoi-quan-thanh-xuan", "Quận Thanh Xuân"], ["vn-hanoi-quan-hai-ba-trung", "Quận Hai Bà Trưng"],
+  ["vn-hanoi-quan-hoan-kiem", "Quận Hoàn Kiếm"], ["vn-hanoi-quan-cau-giay", "Quận Cầu Giấy"],
+  ["vn-hanoi-quan-hoang-mai", "Quận Hoàng Mai"], ["vn-hanoi-quan-dong-da", "Quận Đống Đa"],
+  ["vn-hanoi-quan-tay-ho", "Quận Tây Hồ"], ["vn-hanoi-bac-tu-liem", "Bắc Từ Liêm"], ["vn-hanoi-hang-trong", "Hàng Trống"],
+  ["vn-hanoi-ngoc-lam", "Ngọc Lâm"], ["vn-hanoi-xuan-la", "Xuân La"],
+];
+
+/**
+ * DB đã nạp danh bạ (máy thu từ 08/11) → đưa về trạng thái trước nạp NGAY trong giao dịch của ca, để mọi ca đo đúng lượt
+ * nạp đầu mà tiêu chí mô tả: gỡ bí danh, gỡ mã, bỏ xã chèn từ danh bạ (chỗ trỏ tới chúng: cột cho NULL thì về NULL, cột
+ * bắt buộc thì bỏ dòng), dựng lại 11 khu airbnb-discovery. DB chưa nạp → không làm gì.
+ */
+async function veTruocNap(c) {
+  const { rows: [r] } = await c.query(`SELECT count(*)::int AS n FROM areas WHERE admin_code IS NOT NULL`);
+  if (r.n > 0) {
+    await c.query(`DELETE FROM area_aliases`);
+    const { rows: fk } = await c.query(
+      `SELECT k.conrelid::regclass::text AS bang, a.attname AS cot, a.attnotnull AS bat_buoc
+       FROM pg_constraint k JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1]
+       WHERE k.contype = 'f' AND k.confrelid = 'public.areas'::regclass AND cardinality(k.conkey) = 1
+         AND k.conrelid <> 'public.areas'::regclass`,
+    );
+    const dvhc = `SELECT id FROM areas WHERE meta->>'source' = 'dvhc'`;
+    for (const f of fk) {
+      await c.query(f.bat_buoc
+        ? `DELETE FROM ${f.bang} WHERE ${f.cot} IN (${dvhc})`
+        : `UPDATE ${f.bang} SET ${f.cot} = NULL WHERE ${f.cot} IN (${dvhc})`);
+    }
+    await c.query(`DELETE FROM areas WHERE meta->>'source' = 'dvhc'`);
+    await c.query(`UPDATE areas SET admin_code = NULL WHERE admin_code IS NOT NULL`);
+  }
+  for (const [id, name] of AIRBNB_KHU) {
+    await c.query(
+      `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
+       VALUES ($1, 'vn-hanoi', 'submarket', $2, 'vn', '{"source":"airbnb-discovery"}') ON CONFLICT (id) DO NOTHING`,
+      [id, name],
+    );
   }
 }
 
@@ -132,11 +176,7 @@ test("PX1-AC-2 chiều đỏ: thiếu thị trường, tên thị trường lệ
   assert.equal(r.n, 0);
 }));
 
-const AIRBNB_11 = [
-  "vn-hanoi-quan-thanh-xuan", "vn-hanoi-quan-hai-ba-trung", "vn-hanoi-quan-hoan-kiem", "vn-hanoi-quan-cau-giay",
-  "vn-hanoi-quan-hoang-mai", "vn-hanoi-quan-dong-da", "vn-hanoi-quan-tay-ho",
-  "vn-hanoi-bac-tu-liem", "vn-hanoi-hang-trong", "vn-hanoi-ngoc-lam", "vn-hanoi-xuan-la",
-];
+const AIRBNB_11 = AIRBNB_KHU.map(([id]) => id);
 
 test("PX1-AC-3 giữ id cũ, gắn mã phường OSM, chèn xã thiếu đúng khuôn", (t) => withTx(t, async (c) => {
   const chup = `SELECT id, name, md5(coalesce(geom::text, '')) AS g, meta->>'source' AS s FROM areas WHERE region_type = 'submarket' ORDER BY id`;
