@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>155 việc"]
+  GB --> DG["Đã giao<br/>156 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>104 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -194,6 +194,7 @@ flowchart TD
 - Đo hiệu quả hằng ngày — mẫu soát cuốn chiếu 20 bài, tỉ lệ giữ nháp theo cách đọc × ô, ước bỏ sót, tín hiệu không cần nhãn, dòng chuyển bậc; lát phường/xã, dự án, toà; xem trên /ops/quality (`do-hieu-qua-hang-ngay`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
+- Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
 - Bộ test design-floor dọn mọi thư mục tạm nó tạo (clone sau-gộp, bản chép, cap-config, reuse-plan) khi tiến trình thoát, để mỗi lượt chạy không bỏ lại rác trong TMPDIR (`don-clone-tam-design-floor`)
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
