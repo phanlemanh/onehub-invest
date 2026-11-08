@@ -1,0 +1,39 @@
+{
+  "feature_plain": "Mỗi ngày anh thấy, theo từng đường làm giàu, máy thêm, đổi, tự rút bao nhiêu giá trị và người sửa hay rút bao nhiêu; mỗi tuần máy giấu giá trị đã biết rồi cho đường ấy suy lại để biết đúng bao nhiêu phần trăm — xem trên /ops/quality, theo thị trường, phường/xã, dự án, toà.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghi mỗi ngày một dòng số cho từng đường trong bốn đường; đường chưa ghi gì lên tin (diện tích suy ra, danh mục CĐT hôm nay) hiện «Chưa chạy», không hiện số 0."},
+    {"id": "AC-2", "p": "Sẽ đếm giá trị thêm, đổi và máy tự rút trong ngày bằng ảnh chụp lần chạy trước; chạy lại mỗi 15 phút không đếm hai lần; lần đầu chỉ lập mốc."},
+    {"id": "AC-3", "p": "Sẽ đếm người rút (thay tay, hoàn tác) và người sửa (nhãn người khác giá trị máy); số qua người đăng chưa có lối rút tay nên hiện «không có đường người rút»."},
+    {"id": "AC-6", "p": "Sẽ chia mọi số theo thị trường, phường/xã, dự án, toà, có hai ô chưa gắn tách nhau và tổng các ô luôn bằng tổng chung."},
+    {"id": "AC-7", "p": "Sẽ thêm khối «Làm giàu» dưới «Đo hằng ngày» trên /ops/quality: hôm nay, 7 ngày, kiểm ngược tuần này so tuần trước, chọn lát, đủ trạng thái tải, trống, lỗi kèm Thử lại."},
+    {"id": "AC-9", "p": "Sẽ chạy bước đo trong chạy đêm mỗi 15 phút ngay sau bước đo DO1; bước đo hỏng thì job báo lỗi rõ tên bước."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Sẽ KHÔNG dùng bằng chứng của chính tin để chấm nó: kiểm ngược số qua người đăng giấu cả tin, bài và tin cùng bài rồi suy lại, không gọi model; lượt lỗi không làm mất tuần."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG tính bài đang chấm vào lá phiếu của nhóm: kiểm ngược loại hình theo nhóm bỏ bài ra rồi suy lại, so với loại hình ghi trong chữ bài."},
+    {"id": "AC-8", "p": "Chặn số điện thoại, tên người đăng, chữ bài, mã người gắn nhãn, tên nguồn thật khỏi số đo; bảng ảnh chụp không lên cloud."},
+    {"id": "OOS-1", "p": "Không ghi giá trị mới cho diện tích suy ra, quy ước nhóm có phiên bản, liên kết tin → toà — các hàng GC2, GCQ1, PL20 thêm vào sổ đường khi bắt đầu ghi."},
+    {"id": "OOS-2", "p": "Không dựng lối duyệt hay rút tay số qua người đăng."},
+    {"id": "OOS-3", "p": "Không kiểm ngược danh mục CĐT ở mức toà (theo Hỏi-1)."},
+    {"id": "OOS-4", "p": "Không chấm đạt/đỏ theo đích — báo cáo ngày làm việc đó."},
+    {"id": "OOS-5", "p": "Không đo độ phủ, chi phí hay gắn căn — đã có hàng riêng."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không gian tiêu chí quét theo bảy trục dưới đây; mỗi trục chỉ ra tiêu chí phủ nó."},
+    {"i": 3, "p": "Đường: hai đường đang ghi có số và kiểm ngược (AC-1, AC-4, AC-5); hai đường chưa ghi hiện «Chưa chạy»."},
+    {"i": 4, "p": "Thay đổi: thêm, đổi, máy rút, người sửa, người rút, không đổi, lập mốc — mỗi loại có ca thử (AC-2, AC-3)."},
+    {"i": 5, "p": "Kiểm ngược: đúng, sai, không ra, so tuần trước, đường chưa có hàm kiểm, lượt sau trong tuần (AC-4, AC-5)."},
+    {"i": 6, "p": "Nhịp: lượt 15 phút, lượt trong tuần, lần đầu (AC-1, AC-2, AC-4, AC-9)."},
+    {"i": 7, "p": "Lát: tổng, thị trường, phường/xã, dự án, toà và hai ô chưa gắn (AC-6)."},
+    {"i": 8, "p": "Mặt: pipeline ghi, trang Ops ở máy thu và cloud, bước đêm (AC-7, AC-9)."},
+    {"i": 9, "p": "Rò rỉ: số điện thoại, người đăng, chữ bài, mã người gắn nhãn, tên nguồn thật, bảng ảnh chụp (AC-8)."},
+    {"i": 10, "p": "Kiểm ngược bỏ-một-ra là cách chuẩn của ngành để đo một luật suy. Riêng trang cloud chưa chụp ở vòng này — chỉ chứng bằng bảng số đã nằm trong đường đồng bộ."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Hai lựa chọn máy ghi «có căn cứ» nhưng câu trích không thật sự quyết: đã đổi một dòng sang căn cứ «chỉ một lối sống», và tách cách định nghĩa tập kiểm ngược thành câu hỏi cho anh (Hỏi-2)."},
+    {"i": 1, "p": "Kiểm ngược số có thể rò: bỏ tin mà vẫn đọc số trong chữ bài của chính nó. Đã ghim việc giấu cả bài và tin cùng bài, có ca đỏ riêng, và bỏ ca hoà trong ma trận."},
+    {"i": 2, "p": "Ca thử dựng giá trị bằng tay có thể lệch khuôn bên ghi thật: đã chuyển sang ghi bằng đúng hàm ghi, thêm một ca chỉ đọc DB máy thu thấy cả hai đường có số."},
+    {"i": 3, "p": "Lượt đầu tuần lỗi có thể làm mất trọn tuần kiểm ngược: đã đổi thành «tuần chưa có dòng thì lượt kế chạy», có ca lỗi tiêm."},
+    {"i": 4, "p": "Chưa có luật đỏ xác định và một lần người rút bị đếm hai lần: đỏ nay chỉ khi bộ tự soát lệch, người rút không vào máy rút, có ca thử."}
+  ]
+}
