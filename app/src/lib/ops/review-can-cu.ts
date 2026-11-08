@@ -227,8 +227,22 @@ function soTang(a: string | number | null, b: string | number | null): So {
   return ka === kb ? "khop" : "lech";
 }
 
+/**
+ * So trên số đã làm tròn như ô hiện (OD1 · ĐC2, P1-2): hai ô cùng «72tr/m²» thì Khớp — người duyệt thấy hai số bằng nhau
+ * mà nhãn nói Lệch là mất niềm tin vào cột So. Định dạng là `fmtGia`/`fmtGiaM2` — đúng hàm bảng so dùng để hiện.
+ */
+const soTheoHien = (fmt: (v: number | null) => string) => (a: string | number | null, b: string | number | null): So => {
+  if (trong(a) || trong(b)) return "thieu";
+  const na = Number(a);
+  const nb = Number(b);
+  if (!Number.isFinite(na) || !Number.isFinite(nb)) return soGiaTri(a, b);
+  return fmt(na) === fmt(nb) ? "khop" : "lech";
+};
+
 /** Hàng có khoá riêng; hàng còn lại so bằng `soGiaTri`. */
 const SO_RIENG: Partial<Record<keyof BenGhepCan, (a: string | number | null, b: string | number | null) => So>> = {
+  price_vnd: soTheoHien((v) => fmtGia(v)),
+  price_perm2: soTheoHien((v) => fmtGiaM2(v)),
   phuong: soPhuong,
   street: soDuong,
   block: soToa,

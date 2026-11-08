@@ -20,11 +20,9 @@ export type NguoiEvidence = {
   tin_mau?: { offer_id: string; gia: number | null; dien_tich: number | null; ngay: string | null }[];
 };
 
-export const NGUOI_DONE_LABEL: Record<string, string> = { approved: "Đã gộp", rejected: "Giữ tách", deferred: "Hoãn" };
-
 /** Thẻ «Gộp Người?»: một nhóm tài khoản–SĐT không nối một–một; người duyệt quyết cả nhóm. */
 export function NguoiCard({ item, render }: { item: ReviewItem; render: (parts: ReviewCardParts) => ReactNode }) {
-  const d = useDecide(item.id);
+  const d = useDecide(item);
   const ev = (item.evidence ?? {}) as NguoiEvidence;
   const taiKhoan = ev.tai_khoan ?? [];
   const sdt = ev.sdt ?? [];
@@ -115,7 +113,7 @@ export function NguoiCard({ item, render }: { item: ReviewItem; render: (parts: 
       </Button>
     </PendingActions>
   ) : (
-    <DoneState item={item} labels={NGUOI_DONE_LABEL} />
+    <DoneState item={item} />
   );
   return render({ body, actions });
 }

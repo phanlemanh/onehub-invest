@@ -47,8 +47,8 @@ export function ReviewDetailSheet({ item, media, context, onOpenChange }: {
                     #{item.id} · {fmtVnDateTime(item.created_at)}
                   </SheetDescription>
                   <div className="flex flex-wrap items-center gap-2">
-                    <ReviewTypeBadge type={item.item_type} />
-                    <ReviewStatusBadge status={item.status} />
+                    <ReviewTypeBadge item={item} />
+                    <ReviewStatusBadge item={item} />
                   </div>
                 </SheetHeader>
                 <ScrollArea className="min-h-0 flex-1">

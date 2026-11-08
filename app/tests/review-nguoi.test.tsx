@@ -5,6 +5,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { JSDOM } from "jsdom";
+/** OD1 · ĐC6: mọi lần quyết gửi thêm `elapsed_ms` (khoảng mở thẻ, số nguyên ≥ 0). Tách ra để phép so body cũ giữ nguyên nghĩa. */
+const tachElapsed = (b: unknown) => {
+  if (!b || typeof b !== "object" || !("status" in b)) return b;
+  const { elapsed_ms, ...rest } = b as Record<string, unknown>;
+  if (!(typeof elapsed_ms === "number" && Number.isInteger(elapsed_ms) && elapsed_ms >= 0)) throw new Error(`OD1: body quyết định thiếu elapsed_ms hợp lệ: ${JSON.stringify(b)}`);
+  return rest;
+};
+
 
 const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3456/ops/review" });
 Object.assign(globalThis, {
@@ -27,7 +35,7 @@ async function render(item: Record<string, unknown>, tra: { ok: boolean; error?:
 
   const sent: Sent[] = [];
   globalThis.fetch = (async (url: string, init?: RequestInit) => {
-    sent.push({ url, body: JSON.parse(String(init?.body ?? "null")) });
+    sent.push({ url, body: tachElapsed(JSON.parse(String(init?.body ?? "null"))) });
     return { ok: tra.ok, json: async () => (tra.ok ? { ok: true } : { error: tra.error }) };
   }) as unknown as typeof fetch;
   const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
@@ -132,7 +140,7 @@ test("TN-AC-8 chiều đỏ: bản đột biến nút Giữ tách gửi approved
     const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
     const sent: unknown[] = [];
     globalThis.fetch = (async (_u: string, init?: RequestInit) => {
-      sent.push(JSON.parse(String(init?.body)));
+      sent.push(tachElapsed(JSON.parse(String(init?.body))));
       return { ok: true, json: async () => ({}) };
     }) as unknown as typeof fetch;
     document.body.innerHTML = "<div id=root></div>";

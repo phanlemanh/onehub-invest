@@ -5,12 +5,13 @@
  * Q9 (classification-enrich-review §7, Mạnh duyệt 26/10): thẻ duyệt không hiện độ tự tin. `ai_confidence`
  * vẫn nằm trong DB để hiệu chỉnh nhưng KHÔNG đi vào `ReviewItem` — số không tới được trình duyệt.
  */
+import { answerLabel, reviewKind, type CategoryInput, type ReviewKind } from "./review-hang-muc";
 
 /** Dòng `review_queue` như truy vấn của trang đọc ra. */
 export type ReviewQueueRow = {
   id: number;
   item_type: string;
-  /** Mã thẻ (`nguoi:<S0x>:<băm>` ở thẻ Người HD17); truy vấn cũ không chọn thì vắng. */
+  /** Khoá dòng nguồn của thẻ (`nguoi:<S0x>:<băm>` ở thẻ Người HD17, `pair:<A>|<B>` ở thẻ Ghép căn); truy vấn cũ không chọn thì vắng. */
   item_id?: string | null;
   title: string;
   evidence: Record<string, unknown>;
@@ -63,15 +64,48 @@ export function stripEvidenceConfidence(evidence: Record<string, unknown>): Reco
   };
 }
 
-/** Dòng DB → thẻ cho client. `evidence` truyền vào đã gọt ảnh (`stripEvidenceImages`); ở đây gọt thêm độ tự tin. */
+/** Vế điểm trong tiêu đề («(score 0.93)», «score 0.5») — judge-run ghi vào cột title; không tới trình duyệt (Q9, RV-L04). */
+const TITLE_SCORE = /\s*\(?\s*score\s*[:=]?\s*\d+(?:[.,]\d+)?\s*\)?/giu;
+
+const soDt = (v: unknown): string | null => {
+  const n = typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN;
+  return Number.isFinite(n) && n > 0 ? String(Math.round(n * 10) / 10).replace(".", ",") : null;
+};
+const chu = (v: unknown): string | null => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+
+/**
+ * Tiêu đề hiện cho người duyệt (OD1 · ĐC2, P1-1): thẻ Ghép căn dựng lại từ `evidence` — «Cùng căn? <phường> · 80 m² và 84 m²»,
+ * phường lấy tên có dấu của Tin B rồi tới Tin A; thiếu dữ liệu thì giữ tiêu đề gốc. Mọi tiêu đề gọt vế «score <số>».
+ * Cột `title` trong DB giữ nguyên (cùng cách Q9 giữ ai_confidence để hiệu chỉnh).
+ */
+export function reviewTitle(row: Pick<ReviewQueueRow, "item_type" | "title" | "evidence">): string {
+  const goc = row.title.replace(TITLE_SCORE, "").trim();
+  if (row.item_type !== "entity_match") return goc;
+  const ev = (row.evidence ?? {}) as { offer_a?: Record<string, unknown>; offer_b?: Record<string, unknown> };
+  const a = soDt(ev.offer_a?.area_m2);
+  const b = soDt(ev.offer_b?.area_m2);
+  const phuong = chu(ev.offer_b?.phuong) ?? chu(ev.offer_a?.phuong);
+  if (!a || !b || !phuong) return goc;
+  return `Cùng căn? ${phuong} · ${a} m² và ${b} m²`;
+}
+
+/** Bỏ điểm Stage B khỏi evidence (Q9, RV-L04): thẻ Ghép căn mang `stage_b_score` từ judge-run. */
+export function stripEvidenceScore(evidence: Record<string, unknown>): Record<string, unknown> {
+  if (!("stage_b_score" in evidence)) return evidence;
+  const { stage_b_score: _s, ...rest } = evidence;
+  void _s;
+  return rest;
+}
+
+/** Dòng DB → thẻ cho client. `evidence` truyền vào đã gọt ảnh (`stripEvidenceImages`); ở đây gọt thêm độ tự tin và điểm. */
 export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unknown>): ReviewItem {
   return {
     // review_queue.id là bigint — pg trả chuỗi; ép về số cho đúng kiểu (khoá media, so sánh thẻ đang mở).
     id: Number(row.id),
     item_type: row.item_type,
     ...(row.item_id ? { item_id: row.item_id } : {}),
-    title: row.title,
-    evidence: stripEvidenceConfidence(evidence),
+    title: reviewTitle(row),
+    evidence: stripEvidenceScore(stripEvidenceConfidence(evidence)),
     ai_suggestion: row.ai_suggestion,
     ai_reasoning: row.ai_reasoning,
     status: row.status,
@@ -80,30 +114,30 @@ export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unkno
   };
 }
 
-/** Loại thẻ đã có giao diện duyệt; loại khác hiện mã nguyên văn. */
-export const REVIEW_TYPE_LABEL: Record<string, string> = {
+/** Loại thẻ đã có giao diện duyệt (theo `reviewKind`: thẻ Người tách khỏi `data_quality`); loại khác hiện mã nguyên văn. */
+export const REVIEW_TYPE_LABEL: Record<Exclude<ReviewKind, "other">, string> = {
   entity_match: "Ghép căn",
   agent_output: "Bổ sung tin",
+  nguoi: "Người",
 };
 
-export const reviewTypeLabel = (t: string) => REVIEW_TYPE_LABEL[t] ?? t;
+/** Nhãn loại của một thẻ; loại chưa có giao diện → null (badge hiện mã nguyên văn). */
+export function reviewTypeLabel(item: CategoryInput): string | null {
+  const k = reviewKind(item);
+  return k === "other" ? null : REVIEW_TYPE_LABEL[k];
+}
 
-export const REVIEW_STATUS_LABEL: Record<string, string> = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối",
-  deferred: "Hoãn",
-};
+/** Nhãn trạng thái của một thẻ: chờ → «Chờ duyệt»; đã quyết → nhãn đáp án đã bấm (OD1 · ĐC1). */
+export const reviewStatusLabel = (item: CategoryInput & { status: string }) => answerLabel(item, item.status);
 
-export const reviewStatusLabel = (s: string) => REVIEW_STATUS_LABEL[s] ?? s;
-
-export type TypeFilter = "all" | "entity_match" | "agent_output" | "other";
+export type TypeFilter = "all" | ReviewKind;
 export type StatusFilter = "pending" | "decided" | "all";
 
 export const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
   { value: "all", label: "Mọi loại" },
   { value: "entity_match", label: "Ghép căn" },
   { value: "agent_output", label: "Bổ sung tin" },
+  { value: "nguoi", label: "Người" },
   { value: "other", label: "Loại khác" },
 ];
 
@@ -117,9 +151,7 @@ export const DEFAULT_TYPE_FILTER: TypeFilter = "all";
 export const DEFAULT_STATUS_FILTER: StatusFilter = "pending";
 
 function matchesType(item: ReviewItem, f: TypeFilter): boolean {
-  if (f === "all") return true;
-  if (f === "other") return !(item.item_type in REVIEW_TYPE_LABEL);
-  return item.item_type === f;
+  return f === "all" || reviewKind(item) === f;
 }
 
 function matchesStatus(item: ReviewItem, f: StatusFilter): boolean {

@@ -15,6 +15,7 @@ import { doiChieuCua, type DoiChieu } from "@/lib/ops/doi-chieu";
 import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan, fmtGia } from "@/lib/ops/review-can-cu";
 import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
+import { answerLabel } from "@/lib/ops/review-hang-muc";
 import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
 
@@ -80,28 +81,37 @@ export type ReviewCardParts = { body: ReactNode; actions: ReactNode };
 
 type DecideStatus = "approved" | "rejected" | "deferred";
 
-const DONE_LABEL: Record<string, Record<string, string>> = {
-  entity_match: { approved: "Đã duyệt", rejected: "Đã từ chối", deferred: "Hoãn" },
-  agent_output: { approved: "Đã áp", rejected: "Đã bỏ", deferred: "Hoãn" },
-};
+/** Đồng hồ đơn điệu của trình duyệt (OD1 · ĐC6): khoảng không lệch theo giờ máy khách. */
+const dongHo = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
-/** Gửi quyết định (kèm lý do) lên route decide rồi làm mới danh sách. Lý do giữ nguyên khi route trả lỗi. */
-export function useDecide(id: number) {
+/** Khoảng mở thẻ gửi route decide: số nguyên mili-giây; route tự quy ra opened_at bằng giờ của giao dịch. */
+export function khoangMo(t0: number, t1: number): number {
+  return Math.max(0, Math.round(t1 - t0));
+}
+
+/**
+ * Gửi quyết định (kèm lý do) lên route decide rồi làm mới danh sách. Lý do giữ nguyên khi route trả lỗi.
+ * Đồng hồ thẻ (OD1 · ĐC6): `t0` ghi lúc thẻ dựng — sheet dựng thẻ theo `key={item.id}` nên mở thẻ khác là đặt lại; body
+ * gửi `elapsed_ms` = khoảng tới lúc bấm.
+ */
+export function useDecide(item: Pick<ReviewItem, "id" | "item_type" | "item_id" | "evidence">) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [t0] = useState(dongHo);
   const lyDo = lyDoHopLe(reason);
   const decide = (status: DecideStatus, choices?: EnrichChoices) => {
     if (lyDo === null) return;
+    const elapsed_ms = khoangMo(t0, dongHo());
     start(async () => {
-      const res = await fetch(`/api/v1/ops/review/${id}/decide`, {
+      const res = await fetch(`/api/v1/ops/review/${item.id}/decide`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(choices ? { status, choices, reason: lyDo } : { status, reason: lyDo }),
+        body: JSON.stringify(choices ? { status, choices, reason: lyDo, elapsed_ms } : { status, reason: lyDo, elapsed_ms }),
       });
       if (res.ok) {
-        setMsg(status === "approved" ? "Đã duyệt" : status === "rejected" ? "Đã từ chối" : "Đã hoãn");
+        setMsg(answerLabel(item, status));
         router.refresh();
       } else {
         setMsg(`Lỗi: ${(await res.json().catch(() => ({}))).error ?? "không rõ"}`);
@@ -111,13 +121,12 @@ export function useDecide(id: number) {
   return { pending, msg, decide, reason, setReason, ready: lyDo !== null };
 }
 
-/** Thẻ đã quyết: nhãn trạng thái + lý do đã ghi (thẻ quyết trước PL3 không có lý do). */
-export function DoneState({ item, labels }: { item: ReviewItem; labels?: Record<string, string> }) {
-  const label = (labels ?? DONE_LABEL[item.item_type])?.[item.status] ?? "Đã quyết";
+/** Thẻ đã quyết: nhãn đáp án đã bấm (cùng bảng với badge danh sách) + lý do đã ghi (thẻ quyết trước PL3 không có lý do). */
+export function DoneState({ item }: { item: ReviewItem }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div>
-        <Badge variant={item.status === "approved" ? "success-light" : "outline"}>{label}</Badge>
+        <Badge variant={item.status === "approved" ? "success-light" : "outline"} data-review-done>{answerLabel(item, item.status)}</Badge>
       </div>
       {item.decision_note && (
         <p className="text-muted-foreground text-xs break-words whitespace-pre-line" data-review-decision-note>
@@ -302,7 +311,7 @@ function DoiChieuBlock({ items }: { items: DoiChieu[] }) {
 }
 
 function AgentOutputCard({ item, media, context, render }: CardProps) {
-  const d = useDecide(item.id);
+  const d = useDecide(item);
   const [picked, setPicked] = useState<Record<string, string | undefined>>({});
   const ev = item.evidence as EnrichEvidence;
   const fields = Array.isArray(ev.fields) ? ev.fields : [];
@@ -369,7 +378,7 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
 }
 
 function EntityMatchCard({ item, media, context, render }: CardProps) {
-  const d = useDecide(item.id);
+  const d = useDecide(item);
   const ev = item.evidence as ReviewEvidence;
   // HD6: bảng so đọc giá trị sống (`ben`) khi ngữ cảnh có; `evidence` chỉ còn để hiện «Lúc chấm». `ben === null` = rời kho.
   const benA = context?.offer_a?.ben;

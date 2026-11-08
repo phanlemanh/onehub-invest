@@ -15,15 +15,15 @@ import { xemNoiDungTin } from "@/lib/ops-access";
 import { localOnlyTable } from "@/lib/ops-queries";
 import { cn } from "@/lib/utils";
 import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status";
-import { loadReviewContext } from "@/lib/ops/review-context";
-import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
-import { toReviewItem, type ReviewQueueRow } from "@/lib/ops/review-queue";
+import { ReviewNhip, ReviewNhipSkeleton } from "@/components/ops/review/review-nhip";
+import { loadReviewQueue } from "@/lib/ops/review-nap";
+import { hangNhip, loadReviewPace } from "@/lib/ops/review-nhip";
 
 /**
  * Nội dung /ops/review sau bước kiểm quyền ops (page.tsx). review_queue là tầng A, chỉ có ở máy local: vắng bảng
  * (cloud) thì dừng ở thông báo có tên thay vì ném 42P01 (sự cố prod 24/10, audit OPS-1).
  */
-export async function ReviewContent({ user }: { user: User }) {
+export async function ReviewContent({ user, card = null }: { user: User; card?: string | null }) {
   if (await localOnlyTable("review_queue")) {
     // Cloud: chỉ số đếm thẻ chờ từ bản tin máy local (ON3, ADR-0014 — nội dung thẻ là tầng A, không lên cloud).
     const cloud = await getCloudOpsView();
@@ -39,7 +39,7 @@ export async function ReviewContent({ user }: { user: User }) {
         </div>
         <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} />
         <LocalOnlyAlert title="Hàng duyệt chỉ có ở máy thu">
-          Hàng duyệt giữ bằng chứng thô của nguồn (tầng A) nên không lên máy chủ. Duyệt ở cổng Ops trên máy thu.
+          Hàng duyệt chưa lên máy chủ — duyệt từ xa là hàng TV13. Duyệt ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
     );
@@ -62,11 +62,15 @@ export async function ReviewContent({ user }: { user: User }) {
     );
   }
 
-  const { items, media, context } = await loadReviewQueue(user);
+  const [{ items, media, context }, pace] = await Promise.all([loadReviewQueue(user), loadReviewPace()]);
+  const pending = items.filter((i) => i.status === "pending");
+  // Thẻ chờ cũ nhất: items xếp mới nhất trước, nên thẻ cuối của danh sách chờ.
+  const oldestPendingId = pending.length > 0 ? pending[pending.length - 1].id : null;
   return (
     <div className="flex flex-col gap-4">
       <ReviewTitle />
-      <ReviewQueue items={items} media={media} context={context} />
+      <ReviewNhip rows={hangNhip(pace, pending)} oldestPendingId={oldestPendingId} />
+      <ReviewQueue items={items} media={media} context={context} moBanDau={docCard(card)} />
     </div>
   );
 }
@@ -75,11 +79,11 @@ export async function ReviewContent({ user }: { user: User }) {
  * Thân trang /ops/review sau bước kiểm quyền (UI1): ReviewContent tải trong RegionError > Suspense — fallback giữ tiêu đề
  * và khung bảng (không loading.tsx: PageSkeleton đã ghi lý do), lỗi tại chỗ có Thử lại, vỏ Ops vẫn đứng. Đồng bộ.
  */
-export function ReviewPageBody({ user }: { user: User }) {
+export function ReviewPageBody({ user, card = null }: { user: User; card?: string | null }) {
   return (
     <RegionError what="hàng duyệt">
       <Suspense fallback={<ReviewPageSkeleton />}>
-        <ReviewContent user={user} />
+        <ReviewContent user={user} card={card} />
       </Suspense>
     </RegionError>
   );
@@ -110,7 +114,7 @@ function ReviewTitle() {
     <div className="flex flex-col gap-0.5">
       <h1 className="text-xl font-medium">Hàng duyệt</h1>
       <p className="text-muted-foreground text-xs">
-        Máy đề xuất, bạn quyết định — mọi quyết định được ghi nhật ký.
+        Máy đề xuất, người duyệt quyết — mọi quyết định được ghi nhật ký.
       </p>
     </div>
   );
@@ -120,6 +124,7 @@ export function ReviewPageSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <ReviewTitle />
+      <ReviewNhipSkeleton />
       <ReviewQueueSkeleton />
     </div>
   );
@@ -134,16 +139,8 @@ async function loadPendingCounts(): Promise<PendingCount> {
   return { byType: rows, total: rows.reduce((a, r) => a + r.n, 0) };
 }
 
-/** Đọc review_queue (tầng A, chỉ local). Không chọn ai_confidence — Q9: số không tới trình duyệt. */
-async function loadReviewQueue(user: User) {
-  const { rows } = await pool.query<ReviewQueueRow>(
-    `SELECT id, item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, status, decision_note, created_at
-     FROM review_queue ORDER BY created_at DESC, id DESC`,
-  );
-  // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
-  const items = rows.map((r) => toReviewItem(r, stripEvidenceImages(r.evidence)));
-  // Ảnh tin: ảnh đã tải cho vai Vận hành, URL gốc chỉ admin (PL3); một truy vấn cho cả hàng duyệt.
-  // Toàn văn + căn cứ từng trường (PL3): một truy vấn; nhánh viewer và cloud đã dừng ở trên nên không tới đây.
-  const [media, context] = await Promise.all([loadReviewMedia(rows, user), loadReviewContext(rows)]);
-  return { items, media, context };
+/** `?card=<id>` (OD1 · ĐC7): vắng → null; số nguyên dương → id; chuỗi khác → id null (danh sách báo «Không tìm thấy thẻ»). */
+export function docCard(card: string | null | undefined): { id: number | null; raw: string } | null {
+  if (card === null || card === undefined || card === "") return null;
+  return { id: /^[1-9]\d{0,15}$/.test(card) ? Number(card) : null, raw: card.slice(0, 40) };
 }
