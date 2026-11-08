@@ -43,7 +43,13 @@ evals:
     criterion: AC-1
     executor: ui-check
     layer: ui-observed
-    cmd: config:dev_server.start
+    target: "http://localhost:3463/ops/review"
     paths: [app/src/components/ops/review/hang-gui.tsx, app/src/components/ops/review/review-queue.tsx]
-    expected: "Bản dev của worktree (DB thử, tài khoản ops thử) mở /ops/review ở tab A, chọn một hạng mục có thẻ chờ X, bấm 'Duyệt liền' rồi bấm một đáp án ở thẻ X (lệnh chờ 5 giây). Trong 5 giây: tab B (cùng phiên đăng nhập) quyết thẻ X qua route decide; tab A bấm sang một trang Ops khác trong vỏ Ops (chuyển route trong app). Frame tab A sau đó: toast 'Không ghi được #X: …' có nút 'Mở thẻ' hiện trên trang Ops mới; bấm 'Mở thẻ' → URL là /ops/review?card=X và sheet thẻ X mở. Ảnh theo phần tử (toast, sheet), không chụp thân thẻ, chữ bài, cột liên hệ hay thanh bên có email."
-    evidence_required: [run_id, verifier, verified_at, screenshot, observed]
+    steps:
+      - "Bản chạy: dev server :3463 của worktree nối DB thử oneinvest_od1 (đã chạy sẵn). Phiên Ops đăng nhập sẵn trong trình duyệt ego lite — mở bằng ego-browser, không đăng nhập lại. KHÔNG tạo hay sửa tệp nào trong cây ngoài _acceptance/od2-phim-va-loi-ghi/evidence/. Chụp THEO PHẦN TỬ được nêu, không chụp thân thẻ, chữ bài, cột liên hệ hay thanh bên có email."
+      - "Tab A: /ops/review ở 1280 px sáng, bấm mục 'Gộp Người', bấm 'Duyệt liền'; ghi số thẻ X đang mở (mô tả sheet '#X'); chụp đầu sheet → evidence/E6-step1.png"
+      - "Trong 5 giây liền mạch: (a) tab A bấm nút đáp án 'Hoãn' (lý do trống) — toast 'Đã ghi #X · Hoãn' hiện; (b) tab B cùng phiên chạy trong ngữ cảnh trang: fetch('/api/v1/ops/review/X/decide', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({status:'deferred', reason:'thử E6'})}) và ghi mã trả (phải 200); (c) tab A bấm một liên kết sang trang Ops khác trong vỏ Ops (chuyển route trong app, không tải lại trang). Ghi thời điểm từng bước."
+      - "Tab A trên trang Ops mới: chờ tới 3 giây, chụp toast lỗi → evidence/E6-step2.png; ghi nguyên chữ toast và nhãn nút"
+      - "Bấm nút 'Mở thẻ' của toast: ghi location.href; chụp đầu sheet thẻ X → evidence/E6-step3.png"
+    expected: "Toast 'Không ghi được #X: Item đã quyết (deferred)' (hay chữ lỗi route trả về) có nút 'Mở thẻ' hiện trên trang Ops vừa chuyển tới, không phải trên /ops/review; bấm 'Mở thẻ' → URL là /ops/review?card=X và sheet mở thẻ X. Ảnh theo phần tử ở evidence/."
+    evidence_required: [screenshot, observed, verified_at]
