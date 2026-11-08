@@ -9,7 +9,7 @@ Ngày: 2026-11-08 · Trạng thái: **bản hoàn chỉnh trình Mạnh** · Gom
 - Mục 38: thông tin dự án là công khai, kể cả giá chủ đầu tư và quỹ căn.
 - Mục 39: Q1–Q4 và Hỏi-1 đến Hỏi-5.
 
-Phần thu theo giải pháp của ZCode (Mạnh, 08/11; §8). Còn một câu chờ Mạnh: nhãn dự án theo vòng đời (§8).
+Phần thu theo giải pháp của ZCode (Mạnh, 08/11; §8). Nhãn dự án theo vòng đời: đã quyết theo khuyến nghị (Mạnh, 08/11; §8).
 
 ## 0. Một trang
 
@@ -226,7 +226,7 @@ Kết quả gắn tin là **phát biểu** trong `field_assertions`, không ph�
 | Gộp căn sai lan sang danh bạ | DC1 trước khi `properties` thành view của danh bạ (ADR-0016 Đợt 2) |
 | Tên nguồn thật lọt lên cloud qua mã, URL, mô tả | Bộ soát tầng A ở cửa ra phủ cả bảng danh bạ mới (DN4) |
 
-## 8. Phần thu thuộc ZCode, và câu còn chờ Mạnh
+## 8. Phần thu thuộc ZCode, và nhãn dự án theo vòng đời
 
 **Nguyên tắc (Mạnh, 08/11)**: «Phần thu thì tôn trọng giải pháp của ZCode, chỉ hỗ trợ khi ZCode không thể thực hiện hay không hiệu quả.»
 - Trần, nhịp, đường thu và cách thu của S09, S07 và nguồn nhà nước do **ZCode đề xuất và chọn**.
@@ -242,9 +242,8 @@ Các góp ý dưới đây gửi ZCode **để tham khảo**, không phải lệ
   Góp ý của Claude: ưu tiên sitemap và trang công khai, bỏ quỹ căn S09 vì đã có từ S08.
   Nếu giải pháp của ZCode vẫn đi đường robots cấm, ZCode ghi rõ trong lời đề xuất để Mạnh nắm rủi ro trước khi thu.
 
-**Câu còn chờ Mạnh: nhãn dự án theo vòng đời.**
-*Khuyến nghị*: một nhãn «Dự án» không đổi theo thời gian.
-- Trạng thái hiện bằng huy hiệu bên cạnh tên: «Sắp mở bán», «Đang mở bán», «Đã bàn giao».
+**Nhãn dự án theo vòng đời: đã quyết (Mạnh «Theo khuyến nghị», 08/11).** Một nhãn «Dự án» không đổi theo thời gian.
+- Trạng thái hiện bằng huy hiệu bên cạnh tên: «Sắp mở bán», «Đang mở bán», «Đã bàn giao». Ba nhãn này vào CONTEXT ở hàng DA0 và dùng ở DA8.
 - Dữ liệu dùng RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`.
 - Lý do: người dân vẫn gọi «dự án Ocean Park» sau bàn giao. Nhãn đổi theo thời gian thì URL, tìm kiếm và bộ lọc phải đổi theo.
 

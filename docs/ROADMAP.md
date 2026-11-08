@@ -519,6 +519,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Sau đó Mạnh chốt nguyên tắc: «Phần thu thì tôn trọng giải pháp của ZCode, chỉ hỗ trợ khi ZCode không thể thực hiện hay không hiệu
     quả». Trần, nhịp, đường thu (kể cả cách xử robots.txt của S09) do ZCode đề xuất và chọn; Claude chỉ góp ý và giữ phía sau `stg_*`.
     Kế hoạch: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §8.
+    Nhãn dự án theo vòng đời (Mạnh «Theo khuyến nghị», 08/11): một nhãn «Dự án» không đổi; trạng thái là huy hiệu «Sắp mở bán», «Đang mở
+    bán», «Đã bàn giao» từ RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`. URL, tìm kiếm và bộ lọc không đổi theo trạng thái.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
