@@ -36,7 +36,7 @@ Source input: hàng lộ trình OD2 (Cổng Đáng gom về giám sát, Mạnh d
   `REVIEW_CATEGORIES`, mỗi mục mang số thẻ chờ, tuổi thẻ chờ cũ nhất (ngày; mục hết thẻ chờ ghi «hết thẻ chờ») và trung vị
   giây ở thẻ 7 ngày đọc từ `loadReviewPace` của OD1 («—» khi chưa đo); bấm một mục → bảng chỉ còn thẻ của mục đó, URL có
   `?category=<mã>`; mục hết thẻ chờ + Trạng thái «Đã quyết» vẫn lọc ra thẻ đã quyết của mục đó; mở
-  `/ops/review?category=<mã>` → mục đó chọn sẵn; `?category=` lạ → «Tất cả», không lỗi; ô lọc «Loại thẻ» không còn (hộp thay
+  `/ops/review?category=<mã>` → mục đó chọn sẵn; `?category=` lạ → «Tất cả», không lỗi; ô lọc theo `item_type` không còn (hộp thay
   nó), ô «Trạng thái» giữ.
 - **AC-3** (cross-layer) — Given đang chọn một hạng mục có N thẻ chờ, When người bấm «Duyệt liền» rồi quyết lần lượt từng
   thẻ, Then sheet mở ở thẻ chờ đầu theo thứ tự cũ nhất trước (Hỏi-1), đầu sheet hiện «k/N · <hạng mục>», mỗi lượt quyết
@@ -93,7 +93,7 @@ Q4, Q7 của báo cáo f2 đã Mạnh duyệt). Trục tự kê để người s
 
 - Không đổi route decide (`app/src/app/api/v1/ops/review/**` là đường T3 của kho), không migration, không API mới.
 - Hoàn tác quay về một thẻ thì đồng hồ thẻ (OD1) đặt lại: giây ở thẻ của lượt đó đo từ lúc quay về.
-- Ô «Loại thẻ» bỏ vì hộp hạng mục thay nó (thẻ Người lọc ở mục «Gộp Người»). Test cũ đã sửa theo: `ops-duyet-nhip.test.tsx`
+- Ô lọc theo `item_type` bỏ vì hộp hạng mục thay nó (thẻ Người lọc ở mục «Gộp Người»). Test cũ đã sửa theo: `ops-duyet-nhip.test.tsx`
   ca OD1-AC-8 (bộ lọc thẻ Người — hồ sơ ops-duyet-nhip-va-chu AC-8), OD1-AC-1-UI, OD1-AC-10 (chỉ đổi chuỗi đột biến theo mã
   mới); `review-queue.test.tsx` RQ-AC-2 (ma trận lọc, hồ sơ UI1), RQ-AC-5 (quyết từ sheet: chờ 5 giây, sang thẻ kế);
   `review-card.test.tsx` AC-11, `review-nguoi.test.tsx` TN-AC-8, `the-duyet-du-can-cu.test.tsx` TD-AC-6, TD-AC-7 (lý do
