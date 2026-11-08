@@ -1,39 +1,125 @@
 {
   "feature_plain": "Hàng duyệt bắt đầu đếm mỗi thẻ mất bao nhiêu giây theo từng loại câu hỏi, thẻ nói đúng chữ của quyết định, không còn điểm máy hay mã thô, và Căn giá tốt báo khi căn đang chờ ghép.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ ghi giờ mở thẻ, giờ quyết và số giây cho mỗi lần người duyệt bấm đáp án, ở mọi loại thẻ (AC-1, ghi nhịp mỗi lượt)."},
-    {"id": "AC-2", "p": "Sẽ vẫn ghi quyết định như cũ khi không đo được thời gian, và giữ nguyên các luật cũ: thiếu lý do thì không ghi (AC-2, đo không chặn quyết)."},
-    {"id": "AC-3", "p": "Sẽ xếp mỗi thẻ vào đúng một hạng mục duyệt: Ghép căn, Gộp Người, Luật và AI khác nhau, Bổ sung tin, ba loại Đối chiếu (AC-3, chia hạng mục)."},
-    {"id": "AC-4", "p": "Sẽ hiện bảng «Nhịp duyệt 7 ngày» trên Hàng duyệt: mỗi hạng mục có số thẻ chờ, số lượt đã đo, trung vị giây ở thẻ và giữa hai lượt (AC-4, bảng nhịp)."},
-    {"id": "AC-5", "p": "Sẽ bỏ điểm máy chấm khỏi tiêu đề thẻ Ghép căn và thay bằng tên phường có dấu cùng hai diện tích (AC-5, thẻ không điểm)."},
-    {"id": "AC-6", "p": "Sẽ ghi «Khớp» khi hai giá hiện ra bằng nhau, không còn «Lệch» trên hai số giống nhau (AC-6, so trên số hiện)."},
-    {"id": "AC-8", "p": "Sẽ gọi thẻ Gộp Người là «Người», có bộ lọc riêng, và hiện nhãn đúng nút đã bấm sau khi quyết (AC-8, chữ và nhãn)."},
-    {"id": "AC-9", "p": "Sẽ gắn nhãn «Đang chờ ghép» kèm liên kết mở thẻ ở Căn giá tốt khi căn đang là một vế của thẻ Ghép căn chưa quyết (AC-9, nối hai trang)."},
-    {"id": "AC-10", "p": "Sẽ mở thẳng đúng thẻ khi đi theo liên kết, kể cả thẻ cũ đã quyết; thẻ không có thì báo rõ (AC-10, liên kết tới thẻ)."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ ghi giờ mở thẻ, giờ quyết và số giây cho mỗi lần người duyệt bấm đáp án, ở mọi loại thẻ (AC-1, ghi nhịp mỗi lượt)."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ vẫn ghi quyết định như cũ khi không đo được thời gian, và giữ nguyên các luật cũ: thiếu lý do thì không ghi (AC-2, đo không chặn quyết)."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ xếp mỗi thẻ vào đúng một hạng mục duyệt: Ghép căn, Gộp Người, Luật và AI khác nhau, Bổ sung tin, ba loại Đối chiếu (AC-3, chia hạng mục)."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ hiện bảng «Nhịp duyệt 7 ngày» trên Hàng duyệt: mỗi hạng mục có số thẻ chờ, số lượt đã đo, trung vị giây ở thẻ và giữa hai lượt (AC-4, bảng nhịp)."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ bỏ điểm máy chấm khỏi tiêu đề thẻ Ghép căn và thay bằng tên phường có dấu cùng hai diện tích (AC-5, thẻ không điểm)."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ ghi «Khớp» khi hai giá hiện ra bằng nhau, không còn «Lệch» trên hai số giống nhau (AC-6, so trên số hiện)."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ gọi thẻ Gộp Người là «Người», có bộ lọc riêng, và hiện nhãn đúng nút đã bấm sau khi quyết (AC-8, chữ và nhãn)."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ gắn nhãn «Đang chờ ghép» kèm liên kết mở thẻ ở Căn giá tốt khi căn đang là một vế của thẻ Ghép căn chưa quyết (AC-9, nối hai trang)."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ mở thẳng đúng thẻ khi đi theo liên kết, kể cả thẻ cũ đã quyết; thẻ không có thì báo rõ (AC-10, liên kết tới thẻ)."
+    }
   ],
   "wont_do": [
-    {"id": "AC-7", "p": "Sẽ KHÔNG để ô «Ảnh hỏng» chiếm chỗ — ảnh không tải được gom thành một dòng đếm (AC-7, ảnh hỏng một dòng)."},
-    {"id": "OOS-1", "p": "Chưa làm hộp hạng mục bên trái, phím tắt, tự sang thẻ kế, hoàn tác 5 giây — đó là việc OD2, đo bằng số của việc này."},
-    {"id": "OOS-2", "p": "Chưa tách «Bổ sung tin» thành điền ô trống, ghi đè và trùng giá trị — cần thẻ hiện giá trị đang lưu (OD4)."},
-    {"id": "OOS-3", "p": "Chưa thêm liên kết hồ sơ người trên thẻ Người và chưa sửa cách xưng hô ở màn Gắn nhãn (OD5, OD7)."},
-    {"id": "OOS-4", "p": "Không sửa chỗ máy chấm ghi tiêu đề — điểm vẫn nằm trong dữ liệu để hiệu chỉnh, chỉ không tới màn hình."},
-    {"id": "OOS-5", "p": "Nhãn «Đang chờ ghép» chưa có trên bản máy chủ, vì hàng duyệt chưa lên máy chủ (TV13)."}
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG để ô «Ảnh hỏng» chiếm chỗ — ảnh không tải được gom thành một dòng đếm (AC-7, ảnh hỏng một dòng)."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Chưa làm hộp hạng mục bên trái, phím tắt, tự sang thẻ kế, hoàn tác 5 giây — đó là việc OD2, đo bằng số của việc này."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Chưa tách «Bổ sung tin» thành điền ô trống, ghi đè và trùng giá trị — cần thẻ hiện giá trị đang lưu (OD4)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Chưa thêm liên kết hồ sơ người trên thẻ Người và chưa sửa cách xưng hô ở màn Gắn nhãn (OD5, OD7)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không sửa chỗ máy chấm ghi tiêu đề — điểm vẫn nằm trong dữ liệu để hiệu chỉnh, chỉ không tới màn hình."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Nhãn «Đang chờ ghép» chưa có trên bản máy chủ, vì hàng duyệt chưa lên máy chủ (TV13)."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Không chạy bước quét chống sót tiêu chí: phạm vi đã chốt sẵn ở hàng OD1 và báo cáo soát Ops Mạnh duyệt."},
-    {"i": 1, "p": "Bảng dưới là các trục tự kê để người soát."},
-    {"i": 3, "p": "Bốn hạng mục điều chỉnh đều có tiêu chí: nhịp (AC-1..AC-4), chữ (AC-8), thẻ sạch (AC-5..AC-7), nối hai trang (AC-9, AC-10)."},
-    {"i": 4, "p": "Mọi loại thẻ đều được thử: Ghép căn, Bổ sung tin ba dáng, Người, loại lạ (AC-3, AC-5, AC-8)."},
-    {"i": 5, "p": "Mọi kiểu quyết và lỗi cũ đều được thử: duyệt, bác, hoãn, thiếu lý do, đã quyết, chạm sai ứng viên (AC-2, AC-8)."},
-    {"i": 6, "p": "Đồng hồ được thử ở mọi ca: có đo, thiếu, sai kiểu, quá dài, quá 30 phút, ngoài 7 ngày (AC-1, AC-2, AC-4)."},
-    {"i": 7, "p": "Mọi chỗ người thấy: danh sách, sheet, lưới Căn giá tốt, sheet căn, trang một căn, liên kết tới thẻ (AC-4, AC-8..AC-10)."},
-    {"i": 8, "p": "Ba môi trường: máy thu, máy chủ không có hàng duyệt, vai Người xem (AC-4, AC-8, AC-9)."}
+    {
+      "i": 0,
+      "p": "Không chạy bước quét chống sót tiêu chí: phạm vi đã chốt sẵn ở hàng OD1 và báo cáo soát Ops Mạnh duyệt."
+    },
+    {
+      "i": 1,
+      "p": "Bảng dưới là các trục tự kê để người soát."
+    },
+    {
+      "i": 3,
+      "p": "Bốn hạng mục điều chỉnh đều có tiêu chí: nhịp (AC-1..AC-4), chữ (AC-8), thẻ sạch (AC-5..AC-7), nối hai trang (AC-9, AC-10)."
+    },
+    {
+      "i": 4,
+      "p": "Mọi loại thẻ đều được thử: Ghép căn, Bổ sung tin ba dáng, Người, loại lạ (AC-3, AC-5, AC-8)."
+    },
+    {
+      "i": 5,
+      "p": "Mọi kiểu quyết và lỗi cũ đều được thử: duyệt, bác, hoãn, thiếu lý do, đã quyết, chạm sai ứng viên (AC-2, AC-8)."
+    },
+    {
+      "i": 6,
+      "p": "Đồng hồ được thử ở mọi ca: có đo, thiếu, sai kiểu, quá dài, quá 30 phút, ngoài 7 ngày (AC-1, AC-2, AC-4)."
+    },
+    {
+      "i": 7,
+      "p": "Mọi chỗ người thấy: danh sách, sheet, lưới Căn giá tốt, sheet căn, trang một căn, liên kết tới thẻ (AC-4, AC-8..AC-10)."
+    },
+    {
+      "i": 8,
+      "p": "Ba môi trường: máy thu, máy chủ không có hàng duyệt, vai Người xem (AC-4, AC-8, AC-9)."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Cách tính «giây mỗi thẻ» là định nghĩa của thước mà việc sau (OD2) sẽ so, nên phải là Mạnh chốt — đã đưa thành câu Hỏi-3, nháp ghi cả hai số."},
-    {"i": 1, "p": "Phép đo cũ chỉ thử thẻ Ghép căn gửi thời gian; đã thêm đủ bốn loại thẻ có nút quyết, kể cả thẻ Người."},
-    {"i": 2, "p": "Liên kết tới thẻ chưa được thử trên dữ liệu thật của trang; đã thêm ca đọc toàn bộ hàng duyệt, thẻ đích là thẻ cũ nhất đã quyết."},
-    {"i": 3, "p": "Câu hỏi về nhãn trạng thái chỉ kể ba loại thẻ trong khi bảng có năm; đã viết lại đủ năm hàng kèm chữ nút gốc."},
-    {"i": 4, "p": "Vai Người xem và bản máy chủ chưa có ca dựng màn thật; đã thêm ca: cả hai không thấy bảng nhịp, bản máy chủ nói rõ hàng TV13."}
-  ]
+    {
+      "i": 0,
+      "p": "Cách tính «giây mỗi thẻ» là định nghĩa của thước mà việc sau (OD2) sẽ so, nên phải là Mạnh chốt — đã đưa thành câu Hỏi-3, nháp ghi cả hai số."
+    },
+    {
+      "i": 1,
+      "p": "Phép đo cũ chỉ thử thẻ Ghép căn gửi thời gian; đã thêm đủ bốn loại thẻ có nút quyết, kể cả thẻ Người."
+    },
+    {
+      "i": 2,
+      "p": "Liên kết tới thẻ chưa được thử trên dữ liệu thật của trang; đã thêm ca đọc toàn bộ hàng duyệt, thẻ đích là thẻ cũ nhất đã quyết."
+    },
+    {
+      "i": 3,
+      "p": "Câu hỏi về nhãn trạng thái chỉ kể ba loại thẻ trong khi bảng có năm; đã viết lại đủ năm hàng kèm chữ nút gốc."
+    },
+    {
+      "i": 4,
+      "p": "Vai Người xem và bản máy chủ chưa có ca dựng màn thật; đã thêm ca: cả hai không thấy bảng nhịp, bản máy chủ nói rõ hàng TV13."
+    }
+  ],
+  "decisions": [],
+  "analyst_plain": "Hai phép kiểm (luật đường dẫn trang và sàn màu) xanh cả trước lẫn sau thay đổi — chúng là lưới chống thụt lùi có chủ ý, không chứng minh tính năng. Bộ test app chưa đo được trên mã cũ vì chạy quá 3 phút, do hạ tầng chứ không phải mã."
 }
