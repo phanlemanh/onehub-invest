@@ -55,8 +55,9 @@ export function chayVitestBoTra(locTen) {
       symlinkSync(join(src, m), dich);
     }
     console.log(`bộ tra: OpenClaw ${base} @${sha.slice(0, 9)} + extension.patch`);
+    // U1(10): ca tích hợp trong patch cần collector thật — trỏ dist của kho.
     const r = spawnSync(join(tam, "node_modules", ".bin", "vitest"), ["run", testTra, ...(locTen ? ["-t", locTen] : [])],
-      { cwd: tam, stdio: "inherit" });
+      { cwd: tam, stdio: "inherit", env: { ...process.env, LNB_COLLECTOR_DIST: join(ROOT, "collector", "dist") } });
     return r.status ?? 1;
   } finally {
     rmSync(tam, { recursive: true, force: true });

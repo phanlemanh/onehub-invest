@@ -101,8 +101,13 @@ test("E4-phu: marker bộ canh trong monitor.ts cây extension; .patch không th
   const patch = readFileSync(PATCH, "utf8");
   const khoiMon = patch.split(/^diff --git /m).find((k) => k.includes("src/monitor.ts")) ?? "";
   assert.ok(/khoiDongTuEnv/.test(khoiMon), ".patch có khối gắn bộ tra (khoiDongTuEnv) vào monitor.ts");
-  assert.ok(!/^\+.*\blisten\s*\(/m.test(patch), "không thêm listen( trong mã nguồn mới");
-  assert.ok(!/^\+.*createServer/m.test(patch), "không thêm createServer");
+  // U1(10): listen/createServer chỉ cấm trong MÃ NGUỒN mới (seller-lookup.ts,
+  // monitor.ts) — tệp .test.ts được phép dựng HTTP server cho ca tích hợp.
+  const khoiMaNguon = patch.split(/^diff --git /m)
+    .filter((k) => /src\/(seller-lookup\.ts|monitor\.ts)/.test(k.split("\n")[0]))
+    .join("\n");
+  assert.ok(!/^\+.*\blisten\s*\(/m.test(khoiMaNguon), "không thêm listen( trong mã nguồn mới");
+  assert.ok(!/^\+.*createServer/m.test(khoiMaNguon), "không thêm createServer");
 });
 
 // E9-phu: ĐOẠN TÁI KIỂM THẬT chạy NGAY TRƯỚC mỗi lời — còn tệp chặn → không

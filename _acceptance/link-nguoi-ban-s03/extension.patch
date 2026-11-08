@@ -15,10 +15,10 @@ index 636cbe6..82eb191 100644
  ): Promise<ZalouserMonitorResult> {
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..83bd490
+index 0000000..873ea9d
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,446 @@
+@@ -0,0 +1,495 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -443,6 +443,55 @@ index 0000000..83bd490
 +    expect(apiGia.dem.getUserInfo).toBe(1);
 +    expect([...daGoi.keys()]).toEqual([]); // KHÔNG hàm nào ngoài getUserInfo được gọi
 +  });
++
++
++  // MỞ LẠI 0611-6 (10) TÍCH HỢP THẬT: bộ tra thật (chayVong) + collector thật
++  // (createAgentServer từ LNB_COLLECTOR_DIST — env do bộ chấm đặt) + Authorization
++  // Bearer thật qua HTTP thật (fetch thật). Vắng env → ĐỎ (không bỏ qua).
++  // Chiều sai-key → spool đã phủ ở ca spool (fetchImpl giả) + test API 401.
++  it("tích hợp: chayVong → HTTP thật + Bearer → collector thật → snapshot hồ sơ v7", async () => {
++    const distDir = process.env.LNB_COLLECTOR_DIST;
++    if (!distDir) throw new Error("thiếu LNB_COLLECTOR_DIST (collector/dist của kho one-invest) — ca tích hợp bắt buộc, không bỏ qua");
++    const mod = (await import(`${distDir}/api/server.js`)) as {
++      createAgentServer: (o: { snapshotRoot: string; city: string; keys: string[] }) => Promise<{
++        handle: (req: unknown, res: unknown) => void;
++      }>;
++    };
++    const os = await import("node:os");
++    const http = await import("node:http");
++    const fsThat = await import("node:fs");
++    const path = await import("node:path");
++    const root = fsThat.mkdtempSync(path.join(os.tmpdir(), "lnb-tichhop-"));
++    const server = await mod.createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k-tich-hop"] });
++    const httpSrv = http.createServer(server.handle as never);
++    await new Promise<void>((r) => httpSrv.listen(0, "127.0.0.1", r));
++    const port = (httpSrv.address() as { port: number }).port;
++    process.env.S03_COLLECTOR_KEY = "k-tich-hop";
++    const fsFake = taoFsFake();
++    const api = taoApiGia();
++    api.ketQuaThe = (mas) => ({
++      changed_profiles: Object.fromEntries(mas.map((m) => [`${m}_0`, { userId: m, username: `u${m}` }])),
++    });
++    const deps = taoDeps(undefined, fsFake, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    (deps as unknown as { collectorUrl: unknown }).collectorUrl = `http://127.0.0.1:${port}/s03-ho-so`;
++    (deps as unknown as { fetchImpl: unknown }).fetchImpl = fetch; // fetch THẬT qua HTTP thật
++    await ghiYeuCau(fsFake, ["1", "2"], ["1", "2"]);
++    try {
++      const v = await chayVong(deps);
++      expect(v.loi_goi).toBe(1);
++      expect(fsFake.files.get("/f/spool-ho-so.jsonl") ?? "").toBe(""); // gửi OK → spool rỗng
++      const hanoi = path.join(root, "hanoi");
++      const snaps = fsThat.readdirSync(hanoi).filter((d) => d.includes("__s03-ho-so__"));
++      expect(snaps.length).toBe(1); // collector THẬT ghi snapshot hồ sơ xuống đĩa
++      const man = JSON.parse(fsThat.readFileSync(path.join(hanoi, snaps[0], "manifest.json"), "utf8"));
++      expect(man.schemaVersion).toBeGreaterThanOrEqual(7);
++      expect(man.source).toBe("s03-ho-so");
++    } finally {
++      httpSrv.close();
++      fsThat.rmSync(root, { recursive: true, force: true });
++    }
++  }, 120_000);
 +
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
 +    const { fs, api, deps } = chuanBi();
