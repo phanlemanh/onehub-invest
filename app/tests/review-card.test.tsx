@@ -208,9 +208,11 @@ test("AC-11 thẻ xung đột: «Bỏ cả hai» gửi null", async () => {
 test("AC-11 đối chứng: thẻ không xung đột không có lựa chọn", async () => {
   const r = await render(agentItem(ENRICH_EVIDENCE));
   assert.equal(button("Chọn luật"), undefined);
-  // PL3: «Áp dụng» chờ lý do (trước PL3 bật ngay); có lý do thì bật, không cần chọn bên.
-  assert.ok(isDisabled(button("Áp dụng")), "thẻ thường: chưa có lý do thì «Áp dụng» khoá");
+  // OD2 (Q4): lý do trống thì «Áp dụng» vẫn bật (gửi nhãn đáp án); «Bỏ» ở Bổ sung tin còn bắt gõ. Có lý do thì cả hai bật.
+  assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: lý do trống thì «Áp dụng» vẫn bật (Q4)");
+  assert.ok(isDisabled(button("Bỏ")), "thẻ thường: lý do trống thì «Bỏ» khoá (Q4 giữ lý do gõ khi bác)");
   await r.lyDo("đủ căn cứ");
+  assert.ok(!isDisabled(button("Bỏ")), "thẻ thường: có lý do thì «Bỏ» bật");
   assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: có lý do thì «Áp dụng» bật");
   await r.click("Áp dụng");
   assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", reason: "đủ căn cứ" });

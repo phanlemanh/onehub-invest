@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { InboxIcon, TriangleAlertIcon } from "lucide-react"
+import { InboxIcon, PlayIcon, TriangleAlertIcon } from "lucide-react"
+import { toast } from "sonner"
 import { useTable, type ColumnDef, type PaginationState } from "@tanstack/react-table"
 
 import {
@@ -22,37 +23,59 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { DATA_GRID_VI } from "@/components/insight/insight-grid"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import type { ReviewContext } from "@/lib/ops/review-context"
+import type { QuyetGanDay } from "@/lib/ops/review-gan-day"
+import { REVIEW_CATEGORY_LABEL } from "@/lib/ops/review-hang-muc"
+import { hangDuyet, hopHangMuc, locTheoHop, mucKe, TAT_CA, type HopChon } from "@/lib/ops/review-hop-hang-muc"
 import type { ReviewMedia } from "@/lib/ops/review-media"
+import type { NhipHangMuc } from "@/lib/ops/review-nhip"
 import {
   DEFAULT_STATUS_FILTER,
-  DEFAULT_TYPE_FILTER,
   filterReviewItems,
   STATUS_FILTERS,
-  TYPE_FILTERS,
   type ReviewItem,
   type StatusFilter,
-  type TypeFilter,
 } from "@/lib/ops/review-queue"
 
+import { HangGuiProvider, HOAN_TAC_MS, type LenhQuyet } from "./hang-gui"
 import { ReviewStatusBadge, ReviewTypeBadge } from "./review-badges"
-import { ReviewDetailSheet } from "./review-detail-sheet"
+import { ReviewDetailSheet, type DieuHuong, type HetThe } from "./review-detail-sheet"
+import { ReviewGanDay } from "./review-gan-day"
+import { ReviewHopHangMuc } from "./review-hop-hang-muc"
+import { ReviewPhimTat } from "./review-phim-tat"
+import { bamDapAn, usePhimDuyet } from "./use-phim-duyet"
 
 const PAGE_SIZE = 20
 
+/** Ghi `?category=` vào URL không tải lại trang (App Router đồng bộ với history API); «Tất cả» → bỏ tham số. */
+function ghiCategory(chon: HopChon) {
+  if (typeof window === "undefined") return
+  const url = new URL(window.location.href)
+  if (chon === TAT_CA) url.searchParams.delete("category")
+  else url.searchParams.set("category", chon)
+  window.history.replaceState(window.history.state, "", url)
+}
+
 /**
- * Hàng chờ /ops/review (UI1) — chuyển thể @reui/solution-agents-5 (approval-queue + request-detail-sheet):
- * Card → Frame theo họ khung của trang (routes.md); bỏ chọn hàng loạt, SLA, xuất (GD10 riêng, không duyệt hàng loạt).
- * Lọc theo loại thẻ + trạng thái phía client (hàng duyệt nhỏ); bấm hàng hoặc tên thẻ mở sheet chi tiết.
+ * Hàng chờ /ops/review (UI1 → OD2) — chuyển thể @reui/solution-agents-5 (approval-queue + request-detail-sheet), thêm hộp
+ * hạng mục bên trái theo cột trái của @reui/solution-agents-9 (OD2 · ĐC3): chọn hạng mục thay ô lọc «Loại thẻ».
+ * Chế độ duyệt (ĐC4): «Duyệt liền» hay bấm một thẻ chờ mở sheet; quyết xong, thẻ kế cùng hạng mục hiện trong CÙNG sheet
+ * (cũ nhất trước — Hỏi-1); phím J/K/1–4/R/?. Hoàn tác 5 giây (ĐC5): lệnh giữ ở trình duyệt (`HangGuiProvider`).
  * Không cột độ tự tin (Q9) — `ReviewItem` không mang số đó.
  */
-export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
+export function ReviewQueue({ items, media, context = {}, moBanDau = null, pace = [], category = TAT_CA, ganDay = null }: {
   items: ReviewItem[]
   media: Record<number, ReviewMedia>
   context?: Record<number, ReviewContext>
   /** `?card=<id>` (OD1 · ĐC7): thẻ có trong hàng duyệt → sheet mở sẵn, bất kể trang và bộ lọc; không có → Alert. */
   moBanDau?: { id: number | null; raw: string } | null
+  /** Nhịp duyệt 7 ngày (OD1) — hộp hạng mục mượn trung vị giây ở thẻ. */
+  pace?: NhipHangMuc[]
+  /** `?category=` đã đọc (OD2 · ĐC3). */
+  category?: HopChon
+  /** Quyết định gần đây của chính người duyệt (ĐC5); null → không hiện Frame (thẻ dựng riêng, test cũ). */
+  ganDay?: QuyetGanDay[] | null
 }) {
-  const [type, setType] = useState<TypeFilter>(DEFAULT_TYPE_FILTER)
+  const [chon, setChon] = useState<HopChon>(category)
   const [status, setStatus] = useState<StatusFilter>(DEFAULT_STATUS_FILTER)
   // Tìm trong `items` (cả hàng duyệt), không trong hàng đang lọc — thẻ đã quyết vẫn mở được.
   const theCanMo = (m: typeof moBanDau) => (m?.id != null && items.some((i) => i.id === m.id) ? m.id : null)
@@ -66,11 +89,109 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
   }
   const thieuThe = moBanDau !== null && (moBanDau.id === null || !items.some((i) => i.id === moBanDau.id))
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE })
+  /** Thẻ đã bấm đáp án, đang trong 5 giây chờ gửi hay đã gửi mà trang chưa làm mới — rời hàng duyệt ngay. */
+  const [dangGui, setDangGui] = useState<ReadonlySet<number>>(new Set())
+  const [het, setHet] = useState(false)
+  const [phimMo, setPhimMo] = useState(false)
 
-  const rows = useMemo(() => filterReviewItems(items, type, status), [items, type, status])
+  const hop = useMemo(() => hopHangMuc(items, pace), [items, pace])
+  const tongCho = useMemo(() => items.filter((i) => i.status === "pending").length, [items])
+  const rows = useMemo(() => filterReviewItems(locTheoHop(items, chon), "all", status), [items, chon, status])
+  const hang = useMemo(() => hangDuyet(items, chon, dangGui), [items, chon, dangGui])
   // Thẻ đang mở đọc từ `items` (không từ `rows`): quyết xong, router.refresh() đổi trạng thái → thẻ rời bộ lọc
   // «Chờ duyệt» nhưng sheet vẫn hiện kết quả cho tới khi người đóng.
   const open = openId === null ? null : (items.find((i) => i.id === openId) ?? null)
+  // Bản mới nhất của hàng và thẻ đang mở cho nhịp `onXep` (gọi từ hàng chờ gửi, ngoài lượt vẽ).
+  const hangRef = useRef(hang)
+  const openRef = useRef(openId)
+  useEffect(() => {
+    hangRef.current = hang
+    openRef.current = openId
+  })
+
+  const moThe = useCallback((id: number) => {
+    setHet(false)
+    setOpenId(id)
+  }, [])
+  const dong = () => {
+    setOpenId(null)
+    setHet(false)
+  }
+  const chonMuc = (c: HopChon) => {
+    setChon(c)
+    setPagination((p) => ({ ...p, pageIndex: 0 }))
+    ghiCategory(c)
+  }
+  const duyetLien = () => {
+    const dau = hang[0]
+    if (dau) moThe(dau.id)
+  }
+
+  // Ba nhịp của hàng chờ gửi. Thẻ vừa bấm rời hàng duyệt ngay; thẻ kế = thẻ đứng sau nó trong hàng lúc bấm.
+  const onXep = useCallback((lenh: LenhQuyet, hoanTac: () => void) => {
+    const truoc = hangRef.current
+    const i = truoc.findIndex((t) => t.id === lenh.id)
+    const con = truoc.filter((t) => t.id !== lenh.id)
+    const ke = con[Math.max(i, 0)] ?? con[0] ?? null
+    setDangGui((s) => new Set(s).add(lenh.id))
+    if (openRef.current === lenh.id) {
+      setOpenId(ke?.id ?? null)
+      setHet(ke === null)
+    }
+    toast(`Đã ghi #${lenh.id} · ${lenh.nhan}`, {
+      duration: HOAN_TAC_MS,
+      action: {
+        label: "Hoàn tác",
+        onClick: () => {
+          hoanTac()
+          setDangGui((s) => {
+            const n = new Set(s)
+            n.delete(lenh.id)
+            return n
+          })
+          moThe(lenh.id)
+        },
+      },
+    })
+  }, [moThe])
+  const onXong = useCallback((lenh: LenhQuyet) => lenh.lamMoi(), [])
+  const onLoi = useCallback((lenh: LenhQuyet, loi: string) => {
+    setDangGui((s) => {
+      const n = new Set(s)
+      n.delete(lenh.id)
+      return n
+    })
+    toast.error(`Không ghi được #${lenh.id}: ${loi}`, { action: { label: "Mở thẻ", onClick: () => moThe(lenh.id) } })
+  }, [moThe])
+
+  // Thanh điều hướng: chỉ khi thẻ đang mở nằm trong hàng duyệt (thẻ đã quyết mở để xem lại thì không).
+  const viTri = open ? hang.findIndex((t) => t.id === open.id) : -1
+  const dieuHuong: DieuHuong | null = viTri < 0 ? null : {
+    viTri: viTri + 1,
+    tong: hang.length,
+    nhan: chon === TAT_CA ? "Tất cả" : REVIEW_CATEGORY_LABEL[chon],
+    onTruoc: viTri > 0 ? () => moThe(hang[viTri - 1].id) : null,
+    onSau: viTri < hang.length - 1 ? () => moThe(hang[viTri + 1].id) : null,
+    onPhim: () => setPhimMo(true),
+  }
+  const ke = het ? mucKe(hop, chon, (c) => hangDuyet(items, c, dangGui).length > 0) : null
+  const hetThe: HetThe | null = !het ? null : {
+    nhanKe: ke?.nhan ?? null,
+    onKe: () => {
+      if (!ke) return dong()
+      chonMuc(ke.ma)
+      const dau = hangDuyet(items, ke.ma, dangGui)[0]
+      if (dau) moThe(dau.id)
+    },
+  }
+
+  usePhimDuyet((open !== null || het) && !phimMo, {
+    sau: () => dieuHuong?.onSau?.(),
+    truoc: () => dieuHuong?.onTruoc?.(),
+    dapAn: (n) => void bamDapAn(document.querySelector("[data-review-sheet]"), n),
+    vaoLyDo: () => document.querySelector<HTMLTextAreaElement>("[data-review-sheet] [data-review-reason]")?.focus(),
+    moBangPhim: () => setPhimMo(true),
+  })
 
   const columns = useMemo<ColumnDef<DataGridFeatures, ReviewItem>[]>(
     () => [
@@ -86,7 +207,7 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
               className="max-w-full justify-start"
               onClick={(e) => {
                 e.stopPropagation()
-                setOpenId(row.original.id)
+                moThe(row.original.id)
               }}
             >
               <span className="truncate" translate="no">{row.original.title}</span>
@@ -128,7 +249,7 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
         size: 170,
       },
     ],
-    [],
+    [moThe],
   )
 
   const table = useTable({
@@ -140,24 +261,23 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
     onPaginationChange: setPagination,
   })
 
-  const isDefault = type === DEFAULT_TYPE_FILTER && status === DEFAULT_STATUS_FILTER
+  const isDefault = chon === TAT_CA && status === DEFAULT_STATUS_FILTER
   const reset = () => {
-    setType(DEFAULT_TYPE_FILTER)
+    chonMuc(TAT_CA)
     setStatus(DEFAULT_STATUS_FILTER)
-    setPagination((p) => ({ ...p, pageIndex: 0 }))
   }
 
   if (items.length === 0) return <ReviewQueueEmpty />
 
   return (
-    <>
+    <HangGuiProvider onXep={onXep} onXong={onXong} onLoi={onLoi}>
     {thieuThe && (
       <Alert variant="warning" data-review-card-thieu>
         <TriangleAlertIcon aria-hidden />
         <AlertTitle>Không tìm thấy thẻ #{moBanDau?.raw}</AlertTitle>
       </Alert>
     )}
-    <Frame spacing="default" className="w-full min-w-0">
+    <Frame spacing="default" className="@container w-full min-w-0">
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-0.5">
           <FrameTitle role="heading" aria-level={2}>Danh sách thẻ</FrameTitle>
@@ -167,15 +287,6 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FilterSelect
-            label="Loại thẻ"
-            value={type}
-            options={TYPE_FILTERS}
-            onChange={(v) => {
-              setType(v)
-              setPagination((p) => ({ ...p, pageIndex: 0 }))
-            }}
-          />
-          <FilterSelect
             label="Trạng thái"
             value={status}
             options={STATUS_FILTERS}
@@ -184,52 +295,65 @@ export function ReviewQueue({ items, media, context = {}, moBanDau = null }: {
               setPagination((p) => ({ ...p, pageIndex: 0 }))
             }}
           />
+          <Button size="sm" onClick={duyetLien} disabled={hang.length === 0} data-review-duyet-lien>
+            <PlayIcon data-icon="inline-start" aria-hidden />
+            Duyệt liền
+          </Button>
         </div>
       </FrameHeader>
-      <FramePanel className="flex flex-col gap-3">
-        <DataGrid
-          table={table}
-          recordCount={rows.length}
-          i18n={DATA_GRID_VI}
-          onRowClick={(r) => setOpenId(r.id)}
-          tableLayout={{ dense: true, width: "auto" }}
-          emptyMessage={
-            // Bộ lọc mặc định ra 0 trong khi hàng duyệt còn thẻ = mọi thẻ đã quyết: lối thoát phải tới chỗ có dòng,
-            // không phải «Xoá lọc» về đúng mặc định đó (ngõ cụt — gap-probe F1).
-            <div className="flex flex-col items-center gap-2 py-6">
-              <span className="text-muted-foreground text-sm">
-                {isDefault ? "Không còn thẻ chờ duyệt" : "Không có thẻ khớp bộ lọc"}
-              </span>
-              {isDefault ? (
-                <Button variant="outline" size="sm" onClick={() => setStatus("decided")}>
-                  Xem thẻ đã quyết
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={reset}>
-                  Xoá lọc
-                </Button>
-              )}
-            </div>
-          }
-        >
-          <div className="flex w-full flex-col gap-2.5">
-            <DataGridContainer>
-              <DataGridScrollArea>
-                <DataGridTable />
-              </DataGridScrollArea>
-            </DataGridContainer>
-            {rows.length > PAGE_SIZE && <DataGridPagination sizes={[20, 50]} />}
+      <FramePanel className="p-0">
+        <div className="grid min-w-0 grid-cols-1 @4xl:grid-cols-[16rem_minmax(0,1fr)]">
+          <ReviewHopHangMuc hop={hop} chon={chon} tongCho={tongCho} onChon={chonMuc} />
+          <div className="min-w-0 p-3">
+            <DataGrid
+              table={table}
+              recordCount={rows.length}
+              i18n={DATA_GRID_VI}
+              onRowClick={(r) => moThe(r.id)}
+              tableLayout={{ dense: true, width: "auto" }}
+              emptyMessage={
+                // Bộ lọc mặc định ra 0 trong khi hàng duyệt còn thẻ = mọi thẻ đã quyết: lối thoát phải tới chỗ có dòng,
+                // không phải «Xoá lọc» về đúng mặc định đó (ngõ cụt — gap-probe F1).
+                <div className="flex flex-col items-center gap-2 py-6">
+                  <span className="text-muted-foreground text-sm">
+                    {isDefault ? "Không còn thẻ chờ duyệt" : "Không có thẻ khớp bộ lọc"}
+                  </span>
+                  {isDefault ? (
+                    <Button variant="outline" size="sm" onClick={() => setStatus("decided")}>
+                      Xem thẻ đã quyết
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={reset}>
+                      Xoá lọc
+                    </Button>
+                  )}
+                </div>
+              }
+            >
+              <div className="flex w-full flex-col gap-2.5">
+                <DataGridContainer>
+                  <DataGridScrollArea>
+                    <DataGridTable />
+                  </DataGridScrollArea>
+                </DataGridContainer>
+                {rows.length > PAGE_SIZE && <DataGridPagination sizes={[20, 50]} />}
+              </div>
+            </DataGrid>
           </div>
-        </DataGrid>
+        </div>
       </FramePanel>
       <ReviewDetailSheet
         item={open}
         media={open ? media[open.id] : undefined}
         context={open ? context[open.id] : undefined}
-        onOpenChange={(o) => !o && setOpenId(null)}
+        onOpenChange={(o) => !o && dong()}
+        dieuHuong={dieuHuong}
+        het={hetThe}
       />
+      <ReviewPhimTat open={phimMo} onOpenChange={setPhimMo} />
     </Frame>
-    </>
+    {ganDay && <ReviewGanDay rows={ganDay} onDuyetLien={hang.length > 0 ? duyetLien : undefined} />}
+    </HangGuiProvider>
   )
 }
 
@@ -276,4 +400,3 @@ function ReviewQueueEmpty() {
     </Empty>
   )
 }
-

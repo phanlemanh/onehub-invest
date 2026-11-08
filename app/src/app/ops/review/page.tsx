@@ -14,12 +14,16 @@ export const metadata: Metadata = { title: "Hàng duyệt" };
  * Trang chỉ kiểm quyền; nội dung (kể cả dừng sớm khi review_queue vắng trên cloud) ở ReviewContent, bọc RegionError >
  * Suspense trong ReviewPageBody (UI1).
  */
-export default async function ReviewPage({ searchParams }: { searchParams: Promise<{ card?: string | string[] }> }) {
+export default async function ReviewPage({ searchParams }: {
+  searchParams: Promise<{ card?: string | string[]; category?: string | string[] }>
+}) {
   const user = await getSessionUser();
   if (!user || !canAccessOps(user)) {
     return <p className="text-muted-foreground p-8 text-sm">Cần đăng nhập ops.</p>;
   }
   // `?card=<id>` (OD1 · ĐC7): liên kết sâu tới một thẻ — Căn giá tốt trỏ thẻ Ghép căn đang chờ.
-  const { card } = await searchParams;
-  return <ReviewPageBody user={user} card={Array.isArray(card) ? card[0] : (card ?? null)} />;
+  // `?category=<mã>` (OD2 · ĐC3): hộp hạng mục chọn sẵn một Hạng mục duyệt.
+  const { card, category } = await searchParams;
+  const mot = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : (v ?? null));
+  return <ReviewPageBody user={user} card={mot(card)} category={mot(category)} />;
 }

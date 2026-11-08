@@ -4,7 +4,7 @@ Pattern: @reui/solution-agents-5
 | Slot | Rung | Use | Reason |
 |---|---|---|---|
 | đầu trang ba số | 3 | PageHeader | bắt buộc theo routes.md; ba số là `stats` |
-| hộp hạng mục | 7 | ds-new: Hộp hạng mục duyệt | chuyển thể cột trái của @reui/solution-agents-9 (Mạnh duyệt §f4); block chưa có trong registry, cài rồi ghi catalog.md |
+| hộp hạng mục | 2 | @reui/solution-agents-9 | chỉ lấy cột trái ScopeRail (Mạnh duyệt §f4); đã cài, ghi catalog.md |
 | mục hạng mục | 5 | ui/item + reui/badge | mỗi mục: nhãn, số chờ (badge), dòng mô tả cũ nhất · trung vị |
 | bảng thẻ | 3 | reui/frame | giữ data-grid và Frame «Danh sách thẻ» hiện có |
 | quyết định gần đây | 5 | reui/frame + reui/timeline | chuyển thể recent-decisions của solution-agents-5: Card → Frame theo họ khung trang |
