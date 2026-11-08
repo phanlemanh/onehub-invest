@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Mỗi đêm máy tự đọc mọi bài S03 mới của hôm qua và hôm kia bằng model đang chọn (mặc định Haiku), mỗi tin chỉ đọc một lần, không gọi lại bài đã đọc, và dừng khi tiền chi trong ngày chạm 20 USD; bước đêm có sẵn nhưng chưa gắn lịch."
+}

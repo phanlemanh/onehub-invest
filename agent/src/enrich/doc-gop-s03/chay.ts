@@ -12,7 +12,7 @@ import { chuNguoiDung, HUONG_DAN, PROMPT_SHA, PROMPT_VERSION } from "./prompt.js
 import { docTheTheoLat, docTheTheoPost, type Q, type The } from "./the.js";
 
 export type CoChay = { lat?: string; split?: "dev" | "test"; post?: string[]; tranUsd: number; cauHinh?: string; runId?: string; thu?: boolean };
-export type TomTatChay = { the: number; goi: number; loi: number; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number };
+export type TomTatChay = { the: number; goi: number; loi: number; hong: number; lopLoi: string[]; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number };
 
 const CO = new Set(["--lat", "--split", "--post", "--tran-usd", "--cau-hinh", "--run-id", "--thu"]);
 
@@ -73,9 +73,16 @@ export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string },
   ];
 }
 
+/**
+ * Một lượt đọc gộp. Hai tuỳ chọn của PL34 `doc-gop-hang-ngay` (không truyền thì y như `chay` của PL30):
+ * - `doDaDoc`: chạy câu dò «đã có nhãn» cả khi người gọi truyền sẵn `the`.
+ * - `goiDenTran`: không từ chối cả lượt khi tổng ước vượt trần; trước mỗi lời gọi, ước lời ấy bằng max(ước công thức, tiền
+ *   thật lớn nhất đã gặp trong lượt) cộng tiền thật đã chi, vượt trần thì dừng.
+ */
 export async function chayLuot(o: {
   client: Q; co: CoChay; taoModel?: TaoModel; recordCall?: RecordCall; the?: The[];
   uoc?: (t: The, gia: { vao: number; ra: number }) => number; log?: (s: string) => void;
+  doDaDoc?: boolean; goiDenTran?: boolean;
 }): Promise<TomTatChay> {
   const log = o.log ?? console.log;
   const cau = napCauHinh(o.co.cauHinh); // bảng sai → ném trước mọi lời gọi
@@ -84,12 +91,12 @@ export async function chayLuot(o: {
   const uoc = o.uoc ?? uocThe;
   const tatCa = o.the ?? (o.co.lat ? await docTheTheoLat(o.client, o.co.lat, o.co.split) : await docTheTheoPost(o.client, o.co.post ?? []));
   const the = tatCa.filter((t) => t.text.trim() || t.anh.length);
-  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length };
+  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, hong: 0, lopLoi: [], ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length };
   if (kq.bo) log(`bo ${kq.bo} bai khong chu khong anh`);
 
   // Đã có nhãn đọc được cùng (bài, chữ, model, prompt) → không gọi lại.
   const da = new Set<string>();
-  if (!o.the) {
+  if (!o.the || o.doDaDoc) {
     const { rows } = await o.client.query(
       `SELECT post_id, text_hash, model FROM silver_labels WHERE source_code = 'S03' AND prompt_version = $1 AND json_ok AND post_id = ANY ($2)`,
       [PROMPT_VERSION, the.map((t) => t.post_id)]);
@@ -98,14 +105,16 @@ export async function chayLuot(o: {
   const viec = the.flatMap((t) => kh.nhom.filter((n) => !da.has(`${t.post_id}|${t.text_hash}|gateway:${n.gateway}`)).map((n) => ({ t, n })));
   const uocTong = viec.reduce((s, v) => s + uoc(v.t, v.n.gia), 0);
   log(`chay ${viec.length} loi goi tren ${the.length} bai, prompt ${PROMPT_VERSION}, bang ${cau.sha.slice(0, 12)}: uoc ${uocTong.toFixed(4)} USD / tran ${o.co.tranUsd}`);
-  if (uocTong > o.co.tranUsd && viec.length) {
+  if (!o.goiDenTran && uocTong > o.co.tranUsd && viec.length) {
     log(`uoc vuot tran: ${uocTong.toFixed(4)} > ${o.co.tranUsd} — khong goi`);
     return { ...kq, conLai: viec.length, dungTran: true };
   }
   const record = o.recordCall ?? ghiAiCallQua(o.client);
+  let datNhat = 0; // tiền thật lớn nhất của một lời gọi trong lượt (goiDenTran)
   for (let i = 0; i < viec.length; i++) {
     const { t, n } = viec[i];
-    if (kq.usd + uoc(t, n.gia) > o.co.tranUsd) {
+    const uocLoi = o.goiDenTran ? Math.max(uoc(t, n.gia), datNhat) : uoc(t, n.gia);
+    if (kq.usd + uocLoi > o.co.tranUsd) {
       kq.dungTran = true;
       kq.conLai = viec.length - i;
       log(`cham tran ${o.co.tranUsd} USD: da chi ${kq.usd.toFixed(4)}, con lai ${kq.conLai}`);
@@ -114,13 +123,16 @@ export async function chayLuot(o: {
     const k = await hoiGop({ gateway: n.gateway, gia: n.gia, the: t, taoModel: o.taoModel, recordCall: record, trace: runId });
     kq.goi++;
     kq.usd += k.usd;
+    datNhat = Math.max(datNhat, k.usd);
+    if (k.error_kind === "json-hong") kq.hong++;
     if (k.error_kind && k.error_kind !== "json-hong") { // lỗi gọi: không lưu, lượt sau gọi lại; đếm để lệnh báo (S4-r1 t6)
       kq.loi++;
+      if (!kq.lopLoi.includes(k.error_kind)) kq.lopLoi.push(k.error_kind);
       log(`loi goi ${n.gateway} bai ${t.post_id}: ${k.error_kind}`);
       continue;
     }
     if (!o.co.thu) kq.ghi += (await o.client.query(SQL_GHI_DOC, dongNhan(t, n, k, cau, runId))).rowCount ?? 0;
   }
-  log(`xong: ${kq.goi} loi goi (${kq.loi} hong), ${kq.ghi} dong nhan, ${kq.usd.toFixed(4)} USD${kq.dungTran ? ", dung vi tran" : ""}`);
+  log(`xong: ${kq.goi} loi goi (${kq.loi} loi goi, ${kq.hong} json hong), ${kq.ghi} dong nhan, ${kq.usd.toFixed(4)} USD${kq.dungTran ? ", dung vi tran" : ""}`);
   return kq;
 }
