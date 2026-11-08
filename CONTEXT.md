@@ -54,7 +54,7 @@ _Avoid_: dự án, đại đô thị
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
-**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; hiện 3 tòa còn ở `asset_nodes.node_type = building`, chuyển sang bảng tòa ở hàng code). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
+**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; 3 dòng `asset_nodes.node_type = building` thực là phân khu Grand Park, ở lại họ Vùng — ADR-0016 §3 sửa 07/11). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
 - Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
 _Avoid_: block, chung cư
 
@@ -207,7 +207,7 @@ _Avoid_: assertion, claim
 - Code: `evidence_tier` · RESO: không có — extension local
 _Avoid_: confidence, bậc H0–H5
 
-**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị năm cột loại hình, phòng ngủ, WC, đường, toà. Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
+**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị các cột chuẩn (12 cột từ migration 061: loại hình, phòng ngủ, WC, đường, toà…, xem `mo-hinh-pipeline-mot-can-nha.md`). Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
 - Code: `resolve_offer_fields` · RESO: không có — bộ phân xử local
 _Avoid_: fill-gap, ghi đè
 
@@ -719,7 +719,7 @@ _Avoid_: chưa so
 - Code: `eval_labels.basis` (`chu_bai`, `anh`, `ngu_canh_nhom`, `kien_thuc_nghe`, `danh_muc_cdt`)
 _Avoid_: nguồn nhãn
 
-**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã; chỉ ở máy thu, không lên cloud. Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
+**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã. (Câu cũ «chỉ ở máy thu, không lên cloud» hết hiệu lực từ 08/11, ROADMAP §3 mục 38; luật hiển thị theo hàng DN4.) Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
 - Code: `eval_labels.basis = 'danh_muc_cdt'`, kiểm ở `app/src/lib/labels-s08.ts`
 _Avoid_: danh mục dự án, quỹ căn
 

@@ -1,7 +1,7 @@
 # ADR-0016: Danh bạ vật thể và người — căn là nút vật thể, listing gắn ở mức sâu nhất biết được
 
 Ngày: 2026-10-27 · Trạng thái: **accepted** (Mạnh duyệt 27/10: «Duyệt khung đã sửa ba điểm, theo các mặc định của em»)
-· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
+· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 08/11: §9 (thông tin dự án công khai) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
 `docs/product/FRAMING.md`, `CONTEXT.md`, ROADMAP §3 mục 22
 
 > Câu hỏi của Mạnh (27/10): «Mô hình của chúng ta là một bất động sản duy nhất và nhiều listing. Có nên tạo một bảng
@@ -107,7 +107,7 @@ và phát biểu theo vật thể.
 
 ### 6. Dựng vật thể
 
-- **Chung cư**: toà, trục, căn từ danh mục (S08 nội bộ — PL10 đã ký, ZC8 nạp) + phát biểu toà / mã căn từ tin (PL13).
+- **Chung cư**: toà, trục, căn từ danh mục (S08 — PL10 đã ký, ZC8 nạp; công khai từ 08/11, §9) + phát biểu toà / mã căn từ tin (PL13).
 - **Nhà phố, đất**: mỗi listing sinh **một vật thể tạm** (`pending`); chỉ gộp khi có bằng chứng: đăng lại cùng tài khoản +
   cùng diện tích + cùng phường, ảnh trùng (G-2.5), hoặc người duyệt «Cùng căn». **Toạ độ chỉ là tín hiệu phụ** (số đo:
   53% tin S06 nằm ở điểm chung). Số «căn» nhà phố lúc đầu ≈ số tin, giảm dần theo bằng chứng.
@@ -154,6 +154,11 @@ và phát biểu theo vật thể.
   **hoặc có ≥ 1 xác nhận của người** (Mạnh duyệt sửa đổi 03/11, ROADMAP §3 mục 28). Giá trị kế thừa có nguồn duy nhất S08 chỉ để bắt mâu
   thuẫn và hiện ở `/ops`, **không hiện trên Invest** khi chưa có nguồn khác xác nhận. Tên toà/trục được lên (tin cũng nói
   tới); bí danh mã căn S08 ở local.
+- **Sửa đổi 08/11 (Mạnh chốt «cứ bỏ các luật nội bộ», ROADMAP §3 mục 38)**: thông tin dự án do chủ đầu tư hay nhà nước công bố
+  là công khai. Vật thể và giá trị dựng từ danh mục S07, S08, S09 (dự án, phân khu, toà, trục, căn, chủ đầu tư, pháp lý, bàn giao)
+  **được lên cloud và Invest**, kể cả khi chưa có tin trỏ vào; hai gạch trên về «ở lại máy local» và «không hiện trên Invest» hết
+  hiệu lực cho loại dữ liệu này. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai»). Câu 11 đọc lại: chỉ vai suy
+  luận và hồ sơ người đã gộp ở lại `/ops`. Mâu thuẫn tin ↔ danh mục vẫn lên thẻ (§7.4). Căn cứ: `docs/research/danh-ba-du-an-0811.md` §3.1.
 - ZCode và DATA-CONTRACT không đổi: danh bạ nằm sau `stg_*`.
 
 ### 10. Phân kỳ và thứ tự (luật 11: chỉ dựng cấp có dữ liệu lấp)
@@ -188,7 +193,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 9. **Gắn ở mức nào?** Listing gắn vật thể ở mức sâu nhất có bằng chứng; không đoán tầng, không gắn theo toạ độ đơn thuần.
 10. **Kế thừa có tự nuôi không?** Phát biểu `registry_inherit` không quay về làm bằng chứng cho vật thể; trường thuộc listing
     không kế thừa từ vật thể.
-11. **Được lên đâu?** Vật thể/giá trị chỉ từ S08 không lên Invest; vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`.
+11. **Được lên đâu?** Vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`. (Vế cũ «vật thể/giá trị chỉ từ S08 không lên Invest» bỏ từ 08/11, §9.)
 
 ## Hệ quả
 
@@ -196,7 +201,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 - `CONTEXT.md`: thêm Thửa, Căn, Danh bạ, Vai trò; sửa Căn nhà, Tòa nhà, Người bán (cùng PR này).
 - ROADMAP §3 mục 22; §5 chỉ mục ADR.
 - Hàng code (T3): migration bảng danh bạ + mở ràng buộc `field_assertions` (`resource_name`, `method`, `field`);
-  resolver mới thay `resolve-properties.mjs`; `sync-cloud` lọc vật thể chỉ-S08; bảng `sellers` cũ (19 dòng local) được
+  resolver mới thay `resolve-properties.mjs`; `sync-cloud` đẩy bảng danh bạ (bỏ lọc vật thể chỉ-S08 từ 08/11, §9); bảng `sellers` cũ (19 dòng local) được
   `parties` thay.
 - Con số «~19% căn là mảnh vỡ do khoá» trong thảo luận 27/10 **bị rút**: bỏ giá khỏi khoá vừa gộp đúng mảnh vỡ vừa gộp
   nhầm nhà khác nhau ở cùng điểm toạ độ.

@@ -377,7 +377,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    mà S03 thu là tầng C — hiện trên `/ops/**` ở cloud, đi qua `ops_heartbeat`, làm ngữ cảnh cho agent; tên nguồn
    thật vẫn tầng A, ngoài `/ops/sources` chỉ mã `S0x` + vai trò. Tên tài khoản thu chưa chốt. Sửa đổi ADR-0007.
 15. **S08 như nguồn hiệu chuẩn** (24/10): chỉ đọc, ≤ 1 lần/tuần, chỉ nội bộ, không tái xuất lên cổng công khai
-   (AGENTS.md cạnh luật 5).
+   (AGENTS.md cạnh luật 5). **Thay bởi mục 38 (08/11)** cho thông tin dự án: còn giữ ≤ 1 lần/tuần, chỉ đọc, `stg_*` không sync nguyên bảng.
 16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
    độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
    đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
@@ -418,7 +418,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    nút vật thể listing gắn vào, ở mức sâu nhất biết được; UPI neo toà hoặc thửa, đúc một lần. Kế thừa hai chiều theo năm
    luật (chỉ trường thuộc vật thể, không đè, không tự nuôi, mâu thuẫn ra thẻ, rút dây chuyền). Nhà phố/đất: một vật thể tạm
    mỗi tin, gộp theo bằng chứng — toạ độ S06 chỉ là tín hiệu phụ. S08: vật thể chỉ-S08 ở local, giá trị chỉ-S08 không lên
-   Invest. Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
+   Invest (**thay bởi mục 38**, 08/11: thông tin dự án S08 lên cloud và Invest). Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
 23. **Quỹ hàng là sản phẩm SaaS riêng** (29/10, Mạnh chốt «Chốt app riêng» và «Chốt, viết ADR»; **ADR-0017**): ứng dụng
    quản lý hàng cho sàn môi giới, phía cung của Platform, **không phải cổng thứ ba** của Invest — `app/` không có route nào
    của nó; kho riêng tư `onehub-quy-hang`, cơ sở dữ liệu riêng. Nguyên tắc SaaS: cơ chế ở kiến trúc, mỗi kết nối là một
@@ -449,7 +449,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    Housing Dictionary của Beike. Tra căn khi giao dịch và xác nhận nằm ở Quỹ hàng, đội mình đi cùng đường như một công ty;
    trang Ops để kiểm độ phủ và vận hành. Máy thu kéo sự kiện lớp danh mục về, thành phát biểu qua cửa kiểm; Invest không mở
    cửa vào (ADR-0017 §6 sửa). Vật thể ra khỏi máy thu khi có tin hoặc có xác nhận; thứ chỉ từ S08 ở lại, kể cả tên toà
-   (ADR-0016 §9 sửa). Lát đầu Ocean Park 1 và Grand Park cao tầng, mở thêm bằng cấu hình. Không trả theo lượt; hai công ty độc
+   (ADR-0016 §9 sửa; vế «chỉ từ S08 ở lại» **thay bởi mục 38**, 08/11). Lát đầu Ocean Park 1 và Grand Park cao tầng, mở thêm bằng cấu hình. Không trả theo lượt; hai công ty độc
    lập cùng giá trị thì lên lớp sự thật. Hàng: DB1, DN1–DN4; mục chờ DN5–DN7.
 29. **S01 thu theo ID có trong danh sách S02** (03/11, Mạnh chốt «Cho dùng ID S02», sửa luật 5 và ADR-0009): tìm kiếm S01 chạm
     trần 15 trang nên chỉ phủ khoảng 2,3% số căn hoạt động ở 3 thành phố. Mở thẳng trang chi tiết theo ID; số S02 không lên cổng, doanh thu
@@ -457,7 +457,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 30. **Gắn tin S03 vào căn làm đầu tiên sau 05/11, diện tích đi theo** (04/11, Mạnh chốt «Gộp, làm đầu tiên»): chuỗi `GC0`, `GCQ1`, `GCQ2`, `GC1`, `DN1`, `DB1`,
     `PL13`, `PL20`, `GC2`, `GC3` (mốc `GCM1`), bắt đầu từ Ocean Park. Đo 04/11: 0/3.708 tin S03 gắn căn; chỉ 45/2.175 tin thiếu m² có trục.
     Diện tích tin ghi thành phát biểu, tin khác nhận dải kèm nhãn «suy ra», không vào `area_m2`, giá/m², thước giá. S08 chỉ đối chiếu nội
-    bộ, luật 5 và ADR-0016 §9 không đổi. Ba câu còn mở chốt ở Cổng Phạm vi của `GC3`: `docs/plan/pham-vi-gan-can-s03-0411.md`.
+    bộ, luật 5 và ADR-0016 §9 không đổi (vế này **thay bởi mục 38**, 08/11: giá trị S08 là thông tin dự án công khai; diện tích suy ra vẫn theo luật «suy ra» ở trên). Ba câu còn mở chốt ở Cổng Phạm vi của `GC3`: `docs/plan/pham-vi-gan-can-s03-0411.md`.
     Mạnh và đội kiểm tay theo từng nhóm trước, thống kê trường hợp rồi mới làm bộ đọc: đo 04/11 chưa có nhãn người nào.
     **Sửa Q4/H5** (Mạnh chốt «Cho ghi suy ra»): mỗi nhóm có quy ước chuẩn hoá; quy ước đã qua người và đạt eval theo nhóm được tự ghi giá trị kèm nhãn
     «suy ra» và căn cứ, chữ bài nói khác thì chữ bài thắng; người duyệt một lần cho mỗi phiên bản. Ngữ cảnh chưa qua eval vẫn không tự quyết. Hàng `GCQ1`, `GCQ2`.
@@ -484,7 +484,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     nghiệm thu PL30 làm sau khi DO1 có số đo hằng ngày. Hàng PL34.
 37. **Danh bạ phường/xã toàn quốc và 150 dự án S08** (08/11, Mạnh «Đồng ý»): nạp đủ 3.321 xã, phường, đặc khu theo mã của
     Cục Thống kê (dữ liệu công, sinh ở repo onehub-quy-hang), tên xã cũ là bí danh, ranh giới OSM khớp vào mã; mở danh bạ
-    toà–trục–căn ra 150 dự án của danh mục nội bộ S08. Hàng PX1, PX2.
+    toà–trục–căn ra 150 dự án của danh mục S08 (từ 08/11 công khai, mục 38). Hàng PX1, PX2.
 35. **Duyệt trên Ops theo hạng mục** (07/11, Mạnh duyệt báo cáo `docs/research/soat-ops-0711.md`, «Đồng ý, tôi đã đăng
     nhập lại Reui pro»):
     - Thẻ Đối chiếu (chỉ ghi nhật ký) rời Hàng duyệt thành lát chấm mẫu ~30 thẻ/tuần, đáp án bốn lựa chọn.
@@ -498,6 +498,46 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 36. **S01 dừng sau nấc 1, thử lại theo lịch** (07/11, Mạnh «Dừng S01» rồi «duyệt lịch s01»): lượt 1 thu 40 căn, 12.410 đêm
     nhưng 24/30 căn không giá dù ngày hỏi còn trống (nghi chặn mềm). Nghỉ tới hết 09/11; 10/11 dò 20 căn đối chứng nhịp
     12–20 giây; ≥50% có giá → 50 căn rồi 150 cách ngày; 20–50% → dò lại 13/11; <20% → chỉ thu lịch/đêm. Hàng ZC10.
+
+38. **Thông tin dự án là công khai** (08/11, Mạnh: «Đây là dữ liệu thông tin dự án, dữ liệu công khai của chính phủ và chủ đầu tư
+    dự án cho toàn bộ người dân nắm thông tin, nên tôi quyết định cứ bỏ các luật nội bộ, để thuận lợi hơn cho mình trong việc sắp
+    xếp và liên kết thông tin»): thông tin dự án (tên, địa chỉ, chủ đầu tư, pháp lý, quy mô, phân khu, toà, trục, căn, bàn giao,
+    tiện ích, mặt bằng) từ S07, S08, S09 và nguồn nhà nước lên cloud, Invest và API qua danh bạ. Sửa AGENTS luật 5, ADR-0016 §9,
+    `.claude/rules/pii-spl.md`. Giữ: tên nguồn thật tầng A; `stg_*` thô không sync nguyên bảng; S02 theo luật 5; chỉ số giá tổng
+    hợp S06/S07 theo mục 27. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai», 08/11). Rủi ro đã nêu: điều khoản S07 cấm thương mại, S09
+    chưa kiểm điều khoản. Code (sync-cloud, DN4) và `CONTEXT.md` đổi theo hàng sau. Căn cứ `docs/research/danh-ba-du-an-0811.md`.
+
+39. **Đối chiếu nhất quán danh bạ dự án** (08/11, Mạnh «Đồng ý với các khuyến nghị», `docs/research/doi-chieu-nhat-quan-0811.md` §5):
+    - Hỏi-1: chữ hiển thị «**Dự án**» thay «Khu đô thị» (UI, văn xuôi, tiêu chí, CONTEXT); khu đô thị, đại đô thị là quy mô của dự án.
+      **Chỉ đổi nhãn**: mã `project`, `asset_nodes.node_type`, RESO `SubdivisionName`, tên bảng, cột, URL không đổi.
+    - Hỏi-2: khác chủ đầu tư hoặc mở bán riêng → dự án con có dự án cha (`parent_id`); cùng chủ đầu tư → phân khu. Ba nút Grand
+      Park đổi loại ở hàng DA1, không chặn DB1. ADR-0016 §7 mở kế thừa từ nút vùng (chủ đầu tư, phường).
+    - Hỏi-3: căn sơ cấp S08 **chưa** thành tin trong danh sách Bán, thước giá, metrics; giá chủ đầu tư và quỹ căn hiện ở trang dự án,
+      danh bạ. Câu «S02, S08 không tính là tin hiển thị được» giữ nguyên.
+    - Hỏi-4: gói Invest đẩy sang Quỹ hàng được mang thông tin dự án S08; vẫn không mang tên nguồn, đường dẫn bài gốc (sửa ADR-0017
+      khi hàng đẩy mở).
+    - Hỏi-5: thứ tự code — mở `buildings.iso_region` toàn quốc (migration mới) trước PX2; sửa mã căn S06 và khoá gộp căn ngay sau
+      GCM1; ghi thẳng cột, `mappings.yaml`, sync-cloud gộp vào DA0 và DN4.
+    Sửa văn bản (CONTEXT, ADR-0011 Qđ 2, ADR-0013 §2, ADR-0016 §1/§3/§7) theo hàng DA0.
+    Cùng ngày Mạnh «phê duyệt cả 4 khuyến nghị câu hỏi» của `danh-ba-du-an-0811.md` §0: thêm Q3 phần còn lại (thu thử S09 đúng Ocean Park 1
+    và Grand Park, ≤ 60 lời gọi, rồi mới thu toàn bộ) và Q4 (làm với dữ liệu sẵn có trước: DA1, DS2+, DA2, chưa thu mới). Trần/nhịp
+    §8.2 cho S09 toàn bộ và S07 chờ chốt riêng.
+    Sau đó Mạnh chốt nguyên tắc: «Phần thu thì tôn trọng giải pháp của ZCode, chỉ hỗ trợ khi ZCode không thể thực hiện hay không hiệu
+    quả». Trần, nhịp, đường thu (kể cả cách xử robots.txt của S09) do ZCode đề xuất và chọn; Claude chỉ góp ý và giữ phía sau `stg_*`.
+    Kế hoạch: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §8.
+    Nhãn dự án theo vòng đời (Mạnh «Theo khuyến nghị», 08/11): một nhãn «Dự án» không đổi; trạng thái là huy hiệu «Sắp mở bán», «Đang mở
+    bán», «Đã bàn giao» từ RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`. URL, tìm kiếm và bộ lọc không đổi theo trạng thái.
+    Kế hoạch thi công bản 2 (Mạnh «Theo khuyến nghị», 08/11): (1) cặp nối dự án do máy đề xuất, đội ops duyệt trên thẻ, cặp cùng căn cứ duyệt
+    loạt bằng «thẻ luật», Mạnh xem mẫu; (2) mở thu toàn bộ S09 khi S09 phủ ≥ 50% trong 282 dự án S06 và phân giải ≥ 70% mã toà S03 ở hai dự
+    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục hoặc đã người duyệt cặp nối, có xã/phường, và có tin đang rao
+    hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
+    Mốc S09 hai thước (Mạnh, 08/11: «Điều quan trọng nhất của tôi là nguồn S03», chọn «cả hai»): nấc 1 thu S09 cho các dự án S03 nói
+    tới khi phủ đo trên bài S03 ≥ 50% và phân giải ≥ 70%; nấc 2 thu toàn bộ khi thêm phủ 282 dự án S06 ≥ 50%. Số sơ bộ: thước S03 ≈ 99%,
+    thước S06 ≈ 4,6% (S09 là danh mục Hà Nội). Hàng DA10, DAZ2.
+    Đường thu toà S09 (Mạnh, 08/11: «Dùng đường API, Trang Chủ đầu tư, Tìm từ Google Search để có thêm nguồn»; «Có ở đây là dùng
+    qua API»): đường công khai cộng S08 mới phân giải 51% mã toà S03 (thiếu toà Grand Park, Zurich OP1). Để tăng, dùng cả ba đường:
+    đường API mà robots.txt của S09 cấm (chỉ danh sách toà của các dự án S03 nói tới, một lần, không quỹ căn, raw local, ZCode chọn
+    trần và nhịp; vòng `claudedp-0811-13`), trang chủ đầu tư, và tìm kiếm web. Quỹ căn S09 qua đường cấm vẫn chưa được duyệt.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -524,7 +564,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | S06 | 29.762 tin bán · 2 vùng · ~2.200 mới/ngày | ~45.000 tin bán · 5 vùng · 2 lượt/ngày | bộ thu vùng mới (tham số vùng đúng, T2); sửa deadlock resolve trước khi lên 2 lượt |
 | S03 | 1.153 tin · ~130 mới/ngày · 28 nhóm | 2.500 tin · 200 mới/ngày | thêm nhóm; chỉ đọc, an toàn Zalo |
 | S01 | 611 căn · thu tuần một lần | 1.000 căn · 15 mới/ngày | chạy hằng ngày; rủi ro chống bot |
-| S08 | 148 dự án / 19.669 căn | 200 dự án / 30.000 căn | ≤1 lượt/tuần, chỉ nội bộ (không lên cổng Invest/API) |
+| S08 | 148 dự án / 19.669 căn | 200 dự án / 30.000 căn | ≤1 lượt/tuần; thông tin dự án lên Invest/API qua danh bạ từ 08/11 (mục 38) |
 | S05 | 28 tin, paused | không tính | không nạp credit |
 | S02 | — | không tính | chỉ hiệu chuẩn |
 
