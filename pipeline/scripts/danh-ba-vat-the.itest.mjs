@@ -659,9 +659,17 @@ async function soatAC5(chayDem) {
       `SELECT count(*)::int AS n FROM buildings WHERE region_node_id = $1`, [d.id["q-khu-mot"]]);
     const { rows: canMoi } = await d.c.query(
       `SELECT u.unit_key FROM units u JOIN registry_aliases a ON a.object_key = u.unit_key AND a.kind = 'ma_nguon' AND a.value = 'q3/QX103.01'`);
+    // Kỳ vọng viết trước: mã mới q3/QX103.01 (toà QX1, trục có sẵn, tầng mới) → đúng MỘT khoá mới là căn của nó.
+    const kyVong = canMoi.map((u) => `u:${u.unit_key}`).sort();
+    const thuc = moi.map((r) => `${r.cap}:${r.k}`).sort();
     if (khuMot > 0) loi.push("DBM-AC-5 đêm lan sang khu chưa dựng");
-    else if (canMoi.length !== 1 || !moi.some((r) => r.k === canMoi[0].unit_key)) loi.push("DBM-AC-5 phân khu không được giữ tươi");
-    else if (moi.some((r) => r.cap === "b")) loi.push("DBM-AC-5 đêm đúc toà không có mã mới");
+    else if (canMoi.length !== 1) loi.push("DBM-AC-5 phân khu không được giữ tươi");
+    else if (JSON.stringify(thuc) !== JSON.stringify(kyVong)) loi.push(`DBM-AC-5 tập khoá mới khác kỳ vọng: ${thuc.length} so với ${kyVong.length}`);
+    else {
+      const { rows: [v] } = await d.c.query(`SELECT b.region_node_id::int AS r FROM units u JOIN buildings b ON b.building_key = u.building_key
+                                              WHERE u.unit_key = $1`, [canMoi[0].unit_key]);
+      if (v.r !== d.id["q-phan-khu"]) loi.push("DBM-AC-5 căn mới không thuộc toà của phân khu");
+    }
     await chayDem(d);
     if (JSON.stringify(await tapKhoa(d.c)) !== JSON.stringify(k1)) loi.push("DBM-AC-5 đêm lần hai đúc khoá");
     if ((await cdt()) !== cdt0) loi.push("DBM-AC-5 đêm ghi chủ đầu tư");
@@ -673,6 +681,9 @@ test("DBM-AC-5 bước đêm chỉ đúc mã mới của khu đã dựng (qua ph
   assert.deepEqual(await soatAC5(demQuaRbg), []);
   const lan = banChep("lan-khu", [["const khuSlugs = await khuDaDung(c);", "const khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"]]);
   assert.ok((await soatAC5(demTrucTiep(lan))).includes("DBM-AC-5 đêm lan sang khu chưa dựng"), "DBM-AC-5 thước không bắt được đêm lan khu");
+  const thua = banChep("duc-thua", [["  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });",
+    "  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });\n  { const s = (await c.query(\"SELECT building_key FROM buildings LIMIT 1\")).rows[0]; if (s) await c.query(\"INSERT INTO stacks (stack_key, building_key, catalog_tier) VALUES ($1, $2, 'xac_minh')\", [`stk_${'Z'.repeat(26)}`, s.building_key]); }"]]);
+  assert.ok((await soatAC5(demTrucTiep(thua))).some((l) => l.startsWith("DBM-AC-5 tập khoá mới khác kỳ vọng")), "DBM-AC-5 thước không bắt được khoá thừa");
   const boCha = banChep("bo-cha-phan-khu", [["const khuSlugs = await khuDaDung(c);",
     "const khuSlugs = (await c.query(\"SELECT DISTINCT n.slug FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id WHERE n.node_type = 'project'\")).rows.map((r) => r.slug);"]]);
   assert.ok((await soatAC5(demTrucTiep(boCha))).includes("DBM-AC-5 phân khu không được giữ tươi"), "DBM-AC-5 thước không bắt được bỏ đường cha phân khu");
