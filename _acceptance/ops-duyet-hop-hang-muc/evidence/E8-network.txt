@@ -1,0 +1,1 @@
+driver ego-browser (nodejs CLI): khong co duong doc network/console; n-a (driver). Quan sat gian tiep: moi trang tai OK, khong loi hien thi; server :3463 co san, khong tat.
