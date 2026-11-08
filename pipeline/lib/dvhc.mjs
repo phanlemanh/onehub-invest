@@ -198,21 +198,25 @@ export function matchXaCuCoTienTo(text, biDanh) {
 /**
  * So gán khu vực trước/sau theo tỉnh (thước AC-9).
  * @param {{ ma: string, tinh: string|null, truoc: string|null, sau: string|null, cachSau?: string|null }[]} dong
- * @param {{ laXa: (id: string|null) => boolean, khaiTruoc?: Set<string> }} o
+ * @param {{ laXa: (id: string|null) => boolean, khaiTruoc?: Set<string> | ((d: object) => boolean) }} o khaiTruoc:
+ *   tập mã tin, hoặc hàm luật đổi đã khai trước (doi-xa-khai-truoc.json)
  */
 export function soSanhTruocSau(dong, { laXa, khaiTruoc = new Set() }) {
+  const daKhai = typeof khaiTruoc === "function" ? khaiTruoc : (d) => khaiTruoc.has(d.ma);
   const bang = new Map();
-  const mau = { matXa: [], doiXa: [], moiTen: [], moiBiDanh: [] };
+  const mau = { matXa: [], doiXa: [], doiKhai: [], moiTen: [], moiBiDanh: [] };
   for (const d of dong) {
     const t = d.tinh ?? "(không tỉnh)";
-    if (!bang.has(t)) bang.set(t, { tinh: t, tin: 0, truoc: 0, sau: 0, matXa: 0, doiXa: 0, moiTen: 0, moiBiDanh: 0 });
+    if (!bang.has(t)) bang.set(t, { tinh: t, tin: 0, truoc: 0, sau: 0, matXa: 0, doiXa: 0, doiKhai: 0, moiTen: 0, moiBiDanh: 0 });
     const b = bang.get(t);
     b.tin++;
     const xt = laXa(d.truoc), xs = laXa(d.sau);
     if (xt) b.truoc++;
     if (xs) b.sau++;
     if (xt && !xs) { b.matXa++; mau.matXa.push(d.ma); }
-    if (xt && xs && d.truoc !== d.sau && !khaiTruoc.has(d.ma)) { b.doiXa++; mau.doiXa.push(d.ma); }
+    if (xt && xs && d.truoc !== d.sau) {
+      if (daKhai(d)) { b.doiKhai++; mau.doiKhai.push(d.ma); } else { b.doiXa++; mau.doiXa.push(d.ma); }
+    }
     if (!xt && xs) {
       if (d.cachSau === "bi-danh") { b.moiBiDanh++; mau.moiBiDanh.push(d.ma); } else { b.moiTen++; mau.moiTen.push(d.ma); }
     }

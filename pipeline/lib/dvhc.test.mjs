@@ -215,3 +215,16 @@ test("PX1-AC-7 S03: nhóm khai tỉnh khớp xã của tỉnh đó; nhóm chưa 
   const hong = ganPhuongS03(bai, null, { entries, moiThiTruong: moiTinh, biDanhCua: new Map() });
   assert.equal(hong.ph?.market, "vn-nghe-an", "bản hỏng phải gắn tỉnh khác — chiều đỏ của ca");
 });
+
+test("PX1-AC-9 luật đổi khai trước dạng hàm: đổi theo luật vào cột riêng, đổi ngoài luật vẫn đỏ", () => {
+  const thiTruong = new Set(Object.values(MA_TINH_THI_TRUONG));
+  const laXa = (id) => !!id && !thiTruong.has(id);
+  const dong = [
+    { ma: "o1", tinh: "vn-hcmc", truoc: "vn-hcmc-binh-chanh", sau: "vn-hcmc-hung-long", cach: "v3" },
+    { ma: "o2", tinh: "vn-hcmc", truoc: "vn-hcmc-binh-chanh", sau: "vn-hcmc-ben-thanh", cach: "chu" },
+  ];
+  const kq = soSanhTruocSau(dong, { laXa, khaiTruoc: (d) => d.cach === "v3" });
+  assert.deepEqual(kq.mau.doiKhai, ["o1"]);
+  assert.deepEqual(kq.mau.doiXa, ["o2"]);
+  assert.ok(kq.do.some((m) => m.startsWith("PX1-AC-9 đổi xã: 1 (vn-hcmc)")));
+});
