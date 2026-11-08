@@ -124,7 +124,7 @@ S08 vào danh sách Bán, thước giá hay metrics (mục 39 Hỏi-3).
 Quy ước:
 - «Xong khi» là câu bắt cho cổng nghiệm thu; người thi công chép sang `contract.md`.
 - Hàng đã có trong lộ trình giữ câu bắt của lộ trình, kế hoạch chỉ ghi phần thêm.
-- Mã tạm, giám sát đặt mã chính thức.
+- Mã tạm (DR1, DF1, DB1c, DA0a/b, DA1, DA1b, DC1, DA2–DA9, Z1a/Z1b, DO-S09), giám sát đặt mã chính thức.
 - **Số migration xin phiên liên làn** (sổ số); 084 đã thuộc PX1.
 - **DDL lên Supabase phải xin Mạnh duyệt trước khi gộp PR** (ghi nhớ «Mạnh không chạy SQL Supabase»). Hàng có DDL cloud ghi rõ.
 
@@ -132,11 +132,12 @@ Quy ước:
 
 | Mã | Việc | Làn · hạng | Đứng trên | Xong khi |
 |---|---|---|---|---|
-| **DR1** | Migration mở `buildings.iso_region` và regex `upi` (082:15–16) cho 34 tỉnh. Mã ISO của tỉnh sau sáp nhập = **mã ISO cũ của tỉnh mang tên được giữ** (34 tỉnh mới đều giữ tên một tỉnh cũ, nên đã có mã), kèm bảng tra mã Cục Thống kê ↔ ISO trong migration. Bỏ bản đồ cứng `ISO = {hanoi, hcmc}` ở `danh-ba-vat-the.mjs:17`, đọc từ bảng tra | Claude · T2 | DB1b gộp xong (tệp `danh-ba-vat-the.mjs` thuộc vùng DB1b) | Bảng tra đủ 34 dòng, khớp `pipeline/data/dvhc` của PX1; test chèn toà cho mỗi mã ISO qua được CHECK, mã lạ bị từ chối; dựng lại Ocean Park 1 và Grand Park ra đúng UPI cũ (0 UPI đổi) |
+| **DR1** | Migration mở `buildings.iso_region` và regex `upi` (082:15–16) cho 34 tỉnh. Mã ISO của tỉnh sau sáp nhập = **mã ISO cũ của tỉnh mang tên được giữ** (34 tỉnh mới đều giữ tên một tỉnh cũ, nên đã có mã), kèm bảng tra mã Cục Thống kê ↔ ISO trong migration. Bỏ bản đồ cứng `ISO = {hanoi, hcmc}` ở `danh-ba-vat-the.mjs:17`, đọc từ bảng tra. Lưu ý: DB1b thêm vào hai tệp này các hàm `kiemDich`, `thamSoTuUrl`, `demTheoKhu`, `khuDaDung`, `buocVatTheDem` và cờ `--db-that`, `--sao-luu`; bước đêm gọi từ `refresh-bait-gap.mjs` | Claude · T2 | DB1b gộp xong (tệp `danh-ba-vat-the.mjs` thuộc vùng DB1b) | Bảng tra đủ 34 dòng, khớp `pipeline/data/dvhc` của PX1; test chèn toà cho mỗi mã ISO qua được CHECK, mã lạ bị từ chối; dựng lại Ocean Park 1 và Grand Park ra đúng UPI cũ (0 UPI đổi) |
 | **DF1** | Migration mở `field_assertions` cho tin: trường `project_node_id` (dd `SubdivisionName`), `subzone_node_id` (extension `ComplexName` trên Property), và `area_id` ở resource `Property` (trigger 082:129 hôm nay chỉ cho `area_id` ở Building). Giá trị là `asset_nodes.id` dạng chữ. Khai trong `mappings.yaml` đủ 6 điều kiện ADR-0011 cho extension | Claude · T2 | — | Ba trường ghi được ở Property với mọi phương pháp hợp lệ; trường lạ vẫn bị từ chối; test trigger xanh. **Gộp trước Cổng Phạm vi của GCQ2**: GCQ2 dùng trường này thay cho «chốt nơi chứa» |
 | **DA3** | Bảng nối mã đa nguồn: nguồn, mã, nút, trạng thái `noi`/`chua_noi`/`tu_choi`, lý do, người duyệt, thời điểm. Khái quát `s08_project_links` (074); 074 thành view đọc từ bảng mới. Mở `registry_aliases` cho nút vùng: `object_key` thêm dạng `node:<asset_nodes.id>`, `kind` thêm `ma_nguon`. Thẻ duyệt cặp nối trên `/ops/review` theo khuôn hạng mục (mục 35), có duyệt loạt bằng «thẻ luật» | Claude · T3 | DF1 | 8 cặp S08 đã nối hiện trong bảng mới, view 074 trả đúng 8 dòng; ghi một cặp qua thẻ thì sinh đúng một bí danh; hoàn tác 5 giây khôi phục trạng thái cũ |
 | **DA0a** | Văn bản theo mục 39: CONTEXT («Dự án», «Phân khu», «Mức gắn», «Danh mục dự án», ba huy hiệu trạng thái), ADR-0011 Qđ 2, ADR-0013 §2, ADR-0016 §1/§3/§7 (dự án cha; kế thừa từ nút vùng, bằng chứng là id nút + id phát biểu gốc) | Claude · T1 | — | Test `route-slugs` và bộ đọc CONTEXT xanh; grep «Khu đô thị» chỉ còn ở chỗ nói quy mô; ADR-0016 §7 có câu kế thừa từ nút vùng |
 | **DA0b** | `mappings.yaml`: `property_type` → `PropertySubType` (còn `kind` mới là `PropertyType`), `block_raw` → `BuildingName`, S08 `project_name` → `SubdivisionName`, bỏ nhãn «chỉ nội bộ»; chạy lại bộ sinh vocab | Claude · T2 (tệp này không nằm trong `t1_skip_globs`) | DA0a; tránh lúc GCQ2, GC2, GC3 đang sửa `mappings.yaml` | Bộ sinh vocab chạy lại không đổi `ref_lookup` ngoài các dòng trên; test pipeline xanh |
+| **DB1c** | Lệnh tay của DB1 ghi `builder_name` lớp `fact`/`hitl` mà `changed_by` trống. Đổi sang `source_field` (nguồn là tệp từ điển), hoặc ghi người duyệt từ điển; rút phát biểu cũ nếu đã ghi | Claude · T1 | DB1b gộp xong | 0 phát biểu `hitl` có `changed_by` trống |
 | — | Sửa lời 5 hàng chưa mở còn ghi luật S08 cũ: DN2, DN4, GC2, GC3, PL10b. DN1 và GN1 đã ký nên không sửa | Giám sát | — | Câu giao, câu bắt khớp mục 38 |
 
 ### GĐ1. Gắn bằng dữ liệu sẵn có
@@ -265,4 +266,5 @@ Kết quả gắn tin là **phát biểu**, không phải bảng kết quả ri�
 - **Chưa có hàng trong bản này** (ghi chép để giám sát cắt riêng):
   - C4: `kind`, `area_m2`, `price_vnd` do transform ghi thẳng vào cột; bộ chặn ghi thẳng mới canh 5 trong 12 trường. Theo Hỏi-5 thì
     gộp vào DA0 và DN4, nhưng phạm vi lớn, nên tách thành hàng riêng sau DC1.
-  - C5: `builder_name` ghi lớp `hitl` mà không có người duyệt (`danh-ba-vat-the.mjs:141-143`): báo phiên DB1b sửa trong hàng của nó.
+  - C5: `builder_name` ghi lớp `hitl` mà không có người duyệt (`danh-ba-vat-the.mjs:141-143`). Phiên DB1b trả lời 08/11: lỗi có từ DB1,
+    nằm ngoài phạm vi đã ký của DB1b (bước đêm của DB1b không ghi `builder_name`). Thành hàng **DB1c** dưới đây.
