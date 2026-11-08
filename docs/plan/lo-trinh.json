@@ -4640,15 +4640,15 @@
       "hang": "T2",
       "vai": "nen",
       "tieu_chi": 9,
-      "cau_giao": "Phân khu và toà S09 vào danh bạ không sinh toà trùng, và có hai số quyết định thu toàn bộ S09: tỉ lệ phủ trên 282 dự án S06 và tỉ lệ phân giải mã toà S03",
-      "bat_khi": "0 toà có hai UPI; toà khớp S08 thành bí danh, không khớp thì lên thẻ; có số phủ và số phân giải (mẫu số: mã toà S03 khác nhau đã chuẩn hoá, bỏ mã cụm); đạt phủ ≥ 50% và phân giải ≥ 70% thì DAZ2 mở",
-      "vi_sao": "Mạnh duyệt mốc mở thu toàn bộ S09 ngày 08/11 (mục 39).",
+      "cau_giao": "Phân khu và toà S09 vào danh bạ không sinh toà trùng, và có ba số quyết định thu S09: phủ trên dự án của S03, phủ trên 282 dự án S06, phân giải mã toà S03",
+      "bat_khi": "0 toà có hai UPI; toà khớp S08 thành bí danh, không khớp thì lên thẻ; có hai số phủ (thước S03: tỉ lệ bài S03 ở nhóm riêng một dự án thuộc dự án có trong S09; thước S06: tỉ lệ 282 dự án S06) và số phân giải (mẫu số: mã toà S03 khác nhau đã chuẩn hoá, bỏ mã cụm). Nấc 1 DAZ2 mở khi phủ thước S03 ≥ 50% và phân giải ≥ 70%; nấc 2 khi thêm phủ thước S06 ≥ 50%",
+      "vi_sao": "Mạnh duyệt mốc mở thu S09 ngày 08/11 (mục 39); cùng ngày Mạnh chọn đo cả hai thước, S03 là nguồn quan trọng nhất.",
       "vung": [
         "db/migrations",
         "pipeline/danh-ba-vat-the.mjs",
         "pipeline/lib/danh-ba-vat-the.mjs"
       ],
-      "ghi_chu": "Toà chỉ có từ S09 nhận catalog_tier thấp nhất. Không đạt mốc: S09 chỉ dùng cho dự án đã phủ, Claude báo liên làn để hỗ trợ ZCode. Kế hoạch: DA5 + DO-S09.",
+      "ghi_chu": "Toà chỉ có từ S09 nhận catalog_tier thấp nhất. Số đo sơ bộ 08/11: phủ thước S03 ≈ 99% bài ở nhóm một dự án; phủ thước S06 ≈ 4,6% (S09 là danh mục Hà Nội, 252/282 dự án S06 ở HCM). Không đạt nấc 2: Claude báo liên làn để ZCode tìm đường khác cho HCM, Đà Nẵng. Kế hoạch: DA5 + DO-S09.",
       "phu": [
         "DA10"
       ]
@@ -4663,10 +4663,10 @@
       "slug": "thu-s09-toan-bo",
       "hang": "T2",
       "vai": "nen",
-      "tieu_chi": 5,
-      "cau_giao": "S09 thu toàn bộ theo giải pháp ZCode và nạp vào stg_* không nhân dòng",
-      "bat_khi": "Snapshot toàn bộ trong trần ZCode khai; bộ nạp chạy lại không nhân dòng; gặp chặn thì dừng và báo",
-      "vi_sao": "Chỉ mở khi DA10 đạt mốc phủ và phân giải Mạnh đã duyệt.",
+      "tieu_chi": 6,
+      "cau_giao": "S09 thu theo hai nấc theo giải pháp ZCode — nấc 1 các dự án S03 nói tới, nấc 2 toàn bộ — và nạp vào stg_* không nhân dòng",
+      "bat_khi": "Nấc 1: snapshot đủ các dự án S03 nói tới (danh sách từ DA10) trong trần ZCode khai; nấc 2 chỉ chạy khi DA10 đạt phủ thước S06; bộ nạp chạy lại không nhân dòng; gặp chặn thì dừng và báo",
+      "vi_sao": "Mở theo nấc của DA10 (mục 39): S03 là nguồn quan trọng nhất nên nấc 1 không chờ phủ thước S06.",
       "vung": [
         "collector/src",
         "pipeline/import-s09*"

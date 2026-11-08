@@ -162,10 +162,15 @@ Quy ước:
 | **DA5** | Nạp phân khu, toà S09 vào danh bạ. Trước khi đúc UPI, khớp toà S09 với toà S08 cùng dự án theo mã, tên chuẩn hoá; khớp thì thêm bí danh, không đúc UPI mới; không khớp thì lên thẻ. Toà chỉ có từ S09: `catalog_tier` thấp nhất. Đo phân giải `block_raw` S03 | Claude · T2 | Z1a, DB1b, DA3 | 0 toà có hai UPI; có số **tỉ lệ phân giải** = số mã toà S03 khác nhau (đã chuẩn hoá, bỏ mã cụm như «S1») của hai dự án mà khớp được toà S09 hoặc S08, chia cho tổng số mã đó |
 | **DO-S09** | Đo phủ: tỉ lệ 282 dự án S06 có mặt trong danh sách dự án S09. ZCode lấy danh sách theo cách của mình; Claude ghép tên với nút | ZCode · Claude · T1 | Z1a, DA2 | Có số phủ, kèm danh sách dự án không phủ |
 
-**Mốc mở thu toàn bộ S09** (đã quyết, §8 câu 2): phủ ≥ 50% **và** phân giải ≥ 70%.
-- Đạt: Z1b mở.
-- Không đạt: S09 chỉ dùng cho các dự án đã phủ, không thu toàn bộ. Claude báo liên làn để ZCode tìm đường khác; đây là trường hợp
+**Mốc mở thu S09** (đã quyết, §8 câu 2; Mạnh chọn «cả hai» thước ngày 08/11): hai nấc.
+- **Nấc 1 — các dự án S03 nói tới**: phủ thước S03 ≥ 50% (tỉ lệ bài S03 ở nhóm riêng một dự án mà dự án có trong S09) **và**
+  phân giải ≥ 70%. Đạt: Z1b thu S09 cho các dự án ấy.
+- **Nấc 2 — toàn bộ S09**: thêm phủ thước S06 ≥ 50% (282 dự án S06 có từ 10 tin). Đạt: Z1b thu toàn bộ.
+- Không đạt nấc nào: S09 chỉ dùng cho các dự án đã phủ. Claude báo liên làn để ZCode tìm đường khác; đây là trường hợp
   «không hiệu quả» của nguyên tắc mục 39, nên Claude vào hỗ trợ.
+- Số đo sơ bộ 08/11 (danh sách 394 dự án S09 từ sitemap): thước S03 ≈ 99% bài ở nhóm một dự án (Grand Park, Ocean Park, Masteri,
+  Smart City, Ecopark, Global City; thiếu Ocean Park 3) → vế phủ nấc 1 đạt; thước S06 ≈ 4,6% (13/282; S09 có 380 dự án Hà Nội, chỉ 4
+  ở HCM, còn 252/282 dự án S06 ở HCM) → nấc 2 không đạt. Vế phân giải chờ tên toà Ocean Park 1, Grand Park.
 
 ### GĐ3. Mở rộng nguồn
 
@@ -220,6 +225,8 @@ Kết quả gắn tin là **phát biểu**, không phải bảng kết quả ri�
 - Ước khối lượng: ~430 cặp, phần lớn khớp rõ.
 
 **Câu 2. Mốc mở thu toàn bộ S09** (đã quyết): S09 phủ ≥ 50% trong 282 dự án S06 **và** phân giải ≥ 70% mã toà S03 ở hai dự án thử.
+*Bổ sung 08/11* (Mạnh: S03 là nguồn quan trọng nhất; chọn «cả hai» thước): thêm nấc 1 đo phủ trên dự án của S03, mở thu S09 cho các
+dự án ấy; mốc 282 dự án S06 giữ làm nấc 2 cho thu toàn bộ (GĐ2).
 *Khuyến nghị*: duyệt hai mốc này.
 
 **Câu 3. Dự án nào đủ tin cậy để hiện trên Invest** (DA8; đã quyết)?

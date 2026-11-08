@@ -525,6 +525,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     loạt bằng «thẻ luật», Mạnh xem mẫu; (2) mở thu toàn bộ S09 khi S09 phủ ≥ 50% trong 282 dự án S06 và phân giải ≥ 70% mã toà S03 ở hai dự
     án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục hoặc đã người duyệt cặp nối, có xã/phường, và có tin đang rao
     hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
+    Mốc S09 hai thước (Mạnh, 08/11: «Điều quan trọng nhất của tôi là nguồn S03», chọn «cả hai»): nấc 1 thu S09 cho các dự án S03 nói
+    tới khi phủ đo trên bài S03 ≥ 50% và phân giải ≥ 70%; nấc 2 thu toàn bộ khi thêm phủ 282 dự án S06 ≥ 50%. Số sơ bộ: thước S03 ≈ 99%,
+    thước S06 ≈ 4,6% (S09 là danh mục Hà Nội). Hàng DA10, DAZ2.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
