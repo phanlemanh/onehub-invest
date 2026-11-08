@@ -1,6 +1,6 @@
 # Kế hoạch thu thập và gắn danh bạ dự án, phân khu, toà, căn
 
-Ngày: 2026-11-08 · Trạng thái: **bản thi công, trình Mạnh**. Bản 2, viết lại sau khi một người đọc độc lập kiểm «đủ để làm chưa»;
+Ngày: 2026-11-08 · Trạng thái: **bản thi công, Mạnh đã duyệt 08/11**. Bản 2, viết lại sau khi một người đọc độc lập kiểm «đủ để làm chưa»;
 những gì đã sửa nằm ở §10.
 
 Gom từ:
@@ -12,7 +12,7 @@ Gom từ:
 - Mục 38: thông tin dự án là công khai, kể cả giá chủ đầu tư và quỹ căn.
 - Mục 39: Q1–Q4; Hỏi-1 đến Hỏi-5; phần thu theo giải pháp của ZCode; một nhãn «Dự án» với huy hiệu trạng thái.
 
-Còn ba câu chờ Mạnh, ở §8. Không câu nào chặn GĐ0.
+Ba câu ở §8 đã quyết theo khuyến nghị (Mạnh, 08/11). Kế hoạch không còn câu chờ Mạnh; DDL cloud vẫn xin duyệt từng PR.
 
 ## 0. Một trang
 
@@ -162,7 +162,7 @@ Quy ước:
 | **DA5** | Nạp phân khu, toà S09 vào danh bạ. Trước khi đúc UPI, khớp toà S09 với toà S08 cùng dự án theo mã, tên chuẩn hoá; khớp thì thêm bí danh, không đúc UPI mới; không khớp thì lên thẻ. Toà chỉ có từ S09: `catalog_tier` thấp nhất. Đo phân giải `block_raw` S03 | Claude · T2 | Z1a, DB1b, DA3 | 0 toà có hai UPI; có số **tỉ lệ phân giải** = số mã toà S03 khác nhau (đã chuẩn hoá, bỏ mã cụm như «S1») của hai dự án mà khớp được toà S09 hoặc S08, chia cho tổng số mã đó |
 | **DO-S09** | Đo phủ: tỉ lệ 282 dự án S06 có mặt trong danh sách dự án S09. ZCode lấy danh sách theo cách của mình; Claude ghép tên với nút | ZCode · Claude · T1 | Z1a, DA2 | Có số phủ, kèm danh sách dự án không phủ |
 
-**Mốc mở thu toàn bộ S09** (khuyến nghị, §8 câu 2): phủ ≥ 50% **và** phân giải ≥ 70%.
+**Mốc mở thu toàn bộ S09** (đã quyết, §8 câu 2): phủ ≥ 50% **và** phân giải ≥ 70%.
 - Đạt: Z1b mở.
 - Không đạt: S09 chỉ dùng cho các dự án đã phủ, không thu toàn bộ. Claude báo liên làn để ZCode tìm đường khác; đây là trường hợp
   «không hiệu quả» của nguyên tắc mục 39, nên Claude vào hỗ trợ.
@@ -210,19 +210,19 @@ Kết quả gắn tin là **phát biểu**, không phải bảng kết quả ri�
 | Hai UPI cho một toà khi S09 và S08 cùng có | DA5 khớp trước khi đúc |
 | Tên nguồn thật lọt lên cloud | Bộ soát tầng A ở cửa ra phủ bảng danh bạ mới (DN4) |
 
-## 8. Ba câu chờ Mạnh
+## 8. Ba câu đã quyết (Mạnh «Theo khuyến nghị», 08/11; ROADMAP §3 mục 39)
 
-**Câu 1. Ai duyệt cặp nối dự án** (282 mã S06 ở DA2, 142 dự án S08 ở PX2, rồi S09, S07)?
+**Câu 1. Ai duyệt cặp nối dự án** (đã quyết) (282 mã S06 ở DA2, 142 dự án S08 ở PX2, rồi S09, S07)?
 *Khuyến nghị*:
 - Máy đề xuất ứng viên theo tên chuẩn hoá cộng tỉnh.
 - Đội ops duyệt trên thẻ DA3; cặp cùng căn cứ duyệt loạt bằng «thẻ luật» (mục 35).
 - Mạnh chỉ xem mẫu.
 - Ước khối lượng: ~430 cặp, phần lớn khớp rõ.
 
-**Câu 2. Mốc mở thu toàn bộ S09**: S09 phủ ≥ 50% trong 282 dự án S06 **và** phân giải ≥ 70% mã toà S03 ở hai dự án thử.
+**Câu 2. Mốc mở thu toàn bộ S09** (đã quyết): S09 phủ ≥ 50% trong 282 dự án S06 **và** phân giải ≥ 70% mã toà S03 ở hai dự án thử.
 *Khuyến nghị*: duyệt hai mốc này.
 
-**Câu 3. Dự án nào đủ tin cậy để hiện trên Invest** (DA8)?
+**Câu 3. Dự án nào đủ tin cậy để hiện trên Invest** (DA8; đã quyết)?
 *Khuyến nghị*: hiện khi đủ ba điều kiện:
 - có ít nhất một nguồn danh mục (S08, S09 hoặc S07), hoặc đã có người duyệt cặp nối;
 - có xã/phường;

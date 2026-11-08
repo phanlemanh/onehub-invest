@@ -521,6 +521,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Kế hoạch: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §8.
     Nhãn dự án theo vòng đời (Mạnh «Theo khuyến nghị», 08/11): một nhãn «Dự án» không đổi; trạng thái là huy hiệu «Sắp mở bán», «Đang mở
     bán», «Đã bàn giao» từ RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`. URL, tìm kiếm và bộ lọc không đổi theo trạng thái.
+    Kế hoạch thi công bản 2 (Mạnh «Theo khuyến nghị», 08/11): (1) cặp nối dự án do máy đề xuất, đội ops duyệt trên thẻ, cặp cùng căn cứ duyệt
+    loạt bằng «thẻ luật», Mạnh xem mẫu; (2) mở thu toàn bộ S09 khi S09 phủ ≥ 50% trong 282 dự án S06 và phân giải ≥ 70% mã toà S03 ở hai dự
+    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục hoặc đã người duyệt cặp nối, có xã/phường, và có tin đang rao
+    hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
