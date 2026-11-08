@@ -12,6 +12,13 @@ const BATCH = 1000;
 /** v4 (2026-10-24): thêm kind inventory_unit + nguồn s08-danh-muc (S08 quỹ căn). */
 export const SNAPSHOT_SCHEMA_VERSION = 4;
 
+// U1(9) — link-nguoi-ban-s03: hằng schemaVersion của HAI kênh S03 sống ở đây
+// (core), server.ts không khai lại giá trị, chỉ re-export.
+/** kênh tin S03 (DATA-CONTRACT v6 — album_meta). */
+export const ZALO_AGENT_SCHEMA_VERSION = 6;
+/** kênh hồ sơ S03 (DATA-CONTRACT v7 — hồ sơ người bán). */
+export const HO_SO_SCHEMA_VERSION = 7;
+
 /**
  * Ghi raw snapshots bất biến: snapshots/<city>/<snapshotId>/items-NNNN.json.gz
  * + manifest.json. Payload giữ nguyên vẹn; ghi xong không bao giờ sửa.

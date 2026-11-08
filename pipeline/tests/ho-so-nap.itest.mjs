@@ -52,8 +52,9 @@ test("ho-so-nap: v7 nạp đúng bảng + CHUA-AP-080 khi thiếu bảng + nạp
   assert.equal(n, 2, "nạp đủ 2 dòng");
   const un = (await c.query("SELECT username FROM stg_s03_ho_so WHERE ma_tai_khoan = $1", [`9${ts}`])).rows[0].username;
   assert.ok(String(un).startsWith("u."), "username đúng");
-  // (3) nạp lại → không nhân đôi
-  nap(d2);
+  // (3) nạp lại → không nhân đôi (U1(6): kiểm cả MÃ THOÁT của lần nạp lại)
+  const r3 = nap(d2);
+  assert.equal(r3.status, 0, "rc 0 khi nạp lại (U1-6)");
   const n2 = Number((await c.query("SELECT count(*) FROM stg_s03_ho_so WHERE ma_tai_khoan LIKE $1", [`%${ts}`])).rows[0].count);
   assert.equal(n2, 2, "ON CONFLICT không nhân đôi");
   await c.end();

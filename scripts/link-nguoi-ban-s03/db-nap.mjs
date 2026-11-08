@@ -94,16 +94,17 @@ async function chay(argv) {
   const r2 = nap(dHoSo);
   kiem("nạp snapshot hồ sơ v7 sau 080: đủ 2 dòng", r2.status === 0 && (await dem()) === 2, `rc=${r2.status}`);
 
-  // (3) nạp lại → +0
-  nap(dHoSo);
-  kiem("nạp lại: +0 dòng", (await dem()) === 2);
+  // (3) nạp lại → +0  (U1(6): giữ KẾT QUẢ + kiểm mã thoát của chính lần nạp lại)
+  const r3 = nap(dHoSo);
+  kiem("nạp lại: rc 0 + +0 dòng", r3.status === 0 && (await dem()) === 2, `rc=${r3.status}`);
 
   // (4) view giữ dòng mới nhất mỗi mã (bản mới hơn cùng mã)
   // bản "mới hơn" cùng mã — fetchedAt muộn 5s + sourceId khác để view chọn nó
   const lucMoi = new Date(Date.now() + 5000).toISOString();
   const hoSoMoi = (id, un) => ({ ...hoSo(id, un), fetchedAt: lucMoi, sourceId: `${id}__moi${ts}` });
   const dMoi = await sinh(boNap.NGUON_HO_SO_S03, "ho-so", [hoSoMoi(`70${ts}`, `umoi${ts}`)], 7);
-  nap(dMoi);
+  const r4 = nap(dMoi);
+  kiem("nạp bản mới hơn: rc 0", r4.status === 0, `rc=${r4.status}`);
   const un = (await q(`SELECT username FROM ${boNap.STG_HO_SO}_moi_nhat WHERE ma_tai_khoan = $1`, [`70${ts}`]))[0]?.username;
   kiem("view moi_nhat giữ dòng mới nhất mỗi mã", un === `umoi${ts}`, `username=${un}`);
 

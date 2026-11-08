@@ -16,11 +16,12 @@ const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@local
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 function doiSo(argv) {
-  const a = { out: null, snapshots: join(ROOT, "collector", "snapshots"), soMa: LUOT_THU.soMa, tinToiThieu: LUOT_THU.tinToiThieu, ghiDe: false };
+  const a = { out: null, snapshots: join(ROOT, "collector", "snapshots"), lookupDir: process.env.S03_LOOKUP_DIR ?? null, soMa: LUOT_THU.soMa, tinToiThieu: LUOT_THU.tinToiThieu, ghiDe: false };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === "--out") a.out = argv[++i];
     else if (k === "--snapshots") a.snapshots = argv[++i];
+    else if (k === "--lookup-dir") a.lookupDir = argv[++i];
     else if (k === "--so-ma") a.soMa = Number(argv[++i]);
     else if (k === "--tin-toi-thieu") a.tinToiThieu = Number(argv[++i]);
     else if (k === "--ghi-de") a.ghiDe = true;
@@ -44,7 +45,7 @@ async function main() {
   let kq;
   try {
     await c.query("BEGIN READ ONLY");
-    kq = await docVaChon(c, { snapshots: a.snapshots, soMa: a.soMa, tinToiThieu: a.tinToiThieu });
+    kq = await docVaChon(c, { snapshots: a.snapshots, lookupDir: a.lookupDir, soMa: a.soMa, tinToiThieu: a.tinToiThieu });
     await c.query("COMMIT");
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});

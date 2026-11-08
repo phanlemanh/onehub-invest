@@ -3,11 +3,10 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-import { SnapshotWriter } from "../core/storage.js";
-
-/** link-nguoi-ban-s03: kênh hồ sơ ghi schemaVersion 7 (v7). */
-export const HO_SO_SCHEMA_VERSION = 7;
-export const ZALO_AGENT_SCHEMA_VERSION = 6;
+import { SnapshotWriter, HO_SO_SCHEMA_VERSION, ZALO_AGENT_SCHEMA_VERSION } from "../core/storage.js";
+// U1(9): hằng schemaVersion hai kênh S03 khai ở core/storage.ts — server không
+// khai lại giá trị, chỉ re-export cho người dùng cũ của API này.
+export { HO_SO_SCHEMA_VERSION, ZALO_AGENT_SCHEMA_VERSION } from "../core/storage.js";
 import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
