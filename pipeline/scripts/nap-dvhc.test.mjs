@@ -17,6 +17,7 @@ import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa
 import { ganPhuongS06 } from "../transform-chotot.mjs";
 import { ganPhuongS03 } from "../transform-zalo.mjs";
 import { chuanTen } from "../lib/dvhc.mjs";
+import { runReassign } from "../reassign-areas.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const ROOT = join(import.meta.dirname, "../..");
@@ -238,6 +239,37 @@ test("PX1-AC-7-db bộ đọc tên thật sau bộ nạp thật: S06, S03 khai v
   assert.notEqual(chuaKhai.ph?.market, mk, "PX1-AC-7 nhóm chưa khai gắn tỉnh khác");
   const hong = ganPhuongS03(bai, null, { entries, moiThiTruong: coXa, biDanhCua });
   assert.equal(hong.ph?.market, mk, "chiều đỏ: tập chưa khai = mọi tỉnh có xã thì gắn sang Nghệ An");
+}));
+
+const BA_TP = ["hanoi", "hcmc", "danang"];
+const demMa = async (c) => (await c.query(`SELECT count(*)::int AS n FROM areas WHERE admin_code IS NOT NULL AND region_type = 'submarket'`)).rows[0].n;
+
+for (const xoaKhuVucLac of [false, true]) {
+  test(`PX1-AC-6 reassign (${xoaKhuVucLac ? "--xoa-khu-vuc-lac" : "lượt thường"}) không xoá xã danh bạ, vẫn xoá khu không mã`, (t) => withTx(t, async (c) => {
+    await napDvhc(c, { log: IM });
+    const { rows: hl } = await c.query(`SELECT id FROM areas WHERE admin_code IS NOT NULL AND name IN ('Hưng Long', 'Hoàng Sa') AND parent_id IN ('vn-hcmc', 'vn-da-nang')`);
+    assert.equal(hl.length, 2);
+    await c.query(
+      `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
+       VALUES ('vn-hcmc-px1-thu-xoa', 'vn-hcmc', 'submarket', 'Khu Thử Xoá', 'vn', '{"source":"thu"}')`,
+    );
+    const { rows: osmTruoc } = await c.query(`SELECT id, admin_code FROM areas WHERE meta->>'source' = 'osm-phuong' AND admin_code IS NOT NULL ORDER BY id`);
+    const truoc = await demMa(c);
+    await runReassign(c, BA_TP, { log: IM, xoaKhuVucLac });
+    assert.equal(await demMa(c), truoc);
+    for (const r of hl) assert.equal((await c.query(`SELECT 1 FROM areas WHERE id = $1`, [r.id])).rowCount, 1, `PX1-AC-6 reassign xoá xã danh bạ: ${r.id}`);
+    assert.equal((await c.query(`SELECT 1 FROM areas WHERE id = 'vn-hcmc-px1-thu-xoa'`)).rowCount, 0, "đối chứng dương: khu không mã, không tham chiếu bị xoá");
+    const { rows: osmSau } = await c.query(`SELECT id, admin_code FROM areas WHERE id = ANY($1) ORDER BY id`, [osmTruoc.map((r) => r.id)]);
+    assert.deepEqual(osmSau, osmTruoc.filter((r) => osmSau.some((x) => x.id === r.id)), "phường OSM upsert lại phải giữ admin_code");
+  }));
+}
+
+test("PX1-AC-6 chiều đỏ: xã chèn mới mất mã thì reassign xoá nó (điều kiện admin_code là thứ giữ nó lại)", (t) => withTx(t, async (c) => {
+  await napDvhc(c, { log: IM });
+  const { rows: [r] } = await c.query(`SELECT id FROM areas WHERE parent_id = 'vn-hcmc' AND name = 'Hưng Long' AND meta->>'source' = 'dvhc'`);
+  await c.query(`UPDATE areas SET admin_code = NULL WHERE id = $1`, [r.id]);
+  await runReassign(c, ["hcmc"], { log: IM });
+  assert.equal((await c.query(`SELECT 1 FROM areas WHERE id = $1`, [r.id])).rowCount, 0);
 }));
 
 // Ca ghi thật đặt CUỐI tệp: các ca trên cần DB chưa nạp.

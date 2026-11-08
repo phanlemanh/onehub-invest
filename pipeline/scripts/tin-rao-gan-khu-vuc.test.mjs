@@ -210,6 +210,7 @@ export const MA_TRAN = {
   "refresh-bait-gap.mjs": "mien",
   "do-hang-ngay.mjs": "mien", // DO1: đọc phường/thị trường để phân rã số đo, không gán khu vực
   "scripts/do1-dung-thu.mjs": "mien", // DO1: dữ liệu mẫu trên DB thử, lấy một phường bất kỳ, không gán khu vực tin thật
+  "nap-dvhc.mjs": "mien", // PX1: bộ nạp danh bạ xã ghi areas, không gán khu vực cho tin
 };
 
 function docPipeline() {
@@ -245,7 +246,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 16, "ma trận viết trước phải đủ 16 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1)");
+  assert.equal(Object.keys(MA_TRAN).length, 17, "ma trận viết trước phải đủ 17 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1 + bộ nạp danh bạ PX1)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 
