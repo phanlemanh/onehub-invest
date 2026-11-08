@@ -83,7 +83,7 @@ human_signoff: Mạnh 2026-11-09
   run_id: minted-od2-phim-va-loi-ghi-E6-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:dev_server.start   # tác tử chấm lái ego-browser trên bản dev của worktree (:3463); bản tổng hợp ghi khoá executors.ui-check không có trong config — sửa nhãn theo tiền lệ OD2
   verified_at: 2026-11-08T18:40:20Z
   screenshot: evidence/E6-step1.png
   observed: |
