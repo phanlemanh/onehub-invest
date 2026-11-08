@@ -1,0 +1,80 @@
+schema_version: 1
+feature_slug: tin-ngung-rao-khong-thay-lai
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/trang-thai-chao.mjs, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-1» trong giao dịch ROLLBACK trên DB của riêng lượt (db-thu --chay), 059 có sẵn, 085 nạp trong giao dịch; fixture vùng giả region_v2=99901, ad_type 's' trong stg_chotot_ads: tin A captured_at = mốc − 22 ngày, last_seen = first_seen = mốc − 40 ngày; tin B last_seen = mốc − 40 ngày (ngày đăng cũ) nhưng captured_at = mốc − 1 ngày; một dòng stg thứ ba captured_at = mốc dựng mốc của vùng. Sau chay(): A có offer_status 'withdrawn' và phát biểu sống thắng có evidence_tier 'inferred', method 'e1_rule', rule_id 'khong-thay-lai:'||A, observed_at = captured_at(A) + 21 ngày, evidence chứa n_ngay=21, lan_thay_cuoi, moc_thu; B 'active'; tin S06 E không có dòng stg, last_seen = mốc − 40 ngày → 0 phát biểu khong-thay-lai, offer_status như chạy chỉ 059. Chiều đỏ ghim: bản chép dùng last_seen cho tin thiếu dòng stg thì E đỏ với thông điệp «TNR-AC-1 tin thiếu dòng stg bị ngừng rao»; bản chép hàm bang_chung_khong_thay_lai đọc lần thấy cuối từ last_seen thay vì captured_at (nạp trong giao dịch thay 085 thật) thì B đỏ với thông điệp «TNR-AC-1 ngày đăng không phải lần thấy cuối»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-2» trong giao dịch ROLLBACK, hai nhóm giả trong stg_zalo_posts: nhóm Y đang thu (bài mới nhất posted_at = M), nhóm X ngừng thu (mọi bài ở M − 30 ngày); tin S03 C (bài trong Y) last_seen = M − 21 ngày − 1 giờ → 'withdrawn' (đối chứng dương); tin S03 D (bài trong Y) last_seen = M − 20 ngày → 'active'; tin S03 X1 (bài chỉ trong X) last_seen = M − 30 ngày → 'active' và 0 phát biểu khong-thay-lai. Nguồn ngừng thu: mọi tin sống S05 trong giao dịch đặt last_seen = cùng một mốc cũ (now() − 60 ngày) → sau chay() 0 tin S05 'withdrawn' và 0 phát biểu rule_id 'khong-thay-lai:%' cho S05. Chiều đỏ ghim: bản chép lấy mốc S03 theo cả nguồn thì X1 đỏ với thông điệp «TNR-AC-2 nhóm ngừng thu bị ngừng rao»; bản chép đo tới now() thay vì mốc thu của nguồn thì ca S05 đỏ với thông điệp «TNR-AC-2 nguồn ngừng thu bị ngừng rao»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/trang-thai-chao.mjs, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-3» trong giao dịch ROLLBACK với fixture của TNR-AC-1 và TNR-AC-2: chay() ba lần liên tiếp; lần hai và lần ba trả moi=0, rut=0 ở cả ghi_bang_chung_chao lẫn ghi_khong_thay_lai, offer_status của mọi tin fixture như lần một, và không phát biểu nào của tin fixture có retract_reason 'quay-lai'. Chiều đỏ ghim: nạp lại bang_chung_chao nguyên bản 059 (doi_at tính cả phát biểu khong-thay-lai) sau 085 thì A về 'active' ở lần hai, đỏ với thông điệp «TNR-AC-3 phát biểu ngừng rao bị dội»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-4» trong giao dịch ROLLBACK: A ngừng rao sau chay(); đặt captured_at(A) = mốc của vùng (S06) và last_seen(C) = M (S03) rồi chay() → phát biểu khong-thay-lai của A và C có retracted_at, retract_reason 'thay-lai'; A, C 'active'; history_transactional của A đúng hai dòng theo thứ tự change_type 'withdrawn' rồi 'back_on_market'. Chiều đỏ ghim: bản chép ghi_khong_thay_lai bỏ câu rút thì A còn 'withdrawn', đỏ với thông điệp «TNR-AC-4 thấy lại mà vẫn ngừng rao»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-5» trong giao dịch ROLLBACK: chụp (offer_id, retired_at, retired_reason, seller_name, seller_phone, seller_ref) của MỌI dòng sale_offer_records và count(*) của view sale_offers trước chay(); sau chay() cùng tập dòng, từng cột bằng nhau (so theo offer_id), count(sale_offers) bằng nhau; có ít nhất một tin (A) đổi sang 'withdrawn' trong lượt — đối chứng dương rằng luật đã chạy. Chiều đỏ ghim: bản chép luật đặt retired_at cho tin ngừng rao thì đỏ với thông điệp «TNR-AC-5 ngừng rao chạm dòng tin»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-6» trong giao dịch ROLLBACK, ma trận viết trước, mọi tin đều tụt > N trong vùng giả 99901: {S06 retired het_trong_luot, S06 retired doi_khoa, S03 retired het_trong_luot, tin nguồn 'S01' sống} (4 ô) → 0 phát biểu rule_id 'khong-thay-lai:%' cho cả bốn, offer_status mỗi tin bằng trạng thái chạy chỉ 059 (cùng fixture, giao dịch riêng không nạp 085); số assert = 4 × 2. Đối chứng dương: tin A cùng vùng có phát biểu. Chiều đỏ ghim: bản chép luật bỏ điều kiện retired_at IS NULL thì ô S06 doi_khoa đỏ với thông điệp «TNR-AC-6 luật chạm tin đã nghỉ»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, CONTEXT.md, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-7 biên» trong giao dịch ROLLBACK: ngung_rao_sau_ngay trả 21 cho 'S03','S05','S06' và NULL cho 'S01'; tin S06 tụt đúng 21 ngày → 'active', tụt 21 ngày + 1 giây → 'withdrawn'. Ca «TNR-AC-7 CONTEXT» đọc CONTEXT.md: đoạn định nghĩa «Trạng thái chào» chứa «21 ngày» và «không thấy lại», không còn chuỗi «quá cửa sổ không đổi»; có một mục thuật ngữ mở đầu «**Ngừng rao**» mà dòng Code chứa «withdrawn» và «khong-thay-lai», và có dòng «_Avoid_». Chiều đỏ ghim: bản chép điều kiện dùng >= thay vì > thì ô đúng 21 ngày đỏ với thông điệp «TNR-AC-7 biên N»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [pipeline/trang-thai-chao.mjs, db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-8 chưa áp» chạy TRƯỚC khi ca nào áp 085 thật lên DB của riêng lượt, hai chế độ: (i) tiến trình con pipeline/trang-thai-chao.mjs không cờ (đường cloud-sync) → mã 0, stdout có một dòng chứa «chưa áp 085», dòng «trang-thai-chao: …» khớp từng chữ với stdout của bản lệnh nhánh chính (git show origin/main:pipeline/trang-thai-chao.mjs ghi ra tệp tạm cạnh tệp thật) chạy ngay trước trên cùng DB, 0 phát biểu rule_id 'khong-thay-lai:%'; (ii) --thu → mã 0, có «chưa áp 085», count(field_assertions) trước = sau. Ca «TNR-AC-8 đã áp» sau khi áp 085 thật: tiến trình con --thu → mã 0, stdout có dòng chứa «ngừng rao» kèm số theo S03, S05, S06 và số phát biểu luật mới, số rút; count(field_assertions) và chuỗi (offer_id, offer_status) của mọi tin trước = sau. Chiều đỏ ghim: biến TNR_LENH (phía test, chọn tệp lệnh để spawn) trỏ bản chép bỏ ROLLBACK của --thu thì đỏ với thông điệp «TNR-AC-8 --thu ghi DB»; bản chép bỏ kiểm to_regproc thì ca chưa áp đỏ với thông điệp «TNR-AC-8 chưa áp mà lỗi»; bản chép chỉ kiểm to_regproc khi có --thu thì ca (i) đỏ với thông điệp «TNR-AC-8 chế độ thường chưa áp mà lỗi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-9 áp hai lần»: áp db/migrations/085_ngung_rao_khong_thay_lai.sql hai lần (hai giao dịch có COMMIT) lên DB của riêng lượt → không lỗi; to_regproc của ngung_rao_sau_ngay, bang_chung_khong_thay_lai, ghi_khong_thay_lai khác NULL. Chiều đỏ ghim: bản chép 085 có CREATE FUNCTION không OR REPLACE thì lần hai đỏ với thông điệp «TNR-AC-9 áp lần hai lỗi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tnr_pl19
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
+    expected: "exit 0; bộ itest PL19 pipeline/scripts/trang-thai-chao.itest.mjs và pipeline/scripts/bac-du-lieu.itest.mjs chạy với PL19_NAP_THEM trỏ 085 (nạp sau 059 trong cùng giao dịch của mỗi ca) đều xanh — mọi ca E1–E7 của thoi-gian-va-hieu-luc. Đối chứng: stdout của bộ in một dòng «PL19_NAP_THEM: 085_ngung_rao_khong_thay_lai.sql» chứng tệp đã nạp. Chiều đỏ ghim: PL19_NAP_THEM trỏ bản chép 085 mà bang_chung_chao bỏ nhánh tin S06 het_trong_luot thì ca gỡ trong lượt của PL19 đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.tnr_db
+    paths: [pipeline/trang-thai-chao.mjs, db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs]
+    expected: "exit 0; ca «TNR-AC-10 dữ liệu thật» trên DB của riêng lượt chép từ máy thu (dữ liệu thật, đã áp 085 ở TNR-AC-9): tiến trình con trang-thai-chao.mjs --thu, đọc số ngừng rao theo nguồn từ stdout; so với số đếm độc lập bằng một câu SQL viết riêng trong file test (không gọi hàm của 085: tự nối stg_chotot_ads theo list_id, tự tính mốc theo region_v2 × ad_type cho S06 và theo nhóm (stg_zalo_posts) cho S03 và max(last_seen) cho S05, N=21) → bằng nhau từng nguồn; in ba số ra stdout để vào bằng chứng; DB không đổi (count(field_assertions) trước = sau). Chiều đỏ ghim: câu đếm độc lập cộng thêm 1 (biến TNR_LECH=1 của phía test) thì đỏ với thông điệp «TNR-AC-10 lệnh lệch số đếm độc lập»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
