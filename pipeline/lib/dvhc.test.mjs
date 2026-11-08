@@ -1,0 +1,230 @@
+// dvhc.test.mjs — PX1 danh-ba-phuong-xa-toan-quoc: hàm thuần của lib/dvhc.mjs (E3 ma trận tên, E4 bộ tra, E7 ca thuần,
+// E8 bí danh, E9 hàm so sánh). Không DB. Ma trận bộ tra rút từ chính pipeline/data/dvhc (không viết tay khuôn).
+import { strict as assert } from "node:assert";
+import { test } from "node:test";
+
+import {
+  chuanTen, docDanhBa, dungBiDanhAnToan, khopXa, matchXaCuCoTienTo, MA_TINH_THI_TRUONG, soSanhTruocSau,
+  thiTruongCuaTinh, traXaCu, idXa, slugTrungTrongTinh,
+} from "./dvhc.mjs";
+
+const DB = docDanhBa();
+
+test("PX1-AC-3 chuanTen: ma trận viết trước", () => {
+  const MT = [
+    ["Phường Ba Đình", "ba đình"],
+    ["Xã Bát Tràng", "bát tràng"],
+    ["Thị trấn Đông Anh", "đông anh"],
+    ["Đặc khu Hoàng Sa", "hoàng sa"],
+    ["Cẩm Giàng (03626)", "cẩm giàng"],
+    ["Thạnh An (73308)", "thạnh an"],
+    ["Quận Thanh Xuân", "quận thanh xuân"],
+    ["Huyện Gia Lâm", "huyện gia lâm"],
+    ["Thị xã Sơn Tây", "thị xã sơn tây"],
+    ["  Phường   Phúc  Xá ", "phúc xá"],
+    ["Ba Đình".normalize("NFD"), "ba đình"],
+  ];
+  for (const [vao, ra] of MT) assert.equal(chuanTen(vao), ra, `chuanTen(${vao})`);
+  assert.notEqual(chuanTen("Cẩm Giang"), chuanTen("Cẩm Giàng"));
+});
+
+test("PX1-AC-3 khopXa: ưu tiên phường OSM, khu tên quận cũ không nhận mã, hai cùng hạng thì mơ hồ", () => {
+  const con = [
+    { id: "vn-hanoi-thanh-xuan", name: "Thanh Xuân", source: "osm-phuong" },
+    { id: "vn-hanoi-quan-thanh-xuan", name: "Quận Thanh Xuân", source: "airbnb-discovery" },
+    { id: "vn-hanoi-xuan-la", name: "Xuân La", source: "airbnb-discovery" },
+    { id: "vn-hai-phong-cam-giang-03626", name: "Cẩm Giàng (03626)", source: "osm-phuong" },
+    { id: "vn-hai-phong-cam-giang", name: "Cẩm Giang", source: "osm-phuong" },
+  ];
+  assert.deepEqual(khopXa({ ten: "Thanh Xuân" }, con), { id: "vn-hanoi-thanh-xuan" });
+  assert.deepEqual(khopXa({ ten: "Cẩm Giàng" }, con), { id: "vn-hai-phong-cam-giang-03626" });
+  assert.deepEqual(khopXa({ ten: "Cẩm Giang" }, con), { id: "vn-hai-phong-cam-giang" });
+  assert.equal(khopXa({ ten: "Hoàn Kiếm" }, con), null);
+  // khu khác (không OSM) khớp đúng một thì nhận
+  assert.deepEqual(khopXa({ ten: "Xuân La" }, con), { id: "vn-hanoi-xuan-la" });
+  const hai = [...con, { id: "vn-hanoi-thanh-xuan-2", name: "Phường Thanh Xuân", source: "osm-phuong" }];
+  assert.equal(khopXa({ ten: "Thanh Xuân" }, hai).loi, "hai");
+});
+
+test("PX1-AC-3 idXa: slug chung trong tỉnh hoặc id đã có thì thêm mã", () => {
+  const xaHp = DB.xa.filter((x) => x.maTinh === "31");
+  const trung = slugTrungTrongTinh(xaHp);
+  const cg = xaHp.filter((x) => x.ten === "Cẩm Giang" || x.ten === "Cẩm Giàng");
+  assert.equal(cg.length, 2);
+  for (const x of cg) assert.equal(idXa(x, "vn-hai-phong", trung, new Set()), `vn-hai-phong-cam-giang-${x.ma}`);
+  const x0 = DB.xa.find((x) => x.maTinh === "40");
+  assert.equal(idXa(x0, "vn-nghe-an", new Set(), new Set()), `vn-nghe-an-${x0.ten.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`);
+  assert.equal(idXa(x0, "vn-nghe-an", new Set(), new Set([idXa(x0, "vn-nghe-an", new Set(), new Set())])).endsWith(`-${x0.ma}`), true);
+});
+
+test("PX1-AC-2 bảng tỉnh: 34 mã, phủ mọi maTinh của danh bạ, tên khớp tinh.json", () => {
+  assert.equal(Object.keys(MA_TINH_THI_TRUONG).length, 34);
+  assert.equal(DB.tinh.length, 34);
+  for (const t of DB.tinh) assert.ok(thiTruongCuaTinh(t.ma), `thiếu mã tỉnh ${t.ma}`);
+  for (const x of DB.xa) assert.ok(thiTruongCuaTinh(x.maTinh), `xã ${x.ma} trỏ tỉnh không có`);
+  assert.equal(thiTruongCuaTinh("46"), "vn-hue");
+  assert.equal(thiTruongCuaTinh("79"), "vn-hcmc");
+  assert.equal(DB.xa.length, 3321);
+  assert.equal(DB.xaCu.length, 10033);
+});
+
+/** Kiểm một bộ tra trên ma trận toàn phần theo khoá (tỉnh mới, tên chuẩn) rút từ xa-cu.json. */
+function kiemBoTra(fn) {
+  const nhom = new Map();
+  for (const r of DB.xaCu) {
+    const k = `${r.maTinh}|${chuanTen(r.ten)}`;
+    if (!nhom.has(k)) nhom.set(k, { maTinh: r.maTinh, ten: r.ten, dich: new Set() });
+    for (const v of r.vao) nhom.get(k).dich.add(v);
+  }
+  const loi = [];
+  let soAssert = 0;
+  for (const g of nhom.values()) {
+    soAssert++;
+    const kq = fn(DB.xaCu, g.maTinh, g.ten);
+    const dich = [...g.dich].sort();
+    if (dich.length === 1) {
+      if (!kq || kq.xa !== dich[0]) loi.push(`PX1-AC-4 sai xã cho ${g.maTinh}/${g.ten}`);
+    } else if (!kq || kq.xa || JSON.stringify(kq.canChon) !== JSON.stringify(dich)) {
+      loi.push(`PX1-AC-4 đoán xã cho tên cũ nhiều đích: ${g.maTinh}/${g.ten}`);
+    }
+  }
+  return { loi, soAssert, soKhoa: nhom.size };
+}
+
+test("PX1-AC-4 bộ tra theo khoá: một đích → xã, nhiều đích → cần chọn, không bao giờ đoán", () => {
+  const r = kiemBoTra(traXaCu);
+  assert.equal(r.soAssert, r.soKhoa);
+  assert.deepEqual(r.loi, []);
+  assert.equal(DB.xaCu.filter((x) => x.vao.length > 1).length, 441);
+  // Chiều đỏ: bản sao bộ tra trả đích đầu tiên
+  const hong = (xaCu, maTinh, ten) => {
+    const t = traXaCu(xaCu, maTinh, ten);
+    return t?.canChon ? { xa: t.canChon[0] } : t;
+  };
+  const d = kiemBoTra(hong);
+  assert.ok(d.loi.some((m) => m.startsWith("PX1-AC-4 đoán xã cho tên cũ nhiều đích: ")), "bản hỏng phải đỏ");
+});
+
+// Danh sách xã hiện hành dạng đầu ra của bộ đọc DB (id giả theo mã, market theo bảng tỉnh)
+const xaHienHanh = (xa) => xa.map((x) => ({ ma: x.ma, id: `${thiTruongCuaTinh(x.maTinh)}-x${x.ma}`, name: x.ten, market: thiTruongCuaTinh(x.maTinh) }));
+
+test("PX1-AC-8 bí danh: ma trận bốn lớp × hai đường", () => {
+  const xa = [
+    { ma: "90001", maTinh: "40", ten: "An Mới", loai: "Xã" },
+    { ma: "90002", maTinh: "40", ten: "Bình Mới", loai: "Xã" },
+    { ma: "90003", maTinh: "40", ten: "Cũ Trùng", loai: "Xã" }, // tên hiện hành trùng tên một xã cũ
+  ];
+  const xaCu = [
+    { ma: "80001", maTinh: "40", ten: "Trọn Vẹn", vao: ["90001"] },            // trọn
+    { ma: "80002", maTinh: "40", ten: "Bị Tách", vao: ["90001", "90002"] },   // tách
+    { ma: "80003", maTinh: "40", ten: "Cũ Trùng", vao: ["90001"] },           // trùng tên hiện hành (xã 90003)
+    { ma: "80004", maTinh: "40", ten: "Hai Nơi", vao: ["90001"] },            // cùng tên, hai huyện cũ, hai đích
+    { ma: "80005", maTinh: "40", ten: "Hai Nơi", vao: ["90002"] },
+  ];
+  const { map, loai } = dungBiDanhAnToan(xaCu, xaHienHanh(xa));
+  assert.deepEqual(loai, { "an-toan": 1, tach: 1, "nhieu-dich": 2, "trung-ten-hien-hanh": 1 });
+  const bd = map.get("vn-nghe-an");
+  assert.deepEqual([...bd.keys()], ["trọn vẹn"]);
+  // S06 (trường ward_name có cấu trúc): tra thẳng theo tên chuẩn
+  assert.equal(bd.get(chuanTen("Xã Trọn Vẹn")), "vn-nghe-an-x90001");
+  for (const t of ["Bị Tách", "Cũ Trùng", "Hai Nơi"]) assert.equal(bd.get(chuanTen(t)), undefined, `S06 ${t}`);
+  // S03 (chữ tự do): chỉ khi gọi đích danh
+  assert.equal(matchXaCuCoTienTo("Bán nhà phường Trọn Vẹn cũ, sổ đỏ", bd), "vn-nghe-an-x90001");
+  assert.equal(matchXaCuCoTienTo("bán đất x. trọn vẹn", bd), "vn-nghe-an-x90001");
+  assert.equal(matchXaCuCoTienTo("Nhà mặt đường Trọn Vẹn", bd), null, "PX1-AC-8 nhận tên cũ không gọi đích danh");
+  for (const t of ["Bị Tách", "Cũ Trùng", "Hai Nơi"]) assert.equal(matchXaCuCoTienTo(`bán nhà xã ${t}`, bd), null, `S03 ${t}`);
+  // Chiều đỏ: bản sao bộ khớp S03 bỏ đòi tiền tố → ca «đường <tên cũ>» đỏ
+  const boTienTo = (text, m) => { for (const [ten, id] of m) if (text.toLowerCase().includes(ten)) return id; return null; };
+  assert.notEqual(boTienTo("Nhà mặt đường Trọn Vẹn", bd), null, "bản hỏng phải nhận tên đường — chiều đỏ của ca");
+});
+
+test("PX1-AC-8 bí danh trên dữ liệu thật: bốn lớp cộng lại đủ 10.033 dòng", () => {
+  const { map, loai } = dungBiDanhAnToan(DB.xaCu, xaHienHanh(DB.xa));
+  const tong = Object.values(loai).reduce((a, b) => a + b, 0);
+  assert.equal(tong, 10033);
+  assert.equal(loai.tach, 441);
+  assert.ok(map.size > 0 && map.size <= 34);
+});
+
+test("PX1-AC-9 so sánh trước/sau: tỉnh giảm, mất xã, đổi xã đều gọi tên", () => {
+  const thiTruong = new Set(Object.values(MA_TINH_THI_TRUONG));
+  const laXa = (id) => !!id && !thiTruong.has(id);
+  const xanh = soSanhTruocSau([
+    { ma: "o1", tinh: "vn-hanoi", truoc: "vn-hanoi-ba-dinh", sau: "vn-hanoi-ba-dinh" },
+    { ma: "o2", tinh: "vn-hanoi", truoc: "vn-hanoi", sau: "vn-hanoi-xuan-la", cachSau: "bi-danh" },
+    { ma: "o3", tinh: "vn-nghe-an", truoc: "vn-nghe-an", sau: "vn-nghe-an-vinh", cachSau: "ten" },
+  ], { laXa });
+  assert.deepEqual(xanh.do, []);
+  const hn = xanh.bang.find((r) => r.tinh === "vn-hanoi");
+  assert.equal(hn.moiBiDanh, 1);
+  assert.equal(xanh.bang.find((r) => r.tinh === "vn-nghe-an").moiTen, 1);
+  const doDong = soSanhTruocSau([
+    { ma: "o1", tinh: "vn-hcmc", truoc: "vn-hcmc-ben-thanh", sau: "vn-hcmc" },
+    { ma: "o2", tinh: "vn-hanoi", truoc: "vn-hanoi-ba-dinh", sau: "vn-hanoi-ngoc-ha" },
+  ], { laXa });
+  assert.ok(doDong.do.includes("PX1-AC-9 tỉnh giảm: vn-hcmc"));
+  assert.ok(doDong.do.some((m) => m.startsWith("PX1-AC-9 mất xã: 1 (vn-hcmc)")));
+  assert.ok(doDong.do.some((m) => m.startsWith("PX1-AC-9 đổi xã: 1 (vn-hanoi)")));
+  assert.deepEqual(doDong.mau.doiXa, ["o2"]);
+  // đổi đã khai trước thì không đỏ
+  const khai = soSanhTruocSau([{ ma: "o2", tinh: "vn-hanoi", truoc: "vn-hanoi-ba-dinh", sau: "vn-hanoi-ngoc-ha" }], { laXa, khaiTruoc: new Set(["o2"]) });
+  assert.deepEqual(khai.do, []);
+});
+
+// ---- PX1-AC-7: hàm gán của transform trên danh sách dạng đầu ra docPhuongHopLe (không DB) ----
+import { ganPhuongS06 } from "../transform-chotot.mjs";
+import { ganPhuongS03 } from "../transform-zalo.mjs";
+
+const BON_TP = ["vn-hanoi", "vn-hcmc", "vn-da-nang", "vn-hai-phong"];
+// Xã Nghệ An có tên duy nhất cả nước (không trùng chuỗi con với tên nào khác) — để chiều đỏ gắn được, không bị tranh
+const demTen = new Map();
+for (const x of DB.xa) demTen.set(chuanTen(x.ten), (demTen.get(chuanTen(x.ten)) ?? 0) + 1);
+const XA_NGHE_AN = DB.xa.find((x) => x.maTinh === "40" && demTen.get(chuanTen(x.ten)) === 1 && x.ten.length > 6
+  && !DB.xa.some((y) => y !== x && (chuanTen(y.ten).includes(chuanTen(x.ten)) || chuanTen(x.ten).includes(chuanTen(y.ten)))));
+
+function dungDanhSach() {
+  const xa = DB.xa.map((x) => ({ id: `${thiTruongCuaTinh(x.maTinh)}-x${x.ma}`, name: x.ten, parent_id: thiTruongCuaTinh(x.maTinh) }));
+  const entries = (ms) => xa.filter((a) => ms.includes(a.parent_id)).map((a) => ({ id: a.id, name: a.name, market: a.parent_id }));
+  return { xa, entries };
+}
+
+test("PX1-AC-7 S06 khớp ward_name_v3 vào xã danh bạ của tỉnh khác 4 thành phố", () => {
+  const { xa } = dungDanhSach();
+  const mk = "vn-nghe-an";
+  const conMk = xa.filter((a) => a.parent_id === mk);
+  const wardMap = new Map(conMk.map((a) => [a.name.normalize("NFC").toLowerCase(), a.id]));
+  const slugList = conMk.map((a) => [a.id.slice(mk.length + 1), a.name]);
+  const g = ganPhuongS06({ ward_name_v3: `Xã ${XA_NGHE_AN.ten}`, ward_name: "Thị trấn Cũ Nào Đó", subject: "bán đất" }, { mk, wardMap, slugList });
+  assert.equal(g.areaId, `${mk}-x${XA_NGHE_AN.ma}`);
+  assert.equal(g.cach, "v3");
+  // Bí danh chỉ lấp khi mọi đường khác trượt
+  const bd = new Map([["trọn vẹn", `${mk}-x${XA_NGHE_AN.ma}`]]);
+  const h = ganPhuongS06({ ward_name_v3: null, ward_name: "Xã Trọn Vẹn", subject: "bán đất" }, { mk, wardMap, biDanh: bd, slugList });
+  assert.deepEqual([h.areaId, h.cach], [`${mk}-x${XA_NGHE_AN.ma}`, "bi-danh"]);
+});
+
+test("PX1-AC-7 S03: nhóm khai tỉnh khớp xã của tỉnh đó; nhóm chưa khai không bị kéo sang tỉnh khác", () => {
+  const { entries } = dungDanhSach();
+  const bai = `Bán nhà xã ${XA_NGHE_AN.ten}, sổ đỏ chính chủ, giá 2 tỷ`;
+  const khai = ganPhuongS03(bai, ["vn-nghe-an"], { entries, moiThiTruong: BON_TP, biDanhCua: new Map() });
+  assert.equal(khai.ph?.id, `vn-nghe-an-x${XA_NGHE_AN.ma}`);
+  const chuaKhai = ganPhuongS03(bai, null, { entries, moiThiTruong: BON_TP, biDanhCua: new Map() });
+  assert.notEqual(chuaKhai.ph?.market, "vn-nghe-an", "PX1-AC-7 nhóm chưa khai gắn tỉnh khác");
+  // Chiều đỏ: bản sao đặt tập chưa khai = mọi thị trường có xã → gắn sang Nghệ An
+  const moiTinh = [...new Set(DB.xa.map((x) => thiTruongCuaTinh(x.maTinh)))];
+  const hong = ganPhuongS03(bai, null, { entries, moiThiTruong: moiTinh, biDanhCua: new Map() });
+  assert.equal(hong.ph?.market, "vn-nghe-an", "bản hỏng phải gắn tỉnh khác — chiều đỏ của ca");
+});
+
+test("PX1-AC-9 luật đổi khai trước dạng hàm: đổi theo luật vào cột riêng, đổi ngoài luật vẫn đỏ", () => {
+  const thiTruong = new Set(Object.values(MA_TINH_THI_TRUONG));
+  const laXa = (id) => !!id && !thiTruong.has(id);
+  const dong = [
+    { ma: "o1", tinh: "vn-hcmc", truoc: "vn-hcmc-binh-chanh", sau: "vn-hcmc-hung-long", cach: "v3" },
+    { ma: "o2", tinh: "vn-hcmc", truoc: "vn-hcmc-binh-chanh", sau: "vn-hcmc-ben-thanh", cach: "chu" },
+  ];
+  const kq = soSanhTruocSau(dong, { laXa, khaiTruoc: (d) => d.cach === "v3" });
+  assert.deepEqual(kq.mau.doiKhai, ["o1"]);
+  assert.deepEqual(kq.mau.doiXa, ["o2"]);
+  assert.ok(kq.do.some((m) => m.startsWith("PX1-AC-9 đổi xã: 1 (vn-hcmc)")));
+});

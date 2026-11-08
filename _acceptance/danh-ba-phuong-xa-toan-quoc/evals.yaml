@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: danh-ba-phuong-xa-toan-quoc
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/data/dvhc/**, pipeline/nap-dvhc.mjs, pipeline/lib/dvhc.mjs, pipeline/scripts/nap-dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-1»: NGUON.json có khoá sha256 cho đủ bốn tệp dữ liệu, commit nguồn 40 hex, văn bản, ngày tham chiếu; băm thật của từng tệp trong pipeline/data/dvhc bằng giá trị khai. Chiều đỏ trên cùng thư mục: bản sao thư mục dữ liệu ở thư mục tạm, đổi một byte trong xa.json, chạy bộ nạp thật (đường lệnh pipeline/nap-dvhc.mjs --data <tạm>) → thoát 2 với thông điệp ghim «PX1 băm lệch: xa.json» và câu đếm areas có admin_code, area_aliases trước/sau bằng nhau (0 dòng ghi)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/nap-dvhc.mjs, pipeline/lib/dvhc.mjs, pipeline/data/dvhc/**, db/migrations/084_danh_ba_dvhc.sql, pipeline/scripts/nap-dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-2» trên DB thử (bản chép DB máy thu): sau bộ nạp thật, 34 dòng market có admin_code 2 số khớp bảng ánh xạ cố định; đếm submarket có admin_code = 3321, count(distinct admin_code) = 3321; bảng kỳ vọng theo tỉnh RÚT TỪ xa.json (không viết tay) so từng dòng với câu đếm GROUP BY parent_id — 34/34 bằng nhau; mọi xã có parent_id = thị trường của maTinh. Chiều đỏ: xoá (trong giao dịch) market vn-hue rồi chạy bộ nạp → thoát 1 với thông điệp ghim «PX1 thiếu thị trường 46» và 0 dòng ghi; đổi tên market vn-gia-lai thành tên khác → thoát 1 «PX1 tên thị trường lệch 52»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/nap-dvhc.mjs, pipeline/lib/dvhc.mjs, pipeline/scripts/nap-dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-3» trên DB thử (bản chép máy thu): chụp (id, name, md5(geom), meta->>'source') của mọi submarket trước nạp; sau nạp mọi id trước còn đủ và bốn giá trị đó không đổi (so tập); 500 phường osm-phuong đều có admin_code; bảng 11 khu airbnb-discovery viết trước theo tên (7 «Quận …», 4 tên phường cũ) — cả 11 admin_code NULL và có tên trong báo cáo; «Cẩm Giàng (03626)», «Thạnh An (73308)» khớp đúng xã CÓ dấu; xã chèn mới (Hưng Long ở vn-hcmc, Hoàng Sa ở vn-da-nang, mọi xã ở 30 tỉnh) có id <market>-<slug> hoặc <market>-<slug>-<mã> khi chung slug trong tỉnh, name đúng bằng trường ten của xa.json (không tiền tố), geom NULL, meta.source='dvhc', meta.loai = trường loai. Ma trận khớp tên viết trước cho chuanTen/khopTen (hàm thuần, cùng ca): có dấu ≠ không dấu, bỏ «Phường/Xã/Thị trấn/Đặc khu», KHÔNG bỏ «Quận/Huyện/Thị xã», bỏ hậu tố «(…)», NFC = NFD; ưu tiên osm-phuong hơn khu khác cùng tên. Chiều đỏ: chèn (trong giao dịch) phường osm-phuong thứ hai tên «Ba Đình» dưới vn-hanoi → bộ nạp thoát 1 với thông điệp ghim «PX1 khớp hai khu vực: 00004»; bản sao chuanTen bỏ cả «Quận» → ca 11 khu đỏ với «PX1-AC-3 khu tên quận nhận mã»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/nap-dvhc.mjs, pipeline/lib/dvhc.mjs, db/migrations/084_danh_ba_dvhc.sql, pipeline/scripts/nap-dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-4»: đếm area_aliases = 10033, split=true = 441, cả hai số RÚT TỪ xa-cu.json; mỗi dòng có name, old_district, province_code khác rỗng và targets ⊆ tập admin_code của areas. Ma trận theo khoá (maTinh mới, chuanTen) RÚT TỪ xa-cu.json (số assert = số khoá): khoá có hợp đích đúng một mã → traXaCu trả {xa} đúng mã; khoá có hơn một mã (vì tách hay vì trùng tên giữa huyện cũ) → {canChon} đúng hợp mã, không bao giờ {xa}; báo cáo của bộ nạp in số khoá ba lớp (một đích, tách, trùng tên) và tổng bằng số khoá. Chiều đỏ: bản sao bộ tra trả đích đầu tiên cho khoá nhiều đích → ca đỏ với thông điệp ghim «PX1-AC-4 đoán xã cho tên cũ nhiều đích: <tỉnh>/<tên>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/nap-dvhc.mjs, db/migrations/084_danh_ba_dvhc.sql, pipeline/scripts/nap-dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-5»: áp 084 hai lần — dấu lược đồ (db-thu.sh --dau hoặc băm information_schema của areas, area_aliases, index) bằng nhau; chạy bộ nạp thật hai lần — lần hai in «doi=0» và băm md5 của (id, parent_id, name, admin_code, meta) mọi areas cùng mọi dòng area_aliases sau lần hai bằng sau lần một. Chiều đỏ: giữa hai lần đổi tay meta.loai của một xã → lần hai in doi=1 và ca ghim «PX1-AC-5 lần hai đổi dòng» được kiểm bằng một ca phụ đảo kỳ vọng (biết đỏ khi có thay đổi)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.px1_db
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/nap-dvhc.test.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca «PX1-AC-6» trên DB thử sau nạp, mỗi lượt BEGIN…ROLLBACK: runReassign thật cho hanoi, hcmc, danang (lượt thường) rồi cùng ba thành phố với xoaKhuVucLac=true; đếm areas có admin_code trước = sau ở mọi lượt; vn-hcmc-hung-long và vn-da-nang-hoang-sa (xã chèn mới, không tin, không con) còn nguyên; một submarket không mã, không tham chiếu chèn trong ca dưới vn-hcmc bị xoá như trước (đối chứng dương bước 4); phường OSM upsert lại giữ admin_code. Chiều đỏ: bản sao reassign bỏ điều kiện admin_code ở bước 4 → ca đỏ với thông điệp ghim «PX1-AC-6 reassign xoá xã danh bạ: vn-hcmc-hung-long». Các ca AU9 cũ của reassign-areas.test.mjs vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.px1_thuan
+    paths: [pipeline/lib/osm.mjs, pipeline/lib/dvhc.mjs, pipeline/transform-chotot.mjs, pipeline/transform-zalo.mjs, pipeline/lib/dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-7-db» (config px1_db) trên DB thử sau bộ nạp thật: danh sách tên đọc bằng docPhuongHopLe(docThiTruongCoXa) thật; ganPhuongS06 với một dòng S06 dạng stg_chotot_ads (city_code vn-nghe-an, ward_name_v3 = tên một xã Nghệ An lấy từ xa.json) → đúng area_id của xã đó; bài S03 nhóm khai vn-nghe-an «bán nhà xã <tên>» → đúng xã; cùng bài với nhóm chưa khai (tập docThiTruongCoPhuong) → không gắn Nghệ An; docThiTruongCoXa trả 34 thị trường, docThiTruongCoPhuong trả đúng tập trước nạp; phuongHopLe không nhận dòng meta.source='dvhc'. Ca thuần «PX1-AC-7» (px1_thuan): cùng ba ca trên danh sách tên dạng đầu ra của docPhuongHopLe. Chiều đỏ: bản sao transform-zalo đặt tập chưa khai = docThiTruongCoXa → ca chưa khai đỏ với thông điệp ghim «PX1-AC-7 nhóm chưa khai gắn tỉnh khác»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.px1_thuan
+    paths: [pipeline/lib/dvhc.mjs, pipeline/transform-chotot.mjs, pipeline/transform-zalo.mjs, pipeline/lib/dvhc.test.mjs]
+    expected: "exit 0; ca «PX1-AC-8»: ma trận viết trước — bốn lớp bí danh (trọn, tách, trùng tên hiện hành cùng tỉnh, cùng tên trỏ hai xã) × hai đường (S06 ward_name có cấu trúc, S03 chữ tự do); dungBiDanhAnToan chỉ giữ lớp trọn và đếm ba lớp còn lại theo đúng lý do; S06 ward_name cũ lớp trọn → xã mới; S03 «phường <tên cũ>» lớp trọn → xã mới, cùng tên không tiền tố (vd «đường <tên cũ>») → null; ba lớp còn lại → null ở cả hai đường. Thêm một ca trên dữ liệu thật pipeline/data/dvhc: đếm bí danh an toàn + ba lý do = 10033. Chiều đỏ: bản sao bộ khớp S03 bỏ đòi tiền tố → ca «đường <tên cũ>» đỏ với thông điệp ghim «PX1-AC-8 nhận tên cũ không gọi đích danh»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.test.px1_do
+    paths: [pipeline/scripts/nap-dvhc-do.mjs, pipeline/nap-dvhc.mjs, pipeline/lib/dvhc.mjs, pipeline/lib/osm.mjs, pipeline/transform-chotot.mjs, pipeline/transform-zalo.mjs]
+    expected: "exit 0; thước chạy trên DB thử (bản chép DB máy thu): trước khi nạp, hàm gán mới cho đúng area_id đang lưu ở mọi tin nối được (S06 theo originating_system_key = list_id; S03 tin một bài theo post_ids) — in «đối chứng code: lệch 0»; sau nạp in bảng tỉnh × (tin nối được, có xã trước, có xã sau, mất xã, đổi xã, gắn mới qua tên hiện hành, gắn mới qua bí danh) cho S03 và S06, tối đa 5 tin mẫu mỗi cột gắn mới/đổi, dòng riêng cho tập khai trước (46 tin Hưng Yên, 233 tin không tỉnh, tin HN/HCM chỉ gắn tỉnh); mọi tỉnh có xã sau ≥ trước, mất xã = 0, đổi xã ngoài doi-xa-khai-truoc.json = 0; dòng cuối «PX1-AC-9 xanh»; đếm areas, area_aliases sau thước bằng trước (ROLLBACK). Chiều đỏ trong chính lệnh: cờ --doi-chung-hong đặt tập nhóm chưa khai = docThiTruongCoXa → thoát 1 với dòng ghim «PX1-AC-9 tỉnh giảm: <tỉnh>» hoặc «mất xã: <n>»; ca thuần trong px1_thuan gọi hàm so sánh của thước với bảng giả (một tỉnh giảm, một tin đổi xã) → trả đỏ đúng tên tỉnh và mã tin."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.px1_cu
+    paths: [pipeline/lib/osm.mjs, pipeline/lib/dvhc.mjs, pipeline/reassign-areas.mjs, pipeline/transform-chotot.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/nap-dvhc-cu.test.mjs]
+    expected: "exit 0; ca «PX1-AC-10» trên DB thử bản chép máy thu đưa về trạng thái CHƯA áp 084 trong giao dịch ROLLBACK (bản chép đã có 084 thì DROP cột admin_code, bảng area_aliases trong giao dịch; kiểm information_schema xác nhận vắng cả hai trước khi đo): docPhuongHopLe, docThiTruongCoXa, ganPhuongS06, đường gán S03 chạy không lỗi và in đúng một dòng «chưa áp 084»; gán S06 và S03 bằng code mới cho đúng area_id đang lưu ở mọi tin nối được (lệch 0); runReassign mới và runReassign của bản nhánh chính (chép `git show origin/main:pipeline/reassign-areas.mjs` vào tệp tạm cạnh bản thật) chạy trong hai giao dịch ROLLBACK riêng trên cùng DB cho cùng tập (moves, dropped, removed). Chiều đỏ: bản sao lib/osm.mjs bỏ kiểm cột → ca đỏ với thông điệp ghim «PX1-AC-10 gãy khi chưa áp 084: column admin_code»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
