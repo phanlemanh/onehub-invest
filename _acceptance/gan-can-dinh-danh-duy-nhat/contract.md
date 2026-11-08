@@ -5,7 +5,7 @@ slug: gan-can-dinh-danh-duy-nhat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-08-gan-can-dinh-danh-duy-nhat-design.md
 approved_by: Mạnh
 approved_at: 2026-11-08T16:08:54Z
