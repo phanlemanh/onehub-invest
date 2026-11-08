@@ -3,10 +3,10 @@ schema_version: 1
 slug: danh-ba-du-an-toa-s08
 feature: "Danh bạ dự án–toà–trục–căn mở ra toàn bộ 150 dự án của danh mục S08: mọi dự án có trạng thái nối, 83 dự án cao tầng có toà–trục–căn, mỗi dự án gắn xã/phường hiện hành"
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: park         # Mạnh 08/11 «PX2 Cổng Đáng: park tới khi DA1, DA3 ký» (giám sát chuyển lời, P3-164)
+decided_by: Mạnh (qua giám sát, P3-164)
+decided_at: 2026-11-08T16:05:50Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
