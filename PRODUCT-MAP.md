@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>152 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>102 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>157 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>105 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -64,6 +64,7 @@ flowchart TD
 - Ca thử công tắc nhóm thu đối chứng với bản route trước sửa đã ghim cố định trong kho, nên vẫn xanh sau khi PR (`cong-tac-test-ghim-ban-cu`)
 - /api/v1/ops/coverage trên máy chủ trả độ tươi từng nguồn S0x từ khối độ tươi máy thu đẩy lên (ADR-0014), có cờ tươi / cũ / chỉ đo ở máy thu, không trường nào chứa tên nguồn thật (`coverage-cloud-got-tang-a`)
 - Đặc trưng nhà của tin S06 (số nhà, mã căn, mặt tiền, ngang×dài, số tầng, WC, toạ độ) lên canonical qua phát biểu trường lớp sự thật có căn cứ — migration 061 (`dac-trung-nha-s06-len-canonical`)
+- Danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê trong areas dưới đúng 34 tỉnh; 10.033 tên xã cũ thành bí danh (441 xã cũ bị tách trả «cần chọn xã»); tin S03, S06 khớp tên xã hiện hành và tên xã cũ an toàn ở mọi tỉnh; reassign không xoá xã danh bạ; đo tin có xã trước/sau theo tỉnh (`danh-ba-phuong-xa-toan-quoc`)
 - Danh bạ có toà · trục · căn cao tầng Ocean Park 1 và Grand Park dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; chủ đầu tư ghi ở cấp toà (Building.BuilderName) (`danh-ba-toa-truc-can`)
 - DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại (`db-tu-khoi-dong`)
 - Mỗi căn và mỗi tin chưa gắn căn có bậc dữ liệu B0–B5 tính bằng một hàm, phân bố bậc theo thị trường × loại hình được chụp mỗi ngày và in ra được, và một kiểm chất lượng giữ bất biến «mọi đề xuất enrich đã áp có phát biểu tương ứng» (`de-xuat-thanh-phat-bieu-bac`)
@@ -76,6 +77,7 @@ flowchart TD
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
 - Người vận hành mở /ops/data-flow ở máy thu khi bước làm tươi số dòng chảy hỏng quá 45 phút thì thấy cảnh báo số cũ như trên cloud, không phải số cũ trình bày như số mới (`dong-chay-so-cu-may-thu`)
 - Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0% (`dq-moi-nhat-moi-kiem`)
+- Lệnh dựng danh bạ vật thể chạy được trên DB máy thu bằng cờ cho phép tường minh, kiểm slug khu, và có bước trong chạy đêm (`dung-danh-ba-may-thu`)
 - Ô đường viết không dấu so như dạng có dấu — «30 thang 4» ↔ «2 thang 4» là hai đường khác, «3 thang 2» không bị coi số 3 là số nhà, ô chỉ «Ngo»/«Hem» là thiếu tên đường (`duong-thang-n-khong-dau`)
 - Enrich chạy mỗi đêm sau lượt nạp S03/S05 — mỗi tin một giao dịch ngắn, ghi đề xuất và áp luật xác định, lỗi LLM có đếm, dòng tổng kết đếm đúng, không bốc lại tin đã thử (`enrich-chay-sau-nap`)
 - Người vận hành dữ liệu chạy eval:classify và nhận độ đúng từng (cách đọc × trường × phân khúc) theo cận dưới Wilson so với ngưỡng F3, ghi vào dq_check_results (`eval-classify-wilson`)
@@ -108,6 +110,7 @@ flowchart TD
 - Bảng nhóm S03 ghi đúng số nhóm đang bật trong danh sách cho phép và «Vào bảng thô» theo nhóm — ở máy thu đo trực tiếp, trên máy chủ đọc khối s03 máy thu đẩy lên; thiếu số thì «—», không 0 (`nhom-s03-tren-cloud`)
 - Mỗi dự án S08 của lát Ocean Park 1 và Grand Park nối vào đúng một khu đô thị, không còn bí danh dự án trùng mã toà, area_ids OCP1–3 khớp nguồn xác minh (`noi-du-an-s08-khu-do-thi`)
 - Ô KPI ba trang Ops trên cloud đọc số máy local đẩy lên kèm mốc đo giờ VN; không có số thì «—» và «Chỉ đo ở máy local» một lần; số cũ quá 45′ thì báo, không badge xanh (`o-kpi-chi-do-local`)
+- Chế độ duyệt ở /ops/review báo lỗi ghi sau khi rời Hàng duyệt, giữ phím số chỉ quyết một thẻ, phím duyệt im khi hộp thoại khác đè lên sheet (`od2-phim-va-loi-ghi`)
 - Người vận hành mở /ops/data-flow ở máy thu và thấy dòng chảy bài → tin → căn, chất lượng từng chặng và bậc nghiêm của từng tin; cột «bài thô» S03 không lẫn bài S05 và bài thử (`ops-dong-chay-df0`)
 - Sau mỗi lượt cloud-sync, máy local đẩy lên cloud năm khối số tổng hợp Ops có mốc đo, qua bộ soát tầng A, và cloud có một hàm đọc chung báo số cũ quá 45′ (`ops-facts-so-tong-hop`)
 - Người vận hành đọc /ops/collections và /ops/quality chỉ thấy mã S0x kèm vai trò, không tên nguồn thật — kể cả nhãn job đẩy từ máy thu (`ops-nhan-ma-nguon`)
@@ -193,12 +196,15 @@ flowchart TD
 - tài khoản ops thử chỉ ở DB local cho máy tự đăng nhập dev (`dev-ops-account`) — đã giao — máy thông, cửa veto còn mở
 - Biểu đồ «Chặng theo ngày» trên /ops/data-flow vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0 (`df0-chang-theo-ngay-diem-0`)
 - Đầu trang /ops/data-flow đếm «đề xuất làm giàu» theo trạng thái chờ thật (queued), thôi luôn là 0 (`df0-dem-de-xuat-lam-giau`)
+- Đo hiệu quả hằng ngày — mẫu soát cuốn chiếu 20 bài, tỉ lệ giữ nháp theo cách đọc × ô, ước bỏ sót, tín hiệu không cần nhãn, dòng chuyển bậc; lát phường/xã, dự án, toà; xem trên /ops/quality (`do-hieu-qua-hang-ngay`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
+- Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
 - Bộ test design-floor dọn mọi thư mục tạm nó tạo (clone sau-gộp, bản chép, cap-config, reuse-plan) khi tiến trình thoát, để mỗi lượt chạy không bỏ lại rác trong TMPDIR (`don-clone-tam-design-floor`)
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
+- Danh sách tin công khai nhanh — getPublicOffers rút trang trước, đếm tài khoản nhiều tên chỉ cho người bán của trang, tổng đếm theo hàm cửa sổ; trang đầu vn-hcmc bốn kiểu sắp dưới 1000 ms trên DB máy thu, có biên, không nới trần E4b (`e4b-danh-sach-tin-nhanh`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
 - Hậu kỳ enrich-qua-de-xuat — đề xuất sống qua nạp lại, hoàn tác có audit, E1 không suy đất từ tên nhóm (`enrich-hau-ky`)
 - Enrich danh bạ Người S03 — số liên lạc theo tài khoản từ tin có số và bài của chính người gửi; tin không số lấy số qua người đăng, hiện qua «Xem số» kèm nhãn chưa xác minh (cơ chế S06); chừa chỗ liên lạc hồ sơ kênh S03 (`enrich-nguoi-s03`)
@@ -244,6 +250,8 @@ flowchart TD
 - hai việc nối tiếp ZC4 — script cài collector tạo thư mục log và không để plist rỗng; lượt thu bị bỏ qua không để lại thư mục ẩn rỗng (`noi-tiep-zc4`)
 - hai test app chập chờn thành tất định — ON22-AC-5 (lớp hạ tầng đo trực tiếp máy) và listings-browse (ngăn lọc đóng theo nhịp hẹn giờ, assert inspect phần tử jsdom treo tiến trình) (`on-dinh-test-app-chap-chon`)
 - Siết quyền — cổng Ops đóng mặc định, /api/zalo-media chỉ ảnh staging (`ops-access-hardening`)
+- Người duyệt chọn một hạng mục và quyết liền từng thẻ bằng phím, quyết xong tự sang thẻ kế, hoàn tác được trong 5 giây, xem lại quyết định gần đây (`ops-duyet-hop-hang-muc`)
+- Hàng duyệt ghi giờ mở và giờ quyết từng thẻ (đo giây/thẻ theo hạng mục), chữ và nhãn khớp quyết định mới, thẻ không còn điểm hay mã thô, Căn giá tốt báo căn đang chờ ghép (`ops-duyet-nhip-va-chu`)
 - Đổi URL cloud cứng từ project Vercel cũ sang prod mới onehub-invest.vercel.app (`ops-ingest-url-onehub-invest`)
 - Người trực mở bảng Ops trên điện thoại 390px thấy cột Trạng thái ngay sau cột tên, không phải cuộn ngang mới thấy Hỏng hay Ổn (`ops-mobile-cot-trang-thai`)
 - Người vận hành đọc cổng Ops thấy nhãn theo CONTEXT.md, không chữ tiếng Anh hay mã thô, chi tiết kiểm chất lượng diễn giải tiếng Việt, tên thị trường có dấu đầy đủ (`ops-nhan-theo-context`)
