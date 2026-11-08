@@ -29,5 +29,11 @@ job_run cloud-sync do-danh-ba-sdt node "$ROOT/pipeline/do-danh-ba-sdt.mjs" --wri
 # HD11 `do-the-duyet-du-du-lieu` (Hỏi-3): bốn kiểm độ đủ dữ liệu thẻ ghép căn chờ duyệt, một dòng mỗi kiểm mỗi ngày (giờ
 # máy thu), chỉ ghi DB local; bước cuối — dòng lên cloud ở lượt sync-cloud kế. Dòng `fail` không đổi mã thoát.
 job_run cloud-sync do-the-duyet node "$ROOT/pipeline/do-the-duyet.mjs" --write
+# DO1 `do-hieu-qua-hang-ngay` (Hỏi-3, giám sát làm sau gộp #359), hai bước cuối: rút 20 bài S03 hôm qua vào lát s03-cuon-chieu và chụp
+# nháp (đọc gộp Haiku chỉ cho bài chưa đọc, trần 0,05 USD/ngày; ngày đã có thẻ thì không rút, không gọi), rồi dòng chuyển
+# bậc + bốn nhóm số do1-* vào dq_check_results (đọc ảnh bậc của bac-du-lieu bên trên). Chỉ ghi DB local; số gộp lên cloud
+# ở lượt sync-cloud kế. Dòng `fail` không đổi mã thoát; chỉ lỗi chạy làm job ≠0.
+job_run cloud-sync mau-soat-cuon-chieu node "$ROOT/pipeline/mau-soat-cuon-chieu.mjs"
+job_run cloud-sync do-hang-ngay node "$ROOT/pipeline/do-hang-ngay.mjs" --write
 exit "$JOB_RC"
 
