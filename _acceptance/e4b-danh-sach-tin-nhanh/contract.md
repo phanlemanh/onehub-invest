@@ -5,7 +5,7 @@ slug: e4b-danh-sach-tin-nhanh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-08
 design_doc: docs/superpowers/specs/2026-11-08-e4b-danh-sach-tin-nhanh-design.md
@@ -91,3 +91,6 @@ Quét hình thái (preset test-matrix) ở `design_doc` mục «Không gian tiê
 - Hằng `NHIEU_TEN` và thân đếm tên sinh từ một hàm, nên danh sách và trang tin dùng chung một luật đếm tên.
 - Câu cũ của AC-3, AC-4 là chính tệp `offers-public.ts` ở commit e21a151e, đọc bằng `git show` và nạp thành module tạm cạnh tệp
   thật; ca cần lịch sử git nên bỏ qua trên CI như mọi ca DB máy thu của tệp.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-08:
+  - Ngoài-1: ba ca so một lần E4B-AC-3, E4B-AC-4, E4B-AC-7 ghim vào gốc nhánh e21a151e và chạy trong bộ kiểm chung, nên
+    hàng sau cố ý đổi `offers-public.ts` hay ca E4b sẽ thấy chúng đỏ dù không có lỗi; gỡ ba ca bằng một việc nhỏ sau khi gộp.

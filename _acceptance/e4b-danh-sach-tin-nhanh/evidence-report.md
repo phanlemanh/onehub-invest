@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 240aece488817e44b79d3ba94a2a879f8593959e
-human_signoff:
+human_signoff: Mạnh 2026-11-08
 ---
 
 # Evidence Report: e4b-danh-sach-tin-nhanh
