@@ -204,6 +204,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   căn cứ; vai Vận hành nhận ảnh đã tải, URL gốc chỉ quản trị. Quyết định bắt buộc lý do (1–1.000 ký tự) ghi
   `review_queue.decision_note` + `ops_audit.detail.ly_do` cùng transaction; lượt bổ sung tin không gắn
   `ai_suggestion` — `_acceptance/the-duyet-du-can-cu`.
+- Nhịp duyệt + chữ khớp quyết định (OD1, 08/11): mỗi lượt `review.decide` ghi `opened_at`, `decided_at`, `seconds` (giây ở
+  thẻ, đồng hồ đơn điệu ở trình duyệt gửi `elapsed_ms`), `since_prev_seconds` (giữa hai lượt của cùng người) và `category`
+  (hạng mục duyệt, `lib/ops/review-hang-muc.ts`) vào `ops_audit.detail`; Frame «Nhịp duyệt 7 ngày» trên `/ops/review` (trung vị,
+  lượt quá 30 phút đếm riêng) là số trước của OD2. Thẻ Người có nhãn «Người», nhãn trạng thái là nhãn đáp án, tiêu đề Ghép căn
+  không còn điểm Stage B, cột So so trên số hiện, ảnh hỏng gom một dòng; `?card=<id>` mở thẳng thẻ; Căn giá tốt báo «Đang chờ
+  ghép» kèm liên kết (chỉ máy thu) — `_acceptance/ops-duyet-nhip-va-chu`.
 - S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
   (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
   ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.

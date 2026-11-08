@@ -14,6 +14,7 @@ import { getSessionUser } from "@/lib/auth";
 import { dealHang, dealTheoVai, getDeals } from "@/lib/deals";
 import { NGAY_TOI_DA, NGUONG_VAO_PCT } from "@/lib/deals-chi-tiet";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
+import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Căn giá tốt" };
@@ -23,6 +24,8 @@ async function DealsContent({ xemNoiDung, can }: { xemNoiDung: boolean; can: str
   // Căn ngoài danh sách đã tải: trang một căn đã xử lý mã lạ và căn rời danh sách, không dựng thêm trạng thái sheet.
   if (can && !tho.some((d) => d.offerId === can)) redirect(`/ops/deals/${encodeURIComponent(can)}`);
   const rows = tho.map((d) => dealHang(dealTheoVai(d, { lienHe: xemNoiDung, noiDung: xemNoiDung }), { xemNoiDung, mayThu }));
+  // Căn đang là một vế của thẻ Ghép căn còn chờ (OD1 · ĐC7); cloud không có hàng duyệt → rỗng.
+  const choGhep = await loadPendingUnitMatches(rows.map((d) => d.offerId));
   if (rows.length === 0) {
     return (
       <Empty className="border">
@@ -43,7 +46,7 @@ async function DealsContent({ xemNoiDung, can }: { xemNoiDung: boolean; can: str
           Máy chủ chưa giữ hai phần này, nên căn không thiếu chúng. Mở cổng Ops trên máy thu để xem.
         </LocalOnlyAlert>
       )}
-      <DealsGrid rows={rows} moBanDau={can} xemNoiDung={xemNoiDung} mayThu={mayThu} />
+      <DealsGrid rows={rows} moBanDau={can} xemNoiDung={xemNoiDung} mayThu={mayThu} choGhep={choGhep} />
     </>
   );
 }
