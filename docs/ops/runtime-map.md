@@ -289,6 +289,24 @@ lạnh, hạn giữ bản lùi): `docs/ops/db-volume.md`.
   đồ ở vòng này.
 - Thước: `node pipeline/scripts/dung-lai-canonical.mjs` (xoá năm cột rồi dựng lại, giao dịch ROLLBACK) và `--nguon-goc`.
 
+## Danh bạ vật thể toà · trục · căn trên máy thu (2026-11-08, `_acceptance/dung-danh-ba-may-thu/`, DB1b)
+
+- **Lệnh:** `node pipeline/danh-ba-vat-the.mjs` (dựng toà · trục · căn từ danh mục S08 đã nối khu). Ghi DB máy thu
+  `oneinvest` chỉ khi có `--db-that`; lần dựng đầu (máy thu chưa có toà) còn phải có `--sao-luu <tệp pg_dump không rỗng>`
+  làm trước — thiếu thì lệnh thoát 2, không ghi. DB thử `oneinvest_<việc>` ghi không cần cờ.
+- **Không có đường ghi ra ngoài máy:** đích là máy chủ khác (đám mây, máy khác, kể cả URL `localhost` mang `?host=` hay
+  `PGHOST` trỏ đi chỗ khác) luôn bị từ chối, có cờ hay không. Đây là rào an toàn của lệnh ghi: dữ liệu lên cloud chỉ đi
+  qua đường đồng bộ có kiểm (`sync-cloud`).
+- **Chạy đêm:** bước `danh-ba-vat-the` nằm trong `pipeline/refresh-bait-gap.mjs` (job `zalo-import` 00:00, `chotot`
+  05:30 và 14:00, `apify-facebook`), chạy SAU bait gap + danh bạ Người trong giao dịch riêng. Nó chỉ giữ tươi các khu đã
+  có toà (khu, hoặc cha của phân khu), không bao giờ dựng lần đầu hay lan sang khu mới, không ghi chủ đầu tư. Chưa áp 082
+  → «danh-ba-vat-the: bỏ qua — DB chưa áp 082»; chưa có toà → «… bỏ qua — chưa dựng lần đầu». Bước hỏng → job đỏ, stderr
+  `danh-ba-vat-the: …`, danh bạ Người của lượt đó vẫn đã commit.
+- **Cloud:** ở bản này ba bảng `buildings`, `stacks`, `units` chưa đồng bộ lên cloud — đó là phạm vi của vòng DB1b, không
+  phải luật (Mạnh 08/11 mở thông tin dự án khỏi luật nội bộ; văn bản sửa ở hàng DA0).
+- **Đo sau lần dựng đầu:** `node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs` — ca
+  `DBM-AC-8` so số toà, trục, căn từng khu giữa máy thu và bản chép chỉ đọc; chạy lại `--db-that` phải ra `khoa_moi` 0.
+
 ## Job đêm báo lỗi thật (chốt 2026-10-23, `_acceptance/job-bao-loi-that/`, hàng AU3)
 
 Đêm 22→23/10 DB local sập ~8 giờ mà `launchctl` ghi mọi job «last exit 0». Từng bước xử lý (`pipeline/*.mjs`)

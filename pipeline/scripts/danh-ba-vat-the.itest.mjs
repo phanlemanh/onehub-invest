@@ -433,3 +433,376 @@ test("DBV-AC-12 phường của toà: khu một phường, khu hai phường, ph
     assert.equal(await bamTin(), tin0, "phát biểu tin đổi");
   } finally { await d.dong(); }
 });
+
+// ================= DB1b dung-danh-ba-may-thu (DBM-AC-*) =================
+// Mọi ca chạy trên DB thử ở :5433. Chiều đỏ dùng BẢN CHÉP tệp lệnh đặt cạnh tệp thật (import tương đối giữ nguyên), không
+// biến môi trường nào trong tệp chạy thật. Mỗi ca: hàm soát trả danh sách thông điệp ghim; tệp thật → rỗng, bản chép → có.
+import { spawnSync } from "node:child_process";
+import { rmSync, symlinkSync, unlinkSync } from "node:fs";
+import { MAY_CHU, thuMucMigration } from "./db-thu-dbv.mjs";
+import { demTheoKhu, moiKhoa, nhanSo, soDem } from "../lib/danh-ba-vat-the.mjs";
+
+const RBG = join(GOC, "pipeline/refresh-bait-gap.mjs");
+const BAN_CHEP = [];
+after(() => { for (const f of BAN_CHEP) { try { unlinkSync(f); } catch { /* đã xoá */ } } });
+
+/** Bản chép tệp lệnh cạnh tệp thật, thay từng cặp (phải khớp đúng một lần). */
+function banChep(ten, thay) {
+  let src = readFileSync(LENH, "utf8");
+  for (const [a, b] of thay) {
+    assert.ok(src.includes(a), `bản chép ${ten}: không thấy «${a.slice(0, 50)}»`);
+    src = src.replace(a, b);
+  }
+  const f = join(GOC, "pipeline", `.dbm-${ten}-${process.pid}.mjs`);
+  writeFileSync(f, src);
+  BAN_CHEP.push(f);
+  return f;
+}
+
+/** Chạy một tệp node, không ném khi thoát ≠ 0. */
+function chayTep(tep, args = [], env = {}) {
+  const t0 = Date.now();
+  const r = spawnSync(process.execPath, [tep, ...args], { cwd: join(GOC, "pipeline"), env: { ...process.env, ...env }, encoding: "utf8", timeout: 300000 });
+  return { code: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? "", ms: Date.now() - t0 };
+}
+const tongKet = (out) => {
+  const d = out.split("\n").find((l) => l.startsWith("tong_ket "));
+  return d ? JSON.parse(d.slice("tong_ket ".length)) : null;
+};
+// v = số dòng ba bảng vật thể; b = bí danh của vật thể (không tính bí danh Người — bước đêm dựng Người hợp lệ).
+const demBang = async (c) => (await c.query(`SELECT (SELECT count(*) FROM buildings) + (SELECT count(*) FROM stacks)
+  + (SELECT count(*) FROM units) AS v, (SELECT count(*) FROM registry_aliases WHERE object_key ~ '^(bld|stk|unt)_') AS b`)).rows[0];
+
+/** DB trên máy này, tên KHÔNG khớp oneinvest_<việc> (đóng vai máy thu), đủ migration + fixture. */
+async function dbKhac(hau) {
+  const ten = `dbvm_${process.pid}_${hau}`;
+  const qt = async (sql) => { const a = new pg.Client({ connectionString: `${MAY_CHU}/postgres` }); await a.connect(); try { await a.query(sql); } finally { await a.end(); } };
+  await qt(`DROP DATABASE IF EXISTS ${ten} WITH (FORCE)`);
+  await qt(`CREATE DATABASE ${ten}`);
+  const url = `${MAY_CHU}/${ten}`;
+  const dir = thuMucMigration();
+  try {
+    execFileSyncNode([join(GOC, "scripts/ci-db-init.mjs"), "--migrations", dir], { DATABASE_URL: url });
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+  const c = new pg.Client({ connectionString: url });
+  await c.connect();
+  const id = await napFixture(c);
+  return { url, c, id, dong: async () => { await c.end().catch(() => {}); await qt(`DROP DATABASE IF EXISTS ${ten} WITH (FORCE)`); } };
+}
+function execFileSyncNode(args, env) {
+  const r = spawnSync(process.execPath, args, { env: { ...process.env, ...env }, encoding: "utf8" });
+  assert.equal(r.status, 0, `ci-db-init: ${r.stderr}`);
+}
+
+// ---------- DBM-AC-1 lệnh thật: cờ --db-that, rào --sao-luu ----------
+async function soatAC1(lenh) {
+  const loi = [];
+  const tam = mkdtempSync(join(tmpdir(), "dbm-sl-"));
+  const tepDung = join(tam, "dump.sql"); writeFileSync(tepDung, "-- sao lưu tổng hợp\n");
+  const tepRong = join(tam, "rong.sql"); writeFileSync(tepRong, "");
+  const a = await dbCa("m1a");
+  const k = await dbKhac("m1");
+  try {
+    const ra = chayTep(lenh, ["--db", a.url, "--khu", KHU_FIX]);
+    if (ra.code !== 0 || !(tongKet(ra.stdout)?.khoa_moi > 0)) loi.push(`DBM-AC-1 DB thử không ghi được: ${ra.code} ${ra.stderr}`);
+    const truoc = await demBang(k.c);
+    const rb = chayTep(lenh, ["--db", k.url, "--khu", KHU_FIX]);
+    const sauB = await demBang(k.c);
+    if (rb.code !== 2 || JSON.stringify(sauB) !== JSON.stringify(truoc)) loi.push("DBM-AC-1 ghi không cờ");
+    else if (!rb.stderr.includes("--db-that")) loi.push("DBM-AC-1 thông điệp thiếu --db-that");
+    const rc = chayTep(lenh, ["--db", k.url, "--khu", KHU_FIX, "--db-that"]);
+    if (rc.code !== 2 || JSON.stringify(await demBang(k.c)) !== JSON.stringify(truoc)) loi.push("DBM-AC-1 lần đầu không sao lưu");
+    else if (!rc.stderr.includes("--sao-luu")) loi.push("DBM-AC-1 thông điệp thiếu --sao-luu");
+    for (const t of [join(tam, "khong-co.sql"), tepRong, tam]) {
+      const rd = chayTep(lenh, ["--db", k.url, "--khu", KHU_FIX, "--db-that", "--sao-luu", t]);
+      if (rd.code !== 2 || JSON.stringify(await demBang(k.c)) !== JSON.stringify(truoc)) loi.push(`DBM-AC-1 tệp sao lưu hỏng vẫn ghi: ${t}`);
+    }
+    const re = chayTep(lenh, ["--db", k.url, "--khu", KHU_FIX, "--db-that", "--sao-luu", tepDung]);
+    if (re.code !== 0 || !(tongKet(re.stdout)?.khoa_moi > 0)) loi.push(`DBM-AC-1 có cờ và sao lưu mà không ghi: ${re.stderr}`);
+    const rf = chayTep(lenh, ["--db", k.url, "--khu", KHU_FIX, "--db-that"]);
+    if (rf.code !== 0 || tongKet(rf.stdout)?.khoa_moi !== 0) loi.push(`DBM-AC-1 đã có toà mà vẫn đòi sao lưu: ${rf.stderr}`);
+  } finally {
+    await a.dong(); await k.dong(); rmSync(tam, { recursive: true, force: true });
+  }
+  return loi;
+}
+
+test("DBM-AC-1 lệnh thật: DB thử không cờ; DB khác chỉ với --db-that; lần đầu đòi --sao-luu có thật, không rỗng", async () => {
+  assert.deepEqual(await soatAC1(LENH), []);
+  const boDich = banChep("bo-dich", [["const kq = kiemDich(thamSoTuUrl(url), { dbThat });", "const kq = { ok: true, loai: \"thu\" };"]]);
+  assert.ok((await soatAC1(boDich)).includes("DBM-AC-1 ghi không cờ"), "DBM-AC-1 thước không bắt được bản bỏ kiểm đích");
+  const boSaoLuu = banChep("bo-sao-luu", [["if (soToa === 0 && !(tep && tepSaoLuuDung(tep))) {", "if (false) {"]]);
+  assert.ok((await soatAC1(boSaoLuu)).includes("DBM-AC-1 lần đầu không sao lưu"), "DBM-AC-1 thước không bắt được bản bỏ rào sao lưu");
+});
+
+// ---------- DBM-AC-2 lệnh + đêm: đích ngoài máy ----------
+test("DBM-AC-2 lệnh và bước đêm từ chối đích ngoài máy trước khi kết nối, không lộ mật khẩu", async () => {
+  const mk = "matkhau" + "-bi-mat";
+  const ngoai = "postgres://u:" + mk + "@db.abcd.supabase.co:5432/postgres";
+  for (const [args, env] of [[["--db", ngoai, "--db-that"], {}], [["--db-that"], { DATABASE_URL: ngoai }]]) {
+    const r = chayTep(LENH, args, env);
+    assert.equal(r.code, 2, `DBM-AC-2 lệnh không thoát 2: ${r.stderr}`);
+    assert.ok(r.ms < 5000, `DBM-AC-2 lệnh chờ kết nối: ${r.ms}ms`);
+    assert.match(r.stderr, /đích ngoài máy này/);
+    assert.ok(!r.stderr.includes(mk) && !r.stdout.includes(mk), "DBM-AC-2 lộ mật khẩu");
+  }
+  const { buocVatTheDem } = await import(LENH);
+  const c = new pg.Client({ connectionString: "postgres://db.abcd.supabase.co:5432/postgres" });
+  let soCau = 0;
+  c.query = async () => { soCau++; return { rows: [] }; };
+  await assert.rejects(buocVatTheDem(c, { log: () => {} }), /đích ngoài máy này/);
+  assert.equal(soCau, 0, "DBM-AC-2 bước đêm truy vấn trước khi kiểm đích");
+});
+
+// ---------- DBM-AC-3 slug khu ----------
+async function soatAC3(lenh) {
+  const loi = [];
+  const d = await dbCa("m3");
+  try {
+    const ra = chayTep(lenh, ["--db", d.url, "--khu", "q-khu-mot,q-khu-sai"]);
+    const v = await demBang(d.c);
+    if (ra.code !== 2 || Number(v.v) !== 0) loi.push("DBM-AC-3 slug sai mà xong");
+    else if (!ra.stderr.includes("q-khu-sai") || /q-khu-mot/.test(ra.stderr)) loi.push(`DBM-AC-3 thông điệp không gọi đúng slug sai: ${ra.stderr}`);
+    await d.c.query(`INSERT INTO asset_nodes (node_type, name, slug, aliases, area_ids, dd_field, meta)
+                     VALUES ('project', 'Q Khu Trống', 'q-khu-trong', '{}', '{q-p1}', 'SubdivisionName', '{"city":"hanoi"}')`);
+    const rb = chayTep(lenh, ["--db", d.url, "--khu", "q-khu-mot,q-khu-trong"]);
+    const tk = tongKet(rb.stdout);
+    if (rb.code !== 0 || JSON.stringify(tk?.khu_khong_s08) !== JSON.stringify(["q-khu-trong"])) loi.push(`DBM-AC-3 khu không S08 không được gọi tên: ${rb.code} ${rb.stdout}`);
+    else if (rb.stderr.split("\n").filter((l) => l.includes("q-khu-trong")).length !== 1) loi.push("DBM-AC-3 thiếu dòng cảnh báo khu không S08");
+    else if (JSON.stringify(tk.khu["q-khu-mot"]) !== JSON.stringify({ toa: 2, truc: 4, can: 8, ti_le_tach: 0.8889, ma: 9 })) loi.push("DBM-AC-3 khu đúng dựng sai");
+  } finally { await d.dong(); }
+  return loi;
+}
+
+test("DBM-AC-3 slug khu sai: thoát 2 gọi tên, không ghi; khu không S08: dựng khu khác, cảnh báo một dòng", async () => {
+  assert.deepEqual(await soatAC3(LENH), []);
+  const boSlug = banChep("bo-slug", [["if (thieu.length) throw", "if (false) throw"]]);
+  assert.ok((await soatAC3(boSlug)).includes("DBM-AC-3 slug sai mà xong"), "DBM-AC-3 thước không bắt được bản bỏ kiểm slug");
+});
+
+// ---------- DBM-AC-4 bước đêm: chưa áp 082, chưa dựng lần đầu ----------
+async function soatAC4c(chayDem) {
+  const loi = [];
+  const d = await dbCa("m4c");
+  try {
+    await d.c.query(`INSERT INTO registry_aliases (object_key, kind, value, source) VALUES ($1, 'ma_nguon', 'q9/Q99', 'S08'), ($2, 'ma_nguon', 'q-ngoai', 'S03')`,
+      [K("bld", 9), K("pty", 9)]);
+    const b0 = await demBang(d.c);
+    const out = await chayDem(d);
+    const b1 = await demBang(d.c);
+    if (Number(b1.v) !== 0) loi.push("DBM-AC-4 đêm tự dựng lần đầu");
+    else if (b1.b !== b0.b) loi.push("DBM-AC-4 đêm đổi bí danh");
+    else if (out.split("\n").filter((l) => l.includes("bỏ qua — chưa dựng lần đầu")).length !== 1) loi.push(`DBM-AC-4 thiếu dòng bỏ qua: ${out}`);
+  } finally { await d.dong(); }
+  return loi;
+}
+const demQuaRbg = async (d) => { const r = chayTep(RBG, [], { DATABASE_URL: d.url }); assert.equal(r.code, 0, `refresh-bait-gap: ${r.stderr}`); return r.stdout; };
+const demTrucTiep = (tep) => async (d) => {
+  const { buocVatTheDem } = await import(tep);
+  const dong = [];
+  await buocVatTheDem(d.c, { log: (s) => dong.push(s) }).catch((e) => dong.push(String(e)));
+  return dong.join("\n");
+};
+
+/** Bộ dựng nhận danh sách khu rỗng: phải ném lỗi gọi tên «danh sách khu rỗng» và KHÔNG ghi dòng nào (đếm trước/sau). */
+async function soatDungRong(tep) {
+  const loi = [];
+  const d = await dbCa("m4r");
+  try {
+    const { dung } = await import(tep);
+    const b0 = await demBang(d.c);
+    let nem = null;
+    try { await dung(d.c, { khuSlugs: [] }); } catch (e) { nem = e; }
+    const b1 = await demBang(d.c);
+    if (Number(b1.v) !== Number(b0.v) || b1.b !== b0.b) loi.push(`DBM-AC-4 đêm rơi khu mặc định: ghi ${Number(b1.v) - Number(b0.v)} dòng vật thể`);
+    else if (!nem) loi.push("DBM-AC-4 bộ dựng nhận danh sách khu rỗng mà không báo");
+    else if (!String(nem.message).includes("danh sách khu rỗng")) loi.push(`DBM-AC-4 thông điệp khu rỗng sai: ${nem.message}`);
+  } finally { await d.dong(); }
+  return loi;
+}
+
+test("DBM-AC-4 bước đêm: chưa áp 082 hay chưa có toà thì bỏ qua một dòng, không ghi; danh sách khu rỗng bị từ chối", async () => {
+  // (a) DB trước 082.
+  const tenA = `${TEN}_m4a`;
+  const urlA = await taoDbThu(tenA, { hetSo: 81 });
+  try {
+    const r = chayTep(RBG, [], { DATABASE_URL: urlA });
+    assert.equal(r.code, 0, `DBM-AC-4 refresh-bait-gap đỏ trên DB trước 082: ${r.stderr}`);
+    assert.equal(r.stdout.split("\n").filter((l) => l.includes("bỏ qua — DB chưa áp 082")).length, 1, "DBM-AC-4 thiếu dòng chưa áp 082");
+  } finally { await xoaDbThu(tenA); }
+  // (b) đủ migration, fixture S08, chưa dựng.
+  const d = await dbCa("m4b");
+  try {
+    const out = await demQuaRbg(d);
+    assert.equal(out.split("\n").filter((l) => l.includes("bỏ qua — chưa dựng lần đầu")).length, 1, "DBM-AC-4 thiếu dòng bỏ qua");
+    const v = await demBang(d.c);
+    assert.equal(Number(v.v), 0, "DBM-AC-4 đêm tự dựng lần đầu");
+    assert.equal((await d.c.query(`SELECT count(*)::int AS n FROM registry_aliases WHERE kind = 'ma_nguon'`)).rows[0].n, 0);
+  } finally { await d.dong(); }
+  // Ca hàm: danh sách khu rỗng bị từ chối, không ghi (đo bằng đếm dòng trước/sau).
+  assert.deepEqual(await soatDungRong(LENH), []);
+  // (c) có bí danh ma_nguon, 0 toà — qua refresh-bait-gap thật.
+  assert.deepEqual(await soatAC4c(demQuaRbg), []);
+  // Chiều đỏ: rào đếm bí danh thay vì toà; dung nhận [] rơi về khu mặc định.
+  const demBiDanh = banChep("dem-bi-danh", [["const khuSlugs = await khuDaDung(c);",
+    "const khuSlugs = (await c.query(\"SELECT count(*)::int AS n FROM registry_aliases WHERE kind = 'ma_nguon'\")).rows[0].n ? [\"q-khu-mot\", \"q-khu-hai\"] : [];"]]);
+  assert.ok((await soatAC4c(demTrucTiep(demBiDanh))).includes("DBM-AC-4 đêm tự dựng lần đầu"), "DBM-AC-4 thước không bắt được rào đếm bí danh");
+  // Bản chép chỉ đổi rào khu rỗng của bộ dựng (rào đêm giữ nguyên) — đo bằng số dòng bộ dựng ghi ra.
+  const roiMacDinh = banChep("roi-mac-dinh", [
+    ["if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi(\"danh sách khu rỗng — không dựng gì\");",
+      "if (!khuSlugs.length) khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"]]);
+  assert.ok((await soatDungRong(roiMacDinh)).some((l) => l.startsWith("DBM-AC-4 đêm rơi khu mặc định")), "DBM-AC-4 thước không bắt được rơi khu mặc định");
+});
+
+// ---------- DBM-AC-5 bước đêm giữ tươi khu đã dựng (kể cả phân khu) ----------
+async function soatAC5(chayDem) {
+  const loi = [];
+  const d = await dbCa("m5");
+  const tam = mkdtempSync(join(tmpdir(), "dbm-td-"));
+  try {
+    const td = join(tam, "chu-dau-tu.json"); writeFileSync(td, JSON.stringify({ q3: "Q Chủ Đầu Tư" }));
+    // Khu hai chỉ còn dự án gắn phân khu (q3): bỏ nối q4 để đường «cha của phân khu» là đường DUY NHẤT tới khu hai.
+    await d.c.query(`DELETE FROM s08_project_links WHERE project_id = 'q4'`);
+    const r0 = chayTep(LENH, ["--db", d.url, "--khu", "q-khu-hai", "--tu-dien", td]);
+    assert.equal(r0.code, 0, r0.stderr);
+    const cdt = async () => (await d.c.query(`SELECT count(*)::int AS n FROM field_assertions WHERE field = 'builder_name'`)).rows[0].n;
+    const cdt0 = await cdt();
+    for (const r of [S08("s2", "q3", "QX103.01", "QPK"), S08("s2", "q1", "Q12-06-01")]) await themS08(d.c, r);
+    const k0 = new Set((await tapKhoa(d.c)).map((r) => r.k));
+    await chayDem(d);
+    const k1 = await tapKhoa(d.c);
+    const moi = k1.filter((r) => !k0.has(r.k));
+    const { rows: [{ n: khuMot }] } = await d.c.query(
+      `SELECT count(*)::int AS n FROM buildings WHERE region_node_id = $1`, [d.id["q-khu-mot"]]);
+    const { rows: canMoi } = await d.c.query(
+      `SELECT u.unit_key FROM units u JOIN registry_aliases a ON a.object_key = u.unit_key AND a.kind = 'ma_nguon' AND a.value = 'q3/QX103.01'`);
+    // Kỳ vọng viết trước: mã mới q3/QX103.01 (toà QX1, trục có sẵn, tầng mới) → đúng MỘT khoá mới là căn của nó.
+    const kyVong = canMoi.map((u) => `u:${u.unit_key}`).sort();
+    const thuc = moi.map((r) => `${r.cap}:${r.k}`).sort();
+    if (khuMot > 0) loi.push("DBM-AC-5 đêm lan sang khu chưa dựng");
+    else if (canMoi.length !== 1) loi.push("DBM-AC-5 phân khu không được giữ tươi");
+    else if (JSON.stringify(thuc) !== JSON.stringify(kyVong)) loi.push(`DBM-AC-5 tập khoá mới khác kỳ vọng: ${thuc.length} so với ${kyVong.length}`);
+    else {
+      const { rows: [v] } = await d.c.query(`SELECT b.region_node_id::int AS r FROM units u JOIN buildings b ON b.building_key = u.building_key
+                                              WHERE u.unit_key = $1`, [canMoi[0].unit_key]);
+      if (v.r !== d.id["q-phan-khu"]) loi.push("DBM-AC-5 căn mới không thuộc toà của phân khu");
+    }
+    await chayDem(d);
+    if (JSON.stringify(await tapKhoa(d.c)) !== JSON.stringify(k1)) loi.push("DBM-AC-5 đêm lần hai đúc khoá");
+    if ((await cdt()) !== cdt0) loi.push("DBM-AC-5 đêm ghi chủ đầu tư");
+  } finally { await d.dong(); rmSync(tam, { recursive: true, force: true }); }
+  return loi;
+}
+
+test("DBM-AC-5 bước đêm chỉ đúc mã mới của khu đã dựng (qua phân khu), lần hai 0 khoá, không ghi chủ đầu tư", async () => {
+  assert.deepEqual(await soatAC5(demQuaRbg), []);
+  const lan = banChep("lan-khu", [["const khuSlugs = await khuDaDung(c);", "const khuSlugs = [\"q-khu-mot\", \"q-khu-hai\"];"]]);
+  assert.ok((await soatAC5(demTrucTiep(lan))).includes("DBM-AC-5 đêm lan sang khu chưa dựng"), "DBM-AC-5 thước không bắt được đêm lan khu");
+  const thua = banChep("duc-thua", [["  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });",
+    "  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });\n  { const s = (await c.query(\"SELECT building_key FROM buildings LIMIT 1\")).rows[0]; if (s) await c.query(\"INSERT INTO stacks (stack_key, building_key, catalog_tier) VALUES ($1, $2, 'xac_minh')\", [`stk_${'Z'.repeat(26)}`, s.building_key]); }"]]);
+  assert.ok((await soatAC5(demTrucTiep(thua))).some((l) => l.startsWith("DBM-AC-5 tập khoá mới khác kỳ vọng")), "DBM-AC-5 thước không bắt được khoá thừa");
+  const boCha = banChep("bo-cha-phan-khu", [["const khuSlugs = await khuDaDung(c);",
+    "const khuSlugs = (await c.query(\"SELECT DISTINCT n.slug FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id WHERE n.node_type = 'project'\")).rows.map((r) => r.slug);"]]);
+  assert.ok((await soatAC5(demTrucTiep(boCha))).includes("DBM-AC-5 phân khu không được giữ tươi"), "DBM-AC-5 thước không bắt được bỏ đường cha phân khu");
+});
+
+// ---------- DBM-AC-6 bước đêm hỏng giữa giao dịch ----------
+async function moiNguoi(c) {
+  await c.query(`INSERT INTO sale_offer_records (offer_id, source, originating_system_key, kind, first_seen, last_seen, seller_name, seller_phone)
+                 VALUES ('offer_dbm_1', 'S05', 'q-dbm-1', 'sale', '2026-11-01', '2026-11-02', 'Q Người Bán', '+84900000001') ON CONFLICT DO NOTHING`);
+}
+
+async function soatAC6(rbg) {
+  const loi = [];
+  const [h, dc] = [await dbCa("m6h"), await dbCa("m6d")];
+  try {
+    for (const d of [h, dc]) {
+      assert.equal(chayTep(LENH, ["--db", d.url, "--khu", "q-khu-mot"]).code, 0);
+      await moiNguoi(d.c);
+      await themS08(d.c, S08("s2", "q1", "Q15-01-01"));
+    }
+    await h.c.query(`CREATE FUNCTION dbm_ep_hong() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'ep-hong-dbm'; END $$`);
+    await h.c.query(`CREATE TRIGGER dbm_ep_hong BEFORE INSERT ON units FOR EACH ROW EXECUTE FUNCTION dbm_ep_hong()`);
+    const kH0 = await tapKhoa(h.c);
+    const bH0 = (await demBang(h.c)).b;
+    const rh = chayTep(rbg, [], { DATABASE_URL: h.url });
+    const rd = chayTep(rbg, [], { DATABASE_URL: dc.url });
+    const nguoi = async (c) => (await c.query(`SELECT count(*)::int AS n FROM parties`)).rows[0].n;
+    const [nh, nd] = [await nguoi(h.c), await nguoi(dc.c)];
+    if (rd.code !== 0) loi.push(`DBM-AC-6 đối chứng đỏ: ${rd.stderr}`);
+    if (nd === 0) loi.push("DBM-AC-6 đối chứng không dựng người nào — ca không đo được");
+    if (rh.code === 0 || !rh.stderr.includes("danh-ba-vat-the") || !rh.stderr.includes("ep-hong-dbm")) loi.push(`DBM-AC-6 lỗi không gọi tên bước: ${rh.code} ${rh.stderr}`);
+    if (nh !== nd) loi.push("DBM-AC-6 lỗi vật thể lùi danh bạ Người");
+    if (JSON.stringify(await tapKhoa(h.c)) !== JSON.stringify(kH0) || (await demBang(h.c)).b !== bH0) loi.push("DBM-AC-6 dòng nửa chừng");
+  } finally { await h.dong(); await dc.dong(); }
+  return loi;
+}
+
+test("DBM-AC-6 bước vật thể hỏng giữa giao dịch: job đỏ gọi tên bước, danh bạ Người vẫn commit, không dòng nửa chừng", async () => {
+  assert.deepEqual(await soatAC6(RBG), []);
+  const nguon = readFileSync(RBG, "utf8");
+  assert.ok(!nguon.includes("process.env.DBV_"), "DBM-AC-6 refresh-bait-gap đọc biến thay mô-đun");
+  assert.ok(!/import\(\s*process\.env/.test(nguon), "DBM-AC-6 refresh-bait-gap import động theo biến môi trường");
+  // Chiều đỏ: bước vật thể trong cùng giao dịch với buocDem (savepoint) → lỗi lùi cả Người.
+  let src = nguon.replace(/\n  try \{\n    await buocDem\(c\);[\s\S]*?\n  \} finally \{/,
+    "\n  try {\n    await c.query(\"BEGIN\");\n    await buocDem(c, { savepoint: true });\n    await buocVatTheDem(c);\n    await c.query(\"COMMIT\");\n  } catch (e) {\n    await c.query(\"ROLLBACK\").catch(() => {});\n    console.error(`danh-ba-vat-the: ${e.message}`);\n    process.exitCode = 1;\n  } finally {");
+  assert.notEqual(src, nguon, "bản chép refresh-bait-gap: không thay được khối main");
+  const f = join(GOC, "pipeline", `.dbm-rbg-chung-${process.pid}.mjs`);
+  writeFileSync(f, src); BAN_CHEP.push(f);
+  assert.ok((await soatAC6(f)).includes("DBM-AC-6 lỗi vật thể lùi danh bạ Người"), "DBM-AC-6 thước không bắt được bản chung giao dịch");
+});
+
+// ---------- DBM-AC-7 lối vào qua symlink ----------
+async function soatAC7(tenTep) {
+  const loi = [];
+  const tam = mkdtempSync(join(tmpdir(), "dbm-ln-"));
+  const link = join(tam, "repo");
+  symlinkSync(GOC, link);
+  const [a, b] = [await dbCa("m7a"), await dbCa("m7b")];
+  try {
+    const ra = chayTep(join(link, "pipeline", tenTep), ["--db", a.url, "--khu", KHU_FIX]);
+    chayTep(LENH, ["--db", b.url, "--khu", KHU_FIX]);
+    if (!tongKet(ra.stdout) || !(tongKet(ra.stdout).khoa_moi > 0)) loi.push("DBM-AC-7 lối vào câm qua symlink");
+    else if (JSON.stringify([...(await demTheoKhu(a.c))]) !== JSON.stringify([...(await demTheoKhu(b.c))])) loi.push("DBM-AC-7 qua symlink dựng khác đường thật");
+  } finally { await a.dong(); await b.dong(); rmSync(tam, { recursive: true, force: true }); }
+  return loi;
+}
+
+test("DBM-AC-7 gọi qua symlink trỏ gốc kho: lệnh chạy thật, dựng như đường thật", async () => {
+  assert.deepEqual(await soatAC7("danh-ba-vat-the.mjs"), []);
+  const tho = banChep("loi-vao-tho", [["if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {",
+    "if (process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url)) {"]]);
+  assert.ok((await soatAC7(tho.split("/").pop())).includes("DBM-AC-7 lối vào câm qua symlink"), "DBM-AC-7 thước không bắt được lối vào so chuỗi thô");
+});
+
+// ---------- DBM-AC-8 đếm độc lập, so, chọn nhánh ----------
+async function soatAC8(dem, chon = nhanSo) {
+  const loi = [];
+  const [a, b, rong] = [await dbCa("m8a"), await dbCa("m8b"), await dbCa("m8r")];
+  try {
+    const ta = tongKet(chayTep(LENH, ["--db", a.url, "--khu", KHU_FIX]).stdout);
+    tongKet(chayTep(LENH, ["--db", b.url, "--khu", KHU_FIX]).stdout);
+    const da = await dem(a.c, ta);
+    const kyVong = { "q-khu-mot": { toa: 2, truc: 4, can: 8 } };
+    if (JSON.stringify(da.get("q-khu-mot")) !== JSON.stringify(kyVong["q-khu-mot"])) loi.push(`DBM-AC-8 đếm khu một sai: ${JSON.stringify(da.get("q-khu-mot"))}`);
+    if (da.get("q-khu-hai")?.toa !== 3 || da.get("q-khu-hai")?.can !== 3) loi.push(`DBM-AC-8 đếm khu hai sai: ${JSON.stringify(da.get("q-khu-hai"))}`);
+    if (soDem(da, await dem(b.c, ta)).length) loi.push("DBM-AC-8 lệch khi cùng dữ liệu");
+    const u = (await b.c.query(`SELECT u.building_key, u.stack_key FROM units u JOIN buildings x ON x.building_key = u.building_key
+                                 WHERE x.region_node_id = $1 LIMIT 1`, [b.id["q-khu-mot"]])).rows[0];
+    await b.c.query(`INSERT INTO units (unit_key, building_key, stack_key, floor, sub_id, catalog_tier) VALUES ($1, $2, $3, '99', $3 || ':99', 'xac_minh')`,
+      [moiKhoa("unt"), u.building_key, u.stack_key]);
+    const lech = soDem(da, await dem(b.c, ta));
+    if (!lech.length) loi.push("DBM-AC-8 đếm không độc lập");
+    else if (JSON.stringify(lech) !== JSON.stringify([{ khu: "q-khu-mot", cap: "can", may: 8, ban: 9 }])) loi.push(`DBM-AC-8 lệch sai: ${JSON.stringify(lech)}`);
+    if (chon(da) !== "so") loi.push("DBM-AC-8 bỏ so khi máy thu đã dựng");
+    if (chon(await dem(rong.c, null)) !== "chua-so") loi.push("DBM-AC-8 so khi máy thu chưa dựng");
+  } finally { await a.dong(); await b.dong(); await rong.dong(); }
+  return loi;
+}
+
+test("DBM-AC-8 đếm độc lập theo khu, so hai DB, căn thừa ra đúng một dòng lệch, chọn nhánh hai chiều", async () => {
+  assert.deepEqual(await soatAC8((c) => demTheoKhu(c)), []);
+  const tuTongKet = async (_c, tk) => new Map(Object.entries(tk?.khu ?? {}).map(([k, v]) => [k, { toa: v.toa, truc: v.truc, can: v.can }]));
+  assert.ok((await soatAC8(tuTongKet)).includes("DBM-AC-8 đếm không độc lập"), "DBM-AC-8 thước không bắt được đếm từ tổng kết");
+  assert.ok((await soatAC8((c) => demTheoKhu(c), () => "chua-so")).includes("DBM-AC-8 bỏ so khi máy thu đã dựng"), "DBM-AC-8 thước không bắt được bỏ nhánh so");
+});
