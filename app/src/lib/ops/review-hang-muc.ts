@@ -82,6 +82,14 @@ const NHAN_DAP_AN: Record<ReviewKind | "doi_chieu", Record<string, string>> = {
   other: { approved: "Đã duyệt", rejected: "Từ chối", deferred: "Hoãn" },
 };
 
+/**
+ * Đáp án nào còn bắt gõ lý do (OD2 · Q4): đáp án đã chọn tính là lý do, trừ «Bỏ» ở thẻ Bổ sung tin — Q4 giữ lý do gõ tay
+ * cho việc bác một đề xuất ghi đè, mà thẻ chưa phân được ghi đè với điền ô trống (OD4) nên giữ cho mọi «Bỏ».
+ */
+export function batGoLyDo(t: CategoryInput, status: string): boolean {
+  return reviewKind(t) === "agent_output" && status === "rejected";
+}
+
 export function answerLabel(t: CategoryInput, status: string): string {
   if (status === "pending") return "Chờ duyệt";
   const k = reviewKind(t);

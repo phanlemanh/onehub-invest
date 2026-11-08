@@ -117,6 +117,12 @@ export const SCAN_FILES = [
   "src/components/ops/review/review-detail-sheet.tsx",
   "src/components/ops/review/review-full-text.tsx",
   "src/components/ops/review/review-nhip.tsx",
+  // OD2: hàng chờ gửi, quyết định gần đây, hộp hạng mục, bảng phím, hook phím.
+  "src/components/ops/review/hang-gui.tsx",
+  "src/components/ops/review/review-gan-day.tsx",
+  "src/components/ops/review/review-hop-hang-muc.tsx",
+  "src/components/ops/review/review-phim-tat.tsx",
+  "src/components/ops/review/use-phim-duyet.ts",
   "src/components/ops/review/review-queue-skeleton.tsx",
   "src/components/ops/review/review-queue.tsx",
   "src/components/ops/review/review-reason.tsx",

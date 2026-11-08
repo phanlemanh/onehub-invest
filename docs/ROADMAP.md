@@ -210,6 +210,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   lượt quá 30 phút đếm riêng) là số trước của OD2. Thẻ Người có nhãn «Người», nhãn trạng thái là nhãn đáp án, tiêu đề Ghép căn
   không còn điểm Stage B, cột So so trên số hiện, ảnh hỏng gom một dòng; `?card=<id>` mở thẳng thẻ; Căn giá tốt báo «Đang chờ
   ghép» kèm liên kết (chỉ máy thu) — `_acceptance/ops-duyet-nhip-va-chu`.
+- Hộp hạng mục + chế độ duyệt (OD2, 08/11): `/ops/review` có PageHeader ba số (Chờ duyệt · Quá 3 ngày · Đã quyết hôm nay giờ
+  VN), hộp hạng mục bên trái danh sách (cột trái `@reui/solution-agents-9`, `?category=`) thay ô lọc theo `item_type`; «Duyệt
+  liền» mở chế độ duyệt: cũ nhất trước, quyết xong thẻ kế hiện trong cùng sheet, phím J/K/1–4/R/? (bảng phím
+  `@reui/c-dialog-9`), lệnh giữ 5 giây ở trình duyệt có «Hoàn tác» (xả bằng `keepalive` khi rời trang hay gỡ); lý do trống
+  thì gửi nhãn đáp án (Q4), «Bỏ» ở Bổ sung tin còn bắt gõ; «Quyết định gần đây» 20 lượt 7 ngày của chính người duyệt. Route
+  decide không đổi — `_acceptance/ops-duyet-hop-hang-muc`.
 - S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
   (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
   ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition, type ComponentProps, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, CircleHelpIcon, SparklesIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 
@@ -15,7 +15,9 @@ import { doiChieuCua, type DoiChieu } from "@/lib/ops/doi-chieu";
 import { CHUA_CAN_CU, lyDoHopLe, soNguoiDang, soTruongGhepCan, fmtGia } from "@/lib/ops/review-can-cu";
 import type { OfferContext, ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
-import { answerLabel } from "@/lib/ops/review-hang-muc";
+import { answerLabel, batGoLyDo } from "@/lib/ops/review-hang-muc";
+import { Kbd } from "@/components/ui/kbd";
+import { useHangGui } from "./review/hang-gui";
 import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
 
@@ -96,19 +98,27 @@ export function khoangMo(t0: number, t1: number): number {
  */
 export function useDecide(item: Pick<ReviewItem, "id" | "item_type" | "item_id" | "evidence">) {
   const router = useRouter();
+  const hang = useHangGui();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const [reason, setReason] = useState("");
+  // Hoàn tác (OD2 · ĐC5) dựng lại thẻ với chữ người đã gõ.
+  const [reason, setReason] = useState(() => hang?.lyDoGiu(item.id) ?? "");
   const [t0] = useState(dongHo);
   const lyDo = lyDoHopLe(reason);
+  /** Lý do gửi đi: chữ gõ thắng; trống thì nhãn đáp án (Q4), trừ đáp án còn bắt gõ → null (nút tắt). */
+  const lyDoGui = (status: DecideStatus) => lyDo ?? (reason.trim() === "" && !batGoLyDo(item, status) ? answerLabel(item, status) : null);
   const decide = (status: DecideStatus, choices?: EnrichChoices) => {
-    if (lyDo === null) return;
+    const lyDoChot = lyDoGui(status);
+    if (lyDoChot === null) return;
     const elapsed_ms = khoangMo(t0, dongHo());
+    const body = choices ? { status, choices, reason: lyDoChot, elapsed_ms } : { status, reason: lyDoChot, elapsed_ms };
+    // Chế độ duyệt: lệnh vào hàng chờ 5 giây, sheet sang thẻ kế; thẻ dựng riêng gửi thẳng như OD1.
+    if (hang) return hang.xep({ id: item.id, body, nhan: answerLabel(item, status), lyDoGo: reason, lamMoi: () => router.refresh() });
     start(async () => {
       const res = await fetch(`/api/v1/ops/review/${item.id}/decide`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(choices ? { status, choices, reason: lyDo, elapsed_ms } : { status, reason: lyDo, elapsed_ms }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         setMsg(answerLabel(item, status));
@@ -118,7 +128,9 @@ export function useDecide(item: Pick<ReviewItem, "id" | "item_type" | "item_id" 
       }
     });
   };
-  return { pending, msg, decide, reason, setReason, ready: lyDo !== null };
+  /** Nút của đáp án `status` bấm được: có lý do gõ hợp lệ, hoặc trống mà đáp án không bắt gõ. */
+  const sanSang = (status: DecideStatus) => lyDoGui(status) !== null;
+  return { pending, msg, decide, reason, setReason, sanSang, batGo: (status: DecideStatus) => batGoLyDo(item, status) };
 }
 
 /** Thẻ đã quyết: nhãn đáp án đã bấm (cùng bảng với badge danh sách) + lý do đã ghi (thẻ quyết trước PL3 không có lý do). */
@@ -137,15 +149,30 @@ export function DoneState({ item }: { item: ReviewItem }) {
   );
 }
 
-/** Chân thẻ chờ: ô lý do trên hàng nút; mọi nút tắt khi lý do trống (PL3). */
-export function PendingActions({ d, extraBlock, children }: {
+/** Nút đáp án ở chân thẻ: mang số phím (OD2 · ĐC4) — phím `so` bấm đúng nút này, nút tắt thì phím không làm gì. */
+export function NutDapAn({ so, children, ...props }: ComponentProps<typeof Button> & { so: number }) {
+  // Kbd đứng cạnh nút, không trong nút: tên nút (chữ đáp án) giữ nguyên cho trình đọc màn hình; phím khai ở aria-keyshortcuts.
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Button size="sm" data-review-answer={so} aria-keyshortcuts={String(so)} {...props}>
+        {children}
+      </Button>
+      <Kbd data-review-kbd aria-hidden>{so}</Kbd>
+    </span>
+  );
+}
+
+/** Chân thẻ chờ: ô lý do trên hàng nút. Lý do trống thì ghi nhãn đáp án (Q4); đáp án còn bắt gõ thì nút đó tắt. */
+export function PendingActions({ d, extraBlock, batBo = false, children }: {
   d: ReturnType<typeof useDecide>;
   extraBlock?: string | null;
+  /** Thẻ có đáp án «Bỏ» còn bắt gõ lý do (Bổ sung tin). */
+  batBo?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex w-full flex-col gap-3">
-      <ReviewReason value={d.reason} onChange={d.setReason} disabled={d.pending} />
+      <ReviewReason value={d.reason} onChange={d.setReason} disabled={d.pending} batBo={batBo} />
       <div className="flex flex-wrap items-center gap-2" data-review-actions>
         {children}
         {extraBlock && <span className="text-muted-foreground text-xs">{extraBlock}</span>}
@@ -360,16 +387,16 @@ function AgentOutputCard({ item, media, context, render }: CardProps) {
     </div>
   );
   const actions = fields.length === 0 && doiChieu.length === 0 ? null : item.status === "pending" ? (
-    <PendingActions d={d} extraBlock={chosen ? null : "Chọn một bên cho trường xung đột trước khi áp."}>
-      <Button size="sm" onClick={approve} disabled={d.pending || !d.ready || !chosen}>
+    <PendingActions d={d} batBo extraBlock={chosen ? null : "Chọn một bên cho trường xung đột trước khi áp."}>
+      <NutDapAn so={1} onClick={approve} disabled={d.pending || !d.sanSang("approved") || !chosen}>
         {fields.length === 0 ? "Ghi phán quyết" : "Áp dụng"}
-      </Button>
-      <Button size="sm" variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.ready}>
+      </NutDapAn>
+      <NutDapAn so={2} variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.sanSang("rejected")}>
         Bỏ
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.ready}>
+      </NutDapAn>
+      <NutDapAn so={3} variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.sanSang("deferred")}>
         Để sau
-      </Button>
+      </NutDapAn>
     </PendingActions>
   ) : (
     <DoneState item={item} />
@@ -444,18 +471,18 @@ function EntityMatchCard({ item, media, context, render }: CardProps) {
   );
   const actions = item.status === "pending" ? (
     <PendingActions d={d}>
-      <Button size="sm" onClick={() => d.decide("approved")} disabled={d.pending || !d.ready || khoa}>
+      <NutDapAn so={1} onClick={() => d.decide("approved")} disabled={d.pending || !d.sanSang("approved") || khoa}>
         <CheckIcon data-icon="inline-start" aria-hidden />
         Cùng căn
-      </Button>
-      <Button size="sm" variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.ready || khoa}>
+      </NutDapAn>
+      <NutDapAn so={2} variant="destructive" onClick={() => d.decide("rejected")} disabled={d.pending || !d.sanSang("rejected") || khoa}>
         <XIcon data-icon="inline-start" aria-hidden />
         Khác căn
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.ready || khoa}>
+      </NutDapAn>
+      <NutDapAn so={3} variant="outline" onClick={() => d.decide("deferred")} disabled={d.pending || !d.sanSang("deferred") || khoa}>
         <CircleHelpIcon data-icon="inline-start" aria-hidden />
         Không chắc
-      </Button>
+      </NutDapAn>
     </PendingActions>
   ) : (
     <DoneState item={item} />
