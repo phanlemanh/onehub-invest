@@ -19,6 +19,14 @@ function dangGo(t: EventTarget | null): boolean {
 }
 
 /**
+ * Có hộp thoại nào đang mở mà không phải sheet duyệt (hộp phóng ảnh của thẻ, ⌘K, hộp thoại sau này) → phím của chế độ duyệt
+ * thuộc về hộp đó, không phải sheet bên dưới (od2-phim-va-loi-ghi AC-4).
+ */
+function hopThoaiDe(): boolean {
+  return [...document.querySelectorAll("[role=dialog], [role=alertdialog]")].some((el) => !el.matches("[data-review-sheet]"))
+}
+
+/**
  * Phím của chế độ duyệt (OD2 · ĐC4), chỉ khi `bat` (sheet đang mở, không Dialog chồng). Phím có ⌘/Ctrl/Alt không bị bắt —
  * vỏ Ops giữ ⌘K, trình duyệt giữ phím của nó. Tiêu điểm ở ô nhập → bỏ qua mọi phím chữ/số.
  */
@@ -32,6 +40,7 @@ export function usePhimDuyet(bat: boolean, hanh: PhimDuyet) {
     const nghe = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return
       if (dangGo(e.target)) return
+      if (hopThoaiDe()) return
       const h = ref.current
       const lam = (f: () => void) => {
         e.preventDefault()
@@ -55,6 +64,8 @@ export function usePhimDuyet(bat: boolean, hanh: PhimDuyet) {
         case "2":
         case "3":
         case "4":
+          // Giữ phím: trình duyệt lặp keydown — mỗi lần lặp sẽ quyết thẻ kế. Chỉ lần nhấn đầu quyết (od2-phim-va-loi-ghi AC-3).
+          if (e.repeat) return
           return lam(() => h.dapAn(Number(e.key)))
       }
     }
