@@ -1,5 +1,5 @@
 {
- "feature_plain": "Người duyệt ở /ops/review không còn quyết nhầm thẻ vì giữ phím hay vì phím chạy dưới hộp ảnh, và luôn biết khi một quyết định gửi lúc rời trang bị lỗi.",
+ "feature_plain": "Người duyệt ở /ops/review luôn biết khi một quyết định gửi lúc rời Hàng duyệt bị lỗi, giữ phím số chỉ quyết một thẻ, và phím duyệt không chạy dưới hộp phóng ảnh.",
  "will_do": [
   {
    "id": "AC-1",
