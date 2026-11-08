@@ -68,8 +68,8 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.test.tnr_pl19
-    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
-    expected: "exit 0; bộ itest PL19 pipeline/scripts/trang-thai-chao.itest.mjs và pipeline/scripts/bac-du-lieu.itest.mjs chạy với PL19_NAP_THEM trỏ 085 (nạp sau 059 trong cùng giao dịch của mỗi ca) đều xanh — mọi ca E1–E7 của thoi-gian-va-hieu-luc. Đối chứng: stdout của bộ in một dòng «PL19_NAP_THEM: 085_ngung_rao_khong_thay_lai.sql» chứng tệp đã nạp. Chiều đỏ ghim: PL19_NAP_THEM trỏ bản chép 085 mà bang_chung_chao bỏ nhánh tin S06 het_trong_luot thì ca gỡ trong lượt của PL19 đỏ."
+    paths: [db/migrations/085_ngung_rao_khong_thay_lai.sql, pipeline/scripts/trang-thai-chao.itest.mjs, pipeline/scripts/bac-du-lieu.itest.mjs, pipeline/scripts/pl19-khong-do-them.mjs]
+    expected: "exit 0; (sửa theo lời Mạnh 09/11 «Sửa E9b theo khuyến nghị», sổ d-20261108T225642Z-24) thước pipeline/scripts/pl19-khong-do-them.mjs chạy bộ itest PL19 pipeline/scripts/trang-thai-chao.itest.mjs + pipeline/scripts/bac-du-lieu.itest.mjs ba lượt trên cùng DB của riêng lượt: bản gốc, kèm PL19_NAP_THEM trỏ 085 (nạp sau 059 trong giao dịch của mỗi ca), kèm bản chép 085 hỏng; kèm 085 cùng số ca và KHÔNG đỏ thêm ca nào so với bản gốc (bản gốc hôm nay đỏ sẵn đúng ca AC-3 «cột và trục» — lệch sổ có từ trước, hàng riêng). Đối chứng: stdout có dòng «PL19_NAP_THEM: 085_ngung_rao_khong_thay_lai.sql» và mỗi lượt kèm tệp phải in tên tệp nạp thêm. Chiều đỏ ghim (chạy trong cùng thước): bản chép 085 mà bang_chung_chao bỏ nhánh tin S06 het_trong_luot phải đỏ thêm ít nhất một ca so với bản gốc, không thì thước thoát 1 với thông điệp «E9b đối chứng 085 hỏng không đỏ thêm ca nào»; 085 thật đỏ thêm thì thoát 1 với thông điệp «E9b 085 làm đỏ thêm ca PL19»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10
