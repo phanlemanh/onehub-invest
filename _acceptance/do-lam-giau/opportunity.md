@@ -3,10 +3,10 @@ schema_version: 1
 slug: do-lam-giau
 feature: "Người vận hành thấy mỗi ngày, theo từng đường làm giàu (số qua người đăng, diện tích suy ra, quy ước nhóm, danh mục CĐT): bao nhiêu giá trị được thêm, bao nhiêu bị người sửa hay rút, và kết quả kiểm ngược định kỳ (giấu giá trị có sẵn rồi so); mọi số xem được theo phường/xã, dự án, toà (và trục khi gắn tới trục), kèm một ô «chưa gắn» cho tin chưa gắn được mức đó"
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided                # discovery | decided | archived
+decision: build   # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-11-08T14:35:17Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
@@ -26,7 +26,8 @@ Vì sao: Mạnh 07/11: đo làm giàu theo phường/xã, dự án, toà. C2b ch
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson» khi hết timebox
-- Timebox: [đề xuất] hai tuần sau khi bước đêm chạy thật — đủ 14 ngày số thêm/sửa/rút và hai lượt kiểm ngược tuần cho mỗi đường làm giàu đang chạy
+- Câu hỏi phép đo trả lời: đã đạt «Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson» chưa?
+- Kết quả nào là SỐNG: Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson
+- Kết quả nào là CHẾT: chưa đạt «Mỗi đường làm giàu đang chạy có số thêm/sửa/rút theo ngày và một lượt kiểm ngược mỗi tuần kèm cận dưới Wilson» khi hết timebox
+- Timebox: hai tuần sau khi bước đêm chạy thật — đủ 14 ngày số thêm/sửa/rút và hai lượt kiểm ngược tuần cho mỗi đường làm giàu đang chạy
+- Quyết: Mạnh gõ ở phiên P2 ngày 08/11 «Cổng Đáng DO3 do-lam-giau: build; ngưỡng: theo đề xuất trong ô».
