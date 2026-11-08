@@ -148,7 +148,7 @@ mục 38/39.
 | Mã | Việc | Làn | Hạng | Trạng thái | Xong khi |
 |---|---|---|---|---|---|
 | **DR1** | Migration mới mở `buildings.iso_region` cho mọi mã ISO 3166-2:VN; hiện 082 chỉ nhận VN-HN, VN-SG | Claude | T2 | mới | Dựng được toà ở Đà Nẵng, Hải Phòng trên DB thử. **Đứng trước PX2** |
-| **DA1** | Sửa bộ đọc S06 (`dac-trung-s06.mjs:55`): bỏ cờ `unitnumber_display`, bỏ «0» ở mã căn và số nhà, đọc `block` và tầng thành phát biểu; rút 11.531 phát biểu rác rồi phân xử lại | Claude | T2 | mới | 0 mã căn «0»/«1»; toà S06 trên tin ≈ số có trong thô |
+| **DA1** | Sửa bộ đọc S06 (`dac-trung-s06.mjs:55`): bỏ cờ `unitnumber_display`, bỏ «0» ở mã căn và số nhà, đọc `block` và tầng thành phát biểu; rút 11.531 phát biểu rác rồi phân xử lại. Đo lại nghĩa `pty_project_type` của S06 trước khi dùng: ZCode suy 1, 3, 4, 7 đều là căn hộ, 2 là shophouse, 10 là nhà phố, 11 là đất nền; đây mới là giả thuyết, nguồn không có bảng chính thức | Claude | T2 | mới | 0 mã căn «0»/«1»; toà S06 trên tin ≈ số có trong thô |
 | **DA0** | Văn bản theo mục 39: CONTEXT («Dự án», «Phân khu», «Lô», «Mức gắn», «Danh mục dự án»), ADR-0011 Qđ 2, ADR-0013 §2, ADR-0016 §1/§3/§7 (dự án cha, kế thừa từ nút vùng), sổ extension; `mappings.yaml` (`property_type` → `PropertySubType`, `block_raw` → `BuildingName`, S08 `project_name` → `SubdivisionName`) và chạy lại bộ sinh vocab | Claude | T1 | mới | Test sinh vocab xanh; không còn văn bản hai nghĩa |
 | — | Sửa lời 7 hàng lộ trình còn luật S08 cũ: DN1, DN2, DN4, GC2, GC3, GN1, PL10b | Giám sát | — | sửa lời | Câu giao, câu bắt khớp mục 38 |
 
@@ -173,6 +173,12 @@ mục 38/39.
 | **Z1a** | Kiểm điều khoản S09; DATA-CONTRACT S09 v1 (`du-an`, `phan-khu`, `toa`, `alias`); thu thử Ocean Park 1 + Grand Park, ≤ 60 lời; migration `stg_*` S09 do Claude viết | ZCode (thu), Claude (migration, duyệt hợp đồng) | T2 | Câu 1 của ZCode không vướng | Một snapshot, đúng trần, không gặp chặn |
 | **DA5** | Toà, phân khu S09 vào danh bạ cùng S08; đo khớp `block_raw` S03 với toà S09; tách mã toà, mã cụm («S1»), mã sai | Claude | T2 | Z1a, DB1b | Có số «% mã toà S03 phân giải được thành toà thật». **Số này quyết có thu toàn bộ S09 không** |
 | **DO-S09** | Một lời gọi danh sách 394 dự án S09 để đo phủ trên 282 dự án S06 | ZCode | — | Z1a | Có số phủ; trả lời rủi ro S09 lệch về vài chủ đầu tư lớn |
+
+**ZCode trả lời 08/11 (vòng `claudedp-0811-3`)**:
+- Điều khoản S09: **chưa biết**. Liên làn đã giao ZCode đọc riêng robots.txt và trang điều khoản (≤ 5 lời gọi, không gọi API dự án,
+  vòng `claudedp-0811-5`). Z1a chưa giao cho tới khi có câu trả lời.
+- Ước thu thử: khoảng 9 lời gọi, dưới 2 phút, trong trần 60. Con số này giả định quỹ căn đọc theo phân khu; nếu phải đọc theo toà
+  (khoảng 20 toà mỗi phân khu) thì số lời gọi tăng nhưng vẫn phải nằm trong trần 60.
 
 **Ngưỡng mở GĐ3 cho S09 (khuyến nghị)**: S09 phủ ≥ 50% trong 282 dự án S06, **và** phân giải được ≥ 70% mã toà S03 có trong hai dự án
 thử. Không đạt thì S09 chỉ dùng cho các dự án đã phủ, không thu toàn bộ.
