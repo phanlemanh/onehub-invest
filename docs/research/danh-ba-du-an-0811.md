@@ -20,9 +20,9 @@ Những chỗ ghi **[đề xuất]** là lựa chọn của phiên này, chờ M
 |---|---|---|---|
 | Q1 | Lấy «**Dự án**» làm đơn vị gốc thay «Khu đô thị»? | **Đã quyết (Mạnh, 08/11, ROADMAP §3 mục 39): Có — chỉ đổi nhãn, mã và field giữ.** Khu đô thị và đại đô thị thành *quy mô* của dự án. Một dự án được có **dự án cha**. | Thị trường, S06, S07, S08 và S09 đều gọi là «dự án», gồm cả dự án một toà. `CONTEXT.md` đang cấm chữ này. 20 dự án trong `asset_nodes` đang xếp chung một cấp dù có cái 271 ha, có cái chỉ 4 toà. |
 | Q2 | Ranh giới giữa «dự án con» và «phân khu»? | **Đã quyết (Mạnh, 08/11, mục 39).** **Khác chủ đầu tư, hoặc mở bán như dự án riêng → dự án, có cha. Cùng chủ đầu tư, chỉ là đợt/khu bán hàng → phân khu.** Ví dụ: Lumiere Boulevard là dự án (cha Vinhomes Grand Park); The Zurich, Sapphire là phân khu của Ocean Park 1. | Các nguồn vạch khác nhau: S07 gọi Zurich, Pavilion là «dự án con» có mã riêng, còn S09 gọi chúng là phân khu. Phải có một luật của mình, còn nguồn chỉ là bí danh. |
-| Q3 | Phần danh mục của S07 và S09 theo chính sách nào? | **Đã quyết (Mạnh, 08/11): thông tin dự án là công khai, bỏ luật nội bộ** (§3.1). Còn lại: **thu thử S09 đúng hai dự án trước**, Ocean Park 1 và Grand Park, để đo khớp toà, rồi mới thu toàn bộ. | Lời Mạnh: thông tin dự án là dữ liệu chính phủ và chủ đầu tư công bố cho mọi người dân. Thu thử vẫn nên làm vì đây là số đo trước khi dựng: tên toà của S09 là thứ đang thiếu nhất (§2.4). |
+| Q3 | Phần danh mục của S07 và S09 theo chính sách nào? | **Đã quyết (Mạnh, 08/11): thông tin dự án là công khai, bỏ luật nội bộ** (§3.1). Còn lại: **thu thử S09 đúng hai dự án trước**, Ocean Park 1 và Grand Park, để đo khớp toà, rồi mới thu toàn bộ — **đã quyết (Mạnh duyệt cả bốn khuyến nghị Q1–Q4, 08/11, mục 39)**. | Lời Mạnh: thông tin dự án là dữ liệu chính phủ và chủ đầu tư công bố cho mọi người dân. Thu thử vẫn nên làm vì đây là số đo trước khi dựng: tên toà của S09 là thứ đang thiếu nhất (§2.4). |
 | Q5 | Giá chủ đầu tư và trạng thái quỹ căn của S08 có thuộc «thông tin dự án công khai» không? | **Đã quyết (Mạnh, 08/11): «Có, công khai».** Hiện ở trang dự án, danh bạ; **chưa** thành tin hiển thị (mục 39 Hỏi-3). | Mỗi căn đang bán sơ cấp về sau có thể thành một tin (`Property`) do chủ đầu tư chào, giá ở `ListPrice`, trạng thái ở `StandardStatus` (§9.3 G). |
-| Q4 | Thứ tự làm? | **Dùng dữ liệu đã có trước, chưa thu gì mới**: sửa lỗi đọc S06 (DA1), đưa dự án S06 vào tin (DS2 mở rộng), nối 282 dự án S06 có từ 10 tin trở lên (DA2). Sau đó mới thu thử S09. | 1.256 dự án và 11.140 tin có mã dự án nằm sẵn trong raw S06. Có 11.526 mã căn rác đang chờ sửa. Đây là số đo trước khi dựng (luật 11). |
+| Q4 | Thứ tự làm? | **Đã quyết (Mạnh, 08/11, mục 39).** **Dùng dữ liệu đã có trước, chưa thu gì mới**: sửa lỗi đọc S06 (DA1), đưa dự án S06 vào tin (DS2 mở rộng), nối 282 dự án S06 có từ 10 tin trở lên (DA2). Sau đó mới thu thử S09. | 1.256 dự án và 11.140 tin có mã dự án nằm sẵn trong raw S06. Có 11.526 mã căn rác đang chờ sửa. Đây là số đo trước khi dựng (luật 11). |
 
 Nếu Mạnh duyệt: các hàng ở §6 chuyển cho giám sát cắt vào lộ trình. Kèm sửa `CONTEXT.md`, AGENTS luật 5 và ADR-0016 (hàng DA0).
 Trần và nhịp từng nguồn để Mạnh chốt: §8.2. Phần trả lời kế hoạch nháp của ZCode (vòng `zcode-0711-40`): §8.
@@ -257,14 +257,14 @@ extension `ComplexName` trên Property cho phân khu; giá trị là id nút vù
 
 ---
 
-## 5. Câu đã gom cho ZCode (qua phiên liên làn, chưa gửi)
+## 5. Câu đã gom cho ZCode (qua phiên liên làn, gửi 08/11)
 
 1. Điều khoản sử dụng của nguồn B (S09): có cấm thu tự động hay dùng thương mại không, và có kênh xin dữ liệu chính thức không?
 2. Thu thử S09 chỉ Ocean Park 1 và Grand Park (dự án, phân khu, toà, quỹ căn), một snapshot, theo DATA-CONTRACT mới
    `schemaVersion 1`: ước bao nhiêu lượt gọi, bao lâu?
 3. Ý nghĩa `pty_project_type` (11 giá trị) trong raw S06, nếu đã biết.
 
-Q3 đã quyết (§3.1). Câu 2 và 3 gửi qua phiên liên làn khi Mạnh duyệt thứ tự (Q4) và trần/nhịp (§8.2); câu 1 vẫn nên hỏi để biết rủi ro nguồn khoá API.
+Q3, Q4 đã quyết (08/11). Ba câu gửi qua phiên liên làn ngày 08/11, chỉ là câu hỏi, chưa phải lệnh thu. Trần/nhịp §8.2 ngoài dòng «S09 – thu thử» vẫn chờ Mạnh chốt.
 
 ---
 

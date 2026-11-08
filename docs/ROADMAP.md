@@ -513,6 +513,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Hỏi-5: thứ tự code — mở `buildings.iso_region` toàn quốc (migration mới) trước PX2; sửa mã căn S06 và khoá gộp căn ngay sau
       GCM1; ghi thẳng cột, `mappings.yaml`, sync-cloud gộp vào DA0 và DN4.
     Sửa văn bản (CONTEXT, ADR-0011 Qđ 2, ADR-0013 §2, ADR-0016 §1/§3/§7) theo hàng DA0.
+    Cùng ngày Mạnh «phê duyệt cả 4 khuyến nghị câu hỏi» của `danh-ba-du-an-0811.md` §0: thêm Q3 phần còn lại (thu thử S09 đúng Ocean Park 1
+    và Grand Park, ≤ 60 lời gọi, rồi mới thu toàn bộ) và Q4 (làm với dữ liệu sẵn có trước: DA1, DS2+, DA2, chưa thu mới). Trần/nhịp
+    §8.2 cho S09 toàn bộ và S07 chờ chốt riêng.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
