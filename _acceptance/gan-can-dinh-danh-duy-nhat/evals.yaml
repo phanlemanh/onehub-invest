@@ -86,3 +86,11 @@ evals:
     paths: [app/src/components/ops/data-flow/quality-grid.tsx, app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/record-sheet.tsx, app/src/components/ops/data-flow/stage-face.tsx]
     expected: "exit 0 trên bốn tệp giao diện của vòng (a11y/slop P0 sạch). Chiều đỏ: thước có sẵn của kit (design-gate tự có ca đỏ); vòng không viết thước mới."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    long_running: 60
+    paths: [pipeline/sql/600_data_flow.sql, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; bộ pipeline đầy đủ xanh trên DB của riêng lượt, gồm ca «TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước» nhận sql/600_data_flow.sql là «mien» (600 đọc khu là phường để đếm định danh, không gán khu vực cho tin). Chiều đỏ: thước có sẵn của ca TRG-AC-7 (bản sao thêm câu chọn riêng, tệp mới ngoài ma trận) chạy trong cùng bộ. Chạy một mình mất khoảng 14 phút; dưới tải song song vượt 30 phút nên khai long_running 60."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
