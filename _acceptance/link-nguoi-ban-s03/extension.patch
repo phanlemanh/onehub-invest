@@ -1,18 +1,39 @@
 diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6..82eb191 100644
+index 636cbe6..08bb5ca 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
-@@ -848,0 +849,4 @@
-+// link-nguoi-ban-s03 (b): MỘT vòng hẹn giờ bộ tra hồ sơ — đọc S03_LOOKUP_DIR
-+// (bỏ trống = tắt); đúng MỘT vòng dù listener khởi động lại (AC-1).
+@@ -25,6 +25,8 @@ import {
+   triggerInternalHook,
+ } from "openclaw/plugin-sdk/hook-runtime";
+ import { getGlobalHookRunner } from "openclaw/plugin-sdk/plugin-runtime";
++// link-nguoi-ban-s03 (b): bộ tra hồ sơ khởi cùng Provider (import đầu tệp — E4 siết).
 +import { khoiDongTuEnv } from "./seller-lookup.js";
+ import { createDeferred } from "openclaw/plugin-sdk/extension-shared";
+ import { channelReadyPatch } from "openclaw/plugin-sdk/gateway-runtime";
+ import { resolvePromptHistoryLimit } from "openclaw/plugin-sdk/number-runtime";
+@@ -846,9 +848,16 @@ async function deliverZalouserReply(params: {
+   return { visibleReplySent };
+ }
+ 
 +
+ export async function monitorZalouserProvider(
+   options: ZalouserMonitorOptions,
+ ): Promise<ZalouserMonitorResult> {
++  // link-nguoi-ban-s03 (b): MỘT vòng hẹn giờ bộ tra hồ sơ — khởi ở ĐẦU đường
++  // khởi động Provider; idempotent: Provider khởi lại (listener reconnect)
++  // vẫn đúng MỘT vòng (AC-1, E1/E4 siết 0911). Đọc S03_LOOKUP_DIR (rỗng = tắt).
++  khoiDongTuEnv((line) => {
++    options.runtime?.log?.(line);
++  });
+   const { config } = options;
+   let { account } = options;
+   const { abortSignal, statusSink, runtime } = options;
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..873ea9d
+index 0000000..80690cc
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,495 @@
+@@ -0,0 +1,541 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -487,6 +508,52 @@ index 0000000..873ea9d
 +    }
 +  }, 120_000);
 +
++
++  // 0911-1 E1/E4 SIẾT: đường khởi động THẬT — git apply thật đã đưa monitor vào
++  // cây này; Provider giả khởi động HAI lần, bộ tra được khởi QUA ĐƯỜNG PROVIDER
++  // (không gọi chayVong/hàm khởi trực tiếp ở đây) và vẫn đúng MỘT vòng hẹn giờ
++  // (đo trạng thái thật soVongHenGio — spy chỉ bọc, chạy hàm thật).
++  it("E1/E4: Provider khởi HAI lần → đúng MỘT vòng hẹn giờ qua đường khởi động Provider", async () => {
++    vi.resetModules();
++    let soLanGoi = 0;
++    let dung: (() => void) | null = null;
++    vi.doMock("./seller-lookup.js", async (importOriginal) => {
++      const goc = await importOriginal<typeof import("./seller-lookup.js")>();
++      return {
++        ...goc,
++        khoiDongTuEnv: (log: (l: string) => void) => {
++          soLanGoi++;
++          const d = goc.khoiDongTuEnv(log);
++          if (!dung) dung = d;
++          return d;
++        },
++      };
++    });
++    process.env.S03_LOOKUP_DIR = "/f-e1";
++    try {
++      const { soVongHenGio } = await import("./seller-lookup.js");
++      expect(soVongHenGio()).toBe(0);
++      const monitor = (await import("./monitor.js")) as unknown as {
++        monitorZalouserProvider: (o: unknown) => Promise<unknown>;
++      };
++      // Provider GIẢ: options tối thiểu — có thể ném ở bước sau khởi động,
++      // không ảnh hưởng lời gọi bộ tra ở đầu đường khởi động.
++      for (let i = 0; i < 2; i++) {
++        await monitor
++          .monitorZalouserProvider({ runtime: { log: () => {} } })
++          .catch(() => undefined);
++      }
++      expect(soLanGoi).toBe(2); // Provider gọi bộ tra cả hai lần khởi động
++      expect(soVongHenGio()).toBe(1); // nhưng đúng MỘT vòng hẹn giờ (idempotent thật)
++      dung?.();
++      expect(soVongHenGio()).toBe(0); // dừng được vòng duy nhất
++    } finally {
++      delete process.env.S03_LOOKUP_DIR;
++      vi.doUnmock("./seller-lookup.js");
++      vi.resetModules();
++    }
++  }, 120_000);
++
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
 +    const { fs, api, deps } = chuanBi();
 +    await fs.ghiFile("/f/dem-2026-11-08.txt", "30"); // đã dùng hết 30 lời trong ngày VN 2026-11-08 (now giả = 08/11 02:30 VN)
@@ -510,10 +577,10 @@ index 0000000..873ea9d
 +});
 diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..a9f8ce0
+index 0000000..92844d8
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,475 @@
+@@ -0,0 +1,481 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -981,6 +1048,12 @@ index 0000000..a9f8ce0
 +  return khoiDongBoTraDung;
 +}
 +let khoiDongBoTraDung: (() => void) | null = null;
++
++// 0911-1 E1/E4: đếm vòng hẹn giờ bộ tra đang sống (0 hoặc 1) — cho ca kiểm
++// «Provider khởi hai lần vẫn đúng MỘT vòng» đo trên trạng thái thật.
++export function soVongHenGio(): number {
++  return boTraTimer ? 1 : 0;
++}
 +
 +// 0711-37(b): điểm vào thật đọc S03_LOOKUP_DIR (bỏ trống = bộ tra tắt) và
 +// S03_COLLECTOR_URL — runtime-map mô tả đúng cách vận hành.
