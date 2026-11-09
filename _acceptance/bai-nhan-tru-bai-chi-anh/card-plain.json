@@ -1,0 +1,120 @@
+{
+  "feature_plain": "Người vận hành mở /ops/data-flow thấy «Đọc được» của S03 gồm hai đầu ra ngang hàng — bài thành tin rao và bài thành Yêu cầu (tìm mua, tìm thuê) — tính trên bài cần đọc: tin nhắn chỉ có ảnh đã ghép vào tin không còn kéo tỉ lệ xuống.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ đếm đúng ba loại bài S03 — ảnh đã ghép vào tin, bài Yêu cầu mua/thuê, ảnh chưa ghép — bằng chính bộ đọc của bước nạp tin, khớp từng loại bài dựng sẵn ở cả ba khoảng 7 ngày, 30 ngày, toàn kho."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ giữ tổng: bài nhận luôn bằng đọc được cộng các nhánh cộng phần còn lại; bài đã thành tin không bao giờ bị đếm sang nhánh mới; số theo ngày và theo nhóm thu cộng lại khớp số của nguồn."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ để nguyên mọi số của S05, S06, listing ngắn hạn và mọi số cũ của S03 — chỉ thêm ba con số nhánh."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ vẽ trên Sankey «Ảnh đã ghép vào tin», «Bài cần đọc», hai đầu ra ngang hàng «Đọc thành tin rao» và «Đọc thành Yêu cầu», cùng «Ảnh chưa ghép», «Không đọc được»; đầu cột «Đọc được» ghi tổng hai đầu ra và phần trăm trên bài cần đọc."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ ghi ô «Đọc được» của S03 và từng nhóm thu S03 là tin rao + Yêu cầu trên bài cần đọc, và chấm nhãn «Kẹt / Theo dõi · đọc» theo tỉ lệ ấy (ngưỡng 30% / 60% giữ nguyên)."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ ghi ô và đường «Đọc được» của «Chặng theo ngày» là tin rao + Yêu cầu, phần trăm trên bài cần đọc; ô «Tin rao mới» so với bài thành tin rao."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ cho trang trên cloud thấy đúng các nhánh và tỉ lệ như máy thu."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ xanh mọi bài kiểm dòng chảy có sẵn."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-4",
+      "p": "Sẽ KHÔNG đoán số khi khối chưa tách nhánh (lượt làm tươi cũ, khối cloud đời trước): trang vẽ như trước và báo một dòng «Chưa tách bài chỉ-ảnh và Yêu cầu — có ở lượt làm tươi kế»."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đổi cách ghép ảnh (cửa sổ 2 phút, mã album GT0) — chỉ đếm theo bộ ghép đang chạy."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG làm DF5 (chỉ nhận phường thật) và NH2 (ảnh hết hạn) — hai hàng riêng đi sau."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đọc nhánh Yêu cầu từ bảng Yêu cầu (bảng chưa áp ở máy thu)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG đổi ngưỡng Kẹt/Theo dõi hay mẫu số của S05, S06."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Không chạy quét hình thái: phạm vi là một phép đếm đã gọi tên; các trục kê tay dưới đây."
+    },
+    {
+      "i": 3,
+      "p": "Loại bài S03 (thành tin, ảnh đã ghép, ảnh chưa ghép, Yêu cầu, chat) — đủ khi mỗi loại có bài dựng sẵn và số khớp (AC-1, AC-2)."
+    },
+    {
+      "i": 4,
+      "p": "Bài đã thành tin mà bộ đọc nay coi là Yêu cầu hay chỉ-ảnh vẫn tính «Đọc được» (AC-2)."
+    },
+    {
+      "i": 5,
+      "p": "Ba nguồn S03, S05, S06 và listing ngắn hạn — S05, S06 không đổi số (AC-1, AC-3, AC-6)."
+    },
+    {
+      "i": 6,
+      "p": "Ba khoảng thời gian, theo ngày và theo nhóm thu — cộng lại khớp nhau (AC-1, AC-2)."
+    },
+    {
+      "i": 7,
+      "p": "Làm tươi qua bộ chạy mới hay chạy trần — chạy trần thì trang báo chưa tách, không đoán (AC-1, AC-4)."
+    },
+    {
+      "i": 8,
+      "p": "Bốn chỗ đọc tỉ lệ: Sankey, lưới theo nguồn, lưới theo nhóm thu, Chặng theo ngày (AC-5, AC-6, AC-7)."
+    },
+    {
+      "i": 9,
+      "p": "Máy thu và cloud, khối mới lẫn khối đời trước (AC-5, AC-8, AC-4)."
+    },
+    {
+      "i": 10,
+      "p": "Bài kiểm dòng chảy có sẵn vẫn xanh (AC-9)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Mẫu số «Đọc được» là nghĩa sản phẩm, máy không được tự chọn → đã thành Hỏi-1, Hỏi-2; anh đã chốt Hỏi-2 (Yêu cầu là đầu ra ngang tin rao), còn Hỏi-1."
+    },
+    {
+      "i": 1,
+      "p": "Thước trên dữ liệu thật chưa có phép đếm độc lập cho ảnh đã ghép → đã thêm phép đếm viết lại bằng SQL, khớp đúng 24.054 bài."
+    },
+    {
+      "i": 2,
+      "p": "Bài kiểm chưa canh nút Yêu cầu bị tô màu rơi → đã thêm bảng nút → loại màu; design-pass sửa màu Yêu cầu trùng «Gắn căn» ở chế độ tối và thêm nhãn cho hai đầu ra."
+    },
+    {
+      "i": 3,
+      "p": "Chưa canh lối nào chạy bước làm tươi mà bỏ qua bộ chạy mới → đã thêm ca liệt kê mọi lối gọi."
+    },
+    {
+      "i": 4,
+      "p": "Lưới nhóm thu và ô theo ngày chưa đọc từ số thật do bộ chạy sinh → đã thêm ca đọc từ khối thật."
+    }
+  ],
+  "scope_plain": "Bốn việc gần đó để hàng khác:"
+}
