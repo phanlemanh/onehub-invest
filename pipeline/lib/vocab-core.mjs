@@ -461,7 +461,6 @@ async function bangGoc(client, ten) {
   return rows.length === 1 ? rows[0].goc : ten;
 }
 
-/** So DB với sổ; trả danh sách lệch {axis, value?, column?, msg}. Rỗng = khớp. */
 /** CHECK theo trục của một cột: ưu tiên CHECK DANH SÁCH của chính cột (`<cột> = ANY (ARRAY[…])` hoặc `<cột> IN (…)`)
  * hơn CHECK chéo cũng nhắc tên cột và một chuỗi (vd `(huong = 'moi') = (from_level IS NULL)` của data_level_change,
  * thang-bac-moi-b0-b5 AC-9) — pg_constraint không bảo đảm thứ tự dòng. Không có CHECK danh sách thì giữ luật cũ (dòng đầu). */
@@ -470,6 +469,7 @@ export function chonCheckCot(defs, cot) {
   return defs.find((r) => danhSach.test(r.def)) ?? defs[0];
 }
 
+/** So DB với sổ; trả danh sách lệch {axis, value?, column?, msg}. Rỗng = khớp. */
 export async function checkDb(client, reg) {
   const lech = [];
   const can = "cần migration mới";

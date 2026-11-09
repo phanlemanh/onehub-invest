@@ -86,9 +86,17 @@ describe("TB-AC-6 đổi thang", () => {
     assert.equal(o.doiThang, undefined);
     assert.equal(o.roi.length, 1);
   });
-  test("TB-AC-6 NS1 theo thang mới: 0 căn từ B3, không cộng dòng thang cũ", () => {
+  test("TB-AC-6 NS1 theo thang mới: 0 căn từ B3, không cộng dòng thang cũ (kèm chiều đỏ)", () => {
     assert.deepEqual(demNs1(sau), { NS1: 0, NS1b: 0 });
+    // đối chứng dương: dòng thang mới từ B3 được đếm
     assert.deepEqual(demNs1([...sau, moi("m", "can", "B5", 2), moi("m", "can", "B3", 3, "house")]), { NS1: 5, NS1b: 5 });
+    // dòng thang cũ ở B3 trở lên (căn = cụm properties của 23/10) không được cộng; dòng không ghi thang là thang cũ
+    const lanCu = [cu("m", "can", "B5", 700), cu("m", "can", "B3", 40, "house"), { ...cu("m", "can", "B4", 9), scale: undefined }];
+    assert.deepEqual(demNs1([...sau, ...lanCu]), { NS1: 0, NS1b: 0 });
+    // chiều đỏ: bộ đếm bỏ cột thang (luật trước vòng này) cộng cả 749 đơn vị thang cũ
+    const boThang = (rows) => demNs1(rows.map((r) => ({ ...r, scale: "thang-0811" })));
+    assert.throws(() => assert.deepEqual(boThang([...sau, ...lanCu]), { NS1: 0, NS1b: 0 }, "TB-AC-6 NS1 cộng dòng thang cũ"),
+      /TB-AC-6 NS1 cộng dòng thang cũ/);
   });
   test("TB-AC-6 một ảnh chụp: không so, không lỗi", () => {
     assert.deepEqual(oBacGiam([], sau), { nghi: [], roi: [] });

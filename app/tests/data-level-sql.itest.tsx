@@ -12,7 +12,10 @@ import { after, before, test } from "node:test"
 import pg from "pg"
 import { levelOf, type LevelInput } from "../src/lib/data-level"
 
-type O = { ten: string; r: LevelInput }
+// `ky`: bậc viết trước theo luật FRAMING §3.4 (thiếu một trường lõi hoặc trường ở ô biên → B0; đủ → B1; đủ + định vị → B2),
+// không suy từ levelOf — hai bản cài đặt (SQL, levelOf) cùng so với nó (lượt chấm 1, Ngoài t10).
+type O = { ten: string; r: LevelInput; ky: string }
+const kyVong = (thieu: boolean, located: boolean) => (thieu ? "B0" : located ? "B2" : "B1")
 
 const SQL_087 = readFileSync(path.join(import.meta.dirname, "../../db/migrations/087_thang_bac_moi.sql"), "utf8")
 const DU: Omit<LevelInput, "located"> = { kind: "sale", propertyType: "house", priceVnd: 2e9, areaM2: 60, ward: "vn-hanoi-x" }
@@ -27,7 +30,7 @@ function maTran(): O[] {
       KHOA.forEach((k, i) => {
         if (m & (1 << i)) (r as Record<string, unknown>)[k] = null
       })
-      o.push({ ten: `thiếu ${KHOA.filter((_, i) => m & (1 << i)).join("+") || "không"}${located ? " · định vị" : ""}`, r })
+      o.push({ ten: `thiếu ${KHOA.filter((_, i) => m & (1 << i)).join("+") || "không"}${located ? " · định vị" : ""}`, r, ky: kyVong(m !== 0, located) })
     }
     const bien: [string, Partial<LevelInput>][] = [
       ["giá 0", { priceVnd: 0 }],
@@ -36,7 +39,11 @@ function maTran(): O[] {
       ["loại hình rỗng", { propertyType: "" }],
       ["loại tin rỗng", { kind: "" }],
     ]
-    for (const [ten, d] of bien) o.push({ ten: `${ten}${located ? " · định vị" : ""}`, r: { ...DU, ...d, located } })
+    // Luật trường lõi của 056 (vòng này không đổi): loại hình chỉ thiếu khi NULL hoặc 'unknown' — chuỗi rỗng tính là có.
+    for (const [ten, d] of bien) {
+      const ky = ten === "loại hình rỗng" ? kyVong(false, located) : "B0"
+      o.push({ ten: `${ten}${located ? " · định vị" : ""}`, r: { ...DU, ...d, located }, ky })
+    }
   }
   return o
 }
@@ -69,11 +76,11 @@ async function trongGiaoDich(fn: () => Promise<void>) {
 /** Đối chiếu từng ô (bậc + chỗ kẹt); ô đầu tiên lệch ném lỗi mang tên ô. */
 async function doiChieu(fn: string, o: O[]): Promise<number> {
   let khop = 0
-  for (const { ten, r } of o) {
+  for (const { ten, r, ky } of o) {
     const { rows: [s] } = await c.query(`SELECT data_level, ke_thieu FROM ${fn}($1, $2, $3, $4, $5, $6)`,
       [r.kind, r.propertyType, r.priceVnd, r.areaM2, r.ward, r.located])
-    const lv = levelOf(r)
-    assert.deepEqual([s.data_level, s.ke_thieu], [lv, KE[lv]], `ô lệch: ${ten}`)
+    assert.equal(levelOf(r), ky, `levelOf lệch kỳ vọng viết trước: ${ten}`)
+    assert.deepEqual([s.data_level, s.ke_thieu], [ky, KE[ky]], `ô lệch: ${ten}`)
     khop++
   }
   return khop
@@ -105,7 +112,7 @@ test("AC-1 chiều đỏ: vị từ giá viết `IS NOT NULL` lệch ở ô giá
 })
 
 // ---- thang-bac-moi-b0-b5 AC-2 (E2): 64 tin thật — bốn trường lõi × định vị × trong cụm — qua data_level_units() ----
-type Tin = { ten: string; r: LevelInput; cum: boolean; id: string }
+type Tin = { ten: string; r: LevelInput; cum: boolean; id: string; ky: string }
 async function dungTin(): Promise<Tin[]> {
   const { rows: [w] } = await c.query("SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1")
   await c.query("CREATE TEMP TABLE tb2_dinh_vi (offer_id text PRIMARY KEY) ON COMMIT DROP")
@@ -129,7 +136,7 @@ async function dungTin(): Promise<Tin[]> {
         "INSERT INTO properties (area_id, property_type, verification) VALUES ($1, 'house', 'pending') RETURNING id", [w.id])
       await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [p.id, id])
     }
-    ds.push({ ten: `thiếu ${KHOA.filter((_, i) => thieu(i)).join("+") || "không"}${located ? " · định vị" : ""}${cum ? " · cụm" : ""}`, r, cum, id })
+    ds.push({ ten: `thiếu ${KHOA.filter((_, i) => thieu(i)).join("+") || "không"}${located ? " · định vị" : ""}${cum ? " · cụm" : ""}`, r, cum, id, ky: kyVong(m !== 0, located) })
   }
   return ds
 }
@@ -138,7 +145,8 @@ async function doiChieuDonVi(fn: string, ds: Tin[]): Promise<number> {
   const bac = new Map(rows.map((x) => [x.unit_key as string, x.data_level as string]))
   let khop = 0
   for (const t of ds) {
-    assert.equal(bac.get(`tin:${t.id}`), levelOf(t.r), `TB-AC-2 ô lệch: ${t.ten}`)
+    assert.equal(levelOf(t.r), t.ky, `levelOf lệch kỳ vọng viết trước: ${t.ten}`)
+    assert.equal(bac.get(`tin:${t.id}`), t.ky, `TB-AC-2 ô lệch: ${t.ten}`)
     khop++
   }
   return khop
