@@ -7,55 +7,57 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bd2a6a830039eaf307c2792a528962be3292babd
+verified_commit: ffd4ac90c686e218519ceccd41e0cfd12e98664c
 human_signoff:
 ---
 
 # Evidence Report: khoa-nguon-nghi-khi-ddl-sua
 
-Round 1. Verdict REJECT: bảy eval của feature (E1 đến E7) đều xanh, nhưng hai lệnh suite hồi quy không gắn eval nào đỏ (`cd app && npm test` và `cd pipeline && npm test`). Hai lệnh này nằm ngoài danh sách eval nên `failed_evals` để trống; chi tiết ở mục Lệnh suite bên dưới.
+Vòng 2. Cả bảy eval của hợp đồng (E1–E7) được mang từ vòng 1 vì delta không chạm paths của eval. Lệnh suite `cd app && npm test` không gắn eval nào đã thoát khác 0 vì một ca đỏ ngoài vật của tính năng, nên verdict là REJECT.
+
+Lệnh fail không gắn eval: `cd app && npm test` (không eval nào gắn). Ca đỏ duy nhất là `tests/tin-rao-cong-khai.test.tsx` ca "E4 bốn cách sắp đúng thứ tự, tin trùng giá vẫn ổn định" (thứ tự thực tế a, d, b, c thay vì a, b, d, c). Tệp này không thuộc phạm vi tính năng khoá nguồn.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | PASS |
-| E2 | AC-2 | test | PASS |
-| E3 | AC-3 | test | PASS |
-| E4 | AC-4 | script | PASS |
-| E5 | AC-5 | test | PASS |
-| E6 | AC-5 | test | PASS |
-| E7 | AC-6 | test | PASS |
+| E1 | AC-1 | test | PASS (carry-forward tu round 1) |
+| E2 | AC-2 | test | PASS (carry-forward tu round 1) |
+| E3 | AC-3 | test | PASS (carry-forward tu round 1) |
+| E4 | AC-4 | script | PASS (carry-forward tu round 1) |
+| E5 | AC-5 | test | PASS (carry-forward tu round 1) |
+| E6 | AC-5 | test | PASS (carry-forward tu round 1) |
+| E7 | AC-6 | test | PASS (carry-forward tu round 1) |
 
 ## Evidence
 
 - eval: E1
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E1-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_ldr
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs
-    ℹ duration_ms 3658.212958
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E2-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_ldr
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    cùng lệnh với E1 (ca KN-AC-2)
-    ℹ duration_ms 3658.212958
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E3-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_ldr
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    cùng lệnh với E1 (ca KN-AC-3)
-    ℹ duration_ms 3658.212958
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E4-r1
@@ -63,72 +65,72 @@ Round 1. Verdict REJECT: bảy eval của feature (E1 đến E7) đều xanh, nh
   baseline: n-a
   verifier: config:executors.script.kn_dot_bien
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    DOT BIEN OK
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E5-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_hoi_quy_pipe
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    bảy tệp test pipeline dùng thư viện
-    ℹ duration_ms 35432.601209
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E6-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_hoi_quy_app
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    ba tệp test app dùng thư viện
-    ℹ duration_ms 40199.397625
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-khoa-nguon-nghi-khi-ddl-sua-E7-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.kn_ldr
   verified_at: 2026-11-09T09:22:10Z
+  carried_from_round: 1
   output: |
-    cùng lệnh với E1 (ca KN-AC-6)
-    ℹ duration_ms 3658.212958
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bb6271-r1
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-09T09:22:10Z
+  verified_at: 2026-11-09T10:11:28Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-lint-r1
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-09T09:22:10Z
+  verified_at: 2026-11-09T10:11:28Z
 
 - cmd: cd app && npm test
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bd9a35-r1
+  run_id: bbbnawz7c
   exit_code: 1
-  verified_at: 2026-11-09T09:22:10Z
-  note: 1088 ca, 1082 qua, 1 hỏng, 5 bỏ qua. Ca hỏng là E4B-AC-3 ở tests/tin-rao-doi-chieu.test.tsx, phép đo thời gian "mỗi sort bản mới dưới 700 ms" ra "BIEN price-desc 704 ms". Ca này đo độ trễ sort, không dùng thư viện khoaNguon.
+  verified_at: 2026-11-09T10:11:28Z
+  note: 1104 ca, 1098 xanh, 1 đỏ (tin-rao-cong-khai E4 thứ tự sắp), 5 bỏ qua; không gắn eval nào.
 
 - cmd: cd pipeline && npm test
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-11-09T09:22:10Z
-  note: có ca hỏng ở scripts/nap-dvhc-cu.test.mjs (PX1-AC-10 chiều đỏ), lỗi khoá ngoại sale_offers_area_id_fkey khi xoá dòng areas vn-da-nang-hoang-sa còn được sale_offer_records tham chiếu.
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-11-09T10:11:28Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-test_lint_rules-r1
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-09T09:22:10Z
+  verified_at: 2026-11-09T10:11:28Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-09T09:22:10Z
+  verified_at: 2026-11-09T10:11:28Z
 
 ## Known limits
 
@@ -136,22 +138,18 @@ Round 1. Verdict REJECT: bảy eval của feature (E1 đến E7) đều xanh, nh
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên HEAD lẫn baseline, chứng minh harness chứ không chứng minh feature; cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
+carried tu round 1 — baseline khong do lai round nay. Field baseline cua moi eval ghi n-a.
 
-- cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs: E1, E2, E3, E7
-- cd pipeline && bash ../db/db-thu.sh oneinvest_suite_knhq --chay node --test --test-concurrency=1 scripts/luoc-do-rieng.test.mjs scripts/so-ghep-s06.test.mjs scripts/bait-gap-sellers.test.mjs scripts/gan-sdt-s06.test.mjs scripts/importer-schema-v5.test.mjs scripts/kiem-do-sau-070.test.mjs scripts/deals-phi-ly.test.mjs: E5
-- cd app && bash ../db/db-thu.sh oneinvest_suite_knapp --chay node --import tsx --test --test-concurrency=1 tests/deals-phi-ly.test.tsx tests/dq-moi-nhat.test.tsx tests/can-gia-tot-biet-can.test.tsx: E6
-
-Lệnh fail không gắn eval: `cd app && npm test` (một ca thời gian E4B-AC-3 sort 704 ms so với trần 700 ms, có vẻ nhạy tải máy) và `cd pipeline && npm test` (ca PX1-AC-10 của nap-dvhc-cu.test.mjs, vi phạm khoá ngoại trên DB dùng chung). Không lệnh nào trong hai lệnh này nằm trong danh sách eval của feature; cần người xét ở Cổng 2 xem có phải hỏng sẵn từ trước hay do thay đổi này.
-
-### Baseline khong do
-
-- cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kndb --chay node ../_acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs: bo qua baseline: tep _acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs co o cay dang kiem nhung chua co o merge-base 773a0040dc5ac65bfafbc0e3cb8ba5eea7d877df — eval moi, chay tren code cu khong phan biet gi
+Eval không phân biệt (xanh ở cả HEAD lẫn baseline), cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
+- `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs` — E1, E2, E3, E7
+- `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_knhq --chay node --test --test-concurrency=1 scripts/luoc-do-rieng.test.mjs scripts/so-ghep-s06.test.mjs scripts/bait-gap-sellers.test.mjs scripts/gan-sdt-s06.test.mjs scripts/importer-schema-v5.test.mjs scripts/kiem-do-sau-070.test.mjs scripts/deals-phi-ly.test.mjs` — E5
+- `cd app && bash ../db/db-thu.sh oneinvest_suite_knapp --chay node --import tsx --test --test-concurrency=1 tests/deals-phi-ly.test.tsx tests/dq-moi-nhat.test.tsx tests/can-gia-tot-biet-can.test.tsx` — E6
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — không eval nào có runs lớn hơn 1, không eval nào chập chờn trong vòng này.
 
 ## Iterations
 
-Round 1: bảy eval E1 đến E7 xanh; hai lệnh suite không gắn eval (`cd app && npm test`, `cd pipeline && npm test`) đỏ. Trả về triển khai/người xét.
+Round 1: S4 REJECT chỉ do hai suite đỏ ngoài vật của tính năng (PX1-AC-10 đỏ sẵn trên main, E4B-AC-3 chập chờn); E1–E7 xanh. Trả về triển khai.
+Round 2: E1–E7 mang từ round 1 (delta không chạm paths của eval). Suite app còn một ca đỏ ngoài vật (tin-rao-cong-khai, thứ tự sắp tin trùng giá); các suite còn lại xanh. REJECT.
