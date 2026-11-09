@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.tb_app
     paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs, agent/src/vocab.generated.ts, app/src/lib/vocab.generated.ts, CONTEXT.md, app/tests/thang-bac.test.tsx]
-    expected: "exit 0; ca «TB-AC-1 nhãn năm chỗ»: đọc THẬT pipeline/mappings.yaml (trục data_level), ba tệp vocab.generated (LABELS_VI.data_level hoặc tương đương) và dòng `data_level` của bảng sinh trong CONTEXT.md; mảng [mã, nhãn] của mỗi chỗ so trọn với mảng viết trước [[B0,Có lời khai],[B1,Tin],[B2,Định vị],[B3,Gắn căn],[B4,Làm giàu],[B5,Sống]]; chạy `node pipeline/vocab.mjs --check` thoát 0. Chiều đỏ cùng ca: bộ so chạy trên bản sao chữ của CONTEXT.md giữ «`B2` «Gắn căn»» → lỗi ghim «TB-AC-1 CONTEXT.md lệch ở B2»."
+    expected: "exit 0; ca «TB-AC-1 nhãn năm chỗ»: đọc THẬT pipeline/mappings.yaml (trục data_level), LABELS_VI.data_level của app/src/lib/vocab.generated.ts và dòng `data_level` của bảng sinh trong CONTEXT.md — mảng [mã, nhãn] của mỗi chỗ so trọn với mảng viết trước; hai tệp sinh pipeline, agent chỉ mang mã (không nhãn) — mảng mã so trọn [B0…B5] [[B0,Có lời khai],[B1,Tin],[B2,Định vị],[B3,Gắn căn],[B4,Làm giàu],[B5,Sống]]; chạy `node pipeline/vocab.mjs --check` thoát 0. Chiều đỏ cùng ca: bộ so chạy trên bản sao chữ của CONTEXT.md giữ «`B2` «Gắn căn»» → lỗi ghim «TB-AC-1 CONTEXT.md lệch ở B2»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E1b
     criterion: AC-1
@@ -21,7 +21,7 @@ evals:
     executor: test
     cmd: config:executors.test.tb_app_db
     paths: [db/migrations/087_thang_bac_moi.sql, app/src/lib/data-level.ts, app/tests/data-level-sql.itest.tsx]
-    expected: "exit 0; ca «TB-AC-2 levelOf ≡ offer_data_level»: nạp 087 trong giao dịch; ma trận viết trước 2^5 (năm trường lõi có/thiếu) × định vị (có/không) × trong cụm properties (có/không) = 128 ô, đếm ô đã kiểm bằng đúng 128; mỗi ô gọi offer_data_level(...) của 087 và levelOf THẬT; cả hai bằng kỳ vọng viết trước: thiếu trường → [B0, truong-loi]; đủ → [B1, dinh-vi]; đủ + định vị → [B2, gan-can]; ô «trong cụm» luôn cùng bậc với ô «không cụm» tương ứng. Chiều đỏ cùng ca: chạy cùng ma trận với thân offer_data_level của 056 (B2 khi tham số cuối đúng = cụm) truyền cờ cụm → ca phụ xác nhận lệch ghim «TB-AC-2 cụm cho B2»."
+    expected: "exit 0; ca «TB-AC-2 levelOf ≡ offer_data_level»: nạp 087 trong giao dịch; ma trận hàm viết trước 2^5 (năm trường lõi có/thiếu) × định vị (có/không) + năm ô biên × định vị = 74 ô, mỗi ô gọi offer_data_level(...) của 087 và levelOf THẬT, so bậc và chỗ kẹt; rồi 64 tin thật chèn trong giao dịch — 2^4 (bốn trường lõi; loại tin NOT NULL + CHECK ở bảng bản ghi nên luôn có) × định vị (fixture offer_located) × trong cụm properties (có/không) — đếm ô đã kiểm bằng đúng 64, bậc của data_level_units() bằng levelOf; cả hai bằng kỳ vọng viết trước: thiếu trường → [B0, truong-loi]; đủ → [B1, dinh-vi]; đủ + định vị → [B2, gan-can]; ô «trong cụm» luôn cùng bậc với ô «không cụm» tương ứng. Chiều đỏ cùng ca: chạy cùng ma trận với thân offer_data_level của 056 (B2 khi tham số cuối đúng = cụm) truyền cờ cụm → ca phụ xác nhận lệch ghim «TB-AC-2 cụm cho B2»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
