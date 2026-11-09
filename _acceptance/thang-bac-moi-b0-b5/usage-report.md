@@ -81,3 +81,42 @@ wall: 2036s
 - **claude-haiku-5-5**: 11 agent · 41 calls · out 32,716 · in 82 · cache_read 892,726 · cache_create 359,864
 - **claude-sonnet-5-5**: 6 agent · 35 calls · out 25,235 · in 70 · cache_read 2,325,789 · cache_create 304,475
 
+### S4 round 3 — wf_499ebd7c-82d (18 agent, 110,551 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 40 | 25,185 | 84 | 4,193,463 | 285 |
+| review:conventions | claude-opus-5-5 | 36 | 17,502 | 76 | 3,157,663 | 201 |
+| review:measurement | claude-opus-5-5 | 9 | 13,447 | 20 | 686,942 | 138 |
+| ui:E10 | claude-sonnet-5-5 | 22 | 11,384 | 44 | 2,107,578 | 248 |
+| machine:cd pipeline && bash ../db/db-thu.sh onei | claude-haiku-5-5 | 11 | 11,081 | 22 | 355,848 | 897 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 8,826 | 4 | 46,434 | 55 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 9 | 4,761 | 18 | 212,129 | 1102 |
+| triage | claude-sonnet-5-5 | 2 | 4,578 | 4 | 30,993 | 36 |
+| machine:cd app && npm test | claude-haiku-5-5 | 8 | 2,607 | 16 | 183,739 | 920 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,143 | 4 | 28,031 | 10 |
+| machine:node --test scripts/bao-cao-ngay.test.mj | claude-haiku-5-5 | 2 | 1,748 | 4 | 28,040 | 10 |
+| machine:for f in app/src/components/ops/quality/ | claude-haiku-5-5 | 2 | 1,595 | 4 | 28,221 | 11 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 1,444 | 4 | 28,086 | 10 |
+| machine:cd app && bash ../db/db-thu.sh oneinvest | claude-haiku-5-5 | 2 | 1,259 | 4 | 28,101 | 83 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,074 | 4 | 28,036 | 23 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 846 | 4 | 28,025 | 6 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 756 | 4 | 24,824 | 102 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 315 | 4 | 23,615 | 9 |
+
+
+wall: 2279s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| ui | 1 | 11,384 | 2,107,578 | 248 | 19:02:15 | 19:06:23 |
+| machine | 11 | 29,314 | 973,080 | 2173 | 19:02:15 | 19:38:29 |
+| review | 3 | 56,134 | 8,038,068 | 286 | 19:02:15 | 19:07:01 |
+| triage | 1 | 4,578 | 30,993 | 36 | 19:38:31 | 19:39:07 |
+| capture | 1 | 315 | 23,615 | 9 | 19:39:09 | 19:39:17 |
+| synthesize | 1 | 8,826 | 46,434 | 55 | 19:39:19 | 19:40:14 |
+
+- **claude-opus-5-5**: 3 agent · 85 calls · out 56,134 · in 180 · cache_read 8,038,068 · cache_create 387,355
+- **claude-sonnet-5-5**: 4 agent · 28 calls · out 25,103 · in 56 · cache_read 2,208,620 · cache_create 252,689
+- **claude-haiku-5-5**: 11 agent · 44 calls · out 29,314 · in 88 · cache_read 973,080 · cache_create 359,595
+
