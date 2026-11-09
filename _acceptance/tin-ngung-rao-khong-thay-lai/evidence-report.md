@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a0992efd58d6cbfddd6c8b5a40e928a511819d4f
+verified_commit: a51fe787646243d13cef449ac80a13155f361923
 human_signoff: Mạnh 2026-11-09
 ---
 
@@ -191,3 +191,7 @@ Round 1: AC-7 đỏ ở mục CONTEXT «Ngừng rao» (_Avoid_ cấm nhầm «h�
 Round 2: các eval E1–E10 chạy, nhưng đợt xác minh bị chặn bởi hạ tầng (lỗi phân giải tên miền), không phải lỗi mã.
 Round 3: sáu lệnh suite xanh, mười một eval mang từ round 2 vì delta không chạm paths; verdict PASS.
 
+
+### Re-pin lần 1 — 2026-11-09, do hoá cũ do sửa S5-AC-6 ở itest
+run_id: repin-20261109T060447Z-94960
+sha: a51fe787646243d13cef449ac80a13155f361923 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
