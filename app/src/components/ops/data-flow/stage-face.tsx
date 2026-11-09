@@ -11,6 +11,7 @@ export const STAGE_COLOR: Record<Stage, string> = {
   clustered: "var(--chart-3)",
   dropped: "var(--destructive)",
   merged: "var(--muted-foreground)",
+  inquiry: "var(--color-cyan-500)",
 }
 
 export const STAGE_LABEL: Record<Stage, string> = {
@@ -21,6 +22,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
   clustered: "Gom cụm",
   dropped: "Rơi khỏi ống",
   merged: "Gộp trùng",
+  inquiry: "Yêu cầu",
 }
 
 const STAGE_DOT: Record<Stage, string> = {
@@ -31,6 +33,7 @@ const STAGE_DOT: Record<Stage, string> = {
   clustered: "bg-chart-3",
   dropped: "bg-destructive",
   merged: "bg-muted-foreground",
+  inquiry: "bg-cyan-500 dark:bg-cyan-400",
 }
 
 export function StageFace({ stage }: { stage: Stage }) {
