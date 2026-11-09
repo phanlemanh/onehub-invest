@@ -373,15 +373,16 @@ describe("[E1] AC-1 bộ tra qua đường khởi động Provider thật", () =
     expect(ca.goiApi.length, "đối chứng: chu kỳ kế (mốc đã 90 giây) ra đúng 1 lời — một vòng").toBe(1);
   });
 
-  it("[E1] mỗi lời ≤ 20 mã người bán (cộng tối đa 2 mã đối chứng)", async () => {
+  it("[E1] mỗi lời ≤ 20 mã TÍNH CẢ mã đối chứng (lượt lần 10: trần 20 gồm đối chứng)", async () => {
     const { provider } = await napModule();
     yeuCau(MA(25));
     await khoiProvider(provider);
     await choChay(60_000);
     expect(ca.goiApi.length, "đối chứng: lượt thử ra đúng 1 lời").toBe(1);
     const goi = maGoi(0);
-    expect(goi.filter((m) => !DC.includes(m)).length, "≤ 20 mã người bán mỗi lời").toBeLessThanOrEqual(20);
+    expect(goi.length, "≤ 20 mã mỗi lời, tính cả đối chứng").toBeLessThanOrEqual(20);
     expect(goi.filter((m) => DC.includes(m)).length, "2 mã đối chứng đi cùng lời").toBe(2);
+    expect(goi.filter((m) => !DC.includes(m)).length, "đối chứng: chỗ còn lại lấp đủ bằng mã người bán (25 mã sẵn)").toBe(18);
   });
 
   it("[E1] 21 mã → 2 lời cách nhau ≥ 60 giây, đủ 21 mã", async () => {
@@ -393,6 +394,8 @@ describe("[E1] AC-1 bộ tra qua đường khởi động Provider thật", () =
     expect(ca.goiApi.length, "21 mã cần đúng 2 lời").toBe(2);
     const da = new Set([...maGoi(0), ...maGoi(1)].filter((m) => !DC.includes(m)));
     expect(da.size, "hai lời phủ đủ 21 mã").toBe(21);
+    for (let i = 0; i < 2; i++) expect(maGoi(i).length, `lời ${i + 1} ≤ 20 mã tính cả đối chứng`).toBeLessThanOrEqual(20);
+    for (const dc of DC) expect([...maGoi(0), ...maGoi(1)].filter((m) => m === dc).length, `mã đối chứng ${dc} gọi đúng 1 lần mỗi lượt`).toBe(1);
     expect(ca.goiApi[1].luc - ca.goiApi[0].luc, "hai lời cách nhau ≥ 60 giây").toBeGreaterThanOrEqual(60_000);
   });
 
@@ -598,13 +601,13 @@ describe("[E2] AC-2 lỗi kênh: dừng cả lượt, không thử lại, tệp 
 
 // ═════════════════════════════ E3 — AC-3 ═════════════════════════════
 describe("[E3] AC-3 lượt thử mặc định, đối chứng, lượt lớn", () => {
-  it("[E3] mặc định là thử: đúng 1 lời ≤ 20 + 2 mã, có dấu đã thử, không chạy lần hai khi dấu còn; đầu ra chỉ số đếm", async () => {
+  it("[E3] mặc định là thử: đúng 1 lời ≤ 20 mã gồm 2 đối chứng, có dấu đã thử, không chạy lần hai khi dấu còn; đầu ra chỉ số đếm", async () => {
     const { provider } = await napModule();
     yeuCau(MA(25));
     await khoiProvider(provider);
     await choChay(60_000);
     expect(ca.goiApi.length, "đúng 1 lời").toBe(1);
-    expect(maGoi(0).length, "≤ 20 + 2 mã").toBeLessThanOrEqual(22);
+    expect(maGoi(0).length, "≤ 20 mã tính cả 2 mã đối chứng").toBeLessThanOrEqual(20);
     expect(doc("da-thu.txt") !== null, "có dấu đã thử").toBe(true);
     yeuCau(MA(5, 3000));
     await choChay(60_000);
@@ -617,6 +620,18 @@ describe("[E3] AC-3 lượt thử mặc định, đối chứng, lượt lớn",
     expect(dong.filter((l) => !KHUON.test(l)), "mọi dòng log chỉ số đếm bốn loại và kết quả đối chứng").toEqual([]);
     const dauRa = [...ca.logs, doc("chan.txt") ?? "", doc("da-thu.txt") ?? ""].join("\n");
     expect(dauRa.match(/\bu\d{4}\b|PII-|\+84\d+/g), "không username hay chuỗi đánh dấu trong đầu ra (log, tệp chặn, dấu đã thử)").toBe(null);
+  });
+
+  it("[E3] tệp yêu cầu có mã trùng → lượt thử vẫn đúng 1 lời, có dấu đã thử, mỗi mã gọi một lần (lần 10: khử trùng lúc đọc)", async () => {
+    const { provider } = await napModule();
+    yeuCau([...MA(3), "1000", "1001"]);
+    await khoiProvider(provider);
+    await choChay(60_000);
+    expect(ca.goiApi.length, "đúng 1 lời").toBe(1);
+    expect(maGoi(0).filter((m) => m === "1000").length, "mã trùng chỉ gọi một lần").toBe(1);
+    expect(doc("da-thu.txt") !== null, "có dấu đã thử dù tệp có mã trùng").toBe(true);
+    for (let i = 0; i < 3; i++) await choChay(60_000);
+    expect(ca.goiApi.length, "các nhịp sau: 0 lời lặp").toBe(1);
   });
 
   const DOI_CHUNG_SAI = [
@@ -655,17 +670,26 @@ describe("[E3] AC-3 lượt thử mặc định, đối chứng, lượt lớn",
     });
   }
 
-  it("[E3] lượt lớn: mỗi tệp yêu cầu xử một lần (đổi tên đã xử, nhịp sau 0 lời) và giữ trần ≤ 20 mã", async () => {
+  it("[E3] lượt lớn: 20 mã → lời 1 = 18 mã + 2 đối chứng, lời 2 = 2 mã không đối chứng, rồi đổi tên đã xử; nhịp sau 0 lời", async () => {
     const { provider } = await napModule();
     ghi("luot-lon.txt", "Manh-bat-09-11");
     yeuCau(MA(20));
     await khoiProvider(provider);
     await choChay(60_000);
     expect(ca.goiApi.length, "đối chứng: lượt lớn gọi").toBe(1);
-    expect([doc("yeu-cau.json"), doc("yeu-cau.da-xu.json") !== null], "tệp yêu cầu đã đổi tên đã xử").toEqual([null, true]);
+    expect(maGoi(0).length, "lời 1 đúng trần 20 mã, tính cả đối chứng").toBe(20);
+    expect(maGoi(0).filter((m) => DC.includes(m)).length, "lời 1 mang 2 mã đối chứng").toBe(2);
+    expect(doc("yeu-cau.json") !== null, "còn 2 mã chưa gọi: tệp yêu cầu chưa đổi tên").toBe(true);
     await choChay(60_000);
-    expect(ca.goiApi.length, "nhịp sau, không có tệp mới: 0 lời").toBe(1);
-    expect(maGoi(0).filter((m) => !DC.includes(m)).length, "trần ≤ 20 mã").toBeLessThanOrEqual(20);
+    expect(ca.goiApi.length, "lời 2 cho 2 mã còn lại").toBe(2);
+    expect(maGoi(1).length, "lời 2 chỉ 2 mã người bán còn lại").toBe(2);
+    expect(maGoi(1).filter((m) => DC.includes(m)), "lời 2 không gọi lại đối chứng").toEqual([]);
+    expect(new Set([...maGoi(0), ...maGoi(1)].filter((m) => !DC.includes(m))).size, "hai lời phủ đủ 20 mã").toBe(20);
+    expect([doc("yeu-cau.json"), doc("yeu-cau.da-xu.json") !== null], "đủ mã: tệp yêu cầu đổi tên đã xử").toEqual([null, true]);
+    await choChay(60_000);
+    await choChay(60_000);
+    expect(ca.goiApi.length, "nhịp sau, không có tệp mới: 0 lời").toBe(2);
+    for (let i = 0; i < 2; i++) expect(maGoi(i).length, `lời ${i + 1} ≤ 20 mã tính cả đối chứng`).toBeLessThanOrEqual(20);
   });
 });
 
