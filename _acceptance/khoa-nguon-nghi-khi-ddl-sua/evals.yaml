@@ -1,0 +1,59 @@
+schema_version: 1
+feature_slug: khoa-nguon-nghi-khi-ddl-sua
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.kn_ldr
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; ca 'KN-AC-1' xanh trên DB của riêng lượt. Đối chứng dương trước: hàm đo giữ-33033 thấy khoá 33033 của một phiên đối chứng gọi pg_advisory_lock(33033) (không thì 'KN do khoa 33033 hong'); phiên chặn giữ ACCESS EXCLUSIVE public.field_assertions mà hàm đo thấy KHÔNG giữ 33033; phiên gọi bị chặn ở lần thử đầu (lan >= 1, không thì 'KN ca het can cu'). Phiên chặn nhả sau 1,5 s; khoaNguon(c, ['sale_offer_records','field_assertions'], {toiDa: 40}) trả về, 5 <= lan <= 25, không giữ 33033, AccessShareLock granted trên relation = 'public.sale_offer_records'::regclass và 'public.field_assertions'::regclass. Chiều đỏ (E4): mã cũ ném 55P03 HOẶC trả lan > 25 → cùng một thông điệp 'KN KHOA NGOAI 33033 QUAY KHONG NGHI'; quên nhả 33033 → 'KN CON GIU 33033'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.kn_ldr
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; ca 'KN-AC-2' xanh: phiên chặn ngoài 33033 giữ suốt; khoaNguon(c, ['field_assertions'], {toiDa: 5}) ném lỗi có code === '55P03' (ghim code, không chỉ 'rejects'), thời gian từ gọi tới ném >= 450 ms; sau đó 'SELECT 1' trên cùng giao dịch trả 1 và phiên không giữ 33033. Chiều đỏ (E4): mã cũ ném sau < 450 ms → 'KN HET LUOT MA KHONG NGHI'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.kn_ldr
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; ca 'KN-AC-3' xanh: phiên chặn ngoài 33033 giữ 1 s; phiên thứ ba lấy mẫu pg_locks (locktype advisory, classid 0, objid 33033, objsubid 1, granted, pid của phiên gọi) mỗi 20 ms, CHỈ trong khoảng từ lúc gọi tới lúc khoaNguon trả về; đủ >= 30 mẫu (không thì 'KN lay mau thieu'); in dòng '# KN-AC-3 giu 33033: <k>/<n> mau'; k/n <= 0.5. Chiều đỏ (E4): bản nghỉ khi còn giữ 33033 → 'KN NGHI KHI GIU 33033'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.kn_dot_bien
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs, _acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs]
+    expected: "exit 0, in 'DOT BIEN OK'. Đầu tiên đối chiếu danh sách: các tệp test import luoc-do-rieng.mjs (git grep trong app/tests và pipeline/scripts) bằng đúng mười tệp của AC-5, lệch → 'DANH SACH HOI QUY LECH'. Bản thật: ca KN- xanh 'ℹ pass 4' (đối chứng dương). Bốn bản chép tạm .dot-<pid> của lib + test (tệp thật không đổi, so băm trước/sau, lệch → 'TEP THAT BI DOI'), mỗi bản thoát ≠ 0 và có thông điệp ghim: 'mã cũ' → 'KN KHOA NGOAI 33033 QUAY KHONG NGHI' và 'KN HET LUOT MA KHONG NGHI'; 'nghỉ khi còn giữ 33033' → 'KN NGHI KHI GIU 33033'; 'quên nhả 33033 khi vào được' → 'KN CON GIU 33033'; 'thử lại mọi mã lỗi' → 'KN LOI KHAC VAN THU LAI'. Chỗ cần đổi không thấy trong lib → 'DOT BIEN KHONG AP DUOC', thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.kn_hoi_quy_pipe
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs, pipeline/scripts/so-ghep-s06.test.mjs, pipeline/scripts/bait-gap-sellers.test.mjs, pipeline/scripts/gan-sdt-s06.test.mjs, pipeline/scripts/importer-schema-v5.test.mjs, pipeline/scripts/kiem-do-sau-070.test.mjs, pipeline/scripts/deals-phi-ly.test.mjs]
+    expected: "exit 0; mọi ca của bảy tệp test pipeline dùng thư viện xanh (gồm các ca LDR cũ và ca 'LDR chuỗi ca DDL giữ khoá liền nhau' của luoc-do-rieng.test.mjs), fail 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.kn_hoi_quy_app
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, app/tests/deals-phi-ly.test.tsx, app/tests/dq-moi-nhat.test.tsx, app/tests/can-gia-tot-biet-can.test.tsx]
+    expected: "exit 0; mọi ca của ba tệp test app dùng thư viện xanh, fail 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.kn_ldr
+    layer: backend-effect
+    paths: [pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; ca 'KN-AC-6' xanh: khoaNguon(c, ['bang_khong_co_kn'], {toiDa: 3}) ném lỗi có code === '42P01' trong < 250 ms (đối chứng dương: to_regclass('public.bang_khong_co_kn') là null, không thì 'KN ca het can cu'); sau đó 'SELECT 1' trên cùng giao dịch trả 1. Chiều đỏ (E4): bản thử lại mọi mã lỗi → 'KN LOI KHAC VAN THU LAI'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

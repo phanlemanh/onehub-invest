@@ -1,0 +1,18 @@
+{
+  "feature_plain": "Các bộ thử dùng chung DB không còn báo đỏ giả khi có một thao tác sửa cấu trúc bảng ngoài khoá 33033 đang chạy: bước lấy khoá nguồn nghỉ 100 ms giữa các lần thử thay vì quay rỗng hết lượt rồi bỏ cuộc.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chờ được tới khi thao tác sửa bảng (không đi qua khoá 33033) xong rồi vào, nghỉ đều 100 ms giữa các lần thử, kể cả khi bảng bị chặn đứng sau trong danh sách."},
+    {"id": "AC-2", "p": "Sẽ chỉ bỏ cuộc sau khi đã thật sự chờ đủ số lần thử, và để giao dịch còn dùng được, không giữ khoá 33033."},
+    {"id": "AC-3", "p": "Sẽ không cầm khoá 33033 trong lúc nghỉ, để các ca nạp cấu trúc đang xếp hàng không bị chặn thêm."},
+    {"id": "AC-4", "p": "Sẽ chứng chiều đỏ bằng bốn bản đột biến của thư viện, mỗi bản phải làm đúng ca nó phá báo đỏ có tên."},
+    {"id": "AC-5", "p": "Sẽ giữ xanh mười bộ thử đang dùng thư viện, kể cả ca chuỗi thao tác nạp cấu trúc nối đuôi."},
+    {"id": "AC-6", "p": "Sẽ báo ngay lỗi khác (ví dụ bảng không tồn tại) mà không thử lại hay nghỉ."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không dựng lại chuỗi nhiều thao tác nối đuôi (Ngoài-5 cũ, đã ghi hạn chế)."},
+    {"id": "OOS-2", "p": "Không siết ca «xếp hàng bị cắt bởi hạn chờ» (Ngoài-6 cũ, đã ghi hạn chế)."},
+    {"id": "OOS-3", "p": "Không đổi số lần thử mặc định, khoá 33033 hay cách bộ thử nạp cấu trúc."},
+    {"id": "OOS-4", "p": "Không đưa thư viện vào mã chạy thật — nó chỉ cho bộ thử."},
+    {"id": "OOS-5", "p": "Không sửa phép đo của hồ sơ đã ký app-test-chiu-song-song (đã lệch từ trước); đã báo giám sát."}
+  ]
+}

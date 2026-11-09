@@ -231,6 +231,9 @@ executors:
     px1_thuan: "node --test pipeline/lib/dvhc.test.mjs"   # danh-ba-phuong-xa-toan-quoc E7, E8 — hàm thuần, không DB
     px1_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1 --chay node --test --test-concurrency=1 scripts/nap-dvhc.test.mjs"   # danh-ba-phuong-xa-toan-quoc E1–E7 — DB của riêng lượt (bản chép máy thu), BEGIN…ROLLBACK
     px1_cu: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1cu --chay node --test --test-concurrency=1 scripts/nap-dvhc-cu.test.mjs"   # danh-ba-phuong-xa-toan-quoc E10 — code mới trên DB chưa áp 084
+    kn_ldr: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs"   # khoa-nguon-nghi-khi-ddl-sua E1–E3 — ca KN- của thư viện lược đồ riêng, DB của riêng lượt
+    kn_hoi_quy_pipe: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_knhq --chay node --test --test-concurrency=1 scripts/luoc-do-rieng.test.mjs scripts/so-ghep-s06.test.mjs scripts/bait-gap-sellers.test.mjs scripts/gan-sdt-s06.test.mjs scripts/importer-schema-v5.test.mjs scripts/kiem-do-sau-070.test.mjs scripts/deals-phi-ly.test.mjs"   # khoa-nguon-nghi-khi-ddl-sua E5 — bảy tệp pipeline dùng thư viện
+    kn_hoi_quy_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_knapp --chay node --import tsx --test --test-concurrency=1 tests/deals-phi-ly.test.tsx tests/dq-moi-nhat.test.tsx tests/can-gia-tot-biet-can.test.tsx"   # khoa-nguon-nghi-khi-ddl-sua E6 — ba tệp app dùng thư viện
     px1_do: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1do --chay node scripts/nap-dvhc-do.mjs"   # danh-ba-phuong-xa-toan-quoc E9 — thước trước/sau theo tỉnh, ROLLBACK
   script:
     icc_keychain: "bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""   # install-cron-chi AC-3 — security/launchctl giả, HOME giả
@@ -379,6 +382,7 @@ executors:
     atss_khoa: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs khoa"   # app-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
     atss_assert: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs assert"   # app-test-chiu-song-song E3 — thông điệp assert giữ nguyên trừ câu thước đã khai
     atss_lib: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — test thư viện lược đồ riêng + ba đột biến đỏ
+    kn_dot_bien: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kndb --chay node ../_acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs"   # khoa-nguon-nghi-khi-ddl-sua E4 — hai bản đột biến của khoaNguon đỏ có tên, bản thật xanh
     atss_pham_vi: "bash _acceptance/app-test-chiu-song-song/probes/pham-vi.sh"   # app-test-chiu-song-song E5
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
