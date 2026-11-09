@@ -52,6 +52,8 @@ type LaidOutNode = SankeyNode & FlowNode
 const CHART_CONFIG = {
   journey: { label: STAGE_LABEL.journey, color: STAGE_COLOR.journey },
   linked: { label: STAGE_LABEL.linked, color: STAGE_COLOR.linked },
+  located: { label: STAGE_LABEL.located, color: STAGE_COLOR.located },
+  clustered: { label: STAGE_LABEL.clustered, color: STAGE_COLOR.clustered },
   dropped: { label: STAGE_LABEL.dropped, color: STAGE_COLOR.dropped },
   merged: { label: STAGE_LABEL.merged, color: STAGE_COLOR.merged },
 } satisfies ChartConfig
@@ -118,7 +120,7 @@ export function FlowJourney({
     const lit = emphasis ? emphasis.node(index) : true
     const header = headers[node.id]
     const first = node.depth === 0
-    const terminal = node.stage === "linked" || node.stage === "dropped" || node.stage === "merged"
+    const terminal = node.stage !== "channel" && node.stage !== "journey"
     const labelX = first ? x - LABEL_GAP : x + width + LABEL_GAP
     return (
       <g className={cn("transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none", !lit && "opacity-30")}>
@@ -211,7 +213,7 @@ export function FlowJourney({
         className="aspect-auto h-104 w-full min-w-3xl"
         initialDimension={{ width: 960, height: 416 }}
         role="img"
-        aria-label={`Đường ống: ${fmtInt(total)} bài nhận, ${fmtInt(amountOf("linked"))} tin gắn căn`}
+        aria-label={`Đường ống: ${fmtInt(total)} bài nhận, ${fmtInt(amountOf("unit"))} tin gắn căn`}
       >
         <Sankey
           data={{ nodes, links }}

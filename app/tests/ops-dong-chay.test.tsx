@@ -111,17 +111,20 @@ const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm kh�
 
 // ---------- AC-1: đường ống bảo toàn ----------
 type SF = import("../src/lib/data-flow-queries").SourceFlow
-const sf = (source: "S03" | "S05" | "S06", received: number, readable: number, offers: number, linked: number): SF => ({
-  source, received, readable, offers, linked, testRejected: 0, withWard: 0, withType: 0, withPriceArea: 0, complete: 0,
+// Chặng cuối từ gan-can-dinh-danh-duy-nhat: Tin rao chia theo mức sâu nhất; tham số thứ năm là số tin GẮN CĂN (khớp danh
+// bạ) — cùng vai «tới đích» của cột Gắn căn cũ.
+const sf = (source: "S03" | "S05" | "S06", received: number, readable: number, offers: number, unitLinked: number): SF => ({
+  source, received, readable, offers, clustered: 0, located: 0, unitLinked, locatedPending: 0, uniqueIdPending: 0,
+  deepest: { unitLinked, located: 0, clustered: 0 }, testRejected: 0, withWard: 0, withType: 0, withPriceArea: 0, complete: 0,
   highConfidence: 0, latestAt: null, approx: source === "S06",
 })
 
 describe("DF-AC-1 bảo toàn", () => {
   const BO = [
-    { ten: "ba nguồn đủ chặng", src: [sf("S03", 100, 40, 10, 2), sf("S05", 10, 5, 3, 0), sf("S06", 50, 45, 45, 44)], ids: ["S03", "S05", "S06", "received", "readable", "unreadable", "offers", "merged", "linked", "unlinked"] },
-    { ten: "không tin nào gắn căn", src: [sf("S03", 20, 8, 4, 0)], ids: ["S03", "received", "readable", "unreadable", "offers", "merged", "unlinked"] },
+    { ten: "ba nguồn đủ chặng", src: [sf("S03", 100, 40, 10, 2), sf("S05", 10, 5, 3, 0), sf("S06", 50, 45, 45, 44)], ids: ["S03", "S05", "S06", "received", "readable", "unreadable", "offers", "merged", "unit", "unlocated"] },
+    { ten: "không tin nào gắn căn", src: [sf("S03", 20, 8, 4, 0)], ids: ["S03", "received", "readable", "unreadable", "offers", "merged", "unlocated"] },
     { ten: "đọc được bằng 0", src: [sf("S03", 7, 0, 0, 0)], ids: ["S03", "received", "unreadable"] },
-    { ten: "mọi tin gắn căn", src: [sf("S06", 9, 9, 9, 9)], ids: ["S06", "received", "readable", "offers", "linked"] },
+    { ten: "mọi tin gắn căn", src: [sf("S06", 9, 9, 9, 9)], ids: ["S06", "received", "readable", "offers", "unit"] },
   ]
   const kiem = (build: typeof import("../src/components/ops/data-flow/flow-sankey-data").buildFlow, src: SF[]) => {
     const { nodes, links } = build(src, {})
@@ -145,13 +148,13 @@ describe("DF-AC-1 bảo toàn", () => {
       assert.deepEqual(nodes.map((n) => n.id), b.ids, `${b.ten}: tập nút`)
     }
     const h1 = buildFlow(BO[0].src, {}).headers
-    assert.equal(h1.linked.value, (await import("../src/lib/format")).fmtPct(46 / 58))
-    assert.equal(h1.linked.weak, true)
+    assert.equal(h1.unit.value, (await import("../src/lib/format")).fmtPct(46 / 58))
+    assert.equal(h1.unit.weak, true)
     const h2 = buildFlow(BO[1].src, {}).headers
-    assert.equal(h2.unlinked?.title, "Gắn căn", "không tin gắn căn → chú thích đứng trên «Chưa gắn căn»")
-    assert.equal(h2.unlinked?.value, "0,0%")
-    assert.equal(h2.unlinked?.weak, true)
-    assert.equal(buildFlow(BO[3].src, {}).headers.linked.weak, false)
+    assert.equal(h2.unlocated?.title, "Gắn căn", "không tin gắn căn → chú thích đứng trên «Chưa định vị»")
+    assert.equal(h2.unlocated?.value, "0,0%")
+    assert.equal(h2.unlocated?.weak, true)
+    assert.equal(buildFlow(BO[3].src, {}).headers.unit.weak, false)
   })
   test("DF-AC-1 chiều đỏ — cạnh Bài nhận → Đọc được mang số của Bài nhận", async () => {
     const { buildFlow } = await import("../src/components/ops/data-flow/flow-sankey-data")
@@ -173,10 +176,11 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
     const { getDataFlow } = await import("../src/lib/data-flow-queries")
     const all = await getDataFlow("all", { now: NOW })
     const by = Object.fromEntries(all.sources.map((s) => [s.source, s]))
-    const pick = (s: SF) => ({ received: s.received, testRejected: s.testRejected, readable: s.readable, offers: s.offers, complete: s.complete, withWard: s.withWard, linked: s.linked, approx: s.approx })
-    assert.deepEqual(pick(by.S03), { received: 6, testRejected: 3, readable: 4, offers: 2, complete: 1, withWard: 1, linked: 1, approx: false })
-    assert.deepEqual(pick(by.S05), { received: 2, testRejected: 0, readable: 1, offers: 1, complete: 0, withWard: 0, linked: 0, approx: false })
-    assert.deepEqual(pick(by.S06), { received: 4, testRejected: 0, readable: 3, offers: 3, complete: 3, withWard: 3, linked: 1, approx: true })
+    const pick = (s: SF) => ({ received: s.received, testRejected: s.testRejected, readable: s.readable, offers: s.offers, complete: s.complete, withWard: s.withWard, clustered: s.clustered, approx: s.approx })
+    // o1 (S03) và c1 (S06) cùng cụm 1 → mỗi nguồn một tin Gom cụm (gan-can-dinh-danh-duy-nhat; trước là «gắn căn»).
+    assert.deepEqual(pick(by.S03), { received: 6, testRejected: 3, readable: 4, offers: 2, complete: 1, withWard: 1, clustered: 1, approx: false })
+    assert.deepEqual(pick(by.S05), { received: 2, testRejected: 0, readable: 1, offers: 1, complete: 0, withWard: 0, clustered: 0, approx: false })
+    assert.deepEqual(pick(by.S06), { received: 4, testRejected: 0, readable: 3, offers: 3, complete: 3, withWard: 3, clustered: 1, approx: true })
     assert.deepEqual([all.shortStay.received, all.shortStay.stored], [2, 3])
     const w7 = await getDataFlow("7d", { now: NOW })
     const s03 = w7.sources.find((s) => s.source === "S03")!
@@ -310,28 +314,30 @@ describe("DF-AC-5 nút thắt", () => {
   const H = 3600000
   const at = (h: number) => new Date(NOW - h * H).toISOString()
   const row = (p: Partial<Row>): Row => ({
-    id: "x", name: "x", meta: "", received: 100, readable: 90, offers: 50, complete: 45, withWard: 45, linked: 45, latestAt: at(1), approx: false, ...p,
+    id: "x", name: "x", meta: "", received: 100, readable: 90, offers: 50, complete: 45, withWard: 45, clustered: 45, located: 0, unitLinked: 0, locatedPending: 0,
+    uniqueIdPending: 0, levelsPending: false, latestAt: at(1), approx: false, ...p,
   })
   const MA: [string, Row, string][] = [
     ["1 đọc 26%", row({ readable: 26 }), "Kẹt · đọc"],
     ["2 trường lõi 0%", row({ readable: 96, complete: 0 }), "Kẹt · trường lõi"],
     ["3 phường 40%", row({ readable: 70, complete: 45, withWard: 20 }), "Kẹt · phường"],
-    ["4 gắn căn 10%", row({ linked: 5 }), "Kẹt · gắn căn"],
+    // Kiểm gắn căn bỏ từ gan-can-dinh-danh-duy-nhat (AC-7, Hỏi-1): Gắn căn 0–10% không còn làm nguồn «Kẹt».
+    ["4 gắn căn 10%", row({ unitLinked: 5 }), "Khoẻ"],
     ["5 kẹt thắng im", row({ readable: 26, latestAt: at(72) }), "Kẹt · đọc"],
     ["6 im 3 ngày", row({ latestAt: at(72) }), "Im 3 ngày"],
     ["7 đọc 55%", row({ readable: 55 }), "Theo dõi · đọc"],
     ["8 khoẻ", row({}), "Khoẻ"],
-    ["9 nhóm thu", row({ complete: null, withWard: null, linked: null }), "Khoẻ"],
+    ["9 nhóm thu", row({ complete: null, withWard: null, clustered: null, located: null, unitLinked: null }), "Khoẻ"],
   ]
   test("DF-AC-5 nút thắt — ma trận chín hàng", async () => {
     const { healthOf } = await import("../src/components/ops/data-flow/quality-rows")
     const lech = MA.filter(([, r, want]) => healthOf(r, NOW).label !== want).map(([ten, r, want]) => `${ten}: ${healthOf(r, NOW).label} ≠ ${want}`)
     assert.deepEqual(lech, [])
   })
-  test("DF-AC-5 chiều đỏ — đổi thứ tự luật (gắn căn trước đọc)", async () => {
+  test("DF-AC-5 chiều đỏ — đổi thứ tự luật (phường trước đọc)", async () => {
     const { healthOf, NUT_THAT_CHECKS } = await import("../src/components/ops/data-flow/quality-rows")
     const nguoc = [...NUT_THAT_CHECKS].reverse()
-    const r1 = row({ readable: 26, linked: 5 })
+    const r1 = row({ readable: 26, withWard: 5 })
     assert.equal(healthOf(r1, NOW).label, "Kẹt · đọc")
     assert.notEqual(healthOf(r1, NOW, nguoc).label, "Kẹt · đọc", "đột biến phải đỏ ở hàng 1")
   })
@@ -341,7 +347,8 @@ describe("DF-AC-5 nút thắt", () => {
 type Rec = import("../src/lib/data-flow-queries").FlowRecord
 const rec = (p: Partial<Rec>): Rec => ({
   offerId: "r", source: "S03", kind: "sale", propertyType: "unknown", priceVnd: 3_200_000_000, areaM2: 81, bedrooms: 3,
-  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false, firstSeen: "2026-10-25 09:00:00+00",
+  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false,
+  identification: { level: "none", locatedPending: false, uniqueIdPending: false }, firstSeen: "2026-10-25 09:00:00+00",
   lastSeen: "2026-10-25 09:00:00+00", postText: "3pn 81m2 có sổ 3,2 tỷ", postGroup: "Nhóm A", ...p,
 })
 const RECS: Rec[] = [

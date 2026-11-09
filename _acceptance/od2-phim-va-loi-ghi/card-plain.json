@@ -1,0 +1,43 @@
+{
+ "feature_plain": "Người duyệt ở /ops/review luôn biết khi một quyết định gửi lúc rời Hàng duyệt bị lỗi, giữ phím số chỉ quyết một thẻ, và phím duyệt không chạy dưới hộp phóng ảnh.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ báo lỗi «Không ghi được #id» kèm nút «Mở thẻ» khi quyết định gửi lúc rời Hàng duyệt bị từ chối hay mất mạng; nút đưa về đúng thẻ."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ cho nút «Hoàn tác» nói đúng tình trạng khi đã quá 5 giây: đang gửi, đã ghi, hay chưa ghi được — chỉ nói «đã ghi» khi máy chủ đã nhận."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ chỉ quyết một thẻ khi giữ phím số; giữ J/K hay mũi tên vẫn lướt thẻ như cũ."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ tắt phím duyệt khi hộp phóng ảnh hay hộp thoại nào khác đang mở trên thẻ; đóng hộp là phím chạy lại."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ giữ nguyên mọi hành vi OD2 đã ký — bộ thử OD2 vẫn xanh."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "OOS-1",
+   "p": "Không đổi chữ «Đã ghi» lúc bấm, trừ khi anh chọn đổi ở Hỏi-1."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không sửa hộp phóng ảnh (nằm ngoài vùng của hàng này)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không sửa bộ thử của OD2 — các hạn chế anh đã ghi ở OD2 giữ nguyên."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Không báo lỗi khi đóng hẳn tab — trang đã mất thì không còn chỗ hiện tin."
+  }
+ ]
+}
