@@ -8,7 +8,7 @@ import { describe, test } from "node:test"
 import { renderToStaticMarkup } from "react-dom/server"
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime"
 
-import { DoHangNgay } from "../src/components/ops/quality/do-hang-ngay"
+import { DoHangNgay, ngayAp } from "../src/components/ops/quality/do-hang-ngay"
 import type { FlowRecord } from "../src/lib/data-flow-queries"
 import { levelOf } from "../src/lib/data-level"
 import type { Do1 } from "../src/lib/do-hang-ngay"
@@ -61,8 +61,12 @@ describe("TB-AC-7 dòng đổi thang", () => {
     const d = dongThang(ve({ status: "skip", ly_do: "doi-thang", don_vi: 81922, thang: THANG }))
     assert.ok(d, "TB-AC-7 thiếu dòng thang")
     assert.match(d, /08\/11/)
-    assert.ok(d.includes(fmtVnDate("2026-11-10")), `ngày áp phải theo định dạng của kho: ${d}`)
+    assert.ok(d.includes("áp từ 2026-11-10 —"), `ngày áp phải hiện theo định dạng ngày của kho: ${d}`)
     assert.match(d, /hạ một lần/)
+    // chiều đỏ: đọc khoá ngày như mốc giờ (fmtVnDate đòi giờ + múi) ra «—» — đúng lỗi lượt chấm 1 thấy trên màn
+    assert.equal(fmtVnDate("2026-11-10"), "—")
+    assert.equal(ngayAp("2026-11-10"), "2026-11-10")
+    assert.equal(ngayAp("2026-11-09T18:00:00Z"), "2026-11-10")
   })
   test("TB-AC-7 (b) ngày thường có thang: dòng thang + bảng chuyển bậc", () => {
     const h = ve({ status: "pass", thang: THANG, theo_nguon: { S03: { len: 1, tut: 2, moi: 0, mat: 0, doi_khoa: 0 } } })

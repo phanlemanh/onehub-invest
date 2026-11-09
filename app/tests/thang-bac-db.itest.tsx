@@ -80,6 +80,7 @@ test("TB-AC-7 bên ghi thật → bên đọc thật: dòng đổi thang lên kh
     assert.match(h, /data-do1-thang/, "TB-AC-7 bên đọc không thấy thang")
     assert.match(h, /Thang bậc 08\/11/)
     assert.match(h, /lần hạ một lần/)
+    assert.match(h, /áp từ \d{4}-\d{2}-\d{2} —/, "TB-AC-7 ngày áp không hiện")
     // chiều đỏ: cùng DB, bỏ khoá thang khỏi dòng vừa ghi → không còn dòng thang
     await c.query(`UPDATE dq_check_results SET detail = (detail::jsonb - 'thang')::text
       WHERE check_name = 'do1-chuyen-bac' AND id = (SELECT max(id) FROM dq_check_results WHERE check_name = 'do1-chuyen-bac')`)

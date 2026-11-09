@@ -9,7 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Do1, LAT_DO, type LatDo } from "@/lib/do-hang-ngay"
-import { fmtInt, fmtPct, fmtVnDate } from "@/lib/format"
+import { fmtInt, fmtPct, fmtVnDate, vnDayStart } from "@/lib/format"
 
 import { BangBoSot, BangChuyenBac, BangGiu, BangLat, BangSoCap, BangTinHieu } from "./do-hang-ngay-bang"
 
@@ -25,6 +25,11 @@ const CHIEU: Record<Exclude<LatDo, "tong">, { giu: string; tin: string; bac: str
   phuong: { giu: "phuong", tin: "phuong", bac: "phuong" },
   du_an: { giu: "du_an", tin: "du_an", bac: "du_an", them: "du_an_theo_chu" },
   toa: { giu: "toa", tin: "toa", bac: "toa" },
+}
+
+/** Ngày áp thang là khoá ngày VN "YYYY-MM-DD" (snap_date) — đọc theo 00:00 giờ VN; chuỗi có giờ + múi thì đọc như mốc giờ. */
+export function ngayAp(v: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? fmtVnDate(vnDayStart(v)) : fmtVnDate(v)
 }
 
 export function DoHangNgaySkeleton() {
@@ -74,8 +79,8 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
           <FrameTitle>Đo hằng ngày</FrameTitle>
           <FrameDescription className="text-xs">{MO_TA}</FrameDescription>
         </div>
-        <Tabs value={lat} onValueChange={(v) => chonLat(String(v))}>
-          <TabsList variant="line" className="no-scrollbar max-w-full justify-start gap-5 overflow-x-auto">
+        <Tabs value={lat} onValueChange={(v) => chonLat(String(v))} className="min-w-0 max-w-full">
+          <TabsList variant="line" className="no-scrollbar relative max-w-full justify-start gap-5 overflow-x-auto">
             {LAT_DO.map((l) => (
               <TabsTrigger key={l.value} value={l.value} className="flex-none px-1 text-sm">{l.label}</TabsTrigger>
             ))}
@@ -107,7 +112,7 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
           {bac?.thang ? (
             <FramePanel>
               <p className="text-muted-foreground text-sm" data-do1-thang="">
-                Thang bậc 08/11 (B2 Định vị, B3 Gắn căn) áp từ {fmtVnDate(bac.thang.tu_ngay)} — dòng chuyển bậc tính từ ngày này.
+                Thang bậc 08/11 (B2 Định vị, B3 Gắn căn) áp từ {ngayAp(bac.thang.tu_ngay)} — dòng chuyển bậc tính từ ngày này.
                 {bac.ly_do === "doi-thang" ? " Ngày đổi thang là lần hạ một lần, không phải tụt bậc." : null}
               </p>
             </FramePanel>

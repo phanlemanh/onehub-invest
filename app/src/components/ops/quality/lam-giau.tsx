@@ -74,8 +74,8 @@ export function LamGiau({ data, lat, areaNames = {}, dotBien }: {
           <FrameTitle>Làm giàu</FrameTitle>
           <FrameDescription className="text-xs">{MO_TA}</FrameDescription>
         </div>
-        <Tabs value={lat} onValueChange={(v) => chonLat(String(v))}>
-          <TabsList variant="line" className="no-scrollbar max-w-full justify-start gap-5 overflow-x-auto">
+        <Tabs value={lat} onValueChange={(v) => chonLat(String(v))} className="min-w-0 max-w-full">
+          <TabsList variant="line" className="no-scrollbar relative max-w-full justify-start gap-5 overflow-x-auto">
             {LAT_DO.map((l) => (
               <TabsTrigger key={l.value} value={l.value} className="flex-none px-1 text-sm">{l.label}</TabsTrigger>
             ))}
