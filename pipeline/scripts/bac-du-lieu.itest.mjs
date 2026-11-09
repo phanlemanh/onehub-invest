@@ -14,6 +14,8 @@ const SQL_056 = readFileSync(path.join(ROOT, "db/migrations/056_data_level.sql")
 // PL19: 059 thay property_data_level (thêm vị từ B5) — có tệp thì nạp sau 056, mọi ca PL16 phải trả như cũ.
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
 const SQL_059 = existsSync(TEP_059) ? readFileSync(TEP_059, "utf8") : null;
+// thang-bac-moi-b0-b5: 610 đọc data_level_units() của 087 — ca chụp ảnh nạp 087 sau 056/059 (nap087); ca hàm cũ thì không.
+const SQL_087 = readFileSync(path.join(ROOT, "db/migrations/087_thang_bac_moi.sql"), "utf8");
 const KHOA = KHOA_BAC; // khoá của bac-du-lieu.mjs lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
 const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
 const MARKET = "vn-tst-bac-m";
@@ -31,12 +33,17 @@ after(async () => {
   await c?.end();
 });
 
-export async function trongGiaoDich(fn) {
+export async function trongGiaoDich(fn, { nap087 = false } = {}) {
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
-    await c.query(SQL_056);
-    if (SQL_059) await c.query(SQL_059);
+    // DB chưa áp thì nạp trong giao dịch; DB đã áp (bản chép máy thu sau 061/082) thì không nạp lại — 059 dựng lại CHECK
+    // trường phát biểu theo danh sách của nó và vấp các trường thêm về sau.
+    const { rows: [co] } = await c.query(`SELECT to_regclass('data_level_snapshot') IS NOT NULL AS s056,
+      to_regclass('history_transactional') IS NOT NULL AS s059`);
+    if (!co.s056) await c.query(SQL_056);
+    if (SQL_059 && !co.s059) await c.query(SQL_059);
+    if (nap087) await c.query(SQL_087);
     await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
       ($1, NULL, 'market', 'Thị trường thử PL16', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử PL16', 'VN', '{}')`, [MARKET, WARD]);
     return await fn(c);
@@ -209,18 +216,18 @@ test("AC-7 enrich:proposal-assertion bốn dạng → applied=4 missing=2 fail; 
     await c.query("UPDATE enrichment_proposals SET status = 'rejected' WHERE status = 'applied'");
     assert.equal(await chay(c, { write: true, out: im }), 0);
     assert.deepEqual(await dongKiem(), { status: "pass", detail: "applied=0 missing=0" });
-  });
+  }, { nap087: true });
 });
 
 const nCua = async (market, pt, unit, lv) => (await c.query(`SELECT coalesce(sum(n), 0)::int AS n FROM data_level_snapshot
   WHERE snap_date = current_date AND market_id = $1 AND property_type = $2 AND unit = $3 AND data_level = $4`,
 [market, pt, unit, lv])).rows[0].n;
 
+// thang 08/11 (087): tin trong cụm properties vẫn là đơn vị tin — gom cụm không cho bậc, cụm không thành căn.
 async function kiemPhanKhuc(truoc) {
   assert.equal(await nCua("chua-ro", "land", "tin_le", "B0"), truoc + 1, "tin không phường phải ở chua-ro");
-  assert.equal(await nCua(MARKET, "apartment", "can", "B2"), 1, "căn ở phường con của thị trường, loại hình lấy từ căn");
-  assert.equal(await nCua(MARKET, "house", "can", "B2"), 0, "loại hình của căn không lấy từ tin gắn");
-  assert.equal(await nCua(MARKET, "house", "tin_le", "B1"), 1, "tin lẻ đủ trường lõi ở thị trường của phường");
+  assert.equal(await nCua(MARKET, "house", "tin_le", "B1"), 2, "tin trong cụm và tin lẻ đủ trường lõi ở thị trường của phường");
+  assert.equal(await nCua(MARKET, "apartment", "can", "B2"), 0, "cụm properties không thành căn");
 }
 test("AC-5 phân khúc của đơn vị: thị trường = cha market của phường, không phường → chua-ro (kèm chiều đỏ)", async () => {
   await trongGiaoDich(async () => {
@@ -233,13 +240,11 @@ test("AC-5 phân khúc của đơn vị: thị trường = cha market của phư
     await kiemPhanKhuc(truoc);
     const { rows: [t] } = await c.query(`SELECT
       (SELECT sum(n)::int FROM data_level_snapshot WHERE snap_date = current_date) AS snap,
-      (SELECT count(*)::int FROM properties)
-        + (SELECT count(*)::int FROM sale_offers o WHERE o.source IN ('S03', 'S05', 'S06')
-             AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id)) AS dem`);
-    assert.equal(t.snap, t.dem, "tổng ảnh chụp = số căn + số tin lẻ còn sống");
+      (SELECT count(*)::int FROM sale_offers o WHERE o.source IN ('S03', 'S05', 'S06')) AS dem`);
+    assert.equal(t.snap, t.dem, "tổng ảnh chụp = số tin S03/S05/S06 còn sống (chưa căn nào gắn)");
     const lech = SQL_610.replace("LEFT JOIN areas w ON w.id = d.area_id", "JOIN areas w ON w.id = d.area_id");
     assert.notEqual(lech, SQL_610, "bản lệch: 610 không còn LEFT JOIN phường — sửa ca đỏ");
     await c.query(lech);
     await assert.rejects(kiemPhanKhuc(truoc), /tin không phường phải ở chua-ro/);
-  });
+  }, { nap087: true });
 });

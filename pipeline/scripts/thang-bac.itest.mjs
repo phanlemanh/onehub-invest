@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { KHOA } from "../bac-du-lieu.mjs";
+import { chay, KHOA, SQL_610 } from "../bac-du-lieu.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -157,4 +157,86 @@ test("TB-AC-9 checkDb đọc đúng CHECK của data_level_change (kèm chiều 
       "TB-AC-9 vớ CHECK chéo khi nó đứng đầu");
     assert.match([cheo, ...cua][0].def, /huong/, "đối chứng đỏ: bộ chọn dòng đầu ra CHECK chéo");
   });
+});
+
+// ---- E4 · AC-4: 610 đếm tin và căn theo thang 08/11 ----
+const MARKET = `vn-tst-tb-m-${process.pid}`;
+const WARD = `vn-tst-tb-w-${process.pid}`;
+async function thiTruongThu() {
+  await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
+    ($1, NULL, 'market', 'Thị trường thử TB', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử TB', 'VN', '{}')`, [MARKET, WARD]);
+}
+async function cum(...offers) {
+  const { rows: [r] } = await c.query(
+    "INSERT INTO properties (area_id, property_type, verification) VALUES ($1, 'apartment', 'pending') RETURNING id", [WARD]);
+  for (const o of offers) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [r.id, o]);
+}
+const anhChupThu = async (sql = SQL_610) => {
+  await c.query(sql);
+  const { rows } = await c.query(`SELECT unit, data_level, sum(n)::int AS n, array_agg(DISTINCT scale) AS scale
+    FROM data_level_snapshot WHERE snap_date = current_date AND market_id = $1 GROUP BY 1, 2 ORDER BY 1, 2`, [MARKET]);
+  return rows;
+};
+/** Fixture viết trước của TB-AC-4: trả các offer_id để ca hai so tập khoá. */
+async function fixtureAC4({ ganCanThu = true } = {}) {
+  await thiTruongThu();
+  const ds = {
+    s03: await tin({ source: "S03", ward: WARD }),
+    s03Thieu: await tin({ source: "S03", ward: WARD, price: 0 }),
+    s05: await tin({ source: "S05", ward: WARD }),
+    cum: [await tin({ ward: WARD }), await tin({ ward: WARD }), await tin({ ward: WARD })],
+    gan: await tin({ ward: WARD }),
+    rut: [await tin({ source: "S03", ward: WARD, retired: true }), await tin({ source: "S05", ward: WARD, retired: true }),
+      await tin({ ward: WARD, retired: true })],
+  };
+  await cum(...ds.cum);
+  if (ganCanThu) {
+    const { units: [u] } = await khuVaCan(1);
+    ds.unit = u;
+    await ganCan([[ds.gan, u]]);
+  }
+  return ds;
+}
+test("TB-AC-4 610 đếm đơn vị: tin trong cụm ở B1, tin gắn căn chỉ ở căn, scale thang-0811 (kèm chiều đỏ)", async () => {
+  await trongGiaoDich(async () => {
+    await fixtureAC4();
+    const rows = await anhChupThu();
+    assert.deepEqual(rows.map((r) => [r.unit, r.data_level, r.n]), [["can", "B3", 1], ["tin_le", "B0", 1], ["tin_le", "B1", 5]],
+      "TB-AC-4 bảng đơn vị lệch");
+    assert.ok(rows.every((r) => r.scale.length === 1 && r.scale[0] === "thang-0811"), "mọi dòng hôm nay phải mang thang-0811");
+    // chiều đỏ: luật cũ (đơn vị tin = tin không nằm trong cụm) bỏ sót ba tin cụm
+    const lech = SQL_610.replace("FROM data_level_units() d",
+      "FROM (SELECT * FROM data_level_units() x WHERE NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = ANY (x.offer_ids))) d");
+    assert.notEqual(lech, SQL_610, "bản lệch không đổi gì — sửa ca đỏ theo 610");
+    const r2 = await anhChupThu(lech);
+    assert.notDeepEqual(r2.map((r) => [r.unit, r.data_level, r.n]), rows.map((r) => [r.unit, r.data_level, r.n]),
+      "TB-AC-4 tin trong cụm không được đếm");
+  });
+  await trongGiaoDich(async () => {   // 087 nguyên: không fixture gắn căn → không dòng nào của thị trường thử từ B2 trở lên
+    await fixtureAC4({ ganCanThu: false });
+    const rows = await anhChupThu();
+    assert.deepEqual(rows.filter((r) => r.data_level >= "B2"), [], "087 nguyên mà có đơn vị từ B2");
+  });
+});
+
+test("TB-AC-4 chưa áp 087: bac-du-lieu --write bỏ qua có tên, không chụp ảnh, kiểm đề xuất vẫn ghi", async () => {
+  await trongGiaoDich(async () => {
+    const { rows: [co] } = await c.query("SELECT to_regprocedure('data_level_units()') IS NOT NULL AS co");
+    if (co.co) return;   // DB đã áp 087 (máy thu sau triển khai) — ca chỉ có nghĩa trên lược đồ chưa áp
+    const dong = [];
+    const { rows: [t0] } = await c.query("SELECT count(*)::int n FROM data_level_snapshot WHERE snap_date = current_date");
+    assert.equal(await chay(c, { write: true, out: (s) => dong.push(s) }), 0);
+    assert.ok(dong.some((s) => s.includes("chưa áp 087 — bỏ qua")), `không in dòng bỏ qua: ${dong}`);
+    const { rows: [t1] } = await c.query("SELECT count(*)::int n FROM data_level_snapshot WHERE snap_date = current_date");
+    assert.equal(t1.n, t0.n, "chưa áp 087 mà vẫn chụp ảnh");
+    const { rows: k } = await c.query(`SELECT check_name, status, detail FROM dq_check_results
+      WHERE check_name IN ('data-level:distribution', 'enrich:proposal-assertion') ORDER BY id DESC LIMIT 2`);
+    assert.deepEqual(k.map((r) => r.check_name).sort(), ["data-level:distribution", "enrich:proposal-assertion"]);
+    assert.deepEqual(k.find((r) => r.check_name === "data-level:distribution"),
+      { check_name: "data-level:distribution", status: "skip", detail: "chua-ap-087" });
+    // đối chứng: cùng giao dịch, nạp 087 thì chốt mở (co087 đúng) — bỏ qua là vì thiếu 087, không vì lỗi khác
+    await c.query(SQL_087);
+    const { co087 } = await import("../bac-du-lieu.mjs");
+    assert.equal(await co087(c), true);
+  }, { nap087: false });
 });
