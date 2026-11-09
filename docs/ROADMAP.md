@@ -601,6 +601,18 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Số đo nền (audit 09–10/11): trong tin có nhiều bản chữ khác nhau, gộp nhầm 25% [17–35%] (đọc tay), 15% [5–36%] (đồng thuận hai
     model lớn); tách nhầm 2–4%; Haiku gom mù gộp đúng 98% [88–100%]. Hàng mới: GT5–GT8, DV2–DV5; sửa lời GT4 (thành thước, T2), PL18
     (E2 tách rổ lên đầu).
+42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
+    kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
+    **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
+    vẫn đủ; tầng, hướng, view, nội thất là bộ lọc, không chia nhóm. Chấm sẵn ở pipeline (luật 10), app và API chỉ đọc; LLM không quyết điểm.
+    - Q1: nhãn «giá tốt» chỉ từ **cấp dự án trở xuống**; nhóm cấp phường gắn «rẻ trong phường».
+    - Q2: nhóm từ **10 căn** mới gắn nhãn; 5–9 căn chỉ hiện số; dưới 5 không chấm.
+    - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
+    - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
+    - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
+    (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
+    5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
