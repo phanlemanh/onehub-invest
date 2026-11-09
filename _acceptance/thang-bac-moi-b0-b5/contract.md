@@ -5,7 +5,7 @@ slug: thang-bac-moi-b0-b5
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-09-thang-bac-moi-b0-b5-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09T09:17:00Z
