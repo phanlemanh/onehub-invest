@@ -5,7 +5,7 @@ slug: khoa-nguon-nghi-khi-ddl-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-09T09:00:00Z
 design_doc: docs/superpowers/specs/2026-11-09-khoa-nguon-nghi-khi-ddl-sua-design.md
