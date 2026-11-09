@@ -175,10 +175,10 @@ index 0000000..8d7d113
 +}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..0063a51
+index 0000000..251b762
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,600 @@
+@@ -0,0 +1,621 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -473,7 +473,13 @@ index 0000000..0063a51
 +      .map((l) => String(JSON.parse(l)?.ma))
 +      .filter(Boolean)),
 +  );
-+  const mas = yeuCau.mas.filter((m) => !daGoiTrongLuot.has(m)).slice(0, TRAN.maMoiLoi);
++  const mas = luotLon
++    ? yeuCau.mas.filter((m) => !daGoiTrongLuot.has(m)).slice(0, TRAN.maMoiLoi)
++    : yeuCau.mas.slice(0, TRAN.maMoiLoi); // 0911-13(2): lượt THỬ giữ khuôn cũ — 1 lời, không dấu theo lượt
++  // 0911-13(2) sửa 2: đóng lượt khi tập ĐÃ PHỦ đủ mọi mã của yêu cầu — chỉ
++  // đếm mã của chính yêu cầu (dấu lượt có thể lọt mã của ca/req cũ); đánh
++  // dấu leak bằng cách loại mã lạ khỏi daGoi ngay khi đọc.
++  for (const m of [...daGoiTrongLuot]) if (!yeuCau.mas.includes(m)) daGoiTrongLuot.delete(m);
 +  const doiChungYeuCau = yeuCau.doi_chung.slice(0, TRAN.doiChung);
 +  // MỞ LẠI claudedp-0611-6: mã đối chứng sai khuôn (không toàn chữ số) →
 +  // sai-khuon-yeu-cau, KHÔNG đốt lời thử duy nhất
@@ -486,8 +492,18 @@ index 0000000..0063a51
 +  // chứa nó → luôn khong-tim-thay → chặn nhầm khac-khong-gian-ma.
 +  // 0911-13(2): lời sau bỏ CẢ mã đối chứng đã gọi ở lời trước — lời 2 chỉ
 +  // còn mã chưa phủ (tránh gọi lại 2 mã đối chứng đã có kết quả).
-+  const doiChungCon = luotLon || daGoiTrongLuot.size === 0 ? doiChungYeuCau : doiChungYeuCau.filter((m) => !daGoiTrongLuot.has(m));
++  const doiChungCon = daGoiTrongLuot.size === 0 ? doiChungYeuCau : doiChungYeuCau.filter((m) => !daGoiTrongLuot.has(m)); // 0911-13(2): DC đã gọi không gọi lại (mọi chế độ)
 +  const masGoi = [...new Set([...mas, ...doiChungCon])];
++  const phuBan = luotLon
++    ? new Set([...daGoiTrongLuot, ...mas.filter((m) => yeuCau.mas.includes(m))]) // 0911-13(2): chỉ mã người bán, chỉ lượt lớn
++    : new Set(yeuCau.mas); // lượt thử: một lời coi như đã xử trọn yêu cầu
++  if (mas.length === 0 && phuBan.size >= yeuCau.mas.length) {
++    // mọi mã của yêu cầu đã được gọi ở lời trước → đóng lượt, không đốt lời rỗng
++    await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
++    await deps.xoaFile(duong(TEN.daGoiLuot));
++    if (!luotLon) await deps.ghiFile(duong(TEN.daThu), new Date(deps.now().getTime()).toISOString());
++    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++  }
 +
 +  // Cách lời trước ≥60 giây kể cả qua khởi động lại listener — mốc đĩa (AC-1).
 +  const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
@@ -505,9 +521,8 @@ index 0000000..0063a51
 +  // GHI mốc TRƯỚC lời gọi — lời treo vẫn tính là một lời (AC-1 tính lời, không thử lại).
 +  await deps.ghiFile(duong(TEN.moc60s), String(hienTai));
 +  await deps.noiFile(duong(TEN.mocLoi30p), JSON.stringify({ atMs: hienTai }) + "\n"); // lần 9
-+  await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n"); // 0911-13(2)
 +  await deps.ghiFile(duong(TEN.demNgay(ngay)), String(demNgay + 1));
-+  if (!luotLon && masGoi.length > 0 && daGoiTrongLuot.size + masGoi.length >= yeuCau.mas.length) {
++  if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) { // 0911-13(2): đủ là ghi dấu đã-thử (kể cả lượt lớn — yêu cầu đã đóng)
 +    await deps.ghiFile(duong(TEN.daThu), new Date(hienTai).toISOString());
 +  }
 +
@@ -550,7 +565,12 @@ index 0000000..0063a51
 +  // Tệp yêu cầu xử MỘT lần — đổi tên đã-xử (AC-3). 0911-13(2): chỉ đóng lượt
 +  // khi ĐÃ GỌI ĐỦ mọi mã của yêu cầu (nhiều lời ≥60s); còn thiếu → giữ tệp
 +  // yêu cầu + dấu lượt để tick kế gọi nốt (không đốt daThu).
-+  if (masGoi.length > 0 && daGoiTrongLuot.size + masGoi.length >= yeuCau.mas.length) {
++  // 0911-13(2)/E2: dấu mã đã gọi ghi SAU lời thành công — lời gây lỗi KHÔNG
++  // đánh đã-gọi; ghi TRƯỚC đóng lượt (đóng lượt xoá dấu sau khi đủ).
++  if (luotLon) {
++    await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n");
++  }
++  if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) {
 +    await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
 +    await deps.xoaFile(duong(TEN.daGoiLuot));
 +  }
@@ -565,6 +585,7 @@ index 0000000..0063a51
 +    lay_luc: new Date(hienTai).toISOString(),
 +  }));
 +  await guiCollector(deps, dong);
++
 +
 +  return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung };
 +}
@@ -781,10 +802,10 @@ index 0000000..0063a51
 +}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..b2d366c
+index 0000000..85f9ccc
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,760 @@
+@@ -0,0 +1,761 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -1147,6 +1168,7 @@ index 0000000..b2d366c
 +    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
 +    const mas = Array.from({ length: 21 }, (_, i) => String(300 + i));
 +    await ghiYeuCau(fs, mas, mas.slice(0, 2));
++    await fs.ghiFile("/f/luot-lon.txt", "bat"); // nhiều lời chỉ ở LƯỢT LỚN (E3 giữ khuôn thử)
 +    const v1 = await chayVong(deps);
 +    expect(v1.loi_goi).toBe(1);
 +    expect(api.voi[0]).toBe(20, "lời 1 đủ 20");
