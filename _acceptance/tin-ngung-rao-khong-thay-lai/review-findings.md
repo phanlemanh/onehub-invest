@@ -1,59 +1,26 @@
 ## Trong hợp đồng
 
-(không có)
-
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Ca TNR-AC-8 «chưa áp» buộc DB không có 085, nên executor tnr_db sẽ đỏ mãi sau khi áp 085 lên máy thu**
-  Người dùng thấy gì: Sau khi áp thay đổi này lên máy thu, một ca kiểm tra sẽ báo đỏ dù tính năng vẫn đúng, nên các lần kiểm lại sau đó có thể bị báo lỗi nhầm.
-  Căn cứ: Chỉ làm bộ kiểm tra báo nhầm, không ảnh hưởng dữ liệu hay người dùng, và người vận hành biết lý do nên không gây hại thật.
-  file: `pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs`
-  severity: medium
-  Đề xuất: known-limits
+## Chưa phân loại (triage-failed)
 
-- **Ca TNR-AC-8 so với `origin/main`, nên sau khi gộp thì ca này chỉ còn so lệnh với chính nó**
-  Người dùng thấy gì: Sau khi gộp, phép so sánh này không còn phát hiện được việc dòng thống kê cũ bị đổi nhầm, và môi trường thiếu bản nhánh chính sẽ báo lỗi.
-  Căn cứ: Chỉ làm yếu một lưới bảo vệ về dòng in ra của lệnh, người dùng cuối không thấy gì và có thể sửa sau với chi phí thấp.
-  file: `pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs`
+phân loại phạm vi không chạy được — không lỗi nào bị máy tự sửa, người xem lại toàn bộ
+
+- **_Avoid_ của «Ngừng rao»: «tin hết rao» không được thước ON12-AC-1 quét vì cùng mục có ngoặc**
+  file: `CONTEXT.md:229`
   severity: low
-  Đề xuất: known-limits
+  source: conventions
+  detail: Round này chỉ CONTEXT.md đổi (commit 3e19f64c đổi «hết hạn» thành «tin hết hạn»). Đổi như vậy là đúng: «hết hạn» trần làm đỏ các chuỗi hợp lệ (mã QR hết hạn, chế độ Bùng hết hạn…) trong phạm vi quét của ON12-AC-1. Nhưng dòng `_Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)` được tách bằng dấu phẩy, nên mục cuối là `tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)`. `laTu` trong scripts/lib/ops-nhan.mjs:5 bỏ mọi mục có ngoặc hoặc «», nên mục này bị coi là lời dặn chứ không phải từ để quét. Tôi đã chạy avoidTerms trên CONTEXT.md: khối «Ngừng rao» chỉ ra ba từ là 'tin hết hạn', 'expired', 'tin chết'. «tin hết rao» không bao giờ bị chặn trên cổng Ops, dù văn bản ghi rõ là từ phải tránh. Hiện app/src chưa có chuỗi nào dùng «hết rao», nên chưa có lỗi thật; đây là lỗ hổng của thước. Mẫu «từ (chú thích)» đã có ở nhiều dòng khác (216, 234…), nên đây không phải vi phạm mới, chỉ là chỗ khác với ý muốn. Cách sửa gợi ý: tách thành `tin hết rao, ...` và đặt lời dặn «(dùng «ngừng rao»)» ở mục riêng hoặc sau dấu chấm phẩy. Phần «rút (là nghỉ bản ghi)» bị bỏ khỏi thước là hợp lý, vì «rút» là thuật ngữ hợp lệ cho việc nghỉ bản ghi. Các tên trong dòng Code (`ghi_khong_thay_lai`, `ngung_rao_sau_ngay`, rule_id `khong-thay-lai:<offer_id>`, inferred/e1_rule) khớp với db/migrations/085_ngung_rao_khong_thay_lai.sql.
 
-- **Chú thích của executor tnr_pl19 bị lặp, còn sót đoạn mô tả cũ**
-  Người dùng thấy gì: Một dòng chú thích trong cấu hình kiểm tra có đoạn mô tả cũ gây khó hiểu cho người đọc; người dùng không bị ảnh hưởng.
-  Căn cứ: Chỉ là lỗi trình bày nội bộ, không ảnh hưởng dữ liệu hay hành vi nên không đáng mở việc riêng.
-  file: `_acceptance/config.yaml`
+- **Bộ quét ON12 không bao giờ quét «tin hết rao» vì nó nằm chung đoạn phẩy với chú thích trong ngoặc**
+  file: `CONTEXT.md:229`
   severity: low
-  Đề xuất: wont-fix
+  source: bugs
+  detail: Dòng `_Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)` bị `avoidTerms` (scripts/lib/ops-nhan.mjs:16) tách theo dấu phẩy. Đoạn cuối là `tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)`. Đoạn này có `(`/`«` nên hàm `laTu` (dòng 5) loại nó và coi là lời dặn. Kết quả: chỉ «tin hết hạn», «expired», «tin chết» được quét. «tin hết rao» bị bỏ qua mà không báo gì, nên ON12-AC-1 vẫn xanh dù chữ này có xuất hiện trên chuỗi hiển thị của Ops. Lần sửa 3e19f64c chỉ đổi «hết hạn» thành «tin hết hạn» (đã chạy app/tests/ops-nhan-theo-context.test.tsx, 26/26 pass). Lần sửa đó không đụng tới lỗ này. Cách sửa: tách ra thành `..., tin chết, tin hết rao, rút` và chuyển phần chú thích ra ngoài danh sách phẩy. Nếu «rút» quá rộng để quét thì chỉ giữ «tin hết rao».
 
-- **Tin đang ngừng rao mà bị nghỉ (rút bản ghi) thì bật về «Đang chào» và sinh dòng lịch sử «Chào lại» sai**
-  Người dùng thấy gì: Một tin đã được đánh dấu ngừng rao rồi bị rút khỏi hệ thống có thể hiện lại là đang chào, kèm dòng lịch sử «chào lại» sai.
-  Căn cứ: Gây lịch sử và trạng thái sai cho một số tin nhưng không mất dữ liệu; trường hợp hiếm và hiện chưa tin nào ngừng rao ở N=21, nên xử lý ở việc riêng.
-  file: `db/migrations/085_ngung_rao_khong_thay_lai.sql`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Hình dạng 3 (quan hệ suy biến): TNR-AC-6 so trạng thái «như 059» với mốc sinh ra từ chính bang_chung_chao của 085**
-  Người dùng thấy gì: Phép kiểm tra rằng tin đã nghỉ giữ nguyên trạng thái có thể không bắt được lỗi nếu phần ghi bằng chứng bị làm hỏng.
-  Căn cứ: Chỉ làm yếu lưới kiểm tra, người dùng chưa gặp lỗi thật; có thể củng cố sau mà không ảnh hưởng dữ liệu.
-  file: `pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (âm tính một mình, chiều đỏ không chạm phép đo): TNR-AC-10 bằng nhau 0=0 vẫn xanh, chiều đỏ chỉ thử hàm so**
-  Người dùng thấy gì: Trên một cơ sở dữ liệu không có tin nào đủ điều kiện, phép kiểm số liệu vẫn báo đạt dù chưa đo được gì thật.
-  Căn cứ: Chỉ làm giảm sức thuyết phục của phép kiểm, không sai dữ liệu; đo trên dữ liệu máy thu thật sẽ có số khác 0.
-  file: `pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (âm tính một mình, không ghim chiều đỏ): ô F của TNR-AC-1 và ô Z của TNR-AC-2**
-  Người dùng thấy gì: Hai tình huống kiểm tra (tin không có dòng quét, tin nhóm không nối được) chưa chắc bắt được lỗi nếu có người sửa sai luật.
-  Căn cứ: Chỉ là lưới kiểm tra hơi lỏng cho hai ca hiếm, không ảnh hưởng người dùng hay dữ liệu hiện tại.
-  file: `pipeline/scripts/trang-thai-chao-ngung-rao.itest.mjs`
-  severity: low
-  Đề xuất: known-limits
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 
