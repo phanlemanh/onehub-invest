@@ -4775,6 +4775,82 @@
       "phu": [
         "DA14"
       ]
+    },
+    {
+      "ma": "DF6",
+      "slug": "bai-nhan-tru-bai-chi-anh",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "DF1",
+        "PL28"
+      ],
+      "phu": [
+        "DF6"
+      ],
+      "dot": "s03-ket-0911",
+      "nhom": "df-dong-chay",
+      "cau_giao": "Người vận hành mở /ops/data-flow và thấy chặng «Bài nhận → Đọc được» của S03 tính trên bài có chữ: tin nhắn chỉ có ảnh đã ghép vào tin không còn nằm trong mẫu số, và bài Yêu cầu mua/thuê là một nhánh riêng trên Sankey",
+      "bat_khi": "Số bài chỉ-ảnh bị bỏ khỏi mẫu số khớp đếm SQL độc lập; tổng các nhánh bằng số bài nhận; S06 và S05 không đổi số; nhánh Yêu cầu khớp số bài Yêu cầu",
+      "vi_sao": "Đo 09/11 (snapshot 22:42Z 08/11): 43.828/110.089 bài nhận S03 (39,8%) chỉ là tin nhắn URL ảnh, bị đếm vào mẫu số nên tỉ lệ đọc được hiện 43%; bỏ chúng thì 71,5%. 11.360 bài Yêu cầu bị loại đúng nhưng hiện như rơi.",
+      "vung": [
+        "pipeline/sql/600_data_flow.sql",
+        "app/src/lib/data-flow-queries.ts",
+        "app/src/components/ops/data-flow/**",
+        "app/tests/data-flow*"
+      ],
+      "ghi_chu": "Mạnh duyệt 09/11 qua phiên DA truy kẹt S03. Bài chỉ-ảnh chưa ghép vào tin (trong cửa sổ PL28, sau này GT0) vẫn tính là rơi, ghi lý do «ảnh chưa ghép». Đi trước DF7 vì cùng tệp 600."
+    },
+    {
+      "ma": "DF7",
+      "slug": "phuong-that-trong-truong-loi",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "DF6"
+      ],
+      "phu": [
+        "DF7"
+      ],
+      "dot": "s03-ket-0911",
+      "nhom": "df-dong-chay",
+      "cau_giao": "Kiểm «phường» và «trường lõi» trên đồng chảy và bậc dữ liệu chỉ nhận khu cấp phường; tin chỉ gắn tới tỉnh hay thành phố không còn được tính là có phường",
+      "bat_khi": "Số tin S03 đủ lõi sau đổi khớp đếm SQL độc lập (đo 09/11 là 34); S06 không đổi số; nhãn trên /ops/data-flow ghi rõ lý do «chỉ tới tỉnh»",
+      "vi_sao": "Đo 09/11: 4.825/5.103 tin S03 chỉ có khu cấp tỉnh/thành, phường thật 56 (1,1%), nhưng kiểm hiện chỉ xét area_id có giá trị nên đếm 1.673 tin đủ lõi; tính nghiêm chỉ 34.",
+      "vung": [
+        "pipeline/sql/600_data_flow.sql",
+        "pipeline/sql/610_data_level.sql",
+        "app/src/lib/data-level.ts",
+        "app/tests/data-flow*"
+      ],
+      "ghi_chu": "Mạnh duyệt 09/11, biết trước tỉ lệ đủ lõi S03 sẽ tụt từ 32,8% về khoảng 1%. Làm ngay sau thang-bac-moi-b0-b5 (dãy N1, cùng 610 và data-level.ts). Gốc dữ liệu được gỡ dần ở DA9 phuong-tu-du-an."
+    },
+    {
+      "ma": "NH2",
+      "slug": "media-het-han",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "NH1"
+      ],
+      "phu": [
+        "NH2"
+      ],
+      "dot": "s03-ket-0911",
+      "nhom": "tv-xem-tin",
+      "cau_giao": "Ảnh tin không tải được (đường dẫn hết hạn, không có tệp) được đánh dấu, và Ops, Invest không vẽ ô ảnh vỡ cho các ảnh đó",
+      "bat_khi": "Số ảnh đánh dấu khớp đếm SQL độc lập (ảnh không có tệp); tin chỉ có ảnh hết hạn hiện như tin không ảnh; ảnh có tệp không đổi",
+      "vi_sao": "Đo 09/11: 5.933 dòng media dạng đường dẫn zpc, chỉ 141 có tệp; 136 tin S03 chỉ có loại ảnh này nên hiện ảnh vỡ. ZCode trả lời không tải lại được (ZC9 hạ ưu tiên).",
+      "vung": [
+        "pipeline/sql",
+        "app/src/lib/ops/**",
+        "app/src/components/ops/**",
+        "app/src/components/listing/**"
+      ],
+      "ghi_chu": "Mạnh duyệt 09/11 qua phiên DA truy kẹt S03. Cần cột cờ mới thì lên T3 và xin số migration ở giám sát. Không tải lại ảnh (làn ZCode)."
     }
   ],
   "chan_troi": [

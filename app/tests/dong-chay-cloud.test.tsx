@@ -355,13 +355,16 @@ describe("DC-AC-1 bảng tính sẵn", () => {
 
 // ---------- AC-2: số khớp DF0 ----------
 const SRC = (o: Partial<import("../src/lib/data-flow-queries").SourceFlow> & { source: string }) => ({
-  received: 0, readable: 0, offers: 0, linked: 0, testRejected: 0, withWard: 0, withType: 0, withPriceArea: 0, complete: 0,
+  // Mức nhận diện (gan-can-dinh-danh-duy-nhat): o1 (S03) và c1 (S06) cùng cụm 1 → mỗi nguồn một tin Gom cụm; Định vị,
+  // Gắn căn 0 vì chưa có bảng nối danh bạ; fixture không ghi toà, số nhà nên chờ khớp 0.
+  received: 0, readable: 0, offers: 0, clustered: 0, located: 0, unitLinked: 0, locatedPending: 0, uniqueIdPending: 0,
+  deepest: { unitLinked: 0, located: 0, clustered: 0 }, testRejected: 0, withWard: 0, withType: 0, withPriceArea: 0, complete: 0,
   highConfidence: 0, latestAt: null as string | null, approx: o.source === "S06", ...o,
 })
 const LATEST_S03 = vn("2026-10-25T09:00:00")
 const S05 = SRC({ source: "S05", received: 2, readable: 1, offers: 1, latestAt: LATEST_S03 })
-const S06 = SRC({ source: "S06", received: 4, readable: 3, offers: 3, linked: 1, withWard: 3, withType: 3, withPriceArea: 3, complete: 3, latestAt: vn(IN) })
-const S03_ALL = SRC({ source: "S03", received: 6, readable: 4, offers: 2, linked: 1, testRejected: 3, withWard: 1, withType: 1, withPriceArea: 1, complete: 1, latestAt: LATEST_S03 })
+const S06 = SRC({ source: "S06", received: 4, readable: 3, offers: 3, clustered: 1, deepest: { unitLinked: 0, located: 0, clustered: 1 }, withWard: 3, withType: 3, withPriceArea: 3, complete: 3, latestAt: vn(IN) })
+const S03_ALL = SRC({ source: "S03", received: 6, readable: 4, offers: 2, clustered: 1, deepest: { unitLinked: 0, located: 0, clustered: 1 }, testRejected: 3, withWard: 1, withType: 1, withPriceArea: 1, complete: 1, latestAt: LATEST_S03 })
 const DAYS = (
   [
     ["2026-10-10", "S03", 1, 1, 1, 0],
@@ -372,7 +375,7 @@ const DAYS = (
     ["2026-10-25", "S03", 1, 0, 0, 0],
     ["2026-10-25", "S05", 1, 0, 0, 0],
   ] as const
-).map(([day, source, received, readable, offers, linked]) => ({ day, source, received, readable, offers, linked }))
+).map(([day, source, received, readable, offers]) => ({ day, source, received, readable, offers, unitLinked: 0 }))
 const G = (group: string, source: string, received: number, readable: number, offers: number, latestAt: string) => ({ group, source, received, readable, offers, latestAt })
 const GROUPS_ALL = [G("Nhóm A", "S03", 4, 3, 2, vn("2026-10-24T10:00:00")), G("Nhóm B", "S03", 2, 1, 1, LATEST_S03), G("Nhóm FB", "S05", 2, 1, 1, LATEST_S03)]
 /** Bảng mong đợi viết trước cho fixture DF0 (cùng đáp án DF-AC-2), mốc NOW = 26/10 12:00 VN. */
@@ -405,8 +408,14 @@ const WANT: Record<W, FF> = {
 /** So `got` với bảng mong đợi — mỗi lệch một dòng «<chỗ> <được> ≠ <mong>»; mốc giờ so theo thời điểm. */
 function diffFacts(got: FF, want: FF): string[] {
   const out: string[] = []
+  // Ô đối tượng (deepest của gan-can-dinh-danh-duy-nhat) so theo khoá đã sắp — jsonb không giữ thứ tự khoá.
+  const chuan = (v: unknown) => JSON.stringify(Object.fromEntries(Object.entries(v as object).sort(([a], [b]) => a.localeCompare(b))))
   const same = (a: unknown, b: unknown, k: string) =>
-    k === "latestAt" && typeof a === "string" && typeof b === "string" && b.includes("T") ? Date.parse(a) === Date.parse(b) : a === b
+    k === "latestAt" && typeof a === "string" && typeof b === "string" && b.includes("T")
+      ? Date.parse(a) === Date.parse(b)
+      : a && b && typeof a === "object" && typeof b === "object"
+        ? chuan(a) === chuan(b)
+        : a === b
   const row = (where: string, g: Record<string, unknown> | undefined, w: Record<string, unknown>) => {
     if (!g) return void out.push(`${where} thiếu`)
     for (const k of new Set([...Object.keys(w), ...Object.keys(g)])) if (!same(g[k], w[k], k)) out.push(`${where} ${k} ${g[k]} ≠ ${w[k]}`)
@@ -502,8 +511,9 @@ describe("DC-AC-3 chỉ đọc bảng", () => {
 // ---------- AC-4: khối dataFlow ----------
 const KEYS: Record<string, string[]> = {
   "": ["sources", "days", "groups", "shortStay", "mix", "enrichPending"],
-  "sources[]": ["source", "received", "readable", "offers", "linked", "testRejected", "withWard", "withType", "withPriceArea", "complete", "highConfidence", "latestAt", "approx"],
-  "days[]": ["day", "source", "received", "readable", "offers", "linked"],
+  "sources[]": ["source", "received", "readable", "offers", "clustered", "located", "unitLinked", "locatedPending", "uniqueIdPending", "deepest", "testRejected", "withWard", "withType", "withPriceArea", "complete", "highConfidence", "latestAt", "approx"],
+  "sources[].deepest": ["unitLinked", "located", "clustered"],
+  "days[]": ["day", "source", "received", "readable", "offers", "unitLinked"],
   "groups[]": ["group", "source", "received", "readable", "offers", "latestAt"],
   shortStay: ["received", "stored", "withWard", "latestAt"],
   mix: ["sale", "rentLt", "shortStay"],
@@ -605,13 +615,13 @@ function cloudPageProblems(root: Element, flow: DF, block: FF): string[] {
     const cols = [...(table?.querySelectorAll("thead th") ?? [])].map((th) => th.getAttribute("data-col-id"))
     const tr = [...(table?.querySelectorAll("tbody tr") ?? [])].find((r) => txt(r.querySelector("td")).includes(s.source))
     const cell = (col: string) => txt(tr?.querySelectorAll("td")[cols.indexOf(col)]?.querySelector("span.font-medium"))
-    for (const [k, col, v] of [["Bài nhận", "received", s.received], ["Đọc được", "readable", s.readable], ["Tin rao", "offers", s.offers], ["Đủ trường lõi", "complete", s.complete], ["Gắn căn", "linked", s.linked]] as const)
+    for (const [k, col, v] of [["Bài nhận", "received", s.received], ["Đọc được", "readable", s.readable], ["Tin rao", "offers", s.offers], ["Đủ trường lõi", "complete", s.complete], ["Gom cụm", "clustered", s.clustered], ["Gắn căn", "unitLinked", s.unitLinked]] as const)
       if (cell(col) !== String(v)) out.push(`hàng ${s.source} ô ${k} «${cell(col)}» ≠ ${v}`)
   }
   const tiles = new Map<string, string>()
   for (const el of root.querySelectorAll(".text-muted-foreground.text-xs.font-medium")) tiles.set(txt(el).trim(), txt(el.nextElementSibling?.querySelector("span")))
-  for (const [label, key] of [["Bài nhận", "received"], ["Đọc được", "readable"], ["Tin rao mới", "offers"], ["Gắn căn", "linked"]] as const) {
-    const sum = block.sources.reduce((a, s) => a + s[key], 0)
+  for (const [label, key] of [["Bài nhận", "received"], ["Đọc được", "readable"], ["Tin rao mới", "offers"], ["Gắn căn", "unitLinked"]] as const) {
+    const sum = block.sources.reduce((a, s) => a + (s[key] ?? 0), 0)
     if (tiles.get(label) !== String(sum)) out.push(`ô «${label}» ${tiles.get(label)} ≠ ${sum}`)
   }
   for (const k of ["days", "groups", "sources"] as const)
@@ -643,7 +653,7 @@ async function trendPoints(root: Element, n: number) {
     const t = txt(svg.closest(".recharts-wrapper")?.querySelector(".recharts-tooltip-wrapper")).replace(/\s/g, "")
     const m = t.match(/^(\d+\/\d+)/)
     const v = (label: string) => Number(t.match(new RegExp(`${label}([\\d.]+)`))?.[1]?.replace(/\./g, "") ?? NaN)
-    return { day: m?.[1] ?? "", received: v("Bàinhận"), readable: v("Đọcđược"), offers: v("Tinraomới"), linked: v("Gắncăn") }
+    return { day: m?.[1] ?? "", received: v("Bàinhận"), readable: v("Đọcđược"), offers: v("Tinraomới"), unitLinked: v("Gắncăn") }
   }
   await act(() => svg.focus())
   const out = [read()]
@@ -659,8 +669,8 @@ function wantPoints(days: FF["days"], n: number) {
   return Array.from({ length: n }, (_, i) => {
     const iso = new Date(end - (n - 1 - i) * 86_400_000).toISOString().slice(0, 10)
     const on = days.filter((d) => d.day === iso)
-    const sum = (k: "received" | "readable" | "offers" | "linked") => on.reduce((a, d) => a + d[k], 0)
-    return { day: `${Number(iso.slice(8, 10))}/${Number(iso.slice(5, 7))}`, received: sum("received"), readable: sum("readable"), offers: sum("offers"), linked: sum("linked") }
+    const sum = (k: "received" | "readable" | "offers" | "unitLinked") => on.reduce((a, d) => a + d[k], 0)
+    return { day: `${Number(iso.slice(8, 10))}/${Number(iso.slice(5, 7))}`, received: sum("received"), readable: sum("readable"), offers: sum("offers"), unitLinked: sum("unitLinked") }
   })
 }
 /** Lưới «Theo nhóm thu»: số từng nhóm (Bài nhận · Đọc được · Tin rao) trên DOM so với khối. */
@@ -706,7 +716,7 @@ describe("DC-AC-6 route trên cloud", () => {
       const n = chartDaysOf(w)
       const got = await trendPoints(root, n)
       const want = wantPoints(blocks[w].days, n)
-      console.log(`# DC-AC-6 ${w} điểm ngày: ${got.filter((p) => p.received).map((p) => `${p.day}=${p.received}/${p.readable}/${p.offers}/${p.linked}`).join(" · ")}`)
+      console.log(`# DC-AC-6 ${w} điểm ngày: ${got.filter((p) => p.received).map((p) => `${p.day}=${p.received}/${p.readable}/${p.offers}/${p.unitLinked}`).join(" · ")}`)
       assert.deepEqual(got, want, `cửa sổ ${w}: điểm ngày trên DOM ≠ khối`)
       assert.ok(want.some((p) => p.received > 0), "đối chứng: cửa sổ phải có ngày có số")
     }
