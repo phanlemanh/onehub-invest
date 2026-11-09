@@ -39,6 +39,9 @@ const TEN_KIEM: Record<string, string> = {
   "the-duyet:anh-ops": "Thẻ ghép căn: bên không có ảnh cho vai Vận hành",
   "the-duyet:anh-admin": "Thẻ ghép căn: bên không có ảnh nào",
   "the-duyet:do-day": "Thẻ ghép căn: độ đầy trường",
+  // pipeline/do-lam-giau.mjs (DO3) — có khối «Làm giàu» riêng, bảng chung loại do3-* (dq-checks.ts)
+  "do3-thay-doi": "Làm giàu: thay đổi theo ngày",
+  "do3-kiem-nguoc": "Làm giàu: kiểm ngược tuần",
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",

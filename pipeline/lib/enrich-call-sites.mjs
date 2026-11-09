@@ -11,6 +11,7 @@ export const CALL_SITES = [
   { file: "agent/src/enrich/doc-toan-bo.ts", fn: "apply_enrichment", vai: "may" },
   { file: "agent/scripts/enrich-revert.ts", fn: "revert_enrichment", vai: "nguoi" },
   { file: "pipeline/scripts/idem-063.mjs", fn: "apply_enrichment", vai: "may" },   // phép đo 063 trên DB thử, ROLLBACK
+  { file: "pipeline/scripts/do3-dung-thu.mjs", fn: "apply_enrichment", vai: "nguoi" },   // DO3: dữ liệu mẫu trên DB thử, người ghi đè loại hình nhóm
 ];
 
 const FN = /\b(apply_enrichment|revert_enrichment|decide_enrichment_review)\s*\(/g;

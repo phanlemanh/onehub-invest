@@ -107,6 +107,8 @@ export const SCAN_FILES = [
   "src/components/ops/quality/do-hang-ngay-bang.tsx",
   "src/components/ops/quality/do-hang-ngay.tsx",
   "src/components/ops/quality/dq-checks-table.tsx",
+  "src/components/ops/quality/lam-giau-bang.tsx",
+  "src/components/ops/quality/lam-giau.tsx",
   "src/components/ops/raw-label.tsx",
   "src/components/ops/review-card.tsx",
   "src/components/ops/review-card-nguoi.tsx",
