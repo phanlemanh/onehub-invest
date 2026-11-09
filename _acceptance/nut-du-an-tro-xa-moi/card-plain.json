@@ -1,0 +1,33 @@
+{
+  "feature_plain": "Mỗi dự án trong danh bạ chỉ đúng phường, xã hiện hành sau sắp xếp 2025, để toà và tin kế thừa phường từ dự án không bị gán nhầm chỗ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có một tệp ghi xã cũ của từng dự án trong 20 dự án, mỗi xã kèm nguồn có tên và đường dẫn."},
+    {"id": "AC-2", "p": "Sẽ đổi xã cũ sang xã mới bằng bảng chuyển đổi chính thức, tra theo mã nên hai xã trùng tên không lẫn nhau."},
+    {"id": "AC-3", "p": "Sẽ có lệnh ghi phường mới cho cả 20 dự án, in bảng cũ → mới; chạy lại không đổi gì; chạy thử thì không ghi."},
+    {"id": "AC-4", "p": "Sẽ dừng trước khi ghi nếu tệp sai một chỗ, thiếu hay thừa dự án, hoặc đích là máy thu mà chưa có cờ cho phép."},
+    {"id": "AC-5", "p": "Sẽ chỉ Vinhomes Grand Park về phường Long Bình theo nguồn, và gỡ ba dự án đang trỏ nhầm sang phường cùng tên ở nơi khác."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên toà, trục, căn và mã căn khi dựng lại danh bạ; phường cũ của toà bị rút, toà nhận phường mới."},
+    {"id": "AC-7", "p": "Sẽ đo trên bản chép 20 dự án của máy thu: trước có mã lạc, sau không còn, máy thu không bị ghi."},
+    {"id": "AC-8", "p": "Sẽ ghi lệnh mới vào tài liệu pipeline và ROADMAP; bộ test pipeline xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không tự áp lên máy thu và cloud trong vòng — đó là bước triển khai sau gộp, cần anh nói (Hỏi-1)."},
+    {"id": "OOS-2", "p": "Không sửa tỉnh ghi sai của Ecopark, Ocean Park 2, 3: đổi tỉnh làm đổi mã căn, để hàng riêng."},
+    {"id": "OOS-3", "p": "Không rút hay đổi tên ba dự án gieo không tìm được thật (The Rainbow, Sun Grand Park 11, Saluto) — việc của DA19."},
+    {"id": "OOS-4", "p": "Không đưa vào chạy đêm và không đụng dự án mới do PX2, DA7 tạo."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Năm kiểu mã sai đo trên máy thu 10/11 (không còn, trùng tên nơi khác, sai phường, chỉ tới tỉnh, đúng) đều có tiêu chí đo — AC-3, AC-5, AC-7."},
+    {"i": 1, "p": "Bốn đường đổi mã (xã cũ nguyên, xã cũ bị chia, nhiều xã cũ, chỉ biết tỉnh) đều có ô đo riêng — AC-2."},
+    {"i": 2, "p": "Mọi lỗi đầu vào và đích sai đều có ô đỏ gọi tên — AC-2, AC-4."},
+    {"i": 3, "p": "Bên dùng mã trong vòng là phường của toà và mã căn — AC-6; DA9, PX2, DA7 đọc mã đã sửa ở hàng sau."},
+    {"i": 4, "p": "Đo trên DB thử và bản chép máy thu; máy thu và cloud ở bước áp sau gộp — AC-3, AC-7."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép so «bằng tệp» tự khép vòng: gõ nhầm mã xã cũ vẫn xanh. Đã thêm bảng vàng 15 dự án → tên phường viết sẵn trong test."},
+    {"i": 1, "p": "Ngưỡng «cùng số toà, 0 mã căn đổi» chỉ đo trên dữ liệu mẫu. Đã dời phép đo trên 69 toà thật vào bước áp sau gộp, có lệnh cụ thể (Hỏi-1)."},
+    {"i": 2, "p": "Dự án chuyển từ một phường sang hai phường vẫn giữ phường cũ cho toà. Đã sửa luật rút và thêm ô đo."},
+    {"i": 3, "p": "Phép kiểm «không kết nối tới máy thu» đo lỏng. Đã đổi sang cổng giả đếm kết nối, không trỏ máy thu."},
+    {"i": 4, "p": "Chọn «tệp + lệnh» thay migration bị ghi là máy quyết mà có giá. Đã đổi thành câu hỏi cho anh (Hỏi-3)."}
+  ]
+}

@@ -1,0 +1,67 @@
+schema_version: 1
+feature_slug: nut-du-an-tro-xa-moi
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/data/xa-nut-du-an.json, pipeline/lib/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DV1-AC-1» đọc tệp thật pipeline/data/xa-nut-du-an.json và tập 20 slug nút dự án rút từ chính các câu INSERT asset_nodes node_type 'project' của db/migrations/026_asset_nodes.sql (không gõ tay danh sách): tập khoá của tệp bằng đúng tập đó (20 assert có mặt + 1 assert không slug lạ); với mỗi mục kiemMucXa trả rỗng — cap xa có ≥1 xã cũ, old_code khớp /^\\d{5}$/, nguon.ten không rỗng, nguon.url mở đầu http(s)://; có chon thì có nguon_chon cùng khuôn; cap tinh có tinh và ly_do. Chiều đỏ ghim trên bản sao trong bộ nhớ của CHÍNH tệp thật, mỗi phá một ca: xoá một mục → «DV1-AC-1 thiếu nút <slug>»; thêm slug lạ → «DV1-AC-1 slug lạ <slug>»; xoá nguon.url một xã cũ → «DV1-AC-1 <slug>: thieu-nguon»; xoá nguon_chon khi có chon → «DV1-AC-1 <slug>: thieu-nguon»; cap tinh thiếu ly_do → «DV1-AC-1 <slug>: thieu-ly-do»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DV1-AC-2» gọi xaMoiCuaNut trên bảng bí danh và bảng mã xã tổng hợp trong bộ nhớ, ma trận viết trước, một assert mỗi ô: xã cũ không tách → đúng targets; xã cũ tách + chon ⊂ đích → đúng chon; nhiều xã cũ → hợp, sắp xếp, không trùng; cap tinh → [tinh]; và sáu ô lỗi, mỗi ô đúng một mã: thieu-nguon, xa-cu-khong-co, can-chon-xa (tách mà không chon), chon-ngoai-dich, ma-khong-co (đích không có trong bảng mã xã), tinh-khong-co. Ô bẫy cùng tên: hai xã cũ cùng tên «An Phú» khác old_code (27091 Thủ Đức → 27097, 25975 Thuận An → 25975) ra hai area_id khác nhau. Mỗi ô đỏ có cặp ô lành cùng mục (đối chứng dương) để chứng mã lỗi do đúng phần bị phá."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dv1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/data/xa-nut-du-an.json, pipeline/scripts/danh-ba-vat-the-xa.itest.mjs]
+    expected: "exit 0; ca «DV1-AC-3» trên DB thử oneinvest_dbv_xa_<pid> dựng bằng db-thu-dbv.mjs (cùng đường CI) rồi chạy nạp PX1 (nap-dvhc, dữ liệu pipeline/data/dvhc): chạy tiến trình con thật `node pipeline/danh-ba-vat-the.mjs --sua-xa --db <DB thử>` → thoát 0; đọc lại asset_nodes project bằng SQL độc lập: 20/20 nút có area_ids bằng đúng kết quả xaMoiCuaNut của tệp thật (so từng nút, 20 assert), mọi mã có trong areas, nút cap xa chỉ mang mã có admin_code và region_type submarket, nút cap tinh mang đúng mã region_type market; stdout có một dòng mỗi nút đổi dạng «<slug> · <cũ> → <mới>». Ca «DV1-AC-3 vàng»: bảng viết trước trong test 15 dòng slug → tên phường mới (chép từ thiết kế §3, không tính từ tệp), mỗi nút cấp xã assert areas.name của từng mã suy ra bằng tên trong bảng (15 assert); chiều đỏ ghim: sửa một old_code của vinhomes-smart-city trong bản sao trong bộ nhớ sang mã xã cũ liền kề có thật thì ca đỏ với «DV1-AC-3 vinhomes-smart-city lệch bảng vàng». Lần chạy hai: tong_ket doi = 0, area_ids không đổi. --thu trên DB thử mới dựng: thoát 0, area_ids bằng seed (không ghi). Chiều đỏ ghim: trước khi chạy lệnh, phép so «bằng tệp» trên seed thô đỏ ở ≥ 15 nút với thông điệp «DV1-AC-3 <slug> lệch tệp» — đối chứng rằng phép so phân biệt được mã cũ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dv1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-xa.itest.mjs]
+    expected: "exit 0; ca «DV1-AC-4» trên DB thử như E3, mỗi ô một tệp tạm (bản chép tệp thật bị phá một chỗ) chạy tiến trình con thật `--sua-xa --tep <tệp tạm>`: (a) một mục chon ngoài đích → thoát 2, stderr chứa «<slug>: chon-ngoai-dich»; (b) xoá một mục → thoát 2, stderr chứa «thiếu nút <slug>»; (c) thêm slug lạ → thoát 2, stderr chứa «slug lạ <slug>»; sau mỗi ô, ảnh chụp area_ids của 20 nút bằng ảnh trước ô (20 assert mỗi ô). Đích: test mở một bộ nghe TCP giả trên 127.0.0.1 cổng ngẫu nhiên và đếm kết nối; `--db postgres://127.0.0.1:<cổng giả>/oneinvest` không --db-that → thoát 2, stderr chứa nguyên văn THONG_DIEP.thieuCo; `--db postgres://db.vi-du.invalid:<cổng giả>/oneinvest_dbv_x --db-that` → thoát 2, stderr chứa nguyên văn THONG_DIEP.ngoai; bộ nghe nhận 0 kết nối; không URL nào trỏ :5433 của DB máy thu. Đối chứng dương: tệp thật trên cùng DB thoát 0 (chứng ô đỏ do đúng phần phá)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/data/xa-nut-du-an.json, pipeline/lib/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DV1-AC-5» đọc tệp thật và bảng bí danh rút từ pipeline/data/dvhc (xa-cu.json, xa.json qua lib/dvhc.mjs — cùng nguồn bộ nạp PX1, không DB): mục vinhomes-grand-park có đúng hai xã cũ old_code 26830 và 26833, mỗi xã nguon.url khác rỗng, có nguon_chon; xaMoiCuaNut ra đúng ['vn-hcmc-long-binh']; estella-heights, the-global-city không chứa vn-hcmc-an-phu; vinhomes-central-park không chứa vn-hcmc-binh-thanh; phu-my-hung không chứa vn-hcmc-tan-phu. Chiều đỏ ghim: cùng hàm suy theo TÊN xã cũ (bỏ old_code, tra tên trong tỉnh) thì estella-heights ra mã khác bản theo mã, đỏ với «DV1-AC-5 suy theo tên lệch» — chứng ô bẫy phân biệt được hai cách tra."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dv1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-xa.itest.mjs]
+    expected: "exit 0; ca «DV1-AC-6» trên DB thử như E3 với fixture tổng hợp của danh-ba-vat-the.itest (S08 cao tầng hai khu vinhomes-ocean-park-1, vinhomes-grand-park, nối khu): dựng lần đầu bằng dung(), đặt area_ids của vinhomes-grand-park về một phường cũ có trong areas (vn-hcmc-long-truong) và ghi tay phát biểu area_id registry_inherit giá trị đó cho mọi toà dưới khu; chụp (building_key, upi) và số toà/trục/căn (demTheoKhu). Chạy --sua-xa rồi dung() lại: tập (building_key, upi) bằng ảnh trước, số toà/trục/căn bằng trước; mọi phát biểu vn-hcmc-long-truong có retracted_at và retract_reason = 'sua-xa-nut'; mỗi toà dưới khu có đúng một phát biểu sống area_id = vn-hcmc-long-binh. Ô nhiều phường: đặt area_ids của vinhomes-ocean-park-1 về [vn-hanoi-gia-lam] với phát biểu kế thừa vn-hanoi-gia-lam cho toà của nó, rồi chạy --sua-xa bằng tệp tạm cho nút này hai xã (Gia Lâm + Bát Tràng, chon hai đích của Đa Tốn): sau --sua-xa và dung(), toà dưới vinhomes-ocean-park-1 có 0 phát biểu kế thừa area_id sống, chiều đỏ ghim «DV1-AC-6 toà <key> giữ phường kế thừa của nút nhiều phường» khi chạy với { rut: false }. Chiều đỏ ghim: gọi suaXaNut với tham số { rut: false } (chỉ test dùng, CLI không có cờ này) thì toà có hai phát biểu sống, đỏ với «DV1-AC-6 toà <key> hai phường sống»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dv1_that
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/data/xa-nut-du-an.json, pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs]
+    expected: "exit 0; ngoài CI (cần DB máy thu :5433); ca «DV1-AC-7» mở máy thu bằng phiên default_transaction_read_only=on, chép 20 nút dự án (slug, area_ids, meta) sang DB thử có danh bạ xã PX1; đếm TRƯỚC số mã không có trong areas trên DB thử bằng đúng số đếm độc lập trên máy thu (một câu SQL riêng, cùng phiên chỉ đọc); chạy --sua-xa trên DB thử; SAU: 0 mã ngoài areas, 20/20 nút bằng xaMoiCuaNut của tệp; area_ids 20 nút trên máy thu sau ca bằng ảnh chụp đầu ca (chứng không ghi). In ra chỉ số đếm và slug. Chiều đỏ ghim: phép đếm «sau» chạy trên ảnh trước-khi-sửa ra > 0, đỏ với «DV1-AC-7 còn mã ngoài areas»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/CLAUDE.md, docs/ROADMAP.md, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DV1-AC-8» đọc pipeline/CLAUDE.md: dòng bảng bắt đầu «| danh-ba-vat-the.mjs |» chứa «--sua-xa» và «xa-nut-du-an.json»; docs/ROADMAP.md có dòng chứa «DV1» và «--sua-xa». Chiều đỏ ghim: cùng phép kiểm trên bản origin/main của hai tệp (git show) đỏ với «DV1-AC-8 tài liệu chưa ghi --sua-xa»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ test pipeline đầy đủ trên DB của riêng lượt xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -119,6 +119,8 @@ executors:
     dbv_kho: "node --test pipeline/lib/danh-ba-vat-the.test.mjs"   # danh-ba-toa-truc-can E11 — lõi thuần + FILL sync-cloud, không DB
     dbv_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the.itest.mjs"   # danh-ba-toa-truc-can E1, E3–E6, E8–E10 — DB thử oneinvest_dbv_<pid> ở :5433 áp 001…082, fixture tổng hợp
     dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
+    dv1_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa.itest.mjs"   # nut-du-an-tro-xa-moi E3, E4, E6 — DB thử oneinvest_dbv_xa_<pid> từ db/migrations + nạp PX1, lệnh --sua-xa thật
+    dv1_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs"   # nut-du-an-tro-xa-moi E7 — chép chỉ đọc 20 nút dự án từ máy thu sang DB thử, chỉ in số; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
