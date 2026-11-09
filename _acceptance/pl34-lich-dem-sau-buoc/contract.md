@@ -24,8 +24,8 @@ Hàng `pl34-lich-dem-sau-buoc` của đợt dot0-cam-mau (giám sát giao 09/11)
   refresh-bait-gap · doc-gop-hang-ngay · enrich-run; job thoát 0, không dòng `JOB FAIL`; `doc-gop-hang-ngay` chạy khi khoá
   nạp `pipeline/logs/apify-daily.state.lock` đã nhả; enrich-run chạy trong `agent/` với `LIMIT` = `ENRICH_LIMIT` khi có,
   ngược lại 50; khi nạp hỏng (job thoát 1 trước các bước) thì cả doc-gop-hang-ngay lẫn enrich-run không chạy; khi không có
-  snapshot Zalo nào mới hơn state thì job thoát 0 và không chạy bước nào, kể cả doc-gop-hang-ngay. Thay lời
-  `enrich-chay-sau-nap/AC-6`.
+  snapshot Zalo nào mới hơn state thì job bỏ bước nạp mà vẫn chạy năm bước sau, kể cả doc-gop-hang-ngay, và thoát 0. Thay
+  lời `enrich-chay-sau-nap/AC-6`.
 - **AC-2** — Given bước doc-gop-hang-ngay thoát n ≠ 0, When job kết thúc, Then stderr có đúng một dòng
   `JOB FAIL [zalo-import-daily] bước doc-gop-hang-ngay mã n`; enrich-run vẫn chạy; job thoát n khi các bước trước lành;
   khi một bước trước hỏng thì job thoát bằng mã của bước hỏng đầu tiên.
@@ -61,7 +61,10 @@ Hàng `pl34-lich-dem-sau-buoc` của đợt dot0-cam-mau (giám sát giao 09/11)
 
 ## Notes
 
-- Đêm không có snapshot Zalo mới thì job thoát trước mọi bước, nên đọc gộp đêm đó không chạy; bài S03 của hôm qua, hôm kia
-  được đọc ở đêm kế có snapshot mới (lệnh đọc hai ngày). Đây là hệ quả của chỗ ZCode đặt dòng, hồ sơ này ghim nó (AC-1).
+- Đêm không có snapshot Zalo mới thì job chỉ bỏ bước nạp; transform, đọc gộp và enrich vẫn chạy, nên đọc gộp chạy mọi đêm
+  (AC-1). Bản nháp trước ghi nhầm «job thoát trước mọi bước» — đính chính ở S3 khi ca kiểm chạy trên tệp bọc thật (sổ `fix`).
+- `pipeline/doc-gop-hang-ngay.sh` (ngoài phạm vi) cần `.env` ở gốc kho: thiếu tệp thì `/bin/bash` 3.2 với `set -u` báo
+  `ENV_FILE[@]: unbound variable` và bước thoát lỗi. Máy thu có `.env` nên đêm thật không dính; ca PL34-AC-3 đặt `.env` vào
+  cây như máy thu.
 - Tiêu chí `enrich-chay-sau-nap/AC-6` (Mạnh ký 30/10) ghim «năm bước»; AC-1 thay lời ấy. E8, E11 của hồ sơ cũ vẫn chạy và
   thoát 0 nên không khai `superseded_by` (luật đó cho eval mất vật đo).
