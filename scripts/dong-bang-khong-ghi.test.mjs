@@ -10,7 +10,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8" });
+// Bộ đệm 64 MB: diff gồm cả trang sinh dài dòng thì bộ đệm mặc định 1 MB của execFileSync tràn (ENOBUFS).
+const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 const ROUTE = "app/src/app/api/v1/ops/review/[id]/decide/route.ts";
 const BANG = "review_queue|property_candidates|property_offers|properties";
 const CAU_GHI = new RegExp(`\\b(INSERT\\s+INTO|UPDATE|DELETE\\s+FROM|TRUNCATE)\\b[\\s\\S]*?\\b(${BANG})\\b`, "i");
@@ -55,7 +56,8 @@ export function kiem({ moi, sua, them }) {
 
 test("DBS-AC-7 vòng không thêm migration, không câu ghi mới vào bảng căn/thẻ, không đổi route decide", () => {
   const base = git("merge-base", "HEAD", "origin/main").trim();
-  const diff = git("diff", "--no-color", "-U0", base, "--", ".", ":(exclude)_acceptance/**", ":(exclude)docs/**");
+  const diff = git("diff", "--no-color", "-U0", base, "--", ".", ":(exclude)_acceptance/**", ":(exclude)docs/**",
+    ":(exclude)LO-TRINH.html", ":(exclude)PRODUCT-MAP.md");
   const d = docDiff(diff);
   assert.ok(d.sua.includes("pipeline/resolve-properties.mjs"), "đối chứng: diff phải thấy tệp vòng đổi");
   assert.doesNotThrow(() => kiem(d));
