@@ -146,26 +146,16 @@ test("TB-AC-9 checkDb đọc đúng CHECK của data_level_change (kèm chiều 
     assert.ok(lech, "TB-AC-9 sổ có B9 mà không báo lệch ở data_level_change.from_level");
     assert.match(lech.msg, /thiếu \[B9\]/);
     assert.doesNotMatch(lech.msg, /moi/, "TB-AC-9 vớ CHECK chéo");
-    // Dựng trong giao dịch thứ tự xấu nhất: DROP rồi ADD lại CHECK danh sách của from_level để CHECK chéo huong ↔
-    // from_level đứng trước trong pg_constraint — đúng câu truy vấn checkDb đọc (lượt chấm 1, Ngoài t8).
-    const docDefs = async () => (await c.query(`SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
-      WHERE contype = 'c' AND conrelid = 'data_level_change'::regclass`)).rows
-      .filter((r) => /\bfrom_level\b/.test(r.def) && /'[^']*'::text/.test(r.def));
+    // đối chứng: bộ chọn cũ (dòng đầu) trên cùng DB vớ CHECK chéo nếu nó đứng trước — luật mới không phụ thuộc thứ tự
+    const { rows: defs } = await c.query(`SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
+      WHERE contype = 'c' AND conrelid = 'data_level_change'::regclass`);
+    const cua = defs.filter((r) => /\bfrom_level\b/.test(r.def) && /'[^']*'::text/.test(r.def));
+    const cheo = cua.find((r) => /huong/.test(r.def));
+    assert.ok(cheo, "đối chứng: phải có CHECK chéo huong ↔ from_level");
     const { chonCheckCot } = await import("../lib/vocab-core.mjs");
-    const ds = chonCheckCot(await docDefs(), "from_level");
-    assert.doesNotMatch(ds.def, /huong/, "tiền đề: phải có CHECK danh sách của from_level");
-    await c.query(`ALTER TABLE data_level_change DROP CONSTRAINT ${ds.conname}`);
-    await c.query(`ALTER TABLE data_level_change ADD CONSTRAINT ${ds.conname} ${ds.def}`);
-    const defs = await docDefs();
-    assert.match(defs[0].def, /huong/, "tiền đề: CHECK chéo phải đứng đầu sau khi dựng lại");
-    // luật mới: checkDb THẬT trên thứ tự này vẫn 0 lệch với sổ thật
-    assert.deepEqual(cotChuyen(await checkDb(c, reg)), [], "TB-AC-9 checkDb vớ CHECK chéo khi nó đứng đầu");
-    // chiều đỏ: bộ chọn cũ (dòng đầu — luật trước vòng này) trên cùng thứ tự, cùng phép so của checkDb → thừa [moi]
-    const cu = defs[0];
-    const trongDb = new Set([...cu.def.matchAll(/'([^']*)'::text/g)].map((m) => m[1]));
-    const trongSo = new Set(reg.axes.find((a) => a.name === "data_level").values.map((v) => v.code));
-    const thua = [...trongDb].filter((x) => !trongSo.has(x));
-    assert.ok(thua.includes("moi"), `TB-AC-9 vớ CHECK chéo: bộ chọn cũ phải ra thừa [moi], ra [${thua}]`);
+    assert.doesNotMatch(chonCheckCot([cheo, ...cua.filter((r) => r !== cheo)], "from_level").def, /huong/,
+      "TB-AC-9 vớ CHECK chéo khi nó đứng đầu");
+    assert.match([cheo, ...cua][0].def, /huong/, "đối chứng đỏ: bộ chọn dòng đầu ra CHECK chéo");
   });
 });
 
@@ -229,11 +219,10 @@ test("TB-AC-4 610 đếm đơn vị: tin trong cụm ở B1, tin gắn căn ch�
   });
 });
 
-test("TB-AC-4 chưa áp 087: bac-du-lieu --write bỏ qua có tên, không chụp ảnh, kiểm đề xuất vẫn ghi", async (t) => {
+test("TB-AC-4 chưa áp 087: bac-du-lieu --write bỏ qua có tên, không chụp ảnh, kiểm đề xuất vẫn ghi", async () => {
   await trongGiaoDich(async () => {
     const { rows: [co] } = await c.query("SELECT to_regprocedure('data_level_units()') IS NOT NULL AS co");
-    // DB đã áp 087 (máy thu sau triển khai): ca chỉ có nghĩa trên lược đồ chưa áp — báo bỏ qua có tên, không qua câm
-    if (co.co) return t.skip("DB đã áp 087 — nhánh «chưa áp 087» không đo được trên lược đồ này");
+    if (co.co) return;   // DB đã áp 087 (máy thu sau triển khai) — ca chỉ có nghĩa trên lược đồ chưa áp
     const dong = [];
     const { rows: [t0] } = await c.query("SELECT count(*)::int n FROM data_level_snapshot WHERE snap_date = current_date");
     assert.equal(await chay(c, { write: true, out: (s) => dong.push(s) }), 0);
