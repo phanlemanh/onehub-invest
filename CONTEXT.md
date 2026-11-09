@@ -476,8 +476,12 @@ _Avoid_: cào, crawl
 **Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → mức nhận diện (Gom cụm ·
 Định vị · Gắn căn, mỗi mức là phần trăm trên Tin rao) — kèm nhánh rơi («Không đọc được», «Chưa định vị») và nhánh «Gộp vào
 tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
-`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
-- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked)` · RESO: —
+`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu. Từ DF6: «Bài nhận» tách «Ảnh đã ghép
+vào tin» (tin nhắn chỉ có ảnh mà **Ghép suy ra** đã nối vào một tin — không cần đọc) và «Bài cần đọc» (mẫu số của «Đọc
+được»); «Bài cần đọc» chảy vào hai đầu ra ngang hàng «Đọc thành tin rao» và «Đọc thành Yêu cầu» (bài **Yêu cầu** — Mạnh
+chốt 09/11: Yêu cầu quan trọng song song với tin, «Đọc được» = tin rao + Yêu cầu), cùng «Ảnh chưa ghép» và «Không đọc
+được» (hai nhánh rơi).
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked; nhánh bài: imageMerged · inquiry · imageUnmerged, bài cần đọc toReadOf)` · RESO: —
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 

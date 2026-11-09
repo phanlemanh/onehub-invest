@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "lucide-react"
 
 import { fmtInt, fmtPct } from "@/lib/format"
 
-import { PREVIOUS_STAGE, type FlowLink, type FlowNode } from "./flow-sankey-data"
+import { type FlowLink, type FlowNode } from "./flow-sankey-data"
 import { StageFace } from "./stage-face"
 
 export type Hover = { type: "node" | "link"; index: number } | null
@@ -21,10 +21,12 @@ function Readout({ label, value }: { label: string; value: string }) {
 /** Bảng đọc khi rê chuột lên một nút hay một dòng chảy (readout của @reui/chart-49), thêm lý do rơi của nhánh. */
 export function FlowReadout({ hover, nodes, links, total }: { hover: Hover; nodes: FlowNode[]; links: FlowLink[]; total: number }) {
   if (!hover) return null
-  const amountOf = (id: string) => nodes.find((node) => node.id === id)?.amount ?? 0
   if (hover.type === "node") {
     const node = nodes[hover.index]
-    const previous = PREVIOUS_STAGE[node.id]
+    // Chặng đứng trước = nút nguồn của dòng chảy DUY NHẤT đổ vào nút (DF6: «Đọc được» đứng sau «Bài cần đọc» khi khối có
+    // nhánh bài, sau «Bài nhận» khi chưa) — một luật với cạnh của cây, không bảng tay. «Bài nhận» nhận từ nhiều nguồn: không có.
+    const incoming = links.filter((link) => link.target === hover.index)
+    const previous = incoming.length === 1 ? nodes[incoming[0].source] : null
     return (
       <div className="flex flex-1 flex-col gap-1.5">
         <div className="flex items-center justify-between gap-4">
@@ -36,7 +38,7 @@ export function FlowReadout({ hover, nodes, links, total }: { hover: Hover; node
         <div className="flex flex-col gap-1">
           <Readout label="Số lượng" value={fmtInt(node.amount)} />
           <Readout label="So với bài nhận" value={fmtPct(node.amount / total)} />
-          {previous ? <Readout label="Tỉ lệ bước" value={fmtPct(node.amount / Math.max(1, amountOf(previous)))} /> : null}
+          {previous ? <Readout label="Tỉ lệ bước" value={fmtPct(node.amount / Math.max(1, previous.amount))} /> : null}
         </div>
         {node.hint ? <p className="text-muted-foreground text-xs text-pretty">{node.hint}</p> : null}
       </div>

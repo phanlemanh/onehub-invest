@@ -55,7 +55,22 @@ export type Levels = {
   deepest: { unitLinked: number; located: number; clustered: number } | null;
 };
 
-export type SourceFlow = StageCounts & Levels & {
+/**
+ * Nhánh của bài nhận chưa thành tin (DF6 `bai-nhan-tru-bai-chi-anh`) — tính bằng hàm của transform ở bộ chạy
+ * refresh-data-flow.mjs (pipeline/lib/nhanh-bai-s03.mjs), chỉ S03 khác 0. Vắng (hay null) = khối chưa tách nhánh (600 chạy
+ * trần, khối đời trước) — trang vẽ như trước DF6, không đọc thành 0. «Đọc được» thắng mọi nhánh. Hai hàm đọc nhánh
+ * (`toReadOf`, `hasBranches`) ở components/ops/data-flow/flow-branches.ts — tệp này kéo `pg`, client không nhập giá trị từ đây.
+ */
+export type Branches = {
+  /** Tin nhắn chỉ có ảnh mà PL28 đã ghép vào một tin — không cần đọc, rời mẫu số «Đọc được». */
+  imageMerged?: number | null;
+  /** Bài Yêu cầu mua/thuê (bên mua) — transform loại đúng, nhánh riêng, vẫn ở mẫu số. */
+  inquiry?: number | null;
+  /** Tin nhắn chỉ có ảnh chưa vào tin nào — tính là rơi. */
+  imageUnmerged?: number | null;
+};
+
+export type SourceFlow = StageCounts & Levels & Branches & {
   source: FlowSource;
   testRejected: number;
   withWard: number;
@@ -68,9 +83,9 @@ export type SourceFlow = StageCounts & Levels & {
   approx: boolean;
 };
 
-export type FlowDay = StageCounts & { day: string; source: FlowSource; unitLinked: number };
+export type FlowDay = StageCounts & Branches & { day: string; source: FlowSource; unitLinked: number };
 
-export type GroupFlow = {
+export type GroupFlow = Branches & {
   /** Tên nhóm thu S03/S05 — tầng C (ADR-0007 sửa đổi 24/10), hiện được ở /ops. */
   group: string;
   source: FlowSource;
@@ -112,6 +127,12 @@ export type Identification = { level: IdentificationLevel; locatedPending: boole
 
 const nOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+/** Ba khoá nhánh của một phần tử khối: khoá có mà không phải số → null; khoá VẮNG (600 chạy trần, khối đời trước) giữ
+ * vắng — hình khối giống hệt trước DF6, trang coi vắng như chưa tách nhánh (hasBranches, toReadOf, readOf). */
+const BRANCH_KEYS = ["imageMerged", "inquiry", "imageUnmerged"] as const;
+const branchesOf = (x: Record<string, unknown>): Branches =>
+  Object.fromEntries(BRANCH_KEYS.filter((k) => k in x).map((k) => [k, nOrNull(x[k])]));
+
 /** Khối `facts` (máy thu hay cloud) → đúng kiểu: khoá mức nhận diện vắng (khối đời trước) thành null, `days[].unitLinked`
  * vắng thành 0; khoá `linked` của khối cũ bị bỏ, không bao giờ đọc lại dưới nhãn mới. */
 export function normalizeFacts(raw: FlowFacts): FlowFacts {
@@ -133,12 +154,14 @@ export function normalizeFacts(raw: FlowFacts): FlowFacts {
         locatedPending: nOrNull(s.locatedPending),
         uniqueIdPending: nOrNull(s.uniqueIdPending),
         deepest,
+        ...branchesOf(s),
       };
     }),
     days: ((raw.days ?? []) as (FlowDay & Record<string, unknown>)[]).map(({ linked: _old, ...d }) => {
       void _old;
-      return { ...(d as FlowDay), unitLinked: nOrNull(d.unitLinked) ?? 0 };
+      return { ...(d as FlowDay), unitLinked: nOrNull(d.unitLinked) ?? 0, ...branchesOf(d) };
     }),
+    groups: ((raw.groups ?? []) as (GroupFlow & Record<string, unknown>)[]).map((g) => ({ ...(g as GroupFlow), ...branchesOf(g) })),
   };
 }
 
