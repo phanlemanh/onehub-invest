@@ -12,10 +12,16 @@ import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { writeAssertions } from "../lib/assert.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { napDacTrung } from "../lib/nap-061.mjs";
+import { sqlNapLai059 } from "../lib/nap-view-song.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
 const sql059 = () => readFileSync(TEP_059, "utf8");
+// V6 (085): PL19_NAP_THEM = đường tới một tệp SQL nạp NGAY SAU 059 trong mỗi giao dịch dùng 059 thật (E9b của tin-ngung-rao-khong-thay-lai:
+// bộ PL19 phải xanh khi 085 thay bang_chung_chao). Ca đỏ truyền `sql` (bản chép 059) thì không nạp thêm — chữ bị phá nằm ở 059. Vắng biến → như cũ.
+const TEP_NAP_THEM = process.env.PL19_NAP_THEM ? path.resolve(process.cwd(), process.env.PL19_NAP_THEM) : null;
+const SQL_NAP_THEM = TEP_NAP_THEM ? readFileSync(TEP_NAP_THEM, "utf8") : null;
+if (TEP_NAP_THEM) console.log(`PL19_NAP_THEM: ${path.basename(TEP_NAP_THEM)}`);
 const T = `pl19-tst-${process.pid}`;
 
 let c;
@@ -31,13 +37,16 @@ after(async () => {
   await c?.end();
 });
 
-/** Một giao dịch ROLLBACK: `truoc` chạy trước khi nạp 059 (fixture đời cũ), rồi nạp `sql` (mặc định 059 thật). */
-async function trongGiaoDich(fn, { truoc, sql = sql059() } = {}) {
+/** Một giao dịch ROLLBACK: `truoc` chạy trước khi nạp 059 (fixture đời cũ), rồi nạp `sql` (mặc định 059 thật, kèm
+ *  PL19_NAP_THEM nếu có). */
+async function trongGiaoDich(fn, { truoc, sql } = {}) {
+  const goc = sql === undefined;
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
     if (truoc) await truoc(c);
-    await c.query(sql);
+    await c.query(await sqlNapLai059(c, goc ? sql059() : sql));
+    if (goc && SQL_NAP_THEM) await c.query(SQL_NAP_THEM);
     return await fn(c);
   } finally {
     await c.query("ROLLBACK");
