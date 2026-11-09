@@ -5,7 +5,7 @@ slug: tin-ngung-rao-khong-thay-lai
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-tin-ngung-rao-khong-thay-lai-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09
@@ -114,3 +114,11 @@ Quét không gian (morphological-scan, preset risk-premortem + entity-feature, i
   trục ngay trong 085, giá là đổi CHECK của 044/059, từ vựng và trigger lịch sử.
 - Hỏi-3 (người, lời Mạnh qua giám sát): tin ngừng rao không xoá hay che tên, SĐT người bán. Chúng giữ lâu dài trong danh
   bạ Người (Ops) và rời Invest theo tin khi việc lọc của Hỏi-1 xong.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-1: Thêm nguồn mới vào luật ngừng rao mà không sửa lệnh thì dòng báo của job đồng bộ bỏ sót nguồn đó; tin vẫn xử lý đúng.
+  - Ngoài-2: Chữ «rút» trong từ vựng chuẩn đang mang hai nghĩa (rút phát biểu và nghỉ bản ghi), người đọc số «rút» có thể hiểu nhầm.
+  - Ngoài-4: Tin S06 có dòng quét nhưng thiếu thời điểm quét có thể ngừng rao theo ngày đăng; tin không bị xoá và tự về khi thấy lại.
+  - Ngoài-5: Bằng chứng «bộ PL19 kèm 085 không đỏ thêm» chưa chứng được 085 thật sự nạp trong bộ kiểm bậc dữ liệu.
+  - Ngoài-6: Phép đối chiếu số ngừng rao trên dữ liệu thật có thể xanh khi cả hai phía cùng ra 0.
+  - Ngoài-7: Chưa ca kiểm nào chứng tin S05 thật sự ngừng rao khi quá hạn.
+  - Ngoài-8: Ca kiểm tin đã nghỉ và nguồn không có N chỉ phủ các ô chọn tay, chưa phủ mọi lý do nghỉ và mọi nguồn.

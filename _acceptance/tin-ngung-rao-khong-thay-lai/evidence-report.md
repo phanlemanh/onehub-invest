@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: a0992efd58d6cbfddd6c8b5a40e928a511819d4f
-human_signoff:
+human_signoff: Mạnh 2026-11-09
 ---
 
 # Evidence Report: tin-ngung-rao-khong-thay-lai
