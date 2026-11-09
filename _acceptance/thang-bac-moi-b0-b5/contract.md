@@ -5,7 +5,7 @@ slug: thang-bac-moi-b0-b5
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-09-thang-bac-moi-b0-b5-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09T09:17:00Z
@@ -89,3 +89,14 @@ Thước CE: số đo DB chung 09/11 ở design doc §1 (68.543 căn B2 toàn c�
 
 - Tham số cuối của `offer_data_level` giữ kiểu boolean để bên gọi ở cloud (chưa áp 087) không gãy; app truyền `false` tới
   khi có bảng nối.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Trước khi máy thu áp 087, trang chất lượng Ops hiện mã thô `chua-ap-087` thay vì câu tiếng Việt cho kiểm phân bố bậc.
+  - Ngoài-2: Lời chú thích của 087 tự nhận là chỗ cắm duy nhất cho bảng nối, nhưng `600_data_flow.sql` và `data-flow-queries.ts` còn vị từ riêng; hàng GC phải sửa cả ba.
+  - Ngoài-3: Báo cáo ngày gọi «Tin S03 đã gắn căn» cho số tin nằm trong cụm, mâu thuẫn với dòng gắn căn bằng 0.
+  - Ngoài-5: Sau khi máy thu áp 087, thước TB-AC-11 của app sẽ đỏ dù sản phẩm không lỗi, cần sửa thước lúc áp.
+  - Ngoài-6: Bài kiểm TB-AC-6 dùng dòng ảnh chụp viết tay, không đi qua đường ghi 610 thật.
+  - Ngoài-7: Ca «087 nguyên» của TB-AC-4 chỉ khẳng định vắng dòng B2 trở lên, không có đối chứng dương cùng giao dịch.
+  - Ngoài-8: Ca chưa áp 087 của TB-AC-11 có thể xanh suông khi không có dữ liệu để đọc.
+  - Ngoài-9: Chiều đỏ của TB-AC-8 là câu SQL viết tay, không rút từ truy vấn thật.
+  - Ngoài-10: Kiểm chữ lên bậc cũ đã biến mất đọc mã nguồn, không đọc chữ trên màn hình.
+  - Ngoài-11: Chiều đỏ của TB-AC-4 chỉ đòi kết quả khác bảng xanh, không ghim chỗ khác.
