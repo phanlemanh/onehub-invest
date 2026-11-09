@@ -6,6 +6,7 @@
 // - Provider thật của monitor.ts khởi bộ tra; bộ tra thật (seller-lookup.ts) chạy với đồng hồ giả của vitest.
 // - Chỉ module kênh bị thay: hàm lấy API bộ nghe tin đang nối trả API giả; start…Listener trả bộ nghe tin giả giữ onMessage/onError
 //   của monitor thật; mọi hàm xuất khác mà bộ tra gọi tới (xác định bằng ngăn xếp lời gọi) bị đếm là lời cấm.
+//   Riêng một ca [E1] nạp module kênh THẬT (giả ở tầng dưới: hàm tạo client, tệp phiên, phần lưu phiên) để đo vòng đời sổ API đang nối.
 // - API giả là Proxy đếm MỌI thuộc tính bị đọc; getUserInfo đi qua đúng hàm giải phản hồi của thư viện kênh (resolveResponse) với
 //   Response HTTP dựng sẵn, nên lỗi 401, 429, lỗi máy chủ, lỗi lạ và kết quả thành công đều có dạng do thư viện sinh, không viết tay.
 // - Collector giả là máy chủ HTTP thật trên cổng tạm. Mã tệp chặn hợp lệ đọc từ bảng «Tệp chặn» của docs/ops/runtime-map.md.
@@ -266,6 +267,80 @@ describe("[E1] AC-1 bộ tra qua đường khởi động Provider thật", () =
     expect(ca.kenhGoc.some((k) => /^start\w+Listener$/.test(k)), "đối chứng: đọc được khoá xuất của module kênh thật").toBe(true);
     expect(ca.kenhGoc.includes(HAM_LAY_API),
       "module kênh thật phải xuất hàm lấy API mà bộ tra gọi khi chạy thật — thiếu thì mỗi vòng ném lỗi, bộ tra không bao giờ gọi").toBe(true);
+  });
+
+  it("[E1] sổ API đang nối qua start…Listener THẬT: nối → đúng API; đóng, huỷ, start ném → rỗng; tín hiệu đã huỷ → không ghi; khởi trùng giữ API sống", async () => {
+    // Module kênh THẬT; chỉ giả tầng dưới: hàm tạo client của thư viện (login trả API mới mỗi lần, bộ nghe tin là EventEmitter),
+    // tệp phiên và phần lưu phiên. Đo đúng vòng đời sổ mà bộ tra đọc khi chạy thật.
+    const { EventEmitter } = await import("node:events");
+    let soLogin = 0, startNem = false;
+    const taoApiNoi = () => {
+      const listener = new EventEmitter();
+      listener.start = () => { if (startNem) throw new Error("start đồng bộ hỏng (giả)"); };
+      listener.stop = () => {};
+      return { soThu: ++soLogin, listener };
+    };
+    const PHIEN = { imei: "imei-gia", cookie: [], userAgent: "ua-gia", language: "vi" };
+    vi.resetModules();
+    vi.doMock("./zca-client.js", async (orig) => {
+      const g = await orig();
+      const tao = Object.keys(g).find((k) => /^create[A-Z]\w*$/.test(k) && typeof g[k] === "function");
+      return { ...g, [tao]: async () => ({ login: async () => taoApiNoi() }) };
+    });
+    vi.doMock("./session-state.js", async (orig) => {
+      const g = await orig();
+      const ra = { ...g };
+      for (const k of Object.keys(g)) {
+        if (/^loadStored\w+Credentials$/.test(k)) ra[k] = async () => ({ ...PHIEN });
+        if (/^refreshStored\w+Credentials$/.test(k)) ra[k] = async (_p, snap) => snap ?? { ...PHIEN };
+      }
+      return ra;
+    });
+    vi.doMock("./credential-persistence.js", async (orig) => {
+      const g = await orig();
+      const ra = { ...g, snapshotApiCredentials: () => ({ ...PHIEN }) };
+      for (const [k, v] of Object.entries(g)) {
+        if (/CredentialPersistence$/.test(k) && typeof v === "function") {
+          ra[k] = class extends v { async persistApiCredentialsIfChanged() {} pendingRevocation() { return undefined; } };
+        }
+      }
+      return ra;
+    });
+    try {
+      const kenh = await import(MOD_KENH);
+      const lay = kenh[HAM_LAY_API];
+      const batDau = Object.entries(kenh).find(([k]) => /^start\w+Listener$/.test(k))?.[1];
+      expect(typeof lay, "module kênh thật xuất hàm lấy API").toBe("function");
+      expect(typeof batDau, "module kênh thật xuất start…Listener").toBe("function");
+      const thamSo = (ac) => ({ accountId: "default", profile: "default", abortSignal: ac.signal, onMessage: () => {}, onError: () => {} });
+
+      expect(lay(), "đối chứng: chưa nối thì sổ rỗng").toBeUndefined();
+      const ac1 = new AbortController();
+      const n1 = await batDau(thamSo(ac1));
+      const api1 = lay();
+      expect(api1?.soThu, "nối → sổ trả đúng API của bộ nghe tin đang nối").toBe(1);
+      await expect(batDau(thamSo(new AbortController())), "khởi trùng phải ném").rejects.toThrow();
+      expect(lay(), "khởi trùng không đè, không xoá API đang sống").toBe(api1);
+      api1.listener.emit("closed", 3003, "KICKOUT");
+      expect(lay(), "bộ nghe tin đóng → sổ rỗng (không giữ API cũ)").toBeUndefined();
+      n1.stop();
+
+      const ac2 = new AbortController();
+      await batDau(thamSo(ac2));
+      expect(lay()?.soThu, "nối lại → API MỚI, không phải API đã đóng").toBe(2);
+      ac2.abort();
+      expect(lay(), "huỷ tín hiệu → sổ rỗng").toBeUndefined();
+
+      const ac3 = new AbortController(); ac3.abort();
+      await batDau(thamSo(ac3));
+      expect(lay(), "tín hiệu đã huỷ trước khi nối → không ghi sổ (không có cleanup nào xoá)").toBeUndefined();
+
+      startNem = true;
+      await expect(batDau(thamSo(new AbortController())), "đối chứng: start đồng bộ ném thì start…Listener ném").rejects.toThrow();
+      expect(lay(), "start đồng bộ ném → sổ rỗng").toBeUndefined();
+    } finally {
+      vi.doUnmock("./zca-client.js"); vi.doUnmock("./session-state.js"); vi.doUnmock("./credential-persistence.js");
+    }
   });
 
   it("[E1] Provider khởi hai lần → đúng một vòng hẹn giờ (đối chứng: vòng đó ra thêm đúng 1 lời ở chu kỳ kế)", async () => {
