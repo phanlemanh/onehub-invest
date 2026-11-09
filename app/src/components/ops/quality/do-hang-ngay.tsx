@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Do1, LAT_DO, type LatDo } from "@/lib/do-hang-ngay"
 import { fmtInt, fmtPct, fmtVnDate, vnDayStart } from "@/lib/format"
-import { LABELS_VI } from "@/lib/vocab.generated"
 
 import { BangBoSot, BangChuyenBac, BangGiu, BangLat, BangSoCap, BangTinHieu } from "./do-hang-ngay-bang"
 
@@ -113,7 +112,7 @@ export function DoHangNgay({ data, lat, areaNames = {} }: { data: Do1 | null; la
           {bac?.thang ? (
             <FramePanel>
               <p className="text-muted-foreground text-sm" data-do1-thang="">
-                Thang bậc 08/11 (B2 {LABELS_VI.data_level.B2}, B3 {LABELS_VI.data_level.B3}) áp từ {ngayAp(bac.thang.tu_ngay)} — dòng chuyển bậc tính từ ngày này.
+                Thang bậc 08/11 (B2 Định vị, B3 Gắn căn) áp từ {ngayAp(bac.thang.tu_ngay)} — dòng chuyển bậc tính từ ngày này.
                 {bac.ly_do === "doi-thang" ? " Ngày đổi thang là lần hạ một lần, không phải tụt bậc." : null}
               </p>
             </FramePanel>

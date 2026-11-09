@@ -45,19 +45,6 @@ export function chamBang(so, homQua, mucTieu) {
   });
 }
 
-/** NS1, NS1b trên ảnh chụp mới nhất: căn hộ từ B5, loại khác từ B3 (NS1); mọi đơn vị từ B3 (NS1b). Chỉ đếm dòng thang
- * 08/11 (cột `scale`; vắng = `thang-2310`): ảnh chụp thang cũ — máy thu chưa áp 087 nên ảnh mới nhất còn là của 23/10 —
- * không cộng vào (thang-bac-moi-b0-b5 AC-6). Thang 08/11: B3 trở lên là căn của danh bạ có tin gắn — hôm nay 0 tới khi có
- * bảng nối. */
-export function demNs1(sau) {
-  const capB = (lv) => Number(String(lv).slice(1));
-  const moi = sau.filter((r) => (r.scale ?? "thang-2310") === "thang-0811");
-  return {
-    NS1: moi.filter((r) => capB(r.data_level) >= (r.property_type === "apartment" ? 5 : 3)).reduce((s, r) => s + Number(r.n), 0),
-    NS1b: moi.filter((r) => capB(r.data_level) >= 3).reduce((s, r) => s + Number(r.n), 0),
-  };
-}
-
 /**
  * Ô nghi tụt bậc giữa hai ảnh chụp `data_level_snapshot` (hàng {market_id, property_type, unit, data_level, n}).
  *
@@ -69,6 +56,16 @@ export function demNs1(sau) {
  * Hai ảnh chụp khác thang (cột `scale` của 087; vắng = `thang-2310`) không so: ngày đổi thang 08/11 là lần hạ một lần,
  * không phải tụt bậc (thang-bac-moi-b0-b5 AC-6) — trả `doiThang` và không ô nào.
  */
+/** NS1, NS1b trên ảnh chụp mới nhất: căn hộ từ B5, loại khác từ B3 (NS1); mọi đơn vị từ B3 (NS1b). Thang 08/11: B3 trở lên
+ * là căn của danh bạ có tin gắn — hôm nay 0 tới khi có bảng nối. */
+export function demNs1(sau) {
+  const capB = (lv) => Number(String(lv).slice(1));
+  return {
+    NS1: sau.filter((r) => capB(r.data_level) >= (r.property_type === "apartment" ? 5 : 3)).reduce((s, r) => s + Number(r.n), 0),
+    NS1b: sau.filter((r) => capB(r.data_level) >= 3).reduce((s, r) => s + Number(r.n), 0),
+  };
+}
+
 export function oBacGiam(truoc, sau, { nguongPct = 2, toiThieu = 50, giamToiThieu = 20 } = {}) {
   const thangCua = (rows) => [...new Set(rows.map((r) => r.scale ?? "thang-2310"))].sort().join(",");
   if (truoc.length && sau.length && thangCua(truoc) !== thangCua(sau)) {
