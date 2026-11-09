@@ -2,7 +2,7 @@
 
 > Nguồn: nghiên cứu 09/11 (quét hình thái cấp × bảy nhóm thông tin × vòng đời × đầu ra, kiểm RESO DD 2.1, kế hoạch thực hiện ba dãy),
 > ghi ở kho tri thức riêng, trang `wiki/chu-de/danh-ba-du-an.md`. Mạnh chốt «Theo khuyến nghị» ngày 09/11 cho Q1–Q6 (ROADMAP §3 mục 40).
-> Q7–Q9 (suy dự án từ nhóm và người bán, phường kế thừa từ dự án) chờ Mạnh xác nhận, chưa vào bản này.
+> Q7–Q9 (suy dự án từ nhóm và người bán, phường kế thừa từ dự án) Mạnh xác nhận «Đúng» 09/11; ghi ở mục 40, áp bằng sửa lời GCQ2, DF7, DA9.
 > Nguồn gọi bằng mã: S03 nhóm cộng đồng, S06 rao vặt công khai, S07 cổng rao (phần danh mục), S08 danh mục dự án, S09 nguồn danh mục mới.
 >
 > **Kết luận.** Kế hoạch 08/11 (đợt `danh-ba-du-an-0811`) phủ định danh và gắn tin; bản này thêm phần thông tin của chính dự án: chỗ ghi
@@ -11,9 +11,9 @@
 >
 > **Hàng có sẵn, sửa lời trong cùng PR:** DA3 (bí danh `ma_nha_nuoc`), DA4 (thuật ngữ mới, bẫy tên RESO, hai dòng cũ của `mappings.yaml`),
 > DA8 (dự án cha Ocean Park), PX2 (306 phân khu S08, đứng trên DV1), DA10 (khớp nút ứng viên), DA11 (bỏ phần mở chỗ ghi, đứng trên DA15),
-> DN4 (thêm phát biểu dự án và tin sơ cấp), DA13 (đứng trên DA16, DA17, DA19, DA20). DAZ4 chuyển từ mục chờ thành hàng (Q4).
+> DN4 (thêm phát biểu dự án và tin sơ cấp), DA13 (đứng trên DA16, DA17, DA19, DA20), GCQ2 (ngưỡng ≥ 95% GC0, Q7), DF7 (đứng trên DA9, Q9), DA9 (đứng trên DV1). DAZ4 chuyển từ mục chờ thành hàng (Q4).
 >
-> **Ngoài phạm vi:** `collector/` và cách thu (làn ZCode) · Q7–Q9 · hàng DV2–DV5 của phiên Định vị S03.
+> **Ngoài phạm vi:** `collector/` và cách thu (làn ZCode) · hàng DV2–DV5 của phiên Định vị S03 (Q8 cần DV2).
 
 <!-- <<<PHAM-VI-MA -->
 ```

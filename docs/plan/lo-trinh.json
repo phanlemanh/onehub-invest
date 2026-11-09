@@ -3688,7 +3688,7 @@
       "dot": "gan-can-s03-0411",
       "nhom": "gan-can",
       "cau_giao": "Tin S03 của nhóm có quy ước đã bật nhận dự án, phân khu, toà từ quy ước thành phát biểu suy ra kèm trích quy ước và phiên bản; chữ bài nói khác thì chữ bài thắng; tắt quy ước thì giá trị rút theo",
-      "bat_khi": "Trên nhãn người đạt ngưỡng đã chốt; 0 ô do quy ước đè giá trị chữ bài; tắt một nhóm thì phát biểu của nhóm đó rút hết, chạy lại ra y nguyên; nhóm chưa bật không đổi một dòng",
+      "bat_khi": "Mỗi nhóm chỉ bật khi quy ước đạt ≥ 95% trên mẫu nhãn GC0 của nhóm đó; 0 ô do quy ước đè giá trị chữ bài; tắt một nhóm thì phát biểu của nhóm đó rút hết, chạy lại ra y nguyên; nhóm chưa bật không đổi một dòng; tin của nhóm chưa bật không được tính bậc B2 (Định vị) từ quy ước",
       "vi_sao": "Mạnh chốt 04/11 «Cho ghi suy ra», sửa Q4/H5: 73% tin căn hộ không nêu dự án trong chữ, chỉ phá hoà thì các tin đó không bao giờ có dự án và PL20 không biết gắn vào đâu.",
       "vung": [
         "agent/src/agents/context-resolver.ts",
@@ -3696,7 +3696,7 @@
         "db/migrations",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Luật 7: quy ước là luật xác định do người duyệt, LLM không tự ghi. ADR-0013: ghi FieldAssertion tier inferred, chỉ bộ phân xử ghi cột chuẩn. Tin hiện chưa có cột dự án và ASSERTION_FIELD chưa có dự án, phân khu: chốt nơi chứa ở Cổng Phạm vi. Đo 02/11: LLM đọc thẻ cũng nâng toà, mã căn, đường đó dùng cùng phiên bản quy ước. Nơi chứa dự án, phân khu: trường project_node_id, subzone_node_id của DA2 (kế hoạch danh bạ dự án 08/11)."
+      "ghi_chu": "Luật 7: quy ước là luật xác định do người duyệt, LLM không tự ghi. ADR-0013: ghi FieldAssertion tier inferred, chỉ bộ phân xử ghi cột chuẩn. Tin hiện chưa có cột dự án và ASSERTION_FIELD chưa có dự án, phân khu: chốt nơi chứa ở Cổng Phạm vi. Đo 02/11: LLM đọc thẻ cũng nâng toà, mã căn, đường đó dùng cùng phiên bản quy ước. Nơi chứa dự án, phân khu: trường project_node_id, subzone_node_id của DA2 (kế hoạch danh bạ dự án 08/11). Sửa 09/11 (ROADMAP §3 mục 40, Q7, Mạnh «Đúng»): tin nhóm một dự án chỉ nhận dự án «suy ra» và tính B2 khi quy ước nhóm đạt ≥ 95% trên mẫu GC0."
     },
     {
       "ma": "GT1",
@@ -4587,7 +4587,8 @@
       "dung_tren": [
         "GCQ2",
         "PX1",
-        "DA4"
+        "DA4",
+        "DV1"
       ],
       "dot": "danh-ba-du-an-0811",
       "nhom": "danh-ba-du-an",
@@ -4603,7 +4604,7 @@
         "pipeline/sql",
         "db/migrations"
       ],
-      "ghi_chu": "registry_inherit lớp suy luận; chỉ khi area_id hiện tại là cấp tỉnh hoặc trống; reassign-areas không bị đè. Tin S06 có dự án từ DS2 cũng dùng được. Kế hoạch: DA4.",
+      "ghi_chu": "registry_inherit lớp suy luận; chỉ khi area_id hiện tại là cấp tỉnh hoặc trống; reassign-areas không bị đè. Tin S06 có dự án từ DS2 cũng dùng được. Kế hoạch: DA4. Sửa 09/11 (mục 40): đứng thêm trên DV1 (mã xã hiện hành của nút dự án); phường suy ra mang nhãn «suy ra từ dự án» và được DF7 tính là phường thật (Q9).",
       "phu": [
         "DA9"
       ]
@@ -5010,7 +5011,8 @@
       "vai": "Người vận hành",
       "tieu_chi": 6,
       "dung_tren": [
-        "DF6"
+        "DF6",
+        "DA9"
       ],
       "phu": [
         "DF7"
@@ -5018,7 +5020,7 @@
       "dot": "s03-ket-0911",
       "nhom": "df-dong-chay",
       "cau_giao": "Kiểm «phường» và «trường lõi» trên đồng chảy và bậc dữ liệu chỉ nhận khu cấp phường; tin chỉ gắn tới tỉnh hay thành phố không còn được tính là có phường",
-      "bat_khi": "Số tin S03 đủ lõi sau đổi khớp đếm SQL độc lập (đo 09/11 là 34); S06 không đổi số; nhãn trên /ops/data-flow ghi rõ lý do «chỉ tới tỉnh»",
+      "bat_khi": "Số tin S03 đủ lõi sau đổi khớp đếm SQL độc lập (đo 09/11 là 34); S06 không đổi số; nhãn trên /ops/data-flow ghi rõ lý do «chỉ tới tỉnh»; phường suy ra từ dự án (registry_inherit, nhãn «suy ra từ dự án») được tính là có phường",
       "vi_sao": "Đo 09/11: 4.825/5.103 tin S03 chỉ có khu cấp tỉnh/thành, phường thật 56 (1,1%), nhưng kiểm hiện chỉ xét area_id có giá trị nên đếm 1.673 tin đủ lõi; tính nghiêm chỉ 34.",
       "vung": [
         "pipeline/sql/600_data_flow.sql",
@@ -5026,7 +5028,7 @@
         "app/src/lib/data-level.ts",
         "app/tests/data-flow*"
       ],
-      "ghi_chu": "Mạnh duyệt 09/11, biết trước tỉ lệ đủ lõi S03 sẽ tụt từ 32,8% về khoảng 1%. Làm ngay sau thang-bac-moi-b0-b5 (dãy N1, cùng 610 và data-level.ts). Gốc dữ liệu được gỡ dần ở DA9 phuong-tu-du-an."
+      "ghi_chu": "Mạnh duyệt 09/11, biết trước tỉ lệ đủ lõi S03 sẽ tụt từ 32,8% về khoảng 1%. Làm ngay sau thang-bac-moi-b0-b5 (dãy N1, cùng 610 và data-level.ts). Gốc dữ liệu được gỡ dần ở DA9 phuong-tu-du-an. Sửa 09/11 (mục 40, Q9, Mạnh «Đúng»): phường kế thừa từ dự án là phường thật; DF7 đứng trên DA9 để số tin S03 có phường không tụt trước khi DA9 gộp."
     },
     {
       "ma": "NH2",

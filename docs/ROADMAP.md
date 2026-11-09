@@ -575,7 +575,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     `CertificateOfOccupancyYN`, `ParcelNumber`, `Zoning`, `CommonInterest`, `AssociationName`…); bỏ extension `BalconyDirection` (dùng
     `direction_faces` của GN1) và `BuildingFootprintArea` (dùng `FoundationArea`); không điền `SourceSystemName`, `OriginatingSystemName`
     (là tên nguồn thật, tầng A). Hàng mới: DV1, DA15–DA20; mục chờ DA21–DA28; sửa lời DA3, DA4, DA8, PX2, DA10, DA11, DN4, DA13.
-    Ba câu về suy dự án từ nhóm và người bán, phường kế thừa từ dự án (phiên Định vị S03) chờ Mạnh xác nhận riêng.
+    Ba câu của phiên Định vị S03 (Mạnh xác nhận «Đúng», 09/11):
+    - Q7: tin nhóm một dự án chỉ nhận dự án «suy ra» và tính B2 khi quy ước nhóm đạt ≥ 95% trên mẫu GC0 của nhóm (hàng GCQ2).
+    - Q8: người bán lặp lại (≥ 3 tin đã biết dự án, ≥ 80% một dự án) cho phát biểu dự án `inferred`, chỉ cho tin không có tín hiệu
+      khác; đo kiểm bỏ-một mỗi ngày, tụt dưới ngưỡng thì tắt. Chưa có hàng; phiên Định vị S03 đề xuất DV2.
+    - Q9: phường kế thừa từ dự án tính là phường thật, mang nhãn «suy ra từ dự án»; DA9 gộp trước hoặc cùng DF7 (DF7 đứng trên DA9).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
