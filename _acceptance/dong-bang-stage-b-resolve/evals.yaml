@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: dong-bang-stage-b-resolve
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dbs_resolve
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-dong-bang.itest.mjs]
+    expected: "exit 0; ca «DBS-AC-1» trên DB của riêng lượt (db-thu --chay: lược đồ thật chép từ máy thu, đủ FK, trigger, CHECK), mọi thứ trong một giao dịch ROLLBACK: mồi 6 tin S06 ở 3 ô lưới, 3 tin S03 cùng phường đủ điều kiện cặp của luật cũ, và 4 dòng property_candidates trạng thái pending, needs_llm, merged, rejected. chayResolve với client ghi lại mọi câu gửi đi → 0 câu chứa chuỗi 'property_candidates'; ảnh chụp property_candidates (mọi cột, theo id) trước và sau bằng nhau; đầu ra có đúng dòng 'Stage B: đóng băng (V7) — không dựng cặp mới'; properties và property_offers sau lượt bằng kết quả chạy bản Stage A trích từ git show origin/main:pipeline/resolve-properties.mjs trong một giao dịch ROLLBACK thứ hai cùng mồi (so theo stable_key, n_evidence, offer_id). Chiều đỏ ghim: chạy bản origin/main trong giao dịch thứ hai thì phép đếm câu đỏ với thông điệp «DBS-AC-1 Stage B còn chạm property_candidates» — đối chứng rằng phép đếm thấy được câu Stage B cũ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dbs_judge
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run-dong-bang.test.ts]
+    expected: "exit 0; ca «DBS-AC-2» chạy tiến trình con thật `node --import tsx agent/scripts/judge-run.ts` hai lần (không cờ, và --khong-llm) với DATABASE_URL trỏ cổng đóng (postgres://127.0.0.1:1/x) và ANTHROPIC_API_KEY rỗng: cả hai thoát 0, stdout có đúng dòng 'judge-run: Ghép căn đóng băng (V7) — không chấm, không gieo hay rút thẻ', stderr không có ECONNREFUSED hay lỗi model — chứng không mở DB, không gọi model. Chiều đỏ ghim: ca chạy cùng lệnh trên bản judge-run.ts của origin/main chép vào thư mục tạm thì thoát khác 0 hoặc stderr có ECONNREFUSED, đỏ với thông điệp «DBS-AC-2 judge-run còn mở DB»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dbs_app
+    paths: [app/src/lib/ops/review-nap.ts, app/src/lib/ops/review-dong-bang.ts, app/src/components/ops/review-content.tsx, app/tests/review-dong-bang.test.tsx]
+    expected: "exit 0; ca «DBS-AC-3» trên DB của riêng lượt, review_queue của lược đồ thật (status theo CHECK thật), mồi 6 thẻ: G1 entity_match pending, G2 entity_match approved, G3 entity_match rejected, G5 entity_match deferred, K1 agent_output pending, K2 data_quality pending. loadReviewQueue trả đúng tập {G2, G3, G5, K1, K2}; render ReviewContent với card=String(G1) cho vai ops hiện «Không tìm thấy thẻ»; card=String(G2) mở thẻ G2. Ma trận đủ 6 thẻ × (có trong danh sách hay không) ghi thành 6 assert; G5 nằm trong nhóm «Đã quyết» như bản trước vòng. Chiều đỏ ghim: chạy REVIEW_QUEUE_SQL của origin/main (đọc bằng git show) trên cùng mồi thì G1 có mặt, đỏ với thông điệp «DBS-AC-3 thẻ Ghép căn đang chờ vẫn hiện»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbs_app
+    paths: [app/src/lib/ops/review-dau-trang.ts, app/src/lib/ops/review-dong-bang.ts, app/src/components/ops/review-content.tsx, app/src/lib/data-flow-queries.ts, app/tests/review-dong-bang.test.tsx]
+    expected: "exit 0; ca «DBS-AC-4» cùng mồi E3, thêm G4 entity_match pending tạo 100 giờ trước và G2 decided_at = hôm nay giờ VN: loadDauTrang trả cho = 2 (K1, K2), quaHan = 0, homNay tính G2; đếm theo loại cho vai viewer (render ReviewContent vai viewer) không có dòng entity_match, có agent_output 1, data_quality 1; số «Hàng duyệt» của data-flow-queries chế độ local = 2. Chiều đỏ ghim: DAU_TRANG_SQL của origin/main trên cùng mồi trả cho = 4, đỏ với thông điệp «DBS-AC-4 số chờ còn tính Ghép căn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4b
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbs_mjs
+    paths: [scripts/lib/ops-local.mjs, pipeline/do-the-duyet.mjs, scripts/bao-cao-ngay.mjs, scripts/ops-local-dong-bang.test.mjs]
+    expected: "exit 0; ca «DBS-AC-4b» trên DB của riêng lượt, cùng mồi E3 + G4: readReviewQueue trả byType không có entity_match, total = 2; câu «công người» của bao-cao-ngay cho H1 = 2; bộ nạp thẻ của do-the-duyet (hàm nạp, không ghi dq_check_results) trả 0 thẻ và không ném lỗi SQL. Chiều đỏ ghim, cùng mồi, từng bên đọc một ca: câu của readReviewQueue bản origin/main trả entity_match 2 → «DBS-AC-4b bản tin cloud còn đếm Ghép căn»; câu H1 bản origin/main trả 4 → «DBS-AC-4b báo cáo ngày còn đếm Ghép căn»; câu nạp do-the-duyet bản origin/main trả 2 (G1, G4) → «DBS-AC-4b HD11 còn nạp Ghép căn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dbs_app
+    paths: [app/src/lib/ops/review-cho-ghep.ts, app/tests/review-dong-bang.test.tsx]
+    expected: "exit 0; ca «DBS-AC-5»: loadPendingUnitMatches(['oA']) với client giả ghi lại mọi câu, mồi trong DB có thẻ G1 pending pair:oA|oB → trả {} và client nhận 0 câu chứa 'review_queue'. Chiều đỏ ghim: cùng ca trên CHO_GHEP_SQL của origin/main (chạy trực tiếp trên DB) trả G1 cho oA, đỏ với thông điệp «DBS-AC-5 Căn giá tốt còn báo chờ ghép»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dbs_mjs
+    paths: [app/src/**, scripts/**, pipeline/**, agent/src/**, agent/scripts/**, data-api/src/**]
+    expected: "exit 0; ca «DBS-AC-6»: (a) rút chuỗi THE_DONG_BANG_SQL từ review-dong-bang.ts (đọc như chữ) và từ mọi tệp .mjs chép nó — bằng nhau từng ký tự; (b) quét mọi câu FROM review_queue hoặc JOIN review_queue trong app/src, scripts, pipeline, agent/src, agent/scripts, data-api/src (bỏ tests/, *.test.*, *.itest.*, scripts/smoke-*) — mỗi câu hoặc chứa NOT + vị từ, hoặc khớp đúng một mục của danh sách miễn trong tệp test (tệp:dòng-mẫu + lý do: đọc theo mã thẻ, lọc loại khác entity_match, judge-run đã đóng băng); ma trận in ra mọi câu tìm được và kết luận của nó, số câu tìm được bằng số dòng ma trận. Chiều đỏ ghim: bản sao tạm của cây thêm câu `SELECT count(*) FROM review_queue WHERE status = 'pending'` vào một tệp app thì đỏ với thông điệp «DBS-AC-6 câu đọc chờ thiếu vị từ: <tệp>»; bản sao đổi một ký tự vị từ trong ops-local.mjs đỏ với «DBS-AC-6 vị từ lệch: scripts/lib/ops-local.mjs»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dbs_khong_ghi
+    paths: [scripts/dong-bang-khong-ghi.test.mjs, pipeline/resolve-properties.mjs, agent/scripts/judge-run.ts, app/src/lib/ops/**, scripts/lib/ops-local.mjs, pipeline/do-the-duyet.mjs, db/migrations/**, app/src/app/api/v1/ops/review/**]
+    expected: "exit 0; ca «DBS-AC-7»: git diff merge-base(origin/main)..HEAD — 0 tệp mới dưới db/migrations/, trên phần thêm của mỗi tệp vòng đổi, nối các dòng thêm liền nhau thành một khối rồi tách theo dấu «;» và dấu backtick, 0 câu khớp /\\b(INSERT\\s+INTO|UPDATE|DELETE\\s+FROM|TRUNCATE)\\b[\\s\\S]*?\\b(review_queue|property_candidates|property_offers|properties)\\b/i (bỏ thư mục tests/ và tệp *.test.*, *.itest.*), route decide không có trong diff. Chiều đỏ ghim: chạy hàm quét trên một diff mẫu có dòng thêm `UPDATE review_queue SET status` thì đỏ với thông điệp «DBS-AC-7 câu ghi mới: review_queue»; diff mẫu thêm `UPDATE` ở một dòng và `review_queue SET status` ở dòng kế đỏ cùng thông điệp; diff mẫu thêm db/migrations/999_x.sql đỏ với «DBS-AC-7 migration mới»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: [docs/ROADMAP.md, pipeline/CLAUDE.md, scripts/chotot-daily.sh, _acceptance/dong-bang-stage-b-resolve/contract.md]
+    question: "Trong các tệp được đưa: (1) scripts/chotot-daily.sh có còn bước job_run gọi pipeline/resolve-properties.mjs không? (2) docs/ROADMAP.md mục as-built và pipeline/CLAUDE.md dòng resolve-properties có nói Stage B và thẻ Ghép căn đã đóng băng, nêu lý do «gắn căn = nhận diện duy nhất» (Q1, 08/11) và việc thay thế là danh bạ vật thể DB1 cùng chuỗi gắn căn GC0–GC3 không? Trả PASS chỉ khi cả hai đúng; trích dòng làm căn cứ."
+    evidence_required: [run_id, verdict, rationale, quotes]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/**, app/src/lib/ops/**, app/src/components/ops/review-content.tsx]
+    expected: "exit 0; bộ test jsdom của app xanh trên DB của riêng lượt, gồm ops-duyet-nhip, viewer-the-duyet, review-queue, ops-duyet-hop-hang-muc, the-duyet-du-can-cu đã đổi mồi thẻ Ghép căn đang chờ sang thẻ đã quyết hoặc loại khác; số assert của năm tệp không giảm so với origin/main (đếm `assert.` bằng git show). Chiều đỏ: bỏ lọc trong review-nap.ts (bản sao tạm) thì DBS-AC-3 đỏ — đã ghim ở E3."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.rtld_itest
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs, pipeline/lib/thu-lai-deadlock.sql-base.json]
+    expected: "exit 0; itest thử lại deadlock của resolve-properties xanh sau khi bỏ khối Stage B — sổ câu gốc thu-lai-deadlock.sql-base.json đổi theo đúng số câu còn lại, ca vụ đảo vẫn chứng thử lại 40P01 trên Stage A; số assert của tệp không giảm so với origin/main ngoài các assert về cặp needs_llm (được thay bằng assert cặp không đổi)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9c
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.s03_len_cong_db
+    paths: [pipeline/resolve-properties.mjs, pipeline/scripts/s03-len-cong.itest.mjs]
+    expected: "exit 0; itest s03-len-cong xanh; ca «tin cấp thị trường không thành cặp» ghi rõ trong tên hoặc lời chú thích rằng nó đúng theo cấu tạo khi Stage B đóng băng (không nới assert)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

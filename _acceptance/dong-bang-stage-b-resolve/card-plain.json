@@ -1,0 +1,32 @@
+{
+  "feature_plain": "Máy thôi dựng cặp «có thể cùng căn» mỗi đêm và thôi gieo thẻ Ghép căn; đội Ops không còn gặp thẻ duyệt mà duyệt xong không gắn tin vào căn nào. Cặp và thẻ cũ giữ nguyên làm lịch sử.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ để lệnh chấm cặp ghép căn chỉ in một dòng «đã đóng băng» rồi thoát — không mở dữ liệu, không gọi model."},
+    {"id": "AC-6", "p": "Sẽ dùng một luật «thẻ đóng băng» chung cho mọi chỗ đọc thẻ chờ; máy quét cả kho mỗi lượt, chỗ đọc mới quên luật thì đỏ."},
+    {"id": "AC-9", "p": "Sẽ giữ xanh mọi bộ test cũ; test nào đang dùng thẻ Ghép căn chờ làm mồi thì đổi mồi, không bỏ phép đo nào."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG dựng cặp mới hay xoá cặp cũ trong lượt đêm; phần gom cụm tin S06 chạy y như trước."},
+    {"id": "AC-3", "p": "Sẽ KHÔNG hiện thẻ Ghép căn đang chờ ở Hàng duyệt, kể cả mở bằng liên kết thẳng; thẻ đã quyết vẫn xem lại được."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG tính thẻ Ghép căn đang chờ vào bất kỳ số «chờ duyệt» nào: đầu trang, vai xem, dòng chảy, bản tin máy chủ, báo cáo ngày, kiểm độ đủ thẻ."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG báo «căn này đang chờ ghép» ở Căn giá tốt nữa."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG ghi, xoá hay đóng dòng dữ liệu nào, không thêm migration, không sửa đường ghi quyết định duyệt."},
+    {"id": "OOS-1", "p": "Không xoá hay đóng thẻ Ghép căn cũ, không xoá cặp cũ."},
+    {"id": "OOS-2", "p": "Không sửa đường ghi quyết định duyệt; gửi tay vào thẻ cũ vẫn đổi trạng thái cặp như trước."},
+    {"id": "OOS-3", "p": "Không dựng bộ gắn tin vào danh bạ căn — đó là hàng riêng thay thế việc này."},
+    {"id": "OOS-4", "p": "Không gỡ giao diện thẻ Ghép căn — thẻ đã quyết vẫn cần nó để xem lại."}
+  ],
+  "scope_plain": "Phần cắt khỏi vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi khâu chạm thẻ Ghép căn đều có tiêu chí: dựng cặp (AC-1), chấm cặp (AC-2), hiện thẻ (AC-3), đếm thẻ (AC-4), báo căn (AC-5); đủ khi máy quét cả kho không thấy chỗ đọc thẻ chờ nào sót luật đóng băng."},
+    {"i": 1, "p": "Ba trạng thái thẻ đều được thử: đang chờ bị ẩn, đã quyết và hoãn vẫn hiện như cũ (AC-3, AC-4)."},
+    {"i": 2, "p": "Cả máy thu lẫn máy chủ: máy chủ chỉ thấy số đếm qua bản tin, và số ấy cũng bỏ thẻ đóng băng (AC-4)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thiếu phép chạy lại hai bộ test tích hợp của lượt đêm — đã thêm hai eval chạy chúng."},
+    {"i": 1, "p": "Danh sách chỗ đọc thẻ chờ kê tay đã sót số «Hàng duyệt» ở trang dòng chảy và số chờ trong báo cáo ngày — đã thêm cả hai, và đổi phép đo thành quét cả kho."},
+    {"i": 2, "p": "Ba dòng bỏ bước giao diện chỉ đúng khi anh chọn không thêm chữ báo — đã ghi điều kiện: chọn thêm chữ báo thì máy thêm tiêu chí và phép chụp màn trước khi duyệt."},
+    {"i": 3, "p": "Mồi test tự dựng thiếu ràng buộc thật và thiếu thẻ «hoãn» — đã chuyển sang dữ liệu có lược đồ thật và thêm thẻ hoãn."},
+    {"i": 4, "p": "Hai phép đo có thể xanh rỗng (kiểm độ đủ thẻ trả rỗng vì lỗi; câu ghi viết hai dòng lọt quét) — đã thêm chiều đỏ cho từng chỗ."}
+  ]
+}
