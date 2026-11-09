@@ -8,7 +8,7 @@
 import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PATCH, trenCayOpenclaw } from "./chung-zcode.mjs";
 import { ROOT } from "./chung.mjs";
@@ -93,5 +93,6 @@ export function chayTichHop(nhom, { patch = PATCH } = {}) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [nhom = "E1", ...rest] = process.argv.slice(2);
   const i = rest.indexOf("--patch");
-  process.exit(chayTichHop(nhom, i >= 0 ? { patch: rest[i + 1] } : {}));
+  // git apply chạy trong cây tạm: đường tương đối phải đổi sang tuyệt đối theo thư mục gọi lệnh.
+  process.exit(chayTichHop(nhom, i >= 0 ? { patch: resolve(rest[i + 1]) } : {}));
 }
