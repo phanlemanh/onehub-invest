@@ -1,10 +1,17 @@
 ## Trong hợp đồng
 
+(không có finding nào map được vào AC)
+
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-(Không có muc moi ở round 2. 10 muc ngoai hop dong round truoc duoc may tu chen, mang nhan (r1).)
+- **min-w-5xl làm Sankey S03 tràn khung ở desktop 1280: chữ đầu cột bị cắt, phải cuộn ngang ngay trên desktop**
+  Người dùng thấy gì: Trên màn hình máy tính 1280 px, biểu đồ dòng chảy S03 rộng hơn khung nên phải cuộn ngang, và chữ ở đầu cột «Gắn căn» (ví dụ «156 chờ khớp») bị cắt ở mép phải. Số liệu vẫn đúng, chỉ phần hiển thị bị cắt.
+  Căn cứ: Lỗi chỉ ảnh hưởng cách hiển thị trên trang vận hành nội bộ, không làm mất hay sai số liệu, người xem cuộn ngang hoặc thu cửa sổ là đọc được, và sửa lại sau cũng rẻ.
+  file: `app/src/components/ops/data-flow/flow-journey.tsx`
+  severity: medium
+  Đề xuất: known-limits
 
 - **Rào DB thử của do-nhanh-bai-s03 chỉ chặn đúng một tên, khác mẫu chỉ-cho-phép sẵn có của repo (r1)**
   Người dùng thấy gì: Công cụ đo nội bộ có thể ghi vào một kho dữ liệu không phải kho thử nếu chạy nhầm. Người dùng cổng không bị ảnh hưởng.
@@ -75,7 +82,5 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `app/tests/data-flow-bai-chi-anh.test.tsx`
   severity: low
   Đề xuất: known-limits
-
-## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
