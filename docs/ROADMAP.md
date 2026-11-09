@@ -167,6 +167,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `bang_chung_chao` của 059 để phát biểu luật không bị dội. `pipeline/trang-thai-chao.mjs` chạy luật giữa ghi bằng chứng và
   phân xử, in «ngừng rao S03 · S05 · S06»; chưa áp 085 thì in «chưa áp 085»; `--thu` ROLLBACK. Chưa áp 085 lên máy thu;
   trạng thái chào chưa lên cloud nên Invest chưa ẩn tin ngừng rao (Hỏi-1: hàng riêng đưa `offer_status` vào `CLOUD_ALLOW`).
+- Đóng băng Stage B và thẻ Ghép căn (V7, `_acceptance/dong-bang-stage-b-resolve`, Q1 Mạnh 08/11 — gắn căn = nhận diện duy
+  nhất, FRAMING §3.4): `pipeline/resolve-properties.mjs` không còn dựng cặp «cùng phường, DT ±15%, giá/m² ±20%» (đo «giống
+  nhau», không phải «là cùng một»), không xoá cặp cũ — `property_candidates` giữ làm lịch sử; Stage A (gom cụm S06) như cũ.
+  `agent/scripts/judge-run.ts` in một dòng đóng băng rồi thoát, không mở DB, không gọi model. Thẻ `entity_match` ĐANG CHỜ
+  không hiện ở `/ops/review` và không vào số chờ nào (đầu trang, viewer, «Hàng duyệt» ở dòng chảy, bản tin cloud, báo cáo
+  ngày, HD11), Căn giá tốt thôi báo «đang chờ ghép»; một vị từ `THE_DONG_BANG_SQL` (`app/src/lib/ops/review-dong-bang.ts`,
+  chép nguyên văn ở các bên đọc `.mjs`), `scripts/ops-local-dong-bang.test.mjs` quét mọi câu đọc `review_queue`. Thẻ đã quyết
+  vẫn xem lại được. Không ghi dữ liệu, không migration, route decide không đổi. Thay thế: danh bạ vật thể (DB1) + chuỗi gắn
+  căn GC0–GC3 (bảng nối tin → nút danh bạ).
 - SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
@@ -631,7 +640,8 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, đã gộp (#303); Ngoài-9 đổi sang Known limits, không mở việc mới |
 | CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | DB1 | Danh bạ toà · trục · căn cao tầng Ocean Park 1 và Grand Park từ S08 + bí danh tên toà trên tin; UPI neo toà; chủ đầu tư, phường là phát biểu cấp toà; ba dòng `asset_nodes building` là phân khu, ở lại họ Vùng — `_acceptance/danh-ba-toa-truc-can` (T3, 082) | 🔶 vòng S4; Mạnh duyệt Cổng Phạm vi và kế hoạch 07/11; sau gộp: áp 082 lên máy thu + chạy bộ dựng là lời riêng của Mạnh (`pg_dump` trước); Grand Park chưa có phường cấp toà (cần toạ độ toà, hàng riêng) |
-| V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 09/11, đang làm; sau gộp: đo `node pipeline/trang-thai-chao.mjs --thu` trên bản chép, rồi áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng (`offer_status` lên cloud) |
+| V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | ✅ Mạnh ký Cổng 2 09/11, gộp PR #383; áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng |
+| V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

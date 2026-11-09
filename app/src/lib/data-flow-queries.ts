@@ -3,6 +3,7 @@ import { pool } from "./db";
 import { vnDayKey, vnDayStart } from "./format";
 import { ageState, readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
+import { KHONG_DONG_BANG_SQL } from "./ops/review-dong-bang";
 import { buildMediaImages, loadOfferMedia, type MediaRow, type MediaRowQuery, type ReviewImage } from "./ops/review-media";
 
 /**
@@ -263,6 +264,9 @@ function cloudFacts(facts: OpsFacts, window: FlowWindow): FactsRead {
   return { state: b.state, at: b.measuredAt, facts: f, error: null };
 }
 
+/** Số «Hàng duyệt» ở máy thu: thẻ chờ, trừ thẻ Ghép căn đang chờ đóng băng (V7, review-dong-bang.ts). */
+export const REVIEW_PENDING_SQL = `SELECT count(*) AS review FROM review_queue WHERE status = 'pending' AND ${KHONG_DONG_BANG_SQL}`;
+
 export async function getDataFlow(
   window: FlowWindow,
   opts: {
@@ -288,7 +292,7 @@ export async function getDataFlow(
   if (mode === "local") {
     const [lf, pending] = await Promise.all([
       localFacts(q, window, now),
-      q(`SELECT count(*) AS review FROM review_queue WHERE status = 'pending'`),
+      q(REVIEW_PENDING_SQL),
     ]);
     f = lf;
     reviewPending = num(pending.rows[0]?.review);
