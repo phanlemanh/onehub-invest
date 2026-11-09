@@ -1,0 +1,38 @@
+{
+  "feature_plain": "Bậc dữ liệu chạy mỗi ngày theo thang mới của FRAMING: cụm tin S06 tự dựng không còn tính là căn đã gắn, người vận hành thấy ngày đổi thang trên trang Chất lượng và không đọc lần hạ này thành tụt bậc.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đổi nhãn sáu bậc thành Có lời khai · Tin · Định vị · Gắn căn · Làm giàu · Sống ở mọi chỗ hiện nhãn, và bộ kiểm từ vựng không báo lệch."},
+    {"id": "AC-2", "p": "Sẽ xếp một tin ở B1 Tin khi đủ năm trường lõi, lên B2 Định vị chỉ khi tin được định vị vào danh bạ; tin nằm trong cụm S06 không được nâng bậc."},
+    {"id": "AC-3", "p": "Sẽ xếp căn của danh bạ có tin gắn ở B3 Gắn căn, B4 Làm giàu, B5 Sống theo luật FRAMING; hôm nay chưa có căn nào vì chưa có bảng nối tin với căn."},
+    {"id": "AC-4", "p": "Sẽ đếm mỗi tin một lần (kể cả tin trong cụm), mỗi căn có tin gắn một lần, và phân bố bậc với đo hằng ngày dùng chung một tập đơn vị."},
+    {"id": "AC-6", "p": "Sẽ để báo cáo ngày không so hai ngày khác thang, ghi «đổi thang, không so», và đếm căn B3 trở lên theo thang mới."},
+    {"id": "AC-7", "p": "Sẽ hiện trên trang Chất lượng một dòng nêu thang bậc 08/11 áp từ ngày nào, nói rõ đây là lần hạ một lần."},
+    {"id": "AC-8", "p": "Sẽ đổi chữ lên bậc ở ngăn chi tiết tin: lên B2 cần định vị vào dự án, toà hoặc trục; lên B3 cần khớp đúng một căn; lọc B2 trên trang Dòng chảy không còn tin cụm."},
+    {"id": "AC-9", "p": "Sẽ sửa bộ kiểm từ vựng để thôi báo lệch oan ở bảng dòng chuyển bậc."},
+    {"id": "AC-10", "p": "Sẽ hiện dòng đổi thang và hai câu lên bậc mới rõ ở màn rộng sáng, tối và màn điện thoại."},
+    {"id": "AC-11", "p": "Sẽ giữ trang Dòng chảy và trang Chất lượng trên cloud chạy bình thường khi cloud chưa áp bản cập nhật cơ sở dữ liệu."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG ghi 68.543 dòng tụt bậc vào ngày đổi thang: đo hằng ngày lập mốc lại, từ hôm sau mới tính dòng chuyển."},
+    {"id": "OOS-1", "p": "KHÔNG dựng bảng nối tin với dự án, toà, căn của danh bạ — chuỗi GC làm; tới đó B2 trở lên bằng 0."},
+    {"id": "OOS-2", "p": "KHÔNG sửa luật phường cấp tỉnh trong trường lõi — hàng DF7 làm ngay sau hàng này."},
+    {"id": "OOS-3", "p": "KHÔNG đổi cách trang Dòng chảy đếm định vị và gắn căn — DF7 hoặc GC làm; hai bên vẫn cùng ra 0."},
+    {"id": "OOS-4", "p": "KHÔNG đổi tên bậc trong tài liệu mô hình, đo DO2, khoá cụm."},
+    {"id": "OOS-5", "p": "KHÔNG áp bản cập nhật cơ sở dữ liệu lên máy thu hay cloud — Mạnh quyết riêng sau khi gộp, kèm bản sao lưu."}
+  ],
+  "scope_plain": "Phần bỏ ngoài là các việc đã có hàng riêng hoặc là lời riêng của Mạnh.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đơn vị đếm: tin chưa định vị, tin định vị, tin trong cụm, căn có tin gắn, tin đã rút — mỗi loại có ca đo ở AC-2, AC-3, AC-4, AC-5."},
+    {"i": 1, "p": "Sáu bậc B0–B5: mỗi bậc có ô kỳ vọng viết trước ở AC-2 (tin), AC-3 (căn), AC-4 (đếm)."},
+    {"i": 2, "p": "Thời điểm: trước, đúng ngày và sau ngày đổi thang — AC-5 (đo hằng ngày), AC-6 (báo cáo ngày), AC-7 (trang Chất lượng)."},
+    {"i": 3, "p": "Bề mặt: hàm bậc, ảnh chụp bậc, đo hằng ngày, trang Chất lượng, báo cáo ngày, ngăn tin, sổ từ vựng — AC-1 tới AC-10."},
+    {"i": 4, "p": "Cơ sở dữ liệu có hay chưa có bản cập nhật 087 — AC-11 đo trường hợp cloud chưa áp."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Điều kiện lên B4 Làm giàu và lý do giữ cách đếm của trang Dòng chảy ban đầu do máy tự quyết mà câu căn cứ không đủ — đã chuyển điều kiện B4 thành câu hỏi Hỏi-2 cho Mạnh và sửa căn cứ dòng kia."},
+    {"i": 1, "p": "Dòng đổi thang trên trang Chất lượng và bậc ở trang Dòng chảy chỉ được đo trên dữ liệu viết tay — đã thêm hai phép đo chạy bước ghi thật và truy vấn thật trên cơ sở dữ liệu thử."},
+    {"i": 2, "p": "Không tiêu chí nào giữ cho trang trên cloud chạy khi cloud chưa áp bản cập nhật — đã thêm AC-11 đo trên cơ sở dữ liệu chưa áp."},
+    {"i": 3, "p": "Phân bố bậc và đo hằng ngày có thể đếm hai tập đơn vị khác nhau — đã gom về một hàm chung và thêm ca so hai tập, có tin đã rút."},
+    {"i": 4, "p": "Ngày áp thang và số căn B3 trở lên trên báo cáo ngày chỉ được kiểm là có mặt — đã đổi thành so đúng ngày và đúng số viết trước."}
+  ]
+}

@@ -4,7 +4,7 @@ feature: Thang bậc mới B0–B5 chạy hằng ngày — 087 viết lại bậ
 slug: thang-bac-moi-b0-b5
 owner: phanlemanh@gmail.com
 risk_tier: T3
-surfaces: [ui, data]
+surfaces: [ui]
 status: draft
 design_doc: docs/superpowers/specs/2026-11-09-thang-bac-moi-b0-b5-design.md
 ---
