@@ -353,15 +353,14 @@ test("OD1-AC-8 nhãn trạng thái là nhãn đáp án (15 ô), thẻ Người c
   const root = await ve(<queueMod.ReviewQueue items={items} media={{}} />)
   assert.ok(root.querySelector("[data-review-kind=nguoi]")?.textContent === "Người", "NGUOI HIEN MA THO")
   assert.ok(![...root.querySelectorAll("code")].some((c) => c.textContent === "data_quality" && c.closest("tr")?.textContent?.includes("Gộp Người")), "NGUOI HIEN MA THO")
-  const chon = async (label: string, option: string) => {
-    const trig = document.querySelector(`button[aria-label='${label}']`) as HTMLElement
-    await act(() => { trig.dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true })); trig.click() })
-    await click(byText(document, "[role=option]", option), option)
+  // OD2: ô «Loại thẻ» thay bằng hộp hạng mục — thẻ Người lọc ở mục «Gộp Người», loại lạ ở «Loại khác».
+  const chon = async (ma: string) => {
+    await click(document.querySelector(`[data-review-hop-muc='${ma}']`), `mục ${ma}`)
   }
   const ids = () => [...document.querySelectorAll("#root tbody tr")].map((tr) => tr.textContent?.match(/#(\d+)/)?.[1]).filter(Boolean).map(Number)
-  await chon("Loại thẻ", "Người")
+  await chon("party_merge")
   assert.deepEqual(ids(), [2], "OD1-AC-8 bộ lọc «Người» sai")
-  await chon("Loại thẻ", "Loại khác")
+  await chon("other")
   assert.ok(!ids().includes(2), "OD1-AC-8 «Loại khác» còn nhận thẻ Người")
   assert.deepEqual(ids(), [10], "OD1-AC-8 «Loại khác» phải ra đúng thẻ loại khác (đối chứng dương)")
   // Sheet thẻ đã bác: badge đầu sheet và DoneState đều «Khác căn».
@@ -390,6 +389,9 @@ const TEP_REVIEW = [
   "src/components/ops/review/review-detail-sheet.tsx", "src/components/ops/review/review-full-text.tsx",
   "src/components/ops/review/review-nhip.tsx", "src/components/ops/review/review-queue-skeleton.tsx",
   "src/components/ops/review/review-queue.tsx", "src/components/ops/review/review-reason.tsx",
+  // OD2: hàng chờ gửi, hộp hạng mục, quyết định gần đây, bảng phím.
+  "src/components/ops/review/hang-gui.tsx", "src/components/ops/review/review-gan-day.tsx",
+  "src/components/ops/review/review-hop-hang-muc.tsx", "src/components/ops/review/review-phim-tat.tsx",
 ]
 /** Chữ người đọc thấy trong một tệp: chuỗi trong nháy kép/đơn/backtick và chữ JSX giữa thẻ; bỏ chú thích và import. */
 function chuHienThi(src: string): string[] {
@@ -852,10 +854,10 @@ test("OD1-AC-1-UI mọi thẻ có nút quyết gửi elapsed_ms đơn điệu; t
   const khongDat = await banChep<CardMod>(rel, (s) => s.replace("const [t0] = useState(dongHo);", "const t0 = 1000;"))
   await assert.rejects(kiemDongHo(khongDat), /DONG HO KHONG DAT LAI/)
   const gioTuyet = await banChep<CardMod>(rel, (s) => s.replace(
-    "body: JSON.stringify(choices ? { status, choices, reason: lyDo, elapsed_ms } : { status, reason: lyDo, elapsed_ms }),",
-    "body: JSON.stringify({ status, ...(choices ? { choices } : {}), reason: lyDo, opened_at: new Date(Date.now() - elapsed_ms).toISOString() }),"))
+    "const body = choices ? { status, choices, reason: lyDoChot, elapsed_ms } : { status, reason: lyDoChot, elapsed_ms };",
+    "const body = { status, ...(choices ? { choices } : {}), reason: lyDoChot, opened_at: new Date(Date.now() - elapsed_ms).toISOString() };"))
   await assert.rejects(kiemDongHo(gioTuyet), /GUI GIO MAY KHACH|NGUOI KHONG GUI ELAPSED/)
-  const nguoi = await banChep<typeof import("../src/components/ops/review-card-nguoi")>("src/components/ops/review-card-nguoi.tsx", (s) => s.replace("onClick={() => d.decide(\"approved\")} disabled={tat}", "onClick={() => { void fetch(`/api/v1/ops/review/${item.id}/decide`, { method: \"POST\", body: JSON.stringify({ status: \"approved\", reason: d.reason }) }) }} disabled={tat}"))
+  const nguoi = await banChep<typeof import("../src/components/ops/review-card-nguoi")>("src/components/ops/review-card-nguoi.tsx", (s) => s.replace("onClick={() => d.decide(\"approved\")} disabled={d.pending || !d.sanSang(\"approved\")}", "onClick={() => { void fetch(`/api/v1/ops/review/${item.id}/decide`, { method: \"POST\", body: JSON.stringify({ status: \"approved\", reason: d.reason }) }) }} disabled={d.pending}"))
   const cardNguoi = { ...cardMod, ReviewCard: ({ item }: { item: Item }) => (item.item_type === "data_quality" ? <nguoi.NguoiCard item={item} render={({ body, actions }) => <div>{body}{actions}</div>} /> : <cardMod.ReviewCard item={item} />) } as unknown as CardMod
   await assert.rejects(kiemDongHo(cardNguoi), /NGUOI KHONG GUI ELAPSED/)
 })
@@ -885,7 +887,7 @@ test("OD1-AC-10 ?card= mở thẳng thẻ (đã quyết, ngoài trang 1); id l�
   assert.deepEqual(docCard("42"), { id: 42, raw: "42" })
   assert.equal(docCard(null), null)
   const rel = "src/components/ops/review/review-queue.tsx"
-  const loc = await banChep<QueueMod>(rel, (s) => s.replace("m?.id != null && items.some((i) => i.id === m.id)", "m?.id != null && filterReviewItems(items, DEFAULT_TYPE_FILTER, DEFAULT_STATUS_FILTER).some((i) => i.id === m.id)"))
+  const loc = await banChep<QueueMod>(rel, (s) => s.replace("m?.id != null && items.some((i) => i.id === m.id)", "m?.id != null && filterReviewItems(items, \"all\", DEFAULT_STATUS_FILTER).some((i) => i.id === m.id)"))
   await assert.rejects(kiemCard(loc.ReviewQueue), /CARD NGOAI BO LOC/)
   const im = await banChep<QueueMod>(rel, (s) => s.replace("    {thieuThe && (", "    {false && thieuThe && ("))
   await assert.rejects(kiemCard(im.ReviewQueue), /IM LANG KHI THIEU THE/)

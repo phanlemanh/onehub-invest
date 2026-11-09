@@ -210,6 +210,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   lượt quá 30 phút đếm riêng) là số trước của OD2. Thẻ Người có nhãn «Người», nhãn trạng thái là nhãn đáp án, tiêu đề Ghép căn
   không còn điểm Stage B, cột So so trên số hiện, ảnh hỏng gom một dòng; `?card=<id>` mở thẳng thẻ; Căn giá tốt báo «Đang chờ
   ghép» kèm liên kết (chỉ máy thu) — `_acceptance/ops-duyet-nhip-va-chu`.
+- Hộp hạng mục + chế độ duyệt (OD2, 08/11): `/ops/review` có PageHeader ba số (Chờ duyệt · Quá 3 ngày · Đã quyết hôm nay giờ
+  VN), hộp hạng mục bên trái danh sách (cột trái `@reui/solution-agents-9`, `?category=`) thay ô lọc theo `item_type`; «Duyệt
+  liền» mở chế độ duyệt: cũ nhất trước, quyết xong thẻ kế hiện trong cùng sheet, phím J/K/1–4/R/? (bảng phím
+  `@reui/c-dialog-9`), lệnh giữ 5 giây ở trình duyệt có «Hoàn tác» (xả bằng `keepalive` khi rời trang hay gỡ); lý do trống
+  thì gửi nhãn đáp án (Q4), «Bỏ» ở Bổ sung tin còn bắt gõ; «Quyết định gần đây» 20 lượt 7 ngày của chính người duyệt. Route
+  decide không đổi — `_acceptance/ops-duyet-hop-hang-muc`.
 - S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
   (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
   ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.
@@ -275,6 +281,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   nhóm số `do1-*` vào `dq_check_results` (lên cloud sẵn) — giữ nháp, bỏ sót, tín hiệu, chuyển bậc, lát thị trường/phường/dự
   án/toà; `pipeline/so-sanh-cach-doc.mjs` so cặp trước/sau. Xem ở `/ops/quality` khối «Đo hằng ngày». Nguyên tắc đo: FRAMING §5.
   Áp 083 lên DB máy thu và thêm hai lệnh vào `scripts/cloud-sync.sh` sau `bac-du-lieu`: giám sát làm sau gộp (Hỏi-3).
+- **Đo làm giàu (DO3, 08/11)**: `pipeline/do-lam-giau.mjs --write` (bước `cloud-sync.sh` sau `do-hang-ngay`) đếm theo từng đường
+  làm giàu (số qua người đăng, quy ước nhóm; diện tích suy ra, danh mục CĐT hiện «Chưa chạy» tới khi ghi lên tin) số thêm, đổi,
+  máy rút, người sửa/rút mỗi ngày (`do3-thay-doi`, ảnh chụp 086 chỉ máy thu) và kiểm ngược bỏ-một-ra mỗi tuần, không gọi model
+  (`do3-kiem-nguoc`, tỉ lệ đúng + cận dưới Wilson). Người sửa = nhãn người khác giá trị + phát biểu `hitl` ghi đè khác giá trị
+  (`nguoi_sua_de`); hai đường đang chạy đều không có lối người rút (Mạnh chốt 09/11). Xem ở `/ops/quality` khối «Làm giàu». Áp 086
+  lên DB máy thu: lời riêng của Mạnh.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị

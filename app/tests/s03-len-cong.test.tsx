@@ -157,8 +157,12 @@ test("SL1-AC-8 vùng tin rao: thẻ cấp thị trường không có liên kết
 
 test("SL1-AC-8 thị trường chỉ có tin cấp thị trường vẫn hiện tin, không báo đang thu thập", { skip, timeout: 120_000 }, async () => {
   await withTx(async (c, ca) => {
+    // Thị trường không có phường: từ PX1 (084 + nạp danh bạ) mọi thị trường mang xã danh bạ (`meta.source = 'dvhc'`,
+    // không ranh giới, không tin trong view của ca) — chọn như trước nạp, bỏ qua các xã đó.
     const { rows: [{ id: khongPhuong }] } = await c.query(
-      `SELECT id FROM areas m WHERE region_type = 'market' AND NOT EXISTS (SELECT 1 FROM areas w WHERE w.parent_id = m.id) ORDER BY id LIMIT 1`)
+      `SELECT id FROM areas m WHERE region_type = 'market'
+         AND NOT EXISTS (SELECT 1 FROM areas w WHERE w.parent_id = m.id AND w.meta->>'source' IS DISTINCT FROM 'dvhc')
+       ORDER BY id LIMIT 1`)
     const duong = `/vn/${khongPhuong}`
     assert.ok((await veVung(khongPhuong, duong)).includes("Đang thu thập"), "SL1-AC-8 đối chứng: thị trường chưa có tin phải báo đang thu thập")
     await c.query("UPDATE sale_offer_records SET area_id = $2 WHERE offer_id = $1", [ca.s03, khongPhuong])

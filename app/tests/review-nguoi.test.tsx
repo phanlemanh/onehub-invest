@@ -90,7 +90,8 @@ test("TN-AC-8 thẻ Gộp Người: nội dung, nút theo lý do, body gửi đ�
     const t = r.text();
     assert.match(t, /Gộp Người\?/);
     for (const s of ["Anh Một", "a1", "a2", "Chưa có tên", "+84900000001", "S03:o1", "60 m²"]) assert.ok(t.includes(s), `TN-AC-8 thiếu «${s}»`);
-    for (const [l] of NUT) assert.equal(nut(l)?.disabled, true, `TN-AC-8 nút «${l}» bấm được khi lý do trống`);
+    // OD2 (Q4): lý do trống thì đáp án là lý do — mọi nút thẻ Người bật.
+    for (const [l] of NUT) assert.equal(nut(l)?.disabled, false, `TN-AC-8 nút «${l}» tắt khi lý do trống (Q4)`);
     await r.lyDo("Cùng một môi giới");
     for (const [l] of NUT) assert.equal(nut(l)?.disabled, false, `TN-AC-8 nút «${l}» tắt khi đã có lý do`);
     await r.click(label);
@@ -127,11 +128,11 @@ test("TN-AC-8 thẻ đã quyết: nhãn + lý do; đối chứng data_quality kh
 
 test("TN-AC-8 chiều đỏ: bản đột biến nút Giữ tách gửi approved", async () => {
   const goc = readFileSync(join(import.meta.dirname, "../src/components/ops/review-card-nguoi.tsx"), "utf8");
-  const DONG = `onClick={() => d.decide("rejected")} disabled={tat}`;
+  const DONG = `onClick={() => d.decide("rejected")} disabled={d.pending || !d.sanSang("rejected")}`;
   assert.ok(goc.includes(DONG), "TN-AC-8 dòng nút Giữ tách không còn nguyên văn");
   const tep = join(import.meta.dirname, "../src/components/ops/_db-review-card-nguoi.tsx");
   const { writeFileSync, rmSync } = await import("node:fs");
-  writeFileSync(tep, goc.replace(DONG, `onClick={() => d.decide("approved")} disabled={tat}`));
+  writeFileSync(tep, goc.replace(DONG, `onClick={() => d.decide("approved")} disabled={d.pending || !d.sanSang("rejected")}`));
   try {
     const m = await import(tep);
     const React = await import("react");

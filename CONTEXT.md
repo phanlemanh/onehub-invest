@@ -86,10 +86,25 @@ _Avoid_: hồ sơ người bán
 - Code: `registry_alias` · RESO: không có
 _Avoid_: alias (trên UI)
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện chứa cụm tin S06 do máy tự dựng (gom cụm) — cụm không phải căn đã gắn; bảng chuyển dần thành view trên danh bạ (FRAMING §3.4, 08/11).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
+
+**Gắn căn**: Tin khớp đúng một căn của danh bạ bằng định danh duy nhất — dự án + toà + mã căn, hoặc số nhà + đường + phường; là bậc B3 (FRAMING §3.4, Mạnh chốt 08/11: «gắn được căn là đã nhận diện duy nhất, như có số nhà, có mã căn»). Mã căn hay số nhà có trong chữ tin là điều kiện cần, chỉ tính khi khớp một căn có thật trong danh bạ; tin mang định danh mà chưa khớp là «chờ khớp». Gom trùng và gom cụm không phải gắn căn.
+- Code: `unitLinked` (khối `dataFlow`), chờ khớp: `uniqueIdPending` · RESO: `UnitNumber`, `StreetNumber` + UPI của căn
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn cụm, linked (trên UI)
+
+**Định vị**: Tin gắn vào một nút dự án, toà hoặc trục có trong danh bạ, kèm bằng chứng — biết tin nói về toà nào, trục nào mà chưa tới đúng một căn; là bậc B2 (FRAMING §3.4). Toà hay trục ghi trong chữ tin mà chưa khớp danh bạ là «chờ khớp».
+- Code: `located` (khối `dataFlow`), chờ khớp: `locatedPending` · RESO: `SubdivisionName`, `BuildingName`
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn toà, căn suy ra
+
+**Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
+- Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: căn tự dựng, cụm căn
 
 **Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
@@ -453,10 +468,11 @@ _Avoid_: bản chụp, dump
 - Slug URL: `collections`
 _Avoid_: cào, crawl
 
-**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → Gắn căn — kèm nhánh rơi
-(«Không đọc được», «Chưa gắn căn») và nhánh «Gộp vào tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
+**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → mức nhận diện (Gom cụm ·
+Định vị · Gắn căn, mỗi mức là phần trăm trên Tin rao) — kèm nhánh rơi («Không đọc được», «Chưa định vị») và nhánh «Gộp vào
+tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
 `/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
-- Code: `data flow (getDataFlow, StageCounts: received · readable · offers · linked)` · RESO: —
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked)` · RESO: —
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 
@@ -496,6 +512,28 @@ _Avoid_: rolling sample, mẫu mù
 nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (tham số `lat-do`).
 - Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
 _Avoid_: dashboard đo, KPI hằng ngày
+
+**Làm giàu**: giá trị máy thêm vào tin mà tin không tự ghi, theo từng đường (Số qua người đăng, Quy ước nhóm, Diện tích suy
+ra, Danh mục CĐT). Khối «Làm giàu» của «Chất lượng dữ liệu» đếm mỗi ngày giá trị thêm, đổi, máy rút, người sửa, người rút;
+đường không có lối người rút (số qua người đăng) hiện «không có đường người rút» thay số 0. Lần chạy đầu của một đường chỉ lập mốc.
+- Code: `pipeline/do-lam-giau.mjs`, `dq_check_results` `do3-thay-doi`, `enrichment_value_state`, `enrichment_value_change`, `app/src/lib/ops/quality-lam-giau.ts` · RESO: —
+_Avoid_: enrich (trên UI), bổ sung dữ liệu
+
+**Kiểm ngược**: mỗi tuần ISO, giấu giá trị đã có của một tin hay bài, cho đường làm giàu suy lại rồi so (bỏ-một-ra). Ra tỉ lệ
+đúng trên đúng + sai kèm cận dưới Wilson 95% và n, so tuần trước; «chênh có ý nghĩa» khi hai khoảng không chồng nhau. Tập đo
+ghi rõ (tin có số riêng, bài có chữ loại hình), nên không phải độ đúng trên mọi tin.
+- Code: `dq_check_results` `do3-kiem-nguoc`, `kiemNguocSo`, `kiemNguocNhom` (`pipeline/lib/do-lam-giau.mjs`) · RESO: —
+_Avoid_: backtest, độ chính xác (khi chưa nói tập đo)
+
+**Cận dưới Wilson**: đầu dưới của khoảng tin cậy Wilson 95% cho một tỉ lệ đúng trên n mẫu; mẫu ít thì cận dưới thấp hơn tỉ lệ thô
+nhiều, nên so ngưỡng và so tuần bằng cận dưới chứ không bằng tỉ lệ thô. Khối «Làm giàu» và cổng tự áp F3 dùng nó.
+- Code: `wilson` (`pipeline/lib/do-hang-ngay.mjs`), `wilson.thap` trong detail `do3-kiem-nguoc` · RESO: —
+_Avoid_: cận Wilson, Wilson thấp
+
+**Chưa chạy**: đường làm giàu chưa ghi giá trị nào lên tin; khối hiện «Chưa chạy», không hiện số 0 (đường đã lập mốc mà mất hết
+giá trị thì không phải chưa chạy: các giá trị mất đếm là máy rút).
+- Code: `status = 'skip'`, `ly_do = 'chua-chay'` của `do3-thay-doi` · RESO: —
+_Avoid_: không hoạt động
 
 **So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
 4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.
@@ -576,15 +614,15 @@ _Avoid_: calibration
 **Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent — LLM không ghi dữ liệu trực tiếp (luật 7). Ba loại thẻ có
 giao diện: Ghép căn (`entity_match`), Bổ sung tin (`agent_output` `enrich:`), Người (`data_quality` `nguoi:`, HD17); loại khác
 hiện mã nguyên văn. Mỗi thẻ thuộc một Hạng mục duyệt. Nhãn trạng thái sau khi quyết là nhãn đáp án đã bấm (Cùng căn, Khác căn,
-Đã áp, Đã gộp…). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
+Đã áp, Đã gộp…). Chọn thẻ theo Hộp hạng mục, quyết liền ở Chế độ duyệt (OD2). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Tham số URL: `card`
+- Tham số URL: `card` · `category`
 - Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10). `/ops/review?card=<id>` mở thẳng sheet của thẻ `<id>`
-  (OD1), kể cả thẻ đã quyết.
+  (OD1), kể cả thẻ đã quyết. `/ops/review?category=<mã Hạng mục duyệt>` chọn sẵn một mục của Hộp hạng mục (OD2).
 _Avoid_: Review Queue, hàng chờ
 
-**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+**Lý do quyết định**: Câu ghi kèm khi quyết một thẻ ở Hàng duyệt, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Người để trống thì nhãn đáp án đã bấm là lý do (OD2, Q4), nên lý do không bao giờ rỗng; riêng «Bỏ» ở thẻ Bổ sung tin còn bắt gõ tay tới khi thẻ phân được ghi đè (OD4). Nhãn ô: «Lý do».
 - Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
 _Avoid_: ghi chú, comment, note
 
@@ -605,6 +643,28 @@ trước của OD2.
 - Code: `ops_audit.detail.seconds`, `since_prev_seconds`, `opened_at`, `decided_at` (route decide, body `elapsed_ms`) ·
   `loadReviewPace` · RESO: —
 _Avoid_: tốc độ duyệt, năng suất (chưa nói đơn vị)
+
+**Hộp hạng mục**: Cột trái của danh sách thẻ ở `/ops/review`: mục «Tất cả» rồi mỗi Hạng mục duyệt đang có thẻ chờ, kèm số thẻ
+chờ, tuổi thẻ chờ cũ nhất và trung vị giây ở thẻ 7 ngày. Bấm một mục để lọc và duyệt liền mục đó (OD2, khuôn
+`@reui/solution-agents-9`).
+- Code: `hopHangMuc`, `ReviewHopHangMuc` · Tham số URL `category` · RESO: —
+_Avoid_: rail, bộ lọc loại thẻ (ô «Loại thẻ» đã bỏ ở OD2)
+
+**Chế độ duyệt**: Cách quyết liền các thẻ chờ của một Hạng mục duyệt trong một sheet: cũ nhất trước, quyết xong thẻ kế hiện
+ngay (sheet không đóng giữa hai thẻ), đầu sheet ghi «k/N · hạng mục», đi lại và quyết bằng phím (`J`/`K`, `1`–`4`, `R`, `?`).
+Nút «Duyệt liền» mở chế độ này (OD2).
+- Code: `hangDuyet`, `usePhimDuyet`, `ReviewDetailSheet` (`dieuHuong`) · RESO: —
+_Avoid_: duyệt hàng loạt (GD10 đã loại — mỗi thẻ vẫn một quyết định), focus mode
+
+**Hoàn tác**: Huỷ một quyết định trong 5 giây sau khi bấm: lệnh giữ ở trình duyệt rồi mới gửi, toast «Đã ghi #id · <nhãn>»
+có nút «Hoàn tác». Quá 5 giây thì đảo là lệnh đảo (ADR-0015, việc sau). Rời trang khi còn lệnh chờ thì lệnh gửi ngay (OD2, Q7).
+- Code: `HangGuiProvider`, `HOAN_TAC_MS` · RESO: —
+_Avoid_: undo (trên UI), huỷ quyết định (sau 5 giây)
+
+**Quyết định gần đây**: 20 lượt quyết mới nhất trong 7 ngày của chính người đang duyệt, ở `/ops/review`: mã thẻ, tiêu đề, nhãn
+đáp án, lý do, giờ; bấm mã thẻ để xem lại thẻ (OD2).
+- Code: `loadRecentDecisions`, `ReviewGanDay` (`ops_audit` `review.decide`) · RESO: —
+_Avoid_: lịch sử duyệt, nhật ký (là `/ops/audit`)
 
 **Đang chờ ghép**: Nhãn của một căn ở Căn giá tốt khi căn là Tin A hay Tin B của một thẻ Ghép căn còn chờ ở Hàng duyệt —
 người gọi điện biết căn có thể là một căn trùng. Kèm liên kết «Mở thẻ ghép #<id>». Chỉ ở máy thu.

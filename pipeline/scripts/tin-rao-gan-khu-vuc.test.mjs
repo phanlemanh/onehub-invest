@@ -207,9 +207,12 @@ export const MA_TRAN = {
   "sql/300_metrics.sql": "mien",
   "sql/450_dq_checks.sql": "mien",
   "sql/500_asset_stats.sql": "mien", // s03-len-cong: lọc thống kê theo phường, không gán khu vực
+  "sql/600_data_flow.sql": "mien", // gan-can-dinh-danh-duy-nhat: «đủ định danh» đọc khu là phường để đếm, không gán khu vực
   "refresh-bait-gap.mjs": "mien",
   "do-hang-ngay.mjs": "mien", // DO1: đọc phường/thị trường để phân rã số đo, không gán khu vực
   "scripts/do1-dung-thu.mjs": "mien", // DO1: dữ liệu mẫu trên DB thử, lấy một phường bất kỳ, không gán khu vực tin thật
+  "lib/do-lam-giau-db.mjs": "mien", // DO3: đọc phường/thị trường của tin để lát số đo, không gán khu vực
+  "scripts/do3-dung-thu.mjs": "mien", // DO3: dữ liệu mẫu trên DB thử, lấy một phường bất kỳ, không gán khu vực tin thật
   "nap-dvhc.mjs": "mien", // PX1: bộ nạp danh bạ xã ghi areas, không gán khu vực cho tin
   "scripts/nap-dvhc-do.mjs": "mien", // PX1: thước trước/sau, đọc danh sách tên như transform, ROLLBACK, không gán tin thật
 };
@@ -247,7 +250,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 18, "ma trận viết trước phải đủ 18 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1 + bộ nạp và thước danh bạ PX1)");
+  assert.equal(Object.keys(MA_TRAN).length, 21, "ma trận viết trước phải đủ 21 tệp (design doc §5 + phép đo N1 + 500 của s03-len-cong + đo hằng ngày DO1 + dữ liệu mẫu DO1 + bộ nạp và thước danh bạ PX1 + 600 của gan-can-dinh-danh-duy-nhat + bộ đọc và dữ liệu mẫu DO3)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 
