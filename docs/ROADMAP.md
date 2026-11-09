@@ -296,6 +296,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`do3-kiem-nguoc`, tỉ lệ đúng + cận dưới Wilson). Người sửa = nhãn người khác giá trị + phát biểu `hitl` ghi đè khác giá trị
   (`nguoi_sua_de`); hai đường đang chạy đều không có lối người rút (Mạnh chốt 09/11). Xem ở `/ops/quality` khối «Làm giàu». Áp 086
   lên DB máy thu: lời riêng của Mạnh.
+- **Thang bậc 08/11 chạy hằng ngày (thang-bac-moi-b0-b5, 09/11)**: 087 viết lại bậc theo FRAMING §3.4 — B0 Có lời khai · B1
+  Tin · B2 Định vị · B3 Gắn căn · B4 Làm giàu · B5 Sống. Một tập đơn vị `data_level_units()` cho `610_data_level.sql` và DO1: mọi
+  tin S03/S05/S06 chưa gắn căn (kể cả tin trong cụm — gom cụm không cho bậc) + căn danh bạ có tin gắn; hai vị từ chờ bảng nối
+  (`offer_located`, `offer_unit_key`, hôm nay false/NULL) là chỗ cắm của GC. Cột `scale` (`thang-2310`/`thang-0811`) trên ảnh
+  chụp và bậc từng đơn vị: DO1 ngày đổi thang lập mốc lại (`ly_do: doi-thang`), báo cáo ngày không so hai ngày khác thang,
+  `/ops/quality` hiện «Thang bậc 08/11 áp từ <ngày>». Chưa áp 087 thì `bac-du-lieu` và phần chuyển bậc của DO1 bỏ qua có tên
+  (`chua-ap-087`). `checkDb` thôi vớ CHECK chéo của `data_level_change`. Áp 087 lên DB máy thu và cloud: lời riêng của Mạnh.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị

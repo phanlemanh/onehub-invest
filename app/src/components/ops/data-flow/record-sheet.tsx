@@ -56,7 +56,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-/** Điều kiện lên bậc kế (bản DF0: năm trường lõi cho B1, gắn căn cho B2; loại thiếu tin/hệ thống ở DF2). */
+/** Điều kiện lên bậc kế (thang 08/11: năm trường lõi cho B1, định vị vào danh bạ cho B2, khớp một căn cho B3). */
 function LevelGate({ record }: { record: FlowRecord }) {
   const fields = coreFields(record)
   const missing = fields.filter((f) => !f.ok)
@@ -65,8 +65,8 @@ function LevelGate({ record }: { record: FlowRecord }) {
     level === DATA_LEVEL.B0
       ? `Lên B1 cần đủ năm trường lõi — còn thiếu ${missing.map((f) => f.label.toLowerCase()).join(", ")}.`
       : level === DATA_LEVEL.B1
-        ? "Lên B2 cần gắn được tin về một căn."
-        : "Lên B3 cần số đo trên nhãn cho các trường lõi (PL7, PL9)."
+        ? "Lên B2 cần định vị tin vào dự án, toà hoặc trục của danh bạ."
+        : "Lên B3 cần khớp đúng một căn của danh bạ."
   return (
     <Section title={`Trường lõi ${fields.length - missing.length}/5`}>
       <ul className="flex flex-wrap gap-1.5">

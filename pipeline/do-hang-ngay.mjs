@@ -3,7 +3,10 @@
 //   node pipeline/do-hang-ngay.mjs [--write] [--ngay YYYY-MM-DD]
 // Không --write: tính trong giao dịch rồi ROLLBACK, in tóm tắt. --write: khoá advisory 56083 trong giao dịch, ghi
 // data_level_change (gộp nhiều lần chạy trong ngày thành một dòng mỗi đơn vị), thay data_level_unit, ghi lại các dòng do1-*
-// của ngày (giờ VN). Lần đầu (data_level_unit rỗng) chỉ lập mốc. Chạy sau bac-du-lieu.mjs (cùng hai hàm SQL của 056).
+// của ngày (giờ VN). Lần đầu (data_level_unit rỗng) chỉ lập mốc. Chạy sau bac-du-lieu.mjs (cùng tập đơn vị data_level_units()
+// của 087). Thang 08/11 (thang-bac-moi-b0-b5): data_level_unit còn dòng thang cũ → lập mốc lại, không ghi dòng chuyển ngày đó
+// (đổi thang là lần hạ một lần, không phải tụt bậc); mọi dòng do1-chuyen-bac mang thang + ngày áp. Chưa áp 087 → phần chuyển
+// bậc bỏ qua có tên (không đụng data_level_unit/change), bốn nhóm số còn lại vẫn chạy.
 // Bảng 083 chỉ ở máy thu; số gộp lên cloud qua dq_check_results (đã có trong FILL của sync-cloud.mjs). detail qua chanLo.
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -21,36 +24,42 @@ const CORE_SQL = (o) => `jsonb_build_object(
   'measured', (SELECT bool_and(coalesce(${o}.field_provenance -> k ->> 'measured', '') = 'true')
                  FROM unnest(ARRAY['kind','property_type','price_vnd','area_m2','area_id']) k))`;
 
-/** Bậc hiện tại của mọi đơn vị — cùng tập đơn vị với 610_data_level.sql. */
+export const THANG = "thang-0811";
+
+/** DB đã áp 087 chưa (tập đơn vị data_level_units). */
+export async function co087(client) {
+  const { rows: [r] } = await client.query("SELECT to_regprocedure('data_level_units()') IS NOT NULL AS co");
+  return r.co;
+}
+
+/** Ngày áp thang hiện hành = ngày nhỏ nhất có ảnh chụp mang thang ấy (bac-du-lieu chạy trước DO1); chưa có thì `ngay`. */
+export async function tuNgayThang(client, ngay) {
+  const { rows: [r] } = await client.query(
+    "SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG]);
+  return r.d ?? ngay;
+}
+
+/** Bậc hiện tại của mọi đơn vị — data_level_units() của 087, cùng tập với 610_data_level.sql. */
 export async function donViHienTai(client) {
   const { rows } = await client.query(`
-    WITH can AS (
-      SELECT 'can:' || p.id AS unit_key, 'can' AS unit, b.data_level, b.ke_thieu, p.area_id, p.project_node,
-             (SELECT min(o.source) FROM property_offers po JOIN sale_offers o USING (offer_id) WHERE po.property_id = p.id) AS source,
-             (SELECT jsonb_build_object(
-                'kind', bool_or((c->>'kind')::boolean), 'property_type', bool_or((c->>'property_type')::boolean),
-                'price_vnd', bool_or((c->>'price_vnd')::boolean), 'area_m2', bool_or((c->>'area_m2')::boolean),
-                'area_id', bool_or((c->>'area_id')::boolean), 'measured', coalesce(bool_or((c->>'measured')::boolean), false),
-                'tin', coalesce(jsonb_agg(x.offer_id ORDER BY x.offer_id), '[]'::jsonb),
-                'toa_chu', bool_or(x.block_raw IS NOT NULL AND x.block_raw <> ''))
-                FROM (SELECT o.offer_id, o.block_raw, ${CORE_SQL("o")} AS c
-                        FROM property_offers po JOIN sale_offers o USING (offer_id) WHERE po.property_id = p.id) x) AS core
-        FROM property_data_level(NULL) b JOIN properties p ON p.id = b.property_id
-    ), tin AS (
-      SELECT 'tin:' || o.offer_id, 'tin_le', l.data_level, l.ke_thieu, o.area_id, NULL::bigint, o.source,
-             ${CORE_SQL("o")} || jsonb_build_object('tin', '[]'::jsonb, 'toa_chu', coalesce(o.block_raw <> '', false))
-        FROM sale_offers o
-       CROSS JOIN LATERAL offer_data_level(o.kind, o.property_type, o.price_vnd, o.area_m2, o.area_id, false) l
-       WHERE o.source IN ('S03', 'S05', 'S06') AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id)
-    )
-    SELECT d.*, w.id AS ward_id, m.id AS market_id
-      FROM (SELECT * FROM can UNION ALL SELECT * FROM tin) d
+    SELECT d.unit_key, d.unit, d.data_level, d.ke_thieu, d.area_id, d.source,
+           (SELECT jsonb_build_object(
+              'kind', bool_or((c->>'kind')::boolean), 'property_type', bool_or((c->>'property_type')::boolean),
+              'price_vnd', bool_or((c->>'price_vnd')::boolean), 'area_m2', bool_or((c->>'area_m2')::boolean),
+              'area_id', bool_or((c->>'area_id')::boolean), 'measured', coalesce(bool_or((c->>'measured')::boolean), false),
+              'tin', CASE WHEN d.unit = 'can' THEN coalesce(jsonb_agg(x.offer_id ORDER BY x.offer_id), '[]'::jsonb)
+                          ELSE '[]'::jsonb END,
+              'toa_chu', coalesce(bool_or(x.block_raw IS NOT NULL AND x.block_raw <> ''), false))
+              FROM (SELECT o.offer_id, o.block_raw, ${CORE_SQL("o")} AS c
+                      FROM sale_offers o WHERE o.offer_id = ANY (d.offer_ids)) x) AS core,
+           w.id AS ward_id, m.id AS market_id
+      FROM data_level_units() d
       LEFT JOIN areas w ON w.id = d.area_id AND w.region_type = 'submarket'
       LEFT JOIN areas m ON m.region_type = 'market' AND m.id IN (d.area_id, (SELECT parent_id FROM areas WHERE id = d.area_id))`);
   return new Map(rows.map((r) => [r.unit_key, {
     unit_key: r.unit_key, unit: r.unit, source: r.source, data_level: r.data_level, ke_thieu: r.ke_thieu,
     core: { ...r.core, tin: r.core?.tin ?? [] }, market_id: r.market_id, ward_id: r.ward_id,
-    project_key: r.project_node ? `node:${r.project_node}` : null, building_key: null,
+    project_key: null, building_key: null,   // dự án, toà của đơn vị có khi bảng nối tin → nút danh bạ có (GC)
   }]));
 }
 
@@ -89,8 +98,8 @@ async function thayDonVi(client, nay, ngay) {
   for (let i = 0; i < ds.length; i += 2000) {
     const lo = ds.slice(i, i + 2000);
     await client.query(
-      `INSERT INTO data_level_unit (unit_key, unit, source, data_level, ke_thieu, core, market_id, ward_id, project_key, building_key, seen_on)
-       SELECT * FROM jsonb_to_recordset($1::jsonb) AS x(unit_key text, unit text, source text, data_level text, ke_thieu text,
+      `INSERT INTO data_level_unit (unit_key, unit, source, data_level, ke_thieu, core, market_id, ward_id, project_key, building_key, seen_on, scale)
+       SELECT *, '${THANG}' FROM jsonb_to_recordset($1::jsonb) AS x(unit_key text, unit text, source text, data_level text, ke_thieu text,
               core jsonb, market_id text, ward_id text, project_key text, building_key text, seen_on date)`,
       [JSON.stringify(lo.map((u) => ({ ...u, seen_on: ngay })))]);
   }
@@ -141,12 +150,20 @@ function latThe(the, ngay) {
 export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = false, dotBien } = {}) {
   const ra = [];
   // ---- Chuyển bậc ----
-  const nay = await donViHienTai(client);
-  const { rows: truocRows } = await client.query("SELECT * FROM data_level_unit");
   let lapMoc = false, chuyen = [];
+  if (!(await co087(client))) {
+    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "chua-ap-087" } });
+  } else {
+  const nay = await donViHienTai(client);
+  const thang = { ma: THANG, tu_ngay: await tuNgayThang(client, ngay) };
+  const { rows: truocRows } = await client.query("SELECT * FROM data_level_unit");
   if (!truocRows.length) {
     lapMoc = true;
-    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "lap-moc", don_vi: nay.size } });
+    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "lap-moc", don_vi: nay.size, thang } });
+  } else if (dotBien !== "bo-doi-thang" && truocRows.some((r) => r.scale !== THANG)) {   // bo-doi-thang: đột biến cho thước TB-AC-5
+    // Đổi thang 08/11: bậc cũ đếm theo thang khác — so với nó là đọc lần hạ một lần thành tụt bậc. Lập mốc lại.
+    lapMoc = true;
+    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "doi-thang", don_vi: nay.size, thang } });
   } else {
     const truoc = new Map(truocRows.map((r) => [r.unit_key, r]));
     const tinTruoc = [...truoc.keys()].filter((k) => k.startsWith("tin:")).map((k) => k.slice(4));
@@ -159,9 +176,10 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
     // data_level_change không mang core: tra đơn vị (lần này, hoặc lần trước với đơn vị đã mất) để biết bài có nêu toà không.
     const donVi = (r) => nay.get(r.unit_key) ?? truoc.get(r.unit_key) ?? r;
     const lat = Object.fromEntries(Object.entries(KHOA_LAT_DON_VI).map(([c, k]) => [c, phanRa(ngayRows, (r) => k(dotBien === "lat-tren-dong" ? r : donVi(r)), () => 1, 30, { dotBien })]));
-    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "pass", detail: { ngay, ...demChuyenBac(ngayRows, { dotBien }), lat } });
+    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "pass", detail: { ngay, ...demChuyenBac(ngayRows, { dotBien }), lat, thang } });
   }
   await thayDonVi(client, nay, ngay);
+  }
 
   // ---- Mẫu soát: giữ nháp, bỏ sót ----
   const the = await docThe(client, ngay);

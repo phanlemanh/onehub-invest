@@ -269,7 +269,7 @@ describe("DF-AC-3 SQL khớp levelOf", () => {
       )
       const lech = rows
         .map((r) => {
-          const lv = levelOf({ kind: r.kind, propertyType: r.property_type, priceVnd: r.price, areaM2: r.area, ward: r.area_id, linked: r.linked })
+          const lv = levelOf({ kind: r.kind, propertyType: r.property_type, priceVnd: r.price, areaM2: r.area, ward: r.area_id, located: false })
           return { id: r.offer_id, sql: Boolean(r.sql_du), ts: lv !== "B0" }
         })
         .filter((x) => x.sql !== x.ts)
@@ -299,7 +299,7 @@ describe("DF-AC-3 SQL khớp levelOf", () => {
     for (const r of rows) {
       const x = by.get(r.source) ?? { sql: 0, ts: 0 }
       if (r.sql_du) x.sql++
-      if (levelOf({ kind: r.kind, propertyType: r.property_type, priceVnd: r.price, areaM2: r.area, ward: r.area_id, linked: false }) !== "B0") x.ts++
+      if (levelOf({ kind: r.kind, propertyType: r.property_type, priceVnd: r.price, areaM2: r.area, ward: r.area_id, located: false }) !== "B0") x.ts++
       by.set(r.source, x)
     }
     console.log(`# DF-AC-3 DB thật ${JSON.stringify(Object.fromEntries(by))}`)
@@ -347,7 +347,7 @@ describe("DF-AC-5 nút thắt", () => {
 type Rec = import("../src/lib/data-flow-queries").FlowRecord
 const rec = (p: Partial<Rec>): Rec => ({
   offerId: "r", source: "S03", kind: "sale", propertyType: "unknown", priceVnd: 3_200_000_000, areaM2: 81, bedrooms: 3,
-  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false,
+  ward: null, market: null, confidence: "medium", nPosts: 1, located: false,
   identification: { level: "none", locatedPending: false, uniqueIdPending: false }, firstSeen: "2026-10-25 09:00:00+00",
   lastSeen: "2026-10-25 09:00:00+00", postText: "3pn 81m2 có sổ 3,2 tỷ", postGroup: "Nhóm A", ...p,
 })
@@ -355,9 +355,9 @@ const RECS: Rec[] = [
   rec({ offerId: "a", source: "S03" }),
   rec({ offerId: "b", source: "S03", kind: "rent_lt", propertyType: "apartment", ward: "Bảy Hiền", market: "Thành phố Hồ Chí Minh" }),
   rec({ offerId: "c", source: "S05", kind: "rent_lt", propertyType: "apartment", ward: "Láng", market: "Thành phố Hà Nội" }),
-  rec({ offerId: "d", source: "S06", propertyType: "house", ward: "Tân Định", market: "Thành phố Hồ Chí Minh", linked: true, postText: null, postGroup: null }),
-  rec({ offerId: "e", source: "S06", kind: "rent_lt", propertyType: "apartment", ward: "Bến Nghé", market: "Thành phố Hồ Chí Minh", linked: false, postText: null }),
-  rec({ offerId: "f", source: "S06", propertyType: "apartment", ward: "Láng", market: "Thành phố Hà Nội", linked: true, postText: null }),
+  rec({ offerId: "d", source: "S06", propertyType: "house", ward: "Tân Định", market: "Thành phố Hồ Chí Minh", located: true, postText: null, postGroup: null }),
+  rec({ offerId: "e", source: "S06", kind: "rent_lt", propertyType: "apartment", ward: "Bến Nghé", market: "Thành phố Hồ Chí Minh", located: false, postText: null }),
+  rec({ offerId: "f", source: "S06", propertyType: "apartment", ward: "Láng", market: "Thành phố Hà Nội", located: true, postText: null }),
 ]
 
 describe("DF-AC-6 bộ lọc và hồ sơ tin", () => {
@@ -404,10 +404,10 @@ describe("DF-AC-6 bộ lọc và hồ sơ tin", () => {
     await render(<RecordSheet record={RECS[3]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     d = dialogs()[0]
     assert.match(d.textContent ?? "", /Trường lõi 5\/5/)
-    assert.match(d.textContent ?? "", /Lên B3 cần số đo trên nhãn cho các trường lõi \(PL7, PL9\)\./)
+    assert.match(d.textContent ?? "", /Lên B3 cần khớp đúng một căn của danh bạ\./)
     assert.match(d.textContent ?? "", /S06 chưa lưu khoá nối ngược tin → bài \(TV10\)\./)
     await render(<RecordSheet record={RECS[4]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
-    assert.match(dialogs()[0].textContent ?? "", /Lên B2 cần gắn được tin về một căn\./)
+    assert.match(dialogs()[0].textContent ?? "", /Lên B2 cần định vị tin vào dự án, toà hoặc trục của danh bạ\./)
   })
   test("DF-AC-6 bấm nút tiêu đề — hồ sơ mở và ở lại", async () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
