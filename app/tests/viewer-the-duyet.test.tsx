@@ -334,7 +334,7 @@ describe("VT-AC-4 data-flow: props đã che", () => {
 // ---------- AC-5: sheet bản ghi ----------
 const rec = (p: Partial<FlowRecord>): FlowRecord => ({
   offerId: "r", source: "S05", kind: "rent_lt", propertyType: "apartment", priceVnd: 9_000_000, areaM2: 40, bedrooms: 1,
-  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false, firstSeen: "2026-10-25 09:00:00+00",
+  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false, identification: { level: "none", locatedPending: false, uniqueIdPending: false }, firstSeen: "2026-10-25 09:00:00+00",
   lastSeen: "2026-10-25 09:00:00+00", postText: "vt-bai-x", postGroup: "nhóm vt", ...p,
 })
 const RECS: FlowRecord[] = [rec({ offerId: "x" }), rec({ offerId: "y", source: "S06", postText: null, postGroup: null, firstSeen: "2026-10-24 09:00:00+00" })]

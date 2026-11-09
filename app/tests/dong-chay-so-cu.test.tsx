@@ -224,7 +224,7 @@ async function staleProblems(root: Element, flow: DF, oldest: string, facts: FF)
     if (!dong.some((l) => l.includes(s.source) && l.endsWith(`tới Bài nhận: ${s.received}`))) out.push(`đường ống thiếu «${s.source} tới Bài nhận: ${s.received}»`)
     const tr = [...(table?.querySelectorAll("tbody tr") ?? [])].find((r) => txt(r.querySelector("td")).includes(s.source))
     const cell = (col: string) => txt(tr?.querySelectorAll("td")[cols.indexOf(col)]?.querySelector("span.font-medium"))
-    for (const [k, col, v] of [["Bài nhận", "received", s.received], ["Đọc được", "readable", s.readable], ["Tin rao", "offers", s.offers], ["Đủ trường lõi", "complete", s.complete], ["Gắn căn", "linked", s.linked]] as const)
+    for (const [k, col, v] of [["Bài nhận", "received", s.received], ["Đọc được", "readable", s.readable], ["Tin rao", "offers", s.offers], ["Đủ trường lõi", "complete", s.complete], ["Gom cụm", "clustered", s.clustered], ["Gắn căn", "unitLinked", s.unitLinked]] as const)
       if (cell(col) !== String(v)) out.push(`hàng ${s.source} ô ${k} «${cell(col)}» ≠ ${v}`)
   }
   return out

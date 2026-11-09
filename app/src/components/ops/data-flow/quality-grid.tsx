@@ -34,15 +34,33 @@ const TONE: Record<Health["tone"], "success-light" | "warning-light" | "destruct
   destructive: "destructive-light",
 }
 
-function StageCell({ value, of, suffix }: { value: number | null; of: number; suffix?: string }) {
+function StageCell({ value, of, suffix, pending }: { value: number | null; of: number; suffix?: string; pending?: number | null }) {
   if (value === null) return <span className="text-muted-foreground text-sm">—</span>
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="text-foreground text-sm font-medium tabular-nums">{fmtInt(value)}</span>
       <span className="text-muted-foreground text-xs tabular-nums">{suffix ?? (of > 0 ? fmtPct(value / of, 0) : "—")}</span>
+      {pending ? <span className="text-muted-foreground text-xs tabular-nums">{fmtInt(pending)} chờ khớp</span> : null}
     </div>
   )
 }
+
+/** Ba cột mức nhận diện (gan-can-dinh-danh-duy-nhat): phần trăm trên Tin rao; Định vị, Gắn căn kèm số tin «chờ khớp». */
+const levelColumn = (
+  id: "clustered" | "located" | "unitLinked",
+  title: string,
+  pending?: "locatedPending" | "uniqueIdPending",
+): ColumnDef<DataGridFeatures, QualityRow> => ({
+  accessorFn: (r) => r[id] ?? -1,
+  id,
+  header: ({ column }) => <DataGridColumnHeader title={title} column={column} />,
+  cell: ({ row }) => (
+    <StageCell value={row.original[id]} of={row.original.offers} pending={pending ? row.original[pending] : null} />
+  ),
+  size: 110,
+  enableSorting: true,
+  meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
+})
 
 const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
   {
@@ -116,15 +134,9 @@ const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
     enableSorting: true,
     meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
   },
-  {
-    accessorFn: (r) => r.linked ?? -1,
-    id: "linked",
-    header: ({ column }) => <DataGridColumnHeader title="Gắn căn" column={column} />,
-    cell: ({ row }) => <StageCell value={row.original.linked} of={row.original.offers} />,
-    size: 110,
-    enableSorting: true,
-    meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
-  },
+  levelColumn("clustered", "Gom cụm"),
+  levelColumn("located", "Định vị", "locatedPending"),
+  levelColumn("unitLinked", "Gắn căn", "uniqueIdPending"),
   {
     accessorFn: (r) => r.latestAt ?? "",
     id: "latestAt",
@@ -141,6 +153,7 @@ export function QualityGrid({ bySource, byGroup }: { bySource: QualityRow[]; byG
   const [sorting, setSorting] = useState<SortingState>([{ id: "received", desc: true }])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
   const data = useMemo(() => (segment === "source" ? bySource : byGroup), [segment, bySource, byGroup])
+  const levelsPending = bySource.some((r) => r.levelsPending)
   const table = useTable({
     features: dataGridFeatures,
     columns,
@@ -163,8 +176,12 @@ export function QualityGrid({ bySource, byGroup }: { bySource: QualityRow[]; byG
           <div className="flex min-w-0 flex-col gap-0.5">
             <FrameTitle>Chất lượng từng chặng</FrameTitle>
             <FrameDescription className="text-xs text-pretty">
-              Nút thắt là chặng yếu nhất của hàng: đọc được, đủ trường lõi (bậc B1), có phường hoặc gắn căn
+              Nút thắt là chặng yếu nhất của hàng: đọc được, đủ trường lõi (bậc B1) hoặc có phường. Gom cụm · Định vị · Gắn
+              căn tính trên Tin rao; Định vị và Gắn căn chỉ tính tin khớp danh bạ.
             </FrameDescription>
+            {levelsPending ? (
+              <FrameDescription className="text-xs text-pretty">Số mức nhận diện có ở lượt làm tươi kế.</FrameDescription>
+            ) : null}
           </div>
           <Select
             value={segment}

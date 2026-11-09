@@ -98,32 +98,41 @@ Câu 4 thay cho «khai thác sau mua» trong `CONTEXT-PRODUCT.md` §2 — cần 
 
 ### 3.2 «Tin cậy» nghĩa là gì [đề xuất — sáu chiều đo được]
 
-1. **Có thật** — tin gắn được vào một căn có thật (số nhà / mã căn; tối thiểu toạ độ + toà).
+1. **Có thật** — tin gắn được vào một căn có thật bằng định danh duy nhất (số nhà / mã căn) khớp danh bạ.
 2. **Duy nhất** — một căn một bản ghi; tin trùng gộp đúng.
 3. **Đúng** — trường lõi đúng, mỗi giá trị có căn cứ truy được.
 4. **Còn hiệu lực** — còn bán/thuê; giá là giá mới nhất.
 5. **Truy được nguồn** — ai đăng, khi nào, ở đâu.
 6. **Nói rõ độ chắc** — phân biệt «đã xác minh» · «suy ra» · «chưa biết»; không trình bày suy đoán như sự thật.
 
-### 3.4 Thang bậc dữ liệu (Mạnh duyệt 23/10)
+### 3.4 Thang bậc dữ liệu (Mạnh duyệt 23/10; viết lại 08/11)
 
-**Bậc của một căn** — mỗi bậc gồm mọi điều của bậc dưới:
+**Bậc dữ liệu** — mỗi bậc gồm mọi điều của bậc dưới. B0–B2 đếm theo **tin**, B3–B5 đếm theo **căn** (luật đơn vị và
+mẫu số của §5):
 
-| Bậc | Tên | Căn ở bậc này khi | Nỗ lực để lên bậc kế | Tụt bậc khi |
-|---|---|---|---|---|
-| **B0** | Có lời khai | Có ít nhất một tin thô trong raw | Đọc tin theo từ vựng chung | — |
-| **B1** | Đọc được | Trường lõi (bán/thuê, loại, giá, diện tích, vị trí) đã diễn giải, có nguồn gốc | Gắn tin vào một căn, gộp trùng | Từ vựng đổi mà chưa đọc lại |
-| **B2** | Gắn căn | Tin đã gắn về một căn (suy ra), tin trùng đã gộp | Đo các cách đọc trên tập nhãn | Phát biểu mới chỉ ra gắn nhầm |
-| **B3** | Đã đo | Mọi trường lõi đến từ cách đọc có số đo đạt ngưỡng | Khớp danh mục / người có quyền xác nhận | Đo lại thấy ô đó dưới ngưỡng (model trôi, nguồn đổi kiểu viết) |
-| **B4** | Xác minh | Căn khớp danh mục (mã căn) hoặc được xác nhận; trường lõi có ít nhất một nguồn sự thật | Theo dõi hiệu lực và giá theo thời gian | Danh mục đổi; xác nhận bị rút |
-| **B5** | Sống | B4 + lời chào còn hiệu lực trong cửa sổ độ tươi + có lịch sử giá | Giữ nhịp quét và xác nhận | **Hết cửa sổ độ tươi mà không có bằng chứng mới → về B4** |
+| Bậc | Tên | Đơn vị | Đạt khi | Định danh | Nỗ lực để lên bậc kế | Tụt bậc khi |
+|---|---|---|---|---|---|---|
+| **B0** | Có lời khai | Bài | Có ít nhất một bài thô trong raw | Mã bài của nguồn | Đọc tin theo từ vựng chung | — |
+| **B1** | Tin | Tin | Trường lõi (bán/thuê, loại, giá, diện tích, khu) đã diễn giải, có nguồn gốc; bài đăng lại và bài trùng nội dung đã gộp thành một tin | Mã tin (khoá bền của nguồn) | Định vị vào danh bạ vật thể | Từ vựng đổi mà chưa đọc lại |
+| **B2** | Định vị | Tin | Tin gắn vào **dự án, toà hoặc trục** có trong danh bạ, kèm bằng chứng | Tên dự án, tên toà, mã trục | Tìm định danh duy nhất | Phát biểu mới chỉ ra định vị nhầm |
+| **B3** | Gắn căn | Căn | Tin khớp **đúng một căn** trong danh bạ — nhận diện duy nhất: dự án + toà + mã căn, hoặc số nhà + đường + phường | Mã căn / số nhà (UPI) | Làm giàu hồ sơ căn | Danh bạ đổi; phát biểu mới chỉ ra gắn nhầm |
+| **B4** | Làm giàu | Căn | Hồ sơ căn đủ trường lõi; mỗi trường đến từ cách đọc có số đo đạt ngưỡng hoặc từ nguồn sự thật (danh mục, người có quyền xác nhận); có kế thừa trục · toà · dự án | Như B3 | Theo dõi tin và giá theo thời gian | Đo lại thấy trường dưới ngưỡng; xác nhận bị rút |
+| **B5** | Sống | Căn | B4 + có tin còn hiệu lực trong cửa sổ độ tươi + có lịch sử giá | Như B3 | Giữ nhịp quét và xác nhận | **Hết cửa sổ độ tươi mà không có bằng chứng mới → về B4** |
 
-- Ba nhãn hiển thị là phép chiếu thô của thang: **đã xác minh** = B4–B5 · **suy ra** = B2–B3 · **chưa biết** = B0–B1
+- **Gắn căn = nhận diện duy nhất** (Mạnh chốt 08/11): như có số nhà, có mã căn. Mã có trong chữ của tin là điều kiện
+  cần; chỉ tính khi mã khớp một căn có thật trong danh bạ.
+- **Tin, gom trùng, gom cụm vẫn có nghĩa riêng**, nhưng không thay được gắn căn. Gom trùng nằm trong B1. Gom cụm (gom tin
+  trông giống nhau theo vùng, diện tích, giá) là công cụ gợi ý cho B1 → B2, **không phải một bậc** và không đưa tin lên
+  bậc nào.
+- Ba nhãn hiển thị là phép chiếu thô của thang: **đã xác minh** = B3–B5 · **định vị** = B2 · **chưa biết** = B0–B1
   (tin vẫn hiện, nói rõ là chưa biết).
-- Sáu chiều «tin cậy» (§3.2) nằm trên thang: *truy được nguồn* từ B0, *đúng* có số từ B3, *có thật* + *duy nhất*
-  chắc từ B4, *còn hiệu lực* ở B5, *nói rõ độ chắc* ở mọi bậc.
-- **Mỗi phân khúc có bậc đích riêng**: căn hộ có danh mục → B5; nhà phố (khó có số nhà) → B3; tin Chợ Tốt dùng làm
-  thước → B3. Không đòi mọi căn lên B5.
+- Sáu chiều «tin cậy» (§3.2) nằm trên thang: *truy được nguồn* từ B0, *duy nhất* (tin) từ B1, *có thật* + *duy nhất*
+  (căn) chắc từ B3, *đúng* có số từ B4, *còn hiệu lực* ở B5, *nói rõ độ chắc* ở mọi bậc.
+- **Mỗi phân khúc có bậc đích riêng**: căn hộ trong dự án có danh mục → B5; căn hộ người rao che mã căn → B2 (tới trục);
+  nhà phố, đất có số nhà thật → B4; nhà phố, đất không có số nhà → B2; tin S06 dùng làm thước → B1. Không đòi mọi căn
+  lên B5.
+- **Đổi thang 08/11 là lần hạ một lần**: cụm S06 tự dựng (67.688 «căn», trước tính B2) về B1. Ghi ngày đổi thang trên
+  `/ops/quality`, không đọc thành tụt bậc; dòng chuyển bậc (DO1) tính từ ngày đổi.
 
 **Bậc năng lực của một phân khúc** (thị trường × loại hình) — hệ thống làm được đến đâu:
 
@@ -167,15 +176,15 @@ Bốn tầng tính sẵn ở pipeline, đẩy lên Ops qua kênh số tổng h�
 
 | Tầng | Thước đo | Ghi chú · hàng |
 |---|---|---|
-| **North star** | **Phân bố căn theo bậc B0–B5** (§3.4), theo thị trường × loại; số chính = số căn **đạt bậc đích của phân khúc mình**; **dòng chuyển bậc mỗi ngày** (lên, tụt, vì sao) | Đẩy phân bố lên và **giữ không tụt**; tách B3 «suy ra có số» với B4–B5 «xác minh». Dòng chuyển bậc: DO1 |
-| Dòng chảy | Bài nhận → bài khác nội dung → tin rao (ước tỉ lệ bị bỏ sót) → đọc được (B1) → gắn căn theo mức (căn · trục · toà · chỉ vùng) → lên cổng; mỗi chặng có lý do rơi | `/ops/data-flow`; DF1, DF3 |
+| **North star** | **Phân bố căn theo bậc B0–B5** (§3.4), theo thị trường × loại; số chính = số căn **đạt bậc đích của phân khúc mình**; **dòng chuyển bậc mỗi ngày** (lên, tụt, vì sao) | Đẩy phân bố lên và **giữ không tụt**; tách B2 «định vị» với B3–B5 «đã xác minh»; B0–B2 đếm tin, B3–B5 đếm căn. Dòng chuyển bậc: DO1 |
+| Dòng chảy | Bài nhận → bài khác nội dung → tin rao (ước tỉ lệ bị bỏ sót) → tin (B1) → định vị (toà · trục, B2) → gắn căn (B3) → lên cổng; gom cụm chỉ là gợi ý, không là chặng; mỗi chặng có lý do rơi | `/ops/data-flow`; DF1, DF3 |
 | Độ đúng — để mở cổng | Cận dưới Wilson theo (cách đọc × trường × phân khúc) trên **tập test mù đóng băng**; ngưỡng F3 ba nhóm | Cổng tự áp PL21; tập mù hay mẫu nháp: **hoãn, quyết khi mở PL21** |
 | Độ đúng — để thấy trôi | Mẫu soát cuốn chiếu 20 bài/ngày «máy nháp, Mạnh feedback»: tỉ lệ giữ nháp, tỉ lệ tin rao bị bỏ sót, độ đúng gắn căn, làm giàu bị sửa/rút; tín hiệu không cần nhãn (JSON hỏng, trích không có trong bài, độ phủ từng ô, bất đồng giữa cách đọc, ô người sửa) | Số có neo — chỉ so tuần với tuần. DO1, DO2, DO3 (làm giàu: `do3-thay-doi` theo ngày, `do3-kiem-nguoc` bỏ-một-ra theo tuần) |
 | Môi giới | Số kênh họ không phải tự đăng · tỉ lệ tin của họ hiện đúng và gộp đúng · phản hồi «tin sai» | Phản hồi cần kênh báo sai trên trang hiển thị |
 | Nhà đầu tư | Số thị trường đủ thước theo loại · độ đúng danh sách «Căn giá tốt» · sai số ước giá thuê / giá trị khi có số thật | Câu 1–3 |
 | Năng lực (§3.4) | Bậc N0–N4 của từng phân khúc | Phân khúc nào lên N3 thì mới mở rộng ra cổng công khai rộng |
 | Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Đo trên tập test đóng băng |
-| Độ tươi (D4) | **Phút** từ lúc tin được đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95), thêm hai quãng B1 → gắn căn, gắn căn → lên cổng | PL22 |
+| Độ tươi (D4) | **Phút** từ lúc tin được đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95), thêm ba quãng B1 → định vị, định vị → gắn căn, gắn căn → lên cổng | PL22 |
 | Chi phí (D6) | Chi phí model + phút người **để đưa một căn lên bậc**, theo phân khúc; USD model mỗi bài và mỗi tin B1 · chi phí trợ lý theo người dùng | PL31; sổ `ai_calls` |
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
 | **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud (lời gọi model đọc tin là ngoại lệ có tên, ADR-0007 sửa 06/11) · 0 khoá vật thể chứa giá, loại hay bán/thuê | Chặn ở CI |
@@ -235,7 +244,9 @@ trong danh bạ» (việc của danh bạ). Lấy mẫu phân tầng theo khu tr
 ## 8. Claude đã tự chọn (Mạnh kiểm khi đọc)
 
 - North star là phân bố theo bậc (§3.4); thang B0–B5, N0–N4 và bậc đích từng phân khúc (căn hộ có danh mục B5,
-  nhà phố B3, Chợ Tốt làm thước B3) — Mạnh duyệt 23/10. Còn mở: số công/tuần cho nhịp giữ bậc (§7).
+  nhà phố B3, Chợ Tốt làm thước B3) — Mạnh duyệt 23/10. Viết lại 08/11: B2 Định vị, B3 Gắn căn = nhận diện duy nhất,
+  B4 Làm giàu; bậc đích: căn hộ có danh mục B5, căn hộ che mã B2, nhà phố có số nhà B4, không số nhà B2, S06 làm thước
+  B1. Còn mở: số công/tuần cho nhịp giữ bậc (§7).
 - **Listing cho thuê ngắn hạn (S01)** lúc này **không** ghép vào căn gốc: lợi suất STR dùng thước phường × loại.
   Ghép listing Airbnb ↔ tin rao bán (Airbnb không lộ địa chỉ) để đợt sau, khi căn gốc của tin rao đã ổn.
 - Trường «thuộc căn» / «thuộc tin» theo danh sách §3.1 — có thể dời một trường khi làm thật.
@@ -255,3 +266,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-11-02 | Thêm §0 sứ mệnh và chỉ nam; tám chỉ số ra mắt 05/11 ở `docs/plan/ra-mat-0511-so-luong-chat-luong.md`; ngưỡng chất lượng chỉ đo, không chặn | Mạnh chốt · Claude ghi |
 | 2026-11-07 | §5 thôi «[đề xuất]»: chép bốn tầng đo của tài liệu mô hình dòng chảy (dòng chuyển bậc, phễu theo mức gắn, độ đúng để mở cổng tách khỏi mẫu soát để thấy trôi, bất biến khoá vật thể); hàng DO1–DO3, DF1/DF3, PL21/22/31; tập test mù hay mẫu nháp cho cổng tự áp hoãn tới PL21 (ROADMAP §3 mục 32) | Mạnh duyệt · Claude ghi |
 | 2026-11-07 | §5 thêm tám nguyên tắc đo của DO1 (đơn vị + mẫu số, dung sai ô số, nhóm ô F3, phiên bản thước, cơ cấu, chênh có ý nghĩa, tỉ lệ soát, so cặp trước/sau) và hai ô chưa gắn của địa lý | Mạnh duyệt · Claude ghi |
+| 2026-11-08 | §3.4 viết lại thang bậc: gắn căn = nhận diện duy nhất (mã căn / số nhà khớp danh bạ) thành B3; B2 đổi tên «Định vị» (dự án · toà · trục); B4 «Làm giàu» (đo đạt ngưỡng hoặc nguồn sự thật, kế thừa); gom trùng vào B1, gom cụm không là bậc; B0–B2 đếm tin, B3–B5 đếm căn; bậc đích theo phân khúc sửa; cụm S06 tự dựng về B1 (hạ một lần) | Mạnh chốt · Claude ghi |

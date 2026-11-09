@@ -2,8 +2,9 @@ import type { FlowDay, FlowWindow } from "@/lib/data-flow-queries"
 import { vnDayKey } from "@/lib/format"
 
 /** Bốn chặng của «Chặng theo ngày» — các chặng lồng nhau, mỗi chặng đếm riêng. */
-export type StageKey = "received" | "readable" | "offers" | "linked"
-export const STAGE_KEYS: readonly StageKey[] = ["received", "readable", "offers", "linked"]
+/** Chặng cuối là Gắn căn theo nghĩa mới (khớp danh bạ, `unitLinked`) — gan-can-dinh-danh-duy-nhat. */
+export type StageKey = "received" | "readable" | "offers" | "unitLinked"
+export const STAGE_KEYS: readonly StageKey[] = ["received", "readable", "offers", "unitLinked"]
 
 /** Một điểm của trục: khoá ngày giờ VN ("2026-10-24") và số bốn chặng của mọi nguồn trong ngày. */
 export type DayPoint = { key: string } & Record<StageKey, number>
@@ -23,7 +24,7 @@ export function dailySeries(days: FlowDay[], nowMs: number, windowDays: number):
   const points = new Map<string, DayPoint>()
   for (let i = windowDays - 1; i >= 0; i--) {
     const key = vnDayKey(nowMs - i * 86400000)
-    points.set(key, { key, received: 0, readable: 0, offers: 0, linked: 0 })
+    points.set(key, { key, received: 0, readable: 0, offers: 0, unitLinked: 0 })
   }
   for (const d of days) {
     const p = points.get(d.day)
