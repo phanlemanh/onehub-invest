@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { AirdnaMarketsTable, CalibrationEmptyLine, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
 import { DoHangNgay, DoHangNgaySkeleton } from "@/components/ops/quality/do-hang-ngay";
 import { DqChecksTable } from "@/components/ops/quality/dq-checks-table";
+import { LamGiau, LamGiauSkeleton } from "@/components/ops/quality/lam-giau";
 import { PageHeader } from "@/components/page/page-header";
 import { RegionError } from "@/components/states/region-error";
 import { StatTiles } from "@/components/page/stat-tiles";
@@ -15,6 +16,7 @@ import { dqSection, loadDqChecks } from "@/lib/dq-checks";
 import { getAreaNames, getRulerHealth } from "@/lib/ops-queries";
 import { shortAreaName } from "@/lib/market-names";
 import { pool } from "@/lib/db";
+import { loadLamGiau } from "@/lib/ops/quality-lam-giau";
 import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
 import { sourceLabel } from "@/lib/source-labels";
 import { maskSourceNames } from "@/lib/mask-source-names";
@@ -31,6 +33,11 @@ export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
 /** DO1: khối «Đo hằng ngày» tải riêng — lỗi hay chậm chỉ ở vùng này, phần còn lại của trang vẫn đứng. */
 async function DoHangNgayKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<string, string> }) {
   return <DoHangNgay data={await loadDo1(pool)} lat={lat} areaNames={areaNames} />;
+}
+
+/** DO3: khối «Làm giàu» tải riêng như khối DO1 — lỗi đọc bảng kiểm chỉ thay vùng này bằng Alert + «Thử lại». */
+async function LamGiauKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<string, string> }) {
+  return <LamGiau data={await loadLamGiau(pool)} lat={lat} areaNames={areaNames} />;
 }
 
 export default async function QualityPage({ searchParams }: { searchParams?: Promise<{ "lat-do"?: string }> } = {}) {
@@ -87,6 +94,11 @@ export default async function QualityPage({ searchParams }: { searchParams?: Pro
       <RegionError what="số đo hằng ngày">
         <Suspense fallback={<DoHangNgaySkeleton />}>
           <DoHangNgayKhoi lat={lat} areaNames={areaNames} />
+        </Suspense>
+      </RegionError>
+      <RegionError what="số đo làm giàu">
+        <Suspense fallback={<LamGiauSkeleton />}>
+          <LamGiauKhoi lat={lat} areaNames={areaNames} />
         </Suspense>
       </RegionError>
       {/* ON9: bản mới nhất của mỗi kiểm theo từng đối tượng (7 ngày) — chữ kiểm/đối tượng/chi tiết theo ON12 */}
