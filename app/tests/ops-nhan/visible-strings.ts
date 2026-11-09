@@ -47,6 +47,7 @@ export const SCAN_FILES = [
   "src/components/ops/data-flow/data-flow-content.tsx",
   "src/components/ops/data-flow/data-flow-skeleton.tsx",
   "src/components/ops/data-flow/data-flow-view.tsx",
+  "src/components/ops/data-flow/flow-branches.ts",
   "src/components/ops/data-flow/flow-journey.tsx",
   "src/components/ops/data-flow/flow-readout.tsx",
   "src/components/ops/data-flow/flow-sankey-data.ts",

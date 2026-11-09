@@ -21,6 +21,6 @@ Hàng DF6 trong `docs/plan/lo-trinh.json` (PR #379). Mạnh duyệt 09/11 qua ph
 ## Ngưỡng chết / ngưỡng UAT
 
 - Câu hỏi phép đo trả lời: [đề xuất] Số bài chỉ-ảnh bị bỏ khỏi mẫu số khớp đếm SQL độc lập; tổng các nhánh bằng số bài nhận; S06 và S05 không đổi số; nhánh Yêu cầu khớp số bài Yêu cầu?
-- Kết quả nào là SỐNG: [đề xuất] tỉ lệ «Đọc được» của S03 tính trên bài có chữ, khớp đếm SQL độc lập; nhánh Yêu cầu tách riêng; S06, S05 không đổi số
-- Kết quả nào là CHẾT: [đề xuất] mẫu số vẫn lẫn bài chỉ-ảnh, hoặc tổng nhánh không bằng số bài nhận
+- Kết quả nào là SỐNG: [đề xuất] tỉ lệ «Đọc được» của S03 = (đọc thành tin rao + đọc thành Yêu cầu) / bài cần đọc (bài nhận trừ ảnh đã ghép vào tin), các nhánh khớp đếm SQL độc lập; S06, S05 không đổi số
+- Kết quả nào là CHẾT: [đề xuất] mẫu số vẫn lẫn ảnh đã ghép vào tin, Yêu cầu vẫn hiện như rơi, hoặc tổng nhánh không bằng số bài nhận
 - Timebox: một vòng

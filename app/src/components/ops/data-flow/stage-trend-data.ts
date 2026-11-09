@@ -1,6 +1,8 @@
 import type { FlowDay, FlowWindow } from "@/lib/data-flow-queries"
 import { vnDayKey } from "@/lib/format"
 
+import { readOf } from "./flow-branches"
+
 /** Bốn chặng của «Chặng theo ngày» — các chặng lồng nhau, mỗi chặng đếm riêng. */
 /** Chặng cuối là Gắn căn theo nghĩa mới (khớp danh bạ, `unitLinked`) — gan-can-dinh-danh-duy-nhat. */
 export type StageKey = "received" | "readable" | "offers" | "unitLinked"
@@ -32,4 +34,10 @@ export function dailySeries(days: FlowDay[], nowMs: number, windowDays: number):
     for (const s of STAGE_KEYS) p[s] += d[s]
   }
   return [...points.values()]
+}
+
+/** DF6 (`bai-nhan-tru-bai-chi-anh`): «Đọc được» theo ngày = đọc thành tin rao + đọc thành Yêu cầu khi khối đã tách nhánh bài
+ * (Mạnh chốt ở Cổng Phạm vi 09/11); chưa tách → như trước. Chặng khác giữ nguyên. */
+export function readDays(days: FlowDay[], branched: boolean): FlowDay[] {
+  return branched ? days.map((d) => ({ ...d, readable: readOf(d) })) : days
 }
