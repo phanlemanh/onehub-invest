@@ -84,3 +84,11 @@ evals:
     paths: [pipeline/resolve-properties.mjs, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; itest s03-len-cong xanh trên DB của riêng lượt, trừ hai ca SL1-AC-5 (áp 069) đỏ sẵn trên cây gốc 773a0040 — đo cùng lệnh trên bản gốc ra cùng hai ca đỏ, không thuộc vòng; ca «tin cấp thị trường không thành cặp» ghi rõ trong tên hoặc lời chú thích rằng nó đúng theo cấu tạo khi Stage B đóng băng (không nới assert)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9d
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ pipeline đầy đủ xanh trên DB của riêng lượt (npm test tự chạy db/db-thu.sh --chay). Cùng lệnh với suite `cd pipeline && npm test` — khai thành eval để mang long_running: chạy một mình mất khoảng 12–14 phút, dưới tải song song của lượt chấm vượt trần 600 giây của công cụ (S4 r2 BLOCKED). Chiều đỏ: thước có sẵn của các ca trong bộ; vòng không viết thước mới cho eval này."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
