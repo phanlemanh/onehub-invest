@@ -462,6 +462,14 @@ async function bangGoc(client, ten) {
 }
 
 /** So DB với sổ; trả danh sách lệch {axis, value?, column?, msg}. Rỗng = khớp. */
+/** CHECK theo trục của một cột: ưu tiên CHECK DANH SÁCH của chính cột (`<cột> = ANY (ARRAY[…])` hoặc `<cột> IN (…)`)
+ * hơn CHECK chéo cũng nhắc tên cột và một chuỗi (vd `(huong = 'moi') = (from_level IS NULL)` của data_level_change,
+ * thang-bac-moi-b0-b5 AC-9) — pg_constraint không bảo đảm thứ tự dòng. Không có CHECK danh sách thì giữ luật cũ (dòng đầu). */
+export function chonCheckCot(defs, cot) {
+  const danhSach = new RegExp(`\\(?\\b${cot}\\b\\)?(?:::text)?\\s*(?:=\\s*ANY\\s*\\(|IN\\s*\\()`);
+  return defs.find((r) => danhSach.test(r.def)) ?? defs[0];
+}
+
 export async function checkDb(client, reg) {
   const lech = [];
   const can = "cần migration mới";
@@ -499,7 +507,7 @@ export async function checkDb(client, reg) {
         WHERE contype = 'c' AND conrelid = to_regclass($1)`, [await bangGoc(client, t)])).rows
       .filter((r) => new RegExp(`\\b${cot}\\b`).test(r.def) && /'[^']*'::text/.test(r.def));
     if (!defs.length) { lech.push({ axis: a.name, column: col, msg: `${col}: thiếu CHECK theo trục ${a.name} — ${can}` }); continue; }
-    const r = defs[0];
+    const r = chonCheckCot(defs, cot);
     const trongDb = new Set([...r.def.matchAll(/'([^']*)'::text/g)].map((m) => m[1]));
     const trongSo = new Set(a.values.map((v) => v.code));
     const thieu = [...trongSo].filter((x) => !trongDb.has(x));

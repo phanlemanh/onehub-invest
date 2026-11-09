@@ -1,0 +1,160 @@
+// thang-bac.itest.mjs — thang-bac-moi-b0-b5 (AC-n ↔ _acceptance/thang-bac-moi-b0-b5/evals.yaml E1b, E3, E4, E5, E9).
+// Mỗi ca BEGIN … ROLLBACK, 087 nạp THẬT trong giao dịch dưới khoá của bac-du-lieu.mjs. Chạy trên DB của riêng lượt
+// (config:executors.test.tb_db — db/db-thu.sh … --chay), không trên DB `oneinvest` dùng chung khi 087 chưa áp.
+import { after, before, test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import pg from "pg";
+import { KHOA } from "../bac-du-lieu.mjs";
+import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const SQL_087 = readFileSync(path.join(ROOT, "db/migrations/087_thang_bac_moi.sql"), "utf8");
+const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
+export const NHAN = [["B0", "Có lời khai"], ["B1", "Tin"], ["B2", "Định vị"], ["B3", "Gắn căn"], ["B4", "Làm giàu"], ["B5", "Sống"]];
+
+let c;
+before(async () => {
+  if (!process.env.DATABASE_URL) throw new Error("thiếu DATABASE_URL — chạy qua config:executors.test.tb_db (DB của riêng lượt)");
+  c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await c.connect();
+  const { rows: [r] } = await c.query("SELECT current_database() AS db, to_regprocedure('data_level_units()') IS NOT NULL AS co");
+  if (r.db === "oneinvest" && !r.co) throw new Error("DATABASE_URL trỏ DB oneinvest dùng chung khi 087 chưa áp — dùng DB thử");
+});
+after(async () => {
+  await c?.end();
+});
+
+/** Một giao dịch ROLLBACK: `truoc` chạy trước khi nạp 087 (trạng thái chưa áp), rồi nạp 087 thật (trừ khi nap087 false). */
+async function trongGiaoDich(fn, { truoc, nap087 = true } = {}) {
+  await c.query("BEGIN");
+  try {
+    await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
+    if (truoc) await truoc(c);
+    if (nap087) await c.query(SQL_087);
+    return await fn(c);
+  } finally {
+    await c.query("ROLLBACK");
+  }
+}
+
+/** Nguồn gốc năm trường lõi theo khuôn resolve_offer_fields (045); `rieng` đè từng khoá. */
+function nguonGoc({ measured = false, tier = "observed" } = {}, rieng = {}) {
+  const fp = {};
+  for (const k of LOI) fp[k] = { v: "x", ids: [], tier, measured, conflict: false, ...(rieng[k] ?? {}) };
+  return fp;
+}
+
+let dem = 0;
+const T = `tb-tst-${process.pid}`;
+/** Một tin trong bảng bản ghi; trả offer_id. */
+async function tin({ source = "S06", kind = "sale", pt = "apartment", price = 2_000_000_000, area = 60, ward,
+  fp = {}, status = "unknown", lastSeen = "now()", retired = false } = {}) {
+  const id = `${T}-${++dem}`;
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, price_vnd, area_m2, area_id, source,
+      originating_system_key, first_seen, last_seen, field_provenance, offer_status, retired_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $1, now() - interval '1 day', ${lastSeen}, $8, $9, $10)`,
+  [id, kind, pt, price, area, ward, source, fp, status, retired ? new Date() : null]);
+  return id;
+}
+
+/** Thay thân offer_unit_key bằng bảng tạm offer → căn (chỗ cắm của GC): fixture gắn tin vào căn danh bạ. */
+async function ganCan(cap) {
+  await c.query("CREATE TEMP TABLE IF NOT EXISTS tb_gan (offer_id text PRIMARY KEY, unit_key text) ON COMMIT DROP");
+  for (const [o, u] of cap) await c.query("INSERT INTO tb_gan VALUES ($1, $2)", [o, u]);
+  await c.query(`CREATE OR REPLACE FUNCTION offer_unit_key(p_offer_id text) RETURNS text LANGUAGE sql STABLE AS
+    $f$ SELECT unit_key FROM pg_temp.tb_gan WHERE offer_id = p_offer_id $f$`);
+}
+
+/** Một phường có sẵn (để tin qua khoá ngoại) và n căn danh bạ đang hiệu lực. */
+async function khuVaCan(n) {
+  const { rows: [w] } = await c.query("SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1");
+  const { rows: u } = await c.query("SELECT unit_key FROM units WHERE status = 'active' ORDER BY unit_key LIMIT $1", [n]);
+  assert.equal(u.length, n, `bản chép không đủ ${n} căn danh bạ đang hiệu lực (082)`);
+  return { ward: w.id, units: u.map((r) => r.unit_key) };
+}
+
+// ---- E1b · AC-1: nhãn ref_lookup sau 087, checkDb trục data_level không lệch ----
+test("TB-AC-1 ref_lookup: sáu nhãn thang 08/11, checkDb trục data_level 0 lệch (kèm chiều đỏ)", async () => {
+  const reg = readMappings(ROOT);
+  const lechBac = async () => (await checkDb(c, reg)).filter((x) => x.axis === "data_level").map((x) => x.msg);
+  await trongGiaoDich(async () => {
+    const { rows } = await c.query(
+      "SELECT lookup_value, label_vi FROM ref_lookup WHERE lookup_name = 'data_level' ORDER BY sort_order");
+    assert.deepEqual(rows.map((r) => [r.lookup_value, r.label_vi]), NHAN);
+    assert.deepEqual(await lechBac(), [], "checkDb trục data_level phải 0 lệch sau 087");
+  }, {
+    // chiều đỏ: trên DB chưa có nhãn mới (đưa nhãn về thang cũ trong giao dịch), sổ mới phải báo lệch ở B2
+    truoc: async () => {
+      await c.query(`UPDATE ref_lookup SET label_vi = CASE lookup_value WHEN 'B1' THEN 'Đọc được' WHEN 'B2' THEN 'Gắn căn'
+        WHEN 'B3' THEN 'Đã đo' WHEN 'B4' THEN 'Xác minh' ELSE label_vi END WHERE lookup_name = 'data_level'`);
+      const lech = await lechBac();
+      assert.ok(lech.some((m) => m.includes("ref_lookup lệch sổ ở data_level · B2")), `chiều đỏ không báo B2: ${lech}`);
+    },
+  });
+});
+
+// ---- E3 · AC-3: bậc của căn danh bạ có tin gắn ----
+async function bacCan() {
+  const { rows } = await c.query("SELECT unit_key, data_level, ke_thieu FROM unit_data_level() ORDER BY unit_key");
+  return rows.map((r) => [r.unit_key, r.data_level, r.ke_thieu]);
+}
+test("TB-AC-3 unit_data_level: B3 lam-giau · B4 hieu-luc · B5 giu-nhip · quá cửa sổ về B4 (kèm chiều đỏ)", async () => {
+  await trongGiaoDich(async () => {
+    const { rows: [{ d }] } = await c.query("SELECT pg_get_functiondef('unit_data_level()'::regprocedure) AS d");
+    assert.deepEqual(await bacCan(), [], "087 nguyên (chưa bảng nối) — unit_data_level phải rỗng");
+    const { rows: [p] } = await c.query("SELECT to_regprocedure('property_data_level(bigint[])') IS NULL AS mat");
+    assert.equal(p.mat, true, "property_data_level phải bị bỏ");
+
+    const { ward, units: [u1, u2, u3, u4, u5] } = await khuVaCan(5);
+    const daDo = nguonGoc({ measured: true });
+    const suThat = nguonGoc({ tier: "fact" });
+    const t1 = await tin({ ward, area: null });                                    // thiếu diện tích
+    const t2 = await tin({ ward });                                                // đủ, chưa đo
+    const t3 = await tin({ ward, fp: daDo });                                      // mọi trường đo
+    const t4 = await tin({ ward, fp: suThat, status: "active" });                  // + đang chào, tươi
+    const t4b = await tin({ ward, fp: suThat, status: "active" });                 //   tin thứ hai cùng căn = hai mốc giá
+    const t5 = await tin({ ward, fp: daDo, status: "active", lastSeen: "now() - interval '30 days'" }); // quá cửa sổ
+    const t5b = await tin({ ward, fp: daDo, status: "active", lastSeen: "now() - interval '30 days'" });
+    await ganCan([[t1, u1], [t2, u2], [t3, u3], [t4, u4], [t4b, u4], [t5, u5], [t5b, u5]]);
+    const ky = [[u2, "B3", "lam-giau"], [u3, "B4", "hieu-luc"], [u4, "B5", "giu-nhip"], [u5, "B4", "hieu-luc"]]
+      .sort((a, b) => a[0].localeCompare(b[0]));
+    assert.deepEqual(await bacCan(), ky, "TB-AC-3 bảng bậc căn lệch");
+
+    // chiều đỏ: bỏ vế last_seen của B5 → căn quá cửa sổ lên B5
+    const lech = d.replace("public.unit_data_level(", "pg_temp.unit_data_level_lech(")
+      .replace("AND g.last_seen >= now() - freshness_window()", "");
+    assert.notEqual(lech, d.replace("public.unit_data_level(", "pg_temp.unit_data_level_lech("), "bản lệch không đổi gì");
+    await c.query(lech);
+    const { rows: [r] } = await c.query("SELECT data_level FROM pg_temp.unit_data_level_lech() WHERE unit_key = $1", [u5]);
+    assert.notEqual(r.data_level, "B4", "TB-AC-3 quá cửa sổ vẫn B5");
+    assert.equal(r.data_level, "B5");
+  });
+});
+
+// ---- E9 · AC-9: checkDb đọc CHECK danh sách của chính cột, không vớ CHECK chéo với huong ----
+test("TB-AC-9 checkDb đọc đúng CHECK của data_level_change (kèm chiều đỏ)", async () => {
+  const reg = readMappings(ROOT);
+  const cotChuyen = (ds) => ds.filter((x) => ["data_level_change.from_level", "data_level_change.to_level"].includes(x.column));
+  await trongGiaoDich(async () => {
+    assert.deepEqual(cotChuyen(await checkDb(c, reg)), [], "TB-AC-9 sổ thật: hai cột bậc của data_level_change phải 0 lệch");
+    const regLech = structuredClone(reg);
+    regLech.axes.find((a) => a.name === "data_level").values.push({ code: "B9", label_vi: "Bậc giả", local: true });
+    const lech = cotChuyen(await checkDb(c, regLech)).find((x) => x.column === "data_level_change.from_level");
+    assert.ok(lech, "TB-AC-9 sổ có B9 mà không báo lệch ở data_level_change.from_level");
+    assert.match(lech.msg, /thiếu \[B9\]/);
+    assert.doesNotMatch(lech.msg, /moi/, "TB-AC-9 vớ CHECK chéo");
+    // đối chứng: bộ chọn cũ (dòng đầu) trên cùng DB vớ CHECK chéo nếu nó đứng trước — luật mới không phụ thuộc thứ tự
+    const { rows: defs } = await c.query(`SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
+      WHERE contype = 'c' AND conrelid = 'data_level_change'::regclass`);
+    const cua = defs.filter((r) => /\bfrom_level\b/.test(r.def) && /'[^']*'::text/.test(r.def));
+    const cheo = cua.find((r) => /huong/.test(r.def));
+    assert.ok(cheo, "đối chứng: phải có CHECK chéo huong ↔ from_level");
+    const { chonCheckCot } = await import("../lib/vocab-core.mjs");
+    assert.doesNotMatch(chonCheckCot([cheo, ...cua.filter((r) => r !== cheo)], "from_level").def, /huong/,
+      "TB-AC-9 vớ CHECK chéo khi nó đứng đầu");
+    assert.match([cheo, ...cua][0].def, /huong/, "đối chứng đỏ: bộ chọn dòng đầu ra CHECK chéo");
+  });
+});
