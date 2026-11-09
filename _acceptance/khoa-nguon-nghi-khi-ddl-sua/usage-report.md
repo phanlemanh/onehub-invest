@@ -70,3 +70,35 @@ wall: 2363s
 - **claude-haiku-5-5**: 6 agent · 26 calls · out 16,906 · in 52 · cache_read 533,967 · cache_create 211,155
 - **claude-sonnet-5-5**: 3 agent · 6 calls · out 6,663 · in 12 · cache_read 86,697 · cache_create 107,543
 
+### S4 round 3 — wf_e5b95808-4b0 (12 agent, 28,890 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| synthesize:report | claude-sonnet-5-5 | 2 | 4,915 | 4 | 37,875 | 28 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 9 | 4,262 | 18 | 209,433 | 1022 |
+| review:bugs | claude-opus-5-5 | 7 | 3,938 | 14 | 194,652 | 66 |
+| machine:cd app && npm test | claude-haiku-5-5 | 4 | 2,956 | 8 | 60,531 | 629 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,610 | 4 | 24,416 | 36 |
+| review:conventions | claude-opus-5-5 | 7 | 2,301 | 14 | 181,638 | 48 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,218 | 4 | 27,623 | 11 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,674 | 4 | 27,617 | 10 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,327 | 4 | 27,628 | 18 |
+| review:measurement | claude-opus-5-5 | 5 | 1,263 | 10 | 112,665 | 28 |
+| triage | claude-sonnet-5-5 | 2 | 1,100 | 4 | 26,021 | 9 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 326 | 4 | 23,213 | 5 |
+
+
+wall: 1785s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 6 | 15,047 | 377,248 | 1737 | 12:32:08 | 13:01:05 |
+| review | 3 | 7,502 | 488,955 | 71 | 12:32:08 | 12:33:19 |
+| triage | 1 | 1,100 | 26,021 | 9 | 13:01:07 | 13:01:16 |
+| capture | 1 | 326 | 23,213 | 5 | 13:01:18 | 13:01:23 |
+| synthesize | 1 | 4,915 | 37,875 | 28 | 13:01:25 | 13:01:53 |
+
+- **claude-sonnet-5-5**: 3 agent · 6 calls · out 6,341 · in 12 · cache_read 87,109 · cache_create 107,952
+- **claude-haiku-5-5**: 6 agent · 21 calls · out 15,047 · in 42 · cache_read 377,248 · cache_create 212,985
+- **claude-opus-5-5**: 3 agent · 19 calls · out 7,502 · in 38 · cache_read 488,955 · cache_create 127,649
+

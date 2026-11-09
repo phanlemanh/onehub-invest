@@ -7,15 +7,13 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ffd4ac90c686e218519ceccd41e0cfd12e98664c
+verified_commit: a630904165171f5442ef8ee3f4c0acc3055770bb
 human_signoff:
 ---
 
 # Evidence Report: khoa-nguon-nghi-khi-ddl-sua
 
-Vòng 2. Cả bảy eval của hợp đồng (E1–E7) được mang từ vòng 1 vì delta không chạm paths của eval. Lệnh suite `cd app && npm test` không gắn eval nào đã thoát khác 0 vì một ca đỏ ngoài vật của tính năng, nên verdict là REJECT.
-
-Lệnh fail không gắn eval: `cd app && npm test` (không eval nào gắn). Ca đỏ duy nhất là `tests/tin-rao-cong-khai.test.tsx` ca "E4 bốn cách sắp đúng thứ tự, tin trùng giá vẫn ổn định" (thứ tự thực tế a, d, b, c thay vì a, b, d, c). Tệp này không thuộc phạm vi tính năng khoá nguồn.
+Round 3. Bảy eval E1–E7 mang từ round 1 sang (delta không chạm paths của chúng, round này không chạy lại). Verdict REJECT chỉ do một lệnh suite không gắn eval là `cd app && npm test` đỏ ở một ca ngoài vật (ON12-AC-5, tests/ops-nhan-theo-context.test.tsx). Không có eval nào đỏ.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -102,35 +100,35 @@ Lệnh fail không gắn eval: `cd app && npm test` (không eval nào gắn). Ca
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bb6271-r2
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-11-09T10:11:28Z
+  verified_at: 2026-11-09T12:31:55Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-lint-r2
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-11-09T10:11:28Z
+  verified_at: 2026-11-09T12:31:55Z
 
 - cmd: cd app && npm test
-  run_id: bbbnawz7c
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__bd9a35-r3
   exit_code: 1
-  verified_at: 2026-11-09T10:11:28Z
-  note: 1104 ca, 1098 xanh, 1 đỏ (tin-rao-cong-khai E4 thứ tự sắp), 5 bỏ qua; không gắn eval nào.
+  verified_at: 2026-11-09T12:31:55Z
+  note: đỏ một ca, pass 1098, fail 1, skipped 5. Ca đỏ là ON12-AC-5 (tests/ops-nhan-theo-context.test.tsx) trên DB local, ngoài vật của hàng này; không gắn eval nào.
 
 - cmd: cd pipeline && npm test
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-npm_test__13563d-r2
+  run_id: bldz589ii
   exit_code: 0
-  verified_at: 2026-11-09T10:11:28Z
+  verified_at: 2026-11-09T12:31:55Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-test_lint_rules-r2
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-11-09T10:11:28Z
+  verified_at: 2026-11-09T12:31:55Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-khoa-nguon-nghi-khi-ddl-sua-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-11-09T10:11:28Z
+  verified_at: 2026-11-09T12:31:55Z
 
 ## Known limits
 
@@ -138,18 +136,21 @@ Lệnh fail không gắn eval: `cd app && npm test` (không eval nào gắn). Ca
 
 ## Analyst
 
-carried tu round 1 — baseline khong do lai round nay. Field baseline cua moi eval ghi n-a.
+carried tu round 1 — baseline khong do lai round nay
 
-Eval không phân biệt (xanh ở cả HEAD lẫn baseline), cần viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
-- `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs` — E1, E2, E3, E7
-- `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_knhq --chay node --test --test-concurrency=1 scripts/luoc-do-rieng.test.mjs scripts/so-ghep-s06.test.mjs scripts/bait-gap-sellers.test.mjs scripts/gan-sdt-s06.test.mjs scripts/importer-schema-v5.test.mjs scripts/kiem-do-sau-070.test.mjs scripts/deals-phi-ly.test.mjs` — E5
-- `cd app && bash ../db/db-thu.sh oneinvest_suite_knapp --chay node --import tsx --test --test-concurrency=1 tests/deals-phi-ly.test.tsx tests/dq-moi-nhat.test.tsx tests/can-gia-tot-biet-can.test.tsx` — E6
+Eval không-phân-biệt (pass trên cả HEAD lẫn baseline), nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý:
+- Lệnh `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kn --chay node --test --test-concurrency=1 --test-name-pattern=^KN- scripts/luoc-do-rieng.test.mjs` phủ E1, E2, E3, E7.
+- Lệnh `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_knhq --chay node --test --test-concurrency=1 scripts/luoc-do-rieng.test.mjs scripts/so-ghep-s06.test.mjs scripts/bait-gap-sellers.test.mjs scripts/gan-sdt-s06.test.mjs scripts/importer-schema-v5.test.mjs scripts/kiem-do-sau-070.test.mjs scripts/deals-phi-ly.test.mjs` phủ E5.
+- Lệnh `cd app && bash ../db/db-thu.sh oneinvest_suite_knapp --chay node --import tsx --test --test-concurrency=1 tests/deals-phi-ly.test.tsx tests/dq-moi-nhat.test.tsx tests/can-gia-tot-biet-can.test.tsx` phủ E6.
+
+Judge panels: không có panel nào ở round này, không có mục judgment chờ người.
 
 ## Variance
 
-none — không eval nào có runs lớn hơn 1, không eval nào chập chờn trong vòng này.
+none — mọi eval chạy một lần, không có eval nào mang runs lớn hơn 1.
 
 ## Iterations
 
-Round 1: S4 REJECT chỉ do hai suite đỏ ngoài vật của tính năng (PX1-AC-10 đỏ sẵn trên main, E4B-AC-3 chập chờn); E1–E7 xanh. Trả về triển khai.
-Round 2: E1–E7 mang từ round 1 (delta không chạm paths của eval). Suite app còn một ca đỏ ngoài vật (tin-rao-cong-khai, thứ tự sắp tin trùng giá); các suite còn lại xanh. REJECT.
+Round 1: REJECT chỉ do hai suite đỏ ngoài vật (PX1-AC-10 đỏ sẵn trên main, E4B-AC-3 chập chờn); E1–E7 xanh.
+Round 2: REJECT chỉ do ca app ngoài vật chập chờn; dừng vá, trình lối ra cho người chọn.
+Round 3: REJECT chỉ do ca ON12-AC-5 của `cd app && npm test` đỏ ngoài vật (diễn giải dòng kiểm chất lượng trên DB local); E1–E7 mang từ round 1, không đổi. Mạnh đã chọn chấm thêm một lượt; chờ người quyết ở Cổng 2.

@@ -4,21 +4,35 @@
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **KN-AC-2/KN-AC-3: phiên chặn dựng ngoài try, lỗi lúc dựng làm rò phiên c (và s) đang mở giao dịch**
+- **card.html báo cả bảy eval E1–E7 «chưa đạt», nhưng evidence-report ghi cả bảy là PASS**
+  Người dùng thấy gì: Thẻ duyệt báo nhầm rằng cả bảy phép kiểm đều chưa đạt và máy đang sửa code, trong khi hồ sơ ghi chúng đạt và Mạnh đã chọn chấm thêm một lượt. Người ký có thể hiểu sai tình trạng của việc này.
+  Căn cứ: Chỉ gây hiểu nhầm khi đọc thẻ, không mất hay lộ dữ liệu; người ký đối chiếu được với báo cáo bằng chứng, và lỗi nằm ở bộ sinh thẻ của kit nên cần gửi về kit chứ không sửa tay.
+  file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/card.html`
+  severity: medium
+  Đề xuất: known-limits
+
+- **evidence-page.html cũ hơn HEAD: thiếu quyết định của người (d-…-11) và vẫn ghi «người 0»**
+  Người dùng thấy gì: Trang bằng chứng chưa cập nhật quyết định mới nhất của Mạnh nên vẫn ghi người chưa quyết định nào. Người đọc trang sẽ không thấy lối ra đã được chọn.
+  Căn cứ: Nhẹ: chỉ là trang hiển thị cũ, không ảnh hưởng dữ liệu hay hành vi; sinh lại trang là xong ở lượt kế.
+  file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/evidence-page.html`
+  severity: low
+  Đề xuất: known-limits
+
+- **KN-AC-2/KN-AC-3: phiên chặn dựng ngoài try, lỗi lúc dựng làm rò phiên c (và s) đang mở giao dịch (r2)**
   Người dùng thấy gì: Nếu bước dựng thử nghiệm bị lỗi, bộ kiểm tra có thể treo khoảng hai phút và báo lỗi hết giờ thay vì lỗi gốc. Người dùng sản phẩm không bị ảnh hưởng, chỉ người chạy kiểm tra thấy chậm và khó đọc lỗi.
   Căn cứ: Chỉ xảy ra khi chính bước dựng kiểm tra hỏng, không ảnh hưởng người dùng cuối, tự hết sau vài phút và chạy lại là được; sửa có thể để lần chạm tệp sau.
   file: `pipeline/scripts/luoc-do-rieng.test.mjs`
   severity: low
   Đề xuất: wont-fix
 
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): E4 so danh sách tệp import với hằng HOI_QUY chép tay, không so với lệnh E5/E6 thật sự chạy**
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): E4 so danh sách tệp import với hằng HOI_QUY chép tay, không so với lệnh E5/E6 thật sự chạy (r2)**
   Người dùng thấy gì: Nếu sau này thêm một tệp kiểm tra dùng thư viện này mà chỉ cập nhật một trong hai danh sách, phép kiểm vẫn báo khớp trong khi tệp mới không được chạy lại. Hiện tại hai danh sách đang đúng.
   Căn cứ: Hiện chưa có sai lệch nào và hậu quả chỉ là một tệp kiểm tra có thể bị bỏ sót chạy về sau; ghi lại để người thêm tệp mới nhớ cập nhật cả hai chỗ, sửa rẻ khi cần.
   file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Chú thích executor kn_dot_bien ghi «hai bản đột biến» trong khi probe và E4 có bốn (r1 · tệp đã đổi)**
+- **Chú thích executor kn_dot_bien ghi «hai bản đột biến» trong khi probe và E4 có bốn (r1)**
   Người dùng thấy gì: Một dòng chú thích trong tài liệu lệnh kiểm ghi sai số bản thử đột biến (hai thay vì bốn). Người chấm có thể hiểu nhầm phạm vi kiểm, nhưng việc kiểm thật vẫn chạy đủ.
   Căn cứ: Chỉ sai một chữ trong chú thích, không ảnh hưởng kết quả kiểm hay dữ liệu nào, sửa lúc nào cũng rẻ.
   file: `_acceptance/config.yaml`
@@ -46,4 +60,4 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/2 lỗi rơi vào file không bộ đo nào phủ (_acceptance/khoa-nguon-nghi-khi-ddl-sua/card.html, _acceptance/khoa-nguon-nghi-khi-ddl-sua/evidence-page.html) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
