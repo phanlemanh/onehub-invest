@@ -1,0 +1,31 @@
+{
+  "feature_plain": "Gỡ chặn gộp cho hồ sơ đã ký app-test-chiu-song-song: phép đo E4 thôi đếm tổng số ca xanh của tệp test (tệp đã có thêm ca nên phép đo đỏ oan), mà kiểm đúng ba ca nó canh theo tên; phép đo phạm vi E5 neo vào đúng nhánh gốc; rồi ghim lại hồ sơ ấy bằng làn máy, giữ chữ ký cũ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chỉ chạy đúng ba ca LDR mà hồ sơ cũ canh, gọi bằng tên, và đòi cả ba xanh — tệp test có thêm bao nhiêu ca khác cũng không đổi kết quả; chạy trên DB thử, không trên DB chung."},
+    {"id": "AC-2", "p": "Sẽ báo đỏ gọi đúng tên ca khi một trong ba ca bị đổi tên hay biến mất (đối chứng trên bản chép tạm)."},
+    {"id": "AC-3", "p": "Sẽ vẫn xanh 3/3 khi tệp có thêm ca LDR mới, kể cả ca có tên gần giống một ca đích; không để lại bản chép tạm nào."},
+    {"id": "AC-4", "p": "Sẽ giữ ba lần phá thư viện cũ (giữ khoá dùng chung, bỏ ràng buộc, dùng chung dãy số) — mỗi lần vẫn đỏ đúng lý do cũ."},
+    {"id": "AC-5", "p": "Sẽ cho phép đo phạm vi E5 so đúng khoảng commit của nhánh gốc đã ký, nên chạy được ở mọi nhánh sau; hai commit neo nằm sẵn trong lịch sử main."},
+    {"id": "AC-6", "p": "Sẽ ghim lại hồ sơ app-test-chiu-song-song bằng làn máy với cả năm phép đo xanh, và lưới trước-gộp trên toàn phạm vi PR không còn chặn nào."},
+    {"id": "AC-7", "p": "Sẽ chỉ đổi hai tệp đo của hồ sơ cũ, dòng ghim trong sổ của nó, hồ sơ này và cấu hình — không sửa chữ hợp đồng, tiêu chí hay chữ ký đã ký."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Sẽ KHÔNG sửa hợp đồng, tiêu chí hay chữ ký của hồ sơ đã ký — chữ cũ vẫn đúng với phép đo mới."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG ghim lại các hồ sơ đã ký khác đang hoá cũ ngoài app-test-chiu-song-song."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG đo các ca KN- của hàng khoá-nguồn đang gác — hàng ấy tự đo."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Tệp test: đúng ba ca, có thêm ca (5 trên main, 9 ở nhánh khoá-nguồn), một ca bị đổi tên — AC-1, AC-2, AC-3."},
+    {"i": 1, "p": "Ba cách phá thư viện vẫn đỏ đúng lý do — AC-4."},
+    {"i": 2, "p": "Phép đo phạm vi: khoảng neo xanh, commit neo vắng thì báo, tệp ngoài vùng thì đỏ — AC-5."},
+    {"i": 3, "p": "Ghim lại: năm phép đo cùng các bộ test xanh, lưới trước-gộp sạch trên phạm vi PR, E4 chạy DB thử — AC-6, AC-1."},
+    {"i": 4, "p": "Phạm vi hàng: chỉ các tệp đã kê, hồ sơ đã ký không đổi chữ — AC-7."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản đầu để lượt ghim lại chạy phép đo cầm khoá dùng chung trên DB thật — đã chuyển phép đo E4 cũ sang DB thử."},
+    {"i": 1, "p": "Lo commit neo mất khi nhánh gốc bị xoá — đã đo: cả hai commit nằm trong lịch sử main; phép đo thêm vế kiểm điều đó."},
+    {"i": 2, "p": "Lưới trước-gộp chỉ kiểm một hồ sơ, PR vẫn có thể bị chặn vì hồ sơ khác — đã đổi sang kiểm toàn phạm vi PR."},
+    {"i": 3, "p": "Chưa chứng bộ lọc tên neo đủ (ca tên gần giống có thể lọt) — đã thêm phép so tập tên và một ca đối chứng tên gần giống."},
+    {"i": 4, "p": "Chưa kiểm bản chép tạm được dọn khi đối chứng hỏng giữa chừng — đã thêm vế kiểm và dọn ở bước cuối."}
+  ]
+}
