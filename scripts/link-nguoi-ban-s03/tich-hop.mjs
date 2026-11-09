@@ -23,20 +23,20 @@ export function thuMucExtension(patch = PATCH) {
   return m?.[1] ?? null;
 }
 
-/**
- * Khuôn của .patch trước khi áp: mọi hunk của mọi tệp có dòng ngữ cảnh (khối -U0 làm git apply đặt dòng sai chỗ mà không báo —
- * 09/11 một dòng rơi ra ngoài hàm làm module kênh vỡ lúc nạp), và đường a/ trùng đường b/ (tệp mới thì a/ là /dev/null). Thuần.
- * @returns {string[]} lỗi, mỗi lỗi một dòng; rỗng là đạt
- */
 /** Che tên kênh trong một đoạn chữ: tên thư mục extension (`ext` = extensions/<thư mục>/src) và phần gốc của nó. */
 export function cheTenKenh(text, ext) {
   const thuMuc = ext.split("/")[1] ?? "";
   const gocTen = thuMuc.replace(/user$/i, "");
   let ra = thuMuc ? text.split(thuMuc).join("<ext>") : text;
-  if (gocTen.length >= 3) ra = ra.replace(new RegExp(gocTen.replace(/[.*+?^${}()|[\]\\]/g, "\\export function kiemKhuonPatch(text) {"), "gi"), "<kenh>");
+  if (gocTen.length >= 3) ra = ra.replace(new RegExp(gocTen.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "<kenh>");
   return ra;
 }
 
+/**
+ * Khuôn của .patch trước khi áp: mọi hunk của mọi tệp có dòng ngữ cảnh (khối -U0 làm git apply đặt dòng sai chỗ mà không báo —
+ * 09/11 một dòng rơi ra ngoài hàm làm module kênh vỡ lúc nạp), và đường a/ trùng đường b/ (tệp mới thì a/ là /dev/null). Thuần.
+ * @returns {string[]} lỗi, mỗi lỗi một dòng; rỗng là đạt
+ */
 export function kiemKhuonPatch(text) {
   const loi = [];
   for (const khoi of text.split(/^diff --git /m).slice(1)) {
