@@ -26,15 +26,6 @@ test("khuôn lệch của hai dòng kiểm PL16 vẫn rơi về «chưa diễn g
   assert.equal(dqDetail("data-level:distribution", "units=10 B0=1 B1=2").known, false, "thiếu bậc B2–B5 phải là khuôn lạ")
 })
 
-// thang-bac-moi-b0-b5: máy thu chưa áp 087 thì bac-du-lieu ghi skip «chua-ap-087» — chữ tiếng Việt, chỉ cho đúng kiểm này.
-test("nhãn dòng skip chưa áp 087 của data-level:distribution", () => {
-  assert.deepEqual(dqDetail("data-level:distribution", "chua-ap-087"), {
-    text: "Tạm dừng: máy thu chưa áp bản cập nhật thang bậc 08/11 (087)",
-    known: true,
-  })
-  assert.equal(dqDetail("vocab:x", "chua-ap-087").known, false, "chỉ đọc cho đúng kiểm data-level:distribution")
-})
-
 // Kiểm 450 so-chua-xac-minh (070): #329 (enrich-nguoi-s03, 079) thêm vế «S03 qua người đăng». Đầu vào chép đúng chuỗi 450 ghi.
 test("nhãn kiểm so-chua-xac-minh: dạng 079 có vế S03 qua người đăng và dạng 070 cũ đều diễn giải được", () => {
   assert.deepEqual(dqDetail("so-chua-xac-minh", "S06 có số: 57667, chưa xác minh: 44664, nguồn khác có nhãn: 0, S03 qua người đăng: 758"), {

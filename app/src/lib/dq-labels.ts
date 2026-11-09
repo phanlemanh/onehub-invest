@@ -178,9 +178,6 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `Snapshot cuối ${m[1]} (${m[2]} ngày, SLO ${m[3]} ngày)`, known: true }
   if (d === "chưa có snapshot") return { text: "Chưa có snapshot", known: true }
   if (d === "chưa có crosswalk S02 nào") return { text: "Chưa nối thị trường S02 nào", known: true }
-  // pipeline/bac-du-lieu.mjs (thang-bac-moi-b0-b5): máy thu chưa áp 087 → không chụp ảnh bậc, ghi một dòng skip
-  if (d === "chua-ap-087" && check === "data-level:distribution")
-    return { text: "Tạm dừng: máy thu chưa áp bản cập nhật thang bậc 08/11 (087)", known: true }
   if ((m = d.match(/^our=(\w+) (?:s02|S02|airdna)_active=(\w+)\(([^)]*)\) universe=(\w+) history=(\w+)m coverage=([\d.]+%|n\/a) captured_age=(\w+|n\/a)d$/)))
     return {
       text:
