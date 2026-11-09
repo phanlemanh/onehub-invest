@@ -50,8 +50,8 @@ evals:
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-4
-    executor: test
-    cmd: config:executors.test.pl34_test_khac
+    executor: script
+    cmd: config:executors.script.pl34_test_khac
     paths: [scripts/zalo-import-daily.sh, scripts/nap-argmax.test.mjs, pipeline/scripts/media-wiring.test.mjs, pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs]
     expected: "exit 0; scripts/nap-argmax.test.mjs và pipeline/scripts/media-wiring.test.mjs, pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs xanh trên đầu nhánh (ba tệp còn lại trong bảy tệp nhắc zalo-import-daily)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
