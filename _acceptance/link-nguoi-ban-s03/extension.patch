@@ -1,5 +1,5 @@
 diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6..c244466 100644
+index 636cbe6..87240d7 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
 @@ -25,6 +25,8 @@ import {
@@ -38,20 +38,22 @@ index 636cbe6..c244466 100644
    const { config } = options;
    let { account } = options;
    const { abortSignal, statusSink, runtime } = options;
-@@ -1004,6 +1023,11 @@ export async function monitorZalouserProvider(
+@@ -1004,6 +1023,13 @@ export async function monitorZalouserProvider(
          await ingress.receive(msg);
        },
        onError: (err) => {
 +        // 0911 lần 9 (i): đường MONITOR thật — bộ nghe tin báo lỗi → ghi sự kiện
 +        // vào tệp chung của bộ tra (kể cả khi module kênh là bản mock của bộ chạy).
-+        void import("./api-dang-noi.js").then(({ ghiSuKienListener }) =>
-+          ghiSuKienListener(process.env.S03_LOOKUP_DIR?.trim() || null, "error", Date.now()),
-+        );
++        void import("./api-dang-noi.js")
++          .then(({ ghiSuKienListener }) =>
++            ghiSuKienListener(process.env.S03_LOOKUP_DIR?.trim() || null, "error", Date.now()),
++          )
++          .catch(() => {}); // import hỏng không thành unhandled rejection trên đường lỗi gateway
          if (stopped || abortSignal.aborted) {
            return;
          }
 diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
-index 548f3f5..ad012e3 100644
+index 548f3f5..c8b4655 100644
 --- a/extensions/zalouser/src/zalo-js.ts
 +++ b/extensions/zalouser/src/zalo-js.ts
 @@ -101,6 +101,29 @@ type ActiveZaloListener = {
@@ -84,7 +86,7 @@ index 548f3f5..ad012e3 100644
  const groupContextCache = new Map<string, { value: ZaloGroupContext; expiresAt: number }>();
  
  type AccountInfoResponse = Awaited<ReturnType<API["fetchAccountInfo"]>>;
-@@ -1357,6 +1380,12 @@ export async function startZaloListener(params: {
+@@ -1357,6 +1380,11 @@ export async function startZaloListener(params: {
  }): Promise<{ stop: () => void }> {
    const profile = normalizeProfile(params.profile);
    const api = await withZaloApi(profile, async (apiLocal) => apiLocal);
@@ -92,12 +94,11 @@ index 548f3f5..ad012e3 100644
 +  // đóng/lỗi → tệp sự kiện trong S03_LOOKUP_DIR (đường không do abort của mình).
 +  // A2 (0911-13): ghi sổ SAU kiểm trùng và abort — khởi trùng không đè api
 +  // đang sống, abort sớm không kẹt api cũ trong sổ (không có cleanup chạy).
-+  const { ghiSuKienListener } = await import("./api-dang-noi.js"); // sự kiện chung cho bộ tra + bộ canh
-+  const dirSuKien = process.env.S03_LOOKUP_DIR?.trim() || null;
++  // S4-2(A): sổ API đang nối (ghi sự kiện đóng listener nằm ở MONITOR — một chỗ duy nhất)
    const existing = activeListeners.get(profile);
    if (existing) {
      throw new Error(
-@@ -1366,6 +1395,7 @@ export async function startZaloListener(params: {
+@@ -1366,6 +1394,7 @@ export async function startZaloListener(params: {
    if (params.abortSignal.aborted) {
      return { stop: () => {} };
    }
@@ -105,7 +106,7 @@ index 548f3f5..ad012e3 100644
    let stopped = false;
    let lastWatchdogTickAt = Date.now();
    const onConnected = () => clearTimeout(connectTimer);
-@@ -1384,6 +1414,7 @@ export async function startZaloListener(params: {
+@@ -1384,6 +1413,7 @@ export async function startZaloListener(params: {
      api.listener.off("message", onMessage);
      api.listener.off("connected", onConnected);
      activeListeners.delete(profile);
@@ -113,23 +114,7 @@ index 548f3f5..ad012e3 100644
      // zca-js stop() resets before ws closes. Retire the API so a retry cannot
      // reuse that listener while its previous socket is still closing.
      invalidateApi(profile);
-@@ -1396,6 +1427,7 @@ export async function startZaloListener(params: {
-     params.onError(error);
-   };
-   const onError = (error: unknown) => {
-+    void ghiSuKienListener(dirSuKien, "error", Date.now()); // lần 9 (i)
-     failListener(error instanceof Error ? error : new Error(String(error)));
-   };
-   const onMessage = (incoming: Message) => {
-@@ -1408,6 +1440,7 @@ export async function startZaloListener(params: {
-     // Closing a CONNECTING ws emits error on nextTick, then closed. Keep the
-     // guarded error handler until that terminal event to avoid an unhandled error.
-     detachTerminalHandlers();
-+    void ghiSuKienListener(dirSuKien, "closed", Date.now()); // lần 9 (i)
-     failListener(new Error(`Zalo listener closed (${code}): ${reason || "no reason"}`));
-   };
-   const connectTimer = setTimeout(() => {
-diff --git a/u7-tree/extensions/zalouser/src/api-dang-noi.ts b/extensions/zalouser/src/api-dang-noi.ts
+diff --git a/extensions/zalouser/src/api-dang-noi.ts b/extensions/zalouser/src/api-dang-noi.ts
 new file mode 100644
 index 0000000..8d7d113
 --- /dev/null
@@ -185,7 +170,7 @@ index 0000000..8d7d113
 +    // dọn hỏng không sao — lọc theo thời gian khi đọc
 +  }
 +}
-diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
+diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
 index 0000000..653c8f1
 --- /dev/null
@@ -824,7 +809,7 @@ index 0000000..653c8f1
 +  if (!dir) return () => {};
 +  return khoiDongBoTra(dir, process.env.S03_COLLECTOR_URL?.trim() ?? "", log);
 +}
-diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
+diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
 index 0000000..cc9571f
 --- /dev/null
