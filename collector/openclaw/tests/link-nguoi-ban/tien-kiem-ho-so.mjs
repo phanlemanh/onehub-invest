@@ -60,6 +60,8 @@ if (process.argv[1] && process.argv[1].endsWith("tien-kiem-ho-so.mjs")) {
     console.log("TIEN-KIEM-HO-SO OK — không tệp yêu cầu/lượt lớn/chặn, .patch đúng một getUserInfo");
   } else {
     for (const l of loi) console.error("TIEN-KIEM-HO-SO SAI: " + l);
+    // 0911-13(4): câu bắt buộc — người chạy thấy ngay hệ quả
+    console.error("TIEN-KIEM-HO-SO: KHÔNG ĐƯỢC KHỞI ĐỘNG LẠI gateway cho tới khi mọi lỗi trên được xử lý");
     process.exit(1);
   }
 }
