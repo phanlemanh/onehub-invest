@@ -41,7 +41,8 @@ const SQL_DEM = `
            (SELECT data_level FROM offer_data_level(o.kind, o.property_type, o.price_vnd, o.area_m2, o.area_id, false))
       FROM sale_offers o
      WHERE o.source IN ('S03', 'S05', 'S06'))
-  SELECT coalesce((SELECT m.id FROM areas w JOIN areas m ON m.id = w.parent_id
+  SELECT coalesce((SELECT m.id FROM areas m WHERE m.id = u.area_id AND m.region_type = 'market'),   -- tin mang mã thị trường (s03-len-cong)
+                  (SELECT m.id FROM areas w JOIN areas m ON m.id = w.parent_id
                     WHERE w.id = u.area_id AND m.region_type = 'market'), 'chua-ro') AS market_id,
          coalesce(property_type, 'unknown') AS property_type, unit, data_level, count(*)::int AS n
     FROM u GROUP BY 1, 2, 3, 4`
