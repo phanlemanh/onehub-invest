@@ -56,6 +56,7 @@ const CHART_CONFIG = {
   clustered: { label: STAGE_LABEL.clustered, color: STAGE_COLOR.clustered },
   dropped: { label: STAGE_LABEL.dropped, color: STAGE_COLOR.dropped },
   merged: { label: STAGE_LABEL.merged, color: STAGE_COLOR.merged },
+  inquiry: { label: STAGE_LABEL.inquiry, color: STAGE_COLOR.inquiry },
 } satisfies ChartConfig
 
 const MARGIN = { top: 64, right: 150, bottom: 8, left: 170 }
@@ -120,7 +121,7 @@ export function FlowJourney({
     const lit = emphasis ? emphasis.node(index) : true
     const header = headers[node.id]
     const first = node.depth === 0
-    const terminal = node.stage !== "channel" && node.stage !== "journey"
+    const terminal = (node.stage !== "channel" && node.stage !== "journey") || node.labeled === true
     const labelX = first ? x - LABEL_GAP : x + width + LABEL_GAP
     return (
       <g className={cn("transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none", !lit && "opacity-30")}>
