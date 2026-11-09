@@ -383,32 +383,47 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
   });
 });
 
-test("DO3-AC-2 đường đã lập mốc mà mất hết giá trị: mỗi chủ thể một dòng máy rút, song 0, không báo «chưa chạy»", coDb, async () => {
+test("DO3-AC-2 đường đã lập mốc mà mất hết giá trị: máy rút, chạy lại cùng ngày giữ nguyên, ngày sau không «chưa chạy», giá trị quay lại là «thêm»", coDb, async () => {
   await trongGiaoDich(async (c) => {
     await chuanBi(c);
     // Sổ đường thử: một đường phát biểu với mã ghi riêng của ca (không trùng dữ liệu chép), không kiểm ngược.
     const RULE = "do3-thu-mat-het";
     const so = [Object.freeze({ duong: "dien-tich-suy-ra", doc: "phat-bieu", rule_ids: Object.freeze([RULE]), o_nhan: null, nguoi_rut: false,
       nguoi_de: false, kiem: null })];
+    const chay = (ngay, dotBien) => doLamGiau(c, { ngay, write: true, duong: so, kiemNguoc: false, dotBien });
+    const dongDq = (kq) => kq.dq.find((x) => x.check_name === "do3-thay-doi" && x.entity === "dien-tich-suy-ra");
+    const dongMh = async (ngay) => (await dongDoi(c, ngay)).filter((x) => x.subject_key.startsWith("S03:do3a2mh")).map((x) => x.huong);
     const ma = ["mh1", "mh2", "mh3"];
     for (const x of ma) await tin(c, `a2${x}`);
-    await ghiNhom(c, ma.map((x) => ({ ...pbNhom(`a2${x}`), rule_id: RULE })));
-    const lan1 = await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false });
-    assert.equal(detailCua(lan1, "dien-tich-suy-ra").ly_do, "lap-moc");
+    const ghi = () => ghiNhom(c, ma.map((x) => ({ ...pbNhom(`a2${x}`), rule_id: RULE })));
+    await ghi();
+    assert.equal(dongDq(await chay(D)).detail.ly_do, "lap-moc");
     await retractRule(c, ma.map((x) => `S03:do3a2${x}`), "property_type", RULE, "thay-boi-luot"); // mất hết giá trị
-    const kiem = async (kq) => {
-      const r = kq.dq.find((x) => x.check_name === "do3-thay-doi" && x.entity === "dien-tich-suy-ra");
+    // Lượt 1 và lượt 2 cùng ngày D: cùng một kết quả, dòng dq khớp dòng đổi.
+    const kiemD = async (kq) => {
+      const r = dongDq(kq);
       if (r.detail.ly_do === "chua-chay") throw new Error("MAT HET THANH CHUA CHAY");
       assert.equal(r.status, "pass");
       assert.deepEqual([r.detail.song, r.detail.may_rut, r.detail.them, r.detail.doi], [0, 3, 0, 0]);
-      const dong = (await dongDoi(c, D)).filter((x) => x.subject_key.startsWith("S03:do3a2mh"));
-      assert.deepEqual(dong.map((x) => x.huong), ["may_rut", "may_rut", "may_rut"]);
-      const { rows: [{ n }] } = await c.query("SELECT count(*)::int AS n FROM enrichment_value_state WHERE duong = 'dien-tich-suy-ra'");
-      assert.equal(n, 0, "ảnh chụp thay bằng trạng thái rỗng");
+      assert.deepEqual(await dongMh(D), ["may_rut", "may_rut", "may_rut"]);
     };
-    await thu(c, async () => assert.rejects(async () => kiem(await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false,
-      dotBien: "mat-het-la-chua-chay" })), /MAT HET THANH CHUA CHAY/));
-    await kiem(await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false }));
+    for (let luot = 1; luot <= 2; luot++) {
+      await thu(c, async () => assert.rejects(async () => {
+        if (luot === 2) await chay(D);
+        await kiemD(await chay(D, "mat-het-la-chua-chay"));
+      }, /MAT HET THANH CHUA CHAY/, `bản phá lượt ${luot}`));
+      await kiemD(await chay(D));
+    }
+    // Ngày D+1 vẫn rỗng: đường đã chạy, song 0, không dòng đổi mới.
+    const r2 = dongDq(await chay(D2));
+    if (r2.detail.ly_do === "chua-chay") throw new Error("MAT HET THANH CHUA CHAY: ngày sau");
+    assert.deepEqual([r2.status, r2.detail.song, r2.detail.may_rut, r2.detail.them], ["pass", 0, 0, 0]);
+    // Giá trị quay lại trong ngày D+1: «thêm», không lập mốc lại.
+    await ghi();
+    const r3 = dongDq(await chay(D2));
+    if (r3.detail.ly_do === "lap-moc") throw new Error("LAP MOC LAI KHI QUAY LAI");
+    assert.deepEqual([r3.status, r3.detail.song, r3.detail.them, r3.detail.may_rut], ["pass", 3, 3, 0]);
+    assert.deepEqual(await dongMh(D2), ["them", "them", "them"]);
   });
 });
 

@@ -11,7 +11,7 @@ import pg from "pg";
 
 import { chanLo, gopOCam, ngayVn, phanRa, tuanIso, tuanTruoc } from "./lib/do-hang-ngay.mjs";
 import {
-  daCoLamGiau, docBaiNguoi, docBaiNhom, docGiaTriSong, docNguoiDe, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
+  daCoLamGiau, daLapMoc, docBaiNguoi, docBaiNhom, docGiaTriSong, docNguoiDe, docNguoiRut, docNhanNgay, docViTriTin, SO_MIG,
 } from "./lib/do-lam-giau-db.mjs";
 import {
   demNguoiDe, demThayDoi, DUONG, gopNgay, kiemNguocNhom, kiemNguocSo, latPhang, NHOM_LAT_THAY_DOI, ngayDauTuan, nguoiSua, PHIEN_BAN_THUOC, soAnh,
@@ -97,11 +97,13 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
 
   for (const d of duong) {
     const goc = { rule_ids: [...d.rule_ids], phien_ban_thuoc: PHIEN_BAN_THUOC };
-    // 1–3. Giá trị sống và ảnh chụp lần trước. «Chưa chạy» (không ô số 0) chỉ khi CẢ HAI rỗng: đường đã lập mốc mà lượt này mất
-    // hết giá trị thì đi tiếp đường so ảnh chụp — mỗi chủ thể của ảnh chụp ra một dòng máy rút, song 0 (AC-2).
+    // 1–3. Giá trị sống và ảnh chụp lần trước. Ảnh chụp rỗng chưa nói được đường chưa lập mốc (đường đã lập mốc mà mất hết giá trị
+    // cũng để ảnh chụp rỗng), nên hỏi thêm dấu bền `daLapMoc`. «Chưa chạy» (không ô số 0) chỉ khi không giá trị, không ảnh chụp và
+    // chưa lập mốc; đã lập mốc thì đi đường so ảnh chụp — mất hết ra máy rút, song 0; giá trị quay lại ra «thêm» (AC-2).
     const nay = await docGiaTriSong(client, d, { dotBien });
     const { rows: tr } = await client.query("SELECT subject_key, value_key, offer_id FROM enrichment_value_state WHERE duong = $1", [d.duong]);
-    if (!nay.size && (!tr.length || dotBien === "mat-het-la-chua-chay")) {
+    const lapMoc = tr.length > 0 || await daLapMoc(client, d.duong);
+    if (!nay.size && (!lapMoc || dotBien === "mat-het-la-chua-chay")) {
       const so0 = dotBien === "chua-chay-so-0" ? { song: 0, them: 0, doi: 0, may_rut: 0, nguoi_sua: 0 } : {};
       ra.push({ check_name: "do3-thay-doi", entity: d.duong, status: "skip", detail: { ngay, ly_do: "chua-chay", ...so0, ...goc } });
       continue;
@@ -109,7 +111,7 @@ export async function doLamGiau(client, { ngay = ngayVn(Date.now()), write = fal
     dangChay.add(d.duong);
     if (d.doc === "so-tren-tin") for (const v of nay.values()) tinCam.add(v.offer_id);
     // Ảnh chụp chưa có → lập mốc.
-    if (!tr.length && dotBien !== "lap-moc-co-dong") {
+    if (!lapMoc && dotBien !== "lap-moc-co-dong") {
       await thayAnhChup(client, d, nay, ngay);
       ra.push({ check_name: "do3-thay-doi", entity: d.duong, status: "skip", detail: { ngay, ly_do: "lap-moc", song: nay.size, ...goc } });
       continue;

@@ -30,6 +30,18 @@ export async function napLamGiau(client) {
 
 // ================= Bộ đọc của DO3 (chỉ SELECT) =================
 /**
+ * Đường đã lập mốc chưa, khi ảnh chụp rỗng: ảnh chụp rỗng có hai nghĩa — chưa từng lập mốc, hoặc đã lập mốc mà mọi giá trị đã rời
+ * đường. Dấu bền là một dòng `do3-thay-doi` cũ của đường không phải «chưa chạy» (lập mốc hay pass).
+ * @param {import("pg").Client} c @param {string} duong
+ */
+export async function daLapMoc(c, duong) {
+  const { rows } = await c.query(
+    `SELECT 1 FROM dq_check_results WHERE check_name = 'do3-thay-doi' AND entity = $1
+        AND coalesce(detail::jsonb ->> 'ly_do', '') <> 'chua-chay' LIMIT 1`, [duong]);
+  return rows.length > 0;
+}
+
+/**
  * Giá trị sống của một đường trên tin: Map `subject_key → {value_key, offer_id}`. `rule_ids` rỗng → Map rỗng («chưa chạy»).
  * - `so-tren-tin`: tin S03 sống mang dấu số suy; khoá `tin:<offer_id>`, value_key là băm số (`seller_phone_hash`), không bao giờ là số.
  * - `phat-bieu`: phát biểu sống `resource_name = 'Property'`; khoá `<subject_key>|<field>`; chỉ phát biểu nối được tin sống (qua
