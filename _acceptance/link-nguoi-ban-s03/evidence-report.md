@@ -1,21 +1,19 @@
 ---
 schema_version: 2
 feature_slug: link-nguoi-ban-s03
-verdict: REJECT
+verdict: BLOCKED
 failed_evals: []
-reason:
+reason: "Hai lệnh không ra được kết quả PASS/FAIL. (1) E9 (node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem): dừng ở lỗi khởi động vitest/vite, ENOTEMPTY khi rename thư mục cache deps_temp trong node_modules/.vite của openclaw, có thể do lượt verifier khác chạy song song dùng chung cache; chưa tới bước kiểm nào; theo chỉ dẫn không chạy lại. (2) Lệnh suite cd pipeline && npm test chạy quá 30 phút chưa xong (mặc định 30 phút, không tìm thấy khai báo long_running trong evals.yaml cho nhánh này); không kill, không chạy lại; cần người điều phối chọn chờ thêm hoặc khai long_running rồi chạy lại."
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0610d52ab83f84b70485d4c9d449ca8e9ac7e1d4
+verified_commit: 47debf79ab1006ea23fd3cb9ac0f715a6e866d72
 human_signoff:
 ---
 
 # Evidence Report: link-nguoi-ban-s03
 
-Round 3. Nội dung thay toàn bộ round cũ; lịch sử các round nằm ở mục Iterations.
-
-Lý do REJECT: mọi eval của hợp đồng (E1 đến E11a) đều xanh trên máy, nhưng hai lệnh suite không gắn eval đỏ là `cd app && npm test` và `cd pipeline && npm test`. Hai lệnh này nêu ở mục Lệnh suite bên dưới. Danh sách failed_evals để trống vì không eval nào của hợp đồng đỏ.
+Round 4. Verdict BLOCKED: E9 và lệnh suite pipeline không chạy ra kết quả (xem reason). Chín eval máy còn lại và năm lệnh suite khác xanh.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -27,162 +25,150 @@ Lý do REJECT: mọi eval của hợp đồng (E1 đến E11a) đều xanh trên
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | script | PASS |
 | E8 | AC-8 | script | PASS |
-| E9 | AC-9 | script | PASS |
+| E9 | AC-9 | script | BLOCKED (không chạy được, chưa phải PASS hay FAIL) |
 | E10 | AC-10 | script | PASS |
 | E11a | AC-11 | script | PASS |
-| E11b | AC-11 | judgment | chờ người chốt (đề xuất PASS) |
+| E11b | AC-11 | judgment | đề xuất PASS, chờ người (panel giữ từ round 3) |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-link-nguoi-ban-s03-E1-r3
+  run_id: minted-link-nguoi-ban-s03-E1-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_tra
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs tra
-    chạy 1 lần, đạt 1/1, không phương sai
+    __EXIT=0
 
 - eval: E2
-  run_id: minted-link-nguoi-ban-s03-E2-r3
+  run_id: minted-link-nguoi-ban-s03-E2-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_dung
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs dung
-    chạy 1 lần, đạt 1/1, không phương sai
+    __EXIT=0
 
 - eval: E3
-  run_id: minted-link-nguoi-ban-s03-E3-r3
+  run_id: minted-link-nguoi-ban-s03-E3-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_thu
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs thu
-    chạy 1 lần, đạt 1/1, không phương sai
+    __EXIT=0
 
 - eval: E4
-  run_id: minted-link-nguoi-ban-s03-E4-r3
+  run_id: minted-link-nguoi-ban-s03-E4-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_ranh_gioi
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs ranh-gioi
-    chạy 1 lần, đạt 1/1, không phương sai
+    __EXIT=0
 
 - eval: E5
-  run_id: minted-link-nguoi-ban-s03-E5-r3
+  run_id: minted-link-nguoi-ban-s03-E5-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_api
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs api
-    ℹ duration_ms 110518.4615
+    duration_ms 110342.757959
+    __EXIT=0
 
 - eval: E6
-  run_id: minted-link-nguoi-ban-s03-E6-r3
+  run_id: minted-link-nguoi-ban-s03-E6-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_db
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    ok   E6-nạp view mới_nhất giữ dòng mới nhất mỗi mã
+    ok   E6-nap view moi_nhat giữ dòng mới nhất mỗi mã
+    __EXIT=0
 
 - eval: E7
-  run_id: minted-link-nguoi-ban-s03-E7-r3
+  run_id: minted-link-nguoi-ban-s03-E7-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_lien_lac
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
     lien-lac: 18 đạt · 0 hỏng
+    __EXIT=0
 
 - eval: E8
-  run_id: minted-link-nguoi-ban-s03-E8-r3
+  run_id: minted-link-nguoi-ban-s03-E8-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_chon
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
     chon: 14 đạt · 0 hỏng
+    __EXIT=0
 
 - eval: E9
-  run_id: minted-link-nguoi-ban-s03-E9-r3
-  exit_code: 0
+  run_id: minted-link-nguoi-ban-s03-E9-r4
   baseline: n-a
   verifier: config:executors.script.lnb_tien_kiem
-  verified_at: 2026-11-09T14:23:19Z
+  trạng thái: BLOCKED, không chạy được (cannotRun), không phải kết quả PASS hay FAIL của tien-kiem
   output: |
-    lệnh: node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem
-    chạy 1 lần, đạt 1/1, không phương sai
+    tích hợp E9: OpenClaw feat/s03-ma-album-ext @87afe987b + extension.patch (git apply thật)
+    Startup Error của vitest/vite: ENOTEMPTY, directory not empty, rename deps_temp_447f585b sang deps
+    trong node_modules/.vite/vitest của bản chép openclaw tạm; chưa tới bước kiểm nào.
+    Nghi do lượt verifier khác chạy song song dùng chung cache. Không chạy lại theo chỉ dẫn.
 
 - eval: E10
-  run_id: minted-link-nguoi-ban-s03-E10-r3
+  run_id: minted-link-nguoi-ban-s03-E10-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_ten_nguon
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
-    ten-nguon: 11 đạt · 0 hỏng
+    ten-nguon: 13 đạt · 0 hỏng
+    __EXIT=0
 
 - eval: E11a
-  run_id: minted-link-nguoi-ban-s03-E11a-r3
+  run_id: minted-link-nguoi-ban-s03-E11a-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.lnb_tai_lieu
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
   output: |
     tai-lieu: 20 đạt · 0 hỏng
+    __EXIT=0
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-link-nguoi-ban-s03-SUITE-npm_test__bb6271-r3
+  run_id: minted-link-nguoi-ban-s03-SUITE-npm_test__bb6271-r4
   exit_code: 0
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-link-nguoi-ban-s03-SUITE-lint-r3
+  run_id: minted-link-nguoi-ban-s03-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
 
 - cmd: cd app && npm test
-  run_id: minted-link-nguoi-ban-s03-SUITE-npm_test__bd9a35-r3
-  exit_code: 1
-  verified_at: 2026-11-09T14:23:19Z
-  ghi chú: 1098 ca đạt, 1 ca hỏng, 5 bỏ qua. Ca hỏng là ON12-AC-5 «bảng kiểm chất lượng trên DB local diễn giải đủ» (app/tests/ops-nhan-theo-context.test.tsx dòng 352): các dòng kiểm do3-thay-doi và do3-kiem-nguoc trên DB local chưa có diễn giải. Không gắn eval nào.
+  run_id: b18rcnuu4
+  exit_code: 0
+  verified_at: 2026-11-09T22:32:28Z
 
 - cmd: cd pipeline && npm test
-  run_id: bxvq7pudk
-  exit_code: 1
-  verified_at: 2026-11-09T14:23:19Z
-  ghi chú: 663 ca đạt, 1 ca hỏng, 1 bỏ qua. Ca hỏng là AC-3 «không còn khuôn cũ» (pipeline/scripts/entrypoint-symlink.test.mjs dòng 134): báo «AC-3 còn lối vào khuôn cũ: scripts/link-nguoi-ban-s03/tich-hop.mjs». Không gắn eval nào.
+  run_id: minted-link-nguoi-ban-s03-SUITE-npm_test__13563d-r4
+  trạng thái: BLOCKED, chạy quá 30 phút chưa xong (mặc định 30 phút, không có khai báo long_running); không kill, không chạy lại; tệp đầu ra còn rỗng, bốn tiến trình npm test vẫn chạy
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-link-nguoi-ban-s03-SUITE-test_lint_rules-r3
+  run_id: minted-link-nguoi-ban-s03-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-11-09T14:23:19Z
+  verified_at: 2026-11-09T22:32:28Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-link-nguoi-ban-s03-SUITE-node_scripts_check_portal_compliance_mjs-r3
+  run_id: minted-link-nguoi-ban-s03-SUITE-node_scripts_check_portal_compliance_mjs-r4
   exit_code: 0
-  verified_at: 2026-11-09T14:23:19Z
-
-### Phán đoán (judgment)
-
-- eval: E11b
-  judged_by: hội đồng judge (đề xuất, chưa có người chốt)
-  proposal: PASS
-  panel:
-    - domain-correctness: PASS — Mục «Bộ tra hồ sơ người bán S03» ở runtime-map.md có đủ các bước lượt thử, đọc số đếm bốn loại và hai mã đối chứng, bảng xử từng mã tệp chặn, bảng trần, tắt bằng cách xoá `yeu-cau.json` hoặc đặt `chan.txt` không cần khởi động lại, lượt lớn chỉ Mạnh bật qua `luot-lon.txt`, cấm đăng nhập thứ hai, và đoạn «Chưa đo». Runbook trỏ đúng về runtime-map. `s03_ho_so_theo_tai_khoan` trong mappings.yaml khai đủ sáu điều kiện ADR-0011. CONTEXT.md có thuật ngữ «Username người bán».
-    - operational-feasibility: PASS — Mục runtime-map có đủ các bước lượt thử, cách đọc số đếm, bảng xử từng mã tệp chặn, bảng trần, cách tắt không cần khởi động lại, chỉ Mạnh bật lượt lớn, cấm đăng nhập thứ hai. Mục «Chưa đo» liệt kê bốn điều chưa đo. Runbook trỏ về mục đó và thêm tiền kiểm. mappings.yaml khai đủ sáu điều kiện ADR-0011.
-    - spec-alignment: PASS — runtime-map mục «Bộ tra hồ sơ người bán S03» có đủ các ý AC-11, gồm bảng trần, lượt thử năm bước, bảng xử từng mã tệp chặn, cách tắt, lượt lớn chỉ Mạnh bật, cấm đăng nhập thứ hai và mục «Chưa đo». `rule_id` trong mappings.yaml khai sáu điều kiện ADR-0011, CONTEXT có thuật ngữ «Username người bán».
-  human_override:  # chi nguoi ghi
+  verified_at: 2026-11-09T22:32:28Z
 
 ## Known limits
 
@@ -190,15 +176,28 @@ Lý do REJECT: mọi eval của hợp đồng (E1 đến E11a) đều xanh trên
 
 ## Analyst
 
-carried tư round 1 — baseline khong do lai round nay
+carried tu round 1 — baseline khong do lai round nay.
 
-Không có eval nào bị liệt kê là không-phân-biệt. Hai lệnh suite hồi quy của app và pipeline đỏ không gắn eval (nêu ở mục Lệnh suite); không phải lỗi harness của eval nào.
+Eval khong-phan-biet (xanh ca tren HEAD lan baseline): khong co. Moi eval ghi baseline n-a vi round nay khong do lai. Lenh suite xanh-ca-hai-phia la regression-guard binh thuong.
+
+## Judge
+
+Panel E11b, đề xuất PASS. Panel giữ nguyên từ round 3 — inputs không đổi, không chấm lại; rationale xem round đó.
+
+- domain-correctness: PASS (r3)
+- operational-feasibility: PASS (r3)
+- spec-alignment: PASS (r3)
+
+- eval: E11b
+  judged_by: hội đồng ba lens (carried từ round 3)
+  proposal: PASS
+  human_override:  # chi nguoi ghi
 
 ## Variance
 
-none — mọi eval chạy một lần và đồng nhất (không eval nào có runs lớn hơn 1).
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: lịch sử round 1 giữ ở bản ghi cũ; baseline đo ở round này không lặp lại.
-Round 3: mọi eval E1 đến E11a xanh, nhưng hai lệnh suite `cd app && npm test` và `cd pipeline && npm test` đỏ ngoài eval. Trả về triển khai.
+Round 1-3: lịch sử chi tiết của các round này không có trong dữ liệu round 4; baseline đo ở round 1, panel E11b chấm ở round 3.
+Round 4: E9 không chạy được (lỗi khởi động vitest, tranh cache song song) và suite pipeline chạy quá 30 phút chưa xong; hai lệnh này BLOCKED, không eval nào FAIL. Cần chạy lại E9 một mình và chạy lại pipeline npm test với tool timeout dài hơn hoặc khai long_running.

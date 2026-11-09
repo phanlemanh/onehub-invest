@@ -197,3 +197,48 @@ wall: 2800s
 - **claude-sonnet-5-5**: 11 agent · 33 calls · out 36,249 · in 70 · cache_read 704,119 · cache_create 433,027
 - **claude-haiku-5-5**: 17 agent · 51 calls · out 37,859 · in 102 · cache_read 929,388 · cache_create 504,451
 
+### S4 round 4 — wf_af272257-94c (24 agent, 125,577 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 20 | 23,898 | 40 | 2,059,313 | 252 |
+| review:conventions | claude-opus-5-5 | 34 | 22,203 | 74 | 3,044,209 | 274 |
+| review:bugs | claude-opus-5-5 | 20 | 18,810 | 42 | 1,461,157 | 211 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 10,802 | 4 | 52,824 | 60 |
+| triage | claude-sonnet-5-5 | 2 | 7,770 | 4 | 35,722 | 49 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 17 | 6,781 | 34 | 469,365 | 1916 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 4,161 | 4 | 27,989 | 101 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,736 | 4 | 27,989 | 99 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,712 | 4 | 27,994 | 90 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,601 | 4 | 27,993 | 61 |
+| machine:cd app && npm test | claude-haiku-5-5 | 9 | 2,957 | 18 | 210,906 | 1121 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,678 | 4 | 24,766 | 57 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 2,596 | 4 | 27,988 | 126 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 1,956 | 4 | 27,989 | 97 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,708 | 4 | 27,967 | 9 |
+| refute:extension.patch | claude-sonnet-5-5 | 4 | 1,376 | 8 | 86,423 | 16 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,235 | 4 | 27,978 | 33 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 1,145 | 4 | 27,988 | 10 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,114 | 4 | 27,973 | 6 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 888 | 4 | 27,989 | 11 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 752 | 4 | 27,993 | 12 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 728 | 4 | 27,992 | 14 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 642 | 4 | 27,993 | 8 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 328 | 4 | 23,563 | 6 |
+
+
+wall: 3295s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 17 | 40,390 | 1,096,852 | 3154 | 22:38:58 | 23:31:32 |
+| review | 3 | 64,911 | 6,564,679 | 274 | 22:38:58 | 22:43:32 |
+| triage | 1 | 7,770 | 35,722 | 49 | 23:31:34 | 23:32:23 |
+| refute | 1 | 1,376 | 86,423 | 16 | 23:32:25 | 23:32:42 |
+| capture | 1 | 328 | 23,563 | 6 | 23:32:44 | 23:32:49 |
+| synthesize | 1 | 10,802 | 52,824 | 60 | 23:32:53 | 23:33:53 |
+
+- **claude-opus-5-5**: 3 agent · 74 calls · out 64,911 · in 156 · cache_read 6,564,679 · cache_create 417,423
+- **claude-sonnet-5-5**: 4 agent · 10 calls · out 20,276 · in 20 · cache_read 198,532 · cache_create 169,923
+- **claude-haiku-5-5**: 17 agent · 56 calls · out 40,390 · in 112 · cache_read 1,096,852 · cache_create 511,936
+

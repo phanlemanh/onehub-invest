@@ -31,6 +31,22 @@ function thuMucModules(goc, tuong = "", sau = 0, ra = []) {
   return ra;
 }
 
+/** Thư mục bộ đệm của vite/vitest nằm trong node_modules gốc — mỗi cây tạm phải có bộ đệm riêng. */
+const BO_DEM = new Set([".vite", ".vitest-cache", ".vite-temp", ".cache"]);
+
+/**
+ * node_modules gốc của cây tạm là thư mục THẬT, mỗi mục bên trong trỏ về cây nguồn, trừ bộ đệm vite/vitest. S4-r4 (10/11): trỏ
+ * cả thư mục thì mọi cây tạm dùng chung node_modules/.vite của cây nguồn; hai lệnh chấm chạy song song cùng tối ưu deps và vite
+ * đổi tên deps_temp → ENOTEMPTY, lệnh chết trước ca đầu (E9 BLOCKED).
+ */
+function troModulesGoc(nguon, dich) {
+  mkdirSync(dich);
+  for (const ten of readdirSync(nguon)) {
+    if (BO_DEM.has(ten)) continue;
+    symlinkSync(join(nguon, ten), join(dich, ten));
+  }
+}
+
 /**
  * Dựng cây OpenClaw tạm: xuất bản sạch của ref nền (git archive), áp .patch bằng git apply thật, trỏ node_modules của từng gói về
  * cây nguồn (chỉ đọc). Gọi `lam(tam, sha, base)` trên cây đó rồi xoá cây. Thiếu thứ gì → 2 kèm tên, không gọi `lam`.
@@ -57,6 +73,7 @@ export function trenCayOpenclaw(lam, { patch = PATCH } = {}) {
       const dich = join(tam, m);
       if (existsSync(dich)) continue;
       mkdirSync(dirname(dich), { recursive: true });
+      if (m === "node_modules") { troModulesGoc(join(src, m), dich); continue; }
       symlinkSync(join(src, m), dich);
     }
     return lam(tam, sha, base);
