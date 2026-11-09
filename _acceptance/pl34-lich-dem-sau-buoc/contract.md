@@ -5,8 +5,10 @@ slug: pl34-lich-dem-sau-buoc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-09-pl34-lich-dem-sau-buoc-design.md
+approved_by: Mạnh
+approved_at: 2026-11-09
 ---
 
 # Acceptance Contract: pl34-lich-dem-sau-buoc
