@@ -587,6 +587,20 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Q8: người bán lặp lại (≥ 3 tin đã biết dự án, ≥ 80% một dự án) cho phát biểu dự án `inferred`, chỉ cho tin không có tín hiệu
       khác; đo kiểm bỏ-một mỗi ngày, tụt dưới ngưỡng thì tắt. Chưa có hàng; phiên Định vị S03 đề xuất DV2.
     - Q9: phường kế thừa từ dự án tính là phường thật, mang nhãn «suy ra từ dự án»; DA9 gộp trước hoặc cùng DF7 (DF7 đứng trên DA9).
+41. **Định vị và gom tin S03** (10/11, Mạnh «Đồng ý cả 7»; bản phạm vi `docs/plan/pham-vi-dinh-vi-gom-tin-s03-1011.md`, phân tích ở kho tri
+    thức riêng `wiki/chu-de/dinh-vi-gom-tin-s03.md`): mất giá trị của S03 nằm ở bước đọc bài, trước khi có tin. Định vị và tách căn làm ở
+    mức bài, trước khi gom; khớp danh bạ (B2, B3) làm sau khi có tin; bước thu chỉ giữ ngữ cảnh. Ba trong bảy câu đã ghi ở mục 40 (Q7, Q8,
+    Q9); bốn câu còn lại:
+    - Q1: hai môi giới rao cùng một căn là **hai tin**, nối vào cùng căn ở bậc Gắn căn (ADR-0013), không gộp ở bậc Tin.
+    - Q2: cùng người đổi giá cùng căn là **một tin**; giá cũ vào lịch sử giá, giữ tín hiệu tăng, giảm giá (**GT6**).
+    - Q3: rổ hàng và bảng giá quảng cáo khi chưa tách được thành căn **không tính vào số tin trên cổng**, đếm riêng ở Ops (**GT8**, tới
+      khi PL18 E2 tách rổ).
+    - Q4: Haiku được chạy trên đường ống để **đề xuất** gom (nghi gộp nhầm, nghi cùng căn → thẻ duyệt) và gom mù một mẫu mỗi tuần làm
+      **thước** (GT4), trong trần tiền PL34. Opus, Sonnet chỉ làm thước ngoài đường ống; luật ba model của luật 6 không đổi. Luật 7 giữ:
+      model không vào khoá gom, không ghi vào tin.
+    Số đo nền (audit 09–10/11): trong tin có nhiều bản chữ khác nhau, gộp nhầm 25% [17–35%] (đọc tay), 15% [5–36%] (đồng thuận hai
+    model lớn); tách nhầm 2–4%; Haiku gom mù gộp đúng 98% [88–100%]. Hàng mới: GT5–GT8, DV2–DV5; sửa lời GT4 (thành thước, T2), PL18
+    (E2 tách rổ lên đầu).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
