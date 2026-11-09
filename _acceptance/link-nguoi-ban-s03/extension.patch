@@ -1,5 +1,5 @@
 diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6..a94cb93 100644
+index 636cbe6..c244466 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
 @@ -25,6 +25,8 @@ import {
@@ -38,6 +38,18 @@ index 636cbe6..a94cb93 100644
    const { config } = options;
    let { account } = options;
    const { abortSignal, statusSink, runtime } = options;
+@@ -1004,6 +1023,11 @@ export async function monitorZalouserProvider(
+         await ingress.receive(msg);
+       },
+       onError: (err) => {
++        // 0911 lần 9 (i): đường MONITOR thật — bộ nghe tin báo lỗi → ghi sự kiện
++        // vào tệp chung của bộ tra (kể cả khi module kênh là bản mock của bộ chạy).
++        void import("./api-dang-noi.js").then(({ ghiSuKienListener }) =>
++          ghiSuKienListener(process.env.S03_LOOKUP_DIR?.trim() || null, "error", Date.now()),
++        );
+         if (stopped || abortSignal.aborted) {
+           return;
+         }
 diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
 index 548f3f5..ad012e3 100644
 --- a/extensions/zalouser/src/zalo-js.ts
@@ -814,7 +826,7 @@ index 0000000..653c8f1
 +}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..85f9ccc
+index 0000000..cc9571f
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
 @@ -0,0 +1,761 @@
@@ -1535,7 +1547,7 @@ index 0000000..85f9ccc
 +  it("lần 9 (c): onError/onClosed của listener THẬT ghi sự kiện — qua đường khởi listener thật (api giả, không abort)", async () => {
 +    // khởi listener thật cần API wrapper — không thể không creds; đo QUA
 +    // chính module: bọc fetch thêm không cần — gọi onClose/onError của api giả
-+    // listener và chứng minh zalo-js đã treo handler ghi tệp. Vì listener thật
++    // listener và chứng minh module kênh đã treo handler ghi tệp. Vì listener thật
 +    // cần api thật, ca này dùng đường export của api-dang-noi (cùng hàm
 +    // module kênh gọi) + khuôn tệp — đủ chứng minh VÒNG ĐỎNG: sự kiện loai
 +    // 'error'/'closed' trong 30′ sau lời → chan (đã ở ca trên); ở đây chốt
