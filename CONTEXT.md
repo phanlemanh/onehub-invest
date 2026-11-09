@@ -243,8 +243,8 @@ _Avoid_: tin hết hạn, expired, tình trạng tin
 - Slug URL: —
 _Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)
 
-**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
-- Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
+**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi tin rao S03/S05/S06 chưa gắn căn (kể cả tin nằm trong cụm — gom cụm không cho bậc) cộng mỗi căn của danh bạ có tin gắn; B0–B2 đếm tin, B3–B5 đếm căn. Đơn vị không có phường đếm ở thị trường «chưa rõ». Mỗi ảnh chụp mang thang của nó (`thang-2310` trước 08/11, `thang-0811` sau): hai ảnh chụp khác thang không so với nhau, ngày đổi thang là lần hạ một lần, không phải tụt bậc. Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
+- Code: `data_level_snapshot.scale`, `data_level_units()`, `offer_data_level`, `unit_data_level`, vị từ chờ bảng nối `offer_located`, `offer_unit_key` (087), `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
@@ -439,7 +439,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Ý định tin | `listing_intent` | local | `silver_labels.listing_intent` | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
-| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level`, `data_level_unit.data_level`, `data_level_change.from_level`, `data_level_change.to_level` | `B0` «Có lời khai» · `B1` «Tin» · `B2` «Định vị» · `B3` «Gắn căn» · `B4` «Làm giàu» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 | Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
 | Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |

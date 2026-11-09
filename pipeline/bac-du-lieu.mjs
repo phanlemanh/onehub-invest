@@ -96,10 +96,25 @@ async function inBang(client, out) {
   out([chu("Tổng", wT), chu("", wL), ...BAC.map((b, i) => so(tong[b], wC[i])), so(tt, 8)].join("  "));
 }
 
+/** DB đã áp 087 (thang 08/11: tập đơn vị data_level_units) chưa — gộp code trước khi Mạnh áp 087 lên máy thu thì bước
+ * chụp bậc của job đêm bỏ qua có tên thay vì làm job đỏ (thang-bac-moi-b0-b5, Review Focus 1). */
+export async function co087(client) {
+  const { rows: [r] } = await client.query("SELECT to_regprocedure('data_level_units()') IS NOT NULL AS co");
+  return r.co;
+}
+
 /** `write`: chụp + kiểm + ghi hai dòng kiểm (giao dịch do bên gọi mở); không cờ: in bảng. Trả mã thoát. */
 export async function chay(client, { write = false, out = console.log } = {}) {
   if (!write) {
     await inBang(client, out);
+    return 0;
+  }
+  if (!(await co087(client))) {
+    const deXuat = await kiemDeXuat(client);
+    await client.query(`INSERT INTO dq_check_results (check_name, entity, status, detail) VALUES
+      ('enrich:proposal-assertion', 'enrichment_proposals', $1, $2), ('data-level:distribution', 'all', 'skip', 'chua-ap-087')`,
+    [deXuat.missing > 0 ? "fail" : "pass", `applied=${deXuat.applied} missing=${deXuat.missing}`]);
+    out("bac-du-lieu: chưa áp 087 — bỏ qua chụp bậc (thang 08/11 cần data_level_units); kiểm đề xuất vẫn ghi");
     return 0;
   }
   const phanBo = await ghiAnhChup(client);
