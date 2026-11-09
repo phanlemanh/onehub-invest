@@ -240,7 +240,9 @@ test("TNR-AC-1 S06: không thấy lại quá 21 ngày ngừng rao, ngày đăng 
 // ---- TNR-AC-7 biên ----
 async function kiemBien() {
   const { rows } = await c.query("SELECT s, ngung_rao_sau_ngay(s) AS n FROM unnest(ARRAY['S03','S05','S06','S01']) s");
-  assert.deepEqual(rows.map((r) => [r.s, r.n]), [["S03", 21], ["S05", 21], ["S06", 21], ["S01", null]]);
+  // N ngừng rao (không phải SLO độ tươi): hằng có tên để bộ quét SLO S05 (S5-AC-6) không đọc nhầm dạng bộ đôi.
+  const N_NGUNG_RAO = 21;
+  assert.deepEqual(rows.map((r) => [r.s, r.n]), [["S03", N_NGUNG_RAO], ["S05", N_NGUNG_RAO], ["S06", N_NGUNG_RAO], ["S01", null]]);
   await mocVung();
   const dung = await tinS06({ captured_at: MOC - 21 * NGAY, last_seen: MOC - 40 * NGAY });
   const quaMotGiay = await tinS06({ captured_at: MOC - 21 * NGAY - 1000, last_seen: MOC - 40 * NGAY });
