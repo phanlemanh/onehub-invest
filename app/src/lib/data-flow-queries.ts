@@ -110,8 +110,8 @@ export type FlowRecord = {
   market: string | null;
   confidence: string;
   nPosts: number;
-  /** Có dòng `property_offers` — chỉ khối bậc (B2 cũ) còn đọc, tới hàng thang-bac-moi-b0-b5. */
-  linked: boolean;
+  /** Đã định vị vào danh bạ (mức nhận diện Định vị hoặc Gắn căn) — bậc B2 của tin (thang 08/11). Cụm không tính. */
+  located: boolean;
   /** Mức nhận diện sâu nhất của tin + cờ chờ khớp — cùng luật với 600_data_flow.sql. */
   identification: Identification;
   firstSeen: string;
@@ -220,7 +220,6 @@ const recordsSql = (withPost: boolean) => `
   SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
          o.n_reposts, o.first_seen::text, o.last_seen::text,
          a.name AS ward, m.name AS market,
-         EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id) AS linked,
          -- Mức nhận diện cùng luật 600_data_flow.sql (đoạn LOCATED_PENDING, UNIQUE_ID). Định vị, Gắn căn: chưa có bảng nối
          -- tin → nút danh bạ (V9) nên không tin nào tới. Cloud không có cột unit_number, street_number → đọc qua to_jsonb.
          CASE WHEN EXISTS (SELECT 1 FROM property_offers po
@@ -339,7 +338,7 @@ export async function getDataFlow(
       market: r.market ?? null,
       confidence: r.confidence,
       nPosts: num(r.n_reposts),
-      linked: Boolean(r.linked),
+      located: r.muc === "located" || r.muc === "unit",
       identification: {
         level: (r.muc ?? "none") as IdentificationLevel,
         locatedPending: Boolean(r.ghi_toa),
