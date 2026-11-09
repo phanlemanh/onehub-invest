@@ -44,7 +44,9 @@ export function chayVitestBoTra(locTen) {
   try {
     const sha = execFileSync("git", ["-C", src, "rev-parse", "--verify", `${base}^{commit}`], { encoding: "utf8" }).trim();
     execFileSync("bash", ["-c", `git -C "$1" archive "$2" | tar -x -C "$3"`, "_", src, sha, tam]);
-    const ap = spawnSync("git", ["apply", PATCH], { cwd: tam, encoding: "utf8" });
+    // S4-2(A): khối module kênh S03 sinh -U0 nhiều hunk — git apply cần
+    // --unidiff-zero để áp đúng vị trí (không cờ: multi-hunk -U0 dồn về cuối tệp)
+    const ap = spawnSync("git", ["apply", "--unidiff-zero", PATCH], { cwd: tam, encoding: "utf8" });
     if (ap.status !== 0) { console.error(`.patch không áp được lên ${base} (${sha.slice(0, 9)}): ${ap.stderr.trim()}`); return 2; }
     const testTra = tepTestBoTra();
     if (!testTra || !existsSync(join(tam, testTra))) { console.error("THIẾU test vitest (.test.ts) của bộ tra trong .patch"); return 2; }

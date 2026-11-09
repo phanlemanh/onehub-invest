@@ -38,12 +38,12 @@ index 636cbe6..a94cb93 100644
    const { config } = options;
    let { account } = options;
    const { abortSignal, statusSink, runtime } = options;
-diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
+diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..6beaf0b
+index 0000000..c064c51
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,647 @@
+@@ -0,0 +1,673 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -670,6 +670,32 @@ index 0000000..6beaf0b
 +    }
 +  });
 +
++
++  // S4-2(A) 0911-11: hàm CHỈ-ĐỌC API đang nối của module kênh — layApi MẶC ĐỊNH
++  // (taoDepsMacDinh) lấy đúng api đang nối, KHÔNG tạo client; listener dừng → rỗng.
++  it("S4-2(A): layApiDangNoi — api đang nối trả đúng, chưa nối/dừng trả undefined, không ném", async () => {
++    const zjs = (await import("./zalo-js.js")) as unknown as {
++      layApiDangNoi: (p?: string | null) => unknown;
++      __testGanApiDangNoi: (p: string, a: unknown) => void;
++      __testXoaApiDangNoi: (p: string) => void;
++    };
++    expect(zjs.layApiDangNoi()).toBeUndefined(); // chưa nối — không tạo client, không ném
++    const apiGia = { getUserInfo: async () => ({}) } as unknown as object;
++    zjs.__testGanApiDangNoi("default", apiGia);
++    try {
++      expect(zjs.layApiDangNoi()).toBe(apiGia); // đang nối → ĐÚNG api, không bản sao client
++      expect(zjs.layApiDangNoi("DEFAULT")).toBe(apiGia); // chuẩn hoá profile về thường
++      expect(zjs.layApiDangNoi("khac")).toBeUndefined(); // profile khác → rỗng
++      // đường MẶC ĐỊNH của taoDepsMacDinh bọc layApiDangNoi — qua deps thật
++      const sl = (await import("./seller-lookup.js")) as unknown as { taoDepsMacDinh: (d: string, u: string) => { layApi: () => unknown } };
++      const deps = sl.taoDepsMacDinh("/f4", "");
++      expect(deps.layApi()).toBe(apiGia, "layApi mặc định lấy đúng api đang nối");
++    } finally {
++      zjs.__testXoaApiDangNoi("default"); // listener dừng → hàm trả rỗng
++    }
++    expect(zjs.layApiDangNoi()).toBeUndefined();
++  });
++
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
 +    const { fs, api, deps } = chuanBi();
 +    await fs.ghiFile("/f/dem-2026-11-08.txt", "30"); // đã dùng hết 30 lời trong ngày VN 2026-11-08 (now giả = 08/11 02:30 VN)
@@ -691,12 +717,12 @@ index 0000000..6beaf0b
 +    expect(api.dem.getUserInfo).toBe(0);
 +  });
 +});
-diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
+diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..940dec9
+index 0000000..455c1d3
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,536 @@
+@@ -0,0 +1,537 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -726,7 +752,8 @@ index 0000000..940dec9
 + */
 +
 +import * as fsp from "node:fs/promises";
-+import { getConnectedZaloApi } from "./zalo-js.js";
++// S4-2(A) 0911-11: hàm CHỈ-ĐỌC của module kênh — KHÔNG tạo client (AC-1)
++import { layApiDangNoi } from "./zalo-js.js";
 +
 +// Kiểu API — import đúng đường module kênh S03 (bọc zca-js).
 +import type { API } from "./zca-client.js";
@@ -753,7 +780,7 @@ index 0000000..940dec9
 +  now: () => Date;
 +  fetchImpl: typeof fetch;
 +  collectorUrl: string; // API collector (AC-5); rỗng = chỉ spool
-+  layApi: () => API | undefined; // mặc định getConnectedZaloApi() — test chèn API giả
++  layApi: () => API | undefined; // mặc định layApiDangNoi() — test chèn API giả
 +  treMs: (ms: number) => Promise<void>;
 +  docFile: (path: string) => Promise<string | null>;
 +  ghiFile: (path: string, data: string) => Promise<void>;
@@ -1131,7 +1158,7 @@ index 0000000..940dec9
 +    collectorUrl,
 +    now: () => new Date(),
 +    fetchImpl: fetch,
-+    layApi: () => getConnectedZaloApi(),
++    layApi: () => layApiDangNoi(), // S4-2(A): API listener đang nối (mặc định thật)
 +    treMs: (ms) => new Promise((r) => setTimeout(r, ms)),
 +    docFile: async (p) => {
 +      try {
@@ -1233,3 +1260,33 @@ index 0000000..940dec9
 +  if (!dir) return () => {};
 +  return khoiDongBoTra(dir, process.env.S03_COLLECTOR_URL?.trim() ?? "", log);
 +}
+diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
+index 548f3f5..2e069cb 100644
+--- a/extensions/zalouser/src/zalo-js.ts
++++ b/extensions/zalouser/src/zalo-js.ts
+@@ -103,0 +104,21 @@
++
++// S4-2(A) 0911-11: API của bộ nghe tin ĐANG NỐI theo profile — cho bộ tra hồ
++// sơ đọc mà KHÔNG tạo client (AC-1). listener khởi động lưu vào đây; cleanup xoá.
++const apisDangNoi = new Map<string, API>();
++
++/** CHỈ ĐỌC API của listener đang nối theo profile — không ensureApi, không
++ * with…Api, không login, không tạo client. Chưa nối / đã dừng → undefined. */
++export function layApiDangNoi(profile?: string | null): API | undefined {
++  return apisDangNoi.get(normalizeProfile(profile)) ?? undefined;
++}
++
++/** Chỉ cho test: gắn API giả vào sổ đang nối như listener thật —
++ * không dùng trong runtime (S4-2(A) ca kiểm đường mặc định). */
++export function __testGanApiDangNoi(profile: string, api: API): void {
++  apisDangNoi.set(normalizeProfile(profile), api);
++}
++
++/** Chỉ cho test: dọn sổ như cleanup của listener (S4-2(A)). */
++export function __testXoaApiDangNoi(profile: string): void {
++  apisDangNoi.delete(normalizeProfile(profile));
++}
+@@ -1359,0 +1381 @@
++  apisDangNoi.set(profile, api); // S4-2(A): cho bộ tra đọc API đang nối
+@@ -1386,0 +1409 @@
++    apisDangNoi.delete(profile); // S4-2(A): listener dừng → API không còn

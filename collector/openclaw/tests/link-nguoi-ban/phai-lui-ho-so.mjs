@@ -50,13 +50,18 @@ export function phanLuiHoSo(mocLoiGoi, dongListener, hienTai) {
 }
 
 // Đọc dòng đóng listener từ gateway.log (+07:00, khuôn của phai-lui album).
+// S4-2(B) 0911-12: gateway.log thật ghi ISO "YYYY-MM-DDTHH:MM:SS.mmm±hh:mm"
+// (T, mili giây, độ lệch múi giờ) — bản khớp dấu-cách trước đây đọc ra 0 dòng.
+// Date.parse giữ nguyên múi giờ trong chuỗi, KHÔNG tự cộng +7.
 export function docDongDongListener(logText) {
   const out = [];
   for (const line of logText.split("\n")) {
-    const m = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+    // ISO đầu dòng (gateway thật) hoặc khuôn dấu cách cũ (album) — cả hai đều đọc được
+    const m = line.match(/^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)/);
     if (!m) continue;
     if (!/listener (closed|error)|S03-kenh listener closed/i.test(line)) continue;
-    const t = new Date(m[1] + "+07:00").getTime();
+    let t = Date.parse(m[1].replace(" ", "T"));
+    if (!Number.isFinite(t) && !/[Z+-]/.test(m[1])) t = Date.parse(m[1] + "+07:00"); // khuôn cũ không múi giờ → +07:00
     if (Number.isFinite(t)) out.push({ atMs: t });
   }
   return out;
