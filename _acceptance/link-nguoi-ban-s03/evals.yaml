@@ -5,7 +5,7 @@ evals:
     criterion: AC-1
     executor: script
     cmd: config:executors.script.lnb_tra
-    expected: "exit 0; API giả dựng theo getUserInfo.d.ts thật (khoá có _0, nhóm changed và unchanged, một hồ sơ có userId khác khoá); spy trên login, loginQR, tạo client và trên hàm bọc tự đăng nhập; mọi lời gọi lấy API của bộ nghe tin đang nối; mỗi lời ≤ 20 mã; ca 21 mã ra 2 lời cách ≥ 60 giây; mốc lời cuối đọc lại từ đĩa sau khi khởi động lại bộ nghe tin giả hai lần, vẫn đúng 1 vòng hẹn giờ; lời thứ 31 trong ngày và lời ngoài 01:00–05:00 bằng 0; ghép theo userId, bốn loại kết quả đúng; hằng trần trong mã ≥ sàn hợp đồng; should-NOT-fire: không có bộ nghe tin đang nối, bộ nhớ đệm API trống, không có tệp yêu cầu, tệp rỗng, tệp sai khuôn đều cho 0 lời gọi, 0 lần đăng nhập, băm tệp phiên không đổi; không phiên thì có tệp chặn khong-co-phien"
+    expected: "exit 0; API giả dựng theo getUserInfo.d.ts thật (khoá có _0, nhóm changed và unchanged, một hồ sơ có userId khác khoá); spy trên login, loginQR, tạo client và trên hàm bọc tự đăng nhập; mọi lời gọi lấy API của bộ nghe tin đang nối; mỗi lời ≤ 20 mã; ca 21 mã ra 2 lời cách ≥ 60 giây; mốc lời cuối đọc lại từ đĩa sau khi khởi động lại bộ nghe tin giả hai lần, vẫn đúng 1 vòng hẹn giờ; lời thứ 31 trong ngày và lời ngoài 01:00–05:00 bằng 0; ghép theo userId, bốn loại kết quả đúng; hằng trần trong mã ≥ sàn hợp đồng; đường khởi động thật: áp extension.patch bằng git apply thật lên base đã vá mã album, Provider giả khởi động hai lần → bộ tra được khởi đúng một lần qua đường khởi động của Provider (không gọi chayVong hay hàm khởi trực tiếp trong ca này), vẫn đúng 1 vòng hẹn giờ; should-NOT-fire: không có bộ nghe tin đang nối, bộ nhớ đệm API trống, không có tệp yêu cầu, tệp rỗng, tệp sai khuôn đều cho 0 lời gọi, 0 lần đăng nhập, băm tệp phiên không đổi; không phiên thì có tệp chặn khong-co-phien"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
@@ -26,7 +26,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.lnb_ranh_gioi
-    expected: "exit 0; diff extension so với base đã vá mã album chỉ thêm một lời gọi API mới getUserInfo; bộ tra không tham chiếu hàm bọc tự đăng nhập; chạy API giả có bẫy: 0 lời login, loginQR, tạo client, send*, addReaction, sendTypingEvent, sendSeenEvent, sendDeliveredEvent, friend ngoài getUserInfo, getAllFriends, requestOldMessages; 0 listen, createServer, route HTTP mới; băm cấu hình OpenClaw trên bản chép không đổi; marker bộ canh còn trong monitor build ra; đối tượng kết quả trong bộ nhớ sau khi nhận chỉ có userId, username"
+    expected: "exit 0; diff extension so với base đã vá mã album chỉ thêm một lời gọi API mới getUserInfo; bộ tra không tham chiếu hàm bọc tự đăng nhập; chạy API giả có bẫy: 0 lời login, loginQR, tạo client, send*, addReaction, sendTypingEvent, sendSeenEvent, sendDeliveredEvent, friend ngoài getUserInfo, getAllFriends, requestOldMessages; 0 listen, createServer, route HTTP mới; băm cấu hình OpenClaw trên bản chép không đổi; marker bộ canh còn trong monitor build ra; monitor build ra từ base + extension.patch (git apply thật) có đúng một lời GỌI khoiDongTuEnv nằm trong đường khởi động Provider (đếm lời gọi trên AST hoặc bằng spy khi Provider giả khởi động, không dò chữ), câu import nằm ở khối import đầu tệp, khối diff của monitor có đủ dòng ngữ cảnh (không sinh bằng -U0); đối tượng kết quả trong bộ nhớ sau khi nhận chỉ có userId, username"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
