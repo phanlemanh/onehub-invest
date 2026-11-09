@@ -1,17 +1,1 @@
-{"feature_plain":"Mỗi đêm, job nạp tin Zalo chạy thêm bước đọc gộp bài S03 của hôm qua và hôm kia — sau khi đã nhả khoá nạp, trước bước làm giàu — và bộ kiểm tự động của kho đo đúng bước mới này thay vì báo đỏ.",
-"will_do":[
- {"id":"AC-1","p":"Sẽ kiểm job đêm chạy đủ sáu bước theo đúng thứ tự, bước đọc gộp đứng sau lúc nhả khoá nạp và trước bước làm giàu; nạp hỏng hay không có tin mới thì không chạy bước nào sau."},
- {"id":"AC-2","p":"Sẽ kiểm khi bước đọc gộp hỏng thì job báo đúng một dòng lỗi có tên bước, còn bước làm giàu vẫn chạy."},
- {"id":"AC-3","p":"Sẽ kiểm tệp bước đọc gộp thật có trong kho, job trỏ đúng nó, và khi chạy trong job nó đọc đúng hôm qua rồi hôm kia theo giờ Việt Nam."},
- {"id":"AC-4","p":"Sẽ làm cho cả bảy bộ kiểm có đụng job đêm Zalo xanh trở lại, và có một phép đo bắt bộ kiểm thứ tám nếu ai thêm sau."},
- {"id":"AC-5","p":"Sẽ kiểm việc gộp không làm hồ sơ nghiệm thu nào khác của kho bị lỗi thời hay vi phạm."}],
-"wont_do":[
- {"id":"OOS-1","p":"KHÔNG sửa dòng gọi bước đọc gộp trong job đêm hay lịch chạy — đó là việc của ZCode."},
- {"id":"OOS-2","p":"KHÔNG đo đêm chạy thật lần đầu (chi phí đọc gộp ≤ 20 USD) — đo sau khi gộp."},
- {"id":"OOS-3","p":"KHÔNG đổi job nạp Facebook hay nội dung bước đọc gộp."}],
-"coverage_plain":[{"i":0,"p":"Không quét không gian tiêu chí: 11 ca đỏ thật đo ngày 09/11 cộng bước mới lành/hỏng và tệp thật đã kê đủ; bảng trục gồm job (lành · nạp hỏng · không tin mới · đọc gộp hỏng · khoá nạp), tệp bước, bộ kiểm."}],
-"gap_probe_plain":[
- {"i":0,"p":"Thiếu ca đêm không có tin Zalo mới — đã thêm: đêm đó job dừng sớm, không đọc gộp, và hồ sơ ghi rõ hệ quả này."},
- {"i":1,"p":"Tệp giả có thể che lỗi của tệp đọc gộp thật — đã thêm ca chạy chính tệp thật trong job, kiểm thư mục chạy và hai ngày đọc; phần mã lỗi khi chạm trần chi phí là hành vi đã ký của bước đọc gộp, không đổi ở đây."},
- {"i":2,"p":"Lưới đỡ «chạy cả bộ kiểm» chưa có thật — đã quét ra bảy bộ kiểm đụng job đêm, kê đủ, chạy cả bảy và thêm phép đo bắt bộ kiểm chưa kê."},
- {"i":3,"p":"Phép đo «không vi phạm» miễn quá rộng — đã ghim đúng hai dòng chờ chữ ký được miễn, mọi vi phạm khác của hồ sơ này làm đỏ."}]}
+{"feature_plain":"Job nạp tin Zalo mỗi đêm nay chạy thêm bước đọc gộp bài S03 (sau khi nhả khoá nạp, trước bước làm giàu), và bộ kiểm tự động của kho đo đúng sáu bước thay vì báo đỏ."}
