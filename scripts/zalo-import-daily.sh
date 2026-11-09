@@ -130,17 +130,18 @@ fi
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
-# PL34 (claudedp-0911-7 MỞ LẠI): đọc gộp S03 hằng ngày chạy TRONG chuỗi đêm,
-# ngay sau transform-zalo — chỉ bắt đầu khi nạp + transform-zalo của đêm đó
-# ĐÃ XONG (job_run dừng khi bước trước hỏng → không bao giờ đọc bảng đang nạp
-# dở); trước mau-soat của cloud-sync (mốc mềm — mau-soat tự vớt bài chưa có
-# kết quả, trần 0,05 USD). Trần DOC_GOP_TRAN_NGAY_USD mặc định 20 của script.
-job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"
 job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
 # (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
 trap - EXIT; rm -rf "$LOCK_DIR"
+# PL34 (claudedp-0911-7 MỞ LẠI lần 2): đặt SAU nhả khoá nạp — bước LLM dài
+# (đọc cả ngày bài) không giữ khoá, apify-facebook-daily không phải chờ.
+# Bảo đảm đọc bảng ĐÃ NẠP XONG: import hỏng thì tệp đã exit 1 trước đó
+# (không bao giờ tới đây); transform-zalo hỏng không ảnh hưởng stg_zalo_posts
+# (job_run không dừng khi bước trước hỏng — chỉ giữ JOB_RC). Vẫn trước
+# enrich-run; trước mau-soat là mốc mềm (tự vớt ≤0,05 USD). Trần mặc định 20.
+job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"
 enrich_run() { (cd "$ROOT/agent" && LIMIT="${ENRICH_LIMIT:-50}" node --import tsx scripts/enrich-run.ts); }
 job_run zalo-import-daily enrich-run enrich_run
 exit "$JOB_RC"
