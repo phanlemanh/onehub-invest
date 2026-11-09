@@ -35,5 +35,9 @@ job_run cloud-sync do-the-duyet node "$ROOT/pipeline/do-the-duyet.mjs" --write
 # ở lượt sync-cloud kế. Dòng `fail` không đổi mã thoát; chỉ lỗi chạy làm job ≠0.
 job_run cloud-sync mau-soat-cuon-chieu node "$ROOT/pipeline/mau-soat-cuon-chieu.mjs"
 job_run cloud-sync do-hang-ngay node "$ROOT/pipeline/do-hang-ngay.mjs" --write
+# DO3 `do-lam-giau`: thay đổi theo ngày của từng đường làm giàu (thêm, đổi, máy rút, người sửa/rút) và kiểm ngược bỏ-một-ra
+# khi tuần ISO chưa có dòng, không gọi model; chỉ ghi DB local (086 + do3-* vào dq_check_results), số lên cloud ở lượt sync-cloud
+# kế. Chưa áp 086 thì in CHUA-AP-086 và thoát 0. Dòng `fail` không đổi mã thoát; chỉ lỗi chạy làm job ≠0.
+job_run cloud-sync do-lam-giau node "$ROOT/pipeline/do-lam-giau.mjs" --write
 exit "$JOB_RC"
 

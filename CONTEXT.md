@@ -518,6 +518,28 @@ nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng 
 - Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
 _Avoid_: dashboard đo, KPI hằng ngày
 
+**Làm giàu**: giá trị máy thêm vào tin mà tin không tự ghi, theo từng đường (Số qua người đăng, Quy ước nhóm, Diện tích suy
+ra, Danh mục CĐT). Khối «Làm giàu» của «Chất lượng dữ liệu» đếm mỗi ngày giá trị thêm, đổi, máy rút, người sửa, người rút;
+đường không có lối người rút (số qua người đăng) hiện «không có đường người rút» thay số 0. Lần chạy đầu của một đường chỉ lập mốc.
+- Code: `pipeline/do-lam-giau.mjs`, `dq_check_results` `do3-thay-doi`, `enrichment_value_state`, `enrichment_value_change`, `app/src/lib/ops/quality-lam-giau.ts` · RESO: —
+_Avoid_: enrich (trên UI), bổ sung dữ liệu
+
+**Kiểm ngược**: mỗi tuần ISO, giấu giá trị đã có của một tin hay bài, cho đường làm giàu suy lại rồi so (bỏ-một-ra). Ra tỉ lệ
+đúng trên đúng + sai kèm cận dưới Wilson 95% và n, so tuần trước; «chênh có ý nghĩa» khi hai khoảng không chồng nhau. Tập đo
+ghi rõ (tin có số riêng, bài có chữ loại hình), nên không phải độ đúng trên mọi tin.
+- Code: `dq_check_results` `do3-kiem-nguoc`, `kiemNguocSo`, `kiemNguocNhom` (`pipeline/lib/do-lam-giau.mjs`) · RESO: —
+_Avoid_: backtest, độ chính xác (khi chưa nói tập đo)
+
+**Cận dưới Wilson**: đầu dưới của khoảng tin cậy Wilson 95% cho một tỉ lệ đúng trên n mẫu; mẫu ít thì cận dưới thấp hơn tỉ lệ thô
+nhiều, nên so ngưỡng và so tuần bằng cận dưới chứ không bằng tỉ lệ thô. Khối «Làm giàu» và cổng tự áp F3 dùng nó.
+- Code: `wilson` (`pipeline/lib/do-hang-ngay.mjs`), `wilson.thap` trong detail `do3-kiem-nguoc` · RESO: —
+_Avoid_: cận Wilson, Wilson thấp
+
+**Chưa chạy**: đường làm giàu chưa ghi giá trị nào lên tin; khối hiện «Chưa chạy», không hiện số 0 (đường đã lập mốc mà mất hết
+giá trị thì không phải chưa chạy: các giá trị mất đếm là máy rút).
+- Code: `status = 'skip'`, `ly_do = 'chua-chay'` của `do3-thay-doi` · RESO: —
+_Avoid_: không hoạt động
+
 **So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
 4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.
 - Code: `pipeline/so-sanh-cach-doc.mjs`, `do1-so-sanh` · RESO: —
