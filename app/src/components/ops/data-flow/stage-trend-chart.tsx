@@ -9,7 +9,8 @@ import type { FlowDay, SourceFlow } from "@/lib/data-flow-queries"
 import { fmtInt, fmtPct } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-import { dailySeries, type StageKey } from "./stage-trend-data"
+import { hasBranches, readOf, toReadOf } from "./flow-branches"
+import { dailySeries, readDays, type StageKey } from "./stage-trend-data"
 
 /**
  * «Chặng theo ngày» — chuyển thể activation-funnel-chart của @reui/solution-analytics-3: bốn ô số của bốn chặng
@@ -41,12 +42,27 @@ export function StageTrendChart({
   nowMs: number
   windowDays: number
 }) {
+  // DF6: khối đã tách nhánh bài thì «Đọc được» = đọc thành tin rao + đọc thành Yêu cầu (Mạnh chốt ở Cổng Phạm vi 09/11),
+  // chia cho bài cần đọc (bài nhận trừ ảnh đã ghép vào tin) — cả ô số lẫn đường theo ngày; «Tin rao mới» vẫn so với bài
+  // thành tin rao. Khối chưa tách → như trước DF6.
+  const branched = hasBranches(sources)
+  const srcs = branched ? sources.map((src) => ({ ...src, readable: readOf(src) })) : sources
   const totals = Object.fromEntries(
-    STAGES.map((s) => [s.key, sources.reduce((acc, src) => acc + (src[s.key] ?? 0), 0)]),
+    STAGES.map((s) => [s.key, srcs.reduce((acc, src) => acc + (src[s.key] ?? 0), 0)]),
   ) as Record<StageKey, number>
+  const toRead = sources.reduce((acc, src) => acc + toReadOf(branched ? src : { received: src.received }), 0)
+  const tinRao = sources.reduce((acc, src) => acc + src.readable, 0)
+  const ofOf = (s: (typeof STAGES)[number]) =>
+    branched && s.key === "readable"
+      ? { total: toRead, label: "bài cần đọc" }
+      : branched && s.key === "offers"
+        ? { total: tinRao, label: "bài thành tin rao" }
+        : s.of
+          ? { total: totals[s.of], label: s.ofLabel }
+          : null
 
   // Gộp mọi nguồn theo ngày; mọi ngày của cửa sổ đều có điểm, ngày trống là 0 để trục liền.
-  const series = dailySeries(days, nowMs, windowDays)
+  const series = dailySeries(readDays(days, branched), nowMs, windowDays)
   const data = series.map((p) => ({ ...p, day: dayLabel(p.key) }))
   const empty = series.every((p) => STAGES.every((s) => p[s.key] === 0))
 
@@ -65,9 +81,9 @@ export function StageTrendChart({
                 <div className="text-muted-foreground text-xs font-medium">{s.label}</div>
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="text-base leading-none font-semibold tabular-nums">{fmtInt(totals[s.key])}</span>
-                  {s.of ? (
-                    <span className="text-muted-foreground text-xs tabular-nums" title={`so với ${s.ofLabel}`}>
-                      {totals[s.of] > 0 ? fmtPct(totals[s.key] / totals[s.of]) : "—"}
+                  {ofOf(s) ? (
+                    <span className="text-muted-foreground text-xs tabular-nums" title={`so với ${ofOf(s)!.label}`}>
+                      {ofOf(s)!.total > 0 ? fmtPct(totals[s.key] / ofOf(s)!.total) : "—"}
                     </span>
                   ) : null}
                 </div>

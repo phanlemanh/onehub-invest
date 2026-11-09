@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vòng đời của tin rao</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--accent:#eb6c36}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--paper);color:var(--ink);padding:3rem 2rem}
+.frame{max-width:1040px;margin:0 auto}
+.eyebrow{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:'Instrument Serif','Lora',serif;font-size:2rem;font-weight:400;letter-spacing:-.02em;margin-bottom:1.5rem}
+svg{width:100%;min-width:900px;display:block}
+</style>
+</head>
+<body>
+<div class="frame">
+<p class="eyebrow">Sơ đồ trạng thái · tin-ngung-rao-khong-thay-lai</p>
+<h1>Vòng đời của tin rao</h1>
+<svg viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg" font-family="'Geist',sans-serif">
+<defs>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+
+<!-- vùng Hỏi-1 -->
+<rect x="660" y="96" width="260" height="320" rx="8" fill="none" stroke="#636b80" stroke-width="1" stroke-dasharray="5,4"/>
+<text x="676" y="116" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.14em">HỎI-1 · HÀNG RIÊNG</text>
+
+<!-- mũi tên (vẽ trước hộp) -->
+<!-- Đang rao -> Ngừng rao -->
+<line x1="200" y1="160" x2="420" y2="160" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+<rect x="212" y="120" width="196" height="32" rx="2" fill="#f5f5f5"/>
+<text x="310" y="132" fill="#ba4513" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG THẤY LẠI &gt; N NGÀY</text>
+<text x="310" y="146" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">nguồn vẫn đang thu</text>
+<!-- Ngừng rao -> Đang rao -->
+<line x1="420" y1="188" x2="200" y2="188" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<rect x="272" y="198" width="76" height="14" rx="2" fill="#f5f5f5"/>
+<text x="310" y="208" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.06em">THẤY LẠI</text>
+<!-- ghi lịch sử -->
+<path d="M120 204 V354 Q120 362 128 362 H250" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<path d="M540 204 V354 Q540 362 532 362 H450" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<rect x="128" y="272" width="68" height="14" rx="2" fill="#f5f5f5"/>
+<text x="132" y="282" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">withdrawn</text>
+<rect x="428" y="272" width="104" height="14" rx="2" fill="#f5f5f5"/>
+<text x="528" y="282" text-anchor="end" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">back_on_market</text>
+<!-- Hỏi-1: nét đứt -->
+<line x1="580" y1="160" x2="680" y2="160" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M580 188 H628 V330 Q628 338 636 338 H680" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+<!-- Đang rao -->
+<rect x="40" y="140" width="160" height="64" rx="8" fill="#f5f5f5"/>
+<rect x="40" y="140" width="160" height="64" rx="8" fill="#2d3142" fill-opacity="0.04" stroke="#2d3142" stroke-width="1"/>
+<text x="120" y="168" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Đang rao</text>
+<text x="120" y="186" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">active</text>
+<!-- Ngừng rao (focal) -->
+<rect x="420" y="140" width="160" height="64" rx="8" fill="#f5f5f5"/>
+<rect x="420" y="140" width="160" height="64" rx="8" fill="#eb6c36" fill-opacity="0.08" stroke="#eb6c36" stroke-width="1"/>
+<text x="500" y="168" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Ngừng rao</text>
+<text x="500" y="186" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">withdrawn · suy luận</text>
+<!-- Lịch sử căn -->
+<rect x="250" y="330" width="200" height="64" rx="8" fill="#f5f5f5"/>
+<rect x="250" y="330" width="200" height="64" rx="8" fill="#2d3142" fill-opacity="0.04" stroke="#2d3142" stroke-width="1"/>
+<text x="350" y="358" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Lịch sử căn</text>
+<text x="350" y="376" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">history_transactional</text>
+<!-- Rút (tách riêng) -->
+<rect x="250" y="440" width="200" height="56" rx="8" fill="#f5f5f5" stroke="#636b80" stroke-width="1" stroke-dasharray="5,4"/>
+<text x="350" y="464" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">Rút</text>
+<text x="350" y="482" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">retired · rác, gộp nhầm</text>
+<text x="466" y="472" fill="#636b80" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">TÁCH RIÊNG · KHÔNG DO LUẬT NÀY</text>
+<!-- ghi chú giữ nguyên -->
+<text x="40" y="84" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" letter-spacing="0.04em">Nhóm hay nguồn ngừng thu → giữ nguyên, không ngừng rao.</text>
+
+<!-- Hỏi-1 (a) khuyên -->
+<rect x="680" y="132" width="220" height="100" rx="8" fill="#f5f5f5"/>
+<rect x="680" y="132" width="220" height="100" rx="8" fill="#eb6c36" fill-opacity="0.08" stroke="#eb6c36" stroke-width="1"/>
+<rect x="688" y="138" width="44" height="12" rx="2" fill="none" stroke="#ba4513" stroke-opacity="0.5" stroke-width="0.8"/>
+<text x="710" y="147" fill="#ba4513" font-size="7" font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">KHUYÊN</text>
+<text x="790" y="178" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">(a) offer_status lên cloud</text>
+<text x="790" y="198" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">Invest lọc đang rao</text>
+<text x="790" y="214" fill="#636b80" font-size="9" text-anchor="middle">tin còn ở cloud, thấy lại tự hiện</text>
+<!-- (b) -->
+<rect x="680" y="290" width="220" height="100" rx="8" fill="#f5f5f5"/>
+<rect x="680" y="290" width="220" height="100" rx="8" fill="#2d3142" fill-opacity="0.04" stroke="#2d3142" stroke-width="1"/>
+<text x="790" y="336" fill="#2d3142" font-size="12" font-weight="600" text-anchor="middle">(b) lọc khi đẩy</text>
+<text x="790" y="356" fill="#4f5d75" font-size="9" font-family="'Geist Mono',monospace" text-anchor="middle">gỡ tin khỏi cloud</text>
+<text x="790" y="372" fill="#636b80" font-size="9" text-anchor="middle">thấy lại phải đẩy lại</text>
+
+<!-- legend -->
+<line x1="40" y1="524" x2="920" y2="524" stroke="#2d3142" stroke-opacity="0.12" stroke-width="0.8"/>
+<text x="40" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.14em">CHÚ GIẢI</text>
+<line x1="140" y1="544" x2="172" y2="544" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+<text x="184" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">chuyển trạng thái</text>
+<line x1="320" y1="544" x2="352" y2="544" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="364" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">hàng riêng, chưa làm</text>
+<rect x="480" y="538" width="12" height="12" rx="2" fill="#eb6c36" fill-opacity="0.08" stroke="#eb6c36" stroke-width="1"/>
+<text x="500" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">trạng thái mới / lựa chọn khuyên</text>
+<text x="700" y="548" fill="#4f5d75" font-size="8" font-family="'Geist Mono',monospace" letter-spacing="0.06em">N = 21 ngày đề xuất (S03, S05, S06)</text>
+</svg>
+</div>
+</body>
+</html>

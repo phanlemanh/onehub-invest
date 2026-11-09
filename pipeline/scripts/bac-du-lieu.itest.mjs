@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { sqlNapLai059 } from "../lib/nap-view-song.mjs";
 import { chay, ghiAnhChup, KHOA as KHOA_BAC, SQL_610, SQL_KIEM_DE_XUAT } from "../bac-du-lieu.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -14,6 +15,11 @@ const SQL_056 = readFileSync(path.join(ROOT, "db/migrations/056_data_level.sql")
 // PL19: 059 thay property_data_level (thêm vị từ B5) — có tệp thì nạp sau 056, mọi ca PL16 phải trả như cũ.
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
 const SQL_059 = existsSync(TEP_059) ? readFileSync(TEP_059, "utf8") : null;
+// V6 (085): PL19_NAP_THEM = đường tới một tệp SQL nạp NGAY SAU 059 trong mỗi giao dịch (E9b của tin-ngung-rao-khong-thay-lai:
+// bộ PL19 phải xanh khi 085 thay bang_chung_chao). Vắng biến → như cũ.
+const TEP_NAP_THEM = process.env.PL19_NAP_THEM ? path.resolve(process.cwd(), process.env.PL19_NAP_THEM) : null;
+const SQL_NAP_THEM = TEP_NAP_THEM ? readFileSync(TEP_NAP_THEM, "utf8") : null;
+if (TEP_NAP_THEM) console.log(`PL19_NAP_THEM: ${path.basename(TEP_NAP_THEM)}`);
 const KHOA = KHOA_BAC; // khoá của bac-du-lieu.mjs lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
 const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
 const MARKET = "vn-tst-bac-m";
@@ -36,7 +42,8 @@ export async function trongGiaoDich(fn) {
   try {
     await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
     await c.query(SQL_056);
-    if (SQL_059) await c.query(SQL_059);
+    if (SQL_059) await c.query(await sqlNapLai059(c, SQL_059));
+    if (SQL_059 && SQL_NAP_THEM) await c.query(SQL_NAP_THEM);
     await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
       ($1, NULL, 'market', 'Thị trường thử PL16', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử PL16', 'VN', '{}')`, [MARKET, WARD]);
     return await fn(c);

@@ -1,0 +1,4 @@
+E11 network (driver ego-browser, performance.getEntriesByType resource, khong co read_network_requests)
+fetch/xmlhttprequest toi app-origin :3465: khong co muc nao (trang SSR)
+resource status>=400: khong co
+console: khong doc duoc (CDP console an)
