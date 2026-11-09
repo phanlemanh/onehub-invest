@@ -33,7 +33,7 @@
 ```
 dot: danh-ba-du-an-0811
 dang: chuoi
-nguon: onehub-invest-tri-thuc:wiki/chu-de/danh-ba-du-an.md#edb1ed9c0173dacf34754cae052cffc6b19eea8b
+nguon: onehub-invest-tri-thuc:wiki/chu-de/danh-ba-du-an.md#cc5a831db25ee1071ba8fee913a250b558c97b07
 
 - `DA1` — danh bạ vật thể dựng được toà ở cả 34 tỉnh, chủ đầu tư ghi đúng phương pháp
 - `DA2` — tin ghi được phát biểu dự án, phân khu, phường
