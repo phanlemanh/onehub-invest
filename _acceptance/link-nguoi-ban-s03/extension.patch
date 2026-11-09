@@ -1,5 +1,5 @@
 diff --git a/extensions/zalouser/src/monitor.ts b/extensions/zalouser/src/monitor.ts
-index 636cbe6..08bb5ca 100644
+index 636cbe6..a94cb93 100644
 --- a/extensions/zalouser/src/monitor.ts
 +++ b/extensions/zalouser/src/monitor.ts
 @@ -25,6 +25,8 @@ import {
@@ -7,11 +7,11 @@ index 636cbe6..08bb5ca 100644
  } from "openclaw/plugin-sdk/hook-runtime";
  import { getGlobalHookRunner } from "openclaw/plugin-sdk/plugin-runtime";
 +// link-nguoi-ban-s03 (b): bộ tra hồ sơ khởi cùng Provider (import đầu tệp — E4 siết).
-+import { khoiDongTuEnv } from "./seller-lookup.js";
++import { dungVongHienTai, khoiDongTuEnv } from "./seller-lookup.js";
  import { createDeferred } from "openclaw/plugin-sdk/extension-shared";
  import { channelReadyPatch } from "openclaw/plugin-sdk/gateway-runtime";
  import { resolvePromptHistoryLimit } from "openclaw/plugin-sdk/number-runtime";
-@@ -846,9 +848,16 @@ async function deliverZalouserReply(params: {
+@@ -846,9 +848,26 @@ async function deliverZalouserReply(params: {
    return { visibleReplySent };
  }
  
@@ -22,18 +22,28 @@ index 636cbe6..08bb5ca 100644
 +  // link-nguoi-ban-s03 (b): MỘT vòng hẹn giờ bộ tra hồ sơ — khởi ở ĐẦU đường
 +  // khởi động Provider; idempotent: Provider khởi lại (listener reconnect)
 +  // vẫn đúng MỘT vòng (AC-1, E1/E4 siết 0911). Đọc S03_LOOKUP_DIR (rỗng = tắt).
-+  khoiDongTuEnv((line) => {
++  const dungBoTra = khoiDongTuEnv((line) => {
 +    options.runtime?.log?.(line);
 +  });
++  // 0911-4(1): Provider bị huỷ (abort) mà gateway còn sống thì bộ tra phải dừng
++  // theo — «tắt là dừng» của an toàn S03; idempotent nên khởi lại vẫn đúng 1 vòng.
++  options.abortSignal?.addEventListener(
++    "abort",
++    () => {
++      dungBoTra();
++      dungVongHienTai();
++    },
++    { once: true },
++  );
    const { config } = options;
    let { account } = options;
    const { abortSignal, statusSink, runtime } = options;
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..80690cc
+index 0000000..09537dc
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,541 @@
+@@ -0,0 +1,553 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -545,6 +555,18 @@ index 0000000..80690cc
 +      }
 +      expect(soLanGoi).toBe(2); // Provider gọi bộ tra cả hai lần khởi động
 +      expect(soVongHenGio()).toBe(1); // nhưng đúng MỘT vòng hẹn giờ (idempotent thật)
++      // 0911-4(1): ABORT Provider (tắt tài khoản, gateway còn sống) → bộ tra dừng
++      const ac = new AbortController();
++      await monitor
++        .monitorZalouserProvider({ runtime: { log: () => {} }, abortSignal: ac.signal })
++        .catch(() => undefined);
++      ac.abort();
++      expect(soVongHenGio()).toBe(0, "abort Provider dừng vòng tra ngay");
++      // khởi lại Provider mới (khác abort) → đúng 1 vòng trở lại
++      await monitor
++        .monitorZalouserProvider({ runtime: { log: () => {} } })
++        .catch(() => undefined);
++      expect(soVongHenGio()).toBe(1, "Provider mới khởi lại đúng 1 vòng");
 +      dung?.();
 +      expect(soVongHenGio()).toBe(0); // dừng được vòng duy nhất
 +    } finally {
@@ -577,10 +599,10 @@ index 0000000..80690cc
 +});
 diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..92844d8
+index 0000000..ac48437
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,481 @@
+@@ -0,0 +1,490 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -1053,6 +1075,15 @@ index 0000000..92844d8
 +// «Provider khởi hai lần vẫn đúng MỘT vòng» đo trên trạng thái thật.
 +export function soVongHenGio(): number {
 +  return boTraTimer ? 1 : 0;
++}
++
++// 0911-4(1): dừng vòng hẹn giờ ĐANG sống (bất kể lần khởi nào tạo ra) — cho
++// abort Provider: lần khởi idempotent trả hàm rỗng nên không dùng làm lối dừng.
++export function dungVongHienTai(): void {
++  if (boTraTimer) {
++    clearInterval(boTraTimer);
++    boTraTimer = undefined;
++  }
 +}
 +
 +// 0711-37(b): điểm vào thật đọc S03_LOOKUP_DIR (bỏ trống = bộ tra tắt) và
