@@ -25,7 +25,8 @@ const dong = (id) => ({
   meta: { city: "hanoi", loai_ket_qua: "co-username", ts: "2026-11-06T22:00:00.000Z" },
 });
 const sinh = async (items, sv) => {
-  const { SnapshotWriter } = await import(join(REPO, "collector/dist/core/storage.js"));
+  // Nạp thẳng mã nguồn .ts (Node 24 bỏ kiểu) — không phụ thuộc bản dựng collector/dist (gitignore, có thể lệch nguồn).
+  const { SnapshotWriter } = await import(new URL("../../collector/src/core/storage.ts", import.meta.url).href);
   const r = mkdtempSync(join(tmpdir(), "ho-so-snap-"));
   const w = new SnapshotWriter(r, "hanoi", "s03-ho-so", { schemaVersion: sv });
   await w.write(items);

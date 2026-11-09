@@ -10,7 +10,9 @@ import { luocDoRieng } from "../lib/luoc-do-rieng.mjs";
 // sinh đúng chuẩn bộ nạp (source "chotot-ads"); bản viết tay nguồn "S06" khiến
 // readSnapshot process.exit(0) ngay tại nhánh ALLOWLIST (import-chotot dòng
 // bỏ-qua) → test runner tắt sạch, mọi assert không chạy.
-const { SnapshotWriter } = await import(join("..", "..", "collector", "dist", "core", "storage.js"));
+// Nạp THẲNG mã nguồn .ts (Node 24 bỏ kiểu sẵn; storage.ts chỉ có import kiểu): job pipeline của CI không build collector, collector/dist
+// bị gitignore và bản dist cũ trên máy có thể lệch nguồn (S4-r3 bắt cả hai). Đường tính từ tệp này, không theo thư mục chạy.
+const { SnapshotWriter } = await import(new URL("../../collector/src/core/storage.ts", import.meta.url).href);
 
 // claudedp-0211-1 (hợp đồng người bán): DATA-CONTRACT v5 thêm RawItem.seller
 // (tùy chọn) — không đổi hình dạng cũ. CẢ HAI importer phải chấp nhận v4 LẪN v5
