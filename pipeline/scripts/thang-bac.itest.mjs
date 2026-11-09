@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { chay, KHOA, SQL_610 } from "../bac-du-lieu.mjs";
-import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { checkDb, chonCheckCot, readMappings } from "../lib/vocab-core.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_087 = readFileSync(path.join(ROOT, "db/migrations/087_thang_bac_moi.sql"), "utf8");
@@ -146,16 +146,22 @@ test("TB-AC-9 checkDb đọc đúng CHECK của data_level_change (kèm chiều 
     assert.ok(lech, "TB-AC-9 sổ có B9 mà không báo lệch ở data_level_change.from_level");
     assert.match(lech.msg, /thiếu \[B9\]/);
     assert.doesNotMatch(lech.msg, /moi/, "TB-AC-9 vớ CHECK chéo");
-    // đối chứng: bộ chọn cũ (dòng đầu) trên cùng DB vớ CHECK chéo nếu nó đứng trước — luật mới không phụ thuộc thứ tự
-    const { rows: defs } = await c.query(`SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
-      WHERE contype = 'c' AND conrelid = 'data_level_change'::regclass`);
-    const cua = defs.filter((r) => /\bfrom_level\b/.test(r.def) && /'[^']*'::text/.test(r.def));
-    const cheo = cua.find((r) => /huong/.test(r.def));
-    assert.ok(cheo, "đối chứng: phải có CHECK chéo huong ↔ from_level");
-    const { chonCheckCot } = await import("../lib/vocab-core.mjs");
-    assert.doesNotMatch(chonCheckCot([cheo, ...cua.filter((r) => r !== cheo)], "from_level").def, /huong/,
-      "TB-AC-9 vớ CHECK chéo khi nó đứng đầu");
-    assert.match([cheo, ...cua][0].def, /huong/, "đối chứng đỏ: bộ chọn dòng đầu ra CHECK chéo");
+    // Thứ tự xấu nhất, dựng trong giao dịch: DROP rồi ADD lại CHECK danh sách của from_level để CHECK chéo
+    // huong ↔ from_level đứng trước trong pg_constraint — đúng câu truy vấn checkDb đọc.
+    const docDefs = async () => (await c.query(`SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
+      WHERE contype = 'c' AND conrelid = 'data_level_change'::regclass`)).rows
+      .filter((r) => /\bfrom_level\b/.test(r.def) && /'[^']*'::text/.test(r.def));
+    const ds = chonCheckCot(await docDefs(), "from_level");
+    assert.doesNotMatch(ds.def, /huong/, "tiền đề: phải có CHECK danh sách của from_level");
+    await c.query(`ALTER TABLE data_level_change DROP CONSTRAINT ${ds.conname}`);
+    await c.query(`ALTER TABLE data_level_change ADD CONSTRAINT ${ds.conname} ${ds.def}`);
+    assert.match((await docDefs())[0].def, /huong/, "tiền đề: CHECK chéo phải đứng đầu sau khi dựng lại");
+    // luật mới: checkDb THẬT trên thứ tự này vẫn 0 lệch với sổ thật
+    assert.deepEqual(cotChuyen(await checkDb(c, reg)), [], "TB-AC-9 vớ CHECK chéo khi nó đứng đầu");
+    // chiều đỏ: checkDb THẬT với bộ chọn cũ (dòng đầu, luật trước vòng này) trên cùng DB, cùng sổ thật → thừa [moi]
+    const cu = cotChuyen(await checkDb(c, reg, { chon: (defs) => defs[0] })).find((x) => x.column === "data_level_change.from_level");
+    assert.ok(cu, "đối chứng đỏ: bộ chọn cũ phải báo lệch ở data_level_change.from_level");
+    assert.throws(() => assert.doesNotMatch(cu.msg, /thừa \[moi\]/, "TB-AC-9 vớ CHECK chéo"), /TB-AC-9 vớ CHECK chéo/);
   });
 });
 

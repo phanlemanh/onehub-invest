@@ -470,7 +470,8 @@ export function chonCheckCot(defs, cot) {
   return defs.find((r) => danhSach.test(r.def)) ?? defs[0];
 }
 
-export async function checkDb(client, reg) {
+/** `chon` thay bộ chọn CHECK theo cột — chỉ để test đặt bộ chọn cũ (dòng đầu) làm đối chứng đỏ (thang-bac-moi-b0-b5 AC-9). */
+export async function checkDb(client, reg, { chon = chonCheckCot } = {}) {
   const lech = [];
   const can = "cần migration mới";
   const coBang = (await client.query("SELECT to_regclass('ref_lookup') AS a, to_regclass('ref_field_lookup') AS b")).rows[0];
@@ -507,7 +508,7 @@ export async function checkDb(client, reg) {
         WHERE contype = 'c' AND conrelid = to_regclass($1)`, [await bangGoc(client, t)])).rows
       .filter((r) => new RegExp(`\\b${cot}\\b`).test(r.def) && /'[^']*'::text/.test(r.def));
     if (!defs.length) { lech.push({ axis: a.name, column: col, msg: `${col}: thiếu CHECK theo trục ${a.name} — ${can}` }); continue; }
-    const r = chonCheckCot(defs, cot);
+    const r = chon(defs, cot);
     const trongDb = new Set([...r.def.matchAll(/'([^']*)'::text/g)].map((m) => m[1]));
     const trongSo = new Set(a.values.map((v) => v.code));
     const thieu = [...trongSo].filter((x) => !trongDb.has(x));
