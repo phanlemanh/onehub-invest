@@ -5,7 +5,7 @@ slug: dong-bang-stage-b-resolve
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-09-dong-bang-stage-b-resolve-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09
@@ -106,3 +106,13 @@ Core → AC-1…AC-7. Later: đóng 7 thẻ cũ bằng một lượt ghi (Hỏi-
   ui-observed, đặc-tả-UX, rồi dựng lại thẻ. Ba dòng bỏ ấy chỉ đứng khi Hỏi-2 = không thêm chữ.
 - HD11 (`do-the-duyet`) sau đóng băng đo 0 thẻ: kết quả «pass» là rỗng, không phải «đủ dữ liệu».
 - Ca «tin cấp thị trường không thành cặp» của `pipeline/scripts/s03-len-cong.itest.mjs` đúng theo cấu tạo khi Stage B không chạy.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Phép kiểm số thẻ chờ ở bản tin cloud, báo cáo ngày và HD11 tự bỏ qua trên CI, nên số đếm sai trở lại chỉ lộ khi chạy tay.
+  - Ngoài-4: Ca mở thẻ Ghép căn đã quyết bằng `?card=` chỉ kiểm vắng chữ «Không tìm thấy thẻ», chưa đòi thẻ hiện ra.
+  - Ngoài-5: Số thẻ chờ theo loại của viewer mới chắc phần không hiện Ghép căn, chưa đo dương các loại còn lại trên màn.
+  - Ngoài-6: Ca «Căn giá tốt không truy vấn hàng duyệt» chưa có đối chứng chứng tỏ bộ đếm câu bắt được truy vấn.
+  - Ngoài-7: Phép so vị từ đóng băng chỉ canh ba tệp `.mjs` liệt tay; tệp thứ tư chép vị từ về sau không bị canh.
+  - Ngoài-8: Đối chứng đỏ của ca «sau khi gộp» trong E7 không chạy lại cách đo cũ, nên chưa chứng nó đỏ khi cách đo hỏng.
+  - Ngoài-9: Đường bắt câu ghi mới của E7 mới chứng trên diff mẫu dựng tay, chưa trên diff git thật.
+  - Ngoài-10: Đối chứng đỏ RK-AC-8 của judge-run là chuỗi đầu ra cũ gõ tay, không phải bản chạy thật trước vòng.
+  - Ngoài-11: Ca «judge-run đóng băng không gieo thẻ» chưa có đối chứng dương và chưa kiểm cặp chờ chấm còn nguyên.
