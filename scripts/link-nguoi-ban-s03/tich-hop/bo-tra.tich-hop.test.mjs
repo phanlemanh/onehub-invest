@@ -691,6 +691,21 @@ describe("[E3] AC-3 lượt thử mặc định, đối chứng, lượt lớn",
     expect(ca.goiApi.length, "nhịp sau, không có tệp mới: 0 lời").toBe(2);
     for (let i = 0; i < 2; i++) expect(maGoi(i).length, `lời ${i + 1} ≤ 20 mã tính cả đối chứng`).toBeLessThanOrEqual(20);
   });
+
+  it("[E3] lượt lớn 40 mã + 2 đối chứng → đúng 3 lời (18+2, 20, 2), phủ đủ 40 mã rồi mới đổi tên đã xử (lần 11: mã đối chứng không tính vào điều kiện đóng lượt)", async () => {
+    const { provider } = await napModule();
+    ghi("luot-lon.txt", "Manh-bat-09-11");
+    yeuCau(MA(40));
+    await khoiProvider(provider);
+    for (let i = 0; i < 5; i++) await choChay(60_000);
+    expect(ca.goiApi.length, "40 mã bán + 2 đối chứng cần đúng 3 lời").toBe(3);
+    expect([0, 1, 2].map((i) => maGoi(i).length), "cỡ ba lời: 20, 20, 2").toEqual([20, 20, 2]);
+    expect([0, 1, 2].map((i) => maGoi(i).filter((m) => DC.includes(m)).length), "đối chứng chỉ ở lời 1").toEqual([2, 0, 0]);
+    const ban = [0, 1, 2].flatMap((i) => maGoi(i)).filter((m) => !DC.includes(m));
+    expect(new Set(ban).size, "ba lời phủ đủ 40 mã bán, không sót mã nào").toBe(40);
+    expect(ban.length, "mỗi mã bán gọi đúng một lần").toBe(40);
+    expect([doc("yeu-cau.json"), doc("yeu-cau.da-xu.json") !== null], "đủ mã: tệp yêu cầu đổi tên đã xử").toEqual([null, true]);
+  });
 });
 
 // ═════════════════════════════ E4 — AC-4 ═════════════════════════════
