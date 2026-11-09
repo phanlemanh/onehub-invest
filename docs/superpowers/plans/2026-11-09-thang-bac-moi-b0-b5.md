@@ -53,7 +53,7 @@ DO1 cùng đọc `data_level_units()`; app đọc `levelOf` (cùng luật, truy�
 **Interfaces — Produces (087):**
 - `offer_located(p_offer_id text) RETURNS boolean` — `false`.
 - `offer_unit_key(p_offer_id text) RETURNS text` — `NULL`.
-- `offer_data_level(p_kind text, p_property_type text, p_price_vnd numeric, p_area_m2 numeric, p_area_id text, p_located boolean) RETURNS TABLE (data_level text, ke_thieu text)` — DROP rồi CREATE (đổi tên tham số).
+- `offer_data_level(p_kind text, p_property_type text, p_price_vnd numeric, p_area_m2 numeric, p_area_id text, p_linked boolean) — tham số cuối nghĩa «đã định vị» RETURNS TABLE (data_level text, ke_thieu text)` — CREATE OR REPLACE, giữ tên tham số của 056.
 - `unit_data_level() RETURNS TABLE (unit_key text, data_level text, ke_thieu text, source text, area_id text, property_type text, offer_ids text[])` — căn có tin gắn (`offer_unit_key(o.offer_id) IS NOT NULL`), bậc cao nhất; B3 đủ trường lõi; B4 thêm mọi trường lõi `measured = 'true'` hoặc `tier = 'fact'`; B5 thêm `offer_status = 'active'`, `last_seen >= now() - freshness_window()`, căn có ≥ 2 mốc giá (đếm dòng `history_transactional` loại `new_listing`/`price_change` của các tin gắn, hoặc ≥ 2 tin gắn). Căn không có tin đủ trường lõi → không trả dòng.
 - `data_level_units() RETURNS TABLE (unit_key text, unit text, data_level text, ke_thieu text, source text, area_id text, property_type text, offer_ids text[])` — `tin:<offer_id>` cho mọi tin S03/S05/S06 của `sale_offers` mà `offer_unit_key` NULL; `can:<unit_key>` từ `unit_data_level()`.
 - `DROP FUNCTION IF EXISTS property_data_level(bigint[])`.
