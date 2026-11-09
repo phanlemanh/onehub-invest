@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, test } from "node:test";
 
-import { bienDong, chamBang, danhGia, dungMarkdown, fmt, fmtNgay, goiY, oBacGiam } from "./lib/bao-cao-ngay.mjs";
+import { bienDong, chamBang, danhGia, demNs1, dungMarkdown, fmt, fmtNgay, goiY, oBacGiam } from "./lib/bao-cao-ngay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MT = JSON.parse(readFileSync(path.join(HERE, "bao-cao-ngay/muc-tieu.json"), "utf8"));
@@ -60,6 +60,38 @@ describe("oBacGiam", () => {
   test("co nhỏ hơn ngưỡng tuyệt đối hoặc ô nhỏ → bỏ qua (nhiễu)", () => {
     assert.equal(oBacGiam([r("m", "B1", 500), r("m", "B0", 0)], [r("m", "B1", 490), r("m", "B0", 10)]).nghi.length, 0);
     assert.equal(oBacGiam([r("m", "B1", 30), r("m", "B0", 0)], [r("m", "B1", 0), r("m", "B0", 30)]).nghi.length, 0);
+  });
+});
+
+// thang-bac-moi-b0-b5 (E6 · AC-6): hai ảnh chụp khác thang không so; NS1, NS1b đếm theo thang mới.
+describe("TB-AC-6 đổi thang", () => {
+  const s = (scale) => (market_id, unit, data_level, n, property_type = "apartment") => ({ market_id, property_type, unit, data_level, n, scale });
+  const cu = s("thang-2310"), moi = s("thang-0811");
+  const truoc = [cu("m", "can", "B2", 68543), cu("m", "tin_le", "B1", 1698), cu("m", "tin_le", "B0", 3459)];
+  const sau = [moi("m", "tin_le", "B1", 75000), moi("m", "tin_le", "B0", 3459)];
+  test("TB-AC-6 NS3 không so khác thang: không ô co lại hay rời ô, có dòng «đổi thang, không so»", () => {
+    const o = oBacGiam(truoc, sau);
+    assert.deepEqual([o.nghi, o.roi], [[], []], "TB-AC-6 đổi thang thành tụt");
+    assert.deepEqual(o.doiThang, { truoc: "thang-2310", sau: "thang-0811" });
+    const md = dungMarkdown({ ngay: "2026-11-12", doLuc: "07:30", mucTieuTrangThai: "de-xuat", homQuaNgay: null, bang: [], goiY: [], lat: null, oGiam: o });
+    assert.match(md, /đổi thang \(thang-2310 → thang-0811\), không so/);
+    // chiều đỏ: cùng hai ảnh chụp mà bỏ cột scale (luật cũ) → báo rời ô
+    const bo = (rows) => rows.map(({ scale, ...x }) => x);
+    const cuLuat = oBacGiam(bo(truoc), bo(sau));
+    assert.ok(cuLuat.roi.length > 0 && !cuLuat.doiThang, "đối chứng: luật cũ phải đọc ô can co lại thành rời ô");
+  });
+  test("TB-AC-6 cùng thang vẫn so như cũ", () => {
+    const o = oBacGiam([moi("m", "tin_le", "B1", 200, "house"), moi("m", "tin_le", "B0", 10, "house")],
+      [moi("m", "tin_le", "B1", 100, "house"), moi("m", "tin_le", "B0", 20, "house")]);
+    assert.equal(o.doiThang, undefined);
+    assert.equal(o.roi.length, 1);
+  });
+  test("TB-AC-6 NS1 theo thang mới: 0 căn từ B3, không cộng dòng thang cũ", () => {
+    assert.deepEqual(demNs1(sau), { NS1: 0, NS1b: 0 });
+    assert.deepEqual(demNs1([...sau, moi("m", "can", "B5", 2), moi("m", "can", "B3", 3, "house")]), { NS1: 5, NS1b: 5 });
+  });
+  test("TB-AC-6 một ảnh chụp: không so, không lỗi", () => {
+    assert.deepEqual(oBacGiam([], sau), { nghi: [], roi: [] });
   });
 });
 

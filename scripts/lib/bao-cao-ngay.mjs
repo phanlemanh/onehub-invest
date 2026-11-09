@@ -53,8 +53,24 @@ export function chamBang(so, homQua, mucTieu) {
  * hơn `nguongPct` phần trăm VÀ số ở dưới L tăng ít nhất bằng phần co → «nghi tụt». Co mà bậc dưới không tăng tương
  * ứng → «rời ô», chỉ để tham khảo. Chỉ xét ô có ≥ `toiThieu` đơn vị ở bậc ≥ L hôm trước và co ≥ `giamToiThieu` đơn vị
  * (dưới mức đó là nhiễu của tin vào, tin nghỉ trong ngày).
+ * Hai ảnh chụp khác thang (cột `scale` của 087; vắng = `thang-2310`) không so: ngày đổi thang 08/11 là lần hạ một lần,
+ * không phải tụt bậc (thang-bac-moi-b0-b5 AC-6) — trả `doiThang` và không ô nào.
  */
+/** NS1, NS1b trên ảnh chụp mới nhất: căn hộ từ B5, loại khác từ B3 (NS1); mọi đơn vị từ B3 (NS1b). Thang 08/11: B3 trở lên
+ * là căn của danh bạ có tin gắn — hôm nay 0 tới khi có bảng nối. */
+export function demNs1(sau) {
+  const capB = (lv) => Number(String(lv).slice(1));
+  return {
+    NS1: sau.filter((r) => capB(r.data_level) >= (r.property_type === "apartment" ? 5 : 3)).reduce((s, r) => s + Number(r.n), 0),
+    NS1b: sau.filter((r) => capB(r.data_level) >= 3).reduce((s, r) => s + Number(r.n), 0),
+  };
+}
+
 export function oBacGiam(truoc, sau, { nguongPct = 2, toiThieu = 50, giamToiThieu = 20 } = {}) {
+  const thangCua = (rows) => [...new Set(rows.map((r) => r.scale ?? "thang-2310"))].sort().join(",");
+  if (truoc.length && sau.length && thangCua(truoc) !== thangCua(sau)) {
+    return { nghi: [], roi: [], doiThang: { truoc: thangCua(truoc), sau: thangCua(sau) } };
+  }
   const BAC = VOCAB.data_level;
   const gom = (rows) => {
     const m = new Map();
@@ -180,6 +196,9 @@ export function dungMarkdown(ctx) {
   for (const r of ctx.bang) {
     const dich = r.dich === null ? (r.ghi_chu_dich ? `(${r.ghi_chu_dich})` : "—") : fmt(r.dich);
     L.push(`| ${r.id} | ${r.nhom} | ${r.ten} | ${fmt(r.gia_tri)} | ${fmtDelta(r.bien_dong)} | ${dich} | ${fmtNgay(r.han)} | ${NHAN[r.trang_thai]} |`);
+  }
+  if (ctx.oGiam?.doiThang) {
+    L.push(`- ô bậc: đổi thang (${ctx.oGiam.doiThang.truoc} → ${ctx.oGiam.doiThang.sau}), không so — lần hạ một lần, không phải tụt bậc`);
   }
   if (ctx.oGiam?.nghi?.length || ctx.oGiam?.roi?.length) {
     L.push("", "### Ô bậc co lại > 2% (thị trường | loại | đơn vị | bậc)", "");
