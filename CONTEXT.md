@@ -226,7 +226,7 @@ _Avoid_: tin hết hạn, expired, tình trạng tin
 **Ngừng rao**: Tin không thấy lại ở nguồn quá N ngày trong khi nguồn vẫn đang thu — S06 đo từ lần quét cuối tới lần quét mới nhất của cùng vùng × loại tin, S03 tới bài mới nhất của các nhóm mà tin đã đăng, S05 tới tin mới nhất của nguồn. N = 21 ngày cho S03, S05, S06 (Mạnh duyệt 09/11). Tin ngừng rao không bị xoá hay nghỉ: nó thành lịch sử của căn, giữ tên và SĐT người bán, và thấy lại thì tự về Đang chào. Hiện nhãn «Đã gỡ» như tin nguồn gỡ; phân biệt bằng phát biểu. Bước ba của vòng đời tin là «rút» (nghỉ bản ghi: rác, gộp nhầm), không phải ngừng rao.
 - Code: `offer_status = withdrawn` + phát biểu `inferred`/`e1_rule` `rule_id khong-thay-lai:<offer_id>` (migration 085, `ghi_khong_thay_lai`), N ở `ngung_rao_sau_ngay(source)` · RESO: StandardStatus Withdrawn
 - Slug URL: —
-_Avoid_: hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)
+_Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)
 
 **Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
 - Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
