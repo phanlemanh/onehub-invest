@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>3 việc"]
+  GD --> B["Sắp mở vòng<br/>2 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>158 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>105 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>159 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>107 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -24,7 +24,6 @@ flowchart TD
 
 ## Sắp mở vòng
 
-- Người vận hành mở /ops/data-flow và thấy chặng «Bài nhận → Đọc được» của S03 tính trên bài có chữ: tin nhắn chỉ có ảnh đã ghép vào tin không còn nằm trong mẫu số, và bài Yêu cầu mua/thuê là một nhánh riêng trên Sankey (`bai-nhan-tru-bai-chi-anh`)
 - Ảnh tin không tải được (đường dẫn hết hạn, không có tệp) được đánh dấu, và Ops, Invest không vẽ ô ảnh vỡ cho các ảnh đó (`media-het-han`)
 - Kiểm «phường» và «trường lõi» trên đồng chảy và bậc dữ liệu chỉ nhận khu cấp phường; tin chỉ gắn tới tỉnh hay thành phố không còn được tính là có phường (`phuong-that-trong-truong-loi`)
 
@@ -57,6 +56,7 @@ flowchart TD
 - Người duyệt vai Vận hành ở máy thu thấy ảnh tin chỉ có URL gốc (S06, S05) trên thẻ duyệt — ảnh đi qua máy chủ theo media_key, trình duyệt không nhận URL hay tên miền nguồn (`anh-goc-qua-may-chu`)
 - audit-all không còn PASS giả ở backup và membership S03, và kiểm các trang /ops ở đúng cổng :3456 (`audit-all-noi-that`)
 - Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx (`auth-hop-chuan`)
+- Chặng «Bài nhận → Đọc được» của S03 trên /ops/data-flow tính trên bài cần đọc — ảnh đã ghép vào tin rời mẫu số, bài Yêu cầu là đầu ra ngang tin rao và cùng tính vào «Đọc được» (`bai-nhan-tru-bai-chi-anh`)
 - Bộ bóc SĐT của S03/S05 bắt đủ bốn dạng viết tách lạ, bỏ số 11 chữ số, và tin chọn SĐT theo luật rõ trên mọi bài của tin — dạng số ra giữ nguyên (`boc-sdt-du-va-chon-ro`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
 - Người vận hành quét Căn giá tốt trên một bảng có tab và lọc, mở sheet một căn để biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai, so với các căn cùng tiêu chí; căn thiếu dữ liệu ghi rõ thiếu gì; vai Người xem không nhận ảnh, chữ bài, liên hệ (`can-gia-tot-biet-can`)
@@ -78,6 +78,7 @@ flowchart TD
 - Người vận hành mở «Căn giá tốt» /ops/deals không thấy căn có diện tích hay số phòng phi lý, danh sách không dồn ở trần giảm giá, và thẻ ghi «đăng 1 lần» thay «mới» (`deals-loai-tin-phi-ly`)
 - Người xem và bearer chung không nhận định danh tài khoản thu hay mã nhóm Zalo ở bề mặt Thu thập; mã nhóm không lên cloud (`dinh-danh-tai-khoan-thu-theo-vai`)
 - Mỗi đêm đo trục SĐT của danh bạ Người và ghi vào dq_check_results để /ops/quality hiện (`do-danh-ba-sdt`)
+- Đo làm giàu hằng ngày — theo từng đường làm giàu, số giá trị thêm, đổi, máy rút, người sửa hay rút mỗi ngày và kiểm ngược bỏ-một-ra mỗi tuần kèm cận dưới Wilson; lát thị trường, phường/xã, dự án, toà; xem trên /ops/quality (`do-lam-giau`)
 - Mỗi đêm scorecard ghi tỉ lệ thẻ ghép căn chờ duyệt có đủ dữ liệu hai bên (ảnh, đặc trưng nhà, người đăng, tin còn sống) (`do-the-duyet-du-du-lieu`)
 - Bài S03 ghi diện tích không đơn vị sau nhãn «Diện tích» hay bằng chữ kiểu Unicode được đọc ra area_m2 như bài ghi m² thường (`doc-so-m2-bi-sot`)
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
@@ -307,6 +308,7 @@ flowchart TD
 - Thẻ gắn nhãn hiện người đăng bài (tên và ID) cạnh nhóm và giờ đăng (`the-gan-nhan-nguoi-dang`)
 - Thẻ gắn hai người chưa ai gắn xếp cuối nhóm, không chặn người gắn duy nhất (`the-hai-nguoi-xep-sau`)
 - collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
+- Tin không thấy lại ở nguồn quá N ngày (nguồn vẫn đang thu) chuyển sang ngừng rao, giữ lại làm lịch sử; thấy lại thì về đang rao (`tin-ngung-rao-khong-thay-lai`)
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
 - Nhà đầu tư tìm được tin rao kèm người bán và SĐT trên cổng Invest — tên, SĐT lên cloud, API Listing theo loại, trang Bán và Cho thuê với thẻ chung (`tin-rao-tren-invest`)
 - Nhà đầu tư mở được một tin bán, tin thuê dài hạn của mọi nguồn trên cổng Invest để xem đủ thông số và liên hệ người đăng (`trang-chi-tiet-tin`)
