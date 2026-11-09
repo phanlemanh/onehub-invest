@@ -383,6 +383,35 @@ test("DO3-AC-2 ảnh chụp và dòng đổi: lập mốc, thêm/đổi/máy rú
   });
 });
 
+test("DO3-AC-2 đường đã lập mốc mà mất hết giá trị: mỗi chủ thể một dòng máy rút, song 0, không báo «chưa chạy»", coDb, async () => {
+  await trongGiaoDich(async (c) => {
+    await chuanBi(c);
+    // Sổ đường thử: một đường phát biểu với mã ghi riêng của ca (không trùng dữ liệu chép), không kiểm ngược.
+    const RULE = "do3-thu-mat-het";
+    const so = [Object.freeze({ duong: "dien-tich-suy-ra", doc: "phat-bieu", rule_ids: Object.freeze([RULE]), o_nhan: null, nguoi_rut: false,
+      nguoi_de: false, kiem: null })];
+    const ma = ["mh1", "mh2", "mh3"];
+    for (const x of ma) await tin(c, `a2${x}`);
+    await ghiNhom(c, ma.map((x) => ({ ...pbNhom(`a2${x}`), rule_id: RULE })));
+    const lan1 = await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false });
+    assert.equal(detailCua(lan1, "dien-tich-suy-ra").ly_do, "lap-moc");
+    await retractRule(c, ma.map((x) => `S03:do3a2${x}`), "property_type", RULE, "thay-boi-luot"); // mất hết giá trị
+    const kiem = async (kq) => {
+      const r = kq.dq.find((x) => x.check_name === "do3-thay-doi" && x.entity === "dien-tich-suy-ra");
+      if (r.detail.ly_do === "chua-chay") throw new Error("MAT HET THANH CHUA CHAY");
+      assert.equal(r.status, "pass");
+      assert.deepEqual([r.detail.song, r.detail.may_rut, r.detail.them, r.detail.doi], [0, 3, 0, 0]);
+      const dong = (await dongDoi(c, D)).filter((x) => x.subject_key.startsWith("S03:do3a2mh"));
+      assert.deepEqual(dong.map((x) => x.huong), ["may_rut", "may_rut", "may_rut"]);
+      const { rows: [{ n }] } = await c.query("SELECT count(*)::int AS n FROM enrichment_value_state WHERE duong = 'dien-tich-suy-ra'");
+      assert.equal(n, 0, "ảnh chụp thay bằng trạng thái rỗng");
+    };
+    await thu(c, async () => assert.rejects(async () => kiem(await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false,
+      dotBien: "mat-het-la-chua-chay" })), /MAT HET THANH CHUA CHAY/));
+    await kiem(await doLamGiau(c, { ngay: D, write: true, duong: so, kiemNguoc: false }));
+  });
+});
+
 // ---- AC-3: người rút, người sửa ----
 test("DO3-AC-3 người sửa = nhãn ngày D khác giá trị + ghi đè hitl ngày D khác giá trị; không đường nào có lối người rút; bộ đếm rút đo trên sổ thử", coDb, async () => {
   await trongGiaoDich(async (c) => {

@@ -509,9 +509,15 @@ ghi rõ (tin có số riêng, bài có chữ loại hình), nên không phải �
 - Code: `dq_check_results` `do3-kiem-nguoc`, `kiemNguocSo`, `kiemNguocNhom` (`pipeline/lib/do-lam-giau.mjs`) · RESO: —
 _Avoid_: backtest, độ chính xác (khi chưa nói tập đo)
 
-**Chưa chạy**: đường làm giàu chưa ghi giá trị nào lên tin; khối hiện «Chưa chạy», không hiện số 0.
+**Cận dưới Wilson**: đầu dưới của khoảng tin cậy Wilson 95% cho một tỉ lệ đúng trên n mẫu; mẫu ít thì cận dưới thấp hơn tỉ lệ thô
+nhiều, nên so ngưỡng và so tuần bằng cận dưới chứ không bằng tỉ lệ thô. Khối «Làm giàu» và cổng tự áp F3 dùng nó.
+- Code: `wilson` (`pipeline/lib/do-hang-ngay.mjs`), `wilson.thap` trong detail `do3-kiem-nguoc` · RESO: —
+_Avoid_: cận Wilson, Wilson thấp
+
+**Chưa chạy**: đường làm giàu chưa ghi giá trị nào lên tin; khối hiện «Chưa chạy», không hiện số 0 (đường đã lập mốc mà mất hết
+giá trị thì không phải chưa chạy: các giá trị mất đếm là máy rút).
 - Code: `status = 'skip'`, `ly_do = 'chua-chay'` của `do3-thay-doi` · RESO: —
-_Avoid_: 0, tắt
+_Avoid_: không hoạt động
 
 **So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
 4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.

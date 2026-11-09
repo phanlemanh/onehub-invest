@@ -35,7 +35,7 @@ async function DoHangNgayKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Recor
   return <DoHangNgay data={await loadDo1(pool)} lat={lat} areaNames={areaNames} />;
 }
 
-/** DO3: khối «Làm giàu» tải riêng như khối DO1 — lỗi đọc dq_check_results chỉ thay vùng này bằng Alert + «Thử lại». */
+/** DO3: khối «Làm giàu» tải riêng như khối DO1 — lỗi đọc bảng kiểm chỉ thay vùng này bằng Alert + «Thử lại». */
 async function LamGiauKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<string, string> }) {
   return <LamGiau data={await loadLamGiau(pool)} lat={lat} areaNames={areaNames} />;
 }
