@@ -15,7 +15,6 @@ flowchart TD
   GB --> DG["Đã giao<br/>159 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>105 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
-  HS["Hồ sơ hỏng<br/>1 việc"]
 ```
 
 > **Bốn cổng người** — mỗi cổng là một câu hỏi chỉ người trả lời được:
@@ -322,7 +321,3 @@ flowchart TD
 ## Đã nghiệm thu giá trị
 
 - Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số (`people-hien-so-goc`) — lặp thêm (iterate)
-
-## Hồ sơ hỏng
-
-- `danh-ba-du-an-toa-s08` — không đọc được hồ sơ (`(workspace)`): không có contract.md lẫn opportunity.md
