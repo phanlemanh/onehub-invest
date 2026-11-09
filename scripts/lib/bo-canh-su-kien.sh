@@ -13,7 +13,9 @@ GATEWAY_ENV_FILE="${GATEWAY_ENV_FILE:-$HOME/.openclaw/service-env/ai.openclaw.ga
 doc_s03_lookup_dir() {
   local dir="${S03_LOOKUP_DIR:-}"
   if [ -z "$dir" ] && [ -f "$GATEWAY_ENV_FILE" ]; then
-    dir=$(grep -E '^[A-Za-z_]*S03_LOOKUP_DIR=' "$GATEWAY_ENV_FILE" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+    # tệp env gateway thật viết «export KEY=value» (14/14 dòng) — khớp cả hai
+    # khuôn có/không «export », KEY ở đầu dòng, bắt giá trị tới cuối dòng.
+    dir=$(sed -n 's/^[[:space:]]*\(export \)\{0,1\}S03_LOOKUP_DIR=//p' "$GATEWAY_ENV_FILE" 2>/dev/null | tail -1 | tr -d '"' | tr -d "'")
   fi
   printf '%s' "$dir"
 }
