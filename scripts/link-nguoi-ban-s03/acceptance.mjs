@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // acceptance.mjs — link-nguoi-ban-s03: điểm vào chung của các lệnh chấm (executors.script.lnb_* trong _acceptance/config.yaml).
 // Mỗi lệnh con là một tệp <lệnh>.mjs cùng thư mục, mỗi làn giữ tệp của mình (phân làn ở Notes hợp đồng):
-//   làn ZCode: tra · dung · thu · ranh-gioi · api · tien-kiem       làn Claude: db · lien-lac · chon · ten-nguon · tai-lieu
+//   bộ chạy tích hợp của làn Claude (tich-hop.mjs): tra · dung · thu · ranh-gioi · tien-kiem   nối test làn ZCode: api
+//   làn Claude: db · lien-lac · chon · ten-nguon · tai-lieu
 // Tệp của lệnh chưa có → thoát 2 (không đo được), không bao giờ coi là đạt.
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";

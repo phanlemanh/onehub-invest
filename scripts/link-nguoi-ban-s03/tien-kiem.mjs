@@ -1,7 +1,8 @@
-// tien-kiem.mjs — E9, lệnh chấm AC-9: test có sẵn của làn ZCode cho tiền kiểm khởi động lại và lệnh phán lùi của bộ tra
-// (collector/openclaw/tests/link-nguoi-ban/tien-kiem-ho-so.test.mjs, phai-lui-ho-so.test.mjs). Trả đúng mã thoát của test.
-import { chayNodeTest } from "./chung-zcode.mjs";
+// tien-kiem.mjs — E9, lệnh chấm AC-9: bộ chạy tích hợp độc lập của làn Claude (tich-hop.mjs) trên cây OpenClaw nền + extension.patch áp
+// bằng git apply thật, chỉ các ca nhóm [E9] (giám sát duyệt 09/11, XONG U1-0911-5 — thay việc nối vào test của làn ZCode; test của
+// ZCode giữ làm test đơn vị, không là thước cổng). Trả đúng mã thoát của vitest; thiếu thứ gì → 2 kèm tên.
+import { chayTichHop } from "./tich-hop.mjs";
 
 export async function chay() {
-  return chayNodeTest("tien-kiem-ho-so.test.mjs", "phai-lui-ho-so.test.mjs");
+  return chayTichHop("E9");
 }
