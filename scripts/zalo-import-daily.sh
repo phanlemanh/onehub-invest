@@ -130,6 +130,12 @@ fi
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+# PL34 (claudedp-0911-7 MỞ LẠI): đọc gộp S03 hằng ngày chạy TRONG chuỗi đêm,
+# ngay sau transform-zalo — chỉ bắt đầu khi nạp + transform-zalo của đêm đó
+# ĐÃ XONG (job_run dừng khi bước trước hỏng → không bao giờ đọc bảng đang nạp
+# dở); trước mau-soat của cloud-sync (mốc mềm — mau-soat tự vớt bài chưa có
+# kết quả, trần 0,05 USD). Trần DOC_GOP_TRAN_NGAY_USD mặc định 20 của script.
+job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"
 job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
