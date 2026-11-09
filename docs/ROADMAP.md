@@ -567,6 +567,27 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     đường API mà robots.txt của S09 cấm (chỉ danh sách toà của các dự án S03 nói tới, một lần, không quỹ căn, raw local, ZCode chọn
     trần và nhịp; vòng `claudedp-0811-13`), trang chủ đầu tư, và tìm kiếm web. Quỹ căn S09 qua đường cấm vẫn chưa được duyệt.
 
+40. **Danh bạ dự án thông tin toàn diện** (09/11, Mạnh «Theo khuyến nghị»; bản phạm vi `docs/plan/pham-vi-danh-ba-du-an-toan-dien-0911.md`,
+    nghiên cứu ở kho tri thức riêng `wiki/chu-de/danh-ba-du-an.md`): kế hoạch 08/11 phủ định danh và gắn tin; phần thông tin của chính dự án
+    (bảy nhóm: danh tính, vị trí, phân loại và quy mô, pháp lý, tiến độ, sản phẩm sơ cấp và giá, mô tả và media) làm theo hàng mới.
+    - Q1: chỗ ghi thuộc tính dự án và phân khu (resource `Subdivision`, `Complex`) tách khỏi DA11 thành **DA15**, không chờ thu S07.
+    - Q2: người được tạo nút dự án, toà từ bằng chứng tin (**DA18**); toà ứng viên chưa cấp UPI tới khi người duyệt.
+    - Q3: quỹ căn chủ đầu tư S08 thành **tin sơ cấp** (**DA17**, extension `MarketTier`), giữ mục 39 Hỏi-3: không vào danh sách Bán,
+      thước giá, metrics.
+    - Q4: khảo sát nguồn nhà nước (**DAZ4**) mở ngay, gồm mã định danh nhà ở và công trình theo NĐ 357/2025 (hiệu lực 01/3/2026). Mã nhà
+      nước là bí danh, không thay UPI; toà ghi ở RESO `BuildingId`.
+    - Q5: **độ đủ hồ sơ** (**DA20**) là thước «toàn diện», cạnh DA14. Mốc M2: ≥ 80% dự án S08 và 100% dự án S03 nói tới đủ năm nhóm đầu.
+    - Q6: toà cho hay cấm thuê ngắn hạn (RESO `ShortTermRentalAllowedYN`) vào mục chờ DA28.
+    Kiểm RESO DD 2.1 (09/11): thêm field chuẩn bị sót (`BuildingId`, `ShortTermRentalAllowedYN`, `LeaseRestrictionsYN`,
+    `CertificateOfOccupancyYN`, `ParcelNumber`, `Zoning`, `CommonInterest`, `AssociationName`…); bỏ extension `BalconyDirection` (dùng
+    `direction_faces` của GN1) và `BuildingFootprintArea` (dùng `FoundationArea`); không điền `SourceSystemName`, `OriginatingSystemName`
+    (là tên nguồn thật, tầng A). Hàng mới: DV1, DA15–DA20; mục chờ DA21–DA28; sửa lời DA3, DA4, DA8, PX2, DA10, DA11, DN4, DA13.
+    Ba câu của phiên Định vị S03 (Mạnh xác nhận «Đúng», 09/11):
+    - Q7: tin nhóm một dự án chỉ nhận dự án «suy ra» và tính B2 khi quy ước nhóm đạt ≥ 95% trên mẫu GC0 của nhóm (hàng GCQ2).
+    - Q8: người bán lặp lại (≥ 3 tin đã biết dự án, ≥ 80% một dự án) cho phát biểu dự án `inferred`, chỉ cho tin không có tín hiệu
+      khác; đo kiểm bỏ-một mỗi ngày, tụt dưới ngưỡng thì tắt. Chưa có hàng; phiên Định vị S03 đề xuất DV2.
+    - Q9: phường kế thừa từ dự án tính là phường thật, mang nhãn «suy ra từ dự án»; DA9 gộp trước hoặc cùng DF7 (DF7 đứng trên DA9).
+
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
