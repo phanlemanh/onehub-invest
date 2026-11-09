@@ -16,7 +16,7 @@ prototype:
 
 Đo 09/11 (snapshot 22:42Z 08/11): 43.828/110.089 bài nhận S03 (39,8%) chỉ là tin nhắn URL ảnh, bị đếm vào mẫu số nên tỉ lệ đọc được hiện 43%; bỏ chúng thì 71,5%. 11.360 bài Yêu cầu bị loại đúng nhưng hiện như rơi.
 
-Hàng DF4 trong `docs/plan/lo-trinh.json` (PR #379). Mạnh duyệt 09/11 qua phiên DA truy kẹt S03. Bài chỉ-ảnh chưa ghép vào tin (trong cửa sổ PL28, sau này GT0) vẫn tính là rơi, ghi lý do «ảnh chưa ghép». Đi trước DF5 vì cùng tệp 600.
+Hàng DF6 trong `docs/plan/lo-trinh.json` (PR #379). Mạnh duyệt 09/11 qua phiên DA truy kẹt S03. Bài chỉ-ảnh chưa ghép vào tin (trong cửa sổ PL28, sau này GT0) vẫn tính là rơi, ghi lý do «ảnh chưa ghép». Đi trước DF7 vì cùng tệp 600.
 
 ## Ngưỡng chết / ngưỡng UAT
 
