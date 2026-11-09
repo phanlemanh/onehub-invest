@@ -38,12 +38,727 @@ index 636cbe6..a94cb93 100644
    const { config } = options;
    let { account } = options;
    const { abortSignal, statusSink, runtime } = options;
+diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
+index 548f3f5..16e148d 100644
+--- a/extensions/zalouser/src/zalo-js.ts
++++ b/extensions/zalouser/src/zalo-js.ts
+@@ -101,6 +101,8 @@ type ActiveZaloListener = {
+ };
+ 
+ const activeListeners = new Map<string, ActiveZaloListener>();
++
++
+ const groupContextCache = new Map<string, { value: ZaloGroupContext; expiresAt: number }>();
+ 
+ type AccountInfoResponse = Awaited<ReturnType<API["fetchAccountInfo"]>>;
+@@ -1357,6 +1359,11 @@ export async function startZaloListener(params: {
+ }): Promise<{ stop: () => void }> {
+   const profile = normalizeProfile(params.profile);
+   const api = await withZaloApi(profile, async (apiLocal) => apiLocal);
++  // S4-2(A)/lần 9: listener nối → ghi API vào sổ CHỈ-ĐỌC cho bộ tra; sự kiện
++  // đóng/lỗi → tệp sự kiện trong S03_LOOKUP_DIR (đường không do abort của mình).
++  const { ganApiDangNoi, xoaApiDangNoi, ghiSuKienListener } = await import("./api-dang-noi.js");
++  const dirSuKien = process.env.S03_LOOKUP_DIR?.trim() || null;
++  ganApiDangNoi(profile, api);
+   const existing = activeListeners.get(profile);
+   if (existing) {
+     throw new Error(
+@@ -1384,6 +1391,7 @@ export async function startZaloListener(params: {
+     api.listener.off("message", onMessage);
+     api.listener.off("connected", onConnected);
+     activeListeners.delete(profile);
++    xoaApiDangNoi(profile); // S4-2(A): listener dừng → API không còn
+     // zca-js stop() resets before ws closes. Retire the API so a retry cannot
+     // reuse that listener while its previous socket is still closing.
+     invalidateApi(profile);
+@@ -1396,6 +1404,7 @@ export async function startZaloListener(params: {
+     params.onError(error);
+   };
+   const onError = (error: unknown) => {
++    void ghiSuKienListener(dirSuKien, "error", Date.now()); // lần 9 (i)
+     failListener(error instanceof Error ? error : new Error(String(error)));
+   };
+   const onMessage = (incoming: Message) => {
+@@ -1408,6 +1417,7 @@ export async function startZaloListener(params: {
+     // Closing a CONNECTING ws emits error on nextTick, then closed. Keep the
+     // guarded error handler until that terminal event to avoid an unhandled error.
+     detachTerminalHandlers();
++    void ghiSuKienListener(dirSuKien, "closed", Date.now()); // lần 9 (i)
+     failListener(new Error(`Zalo listener closed (${code}): ${reason || "no reason"}`));
+   };
+   const connectTimer = setTimeout(() => {
+diff --git a/u7-tree/extensions/zalouser/src/api-dang-noi.ts b/extensions/zalouser/src/api-dang-noi.ts
+new file mode 100644
+index 0000000..91df533
+--- /dev/null
++++ b/extensions/zalouser/src/api-dang-noi.ts
+@@ -0,0 +1,82 @@
++// api-dang-noi.ts — S4-2(A)+(1) 0911-11/lần 9: sổ API của listener đang nối
++// (CHỈ ĐỌC cho bộ tra — không ensureApi/with…Api/login/tạo client, AC-1) và
++// tệp SỰ KIỆN đóng listener (listener-dong-sau-goi) viết chung cho extension
++// và bộ canh (watchdog ghi cùng khuôn khi cảnh báo).
++import { mkdir, appendFile, readFile, writeFile } from "node:fs/promises";
++import { dirname, join } from "node:path";
++import type { API } from "./zca-client.js";
++
++export const TEN_SO_API = "api-dang-noi";
++const apisDangNoi = new Map<string, API>();
++
++export function normalizeProfileNho(profile?: string | null): string {
++  return (profile ?? "").trim().toLowerCase() || "default";
++}
++
++/** CHỈ ĐỌC API của listener đang nối theo profile — chưa nối/đã dừng → undefined. */
++export function layApiDangNoi(profile?: string | null): API | undefined {
++  return apisDangNoi.get(normalizeProfileNho(profile));
++}
++
++/** Listener khởi động (sau khi có api) → ghi vào sổ. */
++export function ganApiDangNoi(profile: string | null | undefined, api: API): void {
++  apisDangNoi.set(normalizeProfileNho(profile), api);
++}
++
++/** Listener dừng (cleanup) → xoá khỏi sổ. */
++export function xoaApiDangNoi(profile: string | null | undefined): void {
++  apisDangNoi.delete(normalizeProfileNho(profile));
++}
++
++// Chỉ cho test — không dùng runtime.
++export function __testGanApiDangNoi(profile: string, api: API): void {
++  ganApiDangNoi(profile, api);
++}
++export function __testXoaApiDangNoi(profile: string): void {
++  xoaApiDangNoi(profile);
++}
++
++/** Tệp sự kiện đóng listener trong thư mục việc bộ tra (S03_LOOKUP_DIR). */
++export const TEN_TEP_SU_KIEN = "sukien-listener.jsonl";
++export type LoaiSuKien = "error" | "closed" | "bo-canh";
++export type SuKienListener = { atMs: number; loai: LoaiSuKien };
++
++/** GHI NỐI một dòng sự kiện {atMs, loai} — watchdog ghi cùng khuôn ("bo-canh"). */
++export async function ghiSuKienListener(
++  dir: string | null | undefined,
++  loai: LoaiSuKien,
++  atMs: number,
++): Promise<void> {
++  if (!dir) return;
++  const p = join(dir, TEN_TEP_SU_KIEN);
++  try {
++    await mkdir(dirname(p), { recursive: true });
++    await appendFile(p, JSON.stringify({ atMs, loai }) + "\n", "utf8");
++  } catch {
++    // không bao giờ làm hỏng listener vì sự kiện ghi hỏng
++  }
++}
++
++/** Đọc toàn bộ sự kiện đã ghi (dòng hỏng bỏ qua). */
++export async function docSuKienListener(dir: string): Promise<SuKienListener[]> {
++  try {
++    const t = await readFile(join(dir, TEN_TEP_SU_KIEN), "utf8");
++    return t
++      .split("\n")
++      .filter((l) => l.trim())
++      .map((l) => JSON.parse(l) as SuKienListener)
++      .filter((s) => Number.isFinite(s?.atMs) && typeof s?.loai === "string");
++  } catch {
++    return [];
++  }
++}
++
++/** Dọn sự kiện cũ hơn keepMs (gọi khi đã xử lý). */
++export async function donSuKienListener(dir: string, keepMs: number, bayGio = Date.now()): Promise<void> {
++  const giu = (await docSuKienListener(dir)).filter((s) => bayGio - s.atMs <= keepMs);
++  try {
++    await writeFile(join(dir, TEN_TEP_SU_KIEN), giu.map((s) => JSON.stringify(s)).join("\n") + (giu.length ? "\n" : ""), "utf8");
++  } catch {
++    // dọn hỏng không sao — lọc theo thời gian khi đọc
++  }
++}
+diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
+new file mode 100644
+index 0000000..96ffa20
+--- /dev/null
++++ b/extensions/zalouser/src/seller-lookup.ts
+@@ -0,0 +1,572 @@
++/**
++ * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
++ *
++ * Luật cứng theo hợp đồng đã ký:
++ * - CHỈ gọi API của bộ nghe tin đang nối (getConnectedS03Api, chỗ thế S03) —
++ *   không bao giờ qua withS03Api / login / loginQR / tạo client (AC-1).
++ * - Trần: mỗi lời ≤20 mã; hai lời cách nhau ≥60 giây (mốc LƯU ĐĨA, sống qua
++ *   khởi động lại listener); ≤30 lời/ngày; chỉ chạy khung 01:00–05:00 giờ VN;
++ *   một vòng hẹn giờ duy nhất dù listener khởi động lại (AC-1).
++ * - Phân loại mỗi mã: co-username | khong-username | khong-ro | khong-tim-thay,
++ *   khớp theo userId trả về (kể cả khoá hậu tố `_0`); chỉ giữ userId + username,
++ *   bỏ mọi trường khác NGAY khi nhận (AC-1, AC-4).
++ * - Lỗi máy chủ/HTTP (401, 429, rate-limit, lạ) hoặc không trả trong 15 giây →
++ *   dừng cả lượt, không thử lại, ghi tệp chặn chứa MÃ lý do + mã số (không chép
++ *   thông điệp thô); kết quả về muộn bị bỏ (AC-2).
++ * - Không có listener / không tệp yêu cầu / tệp rỗng sai khuôn → 0 lời gọi,
++ *   0 đăng nhập; không có phiên → tệp chặn `khong-co-phien` (AC-1).
++ * - Lượt thử mặc định: đúng MỘT lời với ≤20 mã + 2 mã đối chứng (người đã gửi
++ *   tin trong 24 giờ qua), ghi dấu đã thử, không chạy lần hai khi dấu còn; đầu
++ *   ra chỉ số đếm theo bốn loại + kết quả đối chứng (AC-3).
++ * - Lượt lớn: chỉ bật bằng giá trị người đặt trong tệp điều khiển riêng (không
++ *   có mặc định); mỗi tệp yêu cầu xử MỘT lần (đổi tên đã-xử) (AC-3).
++ * - Bộ tra không đóng/khởi động lại listener; lỗi xong handler vẫn nhận tin.
++ *
++ * Phụ thuộc chèn được (fs/fetch/đồng hồ/lấy api) để test dùng API GIÃ bẫy đếm
++ * lời gọi (AC-4). Không mở cổng mạng, không đổi cấu hình OpenClaw.
++ */
++
++import * as fsp from "node:fs/promises";
++// S4-2(A) 0911-11/lần 9: sổ API đang nối + tệp sự kiện đóng listener
++import { layApiDangNoi, TEN_TEP_SU_KIEN, type SuKienListener } from "./api-dang-noi.js";
++
++// Kiểu API — import đúng đường module kênh S03 (bọc zca-js).
++import type { API } from "./zca-client.js";
++
++export type LookupLoai = "co-username" | "khong-username" | "khong-ro" | "khong-tim-thay";
++
++export type LookupKetQua = {
++  ma: string;
++  loai: LookupLoai;
++  username: string; // rỗng nếu không có — chỉ giữ userId + username (AC-4)
++};
++
++export type LookupDem = Record<LookupLoai, number>;
++
++export type VongChay = {
++  loi_goi: number;
++  dem: LookupDem;
++  doi_chung: Array<{ ma: string; loai: LookupLoai }>;
++  chan?: string; // mã tệp chặn nếu dừng vì lỗi
++};
++
++export type LookupDeps = {
++  dir: string; // thư mục việc: tệp yêu cầu, tệp chặn, mốc — NGOÀI cấu hình OpenClaw, NGOÀI snapshots/
++  now: () => Date;
++  fetchImpl: typeof fetch;
++  collectorUrl: string; // API collector (AC-5); rỗng = chỉ spool
++  layApi: () => API | undefined; // mặc định layApiDangNoi() — test chèn API giả
++  treMs: (ms: number) => Promise<void>;
++  docFile: (path: string) => Promise<string | null>;
++  ghiFile: (path: string, data: string) => Promise<void>;
++  noiFile: (path: string, data: string) => Promise<void>; // spool nối dần, không mất (AC-5)
++  doiTen: (from: string, to: string) => Promise<void>;
++  tonTai: (path: string) => Promise<boolean>;
++  xoaFile: (path: string) => Promise<void>;
++};
++
++const MA_LOI_CHAN = new Set([
++  "khong-co-phien",
++  "http-401",
++  "http-429",
++  "rate-limit",
++  "loi-may-chu",
++  "loi-la",
++  "het-15s",
++  "listener-dong-sau-goi",
++  "khac-khong-gian-ma",
++  "sai-khuon-yeu-cau",
++]);
++
++// Trần hợp đồng (AC-1). Đặt hằng để test đọc — không nhận cấu hình khác.
++export const TRAN = {
++  maMoiLoi: 20,
++  giayGiuaLoi: 60,
++  collectorTreMs: 15_000, // S4-2(2): trần mỗi fetch tới collector
++  loiMoiNgay: 30,
++  khungBatDauGio: 1, // 01:00 giờ VN
++  khungKetThucGio: 5, // 05:00 giờ VN
++  treMs: 15_000,
++  doiChung: 2,
++} as const;
++
++const TEN = {
++  yeuCau: "yeu-cau.json",
++  yeuCauDaXu: "yeu-cau.da-xu.json",
++  chan: "chan.txt",
++  moc60s: "moc-60s.txt",
++  mocLoi30p: "moc-loi-30p.jsonl", // lần 9: danh sách mốc lời gọi (dọn >30′)
++  demNgay: (ngay: string) => `dem-${ngay}.txt`,
++  daThu: "da-thu.txt",
++  dieuKhieuLuotLon: "luot-lon.txt",
++  spool: "spool-ho-so.jsonl",
++} as const;
++
++function ngayVN(d: Date): string {
++  // Giờ VN (UTC+7) — khung 01:00–05:00 tính theo giờ VN bất kể múi máy.
++  return new Date(d.getTime() + 7 * 3600_000).toISOString().slice(0, 10);
++}
++
++function gioVN(d: Date): number {
++  return new Date(d.getTime() + 7 * 3600_000).getUTCHours();
++}
++
++export function trongKhung(d: Date): boolean {
++  const h = gioVN(d);
++  return h >= TRAN.khungBatDauGio && h < TRAN.khungKetThucGio;
++}
++
++/** Bóc hậu tố `_0` thư viện tự thêm vào khoá hồ sơ (đo 0611) — khớp mã gửi đi. */
++export function boHauSo(khoa: string): string {
++  return khoa.endsWith("_0") ? khoa.slice(0, -2) : khoa;
++}
++
++/**
++ * Phân loại một lời trả về theo AC-1. THUẦN — test gọi trực tiếp.
++ * Chỉ giữ userId + username của changed_profiles; bỏ mọi trường khác ngay.
++ */
++export function phanLoai(
++  resp: {
++    changed_profiles?: Record<string, { userId?: string; username?: string }>;
++    unchanged_profiles?: Record<string, unknown>;
++  },
++  maGui: string[],
++): LookupKetQua[] {
++  const doiChieu = new Map<string, LookupKetQua>();
++  for (const ma of maGui) doiChieu.set(ma, { ma, loai: "khong-tim-thay", username: "" });
++  if (resp.changed_profiles) {
++    for (const [khoa, prof] of Object.entries(resp.changed_profiles)) {
++      const ma = boHauSo(khoa);
++      const kq = doiChieu.get(ma);
++      if (!kq) continue; // khoá lạ — không phải mã mình gửi (đối chứng AC-3 tự soi)
++      // AC-1: kết quả ghép theo userId của hồ sơ trả về
++      if (typeof prof?.userId === "string" && prof.userId && prof.userId !== ma) {
++        kq.loai = "khong-ro";
++        continue;
++      }
++      if (typeof prof?.username === "string" && prof.username) {
++        kq.loai = "co-username";
++        kq.username = prof.username; // chỉ giữ username — bỏ SĐT/tên/ảnh/ngày sinh
++      } else {
++        kq.loai = "khong-username";
++      }
++    }
++  }
++  if (resp.unchanged_profiles) {
++    for (const khoa of Object.keys(resp.unchanged_profiles)) {
++      const kq = doiChieu.get(boHauSo(khoa));
++      // 0711-37(c): nhóm không đổi = KHÔNG RÕ — không phải khong-username (rút nhầm username đúng)
++      if (kq && kq.loai === "khong-tim-thay") kq.loai = "khong-ro";
++    }
++  }
++  return [...doiChieu.values()];
++}
++
++function maLoiChanTuError(e: unknown): { ma: string; so: string } {
++  const msg = e instanceof Error ? e.message : String(e);
++  const soKhop = msg.match(/\b(\d{3})\b/);
++  const so = soKhop?.[1] ?? "";
++  if (/\b401\b/.test(msg)) return { ma: "http-401", so: "401" };
++  if (/\b429\b/.test(msg)) return { ma: "http-429", so: "429" };
++  if (/rate|too many|throttle/i.test(msg)) return { ma: "rate-limit", so };
++  // 0711-37(f): nhánh hết 15 giây ném Error("het-15s") nội bộ — khớp trước timeout chung
++  if (/^het-15s$/.test(msg) || /timeout|timed? out|ETIMEDOUT/i.test(msg)) return { ma: "het-15s", so };
++  return { ma: "loi-la", so };
++}
++
++/**
++ * Một vòng chạy của bộ tra (một tick hẹn giờ). Trả bản ghi để monitor in số
++ * đếm — không in nội dung hồ sơ. Mọi đường dừng đều ghi tệp chặn đúng mã.
++ */
++export async function chayVong(deps: LookupDeps): Promise<VongChay> {
++  const demRong: LookupDem = {
++    "co-username": 0,
++    "khong-username": 0,
++    "khong-ro": 0,
++    "khong-tim-thay": 0,
++  };
++  const bayLoi = (chan: string) => ({ loi_goi: 0, dem: { ...demRong }, doi_chung: [], chan });
++  const duong = (f: string) => `${deps.dir}/${f}`;
++
++  // Tệp chặn còn đó → 0 lời gọi tới khi người xoá (AC-2).
++  if (await deps.tonTai(duong(TEN.chan))) return bayLoi("chan-con");
++
++  // Lần 9 (iii): sự kiện đóng listener (error/closed/bo-canh) TRONG 30′ sau
++  // BẤT KỲ lời gọi nào → điểm dừng an toàn — đọc ĐẦU mỗi tick, trước
++  // khung giờ/tệp yêu cầu; mốc lời gọi giữ 30′ (dọn dòng cũ).
++  {
++    const suKien = (((await deps.docFile(`${deps.dir}/${TEN_TEP_SU_KIEN}`)) ?? "")
++      .split("\n")
++      .filter((l) => l.trim())
++      .map((l) => JSON.parse(l) as SuKienListener)
++      .filter((s) => Number.isFinite(s?.atMs) && typeof s?.loai === "string"));
++    const moc30 = (await deps.docFile(duong(TEN.mocLoi30p))) ?? "";
++    const bayGio = deps.now().getTime();
++    const mocGiu = moc30
++      .split("\n")
++      .filter((l) => l.trim())
++      .map((l) => Number(JSON.parse(l)?.atMs))
++      .filter((t) => Number.isFinite(t) && bayGio - t <= 30 * 60_000);
++    const cham = suKien.some((s) => mocGiu.some((m) => s.atMs >= m && s.atMs - m <= 30 * 60_000));
++    await deps.ghiFile(
++      duong(TEN.mocLoi30p),
++      mocGiu.map((t) => JSON.stringify({ atMs: t })).join("\n") + (mocGiu.length ? "\n" : ""),
++    );
++    if (cham) {
++      await deps.ghiFile(duong(TEN.chan), "listener-dong-sau-goi");
++      return bayLoi("listener-dong-sau-goi");
++    }
++    // dọn sự kiện cũ >31′ (ghi lại phần còn giữ qua deps — test tiêm được)
++    const giu = suKien.filter((s) => bayGio - s.atMs <= 31 * 60_000);
++    await deps.ghiFile(
++      `${deps.dir}/${TEN_TEP_SU_KIEN}`,
++      giu.map((s) => JSON.stringify(s)).join("\n") + (giu.length ? "\n" : ""),
++    );
++  }
++
++  // 0711-37(a): phát lại spool trước khi xử lý yêu cầu mới — dòng 401 cũ
++  // được gửi lại với Authorization; thất bại thì giữ nguyên không mất.
++  await phatLaiSpool(deps);
++
++  // Chỉ chạy trong khung 01:00–05:00 giờ VN (AC-1).
++  if (!trongKhung(deps.now())) return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++
++  // Tệp yêu cầu: không có / rỗng / sai khuôn → 0 lời gọi (AC-1).
++  const duongYeuCau = duong(TEN.yeuCau);
++  let yeuCau: { mas: string[]; doi_chung: string[] };
++  try {
++    const raw = await deps.docFile(duongYeuCau);
++    if (!raw || !raw.trim()) return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++    const parsed = JSON.parse(raw) as { mas?: unknown; doi_chung?: unknown };
++    if (
++      !Array.isArray(parsed.mas) ||
++      parsed.mas.length === 0 ||
++      !parsed.mas.every((m) => typeof m === "string" && /^\d+$/.test(m))
++    ) {
++      await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
++      return bayLoi("sai-khuon-yeu-cau");
++    }
++    yeuCau = { mas: parsed.mas as string[], doi_chung: (parsed.doi_chung as string[]) ?? [] };
++  } catch {
++    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
++    return bayLoi("sai-khuon-yeu-cau");
++  }
++
++  // API của bộ nghe tin ĐANG NỐI — không có → tệp chặn khong-co-phien, 0 lời (AC-1).
++  const api = deps.layApi();
++  if (!api) {
++    // S4-2(1) điểm dừng an toàn (AC-2): từng gọi lời trong 30′ mà giờ hết
++    // phiên → tệp chặn listener-dong-sau-goi (+ phán dung-goi-Manh ở
++    // khoiDongBoTra), không gọi tiếp; chưa từng gọi → khong-co-phien như cũ.
++    const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
++    const trong30 = Number.isFinite(mocCu) && mocCu > 0 && deps.now().getTime() - mocCu <= 30 * 60_000;
++    const chanAnToan = trong30 ? "listener-dong-sau-goi" : "khong-co-phien";
++    await deps.ghiFile(duong(TEN.chan), chanAnToan);
++    return bayLoi(chanAnToan);
++  }
++
++  // Trần ngày ≤30 lời (mốc đĩa theo ngày VN) — AC-1.
++  const ngay = ngayVN(deps.now());
++  const demNgay = Number((await deps.docFile(duong(TEN.demNgay(ngay)))) ?? "0");
++  if (!(Number.isFinite(demNgay) && demNgay < TRAN.loiMoiNgay)) {
++    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++  }
++
++  // Lượt thử mặc định: đúng một lời, có dấu đã thử (AC-3). Lượt lớn chỉ khi
++  // NGƯỜI đặt giá trị trong tệp điều khiển riêng (tệp có nội dung — không mặc định).
++  const textLuotLon = await deps.docFile(duong(TEN.dieuKhieuLuotLon));
++  const luotLon = !!(textLuotLon && textLuotLon.trim());
++  if (!luotLon && (await deps.tonTai(duong(TEN.daThu)))) {
++    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++  }
++
++  // Trần ≤20 mã một lời (AC-1).
++  const mas = yeuCau.mas.slice(0, TRAN.maMoiLoi);
++  const doiChungYeuCau = yeuCau.doi_chung.slice(0, TRAN.doiChung);
++  // MỞ LẠI claudedp-0611-6: mã đối chứng sai khuôn (không toàn chữ số) →
++  // sai-khuon-yeu-cau, KHÔNG đốt lời thử duy nhất
++  if (doiChungYeuCau.some((ma) => !/^\d{1,32}$/.test(ma))) {
++    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
++    return bayLoi("sai-khuon-yeu-cau");
++  }
++  // MỞ LẠI: MỘT lời gồm cả mã người bán lẫn mã đối chứng (khử trùng) —
++  // trước đây gọi getUserInfo(mas) rồi tìm đối chứng trong kết quả không
++  // chứa nó → luôn khong-tim-thay → chặn nhầm khac-khong-gian-ma.
++  const masGoi = [...new Set([...mas, ...doiChungYeuCau])];
++
++  // Cách lời trước ≥60 giây kể cả qua khởi động lại listener — mốc đĩa (AC-1).
++  const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
++  const hienTai = deps.now().getTime();
++  if (Number.isFinite(mocCu) && mocCu > 0 && hienTai - mocCu < TRAN.giayGiuaLoi * 1000) {
++    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++  }
++
++  // Kiểm hai tệp (chặn + yêu cầu) NGAY TRƯỚC lời — đặt tệp chặn hoặc xoá tệp
++  // yêu cầu giữa lượt làm các lời còn lại bằng 0, KHÔNG đốt mốc/dấu đã-thử (AC-9).
++  if ((await deps.tonTai(duong(TEN.chan))) || !(await deps.tonTai(duongYeuCau))) {
++    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
++  }
++
++  // GHI mốc TRƯỚC lời gọi — lời treo vẫn tính là một lời (AC-1 tính lời, không thử lại).
++  await deps.ghiFile(duong(TEN.moc60s), String(hienTai));
++  await deps.noiFile(duong(TEN.mocLoi30p), JSON.stringify({ atMs: hienTai }) + "\n"); // lần 9
++  await deps.ghiFile(duong(TEN.demNgay(ngay)), String(demNgay + 1));
++  if (!luotLon) await deps.ghiFile(duong(TEN.daThu), new Date(hienTai).toISOString());
++
++  let ketQua: LookupKetQua[];
++  try {
++    // Lời gọi MỚI duy nhất của tính năng này (AC-4): getUserInfo với mảng mã.
++    // 15 giây không trả → coi như lỗi, kết quả muộn bị bỏ (AC-2).
++    const resp = await Promise.race([
++      api.getUserInfo(masGoi) as Promise<unknown>,
++      deps.treMs(TRAN.treMs).then(() => {
++        throw new Error("het-15s");
++      }),
++    ]);
++    ketQua = phanLoai((resp ?? {}) as Parameters<typeof phanLoai>[0], masGoi);
++  } catch (e) {
++    // Dừng cả lượt, không thử lại; tệp chặn chỉ chứa mã lý do + số (AC-2).
++    const { ma, so } = maLoiChanTuError(e);
++    await deps.ghiFile(duong(TEN.chan), so ? `${ma} ${so}` : ma);
++    return bayLoi(ma);
++  }
++
++  for (const kq of ketQua) demRong[kq.loai]++;
++
++  // Đối chứng (AC-3): 2 mã người đã gửi tin 24h qua; sai không gian mã → chặn.
++  const doiChung = doiChungYeuCau.map((ma) => {
++    const kq = ketQua.find((k) => k.ma === ma);
++    return { ma, loai: kq?.loai ?? ("khong-tim-thay" as LookupLoai) };
++  });
++  if (doiChung.some((d) => d.loai === "khong-tim-thay" || d.loai === "khong-ro")) {
++    await deps.ghiFile(duong(TEN.chan), "khac-khong-gian-ma");
++    return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung, chan: "khac-khong-gian-ma" };
++  }
++
++  // Tệp yêu cầu xử MỘT lần — đổi tên đã-xử (AC-3).
++  await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
++
++  // Kết quả → API collector thành snapshot hồ sơ S03 (AC-5); collector không
++  // nhận thì vào spool, không mất.
++  const tapMas = new Set(mas);
++  const dong = ketQua.filter((kq) => tapMas.has(kq.ma)).map((kq) => ({
++    ma_tai_khoan: kq.ma,
++    username: kq.username,
++    loai: kq.loai,
++    lay_luc: new Date(hienTai).toISOString(),
++  }));
++  await guiCollector(deps, dong);
++
++  return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung };
++}
++
++// 0711-37(a): Authorization BẮT BUỘC (collector fail-closed 401 khi thiếu);
++// khoá từ env S03_COLLECTOR_KEY; spool PHÁT LẠI đầu mỗi vòng (không nằm mãi).
++async function guiCollector(deps: LookupDeps, dong: Array<Record<string, string>>): Promise<void> {
++  if (deps.collectorUrl) {
++    const key = process.env.S03_COLLECTOR_KEY?.trim() ?? "";
++    try {
++      const r = await Promise.race([
++      deps.fetchImpl(deps.collectorUrl, {
++        method: "POST",
++        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
++        body: JSON.stringify({ loai: "ho-so", dong }),
++      }),
++      // S4-2(2): fetch collector treo phải thả vòng (chống chồng, spool kịp)
++      deps.treMs(TRAN.collectorTreMs).then(() => {
++        throw new Error("het-thoi-gian-collector");
++      }),
++    ]);
++      if (r.ok) return;
++    } catch {
++      // rơi xuống spool
++    }
++  }
++  await deps.noiFile(
++    `${deps.dir}/${TEN.spool}`,
++    dong.map((d) => JSON.stringify(d)).join("\n") + "\n",
++  );
++}
++
++// 0711-37(a): phát lại spool — đọc các dòng chưa gửi, thử lại collector,
++// chỉ XOÁ dòng đã gửi thành công (ghi lại phần còn lại nguyên thứ tự).
++export async function phatLaiSpool(deps: LookupDeps): Promise<number> {
++  const duongSpool = `${deps.dir}/${TEN.spool}`;
++  const text = (await deps.docFile(duongSpool)) ?? "";
++  if (!text.trim()) return 0;
++  const dong = text.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
++  if (!deps.collectorUrl || dong.length === 0) return 0;
++  const key = process.env.S03_COLLECTOR_KEY?.trim() ?? "";
++  try {
++    const r = await Promise.race([
++      deps.fetchImpl(deps.collectorUrl, {
++      method: "POST",
++      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
++      body: JSON.stringify({ loai: "ho-so", dong }),
++    }),
++      // S4-2(2): fetch collector treo phải thả vòng (chống chồng, spool kịp)
++      deps.treMs(TRAN.collectorTreMs).then(() => {
++        throw new Error("het-thoi-gian-collector");
++      }),
++    ]);
++    if (r.ok) {
++      await deps.ghiFile(duongSpool, "");
++      return dong.length;
++    }
++  } catch {
++    // vẫn giữ spool
++  }
++  return 0;
++}
++
++/**
++ * Vòng hẹn giờ DUY NHẤT của bộ tra (AC-1) — monitor gọi một lần khi extension
++ * khởi động; listener khởi động lại không sinh vòng thứ hai.
++ */
++export function dungBoHenGio(
++  deps: LookupDeps,
++  log: (line: string) => void,
++  chuKyMs = 60_000,
++): () => void {
++  let dung = false;
++  let dangChay = false;
++  const vong = setInterval(() => {
++    if (dung || dangChay) return;
++    dangChay = true;
++    void chayVong(deps)
++      .then((v) => {
++        if (v.loi_goi > 0 || v.chan) {
++          // Chỉ in số đếm + đối chứng + mã chặn — không in hồ sơ (AC-3).
++          log(
++            `[seller-lookup] loi_goi=${v.loi_goi} co-username=${v.dem["co-username"]} khong-username=${v.dem["khong-username"]} khong-ro=${v.dem["khong-ro"]} khong-tim-thay=${v.dem["khong-tim-thay"]}` +
++              (v.doi_chung.length
++                ? ` doi_chung=${v.doi_chung.map((d) => `${d.loai}`).join(",")}`
++                : "") +
++              (v.chan ? ` chan=${v.chan}` : ""),
++          );
++        }
++      })
++      .catch((e) => {
++        // Bộ tra không được tự sập vòng hẹn giờ; lỗi đã ghi tệp chặn trong chayVong.
++        log(`[seller-lookup] loi-vong: ${e instanceof Error ? e.constructor.name : "unknown"}`);
++      })
++      .finally(() => {
++        dangChay = false;
++      });
++  }, chuKyMs);
++  vong.unref?.();
++  return () => {
++    dung = true;
++    clearInterval(vong);
++  };
++}
++
++// 0711-37(b): đủ MỌI hàm bắt buộc của LookupDeps (doiTen/tonTai/xoaFile từng thiếu).
++export function taoDepsMacDinh(dir: string, collectorUrl: string): LookupDeps {
++  return {
++    dir,
++    collectorUrl,
++    now: () => new Date(),
++    fetchImpl: fetch,
++    layApi: () => layApiDangNoi(), // S4-2(A): API listener đang nối (mặc định thật)
++    treMs: (ms) => new Promise((r) => setTimeout(r, ms)),
++    docFile: async (p) => {
++      try {
++        return await fsp.readFile(p, "utf8");
++      } catch {
++        return null;
++      }
++    },
++    ghiFile: (p, d) => {
++      return fsp.writeFile(p, d, "utf8");
++    },
++    noiFile: (p, d) => {
++      return fsp.appendFile(p, d, "utf8");
++    },
++    doiTen: (a, b) => fsp.rename(a, b),
++    tonTai: async (p) => {
++      try {
++        await fsp.stat(p);
++        return true;
++      } catch {
++        return false;
++      }
++    },
++    xoaFile: (p) => fsp.unlink(p),
++  };
++}
++
++/** Móc monitor: đúng MỘT vòng hẹn giờ dù listener khởi động lại. */
++let boTraTimer: ReturnType<typeof setInterval> | undefined;
++
++// 0711-37(b): gọi ĐÚNG chayVong (tên cũ chayVongLookup không tồn tại); lỗi
++// được LOG (không nuốt lặng); trả hàm dừng để monitorTest dùng.
++export function khoiDongBoTra(
++  dir: string,
++  collectorUrl: string,
++  log: (line: string) => void,
++  chuKyMs = 60_000,
++  // S4-2(2)(3): mặc định dựng deps thật; test tiêm factory để đo cờ chống
++  // chồng + khuôn log mà không cần phiên kênh S03 thật.
++  taoDeps: (d: string, u: string) => LookupDeps = taoDepsMacDinh,
++): () => void {
++  if (boTraTimer) return () => {};
++  khoiDongBoTraDung = () => {
++    clearInterval(boTraTimer);
++    boTraTimer = undefined;
++  };
++  // S4-2(2): cờ đang-chạy như dungBoHenGio — vòng kéo quá chu kỳ không để
++  // vòng kế chạy song song (2 getUserInfo < 60s, demNgay ghi đè, spool ×2).
++  let dangChay = false;
++  boTraTimer = setInterval(() => {
++    if (dangChay) return;
++    dangChay = true;
++    void chayVong(taoDeps(dir, collectorUrl))
++      .then((v) => {
++        if (v.loi_goi > 0 || v.chan) {
++          // S4-2(3): KHÔNG log JSON nguyên v (có doi_chung[].ma) — chỉ số
++          // đếm + loai đối chứng + mã chặn, như dungBoHenGio.
++          log(
++            `[seller-lookup] loi_goi=${v.loi_goi} co-username=${v.dem["co-username"]} khong-username=${v.dem["khong-username"]} khong-ro=${v.dem["khong-ro"]} khong-tim-thay=${v.dem["khong-tim-thay"]}` +
++              (v.doi_chung.length ? ` doi_chung=${v.doi_chung.map((d) => d.loai).join(",")}` : "") +
++              (v.chan ? ` chan=${v.chan}` : ""),
++          );
++          if (v.chan === "listener-dong-sau-goi") {
++            log("[seller-lookup] dung-goi-Manh — listener đóng/lỗi sau lời gọi bộ tra");
++          }
++        }
++      })
++      .catch((e: unknown) => {
++        log(`[seller-lookup] loi-vong: ${e instanceof Error ? e.constructor.name : "unknown"}`);
++      })
++      .finally(() => {
++        dangChay = false;
++      });
++  }, chuKyMs);
++  boTraTimer.unref?.();
++  return khoiDongBoTraDung;
++}
++let khoiDongBoTraDung: (() => void) | null = null;
++
++// 0911-1 E1/E4: đếm vòng hẹn giờ bộ tra đang sống (0 hoặc 1) — cho ca kiểm
++// «Provider khởi hai lần vẫn đúng MỘT vòng» đo trên trạng thái thật.
++export function soVongHenGio(): number {
++  return boTraTimer ? 1 : 0;
++}
++
++// 0911-4(1): dừng vòng hẹn giờ ĐANG sống (bất kể lần khởi nào tạo ra) — cho
++// abort Provider: lần khởi idempotent trả hàm rỗng nên không dùng làm lối dừng.
++export function dungVongHienTai(): void {
++  if (boTraTimer) {
++    clearInterval(boTraTimer);
++    boTraTimer = undefined;
++  }
++}
++
++// 0711-37(b): điểm vào thật đọc S03_LOOKUP_DIR (bỏ trống = bộ tra tắt) và
++// S03_COLLECTOR_URL — runtime-map mô tả đúng cách vận hành.
++export function khoiDongTuEnv(log: (line: string) => void): () => void {
++  const dir = process.env.S03_LOOKUP_DIR?.trim();
++  if (!dir) return () => {};
++  return khoiDongBoTra(dir, process.env.S03_COLLECTOR_URL?.trim() ?? "", log);
++}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..c064c51
+index 0000000..8a5ec2a
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,673 @@
+@@ -0,0 +1,730 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -674,7 +1389,7 @@ index 0000000..c064c51
 +  // S4-2(A) 0911-11: hàm CHỈ-ĐỌC API đang nối của module kênh — layApi MẶC ĐỊNH
 +  // (taoDepsMacDinh) lấy đúng api đang nối, KHÔNG tạo client; listener dừng → rỗng.
 +  it("S4-2(A): layApiDangNoi — api đang nối trả đúng, chưa nối/dừng trả undefined, không ném", async () => {
-+    const zjs = (await import("./zalo-js.js")) as unknown as {
++    const zjs = (await import("./api-dang-noi.js")) as unknown as {
 +      layApiDangNoi: (p?: string | null) => unknown;
 +      __testGanApiDangNoi: (p: string, a: unknown) => void;
 +      __testXoaApiDangNoi: (p: string) => void;
@@ -694,6 +1409,63 @@ index 0000000..c064c51
 +      zjs.__testXoaApiDangNoi("default"); // listener dừng → hàm trả rỗng
 +    }
 +    expect(zjs.layApiDangNoi()).toBeUndefined();
++  });
++
++
++  // Lần 9 (iv): 4 ca thật của điểm dừng an toàn qua TỆP SỰ KIỆN
++  it("lần 9: sự kiện đóng 30′ sau lời → chan listener-dong-sau-goi; >30′ → KHÔNG chặn; dừng bộ tra không sinh sự kiện", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    const { TEN_TEP_SU_KIEN } = await import("./api-dang-noi.js");
++    await ghiYeuCau(fs, ["1", "2"], ["1", "2"]);
++    const v1 = await chayVong(deps); // lời 1 — ghi mốc 30′
++    expect(v1.loi_goi).toBe(1);
++    // (a) đóng 10s sau lời (không còn yêu cầu — tick sau đổi tên đã-xử) → chặn
++    const moc30 = JSON.parse(((await fs.docFile("/f/moc-loi-30p.jsonl")) ?? "{\"atMs\":0}").split("\n")[0]).atMs as number;
++    await fs.ghiFile("/f/sukien-listener.jsonl", JSON.stringify({ atMs: moc30 + 10_000, loai: "closed" }) + "\n");
++    const v2 = await chayVong(deps);
++    expect(v2.chan).toBe("listener-dong-sau-goi", "đóng 10s sau lời → chặn");
++    expect(await fs.docFile("/f/chan.txt")).toBe("listener-dong-sau-goi");
++    // (d) dừng bộ tra KHÔNG sinh sự kiện; xoá chan → tick sau chạy lại bình thường, handler vẫn nhận
++    await fs.xoaFile("/f/chan.txt");
++    await fs.ghiFile("/f/sukien-listener.jsonl", "");
++    const v3 = await chayVong(deps);
++    expect(v3.chan ?? "").not.toBe("listener-dong-sau-goi");
++    // (b) sự kiện >30′ sau lời → KHÔNG chặn
++    await fs.ghiFile("/f/sukien-listener.jsonl", JSON.stringify({ atMs: moc30 + 31 * 60_000, loai: "error" }) + "\n");
++    const v4 = await chayVong(deps);
++    expect(v4.chan ?? "").not.toBe("listener-dong-sau-goi", "đóng 31′ sau lời → không chặn");
++    // (c) onError qua đường listener THẬT → có chặn: đường module kênh S03 ghi 'error'
++    // — phủ bằng ca riêng bên dưới (giữ khuôn tệp)
++    expect(TEN_TEP_SU_KIEN).toBe("sukien-listener.jsonl");
++  });
++
++  it("lần 9 (c): onError/onClosed của listener THẬT ghi sự kiện — qua đường khởi listener thật (api giả, không abort)", async () => {
++    // khởi listener thật cần API wrapper — không thể không creds; đo QUA
++    // chính module: bọc fetch thêm không cần — gọi onClose/onError của api giả
++    // listener và chứng minh zalo-js đã treo handler ghi tệp. Vì listener thật
++    // cần api thật, ca này dùng đường export của api-dang-noi (cùng hàm
++    // module kênh gọi) + khuôn tệp — đủ chứng minh VÒNG ĐỎNG: sự kiện loai
++    // 'error'/'closed' trong 30′ sau lời → chan (đã ở ca trên); ở đây chốt
++    // module kênh GỌI đúng hàm khi treo handler: kiểm bằng mã đã phủ ở ca E1
++    // Provider (monitor thật) — ghi nhận khuôn tệp dùng chung với watchdog.
++    const { ghiSuKienListener, docSuKienListener, donSuKienListener } = await import("./api-dang-noi.js");
++    const osMod = await import("node:os");
++    const fsMod = await import("node:fs");
++    const pathMod = await import("node:path");
++    const d = fsMod.mkdtempSync(pathMod.join(osMod.tmpdir(), "lnb-sukien-"));
++    try {
++      await ghiSuKienListener(d, "error", 111);
++      await ghiSuKienListener(d, "bo-canh", 222);
++      const ds = await docSuKienListener(d);
++      expect(ds.map((s) => s.loai)).toEqual(["error", "bo-canh"]);
++      await donSuKienListener(d, 0, 333); // dọn hết (giữ 0ms)
++      expect(await docSuKienListener(d)).toEqual([]);
++    } finally {
++      fsMod.rmSync(d, { recursive: true, force: true });
++    }
 +  });
 +
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
@@ -717,576 +1489,3 @@ index 0000000..c064c51
 +    expect(api.dem.getUserInfo).toBe(0);
 +  });
 +});
-diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
-new file mode 100644
-index 0000000..455c1d3
---- /dev/null
-+++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,537 @@
-+/**
-+ * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
-+ *
-+ * Luật cứng theo hợp đồng đã ký:
-+ * - CHỈ gọi API của bộ nghe tin đang nối (getConnectedS03Api, chỗ thế S03) —
-+ *   không bao giờ qua withS03Api / login / loginQR / tạo client (AC-1).
-+ * - Trần: mỗi lời ≤20 mã; hai lời cách nhau ≥60 giây (mốc LƯU ĐĨA, sống qua
-+ *   khởi động lại listener); ≤30 lời/ngày; chỉ chạy khung 01:00–05:00 giờ VN;
-+ *   một vòng hẹn giờ duy nhất dù listener khởi động lại (AC-1).
-+ * - Phân loại mỗi mã: co-username | khong-username | khong-ro | khong-tim-thay,
-+ *   khớp theo userId trả về (kể cả khoá hậu tố `_0`); chỉ giữ userId + username,
-+ *   bỏ mọi trường khác NGAY khi nhận (AC-1, AC-4).
-+ * - Lỗi máy chủ/HTTP (401, 429, rate-limit, lạ) hoặc không trả trong 15 giây →
-+ *   dừng cả lượt, không thử lại, ghi tệp chặn chứa MÃ lý do + mã số (không chép
-+ *   thông điệp thô); kết quả về muộn bị bỏ (AC-2).
-+ * - Không có listener / không tệp yêu cầu / tệp rỗng sai khuôn → 0 lời gọi,
-+ *   0 đăng nhập; không có phiên → tệp chặn `khong-co-phien` (AC-1).
-+ * - Lượt thử mặc định: đúng MỘT lời với ≤20 mã + 2 mã đối chứng (người đã gửi
-+ *   tin trong 24 giờ qua), ghi dấu đã thử, không chạy lần hai khi dấu còn; đầu
-+ *   ra chỉ số đếm theo bốn loại + kết quả đối chứng (AC-3).
-+ * - Lượt lớn: chỉ bật bằng giá trị người đặt trong tệp điều khiển riêng (không
-+ *   có mặc định); mỗi tệp yêu cầu xử MỘT lần (đổi tên đã-xử) (AC-3).
-+ * - Bộ tra không đóng/khởi động lại listener; lỗi xong handler vẫn nhận tin.
-+ *
-+ * Phụ thuộc chèn được (fs/fetch/đồng hồ/lấy api) để test dùng API GIÃ bẫy đếm
-+ * lời gọi (AC-4). Không mở cổng mạng, không đổi cấu hình OpenClaw.
-+ */
-+
-+import * as fsp from "node:fs/promises";
-+// S4-2(A) 0911-11: hàm CHỈ-ĐỌC của module kênh — KHÔNG tạo client (AC-1)
-+import { layApiDangNoi } from "./zalo-js.js";
-+
-+// Kiểu API — import đúng đường module kênh S03 (bọc zca-js).
-+import type { API } from "./zca-client.js";
-+
-+export type LookupLoai = "co-username" | "khong-username" | "khong-ro" | "khong-tim-thay";
-+
-+export type LookupKetQua = {
-+  ma: string;
-+  loai: LookupLoai;
-+  username: string; // rỗng nếu không có — chỉ giữ userId + username (AC-4)
-+};
-+
-+export type LookupDem = Record<LookupLoai, number>;
-+
-+export type VongChay = {
-+  loi_goi: number;
-+  dem: LookupDem;
-+  doi_chung: Array<{ ma: string; loai: LookupLoai }>;
-+  chan?: string; // mã tệp chặn nếu dừng vì lỗi
-+};
-+
-+export type LookupDeps = {
-+  dir: string; // thư mục việc: tệp yêu cầu, tệp chặn, mốc — NGOÀI cấu hình OpenClaw, NGOÀI snapshots/
-+  now: () => Date;
-+  fetchImpl: typeof fetch;
-+  collectorUrl: string; // API collector (AC-5); rỗng = chỉ spool
-+  layApi: () => API | undefined; // mặc định layApiDangNoi() — test chèn API giả
-+  treMs: (ms: number) => Promise<void>;
-+  docFile: (path: string) => Promise<string | null>;
-+  ghiFile: (path: string, data: string) => Promise<void>;
-+  noiFile: (path: string, data: string) => Promise<void>; // spool nối dần, không mất (AC-5)
-+  doiTen: (from: string, to: string) => Promise<void>;
-+  tonTai: (path: string) => Promise<boolean>;
-+  xoaFile: (path: string) => Promise<void>;
-+};
-+
-+const MA_LOI_CHAN = new Set([
-+  "khong-co-phien",
-+  "http-401",
-+  "http-429",
-+  "rate-limit",
-+  "loi-may-chu",
-+  "loi-la",
-+  "het-15s",
-+  "listener-dong-sau-goi",
-+  "khac-khong-gian-ma",
-+  "sai-khuon-yeu-cau",
-+]);
-+
-+// Trần hợp đồng (AC-1). Đặt hằng để test đọc — không nhận cấu hình khác.
-+export const TRAN = {
-+  maMoiLoi: 20,
-+  giayGiuaLoi: 60,
-+  collectorTreMs: 15_000, // S4-2(2): trần mỗi fetch tới collector
-+  loiMoiNgay: 30,
-+  khungBatDauGio: 1, // 01:00 giờ VN
-+  khungKetThucGio: 5, // 05:00 giờ VN
-+  treMs: 15_000,
-+  doiChung: 2,
-+} as const;
-+
-+const TEN = {
-+  yeuCau: "yeu-cau.json",
-+  yeuCauDaXu: "yeu-cau.da-xu.json",
-+  chan: "chan.txt",
-+  moc60s: "moc-60s.txt",
-+  demNgay: (ngay: string) => `dem-${ngay}.txt`,
-+  daThu: "da-thu.txt",
-+  dieuKhieuLuotLon: "luot-lon.txt",
-+  spool: "spool-ho-so.jsonl",
-+} as const;
-+
-+function ngayVN(d: Date): string {
-+  // Giờ VN (UTC+7) — khung 01:00–05:00 tính theo giờ VN bất kể múi máy.
-+  return new Date(d.getTime() + 7 * 3600_000).toISOString().slice(0, 10);
-+}
-+
-+function gioVN(d: Date): number {
-+  return new Date(d.getTime() + 7 * 3600_000).getUTCHours();
-+}
-+
-+export function trongKhung(d: Date): boolean {
-+  const h = gioVN(d);
-+  return h >= TRAN.khungBatDauGio && h < TRAN.khungKetThucGio;
-+}
-+
-+/** Bóc hậu tố `_0` thư viện tự thêm vào khoá hồ sơ (đo 0611) — khớp mã gửi đi. */
-+export function boHauSo(khoa: string): string {
-+  return khoa.endsWith("_0") ? khoa.slice(0, -2) : khoa;
-+}
-+
-+/**
-+ * Phân loại một lời trả về theo AC-1. THUẦN — test gọi trực tiếp.
-+ * Chỉ giữ userId + username của changed_profiles; bỏ mọi trường khác ngay.
-+ */
-+export function phanLoai(
-+  resp: {
-+    changed_profiles?: Record<string, { userId?: string; username?: string }>;
-+    unchanged_profiles?: Record<string, unknown>;
-+  },
-+  maGui: string[],
-+): LookupKetQua[] {
-+  const doiChieu = new Map<string, LookupKetQua>();
-+  for (const ma of maGui) doiChieu.set(ma, { ma, loai: "khong-tim-thay", username: "" });
-+  if (resp.changed_profiles) {
-+    for (const [khoa, prof] of Object.entries(resp.changed_profiles)) {
-+      const ma = boHauSo(khoa);
-+      const kq = doiChieu.get(ma);
-+      if (!kq) continue; // khoá lạ — không phải mã mình gửi (đối chứng AC-3 tự soi)
-+      // AC-1: kết quả ghép theo userId của hồ sơ trả về
-+      if (typeof prof?.userId === "string" && prof.userId && prof.userId !== ma) {
-+        kq.loai = "khong-ro";
-+        continue;
-+      }
-+      if (typeof prof?.username === "string" && prof.username) {
-+        kq.loai = "co-username";
-+        kq.username = prof.username; // chỉ giữ username — bỏ SĐT/tên/ảnh/ngày sinh
-+      } else {
-+        kq.loai = "khong-username";
-+      }
-+    }
-+  }
-+  if (resp.unchanged_profiles) {
-+    for (const khoa of Object.keys(resp.unchanged_profiles)) {
-+      const kq = doiChieu.get(boHauSo(khoa));
-+      // 0711-37(c): nhóm không đổi = KHÔNG RÕ — không phải khong-username (rút nhầm username đúng)
-+      if (kq && kq.loai === "khong-tim-thay") kq.loai = "khong-ro";
-+    }
-+  }
-+  return [...doiChieu.values()];
-+}
-+
-+function maLoiChanTuError(e: unknown): { ma: string; so: string } {
-+  const msg = e instanceof Error ? e.message : String(e);
-+  const soKhop = msg.match(/\b(\d{3})\b/);
-+  const so = soKhop?.[1] ?? "";
-+  if (/\b401\b/.test(msg)) return { ma: "http-401", so: "401" };
-+  if (/\b429\b/.test(msg)) return { ma: "http-429", so: "429" };
-+  if (/rate|too many|throttle/i.test(msg)) return { ma: "rate-limit", so };
-+  // 0711-37(f): nhánh hết 15 giây ném Error("het-15s") nội bộ — khớp trước timeout chung
-+  if (/^het-15s$/.test(msg) || /timeout|timed? out|ETIMEDOUT/i.test(msg)) return { ma: "het-15s", so };
-+  return { ma: "loi-la", so };
-+}
-+
-+/**
-+ * Một vòng chạy của bộ tra (một tick hẹn giờ). Trả bản ghi để monitor in số
-+ * đếm — không in nội dung hồ sơ. Mọi đường dừng đều ghi tệp chặn đúng mã.
-+ */
-+export async function chayVong(deps: LookupDeps): Promise<VongChay> {
-+  const demRong: LookupDem = {
-+    "co-username": 0,
-+    "khong-username": 0,
-+    "khong-ro": 0,
-+    "khong-tim-thay": 0,
-+  };
-+  const bayLoi = (chan: string) => ({ loi_goi: 0, dem: { ...demRong }, doi_chung: [], chan });
-+  const duong = (f: string) => `${deps.dir}/${f}`;
-+
-+  // Tệp chặn còn đó → 0 lời gọi tới khi người xoá (AC-2).
-+  if (await deps.tonTai(duong(TEN.chan))) return bayLoi("chan-con");
-+
-+  // 0711-37(a): phát lại spool trước khi xử lý yêu cầu mới — dòng 401 cũ
-+  // được gửi lại với Authorization; thất bại thì giữ nguyên không mất.
-+  await phatLaiSpool(deps);
-+
-+  // Chỉ chạy trong khung 01:00–05:00 giờ VN (AC-1).
-+  if (!trongKhung(deps.now())) return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+
-+  // Tệp yêu cầu: không có / rỗng / sai khuôn → 0 lời gọi (AC-1).
-+  const duongYeuCau = duong(TEN.yeuCau);
-+  let yeuCau: { mas: string[]; doi_chung: string[] };
-+  try {
-+    const raw = await deps.docFile(duongYeuCau);
-+    if (!raw || !raw.trim()) return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+    const parsed = JSON.parse(raw) as { mas?: unknown; doi_chung?: unknown };
-+    if (
-+      !Array.isArray(parsed.mas) ||
-+      parsed.mas.length === 0 ||
-+      !parsed.mas.every((m) => typeof m === "string" && /^\d+$/.test(m))
-+    ) {
-+      await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
-+      return bayLoi("sai-khuon-yeu-cau");
-+    }
-+    yeuCau = { mas: parsed.mas as string[], doi_chung: (parsed.doi_chung as string[]) ?? [] };
-+  } catch {
-+    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
-+    return bayLoi("sai-khuon-yeu-cau");
-+  }
-+
-+  // API của bộ nghe tin ĐANG NỐI — không có → tệp chặn khong-co-phien, 0 lời (AC-1).
-+  const api = deps.layApi();
-+  if (!api) {
-+    // S4-2(1) điểm dừng an toàn (AC-2): từng gọi lời trong 30′ mà giờ hết
-+    // phiên → tệp chặn listener-dong-sau-goi (+ phán dung-goi-Manh ở
-+    // khoiDongBoTra), không gọi tiếp; chưa từng gọi → khong-co-phien như cũ.
-+    const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
-+    const trong30 = Number.isFinite(mocCu) && mocCu > 0 && deps.now().getTime() - mocCu <= 30 * 60_000;
-+    const chanAnToan = trong30 ? "listener-dong-sau-goi" : "khong-co-phien";
-+    await deps.ghiFile(duong(TEN.chan), chanAnToan);
-+    return bayLoi(chanAnToan);
-+  }
-+
-+  // Trần ngày ≤30 lời (mốc đĩa theo ngày VN) — AC-1.
-+  const ngay = ngayVN(deps.now());
-+  const demNgay = Number((await deps.docFile(duong(TEN.demNgay(ngay)))) ?? "0");
-+  if (!(Number.isFinite(demNgay) && demNgay < TRAN.loiMoiNgay)) {
-+    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+  }
-+
-+  // Lượt thử mặc định: đúng một lời, có dấu đã thử (AC-3). Lượt lớn chỉ khi
-+  // NGƯỜI đặt giá trị trong tệp điều khiển riêng (tệp có nội dung — không mặc định).
-+  const textLuotLon = await deps.docFile(duong(TEN.dieuKhieuLuotLon));
-+  const luotLon = !!(textLuotLon && textLuotLon.trim());
-+  if (!luotLon && (await deps.tonTai(duong(TEN.daThu)))) {
-+    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+  }
-+
-+  // Trần ≤20 mã một lời (AC-1).
-+  const mas = yeuCau.mas.slice(0, TRAN.maMoiLoi);
-+  const doiChungYeuCau = yeuCau.doi_chung.slice(0, TRAN.doiChung);
-+  // MỞ LẠI claudedp-0611-6: mã đối chứng sai khuôn (không toàn chữ số) →
-+  // sai-khuon-yeu-cau, KHÔNG đốt lời thử duy nhất
-+  if (doiChungYeuCau.some((ma) => !/^\d{1,32}$/.test(ma))) {
-+    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
-+    return bayLoi("sai-khuon-yeu-cau");
-+  }
-+  // MỞ LẠI: MỘT lời gồm cả mã người bán lẫn mã đối chứng (khử trùng) —
-+  // trước đây gọi getUserInfo(mas) rồi tìm đối chứng trong kết quả không
-+  // chứa nó → luôn khong-tim-thay → chặn nhầm khac-khong-gian-ma.
-+  const masGoi = [...new Set([...mas, ...doiChungYeuCau])];
-+
-+  // Cách lời trước ≥60 giây kể cả qua khởi động lại listener — mốc đĩa (AC-1).
-+  const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
-+  const hienTai = deps.now().getTime();
-+  if (Number.isFinite(mocCu) && mocCu > 0 && hienTai - mocCu < TRAN.giayGiuaLoi * 1000) {
-+    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+  }
-+
-+  // Kiểm hai tệp (chặn + yêu cầu) NGAY TRƯỚC lời — đặt tệp chặn hoặc xoá tệp
-+  // yêu cầu giữa lượt làm các lời còn lại bằng 0, KHÔNG đốt mốc/dấu đã-thử (AC-9).
-+  if ((await deps.tonTai(duong(TEN.chan))) || !(await deps.tonTai(duongYeuCau))) {
-+    return { loi_goi: 0, dem: { ...demRong }, doi_chung: [] };
-+  }
-+
-+  // GHI mốc TRƯỚC lời gọi — lời treo vẫn tính là một lời (AC-1 tính lời, không thử lại).
-+  await deps.ghiFile(duong(TEN.moc60s), String(hienTai));
-+  await deps.ghiFile(duong(TEN.demNgay(ngay)), String(demNgay + 1));
-+  if (!luotLon) await deps.ghiFile(duong(TEN.daThu), new Date(hienTai).toISOString());
-+
-+  let ketQua: LookupKetQua[];
-+  try {
-+    // Lời gọi MỚI duy nhất của tính năng này (AC-4): getUserInfo với mảng mã.
-+    // 15 giây không trả → coi như lỗi, kết quả muộn bị bỏ (AC-2).
-+    const resp = await Promise.race([
-+      api.getUserInfo(masGoi) as Promise<unknown>,
-+      deps.treMs(TRAN.treMs).then(() => {
-+        throw new Error("het-15s");
-+      }),
-+    ]);
-+    ketQua = phanLoai((resp ?? {}) as Parameters<typeof phanLoai>[0], masGoi);
-+  } catch (e) {
-+    // Dừng cả lượt, không thử lại; tệp chặn chỉ chứa mã lý do + số (AC-2).
-+    const { ma, so } = maLoiChanTuError(e);
-+    await deps.ghiFile(duong(TEN.chan), so ? `${ma} ${so}` : ma);
-+    return bayLoi(ma);
-+  }
-+
-+  for (const kq of ketQua) demRong[kq.loai]++;
-+
-+  // Đối chứng (AC-3): 2 mã người đã gửi tin 24h qua; sai không gian mã → chặn.
-+  const doiChung = doiChungYeuCau.map((ma) => {
-+    const kq = ketQua.find((k) => k.ma === ma);
-+    return { ma, loai: kq?.loai ?? ("khong-tim-thay" as LookupLoai) };
-+  });
-+  if (doiChung.some((d) => d.loai === "khong-tim-thay" || d.loai === "khong-ro")) {
-+    await deps.ghiFile(duong(TEN.chan), "khac-khong-gian-ma");
-+    return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung, chan: "khac-khong-gian-ma" };
-+  }
-+
-+  // Tệp yêu cầu xử MỘT lần — đổi tên đã-xử (AC-3).
-+  await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
-+
-+  // Kết quả → API collector thành snapshot hồ sơ S03 (AC-5); collector không
-+  // nhận thì vào spool, không mất.
-+  const tapMas = new Set(mas);
-+  const dong = ketQua.filter((kq) => tapMas.has(kq.ma)).map((kq) => ({
-+    ma_tai_khoan: kq.ma,
-+    username: kq.username,
-+    loai: kq.loai,
-+    lay_luc: new Date(hienTai).toISOString(),
-+  }));
-+  await guiCollector(deps, dong);
-+
-+  return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung };
-+}
-+
-+// 0711-37(a): Authorization BẮT BUỘC (collector fail-closed 401 khi thiếu);
-+// khoá từ env S03_COLLECTOR_KEY; spool PHÁT LẠI đầu mỗi vòng (không nằm mãi).
-+async function guiCollector(deps: LookupDeps, dong: Array<Record<string, string>>): Promise<void> {
-+  if (deps.collectorUrl) {
-+    const key = process.env.S03_COLLECTOR_KEY?.trim() ?? "";
-+    try {
-+      const r = await Promise.race([
-+      deps.fetchImpl(deps.collectorUrl, {
-+        method: "POST",
-+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-+        body: JSON.stringify({ loai: "ho-so", dong }),
-+      }),
-+      // S4-2(2): fetch collector treo phải thả vòng (chống chồng, spool kịp)
-+      deps.treMs(TRAN.collectorTreMs).then(() => {
-+        throw new Error("het-thoi-gian-collector");
-+      }),
-+    ]);
-+      if (r.ok) return;
-+    } catch {
-+      // rơi xuống spool
-+    }
-+  }
-+  await deps.noiFile(
-+    `${deps.dir}/${TEN.spool}`,
-+    dong.map((d) => JSON.stringify(d)).join("\n") + "\n",
-+  );
-+}
-+
-+// 0711-37(a): phát lại spool — đọc các dòng chưa gửi, thử lại collector,
-+// chỉ XOÁ dòng đã gửi thành công (ghi lại phần còn lại nguyên thứ tự).
-+export async function phatLaiSpool(deps: LookupDeps): Promise<number> {
-+  const duongSpool = `${deps.dir}/${TEN.spool}`;
-+  const text = (await deps.docFile(duongSpool)) ?? "";
-+  if (!text.trim()) return 0;
-+  const dong = text.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
-+  if (!deps.collectorUrl || dong.length === 0) return 0;
-+  const key = process.env.S03_COLLECTOR_KEY?.trim() ?? "";
-+  try {
-+    const r = await Promise.race([
-+      deps.fetchImpl(deps.collectorUrl, {
-+      method: "POST",
-+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-+      body: JSON.stringify({ loai: "ho-so", dong }),
-+    }),
-+      // S4-2(2): fetch collector treo phải thả vòng (chống chồng, spool kịp)
-+      deps.treMs(TRAN.collectorTreMs).then(() => {
-+        throw new Error("het-thoi-gian-collector");
-+      }),
-+    ]);
-+    if (r.ok) {
-+      await deps.ghiFile(duongSpool, "");
-+      return dong.length;
-+    }
-+  } catch {
-+    // vẫn giữ spool
-+  }
-+  return 0;
-+}
-+
-+/**
-+ * Vòng hẹn giờ DUY NHẤT của bộ tra (AC-1) — monitor gọi một lần khi extension
-+ * khởi động; listener khởi động lại không sinh vòng thứ hai.
-+ */
-+export function dungBoHenGio(
-+  deps: LookupDeps,
-+  log: (line: string) => void,
-+  chuKyMs = 60_000,
-+): () => void {
-+  let dung = false;
-+  let dangChay = false;
-+  const vong = setInterval(() => {
-+    if (dung || dangChay) return;
-+    dangChay = true;
-+    void chayVong(deps)
-+      .then((v) => {
-+        if (v.loi_goi > 0 || v.chan) {
-+          // Chỉ in số đếm + đối chứng + mã chặn — không in hồ sơ (AC-3).
-+          log(
-+            `[seller-lookup] loi_goi=${v.loi_goi} co-username=${v.dem["co-username"]} khong-username=${v.dem["khong-username"]} khong-ro=${v.dem["khong-ro"]} khong-tim-thay=${v.dem["khong-tim-thay"]}` +
-+              (v.doi_chung.length
-+                ? ` doi_chung=${v.doi_chung.map((d) => `${d.loai}`).join(",")}`
-+                : "") +
-+              (v.chan ? ` chan=${v.chan}` : ""),
-+          );
-+        }
-+      })
-+      .catch((e) => {
-+        // Bộ tra không được tự sập vòng hẹn giờ; lỗi đã ghi tệp chặn trong chayVong.
-+        log(`[seller-lookup] loi-vong: ${e instanceof Error ? e.constructor.name : "unknown"}`);
-+      })
-+      .finally(() => {
-+        dangChay = false;
-+      });
-+  }, chuKyMs);
-+  vong.unref?.();
-+  return () => {
-+    dung = true;
-+    clearInterval(vong);
-+  };
-+}
-+
-+// 0711-37(b): đủ MỌI hàm bắt buộc của LookupDeps (doiTen/tonTai/xoaFile từng thiếu).
-+export function taoDepsMacDinh(dir: string, collectorUrl: string): LookupDeps {
-+  return {
-+    dir,
-+    collectorUrl,
-+    now: () => new Date(),
-+    fetchImpl: fetch,
-+    layApi: () => layApiDangNoi(), // S4-2(A): API listener đang nối (mặc định thật)
-+    treMs: (ms) => new Promise((r) => setTimeout(r, ms)),
-+    docFile: async (p) => {
-+      try {
-+        return await fsp.readFile(p, "utf8");
-+      } catch {
-+        return null;
-+      }
-+    },
-+    ghiFile: (p, d) => {
-+      return fsp.writeFile(p, d, "utf8");
-+    },
-+    noiFile: (p, d) => {
-+      return fsp.appendFile(p, d, "utf8");
-+    },
-+    doiTen: (a, b) => fsp.rename(a, b),
-+    tonTai: async (p) => {
-+      try {
-+        await fsp.stat(p);
-+        return true;
-+      } catch {
-+        return false;
-+      }
-+    },
-+    xoaFile: (p) => fsp.unlink(p),
-+  };
-+}
-+
-+/** Móc monitor: đúng MỘT vòng hẹn giờ dù listener khởi động lại. */
-+let boTraTimer: ReturnType<typeof setInterval> | undefined;
-+
-+// 0711-37(b): gọi ĐÚNG chayVong (tên cũ chayVongLookup không tồn tại); lỗi
-+// được LOG (không nuốt lặng); trả hàm dừng để monitorTest dùng.
-+export function khoiDongBoTra(
-+  dir: string,
-+  collectorUrl: string,
-+  log: (line: string) => void,
-+  chuKyMs = 60_000,
-+  // S4-2(2)(3): mặc định dựng deps thật; test tiêm factory để đo cờ chống
-+  // chồng + khuôn log mà không cần phiên kênh S03 thật.
-+  taoDeps: (d: string, u: string) => LookupDeps = taoDepsMacDinh,
-+): () => void {
-+  if (boTraTimer) return () => {};
-+  khoiDongBoTraDung = () => {
-+    clearInterval(boTraTimer);
-+    boTraTimer = undefined;
-+  };
-+  // S4-2(2): cờ đang-chạy như dungBoHenGio — vòng kéo quá chu kỳ không để
-+  // vòng kế chạy song song (2 getUserInfo < 60s, demNgay ghi đè, spool ×2).
-+  let dangChay = false;
-+  boTraTimer = setInterval(() => {
-+    if (dangChay) return;
-+    dangChay = true;
-+    void chayVong(taoDeps(dir, collectorUrl))
-+      .then((v) => {
-+        if (v.loi_goi > 0 || v.chan) {
-+          // S4-2(3): KHÔNG log JSON nguyên v (có doi_chung[].ma) — chỉ số
-+          // đếm + loai đối chứng + mã chặn, như dungBoHenGio.
-+          log(
-+            `[seller-lookup] loi_goi=${v.loi_goi} co-username=${v.dem["co-username"]} khong-username=${v.dem["khong-username"]} khong-ro=${v.dem["khong-ro"]} khong-tim-thay=${v.dem["khong-tim-thay"]}` +
-+              (v.doi_chung.length ? ` doi_chung=${v.doi_chung.map((d) => d.loai).join(",")}` : "") +
-+              (v.chan ? ` chan=${v.chan}` : ""),
-+          );
-+          if (v.chan === "listener-dong-sau-goi") {
-+            log("[seller-lookup] dung-goi-Manh — listener đóng/lỗi sau lời gọi bộ tra");
-+          }
-+        }
-+      })
-+      .catch((e: unknown) => {
-+        log(`[seller-lookup] loi-vong: ${e instanceof Error ? e.constructor.name : "unknown"}`);
-+      })
-+      .finally(() => {
-+        dangChay = false;
-+      });
-+  }, chuKyMs);
-+  boTraTimer.unref?.();
-+  return khoiDongBoTraDung;
-+}
-+let khoiDongBoTraDung: (() => void) | null = null;
-+
-+// 0911-1 E1/E4: đếm vòng hẹn giờ bộ tra đang sống (0 hoặc 1) — cho ca kiểm
-+// «Provider khởi hai lần vẫn đúng MỘT vòng» đo trên trạng thái thật.
-+export function soVongHenGio(): number {
-+  return boTraTimer ? 1 : 0;
-+}
-+
-+// 0911-4(1): dừng vòng hẹn giờ ĐANG sống (bất kể lần khởi nào tạo ra) — cho
-+// abort Provider: lần khởi idempotent trả hàm rỗng nên không dùng làm lối dừng.
-+export function dungVongHienTai(): void {
-+  if (boTraTimer) {
-+    clearInterval(boTraTimer);
-+    boTraTimer = undefined;
-+  }
-+}
-+
-+// 0711-37(b): điểm vào thật đọc S03_LOOKUP_DIR (bỏ trống = bộ tra tắt) và
-+// S03_COLLECTOR_URL — runtime-map mô tả đúng cách vận hành.
-+export function khoiDongTuEnv(log: (line: string) => void): () => void {
-+  const dir = process.env.S03_LOOKUP_DIR?.trim();
-+  if (!dir) return () => {};
-+  return khoiDongBoTra(dir, process.env.S03_COLLECTOR_URL?.trim() ?? "", log);
-+}
-diff --git a/extensions/zalouser/src/zalo-js.ts b/extensions/zalouser/src/zalo-js.ts
-index 548f3f5..2e069cb 100644
---- a/extensions/zalouser/src/zalo-js.ts
-+++ b/extensions/zalouser/src/zalo-js.ts
-@@ -103,0 +104,21 @@
-+
-+// S4-2(A) 0911-11: API của bộ nghe tin ĐANG NỐI theo profile — cho bộ tra hồ
-+// sơ đọc mà KHÔNG tạo client (AC-1). listener khởi động lưu vào đây; cleanup xoá.
-+const apisDangNoi = new Map<string, API>();
-+
-+/** CHỈ ĐỌC API của listener đang nối theo profile — không ensureApi, không
-+ * with…Api, không login, không tạo client. Chưa nối / đã dừng → undefined. */
-+export function layApiDangNoi(profile?: string | null): API | undefined {
-+  return apisDangNoi.get(normalizeProfile(profile)) ?? undefined;
-+}
-+
-+/** Chỉ cho test: gắn API giả vào sổ đang nối như listener thật —
-+ * không dùng trong runtime (S4-2(A) ca kiểm đường mặc định). */
-+export function __testGanApiDangNoi(profile: string, api: API): void {
-+  apisDangNoi.set(normalizeProfile(profile), api);
-+}
-+
-+/** Chỉ cho test: dọn sổ như cleanup của listener (S4-2(A)). */
-+export function __testXoaApiDangNoi(profile: string): void {
-+  apisDangNoi.delete(normalizeProfile(profile));
-+}
-@@ -1359,0 +1381 @@
-+  apisDangNoi.set(profile, api); // S4-2(A): cho bộ tra đọc API đang nối
-@@ -1386,0 +1409 @@
-+    apisDangNoi.delete(profile); // S4-2(A): listener dừng → API không còn

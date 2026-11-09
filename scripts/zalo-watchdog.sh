@@ -27,6 +27,13 @@ mkdir -p "$ROOT/pipeline/logs"
 alert() {
   local reason="$1"
   echo "$(date -Iseconds) KILL: $reason" >> "$ALERT_LOG"
+  # S4-2 lần 9 (ii): bộ canh báo vào TỆP SỰ KIỆN chung của bộ tra
+  # (sukien-listener.jsonl trong S03_LOOKUP_DIR) — bộ tra thấy 'bo-canh'
+  # trong 30′ sau lời gọi → điểm dừng an toàn listener-dong-sau-goi.
+  if [ -n "${S03_LOOKUP_DIR:-}" ] && [ -d "$S03_LOOKUP_DIR" ]; then
+    printf '{"atMs":%s,"loai":"bo-canh"}\n' "$(( $(date +%s) * 1000 ))" \
+      >> "$S03_LOOKUP_DIR/sukien-listener.jsonl" 2>/dev/null || true
+  fi
   # tắt hẳn service để launchd không hồi sinh
   launchctl bootout "gui/$(id -u)/ai.openclaw.gateway" 2>/dev/null || true
   pkill -9 -f openclaw 2>/dev/null || true
