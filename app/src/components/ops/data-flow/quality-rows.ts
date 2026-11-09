@@ -1,4 +1,5 @@
 import type { DataFlow } from "@/lib/data-flow-queries"
+import { readOf, toReadOf } from "./flow-branches"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 /**
@@ -6,6 +7,8 @@ import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
  * đọc được < 30% hay trường lõi/phường < 50% là «Kẹt»; dưới 60% / 80% là «Theo dõi»; im quá 48 giờ là «Im».
  * Kiểm «gắn căn» bỏ từ 08/11 (gan-can-dinh-danh-duy-nhat, Hỏi-1): gắn căn nay là khớp danh bạ, bằng 0 ở mọi nguồn tới khi có
  * bộ gắn — giữ kiểm thì mọi nguồn «Kẹt» và che nút thắt thật. Ba cột mức nhận diện vẫn hiện số.
+ * DF6 (`bai-nhan-tru-bai-chi-anh`): kiểm «đọc» và ô «Đọc được» = (đọc thành tin rao + đọc thành Yêu cầu) / bài cần đọc
+ * (bài nhận trừ ảnh đã ghép vào tin); khối chưa tách nhánh → tin rao / bài nhận như trước.
  */
 
 export type Health = { tone: "success" | "warning" | "destructive"; label: string }
@@ -15,6 +18,10 @@ export type QualityRow = {
   name: string
   meta: string
   received: number
+  /** Bài cần đọc = bài nhận trừ ảnh đã ghép vào tin (DF6) — mẫu số của «Đọc được». */
+  toRead?: number
+  /** Đọc được = đọc thành tin rao + đọc thành Yêu cầu (DF6) — tử số của «Đọc được». */
+  readTotal?: number
   readable: number
   offers: number
   /** null = không áp dụng cho hàng này (nhóm thu, listing ngắn hạn). */
@@ -39,7 +46,7 @@ type Check = { name: string; num: (r: Omit<QualityRow, "health">) => number | nu
 
 /** Luật nút thắt, theo thứ tự đường ống: chặng đầu tiên chạm ngưỡng là nút thắt (xuất cho phép đo). */
 export const NUT_THAT_CHECKS: readonly Check[] = [
-  { name: "đọc", num: (r) => r.readable, den: (r) => r.received, stuck: 0.3, watch: 0.6 },
+  { name: "đọc", num: (r) => r.readTotal ?? r.readable, den: (r) => r.toRead ?? r.received, stuck: 0.3, watch: 0.6 },
   { name: "trường lõi", num: (r) => r.complete, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
   { name: "phường", num: (r) => r.withWard, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
 ]
@@ -66,6 +73,8 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       name: sourceLabel(s.source, roles),
       meta: s.approx ? "Tin rao · đọc được ước lượng" : `Tin rao · ${s.testRejected > 0 ? `gạt ${s.testRejected} bài thử` : "không có bài thử"}`,
       received: s.received,
+      toRead: toReadOf(s),
+      readTotal: readOf(s),
       readable: s.readable,
       offers: s.offers,
       complete: s.complete,
@@ -86,6 +95,7 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       name: sourceLabel("S01", roles),
       meta: "Listing ngắn hạn · không ghép căn",
       received: ss.received,
+      toRead: ss.received,
       readable: ss.stored,
       offers: ss.stored,
       complete: null,
@@ -105,6 +115,8 @@ export function groupRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Qu
       name: g.group,
       meta: `Nhóm thu ${sourceLabel(g.source, roles)}`,
       received: g.received,
+      toRead: toReadOf(g),
+      readTotal: readOf(g),
       readable: g.readable,
       offers: g.offers,
       complete: null,

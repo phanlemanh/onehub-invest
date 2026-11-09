@@ -234,9 +234,14 @@ _Avoid_: provenance (trên UI)
 - Code: `field_provenance.seller_phone` với `rule_id` = `s06-cung-tai-khoan` (số trên tin: `s06-so-tren-tin`), `pipeline/gan-sdt-s06.mjs` · RESO: resource Member
 _Avoid_: số suy đoán, số đoán
 
-**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
-- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
+**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng. Bằng chứng là phát biểu trường `offer_status`: tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp, và tin không thấy lại quá 21 ngày trong khi nguồn hay nhóm của nó vẫn đang thu (bằng chứng suy luận ngừng rao — xem «Ngừng rao»; thấy lại thì về Đang chào). Phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19, 085). Căn có tin ngừng rao tụt khỏi bậc B5.
+- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `ghi_khong_thay_lai`, `ngung_rao_sau_ngay`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
 _Avoid_: tin hết hạn, expired, tình trạng tin
+
+**Ngừng rao**: Tin không thấy lại ở nguồn quá N ngày trong khi nguồn vẫn đang thu — S06 đo từ lần quét cuối tới lần quét mới nhất của cùng vùng × loại tin, S03 tới bài mới nhất của các nhóm mà tin đã đăng, S05 tới tin mới nhất của nguồn. N = 21 ngày cho S03, S05, S06 (Mạnh duyệt 09/11). Tin ngừng rao không bị xoá hay nghỉ: nó thành lịch sử của căn, giữ tên và SĐT người bán, và thấy lại thì tự về Đang chào. Hiện nhãn «Đã gỡ» như tin nguồn gỡ; phân biệt bằng phát biểu. Bước ba của vòng đời tin là «rút» (nghỉ bản ghi: rác, gộp nhầm), không phải ngừng rao.
+- Code: `offer_status = withdrawn` + phát biểu `inferred`/`e1_rule` `rule_id khong-thay-lai:<offer_id>` (migration 085, `ghi_khong_thay_lai`), N ở `ngung_rao_sau_ngay(source)` · RESO: StandardStatus Withdrawn
+- Slug URL: —
+_Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)
 
 **Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi tin rao S03/S05/S06 chưa gắn căn (kể cả tin nằm trong cụm — gom cụm không cho bậc) cộng mỗi căn của danh bạ có tin gắn; B0–B2 đếm tin, B3–B5 đếm căn. Đơn vị không có phường đếm ở thị trường «chưa rõ». Mỗi ảnh chụp mang thang của nó (`thang-2310` trước 08/11, `thang-0811` sau): hai ảnh chụp khác thang không so với nhau, ngày đổi thang là lần hạ một lần, không phải tụt bậc. Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
 - Code: `data_level_snapshot.scale`, `data_level_units()`, `offer_data_level`, `unit_data_level`, vị từ chờ bảng nối `offer_located`, `offer_unit_key` (087), `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
@@ -471,8 +476,12 @@ _Avoid_: cào, crawl
 **Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → mức nhận diện (Gom cụm ·
 Định vị · Gắn căn, mỗi mức là phần trăm trên Tin rao) — kèm nhánh rơi («Không đọc được», «Chưa định vị») và nhánh «Gộp vào
 tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
-`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
-- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked)` · RESO: —
+`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu. Từ DF6: «Bài nhận» tách «Ảnh đã ghép
+vào tin» (tin nhắn chỉ có ảnh mà **Ghép suy ra** đã nối vào một tin — không cần đọc) và «Bài cần đọc» (mẫu số của «Đọc
+được»); «Bài cần đọc» chảy vào hai đầu ra ngang hàng «Đọc thành tin rao» và «Đọc thành Yêu cầu» (bài **Yêu cầu** — Mạnh
+chốt 09/11: Yêu cầu quan trọng song song với tin, «Đọc được» = tin rao + Yêu cầu), cùng «Ảnh chưa ghép» và «Không đọc
+được» (hai nhánh rơi).
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked; nhánh bài: imageMerged · inquiry · imageUnmerged, bài cần đọc toReadOf)` · RESO: —
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 

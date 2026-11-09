@@ -158,6 +158,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   khi đúc; căn chỉ khi có mã căn; toà chỉ thấy trên tin là ứng viên. Đo trên bản chép thật 07/11: Ocean Park 1 18 toà ·
   152 trục · 318 căn (95,8% mã tách được), Grand Park 51 · 259 · 1.417 (99,9%); dựng lại 0 khoá mới. Chỉ local, không sync
   cloud; chưa áp 082 lên máy thu.
+- Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
+  S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
+  withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
+  S06 từ lần quét cuối (`stg_chotot_ads.captured_at`, vì `last_seen` của S06 là ngày đăng) tới lần quét mới nhất của cùng
+  vùng × loại tin, S03 tới bài mới nhất của các nhóm mà tin đã đăng, S05 tới tin mới nhất của nguồn. Thấy lại → rút
+  `thay-lai`, về Đang chào, lịch sử ghi «Gỡ tin» rồi «Chào lại». Không xoá, không nghỉ, giữ người bán. 085 thay
+  `bang_chung_chao` của 059 để phát biểu luật không bị dội. `pipeline/trang-thai-chao.mjs` chạy luật giữa ghi bằng chứng và
+  phân xử, in «ngừng rao S03 · S05 · S06»; chưa áp 085 thì in «chưa áp 085»; `--thu` ROLLBACK. Chưa áp 085 lên máy thu;
+  trạng thái chào chưa lên cloud nên Invest chưa ẩn tin ngừng rao (Hỏi-1: hàng riêng đưa `offer_status` vào `CLOUD_ALLOW`).
 - SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
@@ -629,6 +638,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, đã gộp (#303); Ngoài-9 đổi sang Known limits, không mở việc mới |
 | CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | DB1 | Danh bạ toà · trục · căn cao tầng Ocean Park 1 và Grand Park từ S08 + bí danh tên toà trên tin; UPI neo toà; chủ đầu tư, phường là phát biểu cấp toà; ba dòng `asset_nodes building` là phân khu, ở lại họ Vùng — `_acceptance/danh-ba-toa-truc-can` (T3, 082) | 🔶 vòng S4; Mạnh duyệt Cổng Phạm vi và kế hoạch 07/11; sau gộp: áp 082 lên máy thu + chạy bộ dựng là lời riêng của Mạnh (`pg_dump` trước); Grand Park chưa có phường cấp toà (cần toạ độ toà, hàng riêng) |
+| V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 09/11, đang làm; sau gộp: đo `node pipeline/trang-thai-chao.mjs --thu` trên bản chép, rồi áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng (`offer_status` lên cloud) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

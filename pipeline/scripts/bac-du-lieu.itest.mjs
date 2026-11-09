@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { sqlNapLai059 } from "../lib/nap-view-song.mjs";
 import { chay, ghiAnhChup, KHOA as KHOA_BAC, SQL_610, SQL_KIEM_DE_XUAT } from "../bac-du-lieu.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -14,6 +15,11 @@ const SQL_056 = readFileSync(path.join(ROOT, "db/migrations/056_data_level.sql")
 // PL19: 059 thay property_data_level (thêm vị từ B5) — có tệp thì nạp sau 056, mọi ca PL16 phải trả như cũ.
 const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
 const SQL_059 = existsSync(TEP_059) ? readFileSync(TEP_059, "utf8") : null;
+// V6 (085): PL19_NAP_THEM = đường tới một tệp SQL nạp NGAY SAU 059 trong mỗi giao dịch (E9b của tin-ngung-rao-khong-thay-lai:
+// bộ PL19 phải xanh khi 085 thay bang_chung_chao). Vắng biến → như cũ.
+const TEP_NAP_THEM = process.env.PL19_NAP_THEM ? path.resolve(process.cwd(), process.env.PL19_NAP_THEM) : null;
+const SQL_NAP_THEM = TEP_NAP_THEM ? readFileSync(TEP_NAP_THEM, "utf8") : null;
+if (TEP_NAP_THEM) console.log(`PL19_NAP_THEM: ${path.basename(TEP_NAP_THEM)}`);
 // thang-bac-moi-b0-b5: 610 đọc data_level_units() của 087 — ca chụp ảnh nạp 087 sau 056/059 (nap087); ca hàm cũ thì không.
 const SQL_087 = readFileSync(path.join(ROOT, "db/migrations/087_thang_bac_moi.sql"), "utf8");
 const KHOA = KHOA_BAC; // khoá của bac-du-lieu.mjs lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
@@ -37,12 +43,9 @@ export async function trongGiaoDich(fn, { nap087 = false } = {}) {
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
-    // DB chưa áp thì nạp trong giao dịch; DB đã áp (bản chép máy thu sau 061/082) thì không nạp lại — 059 dựng lại CHECK
-    // trường phát biểu theo danh sách của nó và vấp các trường thêm về sau.
-    const { rows: [co] } = await c.query(`SELECT to_regclass('data_level_snapshot') IS NOT NULL AS s056,
-      to_regclass('history_transactional') IS NOT NULL AS s059`);
-    if (!co.s056) await c.query(SQL_056);
-    if (SQL_059 && !co.s059) await c.query(SQL_059);
+    await c.query(SQL_056);
+    if (SQL_059) await c.query(await sqlNapLai059(c, SQL_059));
+    if (SQL_059 && SQL_NAP_THEM) await c.query(SQL_NAP_THEM);
     if (nap087) await c.query(SQL_087);
     await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
       ($1, NULL, 'market', 'Thị trường thử PL16', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử PL16', 'VN', '{}')`, [MARKET, WARD]);

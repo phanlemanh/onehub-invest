@@ -94,10 +94,10 @@ const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
     enableSorting: true,
   },
   {
-    accessorKey: "readable",
+    accessorFn: (r) => r.readTotal ?? r.readable,
     id: "readable",
     header: ({ column }) => <DataGridColumnHeader title="Đọc được" column={column} />,
-    cell: ({ row }) => <StageCell value={row.original.readable} of={row.original.received} />,
+    cell: ({ row }) => <StageCell value={row.original.readTotal ?? row.original.readable} of={row.original.toRead ?? row.original.received} />,
     size: 110,
     enableSorting: true,
   },
