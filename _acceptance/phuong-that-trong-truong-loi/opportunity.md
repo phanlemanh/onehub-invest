@@ -16,7 +16,7 @@ prototype:
 
 Đo 09/11: 4.825/5.103 tin S03 chỉ có khu cấp tỉnh/thành, phường thật 56 (1,1%), nhưng kiểm hiện chỉ xét area_id có giá trị nên đếm 1.673 tin đủ lõi; tính nghiêm chỉ 34.
 
-Hàng DF5 trong `docs/plan/lo-trinh.json` (PR #379). Mạnh duyệt 09/11, biết trước tỉ lệ đủ lõi S03 sẽ tụt từ 32,8% về khoảng 1%. Làm ngay sau thang-bac-moi-b0-b5 (dãy N1, cùng 610 và data-level.ts). Gốc dữ liệu được gỡ dần ở DA9 phuong-tu-du-an.
+Hàng DF7 trong `docs/plan/lo-trinh.json` (PR #379). Mạnh duyệt 09/11, biết trước tỉ lệ đủ lõi S03 sẽ tụt từ 32,8% về khoảng 1%. Làm ngay sau thang-bac-moi-b0-b5 (dãy N1, cùng 610 và data-level.ts). Gốc dữ liệu được gỡ dần ở DA9 phuong-tu-du-an.
 
 ## Ngưỡng chết / ngưỡng UAT
 
