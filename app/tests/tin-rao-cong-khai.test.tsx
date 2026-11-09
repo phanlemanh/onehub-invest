@@ -129,7 +129,7 @@ async function banSao(sua: (src: string) => string) {
   const src = readFileSync(goc, "utf8")
   const moi = sua(src)
   assert.notEqual(moi, src, "đột biến không áp được")
-  const tep = join(import.meta.dirname, `../src/lib/__ban_sao_tir_${process.pid}_${++soBanSao}.ts`)
+  const tep = join(import.meta.dirname, `../src/lib/.tir-mut-${process.pid}-${++soBanSao}.ts`)
   writeFileSync(tep, moi)
   try {
     return (await import(tep)) as typeof offers
