@@ -9,6 +9,7 @@ evals:
   - id: E1
     criterion: AC-1
     executor: test
+    layer: backend-effect
     cmd: config:executors.test.df4_app
     paths: [pipeline/lib/nhanh-bai-s03.mjs, pipeline/refresh-data-flow.mjs, pipeline/sql/600_data_flow.sql, app/tests/data-flow-bai-chi-anh.test.tsx]
     expected: "exit 0; ca 'DF6-AC-1' ma trận viết trước 6 loại bài S03 (thành tin · ảnh cách bài chữ của tin 60 giây cùng người cùng nhóm · ảnh cách 60 giây nhưng KHÁC người · ảnh cách 10 phút · ảnh gần bài chữ không thành tin · Yêu cầu 'cần thuê căn 2pn' · chat) × 3 cửa sổ (số assert = loại × cửa sổ): imageMerged, inquiry, imageUnmerged của dòng S03 bằng số fixture dựng, VÀ bằng số đếm lại bằng chính baiAnhCuaTin + laChiAnh + parsePost/laYeuCau gọi thẳng trên cùng lược đồ (hai nguồn độc lập cùng khớp). Bài 'cần bán gấp căn 2pn 3 tỷ' (parsePost ra loại) KHÔNG vào inquiry. Chiều đỏ: nhánh ảnh ghép theo bài chữ gần nhất bất kể có thành tin → 'ANH GHEP SAI TIN'; Yêu cầu bỏ điều kiện parsePost không ra loại → 'YEU CAU NUOT TIN RAO'; bộ chạy bỏ bước nạp nhánh → 'NHANH VANG KHI QUA BO CHAY'."
@@ -37,6 +38,7 @@ evals:
   - id: E5
     criterion: AC-5
     executor: test
+    layer: backend-effect
     cmd: config:executors.test.df4_app
     paths: [app/src/components/ops/data-flow/**, app/src/lib/data-flow-queries.ts, app/tests/data-flow-bai-chi-anh.test.tsx]
     expected: "exit 0; ca 'DF6-AC-5': khối facts sinh từ fixture qua bộ chạy (không viết tay) → buildFlow với S03: nút 'Ảnh đã ghép vào tin', 'Bài cần đọc', 'Đọc thành tin rao', 'Đọc thành Yêu cầu', 'Ảnh chưa ghép', 'Không đọc được' mang đúng số khối; cạnh received→{imageMerged, toRead}, toRead→{readable, inquiry, imageUnmerged, unreadable}; ở MỌI nút giữa tổng giá trị cạnh vào = tổng cạnh ra (ma trận nút giữa viết trước); header 'Đọc được'.value = fmtInt(readable+inquiry), .note = fmtPct((readable+inquiry)/(received−imageMerged)); FlowReadout rê 'Đọc thành tin rao' ra 'Tỉ lệ bước' = fmtPct(readable/(received−imageMerged)), rê 'Đọc thành Yêu cầu' ra fmtPct(inquiry/(received−imageMerged)); FlowJourney dựng (jsdom) có nhãn chữ 'Đọc thành tin rao' và 'Đọc thành Yêu cầu' cạnh thanh; hint 'Không đọc được' không chứa 'hỏi mua'. Ma trận viết trước nút → loại (số assert = 6): imageMerged → merged, toRead → journey, readable → journey, inquiry → inquiry, imageUnmerged → dropped, unreadable → dropped; màu của merged, inquiry, dropped, linked là bốn biến màu khác nhau (STAGE_COLOR). Chọn chỉ S06 → không nút nhánh S03. Chiều đỏ: header chia cho received → 'MAU SO CU'; header bỏ inquiry khỏi tử số → 'YEU CAU KHONG TINH DOC DUOC'; cạnh imageMerged xuất phát từ toRead → 'DONG CHAY KHONG BAO TOAN'; inquiry gắn loại dropped → 'YEU CAU TO MAU ROI'."
@@ -58,6 +60,7 @@ evals:
   - id: E8
     criterion: AC-8
     executor: test
+    layer: backend-effect
     cmd: config:executors.test.df4_app
     paths: [app/src/lib/data-flow-queries.ts, pipeline/sql/600_data_flow.sql, app/tests/data-flow-bai-chi-anh.test.tsx]
     expected: "exit 0; ca 'DF6-AC-8': lược đồ máy thu làm tươi qua bộ chạy, push-ops-facts thật dựng khối dataFlow sang lược đồ cloud (cùng cách dong-chay-cloud.test.tsx), getDataFlow ở chế độ cloud trả ba khoá nhánh bằng số máy thu ở mọi sources/days/groups; buildFlow, sourceRows trên hai bản cho cùng nút và nhãn. Khối cloud đời trước (xoá ba khoá khỏi facts) → null, đi đường AC-4. Chiều đỏ: normalizeFacts bỏ khoá nhánh → 'CLOUD MAT NHANH'."
@@ -72,6 +75,7 @@ evals:
   - id: E10
     criterion: AC-1
     executor: script
+    layer: backend-effect
     cmd: config:executors.script.df4_that
     paths: [pipeline/lib/nhanh-bai-s03.mjs, pipeline/refresh-data-flow.mjs, pipeline/sql/600_data_flow.sql, pipeline/scripts/do-nhanh-bai-s03.mjs]
     expected: "exit 0; trên DB của riêng lượt (chép từ bản mẫu của DB máy thu, db-thu --chay): làm tươi bằng 600 của merge-base rồi bằng bộ chạy mới; in một dòng mỗi cửa sổ cho S03: received, readable, imageMerged, inquiry, imageUnmerged, bài cần đọc, % đọc được. Đỏ (exit 1, thông điệp ghim) khi: imageMerged + imageUnmerged ≠ số bài S03 thật CHƯA thành tin mà chữ chỉ còn khoảng trắng sau khi gạt URL, đếm bằng SQL độc lập ('ANH LECH DEM SQL'); imageMerged ≠ đếm SQL độc lập của ảnh đã ghép (bài chỉ-ảnh chưa thành tin có bài chữ cùng người, cùng nhóm, cách dưới 120 giây mà bài chữ GẦN NHẤT — hoà thì bài đứng sau ảnh, rồi post_id nhỏ — nằm trong post_ids của một tin S03; viết bằng SQL, không gọi lib/gop-anh.mjs) ('ANH GHEP LECH DEM SQL'); tổng nhánh vượt received ('TONG NHANH VUOT'); S05/S06 hay khoá cũ khác bản merge-base ('SO CU DOI'); inquiry ≠ số bài suyLoai → yeu-cau không thành tin đếm lại bằng hàm transform ('YEU CAU LECH'). Đối chứng: '--doi-chung-hong=anh|ghep|yeu-cau' ép đúng một nhánh lệch → phải exit 1 với đúng thông điệp của nhánh ấy. Không ghi DB dùng chung (DB đích là oneinvest thì thoát 2)."
