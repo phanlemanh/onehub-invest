@@ -5,7 +5,7 @@
 // làn Claude (JavaScript thuần) được chép vào thư mục src của extension trên cây tạm rồi chạy bằng vitest của cây nguồn: bộ tra và Provider là mã THẬT
 // của .patch; chỉ module kênh (lấy API bộ nghe tin đang nối) bị thay bằng API giả đếm mọi thuộc tính. Kho không viết tên thư mục
 // extension hay tên module kênh: tệp test đọc chúng lúc chạy từ chính .patch và từ dòng import của bộ tra. Không chạm collector/**.
-import { copyFileSync, existsSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -90,7 +90,8 @@ export function chayTichHop(nhom, { patch = PATCH } = {}) {
   }, { patch });
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Lối vào so qua realpath để chạy được cả khi gọi qua symlink (~/dev/one-invest → kho) — luật entrypoint-symlink AC-3.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [nhom = "E1", ...rest] = process.argv.slice(2);
   const i = rest.indexOf("--patch");
   // git apply chạy trong cây tạm: đường tương đối phải đổi sang tuyệt đối theo thư mục gọi lệnh.

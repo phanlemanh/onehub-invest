@@ -46,8 +46,11 @@ export function dinhDanhUpstream(hopDong) {
   const dau = dong.indexOf("Danh sách:");
   const cuoi = dong.indexOf("Chỉ áp", dau);
   if (dau < 0 || cuoi < 0) return [];
-  // Mỗi định danh phải có chữ ngoài chỗ thế: chỗ thế đứng riêng sẽ miễn chính tên kênh.
-  return [...dong.slice(dau, cuoi).matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((d) => d.replace(/\{S\d\d\}/g, "").length >= 2);
+  // Chỉ đọc mục của danh sách: bỏ mọi đoạn trong ngoặc tròn (ghi chú như «… gỡ 09/11 …» có backtick nhưng KHÔNG phải mục miễn —
+  // S4-r3 bắt bản trước đọc nhầm mục đã gỡ thành mục miễn). Mỗi định danh phải có chữ ngoài chỗ thế: chỗ thế đứng riêng sẽ miễn chính
+  // tên kênh.
+  const muc = dong.slice(dau, cuoi).replace(/\([^)]*\)/g, "");
+  return [...muc.matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((d) => d.replace(/\{S\d\d\}/g, "").length >= 2);
 }
 
 /** Dòng chú thích (kể cả dòng nội dung của .patch mở đầu bằng +, -, khoảng trắng). */
@@ -188,9 +191,14 @@ export async function chay(argv) {
       dem(boDuongExtension(mau), entries).size > 0 && dem(boDuongExtension(mau.split("\n").slice(0, 2).join("\n")), entries).size === 0);
     k.kiem("danh sách định danh upstream đọc được từ Notes hợp đồng", dinhDanh.length > 0);
     const s03 = tenTheoMa.get("S03")?.[0] ?? "";
-    const ma = `+const api = getConnected${s03}Api();\n`;
-    const chu = `+// gọi getConnected${s03}Api của kênh ${s03}\n`;
+    const ma = `+const api = await with${s03}Api(cfg);\n`;
+    const chu = `+// gọi with${s03}Api của kênh ${s03}\n`;
     k.kiem("đối chứng: định danh upstream trên dòng mã được miễn", dem(boDinhDanhUpstream(ma, dinhDanh, tenTheoMa), entries).size === 0);
+    // Đối chứng âm cho mục đã gỡ (G-0911-1): getConnected{S03}Api chỉ còn trong ghi chú gỡ của Notes — không được đọc thành mục miễn,
+    // và trên dòng mã nó vẫn bị bắt.
+    k.kiem("đối chứng: mục đã gỡ getConnected{S03}Api không nằm trong danh sách miễn", !dinhDanh.includes("getConnected{S03}Api"));
+    k.kiem("đối chứng: mục đã gỡ trên dòng mã vẫn bị bắt",
+      dem(boDinhDanhUpstream(`+const api = getConnected${s03}Api();\n`, dinhDanh, tenTheoMa), entries).size > 0);
     k.kiem("đối chứng: chú thích mang tên kênh (kể cả định danh upstream) vẫn bị bắt", dem(boDinhDanhUpstream(chu, dinhDanh, tenTheoMa), entries).size > 0);
     k.kiem("đối chứng: tên kênh đứng riêng trên dòng mã vẫn bị bắt",
       dem(boDinhDanhUpstream(`+const nguon = "${s03}";\n`, dinhDanh, tenTheoMa), entries).size > 0);
