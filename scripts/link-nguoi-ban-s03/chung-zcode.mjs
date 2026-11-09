@@ -31,10 +31,15 @@ function thuMucModules(goc, tuong = "", sau = 0, ra = []) {
   return ra;
 }
 
-/** Chạy vitest của bộ tra trên bản OpenClaw sạch + .patch. Trả mã thoát; thiếu thứ gì → 2 kèm tên. */
-export function chayVitestBoTra(locTen) {
+/**
+ * Dựng cây OpenClaw tạm: xuất bản sạch của ref nền (git archive), áp .patch bằng git apply thật, trỏ node_modules của từng gói về
+ * cây nguồn (chỉ đọc). Gọi `lam(tam, sha, base)` trên cây đó rồi xoá cây. Thiếu thứ gì → 2 kèm tên, không gọi `lam`.
+ * @param {(tam: string, sha: string, base: string) => number} lam
+ * @param {{ patch?: string }} [tuy] `patch` thay .patch của hồ sơ (bộ chạy tích hợp dùng để phá thử trên bản sao)
+ */
+export function trenCayOpenclaw(lam, { patch = PATCH } = {}) {
   const src = process.env.OPENCLAW_SRC ?? join(homedir(), "dev", "openclaw");
-  if (!existsSync(PATCH)) { console.error("THIẾU .patch extension (_acceptance/link-nguoi-ban-s03/extension.patch)"); return 2; }
+  if (!existsSync(patch)) { console.error(`THIẾU .patch extension (${patch})`); return 2; }
   if (!existsSync(join(src, ".git")) || !existsSync(join(src, "node_modules", ".bin", "vitest"))) {
     console.error(`THIẾU cây nguồn OpenClaw có vitest ở ${src} (đặt OPENCLAW_SRC)`);
     return 2;
@@ -44,24 +49,31 @@ export function chayVitestBoTra(locTen) {
   try {
     const sha = execFileSync("git", ["-C", src, "rev-parse", "--verify", `${base}^{commit}`], { encoding: "utf8" }).trim();
     execFileSync("bash", ["-c", `git -C "$1" archive "$2" | tar -x -C "$3"`, "_", src, sha, tam]);
-    const ap = spawnSync("git", ["apply", PATCH], { cwd: tam, encoding: "utf8" });
+    const ap = spawnSync("git", ["apply", patch], { cwd: tam, encoding: "utf8" });
     if (ap.status !== 0) { console.error(`.patch không áp được lên ${base} (${sha.slice(0, 9)}): ${ap.stderr.trim()}`); return 2; }
-    const testTra = tepTestBoTra();
-    if (!testTra || !existsSync(join(tam, testTra))) { console.error("THIẾU test vitest (.test.ts) của bộ tra trong .patch"); return 2; }
     for (const m of thuMucModules(src)) {
       const dich = join(tam, m);
       if (existsSync(dich)) continue;
       mkdirSync(dirname(dich), { recursive: true });
       symlinkSync(join(src, m), dich);
     }
+    return lam(tam, sha, base);
+  } finally {
+    rmSync(tam, { recursive: true, force: true });
+  }
+}
+
+/** Chạy vitest của bộ tra (test đơn vị của làn ZCode) trên bản OpenClaw sạch + .patch. Trả mã thoát; thiếu thứ gì → 2 kèm tên. */
+export function chayVitestBoTra(locTen) {
+  return trenCayOpenclaw((tam, sha, base) => {
+    const testTra = tepTestBoTra();
+    if (!testTra || !existsSync(join(tam, testTra))) { console.error("THIẾU test vitest (.test.ts) của bộ tra trong .patch"); return 2; }
     console.log(`bộ tra: OpenClaw ${base} @${sha.slice(0, 9)} + extension.patch`);
     // U1(10): ca tích hợp trong patch cần collector thật — trỏ dist của kho.
     const r = spawnSync(join(tam, "node_modules", ".bin", "vitest"), ["run", testTra, ...(locTen ? ["-t", locTen] : [])],
       { cwd: tam, stdio: "inherit", env: { ...process.env, LNB_COLLECTOR_DIST: join(ROOT, "collector", "dist") } });
     return r.status ?? 1;
-  } finally {
-    rmSync(tam, { recursive: true, force: true });
-  }
+  });
 }
 
 /** Chạy node --test trên các tệp test của thư mục collector/openclaw/tests/link-nguoi-ban. Tệp thiếu → 2. */
