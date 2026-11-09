@@ -161,3 +161,137 @@ test("LDR xếp hàng bị lock_timeout cắt: giao dịch không hỏng, thử 
     await dong(c);
   }
 });
+
+// ── Hồ sơ khoa-nguon-nghi-khi-ddl-sua: kẻ chặn KHÔNG đi qua 33033 (migration chạy tay, ALTER của job khác, phiên psql). ──
+
+/** Kẻ chặn ngoài 33033: ACCESS EXCLUSIVE trên bảng mà không giữ khoá tư vấn nào — 33033 rảnh suốt lúc nó giữ bảng. */
+const chanNgoai33033 = async () => {
+  const c = await moi();
+  await c.query("SET LOCAL lock_timeout = 0");
+  await c.query("SET LOCAL statement_timeout = 0");
+  await c.query("LOCK TABLE public.field_assertions IN ACCESS EXCLUSIVE MODE");
+  return c;
+};
+const pidCua = async (c) => (await c.query("SELECT pg_backend_pid() p")).rows[0].p;
+const ngu = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Đối chứng dương của hàm đo giữ-33033: một phiên giữ 33033 thì hàm phải thấy; không thì mọi vế «không giữ» xanh vô điều kiện. */
+const doiChungDo33033 = async (doc) => {
+  const dc = await moi();
+  try {
+    await dc.query("SELECT pg_advisory_lock(33033)");
+    assert.equal(await giu33033(doc, await pidCua(dc)), 1, "KN do khoa 33033 hong: phiên đối chứng giữ 33033 mà hàm đo không thấy");
+    await dc.query("SELECT pg_advisory_unlock(33033)");
+  } finally {
+    await dong(dc);
+  }
+};
+
+test("KN-AC-1 khoá DDL ngoài 33033: nghỉ 100 ms giữa các lần thử, vào được khi kẻ chặn nhả, không giữ 33033", { timeout: 120_000 }, async () => {
+  const c = await moi();
+  let a;
+  try {
+    await doiChungDo33033(c);
+    a = await chanNgoai33033();
+    assert.equal(await giu33033(c, await pidCua(a)), 0, "KN ca het can cu: phiên chặn đang giữ 33033");
+    await c.query("SET LOCAL lock_timeout = 0");
+    await c.query("SET LOCAL statement_timeout = 0");
+    // Bảng bị chặn đứng sau trong danh sách: câu LOCK nhiều bảng khoá được bảng đầu rồi mới gặp bảng bị chặn.
+    const dangCho = khoaNguon(c, ["sale_offer_records", "field_assertions"], { toiDa: 40 }).then((v) => ({ v }), (e) => ({ e }));
+    await ngu(1_500);
+    await a.query("ROLLBACK");
+    const r = await dangCho;
+    if (r.e?.code === "55P03" || (r.v ?? 0) > 25) {
+      assert.fail(`KN KHOA NGOAI 33033 QUAY KHONG NGHI: ${r.e ? "ném 55P03 trước khi kẻ chặn nhả" : `lan=${r.v} > 25`}`);
+    }
+    if (r.e) throw r.e;
+    assert.ok(r.v >= 1, "KN ca het can cu: phiên gọi không hề bị chặn");
+    assert.ok(r.v >= 5, `KN-AC-1 lan=${r.v} dưới nhịp nghỉ: vào trước khi kẻ chặn giữ đủ 1,5 s`);
+    const pid = await pidCua(c);
+    assert.equal(await giu33033(c, pid), 0, "KN CON GIU 33033: vào được mà chưa nhả 33033");
+    const co = (await c.query(`SELECT relation::regclass::text t FROM pg_locks WHERE locktype = 'relation' AND pid = $1 AND granted
+      AND mode = 'AccessShareLock' AND relation = ANY(ARRAY['public.sale_offer_records'::regclass, 'public.field_assertions'::regclass])
+      ORDER BY 1`, [pid])).rows.map((x) => x.t);
+    assert.deepEqual(co, ["field_assertions", "sale_offer_records"], `KN-AC-1 chưa cầm ACCESS SHARE trên cả hai bảng nguồn: ${co}`);
+  } finally {
+    if (a) await dong(a);
+    await dong(c);
+  }
+});
+
+test("KN-AC-2 khoá DDL ngoài 33033 giữ suốt: hết lượt sau khi đã nghỉ, ném 55P03, giao dịch còn dùng được", { timeout: 120_000 }, async () => {
+  const c = await moi();
+  const a = await chanNgoai33033();
+  try {
+    await c.query("SET LOCAL lock_timeout = 0");
+    const t0 = Date.now();
+    let loi;
+    try {
+      await khoaNguon(c, ["field_assertions"], { toiDa: 5 });
+    } catch (e) {
+      loi = e;
+    }
+    const ms = Date.now() - t0;
+    assert.ok(loi, "KN ca het can cu: khoaNguon vào được dù kẻ chặn giữ suốt");
+    assert.equal(loi.code, "55P03", `KN-AC-2 ném lỗi khác 55P03: ${loi.code} ${loi.message}`);
+    assert.ok(ms >= 450, `KN HET LUOT MA KHONG NGHI: hết 5 lượt sau ${ms} ms`);
+    assert.equal((await c.query("SELECT 1 AS mot")).rows[0].mot, 1, "KN-AC-2 giao dịch hỏng sau khi hết lượt");
+    assert.equal(await giu33033(c, await pidCua(c)), 0, "KN CON GIU 33033: hết lượt mà chưa nhả 33033");
+  } finally {
+    await dong(a);
+    await dong(c);
+  }
+});
+
+test("KN-AC-3 khoá DDL ngoài 33033: lúc nghỉ không cầm 33033 (lấy mẫu pg_locks trong lúc chờ)", { timeout: 120_000 }, async () => {
+  const c = await moi();
+  const s = await moi();
+  const a = await chanNgoai33033();
+  try {
+    await doiChungDo33033(s);
+    await c.query("SET LOCAL lock_timeout = 0");
+    await c.query("SET LOCAL statement_timeout = 0");
+    const pid = await pidCua(c);
+    let xong = false;
+    const dangCho = khoaNguon(c, ["field_assertions"], { toiDa: 100 }).finally(() => { xong = true; });
+    const nha = ngu(1_000).then(() => a.query("ROLLBACK"));
+    let n = 0;
+    let k = 0;
+    while (!xong) {
+      const giu = await giu33033(s, pid);
+      if (xong) break; // mẫu lấy sau khi khoaNguon trả về không tính
+      n += 1;
+      k += giu;
+      await ngu(20);
+    }
+    await dangCho;
+    await nha;
+    console.log(`# KN-AC-3 giu 33033: ${k}/${n} mau`);
+    assert.ok(n >= 30, `KN lay mau thieu: ${n} mẫu`);
+    assert.ok(k / n <= 0.5, `KN NGHI KHI GIU 33033: ${k}/${n} mẫu thấy phiên chờ cầm 33033`);
+  } finally {
+    await dong(a);
+    await dong(s);
+    await dong(c);
+  }
+});
+
+test("KN-AC-6 lỗi khác 55P03 (bảng không có): ném ngay, không thử lại, giao dịch còn dùng được", { timeout: 60_000 }, async () => {
+  const c = await moi();
+  try {
+    assert.equal((await c.query("SELECT to_regclass('public.bang_khong_co_kn') r")).rows[0].r, null, "KN ca het can cu: bảng thử có thật");
+    const t0 = Date.now();
+    let loi;
+    try {
+      await khoaNguon(c, ["bang_khong_co_kn"], { toiDa: 3 });
+    } catch (e) {
+      loi = e;
+    }
+    const ms = Date.now() - t0;
+    assert.equal(loi?.code, "42P01", `KN-AC-6 không ném 42P01: ${loi?.code}`);
+    assert.ok(ms < 250, `KN LOI KHAC VAN THU LAI: ném sau ${ms} ms`);
+    assert.equal((await c.query("SELECT 1 AS mot")).rows[0].mot, 1, "KN-AC-6 giao dịch hỏng sau lỗi");
+  } finally {
+    await dong(c);
+  }
+});

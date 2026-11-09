@@ -24,24 +24,28 @@ async function xepHangDdl(c) {
 /** ACCESS SHARE trên mọi bảng nguồn trong MỘT câu NOWAIT. Bị ca DDL khác chặn thì nhả hết, xếp hàng 33033 rồi thử lại: các ca
  * nạp DDL nối đuôi nhau trên 33033 nên khe giữa hai ca rất ngắn, chỉ thử rồi ngủ thì đói khoá (đo 03/11: bảng bị giữ 97% thời
  * gian, ca hết 1000 lượt thử). Chỉ cầm 33033 trong đúng một câu NOWAIT, xong nhả ngay; lúc chờ không giữ khoá bảng nào nên
- * không vào vòng deadlock — gọi đầu giao dịch, trước khi đọc bảng public. Vẫn bị chặn (khoá DDL ngoài 33033) thì nghỉ 100 ms.
- * Trả số lần thử lại. */
+ * không vào vòng deadlock — gọi đầu giao dịch, trước khi đọc bảng public. Mỗi lần bị chặn (55P03) thì nghỉ 100 ms SAU khi đã
+ * nhả 33033 — kể cả khi đã tới lượt 33033 mà bảng vẫn bị một khoá DDL không đi qua 33033 giữ (migration chạy tay, ALTER của
+ * job khác): 33033 rảnh nên vòng sau lấy lại ngay, không nghỉ thì quay rỗng tới hết toiDa (hồ sơ khoa-nguon-nghi-khi-ddl-sua).
+ * Nghỉ khi còn giữ 33033 thì chặn các ca nạp DDL đang xếp hàng. Lỗi khác 55P03 ném ngay. Trả số lần thử lại. */
 export async function khoaNguon(c, bang, { toiDa = 3000 } = {}) {
   const ds = bang.map((t) => `public.${t}`).join(", ");
   for (let lan = 0; ; lan++) {
     const toiLuot = lan > 0 && (await xepHangDdl(c));
+    let duoc = false;
     await c.query("SAVEPOINT khoa_nguon");
     try {
       await c.query(`LOCK TABLE ${ds} IN ACCESS SHARE MODE NOWAIT`);
       await c.query("RELEASE SAVEPOINT khoa_nguon");
-      return lan;
+      duoc = true;
     } catch (e) {
       await c.query("ROLLBACK TO SAVEPOINT khoa_nguon");
       if (e.code !== "55P03" || lan >= toiDa) throw e; // 55P03 lock_not_available
-      if (!toiLuot) await new Promise((r) => setTimeout(r, 100));
     } finally {
       if (toiLuot) await c.query("SELECT pg_advisory_unlock(33033)");
     }
+    if (duoc) return lan;
+    await new Promise((r) => setTimeout(r, 100));
   }
 }
 
