@@ -230,7 +230,10 @@ const nCua = async (market, pt, unit, lv) => (await c.query(`SELECT coalesce(sum
 async function kiemPhanKhuc(truoc) {
   assert.equal(await nCua("chua-ro", "land", "tin_le", "B0"), truoc + 1, "tin không phường phải ở chua-ro");
   assert.equal(await nCua(MARKET, "house", "tin_le", "B1"), 2, "tin trong cụm và tin lẻ đủ trường lõi ở thị trường của phường");
-  assert.equal(await nCua(MARKET, "apartment", "can", "B2"), 0, "cụm properties không thành căn");
+  // mọi bậc, mọi loại hình (lượt chấm 1, Ngoài t7): đơn vị căn của 087 chỉ ở B3–B5, nên ô can·B2 luôn 0 và không đo được gì
+  const { rows: [k] } = await c.query(`SELECT coalesce(sum(n), 0)::int AS n FROM data_level_snapshot
+    WHERE snap_date = current_date AND market_id = $1 AND unit = 'can'`, [MARKET]);
+  assert.equal(k.n, 0, "cụm properties không thành căn");
 }
 test("AC-5 phân khúc của đơn vị: thị trường = cha market của phường, không phường → chua-ro (kèm chiều đỏ)", async () => {
   await trongGiaoDich(async () => {
