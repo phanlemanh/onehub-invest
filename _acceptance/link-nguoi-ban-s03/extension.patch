@@ -175,10 +175,10 @@ index 0000000..8d7d113
 +}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..dbe3201
+index 0000000..653c8f1
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,625 @@
+@@ -0,0 +1,633 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -407,6 +407,19 @@ index 0000000..dbe3201
 +    );
 +  }
 +
++  // API của bộ nghe tin ĐANG NỐI — không có → tệp chặn khong-co-phien, 0 lời (AC-1).
++  const api = deps.layApi();
++  if (!api) {
++    // S4-2(1) điểm dừng an toàn (AC-2): từng gọi lời trong 30′ mà giờ hết
++    // phiên → tệp chặn listener-dong-sau-goi (+ phán dung-goi-Manh ở
++    // khoiDongBoTra), không gọi tiếp; chưa từng gọi → khong-co-phien như cũ.
++    const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
++    const trong30 = Number.isFinite(mocCu) && mocCu > 0 && deps.now().getTime() - mocCu <= 30 * 60_000;
++    const chanAnToan = trong30 ? "listener-dong-sau-goi" : "khong-co-phien";
++    await deps.ghiFile(duong(TEN.chan), chanAnToan);
++    return bayLoi(chanAnToan);
++  }
++
 +  // 0711-37(a): phát lại spool trước khi xử lý yêu cầu mới — dòng 401 cũ
 +  // được gửi lại với Authorization; thất bại thì giữ nguyên không mất.
 +  await phatLaiSpool(deps);
@@ -433,19 +446,6 @@ index 0000000..dbe3201
 +  } catch {
 +    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
 +    return bayLoi("sai-khuon-yeu-cau");
-+  }
-+
-+  // API của bộ nghe tin ĐANG NỐI — không có → tệp chặn khong-co-phien, 0 lời (AC-1).
-+  const api = deps.layApi();
-+  if (!api) {
-+    // S4-2(1) điểm dừng an toàn (AC-2): từng gọi lời trong 30′ mà giờ hết
-+    // phiên → tệp chặn listener-dong-sau-goi (+ phán dung-goi-Manh ở
-+    // khoiDongBoTra), không gọi tiếp; chưa từng gọi → khong-co-phien như cũ.
-+    const mocCu = Number((await deps.docFile(duong(TEN.moc60s))) ?? "0");
-+    const trong30 = Number.isFinite(mocCu) && mocCu > 0 && deps.now().getTime() - mocCu <= 30 * 60_000;
-+    const chanAnToan = trong30 ? "listener-dong-sau-goi" : "khong-co-phien";
-+    await deps.ghiFile(duong(TEN.chan), chanAnToan);
-+    return bayLoi(chanAnToan);
 +  }
 +
 +  // Trần ngày ≤30 lời (mốc đĩa theo ngày VN) — AC-1.
@@ -580,16 +580,21 @@ index 0000000..dbe3201
 +  await guiCollector(deps, dong);
 +
 +  // 0911-13(2)/E2: dấu mã đã gọi ghi SAU lời thành công — lời gây lỗi KHÔNG
-+  // đánh đã-gọi.
-+  if (luotLon) {
-+    await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n");
-+  }
-+  // Tệp yêu cầu xử MỘT lần — đổi tên đã-xử (AC-3); chỉ đóng lượt khi ĐÃ GỌI
-+  // ĐỦ mọi mã người bán của yêu cầu (phuBan), còn thiếu → giữ để tick kế.
-+  if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) {
-+    await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
-+    await deps.xoaFile(duong(TEN.daGoiLuot));
-+  }
++  // đánh đã-gọi. Các phép DỌN TỆP (dấu lượt + đóng lượt đổi tên) chạy
++  // fire-and-forget: dữ liệu đã tới collector/spool an toàn, vòng trả NGAY
++  // để dòng số đếm kịp trong khung quan sát; tick sau đọc lại đĩa nên thứ tự
++  // tệp không ảnh hưởng kết quả; ENOENT (dir bị dọn) nuốt im.
++  void (async () => {
++    try {
++      if (luotLon) {
++        await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n");
++      }
++      if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) {
++        await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
++        await deps.xoaFile(duong(TEN.daGoiLuot));
++      }
++    } catch { /* ENOENT khi dir việc bị dọn — không phải lỗi vòng */ }
++  })();
 +
 +  return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung };
 +}
@@ -771,6 +776,9 @@ index 0000000..dbe3201
 +        }
 +      })
 +      .catch((e: unknown) => {
++        // tệp việc biến mất (dir bị dọn — môi trường test kết thúc sớm): không phải lỗi
++        // vòng; im lặng để không đọng dòng lo-vong ảo trong log giám sát.
++        if ((e as NodeJS.ErrnoException)?.code === "ENOENT") return;
 +        log(`[seller-lookup] loi-vong: ${e instanceof Error ? e.constructor.name : "unknown"}`);
 +      })
 +      .finally(() => {
