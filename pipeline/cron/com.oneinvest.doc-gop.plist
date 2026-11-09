@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.oneinvest.doc-gop</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__ROOT__/pipeline/doc-gop-hang-ngay.sh</string>
+  </array>
+  <!-- 00:02 hằng ngày (PL34): đọc gộp S03 hôm qua + hôm kia, SAU mốc 00:00 VN
+       (khóa đúng "hôm qua") và TRƯỚC tick cloud-sync đầu của ngày mới (pha đo
+       thực tế 900s: tick sau nửa đêm ~00:06) — trước cả zalo-import nạp xong,
+       bài thu muộn do bước "hôm kia" của đêm sau vớt. Trần mặc định
+       DOC_GOP_TRAN_NGAY_USD=20 của script. -->
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>0</integer><key>Minute</key><integer>2</integer></dict>
+  <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/doc-gop.log</string>
+  <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/doc-gop.log</string>
+</dict>
+</plist>
