@@ -4,14 +4,21 @@
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **card.html báo cả bảy eval E1–E7 «chưa đạt», nhưng evidence-report ghi cả bảy là PASS**
+- **Hình dạng 5 — quét LỚP «mọi tệp test import thư viện» nhưng chỉ quét hai thư mục chọn tay**
+  Người dùng thấy gì: Phép kiểm chỉ tìm các bộ thử dùng thư viện khoá trong hai thư mục đã chọn sẵn. Nếu sau này có bộ thử mới ở thư mục khác dùng thư viện này, phép kiểm vẫn báo xanh dù bộ thử đó chưa được chạy lại. Hiện chưa có bộ thử nào bị bỏ sót và người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Hậu quả nhẹ: chỉ ảnh hưởng độ tin cậy của bước kiểm nội bộ, không mất hay lộ dữ liệu, hiện chưa có tệp nào bị sót, và nếu có tệp mới thì ghi vào danh sách hạn chế đã biết để người làm sau chú ý.
+  file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/probes/dot-bien.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **card.html báo cả bảy eval E1–E7 «chưa đạt», nhưng evidence-report ghi cả bảy là PASS (r3)**
   Người dùng thấy gì: Thẻ duyệt báo nhầm rằng cả bảy phép kiểm đều chưa đạt và máy đang sửa code, trong khi hồ sơ ghi chúng đạt và Mạnh đã chọn chấm thêm một lượt. Người ký có thể hiểu sai tình trạng của việc này.
   Căn cứ: Chỉ gây hiểu nhầm khi đọc thẻ, không mất hay lộ dữ liệu; người ký đối chiếu được với báo cáo bằng chứng, và lỗi nằm ở bộ sinh thẻ của kit nên cần gửi về kit chứ không sửa tay.
   file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/card.html`
   severity: medium
   Đề xuất: known-limits
 
-- **evidence-page.html cũ hơn HEAD: thiếu quyết định của người (d-…-11) và vẫn ghi «người 0»**
+- **evidence-page.html cũ hơn HEAD: thiếu quyết định của người (d-…-11) và vẫn ghi «người 0» (r3)**
   Người dùng thấy gì: Trang bằng chứng chưa cập nhật quyết định mới nhất của Mạnh nên vẫn ghi người chưa quyết định nào. Người đọc trang sẽ không thấy lối ra đã được chọn.
   Căn cứ: Nhẹ: chỉ là trang hiển thị cũ, không ảnh hưởng dữ liệu hay hành vi; sinh lại trang là xong ở lượt kế.
   file: `_acceptance/khoa-nguon-nghi-khi-ddl-sua/evidence-page.html`
@@ -60,4 +67,6 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 2/2 lỗi rơi vào file không bộ đo nào phủ (_acceptance/khoa-nguon-nghi-khi-ddl-sua/card.html, _acceptance/khoa-nguon-nghi-khi-ddl-sua/evidence-page.html) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+## Chưa adversarial-verify (refuter chết)
+
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
