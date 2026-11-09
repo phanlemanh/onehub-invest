@@ -46,6 +46,21 @@ export function tienKiemHoSo(lookupDir, patchPath) {
       return new RegExp("^\\+.*" + esc, "m").test(diff);
     });
     if (cam.length > 0) loi.push(`.patch thêm lời gọi cấm: ${cam.join(", ")}`);
+    // 0911-13 E9: MỌI lời gọi API mới ngoài getUserInfo đều cấm —不只是 danh sách
+    // tên biết trước (sendMessage/… chưa liệt kê cũng phải bắt). Khớp dòng + có
+    // «api.<tên>(» mà <tên> không phải getUserInfo; khai báo kiểu/không lời gọi
+    // không có dạng api.x( nên không dính.
+    // chỉ xét khối tệp MÃ NGUỒN (bỏ .test.ts — mock API giả trong test được
+    // phép gọi api.ketQuaThe và các hàm dựng dữ liệu khác)
+    const maNguon = diff
+      .split(/^diff --git /m)
+      .filter((k) => {
+        const duong = [...k.matchAll(/^\+\+\+ b\/(\S+)$/gm)].map((m) => m[1])[0] ?? "";
+        return duong.startsWith("extensions/") && duong.endsWith(".ts") && !duong.endsWith(".test.ts");
+      })
+      .join("\n");
+    const moiNgoai = [...new Set([...maNguon.matchAll(/^\+.*?\bapi\.(?!getUserInfo\b)([A-Za-z_$][\w$]*)\s*\(/gm)].map((m) => m[1]))];
+    if (moiNgoai.length > 0) loi.push(`.patch thêm lời gọi API mới ngoài getUserInfo: api.${moiNgoai.join(", api.")}`);
   }
   return loi;
 }

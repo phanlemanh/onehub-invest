@@ -175,10 +175,10 @@ index 0000000..8d7d113
 +}
 diff --git a/u7-tree/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..251b762
+index 0000000..dbe3201
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,621 @@
+@@ -0,0 +1,625 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -567,16 +567,9 @@ index 0000000..251b762
 +  // yêu cầu + dấu lượt để tick kế gọi nốt (không đốt daThu).
 +  // 0911-13(2)/E2: dấu mã đã gọi ghi SAU lời thành công — lời gây lỗi KHÔNG
 +  // đánh đã-gọi; ghi TRƯỚC đóng lượt (đóng lượt xoá dấu sau khi đủ).
-+  if (luotLon) {
-+    await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n");
-+  }
-+  if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) {
-+    await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
-+    await deps.xoaFile(duong(TEN.daGoiLuot));
-+  }
-+
-+  // Kết quả → API collector thành snapshot hồ sơ S03 (AC-5); collector không
-+  // nhận thì vào spool, không mất.
++  // Kết quả → API collector thành snapshot hồ sơ S03 (AC-5) — GỬI TRƯỚC các
++  // phép đóng lượt (đổi tên/xoá tệp) để dữ liệu tới collector ngay cả khi
++  // phần dọn dẹp tệp bị gián đoạn; collector không nhận thì vào spool.
 +  const tapMas = new Set(mas);
 +  const dong = ketQua.filter((kq) => tapMas.has(kq.ma)).map((kq) => ({
 +    ma_tai_khoan: kq.ma,
@@ -586,6 +579,17 @@ index 0000000..251b762
 +  }));
 +  await guiCollector(deps, dong);
 +
++  // 0911-13(2)/E2: dấu mã đã gọi ghi SAU lời thành công — lời gây lỗi KHÔNG
++  // đánh đã-gọi.
++  if (luotLon) {
++    await deps.noiFile(duong(TEN.daGoiLuot), masGoi.map((m) => JSON.stringify({ ma: m })).join("\n") + "\n");
++  }
++  // Tệp yêu cầu xử MỘT lần — đổi tên đã-xử (AC-3); chỉ đóng lượt khi ĐÃ GỌI
++  // ĐỦ mọi mã người bán của yêu cầu (phuBan), còn thiếu → giữ để tick kế.
++  if (masGoi.length > 0 && phuBan.size >= yeuCau.mas.length) {
++    await deps.doiTen(duongYeuCau, duong(TEN.yeuCauDaXu));
++    await deps.xoaFile(duong(TEN.daGoiLuot));
++  }
 +
 +  return { loi_goi: 1, dem: { ...demRong }, doi_chung: doiChung };
 +}
