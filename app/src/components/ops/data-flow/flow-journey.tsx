@@ -115,6 +115,9 @@ export function FlowJourney({
   const emphasis = emphasisOf(hover, links)
   const total = nodes.find((node) => node.id === "received")?.amount ?? 1
   const amountOf = (id: string) => nodes.find((node) => node.id === id)?.amount ?? 0
+  // DF6: khối đã tách nhánh có thêm cột «Bài cần đọc» — nới khung tối thiểu để đầu cột không chồng nhau ở khổ hẹp
+  // (cuộn ngang trong khung như trước); khối chưa tách giữ khung cũ.
+  const branched = nodes.some((node) => node.id === "toRead")
 
   const renderNode = ({ x, y, width, height, index, payload }: SankeyNodeProps) => {
     const node = payload as LaidOutNode
@@ -211,7 +214,7 @@ export function FlowJourney({
       <ChartContainer
         id={uid}
         config={CHART_CONFIG}
-        className="aspect-auto h-104 w-full min-w-3xl"
+        className={cn("aspect-auto h-104 w-full", branched ? "min-w-5xl" : "min-w-3xl")}
         initialDimension={{ width: 960, height: 416 }}
         role="img"
         aria-label={`Đường ống: ${fmtInt(total)} bài nhận, ${fmtInt(amountOf("unit"))} tin gắn căn`}
