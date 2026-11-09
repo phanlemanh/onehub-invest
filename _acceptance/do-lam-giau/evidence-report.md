@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 70508a6a0f1a3ca5fc76d68a7a6f2027e20d6a41
-human_signoff:
+verified_commit: d8175f7a81cd51fee436db67bb0c6629a045b2ef
+human_signoff: Mạnh 2026-11-09
 ---
 
 # Evidence Report: do-lam-giau
@@ -110,7 +110,7 @@ human_signoff:
 - eval: E8
   run_id: minted-do-lam-giau-E8-r2
   exit_code: 0
-  verifier: ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-09T00:39:17Z
   carried_from_round: 2
   screenshot: evidence/E8-step1.png
@@ -175,3 +175,7 @@ none — every multi-run eval is uniform
 Round 1: E7 do (app_ui) — cac eval khac xanh; round tra ve trien khai (loi duong dang chay ve 0 gia tri bi bao «chua chay»).
 Round 2: E1-E10 xanh nhung con hai finding muc cao trong hop dong AC-2 (duong mat het gia tri: lan chay sau lai thanh «chua chay» va xoa dong may_rut). Tra ve trien khai.
 Round 3: E1-E6, E9 chay lai tren 70508a6a (dau «da lap moc» ben); E7, E8 carry-forward tu round 2, E10 tu round 1. Tat ca PASS.
+
+### Re-pin lần 1 — 2026-11-09, do gộp origin/main vào nhánh trước khi ký (PR #382 xung đột)
+run_id: repin-20261109T041739Z-99931
+sha: d8175f7a81cd51fee436db67bb0c6629a045b2ef · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E8

@@ -5,7 +5,7 @@ slug: do-lam-giau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T2; máy nâng T3 vì sửa scripts/cloud-sync.sh và cần migration (cả hai thuộc t3_paths)
 surfaces: [ui, db, script]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-08-do-lam-giau-design.md
 approved_by: Mạnh
 approved_at: 2026-11-08
@@ -111,4 +111,10 @@ Ngưỡng của `opportunity.md` (Mạnh 08/11):
 
 - Lõi kiểm ngược gọi đúng hàm của bước ghi (`rutLienLac`, `chonSoNguoi`, `loaiHinhNhom`) để đo đúng thứ đang chạy, không
   một bản chép.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-1: người vận hành chạy tay lệnh đo với ngày cũ hay thiếu giá trị ngày thì số của hôm nay có thể ghi nhầm vào ngày khác; lượt đêm tự động không dính.
+  - Ngoài-2: hai cột mới của bảng đo làm giàu mang tên tiếng Việt (`duong`, `huong`), lệch quy ước tên tiếng Anh; người dùng không thấy gì khác.
+  - Ngoài-3: lưới kiểm phần chia số theo khu vực, dự án, toà còn lỏng; một nhóm số mất phần chia sau này có thể không bị bắt ngay.
+  - Ngoài-4: phép thử màn Làm giàu dùng dòng kiểm ngược dựng tay cho hai ca, nên khuôn dữ liệu đổi mà màn không theo kịp thì có thể không bị báo.
+  - Ngoài-5: trạng thái lỗi «Thử lại» của khối Làm giàu mới được kiểm qua mã nguồn, chưa thử khi dữ liệu tải hỏng thật.
 - Chiều dự án, toà (và trục) của lát là **định vị** theo thang bậc mới (Mạnh «Đồng ý đổi» 08/11: B2 «Định vị», B3 «Gắn căn» = nhận diện duy nhất); DO3 không gọi chiều này là «gắn căn» và không dùng bậc B0–B5 làm mẫu số cho số nào.
