@@ -1,0 +1,18 @@
+{
+  "feature_plain": "Ngày đổi thang bậc (và ngày lập mốc đầu tiên) giữ nguyên câu «lần hạ một lần» trên trang chất lượng Ops suốt cả ngày, thay vì mất sau 15 phút và hiện ra bảng tụt bậc giả.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ giữ dấu «đổi thang» qua mọi lượt chạy trong ngày đổi thang, và ngày ấy không có dòng chuyển bậc nào."},
+    {"id": "AC-2", "p": "Sẽ so ngày hôm sau với trạng thái cuối của ngày đổi thang, rồi ghi dòng chuyển như thường."},
+    {"id": "AC-3", "p": "Sẽ giữ dấu «lập mốc» suốt ngày đầu tiên đo, kể cả khi ngày ấy cũng là ngày áp thang mới."},
+    {"id": "AC-4", "p": "Sẽ nhận lại ngày đổi thang theo ngày áp, khi dấu đã bị lượt cũ xoá trước khi có bản sửa."},
+    {"id": "AC-5", "p": "Sẽ xử dòng chuyển bậc có sẵn của ngày lập mốc theo câu anh trả lời ở Hỏi-1 (máy khuyên xoá), không đụng ngày khác."},
+    {"id": "AC-6", "p": "Sẽ hiện dòng «Thang bậc 08/11 … lần hạ một lần» trên khối Đo hằng ngày sau lượt chạy thứ hai cùng ngày."},
+    {"id": "AC-7", "p": "Sẽ cho thước kiểm trang Ops trên lược đồ chưa có 087 chạy được lại, dù bản chép từ máy thu nay đã có 087."},
+    {"id": "AC-8", "p": "Sẽ có lệnh sửa ngày đổi thang đã qua: mặc định chỉ in ngày và số dòng, ghi khi có cờ, từ chối khi ngày lệch."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG sửa scripts/cloud-sync.sh — bật lại bước DO1 đang tạm tắt là việc của giám sát và anh sau khi gộp."},
+    {"id": "OOS-2", "p": "KHÔNG chạy lệnh sửa có ghi trên máy thu trong vòng này — đó là lời riêng của anh sau gộp, có pg_dump trước."},
+    {"id": "OOS-3", "p": "KHÔNG mở lại bảy giới hạn đã biết khác của thang bậc mới."}
+  ]
+}
