@@ -20,6 +20,10 @@ export async function trongGiaoDich(fn) {
     if (db === "oneinvest") throw new Error("DATABASE_URL trỏ DB oneinvest dùng chung — dùng DB thử (db/db-thu.sh)");
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
+    // Ngày D theo đồng hồ của chính giao dịch: fixture ghi bằng now() (cố định trong giao dịch), mã DO3 lọc theo khoảng giờ của D;
+    // lấy D lúc nạp tệp thì lượt vắt qua nửa đêm VN đếm fixture sang ngày D+1 (làn 09/11 23:41–00:51 VN đỏ DO3-AC-2, DO3-AC-3).
+    const { rows: [{ t }] } = await c.query("SELECT now() AS t");
+    datNgay(ngayVn(t.getTime()));
     await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -208,7 +212,10 @@ const songCua = (kq) => Object.fromEntries(kq.dq.filter((r) => r.check_name === 
 const SO = "so-qua-nguoi-dang", NHOM = "quy-uoc-nhom";
 const so = (n) => `+84399000${String(n).padStart(3, "0")}`;
 
-const D = ngayVn(Date.now()), D1 = congNgay(D, -1), D2 = congNgay(D, 1);
+let D, D1, D2;
+/** Đặt ngày D (và hôm trước, hôm sau) — trongGiaoDich gọi với ngày của now() giao dịch. */
+function datNgay(ngay) { D = ngay; D1 = congNgay(D, -1); D2 = congNgay(D, 1); }
+datNgay(ngayVn(Date.now()));
 
 function kiemAc1(rows, goc) {
   if (rows.length !== 4) throw new Error(`DONG NGAY LAP: ${rows.length} dòng`);
