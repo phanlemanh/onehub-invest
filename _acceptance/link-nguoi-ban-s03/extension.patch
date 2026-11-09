@@ -172,10 +172,10 @@ index 0000000..8d7d113
 +}
 diff --git a/extensions/zalouser/src/seller-lookup.ts b/extensions/zalouser/src/seller-lookup.ts
 new file mode 100644
-index 0000000..653c8f1
+index 0000000..b31787f
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.ts
-@@ -0,0 +1,633 @@
+@@ -0,0 +1,641 @@
 +/**
 + * seller-lookup.ts — bộ tra hồ sơ người bán S03 (link-nguoi-ban-s03, AC-1..AC-3).
 + *
@@ -439,7 +439,9 @@ index 0000000..653c8f1
 +      await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
 +      return bayLoi("sai-khuon-yeu-cau");
 +    }
-+    yeuCau = { mas: parsed.mas as string[], doi_chung: (parsed.doi_chung as string[]) ?? [] };
++    // S4 lượt 3 (2): khử trùng NGAY khi đọc — mã trùng làm length > số duy nhất,
++    // phuBan khớp mãi không xong → lặp 60s tới 30 lời.
++    yeuCau = { mas: [...new Set(parsed.mas as string[])], doi_chung: [...new Set((parsed.doi_chung as string[]) ?? [])] };
 +  } catch {
 +    await deps.ghiFile(duong(TEN.chan), "sai-khuon-yeu-cau");
 +    return bayLoi("sai-khuon-yeu-cau");
@@ -470,13 +472,19 @@ index 0000000..653c8f1
 +      .map((l) => String(JSON.parse(l)?.ma))
 +      .filter(Boolean)),
 +  );
++  // S4 lượt 3 (1): trần ≤20 mã NGƯỜI BÁN + ĐỐI CHỨNG GỒM TRONG LỜI — DC cũng
++  // đếm vào trần (hai người đối chứng bị tra lại tới 30 lần/đêm là lỗi).
++  const doiChungGioDiemDo = yeuCau.doi_chung
++    .slice(0, TRAN.doiChung)
++    .filter((m) => !daGoiTrongLuot.has(m)); // DC chưa gọi trong lượt này
++  const tranChoBan = Math.max(0, TRAN.maMoiLoi - doiChungGioDiemDo.length);
 +  const mas = luotLon
-+    ? yeuCau.mas.filter((m) => !daGoiTrongLuot.has(m)).slice(0, TRAN.maMoiLoi)
-+    : yeuCau.mas.slice(0, TRAN.maMoiLoi); // 0911-13(2): lượt THỬ giữ khuôn cũ — 1 lời, không dấu theo lượt
++    ? yeuCau.mas.filter((m) => !daGoiTrongLuot.has(m)).slice(0, tranChoBan)
++    : yeuCau.mas.slice(0, tranChoBan); // lượt THỬ: 1 lời (20 − DC) mã bán + DC
 +  // 0911-13(2) sửa 2: đóng lượt khi tập ĐÃ PHỦ đủ mọi mã của yêu cầu — chỉ
 +  // đếm mã của chính yêu cầu (dấu lượt có thể lọt mã của ca/req cũ); đánh
 +  // dấu leak bằng cách loại mã lạ khỏi daGoi ngay khi đọc.
-+  for (const m of [...daGoiTrongLuot]) if (!yeuCau.mas.includes(m)) daGoiTrongLuot.delete(m);
++  for (const m of [...daGoiTrongLuot]) if (!yeuCau.mas.includes(m) && !yeuCau.doi_chung.includes(m)) daGoiTrongLuot.delete(m); // S4-3(1): GIỮ DC trong dấu
 +  const doiChungYeuCau = yeuCau.doi_chung.slice(0, TRAN.doiChung);
 +  // MỞ LẠI claudedp-0611-6: mã đối chứng sai khuôn (không toàn chữ số) →
 +  // sai-khuon-yeu-cau, KHÔNG đốt lời thử duy nhất
@@ -489,7 +497,7 @@ index 0000000..653c8f1
 +  // chứa nó → luôn khong-tim-thay → chặn nhầm khac-khong-gian-ma.
 +  // 0911-13(2): lời sau bỏ CẢ mã đối chứng đã gọi ở lời trước — lời 2 chỉ
 +  // còn mã chưa phủ (tránh gọi lại 2 mã đối chứng đã có kết quả).
-+  const doiChungCon = daGoiTrongLuot.size === 0 ? doiChungYeuCau : doiChungYeuCau.filter((m) => !daGoiTrongLuot.has(m)); // 0911-13(2): DC đã gọi không gọi lại (mọi chế độ)
++  const doiChungCon = doiChungGioDiemDo; // DC chưa gọi trong lượt — đã trừ khỏi trần ở trên
 +  const masGoi = [...new Set([...mas, ...doiChungCon])];
 +  const phuBan = luotLon
 +    ? new Set([...daGoiTrongLuot, ...mas.filter((m) => yeuCau.mas.includes(m))]) // 0911-13(2): chỉ mã người bán, chỉ lượt lớn
@@ -811,10 +819,10 @@ index 0000000..653c8f1
 +}
 diff --git a/extensions/zalouser/src/seller-lookup.test.ts b/extensions/zalouser/src/seller-lookup.test.ts
 new file mode 100644
-index 0000000..cc9571f
+index 0000000..9a1f856
 --- /dev/null
 +++ b/extensions/zalouser/src/seller-lookup.test.ts
-@@ -0,0 +1,761 @@
+@@ -0,0 +1,815 @@
 +import { describe, expect, it, vi } from "vitest";
 +// link-nguoi-ban-s03 AC-4: kiểm tĩnh + chạy với API GIÃ có bẫy đếm lời gọi.
 +// Không mock withS03Api (chỗ thế S03) bằng cách gọi nó — bộ tra KHÔNG được import/dùng nó;
@@ -1016,15 +1024,15 @@ index 0000000..cc9571f
 +
 +  it("lượt thử: đúng 1 lời ≤20 mã + dấu đã-thu; chạy lại 0 lời; tệp đổi tên đã-xử", async () => {
 +    const { fs, api, deps } = chuanBi();
-+    const mas = Array.from({ length: 20 }, (_, i) => String(100 + i)); // 20 mã = đúng 1 lượt
++    const mas = Array.from({ length: 18 }, (_, i) => String(100 + i)); // 18 bán + 2 DC = tràn 20 (S4-3)
 +    await ghiYeuCau(fs, mas, mas.slice(0, 2));
 +    const v1 = await chayVong(deps);
 +    expect(v1.loi_goi).toBe(1);
 +    expect(api.dem.getUserInfo).toBe(1);
-+    expect(api.voi[0]).toBe(TRAN.maMoiLoi); // đúng 20 mã trong lời
++    expect(api.voi[0]).toBe(18); // 18 bán (2 DC trùng mã bán — Set khử; trần gồm DC, S4-3)
 +    expect(v1.dem["co-username"]).toBe(2);
 +    expect(v1.dem["khong-ro"]).toBe(1);
-+    expect(v1.dem["khong-tim-thay"]).toBe(17);
++    expect(v1.dem["khong-tim-thay"]).toBe(15);
 +    expect(await deps.tonTai("/f/da-thu.txt")).toBe(true);
 +    expect(await deps.tonTai("/f/yeu-cau.da-xu.json")).toBe(true);
 +    expect(await deps.tonTai("/f/yeu-cau.json")).toBe(false);
@@ -1076,7 +1084,7 @@ index 0000000..cc9571f
 +
 +  // MỞ LẠI claudedp-0611-35 ca (a): mas 20 + doi_chung 2 NGOÀI mas → đúng
 +  // 1 lời 22 mã, không chặn, dòng gửi collector chỉ 20 mã mas
-+  it("mas 20 + doi_chung 2 ngoài mas → 1 lời 22 mã, không chặn, collector chỉ 20 dòng", async () => {
++  it("mas 20 + doi_chung 2 ngoài mas → 1 lời 20 mã GỒM DC (S4-3), không chặn, collector chỉ 18 dòng mã bán", async () => {
 +    const fs = taoFsFake();
 +    const api = taoApiGia();
 +    api.ketQuaThe = (mas) => ({
@@ -1089,14 +1097,14 @@ index 0000000..cc9571f
 +      bodys.push(String(init?.body ?? ""));
 +      return { ok: true } as unknown as Response;
 +    }) as unknown as typeof fetch;
-+    const mas = Array.from({ length: 20 }, (_, i) => String(500 + i));
++    const mas = Array.from({ length: 18 }, (_, i) => String(500 + i));
 +    await ghiYeuCau(fs, mas, ["901", "902"]);
 +    const v = await chayVong(deps);
 +    expect(v.chan).toBeUndefined();
 +    expect(api.dem.getUserInfo).toBe(1);
-+    expect(api.voi).toEqual([22]);
++    expect(api.voi).toEqual([20]); // 18 bán + 2 DC — trần gồm đối chứng (S4-3)
 +    const dong = (JSON.parse(bodys[0] ?? "{}").dong ?? []) as Array<{ ma_tai_khoan: string }>;
-+    expect(dong.length).toBe(20);
++    expect(dong.length).toBe(18, "collector chỉ nhận dòng mã người bán");
 +    expect(dong.every((d) => mas.includes(d.ma_tai_khoan))).toBe(true);
 +  });
 +
@@ -1180,13 +1188,13 @@ index 0000000..cc9571f
 +    await fs.ghiFile("/f/luot-lon.txt", "bat"); // nhiều lời chỉ ở LƯỢT LỚN (E3 giữ khuôn thử)
 +    const v1 = await chayVong(deps);
 +    expect(v1.loi_goi).toBe(1);
-+    expect(api.voi[0]).toBe(20, "lời 1 đủ 20");
++    expect(api.voi[0]).toBe(18, "lời 1: 18 (2 DC trùng mã bán — Set khử; trần gồm DC)");
 +    expect(await deps.tonTai("/f/yeu-cau.json")).toBe(true, "chưa đóng lượt — còn mã 21");
 +    expect(await deps.tonTai("/f/da-thu.txt")).toBe(false, "chưa đốt daThu khi còn thiếu mã");
 +    t += 61_000; // ĐỔI ĐỒNG HỒ qua 60 giây
 +    const v2 = await chayVong(deps);
 +    expect(v2.loi_goi).toBe(1);
-+    expect(api.voi[1]).toBe(1, "lời 2 chỉ mã còn lại (21)");
++    expect(api.voi[1]).toBe(3, "lời 2: 3 mã bán còn lại (21 − 18; DC đã gọi không lại)");
 +    expect(api.dem.getUserInfo).toBe(2);
 +    const tongMa = [...api.voi].reduce((s, n) => s + n, 0);
 +    expect(tongMa).toBeGreaterThanOrEqual(21, "phủ đủ 21 mã");
@@ -1553,6 +1561,60 @@ index 0000000..cc9571f
 +    } finally {
 +      fsMod.rmSync(d, { recursive: true, force: true });
 +    }
++  });
++
++
++  // ── S4 lượt 3 (MỞ LẠI lần 10): trần gồm DC + mã trùng ──
++
++  it("S4-3(1): 20 mã + 2 DC NGOÀI mas → mỗi lời ĐÚNG ≤20 (18+2), mỗi DC gọi đúng 1 lần", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    api.ketQuaThe = (ms) => ({
++      changed_profiles: Object.fromEntries(ms.map((m) => [`${m}_0`, { userId: m, username: `u${m}` }])),
++    });
++    const logs: string[] = [];
++    const { khoiDongBoTra, dungVongHienTai } = await import("./seller-lookup.js");
++    const mas = Array.from({ length: 20 }, (_, i) => String(700 + i));
++    await fs.ghiFile("/f/luot-lon.txt", "bat");
++    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas, doi_chung: ["901", "902"] }));
++    const taoDepsTest = () => {
++      const d = taoDeps(undefined, fs, 2);
++      (d as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++      (d as unknown as { treMs: unknown }).treMs = (ms2?: number) => new Promise((r) => setTimeout(r, ms2 ?? 0));
++      return d;
++    };
++    const dung = khoiDongBoTra("/f", "", (l) => logs.push(l), 10, taoDepsTest);
++    try {
++      await new Promise((r) => setTimeout(r, 60));
++      expect(api.voi.length).toBeGreaterThanOrEqual(1);
++      expect(api.voi.every((n) => n <= 20), "mỗi lời ≤ 20 GỒM DC").toBe(true);
++      expect(api.voi[0]).toBe(20, "lời 1: 18 bán + 2 DC = 20");
++      const tong = [...api.voi].reduce((s, n) => s + n, 0);
++      expect(tong).toBe(20, "DC gọi đúng 1 lần/lượt — không gọi lại ở lời sau (tổng đúng 20)");
++    } finally {
++      dung();
++      dungVongHienTai();
++    }
++  });
++
++  it("S4-3(2): tệp yêu cầu CÓ MÃ TRÙNG → đóng đúng sau phủ đủ, không lời thừa", async () => {
++    const fs = taoFsFake();
++    const api = taoApiGia();
++    let t = Date.UTC(2026, 10, 9, 2 - 7, 0, 0);
++    const deps = taoDeps(undefined, fs, 2);
++    (deps as unknown as { now: unknown }).now = () => new Date(t);
++    (deps as unknown as { layApi: unknown }).layApi = () => gắnApiGia(api);
++    // 5 mã DUY NHẤT nhưng ghi trùng: [A,B,A,C,B]
++    await fs.ghiFile("/f/yeu-cau.json", JSON.stringify({ mas: ["801", "802", "801", "803", "802"], doi_chung: [] }));
++    const v1 = await chayVong(deps);
++    expect(v1.loi_goi).toBe(1);
++    expect(api.voi[0]).toBe(3, "3 mã duy nhất (khử trùng khi đọc)");
++    expect(await deps.tonTai("/f/yeu-cau.da-xu.json")).toBe(true, "phủ đủ 3 mã duy nhất → đóng NGAY (không lặp)");
++    expect(await deps.tonTai("/f/da-thu.txt")).toBe(true);
++    t += 61_000;
++    const v2 = await chayVong(deps);
++    expect(v2.loi_goi).toBe(0, "không lời thừa — mã trùng không giữ lượt mở");
++    expect(api.dem.getUserInfo).toBe(1);
 +  });
 +
 +  it("trần 30 lời/ngày: chạm trần → 0 lời", async () => {
