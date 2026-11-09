@@ -1,7 +1,8 @@
 // judge-run-dong-bang.test.ts — hồ sơ dong-bang-stage-b-resolve E2 (AC-2): Ghép căn đóng băng (V7).
 // Chạy tiến trình con THẬT của scripts/judge-run.ts với DATABASE_URL trỏ cổng đóng và khoá model rỗng: lệnh phải in đúng dòng
 // đóng băng rồi thoát 0 — mở DB hay gọi model là lộ ra ngay (ECONNREFUSED / lỗi khoá). Đối chứng: bản judge-run.ts của
-// origin/main chép vào thư mục tạm cạnh scripts/ (để import tương đối còn đúng) chạy cùng lệnh thì đỏ.
+// cây gốc vòng GOC_VONG (ghim sha, đứng yên sau khi gộp) chép cạnh scripts/ (để import tương đối còn đúng) chạy cùng lệnh thì
+// đỏ. Job agent của CI checkout nông, không có sha gốc → ca đối chứng bỏ qua có tên (như judge-entity-khong-dau.test.ts).
 // Chạy: cd agent && node --import tsx --test tests/judge-run-dong-bang.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,6 +12,8 @@ import { join } from "node:path";
 import { JUDGE_RUN_DONG_BANG } from "../scripts/judge-run.js";
 
 const AGENT = join(import.meta.dirname, "..");
+/** Gốc của vòng (origin/main lúc mở nhánh): bản judge-run.ts trước đóng băng. */
+const GOC_VONG = "773a0040dc5ac65bfafbc0e3cb8ba5eea7d877df";
 const ENV = { ...process.env, DATABASE_URL: "postgres://127.0.0.1:1/x", ANTHROPIC_API_KEY: "", OPENAI_API_KEY: "" };
 
 const chay = (tep: string, co: string[]) =>
@@ -28,10 +31,16 @@ test("DBS-AC-2 judge-run đóng băng: in một dòng, thoát 0, không mở DB,
     const r = chay("scripts/judge-run.ts", co);
     assert.doesNotThrow(() => kiem(r), `cờ ${co.join(" ") || "(không)"}: exit ${r.status}\n${r.stdout}\n${r.stderr}`);
   }
+});
 
-  // Đối chứng đỏ: bản nhánh chính mở DB ở cổng đóng → thoát khác 0 / ECONNREFUSED.
-  const cu = join(AGENT, "scripts", `.judge-run-main-${process.pid}.ts`);
-  writeFileSync(cu, execFileSync("git", ["show", "origin/main:agent/scripts/judge-run.ts"], { cwd: AGENT, encoding: "utf8" }));
+test("DBS-AC-2 đối chứng đỏ: bản judge-run.ts của gốc vòng mở DB ở cổng đóng", (t) => {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${GOC_VONG}:agent/scripts/judge-run.ts`], { cwd: AGENT, stdio: "ignore" });
+  } catch {
+    return t.skip(`không có mốc ${GOC_VONG.slice(0, 8)} trong lịch sử (CI checkout nông)`);
+  }
+  const cu = join(AGENT, "scripts", `.judge-run-goc-${process.pid}.ts`);
+  writeFileSync(cu, execFileSync("git", ["show", `${GOC_VONG}:agent/scripts/judge-run.ts`], { cwd: AGENT, encoding: "utf8" }));
   try {
     const r = chay(cu, ["--khong-llm"]);
     assert.throws(() => kiem(r), /^Error: DBS-AC-2 judge-run còn mở DB$/);

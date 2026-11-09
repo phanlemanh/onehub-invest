@@ -1,6 +1,7 @@
 // review-dong-bang.test.tsx — hồ sơ _acceptance/dong-bang-stage-b-resolve E3, E4, E5: thẻ Ghép căn đang chờ đóng băng (V7).
 // Ca DB dựng lược đồ tạm `dbs_<pid>` (review_queue LIKE public, dữ liệu viết trước), xoá cuối lượt; bộ nạp, câu đếm và
-// ReviewContent là bản thật. Chiều đỏ: câu tương ứng của origin/main (git show) chạy trên CÙNG mồi, thông điệp ghim.
+// ReviewContent là bản thật. Chiều đỏ: câu tương ứng của cây gốc vòng GOC_VONG (git show, ghim sha — không trỏ origin/main,
+// vì sau khi gộp origin/main đã đóng băng và đối chứng sẽ tự so với chính nó) chạy trên CÙNG mồi, thông điệp ghim.
 // Chạy: cd app && bash ../db/db-thu.sh oneinvest_suite_dbs --chay node --import tsx --test tests/review-dong-bang.test.tsx
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
@@ -30,11 +31,14 @@ let admin: pg.Client
 let c: pg.Client
 const ID: Record<string, number> = {}
 
-/** Câu `<ten> = \`…\`` trong tệp của origin/main. */
+/** Gốc của vòng (origin/main lúc mở nhánh): bản trước đóng băng, đứng yên sau khi gộp. Job app của CI checkout đủ lịch sử. */
+const GOC_VONG = "773a0040dc5ac65bfafbc0e3cb8ba5eea7d877df"
+
+/** Câu `<ten> = \`…\`` trong tệp của cây gốc vòng. */
 function cauNhanhChinh(tep: string, ten: string): string {
-  const src = execFileSync("git", ["show", `origin/main:${tep}`], { cwd: APP, encoding: "utf8" })
+  const src = execFileSync("git", ["show", `${GOC_VONG}:${tep}`], { cwd: APP, encoding: "utf8" })
   const m = new RegExp(`${ten}\\s*=\\s*\`([\\s\\S]*?)\``).exec(src)
-  assert.ok(m, `không rút được ${ten} từ origin/main:${tep}`)
+  assert.ok(m, `không rút được ${ten} từ ${GOC_VONG.slice(0, 8)}:${tep}`)
   return m[1]
 }
 
@@ -89,7 +93,7 @@ test("DBS-AC-3 hàng duyệt bỏ thẻ Ghép căn đang chờ; thẻ đã quy�
   const htmlQuyet = renderToStaticMarkup(await ReviewContent({ user: OPS, card: String(ID.G2) }))
   assert.doesNotMatch(htmlQuyet, /Không tìm thấy thẻ/, "DBS-AC-3 ?card thẻ Ghép căn đã quyết phải mở được")
 
-  // Chiều đỏ: câu của origin/main trên cùng mồi còn G1.
+  // Chiều đỏ: câu của cây gốc vòng trên cùng mồi còn G1.
   const cu = tapId((await c.query(cauNhanhChinh("app/src/lib/ops/review-nap.ts", "REVIEW_QUEUE_SQL"))).rows)
   const kiem = (tap: Set<number>) => { if (tap.has(ID.G1)) throw new Error("DBS-AC-3 thẻ Ghép căn đang chờ vẫn hiện") }
   assert.doesNotThrow(() => kiem(co))
@@ -112,7 +116,7 @@ test("DBS-AC-4 số chờ (đầu trang, viewer, dòng chảy) không tính th�
   const { REVIEW_PENDING_SQL } = await import("@/lib/data-flow-queries")
   assert.equal(Number((await c.query(REVIEW_PENDING_SQL)).rows[0].review), 2, "DBS-AC-4 dòng chảy «Hàng duyệt»")
 
-  // Chiều đỏ: câu ba số của origin/main trên cùng mồi đếm cả G1, G4.
+  // Chiều đỏ: câu ba số của cây gốc vòng trên cùng mồi đếm cả G1, G4.
   const { rows: [cu] } = await c.query(cauNhanhChinh("app/src/lib/ops/review-dau-trang.ts", "DAU_TRANG_SQL"), [72])
   const kiem = (cho: number) => { if (cho !== 2) throw new Error("DBS-AC-4 số chờ còn tính Ghép căn") }
   assert.doesNotThrow(() => kiem(d?.cho ?? -1))
@@ -127,7 +131,7 @@ test("DBS-AC-5 Căn giá tốt không báo «đang chờ ghép», không truy v�
   assert.deepEqual(await loadPendingUnitMatches(["oA"], spy), {}, "DBS-AC-5 kết quả")
   assert.equal(cau.filter((s) => s.includes("review_queue")).length, 0, "DBS-AC-5 còn truy vấn review_queue")
 
-  // Chiều đỏ: câu của origin/main chạy thẳng trên cùng mồi trả G1 cho oA.
+  // Chiều đỏ: câu của cây gốc vòng chạy thẳng trên cùng mồi trả G1 cho oA.
   const cu = await c.query(cauNhanhChinh("app/src/lib/ops/review-cho-ghep.ts", "CHO_GHEP_SQL"), [["oA"]])
   const kiem = (rows: { id: string | number }[]) => { if (rows.some((r) => Number(r.id) === ID.G1)) throw new Error("DBS-AC-5 Căn giá tốt còn báo chờ ghép") }
   assert.throws(() => kiem(cu.rows), /^Error: DBS-AC-5 Căn giá tốt còn báo chờ ghép$/)

@@ -1,7 +1,7 @@
 // resolve-properties-dong-bang.itest.mjs — hồ sơ dong-bang-stage-b-resolve E1 (AC-1): Stage B đóng băng (V7).
 // Chạy trên DB của riêng lượt (lược đồ + dữ liệu thật chép từ máy thu), mọi thứ trong MỘT giao dịch ROLLBACK:
 //   cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dbs_rs --chay node --test --test-concurrency=1 tests/resolve-properties-dong-bang.itest.mjs
-// Đối chứng: bản resolve-properties.mjs của origin/main (git show) chạy trên cùng mồi trong một SAVEPOINT riêng — phép đếm câu
+// Đối chứng: bản resolve-properties.mjs của cây gốc vòng GOC_VONG (git show, ghim sha — đứng yên sau khi gộp) chạy trên cùng mồi trong một SAVEPOINT riêng — phép đếm câu
 // phải thấy nó chạm property_candidates, và Stage A của hai bản phải ra cùng căn, cùng tin.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -17,9 +17,12 @@ const URL_DB = process.env.DATABASE_URL;
 const PIPE = join(import.meta.dirname, "..");
 const GOC = join(PIPE, "..");
 
-/** Bản resolve-properties.mjs của origin/main, đặt ở thư mục tạm, import lib trỏ tuyệt đối về pipeline/lib. */
+/** Gốc của vòng (origin/main lúc mở nhánh): bản trước đóng băng. Job pipeline của CI checkout đủ lịch sử. */
+const GOC_VONG = "773a0040dc5ac65bfafbc0e3cb8ba5eea7d877df";
+
+/** Bản resolve-properties.mjs của cây gốc vòng, đặt ở thư mục tạm, import lib trỏ tuyệt đối về pipeline/lib. */
 async function banNhanhChinh() {
-  const src = execFileSync("git", ["show", "origin/main:pipeline/resolve-properties.mjs"], { cwd: GOC, encoding: "utf8" })
+  const src = execFileSync("git", ["show", `${GOC_VONG}:pipeline/resolve-properties.mjs`], { cwd: GOC, encoding: "utf8" })
     .replaceAll('from "./lib/', `from "${pathToFileURL(join(PIPE, "lib")).href}/`);
   const dir = mkdtempSync(join(tmpdir(), "dbs-rs-"));
   const f = join(dir, "resolve-main.mjs");

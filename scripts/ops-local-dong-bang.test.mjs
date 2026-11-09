@@ -1,6 +1,6 @@
 // ops-local-dong-bang.test.mjs — hồ sơ _acceptance/dong-bang-stage-b-resolve E4b, E6: thẻ Ghép căn đóng băng (V7).
 // E4b (cần DB, chạy dưới db-thu --chay): bản tin cloud, báo cáo ngày, HD11 không đếm/nạp thẻ Ghép căn đang chờ; chiều đỏ là
-//   câu của origin/main (git show) trên CÙNG mồi. Lược đồ tạm `dbs_mjs_<pid>` (review_queue LIKE public), xoá cuối lượt.
+//   câu của cây gốc vòng GOC_VONG (git show, ghim sha — đứng yên sau khi gộp) trên CÙNG mồi. Lược đồ tạm `dbs_mjs_<pid>` (review_queue LIKE public), xoá cuối lượt.
 // E6 (không DB): mọi chuỗi vị từ chép bằng nhau; quét mọi câu FROM/JOIN review_queue của kho — mỗi câu có vị từ đóng băng
 //   hoặc nằm trong danh sách miễn có lý do.
 // Chạy: bash db/db-thu.sh oneinvest_suite_dbs_mjs --chay node --test scripts/ops-local-dong-bang.test.mjs
@@ -105,10 +105,13 @@ const coDb = !!URL_DB && /\/oneinvest_suite_/.test(URL_DB);
 const S = `dbs_mjs_${process.pid}`;
 let admin, c;
 
+/** Gốc của vòng (origin/main lúc mở nhánh): bản trước đóng băng. Job scripts của CI checkout đủ lịch sử. */
+const GOC_VONG = "773a0040dc5ac65bfafbc0e3cb8ba5eea7d877df";
+
 function cauNhanhChinh(tep, mau) {
-  const src = execFileSync("git", ["show", `origin/main:${tep}`], { cwd: REPO, encoding: "utf8" });
+  const src = execFileSync("git", ["show", `${GOC_VONG}:${tep}`], { cwd: REPO, encoding: "utf8" });
   const m = mau.exec(src);
-  assert.ok(m, `không rút được câu từ origin/main:${tep}`);
+  assert.ok(m, `không rút được câu từ ${GOC_VONG.slice(0, 8)}:${tep}`);
   return m[1];
 }
 
