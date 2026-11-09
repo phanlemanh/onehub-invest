@@ -79,8 +79,8 @@ evals:
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9c
     criterion: AC-9
-    executor: test
-    cmd: config:executors.test.s03_len_cong_db
+    executor: script
+    cmd: config:executors.script.s03_len_cong_db
     paths: [pipeline/resolve-properties.mjs, pipeline/scripts/s03-len-cong.itest.mjs]
     expected: "exit 0; itest s03-len-cong xanh; ca «tin cấp thị trường không thành cặp» ghi rõ trong tên hoặc lời chú thích rằng nó đúng theo cấu tạo khi Stage B đóng băng (không nới assert)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
