@@ -144,3 +144,56 @@ wall: 1745s
 - **claude-sonnet-5-5**: 25 agent · 82 calls · out 64,752 · in 170 · cache_read 1,713,168 · cache_create 859,852
 - **claude-haiku-5-5**: 17 agent · 42 calls · out 25,527 · in 84 · cache_read 640,946 · cache_create 492,790
 
+### S4 round 3 — wf_4ab05012-f8b (31 agent, 152,800 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 39 | 35,742 | 78 | 4,761,797 | 413 |
+| review:measurement | claude-opus-5-5 | 29 | 22,502 | 60 | 3,060,319 | 259 |
+| review:conventions | claude-opus-5-5 | 38 | 20,448 | 78 | 3,373,918 | 270 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 13,554 | 4 | 56,692 | 71 |
+| triage | claude-sonnet-5-5 | 2 | 10,026 | 4 | 37,814 | 65 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 11 | 5,185 | 22 | 277,333 | 1284 |
+| machine:cd app && npm test | claude-haiku-5-5 | 10 | 4,844 | 20 | 239,659 | 1172 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,777 | 4 | 27,710 | 111 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,584 | 4 | 27,710 | 113 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,581 | 4 | 27,715 | 104 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 3,375 | 4 | 27,714 | 107 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 2,692 | 4 | 27,709 | 124 |
+| judge:E11b:spec-alignment | claude-sonnet-5-5 | 4 | 2,603 | 8 | 96,073 | 18 |
+| judge:E11b:operational-feasibility | claude-sonnet-5-5 | 4 | 2,350 | 10 | 121,332 | 19 |
+| judge:E11b:domain-correctness | claude-sonnet-5-5 | 3 | 2,173 | 8 | 57,779 | 15 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 2,128 | 4 | 27,710 | 108 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,926 | 4 | 27,694 | 8 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,721 | 4 | 27,688 | 8 |
+| refute:extension.patch | claude-sonnet-5-5 | 4 | 1,601 | 8 | 88,810 | 16 |
+| refute:extension.patch | claude-sonnet-5-5 | 3 | 1,191 | 6 | 56,859 | 12 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,026 | 4 | 27,699 | 30 |
+| refute:{S03}-watchdog.sh | claude-sonnet-5-5 | 4 | 978 | 8 | 86,681 | 11 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 880 | 4 | 27,710 | 18 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 828 | 4 | 27,709 | 9 |
+| refute:{S03}-watchdog.sh | claude-sonnet-5-5 | 3 | 780 | 6 | 52,376 | 10 |
+| refute:ten-nguon.mjs | claude-sonnet-5-5 | 2 | 663 | 4 | 26,419 | 7 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 643 | 4 | 27,714 | 11 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 579 | 4 | 27,713 | 16 |
+| machine:node scripts/link-nguoi-ban-s03/acceptan | claude-haiku-5-5 | 2 | 566 | 4 | 27,714 | 7 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 524 | 4 | 24,487 | 119 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 330 | 4 | 23,284 | 4 |
+
+
+wall: 2800s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 17 | 37,859 | 929,388 | 2634 | 14:30:24 | 15:14:18 |
+| judge | 3 | 7,126 | 275,184 | 20 | 14:30:24 | 14:30:44 |
+| review | 3 | 78,692 | 11,196,034 | 424 | 14:30:24 | 14:37:28 |
+| triage | 1 | 10,026 | 37,814 | 65 | 15:14:21 | 15:15:26 |
+| refute | 5 | 5,213 | 311,145 | 17 | 15:15:28 | 15:15:45 |
+| capture | 1 | 330 | 23,284 | 4 | 15:15:47 | 15:15:52 |
+| synthesize | 1 | 13,554 | 56,692 | 71 | 15:15:54 | 15:17:04 |
+
+- **claude-opus-5-5**: 3 agent · 106 calls · out 78,692 · in 216 · cache_read 11,196,034 · cache_create 497,166
+- **claude-sonnet-5-5**: 11 agent · 33 calls · out 36,249 · in 70 · cache_read 704,119 · cache_create 433,027
+- **claude-haiku-5-5**: 17 agent · 51 calls · out 37,859 · in 102 · cache_read 929,388 · cache_create 504,451
+
