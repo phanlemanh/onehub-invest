@@ -322,7 +322,7 @@ after(async () => {
 type Rec = import("../src/lib/data-flow-queries").FlowRecord
 const rec = (p: Partial<Rec>): Rec => ({
   offerId: "r", source: "S06", kind: "sale", propertyType: "house", priceVnd: 3_200_000_000, areaM2: 81, bedrooms: 3,
-  ward: "Tân Định", market: "Thành phố Hồ Chí Minh", confidence: "medium", nPosts: 0, linked: true, identification: { level: "none", locatedPending: false, uniqueIdPending: false },
+  ward: "Tân Định", market: "Thành phố Hồ Chí Minh", confidence: "medium", nPosts: 0, located: false, identification: { level: "none", locatedPending: false, uniqueIdPending: false },
   firstSeen: "2026-10-25 09:00:00+00", lastSeen: "2026-10-25 09:00:00+00", postText: null, postGroup: null, ...p,
 })
 const RECS: Rec[] = [rec({ offerId: "x", source: "S03", postText: "3pn 81m2 3,2 tỷ", nPosts: 1 }), rec({ offerId: "s06a" }), rec({ offerId: "s06b" })]

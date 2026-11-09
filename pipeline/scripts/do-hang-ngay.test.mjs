@@ -310,6 +310,8 @@ import { chuoiCam, KHOA_LAT_DON_VI, KHOA_LAT_THE } from "../do-hang-ngay.mjs";
 
 const GOC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const SQL_083 = readFileSync(path.join(GOC, "db/migrations/083_do_hang_ngay.sql"), "utf8");
+// thang-bac-moi-b0-b5: DO1 đọc data_level_units() của 087 — nạp sau 083 trong giao dịch.
+export const SQL_087 = readFileSync(path.join(GOC, "db/migrations/087_thang_bac_moi.sql"), "utf8");
 const DB = process.env.DATABASE_URL;
 const coDb = { skip: DB ? false : "thiếu DATABASE_URL — chạy qua npm test (DB thử của lượt)" };
 
@@ -323,6 +325,7 @@ export async function trongGiaoDich(fn) {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     await c.query(SQL_083);
+    await c.query(SQL_087);
     await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('2025-01-15__s03', 'hanoi', 'zalo-agent', '{}')
                    ON CONFLICT DO NOTHING`);
     await fn(c);
@@ -567,11 +570,19 @@ async function tinDu(c, { ma, source = "S03", gia = 3400000000, dt = 62, area = 
     method: "e1_rule", method_version: "do1-test", rule_id: "do1" }]);
   return oid;
 }
+/** Căn = căn danh bạ (082) có tin gắn, qua vị từ offer_unit_key của 087 (thang 08/11) — fixture thay thân vị từ bằng bảng
+ * tạm tin → căn; mỗi lần gọi lấy một căn đang hiệu lực chưa dùng. Gỡ tin khỏi căn: `boGan`. */
+let canDung = 0;
 async function can(c, oids) {
-  const { rows: [{ id }] } = await c.query(`INSERT INTO properties (kind, property_type, first_seen, last_seen) VALUES ('sale', 'apartment', now(), now()) RETURNING id`);
-  for (const o of oids) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [id, o]);
-  return `can:${id}`;
+  await c.query("CREATE TEMP TABLE IF NOT EXISTS do1_gan (offer_id text PRIMARY KEY, unit_key text) ON COMMIT DROP");
+  await c.query(`CREATE OR REPLACE FUNCTION offer_unit_key(p_offer_id text) RETURNS text LANGUAGE sql STABLE AS
+    $f$ SELECT unit_key FROM pg_temp.do1_gan WHERE offer_id = p_offer_id $f$`);
+  const { rows: [u] } = await c.query("SELECT unit_key FROM units WHERE status = 'active' ORDER BY unit_key OFFSET $1 LIMIT 1", [canDung++]);
+  assert.ok(u, "bản chép không đủ căn danh bạ đang hiệu lực (082)");
+  for (const o of oids) await c.query("INSERT INTO pg_temp.do1_gan VALUES ($1, $2)", [o, u.unit_key]);
+  return `can:${u.unit_key}`;
 }
+const boGan = (c, oids) => c.query("DELETE FROM pg_temp.do1_gan WHERE offer_id = ANY ($1)", [oids]);
 test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi khoá, một dòng mỗi đơn vị, chạy lại 0 dòng", coDb, async () => {
   await trongGiaoDich(async (c) => {
     const { rows: [{ ward }] } = await c.query("SELECT id AS ward FROM areas WHERE region_type = 'submarket' LIMIT 1");
@@ -596,9 +607,7 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
     await c.query(`UPDATE sale_offer_records SET field_provenance = (SELECT jsonb_object_agg(k, jsonb_build_object('measured', 'true'))
                    FROM unnest(ARRAY['kind','property_type','price_vnd','area_m2','area_id']) k) WHERE offer_id = $1`, [o.f1]);
     await c.query("UPDATE sale_offer_records SET price_vnd = NULL, area_m2 = NULL WHERE offer_id = $1", [o.G]);
-    const pId = Number(P.slice(4));
-    await c.query("DELETE FROM property_offers WHERE property_id = $1", [pId]);
-    await c.query("DELETE FROM properties WHERE id = $1", [pId]);
+    await boGan(c, [o.h1]);   // tin h1 rời căn P sang căn Q (bảng nối đổi) → đổi khoá
     const Q = await can(c, [o.h1]);
     const ky = {
       [`tin:${o.A}`]: ["tut", ["thieu-gia"]], [`tin:${o.B}`]: ["len", ["du-dien-tich"]], [`tin:${o.C}`]: ["mat", ["gan-can"]], [K]: ["moi", ["gan-can"]],
@@ -625,13 +634,10 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
       for (const [chieu, v] of Object.entries(d.lat)) assert.equal(Object.values(v.o).reduce((s, n) => s + n, 0), v.tong, `lát ${chieu}`);
       // Lát toà đọc core của đơn vị (bộ ghi): tin A nêu toà S8.02 mà danh bạ chưa có → đúng 1 ô chua-co-danh-ba.
       if (d.lat.toa.o["chua-co-danh-ba"] !== 1) throw new Error(`GOP HAI O CHUA GAN: toa ${JSON.stringify(d.lat.toa.o)}`);
-      // data_level_unit khớp hai hàm SQL ở mọi đơn vị.
+      // data_level_unit khớp tập đơn vị data_level_units() của 087 ở mọi đơn vị (khoá và bậc).
       const { rows: [{ lech }] } = await c.query(`
-        SELECT count(*)::int AS lech FROM data_level_unit u
-          LEFT JOIN property_data_level(NULL) b ON u.unit_key = 'can:' || b.property_id
-          LEFT JOIN sale_offers s ON u.unit_key = 'tin:' || s.offer_id
-          LEFT JOIN LATERAL offer_data_level(s.kind, s.property_type, s.price_vnd, s.area_m2, s.area_id, false) l ON s.offer_id IS NOT NULL
-         WHERE u.data_level IS DISTINCT FROM coalesce(b.data_level, l.data_level)`);
+        SELECT count(*)::int AS lech FROM data_level_unit u FULL JOIN data_level_units() d USING (unit_key)
+         WHERE u.data_level IS DISTINCT FROM d.data_level`);
       assert.equal(lech, 0);
       await doHangNgay(c, { ngay: "2025-01-15", write: true });
       await kiem(); // chạy lại không đổi dữ liệu: vẫn đúng các dòng ấy

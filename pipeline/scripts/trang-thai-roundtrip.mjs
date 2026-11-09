@@ -85,13 +85,18 @@ async function main() {
     await c.query("BEGIN");
     try {
       await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
-      const { rows: [f] } = await c.query("SELECT pg_get_functiondef('property_data_level(bigint[])'::regprocedure) AS d");
-      const ve = "\n                         AND coalesce(g.n, 0) >= 2";
-      if (!f.d.includes(ve)) throw new Error("property_data_level không còn vế lịch sử giá — sửa phép đo theo hàm");
-      await c.query(f.d.replace("public.property_data_level(", "pg_temp.bac_bo_ve_gia(").replace(ve, ""));
+      // thang-bac-moi-b0-b5 (087): căn = căn danh bạ có tin gắn, hàm unit_data_level(); DB chưa áp 087 giữ hàm của 059.
+      const { rows: [moi] } = await c.query("SELECT to_regprocedure('unit_data_level()') IS NOT NULL AS co");
+      const [ham, goi, ve] = moi.co
+        ? ["unit_data_level()", "()", "\n                  AND (coalesce(gi.n, 0) >= 2 OR (SELECT count(*) FROM du x WHERE x.uk = g.uk) >= 2)"]
+        : ["property_data_level(bigint[])", "(NULL)", "\n                         AND coalesce(g.n, 0) >= 2"];
+      const ten = ham.slice(0, ham.indexOf("("));
+      const { rows: [f] } = await c.query(`SELECT pg_get_functiondef('${ham}'::regprocedure) AS d`);
+      if (!f.d.includes(ve)) throw new Error(`${ten} không còn vế lịch sử giá — sửa phép đo theo hàm`);
+      await c.query(f.d.replace(`public.${ten}(`, "pg_temp.bac_bo_ve_gia(").replace(ve, ""));
       const { rows: [k] } = await c.query(`SELECT
-        (SELECT count(*) FROM pg_temp.bac_bo_ve_gia(NULL) WHERE data_level = 'B5')::int
-          - (SELECT count(*) FROM property_data_level(NULL) WHERE data_level = 'B5')::int AS k`);
+        (SELECT count(*) FROM pg_temp.bac_bo_ve_gia${goi} WHERE data_level = 'B5')::int
+          - (SELECT count(*) FROM ${ten}${goi} WHERE data_level = 'B5')::int AS k`);
       console.log(`AC-8 căn bị vế lịch sử giá loại: ${k.k}${k.k === 0 ? " — vế lịch sử giá không lọc căn nào" : ""}`);
     } finally {
       await c.query("ROLLBACK");

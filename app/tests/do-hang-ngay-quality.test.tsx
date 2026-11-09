@@ -28,6 +28,9 @@ async function dung(c: pg.Client) {
   await c.query("BEGIN")
   await c.query("SELECT pg_advisory_xact_lock(33033)")
   await c.query(readFileSync(join(GOC, "db/migrations/083_do_hang_ngay.sql"), "utf8"))
+  // thang-bac-moi-b0-b5: DO1 đọc data_level_units() của 087 — DB chưa áp thì nạp trong giao dịch.
+  const { rows: [m] } = await c.query("SELECT to_regprocedure('data_level_units()') IS NOT NULL AS co")
+  if (!m.co) await c.query(readFileSync(join(GOC, "db/migrations/087_thang_bac_moi.sql"), "utf8"))
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('2025-04-01__s03', 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`)
   for (let i = 0; i < 20; i++) {
     const id = `do1q${String(i).padStart(2, "0")}`
