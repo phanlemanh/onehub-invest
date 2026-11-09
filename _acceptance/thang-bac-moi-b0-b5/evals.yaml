@@ -12,6 +12,7 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.tb_db
+    long_running: 40
     paths: [db/migrations/087_thang_bac_moi.sql, pipeline/lib/vocab-core.mjs, pipeline/scripts/thang-bac.itest.mjs]
     expected: "exit 0; ca «TB-AC-1 ref_lookup» trong BEGIN … ROLLBACK trên DB của riêng lượt: nạp 087 THẬT; SELECT lookup_value, label_vi FROM ref_lookup WHERE lookup_name = 'data_level' ORDER BY sort_order so trọn với mảng viết trước của E1; checkDb(readMappings) lọc theo axis = 'data_level' trả []. Chiều đỏ: trước khi nạp 087 (cùng giao dịch, cùng sổ mới), checkDb báo lệch nhãn ở data_level · B2 — ghim thông điệp «ref_lookup lệch sổ ở data_level · B2»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -26,6 +27,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.tb_db
+    long_running: 40
     paths: [db/migrations/087_thang_bac_moi.sql, pipeline/scripts/thang-bac.itest.mjs]
     expected: "exit 0; ca «TB-AC-3 bậc của căn»: trong giao dịch nạp 087 rồi CREATE OR REPLACE offer_unit_key bằng thân fixture (bảng tạm offer → unit_key); fixture viết trước năm căn của danh bạ (082: buildings, units) mỗi căn một tin: thiếu diện tích · đủ trường chưa đo · mọi trường measured · mọi trường fact + đang chào + last_seen hôm nay + hai mốc giá · như trước nhưng last_seen quá freshness_window(); unit_data_level() so trọn với bảng kỳ vọng [unit_key, bậc, chỗ kẹt]: [không có dòng | B3 lam-giau | B4 hieu-luc | B5 giu-nhip | B4 hieu-luc] (căn có tin thiếu trường không có dòng — chưa đạt B3); không fixture (087 nguyên) → unit_data_level() rỗng; to_regprocedure('property_data_level(bigint[])') IS NULL. Chiều đỏ cùng fixture: bản đột biến của unit_data_level bỏ vế last_seen → căn thứ năm lên B5, ca phụ ghim «TB-AC-3 quá cửa sổ vẫn B5»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -33,6 +35,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.tb_db
+    long_running: 40
     paths: [db/migrations/087_thang_bac_moi.sql, pipeline/sql/610_data_level.sql, pipeline/bac-du-lieu.mjs, pipeline/scripts/thang-bac.itest.mjs]
     expected: "exit 0; ca «TB-AC-4 610 đếm đơn vị»: giao dịch nạp 087, xoá data_level_snapshot của hôm nay, dựng fixture viết trước có tiền tố riêng trên các thị trường riêng (một market + một phường mới): tin S03 đủ trường · tin S03 thiếu giá · tin S05 đủ · ba tin S06 đủ cùng một cụm properties · tin S06 gắn căn qua fixture offer_unit_key; chạy ghiAnhChup THẬT (SQL_610); đọc dòng ảnh chụp của thị trường fixture so trọn với bảng kỳ vọng [unit, data_level, n]: [[tin_le,B0,1],[tin_le,B1,5],[can,B3,1]] (ba tin cụm ở B1, tin gắn căn chỉ ở can); mọi dòng hôm nay có scale = 'thang-0811'; khi bỏ fixture offer_unit_key (087 nguyên) không có dòng nào của fixture ở B2 trở lên. Ca «TB-AC-4 hai bộ đếm một tập»: cùng fixture thêm một tin đã rút (retired_at) mỗi nguồn S03, S05, S06; tập unit_key của data_level_units() (dùng cho 610) so trọn với tập khoá donViHienTai THẬT của DO1 và với tập viết trước (tin đã rút không có ở cả hai). Chiều đỏ: SQL_610 đột biến lấy đơn vị tin = tin không có property_offers (luật cũ) → ca ghim «TB-AC-4 tin trong cụm không được đếm»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -40,6 +43,7 @@ evals:
     criterion: AC-5
     executor: test
     cmd: config:executors.test.tb_db
+    long_running: 40
     paths: [db/migrations/087_thang_bac_moi.sql, pipeline/do-hang-ngay.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/scripts/thang-bac.itest.mjs]
     expected: "exit 0; ca «TB-AC-5 DO1 đổi thang»: giao dịch nạp 087 trên DB của riêng lượt; xoá data_level_unit, data_level_change rồi chèn ba dòng data_level_unit scale = 'thang-2310' (một can:<cụm> B2, hai tin:… B0, B1); gọi doHangNgay THẬT ngày D (write) → số dòng data_level_change ngày D = 0; dòng do1-chuyen-bac của kết quả có status skip, detail.ly_do = 'doi-thang', detail.don_vi = số đơn vị hiện hành, detail.thang.ma = 'thang-0811', detail.thang.tu_ngay bằng ngày nhỏ nhất có ảnh chụp scale thang-0811 của fixture (fixture chèn ảnh chụp thang mới ngày D−2, khác D, nên ngày chạy không lọt qua); data_level_unit sau đó chỉ còn scale 'thang-0811'; sửa một tin fixture cho thiếu giá rồi gọi doHangNgay ngày D+1 → có đúng một dòng data_level_change huong 'tut' cho tin đó và dòng do1-chuyen-bac mang detail.thang. Chiều đỏ: bản doHangNgay bỏ nhánh đổi thang (chỉ lập mốc khi bảng rỗng) chạy trên cùng fixture → ghi dòng chuyển ngày D, ca ghim «TB-AC-5 đổi thang ghi dòng chuyển»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -84,6 +88,7 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.test.tb_db
+    long_running: 40
     paths: [pipeline/lib/vocab-core.mjs, db/migrations/087_thang_bac_moi.sql, pipeline/scripts/thang-bac.itest.mjs]
     expected: "exit 0; ca «TB-AC-9 checkDb đọc đúng CHECK»: giao dịch nạp 087; checkDb THẬT với sổ thật → không phần tử nào có column data_level_change.from_level hay data_level_change.to_level; sổ bản sao thêm mã B9 vào trục data_level → checkDb có phần tử column = 'data_level_change.from_level' với msg chứa «thiếu [B9]» và KHÔNG chứa «moi» (đọc CHECK danh sách, không vớ CHECK chéo). Chiều đỏ: bộ chọn CHECK bản cũ (lấy defs[0], giữ trong test làm đối chứng) trên cùng DB ra msg chứa «thừa [moi]», ghim «TB-AC-9 vớ CHECK chéo»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

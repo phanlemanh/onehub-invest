@@ -240,3 +240,67 @@ test("TB-AC-4 chưa áp 087: bac-du-lieu --write bỏ qua có tên, không chụ
     assert.equal(await co087(c), true);
   }, { nap087: false });
 });
+
+// ---- E4 ca hai · AC-4: 610 và DO1 đọc một tập đơn vị ----
+test("TB-AC-4 hai bộ đếm một tập: data_level_units = donViHienTai của DO1 = tập viết trước, tin đã rút không có", async () => {
+  const { donViHienTai } = await import("../do-hang-ngay.mjs");
+  await trongGiaoDich(async () => {
+    const ds = await fixtureAC4();
+    const cuaFixture = (k) => k.startsWith(`tin:${T}`) || k === `can:${ds.unit}`;
+    const ky = [`can:${ds.unit}`, ...[ds.s03, ds.s03Thieu, ds.s05, ...ds.cum].map((o) => `tin:${o}`)].sort();
+    const { rows } = await c.query("SELECT unit_key FROM data_level_units()");
+    const sql = rows.map((r) => r.unit_key).filter(cuaFixture).sort();
+    const do1 = [...(await donViHienTai(c)).keys()].filter(cuaFixture).sort();
+    assert.deepEqual(sql, ky, "TB-AC-4 tập đơn vị của 610 lệch tập viết trước");
+    assert.deepEqual(do1, sql, "TB-AC-4 DO1 và 610 đếm hai tập khác nhau");
+    for (const o of ds.rut) assert.ok(!sql.includes(`tin:${o}`), `tin đã rút ${o} vẫn là đơn vị`);
+  });
+});
+
+// ---- E5 · AC-5: DO1 ngày đổi thang lập mốc lại, ngày kế ghi dòng chuyển ----
+test("TB-AC-5 DO1 đổi thang: ngày D không ghi dòng chuyển, doi-thang + ngày áp; ngày D+1 ghi như thường (kèm chiều đỏ)", async () => {
+  const { doHangNgay, donViHienTai } = await import("../do-hang-ngay.mjs");
+  const D = "2026-11-12", D1 = "2026-11-13", AP = "2026-11-10";
+  const nen = async (db) => {
+    await db.query("DELETE FROM data_level_unit; DELETE FROM data_level_change");
+    await db.query(`INSERT INTO data_level_unit (unit_key, unit, source, data_level, ke_thieu, core, seen_on, scale) VALUES
+      ('can:999999001', 'can', 'S06', 'B2', 'so-do', '{"tin": []}', '2026-11-08', 'thang-2310'),
+      ('tin:${T}-cu-1', 'tin_le', 'S03', 'B0', 'truong-loi', '{"tin": []}', '2026-11-08', 'thang-2310'),
+      ('tin:${T}-cu-2', 'tin_le', 'S03', 'B1', 'gan-can', '{"tin": []}', '2026-11-08', 'thang-2310')`);
+    await db.query(`DELETE FROM data_level_snapshot WHERE scale = 'thang-0811';
+      INSERT INTO data_level_snapshot (snap_date, market_id, property_type, unit, data_level, n, scale)
+      VALUES ('${AP}', 'chua-ro', 'unknown', 'tin_le', 'B1', 1, 'thang-0811')`);
+  };
+  await trongGiaoDich(async () => {
+    const { ward } = await khuVaCan(0);
+    const t1 = await tin({ ward, source: "S03" });
+    await nen(c);
+    const lan1 = await doHangNgay(c, { ngay: D, write: true });
+    const { rows: [n] } = await c.query("SELECT count(*)::int AS n FROM data_level_change WHERE snap_date = $1", [D]);
+    assert.equal(n.n, 0, "TB-AC-5 đổi thang ghi dòng chuyển");
+    const r = lan1.dq.find((x) => x.check_name === "do1-chuyen-bac");
+    assert.equal(r.status, "skip");
+    assert.equal(r.detail.ly_do, "doi-thang");
+    assert.equal(r.detail.don_vi, (await donViHienTai(c)).size);
+    assert.deepEqual(r.detail.thang, { ma: "thang-0811", tu_ngay: AP }, "ngày áp phải là ngày nhỏ nhất có ảnh chụp thang mới");
+    const { rows: thang } = await c.query("SELECT DISTINCT scale FROM data_level_unit");
+    assert.deepEqual(thang.map((x) => x.scale), ["thang-0811"]);
+    await doHangNgay(c, { ngay: D, write: true });   // chạy lại cùng ngày đổi thang: vẫn không dòng chuyển nào
+    const { rows: [n2] } = await c.query("SELECT count(*)::int AS n FROM data_level_change WHERE snap_date = $1", [D]);
+    assert.equal(n2.n, 0, "TB-AC-5 chạy lại ngày đổi thang ghi dòng chuyển");
+
+    await c.query("UPDATE sale_offer_records SET price_vnd = NULL WHERE offer_id = $1", [t1]);
+    const lan2 = await doHangNgay(c, { ngay: D1, write: true });
+    const { rows: dong } = await c.query(
+      "SELECT unit_key, huong FROM data_level_change WHERE snap_date = $1 AND unit_key LIKE $2", [D1, `tin:${T}%`]);
+    assert.deepEqual(dong.map((x) => [x.unit_key, x.huong]), [[`tin:${t1}`, "tut"]]);
+    assert.deepEqual(lan2.dq.find((x) => x.check_name === "do1-chuyen-bac").detail.thang, { ma: "thang-0811", tu_ngay: AP });
+  });
+  await trongGiaoDich(async () => {   // chiều đỏ: bỏ nhánh đổi thang → ngày D ghi dòng chuyển (đơn vị thang cũ «mất»)
+    await nen(c);
+    await doHangNgay(c, { ngay: D, write: true, dotBien: "bo-doi-thang" });
+    const { rows: [n] } = await c.query("SELECT count(*)::int AS n FROM data_level_change WHERE snap_date = $1", [D]);
+    assert.ok(n.n > 0, "đối chứng đỏ: bỏ nhánh đổi thang mà không có dòng chuyển — thước không phân biệt");
+    assert.throws(() => assert.equal(n.n, 0, "TB-AC-5 đổi thang ghi dòng chuyển"), /TB-AC-5 đổi thang ghi dòng chuyển/);
+  });
+});
