@@ -5,7 +5,7 @@ slug: bai-nhan-tru-bai-chi-anh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-09-bai-nhan-tru-bai-chi-anh-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09
@@ -101,3 +101,15 @@ không đổi số; nhánh Yêu cầu khớp số bài Yêu cầu»):
   đọc = 68,1%; trước DF6 là 42,9% (tin rao / bài nhận). Hỏi-2 đã chốt ở Cổng Phạm vi: Yêu cầu là đầu ra ngang tin rao
   (sổ `d-20261109T005328Z-11`). Hỏi-1 (ảnh chưa ghép có ở mẫu số không) còn chờ: bỏ → (58.769 / 66.422) = 88,5%.
 - Bước làm tươi cloud-sync (15 phút) dài thêm ~6–16 giây (tính nhánh bằng hàm transform trên ~110 nghìn bài).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-1: Trên màn hình máy tính 1280 px (thanh bên Ops mở), biểu đồ dòng chảy S03 rộng hơn khung nên phải cuộn ngang, và chữ ở đầu cột «Gắn căn» (ví dụ «156 chờ khớp») bị cắt ở mép phải. Số liệu vẫn đúng, chỉ phần hiển thị bị cắt.
+  - Ngoài-2: Công cụ đo nội bộ có thể ghi vào một kho dữ liệu không phải kho thử nếu chạy nhầm. Người dùng cổng không bị ảnh hưởng.
+  - Ngoài-3: Màu của chặng «Yêu cầu» trên biểu đồ hơi nhạt ở giao diện sáng và lệch tông giữa chú giải với thanh ở giao diện tối. Số liệu vẫn đúng.
+  - Ngoài-4: Công cụ đối chiếu số có thể báo lệch giả khi có bài thử chỉ chứa đường link thử nghiệm. Số hiển thị cho người dùng không sai.
+  - Ngoài-5: Bài thử tự động kiểm ô «Đọc được» theo ngày hơi lỏng, nên nếu sau này ô ghi sai số thì có thể không bị bắt. Hiện số trên màn hình chưa thấy sai.
+  - Ngoài-6: Bài thử không đọc trực tiếp đường «Đọc được» theo ngày mà biểu đồ vẽ, nên một lỗi vẽ sai sau này có thể không bị phát hiện.
+  - Ngoài-7: Bài thử khẳng định nguồn S05 không bị đổi số nhưng phần đối chứng chưa thật sự chứng minh bài mới đã được đếm. Người dùng chưa thấy số sai.
+  - Ngoài-8: Hàng nguồn S01 trong lưới chất lượng chưa được bài thử tự động kiểm, nên nếu bị đổi số nhầm thì có thể không ai thấy ngay.
+  - Ngoài-9: Khi làm tươi ở chế độ trần, bài thử chỉ so số theo nguồn chứ chưa so số theo ngày, nhóm; chênh lệch ở đó có thể lọt. Chưa thấy chênh lệch thật.
+  - Ngoài-10: Với dữ liệu đời trước chưa có nhánh, bài thử chỉ kiểm nhãn của ô tỉ lệ chứ không kiểm con số, nên tỉ lệ ghi sai dưới nhãn đúng có thể lọt.
+  - Ngoài-11: Bài thử xác nhận bản cloud giống máy thu nhưng nếu cả hai cùng mất số thì vẫn báo xanh. Chưa thấy bản cloud thiếu số thật.

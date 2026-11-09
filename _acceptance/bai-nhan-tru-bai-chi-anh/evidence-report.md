@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8981a8ebff815a0ef28c96be3f5ef2d64c6bf60a
-human_signoff:
+human_signoff: Mạnh 2026-11-09
 ---
 
 # Evidence Report: bai-nhan-tru-bai-chi-anh
@@ -135,7 +135,7 @@ Round 3: toàn bộ eval giữ nguyên từ round trước (delta không chạm 
   run_id: minted-bai-nhan-tru-bai-chi-anh-E11-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3465); bản tổng hợp ghi khoá executors.ui-check không có trong config — sửa nhãn theo tiền lệ của kho
   verified_at: 2026-11-09T05:23:44Z
   carried_from_round: 2
   screenshot: evidence/E11-step1.png
