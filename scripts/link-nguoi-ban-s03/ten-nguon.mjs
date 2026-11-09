@@ -87,6 +87,38 @@ function tepHoSo(dir) {
   return out;
 }
 
+/** Tệp phép quét đọc: đổi so với base, chưa theo dõi, luôn quét, mọi tệp hồ sơ; bỏ ảnh và tệp nén. */
+export function lietKeTep(base) {
+  const doi = [...git("diff", "--name-only", "--diff-filter=AMR", base, "--").split("\n"),
+    ...git("ls-files", "--others", "--exclude-standard").split("\n")].filter(Boolean);
+  return [...new Set([...doi, ...LUON_QUET, ...tepHoSo(HO_SO)])]
+    .filter((f) => existsSync(join(ROOT, f)) && !/\.(png|jpe?g|gz|webp)$/i.test(f));
+}
+
+/**
+ * So một tệp trước–sau: số lần xuất hiện của từng tên sau trừ trước (bản ở base), đã miễn đường extension và định danh upstream theo
+ * vùng. `doc`/`docGoc` thay được để đối chứng chạy đúng phép so này trên nội dung dựng sẵn. Trả null khi tệp biến mất giữa lúc liệt kê
+ * và lúc đọc (bộ test chạy song song tạo rồi xoá tệp tạm) — lỗi đọc khác vẫn ném.
+ */
+export function quetMotTep(f, base, { entries, dinhDanh, tenTheoMa }, {
+  doc = () => readFileSync(join(ROOT, f), "utf8"),
+  docGoc = () => git("show", `${base}:${f}`),
+} = {}) {
+  const mien = (x) => {
+    const a = f === PATCH ? boDuongExtension(x) : x;
+    return VUNG_DINH_DANH(f) ? boDinhDanhUpstream(a, dinhDanh, tenTheoMa) : a;
+  };
+  let noiDung;
+  try { noiDung = doc(); } catch (e) { if (e?.code === "ENOENT") return null; throw e; }
+  const sau = mien(noiDung);
+  let truoc = "";
+  try { truoc = mien(docGoc()); } catch { /* tệp mới */ }
+  const a = dem(truoc, entries);
+  const moi = [];
+  for (const [code, n] of dem(sau, entries)) if (n > (a.get(code) ?? 0)) moi.push(`${code} +${n - (a.get(code) ?? 0)} ${f}`);
+  return { moi, link: MAU_LINK.test(sau) && !MAU_LINK.test(truoc) };
+}
+
 export async function chay(argv) {
   const k = boKiem("ten-nguon");
   const c = await noiDbThu();
@@ -107,27 +139,15 @@ export async function chay(argv) {
   for (const e of entries) tenTheoMa.set(e.code, [...(tenTheoMa.get(e.code) ?? []), e.realName]);
   const dinhDanh = dinhDanhUpstream(readFileSync(join(ROOT, HOP_DONG), "utf8"));
   const base = argv.includes("--base") ? argv[argv.indexOf("--base") + 1] : git("merge-base", "HEAD", "origin/main").trim();
-  const doi = [...git("diff", "--name-only", "--diff-filter=AMR", base, "--").split("\n"),
-    ...git("ls-files", "--others", "--exclude-standard").split("\n")].filter(Boolean);
-  const tep = [...new Set([...doi, ...LUON_QUET, ...tepHoSo(HO_SO)])]
-    .filter((f) => existsSync(join(ROOT, f)) && !/\.(png|jpe?g|gz|webp)$/i.test(f));
+  const ngucanh = { entries, dinhDanh, tenTheoMa };
+  const tep = lietKeTep(base);
   const moi = [];
   const link = [];
   for (const f of tep) {
-    const mien = (x) => {
-      const a = f === PATCH ? boDuongExtension(x) : x;
-      return VUNG_DINH_DANH(f) ? boDinhDanhUpstream(a, dinhDanh, tenTheoMa) : a;
-    };
-    // Tệp chưa theo dõi có thể biến mất giữa lúc liệt kê và lúc đọc (bộ test chạy song song tạo rồi xoá tệp tạm): không còn thì
-    // không có gì để quét — bỏ qua tệp ấy, không dừng cả phép quét. Lỗi đọc khác vẫn ném.
-    let noiDung;
-    try { noiDung = readFileSync(join(ROOT, f), "utf8"); } catch (e) { if (e?.code === "ENOENT") continue; throw e; }
-    const sau = mien(noiDung);
-    let truoc = "";
-    try { truoc = mien(git("show", `${base}:${f}`)); } catch { /* tệp mới */ }
-    const a = dem(truoc, entries);
-    for (const [code, n] of dem(sau, entries)) if (n > (a.get(code) ?? 0)) moi.push(`${code} +${n - (a.get(code) ?? 0)} ${f}`);
-    if (MAU_LINK.test(sau) && !MAU_LINK.test(truoc)) link.push(f);
+    const kq = quetMotTep(f, base, ngucanh);
+    if (!kq) continue;
+    moi.push(...kq.moi);
+    if (kq.link) link.push(f);
   }
   for (const m of moi) console.log(`MỚI ${m}`);
   for (const f of link) console.log(`MẪU LINK ${f}`);
@@ -135,13 +155,33 @@ export async function chay(argv) {
   k.kiem(`0 lần xuất hiện mới của tên nguồn (${moi.length})`, moi.length === 0);
   k.kiem(`không có mẫu link hồ sơ trong kho (${link.length})`, link.length === 0);
 
-  // Đối chứng: tên của sổ (tách đôi bằng phép cộng chuỗi) trong tệp tạm → phải bắt được.
+  // Đối chứng 1 — đúng đường quét thật: một tệp chưa theo dõi mới trong kho mang tên của sổ (tách đôi bằng phép cộng chuỗi) phải
+  // được bước liệt kê thấy và phép so trước–sau bắt. Tệp xoá ngay sau đó; nó chưa theo dõi nên không đổi cây đang theo dõi.
+  const ten = entries.find((e) => e.realName.length >= 6)?.realName ?? entries[0].realName;
+  const giua = Math.floor(ten.length / 2);
+  const tepDoiChung = `scripts/link-nguoi-ban-s03/doi-chung-ten-nguon-${process.pid}.mjs`;
+  try {
+    writeFileSync(join(ROOT, tepDoiChung), `const a = "${ten.slice(0, giua)}" + "${ten.slice(giua)}";\n`);
+    const thay = lietKeTep(base).includes(tepDoiChung);
+    const kq = thay ? quetMotTep(tepDoiChung, base, ngucanh) : null;
+    k.kiem("đối chứng: tệp mới chưa theo dõi trong kho được liệt kê và tên tách chuỗi trong đó bị phép quét bắt",
+      thay && (kq?.moi.length ?? 0) > 0);
+  } finally {
+    rmSync(join(ROOT, tepDoiChung), { force: true });
+  }
+  // Đối chứng 2 — phép so trước–sau trên tệp đã theo dõi mà bản ở base vốn có tên: thêm đúng một lần → +1, giữ nguyên → 0.
+  const coSan = tep.find((f) => { try { return dem(git("show", `${base}:${f}`), entries).size > 0; } catch { return false; } });
+  if (coSan) {
+    const goc = git("show", `${base}:${coSan}`);
+    const them = quetMotTep(coSan, base, ngucanh, { doc: () => `${goc}\n// ${ten}\n`, docGoc: () => goc });
+    const giu = quetMotTep(coSan, base, ngucanh, { doc: () => goc, docGoc: () => goc });
+    k.kiem("đối chứng: tệp đã có tên ở base — thêm một lần thì phép so ra +1, giữ nguyên thì ra 0",
+      them?.moi.some((m) => / \+1 /.test(m)) && giu?.moi.length === 0);
+  } else {
+    k.kiem("đối chứng: có tệp được quét mà bản ở base mang tên nguồn (để đo phép so trước–sau)", false);
+  }
   const tam = mkdtempSync(join(tmpdir(), "lnb-tn-"));
   try {
-    const ten = entries.find((e) => e.realName.length >= 6)?.realName ?? entries[0].realName;
-    const giua = Math.floor(ten.length / 2);
-    writeFileSync(join(tam, "x.mjs"), `const a = "${ten.slice(0, giua)}" + "${ten.slice(giua)}";\n`);
-    k.kiem("đối chứng: tên tách chuỗi trong tệp tạm bị bắt", dem(readFileSync(join(tam, "x.mjs"), "utf8"), entries).size > 0);
     const ten2 = entries.find((e) => e.realName.length >= 4)?.realName ?? "";
     const mau = `diff --git a/extensions/${ten2}/x.ts b/extensions/${ten2}/x.ts\n+++ b/extensions/${ten2}/x.ts\n+// ${ten2}\n`;
     k.kiem("đối chứng: miễn chỉ đường đầu khối diff, dòng nội dung .patch vẫn bị bắt",
