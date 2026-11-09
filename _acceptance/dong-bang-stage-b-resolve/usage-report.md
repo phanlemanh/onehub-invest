@@ -96,3 +96,46 @@ wall: 1566s
 - **claude-sonnet-5-5**: 7 agent · 24 calls · out 25,139 · in 48 · cache_read 557,416 · cache_create 261,379
 - **claude-haiku-5-5**: 13 agent · 33 calls · out 20,457 · in 66 · cache_read 514,105 · cache_create 393,020
 
+### S4 round 2 (thử lại) — wf_871c98fa-8eb (21 agent, 86,165 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 13 | 13,993 | 26 | 844,360 | 149 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 12 | 12,625 | 24 | 393,914 | 1038 |
+| review:bugs | claude-opus-5-5 | 23 | 10,400 | 46 | 1,376,065 | 129 |
+| review:conventions | claude-opus-5-5 | 18 | 9,667 | 36 | 1,362,908 | 117 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 8,178 | 4 | 41,607 | 50 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 7,318 | 6 | 74,347 | 96 |
+| machine:cd app && npm test | claude-haiku-5-5 | 5 | 3,764 | 10 | 90,396 | 712 |
+| triage | claude-sonnet-5-5 | 2 | 3,353 | 4 | 29,654 | 30 |
+| machine:bash db/db-thu.sh oneinvest_suite_dbs_mj | claude-haiku-5-5 | 2 | 3,251 | 4 | 27,998 | 29 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,098 | 4 | 27,953 | 9 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,708 | 4 | 27,947 | 8 |
+| machine:cd pipeline && bash ../db/db-thu.sh onei | claude-haiku-5-5 | 2 | 1,512 | 4 | 28,037 | 155 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,311 | 4 | 27,958 | 18 |
+| refute:dong-bang-khong-ghi.test.mjs | claude-sonnet-5-5 | 4 | 1,180 | 8 | 80,648 | 25 |
+| machine:cd app && bash ../db/db-thu.sh oneinvest | claude-haiku-5-5 | 2 | 1,119 | 4 | 27,997 | 23 |
+| machine:cd pipeline && bash ../db/db-thu.sh onei | claude-haiku-5-5 | 2 | 960 | 4 | 28,014 | 20 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 951 | 4 | 27,935 | 31 |
+| machine:node --test pipeline/tests/resolve-prope | claude-haiku-5-5 | 2 | 874 | 4 | 27,965 | 13 |
+| machine:node --test scripts/dong-bang-khong-ghi. | claude-haiku-5-5 | 2 | 814 | 4 | 27,964 | 7 |
+| machine:cd agent && node --import tsx --test tes | claude-haiku-5-5 | 2 | 760 | 4 | 27,965 | 8 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 329 | 4 | 23,542 | 11 |
+
+
+wall: 1953s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 7,318 | 74,347 | 96 | 18:23:42 | 18:25:19 |
+| machine | 13 | 31,747 | 792,043 | 1828 | 18:23:42 | 18:54:10 |
+| review | 3 | 34,060 | 3,583,333 | 151 | 18:23:42 | 18:26:13 |
+| triage | 1 | 3,353 | 29,654 | 30 | 18:54:12 | 18:54:42 |
+| refute | 1 | 1,180 | 80,648 | 25 | 18:54:44 | 18:55:09 |
+| capture | 1 | 329 | 23,542 | 11 | 18:55:12 | 18:55:23 |
+| synthesize | 1 | 8,178 | 41,607 | 50 | 18:55:26 | 18:56:16 |
+
+- **claude-opus-5-5**: 3 agent · 54 calls · out 34,060 · in 108 · cache_read 3,583,333 · cache_create 305,877
+- **claude-haiku-5-5**: 13 agent · 39 calls · out 31,747 · in 78 · cache_read 792,043 · cache_create 380,072
+- **claude-sonnet-5-5**: 5 agent · 13 calls · out 20,358 · in 26 · cache_read 249,798 · cache_create 189,457
+
