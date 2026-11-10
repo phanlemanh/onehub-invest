@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 56b3a7d2e28d650c131bf5a3d25b028275d2bdcf
+verified_commit: a92c2890ba7b4851a8395eccac5ab3674c021b32
 human_signoff: Mạnh 2026-11-10
 ---
 
@@ -164,3 +164,7 @@ none — every multi-run eval is uniform
 
 Round 1: tat ca eval xanh (E1-E8b) — khong co eval that bai, khong co cau hoi cho nguoi phan xu.
 
+
+### Re-pin lần 1 — 2026-11-10, do gộp main có #392, #399 đổi pipeline/**
+run_id: repin-20261110T065815Z-91473
+sha: a92c2890ba7b4851a8395eccac5ab3674c021b32 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
