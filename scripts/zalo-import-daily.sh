@@ -156,16 +156,52 @@ fi
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
-job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
-job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
-job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
-# Lượt nhanh 15′ (S03_LUOT_NHANH=1) dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt
-# 00:00 cho tới khi hàng s03-len-nhanh-nac-1 của N1 gộp ENRICH_LIMIT=0 ban ngày +
-# lock_timeout (lời giám sát 10/11). Khoá nạp nhả qua trap EXIT.
-if [ "${S03_LUOT_NHANH:-0}" = "1" ]; then
+# s03-len-nhanh-nac-1 (Mạnh duyệt 10/11): lượt nhanh 15′ (S03_LUOT_NHANH=1) cho ba bước transform chờ khoá DB tối đa
+# S03_NHANH_LOCK_TIMEOUT (mặc định 10s) qua PGOPTIONS — bước nạp phía trên và lượt 00:00 không nhận. Bước hỏng vì khoá
+# (đầu ra có «lock timeout» / 55P03; ba bước đều một giao dịch nên lùi trọn) → dòng «BỎ LƯỢT», không tính vào mã thoát,
+# lượt sau làm; bỏ 8 lượt nhanh liền (sổ pipeline/logs/zalo-import-bo-luot.state, ≈2 giờ) → JOB FAIL, thoát 75. Lỗi khác
+# vẫn JOB FAIL như job_run. Lượt nhanh không bỏ bước nào, hay lượt 00:00, đặt lại sổ về 0.
+NHANH="${S03_LUOT_NHANH:-0}"
+SO_BO="$ROOT/pipeline/logs/zalo-import-bo-luot.state"
+BO_LUOT=0
+[ "$NHANH" = "1" ] && export PGOPTIONS="${PGOPTIONS:+$PGOPTIONS }-c lock_timeout=${S03_NHANH_LOCK_TIMEOUT:-10s}"
+buoc_nhanh() {
+  local job="$1" nhan="$2" ra rc
+  shift 2
+  ra=$(mktemp)
+  "$@" 2>&1 | tee "$ra"
+  rc=${PIPESTATUS[0]}
+  if [ "$rc" -ne 0 ] && grep -qE 'lock timeout|55P03' "$ra"; then
+    echo "BỎ LƯỢT [$job] bước $nhan: đụng khoá — lượt sau làm" >&2
+    BO_LUOT=1
+  elif [ "$rc" -ne 0 ]; then
+    echo "JOB FAIL [$job] bước $nhan mã $rc" >&2
+    [ "$JOB_RC" -eq 0 ] && JOB_RC=$rc
+  fi
+  rm -f "$ra"
+  return 0
+}
+buoc() { if [ "$NHANH" = "1" ]; then buoc_nhanh "$@"; else job_run "$@"; fi; }
+buoc zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+buoc zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
+buoc zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+mkdir -p "$(dirname "$SO_BO")"
+# Lượt nhanh 15′ dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt 00:00 (hàng s03-nap-nhanh). Khoá nạp nhả qua trap EXIT.
+if [ "$NHANH" = "1" ]; then
+  if [ "$BO_LUOT" = "1" ]; then
+    n=$(cat "$SO_BO" 2>/dev/null); [[ "$n" =~ ^[0-9]+$ ]] || n=0
+    n=$((n + 1)); echo "$n" > "$SO_BO"
+    if [ "$n" -ge 8 ] && [ "$JOB_RC" -eq 0 ]; then
+      echo "JOB FAIL [zalo-import-daily] đụng khoá $n lượt liền" >&2
+      exit 75
+    fi
+  else
+    echo 0 > "$SO_BO"
+  fi
   echo "lượt nhanh: bỏ đọc gộp + enrich (chạy ở lượt 00:00)"
   exit "$JOB_RC"
 fi
+echo 0 > "$SO_BO"
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
 # (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
 trap - EXIT; rm -rf "$LOCK_DIR"
