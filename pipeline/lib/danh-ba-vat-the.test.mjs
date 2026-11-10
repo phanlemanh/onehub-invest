@@ -201,3 +201,104 @@ test("DBM-AC-8 soDem, nhanSo: hai chiều", () => {
   assert.equal(nhanSo(new Map()), "chua-so");
   assert.equal(nhanSo(new Map([["x", { toa: 0, truc: 0, can: 0 }]])), "chua-so");
 });
+
+// ---- DV1 nut-du-an-tro-xa-moi (E1, E2, E5, E8): tệp xã của nút, suy mã theo mã, bẫy cùng tên, tài liệu. Không DB. ----
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { kiemMucXa, kiemTepXa, slugNutTuSeed, traXaCuTheoTen, xaMoiCuaNut } from "./danh-ba-vat-the.mjs";
+import { docDanhBa, idXa, slugTrungTrongTinh, thiTruongCuaTinh } from "./dvhc.mjs";
+
+const GOC_DV1 = join(import.meta.dirname, "../..");
+const GOC_VONG_DV1 = "56ca87d1e7777aee6c6b586ac63e1624506fb754";
+const TEP_XA_THAT = JSON.parse(readFileSync(join(GOC_DV1, "pipeline/data/xa-nut-du-an.json"), "utf8"));
+const SLUG_SEED = slugNutTuSeed(readFileSync(join(GOC_DV1, "db/migrations/026_asset_nodes.sql"), "utf8"));
+const banSao = () => structuredClone(TEP_XA_THAT);
+
+test("DV1-AC-1 tệp xã thật đủ 20 nút của seed, mỗi mục đúng khuôn; năm phá đỏ đúng thông điệp", () => {
+  assert.equal(SLUG_SEED.length, 20, "DV1-AC-1 seed 026 phải có 20 nút dự án");
+  const nut = TEP_XA_THAT.nut;
+  for (const s of SLUG_SEED) assert.ok(s in nut, `DV1-AC-1 thiếu nút ${s}`);
+  assert.deepEqual(Object.keys(nut).filter((s) => !SLUG_SEED.includes(s)), [], "DV1-AC-1 slug lạ");
+  for (const [s, m] of Object.entries(nut)) assert.deepEqual(kiemMucXa(s, m), [], `DV1-AC-1 ${s}: khuôn`);
+  assert.deepEqual(kiemTepXa(TEP_XA_THAT, SLUG_SEED), [], "DV1-AC-1 tệp thật lành");
+  const pha = (sua) => { const t = banSao(); sua(t.nut); return kiemTepXa(t, SLUG_SEED); };
+  assert.ok(pha((n) => delete n["ecopark"]).includes("thiếu nút ecopark"), "DV1-AC-1 thiếu nút ecopark");
+  assert.ok(pha((n) => { n["khu-la"] = n["ecopark"]; }).includes("slug lạ khu-la"), "DV1-AC-1 slug lạ khu-la");
+  assert.ok(pha((n) => { delete n["ecopark"].xa_cu[0].nguon.url; }).includes("ecopark: thieu-nguon"), "DV1-AC-1 ecopark: thieu-nguon");
+  assert.ok(pha((n) => { delete n["vinhomes-grand-park"].nguon_chon; }).includes("vinhomes-grand-park: thieu-nguon"),
+    "DV1-AC-1 vinhomes-grand-park: thieu-nguon");
+  assert.ok(pha((n) => { delete n["saluto"].ly_do; }).includes("saluto: thieu-ly-do"), "DV1-AC-1 saluto: thieu-ly-do");
+});
+
+// Bảng tổng hợp: Q1 nguyên → A; Q2 tách → {A, B}; Q3 nguyên → B; P1, P2 cùng tên «An Phú» khác mã (bẫy).
+const NGUON = { ten: "Nguồn thử", url: "https://vi-du.invalid/x" };
+const xc = (old_code) => ({ old_code, ten: "x", huyen: "h", nguon: NGUON });
+const BANG = {
+  biDanh: new Map([["11111", { targets: ["90001"], split: false }], ["22222", { targets: ["90001", "90002"], split: true }],
+    ["33333", { targets: ["90002"], split: false }], ["27091", { targets: ["90010"], split: false }],
+    ["25975", { targets: ["90020"], split: false }], ["44444", { targets: ["90009"], split: false }]]),
+  maXa: new Map([["90001", { id: "q-xa-a", region_type: "submarket" }], ["90002", { id: "q-xa-b", region_type: "submarket" }],
+    ["90010", { id: "q-an-phu-thu-duc", region_type: "submarket" }], ["90020", { id: "q-an-phu-thuan-an", region_type: "submarket" }]]),
+  thiTruong: new Set(["q-tinh"]),
+};
+
+test("DV1-AC-2 suy mã: bốn đường đúng, sáu lỗi mỗi lỗi một mã có đối chứng lành, bẫy cùng tên ra hai mã", () => {
+  const o = (muc, mong, tin) => assert.deepEqual(xaMoiCuaNut(muc, BANG), mong, tin);
+  o({ cap: "xa", xa_cu: [xc("11111")] }, { area_ids: ["q-xa-a"] }, "DV1-AC-2 xã cũ nguyên");
+  o({ cap: "xa", xa_cu: [xc("22222")], chon: ["90002"], nguon_chon: NGUON }, { area_ids: ["q-xa-b"] }, "DV1-AC-2 tách có chon");
+  o({ cap: "xa", xa_cu: [xc("11111"), xc("33333"), xc("11111")] }, { area_ids: ["q-xa-a", "q-xa-b"] }, "DV1-AC-2 nhiều xã cũ, khử trùng");
+  o({ cap: "tinh", tinh: "q-tinh", ly_do: "chưa chốt" }, { area_ids: ["q-tinh"] }, "DV1-AC-2 cấp tỉnh");
+  o({ cap: "xa", xa_cu: [xc("11111")], chon: ["90001"], nguon_chon: NGUON }, { area_ids: ["q-xa-a"] }, "DV1-AC-2 chon khi không tách");
+  // Sáu lỗi: mỗi ô phá đúng một chỗ của một mục lành.
+  o({ cap: "xa", xa_cu: [{ ...xc("11111"), nguon: { ten: "x" } }] }, { loi: "thieu-nguon" }, "DV1-AC-2 thieu-nguon");
+  o({ cap: "xa", xa_cu: [xc("55555")] }, { loi: "xa-cu-khong-co" }, "DV1-AC-2 xa-cu-khong-co");
+  o({ cap: "xa", xa_cu: [xc("22222")] }, { loi: "can-chon-xa" }, "DV1-AC-2 can-chon-xa");
+  o({ cap: "xa", xa_cu: [xc("22222")], chon: ["90010"], nguon_chon: NGUON }, { loi: "chon-ngoai-dich" }, "DV1-AC-2 chon-ngoai-dich");
+  o({ cap: "xa", xa_cu: [xc("44444")] }, { loi: "ma-khong-co" }, "DV1-AC-2 ma-khong-co");
+  o({ cap: "tinh", tinh: "q-tinh-khac", ly_do: "chưa chốt" }, { loi: "tinh-khong-co" }, "DV1-AC-2 tinh-khong-co");
+  // Bẫy cùng tên: hai xã cũ «An Phú» khác mã → hai khu vực khác nhau.
+  const a = xaMoiCuaNut({ cap: "xa", xa_cu: [xc("27091")] }, BANG);
+  const b = xaMoiCuaNut({ cap: "xa", xa_cu: [xc("25975")] }, BANG);
+  assert.deepEqual([a.area_ids, b.area_ids], [["q-an-phu-thu-duc"], ["q-an-phu-thuan-an"]], "DV1-AC-2 bẫy cùng tên");
+});
+
+/** Bảng thật từ dữ liệu PX1 (cùng nguồn bộ nạp), id khu vực theo idXa của bộ nạp. */
+function bangThat() {
+  const D = docDanhBa();
+  const biDanh = new Map(D.xaCu.map((r) => [r.ma, { targets: r.vao, split: r.vao.length > 1 }]));
+  const maXa = new Map();
+  for (const t of D.tinh) {
+    const cua = D.xa.filter((x) => x.maTinh === t.ma);
+    const trung = slugTrungTrongTinh(cua);
+    for (const x of cua) maXa.set(x.ma, { id: idXa(x, thiTruongCuaTinh(t.ma), trung, new Set()), region_type: "submarket" });
+  }
+  return { D, bang: { biDanh, maXa, thiTruong: new Set(D.tinh.map((t) => thiTruongCuaTinh(t.ma))) } };
+}
+
+test("DV1-AC-5 Grand Park về Long Bình từ hai xã cũ có nguồn; ba bẫy cùng tên không lọt; suy theo tên thì lệch", () => {
+  const { D, bang } = bangThat();
+  const gp = TEP_XA_THAT.nut["vinhomes-grand-park"];
+  assert.deepEqual(gp.xa_cu.map((x) => x.old_code).sort(), ["26830", "26833"], "DV1-AC-5 Grand Park hai xã cũ");
+  for (const x of gp.xa_cu) assert.match(x.nguon.url, /^https?:\/\//, `DV1-AC-5 Grand Park nguồn ${x.old_code}`);
+  assert.match(gp.nguon_chon?.url ?? "", /^https?:\/\//, "DV1-AC-5 Grand Park nguồn chọn khi tách");
+  const moi = (s) => xaMoiCuaNut(TEP_XA_THAT.nut[s], bang).area_ids ?? [];
+  assert.deepEqual(moi("vinhomes-grand-park"), ["vn-hcmc-long-binh"], "DV1-AC-5 Grand Park");
+  for (const s of ["estella-heights", "the-global-city"]) assert.ok(!moi(s).includes("vn-hcmc-an-phu"), `DV1-AC-5 ${s} trỏ An Phú Thuận An`);
+  assert.ok(!moi("vinhomes-central-park").includes("vn-hcmc-binh-thanh"), "DV1-AC-5 Central Park trỏ Bình Thạnh mới");
+  assert.ok(!moi("phu-my-hung").includes("vn-hcmc-tan-phu"), "DV1-AC-5 Phú Mỹ Hưng trỏ Tân Phú");
+  // Đối chứng: tra theo TÊN xã cũ trong tỉnh mới (79) thì Estella ra mã khác bản theo mã.
+  const theoTen = traXaCuTheoTen(D.xaCu, "79", "An Phú").map((m) => bang.maXa.get(m)?.id).sort();
+  assert.notDeepEqual(theoTen, moi("estella-heights"), "DV1-AC-5 suy theo tên lệch");
+});
+
+test("DV1-AC-8 tài liệu ghi --sua-xa; bản ở gốc vòng chưa ghi", () => {
+  const kiem = (claude, roadmap) => {
+    const dong = claude.split("\n").find((l) => l.startsWith("| danh-ba-vat-the.mjs |")) ?? "";
+    return dong.includes("--sua-xa") && dong.includes("xa-nut-du-an.json") && roadmap.split("\n").some((l) => l.includes("DV1") && l.includes("--sua-xa"));
+  };
+  const doc = (p) => readFileSync(join(GOC_DV1, p), "utf8");
+  assert.ok(kiem(doc("pipeline/CLAUDE.md"), doc("docs/ROADMAP.md")), "DV1-AC-8 tài liệu chưa ghi --sua-xa");
+  const cu = (p) => execFileSync("git", ["show", `${GOC_VONG_DV1}:${p}`], { cwd: GOC_DV1, encoding: "utf8", maxBuffer: 64 << 20 });
+  assert.equal(kiem(cu("pipeline/CLAUDE.md"), cu("docs/ROADMAP.md")), false, "DV1-AC-8 tài liệu chưa ghi --sua-xa (đối chứng gốc vòng)");
+});

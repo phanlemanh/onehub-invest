@@ -280,3 +280,95 @@ export function soDem(may, ban) {
 
 /** Nhánh của phép so dữ liệu thật: máy thu đã có toà thì so, chưa thì «chưa so». */
 export const nhanSo = (demMay) => ([...demMay.values()].some((d) => d.toa > 0) ? "so" : "chua-so");
+
+// ---- DV1 nut-du-an-tro-xa-moi: mã xã của nút dự án suy từ xã cũ có nguồn ----
+
+/** Mã lỗi của một mục tệp xã (thiết kế §2). */
+export const LOI_XA = Object.freeze([
+  "thieu-nguon", "thieu-ly-do", "xa-cu-khong-co", "can-chon-xa", "chon-ngoai-dich", "ma-khong-co", "tinh-khong-co",
+]);
+
+const nguonDung = (n) => Boolean(n && typeof n.ten === "string" && n.ten.trim() && /^https?:\/\/\S+$/.test(n.url ?? ""));
+
+/**
+ * Lỗi khuôn của một mục (không cần bảng): xã cũ có mã 5 số và nguồn; chọn khi tách có nguồn; cấp tỉnh có mã và lý do.
+ * @param {string} slug @param {object} muc @returns {string[]} mã lỗi
+ */
+export function kiemMucXa(slug, muc) {
+  const loi = new Set();
+  if (!muc || typeof muc !== "object") return ["xa-cu-khong-co"];
+  if (muc.cap === "tinh") {
+    if (!muc.tinh) loi.add("tinh-khong-co");
+    if (!String(muc.ly_do ?? "").trim()) loi.add("thieu-ly-do");
+    return [...loi];
+  }
+  const xaCu = Array.isArray(muc.xa_cu) ? muc.xa_cu : [];
+  if (!xaCu.length) loi.add("xa-cu-khong-co");
+  for (const x of xaCu) {
+    if (!/^\d{5}$/.test(x?.old_code ?? "")) loi.add("xa-cu-khong-co");
+    if (!nguonDung(x?.nguon)) loi.add("thieu-nguon");
+  }
+  if (muc.chon !== undefined && !nguonDung(muc.nguon_chon)) loi.add("thieu-nguon");
+  return [...loi];
+}
+
+/**
+ * Mã mới của một nút: hợp đích của các xã cũ (theo MÃ, không theo tên); xã cũ tách thì phải có `chon` ⊂ đích; có `chon`
+ * thì dùng `chon`. Mã xã mới → id khu vực qua bảng mã xã; cấp tỉnh → mã thị trường.
+ * @param {object} muc
+ * @param {{ biDanh: Map<string, {targets: string[], split: boolean}>, maXa: Map<string, {id: string, region_type: string}>, thiTruong: Set<string> }} bang
+ * @returns {{ area_ids: string[] } | { loi: string }}
+ */
+export function xaMoiCuaNut(muc, { biDanh, maXa, thiTruong }) {
+  const khuon = kiemMucXa("", muc);
+  if (khuon.length) return { loi: khuon[0] };
+  if (muc.cap === "tinh") return thiTruong.has(muc.tinh) ? { area_ids: [muc.tinh] } : { loi: "tinh-khong-co" };
+  const dich = new Set();
+  let tach = false;
+  for (const x of muc.xa_cu) {
+    const b = biDanh.get(x.old_code);
+    if (!b) return { loi: "xa-cu-khong-co" };
+    for (const t of b.targets) dich.add(t);
+    tach ||= b.split;
+  }
+  let ma = [...dich];
+  if (muc.chon !== undefined) {
+    if (!Array.isArray(muc.chon) || !muc.chon.length || muc.chon.some((m) => !dich.has(m))) return { loi: "chon-ngoai-dich" };
+    ma = [...new Set(muc.chon)];
+  } else if (tach) return { loi: "can-chon-xa" };
+  const ids = [];
+  for (const m of ma) {
+    const a = maXa.get(m);
+    if (!a || a.region_type !== "submarket") return { loi: "ma-khong-co" };
+    ids.push(a.id);
+  }
+  return { area_ids: [...new Set(ids)].sort() };
+}
+
+/**
+ * Lỗi cấp tệp: đủ một-một với slug nút dự án, mỗi mục đúng khuôn. Khoá mở đầu «_» là ghi chú.
+ * @param {{ nut?: Record<string, object> }} tep @param {string[]} slugs @returns {string[]}
+ */
+export function kiemTepXa(tep, slugs) {
+  const nut = Object.fromEntries(Object.entries(tep?.nut ?? {}).filter(([k]) => !k.startsWith("_")));
+  const loi = [];
+  for (const s of slugs) if (!(s in nut)) loi.push(`thiếu nút ${s}`);
+  for (const s of Object.keys(nut)) if (!slugs.includes(s)) loi.push(`slug lạ ${s}`);
+  for (const [s, m] of Object.entries(nut)) for (const l of kiemMucXa(s, m)) loi.push(`${s}: ${l}`);
+  return loi;
+}
+
+/** Slug nút project trong câu INSERT asset_nodes của một migration seed (026). @param {string} sql @returns {string[]} */
+export function slugNutTuSeed(sql) {
+  // Chỉ dòng giá trị mở đầu dòng «('project', '<tên>', '<slug>'» — bỏ CHECK (node_type IN ('project', …)) của CREATE TABLE.
+  return [...sql.matchAll(/^\s*\(\s*'project'\s*,\s*'(?:[^']|'')*'\s*,\s*'([a-z0-9-]+)'/gm)].map((m) => m[1]);
+}
+
+/**
+ * Đường tra SAI để đối chứng (DV1-AC-5): mọi đích của xã cũ cùng tên trong một tỉnh mới — đúng cái bẫy cùng tên mà
+ * xaMoiCuaNut tránh bằng cách tra theo mã. Không dùng ở đường ghi.
+ * @param {{ maTinh: string, ten: string, vao: string[] }[]} xaCu @param {string} maTinh @param {string} ten @returns {string[]}
+ */
+export function traXaCuTheoTen(xaCu, maTinh, ten) {
+  return [...new Set(xaCu.filter((r) => r.maTinh === maTinh && r.ten === ten).flatMap((r) => r.vao))].sort();
+}
