@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: dau-noi-dung-sql-bai-thu
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b6fcee09a705da364bcec2af092da680040f81d1
+verified_commit: 722bf1223bae961ebf4d5ffa1ab92a79b43d3103
 human_signoff:
 ---
 
 # Evidence Report: dau-noi-dung-sql-bai-thu
-
-Round 1. Cả năm eval của hợp đồng đều xanh. Verdict là REJECT vì lệnh suite hồi quy `cd pipeline && npm test` đỏ và không gắn eval nào (xem mục «Lệnh suite» và Analyst).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -31,32 +29,29 @@ Round 1. Cả năm eval của hợp đồng đều xanh. Verdict là REJECT vì 
   baseline: n-a
   verifier: config:executors.test.dnd_khop
   verified_at: 2026-11-10T13:37:27Z
-  runs: 1
+  carried_from_round: 1
   output: |
-    ca DND-AC-1 chạy, pass 1
-    ℹ duration_ms 147.370542
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-dau-noi-dung-sql-bai-thu-E2-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.dnd_luong7
   verified_at: 2026-11-10T13:37:27Z
-  runs: 1
+  carried_from_round: 1
   output: |
-    hai ca DND-AC-2 chạy, pass 2
-    ℹ duration_ms 1082.003042
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-dau-noi-dung-sql-bai-thu-E3-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.dnd_dong_chay
   verified_at: 2026-11-10T13:37:27Z
-  runs: 1
+  carried_from_round: 1
   output: |
-    hai ca DND-AC-3 chạy, pass 2
-    ℹ duration_ms 1708.385875
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-dau-noi-dung-sql-bai-thu-E4-r1
@@ -64,54 +59,51 @@ Round 1. Cả năm eval của hợp đồng đều xanh. Verdict là REJECT vì 
   baseline: n-a
   verifier: config:executors.test.dnd_du_luong
   verified_at: 2026-11-10T13:37:27Z
-  runs: 1
+  carried_from_round: 1
   output: |
-    ca DND-AC-4 chạy, pass 1
-    ℹ duration_ms 127.397917
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-dau-noi-dung-sql-bai-thu-E5-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.script.test_data_residue
   verified_at: 2026-11-10T13:37:27Z
-  runs: 1
+  carried_from_round: 1
   output: |
-    test-data-residue --simulate trên DB máy thu, giao dịch ROLLBACK
-    JSON kết thúc bình thường
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-npm_test__bb6271-r1
+  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-10T13:37:27Z
+  verified_at: 2026-11-10T14:47:47Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-lint-r1
+  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-10T13:37:27Z
+  verified_at: 2026-11-10T14:47:47Z
 
 - cmd: cd app && npm test
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-npm_test__bd9a35-r1
+  run_id: bau2okr4n
   exit_code: 0
-  verified_at: 2026-11-10T13:37:27Z
+  verified_at: 2026-11-10T14:47:47Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-11-10T13:37:27Z
-  note: đỏ, không gắn eval nào. Ca hỏng `GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng` ở scripts/vn-day.test.mjs:123, lỗi ERR_MODULE_NOT_FOUND: bản sao ops-flow trong thư mục tạm không tìm thấy `test-posts.mjs` (tệp tạm `ops-flow-sao-*/test-posts.mjs` thiếu).
+  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-11-10T14:47:47Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-test_lint_rules-r1
+  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-10T13:37:27Z
+  verified_at: 2026-11-10T14:47:47Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-dau-noi-dung-sql-bai-thu-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-10T13:37:27Z
+  verified_at: 2026-11-10T14:47:47Z
 
 ## Known limits
 
@@ -119,18 +111,15 @@ Round 1. Cả năm eval của hợp đồng đều xanh. Verdict là REJECT vì 
 
 ## Analyst
 
-Eval không phân biệt (xanh cả trên mã cũ lẫn mới): none — mọi eval feature đo được baseline (E2, E3, E5) đều red trên mã cũ (có phân biệt).
+carried tu round 1 — baseline khong do lai round nay. Field baseline cua tung eval ghi n-a (round nay khong do). Lenh suite xanh ca hai phia la regression-guard binh thuong, khong liet ke.
 
-Lệnh fail không gắn eval: `cd pipeline && npm test` — ca GV-AC-10 của scripts/vn-day.test.mjs hỏng vì bản sao ops-flow tạm thiếu `test-posts.mjs` (ERR_MODULE_NOT_FOUND). Ca này sao ops-flow.mjs sang thư mục tạm; feature thêm phụ thuộc ops-flow → test-posts.mjs (hằng NOI_DUNG_SQL) nên bản sao tạm không còn tự đủ. Nhiều khả năng là hồi quy do feature gây ra, cần sửa fixture của vn-day.test.mjs để chép kèm test-posts.mjs rồi chạy lại.
-
-Baseline không đo:
-- bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=DND-AC-1 scripts/dau-bai-thu-sql.test.mjs | tee /dev/stderr | grep "pass 1$" >/dev/null': bo qua baseline: tep pipeline/scripts/dau-bai-thu-sql.test.mjs co o cay dang kiem nhung chua co o merge-base 24e103b0f74b389d2701c71580b4d50402c8e377 — eval moi, chay tren code cu khong phan biet gi
-- bash -o pipefail -c 'cd pipeline && node --test --test-name-pattern=DND-AC-4 scripts/dau-bai-thu-sql.test.mjs | tee /dev/stderr | grep "pass 1$" >/dev/null': bo qua baseline: tep pipeline/scripts/dau-bai-thu-sql.test.mjs co o cay dang kiem nhung chua co o merge-base 24e103b0f74b389d2701c71580b4d50402c8e377 — eval moi, chay tren code cu khong phan biet gi
+none — khong co eval khong-phan-biet duoc liet ke.
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định, không có phương sai.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: các eval E1–E5 xanh; lệnh suite `cd pipeline && npm test` đỏ ở ca GV-AC-10 (bản sao ops-flow thiếu test-posts.mjs). Trả về cho khâu triển khai sửa fixture rồi chạy lại.
+Round 1: cac eval E1-E5 da PASS tren round goc; round 2 chi chay lai cac lenh suite, E1-E5 carry-forward vi delta khong cham paths cua eval.
+Round 2: toan bo lenh suite xanh, E1-E5 carry-forward, verdict PASS.

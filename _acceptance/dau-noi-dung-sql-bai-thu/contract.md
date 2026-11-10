@@ -5,7 +5,7 @@ slug: dau-noi-dung-sql-bai-thu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, api]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-10
 design_doc: docs/superpowers/specs/2026-11-10-dau-noi-dung-sql-bai-thu-design.md

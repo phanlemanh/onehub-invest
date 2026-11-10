@@ -37,3 +37,33 @@ wall: 2638s
 - **claude-haiku-5-5**: 11 agent · 40 calls · out 19,699 · in 80 · cache_read 829,702 · cache_create 350,604
 - **claude-sonnet-5-5**: 4 agent · 9 calls · out 10,836 · in 18 · cache_read 155,207 · cache_create 144,776
 
+### S4 round 2 — wf_3a29925d-827 (11 agent, 34,724 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 22 | 10,462 | 46 | 1,558,964 | 117 |
+| review:measurement | claude-opus-5-5 | 7 | 6,797 | 16 | 278,032 | 72 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 9 | 5,224 | 18 | 228,876 | 1132 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 2,632 | 4 | 34,474 | 19 |
+| review:conventions | claude-opus-5-5 | 10 | 2,581 | 22 | 304,647 | 30 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,991 | 4 | 28,290 | 8 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,671 | 4 | 28,284 | 7 |
+| machine:cd app && npm test | claude-haiku-5-5 | 3 | 1,188 | 6 | 31,912 | 689 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,168 | 4 | 28,295 | 23 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 667 | 4 | 25,083 | 31 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 343 | 4 | 23,886 | 6 |
+
+
+wall: 1915s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 6 | 11,909 | 370,740 | 1890 | 14:49:02 | 15:20:32 |
+| review | 3 | 19,840 | 2,141,643 | 118 | 14:49:02 | 14:51:00 |
+| capture | 1 | 343 | 23,886 | 6 | 15:20:32 | 15:20:37 |
+| synthesize | 1 | 2,632 | 34,474 | 19 | 15:20:37 | 15:20:56 |
+
+- **claude-opus-5-5**: 3 agent · 39 calls · out 19,840 · in 84 · cache_read 2,141,643 · cache_create 209,120
+- **claude-haiku-5-5**: 6 agent · 20 calls · out 11,909 · in 40 · cache_read 370,740 · cache_create 219,688
+- **claude-sonnet-5-5**: 2 agent · 4 calls · out 2,975 · in 8 · cache_read 58,360 · cache_create 72,701
+
