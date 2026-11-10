@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: do1-giu-dau-doi-thang
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b9ee1b8645ece6b648908c7c836bb83e240335fc
+verified_commit: bf2872c88cf14810721ed223e5f00c49689110d3
 human_signoff:
 ---
 
 # Evidence Report: do1-giu-dau-doi-thang
-
-Round 1. Cả tám eval của tính năng đều xanh. Verdict tổng là REJECT vì một lệnh suite không gắn eval nào (`cd app && npm test`) đỏ. Chi tiết ở khối «Lệnh suite (hồi quy)» và mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -25,121 +23,142 @@ Round 1. Cả tám eval của tính năng đều xanh. Verdict tổng là REJECT
 | E6 | AC-6 | test | PASS |
 | E7 | AC-7 | test | PASS |
 | E8 | AC-8 | test | PASS |
+| E9 | AC-9 | test | PASS |
+| E10 | AC-10 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Lệnh: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dd --chay node --test --test-concurrency=1 scripts/do-hang-ngay-doi-thang.itest.mjs
-    ℹ duration_ms 244186.62925
+    cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dd --chay node --test --test-concurrency=1 scripts/do-hang-ngay-doi-thang.itest.mjs
+    ℹ duration_ms 386354.8705
 
 - eval: E2
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Cùng lệnh với E1 (một tệp itest, một lượt chạy).
-    ℹ duration_ms 244186.62925
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
 
 - eval: E3
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Cùng lệnh với E1 (một tệp itest, một lượt chạy).
-    ℹ duration_ms 244186.62925
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
 
 - eval: E4
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Cùng lệnh với E1 (một tệp itest, một lượt chạy).
-    ℹ duration_ms 244186.62925
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
 
 - eval: E5
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Cùng lệnh với E1 (một tệp itest, một lượt chạy).
-    ℹ duration_ms 244186.62925
-
-- eval: E6
-  run_id: minted-do1-giu-dau-doi-thang-E6-r1
-  exit_code: 0
-  baseline: red
-  verifier: config:executors.test.tb_app_db
-  verified_at: 2026-11-10T01:44:47Z
-  output: |
-    Lệnh: cd app && bash ../db/db-thu.sh oneinvest_suite_tba --chay node --import tsx --test --test-concurrency=1 tests/thang-bac-db.itest.tsx tests/data-level-sql.itest.tsx
-    ℹ duration_ms 23983.992667
-
-- eval: E7
-  run_id: minted-do1-giu-dau-doi-thang-E7-r1
-  exit_code: 0
-  baseline: red
-  verifier: config:executors.test.tb_app_db
-  verified_at: 2026-11-10T01:44:47Z
-  output: |
-    Cùng lệnh với E6 (hai tệp itest, một lượt chạy).
-    ℹ duration_ms 23983.992667
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
 
 - eval: E8
-  run_id: r1-l1-1-20261110014447
+  run_id: minted-do1-giu-dau-doi-thang-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.do1_dd
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
   output: |
-    Cùng lệnh với E1 (một tệp itest, một lượt chạy).
-    ℹ duration_ms 244186.62925
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
+
+- eval: E9
+  run_id: minted-do1-giu-dau-doi-thang-E9-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.do1_dd
+  verified_at: 2026-11-10T05:15:29Z
+  output: |
+    cùng lệnh với E1 (một lần chạy phủ E1, E2, E3, E4, E5, E8, E9)
+    ℹ duration_ms 386354.8705
+
+- eval: E6
+  run_id: minted-do1-giu-dau-doi-thang-E6-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.tb_app_db
+  verified_at: 2026-11-10T05:15:29Z
+  output: |
+    cd app && bash ../db/db-thu.sh oneinvest_suite_tba --chay node --import tsx --test --test-concurrency=1 tests/thang-bac-db.itest.tsx tests/data-level-sql.itest.tsx
+    ℹ duration_ms 331860.489584
+
+- eval: E7
+  run_id: minted-do1-giu-dau-doi-thang-E7-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.tb_app_db
+  verified_at: 2026-11-10T05:15:29Z
+  output: |
+    cùng lệnh với E6 (một lần chạy phủ E6, E7, E10)
+    ℹ duration_ms 331860.489584
+
+- eval: E10
+  run_id: minted-do1-giu-dau-doi-thang-E10-r2
+  exit_code: 0
+  baseline: red
+  verifier: config:executors.test.tb_app_db
+  verified_at: 2026-11-10T05:15:29Z
+  output: |
+    cùng lệnh với E6 (một lần chạy phủ E6, E7, E10)
+    ℹ duration_ms 331860.489584
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-do1-giu-dau-doi-thang-SUITE-npm_test__bb6271-r1
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-do1-giu-dau-doi-thang-SUITE-lint-r1
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
 
 - cmd: cd app && npm test
-  run_id: b0mxho629
-  exit_code: 1
-  verified_at: 2026-11-10T01:44:47Z
-  ghi chú: 1112 test, 1106 pass, 1 đỏ, 5 bỏ qua. Ca đỏ duy nhất là «E4B-AC-3 biên: mỗi sort bản mới dưới 700 ms» ở app/tests/tin-rao-doi-chieu.test.tsx, đo thời gian sort price-desc 779 ms và perm2-asc 943 ms. Ca này thuộc tính năng tin rao đối chiếu, không nằm trong phạm vi tám eval của tính năng này. Lệnh không gắn eval nào.
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-10T05:15:29Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-do1-giu-dau-doi-thang-SUITE-npm_test__13563d-r1
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-do1-giu-dau-doi-thang-SUITE-test_lint_rules-r1
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-do1-giu-dau-doi-thang-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-do1-giu-dau-doi-thang-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-10T01:44:47Z
+  verified_at: 2026-11-10T05:15:29Z
 
 ## Known limits
 
@@ -147,15 +166,17 @@ Round 1. Cả tám eval của tính năng đều xanh. Verdict tổng là REJECT
 
 ## Analyst
 
-none — mọi eval của tính năng không có bằng chứng xanh-cả-hai-phía (không eval nào pass trên cả HEAD lẫn baseline): E6, E7 red trên baseline (có phân biệt); E1, E2, E3, E4, E5, E8 không đo được baseline.
+none — moi eval feature deu red tren baseline (co phan biet) hoac khong do duoc baseline (n-a, xem duoi); khong eval nao green tren ca hai phia.
 
-Baseline không đo
+Baseline khong do
 - cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dd --chay node --test --test-concurrency=1 scripts/do-hang-ngay-doi-thang.itest.mjs: bo qua baseline: tep pipeline/scripts/do-hang-ngay-doi-thang.itest.mjs co o cay dang kiem nhung chua co o merge-base 56ca87d1e7777aee6c6b586ac63e1624506fb754 — eval moi, chay tren code cu khong phan biet gi
 
 ## Variance
 
-none — mọi eval chỉ chạy một lượt (deterministic), không eval nào có pass_rate hỗn hợp.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: không eval nào trong E1–E8 đỏ; lệnh suite `cd app && npm test` đỏ ở một ca đo thời gian (E4B-AC-3, tin-rao-doi-chieu) không gắn eval nào, nên verdict REJECT. Trả về triển khai/người quyết: chạy lại để xác nhận ca thời gian là nhiễu tải hay hồi quy thật.
+Round 1: chỉ ca đo thời gian E4B-AC-3 chập chờn (8/8 eval xanh), 5 mục ngoài hợp đồng. Mạnh nâng phạm vi (AC-9, AC-10, AC-8 thoát 2, E3 phủ trọn bảng 1). Returned to implementation.
+Round 2: E1-E10 và sáu lệnh suite đều xanh trên commit bf2872c8; AC-9 và AC-10 mới có eval riêng.
+
