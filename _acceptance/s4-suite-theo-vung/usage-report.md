@@ -43,3 +43,40 @@ wall: 2212s
 - **claude-sonnet-5-5**: 6 agent · 17 calls · out 21,199 · in 34 · cache_read 348,843 · cache_create 222,303
 - **claude-haiku-5-5**: 14 agent · 41 calls · out 19,570 · in 82 · cache_read 739,311 · cache_create 427,371
 
+### S4 round 2 — wf_34ffbb71-0f5 (18 agent, 40,405 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 11 | 7,075 | 22 | 500,803 | 75 |
+| review:bugs | claude-opus-5-5 | 12 | 4,599 | 24 | 503,905 | 58 |
+| machine:node scripts/suite-neu-doi.mjs pipeline | claude-haiku-5-5 | 8 | 4,533 | 16 | 184,039 | 1096 |
+| machine:node scripts/suite-neu-doi.mjs app_ui -- | claude-haiku-5-5 | 6 | 3,978 | 12 | 121,728 | 811 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 3,674 | 4 | 35,090 | 25 |
+| review:conventions | claude-opus-5-5 | 9 | 3,181 | 18 | 336,710 | 38 |
+| machine:node scripts/suite-neu-doi.mjs agent -- | claude-haiku-5-5 | 2 | 2,766 | 4 | 25,261 | 45 |
+| machine:node scripts/suite-neu-doi.mjs portal_st | claude-haiku-5-5 | 2 | 2,262 | 4 | 28,460 | 9 |
+| machine:node --test scripts/*.test.mjs | claude-haiku-5-5 | 2 | 1,863 | 4 | 28,424 | 242 |
+| machine:node scripts/suite-neu-doi.mjs app -- 'c | claude-haiku-5-5 | 2 | 1,097 | 4 | 28,462 | 23 |
+| machine:node --test --test-name-pattern=S4V-AC-6 | claude-haiku-5-5 | 2 | 870 | 4 | 28,494 | 6 |
+| machine:node --test --test-name-pattern=S4V-AC-1 | claude-haiku-5-5 | 2 | 774 | 4 | 28,455 | 7 |
+| machine:node --test --test-name-pattern=S4V-AC-2 | claude-haiku-5-5 | 2 | 755 | 4 | 28,455 | 10 |
+| machine:node --test --test-name-pattern=S4V-AC-5 | claude-haiku-5-5 | 2 | 712 | 4 | 28,455 | 6 |
+| machine:node --test --test-name-pattern=S4V-AC-4 | claude-haiku-5-5 | 2 | 690 | 4 | 28,455 | 8 |
+| machine:node --test --test-name-pattern=S4V-AC-3 | claude-haiku-5-5 | 2 | 673 | 4 | 28,455 | 5 |
+| machine:node scripts/suite-neu-doi.mjs ui_lint_r | claude-haiku-5-5 | 2 | 577 | 4 | 28,464 | 4 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 326 | 4 | 24,020 | 7 |
+
+
+wall: 2021s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 13 | 21,550 | 615,607 | 1989 | 18:52:22 | 19:25:31 |
+| review | 3 | 14,855 | 1,341,418 | 76 | 18:52:22 | 18:53:38 |
+| capture | 1 | 326 | 24,020 | 7 | 19:25:31 | 19:25:38 |
+| synthesize | 1 | 3,674 | 35,090 | 25 | 19:25:38 | 19:26:03 |
+
+- **claude-opus-5-5**: 3 agent · 32 calls · out 14,855 · in 64 · cache_read 1,341,418 · cache_create 174,025
+- **claude-haiku-5-5**: 13 agent · 36 calls · out 21,550 · in 72 · cache_read 615,607 · cache_create 400,167
+- **claude-sonnet-5-5**: 2 agent · 4 calls · out 4,000 · in 8 · cache_read 59,110 · cache_create 73,435
+
