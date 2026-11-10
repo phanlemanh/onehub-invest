@@ -153,9 +153,57 @@ echo "$MAXTS" > "$STATE"
 if [ "$FAILED" != "0" ]; then
   exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
 fi
+
+# claudedp-1011-12 (link-nguoi-ban-s03 Ngoài-1/5/6, Mạnh ký Cổng 2 10/11): nạp snapshot HỒ SƠ người bán S03
+# (nguồn s03-ho-so, collector API /s03-ho-so ghi) vào stg_s03_ho_so — trước đây không tác vụ nào nạp nên bảng luôn
+# rỗng và bước ghi link hồ sơ trong refresh-bait-gap không có gì để ghi.
+# - Con trỏ RIÊNG (s03-ho-so.state): snapshot hồ sơ sinh theo nhịp bộ tra, không theo nhịp tin; dùng chung con
+#   trỏ tin thì một snapshot hồ sơ mốc cũ hơn con trỏ sẽ bị bỏ vĩnh viễn.
+# - Ngoài-6: importer gặp DB thiếu 080 in CHUA-AP-080 rồi thoát 0 mà KHÔNG nạp — ở đây coi đó là chưa nạp: GIỮ con
+#   trỏ, dừng vòng hồ sơ, báo JOB FAIL; lượt sau (khi đã áp 080) nạp lại đủ. Nạp hỏng cũng giữ con trỏ.
+# - Hồ sơ hỏng không chặn chuỗi tin: transform/media/refresh vẫn chạy, mã thoát cuối mang lỗi hồ sơ.
+HS_STATE="$ROOT/pipeline/logs/s03-ho-so.state"
+HS_LAST=$(cat "$HS_STATE" 2>/dev/null || echo "00000000T000000")
+HS_MAX="$HS_LAST"
+HS_RC=0
+HS_DIRS=$(find "$ROOT/collector/snapshots" -maxdepth 2 -type d -name '*__s03-ho-so__*') || { echo "❌ lỗi liệt kê snapshot hồ sơ (find)" >&2; HS_RC=3; HS_DIRS=""; }
+for SNAP in $(printf '%s\n' "$HS_DIRS" | while read -r d; do
+    [ -n "$d" ] || continue
+    b=${d##*/}; [ "${b#.}" != "$b" ] && continue
+    ts=${b##*__}
+    echo "$ts" | grep -qE "$TS_RE" || { echo "bỏ qua thư mục hồ sơ TS không phải mốc thời gian: $d" >&2; continue; }
+    echo "$ts $d"
+  done | sort | while read -r _ d; do echo "$d"; done); do
+  TS=${SNAP##*__}
+  [[ "$TS" > "$HS_LAST" ]] || continue
+  if [ ! -f "$SNAP/manifest.json" ]; then
+    # như vòng tin (2510-8): thiếu manifest <30′ = đang ghi → giữ con trỏ, lượt sau thử lại; ≥30′ = mồ côi → bỏ, đi tiếp
+    if [ -n "$(find "$SNAP" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+      echo "⏸ snapshot hồ sơ chưa xong (thiếu manifest, <30′): $SNAP — giữ con trỏ hồ sơ"; break
+    fi
+    echo "⚠️ snapshot hồ sơ mồ côi (thiếu manifest, ≥30′) — bỏ qua, đi tiếp: $SNAP"
+    HS_MAX="$TS"; continue
+  fi
+  if ! OUT=$(import_one "$SNAP"); then
+    printf '%s\n' "$OUT"
+    echo "❌ nạp hồ sơ fail tại $SNAP — giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=1; break
+  fi
+  printf '%s\n' "$OUT"
+  # so khớp trong shell, KHÔNG qua ống: printf | grep -q dưới pipefail có thể dính SIGPIPE (141) khi đầu ra lớn
+  # và dòng CHUA nằm đầu → bỏ lọt đúng ca mất dữ liệu Ngoài-6 (review 10/11)
+  if [[ "$OUT" == *CHUA-AP-080* ]]; then
+    echo "❌ DB chưa áp 080 — snapshot hồ sơ $SNAP CHƯA nạp, giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=4; break
+  fi
+  HS_MAX="$TS"
+done
+echo "$HS_MAX" > "$HS_STATE"
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
+if [ "$HS_RC" != "0" ]; then
+  echo "JOB FAIL [zalo-import-daily] bước nap-ho-so mã $HS_RC" >&2
+  JOB_RC=$HS_RC
+fi
 # s03-len-nhanh-nac-1 (Mạnh duyệt 10/11): lượt nhanh 15′ (S03_LUOT_NHANH=1) cho ba bước transform chờ khoá DB tối đa
 # S03_NHANH_LOCK_TIMEOUT (mặc định 10s) qua PGOPTIONS — bước nạp phía trên và lượt 00:00 không nhận. Bước hỏng vì khoá
 # (đầu ra có «lock timeout» / 55P03; ba bước đều một giao dịch nên lùi trọn) → dòng «BỎ LƯỢT», không tính vào mã thoát,

@@ -1,0 +1,6 @@
+{
+  "feature_plain": "Tác vụ nạp S03 giờ nạp thêm kết quả tra hồ sơ người bán vào bảng, để link hồ sơ người bán hiện ra thật thay vì bảng luôn rỗng; nếu cơ sở dữ liệu chưa sẵn bảng thì giữ nguyên chỗ đọc để nạp lại đủ sau, không mất hồ sơ.",
+  "coverage_plain": [
+    {"i": 0, "p": "Nạp đúng chỗ, giữ đúng thứ tự khi chưa có bảng 080, nạp lại đủ và không trùng (AC-1, AC-2); chỗ đọc hồ sơ tách riêng khỏi tin (AC-3); hồ sơ hỏng không chặn tin (AC-4); lượt nhanh cũng nạp (AC-5); không có gì để nạp (AC-6); không hỏng gì cũ (AC-7)."}
+  ]
+}
