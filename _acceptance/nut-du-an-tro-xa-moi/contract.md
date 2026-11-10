@@ -5,7 +5,7 @@ slug: nut-du-an-tro-xa-moi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-nut-du-an-tro-xa-moi-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
@@ -102,3 +102,6 @@ tên (bẫy cùng tên).
 ## Notes
 
 - Năm nút không chốt được xã theo Hỏi-2 (Ocean Park 3, Celadon City và ba nút gieo không xác định).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Ca kiểm ba bẫy cùng tên chỉ kiểm phía «không trỏ nhầm», nên phần suy xã hỏng về sau có thể không bị báo đỏ.
+  - Ngoài-2: Ca dự án chuyển sang nhiều phường chưa chứng bước dọn phường cũ của toà là thứ làm nên kết quả đúng.
