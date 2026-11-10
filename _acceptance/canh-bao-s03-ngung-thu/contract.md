@@ -5,9 +5,9 @@ slug: canh-bao-s03-ngung-thu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-10
 ---
 
 # Acceptance Contract: canh-bao-s03-ngung-thu
