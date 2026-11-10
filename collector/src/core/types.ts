@@ -36,8 +36,9 @@ export type ManifestFile = {
   bytes: number;
 };
 
+/** schemaVersion: 4 mặc định; kênh có field DATA-CONTRACT mới hơn ghi số cao hơn. */
 export type SnapshotManifest = {
-  schemaVersion: 4;
+  schemaVersion: number;
   snapshotId: string; // "<city>__<source>__<yyyymmdd-hhmmss>"
   city: string;
   source: string;
