@@ -5,7 +5,7 @@ slug: so-lenh-bo-ap
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: chạm db/migrations/**, app/src/app/api/v1/ops/**, pipeline/push-ops-facts.mjs (t3_paths); hàng lộ trình ghi T3
 surfaces: [api, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-10-so-lenh-bo-ap-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
