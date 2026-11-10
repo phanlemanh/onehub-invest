@@ -5,7 +5,7 @@ slug: link-nguoi-ban-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, api]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-06
 ---
