@@ -122,6 +122,7 @@ executors:
     dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
     dv1_db: "bash db/db-thu.sh oneinvest_suite_dv1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa.itest.mjs"   # nut-du-an-tro-xa-moi E3, E4, E6 — DB của riêng lượt chép từ máy thu (có PX1, 69 toà), lệnh --sua-xa thật; ngoài CI
     dv1_that: "bash db/db-thu.sh oneinvest_suite_dv1t --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs"   # nut-du-an-tro-xa-moi E7 — DB của riêng lượt + phiên chỉ đọc máy thu, chỉ in số; ngoài CI
+    da1_db: "bash db/db-thu.sh oneinvest_suite_da1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-iso.itest.mjs"   # danh-ba-vat-the-toan-quoc E1–E3, E4b–E7 — DB của riêng lượt chép từ máy thu (chưa 088), áp 088 trong ca; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
@@ -540,6 +541,11 @@ executors:
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
     zc3b_marker_hong: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"   # vòng 2: bản chép + HOME giả + stub, như rotate
+    # canh-bao-s03-ngung-thu (LT0 phần watchdog, claudedp-1011-5) — lớp L6 kiểm sống S03; bản chép + HOME giả + stub (luật 8)
+    s03_song_lib: "WATCHDOG_FILE=scripts/zalo-watchdog.sh node --test scripts/zalo-watchdog-song.test.mjs"   # 7 ca của ZCode, kèm kiểm tĩnh móc L6
+    s03_song_tron: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"   # watchdog trọn vẹn: khoẻ, sự cố 09/11, lặp, hồi, tái phát, đêm
+    s03_song_bien: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"   # biên giờ 6/7/21/22, tuổi 1799/1800s, attempt 119/120s
+    s03_song_syntax: "bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
     # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
     snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
