@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f17ff90e934b139a0a9d6db2b638950993da0997
+verified_commit: edb10cc3ca762624641e4248d862b6884d9db1a5
 human_signoff: Mạnh 2026-11-10
 ---
 
@@ -223,3 +223,7 @@ Round 1: không ghi trong đầu vào của vòng này; xem lịch sử run-log.
 Round 2: BLOCKED — bộ pipeline quá trần 600 giây của công cụ; khai E9d là eval long_running.
 Round 3: mọi eval xanh, kể cả E9d (bộ pipeline đầy đủ); verdict PASS.
 
+
+### Re-pin lần 1 — 2026-11-10, do gộp main có #391 đổi tệp app vòng cũng sửa
+run_id: repin-20261110T011332Z-32405
+sha: edb10cc3ca762624641e4248d862b6884d9db1a5 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths) · AC không có chốt máy: AC-8
