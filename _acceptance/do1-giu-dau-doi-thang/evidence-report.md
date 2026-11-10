@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bf2872c88cf14810721ed223e5f00c49689110d3
+verified_commit: 8af7d6fedf9e8e5558d2eb5407068a05a17db4e5
 human_signoff: Mạnh 2026-11-10
 ---
 
@@ -180,3 +180,7 @@ none — every multi-run eval is uniform
 Round 1: chỉ ca đo thời gian E4B-AC-3 chập chờn (8/8 eval xanh), 5 mục ngoài hợp đồng. Mạnh nâng phạm vi (AC-9, AC-10, AC-8 thoát 2, E3 phủ trọn bảng 1). Returned to implementation.
 Round 2: E1-E10 và sáu lệnh suite đều xanh trên commit bf2872c8; AC-9 và AC-10 mới có eval riêng.
 
+
+### Re-pin lần 1 — 2026-11-10, do gộp main (#392, #400) sau chữ ký
+run_id: repin-20261110T075301Z-79552
+sha: 8af7d6fedf9e8e5558d2eb5407068a05a17db4e5 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
