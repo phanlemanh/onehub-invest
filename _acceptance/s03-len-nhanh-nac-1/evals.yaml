@@ -68,8 +68,8 @@ evals:
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6e
     criterion: AC-6
-    executor: test
-    cmd: config:executors.test.snn_test
+    executor: script
+    cmd: config:executors.script.snn_test
     paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs]
     expected: "exit 0; s03-nap-nhanh.test.mjs (hàng s03-nap-nhanh) xanh không sửa: lượt nhanh bốn bước, khoá bận bỏ lượt, cờ lạ thoát 2, lượt 00:00 sáu bước."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
