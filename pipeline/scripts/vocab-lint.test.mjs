@@ -157,8 +157,7 @@ const NGOAI_LE = [
   "pipeline/scripts/bench-gate.mjs|kind",
   "pipeline/scripts/bench-extraction.mjs|kind",
   "pipeline/sql/500_asset_stats.sql|confidence",
-  "pipeline/resolve-properties.mjs|confidence",
-  "pipeline/resolve-properties.mjs|property_type",
+  // resolve-properties.mjs: hai ngoại lệ của Stage B gỡ khi Stage B đóng băng (V7, hồ sơ dong-bang-stage-b-resolve).
   "agent/src/enrich/run.ts|confidence",
   "app/src/components/compare/compare-types.ts|confidence",
   "app/src/lib/source-status-labels.ts|registry_status",   // DB2b: source_registry.status trùng chữ active/retired

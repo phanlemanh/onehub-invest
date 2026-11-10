@@ -233,7 +233,10 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
   const { refreshBaitGap } = await import("../refresh-bait-gap.mjs");
   const { chayResolve } = await import("../resolve-properties.mjs");
   const { MARKETS, runReassign } = await import("../reassign-areas.mjs");
-  const { ghiAnhChup, SQL_610 } = await import("../bac-du-lieu.mjs");
+  const { co087, ghiAnhChup, SQL_610 } = await import("../bac-du-lieu.mjs");
+  // thang-bac-moi-b0-b5: 610 đọc data_level_units() của 087 — DB chưa áp thì nạp 087 trong giao dịch của ca.
+  const { readFileSync } = await import("node:fs");
+  const SQL_087 = readFileSync(new URL("../../db/migrations/087_thang_bac_moi.sql", import.meta.url), "utf8");
   await withTx(async (c) => {
     const { market, ward } = await thiTruongCoPhuong(c);
     const a = await tinS03(c, market), b = await tinS03(c, market);
@@ -303,9 +306,12 @@ test("SL1-AC-3 thước, bait, ghép, reassign, bậc dữ liệu với tin cấ
       assert.equal(d.area_id, market, "SL1-AC-3 area_id bị dọn");
     }
     const cap = async (ids) => (await c.query("SELECT count(*)::int n FROM property_candidates WHERE offer_a = ANY ($1) OR offer_b = ANY ($1)", [ids])).rows[0].n;
+    // Stage B đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): resolve không dựng cặp nào nữa, nên «tin cấp thị trường
+    // không thành cặp» đúng theo cấu tạo, và đối chứng «cặp cùng phường có sinh» đổi thành «không cặp mới nào».
     assert.equal(await cap([a.id, b.id, s06Tt]), 0, "SL1-AC-3 có cặp chứa tin cấp thị trường");
-    assert.ok(await cap([doiChung.id]) > 0, "SL1-AC-3 cặp đối chứng cùng phường không sinh");
+    assert.equal(await cap([doiChung.id]), 0, "SL1-AC-3 Stage B đóng băng (V7): có cặp mới");
 
+    if (!(await co087(c))) await c.query(SQL_087);
     await ghiAnhChup(c);
     const tinh = async () => (await c.query(
       `SELECT coalesce(sum(n), 0)::int n FROM data_level_snapshot WHERE snap_date = current_date AND market_id = $1 AND unit = 'tin_le'`, [market])).rows[0].n;

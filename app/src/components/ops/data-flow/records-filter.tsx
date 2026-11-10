@@ -72,7 +72,7 @@ export function compileRecordFilter(query: FilterQuery): (r: FlowRecord) => bool
   }
 }
 
-/** B2 tới đích hiện tại (xanh), B1 đang chảy (lam), B0 mới có lời khai (viền). */
+/** Thang 08/11: B2 Định vị (xanh — chờ bảng nối danh bạ, hôm nay chưa tin nào), B1 Tin (lam), B0 mới có lời khai (viền). */
 export const LEVEL_VARIANT: Record<TinLevel, "outline" | "info-light" | "success-light"> = {
   [DATA_LEVEL.B0]: "outline",
   [DATA_LEVEL.B1]: "info-light",

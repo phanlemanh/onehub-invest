@@ -25,11 +25,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isBad, readFreshness } from "./lib/freshness.mjs";
 import { VOCAB } from "../pipeline/lib/vocab.generated.mjs";
-import { chamBang, dungMarkdown, goiY, oBacGiam, tachDaBiet } from "./lib/bao-cao-ngay.mjs";
+import { chamBang, demNs1, dungMarkdown, goiY, oBacGiam, tachDaBiet } from "./lib/bao-cao-ngay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const TZ = "Asia/Ho_Chi_Minh";
+
+/** Thẻ Ghép căn đóng băng (V7) — chép NGUYÊN VĂN từ app/src/lib/ops/review-dong-bang.ts (test ops-local-dong-bang so chuỗi). */
+export const THE_DONG_BANG_SQL = "(item_type = 'entity_match' AND status = 'pending')";
+
+/** Công người (H1 chờ, H1b quyết 24 giờ, thẻ vào 24 giờ): thẻ Ghép căn đang chờ đóng băng không tính. */
+export const CONG_NGUOI_SQL = `
+      SELECT count(*) FILTER (WHERE status = 'pending')::int cho,
+             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours')::int quyet,
+             count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int vao
+        FROM review_queue WHERE NOT ${THE_DONG_BANG_SQL}`;
 
 export function ngayVN(d = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
@@ -68,18 +78,18 @@ export async function gom(client, { now = new Date(), daBietCfg = [] } = {}) {
 
     // North star — hai ảnh chụp bậc gần nhất.
     const snaps = (await q(`SELECT DISTINCT snap_date::text d FROM data_level_snapshot ORDER BY 1 DESC LIMIT 2`)).map((r) => r.d);
-    const lay = (d) => q(`SELECT market_id, property_type, unit, data_level, n FROM data_level_snapshot WHERE snap_date = $1`, [d]);
+    // scale (087) đọc qua to_jsonb: DB chưa áp 087 không có cột — trả null, oBacGiam coi là thang-2310.
+    const lay = (d) => q(`SELECT market_id, property_type, unit, data_level, n, to_jsonb(s) ->> 'scale' AS scale
+      FROM data_level_snapshot s WHERE snap_date = $1`, [d]);
     const sau = snaps[0] ? await lay(snaps[0]) : [];
     const truoc = snaps[1] ? await lay(snaps[1]) : [];
     ngu.snapNgay = snaps[0] ?? null;
     ngu.snapTruoc = snaps[1] ?? null;
-    const capB = (lv) => Number(String(lv).slice(1));
-    so.NS1 = sau.filter((r) => capB(r.data_level) >= (r.property_type === "apartment" ? 5 : 3)).reduce((s, r) => s + r.n, 0);
-    so.NS1b = sau.filter((r) => capB(r.data_level) >= 3).reduce((s, r) => s + r.n, 0);
+    Object.assign(so, demNs1(sau));
     ngu.tongDonVi = sau.reduce((s, r) => s + r.n, 0);
     ngu.phanBo = Object.fromEntries(VOCAB.data_level.map((b) => [b, sau.filter((r) => r.data_level === b).reduce((s, r) => s + r.n, 0)]));
     const oGiam = truoc.length ? oBacGiam(truoc, sau) : { nghi: [], roi: [] };
-    so.NS3 = truoc.length ? oGiam.nghi.length : null;
+    so.NS3 = truoc.length && !oGiam.doiThang ? oGiam.nghi.length : null;
 
     const [g] = await q(`SELECT count(DISTINCT po.offer_id)::int n FROM property_offers po JOIN sale_offers o USING (offer_id) WHERE o.source = 'S03'`);
     so.NS2 = g.n;
@@ -171,11 +181,7 @@ export async function gom(client, { now = new Date(), daBietCfg = [] } = {}) {
     so.C4 = c4.n;
 
     // Công người.
-    const [h] = await q(`
-      SELECT count(*) FILTER (WHERE status = 'pending')::int cho,
-             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours')::int quyet,
-             count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int vao
-        FROM review_queue`);
+    const [h] = await q(CONG_NGUOI_SQL);
     so.H1 = h.cho;
     so.H1b = h.quyet;
     ngu.theVao24h = h.vao;

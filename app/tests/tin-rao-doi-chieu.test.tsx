@@ -147,7 +147,7 @@ const gitShow = (tep: string) =>
 
 /** Nạp một bản chữ của offers-public.ts thành module cạnh tệp thật (dùng chung ./db, cùng pool), xoá tệp ngay sau khi nạp. */
 async function napBan(src: string, nhan: string): Promise<Offers> {
-  const tep = join(import.meta.dirname, `../src/lib/__e4b_${nhan}_${process.pid}.ts`)
+  const tep = join(import.meta.dirname, `../src/lib/.e4b-mut-${nhan}-${process.pid}.ts`)
   writeFileSync(tep, src)
   try {
     return await import(tep)

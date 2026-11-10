@@ -3,6 +3,7 @@ import { pool } from "./db";
 import { vnDayKey, vnDayStart } from "./format";
 import { ageState, readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
+import { KHONG_DONG_BANG_SQL } from "./ops/review-dong-bang";
 import { buildMediaImages, loadOfferMedia, type MediaRow, type MediaRowQuery, type ReviewImage } from "./ops/review-media";
 
 /**
@@ -110,8 +111,8 @@ export type FlowRecord = {
   market: string | null;
   confidence: string;
   nPosts: number;
-  /** Có dòng `property_offers` — chỉ khối bậc (B2 cũ) còn đọc, tới hàng thang-bac-moi-b0-b5. */
-  linked: boolean;
+  /** Đã định vị vào danh bạ (mức nhận diện Định vị hoặc Gắn căn) — bậc B2 của tin (thang 08/11). Cụm không tính. */
+  located: boolean;
   /** Mức nhận diện sâu nhất của tin + cờ chờ khớp — cùng luật với 600_data_flow.sql. */
   identification: Identification;
   firstSeen: string;
@@ -220,7 +221,6 @@ const recordsSql = (withPost: boolean) => `
   SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
          o.n_reposts, o.first_seen::text, o.last_seen::text,
          a.name AS ward, m.name AS market,
-         EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id) AS linked,
          -- Mức nhận diện cùng luật 600_data_flow.sql (đoạn LOCATED_PENDING, UNIQUE_ID). Định vị, Gắn căn: chưa có bảng nối
          -- tin → nút danh bạ (V9) nên không tin nào tới. Cloud không có cột unit_number, street_number → đọc qua to_jsonb.
          CASE WHEN EXISTS (SELECT 1 FROM property_offers po
@@ -286,6 +286,9 @@ function cloudFacts(facts: OpsFacts, window: FlowWindow): FactsRead {
   return { state: b.state, at: b.measuredAt, facts: f, error: null };
 }
 
+/** Số «Hàng duyệt» ở máy thu: thẻ chờ, trừ thẻ Ghép căn đang chờ đóng băng (V7, review-dong-bang.ts). */
+export const REVIEW_PENDING_SQL = `SELECT count(*) AS review FROM review_queue WHERE status = 'pending' AND ${KHONG_DONG_BANG_SQL}`;
+
 export async function getDataFlow(
   window: FlowWindow,
   opts: {
@@ -311,7 +314,7 @@ export async function getDataFlow(
   if (mode === "local") {
     const [lf, pending] = await Promise.all([
       localFacts(q, window, now),
-      q(`SELECT count(*) AS review FROM review_queue WHERE status = 'pending'`),
+      q(REVIEW_PENDING_SQL),
     ]);
     f = lf;
     reviewPending = num(pending.rows[0]?.review);
@@ -339,7 +342,7 @@ export async function getDataFlow(
       market: r.market ?? null,
       confidence: r.confidence,
       nPosts: num(r.n_reposts),
-      linked: Boolean(r.linked),
+      located: r.muc === "located" || r.muc === "unit",
       identification: {
         level: (r.muc ?? "none") as IdentificationLevel,
         locatedPending: Boolean(r.ghi_toa),
