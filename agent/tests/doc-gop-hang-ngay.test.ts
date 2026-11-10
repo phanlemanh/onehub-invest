@@ -392,3 +392,48 @@ test("PL34-AC-8 bước đêm: hôm qua rồi hôm kia giờ VN, trần 20 mặc
   assert.ok(d.stderr.includes("JOB FAIL [doc-gop-hang-ngay] bước hom-kia mã 1"), d.stderr);
 });
 
+
+/** Hồ sơ doc-gop-env-rong: chạy bước đêm bằng /bin/bash (macOS: 3.2) trên một gốc kho tạm — có hay không `.env` tuỳ `coEnv`. */
+function chayBuocGocTam(coEnv: boolean, tep = join(ROOT, "pipeline/doc-gop-hang-ngay.sh")): { status: number | null; stderr: string; goi: string[] } {
+  const goc = mkdtempSync(join(tmpdir(), "dger-goc-"));
+  for (const d of ["pipeline", "scripts/lib", "agent"]) mkdirSync(join(goc, d), { recursive: true });
+  writeFileSync(join(goc, "pipeline/doc-gop-hang-ngay.sh"), readFileSync(tep, "utf8"));
+  writeFileSync(join(goc, "scripts/lib/job-step.sh"), readFileSync(join(ROOT, "scripts/lib/job-step.sh"), "utf8"));
+  if (coEnv) writeFileSync(join(goc, ".env"), "X=1\n");
+  const so = join(goc, "goi.txt");
+  const gia = join(goc, "node-gia.sh");
+  writeFileSync(gia, `#!/bin/bash\necho "$*" >> "${so}"\n`);
+  chmodSync(gia, 0o755);
+  const r = spawnSync("/bin/bash", [join(goc, "pipeline/doc-gop-hang-ngay.sh")], {
+    env: { ...process.env, DOC_GOP_NODE: gia, DOC_GOP_BAY_GIO: "2026-11-08T01:00:00+07:00" }, encoding: "utf8",
+  });
+  let goi: string[] = [];
+  try { goi = readFileSync(so, "utf8").trim().split("\n"); } catch { /* không lần gọi nào */ }
+  return { status: r.status, stderr: r.stderr, goi };
+}
+
+test("DGER-AC-1 kho không có .env: bước đêm chạy đủ hai bước, không cờ --env-file; có .env thì mang cờ", () => {
+  const khong = chayBuocGocTam(false);
+  assert.equal(khong.status, 0, `KHONG ENV THI HONG: ${khong.stderr}`);
+  assert.equal(khong.goi.length, 2, `KHONG ENV THI HONG: ${khong.stderr}`);
+  assert.ok(khong.goi.every((g) => !g.includes("--env-file")), khong.goi.join(" | "));
+  const co = chayBuocGocTam(true);
+  assert.equal(co.status, 0, co.stderr);
+  assert.equal(co.goi.length, 2, co.stderr);
+  assert.ok(co.goi.every((g) => /^--env-file=\S+\/\.env --import tsx scripts\/doc-gop-s03\.ts hang-ngay --ngay /.test(g)), `CO ENV MA MAT CO: ${co.goi.join(" | ")}`);
+});
+
+test("DGER-AC-2 đối chứng: bản trước vòng (\"${ENV_FILE[@]}\" trần) chết trên /bin/bash 3.2 khi không có .env", (t) => {
+  const ban = spawnSync("/bin/bash", ["-c", "echo $BASH_VERSINFO"], { encoding: "utf8" }).stdout.trim();
+  if (ban !== "3") return t.skip(`/bin/bash bản ${ban} không coi mảng rỗng là chưa đặt — đối chứng chỉ đo được trên bash 3`);
+  const thuMuc = mkdtempSync(join(tmpdir(), "dger-cu-"));
+  const cu = join(thuMuc, "doc-gop-hang-ngay.sh");
+  const moi = readFileSync(join(ROOT, "pipeline/doc-gop-hang-ngay.sh"), "utf8");
+  const ganCu = moi.replace('${ENV_FILE[@]+"${ENV_FILE[@]}"}', '"${ENV_FILE[@]}"');
+  assert.notEqual(ganCu, moi, "KHONG TIM THAY CHO SUA");
+  writeFileSync(cu, ganCu);
+  const r = chayBuocGocTam(false, cu);
+  assert.notEqual(r.status, 0, "DOI CHUNG KHONG DO");
+  assert.match(r.stderr, /ENV_FILE\[@\]: unbound variable/, r.stderr);
+  assert.equal(r.goi.length, 0, "DOI CHUNG KHONG DO");
+});
