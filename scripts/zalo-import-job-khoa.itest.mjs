@@ -59,6 +59,23 @@ function chay(root, env) {
 async function demS03(c) {
   return Number((await c.query(`SELECT count(*) n FROM sale_offers WHERE source = 'S03'`)).rows[0].n);
 }
+// Dấu đối chứng dương cho vế «không ghi dở»: cho nghỉ K tin S03 đang sống. writeOffers upsert lại mọi tin transform-zalo
+// ra và đặt retired_at = NULL, nên lượt transform chạy TRỌN làm dấu đổi (ca đối chứng đo điều này), còn lượt bị khoá lùi
+// trọn thì dấu giữ nguyên. Không có dấu, đẳng thức đếm trước/sau xanh cả khi không lùi (DB đã transform sẵn, nạp rỗng).
+const K = 5;
+async function datDau(c) {
+  const { rows } = await c.query(
+    `UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot'
+      WHERE offer_id IN (SELECT offer_id FROM sale_offer_records WHERE source = 'S03' AND retired_at IS NULL
+                          ORDER BY last_seen DESC NULLS LAST, offer_id LIMIT ${K})
+      RETURNING offer_id`);
+  assert.equal(rows.length, K, `SK-AC-3: DB của lượt thiếu ${K} tin S03 đang sống để đặt dấu`);
+  return rows.map((r) => r.offer_id);
+}
+async function demDau(c, ids) {
+  return Number((await c.query(
+    `SELECT count(*) n FROM sale_offer_records WHERE offer_id = ANY($1::text[]) AND retired_at IS NOT NULL`, [ids])).rows[0].n);
+}
 async function giuKhoa() {
   const a = new pg.Client({ connectionString: DB_URL });
   await a.connect();
@@ -73,6 +90,7 @@ before(async () => { C = new pg.Client({ connectionString: DB_URL }); await C.co
 after(async () => { await C?.end(); });
 
 test("SK-AC-3 giữ khoá stg_zalo_posts: lượt nhanh thật BỎ LƯỢT transform-zalo trong 30 s, thoát 0, sale_offers S03 không đổi", async () => {
+  const dau = await datDau(C);
   const truoc = await demS03(C);
   const nha = await giuKhoa();
   let k;
@@ -82,14 +100,21 @@ test("SK-AC-3 giữ khoá stg_zalo_posts: lượt nhanh thật BỎ LƯỢT tran
   assert.ok(r.thay() !== null, `SK-AC-3 không có dòng BỎ LƯỢT: ${k.err.slice(-600)}`);
   assert.ok(r.thay() < 30_000, `SK-AC-3 BỎ LƯỢT sau ${r.thay()} ms`);
   assert.equal(await demS03(C), truoc, "SK-AC-3 sale_offers S03 đổi sau lượt bỏ");
+  assert.equal(await demDau(C, dau), K, "SK-AC-3 lượt bỏ đã ghi dở: tin đặt dấu sống lại");
 });
 
-test("SK-AC-3 đối chứng: không ai giữ khoá → transform-zalo xong, không BỎ LƯỢT, không JOB FAIL", async () => {
+test("SK-AC-3 đối chứng: không ai giữ khoá → transform-zalo xong, ghi thật (tin đặt dấu sống lại), không BỎ LƯỢT, không JOB FAIL", async () => {
+  const dau = await datDau(C);
+  const truoc = await demS03(C);
   const r = chay(cay(), {});
   const k = await Promise.race([r.xong, ngu(400_000).then(() => { r.kill(); return { code: null, err: "quá 400 s" }; })]);
   assert.equal(k.code, 0, `SK-AC-3 đối chứng thoát ${k.code}: ${k.err.slice(-600)}`);
   assert.ok(!k.err.includes("BỎ LƯỢT"), `SK-AC-3 đối chứng có BỎ LƯỢT: ${k.err.slice(-400)}`);
   assert.ok(!k.err.includes("JOB FAIL"), `SK-AC-3 đối chứng có JOB FAIL: ${k.err.slice(-400)}`);
+  // Đối chứng dương cho hai phép đo của ca khoá: transform chạy trọn thì dấu đổi và số tin S03 đổi theo.
+  const con = await demDau(C, dau);
+  assert.ok(con < K, `SK-AC-3 đối chứng: transform chạy trọn mà ${con}/${K} tin đặt dấu vẫn nghỉ — phép đo dấu không phân biệt`);
+  assert.notEqual(await demS03(C), truoc, "SK-AC-3 đối chứng: số tin S03 không đổi dù transform chạy trọn — phép đếm không phân biệt");
 });
 
 test("SK-AC-3 chiều đỏ: lock_timeout tắt (0) → lượt nhanh treo sau khoá (bị giết sau 20 s)", async () => {
