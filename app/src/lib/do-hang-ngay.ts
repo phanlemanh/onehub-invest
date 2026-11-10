@@ -17,7 +17,8 @@ export type Do1 = {
   giuNhap: { status: string; checkedAt: string; dong: DongGiu[]; ty_le_soat?: { tuan_nay: { rut: number; soat: number; ty_le: number | null } }; canh_bao_soat?: boolean; phien_ban_thuoc?: string; lat?: Record<string, Lat> } | null
   boSot: { status: string; cach_doc: DongBoSot[]; lat?: Record<string, Lat> } | null
   tinHieu: { status: string; ngay?: string; cach_doc: DongTinHieu[]; lat?: Record<string, Lat> } | null
-  chuyenBac: { status: string; ly_do?: string; don_vi?: number; so_dong?: number; doi_khoa?: number; theo_nguon?: Record<string, Record<string, number>>; theo_huong_ly_do?: Record<string, number>; lat?: Record<string, Lat> } | null
+  /** `thang`: thang bậc hiện hành và ngày áp (087, thang-bac-moi-b0-b5); dòng đời trước không có. */
+  chuyenBac: { status: string; ly_do?: string; don_vi?: number; thang?: { ma: string; tu_ngay: string }; so_dong?: number; doi_khoa?: number; theo_nguon?: Record<string, Record<string, number>>; theo_huong_ly_do?: Record<string, number>; lat?: Record<string, Lat> } | null
   soSanh: { entity: string; status: string; ly_do?: string; cu?: string; o?: Record<string, SoCap> }[]
 }
 
