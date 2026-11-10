@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 // do-hang-ngay.mjs — DO1 (AC-3..AC-7, AC-9): dòng chuyển bậc từng đơn vị + bốn nhóm số đo hằng ngày vào dq_check_results.
 //   node pipeline/do-hang-ngay.mjs [--write] [--ngay YYYY-MM-DD]
+//   node pipeline/do-hang-ngay.mjs --sua-ngay-doi-thang [--write]   (sửa ngày đổi thang đã qua; không --write: in ngày + số dòng)
+// Ngày lập mốc (lap-moc, doi-thang) giữ suốt cả ngày qua mọi lượt (do1-giu-dau-doi-thang): nhận theo dấu đã ghi, bảng rỗng,
+// thang cũ, rồi ngày áp thang; ngày ấy không có dòng chuyển (Hỏi-1).
 // Không --write: tính trong giao dịch rồi ROLLBACK, in tóm tắt. --write: khoá advisory 56083 trong giao dịch, ghi
 // data_level_change (gộp nhiều lần chạy trong ngày thành một dòng mỗi đơn vị), thay data_level_unit, ghi lại các dòng do1-*
 // của ngày (giờ VN). Lần đầu (data_level_unit rỗng) chỉ lập mốc. Chạy sau bac-du-lieu.mjs (cùng tập đơn vị data_level_units()
@@ -37,6 +40,63 @@ export async function tuNgayThang(client, ngay) {
   const { rows: [r] } = await client.query(
     "SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG]);
   return r.d ?? ngay;
+}
+
+/** Hỏi-1, Hỏi-2 ở Cổng Phạm vi do1-giu-dau-doi-thang (Mạnh, 10/11 — theo khuyến nghị): dòng chuyển có sẵn của ngày lập mốc
+ *  bị xoá («xoa») hay giữ («giu»). HOI1: lượt DO1 trong ngày; HOI2: lệnh --sua-ngay-doi-thang. */
+export const HOI1 = "xoa";
+export const HOI2 = "xoa";
+const NHAN_MOC = new Set(["lap-moc", "doi-thang"]);
+
+/** Ngày áp thang thật (ngày nhỏ nhất có ảnh chụp thang mới), null khi chưa có — khác tuNgayThang, không rơi về `ngay`. */
+export async function ngayApThang(client) {
+  const { rows: [r] } = await client.query("SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG]);
+  return r.d;
+}
+
+/** Dấu lập mốc đã ghi cho ngày (dòng do1-chuyen-bac skip mới nhất của ngày), null khi không có. */
+export async function dauNgay(client, ngay) {
+  const { rows: [r] } = await client.query(
+    `SELECT status, detail::jsonb ->> 'ly_do' AS ly_do FROM dq_check_results
+      WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1 ORDER BY checked_at DESC, id DESC LIMIT 1`, [ngay]);
+  return r?.status === "skip" && NHAN_MOC.has(r.ly_do) ? r.ly_do : null;
+}
+
+/** Nhãn ngày lập mốc (bảng 1 design §2), luật đầu tiên khớp thắng: dấu đã ghi → bảng đơn vị rỗng → bảng còn thang cũ →
+ *  ngày áp thang → không (so như thường). Đột biến cho chiều đỏ: bo-giu-moc bỏ dấu và ngày áp; bo-ngay-ap bỏ ngày áp;
+ *  ngay-ap-truoc-rong đưa ngày áp lên trước bảng rỗng. */
+export function nhanNgay({ dau, bangRong, coThangCu, ngay, tuNgay, dotBien }) {
+  const theoDau = dotBien === "bo-giu-moc" ? null : dau;
+  const theoNgayAp = dotBien !== "bo-giu-moc" && dotBien !== "bo-ngay-ap" && tuNgay != null && ngay === tuNgay;
+  if (theoDau) return theoDau;
+  if (dotBien === "ngay-ap-truoc-rong" && theoNgayAp) return "doi-thang";
+  if (bangRong) return "lap-moc";
+  if (coThangCu) return "doi-thang";
+  if (theoNgayAp) return "doi-thang";
+  return null;
+}
+
+/** Sửa ngày đổi thang đã qua (AC-8): ghi lại dấu doi-thang của ngày áp, dòng chuyển của đúng ngày ấy theo Hỏi-2. Không đụng
+ *  data_level_unit hay ngày khác. Đã có dấu doi-thang ở ngày khác ngày áp → từ chối. */
+export async function suaNgayDoiThang(client, { write = false, hoi2 = HOI2, dotBien } = {}) {
+  if (!(await co087(client))) return { bo_qua: "chua-ap-087" };
+  const ngay = await ngayApThang(client);
+  if (!ngay) return { bo_qua: "chua-co-thang-moi" };
+  const { rows: lech } = await client.query(
+    `SELECT DISTINCT detail::jsonb ->> 'ngay' AS d FROM dq_check_results
+      WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ly_do' = 'doi-thang' AND detail::jsonb ->> 'ngay' <> $1`, [ngay]);
+  if (lech.length) throw new Error(`DD-AC-8 ngày áp ${ngay} lệch ngày có dấu ${lech.map((r) => r.d).sort().join(", ")}`);
+  const { rows: [n] } = await client.query("SELECT count(*)::int AS n FROM data_level_change WHERE snap_date = $1", [ngay]);
+  if (write) {
+    if (hoi2 !== "giu") {
+      await client.query(dotBien === "sua-moi-ngay" ? "DELETE FROM data_level_change" : "DELETE FROM data_level_change WHERE snap_date = $1",
+        dotBien === "sua-moi-ngay" ? [] : [ngay]);
+    }
+    await client.query(`DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1`, [ngay]);
+    await client.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail) VALUES (clock_timestamp(), 'do1-chuyen-bac', 'tat-ca', 'skip', $1)`,
+      [JSON.stringify({ ngay, ly_do: "doi-thang", thang: { ma: THANG, tu_ngay: ngay }, sua: true })]);
+  }
+  return { ngay, xoa: hoi2 === "giu" ? 0 : n.n };
 }
 
 /** Bậc hiện tại của mọi đơn vị — data_level_units() của 087, cùng tập với 610_data_level.sql. */
@@ -147,7 +207,7 @@ function latThe(the, ngay) {
 }
 
 /** Bốn nhóm số + dòng chuyển bậc của một ngày. Trả dòng dq (chưa ghi) và số đếm. */
-export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = false, dotBien } = {}) {
+export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = false, dotBien, hoi1 = HOI1 } = {}) {
   const ra = [];
   // ---- Chuyển bậc ----
   let lapMoc = false, chuyen = [];
@@ -157,13 +217,18 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
   const nay = await donViHienTai(client);
   const thang = { ma: THANG, tu_ngay: await tuNgayThang(client, ngay) };
   const { rows: truocRows } = await client.query("SELECT * FROM data_level_unit");
-  if (!truocRows.length) {
+  // Ngày lập mốc giữ là ngày lập mốc suốt cả ngày (do1-giu-dau-doi-thang): lượt sau cùng ngày không so bậc, không xoá dấu.
+  const nhan = nhanNgay({
+    dau: await dauNgay(client, ngay), bangRong: !truocRows.length,
+    coThangCu: dotBien !== "bo-doi-thang" && truocRows.some((r) => r.scale !== THANG),   // bo-doi-thang: đột biến cho thước TB-AC-5
+    ngay, tuNgay: await ngayApThang(client), dotBien,
+  });
+  if (nhan) {
+    // Đổi thang 08/11: bậc cũ đếm theo thang khác — so với nó là đọc lần hạ một lần thành tụt bậc. Lập mốc lại. Ngày lập mốc
+    // không có dòng chuyển nào (AC-5 thang-bac-moi-b0-b5): Hỏi-1 «xoá» dọn cả dòng có sẵn của ngày, «giữ» chỉ không ghi thêm.
     lapMoc = true;
-    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "lap-moc", don_vi: nay.size, thang } });
-  } else if (dotBien !== "bo-doi-thang" && truocRows.some((r) => r.scale !== THANG)) {   // bo-doi-thang: đột biến cho thước TB-AC-5
-    // Đổi thang 08/11: bậc cũ đếm theo thang khác — so với nó là đọc lần hạ một lần thành tụt bậc. Lập mốc lại.
-    lapMoc = true;
-    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "doi-thang", don_vi: nay.size, thang } });
+    if (write && hoi1 !== "giu" && dotBien !== "bo-don-ngay") await client.query("DELETE FROM data_level_change WHERE snap_date = $1", [ngay]);
+    ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: nhan, don_vi: nay.size, thang } });
   } else {
     const truoc = new Map(truocRows.map((r) => [r.unit_key, r]));
     const tinTruoc = [...truoc.keys()].filter((k) => k.startsWith("tin:")).map((k) => k.slice(4));
@@ -284,6 +349,13 @@ async function main() {
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock(56083)");
+    if (a.includes("--sua-ngay-doi-thang")) {
+      const s = await suaNgayDoiThang(client, { write });
+      await client.query(write ? "COMMIT" : "ROLLBACK");
+      console.log(s.bo_qua ? `do-hang-ngay --sua-ngay-doi-thang: bỏ qua (${s.bo_qua})`
+        : `do-hang-ngay --sua-ngay-doi-thang: ngày ${s.ngay} · ${s.xoa} dòng chuyển ${write ? "đã xoá" : "sẽ xoá"}${HOI2 === "giu" ? " (Hỏi-2: giữ)" : ""}; dấu doi-thang ${write ? "đã ghi lại" : "sẽ ghi lại"}${write ? "" : " (không ghi)"}`);
+      return;
+    }
     const kq = await doHangNgay(client, { ngay, write });
     await client.query(write ? "COMMIT" : "ROLLBACK");
     console.log(`do-hang-ngay ${ngay}: ${kq.lap_moc ? "lập mốc" : `${kq.chuyen} đơn vị đổi bậc`}; ${kq.dq.map((r) => `${r.check_name}=${r.status}`).join(" ")}${write ? "" : " (không ghi)"}`);

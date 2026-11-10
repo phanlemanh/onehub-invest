@@ -47,7 +47,7 @@ evals:
     cmd: config:executors.test.tb_app_db
     layer: backend-effect
     paths: [pipeline/do-hang-ngay.mjs, app/src/lib/do-hang-ngay.ts, app/src/components/ops/quality/do-hang-ngay.tsx, app/tests/thang-bac-db.itest.tsx]
-    expected: "exit 0; ca «DD-AC-6 hai lượt cùng ngày lên khối DO1» trong giao dịch có 087: data_level_unit thang-2310 + ảnh chụp thang-0811 ngày D; doHangNgay THẬT (pipeline) ngày D write; đổi giá một tin của bản chép; doHangNgay THẬT lần hai cùng ngày; loadDo1 THẬT của app đọc; khối DoHangNgay dựng bằng renderToStaticMarkup có data-do1-thang, «Thang bậc 08/11», «lần hạ một lần», «áp từ D —». Chiều đỏ cùng ca: chạy lại với dotBien «bo-giu-moc» → HTML không có data-do1-thang; ca phụ ghim «DD-AC-6 lượt hai mất dòng thang trên khối DO1»."
+    expected: "exit 0; ca «DD-AC-6 hai lượt cùng ngày lên khối DO1» trong giao dịch có 087: data_level_unit thang-2310 + ảnh chụp thang-0811 ngày D; doHangNgay THẬT (pipeline) ngày D write; đổi giá một tin S03 chèn trong giao dịch; doHangNgay THẬT lần hai cùng ngày; loadDo1 THẬT của app đọc; khối DoHangNgay dựng bằng renderToStaticMarkup có data-do1-thang, «Thang bậc 08/11», «lần hạ một lần», «áp từ D —». Chiều đỏ cùng ca: chạy lại với dotBien «bo-giu-moc» → HTML không còn «lần hạ một lần» (dòng pass vẫn mang thang nên data-do1-thang vẫn hiện; câu lập mốc là thứ mất); ca phụ ghim «DD-AC-6 lượt hai mất dòng thang trên khối DO1»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
