@@ -594,7 +594,8 @@ test("DO1-AC-6 chuyển bậc trên DB: lập mốc, bảy loại đổi, đổi
     const F = await can(c, [o.f1]), P = await can(c, [o.h1]);
     // Trong giao dịch (ROLLBACK): DB đã có dòng đo từ trước (vd DB thử dựng mẫu) thì bắt đầu từ hai bảng rỗng.
     await c.query("DELETE FROM data_level_unit; DELETE FROM data_level_change");
-    const lan1 = await doHangNgay(c, { ngay: "2025-01-15", write: true });
+    // Lập mốc ngày trước: ngày lập mốc giữ suốt cả ngày, không so bậc (do1-giu-dau-doi-thang) — lượt đo đổi bậc chạy ngày sau.
+    const lan1 = await doHangNgay(c, { ngay: "2025-01-14", write: true });
     assert.equal(lan1.lap_moc, true);
     assert.equal(lan1.dq.find((r) => r.check_name === "do1-chuyen-bac").status, "skip");
     const { rows: [{ n: n0 }] } = await c.query("SELECT count(*)::int AS n FROM data_level_change");

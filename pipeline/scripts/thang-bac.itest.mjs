@@ -268,7 +268,9 @@ test("TB-AC-5 DO1 đổi thang: ngày D không ghi dòng chuyển, doi-thang + n
   const { doHangNgay, donViHienTai } = await import("../do-hang-ngay.mjs");
   const D = "2026-11-12", D1 = "2026-11-13", AP = "2026-11-10";
   const nen = async (db) => {
-    await db.query("DELETE FROM data_level_unit; DELETE FROM data_level_change");
+    // Ngày áp = ngày VN của lượt DO1 đầu tiên mang thang mới (AC-9 do1-giu-dau-doi-thang): bỏ dòng DO1 của bản chép để lượt
+    // ngày D là lượt đầu; ảnh chụp ngày AP (sớm hơn D) không còn quyết ngày áp.
+    await db.query("DELETE FROM data_level_unit; DELETE FROM data_level_change; DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac'");
     await db.query(`INSERT INTO data_level_unit (unit_key, unit, source, data_level, ke_thieu, core, seen_on, scale) VALUES
       ('can:999999001', 'can', 'S06', 'B2', 'so-do', '{"tin": []}', '2026-11-08', 'thang-2310'),
       ('tin:${T}-cu-1', 'tin_le', 'S03', 'B0', 'truong-loi', '{"tin": []}', '2026-11-08', 'thang-2310'),
@@ -288,7 +290,7 @@ test("TB-AC-5 DO1 đổi thang: ngày D không ghi dòng chuyển, doi-thang + n
     assert.equal(r.status, "skip");
     assert.equal(r.detail.ly_do, "doi-thang");
     assert.equal(r.detail.don_vi, (await donViHienTai(c)).size);
-    assert.deepEqual(r.detail.thang, { ma: "thang-0811", tu_ngay: AP }, "ngày áp phải là ngày nhỏ nhất có ảnh chụp thang mới");
+    assert.deepEqual(r.detail.thang, { ma: "thang-0811", tu_ngay: D }, "ngày áp phải là ngày VN của lượt DO1 đầu tiên mang thang mới");
     const { rows: thang } = await c.query("SELECT DISTINCT scale FROM data_level_unit");
     assert.deepEqual(thang.map((x) => x.scale), ["thang-0811"]);
     await doHangNgay(c, { ngay: D, write: true });   // chạy lại cùng ngày đổi thang: vẫn không dòng chuyển nào
@@ -300,7 +302,7 @@ test("TB-AC-5 DO1 đổi thang: ngày D không ghi dòng chuyển, doi-thang + n
     const { rows: dong } = await c.query(
       "SELECT unit_key, huong FROM data_level_change WHERE snap_date = $1 AND unit_key LIKE $2", [D1, `tin:${T}%`]);
     assert.deepEqual(dong.map((x) => [x.unit_key, x.huong]), [[`tin:${t1}`, "tut"]]);
-    assert.deepEqual(lan2.dq.find((x) => x.check_name === "do1-chuyen-bac").detail.thang, { ma: "thang-0811", tu_ngay: AP });
+    assert.deepEqual(lan2.dq.find((x) => x.check_name === "do1-chuyen-bac").detail.thang, { ma: "thang-0811", tu_ngay: D });
   });
   await trongGiaoDich(async () => {   // chiều đỏ: bỏ nhánh đổi thang → ngày D ghi dòng chuyển (đơn vị thang cũ «mất»)
     await nen(c);
