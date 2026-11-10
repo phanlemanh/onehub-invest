@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>161 việc"]
+  GB --> DG["Đã giao<br/>163 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>108 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -291,6 +291,7 @@ flowchart TD
 - /ops/review và /ops/sources trên cloud không còn 500 khi thiếu bảng tầng A — nói rõ chỉ có ở máy local (`ops-review-sources-500-tren-cloud`)
 - Test quét cây PB-AC-5/PB-AC-6 không đỏ chập chờn khi bản đột biến tạm của test khác bị xoá giữa lúc quét (`pb-ac-5-khong-quet-tep-tam`) — đã giao — máy thông, cửa veto còn mở
 - Áp hay hoàn tác một đề xuất làm giàu thì mọi tin chung bài đăng được phân xử lại; dữ liệu đã lệch được sửa một lần; hai ca đỏ của bộ test phát biểu xanh lại trên main, và test dòng chảy cloud tự dọn lược đồ tạm (`phat-bieu-db-do-tren-main`)
+- Job nạp Zalo đêm chạy sáu bước — đọc gộp S03 hằng ngày sau nhả khoá nạp, trước enrich; bộ test job Zalo đo đúng bước mới (`pl34-lich-dem-sau-buoc`)
 - Vá ranh giới cổng — Căn giá tốt sang Ops, gỡ AirDNA khỏi Mô phỏng đầu tư (`portal-deals-airdna`)
 - Bộ kiểm sổ bề mặt API (check-api-surface) không đỏ vì tệp đột biến tạm của test khác bị xoá giữa lúc quét — CI app thôi đỏ chập chờn ở QV-AC-9 (`qv-ac-9-khong-chap-chon`)
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
@@ -333,6 +334,7 @@ flowchart TD
 - Thẻ gắn nhãn hiện người đăng bài (tên và ID) cạnh nhóm và giờ đăng (`the-gan-nhan-nguoi-dang`)
 - Thẻ gắn hai người chưa ai gắn xếp cuối nhóm, không chặn người gắn duy nhất (`the-hai-nguoi-xep-sau`)
 - collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
+- Thước E4 của hồ sơ đã ký app-test-chiu-song-song đếm đúng ba ca LDR theo tên thay vì tổng ca xanh của tệp test, thước phạm vi E5 neo khoảng commit của nhánh gốc, rồi ghim lại hồ sơ ấy bằng làn máy (`thuoc-song-song-dem-theo-ten-ca`)
 - Tin không thấy lại ở nguồn quá N ngày (nguồn vẫn đang thu) chuyển sang ngừng rao, giữ lại làm lịch sử; thấy lại thì về đang rao (`tin-ngung-rao-khong-thay-lai`)
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
 - Nhà đầu tư tìm được tin rao kèm người bán và SĐT trên cổng Invest — tên, SĐT lên cloud, API Listing theo loại, trang Bán và Cho thuê với thẻ chung (`tin-rao-tren-invest`)
