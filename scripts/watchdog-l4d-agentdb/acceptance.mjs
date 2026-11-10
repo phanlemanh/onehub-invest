@@ -20,11 +20,13 @@
  * canary — canary không được xuất hiện ở cảnh báo/log; câu truy vấn kiểm
  * ngay dòng gọi sqlite3 (không tính chú thích); băm kho chính không đổi;
  * tệp mới duy nhất được phép là -shm khi đã có -wal.
+ * Đối chứng AC-9 (E10a–c): doc-that.sh trên kho giả trong môi trường launchd
+ * — đọc đúng thoát 0, kho hỏng hay không có kho thì thoát khác 0.
  * Tên nguồn thật chỉ ở MỘT hằng S03 (0511-18).
  */
 import { spawnSync, spawn } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -59,10 +61,26 @@ function finish(tag) {
 const read = (p) => (existsSync(p) ? readFileSync(p, "utf8") : "");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
-// —— E9 TRƯỚC TIÊN: kiểm stub thắng PATH (command -v); môi trường lạ → thoát 2
-for (const n of ["launchctl", "pkill", "osascript"]) {
-  const r = spawnSync("/bin/sh", ["-c", `command -v ${n}`], { encoding: "utf8" });
-  if (r.status !== 0) { console.error(`E9: ${n} không có trong PATH — dừng`); process.exit(2); }
+// —— E9: PATH của bản chép. Bình thường stub đứng ĐẦU PATH; biến
+// L4D_TEST_PATH_SAI=1 đặt stub CUỐI PATH để chứng minh bước kiểm bên dưới bắt
+// được và thoát 2 trước khi chạy ca nào (ca «PATH sai» của AC-8, tự gọi lại
+// chính tệp này ở đầu phép thử).
+const PATH_SAI = process.env.L4D_TEST_PATH_SAI === "1";
+const HE_THONG = "/usr/bin:/bin:/usr/sbin:/sbin";
+const pathFor = (stub) => (PATH_SAI ? `${HE_THONG}:${stub}` : `${stub}:${HE_THONG}`);
+// kiểm bằng ĐÚNG PATH mà bản chép sẽ chạy: mỗi tên trong STUB_NAMES phải giải
+// ra tệp giả trong thư mục stub — lệch một tên là thoát 2, không chạy ca nào
+function kiemStubThang(stub) {
+  const lech = [];
+  for (const n of STUB_NAMES) {
+    const r = spawnSync("/bin/bash", ["-c", `command -v ${n}`], { env: { PATH: pathFor(stub) }, encoding: "utf8" });
+    const thay = (r.stdout || "").trim();
+    if (r.status !== 0 || thay !== join(stub, n)) lech.push(`${n}→${thay || "(không có)"}`);
+  }
+  if (lech.length) {
+    console.error(`E9: bản giả không thắng PATH (${lech.join(", ")}) — dừng, không chạy ca nào`);
+    process.exit(2);
+  }
 }
 
 // DB agent giả (E6: mặc định WAL — đúng kho thật; ca rollback truyền "delete").
@@ -110,6 +128,7 @@ function makeSandbox(tag) {
   chmodSync(join(stub, "pgrep"), 0o755);
   writeFileSync(join(stub, "curl"), `#!/bin/sh\necho "curl $*" >> ${JSON.stringify(calls)}\nexit 0\nwhile getopts "o" o; do :; done; shift $((OPTIND-1)); echo "200"\n`);
   chmodSync(join(stub, "curl"), 0o755);
+  kiemStubThang(stub);
   const src = readFileSync(WATCHDOG, "utf8");
   if (src.split(WD_LINE).length !== 2) {
     console.error("bản chép: không tìm thấy đúng MỘT dòng L4D_AGENTS_DIR — bỏ chạy");
@@ -134,7 +153,7 @@ function makeSandbox(tag) {
 function runWd(sb, extraEnv = {}) {
   const r = spawnSync("/bin/bash", [join(sb.repo, "scripts", WD_FILE)], {
     env: {
-      PATH: `${sb.stub}:/usr/bin:/bin:/usr/sbin:/sbin`,
+      PATH: pathFor(sb.stub),
       HOME: sb.home,
       WD_TEST_AGENTS_DIR: sb.agentsDir,
       WD_TEST_OC_LOG: join(sb.home, "tmpoc/khong-co.log"),
@@ -184,11 +203,32 @@ function holdWalWriter(path, ms) {
 }
 
 // ————— E9: chụp máy thật TRƯỚC toàn bộ ca (so lại ở CUỐI file) —————
+// dòng launchd của gateway (PID · mã thoát · nhãn) + giờ khởi động tiến trình
+// đó: bootout, kill hay khởi động lại đều đổi chuỗi này. Không đọc được
+// launchctl thì dừng (thoát 2) — chụp rỗng sẽ biến phép so thành hằng đúng.
+const GW_LABEL = "ai.openclaw.gateway";
 const launchctlThat = () => {
   const r = spawnSync("/bin/launchctl", ["list"], { encoding: "utf8" });
-  return r.stdout || "";
+  if (r.status !== 0 || !(r.stdout || "").includes("\t")) {
+    console.error("E9: không đọc được launchctl list của máy thật — dừng");
+    process.exit(2);
+  }
+  const dong = (r.stdout || "").split("\n").filter((l) => l.split("\t")[2] === GW_LABEL);
+  if (dong.length === 0) return "(gateway không nạp)";
+  const pid = dong[0].split("\t")[0];
+  const ps = /^[0-9]+$/.test(pid) ? spawnSync("/bin/ps", ["-o", "lstart=", "-p", pid], { encoding: "utf8" }) : null;
+  return `${dong.join("|")} · khởi động ${ps ? (ps.stdout || "").trim() || "(không thấy)" : "(không chạy)"}`;
 };
 const GW_BEFORE = launchctlThat();
+if (!PATH_SAI) {
+  // ca «PATH sai» (AC-8): chạy lại chính tệp này với stub cuối PATH — phải
+  // thoát 2 ngay ở bước kiểm, chưa in kết quả ca nào
+  const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], {
+    env: { ...process.env, L4D_TEST_PATH_SAI: "1" }, encoding: "utf8", timeout: 120_000,
+  });
+  check(r.status === 2 && !/^(ok  |FAIL) E\d/m.test(r.stdout || "") && (r.stderr || "").includes("không thắng PATH"),
+    `E9a: stub đặt cuối PATH → bước kiểm command -v thoát 2 trước mọi ca (thoát ${r.status})`);
+}
 const ALERT_THAT_TRUOC = existsSync(`${QUAN_THAT}/${WD_ALERTS}`) ? sha(`${QUAN_THAT}/${WD_ALERTS}`) : "(không)";
 const LOG_THAT_TRUOC = `${QUAN_THAT}/${WD_LOG}`;
 
@@ -462,15 +502,22 @@ const LOG_THAT_TRUOC = `${QUAN_THAT}/${WD_LOG}`;
   const sb = makeSandbox("e8a");
   const p = mainDb(sb);
   makeAgentDb(p, []);
-  runWd(sb);
+  const r1 = runWd(sb);
   addEvents(p, 1);
   rmSync(sb.calls, { force: true });
-  runWd(sb);
-  const all = alerts(sb) + read(sb.calls) + okLog(sb) + r_out(sb);
-  check(!all.includes(CANARY), "E8a: canary trong cột nội dung KHÔNG lọt ra cảnh báo/log/stdout");
+  const r2 = runWd(sb);
+  // đối chứng dương: canary THẬT nằm trong kho, và lượt hai thật sự tắt (có
+  // dòng cảnh báo, có đầu ra) — không thì phép âm tính dưới không đo gì
+  const dbc = new DatabaseSync(p, { readOnly: true });
+  const coCanary = dbc.prepare("SELECT COUNT(*) AS n FROM transcript_events WHERE event_json LIKE ?").get(`%${CANARY}%`).n;
+  dbc.close();
+  check(coCanary >= 1 && killed(sb) && alerts(sb).includes("L4d"), `E8a(đặt): kho có canary (${coCanary} dòng) và lượt hai tắt`);
+  const logDir = join(sb.repo, "pipeline/logs");
+  const moiLog = readdirSync(logDir).map((f) => join(logDir, f)).filter((f) => statSync(f).isFile()).map(read).join("");
+  const all = alerts(sb) + read(sb.calls) + moiLog + r1.out + r2.out;
+  check(all.length > 0 && !all.includes(CANARY), "E8a: canary trong cột nội dung KHÔNG lọt ra cảnh báo, log, stdout/stderr của hai lượt");
   rmSync(sb.S, { recursive: true, force: true });
 }
-function r_out(sb) { return read(join(sb.S, "out.log")); }
 {
   const src = readFileSync(WATCHDOG, "utf8");
   // gom dòng lệnh liên tiếp (kết thúc "\") thành MỘT lệnh rồi mới kiểm
@@ -486,15 +533,91 @@ function r_out(sb) { return read(join(sb.S, "out.log")); }
   check(lenh.length >= 1, `E8b: có dòng gọi sqlite3 (${lenh.length})`);
   check(lenh.every((l) => /COUNT\(\*\)/.test(l) && /MAX\(created_at\)/.test(l) && !/event_json|event_zstd|navigation_json/.test(l)),
     "E8b: lệnh gọi chỉ COUNT/MAX(created_at), không đụng cột nội dung");
+  // chế độ mở: mọi dòng gọi mở kho bằng URI "file:…?$mode", và trong hàm đọc
+  // biến mode chỉ nhận mode=ro hoặc immutable=1 (hai chế độ chỉ đọc)
+  check(lenh.every((l) => /"file:\$db\?\$mode"/.test(l)), "E8b: mọi dòng gọi sqlite3 mở kho qua URI có tham số chế độ $mode");
+  const ham = (src.match(/^l4d_read_db\(\)[\s\S]*?^}/m) || [""])[0];
+  const gan = [...ham.matchAll(/mode="([^"]*)"/g)].map((m) => m[1]);
+  check(gan.length >= 2 && gan.every((v) => v === "mode=ro" || v === "immutable=1") && gan.includes("mode=ro"),
+    `E8b: hàm đọc chỉ gán mode=ro hoặc immutable=1 (${gan.join(", ") || "không thấy"})`);
 }
+const tepKho = (dir) => readdirSync(dir).filter((f) => f.startsWith("openclaw-agent.sqlite")).sort();
+// tập tệp sau ⊆ tập trước ∪ {-shm khi trước đã có -wal}
+const chiThemShm = (truoc, sau) => {
+  const choPhep = new Set(truoc);
+  if (truoc.includes("openclaw-agent.sqlite-wal")) choPhep.add("openclaw-agent.sqlite-shm");
+  return sau.every((f) => choPhep.has(f));
+};
 {
+  // trạng thái 1: kho WAL đã đóng sạch (không tệp phụ) → nhánh immutable=1
   const sb = makeSandbox("e8c");
-  makeAgentDb(mainDb(sb), [MS_3010(9, 52)]); // WAL còn mở trạng thái
+  makeAgentDb(mainDb(sb), [MS_3010(9, 52)]);
   const dir = join(sb.agentsDir, "main/agent");
+  const truoc = tepKho(dir);
   const bamTruoc = sha(mainDb(sb));
   runWd(sb);
-  check(sha(mainDb(sb)) === bamTruoc, "E8c: băm tệp kho KHÔNG đổi sau khi đọc");
+  check(marker(sb, "main") === `1|${MS_3010(9, 52)}`, "E8c(đặt): kho đóng sạch — bộ canh thật sự đọc được (mốc 1|max)");
+  check(sha(mainDb(sb)) === bamTruoc, "E8c: băm tệp kho chính KHÔNG đổi sau khi đọc (kho đóng sạch)");
+  const sau = tepKho(dir);
+  check(chiThemShm(truoc, sau), `E8c: không sinh tệp mới nào (trước ${truoc.join(",")} · sau ${sau.join(",")})`);
   rmSync(sb.S, { recursive: true, force: true });
+}
+// giữ một kết nối ĐỌC mở trên kho WAL suốt lúc bộ canh chạy → có -wal, -shm
+// thật như kho đang dùng; kết nối không ghi gì nên tệp chính không đổi
+function holdWalReader(path, ms) {
+  const c = spawn(process.execPath, ["-e", `
+    const { DatabaseSync } = require("node:sqlite");
+    const db = new DatabaseSync(${JSON.stringify(path)});
+    db.prepare("SELECT COUNT(*) FROM transcript_events").get();
+    setTimeout(() => db.close(), ${ms});
+  `], { stdio: "ignore" });
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 700);
+  return c;
+}
+{
+  // trạng thái 2: kho WAL đang mở (có -wal) → nhánh mode=ro; tệp mới duy nhất
+  // được phép là -shm
+  const sb = makeSandbox("e8d");
+  makeAgentDb(mainDb(sb), [MS_3010(9, 52), MS_3010(9, 53)]);
+  const dir = join(sb.agentsDir, "main/agent");
+  const h = holdWalReader(mainDb(sb), 8000);
+  const truoc = tepKho(dir);
+  check(truoc.includes("openclaw-agent.sqlite-wal"), `E8d(đặt): kho đang mở có -wal (${truoc.join(",")})`);
+  const bamTruoc = sha(mainDb(sb));
+  runWd(sb);
+  const sau = tepKho(dir);
+  check(marker(sb, "main") === `2|${MS_3010(9, 53)}`, "E8d(đặt): kho WAL đang mở — bộ canh đọc được qua mode=ro (mốc 2|max)");
+  check(sha(mainDb(sb)) === bamTruoc, "E8d: băm tệp kho chính KHÔNG đổi sau khi đọc (kho WAL đang mở)");
+  check(chiThemShm(truoc, sau), `E8d: tệp mới chỉ có thể là -shm khi đã có -wal (trước ${truoc.join(",")} · sau ${sau.join(",")})`);
+  await new Promise((res) => { h.on("exit", res); });
+  rmSync(sb.S, { recursive: true, force: true });
+}
+
+// ————— AC-9 đối chứng cho doc-that.sh (E10 chạy nó trên kho thật): trên kho
+// giả, cùng môi trường launchd — đọc đúng thì thoát 0 và chỉ in dòng số|số;
+// đọc lỗi hay không có kho thì thoát khác 0 (đọc lỗi không được gộp) —————
+const DOC_THAT = join(ROOT, "scripts/watchdog-l4d-agentdb/doc-that.sh");
+const chayDocThat = (dir, home) => {
+  const r = spawnSync("/bin/bash", [DOC_THAT, dir], { env: { PATH: HE_THONG, HOME: home }, encoding: "utf8", timeout: 120_000 });
+  return { code: r.status, out: r.stdout || "", err: r.stderr || "" };
+};
+{
+  const T = mkdtempSync(join(tmpdir(), "wd-l4d-docthat-"));
+  const ag = join(T, "agents");
+  makeAgentDb(join(ag, "main/agent/openclaw-agent.sqlite"), EV8);
+  const r = chayDocThat(ag, T);
+  const dong = r.out.trim().split("\n");
+  check(r.code === 0 && dong.length === 2 && dong[0] === `main that 8|${MS_3010(9, 53)}` && dong[1] === `main ban-chep 8|${MS_3010(9, 53)}`,
+    `E10a: doc-that.sh trên kho giả → thoát 0, đúng hai dòng số|số (kho + bản chép đóng sạch) (thoát ${r.code})`);
+  check(!r.out.includes(CANARY) && !r.err.includes(CANARY), "E10a: doc-that.sh không in nội dung kho");
+  writeFileSync(join(ag, "main/agent/openclaw-agent.sqlite"), "không phải sqlite");
+  const r2 = chayDocThat(ag, T);
+  check(r2.code !== 0 && !/\d+\|\d+/.test(r2.out), `E10b: kho hỏng → doc-that.sh thoát khác 0, không in số (thoát ${r2.code})`);
+  const rong = join(T, "rong");
+  mkdirSync(rong);
+  const r3 = chayDocThat(rong, T);
+  check(r3.code !== 0, `E10c: không gặp kho nào → doc-that.sh thoát khác 0 (thoát ${r3.code})`);
+  rmSync(T, { recursive: true, force: true });
 }
 
 // ————— E14/AC-11: khối 400KB timing ở ĐẦU — /bin/bash 3.2 pipefail —————
@@ -531,7 +654,7 @@ function khoi400(coTiming) {
 // ————— E9 (chốt): máy thật không đổi sau TOÀN BỘ ca —————
 {
   const sau = launchctlThat();
-  check(sau === GW_BEFORE || !/KILL/.test(sau), "E9c: launchd gateway thật không có thay đổi từ phép thử");
+  check(sau === GW_BEFORE, `E9c: launchd + tiến trình gateway thật y nguyên trước/sau (trước: ${GW_BEFORE} · sau: ${sau})`);
   const alertSau = existsSync(`${QUAN_THAT}/${WD_ALERTS}`) ? sha(`${QUAN_THAT}/${WD_ALERTS}`) : "(không)";
   check(alertSau === ALERT_THAT_TRUOC, "E9c: tệp cảnh báo THẬT không đổi");
   const logCuoi = read(LOG_THAT_TRUOC).trim().split("\n").pop() || "";
