@@ -22,6 +22,9 @@ import { buocVatTheDem } from "./danh-ba-vat-the.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+/** Khoá advisory chung của bước bait gap + danh bạ Người (theo tên, cùng kiểu KHOA_CO_VAN của danh-ba-vat-the). */
+export const KHOA_BAIT_GAP = "SELECT pg_advisory_xact_lock(hashtext('refresh-bait-gap'))";
+
 /**
  * Thân bước bait gap + sellers — chạy được trong transaction của người gọi (thước dư lượng, test).
  * @param {import("pg").Client} c
@@ -104,7 +107,20 @@ export async function loaiTinPhiLy(c, rows) {
  * @param {import("pg").Client} c
  */
 export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } = {}) {
-  const kq = await refreshBaitGap(c);
+  // bait-gap-mot-giao-dich: phần bait gap (đặt rỗng rồi tính lại bait_gap_pct P1, loại tin phi lý) chạy trong MỘT giao
+  // dịch mở bằng khoá chung — ba job gọi bước này (S03/S05, S06, FB) xếp hàng, lượt có lock_timeout chờ rồi lùi trọn,
+  // người đọc không bao giờ thấy P1 rỗng giữa lượt. savepoint: người gọi đã mở giao dịch → chỉ lấy khoá (giữ tới khi nó
+  // kết thúc), không mở/commit giao dịch riêng.
+  let kq;
+  if (!savepoint) await c.query("BEGIN"); // giao dịch: bait gap
+  try {
+    await c.query(KHOA_BAIT_GAP); // khoá: bait gap
+    kq = await refreshBaitGap(c);
+    if (!savepoint) await c.query("COMMIT"); // giao dịch: bait gap
+  } catch (e) {
+    if (!savepoint) await c.query("ROLLBACK").catch(() => {}); // giao dịch: bait gap
+    throw e;
+  }
   if (!(await c.query("SELECT to_regclass('public.parties') AS t")).rows[0].t) {
     console.log("danh-ba-nguoi: bỏ qua — DB chưa áp 055 (chưa có bảng parties)");
     return { ...kq, nguoi: null };
@@ -114,6 +130,7 @@ export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } 
     : ["BEGIN", "COMMIT", "ROLLBACK"];
   await c.query(mo);
   try {
+    await c.query(KHOA_BAIT_GAP); // khoá: danh bạ Người
     const nguoi = await dung(c, { runId });
     // enrich-nguoi-s03: sổ liên lạc dựng sau Người của cùng đêm, rồi tin S03 không số nhận số qua người đăng. Chưa áp 079 thì
     // hai bước in CHUA-AP-079 và không ghi; bộ dựng Người vẫn commit như hôm nay.
