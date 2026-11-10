@@ -493,12 +493,21 @@ enums:
     local: true
     rationale: "extension luật sinh phát biểu liên lạc (enrich-nguoi-s03) — DD 2.1 không có xuất xứ cho số liên lạc; phân biệt số người đăng ghi trên tin của chính họ với số chỉ có trong bài khác (trả lời, bình luận), dùng cho luật chọn số"
     checked_on: "2026-11-06"
-    # Migration 079 (CHECK). DQ: enum-vocab:rule_id, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
+    # Migration 079 (CHECK), 080 nới thêm s03_ho_so_theo_tai_khoan + rào cặp luật–loại (party_contacts_rule_kind_chk).
+    # DQ: enum-vocab:rule_id, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
     columns: [party_contacts.rule_id]
     nullable: false
     values:
       - { code: so_tren_tin, label_vi: Số trên tin của chính người đăng }
       - { code: so_trong_bai, label_vi: Số trong bài khác của người đăng }
+      # link-nguoi-ban-s03 (080): username trả về khi tra hồ sơ theo đúng mã tài khoản S03 (bí danh tai_khoan_nguon) của Người;
+      # chỉ sinh liên lạc chat_profile, lớp fact, phương pháp source_field. Sáu điều kiện ADR-0011 (extension, không có trong DD 2.1):
+      # (1) tra DD 2.1 trước: SocialMedia.SocialMediaUrlOrId là trường của bản ghi người, không có xuất xứ cho liên lạc; SocialMediaType
+      #     không có kênh chat của S03 · (2) đặc trưng VN: kênh chat nhóm là nơi người bán S03 đăng tin, không để lại số thì username
+      #     là đường liên hệ duy nhất · (3) tên tiếng Anh snake_case, không mang tên nguồn thật (nguồn ở evidence, link dựng từ
+      #     source_registry local) · (4) nhãn VN «Hồ sơ chat theo mã tài khoản» trong ref_lookup (080) · (5) CHECK 080 + DQ enum-vocab
+      #     · (6) kiểm 13/12 — _acceptance/link-nguoi-ban-s03 (AC-6, AC-7).
+      - { code: s03_ho_so_theo_tai_khoan, label_vi: Hồ sơ chat theo mã tài khoản }
   listing_intent:
     term_vi: Ý định tin
     dd_field: null
