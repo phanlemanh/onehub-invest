@@ -541,6 +541,10 @@ executors:
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
     snn_syntax: "for f in scripts/*-import-daily.sh; do bash -n \"$f\" || exit 1; done && plutil -lint pipeline/cron/com.oneinvest.s03-nap-15phut.plist && echo SYNTAX OK"
     snn_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-nhanh[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
+    # s03-nap-ho-so (1011-12, link-nguoi-ban-s03 Ngoài-1/5/6; liên làn làm thay ZCode 10/11) — bản chép tệp bọc, node giả
+    snh_test: "node --test scripts/s03-nap-ho-so.test.mjs"
+    snh_regress: "node --test scripts/s03-nap-nhanh.test.mjs scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
+    snh_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-(nhanh|ho-so)[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
