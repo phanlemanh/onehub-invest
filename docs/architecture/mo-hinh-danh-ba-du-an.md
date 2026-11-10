@@ -217,14 +217,17 @@ nhiều nhất.
 
 ## 5. Đo thử OSM 11/11 (Mạnh «Đo thử OSM»)
 
-- Mẫu: 50/177 dự án S08 chọn theo băm.
-- Mốc so: điểm trong bản đồ nhúng của trang chi tiết S08 (174/177 dự án có).
-- Đang chạy; số tạm ở 14 dự án đầu:
-  - tìm theo tên trúng trong 1 km: 3/14;
-  - tìm theo «tên + tỉnh»: 3/14;
-  - tìm theo địa chỉ chỉ ra tâm phường: 4/11 trong 3 km;
-  - khi đã có điểm, có vùng OSM mang tên khớp trong 500 m: 7/14.
-- Đọc tạm: OSM không thay được điểm của nguồn; OSM cho được vùng khi đã có điểm. Số đủ 50 thay vào khi xong.
+- Mẫu: 50 dự án S08 chọn theo băm, đo đủ 50/50.
+- Mốc so: điểm ghim trong bản đồ nhúng của S08.
+- Tìm điểm từ OSM:
+  - theo tên dự án, trúng trong 1 km: 7/50;
+  - theo «tên + tỉnh»: 8/50;
+  - gộp hai cách: 8/50, cả 8 kết quả đều là vùng (way/relation);
+  - theo địa chỉ thì chỉ ra tâm phường: 7/50 trong 1 km, 10/50 trong 3 km;
+  - 33/50 dự án không cách nào ra kết quả trong 3 km.
+- Khi đã có điểm: 41/50 dự án có vùng mang tên trong 500 m, nhưng chỉ 14/50 (khoảng 28%) có vùng mang tên khớp dự án.
+- Kết luận: OSM không thay được điểm do nguồn công bố, khớp với Hỏi-2. Lấy vùng từ OSM chỉ phủ khoảng 28%, nên DA21 giữ ở mục
+  chờ như đã chốt.
 
 ## 6. Đối chiếu với mã — giữ · sửa · thiếu
 
