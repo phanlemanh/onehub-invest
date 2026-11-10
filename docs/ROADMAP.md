@@ -622,6 +622,22 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
     (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
     5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
+43. **Bảng Yêu cầu** (10/11, Mạnh «Đồng ý theo khuyến nghị»; bản phạm vi `docs/plan/pham-vi-bang-yeu-cau-1011.md`, phân tích ở kho tri
+    thức riêng `wiki/chu-de/bang-yeu-cau.md`): Yêu cầu (bài người cần thuê, mua trong nhóm S03, S05) thành bảng có cấu trúc, xem và ghép
+    ở Ops; Invest chỉ có chỉ số tổng hợp. Tiêu chí dùng lại trường RESO phía bán (`ListPriceLow` cho đầu dưới ngân sách); cặp Yêu cầu ↔
+    tin rao theo ContactListings, người bấm, máy không gửi gì (luật 7).
+    - Q1: nối bảng `inquiry_records` (nhánh `feat/bang-yeu-cau`, đã ký 30/10) **ngay**, ý định từ luật `laYeuCau` cộng nhãn model đọc
+      tin, lớp cao nhất thắng; **không chờ PL5**, Kev thêm vào sau. AC-4, AC-7 của hồ sơ đã ký sửa theo.
+    - Q2: thêm **gom mềm 7 ngày** theo người đăng · dự án · dịch vụ · số phòng · ngân sách ± 15%; bảng giữ khoá theo người và chữ, chỉ
+      số đếm theo nhu cầu đã gom và luôn kèm số bài.
+    - Q3: người đăng Yêu cầu là **tầng C** như người bán: chỉ hiện trên Ops, nối `/ops/people`, SĐT chỉ qua «Xem số»; không lên Invest.
+      Ghi thành sửa đổi ADR-0007 cùng PR của YC5.
+    - Q4: Invest **chỉ có chỉ số tổng hợp** theo dự án × số phòng, nhãn «ước từ bài nhóm», bật sau **4 tuần** đo trên Ops; không có
+      từng Yêu cầu.
+    - Q5: Yêu cầu **hết hạn sau 7 ngày** không có bài mới cùng nhu cầu (nghỉ, không xoá; đăng lại thì mở lại).
+    Số đo nền (DB máy thu 10/11): 11.616 bài Yêu cầu S03, luật bỏ sót thêm khoảng 1.300 bài viết tắt; số phòng đọc được 96%, ngân sách
+    73%, dịch vụ suy được 86%; dự án theo tên nhóm 42%, phường 0,1%; 670 người đăng, 317 người viết 94% số bài; gom theo người và chữ
+    còn 4.832. Hàng mới: YC0–YC8 (YC1 sửa bộ đọc ngân sách đi trước YC0). SH12 (tín hiệu cầu, chờ Q8b) nay do YC7, YC8 gánh.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
