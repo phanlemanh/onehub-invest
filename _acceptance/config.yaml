@@ -254,6 +254,16 @@ executors:
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
     icc_keychain: "bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""   # install-cron-chi AC-3 — security/launchctl giả, HOME giả
     icc_scope: "bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""   # install-cron-chi AC-5 — tệp đổi so với main
+    mas3_ext: "bash collector/openclaw/tests/ma-album/chay-extension.sh"   # ma-album-s03 E1 — bản build mới từ ~/dev/openclaw
+    mas3_mapper: "node --test collector/openclaw/tests/ma-album/mapper-runtime.test.mjs"   # ma-album-s03 E2 — bộ chiếu của runtime đang chạy, ngoài gateway
+    mas3_handler: "node --test collector/openclaw/tests/ma-album/handler-album.test.mjs"   # ma-album-s03 E3 — API giả
+    mas3_api: "cd collector && npm run build && node --test dist/test/album-meta.test.js"   # ma-album-s03 E4
+    mas3_db: "bash db/db-thu.sh oneinvest_album_s03 >/dev/null && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_album_s03 node --test pipeline/tests/album-meta-nap.itest.mjs"   # ma-album-s03 E5 — chỉ DB thử
+    mas3_do: "node --test pipeline/do-anh-roi-s03.test.mjs"   # ma-album-s03 E6
+    mas3_tien_kiem: "node --test collector/openclaw/tests/ma-album/tien-kiem.test.mjs"   # ma-album-s03 E7
+    mas3_lui: "node --test collector/openclaw/tests/ma-album/dieu-kien-lui.test.mjs"   # ma-album-s03 E8
+    mas3_dien_tap: "bash collector/openclaw/tests/ma-album/dien-tap-lui.sh"   # ma-album-s03 E9 — gateway thử, ghi vào .acceptance-runs
+    mas3_patch: "bash collector/openclaw/tests/ma-album/kiem-patch.sh"   # ma-album-s03 E10
     can_gia_tot_ca_cu: "bash _acceptance/can-gia-tot-sua-ba-loi/probes/ca-cu-khong-doi.sh"   # can-gia-tot-sua-ba-loi AC-4 — tệp test CG1 chỉ được thêm dòng
     cn_song: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/quet-ten-nguon-html.mjs"   # chu-nguon-tren-cong E2 — HTML thật của mười hai trang trên bản chạy; không đo được thì thoát 2
     cn_tinh: "node scripts/check-invest-tier-a.mjs"   # chu-nguon-tren-cong E3b — chuỗi trong mã của mọi trang công khai và tệp chúng import

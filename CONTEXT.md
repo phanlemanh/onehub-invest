@@ -736,6 +736,10 @@ _Avoid_: deadline, hạn burst
   «bài thô» / «tin rao (đã đọc)»).
 _Avoid_: post raw, post mock, bài post, bài thô (làm nhãn cột đếm)
 
+**Mã album**: Các khoá kênh S03 gắn vào tin ảnh, cho biết ảnh nào được gửi cùng một album; nằm trong `album_meta` của bảng stg S03. «Ảnh rơi» là album về thiếu ảnh so với tổng album tự khai.
+- Code: `album_meta`, `albumMeta` · RESO: —
+_Avoid_: mã nhóm (dễ nhầm với nhóm cộng đồng)
+
 **Gộp trùng**: Bước gom các bài đăng lại cùng một tin thành một tin rao (transform S03/S05 bước 4, `repostKey`). Nội dung
 đủ phường và diện tích thì gộp theo nội dung (kind · phường · giá · diện tích · PN), kể cả bài của người khác; thiếu một
 trong hai thì thêm người đăng (`sender_id`, rồi SĐT, rồi chữ bài đã chuẩn hoá) — khoá thiếu trường mà không phân biệt

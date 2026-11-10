@@ -1,0 +1,152 @@
+{
+  "feature_plain": "Mỗi ảnh S03 về kho giữ được mã album, để biết ảnh nào thuộc cùng một bài và đếm được album về thiếu ảnh.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ giữ mã album ngay khi tin ảnh tới. Tin chữ, ảnh đơn đi như cũ; album không nhắc tên vẫn không làm agent chạy."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ gửi mã album tới máy thu mà không tính nó thành ảnh, và không làm mất tin khi mã bị hỏng."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ giữ mã album khi máy thu nhận bài. Mã sai dạng thì bỏ mã, vẫn nhận bài; các kênh khác không đổi."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ báo mỗi ngày bao nhiêu album từ 2 ảnh về thiếu ảnh: trên 2% cảnh báo, trên 5% báo dừng mở rộng. Chỉ báo, không chặn ghi."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ dừng, không bật lại và gọi Mạnh khi agent có lượt mới, kể cả lượt nhanh, hoặc bộ canh báo cấu hình nguy hiểm. Kênh tự nối lại như 26 và 27/10 thì không lùi."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ diễn tập cả đường cài và đường lùi trên một gateway thử riêng, không đụng gateway đang thu."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-2",
+      "p": "Chặn bản cài nếu lõi gateway đang chạy làm rơi mã album trước khi tới bước gửi."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ KHÔNG dừng việc nạp đêm khi kho chưa có cột mới, và không làm đổi tin rao đang có."
+    },
+    {
+      "id": "AC-7",
+      "p": "Chặn khởi động lại khi kiểm cấu hình đỏ, thiếu dấu an toàn, bộ canh chưa vá đếm lượt agent, có đường gửi tin mới, bản build lệch bản đang chạy, hoặc agent có lượt dở hay lượt mới trong 60 phút."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Sẽ KHÔNG lấy tin cũ từ kênh S03, kể cả để đo thử."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Sẽ KHÔNG khởi động lại gateway thật hay thêm cột vào kho thật trong lượt chấm: mỗi việc có lời duyệt và lời giao riêng."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Sẽ KHÔNG thu lại dữ liệu cũ: bài trước lúc triển khai không có mã album."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Sẽ KHÔNG gom ảnh hay đổi tin rao theo mã album: quyết sau khi có số đo thật."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Sẽ KHÔNG sửa lõi gateway và không đổi cấu hình an toàn của kênh S03."
+    }
+  ],
+  "scope_plain": "Vòng này chỉ giữ và đo mã album; dùng nó để gom ảnh là việc sau.",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Đi hết đường tin, từ lúc tới gateway đến phép đo. Bước gửi được thử bằng đúng đầu ra của lõi gateway đang chạy; chặng trên gateway thật chỉ biết sau khởi động lại."
+    },
+    {
+      "i": 1,
+      "p": "Thử đủ loại tin: ảnh trong album, ảnh đơn, chữ, mã hỏng, trường lạ."
+    },
+    {
+      "i": 2,
+      "p": "Phủ bốn pha: trước khởi động lại, điều kiện lùi, diễn tập lùi, tài liệu. Pha sau khởi động lại ghi ở lời giao triển khai."
+    },
+    {
+      "i": 3,
+      "p": "Phủ an toàn: không gửi tin vào nhóm, không đổi cấu hình, không lấy tin cũ, không đá kết nối đang thu lúc diễn tập."
+    },
+    {
+      "i": 4,
+      "p": "Đối chiếu với log gateway và kho local ngày 05/11; hai ngưỡng 2%, 5% chưa có chuẩn ngoài."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Đường được duyệt ban đầu không tới bước gửi, mọi kiểm vẫn xanh mà mã album rỗng hết. Đã đổi đường và chạy lại trên lõi gateway đang chạy."
+    },
+    {
+      "i": 1,
+      "p": "Gộp trước khi có cột mới thì đêm đầu S03 ngừng nạp. Đã buộc bộ nạp chạy được khi chưa có cột."
+    },
+    {
+      "i": 2,
+      "p": "Quên cập nhật máy thu thì mất mã mà vẫn xanh; phép đo báo nhầm với album vắt qua ranh ngày. Đã thêm thứ tự và ca kiểm."
+    },
+    {
+      "i": 3,
+      "p": "Khởi động lại lúc agent có lượt dở có thể thành sự cố gửi tin. Đã chặn trong bước kiểm trước."
+    },
+    {
+      "i": 4,
+      "p": "Diễn tập có thể xanh mà không nạp bản mới. Đã buộc nạp thật và canh không đá kết nối đang thu."
+    },
+    {
+      "i": 5,
+      "p": "Đường lùi thiếu phần gửi và có thể bật lại đúng lúc phải dừng. Đã tách hai hành động, ghi rõ phần không lùi."
+    },
+    {
+      "i": 6,
+      "p": "Hai log lệch múi giờ và chưa ai canh; mẫu log có thể lộ tên tài khoản thu. Đã buộc đọc log thật, nêu người canh, quét mẫu."
+    },
+    {
+      "i": 7,
+      "p": "Một phép kiểm có thể xanh khi chưa có bài test; số phiên bản mới có thể làm bộ nạp khác dừng. Đã siết hai phép kiểm."
+    },
+    {
+      "i": 8,
+      "p": "Dòng ghi nhận lượt agent chỉ in khi lượt chậm, nên lượt nhanh lọt qua cả bộ canh. Đã đổi sang đếm thẳng lượt trong kho phiên."
+    },
+    {
+      "i": 9,
+      "p": "Lệnh lùi có thể bật lại đúng lúc bộ canh vừa tắt vì cấu hình nguy hiểm. Đã buộc dừng và gọi Mạnh; chỉ mất dấu an toàn mới được lùi."
+    },
+    {
+      "i": 10,
+      "p": "Có album không khai tổng ảnh; đòi đủ khoá sẽ bỏ đúng album lớn. Đã chỉ bắt buộc hai khoá."
+    },
+    {
+      "i": 11,
+      "p": "Ảnh đơn làm loãng tỉ lệ album thiếu. Đã chỉ tính album từ 2 ảnh và thêm hội thoại, người gửi vào khoá gom."
+    },
+    {
+      "i": 12,
+      "p": "Mục kiểm sau khởi động lại đòi một dòng log không tồn tại. Đã đổi sang dòng có thật."
+    },
+    {
+      "i": 13,
+      "p": "Gateway thử có thể ghi lẫn vào log thật. Đã buộc log riêng và đo log thật."
+    },
+    {
+      "i": 14,
+      "p": "Build lại có thể kéo theo thay đổi ngoài bản vá. Đã buộc so bản chưa vá với bản đang chạy."
+    },
+    {
+      "i": 15,
+      "p": "Dữ liệu sai kiểu có thể làm mất tin ở bước gửi. Đã thêm ca kiểm."
+    }
+  ]
+}

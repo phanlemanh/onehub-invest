@@ -43,6 +43,29 @@ Chuẩn hoá từ lần triển khai PL4 Kev-nhãn (lời giao `claudedp-2310-10
 - Ghi chú: watchdog L1 grep bản hook TRONG REPO (`collector/openclaw/handler.js`), không grep bản đã cài —
   bước 2 «trước khi cài» là chỗ đối chiếu hai bản.
 
+## Mã album (`_acceptance/ma-album-s03/`, 06/11)
+
+Lần cài này đổi CẢ extension kênh S03 lẫn handler — ngoại lệ có tên của dòng «không sửa extension» ở trên, chỉ trong
+lời giao triển khai của hồ sơ này. Thứ tự đầy đủ, điều kiện lùi và người canh: `docs/ops/runtime-map.md` mục
+«Mã album S03». Tin tới theo kết nối dài, không theo nhịp đều, nên bước khởi động lại phải nằm trong khung 2–4 giờ.
+
+Trước khi cài, thêm vào năm bước ở trên:
+
+1. Đã nâng runtime OpenClaw kể từ lần chạy trước? Chạy lại phép thử bộ chiếu
+   `node --test collector/openclaw/tests/ma-album/mapper-runtime.test.mjs`. Đỏ thì DỪNG: mục `media` mang khoá album
+   không còn tới handler.
+2. `bash collector/openclaw/tests/ma-album/kiem-patch.sh` xanh; build extension bằng
+   `bash collector/openclaw/tests/ma-album/chay-extension.sh` (dist mới phải có `albumMeta`).
+3. Sao lưu `dist/`, `openclaw.plugin.json` của extension và `handler.js` (cùng hậu tố `bak-<YYYYMMDD>`).
+4. Tiền kiểm `node --test collector/openclaw/tests/ma-album/tien-kiem.test.mjs`; ghi hai dòng `E7_MOC_*` làm mốc.
+
+Cài: thay cả thư mục `dist/` của extension (giữ `node_modules` ngoài), chép handler, `node --check handler.js`,
+`openclaw config validate`, rồi khởi động lại gateway đúng một lần nếu lời giao cho phép, ghi giờ làm `batLuc`.
+
+Sau khi bật: chạy `node collector/openclaw/tests/ma-album/phai-lui.mjs <mốc.json>` mỗi lượt canh trong 30 phút đầu.
+`dung-goi-Manh` → không bật lại, `KẸT`, gọi Mạnh. `lui-bat-lai` → khôi phục ba bản sao lưu, khởi động lại một lần, kiểm
+lại như mục «Kiểm hai phía». Không lùi 077, snapshot, bộ nạp hay API collector. Kiểm thêm: trong 1 giờ có ít nhất
+1 item snapshot mang `meta.albumMeta`.
 ## Bộ tra hồ sơ người bán S03 (`link-nguoi-ban-s03`)
 
 Cài cùng lần với `ma-album-s03` — không có lần khởi động lại riêng. Mô tả đầy đủ, trần, tệp chặn: `runtime-map.md` mục «Bộ tra hồ sơ

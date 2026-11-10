@@ -1,0 +1,83 @@
+schema_version: 1
+feature_slug: ma-album-s03
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.mas3_ext
+    expected: "exit 0; canonical có một mục media có group_layout_id, id_in_group; chạy đủ các tập khoá đã thấy, thiếu khoá tuỳ chọn vẫn nhận; tin chữ và ảnh đơn giống hệt bản trước vá; should-NOT-fire: params hỏng không sinh albumMeta và tin vẫn đi tiếp; album không mention có hook 1 lần, dispatch 0; monitor.group-gating.test.ts xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.mas3_mapper
+    expected: "exit 0; gọi đúng toInternalMessageReceivedContext; in phiên bản runtime; media[].albumMeta tới nguyên vẹn; mẫu không khoá đủ trường cũ; ca bộ chiếu giả làm rơi mục đó thì phép thử bắt được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.mas3_handler
+    expected: "exit 0; đầu vào là đầu ra thật của E2; body có albumMeta, mục đó không thành ảnh; should-NOT-fire: sự kiện không có thì body giống hệt bản trước vá; albumMeta sai kiểu hoặc ev.media không phải mảng không làm mất tin; không thêm dòng dbg-media"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.mas3_api
+    expected: "exit 0; tệp test album chạy và xanh; RawItem.meta.albumMeta giữ nguyên; kênh S03 ghi schemaVersion số kế tiếp, kênh khác giữ số cũ; should-NOT-fire: albumMeta sai dạng không làm mất bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.mas3_db
+    layer: backend-effect
+    expected: "exit 0 trên DB thử; 077 chạy hai lần không lỗi; snapshot do SnapshotWriter thật sinh ghi đúng cột; snapshot cũ cho album_meta IS NULL, số bài không đổi; bộ nạp mới trên DB chưa có 077 vẫn nạp được; hai bộ nạp nhận số mới; transform S03 không đổi số dòng và giá trị canonical"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.mas3_do
+    expected: "exit 0; đủ các số báo; biên 2,0% không cảnh báo, trên 2% cảnh báo, trên 5% báo dừng; mẫu số chỉ nhóm tổng từ 2; khoá gom gồm hội thoại, người gửi, group_layout_id; should-NOT-fire: nhóm tổng bằng 1, nhóm dưới 10 phút và album vắt qua ranh cửa sổ không tính thiếu; không có lệnh ghi dữ liệu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.mas3_tien_kiem
+    expected: "exit 0; bản đúng qua tiền kiểm; tám ca hỏng (validate đỏ, thiếu marker, bộ canh chưa vá đếm transcript_events hoặc lần chạy gần nhất không đạt, cấu hình đổi băm, mã có lấy tin cũ hoặc đường gửi mới, có phiên agent dở, transcript_events tăng trong 60 phút, build chưa vá lệch dist đang chạy) đều thoát khác 0 và in không được khởi động lại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.mas3_lui
+    expected: "exit 0; lệnh đọc đúng hai định dạng log và lệch múi giờ không làm phán sai; transcript_events tăng dù không có dòng timing trả dung-goi-Manh; bộ canh kill kèm có lượt trả dung-goi-Manh; chỉ mất marker và các điều kiện kênh trả lui-bat-lai; log đổi inode vẫn đọc đủ; should-NOT-fire: dạng log 26/10, 27/10 và 29 phút không có post 202 đều không lùi; mẫu log 0 tên, ID tài khoản thu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.mas3_dien_tap
+    expected: "exit 0; gateway thử qua startup phases ở cả hai lần; validate đạt; monitor mới import động được; diff -r gồm dist, handler, openclaw.plugin.json rỗng sau khôi phục; ghi thời gian lùi; should-NOT-fire: PID gateway thật không đổi, log thật không có dòng listener đóng mới, độ dài log runtime thật không có dòng từ gateway thử, thư mục thử không có khoá phiên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.mas3_patch
+    expected: "exit 0; .patch áp lên 568ed825b ra đúng mã đã build; runtime-map, runbook-openclaw-hook không còn ghi poll 10 phút chưa đo và có dòng chạy lại phép thử bộ chiếu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: judgment
+    inputs:
+      - docs/ops/runtime-map.md
+      - docs/ops/runbook-openclaw-hook.md
+      - _acceptance/ma-album-s03/contract.md
+    question: "Một người chưa làm việc này có đủ thông tin trong runtime-map và runbook để build, cài theo đúng thứ tự, kiểm hai phía và lùi bản vá theo đúng điều kiện và phạm vi lùi của hợp đồng không, và chỗ nào còn phải đoán?"
+    evidence_required: [verdict, rationale]

@@ -36,6 +36,8 @@ export type AgentMessage = {
   conversationId?: string | null;
   media?: AgentMediaFact[];
   kev?: AgentKevFact | null;
+  // ma-album-s03 (AC-4): khoá album từ handler — sai dạng bị bỏ ở albumMetaOf
+  albumMeta?: unknown;
 };
 
 export type AgentReportBody = {
@@ -181,6 +183,22 @@ export async function createAgentServer(opts: AgentServerOptions) {
         return { status: 400, body: { error: "mỗi message cần text + ts" } };
       }
     }
+    // ma-album-s03 (AC-4): khoá album hợp lệ = object có group_layout_id +
+    // id_in_group dạng chuỗi (handler đã lọc thô; đây là lớp cuối). Sai dạng
+    // → bỏ trường, bài VẪN được nhận.
+    const albumMetaOf = (m: { albumMeta?: unknown }) => {
+      const a = m?.albumMeta;
+      if (!a || typeof a !== "object" || Array.isArray(a)) return null;
+      const r = a as Record<string, unknown>;
+      if (typeof r.group_layout_id !== "string" || typeof r.id_in_group !== "string") return null;
+      // chỉ giữ đúng 6 khoá DATA-CONTRACT khai — snapshot bất biến không mang khoá lạ
+      const kq: Record<string, unknown> = { group_layout_id: r.group_layout_id, id_in_group: r.id_in_group };
+      if (typeof r.total_item_in_group === "number") kq.total_item_in_group = r.total_item_in_group;
+      if (typeof r.is_group_layout === "boolean") kq.is_group_layout = r.is_group_layout;
+      if (typeof r.child_number === "number") kq.child_number = r.child_number;
+      if (typeof r.msg_type === "string") kq.msg_type = r.msg_type;
+      return kq;
+    };
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
@@ -229,6 +247,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
           // Kev-nhãn: điểm gate là DỮ LIỆU đi cùng tin (p=null = gate down),
           // quyết định dùng p ở đâu nằm ở transform — không lọc ở collector.
           ...(m.kev ? { kev: m.kev } : {}),
+          ...(albumMetaOf(m) ? { albumMeta: albumMetaOf(m) } : {}),
         },
       });
       accepted++;

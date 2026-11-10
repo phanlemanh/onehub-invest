@@ -19,7 +19,15 @@ snapshots/
       manifest.json
 ```
 
-## manifest.json (schemaVersion 5)
+## manifest.json (schemaVersion 6)
+
+> **schemaVersion 6 (2026-11-06, ma-album-s03)**: thêm `RawItem.meta.albumMeta`
+> {group_layout_id, id_in_group bắt buộc; total_item_in_group, is_group_layout,
+> child_number, msg_type tuỳ chọn} — khoá gom ảnh cùng một bài của kênh S03
+> (zalo-agent). CHỈ kênh S03 lên 6 khi gộp; kênh khác giữ số cũ. Bộ nạp phải
+> chịu được DB chưa có cột `album_meta` (bỏ trường + cảnh báo).
+
+## manifest.json (schemaVersion 5) — lịch sử
 
 ```jsonc
 {

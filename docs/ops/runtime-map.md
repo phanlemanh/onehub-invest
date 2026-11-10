@@ -7,16 +7,16 @@
 
 | Thành phần | Vai trò CHỐT | Vẫn cần? | Ghi chú vận hành |
 |---|---|---|---|
-| **OpenClaw headless gateway** (launchd `ai.openclaw.gateway`, runtime `~/.openclaw/runtime/2026.10.5…`) | **CANONICAL** — chạy zalouser provider (poll Zalo ~10′/lần), hooks, đã chứng minh tự polling | ✅ DUY NHẤT | KeepAlive; log ×2: `/tmp/openclaw/openclaw-YYYY-MM-DD.log` (console) + `~/Library/Logs/openclaw/gateway.log` (đầy đủ — **grep cái này!**) |
+| **OpenClaw headless gateway** (launchd `ai.openclaw.gateway`, runtime `~/.openclaw/runtime/2026.10.5…`) | **CANONICAL** — chạy zalouser provider (giữ kết nối dài tới server Zalo, tin tới ngay — đo 05/11, xem mục «Mã album S03»), hooks | ✅ DUY NHẤT | KeepAlive; log ×2: `/tmp/openclaw/openclaw-YYYY-MM-DD.log` (console) + `~/Library/Logs/openclaw/gateway.log` (đầy đủ — **grep cái này!**) |
 | OpenClaw Desktop (/Applications) | Không cần cho vận hành — headless làm được tất | ❌ (user được phép remove) | Không cài thêm Login Items |
 | ~/dev/openclaw (source 4.4G) | **Tham chiếu source để vá plugin** (đang đứng nhánh `fix/zalouser-plugin-hooks` = v2026.10.5 + port pluginHooks) | ✅ GIỮ (dev) | KHÔNG chạy production từ đây |
-| Zalo PC app / Zalo Web (Chrome) | **KHÔNG liên quan thu thập** — provider zca-js poll server Zalo trực tiếp bằng session QR-link | ❌ | Tiện cá nhân của user, muốn dùng thì dùng |
+| Zalo PC app / Zalo Web (Chrome) | **KHÔNG liên quan thu thập** — provider zca-js giữ kết nối dài tới server Zalo bằng session QR-link | ❌ | Tiện cá nhân của user, muốn dùng thì dùng |
 | Kev :8009, collector :9210, MTPLX :8000 | Hạ tầng phụ thuộc hook | ✅ | launchd KeepAlive đã có |
 
 ## Chuỗi tin Zalo (đúng như đã verify)
 
 ```
-zca-js poll Zalo server (session QR-link, mỗi ~10′)
+zca-js listener (kết nối dài, session QR-link; tin tới ngay, không theo nhịp — đo 05/11)
 → zalouser monitor (core gateway bundle)
 → [MENTION GATE]  ← ĐIỂM CHẾT: requireMention=true drop tin THƯỜNG
    │                  TRƯỚC khi hook thấy (log "drop no mention")
@@ -65,6 +65,79 @@ commit `568ed825b` nhánh `fix/zalouser-plugin-hooks` ở `~/dev/openclaw`
    accepted=1 media=1`; Grand Park N1 tới hook, Kev skip p=0.48); agent 0 turn
    mới; turn bị gián đoạn 17:59 được restart-recovery chạy xong (stopReason=stop)
    và KHÔNG gửi tin nào; watchdog 21:29/21:34 "ok".
+
+## Mã album S03 (`_acceptance/ma-album-s03/`, chốt 06/11)
+
+Bài ảnh S03 giữ khoá album (`group_layout_id`, `id_in_group`, tổng ảnh) từ extension tới cột stg, để biết ảnh nào
+cùng một bài và đo ảnh rơi. Hồ sơ T3: hợp đồng và Notes là nguồn gốc của mọi điều kiện dưới đây.
+
+**Số đo 05/11 (thay ghi chép nhịp 10 phút cũ).** Tin tới theo kết nối dài, không theo nhịp: 3 ngày qua 99% bài có
+`captured_at - posted_at` dưới 60 giây, 0 bài từ 11 phút trở lên; 8.000 dòng `post 202` gần nhất cách nhau tối đa
+451 giây. Khung 2–4 giờ có 0,007 bài/giây nhưng bài tới theo cụm: 90 giây tính từ một bài có trung bình 3,42 bài,
+tối đa 13. Nên đứt 30–90 giây có thể mất trọn một album. Log có 2 lần listener đóng mã 3003 (26/10, 27/10), cả hai
+tự khởi động lại sau khoảng 6 giây.
+
+**Chuỗi tin sau bản vá.**
+
+```
+listener kênh S03 (content.params có khoá album)
+→ monitor của extension: thêm MỘT mục canonical.media chỉ chứa albumMeta
+→ admission → plugin hook + internal hook (toInternalMessageReceivedContext chép nguyên mục media)
+→ handler.js: tách albumMeta, mục đó không tính thành ảnh
+→ API collector :9210 → RawItem.meta.albumMeta, manifest kênh S03 schemaVersion 6
+→ bộ nạp → stg (cột album_meta, migration 077) → pipeline/do-anh-roi-s03.mjs
+```
+
+Mục `media` là mượn trường có nghĩa khác. **Mỗi lần nâng runtime OpenClaw phải chạy lại phép thử bộ chiếu**
+`node --test collector/openclaw/tests/ma-album/mapper-runtime.test.mjs` (AC-2) trước khi khởi động lại gateway.
+
+**Vết bản vá.** `collector/openclaw/ma-album-s03-extension.patch` áp lên `568ed825b` ra đúng mã đã build; kiểm bằng
+`bash collector/openclaw/tests/ma-album/kiem-patch.sh`. Build extension theo khuôn 22/10 ở mục «Fix ĐÃ LÀM» bước 2;
+script `collector/openclaw/tests/ma-album/chay-extension.sh` chạy test album, build và soát dist có `albumMeta`.
+
+**Thứ tự triển khai** — chỉ sau khi Mạnh ký hai cổng, PR đã gộp, bộ canh đã vá (đếm `transcript_events`) đang chạy:
+
+1. Sao lưu DB, áp 077 theo lời duyệt riêng của Mạnh. Bộ nạp mới chịu được DB chưa có 077 (in `WARN … album_meta`),
+   nên gộp mã không phải chờ bước này.
+2. Build và khởi động lại API collector (:9210).
+3. Sao lưu rồi cài handler, extension theo `docs/ops/runbook-openclaw-hook.md` mục «Mã album».
+4. Tiền kiểm `node --test collector/openclaw/tests/ma-album/tien-kiem.test.mjs`: đỏ là không được khởi động lại.
+   Ghi hai dòng `E7_MOC_TRANSCRIPT`, `E7_MOC_CFG_SHA` nó in ra làm mốc cho lệnh phán lùi.
+5. Khởi động lại gateway trong khung 2–4 giờ của đêm đã sẵn sàng, bằng lời giao triển khai riêng (merge ≠ đang chạy).
+
+**Kiểm hai phía sau khởi động lại** (ghi vào XONG của lời giao triển khai): `transcript_events` mọi agent không tăng
+so với mốc tiền kiểm (dòng timing chỉ in với lượt chậm nên không đủ); có `starting … provider` rồi tin chảy tới hook
+(`post 202`) sau mốc khởi động; trong 1 giờ có ít nhất 1 item snapshot mang `meta.albumMeta`; bộ canh `ok`. Bộ nạp
+chạy lúc 00:00 nên chưa kiểm được ở stg trong khung đó.
+
+**Phán lùi.** `node collector/openclaw/tests/ma-album/phai-lui.mjs <mốc.json>` (mốc từ tiền kiểm cộng `batLuc` =
+giờ bật gateway). Kết quả:
+
+- `dung-goi-Manh` (thoát 3, ưu tiên cao nhất): `transcript_events` tăng, kể cả lượt nhanh không có dòng timing;
+  hoặc bộ canh báo bất cứ gì ngoài mất marker. Dừng, **không bật lại**, gọi Mạnh.
+- `lui-bat-lai` (thoát 2): tiến trình không lên hoặc thoát lại trong 2 phút; bộ canh chỉ báo mất marker; listener
+  đóng trong 15 phút đầu; listener đóng mà sau 2 phút chưa có `starting … provider`; hết lượt auto-restart;
+  30 phút không có `post 202`.
+- KHÔNG lùi với dạng log 26/10, 27/10 (đóng 3003 ngoài 15 phút đầu, tự nối lại sau khoảng 6 giây) và với
+  29 phút không có `post 202`.
+
+**Phạm vi lùi.** Chỉ extension và handler: chép bản sao lưu đè lại, khởi động lại một lần. 077, snapshot, `album_meta`
+đã ghi, bộ nạp, API collector KHÔNG lùi. Bộ nạp cũ từ chối `schemaVersion` 6, nên revert PR phải kèm cách xử snapshot
+đã ghi. Diễn tập lùi trên gateway thử tách biệt: `bash collector/openclaw/tests/ma-album/dien-tap-lui.sh` (06/11:
+lùi 9 giây, PID và log gateway thật không đổi).
+
+**Ai canh.** Phiên ZCode nhận lời giao triển khai chạy lệnh phán lùi và canh tới hết 30 phút đầu; bộ canh launchd
+chạy mỗi 5 phút; điều phối liên làn đọc XONG và kiểm hai phía; `dung-goi-Manh` thì chỉ Mạnh quyết bật lại.
+
+**Đo ảnh rơi.** `node pipeline/do-anh-roi-s03.mjs [--den <ISO>] [--gio 24]` — chỉ đọc. Khoá gom = hội thoại + người gửi
++ `group_layout_id`; tỉ lệ = nhóm thiếu / nhóm có tổng từ 2; thiếu 2,0% không cảnh báo, trên 2% cảnh báo, trên 5%
+báo dừng mở rộng (ngưỡng tạm, chốt lại sau 24 giờ đo đầu). Không tính thiếu: nhóm tổng 1, nhóm mới dưới 10 phút,
+album vắt qua ranh cửa sổ. In kèm số `post 202` so với số item snapshot. DB chưa có 077 thì in `CHUA-AP-077`.
+
+**Chưa đo.** Không có nguồn đối chứng để đếm tin mất trong lúc đứt (cận từ số đo trên: tối đa 13 bài trong 90 giây).
+Phiên thật của tài khoản thu không diễn tập được (hai kết nối có thể đá nhau, mã 3003). Test chặn theo nhóm của
+extension không chạy được trong môi trường dev (thiếu exports test của plugin-sdk ở chính `568ed825b`). Chặng
+monitor → hook với bản build mới chỉ chứng minh được sau khởi động lại. Thời gian giữ khoá thật lúc khởi động.
 
 ## Vercel — prod của app/ (chốt 2026-10-23)
 
