@@ -5,8 +5,10 @@ slug: s03-len-nhanh-nac-1
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-10-s03-len-nhanh-nac-1-design.md
+approved_by: Mạnh
+approved_at: 2026-11-10T10:31:00Z
 ---
 
 # Acceptance Contract: s03-len-nhanh-nac-1
