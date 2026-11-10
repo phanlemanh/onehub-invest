@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: danh-ba-vat-the-toan-quoc
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [db/migrations/088_iso_tinh.sql, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-1» trên DB của riêng lượt (db/db-thu.sh oneinvest_suite_da1 --chay — chép máy thu, có PX1, CHƯA có 088) áp 088 trong giao dịch của ca: iso_regions có đúng 34 dòng; tập admin_code bằng tập mã của pipeline/data/dvhc/tinh.json đọc bằng docDanhBa (34 assert); bảng vàng RÚT BẰNG MÁY: nối pipeline/data/iso-3166-2-vn.json (bản chụp 63 mã ISO 3166-2:VN kèm ngày đọc và nguồn) với tinh.json theo tên đã chuẩn hoá (chuanTen), ngoại lệ có lý do duy nhất là Huế 46 → Thừa Thiên-Huế VN-26; mỗi tỉnh khớp đúng một mã cũ; bảng rút ra bằng bảng trong DB từng dòng (34 assert); iso_region không trùng; mọi areas market có admin_code 2 số có dòng. Chiều đỏ ghim: bản sao trong bộ nhớ của bản chụp ISO đổi tên Hưng Yên thì phép nối đỏ với «DA1-AC-1 33 không khớp tên ISO»; bản sao bảng DB đổi Huế thành VN-HU thì đỏ với «DA1-AC-1 46 lệch bảng vàng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [db/migrations/088_iso_tinh.sql, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-2» sau khi áp 088 trong giao dịch: với MỖI iso_region của bảng (34 ô) chèn một toà khoá mới (moiKhoa) với upi = upiToa(iso, khoá) dưới một nút dự án có sẵn → được nhận (SAVEPOINT mỗi ô); ba ô âm mỗi ô một SAVEPOINT và ghim lỗi: iso VN-03 → vi phạm khoá ngoại iso_region; iso VN-99 → vi phạm khoá ngoại; upi mang VN-HN mà iso_region VN-SG → vi phạm buildings_upi_khop_khoa. Đối chứng: cùng ô VN-66 trên DB CHƯA áp 088 (giao dịch riêng) bị từ chối với «DA1-AC-2 082 còn khoá hai mã» — chứng ô dương thật do 088 mở."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [db/migrations/088_iso_tinh.sql, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-3» trong giao dịch: chụp (building_key, upi, iso_region) mọi toà trước; áp 088 lần một, chụp lược đồ (định nghĩa ràng buộc của buildings, iso_regions) và dữ liệu iso_regions; áp lần hai không lỗi; chụp lại bằng lần một; mọi toà bằng ảnh trước. Chiều đỏ ghim: bản sao 088 thêm dòng thứ 35 rồi áp lần hai thì phép so dữ liệu đỏ với «DA1-AC-3 088 lần hai đổi dữ liệu»; bản sao bỏ guard IF NOT EXISTS của khoá ngoại thì lần hai lỗi với «DA1-AC-3 088 không chạy lại được»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/lib/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DA1-AC-4» gọi isoCuaKhu trên bảng tổng hợp, ma trận viết trước một assert mỗi ô: khu một xã Hà Nội → VN-HN; một xã TP.HCM → VN-SG; khu Hưng Yên meta.city=hanoi → VN-66; khu chỉ mã tỉnh (market) → ISO tỉnh; một mã đúng + một mã không có trong areas → ISO của mã đúng; toàn mã không có trong areas → lỗi «khong-co-tinh»; hai tỉnh → lỗi «nhieu-tinh»; tỉnh không có trong bảng ISO → lỗi «tinh-khong-co-iso». Đối chứng: cùng khu Hưng Yên với hàm cũ theo meta.city ra VN-HN — «DA1-AC-4 meta.city sai tỉnh» chứng ô phân biệt hai cách."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4c
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-4c» trên dữ liệu thật của DB lượt, trong giao dịch: áp 088, chạy suaXaNut (DV1) để area_ids về mã hiện hành, rồi isoCuaKhu cho MỌI nút dự án (20) với bảng đọc từ areas + iso_regions: ghim vinhomes-ocean-park-2, vinhomes-ocean-park-3, ecopark → VN-66; vinhomes-ocean-park-1 → VN-HN; vinhomes-grand-park → VN-SG; đếm 20/20 nút ra ISO (0 lỗi). Đối chứng: cùng ba khu Hưng Yên theo meta.city ra VN-HN — «DA1-AC-4c meta.city sai tỉnh»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4b
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-4b» trong giao dịch sau áp 088: đặt area_ids của vinhomes-grand-park về hai mã xã thuộc hai thị trường khác nhau chọn bằng truy vấn areas (không viết cứng) rồi gọi dung() → ném LoiGoi chứa «khu vinhomes-grand-park: nhieu-tinh», số toà/trục/căn và registry_aliases không đổi (đếm trước–sau)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-5» sau áp 088 (COMMIT trên DB của lượt): chụp (building_key, upi) và demTheoKhu; dung(c, { khuSlugs: khuDaDung }) ; ảnh sau bằng ảnh trước (0 UPI đổi, 0 khoá mới, cùng số toà/trục/căn). Chiều đỏ ghim: dung() với hàm ISO bị thay (tham số isoTheo trả VN-66 cho mọi khu — chỉ test truyền) ném lỗi CHECK upi hoặc đúc khoá mới, đỏ với «DA1-AC-5 ISO sai đổi UPI»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5b
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/lib/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-5b» trong giao dịch ROLLBACK sau áp 088 và suaXaNut: nối một dự án S08 tổng hợp (airbnb_snapshots + stg_s08_inventory high_rise + s08_project_links noi) vào vinhomes-ocean-park-2 (Hưng Yên), dung(c, { khuSlugs: ['vinhomes-ocean-park-2'] }) → toà mới có iso_region VN-66, upi khớp khuôn upiToa('VN-66', khoá), bí danh ma_nguon trỏ đúng khoá. Đối chứng: cùng ca với hàm ISO cũ theo meta.city (tham số isoTheo chỉ test truyền) ra VN-HN — «DA1-AC-5b toà tỉnh thứ ba sai mã»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-6»: tệp từ điển tạm gán chủ đầu tư cho project_id của một toà Grand Park; chạy lệnh thật `node pipeline/danh-ba-vat-the.mjs --db <lượt> --khu vinhomes-grand-park --tu-dien <tệp>` → mọi phát biểu builder_name mới có method source_field, evidence.tep là tên tệp, evidence.ban bằng sha256 của tệp; chạy lần hai builder_name_moi = 0; đếm phát biểu hitl sống có changed_by trống = 0. Chiều đỏ ghim: đếm cùng câu trên mẫu ghi bằng khuôn cũ (method hitl, changed_by NULL — chèn tay trong giao dịch con) ra 1, đỏ với «DA1-AC-6 còn hitl không người»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.da1_db
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-iso.itest.mjs]
+    expected: "exit 0; ca «DA1-AC-7» chạy TRƯỚC mọi ca áp 088 (DB của lượt chép máy thu chưa có iso_regions — assert to_regclass null): buocVatTheDem(c, { log }) xong không lỗi, log có đúng dòng «danh-ba-vat-the: chưa áp 088 — ISO theo meta.city», 0 UPI đổi (đối chứng dương: dựng lại OCP1, Grand Park). Vế chặn: cùng DB, dung(c, { khuSlugs: ['vinhomes-ocean-park-2'] }) (khu chưa có toà) ném LoiGoi chứa «chưa áp 088 — chỉ dựng lại khu đã có toà», 0 toà mới."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dbv_kho
+    paths: [pipeline/CLAUDE.md, docs/ROADMAP.md, pipeline/lib/danh-ba-vat-the.test.mjs]
+    expected: "exit 0; ca «DA1-AC-8»: dòng «| danh-ba-vat-the.mjs |» của pipeline/CLAUDE.md chứa «088» và «iso_regions»; docs/ROADMAP.md có dòng chứa «DA1» và «088». Chiều đỏ: bản ở gốc vòng (git show cc26f7ad) đỏ với «DA1-AC-8 tài liệu chưa ghi 088»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    long_running: 60
+    paths: [pipeline/**]
+    expected: "exit 0; bộ test pipeline đầy đủ trên DB của riêng lượt xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
