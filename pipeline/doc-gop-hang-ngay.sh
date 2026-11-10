@@ -24,7 +24,9 @@ ENV_FILE=()
 [ -f "$ROOT/.env" ] && ENV_FILE=(--env-file="$ROOT/.env")
 
 . "$ROOT/scripts/lib/job-step.sh"
-doc() { (cd "$ROOT/agent" && "$NODE" "${ENV_FILE[@]}" --import tsx scripts/doc-gop-s03.ts hang-ngay --ngay "$1" --tran-ngay-usd "$TRAN"); }
+# ${ENV_FILE[@]+…}: /bin/bash 3.2 của macOS coi mảng rỗng là biến chưa đặt dưới `set -u` (kho không có .env thì
+# bước chết «unbound variable» trước lời gọi đầu) — hồ sơ doc-gop-env-rong.
+doc() { (cd "$ROOT/agent" && "$NODE" ${ENV_FILE[@]+"${ENV_FILE[@]}"} --import tsx scripts/doc-gop-s03.ts hang-ngay --ngay "$1" --tran-ngay-usd "$TRAN"); }
 job_run doc-gop-hang-ngay hom-qua doc "$HOM_QUA"
 job_run doc-gop-hang-ngay hom-kia doc "$HOM_KIA"
 exit "$JOB_RC"
