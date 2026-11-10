@@ -48,6 +48,9 @@ function buildTree(scriptName) {
   ]) mkdirSync(d, { recursive: true });
   copyFileSync(path.join(REPO, "scripts", scriptName), path.join(t.root, "scripts", scriptName));
   copyFileSync(path.join(REPO, "scripts", "lib", "job-step.sh"), path.join(t.root, "scripts", "lib", "job-step.sh"));
+  // pl34-lich-dem-sau-buoc: zalo-import-daily gọi bash pipeline/doc-gop-hang-ngay.sh — tệp giả qua node giả (không chép bản thật).
+  mkdirSync(path.join(t.root, "pipeline"), { recursive: true });
+  writeFileSync(path.join(t.root, "pipeline", "doc-gop-hang-ngay.sh"), '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n');
   writeFileSync(path.join(t.bin, "node"), NODE_SHIM, { mode: 0o755 });
   return t;
 }
