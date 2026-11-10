@@ -5,10 +5,10 @@ slug: do1-giu-dau-doi-thang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: implemented
+status: draft
 design_doc: docs/superpowers/specs/2026-11-10-do1-giu-dau-doi-thang-design.md
-approved_by: Mạnh
-approved_at: 2026-11-09T23:42:15Z
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: do1-giu-dau-doi-thang
@@ -20,6 +20,10 @@ cloud-sync; lượt hai của ngày đổi thang xoá dấu `doi-thang` và ghi 
 mất câu «lần hạ một lần» và hiện một phần bảng chuyển bậc. Giám sát gộp thêm Ngoài-5 (N1-53): thước TB-AC-11 đỏ vĩnh viễn từ
 khi máy thu áp 087. Máy thu 10/11: 087 đã áp, `data_level_unit` còn 76.124 dòng thang-2310, `data_level_change` ngày 10/11 đã
 có 1.364 dòng do code cũ ghi.
+
+Vòng 2 (Mạnh «Nâng phạm vi sửa ngay» sau S4 vòng 1, 10/11): lượt chấm bắt ngày áp thang lấy theo ngày UTC — máy thu ghi
+ảnh chụp `thang-0811` đầu tiên ngày 09/11 trong khi ngày đổi thang giờ VN là 10/11 — và dấu do lệnh sửa ghi bị lượt DO1 kế xoá.
+Thêm AC-9, AC-10; AC-8 thêm mã thoát 2 khi từ chối.
 
 ## Criteria
 
@@ -50,8 +54,17 @@ có 1.364 dòng do code cũ ghi.
   `do-hang-ngay.mjs --sua-ngay-doi-thang` không cờ rồi có `--write`, Then không cờ: in ngày D và số dòng sẽ xoá, DB không đổi;
   có `--write`: dòng DO1 ngày D là `skip` `doi-thang` kèm `thang`, dòng `data_level_change` ngày D xử theo Hỏi-2 (mặc định
   khuyến nghị «xoá»: 0 dòng; nhánh «giữ»: còn nguyên), các ngày khác và `data_level_unit` giữ nguyên; đã có dấu `doi-thang` ở
-  một ngày khác D thì lệnh từ chối và in hai ngày; DB chưa áp 087 hay chưa có ảnh chụp thang mới thì in một dòng có tên, không
-  ghi.
+  một ngày khác D thì lệnh từ chối (thoát 2) và in hai ngày; DB chưa áp 087 hay chưa có dòng DO1 nào mang thang mới thì in một
+  dòng có tên, không ghi.
+- AC-9: Given ảnh chụp `thang-0811` nhỏ nhất ghi ngày D−1 (ngày UTC của DB: bac-du-lieu chạy lần đầu trong 0–7 giờ sáng giờ VN
+  ngày D, như máy thu 09/11 ↔ 10/11) và dòng DO1 đầu tiên mang `thang-0811` là ngày D, When DO1 chạy ngày D không dấu (ca AC-4)
+  và When lệnh sửa chạy (ca AC-8), Then ngày áp nhận là D — ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang thang mới: DO1
+  ngày D ghi `skip` `doi-thang` với `thang.tu_ngay` D; lệnh sửa in và xử ngày D; `data_level_change` ngày D−1 giữ nguyên từng
+  dòng. Chưa có dòng DO1 nào mang thang mới thì chưa có ngày áp: lệnh sửa in `chua-co-thang-moi`, DO1 lấy chính ngày chạy làm
+  `tu_ngay`.
+- AC-10: Given lệnh sửa `--write` đã chạy vào ngày X cho ngày áp D < X, When DO1 `--write` chạy ngày X rồi `loadDo1` của app
+  đọc, Then dòng `do1-chuyen-bac` của D vẫn là `skip` `doi-thang` mang `thang` và `don_vi` (số dòng `data_level_unit`), giờ ghi
+  nằm trong ngày D giờ VN; dòng chuyển bậc hiện hành của khối là dòng ngày X, không phải dấu của D.
 
 ## Coverage
 
@@ -65,6 +78,8 @@ thang mới × khác D × không dấu → so thường (AC-2, AC-4); mọi bả
 - Bề mặt: dòng DO1 (`dq_check_results`) · `data_level_change` · `data_level_unit` · khối DO1 `/ops/quality` · lệnh sửa · thước
   TB-AC-11 → AC-1 … AC-8.
 - Lược đồ: có 087 · chưa có 087 → AC-7, AC-8.
+- Múi giờ ngày áp: ảnh chụp cùng ngày VN · ảnh chụp sớm một ngày (UTC) → AC-4, AC-8, AC-9.
+- Thời điểm sau lệnh sửa: ngay sau lệnh · sau lượt DO1 kế của ngày khác → AC-8, AC-10.
 Thước CE: hiện trạng máy thu 10/11 ở design doc §1 (76.124 đơn vị thang-2310, 1.364 dòng chuyển ngày 10/11, chưa có ảnh chụp
 thang-0811 lúc 06:19).
 
@@ -78,5 +93,6 @@ thang-0811 lúc 06:19).
 
 ## Notes
 
-- Ngày lập mốc nhận theo dấu trước, ngày áp sau; ngày áp là ngày nhỏ nhất có ảnh chụp thang mới, cùng định nghĩa AC-5 của
-  `thang-bac-moi-b0-b5`.
+- Ngày lập mốc nhận theo dấu trước, ngày áp sau. Ngày áp là ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang thang mới (AC-9,
+  nâng phạm vi sau S4 vòng 1, Mạnh 10/11) — thay định nghĩa «ngày nhỏ nhất có ảnh chụp thang mới» của AC-5 `thang-bac-moi-b0-b5`,
+  vì `data_level_snapshot.snap_date` ghi theo ngày UTC còn DO1 theo ngày VN.

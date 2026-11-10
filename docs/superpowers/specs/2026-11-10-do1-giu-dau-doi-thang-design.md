@@ -111,3 +111,32 @@ Không migration.
 
 Bỏ, vì không đổi giao diện (dòng descope trong sổ). Câu hiển thị của khối DO1 giữ nguyên. Hàng này chỉ làm dấu còn đó để
 khối hiện được nó.
+
+## 6. Vòng 2 — nâng phạm vi sau S4 vòng 1 (Mạnh, 10/11)
+
+Lượt chấm vòng 1 xanh 8/8 eval nhưng bắt hai lỗi ngoài hợp đồng; Mạnh chọn «Nâng phạm vi sửa ngay».
+
+**Ngày áp theo giờ VN (AC-9).** `610_data_level.sql` ghi `snap_date = current_date`, DB máy thu chạy `Etc/UTC`. Bac-du-lieu
+chạy lần đầu lúc 06:2x giờ VN ngày 10/11 nên ảnh chụp `thang-0811` đầu tiên mang ngày 09/11 (đã đọc trên máy thu: thang-0811
+nhỏ nhất 09/11, thang-2310 lớn nhất 08/11). DO1 và `data_level_change` dùng ngày VN. So thẳng hai loại ngày làm luật 4 không
+bao giờ khớp ngày 10/11, và `--sua-ngay-doi-thang` nhắm 09/11 — xoá nhầm dòng chuyển thật của một ngày thường.
+
+Sửa: ngày áp = ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang `thang.ma = thang-0811` (`ngayApThang`). Mọi dòng DO1 từ bản
+thang-bac-moi đều mang `thang`, nên dòng đầu tiên mang thang mới chính là lượt DO1 đầu tiên thấy thang mới — ngày đổi thang
+theo đúng đồng hồ của DO1. Chưa có dòng nào thì chưa có ngày áp (luật 3 «bảng còn thang cũ» lo lượt đầu). `tuNgayThang`
+(ngày hiện trên khối «áp từ …») dùng cùng hàm, rơi về ngày chạy khi chưa có. Ảnh chụp không còn quyết ngày áp. Không đổi
+`610_data_level.sql`: ngày UTC của ảnh chụp là nợ riêng (biểu đồ phân bố bậc lệch một ngày với ảnh chụp chạy 0–7 giờ sáng),
+báo giám sát, không mở ở hàng này.
+
+Máy thu: dòng DO1 mang thang đầu tiên là 10/11 (dấu `doi-thang` lúc 23:23Z 09/11 = 06:23 VN 10/11), các dòng 09/11 trở về
+trước không có `thang` (087 áp sau). Nên ngày áp tính ra 10/11 — đúng.
+
+**Dấu do lệnh sửa sống qua lượt DO1 kế (AC-10).** Lệnh sửa ghi dấu với `checked_at = clock_timestamp()`. Lượt DO1 kế (ngày X)
+xoá dòng `do1-*` theo `detail.ngay = X OR checked_at ∈ ngày X`, nên dấu của D mất; trước khi mất, `loadDo1` (dòng mới nhất mỗi
+check) coi dấu D là trạng thái hiện hành, thiếu `don_vi` nên khối hiện «0 đơn vị». Sửa: `checked_at = least(clock_timestamp(),
+cuối ngày D giờ VN)` — nằm trong ngày D, ngoài khung xoá của X và không nổi lên làm dòng mới nhất; ghi `don_vi` = số dòng
+`data_level_unit`.
+
+**Thoát 2 khi từ chối (AC-8).** `main` bắt lỗi từ chối có tên (`TuChoi`) → in stderr, ROLLBACK, `process.exit(2)`.
+
+**Thước bảng 1 (E3).** Mười lăm ô trải hết ô gộp; danh sách ô đã kiểm so trọn với danh sách viết trước.
