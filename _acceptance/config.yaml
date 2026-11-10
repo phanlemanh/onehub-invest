@@ -395,8 +395,11 @@ executors:
     atss_chan: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs chan"   # app-test-chiu-song-song E1 — ba tệp xanh dưới phiên giữ 33033/DDL/khoá chia sẻ, bản cũ treo vì chờ khoá
     atss_khoa: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs khoa"   # app-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
     atss_assert: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs assert"   # app-test-chiu-song-song E3 — thông điệp assert giữ nguyên trừ câu thước đã khai
-    atss_lib: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — test thư viện lược đồ riêng + ba đột biến đỏ
+    atss_lib: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_atsslib --chay node ../_acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — ba ca LDR theo tên + ba đột biến đỏ, trên DB thử (thuoc-song-song-dem-theo-ten-ca)
     atss_pham_vi: "bash _acceptance/app-test-chiu-song-song/probes/pham-vi.sh"   # app-test-chiu-song-song E5
+    ttc_neo: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/neo.sh"   # thuoc-song-song-dem-theo-ten-ca E6 — E5 cũ neo khoảng commit nhánh gốc
+    ttc_ghim: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/ghim.sh"   # thuoc-song-song-dem-theo-ten-ca E7 — hồ sơ cũ đã ghim lại, lưới trước-gộp sạch
+    ttc_pham_vi: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/pham-vi.sh"   # thuoc-song-song-dem-theo-ten-ca E8
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
