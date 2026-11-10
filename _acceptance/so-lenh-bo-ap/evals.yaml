@@ -1,0 +1,95 @@
+schema_version: 1
+feature_slug: so-lenh-bo-ap
+# Ca «SL-AC-n». Hai executor, cả hai chạy trên DB thử của riêng lượt (db/db-thu.sh --chay), không chạm DB chung:
+# - so_lenh_db (pipeline): scripts/lenh.test.mjs (thuần) + scripts/so-lenh.itest.mjs — dựng lược đồ tạm `sl_<pid>_<ca>`,
+#   chạy NGUYÊN tệp db/migrations/091_so_lenh.sql bằng một lời gọi query (giao thức simple, dừng ở lỗi đầu) với
+#   search_path = lược đồ tạm; cloud giả là một http.createServer trên cổng ngẫu nhiên.
+# - so_lenh_app (app): tests/so-lenh.test.tsx — gọi handler route thật với pool của app trỏ lược đồ tạm đã chạy 091.
+# Mọi ca chụp public trước/sau (bảng, cột, số dòng ops_audit) rồi deepEqual: 091 chưa áp lên public trước gộp.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.so_lenh_db
+    paths: [db/migrations/091_so_lenh.sql, pipeline/scripts/so-lenh.itest.mjs]
+    expected: "exit 0; ca 'SL-AC-1' chạy 091 hai lần trên lược đồ kiểu máy thu (có source_registry, ops_audit) và lược đồ kiểu cloud (không source_registry, không ops_audit; ops_heartbeat dựng trước đúng khuôn id text PK, payload jsonb, pushed_at timestamptz): bốn lần không ném lỗi; information_schema có đủ năm bảng, cột ops_audit của lược đồ cloud deepEqual cột của 018 (id, at, actor, action, env, detail); bộ đọc tệp rút danh sách loại từ ADR-0015 §4 và trạng thái từ §5, assert đúng 14 và 9 phần tử trước khi lặp; tập loại deepEqual tập giá trị đọc từ pg_get_constraintdef của change_requests_type_chk, LOAI_LENH của pipeline/lib/lenh.mjs và của app/src/lib/lenh.ts; 14 loại đều INSERT được, 'source.purge', '', 'Source.Pause' bị từ chối với lỗi nêu 'change_requests_type_chk'; 9 trạng thái nhận, 'done' và NULL bị từ chối; INSERT trùng idempotency_key ném 'unique'; ca 'SL-AC-1b' tạo role anon trong DB thử rồi chạy 091: has_table_privilege('anon', bảng, 'SELECT') sai cho cả năm bảng và relrowsecurity đúng; đối chứng: trên bản sao gỡ khối DO thì anon vẫn SELECT được — ca báo 'gỡ khối khoá anon thì mở'; đối chứng hai: bản sao 091 đổi một tên loại thì ca so tập loại đỏ, nêu tên loại lệch"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/change-requests/route.ts, app/src/lib/lenh.ts, app/src/lib/ops-access.ts, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-AC-2' trên lược đồ tạm kiểu cloud của AC-1 (không source_registry, ops_audit do 091 tạo), bảng viết trước 12 lời gọi POST: (ops, source.pause S05 reason 'het credit') → 201, dòng status 'submitted', requested_by 'user:<id ops>', đúng 1 dòng ops_audit action 'change_request.create'; (ops, thiếu reason), (ops, reason '  '), (ops, unit.create), (ops, 'source.purge'), (ops, target 'S5'), (ops, payload.extra), (ops, payload.a.b.c.bindings), (ops, payload.requireMention) → 400, số dòng change_requests và ops_audit không đổi; (viewer) → 403; (ops, source.resume) → 403; (admin, source.resume S05) → 201; (Bearer OPS_API_TOKEN) → 403; đối chứng: bản ép giao dịch hỏng sau INSERT thì 0 dòng change_requests và 0 dòng audit"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: ["app/src/app/api/v1/ops/change-requests/[id]/decide/route.ts", app/src/lib/ops-access.ts, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-AC-3' (lược đồ tạm kiểu cloud của AC-1: không source_registry, ops_audit do 091 tạo): admin duyệt lệnh submitted → 200, status 'approved', approved_by 'user:<id admin>', decided_at khác NULL, 1 dòng audit 'change_request.decide'; admin từ chối lệnh khác → 'rejected'; admin A gửi source.resume S05 rồi chính A duyệt → 200 'approved'; ops gọi decide → 403; duyệt lại lệnh approved → 409, dòng deepEqual trước; lệnh nhắm S03 do admin A gửi và admin A duyệt → 409 và dòng không đổi; admin B duyệt → 200; đối chứng: bỏ luật S03 trong bản sao handler thì ca A-tự-duyệt trả 200 — ca nêu 'luật người thứ hai'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/change-requests/pull/route.ts, app/src/lib/token-may.ts, scripts/cap-token-may.mjs, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-AC-4': cap-token-may.mjs --name may-thu-thu --scope ops:pull in đúng một token; mọi cột text/jsonb của mọi bảng lược đồ tạm không chứa chuỗi token, machine_tokens.token_hash = sha256 hex của token; DB có lệnh L1 approved (cũ), L2 queued, L3 approved (mới), L4 submitted, L5 rejected, L6 applied; GET pull bằng token → 200, id trả về deepEqual [L1, L2, L3] theo đúng thứ tự, L1 và L3 thành 'queued' có queued_at, last_used_at khác NULL; bảng viết trước 6 lời gọi xấu (không header; phiên owner; Bearer OPS_API_TOKEN; token đã thu hồi bằng --thu-hoi; token chỉ scope 'ops:read'; token lạ) → 401 hoặc 403, ảnh chụp change_requests và machine_tokens trước/sau mỗi lời gọi deepEqual; đối chứng: bản sao token-may.ts bỏ kiểm revoked_at thì lời gọi token thu hồi trả 200 — ca nêu 'thu hồi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.so_lenh_db
+    paths: [pipeline/lib/lenh.mjs, app/src/lib/lenh.ts, pipeline/scripts/lenh.test.mjs]
+    expected: "exit 0; ca 'SL-AC-5' bảng viết trước, assert số ô = 2 hợp lệ + 1 loại lạ + 1 loại chưa có bộ áp + 2 target sai + 3 reason (vắng, '', '   ') + 1 khoá thừa + 12 khoá cấm × 2 độ sâu = 34 trước khi lặp; mỗi ô deepEqual {ok, ly_do} viết trước (vd 'loai-chua-co-bo-ap:unit.create', 'khoa-cam:groupPolicy'); ca 'SL-AC-5b' chạy cùng 34 ô qua app/src/lib/lenh.ts (nạp bằng tsx) và deepEqual từng ô với bản .mjs; danh sách KHOA_CAM của hai bản deepEqual danh sách rút từ docs/adr/0015-duong-lenh-keo-mot-chieu.md mục 7; đối chứng: bản đột biến .mjs bỏ duyệt đệ quy (chỉ xét khoá cấp 1) thì đúng 12 ô độ sâu 3 lệch, thông điệp gọi tên từng khoá"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.so_lenh_db
+    layer: backend-effect
+    paths: [pipeline/ops-apply.mjs, pipeline/lib/lenh.mjs, pipeline/scripts/so-lenh.itest.mjs]
+    expected: "exit 0; ca 'SL-AC-6' lược đồ tạm kiểu máy thu đã chạy 047 và 091, S05 active; cloud giả trả cùng lệnh source.pause S05 reason 'het credit' mỗi lần kéo; chạy ops-apply.mjs 10 lượt liền (OPS_APPLY_CLOUD trỏ cloud giả, cấu hình thư mục tạm): sau lượt 1 S05 status 'paused' reason 'het credit', isRunnable trả ly_do 'nguon-paused'; xmin của dòng S05 sau lượt 10 bằng sau lượt 1; change_request_applies đúng 1 dòng outcome 'applied', before deepEqual {status:'active', reason:null, resume_when:null}, after deepEqual {status:'paused', reason:'het credit', resume_when:null}; ops_audit lược đồ tạm đúng 1 dòng actor 'machine:ops-apply'; cloud giả nhận đúng 10 bản kết quả cùng idempotency_key và cùng after; ca 'SL-AC-6b' hai lời gọi apLenh song song trên lệnh mới → đúng 1 UPDATE (1 dòng sổ, 1 audit); đối chứng: bản đột biến lenh.mjs bỏ INSERT sổ áp thì lượt 2 ném hoặc ghi lần hai — ca nêu 'áp lần hai'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.so_lenh_db
+    layer: backend-effect
+    paths: [pipeline/lib/lenh.mjs, pipeline/scripts/so-lenh.itest.mjs]
+    expected: "exit 0; ca 'SL-AC-7' ma trận viết trước 5 ca: pause S0B (paused) → outcome 'failed' ly_do 'tien-dieu-kien:nguon-paused'; pause S0R (retired) → 'failed' 'tien-dieu-kien:nguon-retired'; pause S0Z (không có) → 'failed' 'tien-dieu-kien:nguon-khong-co'; resume S0A (active) → 'failed' 'tien-dieu-kien:nguon-active'; pause S0A với kiemSau ném → 'reverted'; mỗi ca ảnh chụp dòng source_registry trước/sau deepEqual và sổ áp có đúng 1 dòng mang outcome ấy; đối chứng dương: resume S0B → 'applied', reason và resume_when NULL, isRunnable {run:true, ly_do:'chay'}; đối chứng đỏ: bản đột biến bỏ ROLLBACK khi kiemSau hỏng thì ca 'reverted' thấy S0A 'paused' — ca nêu 'không hoàn tác'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/ingest/route.ts, pipeline/push-ops-facts.mjs, app/src/lib/token-may.ts, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-AC-8': lược đồ tạm cloud có ops_heartbeat primary payload {pushedAt:'P0'} và lệnh Q1, Q2, Q3 queued, A1 applied; push-ops-facts.mjs --chi-lenh <tệp> (INGEST_URL trỏ server bọc handler thật, token máy ops:pull) gửi {Q1 applied, Q2 failed, Q3 reverted, A1 applied, Q1 sai idempotency_key}: Q1 'applied' before/after/result/finished_at đúng tệp, Q2 'failed', Q3 'reverted', A1 không đổi; phản hồi đếm bo_qua = 2; 3 dòng audit actor 'machine:may-thu-thu'; ops_heartbeat deepEqual trước; gửi lại cùng tệp → 0 lệnh đổi, bo_qua = 5; nhánh kind bằng Bearer OPS_API_TOKEN → 403; tệp kết quả chứa real_name của một dòng source_registry → push-ops-facts thoát 1, stderr có 'FACTS CHẶN [tầng A]', server nhận 0 yêu cầu; bản tin thường (không kind) bằng Bearer chung vẫn upsert ops_heartbeat như trước; đối chứng: bản sao route bỏ kiểm idempotency_key thì dòng Q1 sai khoá làm đổi Q1 — ca nêu 'idempotency_key'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/change-requests/route.ts, app/src/lib/token-may.ts, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-AC-9': lệnh approved, chưa token nào kéo: GET danh sách bằng phiên viewer → 200, lệnh status 'approved', last_pull_at null; một lượt pull bằng token T1 → last_pull_at = machine_tokens.last_used_at của T1; thu hồi T1 → last_pull_at null; không phiên → 401; mọi lệnh trong danh sách có status 'applied' đều có finished_at và result khác NULL (assert trên tập lệnh fixture gồm cả lệnh queued không kết quả); đối chứng: bản sao route tính last_pull_at cả token thu hồi thì ca sau thu hồi lệch — ca nêu 'token thu hồi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.so_lenh_db
+    layer: backend-effect
+    paths: [pipeline/ops-apply.mjs, pipeline/cron/com.oneinvest.ops-apply.plist, pipeline/scripts/so-lenh.itest.mjs]
+    expected: "exit 0; ca 'SL-AC-10' thư mục cấu hình tạm có ops-apply.dung: ops-apply thoát 0, stdout một dòng chứa 'phanh', cloud giả đếm 0 yêu cầu, ảnh chụp source_registry trước/sau deepEqual; gỡ tệp → lượt kế cloud giả đếm ≥ 1 yêu cầu pull và lệnh được áp; cloud giả trả 503 → thoát 2, DB deepEqual; cổng cloud đóng → thoát 2; cloud.env thiếu OPS_MACHINE_TOKEN → thoát 2, cloud giả đếm 0; trong mọi lượt stdout và stderr không chứa chuỗi token; plutil -lint (hoặc bộ đọc plist thuần khi không có plutil) nhận tệp plist, StartInterval = 60, ProgramArguments chứa 'pipeline/ops-apply.mjs'; đối chứng: bản sao ops-apply bỏ kiểm phanh thì cloud giả đếm ≥ 1 — ca nêu 'phanh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.so_lenh_app
+    layer: backend-effect
+    paths: [pipeline/ops-apply.mjs, pipeline/push-ops-facts.mjs, pipeline/lib/lenh.mjs, app/src/app/api/v1/ops/change-requests/pull/route.ts, app/src/app/api/v1/ops/ingest/route.ts, app/tests/so-lenh.test.tsx]
+    expected: "exit 0; ca 'SL-NOI' đầu-cuối không fixture viết tay ở hai mối nối: một http server bọc handler THẬT của change-requests (tạo, decide, pull) và ingest trên lược đồ cloud tạm; lược đồ máy thu tạm có S05 active; lệnh source.pause S05 tạo bằng phiên ops và duyệt bằng phiên admin qua route; tiến trình con node pipeline/ops-apply.mjs (OPS_APPLY_CLOUD và INGEST_URL trỏ server, DATABASE_URL trỏ lược đồ máy thu, OPS_MACHINE_TOKEN cấp bằng cap-token-may.mjs) thoát 0; trên lược đồ cloud lệnh thành 'applied', finished_at khác NULL, before và after deepEqual before và after của dòng change_request_applies ở lược đồ máy thu; S05 ở máy thu 'paused'; đối chứng: bản sao route pull đổi tên khoá idempotency_key trong phản hồi thì lệnh vẫn 'queued' sau lượt và ca nêu 'khuôn lệnh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

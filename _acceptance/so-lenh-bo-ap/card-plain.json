@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Đội vận hành gửi lệnh tạm dừng hoặc bật lại một nguồn từ cổng Ops ở cloud; máy thu tự kéo lệnh đã duyệt về, áp đúng một lần và báo lên «đã áp» kèm trạng thái trước và sau — cloud không bao giờ gọi vào máy thu.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có sổ lệnh, sổ token máy và sổ áp chống lặp, chạy được cả ở máy thu lẫn cloud, và khoá người ngoài (khoá công khai của cloud) không đọc được các sổ ấy."},
+    {"id": "AC-2", "p": "Sẽ cho người vận hành gửi lệnh tạm dừng nguồn kèm lý do; lệnh sai khuôn, thiếu lý do hay đụng cấu hình Zalo bị từ chối ngay, và mỗi lệnh gửi được ghi nhật ký tên người thật."},
+    {"id": "AC-3", "p": "Sẽ cho trưởng vận hành duyệt hoặc từ chối lệnh; tự duyệt lệnh của mình được, trừ lệnh nhắm S03 (nhóm chat) phải có người thứ hai."},
+    {"id": "AC-4", "p": "Sẽ chỉ cho máy thu cầm token riêng kéo lệnh đã duyệt; mật khẩu chung cũ, người đăng nhập, token đã thu hồi hay thiếu quyền kéo đều bị chặn và không làm lệnh nào đổi trạng thái."},
+    {"id": "AC-5", "p": "Sẽ kiểm khuôn lệnh bằng cùng một luật ở cloud và ở máy thu, gồm cả mười hai khoá cấm của an toàn Zalo ở mọi độ sâu."},
+    {"id": "AC-6", "p": "Sẽ áp một lệnh đúng một lần dù máy thu kéo lại mười lần hay hai bộ áp chạy cùng lúc; nguồn bị tạm dừng thì lượt thu kế không chạy."},
+    {"id": "AC-7", "p": "Sẽ từ chối áp khi nguồn không ở trạng thái hợp lệ, và tự hoàn tác khi kiểm sau áp hỏng — dữ liệu nguồn không đổi trong mọi ca hỏng."},
+    {"id": "AC-8", "p": "Sẽ báo kết quả lên cloud qua đường số liệu đã có, có bộ chặn tên nguồn thật; một lệnh đi trọn từ gửi → duyệt → máy thu áp → cloud hiện «đã áp» kèm trước/sau."},
+    {"id": "AC-10", "p": "Sẽ có phanh tay ở máy thu (một tệp chỉ người ngồi máy tạo được) dừng mọi lệnh, và bộ áp được lên lịch mỗi 60 giây."}
+  ],
+  "wont_do": [
+    {"id": "AC-9", "p": "Sẽ KHÔNG bao giờ hiện «đã áp» khi máy thu chưa báo kết quả; máy thu tắt thì lệnh nằm chờ và cloud có mốc «máy thu kéo lần cuối»."},
+    {"id": "OOS-1", "p": "Chưa có màn bấm trên /ops — nút tạm dừng, ô lý do, dòng «máy thu chưa nhận lệnh từ HH:MM» là hàng TV4b."},
+    {"id": "OOS-2", "p": "Chưa có lệnh cho nhóm S05/S06, nhóm S03, lịch chạy, chạy lại, ngưỡng độ tươi — mỗi loại là hàng riêng (TV5–TV8)."},
+    {"id": "OOS-3", "p": "Không tự áp lên DB máy thu, Supabase, không cấp token thật, không nạp lịch chạy — mỗi việc chờ một lời của anh sau gộp."},
+    {"id": "OOS-4", "p": "Không chứng script thu thật dừng khi nguồn tạm dừng — việc ấy thuộc TV2b (làn ZCode)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi tổ hợp lệnh × trạng thái nguồn (đang chạy, đã dừng, đã ngừng hẳn, không có, loại lạ, khoá cấm) đều có ca viết trước — AC-5, AC-6, AC-7."},
+    {"i": 1, "p": "Mọi kiểu xưng danh (bốn vai người, mật khẩu chung, token máy đủ/thiếu quyền, đã thu hồi, không gì) được thử ở từng cửa — AC-2, AC-3, AC-4, AC-8, AC-9."},
+    {"i": 2, "p": "Sáu chặng của một lệnh — gửi, duyệt, kéo, áp, báo kết quả, hiện trạng thái — mỗi chặng có tiêu chí riêng."},
+    {"i": 3, "p": "Bảy kiểu sự cố — kéo lặp, chạy trùng, báo hỏng, kiểm sau hỏng, máy thu tắt, phanh bật, cloud không trả lời — AC-6, AC-7, AC-9, AC-10."},
+    {"i": 4, "p": "Áp mọi ô: nhật ký người thật cùng lúc ghi, tên nguồn thật không lên cloud, sổ chạy được cả hai nơi."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Ba luật quyền (ai bật lại, admin tự duyệt, S03 cần người thứ hai) từng gom dưới một câu trích không đủ — đã tách, mỗi luật trích nguyên văn ADR-0015 hay tài liệu đã duyệt, thêm ca admin tự duyệt lệnh bật lại."},
+    {"i": 1, "p": "Hai chỗ nối giữa cloud và máy thu chỉ thử bằng dữ liệu viết tay — đã thêm ca đi trọn qua các cửa thật, đổi tên một trường thì ca đỏ."},
+    {"i": 2, "p": "Cloud có thể thiếu sổ nhật ký mà lệnh cần ghi — sổ lệnh mới nay tự tạo sổ nhật ký khi thiếu, và ca thử chạy trên khuôn cloud."},
+    {"i": 3, "p": "Danh sách 14 loại lệnh từng chép tay hai nơi — nay rút từ ADR và so với DB lẫn mã."}
+  ]
+}
