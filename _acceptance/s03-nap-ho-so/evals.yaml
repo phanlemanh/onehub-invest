@@ -7,7 +7,7 @@ evals:
     executor: script
     cmd: config:executors.script.snh_test
     paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-ho-so.test.mjs]
-    expected: "exit 0; '✔ HS-1 lượt 00:00: snapshot hồ sơ mới được nạp'; 'ℹ pass 7', 'ℹ fail 0'"
+    expected: "exit 0; '✔ HS-1 lượt 00:00: snapshot hồ sơ mới được nạp'; 'ℹ pass 9', 'ℹ fail 0'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
@@ -15,7 +15,7 @@ evals:
     executor: script
     cmd: config:executors.script.snh_test
     paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-ho-so.test.mjs]
-    expected: "exit 0; '✔ HS-2 Ngoài-6 thứ tự' — should-NOT-fire: thiếu 080 thì con trỏ hồ sơ KHÔNG nhảy; lần ba KHÔNG nạp lại"
+    expected: "exit 0; '✔ HS-2 Ngoài-6 thứ tự' và '✔ HS-8 CHUA-AP-080 ở ĐẦU một đầu ra rất lớn' — should-NOT-fire: thiếu 080 thì con trỏ hồ sơ KHÔNG nhảy; lần ba KHÔNG nạp lại"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
@@ -47,7 +47,7 @@ evals:
     executor: script
     cmd: config:executors.script.snh_test
     paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-ho-so.test.mjs]
-    expected: "exit 0; should-NOT-fire '✔ HS-6 đối chứng: không có snapshot hồ sơ nào' và '✔ HS-7 snapshot hồ sơ đang ghi (thư mục .partial) không bị nạp'"
+    expected: "exit 0; should-NOT-fire '✔ HS-6 đối chứng: không có snapshot hồ sơ nào' và '✔ HS-7 snapshot hồ sơ đang ghi (thư mục .partial) không bị nạp' và '✔ HS-9 snapshot hồ sơ thiếu manifest'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E7

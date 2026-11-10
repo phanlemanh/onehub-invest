@@ -33,11 +33,11 @@ mất dữ liệu khó nhận — test thứ tự kèm theo»).
 ## Criteria
 
 - AC-1: Given một snapshot hồ sơ mới có manifest và DB đã có 080, When tác vụ nạp S03 chạy lượt 00:00, Then snapshot hồ sơ được nạp, con trỏ hồ sơ `pipeline/logs/s03-ho-so.state` tiến tới mốc của nó, bước nạp hồ sơ đứng TRƯỚC transform (để refresh ghi link hồ sơ), chuỗi tin chạy đủ, thoát 0.
-- AC-2: Given hai snapshot hồ sơ và DB thiếu 080 (importer in `CHUA-AP-080`, thoát 0), When tác vụ chạy, Then con trỏ hồ sơ GIỮ nguyên, vòng hồ sơ dừng ở snapshot đầu, có dòng `JOB FAIL … bước nap-ho-so mã 4`, chuỗi tin vẫn chạy; When áp 080 rồi chạy lại, Then cả hai snapshot được nạp; When chạy lần ba, Then không nạp lại snapshot nào (không trùng).
+- AC-2: Given hai snapshot hồ sơ và DB thiếu 080 (importer in `CHUA-AP-080`, thoát 0), When tác vụ chạy, Then con trỏ hồ sơ GIỮ nguyên — kể cả khi dòng `CHUA-AP-080` nằm đầu một đầu ra rất lớn (~1 MB) —, vòng hồ sơ dừng ở snapshot đầu, có dòng `JOB FAIL … bước nap-ho-so mã 4`, chuỗi tin vẫn chạy; When áp 080 rồi chạy lại, Then cả hai snapshot được nạp; When chạy lần ba, Then không nạp lại snapshot nào (không trùng).
 - AC-3: Given một snapshot hồ sơ có mốc CŨ hơn con trỏ tin, When tác vụ chạy, Then snapshot hồ sơ vẫn được nạp, và vòng hồ sơ không đổi giá trị con trỏ tin.
 - AC-4: Given nạp một snapshot hồ sơ hỏng, When tác vụ chạy, Then con trỏ hồ sơ giữ nguyên, có `JOB FAIL … bước nap-ho-so mã 1`, chuỗi tin vẫn chạy và khoá nạp được nhả.
 - AC-5: Given lượt nhanh (`--luot-nhanh`), When có snapshot hồ sơ mới, Then nó cũng được nạp, và lượt nhanh vẫn không chạy đọc gộp và làm giàu.
-- AC-6: Given không có snapshot hồ sơ nào, hoặc chỉ có thư mục đang ghi (`.…partial`), When tác vụ chạy, Then không gọi nạp hồ sơ nào và thoát 0.
+- AC-6: Given không có snapshot hồ sơ nào, hoặc chỉ có thư mục đang ghi (`.…partial`), When tác vụ chạy, Then không gọi nạp hồ sơ nào và thoát 0; Given một thư mục hồ sơ thiếu manifest, When nó mới hơn 30 phút, Then vòng hồ sơ dừng và giữ con trỏ; When nó cũ từ 30 phút (mồ côi), Then bỏ qua nó và nạp tiếp snapshot sau — như vòng tin.
 - AC-7: Given nhánh này, When chạy các bộ test tác vụ nạp có sẵn (gồm lượt nhanh của #404), Then tất cả xanh; tệp đổi ngoài hồ sơ chỉ gồm tệp bọc nạp S03, plist lượt nhanh, hai tệp test lượt nhanh và hồ sơ.
 
 ## Coverage
@@ -53,6 +53,7 @@ mất dữ liệu khó nhận — test thứ tự kèm theo»).
 
 ## Notes
 
+- Review S4 vòng 1 (10/11) nêu SIGPIPE ở kiểm `CHUA-AP-080` (`printf | grep -q` dưới pipefail) → đã sửa thành so khớp trong shell, thêm HS-8 (đỏ trên bản cũ, xanh trên bản sửa); thiếu manifest xử như vòng tin, thêm HS-9.
 - Đột biến (liên làn chạy 10/11, mỗi đột biến làm đỏ ít nhất một ca): bỏ kiểm `CHUA-AP-080` → đỏ 1; dùng chung con trỏ tin → đỏ 6; bỏ gán `JOB_RC` → đỏ 2.
 
 ## Known limits
