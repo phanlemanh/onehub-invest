@@ -16,9 +16,10 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { join } from "node:path";
 import {
-  NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, khuDaDung, kiemDich, kiemTepXa, phuongCuaToa, thamSoTuUrl, ungVienTuTin,
-  upiToa, xaMoiCuaNut,
+  NGUON_DANH_MUC, chuanHoaTenToa, isoCuaKhu, keHoachDung, khuDaDung, kiemDich, kiemTepXa, phuongCuaToa, thamSoTuUrl,
+  ungVienTuTin, upiToa, xaMoiCuaNut,
 } from "./lib/danh-ba-vat-the.mjs";
+import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
@@ -35,18 +36,35 @@ const arg = (ten, mac) => {
 
 /** Từ điển chủ đầu tư: { "<project_id>": "<BuilderName>" }, khoá mở đầu «_» là ghi chú. */
 export function docTuDien(tep) {
-  if (!tep) return { giaTri: new Map(), ban: null };
+  if (!tep) return { giaTri: new Map(), ban: null, tep: null };
   const tho = readFileSync(tep);
   const j = JSON.parse(tho.toString("utf8"));
   const giaTri = new Map(Object.entries(j).filter(([k, v]) => !k.startsWith("_") && typeof v === "string" && v.trim()));
-  return { giaTri, ban: createHash("sha256").update(tho).digest("hex") };
+  return { giaTri, ban: createHash("sha256").update(tho).digest("hex"), tep: basename(tep) };
+}
+
+/**
+ * DA1: bảng ISO từ DB — khu vực (loại, cha) và ISO của mỗi thị trường qua admin_code → iso_regions (088). Chưa áp 088 → null.
+ * @param {import("pg").Client} c
+ */
+export async function napBangIso(c) {
+  if (!(await c.query("SELECT to_regclass('public.iso_regions') AS t")).rows[0].t) return null;
+  const { rows: v } = await c.query("SELECT id, region_type, parent_id FROM areas");
+  const { rows: m } = await c.query(
+    "SELECT a.id, r.iso_region FROM areas a JOIN iso_regions r ON r.admin_code = a.admin_code WHERE a.region_type = 'market'");
+  return {
+    vung: new Map(v.map((r) => [r.id, { region_type: r.region_type, parent_id: r.parent_id }])),
+    isoCuaThiTruong: new Map(m.map((r) => [r.id, r.iso_region])),
+  };
 }
 
 /**
  * Dựng trên một kết nối đã mở. Trả tổng kết (không mã S08).
  * @param {import("pg").Client} c
  */
-export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null }, runId = `dbv-${Date.now()}` } = {}) {
+export async function dung(c, {
+  khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null, tep: null }, runId = `dbv-${Date.now()}`, log = console.log, isoTheo = null,
+} = {}) {
   if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
   try {
@@ -73,9 +91,25 @@ export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new 
          FROM stg_s08_inventory i JOIN s08_project_links l ON l.project_id = i.project_id AND l.status = 'noi'
         WHERE i.project_type = 'high_rise' AND l.asset_node_id = ANY($1)
         ORDER BY 1, 2`, [khuIds]);
-    for (const d of s08) d.iso = ISO[khu.get(d.khu_id)?.city] ?? null;
+    // DA1: ISO của khu suy từ khu vực (088 iso_regions); chưa áp 088 → chỉ dựng lại khu đã có toà theo meta.city.
+    const isoKhu = new Map();
+    const bangIso = await napBangIso(c);
+    if (bangIso) {
+      for (const k of khu.values()) {
+        const kq = isoTheo ? { iso: isoTheo(k) } : isoCuaKhu(k, bangIso);
+        if (kq.loi) throw new LoiGoi(`khu ${k.slug}: ${kq.loi}`);
+        isoKhu.set(k.id, kq.iso);
+      }
+    } else {
+      const daCoToa = new Set(await khuDaDung(c));
+      const moi = [...khu.values()].filter((k) => !daCoToa.has(k.slug)).map((k) => k.slug);
+      if (moi.length) throw new LoiGoi(`chưa áp 088 — chỉ dựng lại khu đã có toà (${moi.join(", ")})`);
+      log("danh-ba-vat-the: chưa áp 088 — ISO theo meta.city");
+      for (const k of khu.values()) isoKhu.set(k.id, isoTheo ? isoTheo(k) : (ISO[k.city] ?? null));
+    }
+    for (const d of s08) d.iso = isoKhu.get(d.khu_id) ?? null;
     const khongIso = s08.filter((d) => !d.iso).length;
-    if (khongIso) throw new Error(`khu không suy được mã tỉnh (meta.city): ${khongIso} dòng`);
+    if (khongIso) throw new Error(`khu không suy được mã tỉnh: ${khongIso} dòng`);
 
     const { rows: bd } = await c.query(
       "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1", [NGUON_DANH_MUC]);
@@ -147,14 +181,14 @@ export async function dung(c, { khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new 
       biDanhTuTin = r.rowCount;
     }
 
-    // Chủ đầu tư (Hỏi-2): một phát biểu fact/hitl mỗi toà có dòng từ điển; chạy lại không nhân (field_assertions_live_uq).
+    // Chủ đầu tư (Hỏi-2, DA1): một phát biểu fact/source_field mỗi toà có dòng từ điển (nguồn là tệp, không có người duyệt); chạy lại không nhân (field_assertions_live_uq).
     const cdt = kh.toa.filter((t) => tuDien.giaTri.has(t.project_id));
     let builder = 0;
     for (const t of cdt) {
       const r = await c.query(
         `INSERT INTO field_assertions (resource_name, subject_key, field, value, evidence_tier, method, evidence, observed_at, run_id)
-         VALUES ('Building', $1, 'builder_name', $2, 'fact', 'hitl', $3::jsonb, now(), $4) ON CONFLICT DO NOTHING`,
-        [t.key, tuDien.giaTri.get(t.project_id), JSON.stringify({ tu_dien: "chu-dau-tu", ban: tuDien.ban }), runId]);
+         VALUES ('Building', $1, 'builder_name', $2, 'fact', 'source_field', $3::jsonb, now(), $4) ON CONFLICT DO NOTHING`,
+        [t.key, tuDien.giaTri.get(t.project_id), JSON.stringify({ tu_dien: "chu-dau-tu", ban: tuDien.ban, tep: tuDien.tep }), runId]);
       builder += r.rowCount;
     }
 
@@ -226,7 +260,7 @@ export async function buocVatTheDem(c, { log = console.log } = {}) {
     log("danh-ba-vat-the: bỏ qua — chưa dựng lần đầu (lần đầu là lệnh tay --db-that --sao-luu)");
     return { bo_qua: "chua-dung-lan-dau" };
   }
-  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}` });
+  const tk = await dung(c, { khuSlugs, runId: `dbv-dem-${Date.now()}`, log });
   log(`danh-ba-vat-the: đêm ${JSON.stringify({ khu: khuSlugs.length, khoa_moi: tk.khoa_moi })}`);
   return tk;
 }
