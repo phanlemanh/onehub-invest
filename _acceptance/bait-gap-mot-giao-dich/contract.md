@@ -5,7 +5,7 @@ slug: bait-gap-mot-giao-dich
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-10T09:53:27Z
 approved_by:

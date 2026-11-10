@@ -233,11 +233,14 @@ async function kiemAc5(tep) {
   let coKhoa = false;
   try {
     await c.query("BEGIN");
-    await buocDem(c, { savepoint: true });
-    const r = await c.query(`SELECT count(*) n FROM pg_locks WHERE locktype = 'advisory' AND granted AND pid = pg_backend_pid()
-      AND objid::bigint = (hashtext('refresh-bait-gap')::bigint & 4294967295) AND objsubid = 1`);
-    coKhoa = Number(r.rows[0].n) > 0;
-    await c.query("ROLLBACK");
+    // Bản đột biến COMMIT giữa chừng thì giao dịch người gọi đã kết thúc và bước sau có thể ném lỗi — vẫn so trạng thái.
+    try {
+      await buocDem(c, { savepoint: true });
+      const r = await c.query(`SELECT count(*) n FROM pg_locks WHERE locktype = 'advisory' AND granted AND pid = pg_backend_pid()
+        AND objid::bigint = (hashtext('refresh-bait-gap')::bigint & 4294967295) AND objsubid = 1`);
+      coKhoa = Number(r.rows[0].n) > 0;
+    } catch { /* trạng thái DB bên dưới quyết */ }
+    await c.query("ROLLBACK").catch(() => {});
   } finally { await c.end(); }
   const doi = await demKhacCanh(C);
   const p1 = Number((await C.query(`SELECT count(*) n FROM parties`)).rows[0].n);
