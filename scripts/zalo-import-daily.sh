@@ -16,6 +16,20 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
 
+# 1011-3 nấc 1 «S03 lên nhanh» (Mạnh chốt 10/11, giám sát cho bật 10/11 sau N1 đo
+# transform+media+refresh ≈ 76s/lượt): lượt nhanh 15′ ban ngày 7–22h gọi với
+# --luot-nhanh. Cờ CHỈ đổi hai chỗ: (1) lấy khoá — bận thì BỎ LƯỢT, thoát 0, không
+# xếp hàng chờ như lượt 00:00; (2) export S03_LUOT_NHANH=1 để phần làn Claude biết
+# đây là lượt nhanh. Chuỗi vẫn chạy tiếp nạp → transform → media → refresh để tin
+# S03 lên sale_offers trong ngày; đọc gộp và enrich (bước LLM dài) giữ ở lượt 00:00.
+LUOT_NHANH=0
+case "${1:-}" in
+  "") ;;
+  --luot-nhanh) LUOT_NHANH=1 ;;
+  *) echo "❌ cờ không biết '${1}' — chỉ nhận --luot-nhanh (không cờ = lượt 00:00 đầy đủ)" >&2; exit 2 ;;
+esac
+export S03_LUOT_NHANH="$LUOT_NHANH"
+
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
 import_one() {
@@ -46,6 +60,11 @@ go_khoa_cu() {
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
   local goc_do_tuoi=0
+  # Lượt nhanh (review 1011-3): PID còn sống thì KHÔNG gỡ dù khoá cũ >2h hay luc hỏng — lượt 00:00 nạp dồn có
+  # thể giữ khoá lâu; gỡ là hai lượt nạp chồng nhau. Bỏ lượt, 15′ sau thử lại.
+  if [ "$LUOT_NHANH" = "1" ] && [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    return 1
+  fi
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
     echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; goc_do_tuoi=1
   elif [ -n "$luc" ] && ! [[ "$luc" =~ ^[0-9]+$ ]]; then
@@ -61,9 +80,17 @@ go_khoa_cu() {
   fi
   return 1
 }
-i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
-  go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
-done
+if [ "$LUOT_NHANH" = "1" ]; then
+  # lượt nhanh: thử lấy khoá 1 lần (dọn được khoá chết thì thử lại lần nữa);
+  # vẫn bận = lượt khác đang nạp — bỏ lượt, thoát 0 (không fail, không chờ)
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    go_khoa_cu && mkdir "$LOCK_DIR" 2>/dev/null || { echo "⏭ bỏ lượt (khoá $LOCK_DIR bận — lượt khác đang nạp)"; exit 0; }
+  fi
+else
+  i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+    go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
+  done
+fi
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
 trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
@@ -132,6 +159,13 @@ fi
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
 job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Lượt nhanh 15′ (S03_LUOT_NHANH=1) dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt
+# 00:00 cho tới khi hàng s03-len-nhanh-nac-1 của N1 gộp ENRICH_LIMIT=0 ban ngày +
+# lock_timeout (lời giám sát 10/11). Khoá nạp nhả qua trap EXIT.
+if [ "${S03_LUOT_NHANH:-0}" = "1" ]; then
+  echo "lượt nhanh: bỏ đọc gộp + enrich (chạy ở lượt 00:00)"
+  exit "$JOB_RC"
+fi
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
 # (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
 trap - EXIT; rm -rf "$LOCK_DIR"
