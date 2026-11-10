@@ -65,8 +65,9 @@ const NHAN = [
   ["change_type", "new_listing", "Tin mới"], ["change_type", "price_change", "Đổi giá"], ["change_type", "withdrawn", "Gỡ tin"],
   ["change_type", "back_on_market", "Chào lại"], ["change_type", "active_under_contract", "Đã cọc"],
   ["change_type", "closed", "Đã bán"],
-  ["data_level", "B0", "Có lời khai"], ["data_level", "B1", "Đọc được"], ["data_level", "B2", "Gắn căn"],
-  ["data_level", "B3", "Đã đo"], ["data_level", "B4", "Xác minh"], ["data_level", "B5", "Sống"],
+  // thang-bac-moi-b0-b5 (087): thang FRAMING §3.4 viết lại 08/11.
+  ["data_level", "B0", "Có lời khai"], ["data_level", "B1", "Tin"], ["data_level", "B2", "Định vị"],
+  ["data_level", "B3", "Gắn căn"], ["data_level", "B4", "Làm giàu"], ["data_level", "B5", "Sống"],
   ["capability_level", "N0", "Thu được"], ["capability_level", "N1", "Đọc được"], ["capability_level", "N2", "Đo được"],
   ["capability_level", "N3", "Tự động ở ngưỡng"], ["capability_level", "N4", "Tự duy trì"],
   // truong-nhan-s03-081 (GN1): năm trục nhãn mới, nhãn theo thiết kế đã duyệt 07/11.

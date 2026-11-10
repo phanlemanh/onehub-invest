@@ -553,16 +553,16 @@ enums:
     term_vi: Bậc dữ liệu
     dd_field: null
     local: true
-    rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10)"
+    rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10, viết lại 08/11; 087)"
     checked_on: "2026-10-23"
     columns: [data_level_snapshot.data_level, data_level_unit.data_level, data_level_change.from_level, data_level_change.to_level]
     nullable: false
     values:
       - { code: B0, label_vi: Có lời khai }
-      - { code: B1, label_vi: Đọc được }
-      - { code: B2, label_vi: Gắn căn }
-      - { code: B3, label_vi: Đã đo }
-      - { code: B4, label_vi: Xác minh }
+      - { code: B1, label_vi: Tin }
+      - { code: B2, label_vi: Định vị }
+      - { code: B3, label_vi: Gắn căn }
+      - { code: B4, label_vi: Làm giàu }
       - { code: B5, label_vi: Sống }
   capability_level:
     term_vi: Bậc năng lực

@@ -296,6 +296,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`do3-kiem-nguoc`, tỉ lệ đúng + cận dưới Wilson). Người sửa = nhãn người khác giá trị + phát biểu `hitl` ghi đè khác giá trị
   (`nguoi_sua_de`); hai đường đang chạy đều không có lối người rút (Mạnh chốt 09/11). Xem ở `/ops/quality` khối «Làm giàu». Áp 086
   lên DB máy thu: lời riêng của Mạnh.
+- **Thang bậc 08/11 chạy hằng ngày (thang-bac-moi-b0-b5, 09/11)**: 087 viết lại bậc theo FRAMING §3.4 — B0 Có lời khai · B1
+  Tin · B2 Định vị · B3 Gắn căn · B4 Làm giàu · B5 Sống. Một tập đơn vị `data_level_units()` cho `610_data_level.sql` và DO1: mọi
+  tin S03/S05/S06 chưa gắn căn (kể cả tin trong cụm — gom cụm không cho bậc) + căn danh bạ có tin gắn; hai vị từ chờ bảng nối
+  (`offer_located`, `offer_unit_key`, hôm nay false/NULL) là chỗ cắm của GC. Cột `scale` (`thang-2310`/`thang-0811`) trên ảnh
+  chụp và bậc từng đơn vị: DO1 ngày đổi thang lập mốc lại (`ly_do: doi-thang`), báo cáo ngày không so hai ngày khác thang,
+  `/ops/quality` hiện «Thang bậc 08/11 áp từ <ngày>». Chưa áp 087 thì `bac-du-lieu` và phần chuyển bậc của DO1 bỏ qua có tên
+  (`chua-ap-087`). `checkDb` thôi vớ CHECK chéo của `data_level_change`. Áp 087 lên DB máy thu và cloud: lời riêng của Mạnh.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
@@ -580,6 +587,32 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Q8: người bán lặp lại (≥ 3 tin đã biết dự án, ≥ 80% một dự án) cho phát biểu dự án `inferred`, chỉ cho tin không có tín hiệu
       khác; đo kiểm bỏ-một mỗi ngày, tụt dưới ngưỡng thì tắt. Chưa có hàng; phiên Định vị S03 đề xuất DV2.
     - Q9: phường kế thừa từ dự án tính là phường thật, mang nhãn «suy ra từ dự án»; DA9 gộp trước hoặc cùng DF7 (DF7 đứng trên DA9).
+41. **Định vị và gom tin S03** (10/11, Mạnh «Đồng ý cả 7»; bản phạm vi `docs/plan/pham-vi-dinh-vi-gom-tin-s03-1011.md`, phân tích ở kho tri
+    thức riêng `wiki/chu-de/dinh-vi-gom-tin-s03.md`): mất giá trị của S03 nằm ở bước đọc bài, trước khi có tin. Định vị và tách căn làm ở
+    mức bài, trước khi gom; khớp danh bạ (B2, B3) làm sau khi có tin; bước thu chỉ giữ ngữ cảnh. Ba trong bảy câu đã ghi ở mục 40 (Q7, Q8,
+    Q9); bốn câu còn lại:
+    - Q1: hai môi giới rao cùng một căn là **hai tin**, nối vào cùng căn ở bậc Gắn căn (ADR-0013), không gộp ở bậc Tin.
+    - Q2: cùng người đổi giá cùng căn là **một tin**; giá cũ vào lịch sử giá, giữ tín hiệu tăng, giảm giá (**GT6**).
+    - Q3: rổ hàng và bảng giá quảng cáo khi chưa tách được thành căn **không tính vào số tin trên cổng**, đếm riêng ở Ops (**GT8**, tới
+      khi PL18 E2 tách rổ).
+    - Q4: Haiku được chạy trên đường ống để **đề xuất** gom (nghi gộp nhầm, nghi cùng căn → thẻ duyệt) và gom mù một mẫu mỗi tuần làm
+      **thước** (GT4), trong trần tiền PL34. Opus, Sonnet chỉ làm thước ngoài đường ống; luật ba model của luật 6 không đổi. Luật 7 giữ:
+      model không vào khoá gom, không ghi vào tin.
+    Số đo nền (audit 09–10/11): trong tin có nhiều bản chữ khác nhau, gộp nhầm 25% [17–35%] (đọc tay), 15% [5–36%] (đồng thuận hai
+    model lớn); tách nhầm 2–4%; Haiku gom mù gộp đúng 98% [88–100%]. Hàng mới: GT5–GT8, DV2–DV5; sửa lời GT4 (thành thước, T2), PL18
+    (E2 tách rổ lên đầu).
+42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
+    kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
+    **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
+    vẫn đủ; tầng, hướng, view, nội thất là bộ lọc, không chia nhóm. Chấm sẵn ở pipeline (luật 10), app và API chỉ đọc; LLM không quyết điểm.
+    - Q1: nhãn «giá tốt» chỉ từ **cấp dự án trở xuống**; nhóm cấp phường gắn «rẻ trong phường».
+    - Q2: nhóm từ **10 căn** mới gắn nhãn; 5–9 căn chỉ hiện số; dưới 5 không chấm.
+    - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
+    - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
+    - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
+    (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
+    5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

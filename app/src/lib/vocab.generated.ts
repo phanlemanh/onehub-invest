@@ -104,7 +104,7 @@ export const LABELS_VI = {
   listing_intent: { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
   offer_status: { active: "Đang chào", active_under_contract: "Đã cọc", closed: "Đã bán", withdrawn: "Đã gỡ", unknown: "Chưa rõ" },
   change_type: { new_listing: "Tin mới", price_change: "Đổi giá", withdrawn: "Gỡ tin", back_on_market: "Chào lại", active_under_contract: "Đã cọc", closed: "Đã bán" },
-  data_level: { B0: "Có lời khai", B1: "Đọc được", B2: "Gắn căn", B3: "Đã đo", B4: "Xác minh", B5: "Sống" },
+  data_level: { B0: "Có lời khai", B1: "Tin", B2: "Định vị", B3: "Gắn căn", B4: "Làm giàu", B5: "Sống" },
   capability_level: { N0: "Thu được", N1: "Đọc được", N2: "Đo được", N3: "Tự động ở ngưỡng", N4: "Tự duy trì" },
   furnished: { furnished: "Đủ nội thất", partially: "Nội thất cơ bản", unfurnished: "Nhà trống", negotiable: "Thoả thuận" },
   direction_faces: { east: "Đông", west: "Tây", south: "Nam", north: "Bắc", northeast: "Đông Bắc", southeast: "Đông Nam", northwest: "Tây Bắc", southwest: "Tây Nam" },

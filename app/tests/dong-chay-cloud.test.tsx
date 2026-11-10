@@ -175,7 +175,7 @@ before(async () => {
     await makeFlowSchema(admin, S_CLOUD, { tables: ["sale_offers", "property_offers", "areas", "listings"], migrate: false })
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_audit (LIKE public.ops_audit INCLUDING ALL)`)
-    // Phường của tin rao (bảng công khai đã sync) — có tên thì tin đủ năm trường lên B1/B2 (AC-8 không chỉ toàn B0).
+    // Phường của tin rao (bảng công khai đã sync) — có tên thì tin đủ năm trường lên B1 Tin (AC-8 không chỉ toàn B0; thang 08/11).
     for (const [id, name] of [["vn-hanoi-a", "Phường A"], ["vn-hcmc-x", "Phường X"], ["vn-hcmc-y", "Phường Y"]])
       await admin.query(`INSERT INTO "${S_CLOUD}".areas (id, region_type, name, country_code) VALUES ($1, 'ward', $2, 'VN')`, [id, name])
     await ingest(PAYLOAD)

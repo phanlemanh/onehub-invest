@@ -391,7 +391,7 @@
     },
     {
       "ma": "PL18",
-      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 là bộ đọc chạy mù ra mảng căn, mỗi giá trị kèm trích dẫn, chỉ được tính khi trích dẫn có thật trong tin, và mỗi căn của bài nhiều căn thành một offer có khoá riêng",
+      "cau_giao": "E2 là bộ đọc chạy mù ra mảng căn: mỗi căn của bài nhiều căn thành một offer có khoá riêng, mỗi giá trị kèm trích dẫn và chỉ được tính khi trích dẫn có thật trong tin; E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận)",
       "vai": "nen",
       "tieu_chi": 12,
       "vi_sao": "L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.",
@@ -409,7 +409,7 @@
       "phu": [
         "C2.4"
       ],
-      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước. Biến silver_labels của đọc gộp PL30 thành phát biểu observed/e2_llm kèm câu trích (Q5 07/11). Đề xuất (quyết ở Cổng Phạm vi PL18): gánh luôn ý định tin (offer/inquiry/not_listing) làm trường phát biểu theo khoá bài — hiện chưa hàng nào nhận; không gộp thì cắt hàng riêng."
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30. Mạnh chốt 05/11: kéo lên đứng trước GCQ1 (docs/plan/pham-vi-gom-tach-gop-tin-0511.md); thêm GC0 vì tỉ lệ bài nhiều căn và độ đúng theo từng căn đo trên nhãn multi_unit. Đo 05/11: đọc S03 sai nặng 4/30 bài, đều là bài nhiều căn. T2 cho bộ đọc, phần ghi vào tin là T3: chốt ở Cổng Phạm vi. SV2 sửa cùng pipeline/transform-zalo.mjs, xếp một trong hai trước. Biến silver_labels của đọc gộp PL30 thành phát biểu observed/e2_llm kèm câu trích (Q5 07/11). Đề xuất (quyết ở Cổng Phạm vi PL18): gánh luôn ý định tin (offer/inquiry/not_listing) làm trường phát biểu theo khoá bài — hiện chưa hàng nào nhận; không gộp thì cắt hàng riêng. Sửa 10/11 (lượt dinh-vi-gom-tin-s03-1011, Mạnh «Đồng ý cả 7»): E2 tách bài nhiều căn đứng đầu câu giao và làm trước — audit 10/11: 13% bản chữ S03 là rổ, 438 tin rổ trong kho, rổ 7 ngày mang khoảng 12,8 nghìn cụm giá mà mỗi bài chỉ thành một tin giá căn đầu; GT8 giữ rổ ngoài số tin trên cổng tới khi E2 xong."
     },
     {
       "ma": "PL19",
@@ -540,7 +540,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "C3.3"
-      ]
+      ],
+      "ghi_chu": "Lượt cắt can-gia-tot-vi-tri-0911 (Mạnh chốt 09/11 (ROADMAP §3 mục 42), Q5): CG8 giao trước phần so cùng loại hình ở /ops/deals và /v1/deals, tin chưa rõ loại không chấm; CG9 thay thước bằng bảng hạng. Khi mở PL26, Cổng Phạm vi xét lại «thước cả phường» cho tin chưa rõ loại theo mục 42."
     },
     {
       "ma": "PL27",
@@ -3271,72 +3272,25 @@
     {
       "dot": "can-gia-tot-0311",
       "nhom": "can-gia-tot",
-      "ma": "CG2",
-      "slug": "can-gia-tot-du-can",
-      "hang": "T2",
-      "vai": "nen",
-      "tieu_chi": 8,
-      "dung_tren": [],
-      "phu": [
-        "CG2"
-      ],
-      "cau_giao": "Tin bán S06 có số giảm theo thước phường × loại do đường ống tính sẵn và vào danh sách Căn giá tốt, kèm nhãn nguồn và cờ thiếu SĐT",
-      "bat_khi": "Trên DB máy thu: số tin S06 có số giảm khớp phép đếm SQL độc lập (03/11: 6.494 tin giảm 5–50%); chạy lại lần hai không đổi số; tin P1 giữ nguyên số giảm; tin không có SĐT hiện cờ thiếu, không có nút gọi",
-      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Danh sách hôm nay chỉ 4 căn: 1.233/1.277 tin P1 không có phường; S06 đủ phường và loại nhưng chỉ làm thước.",
-      "vung": [
-        "pipeline/refresh-bait-gap.mjs",
-        "pipeline/sql",
-        "app/src/lib/deals.ts"
-      ],
-      "ghi_chu": "Chờ Mạnh chốt Hỏi-2 ở Cổng Đáng của CG1 vì đổi định nghĩa «Căn giá tốt» trong CONTEXT.md; không đồng ý thì hàng về chan_troi. Chưa gọi được cho tới khi có SĐT S06 (làn ZCode). Tính ở pipeline theo luật 10."
-    },
-    {
-      "dot": "can-gia-tot-0311",
-      "nhom": "can-gia-tot",
       "ma": "CG3",
       "slug": "can-gia-tot-loc-xep-hang",
       "hang": "T2",
       "vai": "Người vận hành",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "dung_tren": [
         "UI10",
-        "CG2"
+        "CG9"
       ],
       "phu": [
         "CG3"
       ],
-      "cau_giao": "Người vận hành lọc Căn giá tốt theo khu vực, loại hình, toà hoặc dự án, đường và xem bảng xếp hạng theo mức giảm, độ tin và khu vực",
-      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «Không nhìn theo được điều này thì ko thể sử dụng».",
+      "cau_giao": "Người vận hành chọn một vị trí bất kỳ trên cây (tỉnh → phường → dự án → phân khu → toà), lọc loại hình, bán hay thuê, số phòng ngủ, diện tích, tầng, đường và thấy danh sách Căn giá tốt xếp theo hạng giá/m², mỗi dòng kèm nhóm so sánh, số căn trong nhóm, lý do lùi cấp và độ tin",
+      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Nguyên văn: «Không nhìn theo được điều này thì ko thể sử dụng». Mở rộng 09/11 theo phân tích Căn giá tốt theo vị trí (bản phạm vi docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md): câu hỏi là «ở vị trí X, thông số Y, căn nào giá tốt».",
       "vung": [
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "Đường có ở 3.957/20.873 tin S06 và 0 tin S03; toà ở 382 tin S06 và 815 tin S03: bộ lọc phải nói phủ bao nhiêu. Đường và dự án đầy hơn khi DS1 giao."
-    },
-    {
-      "dot": "can-gia-tot-0311",
-      "nhom": "can-gia-tot",
-      "ma": "CG4",
-      "slug": "can-gia-tot-cho-thue",
-      "hang": "T3",
-      "vai": "Người vận hành",
-      "tieu_chi": 9,
-      "dung_tren": [
-        "CG3"
-      ],
-      "phu": [
-        "CG4"
-      ],
-      "cau_giao": "Người vận hành chuyển Căn giá tốt sang Cho thuê và thấy tin thuê rẻ hơn thước thuê cùng phường × loại, chứng minh như tin bán",
-      "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Thước và số giảm hiện chỉ cho tin bán; S06 có 27.626 tin thuê.",
-      "vung": [
-        "db/migrations",
-        "pipeline/refresh-bait-gap.mjs",
-        "pipeline/sql",
-        "app/src/app/ops/deals",
-        "app/src/lib/deals.ts"
-      ],
-      "ghi_chu": "T3 vì cần view thước thuê bằng migration. Số migration xin ở sổ SO-MIGRATION. Thước là giá thuê trên tháng, không dùng số AirDNA."
+      "ghi_chu": "Viết lại ở lượt cắt can-gia-tot-vi-tri-0911: tra theo vị trí bất kỳ thay bộ lọc khu vực; đứng trên CG9 thay CG2. Truy vấn chỉ chọn tin nào hiện, không tính lại điểm (luật 10). Cấp dự án, toà đầy dần theo CG10, CG11; mỗi bộ lọc nói phủ bao nhiêu tin (09/11: tầng ở 6% tin S06 bán căn hộ, 0% S03). Hướng, view, nội thất thêm ở CG12. Ô Bán | Cho thuê thay phần giao diện của CG4."
     },
     {
       "dot": "can-gia-tot-0311",
@@ -3407,6 +3361,178 @@
         "app/src/components/listing/**"
       ],
       "ghi_chu": "T3, khó đảo vì ra người dùng thật. Ghi chú nội bộ của cuộc gọi không lên cloud; không tên nguồn thật, không số AirDNA; leak gate phải xanh. Ảnh theo AC1."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG8",
+      "slug": "can-gia-tot-cung-loai",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "CG8"
+      ],
+      "cau_giao": "Số giảm của Căn giá tốt ở /ops/deals và ở API /v1/deals chỉ so tin với thước cùng phường × loại hình × bán/thuê; tin chưa rõ loại hình không có số giảm và ghi lý do",
+      "bat_khi": "Trên DB máy thu: phép đếm SQL độc lập cho 0 tin có số giảm tính từ thước khác loại hình hoặc khác bán/thuê ở cả hai đường; trung vị số giảm của tin căn hộ không còn lệch theo trung vị cả phường (09/11: −45,5%); tin chưa rõ loại có lý do «chưa rõ loại hình», không vào danh sách",
+      "vi_sao": "Phân tích 09/11: thước của /ops/deals (v_ruler_p2_area qua refresh-bait-gap) và /v1/deals (market_asset_stats) gộp mọi loại hình theo phường; trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5% (127 phường), nên căn hộ đúng giá vẫn hiện «rẻ» khoảng 45% trên API công khai.",
+      "vung": [
+        "pipeline/refresh-bait-gap.mjs",
+        "app/src/lib/deals.ts",
+        "app/src/app/api/v1/deals",
+        "data-api/src/routes/deals.ts"
+      ],
+      "ghi_chu": "Q5: làm trước mọi hàng, tách khỏi PL26 (PL26 chờ AU9, PL21). Dùng thước phường × loại có sẵn (v_ruler_p2, market_asset_stats theo kind), không migration. S06 có loại hình 100%; tin P1 chưa rõ loại không chấm thay cho «thước cả phường» của PL26."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG9",
+      "slug": "bang-hang-gia-m2",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "CG8"
+      ],
+      "phu": [
+        "CG9"
+      ],
+      "cau_giao": "Mỗi tin đang rao có giá/m² hợp lệ mang hạng phần trăm trong nhóm sâu nhất đủ căn (hôm nay phường × loại × bán/thuê, thêm số phòng ngủ khi nhóm vẫn đủ), cùng số căn, trung vị, p20, phần trăm dưới trung vị, nhãn và lý do lùi cấp, do pipeline tính sẵn; /ops/deals và /v1/deals đọc bảng này",
+      "bat_khi": "Trên DB máy thu: số tin được chấm khớp phép đếm SQL độc lập (09/11: khoảng 8,5 nghìn tin bán và 17 nghìn tin thuê trong nhóm từ 10); chạy lại lần hai không đổi số; nhóm 5–9 căn chỉ có số, không nhãn; nhóm dưới 5 không chấm; tin S03 và S06 chung nhóm, mỗi căn một phiếu; tin thuê có hạng theo giá thuê/m²",
+      "vi_sao": "Phân tích 09/11: ba thước giá (v_ruler_p2_area, v_ruler_p2, market_asset_stats) lệch nhau và chỉ có cấp phường; Mạnh định nghĩa giá tốt là top 20% giá/m² thấp nhất của nhóm, so với trung vị. Chấm một lần ở pipeline thì mọi tổ hợp vị trí và bộ lọc trả lời tức thì (luật 10).",
+      "vung": [
+        "db/migrations",
+        "pipeline/sql",
+        "pipeline/sync-cloud.mjs",
+        "app/src/lib/deals.ts",
+        "data-api/src/routes/deals.ts"
+      ],
+      "ghi_chu": "Gánh CG2 (tin S06 vào danh sách, giữ cờ thiếu SĐT) và CG4 (tin thuê) của đợt can-gia-tot-0311. T3: bảng mới bằng migration (đề xuất offer_price_rank, xin số ở sổ giám sát) và đường lên cloud cho /v1/deals. Bước SQL họ 400 (đề xuất 420_price_rank.sql), chạy sau định vị. Q2, Q4: nhóm từ 10 mới gắn nhãn; trung vị chung P1 + P2, mỗi căn một phiếu (khoá gộp căn DA6 khi có). Ở hàng này chỉ có cấp phường nên nhãn là «rẻ trong phường» (Q1); CG10 bật «giá tốt». Trần 35% → «Cần xác minh» giữ; tin phi lý (ON11) bị loại; bait_gap_pct về nghĩa gốc chênh giá câu. Sửa định nghĩa «Căn giá tốt» và «Thước giá» trong CONTEXT.md cùng hàng này theo Q1–Q3."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG10",
+      "slug": "gia-tot-cap-du-an",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG9",
+        "DA2",
+        "DS2",
+        "DA7"
+      ],
+      "phu": [
+        "CG10"
+      ],
+      "cau_giao": "Người vận hành thấy tin có dự án được xếp hạng trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «giá tốt» khi nằm trong 20% giá/m² thấp nhất và thấp hơn trung vị từ 5%; tin chỉ biết phường mang «rẻ trong phường»; mỗi dòng ghi so với bao nhiêu căn của nhóm nào",
+      "vi_sao": "Phân tích 09/11: ở cấp phường p20 thấp hơn trung vị 17,6% chủ yếu do khác dự án; ở cấp dự án chỉ 5,3%, nên «giá tốt» chỉ đúng nghĩa từ cấp dự án (Q1, Q3). Đại diện: 2.732 tin bán S06 trong 124 dự án có nhóm từ 10.",
+      "vung": [
+        "pipeline/sql",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Đích đề xuất (chốt ở Cổng Đáng): từ 35% tin bán căn hộ được chấm ở cấp dự án trở xuống. Lát đầu S06 khi DA7 nối dự án; S03 theo DV2, DV3. Ngưỡng đo giá trị của CG13 vào ô cơ hội của hàng này."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG11",
+      "slug": "gia-tot-cap-toa",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG10",
+        "PL20",
+        "DA5",
+        "DB1b"
+      ],
+      "phu": [
+        "CG11"
+      ],
+      "cau_giao": "Người vận hành thấy tin gắn được toà xếp hạng trong nhóm toà × loại (× số phòng ngủ) và lọc được theo dải tầng; toà chưa đủ căn thì tin lùi về phân khu, dự án và dòng ghi lý do lùi",
+      "vi_sao": "Phân tích 09/11: S03 dày theo toà (525/884 tin bán nằm trong nhóm phường + toà từ 10) nhưng gần như không chung phường với S06; nhóm toà là chỗ «giá tốt» đo chênh giữa các căn tương đương.",
+      "vung": [
+        "pipeline/sql",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Gánh CGP1 của đợt can-gia-tot-0311 (tin S03 không phường so theo toà); CGP1 không mở riêng. Lát đầu Ocean Park 1 và Grand Park. Tầng chỉ là bộ lọc, không chia nhóm: S03 che tầng trong mã căn, S06 có tầng ở 6% tin căn hộ bán; tin chưa rõ tầng ẩn khi lọc tầng. Đích đề xuất: từ 50% tin bán căn hộ chấm ở cấp dự án trở xuống."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG12",
+      "slug": "huong-view-noi-that",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "CG3"
+      ],
+      "phu": [
+        "CG12"
+      ],
+      "cau_giao": "Người vận hành lọc Căn giá tốt theo hướng, view, nội thất; giá trị đến từ trường nguồn S06 và chữ bài S03 thành phát biểu có bằng chứng, và bộ lọc nói phủ bao nhiêu tin",
+      "vi_sao": "Mạnh nêu hướng, view, nội thất là thông số tra cứu (09/11). Dữ liệu thô S06 căn hộ bán 09/11: hướng 29%, nội thất 66%; chưa field nào thành phát biểu.",
+      "vung": [
+        "pipeline/mappings.yaml",
+        "pipeline/sql",
+        "app/src/app/ops/deals",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "RESO DirectionFaces, View, Furnished — tra DD 2.1 trước (ADR-0011). Bộ lọc, không chia nhóm. Đọc S03 bằng model chỉ cho phát biểu kèm bằng chứng (luật 7), trong ba model được phép. Cần cột mới thì lên T3."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG13",
+      "slug": "do-dung-gia-tot",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "CG5",
+        "CG10"
+      ],
+      "phu": [
+        "CG13"
+      ],
+      "cau_giao": "Người vận hành mở trang đo và thấy, theo cấp nhóm và nguồn, tỉ lệ căn mang nhãn «giá tốt» khi gọi xác minh còn bán và đúng giá trong 2%, và tỉ lệ còn giá tốt sau 7 ngày",
+      "vi_sao": "Phản mục tiêu của phân tích 09/11: căn đứng đầu danh sách phải có thật, đúng giá và thật sự rẻ; chỉ kết quả gọi xác minh của CG5 chứng được điều đó.",
+      "vung": [
+        "pipeline/sql",
+        "app/src/app/ops/deals"
+      ],
+      "ghi_chu": "Hàng giao phép đo; ngưỡng (đề xuất: từ 70% còn bán và đúng giá, từ 60% còn giá tốt sau 7 ngày, «Cần xác minh» không quá 20% trong 30 căn đầu) là đo giá trị, vào ô cơ hội của CG10 ở Cổng Đáng. Việc gọi người bán là của đội vận hành (ra khỏi kho)."
+    },
+    {
+      "dot": "can-gia-tot-vi-tri-0911",
+      "nhom": "can-gia-tot",
+      "ma": "CG14",
+      "slug": "gia-tot-theo-vi-tri-invest",
+      "hang": "T3",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "CG10",
+        "CG7"
+      ],
+      "phu": [
+        "CG14"
+      ],
+      "cau_giao": "Nhà đầu tư chọn một vị trí và thông số trên cổng Invest và thấy căn giá tốt đang rao xếp theo hạng, mỗi căn ghi so với bao nhiêu căn cùng nhóm, thấp hơn trung vị bao nhiêu, độ tin và dấu đã xác minh",
+      "vi_sao": "Đích cuối của phân tích 09/11: nhà đầu tư ở giai đoạn chọn căn hỏi «ở vị trí X, thông số Y, căn nào giá tốt» và gọi người bán vài căn đầu danh sách.",
+      "vung": [
+        "pipeline/sync-cloud.mjs",
+        "app/src/app/(app)/[country]/[market]/listings/**",
+        "app/src/components/listing/**"
+      ],
+      "ghi_chu": "T3: ra người dùng thật. Chữ nói «rẻ so với giá đang rao của căn tương đương», không «dưới giá trị thị trường» (chưa có giá giao dịch). Nhãn «giá tốt» chỉ từ cấp dự án (Q1); cấp phường «rẻ trong phường». Lên theo CG6–CG7: đội chọn rồi mới lên. SĐT chỉ qua «Xem số»; không tên nguồn thật, không số S02 hay AirDNA; leak gate xanh."
     },
     {
       "ma": "DN1",
@@ -3747,25 +3873,26 @@
     {
       "ma": "GT4",
       "slug": "kiem-dinh-gop-trung",
-      "hang": "T3",
+      "hang": "T2",
       "vai": "nen",
       "tieu_chi": 8,
       "dung_tren": [
-        "PL18",
-        "GCQ1"
+        "PL30"
       ],
       "phu": [
         "GT4"
       ],
       "dot": "gom-tach-gop-0511",
       "nhom": "gom-tach-gop",
-      "cau_giao": "Khoá gộp trùng repostKey có tỉ lệ gộp nhầm đo được trên mẫu đọc tay, và chỉ được sửa khi số đo cho thấy sai",
-      "bat_khi": "Báo được tỉ lệ gộp nhầm kèm khoảng tin cậy và số tin gom nhiều người gửi; đổi khoá thì mọi offer_id cũ có đường nối sang mới",
-      "vi_sao": "Nhánh đủ phường và diện tích gộp theo nội dung kể cả bài của người khác, nên hai căn khác nhau cùng giá, diện tích, số phòng có thể thành một tin. Chưa đo.",
+      "cau_giao": "Mỗi tuần Haiku gom mù một mẫu bản chữ S03, kết quả so với khoá gom đang chạy; tỉ lệ gộp nhầm, tách nhầm kèm cận Wilson hiện trên Ops, cặp lệch lên thẻ duyệt",
+      "bat_khi": "Thước nền 120 nhãn audit 09–10/11 (80 tin nhiều bản chữ, 40 cặp tách) cho ra lại số gộp nhầm, tách nhầm của audit; lượt tuần chạy trong trần tiền PL34 và ghi sổ cuộc gọi; cặp lệch thành thẻ mang hai bản chữ; không ghi gì vào tin (luật 7)",
+      "vi_sao": "Audit 09–10/11 đã đo: gộp nhầm 25% [17–35%] ở tin nhiều bản chữ, tách nhầm 2–4%; Haiku gom mù 200 bản chữ gộp đúng 98% [88–100%], bắt 9/9 ca gộp nhầm thật của luật. Mạnh chốt 10/11 (ROADMAP §3 mục 41): Haiku đề xuất gom trên đường ống và gom mù mỗi tuần làm thước; Opus, Sonnet chỉ làm thước ngoài đường ống.",
       "vung": [
-        "pipeline/transform-zalo.mjs"
+        "agent/src",
+        "agent/scripts",
+        "app/src/components/ops/quality"
       ],
-      "ghi_chu": "Mạnh chốt 05/11 đứng sau GCQ1; đứng trên PL18 vì tách sai thì khoá gộp cũng sai. T3 vì offer_id dính vào khoá gộp, nếu đo ra không sai thì không đổi khoá. SV2 và PL18 sửa cùng tệp."
+      "ghi_chu": "Sửa 10/11 (lượt dinh-vi-gom-tin-s03-1011): từ «đo rồi mới sửa khoá» thành thước chạy mỗi tuần; số đo nền đã có nên bỏ đứng trên PL18, GCQ1; hạ T2 vì hàng không đổi khoá (đổi khoá là GT5, T3). Nhãn nền ở research-local/s03-gom-tin-audit-20261109/ (máy thu) — chuyển vào bảng nhãn ở Cổng Phạm vi. Ghi chú cũ 05/11: Mạnh chốt đứng sau GCQ1; T3 vì offer_id dính khoá gộp."
     },
     {
       "ma": "GN0",
@@ -5054,6 +5181,189 @@
         "app/src/components/listing/**"
       ],
       "ghi_chu": "Mạnh duyệt 09/11 qua phiên DA truy kẹt S03. Cần cột cờ mới thì lên T3 và xin số migration ở giám sát. Không tải lại ảnh (làn ZCode)."
+    },
+    {
+      "ma": "GT5",
+      "slug": "khoa-gom-hai-tang",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "nhom": "gom-tach-gop",
+      "dung_tren": [
+        "GT4",
+        "GT8"
+      ],
+      "phu": [
+        "GT5"
+      ],
+      "cau_giao": "Bộ đọc S03 gom bài thành tin theo hai tầng: bài cùng người, cùng chữ chuẩn hoá thành một bản chữ; các bản chữ chỉ gộp khi khớp người, loại, số phòng, diện tích, phân khu và mã toà/căn; bộ tìm mã nhận chữ thường và 1–4 chữ số",
+      "bat_khi": "Trên thước GT4 (120 nhãn audit 09–10/11), gộp nhầm ở tin nhiều bản chữ dưới 5% và tách nhầm không tăng, báo số trước và sau kèm cận Wilson; hai bản chữ khác phân khu không bao giờ chung tin; mọi offer_id cũ có đường nối sang tin mới",
+      "vi_sao": "Audit 09–10/11: trong 900 tin S03 có nhiều bản chữ khác nhau, 25% [17–35%] gộp nhầm khác căn (đọc tay 80 tin), 15% [5–36%] theo đồng thuận hai model lớn; 16/20 ca do khoá thiếu phân khu (ori, rb, bs, gh…) hoặc bộ tìm mã bỏ mã như S203, s1006.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib"
+      ],
+      "ghi_chu": "Hạng T3: thành phần tin và offer_id đổi (đi qua khoá dính PL14). Từ điển phân khu lấy từ danh bạ (nút con của dự án) và sổ nhóm; dự án chưa có nút phân khu thì khai danh sách ở Cổng Phạm vi. Cửa sổ nối bản chữ (đề xuất 7 ngày) và ngưỡng chữ giống khi một bên thiếu trường (đề xuất 0,9) chốt ở Cổng Phạm vi trên thước GT4. LLM không vào khoá (luật 7). PL18, SV2, GT6, GT8 cùng sửa transform-zalo.mjs: làm tuần tự.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "GT6",
+      "slug": "doi-gia-cung-can",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "nhom": "gom-tach-gop",
+      "dung_tren": [
+        "GT5"
+      ],
+      "phu": [
+        "GT6"
+      ],
+      "cau_giao": "Một căn S03 cùng người rao đổi giá vẫn là một tin: giá mới thành giá hiện hành, giá cũ vào lịch sử giá của tin, và tin mang tín hiệu tăng hay giảm giá",
+      "bat_khi": "Trên tin có mã căn đầy đủ, số mã căn cùng người mà nhiều tin giảm từ 47 về 0 hoặc mỗi ca còn lại có lý do; mỗi lần đổi giá có một dòng lịch sử (giá, ngày, bài); tin cũ nối sang tin hợp nhất, không mất offer_id",
+      "vi_sao": "Audit 09–10/11: cùng người, cùng mã căn mà thành nhiều tin 10% [8–13%], 37/47 do đổi giá; giá nằm trong khoá gom nên giảm giá thành tin mới, tin giá cũ sống tới khi luật ngừng rao cho nghỉ. Mạnh chốt 10/11 (ROADMAP §3 mục 41).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/mappings.yaml",
+        "db/migrations"
+      ],
+      "ghi_chu": "Kiểm RESO DD 2.1 cho lịch sử giá (ListPrice, PreviousListPrice, nhóm HistoryTransactional) ở Cổng Phạm vi (ADR-0011). Chỉ áp khi có mã căn đầy đủ, hoặc trục cộng diện tích; thiếu thì giữ như GT5. Hai môi giới cùng căn vẫn là hai tin, nối ở bậc Gắn căn (mục 41). Số migration giám sát cấp.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "GT7",
+      "slug": "ngan-bai-da-gop",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "nhom": "gom-tach-gop",
+      "dung_tren": [],
+      "phu": [
+        "GT7"
+      ],
+      "cau_giao": "Người vận hành mở một tin S03 trên Ops và thấy tin gồm những bản chữ nào (chữ đã che SĐT, số lần đăng, nhóm, từ ngày tới ngày), khoá gom của tin, nhãn «nghi khác căn» hay «rổ», và mở bảng Gom tin S03 trên /ops/quality thấy bài/tin, bản chữ/tin theo ngày, nhóm, người",
+      "bat_khi": "Tin 514 bài hiện một bản chữ đăng lại 514 lần; tin cấy hai bản chữ khác phân khu mang nhãn «nghi khác căn»; số trên bảng khớp đếm độc lập trên DB; không SĐT nào hiện trong chữ; vai Người xem không mở được",
+      "vi_sao": "Mạnh 09/11: cách gom là chỗ mù. Audit: 83% bài trong tin là chữ đăng lại y nguyên; tin 514 bài là bảng giá quảng cáo, chỉ thấy khi xem các bài trong tin.",
+      "vung": [
+        "app/src/components/ops/data-flow",
+        "app/src/lib/data-flow-queries.ts",
+        "app/src/components/ops/quality",
+        "app/src/app/ops/quality"
+      ],
+      "ghi_chu": "Chỉ đọc, làm được trước GT5; sau GT5 dòng khoá gom đổi theo khoá mới. Ngăn nằm trong ngăn chi tiết tin của /ops/data-flow. Nội dung bài là tầng ops, không lên Invest (luật 6).",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "GT8",
+      "slug": "ro-quang-cao-ngoai-so-tin",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "nhom": "gom-tach-gop",
+      "dung_tren": [],
+      "phu": [
+        "GT8"
+      ],
+      "cau_giao": "Bài S03 là khách tìm nhà, rổ hàng (từ ba cụm giá) hay bảng giá quảng cáo theo khoảng nhận nhãn trước khi gom: bài tìm về Yêu cầu, rổ và quảng cáo không thành tin rao một căn, không tính vào số tin trên cổng Invest và được đếm riêng trên Ops",
+      "bat_khi": "Trên 200 bản chữ có nhãn đồng thuận của audit 10/11, nhãn tìm, rổ, quảng cáo khớp từ 95%; 0 tin mang nhãn rổ hay quảng cáo trong danh sách Bán, Cho thuê và số tin công khai; số rổ, quảng cáo theo ngày hiện ở Ops",
+      "vi_sao": "Audit 10/11: 13% bản chữ là rổ, 5% là bài tìm (hai model lớn và Haiku cùng đồng ý), luật hiện coi tất cả là tin rao một căn; tin 514 bài là bảng giá quảng cáo. Mạnh chốt 10/11 (ROADMAP §3 mục 41): rổ và quảng cáo chưa tách được thì ẩn khỏi số tin trên cổng.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "app/src/lib/offers-public.ts"
+      ],
+      "ghi_chu": "Tạm thời tới khi PL18 E2 tách rổ thành căn; rổ đã tách thì không còn nhãn rổ. Bài tìm nối RM1 (đã ký) và PL5. Nhãn do luật xác định; Haiku chỉ đối chiếu (luật 7).",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "DV2",
+      "slug": "du-an-tu-nguoi-ban",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "nhom": "dinh-vi-s03",
+      "dung_tren": [
+        "DA2"
+      ],
+      "phu": [
+        "DV2"
+      ],
+      "cau_giao": "Tin S03 không có tín hiệu dự án nào khác nhận dự án suy ra từ người bán lặp lại (ít nhất ba tin đã biết dự án, từ 80% cùng một dự án), ghi thành phát biểu inferred kèm căn cứ",
+      "bat_khi": "Kiểm bỏ-một chạy mỗi ngày và báo độ đúng; tụt dưới 95% thì luật tự tắt và rút phát biểu; tin đã có dự án từ chữ bài, nhóm hay mã toà không bị ghi đè",
+      "vi_sao": "Mạnh 09/11 Q8 (ROADMAP §3 mục 40). Đo 09/11: thêm khoảng 400 tin căn hộ S03 có dự án; kiểm bỏ-một 2.111/2.116 (99,8%).",
+      "vung": [
+        "pipeline/lib",
+        "pipeline/suy-du-an-s03.mjs"
+      ],
+      "ghi_chu": "Định danh người bán là tầng C. Ngưỡng 3 tin, 80%, 95% chốt ở Cổng Phạm vi. Dưới mục tiêu cỡ, giữ riêng vì nguồn suy luận khác DV3 và có thước tắt riêng.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "DV3",
+      "slug": "toa-mo-ho-theo-ngu-canh",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "nhom": "dinh-vi-s03",
+      "dung_tren": [
+        "DA2"
+      ],
+      "phu": [
+        "DV3"
+      ],
+      "cau_giao": "Tin S03 ghi mã toà mà mã đó chỉ có ở một dự án của danh bạ nhận dự án suy ra từ mã; mã có ở nhiều dự án được giải bằng dự án của nhóm hay người bán, còn mơ hồ thì lên thẻ duyệt",
+      "bat_khi": "Mã duy nhất ra đúng dự án từ 95% trên mẫu đọc tay; 0 tin bị gán dự án khi mã mơ hồ mà không có ngữ cảnh; thẻ mơ hồ mang tin mẫu và các dự án ứng viên",
+      "vi_sao": "Đo 09/11: mã toà duy nhất trong danh bạ cho thêm khoảng 390 tin S03 chưa có dự án; 159 tin mang mã có ở hai dự án (Grand Park và Ocean Park 1).",
+      "vung": [
+        "pipeline/lib",
+        "app/src/app/ops/review"
+      ],
+      "ghi_chu": "Dùng danh bạ đã dựng (buildings, registry_aliases tên). Gộp được vào PL20 nếu Cổng Phạm vi của PL20 thấy chung một bộ khớp. Luật 7: thẻ do người quyết.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "DV4",
+      "slug": "tang-tren-tin-s03",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "nhom": "dinh-vi-s03",
+      "dung_tren": [],
+      "phu": [
+        "DV4"
+      ],
+      "cau_giao": "Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO",
+      "bat_khi": "Trên mẫu đọc tay, tầng đọc đúng từ 95%; mốc kiểu «T4/2027» không bị đọc thành tầng; field_assertions nhận field tầng, field lạ vẫn bị từ chối; nạp lại không nhân phát biểu",
+      "vi_sao": "Đo 09/11: 15% tin căn hộ S03 ghi tầng, phần lớn là dải; floor_raw của S03 đang trống.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/mappings.yaml",
+        "db/migrations"
+      ],
+      "ghi_chu": "Kiểm RESO DD 2.1 trước (bản local có EntryLevel, UnitFloorLocation); dải tầng là extension nếu không có field chuẩn, khai đủ 6 điều kiện ADR-0011. Số migration giám sát cấp.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "ma": "DV5",
+      "slug": "phuong-khong-trai-du-an",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "nhom": "dinh-vi-s03",
+      "dung_tren": [
+        "DA9"
+      ],
+      "phu": [
+        "DV5"
+      ],
+      "cau_giao": "Phường đọc từ chữ bài S03 hay tỉnh gán theo nhóm mà trái với dự án của tin thì không ghi, lý do được ghi lại",
+      "bat_khi": "0 tin có phường hay tỉnh khác tỉnh của dự án đã biết; mỗi ca bỏ có lý do đếm được trên Ops; tin chưa biết dự án giữ nguyên",
+      "vi_sao": "Đo 09/11: 46 tin căn hộ S03 có phường thật, ít nhất 11 trái dự án (tin Grand Park mang phường ở Hà Nội, Bình Dương); 112 tin lệch tỉnh với dự án (~2,8%).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib"
+      ],
+      "ghi_chu": "Đứng sau DA9 vì cần dự án và phường suy từ dự án.",
+      "dot": "dinh-vi-gom-tin-s03-1011"
     }
   ],
   "chan_troi": [
@@ -5549,14 +5859,34 @@
       "mo_lai_khi": "Bộ thu giữ bài S03 chỉ có ảnh vào raw và stg kèm ảnh (DATA-CONTRACT tăng schemaVersion) và KC3 đã giao"
     },
     {
+      "ma": "CG2",
+      "dot": "can-gia-tot-0311",
+      "cau_giao": "Tin bán S06 có số giảm theo thước phường × loại do đường ống tính sẵn và vào danh sách Căn giá tốt, kèm nhãn nguồn và cờ thiếu SĐT",
+      "ly_do": "CG9 thay hàng này (Mạnh chốt 09/11 (ROADMAP §3 mục 42)): tin S06 vào cùng bảng hạng tính sẵn với tin P1, so cùng loại hình (CG8), giữ cờ thiếu SĐT. Chuyển khỏi hàng ở lượt cắt can-gia-tot-vi-tri-0911.",
+      "phu": [
+        "CG2"
+      ],
+      "mo_lai_khi": "Không mở riêng: CG2 giao cùng CG9"
+    },
+    {
+      "ma": "CG4",
+      "dot": "can-gia-tot-0311",
+      "cau_giao": "Người vận hành chuyển Căn giá tốt sang Cho thuê và thấy tin thuê rẻ hơn thước thuê cùng phường × loại, chứng minh như tin bán",
+      "ly_do": "CG9 thay hàng này (Mạnh chốt 09/11 (ROADMAP §3 mục 42)): tin thuê có hạng theo giá thuê/m² trong cùng bảng hạng, cùng loại hình × thuê; ô Bán | Cho thuê ở CG3. Chuyển khỏi hàng ở lượt cắt can-gia-tot-vi-tri-0911.",
+      "phu": [
+        "CG4"
+      ],
+      "mo_lai_khi": "Không mở riêng: CG4 giao cùng CG9 và CG3"
+    },
+    {
       "ma": "CGP1",
       "dot": "can-gia-tot-0311",
       "cau_giao": "Tin S03 không có phường so với thước theo toà hoặc dự án",
-      "ly_do": "1.233/1.277 tin P1 không có phường, 793 có mã toà, nhưng S06 chỉ 382 tin có mã toà và 0 mã trùng đủ 5 tin, nên chưa dựng được thước",
+      "ly_do": "1.233/1.277 tin P1 không có phường, 793 có mã toà, nhưng S06 chỉ 382 tin có mã toà và 0 mã trùng đủ 5 tin, nên chưa dựng được thước. Mạnh chốt 09/11 (ROADMAP §3 mục 42): gộp vào CG11 — tin S03 có toà được chấm trong nhóm toà (S03 + S06 chung, mỗi căn một phiếu), không cần thước S06 theo toà.",
       "phu": [
         "CGP1"
       ],
-      "mo_lai_khi": "DS2 đưa dự án tới tin và căn, DB1 dựng toà; đo lại số mã toà có từ 5 tin S06"
+      "mo_lai_khi": "Không mở riêng: CGP1 giao cùng CG11"
     },
     {
       "ma": "CGP2",

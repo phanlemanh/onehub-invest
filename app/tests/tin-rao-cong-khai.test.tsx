@@ -129,7 +129,7 @@ async function banSao(sua: (src: string) => string) {
   const src = readFileSync(goc, "utf8")
   const moi = sua(src)
   assert.notEqual(moi, src, "đột biến không áp được")
-  const tep = join(import.meta.dirname, `../src/lib/__ban_sao_tir_${process.pid}_${++soBanSao}.ts`)
+  const tep = join(import.meta.dirname, `../src/lib/.tir-mut-${process.pid}-${++soBanSao}.ts`)
   writeFileSync(tep, moi)
   try {
     return (await import(tep)) as typeof offers
@@ -172,7 +172,9 @@ test("E4 ma trận bộ lọc: mỗi ô một tin vào, một tin loại", async
 })
 
 test("E4 bốn cách sắp đúng thứ tự, tin trùng giá vẫn ổn định", async () => {
-  const gio = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString()
+  // Một mốc cho cả bộ: b và d phải trùng last_seen thật; gọi Date.now() mỗi tin thì máy bận làm hai mốc lệch 1 ms, đảo thứ tự.
+  const bay = Date.now()
+  const gio = (h: number) => new Date(bay - h * 3_600_000).toISOString()
   await nap([
     tin("c", { price_vnd: 3_000_000_000, price_perm2: 20_000_000, last_seen: gio(3) }),
     tin("a", { price_vnd: 1_000_000_000, price_perm2: 40_000_000, last_seen: gio(1) }),
