@@ -122,6 +122,7 @@ executors:
     dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
     dv1_db: "bash db/db-thu.sh oneinvest_suite_dv1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa.itest.mjs"   # nut-du-an-tro-xa-moi E3, E4, E6 — DB của riêng lượt chép từ máy thu (có PX1, 69 toà), lệnh --sua-xa thật; ngoài CI
     dv1_that: "bash db/db-thu.sh oneinvest_suite_dv1t --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs"   # nut-du-an-tro-xa-moi E7 — DB của riêng lượt + phiên chỉ đọc máy thu, chỉ in số; ngoài CI
+    da1_db: "bash db/db-thu.sh oneinvest_suite_da1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-iso.itest.mjs"   # danh-ba-vat-the-toan-quoc E1–E3, E4b–E7 — DB của riêng lượt chép từ máy thu (chưa 088), áp 088 trong ca; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
@@ -248,6 +249,8 @@ executors:
     px1_do: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1do --chay node scripts/nap-dvhc-do.mjs"   # danh-ba-phuong-xa-toan-quoc E9 — thước trước/sau theo tỉnh, ROLLBACK
     df4_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4app --chay node --import tsx --test --test-concurrency=1 tests/data-flow-bai-chi-anh.test.tsx"   # bai-nhan-tru-bai-chi-anh E1–E8 — lược đồ tạm, 600 + bộ chạy thật
     df4_cu: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4cu --chay node --import tsx --test --test-concurrency=1 tests/ops-dong-chay.test.tsx tests/dong-chay-cloud.test.tsx tests/df0-chang-theo-ngay.test.tsx tests/df0-dem-de-xuat.test.tsx tests/dong-chay-so-cu.test.tsx"   # bai-nhan-tru-bai-chi-anh E9 — bộ thử dòng chảy có sẵn
+    refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
+    refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
   script:
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
@@ -536,6 +539,20 @@ executors:
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
     zc3b_marker_hong: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"   # vòng 2: bản chép + HOME giả + stub, như rotate
+    # canh-bao-s03-ngung-thu (LT0 phần watchdog, claudedp-1011-5) — lớp L6 kiểm sống S03; bản chép + HOME giả + stub (luật 8)
+    s03_song_lib: "WATCHDOG_FILE=scripts/zalo-watchdog.sh node --test scripts/zalo-watchdog-song.test.mjs"   # 7 ca của ZCode, kèm kiểm tĩnh móc L6
+    s03_song_tron: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"   # watchdog trọn vẹn: khoẻ, sự cố 09/11, lặp, hồi, tái phát, đêm
+    s03_song_bien: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"   # biên giờ 6/7/21/22, tuổi 1799/1800s, attempt 119/120s
+    s03_song_syntax: "bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
+    # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
+    snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
+    snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
+    snn_syntax: "for f in scripts/*-import-daily.sh; do bash -n \"$f\" || exit 1; done && plutil -lint pipeline/cron/com.oneinvest.s03-nap-15phut.plist && echo SYNTAX OK"
+    snn_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-nhanh[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
+    # s03-nap-ho-so (1011-12, link-nguoi-ban-s03 Ngoài-1/5/6; liên làn làm thay ZCode 10/11) — bản chép tệp bọc, node giả
+    snh_test: "node --test scripts/s03-nap-ho-so.test.mjs"
+    snh_regress: "node --test scripts/s03-nap-nhanh.test.mjs scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
+    snh_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-(nhanh|ho-so)[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
@@ -822,6 +839,18 @@ executors:
     hdnb_duong_ra: "cd pipeline && node --test scripts/thu-so-s06.test.mjs"
     hdnb_e2e: "cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"   # mở Chrome ngoài màn hình, máy chủ giả local
     hdnb_luat_cu: "cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"
+    # link-nguoi-ban-s03 (T3) — bộ tra hồ sơ chạy với API giả đếm lời gọi, HOME giả; không chạm ~/.openclaw, phiên thu, :9210; DB thử riêng
+    lnb_tra: "node scripts/link-nguoi-ban-s03/acceptance.mjs tra"
+    lnb_dung: "node scripts/link-nguoi-ban-s03/acceptance.mjs dung"
+    lnb_thu: "node scripts/link-nguoi-ban-s03/acceptance.mjs thu"
+    lnb_ranh_gioi: "node scripts/link-nguoi-ban-s03/acceptance.mjs ranh-gioi"
+    lnb_api: "node scripts/link-nguoi-ban-s03/acceptance.mjs api"
+    lnb_db: "node scripts/link-nguoi-ban-s03/acceptance.mjs db"          # cần pipeline/node_modules (pg); DB thử *_lnb_s03
+    lnb_lien_lac: "node scripts/link-nguoi-ban-s03/acceptance.mjs lien-lac"
+    lnb_chon: "node scripts/link-nguoi-ban-s03/acceptance.mjs chon"
+    lnb_tien_kiem: "node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem"
+    lnb_ten_nguon: "node scripts/link-nguoi-ban-s03/acceptance.mjs ten-nguon"   # đọc danh sách tên từ source_registry local, không in
+    lnb_tai_lieu: "node scripts/link-nguoi-ban-s03/acceptance.mjs tai-lieu"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

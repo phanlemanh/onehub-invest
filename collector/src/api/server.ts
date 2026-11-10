@@ -3,15 +3,18 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-import { SnapshotWriter } from "../core/storage.js";
+import { SnapshotWriter, HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from "../core/storage.js";
+// U1(9): hằng schemaVersion hai kênh S03 khai ở core/storage.ts — server không
+// khai lại giá trị, chỉ re-export cho người dùng cũ của API này.
+export { HO_SO_SCHEMA_VERSION, KENH_TIN_SCHEMA_VERSION } from "../core/storage.js";
 import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
 /**
  * Collector API — POST /agent-report (ADR-0006 sửa đổi bởi ADR-0007).
  *
- * Agent (OpenClaw) đẩy tin nhóm Zalo: KHÔNG ghi DB trực tiếp — buffer in-memory
- * rồi flush thành raw snapshot theo DATA-CONTRACT (source=zalo-agent, gzip +
+ * Agent (OpenClaw) đẩy tin nhóm S03: KHÔNG ghi DB trực tiếp — buffer in-memory
+ * rồi flush thành raw snapshot theo DATA-CONTRACT (source S03, gzip +
  * sha256 manifest). Transform/canonical là việc của pipeline, chạy trên raw.
  *
  * Fail closed: không có key nào được cấu hình → từ chối mọi request.
@@ -239,11 +242,11 @@ export async function createAgentServer(opts: AgentServerOptions) {
     flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
   ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
-    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
+    writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent", { schemaVersion: KENH_TIN_SCHEMA_VERSION });
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
     // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
     const items = buffer.slice();
-    // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
+    // N1 media: URL ảnh CDN S03 CÓ HẠN — tải về máy TRƯỚC khi gzip items
     // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
     // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
     // Shutdown: sát deadline → skipMedia (không bắt đầu tải); ĐANG tải thì
@@ -343,11 +346,73 @@ export async function createAgentServer(opts: AgentServerOptions) {
   }
 
   /** Bọc http: parse JSON, gọi ingest, auto-flush khi đủ flushAfterItems. */
+  /** link-nguoi-ban-s03 (AC-5): nhận lô kết quả tra hồ sơ người bán — mỗi lô
+   * thành MỘT snapshot S03 RIÊNG loại hồ sơ (source s03-ho-so), ghi mới
+   * không sửa bản cũ; mỗi dòng chỉ mã tài khoản + username (hoặc rỗng) +
+   * loại kết quả + thời điểm lấy — không PII nào khác (AC-4/AC-5). */
+  async function handleHoSo(
+    body: unknown,
+    auth: string | null,
+  ): Promise<{ status: number; body: unknown }> {
+    if (!keyOk(keys, auth)) return { status: 401, body: { error: "unauthorized" } };
+    const dong = (body as { dong?: unknown } | null)?.dong;
+    if (!Array.isArray(dong) || dong.length === 0) {
+      return { status: 400, body: { error: "dong phải là mảng không rỗng" } };
+    }
+    if (dong.length > maxBatchItems) {
+      return { status: 413, body: { error: `lô quá lớn: ${dong.length} dòng vượt trần ${maxBatchItems}` } };
+    }
+    const LOAI = new Set(["co-username", "khong-username", "khong-ro", "khong-tim-thay"]);
+    const items: RawItem[] = [];
+    for (const row of dong) {
+      const r = row as Record<string, unknown>;
+      if (
+        typeof r?.ma_tai_khoan !== "string" ||
+        !/^\d{1,32}$/.test(r.ma_tai_khoan) ||
+        typeof r?.username !== "string" ||
+        r.username.length > 120 ||
+        typeof r?.loai !== "string" ||
+        !LOAI.has(r.loai) ||
+        typeof r?.lay_luc !== "string" ||
+        Number.isNaN(Date.parse(r.lay_luc))
+      ) {
+        return { status: 422, body: { error: "dong sai khuôn: cần ma_tai_khoan (số), username (chuỗi ≤120), loai (4 loại hợp lệ), lay_luc (ISO)" } };
+      }
+      items.push({
+        source: "s03-ho-so",
+        sourceId: `${r.ma_tai_khoan}__${r.lay_luc}`,
+        kind: "ho-so",
+        fetchedAt: r.lay_luc,
+        payload: { ma_tai_khoan: r.ma_tai_khoan, username: r.username, loai: r.loai },
+        meta: { city, loai_ket_qua: r.loai, ts: r.lay_luc },
+      });
+    }
+    const writer = new SnapshotWriter(snapshotRoot, city, "s03-ho-so", { schemaVersion: HO_SO_SCHEMA_VERSION });
+    await writer.write(items);
+    await writer.finalize({
+      discovered: items.length,
+      captured: items.length,
+      failed: 0,
+      methods: { sellerLookup: items.length },
+    });
+    return { status: 202, body: { accepted: items.length, snapshotId: writer.snapshotId } };
+  }
+
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const json = (status: number, body: unknown) => {
       res.writeHead(status, { "content-type": "application/json" });
       res.end(JSON.stringify(body));
     };
+    if (req.method === "POST" && req.url?.startsWith("/s03-ho-so")) {
+      let hoSoBody: unknown;
+      try {
+        hoSoBody = JSON.parse(await readBody(req as unknown as { on: Function }));
+      } catch {
+        return json(400, { error: "JSON không hợp lệ" });
+      }
+      const r = await handleHoSo(hoSoBody, req.headers.authorization ?? null);
+      return json(r.status, r.body);
+    }
     if (req.method !== "POST" || !req.url?.startsWith("/agent-report")) {
       return json(404, { error: "not found" });
     }
@@ -381,7 +446,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     return json(r.status, r.body);
   }
 
-  return { ingest, flush, handle, stats: () => ({ accepted: acceptedTotal, duplicates: duplicatesTotal, buffered: buffer.length }) };
+  return { ingest, flush, handle, stats: () => ({ accepted: acceptedTotal, duplicates: duplicatesTotal, buffered: buffer.length }), ingestHoSo: handleHoSo };
 }
 
 export type AgentServer = ReturnType<typeof createAgentServer>;

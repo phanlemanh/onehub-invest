@@ -272,6 +272,10 @@ _Avoid_: chủ nhà, broker
 - Code: `sender_id` (stg) · `nguoiDangId` (thẻ gắn nhãn)
 _Avoid_: UID
 
+**Username người bán**: Tên tài khoản công khai của người đăng S03 trên kênh chat, lấy bằng cách tra hồ sơ theo ID người đăng (bộ tra trong gateway, chỉ đọc, có trần). Lưu trần — không phải link — thành liên lạc «Hồ sơ chat» của Người; link hồ sơ dựng lúc hiển thị từ sổ nguồn ở máy thu, kho không giữ mẫu link. Tầng C như tên người bán; chỉ ở máy thu, chưa hiện trên cổng hay `/ops`.
+- Code: `party_contacts.kind = chat_profile`, `rule_id = s03_ho_so_theo_tai_khoan` · stg `stg_s03_ho_so.username` · hồ sơ `link-nguoi-ban-s03`
+_Avoid_: link người bán, tên đăng nhập, nick
+
 **Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
 - Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
 - Ghi chú: vai đang ghi là «Người đăng» (`nguoi_dang`, DB2b) — từ trường tài khoản của nguồn hoặc từ SĐT trong tin.
@@ -435,7 +439,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
 | Loại liên lạc | `contact_kind` | local | `party_contacts.kind` | `sdt` «Số điện thoại» · `chat_profile` «Hồ sơ chat» |
-| Luật liên lạc | `contact_rule` | local | `party_contacts.rule_id` | `so_tren_tin` «Số trên tin của chính người đăng» · `so_trong_bai` «Số trong bài khác của người đăng» |
+| Luật liên lạc | `contact_rule` | local | `party_contacts.rule_id` | `so_tren_tin` «Số trên tin của chính người đăng» · `so_trong_bai` «Số trong bài khác của người đăng» · `s03_ho_so_theo_tai_khoan` «Hồ sơ chat theo mã tài khoản» |
 | Ý định tin | `listing_intent` | local | `silver_labels.listing_intent` | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |

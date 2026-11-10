@@ -16,7 +16,7 @@ export const VOCAB = Object.freeze({
   registry_event_kind: Object.freeze(["gop", "tach", "nghi"]),
   party_role: Object.freeze(["nguoi_dang"]),
   contact_kind: Object.freeze(["sdt", "chat_profile"]),
-  contact_rule: Object.freeze(["so_tren_tin", "so_trong_bai"]),
+  contact_rule: Object.freeze(["so_tren_tin", "so_trong_bai", "s03_ho_so_theo_tai_khoan"]),
   listing_intent: Object.freeze(["offer", "inquiry", "not_listing", "unknown"]),
   offer_status: Object.freeze(["active", "active_under_contract", "closed", "withdrawn", "unknown"]),
   change_type: Object.freeze(["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"]),
@@ -43,7 +43,7 @@ export const CATALOG_TIER = Object.freeze({ xac_minh: "xac_minh", suy_ra_manh: "
 export const REGISTRY_EVENT_KIND = Object.freeze({ gop: "gop", tach: "tach", nghi: "nghi" });
 export const PARTY_ROLE = Object.freeze({ nguoi_dang: "nguoi_dang" });
 export const CONTACT_KIND = Object.freeze({ sdt: "sdt", chat_profile: "chat_profile" });
-export const CONTACT_RULE = Object.freeze({ so_tren_tin: "so_tren_tin", so_trong_bai: "so_trong_bai" });
+export const CONTACT_RULE = Object.freeze({ so_tren_tin: "so_tren_tin", so_trong_bai: "so_trong_bai", s03_ho_so_theo_tai_khoan: "s03_ho_so_theo_tai_khoan" });
 export const LISTING_INTENT = Object.freeze({ offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" });
 export const OFFER_STATUS = Object.freeze({ active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" });
 export const CHANGE_TYPE = Object.freeze({ new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" });
