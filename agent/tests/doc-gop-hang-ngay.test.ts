@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -394,7 +394,7 @@ test("PL34-AC-8 bước đêm: hôm qua rồi hôm kia giờ VN, trần 20 mặc
 
 
 /** Hồ sơ doc-gop-env-rong: chạy bước đêm bằng /bin/bash (macOS: 3.2) trên một gốc kho tạm — có hay không `.env` tuỳ `coEnv`. */
-function chayBuocGocTam(coEnv: boolean, tep = join(ROOT, "pipeline/doc-gop-hang-ngay.sh")): { status: number | null; stderr: string; goi: string[] } {
+function chayBuocGocTam(coEnv: boolean, tep = join(ROOT, "pipeline/doc-gop-hang-ngay.sh")): { status: number | null; stderr: string; goi: string[]; goc: string } {
   const goc = mkdtempSync(join(tmpdir(), "dger-goc-"));
   for (const d of ["pipeline", "scripts/lib", "agent"]) mkdirSync(join(goc, d), { recursive: true });
   writeFileSync(join(goc, "pipeline/doc-gop-hang-ngay.sh"), readFileSync(tep, "utf8"));
@@ -409,7 +409,7 @@ function chayBuocGocTam(coEnv: boolean, tep = join(ROOT, "pipeline/doc-gop-hang-
   });
   let goi: string[] = [];
   try { goi = readFileSync(so, "utf8").trim().split("\n"); } catch { /* không lần gọi nào */ }
-  return { status: r.status, stderr: r.stderr, goi };
+  return { status: r.status, stderr: r.stderr, goi, goc };
 }
 
 test("DGER-AC-1 kho không có .env: bước đêm chạy đủ hai bước, không cờ --env-file; có .env thì mang cờ", () => {
@@ -420,7 +420,9 @@ test("DGER-AC-1 kho không có .env: bước đêm chạy đủ hai bước, kh�
   const co = chayBuocGocTam(true);
   assert.equal(co.status, 0, co.stderr);
   assert.equal(co.goi.length, 2, co.stderr);
-  assert.ok(co.goi.every((g) => /^--env-file=\S+\/\.env --import tsx scripts\/doc-gop-s03\.ts hang-ngay --ngay /.test(g)), `CO ENV MA MAT CO: ${co.goi.join(" | ")}`);
+  // Cờ phải trỏ đúng .env của CHÍNH gốc đang chạy (không phải .env bất kỳ) — so bằng, chấp nhận cả dạng realpath (macOS /var ↔ /private/var).
+  const dung = [co.goc, realpathSync(co.goc)].map((g) => `--env-file=${g}/.env --import tsx scripts/doc-gop-s03.ts hang-ngay --ngay `);
+  assert.ok(co.goi.every((g) => dung.some((d) => g.startsWith(d))), `CO ENV MA MAT CO: ${co.goi.join(" | ")} — gốc ${co.goc}`);
 });
 
 test("DGER-AC-2 đối chứng: bản trước vòng (\"${ENV_FILE[@]}\" trần) chết trên /bin/bash 3.2 khi không có .env", (t) => {
