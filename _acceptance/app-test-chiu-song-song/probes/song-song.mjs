@@ -6,9 +6,12 @@
 //        (refresh-bait-gap, đọc view tin/thước/sellers, đọc dq_check_results) — phiên không giữ khoá tư vấn, không khoá nào
 //        mạnh hơn ACCESS SHARE trên public, không khoá nào trên view public.
 //   assert (AC-3): thông điệp assert ở merge-base và HEAD bằng nhau, trừ đúng các câu thước đã khai.
-//   lib (AC-4): test của lib xanh 3/3 trên bản thật; ba bản đột biến (giữ 33033, bỏ ràng buộc, dãy dùng chung) đều đỏ có tên.
+//   lib (AC-4): đúng ba ca LDR của AC-4, gọi theo tên (--test-name-pattern neo ^…$), xanh 3/3 trên bản thật; ba đối chứng
+//        tên (đổi tên, thêm ca, ca tên gần giống); ba bản đột biến (giữ 33033, bỏ ràng buộc, dãy dùng chung) đều đỏ có tên.
+//        Chạy trên DB thử (executor atss_lib qua db-thu.sh) — đột biến «giữ 33033» cầm khoá tư vấn dùng chung.
 import { spawn, spawnSync, execFileSync } from "node:child_process";
-import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -299,36 +302,120 @@ if (MODE === "chan") {
   assert.throws(() => so(TEP.dq, cuCua(TEP.dq), doc(TEP.dq).replace("DQ-AC-1", "x")), /THONG DIEP ASSERT DOI/);
   console.log("ASSERT OK");
 } else if (MODE === "lib") {
+  // E4 đếm theo TÊN (hồ sơ thuoc-song-song-dem-theo-ten-ca): tệp test có thêm ca (main 5, nhánh khoá-nguồn 9) không đổi
+  // phép đo; chỉ ba ca của AC-4 chạy — ca khác giữ khoá DDL, không được chạy ngoài DB thử. Executor chạy trên db-thu.sh.
   const LIB = "pipeline/lib/luoc-do-rieng.mjs";
   const TEST = "pipeline/scripts/luoc-do-rieng.test.mjs";
-  const chayTest = (tepTest) => spawnSync("node", ["--test", "--test-timeout=60000", tepTest],
-    { cwd: PIPE, encoding: "utf8", timeout: 180_000 });
-  const that = chayTest(path.relative("pipeline", TEST));
-  const outThat = `${that.stdout}${that.stderr}`;
-  console.log(`# bản thật: thoát ${that.status}`);
-  assert.equal(that.status, 0, `test lib đỏ trên bản thật:\n${outThat.slice(-1500)}`);
-  assert.match(outThat, /ℹ pass 3\b/, "test lib không đủ 3 ca xanh");
-  const lib = doc(LIB);
-  const DOT = [
-    ["giữ 33033", "await c.query(`CREATE SCHEMA ${sc}`);", "await c.query(`CREATE SCHEMA ${sc}`); await c.query(\"SELECT pg_advisory_xact_lock(33033)\");", /LDR phiên dựng lược đồ riêng vẫn giữ khoá 33033|canceling statement due to lock timeout/],
-    ["bỏ ràng buộc", "WHERE conrelid = $1 AND contype IN ('c', 'p', 'u')", "WHERE conrelid = $1 AND false", /LDR \S+ lệch ràng buộc/],
-    ["dãy dùng chung", "md = `nextval('${ten}'::regclass)`;", "day.pop();", /LDR dãy riêng không bắt đầu từ 1|LDR chèn vào bản riêng đẩy dãy dùng chung/],
+  const CA_LDR = [
+    "LDR bản chép rỗng mang đủ ràng buộc, chỉ mục, cột sinh, dãy riêng và search_path trỏ vào nó",
+    "LDR từ chối view",
+    "LDR hai phiên dựng song song không chờ nhau, không giữ khoá 33033, rollback không để lại gì",
   ];
-  for (const [ten, tu, thanh, mong] of DOT) {
-    assert.ok(lib.includes(tu), `đột biến «${ten}»: không thấy chỗ cần đổi trong lib`);
-    const libTam = LIB.replace(".mjs", `.dot-${process.pid}.mjs`);
-    const testTam = TEST.replace(".test.mjs", `.dot-${process.pid}.mjs`);
-    TAM.push(path.join(ROOT, libTam), path.join(ROOT, testTam));
-    writeFileSync(path.join(ROOT, libTam), lib.replace(tu, thanh));
-    writeFileSync(path.join(ROOT, testTam), doc(TEST).replace("../lib/luoc-do-rieng.mjs", `../lib/${path.basename(libTam)}`));
-    const r = chayTest(path.relative("pipeline", testTam));
-    const out = `${r.stdout}${r.stderr}`;
-    for (const f of [libTam, testTam]) try { unlinkSync(path.join(ROOT, f)); } catch {}
-    console.log(`# đột biến «${ten}»: thoát ${r.status}`);
-    assert.notEqual(r.status, 0, `DOI CHUNG KHONG BAT: đột biến «${ten}» vẫn xanh`);
-    assert.match(out, mong, `đột biến «${ten}» đỏ mà không vì lý do mong đợi:\n${out.slice(-1200)}`);
+  const thoatRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const LOC = `^(${CA_LDR.map(thoatRe).join("|")})$`;
+  const chayTest = (tepTest) => spawnSync("node", ["--test", "--test-reporter=spec", "--test-timeout=60000",
+    `--test-name-pattern=${LOC}`, tepTest], { cwd: PIPE, encoding: "utf8", timeout: 180_000 });
+  const tenTrongTep = (src) => [...src.matchAll(/\btest\(\s*"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
+  const tenDaChay = (out) => [...out.matchAll(/^\s*[✔✖] (.+?) \(\d+(?:\.\d+)?ms\)(?!\s*#)/gm)].map((m) => m[1]);
+  /** Lỗi của một lượt chạy theo tên; rỗng = 3/3. */
+  const kiemTheoTen = (out, src) => {
+    const loi = [];
+    const trongTep = tenTrongTep(src);
+    const chay = new Set(tenDaChay(out));
+    for (const t of CA_LDR) if (!out.includes(`✔ ${t}`)) loi.push(`CA LDR VANG: «${t}»`);
+    for (const t of chay) if (!CA_LDR.includes(t)) loi.push(`CA NGOAI DANH SACH CHAY: «${t}»${trongTep.includes(t) ? "" : " (không có trong tệp)"}`);
+    if (!/ℹ pass 3\b/.test(out)) loi.push("không có ℹ pass 3");
+    if (!/ℹ fail 0\b/.test(out)) loi.push("không có ℹ fail 0");
+    return loi;
+  };
+  const bam = () => [LIB, TEST].map((f) => createHash("sha256").update(readFileSync(path.join(ROOT, f))).digest("hex")).join(" ");
+  const chepTam = (duoi, noiDung) => {
+    const f = TEST.replace(".test.mjs", `.dot-${process.pid}-${duoi}.mjs`);
+    TAM.push(path.join(ROOT, f));
+    writeFileSync(path.join(ROOT, f), noiDung);
+    return f;
+  };
+  const xoaTam = (f) => { try { unlinkSync(path.join(ROOT, f)); } catch {} };
+  const bamTruoc = bam();
+  try {
+    const srcThat = doc(TEST);
+    for (const t of CA_LDR) assert.ok(srcThat.includes(`test("${t}"`), `CA LDR VANG: «${t}» — không có trong ${TEST}`);
+    const that = chayTest(path.relative("pipeline", TEST));
+    const outThat = `${that.stdout}${that.stderr}`;
+    console.log(`# bản thật: thoát ${that.status}`);
+    assert.equal(that.status, 0, `test lib đỏ trên bản thật:\n${outThat.slice(-1500)}`);
+    const loiThat = kiemTheoTen(outThat, srcThat);
+    assert.deepEqual(loiThat, [], `bản thật lệch:\n${loiThat.join("\n")}\n${outThat.slice(-1500)}`);
+    console.log(`# ca theo tên: ${CA_LDR.length}/${CA_LDR.length} (tệp có ${tenTrongTep(srcThat).length} ca)`);
+
+    // Đối chứng tổng hợp (không chạy test): đầu ra có thêm một ca xanh ngoài danh sách → bộ kiểm gọi đúng tên ca ấy.
+    const ngoai = tenTrongTep(srcThat).find((t) => !CA_LDR.includes(t)) ?? "LDR ca giả ngoài danh sách";
+    const loiNgoai = kiemTheoTen(`${outThat}\n✔ ${ngoai} (1.5ms)\n`, srcThat);
+    assert.ok(loiNgoai.some((l) => l.startsWith(`CA NGOAI DANH SACH CHAY: «${ngoai}»`)), "DOI CHUNG KHONG BAT (ca ngoài danh sách)");
+    console.log(`# đối chứng ca ngoài danh sách: ${loiNgoai[0]}`);
+
+    // Đối chứng đổi tên: ca 1 mang tên khác → bộ kiểm đỏ gọi đúng tên cũ.
+    const srcDoi = srcThat.replace(`test("${CA_LDR[0]}"`, `test("${CA_LDR[0]} (đổi tên)"`);
+    const fDoi = chepTam("doiten", srcDoi);
+    const rDoi = chayTest(path.relative("pipeline", fDoi));
+    xoaTam(fDoi);
+    const loiDoi = kiemTheoTen(`${rDoi.stdout}${rDoi.stderr}`, srcDoi);
+    const vang = loiDoi.find((l) => l === `CA LDR VANG: «${CA_LDR[0]}»`);
+    assert.ok(vang, `DOI CHUNG KHONG BAT (đổi tên): ${loiDoi.join("; ") || "bộ kiểm xanh"}`);
+    console.log(`# đối chứng đổi tên: ${vang}`);
+
+    // Đối chứng thêm ca: một ca LDR xanh ngoài danh sách → vẫn 3/3, ca thêm không chạy (thước không đếm tổng).
+    const THEM = "LDR ca thêm ngoài danh sách";
+    const srcThem = `${srcThat}\ntest("${THEM}", () => {});\n`;
+    const fThem = chepTam("themca", srcThem);
+    const rThem = chayTest(path.relative("pipeline", fThem));
+    xoaTam(fThem);
+    const outThem = `${rThem.stdout}${rThem.stderr}`;
+    const loiThem = kiemTheoTen(outThem, srcThem);
+    assert.ok(rThem.status === 0 && loiThem.length === 0 && !outThem.includes(THEM),
+      `DOI CHUNG KHONG BAT (thêm ca): thoát ${rThem.status}; ${loiThem.join("; ")}`);
+    console.log("# đối chứng thêm ca: 3/3, ca thêm không chạy");
+
+    // Đối chứng neo tên: ca «<tên ca 1> phụ» chứa trọn tên đích → bộ lọc neo ^…$ không được chạy nó.
+    const PHU = `${CA_LDR[0]} phụ`;
+    const srcPhu = `${srcThat}\ntest("${PHU}", () => {});\n`;
+    const fPhu = chepTam("neoten", srcPhu);
+    const rPhu = chayTest(path.relative("pipeline", fPhu));
+    xoaTam(fPhu);
+    const outPhu = `${rPhu.stdout}${rPhu.stderr}`;
+    const loiPhu = kiemTheoTen(outPhu, srcPhu);
+    assert.ok(rPhu.status === 0 && loiPhu.length === 0 && !outPhu.includes(PHU),
+      `DOI CHUNG KHONG BAT (neo tên): thoát ${rPhu.status}; ${loiPhu.join("; ")}`);
+    console.log("# đối chứng neo tên: ca «… phụ» không chạy");
+
+    const lib = doc(LIB);
+    const DOT = [
+      ["giữ 33033", "await c.query(`CREATE SCHEMA ${sc}`);", "await c.query(`CREATE SCHEMA ${sc}`); await c.query(\"SELECT pg_advisory_xact_lock(33033)\");", /LDR phiên dựng lược đồ riêng vẫn giữ khoá 33033|canceling statement due to lock timeout/],
+      ["bỏ ràng buộc", "WHERE conrelid = $1 AND contype IN ('c', 'p', 'u')", "WHERE conrelid = $1 AND false", /LDR \S+ lệch ràng buộc/],
+      ["dãy dùng chung", "md = `nextval('${ten}'::regclass)`;", "day.pop();", /LDR dãy riêng không bắt đầu từ 1|LDR chèn vào bản riêng đẩy dãy dùng chung/],
+    ];
+    for (const [ten, tu, thanh, mong] of DOT) {
+      assert.ok(lib.includes(tu), `đột biến «${ten}»: không thấy chỗ cần đổi trong lib`);
+      const libTam = LIB.replace(".mjs", `.dot-${process.pid}.mjs`);
+      const testTam = TEST.replace(".test.mjs", `.dot-${process.pid}.mjs`);
+      TAM.push(path.join(ROOT, libTam), path.join(ROOT, testTam));
+      writeFileSync(path.join(ROOT, libTam), lib.replace(tu, thanh));
+      writeFileSync(path.join(ROOT, testTam), doc(TEST).replace("../lib/luoc-do-rieng.mjs", `../lib/${path.basename(libTam)}`));
+      const r = chayTest(path.relative("pipeline", testTam));
+      const out = `${r.stdout}${r.stderr}`;
+      for (const f of [libTam, testTam]) xoaTam(f);
+      console.log(`# đột biến «${ten}»: thoát ${r.status}`);
+      assert.notEqual(r.status, 0, `DOI CHUNG KHONG BAT: đột biến «${ten}» vẫn xanh`);
+      assert.match(out, mong, `đột biến «${ten}» đỏ mà không vì lý do mong đợi:\n${out.slice(-1200)}`);
+    }
+  } finally {
+    for (const f of TAM) try { unlinkSync(f); } catch {}
+    const con = ["pipeline/scripts", "pipeline/lib"].flatMap((d) =>
+      readdirSync(path.join(ROOT, d)).filter((f) => f.includes(`.dot-${process.pid}`)).map((f) => `${d}/${f}`));
+    if (con.length) { console.error(`CON BAN CHEP TAM: ${con.join(", ")}`); process.exitCode = 1; }
+    if (bam() !== bamTruoc) { console.error("TEP THAT BI DOI: lib hoặc test đổi trong lúc probe chạy"); process.exitCode = 1; }
   }
-  console.log("LIB OK");
+  if (!process.exitCode) console.log("LIB OK");
 } else {
   console.error("dùng: song-song.mjs chan|khoa|assert|lib");
   process.exit(2);

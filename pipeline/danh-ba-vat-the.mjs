@@ -7,12 +7,17 @@
 // máy này luôn bị từ chối — đọc máy chủ từ connectionParameters của pg (tính cả ?host=, PGHOST). Không in mã S08 ra stdout.
 // Bước đêm: buocVatTheDem(c), gọi từ refresh-bait-gap.mjs — chỉ giữ tươi khu đã có toà, không bao giờ dựng lần đầu.
 //   node pipeline/danh-ba-vat-the.mjs --db <url> [--db-that] [--sao-luu <tệp>] [--tu-dien <tệp json>] [--khu <slug,slug>]
+// DV1 (nut-du-an-tro-xa-moi): --sua-xa [--tep <tệp>] [--thu] ghi mã xã hiện hành cho mọi nút dự án từ tệp xã của nút
+// (xã cũ có nguồn → area_aliases của PX1, tra theo mã), rút phường kế thừa của toà không còn đúng; cùng rào đích.
+//   node pipeline/danh-ba-vat-the.mjs --sua-xa --db <url> [--db-that] [--tep pipeline/data/xa-nut-du-an.json] [--thu]
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { join } from "node:path";
 import {
-  NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, khuDaDung, kiemDich, phuongCuaToa, thamSoTuUrl, ungVienTuTin, upiToa,
+  NGUON_DANH_MUC, chuanHoaTenToa, keHoachDung, khuDaDung, kiemDich, kiemTepXa, phuongCuaToa, thamSoTuUrl, ungVienTuTin,
+  upiToa, xaMoiCuaNut,
 } from "./lib/danh-ba-vat-the.mjs";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 
@@ -226,6 +231,88 @@ export async function buocVatTheDem(c, { log = console.log } = {}) {
   return tk;
 }
 
+/** Tệp xã của nút dự án (DV1), một mục mỗi nút: xã cũ + nguồn, chọn khi tách, hay cấp tỉnh + lý do. */
+export const TEP_XA = join(import.meta.dirname, "data/xa-nut-du-an.json");
+
+const noiMa = (ds) => (ds?.length ? ds.join(",") : "∅");
+
+/**
+ * Bảng tra của DV1 từ DB: bí danh xã cũ (area_aliases, PX1) cho các mã trong tệp, mã xã → khu vực, tập thị trường.
+ * @param {import("pg").Client} c @param {Record<string, object>} muc
+ */
+export async function napBangXa(c, muc) {
+  const oldCodes = [...new Set(Object.values(muc).flatMap((m) => (m.xa_cu ?? []).map((x) => x.old_code)))];
+  const { rows: al } = await c.query("SELECT old_code, targets, split FROM area_aliases WHERE old_code = ANY($1)", [oldCodes]);
+  const { rows: ax } = await c.query(
+    "SELECT id, region_type, admin_code FROM areas WHERE admin_code IS NOT NULL OR region_type = 'market'");
+  return {
+    biDanh: new Map(al.map((r) => [r.old_code, { targets: r.targets, split: r.split }])),
+    maXa: new Map(ax.filter((r) => r.admin_code).map((r) => [r.admin_code, { id: r.id, region_type: r.region_type }])),
+    thiTruong: new Set(ax.filter((r) => r.region_type === "market").map((r) => r.id)),
+  };
+}
+
+/**
+ * DV1: ghi mã xã hiện hành cho mọi nút dự án theo tệp xã. Một giao dịch, khoá cố vấn của danh bạ vật thể. Tệp phải khớp
+ * một-một với nút dự án trong DB; một mục lỗi → LoiGoi, không ghi gì. Toà dưới nút đổi: phường kế thừa (registry_inherit)
+ * khác phường mà toà nay được kế thừa thì bị rút (sua-xa-nut); phát biểu mới do lần dựng kế sinh.
+ * @param {import("pg").Client} c
+ * @param {{ tep?: string, thu?: boolean, rut?: boolean }} [o] rut=false chỉ cho chiều đỏ của test
+ */
+export async function suaXaNut(c, { tep = TEP_XA, thu = false, rut = true } = {}) {
+  const tepXa = JSON.parse(readFileSync(tep, "utf8"));
+  await c.query("BEGIN");
+  try {
+    await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [KHOA_CO_VAN]);
+    const { rows: nut } = await c.query(
+      "SELECT id::int AS id, slug, area_ids FROM asset_nodes WHERE node_type = 'project' ORDER BY slug");
+    const loiTep = kiemTepXa(tepXa, nut.map((n) => n.slug));
+    if (loiTep.length) throw new LoiGoi(loiTep.join("; "));
+    const muc = tepXa.nut;
+    const bang = await napBangXa(c, muc);
+    const loi = [];
+    const doi = [];
+    for (const n of nut) {
+      const kq = xaMoiCuaNut(muc[n.slug], bang);
+      if (kq.loi) { loi.push(`${n.slug}: ${kq.loi}`); continue; }
+      const cu = [...(n.area_ids ?? [])].sort();
+      if (cu.join(",") !== kq.area_ids.join(",")) doi.push({ id: n.id, slug: n.slug, cu, moi: kq.area_ids });
+    }
+    if (loi.length) throw new LoiGoi(loi.join("; "));
+    for (const d of doi) await c.query("UPDATE asset_nodes SET area_ids = $2 WHERE id = $1", [d.id, d.moi]);
+
+    let soRut = 0;
+    const coToa = (await c.query("SELECT to_regclass('public.buildings') AS t")).rows[0].t;
+    if (doi.length && coToa) {
+      const khuMoi = new Map(doi.map((d) => [d.id, { id: d.id, area_ids: d.moi }]));
+      const { rows: con } = await c.query(
+        "SELECT id::int AS id, parent_id::int AS parent_id, area_ids FROM asset_nodes WHERE parent_id = ANY($1)", [[...khuMoi.keys()]]);
+      const nutVung = new Map([...khuMoi.values()].map((k) => [k.id, { ...k, khu: k.id }]));
+      for (const n of con) nutVung.set(n.id, { id: n.id, area_ids: n.area_ids ?? [], khu: n.parent_id });
+      const { rows: toa } = await c.query(
+        "SELECT building_key, region_node_id::int AS r FROM buildings WHERE region_node_id = ANY($1)", [[...nutVung.keys()]]);
+      const { rows: capRows } = await c.query("SELECT id, region_type FROM areas WHERE id = ANY($1)",
+        [[...new Set([...nutVung.values()].flatMap((n) => n.area_ids))]]);
+      const cap = new Map(capRows.map((r) => [r.id, r.region_type]));
+      for (const t of toa) {
+        const v = nutVung.get(t.r);
+        const kq = phuongCuaToa({ nutVung: v, khu: khuMoi.get(v.khu), cap });
+        if (!rut) continue;
+        const r = await c.query(
+          `UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'sua-xa-nut'
+            WHERE retracted_at IS NULL AND resource_name = 'Building' AND subject_key = $1 AND field = 'area_id'
+              AND method = 'registry_inherit' AND value IS DISTINCT FROM $2`, [t.building_key, kq.area_id ?? null]);
+        soRut += r.rowCount;
+      }
+    }
+    await c.query(thu ? "ROLLBACK" : "COMMIT");
+    return { doi: doi.length, giu: nut.length - doi.length, rut: soRut, thu, bang: doi.map(({ slug, cu, moi }) => ({ slug, cu, moi })) };
+  } catch (e) {
+    await c.query("ROLLBACK").catch(() => {});
+    throw e;
+  }
+}
+
 /** Tệp sao lưu dùng được: có thật, là tệp, không rỗng. */
 function tepSaoLuuDung(tep) {
   try {
@@ -241,6 +328,18 @@ async function main() {
   const dbThat = process.argv.includes("--db-that");
   const kq = kiemDich(thamSoTuUrl(url), { dbThat });
   if (!kq.ok) throw new LoiGoi(url ? kq.ly_do : "thiếu --db");
+  if (process.argv.includes("--sua-xa")) {
+    const c = new pg.Client({ connectionString: url });
+    await c.connect();
+    try {
+      const tk = await suaXaNut(c, { tep: arg("--tep", TEP_XA), thu: process.argv.includes("--thu") });
+      for (const d of tk.bang) console.log(`${d.slug} · ${noiMa(d.cu)} → ${noiMa(d.moi)}`);
+      console.log(`tong_ket ${JSON.stringify({ doi: tk.doi, giu: tk.giu, rut: tk.rut, thu: tk.thu })}`);
+    } finally {
+      await c.end();
+    }
+    return;
+  }
   const khuSlugs = (arg("--khu", null)?.split(",") ?? KHU_MAC_DINH).map((s) => s.trim()).filter(Boolean);
   if (!khuSlugs.length) throw new LoiGoi("--khu rỗng");
   const tuDien = docTuDien(arg("--tu-dien", null));
