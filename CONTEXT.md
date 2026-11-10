@@ -248,6 +248,12 @@ _Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng ra
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
+**Mức hồ sơ dự án**: Thang tổng sáu mức của một nút dự án trong danh bạ: M0 Có tên → M1 Có nguồn → M2 Có xã → M3 Đối chiếu (≥ 2 nguồn khớp) → M4 Có pháp lý (nguồn nhà nước) → M5 Đang bán. Là thước phụ ở Ops, đặt cạnh độ đủ hồ sơ bảy nhóm (DA20); không thành north star. Mã M, khác bậc dữ liệu B0–B5 của tin và căn (ROADMAP §3 mục 44 Hỏi-3, `docs/architecture/mo-hinh-danh-ba-du-an.md` §7).
+- Code: `project_profile_level` (chưa có cột — dựng ở DA20) · RESO: không có — extension local
+- Slug URL: —
+- Ghi chú: «mốc M2» của DA20 (≥ 80% dự án S08 đủ năm nhóm đầu) là mốc độ đủ, không phải mức M2.
+_Avoid_: bậc hồ sơ, bậc dự án
+
 **Danh bạ SĐT**: Năm kiểm đo trục số điện thoại của danh bạ Người theo nguồn, mỗi ngày một dòng: cặp một–một (một SĐT, một người gửi) mà người theo SĐT chưa gộp; người theo SĐT không có tin; bảng người bán so với số SĐT trên tin; tin nhiều số và tin trống số dù bài có số; số bộ bóc bỏ sót so với bộ dò rộng. Chỉ số đếm — không SĐT, không khoá băm.
 - Code: `pipeline/do-danh-ba-sdt.mjs`, kiểm `danh-ba-sdt:n1`…`n5` ở `dq_check_results` · RESO: không có
 - Slug URL: —
