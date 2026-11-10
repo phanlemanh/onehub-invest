@@ -124,6 +124,9 @@ executors:
     dv1_that: "bash db/db-thu.sh oneinvest_suite_dv1t --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs"   # nut-du-an-tro-xa-moi E7 — DB của riêng lượt + phiên chỉ đọc máy thu, chỉ in số; ngoài CI
     da1_db: "bash db/db-thu.sh oneinvest_suite_da1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-iso.itest.mjs"   # danh-ba-vat-the-toan-quoc E1–E3, E4b–E7 — DB của riêng lượt chép từ máy thu (chưa 088), áp 088 trong ca; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
+    dsk_doc: "node scripts/kiem-tin-rao-gan-khu-vuc.mjs"   # do-san-sl1-kdm AC-1 — chỉ đọc DB local: 0 tin trỏ khu vực không hợp lệ theo vị từ của bên ghi (PX1)
+    dsk_vi_tu: "node --test --test-name-pattern=KDM-PX1 scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-san-sl1-kdm AC-2 — ca ba ô khớp khuVucKhopTen của bên ghi, trong giao dịch ROLLBACK
+    dsk_khong_db_chung: "bash _acceptance/do-san-sl1-kdm/probes/khong-db-chung.sh"   # do-san-sl1-kdm AC-4 — thước KDM và test của nó không ghi ngoài giao dịch BEGIN…ROLLBACK
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
