@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0f301eb60f97d40a4cbd7b2f7f1e0a816d1c35db
+verified_commit: b7dc9a808e2c7ea98e7a7e06f43c4679bc904349
 human_signoff: Mạnh 2026-11-10
 ---
 
@@ -251,3 +251,7 @@ none — mọi eval chạy một lần, tất định.
 ## Iterations
 
 Round 1: cả 15 eval qua (8 lệnh riêng biệt, mỗi lệnh chạy một lần). Grader: fresh subagent context, không viết code này.
+
+### Re-pin lần 1 — 2026-11-10, do gop-main-sau-402
+run_id: repin-20261110T125614Z-34364
+sha: b7dc9a808e2c7ea98e7a7e06f43c4679bc904349 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
