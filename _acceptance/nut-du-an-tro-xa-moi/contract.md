@@ -5,7 +5,7 @@ slug: nut-du-an-tro-xa-moi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-11-10-nut-du-an-tro-xa-moi-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
