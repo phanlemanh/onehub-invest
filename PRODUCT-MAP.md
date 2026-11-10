@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>28 việc"]
+  GD --> B["Sắp mở vòng<br/>27 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>168 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>108 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>170 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>109 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -32,7 +32,6 @@ flowchart TD
 - Người vận hành chọn một vị trí bất kỳ trên cây (tỉnh → phường → dự án → phân khu → toà), lọc loại hình, bán hay thuê, số phòng ngủ, diện tích, tầng, đường và thấy danh sách Căn giá tốt xếp theo hạng giá/m², mỗi dòng kèm nhóm so sánh, số căn trong nhóm, lý do lùi cấp và độ tin (`can-gia-tot-loc-xep-hang`)
 - Người vận hành mở trang đo hằng ngày và thấy phân bố tin theo sáu mức gắn (căn, trục, toà, phân khu, dự án, phường) theo nguồn × vùng × loại nhà, kèm cảnh báo khi một ô giảm (`chi-so-muc-gan`)
 - Bản chiếu Danh bạ lên cloud gồm toà, trục, căn, bảng nối dự án, phát biểu thuộc tính dự án và tin sơ cấp, không mang tên nguồn thật, và trang Danh bạ đọc được trên cloud (`danh-ba-len-cloud`)
-- Danh bạ vật thể dựng được toà ở cả 34 tỉnh/thành: mã tỉnh và mã định danh toà nhận mọi mã ISO qua bảng tra, và chủ đầu tư ghi đúng phương pháp nguồn (`danh-ba-vat-the-toan-quoc`)
 - Người vận hành mở trang Danh bạ và thấy độ đủ hồ sơ của từng dự án theo bảy nhóm thông tin — trống, một nguồn, nhiều nguồn khớp, mâu thuẫn — cùng thẻ mâu thuẫn và tỉ lệ dự án đủ năm nhóm đầu mỗi ngày (`do-du-ho-so-du-an`)
 - Thuộc tính của dự án và phân khu ghi được thành phát biểu có nguồn: field_assertions nhận resource Subdivision, Complex với các field đã kiểm RESO DD 2.1, bộ phân xử dựng cột cấp dự án, chủ đầu tư kế thừa xuống toà (`kho-thuoc-tinh-du-an`)
 - Người vận hành mở một toà thấy lưới trục × tầng với trạng thái từng ô, mở một căn thấy tin đang rao, người đăng, lịch sử giá chào, độ chắc từng trường và bằng chứng (`luoi-toa-ho-so-can`)
@@ -98,6 +97,7 @@ flowchart TD
 - Đặc trưng nhà của tin S06 (số nhà, mã căn, mặt tiền, ngang×dài, số tầng, WC, toạ độ) lên canonical qua phát biểu trường lớp sự thật có căn cứ — migration 061 (`dac-trung-nha-s06-len-canonical`)
 - Danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê trong areas dưới đúng 34 tỉnh; 10.033 tên xã cũ thành bí danh (441 xã cũ bị tách trả «cần chọn xã»); tin S03, S06 khớp tên xã hiện hành và tên xã cũ an toàn ở mọi tỉnh; reassign không xoá xã danh bạ; đo tin có xã trước/sau theo tỉnh (`danh-ba-phuong-xa-toan-quoc`)
 - Danh bạ có toà · trục · căn cao tầng Ocean Park 1 và Grand Park dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; chủ đầu tư ghi ở cấp toà (Building.BuilderName) (`danh-ba-toa-truc-can`)
+- Danh bạ vật thể dựng được toà ở cả 34 tỉnh/thành — mã tỉnh ISO qua bảng tra trong migration, UPI nhận mọi mã, chủ đầu tư ghi đúng phương pháp nguồn (`danh-ba-vat-the-toan-quoc`)
 - DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại (`db-tu-khoi-dong`)
 - Mỗi căn và mỗi tin chưa gắn căn có bậc dữ liệu B0–B5 tính bằng một hàm, phân bố bậc theo thị trường × loại hình được chụp mỗi ngày và in ra được, và một kiểm chất lượng giữ bất biến «mọi đề xuất enrich đã áp có phát biểu tương ứng» (`de-xuat-thanh-phat-bieu-bac`)
 - /api/v1/deals chỉ trả dữ liệu cho token ops cho tới khi tin mock được rút khỏi canonical (`deals-api-tam-dong`)
@@ -206,6 +206,7 @@ flowchart TD
 - Bật gói dieu-phoi ở cấp kho — thêm dieu-phoi@acceptance-gate-kit vào enabledPlugins của .claude/settings.json, cùng nguồn marketplace với các gói kit khác, không đổi gì khác (`bat-dieu-phoi-cap-du-an`)
 - Người vận hành thấy đúng tên người đăng, đúng lý do rời danh sách của căn đắt hơn thước, và đường về danh sách không quay lại chính trang một căn (`can-gia-tot-sua-ba-loi`)
 - Căn của tin chung bài đăng nhận theo khi đề xuất làm giàu được áp hay hoàn tác — migration 066 mở rộng chuỗi cập nhật căn của 063, kèm sửa một lần phần lệch đã có (`can-theo-tin-khi-phan-xu-lai`)
+- Bộ canh S03 thêm lớp L6 kiểm sống — cảnh báo khi S03 ngừng thu (không snapshot mới ban ngày, tự khởi động lại treo, not linked), không kill gateway (`canh-bao-s03-ngung-thu`)
 - Vai Người xem không dò được bí danh đã che qua ô tìm của /ops/people — máy chủ bỏ ?q= và trang ẩn ô tìm với vai dưới Vận hành (`che-tim-bi-danh-viewer`)
 - Thước đồng bộ cloud (check-cloud-sync) chạy lại được trên máy thu đã áp 060 và 059 — sellers dựng thành bảng theo 022, bỏ trigger lịch sử khỏi bản dump (`check-cloud-sync-sellers-view`)
 - bước kiểm local-only của check-s08-inventory chạy được trên main sau khi import-airbnb nhập import-s08-row (`check-s08-harness`) — đã giao — máy thông, cửa veto còn mở
@@ -235,6 +236,7 @@ flowchart TD
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
 - DO1 giữ dấu ngày lập mốc (đổi thang, lập mốc đầu) suốt cả ngày qua mọi lượt cloud-sync, ngày ấy không có dòng chuyển bậc, lệnh sửa ngày đổi thang đã qua, thước TB-AC-11 chạy được sau khi máy thu áp 087 (`do1-giu-dau-doi-thang`)
+- Bước đêm đọc gộp S03 chạy được ở kho không có .env trên /bin/bash 3.2 — bộ test agent xanh ở mọi worktree (`doc-gop-env-rong`)
 - Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
 - Bộ test design-floor dọn mọi thư mục tạm nó tạo (clone sau-gộp, bản chép, cap-config, reuse-plan) khi tiến trình thoát, để mỗi lượt chạy không bỏ lại rác trong TMPDIR (`don-clone-tam-design-floor`)
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
