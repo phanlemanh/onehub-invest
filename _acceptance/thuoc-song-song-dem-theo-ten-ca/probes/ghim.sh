@@ -33,9 +33,17 @@ case "$gia" in "GHIM LECH"*) echo "# đối chứng verified_commit giả: GHIM 
 
 base=$(git merge-base origin/main HEAD) || { echo "KHONG TINH DUOC DIEM RE NHANH"; exit 2; }
 luoi=$(bash scripts/pre-merge-check.sh . --base "$base" 2>&1); ma=$?
-vp=$(printf '%s\n' "$luoi" | grep -E "VIOLATION")
-if [ "$ma" -eq 0 ] && [ -z "$vp" ]; then echo "# lưới trước-gộp --base $base: sạch"
+# Lượt chấm S4 của CHÍNH hồ sơ này chạy khi nó còn implemented, chưa có evidence-report: lưới báo đúng một dòng ấy.
+# Chỉ bỏ qua nguyên văn dòng đó (khớp trọn dòng, đúng slug); mọi VIOLATION khác — kể cả của hồ sơ này — vẫn chặn.
+TU="VIOLATION [thuoc-song-song-dem-theo-ten-ca]: status=implemented but no evidence-report.md"
+tu=$(printf '%s\n' "$luoi" | grep -cxF "$TU")
+vp=$(printf '%s\n' "$luoi" | grep -E "VIOLATION" | grep -vxF "$TU")
+[ "$tu" -eq 0 ] || echo "# bỏ qua: hồ sơ này chưa có evidence-report (đang chấm S4)"
+if [ -z "$vp" ] && { [ "$ma" -eq 0 ] || [ "$tu" -gt 0 ]; }; then echo "# lưới trước-gộp --base $base: sạch"
 else printf '%s\n' "$vp" | head -20; echo "LUOI TRUOC GOP CHAN (thoát $ma)"; bad=1; fi
+# Đối chứng: một VIOLATION khác của chính hồ sơ này không được bỏ qua.
+gia2=$(printf '%s\n' "VIOLATION [thuoc-song-song-dem-theo-ten-ca]: evidence is stale" | grep -E "VIOLATION" | grep -vxF "$TU")
+if [ -n "$gia2" ]; then echo "# đối chứng vi phạm khác của hồ sơ này: vẫn chặn"; else echo "DOI CHUNG KHONG BAT (bỏ qua quá rộng)"; bad=1; fi
 
 [ "$bad" -eq 0 ] && echo "GHIM OK"
 exit $bad
