@@ -64,7 +64,7 @@ POST /api/v1/ops/ingest  kind=change_request_results ◀──────  5 ki
 
 ### Máy thu — bộ áp
 
-- `pipeline/lib/lenh.mjs`: `LOAI_LENH` (14), `LOAI_CO_BO_AP` (2), `KHOA_CAM` (mười hai khoá Zalo của ADR §7),
+- `pipeline/lib/lenh.mjs`: `LOAI_LENH` (14), `LOAI_CO_BO_AP` (2), `KHOA_CAM` (mười một khoá Zalo của ADR §7),
   `kiemLenh(cmd)` thuần → `{ok, ly_do}`; `apLenh(client, cmd, {kiemSau})` → kết quả.
   - `kiemLenh`: loại trong `LOAI_CO_BO_AP`; `target` khớp `^S\d{2}$`; payload chỉ có khoá cho phép (`reason`,
     `resume_when` cho pause; rỗng cho resume); `reason` không trống; khoá cấm ở BẤT KỲ độ sâu nào trong lệnh → từ chối,

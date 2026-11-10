@@ -45,7 +45,7 @@ loại lệnh đầu, `source.pause` và `source.resume`, trên `source_registry
   không bao giờ được trả; không header, phiên người vai `owner`, Bearer `OPS_API_TOKEN`, token đã thu hồi, token thiếu
   scope `ops:pull`, token lạ → 401 hoặc 403, không lệnh nào đổi trạng thái và `last_used_at` không đổi. (cross-layer)
 - AC-5: Given ma trận viết trước của `kiemLenh` (lệnh hợp lệ hai loại, loại ngoài danh sách, loại trong 14 nhưng chưa có
-  bộ áp, `target` sai khuôn, thiếu/trống `reason`, khoá payload thừa, mười hai khoá cấm của ADR-0015 §7 mỗi khoá ở độ
+  bộ áp, `target` sai khuôn, thiếu/trống `reason`, khoá payload thừa, mười một khoá cấm của ADR-0015 §7 mỗi khoá ở độ
   sâu 1 và 3), When gọi bản `.mjs` và bản TS của app trên cùng ma trận, Then mỗi ô trả đúng `{ok, ly_do}` viết trước,
   khoá cấm gọi đúng tên khoá, và hai bản trả giống hệt nhau trên mọi ô.
 - AC-6: Given DB thử có `source_registry` S05 `active` và một cloud giả trả một lệnh `source.pause` S05 đã duyệt, When

@@ -43,7 +43,7 @@ evals:
     executor: test
     cmd: config:executors.test.so_lenh_db
     paths: [pipeline/lib/lenh.mjs, app/src/lib/lenh.ts, pipeline/scripts/lenh.test.mjs]
-    expected: "exit 0; ca 'SL-AC-5' bảng viết trước, assert số ô = 2 hợp lệ + 1 loại lạ + 1 loại chưa có bộ áp + 2 target sai + 3 reason (vắng, '', '   ') + 1 khoá thừa + 12 khoá cấm × 2 độ sâu = 34 trước khi lặp; mỗi ô deepEqual {ok, ly_do} viết trước (vd 'loai-chua-co-bo-ap:unit.create', 'khoa-cam:groupPolicy'); ca 'SL-AC-5b' chạy cùng 34 ô qua app/src/lib/lenh.ts (nạp bằng tsx) và deepEqual từng ô với bản .mjs; danh sách KHOA_CAM của hai bản deepEqual danh sách rút từ docs/adr/0015-duong-lenh-keo-mot-chieu.md mục 7; đối chứng: bản đột biến .mjs bỏ duyệt đệ quy (chỉ xét khoá cấp 1) thì đúng 12 ô độ sâu 3 lệch, thông điệp gọi tên từng khoá"
+    expected: "exit 0; ca 'SL-AC-5' bảng viết trước, assert số ô = 2 hợp lệ + 1 loại lạ + 1 loại chưa có bộ áp + 2 target sai + 3 reason (vắng, '', '   ') + 1 khoá thừa + 11 khoá cấm × 2 độ sâu = 32 trước khi lặp; mỗi ô deepEqual {ok, ly_do} viết trước (vd 'loai-chua-co-bo-ap:unit.create', 'khoa-cam:groupPolicy'); ca 'SL-AC-5b' chạy cùng 32 ô qua app/src/lib/lenh.ts (nạp bằng tsx) và deepEqual từng ô với bản .mjs; danh sách KHOA_CAM của hai bản deepEqual danh sách rút từ docs/adr/0015-duong-lenh-keo-mot-chieu.md mục 7; đối chứng: bản đột biến .mjs bỏ duyệt đệ quy (chỉ xét khoá cấp 1) thì đúng 11 ô độ sâu 3 lệch, thông điệp gọi tên từng khoá"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6

@@ -5,7 +5,7 @@
     {"id": "AC-2", "p": "Sẽ cho người vận hành gửi lệnh tạm dừng nguồn kèm lý do; lệnh sai khuôn, thiếu lý do hay đụng cấu hình Zalo bị từ chối ngay, và mỗi lệnh gửi được ghi nhật ký tên người thật."},
     {"id": "AC-3", "p": "Sẽ cho trưởng vận hành duyệt hoặc từ chối lệnh; tự duyệt lệnh của mình được, trừ lệnh nhắm S03 (nhóm chat) phải có người thứ hai."},
     {"id": "AC-4", "p": "Sẽ chỉ cho máy thu cầm token riêng kéo lệnh đã duyệt; mật khẩu chung cũ, người đăng nhập, token đã thu hồi hay thiếu quyền kéo đều bị chặn và không làm lệnh nào đổi trạng thái."},
-    {"id": "AC-5", "p": "Sẽ kiểm khuôn lệnh bằng cùng một luật ở cloud và ở máy thu, gồm cả mười hai khoá cấm của an toàn Zalo ở mọi độ sâu."},
+    {"id": "AC-5", "p": "Sẽ kiểm khuôn lệnh bằng cùng một luật ở cloud và ở máy thu, gồm cả mười một khoá cấm của an toàn Zalo ở mọi độ sâu."},
     {"id": "AC-6", "p": "Sẽ áp một lệnh đúng một lần dù máy thu kéo lại mười lần hay hai bộ áp chạy cùng lúc; nguồn bị tạm dừng thì lượt thu kế không chạy."},
     {"id": "AC-7", "p": "Sẽ từ chối áp khi nguồn không ở trạng thái hợp lệ, và tự hoàn tác khi kiểm sau áp hỏng — dữ liệu nguồn không đổi trong mọi ca hỏng."},
     {"id": "AC-8", "p": "Sẽ báo kết quả lên cloud qua đường số liệu đã có, có bộ chặn tên nguồn thật; một lệnh đi trọn từ gửi → duyệt → máy thu áp → cloud hiện «đã áp» kèm trước/sau."},
