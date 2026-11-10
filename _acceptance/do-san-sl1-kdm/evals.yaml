@@ -17,6 +17,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.tin_rao_gan_do_test
+    long_running: 45
     paths: ["scripts/kiem-tin-rao-gan-khu-vuc.mjs", "scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"]
     expected: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs exit 0: KDM-AC-3 ba chiều xanh (bản thường PASS; khong-sua và mo-loc exit 1 gọi tên tin mồi), KDM-AC-4, KDM-AC-5 và KDM-PX1 xanh."
   - id: E4
@@ -29,4 +30,5 @@ evals:
     criterion: AC-5
     executor: test
     cmd: config:executors.test.scripts
+    long_running: 45
     expected: "node --test scripts/*.test.mjs thoát 0."
