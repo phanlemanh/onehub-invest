@@ -1,0 +1,71 @@
+schema_version: 1
+feature_slug: pl34-lich-dem-sau-buoc
+# Ca test mang tiền tố «PL34-AC-n» (ca cũ giữ mã ZJ-/EC-/NH-/ZL- của hồ sơ gốc). Khuôn của bốn tệp test: chép NGUYÊN tệp bọc
+# thật + job-step.sh vào cây tạm, `node` giả đầu PATH (nhãn = tệp .mjs/.js/.ts đầu tiên); cây tạm có thêm tệp giả
+# pipeline/doc-gop-hang-ngay.sh một dòng `exec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"` nên bước mới mang nhãn
+# doc-gop-hang-ngay qua đúng node giả ấy. Không node thật, không DB, không LLM, không OpenClaw.
+# Chiều đỏ: đột biến bản sao tệp bọc cạnh tệp thật (cùng cây tạm, cùng node giả), thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-1' xanh: mọi bước lành → mã 0, calls đúng sáu nhãn [import-airbnb, transform-zalo, transform-media, refresh-bait-gap, doc-gop-hang-ngay, enrich-run], không dòng JOB FAIL, state chuyển sang mốc snapshot mới; ca 'ZJ-AC-3' (nạp hỏng) xanh: calls chỉ import-airbnb — không doc-gop-hang-ngay, không enrich-run; ca 'PL34-AC-1 không mới' xanh: state đã ở mốc snapshot mới nhất → mã 0, không dòng JOB FAIL, calls đúng năm nhãn sau nạp [transform-zalo, transform-media, refresh-bait-gap, doc-gop-hang-ngay, enrich-run], có đối chứng dương cùng ca là state ở mốc cũ → nhãn đầu là import-airbnb. Chiều đỏ cùng tệp: bản sao tệp bọc bỏ dòng job_run doc-gop-hang-ngay → ca 'PL34-AC-1 thiếu bước' đỏ ghim 'PL34-AC-1 thiếu bước doc-gop-hang-ngay'; bản sao đặt dòng ấy sau enrich-run → đỏ ghim 'PL34-AC-1 doc-gop-hang-ngay phải đứng trước enrich-run'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.enrich_buoc_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; ca 'EC-AC-6' xanh với dãy sáu bước, enrich-run cuối, chạy trong agent/, LIMIT 50, ENRICH_LIMIT ghi đè, nạp hỏng thì không doc-gop-hang-ngay và không enrich-run; ca 'PL34-AC-1 khoá' xanh: node giả ghi khoá nạp khi doc-gop-hang-ngay chạy = khong; chiều đỏ cùng ca: bản sao tệp bọc dời dòng job_run doc-gop-hang-ngay lên TRƯỚC dòng nhả khoá → đỏ ghim 'PL34-AC-1 doc-gop-hang-ngay chạy khi còn giữ khoá nạp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.enrich_buoc_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; ca 'PL34-AC-2' ma trận viết trước bốn tổ hợp (số assert = số phần tử): doc-gop-hang-ngay:3 → mã 3, một dòng 'JOB FAIL [zalo-import-daily] bước doc-gop-hang-ngay mã 3', enrich-run vẫn chạy; doc-gop-hang-ngay:1 → mã 1, một dòng tương ứng; transform-zalo:4,doc-gop-hang-ngay:3 → mã 4, hai dòng JOB FAIL theo đúng thứ tự; doc-gop-hang-ngay:3,enrich-run:2 → mã 3, hai dòng; mọi tổ hợp đủ sáu nhãn trong calls. Đối chứng dương cùng ca: không FAIL_STEPS → mã 0, 0 dòng JOB FAIL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, pipeline/doc-gop-hang-ngay.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'PL34-AC-3' xanh: dòng job_run doc-gop-hang-ngay của tệp bọc THẬT (đọc từ kho, không từ cây tạm) trỏ \"$ROOT/pipeline/doc-gop-hang-ngay.sh\" và tệp ấy có trong kho; chiều đỏ cùng ca: bản sao chuỗi tệp bọc đổi đường thành pipeline/doc-gop-khong-co.sh → hàm kiểm trả lỗi ghim 'PL34-AC-3 tệp bước không có trong kho: pipeline/doc-gop-khong-co.sh'; ca 'PL34-AC-3 tệp thật' xanh: cây tạm chép tệp bọc + pipeline/doc-gop-hang-ngay.sh THẬT + job-step.sh, node giả chuyển lời gọi `node -e` sang node thật và ghi argv + cwd các lời gọi khác, cây có .env rỗng như máy thu, DOC_GOP_BAY_GIO=2026-11-09T01:00:00Z → đúng hai lời gọi doc-gop-s03.ts, cwd <cây>/agent, đối số [--env-file=<cây>/.env --import tsx scripts/doc-gop-s03.ts hang-ngay --ngay 2026-11-08 --tran-ngay-usd 20] rồi [… --ngay 2026-11-07 …], job thoát 0; chiều đỏ cùng ca: bản sao tệp thật đổi cd sang thư mục gốc → đỏ ghim 'PL34-AC-3 doc-gop-s03 không chạy trong agent/'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nap_ts_order
+    paths: [scripts/zalo-import-daily.sh, scripts/apify-facebook-daily.sh, scripts/nap-ts-order.test.mjs]
+    expected: "exit 0; ba ca 'zalo-import-daily.sh: …' của nap-ts-order (6 số / 9 số / '-1' nạp đúng thứ tự; không có gì mới hơn state; state 6 số cũ không cản snapshot mili-giây mới) xanh với cây tạm có tệp giả doc-gop-hang-ngay; ba ca 'apify-facebook-daily.sh: …' vẫn xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-2 nhánh ZCode sửa phần nạp → tệp test job Zalo hiện tại thoát 0' xanh trên đầu nhánh (nhánh giả có dòng doc-gop-hang-ngay của ZCode); ZL-AC-1, ZL-AC-3, ZL-AC-4 vẫn xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.pl34_test_khac
+    paths: [scripts/zalo-import-daily.sh, scripts/nap-argmax.test.mjs, pipeline/scripts/media-wiring.test.mjs, pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs]
+    expected: "exit 0; scripts/nap-argmax.test.mjs và pipeline/scripts/media-wiring.test.mjs, pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs xanh trên đầu nhánh (ba tệp còn lại trong bảy tệp nhắc zalo-import-daily)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'PL34-AC-4 tập tệp' xanh: quét scripts/, pipeline/, app/tests/, agent/tests/ (bỏ node_modules) tìm tệp *.test.* và *.itest.* có chuỗi zalo-import-daily → tập bằng đúng bảy tệp kê trước trong ca (số tệp quét = 7); chiều đỏ cùng ca: bộ so trên danh sách kê thiếu một tệp → lỗi ghim 'PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: <tệp>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.pl34_khong_lui
+    paths: [scripts/zalo-import-daily.sh, _acceptance/pl34-lich-dem-sau-buoc/contract.md]
+    expected: "exit 0; scripts/pre-merge-check.sh --base origin/main trên đầu nhánh không in dòng VIOLATION nào ngoài đúng hai dòng chờ của chính hồ sơ (so nguyên dòng): 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' và 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)' — mọi dòng khác của chính slug cũng làm đỏ. Chiều đỏ đã đo trước vòng: trên nhánh zcode/pl34-lich-dem ＠3b7bc85c (chưa có hồ sơ) lệnh in 'VIOLATION [PR]: non-T1 files changed … NO _acceptance/<slug>/ artifacts' và thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
