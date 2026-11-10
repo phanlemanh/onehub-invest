@@ -5,10 +5,10 @@ slug: do1-giu-dau-doi-thang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-10-do1-giu-dau-doi-thang-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-10T03:08:15Z
 ---
 
 # Acceptance Contract: do1-giu-dau-doi-thang
