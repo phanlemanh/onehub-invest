@@ -7,10 +7,11 @@
   <array>
     <string>/bin/bash</string>
     <string>__ROOT__/scripts/zalo-import-daily.sh</string>
-    <string>--chi-nap</string>
+    <string>--luot-nhanh</string>
   </array>
-  <!-- 1011-3 nấc 1 «S03 lên nhanh»: mỗi 15′ trong 7–22h chỉ NẠP snapshot mới
-       (khoá bận → bỏ lượt); lượt 00:00 đầy đủ giữ ở com.oneinvest.zalo-import -->
+  <!-- 1011-3 nấc 1 «S03 lên nhanh»: mỗi 15′ từ 7:00 tới 22:00 (61 mốc) chạy
+       nạp → transform → media → refresh (khoá bận → bỏ lượt); đọc gộp + enrich
+       chỉ ở lượt 00:00 đầy đủ của job import S03 -->
   <key>StartCalendarInterval</key>
   <array>
     <dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
@@ -74,9 +75,6 @@
     <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>30</integer></dict>
     <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>45</integer></dict>
     <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>15</integer></dict>
-    <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>30</integer></dict>
-    <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>45</integer></dict>
   </array>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/s03-nap-15phut.log</string>
   <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/s03-nap-15phut.log</string>

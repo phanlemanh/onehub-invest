@@ -16,12 +16,15 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
 
-# 1011-3 nấc 1 «S03 lên nhanh» (Mạnh chốt 10/11): lượt nạp nhanh 15′ ban ngày
-# gọi với --chi-nap — CHỈ nạp snapshot mới vào stg, không chạy transform trở
-# đi (chuỗi đầy đủ vẫn là lượt 00:00). Khoá bận thì BỎ LƯỢT — lượt khác đang
-# nạp sẽ nạp trọn, lượt kế đến 15′ sau, không xếp hàng chờ như lượt 00:00.
-CHI_NAP=0
-[ "${1:-}" = "--chi-nap" ] && CHI_NAP=1
+# 1011-3 nấc 1 «S03 lên nhanh» (Mạnh chốt 10/11, giám sát cho bật 10/11 sau N1 đo
+# transform+media+refresh ≈ 76s/lượt): lượt nhanh 15′ ban ngày 7–22h gọi với
+# --luot-nhanh. Cờ CHỈ đổi hai chỗ: (1) lấy khoá — bận thì BỎ LƯỢT, thoát 0, không
+# xếp hàng chờ như lượt 00:00; (2) export S03_LUOT_NHANH=1 để phần làn Claude biết
+# đây là lượt nhanh. Chuỗi vẫn chạy tiếp nạp → transform → media → refresh để tin
+# S03 lên sale_offers trong ngày; đọc gộp và enrich (bước LLM dài) giữ ở lượt 00:00.
+LUOT_NHANH=0
+[ "${1:-}" = "--luot-nhanh" ] && LUOT_NHANH=1
+export S03_LUOT_NHANH="$LUOT_NHANH"
 
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
@@ -68,7 +71,7 @@ go_khoa_cu() {
   fi
   return 1
 }
-if [ "$CHI_NAP" = "1" ]; then
+if [ "$LUOT_NHANH" = "1" ]; then
   # lượt nhanh: thử lấy khoá 1 lần (dọn được khoá chết thì thử lại lần nữa);
   # vẫn bận = lượt khác đang nạp — bỏ lượt, thoát 0 (không fail, không chờ)
   if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -141,15 +144,19 @@ echo "$MAXTS" > "$STATE"
 if [ "$FAILED" != "0" ]; then
   exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
 fi
-if [ "$CHI_NAP" = "1" ]; then
-  exit 0 # lượt nhanh: đã nạp + nhả khoá (trap EXIT) — dừng, không đụng transform trở đi
-fi
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
 job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Lượt nhanh 15′ (S03_LUOT_NHANH=1) dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt
+# 00:00 cho tới khi hàng s03-len-nhanh-nac-1 của N1 gộp ENRICH_LIMIT=0 ban ngày +
+# lock_timeout (lời giám sát 10/11). Khoá nạp nhả qua trap EXIT.
+if [ "${S03_LUOT_NHANH:-0}" = "1" ]; then
+  echo "lượt nhanh: bỏ đọc gộp + enrich (chạy ở lượt 00:00)"
+  exit "$JOB_RC"
+fi
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
 # (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
 trap - EXIT; rm -rf "$LOCK_DIR"
