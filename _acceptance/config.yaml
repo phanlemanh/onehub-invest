@@ -110,6 +110,7 @@ executors:
     freshness_parity: "node --test scripts/freshness-parity.test.mjs"
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
+    nap_ts_order: "node --test scripts/nap-ts-order.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — thứ tự nạp của hai tệp bọc Zalo (node giả, không DB)
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
     rk_itest: "cd agent && node --import tsx --test tests/judge-roi-kho.itest.ts"   # the-ghep-can-tin-roi-kho E9 — lô thật chép chỉ-SELECT từ oneinvest, ngoài CI
     rtld_unit: "node --test pipeline/lib/thu-lai-deadlock.test.mjs"   # resolve-thu-lai-deadlock E1–E4, E7 — client giả + đọc tĩnh, không DB
@@ -188,6 +189,12 @@ executors:
     tg_db: "cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs"   # thoi-gian-va-hieu-luc E1–E7: 059 + observed_at + trạng thái chào + lịch sử + B5 + bộ itest PL16 trên 059 (S4 r1 t4), giao dịch ROLLBACK — DB thử (sau gộp: TG_DB_URL)
     tnr_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tnr --chay node --test --test-concurrency=1 scripts/trang-thai-chao-ngung-rao.itest.mjs"   # tin-ngung-rao-khong-thay-lai E1–E10 — 085 + luật ngừng rao; DB của riêng lượt chép từ máy thu, ca giao dịch ROLLBACK, ca áp thật chỉ trên DB riêng
     tnr_pl19: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tnr19 --chay node scripts/pl19-khong-do-them.mjs"   # tin-ngung-rao-khong-thay-lai E9b (sửa 09/11): PL19 kèm 085 không đỏ thêm so với bản gốc   # tin-ngung-rao-khong-thay-lai E9b — bộ itest PL19 trên 059 + 085
+    dbs_resolve: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dbs_rs --chay node --test --test-concurrency=1 tests/resolve-properties-dong-bang.itest.mjs"   # dong-bang-stage-b-resolve E1 — DB của riêng lượt chép lược đồ thật, ca giao dịch ROLLBACK
+    dbs_judge: "cd agent && node --import tsx --test tests/judge-run-dong-bang.test.ts"   # dong-bang-stage-b-resolve E2 — chạy CLI judge-run thật, DATABASE_URL trỏ cổng chết
+    dbs_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_dbs --chay node --import tsx --test tests/review-dong-bang.test.tsx"   # dong-bang-stage-b-resolve E3, E4, E5 — bộ nạp hàng duyệt trên DB của riêng lượt
+    dbs_mjs: "bash db/db-thu.sh oneinvest_suite_dbs_mjs --chay node --test scripts/ops-local-dong-bang.test.mjs"   # dong-bang-stage-b-resolve E4b, E6 — bản tin cloud + HD11 trên DB của riêng lượt, so vị từ ba nơi
+    dbs_khong_ghi: "node --test scripts/dong-bang-khong-ghi.test.mjs"   # dong-bang-stage-b-resolve E7 — quét diff so nhánh chính: không migration, không câu ghi mới
+    dbs_s03_len_cong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dbs_sl1 --chay node --test --test-skip-pattern 'SL1-AC-5 (áp 069|hai thứ tự)' scripts/s03-len-cong.itest.mjs"   # dong-bang-stage-b-resolve E9c — itest s03-len-cong trên DB của riêng lượt; bỏ hai ca SL1-AC-5 áp 069 (đỏ sẵn trên 773a0040, không thuộc vòng)
     hd9_route: "cd app && node --import tsx --test --test-name-pattern='HD9' tests/the-duyet-du-can-cu.test.tsx"   # quyet-dinh-phai-cham-ung-vien E1–E7: route decide trên lược đồ tạm của bộ thẻ duyệt + thẻ trong jsdom
     ma_thi_truong_dai: "cd app && node --import tsx --test tests/ma-thi-truong-dai.test.tsx"   # khu-vuc-vung-moi-s06 E1: marketNameOf tra mã thị trường dài (tạm)
     can_theo_tin: "cd pipeline && DATABASE_URL=${CT_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ct} node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs"   # can-theo-tin-khi-phan-xu-lai E1–E4: căn của tin chung bài đăng theo áp/hoàn tác + sửa một lần (066), giao dịch ROLLBACK — DB thử
@@ -239,6 +246,8 @@ executors:
     df4_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4app --chay node --import tsx --test --test-concurrency=1 tests/data-flow-bai-chi-anh.test.tsx"   # bai-nhan-tru-bai-chi-anh E1–E8 — lược đồ tạm, 600 + bộ chạy thật
     df4_cu: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4cu --chay node --import tsx --test --test-concurrency=1 tests/ops-dong-chay.test.tsx tests/dong-chay-cloud.test.tsx tests/df0-chang-theo-ngay.test.tsx tests/df0-dem-de-xuat.test.tsx tests/dong-chay-so-cu.test.tsx"   # bai-nhan-tru-bai-chi-anh E9 — bộ thử dòng chảy có sẵn
   script:
+    pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
+    pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
     icc_keychain: "bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""   # install-cron-chi AC-3 — security/launchctl giả, HOME giả
     icc_scope: "bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""   # install-cron-chi AC-5 — tệp đổi so với main
@@ -385,8 +394,11 @@ executors:
     atss_chan: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs chan"   # app-test-chiu-song-song E1 — ba tệp xanh dưới phiên giữ 33033/DDL/khoá chia sẻ, bản cũ treo vì chờ khoá
     atss_khoa: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs khoa"   # app-test-chiu-song-song E2 — không khoá tư vấn, không khoá mạnh trên public
     atss_assert: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs assert"   # app-test-chiu-song-song E3 — thông điệp assert giữ nguyên trừ câu thước đã khai
-    atss_lib: "node _acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — test thư viện lược đồ riêng + ba đột biến đỏ
+    atss_lib: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_atsslib --chay node ../_acceptance/app-test-chiu-song-song/probes/song-song.mjs lib"   # app-test-chiu-song-song E4 — ba ca LDR theo tên + ba đột biến đỏ, trên DB thử (thuoc-song-song-dem-theo-ten-ca)
     atss_pham_vi: "bash _acceptance/app-test-chiu-song-song/probes/pham-vi.sh"   # app-test-chiu-song-song E5
+    ttc_neo: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/neo.sh"   # thuoc-song-song-dem-theo-ten-ca E6 — E5 cũ neo khoảng commit nhánh gốc
+    ttc_ghim: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/ghim.sh"   # thuoc-song-song-dem-theo-ten-ca E7 — hồ sơ cũ đã ghim lại, lưới trước-gộp sạch
+    ttc_pham_vi: "bash _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/pham-vi.sh"   # thuoc-song-song-dem-theo-ten-ca E8
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"

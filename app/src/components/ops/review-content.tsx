@@ -21,6 +21,7 @@ import { hangNhip, loadReviewPace } from "@/lib/ops/review-nhip";
 import { loadDauTrang, type DauTrang } from "@/lib/ops/review-dau-trang";
 import { actorCua, loadRecentDecisions } from "@/lib/ops/review-gan-day";
 import { docCategory } from "@/lib/ops/review-hop-hang-muc";
+import { KHONG_DONG_BANG_SQL } from "@/lib/ops/review-dong-bang";
 import { PageHeader } from "@/components/page/page-header";
 
 /**
@@ -156,11 +157,14 @@ export function ReviewPageSkeleton() {
   );
 }
 
-/** Số thẻ chờ theo loại — cùng câu với khối reviewQueue của bản tin cloud (scripts/lib/ops-local.mjs readReviewQueue). */
+/** Số thẻ chờ theo loại — cùng câu với khối reviewQueue của bản tin cloud (scripts/lib/ops-local.mjs readReviewQueue);
+ *  thẻ Ghép căn đang chờ đóng băng (V7), không đếm. */
+export const PENDING_COUNTS_SQL = `SELECT item_type AS type, count(*)::int AS n FROM review_queue WHERE status = 'pending'
+     AND ${KHONG_DONG_BANG_SQL} GROUP BY item_type ORDER BY item_type`;
+
 async function loadPendingCounts(): Promise<PendingCount> {
   const { rows } = await pool.query<{ type: string; n: number }>(
-    `SELECT item_type AS type, count(*)::int AS n FROM review_queue WHERE status = 'pending'
-     GROUP BY item_type ORDER BY item_type`,
+    PENDING_COUNTS_SQL,
   );
   return { byType: rows, total: rows.reduce((a, r) => a + r.n, 0) };
 }

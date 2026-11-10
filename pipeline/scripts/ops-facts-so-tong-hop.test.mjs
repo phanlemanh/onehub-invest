@@ -132,7 +132,8 @@ describe("ON22-AC-2 độ tươi một định nghĩa", () => {
 });
 
 describe("ON22-AC-4 thẻ chờ duyệt", () => {
-  const WANT = { byType: [{ type: "agent_output", n: 2 }, { type: "entity_match", n: 3 }], total: 5 };
+  // Thẻ Ghép căn đang chờ đóng băng (V7): mồi có 2 thẻ Ghép căn chờ, bản tin không đếm.
+  const WANT = { byType: [{ type: "agent_output", n: 2 }, { type: "data_quality", n: 1 }], total: 3 };
   const shapeProblems = (b) => {
     const keys = Object.keys(b).sort().join(",");
     return keys === "byType,measured_at,total" ? [] : [`khoá khối reviewQueue: ${keys}`];

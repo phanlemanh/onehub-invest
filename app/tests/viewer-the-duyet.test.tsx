@@ -123,10 +123,11 @@ let setupErr: string | null = null
 const vn = (s: string) => new Date(`${s}+07:00`).toISOString()
 
 // Thẻ thứ n mang chuỗi nhận diện riêng trong cả bốn cột nội dung.
-// [id, item_type, status]
+// [id, item_type, status]. Thẻ chờ là Bổ sung tin: thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve) không
+// hiện, không đếm — mồi chờ của ca này đổi sang loại khác để phép đo vai giữ nguyên nghĩa.
 const THE: [number, string, string][] = [
-  [1, "entity_match", "pending"],
-  [2, "entity_match", "pending"],
+  [1, "agent_output", "pending"],
+  [2, "agent_output", "pending"],
   [3, "data_quality", "pending"],
   [4, "entity_match", "approved"],
 ]
@@ -256,7 +257,7 @@ describe("VT-AC-2 viewer: hàng duyệt chỉ số đếm", () => {
     const mod = (await import("../src/components/ops/review-content")) as ReviewMod
     const html = await doReviewViewer(mod)
     assert.match(html, /data-pending-total="3"/, "tổng 3 thẻ chờ (thẻ approved không đếm)")
-    assert.match(html, /entity_match: 2/)
+    assert.match(html, /agent_output: 2/)
     assert.match(html, /data_quality: 1/)
     assert.ok(html.includes(CHU_THE), "câu chú thích")
     // Đối chứng: nhánh viewer bị bỏ — trang đọc đủ cột như vai ops.

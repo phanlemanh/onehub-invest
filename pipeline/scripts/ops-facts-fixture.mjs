@@ -15,9 +15,11 @@ export const SNAPSHOTS = [
 ];
 
 /** Thẻ viết trước: [item_type, status]. Đáp án pending theo loại: agent_output 2, entity_match 3. */
+// Thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): không vào bản tin. Mồi giữ hai thẻ Ghép căn chờ để
+// phép đếm thấy việc loại trừ, và một thẻ data_quality chờ để bản tin vẫn có hai loại.
 export const REVIEW = [
   ["agent_output", "pending"], ["agent_output", "pending"],
-  ["entity_match", "pending"], ["entity_match", "pending"], ["entity_match", "pending"],
+  ["entity_match", "pending"], ["entity_match", "pending"], ["data_quality", "pending"],
   ["entity_match", "rejected"], ["agent_output", "approved"],
 ];
 
