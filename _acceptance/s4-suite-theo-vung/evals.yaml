@@ -1,0 +1,50 @@
+schema_version: 1
+slug: s4-suite-theo-vung
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s4v_bo_qua
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca S4V-AC-1 và S4V-AC-1 (symlink) xanh: repo git tạm, nhánh đổi tệp ngoài vùng app (collector/src) — kể cả khi có symlink app/node_modules dưới .gitignore «node_modules/» — → lệnh đánh dấu (touch tệp) KHÔNG chạy, stdout đúng một dòng bắt đầu «suite-neu-doi: bỏ qua app:», thoát 0. Chiều đỏ cùng fixture: thêm một tệp app/x.ts chưa theo dõi → tệp đánh dấu có mặt, dòng «suite-neu-doi: chạy app»."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s4v_chay
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca S4V-AC-2 xanh: ba ca tệp trong vùng (đã commit, sửa chưa commit, chưa theo dõi) → lệnh chạy với cwd = gốc kho (lệnh ghi pwd), dòng in nêu tệp kích hoạt; lệnh `exit 3` → thoát 3; lệnh `exit 0` → thoát 0. Đối chứng: cùng fixture không có tệp trong vùng → không chạy."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s4v_keo
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca S4V-AC-3 xanh: ma trận viết trước 4 diff × 6 suite = 24 ô (db/migrations/090_x.sql, pipeline/lib/x.mjs, collector/src/x.ts, docs/ROADMAP.md) so với quyetDinh thuần — đúng 24 assert, mỗi ô tên ô trong thông điệp."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s4v_bao_thu
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca S4V-AC-4 xanh: bảy ca (ref gốc vắng, thư mục không phải kho git, suite lạ, chỉ _acceptance/, hồ sơ + docs/superpowers/specs + docs/plan/lo-trinh.json, diff rỗng, SUITE_NEU_DOI=chay) mỗi ca lệnh chạy và dòng in chứa đúng lý do ghim («không giải được gốc», «suite lạ», «chưa có thay đổi mã», «ép chạy»). Đối chứng: ca diff ngoài vùng cùng repo → bỏ qua."
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s4v_phu
+    paths: ["scripts/suite-neu-doi.mjs", "scripts/suite-neu-doi.test.mjs", "app/**", "pipeline/**", "agent/**", "scripts/**"]
+    expected: "Ca S4V-AC-5 xanh trên kho thật: mọi đường quét được nằm trong vùng hoặc ngoại lệ có lý do; mỗi ngoại lệ phải còn được quét thấy (ngoại lệ chết → đỏ). Chiều đỏ: bản sao bảng vùng bỏ «pipeline/**» khỏi app → phép quét đỏ, thông điệp nêu suite app và một tệp pipeline/."
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.s4v_cau_hinh
+    paths: ["_acceptance/config.yaml", "scripts/suite-neu-doi.test.mjs"]
+    expected: "Ca S4V-AC-6 xanh (quan hệ, không băm): suite_keys = sáu key executors.suite.*; mỗi lệnh bọc bằng `node scripts/suite-neu-doi.mjs <tên> -- '<executors.test|script.<tên> hiện hành>'`. Chiều đỏ: lệnh bọc app lệch một ký tự → đỏ gọi tên «app». Chiều xanh: bản sao thêm executors.test.moi vẫn xanh. Probe cau-hinh-khong-doi.sh: so merge-base origin/main, dòng bị xoá/sửa chỉ là suite_keys, sáu lệnh gốc nguyên byte; tự kiểm chiều đỏ bằng diff giả."
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.s4v_dung_wt
+    paths: ["scripts/dung-worktree-cham.sh", "scripts/dung-worktree-cham.test.mjs"]
+    expected: "Ca S4V-AC-7 xanh trên repo git tạm có worktree: env chép đúng nội dung, tệp bi-mat.json ignored mà không khớp .worktreeinclude không chép, env có sẵn ở đích giữ nguyên, node_modules là symlink trỏ checkout chính, .next/dev/types có routes.d.ts; lần hai stdout không có dòng «chép»/«nối»; đích = checkout chính → thoát 2 «không dựng vào checkout chính» và không tạo tệp; ca tsc giả (PATH chứa npx giả thoát 1) → thoát 1 với «tsc: đỏ»; ca lock lệch ở app → không symlink app/node_modules, «lock lệch: app», thoát 3, số mục node_modules của checkout chính không đổi, pipeline (lock khớp) vẫn được nối."
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "node --test scripts/*.test.mjs thoát 0."
