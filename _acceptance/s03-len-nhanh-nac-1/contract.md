@@ -8,7 +8,7 @@ surfaces: [pipeline]
 status: implemented
 design_doc: docs/superpowers/specs/2026-11-10-s03-len-nhanh-nac-1-design.md
 approved_by: Mạnh
-approved_at: 2026-11-10T10:31:00Z
+approved_at: 2026-11-10T10:17:58Z
 ---
 
 # Acceptance Contract: s03-len-nhanh-nac-1
