@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: link-nguoi-ban-s03
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 91ea75c994e0f155347830981f164fa5f2ac6282
-human_signoff:
+human_signoff: Mạnh 2026-11-10
 ---
 
 # Evidence Report: link-nguoi-ban-s03
@@ -26,7 +26,7 @@ human_signoff:
 | E9 | AC-9 | script | PASS |
 | E10 | AC-10 | script | PASS |
 | E11a | AC-11 | script | PASS |
-| E11b | AC-11 | judgment | PENDING-JUDGMENT |
+| E11b | AC-11 | judgment | PASS |
 
 ## Evidence
 
@@ -149,7 +149,7 @@ human_signoff:
     - domain-correctness: PASS (r5)
     - operational-feasibility: PASS (r5)
     - spec-alignment: PASS (r5)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-10 — Đạt
 
 ### Lệnh suite (hồi quy)
 

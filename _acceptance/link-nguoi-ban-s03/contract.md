@@ -5,7 +5,7 @@ slug: link-nguoi-ban-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-06
 ---
@@ -66,3 +66,20 @@ Source input: `claudedp-0611-1`, `claudedp-0611-4`; lời Mạnh qua giám sát 
 - Tắt bộ tra: xoá tệp yêu cầu hoặc đặt tệp chặn; không cần khởi động lại. Lùi mã bộ tra đi cùng phạm vi lùi extension của mã album.
 - Giá nếu kênh khoá phiên: mất thu S03 tới khi Mạnh quét QR lại; dữ liệu đã thu không mất. Lượt thử một lời ở giờ im giảm xác suất, không đưa về 0.
 - Chưa đo: tỉ lệ người bán có `username`; `sender_id` lưu ở stg có cùng không gian mã hàm nhận không (lượt thử đo bằng 2 mã đối chứng); kênh có coi đường hồ sơ bạn bè gọi cho người lạ là bất thường không.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-2: Nếu bộ tra gửi một mốc thời gian sai khuôn, lần nạp hồ sơ có thể hỏng và các hồ sơ phía sau bị chặn lại.
+  - Ngoài-3: Người đọc mã có thể hiểu sai cách hệ thống xử lý lỗi khi kiểm tra bảng hồ sơ, và hai nơi có thể lệch nhau về việc đã áp migration hay chưa.
+  - Ngoài-7: Khi kết nối cơ sở dữ liệu trục trặc thoáng qua đúng lúc nạp hồ sơ người bán, hệ thống có thể bỏ qua lượt nạp đó mà không báo lỗi.
+  - Ngoài-8: Nếu một dòng ghi dở làm hỏng tệp theo dõi, bộ tra có thể ngừng tra hồ sơ mà không báo vì sao.
+  - Ngoài-9: Nếu máy thu không nhận dữ liệu suốt nhiều ngày, hàng đợi hồ sơ có thể phình quá mức và không gửi bù được nữa.
+  - Ngoài-10: Phép kiểm cho lệnh đo trước và sau khi khởi động lại có thể báo xanh dù lệnh đo không hoạt động.
+  - Ngoài-11: Phép kiểm này chỉ chạy đúng trên máy đã có sẵn nhật ký thật, trên máy khác có thể đỏ dù mã đúng.
+  - Ngoài-12: Phép kiểm việc hệ thống vẫn nhận tin sau khi bộ tra lỗi thực ra không kiểm gì thật, nên chưa có bằng chứng cho điều đó.
+  - Ngoài-13: Phép kiểm trước khi khởi động lại có thể đọc nhầm bản mã đang làm việc thay vì bản sẽ cài, nên báo xanh giả.
+  - Ngoài-14: Phép kiểm trước khi khởi động lại chưa thử trường hợp còn tệp chặn, nên chưa chắc nó chặn đúng.
+  - Ngoài-15: Phép kiểm xác nhận bộ canh ghi sự kiện chỉ dò chữ trong tệp nên có thể xanh dù bộ canh không thực sự ghi.
+  - Ngoài-16: Phép kiểm cổng nhận hồ sơ của máy thu không đi qua đường gửi thật nên có thể xanh dù đường gửi hỏng.
+  - Ngoài-17: Phép kiểm rằng dữ liệu cá nhân thừa không rò ra chỉ quét hai trong năm nơi nên chưa chứng minh được là không rò ở ba nơi còn lại.
+  - Ngoài-18: Phép kiểm rằng kết quả không mất khi máy thu không nhận chỉ kiểm có dữ liệu chứ không kiểm đủ số lượng.
+  - Ngoài-19: Phép kiểm rằng người đã tra gần đây không bị tra lại dựa trên dữ liệu mẫu tự viết, nên nếu cách ghi thay đổi thì có thể tra lặp mà không bị phát hiện.
+  - Ngoài-20: Phép kiểm nạp hồ sơ chạy trên bảng tự dựng, nên nếu bảng thật khác thì có thể lỗi lúc áp thật mà bài kiểm không báo.
