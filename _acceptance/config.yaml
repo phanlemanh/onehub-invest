@@ -822,6 +822,18 @@ executors:
     hdnb_duong_ra: "cd pipeline && node --test scripts/thu-so-s06.test.mjs"
     hdnb_e2e: "cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"   # mở Chrome ngoài màn hình, máy chủ giả local
     hdnb_luat_cu: "cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"
+    # link-nguoi-ban-s03 (T3) — bộ tra hồ sơ chạy với API giả đếm lời gọi, HOME giả; không chạm ~/.openclaw, phiên thu, :9210; DB thử riêng
+    lnb_tra: "node scripts/link-nguoi-ban-s03/acceptance.mjs tra"
+    lnb_dung: "node scripts/link-nguoi-ban-s03/acceptance.mjs dung"
+    lnb_thu: "node scripts/link-nguoi-ban-s03/acceptance.mjs thu"
+    lnb_ranh_gioi: "node scripts/link-nguoi-ban-s03/acceptance.mjs ranh-gioi"
+    lnb_api: "node scripts/link-nguoi-ban-s03/acceptance.mjs api"
+    lnb_db: "node scripts/link-nguoi-ban-s03/acceptance.mjs db"          # cần pipeline/node_modules (pg); DB thử *_lnb_s03
+    lnb_lien_lac: "node scripts/link-nguoi-ban-s03/acceptance.mjs lien-lac"
+    lnb_chon: "node scripts/link-nguoi-ban-s03/acceptance.mjs chon"
+    lnb_tien_kiem: "node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem"
+    lnb_ten_nguon: "node scripts/link-nguoi-ban-s03/acceptance.mjs ten-nguon"   # đọc danh sách tên từ source_registry local, không in
+    lnb_tai_lieu: "node scripts/link-nguoi-ban-s03/acceptance.mjs tai-lieu"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

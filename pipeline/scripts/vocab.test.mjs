@@ -56,6 +56,8 @@ const NHAN = [
   // enrich-nguoi-s03 (079): sổ liên lạc của Người.
   ["contact_kind", "sdt", "Số điện thoại"], ["contact_kind", "chat_profile", "Hồ sơ chat"],
   ["contact_rule", "so_tren_tin", "Số trên tin của chính người đăng"], ["contact_rule", "so_trong_bai", "Số trong bài khác của người đăng"],
+  // link-nguoi-ban-s03 (080): liên lạc hồ sơ chat theo mã tài khoản.
+  ["contact_rule", "s03_ho_so_theo_tai_khoan", "Hồ sơ chat theo mã tài khoản"],
   ["listing_intent", "offer", "Tin rao"], ["listing_intent", "inquiry", "Yêu cầu"],
   ["listing_intent", "not_listing", "Không phải tin rao"], ["listing_intent", "unknown", "Chưa rõ"],
   ["offer_status", "active", "Đang chào"], ["offer_status", "active_under_contract", "Đã cọc"],
@@ -92,7 +94,7 @@ test("VB-AC-1 sổ thật: đủ 25 trục, đúng code + nhãn từng byte", ()
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 119); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
+  assert.equal(NHAN.length, 120); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
