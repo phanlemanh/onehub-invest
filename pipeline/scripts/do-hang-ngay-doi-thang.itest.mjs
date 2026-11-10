@@ -1,19 +1,20 @@
-// do-hang-ngay-doi-thang.itest.mjs — do1-giu-dau-doi-thang (DD-AC-n ↔ _acceptance/do1-giu-dau-doi-thang/evals.yaml E1–E5, E8).
+// do-hang-ngay-doi-thang.itest.mjs — do1-giu-dau-doi-thang (DD-AC-n ↔ _acceptance/do1-giu-dau-doi-thang/evals.yaml E1–E5, E8, E9).
 // DO1 nhiều lượt trong ngày lập mốc + lệnh sửa ngày đổi thang. Mỗi ca BEGIN … ROLLBACK trên DB của riêng lượt
 // (config:executors.test.do1_dd — db/db-thu.sh … --chay); 087 nạp trong giao dịch khi bản chép chưa có.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { KHOA } from "../bac-du-lieu.mjs";
-import { doHangNgay, HOI1, HOI2, suaNgayDoiThang } from "../do-hang-ngay.mjs";
+import { doHangNgay, HOI1, HOI2, ngayApThang, suaNgayDoiThang } from "../do-hang-ngay.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_087 = readFileSync(path.join(ROOT, "db/migrations/087_thang_bac_moi.sql"), "utf8");
 // Ngày xa để không đụng dòng thật của bản chép (dq_check_results, data_level_change có ngày 2026-11-xx).
-const D = "2030-01-10", D_1 = "2030-01-09", D1 = "2030-01-11", D_2 = "2030-01-08", KHAC = "2030-01-20";
+const D = "2030-01-10", D_1 = "2030-01-09", D1 = "2030-01-11", D_2 = "2030-01-08", D2 = "2030-01-12", KHAC = "2030-01-20";
 
 let c;
 before(async () => {
@@ -53,8 +54,11 @@ async function tin() {
 const giaNull = (id) => c.query("UPDATE sale_offer_records SET price_vnd = NULL WHERE offer_id = $1", [id]);
 const giaLai = (id) => c.query("UPDATE sale_offer_records SET price_vnd = 2000000000 WHERE offer_id = $1", [id]);
 
-/** Nền: xoá bảng đơn vị, dòng chuyển, dấu DO1 và ảnh chụp thang mới; `bang` = rong | cu; `ap` = ngày áp (ảnh chụp thang mới). */
-async function nen({ bang = "rong", ap = null } = {}) {
+/** Nền: xoá bảng đơn vị, dòng chuyển, dấu DO1 và ảnh chụp thang mới; `bang` = rong | cu; `ap` = ngày áp — dòng DO1 pass mang
+ *  thang ở ngày ấy (AC-9: ngày VN của lượt DO1 đầu tiên mang thang mới); `anhChup` = ngày ảnh chụp thang mới (mặc định = ap). */
+let apHienTai = null;
+async function nen({ bang = "rong", ap = null, anhChup = ap } = {}) {
+  apHienTai = ap;
   await c.query(`DELETE FROM data_level_unit; DELETE FROM data_level_change;
     DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac';
     DELETE FROM data_level_snapshot WHERE scale = 'thang-0811'`);
@@ -63,10 +67,11 @@ async function nen({ bang = "rong", ap = null } = {}) {
       ('can:999999001', 'can', 'S06', 'B2', 'so-do', '{"tin": []}', '2030-01-01', 'thang-2310'),
       ('tin:${T}-cu-1', 'tin_le', 'S03', 'B0', 'truong-loi', '{"tin": []}', '2030-01-01', 'thang-2310')`);
   }
-  if (ap) {
+  if (anhChup) {
     await c.query(`INSERT INTO data_level_snapshot (snap_date, market_id, property_type, unit, data_level, n, scale)
-      VALUES ($1, 'chua-ro', 'unknown', 'tin_le', 'B1', 1, 'thang-0811')`, [ap]);
+      VALUES ($1, 'chua-ro', 'unknown', 'tin_le', 'B1', 1, 'thang-0811')`, [anhChup]);
   }
+  if (ap) await chenDau(ap, "pass", null, true);
 }
 /** Dòng do1-chuyen-bac mới nhất của ngày, đọc từ dq_check_results (bên đọc thật của app cũng đọc bảng này). */
 async function dongDo1(ngay) {
@@ -88,9 +93,17 @@ async function chenChuyen(ngay, n, tien = "co-san") {
       VALUES ($1, $2, 'tin_le', 'S03', 'B1', 'B0', 'tut', '{truong-loi}')`, [ngay, `tin:${T}-${tien}-${ngay}-${i}`]);
   }
 }
-const chenDau = (ngay, status, lyDo) => c.query(
+/** Chèn một dòng do1-chuyen-bac cho ngày; coThang: mang thang mới (ngày ấy là ngày áp khi nhỏ nhất). */
+const chenDau = (ngay, status, lyDo, coThang = false) => c.query(
   `INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail) VALUES (clock_timestamp(), 'do1-chuyen-bac', 'tat-ca', $1, $2)`,
-  [status, JSON.stringify({ ngay, ...(lyDo ? { ly_do: lyDo } : {}) })]);
+  [status, JSON.stringify({ ngay, ...(lyDo ? { ly_do: lyDo } : {}), ...(coThang ? { thang: { ma: "thang-0811", tu_ngay: ngay } } : {}) })]);
+/** Dựng bảng đơn vị toàn thang mới bằng một lượt DO1 thật ở `ngay`, rồi bỏ dòng DO1 của ngày ấy để nó không thành ngày áp
+ *  (lượt dựng nền, không phải lượt đo của ca); ngày ấy là ngày áp của ca thì chèn lại dòng ngày áp. */
+async function chuanBi(ngay) {
+  await chay(ngay);
+  await c.query("DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1", [ngay]);
+  if (apHienTai === ngay) await chenDau(ngay, "pass", null, true);
+}
 const THANG_D = { ma: "thang-0811", tu_ngay: D };
 
 // ---- E1 · AC-1 ----
@@ -184,28 +197,36 @@ test("DD-AC-3 chiều đỏ: ngày áp trước bảng rỗng → doi-thang; b�
   });
 });
 
-// ---- E3 · bảng 1 design §2: bảng đơn vị × ngày áp × dấu → nhãn (viết trước, năm hàng) ----
+// ---- E3 · bảng 1 design §2: bảng đơn vị × ngày áp × dấu → nhãn, viết trước, trải hết ô gộp (mười lăm ô) ----
+// Ngày áp: D · D_2 (khác D) · null (không có). Bảng: rong · cu (thang cũ) · moi (thang mới — dựng bằng lượt DO1 ngày D_1).
 const BANG_1 = [
-  { ten: "rỗng × ngày áp = D × không dấu", bang: "rong", ap: D, chuanBi: null, dau: null, nhan: "lap-moc" },
-  { ten: "thang cũ × ngày áp khác D × không dấu", bang: "cu", ap: KHAC, chuanBi: null, dau: null, nhan: "doi-thang" },
-  { ten: "thang mới × ngày áp = D × không dấu", bang: "rong", ap: D, chuanBi: D_1, dau: null, nhan: "doi-thang" },
-  { ten: "thang mới × ngày áp khác D × không dấu", bang: "rong", ap: D_1, chuanBi: D_1, dau: null, nhan: null },
-  { ten: "thang mới × ngày áp khác D × dấu lap-moc", bang: "rong", ap: D_1, chuanBi: D_1, dau: "lap-moc", nhan: "lap-moc" },
+  ...[D, D_2, null].map((ap) => ({ bang: "rong", ap, dau: null, nhan: "lap-moc" })),
+  ...[D, D_2, null].map((ap) => ({ bang: "cu", ap, dau: null, nhan: "doi-thang" })),
+  { bang: "moi", ap: D, dau: null, nhan: "doi-thang" },
+  { bang: "moi", ap: D_2, dau: null, nhan: null },
+  { bang: "moi", ap: null, dau: null, nhan: null },
+  ...["lap-moc", "doi-thang"].flatMap((dau) => ["rong", "cu", "moi"].map((bang) => ({ bang, ap: D_2, dau, nhan: dau }))),
 ];
-test("DD bảng 1: năm hàng viết trước, mỗi hàng một lượt doHangNgay thật", { timeout: 3_600_000 }, async () => {
-  let daKiem = 0;
+const khoaO = (h) => `${h.bang}×${h.ap ?? "khong"}×${h.dau ?? "khong"}`;
+const O_VIET_TRUOC = [
+  `rong×${D}×khong`, `rong×${D_2}×khong`, "rong×khong×khong", `cu×${D}×khong`, `cu×${D_2}×khong`, "cu×khong×khong",
+  `moi×${D}×khong`, `moi×${D_2}×khong`, "moi×khong×khong",
+  `rong×${D_2}×lap-moc`, `cu×${D_2}×lap-moc`, `moi×${D_2}×lap-moc`, `rong×${D_2}×doi-thang`, `cu×${D_2}×doi-thang`, `moi×${D_2}×doi-thang`,
+];
+test("DD bảng 1: mười lăm ô viết trước, mỗi ô một lượt doHangNgay thật", { timeout: 3_600_000 }, async () => {
+  const daKiem = [];
   for (const h of BANG_1) {
     await trongGiaoDich(async () => {
-      await nen({ bang: h.bang, ap: h.ap });
-      if (h.chuanBi) await chay(h.chuanBi);   // lập mốc ngày trước → bảng đơn vị toàn thang mới
-      if (h.dau) await chenDau(D, "skip", h.dau);
+      await nen({ bang: h.bang === "cu" ? "cu" : "rong", ap: h.ap });
+      if (h.bang === "moi") await chuanBi(D_1);   // lập mốc ngày trước → bảng đơn vị toàn thang mới
+      if (h.dau) await chenDau(D, "skip", h.dau, true);
       await chay(D);
       const r = await dongDo1(D);
-      assert.deepEqual(r.status === "skip" ? r.ly_do : null, h.nhan, `DD bảng 1 «${h.ten}» ra sai nhãn`);
-      daKiem++;
+      assert.deepEqual(r.status === "skip" ? r.ly_do : null, h.nhan, `DD bảng 1 «${khoaO(h)}» ra sai nhãn`);
+      daKiem.push(khoaO(h));
     });
   }
-  assert.equal(daKiem, BANG_1.length, "DD bảng 1 không kiểm đủ số ô viết trước");
+  assert.deepEqual(daKiem, O_VIET_TRUOC, "DD bảng 1 ô đã kiểm lệch danh sách viết trước");
 });
 
 // ---- E4 · AC-4 ----
@@ -213,8 +234,8 @@ test("DD-AC-4 ngày áp mất dấu: ghi lại doi-thang, không thêm dòng; ng
   await trongGiaoDich(async () => {
     await nen({ bang: "rong", ap: D });
     const t = await tin();
-    await chay(D_1);                         // bảng đơn vị toàn thang mới
-    await chenDau(D, "pass", null);          // lượt cũ đã xoá dấu
+    await chuanBi(D_1);                      // bảng đơn vị toàn thang mới
+    await chenDau(D, "pass", null, true);    // lượt cũ đã xoá dấu, ghi pass mang thang
     await giaNull(t);
     await chay(D);
     const r = await dongDo1(D);
@@ -228,8 +249,8 @@ test("DD-AC-4 ngày áp mất dấu: ghi lại doi-thang, không thêm dòng; ng
   await trongGiaoDich(async () => {   // chiều đỏ: chỉ nhận theo dấu
     await nen({ bang: "rong", ap: D });
     const t = await tin();
-    await chay(D_1);
-    await chenDau(D, "pass", null);
+    await chuanBi(D_1);
+    await chenDau(D, "pass", null, true);
     await giaNull(t);
     await chay(D, { dotBien: "bo-ngay-ap" });
     const r = await dongDo1(D);
@@ -275,15 +296,14 @@ async function nenSua() {
   await nen({ bang: "rong", ap: D });
   await chenChuyen(D, 3);
   await chenChuyen(D1, 2);
-  await chenDau(D, "pass", null);
+  await chenDau(D, "pass", null, true);
 }
 test("DD-AC-8 lệnh sửa ngày đổi thang: thử không ghi, ghi đúng ngày, từ chối khi lệch, bỏ qua có tên (kèm chiều đỏ)", { timeout: 1_800_000 }, async () => {
   console.log(`HOI2 đang ship: ${HOI2}`);
   assert.equal(HOI2, "xoa", "DD-AC-8 hằng HOI2 lệch câu trả lời Hỏi-2 ở Cổng Phạm vi (xoá)");
   await trongGiaoDich(async () => {
     await nenSua();
-    await chay(D_2);                                   // có bảng đơn vị để băm
-    await c.query("DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1", [D_2]);
+    await chuanBi(D_2);                                // có bảng đơn vị để băm
     const bam = await bamDonVi();
     assert.deepEqual(await suaNgayDoiThang(c, { write: false }), { ngay: D, xoa: 3 });
     assert.deepEqual([await demNgay(D), await demNgay(D1), (await dongDo1(D)).status, await bamDonVi()], [3, 2, "pass", bam],
@@ -292,7 +312,7 @@ test("DD-AC-8 lệnh sửa ngày đổi thang: thử không ghi, ghi đúng ngà
     assert.equal(await demNgay(D), 0, "DD-AC-8 ngày đổi thang còn dòng chuyển");
     assert.equal(await demNgay(D1), 2, "DD-AC-8 lệnh sửa đụng ngày khác");
     const r = await dongDo1(D);
-    assert.deepEqual({ status: r.status, ly_do: r.ly_do, thang: r.thang }, { status: "skip", ly_do: "doi-thang", thang: THANG_D });
+    assert.deepEqual(r, { status: "skip", ly_do: "doi-thang", thang: THANG_D, don_vi: await soDonVi() });
     assert.equal(await bamDonVi(), bam, "DD-AC-8 lệnh sửa đụng data_level_unit");
   });
   await trongGiaoDich(async () => {   // nhánh giữ của Hỏi-2
@@ -303,10 +323,26 @@ test("DD-AC-8 lệnh sửa ngày đổi thang: thử không ghi, ghi đúng ngà
   });
   await trongGiaoDich(async () => {   // từ chối: đã có dấu doi-thang ở ngày khác ngày áp
     await nenSua();
-    await chenDau(D_2, "skip", "doi-thang");
-    await assert.rejects(suaNgayDoiThang(c, { write: true }), new RegExp(`DD-AC-8 ngày áp ${D} lệch ngày có dấu ${D_2}`));
+    await chenDau(D2, "skip", "doi-thang", true);
+    await assert.rejects(suaNgayDoiThang(c, { write: true }), new RegExp(`DD-AC-8 ngày áp ${D} lệch ngày có dấu ${D2}`));
     assert.equal(await demNgay(D), 3, "DD-AC-8 từ chối mà vẫn xoá");
   });
+  // từ chối qua tiến trình thật: mã thoát 2 (lỗi thường là 1). Tình trạng phải cam kết để tiến trình khác thấy — hai dòng
+  // DO1 mang tiền tố riêng ở năm 2000 (ngày áp nhỏ nhất của bản chép), dọn trong finally.
+  const TAG = `${T}-thoat2`;
+  try {
+    await c.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail) VALUES
+      (clock_timestamp(), 'do1-chuyen-bac', 'tat-ca', 'pass', $1), (clock_timestamp(), 'do1-chuyen-bac', 'tat-ca', 'skip', $2)`,
+    [JSON.stringify({ ngay: "2000-01-01", tag: TAG, thang: { ma: "thang-0811", tu_ngay: "2000-01-01" } }),
+      JSON.stringify({ ngay: "2000-01-03", tag: TAG, ly_do: "doi-thang", thang: { ma: "thang-0811", tu_ngay: "2000-01-01" } })]);
+    const p = spawnSync(process.execPath, [path.join(ROOT, "pipeline/do-hang-ngay.mjs"), "--sua-ngay-doi-thang"],
+      { env: process.env, encoding: "utf8" });
+    console.log(`DD-AC-8 tiến trình từ chối: mã ${p.status} · ${p.stderr.trim().split("\n").pop()}`);
+    assert.equal(p.status, 2, `DD-AC-8 từ chối không thoát 2 (mã ${p.status}: ${p.stderr})`);
+    assert.match(p.stderr, /ngày áp 2000-01-01 lệch ngày có dấu .*2000-01-03/, "DD-AC-8 từ chối không in hai ngày");
+  } finally {
+    await c.query("DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'tag' = $1", [TAG]);
+  }
   await trongGiaoDich(async () => {   // bỏ qua có tên
     await nen({ bang: "rong", ap: null });
     assert.deepEqual(await suaNgayDoiThang(c, { write: true }), { bo_qua: "chua-co-thang-moi" });
@@ -319,5 +355,53 @@ test("DD-AC-8 lệnh sửa ngày đổi thang: thử không ghi, ghi đúng ngà
     const n = await demNgay(D1);
     assert.equal(n, 0, "đối chứng đỏ: xoá không lọc mà ngày khác còn — thước không phân biệt");
     assert.throws(() => assert.equal(n, 2, "DD-AC-8 lệnh sửa đụng ngày khác"), /DD-AC-8 lệnh sửa đụng ngày khác/);
+  });
+});
+
+// ---- E9 · AC-9: ảnh chụp mang ngày UTC sớm một ngày — ngày áp vẫn là ngày VN của lượt DO1 đầu tiên mang thang ----
+const tapNgay = async (ngay) => (await c.query(
+  "SELECT unit_key, from_level, to_level FROM data_level_change WHERE snap_date = $1 ORDER BY unit_key", [ngay])).rows;
+async function nenAC9() {
+  await nen({ bang: "rong", ap: D, anhChup: D_1 });   // như máy thu: ảnh chụp thang-0811 đầu tiên 09/11, DO1 thấy 10/11
+  const t = await tin();
+  await chuanBi(D_2);                                 // bảng đơn vị toàn thang mới, có tin ở B1
+  await chenChuyen(D_1, 2, "d-1");
+  await chenChuyen(D, 3);
+  return t;
+}
+test("DD-AC-9 ngày áp theo giờ VN, không theo ảnh chụp UTC (kèm chiều đỏ)", { timeout: 1_800_000 }, async () => {
+  await trongGiaoDich(async () => {   // (a) (b): ngày áp D; DO1 ngày D không dấu → doi-thang tu_ngay D
+    const t = await nenAC9();
+    assert.equal(await ngayApThang(c), D, "DD-AC-9 ngày áp lấy theo ảnh chụp UTC");
+    const truoc = await tapNgay(D_1);
+    await giaNull(t);                                  // một tin đổi bậc ngày D
+    await chay(D);
+    assert.deepEqual(await dongDo1(D), { status: "skip", ly_do: "doi-thang", thang: THANG_D, don_vi: await soDonVi() },
+      "DD-AC-9 ngày áp lấy theo ảnh chụp UTC");
+    assert.deepEqual(await tapNgay(D_1), truoc, "DD-AC-9 đụng dòng chuyển ngày D-1");
+  });
+  await trongGiaoDich(async () => {   // (c): lệnh sửa nhắm D, không đụng D-1
+    await nenAC9();
+    const truoc = await tapNgay(D_1);
+    assert.deepEqual(await suaNgayDoiThang(c, { write: false }), { ngay: D, xoa: 3 });
+    await suaNgayDoiThang(c, { write: true });
+    assert.equal(await demNgay(D), 0, "DD-AC-9 lệnh sửa không xoá ngày D");
+    assert.deepEqual(await tapNgay(D_1), truoc, "DD-AC-9 ngày áp lấy theo ảnh chụp UTC");
+  });
+  await trongGiaoDich(async () => {   // (d): chưa có dòng DO1 nào mang thang
+    await nen({ bang: "cu", ap: null, anhChup: D_1 });
+    assert.equal(await ngayApThang(c), null);
+    assert.deepEqual(await suaNgayDoiThang(c, { write: true }), { bo_qua: "chua-co-thang-moi" });
+    await chay(D);
+    assert.deepEqual((await dongDo1(D)).thang, THANG_D, "DD-AC-9 lượt đầu không lấy ngày chạy làm tu_ngay");
+  });
+  await trongGiaoDich(async () => {   // chiều đỏ: ngày áp theo ảnh chụp như bản cũ → D-1, lệnh sửa xoá dòng D-1
+    await nenAC9();
+    const ap = await ngayApThang(c, { dotBien: "ngay-ap-theo-anh-chup" });
+    assert.equal(ap, D_1, "đối chứng đỏ: đột biến ảnh chụp mà vẫn ra D — thước không phân biệt");
+    await suaNgayDoiThang(c, { write: true, dotBien: "ngay-ap-theo-anh-chup" });
+    const sau = await tapNgay(D_1);
+    assert.equal(sau.length, 0, "đối chứng đỏ: lệnh sửa theo ảnh chụp mà ngày D-1 còn nguyên");
+    assert.throws(() => assert.equal(ap, D, "DD-AC-9 ngày áp lấy theo ảnh chụp UTC"), /DD-AC-9 ngày áp lấy theo ảnh chụp UTC/);
   });
 });

@@ -76,3 +76,13 @@ Serves E6, E7. Verify: `config:executors.test.tb_app_db`.
 ### Task 5: Docs
 
 `pipeline/CLAUDE.md`: add `--sua-ngay-doi-thang` and the baseline-day rule to the `do-hang-ngay.mjs` row.
+
+## Vòng 2 — nâng phạm vi (Mạnh 10/11, Cổng Phạm vi duyệt lại 03:08Z)
+
+- Task 6 (AC-9, E9): `ngayApThang` = ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang `thang-0811`; `tuNgayThang` dùng chung;
+  đột biến `ngay-ap-theo-anh-chup`. Thước `DD-AC-9` (pipeline itest); nền các ca cũ dựng ngày áp bằng dòng DO1 mang thang
+  (`nen({ap, anhChup})`, `chuanBi`); TB-AC-5 của thang-bac-moi đổi theo.
+- Task 7 (AC-10, E10): `suaNgayDoiThang` ghi `checked_at = least(giờ chạy, cuối ngày D VN)` + `don_vi`; đột biến
+  `sua-gio-chay`. Thước `DD-AC-10` (app itest: sửa → DO1 ngày X thật → `loadDo1`).
+- Task 8 (AC-8): lớp `TuChoi`, `main` thoát 2; ca tiến trình thật trong `DD-AC-8`.
+- Task 9 (E3): bảng 1 mười lăm ô, so trọn danh sách ô viết trước.

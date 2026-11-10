@@ -202,3 +202,46 @@ test("DD-AC-6 hai lượt cùng ngày đổi thang lên khối DO1: dòng thang 
     assert.throws(() => assert.match(h, /lần hạ một lần/, "DD-AC-6 lượt hai mất dòng thang trên khối DO1"), /DD-AC-6 lượt hai mất dòng thang trên khối DO1/)
   })
 })
+
+// ---- do1-giu-dau-doi-thang E10 · AC-10: dấu do lệnh sửa ghi cho ngày đã qua sống qua lượt DO1 kế; khối đọc dòng hôm nay ----
+test("DD-AC-10 dấu sửa qua lượt DO1 kế: còn nguyên, giờ ghi trong ngày áp, khối đọc dòng hôm nay (kèm chiều đỏ)", { timeout: 1_800_000 }, async () => {
+  const m = await import("../../pipeline/do-hang-ngay.mjs")
+  const doHangNgay = m.doHangNgay as (c: pg.Client, o: { ngay: string; write: boolean }) => Promise<unknown>
+  const sua = m.suaNgayDoiThang as (c: pg.Client, o: { write: boolean; dotBien?: string }) => Promise<unknown>
+  const ngayVn = (ms: number) => new Date(ms + 7 * 3600e3).toISOString().slice(0, 10)
+  const X = ngayVn(Date.now()), D = ngayVn(Date.now() - 3 * 86400e3)   // X: ngày lượt DO1 kế thật của máy
+  const dauD = async () => {
+    const { rows: [r] } = await c.query(`SELECT status, detail::jsonb AS d, checked_at >= ($1::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')
+        AND checked_at < (($1::date + 1)::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh') AS trong_ngay
+      FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1::text ORDER BY checked_at DESC, id DESC LIMIT 1`, [D])
+    return r ? { status: r.status, ly_do: r.d.ly_do, thang: r.d.thang, don_vi: r.d.don_vi ?? null, trong_ngay: r.trong_ngay } : null
+  }
+  const chay = async (dotBien?: string) => {
+    await c.query(`DELETE FROM data_level_unit; DELETE FROM data_level_change; DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac'`)
+    await c.query(`INSERT INTO data_level_unit (unit_key, unit, source, data_level, ke_thieu, core, seen_on, scale)
+      VALUES ('can:999999004', 'can', 'S06', 'B2', 'so-do', '{"tin": []}', $1, 'thang-0811')`, [D])
+    await c.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail)
+      VALUES (($1::date + time '12:00') AT TIME ZONE 'Asia/Ho_Chi_Minh', 'do1-chuyen-bac', 'tat-ca', 'pass', $2)`,
+    [D, JSON.stringify({ ngay: D, thang: { ma: "thang-0811", tu_ngay: D } })])
+    for (const i of [1, 2, 3]) {
+      await c.query(`INSERT INTO data_level_change (snap_date, unit_key, unit, source, from_level, to_level, huong, ly_do)
+        VALUES ($1, $2, 'tin_le', 'S03', 'B1', 'B0', 'tut', '{truong-loi}')`, [D, `tin:dd10-${process.pid}-${i}`])
+    }
+    await sua(c, { write: true, dotBien })
+    const { rows: [n] } = await c.query("SELECT count(*)::int AS n FROM data_level_unit")
+    await doHangNgay(c, { ngay: X, write: true })
+    return { dau: await dauD(), donVi: n.n, do1: await loadDo1(c) }
+  }
+  await trongGiaoDich(async () => {
+    const { dau, donVi, do1 } = await chay()
+    assert.deepEqual(dau, { status: "skip", ly_do: "doi-thang", thang: { ma: "thang-0811", tu_ngay: D }, don_vi: donVi, trong_ngay: true },
+      "DD-AC-10 dấu sửa bị lượt DO1 kế xoá")
+    assert.equal(do1?.chuyenBac?.status, "pass", "DD-AC-10 khối đọc dấu ngày cũ làm dòng hiện hành")
+    assert.notEqual(do1?.chuyenBac?.ly_do, "doi-thang")
+  })
+  await trongGiaoDich(async () => {   // chiều đỏ: dấu ghi giờ chạy như bản cũ → lượt DO1 ngày X xoá nó
+    const { dau } = await chay("sua-gio-chay")
+    assert.equal(dau, null, "đối chứng đỏ: dấu ghi giờ chạy mà vẫn còn sau lượt DO1 — thước không phân biệt")
+    assert.throws(() => assert.notEqual(dau, null, "DD-AC-10 dấu sửa bị lượt DO1 kế xoá"), /DD-AC-10 dấu sửa bị lượt DO1 kế xoá/)
+  })
+})

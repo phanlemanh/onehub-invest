@@ -3,7 +3,8 @@
 //   node pipeline/do-hang-ngay.mjs [--write] [--ngay YYYY-MM-DD]
 //   node pipeline/do-hang-ngay.mjs --sua-ngay-doi-thang [--write]   (sửa ngày đổi thang đã qua; không --write: in ngày + số dòng)
 // Ngày lập mốc (lap-moc, doi-thang) giữ suốt cả ngày qua mọi lượt (do1-giu-dau-doi-thang): nhận theo dấu đã ghi, bảng rỗng,
-// thang cũ, rồi ngày áp thang; ngày ấy không có dòng chuyển (Hỏi-1).
+// thang cũ, rồi ngày áp thang; ngày ấy không có dòng chuyển (Hỏi-1). Ngày áp = ngày VN của lượt DO1 đầu tiên mang thang mới
+// (không theo ngày UTC của ảnh chụp). Lệnh sửa từ chối thì thoát 2.
 // Không --write: tính trong giao dịch rồi ROLLBACK, in tóm tắt. --write: khoá advisory 56083 trong giao dịch, ghi
 // data_level_change (gộp nhiều lần chạy trong ngày thành một dòng mỗi đơn vị), thay data_level_unit, ghi lại các dòng do1-*
 // của ngày (giờ VN). Lần đầu (data_level_unit rỗng) chỉ lập mốc. Chạy sau bac-du-lieu.mjs (cùng tập đơn vị data_level_units()
@@ -35,11 +36,9 @@ export async function co087(client) {
   return r.co;
 }
 
-/** Ngày áp thang hiện hành = ngày nhỏ nhất có ảnh chụp mang thang ấy (bac-du-lieu chạy trước DO1); chưa có thì `ngay`. */
-export async function tuNgayThang(client, ngay) {
-  const { rows: [r] } = await client.query(
-    "SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG]);
-  return r.d ?? ngay;
+/** Ngày áp thang hiện hành (hiện ở khối «áp từ …») = ngayApThang; chưa có dòng DO1 nào mang thang thì chính `ngay`. */
+export async function tuNgayThang(client, ngay, { dotBien } = {}) {
+  return (await ngayApThang(client, { dotBien })) ?? ngay;
 }
 
 /** Hỏi-1, Hỏi-2 ở Cổng Phạm vi do1-giu-dau-doi-thang (Mạnh, 10/11 — theo khuyến nghị): dòng chuyển có sẵn của ngày lập mốc
@@ -48,11 +47,21 @@ export const HOI1 = "xoa";
 export const HOI2 = "xoa";
 const NHAN_MOC = new Set(["lap-moc", "doi-thang"]);
 
-/** Ngày áp thang thật (ngày nhỏ nhất có ảnh chụp thang mới), null khi chưa có — khác tuNgayThang, không rơi về `ngay`. */
-export async function ngayApThang(client) {
-  const { rows: [r] } = await client.query("SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG]);
-  return r.d;
+/** Ngày áp thang (AC-9): ngày VN nhỏ nhất có dòng do1-chuyen-bac mang thang mới — lượt DO1 đầu tiên thấy thang mới; null khi
+ *  chưa có (khác tuNgayThang, không rơi về `ngay`). Không lấy ảnh chụp: 610_data_level.sql ghi snap_date = current_date của DB
+ *  (máy thu chạy Etc/UTC), nên ảnh chụp đầu ngày VN mang ngày hôm trước — máy thu: ảnh chụp thang-0811 đầu tiên 09/11, DO1 thấy
+ *  thang mới 10/11. Đột biến ngay-ap-theo-anh-chup: cách tính cũ, cho chiều đỏ DD-AC-9. */
+export async function ngayApThang(client, { dotBien } = {}) {
+  const { rows: [r] } = dotBien === "ngay-ap-theo-anh-chup"
+    ? await client.query("SELECT min(snap_date)::text AS d FROM data_level_snapshot WHERE scale = $1", [THANG])
+    : await client.query(
+      `SELECT min(detail::jsonb ->> 'ngay') AS d FROM dq_check_results
+        WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb -> 'thang' ->> 'ma' = $1`, [THANG]);
+  return r.d ?? null;
 }
+
+/** Lệnh sửa từ chối có chủ đích (AC-8): main thoát 2, khác lỗi thường (thoát 1). */
+export class TuChoi extends Error {}
 
 /** Dấu lập mốc đã ghi cho ngày (dòng do1-chuyen-bac skip mới nhất của ngày), null khi không có. */
 export async function dauNgay(client, ngay) {
@@ -77,15 +86,17 @@ export function nhanNgay({ dau, bangRong, coThangCu, ngay, tuNgay, dotBien }) {
 }
 
 /** Sửa ngày đổi thang đã qua (AC-8): ghi lại dấu doi-thang của ngày áp, dòng chuyển của đúng ngày ấy theo Hỏi-2. Không đụng
- *  data_level_unit hay ngày khác. Đã có dấu doi-thang ở ngày khác ngày áp → từ chối. */
+ *  data_level_unit hay ngày khác. Đã có dấu doi-thang ở ngày khác ngày áp → từ chối (TuChoi, thoát 2). Dấu ghi giờ nằm trong
+ *  ngày áp (AC-10): least(giờ chạy, cuối ngày áp giờ VN) — ngoài khung xoá của lượt DO1 hôm nay, không nổi lên làm dòng mới
+ *  nhất của loadDo1; kèm don_vi như dòng doi-thang của doHangNgay. Đột biến sua-gio-chay: giờ chạy, không don_vi (bản cũ). */
 export async function suaNgayDoiThang(client, { write = false, hoi2 = HOI2, dotBien } = {}) {
   if (!(await co087(client))) return { bo_qua: "chua-ap-087" };
-  const ngay = await ngayApThang(client);
+  const ngay = await ngayApThang(client, { dotBien });
   if (!ngay) return { bo_qua: "chua-co-thang-moi" };
   const { rows: lech } = await client.query(
     `SELECT DISTINCT detail::jsonb ->> 'ngay' AS d FROM dq_check_results
       WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ly_do' = 'doi-thang' AND detail::jsonb ->> 'ngay' <> $1`, [ngay]);
-  if (lech.length) throw new Error(`DD-AC-8 ngày áp ${ngay} lệch ngày có dấu ${lech.map((r) => r.d).sort().join(", ")}`);
+  if (lech.length) throw new TuChoi(`DD-AC-8 ngày áp ${ngay} lệch ngày có dấu ${lech.map((r) => r.d).sort().join(", ")}`);
   const { rows: [n] } = await client.query("SELECT count(*)::int AS n FROM data_level_change WHERE snap_date = $1", [ngay]);
   if (write) {
     if (hoi2 !== "giu") {
@@ -93,8 +104,15 @@ export async function suaNgayDoiThang(client, { write = false, hoi2 = HOI2, dotB
         dotBien === "sua-moi-ngay" ? [] : [ngay]);
     }
     await client.query(`DELETE FROM dq_check_results WHERE check_name = 'do1-chuyen-bac' AND detail::jsonb ->> 'ngay' = $1`, [ngay]);
-    await client.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail) VALUES (clock_timestamp(), 'do1-chuyen-bac', 'tat-ca', 'skip', $1)`,
-      [JSON.stringify({ ngay, ly_do: "doi-thang", thang: { ma: THANG, tu_ngay: ngay }, sua: true })]);
+    const gioCu = dotBien === "sua-gio-chay";
+    const { rows: [dv] } = await client.query("SELECT count(*)::int AS n FROM data_level_unit");
+    const cuoiNgay = new Date(new Date(khoangNgay(ngay)[1]).getTime() - 1).toISOString();
+    await client.query(
+      `INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail)
+       VALUES (CASE WHEN $2::timestamptz IS NULL THEN clock_timestamp() ELSE least(clock_timestamp(), $2::timestamptz) END,
+               'do1-chuyen-bac', 'tat-ca', 'skip', $1)`,
+      [JSON.stringify({ ngay, ly_do: "doi-thang", ...(gioCu ? {} : { don_vi: dv.n }), thang: { ma: THANG, tu_ngay: ngay }, sua: true }),
+        gioCu ? null : cuoiNgay]);
   }
   return { ngay, xoa: hoi2 === "giu" ? 0 : n.n };
 }
@@ -215,13 +233,13 @@ export async function doHangNgay(client, { ngay = ngayVn(Date.now()), write = fa
     ra.push({ check_name: "do1-chuyen-bac", entity: "tat-ca", status: "skip", detail: { ly_do: "chua-ap-087" } });
   } else {
   const nay = await donViHienTai(client);
-  const thang = { ma: THANG, tu_ngay: await tuNgayThang(client, ngay) };
+  const thang = { ma: THANG, tu_ngay: await tuNgayThang(client, ngay, { dotBien }) };
   const { rows: truocRows } = await client.query("SELECT * FROM data_level_unit");
   // Ngày lập mốc giữ là ngày lập mốc suốt cả ngày (do1-giu-dau-doi-thang): lượt sau cùng ngày không so bậc, không xoá dấu.
   const nhan = nhanNgay({
     dau: await dauNgay(client, ngay), bangRong: !truocRows.length,
     coThangCu: dotBien !== "bo-doi-thang" && truocRows.some((r) => r.scale !== THANG),   // bo-doi-thang: đột biến cho thước TB-AC-5
-    ngay, tuNgay: await ngayApThang(client), dotBien,
+    ngay, tuNgay: await ngayApThang(client, { dotBien }), dotBien,
   });
   if (nhan) {
     // Đổi thang 08/11: bậc cũ đếm theo thang khác — so với nó là đọc lần hạ một lần thành tụt bậc. Lập mốc lại. Ngày lập mốc
@@ -365,4 +383,4 @@ async function main() {
   } finally { await client.end(); }
 }
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main().catch((e) => { console.error(e.message ?? e); process.exit(1); });
+if (isMain) main().catch((e) => { console.error(e.message ?? e); process.exit(e instanceof TuChoi ? 2 : 1); });
