@@ -8,7 +8,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
   ui_standards_skill: onehub-ui
-  suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat
+  suite_keys: [executors.suite.agent, executors.suite.app, executors.suite.app_ui, executors.suite.pipeline, executors.suite.ui_lint_rules, executors.suite.portal_static]   # làn ghim lại (repin) chạy mỗi lượt; bọc suite-neu-doi — chỉ chạy suite có vùng bị nhánh đổi (s4-suite-theo-vung)
   # Khoá làn ghim lại của kit (GUIDE §7.1; Mạnh duyệt 2026-10-26, hồ sơ kit-khoa-nhom-1).
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
@@ -25,6 +25,16 @@ design_pass:
     route: "http://localhost:3460"
     dev_flag: "không cần — route thật trên nhánh của hàng, dev server cổng riêng của dãy"
 executors:
+  # Lệnh suite của lượt chấm S4 / ghim lại (feature_loop.suite_keys): bọc nguyên văn lệnh executors.test|script cùng tên
+  # bằng scripts/suite-neu-doi.mjs — bỏ qua khi nhánh không đổi vùng của suite (bảng VUNG + test canh phủ). CI vẫn chạy đủ.
+  # Eval của hồ sơ đã ký vẫn trỏ executors.test.* — không đổi các key đó (hồ sơ s4-suite-theo-vung).
+  suite:
+    agent: "node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'"
+    app: "node scripts/suite-neu-doi.mjs app -- 'cd app && npx tsc --noEmit && npm run lint'"
+    app_ui: "node scripts/suite-neu-doi.mjs app_ui -- 'cd app && npm test'"
+    pipeline: "node scripts/suite-neu-doi.mjs pipeline -- 'cd pipeline && npm test'"
+    ui_lint_rules: "node scripts/suite-neu-doi.mjs ui_lint_rules -- 'cd app && npm run test:lint-rules'"
+    portal_static: "node scripts/suite-neu-doi.mjs portal_static -- 'node scripts/check-portal-compliance.mjs'"
   test:
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
@@ -96,6 +106,13 @@ executors:
     svm_unit: "node --test pipeline/lib/thi-truong.test.mjs"   # s06-vung-moi-len-canonical AC-3 — ánh xạ một chỗ + quét chuỗi cứng, không DB
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    s4v_bo_qua: "node --test --test-name-pattern=S4V-AC-1 scripts/suite-neu-doi.test.mjs"   # s4-suite-theo-vung E1 — repo git tạm, không DB
+    s4v_chay: "node --test --test-name-pattern=S4V-AC-2 scripts/suite-neu-doi.test.mjs"     # s4-suite-theo-vung E2
+    s4v_keo: "node --test --test-name-pattern=S4V-AC-3 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E3 — ma trận 18 ô
+    s4v_bao_thu: "node --test --test-name-pattern=S4V-AC-4 scripts/suite-neu-doi.test.mjs"  # s4-suite-theo-vung E4
+    s4v_phu: "node --test --test-name-pattern=S4V-AC-5 scripts/suite-neu-doi.test.mjs"      # s4-suite-theo-vung E5 — quét kho thật
+    s4v_cau_hinh: "node --test --test-name-pattern=S4V-AC-6 scripts/suite-neu-doi.test.mjs && bash _acceptance/s4-suite-theo-vung/probes/cau-hinh-khong-doi.sh"   # s4-suite-theo-vung E6
+    s4v_dung_wt: "node --test scripts/dung-worktree-cham.test.mjs"   # s4-suite-theo-vung E7 — repo git tạm + worktree, không DB
     icc_test: "node --test scripts/install-cron-chi.test.mjs"   # install-cron-chi AC-1, AC-2, AC-4 — HOME giả + launchctl giả, không DB
     tsdt_mot: "node --test scripts/db-thu.test.mjs"   # test-suite-db-thu E1, E1b, E1c, E8 — docker giả, không DB; từ dau-luoc-do-ban-mau E8 tệp có thêm ca DL- cần Postgres :5433
     dau_luoc_do: "node --test --test-name-pattern=^DL- scripts/db-thu.test.mjs"   # dau-luoc-do-ban-mau E1–E7, E9 — Postgres :5433 thật, chỉ DB postgres và oneinvest_suite_dau_<pid>
