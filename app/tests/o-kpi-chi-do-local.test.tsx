@@ -402,7 +402,9 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
 
 describe("ON3-AC-5 thẻ chờ duyệt", () => {
   const counts = async () => {
-    const { rows } = await admin.query(`SELECT item_type AS type, count(*)::int AS n FROM "${S_LOCAL}".review_queue WHERE status = 'pending' GROUP BY 1 ORDER BY 1`)
+    // Phép đếm độc lập: thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve) không vào bản tin.
+    const { rows } = await admin.query(`SELECT item_type AS type, count(*)::int AS n FROM "${S_LOCAL}".review_queue WHERE status = 'pending'
+      AND NOT (item_type = 'entity_match' AND status = 'pending') GROUP BY 1 ORDER BY 1`)
     return { total: rows.reduce((a: number, r: { n: number }) => a + r.n, 0), byType: rows as { type: string; n: number }[] }
   }
   const shown = (h: string) => ({

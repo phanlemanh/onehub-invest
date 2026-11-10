@@ -10,6 +10,14 @@ import { fileURLToPath } from "node:url";
 
 export const MUI_GIO = "Asia/Ho_Chi_Minh";
 export const LOAI_THE = "entity_match";
+
+/** Thẻ Ghép căn đóng băng (V7) — chép NGUYÊN VĂN từ app/src/lib/ops/review-dong-bang.ts (test scripts/ops-local-dong-bang
+ *  so chuỗi). Thẻ đang chờ không còn hiện ở hàng duyệt, nên HD11 không đo nó: sau đóng băng HD11 đo 0 thẻ (xanh rỗng). */
+export const THE_DONG_BANG_SQL = "(item_type = 'entity_match' AND status = 'pending')";
+
+/** Câu nạp thẻ chờ của HD11. */
+export const CAU_THE = `SELECT item_type, status, evidence FROM review_queue WHERE item_type = $1 AND status = 'pending'
+     AND NOT ${THE_DONG_BANG_SQL}`;
 export const BEN = Object.freeze(["offer_a", "offer_b"]);
 export const KIEM = Object.freeze({
   roiKho: "the-duyet:roi-kho",
@@ -125,8 +133,7 @@ export function veDong(kq) {
 export async function docDuLieu(client) {
   await client.query("BEGIN TRANSACTION READ ONLY");
   try {
-    const { rows: the } = await client.query(
-      `SELECT item_type, status, evidence FROM review_queue WHERE item_type = $1 AND status = 'pending'`, [LOAI_THE]);
+    const { rows: the } = await client.query(CAU_THE, [LOAI_THE]);
     const ids = [...new Set(the.flatMap((t) => benCuaThe(t.evidence).map((b) => b.offerId)))];
     const { rows: tinRows } = await client.query(
       `SELECT offer_id, source, price_vnd, area_m2, price_perm2, area_id, property_type, bedrooms, bathrooms,

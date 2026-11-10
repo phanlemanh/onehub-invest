@@ -455,7 +455,8 @@ describe("DC-AC-2 số khớp DF0", () => {
 const ALLOWED_QUERIES: [string, RegExp][] = [
   // Mốc là computed_at CŨ NHẤT của bảng (dong-chay-so-cu-may-thu: máy thu báo số cũ theo cùng luật measured_at của khối).
   ["bảng tính sẵn", /^SELECT facts,\s+\(SELECT to_char\(min\(computed_at\) AT TIME ZONE 'UTC', '[^']+'\) FROM data_flow_snapshot\) AS oldest_at\s+FROM data_flow_snapshot WHERE time_window = \$1$/],
-  ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending'$/],
+  // Thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): câu đếm mang vị từ loại trừ.
+  ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending' AND NOT \(item_type = 'entity_match' AND status = 'pending'\)$/],
   ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
 ]
 /** Câu nằm ngoài ma trận (rỗng = mọi câu thuộc một lớp cho phép, không lớp nào lặp). */
