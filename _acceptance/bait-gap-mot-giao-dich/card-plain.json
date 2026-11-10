@@ -1,0 +1,1 @@
+{"feature_plain":"Bước tính «giá dưới thước» (bait gap) cho tin S03/S05 chạy trọn trong một giao dịch có khoá chung: lượt nạp S03, job S06 và job FB xếp hàng thay vì ghi chồng, gặp khoá hay chết giữa chừng thì lùi trọn, và Ops không còn lúc nào thấy giá dưới thước của tin P1 về rỗng giữa lượt."}
