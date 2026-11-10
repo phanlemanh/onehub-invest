@@ -54,7 +54,8 @@ async function dung(c: pg.Client) {
   await resolveOffers(c, ["offer_do1q00"])
   const { doHangNgay } = await import("../../pipeline/do-hang-ngay.mjs")
   await c.query("DELETE FROM data_level_unit")
-  await doHangNgay(c, { ngay: "2025-04-01", write: true })
+  // Lập mốc ngày trước (ngày lập mốc giữ suốt cả ngày — do1-giu-dau-doi-thang), lượt đo đổi bậc chạy ngày sau.
+  await doHangNgay(c, { ngay: "2025-03-31", write: true })
   // Đổi dữ liệu: tin đủ trường lõi mất giá → lần đo hai có một dòng tụt bậc thật (S03).
   await c.query("UPDATE sale_offer_records SET price_vnd = NULL WHERE offer_id = 'offer_do1q00'")
   await doHangNgay(c, { ngay: "2025-04-01", write: true })

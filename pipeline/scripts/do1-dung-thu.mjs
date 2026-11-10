@@ -105,7 +105,8 @@ async function main() {
     // Căn P giữ tin do1dt010 trước lần đo đầu; sau đó tin chuyển sang căn Q (khoá căn đổi) → «đổi khoá».
     await can(c, "do1dt-P", ["offer_do1dt010"]);
     const homNay = NGAY_DO;
-    await doHangNgay(c, { ngay: homNay, write: true });
+    // Lập mốc ngày trước (ngày lập mốc giữ suốt cả ngày — do1-giu-dau-doi-thang), lượt đo đổi bậc chạy hôm nay.
+    await doHangNgay(c, { ngay: "2025-05-31", write: true });
     await c.query("UPDATE sale_offer_records SET price_vnd = NULL WHERE offer_id IN ('offer_do1dt000', 'offer_do1dt001', 'offer_do1dt005')");
     await c.query("DELETE FROM property_offers WHERE offer_id = 'offer_do1dt010'; DELETE FROM properties WHERE stable_key = 'do1dt-P'");
     await can(c, "do1dt-Q", ["offer_do1dt010"]);
