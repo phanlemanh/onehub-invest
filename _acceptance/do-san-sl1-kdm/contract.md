@@ -5,7 +5,7 @@ slug: do-san-sl1-kdm
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-10T21:05:00Z
 approved_by:
