@@ -539,6 +539,11 @@ executors:
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
     zc3b_marker_hong: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"   # vòng 2: bản chép + HOME giả + stub, như rotate
+    # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
+    snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
+    snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"
+    snn_syntax: "for f in scripts/*-import-daily.sh; do bash -n \"$f\" || exit 1; done && plutil -lint pipeline/cron/com.oneinvest.s03-nap-15phut.plist && echo SYNTAX OK"
+    snn_scope: "f=$(git diff --name-only $(git merge-base HEAD origin/main) HEAD | grep -v -E '^(_acceptance/|PRODUCT-MAP[.]md$|LO-TRINH[.]html$)' | grep -v -x -E 'scripts/[a-z]+-import-daily[.]sh|scripts/s03-nap-nhanh[.]test[.]mjs|pipeline/cron/com[.]oneinvest[.]s03-nap-15phut[.]plist'); [ -z \"$f\" ] && echo SCOPE OK || { echo \"NGOAI PHAM VI: $f\"; exit 1; }"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
@@ -825,6 +830,18 @@ executors:
     hdnb_duong_ra: "cd pipeline && node --test scripts/thu-so-s06.test.mjs"
     hdnb_e2e: "cd pipeline && node --test scripts/thu-so-s06-e2e.itest.mjs"   # mở Chrome ngoài màn hình, máy chủ giả local
     hdnb_luat_cu: "cd pipeline && node --test scripts/chotot-khong-lui-noi-dung.test.mjs scripts/chotot-thieu-moc.test.mjs"
+    # link-nguoi-ban-s03 (T3) — bộ tra hồ sơ chạy với API giả đếm lời gọi, HOME giả; không chạm ~/.openclaw, phiên thu, :9210; DB thử riêng
+    lnb_tra: "node scripts/link-nguoi-ban-s03/acceptance.mjs tra"
+    lnb_dung: "node scripts/link-nguoi-ban-s03/acceptance.mjs dung"
+    lnb_thu: "node scripts/link-nguoi-ban-s03/acceptance.mjs thu"
+    lnb_ranh_gioi: "node scripts/link-nguoi-ban-s03/acceptance.mjs ranh-gioi"
+    lnb_api: "node scripts/link-nguoi-ban-s03/acceptance.mjs api"
+    lnb_db: "node scripts/link-nguoi-ban-s03/acceptance.mjs db"          # cần pipeline/node_modules (pg); DB thử *_lnb_s03
+    lnb_lien_lac: "node scripts/link-nguoi-ban-s03/acceptance.mjs lien-lac"
+    lnb_chon: "node scripts/link-nguoi-ban-s03/acceptance.mjs chon"
+    lnb_tien_kiem: "node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem"
+    lnb_ten_nguon: "node scripts/link-nguoi-ban-s03/acceptance.mjs ten-nguon"   # đọc danh sách tên từ source_registry local, không in
+    lnb_tai_lieu: "node scripts/link-nguoi-ban-s03/acceptance.mjs tai-lieu"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
