@@ -23,7 +23,11 @@ STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không n�
 # đây là lượt nhanh. Chuỗi vẫn chạy tiếp nạp → transform → media → refresh để tin
 # S03 lên sale_offers trong ngày; đọc gộp và enrich (bước LLM dài) giữ ở lượt 00:00.
 LUOT_NHANH=0
-[ "${1:-}" = "--luot-nhanh" ] && LUOT_NHANH=1
+case "${1:-}" in
+  "") ;;
+  --luot-nhanh) LUOT_NHANH=1 ;;
+  *) echo "❌ cờ không biết '${1}' — chỉ nhận --luot-nhanh (không cờ = lượt 00:00 đầy đủ)" >&2; exit 2 ;;
+esac
 export S03_LUOT_NHANH="$LUOT_NHANH"
 
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
@@ -56,6 +60,11 @@ go_khoa_cu() {
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
   local goc_do_tuoi=0
+  # Lượt nhanh (review 1011-3): PID còn sống thì KHÔNG gỡ dù khoá cũ >2h hay luc hỏng — lượt 00:00 nạp dồn có
+  # thể giữ khoá lâu; gỡ là hai lượt nạp chồng nhau. Bỏ lượt, 15′ sau thử lại.
+  if [ "$LUOT_NHANH" = "1" ] && [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    return 1
+  fi
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
     echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; goc_do_tuoi=1
   elif [ -n "$luc" ] && ! [[ "$luc" =~ ^[0-9]+$ ]]; then

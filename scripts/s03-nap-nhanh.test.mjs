@@ -204,6 +204,28 @@ test("NN-8 hai lượt nhanh chồng nhau: lượt sau bỏ lượt (mã 0, khô
   assert.equal(c.state, MOC_MOI);
 });
 
+test("NN-10 lượt nhanh gặp khoá CŨ >2h mà PID còn sống: bỏ lượt, KHÔNG gỡ khoá (lượt 00:00 nạp dồn còn giữ)", () => {
+  const root = cay();
+  mkdirSync(path.join(root, KHOA));
+  writeFileSync(path.join(root, KHOA, "pid"), `${process.pid}\n`);
+  writeFileSync(path.join(root, KHOA, "luc"), `${Math.floor(Date.now() / 1000) - 3 * 3600}\n`);
+  const r = chay(root, ["--luot-nhanh"]);
+  assert.equal(r.code, 0, r.out);
+  assert.ok(r.out.includes("bỏ lượt"), r.out);
+  assert.deepEqual(r.buoc, []);
+  assert.equal(r.conKhoa, true, "lượt nhanh đã gỡ khoá của một lượt còn sống");
+  assert.equal(r.state, MOC_CU);
+});
+
+test("NN-11 cờ lạ (vd --chi-nap của bản cũ) → thoát 2, không bước nào, không đụng state, không lấy khoá", () => {
+  const r = chay(cay(), ["--chi-nap"]);
+  assert.equal(r.code, 2, r.out);
+  assert.ok(r.out.includes("cờ không biết"), r.out);
+  assert.deepEqual(r.buoc, []);
+  assert.equal(r.state, MOC_CU);
+  assert.equal(r.conKhoa, false);
+});
+
 test("NN-9 plist: 61 mốc mỗi 15′ từ 7:00 tới 22:00, gọi --luot-nhanh, log riêng, không mốc sau 22:00", () => {
   const moc = [...PLIST_SRC.matchAll(/<key>Hour<\/key><integer>(\d+)<\/integer><key>Minute<\/key><integer>(\d+)<\/integer>/g)].map(
     (m) => Number(m[1]) * 60 + Number(m[2]),
