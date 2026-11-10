@@ -67,5 +67,5 @@ evals:
     executor: test
     cmd: config:executors.test.refresh_bait_gap_goi
     paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-goi.test.mjs]
-    expected: "exit 0; quét cây thật (pipeline/, scripts/, agent/src, agent/scripts; bỏ thư mục scripts/ của pipeline và tệp *.test.*, *.itest.*): danh sách lời gọi refreshBaitGap( ngoài test so trọn [pipeline/refresh-bait-gap.mjs trong buocDem]; mọi lời gọi buocDem( ngoài test không truyền savepoint. Đối chứng dương: cây tạm có thêm một tệp gọi thẳng await refreshBaitGap(c) ngoài giao dịch → quét trả lỗi gọi tên tệp ấy, ca ghim «RB-AC-8 lời gọi ngoài giao dịch»."
+    expected: "exit 0; quét cây thật (pipeline/, scripts/, agent/src, agent/scripts; bỏ thư mục scripts/ của pipeline và tệp *.test.*, *.itest.*): danh sách vi phạm rỗng và đúng một lời gọi refreshBaitGap( trong buocDem; lời gọi khác chỉ hợp lệ khi đứng sau query('BEGIN') của cùng tệp; mọi lời gọi buocDem( ngoài test không truyền savepoint. Đối chứng dương: cây tạm có thêm một tệp gọi thẳng await refreshBaitGap(c) ngoài giao dịch, một tệp gọi buocDem với savepoint, và một tệp gọi sau BEGIN → danh sách vi phạm so trọn đúng hai dòng của hai tệp đầu, ca ghim «RB-AC-8 lời gọi ngoài giao dịch»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

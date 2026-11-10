@@ -46,9 +46,10 @@ mà không có khoá chung; giám sát giữ không bật plist lượt nhanh t�
   chỉ chèn một lỗi ném ngay sau câu đặt `bait_gap_pct = NULL`, chạy, Then nó thoát ≠ 0 và mọi tin P1 vẫn mang giá trị canh
   (lượt chết giữa chừng không để rỗng).
 - AC-8: Given mã nguồn sau vòng, When quét mọi lời gọi `refreshBaitGap(` và `buocDem(` ngoài thư mục test (`pipeline/`,
-  `scripts/`, `agent/`), Then lời gọi `refreshBaitGap(` duy nhất ngoài test là trong `buocDem`, và mọi lời gọi `buocDem(`
-  ngoài test hoặc không truyền `savepoint` (giao dịch riêng) hoặc nằm sau một `BEGIN` của cùng hàm; quét có đối chứng
-  dương trên một tệp mẫu gọi thẳng `refreshBaitGap(` ngoài giao dịch.
+  `scripts/`, `agent/`), Then mọi lời gọi `refreshBaitGap(` ngoài test hoặc nằm trong `buocDem`, hoặc đứng sau một
+  `query("BEGIN")` của cùng tệp (thước chạy trong giao dịch của mình, như `scripts/deals-phi-ly-do.mjs`), và không lời gọi
+  `buocDem(` nào ngoài test truyền `savepoint`; quét có đối chứng dương trên một tệp mẫu gọi thẳng `refreshBaitGap(` ngoài
+  giao dịch và một tệp gọi sau `BEGIN`.
 
 ## Coverage
 
