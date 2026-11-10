@@ -1,0 +1,139 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · s03-nap-ho-so</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Tác vụ nạp S03 nạp thêm snapshot hồ sơ người bán (s03-ho-so) vào stg_s03_ho_so với con trỏ riêng; thiếu 080 thì giữ con trỏ để nạp lại đủ</h1><div class="sub">Trang hồ sơ · <span class="mono">s03-nap-ho-so</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Tác vụ nạp S03 nạp thêm snapshot hồ sơ người bán (s03-ho-so) vào stg_s03_ho_so với con trỏ riêng; thiếu 080 thì giữ con trỏ để nạp lại đủ</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Hồ sơ link-nguoi-ban-s03 (PR #402, gộp 10/11) cho bộ tra hồ sơ người bán S03 gửi kết quả về collector API; API ghi snapshot nguồn s03-ho-so. Bước ghi link hồ sơ trong refresh-bait-gap đọc stg_s03_ho_so_moi_nhat. Nhưng không tác vụ nào nạp snapshot s03-ho-so vào stg_s03_ho_so, nên bảng luôn rỗng (Ngoài-1, Ngoài-5)…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">4 mục để ngoài phạm vi · 3 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>7</b></span><span data-k="phep_do">Phép đo <b>8</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>48a236b</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Hồ sơ link-nguoi-ban-s03 (PR #402, gộp 10/11) cho bộ tra hồ sơ người bán S03 gửi kết quả về collector API; API ghi snapshot nguồn s03-ho-so. Bước ghi link hồ sơ trong refresh-bait-gap đọc stg_s03_ho_so_moi_nhat. Nhưng không tác vụ nào nạp snapshot s03-ho-so vào stg_s03_ho_so, nên bảng luôn rỗng (Ngoài-1, Ngoài-5). Ngoài-6: importer gặp DB thiếu 080 thì in CHUA-AP-080 và thoát 0 mà không nạp; nếu tệp bọc đẩy con trỏ qua snapshot đó thì hồ sơ mất vĩnh viễn.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given một snapshot hồ sơ mới có manifest và DB đã có 080, When tác vụ nạp S03 chạy lượt 00:00, Then snapshot hồ sơ được nạp, con trỏ hồ sơ `pipeline/logs/s03-ho-so.state` tiến tới mốc của nó, bước nạp hồ sơ đứng TRƯỚC transform (để refresh ghi link hồ sơ), chuỗi tin chạy đủ, thoát 0.</li><li data-ac="AC-2"><b>AC-2</b> — Given hai snapshot hồ sơ và DB thiếu 080 (importer in `CHUA-AP-080`, thoát 0), When tác vụ chạy, Then con trỏ hồ sơ GIỮ nguyên — kể cả khi dòng `CHUA-AP-080` nằm đầu một đầu ra rất lớn (~1 MB) —, vòng hồ sơ dừng ở snapshot đầu, có dòng `JOB FAIL … bước nap-ho-so mã 4`, chuỗi tin vẫn chạy; When áp 080 rồi chạy lại, Then cả hai snapshot được nạp; When chạy lần ba, Then không nạp lại snapshot nào (không trùng).</li><li data-ac="AC-3"><b>AC-3</b> — Given một snapshot hồ sơ có mốc CŨ hơn con trỏ tin, When tác vụ chạy, Then snapshot hồ sơ vẫn được nạp, và vòng hồ sơ không đổi giá trị con trỏ tin.</li><li data-ac="AC-4"><b>AC-4</b> — Given nạp một snapshot hồ sơ hỏng, When tác vụ chạy, Then con trỏ hồ sơ giữ nguyên, có `JOB FAIL … bước nap-ho-so mã 1`, chuỗi tin vẫn chạy và khoá nạp được nhả.</li><li data-ac="AC-5"><b>AC-5</b> — Given lượt nhanh (`--luot-nhanh`), When có snapshot hồ sơ mới, Then nó cũng được nạp, và lượt nhanh vẫn không chạy đọc gộp và làm giàu.</li><li data-ac="AC-6"><b>AC-6</b> — Given không có snapshot hồ sơ nào, hoặc chỉ có thư mục đang ghi (`.…partial`), When tác vụ chạy, Then không gọi nạp hồ sơ nào và thoát 0; Given một thư mục hồ sơ thiếu manifest, When nó mới hơn 30 phút, Then vòng hồ sơ dừng và giữ con trỏ; When nó cũ từ 30 phút (mồ côi), Then bỏ qua nó và nạp tiếp snapshot sau — như vòng tin.</li><li data-ac="AC-7"><b>AC-7</b> — Given nhánh này, When chạy các bộ test tác vụ nạp có sẵn (gồm lượt nhanh của #404), Then tất cả xanh; tệp đổi ngoài hồ sơ chỉ gồm tệp bọc nạp S03, plist lượt nhanh, hai tệp test lượt nhanh và hồ sơ.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E1-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E2-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E3-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E4-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E5-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E6-20261110T102626Z</td><td class="mono">2026-11-10T10:26:26Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E7-20261110T102636Z</td><td class="mono">2026-11-10T10:26:36Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">s03-nap-ho-so-E8-20261110T102629Z</td><td class="mono">2026-11-10T10:26:29Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given một snapshot hồ sơ mới có manifest và DB đã có 080, When tác vụ nạp S03 chạy lượt 00:00, Then snapshot hồ sơ được nạp, con trỏ hồ sơ `pipeline/logs/s03-ho-so.state` tiến tới mốc của nó, bước nạp hồ sơ đứng TRƯỚC transform (để refresh ghi link hồ sơ), chuỗi tin chạy đủ, thoát 0.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E1-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-1 lượt 00:00: snapshot hồ sơ mới được nạp, con trỏ hồ sơ tiến, chuỗi tin chạy đủ, mã 0 (130.642667ms)
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0
+ℹ skipped 0</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given hai snapshot hồ sơ và DB thiếu 080 (importer in `CHUA-AP-080`, thoát 0), When tác vụ chạy, Then con trỏ hồ sơ GIỮ nguyên — kể cả khi dòng `CHUA-AP-080` nằm đầu một đầu ra rất lớn (~1 MB) —, vòng hồ sơ dừng ở snapshot đầu, có dòng `JOB FAIL … bước nap-ho-so mã 4`, chuỗi tin vẫn chạy; When áp 080 rồi chạy lại, Then cả hai snapshot được nạp; When chạy lần ba, Then không nạp lại snapshot nào (không trùng).</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E2-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-2 Ngoài-6 thứ tự: DB thiếu 080 → GIỮ con trỏ hồ sơ, JOB FAIL nap-ho-so mã 4, chuỗi tin vẫn chạy; áp 080 rồi chạy lại → nạp đủ, không trùng (319.060542ms)
+✔ HS-8 CHUA-AP-080 ở ĐẦU một đầu ra rất lớn (~1 MB) vẫn bị bắt: giữ con trỏ, mã 4 (review: SIGPIPE dưới pipefail) (244.226208ms)
+ℹ pass 9
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given một snapshot hồ sơ có mốc CŨ hơn con trỏ tin, When tác vụ chạy, Then snapshot hồ sơ vẫn được nạp, và vòng hồ sơ không đổi giá trị con trỏ tin.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E3-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-3 con trỏ riêng: snapshot hồ sơ mốc CŨ hơn con trỏ tin vẫn được nạp; con trỏ tin không bị kéo theo (144.181667ms)
+ℹ pass 9
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given nạp một snapshot hồ sơ hỏng, When tác vụ chạy, Then con trỏ hồ sơ giữ nguyên, có `JOB FAIL … bước nap-ho-so mã 1`, chuỗi tin vẫn chạy và khoá nạp được nhả.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E4-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-4 nạp hồ sơ hỏng → giữ con trỏ, JOB FAIL nap-ho-so mã 1, chuỗi tin vẫn chạy, khoá được nhả (137.180875ms)
+ℹ pass 9
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given lượt nhanh (`--luot-nhanh`), When có snapshot hồ sơ mới, Then nó cũng được nạp, và lượt nhanh vẫn không chạy đọc gộp và làm giàu.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E5-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-5 lượt nhanh cũng nạp hồ sơ (để link hồ sơ lên trong ngày), vẫn bỏ đọc gộp + làm giàu (122.705542ms)
+ℹ pass 9
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-6: Given không có snapshot hồ sơ nào, hoặc chỉ có thư mục đang ghi (`.…partial`), When tác vụ chạy, Then không gọi nạp hồ sơ nào và thoát 0; Given một thư mục hồ sơ thiếu manifest, When nó mới hơn 30 phút, Then vòng hồ sơ dừng và giữ con trỏ; When nó cũ từ 30 phút (mồ côi), Then bỏ qua nó và nạp tiếp snapshot sau — như vòng tin.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E6-20261110T102626Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_test</b></span><span>verified_at <b>2026-11-10T10:26:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ HS-6 đối chứng: không có snapshot hồ sơ nào → không gọi nạp hồ sơ, con trỏ hồ sơ ở mốc gốc, mã 0 (140.877875ms)
+✔ HS-7 snapshot hồ sơ đang ghi (thư mục .partial) không bị nạp (127.293125ms)
+✔ HS-9 snapshot hồ sơ thiếu manifest: &lt;30′ thì dừng, giữ con trỏ; ≥30′ (mồ côi) thì bỏ qua và nạp tiếp snapshot sau (234.569209ms)
+ℹ pass 9
+ℹ fail 0</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given nhánh này, When chạy các bộ test tác vụ nạp có sẵn (gồm lượt nhanh của #404), Then tất cả xanh; tệp đổi ngoài hồ sơ chỉ gồm tệp bọc nạp S03, plist lượt nhanh, hai tệp test lượt nhanh và hồ sơ.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E7-20261110T102636Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_regress</b></span><span>verified_at <b>2026-11-10T10:26:36Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ PL34-AC-4 tập tệp: mọi tệp test nhắc {S03}-import-daily đúng bằng bảy tệp kê trước; thiếu một thì đỏ gọi tên (62.779167ms)
+✔ ZJ-AC-7 sổ vận hành: dòng {S03}-import trong bảng job đêm, lệnh grep trỏ đúng log của plist (0.987541ms)
+ℹ tests 134
+ℹ pass 134
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 71254.253167</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-7: Given nhánh này, When chạy các bộ test tác vụ nạp có sẵn (gồm lượt nhanh của #404), Then tất cả xanh; tệp đổi ngoài hồ sơ chỉ gồm tệp bọc nạp S03, plist lượt nhanh, hai tệp test lượt nhanh và hồ sơ.</p>
+<div class="kv"><span>run_id <b>s03-nap-ho-so-E8-20261110T102629Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.snh_scope</b></span><span>verified_at <b>2026-11-10T10:26:29Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">SCOPE OK
+(merge-base d7f86974 = #404 đã vào main → HEAD: ngoài _acceptance/, PRODUCT-MAP.md, LO-TRINH.html chỉ còn
+ scripts/s03-nap-ho-so.test.mjs và scripts/{S03}-import-daily.sh — không dòng NGOAI PHAM VI)</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Baseline khong do: E1–E6 — tệp `scripts/s03-nap-ho-so.test.mjs` chưa có trên diffBase d7f86974 (merge-base với origin/main sau khi #404 vào main; eval mới, chạy trên code cũ không chứng minh gì). E7, E8 là lệnh hồi quy và phạm vi, không đo baseline.
+Kiểm lại phát hiện vòng 1 trên `git diff HEAD~6..HEAD -- scripts/` (commit 3ee9d09a):
+- SIGPIPE ở kiểm `CHUA-AP-080` đã đóng. Dòng 194 nay so khớp trong shell (`[[ &quot;$OUT&quot; == *CHUA-AP-080* ]]`), không còn ống. Người chấm tái hiện bằng bash thật dưới `set -uo pipefail`, đầu ra 20.000 dòng với `CHUA-AP-080` ở dòng đầu: cách cũ (`printf | grep -q`) bắt được 0/5 lần, cách mới 5/5. HS-8 đặt đúng ca đó vào bộ test, qua node giả in khoảng 1 MB. `import_one` chạy trong thay thế lệnh và in bằng `cat`, nên đoạn đó không có ống bị đóng sớm. Các ống còn lại trong vòng hồ sơ (`echo &quot;$ts&quot; | grep -qE`, `printf &#39;%s\n&#39; &quot;$HS_DIRS&quot; | while read`) chỉ mang một dòng hoặc được đọc hết, nên không dính SIGPIPE.
+- Mục Known limits vòng 1 «thiếu manifest thì chặn mãi mà không báo» đã hết: dòng 179–186 nay theo vòng tin. Thư mục mới hơn 30′ thì dừng và giữ con trỏ; từ 30′ trở lên thì coi là mồ côi, đặt `HS_MAX` bằng mốc của nó và đi tiếp. HS-9 phủ cả hai nhánh. `HS_MAX=&quot;$TS&quot;` gán thẳng là đúng vì danh sách đã sắp tăng dần và chỉ xét mốc lớn hơn `HS_LAST`. Thay đổi này không sinh lỗi mới. Khi dừng vì thư mục &lt;30′, vòng hồ sơ không bật `HS_RC`: đúng chữ AC-6 («dừng và giữ con trỏ»), và tự gỡ sau 30′.
+- Mục «test không phủ đầu ra lớn» của vòng 1 đã có HS-8. Mục nhánh `find` lỗi vẫn chưa có test, nên giữ ở Known limits.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1 (verified_commit 580fb821): E1–E8 đạt. Ngoài hợp đồng nêu rủi ro SIGPIPE ở kiểm `CHUA-AP-080` (`printf | grep -q` dưới pipefail làm lọt dòng CHUA khi đầu ra lớn). Known limits nêu: thiếu manifest thì chặn mà không báo, test không phủ đầu ra lớn, không phủ nhánh `find` lỗi, mốc trùng giữa hai thành phố, vòng tin hỏng thì hoãn hồ sơ. Đã trả về sửa (3ee9d09a).</li><li>Round 2 (verified_commit 48a236bd, sau khi gộp origin/main có #404): E1–E8 đạt, 9/9 ca hồ sơ và 134/134 ca hồi quy. SIGPIPE đã đóng (tái hiện: cách cũ 0/5, cách mới 5/5). Thiếu manifest xử như vòng tin. Còn ba giới hạn thấp ở Known limits.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Triển khai bộ tra hồ sơ trên gateway (`S03_LOOKUP_DIR`, lời giao triển khai link-nguoi-ban sau gộp) — việc riêng, báo giám sát trước khi đụng gateway. Trước khi triển khai, máy thu chưa có snapshot hồ sơ nào nên lượt nạp thật nạp 0 dòng.</li><li data-loai="ngoai">Sửa importer (`coBangHoSo` nuốt lỗi dò bảng — Ngoài-7 ghi Known limits của link-nguoi-ban-s03): tệp bọc bắt `CHUA-AP-080` ở đầu ra, không đổi importer.</li><li data-loai="ngoai">Chống trùng ở mức DB: importer đã `ON CONFLICT (source_id) DO NOTHING`; vòng này chỉ bảo đảm con trỏ không nạp lại.</li><li data-loai="ngoai">Transform phía sau `stg_s03_ho_so` (bước ghi link hồ sơ có sẵn từ #402).</li><li data-loai="gioi-han">Hai snapshot hồ sơ cùng mốc ở hai thư mục thành phố khác nhau: nếu cái đầu nạp được, cái sau hỏng (hoặc gặp `CHUA-AP-080`) thì con trỏ đã bằng mốc chung, và lượt kế bỏ cái sau vì so `&gt;` nghiêm ngặt (`scripts/{S03}-import-daily.sh:178`). Rủi ro thấp: collector API ghi hồ sơ theo một thành phố và mốc có mili-giây; vòng tin có cùng giới hạn.</li><li data-loai="gioi-han">Vòng tin hỏng (`FAILED=1`, gồm cả snapshot tin thiếu manifest &lt;30′) thoát ở `scripts/{S03}-import-daily.sh:154`, trước vòng hồ sơ, nên lượt đó không nạp hồ sơ. Không mất dữ liệu: con trỏ hồ sơ không đổi, lượt sau nạp bù.</li><li data-loai="gioi-han">Bộ test không phủ nhánh `find` lỗi khi liệt kê snapshot hồ sơ (`HS_RC=3`, `scripts/{S03}-import-daily.sh:169`); nhánh này chỉ đọc qua code.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">48a236bd0c0d1c4dae0d10e1fd31766debdb1f48</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
