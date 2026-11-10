@@ -5,7 +5,7 @@ slug: s03-nap-nhanh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-11-10T09:40:00Z
 approved_by:
