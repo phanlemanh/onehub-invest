@@ -2,14 +2,11 @@
 //   - kiemLenh: hàm thuần kiểm khuôn — bản TS chẵn ở app/src/lib/lenh.ts (test SL-AC-5b so từng ô);
 //   - apLenh: áp một lệnh vào source_registry ở máy thu trong MỘT giao dịch, chống lặp bằng sổ áp.
 // Danh sách loại (§4), khoá cấm (§7) là nguyên văn ADR-0015; test rút lại từ ADR và so.
+import { LOAI_LENH } from "./loai-lenh.mjs";
 import { isRunnable } from "./vong-doi.mjs";
 
-/** 14 loại lệnh của ADR-0015 §4 — bằng CHECK change_requests_type_chk của 091. */
-export const LOAI_LENH = Object.freeze([
-  "unit.create", "unit.update_meta", "unit.enable", "unit.disable", "unit.retire",
-  "source.pause", "source.resume", "source.set_schedule", "source.set_slo",
-  "context_rule.publish", "context_rule.retire", "coverage_target.set", "job.rerun", "review.decide",
-]);
+/** 14 loại lệnh của ADR-0015 §4 — bằng CHECK change_requests_type_chk của 091 (danh sách ở loai-lenh.mjs). */
+export { LOAI_LENH };
 
 /** Loại đã có bộ áp ở vòng này. Loại khác trong 14 vẫn bị từ chối tới hàng của nó (TV5–TV8). */
 export const LOAI_CO_BO_AP = Object.freeze(["source.pause", "source.resume"]);

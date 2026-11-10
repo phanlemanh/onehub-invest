@@ -80,7 +80,7 @@ test("SL-AC-5 đối chứng đỏ: đột biến chỉ khớp khoá cấm từ 
   assert.equal(goc.split(dong).length, 2, "không thấy đúng một vòng khớp khoá cấm để đột biến");
   const dir = mkdtempSync(path.join(tmpdir(), "lenh-db-"));
   try {
-    writeFileSync(path.join(dir, "vong-doi.mjs"), readFileSync(path.join(path.dirname(LENH_MJS), "vong-doi.mjs"), "utf8"));
+    for (const f of ["vong-doi.mjs", "loai-lenh.mjs"]) writeFileSync(path.join(dir, f), readFileSync(path.join(path.dirname(LENH_MJS), f), "utf8"));
     writeFileSync(path.join(dir, "lenh.mjs"), goc.replace(dong, "for (let i = 1; i <= 1 && i + doan.length <= duong.length; i++) {"));
     const D = await import(pathToFileURL(path.join(dir, "lenh.mjs")).href);
     const lech = maTran().filter(([, cmd, muon]) => JSON.stringify(D.kiemLenh(cmd)) !== JSON.stringify(muon)).map(([ten]) => ten);

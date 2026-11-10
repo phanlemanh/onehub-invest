@@ -149,17 +149,22 @@ test("SL-AC-2 tạo lệnh: bảng 12 lời gọi; giao dịch hỏng thì 0 dò
   assert.equal(ok.body.requested_by, `user:${nguoi.ops.id}`)
   assert.equal(await dem("ops_audit", `action = 'change_request.create' AND detail->>'change_request_id' = '${ok.body.id}'`), 1)
   const truoc = [await dem("change_requests"), await dem("ops_audit")]
-  const xau: [string, Goi][] = [
-    ["thiếu reason", { cookie: nguoi.ops.cookie, body: P({}) }],
-    ["reason trắng", { cookie: nguoi.ops.cookie, body: P({ reason: "  " }) }],
-    ["unit.create", { cookie: nguoi.ops.cookie, body: { type: "unit.create", target: "S05", payload: {} } }],
-    ["loại lạ", { cookie: nguoi.ops.cookie, body: { type: "source.purge", target: "S05", payload: {} } }],
-    ["target S5", { cookie: nguoi.ops.cookie, body: { type: "source.pause", target: "S5", payload: { reason: "x" } } }],
-    ["khoá thừa", { cookie: nguoi.ops.cookie, body: P({ reason: "x", extra: 1 }) }],
-    ["khoá cấm sâu 3", { cookie: nguoi.ops.cookie, body: P({ reason: "x", a: { b: { bindings: [] } } }) }],
-    ["requireMention", { cookie: nguoi.ops.cookie, body: P({ reason: "x", requireMention: false }) }],
+  // Mỗi ô ghim cả lý do: «khoá cấm» và «khoá thừa» đều ra 400, chỉ lý do phân biệt được hai bước kiểm.
+  const xau: [string, Goi, string][] = [
+    ["thiếu reason", { cookie: nguoi.ops.cookie, body: P({}) }, "thieu-reason"],
+    ["reason trắng", { cookie: nguoi.ops.cookie, body: P({ reason: "  " }) }, "thieu-reason"],
+    ["unit.create", { cookie: nguoi.ops.cookie, body: { type: "unit.create", target: "S05", payload: {} } }, "loai-chua-co-bo-ap:unit.create"],
+    ["loại lạ", { cookie: nguoi.ops.cookie, body: { type: "source.purge", target: "S05", payload: {} } }, "loai-la:source.purge"],
+    ["target S5", { cookie: nguoi.ops.cookie, body: { type: "source.pause", target: "S5", payload: { reason: "x" } } }, "target-sai-khuon"],
+    ["khoá thừa", { cookie: nguoi.ops.cookie, body: P({ reason: "x", extra: 1 }) }, "khoa-thua:extra"],
+    ["khoá cấm sâu 3", { cookie: nguoi.ops.cookie, body: P({ reason: "x", a: { b: { bindings: [] } } }) }, "khoa-cam:bindings"],
+    ["requireMention", { cookie: nguoi.ops.cookie, body: P({ reason: "x", requireMention: false }) }, "khoa-cam:requireMention"],
   ]
-  for (const [ten, o] of xau) assert.equal((await tao(o)).status, 400, ten)
+  assert.equal(xau.length, 8)
+  for (const [ten, o, lyDo] of xau) {
+    const r = await tao(o)
+    assert.deepEqual([r.status, r.body.error, r.body.ly_do], [400, "lenh-sai-khuon", lyDo], ten)
+  }
   assert.equal((await tao({ cookie: nguoi.viewer.cookie, body: P({ reason: "x" }) })).status, 403, "viewer")
   assert.equal((await tao({ cookie: nguoi.ops.cookie, body: { type: "source.resume", target: "S05", payload: {} } })).status, 403, "ops bật lại")
   assert.equal((await tao({ auth: `Bearer ${CHUNG}`, body: P({ reason: "x" }) })).status, 403, "bearer chung")
@@ -325,15 +330,21 @@ test("SL-AC-8 kết quả qua push-ops-facts → ingest: đúng lệnh đổi, h
   const sv = await serverThat()
   const env = { DATABASE_URL: schemaUrl(M), INGEST_URL: `${sv.url}/api/v1/ops/ingest`, OPS_MACHINE_TOKEN: token }
   try {
+    const batDau = Date.now() - 1000
     const r = await chay(PUSH, ["--chi-lenh", tep], env)
     assert.equal(r.code, 0, r.err)
     assert.match(r.out, /cập nhật 3, bỏ qua 2/)
     const L = async (id: string) => (await sc.query(`SELECT * FROM change_requests WHERE id = $1`, [id])).rows[0]
+    // result và trạng thái so đúng giá trị của tệp; finished_at là giờ cloud nhận kết quả (now() trong cùng lượt gửi).
     const q1 = await L(Q1.id)
-    assert.deepEqual([q1.status, q1.before, q1.after], ["applied", truoc, sau])
-    assert.ok(q1.finished_at && q1.result)
-    assert.equal((await L(Q2.id)).status, "failed")
-    assert.equal((await L(Q3.id)).status, "reverted")
+    assert.deepEqual([q1.status, q1.before, q1.after, q1.result], ["applied", truoc, sau, { outcome: "applied", ly_do: null, applied_at: "2026-11-10T00:00:00Z" }])
+    const q2 = await L(Q2.id)
+    assert.deepEqual([q2.status, q2.before, q2.after, q2.result], ["failed", truoc, truoc, { outcome: "failed", ly_do: "tien-dieu-kien:nguon-paused", applied_at: null }])
+    const q3 = await L(Q3.id)
+    assert.deepEqual([q3.status, q3.before, q3.after, q3.result], ["reverted", truoc, truoc, { outcome: "reverted", ly_do: "kiem-sau-hong", applied_at: null }])
+    for (const q of [q1, q2, q3]) {
+      assert.ok(q.finished_at instanceof Date && q.finished_at.getTime() >= batDau && q.finished_at.getTime() <= Date.now() + 1000, `finished_at ${q.id}`)
+    }
     assert.deepEqual(await L(A1.id), truocA1)
     assert.equal(await dem("ops_audit", `actor = 'machine:may-thu-thu' AND action = 'change_request.result'`), 3)
     assert.deepEqual(await hb(), hbTruoc, "ops_heartbeat bị ghi đè")

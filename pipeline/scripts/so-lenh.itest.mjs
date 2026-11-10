@@ -223,7 +223,7 @@ test("SL-AC-7 tiền điều kiện hỏng và kiểm sau hỏng: nguồn không
   assert.equal(goc.split(dongKiem).length, 2, "không thấy đúng một lời gọi kiemSau để đột biến");
   const dir = mkdtempSync(path.join(tmpdir(), "lenh-ac7-"));
   try {
-    writeFileSync(path.join(dir, "vong-doi.mjs"), readFileSync(path.join(DIR, "..", "lib", "vong-doi.mjs"), "utf8"));
+    for (const f of ["vong-doi.mjs", "loai-lenh.mjs"]) writeFileSync(path.join(dir, f), readFileSync(path.join(DIR, "..", "lib", f), "utf8"));
     writeFileSync(path.join(dir, "lenh.mjs"), goc.replace(dongKiem, "await kiemSau(client, cmd, sau).catch(() => {});"));
     const D = await import(pathToFileURL(path.join(dir, "lenh.mjs")).href);
     const r = await D.apLenh(c, lenh("source.pause", "S91", { reason: "x" }), { kiemSau: async () => { throw new Error("ép hỏng"); } });
