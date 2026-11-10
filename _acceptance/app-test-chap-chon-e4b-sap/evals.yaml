@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: app-test-chap-chon-e4b-sap
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/package.json, app/tests/tin-rao-doi-chieu.test.tsx, app/tests/can-gia-tot-doi-chieu.test.tsx, app/tests/suite-chung-bo-ca.test.tsx]
+    expected: "exit 0; đầu ra node:test của bộ chung có bốn dòng '# SKIP chạy riêng qua executor …' cho E4B-AC-3, E4B-AC-4, E4B-AC-7 (tir_doi_chieu) và 'CGT-DC đối chiếu DB máy thu chỉ đọc' (can_gia_tot_doi_chieu); ca 'E4b đối chiếu DB máy thu' và 'CGT-DC bộ đếm đo đủ mọi tin' báo ok không SKIP"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tir_doi_chieu
+    layer: backend-effect
+    paths: [app/tests/tin-rao-doi-chieu.test.tsx, app/tests/suite-chung-bo-ca.test.tsx]
+    expected: "exit 0; E4B-AC-3, E4B-AC-4, E4B-AC-7 báo ok, không SKIP; E4B-AC-3 in bốn dòng 'cũ <a> ms · mới <b> ms' với b < 700"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.can_gia_tot_doi_chieu
+    layer: backend-effect
+    paths: [app/tests/can-gia-tot-doi-chieu.test.tsx, app/tests/suite-chung-bo-ca.test.tsx]
+    expected: "exit 0; 'CGT-DC đối chiếu DB máy thu chỉ đọc' báo ok, không SKIP; dòng 'CGT-DC đối chiếu <n> tin' với n bằng số tin P1 bán của kho"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/tests/suite-chung-bo-ca.test.tsx, app/tests/tin-rao-doi-chieu.test.tsx, app/tests/can-gia-tot-doi-chieu.test.tsx]
+    expected: "exit 0; ca 'SCB-AC-2' xanh: hàm bỏ qua trả lý do khi ONEHUB_SUITE_CHUNG=1 và false khi vắng; bản đột biến trả lý do cả khi vắng biến đỏ 'BO QUA KHI CHAY RIENG'; mọi hằng trần (700, 1000, các timeout) của hai tệp test bằng bản ở gốc nhánh (git show, bỏ qua trên CI), đổi một hằng thì đỏ 'TRAN BI DOI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: judgment
+    paths: [docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md, _acceptance/app-test-chap-chon-e4b-sap/contract.md]
+    expected: "Bảng thay lời trong design doc đổi đúng vế 'trong suite app' của e4b-danh-sach-tin-nhanh AC-3 thành điều kiện chạy riêng, giữ 700 ms và bốn kiểu sắp; không đổi lời can-gia-tot-sua-ba-loi AC-7"
+    evidence_required: [verifier, verified_at, rationale]
