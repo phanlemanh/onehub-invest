@@ -5,6 +5,7 @@ import assert from "node:assert/strict"
 
 import type { DealRow } from "../src/lib/deals"
 import { tabCua, thieuGi } from "../src/lib/deals-chi-tiet"
+import { boQuaTrongSuiteChung } from "./helpers/suite-chung"
 
 const goc = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 process.env.DATABASE_URL = `${goc}${goc.includes("?") ? "&" : "?"}options=-c%20default_transaction_read_only%3Don`
@@ -84,7 +85,7 @@ after(async () => {
   await pool.end().catch(() => {})
 })
 
-test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 1_200_000 }, async () => {
+test("CGT-DC đối chiếu DB máy thu chỉ đọc", { skip: boQuaTrongSuiteChung("can_gia_tot_doi_chieu"), timeout: 1_200_000 }, async () => {
   const { pool } = await import("../src/lib/db")
   const { getDeal, getDeals, dealHang } = await import("../src/lib/deals")
   const dem = async () => {
