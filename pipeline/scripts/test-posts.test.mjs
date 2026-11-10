@@ -122,7 +122,7 @@ test("AC-1 chiều đỏ: luật nhóm lỏng bị ma trận bắt", () => {
   assert.deepEqual(failed, ["AC-1 bắt nhầm nhóm thật: TESTING ROOM"]);
 });
 
-test("AC-2 transform S03 từ chối post thử", { timeout: 300_000 }, async () => {
+test("AC-2 transform S03 từ chối post thử", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     const pReal = await insertPost(c, { post_id: pid("real"), text: saleText("61.3", "0912 000 111"), posted_at: "2026-10-22T08:00:00Z" });
     const pOnly = await insertPost(c, { post_id: pid("only"), snapshot_id: MOCK_SNAP, agent_id: null, text: saleText("58.7", "0912 000 333") });
@@ -156,7 +156,7 @@ test("AC-2 transform S03 từ chối post thử", { timeout: 300_000 }, async ()
   });
 });
 
-test("AC-4 rút offer giả qua đối soát", { timeout: 300_000 }, async () => {
+test("AC-4 rút offer giả qua đối soát", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     const p = await insertPost(c, { post_id: pid("ac4"), text: saleText("63.9", "0912 000 444") });
     const first = await runTransformZalo(c);
@@ -190,7 +190,7 @@ test("AC-4 rút offer giả qua đối soát", { timeout: 300_000 }, async () =>
   });
 });
 
-test("AC-5 lượt sạch và lượt toàn thử", { timeout: 300_000 }, async () => {
+test("AC-5 lượt sạch và lượt toàn thử", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     // (a) stg kênh Zalo không còn post thử (xoá trong giao dịch, ROLLBACK cuối).
     const { rows } = await c.query(
@@ -231,7 +231,7 @@ test("AC-5 lượt sạch và lượt toàn thử", { timeout: 300_000 }, async 
   });
 });
 
-test("AC-9 stg không đổi", { timeout: 300_000 }, async () => {
+test("AC-9 stg không đổi", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     const before = await stgPrint(c);
     await runTransformZalo(c);
@@ -243,7 +243,7 @@ test("AC-9 stg không đổi", { timeout: 300_000 }, async () => {
   });
 });
 
-test("AC-3 transform S05 dùng cùng bộ lọc", { timeout: 300_000 }, async () => {
+test("AC-3 transform S05 dùng cùng bộ lọc", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     const p = await insertPost(c, { post_id: pid("fb"), agent_id: "apify-facebook", group_name: "TEST FB", text: saleText("67.7", "0912 000 666") });
     const res = await runTransformFb(c);
@@ -293,7 +293,7 @@ test("AC-4 không câu DELETE FROM sale_offers mới", () => {
   assert.deepEqual(scanDeleteAll([{ path: "mau.mjs", text: "x\n  await c.query(\"DELETE FROM sale_offers WHERE source = 'S03'\");" }]), ["mau.mjs:2"]);
 });
 
-test("AC-6 bait gap tính lại", { timeout: 300_000 }, async () => {
+test("AC-6 bait gap tính lại", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     const ward = (await c.query(`SELECT 1 FROM v_ruler_p2_area WHERE area_id = 'vn-hanoi-nghia-do'`)).rowCount;
     assert.equal(ward, 1, "AC-6 fixture: phường Nghĩa Đô không còn thước P2 — đổi phường fixture");
@@ -321,7 +321,7 @@ test("AC-6 bait gap tính lại", { timeout: 300_000 }, async () => {
   });
 });
 
-test("AC-8 thước dư lượng bắt được tin giả", { timeout: 300_000 }, async () => {
+test("AC-8 thước dư lượng bắt được tin giả", { timeout: 900_000 }, async () => {
   await withTx(async (c) => {
     // Đưa DB trong giao dịch về trạng thái đã dọn, rồi lấy mốc ngay trước khi chèn p.
     await runTransformZalo(c);

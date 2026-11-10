@@ -1,0 +1,403 @@
+{
+  "_ghi_chu": "DV1 nut-du-an-tro-xa-moi: xã cũ (trước sắp xếp 01/07/2025) của từng nút dự án kèm nguồn có tên; mã mới suy qua area_aliases (PX1) theo old_code. chon = admin_code xã mới khi xã cũ bị tách. cap tinh = chưa chốt được xã (Hỏi-2, Mạnh duyệt 10/11).",
+  "nut": {
+    "vinhomes-ocean-park-1": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "00577",
+          "ten": "Đa Tốn",
+          "huyen": "Huyện Gia Lâm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Ocean Park Gia Lâm",
+            "url": "https://thuviennhadat.vn/du-an-bat-dong-san/vinhomes-ocean-park-gia-lam-1596.html"
+          }
+        },
+        {
+          "old_code": "00571",
+          "ten": "Dương Xá",
+          "huyen": "Huyện Gia Lâm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Ocean Park Gia Lâm",
+            "url": "https://thuviennhadat.vn/du-an-bat-dong-san/vinhomes-ocean-park-gia-lam-1596.html"
+          }
+        },
+        {
+          "old_code": "00580",
+          "ten": "Kiêu Kỵ",
+          "huyen": "Huyện Gia Lâm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Ocean Park Gia Lâm",
+            "url": "https://thuviennhadat.vn/du-an-bat-dong-san/vinhomes-ocean-park-gia-lam-1596.html"
+          }
+        },
+        {
+          "old_code": "00565",
+          "ten": "Trâu Quỳ (thị trấn, một phần)",
+          "huyen": "Huyện Gia Lâm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Ocean Park Gia Lâm",
+            "url": "https://thuviennhadat.vn/du-an-bat-dong-san/vinhomes-ocean-park-gia-lam-1596.html"
+          }
+        }
+      ],
+      "chon": [
+        "00565"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Ocean City ở đâu (13/09/2025)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/ocean-city-o-dau-8wonder-ocean-city-la-gi-23896.html"
+      },
+      "ly_do_chon": "Đa Tốn và Trâu Quỳ tách cho Gia Lâm + Bát Tràng; Kiêu Kỵ, Dương Xá trọn vào Gia Lâm. Bài 13/09/2025 dẫn NQ 1656 kết luận Ocean Park 1 thuộc xã Gia Lâm theo vị trí thực tế; bài 14/09/2025 cũng ghi xã Gia Lâm."
+    },
+    "vinhomes-ocean-park-2": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "12034",
+          "ten": "Long Hưng",
+          "huyen": "Huyện Văn Giang (Hưng Yên)",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Ocean City ở đâu (13/09/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/ocean-city-o-dau-8wonder-ocean-city-la-gi-23896.html"
+          }
+        },
+        {
+          "old_code": "12031",
+          "ten": "Nghĩa Trụ",
+          "huyen": "Huyện Văn Giang (Hưng Yên)",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Ocean City ở đâu (13/09/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/ocean-city-o-dau-8wonder-ocean-city-la-gi-23896.html"
+          }
+        }
+      ]
+    },
+    "vinhomes-ocean-park-3": {
+      "cap": "tinh",
+      "tinh": "vn-hung-yen",
+      "ly_do": "Nguồn mâu thuẫn về xã cũ (Tân Quang + TT Như Quỳnh + Nghĩa Trụ, hay Long Hưng + Nghĩa Trụ); chưa có quyết định chủ trương KĐT Đại An để chốt — Hỏi-2 Cổng Phạm vi 10/11"
+    },
+    "vinhomes-smart-city": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "00628",
+          "ten": "Tây Mỗ",
+          "huyen": "Quận Nam Từ Liêm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Layout The Victoria Vinhomes Smart City",
+            "url": "https://thuviennhadat.vn/bat-dong-san/layout-phan-khu-the-victoria-vinhomes-smart-city-cac-toa-30795.html"
+          }
+        },
+        {
+          "old_code": "00634",
+          "ten": "Đại Mỗ",
+          "huyen": "Quận Nam Từ Liêm",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Layout The Victoria Vinhomes Smart City",
+            "url": "https://thuviennhadat.vn/bat-dong-san/layout-phan-khu-the-victoria-vinhomes-smart-city-cac-toa-30795.html"
+          }
+        }
+      ],
+      "chon": [
+        "00634"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Layout The Victoria Vinhomes Smart City (03/02/2026)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/layout-phan-khu-the-victoria-vinhomes-smart-city-cac-toa-30795.html"
+      },
+      "ly_do_chon": "Tây Mỗ cũ tách Xuân Phương/Tây Mỗ, Đại Mỗ cũ tách 5 phường; bài dẫn NQ 1656 kết luận 'địa chỉ Vinhomes Smart City thuộc địa phận phường Tây Mỗ mới'."
+    },
+    "vinhomes-riverside": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "00127",
+          "ten": "Việt Hưng",
+          "huyen": "Quận Long Biên",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Riverside thuộc phường nào từ 1/7/2025",
+            "url": "https://thuviennhadat.vn/bat-dong-san/vinhomes-riverside-thuoc-phuong-nao-tu-1-7-2025-21637.html"
+          }
+        },
+        {
+          "old_code": "00136",
+          "ten": "Phúc Lợi",
+          "huyen": "Quận Long Biên",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Riverside thuộc phường nào từ 1/7/2025",
+            "url": "https://thuviennhadat.vn/bat-dong-san/vinhomes-riverside-thuoc-phuong-nao-tu-1-7-2025-21637.html"
+          }
+        },
+        {
+          "old_code": "00151",
+          "ten": "Phúc Đồng",
+          "huyen": "Quận Long Biên",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Riverside thuộc phường nào từ 1/7/2025",
+            "url": "https://thuviennhadat.vn/bat-dong-san/vinhomes-riverside-thuoc-phuong-nao-tu-1-7-2025-21637.html"
+          }
+        }
+      ],
+      "chon": [
+        "00136"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Riverside thuộc phường nào từ 1/7/2025 (30/07/2025)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/vinhomes-riverside-thuoc-phuong-nao-tu-1-7-2025-21637.html"
+      },
+      "ly_do_chon": "Cả ba phường cũ đều tách (Việt Hưng/Phúc Lợi; Phúc Đồng 4 phường). Bài 30/07/2025 dẫn NQ 1656 kết luận từ 1/7/2025 Vinhomes Riverside thuộc phường Phúc Lợi; bài khu Bằng Lăng (08/08/2025) cũng ghi Phúc Lợi."
+    },
+    "ecopark": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "12022",
+          "ten": "Xuân Quan",
+          "huyen": "Huyện Văn Giang (Hưng Yên)",
+          "nguon": {
+            "ten": "Thư Viện Pháp Luật (thuvienphapluat.vn) — Khu đô thị Ecopark ở đâu",
+            "url": "https://thuvienphapluat.vn/phap-luat-nha-dat/khu-do-thi-ecopark-o-dau-gia-ban-chung-cu-ecopark-hung-yen-moi-nhat-151.html"
+          }
+        },
+        {
+          "old_code": "12025",
+          "ten": "Cửu Cao",
+          "huyen": "Huyện Văn Giang (Hưng Yên)",
+          "nguon": {
+            "ten": "Thư Viện Pháp Luật (thuvienphapluat.vn) — Khu đô thị Ecopark ở đâu",
+            "url": "https://thuvienphapluat.vn/phap-luat-nha-dat/khu-do-thi-ecopark-o-dau-gia-ban-chung-cu-ecopark-hung-yen-moi-nhat-151.html"
+          }
+        },
+        {
+          "old_code": "12028",
+          "ten": "Phụng Công",
+          "huyen": "Huyện Văn Giang (Hưng Yên)",
+          "nguon": {
+            "ten": "Thư Viện Pháp Luật (thuvienphapluat.vn) — Khu đô thị Ecopark ở đâu",
+            "url": "https://thuvienphapluat.vn/phap-luat-nha-dat/khu-do-thi-ecopark-o-dau-gia-ban-chung-cu-ecopark-hung-yen-moi-nhat-151.html"
+          }
+        }
+      ]
+    },
+    "the-rainbow": {
+      "cap": "tinh",
+      "tinh": "vn-hanoi",
+      "ly_do": "Không tìm thấy dự án «The Rainbow» nào ở Văn Khê; nút gieo ở 026 không ứng với dự án xác định được — Hỏi-2; rút hay sửa nút thuộc DA19"
+    },
+    "kdt-van-khe": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "09551",
+          "ten": "La Khê",
+          "huyen": "Quận Hà Đông",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Khu đô thị Văn Khê thuộc phường nào sau sáp nhập (26/12/2025)",
+            "url": "https://thuviennhadat.vn/phap-ly-nha-dat/khu-do-thi-van-khe-thuoc-phuong-nao-sau-sap-nhap-dia-chi-khu-do-thi-van-khe-ha-dong-ha-noi-728647.html"
+          }
+        }
+      ],
+      "chon": [
+        "09556"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Khu đô thị Văn Khê thuộc phường nào sau sáp nhập (26/12/2025)",
+        "url": "https://thuviennhadat.vn/phap-ly-nha-dat/khu-do-thi-van-khe-thuoc-phuong-nao-sau-sap-nhap-dia-chi-khu-do-thi-van-khe-ha-dong-ha-noi-728647.html"
+      },
+      "ly_do_chon": "La Khê cũ tách Hà Đông / Dương Nội. Bài 26/12/2025 dẫn khoản 43 Điều 1 NQ 1656 và vị trí trên đường Tố Hữu (Lê Văn Lương kéo dài): 'khu đô thị Văn Khê sau sáp nhập thuộc phường Hà Đông'."
+    },
+    "sun-grand-park-11": {
+      "cap": "tinh",
+      "tinh": "vn-hanoi",
+      "ly_do": "Không tìm thấy dự án nào tên này trên web hay trong dữ liệu thu; nút gieo ở 026 — Hỏi-2; rút hay sửa nút thuộc DA19"
+    },
+    "masteri-west-heights": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "00628",
+          "ten": "Tây Mỗ",
+          "huyen": "Quận Nam Từ Liêm",
+          "nguon": {
+            "ten": "batdongsan.com.vn — tin cho thuê phường Tây Mỗ (nhãn 'P. Tây Mỗ (Q. Nam Từ Liêm cũ)' cho Masteri West Heights)",
+            "url": "https://batdongsan.com.vn/nha-dat-cho-thue-phuong-tay-mo-tp-ha-noi/p3"
+          }
+        }
+      ],
+      "chon": [
+        "00634"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Layout The Victoria Vinhomes Smart City (03/02/2026)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/layout-phan-khu-the-victoria-vinhomes-smart-city-cac-toa-30795.html"
+      },
+      "ly_do_chon": "Tây Mỗ cũ tách Xuân Phương/Tây Mỗ. Masteri West Heights là một lô trong Vinhomes Smart City; bài TVND kết luận Smart City thuộc phường Tây Mỗ mới; tin rao 2026 cũng ghi P. Tây Mỗ."
+    },
+    "vinhomes-central-park": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "26956",
+          "ten": "Phường 22",
+          "huyen": "Quận Bình Thạnh",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Vinhomes Central Park địa chỉ mới từ 1/7/2025 (24/07/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/vinhomes-central-park-dia-chi-moi-tu-1-7-2025-o-dau-21393.html"
+          }
+        }
+      ]
+    },
+    "masteri-thao-dien": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "27088",
+          "ten": "Thảo Điền",
+          "huyen": "Thành phố Thủ Đức (Quận 2 cũ)",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Chung cư Masteri Thảo Điền Quận 2 giá thuê (05/11/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/chung-cu-masteri-thao-dien-quan-2-gia-thue-bao-nhieu-26498.html"
+          }
+        }
+      ]
+    },
+    "estella-heights": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "27091",
+          "ten": "An Phú",
+          "huyen": "Thành phố Thủ Đức (Quận 2 cũ)",
+          "nguon": {
+            "ten": "batdongsan.com.vn — Estella Heights (nhãn 'P. An Phú (P. Bình Trưng mới)')",
+            "url": "https://batdongsan.com.vn/ban-can-ho-chung-cu-estella-heights"
+          }
+        }
+      ],
+      "chon": [
+        "27097"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Pháp Luật (thuvienphapluat.vn) — Giá bán căn hộ dự án Estella Heights (thấy qua WebSearch, WebFetch 403)",
+        "url": "https://thuvienphapluat.vn/phap-luat-nha-dat/gia-ban-can-ho-du-an-estella-heights-moi-nhat-hien-nay-10839.html"
+      },
+      "ly_do_chon": "An Phú cũ tách Bình Trưng (khoản 76 NQ 1685, 'một phần') / An Khánh (khoản 78, 'phần còn lại'). Trang TVPL ghi địa chỉ dự án '88 Đường Song Hành, Phường Bình Trưng'; tin rao batdongsan ghi 'P. An Phú (P. Bình Trưng mới)'."
+    },
+    "the-global-city": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "27091",
+          "ten": "An Phú",
+          "huyen": "Thành phố Thủ Đức (Quận 2 cũ)",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Loại hình sản phẩm The Global City (24/10/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/loai-hinh-san-pham-the-global-city-thu-duc-co-gi-25882.html"
+          }
+        }
+      ],
+      "chon": [
+        "27097"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Loại hình sản phẩm The Global City (24/10/2025)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/loai-hinh-san-pham-the-global-city-thu-duc-co-gi-25882.html"
+      },
+      "ly_do_chon": "An Phú cũ tách Bình Trưng / An Khánh. Bài 24/10/2025 dẫn NQ 1685 kết luận 'The Global City thuộc địa phận phường Bình Trưng', mặt tiền Đỗ Xuân Hợp."
+    },
+    "empire-city": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "27118",
+          "ten": "Thủ Thiêm",
+          "huyen": "Thành phố Thủ Đức (Quận 2 cũ)",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Tổng quan dự án Empire City Thủ Thiêm",
+            "url": "https://thuviennhadat.vn/du-an-bat-dong-san/empire-city-thu-thiem-3000.html"
+          }
+        }
+      ]
+    },
+    "vinhomes-grand-park": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "26830",
+          "ten": "Long Bình",
+          "huyen": "Thành phố Thủ Đức (Quận 9 cũ)",
+          "nguon": {
+            "ten": "Báo SGGP — Vinhomes chính thức ra mắt Thành phố thông minh – công viên Vinhomes Grand Park ('tọa lạc tại phường Long Bình và Long Thạnh Mỹ, quận 9', 271ha)",
+            "url": "https://www.sggp.org.vn/thanh-pho-thong-minh-cong-vien-vinhomes-grand-park-post523698.html"
+          }
+        },
+        {
+          "old_code": "26833",
+          "ten": "Long Thạnh Mỹ",
+          "huyen": "Thành phố Thủ Đức (Quận 9 cũ)",
+          "nguon": {
+            "ten": "Báo SGGP — Vinhomes chính thức ra mắt Thành phố thông minh – công viên Vinhomes Grand Park",
+            "url": "https://www.sggp.org.vn/thanh-pho-thong-minh-cong-vien-vinhomes-grand-park-post523698.html"
+          }
+        }
+      ],
+      "chon": [
+        "26833"
+      ],
+      "nguon_chon": {
+        "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Phường Long Bình Thủ Đức sau sáp nhập (19/01/2026)",
+        "url": "https://thuviennhadat.vn/bat-dong-san/phuong-long-binh-thu-duc-sau-sap-nhap-doi-thanh-phuong-gi-tu-1-7-2025-30138.html"
+      },
+      "ly_do_chon": "Long Bình cũ gộp trọn vào Long Bình mới; Long Thạnh Mỹ tách: một phần về Tăng Nhơn Phú (khoản 71 NQ 1685), phần còn lại về Long Bình (khoản 72). Bài 19/01/2026 ghi các phân khu Vinhomes Grand Park (vd The Origami, đường Nguyễn Xiển – Phước Thiện) thuộc 'Phường Long Bình'."
+    },
+    "celadon-city": {
+      "cap": "tinh",
+      "tinh": "vn-hcmc",
+      "ly_do": "Sơn Kỳ cũ tách cho Tây Thạnh, Tân Sơn Nhì, Bình Hưng Hòa; chỉ có nhãn tin rao «Tân Sơn Nhì», chưa có nguồn nêu phạm vi — Hỏi-2 Cổng Phạm vi 10/11"
+    },
+    "phu-my-hung": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "27490",
+          "ten": "Tân Phong",
+          "huyen": "Quận 7",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Khu đô thị Phú Mỹ Hưng thuộc phường nào sau sáp nhập (10/07/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/khu-do-thi-phu-my-hung-thuoc-phuong-nao-sau-sap-nhap-20860.html"
+          }
+        },
+        {
+          "old_code": "27487",
+          "ten": "Tân Phú",
+          "huyen": "Quận 7",
+          "nguon": {
+            "ten": "Thư Viện Nhà Đất (thuviennhadat.vn) — Khu đô thị Phú Mỹ Hưng thuộc phường nào sau sáp nhập (10/07/2025)",
+            "url": "https://thuviennhadat.vn/bat-dong-san/khu-do-thi-phu-my-hung-thuoc-phuong-nao-sau-sap-nhap-20860.html"
+          }
+        }
+      ]
+    },
+    "vinhomes-golden-river": {
+      "cap": "xa",
+      "xa_cu": [
+        {
+          "old_code": "26740",
+          "ten": "Bến Nghé",
+          "huyen": "Quận 1",
+          "nguon": {
+            "ten": "CafeLand — Căn hộ Vinhomes Golden River (2 Tôn Đức Thắng, phường Bến Nghé, quận 1)",
+            "url": "https://cafeland.vn/du-an/can-ho-vinhomes-golden-river-luxury-6-1799.html"
+          }
+        }
+      ]
+    },
+    "saluto": {
+      "cap": "tinh",
+      "tinh": "vn-hcmc",
+      "ly_do": "Không tìm thấy dự án nào tên này; bí danh gợi ý The Metropole Thủ Thiêm nhưng không nguồn nào nối hai tên — Hỏi-2; rút hay sửa nút thuộc DA19"
+    }
+  }
+}

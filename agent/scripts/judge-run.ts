@@ -253,7 +253,15 @@ export async function chamMotLuot(
   return dem;
 }
 
+/** Dòng in khi lệnh bị gọi (V7). */
+export const JUDGE_RUN_DONG_BANG = "judge-run: Ghép căn đóng băng (V7) — không chấm, không gieo hay rút thẻ";
+
+/** Ghép căn đóng băng (V7, Mạnh chốt Q1 08/11 — gắn căn = nhận diện duy nhất): duyệt thẻ không gắn tin vào căn nào, nên lệnh
+ *  không chấm, không gieo, không rút thẻ, không mở DB, không gọi model. `chamMotLuot` giữ nguyên làm mẫu cho chuỗi gắn căn
+ *  GC0–GC3; phần dưới `return` là đường cũ, chỉ chạy lại khi gỡ đóng băng. */
 async function main() {
+  console.log(JUDGE_RUN_DONG_BANG);
+  if (JUDGE_RUN_DONG_BANG) return;
   const khongLlm = process.argv.includes("--khong-llm");
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();

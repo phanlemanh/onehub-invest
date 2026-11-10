@@ -1,0 +1,59 @@
+schema_version: 1
+feature_slug: thuoc-song-song-dem-theo-ten-ca
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.atss_lib
+    paths: [_acceptance/app-test-chiu-song-song/probes/song-song.mjs, pipeline/scripts/luoc-do-rieng.test.mjs, pipeline/lib/luoc-do-rieng.mjs]
+    expected: "exit 0 trên DB thử (db-thu.sh --chay); in '# bản thật: thoát 0', '# ca theo tên: 3/3', 'LIB OK'; tập tên ca có dòng ✔/✖ trong đầu ra bằng ĐÚNG ba tên ca của AC-4 cũ (probe rút mọi tên test("…") của tệp đang đứng rồi so tập; lệch → 'CA NGOAI DANH SACH CHAY: «<tên>»'), pass 3, fail 0; chiều đỏ: tên vắng → 'CA LDR VANG: «<tên>»' (đo ở E2)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.atss_lib
+    paths: [_acceptance/app-test-chiu-song-song/probes/song-song.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; probe in '# đối chứng đổi tên: CA LDR VANG: «<tên ca 1>»' — bản chép tạm đổi tên ca 1 làm bộ kiểm đỏ gọi đúng tên ấy; probe hỏng vì bộ kiểm không đỏ thì in 'DOI CHUNG KHONG BAT (đổi tên)' và thoát ≠ 0; tệp .dot-<pid> không còn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.atss_lib
+    paths: [_acceptance/app-test-chiu-song-song/probes/song-song.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; probe in '# đối chứng thêm ca: 3/3, ca thêm không chạy' — bản chép tạm có thêm ca 'LDR ca thêm ngoài danh sách' xanh vẫn 3/3, tên ca thêm vắng trong đầu ra; thước đếm tổng thì đỏ 'DOI CHUNG KHONG BAT (thêm ca)'; bản chép tạm thứ hai thêm ca mang tên '<tên ca 1> phụ' → ca ấy không chạy (neo ^…$), lệch → 'DOI CHUNG KHONG BAT (neo tên)'; sau probe không còn tệp .dot-* trong pipeline/scripts/ và pipeline/lib/ (dọn ở finally, kể cả khi đối chứng ném lỗi), còn → 'CON BAN CHEP TAM'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.atss_lib
+    paths: [_acceptance/app-test-chiu-song-song/probes/song-song.mjs, pipeline/lib/luoc-do-rieng.mjs, pipeline/scripts/luoc-do-rieng.test.mjs]
+    expected: "exit 0; ba dòng '# đột biến «giữ 33033|bỏ ràng buộc|dãy dùng chung»: thoát <≠0>' và mỗi bản đỏ với thông điệp ghim cũ (LDR phiên dựng lược đồ riêng vẫn giữ khoá 33033 | LDR … lệch ràng buộc | LDR dãy riêng không bắt đầu từ 1 / đẩy dãy dùng chung); băm lib + test trước/sau bằng nhau, lệch → 'TEP THAT BI DOI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.atss_pham_vi
+    paths: [_acceptance/app-test-chiu-song-song/probes/pham-vi.sh]
+    expected: "exit 0; in 'PHAM VI OK', 'doi chung: đổi verdict → SUA HO SO DA KY', 'doi chung: sellers-chip.test.tsx → NGOAI PHAM VI'; dòng 'ok …' bằng đúng git diff --name-only a86804f7 2070958c; commit neo vắng → exit 2 'KHONG CO COMMIT NEO <sha>' (đo ở E6)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ttc_neo
+    paths: [_acceptance/app-test-chiu-song-song/probes/pham-vi.sh, _acceptance/thuoc-song-song-dem-theo-ten-ca/probes/neo.sh]
+    expected: "exit 0; danh sách 'ok' của pham-vi.sh bằng git diff --name-only a86804f7 2070958c (so tập); bản chép tạm của pham-vi.sh đổi commit neo thành sha không có → exit 2 với 'KHONG CO COMMIT NEO'; hai commit neo là tổ tiên của origin/main (git merge-base --is-ancestor), không → 'NEO KHONG BEN'; in 'NEO OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ttc_ghim
+    paths: [_acceptance/app-test-chiu-song-song/run-log.jsonl, _acceptance/app-test-chiu-song-song/evidence-report.md]
+    expected: "exit 0; dòng repin cuối của run-log app-test-chiu-song-song có evals_exit E1–E5 = 0, suites_exit toàn 0, sha = verified_commit của evidence-report; pre-merge-check.sh . --base <merge-base với origin/main> (phạm vi diff của PR, không --slug) không in VIOLATION nào — có thì in tên hồ sơ và thoát ≠ 0; in 'GHIM OK'; đối chứng: verified_commit giả khác sha → 'GHIM LECH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ttc_pham_vi
+    paths: [_acceptance/thuoc-song-song-dem-theo-ten-ca/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base nằm trong danh sách AC-7, in 'ok <tệp>'; git diff merge-base -- contract.md evals.yaml decisions.jsonl của app-test-chiu-song-song rỗng; run-log/evidence-report của nó chỉ có dòng ghim (khuôn kiem_ghim của E5 cũ); đối chứng app/tests/sellers-chip.test.tsx → 'NGOAI PHAM VI'; in 'PHAM VI HANG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

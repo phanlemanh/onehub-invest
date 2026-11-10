@@ -158,6 +158,11 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   khi đúc; căn chỉ khi có mã căn; toà chỉ thấy trên tin là ứng viên. Đo trên bản chép thật 07/11: Ocean Park 1 18 toà ·
   152 trục · 318 căn (95,8% mã tách được), Grand Park 51 · 259 · 1.417 (99,9%); dựng lại 0 khoá mới. Chỉ local, không sync
   cloud; chưa áp 082 lên máy thu.
+- Mã xã hiện hành của nút dự án (DV1, `_acceptance/nut-du-an-tro-xa-moi`, không migration): `pipeline/data/xa-nut-du-an.json` ghi
+  xã cũ (trước 01/07/2025) của từng nút dự án kèm nguồn có tên; `pipeline/danh-ba-vat-the.mjs --sua-xa [--tep] [--thu]` suy mã mới
+  qua `area_aliases` của PX1 theo MÃ (không theo tên — bẫy cùng tên An Phú, Bình Thạnh), ghi `asset_nodes.area_ids`, rút phường kế
+  thừa của toà không còn đúng (`sua-xa-nut`); cùng rào đích DB1b. Đo trên bản chép máy thu 10/11: 16 mã lạc → 0, 18/20 nút đổi;
+  Grand Park về Long Bình; năm nút chưa chốt xã mang mã tỉnh kèm lý do (Hỏi-2). Áp lên máy thu là lời riêng của Mạnh (Hỏi-1).
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -167,6 +172,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `bang_chung_chao` của 059 để phát biểu luật không bị dội. `pipeline/trang-thai-chao.mjs` chạy luật giữa ghi bằng chứng và
   phân xử, in «ngừng rao S03 · S05 · S06»; chưa áp 085 thì in «chưa áp 085»; `--thu` ROLLBACK. Chưa áp 085 lên máy thu;
   trạng thái chào chưa lên cloud nên Invest chưa ẩn tin ngừng rao (Hỏi-1: hàng riêng đưa `offer_status` vào `CLOUD_ALLOW`).
+- Đóng băng Stage B và thẻ Ghép căn (V7, `_acceptance/dong-bang-stage-b-resolve`, Q1 Mạnh 08/11 — gắn căn = nhận diện duy
+  nhất, FRAMING §3.4): `pipeline/resolve-properties.mjs` không còn dựng cặp «cùng phường, DT ±15%, giá/m² ±20%» (đo «giống
+  nhau», không phải «là cùng một»), không xoá cặp cũ — `property_candidates` giữ làm lịch sử; Stage A (gom cụm S06) như cũ.
+  `agent/scripts/judge-run.ts` in một dòng đóng băng rồi thoát, không mở DB, không gọi model. Thẻ `entity_match` ĐANG CHỜ
+  không hiện ở `/ops/review` và không vào số chờ nào (đầu trang, viewer, «Hàng duyệt» ở dòng chảy, bản tin cloud, báo cáo
+  ngày, HD11), Căn giá tốt thôi báo «đang chờ ghép»; một vị từ `THE_DONG_BANG_SQL` (`app/src/lib/ops/review-dong-bang.ts`,
+  chép nguyên văn ở các bên đọc `.mjs`), `scripts/ops-local-dong-bang.test.mjs` quét mọi câu đọc `review_queue`. Thẻ đã quyết
+  vẫn xem lại được. Không ghi dữ liệu, không migration, route decide không đổi. Thay thế: danh bạ vật thể (DB1) + chuỗi gắn
+  căn GC0–GC3 (bảng nối tin → nút danh bạ).
 - SĐT S06 lên tin (`_acceptance/sdt-s06-ghep-tai-khoan`, migration 068): `pipeline/gan-sdt-s06.mjs` gọi cuối `runTransformChotot`, ghi
   `seller_phone` và băm từ `stg_chotot_ads.seller`: tin có số riêng thì lấy số riêng, không có thì lấy số của tài khoản khi tài khoản có đúng
   một số; tin ẩn số không nhận số ghép, số ghép bị rút khi tin chuyển ẩn số hoặc tài khoản có thêm số. Xuất xứ ở `field_provenance.seller_phone`,
@@ -296,6 +310,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`do3-kiem-nguoc`, tỉ lệ đúng + cận dưới Wilson). Người sửa = nhãn người khác giá trị + phát biểu `hitl` ghi đè khác giá trị
   (`nguoi_sua_de`); hai đường đang chạy đều không có lối người rút (Mạnh chốt 09/11). Xem ở `/ops/quality` khối «Làm giàu». Áp 086
   lên DB máy thu: lời riêng của Mạnh.
+- **Thang bậc 08/11 chạy hằng ngày (thang-bac-moi-b0-b5, 09/11)**: 087 viết lại bậc theo FRAMING §3.4 — B0 Có lời khai · B1
+  Tin · B2 Định vị · B3 Gắn căn · B4 Làm giàu · B5 Sống. Một tập đơn vị `data_level_units()` cho `610_data_level.sql` và DO1: mọi
+  tin S03/S05/S06 chưa gắn căn (kể cả tin trong cụm — gom cụm không cho bậc) + căn danh bạ có tin gắn; hai vị từ chờ bảng nối
+  (`offer_located`, `offer_unit_key`, hôm nay false/NULL) là chỗ cắm của GC. Cột `scale` (`thang-2310`/`thang-0811`) trên ảnh
+  chụp và bậc từng đơn vị: DO1 ngày đổi thang lập mốc lại (`ly_do: doi-thang`), báo cáo ngày không so hai ngày khác thang,
+  `/ops/quality` hiện «Thang bậc 08/11 áp từ <ngày>». Chưa áp 087 thì `bac-du-lieu` và phần chuyển bậc của DO1 bỏ qua có tên
+  (`chua-ap-087`). `checkDb` thôi vớ CHECK chéo của `data_level_change`. Áp 087 lên DB máy thu và cloud: lời riêng của Mạnh.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
@@ -560,6 +581,69 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     đường API mà robots.txt của S09 cấm (chỉ danh sách toà của các dự án S03 nói tới, một lần, không quỹ căn, raw local, ZCode chọn
     trần và nhịp; vòng `claudedp-0811-13`), trang chủ đầu tư, và tìm kiếm web. Quỹ căn S09 qua đường cấm vẫn chưa được duyệt.
 
+40. **Danh bạ dự án thông tin toàn diện** (09/11, Mạnh «Theo khuyến nghị»; bản phạm vi `docs/plan/pham-vi-danh-ba-du-an-toan-dien-0911.md`,
+    nghiên cứu ở kho tri thức riêng `wiki/chu-de/danh-ba-du-an.md`): kế hoạch 08/11 phủ định danh và gắn tin; phần thông tin của chính dự án
+    (bảy nhóm: danh tính, vị trí, phân loại và quy mô, pháp lý, tiến độ, sản phẩm sơ cấp và giá, mô tả và media) làm theo hàng mới.
+    - Q1: chỗ ghi thuộc tính dự án và phân khu (resource `Subdivision`, `Complex`) tách khỏi DA11 thành **DA15**, không chờ thu S07.
+    - Q2: người được tạo nút dự án, toà từ bằng chứng tin (**DA18**); toà ứng viên chưa cấp UPI tới khi người duyệt.
+    - Q3: quỹ căn chủ đầu tư S08 thành **tin sơ cấp** (**DA17**, extension `MarketTier`), giữ mục 39 Hỏi-3: không vào danh sách Bán,
+      thước giá, metrics.
+    - Q4: khảo sát nguồn nhà nước (**DAZ4**) mở ngay, gồm mã định danh nhà ở và công trình theo NĐ 357/2025 (hiệu lực 01/3/2026). Mã nhà
+      nước là bí danh, không thay UPI; toà ghi ở RESO `BuildingId`.
+    - Q5: **độ đủ hồ sơ** (**DA20**) là thước «toàn diện», cạnh DA14. Mốc M2: ≥ 80% dự án S08 và 100% dự án S03 nói tới đủ năm nhóm đầu.
+    - Q6: toà cho hay cấm thuê ngắn hạn (RESO `ShortTermRentalAllowedYN`) vào mục chờ DA28.
+    Kiểm RESO DD 2.1 (09/11): thêm field chuẩn bị sót (`BuildingId`, `ShortTermRentalAllowedYN`, `LeaseRestrictionsYN`,
+    `CertificateOfOccupancyYN`, `ParcelNumber`, `Zoning`, `CommonInterest`, `AssociationName`…); bỏ extension `BalconyDirection` (dùng
+    `direction_faces` của GN1) và `BuildingFootprintArea` (dùng `FoundationArea`); không điền `SourceSystemName`, `OriginatingSystemName`
+    (là tên nguồn thật, tầng A). Hàng mới: DV1, DA15–DA20; mục chờ DA21–DA28; sửa lời DA3, DA4, DA8, PX2, DA10, DA11, DN4, DA13.
+    Ba câu của phiên Định vị S03 (Mạnh xác nhận «Đúng», 09/11):
+    - Q7: tin nhóm một dự án chỉ nhận dự án «suy ra» và tính B2 khi quy ước nhóm đạt ≥ 95% trên mẫu GC0 của nhóm (hàng GCQ2).
+    - Q8: người bán lặp lại (≥ 3 tin đã biết dự án, ≥ 80% một dự án) cho phát biểu dự án `inferred`, chỉ cho tin không có tín hiệu
+      khác; đo kiểm bỏ-một mỗi ngày, tụt dưới ngưỡng thì tắt. Chưa có hàng; phiên Định vị S03 đề xuất DV2.
+    - Q9: phường kế thừa từ dự án tính là phường thật, mang nhãn «suy ra từ dự án»; DA9 gộp trước hoặc cùng DF7 (DF7 đứng trên DA9).
+41. **Định vị và gom tin S03** (10/11, Mạnh «Đồng ý cả 7»; bản phạm vi `docs/plan/pham-vi-dinh-vi-gom-tin-s03-1011.md`, phân tích ở kho tri
+    thức riêng `wiki/chu-de/dinh-vi-gom-tin-s03.md`): mất giá trị của S03 nằm ở bước đọc bài, trước khi có tin. Định vị và tách căn làm ở
+    mức bài, trước khi gom; khớp danh bạ (B2, B3) làm sau khi có tin; bước thu chỉ giữ ngữ cảnh. Ba trong bảy câu đã ghi ở mục 40 (Q7, Q8,
+    Q9); bốn câu còn lại:
+    - Q1: hai môi giới rao cùng một căn là **hai tin**, nối vào cùng căn ở bậc Gắn căn (ADR-0013), không gộp ở bậc Tin.
+    - Q2: cùng người đổi giá cùng căn là **một tin**; giá cũ vào lịch sử giá, giữ tín hiệu tăng, giảm giá (**GT6**).
+    - Q3: rổ hàng và bảng giá quảng cáo khi chưa tách được thành căn **không tính vào số tin trên cổng**, đếm riêng ở Ops (**GT8**, tới
+      khi PL18 E2 tách rổ).
+    - Q4: Haiku được chạy trên đường ống để **đề xuất** gom (nghi gộp nhầm, nghi cùng căn → thẻ duyệt) và gom mù một mẫu mỗi tuần làm
+      **thước** (GT4), trong trần tiền PL34. Opus, Sonnet chỉ làm thước ngoài đường ống; luật ba model của luật 6 không đổi. Luật 7 giữ:
+      model không vào khoá gom, không ghi vào tin.
+    Số đo nền (audit 09–10/11): trong tin có nhiều bản chữ khác nhau, gộp nhầm 25% [17–35%] (đọc tay), 15% [5–36%] (đồng thuận hai
+    model lớn); tách nhầm 2–4%; Haiku gom mù gộp đúng 98% [88–100%]. Hàng mới: GT5–GT8, DV2–DV5; sửa lời GT4 (thành thước, T2), PL18
+    (E2 tách rổ lên đầu).
+42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
+    kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
+    **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
+    vẫn đủ; tầng, hướng, view, nội thất là bộ lọc, không chia nhóm. Chấm sẵn ở pipeline (luật 10), app và API chỉ đọc; LLM không quyết điểm.
+    - Q1: nhãn «giá tốt» chỉ từ **cấp dự án trở xuống**; nhóm cấp phường gắn «rẻ trong phường».
+    - Q2: nhóm từ **10 căn** mới gắn nhãn; 5–9 căn chỉ hiện số; dưới 5 không chấm.
+    - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
+    - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
+    - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
+    (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
+    5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
+43. **Bảng Yêu cầu** (10/11, Mạnh «Đồng ý theo khuyến nghị»; bản phạm vi `docs/plan/pham-vi-bang-yeu-cau-1011.md`, phân tích ở kho tri
+    thức riêng `wiki/chu-de/bang-yeu-cau.md`): Yêu cầu (bài người cần thuê, mua trong nhóm S03, S05) thành bảng có cấu trúc, xem và ghép
+    ở Ops; Invest chỉ có chỉ số tổng hợp. Tiêu chí dùng lại trường RESO phía bán (`ListPriceLow` cho đầu dưới ngân sách); cặp Yêu cầu ↔
+    tin rao theo ContactListings, người bấm, máy không gửi gì (luật 7).
+    - Q1: nối bảng `inquiry_records` (nhánh `feat/bang-yeu-cau`, đã ký 30/10) **ngay**, ý định từ luật `laYeuCau` cộng nhãn model đọc
+      tin, lớp cao nhất thắng; **không chờ PL5**, Kev thêm vào sau. AC-4, AC-7 của hồ sơ đã ký sửa theo.
+    - Q2: thêm **gom mềm 7 ngày** theo người đăng · dự án · dịch vụ · số phòng · ngân sách ± 15%; bảng giữ khoá theo người và chữ, chỉ
+      số đếm theo nhu cầu đã gom và luôn kèm số bài.
+    - Q3: người đăng Yêu cầu là **tầng C** như người bán: chỉ hiện trên Ops, nối `/ops/people`, SĐT chỉ qua «Xem số»; không lên Invest.
+      Ghi thành sửa đổi ADR-0007 cùng PR của YC5.
+    - Q4: Invest **chỉ có chỉ số tổng hợp** theo dự án × số phòng, nhãn «ước từ bài nhóm», bật sau **4 tuần** đo trên Ops; không có
+      từng Yêu cầu.
+    - Q5: Yêu cầu **hết hạn sau 7 ngày** không có bài mới cùng nhu cầu (nghỉ, không xoá; đăng lại thì mở lại).
+    Số đo nền (DB máy thu 10/11): 11.616 bài Yêu cầu S03, luật bỏ sót thêm khoảng 1.300 bài viết tắt; số phòng đọc được 96%, ngân sách
+    73%, dịch vụ suy được 86%; dự án theo tên nhóm 42%, phường 0,1%; 670 người đăng, 317 người viết 94% số bài; gom theo người và chữ
+    còn 4.832. Hàng mới: YC0–YC8 (YC1 sửa bộ đọc ngân sách đi trước YC0). SH12 (tín hiệu cầu, chờ Q8b) nay do YC7, YC8 gánh.
+
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
@@ -631,7 +715,9 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | CG1-SUA | Sửa ba lỗi của CG1 (tên `unknown`, lý do căn đắt hơn thước, crumb) và lọc `unknown` ở trang tin công khai — `_acceptance/can-gia-tot-sua-ba-loi` | ✅ Mạnh ký 04/11, đã gộp (#303); Ngoài-9 đổi sang Known limits, không mở việc mới |
 | CN1 | Chữ hiện trên các trang công khai Invest không mang tên S01, S02, nói đúng giá rao là tin thật — `_acceptance/chu-nguon-tren-cong` | 🔶 vòng S4; nút mở trang gốc `/listing/[id]` giữ link trên miền S01 (Mạnh chốt 04/11) |
 | DB1 | Danh bạ toà · trục · căn cao tầng Ocean Park 1 và Grand Park từ S08 + bí danh tên toà trên tin; UPI neo toà; chủ đầu tư, phường là phát biểu cấp toà; ba dòng `asset_nodes building` là phân khu, ở lại họ Vùng — `_acceptance/danh-ba-toa-truc-can` (T3, 082) | 🔶 vòng S4; Mạnh duyệt Cổng Phạm vi và kế hoạch 07/11; sau gộp: áp 082 lên máy thu + chạy bộ dựng là lời riêng của Mạnh (`pg_dump` trước); Grand Park chưa có phường cấp toà (cần toạ độ toà, hàng riêng) |
-| V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 09/11, đang làm; sau gộp: đo `node pipeline/trang-thai-chao.mjs --thu` trên bản chép, rồi áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng (`offer_status` lên cloud) |
+| V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | ✅ Mạnh ký Cổng 2 09/11, gộp PR #383; áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng |
+| V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
+| DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

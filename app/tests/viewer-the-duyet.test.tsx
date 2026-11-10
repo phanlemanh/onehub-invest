@@ -123,10 +123,11 @@ let setupErr: string | null = null
 const vn = (s: string) => new Date(`${s}+07:00`).toISOString()
 
 // Thẻ thứ n mang chuỗi nhận diện riêng trong cả bốn cột nội dung.
-// [id, item_type, status]
+// [id, item_type, status]. Thẻ chờ là Bổ sung tin: thẻ Ghép căn đang chờ đóng băng (V7, hồ sơ dong-bang-stage-b-resolve) không
+// hiện, không đếm — mồi chờ của ca này đổi sang loại khác để phép đo vai giữ nguyên nghĩa.
 const THE: [number, string, string][] = [
-  [1, "entity_match", "pending"],
-  [2, "entity_match", "pending"],
+  [1, "agent_output", "pending"],
+  [2, "agent_output", "pending"],
   [3, "data_quality", "pending"],
   [4, "entity_match", "approved"],
 ]
@@ -256,7 +257,7 @@ describe("VT-AC-2 viewer: hàng duyệt chỉ số đếm", () => {
     const mod = (await import("../src/components/ops/review-content")) as ReviewMod
     const html = await doReviewViewer(mod)
     assert.match(html, /data-pending-total="3"/, "tổng 3 thẻ chờ (thẻ approved không đếm)")
-    assert.match(html, /entity_match: 2/)
+    assert.match(html, /agent_output: 2/)
     assert.match(html, /data_quality: 1/)
     assert.ok(html.includes(CHU_THE), "câu chú thích")
     // Đối chứng: nhánh viewer bị bỏ — trang đọc đủ cột như vai ops.
@@ -334,7 +335,7 @@ describe("VT-AC-4 data-flow: props đã che", () => {
 // ---------- AC-5: sheet bản ghi ----------
 const rec = (p: Partial<FlowRecord>): FlowRecord => ({
   offerId: "r", source: "S05", kind: "rent_lt", propertyType: "apartment", priceVnd: 9_000_000, areaM2: 40, bedrooms: 1,
-  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false, identification: { level: "none", locatedPending: false, uniqueIdPending: false }, firstSeen: "2026-10-25 09:00:00+00",
+  ward: null, market: null, confidence: "medium", nPosts: 1, located: false, identification: { level: "none", locatedPending: false, uniqueIdPending: false }, firstSeen: "2026-10-25 09:00:00+00",
   lastSeen: "2026-10-25 09:00:00+00", postText: "vt-bai-x", postGroup: "nhóm vt", ...p,
 })
 const RECS: FlowRecord[] = [rec({ offerId: "x" }), rec({ offerId: "y", source: "S06", postText: null, postGroup: null, firstSeen: "2026-10-24 09:00:00+00" })]

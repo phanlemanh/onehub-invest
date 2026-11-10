@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Zalo đêm sáu bước</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Hỏi-1 · pl34-lich-dem-sau-buoc · AC-1 · AC-2</p>
+    <h1>Job nạp Zalo đêm: năm bước thành sáu</h1>
+    <p class="sub">scripts/zalo-import-daily.sh · doc-gop-hang-ngay chạy sau khi nhả khoá nạp, trước enrich-run · hai nhánh rẽ thoát sớm</p>
+
+    <svg viewBox="0 96 1240 464" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Mũi tên (vẽ trước, nằm dưới nút) ============ -->
+
+      <!-- Kiểm snapshot → import-airbnb (CÓ) -->
+      <line x1="176" y1="280" x2="214" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Kiểm snapshot → thoát 0 (KHÔNG), lên trên -->
+      <line x1="104" y1="232" x2="104" y2="170" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- import-airbnb → thoát 1 (HỎNG), lên trên -->
+      <line x1="284" y1="248" x2="284" y2="170" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Dãy bước chính -->
+      <line x1="352" y1="280" x2="374" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="512" y1="280" x2="534" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="672" y1="280" x2="694" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- refresh-bait-gap → doc-gop-hang-ngay (qua mốc nhả khoá) -->
+      <line x1="832" y1="280" x2="894" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- doc-gop-hang-ngay → enrich-run -->
+      <line x1="1048" y1="280" x2="1070" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Mốc nhả khoá nạp: vạch đứt, không phải bước -->
+      <line x1="864" y1="244" x2="864" y2="316" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- Nhãn mũi tên (có mặt nạ, cách đường ≥6px) -->
+      <rect x="180" y="256" width="32" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="196" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+
+      <rect x="112" y="192" width="48" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="116" y="204" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">KHÔNG</text>
+
+      <rect x="292" y="192" width="40" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="296" y="204" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">HỎNG</text>
+
+      <rect x="808" y="324" width="112" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="864" y="336" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">NHẢ KHOÁ NẠP</text>
+      <rect x="792" y="340" width="144" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="864" y="352" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">apify-daily.state.lock</text>
+
+      <!-- ============ Nút ============ -->
+
+      <!-- Kiểm: snapshot Zalo mới? -->
+      <polygon points="104,232 176,280 104,328 32,280" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="104" y="276" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có snapshot</text>
+      <text x="104" y="292" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Zalo mới?</text>
+
+      <!-- Thoát 0: không snapshot mới -->
+      <rect x="32" y="120" width="144" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="104" y="142" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thoát 0</text>
+      <text x="104" y="158" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">không bước nào chạy</text>
+
+      <!-- Thoát 1: nạp hỏng -->
+      <rect x="212" y="120" width="144" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="284" y="142" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thoát 1</text>
+      <text x="284" y="158" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">dừng, không bước sau</text>
+
+      <!-- 1 import-airbnb -->
+      <rect x="216" y="248" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="284" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">import-airbnb</text>
+      <text x="284" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">nạp snapshot, giữ khoá</text>
+
+      <!-- 2 transform-zalo -->
+      <rect x="376" y="248" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="444" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">transform-zalo</text>
+      <text x="444" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">biến đổi tin Zalo</text>
+
+      <!-- 3 transform-media -->
+      <rect x="536" y="248" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="604" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">transform-media</text>
+      <text x="604" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">ảnh tin S03, S05</text>
+
+      <!-- 4 refresh-bait-gap -->
+      <rect x="696" y="248" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="764" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">refresh-bait-gap</text>
+      <text x="764" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">làm mới bảng</text>
+
+      <!-- 5 doc-gop-hang-ngay — bước mới, PL34 (focal) -->
+      <rect x="896" y="248" width="152" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="896" y="248" width="152" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="904" y="254" width="96" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="952" y="266" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BƯỚC MỚI · PL34</text>
+      <text x="972" y="288" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">doc-gop-hang-ngay</text>
+      <text x="972" y="304" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đọc gộp S03 · trần 20 USD</text>
+
+      <!-- 6 enrich-run -->
+      <rect x="1072" y="248" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1140" y="278" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">enrich-run</text>
+      <text x="1140" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">agent/ · LIMIT 50</text>
+
+      <!-- Chú thích AC-2 (lề trên phải) -->
+      <text x="1208" y="148" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">doc-gop-hang-ngay hỏng mã n: một dòng JOB FAIL,</text>
+      <text x="1208" y="168" fill="#2d3142" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">enrich-run vẫn chạy; job thoát mã bước hỏng đầu tiên (AC-2)</text>
+      <path d="M 1000 180 Q 980 208 972 246" fill="none" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <circle cx="972" cy="246" r="2" fill="#2d3142"/>
+
+      <!-- ============ Bảng đếm bước: cũ so với mới ============ -->
+      <line x1="32" y1="376" x2="1208" y2="376" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- Hàng cũ -->
+      <text x="32" y="404" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">năm bước cũ (AC-6 đã ký)</text>
+      <rect x="272" y="392" width="24" height="16" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="284" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+      <rect x="432" y="392" width="24" height="16" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="444" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">2</text>
+      <rect x="592" y="392" width="24" height="16" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="604" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">3</text>
+      <rect x="752" y="392" width="24" height="16" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="764" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">4</text>
+      <text x="972" y="404" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">không có</text>
+      <rect x="1128" y="392" width="24" height="16" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="1140" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">5</text>
+
+      <line x1="32" y1="424" x2="1208" y2="424" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- Hàng mới -->
+      <text x="32" y="452" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">sáu bước mới (AC-1)</text>
+      <rect x="272" y="440" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="284" y="452" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+      <rect x="432" y="440" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="444" y="452" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">2</text>
+      <rect x="592" y="440" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="604" y="452" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">3</text>
+      <rect x="752" y="440" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="764" y="452" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">4</text>
+      <rect x="960" y="440" width="24" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="972" y="452" fill="#ba4513" font-size="9" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">5</text>
+      <rect x="1128" y="440" width="24" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="0.8"/>
+      <text x="1140" y="452" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">6</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="32" y1="492" x2="1208" y2="492" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="32" y="512" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI · HÌNH MANG LOẠI</text>
+
+      <rect x="32" y="528" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="64" y="538" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Thoát sớm (bầu dục)</text>
+
+      <rect x="216" y="528" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="248" y="538" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước của job (chữ nhật)</text>
+
+      <polygon points="420,534 432,528 444,534 432,540" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="456" y="538" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm kiểm (thoi)</text>
+
+      <rect x="592" y="528" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="624" y="538" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước mới (PL34)</text>
+
+      <line x1="824" y1="524" x2="824" y2="544" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="836" y="538" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Mốc nhả khoá nạp (không phải bước)</text>
+    </svg>
+  </div>
+</body>
+</html>
