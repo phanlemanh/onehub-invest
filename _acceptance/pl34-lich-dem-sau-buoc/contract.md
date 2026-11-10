@@ -5,7 +5,7 @@ slug: pl34-lich-dem-sau-buoc
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-09-pl34-lich-dem-sau-buoc-design.md
 approved_by: Mạnh
 approved_at: 2026-11-09
@@ -68,3 +68,8 @@ Hàng `pl34-lich-dem-sau-buoc` của đợt dot0-cam-mau (giám sát giao 09/11)
   cây như máy thu.
 - Tiêu chí `enrich-chay-sau-nap/AC-6` (Mạnh ký 30/10) ghim «năm bước»; AC-1 thay lời ấy. E8, E11 của hồ sơ cũ vẫn chạy và
   thoát 0 nên không khai `superseded_by` (luật đó cho eval mất vật đo).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-09:
+  - Ngoài-1: thẻ Cổng Phạm vi đã duyệt còn ghi vế cũ «đêm không có tin mới thì không đọc gộp»; hành vi thật (đọc gộp chạy mọi
+    đêm) nằm ở AC-1 và sổ quyết định.
+  - Ngoài-2: phép đo lưới trước-gộp của hồ sơ này có thể báo đạt khi chính công cụ kiểm hỏng giữa chừng.
+  - Ngoài-3: cùng gốc Ngoài-2 — công cụ kiểm không chạy được thì phép đo không đỏ, một vi phạm có thể lọt qua phép đo này.
