@@ -5364,6 +5364,216 @@
       ],
       "ghi_chu": "Đứng sau DA9 vì cần dự án và phường suy từ dự án.",
       "dot": "dinh-vi-gom-tin-s03-1011"
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC1",
+      "slug": "sua-doc-ngan-sach-yeu-cau",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "YC1"
+      ],
+      "cau_giao": "Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị (triệu/tháng cho thuê, tỷ cho mua) ở các cách viết tắt «tc 8tr», «2ty6», «6tr5», «quay đầu» và sáu lỗi Ngoài-4/5/7/9/10/11 của hồ sơ bang-yeu-cau",
+      "bat_khi": "Ma trận ca viết trước (mỗi lỗi Ngoài-* và mỗi cách viết ít nhất hai ca) xanh hết; trên toàn bộ bài Yêu cầu S03 của DB máy thu, số bài có ngân sách không giảm so với bộ đọc cũ và 0 bài thuê mang ngân sách từ 100 triệu/tháng trở lên do đọc nhầm đơn vị",
+      "vi_sao": "Mạnh dặn 30/10 (hồ sơ bang-yeu-cau): các lỗi đọc ngân sách phải gộp trước khi áp bảng Yêu cầu lên máy thu. Đo 10/11: ngân sách đọc được 72,8% bài; trung vị thuê 8 triệu, mua 3 tỷ.",
+      "vung": [
+        "pipeline/lib/yeu-cau.mjs",
+        "pipeline/tests"
+      ],
+      "ghi_chu": "Làm trên main (chép pipeline/lib/yeu-cau.mjs từ nhánh feat/bang-yeu-cau nếu YC0 chưa nối); đi trước YC0 vì YC0 áp bảng lên máy thu."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC0",
+      "slug": "bang-yeu-cau-noi-lai",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "YC1"
+      ],
+      "phu": [
+        "YC0"
+      ],
+      "cau_giao": "Transform S03 và S05 ghi mỗi Yêu cầu vào bảng inquiry_records (dịch vụ, loại hình, số phòng, diện tích, ngân sách với đầu dưới ở ListPriceLow, khu, bài nguồn, bằng chứng ý định); ý định lấy từ phát biểu lớp cao nhất giữa luật laYeuCau và nhãn model đọc tin, Kev thêm vào khi PL5 giao",
+      "bat_khi": "Trên DB máy thu: số Yêu cầu trong bảng khớp đếm SQL độc lập theo luật laYeuCau trừ bài đã thành tin rao (10/11: 11.616 bài S03); chạy lại transform hai lần số dòng không đổi; cột source chỉ mang mã S0x; bài người duyệt đánh «Không phải Yêu cầu» không vào bảng ở lượt sau",
+      "vi_sao": "Bảng đã dựng và ký Cổng Bằng chứng 30/10 ở nhánh feat/bang-yeu-cau nhưng đứng trên PL5 (kẹt ở phần thu) và chậm main gần 2.000 commit; Q1 (10/11) cho nối ngay bằng luật xác định cộng nhãn model.",
+      "vung": [
+        "db/migrations",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib/yeu-cau.mjs",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Q1: hồ sơ mới thay _acceptance/bang-yeu-cau; sửa AC-4, AC-7 từ «phát biểu Kev» thành «phát biểu ý định lớp cao nhất», giữ các tiêu chí khác đã ký. Migration lấy số kế tiếp trên main (058 đã bị bỏ qua). Bảng chỉ ở local tới YC8. Áp lên máy thu cần lời Mạnh (DDL thật)."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC2",
+      "slug": "mo-rong-luat-yeu-cau",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "YC2"
+      ],
+      "cau_giao": "Luật nhận Yêu cầu bắt thêm các bài viết tắt («khách thuê 1pn…», «tìm 2pn…», «cần thuê gấp…») mà không kéo tin rao vào nhánh Yêu cầu; nhánh Yêu cầu trên Sankey DF6 đổi số theo",
+      "bat_khi": "Trên nhãn bạc PL30 và một mẫu đọc tay 200 bài: precision của luật mới không thấp hơn luật cũ, recall tăng; số bài chuyển từ tin rao sang Yêu cầu và ngược lại có danh sách kèm câu trích; nhánh Yêu cầu của DF6 khớp đếm SQL",
+      "vi_sao": "Đo 10/11: khoảng 1.300 bài Yêu cầu nằm trong 7.441 bài bị bỏ vì luật hiện có không bắt cách viết tắt; đọc tay 20 mẫu gần như đều là Yêu cầu thật, chưa đo precision.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/sql/600_data_flow.sql"
+      ],
+      "ghi_chu": "Chồng vùng với GT8 (bài tìm về Yêu cầu trước khi gom) và DV4, DV5 ở transform-zalo.mjs; lịch xếp nối tiếp. Không cần YC0: đổi luật có hiệu lực cả trên DF6."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC3",
+      "slug": "dinh-vi-yeu-cau",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "YC0",
+        "DV2"
+      ],
+      "phu": [
+        "YC3"
+      ],
+      "cau_giao": "Mỗi Yêu cầu nhận dự án, phân khu và toà ở mức sâu nhất biết được bằng cùng bộ định vị mức bài của tin S03 (tên nhóm, mã phân khu, mã toà trong chữ, người đăng lặp lại), ghi kèm căn cứ",
+      "bat_khi": "Trên DB máy thu: tỉ lệ Yêu cầu có dự án tăng từ mức đo 10/11 (42% theo tên nhóm) và được báo theo từng căn cứ; 0 Yêu cầu nhận dự án trái với tỉnh của nhóm; đổi bộ định vị chung thì Yêu cầu và tin rao cùng đổi (một mã nguồn, không chép)",
+      "vi_sao": "Đo 10/11: phường có trong chữ 0,1% bài, dự án trong chữ 2,5–5,8%, theo tên nhóm 42%; không có dự án thì không ghép và không có chỉ số cầu theo dự án.",
+      "vung": [
+        "pipeline/lib"
+      ],
+      "ghi_chu": "Dùng chung bộ định vị của dãy Định vị S03 (DV2, DV3), không viết bộ thứ hai."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC4",
+      "slug": "gom-nhu-cau-yeu-cau",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "YC3"
+      ],
+      "phu": [
+        "YC4"
+      ],
+      "cau_giao": "Yêu cầu cùng người đăng, dự án, dịch vụ, số phòng và ngân sách lệch không quá 15% trong 7 ngày gom thành một nhu cầu; nhu cầu không có bài mới sau 7 ngày chuyển «Hết hạn», đăng lại thì mở lại; bảng giữ khoá theo người và chữ",
+      "bat_khi": "Trên DB máy thu: số nhu cầu sau gom mềm nhỏ hơn số theo người và chữ (10/11: 4.832) và mỗi nhu cầu liệt bài thành phần; 0 nhu cầu gộp hai dịch vụ hay hai số phòng khác nhau; chạy lại không đổi kết quả; nhu cầu hết hạn không bị xoá",
+      "vi_sao": "Đo 10/11: bài giống hệt chỉ lặp trong cùng ngày (p90 khoảng 13 giờ), qua ngày người đăng viết lại câu khác nên khoá người và chữ không theo được một nhu cầu; Q2 và Q5 (10/11) chốt gom mềm 7 ngày, hết hạn 7 ngày.",
+      "vung": [
+        "pipeline/lib/yeu-cau.mjs",
+        "db/migrations"
+      ],
+      "ghi_chu": "Q2, Q5. Chỉ số luôn ghi kèm số bài bên cạnh số nhu cầu."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC5",
+      "slug": "ops-bang-yeu-cau",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "YC0"
+      ],
+      "phu": [
+        "YC5"
+      ],
+      "cau_giao": "Người vận hành mở /ops/inquiries và lọc Yêu cầu theo dịch vụ, dự án, số phòng, ngân sách, người đăng, thời gian, trạng thái; mở một Yêu cầu thấy tiêu chí kèm câu trích và cách đọc, các bài đã đăng, người đăng nối sang /ops/people, và đánh dấu «Không phải Yêu cầu»",
+      "bat_khi": "Trên dữ liệu máy thu: số dòng của bảng khớp đếm SQL ở mỗi bộ lọc; trạng thái tải, trống, lỗi có Thử lại; SĐT người đăng không có trong HTML, chỉ qua «Xem số»; trên cloud trang hiện cảnh báo chỉ có ở local; route-slugs xanh",
+      "vi_sao": "Chưa có chỗ nào xem Yêu cầu: 11.616 bài S03 chỉ hiện là một nhánh trên Sankey DF6.",
+      "vung": [
+        "app/src/app/ops/inquiries",
+        "app/src/app/api/v1/ops/inquiries",
+        "app/src/lib/inquiries.ts",
+        "app/src/components/shell/nav.tsx",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Q3: người đăng Yêu cầu là tầng C như người bán — chỉ hiện trên Ops, SĐT qua «Xem số»; ghi sửa đổi ADR-0007 trong cùng PR. Khuôn bảng có lọc + ngăn chi tiết như /ops/deals, /ops/people; bản phác ở research-local/bang-yeu-cau/phac-ops-inquiries.html. YC3, YC4 làm cột đầy hơn, không chặn."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC6",
+      "slug": "ghep-yeu-cau-tin-rao",
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "YC3",
+        "YC5"
+      ],
+      "phu": [
+        "YC6"
+      ],
+      "cau_giao": "Người vận hành mở một Yêu cầu và thấy tối đa 20 tin rao đang chào khớp (cùng dịch vụ, dự án, số phòng, giá không quá trần × 1,1) kèm lý do khớp, rồi bấm «Có thể» hay «Bỏ»; lựa chọn được lưu theo RESO ContactListings, máy không gửi gì cho ai",
+      "bat_khi": "Trên dữ liệu máy thu: danh sách khớp bằng đúng kết quả của truy vấn luật khớp độc lập; lựa chọn lưu với ContactListingPreference và giữ qua lượt transform sau; không có đường gửi tin nào được gọi (kiểm mã và log)",
+      "vi_sao": "Đo 10/11 ở các nhóm thuê Grand Park: cầu 1PN gấp khoảng 4 lần cung theo bài và 71% tin vừa ngân sách trung vị — ghép có giá trị khi người vận hành xem được cặp cụ thể.",
+      "vung": [
+        "db/migrations",
+        "app/src/app/ops/inquiries",
+        "app/src/app/api/v1/ops/inquiries"
+      ],
+      "ghi_chu": "T3 vì thêm bảng lưu lựa chọn của người. Luật 7: luật khớp xác định, LLM không quyết cặp."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC7",
+      "slug": "chi-so-cau-du-an",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "YC4"
+      ],
+      "phu": [
+        "YC7"
+      ],
+      "cau_giao": "Người vận hành mở /ops/inquiries và thấy chỉ số cầu theo dự án × dịch vụ × số phòng × tuần (số nhu cầu, số bài, ngân sách p50, tỉ lệ cầu trên cung, phần trăm tin vừa ngân sách) tính sẵn ở pipeline",
+      "bat_khi": "Bảng tính sẵn ở pipeline/sql dải 4xx; mỗi ô khớp truy vấn độc lập trên DB máy thu; chạy lại cùng ngày không đổi số; ô dưới 5 nhu cầu không hiện tỉ lệ",
+      "vi_sao": "Luật 10: chỉ số tính sẵn ở pipeline, app chỉ đọc. Là nền cho chỉ số trên Invest theo Q4.",
+      "vung": [
+        "pipeline/sql/420_inquiry_demand.sql",
+        "app/src/app/ops/inquiries"
+      ],
+      "ghi_chu": "Đứng trên YC4 vì chỉ số đếm theo nhu cầu đã gom. Tỉ lệ cầu/cung dùng tin đang chào; phần trăm vừa ngân sách đọc thêm kết quả YC6 khi có."
+    },
+    {
+      "dot": "bang-yeu-cau-1011",
+      "nhom": "bang-yeu-cau",
+      "ma": "YC8",
+      "slug": "yeu-cau-len-cloud",
+      "hang": "T3",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "YC7"
+      ],
+      "phu": [
+        "YC8"
+      ],
+      "cau_giao": "Nhà đầu tư mở trang dự án trên cổng Invest và thấy cầu thuê, cầu mua theo số phòng (số nhu cầu ước, ngân sách p50, cầu trên cung) có nhãn «ước từ bài nhóm», không thấy từng Yêu cầu hay người đăng",
+      "bat_khi": "Sync cloud chỉ đẩy bảng chỉ số và các cột không danh tính; leak gate xanh; HTML và API công khai không chứa SĐT, tên người đăng hay chữ bài; ô dưới ngưỡng không hiện",
+      "vi_sao": "Q4 (10/11): Invest chỉ có chỉ số tổng hợp, bật sau bốn tuần đo trên Ops.",
+      "vung": [
+        "pipeline/sync-cloud.mjs",
+        "app/src/lib/inquiry-demand.ts"
+      ],
+      "ghi_chu": "Q4: bật cờ hiện trên Invest sau 4 tuần YC7 chạy trên Ops; ngưỡng và ngày đọc vào ô cơ hội ở Cổng Đáng. Chỉ số tự tổng hợp từ bài nhóm, không phải số của S06/S07 (không vướng mục 27)."
     }
   ],
   "chan_troi": [
