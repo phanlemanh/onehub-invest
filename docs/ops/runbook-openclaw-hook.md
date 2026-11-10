@@ -42,3 +42,19 @@ Chuẩn hoá từ lần triển khai PL4 Kev-nhãn (lời giao `claudedp-2310-10
   như trên.
 - Ghi chú: watchdog L1 grep bản hook TRONG REPO (`collector/openclaw/handler.js`), không grep bản đã cài —
   bước 2 «trước khi cài» là chỗ đối chiếu hai bản.
+
+## Bộ tra hồ sơ người bán S03 (`link-nguoi-ban-s03`)
+
+Cài cùng lần với `ma-album-s03` — không có lần khởi động lại riêng. Mô tả đầy đủ, trần, tệp chặn: `runtime-map.md` mục «Bộ tra hồ sơ
+người bán S03». Bộ tra chỉ dùng bộ nghe tin đang nối; **cấm đăng nhập thứ hai**, kể cả để thử.
+
+**Tiền kiểm thêm** (ngoài tiền kiểm của `ma-album-s03`; hỏng một điều thì không được khởi động lại):
+- không có `yeu-cau.json` trong `S03_LOOKUP_DIR`;
+- không có `luot-lon.txt`;
+- lời gọi API mới trong diff extension chỉ có `getUserInfo`.
+
+**Sau khởi động lại:** 30 phút ổn theo lệnh phán lùi rồi mới lập tệp yêu cầu lượt thử (`node pipeline/lap-yeu-cau-ho-so.mjs --out
+"$S03_LOOKUP_DIR/yeu-cau.json"`); canh 30 phút sau lời gọi: dòng đóng bộ nghe tin, PID gateway, số `post 202`. Bộ nghe tin đóng trong 30
+phút sau lời gọi → phán lùi trả `dung-goi-Manh` (luật riêng, không xếp vào dạng 26/10): dừng gọi, báo Mạnh.
+
+**Tắt:** xoá `yeu-cau.json` hoặc đặt `chan.txt` — không cần khởi động lại gateway. Lượt lớn chỉ Mạnh bật (`luot-lon.txt`).

@@ -339,3 +339,76 @@ giữa chuỗi) thì launchd thấy 0.
 - **Kiểm:** `node --test scripts/job-exit.test.mjs` — không tắt DB chung; tệp chạy job chạy trong cây tạm với
   `node`/`docker` giả, bước thật chạy trong hộp cát (`scripts/lib/job-exit-sandbox.mjs`) chặn mọi kết nối trừ một
   cổng canh (11 bước, gồm `push-ops-facts`). Không còn ca `todo` — hai ca `P3-3` đã thành ca thật ở AU13.
+
+## Bộ tra hồ sơ người bán S03 (`_acceptance/link-nguoi-ban-s03/`, migration 080)
+
+Người bán S03 không để lại số vẫn liên hệ được qua username công khai trên kênh chat (CONTEXT «Username người bán»). Bộ tra chạy
+**trong gateway đang nối**, chỉ đọc, có trần, tự dừng khi kênh phản ứng. Mạnh chọn 06/11: «Qua gateway, gộp album» — cài cùng lần
+khởi động lại của `ma-album-s03`, không có lần khởi động lại riêng.
+
+**Một phiên, cấm đăng nhập thứ hai.** Bộ tra chỉ lấy API của bộ nghe tin đang nối; không có bộ nghe tin thì đặt tệp chặn
+`khong-co-phien` và không gọi gì. Không đi qua hàm bọc tự tạo client hay tự đăng nhập lại bằng cookie đã lưu, không `login`,
+`loginQR`, không tạo client, không ghi tệp phiên — kể cả để thử. Lời gọi API mới duy nhất là `getUserInfo`; không gửi tin, thả cảm
+xúc, gõ phím, đã xem, kết bạn, đọc danh bạ hay `requestOldMessages`; không mở cổng mạng. Mỗi hồ sơ trả về chỉ giữ `userId` và
+`username`, mọi trường khác (SĐT, tên, ảnh, ngày sinh) bỏ ngay khi nhận.
+
+**Trần** (hằng `TRAN` của bộ tra, sàn hợp đồng AC-1 — trần bảo thủ tự đặt, chưa có nguồn ngoài):
+
+| Trần | Giá trị |
+|---|---|
+| Mã mỗi lời gọi | ≤ 20 |
+| Cách lời trước | ≥ 60 giây, mốc ghi ra đĩa nên đúng cả qua lần khởi động lại bộ nghe tin |
+| Lời mỗi ngày | ≤ 30 |
+| Khung giờ | 01:00–05:00 giờ VN |
+| Hết giờ một lời | 15 giây — dừng cả lượt, kết quả về muộn bị bỏ |
+| Lượt thử | đúng 1 lời: ≤ 20 mã + 2 mã đối chứng, có dấu đã thử |
+
+**Thư mục việc** `S03_LOOKUP_DIR` (env của gateway; bỏ trống = bộ tra tắt). Nằm ngoài `~/.openclaw` và ngoài `snapshots/`:
+`yeu-cau.json` (`{mas, doi_chung}`), `yeu-cau.da-xu.json` (tệp đã xử, lượt lớn), `chan.txt` (tệp chặn: một mã lý do, không chép
+thông điệp thô), `da-thu.txt` (dấu đã thử), `luot-lon.txt` (điều khiển lượt lớn), `moc-60s.txt`, `dem-<ngày>.txt`,
+`spool-ho-so.jsonl` (kết quả chờ khi collector không nhận).
+
+**Đường dữ liệu.** Bộ tra → collector `POST /s03-ho-so` → snapshot S03 riêng nguồn `s03-ho-so`, kind `ho-so` (ghi mới, không sửa;
+mỗi dòng: mã tài khoản, username hoặc rỗng, loại, thời điểm lấy — DATA-CONTRACT) → bộ nạp → `stg_s03_ho_so` (080; thiếu 080 thì bộ
+nạp in `CHUA-AP-080`, không đánh dấu snapshot hồ sơ đã nạp) → bước đêm `buocDem` của `refresh-bait-gap.mjs` gọi `ghiLienLacHoSo`
+(`pipeline/lib/lien-lac-ho-so.mjs`) → liên lạc `chat_profile`, luật `s03_ho_so_theo_tai_khoan`, lớp `fact`, phương pháp
+`source_field` trong `party_contacts`. Đọc dòng mới nhất mỗi mã (`stg_s03_ho_so_moi_nhat`); username đổi thì rút liên lạc cũ lý do
+`doi-username`, lần tra mới ra `khong-username` hay `khong-tim-thay` thì rút lý do `bo-username`; `khong-ro` không đổi gì. Bước này
+không thêm bí danh, không gộp Người, không đụng liên lạc `sdt` hay `sale_offers`. **Không lên cloud**: `stg_s03_ho_so` và
+`party_contacts` chỉ ở máy thu; hiện link là hồ sơ sau.
+
+**Bốn loại kết quả mỗi mã:** `co-username` · `khong-username` · `khong-ro` (nhóm hồ sơ không đổi, không có username) ·
+`khong-tim-thay`.
+
+**Lượt thử** (sau khởi động lại 30 phút ổn theo lệnh phán lùi, không cùng phút khởi động lại):
+1. `node pipeline/lap-yeu-cau-ho-so.mjs` — chỉ đếm, không ghi; đọc số «đủ điều kiện».
+2. `node pipeline/lap-yeu-cau-ho-so.mjs --out "$S03_LOOKUP_DIR/yeu-cau.json"` — 20 mã người bán có từ 3 tin, mọi tin không có số,
+   Người không có liên lạc hay bí danh SĐT (kể cả Người theo SĐT đã nối), chưa tra trong 30 ngày (tính cả snapshot hồ sơ chưa nạp);
+   cộng 2 mã đối chứng là người đã gửi tin trong 24 giờ. Lệnh in số đếm, không in mã.
+3. Lời gọi chạy ở nhịp kế trong khung 01:00–05:00. Canh 30 phút: dòng đóng bộ nghe tin, PID gateway, số `post 202`.
+4. Đọc kết quả: chỉ số đếm bốn loại + kết quả hai mã đối chứng. Đối chứng phải tìm thấy hồ sơ với đúng `userId` đã gửi; ra
+   `khong-tim-thay` hay `userId` khác thì bộ tra đặt `khac-khong-gian-ma` — mã tài khoản trong stg không cùng không gian mã của
+   hàm tra, dừng hẳn.
+5. Báo số đếm cho Mạnh. **Lượt lớn chỉ Mạnh bật** bằng giá trị người đặt trong `luot-lon.txt` (không có mặc định); lượt lớn vẫn giữ
+   mọi trần trên, mỗi tệp yêu cầu xử một lần (đổi tên `yeu-cau.da-xu.json`).
+
+**Tệp chặn** (`chan.txt` còn đó thì 0 lời gọi tới khi người xoá):
+
+| Mã | Nghĩa | Xử |
+|---|---|---|
+| `khong-co-phien` | không có bộ nghe tin đang nối | kiểm gateway (watchdog), không đăng nhập thêm; xoá tệp khi bộ nghe tin nối lại |
+| `http-401`, `http-429`, `rate-limit`, `loi-may-chu`, `loi-la` | kênh từ chối hay lỗi — dừng sau đúng lời gây lỗi, không thử lại | báo Mạnh; không xoá trong ngày |
+| `het-15s` | lời không trả trong 15 giây | báo Mạnh; xem log gateway quanh giờ gọi |
+| `listener-dong-sau-goi` | bộ nghe tin đóng, lỗi hay bộ canh báo trong 30 phút sau một lời — bộ tra in `dung-goi-Manh` | **dừng gọi, báo Mạnh**; không xếp vào dạng 26/10; chỉ Mạnh quyết gọi lại |
+| `khac-khong-gian-ma` | mã đối chứng không tìm thấy hay `userId` lệch | dừng hẳn; cần hồ sơ riêng về không gian mã |
+| `sai-khuon-yeu-cau` | tệp yêu cầu rỗng, sai khuôn, mã không toàn chữ số | lập lại tệp bằng `lap-yeu-cau-ho-so.mjs`, rồi xoá tệp chặn |
+
+**Tắt bộ tra không cần khởi động lại:** xoá `yeu-cau.json` hoặc đặt `chan.txt` (bộ tra kiểm hai tệp ngay trước mỗi lời). Lùi mã bộ tra
+đi cùng phạm vi lùi extension của mã album. Bộ tra dừng vì lỗi không đóng hay khởi động lại bộ nghe tin; handler vẫn nhận tin.
+
+**Giá nếu kênh khoá phiên:** mất thu S03 tới khi Mạnh quét QR lại; dữ liệu đã thu không mất. Lượt thử một lời ở giờ im giảm xác
+suất, không đưa về 0.
+
+**Chưa đo:** tỉ lệ người bán có username; `sender_id` lưu ở stg có cùng không gian mã của hàm tra không (lượt thử đo bằng 2 mã đối
+chứng); kênh có coi lời tra hồ sơ người lạ là bất thường không; trần an toàn thật của kênh (60 giây, 30 lời/ngày, khung 01:00–05:00
+là trần bảo thủ tự đặt).

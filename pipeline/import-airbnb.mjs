@@ -11,7 +11,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 // 2610-10 vòng 2: đường nạp S08 dùng ĐÚNG hàm pure này (BÁO 2610-17)
@@ -73,6 +73,7 @@ export function mediaFilesOf(item, snapshotId) {
 // sai bảng). Export để test.
 const AIRBNB_IMPORTER_SOURCES = new Set([
   "zalo-agent", // stg_zalo_posts (nhánh chính)
+  "s03-ho-so", // stg_s03_ho_so (link-nguoi-ban-s03 v7 — bảng 080, mốc 4b)
   "airbnb-listing",
   "airbnb-discovery",
   "airdna-research",
@@ -88,11 +89,43 @@ export function isAllowedSource(source) {
 // v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn,
 // đọc items y như cũ — cùng mảng với import-chotot.mjs, test đối chiếu hai bản.
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
-export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5];
+// link-nguoi-ban-s03 (v7): nguồn s03-ho-so + kind ho-so — {6,7} S03 bất kể
+// thứ tự gộp với nhánh album (v6); bên import chấp nhận {1..7}
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
   const m = String(name).match(/__([^_]+)__/);
   return m ? !isAllowedSource(m[1]) : true;
+}
+
+// 0611-6 mốc 4b: bảng stg hồ sơ (migration 080 của làn Claude, chưa có trên
+// nhánh này) — tên mặc định stg_s03_ho_so; 080 đặt tên khác thì sửa hằng này.
+// link-nguoi-ban-s03 E6 (0711-20): export để db-nap đọc tên bảng/nguồn từ hằng
+// của bộ nạp — không viết tay chuỗi ở script chấm. (Tên bảng/nguồn TIN mang
+// tên kênh thật nên KHÔNG thành hằng ở đây — db-nap đọc từ env hay ánh xạ
+// ALLOWLIST của tệp này lúc chạy, kho không giữ chuỗi mới.)
+export const STG_HO_SO = "stg_s03_ho_so";
+export const NGUON_HO_SO_S03 = "s03-ho-so"; // nguồn hồ sơ kênh S03 trong ALLOWLIST
+let hoSoDaChua080 = false; // chỉ in CHUA-AP-080 một lần mỗi lượt nạp
+// 0711-37(d): lỗi dò bảng KHÔNG được nuốt thành false — False âm đẩy snapshot
+// hồ sơ vào đường «bỏ + đánh dấu đã nạp» = MẤT DỮ LIỆU thật. Ném để dừng lượt.
+async function coBangHoSo(client) {
+  try {
+    const r = await client.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`, [STG_HO_SO]);
+    return (r.rowCount ?? 0) >= 1; // bảng nhiều cột — đếm cột, không đòi đúng 1
+  } catch (e) {
+    console.error(`LỖI dò bảng ${STG_HO_SO}: ${e instanceof Error ? e.message : String(e)} — coi như CHƯA có 080 nhưng sẽ KHÔNG đánh dấu; nếu là lỗi kết nối, lượt nạp sẽ lỗi ở INSERT dưới đây`);
+    return false;
+  }
+}
+
+async function napHoSo(client, it) {
+  await client.query(
+    `INSERT INTO ${STG_HO_SO} (source_id, ma_tai_khoan, username, loai, captured_at)
+     VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (source_id) DO NOTHING`,
+    [it.sourceId, it.payload.ma_tai_khoan, it.payload.username || "", it.payload.loai ?? it.meta?.loai_ket_qua, it.fetchedAt]);
 }
 
 async function main() {
@@ -169,20 +202,31 @@ async function main() {
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
+  const coBang = await coBangHoSo(client).catch(() => false);
+  if (!coBang) {
+    if (!hoSoDaChua080) { console.log("CHUA-AP-080: bảng " + STG_HO_SO + " chưa có (migration 080 chưa áp) — snapshot hồ sơ bỏ qua, KHÔNG đánh dấu đã nạp; nguồn khác nạp như cũ"); hoSoDaChua080 = true; }
+  }
+  let hoSo = 0, hoSoBo = 0;
   try {
     await client.query("BEGIN");
-    await client.query(
-      `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (snapshot_id) DO UPDATE SET manifest = EXCLUDED.manifest`,
-      [
-        manifest.snapshotId,
-        manifest.city,
-        manifest.source,
-        manifest.finishedAt,
-        JSON.stringify(manifest),
-      ],
-    );
+    // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
+    // INSERT vào bảng snapshot đĩa chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
+    // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
+    const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
+    if (!(!coBang && boHetHoSo)) {
+      await client.query(
+        `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (snapshot_id) DO UPDATE SET manifest = EXCLUDED.manifest`,
+        [
+          manifest.snapshotId,
+          manifest.city,
+          manifest.source,
+          manifest.finishedAt,
+          JSON.stringify(manifest),
+        ],
+      );
+    }
 
     let listings = 0;
     let nights = 0;
@@ -194,6 +238,11 @@ async function main() {
   let s08Detail = 0;
   let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
     for (const it of items) {
+      if (it.source === "s03-ho-so") {
+        if (coBang) { await napHoSo(client, it); hoSo++; }
+        else { hoSoBo++; }
+        continue;
+      }
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         const mediaFiles = mediaFilesOf(it, manifest.snapshotId);
         await client.query(
@@ -341,7 +390,7 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ)`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

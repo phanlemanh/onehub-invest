@@ -1,0 +1,84 @@
+schema_version: 1
+feature_slug: s03-nap-nhanh
+# Mọi eval chạy trên bản chép tệp bọc trong cây tạm: node/sleep giả, HOME tạm, DATABASE_URL cổng đóng — không DB,
+# không launchctl, không snapshot thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; '✔ NN-1 lượt nhanh lành'; 'ℹ pass 11', 'ℹ fail 0', 'ℹ skipped 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; '✔ NN-2 lượt 00:00 (không cờ) giữ nguyên'; should-NOT-fire '✔ NN-4 đối chứng: lượt 00:00 gặp khoá sống thì CHỜ (không bỏ lượt)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; should-NOT-fire '✔ NN-3 … khoá sống' và '✔ NN-10 … khoá CŨ >2h mà PID còn sống: bỏ lượt, KHÔNG gỡ khoá'; '✔ NN-5 … PID đã chết: dọn khoá rồi chạy'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; '✔ NN-6 lượt nhanh: transform hỏng' và '✔ NN-7 lượt nhanh: nạp hỏng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; should-NOT-fire '✔ NN-8 hai lượt nhanh chồng nhau: lượt sau bỏ lượt'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; should-NOT-fire '✔ NN-11 cờ lạ (vd --chi-nap của bản cũ) → thoát 2'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.snn_test
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; '✔ NN-9 plist: 61 mốc mỗi 15′ từ 7:00 tới 22:00, gọi --luot-nhanh, log riêng, không mốc sau 22:00' — should-NOT-fire: không mốc 22:15/22:30/22:45, không còn --chi-nap"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.snn_syntax
+    paths: [scripts/zalo-import-daily.sh, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.snn_regress
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; 'ℹ fail 0', 'ℹ skipped 0' (khoảng 123 ca của các bộ test job nạp có sẵn)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.snn_scope
+    paths: [scripts/zalo-import-daily.sh, scripts/s03-nap-nhanh.test.mjs, pipeline/cron/com.oneinvest.s03-nap-15phut.plist]
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOAI PHAM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

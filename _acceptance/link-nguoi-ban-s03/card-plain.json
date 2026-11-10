@@ -1,0 +1,6 @@
+{
+  "feature_plain": "Người bán S03 không để lại số vẫn có link hồ sơ công khai, máy chỉ đọc qua phiên kênh đang nối, có trần lời gọi và tự dừng khi kênh phản ứng.",
+  "decisions": [
+    {"id": "E11b", "q": "Tài liệu đã đủ để người khác vận hành bộ tra chưa?", "why": "Hội đồng đề xuất đạt: tài liệu nêu đủ trần, cách chạy thử, cách tắt và các điều chưa đo."}
+  ]
+}
