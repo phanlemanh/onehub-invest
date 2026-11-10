@@ -5,7 +5,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { LUOT_THU, NGUON_SNAPSHOT_HO_SO, chonMa, docVaChon, duongYeuCauHopLe } from "../../pipeline/lib/chon-ma-ho-so.mjs";
-import { SQL_LL } from "../../pipeline/lib/lien-lac-nguoi.mjs";
+import { KENH_LIEN_LAC, SQL_LL } from "../../pipeline/lib/lien-lac-nguoi.mjs";
 import { nap079 } from "../../pipeline/lib/nap-079.mjs";
 import { nap080 } from "../../pipeline/lib/nap-080.mjs";
 import { boKiem, trongGiaoDich } from "./chung.mjs";
@@ -44,6 +44,13 @@ export async function chay() {
     await trongGiaoDich(async (c) => {
       await nap079(c);
       await nap080(c);
+      // Đối chứng = người gửi tin của kênh trong GIO_DOI_CHUNG giờ qua. S4-r5 (10/11): DB thử chép từ DB sống, bài S03 mới nhất đã
+      // quá 24 giờ → 0 mã đối chứng, ca đỏ vì dữ liệu cũ chứ không vì bộ chọn. Dựng 2 bài vừa gửi (chép 2 bài có sẵn, đổi post_id,
+      // sender_id toàn chữ số không trùng mã tin nào, captured_at = now()) để ca đo bộ chọn, không đo độ tươi của DB.
+      await c.query(`CREATE TEMP TABLE lnb_dc ON COMMIT DROP AS SELECT * FROM ${BANG_BAI} WHERE agent_id = $1 LIMIT 2`, [KENH_LIEN_LAC]);
+      await c.query(`UPDATE lnb_dc SET post_id = post_id || '_lnbdc' || ctid::text, captured_at = now(),
+                       sender_id = '9' || lpad((floor(random() * 1e12))::bigint::text, 12, '0')`);
+      await c.query(`INSERT INTO ${BANG_BAI} SELECT * FROM lnb_dc`);
       const ban = await docVaChon(c, { snapshots: goc, soMa: LUOT_THU.soMa });
       k.kiem(`lượt thử chọn đủ ${LUOT_THU.soMa} mã + ${LUOT_THU.doiChung} đối chứng`,
         ban.mas.length === LUOT_THU.soMa && ban.doi_chung.length === LUOT_THU.doiChung);

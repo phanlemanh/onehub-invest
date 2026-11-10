@@ -1,146 +1,169 @@
-## Trong hợp đồng
+# Review findings: link-nguoi-ban-s03 (round 5)
 
-- **Sự kiện 'bo-canh' của watchdog bị bỏ qua khi gateway khởi động lại sau hơn 30 phút, nên điểm dừng an toàn listener-dong-sau-goi không bật**
-  file: `_acceptance/link-nguoi-ban-s03/extension.patch:385`
-  severity: medium
-  AC: AC-2
-  source: bugs
-  detail: mocGiu chỉ giữ những mốc lời gọi có `bayGio - t <= 30′`, tính theo thời điểm tick hiện tại chứ không theo thời điểm xảy ra sự kiện. Sự kiện 'bo-canh' chỉ được ghi (scripts/lib/bo-canh-su-kien.sh, gọi từ alert() của {S03}-watchdog.sh) ngay trước khi watchdog bootout launchd và pkill -9 openclaw. Bộ tra chạy trong gateway nên chết theo, và chỉ đọc được sự kiện khi có người khởi động lại gateway, thường sau hơn 30 phút. Đến lúc đó lời gọi đã rơi khỏi mocGiu, nên `cham` là false. Sự kiện cũ hơn 31 phút bị dọn, và nhánh thiếu api cũng dùng mốc moc60s trong vòng 30 phút nên chỉ ra khong-co-phien hoặc không làm gì. Kết quả là tệp chặn `listener-dong-sau-goi` và dòng `dung-goi-Manh`, vốn là điểm dừng mà runbook bắt «chỉ Mạnh quyết gọi lại», không bao giờ xuất hiện cho đúng trường hợp watchdog cảnh báo. Bộ tra sẽ gọi tiếp ở khung giờ kế. Cửa sổ 30 phút nên so giữa sự kiện và lời gọi (s.atMs - m), không nên lọc mốc lời gọi theo now.
+## Trong hợp đồng
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Cổng /s03-ho-so nhận lay_luc không phải ISO, một dòng như vậy chặn nạp snapshot đó vĩnh viễn**
-  Người dùng thấy gì: Nếu bộ tra gửi sai định dạng giờ, cả lô hồ sơ đó không nạp được và các dòng đúng trong lô cũng mất theo. Chỉ xảy ra khi phía gửi có lỗi.
-  Căn cứ: Hiếm gặp vì chỉ bộ tra của mình gửi lên, nhưng khi xảy ra thì cả lô kẹt không tự gỡ được; sửa rẻ nên nên ghi lại để làm sau.
+- **Không job đêm nào nạp snapshot s03-ho-so; và cơ chế 'không đánh dấu đã nạp' khi thiếu 080 dựa vào {S01}_snapshots, không phải dấu trạng thái thật của job**
+  Người dùng thấy gì: Kết quả tra hồ sơ người bán được lưu ra đĩa nhưng không có việc chạy đêm nào đưa vào danh bạ, nên link hồ sơ chưa hiện cho ai. Nếu sau này nối vào mà không cẩn thận, kết quả có thể bị bỏ qua vĩnh viễn.
+  Căn cứ: Tính năng chưa mang lại link nào cho người dùng cho tới khi nối xong, nhưng dữ liệu vẫn còn trên đĩa và nối sau không mất gì, sửa là một việc riêng gọn.
+  file: `scripts/{S03}-import-daily.sh`
+  severity: high
+  Đề xuất: new-contract
+
+- **Bảng, view và cột mới đặt tên tiếng Việt, trái quy ước «tên bảng/cột, API: tiếng Anh»**
+  Người dùng thấy gì: Một số tên bảng và cột nội bộ dùng tiếng Việt thay vì tiếng Anh. Người dùng cuối không thấy gì, chỉ lệch quy ước đặt tên của đội.
+  Căn cứ: Không ảnh hưởng người dùng hay dữ liệu, còn đổi tên sau khi migration đã commit thì tốn kém hơn nhiều so với lợi ích.
+  file: `db/migrations/080_ho_so_s03.sql`
+  severity: medium
+  Đề xuất: wont-fix
+
+- **Biên nhận lô hồ sơ chỉ kiểm lay_luc bằng Date.parse, nhận cả chuỗi không phải ISO trái với hợp đồng**
+  Người dùng thấy gì: Nếu bộ tra gửi thời điểm sai khuôn, cả lô kết quả có thể không nạp được vào danh bạ. Bộ tra của ta luôn gửi đúng khuôn nên khó xảy ra.
+  Căn cứ: Chỉ xảy ra khi chính bộ tra gửi sai, hậu quả là một lô không nạp được chứ không lộ hay mất dữ liệu gốc, và có thể sửa bằng vá nhỏ sau.
   file: `collector/src/api/server.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **Kênh tin S03 ghi schemaVersion 6 dù nhánh này chưa có albumMeta mà hợp đồng v6 khai**
-  Người dùng thấy gì: Số phiên bản dữ liệu tin S03 có thể báo có trường album trong khi thực tế chưa có, làm người đọc sau này hiểu nhầm hình dạng dữ liệu cũ.
-  Căn cứ: Không mất dữ liệu và không ảnh hưởng người dùng cuối; chỉ gây nhầm khi tra cứu về sau, và hết nhầm khi nhánh album được gộp.
+- **Kênh tin {S03} ghi schemaVersion 6 dù nhánh này không có field albumMeta mà v6 khai**
+  Người dùng thấy gì: Trong một thời gian, dữ liệu tin nhóm khai là có thêm thông tin album trong khi thực tế chưa có. Người dùng không thấy gì, chỉ người đọc dữ liệu thô về sau có thể hiểu nhầm.
+  Căn cứ: Tự hết khi nhánh album được gộp, không mất dữ liệu và không ảnh hưởng ai ngoài người đọc kỹ thuật.
   file: `collector/src/core/storage.ts`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Đường KILL của watchdog {S03} chạy thêm bước đọc env gateway và ghi tệp sự kiện TRƯỚC launchctl bootout và pkill**
+  Người dùng thấy gì: Khi hệ thống phải tắt khẩn kênh {S03}, có một bước ghi tệp phụ chạy trước. Nếu bước này treo thì việc tắt có thể chậm lại.
+  Căn cứ: Hiếm khi treo và chỉ làm chậm chứ không làm hỏng việc tắt, nhưng đây là lớp an toàn {S03} nên nên sửa sớm khi có dịp.
+  file: `scripts/{S03}-watchdog.sh`
   severity: low
   Đề xuất: known-limits
 
-- **import-{S01} chép lại hằng của 080, chú thích nói ngược code, dò 080 lỏng hơn daCo080**
-  Người dùng thấy gì: Chú thích trong mã mô tả sai hành vi và có hai cách dò khác nhau xem bảng mới đã áp chưa. Người dùng không thấy ảnh hưởng.
-  Căn cứ: Chỉ là lộn xộn nội bộ, kết quả vẫn an toàn và không mất dữ liệu; dọn lúc nào cũng được.
-  file: `pipeline/import-{S01}.mjs`
-  severity: low
-  Đề xuất: wont-fix
-
-- **Chưa có job nào nạp snapshot s03-ho-so, nên bước đêm ghiLienLacHoSo luôn đọc bảng rỗng**
-  Người dùng thấy gì: Hồ sơ người bán tra về sẽ không bao giờ vào danh bạ vì chưa có lịch tự nạp, nên link hồ sơ chat không xuất hiện dù bộ tra chạy tốt.
-  Căn cứ: Tính năng chạy không báo lỗi nhưng không ra kết quả; dữ liệu không mất và nạp lại được, nhưng cần một việc nối lịch riêng.
-  file: `pipeline/import-{S01}.mjs`
+- **Snapshot s03-ho-so không có đường nạp tự động: stg_s03_ho_so không bao giờ có dữ liệu, cơ chế «không đánh dấu đã nạp» cũng vô hiệu**
+  Người dùng thấy gì: Kết quả tra hồ sơ người bán dừng ở đĩa, không vào danh bạ, nên người bán không để lại số chưa có link hồ sơ. Nối sai về sau còn có thể làm kết quả bị bỏ sót mà không báo.
+  Căn cứ: Dữ liệu không mất nên nối lại sau vẫn được, nhưng tính năng chưa có tác dụng cho đến khi làm việc nối này.
+  file: `scripts/{S03}-import-daily.sh`
   severity: medium
   Đề xuất: new-contract
 
-- **Spool không chia lô: quá 1000 dòng thì collector trả 413 mãi, spool kẹt vĩnh viễn; lỗi 401 vì thiếu khoá cũng rơi vào spool mà không có log**
-  Người dùng thấy gì: Nếu bộ tra gửi lỗi âm thầm vài ngày, kết quả tra tồn lại ngày càng nhiều rồi kẹt hẳn, không ai biết.
-  Căn cứ: Dữ liệu không mất nhưng kẹt không tín hiệu; chỉ xảy ra sau nhiều ngày lỗi và sửa không đắt, nên đáng mở việc riêng.
-  file: `_acceptance/link-nguoi-ban-s03/extension.patch`
-  severity: medium
-  Đề xuất: new-contract
-
-- **Một dòng spool dở (ghi nối bị cắt) làm phatLaiSpool ném lỗi ở mọi tick, bộ tra tê liệt**
-  Người dùng thấy gì: Nếu máy bị tắt đột ngột đúng lúc ghi, bộ tra có thể ngừng làm việc và không gửi nổi kết quả cũ. Gỡ được bằng cách xoá dòng hỏng.
-  Căn cứ: Cần trùng hợp bị tắt ngang đúng lúc ghi; không mất dữ liệu đã thu và người vận hành tự gỡ được, nên chấp nhận và ghi lại.
-  file: `_acceptance/link-nguoi-ban-s03/extension.patch`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Lượt thử chỉ tra 18 mã người bán nhưng vẫn đóng tệp yêu cầu 20 mã, 2 mã cuối bị bỏ mà không báo**
-  Người dùng thấy gì: Lượt thử thật ra chỉ tra 18 người thay vì 20, hai người cuối bị bỏ qua mà không báo. Họ sẽ được chọn lại ở lượt sau.
-  Căn cứ: Hậu quả nhẹ vì chỉ thiếu hai người trong lượt thử và chọn lại được sau; chỉ cần ghi rõ con số thực tế.
-  file: `_acceptance/link-nguoi-ban-s03/extension.patch`
-  severity: medium
-  Đề xuất: known-limits
-
-- **coBangHoSo nuốt lỗi dò bảng thành false, trái với chính ghi chú «không được nuốt, ném để dừng lượt»**
-  Người dùng thấy gì: Nếu việc kiểm tra bảng gặp lỗi lạ, hồ sơ có thể bị bỏ qua với thông báo sai lý do, và có lịch nạp sau đó sẽ không nạp lại.
-  Căn cứ: Chỉ xảy ra khi cơ sở dữ liệu trục trặc, dữ liệu gốc vẫn còn và nạp tay lại được; hậu quả nhẹ.
+- **coBangHoSo nuốt lỗi dò bảng thành false, trái với chú thích «không được nuốt — ném để dừng lượt»**
+  Người dùng thấy gì: Nếu việc kiểm bảng gặp lỗi tạm, hệ thống báo nhầm là chưa áp migration và bỏ qua hồ sơ lượt đó mà không báo lỗi. Link hồ sơ có thể thiếu mà không ai biết.
+  Căn cứ: Cần lỗi hiếm xảy ra đúng lúc nạp, và snapshot gốc vẫn còn nên có thể nạp lại tay sau khi phát hiện.
   file: `pipeline/import-{S01}.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Lượt thử: lap-yeu-cau chọn 20 mã người bán nhưng bộ tra chỉ gọi 18, 2 mã cuối bị bỏ mà không báo**
+  Người dùng thấy gì: Lượt thử chỉ tra 18 trong 20 người bán được chọn mà không báo hai người còn lại bị bỏ. Số đếm báo cáo cho Mạnh sẽ thấp hơn kỳ vọng.
+  Căn cứ: Chỉ là lệch số trong lượt thử nhỏ, không gây hại, hai mã sót sẽ được chọn lại ở lần sau.
+  file: `pipeline/lib/chon-ma-ho-so.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Bộ tra ghi tệp chặn khong-co-phien vĩnh viễn mỗi khi listener hở một nhịp, kể cả ngoài khung giờ và khi không có yêu cầu**
+  Người dùng thấy gì: Một lần kênh chập chờn ban ngày có thể khoá bộ tra cho tới khi người xoá tay, nên lượt tra đêm bị chặn câm. Không gây nguy hiểm vì chỉ là không tra.
+  Căn cứ: Thiên về an toàn (chặn chứ không gọi), người dùng không mất dữ liệu, chỉ cần xoá tệp chặn rồi chạy lại.
+  file: `_acceptance/link-nguoi-ban-s03/extension.patch`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): ca [E9] «lệnh đo trước–sau» chỉ kiểm có tệp tên truoc-sau, không chạy lệnh**
-  Người dùng thấy gì: Bài kiểm tra có thể báo đạt dù lệnh đo trước-sau chưa từng chạy thật, nên có thể tin nhầm là đã kiểm.
-  Căn cứ: Không ảnh hưởng người dùng, chỉ làm bằng chứng yếu; lệnh sẽ được chạy thật lúc triển khai.
-  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 6 (đo máy của tác giả): ca [E9] phán lùi đọc gateway.log thật trong HOME của máy chạy**
-  Người dùng thấy gì: Bài kiểm này chỉ chạy đúng trên máy của người làm, trên máy khác sẽ đỏ hoặc cho kết quả tuỳ ngày.
-  Căn cứ: Không ảnh hưởng người dùng cuối; chỉ gây nhiễu khi chấm trên máy khác, sửa khi cần.
-  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 5 (tuyên cả lớp, chỉ quét một phần): [E4] «lời gọi API mới của diff extension» chỉ đếm AST trên monitor.ts và seller-lookup.ts**
-  Người dùng thấy gì: Bài kiểm chỉ rà hai trong bốn tệp nên một lời gọi kênh ngoài dự kiến ở tệp còn lại có thể lọt qua.
-  Căn cứ: Rủi ro chỉ xảy ra nếu có lời gọi lạ thật; hiện chưa thấy, rà thêm tệp là việc rẻ.
-  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 5 (tuyên cả lớp, chỉ có ca điểm): E5 hứa canary vắng ở 5 nơi cùng spool, DATA-CONTRACT và hai thứ tự gộp; lệnh E5 chỉ chạy test collector đo snapshot**
-  Người dùng thấy gì: Bài kiểm chỉ chứng minh dữ liệu cá nhân không lọt vào một nơi trong năm nơi đã hứa, nên bốn nơi còn lại chưa được kiểm.
-  Căn cứ: Chưa có dấu hiệu dữ liệu lộ thật; là khoảng trống bằng chứng, bổ sung bài kiểm được sau.
-  file: `scripts/link-nguoi-ban-s03/api.mjs`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 3 (assert có mặt hay cận dưới thay cho quan hệ): schemaVersion hồ sơ assert `>= 7`, kênh tin so với chính hằng mà bộ ghi dùng**
-  Người dùng thấy gì: Bài kiểm sẽ vẫn xanh nếu số phiên bản dữ liệu hồ sơ bị đổi sang số khác 7.
-  Căn cứ: Không ảnh hưởng người dùng; số phiên bản hiện đúng, chỉ là rào chắn lỏng.
-  file: `collector/src/test/ho-so-api.test.ts`
+- **Gửi collector và phát lại spool nuốt mọi lỗi không log; thiếu S03_COLLECTOR_KEY làm kết quả kẹt spool mãi, còn mã bị coi là đã tra**
+  Người dùng thấy gì: Nếu cấu hình khoá sai, kết quả tra nằm im trong hàng chờ và không có cảnh báo, các người bán đó cũng không được tra lại. Link hồ sơ sẽ không xuất hiện mà không rõ lý do.
+  Căn cứ: Dữ liệu không mất và gỡ được bằng sửa cấu hình rồi phát lại, nhưng lỗi im lặng khiến khó phát hiện.
+  file: `_acceptance/link-nguoi-ban-s03/extension.patch`
   severity: low
-  Đề xuất: wont-fix
-
-- **Hình dạng 2 (fixture viết tay): E8 dựng snapshot hồ sơ chưa nạp bằng tay «đúng khuôn SnapshotWriter»**
-  Người dùng thấy gì: Bài kiểm dùng dữ liệu mẫu tự dựng, nên nếu cách ghi dữ liệu thật đổi thì bài kiểm không phát hiện.
-  Căn cứ: Không ảnh hưởng người dùng hiện tại; chỉ là rủi ro phát hiện chậm khi khuôn ghi đổi.
-  file: `scripts/link-nguoi-ban-s03/chon.mjs`
-  severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 (fixture viết tay): itest bộ nạp tự CREATE TABLE «mô phỏng 080» thay vì áp migration 080 thật; assert username phụ thuộc chữ số cuối của Date.now()**
-  Người dùng thấy gì: Bài kiểm nạp hồ sơ có thể đỏ ngẫu nhiên khoảng 9 lần trong 10 và không dùng bảng thật, nên có thể xanh dù bảng thật khác.
-  Căn cứ: Chỉ gây nhiễu và kém tin cậy cho đội làm, không chạm người dùng; sửa rẻ.
-  file: `pipeline/tests/ho-so-nap.itest.mjs`
-  severity: medium
+- **phai-lui-ho-so: nhánh dự phòng +07:00 không bao giờ chạy (regex luôn khớp dấu '-' của ngày)**
+  Người dùng thấy gì: Công cụ phán có nên lùi bản cài hay không có thể lệch 7 giờ nếu chạy trên máy không đặt giờ Việt Nam. Trên máy của Mạnh thì đúng.
+  Căn cứ: Chỉ ảnh hưởng công cụ kiểm trên máy khác múi giờ, không đụng người dùng hay dữ liệu thật.
+  file: `collector/openclaw/tests/link-nguoi-ban/phai-lui-ho-so.mjs`
+  severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 6 (đo bản dựng trên máy thay vì cây đang kiểm): E6 db-nap dựng snapshot bằng collector/dist (gitignored)**
-  Người dùng thấy gì: Phép đo nạp dữ liệu có thể chạy trên bản dựng cũ nên có thể đạt hoặc trượt sai so với mã hiện tại.
-  Căn cứ: Không ảnh hưởng người dùng cuối; chỉ làm kết quả kiểm có thể lệch, sửa bằng dựng lại bản.
+- **db-nap (E6) không kiểm vế «snapshot hồ sơ không bị đánh dấu đã nạp» dù chú thích khai có**
+  Người dùng thấy gì: Bài kiểm chưa chứng minh được rằng hồ sơ chưa nạp không bị đánh dấu nhầm là đã nạp. Nếu có lỗi này, một số hồ sơ có thể bị bỏ sót mà không ai biết.
+  Căn cứ: Chỉ là chỗ kiểm còn hở chứ chưa thấy lỗi thật, bổ sung kiểm sau không tốn nhiều.
+  file: `scripts/link-nguoi-ban-s03/db-nap.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): E9 chỉ kiểm có tệp tên truoc-sau, không chạy lệnh đo**
+  Người dùng thấy gì: Bài kiểm chỉ xác nhận có tệp đo trước-sau mà chưa chạy thử, nên khi khởi động lại gateway thật có thể phát hiện lệnh đo không hoạt động đúng. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Lệnh đo chỉ dùng lúc triển khai, sai thì thấy ngay và chạy lại được, không mất dữ liệu.
+  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
+  severity: high
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (assert chuỗi có mặt trong khi lời hứa là quan hệ): E6 «snapshot hồ sơ không bị đánh dấu» không được đo**
+  Người dùng thấy gì: Chưa có bài kiểm xác nhận hồ sơ chưa nạp vẫn được nạp lại sau khi áp migration. Nếu sai, hồ sơ có thể bị bỏ sót.
+  Căn cứ: Chưa thấy lỗi thật, chỉ thiếu bằng chứng; bổ sung sau rẻ và dữ liệu không mất.
   file: `scripts/link-nguoi-ban-s03/db-nap.mjs`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 2 (fixture viết tay, assert lên chính fixture): E2-phu dùng log khuôn dấu cách mà chính tệp test nói không phải khuôn thật, rồi assert regex trên chuỗi log nó tự viết**
-  Người dùng thấy gì: Một bài kiểm luôn đạt nên không chứng minh được bộ nghe tin vẫn nhận tin sau khi bộ tra dừng.
-  Căn cứ: Không ảnh hưởng người dùng; chỉ làm một bằng chứng yếu và các lớp kiểm khác đã phủ phần này.
+- **Hình dạng 5 (tuyên quét lớp nhưng chỉ phủ một phần): E4 «diff extension chỉ thêm getUserInfo» chỉ quét 2/4 tệp mã của .patch**
+  Người dùng thấy gì: Bài kiểm chưa quét hết mã thêm vào, nên một lời gọi kênh không mong muốn thêm sau này có thể lọt. Hiện chưa thấy có lời gọi nào như vậy.
+  Căn cứ: Rủi ro nằm ở tương lai và liên quan an toàn kênh, nhưng mở rộng phạm vi quét là sửa rẻ.
+  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 6 (đường dẫn trỏ ra máy tác giả): E9 phán lùi đọc ~/Library/Logs/openclaw/gateway.log thật**
+  Người dùng thấy gì: Bài kiểm này đỏ hoặc xanh tuỳ log trên máy chạy, nên trên máy khác có thể báo sai. Không ảnh hưởng người dùng cuối.
+  Căn cứ: Chỉ làm kết quả kiểm thiếu ổn định trên máy khác, không đụng dữ liệu hay tính năng.
+  file: `scripts/link-nguoi-ban-s03/tich-hop/bo-tra.tich-hop.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 6 (đo bản dựng hay checkout của tác giả thay vì cây đang kiểm): db-nap dùng collector/dist, E4-phu dùng cây ~/dev/openclaw**
+  Người dùng thấy gì: Một số bài kiểm có thể đo bản dựng cũ trên máy thay vì mã mới nhất, nên kết quả xanh chưa chắc phản ánh đúng. Người dùng cuối không thấy.
+  Căn cứ: Chỉ làm độ tin cậy của bài kiểm giảm, không gây hại trực tiếp, sửa bằng dựng lại trước khi kiểm.
+  file: `scripts/link-nguoi-ban-s03/db-nap.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 5 (tuyên phủ nhiều vị trí nhưng chỉ đo một): lệnh chấm E5 chỉ kiểm canary trong items snapshot**
+  Người dùng thấy gì: Bài kiểm chỉ xác nhận dữ liệu cá nhân thừa không lọt vào snapshot mà chưa kiểm hàng chờ, tệp chặn và log. Nếu lọt ở đó thì thông tin riêng tư có thể nằm trên đĩa máy thu.
+  Căn cứ: Chưa thấy rò rỉ thật, dữ liệu chỉ ở máy thu, bổ sung kiểm các chỗ còn lại là việc vừa phải.
+  file: `scripts/link-nguoi-ban-s03/api.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (assert giá trị có mặt trong khi lời hứa là quan hệ): schemaVersion hồ sơ chỉ kiểm >= 7, kênh tin so với chính hằng mà writer dùng**
+  Người dùng thấy gì: Bài kiểm số phiên bản dữ liệu hơi lỏng nên có thể không bắt được lệch thứ tự phiên về sau. Hiện chưa có lỗi thật.
+  Căn cứ: Chỉ là kiểm chưa chặt, không ảnh hưởng người dùng, sửa rẻ khi có dịp.
+  file: `collector/src/test/ho-so-api.test.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (assert chuỗi có mặt trên chính fixture viết tay): E2-phu «tự nối lại + handler vẫn nhận tin» là kiểm vô nghĩa**
+  Người dùng thấy gì: Một bài kiểm luôn xanh nên chưa chứng minh được kênh tự nối lại và vẫn nhận tin sau khi bộ tra dừng. Chỉ làm giảm độ tin cậy của kiểm tra.
+  Căn cứ: Chưa thấy hành vi sai, chỉ thiếu bằng chứng; việc này sẽ được chứng minh thật lúc canh 30 phút sau khởi động lại.
   file: `collector/openclaw/tests/link-nguoi-ban/phai-lui-ho-so.test.mjs`
   severity: low
-  Đề xuất: wont-fix
+  Đề xuất: known-limits
 
-- **Hình dạng 1 (grep mã nguồn thay vì đo đầu ra), kèm bỏ qua mà vẫn xanh: kiểm watchdog gọi ghi_bo_canh bằng dò chữ**
-  Người dùng thấy gì: Bài kiểm chỉ tìm chữ trong tệp canh gác chứ không chạy thử, nên có thể báo đạt dù cảnh báo không ghi sự kiện thật.
-  Căn cứ: Không ảnh hưởng người dùng trực tiếp; là khoảng trống bằng chứng, vá được bằng một lần chạy thử.
+- **Hình dạng 3 (assert chuỗi có mặt trong khi lời hứa là quan hệ) và skip được tính là đạt: móc watchdog chỉ grep nguồn**
+  Người dùng thấy gì: Bài kiểm có thể báo đạt dù móc watchdog nằm sai chỗ hoặc bị bỏ qua. Người dùng cuối không thấy gì.
+  Căn cứ: Chỉ là độ chặt của kiểm tra, sửa rẻ, không ảnh hưởng dữ liệu.
   file: `collector/openclaw/tests/link-nguoi-ban/bo-canh-su-kien.test.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 1 và 6: E9-phu gọi tiền kiểm tĩnh nhưng tuyên đo «tái kiểm ngay trước mỗi lời»; E4-phu đọc monitor.ts ở cây làm việc ~/dev/openclaw thay vì nền cộng .patch**
-  Người dùng thấy gì: Hai bài kiểm phụ nói đo việc tái kiểm trước mỗi lời gọi và bản mã nền, nhưng thực tế chỉ kiểm tĩnh và đọc thư mục của người làm.
-  Căn cứ: Không đổi hành vi với người dùng; chỉ làm bằng chứng yếu, bổ sung khi cần.
+- **Hình dạng 5 (thiếu ma trận toàn phần): test tiền kiểm tuyên ba tệp nhưng chỉ assert hai**
+  Người dùng thấy gì: Bài kiểm tiền kiểm khởi động lại chưa thử trường hợp còn tệp chặn, nên nếu hỏng, gateway có thể khởi động lại khi không nên. Hiện chưa thấy lỗi.
+  Căn cứ: Chỉ thiếu một ca kiểm trong bước chuẩn bị, bổ sung rất rẻ.
   file: `collector/openclaw/tests/link-nguoi-ban/tien-kiem-ho-so.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): snapshot hồ sơ chưa nạp ở E8 và bảng 080 ở itest không đi qua bên ghi thật**
+  Người dùng thấy gì: Bài kiểm dùng dữ liệu thử dựng tay nên nếu khuôn dữ liệu thật đổi, bài kiểm vẫn xanh trong khi chọn người bán có thể sai. Hiện chưa có lỗi thật.
+  Căn cứ: Rủi ro chỉ xuất hiện khi khuôn dữ liệu đổi sau này, không ảnh hưởng người dùng ngay.
+  file: `scripts/link-nguoi-ban-s03/chon.mjs`
   severity: low
   Đề xuất: known-limits
 
