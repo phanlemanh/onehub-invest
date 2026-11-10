@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9ded3f582a5696d6a533c7106e05f7ce48017a2d
-human_signoff:
+human_signoff: Mạnh 2026-11-10
 ---
 
 # Evidence Report: thuoc-song-song-dem-theo-ten-ca

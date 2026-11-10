@@ -5,7 +5,7 @@ slug: thuoc-song-song-dem-theo-ten-ca
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-09-thuoc-song-song-dem-theo-ten-ca-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
@@ -69,3 +69,9 @@ Bỏ quét hình thái bằng dòng sổ descope «bỏ coverage-scan — …» 
 
 - Không migration, không route, không mã sản xuất.
 - Lượt ghim lại xin lượt `ghim-lai` của đợt trước khi chạy.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Chạy tay probe E4 chế độ lib ngoài đường chuẩn có thể dựng bảng và giữ khoá trên DB chung; chỉ executor ép sang DB thử.
+  - Ngoài-2: `evals.yaml` của hồ sơ này có một dòng sai cú pháp YAML chuẩn (nháy kép lồng); kit vẫn đọc được, công cụ khác sẽ báo lỗi.
+  - Ngoài-3: E7 (`probes/ghim.sh`) có thể báo sạch khi lưới trước-gộp chết giữa chừng mà có dòng được tha; CI vẫn chặn độc lập.
+  - Ngoài-4: Đối chứng «ca ngoài danh sách» của probe E4 chỉ thử regex trên dòng viết tay; khuôn in của `node --test` đổi thì có thể im mà vẫn xanh.
+  - Ngoài-5: Đối chứng «vi phạm khác vẫn chặn» trong E7 chạy trên bản chép tay của bộ lọc; nới bộ lọc thật thì đối chứng không bắt.

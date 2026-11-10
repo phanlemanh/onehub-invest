@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>161 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>162 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>107 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -73,10 +73,6 @@ flowchart TD
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Thước E4 của hồ sơ đã ký app-test-chiu-song-song đếm đúng ba ca LDR theo tên thay vì tổng ca xanh của tệp test, thước phạm vi E5 neo khoảng commit của nhánh gốc, rồi ghim lại hồ sơ ấy bằng làn máy (`thuoc-song-song-dem-theo-ten-ca`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -337,6 +333,7 @@ flowchart TD
 - Thẻ gắn nhãn hiện người đăng bài (tên và ID) cạnh nhóm và giờ đăng (`the-gan-nhan-nguoi-dang`)
 - Thẻ gắn hai người chưa ai gắn xếp cuối nhóm, không chặn người gắn duy nhất (`the-hai-nguoi-xep-sau`)
 - collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
+- Thước E4 của hồ sơ đã ký app-test-chiu-song-song đếm đúng ba ca LDR theo tên thay vì tổng ca xanh của tệp test, thước phạm vi E5 neo khoảng commit của nhánh gốc, rồi ghim lại hồ sơ ấy bằng làn máy (`thuoc-song-song-dem-theo-ten-ca`)
 - Tin không thấy lại ở nguồn quá N ngày (nguồn vẫn đang thu) chuyển sang ngừng rao, giữ lại làm lịch sử; thấy lại thì về đang rao (`tin-ngung-rao-khong-thay-lai`)
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
 - Nhà đầu tư tìm được tin rao kèm người bán và SĐT trên cổng Invest — tên, SĐT lên cloud, API Listing theo loại, trang Bán và Cho thuê với thẻ chung (`tin-rao-tren-invest`)
