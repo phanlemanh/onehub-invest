@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 48a236bd0c0d1c4dae0d10e1fd31766debdb1f48
-human_signoff:
+human_signoff: Mạnh 2026-11-10
 ---
 
 # Evidence Report: s03-nap-ho-so
