@@ -5,7 +5,7 @@ slug: bait-gap-mot-giao-dich
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-10T09:53:27Z
 approved_by:
@@ -69,3 +69,13 @@ Thước CE: số đo 10/11 trên DB thử (bước 6,1 s) ở design doc §2.
 - OOS-3: Giao dịch của `buocVatTheDem`, `resolve-properties`, `transform-*`.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-3: Lượt chạy thước khoá bị ngắt giữa chừng có thể để lại bản chép tạm `pipeline/.tmp-rbk-*.mjs` chưa xoá.
+  - Ngoài-4: Phép quét đường gọi coi mọi lời gọi `refreshBaitGap` nằm dưới một `BEGIN` của cùng tệp là hợp lệ, nên một lời gọi sai đặt sau `buocDem` trong chính tệp ấy có thể lọt.
+  - Ngoài-5: Thước khoá hỏng giữa chừng (quá giờ, ném lỗi) có thể treo thay vì báo đỏ có tên.
+  - Ngoài-6: Ca «chờ khoá» của RB-AC-2 chưa phân biệt được lượt đang chờ khoá với lượt chạy chậm sẵn.
+  - Ngoài-7: Ca trong giao dịch người gọi (RB-AC-5) chỉ thấy khoá có mặt, chưa chứng phần bait gap chạy bên trong khoá.
+  - Ngoài-8: Đối chứng dương của phép quét đường gọi chỉ dùng cách viết một dòng; lời gọi viết nhiều dòng có thể lọt.
+  - Ngoài-9: Điều kiện «sau BEGIN» của phép quét là cờ cả tệp, không theo từng hàm hay giao dịch còn mở.
+  - Ngoài-10: Kiểm «không có dòng audit bait-gap mới» ở RB-AC-1 chưa có đối chứng chứng rằng dòng ấy thường được ghi.

@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 75896cbf32eac3e7f34b992361100755f723f35a
-human_signoff:
+human_signoff: Mạnh 2026-11-10
 ---
 
 # Evidence Report: bait-gap-mot-giao-dich
