@@ -158,6 +158,11 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   khi đúc; căn chỉ khi có mã căn; toà chỉ thấy trên tin là ứng viên. Đo trên bản chép thật 07/11: Ocean Park 1 18 toà ·
   152 trục · 318 căn (95,8% mã tách được), Grand Park 51 · 259 · 1.417 (99,9%); dựng lại 0 khoá mới. Chỉ local, không sync
   cloud; chưa áp 082 lên máy thu.
+- Mã xã hiện hành của nút dự án (DV1, `_acceptance/nut-du-an-tro-xa-moi`, không migration): `pipeline/data/xa-nut-du-an.json` ghi
+  xã cũ (trước 01/07/2025) của từng nút dự án kèm nguồn có tên; `pipeline/danh-ba-vat-the.mjs --sua-xa [--tep] [--thu]` suy mã mới
+  qua `area_aliases` của PX1 theo MÃ (không theo tên — bẫy cùng tên An Phú, Bình Thạnh), ghi `asset_nodes.area_ids`, rút phường kế
+  thừa của toà không còn đúng (`sua-xa-nut`); cùng rào đích DB1b. Đo trên bản chép máy thu 10/11: 16 mã lạc → 0, 18/20 nút đổi;
+  Grand Park về Long Bình; năm nút chưa chốt xã mang mã tỉnh kèm lý do (Hỏi-2). Áp lên máy thu là lời riêng của Mạnh (Hỏi-1).
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -718,6 +723,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | DB1 | Danh bạ toà · trục · căn cao tầng Ocean Park 1 và Grand Park từ S08 + bí danh tên toà trên tin; UPI neo toà; chủ đầu tư, phường là phát biểu cấp toà; ba dòng `asset_nodes building` là phân khu, ở lại họ Vùng — `_acceptance/danh-ba-toa-truc-can` (T3, 082) | 🔶 vòng S4; Mạnh duyệt Cổng Phạm vi và kế hoạch 07/11; sau gộp: áp 082 lên máy thu + chạy bộ dựng là lời riêng của Mạnh (`pg_dump` trước); Grand Park chưa có phường cấp toà (cần toạ độ toà, hàng riêng) |
 | V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | ✅ Mạnh ký Cổng 2 09/11, gộp PR #383; áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng |
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
+| DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
