@@ -16,6 +16,13 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
 
+# 1011-3 nấc 1 «S03 lên nhanh» (Mạnh chốt 10/11): lượt nạp nhanh 15′ ban ngày
+# gọi với --chi-nap — CHỈ nạp snapshot mới vào stg, không chạy transform trở
+# đi (chuỗi đầy đủ vẫn là lượt 00:00). Khoá bận thì BỎ LƯỢT — lượt khác đang
+# nạp sẽ nạp trọn, lượt kế đến 15′ sau, không xếp hàng chờ như lượt 00:00.
+CHI_NAP=0
+[ "${1:-}" = "--chi-nap" ] && CHI_NAP=1
+
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
 import_one() {
@@ -61,9 +68,17 @@ go_khoa_cu() {
   fi
   return 1
 }
-i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
-  go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
-done
+if [ "$CHI_NAP" = "1" ]; then
+  # lượt nhanh: thử lấy khoá 1 lần (dọn được khoá chết thì thử lại lần nữa);
+  # vẫn bận = lượt khác đang nạp — bỏ lượt, thoát 0 (không fail, không chờ)
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    go_khoa_cu && mkdir "$LOCK_DIR" 2>/dev/null || { echo "⏭ bỏ lượt (khoá $LOCK_DIR bận — lượt khác đang nạp)"; exit 0; }
+  fi
+else
+  i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+    go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
+  done
+fi
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
 trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
@@ -125,6 +140,9 @@ echo "$MAXTS" > "$STATE"
 
 if [ "$FAILED" != "0" ]; then
   exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
+fi
+if [ "$CHI_NAP" = "1" ]; then
+  exit 0 # lượt nhanh: đã nạp + nhả khoá (trap EXIT) — dừng, không đụng transform trở đi
 fi
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
