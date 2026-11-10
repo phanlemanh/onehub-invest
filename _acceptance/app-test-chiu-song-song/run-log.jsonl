@@ -82,3 +82,4 @@
 {"ts":"2026-11-01T11:32:54Z","sha":"65bf8e55c1571d1e9c9adbc65eae64a1eecb4c7a","round":4,"kind":"round-tally","verdict":"PASS","expected":6,"returned":6,"blocked":0}
 {"ts":"2026-11-01T11:32:54Z","sha":"65bf8e55c1571d1e9c9adbc65eae64a1eecb4c7a","round":4,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":6}
 {"kind":"thuoc-vat","ts":"2026-11-01T11:41:24Z","round":4,"san":"d05545a7c7c0ffe5ac842fe892ae3cfa8a8e4ffa","vat":[41,19],"thuoc":[56,26],"ho_so":[242,0],"nhat":1,"lan":2,"tep_thuoc":["_acceptance/app-test-chiu-song-song/probes/song-song.mjs"]}
+{"ts":"2026-11-10T01:11:03Z","kind":"repin","run_id":"repin-20261110T004043Z-44553","sha":"4e9054869c2a6f796dec9be6d1689dd74b9ea000","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0},"wall_s":1820.4,"so_lenh":11,"tong_ket":{"ket_cuc":"xanh","phut":30.4,"so_lenh":11,"model_goi":0,"model_carry":0,"chap_chon":0}}
