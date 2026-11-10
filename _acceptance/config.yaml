@@ -26,7 +26,7 @@ design_pass:
     dev_flag: "không cần — route thật trên nhánh của hàng, dev server cổng riêng của dãy"
 executors:
   # Lệnh suite của lượt chấm S4 / ghim lại (feature_loop.suite_keys): bọc nguyên văn lệnh executors.test|script cùng tên
-  # bằng scripts/suite-neu-doi.mjs — bỏ qua khi nhánh không đổi vùng của suite (bảng VUNG + test canh phủ). CI vẫn chạy đủ.
+  # bằng scripts/suite-neu-doi.mjs — bỏ qua khi nhánh không đổi vùng của suite (bảng VUNG + test canh phủ). CI chạy đủ trừ portal_static.
   # Eval của hồ sơ đã ký vẫn trỏ executors.test.* — không đổi các key đó (hồ sơ s4-suite-theo-vung).
   suite:
     agent: "node scripts/suite-neu-doi.mjs agent -- 'cd agent && npm test'"

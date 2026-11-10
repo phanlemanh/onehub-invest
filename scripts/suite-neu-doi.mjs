@@ -6,7 +6,9 @@
 // Tệp đổi = merge-base(origin/main, HEAD)..HEAD ∪ cây làm việc (so HEAD) ∪ tệp chưa theo dõi. Có tệp trong vùng → chạy
 // `bash -c <lệnh>` từ gốc kho, trả đúng mã thoát. Không có → in «bỏ qua», thoát 0. Không chắc → CHẠY (bảo thủ):
 // không giải được gốc, suite lạ, chỉ đổi _acceptance/ (đường nền đầu vòng), diff rỗng, SUITE_NEU_DOI=chay.
-// CI (`ci-test.yml`) vẫn chạy đủ mọi suite trên mọi PR — đây chỉ cắt lượt chấm trên máy.
+// CI (`ci-test.yml`) vẫn chạy đủ agent, app, app_ui, pipeline, ui_lint_rules trên mọi PR — đây chỉ cắt lượt chấm trên
+// máy. RIÊNG portal_static (check-portal-compliance.mjs, gồm cổng lộ tầng A) KHÔNG có trong CI: nó chỉ chạy ở lượt chấm
+// và ghim lại, nên vùng của nó phải phủ đủ mọi tệp nó nạp (S4 r1 t1).
 // Hồ sơ: _acceptance/s4-suite-theo-vung. Bảng vùng đo bằng test canh phủ (scripts/suite-neu-doi.test.mjs, S4V-AC-5).
 import { execFileSync, spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -37,7 +39,13 @@ export const VUNG = {
     "app/tests/the-duyet-du-can-cu.test.tsx", "app/tests/the-duyet-phuong-lech-gia.test.tsx",
     "_acceptance/config.yaml", "_acceptance/chon-model-theo-o/**", "_acceptance/the-ghep-can-tin-roi-kho/**",
   ],
-  portal_static: ["app/**", "scripts/check-portal-compliance.mjs"],
+  // check-portal-compliance.mjs nạp các cổng check-*.mjs cùng thư mục; tier-a-source-names.mjs rút tên nguồn từ
+  // db/migrations (seed source_registry) và mask-source-names.mjs của pipeline — đổi migration là đổi cổng tầng A.
+  portal_static: [
+    "app/**", "db/**", "scripts/check-portal-compliance.mjs", "scripts/check-ops-tier-a.mjs",
+    "scripts/check-deals-api.mjs", "scripts/check-api-surface.mjs", "scripts/check-mcp-tools.mjs",
+    "scripts/lib/ops-visible-strings.mjs", "scripts/lib/tier-a-source-names.mjs", "pipeline/lib/mask-source-names.mjs",
+  ],
 };
 
 // Mỗi suite còn chạy khi chính bộ lọc đổi — bộ lọc sai thì mọi quyết định sau nó sai.

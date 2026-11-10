@@ -106,7 +106,7 @@ test("S4V-AC-2 — tệp trong vùng (commit · sửa chưa commit · chưa theo
 
 test("S4V-AC-3 — ma trận viết trước: migration, pipeline, collector, ROADMAP × sáu suite", () => {
   const MA_TRAN = {
-    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline: true, agent: true, portal_static: false },
+    "db/migrations/090_x.sql": { app: true, app_ui: true, ui_lint_rules: true, pipeline: true, agent: true, portal_static: true },
     "pipeline/lib/x.mjs": { app: true, app_ui: true, ui_lint_rules: false, pipeline: true, agent: true, portal_static: false },
     "collector/src/x.ts": { app: false, app_ui: false, ui_lint_rules: false, pipeline: true, agent: false, portal_static: false },
     "docs/ROADMAP.md": { app: false, app_ui: false, ui_lint_rules: false, pipeline: true, agent: false, portal_static: false },
@@ -167,13 +167,14 @@ const TOP = /^(db|docs|CONTEXT\.md|_acceptance|scripts|pipeline|app|agent|\.clau
 const RE_CHUOI = /["'`]([^"'`\n]{2,200})["'`]/g;
 const RE_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*)["'`]([^"'`\n]{2,200})["'`]/g;
 
-// Đường trong kho mà một tệp mã nêu bằng chuỗi literal: "../x" theo thư mục tệp, hoặc chuỗi bắt đầu bằng thư mục gốc.
+// Đường trong kho mà một tệp mã nêu bằng chuỗi literal: "./x" hay "../x" theo thư mục tệp, hoặc chuỗi bắt đầu bằng thư
+// mục gốc. "./x" phải tính: module một tệp (portal_static) nạp tệp cùng thư mục — S4 r1 t2.
 function thamChieu(f, src, re, ton) {
   const out = new Set();
   for (const m of src.matchAll(re)) {
     const lit = m[1];
     const ung = [];
-    if (lit.includes("../")) ung.push(path.posix.normalize(path.posix.join(path.posix.dirname(f), lit)));
+    if (lit.includes("../") || lit.startsWith("./")) ung.push(path.posix.normalize(path.posix.join(path.posix.dirname(f), lit)));
     if (TOP.test(lit)) ung.push(path.posix.normalize(lit));
     for (let x of ung) { x = x.replace(/\/$/, ""); if (!x.startsWith("..") && ton(x)) out.add(x); }
   }
@@ -246,6 +247,11 @@ test("S4V-AC-5 — bảng vùng phủ mọi đường dẫn mã tham chiếu; ng
   const hong = { ...VUNG, app: VUNG.app.filter((g) => g !== "pipeline/**") };
   const thieuApp = chuaPhu(ROOT, hong).app.thieu.map(([d]) => d);
   assert.ok(thieuApp.some((d) => d.startsWith("pipeline/")), "S4V-AC-5 đối chứng: bỏ pipeline/** khỏi app mà phép quét không đỏ");
+  // chiều đỏ thứ hai (S4 r1 t1/t2): module một tệp nạp tệp cùng thư mục bằng "./x" — bỏ cổng tầng A khỏi portal_static
+  const hongPs = { ...VUNG, portal_static: VUNG.portal_static.filter((g) => g !== "scripts/check-ops-tier-a.mjs" && g !== "db/**") };
+  const thieuPs = chuaPhu(ROOT, hongPs).portal_static.thieu.map(([d]) => d);
+  assert.ok(thieuPs.includes("scripts/check-ops-tier-a.mjs"), "S4V-AC-5 đối chứng: bỏ check-ops-tier-a.mjs khỏi portal_static mà phép quét không đỏ");
+  assert.ok(thieuPs.includes("db"), "S4V-AC-5 đối chứng: bỏ db/** khỏi portal_static mà phép quét không thấy tier-a-source-names đọc db/migrations");
 });
 
 test("S4V-AC-6 — executors.suite.* bọc nguyên văn lệnh hiện hành, suite_keys trỏ đúng sáu key; thêm key test mới vẫn xanh", () => {

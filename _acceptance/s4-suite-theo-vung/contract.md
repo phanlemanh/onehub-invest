@@ -38,9 +38,9 @@ bằng symlink không bao giờ tính là tệp đổi.
 ### AC-3 — Đổi migration hay pipeline kéo cả app
 Given diff chỉ đổi một tệp `db/migrations/*.sql`, hoặc chỉ một tệp `pipeline/lib/*.mjs`,
 When quyết cho sáu suite,
-Then đổi migration làm chạy app, app_ui, ui_lint_rules, pipeline, agent (bỏ qua portal_static); đổi pipeline làm chạy
-app, app_ui, pipeline, agent (bỏ qua ui_lint_rules, portal_static); đổi chỉ `collector/src/*.ts` hoặc chỉ `docs/ROADMAP.md`
-thì chỉ pipeline chạy.
+Then đổi migration làm chạy cả sáu suite (portal_static đọc tên nguồn từ `db/migrations` — sửa ở S4 r1, xem sổ); đổi
+pipeline làm chạy app, app_ui, pipeline, agent (bỏ qua ui_lint_rules, portal_static); đổi chỉ `collector/src/*.ts` hoặc chỉ
+`docs/ROADMAP.md` thì chỉ pipeline chạy.
 
 ### AC-4 — Không chắc thì chạy
 Given một trong: không giải được merge-base (ref gốc vắng), git lỗi, tên suite không có trong bảng, không tệp đổi nào ngoài
@@ -95,4 +95,5 @@ Core → AC-1…AC-8. Later: đọc vùng từ bản đồ import sinh tự đ�
 
 ## Notes
 
-- Đường ghép mảnh bằng `join(ROOT, "a", "b")` nằm ngoài tầm phép quét AC-5 — lưới cho chỗ hở là CI chạy đủ suite.
+- Đường ghép mảnh bằng `join(ROOT, "a", "b")` nằm ngoài tầm phép quét AC-5 — lưới cho chỗ hở là CI chạy đủ suite, TRỪ
+  portal_static (CI không chạy `check-portal-compliance.mjs`): vùng của nó liệt kê tay từng tệp nó nạp.

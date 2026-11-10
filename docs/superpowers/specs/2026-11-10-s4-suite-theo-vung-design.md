@@ -36,7 +36,7 @@ tệp test, `_acceptance/s4-suite-theo-vung/**`.
   | ui_lint_rules | `app/**` `db/**` `CONTEXT.md` `.claude/skills/onehub-ui/**` |
   | pipeline | `pipeline/**` `db/**` `scripts/**` `agent/**` `app/**` `collector/src/**` `collector/docs/**` `collector/scripts/**` `data-api/src/**` `tools/**` `CONTEXT.md` `LO-TRINH.html` `docs/ROADMAP.md` `docs/ops/**` + 7 thư mục `_acceptance/<hồ sơ>/` mà test pipeline đọc |
   | agent | `agent/**` `db/**` `pipeline/**` `scripts/**` `docs/ops/**` + 4 tệp app (`app/src/lib/ops/review-can-cu.ts`, `app/src/lib/vocab.generated.ts`, hai test thẻ duyệt) + `_acceptance/config.yaml` `_acceptance/chon-model-theo-o/**` `_acceptance/the-ghep-can-tin-roi-kho/**` |
-  | portal_static | `app/**` `scripts/check-portal-compliance.mjs` |
+  | portal_static | `app/**` `db/**` `scripts/check-portal-compliance.mjs` + bốn cổng `scripts/check-{ops-tier-a,deals-api,api-surface,mcp-tools}.mjs` + `scripts/lib/{ops-visible-strings,tier-a-source-names}.mjs` + `pipeline/lib/mask-source-names.mjs` |
 
   `db/**` có mặt ở mọi suite dùng DB của riêng lượt (`db/db-thu.sh`) — đổi migration kéo cả app. `docs/ROADMAP.md` và
   `LO-TRINH.html` NẰM trong vùng pipeline (DV1-AC-8 đọc ROADMAP, `so-nhom.itest` đọc LO-TRINH) dù gần như hàng nào cũng sửa
@@ -45,7 +45,9 @@ tệp test, `_acceptance/s4-suite-theo-vung/**`.
 - **Test canh phủ**: quét mọi chuỗi đường dẫn literal (`"../x"`, `"pipeline/…"`, `"db/migrations"`…) trong tệp mã của
   module, đệ quy theo cạnh import ra ngoài module; mỗi đường tồn tại trong kho phải nằm trong vùng của suite, trừ danh
   sách ngoại lệ có lý do. Giới hạn: đường ghép mảnh bằng `join(ROOT, "a", "b")` không bắt được — CI vẫn chạy đủ suite trên
-  mọi PR (`ci-test.yml`: «chạy trên MỌI PR (không lọc paths)»), nên nhánh chính không mất lưới.
+  mọi PR (`ci-test.yml`: «chạy trên MỌI PR (không lọc paths)»), nên nhánh chính không mất lưới — TRỪ portal_static: CI
+  không chạy `check-portal-compliance.mjs`, nên vùng của nó phải phủ đủ (S4 r1: thiếu bốn cổng nạp bằng `./`, và
+  `db/**` vì `tier-a-source-names.mjs` rút tên nguồn từ migration). Phép quét giải cả literal `./x` theo thư mục tệp.
 
 **(2) `_acceptance/config.yaml`**: thêm `executors.suite.<tên>` = `node scripts/suite-neu-doi.mjs <tên> -- '<lệnh cũ>'`
 cho sáu suite; `feature_loop.suite_keys` trỏ sang key mới. `executors.test.*`, `executors.script.portal_static` giữ
