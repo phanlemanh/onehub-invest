@@ -1,0 +1,124 @@
+schema_version: 1
+feature_slug: canh-bao-s03-ngung-thu
+# Mọi eval chạy trên bản chép watchdog hoặc gọi hàm lib với tham số — HOME giả, stub launchctl/pkill/osascript/date,
+# CLI OpenClaw giả (luật 8). Không chạm ~/.openclaw, /tmp/openclaw, launchctl thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s03_song_bien
+    paths: [scripts/lib/s03-song.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; 'BIEN PASS'; '(a) 10 giờ, tuổi 1800s → báo (được 1)'; should-NOT-fire '(a) 10 giờ, tuổi 1799s → KHÔNG báo (được 0)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; 'TRON PASS'; T2: (a,b,c = 1,1,1) và '3 thông báo màn hình L6 qua stub (được 3)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s03_song_bien
+    paths: [scripts/lib/s03-song.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; giờ 7 và 21 → báo (được 1); should-NOT-fire giờ 6 và 22 → KHÔNG báo (được 0); mỗi ca state riêng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; should-NOT-fire 'T6 … ban đêm: (a) không báo, không đánh dấu' — watchdog trọn vẹn, stub date trả giờ 23"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s03_song_bien
+    paths: [scripts/lib/s03-song.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; attempt cách 120s chưa starting → báo; starting TRƯỚC attempt cuối → báo; should-NOT-fire: cách 119s → không, starting sau attempt → không, gateway.log vắng → không báo và stderr rỗng dưới set -u"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s03_song_bien
+    paths: [scripts/lib/s03-song.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; '«Not Linked» viết hoa vẫn báo'; should-NOT-fire '«linked» không báo'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; T3 tick lại vẫn đỏ → (a,b,c = 1,1,1, thông báo 3); T4 hồi → không báo thêm, state rỗng; T5 tái phát → (a,b,c = 2,2,2)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03_song_lib
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog-song.test.mjs]
+    expected: "exit 0; 'ℹ pass 7', 'ℹ fail 0', 'ℹ skipped 0' — 7 ca của ZCode (mỗi điều kiện đỏ/hồi/không spam, đêm, thông báo, móc tĩnh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; 'T2 sự cố: exit 0, KHÔNG kill gateway (exit 0)'; 'T5 … không kill'; should-NOT-fire 'T1 should-NOT-fire: 0 cảnh báo sống (a,b,c = 0,0,0)' và 'T1 stderr không có lỗi của lớp L6 (\"\")'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s03_song_tron
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh, scripts/canh-bao-s03-ngung-thu/acceptance.mjs]
+    expected: "exit 0; T2 dựng đúng chuỗi 09/11 (closed → attempt 1/10 → starting → closed → attempt 2/10 in 10s, không starting sau) + snapshot 23 giờ + not linked → 'T2: đúng 1 cảnh báo mỗi điều kiện (a,b,c = 1,1,1)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc3_gateway
+    paths: [scripts/zalo-watchdog.sh, scripts/lib/s03-song.sh, scripts/audit-p1-resilience/acceptance.mjs]
+    expected: "exit 0; 'GATEWAY PASS' — gồm 'lượt 1: stderr rỗng' (hộp cát chép scripts/lib/*.sh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc3_l4b_scan
+    paths: [scripts/zalo-watchdog.sh, scripts/audit-p1-resilience/acceptance.mjs]
+    expected: "exit 0; 'L4B-SCAN PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc3b_rotate
+    paths: [scripts/zalo-watchdog.sh, scripts/lib/s03-song.sh, scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs]
+    expected: "exit 0; 'ROTATE PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc3b_marker_hong
+    paths: [scripts/zalo-watchdog.sh, scripts/lib/s03-song.sh, scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs]
+    expected: "exit 0; 'MARKER-HONG PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s03_song_syntax
+    paths: [scripts/lib/s03-song.sh, scripts/zalo-watchdog.sh]
+    expected: "exit 0; 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

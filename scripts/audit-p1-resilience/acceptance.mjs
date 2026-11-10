@@ -17,7 +17,7 @@
  * Không đọc/ghi ~/.openclaw, /tmp/openclaw, pipeline/logs thật.
  */
 import { spawnSync } from "node:child_process";
-import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, readdirSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -98,6 +98,10 @@ function watchdogSandbox() {
     process.exit(2);
   }
   writeFileSync(join(repo, "scripts/zalo-watchdog.sh"), copy);
+  // canh-bao-s03-ngung-thu: watchdog source scripts/lib/*.sh (lớp L6 s03-song.sh) — chép lib cùng bản chép,
+  // thiếu thì lệnh `.` in lỗi ra stderr ở mỗi lượt.
+  mkdirSync(join(repo, "scripts/lib"), { recursive: true });
+  for (const f of readdirSync(join(ROOT, "scripts/lib")).filter((x) => x.endsWith(".sh"))) copyFileSync(join(ROOT, "scripts/lib", f), join(repo, "scripts/lib", f));
   writeFileSync(join(repo, "collector/openclaw/handler.js"), "export default async function handler(evt) { return evt; }\n");
   writeFileSync(
     join(home, ".openclaw/openclaw.json"),

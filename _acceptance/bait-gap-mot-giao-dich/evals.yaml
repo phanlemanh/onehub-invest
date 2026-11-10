@@ -1,0 +1,71 @@
+schema_version: 1
+feature_slug: bait-gap-mot-giao-dich
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; DB của riêng lượt (db-thu --chay; test từ chối DB tên oneinvest). Fixture: chạy refresh-bait-gap.mjs THẬT một lần (có ít nhất một tin P1 có gap, không thì ca dừng có tên 'không có tin P1 có gap'), rồi đặt bait_gap_pct = 999.9 cho mọi tin P1 và chụp max(id) của ops_audit. Ca «RB-AC-1 khoá + lock_timeout»: phiên A giữ BEGIN; pg_advisory_xact_lock(hashtext('refresh-bait-gap')); tiến trình với PGOPTIONS='-c lock_timeout=2s' → exit khác 0 trong dưới 30 s, stderr chứa 'lock timeout'; A ROLLBACK; mọi tin P1 = 999.9 (đếm khác 999.9 = 0), ops_audit không có dòng action LIKE 'bait-gap:%' id > max cũ. Chiều đỏ cùng fixture, bản chép tệp: bỏ khoá ở giao dịch bait gap nhưng GIỮ khoá ở giao dịch danh bạ Người → tiến trình vẫn thoát khác 0 với lock timeout nhưng giá trị canh bị ghi đè, ca ghim «RB-AC-1 bait gap chạy trước khi lấy khoá»; bản chép bỏ cả hai khoá → tiến trình xong exit 0 khi A còn giữ, ca ghim «RB-AC-1 không lấy khoá chung»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; ca «RB-AC-2 chờ khoá»: A giữ khoá chung; tiến trình không lock_timeout → sau 3 s vẫn sống (đọc exitCode null); A COMMIT; tiến trình xong exit 0 trong 120 s. Đối chứng dương cùng ca: không ai giữ khoá → xong exit 0 không chờ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; ca «RB-AC-3 hai lượt»: chụp kết quả một lượt đơn; hai tiến trình khởi cùng lúc, phiên B hỏi pg_locks mỗi 10 ms tới khi cả hai xong: ít nhất một lần có dòng locktype='advisory' với objid khớp hashtext('refresh-bait-gap') và granted=false; cả hai exit 0, stderr không chứa 'deadlock'; ảnh chụp P1 sau cùng so trọn bằng ảnh lượt đơn. Chiều đỏ cùng fixture: bản chép tệp bỏ hai câu khoá → B không thấy lần chờ nào, ca ghim «RB-AC-3 hai lượt không xếp hàng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; ca «RB-AC-4 người đọc»: đếm trước N0 = số tin P1 có bait_gap_pct rỗng; phiên B đếm lặp mỗi 10 ms suốt một lượt tiến trình thật; số lớn nhất B thấy ≤ max(N0, N sau lượt), và B đếm được ít nhất 5 lần trong lượt (không thì ca dừng có tên 'đọc quá thưa'). Chiều đỏ cùng fixture: bản chép tệp bỏ BEGIN/COMMIT và chèn SELECT pg_sleep(1) giữa câu đặt rỗng và câu tính lại → số lớn nhất B thấy bằng tổng số tin P1, ca ghim «RB-AC-4 bait gap lộ trạng thái giữa»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; ca «RB-AC-5 trong giao dịch người gọi»: BEGIN; buocDem(c, {savepoint: true}); trong cùng giao dịch, pg_locks có khoá advisory hashtext('refresh-bait-gap') của chính phiên; ROLLBACK → ảnh chụp P1 bằng trước và số parties bằng trước. Chiều đỏ: bản chép buocDem mở BEGIN/COMMIT riêng cả khi savepoint → sau ROLLBACK của người gọi ảnh chụp khác trước, ca ghim «RB-AC-5 giao dịch riêng lọt ra ngoài người gọi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/refresh-bait-gap.mjs]
+    expected: "exit 0; npm test của pipeline trên DB của riêng lượt xanh, gồm bait-gap-sellers.test.mjs, danh-ba-nguoi.test.mjs (CTG E8 buocDem chạy thật không nhận bộ dựng thay thế)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_khoa
+    layer: backend-effect
+    long_running: 15
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-khoa.itest.mjs]
+    expected: "exit 0; ca «RB-AC-7 chết giữa hai câu»: mọi tin P1 = 999.9; bản chép của refresh-bait-gap.mjs THẬT (đọc tệp lúc chạy, chèn đúng một dòng throw new Error('tiem-loi-giua') ngay sau câu đặt bait_gap_pct = NULL; ca dừng có tên nếu không tìm thấy câu ấy) chạy thành tiến trình → exit khác 0, stderr chứa 'tiem-loi-giua'; đếm tin P1 khác 999.9 = 0. Chiều đỏ cùng fixture: bản chép bỏ BEGIN/COMMIT của buocDem và chèn cùng lỗi → đếm tin P1 rỗng = tổng số tin P1, ca ghim «RB-AC-7 lượt chết để bait gap rỗng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.refresh_bait_gap_goi
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/refresh-bait-gap-goi.test.mjs]
+    expected: "exit 0; quét cây thật (pipeline/, scripts/, agent/src, agent/scripts; bỏ thư mục scripts/ của pipeline và tệp *.test.*, *.itest.*): danh sách vi phạm rỗng và đúng một lời gọi refreshBaitGap( trong buocDem; lời gọi khác chỉ hợp lệ khi đứng sau query('BEGIN') của cùng tệp; mọi lời gọi buocDem( ngoài test không truyền savepoint. Đối chứng dương: cây tạm có thêm một tệp gọi thẳng await refreshBaitGap(c) ngoài giao dịch, một tệp gọi buocDem với savepoint, và một tệp gọi sau BEGIN → danh sách vi phạm so trọn đúng hai dòng của hai tệp đầu, ca ghim «RB-AC-8 lời gọi ngoài giao dịch»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
