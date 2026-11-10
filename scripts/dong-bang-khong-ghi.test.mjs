@@ -98,8 +98,11 @@ test("DBS-AC-7 sau khi gộp: đo đúng commit của vòng, PR sau thêm migrat
   if (!main) return t.skip("không có nhánh chính trong lịch sử");
   const env = { ...process.env, GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@local.test", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@local.test" };
   const g = (a, extra = {}) => execFileSync("git", a, { cwd: REPO, encoding: "utf8", env: { ...env, ...extra }, maxBuffer: 64 * 1024 * 1024 }).trim();
-  const base = g(["merge-base", "HEAD", main]);
-  const gop = g(["commit-tree", "HEAD^{tree}", "-p", base, "-m", "gop gia"]);
+  // Gộp giả theo đúng khoảng của vòng: chưa vào main → cây HEAD trên merge-base; ĐÃ vào main → cây của commit gộp thật L
+  // trên L^1. Dùng merge-base khi vòng đã gộp thì cha là chính main — đã chứa L, nên log -S tìm thấy L trước commit giả.
+  const kv = khoangVong(main);
+  const base = g(["rev-parse", kv.tu]);
+  const gop = g(["commit-tree", kv.den ? `${kv.den}^{tree}` : "HEAD^{tree}", "-p", base, "-m", "gop gia"]);
   // PR sau: thêm db/migrations/999_x.sql và một tệp mã có câu ghi vào property_offers.
   const idx = path.join(tmpdir(), `dbs-ac7-idx-${process.pid}`);
   try {
