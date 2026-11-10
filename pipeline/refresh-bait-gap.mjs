@@ -14,6 +14,7 @@ import pg from "pg";
 
 import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
 import { dungLienLac } from "./lib/lien-lac-nguoi.mjs";
+import { ghiLienLacHoSo } from "./lib/lien-lac-ho-so.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
 import { buocVatTheDem } from "./danh-ba-vat-the.mjs";
@@ -117,9 +118,11 @@ export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } 
     // enrich-nguoi-s03: sổ liên lạc dựng sau Người của cùng đêm, rồi tin S03 không số nhận số qua người đăng. Chưa áp 079 thì
     // hai bước in CHUA-AP-079 và không ghi; bộ dựng Người vẫn commit như hôm nay.
     const lienLac = await dungLienLac(c, { runId });
+    // link-nguoi-ban-s03: liên lạc hồ sơ chat từ kết quả tra theo mã tài khoản; chưa áp 080 thì in CHUA-AP-080, không ghi.
+    const hoSo = await ghiLienLacHoSo(c, { runId });
     const ganSo = await ganSdtQuaNguoi(c);
     await c.query(xong);
-    return { ...kq, nguoi, lienLac, ganSo };
+    return { ...kq, nguoi, lienLac, hoSo, ganSo };
   } catch (e) {
     await c.query(lui);
     throw e;
