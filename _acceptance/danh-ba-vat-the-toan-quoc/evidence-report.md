@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 005471c5061a762ea4c39951446558ede9ff67ae
-human_signoff:
+human_signoff: Mạnh 2026-11-10
 ---
 
 # Evidence Report: danh-ba-vat-the-toan-quoc

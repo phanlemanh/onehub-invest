@@ -5,7 +5,7 @@ slug: danh-ba-vat-the-toan-quoc
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-danh-ba-vat-the-toan-quoc-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
@@ -86,3 +86,10 @@ Core → AC-1…AC-7. Later: PX2 dựng toà toàn quốc. Never: đọc ISO t�
 ## Notes
 
 - Mã ISO cũ lấy từ ISO 3166-2:VN (bản 2020-11-24, chưa có bản mới sau sáp nhập 2025).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Lệnh dựng còn một lối phụ chỉ dành cho thử nghiệm mà chưa ca nào dùng, nên hai chiều đỏ ghi trong bộ đo chưa chạy thật.
+  - Ngoài-5: Vài chiều đỏ của bộ kiểm tự so với chính nó, chưa chứng bộ kiểm báo đỏ khi bảng mã tỉnh bị lệch.
+  - Ngoài-6: Phép kiểm dựng lại không đổi mã toà có thể vẫn xanh khi mã tỉnh bị suy sai.
+  - Ngoài-7: Ca giả lập bảng tỉnh sai chưa đi qua đúng bước so sánh thật.
+  - Ngoài-8: Đối chứng «suy theo nhãn thành phố ra sai tỉnh» cho ba khu Hưng Yên là số chép tay, chưa chạy thật.
+  - Ngoài-9: Phép kiểm mọi dự án ra mã tỉnh so với con số 20 cố định, có thêm dự án lỗi vẫn có thể xanh.
