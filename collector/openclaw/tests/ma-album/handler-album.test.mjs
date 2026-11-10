@@ -111,7 +111,7 @@ test("E3b: sự kiện KHÔNG albumMeta → body không sinh media (giống hệ
   const post = nhan.find((x) => x.url.includes("agent-report"));
   assert.ok(post, "handler vẫn POST");
   const msg = JSON.parse(post.body).messages[0];
-  assert.equal(msg.albumMeta, null, "không albumMeta → message.albumMeta = null (giống bản trước vá ở phần albumMeta)");
+  assert.equal("albumMeta" in msg, false, "không albumMeta → body KHÔNG có khoá albumMeta (giống hệt bản trước vá — review 10/11)");
   assert.ok(msg.media.every((m) => !m.albumMeta), "media không mang albumMeta");
 });
 
@@ -133,4 +133,9 @@ test("E3c: ev.media KHÔNG mảng / albumMeta SAI KIỂU → tin KHÔNG MẤT, k
 test("E3d: log handler không chứa dbg-media cho ca album hợp lệ", async () => {
   const { log } = await chayHandler(toInternal(canonicalAlbum));
   assert.ok(!log.includes("dbg-media"), "mục albumMeta không kích hoạt dbg-media");
+});
+
+test("E3e: tin ảnh THƯỜNG (mediaPath) vẫn ghi dbg-media như trước vá (review 10/11 — bản trước bỏ hẳn khoá media)", async () => {
+  const { log } = await chayHandler(toInternal({ ...canonicalAlbum, media: [{ mediaPath: "/tmp/anh-thu.jpg", mediaType: "image/jpeg" }] }));
+  assert.ok(log.includes("dbg-media"), "tin ảnh thường mất dòng dbg-media");
 });

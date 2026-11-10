@@ -176,7 +176,9 @@ export default async function (context) {
   try {
     const mediaish = {};
     for (const k of Object.keys(ev)) {
-      if (k === "media") continue; // ma-album-s03: media đã map (albumMeta + mediaFacts) — không cần bắt nữa
+      // ma-album-s03 (AC-3): khoá «media» chỉ bỏ qua khi KHÔNG có mục ảnh thật (mediaPath/mediaUrl) — mục chỉ chứa albumMeta,
+      // media không phải mảng hay albumMeta sai kiểu không kích dbg-media; tin ảnh thường vẫn ghi dbg-media như trước vá (review 10/11)
+      if (k === "media" && !(Array.isArray(ev.media) && ev.media.some((m) => m && (m.mediaPath || m.mediaUrl)))) continue;
       if (/media|attach|image|photo|file|thumb/i.test(k)) {
         mediaish[k] = JSON.stringify(ev[k])?.slice(0, 300);
       }
@@ -202,7 +204,7 @@ export default async function (context) {
   // Media Zalo: môi giới dán URL ảnh zdn.vn TRỰC TIẾP trong text (khám phá
   // 2026-10-22 nhờ pregate __raw) — extract bổ sung vào media facts.
   const textImageUrls = [...new Set(
-    (text.match(/https?:\/\/[a-z0-9.-]+\/(?:[^\s"]+)\.(?:jpe?g|png|webp)(?:\?[^\s"]*)?/gi) ?? [])
+    (text.match(/https?:\/\/[a-z0-9.-]+\/(?:[^\s"]+)\.(?:jpe?g|png|webp)(?:\?[^\s]*)?/gi) ?? [])
   )].slice(0, 5);
   const mediaFacts = mediaRaw
     .filter((m) => m && (m.mediaPath || m.mediaUrl))
@@ -239,8 +241,8 @@ export default async function (context) {
     senderId: ev.metadata?.senderId ?? ev.from ?? null,
     conversationId: ev.conversationId ?? null,
     media: mediaFacts.length ? mediaFacts : undefined,
-    // ma-album-s03: khoá album đi cùng tin qua API (AC-4 ghi RawItem.meta)
-    albumMeta,
+    // ma-album-s03: khoá album đi cùng tin qua API (AC-4 ghi RawItem.meta); không có khoá thì body giống hệt bản trước vá
+    ...(albumMeta ? { albumMeta } : {}),
     kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
   };
 
