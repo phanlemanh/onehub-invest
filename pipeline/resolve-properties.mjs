@@ -3,7 +3,7 @@
 //
 // Stage A: S06 clusters → match existing properties qua stable_key,
 //          tạo NEW (pending) nếu chưa có, enrich existing nếu match.
-// Stage B: cặp ứng viên P1↔P2 (giữ nguyên logic cũ).
+// Stage B: đóng băng (V7) — không dựng hay xoá cặp property_candidates.
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -21,6 +21,9 @@ const CLUSTER_EXPR = `
 
 // Tin cấp thị trường (s03-len-cong AC-3) không dựng căn: căn mang mã thị trường là thước giá có dòng cấp thị trường.
 // Tin chưa có area_id vẫn dựng như cũ, nên không JOIN.
+/** Dòng log thay khối Stage B (V7). */
+export const STAGE_B_DONG_BANG = "Stage B: đóng băng (V7) — không dựng cặp mới";
+
 const KHONG_CAP_THI_TRUONG = `
   NOT EXISTS (SELECT 1 FROM areas x WHERE x.id = o.area_id AND x.region_type = 'market')`;
 
@@ -99,44 +102,10 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
     ghi(`Stage A: gỡ ${await goSdtKhoiCan(q)} ô đường mang số`);
     ghi(`Stage A: điền đường ${await dienDuongCan(q)} căn đang trống`);
 
-    // ── Stage B: cặp ứng viên P1↔P2 (cùng phường, DT ±15%, giá/m² ±20%) ──
-    await q.query(`DELETE FROM property_candidates WHERE status IN ('pending','needs_llm')`);
-    const { rows: pairs } = await q.query(`
-      WITH p1 AS (
-        SELECT o.offer_id, o.area_id, o.area_m2, o.price_perm2
-        FROM sale_offers o
-        -- Tin cấp thị trường (s03-len-cong AC-3) không có phường để so: «cùng area_id» ở đây chỉ có nghĩa khi là phường.
-        JOIN areas x ON x.id = o.area_id AND x.region_type <> 'market'
-        WHERE o.source IN ('S03','S05') AND o.kind='sale'
-          AND o.confidence IN ('high','medium')
-          AND o.area_m2 BETWEEN 20 AND 500 AND o.price_perm2 BETWEEN 10e6 AND 300e6),
-      p2 AS (
-        SELECT o.offer_id, o.area_id, o.area_m2, o.price_perm2
-        FROM sale_offers o
-        WHERE o.source='S06' AND o.kind='sale'
-          AND o.property_type IN ('apartment','house')
-          AND o.area_m2 BETWEEN 20 AND 500 AND o.price_perm2 BETWEEN 10e6 AND 300e6),
-      scored AS (
-        SELECT p1.offer_id a, p2.offer_id b,
-          round((0.5 * (1 - abs(p1.area_m2 - p2.area_m2)::numeric / GREATEST(p1.area_m2, p2.area_m2))
-               + 0.5 * (1 - abs(p1.price_perm2 - p2.price_perm2)::numeric / GREATEST(p1.price_perm2, p2.price_perm2))
-               )::numeric, 3) s,
-          p1.area_m2 a_m2, p1.price_perm2 a_p2, p2.price_perm2 b_p2
-        FROM p1 JOIN p2 ON p1.area_id = p2.area_id
-          AND abs(p1.area_m2 - p2.area_m2)::numeric / GREATEST(p1.area_m2, p2.area_m2) < 0.15
-          AND abs(p1.price_perm2 - p2.price_perm2)::numeric / GREATEST(p1.price_perm2, p2.price_perm2) < 0.20)
-      INSERT INTO property_candidates (offer_a, offer_b, score, signals, status)
-      SELECT a, b, s,
-        jsonb_build_object('rule','same-ward+area15+perm2_20',
-          'area_p1', a_m2, 'perm2_p1', a_p2, 'perm2_p2', b_p2),
-        CASE WHEN s >= 0.90 THEN 'needs_llm' ELSE 'pending' END
-      FROM scored
-      ON CONFLICT (offer_a, offer_b) DO NOTHING
-      RETURNING 1`);
-    const nLlm = pairs.length
-      ? (await q.query(`SELECT count(*)::int n FROM property_candidates WHERE status='needs_llm'`)).rows[0].n
-      : 0;
-    ghi(`Stage B: ${pairs.length} cặp P1↔P2 (${nLlm} needs_llm)`);
+    // ── Stage B: ĐÓNG BĂNG (V7, Mạnh chốt Q1 08/11 — gắn căn = nhận diện duy nhất, FRAMING §3.4) ──
+    // Luật cặp cũ (cùng phường, DT ±15%, giá/m² ±20%) đo «giống nhau», không phải «là cùng một». Không dựng cặp mới,
+    // không xoá cặp cũ: property_candidates giữ nguyên làm lịch sử. Thay thế: danh bạ vật thể (DB1) + gắn căn GC0–GC3.
+    ghi(STAGE_B_DONG_BANG);
   }
   if (q.soLanThuLai > 0) ghi(`resolve-properties: thử lại sau deadlock ${q.soLanThuLai} lần`);
   return { soLanThuLai: q.soLanThuLai, soCauGui: q.soCauGui };

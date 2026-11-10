@@ -42,12 +42,16 @@ export async function readRecords24h(client) {
   }));
 }
 
-/** Thẻ chờ duyệt: chỉ số đếm `pending` theo `item_type` (nội dung thẻ là tầng A). Bảng vắng → ném. */
+/** Thẻ Ghép căn đóng băng (V7) — chép NGUYÊN VĂN từ app/src/lib/ops/review-dong-bang.ts (test ops-local-dong-bang so chuỗi). */
+export const THE_DONG_BANG_SQL = "(item_type = 'entity_match' AND status = 'pending')";
+
+/** Câu đếm thẻ chờ theo loại — cùng câu với PENDING_COUNTS_SQL của app (components/ops/review-content.tsx). */
+export const REVIEW_QUEUE_COUNT_SQL = `SELECT item_type AS type, count(*)::int AS n FROM review_queue WHERE status = 'pending'
+     AND NOT ${THE_DONG_BANG_SQL} GROUP BY item_type ORDER BY item_type`;
+
+/** Thẻ chờ duyệt: chỉ số đếm `pending` theo `item_type` (nội dung thẻ là tầng A), trừ thẻ Ghép căn đóng băng. Bảng vắng → ném. */
 export async function readReviewQueue(client) {
-  const { rows } = await client.query(
-    `SELECT item_type AS type, count(*)::int AS n FROM review_queue WHERE status = 'pending'
-     GROUP BY item_type ORDER BY item_type`,
-  );
+  const { rows } = await client.query(REVIEW_QUEUE_COUNT_SQL);
   return { byType: rows.map((r) => ({ type: r.type, n: r.n })), total: rows.reduce((s, r) => s + r.n, 0) };
 }
 

@@ -6,12 +6,13 @@
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
 import { loadReviewContext } from "./review-context";
+import { KHONG_DONG_BANG_SQL } from "./review-dong-bang";
 import { loadReviewMedia, stripEvidenceImages } from "./review-media";
 import { toReviewItem, type ReviewQueueRow } from "./review-queue";
 
-/** Câu đọc hàng duyệt. Không chọn ai_confidence — Q9: số không tới trình duyệt. */
+/** Câu đọc hàng duyệt. Không chọn ai_confidence — Q9: số không tới trình duyệt. Thẻ Ghép căn đang chờ đóng băng (V7). */
 export const REVIEW_QUEUE_SQL = `SELECT id, item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, status, decision_note, created_at
-     FROM review_queue ORDER BY created_at DESC, id DESC`;
+     FROM review_queue WHERE ${KHONG_DONG_BANG_SQL} ORDER BY created_at DESC, id DESC`;
 
 export async function loadReviewQueue(user: User) {
   const { rows } = await pool.query<ReviewQueueRow>(REVIEW_QUEUE_SQL);

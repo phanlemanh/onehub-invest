@@ -31,6 +31,16 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const TZ = "Asia/Ho_Chi_Minh";
 
+/** Thẻ Ghép căn đóng băng (V7) — chép NGUYÊN VĂN từ app/src/lib/ops/review-dong-bang.ts (test ops-local-dong-bang so chuỗi). */
+export const THE_DONG_BANG_SQL = "(item_type = 'entity_match' AND status = 'pending')";
+
+/** Công người (H1 chờ, H1b quyết 24 giờ, thẻ vào 24 giờ): thẻ Ghép căn đang chờ đóng băng không tính. */
+export const CONG_NGUOI_SQL = `
+      SELECT count(*) FILTER (WHERE status = 'pending')::int cho,
+             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours')::int quyet,
+             count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int vao
+        FROM review_queue WHERE NOT ${THE_DONG_BANG_SQL}`;
+
 export function ngayVN(d = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
@@ -171,11 +181,7 @@ export async function gom(client, { now = new Date(), daBietCfg = [] } = {}) {
     so.C4 = c4.n;
 
     // Công người.
-    const [h] = await q(`
-      SELECT count(*) FILTER (WHERE status = 'pending')::int cho,
-             count(*) FILTER (WHERE decided_at >= now() - interval '24 hours')::int quyet,
-             count(*) FILTER (WHERE created_at >= now() - interval '24 hours')::int vao
-        FROM review_queue`);
+    const [h] = await q(CONG_NGUOI_SQL);
     so.H1 = h.cho;
     so.H1b = h.quyet;
     ngu.theVao24h = h.vao;

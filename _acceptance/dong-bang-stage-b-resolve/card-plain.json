@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ dựng căn không còn tự ghép cặp tin «có thể cùng căn» mỗi đêm và hàng duyệt không còn hiện thẻ «Ghép căn» đang chờ; dữ liệu cũ giữ nguyên, việc gắn tin vào căn chuyển sang danh bạ (DB1) và chuỗi gắn căn (GC0–GC3).",
+  "scope_plain": "Những việc đã khai bỏ ngoài vòng từ lúc duyệt phạm vi:"
+}
