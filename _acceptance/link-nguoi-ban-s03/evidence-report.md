@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 91ea75c994e0f155347830981f164fa5f2ac6282
+verified_commit: e659f18df2c34d5c34ecfa3e244a587f20d9e4a2
 human_signoff: Mạnh 2026-11-10
 ---
 
@@ -202,3 +202,7 @@ none — every multi-run eval is uniform
 Round 4: BLOCKED do ha tang, chay lai.
 Round 5: E8 failed — ca doi chung thieu nguoi gui tin gan day; E8 tu dung du lieu. Returned to implementation.
 Round 6: moi eval may deu xanh; con E11b cho nguoi chot o Cong 2.
+
+### Re-pin lần 1 — 2026-11-10, do hoá cũ do gộp main (#400, #401) sau chữ ký
+run_id: repin-20261110T090242Z-35071
+sha: e659f18df2c34d5c34ecfa3e244a587f20d9e4a2 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E11b (E11b không khai paths)
