@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fbc54e5b1970b220dbaae40559c37bfb706d84ca
-human_signoff:
+human_signoff: Mạnh 2026-11-11
 ---
 
 # Evidence Report: doc-gop-env-rong

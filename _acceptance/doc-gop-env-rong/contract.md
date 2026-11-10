@@ -5,7 +5,7 @@ slug: doc-gop-env-rong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-10T11:20:00Z
 design_doc: _acceptance/doc-gop-env-rong/design.md
@@ -54,3 +54,5 @@ Bỏ quét không gian — một trục (kho có hay không có `.env`), quét �
 ## Notes
 
 - Lỗi tiềm ẩn của PL34 (#384), hàng do GS cắt 10/11.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Bộ test agent xanh ở máy có sẵn tệp cấu hình không chứng riêng cho ca thiếu tệp đó; ca thiếu tệp được chứng ở AC-1 và AC-2.
