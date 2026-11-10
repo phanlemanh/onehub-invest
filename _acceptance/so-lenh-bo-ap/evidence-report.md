@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: so-lenh-bo-ap
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f1a8f9ca7efa4c19a2ef2d74d73358c4d07d0bc9
+verified_commit: 300e5b6dc44e54b3c6536915f2cf32049910a4dc
 human_signoff:
 ---
 
 # Evidence Report: so-lenh-bo-ap
-
-Round 1. Mọi eval máy (E1-E11) đạt, nhưng lệnh suite `cd app && npm test` (không gắn eval nào) thoát khác 0 nên verdict tổng là REJECT. Nguyên nhân thấy trong đuôi log: ca VT-AC-8 («bảng kiểm kê khớp đĩa và hàm che») của `app/tests/viewer-the-duyet.test.tsx` báo route chưa khai trong bảng kiểm kê (ba route `change-requests`), và một ca khác so danh sách tệp thấy thêm `pipeline/lib/lenh.mjs` ngoài danh sách mong đợi.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -32,147 +30,146 @@ Round 1. Mọi eval máy (E1-E11) đạt, nhưng lệnh suite `cd app && npm tes
 ## Evidence
 
 - eval: E1
-  run_id: minted-so-lenh-bo-ap-E1-r1
+  run_id: minted-so-lenh-bo-ap-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_db
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    lệnh: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
-    ℹ duration_ms 4813.415542
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
+    ℹ duration_ms 4484.823375
 
 - eval: E5
-  run_id: minted-so-lenh-bo-ap-E5-r1
+  run_id: minted-so-lenh-bo-ap-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_db
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E1 (lenh.test.mjs, so-lenh.itest.mjs)
-    ℹ duration_ms 4813.415542
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
+    ℹ duration_ms 4484.823375
 
 - eval: E6
-  run_id: minted-so-lenh-bo-ap-E6-r1
+  run_id: minted-so-lenh-bo-ap-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_db
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E1 (lenh.test.mjs, so-lenh.itest.mjs)
-    ℹ duration_ms 4813.415542
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
+    ℹ duration_ms 4484.823375
 
 - eval: E7
-  run_id: minted-so-lenh-bo-ap-E7-r1
+  run_id: minted-so-lenh-bo-ap-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_db
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E1 (lenh.test.mjs, so-lenh.itest.mjs)
-    ℹ duration_ms 4813.415542
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
+    ℹ duration_ms 4484.823375
 
 - eval: E10
-  run_id: minted-so-lenh-bo-ap-E10-r1
+  run_id: minted-so-lenh-bo-ap-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_db
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E1 (lenh.test.mjs, so-lenh.itest.mjs)
-    ℹ duration_ms 4813.415542
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs
+    ℹ duration_ms 4484.823375
 
 - eval: E2
-  run_id: minted-so-lenh-bo-ap-E2-r1
+  run_id: minted-so-lenh-bo-ap-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    lệnh: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 - eval: E3
-  run_id: minted-so-lenh-bo-ap-E3-r1
+  run_id: minted-so-lenh-bo-ap-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E2 (tests/so-lenh.test.tsx)
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 - eval: E4
-  run_id: minted-so-lenh-bo-ap-E4-r1
+  run_id: minted-so-lenh-bo-ap-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E2 (tests/so-lenh.test.tsx)
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 - eval: E8
-  run_id: minted-so-lenh-bo-ap-E8-r1
+  run_id: minted-so-lenh-bo-ap-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E2 (tests/so-lenh.test.tsx)
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 - eval: E9
-  run_id: minted-so-lenh-bo-ap-E9-r1
+  run_id: minted-so-lenh-bo-ap-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E2 (tests/so-lenh.test.tsx)
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 - eval: E11
-  run_id: minted-so-lenh-bo-ap-E11-r1
+  run_id: minted-so-lenh-bo-ap-E11-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_lenh_app
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
   output: |
-    cùng lệnh với E2 (tests/so-lenh.test.tsx)
-    ℹ duration_ms 3396.647333
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx
+    ℹ duration_ms 2034.883292
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-so-lenh-bo-ap-SUITE-npm_test__bb6271-r1
+  run_id: minted-so-lenh-bo-ap-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-so-lenh-bo-ap-SUITE-lint-r1
+  run_id: minted-so-lenh-bo-ap-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
 
 - cmd: cd app && npm test
-  run_id: blnpbha2n
-  exit_code: 1
-  verified_at: 2026-11-10T20:12:43Z
-  note: lệnh suite thoát khác 0, không gắn eval nào. Ca VT-AC-8 (tests/viewer-the-duyet.test.tsx) báo route chưa khai trong bảng kiểm kê gồm src/app/api/v1/ops/change-requests/route.ts, change-requests/pull/route.ts và change-requests/[id]/decide/route.ts. Một ca khác so danh sách tệp: thực tế có app/src/app/api/v1/ops/review/[id]/decide/route.ts và pipeline/lib/lenh.mjs, mong đợi chỉ có tệp đầu.
+  run_id: minted-so-lenh-bo-ap-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-10T21:45:29Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-so-lenh-bo-ap-SUITE-npm_test__13563d-r1
+  run_id: minted-so-lenh-bo-ap-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-so-lenh-bo-ap-SUITE-test_lint_rules-r1
+  run_id: minted-so-lenh-bo-ap-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-so-lenh-bo-ap-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-so-lenh-bo-ap-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-10T20:12:43Z
+  verified_at: 2026-11-10T21:45:29Z
 
 ## Known limits
 
@@ -180,17 +177,18 @@ Round 1. Mọi eval máy (E1-E11) đạt, nhưng lệnh suite `cd app && npm tes
 
 ## Analyst
 
-none — không eval nào được đo là xanh ở cả hai phía; baseline của mọi eval feature là n-a (xem dưới), nên chưa có bằng chứng phân biệt từ A/B.
-
-Baseline khong do
-- cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs: bo qua baseline: tep pipeline/scripts/lenh.test.mjs co o cay dang kiem nhung chua co o merge-base 24e103b0f74b389d2701c71580b4d50402c8e377 — eval moi, chay tren code cu khong phan biet gi
-- cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx: bo qua baseline: tep app/tests/so-lenh.test.tsx co o cay dang kiem nhung chua co o merge-base 24e103b0f74b389d2701c71580b4d50402c8e377 — eval moi, chay tren code cu khong phan biet gi
+carried tu round 1 — baseline khong do lai round nay (evals.yaml khong doi tu lan baseline cuoi). Khong co eval nao duoc liet ke la khong-phan-biet: none.
 
 ## Variance
 
-none — mọi eval chạy một lần (deterministic), không eval nào có pass_rate lẫn.
+none — moi eval deu deterministic (runs: 1), khong co pass_rate hon hop.
+
+## Judge
+
+Khong co judgment item nao trong round nay: moi eval deu la executor test. Khong co panel de xuat, khong co human_override can dien.
 
 ## Iterations
 
-Round 1: mọi eval E1-E11 đạt; lệnh suite `cd app && npm test` thoát khác 0 (bảng kiểm kê route của viewer-the-duyet chưa khai ba route change-requests, và danh sách tệp có thêm pipeline/lib/lenh.mjs). Trả về thi công.
+Round 1: da chay tren f1a8f9ca; ket qua round do xem run-log (cac run_id hau to r1). Tro lai thi cong sau luot cham 1.
+Round 2: tat ca 11 eval va 6 lenh suite xanh tren 300e5b6d; khong eval nao fail; failed_evals rong.
 
