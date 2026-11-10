@@ -5,7 +5,7 @@
 // PATH — thư mục ấy không có), DATABASE_URL cổng đóng: không node thật, không DB, không OpenClaw.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,7 +23,13 @@ const MOC_CU = "2026-10-24T000000Z";
 // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-zalo. ZJ-AC-1, ZJ-AC-6 của
 // hồ sơ transform-zalo-boc-job-run (lời «ba bước») thay bởi media-canonical-reso#AC-10. enrich-chay-sau-nap (AC-6, Mạnh
 // duyệt 30/10): enrich-run đứng cuối — lời «bốn bước» của media-canonical-reso#AC-10 thay bởi enrich-chay-sau-nap#AC-6.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "enrich-run"];
+// pl34-lich-dem-sau-buoc (AC-1, Mạnh duyệt 09/11): doc-gop-hang-ngay sau nhả khoá nạp, trước enrich-run — lời «năm bước» của
+// enrich-chay-sau-nap#AC-6 thay bởi pl34-lich-dem-sau-buoc#AC-1.
+const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "doc-gop-hang-ngay", "enrich-run"];
+// Tệp giả của bước đọc gộp (pl34-lich-dem-sau-buoc): gọi qua node giả nên mang nhãn doc-gop-hang-ngay, nhận FAIL_STEPS như mọi
+// bước. Không chép bản thật (nó gọi node -e tính ngày rồi doc-gop-s03.ts hai lần); bản thật đo riêng ở ca PL34-AC-3 tệp thật.
+const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
+const DOC_GOP_GIA = '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n';
 
 // node giả: nhãn = tên tệp .mjs/.js/.ts đầu tiên (không đuôi); ghi nhãn + môi trường thấy được; hỏng theo FAIL_STEPS (nhan:ma,…).
 const NODE_SHIM = `#!/bin/bash
@@ -57,6 +63,7 @@ function cay(noiDung) {
   writeFileSync(path.join(root, SNAP, "manifest.json"), "{}\n");
   mkdirSync(path.join(root, "pipeline/logs"), { recursive: true });
   mkdirSync(path.join(root, "agent")); // bước enrich-run chạy trong agent/
+  writeFileSync(path.join(root, DOC_GOP), DOC_GOP_GIA);
   writeFileSync(path.join(root, STATE), MOC_CU);
   const bin = path.join(root, ".shim-bin");
   mkdirSync(bin);
@@ -99,7 +106,7 @@ function chay(root, failSteps = "", failMsg = "") {
 const daChay = [];
 const ghi = (r) => (daChay.push(r), r);
 
-test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự năm bước (NH-AC-10, enrich-chay-sau-nap AC-6), không JOB FAIL", () => {
+test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự sáu bước (NH-AC-10, pl34-lich-dem-sau-buoc AC-1), không JOB FAIL", () => {
   const r = ghi(chay(cay()));
   assert.equal(r.code, 0, r.stderr);
   assert.deepEqual(r.calls, NHAN);
@@ -192,7 +199,7 @@ test("ZJ-AC-5 vòng transform-zalo-boc-job-run (PR #96) không đổi phần n�
   assert.throws(() => assert.equal(phanNap(gia), napTruoc, thongDiep("bản giả")), /ZJ-AC-5 PR #96 đổi phần nạp của scripts\/zalo-import-daily\.sh \(e962e78\^1 → bản giả\)/);
 });
 
-test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đóng, nhãn trong ba bước", () => {
+test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đóng, nhãn trong sáu bước", () => {
   assert.ok(daChay.length >= 7, "các ca chạy phải đi trước");
   for (const r of daChay) {
     assert.ok(r.env.HOME.startsWith(SCRATCH), "HOME ngoài thư mục tạm");
@@ -212,6 +219,137 @@ test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đ�
     }
     for (const c of r.calls) assert.ok(NHAN.includes(c), `nhãn lạ: ${c}`);
   }
+});
+
+// ---- pl34-lich-dem-sau-buoc ----
+// Đọc khi cần, không lúc nạp tệp: ZL-AC-1 chạy ZJ-AC-5 trên cây đã xoá tệp bọc.
+const that = () => readFileSync(path.join(REPO, SCRIPT), "utf8");
+const DONG_DOC_GOP = 'job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"\n';
+const DONG_ENRICH = "job_run zalo-import-daily enrich-run enrich_run\n";
+/** Bản sao tệp bọc: thay đúng một chuỗi (phải có mặt). */
+function dotBien(cu, moi, src = that()) {
+  assert.ok(src.includes(cu), `đột biến không khớp chuỗi: ${cu}`);
+  return src.replace(cu, moi);
+}
+/** Dãy bước của một lượt lành phải có doc-gop-hang-ngay ngay trước enrich-run. */
+function kiemSauBuoc(calls) {
+  if (!calls.includes("doc-gop-hang-ngay")) throw new Error("PL34-AC-1 thiếu bước doc-gop-hang-ngay");
+  if (calls.indexOf("doc-gop-hang-ngay") > calls.indexOf("enrich-run")) throw new Error("PL34-AC-1 doc-gop-hang-ngay phải đứng trước enrich-run");
+  assert.deepEqual(calls, NHAN, "PL34-AC-1 dãy sáu bước");
+}
+
+test("PL34-AC-1 thứ tự: doc-gop-hang-ngay đứng giữa refresh-bait-gap và enrich-run; bỏ dòng hay dời sau enrich-run thì đỏ", () => {
+  kiemSauBuoc(ghi(chay(cay())).calls);
+  assert.throws(() => kiemSauBuoc(chay(cay(dotBien(DONG_DOC_GOP, ""))).calls), /PL34-AC-1 thiếu bước doc-gop-hang-ngay/);
+  const sau = dotBien(DONG_ENRICH, DONG_ENRICH + DONG_DOC_GOP, dotBien(DONG_DOC_GOP, ""));
+  assert.throws(() => kiemSauBuoc(chay(cay(sau)).calls), /PL34-AC-1 doc-gop-hang-ngay phải đứng trước enrich-run/);
+});
+
+test("PL34-AC-1 không mới: state đã ở snapshot mới nhất → mã 0, không nạp, năm bước sau vẫn chạy kể cả doc-gop-hang-ngay", () => {
+  const moi = cay();
+  writeFileSync(path.join(moi, STATE), "2026-10-25T000000Z");
+  const r = chay(moi);
+  assert.equal(r.code, 0, r.stderr);
+  assert.deepEqual(r.jobFail, [], "PL34-AC-1 không mới: có dòng JOB FAIL");
+  assert.deepEqual(r.calls, NHAN.slice(1), "PL34-AC-1 không có snapshot mới thì bỏ nạp mà vẫn chạy năm bước sau");
+  // Đối chứng dương cùng ca: state ở mốc cũ thì có bước nạp.
+  assert.equal(chay(cay()).calls[0], "import-airbnb", "PL34-AC-1 đối chứng: state cũ mà không nạp");
+});
+
+/** Đường tệp bước đọc gộp mà dòng job_run trỏ; ném khi tệp không có trong kho. */
+function kiemTepBuoc(src) {
+  const m = src.match(/^job_run zalo-import-daily doc-gop-hang-ngay bash "\$ROOT\/([^"]+)"$/m);
+  assert.ok(m, "PL34-AC-3 không thấy dòng job_run doc-gop-hang-ngay");
+  if (!existsSync(path.join(REPO, m[1]))) throw new Error(`PL34-AC-3 tệp bước không có trong kho: ${m[1]}`);
+  return m[1];
+}
+
+test("PL34-AC-3 dòng job_run trỏ đúng tệp bước có trong kho; đường sai thì đỏ gọi tên", () => {
+  assert.equal(kiemTepBuoc(that()), DOC_GOP);
+  assert.throws(() => kiemTepBuoc(that().replace(`$ROOT/${DOC_GOP}`, "$ROOT/pipeline/doc-gop-khong-co.sh")),
+    /PL34-AC-3 tệp bước không có trong kho: pipeline\/doc-gop-khong-co\.sh/);
+});
+
+// node giả cho ca tệp thật: `node -e` (tính ngày VN) chạy node thật; lời gọi khác ghi cwd + argv, thoát 0.
+const NODE_THAT = process.execPath;
+const NODE_SHIM_THAT = `#!/bin/bash
+if [ "\${1:-}" = -e ]; then exec "${NODE_THAT}" "$@"; fi
+step=node
+for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
+echo "$step" >> "$CALLS"
+printf '%s' "$PWD" >> "$ARGV"; for a in "$@"; do printf '\\t%s' "$a" >> "$ARGV"; done; printf '\\n' >> "$ARGV"
+exit 0
+`;
+/** Lời gọi doc-gop-s03.ts của tệp bước thật khi chạy trong job; `tepThat` là nội dung tệp bước đặt vào cây. */
+function chayTepThat(tepThat) {
+  const root = cay();
+  writeFileSync(path.join(root, DOC_GOP), tepThat);
+  // Máy thu có .env ở gốc kho; tệp bước truyền --env-file khi có (không có thì bash 3.2 + set -u báo ENV_FILE[@] unbound).
+  writeFileSync(path.join(root, ".env"), "");
+  writeFileSync(path.join(root, ".shim-bin/node"), NODE_SHIM_THAT);
+  const argv = path.join(root, ".argv");
+  writeFileSync(argv, "");
+  const r = chay(root);
+  // chay() dựng env mới; chạy lại với ARGV + DOC_GOP_BAY_GIO cố định.
+  writeFileSync(path.join(root, ".calls"), "");
+  writeFileSync(path.join(root, STATE), MOC_CU);
+  const env = { ...r.env, ARGV: argv, DOC_GOP_BAY_GIO: "2026-11-09T01:00:00Z" };
+  const k = spawnSync("/bin/bash", [path.join(root, SCRIPT)], { cwd: root, env, encoding: "utf8", timeout: 60_000 });
+  const goi = readFileSync(argv, "utf8").split("\n").filter(Boolean).map((l) => l.split("\t"))
+    .filter((a) => a.includes("scripts/doc-gop-s03.ts"));
+  return { root, code: k.status, stderr: k.stderr, goi };
+}
+function kiemTepThat({ root, code, stderr, goi }) {
+  assert.equal(code, 0, `PL34-AC-3 job với tệp thật thoát khác 0 — ${stderr}`);
+  assert.equal(goi.length, 2, `PL34-AC-3 số lời gọi doc-gop-s03.ts: ${goi.length}`);
+  for (const [cwd] of goi) if (cwd !== path.join(root, "agent")) throw new Error(`PL34-AC-3 doc-gop-s03 không chạy trong agent/: ${cwd}`);
+  assert.deepEqual(goi.map((a) => a.slice(1)), ["2026-11-08", "2026-11-07"].map((ngay) =>
+    [`--env-file=${path.join(root, ".env")}`, "--import", "tsx", "scripts/doc-gop-s03.ts", "hang-ngay", "--ngay", ngay, "--tran-ngay-usd", "20"]),
+  "PL34-AC-3 đối số hai lời gọi");
+}
+
+test("PL34-AC-3 tệp thật: chạy trong job gọi doc-gop-s03.ts hai lần trong agent/, hôm qua rồi hôm kia giờ VN", () => {
+  const that = readFileSync(path.join(REPO, DOC_GOP), "utf8");
+  kiemTepThat(chayTepThat(that));
+  const lech = that.replace('cd "$ROOT/agent"', 'cd "$ROOT"');
+  assert.notEqual(lech, that, "đột biến không đổi gì");
+  assert.throws(() => kiemTepThat(chayTepThat(lech)), /PL34-AC-3 doc-gop-s03 không chạy trong agent\//);
+});
+
+// Bảy tệp test của kho nhắc zalo-import-daily (đo 09/11) — thêm tệp mới thì kê vào đây và vào AC-4 của hồ sơ.
+const TEP_NHAC = [
+  "pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs",
+  "pipeline/scripts/media-wiring.test.mjs",
+  "scripts/enrich-buoc-job.test.mjs",
+  "scripts/nap-argmax.test.mjs",
+  "scripts/nap-ts-order.test.mjs",
+  "scripts/zalo-import-job-lan.test.mjs",
+  "scripts/zalo-import-job.test.mjs",
+];
+function quetTepNhac() {
+  const ra = [];
+  const di = (d) => {
+    for (const e of readdirSync(path.join(REPO, d), { withFileTypes: true })) {
+      if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const rel = path.join(d, e.name);
+      if (e.isDirectory()) di(rel);
+      else if (/\.(test|itest)\.(mjs|js|ts|tsx)$/.test(e.name) && readFileSync(path.join(REPO, rel), "utf8").includes("zalo-import-daily")) ra.push(rel);
+    }
+  };
+  for (const d of ["scripts", "pipeline", "app/tests", "agent/tests"]) if (existsSync(path.join(REPO, d))) di(d);
+  return ra.sort();
+}
+function soTepNhac(thay, ke) {
+  for (const f of thay) if (!ke.includes(f)) throw new Error(`PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: ${f}`);
+  assert.deepEqual(thay, [...ke].sort(), "PL34-AC-4 tập tệp kê có tệp không còn nhắc zalo-import-daily");
+}
+
+test("PL34-AC-4 tập tệp: mọi tệp test nhắc zalo-import-daily đúng bằng bảy tệp kê trước; thiếu một thì đỏ gọi tên", () => {
+  const thay = quetTepNhac();
+  assert.equal(thay.length, 7, `PL34-AC-4 số tệp quét: ${thay.join(", ")}`);
+  soTepNhac(thay, TEP_NHAC);
+  assert.throws(() => soTepNhac(thay, TEP_NHAC.filter((f) => f !== "scripts/nap-argmax.test.mjs")),
+    /PL34-AC-4 tệp test nhắc zalo-import-daily chưa kê: scripts\/nap-argmax\.test\.mjs/);
 });
 
 /** Đường log trong lệnh `grep 'JOB FAIL' <tệp>` nói về zalo-import; null khi không có. */
