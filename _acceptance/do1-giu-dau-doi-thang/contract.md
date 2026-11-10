@@ -5,7 +5,7 @@ slug: do1-giu-dau-doi-thang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-do1-giu-dau-doi-thang-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10T03:08:15Z
@@ -96,3 +96,6 @@ thang-0811 lúc 06:19).
 - Ngày lập mốc nhận theo dấu trước, ngày áp sau. Ngày áp là ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang thang mới (AC-9,
   nâng phạm vi sau S4 vòng 1, Mạnh 10/11) — thay định nghĩa «ngày nhỏ nhất có ảnh chụp thang mới» của AC-5 `thang-bac-moi-b0-b5`,
   vì `data_level_snapshot.snap_date` ghi theo ngày UTC còn DO1 theo ngày VN.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-10:
+  - Ngoài-1: Chạy tay lệnh đo `--ngay` cho một ngày trước ngày đổi thang làm trang chất lượng hiện sai ngày «áp từ», và lệnh sửa có thể nhắm nhầm ngày hoặc từ chối chạy.
+  - Ngoài-2: Lượt đo cuối của ngày đổi thang chạy vắt qua nửa đêm có thể làm ngày áp trượt sang hôm sau, khi đó dòng chuyển bậc thật của hôm sau bị xoá không báo.
