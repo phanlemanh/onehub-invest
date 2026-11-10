@@ -40,6 +40,8 @@ evals:
   - id: E5
     criterion: AC-3
     executor: judgment
+    inputs: [docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md, _acceptance/app-test-chap-chon-e4b-sap/contract.md, _acceptance/e4b-danh-sach-tin-nhanh/contract.md, _acceptance/can-gia-tot-sua-ba-loi/contract.md]
+    question: "Bảng thay lời trong design doc có đổi đúng vế 'trong suite app' của AC-3 ở e4b-danh-sach-tin-nhanh thành điều kiện chạy riêng trên DB máy thu, giữ nguyên trần 700 ms và cả bốn kiểu sắp không? Lời AC-7 của can-gia-tot-sua-ba-loi có giữ nguyên không? Có câu nào nới trần, bỏ kiểu sắp, hay đổi lời ngoài hai chỗ đó không?"
     paths: [docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md, _acceptance/app-test-chap-chon-e4b-sap/contract.md]
     expected: "Bảng thay lời trong design doc đổi đúng vế 'trong suite app' của e4b-danh-sach-tin-nhanh AC-3 thành điều kiện chạy riêng, giữ 700 ms và bốn kiểu sắp; không đổi lời can-gia-tot-sua-ba-loi AC-7"
     evidence_required: [verifier, verified_at, rationale]
