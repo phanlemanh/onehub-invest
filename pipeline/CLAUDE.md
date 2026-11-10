@@ -17,7 +17,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | bu-seller-v5.mjs | Làn ZCode: đối chiếu state với stg, bù số còn thiếu bằng một bản v5; không gọi nguồn; chạy từ worktree giữ `state/thu-so-s06/` |
 | refresh-bait-gap.mjs | Bait gap P1 + đếm người bán (`sellers` là VIEW từ 060, không ghi); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng; sau sổ liên lạc số, `ghiLienLacHoSo` (`lib/lien-lac-ho-so.mjs`) ghi liên lạc hồ sơ chat từ `stg_s03_ho_so` (080; chưa áp thì in `CHUA-AP-080`, không ghi) |
 | lap-yeu-cau-ho-so.mjs | link-nguoi-ban-s03 (AC-8): lập tệp yêu cầu `{mas, doi_chung}` cho bộ tra hồ sơ người bán S03 — 20 mã có từ 3 tin, không số ở tin hay Người, chưa tra trong 30 ngày (cả snapshot hồ sơ chưa nạp) + 2 mã đối chứng gửi tin trong 24 giờ; không `--out` thì chỉ đếm; chỉ đọc DB, không in mã; tệp ngoài `~/.openclaw` và `snapshots/` |
-| scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
+| scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK. Câu đếm SQL độc lập (`TEST_POST_SQL_T`) viết bốn dấu bằng SQL, vế nội dung lấy `noiDungSql` của `lib/test-posts.mjs` (GN5); `scripts/dau-bai-thu-sql.test.mjs` giữ nó, `S03_POSTS_SQL`, bản app và `IS_TEST` của 600 khớp `testMarker` từng dòng |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
 | vocab.mjs | Sổ từ vựng một nguồn (PL6): `--write` sinh hằng từ `mappings.yaml` `enums:` · `--check` · `--lint` (enum viết tay) · `--check-db` (ref_* + CHECK) · `--check-field-targets` |
