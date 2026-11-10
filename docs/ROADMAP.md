@@ -303,6 +303,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   chụp và bậc từng đơn vị: DO1 ngày đổi thang lập mốc lại (`ly_do: doi-thang`), báo cáo ngày không so hai ngày khác thang,
   `/ops/quality` hiện «Thang bậc 08/11 áp từ <ngày>». Chưa áp 087 thì `bac-du-lieu` và phần chuyển bậc của DO1 bỏ qua có tên
   (`chua-ap-087`). `checkDb` thôi vớ CHECK chéo của `data_level_change`. Áp 087 lên DB máy thu và cloud: lời riêng của Mạnh.
+- **DO1 giữ dấu ngày lập mốc (do1-giu-dau-doi-thang, 10/11)**: dấu `lap-moc`/`doi-thang` của DO1 giữ suốt cả ngày qua mọi
+  lượt cloud-sync, ngày ấy 0 dòng `data_level_change`. Ngày áp thang = ngày VN nhỏ nhất có dòng `do1-chuyen-bac` mang
+  `thang-0811` (không theo `snap_date` UTC của ảnh chụp). Lệnh `do-hang-ngay.mjs --sua-ngay-doi-thang [--write]` dựng lại dấu
+  cho ngày áp đã qua (dấu ghi trong ngày áp, sống qua lượt DO1 kế; từ chối thoát 2). TB-AC-11 dựng lược đồ chưa 087 trong giao
+  dịch. Chạy `--write` trên máy thu và bật lại bước DO1 trong `cloud-sync.sh`: lời riêng của Mạnh. Hai giới hạn đã biết ở
+  `_acceptance/do1-giu-dau-doi-thang/contract.md` §Notes (chạy tay `--ngay` ngày cũ; lượt cuối vắt qua nửa đêm ngày đổi thang).
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
