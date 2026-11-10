@@ -35,6 +35,7 @@ for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\
 echo "$step $arg" >> "$CALLS"
 case "$arg" in *__s03-ho-so__*)
   [ "\${HS_HONG:-}" = 1 ] && { echo "Error: boom ho-so" >&2; exit 2; }
+  [ "\${HS_CHUA_TO:-}" = 1 ] && { echo "CHUA-AP-080: bảng stg_s03_ho_so chưa có (migration 080 chưa áp)"; for i in $(seq 1 20000); do echo "dòng log dài $i ................................................"; done; exit 0; }
   [ "\${HS_CHUA:-}" = 1 ] && { echo "CHUA-AP-080: bảng stg_s03_ho_so chưa có (migration 080 chưa áp)"; echo "đã nạp: 0 hồ sơ S03 (+1 BỎ do CHUA-AP-080)"; exit 0; }
   echo "đã nạp: 1 hồ sơ S03"; exit 0;;
 esac
@@ -70,7 +71,7 @@ function chay(root, args = [], extra = {}) {
   const calls = path.join(root, ".calls");
   writeFileSync(calls, "");
   const env = { PATH: `${path.join(root, ".shim-bin")}:/usr/bin:/bin`, HOME: path.join(root, ".home"), DATABASE_URL: "postgres://127.0.0.1:9/khong-co", CALLS: calls, ...extra };
-  const r = spawnSync("/bin/bash", [path.join(root, SCRIPT), ...args], { cwd: root, env, encoding: "utf8", timeout: 60_000 });
+  const r = spawnSync("/bin/bash", [path.join(root, SCRIPT), ...args], { cwd: root, env, encoding: "utf8", timeout: 60_000, maxBuffer: 64 * 1024 * 1024 });
   const goi = readFileSync(calls, "utf8").split("\n").filter(Boolean);
   const hs = path.join(root, HS_STATE);
   return {
@@ -151,4 +152,26 @@ test("HS-7 snapshot hồ sơ đang ghi (thư mục .partial) không bị nạp",
   const r = chay(root);
   assert.equal(r.code, 0, r.out);
   assert.deepEqual(r.napHoSo, []);
+});
+
+test("HS-8 CHUA-AP-080 ở ĐẦU một đầu ra rất lớn (~1 MB) vẫn bị bắt: giữ con trỏ, mã 4 (review: SIGPIPE dưới pipefail)", () => {
+  const r = chay(cay(), [], { HS_CHUA_TO: "1" });
+  assert.equal(r.code, 4, r.out.slice(-500));
+  assert.equal(r.hsState, "00000000T000000", "đầu ra lớn làm lọt CHUA-AP-080 — con trỏ hồ sơ nhảy qua snapshot chưa nạp");
+});
+
+test("HS-9 snapshot hồ sơ thiếu manifest: <30′ thì dừng, giữ con trỏ; ≥30′ (mồ côi) thì bỏ qua và nạp tiếp snapshot sau", () => {
+  const root = cay({ hoSoTs: [HS2] });
+  const moCoi = path.join(root, hoSo(HS1));
+  mkdirSync(moCoi, { recursive: true });
+  const a = chay(root);
+  assert.equal(a.code, 0, a.out);
+  assert.deepEqual(a.napHoSo, [], "snapshot đang ghi (<30′) mà vòng hồ sơ vẫn đi tiếp");
+  assert.equal(a.hsState, "00000000T000000");
+  spawnSync("touch", ["-t", "202611100000", moCoi]);
+  const b = chay(root);
+  assert.equal(b.code, 0, b.out);
+  assert.ok(b.out.includes("mồ côi"), b.out);
+  assert.deepEqual(b.napHoSo, [HS2]);
+  assert.equal(b.hsState, HS2);
 });

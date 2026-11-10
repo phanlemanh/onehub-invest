@@ -176,13 +176,22 @@ for SNAP in $(printf '%s\n' "$HS_DIRS" | while read -r d; do
   done | sort | while read -r _ d; do echo "$d"; done); do
   TS=${SNAP##*__}
   [[ "$TS" > "$HS_LAST" ]] || continue
-  [ -f "$SNAP/manifest.json" ] || { echo "⏸ snapshot hồ sơ chưa xong (thiếu manifest): $SNAP — giữ con trỏ hồ sơ"; break; }
+  if [ ! -f "$SNAP/manifest.json" ]; then
+    # như vòng tin (2510-8): thiếu manifest <30′ = đang ghi → giữ con trỏ, lượt sau thử lại; ≥30′ = mồ côi → bỏ, đi tiếp
+    if [ -n "$(find "$SNAP" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+      echo "⏸ snapshot hồ sơ chưa xong (thiếu manifest, <30′): $SNAP — giữ con trỏ hồ sơ"; break
+    fi
+    echo "⚠️ snapshot hồ sơ mồ côi (thiếu manifest, ≥30′) — bỏ qua, đi tiếp: $SNAP"
+    HS_MAX="$TS"; continue
+  fi
   if ! OUT=$(import_one "$SNAP"); then
     printf '%s\n' "$OUT"
     echo "❌ nạp hồ sơ fail tại $SNAP — giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=1; break
   fi
   printf '%s\n' "$OUT"
-  if printf '%s' "$OUT" | grep -q "CHUA-AP-080"; then
+  # so khớp trong shell, KHÔNG qua ống: printf | grep -q dưới pipefail có thể dính SIGPIPE (141) khi đầu ra lớn
+  # và dòng CHUA nằm đầu → bỏ lọt đúng ca mất dữ liệu Ngoài-6 (review 10/11)
+  if [[ "$OUT" == *CHUA-AP-080* ]]; then
     echo "❌ DB chưa áp 080 — snapshot hồ sơ $SNAP CHƯA nạp, giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=4; break
   fi
   HS_MAX="$TS"
