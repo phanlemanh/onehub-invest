@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 // 2610-10 vòng 2: đường nạp S08 dùng ĐÚNG hàm pure này (BÁO 2610-17)
 import { s08RowOf, s08Num, s08Int } from "./import-s08-row.mjs";
+import { bocS10, duBoLoc } from "./lib/s10-bang-hang.mjs";
 export { s08Num, s08Int }; // re-export — test cũ import từ đây
 
 // Luật khuôn tên thư mục dùng chung cho cả hai importer (PL1 mở lại vòng 4,
@@ -81,6 +82,7 @@ const AIRBNB_IMPORTER_SOURCES = new Set([
   "s08-danh-muc", // PL10/BÁO 2510-12: snapshot vn__s08-danh-muc__ nạp qua
                   // import-airbnb vào stg_s08_inventory — thiếu là bị allowlist
                   // bỏ exit 0 (0 dòng stg, không job nào báo lỗi)
+  "s10-bang-hang", // v8 (DATA-CONTRACT mục S10): bảng hàng CĐT → stg_s10_stock (089)
 ]);
 export function isAllowedSource(source) {
   return AIRBNB_IMPORTER_SOURCES.has(String(source));
@@ -91,7 +93,8 @@ export function isAllowedSource(source) {
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
 // link-nguoi-ban-s03 (v7): nguồn s03-ho-so + kind ho-so — {6,7} S03 bất kể
 // thứ tự gộp với nhánh album (v6); bên import chấp nhận {1..7}
-export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
+// v8 (2026-11-10): nguồn s10-bang-hang + s11-nn1-du-an — RawItem không thêm trường chung; bên import chấp nhận {1..8}
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
   const m = String(name).match(/__([^_]+)__/);
@@ -126,6 +129,41 @@ async function napHoSo(client, it) {
      VALUES ($1,$2,$3,$4,$5)
      ON CONFLICT (source_id) DO NOTHING`,
     [it.sourceId, it.payload.ma_tai_khoan, it.payload.username || "", it.payload.loai ?? it.meta?.loai_ket_qua, it.fetchedAt]);
+}
+
+// S10 (089 của làn Claude): bảng stg_s10_stock. DB chưa có bảng → in CHUA-AP-089, snapshot S10 KHÔNG đánh dấu đã nạp
+// (như hồ sơ 080) để sau khi áp 089 nạp lại được. Lỗi dò bảng KHÔNG nuốt thành false — ném, dừng lượt.
+export const STG_S10 = "stg_s10_stock";
+export const NGUON_S10 = "s10-bang-hang";
+async function coBangS10(client) {
+  const r = await client.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`, [STG_S10]);
+  return (r.rowCount ?? 0) >= 1;
+}
+const COT_S10 = ["stock_id", "source_id", "project_id", "block_type", "unit_number", "subdivision_name", "block_raw",
+  "property_sub_type_raw", "lot_size_m2", "building_area_m2", "handover_condition_raw", "direction_faces_raw",
+  "list_price_vnd", "status_raw", "remarks_raw", "source_modified_on", "snapshot_id", "captured_at", "server_cond", "raw_row"];
+/** Nạp dòng của một item stock_table theo lô 500; trả số dòng THẬT SỰ ghi (nạp lại cùng snapshot → 0). */
+async function napS10(client, rows, snapshotId, capturedAt, cond) {
+  let ghi = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const lo = rows.slice(i, i + 500);
+    const params = [];
+    const values = lo.map((d) => {
+      const v = [d.stock_id, d.source_id, d.project_id, d.block_type, d.unit_number, d.subdivision_name, d.block_raw,
+        d.property_sub_type_raw, d.lot_size_m2, d.building_area_m2, d.handover_condition_raw, d.direction_faces_raw,
+        d.list_price_vnd, d.status_raw, d.remarks_raw, d.source_modified_on, snapshotId, capturedAt,
+        cond == null ? null : JSON.stringify(cond), stripNullBytes(d.raw_row)];
+      const base = params.length;
+      params.push(...v);
+      return `(${v.map((_, j) => `$${base + j + 1}`).join(",")})`;
+    });
+    const r = await client.query(
+      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(",")}
+       ON CONFLICT (snapshot_id, stock_id) DO NOTHING`, params);
+    ghi += r.rowCount ?? 0;
+  }
+  return ghi;
 }
 
 async function main() {
@@ -207,13 +245,21 @@ async function main() {
     if (!hoSoDaChua080) { console.log("CHUA-AP-080: bảng " + STG_HO_SO + " chưa có (migration 080 chưa áp) — snapshot hồ sơ bỏ qua, KHÔNG đánh dấu đã nạp; nguồn khác nạp như cũ"); hoSoDaChua080 = true; }
   }
   let hoSo = 0, hoSoBo = 0;
+  const coS10Item = items.some((it) => it.source === NGUON_S10);
+  const coBangS10Db = coS10Item ? await coBangS10(client) : false;
+  if (coS10Item && !coBangS10Db) {
+    console.log(`CHUA-AP-089: bảng ${STG_S10} chưa có (migration 089 chưa áp) — snapshot S10 bỏ qua, KHÔNG đánh dấu đã nạp`);
+  }
+  let s10Dong = 0, s10Bo = 0, s10ThieuLoc = 0, s10Lech = 0;
   try {
     await client.query("BEGIN");
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
     // INSERT vào bảng snapshot đĩa chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
     // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
     const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
-    if (!(!coBang && boHetHoSo)) {
+    // Cùng luật cho S10 khi DB thiếu 089.
+    const boHetS10 = items.length > 0 && items.every((it) => it.source === NGUON_S10) && !coBangS10Db;
+    if (!(!coBang && boHetHoSo) && !boHetS10) {
       await client.query(
         `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
          VALUES ($1,$2,$3,$4,$5)
@@ -241,6 +287,18 @@ async function main() {
       if (it.source === "s03-ho-so") {
         if (coBang) { await napHoSo(client, it); hoSo++; }
         else { hoSoBo++; }
+        continue;
+      }
+      if (it.source === NGUON_S10) {
+        // DATA-CONTRACT S10 luật 1: item thiếu bộ lọc rộng (snapshot 10/11 trước lượt thu lại) bị máy chủ lọc — bỏ có đếm.
+        // Chọn snapshot MỚI NHẤT cho mỗi sourceId là việc của bước đọc stg (089), không phải bộ nạp: nạp mọi snapshot đủ lọc.
+        if (!coBangS10Db) { s10Bo++; continue; }
+        if (it.kind !== "stock_table") { s10Bo++; continue; }
+        if (!duBoLoc(it)) { s10ThieuLoc++; continue; }
+        const r = bocS10(it);
+        s10Lech += r.lechKhuon;
+        if (r.khongStockId) console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`);
+        s10Dong += await napS10(client, r.dong, manifest.snapshotId, manifest.finishedAt, it.payload?.cond ?? null);
         continue;
       }
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
@@ -390,7 +448,8 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
+      + (coS10Item ? `, ${s10Dong} dòng S10 (bỏ ${s10ThieuLoc} item thiếu bộ lọc, ${s10Bo} item bỏ khác, ${s10Lech} dòng lệch khuôn)` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

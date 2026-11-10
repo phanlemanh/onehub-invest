@@ -50,7 +50,7 @@ async function latestSnapshotDir() {
 // v5 (claudedp-0211-1 hợp đồng người bán): RawItem.seller chỉ THÊM key tùy chọn
 // (kênh S06 chưa ghi seller — giữ ghi 1 cho tới khi được cấp vòng thu số riêng);
 // cùng mảng với import-airbnb.mjs, test đối chiếu hai bản không lệch.
-export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7]; // v6 album + v7 s03-ho-so (link-nguoi-ban-s03)
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8]; // v6 album + v7 s03-ho-so (link-nguoi-ban-s03) + v8 S10/S11
 
 // Export để test đọc snapshot v5 từ dir tạm (verify sha256 + parse, không đụng DB)
 export async function readSnapshot(dir) {
