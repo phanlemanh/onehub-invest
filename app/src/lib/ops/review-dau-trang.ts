@@ -3,6 +3,7 @@
  * «hôm nay» theo giờ Việt Nam (cổng Ops ở Hà Nội), không theo giờ UTC của máy chủ. Chỉ ở máy thu.
  */
 import { pool } from "@/lib/db";
+import { KHONG_DONG_BANG_SQL } from "./review-dong-bang";
 
 export type DauTrang = { cho: number; quaHan: number; homNay: number };
 
@@ -14,7 +15,7 @@ export const DAU_TRANG_SQL = `
          count(*) FILTER (WHERE status = 'pending' AND created_at < now() - make_interval(hours => $1))::int AS qua_han,
          count(*) FILTER (WHERE decided_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')
                                                AT TIME ZONE 'Asia/Ho_Chi_Minh'))::int AS hom_nay
-    FROM review_queue`;
+    FROM review_queue WHERE ${KHONG_DONG_BANG_SQL}`;
 
 /** Ba số; bảng `review_queue` vắng (lược đồ cloud) → null, trang không hiện ba số. */
 export async function loadDauTrang(q: Pick<typeof pool, "query"> = pool): Promise<DauTrang | null> {

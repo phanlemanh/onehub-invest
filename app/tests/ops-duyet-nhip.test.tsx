@@ -144,13 +144,12 @@ type CardMod = typeof import("../src/components/ops/review-card")
 type QueueMod = typeof import("../src/components/ops/review/review-queue")
 type RouteMod = typeof import("../src/app/api/v1/ops/review/[id]/decide/route")
 type Item = import("../src/lib/ops/review-queue").ReviewItem
-let hm: HangMucMod, ql: QueueLibMod, cc: CanCuMod, nhipMod: NhipMod, cg: ChoGhepMod, cardMod: CardMod, queueMod: QueueMod
+let hm: HangMucMod, ql: QueueLibMod, cc: CanCuMod, nhipMod: NhipMod, cardMod: CardMod, queueMod: QueueMod
 before(async () => {
   hm = await import("../src/lib/ops/review-hang-muc")
   ql = await import("../src/lib/ops/review-queue")
   cc = await import("../src/lib/ops/review-can-cu")
   nhipMod = await import("../src/lib/ops/review-nhip")
-  cg = await import("../src/lib/ops/review-cho-ghep")
   cardMod = (await import("../src/components/ops/review-card")) as CardMod
   queueMod = (await import("../src/components/ops/review/review-queue")) as QueueMod
 })
@@ -692,11 +691,16 @@ describe("OD1 route decide (lược đồ tạm)", () => {
   }
   test("OD1-AC-9 căn chờ ghép: bảng tra, lưới, sheet, trang một căn; cloud không bảng → rỗng", async () => {
     ready()
-    await kiemChoGhep(cg)
+    // Ghép căn đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): bản thật trả rỗng (đo ở DBS-AC-5). Logic căn chờ ghép vẫn đo ở
+    // đây trên bản chép GỠ đóng băng, để lúc gỡ đóng băng nó còn đúng; trang danh sách, một căn cũng nối vào bản chép này.
     const rel = "src/lib/ops/review-cho-ghep.ts"
-    const daQuyet = await banChep<ChoGhepMod>(rel, (s) => s.replace("WHERE item_type = 'entity_match' AND status = 'pending'", "WHERE item_type = 'entity_match'"))
+    const go = (s: string) => s.replace("export const GHEP_CAN_DONG_BANG = true;", "export const GHEP_CAN_DONG_BANG = false;")
+    const thaw = await banChep<ChoGhepMod>(rel, go)
+    choGhepThaw = CHEP[CHEP.length - 1]
+    await kiemChoGhep(thaw)
+    const daQuyet = await banChep<ChoGhepMod>(rel, (s) => go(s).replace("WHERE item_type = 'entity_match' AND status = 'pending'", "WHERE item_type = 'entity_match'"))
     await assert.rejects(kiemChoGhep(daQuyet), /BADGE THE DA QUYET/)
-    const veA = await banChep<ChoGhepMod>(rel, (s) => s.replace("for (const o of new Set([r.a, r.b]))", "for (const o of new Set([r.a]))"))
+    const veA = await banChep<ChoGhepMod>(rel, (s) => go(s).replace("for (const o of new Set([r.a, r.b]))", "for (const o of new Set([r.a]))"))
     await assert.rejects(kiemChoGhep(veA), /BO SOT VE B/)
     // Cloud: lược đồ không có review_queue.
     const N = `${S}_cloud`
@@ -706,8 +710,8 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     const cl = new pg.Client({ connectionString: u.toString() })
     await cl.connect()
     try {
-      assert.deepEqual(await cg.loadPendingUnitMatches(["offer_A"], cl as never), {}, "CLOUD NEM LOI")
-      const nem = await banChep<ChoGhepMod>(rel, (s) => s.replace("  if (!bang?.r) return {};\n", ""))
+      assert.deepEqual(await thaw.loadPendingUnitMatches(["offer_A"], cl as never), {}, "CLOUD NEM LOI")
+      const nem = await banChep<ChoGhepMod>(rel, (s) => go(s).replace("  if (!bang?.r) return {};\n", ""))
       await assert.rejects(nem.loadPendingUnitMatches(["offer_A"], cl as never).catch(() => assert.fail("CLOUD NEM LOI")), /CLOUD NEM LOI/)
     } finally {
       await cl.end()
@@ -741,6 +745,8 @@ describe("OD1 route decide (lược đồ tạm)", () => {
   })
 
   /** Chép hai trang Căn giá tốt, thay phiên + bộ nạp tin; dựng phần nội dung; badge phải tới từ bộ tra thật qua prop của trang. */
+  /** Bản chép GỠ đóng băng của review-cho-ghep (OD1-AC-9 dựng); trang chép nối vào nó. */
+  let choGhepThaw: string | null = null
   async function kiemTrangChoGhep(dsRel: string, canRel: string, doiDs?: (s: string) => string, doiCan?: (s: string) => string) {
     const MOC = {
       offerId: "offer_A", source: "S03", priceVnd: 2e9, areaM2: 50, pricePerm2: 4e7, bedrooms: 2, phuong: "Cầu Giấy", areaPath: "/vn/x", medianPerm2: 6e7,
@@ -750,6 +756,7 @@ describe("OD1 route decide (lược đồ tạm)", () => {
     }
     Object.assign(globalThis, { __OD1_DEALS: { rows: [MOC, { ...MOC, offerId: "offer_F" }], mayThu: true }, __OD1_DEAL: { deal: MOC, mayThu: true } })
     const giaPhien = (s: string) => s
+      .replace(/"@\/lib\/ops\/review-cho-ghep"/g, JSON.stringify(choGhepThaw ?? "@/lib/ops/review-cho-ghep"))
       .replace(`import { getSessionUser } from "@/lib/auth";`, "")
       .replace(/import \{ dealHang, dealTheoVai, getDeals \} from "@\/lib\/deals";/, `import { dealHang, dealTheoVai } from "@/lib/deals";\nconst getDeals = async () => (globalThis as never as { __OD1_DEALS: never }).__OD1_DEALS;`)
       .replace(/import \{ dealHang, dealTheoVai, dealTrongDanhSach, getDeal \} from "@\/lib\/deals";/, `import { dealHang, dealTheoVai } from "@/lib/deals";\nconst getDeal = async (_: string) => (globalThis as never as { __OD1_DEAL: never }).__OD1_DEAL;\nconst dealTrongDanhSach = async (_: string) => true;`)
