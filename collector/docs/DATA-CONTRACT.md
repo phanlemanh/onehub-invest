@@ -19,19 +19,18 @@ snapshots/
       manifest.json
 ```
 
-## manifest.json (schemaVersion 6)
+## manifest.json — phiên bản hiện hành
 
-> **schemaVersion 6 (2026-11-06, ma-album-s03)**: thêm `RawItem.meta.albumMeta`
-> {group_layout_id, id_in_group bắt buộc; total_item_in_group, is_group_layout,
-> child_number, msg_type tuỳ chọn} — khoá gom ảnh cùng một bài của kênh S03
-> (zalo-agent). CHỈ kênh S03 lên 6 khi gộp; kênh khác giữ số cũ. Bộ nạp phải
-> chịu được DB chưa có cột `album_meta` (bỏ trường + cảnh báo).
+> Số cao nhất importer nhận: **7**. Kênh tin S03 ghi **6** (`RawItem.meta.albumMeta`, ma-album-s03); nguồn hồ sơ S03 `s03-ho-so`
+> ghi **7** (link-nguoi-ban-s03); kênh khác giữ số cũ. Chi tiết từng số ở mục «Lịch sử phiên bản» cuối tệp — một nơi duy nhất.
+> Bộ nạp phải chịu được DB chưa có cột `album_meta` (077; bỏ trường + cảnh báo một lần) và chưa có bảng hồ sơ (080; không đánh dấu
+> snapshot hồ sơ đã nạp).
 
 ## manifest.json (schemaVersion 5) — lịch sử
 
 ```jsonc
 {
-  "schemaVersion": 5,               // 1–5 đều hợp lệ; collector ghi 5 khi kênh đó
+  "schemaVersion": 5,               // 1–7 đều hợp lệ (xem «Lịch sử phiên bản»); collector ghi 5 khi kênh đó
                                      // bắt đầu đính RawItem.seller (v5) — mỗi kênh
                                      // bật theo vòng thu số riêng, không bật đồng loạt
   "snapshotId": "hanoi__airbnb-listing__20261017T101500",

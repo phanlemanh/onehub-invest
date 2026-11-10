@@ -73,7 +73,13 @@ export function albumMetaOf(item) {
   const a = item?.meta?.albumMeta;
   if (!a || typeof a !== "object" || Array.isArray(a)) return null;
   if (typeof a.group_layout_id !== "string" || typeof a.id_in_group !== "string") return null;
-  return a;
+  // chỉ giữ 6 khoá DATA-CONTRACT khai, cùng luật với collector (review 10/11: bản trước chép nguyên object, mang khoá lạ vào stg)
+  const kq = { group_layout_id: a.group_layout_id, id_in_group: a.id_in_group };
+  if (typeof a.total_item_in_group === "number") kq.total_item_in_group = a.total_item_in_group;
+  if (typeof a.is_group_layout === "boolean") kq.is_group_layout = a.is_group_layout;
+  if (typeof a.child_number === "number") kq.child_number = a.child_number;
+  if (typeof a.msg_type === "string") kq.msg_type = a.msg_type;
+  return kq;
 }
 
 // PL1 (claudedp-2310-4 mở lại lần 2): ALLOWLIST nguồn thật thay denylist
