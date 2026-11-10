@@ -1,0 +1,29 @@
+{
+  "feature_plain": "Khi S03 ngừng thu, máy thu tự báo bằng một dòng cảnh báo và một thông báo trên màn hình, thay vì báo «ok» suốt 23 giờ như sự cố 09/11; nó chỉ báo, không tắt gì.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ báo khi trong giờ 7–22 không có bài S03 mới về máy từ 30 phút trở lên; dưới 30 phút thì im."},
+    {"id": "AC-3", "p": "Sẽ báo khi kênh S03 hẹn tự khởi động lại mà sau 2 phút vẫn chưa thấy khởi động — đúng kiểu treo ngày 09/11."},
+    {"id": "AC-4", "p": "Sẽ báo khi kênh S03 mất liên kết tài khoản (trạng thái «not linked»)."},
+    {"id": "AC-6", "p": "Sẽ chỉ cảnh báo, không tắt OpenClaw; khi máy khoẻ thì không có cảnh báo nào và không in lỗi."},
+    {"id": "AC-7", "p": "Sẽ bắt được cả ba dấu hiệu khi dựng lại đúng diễn biến sự cố 09/11."},
+    {"id": "AC-8", "p": "Sẽ giữ nguyên các lớp canh an toàn cũ (chặn trả lời vào nhóm, khoá cấu hình): mọi phép thử cũ vẫn xanh."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG báo vì thiếu bài ngoài giờ 7–22 (ban đêm nhóm vắng, chỉ khoảng 7 bài một giờ)."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG báo lặp mỗi 5 phút cho cùng một sự cố; hồi thì tự xoá, tái phát thì báo lại một lần."},
+    {"id": "OOS-1", "p": "KHÔNG làm ô cảnh báo trên trang Ops và mục tiêu độ tươi S03 — để hàng sau."},
+    {"id": "OOS-2", "p": "KHÔNG sửa lỗi treo tự khởi động lại bên trong OpenClaw — bản này chỉ phát hiện."},
+    {"id": "OOS-3", "p": "KHÔNG tự khôi phục (không tự khởi động lại, không tự sửa, không quét QR)."},
+    {"id": "OOS-4", "p": "KHÔNG gửi cảnh báo ra ngoài máy (tin nhắn, email) — chỉ dòng cảnh báo và thông báo màn hình."},
+    {"id": "OOS-5", "p": "KHÔNG chạy thử trên OpenClaw thật — mọi phép thử chạy trên bản chép với lệnh giả."}
+  ],
+  "scope_plain": "Phần cố ý để ngoài bản này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Ba dấu hiệu ngừng thu, mỗi dấu hiệu một tiêu chí: thiếu bài mới (AC-1), tự khởi động lại treo (AC-3), mất liên kết (AC-4)."},
+    {"i": 1, "p": "Mỗi dấu hiệu thử cả hai chiều: đúng lúc phải báo và đúng lúc phải im."},
+    {"i": 2, "p": "Thử sát ngưỡng: giờ 6/7/21/22/23, thiếu bài 29′59″ và 30′, chờ khởi động 1′59″ và 2′ (AC-1, AC-2, AC-3)."},
+    {"i": 3, "p": "Vòng đời một sự cố: báo lần đầu, không lặp, hồi thì xoá, tái phát báo lại (AC-5)."},
+    {"i": 4, "p": "Không tác dụng phụ: không tắt OpenClaw, không in lỗi, đúng ba thông báo màn hình (AC-6)."},
+    {"i": 5, "p": "Không làm hỏng các lớp canh an toàn cũ (AC-8)."}
+  ]
+}
