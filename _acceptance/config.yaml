@@ -542,6 +542,11 @@ executors:
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
     zc3b_marker_hong: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"   # vòng 2: bản chép + HOME giả + stub, như rotate
+    # canh-bao-s03-ngung-thu (LT0 phần watchdog, claudedp-1011-5) — lớp L6 kiểm sống S03; bản chép + HOME giả + stub (luật 8)
+    s03_song_lib: "WATCHDOG_FILE=scripts/zalo-watchdog.sh node --test scripts/zalo-watchdog-song.test.mjs"   # 7 ca của ZCode, kèm kiểm tĩnh móc L6
+    s03_song_tron: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"   # watchdog trọn vẹn: khoẻ, sự cố 09/11, lặp, hồi, tái phát, đêm
+    s03_song_bien: "node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"   # biên giờ 6/7/21/22, tuổi 1799/1800s, attempt 119/120s
+    s03_song_syntax: "bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"
     # s03-nap-nhanh (1011-3 nấc 1, liên làn làm thay ZCode 10/11) — bản chép tệp bọc nạp S03 trong cây tạm, node/sleep giả
     snn_test: "node --test scripts/s03-nap-nhanh.test.mjs"
     snn_regress: "node --test scripts/*-import-job.test.mjs scripts/*-import-job-lan.test.mjs scripts/enrich-buoc-job.test.mjs scripts/job-exit.test.mjs scripts/nap-argmax.test.mjs scripts/nap-ts-order.test.mjs scripts/s05-khoa-nap.test.mjs"

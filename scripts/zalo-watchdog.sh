@@ -193,6 +193,20 @@ if [ -n "$LAST_SNAP" ]; then
   AGE_H=$(( ( $(date +%s) - LAST_M ) / 3600 ))
   [ "$AGE_H" -ge 24 ] && echo "$(date -Iseconds) WARN: zalo-agent snapshot cũ ${AGE_H}h — collection starved?" >> "$ALERT_LOG"
 fi
+
+# L6 — KIỂM SỐNG S03 (claudedp-1011-5, LT0): sự cố 09/11 provider chết 23
+# giờ mà mọi lớp an toàn trên vẫn «ok» — chúng kiểm an toàn, không kiểm
+# sống. 3 kiểm sống (30′ không snapshot ban ngày 7–22h · auto-restart hẹn
+# mà 2′ không có starting provider · status not linked) cảnh báo KHÔNG kill,
+# mỗi sự cố báo 1 lần rồi tự xoá khi hồi. Xem scripts/lib/s03-song.sh.
+SONG_STATE="$ROOT/pipeline/logs/zalo-watchdog-song-state"
+. "$ROOT/scripts/lib/s03-song.sh"
+SONG_MTIME=$(find "$ROOT"/collector/snapshots -type d -name '*__zalo-agent__*' -exec stat -f '%m' {} + 2>/dev/null | sort -rn | head -1 | tr -d ' ')
+if [ -n "${SONG_MTIME:-}" ]; then
+  song_a_snapshot "$(date +%s)" "$(TZ=Asia/Ho_Chi_Minh date +%H)" "$SONG_MTIME" "$SONG_STATE" "$ALERT_LOG"
+fi
+song_b_restart "$GW_LOG" "$(date +%s)" "$SONG_STATE" "$ALERT_LOG"
+song_c_notlinked "$("$HOME/.openclaw/bin/openclaw" status 2>/dev/null || true)" "$SONG_STATE" "$ALERT_LOG"
 # L1b — port pluginHooks.messageReceived tiền-cổng còn nguyên (thay hot-patch
 # __pregate 22/10 tối; plugin update có thể ghi đè). Marker là tên property
 # sống sót qua minify, không phải tên hàm (hàm bị đổi tên khi bundle).
