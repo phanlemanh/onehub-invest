@@ -129,7 +129,7 @@ async function banSao(sua: (src: string) => string) {
   const src = readFileSync(goc, "utf8")
   const moi = sua(src)
   assert.notEqual(moi, src, "đột biến không áp được")
-  const tep = join(import.meta.dirname, `../src/lib/__ban_sao_tir_${process.pid}_${++soBanSao}.ts`)
+  const tep = join(import.meta.dirname, `../src/lib/.tir-mut-${process.pid}-${++soBanSao}.ts`)
   writeFileSync(tep, moi)
   try {
     return (await import(tep)) as typeof offers
@@ -172,7 +172,9 @@ test("E4 ma trận bộ lọc: mỗi ô một tin vào, một tin loại", async
 })
 
 test("E4 bốn cách sắp đúng thứ tự, tin trùng giá vẫn ổn định", async () => {
-  const gio = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString()
+  // Một mốc cho cả bộ: b và d phải trùng last_seen thật; gọi Date.now() mỗi tin thì máy bận làm hai mốc lệch 1 ms, đảo thứ tự.
+  const bay = Date.now()
+  const gio = (h: number) => new Date(bay - h * 3_600_000).toISOString()
   await nap([
     tin("c", { price_vnd: 3_000_000_000, price_perm2: 20_000_000, last_seen: gio(3) }),
     tin("a", { price_vnd: 1_000_000_000, price_perm2: 40_000_000, last_seen: gio(1) }),
@@ -444,15 +446,60 @@ test("E7 ba tên trải hai trang đều về nhãn; hai tên giữ; rỗng khô
   await kiemNhieuTen(offers)
 })
 
-test("E7 đối chứng: ngưỡng 4 đỏ NHIEU TEN, đếm sau lọc đỏ DEM SAU LOC", async () => {
+test("E7 đối chứng: ngưỡng 4 đỏ NHIEU TEN, đếm sau lọc đỏ DEM SAU LOC, đếm trong trang đỏ NHIEU TEN", async () => {
   await nap(baTen())
   const nguong4 = await banSao((s) => s.replace("HAVING count(DISTINCT seller_name) >= ${OFFER_MANY_NAMES}", "HAVING count(DISTINCT seller_name) >= 4"))
   await assert.rejects(kiemNhieuTen(nguong4), /NHIEU TEN/)
+  // Đếm tên chỉ trong phường đang lọc (lỗi «đếm sau lọc»).
   const sauLoc = await banSao((s) => s.replace(
-    "`${NHIEU_TEN}\n       SELECT ${OFFER_COLUMNS}\n       ${from}",
-    `\`$\{f.wards.length ? NHIEU_TEN.replace("WHERE seller_ref IS NOT NULL", "WHERE area_id = ANY(ARRAY['${P1}']) AND seller_ref IS NOT NULL") : NHIEU_TEN}\n       SELECT $\{OFFER_COLUMNS}\n       $\{from}`,
+    `\${nhieuTen(" AND seller_ref IN (SELECT seller_ref FROM khoa)")}`,
+    `\${nhieuTen(f.wards.length ? " AND area_id = ANY(ARRAY['${P1}']) AND seller_ref IN (SELECT seller_ref FROM khoa)" : " AND seller_ref IN (SELECT seller_ref FROM khoa)")}`,
   ))
   await assert.rejects(kiemNhieuTen(sauLoc), /DEM SAU LOC/)
+  // e4b-danh-sach-tin-nhanh AC-5: đếm tên chỉ trên các tin của trang thay vì mọi tin của tài khoản trên trang.
+  const trongTrang = await banSao((s) => s.replace(
+    `nhieuTen(" AND seller_ref IN (SELECT seller_ref FROM khoa)")`,
+    `nhieuTen(" AND offer_id IN (SELECT offer_id FROM khoa)")`,
+  ))
+  await assert.rejects(kiemNhieuTen(trongTrang), /NHIEU TEN/)
+})
+
+// ---- e4b-danh-sach-tin-nhanh AC-6: tổng đếm đúng cả khi trang rỗng ----
+const namTin = () => [
+  tin("dem-1", { price_vnd: 5_000_000_000, seller_phone: SO_A }),
+  tin("dem-2", { price_vnd: 4_000_000_000, seller_phone: "+84912000002" }),
+  tin("dem-3", { price_vnd: 3_000_000_000 }),
+  tin("dem-4", { price_vnd: 2_500_000_000, area_id: P2 }),
+  tin("dem-5", { price_vnd: 2_100_000_000, area_id: P2 }),
+  tin("dem-an", { price_vnd: 2_000_000_000, source: "S08", seller_phone: "+84912000003" }),
+]
+
+async function kiemTong(m: typeof offers) {
+  const { rows: [doc] } = await admin.query(
+    `SELECT count(*)::int AS total, count(o.seller_phone)::int AS co_so FROM "${S}".sale_offers o JOIN "${S}".areas a ON a.id = o.area_id
+     WHERE o.kind = 'sale' AND o.source NOT IN ('S02', 'S08') AND (a.id = $1 OR a.parent_id = $1)`,
+    [TT],
+  )
+  assert.deepEqual([doc.total, doc.co_so], [5, 2], "fixture: năm tin hiện, hai có số")
+  const ca: [string, Partial<OfferFilters>, number, number, number][] = [
+    ["trang đầu", { limit: 2, offset: 0 }, 2, doc.total, doc.co_so],
+    ["trang cuối một dòng", { limit: 2, offset: 4 }, 1, doc.total, doc.co_so],
+    ["vượt cuối offset 6", { limit: 2, offset: 6 }, 0, doc.total, doc.co_so],
+    ["vượt cuối offset 960", { limit: 2, offset: 960 }, 0, doc.total, doc.co_so],
+    ["lọc rỗng", { priceMin: 9_000_000_000, limit: 2, offset: 0 }, 0, 0, 0],
+  ]
+  for (const [ten, f, soDong, total, withPhone] of ca) {
+    const r = await m.getPublicOffers(TT, locTrang(f))
+    assert.equal(r.rows.length, soDong, `${ten}: số dòng`)
+    if (r.total !== total || r.withPhone !== withPhone) throw new Error(`TOTAL TRANG RONG ${ten}: ${r.total}/${r.withPhone}`)
+  }
+}
+
+test("E4B-AC-6 total, withPhone đúng ở trang đầu, trang cuối, trang vượt cuối, lọc rỗng; bỏ câu đếm dự phòng đỏ TOTAL TRANG RONG", async () => {
+  await nap(namTin())
+  await kiemTong(offers)
+  const boDuPhong = await banSao((s) => s.replace("if (!rows.length && f.offset > 0) {", "if (false) {"))
+  await assert.rejects(kiemTong(boDuPhong), /TOTAL TRANG RONG vượt cuối offset 6/)
 })
 
 // ---- CGB-AC-6 (can-gia-tot-sua-ba-loi): chữ giữ chỗ không hiện như tên ----

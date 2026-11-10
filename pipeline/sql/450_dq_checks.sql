@@ -129,17 +129,23 @@ FROM (
 ) f;
 
 -- Nhãn số chưa xác minh (070, so-ghep-s06-nhan-danh-ba). Đọc qua to_jsonb để DB chưa áp 070 ra skip. Mọi số S06 đều mang nhãn
--- nghĩa là dấu trực tiếp mất hàng loạt (hàm phân xử bị ghi đè chẳng hạn); nguồn khác có nhãn nghĩa là view sai.
+-- nghĩa là dấu trực tiếp mất hàng loạt (hàm phân xử bị ghi đè chẳng hạn); nguồn khác có nhãn nghĩa là view sai — trừ tin mang
+-- dấu số qua người đăng s03-qua-nguoi-dang (079, enrich-nguoi-s03), đếm riêng.
 INSERT INTO dq_check_results (check_name, entity, status, detail)
 SELECT 'so-chua-xac-minh', 'sale_offers',
   CASE WHEN NOT d.co_cot THEN 'skip'
        WHEN d.nguon_khac > 0 OR (d.co_so > 0 AND d.co_so = d.co_nhan) THEN 'fail' ELSE 'pass' END AS status,
-  'S06 có số: ' || d.co_so || ', chưa xác minh: ' || d.co_nhan || ', nguồn khác có nhãn: ' || d.nguon_khac AS detail
+  'S06 có số: ' || d.co_so || ', chưa xác minh: ' || d.co_nhan || ', nguồn khác có nhãn: ' || d.nguon_khac
+    || ', S03 qua người đăng: ' || d.qua_nguoi AS detail
 FROM (
   SELECT coalesce(bool_or(to_jsonb(o) ? 'seller_phone_inferred'), false) AS co_cot,
          count(*) FILTER (WHERE o.source = 'S06' AND o.seller_phone IS NOT NULL) AS co_so,
          count(*) FILTER (WHERE o.source = 'S06' AND to_jsonb(o) ->> 'seller_phone_inferred' = 'true') AS co_nhan,
-         count(*) FILTER (WHERE o.source <> 'S06' AND to_jsonb(o) ->> 'seller_phone_inferred' = 'true') AS nguon_khac
+         count(*) FILTER (WHERE o.source <> 'S06' AND to_jsonb(o) ->> 'seller_phone_inferred' = 'true'
+                            AND NOT (o.source = 'S03'
+                                     AND to_jsonb(o) -> 'field_provenance' -> 'seller_phone' ->> 'rule_id' = 's03-qua-nguoi-dang')) AS nguon_khac,
+         count(*) FILTER (WHERE o.source = 'S03' AND to_jsonb(o) ->> 'seller_phone_inferred' = 'true'
+                            AND to_jsonb(o) -> 'field_provenance' -> 'seller_phone' ->> 'rule_id' = 's03-qua-nguoi-dang') AS qua_nguoi
   FROM sale_offers o
 ) d;
 

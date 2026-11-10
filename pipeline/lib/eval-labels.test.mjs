@@ -7,7 +7,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, phutCong, textHash, thapNhat } from "./eval-labels.mjs";
+import { chonMau, chonMauTheoNhom, chuGatUrl, donViCuaBai, donViTheoNhomThat, khoaNhomThat, khoaTrung, laSuKien, phutCong, textHash, thapNhat } from "./eval-labels.mjs";
+import { normText } from "./norm-text.mjs";
 
 // 30 nội dung khác nhau + 5 bản trùng chữ (khác hoa thường/dấu câu) của 5 tin đầu.
 const POSTS = [
@@ -216,4 +217,64 @@ test("nhom that chiều đỏ: bản khoá nguyên văn, bản gộp quá tay v�
   const boChot = await banDotEvalLabels(moc, 'String(khoa).replace(/^(?:[^:]+:)?group:/, "")');
   assert.throws(() => kiemBangNhomThat(boChot), /NHOM THAT SAI: ô 12 /);
   assert.equal(boChot.donViTheoNhomThat([{ group_key: "k1:group:", unit_code: "A" }, { group_key: "k2:group:", unit_code: "B" }]).gop.length, 1);
+});
+
+// lay-mau-khu-trung-theo-tin AC-1 — ma trận khoá viết trước: mỗi dòng là một cặp bài, cột cuối là cặp khoá mong đợi.
+const TIN_GN2 = new Map([["a3", "zalo_1"], ["a4", "zalo_1"], ["a5", "zalo_2"], ["a6", "zalo_3"], ["a7", "zalo_4"]]);
+const MA_TRAN_KHOA = [
+  ["cùng chữ khác link, chưa thành tin", { post_id: "a1", text: "Bán căn 2PN https://x.y/a.jpg" }, { post_id: "a2", text: "Bán căn 2PN https://x.y/b.jpg" }, ["c:bán căn 2pn", "c:bán căn 2pn"]],
+  ["cùng tin khác chữ", { post_id: "a3", text: "Bán căn 2PN" }, { post_id: "a4", text: "Bán gấp căn 2PN giá mới" }, ["o:zalo_1", "o:zalo_1"]],
+  ["cùng chữ hai tin khác", { post_id: "a5", text: "Cho thuê studio" }, { post_id: "a6", text: "Cho thuê studio" }, ["o:zalo_2", "o:zalo_3"]],
+  ["một bài tin một bài chưa, cùng chữ", { post_id: "a7", text: "Bán shophouse" }, { post_id: "a8", text: "Bán shophouse" }, ["o:zalo_4", "c:bán shophouse"]],
+  ["khác cả hai", { post_id: "a9", text: "Bán đất" }, { post_id: "a10", text: "Cho thuê kho" }, ["c:bán đất", "c:cho thuê kho"]],
+  ["chữ chỉ có URL", { post_id: "a11", text: "https://x.y/a.jpg" }, { post_id: "a12", text: " http://x.y/b.png " }, [null, null]],
+  ["chữ ngắn hai người gửi, chưa thành tin", { post_id: "a13", text: "ib" }, { post_id: "a14", text: "IB!" }, ["c:ib", "c:ib"]],
+];
+const kiemMaTranKhoa = (mod) => MA_TRAN_KHOA.map(([ten, x, y, mong]) => ({ ten, ra: [mod.khoaTrung(x, TIN_GN2), mod.khoaTrung(y, TIN_GN2)], mong }));
+
+test("GN2-AC-1 khoaTrung theo ma trận viết trước, chuGatUrl gạt link", async () => {
+  const kq = kiemMaTranKhoa({ khoaTrung });
+  assert.equal(kq.length, 7);
+  for (const k of kq) assert.deepEqual(k.ra, k.mong, k.ten);
+  assert.equal(chuGatUrl("Bán căn https://x.y/a.jpg 2PN"), normText("Bán căn 2PN"));
+  // Chiều đỏ: mỗi bản đột biến làm đúng một dòng ma trận lệch, thông điệp ghim.
+  const lech = async (a, b, dong) => {
+    const m = await banDotEvalLabels(a, b);
+    const r = kiemMaTranKhoa(m).find((k) => k.ten === dong);
+    return JSON.stringify(r.ra) !== JSON.stringify(r.mong);
+  };
+  assert.ok(await lech("const chu = chuGatUrl(bai.text);", "const chu = textHash(bai.text);", "cùng chữ khác link, chưa thành tin"), "CUNG CHU KHAC LINK BI TACH");
+  assert.ok(await lech("if (tin) return `o:${tin}`;", "", "cùng tin khác chữ"), "CUNG TIN KHAC CHU BI TACH");
+  assert.ok(await lech("if (tin) return `o:${tin}`;", "", "cùng chữ hai tin khác"), "HAI TIN KHAC BI GOP");
+  assert.ok(await lech("return chu ? `c:${chu}` : null;", "return `c:${chu}`;", "chữ chỉ có URL"), "CHU RONG CO KHOA");
+});
+
+// lay-mau-khu-trung-theo-tin AC-3 — sự kiện hệ thống ở cột chữ.
+const BANG_SU_KIEN = [
+  ['[{"clientDelMsgId":"1","globalDelMsgId":"2"}]', true],
+  ['{"catId":10,"id":3,"type":7}', true],
+  ['{"title":"x","href":"https://x.y"}', true],
+  ["[Ở được liền, NT mới] Cho thuê 2PN", false],
+  ["{không đóng", false],
+  ["123", false],
+  ["null", false],
+  ["Bán căn 2PN view hồ", false],
+];
+const MAU_SU_KIEN = [
+  ...Array.from({ length: 6 }, (_, i) => ({ post_id: `s${i}`, text: `Bán căn số ${i}` })),
+  { post_id: "e1", text: BANG_SU_KIEN[0][0] }, { post_id: "e2", text: BANG_SU_KIEN[1][0] },
+  { post_id: "s9", text: BANG_SU_KIEN[3][0] },
+];
+
+test("GN2-AC-3 laSuKien theo bảng viết trước, chonMau gạt sự kiện và đếm bo_su_kien", async () => {
+  assert.deepEqual(BANG_SU_KIEN.map(([t]) => laSuKien(t)), BANG_SU_KIEN.map(([, v]) => v));
+  const r = chonMau(MAU_SU_KIEN, { n: 20, seed: "gn2" });
+  assert.equal(r.bo_su_kien, 2);
+  assert.ok(!r.chon.some((x) => x.ref_id === "e1" || x.ref_id === "e2"));
+  assert.ok(r.chon.some((x) => x.ref_id === "s9"), "bài mở đầu [ không JSON phải được lấy");
+  // Chiều đỏ.
+  const ngoac = await banDotEvalLabels("  if (!/^[[{]/.test(t)) return false;\n  let v;\n  try { v = JSON.parse(t); } catch { return false; }", "  if (!/^[[{]/.test(t)) return false;\n  let v;\n  try { v = JSON.parse(t); } catch { return true; }");
+  assert.notDeepEqual(BANG_SU_KIEN.map(([t]) => ngoac.laSuKien(t)), BANG_SU_KIEN.map(([, v]) => v), "NGOAC VUONG KHONG PHAI SU KIEN");
+  const khongGat = await banDotEvalLabels("    if (laSuKien(p.text)) { boSuKien++; continue; }\n    const khoa", "    const khoa");
+  assert.ok(khongGat.chonMau(MAU_SU_KIEN, { n: 20, seed: "gn2" }).chon.some((x) => x.ref_id === "e1"), "SU KIEN VAO MAU");
 });

@@ -65,8 +65,8 @@ metadata; hai trục địa lý `area` ∥ `asset_nodes`).
 
 ### 4. Địa lý
 
-Phường/xã → **`City`** (địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh) · tỉnh → `StateOrProvince` /
-`CountrySubdivision` (2.1, ISO 3166-2:VN) · `Country = VN` · khu thị trường do mình định nghĩa →
+Phường/xã → **`City`** (địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh) · tỉnh → `StateOrProvince` (ISO 3166-2:VN; sửa 08/11: `CountrySubdivision` chỉ có ở Property và thuộc mã thửa, không dùng cho tỉnh —
+`docs/research/danh-ba-du-an-0811.md` §9.6) · `Country = VN` · khu thị trường do mình định nghĩa →
 `MLSAreaMajor` / `MLSAreaMinor` · toạ độ `Latitude` / `Longitude` + `MapCoordinateSource`.
 
 ### 5. Bản tra chuẩn: DD 2.1

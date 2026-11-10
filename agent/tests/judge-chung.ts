@@ -103,7 +103,7 @@ export const COT_QUERY_PAIR = [
 
 /** Dựng sale_offers trên DB thử theo kiểu cột của oneinvest — thiếu cột nào thì nêu tên. Dùng chung với lô thật. */
 export async function dungSaleOffers(db: pg.Client, ma = "JE-AC-2"): Promise<void> {
-  const goc = new pg.Client({ connectionString: `${PG_SERVER}/oneinvest` });
+  const goc = new pg.Client({ connectionString: process.env.DATABASE_URL ?? `${PG_SERVER}/oneinvest` });
   await goc.connect();
   try {
     const { rows } = await goc.query(

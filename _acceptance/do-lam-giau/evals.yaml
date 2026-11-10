@@ -1,0 +1,91 @@
+schema_version: 1
+feature_slug: do-lam-giau
+# Ca DB chạy trên DB thử của suite (npm test tự dựng qua db/db-thu.sh --chay), số bịa; không gọi model (DO3 không có lời gọi model).
+# Mỗi ca có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/lib/gan-sdt-qua-nguoi.mjs, pipeline/lib/assert.mjs, pipeline/scripts/do-lam-giau.test.mjs, db/migrations/*_lam_giau*]
+    expected: "exit 0; ca 'DO3-AC-1' trên DB thử, giá trị KHÔNG dựng tay mà ghi bằng bên ghi thật: 3 tin S03 nhận số qua người đăng bằng ganSdtQuaNguoi (pipeline/lib/gan-sdt-qua-nguoi.mjs) trên party_contacts thử, 4 phát biểu loai-hinh-nhom ghi bằng writeAssertions (pipeline/lib/assert.mjs) với đúng hằng rule/method của transform-zalo, 2 phát biểu Building area_id registry_inherit; không giá trị nào của dien-tich-suy-ra trên tin → chạy --write ngày D: dq_check_results có đúng 4 dòng do3-thay-doi ngày D, entity đúng bốn khoá đường; so-qua-nguoi-dang song = 3 status 'pass', quy-uoc-nhom song = 4 status 'pass'; dien-tich-suy-ra và danh-muc-cdt status 'skip', detail ly_do 'chua-chay', không có khoá them/doi/may_rut/nguoi_sua; chạy lại ngày D → vẫn 4 dòng của ngày D; bản phá làm song lệch song hôm qua + them − may_rut − nguoi_rut → status 'fail' kèm tên phép soát. Ca 'DO3-AC-1-THAT' (chỉ đọc DB máy thu :5433, bỏ qua trên CI như các ca DB máy thu khác, không ghi): câu đọc giá trị sống của sổ đường trả song so-qua-nguoi-dang > 0 và quy-uoc-nhom > 0, in hai số đếm. Chiều đỏ: ghi số 0 cho đường chưa chạy → 'CHUA CHAY GHI SO 0'; tính phát biểu Building là giá trị trên tin → 'TOA THANH TIN'; chạy lại thêm dòng → 'DONG NGAY LAP'; status fail khi soát khớp → 'FAIL KHONG CO LY DO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/lib/gan-sdt-qua-nguoi.mjs, pipeline/lib/assert.mjs, pipeline/scripts/do-lam-giau.test.mjs, db/migrations/*_lam_giau*]
+    expected: "exit 0; ca 'DO3-AC-2' trên DB thử có migration mới, mọi thay đổi đi qua bên ghi thật (ganSdtQuaNguoi sau khi đổi party_contacts; writeAssertions và rút thay-boi-luot của assert.mjs; hitl-thay bằng đúng lối ghi người của 045): lần 1 → enrichment_value_state có 8 dòng, enrichment_value_change 0 dòng, do3-thay-doi status 'skip' «lập mốc»; sửa dữ liệu: tin A mất số suy (Người hết số), tin B nhận số suy mới, tin C đổi số suy sang số khác, phát biểu P bị rút thay-boi-luot rồi ghi lại cùng giá trị, phát biểu Q đổi loại hình, phát biểu R bị người rút hitl-thay (lượt này chạy với sổ đường thử khai quy-uoc-nhom có lối người rút — sổ thật không có, AC-3), tin E không đổi; lần 2 cùng ngày D → đúng 4 dòng đổi {A may_rut, B them, C doi, Q doi}, 0 dòng cho P và E, R không vào may_rut mà vào nguoi_rut = 1; detail so-qua-nguoi-dang them 1, doi 1, may_rut 1, song 3; lần 3 cùng ngày đổi C về số đầu ngày → dòng của C bị xoá, doi = 0; lần 4 cùng ngày đổi B sang số khác → B vẫn một dòng them (from null, to số mới nhất). Chiều đỏ: sinh dòng cho chủ thể không đổi → 'DOI GIA'; hai dòng một chủ thể một ngày → 'HAI DONG MOT CHU THE'; không xoá khi về giá trị đầu ngày → 'KHONG XOA KHI VE CU'; lần đầu ghi dòng đổi → 'LAP MOC CO DONG'; R vào cả may_rut lẫn nguoi_rut → 'NGUOI RUT DEM HAI LAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/lib/do-lam-giau-db.mjs, pipeline/lib/gan-sdt-qua-nguoi.mjs, pipeline/lib/assert.mjs, pipeline/scripts/do-lam-giau.test.mjs]
+    expected: "exit 0; ca 'DO3-AC-3' trên DB thử, mọi ghi qua bên ghi thật: ghi đè bằng apply_enrichment với người 'hitl:…' (lối người của 045), rút bằng retractRule của assert.mjs với đúng khuôn lý do 045. Quy ước nhóm, sổ thật: ngày D người ghi đè 2 tin mang giá trị nhóm sang loại khác (D1, D2) và 1 tin cùng giá trị (K1); nhãn người ngày D property_type trên 4 bài của tin mang giá trị nhóm (1 khác mã, 3 trùng) và 1 nhãn ngày D-1 khác giá trị; 3 phát biểu nhóm rút 'thay-boi-luot' rồi ghi loại khác (vẫn trên đường) → detail quy-uoc-nhom nguoi_sua 3 (1 nhãn + 2 đè), nguoi_sua_de 2, nhan_da_so 4, duong_nguoi_rut false, không có khoá nguoi_rut, doi 3; đo ngày D+1 trên cùng dữ liệu → nguoi_sua_de 0. Số qua người đăng: nhãn seller_phone trên 3 bài của tin mang số suy (1 khác, 1 trùng viết '0912 345 678' với số suy +84912345678, 1 trùng) → nguoi_sua 1, nhan_da_so 3, duong_nguoi_rut false, không có khoá nguoi_rut lẫn nguoi_sua_de. Sổ đường thử khai quy-uoc-nhom có lối người rút: 2 phát biểu rút 'hitl-thay', 1 rút 'hoan-tac:sai-nhom', 3 rút 'thay-boi-luot' → nguoi_rut 3, may_rut 0; cùng dữ liệu với sổ thật → may_rut 3. Chiều đỏ: đếm đè cùng giá trị → 'DE CUNG GIA TRI'; đếm đè ngày khác → 'DE NGOAI NGAY'; bỏ phần đè → 'BO QUA NGUOI DE'; tính thay-boi-luot là người rút → 'MAY RUT THANH NGUOI'; so số chưa chuẩn hoá E.164 → 'SDT CHUA CHUAN HOA'; ghi nguoi_rut 0 cho đường không có lối người → 'KHONG LOI NGUOI GHI 0'; đếm nhãn ngoài ngày D → 'NHAN NGOAI NGAY'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/lib/lien-lac-nguoi.mjs, pipeline/scripts/do-lam-giau.test.mjs]
+    expected: "exit 0; ca 'DO3-AC-4' ma trận viết trước, hàm thuần + DB thử; số đặt trong CHỮ BÀI của tin (không chỉ ở cột tin) để rutLienLac đọc được từ bài, kỳ vọng theo luật chọn số thật của chonSoNguoi (đúng MỘT số trên tin): 6 Người. N1 có 3 bài, mỗi bài một tin, cùng số X (cộng một tin mang số suy X, không vào tập) → 3 dung. N2 có 3 bài số X2 và 1 bài số Y → tin Y suy lại ra X2: sai 1; mỗi tin X2 bỏ ra còn hai số trên tin (X2, Y) nên chonSoNguoi không chọn: 3 khong_ra. N3 có đúng 1 bài sinh HAI tin cùng số Z → bỏ tin thứ nhất kéo theo bài và tin thứ hai: 2 khong_ra. N4 có 2 bài số W mà người gửi khác cũng đăng W (số chung, bị loại) → 2 khong_ra. N5 có 1 bài số V, một tin → bỏ tin và bài: 1 khong_ra. N6 có 1 bài không số, tin mang số U → 1 khong_ra. Tổng n 13, dung 3, sai 1, khong_ra 9 → detail do3-kiem-nguoc so-qua-nguoi-dang tuần W: tap_do có mặt, n, dung, sai, khong_ra đúng bảng viết trước; ty_le_dung = dung/(dung+sai), wilson khớp hàm tham chiếu đến 4 chữ số, phu = (dung+sai)/n; tuần trước có dòng với tỉ lệ đặt trước → chenh, co_y_nghia, nguong_phat_hien có mặt và khớp; đếm lời gọi model giả = 0. Nhịp tuần: lượt 1 của tuần W ném lỗi sau khi tính (lỗi tiêm) → 0 dòng do3-kiem-nguoc tuần W, giao dịch đã rút; lượt 2 → đúng một dòng; lượt 3 → không thêm dòng, detail không đổi. Chiều đỏ: dùng liên lạc hiện hành (không bỏ ra) → N6 thành dung, đỏ 'KHONG BO MOT RA'; bỏ tin mà giữ bài của nó → N5 thành dung, đỏ 'RO BAI CUA TIN'; bỏ bài mà giữ tin anh em cùng bài → 'RO TIN CUNG BAI'; tính khong_ra vào mẫu số tỉ lệ → 'KHONG RA VAO MAU SO'; ghi lại khi tuần đã có dòng → 'KIEM NGUOC LAP TUAN'; chỉ chạy ở lượt đầu tuần → 'MAT TUAN KHI LUOT DAU LOI'; dùng tin có số suy trong tập → 'SO SUY VAO TAP KIEM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/do-lam-giau.test.mjs]
+    expected: "exit 0; ca 'DO3-AC-5' ma trận viết trước, theo ngưỡng thật của loaiHinhNhom (≥ 20 bài nói rõ loại và ≥ 85% một loại): nhóm G1 có 24 bài chữ 'căn hộ' và 1 bài chữ 'nhà phố' → bỏ một ra: 24 dung, 1 sai; nhóm G2 có đúng 20 bài chữ 'căn hộ' → bỏ một ra còn 19 bài, dưới ngưỡng: 20 khong_ra; 2 bài thử trong G1 không vào tập → detail do3-kiem-nguoc quy-uoc-nhom: n 45, dung 24, sai 1, khong_ra 20, Wilson khớp hàm tham chiếu; dự đoán gọi đúng loaiHinhNhom và docLoaiHinh export từ transform-zalo.mjs (không bản chép). Sổ đường có một đường đang chạy không có hàm kiểm ngược (đường giả trong ca) → dòng skip «chưa có kiểm ngược». Chiều đỏ: không bỏ bài ra → G2 thành 20 dung, đỏ 'KHONG BO MOT RA'; giữ bài thử → 'BAI THU VAO TAP'; đường không hàm ghi số 0 → 'CHUA KIEM GHI SO 0'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/do-lam-giau.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/do-hang-ngay.mjs, pipeline/scripts/do-lam-giau.test.mjs]
+    expected: "exit 0; ca 'DO3-AC-6' ma trận viết trước: tin mang giá trị ở 2 thị trường, 35 phường (số tin 35..1), 3 tin không area_id, 2 tin có block_raw 'S8.02' chưa liên kết toà, 2 dự án → chiều thi_truong 2 ô + khong-tin-hieu 3; phường 30 ô lớn nhất + khac (gộp 5 ô nhỏ) + khong-tin-hieu; toà: chua-co-danh-ba 2 tách khỏi khong-tin-hieu; với mọi nhóm số của detail thật sinh từ hàm ghi (do3-thay-doi các khoá them/doi/may_rut/song và do3-kiem-nguoc dung/sai/khong_ra) và mọi chiều, tổng các ô = tổng chung; phân rã dùng KHOA_LAT_DON_VI và phanRa của DO1 (import, không bản chép). Chiều đỏ: gộp hai ô chưa gắn → 'GOP HAI O CHUA GAN'; cắt 30 ô không gộp khac → 'TONG LAT LECH'; bỏ chiều thị trường → 'THIEU THI TRUONG'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**, app/src/lib/ops/quality*, app/src/lib/dq-labels.ts, app/tests/do-lam-giau.test.tsx]
+    expected: "exit 0; ca 'DO3-AC-7' (jsdom; dòng do3-* KHÔNG dựng tay mà ghi bằng hàm ghi của pipeline/do-lam-giau.mjs trên lược đồ tạm, rồi đọc bằng loader thật của khối): khối 'Làm giàu' có một dòng mỗi đường; so-qua-nguoi-dang hiện thêm/đổi/máy rút hôm nay và 7 ngày, ô người rút chữ 'không có đường người rút'; dien-tich-suy-ra hiện 'Chưa chạy'; kiểm ngược tuần này/tuần trước có tỉ lệ đúng, cận dưới Wilson, n, dấu 'chênh có ý nghĩa' ở ca đặt trước; n < 5 hiện 'ít mẫu'; ?lat-do=phuong đổi bảng sang phân rã phường; không có dòng → chữ trống kèm 'node pipeline/do-lam-giau.mjs --write'; lập mốc → 'đã lập mốc'; loader ném lỗi → Alert + nút 'Thử lại', phần khác của trang vẫn render; bảng 'Kiểm chất lượng' chung không có dòng do3-*; dq-labels có nhãn cho do3-thay-doi và do3-kiem-nguoc. Chiều đỏ: hiện 0 cho đường chưa chạy → 'CHUA CHAY HIEN 0'; hiện 0 cho người rút khi không có lối → 'KHONG LOI HIEN 0'; bảng chung còn do3-* → 'LAP DONG DO3'; thiếu nhãn → 'THIEU NHAN DQ'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    target: "http://localhost:3463/ops/quality"
+    paths: [app/src/app/ops/quality/**, app/src/components/ops/quality/**]
+    steps:
+      - "Bản chạy: dev server :3463 nối DB thử oneinvest_p2_do3 (cấu hình preview của worktree; dữ liệu dựng bằng pipeline/scripts/do3-dung-thu.mjs — số bịa, không tin thật). Phiên Ops đã đăng nhập sẵn trong trình duyệt ego lite — mở trang bằng ego-browser, không đăng nhập lại, không dùng trình duyệt khác. KHÔNG tạo hay sửa tài khoản."
+      - "/ops/quality ở 1280 px sáng: cuộn tới khối «Làm giàu», chụp → evidence/E8-step1.png"
+      - "Bấm thẻ lát «Phường/xã» → evidence/E8-step2.png; ghi URL (có ?lat-do=phuong)"
+      - "Cùng khối 1280 px tối (prefers-color-scheme: dark) → evidence/E8-step3.png"
+      - "Khổ 375 px sáng → evidence/E8-step4.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Thấy khối 'Làm giàu' dưới 'Đo hằng ngày': mỗi đường một dòng (số qua người đăng, quy ước nhóm có số; diện tích suy ra, danh mục CĐT hiện 'Chưa chạy'), cột thêm/đổi/máy rút/người sửa/người rút, ô 'không có đường người rút' ở số qua người đăng; bảng kiểm ngược tuần này/tuần trước có tỉ lệ đúng và cận dưới Wilson; lát Phường/xã đổi bảng và URL có ?lat-do=phuong; chế độ tối đọc được, không chữ chìm; 375 px không cuộn ngang trang (scrollWidth = clientWidth), bảng cuộn trong khung."
+    evidence_required: [screenshot, observed, verified_at]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/do-lam-giau.mjs, pipeline/lib/do-lam-giau.mjs, pipeline/lib/do-hang-ngay.mjs, pipeline/sync-cloud.mjs, pipeline/scripts/do-lam-giau.test.mjs]
+    expected: "exit 0; ca 'DO3-AC-8' trên DB thử: tin mang số suy +84912345678 (băm h1), người đăng tên 'Nguyễn Văn Hiếu', source_registry real_name đặt một tên thật giả, bài chứa tên đó → detail mọi dòng do3-* không chứa '912345678', 'h1', 'Hiếu', tên thật giả, labeler_id của nhãn; FILL của sync-cloud.mjs không có enrichment_value_state, enrichment_value_change; bộ chặn rò là hàm dùng chung của DO1 (import). Đối chứng dương: bản phá đưa băm số vào ô lát → lệnh dừng, không ghi dòng nào, log 'LO DO3'; source_registry rỗng → dừng, không ghi. Chiều đỏ: thêm bảng ảnh chụp vào FILL → 'ANH CHUP LEN CLOUD'; bỏ chặn rò → 'LO DO3'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.job_exit
+    layer: backend-effect
+    paths: [scripts/cloud-sync.sh, scripts/job-exit.test.mjs, scripts/lib/job-step.sh]
+    expected: "exit 0; ca 'DO3 cloud-sync' của scripts/job-exit.test.mjs: dãy bước của cloud-sync.sh khớp danh sách trong test với do-lam-giau đứng ngay sau do-hang-ngay; FAIL_STEPS=do-lam-giau → job ≠ 0, đúng một dòng 'JOB FAIL [cloud-sync] bước do-lam-giau mã <n>', mọi bước khác vẫn chạy; không có FAIL_STEPS → 0. Chiều đỏ: đặt do-lam-giau trước do-hang-ngay → test dãy bước đỏ; bỏ bước khỏi danh sách test → test đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

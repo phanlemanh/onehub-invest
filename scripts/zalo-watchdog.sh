@@ -27,6 +27,11 @@ mkdir -p "$ROOT/pipeline/logs"
 alert() {
   local reason="$1"
   echo "$(date -Iseconds) KILL: $reason" >> "$ALERT_LOG"
+  # S4 lượt 3 (3): bộ canh ghi sự kiện 'bo-canh' vào tệp sự kiện chung của bộ
+  # tra — thư mục đọc THEO ENV GATEWAY (một nguồn, kể cả khi plist watchdog
+  # không khai riêng) qua lib/bo-canh-su-kien.sh.
+  . "$ROOT/scripts/lib/bo-canh-su-kien.sh"
+  ghi_bo_canh "$(doc_s03_lookup_dir)" 
   # tắt hẳn service để launchd không hồi sinh
   launchctl bootout "gui/$(id -u)/ai.openclaw.gateway" 2>/dev/null || true
   pkill -9 -f openclaw 2>/dev/null || true

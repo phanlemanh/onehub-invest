@@ -100,6 +100,13 @@
       "tokensUsed": []
     },
     {
+      "name": "@reui/c-dialog-9",
+      "category": "template",
+      "description": "examples/c-dialog-9.tsx → ops/review/`review-phim-tat.tsx`",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
       "name": "@reui/c-empty-11",
       "category": "template",
       "description": "examples/c-empty-11.tsx → saved/saved-empty.tsx",
@@ -243,6 +250,13 @@
       "name": "@reui/solution-agents-5",
       "category": "template",
       "description": "blocks/solution-agents-5/ → ops/review/ (`review-queue.tsx`, `review-detail-sheet.tsx`, `review-badges.tsx`, `review-queue-skeleton.tsx`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-agents-9",
+      "category": "template",
+      "description": "blocks/solution-agents-9/ → ops/review/`review-hop-hang-muc.tsx`",
       "markup": "",
       "tokensUsed": []
     },
@@ -575,6 +589,12 @@
         "variant=ghost",
         "variant=inverse"
       ]
+    },
+    {
+      "name": "reui/icon-stack",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
     },
     {
       "name": "reui/icon-tile",

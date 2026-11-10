@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: dau-luoc-do-ban-mau
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-1» trên Postgres thật (lược đồ mẫu có PostGIS và một CHECK NOT VALID): thêm CHECK, đổi biểu thức CHECK, thêm FOREIGN KEY, thêm UNIQUE, xoá PRIMARY KEY, VALIDATE constraint NOT VALID có sẵn, thêm CHECK cho domain — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Ca VALIDATE bắt qua chữ NOT VALID của pg_get_constraintdef. Chiều đỏ ở DL-AC-9: câu dấu cũ sót các ca này đúng như cột kỳ vọng, thông điệp ghim «câu dấu bỏ sót: <ca>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-2»: thêm index, xoá index, đổi cột index, đổi điều kiện index một phần, index thường thành UNIQUE, index trên materialized view — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Chiều đỏ: câu dấu cũ sót các ca này đúng như cột kỳ vọng (DL-AC-9)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-3»: thêm trigger, xoá trigger, BEFORE thành AFTER, đổi sự kiện, DISABLE TRIGGER — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Chiều đỏ: bản đột biến bỏ tgenabled làm ca DISABLE TRIGGER đỏ (DL-AC-9)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-4»: ADD VALUE ở cuối, ADD VALUE BEFORE giá trị có sẵn, RENAME VALUE, kiểu enum mới — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Chiều đỏ: câu dấu cũ sót các ca này (DL-AC-9)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-5»: varchar(10)→varchar(20), numeric(10,2)→numeric(12,2), integer→bigint, geometry(Point,4326)→geometry(Point,3857), đổi collation cột, SET NOT NULL, DROP NOT NULL, SET DEFAULT, đổi DEFAULT, thêm cột generated, thêm overload hàm cùng thân, thêm cột, đổi định nghĩa view, đổi thân hàm — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Câu cũ kỳ vọng từng ca theo cột của ma trận (DL-AC-9)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-6»: thêm cột vào bảng của schema sync_stage, tạo bảng trong schema mới không đuôi số, ENABLE ROW LEVEL SECURITY, CREATE POLICY, REVOKE trên bảng, GRANT trên bảng, CREATE EXTENSION pgcrypto, CREATE DOMAIN, đổi thuộc tính kiểu composite, ALTER SEQUENCE INCREMENT — mỗi ca đo ba điểm: dấu trước ca bằng dấu gốc, sau ca khác dấu gốc, sau ROLLBACK bằng dấu gốc; số ca chạy bằng số phần tử ma trận. Câu cũ kỳ vọng từng ca theo cột của ma trận (DL-AC-9)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-7»: INSERT, UPDATE, DELETE, ANALYZE, VACUUM, nextval, tạo bảng trong schema rac_12345, xoá schema đó, tính dấu hai lần — dấu bằng dấu gốc ở mọi ca. Đối chứng dương cùng lược đồ: tạo bảng trong schema rac_moi (không đuôi số) thì dấu đổi; thông điệp ghim «dấu đổi vì sự kiện không phải lược đồ: <ca>»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tsdt_mot
+    paths: [db/db-thu.sh, db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-8» trên docker giả: dòng đối số của lời gọi docker exec tính dấu chứa «-e PGOPTIONS=-c default_transaction_read_only=on» (đọc từ argv docker ghi lại, không từ env), câu truyền vào bằng nội dung db/dau-luoc-do.sql; --dau in đúng dòng docker giả trả, không createdb, không pg_dump; db-thu.sh không còn câu SELECT md5 viết trong nó. Các ca DT-AC-1, DT-AC-2, DT-AC-3 cũ cùng tệp vẫn xanh. Chiều đỏ: bản chép script bỏ cờ -e PGOPTIONS thì ca đỏ, thông điệp ghim «dấu không chạy chỉ đọc»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.dau_luoc_do_chung
+    layer: backend-effect
+    paths: [db/db-thu.sh, db/dau-luoc-do.sql, _acceptance/dau-luoc-do-ban-mau/probes/dau-chung.mjs]
+    expected: "exit 0, in JSON {chi_doc, dau1, dau2, ms1, ms2}: chi_doc = on đọc qua chính lời gọi --dau trên DB chung thật :5433, dau1 khớp ^[0-9a-f]{32}$, dau1 = dau2, ms1 và ms2 dưới 3000. Đối chứng cùng thước: bản chép script trong thư mục tạm bỏ cờ -e PGOPTIONS thì chi_doc = off và probe in «đối chứng: không chỉ đọc khi bỏ cờ»; đối chứng không ra off thì thoát 3 «thước hỏng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.dau_luoc_do
+    paths: [db/dau-luoc-do.sql, scripts/db-thu.test.mjs]
+    expected: "exit 0; ca «DL-AC-9»: mỗi phần tử ma trận khai «câu cũ: bắt» hay «câu cũ: sót» trước khi chạy; câu dấu cũ (bản trước vòng, chép trong test) chạy cùng ma trận khớp đúng từng ô, số assert bằng số phần tử; bản đột biến bỏ tgenabled chỉ làm ca DISABLE TRIGGER sai, bỏ typmod của format_type chỉ làm ba ca varchar, numeric, SRID sai; mọi kết nối của test có database là postgres hoặc oneinvest_suite_dau_<pid>; sau khi xong pg_database không còn oneinvest_suite_dau_<pid>. Không nối được server: CI=true thì đỏ, máy thì ca bỏ qua với lý do «không có Postgres :5433»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

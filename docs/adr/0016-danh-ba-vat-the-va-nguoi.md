@@ -1,7 +1,7 @@
 # ADR-0016: Danh bạ vật thể và người — căn là nút vật thể, listing gắn ở mức sâu nhất biết được
 
 Ngày: 2026-10-27 · Trạng thái: **accepted** (Mạnh duyệt 27/10: «Duyệt khung đã sửa ba điểm, theo các mặc định của em»)
-· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
+· Sửa đổi 03/11: §9 (điều kiện ra khỏi máy thu) · Sửa đổi 08/11: §9 (thông tin dự án công khai) · Sửa đổi 06/11: §8 (liên lạc của Người) · Sửa đổi: ADR-0013 §1 (lớp căn), §3 (UPI), §9 (sổ extension) · Liên quan: ADR-0007 (SPL), ADR-0011 (RESO-first),
 `docs/product/FRAMING.md`, `CONTEXT.md`, ROADMAP §3 mục 22
 
 > Câu hỏi của Mạnh (27/10): «Mô hình của chúng ta là một bất động sản duy nhất và nhiều listing. Có nên tạo một bảng
@@ -82,7 +82,9 @@ và phát biểu theo vật thể.
   `field_assertions` (mở `resource_name` thêm `Parcel` · `Building` · `Stack` · `Unit` · người); bộ phân xử dựng cột
   chuẩn — câu 4 ADR-0013 áp cho vật thể như cho tin.
 - Tên bảng dự kiến: `parcels`, `buildings`, `stacks`, `units`, `parties` (+ `party_roles`), `registry_aliases`,
-  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` chuyển sang `buildings`.
+  `registry_events` — hàng code chốt cùng migration. 3 dòng `asset_nodes.node_type = building` là **phân khu**
+  (`dd_field = ComplexName` của Grand Park), không phải toà: ở lại họ Vùng, toà của chúng trỏ cha vùng là phân khu (sửa
+  07/11, Mạnh duyệt Hỏi-1 của DB1 `danh-ba-toa-truc-can`; trước đó câu này ghi «chuyển sang `buildings`»).
 
 ### 4. UPI (sửa ADR-0013 §3)
 
@@ -105,7 +107,7 @@ và phát biểu theo vật thể.
 
 ### 6. Dựng vật thể
 
-- **Chung cư**: toà, trục, căn từ danh mục (S08 nội bộ — PL10 đã ký, ZC8 nạp) + phát biểu toà / mã căn từ tin (PL13).
+- **Chung cư**: toà, trục, căn từ danh mục (S08 — PL10 đã ký, ZC8 nạp; công khai từ 08/11, §9) + phát biểu toà / mã căn từ tin (PL13).
 - **Nhà phố, đất**: mỗi listing sinh **một vật thể tạm** (`pending`); chỉ gộp khi có bằng chứng: đăng lại cùng tài khoản +
   cùng diện tích + cùng phường, ảnh trùng (G-2.5), hoặc người duyệt «Cùng căn». **Toạ độ chỉ là tín hiệu phụ** (số đo:
   53% tin S06 nằm ở điểm chung). Số «căn» nhà phố lúc đầu ≈ số tin, giảm dần theo bằng chứng.
@@ -137,6 +139,12 @@ và phát biểu theo vật thể.
 - Chủ đầu tư trước mắt là `Building.BuilderName`; thành `parties` khi cần thực thể tổ chức.
 - **Không vào danh bạ Người**: người dùng app (tầng A) và tài khoản thu của mình (tầng A).
 - Gộp người liên nguồn chưa làm (0 tin S06 có SĐT); khi làm, hồ sơ đã gộp chỉ hiện ở `/ops`.
+- **Sửa đổi 06/11 (enrich-nguoi-s03, Mạnh duyệt Cổng Phạm vi 06/11)**: **liên lạc** của Người là phát biểu, không phải bí danh. Bí danh
+  (`registry_aliases`) là khoá định danh — một giá trị thuộc đúng một Người, hai Người cùng giá trị là một lần gộp (HD13). Số liên lạc khác
+  nghĩa: số sàn dùng chung liên lạc được nhiều Người mà không làm họ thành một. Liên lạc ở bảng chỉ-thêm `party_contacts` (079: `kind`
+  `sdt` · `chat_profile`, lớp bằng chứng, luật `so_tren_tin` · `so_trong_bai`, rút có lý do); số thấy ở nhiều người gửi không thành liên lạc của
+  ai. Tin không số nhận số qua người đăng bằng cơ chế số ghép S06 (dấu `s03-qua-nguoi-dang`, nhãn «Chưa xác minh»); số suy không bao giờ
+  quay lại làm bằng chứng (§7 điểm 3 áp cho Người).
 
 ### 9. SPL và S08
 
@@ -146,6 +154,11 @@ và phát biểu theo vật thể.
   **hoặc có ≥ 1 xác nhận của người** (Mạnh duyệt sửa đổi 03/11, ROADMAP §3 mục 28). Giá trị kế thừa có nguồn duy nhất S08 chỉ để bắt mâu
   thuẫn và hiện ở `/ops`, **không hiện trên Invest** khi chưa có nguồn khác xác nhận. Tên toà/trục được lên (tin cũng nói
   tới); bí danh mã căn S08 ở local.
+- **Sửa đổi 08/11 (Mạnh chốt «cứ bỏ các luật nội bộ», ROADMAP §3 mục 38)**: thông tin dự án do chủ đầu tư hay nhà nước công bố
+  là công khai. Vật thể và giá trị dựng từ danh mục S07, S08, S09 (dự án, phân khu, toà, trục, căn, chủ đầu tư, pháp lý, bàn giao)
+  **được lên cloud và Invest**, kể cả khi chưa có tin trỏ vào; hai gạch trên về «ở lại máy local» và «không hiện trên Invest» hết
+  hiệu lực cho loại dữ liệu này. Giá chủ đầu tư và trạng thái quỹ căn S08 cũng công khai (Mạnh «Có, công khai»). Câu 11 đọc lại: chỉ vai suy
+  luận và hồ sơ người đã gộp ở lại `/ops`. Mâu thuẫn tin ↔ danh mục vẫn lên thẻ (§7.4). Căn cứ: `docs/research/danh-ba-du-an-0811.md` §3.1.
 - ZCode và DATA-CONTRACT không đổi: danh bạ nằm sau `stg_*`.
 
 ### 10. Phân kỳ và thứ tự (luật 11: chỉ dựng cấp có dữ liệu lấp)
@@ -165,9 +178,12 @@ hàng do phiên giám sát cắt vào `docs/plan/lo-trinh.json` (cat-luot); migr
 
 | Extension | Vì sao DD không đủ |
 |---|---|
-| resource `Parcel`, `Unit` (local) | DD 2.1 chỉ có field `ParcelNumber`, `UnitNumber`/SubId trên tin; không resource bền cho thửa, căn |
+| resource `Parcel`, `Stack`, `Unit` (local) | DD 2.1 chỉ có field `ParcelNumber`, `UnitNumber`/SubId trên tin; không resource bền cho thửa, trục, căn (`Stack` cũng là extension ở ADR-0013 §9) |
 | `ObjectStatus` (active · merged · split · retired) + sự kiện gộp/tách | DD không có vòng đời định danh vật thể |
 | phương pháp `registry_inherit` | phát biểu kế thừa từ danh bạ (§7) |
+| bậc dòng danh mục `catalog_tier` (xác minh · suy ra mạnh · một lời khai) | DD không có độ tin của danh mục vật thể (review phân loại F2); thêm ở DB1, 082 |
+| loại bí danh `ma_nguon` (mã toà, trục, căn tại nguồn, giá trị `<phạm vi>/<mã>`) | DD 2.1 `UnitNumber` chỉ là field trên tin, không định danh vật thể bền; thêm ở DB1, 082 |
+| trường `area_id` của `Building` (phường/xã, suy từ vùng) | DD 2.1 không có cấp phường/xã cho Building; thêm ở DB1, 082 (`BuilderName` là field DD 2.1 của Building, không phải extension) |
 | vai trò «người đăng», «tự nhận chính chủ» | DD chỉ có vai môi giới/sàn (`ListAgentKey`…), không có người đăng không phải môi giới |
 
 Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migration của nó.
@@ -177,7 +193,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 9. **Gắn ở mức nào?** Listing gắn vật thể ở mức sâu nhất có bằng chứng; không đoán tầng, không gắn theo toạ độ đơn thuần.
 10. **Kế thừa có tự nuôi không?** Phát biểu `registry_inherit` không quay về làm bằng chứng cho vật thể; trường thuộc listing
     không kế thừa từ vật thể.
-11. **Được lên đâu?** Vật thể/giá trị chỉ từ S08 không lên Invest; vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`.
+11. **Được lên đâu?** Vai suy luận và hồ sơ người đã gộp chỉ ở `/ops`. (Vế cũ «vật thể/giá trị chỉ từ S08 không lên Invest» bỏ từ 08/11, §9.)
 
 ## Hệ quả
 
@@ -185,7 +201,7 @@ Mỗi extension khai đủ sáu điều kiện ADR-0011 Qđ 3 trong PR có migra
 - `CONTEXT.md`: thêm Thửa, Căn, Danh bạ, Vai trò; sửa Căn nhà, Tòa nhà, Người bán (cùng PR này).
 - ROADMAP §3 mục 22; §5 chỉ mục ADR.
 - Hàng code (T3): migration bảng danh bạ + mở ràng buộc `field_assertions` (`resource_name`, `method`, `field`);
-  resolver mới thay `resolve-properties.mjs`; `sync-cloud` lọc vật thể chỉ-S08; bảng `sellers` cũ (19 dòng local) được
+  resolver mới thay `resolve-properties.mjs`; `sync-cloud` đẩy bảng danh bạ (bỏ lọc vật thể chỉ-S08 từ 08/11, §9); bảng `sellers` cũ (19 dòng local) được
   `parties` thay.
 - Con số «~19% căn là mảnh vỡ do khoá» trong thảo luận 27/10 **bị rút**: bỏ giá khỏi khoá vừa gộp đúng mảnh vỡ vừa gộp
   nhầm nhà khác nhau ở cùng điểm toạ độ.

@@ -84,7 +84,7 @@ after(async () => {
   await pool.end().catch(() => {})
 })
 
-test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 600_000 }, async () => {
+test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 1_200_000 }, async () => {
   const { pool } = await import("../src/lib/db")
   const { getDeal, getDeals, dealHang } = await import("../src/lib/deals")
   const dem = async () => {

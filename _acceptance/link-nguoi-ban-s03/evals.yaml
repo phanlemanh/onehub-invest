@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: link-nguoi-ban-s03
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.lnb_tra
+    expected: "exit 0; API giả dựng theo getUserInfo.d.ts thật (khoá có _0, nhóm changed và unchanged, một hồ sơ có userId khác khoá); spy trên login, loginQR, tạo client và trên hàm bọc tự đăng nhập; mọi lời gọi lấy API của bộ nghe tin đang nối; mỗi lời ≤ 20 mã; ca 21 mã ra 2 lời cách ≥ 60 giây; mốc lời cuối đọc lại từ đĩa sau khi khởi động lại bộ nghe tin giả hai lần, vẫn đúng 1 vòng hẹn giờ; lời thứ 31 trong ngày và lời ngoài 01:00–05:00 bằng 0; ghép theo userId, bốn loại kết quả đúng; hằng trần trong mã ≥ sàn hợp đồng; đường khởi động thật: áp extension.patch bằng git apply thật lên base đã vá mã album, Provider giả khởi động hai lần → bộ tra được khởi đúng một lần qua đường khởi động của Provider (không gọi chayVong hay hàm khởi trực tiếp trong ca này), vẫn đúng 1 vòng hẹn giờ; should-NOT-fire: không có bộ nghe tin đang nối, bộ nhớ đệm API trống, không có tệp yêu cầu, tệp rỗng, tệp sai khuôn đều cho 0 lời gọi, 0 lần đăng nhập, băm tệp phiên không đổi; không phiên thì có tệp chặn khong-co-phien"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.lnb_dung
+    expected: "exit 0; năm ca lỗi ném theo dạng thư viện (error_code máy chủ, HTTP 401, 429, giới hạn tần suất, lỗi lạ) đều dừng sau đúng lời gây lỗi, 0 thử lại; ca promise không bao giờ xong có tệp chặn trong 15 giây + ε, 0 lời kế, 0 dòng từ lời treo khi nó trả muộn; bộ nghe tin giả phát closed 10 giây sau lời 1 thì lời 2 bằng 0, có tệp chặn listener-dong-sau-goi và in dung-goi-Manh; tệp chặn chỉ chứa mã lý do liệt kê, không chứa chuỗi đánh dấu của error_message; tệp chặn còn thì 0 lời; xoá thì chạy lại được; bộ nghe tin giả không bị đóng, handler giả vẫn nhận tin sau lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.lnb_thu
+    expected: "exit 0; mặc định là thử: đúng 1 lời, ≤ 20 mã cộng 2 mã đối chứng, có dấu đã thử; chạy lần hai khi dấu còn cho 0 lời; đầu ra chỉ có số đếm bốn loại và kết quả đối chứng, quét không có username hay chuỗi đánh dấu; đối chứng khong-tim-thay hoặc userId lệch thì có tệp chặn khac-khong-gian-ma; should-NOT-fire: không có tệp điều khiển hoặc giá trị sai khuôn thì không vào lượt lớn; lượt lớn xử mỗi tệp yêu cầu một lần (tệp đổi tên đã xử, nhịp sau 0 lời) và giữ trần của E1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.lnb_ranh_gioi
+    expected: "exit 0; diff extension so với base đã vá mã album chỉ thêm một lời gọi API mới getUserInfo; bộ tra không tham chiếu hàm bọc tự đăng nhập; chạy API giả có bẫy: 0 lời login, loginQR, tạo client, send*, addReaction, sendTypingEvent, sendSeenEvent, sendDeliveredEvent, friend ngoài getUserInfo, getAllFriends, requestOldMessages; 0 listen, createServer, route HTTP mới; băm cấu hình OpenClaw trên bản chép không đổi; marker bộ canh còn trong monitor build ra; monitor build ra từ base + extension.patch (git apply thật) có đúng một lời GỌI khoiDongTuEnv nằm trong đường khởi động Provider (đếm lời gọi trên AST hoặc bằng spy khi Provider giả khởi động, không dò chữ), câu import nằm ở khối import đầu tệp, khối diff của monitor có đủ dòng ngữ cảnh (không sinh bằng -U0); đối tượng kết quả trong bộ nhớ sau khi nhận chỉ có userId, username"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.lnb_api
+    expected: "exit 0; API collector thật trong HOME giả nhận lô thành snapshot S03 loại hồ sơ bằng SnapshotWriter thật, tệp cũ không đổi băm; mỗi dòng đủ bốn trường; chuỗi đánh dấu nhét vào tên, SĐT, ảnh, ngày sinh, error_message và giá trị dạng cookie xuất hiện 0 lần trong snapshot, spool, tệp chặn, log gateway thử, evidence; DATA-CONTRACT có loại item mới, schemaVersion S03 là số sau ma-album-s03, kênh khác giữ số; bộ nạp nhận cả hai thứ tự gộp; should-NOT-fire: collector giả từ chối thì lô vào spool, số dòng spool bằng số mã"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.lnb_db
+    layer: backend-effect
+    expected: "exit 0 trên DB thử; 080 chạy hai lần không lỗi; bảng stg hồ sơ có; party_contacts nhận rule_id mới, rule_id lạ bị từ chối; bộ nạp trên snapshot do E5 sinh giữ dòng mới nhất mỗi mã, chạy lại thêm 0; chuỗi nạp khi thiếu 080 (in CHUA-AP-080, thoát 0, snapshot tin S03 cùng lượt nạp đủ, snapshot hồ sơ không bị đánh dấu) rồi áp 080, nạp lại thì đủ dòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.lnb_lien_lac
+    layer: backend-effect
+    expected: "exit 0 trên DB thử có 079, 080; có username và userId khớp mã bí danh → một liên lạc chat_profile, rule_id s03_ho_so_theo_tai_khoan, giá trị username trần, lớp fact, source_field, bằng chứng có mã và thời điểm; Người đã gộp → ghi vào Người đích một bước; chạy lại 0 mới; username đổi → rút cũ cùng rule_id lý do doi-username, thêm mới; lần sau khong-username hoặc khong-tim-thay → rút lý do bo-username; liên lạc hitl khác rule_id của cùng Người không đổi; should-NOT-fire: userId lệch mã, không khớp Người, khong-ro đều 0 dòng và có trong số đếm; thiếu 079 hoặc 080 in CHUA-AP-079 hoặc CHUA-AP-080, thoát 0; trước và sau: số bí danh, số Người, liên lạc sdt, băm sale_offers không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.lnb_chon
+    expected: "exit 0 trên DB thử; chọn đúng tài khoản đã đăng tin, mọi tin không có seller_phone, Người không có liên lạc sdt kể cả qua Người theo SĐT đã nối, chưa tra trong 30 ngày tính cả snapshot hồ sơ chưa nạp; lượt thử 20 mã, mỗi mã từ 3 tin; should-NOT-fire: tài khoản có một tin mang số, Người có sdt qua HD13, mã có tiền tố hay hậu tố, mã tra 29 ngày trước, mã chỉ trong snapshot chưa nạp, mã chỉ có trong thành viên nhóm hay chỉ bình luận đều không được chọn; mã tra 31 ngày trước được chọn lại; tệp yêu cầu nằm ngoài cấu hình OpenClaw và ngoài snapshots/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.lnb_tien_kiem
+    expected: "exit 0; tiền kiểm của ma-album-s03 cộng ba điều mới: bản đúng qua; ba ca hỏng (có tệp yêu cầu, có tệp điều khiển lượt lớn, lời gọi mới ngoài getUserInfo) đều thoát khác 0 và in không được khởi động lại; lệnh đo trước-sau in đủ dòng đóng bộ nghe tin, PID, post 202 trong 30 phút; phán lùi trả dung-goi-Manh khi bộ nghe tin đóng 20 giây sau lời gọi (kể cả dạng giống 26/10); should-NOT-fire: log không có lời gọi thì dạng 26/10 vẫn không lùi; lượt 3 lời, đặt tệp chặn sau lời 1 thì lời 2, 3 bằng 0; ca riêng xoá tệp yêu cầu sau lời 1 cũng vậy; không có lệnh khởi động lại nào trong đường tắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.lnb_ten_nguon
+    expected: "exit 0; danh sách tên thật và tên miền đọc từ source_registry local, không in ra; quét mọi tệp đổi so với base cộng 079, 080, .patch, _acceptance/link-nguoi-ban-s03/**: 0 lần xuất hiện mới, kể cả dạng tách chuỗi hay nối chuỗi; không có mẫu link trong kho; đối chứng: chèn một tên miền thử vào tệp tạm thì phép quét đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11a
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.lnb_tai_lieu
+    expected: "exit 0; runtime-map và runbook-openclaw-hook có mục bộ tra hồ sơ với con số trần và các mã tệp chặn; mappings.yaml khai rule_id mới; CONTEXT.md có thuật ngữ username người bán"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11b
+    criterion: AC-11
+    executor: judgment
+    inputs: [docs/ops/runtime-map.md, docs/ops/runbook-openclaw-hook.md, pipeline/mappings.yaml, CONTEXT.md, _acceptance/link-nguoi-ban-s03/contract.md]
+    question: "Tài liệu có đủ để người khác chạy lượt thử, đọc số đếm và đối chứng, xử từng loại tệp chặn, tắt bộ tra không cần khởi động lại, biết chỉ Mạnh bật lượt lớn và con số trần, biết cấm đăng nhập thứ hai, và thấy các điều chưa đo không? rule_id mới có đủ sáu điều kiện ADR-0011 không?"
+    evidence_required: [verdict, rationale, verifier, verified_at]

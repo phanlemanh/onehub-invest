@@ -52,8 +52,11 @@ type LaidOutNode = SankeyNode & FlowNode
 const CHART_CONFIG = {
   journey: { label: STAGE_LABEL.journey, color: STAGE_COLOR.journey },
   linked: { label: STAGE_LABEL.linked, color: STAGE_COLOR.linked },
+  located: { label: STAGE_LABEL.located, color: STAGE_COLOR.located },
+  clustered: { label: STAGE_LABEL.clustered, color: STAGE_COLOR.clustered },
   dropped: { label: STAGE_LABEL.dropped, color: STAGE_COLOR.dropped },
   merged: { label: STAGE_LABEL.merged, color: STAGE_COLOR.merged },
+  inquiry: { label: STAGE_LABEL.inquiry, color: STAGE_COLOR.inquiry },
 } satisfies ChartConfig
 
 const MARGIN = { top: 64, right: 150, bottom: 8, left: 170 }
@@ -112,13 +115,16 @@ export function FlowJourney({
   const emphasis = emphasisOf(hover, links)
   const total = nodes.find((node) => node.id === "received")?.amount ?? 1
   const amountOf = (id: string) => nodes.find((node) => node.id === id)?.amount ?? 0
+  // DF6: khối đã tách nhánh có thêm cột «Bài cần đọc» — nới khung tối thiểu để đầu cột không chồng nhau ở khổ hẹp
+  // (cuộn ngang trong khung như trước); khối chưa tách giữ khung cũ.
+  const branched = nodes.some((node) => node.id === "toRead")
 
   const renderNode = ({ x, y, width, height, index, payload }: SankeyNodeProps) => {
     const node = payload as LaidOutNode
     const lit = emphasis ? emphasis.node(index) : true
     const header = headers[node.id]
     const first = node.depth === 0
-    const terminal = node.stage === "linked" || node.stage === "dropped" || node.stage === "merged"
+    const terminal = (node.stage !== "channel" && node.stage !== "journey") || node.labeled === true
     const labelX = first ? x - LABEL_GAP : x + width + LABEL_GAP
     return (
       <g className={cn("transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none", !lit && "opacity-30")}>
@@ -208,10 +214,10 @@ export function FlowJourney({
       <ChartContainer
         id={uid}
         config={CHART_CONFIG}
-        className="aspect-auto h-104 w-full min-w-3xl"
+        className={cn("aspect-auto h-104 w-full", branched ? "min-w-5xl" : "min-w-3xl")}
         initialDimension={{ width: 960, height: 416 }}
         role="img"
-        aria-label={`Đường ống: ${fmtInt(total)} bài nhận, ${fmtInt(amountOf("linked"))} tin gắn căn`}
+        aria-label={`Đường ống: ${fmtInt(total)} bài nhận, ${fmtInt(amountOf("unit"))} tin gắn căn`}
       >
         <Sankey
           data={{ nodes, links }}

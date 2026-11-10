@@ -51,7 +51,10 @@ async function withTx(fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
-    await khoaNguon(c, [...BANG, ...CHI_KHOA]);
+    // PX1: transform đọc bí danh xã cũ ở public khi đã áp 084 — có bảng thì khoá cùng câu đầu giao dịch.
+    const { rows: [bd] } = await c.query(`SELECT to_regclass('public.area_aliases') IS NOT NULL AS co`);
+    const chiKhoa = bd.co ? [...CHI_KHOA, "area_aliases"] : CHI_KHOA;
+    await khoaNguon(c, [...BANG, ...chiKhoa]);
     const sc = await luocDoRieng(c, BANG, { tienTo: "sg" });
     await chepView(c, sc, "sale_offers");
     await chepView(c, sc, "sellers");
@@ -60,7 +63,7 @@ async function withTx(fn) {
     await nap070(c);
     await c.query(`INSERT INTO ops_audit (actor, action) VALUES ('test', 'phat-bieu:cat-chuyen')`);
     const kq = await fn(c, { sc });
-    assert.deepEqual(await khoaNgoaiDanhSach(c, [...BANG, ...CHI_KHOA]), [], "SG ca xin khoá bảng public giữa giao dịch: thêm bảng đó vào BANG");
+    assert.deepEqual(await khoaNgoaiDanhSach(c, [...BANG, ...chiKhoa]), [], "SG ca xin khoá bảng public giữa giao dịch: thêm bảng đó vào BANG");
     return kq;
   } finally {
     await c.query("ROLLBACK").catch(() => {});

@@ -4,18 +4,24 @@
 // nạp bộ sinh lib/tap-mau.mjs (AC-8 của PL8 chặn đường ấy).
 import { parsePost, maToaCan } from "../transform-zalo.mjs";
 
-/** Chín trường của bảng nhãn PL7 (054), đúng thứ tự màn gắn nhãn. */
+/** Chín trường của bảng nhãn PL7 (054), đúng thứ tự màn gắn nhãn, cộng bảy trường GN1 (truong-nhan-s03-081). */
 export const TRUONG = Object.freeze([
   "listing_intent", "kind", "property_type", "project", "building",
   "price_min_vnd", "price_max_vnd", "area_m2", "bedrooms",
+  "unit_number", "price_basis", "furnished", "direction_faces", "view", "availability_date", "rent_includes",
 ]);
 
-/** Nhóm F3: A định nhóm/định danh, B số. Nhóm C (mô tả) chưa có trường nhãn. */
+/** Nhóm F3: A định nhóm/định danh, B số, C mô tả (classification-enrich-review.md F3). */
 export const NHOM_TRUONG = Object.freeze({
   listing_intent: "A", kind: "A", property_type: "A", project: "A", building: "A",
   price_min_vnd: "B", price_max_vnd: "B", area_m2: "B", bedrooms: "B",
+  unit_number: "A", price_basis: "B",
+  furnished: "C", direction_faces: "C", view: "C", availability_date: "C", rent_includes: "C",
 });
-export const NGUONG = Object.freeze({ A: 0.95, B: 0.9 });
+export const NGUONG = Object.freeze({ A: 0.95, B: 0.9, C: 0.8 });
+
+/** Căn cứ «Danh mục CĐT»: vàng lấy từ S08, máy đọc tin không thấy nên không vào phép chấm (truong-nhan-s03-081 AC-6). */
+export const CAN_CU_NGOAI_TIN = "danh_muc_cdt";
 
 /** Lý do bỏ qua một ô — mã ghi vào detail; chữ hiện ở /ops/quality do app/src/lib/dq-labels.ts dịch. */
 export const LY_DO = Object.freeze({ chuaCoCachDoc: "chua-co-cach-doc", chuaCoNhan: "chua-co-nhan-nguoi" });
@@ -150,20 +156,21 @@ export function docTapMau(noiDung) {
 /**
  * Nhãn vàng từ người cho một lát + split (mặc định test), trong giao dịch chỉ đọc. Một trường: một người, hoặc nhiều
  * người cùng nhãn → nhãn đó; khác nhau → loại, đếm `bat_dong`. Tin có nhãn mà mất chữ ở stg → loại, đếm `mat_chu`.
+ * Chữ chấm là chữ người đã đọc: của tin chữ ghép khi dòng có `ghep.chu_ref`, cùng khoá với `baiDeGhi` của app.
  */
 export async function docNhanNguoi(client, { lat, split = "test" }) {
   await client.query("BEGIN TRANSACTION READ ONLY");
   try {
     const { rows: tins } = await client.query(
-      `SELECT i.item_id::text AS item_id, i.ref_id, p.text
+      `SELECT i.item_id::text AS item_id, i.ref_id, i.ghep, p.text
        FROM eval_label_items i
-       LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = i.ref_id ORDER BY captured_at DESC LIMIT 1) p ON true
+       LEFT JOIN LATERAL (SELECT text FROM stg_zalo_posts WHERE post_id = coalesce(i.ghep->>'chu_ref', i.ref_id) ORDER BY captured_at DESC LIMIT 1) p ON true
        WHERE i.lat = $1 AND i.split = $2
        ORDER BY i.item_id`,
       [lat, split],
     );
     const { rows: nhans } = await client.query(
-      `SELECT l.item_id::text AS item_id, l.labeler_id, l.field, l.value, l.not_stated
+      `SELECT l.item_id::text AS item_id, l.labeler_id, l.field, l.value, l.not_stated, l.basis
        FROM eval_labels l JOIN eval_label_items i USING (item_id)
        WHERE i.lat = $1 AND i.split = $2`,
       [lat, split],
@@ -176,10 +183,18 @@ export async function docNhanNguoi(client, { lat, split = "test" }) {
   }
 }
 
-/** Gộp dòng nhãn thành nhãn vàng từng tin (hàm thuần của docNhanNguoi). */
+/**
+ * Gộp dòng nhãn thành nhãn vàng từng tin (hàm thuần của docNhanNguoi). Ô căn cứ «Danh mục CĐT» bỏ, đếm `danh_muc_cdt`. Dòng đã ghép: trùng cụm thì đại diện đã chấm, đếm
+ * `trung_co_nhan`; bài ảnh không có tin chữ thì bộ đọc không có chữ để đọc, đếm `khong_chu`.
+ */
 export function gopNhan(tins, nhans) {
   const theoTin = new Map();
+  let danh_muc_cdt = 0;
   for (const r of nhans) {
+    if (r.basis === CAN_CU_NGOAI_TIN) {
+      danh_muc_cdt++;
+      continue;
+    }
     if (!theoTin.has(r.item_id)) theoTin.set(r.item_id, new Map());
     const f = theoTin.get(r.item_id);
     if (!f.has(r.field)) f.set(r.field, new Map());
@@ -187,10 +202,20 @@ export function gopNhan(tins, nhans) {
   }
   let bat_dong = 0;
   let mat_chu = 0;
+  let khong_chu = 0;
+  let trung_co_nhan = 0;
   const tin = [];
   for (const t of tins) {
     const f = theoTin.get(t.item_id);
     if (!f) continue; // chưa ai gắn
+    if (t.ghep?.trung_voi) {
+      trung_co_nhan++;
+      continue;
+    }
+    if (t.ghep && !t.ghep.chu_ref) {
+      khong_chu++;
+      continue;
+    }
     if (t.text == null || t.text.trim() === "") {
       mat_chu++;
       continue;
@@ -203,7 +228,7 @@ export function gopNhan(tins, nhans) {
     }
     tin.push({ id: t.ref_id, text: t.text, nhan });
   }
-  return { tin, bat_dong, mat_chu };
+  return { tin, bat_dong, mat_chu, khong_chu, trung_co_nhan, danh_muc_cdt };
 }
 
 /** Ghi mỗi ô một dòng dq_check_results trong MỘT giao dịch; lỗi giữa chừng → không dòng nào ở lại. */

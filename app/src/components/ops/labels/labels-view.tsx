@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
+import { LAT_CUON_CHIEU } from "@/lib/labels-cuon-chieu"
 import type { DoiChieu, DongTruongHop } from "@/lib/labels-luot-hai"
 import { LABEL_FIELDS_NHOM } from "@/lib/labels-normalize"
 import type { DongThuanTruong, NhomCuaLat, TienDo, TinGan } from "@/lib/labels-queries"
@@ -20,6 +21,8 @@ import { ChonNhom } from "./chon-nhom"
 import { LabelForm } from "./label-form"
 import { LabelFormNhom } from "./label-form-nhom"
 import { LuotHai } from "./luot-hai"
+import { MaThe } from "./ma-the"
+import { NguoiDang } from "./nguoi-dang"
 
 /**
  * /ops/labels «Gắn nhãn» (PL7 `man-gan-nhan-mu`) — khuôn danh sách-chi-tiết như /ops/review: hàng chờ ngầm (tin kế do
@@ -30,6 +33,7 @@ import { LuotHai } from "./luot-hai"
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Gắn nhãn" }]
 const DESCRIPTION = "Đọc chữ gốc của từng tin của lát và ghi chín trường lõi. Máy không cho thấy nó đã đọc ra gì."
 const DESCRIPTION_NHOM = "Gắn theo từng nhóm: ghi điều người trong nhóm hiểu, kèm căn cứ từng ô. Lưu xong mới thấy máy đọc gì."
+const DESCRIPTION_CUON_CHIEU = "Mẫu soát mỗi ngày 20 bài: máy đã điền nháp, anh giữ hoặc sửa từng ô rồi lưu. Số giữ nháp hiện ở Chất lượng dữ liệu."
 /** Lát mặc định của màn và lệnh lấy mẫu của nó. */
 export const LAT_THEO_NHOM = "s03-theo-nhom"
 
@@ -54,6 +58,22 @@ function thapNhat(rows: DongThuanTruong[]): number | null {
 }
 
 function LabelsEmpty({ lat }: { lat: string }) {
+  if (lat === LAT_CUON_CHIEU) {
+    return (
+      <Empty data-labels-empty="">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <TagsIcon aria-hidden="true" />
+          </EmptyMedia>
+          <EmptyTitle>Chưa rút mẫu soát hôm nay</EmptyTitle>
+          <EmptyDescription>
+            Chạy lệnh rút mẫu ở máy thu rồi tải lại trang:{" "}
+            <code className="font-mono text-xs">node pipeline/mau-soat-cuon-chieu.mjs</code>
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
   return (
     <Empty data-labels-empty="">
       <EmptyHeader>
@@ -116,7 +136,8 @@ function TinFrame({ tin }: { tin: TinGan }) {
       <FrameHeader>
         <FrameTitle>Tin cần gắn</FrameTitle>
         <FrameDescription className="text-xs text-pretty">
-          S03 · {tin.groupName ?? "nhóm không rõ"}
+          <MaThe itemId={tin.itemId} /> · S03 · {tin.groupName ?? "nhóm không rõ"}
+          <NguoiDang ten={tin.nguoiDang} id={tin.nguoiDangId} />
           {tin.postedAt ? ` · đăng ${fmtVnDateTime(tin.postedAt)}` : ""}
           {tin.doubleLabel ? " · tin gắn trùng (hai người)" : ""}
         </FrameDescription>
@@ -150,6 +171,8 @@ export function LabelsView(props: Props) {
   const theoNhom = nhom.length > 0
   const g = nhom.find((n) => n.unitCode === chon) ?? null
   const hrefNhom = (ma: string) => `/ops/labels?lat=${encodeURIComponent(lat)}&nhom=${encodeURIComponent(ma)}`
+  const cuonChieu = lat === LAT_CUON_CHIEU
+  const hrefLat = `/ops/labels?lat=${encodeURIComponent(lat)}`
   const min = thapNhat(dongThuan)
   const stats =
     t.tong > 0
@@ -165,7 +188,7 @@ export function LabelsView(props: Props) {
         crumbs={CRUMBS}
         title="Gắn nhãn"
         stats={stats}
-        description={theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
+        description={cuonChieu ? DESCRIPTION_CUON_CHIEU : theoNhom || lat === LAT_THEO_NHOM ? DESCRIPTION_NHOM : DESCRIPTION}
         actions={theoNhom && chon ? <ChonNhom nhom={nhom} chon={chon} hrefNhom={hrefNhom} /> : undefined}
       />
       {t.tong === 0 ? <LabelsEmpty lat={lat} /> : null}
@@ -176,19 +199,22 @@ export function LabelsView(props: Props) {
           <AlertDescription>Vai của anh chỉ xem được số tiến độ và đồng thuận.</AlertDescription>
         </Alert>
       ) : null}
-      {luotHai ? <LuotHai d={luotHai} hrefTinKe={chon ? hrefNhom(chon) : `/ops/labels?lat=${encodeURIComponent(lat)}`} /> : null}
+      {luotHai ? <LuotHai d={luotHai} hrefTinKe={chon ? hrefNhom(chon) : hrefLat} /> : null}
       {!luotHai && t.tong > 0 && coGhi && !tin ? g ? <NhomHet g={g} /> : <LabelsDone /> : null}
       {!luotHai && t.tong > 0 && coGhi && tin && chon ? (
         <LabelFormNhom key={tin.itemId} lat={lat} tin={tin} hrefXem={`${hrefNhom(chon)}&xem=${tin.itemId}`} hrefTinKe={hrefNhom(chon)} />
       ) : null}
-      {!luotHai && t.tong > 0 && coGhi && tin && !chon ? (
+      {!luotHai && t.tong > 0 && coGhi && tin && cuonChieu ? (
+        <LabelFormNhom key={tin.itemId} lat={lat} tin={tin} hrefXem={`${hrefLat}&xem=${tin.itemId}`} hrefTinKe={hrefLat} />
+      ) : null}
+      {!luotHai && t.tong > 0 && coGhi && tin && !chon && !cuonChieu ? (
         <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-2">
           <TinFrame tin={tin} />
           <LabelForm key={tin.itemId} lat={lat} itemId={tin.itemId} />
         </div>
       ) : null}
       {theoNhom ? <BangTruongHop rows={bang} /> : null}
-      {t.tong > 0 ? <AgreementTable rows={dongThuan} fields={theoNhom ? LABEL_FIELDS_NHOM : undefined} /> : null}
+      {t.tong > 0 ? <AgreementTable rows={dongThuan} fields={theoNhom || cuonChieu ? LABEL_FIELDS_NHOM : undefined} /> : null}
     </div>
   )
 }

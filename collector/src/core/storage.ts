@@ -12,6 +12,13 @@ const BATCH = 1000;
 /** v4 (2026-10-24): thêm kind inventory_unit + nguồn s08-danh-muc (S08 quỹ căn). */
 export const SNAPSHOT_SCHEMA_VERSION = 4;
 
+// U1(9) — link-nguoi-ban-s03: hằng schemaVersion của HAI kênh S03 sống ở đây
+// (core), server.ts không khai lại giá trị, chỉ re-export.
+/** kênh tin S03 (DATA-CONTRACT v6 — album_meta). */
+export const KENH_TIN_SCHEMA_VERSION = 6;
+/** kênh hồ sơ S03 (DATA-CONTRACT v7 — hồ sơ người bán). */
+export const HO_SO_SCHEMA_VERSION = 7;
+
 /**
  * Ghi raw snapshots bất biến: snapshots/<city>/<snapshotId>/items-NNNN.json.gz
  * + manifest.json. Payload giữ nguyên vẹn; ghi xong không bao giờ sửa.
@@ -24,8 +31,10 @@ export class SnapshotWriter {
   private itemCount = 0;
   private itemFileCount = 0;
   private readonly startedAt = new Date().toISOString();
+  private readonly schemaVersion: number;
 
-  constructor(rootDir: string, city: string, source: string) {
+  constructor(rootDir: string, city: string, source: string, opts?: { schemaVersion?: number }) {
+    this.schemaVersion = opts?.schemaVersion ?? SNAPSHOT_SCHEMA_VERSION;
     // Giữ cả mili-giây: hai flush liên tiếp (single-flight dồn sát nhau) cùng
     // giây phải ra hai snapshot khác nhau — id theo giây sẽ đè nhau.
     const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 20); // yyyymmddThhmmssmmm
@@ -101,7 +110,7 @@ export class SnapshotWriter {
 
   async finalize(coverage: CoverageReport, error?: string): Promise<SnapshotManifest> {
     const manifest: SnapshotManifest = {
-      schemaVersion: SNAPSHOT_SCHEMA_VERSION,
+      schemaVersion: this.schemaVersion,
       snapshotId: this.snapshotId,
       city: dirname(this.dir).split("/").pop() ?? "",
       source: this.snapshotId.split("__")[1] ?? "",

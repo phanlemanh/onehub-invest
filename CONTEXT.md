@@ -54,7 +54,7 @@ _Avoid_: dự án, đại đô thị
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
-**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; hiện 3 tòa còn ở `asset_nodes.node_type = building`, chuyển sang bảng tòa ở hàng code). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
+**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; 3 dòng `asset_nodes.node_type = building` thực là phân khu Grand Park, ở lại họ Vùng — ADR-0016 §3 sửa 07/11). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
 - Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
 _Avoid_: block, chung cư
 
@@ -86,10 +86,25 @@ _Avoid_: hồ sơ người bán
 - Code: `registry_alias` · RESO: không có
 _Avoid_: alias (trên UI)
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện chứa cụm tin S06 do máy tự dựng (gom cụm) — cụm không phải căn đã gắn; bảng chuyển dần thành view trên danh bạ (FRAMING §3.4, 08/11).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
+
+**Gắn căn**: Tin khớp đúng một căn của danh bạ bằng định danh duy nhất — dự án + toà + mã căn, hoặc số nhà + đường + phường; là bậc B3 (FRAMING §3.4, Mạnh chốt 08/11: «gắn được căn là đã nhận diện duy nhất, như có số nhà, có mã căn»). Mã căn hay số nhà có trong chữ tin là điều kiện cần, chỉ tính khi khớp một căn có thật trong danh bạ; tin mang định danh mà chưa khớp là «chờ khớp». Gom trùng và gom cụm không phải gắn căn.
+- Code: `unitLinked` (khối `dataFlow`), chờ khớp: `uniqueIdPending` · RESO: `UnitNumber`, `StreetNumber` + UPI của căn
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn cụm, linked (trên UI)
+
+**Định vị**: Tin gắn vào một nút dự án, toà hoặc trục có trong danh bạ, kèm bằng chứng — biết tin nói về toà nào, trục nào mà chưa tới đúng một căn; là bậc B2 (FRAMING §3.4). Toà hay trục ghi trong chữ tin mà chưa khớp danh bạ là «chờ khớp».
+- Code: `located` (khối `dataFlow`), chờ khớp: `locatedPending` · RESO: `SubdivisionName`, `BuildingName`
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: gắn toà, căn suy ra
+
+**Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
+- Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
+- Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: căn tự dựng, cụm căn
 
 **Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
@@ -153,9 +168,13 @@ _Avoid_: so khớp, kiểm chéo
 **Chưa có số**: Chữ thay nút Xem số khi tin không có SĐT hoặc route trả 404.
 - Code: `hasPhone = false`
 
-**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin khác cùng tài khoản, hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
-- Code: `seller_phone_inferred` (view `sale_offers`, migration 070) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
+**Chưa xác minh**: Nhãn cạnh nút Xem số khi số không lấy trực tiếp từ chính tin: suy từ tin hoặc bài khác của cùng tài khoản (số ghép S06, số qua người đăng S03), hoặc thiếu bằng chứng. Không chặn việc xem số. Bấm hoặc rê chuột lên nhãn ra lời giải thích, tên «Số chưa xác minh»; mục `/methodology#so-chua-xac-minh`.
+- Code: `seller_phone_inferred` (view `sale_offers`, migration 070, 079) · `phoneInferred` · `inferred` · RESO: không có — đặc trưng VN, khai ở `pipeline/mappings.yaml`
 _Avoid_: chưa kiểm chứng, số nghi ngờ
+
+**Liên lạc của Người**: Số điện thoại (sau này link hồ sơ kênh S03) mà một Người dùng để được liên hệ, ghi thành phát biểu có bằng chứng: số người đăng ghi trên tin của chính họ, hoặc số họ nêu trong bài khác như bài trả lời trong nhóm. Khác bí danh: một số dùng chung liên lạc được nhiều Người mà không làm họ thành một. Số dùng chung giữa nhiều người gửi không thành liên lạc của ai. Tin không có số nhận số qua người đăng, kèm nhãn «Chưa xác minh».
+- Code: `party_contacts` (migration 079) · `contact_kind` (`sdt`, `chat_profile`) · `contact_rule` (`so_tren_tin`, `so_trong_bai`) · dấu tin `s03-qua-nguoi-dang` · RESO: `Contacts.MobilePhone`, `SocialMedia` — extension local
+_Avoid_: bí danh SĐT (đó là khoá định danh), số phụ
 
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
@@ -203,7 +222,7 @@ _Avoid_: assertion, claim
 - Code: `evidence_tier` · RESO: không có — extension local
 _Avoid_: confidence, bậc H0–H5
 
-**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị năm cột loại hình, phòng ngủ, WC, đường, toà. Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
+**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị các cột chuẩn (12 cột từ migration 061: loại hình, phòng ngủ, WC, đường, toà…, xem `mo-hinh-pipeline-mot-can-nha.md`). Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
 - Code: `resolve_offer_fields` · RESO: không có — bộ phân xử local
 _Avoid_: fill-gap, ghi đè
 
@@ -215,12 +234,17 @@ _Avoid_: provenance (trên UI)
 - Code: `field_provenance.seller_phone` với `rule_id` = `s06-cung-tai-khoan` (số trên tin: `s06-so-tren-tin`), `pipeline/gan-sdt-s06.mjs` · RESO: resource Member
 _Avoid_: số suy đoán, số đoán
 
-**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
-- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
+**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng. Bằng chứng là phát biểu trường `offer_status`: tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp, và tin không thấy lại quá 21 ngày trong khi nguồn hay nhóm của nó vẫn đang thu (bằng chứng suy luận ngừng rao — xem «Ngừng rao»; thấy lại thì về Đang chào). Phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19, 085). Căn có tin ngừng rao tụt khỏi bậc B5.
+- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `ghi_khong_thay_lai`, `ngung_rao_sau_ngay`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
 _Avoid_: tin hết hạn, expired, tình trạng tin
 
-**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
-- Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
+**Ngừng rao**: Tin không thấy lại ở nguồn quá N ngày trong khi nguồn vẫn đang thu — S06 đo từ lần quét cuối tới lần quét mới nhất của cùng vùng × loại tin, S03 tới bài mới nhất của các nhóm mà tin đã đăng, S05 tới tin mới nhất của nguồn. N = 21 ngày cho S03, S05, S06 (Mạnh duyệt 09/11). Tin ngừng rao không bị xoá hay nghỉ: nó thành lịch sử của căn, giữ tên và SĐT người bán, và thấy lại thì tự về Đang chào. Hiện nhãn «Đã gỡ» như tin nguồn gỡ; phân biệt bằng phát biểu. Bước ba của vòng đời tin là «rút» (nghỉ bản ghi: rác, gộp nhầm), không phải ngừng rao.
+- Code: `offer_status = withdrawn` + phát biểu `inferred`/`e1_rule` `rule_id khong-thay-lai:<offer_id>` (migration 085, `ghi_khong_thay_lai`), N ở `ngung_rao_sau_ngay(source)` · RESO: StandardStatus Withdrawn
+- Slug URL: —
+_Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng rao»); rút (là nghỉ bản ghi)
+
+**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi tin rao S03/S05/S06 chưa gắn căn (kể cả tin nằm trong cụm — gom cụm không cho bậc) cộng mỗi căn của danh bạ có tin gắn; B0–B2 đếm tin, B3–B5 đếm căn. Đơn vị không có phường đếm ở thị trường «chưa rõ». Mỗi ảnh chụp mang thang của nó (`thang-2310` trước 08/11, `thang-0811` sau): hai ảnh chụp khác thang không so với nhau, ngày đổi thang là lần hạ một lần, không phải tụt bậc. Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
+- Code: `data_level_snapshot.scale`, `data_level_units()`, `offer_data_level`, `unit_data_level`, vị từ chờ bảng nối `offer_located`, `offer_unit_key` (087), `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
@@ -243,6 +267,14 @@ _Avoid_: accuracy, độ chính xác
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker
+
+**ID người đăng**: Mã tài khoản của người đăng bài ở nguồn S03, hiện cạnh tên trên thẻ gắn nhãn để phân biệt những người trùng tên trong cùng nhóm. Tầng C như tên người bán; chỉ hiện ở `/ops/**`.
+- Code: `sender_id` (stg) · `nguoiDangId` (thẻ gắn nhãn)
+_Avoid_: UID
+
+**Username người bán**: Tên tài khoản công khai của người đăng S03 trên kênh chat, lấy bằng cách tra hồ sơ theo ID người đăng (bộ tra trong gateway, chỉ đọc, có trần). Lưu trần — không phải link — thành liên lạc «Hồ sơ chat» của Người; link hồ sơ dựng lúc hiển thị từ sổ nguồn ở máy thu, kho không giữ mẫu link. Tầng C như tên người bán; chỉ ở máy thu, chưa hiện trên cổng hay `/ops`.
+- Code: `party_contacts.kind = chat_profile`, `rule_id = s03_ho_so_theo_tai_khoan` · stg `stg_s03_ho_so.username` · hồ sơ `link-nguoi-ban-s03`
+_Avoid_: link người bán, tên đăng nhập, nick
 
 **Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
 - Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
@@ -398,18 +430,26 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường của toà» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
-| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
-| Trạng thái danh bạ | `registry_status` | local | `parties.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
-| Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» |
+| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
+| Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
+| Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» · `sdt` «SĐT số gốc» · `ma_nguon` «Mã tại nguồn» |
+| Bậc dòng danh mục | `catalog_tier` | local | `buildings.catalog_tier`, `stacks.catalog_tier`, `units.catalog_tier` | `xac_minh` «Xác minh» · `suy_ra_manh` «Suy ra mạnh» · `mot_loi_khai` «Một lời khai» |
 | Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
+| Loại liên lạc | `contact_kind` | local | `party_contacts.kind` | `sdt` «Số điện thoại» · `chat_profile` «Hồ sơ chat» |
+| Luật liên lạc | `contact_rule` | local | `party_contacts.rule_id` | `so_tren_tin` «Số trên tin của chính người đăng» · `so_trong_bai` «Số trong bài khác của người đăng» · `s03_ho_so_theo_tai_khoan` «Hồ sơ chat theo mã tài khoản» |
 | Ý định tin | `listing_intent` | local | `silver_labels.listing_intent` | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
-| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level`, `data_level_unit.data_level`, `data_level_change.from_level`, `data_level_change.to_level` | `B0` «Có lời khai» · `B1` «Tin» · `B2` «Định vị» · `B3` «Gắn căn» · `B4` «Làm giàu» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
+| Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
+| Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |
+| View | `view` | View | — | `city` «Thành phố» · `lake` «Hồ» · `river` «Sông» · `park_greenbelt` «Công viên» · `garden` «Vườn, nội khu» · `pool` «Bể bơi» · `panoramic` «Toàn cảnh» · `other` «Khác» |
+| Phí đã gồm | `rent_includes` | RentIncludes | — | `management` «Phí quản lý» · `electricity` «Điện» · `water` «Nước» · `internet` «Internet» · `none` «Không gồm gì» · `other` «Khác» |
+| Cơ sở giá | `price_basis` | local | — | `net` «Thu về (NET)» · `gom_phi` «Đã gồm phí» · `chua_gom_phi` «Chưa gồm phí» |
 
 <!-- VOCAB:END -->
 
@@ -437,10 +477,15 @@ _Avoid_: bản chụp, dump
 - Slug URL: `collections`
 _Avoid_: cào, crawl
 
-**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → Gắn căn — kèm nhánh rơi
-(«Không đọc được», «Chưa gắn căn») và nhánh «Gộp vào tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
-`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
-- Code: `data flow (getDataFlow, StageCounts: received · readable · offers · linked)` · RESO: —
+**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → mức nhận diện (Gom cụm ·
+Định vị · Gắn căn, mỗi mức là phần trăm trên Tin rao) — kèm nhánh rơi («Không đọc được», «Chưa định vị») và nhánh «Gộp vào
+tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
+`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu. Từ DF6: «Bài nhận» tách «Ảnh đã ghép
+vào tin» (tin nhắn chỉ có ảnh mà **Ghép suy ra** đã nối vào một tin — không cần đọc) và «Bài cần đọc» (mẫu số của «Đọc
+được»); «Bài cần đọc» chảy vào hai đầu ra ngang hàng «Đọc thành tin rao» và «Đọc thành Yêu cầu» (bài **Yêu cầu** — Mạnh
+chốt 09/11: Yêu cầu quan trọng song song với tin, «Đọc được» = tin rao + Yêu cầu), cùng «Ảnh chưa ghép» và «Không đọc
+được» (hai nhánh rơi).
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers; mức: clustered · located · unitLinked; nhánh bài: imageMerged · inquiry · imageUnmerged, bài cần đọc toReadOf)` · RESO: —
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 
@@ -451,13 +496,91 @@ công hay lỗi; chi phí = token × đơn giá của model (model chạy local 
 - Slug URL: `ai-calls`
 _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 
-**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
-loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
-(gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
-gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu.
+**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho 24 ô theo nhóm (ý định tin, loại
+tin, loại hình, dự án, toà, giá, diện tích, phòng, mô tả căn…). Từ 06/11 (Mạnh chốt) gắn theo cách «máy nháp, người feedback»:
+máy điền nháp, người giữ hay sửa từng ô; đo bằng tỉ lệ giữ/sửa nháp (DO1). Gắn mù và gắn hai người đã dừng; tập test gắn mù
+đóng băng quyết lại khi mở PL21 (ROADMAP §3 mục 32, 35). Trang `/ops/labels` (PL7), chỉ ở máy thu. (Bản PL7 đầu: chín trường lõi,
+gắn mù, 20% tin hai người gắn — lát đời trước vẫn mở bằng `?lat=`.)
 - Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
 - Slug URL: `labels`
 _Avoid_: annotate, label UI, gán nhãn
+
+**Nhãn bạc**: Kết quả máy đọc một bài — ý định tin, loại tin và các ô đọc được kèm câu trích, theo model và phiên bản prompt;
+là đề xuất, không phải giá trị chuẩn (luật 7). PL18 biến nó thành phát biểu; GC2/GC3 đọc phát biểu, không đọc thẳng bảng này.
+- Code: `silver_labels` · RESO: —
+_Avoid_: lớp nhãn bạc (dành cho nhãn nháp Opus của GNH2, chưa chốt), nhãn AI
+
+**Nhãn nháp Opus**: Nhãn do model lớn gắn dưới `labeler_id` riêng trong `eval_labels` để người soát ngẫu nhiên (đề xuất GNH2,
+Mạnh chưa chốt). Khác nhãn bạc (kết quả máy đọc) và nhãn đánh giá (người gắn).
+- Code: `eval_labels` (labeler_id riêng, GNH2) · RESO: —
+_Avoid_: nhãn bạc, silver
+
+**Mẫu soát cuốn chiếu**: 20 bài rút ngẫu nhiên mỗi ngày từ bài nhận, kể cả bài máy không nhận là tin rao; màn hiện nháp máy,
+người giữ hay sửa. Ra tỉ lệ giữ nháp và tỉ lệ tin rao bị bỏ sót theo tuần — số có neo, chỉ để thấy trôi, không mở cổng tự áp
+(DO1–DO3).
+- Code: DO1 `do-hieu-qua-hang-ngay`, lát `s03-cuon-chieu`, `pipeline/mau-soat-cuon-chieu.mjs`, `eval_label_items.draft` · RESO: —
+_Avoid_: rolling sample, mẫu mù
+
+**Đo hằng ngày**: khối của «Chất lượng dữ liệu» hiện bốn nhóm số tính sẵn mỗi ngày — giữ nháp, bỏ sót, tín hiệu không cần
+nhãn, dòng chuyển bậc — cùng so cặp trước/sau; chọn lát Tổng · Thị trường · Phường/xã · Khu đô thị · Toà (tham số `lat-do`).
+- Code: `pipeline/do-hang-ngay.mjs`, `dq_check_results` `do1-*`, `app/src/lib/do-hang-ngay.ts` · RESO: —
+_Avoid_: dashboard đo, KPI hằng ngày
+
+**Làm giàu**: giá trị máy thêm vào tin mà tin không tự ghi, theo từng đường (Số qua người đăng, Quy ước nhóm, Diện tích suy
+ra, Danh mục CĐT). Khối «Làm giàu» của «Chất lượng dữ liệu» đếm mỗi ngày giá trị thêm, đổi, máy rút, người sửa, người rút;
+đường không có lối người rút (số qua người đăng) hiện «không có đường người rút» thay số 0. Lần chạy đầu của một đường chỉ lập mốc.
+- Code: `pipeline/do-lam-giau.mjs`, `dq_check_results` `do3-thay-doi`, `enrichment_value_state`, `enrichment_value_change`, `app/src/lib/ops/quality-lam-giau.ts` · RESO: —
+_Avoid_: enrich (trên UI), bổ sung dữ liệu
+
+**Kiểm ngược**: mỗi tuần ISO, giấu giá trị đã có của một tin hay bài, cho đường làm giàu suy lại rồi so (bỏ-một-ra). Ra tỉ lệ
+đúng trên đúng + sai kèm cận dưới Wilson 95% và n, so tuần trước; «chênh có ý nghĩa» khi hai khoảng không chồng nhau. Tập đo
+ghi rõ (tin có số riêng, bài có chữ loại hình), nên không phải độ đúng trên mọi tin.
+- Code: `dq_check_results` `do3-kiem-nguoc`, `kiemNguocSo`, `kiemNguocNhom` (`pipeline/lib/do-lam-giau.mjs`) · RESO: —
+_Avoid_: backtest, độ chính xác (khi chưa nói tập đo)
+
+**Cận dưới Wilson**: đầu dưới của khoảng tin cậy Wilson 95% cho một tỉ lệ đúng trên n mẫu; mẫu ít thì cận dưới thấp hơn tỉ lệ thô
+nhiều, nên so ngưỡng và so tuần bằng cận dưới chứ không bằng tỉ lệ thô. Khối «Làm giàu» và cổng tự áp F3 dùng nó.
+- Code: `wilson` (`pipeline/lib/do-hang-ngay.mjs`), `wilson.thap` trong detail `do3-kiem-nguoc` · RESO: —
+_Avoid_: cận Wilson, Wilson thấp
+
+**Chưa chạy**: đường làm giàu chưa ghi giá trị nào lên tin; khối hiện «Chưa chạy», không hiện số 0 (đường đã lập mốc mà mất hết
+giá trị thì không phải chưa chạy: các giá trị mất đếm là máy rút).
+- Code: `status = 'skip'`, `ly_do = 'chua-chay'` của `do3-thay-doi` · RESO: —
+_Avoid_: không hoạt động
+
+**So cặp trước/sau**: so một cách đọc mới (model hay prompt khác) với cách đọc cũ trên CÙNG các thẻ mẫu soát đã gắn nhãn
+4 tuần gần nhất; mỗi ô ra chênh cặp kèm khoảng 95%.
+- Code: `pipeline/so-sanh-cach-doc.mjs`, `do1-so-sanh` · RESO: —
+_Avoid_: A/B, so hai tuần
+
+**Đổi khoá (chuyển bậc)**: cặp «mất + mới» trong dòng chuyển bậc do tin rời căn này sang căn khác vì khoá căn đổi (khoá căn
+S06 còn chứa giá) — tách khỏi biến động bậc thật.
+- Code: lý do `doi-khoa` của `data_level_change` · RESO: —
+_Avoid_: tụt bậc (khi chỉ là đổi khoá)
+
+**Không nêu chỗ · Chưa có trong danh bạ**: hai ô chưa gắn của lát địa lý — bài không nêu chỗ ở mức đó (việc của bộ đọc), và
+bài nêu tên toà/dự án mà danh bạ chưa có vật thể (việc của danh bạ).
+- Code: `khong-tin-hieu`, `chua-co-danh-ba` · RESO: —
+_Avoid_: chưa gắn (gộp chung hai ô)
+
+**Tập test mù đóng băng**: Tập nhãn người gắn không thấy giá trị máy, đóng băng, chỉ dùng để chấm cận dưới Wilson cho cổng tự
+áp và bậc B3; không trộn nhãn lệch mẫu. Cỡ ~200 tin mỗi phân khúc cho nhóm A. Có dùng hay không: quyết khi mở PL21.
+- Code: PL21 · RESO: —
+_Avoid_: lát vàng (lát gắn theo nháp có neo), golden set
+
+**Bài khác nội dung**: Bài nhận sau khi gộp các bài cùng nội dung (đăng lại ở nhiều nhóm); đơn vị đếm của chặng giữa bài nhận
+và tin rao. 30/10–05/11: 44% số bài nhận.
+- Code: gộp theo nội dung (GT2) · RESO: —
+_Avoid_: bài unique, bài sạch
+
+**Đơn vị bài đăng**: Một lần đăng của S03 gồm chữ và ảnh đi cùng (ghép theo mã album hay cửa sổ thời gian), giữa sự kiện thô
+và tin rao (GT2).
+- Code: `eval_label_items.ghep` (lát), lớp bài đăng GT2 · RESO: —
+_Avoid_: post group, cụm bài
+
+**Dòng chuyển bậc**: Số căn lên bậc và tụt bậc B0–B5 mỗi ngày kèm lý do; đo «giữ không tụt» của north star (FRAMING §5).
+- Code: `data_level_snapshot` (so hai ngày), DO1 · RESO: —
+_Avoid_: level churn
 
 **Nhãn đánh giá**: Giá trị một người gắn cho một trường của một tin khi gắn nhãn — sự thật tham chiếu để chấm độ đúng
 của máy (PL9), không phải giá trị hiển thị; «tin không nêu» là một nhãn hợp lệ. Gắn với người gắn nên là tầng A, chỉ ở
@@ -501,19 +624,65 @@ _Avoid_: tên nguồn thật, mọi số của nguồn này
 - Code: `calibration (S02)` · RESO: —
 _Avoid_: calibration
 
-**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).
+**Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent — LLM không ghi dữ liệu trực tiếp (luật 7). Ba loại thẻ có
+giao diện: Ghép căn (`entity_match`), Bổ sung tin (`agent_output` `enrich:`), Người (`data_quality` `nguoi:`, HD17); loại khác
+hiện mã nguyên văn. Mỗi thẻ thuộc một Hạng mục duyệt. Nhãn trạng thái sau khi quyết là nhãn đáp án đã bấm (Cùng căn, Khác căn,
+Đã áp, Đã gộp…). Chọn thẻ theo Hộp hạng mục, quyết liền ở Chế độ duyệt (OD2). Chỉ ở máy thu; duyệt trên cloud là hàng TV13.
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
+- Tham số URL: `card` · `category`
+- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10). `/ops/review?card=<id>` mở thẳng sheet của thẻ `<id>`
+  (OD1), kể cả thẻ đã quyết. `/ops/review?category=<mã Hạng mục duyệt>` chọn sẵn một mục của Hộp hạng mục (OD2).
 _Avoid_: Review Queue, hàng chờ
 
-**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+**Lý do quyết định**: Câu ghi kèm khi quyết một thẻ ở Hàng duyệt, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Người để trống thì nhãn đáp án đã bấm là lý do (OD2, Q4), nên lý do không bao giờ rỗng; riêng «Bỏ» ở thẻ Bổ sung tin còn bắt gõ tay tới khi thẻ phân được ghi đè (OD4). Nhãn ô: «Lý do».
 - Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
 _Avoid_: ghi chú, comment, note
 
 **Suy luận của AI** (trên thẻ ghép căn): Gợi ý cùng căn/khác căn và lời giải thích của bộ chấm LLM. Hiện tách khỏi căn cứ, không đổi thứ tự hay kiểu nút; không kèm điểm hay độ tự tin (Q9).
 - Code: `review_queue.ai_suggestion`, `ai_reasoning` · RESO: —
 _Avoid_: AI tự tin, điểm B, gợi ý mặc định
+
+**Hạng mục duyệt**: Câu hỏi người duyệt thật sự trả lời ở một thẻ, khác loại thẻ: Ghép căn, Gộp Người, Luật và AI khác nhau,
+Bổ sung tin, Đối chiếu ý định, Đối chiếu giá, Đối chiếu diện tích, Loại khác. Suy từ chính thẻ lúc quyết (báo cáo soát Ops
+07/11 §e1). «Bổ sung tin» còn gộp điền ô trống, ghi đè, trùng giá trị đang lưu tới khi thẻ hiện giá trị đang lưu (OD4).
+- Code: `reviewCategory` (`app/src/lib/ops/review-hang-muc.ts`) · `ops_audit.detail.category` (`unit_match`, `party_merge`,
+  `rule_vs_ai`, `fill`, `intent_check`, `price_check`, `area_check`, `other`) · RESO: —
+_Avoid_: loại thẻ (là `item_type`), nhóm thẻ
+
+**Nhịp duyệt**: Số giây người duyệt dành cho một thẻ, theo Hạng mục duyệt: giây ở thẻ (từ lúc thẻ mở tới lúc bấm đáp án) và
+giây giữa hai lượt quyết của cùng người. Báo trung vị 7 ngày trên `/ops/review`; lượt quá 30 phút không vào trung vị. Là số
+trước của OD2.
+- Code: `ops_audit.detail.seconds`, `since_prev_seconds`, `opened_at`, `decided_at` (route decide, body `elapsed_ms`) ·
+  `loadReviewPace` · RESO: —
+_Avoid_: tốc độ duyệt, năng suất (chưa nói đơn vị)
+
+**Hộp hạng mục**: Cột trái của danh sách thẻ ở `/ops/review`: mục «Tất cả» rồi mỗi Hạng mục duyệt đang có thẻ chờ, kèm số thẻ
+chờ, tuổi thẻ chờ cũ nhất và trung vị giây ở thẻ 7 ngày. Bấm một mục để lọc và duyệt liền mục đó (OD2, khuôn
+`@reui/solution-agents-9`).
+- Code: `hopHangMuc`, `ReviewHopHangMuc` · Tham số URL `category` · RESO: —
+_Avoid_: rail, bộ lọc loại thẻ (ô «Loại thẻ» đã bỏ ở OD2)
+
+**Chế độ duyệt**: Cách quyết liền các thẻ chờ của một Hạng mục duyệt trong một sheet: cũ nhất trước, quyết xong thẻ kế hiện
+ngay (sheet không đóng giữa hai thẻ), đầu sheet ghi «k/N · hạng mục», đi lại và quyết bằng phím (`J`/`K`, `1`–`4`, `R`, `?`).
+Nút «Duyệt liền» mở chế độ này (OD2).
+- Code: `hangDuyet`, `usePhimDuyet`, `ReviewDetailSheet` (`dieuHuong`) · RESO: —
+_Avoid_: duyệt hàng loạt (GD10 đã loại — mỗi thẻ vẫn một quyết định), focus mode
+
+**Hoàn tác**: Huỷ một quyết định trong 5 giây sau khi bấm: lệnh giữ ở trình duyệt rồi mới gửi, toast «Đã ghi #id · <nhãn>»
+có nút «Hoàn tác». Quá 5 giây thì đảo là lệnh đảo (ADR-0015, việc sau). Rời trang khi còn lệnh chờ thì lệnh gửi ngay (OD2, Q7).
+- Code: `HangGuiProvider`, `HOAN_TAC_MS` · RESO: —
+_Avoid_: undo (trên UI), huỷ quyết định (sau 5 giây)
+
+**Quyết định gần đây**: 20 lượt quyết mới nhất trong 7 ngày của chính người đang duyệt, ở `/ops/review`: mã thẻ, tiêu đề, nhãn
+đáp án, lý do, giờ; bấm mã thẻ để xem lại thẻ (OD2).
+- Code: `loadRecentDecisions`, `ReviewGanDay` (`ops_audit` `review.decide`) · RESO: —
+_Avoid_: lịch sử duyệt, nhật ký (là `/ops/audit`)
+
+**Đang chờ ghép**: Nhãn của một căn ở Căn giá tốt khi căn là Tin A hay Tin B của một thẻ Ghép căn còn chờ ở Hàng duyệt —
+người gọi điện biết căn có thể là một căn trùng. Kèm liên kết «Mở thẻ ghép #<id>». Chỉ ở máy thu.
+- Code: `loadPendingUnitMatches`, `DealChoGhep` · RESO: —
+_Avoid_: căn trùng (chưa quyết)
 
 ## Vận hành (cổng Ops)
 
@@ -619,9 +788,26 @@ _Avoid_: chưa so
 
 **Ghép suy ra** (code `ghep`): tin chữ và các bài ảnh cùng người, cùng nhóm, cách dưới 2 phút do luật PL28 nối lại vì nguồn S03 không có mã album. Là suy đoán, có thể sai. _Avoid_: album.
 
-**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm hay Kiến thức nghề. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
-- Code: `eval_labels.basis` (`chu_bai`, `ngu_canh_nhom`, `kien_thuc_nghe`)
+**Căn cứ nhãn**: Người gắn hiểu giá trị của một ô từ đâu: Chữ bài, Ảnh trong bài, Ngữ cảnh nhóm, Kiến thức nghề hay Danh mục CĐT. Ô «Không suy ra được» không có căn cứ. Có ô Ngữ cảnh nhóm hay Kiến thức nghề thì bài bắt buộc ghi Lý do.
+- Code: `eval_labels.basis` (`chu_bai`, `anh`, `ngu_canh_nhom`, `kien_thuc_nghe`, `danh_muc_cdt`)
 _Avoid_: nguồn nhãn
+
+**Danh mục CĐT** (nút ngắn «CĐT»): Căn cứ nhãn lấy giá trị từ danh mục căn của chủ đầu tư (S08), nguồn tin cậy cao nhất hiện nay nhưng chưa chắc đúng hết. Chỉ nhận khi mã căn của thẻ có trong danh mục và giá trị khớp một dòng cùng mã. (Câu cũ «chỉ ở máy thu, không lên cloud» hết hiệu lực từ 08/11, ROADMAP §3 mục 38; luật hiển thị theo hàng DN4.) Máy đọc tin không thấy S08 nên ô căn cứ này không vào phép chấm máy đọc tin.
+- Code: `eval_labels.basis = 'danh_muc_cdt'`, kiểm ở `app/src/lib/labels-s08.ts`
+_Avoid_: danh mục dự án, quỹ căn
+
+**Mô tả căn**: Khối thứ sáu của biểu mẫu theo nhóm: Nội thất, Hướng, View, Ngày vào ở.
+- Code: `KHOI` id `mo-ta` (`nhom-fields.ts`)
+
+**Ngày vào ở**: Ngày người thuê hay người mua dọn vào được, theo bài: «ngay», một tháng hay một ngày. RESO `AvailabilityDate`.
+- Code: `eval_labels.field = 'availability_date'` (giá trị `ngay`, `YYYY-MM`, `YYYY-MM-DD`)
+_Avoid_: ngày bàn giao (là một trường hợp của ngày vào ở)
+
+**Mã thẻ**: Số định danh một thẻ trên màn gắn nhãn. Hiện thành chip đơn sắc trên thẻ, bấm để chép, để Mạnh và phiên trợ lý gọi đúng một thẻ («thẻ 10247»).
+- Code: `eval_label_items.item_id`, chip `MaThe` (`app/src/components/ops/labels/ma-the.tsx`) · RESO: —
+- Slug URL: —
+- Ghi chú: Không gọi `review_queue.item_id` (dạng `nguoi:<S0x>:<băm>` của thẻ Người HD17 ở màn duyệt) là mã thẻ — đó là khoá dòng nguồn của thẻ duyệt, nghĩa khác. Chú thích ở `app/src/lib/ops/review-queue.ts` còn dùng chữ cũ, sửa khi có việc chạm tệp đó.
+_Avoid_: mã mẫu, ID thẻ, item id
 
 **Thẻ nhóm**: Đoạn mô tả một nhóm S03 trong sổ đơn vị thu: nhóm chuyên khu đô thị nào, thành viên hiểu ngầm gì. Chỉ hiện ở lượt hai, để nhãn không bị thẻ dẫn dắt; người gắn trả lời thẻ đúng, sai hay chưa xét được.
 - Code: `collection_units.note`, trả lời ở `eval_label_cases.group_card_verdict`
@@ -680,7 +866,7 @@ _Avoid_: Rentalizer
 - Slug URL: —
 _Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
-**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này; chỉ admin thấy, không lên máy chủ. Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
+**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này: vai Vận hành trở lên thấy ảnh đã tải và ảnh máy chủ lấy hộ theo khoá, đường dẫn gốc chỉ Quản trị thấy. Ảnh thu nhỏ được lên máy chủ cho vai Vận hành trở lên (ADR-0007 sửa 26/10, ADR-0015). Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
 - Code: `media` (`transform-media.mjs`, `loadOfferMedia`), kiểm `media:local-file` · RESO: `Media` (DD 2.1)
 - Slug URL: —
 _Avoid_: media canonical (tên kỹ thuật, không dùng trên UI), ảnh khu vực

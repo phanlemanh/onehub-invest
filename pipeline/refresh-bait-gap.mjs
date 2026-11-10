@@ -13,10 +13,17 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
+import { dungLienLac } from "./lib/lien-lac-nguoi.mjs";
+import { ghiLienLacHoSo } from "./lib/lien-lac-ho-so.mjs";
+import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
+import { buocVatTheDem } from "./danh-ba-vat-the.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+
+/** Khoá advisory chung của bước bait gap + danh bạ Người (theo tên, cùng kiểu KHOA_CO_VAN của danh-ba-vat-the). */
+export const KHOA_BAIT_GAP = "SELECT pg_advisory_xact_lock(hashtext('refresh-bait-gap'))";
 
 /**
  * Thân bước bait gap + sellers — chạy được trong transaction của người gọi (thước dư lượng, test).
@@ -95,11 +102,25 @@ export async function loaiTinPhiLy(c, rows) {
  * Bước đêm: bait gap + sellers (tự-commit như trước), rồi danh bạ Người (DB2b) trong giao dịch RIÊNG — bộ dựng lỗi
  * không kéo lùi bait gap/sellers, và lỗi được ném lại (không nuốt). `savepoint: true` khi người gọi đã mở giao dịch
  * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng. Bộ dựng đọc công tắc gộp
- * ops_audit (mặc định tắt); `dung` thay bộ dựng CHỈ cho đối chứng của thước — job đêm không truyền.
+ * ops_audit (mặc định tắt); `dung` thay bộ dựng CHỈ cho đối chứng của thước — job đêm không truyền. Sau bộ dựng: sổ liên lạc của
+ * Người và gán số qua người đăng (enrich-nguoi-s03), cùng giao dịch.
  * @param {import("pg").Client} c
  */
 export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } = {}) {
-  const kq = await refreshBaitGap(c);
+  // bait-gap-mot-giao-dich: phần bait gap (đặt rỗng rồi tính lại bait_gap_pct P1, loại tin phi lý) chạy trong MỘT giao
+  // dịch mở bằng khoá chung — ba job gọi bước này (S03/S05, S06, FB) xếp hàng, lượt có lock_timeout chờ rồi lùi trọn,
+  // người đọc không bao giờ thấy P1 rỗng giữa lượt. savepoint: người gọi đã mở giao dịch → chỉ lấy khoá (giữ tới khi nó
+  // kết thúc), không mở/commit giao dịch riêng.
+  let kq;
+  if (!savepoint) await c.query("BEGIN"); // giao dịch: bait gap
+  try {
+    await c.query(KHOA_BAIT_GAP); // khoá: bait gap
+    kq = await refreshBaitGap(c);
+    if (!savepoint) await c.query("COMMIT"); // giao dịch: bait gap
+  } catch (e) {
+    if (!savepoint) await c.query("ROLLBACK").catch(() => {}); // giao dịch: bait gap
+    throw e;
+  }
   if (!(await c.query("SELECT to_regclass('public.parties') AS t")).rows[0].t) {
     console.log("danh-ba-nguoi: bỏ qua — DB chưa áp 055 (chưa có bảng parties)");
     return { ...kq, nguoi: null };
@@ -109,9 +130,16 @@ export async function buocDem(c, { savepoint = false, runId, dung = dungNguoi } 
     : ["BEGIN", "COMMIT", "ROLLBACK"];
   await c.query(mo);
   try {
+    await c.query(KHOA_BAIT_GAP); // khoá: danh bạ Người
     const nguoi = await dung(c, { runId });
+    // enrich-nguoi-s03: sổ liên lạc dựng sau Người của cùng đêm, rồi tin S03 không số nhận số qua người đăng. Chưa áp 079 thì
+    // hai bước in CHUA-AP-079 và không ghi; bộ dựng Người vẫn commit như hôm nay.
+    const lienLac = await dungLienLac(c, { runId });
+    // link-nguoi-ban-s03: liên lạc hồ sơ chat từ kết quả tra theo mã tài khoản; chưa áp 080 thì in CHUA-AP-080, không ghi.
+    const hoSo = await ghiLienLacHoSo(c, { runId });
+    const ganSo = await ganSdtQuaNguoi(c);
     await c.query(xong);
-    return { ...kq, nguoi };
+    return { ...kq, nguoi, lienLac, hoSo, ganSo };
   } catch (e) {
     await c.query(lui);
     throw e;
@@ -123,6 +151,14 @@ async function main() {
   await c.connect();
   try {
     await buocDem(c);
+    // DB1b: danh bạ vật thể giữ tươi khu đã dựng tay, giao dịch riêng SAU khi bait gap + danh bạ Người đã commit — lỗi ở đây
+    // không lùi Người, nhưng job vẫn đỏ gọi tên bước. Chưa áp 082 / chưa dựng lần đầu thì bước tự bỏ qua một dòng.
+    try {
+      await buocVatTheDem(c);
+    } catch (e) {
+      console.error(`danh-ba-vat-the: ${e.message}`);
+      process.exitCode = 1;
+    }
   } finally {
     await c.end();
   }

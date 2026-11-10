@@ -23,6 +23,7 @@ import { dungBangPhien, taoNguoi } from "./helpers/phien-thu"
 
 const S = `qv_${process.pid}`
 const TOKEN = "qv-thu-token"
+const DB_CUA_LUOT = process.env.DATABASE_URL // db-thu --chay đặt; tiến trình con của ca thử cũ nhận lại đúng DB này
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 process.env.OPS_API_TOKEN = TOKEN
 process.env.OPS_EMAILS = " Cua-Phu@Local.Test ,khac@local.test"
@@ -741,7 +742,8 @@ test("QV-AC-10 push-ops-facts thật → ingest bằng bearer 200, đúng một 
   // Ca thử cũ (route ghi gọi bằng phiên thật) — tiến trình con riêng, không thừa hưởng ngữ cảnh node:test của tệp này.
   const env: NodeJS.ProcessEnv = { ...process.env }
   delete env.NODE_TEST_CONTEXT
-  delete env.DATABASE_URL
+  if (DB_CUA_LUOT) env.DATABASE_URL = DB_CUA_LUOT
+  else delete env.DATABASE_URL
   delete env.OPS_API_TOKEN
   for (const t of ["cong-tac-nhom-go", "vong-doi-nguon", "so-nhom", "che-do-thu", "coverage-cloud-got-tang-a"]) {
     const kq = spawnSync("node", ["--import", "tsx", "--test", `tests/${t}.test.tsx`], { cwd: APP, env, encoding: "utf8" })

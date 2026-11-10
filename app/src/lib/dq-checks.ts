@@ -14,10 +14,11 @@ export type DqCheckRow = {
 };
 
 /** Câu SQL của bảng — test chạy ĐÚNG câu này trên fixture. */
+/** Dòng `do1-*` (DO1 đo hằng ngày) và `do3-*` (DO3 làm giàu) có khối riêng — bảng chung không lặp JSON thô của chúng. */
 export function dqLatestSql(): string {
   return `SELECT DISTINCT ON (check_name, entity) check_name, entity, status, detail, checked_at::text
     FROM dq_check_results
-    WHERE checked_at > now() - interval '7 days'
+    WHERE checked_at > now() - interval '7 days' AND check_name NOT LIKE 'do1-%' AND check_name NOT LIKE 'do3-%'
     ORDER BY check_name, entity, checked_at DESC`;
 }
 

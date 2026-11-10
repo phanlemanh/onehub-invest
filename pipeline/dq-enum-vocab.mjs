@@ -22,6 +22,19 @@ export const KIEM_ENUM = Object.freeze([
   { bang: "registry_aliases", cot: "kind", truc: "alias_kind" },
   { bang: "registry_events", cot: "kind", truc: "registry_event_kind" },
   { bang: "party_roles", cot: "role", truc: "party_role" },
+  // Sổ liên lạc của Người (enrich-nguoi-s03, 079).
+  { bang: "party_contacts", cot: "kind", truc: "contact_kind" },
+  { bang: "party_contacts", cot: "rule_id", truc: "contact_rule" },
+  // Danh bạ vật thể (danh-ba-toa-truc-can, 082; ADR-0011 Qđ 3.6): trạng thái, bậc dòng danh mục của ba bảng; trường và
+  // phương pháp phát biểu (builder_name, area_id, registry_inherit). Bảng chưa có (máy thu chưa áp 082) → bỏ qua.
+  { bang: "buildings", cot: "status", truc: "registry_status" },
+  { bang: "buildings", cot: "catalog_tier", truc: "catalog_tier" },
+  { bang: "stacks", cot: "status", truc: "registry_status" },
+  { bang: "stacks", cot: "catalog_tier", truc: "catalog_tier" },
+  { bang: "units", cot: "status", truc: "registry_status" },
+  { bang: "units", cot: "catalog_tier", truc: "catalog_tier" },
+  { bang: "field_assertions", cot: "field", truc: "assertion_field" },
+  { bang: "field_assertions", cot: "method", truc: "assertion_method" },
 ]);
 
 /**

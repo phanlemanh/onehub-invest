@@ -1,0 +1,85 @@
+schema_version: 1
+feature_slug: chon-model-theo-o
+# Gateway giả ghi lại mã model và trả JSON dựng sẵn; không gọi model thật trừ E10 (đọc tệp tóm tắt của lượt chấm thật).
+# Mỗi ca mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dgs_thuan
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/config/doc-gop-s03.json, agent/scripts/doc-gop-s03.ts, _acceptance/config.yaml, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-1' chạy hàm lệnh chay hai lần với cùng mã, chỉ đổi tệp truyền qua --cau-hinh: bảng A {mac_dinh haiku, o.price_min_vnd glm, o.bathrooms nguoi} → Gateway giả ghi đúng hai mã [anthropic/claude-haiku-5.5, zai/glm-5.3-flash] (một lời gọi mỗi mã), price_min_vnd gộp = 1111 (giá trị GLM giả), area_m2 gộp = 62 (giá trị Haiku giả); bảng B {mac_dinh haiku, o.bathrooms nguoi} → đúng một lời gọi Haiku, price_min_vnd = 3400000000. Ca 'DGS-AC-1-T1': đọc risk_tiers.t1_skip_globs của _acceptance/config.yaml, đường agent/config/doc-gop-s03.json khớp ít nhất một mẫu; đối chứng: agent/src/enrich/doc-gop-s03/doc.ts không khớp mẫu nào. Chiều đỏ: bộ gộp lấy mọi ô từ mac_dinh → 'O KHONG LAY TU MODEL DUOC GIAO'; bỏ mẫu khỏi danh sách → 'BANG CHON CAN HO SO'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dgs_thuan
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/config/doc-gop-s03.json, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-2' đọc tệp agent/config/doc-gop-s03.json thật: keHoach ra đúng một nhóm {gateway anthropic/claude-haiku-5.5, 16 ô} và bathrooms ở danh sách người duyệt; Gateway giả trả bathrooms=2 thì kết quả gộp bathrooms = {nguoi: true} không có v. Chiều đỏ: bảng thiếu khoá o.bathrooms → thông điệp 'WC PHAI LA NGUOI DUYET'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dgs_thuan
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-3' ma trận viết trước 6 bảng sai (ô 'tang_hamm' lạ, khoá model 'qwen' không khai, model thiếu gateway, model thiếu gia_ra, gateway 'openai/gpt-6' ngoài ba mã, ô giá trị 'ai-do') + 1 bảng đúng: 6 bảng sai mỗi bảng nạp ném lỗi có chứa đúng tên chỗ sai, Gateway giả đếm 0 lời gọi; bảng đúng nạp được. Lệnh 'chay' với bảng sai (tệp tạm qua --cau-hinh) thoát 2, stderr chứa tên chỗ sai, 0 lời gọi."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dgs_db
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/tests/doc-gop-s03-db.itest.ts, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-4' trên DB thử (lát tạm, bài stg_zalo_posts tạm có agent_id 'TK_THU_U', sender_name 'NGUOI_DANG_X', sender_id 'SENDER_ID_T'; hai ảnh tệp trong thư mục snapshot tạm, một URL không tệp; nhãn vàng 'VANG_Y'; dòng source_registry tạm real_name 'TEN_THAT_Z', tên miền 'MIEN_THAT_W', source_ids ['SID_V']; chữ bài chứa 'TEN_THAT_Z' nhưng không chứa W, V, U): tin nhắn dựng có chữ bài nguyên văn chứa 'TEN_THAT_Z', đúng 2 phần file, tên nhóm và thẻ nhóm; JSON tin nhắn (kể cả tên phần file) không chứa NGUOI_DANG_X, SENDER_ID_T, TK_THU_U, VANG_Y, MIEN_THAT_W, SID_V; the.anh_thieu = 1. Ca 'DGS-AC-4-CO' (Gateway giả ghi providerOptions, ma trận viết trước ba mã): mọi lời gọi gateway.zeroDataRetention = true, disallowPromptTraining = true; lời gọi deepseek có gateway.only = ['baseten'], hai mã kia không có only. Chiều đỏ: thêm sender_name vào tin nhắn → 'LO NGUOI DANG'; thêm agent_id → 'LO TAI KHOAN THU'; thêm tên miền nguồn → 'LO SOURCE_REGISTRY'; bỏ only → 'DEEPSEEK KHONG QUA BASETEN'; bỏ ZDR → 'THIEU ZDR'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dgs_db
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-s03-db.itest.ts]
+    expected: "exit 0; ca 'DGS-AC-5' chạy lệnh chay trên DB thử với Gateway giả trả 17 ô: silver_labels thêm đúng 1 dòng (model 'gateway:anthropic/claude-haiku-5.5', prompt_version 'dg3-s03-v3', probabilities.o có đủ 17 khoá, mỗi khoá có v/cc/trich, có o_duoc_giao và cau_hinh_sha 64 hex), ai_calls thêm 1 dòng viec 'doc-gop-s03'; số dòng sale_offers, enrichment_proposals, review_queue, eval_labels trước = sau."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dgs_thuan
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-6': chữ bài 'Bán căn 2PN giá 3,4 tỷ'; ô price_min_vnd cc chu_bai trich '3,4 tỷ' → trich_ok true; ô area_m2 cc chu_bai trich '62m2' → trich_ok false; cả hai giữ v; ô cc anh không bị kiểm (trich_ok null). Chiều đỏ: bỏ kiểm trích → 'TRICH BIA KHONG BI DANH DAU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dgs_db
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-s03-db.itest.ts]
+    expected: "exit 0; ca 'DGS-AC-7' ba bài trên DB thử: bài A Gateway giả trả chữ 'khong phai json' → dòng silver_labels json_ok false, error_kind 'json-hong', cost_usd > 0; bài B ném lỗi mạng → 0 dòng nhãn, 1 dòng ai_calls ok=false; bài C trả JSON tốt. Lượt hai: Gateway giả đếm đúng 2 lời gọi (A, B), C không gọi lại; dòng A thay bằng nhãn tốt, cost_usd cộng dồn."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dgs_thuan
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-s03.test.ts]
+    expected: "exit 0; ca 'DGS-AC-8': (a) 10 thẻ, ước 0,003/thẻ, trần 0,01 → dừng, 0 lời gọi, in 'uoc vuot tran'; (b) chạy tuần tự, trần 0,05, ước 0,003/thẻ, Gateway giả báo cost 0,02/lời gọi; luật: trước mỗi lời gọi, đã chi + ước bài kế > trần thì dừng → đúng 3 lời gọi (0,04 + 0,003 ≤ 0,05 nên gọi lần 3; 0,06 + 0,003 > 0,05 nên dừng), in 'con lai 7'; (c) bảng cờ của lệnh chay chỉ nhận --lat, --post, --split, --tran-usd, --cau-hinh, --run-id, --thu; '--toan-bo', '--all' bị từ chối thoát 2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.dgs_db
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/tests/doc-gop-s03-db.itest.ts]
+    expected: "exit 0; ca 'DGS-AC-9' lát vàng tạm 3 thẻ × 17 ô trên DB thử, Gateway giả trả bảng viết trước: bảng ô × model khớp bảng tính tay (vd listing_intent 3/3, price_min_vnd 2/3, bathrooms người duyệt), USD/thẻ, JSON hỏng 0; số dòng silver_labels, ai_calls, eval_labels trước = sau; tệp tóm tắt không chứa chữ bài nào của 3 thẻ và không chứa tên người. Chiều đỏ: chuẩn hoá giá bỏ đổi số → 'BANG CHAM LECH BANG TINH TAY'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dgs_so_that
+    layer: backend-effect
+    paths: [agent/src/enrich/doc-gop-s03/**, agent/scripts/doc-gop-s03.ts, agent/config/doc-gop-s03.json, _acceptance/chon-model-theo-o/evidence/cham-test.json]
+    expected: "exit 0; ca 'DGS-AC-10' đọc _acceptance/chon-model-theo-o/evidence/cham-test.json: split 'test', so_the 23, model anthropic/claude-haiku-5.5, prompt_sha = PROMPT_SHA hiện tại, cau_hinh_sha = băm tệp bảng hiện tại, ma_sha = băm agent/src/enrich/doc-gop-s03/** + agent/scripts/doc-gop-s03.ts hiện tại, mau_so = 23 × số ô giao model (368 với bảng mặc định), dung_gop = dung / mau_so ≥ 0.92, usd_the ≤ 0.0025, có anh_thieu theo thẻ và dung_gop_bo_9991. Nhánh vùng xám 0.90 ≤ dung_gop < 0.92 → ca đỏ với thông điệp 'VUNG XAM — MANH PHAN'; dưới 0.90 → 'CHET DUOI 90'. Chiều đỏ: tóm tắt mang prompt_sha cũ → 'TOM TAT KHONG KHOP PROMPT'; ma_sha cũ → 'TOM TAT KHONG KHOP MA'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -22,6 +22,22 @@ import { LEVEL_VARIANT } from "./records-filter"
  * badge, thân cuộn = các tầng của tin. Ô chưa có dữ liệu ghi rõ «chưa có» kèm hàng lộ trình sẽ lấp nó.
  */
 
+const IDENTIFICATION_LABEL: Record<FlowRecord["identification"]["level"], string> = {
+  unit: "Gắn căn",
+  located: "Định vị",
+  clustered: "Gom cụm",
+  none: "Chưa định vị",
+}
+
+/** Dòng «Mức nhận diện» của ngăn tin — mức sâu nhất, kèm chữ «chờ khớp» khi tin ghi toà/trục hay mang định danh mà
+ * chưa khớp danh bạ (gan-can-dinh-danh-duy-nhat). */
+export function identificationLabel(id: FlowRecord["identification"]): string {
+  const cho = [id.locatedPending ? "ghi toà/trục, chờ khớp" : null, id.uniqueIdPending ? "đủ định danh, chờ khớp" : null]
+    .filter(Boolean)
+    .join(" · ")
+  return cho ? `${IDENTIFICATION_LABEL[id.level]} · ${cho}` : IDENTIFICATION_LABEL[id.level]
+}
+
 function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4 text-sm">
@@ -40,7 +56,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-/** Điều kiện lên bậc kế (bản DF0: năm trường lõi cho B1, gắn căn cho B2; loại thiếu tin/hệ thống ở DF2). */
+/** Điều kiện lên bậc kế (thang 08/11: năm trường lõi cho B1, định vị vào danh bạ cho B2, khớp một căn cho B3). */
 function LevelGate({ record }: { record: FlowRecord }) {
   const fields = coreFields(record)
   const missing = fields.filter((f) => !f.ok)
@@ -49,8 +65,8 @@ function LevelGate({ record }: { record: FlowRecord }) {
     level === DATA_LEVEL.B0
       ? `Lên B1 cần đủ năm trường lõi — còn thiếu ${missing.map((f) => f.label.toLowerCase()).join(", ")}.`
       : level === DATA_LEVEL.B1
-        ? "Lên B2 cần gắn được tin về một căn."
-        : "Lên B3 cần số đo trên nhãn cho các trường lõi (PL7, PL9)."
+        ? "Lên B2 cần định vị tin vào dự án, toà hoặc trục của danh bạ."
+        : "Lên B3 cần khớp đúng một căn của danh bạ."
   return (
     <Section title={`Trường lõi ${fields.length - missing.length}/5`}>
       <ul className="flex flex-wrap gap-1.5">
@@ -141,7 +157,7 @@ export function RecordSheet({
                 <Section title="Làm giàu và căn">
                   <dl className="flex flex-col gap-2">
                     <Row label="Đề xuất làm giàu" value="Chưa có · NT6" muted />
-                    <Row label="Căn" value={record.linked ? "Đã gắn" : "Chưa gắn"} muted={!record.linked} />
+                    <Row label="Mức nhận diện" value={identificationLabel(record.identification)} muted={record.identification.level === "none"} />
                     <Row label="Số bài gộp vào tin" value={fmtInt(record.nPosts)} />
                     <Row label="Lần cuối thấy" value={fmtVnDateTime(record.lastSeen)} />
                   </dl>

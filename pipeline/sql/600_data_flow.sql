@@ -7,8 +7,16 @@
 -- S06 «đọc được» = min(tin, quảng cáo) (chưa có khoá nối ngược), chuỗi ngày 30 ngày gần nhất cho mọi cửa sổ.
 -- Tên không mang tiền tố lược đồ: phép đo chạy tệp này trên lược đồ tạm mà không chạm bảng thật.
 -- Mốc «hôm nay» = `now()`; phép đo đặt `SET oneinvest.flow_now = '<ISO>'` trong phiên để ghim ngày (trống → now()).
--- Ba đoạn định nghĩa đứng trong cặp chú thích `/*<<<TÊN*/ … /*TÊN>>>*/` (IS_TEST · COMPLETE · ENRICH) để bài kiểm rút
+-- Năm đoạn định nghĩa đứng trong cặp chú thích `/*<<<TÊN*/ … /*TÊN>>>*/` (IS_TEST · COMPLETE · ENRICH · LOCATED_PENDING ·
+-- UNIQUE_ID) để bài kiểm rút
 -- đúng câu thật thay vì chép tay.
+-- DF6 (`bai-nhan-tru-bai-chi-anh`): nhánh của bài S03 (ảnh đã ghép vào tin · Yêu cầu · ảnh chưa ghép) KHÔNG tính ở đây —
+-- bộ chạy refresh-data-flow.mjs tính bằng hàm của transform (pipeline/lib/nhanh-bai-s03.mjs), nạp bảng tạm
+-- `flow_s03_branch` của phiên rồi bật `oneinvest.flow_branch`. Cờ tắt (600 chạy trần) → khối KHÔNG có ba khoá nhánh, giống
+-- hệt khối trước DF6 (trang đọc khoá vắng thành null — normalizeFacts).
+-- «Đọc được» thắng mọi nhánh: bài trong post_ids của tin không bao giờ vào nhánh mới.
+
+CREATE TEMP TABLE IF NOT EXISTS flow_s03_branch (post_id text PRIMARY KEY, branch text NOT NULL);
 
 BEGIN;
 
@@ -27,6 +35,9 @@ win AS (
 ),
 series AS (SELECT (SELECT d FROM today) - 29 AS from_day),
 src AS (SELECT * FROM (VALUES ('S03', 1), ('S05', 2), ('S06', 3)) AS s(source, ord)),
+-- Nhánh bài S03 chỉ có nghĩa khi bộ chạy đã nạp (cờ bật). Nối THẲNG bảng tạm (khoá chính post_id) — bọc nó trong CTE
+-- thì planner mất chỉ mục và lặp lồng hàng tỉ dòng (đo 09/11: 1 giây thành hơn 3 phút).
+flag AS (SELECT coalesce(current_setting('oneinvest.flow_branch', true), '') = 'on' AS on_),
 -- Bài S03/S05: bản chụp mới nhất của mỗi post_id; nguồn theo tác tử; dấu bài thử.
 p AS (
   SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, group_name, posted_at
@@ -52,8 +63,12 @@ posts_daily AS (
          count(*) FILTER (WHERE NOT t.is_test) AS received,
          count(*) FILTER (WHERE t.is_test) AS test_rejected,
          count(*) FILTER (WHERE NOT t.is_test AND u.post_id IS NOT NULL) AS readable,
+         count(*) FILTER (WHERE NOT t.is_test AND u.post_id IS NULL AND b.branch = 'anh-da-ghep') AS image_merged,
+         count(*) FILTER (WHERE NOT t.is_test AND u.post_id IS NULL AND b.branch = 'yeu-cau') AS inquiry,
+         count(*) FILTER (WHERE NOT t.is_test AND u.post_id IS NULL AND b.branch = 'anh-chua-ghep') AS image_unmerged,
          max(t.posted_at) FILTER (WHERE NOT t.is_test)::text AS latest
   FROM t LEFT JOIN used u ON u.post_id = t.post_id AND u.source = t.src
+         LEFT JOIN flow_s03_branch b ON b.post_id = t.post_id AND t.src = 'S03' AND (SELECT on_ FROM flag)
   GROUP BY 1, 2
 ),
 ads_daily AS (
@@ -61,9 +76,41 @@ ads_daily AS (
          count(*) AS received, max(list_time)::text AS latest
   FROM stg_chotot_ads GROUP BY 2
 ),
+-- Mức nhận diện của tin (gan-can-dinh-danh-duy-nhat, FRAMING §3.4 viết lại 08/11). Gom cụm: tin nằm trong cụm
+-- `properties` có từ hai tin SỐNG (view sale_offers) — cụm một tin không tính. Định vị (B2) và Gắn căn (B3) chỉ tính khi
+-- tin khớp một nút của danh bạ; toà, trục, mã căn, số nhà trong chữ tin chỉ là «chờ khớp».
+cum AS (
+  SELECT po.property_id, count(DISTINCT po.offer_id) AS n
+  FROM property_offers po JOIN sale_offers o ON o.offer_id = po.offer_id
+  GROUP BY 1
+),
+-- Chưa có bảng nối tin → nút danh bạ (V9, chuỗi GC0–GC3): hai CTE rỗng này là chỗ DUY NHẤT phải đổi khi bộ gắn ra đời.
+dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),
+gan_can_link AS (SELECT NULL::text AS offer_id WHERE false),
+muc AS (
+  SELECT o.offer_id,
+         EXISTS (SELECT 1 FROM property_offers po JOIN cum c ON c.property_id = po.property_id
+                 WHERE po.offer_id = o.offer_id AND c.n >= 2) AS clustered,
+         EXISTS (SELECT 1 FROM dinh_vi_link l WHERE l.offer_id = o.offer_id) AS located,
+         EXISTS (SELECT 1 FROM gan_can_link l WHERE l.offer_id = o.offer_id) AS unit_linked,
+         coalesce(/*<<<LOCATED_PENDING*/nullif(btrim(o.block_raw), '') IS NOT NULL OR o.unit_number ~* 'xx'/*LOCATED_PENDING>>>*/, false) AS ghi_toa,
+         coalesce(/*<<<UNIQUE_ID*/(nullif(btrim(o.block_raw), '') IS NOT NULL AND o.unit_number !~* 'xx'
+                   AND o.unit_number NOT IN ('0', '1') AND length(o.unit_number) >= 3)
+                  OR (o.street_number NOT IN ('0', '1') AND nullif(btrim(o.street_raw), '') IS NOT NULL
+                   AND a.region_type = 'submarket')/*UNIQUE_ID>>>*/, false) AS dinh_danh
+  FROM sale_offers o LEFT JOIN areas a ON a.id = o.area_id
+  WHERE o.source IN ('S03', 'S05', 'S06')
+),
 offers_daily AS (
   SELECT o.source, (o.first_seen AT TIME ZONE 'Asia/Ho_Chi_Minh')::date AS d,
-         count(*) AS offers, count(po.offer_id) AS linked,
+         count(*) AS offers,
+         count(*) FILTER (WHERE m.clustered) AS clustered,
+         count(*) FILTER (WHERE m.located) AS located,
+         count(*) FILTER (WHERE m.unit_linked) AS unit_linked,
+         count(*) FILTER (WHERE m.ghi_toa AND NOT m.located) AS located_pending,
+         count(*) FILTER (WHERE m.dinh_danh AND NOT m.unit_linked) AS unique_id_pending,
+         count(*) FILTER (WHERE m.located AND NOT m.unit_linked) AS deep_located,
+         count(*) FILTER (WHERE m.clustered AND NOT m.located AND NOT m.unit_linked) AS deep_clustered,
          count(*) FILTER (WHERE o.area_id IS NOT NULL) AS with_ward,
          count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
          count(*) FILTER (WHERE o.price_vnd IS NOT NULL AND o.area_m2 IS NOT NULL) AS with_price_area,
@@ -72,25 +119,28 @@ offers_daily AS (
                           AND o.price_vnd > 0 AND o.area_m2 > 0 AND o.area_id IS NOT NULL/*COMPLETE>>>*/) AS complete,
          count(*) FILTER (WHERE o.kind = 'sale') AS sale,
          count(*) FILTER (WHERE o.kind = 'rent_lt') AS rent_lt
-  FROM sale_offers o LEFT JOIN (SELECT DISTINCT offer_id FROM property_offers) po USING (offer_id)
-  WHERE o.source IN ('S03', 'S05', 'S06')
+  FROM sale_offers o JOIN muc m USING (offer_id)
   GROUP BY 1, 2
 ),
 -- Tổng theo (cửa sổ, nguồn).
 recv AS (
   SELECT w.time_window, x.source,
-         sum(x.received) AS received, sum(x.readable) AS readable, sum(x.test_rejected) AS test_rejected, max(x.latest) AS latest
+         sum(x.received) AS received, sum(x.readable) AS readable, sum(x.test_rejected) AS test_rejected, max(x.latest) AS latest,
+         sum(x.image_merged) AS image_merged, sum(x.inquiry) AS inquiry, sum(x.image_unmerged) AS image_unmerged
   FROM win w
   JOIN (
-    SELECT source, d, received, readable, test_rejected, latest FROM posts_daily
+    SELECT source, d, received, readable, test_rejected, latest, image_merged, inquiry, image_unmerged FROM posts_daily
     UNION ALL
-    SELECT source, d, received, 0, 0, latest FROM ads_daily
+    SELECT source, d, received, 0, 0, latest, 0, 0, 0 FROM ads_daily
   ) x ON w.since_day IS NULL OR x.d >= w.since_day
   GROUP BY 1, 2
 ),
 offs AS (
   SELECT w.time_window, o.source,
-         sum(o.offers) AS offers, sum(o.linked) AS linked, sum(o.with_ward) AS with_ward, sum(o.with_type) AS with_type,
+         sum(o.offers) AS offers, sum(o.clustered) AS clustered, sum(o.located) AS located,
+         sum(o.unit_linked) AS unit_linked, sum(o.located_pending) AS located_pending,
+         sum(o.unique_id_pending) AS unique_id_pending, sum(o.deep_located) AS deep_located,
+         sum(o.deep_clustered) AS deep_clustered, sum(o.with_ward) AS with_ward, sum(o.with_type) AS with_type,
          sum(o.with_price_area) AS with_price_area, sum(o.complete) AS complete, sum(o.high_conf) AS high_conf,
          sum(o.sale) AS sale, sum(o.rent_lt) AS rent_lt
   FROM win w JOIN offers_daily o ON w.since_day IS NULL OR o.d >= w.since_day
@@ -104,7 +154,13 @@ sources_by_win AS (
            'readable', CASE WHEN s.source = 'S06' THEN least(coalesce(f.offers, 0), coalesce(r.received, 0))
                             ELSE coalesce(r.readable, 0) END,
            'offers', coalesce(f.offers, 0),
-           'linked', coalesce(f.linked, 0),
+           'clustered', coalesce(f.clustered, 0),
+           'located', coalesce(f.located, 0),
+           'unitLinked', coalesce(f.unit_linked, 0),
+           'locatedPending', coalesce(f.located_pending, 0),
+           'uniqueIdPending', coalesce(f.unique_id_pending, 0),
+           'deepest', jsonb_build_object('unitLinked', coalesce(f.unit_linked, 0), 'located', coalesce(f.deep_located, 0),
+                                         'clustered', coalesce(f.deep_clustered, 0)),
            'testRejected', coalesce(r.test_rejected, 0),
            'withWard', coalesce(f.with_ward, 0),
            'withType', coalesce(f.with_type, 0),
@@ -113,7 +169,9 @@ sources_by_win AS (
            'highConfidence', coalesce(f.high_conf, 0),
            'latestAt', r.latest,
            'approx', s.source = 'S06'
-         ) ORDER BY s.ord) AS sources,
+         ) || CASE WHEN (SELECT on_ FROM flag) THEN jsonb_build_object(
+           'imageMerged', coalesce(r.image_merged, 0), 'inquiry', coalesce(r.inquiry, 0),
+           'imageUnmerged', coalesce(r.image_unmerged, 0)) ELSE '{}'::jsonb END ORDER BY s.ord) AS sources,
          jsonb_build_object('sale', coalesce(sum(f.sale), 0), 'rentLt', coalesce(sum(f.rent_lt), 0)) AS mix_base
   FROM win w CROSS JOIN src s
   LEFT JOIN recv r ON r.time_window = w.time_window AND r.source = s.source
@@ -122,13 +180,15 @@ sources_by_win AS (
 ),
 -- Chuỗi 30 ngày theo (nguồn, ngày) — giống nhau ở mọi cửa sổ; chỉ ngày có số.
 days_raw AS (
-  SELECT source, d, sum(received) AS received, sum(readable) AS readable, sum(offers) AS offers, sum(linked) AS linked
+  SELECT source, d, sum(received) AS received, sum(readable) AS readable, sum(offers) AS offers,
+         sum(unit_linked) AS unit_linked, sum(image_merged) AS image_merged, sum(inquiry) AS inquiry,
+         sum(image_unmerged) AS image_unmerged
   FROM (
-    SELECT source, d, received, readable, 0 AS offers, 0 AS linked FROM posts_daily
+    SELECT source, d, received, readable, 0 AS offers, 0 AS unit_linked, image_merged, inquiry, image_unmerged FROM posts_daily
     UNION ALL
-    SELECT source, d, received, 0, 0, 0 FROM ads_daily
+    SELECT source, d, received, 0, 0, 0, 0, 0, 0 FROM ads_daily
     UNION ALL
-    SELECT source, d, 0, 0, offers, linked FROM offers_daily
+    SELECT source, d, 0, 0, offers, unit_linked, 0, 0, 0 FROM offers_daily
   ) x
   WHERE d >= (SELECT from_day FROM series)
   GROUP BY 1, 2
@@ -137,8 +197,10 @@ days_json AS (
   SELECT coalesce(jsonb_agg(jsonb_build_object(
            'source', source, 'day', d::text, 'received', received,
            'readable', CASE WHEN source = 'S06' THEN least(offers, received) ELSE readable END,
-           'offers', offers, 'linked', linked
-         ) ORDER BY d, source), '[]'::jsonb) AS days
+           'offers', offers, 'unitLinked', unit_linked
+         ) || CASE WHEN (SELECT on_ FROM flag) THEN jsonb_build_object(
+           'imageMerged', image_merged, 'inquiry', inquiry, 'imageUnmerged', image_unmerged) ELSE '{}'::jsonb END
+         ORDER BY d, source), '[]'::jsonb) AS days
   FROM days_raw
 ),
 -- Nhóm thu theo cửa sổ (đếm phân biệt nên tính riêng mỗi cửa sổ, không cộng theo ngày).
@@ -147,7 +209,8 @@ groups_by_win AS (
          coalesce(jsonb_agg(jsonb_build_object(
            'group', g.g, 'source', g.src, 'received', g.received, 'readable', g.readable, 'offers', g.offers,
            'latestAt', g.latest
-         ) ORDER BY g.src, g.g) FILTER (WHERE g.g IS NOT NULL), '[]'::jsonb) AS groups
+         ) || CASE WHEN (SELECT on_ FROM flag) THEN jsonb_build_object(
+           'imageMerged', g.image_merged, 'inquiry', g.inquiry, 'imageUnmerged', g.image_unmerged) ELSE '{}'::jsonb END ORDER BY g.src, g.g) FILTER (WHERE g.g IS NOT NULL), '[]'::jsonb) AS groups
   FROM win w
   LEFT JOIN LATERAL (
     -- Tên nhóm là tầng C; tên rỗng hay chính là mã nhóm (handler thiếu tên kênh ghi mã vào group_name) gộp vào
@@ -159,8 +222,12 @@ groups_by_win AS (
            count(DISTINCT t.post_id) AS received,
            count(DISTINCT t.post_id) FILTER (WHERE l.offer_id IS NOT NULL) AS readable,
            count(DISTINCT l.offer_id) AS offers,
-           max(t.posted_at)::text AS latest
+           max(t.posted_at)::text AS latest,
+           count(DISTINCT t.post_id) FILTER (WHERE l.offer_id IS NULL AND b.branch = 'anh-da-ghep') AS image_merged,
+           count(DISTINCT t.post_id) FILTER (WHERE l.offer_id IS NULL AND b.branch = 'yeu-cau') AS inquiry,
+           count(DISTINCT t.post_id) FILTER (WHERE l.offer_id IS NULL AND b.branch = 'anh-chua-ghep') AS image_unmerged
     FROM t LEFT JOIN link l ON l.post_id = t.post_id AND l.source = t.src
+           LEFT JOIN flow_s03_branch b ON b.post_id = t.post_id AND t.src = 'S03' AND (SELECT on_ FROM flag)
     WHERE NOT t.is_test
       AND (w.since_day IS NULL OR t.posted_at >= (w.since_day::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh'))
     GROUP BY 1, 2

@@ -1,0 +1,90 @@
+schema_version: 1
+feature_slug: test-suite-db-thu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tsdt_mot
+    paths: [db/db-thu.sh, scripts/db-thu.test.mjs]
+    expected: "exit 0; các ca DT-AC-1 trên docker giả: URL của lệnh khớp /oneinvest_suite_app_\\d+$ khi thiếu biến, khi vào bằng URL DB chung, dạng kèm ?options= và dạng không có tên đăng nhập; mã 7 giữ nguyên, SIGTERM thoát 143 dưới 5 giây; có lệnh dropdb DB của lượt ở cả ba kết cục; ghiDbChung rỗng. Chiều đỏ chạy ngay trong ca: bản chép script bỏ nhánh đổi URL để lộ URL DB chung, kèm thông điệp ghim «DB chung lọt qua»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1b
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tsdt_mot
+    paths: [db/db-thu.sh, scripts/db-thu.test.mjs]
+    expected: "exit 0; các ca DT-AC-2: URL DB thử khác giữ nguyên, TEST_DATABASE_URL_ADMIN theo URL đó, không lệnh docker nào; CI=true thiếu container chạy thẳng; máy thiếu container thoát 3 và lệnh không chạy, thông điệp «container one-invest-db không chạy»; tên ngoài khuôn thoát 2; đĩa dưới 10 GB thoát 4, không createdb; tên oneinvest_khac giữ nguyên URL; cùng tên oneinvest ở cổng khác giữ nguyên URL, 127.0.0.1:5433 vẫn tính là DB chung; chế độ không --chay từ chối tên oneinvest và --xoa chỉ xoá đúng tên. Chiều đỏ: cùng cặp trên một docker giả, chay=true thì lệnh chạy, chay=false thì không."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E1c
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tsdt_mot
+    paths: [db/db-thu.sh, scripts/db-thu.test.mjs]
+    expected: "exit 0; các ca DT-AC-3: mẫu mới 0 pg_dump; dấu lệch, quá 24 giờ, chưa có đều đúng 1 pg_dump vào oneinvest_suite_mau_moi_<pid>, có VACUUM ANALYZE trên bản mới trước khi khoá kết nối rồi RENAME; VACUUM ANALYZE lỗi thì không RENAME, lệnh không chạy; mẫu vừa được bên khác dựng trong lúc xin khoá thì 0 pg_dump; DB có chủ pid chết bị xoá, chủ sống giữ. Đối chứng trên cùng docker giả: dấu khớp thì 0 dump, dấu lệch thì 1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tsdt_that
+    long_running: 20
+    layer: backend-effect
+    paths: [db/db-thu.sh, _acceptance/test-suite-db-thu/probes/that.sh]
+    expected: "exit 0, in «E2 đạt»; trên :5433 thật hai lượt song song có hai DB khác nhau cùng tồn tại, có dữ liệu sale_offer_records, sau khi xong 0 DB sót; datallowconn của mẫu = f; COMMENT khớp ^[0-9a-f]{32} [0-9]+$; lệnh đỏ và SIGTERM với lệnh giữ kết nối không để sót DB; ba lượt thấy mẫu lệch dấu cùng lúc thì đúng một lần dựng, cả ba exit 0, 0 DB mau_moi sót; SIGKILL để lại DB (đối chứng), lượt kế dọn. Đo bằng pg_database, không bằng lệnh đã gọi. Chiều đỏ: thông điệp ghim «E2 DB mồ côi», «E2 hai lượt chung một DB»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tsdt_chung
+    layer: backend-effect
+    paths: [_acceptance/test-suite-db-thu/probes/song-song.mjs, app/tests/sellers-chip.test.tsx, pipeline/resolve-properties.mjs, pipeline/refresh-bait-gap.mjs]
+    expected: "exit 0; đối chứng cho E4: SD-AC-6 trỏ thẳng bản chép đóng vai DB chung, cùng bên ghi thật; JSON có mau_ket_noi_cua_test_toi_db_chung > 0, ben_ghi.luot_xanh > 0, ben_ghi.tang_ghi > 0 đo từ sau câu DELETE của probe; đối chứng cùng thước: bên ghi không chạy được thì in «thước hỏng: bên ghi không chạy», và bộ đếm deadlock thấy ca tự gây bằng hai giao dịch đảo khoá. Thiếu một trong ba thì thoát 3 «thước hỏng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tsdt_rieng
+    layer: backend-effect
+    paths: [db/db-thu.sh, _acceptance/test-suite-db-thu/probes/song-song.mjs, app/tests/sellers-chip.test.tsx]
+    expected: "exit 0; cùng bên ghi với E3, SD-AC-6 đi qua db-thu --chay, vào bằng DATABASE_URL trỏ oneinvest: ba lượt exit 0, mau_ket_noi_toi_oneinvest_that = 0, mau_ket_noi_cua_test_toi_db_chung = 0, mau_ket_noi_toi_db_cua_luot > 0, ben_ghi.luot_xanh > 0, ben_ghi.tang_ghi > 0 đo từ sau câu DELETE của probe; đối chứng cùng thước: bên ghi không chạy được thì in «thước hỏng: bên ghi không chạy». Chiều đỏ: E3 cùng fixture thấy kết nối > 0; lượt đỏ in «SD-AC-6 đỏ dù đã trên bản riêng», còn kết nối in «lượt test còn nối vào DB chung»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tsdt_ba_bo
+    long_running: 40
+    layer: backend-effect
+    paths: [app/package.json, app/tests/**, db/db-thu.sh, _acceptance/test-suite-db-thu/probes/lay-mau.mjs]
+    expected: "exit 0; dòng «app:» của ba-bo.sh là JSON của lay-mau có exit 0, ca.fail = 0, ca.pass > 0, ket_noi_db_chung = 0, ket_noi_db_khac > 0, moi_db có khoá oneinvest_suite_app_<pid>. Chiều đỏ: lượt có kết nối vào oneinvest thì «lượt còn N kết nối vào DB chung oneinvest»; đối chứng dương: 0 kết nối ở mọi DB thì thoát 3 «thước hỏng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tsdt_ba_bo
+    long_running: 40
+    layer: backend-effect
+    paths: [pipeline/package.json, pipeline/scripts/**, pipeline/*.test.mjs, db/db-thu.sh, _acceptance/test-suite-db-thu/probes/lay-mau.mjs]
+    expected: "exit 0; dòng «pipeline:» của ba-bo.sh như E5, moi_db có khoá oneinvest_suite_pipeline_<pid>, ket_noi_db_chung = 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tsdt_ba_bo
+    long_running: 40
+    layer: backend-effect
+    paths: [agent/package.json, agent/tests/**, db/db-thu.sh, _acceptance/test-suite-db-thu/probes/lay-mau.mjs]
+    expected: "exit 0; dòng «agent:» của ba-bo.sh như E5, moi_db có khoá oneinvest_suite_agent_<pid>, ket_noi_db_chung = 0."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.sellers_chip
+    paths: [db/db-thu.sh, app/tests/sellers-chip.test.tsx, _acceptance/config.yaml]
+    expected: "exit 0; executor sellers_chip của lượt chấm qua db-thu --chay, SD-AC-6 xanh. Ca DT-AC-5 trong scripts/db-thu.test.mjs ghim chuỗi executor này chứa db-thu.sh oneinvest_suite_ --chay, đổi về node --test thẳng thì đỏ với thông điệp «sellers_chip không đi qua db-thu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tsdt_mot
+    paths: [scripts/db-thu.test.mjs, app/package.json, pipeline/package.json, agent/package.json, app/tests/**, agent/tests/**, pipeline/scripts/**, pipeline/*.test.mjs]
+    expected: "exit 0; ca DT-AC-7: ba script test mở đầu bash ../db/db-thu.sh oneinvest_suite_<bộ> --chay; mỗi bộ quét ≥ 20 tệp, dongLot rỗng trên mọi tệp test và mọi tệp chúng import (capture-ops-facts, judge-chung, helpers/db có mặt trong danh sách quét). Đối chứng cùng hàm quét: bắt đúng mười một dạng lọt, bỏ qua tám dạng lành, thông điệp «phải bắt», «không được bắt»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

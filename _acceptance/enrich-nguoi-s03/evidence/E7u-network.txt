@@ -1,0 +1,2 @@
+document 200 /listing/offer_2d735797ab849665
+fetch 200 /api/v1/listings/offer_2d735797ab849665/contact

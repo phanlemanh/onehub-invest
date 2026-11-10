@@ -7,24 +7,33 @@ export const STAGE_COLOR: Record<Stage, string> = {
   channel: "var(--foreground)",
   journey: "var(--foreground)",
   linked: "var(--success)",
+  located: "var(--info)",
+  clustered: "var(--chart-3)",
   dropped: "var(--destructive)",
   merged: "var(--muted-foreground)",
+  inquiry: "var(--color-cyan-500)",
 }
 
 export const STAGE_LABEL: Record<Stage, string> = {
   channel: "Nguồn",
   journey: "Đang chảy",
   linked: "Gắn căn",
+  located: "Định vị",
+  clustered: "Gom cụm",
   dropped: "Rơi khỏi ống",
   merged: "Gộp trùng",
+  inquiry: "Yêu cầu",
 }
 
 const STAGE_DOT: Record<Stage, string> = {
   channel: "bg-foreground",
   journey: "bg-foreground",
   linked: "bg-success",
+  located: "bg-info",
+  clustered: "bg-chart-3",
   dropped: "bg-destructive",
   merged: "bg-muted-foreground",
+  inquiry: "bg-cyan-500 dark:bg-cyan-400",
 }
 
 export function StageFace({ stage }: { stage: Stage }) {

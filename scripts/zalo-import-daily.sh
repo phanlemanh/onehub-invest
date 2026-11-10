@@ -16,6 +16,20 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
 
+# 1011-3 nấc 1 «S03 lên nhanh» (Mạnh chốt 10/11, giám sát cho bật 10/11 sau N1 đo
+# transform+media+refresh ≈ 76s/lượt): lượt nhanh 15′ ban ngày 7–22h gọi với
+# --luot-nhanh. Cờ CHỈ đổi hai chỗ: (1) lấy khoá — bận thì BỎ LƯỢT, thoát 0, không
+# xếp hàng chờ như lượt 00:00; (2) export S03_LUOT_NHANH=1 để phần làn Claude biết
+# đây là lượt nhanh. Chuỗi vẫn chạy tiếp nạp → transform → media → refresh để tin
+# S03 lên sale_offers trong ngày; đọc gộp và enrich (bước LLM dài) giữ ở lượt 00:00.
+LUOT_NHANH=0
+case "${1:-}" in
+  "") ;;
+  --luot-nhanh) LUOT_NHANH=1 ;;
+  *) echo "❌ cờ không biết '${1}' — chỉ nhận --luot-nhanh (không cờ = lượt 00:00 đầy đủ)" >&2; exit 2 ;;
+esac
+export S03_LUOT_NHANH="$LUOT_NHANH"
+
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
 import_one() {
@@ -46,6 +60,11 @@ go_khoa_cu() {
   [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
   [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
   local goc_do_tuoi=0
+  # Lượt nhanh (review 1011-3): PID còn sống thì KHÔNG gỡ dù khoá cũ >2h hay luc hỏng — lượt 00:00 nạp dồn có
+  # thể giữ khoá lâu; gỡ là hai lượt nạp chồng nhau. Bỏ lượt, 15′ sau thử lại.
+  if [ "$LUOT_NHANH" = "1" ] && [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    return 1
+  fi
   if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
     echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; goc_do_tuoi=1
   elif [ -n "$luc" ] && ! [[ "$luc" =~ ^[0-9]+$ ]]; then
@@ -61,9 +80,17 @@ go_khoa_cu() {
   fi
   return 1
 }
-i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
-  go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
-done
+if [ "$LUOT_NHANH" = "1" ]; then
+  # lượt nhanh: thử lấy khoá 1 lần (dọn được khoá chết thì thử lại lần nữa);
+  # vẫn bận = lượt khác đang nạp — bỏ lượt, thoát 0 (không fail, không chờ)
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    go_khoa_cu && mkdir "$LOCK_DIR" 2>/dev/null || { echo "⏭ bỏ lượt (khoá $LOCK_DIR bận — lượt khác đang nạp)"; exit 0; }
+  fi
+else
+  i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+    go_khoa_cu || { i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }; sleep 5; }
+  done
+fi
 echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
 trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
@@ -126,15 +153,77 @@ echo "$MAXTS" > "$STATE"
 if [ "$FAILED" != "0" ]; then
   exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
 fi
+
+# claudedp-1011-12 (link-nguoi-ban-s03 Ngoài-1/5/6, Mạnh ký Cổng 2 10/11): nạp snapshot HỒ SƠ người bán S03
+# (nguồn s03-ho-so, collector API /s03-ho-so ghi) vào stg_s03_ho_so — trước đây không tác vụ nào nạp nên bảng luôn
+# rỗng và bước ghi link hồ sơ trong refresh-bait-gap không có gì để ghi.
+# - Con trỏ RIÊNG (s03-ho-so.state): snapshot hồ sơ sinh theo nhịp bộ tra, không theo nhịp tin; dùng chung con
+#   trỏ tin thì một snapshot hồ sơ mốc cũ hơn con trỏ sẽ bị bỏ vĩnh viễn.
+# - Ngoài-6: importer gặp DB thiếu 080 in CHUA-AP-080 rồi thoát 0 mà KHÔNG nạp — ở đây coi đó là chưa nạp: GIỮ con
+#   trỏ, dừng vòng hồ sơ, báo JOB FAIL; lượt sau (khi đã áp 080) nạp lại đủ. Nạp hỏng cũng giữ con trỏ.
+# - Hồ sơ hỏng không chặn chuỗi tin: transform/media/refresh vẫn chạy, mã thoát cuối mang lỗi hồ sơ.
+HS_STATE="$ROOT/pipeline/logs/s03-ho-so.state"
+HS_LAST=$(cat "$HS_STATE" 2>/dev/null || echo "00000000T000000")
+HS_MAX="$HS_LAST"
+HS_RC=0
+HS_DIRS=$(find "$ROOT/collector/snapshots" -maxdepth 2 -type d -name '*__s03-ho-so__*') || { echo "❌ lỗi liệt kê snapshot hồ sơ (find)" >&2; HS_RC=3; HS_DIRS=""; }
+for SNAP in $(printf '%s\n' "$HS_DIRS" | while read -r d; do
+    [ -n "$d" ] || continue
+    b=${d##*/}; [ "${b#.}" != "$b" ] && continue
+    ts=${b##*__}
+    echo "$ts" | grep -qE "$TS_RE" || { echo "bỏ qua thư mục hồ sơ TS không phải mốc thời gian: $d" >&2; continue; }
+    echo "$ts $d"
+  done | sort | while read -r _ d; do echo "$d"; done); do
+  TS=${SNAP##*__}
+  [[ "$TS" > "$HS_LAST" ]] || continue
+  if [ ! -f "$SNAP/manifest.json" ]; then
+    # như vòng tin (2510-8): thiếu manifest <30′ = đang ghi → giữ con trỏ, lượt sau thử lại; ≥30′ = mồ côi → bỏ, đi tiếp
+    if [ -n "$(find "$SNAP" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+      echo "⏸ snapshot hồ sơ chưa xong (thiếu manifest, <30′): $SNAP — giữ con trỏ hồ sơ"; break
+    fi
+    echo "⚠️ snapshot hồ sơ mồ côi (thiếu manifest, ≥30′) — bỏ qua, đi tiếp: $SNAP"
+    HS_MAX="$TS"; continue
+  fi
+  if ! OUT=$(import_one "$SNAP"); then
+    printf '%s\n' "$OUT"
+    echo "❌ nạp hồ sơ fail tại $SNAP — giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=1; break
+  fi
+  printf '%s\n' "$OUT"
+  # so khớp trong shell, KHÔNG qua ống: printf | grep -q dưới pipefail có thể dính SIGPIPE (141) khi đầu ra lớn
+  # và dòng CHUA nằm đầu → bỏ lọt đúng ca mất dữ liệu Ngoài-6 (review 10/11)
+  if [[ "$OUT" == *CHUA-AP-080* ]]; then
+    echo "❌ DB chưa áp 080 — snapshot hồ sơ $SNAP CHƯA nạp, giữ con trỏ hồ sơ ở $HS_MAX"; HS_RC=4; break
+  fi
+  HS_MAX="$TS"
+done
+echo "$HS_MAX" > "$HS_STATE"
 # Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
+if [ "$HS_RC" != "0" ]; then
+  echo "JOB FAIL [zalo-import-daily] bước nap-ho-so mã $HS_RC" >&2
+  JOB_RC=$HS_RC
+fi
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
 job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Lượt nhanh 15′ (S03_LUOT_NHANH=1) dừng ở đây: đọc gộp và enrich chỉ chạy ở lượt
+# 00:00 cho tới khi hàng s03-len-nhanh-nac-1 của N1 gộp ENRICH_LIMIT=0 ban ngày +
+# lock_timeout (lời giám sát 10/11). Khoá nạp nhả qua trap EXIT.
+if [ "${S03_LUOT_NHANH:-0}" = "1" ]; then
+  echo "lượt nhanh: bỏ đọc gộp + enrich (chạy ở lượt 00:00)"
+  exit "$JOB_RC"
+fi
 # Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
 # (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
 trap - EXIT; rm -rf "$LOCK_DIR"
+# PL34 (claudedp-0911-7 MỞ LẠI lần 2): đặt SAU nhả khoá nạp — bước LLM dài
+# (đọc cả ngày bài) không giữ khoá, apify-facebook-daily không phải chờ.
+# Bảo đảm đọc bảng ĐÃ NẠP XONG: import hỏng thì tệp đã exit 1 trước đó
+# (không bao giờ tới đây); transform-zalo hỏng không ảnh hưởng stg_zalo_posts
+# (job_run không dừng khi bước trước hỏng — chỉ giữ JOB_RC). Vẫn trước
+# enrich-run; trước mau-soat là mốc mềm (tự vớt ≤0,05 USD). Trần mặc định 20.
+job_run zalo-import-daily doc-gop-hang-ngay bash "$ROOT/pipeline/doc-gop-hang-ngay.sh"
 enrich_run() { (cd "$ROOT/agent" && LIMIT="${ENRICH_LIMIT:-50}" node --import tsx scripts/enrich-run.ts); }
 job_run zalo-import-daily enrich-run enrich_run
 exit "$JOB_RC"

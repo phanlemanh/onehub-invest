@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
+import { inKhongSo } from "./lib/in-khong-so.mjs";
 import { daCoPhanGiu068, nap068 } from "./lib/nap-068.mjs";
 import { daCoNhan070, nap070 } from "./lib/nap-070.mjs";
 
@@ -212,11 +213,7 @@ export function kiemBatBien(so) {
   return loi;
 }
 
-/** Chặn cuối trước khi in: đầu ra lệnh không được mang SĐT, ở cả dạng +84 lẫn 0. */
-export function inKhongSo(dong) {
-  if (/\+84\d{9}|(?<![0-9a-f])0\d{9}(?![0-9a-f])/.test(dong)) throw new Error("RO-SO: dòng in có dạng số điện thoại");
-  return dong;
-}
+export { inKhongSo };
 
 const dongLoai = (ten, truoc, sau) => inKhongSo(`${ten} tin=${sau.tin} song=${sau.song} nghi=${sau.nghi} truoc=${truoc.co_so} sau=${sau.co_so} `
   + `sau_song=${sau.co_so_song} sau_nghi=${sau.co_so_nghi} truc_tiep=${sau.truc_tiep} ghep=${sau.ghep}`);

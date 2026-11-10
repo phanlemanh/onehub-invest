@@ -1,0 +1,1 @@
+E8 verify 2026-11-09: driver ego-browser khong doc duoc network/console; networkObserved=n-a (driver)

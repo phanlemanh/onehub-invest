@@ -70,6 +70,9 @@ test("E1 đối chứng đỏ: z = 1,645 lệch mốc 99/100", () =>
 const NHOM_VIET_TRUOC = {
   listing_intent: ["A", 0.95], kind: ["A", 0.95], property_type: ["A", 0.95], project: ["A", 0.95], building: ["A", 0.95],
   price_min_vnd: ["B", 0.9], price_max_vnd: ["B", 0.9], area_m2: ["B", 0.9], bedrooms: ["B", 0.9],
+  // truong-nhan-s03-081: bảy trường GN1 theo F3 (mã căn A, cơ sở giá B, năm trường mô tả C 0,80).
+  unit_number: ["A", 0.95], price_basis: ["B", 0.9],
+  furnished: ["C", 0.8], direction_faces: ["C", 0.8], view: ["C", 0.8], availability_date: ["C", 0.8], rent_includes: ["C", 0.8],
 };
 function kiemTrangThai(mod) {
   let soAssert = 0;
@@ -78,7 +81,7 @@ function kiemTrangThai(mod) {
     if (x.nhom !== nhom || x.nguong !== nguong) throw new Error(`NHOM TRUONG LECH ${f}`);
     soAssert++;
   }
-  assert.equal(soAssert, 9);
+  assert.equal(soAssert, 16);
   const ca = [
     ["kind", 150, 148, "pass"], ["kind", 150, 147, "fail"], ["area_m2", 150, 143, "pass"], ["area_m2", 150, 142, "fail"],
   ];
@@ -101,7 +104,10 @@ test("E2 đối chứng đỏ: area_m2 vào nhóm A", () =>
 const KHONG = { value: null, not_stated: true };
 const co = (v) => ({ value: v, not_stated: false });
 const GIA_TRI_MAU = { listing_intent: "offer", kind: "sale", property_type: "apartment", project: "ocp1", building: "pr2",
-  price_min_vnd: "3150000000", price_max_vnd: "3150000000", area_m2: "64", bedrooms: "2" };
+  price_min_vnd: "3150000000", price_max_vnd: "3150000000", area_m2: "64", bedrooms: "2",
+  // truong-nhan-s03-081: giá trị mẫu của bảy trường GN1 (khuôn nhãn đã chuẩn hoá).
+  unit_number: "PR6.xx10", price_basis: "net", furnished: "furnished", direction_faces: "southeast", view: "city,lake",
+  availability_date: "ngay", rent_includes: "management,water" };
 const CA_SO_KHOP = [
   ...that.TRUONG.flatMap((f) => [
     [f, KHONG, null, true, "không nêu × không trả"],
@@ -128,7 +134,7 @@ function kiemSoKhop(mod) {
   }
   assert.equal(soAssert, CA_SO_KHOP.length);
 }
-test("E3 ma trận so khớp (27 + 8 ca)", () => kiemSoKhop(that));
+test("E3 ma trận so khớp (48 + 8 ca)", () => kiemSoKhop(that));
 test("E3 đối chứng đỏ: diện tích bằng nhau tuyệt đối", () =>
   banLib("return Math.abs(Number(doc) - g) <= 0.03 * g + 1e-9;", "return Number(doc) === g;",
     (m) => assert.throws(() => kiemSoKhop(m), /DIEN TICH KHONG CHO LECH 3%/)));
@@ -194,18 +200,18 @@ function kiemO(mod) {
     const k = `tat-ca|parser|${f}`;
     if (!rong.some((o) => khoa(o) === k)) throw new Error(`THIEU O ${k}`);
   }
-  assert.equal(rong.length, 9);
+  assert.equal(rong.length, 16);
   assert.equal(rong.filter((o) => o.ly_do === "chua-co-nhan-nguoi").length, 6);
-  assert.equal(rong.filter((o) => o.ly_do === "chua-co-cach-doc").length, 3);
+  assert.equal(rong.filter((o) => o.ly_do === "chua-co-cach-doc").length, 10); // 3 trường cũ + bảy trường GN1 chưa có cách đọc
   const o = mod.chamO({ tin: VANG_VIET_TRUOC });
   assert.deepEqual([...new Set(o.map((x) => x.phan_khuc))], ["tat-ca", "apartment", "house", "khong-neu"]);
   assert.equal(new Set(o.map(khoa)).size, o.length, "ô trùng khoá");
-  for (const pk of ["tat-ca", "apartment", "house", "khong-neu"]) assert.equal(o.filter((x) => x.phan_khuc === pk).length, 9, pk);
+  for (const pk of ["tat-ca", "apartment", "house", "khong-neu"]) assert.equal(o.filter((x) => x.phan_khuc === pk).length, 16, pk);
   const n = (pk) => o.find((x) => x.phan_khuc === pk && x.truong === "kind").n;
   assert.deepEqual([n("tat-ca"), n("apartment"), n("house"), n("khong-neu")], [5, 2, 1, 1]);
   assert.equal(o.find((x) => x.phan_khuc === "tat-ca" && x.truong === "property_type").n, 4, "tin bất đồng loại hình không có vàng loại hình");
 }
-test("E6 ô đủ ở tat-ca khi rỗng; phân khúc theo loại hình, mỗi phân khúc 9 ô", () => kiemO(that));
+test("E6 ô đủ ở tat-ca khi rỗng; phân khúc theo loại hình, mỗi phân khúc 16 ô", () => kiemO(that));
 test("E6 đối chứng đỏ: bỏ ô khi n = 0", () =>
   banLib("const n = coVang.length;", "const n = coVang.length;\n        if (n === 0) continue;",
     (m) => assert.throws(() => kiemO(m), /THIEU O tat-ca\|parser\|listing_intent/)));

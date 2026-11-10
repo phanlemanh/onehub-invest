@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: the-hai-nguoi-xep-sau
+# Lát thử của labels-nhom.test.tsx (lược đồ tạm), đổi cờ double_label để thẻ hai người đứng đầu nhóm. Ca mới có bản đột biến đỏ.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.thn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0 và đầu ra có đúng một ca chạy ('pass 1'); ca 'THN-AC-1': nhóm U-A có i1, i3 hai người, i2, i4 đơn; người A lấy tin kế theo nhóm và lưu lần lượt ra [2, 4, 1, 3, null], không chọn nhóm ra [2, 4, 5, 6, 1, 3, null] (bảng viết trước); tienDo trước [tong 4, conChoToi 4, trungTong 2], sau [4, 4, 0, 2]; nhomCuaLat U-A [4, 4, 0] thành [4, 0, 2]; người B nhận i3 (A đã gắn) khi i2, i4 còn trống; vẫn đúng hai thẻ double_label. Chiều đỏ: bản xếp cũ ra dãy khác ('THE HAI NGUOI CHAN NHOM'); bản bỏ khoá cặp-trước không đưa i3 cho B ('CAP TRUNG KHONG DUNG TRUOC')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels.test.tsx]
+    expected: "exit 0; test cũ của màn gắn nhãn còn xanh, gồm MGN-AC-5 tin trùng đã một người đứng trước tin mới."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; test của lát theo nhóm còn xanh, kể cả THN-AC-1."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.tnd_mu
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, _acceptance/the-gan-nhan-nguoi-dang/probes/mu.mjs]
+    expected: "exit 0; phép đo gắn mù PL7 còn xanh, cuối 'MU OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.thn_pham_vi
+    layer: backend-effect
+    paths: [_acceptance/the-hai-nguoi-xep-sau/probes/pham-vi.sh]
+    expected: "exit 0; mỗi tệp đổi in 'ok <tệp>', không 'NGOAI PHAM VI'; 'ok chi doi cau xep cua tinKe'; 'ok doi chung: tep ngoai danh sach bi bat'; cuối 'PHAM-VI OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.thn_lat_that
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, _acceptance/the-hai-nguoi-xep-sau/probes/lat-that.mjs]
+    expected: "exit 0; trên lát thật s03-theo-nhom (giao dịch READ ONLY): thẻ đầu tinKe thật trả cho mỗi cặp người–nhóm, 'nhom ket ... moi 0'; đối chứng thứ tự cũ chép trong đầu dò kẹt > 0 nhóm; dòng số tin đơn với tới ghi 'chi de doc'; cuối 'LAT-THAT OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

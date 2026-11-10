@@ -83,6 +83,13 @@ AC_LINE_FALLBACK_SEEN=""
 HERE="$(cd "$(dirname "$0")" && pwd)"
 RECHECK="$HERE/recheck-evidence.cjs"
 
+# Thư viện của kit đọc theo CHỖ ĐẶT script, không theo gốc kho đang kiểm (hồ sơ pre-merge-doc-lib-theo-kit):
+# kho cài kit theo đường plugin không có lib/ ở gốc, nên đọc "$ROOT/lib/…" là fail-closed oan ở mọi hồ sơ
+# machine-cleared. Thư viện cạnh script thắng; vắng thì lùi về lib/ của gốc kho như trước vòng.
+# <<<KIT-LIB-THEO-CHO-CAI
+kit_lib() { if [ -f "$HERE/../lib/$1" ]; then printf '%s' "$HERE/../lib/$1"; else printf '%s' "$ROOT/lib/$1"; fi; }
+# KIT-LIB-THEO-CHO-CAI>>>
+
 ROOT="."
 SLUGS=()
 # PRE_MERGE_BASE set-nhưng-RỖNG khác với không-set: không-set là bỏ-qua-có-tín-
@@ -448,7 +455,7 @@ xanh_sach_check() { # <report path>
       && l.replace(/^#{2,6}\s+/,"").trim().toLowerCase()===h.toLowerCase());
       if(!has){process.stdout.write("__VANG__");process.exit(0);}
       process.stdout.write(section(t,h).join("\n").trim()?"__CO__":"");
-    ' "$ROOT/lib/md-section.cjs" "$report" "$_sec" 2>/dev/null || printf '__LOI__')"
+    ' "$(kit_lib md-section.cjs)" "$report" "$_sec" 2>/dev/null || printf '__LOI__')"
     case "$_body" in
       __VANG__) clean_ok=0; clean_why="mục «$_sec» VẮNG khỏi báo cáo (vắng ≠ rỗng)"; break ;;
       __CO__)   clean_ok=0; clean_why="mục «$_sec» có nội dung"; break ;;
@@ -472,7 +479,7 @@ xanh_sach_check() { # <report path>
       const m=mucChuaDinhTuyen(a[0],a[1],a[2]);
       if(m.suspect){process.stdout.write("__NGO__");process.exit(0);}
       process.stdout.write(m.chua.length?m.chua.length+"|"+m.chua.join(", ")+cumCu(a[0],a[1],a[2]):"OK:"+m.tong);
-    ' "$ROOT/lib/out-of-contract.cjs" "$_cdir/review-findings.md" "$_cdir/decisions.jsonl" "$_cdir/run-log.jsonl" 2>/dev/null || printf '__LOI__')"
+    ' "$(kit_lib out-of-contract.cjs)" "$_cdir/review-findings.md" "$_cdir/decisions.jsonl" "$_cdir/run-log.jsonl" 2>/dev/null || printf '__LOI__')"
     case "$_ooc" in
       OK:*) CLEAN_OOC_DINH_TUYEN="${_ooc#OK:}" ;;
       __NGO__) clean_ok=0; clean_why="review-findings.md có chữ trong mục «Ngoài hợp đồng» nhưng không đọc ra mục nào (sai khuôn OOC-ITEM-TEMPLATE)" ;;
@@ -768,6 +775,28 @@ slug_in_diff() { # <slug>
 $DIFF_FILES
 SLUGDIFF
   return 1
+}
+
+# 0 iff PR đổi ít nhất một TỆP VẬT dưới _acceptance/<slug>/ (hồ sơ chi-tep-vat-keo-xet-lai, issue #468).
+# Chỉ luật bằng chứng cũ dùng vị từ này; gap-probe, soi lại và mọi chỗ khác vẫn dùng slug_in_diff. Tệp
+# chữ (khối TEP-CHU-HO-SO của lib/evidence-core.cjs — một nguồn) mà `paths` của eval không phủ thì không
+# kéo hồ sơ vào xét; mọi tệp khác là vật. Không phân được (thiếu node/lib, đầu ra không đọc được) → coi là
+# vật: lùi về luật trước vòng, không có đường im lặng nào bớt xét. Trả 1 do tệp chữ thì đặt SLUG_TEP_CHU.
+slug_vat_in_diff() { # <slug> <evals.yaml>
+  SLUG_TEP_CHU=""
+  slug_in_diff "$1" || return 1
+  command -v node >/dev/null 2>&1 && [ -f "$CHU_KY_LIB" ] || return 0
+  _tv_pre="$(git -C "$ROOT" rev-parse --show-prefix 2>/dev/null)"
+  _tv="$(printf '%s\n' "$DIFF_FILES" | node -e '
+    const l=require(process.argv[1]),fs=require("fs");
+    const files=fs.readFileSync(0,"utf8").split("\n").filter(Boolean);
+    let ev=null; try{ev=fs.readFileSync(process.argv[3],"utf8")}catch(_){}
+    const r=l.phanTepHoSo(files,process.argv[2],ev,{prefix:process.argv[4]});
+    process.stdout.write(r.vat.length||!r.chu.length?"VAT":"CHU="+r.chu.join(", "));' "$CHU_KY_LIB" "$1" "$2" "$_tv_pre" 2>/dev/null)" || return 0
+  case "$_tv" in
+    CHU=?*) SLUG_TEP_CHU="${_tv#CHU=}"; return 1 ;;
+  esac
+  return 0
 }
 
 # AC-12 nửa sau: không có base thì luật không xác định được phạm vi, nên bỏ qua
@@ -1439,6 +1468,11 @@ XLACS
   # (clone shallow CI) phải rơi về kiểm-tất, không phải tắt im (gap-probe P0-1).
   if [ "$DIFF_READY" -eq 1 ] && ! slug_in_diff "$slug"; then # STALE-DIFF-SCOPE-GUARD
     : # sử liệu ngoài diff — không soi verified_commit (AC-2); chạm hồ sơ là nó vào diff và bị soi lại như thường (AC-3)
+  # Hồ sơ chi-tep-vat-keo-xet-lai (#468, ADR 0028): hồ sơ trong diff CHỈ vì tệp chữ (opportunity.md,
+  # decisions.jsonl mà paths không phủ) không bị soi verified_commit — sửa chúng không làm bằng chứng cũ hơn.
+  # Cắt phải thấy được: một dòng NOTE đích danh. slug_in_diff lặp lại để nhánh tự đứng khi guard trên bị gỡ.
+  elif [ "$DIFF_READY" -eq 1 ] && slug_in_diff "$slug" && ! slug_vat_in_diff "$slug" "${dir%/}/evals.yaml"; then # STALE-TEP-CHU-GUARD
+    echo "NOTE [$slug]: sửa tệp chữ, không xét bằng chứng cũ — PR chỉ đổi $SLUG_TEP_CHU của hồ sơ (đổi tệp vật — evals.yaml, contract.md, evidence-report.md, tệp eval trỏ tới — thì xét lại như thường)"
   else
   if [ -z "$vc" ]; then
     echo "NOTE [$slug]: report has no verified_commit (older template) — evidence is not pinned to a commit; code drift since verify is NOT machine-checked. Re-verify to pin."

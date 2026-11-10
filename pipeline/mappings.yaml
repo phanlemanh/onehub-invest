@@ -107,7 +107,9 @@ canonical:
         chưa chắc của tin đang đọc. Tra dd.reso.org 03/11, Member DD 2.0 và 2.1: 15 field điện thoại (MemberDirectPhone,
         MemberMobilePhone, MemberPreferredPhone…) chỉ nói loại số và định dạng, phần mô tả hiển thị không có trạng thái xác minh.
         Migration 070 (cột tính của view sale_offers). Kiểu boolean nên không cần CHECK. DQ: so-chua-xac-minh ở pipeline/sql/450_dq_checks.sql.
-      checked_on: "2026-11-03"
+        Migration 079 (enrich-nguoi-s03, tra lại 06/11) mở thêm tin S03 mang dấu s03-qua-nguoi-dang: số suy qua liên lạc của
+        người đăng (party_contacts), không lấy từ chính tin.
+      checked_on: "2026-11-06"
     seller_phone_hash:
       dd: Member
       note: "khoá sellers registry ≈ ULI — định danh xuyên nguồn"
@@ -364,8 +366,8 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061); dd_lookup = tên field RESO của trường"
-    checked_on: "2026-10-30"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    checked_on: "2026-11-07"
     columns: [field_assertions.field]
     nullable: false
     values:
@@ -382,6 +384,8 @@ enums:
       - { code: stories, label_vi: Số tầng, dd_lookup: Stories }
       - { code: latitude, label_vi: Vĩ độ, dd_lookup: Latitude }
       - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
+      - { code: builder_name, label_vi: Chủ đầu tư, dd_lookup: BuilderName }   # DB1 (082): resource Building, ADR-0016 §3
+      - { code: area_id, label_vi: Phường của toà }   # DB1 (082): resource Building, phường/xã (areas submarket) suy từ vùng; DD 2.1 không có cấp phường
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -398,8 +402,8 @@ enums:
     term_vi: Phương pháp phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
-    checked_on: "2026-10-26"
+    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15); registry_inherit (DB1, 082) là phát biểu kế thừa từ danh bạ, chỉ đi với lớp suy luận (ADR-0016 §7, §11) — DD 2.1 không có phương pháp tương đương; DQ: dq-enum-vocab field_assertions.method"
+    checked_on: "2026-11-07"
     columns: [field_assertions.method, party_roles.method]
     nullable: false
     values:
@@ -409,13 +413,14 @@ enums:
       - { code: e1_rule, label_vi: Luật E1 }
       - { code: e2_llm, label_vi: LLM E2 }
       - { code: legacy, label_vi: Giá trị có trước }
+      - { code: registry_inherit, label_vi: Kế thừa từ danh bạ }   # DB1 (082): lớp suy luận, ADR-0016 §7, §11
   registry_status:
     term_vi: Trạng thái danh bạ
     dd_field: null
     local: true
     rationale: "extension ObjectStatus của danh bạ vật thể và người (ADR-0016 §3) — DD 2.1 không có vòng đời gộp/tách cho Member/Office; StandardStatus chỉ cho tin"
     checked_on: "2026-10-30"
-    columns: [parties.status]
+    columns: [parties.status, buildings.status, stacks.status, units.status]
     nullable: false
     values:
       - { code: active, label_vi: Đang dùng }
@@ -426,8 +431,8 @@ enums:
     term_vi: Loại bí danh
     dd_field: null
     local: true
-    rationale: "extension AliasKind (ADR-0016 §3, §8) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ"
-    checked_on: "2026-10-30"
+    rationale: "extension AliasKind (ADR-0016 §3, §8, §11) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ; ma_nguon (DB1, 082): mã toà, trục, căn tại nguồn — DD 2.1 UnitNumber chỉ là field trên tin, không định danh vật thể bền; DQ: dq-enum-vocab registry_aliases.kind"
+    checked_on: "2026-11-07"
     columns: [registry_aliases.kind]
     nullable: false
     values:
@@ -435,6 +440,19 @@ enums:
       - { code: sdt_bam, label_vi: SĐT băm }
       - { code: ten, label_vi: Tên hiển thị }
       - { code: sdt, label_vi: SĐT số gốc }   # SD3 (Hỏi-A): E.164 +84…, RESO MemberMobilePhone
+      - { code: ma_nguon, label_vi: Mã tại nguồn }   # DB1 (082): mã toà, trục, căn của nguồn, giá trị <phạm vi>/<mã>; DD 2.1 UnitNumber chỉ nằm trên tin
+  catalog_tier:
+    term_vi: Bậc dòng danh mục
+    dd_field: null
+    local: true
+    rationale: "extension bậc của dòng danh mục toà/trục/căn (review phân loại F2, ADR-0016 §6, §11) — DD 2.1 không có độ tin của danh mục vật thể; đặc trưng VN: danh mục chủ đầu tư, môi giới, tin rao cùng mô tả một toà với độ tin khác nhau; DQ: dq-enum-vocab buildings/stacks/units.catalog_tier"
+    checked_on: "2026-11-07"
+    columns: [buildings.catalog_tier, stacks.catalog_tier, units.catalog_tier]
+    nullable: false
+    values:
+      - { code: xac_minh, label_vi: Xác minh }
+      - { code: suy_ra_manh, label_vi: Suy ra mạnh }
+      - { code: mot_loi_khai, label_vi: Một lời khai }
   registry_event_kind:
     term_vi: Sự kiện danh bạ
     dd_field: null
@@ -457,6 +475,39 @@ enums:
     nullable: false
     values:
       - { code: nguoi_dang, label_vi: Người đăng }
+  contact_kind:
+    term_vi: Loại liên lạc
+    dd_field: null
+    local: true
+    rationale: "extension ContactKind (enrich-nguoi-s03, ADR-0016 §3, §8) — DD 2.1 có Contacts.MobilePhone/OtherPhone, Member.MemberMobilePhone và resource SocialMedia (SocialMediaType, SocialMediaUrlOrId) là trường của bản ghi người, không có liên lạc là phát biểu nhiều giá trị kèm lớp bằng chứng; sdt ≈ MobilePhone, chat_profile ≈ SocialMediaUrlOrId (kênh chat của S03 không có trong lookup SocialMediaType)"
+    checked_on: "2026-11-06"
+    # Migration 079 (CHECK). DQ: enum-vocab:kind, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
+    columns: [party_contacts.kind]
+    nullable: false
+    values:
+      - { code: sdt, label_vi: Số điện thoại }   # E.164 +84…, RESO MobilePhone
+      - { code: chat_profile, label_vi: Hồ sơ chat }           # username trần của tài khoản kênh chat ≈ SocialMedia.SocialMediaUrlOrId; link dựng lúc hiển thị từ source_registry local; 080 ghi
+  contact_rule:
+    term_vi: Luật liên lạc
+    dd_field: null
+    local: true
+    rationale: "extension luật sinh phát biểu liên lạc (enrich-nguoi-s03) — DD 2.1 không có xuất xứ cho số liên lạc; phân biệt số người đăng ghi trên tin của chính họ với số chỉ có trong bài khác (trả lời, bình luận), dùng cho luật chọn số"
+    checked_on: "2026-11-06"
+    # Migration 079 (CHECK), 080 nới thêm s03_ho_so_theo_tai_khoan + rào cặp luật–loại (party_contacts_rule_kind_chk).
+    # DQ: enum-vocab:rule_id, entity party_contacts (pipeline/dq-enum-vocab.mjs KIEM_ENUM → dq_check_results).
+    columns: [party_contacts.rule_id]
+    nullable: false
+    values:
+      - { code: so_tren_tin, label_vi: Số trên tin của chính người đăng }
+      - { code: so_trong_bai, label_vi: Số trong bài khác của người đăng }
+      # link-nguoi-ban-s03 (080): username trả về khi tra hồ sơ theo đúng mã tài khoản S03 (bí danh tai_khoan_nguon) của Người;
+      # chỉ sinh liên lạc chat_profile, lớp fact, phương pháp source_field. Sáu điều kiện ADR-0011 (extension, không có trong DD 2.1):
+      # (1) tra DD 2.1 trước: SocialMedia.SocialMediaUrlOrId là trường của bản ghi người, không có xuất xứ cho liên lạc; SocialMediaType
+      #     không có kênh chat của S03 · (2) đặc trưng VN: kênh chat nhóm là nơi người bán S03 đăng tin, không để lại số thì username
+      #     là đường liên hệ duy nhất · (3) tên tiếng Anh snake_case, không mang tên nguồn thật (nguồn ở evidence, link dựng từ
+      #     source_registry local) · (4) nhãn VN «Hồ sơ chat theo mã tài khoản» trong ref_lookup (080) · (5) CHECK 080 + DQ enum-vocab
+      #     · (6) kiểm 13/12 — _acceptance/link-nguoi-ban-s03 (AC-6, AC-7).
+      - { code: s03_ho_so_theo_tai_khoan, label_vi: Hồ sơ chat theo mã tài khoản }
   listing_intent:
     term_vi: Ý định tin
     dd_field: null
@@ -502,16 +553,16 @@ enums:
     term_vi: Bậc dữ liệu
     dd_field: null
     local: true
-    rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10)"
+    rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10, viết lại 08/11; 087)"
     checked_on: "2026-10-23"
-    columns: [data_level_snapshot.data_level]
+    columns: [data_level_snapshot.data_level, data_level_unit.data_level, data_level_change.from_level, data_level_change.to_level]
     nullable: false
     values:
       - { code: B0, label_vi: Có lời khai }
-      - { code: B1, label_vi: Đọc được }
-      - { code: B2, label_vi: Gắn căn }
-      - { code: B3, label_vi: Đã đo }
-      - { code: B4, label_vi: Xác minh }
+      - { code: B1, label_vi: Tin }
+      - { code: B2, label_vi: Định vị }
+      - { code: B3, label_vi: Gắn căn }
+      - { code: B4, label_vi: Làm giàu }
       - { code: B5, label_vi: Sống }
   capability_level:
     term_vi: Bậc năng lực
@@ -527,6 +578,79 @@ enums:
       - { code: N2, label_vi: Đo được }
       - { code: N3, label_vi: Tự động ở ngưỡng }
       - { code: N4, label_vi: Tự duy trì }
+  furnished:
+    term_vi: Nội thất
+    dd_field: Furnished
+    columns: []
+    nullable: true
+    values:
+      - { code: furnished, label_vi: Đủ nội thất, dd_lookup: Furnished }
+      - { code: partially, label_vi: Nội thất cơ bản, dd_lookup: Partially }
+      - { code: unfurnished, label_vi: Nhà trống, dd_lookup: Unfurnished }
+      - { code: negotiable, label_vi: Thoả thuận, dd_lookup: Negotiable }
+    note: "Trường nhãn GN1 (truong-nhan-s03-081). Lookup Furnished của DD 2.1 có đúng 4 giá trị; RESO định nghĩa cho nhà thuê, nhãn dùng cho cả bán."
+    checked_on: "2026-11-06"
+  direction_faces:
+    term_vi: Hướng
+    dd_field: null
+    local: true
+    alias: DirectionFaces
+    rationale: "extension hướng theo cách nói thị trường VN (Hỏi-2 Cổng Phạm vi GN1, Mạnh 07/11): căn hộ ghi hướng ban công, nhà riêng hướng cửa; DD 2.1 DirectionFaces là hướng lối vào chính nên không trùng nghĩa với căn hộ — giá trị giữ đúng tám mã của lookup DirectionFaces"
+    checked_on: "2026-11-06"
+    columns: []
+    nullable: true
+    values:
+      - { code: east, label_vi: Đông }
+      - { code: west, label_vi: Tây }
+      - { code: south, label_vi: Nam }
+      - { code: north, label_vi: Bắc }
+      - { code: northeast, label_vi: Đông Bắc }
+      - { code: southeast, label_vi: Đông Nam }
+      - { code: northwest, label_vi: Tây Bắc }
+      - { code: southwest, label_vi: Tây Nam }
+  view:
+    term_vi: View
+    dd_field: View
+    columns: []
+    nullable: true
+    values:
+      - { code: city, label_vi: Thành phố, dd_lookup: City }
+      - { code: lake, label_vi: Hồ, dd_lookup: Lake }
+      - { code: river, label_vi: Sông, dd_lookup: River }
+      - { code: park_greenbelt, label_vi: Công viên, dd_lookup: ParkGreenbelt }
+      - { code: garden, label_vi: "Vườn, nội khu", dd_lookup: Garden }
+      - { code: pool, label_vi: Bể bơi, dd_lookup: Pool }
+      - { code: panoramic, label_vi: Toàn cảnh, dd_lookup: Panoramic }
+      - { code: other, label_vi: Khác, dd_lookup: Other }
+    note: "DD 2.1 View là danh sách (isCollection, lookup mở 38 giá trị); nhãn chọn nhiều, lưu mã sắp xếp nối dấu phẩy. Tập con theo bài S03 Hà Nội."
+    checked_on: "2026-11-06"
+  rent_includes:
+    term_vi: Phí đã gồm
+    dd_field: RentIncludes
+    columns: []
+    nullable: true
+    values:
+      - { code: management, label_vi: Phí quản lý, dd_lookup: Management }
+      - { code: electricity, label_vi: Điện, dd_lookup: Electricity }
+      - { code: water, label_vi: Nước, dd_lookup: Water }
+      - { code: internet, label_vi: Internet, dd_lookup: Internet }
+      - { code: none, label_vi: Không gồm gì, dd_lookup: None }
+      - { code: other, label_vi: Khác, dd_lookup: Other }
+    note: "DD 2.1 RentIncludes là danh sách 13 giá trị; nhãn chọn nhiều. Câu giao GN1 «Phí đã gồm»."
+    checked_on: "2026-11-06"
+  price_basis:
+    term_vi: Cơ sở giá
+    dd_field: null
+    local: true
+    alias: ListingAgreement.Net
+    rationale: "extension PriceBasis (reso-khung-phan-loai.md §8, PL6, PL13) — nghĩa của giá trong tin VN («thu về», «NET», «đã gồm phí»); DD 2.1 không có field cùng nghĩa, gần nhất ListingAgreement=Net (kiểu hợp đồng niêm yết)"
+    checked_on: "2026-11-06"
+    columns: []
+    nullable: true
+    values:
+      - { code: net, label_vi: Thu về (NET) }
+      - { code: gom_phi, label_vi: Đã gồm phí }
+      - { code: chua_gom_phi, label_vi: Chưa gồm phí }
   source:
     values_from: source_registry.code
     note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây (bộ đọc sổ bỏ qua khoá này)"
@@ -555,12 +679,6 @@ enums_lint_allow:
   - path: pipeline/sql/500_asset_stats.sql
     axis: confidence
     reason: "bộ lọc tập con confidence IN ('high','medium') cho thước giá — nghĩa nghiệp vụ, không phải định nghĩa trục"
-  - path: pipeline/resolve-properties.mjs
-    axis: confidence
-    reason: "bộ lọc tập con confidence IN ('high','medium') khi gom căn — nghĩa nghiệp vụ"
-  - path: pipeline/resolve-properties.mjs
-    axis: property_type
-    reason: "bộ lọc tập con property_type IN ('apartment','house') — chỉ căn hộ và nhà mới gom thành căn"
   - path: agent/src/enrich/run.ts
     axis: confidence
     reason: "bộ lọc tập con confidence IN ('high','medium') chọn tin để enrich — nghĩa nghiệp vụ"

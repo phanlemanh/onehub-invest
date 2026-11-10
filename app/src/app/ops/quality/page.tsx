@@ -1,16 +1,22 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import { AirdnaMarketsTable, CalibrationEmptyLine, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
+import { DoHangNgay, DoHangNgaySkeleton } from "@/components/ops/quality/do-hang-ngay";
 import { DqChecksTable } from "@/components/ops/quality/dq-checks-table";
+import { LamGiau, LamGiauSkeleton } from "@/components/ops/quality/lam-giau";
 import { PageHeader } from "@/components/page/page-header";
+import { RegionError } from "@/components/states/region-error";
 import { StatTiles } from "@/components/page/stat-tiles";
 import type { StatTile } from "@/components/page/tiers";
 import { splitCalibrated } from "@/lib/calibration";
+import { latDo, loadDo1, type LatDo } from "@/lib/do-hang-ngay";
 import { fmtInt } from "@/lib/format";
 import { dqSection, loadDqChecks } from "@/lib/dq-checks";
 import { getAreaNames, getRulerHealth } from "@/lib/ops-queries";
 import { shortAreaName } from "@/lib/market-names";
 import { pool } from "@/lib/db";
+import { loadLamGiau } from "@/lib/ops/quality-lam-giau";
 import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
 import { sourceLabel } from "@/lib/source-labels";
 import { maskSourceNames } from "@/lib/mask-source-names";
@@ -24,7 +30,18 @@ export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
  * /ops/quality — đối chiếu số tự thu với AirDNA. AirDNA chỉ là nguồn hiệu
  * chuẩn (CLAUDE.md, IA rủi ro R1): số của họ CHỈ hiện ở Ops, không ở Invest.
  */
-export default async function QualityPage() {
+/** DO1: khối «Đo hằng ngày» tải riêng — lỗi hay chậm chỉ ở vùng này, phần còn lại của trang vẫn đứng. */
+async function DoHangNgayKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<string, string> }) {
+  return <DoHangNgay data={await loadDo1(pool)} lat={lat} areaNames={areaNames} />;
+}
+
+/** DO3: khối «Làm giàu» tải riêng như khối DO1 — lỗi đọc bảng kiểm chỉ thay vùng này bằng Alert + «Thử lại». */
+async function LamGiauKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<string, string> }) {
+  return <LamGiau data={await loadLamGiau(pool)} lat={lat} areaNames={areaNames} />;
+}
+
+export default async function QualityPage({ searchParams }: { searchParams?: Promise<{ "lat-do"?: string }> } = {}) {
+  const lat = latDo((await searchParams)?.["lat-do"]);
   const ruler = await getRulerHealth();
   // ON9: bản mới nhất theo (kiểm, đối tượng) — bảng và số đầu trang cùng một nguồn (dqSection bên dưới).
   const { rows: dqRaw } = await loadDqChecks(pool);
@@ -74,6 +91,16 @@ export default async function QualityPage() {
       />
       {/* H3-P3: chất lượng thước P2 + phân bố tier (kiến trúc 3 tầng giá) */}
       <StatTiles items={tiles} />
+      <RegionError what="số đo hằng ngày">
+        <Suspense fallback={<DoHangNgaySkeleton />}>
+          <DoHangNgayKhoi lat={lat} areaNames={areaNames} />
+        </Suspense>
+      </RegionError>
+      <RegionError what="số đo làm giàu">
+        <Suspense fallback={<LamGiauSkeleton />}>
+          <LamGiauKhoi lat={lat} areaNames={areaNames} />
+        </Suspense>
+      </RegionError>
       {/* ON9: bản mới nhất của mỗi kiểm theo từng đối tượng (7 ngày) — chữ kiểm/đối tượng/chi tiết theo ON12 */}
       <DqChecksTable rows={dq.rows} areaNames={areaNames} />
       <TruthfulCoverageTable rows={truthful} roles={roles} />

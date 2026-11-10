@@ -30,7 +30,7 @@ export function FlowSankey({ sources, roles }: { sources: SourceFlow[]; roles: S
   const panelRef = useRef<HTMLDivElement>(null)
 
   const chosen = pick === "all" ? sources : sources.filter((s) => s.source === pick)
-  const { nodes, links, headers, totals } = buildFlow(chosen, roles)
+  const { nodes, links, headers, totals, branched } = buildFlow(chosen, roles)
   const approx = chosen.some((s) => s.approx && s.received > 0)
 
   // Hạt ngừng chảy khi khung cuộn khỏi màn hình.
@@ -130,12 +130,18 @@ export function FlowSankey({ sources, roles }: { sources: SourceFlow[]; roles: S
         <span className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
           <StageFace stage="journey" />
           <StageFace stage="linked" />
+          <StageFace stage="located" />
+          <StageFace stage="clustered" />
           <StageFace stage="merged" />
+          {branched ? <StageFace stage="inquiry" /> : null}
           <StageFace stage="dropped" />
         </span>
         <span className="text-muted-foreground">
           {approx ? "S06 chưa nối ngược bài → tin: chặng «Đọc được» của S06 là ước lượng" : "Bài tính theo ngày đăng, tin theo ngày đăng bài đầu tiên"}
         </span>
+        {!branched && totals.received > 0 ? (
+          <span className="text-muted-foreground w-full">Chưa tách bài chỉ-ảnh và Yêu cầu — có ở lượt làm tươi kế</span>
+        ) : null}
       </FrameFooter>
     </Frame>
   )

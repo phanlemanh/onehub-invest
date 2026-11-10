@@ -53,10 +53,10 @@ async function main() {
   });
   await client.connect();
   try {
-    const { tin, bat_dong, mat_chu } = await docNhanNguoi(client, { lat: co.lat, split: co.split });
+    const { tin, bat_dong, mat_chu, khong_chu, trung_co_nhan, danh_muc_cdt } = await docNhanNguoi(client, { lat: co.lat, split: co.split });
     const o = chamO({ tin });
     const run = `ecw-${new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15)}-${randomBytes(3).toString("hex")}`;
-    console.log(`eval-classify: nhãn người · lát ${co.lat} · split ${co.split} · ${tin.length} tin · bất đồng ${bat_dong} · mất chữ ${mat_chu} · run ${run}`);
+    console.log(`eval-classify: nhãn người · lát ${co.lat} · split ${co.split} · ${tin.length} tin · bất đồng ${bat_dong} · mất chữ ${mat_chu} · không tin chữ ${khong_chu} · dòng trùng có nhãn ${trung_co_nhan} · danh_muc_cdt ${danh_muc_cdt} · run ${run}`);
     inBang(o);
     if (co.dry) console.log("--dry: không ghi dq_check_results");
     else console.log(`đã ghi ${await ghiKetQua(client, o, { lat: co.lat, run, tap: "nguoi", split: co.split, bat_dong, mat_chu })} dòng dq_check_results`);

@@ -176,3 +176,104 @@ test("GHEP-AC-1 khong co luat thu hai", () => {
     rmSync(d, { recursive: true, force: true });
   }
 });
+
+// lay-mau-khu-trung-theo-tin AC-5 — ghepLat thật trên lược đồ tạm (bảng LIKE bảng thật) trong một giao dịch ROLLBACK.
+// DB là DATABASE_URL của lượt (suite chạy trên DB thử của riêng lượt); không ghi gì còn lại sau ca.
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+
+const pgGn2 = createRequire(join(import.meta.dirname, "../package.json"))("pg");
+const DB_GN2 = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const AN_TAY = "2026-11-06 Mạnh cho ẩn thẻ trùng";
+const SNAP_GN2 = "hanoi__zalo-agent__2026-11-07T000000";
+// Lát 12 thẻ viết trước: [item_id, post_id, chữ]. Bài tin o1 = t1, t2, t3.
+const THE_GN2 = [
+  [1, "c1", "Bán căn 2PN view hồ https://img.example/a.jpg"], [2, "c2", "Bán căn 2PN view hồ https://img.example/b.jpg"],
+  [3, "pc", "Cho thuê studio full đồ"], [5, "pa", "Cho thuê studio full đồ"], [9, "pb", "Cho thuê studio full đồ"],
+  [4, "t1", "Bán shophouse mặt đường"], [6, "t2", "Bán gấp shophouse"], [7, "t3", "Shophouse còn một căn"],
+  [8, "s8", "Bán đất nền"], [10, "s10", "Cho thuê kho"], [11, "s11", "Bán căn 3PN"], [12, "s12", "Cho thuê văn phòng"],
+];
+// Mong đợi viết tay: thẻ ẩn sau lượt → [trung_voi, khu_trung]; thẻ 5 là dấu ẩn tay giữ nguyên.
+const AN_MONG = { 2: ["c1", "chu"], 3: ["pb", "chu"], 4: ["t3", "tin"], 6: ["t3", "tin"] };
+const NHOM_GN2 = [[1, 2], [3, 5, 9], [4, 6, 7]];
+
+async function gn2Lat(c, schema) {
+  await c.query(`CREATE SCHEMA ${schema}`);
+  for (const b of ["stg_zalo_posts", "sale_offer_records", "eval_label_items", "eval_labels"]) {
+    await c.query(`CREATE TABLE ${schema}.${b} (LIKE public.${b} INCLUDING ALL)`);
+  }
+  await c.query(`SET LOCAL search_path = ${schema}, public`);
+  for (const [id, post, text] of THE_GN2) {
+    await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, group_name, agent_id, posted_at, captured_at) VALUES ($1, $2, $3, 'Nhóm Gee', 'openclaw-hook', now(), now())`, [post, SNAP_GN2, text]);
+    const ghep = id === 5 ? JSON.stringify({ chu_ref: "pa", anh_refs: [], so_chu_gan: 0, trung_voi: "pb", an_tay: AN_TAY }) : null;
+    await c.query(`INSERT INTO eval_label_items (item_id, lat, source_code, ref_id, text_hash, split, seed, ghep) VALUES ($1, 'gn2', 'S03', $2, $2, 'test', 's', $3::jsonb)`, [id, post, ghep]);
+  }
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids) VALUES ('o1', 'sale', now(), now(), 'S03', '{t1,t2,t3}')`);
+  await c.query(`INSERT INTO eval_labels (item_id, labeler_id, field, value) VALUES (7, 'u1', 'kind', 'sale'), (7, 'u2', 'kind', 'sale')`);
+}
+
+async function gn2Doc(c) {
+  const { rows } = await c.query(`SELECT item_id, ref_id, ghep FROM eval_label_items WHERE lat = 'gn2' ORDER BY item_id`);
+  return new Map(rows.map((r) => [Number(r.item_id), r]));
+}
+
+/** Kiểm một lượt; trả danh sách lỗi (chuỗi ghim), rỗng là đạt. */
+function gn2Kiem(the, anTayTruoc) {
+  const loi = [];
+  const an = (id) => the.get(id).ghep?.trung_voi != null;
+  for (const ds of NHOM_GN2) if (ds.filter((id) => !an(id)).length !== 1) loi.push(`NHOM KHONG CON MOT THE: ${ds}`);
+  if (an(7)) loi.push("THE CO NHAN BI AN");
+  if (an(9)) loi.push("THE GIU AN TAY BI AN");
+  if (JSON.stringify(the.get(5).ghep) !== JSON.stringify(anTayTruoc)) loi.push("DAU AN TAY BI XOA");
+  for (const [id, [tv, kt]] of Object.entries(AN_MONG)) {
+    const g = the.get(Number(id)).ghep;
+    if (g?.trung_voi !== tv || g?.khu_trung !== kt) loi.push(`AN SAI ${id}: ${g?.trung_voi}/${g?.khu_trung}`);
+  }
+  for (const id of [1, 7, 8, 9, 10, 11, 12]) if (an(id)) loi.push(`THE KHONG TRUNG BI AN: ${id}`);
+  return loi;
+}
+
+async function gn2ChayCa(ghepLatFn, schema) {
+  const c = new pgGn2.Client({ connectionString: DB_GN2 });
+  await c.connect();
+  try {
+    await c.query("BEGIN");
+    await gn2Lat(c, schema);
+    const anTayTruoc = (await gn2Doc(c)).get(5).ghep;
+    const bamNhan = async () => (await c.query(`SELECT md5(string_agg(item_id || labeler_id || field || coalesce(value,''), ',' ORDER BY item_id, labeler_id)) AS b FROM eval_labels`)).rows[0].b;
+    const nhanTruoc = await bamNhan();
+    const r1 = await ghepLatFn(c, { lat: "gn2" });
+    const loi1 = gn2Kiem(await gn2Doc(c), anTayTruoc);
+    const r2 = await ghepLatFn(c, { lat: "gn2", lamLai: true });
+    const loi2 = gn2Kiem(await gn2Doc(c), anTayTruoc);
+    return { r1, r2, loi: [...loi1, ...loi2], nhanGiu: (await bamNhan()) === nhanTruoc };
+  } finally {
+    await c.query("ROLLBACK").catch(() => {});
+    await c.end();
+  }
+}
+
+test("GN2-AC-5 label-ghep thường và --lam-lai: mỗi nhóm trùng một thẻ hiện, giữ dấu ẩn tay và thẻ có nhãn", { timeout: 120_000 }, async () => {
+  const { ghepLat } = await import("../label-ghep.mjs");
+  const k = await gn2ChayCa(ghepLat, `gn2_ghep_${process.pid}`);
+  assert.deepEqual(k.loi, []);
+  assert.ok(k.nhanGiu, "eval_labels đổi");
+  assert.deepEqual([k.r1.an_moi, k.r1.an_tay_giu, k.r2.an_moi, k.r2.an_tay_giu, k.r2.ghi], [4, 1, 4, 1, 0]);
+  // Chiều đỏ trên cùng lát: bản chép nhomTrung bỏ giữ dấu ẩn tay; bản bỏ bậc «nhiều nhãn nhất».
+  const dot = async (a, b) => {
+    const goc = join(import.meta.dirname, "../label-ghep.mjs");
+    const src = readFileSync(goc, "utf8");
+    assert.ok(src.includes(a), `chỗ đột biến không còn: ${a}`);
+    const d = mkdtempSync(join(import.meta.dirname, "..", ".gn2-ghep-"));
+    try {
+      writeFileSync(join(d, "label-ghep.mjs"), src.replace(a, b).replace(/from "\.\/lib\/([^"]+)"/g, (_m, rel) => `from ${JSON.stringify(pathToFileURL(join(LIB, rel)).href)}`));
+      const m = await import(pathToFileURL(join(d, "label-ghep.mjs")).href);
+      return (await gn2ChayCa(m.ghepLat, `gn2_dot_${process.pid}_${a.length}`)).loi;
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  };
+  assert.ok((await dot("  for (const it of anTay) out.set(String(it.item_id), it.ghep_cu);\n", "")).includes("DAU AN TAY BI XOA"), "DAU AN TAY BI XOA");
+  assert.ok((await dot("    const [giu, ...con] = [...ung].sort((a, b) => nhan(b) - nhan(a)\n      || ", "    const [giu, ...con] = [...ung].sort((a, b) => ")).includes("THE CO NHAN BI AN"), "THE CO NHAN BI AN");
+  assert.ok((await dot("      || Number(duocTro.has(b.ref_id)) - Number(duocTro.has(a.ref_id))\n", "")).includes("THE GIU AN TAY BI AN"), "THE GIU AN TAY BI AN");
+});

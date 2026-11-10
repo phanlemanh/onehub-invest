@@ -20,6 +20,67 @@ export const phuongHopLe = (p = "") => `${p}meta->>'source' = 'osm-phuong' AND N
 export const NGUON_PHUONG = "osm-phuong";
 
 /**
+ * PX1: DB đã áp 084 (areas.admin_code + area_aliases) chưa. Chưa áp → mọi bộ đọc khớp tên dùng đúng điều kiện cũ, không
+ * bí danh (code gộp trước khi máy thu áp 084 vẫn chạy như trước — AC-10); in «chưa áp 084» một lần mỗi tiến trình.
+ * @param {import("pg").Client} client
+ */
+let daBaoChuaAp = false;
+export async function coDanhBa(client) {
+  const { rows: [r] } = await client.query(
+    `SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'areas' AND column_name = 'admin_code')
+            AND to_regclass('area_aliases') IS NOT NULL AS ok`,
+  );
+  if (!r.ok && !daBaoChuaAp) {
+    daBaoChuaAp = true;
+    console.log("chưa áp 084 — khớp tên chỉ dùng phường OSM, không bí danh xã cũ");
+  }
+  return r.ok;
+}
+
+/**
+ * Điều kiện «khu vực khớp tên được» (PX1): phường OSM hợp lệ, hoặc xã của danh bạ Cục Thống kê (có admin_code, kể cả
+ * chưa có ranh giới). Point-in-polygon KHÔNG dùng điều kiện này — vẫn là `phuongHopLe`.
+ * @param {string} [p] tiền tố bảng
+ * @param {boolean} [coMa] DB đã áp 084
+ */
+export const khuVucKhopTen = (p = "", coMa = true) =>
+  coMa ? `((${phuongHopLe(p)}) OR ${p}admin_code IS NOT NULL)` : phuongHopLe(p);
+
+/**
+ * Thị trường có ít nhất một khu vực khớp tên được (PX1) — S06 theo mã thị trường của tin, danh sách tên của S03.
+ * @param {import("pg").Client} client
+ * @returns {Promise<string[]>}
+ */
+export async function docThiTruongCoXa(client) {
+  const coMa = await coDanhBa(client);
+  const { rows } = await client.query(
+    `SELECT DISTINCT parent_id FROM areas WHERE region_type = 'submarket' AND ${khuVucKhopTen("", coMa)} ORDER BY parent_id`,
+  );
+  return rows.map((r) => r.parent_id);
+}
+
+/**
+ * Bí danh xã cũ AN TOÀN theo thị trường (PX1, lib/dvhc.mjs dungBiDanhAnToan): tên chuẩn → area_id. Chưa áp 084 → rỗng.
+ * @param {import("pg").Client} client
+ * @param {string[]} markets
+ * @returns {Promise<Map<string, Map<string, string>>>}
+ */
+export async function docBiDanhAnToan(client, markets) {
+  if (!(await coDanhBa(client))) return new Map();
+  const { rows: cu } = await client.query(
+    `SELECT old_code AS ma, province_code AS "maTinh", name AS ten, targets AS vao FROM area_aliases`,
+  );
+  const { rows: xa } = await client.query(
+    `SELECT admin_code AS ma, id, name, parent_id AS market FROM areas
+     WHERE region_type = 'submarket' AND admin_code IS NOT NULL`,
+  );
+  const { dungBiDanhAnToan } = await import("./dvhc.mjs");
+  const { map } = dungBiDanhAnToan(cu, xa);
+  const chon = new Set(markets);
+  return new Map([...map].filter(([m]) => chon.has(m)));
+}
+
+/**
  * Các thị trường có ít nhất một phường hợp lệ — đối chiếu tên phường khi nhóm S03 chưa khai thị trường (N1, Hỏi-1).
  * @param {import("pg").Client} client
  * @returns {Promise<string[]>}
@@ -32,15 +93,17 @@ export async function docThiTruongCoPhuong(client) {
 }
 
 /**
- * Phường hợp lệ của các thị trường — danh sách khớp tên dùng chung của transform tin rao (S03/S05/S06).
+ * Khu vực khớp tên được của các thị trường (phường OSM hợp lệ + xã danh bạ 084, PX1) — danh sách khớp tên dùng chung
+ * của transform tin rao (S03/S05/S06).
  * @param {import("pg").Client} client
  * @param {string[]} markets id thị trường, vd ["vn-hanoi"]
  * @returns {Promise<{ id: string, name: string, parent_id: string }[]>}
  */
 export async function docPhuongHopLe(client, markets) {
+  const coMa = await coDanhBa(client);
   const { rows } = await client.query(
     `SELECT id, name, parent_id FROM areas
-     WHERE region_type = 'submarket' AND parent_id = ANY($1::text[]) AND ${phuongHopLe()}
+     WHERE region_type = 'submarket' AND parent_id = ANY($1::text[]) AND ${khuVucKhopTen("", coMa)}
      ORDER BY id`,
     [markets],
   );

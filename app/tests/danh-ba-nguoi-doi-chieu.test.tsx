@@ -21,6 +21,7 @@ const docThoi = (() => {
 process.env.DATABASE_URL = docThoi // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 const db = new pg.Client({ connectionString: docThoi })
 const ADMIN = { id: "usr_dbn_dc", email: "dbn-dc@local.test", plan: "free", role: "admin" } as User
+const LUONG_TIM = 8
 
 after(async () => {
   await db.end().catch(() => {})
@@ -133,13 +134,28 @@ test("SHS-DC mọi người có số hiện số ở vai xem được, tìm theo
   assert.equal(hienViewer, 0, "SHS-DC vai Người xem nhận số")
 
   type Mod = typeof import("../src/lib/ops/people")
+  // Tìm từng số vẫn qua danhSachNguoi thật, đủ mọi số; chỉ đổi cách gọi: tám lượt song song trên pool riêng
+  // (pool của app chỉ 5 kết nối). Gọi tuần tự 11.595 số mất 23,6 phút, lớn dần theo danh bạ (giám sát quyết 06/11).
+  const poolTim = new pg.Pool({ connectionString: docThoi, max: LUONG_TIM })
+  t.after(() => poolTim.end().catch(() => {}))
   const kiemTim = async (mod: Mod, value: string) => {
-    const r = await mod.danhSachNguoi({ source: null, q: value, page: 1 })
+    const r = await mod.danhSachNguoi({ source: null, q: value, page: 1 }, poolTim)
     const khoa = giu.get(value) ?? new Set<string>()
     assert.deepEqual(r.rows.map((x) => x.partyKey).sort(), [...khoa].sort(), "SHS-DC tìm sai người")
     for (const x of r.rows) assert.equal(hangNguoi(x, [], true).sdt, fmtPhone(value), "SHS-DC tìm sai người")
   }
-  for (const value of giu.keys()) await kiemTim(await import("../src/lib/ops/people"), value)
+  const people = await import("../src/lib/ops/people")
+  const conLai = [...giu.keys()]
+  let daTim = 0
+  await Promise.all(
+    Array.from({ length: LUONG_TIM }, async () => {
+      for (let value = conLai.pop(); value !== undefined; value = conLai.pop()) {
+        await kiemTim(people, value)
+        daTim++
+      }
+    }),
+  )
+  assert.equal(daTim, giu.size, "SHS-DC chưa tìm đủ mọi số")
   console.log(`SHS-DC người-có-số=${n} số-khác-nhau=${giu.size} người-từ-hai-số=${nhieuSo} hàng-hiện-số=${hienXem} vai-người-xem=${hienViewer}`)
 
   // Chiều đỏ: bản tìm bỏ lọc sdt trên cùng DB → ra người mang số khác.

@@ -189,12 +189,12 @@ test("TD-AC-2 bảng so: ma trận 10 trường × khớp/lệch/thiếu, 10 hà
     assert.equal(o?.textContent, "Chưa ghi căn cứ — đọc từ tin", `ô Trường của ${k}`)
   }
   const sai = await banChepTam<CanCuMod>("src/lib/ops/review-can-cu.ts", (s) =>
-    s.replace('if (trong(a) || trong(b)) return "thieu";', 'if (trong(a) && trong(b)) return "khop";\n  if (trong(a) || trong(b)) return "thieu";'),
+    s.replaceAll('if (trong(a) || trong(b)) return "thieu";', 'if (trong(a) && trong(b)) return "khop";\n  if (trong(a) || trong(b)) return "thieu";'),
   )
   await assert.rejects(kiemSo(sai), /TD-AC-2: giá thiếu cả hai bên phải là Thiếu/)
 })
 
-test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 6 phương pháp = 18 ô theo sổ từ vựng", () => {
+test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 7 phương pháp = 21 ô theo sổ từ vựng", () => {
   let n = 0
   for (const lop of VOCAB.evidence_tier) {
     for (const pp of VOCAB.assertion_method) {
@@ -205,7 +205,7 @@ test("TD-AC-2 nhãn căn cứ: ma trận viết trước 3 lớp × 6 phương p
       n++
     }
   }
-  assert.equal(n, 18)
+  assert.equal(n, 21) // danh-ba-toa-truc-can (082): sổ thêm phương pháp registry_inherit
   assert.equal(canCu.nhanCanCu(undefined), "Chưa ghi căn cứ — đọc từ tin")
 })
 
@@ -267,13 +267,13 @@ test("TD-AC-6 vùng nút không đổi theo ai_suggestion; suy luận AI tách s
 
   const saiGhep = await banChepTam<CardMod>("src/components/ops/review-card.tsx", (s) =>
     s.replace(
-      '<Button size="sm" onClick={() => d.decide("approved")}',
-      '<Button size="sm" variant={item.ai_suggestion === "yes" ? "default" : "outline"} onClick={() => d.decide("approved")}',
+      '<NutDapAn so={1} onClick={() => d.decide("approved")}',
+      '<NutDapAn so={1} variant={item.ai_suggestion === "yes" ? "default" : "outline"} onClick={() => d.decide("approved")}',
     ),
   )
   await assert.rejects(kiemAc6(saiGhep), /TD-AC-6: vùng nút đổi theo gợi ý AI/)
   const saiBo = await banChepTam<CardMod>("src/components/ops/review-card.tsx", (s) =>
-    s.replace('<Button size="sm" onClick={approve}', '<Button size="sm" variant={item.ai_suggestion === "apply" ? "default" : "outline"} onClick={approve}'),
+    s.replace('<NutDapAn so={1} onClick={approve}', '<NutDapAn so={1} variant={item.ai_suggestion === "apply" ? "default" : "outline"} onClick={approve}'),
   )
   await assert.rejects(kiemAc6(saiBo), /TD-AC-6: nút Áp đổi theo gợi ý apply/)
 })
@@ -825,7 +825,7 @@ describe("TD-AC-7/8 route decide nhận lý do", () => {
     await assert.rejects(kiemAc7(sai), /TD-AC-7: thiếu lý do mà route vẫn ghi/)
   })
 
-  test("TD-AC-7 sheet: lý do trống, trắng hay NBSP/U+3000 → mọi nút tắt + gợi ý; gõ chữ → bật", async () => {
+  test("TD-AC-7 sheet: lý do trống, trắng hay NBSP/U+3000 → chỉ «Bỏ» của Bổ sung tin tắt (OD2 · Q4) + gợi ý; gõ chữ → bật", async () => {
     const React = await import("react")
     Object.assign(globalThis, { React })
     const { createRoot } = await import("react-dom/client")
@@ -849,10 +849,14 @@ describe("TD-AC-7/8 route decide nhận lý do", () => {
           el.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
         })
       }
+      // OD2 (Q4): lý do trống hay chỉ khoảng trắng → nhãn đáp án là lý do; chỉ «Bỏ» của thẻ Bổ sung tin còn tắt.
       for (const v of ["", "   ", "\u00a0\u3000"]) {
         await go(v)
-        assert.ok(nut().length === 3 && nut().every((b) => b.disabled), `${item.item_type} «${JSON.stringify(v)}»: nút phải tắt`)
-        assert.ok(document.body.textContent?.includes("Ghi lý do trước khi quyết"), "thiếu gợi ý")
+        const tat = nut().filter((b) => b.disabled).map((b) => b.textContent)
+        // Thẻ Bổ sung tin mẫu có trường xung đột: «Áp dụng» còn chờ chọn bên (luật cũ), «Bỏ» chờ lý do gõ tay (Q4).
+        const mongTat = item.item_type === "agent_output" ? ["Áp dụng", "Bỏ"] : []
+        assert.ok(nut().length === 3 && JSON.stringify(tat) === JSON.stringify(mongTat), `${item.item_type} «${JSON.stringify(v)}»: nút tắt phải là ${JSON.stringify(mongTat)}, thấy ${JSON.stringify(tat)}`)
+        assert.ok(document.body.textContent?.includes("Để trống thì ghi nhãn đáp án làm lý do"), "thiếu gợi ý")
       }
       await go("đủ căn cứ")
       const bat = item.item_type === "entity_match" ? nut() : nut().filter((b) => b.textContent !== "Áp dụng") // Áp còn chờ chọn bên xung đột
@@ -980,7 +984,7 @@ test("TD-AC-9 vai viewer và nhánh cloud: 0 truy vấn toàn văn/căn cứ/ả
   const sai = await banChepTam<ContentMod>("src/components/ops/review-content.tsx", (s) =>
     s.replace(
       "  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ",
-      '  await loadReviewContext([{ id: 0, item_type: "agent_output", evidence: { offer_id: "td" } }]);\n  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ',
+      '  await (await import("@/lib/ops/review-context")).loadReviewContext([{ id: 0, item_type: "agent_output", evidence: { offer_id: "td" } }] as never);\n  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ',
     ),
   )
   await assert.rejects(kiemAc9(sai), /TD-AC-9: vai viewer chạy truy vấn toàn văn/)

@@ -5,6 +5,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { JSDOM } from "jsdom";
+/** OD1 · ĐC6: mọi lần quyết gửi thêm `elapsed_ms` (khoảng mở thẻ, số nguyên ≥ 0). Tách ra để phép so body cũ giữ nguyên nghĩa. */
+const tachElapsed = (b: unknown) => {
+  if (!b || typeof b !== "object" || !("status" in b)) return b;
+  const { elapsed_ms, ...rest } = b as Record<string, unknown>;
+  if (!(typeof elapsed_ms === "number" && Number.isInteger(elapsed_ms) && elapsed_ms >= 0)) throw new Error(`OD1: body quyết định thiếu elapsed_ms hợp lệ: ${JSON.stringify(b)}`);
+  return rest;
+};
+
 
 const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3456/ops/review" });
 Object.assign(globalThis, {
@@ -27,7 +35,7 @@ async function render(item: Record<string, unknown>) {
 
   const sent: Sent[] = [];
   globalThis.fetch = (async (url: string, init?: RequestInit) => {
-    sent.push({ url, body: JSON.parse(String(init?.body ?? "null")) });
+    sent.push({ url, body: tachElapsed(JSON.parse(String(init?.body ?? "null"))) });
     return { ok: true, json: async () => ({ ok: true }) };
   }) as unknown as typeof fetch;
   const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
@@ -200,9 +208,11 @@ test("AC-11 thẻ xung đột: «Bỏ cả hai» gửi null", async () => {
 test("AC-11 đối chứng: thẻ không xung đột không có lựa chọn", async () => {
   const r = await render(agentItem(ENRICH_EVIDENCE));
   assert.equal(button("Chọn luật"), undefined);
-  // PL3: «Áp dụng» chờ lý do (trước PL3 bật ngay); có lý do thì bật, không cần chọn bên.
-  assert.ok(isDisabled(button("Áp dụng")), "thẻ thường: chưa có lý do thì «Áp dụng» khoá");
+  // OD2 (Q4): lý do trống thì «Áp dụng» vẫn bật (gửi nhãn đáp án); «Bỏ» ở Bổ sung tin còn bắt gõ. Có lý do thì cả hai bật.
+  assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: lý do trống thì «Áp dụng» vẫn bật (Q4)");
+  assert.ok(isDisabled(button("Bỏ")), "thẻ thường: lý do trống thì «Bỏ» khoá (Q4 giữ lý do gõ khi bác)");
   await r.lyDo("đủ căn cứ");
+  assert.ok(!isDisabled(button("Bỏ")), "thẻ thường: có lý do thì «Bỏ» bật");
   assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: có lý do thì «Áp dụng» bật");
   await r.click("Áp dụng");
   assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", reason: "đủ căn cứ" });

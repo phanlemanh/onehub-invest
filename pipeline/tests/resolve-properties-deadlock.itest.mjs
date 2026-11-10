@@ -10,7 +10,7 @@ import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
-import { chayResolve } from "../resolve-properties.mjs";
+import { chayResolve, STAGE_B_DONG_BANG } from "../resolve-properties.mjs";
 
 const SERVER = process.env.RTLD_PG_SERVER ?? "postgres://oneinvest:oneinvest@localhost:5433";
 const TEN_DB = `oneinvest_p3_rtld_${process.pid}`;
@@ -24,14 +24,16 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE sale_offer_records (
   offer_id text PRIMARY KEY, source text NOT NULL, kind text NOT NULL, property_type text, area_id text,
-  area_m2 numeric, price_vnd numeric, price_perm2 numeric, confidence text,
+  area_m2 numeric, price_vnd numeric, price_perm2 numeric, confidence text, street_raw text,
   first_seen timestamptz, last_seen timestamptz, retired_at timestamptz);
+CREATE TABLE areas (id text PRIMARY KEY, region_type text NOT NULL);
 ${CAU_VIEW_044}
 CREATE TABLE stg_chotot_ads (list_id bigint PRIMARY KEY, latitude double precision, longitude double precision);
 CREATE TABLE properties (
   id bigserial PRIMARY KEY, geo geography(Point, 4326), area_id text, property_type text, kind text, cluster_key text,
   stable_key text UNIQUE, n_evidence int NOT NULL DEFAULT 0, first_seen timestamptz, last_seen timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(), resolved_by text NOT NULL DEFAULT 'stage-ab', verification text);
+  created_at timestamptz NOT NULL DEFAULT now(), resolved_by text NOT NULL DEFAULT 'stage-ab', verification text,
+  street text, enrichment_log jsonb NOT NULL DEFAULT '[]'::jsonb);
 CREATE TABLE property_offers (
   property_id bigint NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   offer_id text NOT NULL REFERENCES sale_offer_records(offer_id) ON DELETE RESTRICT,
@@ -41,9 +43,11 @@ CREATE TABLE property_candidates (
   status text NOT NULL DEFAULT 'pending', CONSTRAINT property_candidates_offer_a_offer_b_key UNIQUE (offer_a, offer_b));`;
 
 const S06 = (id) => `'offer_' || substr(encode(digest('S06|' || ${id}::text, 'sha256'), 'hex'), 1, 16)`;
-// Mồi: 6 tin S06 ở 3 ô lưới (cụm), 1 căn có sẵn khớp cụm đầu, 3 tin S03 cùng phường → cặp needs_llm và pending.
+// Mồi: 6 tin S06 ở 3 ô lưới (cụm), 1 căn có sẵn khớp cụm đầu, 3 tin S03 cùng phường (luật cặp cũ sẽ ra needs_llm, pending)
+// và hai cặp cũ trong property_candidates — Stage B đóng băng (V7) nên cặp giữ nguyên, không cặp mới.
 const MOI = `
-TRUNCATE property_offers, property_candidates, properties, stg_chotot_ads, sale_offer_records RESTART IDENTITY CASCADE;
+TRUNCATE property_offers, property_candidates, properties, stg_chotot_ads, sale_offer_records, areas RESTART IDENTITY CASCADE;
+INSERT INTO areas VALUES ('a1', 'ward');
 INSERT INTO stg_chotot_ads VALUES (1, 21.0001, 105.8001), (2, 21.0002, 105.8002), (3, 21.0101, 105.8101),
   (4, 21.0102, 105.8102), (5, 21.0201, 105.8201), (6, 21.0202, 105.8202);
 INSERT INTO sale_offer_records (offer_id, source, kind, property_type, area_id, area_m2, price_vnd, price_perm2, confidence, first_seen, last_seen)
@@ -56,7 +60,9 @@ INSERT INTO sale_offer_records (offer_id, source, kind, property_type, area_id, 
   ('offer_s03_c', 'S03', 'sale', 'apartment', 'a1', 55, 2.31e9, 42e6, 'medium', '2026-10-05', '2026-10-25');
 INSERT INTO properties (stable_key, cluster_key, kind, area_id, n_evidence, first_seen, last_seen, verification)
 SELECT floor(21.00015 / 0.0005)::text || '|' || floor(105.80015 / 0.0005)::text || '|sale|apartment|60|3000',
-       NULL, 'sale', 'a1', 1, '2026-09-01', '2026-09-30', 'verified';`;
+       NULL, 'sale', 'a1', 1, '2026-09-01', '2026-09-30', 'verified';
+INSERT INTO property_candidates (offer_a, offer_b, score, status) VALUES
+  ('offer_s03_a', 'offer_cu_1', 0.95, 'needs_llm'), ('offer_s03_b', 'offer_cu_2', 0.80, 'merged');`;
 
 let admin;
 async function dbMoi() {
@@ -144,8 +150,9 @@ let sach, coVuDao;
 test("RTLD-AC-5 deadlock thật — resolve hoàn tất, kết quả bằng lượt sạch", async () => {
   sach = await luot({ vuDao: false });
   assert.equal(sach.err, undefined);
-  assert.ok(sach.anh.properties.length >= 3 && sach.anh.property_candidates.length >= 2);
-  assert.ok(sach.anh.property_candidates.some((x) => JSON.parse(x).status === "needs_llm"));
+  assert.ok(sach.anh.properties.length >= 3);
+  // Stage B đóng băng (V7): đúng hai cặp mồi, không cặp mới, không cặp nào bị xoá.
+  assert.deepEqual(sach.anh.property_candidates.map((x) => JSON.parse(x).status).sort(), ["merged", "needs_llm"]);
   coVuDao = await luot({ vuDao: true });
   assert.equal(coVuDao.err, undefined, `resolve ném: ${coVuDao.err?.code} ${coVuDao.err?.message}`);
   assert.ok(coVuDao.haiCommit, "phiên hai không COMMIT");
@@ -169,13 +176,13 @@ test("RTLD-AC-6 vũ đạo là deadlock thật", async () => {
 
 test("RTLD-AC-8 dòng tổng kết thử lại", () => {
   const kiemSach = (out) => {
-    if (out.length !== 2 || !out[0].startsWith("Stage A: ") || !out[1].startsWith("Stage B: "))
+    if (out.length !== 4 || !out.slice(0, 3).every((d) => d.startsWith("Stage A: ")) || out[3] !== STAGE_B_DONG_BANG)
       throw new Error("RTLD-AC-8 dòng tổng kết khi không thử lại");
   };
   kiemSach(sach.out);
-  assert.equal(coVuDao.out.length, 3);
-  assert.ok(coVuDao.out[0].startsWith("Stage A: ") && coVuDao.out[1].startsWith("Stage B: "));
-  assert.equal(coVuDao.out[2], `resolve-properties: thử lại sau deadlock ${coVuDao.kq.soLanThuLai} lần`);
+  assert.equal(coVuDao.out.length, 5);
+  assert.ok(coVuDao.out.slice(0, 3).every((d) => d.startsWith("Stage A: ")) && coVuDao.out[3] === STAGE_B_DONG_BANG);
+  assert.equal(coVuDao.out[4], `resolve-properties: thử lại sau deadlock ${coVuDao.kq.soLanThuLai} lần`);
   assert.throws(() => kiemSach([...sach.out, "resolve-properties: thử lại sau deadlock 0 lần"]),
     /^Error: RTLD-AC-8 dòng tổng kết khi không thử lại$/);
 });
@@ -223,9 +230,10 @@ test("RTLD-AC-9 điểm vào CLI thật", async () => {
   assert.match(r.stdout, /^resolve-properties: thử lại sau deadlock \d+ lần$/m);
   assert.throws(() => kiem({ code: 1 }), /^Error: RTLD-AC-9 CLI không qua deadlock: exit 1$/);
 
-  // ô lỗi khác: bỏ ràng buộc duy nhất (offer_a, offer_b) → ON CONFLICT ném 42P10, không thử lại
+  // ô lỗi khác: bỏ khoá chính (property_id, offer_id) → ON CONFLICT của Stage A ném 42P10, không thử lại
+  // (trước V7 ca này bỏ khoá của property_candidates — Stage B đóng băng nên câu ấy không còn).
   const c = await dbMoi();
-  try { await c.query(`ALTER TABLE property_candidates DROP CONSTRAINT property_candidates_offer_a_offer_b_key`); } finally { await c.end(); }
+  try { await c.query(`ALTER TABLE property_offers DROP CONSTRAINT property_offers_pkey`); } finally { await c.end(); }
   const h = await chayCli({ vuDao: false });
   assert.equal(h.code, 1);
   assert.ok(h.stderr.includes("42P10"), h.stderr);

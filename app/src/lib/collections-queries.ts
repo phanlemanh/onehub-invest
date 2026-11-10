@@ -482,6 +482,8 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
   {
     const f = await getLocalFacts();
     if (f) return f.zaloGroups;
+    // Cloud chưa có bản tin: rỗng — bảng stg trên cloud không đồng bộ lược đồ, không đọc (ADR-0014 §4).
+    if (isCloud()) return [];
   }
   const [postRows, logText] = await Promise.all([
     pool.query(

@@ -7,18 +7,26 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
-  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id"],
   evidence_tier: ["fact", "observed", "inferred"],
-  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
+  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"],
   registry_status: ["active", "merged", "split", "retired"],
-  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt"],
+  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten", "sdt", "ma_nguon"],
+  catalog_tier: ["xac_minh", "suy_ra_manh", "mot_loi_khai"],
   registry_event_kind: ["gop", "tach", "nghi"],
   party_role: ["nguoi_dang"],
+  contact_kind: ["sdt", "chat_profile"],
+  contact_rule: ["so_tren_tin", "so_trong_bai", "s03_ho_so_theo_tai_khoan"],
   listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
   offer_status: ["active", "active_under_contract", "closed", "withdrawn", "unknown"],
   change_type: ["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"],
   data_level: ["B0", "B1", "B2", "B3", "B4", "B5"],
   capability_level: ["N0", "N1", "N2", "N3", "N4"],
+  furnished: ["furnished", "partially", "unfurnished", "negotiable"],
+  direction_faces: ["east", "west", "south", "north", "northeast", "southeast", "northwest", "southwest"],
+  view: ["city", "lake", "river", "park_greenbelt", "garden", "pool", "panoramic", "other"],
+  rent_includes: ["management", "electricity", "water", "internet", "none", "other"],
+  price_basis: ["net", "gom_phi", "chua_gom_phi"],
 } as const;
 
 export type VocabAxis = keyof typeof VOCAB;
@@ -32,31 +40,47 @@ export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
 export type RegistryStatus = (typeof VOCAB.registry_status)[number];
 export type AliasKind = (typeof VOCAB.alias_kind)[number];
+export type CatalogTier = (typeof VOCAB.catalog_tier)[number];
 export type RegistryEventKind = (typeof VOCAB.registry_event_kind)[number];
 export type PartyRole = (typeof VOCAB.party_role)[number];
+export type ContactKind = (typeof VOCAB.contact_kind)[number];
+export type ContactRule = (typeof VOCAB.contact_rule)[number];
 export type ListingIntent = (typeof VOCAB.listing_intent)[number];
 export type OfferStatus = (typeof VOCAB.offer_status)[number];
 export type ChangeType = (typeof VOCAB.change_type)[number];
 export type DataLevel = (typeof VOCAB.data_level)[number];
 export type CapabilityLevel = (typeof VOCAB.capability_level)[number];
+export type Furnished = (typeof VOCAB.furnished)[number];
+export type DirectionFaces = (typeof VOCAB.direction_faces)[number];
+export type View = (typeof VOCAB.view)[number];
+export type RentIncludes = (typeof VOCAB.rent_includes)[number];
+export type PriceBasis = (typeof VOCAB.price_basis)[number];
 
 export const KIND = { sale: "sale", rent_lt: "rent_lt" } as const;
 export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "land", room: "room", commercial: "commercial", unknown: "unknown" } as const;
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
-export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
-export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
+export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
-export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt" } as const;
+export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten", sdt: "sdt", ma_nguon: "ma_nguon" } as const;
+export const CATALOG_TIER = { xac_minh: "xac_minh", suy_ra_manh: "suy_ra_manh", mot_loi_khai: "mot_loi_khai" } as const;
 export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;
 export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
+export const CONTACT_KIND = { sdt: "sdt", chat_profile: "chat_profile" } as const;
+export const CONTACT_RULE = { so_tren_tin: "so_tren_tin", so_trong_bai: "so_trong_bai", s03_ho_so_theo_tai_khoan: "s03_ho_so_theo_tai_khoan" } as const;
 export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;
 export const OFFER_STATUS = { active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" } as const;
 export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" } as const;
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
+export const FURNISHED = { furnished: "furnished", partially: "partially", unfurnished: "unfurnished", negotiable: "negotiable" } as const;
+export const DIRECTION_FACES = { east: "east", west: "west", south: "south", north: "north", northeast: "northeast", southeast: "southeast", northwest: "northwest", southwest: "southwest" } as const;
+export const VIEW = { city: "city", lake: "lake", river: "river", park_greenbelt: "park_greenbelt", garden: "garden", pool: "pool", panoramic: "panoramic", other: "other" } as const;
+export const RENT_INCLUDES = { management: "management", electricity: "electricity", water: "water", internet: "internet", none: "none", other: "other" } as const;
+export const PRICE_BASIS = { net: "net", gom_phi: "gom_phi", chua_gom_phi: "chua_gom_phi" } as const;
 
 export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
 
@@ -67,18 +91,26 @@ export const LABELS_VI = {
   confidence: { high: "cao", medium: "trung bình", low: "thấp" },
   price_tier: { P0: "giá giao dịch (P0)", P1: "giá nội bộ (P1)", P2: "giá công khai (P2)" },
   enrich_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà" },
-  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ" },
+  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào", street_number: "Số nhà", unit_number: "Mã căn", frontage_length: "Mặt tiền", lot_size_dimensions: "Ngang × dài", stories: "Số tầng", latitude: "Vĩ độ", longitude: "Kinh độ", builder_name: "Chủ đầu tư", area_id: "Phường của toà" },
   evidence_tier: { fact: "Sự thật", observed: "Quan sát có trích dẫn", inferred: "Suy luận" },
-  assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước" },
+  assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước", registry_inherit: "Kế thừa từ danh bạ" },
   registry_status: { active: "Đang dùng", merged: "Đã gộp", split: "Đã tách", retired: "Đã nghỉ" },
-  alias_kind: { tai_khoan_nguon: "Tài khoản tại nguồn", sdt_bam: "SĐT băm", ten: "Tên hiển thị", sdt: "SĐT số gốc" },
+  alias_kind: { tai_khoan_nguon: "Tài khoản tại nguồn", sdt_bam: "SĐT băm", ten: "Tên hiển thị", sdt: "SĐT số gốc", ma_nguon: "Mã tại nguồn" },
+  catalog_tier: { xac_minh: "Xác minh", suy_ra_manh: "Suy ra mạnh", mot_loi_khai: "Một lời khai" },
   registry_event_kind: { gop: "Gộp", tach: "Tách", nghi: "Nghỉ" },
   party_role: { nguoi_dang: "Người đăng" },
+  contact_kind: { sdt: "Số điện thoại", chat_profile: "Hồ sơ chat" },
+  contact_rule: { so_tren_tin: "Số trên tin của chính người đăng", so_trong_bai: "Số trong bài khác của người đăng", s03_ho_so_theo_tai_khoan: "Hồ sơ chat theo mã tài khoản" },
   listing_intent: { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
   offer_status: { active: "Đang chào", active_under_contract: "Đã cọc", closed: "Đã bán", withdrawn: "Đã gỡ", unknown: "Chưa rõ" },
   change_type: { new_listing: "Tin mới", price_change: "Đổi giá", withdrawn: "Gỡ tin", back_on_market: "Chào lại", active_under_contract: "Đã cọc", closed: "Đã bán" },
-  data_level: { B0: "Có lời khai", B1: "Đọc được", B2: "Gắn căn", B3: "Đã đo", B4: "Xác minh", B5: "Sống" },
+  data_level: { B0: "Có lời khai", B1: "Tin", B2: "Định vị", B3: "Gắn căn", B4: "Làm giàu", B5: "Sống" },
   capability_level: { N0: "Thu được", N1: "Đọc được", N2: "Đo được", N3: "Tự động ở ngưỡng", N4: "Tự duy trì" },
+  furnished: { furnished: "Đủ nội thất", partially: "Nội thất cơ bản", unfurnished: "Nhà trống", negotiable: "Thoả thuận" },
+  direction_faces: { east: "Đông", west: "Tây", south: "Nam", north: "Bắc", northeast: "Đông Bắc", southeast: "Đông Nam", northwest: "Tây Bắc", southwest: "Tây Nam" },
+  view: { city: "Thành phố", lake: "Hồ", river: "Sông", park_greenbelt: "Công viên", garden: "Vườn, nội khu", pool: "Bể bơi", panoramic: "Toàn cảnh", other: "Khác" },
+  rent_includes: { management: "Phí quản lý", electricity: "Điện", water: "Nước", internet: "Internet", none: "Không gồm gì", other: "Khác" },
+  price_basis: { net: "Thu về (NET)", gom_phi: "Đã gồm phí", chua_gom_phi: "Chưa gồm phí" },
 } as const satisfies Record<VocabAxis, Record<string, string>>;
 
 /** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */

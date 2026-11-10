@@ -1,0 +1,76 @@
+schema_version: 1
+feature_slug: eval-classify-theo-chu-ref
+# DB thử oneinvest_eval_ghep, tên miền example.test, không in chữ bài thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ecr_lenh
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/scripts/eval-classify-ghep.test.mjs]
+    expected: "exit 0; ca 'ECR-AC-1' của gopNhan trên chữ tin ghép: bộ đọc trả đúng diện tích, giá, loại tin. Chiều đỏ: cùng nhãn chấm trên URL ảnh thì số đúng tụt, ghim tên trường."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-theo-chu-ref/probes/db.mjs]
+    expected: "exit 0; `ghep` sinh bằng ghepLat thật, 'ok chu theo chu_ref' (chữ bằng tuyệt đối chữ tin chữ, không có URL), 'ok cham dung tren tin ghep'. Chiều đỏ: 'ok doi chung: ban chep doc ref_id thi so dung tut' trên cùng fixture."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ecr_lenh
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/scripts/eval-classify-ghep.test.mjs]
+    expected: "exit 0; ca 'ECR-AC-2': bài ảnh không tin chữ có nhãn thì không vào tập, khong_chu 1, mat_chu 0; không có nhãn thì khong_chu 0. Chiều đỏ: bỏ nhánh này thì URL vào tập chấm và ca đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ecr_lenh
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/scripts/eval-classify-ghep.test.mjs]
+    expected: "exit 0; ca 'ECR-AC-3': dòng trùng cụm có nhãn không vào tập, trung_co_nhan 1, đại diện vẫn chấm một lần; đại diện chưa nhãn thì cụm góp 0 dòng; dòng trùng không nhãn không đếm; dòng vừa trùng vừa không chữ đếm vào trung_co_nhan. Chiều đỏ: bỏ nhánh này thì cụm chấm hai lần và ca đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-theo-chu-ref/probes/db.mjs]
+    expected: "exit 0; 'ok ghep null giong moc' so từng trường với docNhanNguoi ở commit 467d3477 trên lát có bài có chữ, bài chỉ URL và bài mất chữ, tập chấm khác rỗng ('ok doi chung: lat so moc co tin cham'); hai số mới bằng 0. Chiều đỏ: 'ok doi chung: doi mot truong thi phep so moc do'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [pipeline/eval-classify.mjs, pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-theo-chu-ref/probes/db.mjs]
+    expected: "exit 0; CLI thật: 'ok dry in dung so', 'ok dry khong ghi', 'ok ghi that dung khuon detail' (so KHOA_DETAIL ở commit 467d3477 và chạy regex thật của dq-labels.ts), 'ok n chi gom dong cham'. Dry ghim khong_chu 2, trung_co_nhan 1. Chiều đỏ: 'ok doi chung: khuon detail them khoa thi bat'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [_acceptance/eval-classify-theo-chu-ref/probes/db.mjs, pipeline/lib/eval-classify.mjs]
+    expected: "exit 0; 'ok dong them khong co ten nguon' (tên từ source_registry và media, buộc khác rỗng), 'ok lan thu hook migration khong doi', 'ok oneinvest khong co dau vet', 'ok dong them khong co chu bai that' (đối chiếu đoạn chữ lấy từ stg local, mẫu buộc khác rỗng, không in), 'ok doc trong giao dich chi doc' (BEGIN TRANSACTION READ ONLY đầu, câu đọc chữ và ghep ở giữa, COMMIT cuối, cùng client). Chiều đỏ: 'ok doi chung: moi ten nguon bi bat', 'ok doi chung: tep lan thu bi bat', 'ok doi chung: moi chu that bi bat', 'ok doi chung: tro vao oneinvest bi tu choi'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-theo-chu-ref/probes/db.mjs]
+    expected: "exit 0; trên DB thử, `ghep` sinh bằng ghepLat thật: 'ok dem khong chu va dong trung' (khong_chu 2, trung_co_nhan 1, mat_chu 0), 'ok bai khong tin chu va dong trung khong vao tap'. Chiều đỏ: 'ok doi chung: bo cot ghep thi bai anh vao tap'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ecr_db
+    layer: backend-effect
+    paths: [pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-theo-chu-ref/probes/db.mjs]
+    expected: "exit 0; trên DB thử: 'ok dem khong chu va dong trung', 'ok cum cham toi da mot lan' (cụm có đại diện chưa nhãn góp 0 dòng). Chiều đỏ: 'ok doi chung: bo cot ghep thi bai anh vao tap'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

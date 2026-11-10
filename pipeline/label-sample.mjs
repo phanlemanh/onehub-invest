@@ -11,8 +11,8 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { loadStgPosts } from "./lib/test-posts.mjs";
-import { ghepLat } from "./label-ghep.mjs";
-import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, LAT_NHOM, textHash } from "./lib/eval-labels.mjs";
+import { docTinCua, ghepLat } from "./label-ghep.mjs";
+import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, khuTrung, LAT_NHOM } from "./lib/eval-labels.mjs";
 import { tangLoai } from "./transform-zalo.mjs";
 
 /** Lát phân tầng theo loại tin (s03-nhan-loai-tin-rong AC-10): ba tầng bằng nhau, mọi nhóm, không lọc tên nhóm. */
@@ -25,23 +25,21 @@ export const LAT_PHAN_TANG = Object.freeze({ "s03-loai-tin": ["chu-bai", "moi-nh
  * @param {Map<string, string>} tang post_id → tầng
  * @param {{ n: number, seed: string, tangs: string[] }} opts
  */
-export function chonMauPhanTang(posts, tang, { n, seed, tangs }) {
-  const daCo = new Set();
+export function chonMauPhanTang(posts, tang, { n, seed, tangs, tinCua = new Map() }) {
+  // Khử trùng trên cả lô theo khoá trùng (tin của pipeline, rồi chữ đã gạt URL); tầng theo bài đại diện.
+  const { dai, bo_su_kien, bo_vi_trung } = khuTrung(posts, tinCua);
   const theoTang = new Map(tangs.map((t) => [t, []]));
-  for (const p of [...posts].sort((a, b) => (a.post_id < b.post_id ? -1 : a.post_id > b.post_id ? 1 : 0))) {
-    const h = textHash(p.text);
-    if (daCo.has(h)) continue;
-    daCo.add(h);
+  for (const p of dai) {
     theoTang.get(tang.get(p.post_id))?.push(p);
   }
   const chon = [], moiTang = {};
   tangs.forEach((t, i) => {
     const can = Math.floor(n / tangs.length) + (i < n % tangs.length ? 1 : 0);
-    const r = chonMau(theoTang.get(t), { n: can, seed });
+    const r = chonMau(theoTang.get(t), { n: can, seed, tinCua });
     chon.push(...r.chon);
     moiTang[t] = { co: r.khac_nhau, chon: r.chon.length };
   });
-  return { chon, khac_nhau: daCo.size, moiTang };
+  return { chon, khac_nhau: dai.length, moiTang, bo_su_kien, bo_vi_trung };
 }
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -86,12 +84,13 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
     throw new Error(`label-sample: lát «${lat}» đã lấy mẫu với seed khác (${cu[0].seeds.join(", ")}) — không trộn hai mẫu`);
   }
   const { posts, rejected } = await loadStgPosts(client, "zalo");
-  if (theoNhom) return layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo: cu[0].so, posts: nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts, rejected });
+  const tinCua = await docTinCua(client);
+  if (theoNhom) return layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo: cu[0].so, posts: nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts, rejected, tinCua });
   const cuaLat = nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts;
   const tangs = LAT_PHAN_TANG[lat];
-  const { chon, khac_nhau, moiTang } = tangs
-    ? chonMauPhanTang(cuaLat, tangLoai(cuaLat), { n, seed, tangs })
-    : chonMau(cuaLat, { n, seed });
+  const { chon, khac_nhau, moiTang, bo_su_kien, bo_vi_trung } = tangs
+    ? chonMauPhanTang(cuaLat, tangLoai(cuaLat), { n, seed, tangs, tinCua })
+    : chonMau(cuaLat, { n, seed, tinCua });
   const [mo, xong, lui] = trongGiaoDich
     ? ["SAVEPOINT label_sample", "RELEASE SAVEPOINT label_sample", "ROLLBACK TO SAVEPOINT label_sample"]
     : ["BEGIN", "COMMIT", "ROLLBACK"];
@@ -114,7 +113,7 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
     }
   }
   return {
-    lat, gat_post_thu: rejected.total, tin_cua_lat: cuaLat.length, khac_nhau, chon: chon.length,
+    lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien, bo_vi_trung, tin_cua_lat: cuaLat.length, khac_nhau, chon: chon.length,
     trung: chon.filter((r) => r.double_label).length, dev: chon.filter((r) => r.split === "dev").length,
     them, thieu: Math.max(0, n - chon.length), thu, ...(moiTang ? { moiTang } : {}),
   };
@@ -122,11 +121,11 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
 
 /** Mẫu theo nhóm (GC0): đơn vị của bài đọc từ sổ collection_units. Lát đã có dòng thì giữ nguyên: bài mới có thể đẩy bài cũ ra
  * khỏi tập chọn, nên khoá (lat, text_hash), (lat, ref_id) một mình không chặn được lát nở quá hạn mức. */
-async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo, posts, rejected }) {
+async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo, posts, rejected, tinCua }) {
   const { rows: so } = await client.query("SELECT unit_code, group_key, note FROM collection_units WHERE source_code = 'S03'");
   const { donVi, gop } = donViTheoNhomThat(so);
-  const { chon, moiNhom, bo_khong_don_vi } = chonMauTheoNhom(
-    posts.map((p) => ({ ...p, unit_code: donViCuaBai(donVi, p.conversation_id) })), { seed, ...theoNhom });
+  const { chon, moiNhom, bo_khong_don_vi, bo_su_kien, bo_vi_trung } = chonMauTheoNhom(
+    posts.map((p) => ({ ...p, unit_code: donViCuaBai(donVi, p.conversation_id) })), { seed, ...theoNhom, tinCua });
   // Nhóm trùng mà lát không có bài thì không có gì để báo: --nhom-khop đã loại nó.
   const gop_trung = gop.flatMap(({ khoa, khoa_dai_dien, unit_code, gop_tu, the_lech }) => {
     const bai = posts.filter((p) => p.conversation_id != null && khoaNhomThat(p.conversation_id) === khoa);
@@ -159,7 +158,7 @@ async function layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom,
     }
   }
   return {
-    lat, gat_post_thu: rejected.total, tin_cua_lat: posts.length, khac_nhau: moiNhom.reduce((a, x) => a + x.khac_nhau, 0), chon: chon.length,
+    lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien, bo_vi_trung, tin_cua_lat: posts.length, khac_nhau: moiNhom.reduce((a, x) => a + x.khac_nhau, 0), chon: chon.length,
     trung: chon.filter((r) => r.double_label).length, dev: chon.filter((r) => r.split === "dev").length,
     them, thieu: 0, thu, moiNhom, bo_khong_don_vi, gop_trung, tang_phu_da_co,
   };
@@ -173,6 +172,7 @@ async function main() {
     const kq = await layMau(client, co);
     console.log(`label-sample: lát ${kq.lat} · tin của lát ${kq.tin_cua_lat} (${kq.khac_nhau} nội dung khác nhau, gạt ${kq.gat_post_thu} post thử)`);
     console.log(`chon ${kq.chon} · trung ${kq.trung} · dev ${kq.dev} / test ${kq.chon - kq.dev} · them ${kq.them}${kq.thu ? " (--thu: không ghi)" : ""}`);
+    console.log(`bo_vi_trung ${kq.bo_vi_trung} · bo_su_kien ${kq.bo_su_kien} · gat_theo_dau ${JSON.stringify(kq.gat_theo_dau)}`);
     if (kq.moiTang) console.log(`tầng: ${JSON.stringify(kq.moiTang)}`);
     if (kq.moiNhom) {
       for (const x of kq.moiNhom) console.log(`nhóm ${x.unit_code}: chọn ${x.chon}/${x.can}, nội dung ${x.khac_nhau}, bỏ vì trùng ${x.bo_vi_trung}${x.chon < x.can ? " · thiếu" : ""}`);

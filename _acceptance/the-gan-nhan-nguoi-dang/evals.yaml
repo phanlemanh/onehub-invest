@@ -1,0 +1,76 @@
+schema_version: 1
+feature_slug: the-gan-nhan-nguoi-dang
+# Lược đồ tạm tnd_<pid>, tên người đăng và tên nguồn giả, ghep sinh bằng ghepLat thật. Mỗi ca có bản đột biến đỏ trên cùng fixture.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tnd_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-cum.ts, app/src/components/ops/labels/labels-view.tsx, app/src/components/ops/labels/label-form-nhom.tsx, app/tests/labels-nguoi-dang.test.tsx]
+    expected: "exit 0; ca 'TND-AC-1': route GET thật trả tin.nguoiDang và tin.nguoiDangId đúng; HTML của LabelsView ở lát chín trường và lát theo nhóm có 'Người đăng: <tên> · ID <id>' nằm sau tên nhóm, trước 'đăng <giờ>' (so vị trí), ID trong phần tử có lớp select-all. Chiều đỏ: bản tinKe bỏ cột sender_name cho nguoiDang null và ca đỏ với 'THE THIEU NGUOI DANG'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tnd_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-cum.ts, app/src/lib/labels-queries.ts, app/tests/labels-nguoi-dang.test.tsx]
+    expected: "exit 0; ca 'TND-AC-2': ghep sinh bằng ghepLat thật, đọc qua route GET thật (JSON tin.nguoiDang, nguoiDangId, postedAt); bài ảnh của người A (tên hiển thị đổi giữa hai bài) ghép về tin chữ của người A; bài ảnh của người B cạnh tin chữ của A không ghép vào A ('KHONG GHEP KHAC NGUOI'); tin chữ không nằm trong lát vẫn cho tên của tin chữ → tên, ID và postedAt của tin chữ (bài ảnh mang tên, ID và giờ khác, phân biệt được); bài ảnh không tin chữ → của chính bài; HTML in giờ tới phút của tin chữ. Chiều đỏ: bản docThe lấy tên của dòng thay cho tin chữ, ca đỏ với 'NGUOI DANG KHONG THEO TIN CHU'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tnd_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/tests/labels-nguoi-dang.test.tsx]
+    expected: "exit 0; ca 'TND-AC-3': ma trận viết trước năm ca — tên thường giữ nguyên; tên chứa tên nguồn giả thành mã S99, tên nguồn không còn trong JSON; source_registry rỗng → nguoiDang null, HTML có 'Người đăng: ID <id>' và không có tên; sender_name rỗng → như trên; không tên không ID → HTML không có 'Người đăng'; sender_name NULL → nguoiDang null; bảng source_registry vắng → route GET 200, nguoiDang null, nguoiDangId còn. Chiều đỏ: bản bỏ bộ che để lộ tên nguồn ('LO TEN NGUON'); bản `?? tên gốc` khi bộ che trả null để lộ tên lúc danh sách rỗng ('LO TEN KHI KHONG CHE')."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tnd_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/lib/labels-cum.ts, app/tests/labels-nguoi-dang.test.tsx]
+    expected: "exit 0; ca 'TND-AC-4': fixture mang conversation_id 'CVTND'; HTML và JSON route không chứa dấu này, chứa tên và ID người đăng (đối chứng dương). Chiều đỏ: bản trả conversation_id làm nguoiDangId, ca đỏ với 'LO MA NHOM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tnd_mu
+    layer: backend-effect
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, _acceptance/the-gan-nhan-nguoi-dang/probes/mu.mjs]
+    expected: "exit 0; bản chép phép đo gắn mù PL7 (chỉ khác câu chèn field_assertions ghi observed_at) còn xanh, cuối 'MU OK'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "exit 0; test cũ của màn gắn nhãn còn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.gcn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; test cũ của lát theo nhóm còn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tnd_pham_vi
+    layer: backend-effect
+    paths: [_acceptance/the-gan-nhan-nguoi-dang/probes/pham-vi.sh]
+    expected: "exit 0; mỗi tệp đổi so với merge-base in 'ok <tệp>', đúng danh sách ở AC-5, không có 'NGOAI PHAM VI'; tệp đổi không nhắc lược đồ 'public.' ('ok khong ghim public'); test mới đặt DATABASE_URL về lược đồ tạm trước mọi import ('ok luoc do tam'); cuối 'PHAM-VI OK'. Chiều đỏ: 'ok doi chung: tep ngoai danh sach bi bat' (danh sách cộng route)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tnd_loi_o
+    layer: ui-observed
+    paths: [app/src/components/ops/labels/label-form-nhom.tsx, app/tests/labels-nhom.test.tsx]
+    expected: "exit 0; ca 'TND-AC-6' trên biểu mẫu thật trong jsdom: lần lưu nhận 400 với lỗi ở Diện tích, Toà, hai đầu giá; tick «Diện tích: không suy ra được» thì chỉ lỗi Diện tích mất; gõ giá thấp nhất thì lỗi cả hai đầu giá mất; lỗi Toà còn (bảng kỳ vọng viết trước). Chiều đỏ: bản không bỏ lỗi khi sửa ô, ca đỏ với 'LOI CU CON SAU KHI SUA O'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

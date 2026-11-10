@@ -16,6 +16,7 @@ import { CASE_KINDS } from "@/lib/labels-normalize"
 import { AnhBai } from "./anh-bai"
 import { BangSo } from "./bang-so"
 import { diTrang } from "./luu-nhan"
+import { MaThe } from "./ma-the"
 
 /** Lượt hai: bảng «Anh gắn · Bộ đọc · AI đọc», thẻ nhóm, ô trường hợp. Không có đường đổi nhãn đã lưu. Bỏ qua được. */
 
@@ -140,7 +141,7 @@ export function LuotHai({ d, hrefTinKe, diToi = diTrang }: { d: DoiChieu; hrefTi
         <FrameHeader>
           <FrameTitle>Bài gốc</FrameTitle>
           <FrameDescription className="text-xs text-pretty">
-            S03 · {d.groupName ?? "nhóm không rõ"}
+            <MaThe itemId={d.itemId} /> · S03 · {d.groupName ?? "nhóm không rõ"}
             {d.postedAt ? ` · đăng ${fmtVnDateTime(d.postedAt)}` : ""}
           </FrameDescription>
         </FrameHeader>

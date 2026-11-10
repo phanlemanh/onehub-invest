@@ -19,6 +19,7 @@ import { NGUONG, apNguong } from "../src/agents/judge-entity.js";
 import type { PairData } from "../src/tools/native.js";
 import {
   CAU_DEM_THIEU_THE,
+  JUDGE_RUN_DONG_BANG,
   MAY,
   SQL_CAP_NHAT,
   SQL_RUT_ROI_KHO,
@@ -767,9 +768,11 @@ test("RK-AC-7 người quyết giữa chừng — không rút", async () => {
   await assert.rejects(kiemKhongRutCapNguoi("pair:rb1|ra1"), /RK-AC-7 rút thẻ của cặp người đã quyết: pair:rb1\|ra1/);
 });
 
-const DONG_IN = "cặp có tin rời kho 3 · thẻ rút 2 · thẻ trả lại 0";
+// Ghép căn đóng băng (V7, hồ sơ dong-bang-stage-b-resolve): CLI chỉ in dòng đóng băng, không chấm, không in tổng kết; đếm rút
+// thẻ của chamMotLuot vẫn đo ở RK-AC-1…7 (gọi hàm trực tiếp).
+const DONG_IN = JUDGE_RUN_DONG_BANG;
 const kiemDongIn = (stdout: string) => {
-  const dong = stdout.split("\n").find((l) => l.startsWith("cặp có tin rời kho")) ?? "(không có dòng)";
+  const dong = stdout.split("\n").find((l) => l.startsWith("judge-run:") || l.startsWith("cặp có tin rời kho")) ?? "(không có dòng)";
   assert.equal(dong, DONG_IN, `RK-AC-8 dòng in sai: ${dong}`);
 };
 test("RK-AC-8 dòng in tổng kết", async () => {
@@ -783,9 +786,12 @@ test("RK-AC-8 dòng in tổng kết", async () => {
     encoding: "utf8",
   });
   kiemDongIn(out);
-  // đối chứng đỏ
-  assert.throws(() => kiemDongIn(out.replace("thẻ rút 2", "thẻ rút 3")),
-    /RK-AC-8 dòng in sai: cặp có tin rời kho 3 · thẻ rút 3 · thẻ trả lại 0/);
+  // CLI đóng băng không đụng cặp: cặp needs_llm còn nguyên, không thẻ nào sinh.
+  const { rows: [n] } = await db.query(`SELECT count(*)::int n FROM review_queue WHERE item_id IN ('pair:rx1|rx2', 'pair:rx2|rx1')`);
+  assert.equal(n.n, 0, "RK-AC-8 CLI đóng băng vẫn gieo thẻ");
+  // đối chứng đỏ: đầu ra của bản chưa đóng băng (dòng tổng kết cũ) bị bắt.
+  assert.throws(() => kiemDongIn("═══ JUDGE RUN XONG ═══\ncặp có tin rời kho 3 · thẻ rút 2 · thẻ trả lại 0\n"),
+    /RK-AC-8 dòng in sai: cặp có tin rời kho 3 · thẻ rút 2 · thẻ trả lại 0/);
 });
 
 const kiemCaDaKy = (ds: string[], co: Set<string>) => {

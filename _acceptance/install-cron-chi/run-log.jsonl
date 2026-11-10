@@ -1,0 +1,15 @@
+{"ts":"2026-11-07T08:57:58Z","round":1,"evalId":"E1","run_id":"install-cron-chi-E1-r1-20261107T085758Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T08:57:59Z","round":1,"evalId":"E2","run_id":"install-cron-chi-E2-r1-20261107T085759Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T08:58:00Z","round":1,"evalId":"E3","run_id":"install-cron-chi-E3-r1-20261107T085800Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""}
+{"ts":"2026-11-07T08:58:00Z","round":1,"evalId":"E4","run_id":"install-cron-chi-E4-r1-20261107T085800Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T08:58:01Z","round":1,"evalId":"E5","run_id":"install-cron-chi-E5-r1-20261107T085801Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""}
+{"ts":"2026-11-07T09:13:09Z","round":2,"evalId":"E1","run_id":"install-cron-chi-E1-r2-20261107T091309Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:13:11Z","round":2,"evalId":"E2","run_id":"install-cron-chi-E2-r2-20261107T091311Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:13:12Z","round":2,"evalId":"E3","run_id":"install-cron-chi-E3-r2-20261107T091312Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""}
+{"ts":"2026-11-07T09:13:12Z","round":2,"evalId":"E4","run_id":"install-cron-chi-E4-r2-20261107T091312Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:13:13Z","round":2,"evalId":"E5","run_id":"install-cron-chi-E5-r2-20261107T091313Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""}
+{"ts":"2026-11-07T09:33:31Z","round":3,"evalId":"E1","run_id":"install-cron-chi-E1-r3-20261107T093331Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:33:32Z","round":3,"evalId":"E2","run_id":"install-cron-chi-E2-r3-20261107T093332Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:33:33Z","round":3,"evalId":"E3","run_id":"install-cron-chi-E3-r3-20261107T093333Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/keychain.sh \"$PWD\""}
+{"ts":"2026-11-07T09:33:34Z","round":3,"evalId":"E4","run_id":"install-cron-chi-E4-r3-20261107T093334Z","exit_code":0,"cmd":"node --test scripts/install-cron-chi.test.mjs"}
+{"ts":"2026-11-07T09:33:35Z","round":3,"evalId":"E5","run_id":"install-cron-chi-E5-r3-20261107T093335Z","exit_code":0,"cmd":"bash _acceptance/install-cron-chi/probes/scope.sh \"$PWD\""}

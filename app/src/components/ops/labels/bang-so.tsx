@@ -3,7 +3,7 @@ import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle } from "@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { fmtInt } from "@/lib/format"
 import type { DoiChieu } from "@/lib/labels-luot-hai"
-import { LABEL_FIELDS_NHOM, type LabelField } from "@/lib/labels-normalize"
+import { BASIS_LABEL, LABEL_FIELDS_NHOM, type LabelField } from "@/lib/labels-normalize"
 
 import { hienGiaTri, nhanTruong } from "./nhom-fields"
 
@@ -13,14 +13,16 @@ type DongSo = { f: LabelField; toi: string; bo: string; ai: string; khacBo: bool
 
 function dongSo(d: DoiChieu): DongSo[] {
   const cua = new Map(d.cuaToi.map((r) => [r.field, r]))
-  return LABEL_FIELDS_NHOM.filter((f) => cua.has(f)).map((f) => {
-    const r = cua.get(f)!
-    const toi = r.notStated ? null : r.value
+  // Mọi trường của lát theo nhóm; thẻ gắn trước truong-nhan-s03-081 không có bảy trường mới → «—» (chưa gắn).
+  return LABEL_FIELDS_NHOM.map((f) => {
+    const r = cua.get(f)
+    const toi = !r || r.notStated ? null : r.value
     const bo = d.boDoc?.[f] ?? null
     const ai = d.aiDoc?.[f] ?? null
+    const canCu = r && !r.notStated && r.basis === "danh_muc_cdt" ? ` · ${BASIS_LABEL.danh_muc_cdt}` : ""
     return {
       f,
-      toi: r.notStated ? "Không suy ra được" : hienGiaTri(f, r.value),
+      toi: !r ? "—" : r.notStated ? "Không suy ra được" : `${hienGiaTri(f, r.value)}${canCu}`,
       bo: hienGiaTri(f, bo),
       ai: hienGiaTri(f, ai),
       // Máy không đọc được thì không phải chỗ khác; máy đọc ra giá trị khác nhãn mới tô, kể cả khi người gắn không suy ra được.

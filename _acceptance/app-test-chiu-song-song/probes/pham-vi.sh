@@ -1,8 +1,14 @@
 #!/bin/bash
-# E5 (app-test-chiu-song-song): tệp đổi so merge-base chỉ trong vùng của hàng; probe không gọi Supabase.
+# E5 (app-test-chiu-song-song): tệp đổi trong khoảng commit của nhánh gốc chỉ trong vùng của hàng; probe không gọi Supabase.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)" || exit 2; cd "$ROOT" || exit 2
-base=$(git merge-base origin/main HEAD) || { echo "KHONG TINH DUOC DIEM RE NHANH"; exit 2; }
+# Khoảng commit của nhánh gốc fix/app-test-chiu-song-song lúc ký (PR #267, gộp bằng merge commit fcc42f9c) — neo cứng để
+# phép đo chạy được ở mọi nhánh sau (hồ sơ thuoc-song-song-dem-theo-ten-ca); hai commit là tổ tiên của origin/main.
+base=a86804f700bbad07462d47a2b0d6500a3ecfa37e
+head=2070958c64212cdc401550b74b2558efed78efcf
+for c in "$base" "$head"; do
+  git cat-file -e "$c^{commit}" 2>/dev/null || { echo "KHONG CO COMMIT NEO $c"; exit 2; }
+done
 cho_phep() {
   case "$1" in
     app/tests/deals-phi-ly.test.tsx|app/tests/dq-moi-nhat.test.tsx|pipeline/scripts/deals-phi-ly.test.mjs|\
@@ -16,7 +22,6 @@ cho_phep() {
     *) return 1 ;;
   esac
 }
-[ "$base" != "$(git rev-parse HEAD)" ] || { echo "DIEM RE BANG HEAD — phép đo mù"; exit 2; }
 # Bốn hồ sơ đã ký chỉ được nhận dòng ghim lại của làn máy: run-log chỉ THÊM dòng kind repin; evidence-report chỉ đổi
 # verified_commit và thêm mục «### Re-pin» (run_id, sha, dòng trống). Đọc diff -U0 từ stdin, in dòng lạ.
 kiem_ghim() {  # $1 = run-log|evidence
@@ -27,7 +32,7 @@ kiem_ghim() {  # $1 = run-log|evidence
             if (loai == "evidence" && ($0 ~ /^\+verified_commit: / || $0 ~ /^\+### Re-pin / || $0 ~ /^\+run_id: / || $0 ~ /^\+sha: / || $0 ~ /^\+$/)) next
             print "SUA HO SO DA KY: " $0 }'
 }
-ds=$(git diff --name-only "$base" HEAD) || { echo "KHONG LIET KE DUOC TEP DOI"; exit 2; }
+ds=$(git diff --name-only "$base" "$head") || { echo "KHONG LIET KE DUOC TEP DOI"; exit 2; }
 [ -n "$ds" ] || { echo "KHONG CO TEP DOI — phép đo mù"; exit 2; }
 bad=0
 while IFS= read -r f; do [ -z "$f" ] && continue
@@ -36,7 +41,7 @@ done <<< "$ds"
 for h in deals-loai-tin-phi-ly deals-phi-ly-test-theo-view dq-moi-nhat-moi-kiem sdt-luu-goc-e164; do
   for t in run-log evidence; do
     tep="_acceptance/$h/$([ "$t" = run-log ] && echo run-log.jsonl || echo evidence-report.md)"
-    la=$(git diff -U0 "$base" HEAD -- "$tep" | kiem_ghim "$t")
+    la=$(git diff -U0 "$base" "$head" -- "$tep" | kiem_ghim "$t")
     [ -z "$la" ] || { echo "$la"; bad=1; }
   done
 done
