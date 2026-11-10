@@ -1,0 +1,15 @@
+{"ts":"2026-11-10T08:49:53Z","round":1,"evalId":"E1","run_id":"canh-bao-s03-ngung-thu-E1-20261110T084953Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"}
+{"ts":"2026-11-10T08:49:53Z","round":1,"evalId":"E3","run_id":"canh-bao-s03-ngung-thu-E3-20261110T084953Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"}
+{"ts":"2026-11-10T08:49:53Z","round":1,"evalId":"E5","run_id":"canh-bao-s03-ngung-thu-E5-20261110T084953Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"}
+{"ts":"2026-11-10T08:49:53Z","round":1,"evalId":"E6","run_id":"canh-bao-s03-ngung-thu-E6-20261110T084953Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs bien"}
+{"ts":"2026-11-10T08:49:56Z","round":1,"evalId":"E2","run_id":"canh-bao-s03-ngung-thu-E2-20261110T084956Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"}
+{"ts":"2026-11-10T08:49:56Z","round":1,"evalId":"E4","run_id":"canh-bao-s03-ngung-thu-E4-20261110T084956Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"}
+{"ts":"2026-11-10T08:49:56Z","round":1,"evalId":"E7","run_id":"canh-bao-s03-ngung-thu-E7-20261110T084956Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"}
+{"ts":"2026-11-10T08:49:56Z","round":1,"evalId":"E9","run_id":"canh-bao-s03-ngung-thu-E9-20261110T084956Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"}
+{"ts":"2026-11-10T08:49:56Z","round":1,"evalId":"E10","run_id":"canh-bao-s03-ngung-thu-E10-20261110T084956Z","exit_code":0,"cmd":"node scripts/canh-bao-s03-ngung-thu/acceptance.mjs tron"}
+{"ts":"2026-11-10T08:50:05Z","round":1,"evalId":"E8","run_id":"canh-bao-s03-ngung-thu-E8-20261110T085005Z","exit_code":0,"cmd":"WATCHDOG_FILE=scripts/zalo-watchdog.sh node --test scripts/zalo-watchdog-song.test.mjs"}
+{"ts":"2026-11-10T08:50:12Z","round":1,"evalId":"E11","run_id":"canh-bao-s03-ngung-thu-E11-20261110T085012Z","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs gateway"}
+{"ts":"2026-11-10T08:50:14Z","round":1,"evalId":"E12","run_id":"canh-bao-s03-ngung-thu-E12-20261110T085014Z","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"}
+{"ts":"2026-11-10T08:50:19Z","round":1,"evalId":"E13","run_id":"canh-bao-s03-ngung-thu-E13-20261110T085019Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"}
+{"ts":"2026-11-10T08:50:22Z","round":1,"evalId":"E14","run_id":"canh-bao-s03-ngung-thu-E14-20261110T085022Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"}
+{"ts":"2026-11-10T08:50:08Z","round":1,"evalId":"E15","run_id":"canh-bao-s03-ngung-thu-E15-20261110T085008Z","exit_code":0,"cmd":"bash -n scripts/lib/s03-song.sh && bash -n scripts/zalo-watchdog.sh && echo SYNTAX OK"}
