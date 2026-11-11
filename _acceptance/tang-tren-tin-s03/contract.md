@@ -5,7 +5,7 @@ slug: tang-tren-tin-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/** khớp t3_paths (lộ trình ghi T2)
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-tang-tren-tin-s03-design.md
