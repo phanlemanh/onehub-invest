@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 300e5b6dc44e54b3c6536915f2cf32049910a4dc
-human_signoff:
+human_signoff: Mạnh 2026-11-11
 ---
 
 # Evidence Report: so-lenh-bo-ap

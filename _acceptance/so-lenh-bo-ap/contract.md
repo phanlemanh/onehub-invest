@@ -5,7 +5,7 @@ slug: so-lenh-bo-ap
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: chạm db/migrations/**, app/src/app/api/v1/ops/**, pipeline/push-ops-facts.mjs (t3_paths); hàng lộ trình ghi T3
 surfaces: [api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-so-lenh-bo-ap-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
@@ -119,3 +119,7 @@ Quét bằng morphological-scan, preset test-matrix (design doc mục «Không g
 - Không đổi `CLOUD_ALLOW` của `sync-cloud`: không bảng mới nào được chép từ máy thu lên cloud.
 - Sửa `app/src/lib/ops-access.ts` (thêm hành động lệnh) và route `ingest` chạm vật của hồ sơ đã ký TV1, ON22: lưới
   trước-gộp có thể đòi ghim lại các hồ sơ ấy trong cùng PR.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Phép kiểm SL-AC-8 so cột kết quả với dữ liệu mẫu viết tay, chưa so với tệp do bộ áp thật sinh ra.
+  - Ngoài-3: Sổ bề mặt API khai route nạp số ở chế độ ops, chưa ghi thêm rằng nhánh báo kết quả lệnh nhận token máy.
+  - Ngoài-5: Một kết quả lệnh mang tên nguồn thật làm cả đợt kết quả không lên cloud, cho tới khi người sửa ở máy thu.
