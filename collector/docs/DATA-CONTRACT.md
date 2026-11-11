@@ -147,8 +147,63 @@ Luật đọc:
    tổng vốn, diện tích, pháp lý — thông tin dự án công khai (mục 38). Không có PII cá nhân.
 3. Mảng `properties` rỗng hoặc `tongBds = 0` là bình thường (đa số dự án chưa công bố BĐS).
 
+## Nguồn S07 `s07-danh-muc` — danh mục và thông tin dự án (v9, DAZ3)
+
+- Thư mục `vn/vn__s07-danh-muc__<id>/` (`city = "vn"`, nguồn toàn quốc); danh sách của nguồn có 608 trang × 10 thẻ, tức khoảng 6.080 dự án
+  (đo 11/11). Mỗi snapshot là một lô nhỏ (5–10 item) ghi ngay
+  khi lấy được, để gãy giữa lượt không mất phần đã lấy — một lượt thu cho ra nhiều snapshot.
+- **Không đăng nhập.** Thu bằng trình duyệt thật ở phiên khách; `meta.sessionLoggedIn = false` là bắt buộc với
+  `project_list_page` và `project_catalog`; item có `true` hoặc thiếu cờ thì bộ nạp bỏ có đếm. Riêng `project_sitemap` của
+  lượt 10/11 không ghi cờ (tệp công khai) — vẫn nhận.
+- Nhịp và trần do làn thu chọn (ROADMAP §3 mục 39): tuần tự, một lời mỗi lần; gặp 403, 429 hoặc trang thử thách thì dừng
+  cả lượt, nghỉ lùi dần 1 → 3 → 12 → 24 giờ; không vượt lớp chặn bot. Script thu ở `research-local/` (mang tên miền),
+  không nằm trong kho. Tên nguồn thật và tên miền chỉ ở `source_registry` local.
+- Phạm vi: **có** trang danh sách dự án, trang một dự án, sitemap dự án; **không** tin rao, SĐT, API có xác thực, API tiện
+  ích quanh dự án.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `project_sitemap` | `sitemap-chi-muc` · `sitemap-<loại hình>` | `{ xml }` | `request {path}` · `loaiHinh` · `soUrl` (đếm mọi `<loc>`, gồm cả trang lọc) · từ 11/11: `sessionLoggedIn`, `httpStatus` |
+| `project_list_page` | `list-p<trang>` | `{ listHtml }` — khối bao mọi link dự án của trang, đã bỏ `form`, `script`, `style`, `svg`, hộp liên hệ | `request {path, page}` · `sessionLoggedIn` · `httpStatus` · `soThe` · từ 11/11: `soTheChinh`, `trangCuoi` |
+| `project_catalog` | `pj<pjId>` | `{ canonical, title, description, ogImage, ldJson[], paramsScript, mainHtml }` | `pjId` · `path` (không host) · `finalPath` · `loaiHinh` · `sessionLoggedIn` · `httpStatus` · `bytesFull` · `mainBytes` · `children[]` · từ 11/11: `descLinks[]`, `relatedLinks[]` |
+
+Payload:
+- `listHtml`: mỗi trang có **10 thẻ chính** (`.js__project-card`: tên, nhãn trạng thái, diện tích, số căn, số toà, địa chỉ,
+  tóm tắt, chủ đầu tư nếu có, ảnh) và **một khối «nổi bật» lặp ở mọi trang** (khoảng 6 thẻ). `meta.soThe` đếm cả hai
+  (thường 16); `meta.soTheChinh` chỉ đếm thẻ chính. Danh sách sắp theo «mới nhất» nên một dự án có thể lùi trang giữa
+  hai lượt — cùng `pjId` xuất hiện ở hai trang là bình thường.
+- `mainHtml`: `outerHTML` của khối nội dung chính đã bỏ thẻ tin rao, form và hộp liên hệ, `script`, `style`, `svg`. Giữ
+  nguyên, không bóc ở collector: tiêu đề, địa chỉ, nhãn trạng thái kèm mốc, thông số, bảng tổng quan, hộp thuộc tính (chủ
+  đầu tư kèm mã `ep<id>`, pháp lý, quy mô, giá), mô tả, tiện ích, mặt bằng, câu hỏi thường gặp, dự án liên quan, album.
+- `ldJson`: chữ của mọi khối JSON-LD (thường `BreadcrumbList` và `FAQPage`). `paramsScript`: chữ của script mang
+  `latitude`, `longitude`, `legacyId` — toạ độ do nguồn công bố.
+
+Luật đọc (bên nạp):
+1. **Tên miền thật có trong payload** (link ảnh, `canonical`, `paramsScript`, link trong mô tả). Raw ở local nên được phép;
+   `stg_s07_*` thì không: link trang thành đường dẫn tương đối, link ảnh thành `s07://<máy con>/<đường dẫn>`, tên miền đứng
+   trần trong chữ thành «S07». Bộ nạp suy tên miền từ chính snapshot (hoặc đọc `S07_HOST` ở cấu hình local) và dừng,
+   không ghi, nếu còn sót tên miền trong bất kỳ dòng nào.
+2. **Loại hình và khu vực đọc từ `meta.path`** (`/du-an-<loại hình>-<khu vực>/<slug>-pj<id>`, 12 loại hình), không đọc
+   `meta.loaiHinh`: 7 item `project_catalog` ghi trước 01:00Z ngày 11/11 mang giá trị cắt sai (bất biến, giữ nguyên).
+3. **Địa chỉ có hai lớp**: dòng địa chỉ thường là hai cấp mới; `BreadcrumbList` và đường dẫn dùng quận cũ. Giữ cả hai
+   nguyên văn; khớp xã/phường là việc transform.
+4. **Dự án con**: trang cha không có khối riêng — `meta.children` rỗng ở mọi item đã thu. Link tới dự án khác nằm trong
+   phần mô tả (`meta.descLinks`, bộ nạp tự bóc lại từ `mainHtml` nên item cũ cũng có) là ứng viên cha–con; quyết định
+   cha–con là việc của làn Claude. `relatedLinks` là khối «dự án liên quan», không phải cha–con.
+5. **Giá và lịch sử giá** trên trang dự án chỉ dùng nội bộ (ROADMAP §3 mục 27), không lên cổng.
+6. Khoá ba bảng stg là `(snapshot_id, pj_id)`: nạp lại cùng snapshot không nhân dòng; một dự án thu lại ở snapshot sau là
+   dòng mới. Chọn bản mới nhất theo `captured_at` (= `fetchedAt` của item) là việc của bước đọc stg.
+7. Sitemap lẫn trang lọc (theo giá, theo tỉnh) với trang dự án: chỉ `<loc>` kết thúc bằng `-pj<id>` là dự án.
+
 ## Lịch sử phiên bản
 
+- **schemaVersion 9 (2026-11-11, phiên thu thay làn thu — DAZ3 S07 danh mục dự án)**: thêm nguồn `s07-danh-muc` (kind
+  `project_sitemap`, `project_list_page`, `project_catalog`) — hình dạng ở mục nguồn phía trên. RawItem không thêm trường
+  chung. Mọi snapshot S07 tới nay mang `schemaVersion 4` trong manifest (`SnapshotWriter` chưa nhận số phiên bản; cùng
+  hình dạng, bất biến, giữ nguyên) — bộ nạp nhận diện theo `source`, chấp nhận `{1..9}`. Nạp bằng
+  `pipeline/import-s07-danh-muc.mjs` (bộ nạp riêng; `import-airbnb.mjs` không có nguồn này trong ALLOWLIST nên bỏ qua có
+  dòng báo) vào `stg_s07_project_card`, `stg_s07_project`, `stg_s07_sitemap_url` của migration 093 (làn Claude); DB chưa
+  áp 093 thì in `CHUA-AP-093`, thoát 0, không đánh dấu snapshot đã nạp.
 - **schemaVersion 8 (2026-11-10, liên làn thay làn thu — DA24a S11, bảng hàng S10)**: thêm hai nguồn `s10-bang-hang`
   (kind `stock_table`, `project_tree`) và `s11-nn1-du-an` (kind `project_list_page`, `project_detail`, `project_properties`)
   — hình dạng ở hai mục nguồn phía trên. RawItem không thêm trường chung. Snapshot hai nguồn này ghi ngày 10/11 mang

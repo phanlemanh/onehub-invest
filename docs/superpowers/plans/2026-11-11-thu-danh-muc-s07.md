@@ -12,6 +12,17 @@
 
 **Cách thi công:** tuần tự trong phiên chính (feature-loop S3); chấm bằng tác tử tươi ở S4.
 
+## Thứ tự năm việc
+
+```mermaid
+flowchart LR
+  T1["1 · Tạo ba bảng (093)<br/>+ bộ soát lược đồ"] --> T2["2 · Đọc trang thu<br/>+ đếm phần bỏ"]
+  T2 --> T3["3 · Bộ nạp ghi DB<br/>nạp lại không nhân dòng"]
+  T3 --> T4["4 · Đo trên dữ liệu thật<br/>+ năm đối chứng"]
+  T4 --> T5["5 · Tài liệu<br/>+ chạy cả bộ kiểm"]
+  T5 --> S4(["Chấm độc lập (S4)"])
+```
+
 ## Global Constraints
 
 - Tầng A: không tệp nào trong kho chứa tên miền hay nhãn của nguồn; chỉ mã `S07`. HTML trong test là giả, miền thử `nguon-thu.test`.
