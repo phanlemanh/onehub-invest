@@ -1,0 +1,13 @@
+{"feature_plain":"Hai phép đo cũ của việc đưa tin S03 lên cổng đang đỏ oan trên dữ liệu hôm nay; vòng này cho chúng đo đúng điều đã ký và xanh lại, không đổi dữ liệu thật.",
+"will_do":[
+ {"id":"AC-1","p":"Sẽ kiểm rằng áp 069 chỉ đổi loại nhà của tin có loại nhà suy từ nhóm, đúng luật 069, và không đổi gì ở mọi tin khác — trên bản sao dữ liệu thật."},
+ {"id":"AC-2","p":"Sẽ cho phép đo «thứ tự áp migration» chạy lại được trên cơ sở dữ liệu hôm nay mà vẫn giữ mọi điều nó kiểm."},
+ {"id":"AC-3","p":"Sẽ chạy trọn tệp kiểm không bỏ ca nào, chỉ trên bản sao riêng, và từ chối chạy trên dữ liệu dùng chung."}],
+"wont_do":[
+ {"id":"OOS-1","p":"Sẽ KHÔNG sửa migration hay dữ liệu thật."},
+ {"id":"OOS-2","p":"Sẽ KHÔNG sửa hợp đồng đã ký của việc đưa tin S03 lên cổng; cách đọc lại ghi ở hồ sơ này."},
+ {"id":"OOS-3","p":"Sẽ KHÔNG đổi lệnh chấm của hồ sơ đã ký khác đang bỏ qua hai ca này."}],
+"coverage_plain":[
+ {"i":0,"p":"Bốn loại tin khi áp 069 — không có loại nhà suy, một giá trị suy, hai giá trị suy, có nguồn chắc hơn — mỗi loại đo trên bản sao dữ liệu thật (AC-1)."},
+ {"i":1,"p":"Năm thứ tự áp migration, có và không gỡ view đời 070 (AC-2)."},
+ {"i":2,"p":"Chỉ chạy trên bản sao riêng, mọi thay đổi hoàn tác, từ chối dữ liệu dùng chung (AC-3)."}]}
