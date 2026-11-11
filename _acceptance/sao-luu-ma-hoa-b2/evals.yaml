@@ -78,6 +78,6 @@ evals:
     criterion: AC-10
     executor: script
     cmd: config:executors.script.sl_ranh_gioi
-    expected: "sync_cloud_doi=0 collector_doi=0 plist=0 launchctl=0 kho_tu_xa_trong_test=0 ten_nguon=0, mã 0; đối chứng --thu-ten-nguon gài tên trong tệp giả thì đỏ"
+    expected: "sync_cloud_doi=0 collector_doi=0 plist=0 nap_lich=0 lenh_tai_khac=0 kho_tu_xa_trong_test=0 ten_nguon=0, mã 0; đối chứng --thu-ten-nguon gài tên trong tệp giả thì đỏ"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
     paths: ["scripts/**", "_acceptance/sao-luu-ma-hoa-b2/**", "docs/superpowers/**"]
