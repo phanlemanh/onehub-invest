@@ -40,7 +40,7 @@ RESO cho mọi nguồn (S06 đều là số), và bên đọc đang có (`review
 2. Trigger miền giá trị trên phát biểu, mọi phương pháp: `floor_raw` khớp `^[1-9][0-9]{0,2}$`, `floor_band` thuộc `low|mid|high`; sai thì RAISE nêu tên trường.
 3. Phát biểu `legacy` cho mọi `floor_raw` đã có (747 tin S06, từ 030), khuôn cắt chuyển PL15: mỗi dòng gắn `offer_id` của chính nó, chỉ đỡ tin đã sinh ra
    nó; đứng TRƯỚC trigger miền để giá trị cũ ngoài miền (4 tin S06 mang `0`) vẫn được giữ, còn từ nay về sau thì bị từ chối. Chạy hai lần không thêm dòng.
-4. `resolve_offer_fields`: nguyên thân bản mới nhất trên main (069), cộng `floor_raw` vào cột dựng. Không có `coalesce` với giá trị cũ.
+4. `resolve_offer_fields`: vá thân hàm đang có theo khuôn mốc của 068/069 (thêm `floor_raw` vào ba chỗ dựng cột), không chép cả hàm, để áp được ở mọi thứ tự với các migration vá khác. Không có `coalesce` với giá trị cũ.
 5. Sổ từ vựng `ref_lookup`: `assertion_field` thêm `floor_raw` «Tầng» (`UnitFloorLocation`), `floor_band` «Dải tầng» (local); trục mới `floor_band`
    (`low` «Tầng thấp», `mid` «Tầng trung», `high` «Tầng cao»).
 
