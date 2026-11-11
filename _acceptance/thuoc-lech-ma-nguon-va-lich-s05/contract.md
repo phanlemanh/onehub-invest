@@ -5,7 +5,7 @@ slug: thuoc-lech-ma-nguon-va-lich-s05
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-11-thuoc-lech-ma-nguon-va-lich-s05-design.md
 approved_by: Mạnh
 approved_at: 2026-11-11
@@ -70,3 +70,6 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai thước, mỗi thư
 
 - Con trỏ `superseded_by` của E11, E12 chỉ được kit công nhận khi hồ sơ này đã ký Cổng Bằng chứng; trước đó lưới
   trước-gộp coi hai ô là xung đột. Gộp PR sau chữ ký thì không vướng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: Ca kiểm báo cáo ngày (TL-AC-2) xanh nhờ S10, S11 đang chưa khai hạn độ tươi; khai hạn rồi thu đúng hạn thì ca đỏ oan.
+  - Ngoài-2: Cùng gốc Ngoài-1 — E2 đỏ dù báo cáo đúng khi S10, S11 có SLO và còn tươi.
