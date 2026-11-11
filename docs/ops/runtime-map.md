@@ -149,6 +149,18 @@ nêu đường + mã `S0x`, không bao giờ in tên.
 - Nhóm S03 đăng ký hai lần: `node pipeline/don-nhom-hai-lan.mjs` chỉ in, `--ghi` chuyển dòng phụ sang «Đã gỡ», giữ dòng và mã, ghi `ops_audit`;
   `--hoan-lai --ghi` trả về trạng thái cũ. Chỉ chạy `--ghi` trên DB local máy thu khi Mạnh nói rõ.
 
+## Đường lệnh kéo — bộ áp ops-apply (2026-11-10, `_acceptance/so-lenh-bo-ap/`, TV4, ADR-0015)
+
+- Cloud chỉ ghi Lệnh (`change_requests`); máy thu chạy `node pipeline/ops-apply.mjs` — kéo lệnh đã duyệt bằng token máy
+  (`OPS_MACHINE_TOKEN` trong `~/.oneinvest/cloud.env`, scope `ops:pull`), áp vào `source_registry` trong một giao dịch có sổ
+  áp `change_request_applies` (một lệnh tối đa một lần), báo kết quả ngay qua `push-ops-facts.mjs --chi-lenh` → `ingest`.
+  Cloud không gọi vào máy thu.
+- **Phanh**: tạo tệp `~/.oneinvest/ops-apply.dung` → bộ áp thoát 0, không kéo, không áp. Chỉ người ngồi máy thu tạo được.
+- **Chưa chạy** tới khi đủ ba bước sau gộp, mỗi bước một lời của Mạnh: (1) áp 091 lên DB máy thu (sao lưu trước) rồi lên
+  Supabase; (2) cấp token: `DATABASE_URL=<cloud> node scripts/cap-token-may.mjs --name may-thu-1 --scope ops:pull`, chép token
+  in ra vào `cloud.env` của máy thu; (3) nạp `pipeline/cron/com.oneinvest.ops-apply.plist` (thay `__ROOT__`, nhịp 60″).
+- Thu hồi một máy: `node scripts/cap-token-may.mjs --thu-hoi <tên>` trên DB cloud.
+
 ## Số tổng hợp Ops lên cloud (chốt 2026-10-24, `_acceptance/ops-facts-so-tong-hop/`, ADR-0014)
 
 Mỗi lượt `scripts/cloud-sync.sh` (15′), `pipeline/push-ops-facts.mjs` đẩy thêm khoá `blocks` gồm năm khối số tính ở máy

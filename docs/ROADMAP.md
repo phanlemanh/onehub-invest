@@ -163,6 +163,10 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   qua `area_aliases` của PX1 theo MÃ (không theo tên — bẫy cùng tên An Phú, Bình Thạnh), ghi `asset_nodes.area_ids`, rút phường kế
   thừa của toà không còn đúng (`sua-xa-nut`); cùng rào đích DB1b. Đo trên bản chép máy thu 10/11: 16 mã lạc → 0, 18/20 nút đổi;
   Grand Park về Long Bình; năm nút chưa chốt xã mang mã tỉnh kèm lý do (Hỏi-2). Áp lên máy thu là lời riêng của Mạnh (Hỏi-1).
+- Danh bạ vật thể toàn quốc (DA1, `_acceptance/danh-ba-vat-the-toan-quoc`, migration 088): bảng `iso_regions` 34 tỉnh → mã ISO
+  3166-2:VN cũ của tỉnh mang tên được giữ (Huế VN-26; bản chụp `pipeline/data/iso-3166-2-vn.json`); `buildings.iso_region` là khoá
+  ngoại tới bảng, `upi` nhận mọi mã. Lệnh dựng suy ISO từ `area_ids` của khu, không đọc `meta.city` (ba khu Hưng Yên ghi `hanoi`);
+  chưa áp 088 thì chỉ dựng lại khu đã có toà. Chủ đầu tư ghi `source_field` (tệp + băm). Chưa áp 088 lên máy thu.
 - Ngừng rao khi không thấy lại (V6, `_acceptance/tin-ngung-rao-khong-thay-lai`, migration 085, Q4 Mạnh 08/11): tin sống của S03,
   S05, S06 không thấy lại quá N = 21 ngày (`ngung_rao_sau_ngay`) trong khi nguồn vẫn thu thì nhận phát biểu `offer_status =
   withdrawn` lớp suy luận (`inferred`/`e1_rule`, `rule_id khong-thay-lai:<offer_id>`); đo tới mốc thu, không tới giờ chạy —
@@ -582,8 +586,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     bán», «Đã bàn giao» từ RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`. URL, tìm kiếm và bộ lọc không đổi theo trạng thái.
     Kế hoạch thi công bản 2 (Mạnh «Theo khuyến nghị», 08/11): (1) cặp nối dự án do máy đề xuất, đội ops duyệt trên thẻ, cặp cùng căn cứ duyệt
     loạt bằng «thẻ luật», Mạnh xem mẫu; (2) mở thu toàn bộ S09 khi S09 phủ ≥ 50% trong 282 dự án S06 và phân giải ≥ 70% mã toà S03 ở hai dự
-    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục hoặc đã người duyệt cặp nối, có xã/phường, và có tin đang rao
-    hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
+    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục **đã qua thẻ luật** (sửa bởi mục 44 Hỏi-1, 11/11) hoặc đã
+    người duyệt cặp nối, có xã/phường, và có tin đang rao hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
     Mốc S09 hai thước (Mạnh, 08/11: «Điều quan trọng nhất của tôi là nguồn S03», chọn «cả hai»): nấc 1 thu S09 cho các dự án S03 nói
     tới khi phủ đo trên bài S03 ≥ 50% và phân giải ≥ 70%; nấc 2 thu toàn bộ khi thêm phủ 282 dự án S06 ≥ 50%. Số sơ bộ: thước S03 ≈ 99%,
     thước S06 ≈ 4,6% (S09 là danh mục Hà Nội). Hàng DA10, DAZ2.
@@ -654,6 +658,41 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Số đo nền (DB máy thu 10/11): 11.616 bài Yêu cầu S03, luật bỏ sót thêm khoảng 1.300 bài viết tắt; số phòng đọc được 96%, ngân sách
     73%, dịch vụ suy được 86%; dự án theo tên nhóm 42%, phường 0,1%; 670 người đăng, 317 người viết 94% số bài; gom theo người và chữ
     còn 4.832. Hàng mới: YC0–YC8 (YC1 sửa bộ đọc ngân sách đi trước YC0). SH12 (tín hiệu cầu, chờ Q8b) nay do YC7, YC8 gánh.
+44. **Mô hình dòng chảy danh bạ dự án** (11/11, Mạnh «Theo khuyến nghị» cả năm câu Hỏi-1..Hỏi-5; căn cứ
+    `docs/architecture/mo-hinh-danh-ba-du-an.md` bản 2, §7): bản song song của `mo-hinh-pipeline-mot-can-nha.md` (mục 32) cho
+    **bản ghi nguồn → dự án** — tám chặng D1–D8, khuôn chung bản ghi nguồn, căn cứ đề xuất cặp K1–K5, phân xử thuộc tính, đo hằng ngày.
+    Phần lớn ghép từ ADR-0016, mục 38–40, DAZ4; điều mới chỉ ở năm câu:
+    - Hỏi-1: bản ghi danh mục không khớp nút nào thì máy **đúc nút ứng viên** hàng loạt; nút chỉ được nối tin và lên Invest sau khi qua
+      **thẻ luật theo nguồn** (Mạnh xem mẫu) hoặc người duyệt. Thêm vào DA18. **Siết** điều kiện Invest ở mục 39: «có nguồn danh mục»
+      thành «có nguồn danh mục đã qua thẻ luật».
+    - Hỏi-2: điểm do nguồn danh mục công bố (S07 trong trang, S08 trong bản đồ nhúng) làm **điểm dự án**, ghi nguồn S0x; không gọi dịch
+      vụ định vị bên ngoài. Thêm vào DA16. Đa giác, tâm từ OSM vẫn thuộc mục chờ DA21.
+    - Hỏi-3: thêm **mức hồ sơ dự án** M0–M5 (Có tên → Có nguồn → Có xã → Đối chiếu ≥ 2 nguồn khớp → Có pháp lý từ nguồn nhà nước →
+      Đang bán) vào DA20, là thước phụ ở Ops cạnh độ đủ bảy nhóm; không thành north star; mã M, khác bậc B0–B5. CONTEXT thêm thuật ngữ.
+    - Hỏi-4: thu danh mục S07 (**DAZ3**) **trước** DA3, ưu tiên Hà Nội và HCM thay cho «dự án có tin mà chưa nối»; bỏ DA3 khỏi
+      `dung_tren` của DAZ3. Thu chậm (≥ 10 s/trang, ~16 giờ) theo giải pháp ZCode.
+    - Hỏi-5: **khuôn chung bản ghi nguồn** (§1.1) làm trong DA3, không mở hàng riêng.
+    Theo §6 (đối chiếu mã): DA3 kèm migration mở `registry_aliases`, `registry_events` (055) cho nút dự án và nguồn S10–S15.
+    Sửa lời hàng: DA3, DA16, DA18, DA20, DAZ3. Không hàng mới.
+45. **Kiểm kê danh bạ dự án: trang gốc ↔ dữ liệu** (11/11, Mạnh «Theo khuyến nghị» cả sáu câu Q1–Q6; căn cứ: bản kiểm kê local
+    ngày 11/11 (research-local, không vào kho vì có ảnh trang gốc)). Phát hiện chính:
+    - Mất lớn nhất ở bước **raw → stg**: lớp dự án S08 (177 dự án: địa chỉ, chủ đầu tư, điểm 174/177…) không bảng nào đọc;
+      S09, S10, S11 có raw nhưng chưa có bảng stg.
+    - **0 phát biểu cấp dự án**; bảng nối S08 mới nối **8/177** dự án (vào 2 nút), 27 dự án mới chưa có trong bảng nối.
+    - App **chưa có trang danh bạ, chưa có trang dự án** (Ops không có mục, Invest không có route).
+    Sáu câu đã duyệt:
+    - Q1: thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án (mỗi ô có giá trị, ngày snapshot, trạng thái khớp/lệch/trống;
+      nút mở trang gốc chỉ ở máy thu). Sửa DA20, DN2.
+    - Q2: hàng stg cấp dự án S08 (**DA30**, đã có) đứng trước DA3. Sửa ghi chú DA30, DA3; `dung_tren` của DA3 thêm DA30.
+    - Q3: S10, S11 vào stg đã có mã (DA29, DA24a); mở rộng DA16 sang S11 (pháp lý, quy mô), DA16 đứng trên DA24a. S10 đi cùng DA17.
+      Sửa DA16, DA17.
+    - Q4: S09 lấy toà từ trang công khai (dữ liệu nền của trang có 115 toà Ocean Park 1, 61 toà Grand Park, kèm ngày bàn giao từng
+      toà); đóng DAZ1 với số đo mới, việc thu là làn ZCode. Sửa DAZ1.
+    - Q5: bản ghi nguồn cấp lô/toà (S11: Ocean Park 1 là 4 bản ghi cấp lô, tên pháp lý khác) nối vào toà/phân khu có sẵn qua thẻ
+      từng cặp; đủ 20 mẫu thì viết thẻ luật. Cùng DA3: quy ước giá trị rỗng giả («Đang cập nhật», «--», «0»), nối lại S08 theo
+      snapshot mới. Sửa DA3.
+    - Q6: lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode. Sửa ghi chú DA29.
+    Mục chờ DA22 thêm ghi chú: 3/3 mẫu lệch tên chủ đầu tư, đo lệch ngay khi có stg; chưa chuyển thành hàng. Không hàng mới.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -729,6 +768,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V6 | Tin ngừng rao khi không thấy lại quá 21 ngày (nguồn vẫn thu), thấy lại thì về đang rao; không xoá, giữ người bán — `_acceptance/tin-ngung-rao-khong-thay-lai` (T3, 085) | ✅ Mạnh ký Cổng 2 09/11, gộp PR #383; áp 085 lên máy thu là lời riêng của Mạnh (`pg_dump` trước); Invest ẩn tin ngừng rao là hàng riêng |
 | V7 | Đóng băng Stage B + thẻ Ghép căn: không dựng cặp, không gieo thẻ, thẻ chờ không hiện và không vào số chờ; dữ liệu giữ nguyên — `_acceptance/dong-bang-stage-b-resolve` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 09/11 (Hỏi-1 A ẩn thẻ chờ, Hỏi-2 A không thêm chữ), đang chấm |
 | DV1 | Mọi nút dự án trỏ mã xã/phường hiện hành: tệp xã cũ có nguồn + `danh-ba-vat-the.mjs --sua-xa` — `_acceptance/nut-du-an-tro-xa-moi` (T2) | 🔶 Mạnh duyệt Cổng Phạm vi 10/11, đang làm; sau gộp: `--sua-xa --thu` rồi `--sua-xa --db-that` trên máy thu, dựng lại danh bạ, so số toà và UPI trước–sau là lời riêng của Mạnh (Hỏi-1) |
+| DA1 | Danh bạ vật thể dựng toà ở cả 34 tỉnh: bảng ISO trong migration 088, ISO suy từ khu vực, chủ đầu tư `source_field` — `_acceptance/danh-ba-vat-the-toan-quoc` (T3, 088) | 🔶 Mạnh duyệt Cổng Phạm vi và kế hoạch 10/11, đang làm; sau gộp: áp 088 lên máy thu là lời riêng của Mạnh (`pg_dump` trước) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -775,6 +815,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 | V21 | Định danh tài khoản thu theo vai: `xemDinhDanhThu` (ops trở lên) ở `app/src/lib/ops-access.ts` + `cheDinhDanhThu` (giữ số dòng, mã về null) — `GET /api/v1/ops/collections` (thân ở `lib/collections-api.ts`) và trang `/ops/collections` che mã tài khoản, hồ sơ, mã nhóm, tài khoản giữ nhóm với Người xem và bearer chung, cả máy thu lẫn cloud; bản tin `push-ops-facts` gửi `soNhomBat` thay mã nhóm, `factsChan` chặn mã nhóm — `_acceptance/dinh-danh-tai-khoan-thu-theo-vai` (T3, Hỏi-1 của V20) | 🔄 S4 chấm |
 | V22 | Cầm máu số liệu S03: transform-zalo đọc số không lẫn URL/SĐT, luật giá VN, DT «Nm», chặn giá phi lý, khoá gom có mã toà/căn, `seller_name`, phường theo thị trường của nhóm — `_acceptance/s03-cam-mau-so-lieu` (T2, N1) | 🔄 S4 chấm |
 | V23 | Bộ `npm test` của app, pipeline, agent tự chạy trên DB của riêng lượt: `db/db-thu.sh oneinvest_suite_<bộ> --chay` chép từ bản mẫu `oneinvest_suite_mau` (dấu lược đồ + 24 giờ, có VACUUM ANALYZE), xoá khi lệnh dừng; thiếu container thì dừng, đĩa VM dưới 10 GB thì dừng; executor `sellers_chip` cùng đường. 86 executor đơn tệp còn lại vẫn vào DB chung (24 mở giao dịch trên bảng thật), đọc `probes/dem-deadlock.mjs` sau ba ngày — `_acceptance/test-suite-db-thu` | 🔄 05/11 |
+| V24 | Đường lệnh kéo, hai lệnh đầu `source.pause`/`source.resume`: sổ Lệnh (`change_requests`, 14 loại, 9 trạng thái), token máy theo tên (`machine_tokens`, băm sha256, `ops:pull`), sổ áp chống lặp ở máy thu (`change_request_applies`); route tạo/duyệt/danh sách/kéo (`/api/v1/ops/change-requests/**`, chế độ sổ bề mặt mới `machine`), kết quả qua `push-ops-facts --chi-lenh` → `ingest`; bộ áp `pipeline/ops-apply.mjs` + phanh `~/.oneinvest/ops-apply.dung`; plist `com.oneinvest.ops-apply` 60″ CHƯA nạp — migration 091 (kèm `ops_heartbeat`, `ops_audit` cho cloud), TV4 `_acceptance/so-lenh-bo-ap` (T3) | 🔄 S4 chấm; sau gộp: áp 091 máy thu rồi Supabase (mỗi nơi lời Mạnh), cấp token, nạp plist |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI

@@ -10,6 +10,7 @@
  *   ops-session     — chỉ phiên ops (`canAccessOps`); KHÔNG có nhánh bearer.
  *   admin           — chỉ role admin (`isAdmin`); KHÔNG có nhánh bearer.
  *   session-or-noop — có phiên thì làm, khách nhận 204 và không có gì được ghi.
+ *   machine         — chỉ token máy theo tên có scope (`kiemTokenMay`, TV4 ADR-0015 §2); không phiên người, bearer chung bị 403.
  * Sổ phải RỘNG BẰNG HOẶC HƠN mã: mã không bao giờ cho một người gọi mà sổ không cho (mã chặt hơn sổ thì được, ghi ở
  * `note`). Thêm route mới: thêm dòng ở đây cùng commit.
  *
@@ -19,7 +20,7 @@
  * khai hiện tại không dùng). `scripts/check-mcp-tools.mjs` (chạy trong làn `portal_static`, tức
  * `check-portal-compliance.mjs`) đỏ khi công cụ trỏ route ngoài sổ, phương thức hay chế độ lệch sổ.
  */
-export type ApiMode = "public" | "ops" | "ops-session" | "admin" | "session-or-noop";
+export type ApiMode = "public" | "ops" | "ops-session" | "admin" | "session-or-noop" | "machine";
 export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 /** methodModes: chế độ riêng của phương thức khác chế độ chung (TV1 — vd GET đọc cho bearer, POST quản trị chỉ admin). */
 export type ApiSurfaceEntry = {
@@ -42,7 +43,10 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/collections", methods: ["GET"], mode: "ops", note: "sức khoẻ thu thập theo nguồn" },
   { route: "v1/ops/coverage", methods: ["GET"], mode: "ops", note: "độ phủ thu thập — máy chủ đọc khối freshness, cờ state fresh/stale/none (AU12)" },
   { route: "v1/ops/extraction-quality", methods: ["GET"], mode: "ops", note: "chất lượng trích xuất" },
-  { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
+  { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud; khối kind=change_request_results chỉ nhận token máy ops:pull (TV4), chặt hơn sổ" },
+  { route: "v1/ops/change-requests", methods: ["GET", "POST"], mode: "ops-session", note: "sổ Lệnh (TV4) — GET lenh.xem từ viewer kèm last_pull_at; POST lenh.gui từ ops, source.resume còn đòi isAdmin (chặt hơn sổ)" },
+  { route: "v1/ops/change-requests/[id]/decide", methods: ["POST"], mode: "admin", note: "duyệt hoặc từ chối lệnh (TV4) — lenh.duyet; lệnh nhắm S03 cần người duyệt khác người gửi" },
+  { route: "v1/ops/change-requests/pull", methods: ["GET"], mode: "machine", note: "máy thu kéo lệnh đã duyệt bằng token máy ops:pull (TV4, ADR-0015 §2)" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },
   { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops-session", note: "quyết thẻ duyệt — review.decide: vai ops, không bearer (TV1)" },
   { route: "v1/ops/labels", methods: ["GET", "POST"], mode: "ops-session", note: "gắn nhãn đánh giá mù — label.write: vai ops, không bearer; chỉ máy thu (PL7)" },
