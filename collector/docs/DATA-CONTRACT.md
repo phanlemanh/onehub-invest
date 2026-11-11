@@ -208,7 +208,9 @@ làn Claude); `import-airbnb.mjs` không có nguồn này trong ALLOWLIST.
   cả lượt, phần còn lại ghi `run-stopped-blocked`; không thử lại liên tục, không đổi cách để né.
 - **Hợp đồng và giấy tờ người mua KHÔNG vào snapshot** (QĐ1; raw bất biến nên tệp đã vào `media/` không gỡ được): tệp có
   tên tệp HOẶC tên thư mục khớp HĐMB, hợp đồng, đặt cọc, thoả thuận, CCCD/CMND/căn cước, giấy tờ khách, xác nhận chuyển
-  tiền, uỷ nhiệm chi — mọi loại tệp — chỉ ghi item `drive-file-skipped` `contract-review-needed`. Bản tải cho người soát
+  tiền, uỷ nhiệm chi — mọi loại tệp — chỉ ghi item `drive-file-skipped` `contract-review-needed`. Item này KHÔNG mang
+  `name`, `folderPath`, `rootLinks` (tên tệp hợp đồng hay có tên người mua): chỉ `driveId`, `posts`, `skipReason`,
+  `matchedRule` (`contract|id-card|payment-proof`, mã luật, không chép chữ khớp) và `bytesAnnounced`. Bản tải cho người soát
   để ngoài `snapshots/` (thư mục xoá được của máy thu); soát xong là «bản mẫu» thì lượt sau ghi vào một snapshot mới.
 - **Layout**: snapshot thường `vn/vn__s03-tu-lieu-drive__<ts>/` gồm `items-0001.json.gz`, `media/<sha256[:16]>.<ext>` —
   tên theo băm NỘI DUNG (khác `media/` v2 của zalo-agent, băm URL) — và `manifest.json` khai đủ mọi tệp trong `files`.
