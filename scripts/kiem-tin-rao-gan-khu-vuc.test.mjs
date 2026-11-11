@@ -16,10 +16,14 @@ import { BANG_GHI, chup, soBam } from "./kiem-tin-rao-gan-khu-vuc.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(ROOT, "scripts/kiem-tin-rao-gan-khu-vuc.mjs");
 
+// Mỗi lượt chạy trên DB của riêng lượt (db/db-thu.sh --chay chép từ bản mẫu, xoá khi xong), không trên DB dùng chung:
+// trên `oneinvest` các job khác (nạp 15 phút) ghi property_offers trong lúc đo làm băm ROLLBACK lệch, và hai lượt song song
+// tranh khoá 33033 tới quá giờ (do-san-sl1-kdm S4 r1). Trên CI db-thu.sh chạy thẳng lệnh (ca nằm trong ci-bo-qua.json).
+// Một lượt ~3,5 phút khi máy rảnh, 7:40 khi các dãy khác đang chấm — trần mỗi lượt 900 giây.
+const DB_THU = path.join(ROOT, "db/db-thu.sh");
 const chay = (...args) => {
-  // Mỗi lượt chạy ba transform trên DB thật: ~3,5 phút khi máy rảnh, đo 7:40 khi các dãy khác đang chấm (do-san-sl1-kdm,
-  // 10/11) — trần 240 giây cũ làm tiến trình bị ngắt (status null) dù thước PASS.
-  const r = spawnSync(process.execPath, [SCRIPT, "--thu", ...args], { cwd: ROOT, encoding: "utf8", timeout: 900_000 });
+  const r = spawnSync("bash", [DB_THU, "oneinvest_suite_kdm", "--chay", process.execPath, SCRIPT, "--thu", ...args],
+    { cwd: ROOT, encoding: "utf8", timeout: 900_000 });
   return { code: r.status, out: `${r.stdout}${r.stderr}` };
 };
 const dongMoi = (out) => [...out.matchAll(/^mồi (S0\d) (offer_\w+) → /gm)].map((m) => ({ nguon: m[1], id: m[2] }));
@@ -86,7 +90,7 @@ test("KDM-PX1 thước khớp vị từ bên ghi ở ba ô; bản phuongHopLe l�
   const pg = createRequire(path.join(ROOT, "app/package.json"))("pg");
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
   await c.connect();
-  const tien = `vn-hcmc-zz-px1-${process.pid}`;
+  const tien = `vn-zz-px1-${process.pid}`;
   const O = [
     { o: "ma", meta: { source: "dvhc" }, ma: `px1-${process.pid}-a` },
     { o: "khong-ma", meta: { source: "moi-khong-osm" }, ma: null },
@@ -96,11 +100,17 @@ test("KDM-PX1 thước khớp vị từ bên ghi ở ba ô; bản phuongHopLe l�
     const coMa = await coDanhBa(c);
     assert.ok(coMa, "KDM-PX1: DB local chưa áp 084 — ca này đo nhánh đã áp");
     await c.query("BEGIN");
+    // Khu vực cha tự dựng trong giao dịch: DB của CI dựng từ migration không có thị trường nào (FK parent_id).
+    const cha = `${tien}-cha`;
+    await c.query(
+      `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES ($1, NULL, 'market', 'KDM-PX1 cha', 'vn', '{}'::jsonb)`,
+      [cha],
+    );
     for (const x of O) {
       await c.query(
         `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta, admin_code)
-         VALUES ($1, 'vn-hcmc', 'submarket', $2, 'vn', $3::jsonb, $4)`,
-        [`${tien}-${x.o}`, `KDM-PX1 ${x.o}`, JSON.stringify(x.meta), x.ma],
+         VALUES ($1, $5, 'submarket', $2, 'vn', $3::jsonb, $4)`,
+        [`${tien}-${x.o}`, `KDM-PX1 ${x.o}`, JSON.stringify(x.meta), x.ma, cha],
       );
       await c.query(
         `INSERT INTO sale_offer_records (offer_id, originating_system_key, source, kind, price_vnd, area_m2, confidence,
@@ -110,7 +120,7 @@ test("KDM-PX1 thước khớp vị từ bên ghi ở ba ô; bản phuongHopLe l�
       );
     }
     const { rows } = await c.query(
-      `SELECT a.id, (${khuVucKhopTen("a.", coMa)}) AS hop FROM areas a WHERE a.id LIKE $1`, [`${tien}-%`]);
+      `SELECT a.id, (${khuVucKhopTen("a.", coMa)}) AS hop FROM areas a WHERE a.id LIKE $1 AND a.region_type = 'submarket'`, [`${tien}-%`]);
     const benGhi = new Map(rows.map((r) => [r.id, r.hop]));
     const thuoc = await chup(c, coMa);
     const doc = (snap) => Object.fromEntries(O.map((x) => [x.o, snap.get(`offer_px1_${process.pid}_${x.o}`)?.hop_le]));
