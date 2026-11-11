@@ -24,7 +24,7 @@ Hai căn cứ đã có:
 
 ## Cách làm
 
-- `app/package.json` script `test` đặt biến môi trường `ONEHUB_SUITE_CHUNG=1` trước lệnh chạy bộ test chung.
+- `app/package.json` script `test` đặt biến môi trường `ONEHUB_SUITE_CHUNG=1` bằng `env` ngay sau `db-thu.sh … --chay` (giữ `npm test` mở đầu bằng `db-thu`, ca DT-AC-7 của `scripts/db-thu.test.mjs`).
 - Một hàm nhỏ trong `app/tests/` trả lý do bỏ qua khi biến đó bật: «chạy riêng qua executor `<tên>`»; bốn ca dùng nó
   trong `skip:` (gộp với lý do CI sẵn có). Executor riêng `tir_doi_chieu` và `can_gia_tot_doi_chieu` không đặt biến
   nên bốn ca chạy thật ở đó.

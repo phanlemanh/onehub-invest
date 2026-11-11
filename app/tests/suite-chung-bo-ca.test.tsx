@@ -52,7 +52,7 @@ test("SCB-AC-1 bộ chung bỏ đúng bốn ca đo theo tải, mỗi ca gọi t�
   assert.deepEqual(e4b.sort(), ["E4B-AC-3", "E4B-AC-4", "E4B-AC-7"], "SAI SO CA BO QUA E4b")
   assert.deepEqual(cgt, ["CGT-DC"], "SAI SO CA BO QUA CGT-DC")
   const pkg = JSON.parse(readFileSync(join(TESTS, "..", "package.json"), "utf8"))
-  assert.match(pkg.scripts.test, new RegExp(`^${BIEN_SUITE_CHUNG}=1 `), "npm test không đặt biến bộ chung")
+  assert.match(pkg.scripts.test, new RegExp(`^bash \\.\\./db/db-thu\\.sh \\S+ --chay env ${BIEN_SUITE_CHUNG}=1 `), "npm test không đặt biến bộ chung")
   // Đối chứng: ca thứ năm dùng hàm bỏ qua thì bộ đếm phải thấy.
   const them = `test("E4b đối chiếu DB máy thu", { skip: boQuaTrongSuiteChung("tir_doi_chieu") }, () => {})\n`
   assert.notDeepEqual(demCaBoQua(them + readFileSync(join(TESTS, HAI_TEP[0]), "utf8"), "tir_doi_chieu").sort(), ["E4B-AC-3", "E4B-AC-4", "E4B-AC-7"])
