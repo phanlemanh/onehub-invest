@@ -5,7 +5,7 @@ slug: sl1-ac5-the-gioi-069
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-sl1-ac5-the-gioi-069-design.md
@@ -67,3 +67,5 @@ migration đã commit, sửa dữ liệu thật.
 - Gỡ `--test-skip-pattern` của `executors.test.dbs_s03_len_cong` (hồ sơ đã ký).
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: probe từ chối DB dùng chung đọc đường dẫn tương đối theo thư mục pipeline/, nên chạy chiều đỏ từ thư mục khác có thể đỏ vì không tìm thấy tệp chứ không phải vì chốt hỏng.

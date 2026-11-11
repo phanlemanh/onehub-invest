@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0ef73dec54f8c0c40adac4abd959297396c36fa6
-human_signoff:
+human_signoff: Mạnh 2026-11-12
 ---
 
 # Evidence Report: sl1-ac5-the-gioi-069
