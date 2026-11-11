@@ -1,0 +1,10 @@
+{"feature_plain":"Ngân sách người cần thuê, cần mua viết trong bài nhóm được đọc đúng số và đúng đơn vị, kể cả cách viết tắt như «2ty6», «6tr5», «tc 8tr», «800 - 1,2 tỷ», và không bao giờ ra đầu dưới lớn hơn đầu trên.",
+"will_do":[
+{"id":"AC-1","p":"Sẽ đọc đủ phần lẻ viết liền: «2ty6» là 2,6 tỷ, «6tr5» là 6,5 triệu."},
+{"id":"AC-2","p":"Sẽ đọc phần lẻ viết rời («2 tỷ 500», «2 tỷ rưỡi») mà không nuốt nhầm số phòng, số tầng, diện tích theo sau."},
+{"id":"AC-3","p":"Sẽ đọc đúng khoảng có đầu dưới thiếu đơn vị: «800 - 1,2 tỷ» là 800 triệu tới 1,2 tỷ."},
+{"id":"AC-4","p":"Sẽ không bao giờ trả đầu dưới lớn hơn đầu trên — lỗi từng làm đổ cả lượt nạp S03."},
+{"id":"AC-5","p":"Sẽ đọc «tc», «tài chính» kèm số trơn theo dịch vụ: thuê là triệu/tháng, mua là tỷ; chưa rõ dịch vụ thì để trống."},
+{"id":"AC-6","p":"Sẽ đọc «X quay đầu» theo nghĩa anh chọn ở Hỏi-1 (máy khuyên: trần X)."},
+{"id":"AC-7","p":"Sẽ đo trên toàn bộ bài Yêu cầu của máy thu, chỉ đọc: không bài nào mất ngân sách, không bài thuê nào từ 100 triệu/tháng, kèm 30 mẫu đổi giá trị để anh soi."},
+{"id":"AC-8","p":"Sẽ giữ y nguyên phần còn lại của tệp bộ đọc để hàng YC0 gộp nhánh không xung đột."}]}

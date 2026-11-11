@@ -7,10 +7,10 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>27 việc"]
+  GD --> B["Sắp mở vòng<br/>26 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>18 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>170 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>110 việc"] --> GG{"Cổng Giá trị"}
@@ -44,7 +44,6 @@ flowchart TD
 - Tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án, không đè phường đã có (`phuong-tu-du-an`)
 - Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn (`s06-du-an-len-tin-can`)
 - Người vận hành gộp hai nút danh bạ, tách, đổi cha, đổi loại giữa dự án con và phân khu, hay rút một nút sai trên Ops, và mọi bí danh, liên kết tin, phát biểu kế thừa phía sau đi theo (`sua-cay-danh-ba`)
-- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị (triệu/tháng cho thuê, tỷ cho mua) ở các cách viết tắt «tc 8tr», «2ty6», «6tr5», «quay đầu» và sáu lỗi Ngoài-4/5/7/9/10/11 của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
 - Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn) (`thuoc-tinh-danh-muc-s08-s09`)
 - Quỹ căn chủ đầu tư S08 thành tin sơ cấp gắn đúng căn, mang giá chủ đầu tư và trạng thái quỹ, và không xuất hiện ở danh sách Bán, thước giá hay metrics (`tin-so-cap-s08`)
 - Phân khu và toà S09 vào danh bạ không sinh toà trùng, và có ba số quyết định thu S09: phủ trên dự án của S03, phủ trên 282 dự án S06, phân giải mã toà S03 (`toa-s09-vao-danh-ba`)
@@ -70,6 +69,7 @@ flowchart TD
 - API Thu thập trên cloud không đọc bảng chỉ có ở máy thu — gỡ 500 của /api/v1/ops/collections (`ops-collections-api-cloud`)
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
+- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị ở các cách viết tắt và sáu lỗi Ngoài của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
 ## Đã giao — chờ phiên nghiệm thu
