@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: au3-moi-truong-thu-buoc-doc-gop
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.au3_ts_format
+    layer: backend-effect
+    paths: [scripts/au3-nap-bao-loi/acceptance.mjs, scripts/zalo-import-daily.sh]
+    expected: "exit 0; dòng 'TS-FORMAT PASS'; hai dòng 'ok   zalo-import-daily.sh: MOI TRUONG DU BUOC' (job thoát 0; đọc gộp sau lần nạp cuối, trước enrich-run). Chiều đỏ: bản không ghi tệp giả → hai dòng 'FAIL … MOI TRUONG DU BUOC … (được 127)', exit 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.au3_ts_format
+    layer: backend-effect
+    paths: [scripts/au3-nap-bao-loi/acceptance.mjs, scripts/zalo-import-daily.sh, scripts/lib/job-step.sh]
+    expected: "exit 0; dòng 'ok   zalo-import-daily.sh: DOI CHUNG THIEU DOC GOP' (bỏ tệp giả → job thoát 127, JOB FAIL gọi tên bước doc-gop-hang-ngay). Chiều đỏ: bản đối chứng vẫn ghi tệp giả → 'FAIL … DOI CHUNG THIEU DOC GOP … (được 0)', exit 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.kns_au3_regress
+    layer: backend-effect
+    paths: [scripts/au3-nap-bao-loi/acceptance.mjs, scripts/zalo-import-daily.sh, scripts/apify-facebook-daily.sh, scripts/chotot-daily.sh, scripts/lib/job-step.sh]
+    expected: "exit 0; bốn dòng cuối 'TS-FORMAT PASS', 'APIFY PASS', 'CHOTOT PASS', 'LOCK PASS'. Chiều đỏ: trên a7e73831 (trước sửa) chế độ lock in 'LOCK FAIL (2 mục)' và lệnh thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.snt_mo_coi
+    layer: backend-effect
+    paths: [scripts/au3-nap-bao-loi/acceptance.mjs, scripts/zalo-import-daily.sh, scripts/apify-facebook-daily.sh]
+    expected: "exit 0; dòng 'MO-COI PASS'. Chiều đỏ: trên a7e73831 (trước sửa) in 'MO-COI FAIL (2 mục)' và thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

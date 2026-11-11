@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-1: định nghĩa bài thử ở mã hay ở hàm SQL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Hỏi-1 · AC-1</p>
+    <h1>Định nghĩa bài thử ở mã, hay ở hàm SQL qua migration?</h1>
+
+    <svg viewBox="0 0 1000 632" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="Hai lối cùng xuất phát từ test-posts.mjs. Lối A, máy khuyên: hằng NOI_DUNG_SQL; ops-flow.mjs và test-data-residue.mjs dùng hằng, 600_data_flow.sql và collections-queries.ts chép chữ, một ma trận khớp canh cả bốn bản; không DDL, một vòng T2. Lối B: hàm SQL is_test_post() qua migration mới, cả bốn chỗ gọi hàm; thêm DDL, áp DB máy thu là bước triển khai riêng có sao lưu.">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+        </marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+        </marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+        </marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Vạch chia hai lối -->
+      <line x1="500" y1="140" x2="500" y2="568" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- ===== Đường nối (vẽ trước hộp) ===== -->
+      <!-- Nguồn → Lối A -->
+      <path d="M 460 88 L 460 104 Q 460 112 452 112 L 268 112 Q 260 112 260 120 L 260 150" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <!-- Nguồn → Lối B -->
+      <path d="M 540 88 L 540 104 Q 540 112 548 112 L 732 112 Q 740 112 740 120 L 740 150" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- Lối A: hằng → hai nhóm -->
+      <line x1="152" y1="224" x2="152" y2="270" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="368" y1="224" x2="368" y2="270" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <!-- Lối A: ma trận canh hai nhóm -->
+      <line x1="152" y1="436" x2="152" y2="390" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="368" y1="436" x2="368" y2="390" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- Lối B: hàm → bốn chỗ gọi -->
+      <line x1="740" y1="224" x2="740" y2="270" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- Nhãn đường nối -->
+      <rect x="164" y="240" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="168" y="252" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">GHÉP HẰNG</text>
+      <rect x="380" y="240" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="384" y="252" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHÉP TAY</text>
+      <rect x="164" y="404" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="168" y="416" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">ĐÒI KHỚP</text>
+      <rect x="380" y="404" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="384" y="416" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">ĐÒI KHỚP</text>
+      <rect x="752" y="240" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="756" y="252" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">GỌI HÀM</text>
+
+      <!-- ===== Nguồn chung ===== -->
+      <rect x="380" y="24" width="240" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="380" y="24" width="240" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="392" y="32" width="48" height="16" rx="2" fill="transparent" stroke="#4f5d75" stroke-width="0.8"/>
+      <text x="416" y="44" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">NGUỒN</text>
+      <text x="500" y="64" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Định nghĩa bài thử</text>
+      <text x="500" y="80" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">test-posts.mjs · testMarker, regex JS</text>
+
+      <!-- ===== LỐI A (máy khuyên) ===== -->
+      <rect x="52" y="152" width="416" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="52" y="152" width="416" height="72" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="64" y="160" width="48" height="16" rx="2" fill="transparent" stroke="#ba4513" stroke-width="0.8"/>
+      <text x="88" y="172" fill="#ba4513" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LỐI A</text>
+      <rect x="120" y="160" width="80" height="16" rx="2" fill="#2d3142"/>
+      <text x="160" y="172" fill="#f5f5f5" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MÁY KHUYÊN</text>
+      <text x="64" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Một hằng SQL, viết tay ngay dưới regex</text>
+      <text x="64" y="214" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">export NOI_DUNG_SQL · test-posts.mjs</text>
+
+      <!-- Nhóm dùng hằng -->
+      <rect x="52" y="272" width="200" height="116" rx="6" fill="none" stroke="rgba(45,49,66,0.24)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="64" y="288" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.12em">DÙNG HẰNG</text>
+      <rect x="64" y="296" width="176" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="152" y="316" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ops-flow.mjs</text>
+      <rect x="64" y="340" width="176" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="152" y="360" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">test-data-residue.mjs</text>
+
+      <!-- Nhóm chép chữ -->
+      <rect x="268" y="272" width="200" height="116" rx="6" fill="none" stroke="rgba(45,49,66,0.24)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="280" y="288" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CHÉP CHỮ</text>
+      <rect x="280" y="296" width="176" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="368" y="316" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">600_data_flow.sql</text>
+      <rect x="280" y="340" width="176" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="368" y="360" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">app collections-queries.ts</text>
+
+      <!-- Ma trận khớp -->
+      <rect x="52" y="436" width="416" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="52" y="436" width="416" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="260" y="458" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ma trận khớp canh cả bốn bản</text>
+      <text x="260" y="474" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">JS và từng bản SQL, cùng dòng · đỏ thì gọi tên bản</text>
+
+      <!-- Giá lối A -->
+      <text x="52" y="524" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">GIÁ</text>
+      <text x="52" y="548" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">Không DDL · một vòng T2</text>
+
+      <!-- ===== LỐI B ===== -->
+      <rect x="532" y="152" width="416" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="532" y="152" width="416" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="544" y="160" width="48" height="16" rx="2" fill="transparent" stroke="#4f5d75" stroke-width="0.8"/>
+      <text x="568" y="172" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LỐI B</text>
+      <text x="544" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Hàm SQL trong DB, một định nghĩa thật</text>
+      <text x="544" y="214" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">is_test_post() · migration mới</text>
+
+      <!-- Bốn chỗ gọi hàm -->
+      <rect x="532" y="272" width="416" height="116" rx="6" fill="none" stroke="rgba(45,49,66,0.24)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="544" y="288" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CẢ BỐN CHỖ GỌI HÀM</text>
+      <rect x="544" y="296" width="184" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="636" y="316" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ops-flow.mjs</text>
+      <rect x="544" y="340" width="184" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="636" y="360" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">test-data-residue.mjs</text>
+      <rect x="752" y="296" width="184" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="844" y="316" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">600_data_flow.sql</text>
+      <rect x="752" y="340" width="184" height="32" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="844" y="360" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">app collections-queries.ts</text>
+
+      <!-- Bước triển khai riêng -->
+      <rect x="532" y="436" width="416" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="532" y="436" width="416" height="48" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4"/>
+      <text x="740" y="458" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp DB máy thu: bước triển khai riêng</text>
+      <text x="740" y="474" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">có sao lưu · DDL cần lời Mạnh</text>
+
+      <!-- Giá lối B -->
+      <text x="532" y="524" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">GIÁ</text>
+      <text x="532" y="548" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">Thêm DDL · thêm một bước triển khai</text>
+
+      <!-- ===== Chú giải ===== -->
+      <line x1="36" y1="588" x2="964" y2="588" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="36" y="616" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CHÚ GIẢI</text>
+      <line x1="128" y1="612" x2="160" y2="612" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="168" y="616" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">dùng trực tiếp một định nghĩa</text>
+      <line x1="344" y1="612" x2="376" y2="612" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="384" y="616" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">bản chép chữ</text>
+      <rect x="488" y="604" width="24" height="16" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="520" y="616" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">lối máy khuyên</text>
+      <rect x="640" y="604" width="24" height="16" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4"/>
+      <text x="672" y="616" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">bước triển khai riêng</text>
+    </svg>
+  </div>
+</body>
+</html>

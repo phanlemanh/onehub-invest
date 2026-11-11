@@ -1,0 +1,26 @@
+{
+  "feature_plain": "Các mã nguồn đã đăng ký nhưng chưa thu (S07, S12–S15) hiện «Chưa thu» trên trang Nguồn của cổng Ops thay cho «Giá trị khác», và bộ test app hết đỏ cho mọi dãy đang chấm trên máy.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ hiện «Chưa thu» cho trạng thái nguồn draft; bốn trạng thái cũ giữ nguyên chữ; giá trị lạ vẫn hiện «Giá trị khác»."},
+    {"id": "AC-2", "p": "Sẽ có một phép kiểm không cần DB: mọi trạng thái mà DB cho phép đều phải có nhãn — lần sau ai thêm trạng thái mà quên nhãn thì đỏ ngay, gọi đúng tên trạng thái thiếu."},
+    {"id": "AC-3", "p": "Sẽ thêm thuật ngữ «Trạng thái mã nguồn» vào sổ từ vựng, và máy kiểm sổ khớp từng nhãn với trang."},
+    {"id": "AC-4", "p": "Sẽ làm bộ test app xanh trở lại trên dữ liệu thật của máy (ca đang đỏ vì có mã draft) mà không sửa ca test đó."},
+    {"id": "AC-5", "p": "Sẽ kiểm trên chính bảng Nguồn đã dựng: dòng draft hiện «Chưa thu», không lộ chữ thô."},
+    {"id": "AC-6", "p": "Sẽ gỡ một dòng ngoại lệ đã thừa trong bộ soát từ vựng (thêm draft làm bảng nhãn thôi trùng trục danh bạ)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Sẽ KHÔNG gắn nhãn cho trạng thái nhóm thu — chưa có chỗ nào hiện nó."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG chuyển bảng nhãn nguồn vào sổ từ vựng máy sinh; chỉ gỡ dòng ngoại lệ đã thừa."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG sửa ca test đang đỏ hay dòng nào khác của sổ từ vựng (dãy khác đang thêm thuật ngữ)."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG xử hai chỗ đỏ có sẵn trên main: kiểu Next thiếu ở worktree mới (môi trường, đã gỡ bằng lệnh sinh kiểu) và một ca đo tốc độ chậm khi máy tải nặng."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Bỏ quét độ phủ: chỉ có một trục (năm giá trị trạng thái), đã liệt đủ trong AC-1 và AC-2."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thiếu bằng chứng ở chỗ người nhìn — đã thêm AC-5 kiểm bảng Nguồn render ra «Chưa thu», đỏ khi bỏ nhãn."},
+    {"i": 1, "p": "Phép kiểm có thể đọc nhầm ràng buộc của bảng nhóm thu (cùng năm giá trị) — đã thêm hai ca đối chứng chứng nó chỉ đọc bảng nguồn."},
+    {"i": 2, "p": "Các eval chung một lệnh nên khó quy về từng ca — đã ghim tên từng ca phải xanh, không được bỏ qua."},
+    {"i": 3, "p": "Nếu trước lượt chấm các mã đã chuyển sang đang thu thì DB không còn draft — eval nay ghi tập thực tế và nói rõ thay vì đánh đỏ."}
+  ]
+}

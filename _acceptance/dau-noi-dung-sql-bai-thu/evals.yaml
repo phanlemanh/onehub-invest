@@ -1,0 +1,46 @@
+schema_version: 1
+feature_slug: dau-noi-dung-sql-bai-thu
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+# DB: bài kiểm pipeline chạy trong giao dịch ROLLBACK, bảng tạm che stg_zalo_posts / sale_offers / sellers (pg_temp đứng trước
+# trong search_path) — không ghi bảng thật; bài kiểm app chạy trên lược đồ tạm của chính nó. Không áp migration nào.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dnd_khop
+    layer: backend-effect
+    paths: [pipeline/lib/test-posts.mjs, pipeline/lib/ops-flow.mjs, pipeline/scripts/test-data-residue.mjs, pipeline/sql/600_data_flow.sql, app/src/lib/collections-queries.ts, pipeline/scripts/dau-bai-thu-sql.test.mjs]
+    expected: "exit 0; đúng một ca 'DND-AC-1' chạy. Ma trận viết trước ≥ 13 dòng [snapshot_id, agent_id, group_name, text, dấu mong đợi], MỖI DÒNG MỘT NGÀY posted_at riêng: snapshot mock → 'snapshot-source'; tác tử e2e → 'agent'; nhóm 'TEST-G1' → 'group'; nhóm 'TESTING ROOM' → null; chữ có 'https://abc.trycloudflare.com/x' → 'noi-dung'; '[Tên sàn]' → 'noi-dung'; '[TÊN SÀN]' → 'noi-dung'; '[Tên sàn]' dạng NFD → 'noi-dung'; 'tên sàn' không ngoặc → null; '[Tên sàn mới]' → null; link ảnh 'https://photo.zdn.vn/a.jpg' → null; text NULL → null; bài thật thường → null. Ca so testMarker với bảng (deepEqual), rồi trên bảng tạm che stg_zalo_posts trong giao dịch ROLLBACK chạy BỐN bản và so TỪNG DÒNG với testMarker: S03_POSTS_SQL của ops-flow (đếm theo ngày → ngày có 1 = bài thật, 0 = bài thử); bản chép S03_POSTS_SQL rút từ app/src/lib/collections-queries.ts (cùng cách đếm, thay ${VN_TZ}); vị từ bài thử của câu đếm độc lập test-data-residue (xuất thành hằng); đoạn IS_TEST rút từ 600_data_flow.sql giữa cặp chú thích. Kiểm thêm: chuỗi 'trycloudflare' trong ops-flow.mjs và test-data-residue.mjs chỉ đến qua hằng NOI_DUNG_SQL của test-posts.mjs (không chữ chép). Chiều đỏ trên cùng ma trận, mỗi đột biến báo tên bản và post_id lệch: S03_POSTS_SQL bỏ vế noi-dung → 'S03_POSTS_SQL LECH testMarker: <post_id>'; bản app bỏ normalize NFC → 'APP S03_POSTS_SQL LECH testMarker: <post_id NFD>'; bản app dùng ~ thay ~* → lệch dòng '[TÊN SÀN]'; 600 bỏ vế noi-dung → '600 IS_TEST LECH testMarker: <post_id>'; residue bỏ vế → 'RESIDUE SQL LECH testMarker: <post_id>'; đột biến bù trừ (bỏ NFC và thêm vế gạt 'tên sàn' không ngoặc, tổng đếm không đổi) vẫn đỏ, gọi đúng hai post_id."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dnd_luong7
+    layer: backend-effect
+    paths: [pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; đúng hai ca 'DND-AC-2' chạy, trên lược đồ thử của bộ luong-7-ngay-dung-so thêm bài S03 mang '[Tên sàn]' và link trycloudflare ở một ngày viết trước. Ca 1: cột bài thô của getFlowDays (bản app) và khối luong7 của bên ghi thật (push) cùng bằng bảng viết trước (bài noi-dung không đếm), lechKhoi rỗng. Ca 2 (chiều đỏ, cùng fixture): bản chép app bỏ vế noi-dung → báo đúng '<ngày>: bài thô <n+k> ≠ <n>' với số viết trước. Các ca cũ ON5-AC-1..4 và DF0 của tệp vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dnd_dong_chay
+    layer: backend-effect
+    paths: [pipeline/sql/600_data_flow.sql, app/tests/ops-dong-chay.test.tsx, app/tests/ops-dong-chay-fixture.ts]
+    expected: "exit 0; đúng hai ca 'DND-AC-3' chạy trên lược đồ tạm của bộ ops-dong-chay, fixture thêm bài S03 mang dấu noi-dung (một '[Tên sàn]', một trycloudflare). Ca 1: làm tươi bằng 600_data_flow.sql thật, dòng S03 có received và test_rejected đúng bảng viết trước (received không tính hai bài, test_rejected tăng đúng 2). Ca 2 (chiều đỏ, cùng fixture): bản 600 bỏ vế noi-dung khỏi IS_TEST → 'S03 received <n+2> ≠ <n>'. Các ca DF-AC cũ của tệp vẫn xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dnd_du_luong
+    layer: backend-effect
+    paths: [pipeline/scripts/test-data-residue.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/dau-bai-thu-sql.test.mjs]
+    expected: "exit 0; đúng một ca 'DND-AC-4' chạy: trong giao dịch ROLLBACK, bảng tạm che stg_zalo_posts / sale_offers / sellers với một bài '[Tên sàn]', một bài trycloudflare, một bài thật, và ba tin (mỗi bài một tin); measureResidue trả offers_from_test = 2 và offers_from_test_sql = 2 (bằng nhau), markers['noi-dung'] = 2. Chiều đỏ cùng fixture: bản câu đếm SQL bỏ vế noi-dung → 'RESIDUE offers_from_test_sql 0 ≠ offers_from_test 2'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.test_data_residue
+    layer: backend-effect
+    paths: [pipeline/scripts/test-data-residue.mjs, pipeline/lib/test-posts.mjs]
+    expected: "exit 0; test-data-residue --simulate trên DB máy thu :5433, mọi ghi trong giao dịch rồi ROLLBACK; JSON in checks.before_matches_sql = true, checks.after_clean = true, checks.rows_unchanged = true, ok = true. E5 xanh cả trên mã cũ (DB máy thu 10/11 có 0 tin sống từ bài noi-dung); chiều phân biệt sửa với không sửa nằm ở E4 và E1, E5 chỉ chứng ngưỡng «xanh ngay sau gộp» của ô."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

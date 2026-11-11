@@ -302,3 +302,41 @@ test("DV1-AC-8 tài liệu ghi --sua-xa; bản ở gốc vòng chưa ghi", () =>
   const cu = (p) => execFileSync("git", ["show", `${GOC_VONG_DV1}:${p}`], { cwd: GOC_DV1, encoding: "utf8", maxBuffer: 64 << 20 });
   assert.equal(kiem(cu("pipeline/CLAUDE.md"), cu("docs/ROADMAP.md")), false, "DV1-AC-8 tài liệu chưa ghi --sua-xa (đối chứng gốc vòng)");
 });
+
+// ---- DA1 danh-ba-vat-the-toan-quoc (E4, E8): ISO của khu suy từ khu vực; tài liệu. Không DB. ----
+import { isoCuaKhu } from "./danh-ba-vat-the.mjs";
+
+const GOC_VONG_DA1 = "cc26f7ad0cfaff32afb4c805636f0aa3fd1014ff";
+const BANG_ISO = {
+  vung: new Map([["q-hn", { region_type: "market", parent_id: null }], ["q-hcm", { region_type: "market", parent_id: null }],
+    ["q-hy", { region_type: "market", parent_id: null }], ["q-la", { region_type: "market", parent_id: null }],
+    ["q-hn-x", { region_type: "submarket", parent_id: "q-hn" }], ["q-hcm-x", { region_type: "submarket", parent_id: "q-hcm" }],
+    ["q-hy-x", { region_type: "submarket", parent_id: "q-hy" }]]),
+  isoCuaThiTruong: new Map([["q-hn", "VN-HN"], ["q-hcm", "VN-SG"], ["q-hy", "VN-66"]]),
+};
+
+test("DA1-AC-4 ISO của khu theo khu vực: tám ô ma trận; theo meta.city thì sai tỉnh", () => {
+  const o = (area_ids, mong, tin) => assert.deepEqual(isoCuaKhu({ slug: "q", area_ids }, BANG_ISO), mong, `DA1-AC-4 ${tin}`);
+  o(["q-hn-x"], { iso: "VN-HN" }, "một xã Hà Nội");
+  o(["q-hcm-x"], { iso: "VN-SG" }, "một xã TP.HCM");
+  o(["q-hy-x"], { iso: "VN-66" }, "khu Hưng Yên (meta.city hanoi không đọc)");
+  o(["q-hy"], { iso: "VN-66" }, "chỉ mã tỉnh");
+  o(["q-hy", "q-hy-x"], { iso: "VN-66" }, "mã tỉnh và mã xã cùng tỉnh");
+  o(["q-hn-x", "q-cu-mat"], { iso: "VN-HN" }, "một mã đúng, một mã không có trong areas");
+  o(["q-cu-mat"], { loi: "khong-co-tinh" }, "toàn mã không có trong areas");
+  o(["q-hn-x", "q-hcm-x"], { loi: "nhieu-tinh" }, "hai tỉnh");
+  o(["q-la"], { loi: "tinh-khong-co-iso" }, "tỉnh không có trong bảng ISO");
+  const ISO_CU = { hanoi: "VN-HN", hcmc: "VN-SG" };
+  assert.notEqual(ISO_CU["hanoi"], isoCuaKhu({ area_ids: ["q-hy-x"] }, BANG_ISO).iso, "DA1-AC-4 meta.city sai tỉnh");
+});
+
+test("DA1-AC-8 tài liệu ghi 088 và iso_regions; bản ở gốc vòng chưa ghi", () => {
+  const kiem = (claude, roadmap) => {
+    const dong = claude.split("\n").find((l) => l.startsWith("| danh-ba-vat-the.mjs |")) ?? "";
+    return dong.includes("088") && dong.includes("iso_regions") && roadmap.split("\n").some((l) => l.includes("DA1") && l.includes("088"));
+  };
+  const doc = (p) => readFileSync(join(GOC_DV1, p), "utf8");
+  assert.ok(kiem(doc("pipeline/CLAUDE.md"), doc("docs/ROADMAP.md")), "DA1-AC-8 tài liệu chưa ghi 088");
+  const cu = (p) => execFileSync("git", ["show", `${GOC_VONG_DA1}:${p}`], { cwd: GOC_DV1, encoding: "utf8", maxBuffer: 64 << 20 });
+  assert.equal(kiem(cu("pipeline/CLAUDE.md"), cu("docs/ROADMAP.md")), false, "DA1-AC-8 tài liệu chưa ghi 088 (đối chứng gốc vòng)");
+});

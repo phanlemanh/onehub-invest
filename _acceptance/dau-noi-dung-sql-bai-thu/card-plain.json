@@ -1,0 +1,30 @@
+{
+  "feature_plain": "Số «Bài nhận» trên trang Ops và lệnh kiểm tin giả thôi đếm bài thử của anh (bài có link trycloudflare hoặc chữ «[Tên sàn]»), khớp đúng tập bài mà máy xử lý tin thật đã bỏ qua.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chạy cùng một bảng bài mẫu (đủ bốn loại dấu bài thử, chữ hoa, chữ dựng sẵn dấu kiểu khác, và các bài thật trông gần giống) qua hàm nhận bài thử và qua cả bốn câu SQL đang chép định nghĩa ấy; mọi câu phải ra cùng kết quả ở từng bài, câu nào lệch thì báo đúng tên câu và bài."},
+    {"id": "AC-2", "p": "Sẽ để cột «Bài nhận» của Luồng 7 ngày, ở cả bản tin lên cloud lẫn trang máy thu, không đếm bài thử mang dấu mới, và hai nơi vẫn ra cùng số từng ngày."},
+    {"id": "AC-3", "p": "Sẽ để trang Dòng chảy dữ liệu xếp bài thử mang dấu mới vào «bài thử bị loại» thay vì «Bài nhận»."},
+    {"id": "AC-4", "p": "Sẽ để lệnh kiểm tin giả đếm cả tin sinh từ bài thử mang dấu mới, khớp với phép đếm qua hàm nhận bài thử, và lệnh chạy thử trên DB máy thu báo xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đổi cách máy nhận bài thử (hàm và regex JS) — tập bài mà máy xử lý tin đọc giữ nguyên."},
+    {"id": "OOS-2", "p": "KHÔNG dọn bài hay tin thử khỏi DB máy thu."},
+    {"id": "OOS-3", "p": "KHÔNG sửa khoá số cũ của bản tin dành cho bản app đời trước."},
+    {"id": "OOS-4", "p": "KHÔNG dựng hàm SQL dùng chung qua migration — trừ khi anh chọn lối đó ở Hỏi-1."},
+    {"id": "OOS-5", "p": "KHÔNG đổi bước nạp để bỏ bài thử từ gốc — việc của làn ZCode."}
+  ],
+  "scope_plain": "Bốn chỗ đếm số dựa trên định nghĩa bài thử được sửa cho khớp; mọi thứ khác giữ nguyên.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đủ bốn chỗ đang chép định nghĩa bài thử: số Luồng 7 ngày gửi lên cloud, bản chép ở trang máy thu, trang Dòng chảy dữ liệu, lệnh kiểm tin giả (AC-1 tới AC-4)."},
+    {"i": 1, "p": "Đủ bốn loại dấu bài thử: nguồn bản chụp thử, tác tử thử, nhóm TEST, và dấu nội dung mới (AC-1)."},
+    {"i": 2, "p": "Các dạng chữ dễ trượt: chữ thường, chữ hoa, chữ tiếng Việt dựng dấu kiểu khác, chữ gần giống mà là bài thật, bài không có chữ (AC-1)."},
+    {"i": 3, "p": "Mọi nơi anh thấy con số: Luồng 7 ngày trên cloud và máy thu, trang Dòng chảy dữ liệu, kết quả lệnh kiểm tin giả (AC-2, AC-3, AC-4)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép so câu Luồng 7 ngày chỉ so tổng số theo ngày, nên hai lỗi bù nhau có thể lọt; đã sửa thành mỗi bài mẫu một ngày riêng và so từng bài, thêm ca hai lỗi bù nhau phải đỏ."},
+    {"i": 1, "p": "Lo câu SQL thiếu một điều kiện «không dính chữ» mà hàm JS có; đã bác vì điều kiện ấy chỉ thuộc dấu nhóm TEST (câu SQL đã có), dấu nội dung mới không có; thêm bài mẫu «[Tên sàn mới]» để canh."},
+    {"i": 2, "p": "Bản chép ở trang máy thu chưa nằm trong bảng so; đã đưa vào, kèm ca bản chép quên xử lý chữ hoa hay chữ dựng dấu kiểu khác phải đỏ."},
+    {"i": 3, "p": "Lệnh chạy thử trên DB máy thu xanh cả trên mã cũ vì hôm nay chưa có tin nào từ bài thử mới; đã ghi rõ, phép phân biệt nằm ở các bài kiểm có dữ liệu mẫu."},
+    {"i": 4, "p": "Máy từng ghi «chỉ còn một lối» trong khi lối hàm SQL qua migration vẫn sống, chỉ cần lời anh; đã đổi thành câu Hỏi-1 cho anh chọn."}
+  ]
+}

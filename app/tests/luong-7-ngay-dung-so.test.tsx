@@ -5,6 +5,7 @@
 import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
 import pg from "pg"
+import { readFileSync } from "node:fs"
 
 import { captureOpsFacts, localDbUrl, mutantPush } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { dropOpsSchema, makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
@@ -33,6 +34,12 @@ const NOT_S03: [string, string, string, string, string, string][] = [
   ["f1", "hanoi__zalo-agent__2026-10-23T120000", "2026-10-23T12:00:00", "2026-10-23T12:01:00", "apify-facebook", "Nhóm FB"],
   ["t1", "hanoi__zalo-agent__2026-10-24T080000", "2026-10-24T08:00:00", "2026-10-24T08:01:00", "openclaw-hook", "TEST-G1"],
   ["e1", "hanoi__zalo-agent__2026-10-24T083000", "2026-10-24T08:30:00", "2026-10-24T08:31:00", "e2e-agent", "Nhóm A"],
+]
+// GN5 (dau-noi-dung-sql-bai-thu): bài thử của Mạnh mang dấu nội dung (testMarker «noi-dung») — ống snapshot, tác tử, nhóm đều
+// thật, chỉ chữ bài lộ là bài thử. Ngày 22/10 không bài thật nào, nên mọi bài đếm lọt hiện thành một con số khác 0.
+const NOI_DUNG: [string, string, string][] = [
+  ["n1", "2026-10-22T09:00:00", "Bán căn [Tên sàn] giá tốt"],
+  ["n2", "2026-10-22T10:00:00", "Xem ảnh https://abc.trycloudflare.com/x nhé"],
 ]
 // [offer_id, source, first_seen (giờ VN)] — 23:59 và 00:01 hai bên nửa đêm, một tin S06 cùng ngày.
 const OFFERS: [string, string, string][] = [
@@ -65,6 +72,11 @@ before(async () => {
       await admin.query(
         `INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at, agent_id, group_name) VALUES ($1, $2, 'bài thử', $3, $4, $5, $6)`,
         [id, snap, vn(posted), vn(captured), agent, group],
+      )
+    for (const [id, posted, text] of NOI_DUNG)
+      await admin.query(
+        `INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at, agent_id, group_name) VALUES ($1, 'hanoi__zalo-agent__2026-10-22T090000', $2, $3, $3, 'openclaw-hook', 'Nhóm thật')`,
+        [id, text, vn(posted)],
       )
     for (const [id, source, seen] of OFFERS)
       await admin.query(`INSERT INTO "${S}".sale_offers (offer_id, kind, first_seen, last_seen, source) VALUES ($1, 'sale', $2, $2, $3)`, [id, vn(seen), source])
@@ -126,7 +138,8 @@ describe("ON5-AC-2 bài thô S03", () => {
     const cu = S03_POSTS_SQL.replace(/ AND coalesce\(agent_id[\s\S]*? GROUP BY/, " GROUP BY")
     assert.notEqual(cu, S03_POSTS_SQL, "đột biến phải bỏ được ba điều kiện DF0")
     const sai = await demSql(cu)
-    assert.deepEqual(loiCot("bài thô", sai, want(WANT_POSTS)), ["2026-10-23: bài thô 3 ≠ 2", "2026-10-24: bài thô 3 ≠ 1"])
+    // GN5: đột biến bỏ luôn vế nội dung, nên hai bài nội dung thử ngày 22/10 cũng lọt.
+    assert.deepEqual(loiCot("bài thô", sai, want(WANT_POSTS)), ["2026-10-22: bài thô 2 ≠ 0", "2026-10-23: bài thô 3 ≠ 2", "2026-10-24: bài thô 3 ≠ 1"])
   })
   test("ON5-AC-2 bản sao đếm theo captured_at → báo ngày và hai số", async () => {
     ready()
@@ -254,6 +267,40 @@ describe("ON5-AC-4 khối bằng trang máy thu", () => {
         `days: await (async () => { const r = await luong7(client, { now: now.getTime() }); const { rows } = await client.query("SELECT (first_seen AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::text d, count(*)::int n FROM sale_offers GROUP BY 1"); const m = new Map(rows.map((x) => [x.d, x.n])); return r.map((x) => ({ ...x, s03Offers: m.get(x.day) ?? 0 })); })()`,
       ))
     assert.deepEqual(await lechKhoi((await push({ script: f })).payload), ["2026-10-23: tin rao khối 3 ≠ trang 2"])
+  })
+})
+
+// ---------- GN5 dau-noi-dung-sql-bai-thu AC-2: bài nội dung thử không vào «Bài nhận» ở cả hai bên ----------
+
+/** Bản S03_POSTS_SQL của app, rút từ mã nguồn rồi dựng như lúc chạy (template literal thật, ${VN_TZ} → giờ VN). */
+function appS03PostsSql(): string {
+  const src = readFileSync(new URL("../src/lib/collections-queries.ts", import.meta.url), "utf8")
+  const m = src.match(/const S03_POSTS_SQL = `([^`]*)`/)
+  assert.ok(m, "không rút được S03_POSTS_SQL trong collections-queries.ts")
+  return new Function("VN_TZ", `return \`${m[1]}\`;`)("Asia/Ho_Chi_Minh") as string
+}
+
+describe("DND-AC-2 Luồng 7 ngày không đếm bài nội dung thử", () => {
+  test("DND-AC-2 bên ghi và trang máy thu cùng bỏ bài nội dung thử, hai bên bằng nhau", async () => {
+    ready()
+    const { pool } = await import("../src/lib/db")
+    const { rows } = await pool.query<{ n: number }>(`SELECT count(*)::int n FROM stg_zalo_posts WHERE post_id IN ('n1','n2')`)
+    assert.equal(rows[0].n, 2, "đối chứng: hai bài nội dung thử nằm trong bảng nạp")
+    const got = (await flow()).map((x) => [x.day, x.zaloPosts] as [string, number])
+    assert.deepEqual(loiCot("bài thô", got, want(WANT_POSTS)), [], "trang máy thu")
+    const r = await push()
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    const khoi = (r.payload.blocks.luong7.days as Day7[]).map((d) => [d.day, d.s03Posts] as [string, number])
+    assert.deepEqual(loiCot("bài thô", khoi, want(WANT_POSTS)), [], "khối luong7 của bên ghi")
+    assert.deepEqual(await lechKhoi(r.payload), [])
+  })
+  test("DND-AC-2 bản chép app bỏ vế nội dung → báo ngày và hai số", async () => {
+    ready()
+    const app = appS03PostsSql()
+    const bo = app.replace(/ AND NOT \(normalize\(coalesce\(text, ''\), NFC\) ~\* '[^']*'\)/, "")
+    assert.notEqual(bo, app, "đột biến phải bỏ được vế nội dung của bản app")
+    assert.deepEqual(loiCot("bài thô", await demSql(app), want(WANT_POSTS)), [], "bản app nguyên vẹn")
+    assert.deepEqual(loiCot("bài thô", await demSql(bo), want(WANT_POSTS)), ["2026-10-22: bài thô 2 ≠ 0"])
   })
 })
 

@@ -203,6 +203,8 @@ export function factsChan(payload, names) {
 }
 
 async function main() {
+  const iChiLenh = process.argv.indexOf("--chi-lenh");
+  if (iChiLenh > 0) return chiLenh(process.argv[iChiLenh + 1]);
   // --kho: chế độ khô — dựng bản tin, soát tầng A, in đường JSON + mã; không cần token, không gửi.
   const kho = process.argv.includes("--kho");
   const { token } = kho ? {} : await env();
@@ -320,6 +322,57 @@ async function main() {
   });
   if (!res.ok) throw new Error(`ingest ${res.status}: ${(await res.text()).slice(0, 200)}`);
   console.log(`ops-facts pushed: ${zalo.groups.length} nhóm, ${jobs.length} jobs, uptime ${(health.uptime24h ?? 0) * 100 | 0}%`);
+}
+
+/** TV4 `so-lenh-bo-ap` (ADR-0015 §8): bản tin chỉ-lệnh — khối kết quả lệnh của bộ áp, không phải bản tin ops_heartbeat. */
+export function banTinLenh(results, now = new Date()) {
+  return { pushedAt: now.toISOString(), kind: "change_request_results", results };
+}
+
+/** Token máy `ops:pull` của máy thu: env OPS_MACHINE_TOKEN, không có thì `<thư mục cấu hình>/cloud.env`. Không in ra. */
+async function tokenMay() {
+  if (process.env.OPS_MACHINE_TOKEN) return process.env.OPS_MACHINE_TOKEN;
+  const dir = process.env.OPS_APPLY_CONFIG_DIR ?? path.join(homedir(), ".oneinvest");
+  const s = await readFile(path.join(dir, "cloud.env"), "utf8").catch(() => "");
+  return s.match(/OPS_MACHINE_TOKEN=(\S+)/)?.[1];
+}
+
+/**
+ * `--chi-lenh <tệp>`: gửi kết quả lệnh của bộ áp (tệp JSON `{results: [...]}`) lên route ingest bằng token máy, sau bộ soát
+ * tầng A chung (`factsChan` — tên nguồn thật từ source_registry). Trúng tầng A → không gửi, thoát 1; thiếu token → thoát 2.
+ */
+async function chiLenh(tep) {
+  if (!tep) {
+    console.error("push-ops-facts: --chi-lenh cần đường tệp kết quả");
+    process.exitCode = 2;
+    return;
+  }
+  const token = await tokenMay();
+  if (!token) {
+    console.error("push-ops-facts: thiếu OPS_MACHINE_TOKEN (token máy ops:pull)");
+    process.exitCode = 2;
+    return;
+  }
+  const doc = JSON.parse(await readFile(tep, "utf8"));
+  const payload = banTinLenh(Array.isArray(doc) ? doc : doc.results);
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
+  await client.connect();
+  const { rows: reg } = await client.query("SELECT code, real_name FROM source_registry");
+  await client.end();
+  const chan = factsChan(payload, reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name })));
+  if (chan.length) {
+    for (const l of chan) console.error(l);
+    process.exitCode = 1;
+    return;
+  }
+  const res = await fetch(INGEST_URL, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`ingest ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const kq = await res.json();
+  console.log(`ops-facts lệnh: gửi ${payload.results.length} kết quả, cập nhật ${kq.cap_nhat}, bỏ qua ${kq.bo_qua}`);
 }
 
 main().catch((e) => {

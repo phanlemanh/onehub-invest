@@ -9,7 +9,7 @@ import type { ReactNode } from "react"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
-import { IN, NOW, OFFERS, fragment, makeFlowSchema, refreshFlow, vn, type Offer } from "./ops-dong-chay-fixture"
+import { IN, NOW, OFFERS, SNAP, flowSql, fragment, inSchema, makeFlowSchema, refreshFlow, vn, type Offer } from "./ops-dong-chay-fixture"
 
 const S = `df0_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
@@ -103,6 +103,7 @@ after(async () => {
   await closeSheets().catch(() => {})
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
   await admin.query(`DROP SCHEMA IF EXISTS "${S}_min" CASCADE`).catch(() => {})
+  await admin.query(`DROP SCHEMA IF EXISTS "${S}_dnd" CASCADE`).catch(() => {})
   await admin.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
@@ -228,6 +229,38 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
     } finally {
       await c.end()
     }
+  })
+})
+
+// ---------- GN5 dau-noi-dung-sql-bai-thu AC-3: bài nội dung thử vào «bài thử bị loại», không vào «Bài nhận» ----------
+describe("DND-AC-3 Dòng chảy dữ liệu xếp bài nội dung thử vào bài thử bị loại", () => {
+  const sch = `${S}_dnd`
+  /** Lược đồ fixture chung + hai bài S03 mang dấu nội dung (ống, tác tử, nhóm đều thật), làm tươi bằng `sql`. */
+  async function s03(sql?: string) {
+    await makeFlowSchema(admin, sch, { offers: OFFERS, ads: 4 })
+    for (const [id, text] of [["n1", "Bán căn [Tên sàn] giá tốt"], ["n2", "Xem ảnh https://abc.trycloudflare.com/x nhé"]])
+      await admin.query(
+        `INSERT INTO "${sch}".stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, captured_at)
+         VALUES ($1, $2, 'openclaw-hook', 'Nhóm A', $3, $4, $4)`,
+        [id, SNAP, text, vn(IN)],
+      )
+    await refreshFlow(sch, { now: NOW, sql })
+    const facts = await inSchema(sch, async (c) => (await c.query(`SELECT facts FROM data_flow_snapshot WHERE time_window = 'all'`)).rows[0].facts)
+    const r = (facts.sources as { source: string; received: number; testRejected: number }[]).find((x) => x.source === "S03")!
+    return { received: r.received, testRejected: r.testRejected }
+  }
+  // Fixture chung (DF-AC-2): S03 Toàn kho received 6, testRejected 3. Hai bài nội dung thử chỉ được cộng vào testRejected.
+  test("DND-AC-3 600 thật — received giữ 6, testRejected lên 5", async () => {
+    ready()
+    assert.deepEqual(await s03(), { received: 6, testRejected: 5 })
+  })
+  test("DND-AC-3 chiều đỏ — 600 bỏ vế nội dung khỏi IS_TEST", async () => {
+    ready()
+    const goc = "\n          OR normalize(coalesce(text, ''), NFC) ~* 'trycloudflare\\.com|\\[tên sàn\\]'"
+    assert.ok(flowSql().includes(goc), "khuôn đột biến lệch 600: không thấy vế nội dung trong IS_TEST")
+    const r = await s03(flowSql().replace(goc, ""))
+    assert.equal(`S03 received ${r.received} ≠ 6`, "S03 received 8 ≠ 6")
+    assert.equal(r.testRejected, 3)
   })
 })
 

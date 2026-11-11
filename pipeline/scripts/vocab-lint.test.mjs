@@ -160,7 +160,8 @@ const NGOAI_LE = [
   // resolve-properties.mjs: hai ngoại lệ của Stage B gỡ khi Stage B đóng băng (V7, hồ sơ dong-bang-stage-b-resolve).
   "agent/src/enrich/run.ts|confidence",
   "app/src/components/compare/compare-types.ts|confidence",
-  "app/src/lib/source-status-labels.ts|registry_status",   // DB2b: source_registry.status trùng chữ active/retired
+  // app/src/lib/source-status-labels.ts|registry_status gỡ ở hàng nhan-trang-thai-nguon-draft: bảng có thêm draft (năm
+  // khoá, hai trùng chữ active/retired) nên lint không còn coi là trục registry_status — ngoại lệ thừa thì allowStale đỏ.
 ];
 
 test("VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim", () => {

@@ -18,7 +18,10 @@ export type HanhDong =
   | "unit.delete"
   | "unit.set_mode"
   | "unit.update_meta"
-  | "zalo.admin";
+  | "zalo.admin"
+  | "lenh.xem"
+  | "lenh.gui"
+  | "lenh.duyet";
 
 /**
  * Bảng quyền: hành động → vai tối thiểu, và bearer chung (`OPS_API_TOKEN`) có được dùng không. Bearer chỉ đọc số và nạp
@@ -38,6 +41,12 @@ export const QUYEN_OPS: Record<HanhDong, { vai: Exclude<Vai, "user">; bearer: bo
   "unit.set_mode": { vai: "admin", bearer: false },
   "unit.update_meta": { vai: "admin", bearer: false },
   "zalo.admin": { vai: "admin", bearer: false },
+  // Đường lệnh kéo (TV4 `so-lenh-bo-ap`, ADR-0015 §6, tài liệu §3.5 + §4.8 #4): xem từ viewer; gửi lệnh từ ops (route
+  // còn đòi isAdmin cho source.resume — bật lại do admin bấm); duyệt là admin. Máy thu không đi bảng này — nó xưng bằng
+  // token máy (lib/token-may.ts).
+  "lenh.xem": { vai: "viewer", bearer: false },
+  "lenh.gui": { vai: "ops", bearer: false },
+  "lenh.duyet": { vai: "admin", bearer: false },
 };
 
 /** Actor của máy dùng bearer chung (chỉ ingest ghi audit bằng nó). */

@@ -13,7 +13,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { phuongHopLe } from "../pipeline/lib/osm.mjs";
+import { coDanhBa, khuVucKhopTen, phuongHopLe } from "../pipeline/lib/osm.mjs";
 import { runTransformChotot } from "../pipeline/transform-chotot.mjs";
 import { runTransformFb } from "../pipeline/transform-fb.mjs";
 import { runTransformZalo } from "../pipeline/transform-zalo.mjs";
@@ -32,12 +32,20 @@ const PHA = ["khong-sua", "mo-loc"];
 export const BANG_GHI = ["sale_offer_records", "property_offers", "property_candidates", "review_queue", "enrichment_proposals", "areas"];
 const AUDIT = "ops_audit";
 
-/** offer_id → { source, area_id, hop_le, post_ids } cho ba nguồn tin rao; hop_le = area_id là phường hợp lệ (null khi không có phường). */
-async function chup(c) {
+/**
+ * Điều kiện «khu vực hợp lệ» của thước — ĐÚNG điều kiện bên ghi khớp tên (PX1, `khuVucKhopTen`): phường OSM hợp lệ hoặc xã
+ * danh bạ mang `admin_code` (084); DB chưa áp 084 thì về `phuongHopLe`. Thước không đặt luật riêng chặt hơn bên ghi — lệch
+ * bên ghi là đúng lớp lỗi làm KDM-AC-3 đỏ oan (hồ sơ do-san-sl1-kdm).
+ * @param {boolean} coMa DB đã áp 084 (`coDanhBa`)
+ */
+export const sqlHopLe = (coMa) => khuVucKhopTen("a.", coMa);
+
+/** offer_id → { source, area_id, hop_le, post_ids } cho ba nguồn tin rao; hop_le = area_id là khu vực hợp lệ (null khi không có khu vực). */
+export async function chup(c, coMa, dieuKien = sqlHopLe(coMa)) {
   const { rows } = await c.query(
     `SELECT o.offer_id, o.source, o.area_id, o.post_ids,
             CASE WHEN o.area_id IS NULL THEN NULL
-                 ELSE EXISTS (SELECT 1 FROM areas a WHERE a.id = o.area_id AND a.region_type = 'submarket' AND ${phuongHopLe("a.")})
+                 ELSE EXISTS (SELECT 1 FROM areas a WHERE a.id = o.area_id AND a.region_type = 'submarket' AND ${dieuKien})
             END AS hop_le
      FROM sale_offers o WHERE o.source = ANY($1)`,
     [NGUON],
@@ -46,7 +54,7 @@ async function chup(c) {
 }
 
 /** Tin trỏ khu vực không phải phường hợp lệ — tin gắn thẳng vào thị trường (area_id là market) không tính. */
-const khongHopLe = async (c, snap) => {
+export const khongHopLe = async (c, snap) => {
   const { rows } = await c.query(`SELECT id FROM areas WHERE region_type = 'submarket'`);
   const sub = new Set(rows.map((r) => r.id));
   return [...snap.values()].filter((o) => o.area_id && sub.has(o.area_id) && !o.hop_le);
@@ -103,9 +111,10 @@ async function main() {
 
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
+  const coMa = await coDanhBa(c);
   try {
     if (!THU) {
-      const bad = await khongHopLe(c, await chup(c));
+      const bad = await khongHopLe(c, await chup(c, coMa));
       for (const s of NGUON) console.log(`${s}: ${bad.filter((o) => o.source === s).length} tin trỏ khu vực không hợp lệ`);
       check(bad.length === 0, `${bad.length} tin trỏ khu vực không hợp lệ (chỉ đọc)`);
     } else {
@@ -117,11 +126,11 @@ async function main() {
         await c.query("SELECT pg_advisory_xact_lock(33033)");
         // PL15: transform đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
         await napPhatBieu(c);
-        const chupGoc = await chup(c);
+        const chupGoc = await chup(c, coMa);
 
         // ---- Lượt nền: lời hứa đã ký của E8 (tin-rao-gan-khu-vuc-dung) trên DB thật ----
         await baTransform(c);
-        const nen = await chup(c);
+        const nen = await chup(c, coMa);
         console.log("\nlượt nền:");
         const lNen = lech(chupGoc, nen);
         check(lNen.length === 0, `lượt nền: ${lNen.length} tin có phường hợp lệ ở DB thật bị gỡ hay đổi khu vực (nối theo offer_id)${lNen.length ? `: ${lNen.slice(0, 10).join(", ")}` : ""}`);
@@ -162,7 +171,7 @@ async function main() {
         const boMoi = new Set(moi.map((m) => m.offer_id));
         const vungMoi = new Set(moiKhuVuc);
 
-        const truoc = await chup(c);
+        const truoc = await chup(c, coMa);
         const sai = await khongHopLe(c, truoc);
         const saiId = new Set(sai.map((o) => o.offer_id));
         const thieu = moi.filter((m) => !saiId.has(m.offer_id)).map((m) => m.offer_id);
@@ -181,7 +190,7 @@ async function main() {
           await baTransform(c);
         }
 
-        const sau = await chup(c);
+        const sau = await chup(c, coMa);
         console.log("\nsau:");
         const saiSau = await khongHopLe(c, sau);
         const vaoMoi = [...sau.values()].filter((o) => vungMoi.has(o.area_id));

@@ -1,0 +1,262 @@
+{
+ "_nguon": {
+  "ten": "ISO 3166-2:VN (Wikipedia, bảng Current codes; bản ISO mới nhất 2020-11-24, chưa có bản sau sáp nhập 2025)",
+  "url": "https://en.wikipedia.org/wiki/ISO_3166-2:VN",
+  "doc_ngay": "2026-11-10",
+  "ghi_chu": "Trang ghi «Kiến Giang» cho VN-47; chép theo tên tỉnh đúng «Kiên Giang»."
+ },
+ "ma": [
+  {
+   "iso": "VN-44",
+   "ten": "An Giang"
+  },
+  {
+   "iso": "VN-43",
+   "ten": "Bà Rịa - Vũng Tàu"
+  },
+  {
+   "iso": "VN-54",
+   "ten": "Bắc Giang"
+  },
+  {
+   "iso": "VN-53",
+   "ten": "Bắc Kạn"
+  },
+  {
+   "iso": "VN-55",
+   "ten": "Bạc Liêu"
+  },
+  {
+   "iso": "VN-56",
+   "ten": "Bắc Ninh"
+  },
+  {
+   "iso": "VN-50",
+   "ten": "Bến Tre"
+  },
+  {
+   "iso": "VN-31",
+   "ten": "Bình Định"
+  },
+  {
+   "iso": "VN-57",
+   "ten": "Bình Dương"
+  },
+  {
+   "iso": "VN-58",
+   "ten": "Bình Phước"
+  },
+  {
+   "iso": "VN-40",
+   "ten": "Bình Thuận"
+  },
+  {
+   "iso": "VN-59",
+   "ten": "Cà Mau"
+  },
+  {
+   "iso": "VN-CT",
+   "ten": "Cần Thơ"
+  },
+  {
+   "iso": "VN-04",
+   "ten": "Cao Bằng"
+  },
+  {
+   "iso": "VN-DN",
+   "ten": "Đà Nẵng"
+  },
+  {
+   "iso": "VN-33",
+   "ten": "Đắk Lắk"
+  },
+  {
+   "iso": "VN-72",
+   "ten": "Đắk Nông"
+  },
+  {
+   "iso": "VN-71",
+   "ten": "Điện Biên"
+  },
+  {
+   "iso": "VN-39",
+   "ten": "Đồng Nai"
+  },
+  {
+   "iso": "VN-45",
+   "ten": "Đồng Tháp"
+  },
+  {
+   "iso": "VN-30",
+   "ten": "Gia Lai"
+  },
+  {
+   "iso": "VN-03",
+   "ten": "Hà Giang"
+  },
+  {
+   "iso": "VN-63",
+   "ten": "Hà Nam"
+  },
+  {
+   "iso": "VN-HN",
+   "ten": "Hà Nội"
+  },
+  {
+   "iso": "VN-23",
+   "ten": "Hà Tĩnh"
+  },
+  {
+   "iso": "VN-61",
+   "ten": "Hải Dương"
+  },
+  {
+   "iso": "VN-HP",
+   "ten": "Hải Phòng"
+  },
+  {
+   "iso": "VN-73",
+   "ten": "Hậu Giang"
+  },
+  {
+   "iso": "VN-SG",
+   "ten": "Hồ Chí Minh"
+  },
+  {
+   "iso": "VN-14",
+   "ten": "Hòa Bình"
+  },
+  {
+   "iso": "VN-66",
+   "ten": "Hưng Yên"
+  },
+  {
+   "iso": "VN-34",
+   "ten": "Khánh Hòa"
+  },
+  {
+   "iso": "VN-47",
+   "ten": "Kiên Giang"
+  },
+  {
+   "iso": "VN-28",
+   "ten": "Kon Tum"
+  },
+  {
+   "iso": "VN-01",
+   "ten": "Lai Châu"
+  },
+  {
+   "iso": "VN-35",
+   "ten": "Lâm Đồng"
+  },
+  {
+   "iso": "VN-09",
+   "ten": "Lạng Sơn"
+  },
+  {
+   "iso": "VN-02",
+   "ten": "Lào Cai"
+  },
+  {
+   "iso": "VN-41",
+   "ten": "Long An"
+  },
+  {
+   "iso": "VN-67",
+   "ten": "Nam Định"
+  },
+  {
+   "iso": "VN-22",
+   "ten": "Nghệ An"
+  },
+  {
+   "iso": "VN-18",
+   "ten": "Ninh Bình"
+  },
+  {
+   "iso": "VN-36",
+   "ten": "Ninh Thuận"
+  },
+  {
+   "iso": "VN-68",
+   "ten": "Phú Thọ"
+  },
+  {
+   "iso": "VN-32",
+   "ten": "Phú Yên"
+  },
+  {
+   "iso": "VN-24",
+   "ten": "Quảng Bình"
+  },
+  {
+   "iso": "VN-27",
+   "ten": "Quảng Nam"
+  },
+  {
+   "iso": "VN-29",
+   "ten": "Quảng Ngãi"
+  },
+  {
+   "iso": "VN-13",
+   "ten": "Quảng Ninh"
+  },
+  {
+   "iso": "VN-25",
+   "ten": "Quảng Trị"
+  },
+  {
+   "iso": "VN-52",
+   "ten": "Sóc Trăng"
+  },
+  {
+   "iso": "VN-05",
+   "ten": "Sơn La"
+  },
+  {
+   "iso": "VN-37",
+   "ten": "Tây Ninh"
+  },
+  {
+   "iso": "VN-20",
+   "ten": "Thái Bình"
+  },
+  {
+   "iso": "VN-69",
+   "ten": "Thái Nguyên"
+  },
+  {
+   "iso": "VN-21",
+   "ten": "Thanh Hóa"
+  },
+  {
+   "iso": "VN-26",
+   "ten": "Thừa Thiên-Huế"
+  },
+  {
+   "iso": "VN-46",
+   "ten": "Tiền Giang"
+  },
+  {
+   "iso": "VN-51",
+   "ten": "Trà Vinh"
+  },
+  {
+   "iso": "VN-07",
+   "ten": "Tuyên Quang"
+  },
+  {
+   "iso": "VN-49",
+   "ten": "Vĩnh Long"
+  },
+  {
+   "iso": "VN-70",
+   "ten": "Vĩnh Phúc"
+  },
+  {
+   "iso": "VN-06",
+   "ten": "Yên Bái"
+  }
+ ]
+}

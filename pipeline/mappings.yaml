@@ -658,9 +658,6 @@ enums:
 # Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
 # hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
 enums_lint_allow:
-  - path: app/src/lib/source-status-labels.ts
-    axis: registry_status
-    reason: "nhãn source_registry.status (migration 012: active/paused/completed/retired) — trục khác trùng chữ với registry_status (active, retired) của danh bạ DB2b"
   - path: app/src/components/ops/review-card.tsx
     axis: enrich_field
     reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"

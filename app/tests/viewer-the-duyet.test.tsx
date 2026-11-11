@@ -519,6 +519,10 @@ const KIEM_KE: Record<string, { doc_noi_dung: boolean; che: Che }> = {
   "src/app/api/v1/deals/route.ts": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/api/v1/offers/route.ts": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/api/v1/ops/audit/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  // Sổ Lệnh (TV4 so-lenh-bo-ap, 10/11): ba route chỉ đọc/ghi change_requests (loại, mã S0x, lý do) — không nội dung tin.
+  "src/app/api/v1/ops/change-requests/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/change-requests/[id]/decide/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/change-requests/pull/route.ts": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/api/v1/ops/collections/route.ts": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/api/v1/ops/coverage/route.ts": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/api/v1/ops/extraction-quality/route.ts": { doc_noi_dung: false, che: "khong-doc" },
@@ -610,7 +614,7 @@ describe("VT-AC-8 kiểm kê route", () => {
   test("VT-AC-8 bảng kiểm kê khớp đĩa và hàm che", (t) => {
     const { khoa, tep } = doKiemKe(KIEM_KE)
     t.diagnostic(`kiểm kê: ${khoa} điểm vào, ${tep} tệp trong các bao đóng`)
-    assert.equal(khoa, 29) // +1: route lượt hai /api/v1/ops/labels/[itemId]/review (gan-nhan-theo-nhom-s03, 04/11), che xemNoiDungTin; +1: /ops/deals/[offerId] (can-gia-tot-biet-can, 03/11), che xemNoiDungTin; +2: /ops/people và /ops/people/[partyKey] (danh-ba-nguoi-tren-ops, 30/10) — bí danh người bán, che xemNoiDungTin; +1: /ops/ai-calls (PL29 so-cuoc-goi-ai, 29/10) — chỉ số, không đọc nội dung tin; +2: /ops/labels và route nhãn (PL7, 30/10) — đọc chữ gốc tin, chặn xemNoiDungTin
+    assert.equal(khoa, 32) // +3: Sổ Lệnh /api/v1/ops/change-requests, …/[id]/decide, …/pull (so-lenh-bo-ap, 10/11), không đọc nội dung tin; +1: route lượt hai /api/v1/ops/labels/[itemId]/review (gan-nhan-theo-nhom-s03, 04/11), che xemNoiDungTin; +1: /ops/deals/[offerId] (can-gia-tot-biet-can, 03/11), che xemNoiDungTin; +2: /ops/people và /ops/people/[partyKey] (danh-ba-nguoi-tren-ops, 30/10) — bí danh người bán, che xemNoiDungTin; +1: /ops/ai-calls (PL29 so-cuoc-goi-ai, 29/10) — chỉ số, không đọc nội dung tin; +2: /ops/labels và route nhãn (PL7, 30/10) — đọc chữ gốc tin, chặn xemNoiDungTin
     // Đối chứng: một trang Ops mới đọc thẻ duyệt mà chưa khai → ca nêu tên route.
     const gia = { "src/app/ops/vt-gia/page.tsx": 'const q = "SELECT title FROM review_queue"\nexport default function P() { return q }\n' }
     assert.throws(() => doKiemKe(KIEM_KE, gia), /src\/app\/ops\/vt-gia\/page\.tsx/, "đối chứng route giả phải đỏ và nêu tên")

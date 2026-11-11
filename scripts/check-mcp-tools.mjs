@@ -24,8 +24,8 @@ export const MCP_MSG = {
   onDinh: "ON DINH: công cụ tin rao phải ghi chưa hứa ổn định",
 };
 
-// Năm chế độ của ApiMode (app/src/lib/api-surface.ts). Dài trước ngắn để «ops-session» không bị đọc thành «ops».
-export const MODES = ["ops-session", "session-or-noop", "public", "ops", "admin"];
+// Sáu chế độ của ApiMode (app/src/lib/api-surface.ts). Dài trước ngắn để «ops-session» không bị đọc thành «ops».
+export const MODES = ["ops-session", "session-or-noop", "public", "ops", "admin", "machine"];
 const ROOT_MODE = new RegExp(`^(${MODES.join("|")})\\b`);
 
 const MANIFEST = "app/docs/api/mcp-tools.json";

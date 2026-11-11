@@ -44,6 +44,7 @@ const ALLOWED = {
   "ops-session": [],
   admin: [],
   "session-or-noop": [],
+  machine: [], // TV4: chỉ token máy theo tên — khách và bearer chung đều bị từ chối
 };
 // Bị từ chối = 401, 403 «forbidden» (bảng quyền TV1: sai vai hoặc bearer ở hành động cấm bearer), hoặc 404 «not found»
 // (route admin giấu sự tồn tại với người không phải admin).

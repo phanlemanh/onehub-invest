@@ -14,7 +14,7 @@ import pg from "pg";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napSdtE164 } from "../lib/nap-060.mjs";
 
-import { TEST_MARKERS, testMarker } from "../lib/test-posts.mjs";
+import { TEST_MARKERS, noiDungSql, testMarker } from "../lib/test-posts.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { extractPhones, runTransformZalo } from "../transform-zalo.mjs";
 
@@ -26,6 +26,15 @@ export const SIM_TABLES = [
   "sale_offers", "sellers", "ops_audit", "review_queue",
   "enrichment_proposals", "property_offers", "property_candidates",
 ];
+
+/**
+ * Vị từ «bài thử» của câu đếm độc lập, trên bí danh `t` của stg_zalo_posts — bốn dấu của testMarker viết bằng SQL (không gọi
+ * testMarker), để thước không mù cùng một lỗi. Vế nội dung lấy hằng của test-posts.mjs (GN5); DND-AC-1 so từng dòng với testMarker.
+ */
+export const TEST_POST_SQL_T = `split_part(t.snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(t.snapshot_id, '__', 2) = 'example'
+         OR coalesce(t.agent_id, '') ~* '^(e2e|test|mock)'
+         OR btrim(coalesce(t.group_name, '')) ~* '^test([^[:alpha:]]|$)'
+         OR ${noiDungSql("t.text")}`;
 
 // Băm SĐT như transform (seller_phone_hash).
 const phoneHash = (p) => createHash("sha256").update(p).digest("hex").slice(0, 32);
@@ -67,10 +76,7 @@ export async function measureResidue(c) {
   // Đếm độc lập bằng SQL (không qua testMarker) — đối chiếu để thước không mù cùng một lỗi.
   const { rows: [q] } = await c.query(
     `SELECT count(*)::int AS n FROM sale_offers o WHERE EXISTS (
-       SELECT 1 FROM stg_zalo_posts t WHERE t.post_id = ANY(o.post_ids) AND (
-         split_part(t.snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(t.snapshot_id, '__', 2) = 'example'
-         OR coalesce(t.agent_id, '') ~* '^(e2e|test|mock)'
-         OR btrim(coalesce(t.group_name, '')) ~* '^test([^[:alpha:]]|$)'))`,
+       SELECT 1 FROM stg_zalo_posts t WHERE t.post_id = ANY(o.post_ids) AND (${TEST_POST_SQL_T}))`,
   );
 
   const res = {

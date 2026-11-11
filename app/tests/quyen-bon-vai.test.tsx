@@ -148,7 +148,7 @@ test("QV-AC-8 canAccessOps / isAdmin theo bậc vai; OPS_EMAILS tính như ops; 
 test("QV-AC-8b kiemQuyen trả 401/403/qua đúng bảng; bearer chỉ qua ở ops.read và ingest.push; bearer + phiên admin dùng phiên", async () => {
   const { kiemQuyen, QUYEN_OPS, BAC_VAI } = await import("../src/lib/ops-access")
   const hds = Object.keys(QUYEN_OPS) as (keyof typeof QUYEN_OPS)[]
-  assert.deepEqual(hds.length, 11) // + label.write (PL7 man-gan-nhan-mu)
+  assert.deepEqual(hds.length, 14) // + label.write (PL7 man-gan-nhan-mu); + lenh.xem, lenh.gui, lenh.duyet (TV4 so-lenh-bo-ap, 10/11)
   const nguoi: Record<string, string> = {}
   for (const v of ["user", "viewer", "ops", "admin", "owner"]) nguoi[v] = (await taoNguoi(sc, v)).cookie
   for (const hd of hds) {

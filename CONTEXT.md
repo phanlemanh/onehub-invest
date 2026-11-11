@@ -248,6 +248,12 @@ _Avoid_: tin hết hạn, expired, tin chết, tin hết rao (dùng «ngừng ra
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
+**Mức hồ sơ dự án**: Thang tổng sáu mức của một nút dự án trong danh bạ: M0 Có tên → M1 Có nguồn → M2 Có xã → M3 Đối chiếu (≥ 2 nguồn khớp) → M4 Có pháp lý (nguồn nhà nước) → M5 Đang bán. Là thước phụ ở Ops, đặt cạnh độ đủ hồ sơ bảy nhóm (DA20); không thành north star. Mã M, khác bậc dữ liệu B0–B5 của tin và căn (ROADMAP §3 mục 44 Hỏi-3, `docs/architecture/mo-hinh-danh-ba-du-an.md` §7).
+- Code: `project_profile_level` (chưa có cột — dựng ở DA20) · RESO: không có — extension local
+- Slug URL: —
+- Ghi chú: «mốc M2» của DA20 (≥ 80% dự án S08 đủ năm nhóm đầu) là mốc độ đủ, không phải mức M2.
+_Avoid_: bậc hồ sơ, bậc dự án
+
 **Danh bạ SĐT**: Năm kiểm đo trục số điện thoại của danh bạ Người theo nguồn, mỗi ngày một dòng: cặp một–một (một SĐT, một người gửi) mà người theo SĐT chưa gộp; người theo SĐT không có tin; bảng người bán so với số SĐT trên tin; tin nhiều số và tin trống số dù bài có số; số bộ bóc bỏ sót so với bộ dò rộng. Chỉ số đếm — không SĐT, không khoá băm.
 - Code: `pipeline/do-danh-ba-sdt.mjs`, kiểm `danh-ba-sdt:n1`…`n5` ở `dq_check_results` · RESO: không có
 - Slug URL: —
@@ -458,6 +464,9 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 **Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S08 (SPL, ADR-0007). Tên thật là tầng A.
 - Code: `source (source_registry.code)` · RESO: OriginatingSystemName
 _Avoid_: kênh dữ liệu
+
+**Trạng thái mã nguồn**: Vòng đời một mã nguồn trong danh mục nguồn (CHECK `source_registry_status_chk`, migration 047) — `draft` «Chưa thu» · `active` «Đang dùng» · `paused` «Tạm dừng» · `completed` «Đã xong» · `retired` «Đã ngừng». «Chưa thu» là mã đã đăng ký trong danh mục nhưng chưa thu; nhãn hiện ở `/ops/sources`.
+- Code: `source_registry.status (sourceStatusLabel)` · RESO: —
 
 **Snapshot**: Bản ghi thô collector thu được — bất biến, chỉ ghi mới (luật 1). Mọi diễn giải nằm ở pipeline.
 - Code: `snapshot (raw)` · RESO: —
@@ -769,6 +778,11 @@ _Avoid_: collection unit, source group
 - Code: `change_request (change_requests)` · RESO: —
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
+
+**Token máy**: Chìa riêng của một máy thu, đặt theo tên (vd `may-thu-1`), để máy ấy kéo lệnh đã duyệt và gửi kết quả lên máy chủ. Mỗi token mang quyền hẹp (`ops:pull`), thu hồi riêng được, máy chủ chỉ giữ bản băm. Khác mật khẩu chung của máy nạp số: mật khẩu chung bị từ chối ở mọi cửa của đường lệnh (ADR-0015, TV4).
+- Code: `machine_token (machine_tokens: name, token_hash, scopes, revoked_at, last_used_at)` · RESO: —
+- Ghi chú: «Máy thu kéo lần cuối» trên màn lệnh là lần dùng cuối của token máy còn hiệu lực có `ops:pull`.
+_Avoid_: API key, bearer chung, token chung
 
 **Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách bài thành tin rao. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các bài gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
 - Code: `context_rule (context_rules)` · RESO: —

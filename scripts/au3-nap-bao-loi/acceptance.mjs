@@ -286,11 +286,15 @@ const mode = process.argv[2];
 // ---------------------------------------------------------- ts-format (vòng 3)
 // Khuôn tên snapshot thật: collector trên main ghi mốc có MILI-GIÂY 'YYYY-MM-DDThhmmssmmm', trùng ms thì thêm '-n';
 // :9210 bản cũ ghi 6 chữ số giây. Cả ba phải nạp ĐÚNG thứ tự thời gian; tên rác (TEST, thiếu giờ) phải bị bỏ.
-function tsSandbox(script) {
+function tsSandbox(script, { boDocGop = false } = {}) {
   const sb = sandbox(script);
   const p = (f) => join(sb.repo, "pipeline", f);
   for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["transform-media.mjs", "transform-media"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
   writeFileSync(p("import-airbnb.mjs"), fakeModule(sb.calls, "import", 'process.argv[2].split("__").at(-1)'));
+  // pl34-lich-dem-sau-buoc: zalo-import-daily.sh gọi `bash pipeline/doc-gop-hang-ngay.sh` sau nhả khoá nạp, trước
+  // enrich-run. Bản giả một dòng ghi lời gọi (nhãn doc-gop-hang-ngay), không chép bản thật — bản thật gọi model trả
+  // phí. boDocGop = đối chứng âm của au3-moi-truong-thu-buoc-doc-gop: không có tệp giả thì bước thoát 127.
+  if (!boDocGop) writeFileSync(p("doc-gop-hang-ngay.sh"), `#!/bin/bash\necho "doc-gop-hang-ngay doc-gop-hang-ngay #1" >> ${JSON.stringify(sb.calls)}\n`);
   fakeEnrich(sb);
   const names = ["2026-10-24T090800123-1", "TEST", "2026-10-24T090755", "2026-10-24", "2026-10-24T090800123", "2026-10-24T090800123Z-x"];
   for (const ts of names) {
@@ -316,9 +320,26 @@ async function modeTsFormat() {
       check(JSON.stringify(order) === JSON.stringify(["2026-10-24T090755", "2026-10-24T090800123", "2026-10-24T090800123-1"]), `${script}: nạp đủ ba khuôn tên thật (6 chữ số, 9 chữ số, có -1) đúng thứ tự thời gian`);
       check(!order.includes("TEST") && !order.includes("2026-10-24") && !order.some((x) => x.endsWith("-x")), `${script}: should-NOT-fire: tên rác (TEST, thiếu giờ, đuôi lạ) không được nạp`);
       check(sb.state() === "2026-10-24T090800123-1", `${script}: state tới mốc thật mới nhất, không nhảy theo tên rác (được ${sb.state()})`);
+      if (script === "zalo-import-daily.sh") {
+        // au3-moi-truong-thu-buoc-doc-gop AC-1: hộp thử đủ bước của job sáu bước — exit 0, đọc gộp (giả) chạy sau lần nạp cuối, trước enrich-run.
+        const iDoc = r.calls.findIndex((l) => l.startsWith("doc-gop-hang-ngay "));
+        const iNap = r.calls.findLastIndex((l) => l.startsWith("import "));
+        const iEnrich = r.calls.findIndex((l) => l.startsWith("enrich-run "));
+        check(r.code === 0, `${script}: MOI TRUONG DU BUOC — hộp thử có tệp giả đọc gộp, job thoát 0 (được ${r.code})`);
+        check(iDoc > iNap && iEnrich > iDoc, `${script}: MOI TRUONG DU BUOC — đọc gộp (giả) chạy sau lần nạp cuối, trước enrich-run (nạp ${iNap} · đọc gộp ${iDoc} · enrich ${iEnrich})`);
+      }
     } finally {
       sb.cleanup();
     }
+  }
+  // au3-moi-truong-thu-buoc-doc-gop AC-2: đối chứng âm trên CÙNG hộp thử, chỉ bỏ tệp giả — phép đo phải thấy thiếu bước.
+  const ctl = tsSandbox("zalo-import-daily.sh", { boDocGop: true });
+  try {
+    const r = run(ctl, "zalo-import-daily.sh", { DATABASE_URL: "acc-khong-ket-noi-db" });
+    console.log(`zalo-import-daily.sh đối chứng thiếu tệp giả đọc gộp: exit ${r.code}`);
+    check(r.code === 127 && /bước doc-gop-hang-ngay mã 127/.test(r.out), `zalo-import-daily.sh: DOI CHUNG THIEU DOC GOP — bỏ tệp giả thì job thoát 127, dòng JOB FAIL gọi tên bước doc-gop-hang-ngay (được ${r.code})`);
+  } finally {
+    ctl.cleanup();
   }
   finish("TS-FORMAT");
 }

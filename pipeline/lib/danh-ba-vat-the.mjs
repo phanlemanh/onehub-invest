@@ -372,3 +372,25 @@ export function slugNutTuSeed(sql) {
 export function traXaCuTheoTen(xaCu, maTinh, ten) {
   return [...new Set(xaCu.filter((r) => r.maTinh === maTinh && r.ten === ten).flatMap((r) => r.vao))].sort();
 }
+
+// ---- DA1 danh-ba-vat-the-toan-quoc: mã tỉnh ISO của khu suy từ khu vực ----
+
+/**
+ * ISO của khu: thị trường của mỗi mã khu vực trong area_ids (market → chính nó, submarket → parent_id; mã không có trong
+ * areas bỏ qua); đúng một thị trường có ISO → ISO đó. Không đọc meta.city (ghi sai cho khu Hưng Yên).
+ * @param {{ slug?: string, area_ids?: string[] }} khu
+ * @param {{ vung: Map<string, {region_type: string, parent_id: string|null}>, isoCuaThiTruong: Map<string, string> }} bang
+ * @returns {{ iso: string } | { loi: "khong-co-tinh" | "nhieu-tinh" | "tinh-khong-co-iso" }}
+ */
+export function isoCuaKhu(khu, { vung, isoCuaThiTruong }) {
+  const thiTruong = new Set();
+  for (const id of khu.area_ids ?? []) {
+    const v = vung.get(id);
+    if (!v) continue;
+    thiTruong.add(v.region_type === "market" ? id : v.parent_id);
+  }
+  if (thiTruong.size === 0) return { loi: "khong-co-tinh" };
+  if (thiTruong.size > 1) return { loi: "nhieu-tinh" };
+  const iso = isoCuaThiTruong.get([...thiTruong][0]);
+  return iso ? { iso } : { loi: "tinh-khong-co-iso" };
+}

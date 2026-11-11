@@ -130,6 +130,8 @@ test("GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng"
   try {
     writeFileSync(path.join(dir, "ops-flow.mjs"), sao);
     copyFileSync(path.join(PIPE, "lib/vn-day.mjs"), path.join(dir, "vn-day.mjs"));
+    // ops-flow nạp hằng NOI_DUNG_SQL từ test-posts.mjs (GN5) — bản sao cần đủ hàng xóm.
+    copyFileSync(path.join(PIPE, "lib/test-posts.mjs"), path.join(dir, "test-posts.mjs"));
     const mut = await import(pathToFileURL(path.join(dir, "ops-flow.mjs")).href);
     assert.throws(() => mut.parseLog(LOG_HONG, { now: NOW }), /Invalid time value/, "mốc hỏng: bản bỏ chặn phải ném");
   } finally {

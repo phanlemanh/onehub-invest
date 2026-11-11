@@ -2,7 +2,7 @@
 // Kiểm TĨNH sổ bề mặt API (hồ sơ so-be-mat-api, NT4): mỗi route.ts dưới app/src/app/api khớp đúng một dòng của
 // app/src/lib/api-surface.ts và cổng trong mã khớp chế độ sổ khai. Đo trạng thái cây, không đo diff.
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
-//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M20 phải TRƯỢT đúng thông điệp
+//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M25 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
 import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
@@ -26,6 +26,8 @@ export const MSG = {
   noop: "chế độ session-or-noop mà khách không nhận 204",
   kqThieu: "phương thức thiếu kiemQuyen",
   kqMode: "chế độ sổ lệch bảng quyền (kiemQuyen)",
+  machine: "chế độ machine mà mã thiếu kiemTokenMay",
+  machineSession: "chế độ machine mà mã nhận phiên người",
 };
 
 // TV1 quyen-bon-vai-mot-cho: route gọi kiemQuyen(req, "<hành động>") — chế độ sổ của mỗi phương thức phải khớp dòng của
@@ -163,6 +165,9 @@ export function checkApiSurface({ entries, files }) {
       if (e.mode === "admin" && !closure.some((g) => /(?<!function\s)\bisAdmin\(/.test(code(files[g] ?? ""))))
         violations.push(`${e.route}: ${MSG.admin}`);
     }
+    // TV4: route chỉ nhận token máy theo tên — phải gọi kiemTokenMay, không có cổng phiên người nào.
+    if (e.mode === "machine" && !/\bkiemTokenMay\(/.test(run)) violations.push(`${e.route}: ${MSG.machine}`);
+    if (e.mode === "machine" && (/\bkiemQuyen\(/.test(run) || sessionGate)) violations.push(`${e.route}: ${MSG.machineSession}`);
     if (e.mode === "ops-session" && bearer) violations.push(`${e.route}: ${MSG.opsSessionBearer}`);
     if (e.mode === "admin" && bearer) violations.push(`${e.route}: ${MSG.adminBearer}`);
     if (e.mode === "session-or-noop" && !/if \(!user\) return new NextResponse\(null, \{ status: 204 \}\)/.test(run))
@@ -343,6 +348,17 @@ export const MUTATIONS = [
   ["M23", "route tin rao bỏ khoá publicOffers", MSG.publicSale, ({ entries, files }) => ({
     entries: entries.map((e) => (e.route === "v1/listings" ? { ...e, publicOffers: false } : e)),
     files,
+  })],
+  ["M24", "route machine (change-requests/pull) bỏ kiemTokenMay", MSG.machine, ({ entries, files }) => {
+    const r = replaceIn(files, routeFile("v1/ops/change-requests/pull"), 'const t = await kiemTokenMay(req, "ops:pull");\n  if (!t.ok) return t.res;', "");
+    return r && { entries, files: r };
+  }],
+  ["M25", "route machine (dựng mới) nhận phiên ops", MSG.machineSession, ({ entries, files }) => ({
+    entries: [...entries, { route: "v1/moi-may", methods: ["GET"], mode: "machine", note: "đột biến" }],
+    files: {
+      ...files,
+      [routeFile("v1/moi-may")]: `import { kiemQuyen } from "@/lib/ops-access";\nimport { kiemTokenMay } from "@/lib/token-may";\nexport async function GET(req: Request) {\n  const t = await kiemTokenMay(req, "ops:pull");\n  if (t.ok) return Response.json({});\n  const q = await kiemQuyen(req, "ops.read");\n  return q.ok ? Response.json({}) : q.res;\n}\n`,
+    },
   })],
 ];
 

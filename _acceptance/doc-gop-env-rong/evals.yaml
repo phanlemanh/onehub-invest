@@ -1,0 +1,29 @@
+schema_version: 1
+feature_slug: doc-gop-env-rong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [pipeline/doc-gop-hang-ngay.sh, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'DGER-AC-1 kho không có .env…' báo ok: không .env → thoát 0, hai lời gọi, không --env-file; có .env → hai lời gọi mang --env-file=<gốc>/.env. Chiều đỏ: bản trước vòng → 'KHONG ENV THI HONG … unbound variable'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [pipeline/doc-gop-hang-ngay.sh, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0; ca 'DGER-AC-2 đối chứng…' báo ok trên /bin/bash 3 (bản trước vòng thoát khác 0, stderr 'ENV_FILE[@]: unbound variable', 0 lời gọi); bash bản khác thì ca báo SKIP kèm lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    paths: [pipeline/doc-gop-hang-ngay.sh, agent/tests/doc-gop-hang-ngay.test.ts]
+    expected: "exit 0 ở worktree không có .env; ca 'PL34-AC-8 bước đêm…' báo ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
