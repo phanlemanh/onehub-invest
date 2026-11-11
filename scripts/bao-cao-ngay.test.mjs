@@ -146,6 +146,20 @@ describe("bất biến của CLI", () => {
   });
 });
 
+/** Phần tử độ tươi không mang đúng mã nguồn `S` + hai chữ số (S01…S99) — báo cáo ngày không được in tên nguồn thật.
+ * Hồ sơ thuoc-lech-ma-nguon-va-lich-s05 AC-1: bộ đăng ký nay có S10 trở lên, khuôn cũ `^S0\d` đỏ oan. */
+function chiMaNguon(ds) {
+  return ds.filter((x) => !/^S\d{2}\//.test(x));
+}
+
+describe("TL-AC-1 hàm kiểm mã nguồn hai chiều", () => {
+  test("S01, S10, S11 qua; tên lạ, chữ thường, một chữ số bị gọi tên", () => {
+    assert.deepEqual(chiMaNguon(["S01/vn 461h>48h", "S10/- ?h>null", "S11/- ?h>null"]), []);
+    const hong = ["chotot/vn 3h>2h", "s10/- ?h>null", "S1/- ?h>null"];
+    assert.deepEqual(chiMaNguon(["S01/vn 1h>2h", ...hong]), hong);
+  });
+});
+
 describe("gom() trên DB local (chỉ đọc)", async () => {
   const require = createRequire(new URL("../app/package.json", import.meta.url));
   const pg = require("pg");
@@ -163,7 +177,15 @@ describe("gom() trên DB local (chỉ đọc)", async () => {
       for (const id of ["NS1", "F3", "F5", "P1", "P2a", "H1", "Q1"]) assert.ok(id in kq.so, id);
       const [{ s }] = (await client.query("SELECT current_setting('transaction_read_only') s")).rows;
       assert.equal(s, "off", "gom() phải ROLLBACK, không để lại giao dịch chỉ đọc đang mở");
-      assert.ok(kq.ngu.freshnessBad.every((x) => /^S0\d\//.test(x)), "độ tươi chỉ mang mã S0x");
+      assert.deepEqual(chiMaNguon(kq.ngu.freshnessBad), [], "độ tươi chỉ mang mã nguồn Sxx");
+      // TL-AC-2: nguồn S10 trở lên trong bộ đăng ký phải đi qua đúng hàm kiểm (không chỉ S0x).
+      const [{ n: dangKy }] = (await client.query(
+        "SELECT count(*)::int n FROM source_registry WHERE status = 'active' AND code ~ '^S[1-9][0-9]$'")).rows;
+      const hai = kq.ngu.freshnessBad.filter((x) => /^S[1-9]\d\//.test(x)).length;
+      console.log(`TL-AC-2 độ tươi mã từ S10: ${hai} (bộ đăng ký active có ${dangKy})`);
+      if (dangKy > 0) assert.ok(hai > 0, "độ tươi không có mã nào từ S10 dù bộ đăng ký có");
+      // Chiều đỏ trên chính danh sách thật: thêm một tên nguồn lạ thì hàm gọi đúng tên ấy.
+      assert.deepEqual(chiMaNguon([...kq.ngu.freshnessBad, "chotot/x"]), ["chotot/x"], "độ tươi chỉ mang mã nguồn Sxx");
     } finally {
       await client.end();
     }
