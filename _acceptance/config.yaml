@@ -258,6 +258,9 @@ executors:
     px1_do: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1do --chay node scripts/nap-dvhc-do.mjs"   # danh-ba-phuong-xa-toan-quoc E9 — thước trước/sau theo tỉnh, ROLLBACK
     df4_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4app --chay node --import tsx --test --test-concurrency=1 tests/data-flow-bai-chi-anh.test.tsx"   # bai-nhan-tru-bai-chi-anh E1–E8 — lược đồ tạm, 600 + bộ chạy thật
     df4_cu: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4cu --chay node --import tsx --test --test-concurrency=1 tests/ops-dong-chay.test.tsx tests/dong-chay-cloud.test.tsx tests/df0-chang-theo-ngay.test.tsx tests/df0-dem-de-xuat.test.tsx tests/dong-chay-so-cu.test.tsx"   # bai-nhan-tru-bai-chi-anh E9 — bộ thử dòng chảy có sẵn
+    zalo_import_nhe: node --test scripts/zalo-import-job-nhe.test.mjs
+    zalo_import_khoa: bash db/db-thu.sh oneinvest_suite_zik --chay node --test --test-concurrency=1 scripts/zalo-import-job-khoa.itest.mjs
+    cloud_sync_do: node --test scripts/cloud-sync-do.test.mjs
     refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
     refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
