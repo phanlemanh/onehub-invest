@@ -266,6 +266,7 @@ executors:
     s07_thuan: "bash -o pipefail -c 'cd pipeline && node --test scripts/s07-danh-muc.test.mjs | tee /dev/stderr | grep \"pass 9$\" >/dev/null'"   # thu-danh-muc-s07 E2, E3, E4, E6, E8 — hàm bóc thuần, HTML giả, không DB; đòi đúng chín ca chạy
     s07_db: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node --test --test-concurrency=1 scripts/s07-danh-muc-db.test.mjs | tee /dev/stderr | grep \"pass 8$\" >/dev/null'"   # thu-danh-muc-s07 E1, E5, E7, E9 — 093 + nạp trên lược đồ tạm của DB riêng lượt; đòi đúng tám ca chạy
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
+    ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
@@ -873,6 +874,8 @@ executors:
     s07_nap_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs"   # thu-danh-muc-s07 E10 — nạp mọi snapshot S07 thật của máy thu vào lược đồ tạm, so số đếm độc lập, soát tên miền; chỉ chạy ở máy có raw
     s07_nap_that_doi_chung: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs --doi-chung 2>&1 | tee /dev/stderr | grep \"ĐỐI CHỨNG ĐỎ ĐÚNG\" >/dev/null'"   # thu-danh-muc-s07 E11 — cùng dữ liệu, ba cách phá phải đỏ đúng tên
     ycns_that: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc 6c4ee41db57e718bc280eac462ddbfc245d17df4"
+    ycns_that_klr: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc 7e7b7073dc534f15d12e69cf33231dc198844750"   # yc1-khoang-le-va-doi-chung-do AC-2 — so với bộ đọc của YC1 đã gộp (#419), chỉ đọc DB máy thu
+    ycns_tu_kiem: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --tu-kiem"   # yc1-khoang-le-va-doi-chung-do AC-4 — bốn đột biến, mỗi đột biến bật đúng lý do
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
