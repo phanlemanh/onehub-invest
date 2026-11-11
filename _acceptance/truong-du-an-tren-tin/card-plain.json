@@ -1,0 +1,14 @@
+{"feature_plain":"Mỗi tin rao, ở mọi nguồn, ghi được ba thông tin «thuộc dự án nào, phân khu nào, phường nào» dưới dạng phát biểu có nguồn gốc, để các bước gắn tin vào dự án và đếm mức gắn có chỗ chứa.",
+"will_do":[
+{"id":"AC-1","p":"Sẽ cho ghi dự án, phân khu (kể cả ba phân khu Grand Park đang mang loại cũ) và phường lên tin, với mọi cách ghi hợp lệ: người duyệt, đọc từ nguồn, máy đọc, model, kế thừa."},
+{"id":"AC-2","p":"Sẽ từ chối và gọi tên trường khi ghi sai: trỏ sai loại nút, nút không có thật, giá trị không phải số, phường cấp thị trường, hay ghi nhầm vào toà."},
+{"id":"AC-3","p":"Sẽ giữ nguyên các luật cũ: phường và chủ đầu tư của toà, hai trường tầng của hàng DV4."},
+{"id":"AC-4","p":"Sẽ chạy lại migration bao nhiêu lần cũng không đổi lược đồ."},
+{"id":"AC-5","p":"Sẽ khai ba trường trong sổ từ vựng và tệp ánh xạ RESO: dự án là SubdivisionName, phân khu là extension đủ sáu điều kiện, sổ khớp DB."},
+{"id":"AC-6","p":"Sẽ giữ xanh bộ test pipeline, app và bộ test danh bạ vật thể của 082."}],
+"wont_do":[
+{"id":"OOS-1","p":"KHÔNG dựng cột trên bảng tin hay bộ phân xử, cũng không viết bộ ghi phát biểu dự án — các hàng GCQ2, DF7, DA9."},
+{"id":"OOS-2","p":"KHÔNG làm kế thừa phường từ dự án và không đổi loại ba nút Grand Park (DA1)."},
+{"id":"OOS-3","p":"KHÔNG áp migration 096 lên DB máy thu hay cloud — đó là lời riêng của anh."},
+{"id":"OOS-4","p":"KHÔNG viết thước độ phủ ba trường — DA9 đo phân bố mức gắn mỗi đêm."},
+{"id":"OOS-5","p":"KHÔNG xử lý dòng đỏ đường nền do worktree mới thiếu kiểu Next — môi trường, gỡ bằng next typegen."}]}
