@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b4d0f80a3d660ac9af96992b9a4c9193cadd3063
+verified_commit: c7cf918ed28707194bb2fa65fee86e685446b4fe
 human_signoff:
 ---
 
@@ -25,89 +25,93 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-app-test-chap-chon-e4b-sap-E1-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-E1-r5
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
   output: |
-    Lệnh: cd app && npm test (một lượt, 1/1 đạt, không phương sai)
-    ℹ duration_ms 489477.38475
+    ℹ duration_ms 463327.637625
+    __EXIT=0
 
 - eval: E2
-  run_id: minted-app-test-chap-chon-e4b-sap-E2-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-E2-r5
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.tir_doi_chieu
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
   output: |
-    Lệnh: cd app && node --import tsx --test tests/tin-rao-doi-chieu.test.tsx (một lượt, 1/1 đạt)
-    ℹ duration_ms 98164.329083
+    ℹ duration_ms 102060.059041
+    __EXIT=0
 
 - eval: E3
-  run_id: minted-app-test-chap-chon-e4b-sap-E3-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-E3-r5
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.can_gia_tot_doi_chieu
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
   output: |
-    Lệnh: cd app && node --import tsx --test tests/can-gia-tot-doi-chieu.test.tsx (một lượt, 1/1 đạt)
-    ℹ duration_ms 481233.095125
+    ℹ duration_ms 489317.9925
+    __EXIT=0
 
 - eval: E4
-  run_id: minted-app-test-chap-chon-e4b-sap-E4-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-E4-r5
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
   output: |
-    Lệnh: cd app && npm test (chung một lượt với E1, 1/1 đạt)
-    ℹ duration_ms 489477.38475
+    ℹ duration_ms 463327.637625
+    __EXIT=0
 
 - eval: E6
-  run_id: minted-app-test-chap-chon-e4b-sap-E6-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-E6-r5
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
   output: |
-    Lệnh: cd app && npm test (chung một lượt với E1, 1/1 đạt)
-    ℹ duration_ms 489477.38475
+    ℹ duration_ms 463327.637625
+    __EXIT=0
 
 ### Judgment
 
 - eval: E5
-  judged_by: judge-panel đề xuất (domain-correctness, operational-feasibility, spec-alignment)
+  judged_by: judge panel (domain-correctness, operational-feasibility, spec-alignment) — đề xuất PASS
   verdict: PASS
-  rationale: Bảng thay lời trong design doc đổi đúng vế «trong suite app» của e4b-danh-sach-tin-nhanh AC-3 thành điều kiện chạy riêng, giữ 700 ms và bốn kiểu sắp, không đổi lời can-gia-tot-sua-ba-loi AC-7.
+  rationale: Bảng thay lời chỉ đổi vế «trong suite app» của AC-3 e4b thành điều kiện chạy riêng, giữ 700 ms và bốn kiểu sắp; hàng AC-7 của can-gia-tot-sua-ba-loi ghi «không đổi lời».
+  votes:
+    - domain-correctness: PASS — Bảng thay lời chỉ bỏ vế «và trong suite app (DB của riêng lượt, tám tệp song song)» ở When và «ở cả hai điều kiện» ở Then của AC-3. Giữ nguyên 700 ms và cả bốn kiểu sắp, không trần nào bị nới. AC-7 của can-gia-tot-sua-ba-loi ghi «không đổi lời» và khớp bản đã ký («chạy ca CGT-DC một mình», trần 600 giây).
+    - operational-feasibility: PASS — Chỉ đổi hai chỗ trong AC-3 của e4b; trần 700 ms và bốn kiểu sắp còn nguyên, lời cũ khớp contract đã ký. Dòng AC-7 ghi «không đổi lời». Không câu nào nới trần, bỏ kiểu sắp hay đổi lời ngoài hai chỗ đó.
+    - spec-alignment: PASS — Vế «trong suite app» của AC-3 e4b được đổi thành «chạy riêng trên DB máy thu (executor tir_doi_chieu)». Lời cũ trong bảng khớp nguyên văn contract e4b; 700 ms và bốn kiểu sắp còn; hàng AC-7 ghi «không đổi lời».
   human_override:  # chi nguoi ghi
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-npm_test__bb6271-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-npm_test__bb6271-r5
   exit_code: 0
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-lint-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-lint-r5
   exit_code: 0
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-npm_test__13563d-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-npm_test__13563d-r5
   exit_code: 0
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-test_lint_rules-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-test_lint_rules-r5
   exit_code: 0
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-node_scripts_check_portal_compliance_mjs-r4
+  run_id: minted-app-test-chap-chon-e4b-sap-SUITE-node_scripts_check_portal_compliance_mjs-r5
   exit_code: 0
-  verified_at: 2026-11-11T08:22:40Z
+  verified_at: 2026-11-11T10:18:13Z
 
 ## Known limits
 
@@ -115,20 +119,15 @@ human_signoff:
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+carried tu round 4 — baseline khong do lai round nay
 
-## Judge
-
-Panel đề xuất cho E5 (de human_override trống cho người quyết):
-
-- domain-correctness: PASS — Bảng thay lời trích đúng lời cũ của e4b AC-3. Lời mới bỏ vế «trong suite app» và «ở cả hai điều kiện», thay bằng «chạy riêng trên DB máy thu (executor tir_doi_chieu)». Trần 700 ms và cả bốn kiểu sắp được giữ nguyên. Lời AC-7 của can-gia-tot-sua-ba-loi không bị sửa.
-- operational-feasibility: PASS — Bảng chỉ đổi hai chỗ trong AC-3. Lời cũ trích khớp AC-3 hiện hành, trần 700 ms và bốn kiểu sắp đều còn, không hằng trần nào đổi. Hàng AC-7 ghi «không đổi lời» và lời AC-7 trong hợp đồng vẫn là «chạy ca CGT-DC một mình», 600 giây, tối đa 5 lời gọi cùng lúc.
-- spec-alignment: PASS — Bảng trích đúng nguyên văn vế cũ của e4b AC-3. Lời mới chỉ bỏ vế suite, giữ 700 ms và «ở cả bốn kiểu sắp». Hàng AC-7 khớp contract. Contract app-test-chap-chon-e4b-sap AC-3 và Out of scope nhắc lại đúng hai điểm này.
+none — không eval nào được liệt kê là không-phân-biệt; lệnh suite xanh-cả-hai-phía là regression-guard bình thường.
 
 ## Variance
 
-none — mọi eval nhiều lượt đều đồng nhất (mọi eval chạy một lượt, không phương sai)
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 4: E1, E2, E3, E4, E6 xanh và đều red trên baseline, E5 do panel đề xuất PASS, năm lệnh suite xanh. Lịch sử các round trước nằm trong run-log.jsonl.
+Round 1-4: xem run-log.jsonl cùng thư mục (lịch sử các vòng trước).
+Round 5: E1-E6 đều đạt, không eval nào đỏ, baseline không đo lại (evals.yaml không đổi từ round 4).
