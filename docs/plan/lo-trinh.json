@@ -5104,6 +5104,69 @@
       ]
     },
     {
+      "dung_tren": [],
+      "dot": "danh-ba-du-an-toan-dien-0911",
+      "nhom": "danh-ba-du-an",
+      "ma": "DA29",
+      "slug": "s10-bang-hang-vao-danh-ba",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "cau_giao": "Bảng hàng chủ đầu tư S10 (sản phẩm, giá, trạng thái) nạp vào stg_s10 và đọc được ở danh bạ dự án",
+      "vi_sao": "Quỹ căn S08, S10 là tin sơ cấp của dự án (DA17; mô hình danh bạ §2, mục 44); bảng hàng S10 chưa có bảng stg nào đọc.",
+      "vung": [
+        "db/migrations/089_s10_bang_hang.sql",
+        "pipeline/transform-s10*"
+      ],
+      "ghi_chu": "Migration 089; đang làm ở dãy P3 đợt dot0-cam-mau.",
+      "phu": [
+        "DA29"
+      ]
+    },
+    {
+      "dung_tren": [
+        "DA29"
+      ],
+      "dot": "danh-ba-du-an-toan-dien-0911",
+      "nhom": "danh-ba-du-an",
+      "ma": "DA24a",
+      "slug": "nn1-du-an-cong-khai-vao-danh-ba",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "cau_giao": "Dự án chủ đầu tư tự công khai trên hệ thống thông tin nhà ở quốc gia (S11) nạp vào stg và vào danh bạ dự án",
+      "vi_sao": "Mạnh 10/11 chốt DAZ4: chỉ thu phần công khai của nguồn nhà nước, bỏ xin quyền khai thác theo NĐ 357; thông tin dự án là công khai (mục 38).",
+      "vung": [
+        "db/migrations/090_nn1_du_an.sql",
+        "pipeline/transform-nn1*"
+      ],
+      "ghi_chu": "Phần thu công khai của DA24 (DAZ4 chỉ thu phần công khai, Mạnh 10/11); migration 090. DA24 ở mục chờ giữ phần xin quyền khai thác.",
+      "phu": [
+        "DA24a"
+      ]
+    },
+    {
+      "dung_tren": [],
+      "dot": "danh-ba-du-an-toan-dien-0911",
+      "nhom": "danh-ba-du-an",
+      "ma": "DA30",
+      "slug": "stg-du-an-s08",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "cau_giao": "Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng",
+      "bat_khi": "177 dự án S08 có dòng; 174/177 có điểm; nạp lại cùng snapshot 0 dòng mới",
+      "vi_sao": "Kiểm kê 11/11: S08 có 177 dự án kèm địa chỉ, CĐT, điểm (174/177) trong raw nhưng chưa bảng nào đọc — mất lớn nhất ở raw → stg (mô hình danh bạ chặng D1→D2, mục 44)",
+      "vung": [
+        "db/migrations/094_stg_s08_du_an.sql",
+        "pipeline/transform-s08-du-an*"
+      ],
+      "ghi_chu": "Bộ nạp raw→stg thuộc làn ZCode, migration và transform làn Claude.",
+      "phu": [
+        "DA30"
+      ]
+    },
+    {
       "ma": "DF6",
       "slug": "bai-nhan-tru-bai-chi-anh",
       "hang": "T2",
