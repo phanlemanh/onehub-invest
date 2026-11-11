@@ -5,7 +5,7 @@ slug: nhan-trang-thai-nguon-draft
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-11-nhan-trang-thai-nguon-draft-design.md
 approved_by: Mạnh
 approved_at: 2026-11-11
@@ -40,3 +40,9 @@ Bỏ quét không gian AC — xem dòng sổ `descope` «bỏ coverage-scan»: b
 - Hai chỗ đỏ có sẵn trên main mà đường nền thấy, không do hàng này: tsc thiếu kiểu `LayoutProps`/`PageProps` ở worktree mới chưa sinh `.next/types` (gỡ bằng `next typegen`, môi trường), và ca đo giờ `E4B-AC-3` (801 ms > 700 ms khi máy tải nặng).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Bảng nhãn trạng thái nguồn vẫn viết tay ngoài sổ từ vựng chung; thêm trạng thái mới phải nhớ sửa bảng, ca kiểm thuần sẽ đỏ nhắc.
+  - Ngoài-2: Thẻ Cổng Phạm vi của hàng này hiển thị nhầm AC-6 vào mục «sẽ không làm» (lỗi bộ dựng thẻ của kit).
+  - Ngoài-3: Thuật ngữ «Trạng thái mã nguồn» chưa có dòng _Avoid_ cho «Nháp», nên dùng chữ ấy sẽ không bị cảnh báo.
+  - Ngoài-4: Một phép đối chứng phụ trong test dùng bảng nhãn tự dựng thay vì bản trước thật, nên bằng chứng của nó yếu hơn mô tả.

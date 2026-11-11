@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: df1633cc80262ffd103704f53cb7c54ac97bdd74
-human_signoff:
+human_signoff: Mạnh 2026-11-11
 ---
 
 # Evidence Report: nhan-trang-thai-nguon-draft
