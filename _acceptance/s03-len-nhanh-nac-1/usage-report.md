@@ -108,3 +108,43 @@ wall: 2073s
 - **claude-sonnet-5-5**: 3 agent · 9 calls · out 6,674 · in 18 · cache_read 248,430 · cache_create 120,571
 - **claude-haiku-5-5**: 7 agent · 30 calls · out 19,283 · in 60 · cache_read 656,811 · cache_create 251,658
 
+### S4 lượt 4 — wf_d8a704ad-020 (20 agent, 48,525 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 9 | 7,209 | 20 | 460,904 | 79 |
+| synthesize:report | claude-sonnet-5-5 | 5 | 6,178 | 10 | 217,798 | 44 |
+| machine:bash db/db-thu.sh oneinvest_suite_zik -- | claude-haiku-5-5 | 6 | 5,698 | 12 | 165,015 | 426 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 9 | 5,404 | 18 | 224,525 | 1080 |
+| review:conventions | claude-opus-5-5 | 8 | 3,822 | 16 | 289,825 | 44 |
+| review:measurement | claude-opus-5-5 | 5 | 3,769 | 12 | 135,394 | 44 |
+| machine:cd app && npm test | claude-haiku-5-5 | 4 | 3,271 | 8 | 66,502 | 679 |
+| machine:node --test scripts/job-exit.test.mjs | claude-haiku-5-5 | 2 | 2,401 | 4 | 29,029 | 21 |
+| triage | claude-sonnet-5-5 | 2 | 1,703 | 4 | 28,266 | 18 |
+| machine:node --test scripts/s03-nap-nhanh.test.m | claude-haiku-5-5 | 2 | 1,397 | 4 | 29,039 | 13 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,265 | 4 | 29,034 | 25 |
+| machine:node --test scripts/enrich-buoc-job.test | claude-haiku-5-5 | 2 | 1,168 | 4 | 29,035 | 13 |
+| machine:node --test scripts/cloud-sync-do.test.m | claude-haiku-5-5 | 2 | 914 | 4 | 29,035 | 8 |
+| machine:node --test scripts/zalo-import-job-lan. | claude-haiku-5-5 | 2 | 828 | 4 | 29,036 | 21 |
+| machine:node --test scripts/zalo-import-job-nhe. | claude-haiku-5-5 | 2 | 752 | 4 | 29,038 | 14 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 718 | 4 | 29,029 | 5 |
+| machine:node --test scripts/zalo-import-job.test | claude-haiku-5-5 | 2 | 603 | 4 | 29,031 | 12 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 575 | 4 | 29,011 | 38 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 528 | 4 | 29,023 | 4 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 322 | 4 | 24,502 | 8 |
+
+
+wall: 1900s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 14 | 25,522 | 775,382 | 1830 | 12:39:23 | 13:09:53 |
+| review | 3 | 14,800 | 886,123 | 80 | 12:39:23 | 12:40:43 |
+| triage | 1 | 1,703 | 28,266 | 18 | 13:09:53 | 13:10:12 |
+| capture | 1 | 322 | 24,502 | 8 | 13:10:12 | 13:10:19 |
+| synthesize | 1 | 6,178 | 217,798 | 44 | 13:10:19 | 13:11:03 |
+
+- **claude-opus-5-5**: 3 agent · 22 calls · out 14,800 · in 48 · cache_read 886,123 · cache_create 193,001
+- **claude-sonnet-5-5**: 3 agent · 9 calls · out 8,203 · in 18 · cache_read 270,566 · cache_create 136,621
+- **claude-haiku-5-5**: 14 agent · 41 calls · out 25,522 · in 82 · cache_read 775,382 · cache_create 438,411
+
