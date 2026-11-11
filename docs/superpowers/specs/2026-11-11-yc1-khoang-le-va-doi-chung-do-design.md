@@ -28,12 +28,13 @@ Sửa: bỏ `CACH_LE` khỏi nhánh `alec` của mẫu «khoang» (dấu nối �
 mọi mẫu khác `CACH_LE` giữ nguyên, nên «tc 8tr 7-8/11» vẫn ra trần 8 triệu (đầu trên «8/11» không có đơn vị nên không phải
 khoảng). Chỉ sửa khối «Ngân sách»; băm phần ngoài khối (YC1 AC-8) giữ nguyên.
 
-Ma trận ca của `pipeline/scripts/yeu-cau-ngan-sach.test.mjs` thêm mã `khoảng lẻ rời` với bốn ca dương ở bảng trên, cộng ca
-`đến` làm đối chứng và ca ngày giữ nguyên. Tổng ca ghim tăng tương ứng. Chiều đỏ: bản sao đột biến giữ `CACH_LE` ở nhánh
+Ma trận ca của `pipeline/scripts/yeu-cau-ngan-sach.test.mjs` thêm mã `khoảng lẻ rời`, 14 ca: sáu dấu nối mà `NOI` nhận
+(`-`, `–`, `—`, `~`, `đến`, `tới`) × hai đơn vị (tỷ, triệu) sinh từ danh sách, một ca hai đầu cùng lẻ, một đối chứng ngày.
+Tổng ca ghim từ 34 thành 48; băm 34 dòng ca cũ ghim bằng hằng lấy từ main 7e7b7073 để ca cũ không đổi lặng lẽ. Chiều đỏ: bản sao đột biến giữ `CACH_LE` ở nhánh
 `alec` thì thông điệp «KHOANG LE ROI 2 tỷ 5 - 3 tỷ».
 
-Đo lại trên DB máy thu bằng lệnh của YC1, gốc so là main 7e7b7073: mất 0, thuê từ 100 triệu 0, min > max 0; in số bài đổi
-giá trị kèm mẫu.
+Đo lại trên DB máy thu bằng lệnh của YC1, gốc so là main 7e7b7073: tổng và số có ngân sách gốc lớn hơn 0, mất 0, thuê
+từ 100 triệu 0, min > max 0; lệnh in thêm băm tệp bộ đọc gốc và mới (phải khác nhau), số bài đổi giá trị kèm mẫu.
 
 ## Nhóm B — đối chứng đỏ cho bộ dò của lệnh đo
 
@@ -41,8 +42,9 @@ giá trị kèm mẫu.
 thuê từ 100 triệu/tháng, có bài min > max. Lượt chấm YC1 chỉ chứng được lý do «mất»; ba lý do kia in 0 mà chưa từng được
 cho đỏ (YC1 Ngoài-5), và chiều đỏ min > max mà E7 của YC1 hứa không có đường chạy (YC1 Ngoài-1).
 
-1. **Test thuần mới** `pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs`, không DB: gọi `soSanh` + `lyDoDo` với hai bộ đọc
-   giả trên cùng danh sách bài dựng sẵn.
+1. **Test thuần mới** `pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs`, không DB: danh sách bài là chữ thật, bộ đọc A là
+   `docNganSach` + `docDichVu` thật, bộ đọc B là A với đúng một đột biến trên đầu ra thật (không fixture viết tay theo khuôn
+   bên đọc); gọi `soSanh` + `lyDoDo`.
    - Đối chứng dương: hai bộ đọc giống nhau thì không có lý do đỏ.
    - Bốn đột biến, mỗi đột biến bật đúng một lý do, thông điệp ghim:
      - bộ đọc mới làm rơi một bài và không thêm bài nào → `SO CO NGAN SACH GIAM` và `MAT NGAN SACH`;

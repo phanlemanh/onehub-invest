@@ -22,45 +22,46 @@ một hàng để tốn một lượt chấm. Nhóm A (AC-1, AC-2) trả Ngoài-
 
 Nhóm A — `sua-doc-ngan-sach-yeu-cau` Ngoài-3:
 
-- AC-1: Given `cần mua 2 tỷ 5 - 3 tỷ`, `cần mua 2 tỷ 2 - 2 tỷ 5`, `cần thuê 8tr 5 - 9tr`, `cần mua 2 tỷ 5 ~ 3 tỷ`, When
-  đọc ngân sách theo đúng dịch vụ, Then ra 2,5 tới 3 tỷ; 2,2 tới 2,5 tỷ; 8,5 tới 9 triệu; 2,5 tới 3 tỷ. Đối chứng
-  `cần mua 2 tỷ 5 đến 3 tỷ` vẫn ra 2,5 tới 3 tỷ, `tìm thuê tc 8tr 7-8/11` vẫn ra trần 8 triệu. Mọi ca cũ của ma trận YC1
-  giữ nguyên kết quả, tổng ca ghim tăng đúng số ca mới. Bản sao giữ chặn dấu nối ở đầu dưới của khoảng thì đỏ «KHOANG LE ROI
-  2 tỷ 5 - 3 tỷ».
+- AC-1: Given ma trận viết trước «khoảng có phần lẻ viết rời ở đầu dưới» = sáu dấu nối mà mẫu khoảng nhận (`-`, `–`, `—`,
+  `~`, `đến`, `tới`) × hai đơn vị (`cần mua 2 tỷ 5 <nối> 3 tỷ` → 2,5 tới 3 tỷ; `cần thuê 8tr 5 <nối> 9tr` → 8,5 tới 9
+  triệu), cộng `cần mua 2 tỷ 2 - 2 tỷ 5` → 2,2 tới 2,5 tỷ, When đọc ngân sách theo đúng dịch vụ, Then cả 13 ca ra đúng; đối
+  chứng `tìm thuê tc 8tr 7-8/11` vẫn ra trần 8 triệu. 34 ca của ma trận YC1 giữ nguyên chữ và kết quả (băm phần bảng ca cũ
+  bằng băm ở main `7e7b7073`), tổng ca ghim từ 34 thành 48. Bản sao giữ chặn dấu nối ở đầu dưới của khoảng thì đỏ «KHOANG LE
+  ROI 2 tỷ 5 - 3 tỷ».
 - AC-2: Given toàn bộ bài S03 khớp `laYeuCau` trên DB máy thu, When chạy lệnh đo chỉ đọc so với bộ đọc ở main `7e7b7073`,
-  Then 0 bài mất ngân sách, 0 bài thuê từ 100 triệu/tháng, 0 bài min > max, số bài có ngân sách không giảm; lệnh in số bài
-  đổi giá trị kèm mẫu, không ghi gì vào DB.
+  Then tổng bài và số bài có ngân sách ở bộ gốc đều lớn hơn 0; 0 bài mất ngân sách, 0 bài thuê từ 100 triệu/tháng, 0 bài
+  min > max, số bài có ngân sách không giảm; lệnh in băm tệp của bộ đọc gốc và bộ đọc mới (hai băm phải khác nhau), số bài đổi
+  giá trị kèm mẫu, và không ghi gì vào DB.
 
 Nhóm B — `sua-doc-ngan-sach-yeu-cau` Ngoài-5:
 
-- AC-3: Given hai bộ đọc giả trên cùng danh sách bài dựng sẵn, When gọi `soSanh` rồi `lyDoDo` của
+- AC-3: Given danh sách bài dựng từ chữ thật và đầu ra thật của `docNganSach` + `docDichVu` (bộ đọc A), và bộ đọc B là A
+  với đúng một đột biến trên đầu ra thật ấy, When gọi `soSanh` rồi `lyDoDo` của
   `pipeline/scripts/do-ngan-sach-yeu-cau.mjs` trong test thuần mới `pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs`, Then:
   - hai bộ đọc giống nhau → không lý do nào;
   - làm rơi một bài, không thêm → đúng `SO CO NGAN SACH GIAM` và `MAT NGAN SACH`;
   - làm rơi một bài, thêm một bài khác → chỉ `MAT NGAN SACH`;
-  - trả 120 triệu cho một bài thuê → chỉ `THUE TU 100 TRIEU`;
-  - trả min > max cho một bài → chỉ `MIN LON HON MAX`.
+  - nhân trần của bài `cần thuê 8tr 5 - 9tr` lên 120 triệu → chỉ `THUE TU 100 TRIEU`;
+  - đảo min và max của bài `cần mua 2 tỷ 5 - 3 tỷ` → chỉ `MIN LON HON MAX`.
 - AC-4: Given lệnh đo chạy `--tu-kiem`, When chạy, Then nó chạy đúng bốn đột biến của AC-3 qua `soSanh` + `lyDoDo` của
   chính tệp, in «YCNS-DO TU-KIEM PASS 4/4» và thoát 0. Bản chép tệp bỏ nhánh `MIN LON HON MAX` của `lyDoDo` thì tự kiểm
   thoát 1, gọi tên đột biến min > max. Lệnh nối thành executor `ycns_tu_kiem`.
 
-Bảng ca viết trước của AC-1 (mã `khoảng lẻ rời`, ghép vào ma trận của YC1):
+Bảng ca viết trước của AC-1 (mã `khoảng lẻ rời`, ghép vào ma trận của YC1, 14 ca):
 
 | Chữ | Dịch vụ | min | max |
 |---|---|---|---|
-| `cần mua 2 tỷ 5 - 3 tỷ` | sale | 2,5e9 | 3e9 |
+| `cần mua 2 tỷ 5 <nối> 3 tỷ`, `<nối>` ∈ `-` `–` `—` `~` `đến` `tới` (6 ca) | sale | 2,5e9 | 3e9 |
+| `cần thuê 8tr 5 <nối> 9tr`, `<nối>` ∈ `-` `–` `—` `~` `đến` `tới` (6 ca) | rent_lt | 8,5e6 | 9e6 |
 | `cần mua 2 tỷ 2 - 2 tỷ 5` | sale | 2,2e9 | 2,5e9 |
-| `cần thuê 8tr 5 - 9tr` | rent_lt | 8,5e6 | 9e6 |
-| `cần mua 2 tỷ 5 ~ 3 tỷ` | sale | 2,5e9 | 3e9 |
-| `cần mua 2 tỷ 5 đến 3 tỷ` | sale | 2,5e9 | 3e9 |
-| `tìm thuê tc 8tr 7-8/11` | rent_lt | — | 8e6 |
+| `tìm thuê tc 8tr 7-8/11` (đối chứng) | rent_lt | — | 8e6 |
 
 ## Coverage
 
 Bỏ quét không gian (dòng `descope` trong sổ) — hai mục Ngoài đã gọi tên, liệt tay:
 
-- Trục A — khoảng có phần lẻ viết rời: bốn dấu nối (`-`, `~`, `đến`) × hai đơn vị (tỷ, triệu) + đối chứng ngày → AC-1 ·
-  dữ liệu thật → AC-2
+- Trục A — khoảng có phần lẻ viết rời: sáu dấu nối (`-`, `–`, `—`, `~`, `đến`, `tới`) × hai đơn vị (tỷ, triệu) = 12 ô,
+  cộng một ca hai đầu cùng có phần lẻ và đối chứng ngày → AC-1 · dữ liệu thật → AC-2
 - Trục B — bốn lý do đỏ của lệnh đo: mỗi lý do một đột biến, một đối chứng dương → AC-3 · lệnh tự kiểm và nối executor →
   AC-4
 
