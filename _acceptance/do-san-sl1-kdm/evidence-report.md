@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: da5ad394bd0be5fe5778e8a002b8c5e54cdb2e09
-human_signoff:
+human_signoff: Mạnh 2026-11-11
 ---
 
 # Evidence Report: do-san-sl1-kdm

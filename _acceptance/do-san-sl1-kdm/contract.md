@@ -5,7 +5,7 @@ slug: do-san-sl1-kdm
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-10-do-san-sl1-kdm-design.md
@@ -73,3 +73,7 @@ Core → AC-1…AC-4. Later: hai ca SL1-AC-5 «áp 069», «hai thứ tự» —
     vòng 1 KDM quá giờ (đã sửa), vòng 2 `AU11-AC-3` của `scripts/ci-test-module.test.mjs` «Connection terminated
     unexpectedly» (chạy riêng xanh 5/5, main đỏ cùng chỗ). Các ca của chính hàng (KDM-AC-3, KDM-AC-4, KDM-AC-5, KDM-PX1) đo ở
     E3; CI vẫn chạy bộ scripts trên mọi PR.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: ca KDM-PX1 so bộ đo với luật khớp tên hiện tại chứ không chạy lại bên ghi thật; bên ghi đổi luật mà bộ đo không đổi thì ca vẫn xanh.
+  - Ngoài-2: phép quét «không ghi DB ngoài giao dịch» chỉ bắt câu ghi viết thẳng trong hai tệp, không bắt bước ghi gián tiếp qua hàm nhập.
+  - Ngoài-3: số 0 tin sai khu vực của E1 chưa có đối chứng dương trên cùng đường đếm.
