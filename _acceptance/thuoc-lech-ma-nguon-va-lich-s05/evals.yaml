@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: thuoc-lech-ma-nguon-va-lich-s05
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tl_bao_cao
+    expected: "exit 0; ca 'TL-AC-1 hàm kiểm mã nguồn hai chiều' ok, không SKIP: S01/…, S10/…, S11/… qua; chotot/…, s10/…, S1/… mỗi phần tử bị gọi tên trong lỗi (chiều đỏ trên cùng danh sách mẫu)"
+    paths: ["scripts/bao-cao-ngay.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tl_bao_cao
+    expected: "exit 0; ca 'ra đủ số chính, không để giao dịch mở' ok trên DB máy thu, không SKIP; ca in dòng 'TL-AC-2 độ tươi mã từ S10: <n>' với n > 0 (bộ đăng ký máy thu có S10, S11); cùng ca gọi chiMaNguon trên danh sách thật cộng 'chotot/x' và lỗi gọi tên 'chotot/x' kèm 'độ tươi chỉ mang mã nguồn Sxx'"
+    paths: ["scripts/bao-cao-ngay.test.mjs", "scripts/bao-cao-ngay.mjs", "scripts/lib/freshness.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tl_lich_s05
+    expected: "exit 0; 'TL-LICH-S05 PASS'; đủ các dòng ok của probe cũ (trừ kiểm '^4 day') cộng hai dòng ok 'cửa sổ mặc định bằng S05_NEWER_THAN_MAC_DINH' và 'S05_NEWER_THAN_MAC_DINH ≥ 4 ngày'"
+    paths: ["_acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/lich-s05.mjs", "pipeline/apify-facebook-collector.mjs", "pipeline/cron/com.oneinvest.apify-facebook.plist"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tl_lich_s05_tu_kiem
+    expected: "exit 0; 'TL-LICH-S05 TU-KIEM PASS': đột biến hằng giả '3 days' in đúng 'FAIL S05_NEWER_THAN_MAC_DINH ≥ 4 ngày' (kiểm bằng hằng vẫn ok); đột biến bộ dựng trả cứng '3 days' với hằng thật in đúng 'FAIL cửa sổ mặc định bằng S05_NEWER_THAN_MAC_DINH'; '4 days' và '96 hours' qua kiểm ≥ 4 ngày"
+    paths: ["_acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/lich-s05.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tl_thay_e11_e12
+    expected: "exit 0; 'TL-THAY PASS': E11, E12 của khoa-nap-s05-paused có status not-run + superseded_by thuoc-lech-ma-nguon-va-lich-s05#AC-3, ô khác không khai; bốn bản chép hỏng mỗi bản cho lỗi gọi tên đúng ô (E11 thiếu superseded_by · E12 superseded_by sai · E12 chưa khai status · E13 khai status); chungThayBoi của kit trả 'ho-so-thay-chua-ky' (trước chữ ký) hoặc ok (sau chữ ký) cho E11 và E12, và trên bản chép hợp đồng bỏ thẻ khoa-nap-s05-paused/E11 trả 'thay-khong-nhan'"
+    paths: ["_acceptance/khoa-nap-s05-paused/evals.yaml", "_acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/thay-e11-e12.mjs", "_acceptance/thuoc-lech-ma-nguon-va-lich-s05/contract.md"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tl_ma_bao_cao
+    expected: "exit 0; 'TL-MA-BAO-CAO PASS (3 tệp, 5 hình thái)'; tự kiểm trong cùng lượt: năm bản chép, mỗi bản chèn một hình thái (regex S0\\d, startsWith S0, nối 'S0' +, ^S\\d$, slice(0, 3)), bộ quét in đúng một dòng gọi tên hình thái + tệp + dòng"
+    paths: ["_acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/ma-bao-cao.mjs", "scripts/bao-cao-ngay.mjs", "scripts/lib/bao-cao-ngay.mjs", "scripts/lib/freshness.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
