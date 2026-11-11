@@ -107,7 +107,54 @@ Khi một kênh bắt đầu ghi `seller`, manifest của kênh đó chuyển `s
 (theo vòng thu số riêng được cấp); kênh chưa ghi seller giữ version cũ — importer
 chấp nhận cả hai.
 
+## Nguồn S10 `s10-bang-hang` — bảng hàng chủ đầu tư (v8)
+
+- Thư mục `vn/vn__s10-bang-hang__<id>/` (`city = "vn"`, nguồn nhiều tỉnh). **Một snapshot = một `project_id`** (1–2 item).
+- Thu qua phiên đăng nhập của Mạnh (giá chỉ hiện khi đăng nhập). Phiên là tầng A: không có trong snapshot, không rời máy.
+  Tên nguồn thật chỉ ở `source_registry` local; script thu giữ ở `research-local/` vì mang tên miền.
+- Nhịp: chạy tay theo luật thu nguồn mới đã duyệt (nghỉ ≥5s, tuần tự, dừng khi 403/429/mất phiên/đòi xác minh); chưa có lịch.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `stock_table` | `p<project_id>-bt<block_type>` (177 thấp tầng · 178 cao tầng) | `{ html, cond, order_by, total_record, html_options_TCBG }` | `request` (mọi tham số đã gửi: `project_id`, `block_type`, `block_id`, `block_is_project`, và từ lượt 11/11 `price_min`, `price_max`, `area_min`, `area_max`) · `endpoint` · `sessionLoggedIn` · `rows` (số `tr.p_row` lúc thu) · `projectLabel` |
+| `project_tree` (dự kiến) | `tree-<yyyymmdd>` | cây dự án → phân khu → `project_id` từ trang danh sách | `request` |
+
+Luật đọc:
+1. **Bộ lọc mặc định của máy chủ:** lời gọi không kèm `price_*`/`area_*` bị lọc (`cond` cho thấy). Snapshot không có
+   `meta.request.area_max` (lượt 10/11) là THIẾU — bộ nạp bỏ qua; mỗi `sourceId` chỉ nạp snapshot mới nhất có đủ bộ lọc.
+2. Một dòng sản phẩm = `tr.p_row` trong `payload.html`; khoá nguồn `stock_id` nằm trong `data-url` của ô đầu; **giá nằm trong
+   chú thích HTML** (`<!-- … -->`) — bộ bóc phải đọc cả phần chú thích. Cột hiện khác nhau giữa 177 và 178 (bảng cột ở
+   `research-local/s10-thu-them-20261110.md`).
+3. Thông tin dự án, giá chủ đầu tư, trạng thái quỹ căn là công khai (ROADMAP §3 mục 38); tên nguồn thật vẫn tầng A.
+
+## Nguồn S11 `s11-nn1-du-an` — tra cứu công khai dự án của nhà nước (v8, DA24a)
+
+- Thư mục `vn/vn__s11-nn1-du-an__<id>/` (`city = "vn"`). Chỉ phần công khai không đăng nhập; không form, không vượt captcha.
+  Phạm vi lượt đầu: dự án có mục tiêu đầu tư «Nhà ở thương mại» và «Thương mại, dịch vụ/văn phòng».
+- Nhịp: một lượt/tuần chạy tay (lượt đầu 10/11: 478 dự án, 8.986 BĐS, 0 lỗi); chưa có lịch.
+
+| `kind` | `sourceId` | `payload` (nguyên văn) | `meta` |
+|---|---|---|---|
+| `project_list_page` | `list-thuong-mai-p<trang>` | `{ json: { rows[{id, code, name, developers, address}], page, pageSize, total, hasNext, partial, areaOptions } }` | `request` (`query`, `investmentObjectives`, `page`, `pageSize` = 10 như trang) · `procedure` |
+| `project_detail` | `du-an-<id>` | `{ detail: {found, id, project{…}}, properties: [trang 1…30 của danh sách BĐS], locations: [] }` | `request {id}` · `procedures` · `tongBds` |
+| `project_properties` | `du-an-<id>-bds-tu-p31` | `{ properties: [trang 31…N] }` — phần bù cho dự án hơn 300 BĐS | `request {id, pageSize, pages[]}` · `procedure` · `tongBds` · `boSungCho` (= `sourceId` item gốc) |
+
+Luật đọc:
+1. Một trang BĐS: `{ rows[{id, projectCode, propertyType, floor, area, updatedAt}], total, … }` — **không có giá, không có
+   trạng thái giao dịch**. Đủ danh sách BĐS của một dự án = `project_detail.properties` ∪ mọi `project_properties` có
+   `boSungCho` trỏ về nó (cùng lượt, `fetchedAt` gần nhau); đối chiếu số dòng với `meta.tongBds`.
+2. `detail.project` mang tên, mã, chủ đầu tư (+ mã định danh), địa chỉ, loại/nhóm dự án, ngày và cơ quan phê duyệt, quy mô,
+   tổng vốn, diện tích, pháp lý — thông tin dự án công khai (mục 38). Không có PII cá nhân.
+3. Mảng `properties` rỗng hoặc `tongBds = 0` là bình thường (đa số dự án chưa công bố BĐS).
+
 ## Lịch sử phiên bản
+
+- **schemaVersion 8 (2026-11-10, liên làn thay làn thu — DA24a S11, bảng hàng S10)**: thêm hai nguồn `s10-bang-hang`
+  (kind `stock_table`, `project_tree`) và `s11-nn1-du-an` (kind `project_list_page`, `project_detail`, `project_properties`)
+  — hình dạng ở hai mục nguồn phía trên. RawItem không thêm trường chung. Snapshot hai nguồn này ghi ngày 10/11 mang
+  `schemaVersion 4` (ghi trước khi khai, cùng hình dạng — bất biến, giữ nguyên); từ lượt kế ghi 8 (`SnapshotWriter` nhận
+  `{ schemaVersion: 8 }`). **Bên import phải chấp nhận `{1..8}`** và thêm hai nguồn vào ALLOWLIST cùng migration bảng
+  `stg_s10_*` / `stg_s11_*` (làn Claude, sổ số migration giữ số); trước đó snapshot hai nguồn bị bỏ qua có dòng báo, không lỗi.
 
 - **schemaVersion 6 (2026-11-05, ma-album-s03 — gộp cùng v7 để hai nhánh không xung đột)**:
   thêm `RawItem.meta.albumMeta` cho kênh tin S03 (khoá album từ

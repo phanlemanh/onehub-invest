@@ -7,7 +7,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 
 | Script | Purpose |
 |--------|---------|
-| import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
+| import-airbnb.mjs | Import snapshots (verify sha256, write staging tables); nhận schemaVersion {1..8}; nguồn `s10-bang-hang` → `stg_s10_stock` (089) qua `lib/s10-bang-hang.mjs` (bóc theo vị trí ô gồm ô trong chú thích, lệch khuôn giữ `raw_row`; item thiếu bộ lọc rộng bỏ; DB chưa có 089 in `CHUA-AP-089`, không đánh dấu snapshot) |
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
 | transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1); bài không ghi «bán/cho thuê» được suy loại (RM1: Yêu cầu → cửa vào → đơn vị giá → tín hiệu bán → mục đích nhóm, `suyLoai`), log đếm theo nguồn; SV1: DT có phẩy, PN viết tắt, phường trùng hướng phải gọi đích danh, số ngữ cảnh không thành giá, thuê từ 1 tỷ không đơn vị thời gian thành bán (`chinhLoaiThueTy`), giá che số lưu số sàn, giá không đơn vị sau công tắc `giaKhongDonVi` mặc định bật, toà và trục qua phát biểu `parser` (`docToaTruc`, `phatBieuToaTruc`), trục vào khoá gom `repostKey` |
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
