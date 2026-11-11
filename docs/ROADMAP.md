@@ -669,6 +669,25 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Hỏi-5: **khuôn chung bản ghi nguồn** (§1.1) làm trong DA3, không mở hàng riêng.
     Theo §6 (đối chiếu mã): DA3 kèm migration mở `registry_aliases`, `registry_events` (055) cho nút dự án và nguồn S10–S15.
     Sửa lời hàng: DA3, DA16, DA18, DA20, DAZ3. Không hàng mới.
+45. **Kiểm kê danh bạ dự án: trang gốc ↔ dữ liệu** (11/11, Mạnh «Theo khuyến nghị» cả sáu câu Q1–Q6; căn cứ: bản kiểm kê local
+    ngày 11/11 (research-local, không vào kho vì có ảnh trang gốc)). Phát hiện chính:
+    - Mất lớn nhất ở bước **raw → stg**: lớp dự án S08 (177 dự án: địa chỉ, chủ đầu tư, điểm 174/177…) không bảng nào đọc;
+      S09, S10, S11 có raw nhưng chưa có bảng stg.
+    - **0 phát biểu cấp dự án**; bảng nối S08 mới nối **8/177** dự án (vào 2 nút), 27 dự án mới chưa có trong bảng nối.
+    - App **chưa có trang danh bạ, chưa có trang dự án** (Ops không có mục, Invest không có route).
+    Sáu câu đã duyệt:
+    - Q1: thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án (mỗi ô có giá trị, ngày snapshot, trạng thái khớp/lệch/trống;
+      nút mở trang gốc chỉ ở máy thu). Sửa DA20, DN2.
+    - Q2: hàng stg cấp dự án S08 (**DA30**, đã có) đứng trước DA3. Sửa ghi chú DA30, DA3; `dung_tren` của DA3 thêm DA30.
+    - Q3: S10, S11 vào stg đã có mã (DA29, DA24a); mở rộng DA16 sang S11 (pháp lý, quy mô), DA16 đứng trên DA24a. S10 đi cùng DA17.
+      Sửa DA16, DA17.
+    - Q4: S09 lấy toà từ trang công khai (dữ liệu nền của trang có 115 toà Ocean Park 1, 61 toà Grand Park, kèm ngày bàn giao từng
+      toà); đóng DAZ1 với số đo mới, việc thu là làn ZCode. Sửa DAZ1.
+    - Q5: bản ghi nguồn cấp lô/toà (S11: Ocean Park 1 là 4 bản ghi cấp lô, tên pháp lý khác) nối vào toà/phân khu có sẵn qua thẻ
+      từng cặp; đủ 20 mẫu thì viết thẻ luật. Cùng DA3: quy ước giá trị rỗng giả («Đang cập nhật», «--», «0»), nối lại S08 theo
+      snapshot mới. Sửa DA3.
+    - Q6: lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode. Sửa ghi chú DA29.
+    Mục chờ DA22 thêm ghi chú: 3/3 mẫu lệch tên chủ đầu tư, đo lệch ngay khi có stg; chưa chuyển thành hàng. Không hàng mới.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
