@@ -5,7 +5,7 @@ slug: app-test-chap-chon-e4b-sap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10
@@ -68,3 +68,11 @@ bị chạm ở AC-3.
 
 - Câu chỉ người biết (sổ, Hỏi-1, Hỏi-2): đổi lời tiêu chí đã ký E4B-AC-3; cho CGT-DC rời bộ chung.
 - Đổi khuôn sau 3 lượt chấm REJECT vì môi trường (Mạnh «Đổi khuôn, chấm lượt 4», 11/11): thêm AC-4; không nới trần nào.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: Ca SCB-AC-1 chỉ khớp cách viết lệnh test, không chứng biến bộ chung tới được tiến trình test (E1 chạy thật đã phủ).
+  - Ngoài-2: Hai ca đo thời gian E2, E3 khai vào model_evals nên tổng kết lượt chấm đếm nhầm là ca gọi model thật.
+  - Ngoài-3: E3 chạy hơn 9 phút mà chưa khai long_running, làn chấm có thể cắt sớm.
+  - Ngoài-5: Một truy vấn lỗi giữa chừng làm hỏng kết nối giữ ảnh chụp, các lần đọc sau đỏ dây chuyền.
+  - Ngoài-6: Bước giữ ảnh chụp hỏng giữa chừng thì rò kết nối, tiến trình test có thể treo tới 20 phút.
+  - Ngoài-7: Bộ kiểm trần có tên không bắt tham số số lượt thử lại `lan = 5` của thuLai.
+  - Ngoài-8: Kiểm «DB đổi sau đối chiếu» luôn xanh khi đọc trong ảnh chụp chung, không còn bắt ghi nhầm.

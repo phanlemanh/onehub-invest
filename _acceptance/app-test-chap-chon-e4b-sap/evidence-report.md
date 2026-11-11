@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c7cf918ed28707194bb2fa65fee86e685446b4fe
-human_signoff:
+human_signoff: Mạnh 2026-11-12
 ---
 
 # Evidence Report: app-test-chap-chon-e4b-sap
