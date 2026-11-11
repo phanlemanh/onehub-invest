@@ -164,7 +164,9 @@ GW_LOG="$HOME/Library/Logs/openclaw/gateway.log"
 GW_NEW=$(scan_new_lines "$GW_LOG" "$ROOT/pipeline/logs/zalo-watchdog-gw-marker" history)
 if [ -n "$GW_NEW" ]; then
   # L4b trên gateway.log
-  if echo "$GW_NEW" | grep -q "auto-reply/agent-turn-timing"; then
+  # AC-11 (0511-16 mở lại lần 2): ống nối echo|grep -q dưới pipefail trả không-khớp
+  # với khối lớn (>bộ đệm pipe, tái hiện 400 KB trên bash 3.2) — dùng here-string
+  if grep -q "auto-reply/agent-turn-timing" <<< "$GW_NEW"; then
     alert "agent-turn MỚI trong gateway.log (auto-reply chạy dù config an toàn) — hành vi sự cố 2026-10-20"
   fi
   # L4a — mention-gate drop là hành vi ĐÚNG, nhưng bùng nổ đếm = bất thường
@@ -178,10 +180,120 @@ fi
 # L4b trên log /tmp theo ngày (nơi launchd ghi)
 if [ -f "$OC_LOG_GLOB" ]; then
   TMP_NEW=$(scan_new_lines "$OC_LOG_GLOB" "$MARKER")
-  if [ -n "$TMP_NEW" ] && echo "$TMP_NEW" | grep -q "auto-reply/agent-turn-timing"; then
+  if [ -n "$TMP_NEW" ] && grep -q "auto-reply/agent-turn-timing" <<< "$TMP_NEW"; then
     alert "agent-turn MỚI từ kênh xã hội (auto-reply chạy dù config an toàn) — hành vi sự cố 2026-10-20"
   fi
 fi
+
+# L4d — AGENT TURN THEO DB (0511-16): lượt agent với tổng dưới 10 giây và
+# không giai đoạn nào từ 5 giây KHÔNG in dòng timing (totalWarnMs 1e4 /
+# stageWarnMs 5e3) nên L4b bỏ sót — bộ canh đã từng chỉ bắt được 30/10 vì
+# lượt đó kịp in timing. Đếm bảng transcript_events trong MỌI
+# ~/.openclaw/agents/*/agent/openclaw-agent.sqlite (glob — không liệt kê
+# cứng agent). Chỉ SELECT COUNT(*)/MAX(created_at) qua sqlite3 CHỈ-ĐỌC
+# thích ứng: mode=ro khi kho đang mở WAL (có -wal), immutable=1 khi kho đóng
+# sạch không tệp phụ (đọc mode=ro lúc đó lỗi rc 14 — tái hiện + gặp thật
+# 06/11) — KHÔNG đụng cột nội dung (event_json, event_zstd,
+# navigation_json), không in nội dung phiên.
+#   baseline: lần chạy đầu của L4d (cờ .first-done chưa có) chỉ ghi mốc cho
+#   kho CHƯA có mốc; kho đã có mốc (lần đầu bị ngắt giữa vòng) được so như
+#   thường — lượt mới giữa chừng không bị nuốt vào mốc. Lượt LỊCH SỬ (30/10
+#   đã xử lý) không kill.
+#   Từ lượt thứ hai: DB MỚI xuất hiện có count>0 là KILL ngay (DB đó sinh ra
+#   vì chính lượt đầu của agent — 0511-16 mở lại), chỉ DB mới rỗng 0|0 mới
+#   baseline; count TĂNG hoặc max TĂNG so marker → KILL. count GIẢM mà max
+#   không tăng → WARN + cập nhật marker (dòng bị chuyển sang archives —
+#   kho có session_transcript_archives/cold_archives), không kill.
+#   marker cố ý KHÔNG tự tiến sau khi KILL: bật lại gateway là lượt kế kill
+#   tiếp cho tới khi người đọc xử marker — luật 8 cần người đọc trước khi
+#   bật lại (0511-16 mở lại; runbook của liên làn).
+#   DB không đọc được sau 3 lần thử (mỗi lần timeout 5s, cách 2s — một lần
+#   busy/migration thoáng qua KHÔNG tắt gateway) / thiếu bảng / cột đổi tên
+#   / đầu ra lệch khuôn ^count|max$ → alert ĐỎ fail-closed, KHÔNG im lặng
+#   coi là 0. MỐC HỎNG (rỗng/sai khuôn) cũng ĐỎ, giữ nguyên tệp mốc; mốc
+#   ghi nguyên tử (tệp tạm + mv). Giữ L4b dò chuỗi timing song song: hai nguồn độc lập —
+#   session bị xoá khỏi DB vẫn còn dấu trong log gateway, và ngược lại lượt
+#   ngắn chỉ thấy ở DB.
+L4D_AGENTS_DIR="$HOME/.openclaw/agents"
+L4D_MARK_DIR="$ROOT/pipeline/logs/zalo-watchdog-agentdb.d"
+L4D_FIRST="$L4D_MARK_DIR/.first-done"
+mkdir -p "$L4D_MARK_DIR"
+# Đọc DB thích ứng (0511-16 mở lại lần 2 điểm 1 — AC-5): kho ĐANG MỞ (có
+# -wal của WAL, hoặc -journal của rollback) đọc mode=ro — được phép sinh -shm
+# và tôn trọng khóa (.timeout); kho ĐÓNG SẠCH (SQLite xoá hết tệp phụ khi
+# kết nối cuối đóng — mode=ro lúc đó lỗi rc 14 «unable to open database
+# file», tái hiện + gặp thật 06/11 02:03 khi làm 0511-17) đọc immutable=1 —
+# không sinh tệp, đọc snapshot; immutable chỉ dùng khi KHÔNG có tệp phụ vì
+# đọc kho đang giữa giao dịch rollback qua immutable có thể ra số chưa nhất
+# quán.
+l4d_read_db() { # $1=DB → in "count|max_created_at"; hỏng/khóa/trái khuôn → exit≠0
+  local db="$1" out i mode
+  if [ -e "$db-wal" ] || [ -e "$db-journal" ]; then mode="mode=ro"; else mode="immutable=1"; fi
+  for i in 1 2 3; do
+    out=$(sqlite3 -cmd '.timeout 5000' "file:$db?$mode" \
+      "SELECT COUNT(*) || '|' || COALESCE(MAX(created_at), 0) FROM transcript_events;" 2>/dev/null)
+    if [ -n "$out" ] && [[ "$out" =~ ^[0-9]+\|[0-9]+$ ]]; then
+      printf '%s\n' "$out"
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
+}
+l4d_cnt() { echo "${1%%|*}"; }
+l4d_max() { echo "${1##*|}"; }
+# Ghi mốc NGUYÊN TỬ (AC-6): tệp tạm trong cùng dir rồi mv — không bao giờ để
+# mốc rỗng/nửa vời giữa chừng.
+l4d_ghi_moc() { # $1=marker $2=value
+  printf '%s\n' "$2" > "$1.tmp.$$" && mv -f "$1.tmp.$$" "$1"
+}
+for L4D_DB in "$L4D_AGENTS_DIR"/*/agent/openclaw-agent.sqlite; do
+  [ -e "$L4D_DB" ] || continue # chưa có agent nào — bình thường
+  L4D_NOW=$(l4d_read_db "$L4D_DB") \
+    || alert "L4d: không đọc được $L4D_DB sau 3 lần thử (DB hỏng/bị khóa kéo dài/thiếu bảng transcript_events/cột đổi tên) — fail-closed, không coi là 0"
+  L4D_AG=$(basename "$(dirname "$(dirname "$L4D_DB")")")
+  L4D_MK="$L4D_MARK_DIR/$L4D_AG"
+  # MỐC HỎNG (AC-6): tệp mốc tồn tại mà rỗng/sai khuôn số|số → ĐỎ, nêu mốc
+  # hỏng, GIỮ NGUYÊN tệp (người sửa gõ sai không được nuốt lượt).
+  if [ -f "$L4D_MK" ]; then
+    L4D_PREV=$(head -c 200 "$L4D_MK" 2>/dev/null || echo "")
+    if [ -z "$L4D_PREV" ] || ! [[ "$L4D_PREV" =~ ^[0-9]+\|[0-9]+$ ]]; then
+      alert "L4d: mốc hỏng của agent '$L4D_AG' (nội dung '${L4D_PREV:0:40}') — giữ nguyên tệp mốc, xử tay rồi mới chạy tiếp"
+    fi
+  else
+    L4D_PREV=""
+  fi
+  if [ -z "$L4D_PREV" ] && [ ! -e "$L4D_FIRST" ]; then
+    # lần chạy ĐẦU của L4d VÀ kho CHƯA có mốc → baseline (lịch sử không kill).
+    # Kho ĐÃ có mốc (lần đầu bị ngắt giữa vòng) rơi xuống nhánh so-sánh như
+    # thường — lượt mới giữa chừng không bị tính vào mốc (0511-16 mở lại lần 2
+    # điểm 2 — AC-2).
+    l4d_ghi_moc "$L4D_MK" "$L4D_NOW"
+  elif [ -z "$L4D_PREV" ] && [ "$(l4d_cnt "$L4D_NOW")" = "0" ]; then
+    # DB mới xuất hiện nhưng chưa có event nào — baseline 0|0, không kill
+    l4d_ghi_moc "$L4D_MK" "$L4D_NOW"
+  elif [ -z "$L4D_PREV" ]; then
+    # DB mới xuất hiện ĐÃ CÓ events từ lượt sau trở đi — chính là lượt chạy
+    # của agent đó (0511-16 mở lại điểm 3): KILL, KHÔNG baseline
+    alert "L4d: agent '$L4D_AG' mới có transcript_events ($L4D_NOW) — lượt agent chạy dù config an toàn, hành vi sự cố 2026-10-20 — SAU KHI ĐIỀU TRA: xử marker $L4D_MK rồi mới bật lại (marker cố ý không tự tiến)"
+  elif [ "$(l4d_cnt "$L4D_NOW")" -gt "$(l4d_cnt "$L4D_PREV")" ] || [ "$(l4d_max "$L4D_NOW")" -gt "$(l4d_max "$L4D_PREV")" ]; then
+    alert "L4d: agent '$L4D_AG' có transcript_events MỚI ($L4D_PREV → $L4D_NOW) — lượt agent chạy dù config an toàn, hành vi sự cố 2026-10-20 — SAU KHI ĐIỀU TRA: xử marker $L4D_MK rồi mới bật lại (marker cố ý không tự tiến)"
+  elif [ "$L4D_NOW" != "$L4D_PREV" ]; then
+    # count GIẢM mà max không tăng: dòng bị chuyển sang archives — WARN, ghi
+    # lại marker, KHÔNG kill (0511-16 mở lại điểm 1)
+    echo "$(date -Iseconds) WARN: L4d agent '$L4D_AG' count giảm $L4D_PREV → $L4D_NOW (dòng chuyển sang archives?) — cập nhật marker, không kill" >> "$ALERT_LOG"
+    l4d_ghi_moc "$L4D_MK" "$L4D_NOW"
+  fi
+done
+# cờ lần-đầu đặt SAU vòng quét: lượt đầu không DB nào cũng coi đã baseline
+[ -e "$L4D_FIRST" ] || touch "$L4D_FIRST"
+# marker còn mà DB mất (agent bị xoá?) — WARN để truy vết, không kill
+for L4D_MK in "$L4D_MARK_DIR"/*; do
+  [ -f "$L4D_MK" ] || continue
+  L4D_AG=$(basename "$L4D_MK")
+  [ -e "$L4D_AGENTS_DIR/$L4D_AG/agent/openclaw-agent.sqlite" ] \
+    || echo "$(date -Iseconds) WARN: L4d marker '$L4D_AG' còn nhưng DB biến mất — agent bị xoá?" >> "$ALERT_LOG"
+done
 
 
 # L4c — COLLECTION STARVED (bài học 22/10: "an toàn 0-turn" có thể là 0 TIN
