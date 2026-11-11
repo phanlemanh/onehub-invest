@@ -5,7 +5,7 @@ slug: thu-danh-muc-s07
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, db]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-thu-danh-muc-s07-design.md
