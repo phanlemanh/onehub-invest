@@ -379,6 +379,28 @@ describe("AU13 cloud-sync", () => {
   }
 });
 
+// ------------------------------------------ s03-len-nhanh-nac-1 cloud-sync-do --
+// Khai riêng, KHÔNG trong JOBS: ma trận AC-3 của AU3 ghim đúng năm job × hai trạng thái.
+const JOB_DO = {
+  script: "scripts/cloud-sync-do.sh",
+  seq: ["trang-thai-chao", "bac-du-lieu", "do-danh-ba-sdt", "do-the-duyet", "mau-soat-cuon-chieu", "do-hang-ngay", "do-lam-giau"],
+  root: () => makeTree("cloud-sync-do", { copy: ["scripts/cloud-sync-do.sh", "scripts/lib/job-step.sh"] }),
+};
+describe("AU13 cloud-sync-do (s03-len-nhanh-nac-1 AC-6)", () => {
+  const J = JOB_DO;
+  test("cloud-sync-do: bac-du-lieu hỏng → ≠0, đúng một dòng ghim, sáu bước còn lại vẫn chạy", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "bac-du-lieu" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync-do", "bac-du-lieu", J.seq), [], r.stderr);
+  });
+  test("cloud-sync-do: hai bước hỏng (3, 5) → thoát 3, hai dòng ghim đúng thứ tự", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "trang-thai-chao:3,do-lam-giau:5" });
+    assert.equal(r.code, 3, "mã thoát phải là mã của bước hỏng ĐẦU TIÊN");
+    const ghim = r.stderr.split("\n").filter((l) => l.startsWith("JOB FAIL"));
+    assert.deepEqual(ghim, [failLine("cloud-sync-do", "trang-thai-chao", 3), failLine("cloud-sync-do", "do-lam-giau", 5)]);
+    assert.deepEqual(r.calls, J.seq);
+  });
+});
+
 // ------------------------------------------------------------------ AC-4 --
 for (const [job, steps] of [
   ["airdna-daily", ["transform-airdna", "dq-truthful-coverage"]],
