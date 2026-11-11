@@ -5,7 +5,7 @@ slug: tu-vung-du-an-muc-39
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [docs, pipeline]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-11T20:05:00Z
 design_doc: docs/superpowers/specs/2026-11-11-tu-vung-du-an-muc-39-design.md
