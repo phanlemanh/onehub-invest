@@ -142,6 +142,9 @@ test("SL1-AC-5 áp 069 chỉ đổi ô luật 069 định đổi (đo trên dữ
     const { rows: [{ n }] } = await c.query(
       "SELECT count(*)::int n FROM field_assertions WHERE field = 'property_type' AND evidence_tier = 'inferred' AND retracted_at IS NULL");
     assert.ok(n >= 1000, `SL1-AC-5: DB thử chỉ có ${n} phát biểu property_type inferred còn sống (cần ≥ 1000 — chép từ máy thu)`);
+    // Dữ liệu máy thu 11/11 không có tin loại (c) (hai giá trị suy, không lớp trên): thêm một tin mồi hai bài trong giao dịch.
+    const c2 = await tinMoi(c, 2);
+    await writeAssertions(c, [pb(c2.posts[0], "property_type", "apartment", "inferred"), pb(c2.posts[1], "property_type", "house", "inferred")]);
     await c.query(HAM_061);
     await resolveOffers(c, null);
     await c.query(SQL_LOAI);
@@ -191,8 +194,13 @@ test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, ch
   const viewTruoc = await dinhNghiaView();
   // Chiều đỏ: view đời 070 có cột tính seller_phone_inferred, bản sao 067 thay view bằng SELECT * thì vỡ — phần gỡ view dưới đây
   // là phần chống đỡ thật của ca (hồ sơ sl1-ac5-the-gioi-069 AC-2).
+  // field_assertions chỉ thêm (trigger field_assertions_guard): tắt trigger đó trong giao dịch để gỡ, ROLLBACK bật lại.
+  const XOA_NGOAI_067 = `ALTER TABLE field_assertions DISABLE TRIGGER field_assertions_guard; DELETE FROM field_assertions WHERE field NOT IN ('property_type', 'bedrooms', 'bathrooms', 'street_raw',
+    'block_raw', 'offer_status', 'street_number', 'unit_number', 'frontage_length', 'lot_size_dimensions', 'stories', 'latitude',
+    'longitude', 'floor_raw', 'unit_facing'); ALTER TABLE field_assertions ENABLE TRIGGER field_assertions_guard`;
   await withTx(async (c) => {
     await c.query(HAM_061);
+    await c.query(XOA_NGOAI_067);
     await assert.rejects(c.query(MIG_067), /seller_phone_inferred/, "SL1-AC-5: phát lại 067 trên view đời 070 không còn vỡ — gỡ view thành thừa");
   });
   for (const [ten, thuTu, mong] of MA_TRAN) {
@@ -200,7 +208,12 @@ test("SL1-AC-5 hai thứ tự với 068 giữ cả fp_sdt lẫn luật mới, ch
       await c.query(HAM_061);
       // 067 chạy CREATE OR REPLACE VIEW sale_offers AS SELECT *; view hiện tại đã có cột của 070. Ca này đo thứ tự áp hàm phân xử,
       // không đo view: gỡ view trong giao dịch để 067 dựng lại (ROLLBACK trả view cũ).
-      if (thuTu.includes(MIG_067)) await c.query("DROP VIEW IF EXISTS sale_offers CASCADE");
+      // Cùng lý do: 067 đặt lại field_assertions_field_chk theo danh sách trường của nó, 082 về sau mở thêm trường — gỡ phát biểu
+      // của trường ngoài danh sách 067 trong giao dịch.
+      if (thuTu.includes(MIG_067)) {
+        await c.query("DROP VIEW IF EXISTS sale_offers CASCADE");
+        await c.query(XOA_NGOAI_067);
+      }
       for (const s of thuTu) await c.query(s);
       const { rows: [{ def }] } = await c.query("SELECT pg_get_functiondef('resolve_offer_fields(text[])'::regprocedure) def");
       assert.equal(def.includes("fp_sdt"), mong.sdt, `${ten}: fp_sdt`);
