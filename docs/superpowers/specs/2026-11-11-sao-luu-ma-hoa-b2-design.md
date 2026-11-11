@@ -68,12 +68,13 @@ thứ:
 1. Kiểm trước, theo thứ tự, mỗi lỗi một mã thoát riêng:
    - tệp xác nhận (mã 3);
    - tệp cấu hình ngoài kho và quyền 600 (mã 4);
-   - có restic (mã 5);
-   - Keychain có mục (mã 6).
+   - Keychain có mục (mã 6; `khoi-tao` bỏ bước này);
+   - có restic (mã 5).
+   Bước Keychain đứng trước restic để thiếu mật khẩu cũng dừng trước mọi lời gọi restic (AC-2).
 2. Dump DB ra thư mục tạm `mktemp -d` ngoài kho. Dump lỗi → ghi trạng thái lỗi, thoát 1, không backup nửa vời.
 3. `restic backup --json --tag onehub-may-thu <nguồn…> --exclude-file <tệp loại trừ sinh từ hằng>`. Đọc dòng `summary`:
    `snapshot_id`, `total_files_processed`, `total_bytes_processed`, `data_added`.
-4. `restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune` (câu hỏi «giữ phiên bản»).
+4. `restic forget --prune --group-by host,tags --tag onehub-may-thu --keep-daily 7 --keep-weekly 4 --keep-monthly 6` — nhóm theo nhãn, không theo đường, vì thư mục dump tạm đổi tên mỗi lượt (câu hỏi «giữ phiên bản»).
 5. Ghi `~/.oneinvest/sao-luu/trang-thai.json` (đổi bằng `SAO_LUU_TRANG_THAI`). Các trường: `lan_chay`, `ket_qua`
    (`ok` hay `loi`), `buoc_loi`, `snapshot_id`, `luc_snapshot`, `so_tep`, `so_byte`, `byte_moi`, `kho_anh`,
    `lan_ok_cuoi`, và `dump_sha256` (sha256 từng tệp của bản dump, tính lúc dump trước khi restic nhận — mốc đối chiếu

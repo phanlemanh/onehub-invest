@@ -356,7 +356,7 @@ không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên 
 - **Theo nhịp**: 15′ cloud-sync + ops-facts (`cloud-sync`) · 15′ tín hiệu sống S03 (`zalo-heartbeat`) · 5′ bộ canh
   (`zalo-watchdog`).
 - **Chạy liên tục** (KeepAlive): `kev-gate` :8009 · `collector-api` (đã chạy dưới launchd) · gateway OpenClaw.
-- **Không chạy dưới launchd**: backup (V1); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
+- **Không chạy dưới launchd**: sao lưu ngoài máy (V1, `scripts/sao-luu-ngoai-may.sh` — công cụ có, chưa nạp lịch); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
 
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
@@ -788,7 +788,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 ### Track 5 — Vận hành
 | # | Việc | Trạng thái |
 |---|---|---|
-| V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
+| V1 | Sao lưu ngoài máy mã hoá: `scripts/sao-luu-ngoai-may.sh` (restic, mã hoá trên máy thu, đích B2 — QĐ3/QĐ5/QĐ15 11/11) — `chay` hằng ngày (dump DB → backup raw snapshot + `collector/state` trừ tệp phiên/khoá + kho ảnh + dump → giữ 7/4/6), `kiem` tuần (≥50 tệp + dump so sha256), `kiem-db` tháng (khôi phục vào DB thử, so `so-dong.tsv`), bước chặn tệp xác nhận «đã cất bản khoá», `check-freshness` đỏ khi quá 36 giờ — `_acceptance/sao-luu-ma-hoa-b2` (T3) | 🔄 S4; chứng minh trên dữ liệu giả + kho cục bộ. Lượt gửi thật chờ luật 6 sửa, thùng + khoá B2 của Mạnh, lời Mạnh; nạp launchd sau hàng P4 (runtime-map); cảnh báo `/ops` hàng riêng |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
