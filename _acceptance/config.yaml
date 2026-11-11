@@ -258,10 +258,14 @@ executors:
     px1_do: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_px1do --chay node scripts/nap-dvhc-do.mjs"   # danh-ba-phuong-xa-toan-quoc E9 — thước trước/sau theo tỉnh, ROLLBACK
     df4_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4app --chay node --import tsx --test --test-concurrency=1 tests/data-flow-bai-chi-anh.test.tsx"   # bai-nhan-tru-bai-chi-anh E1–E8 — lược đồ tạm, 600 + bộ chạy thật
     df4_cu: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4cu --chay node --import tsx --test --test-concurrency=1 tests/ops-dong-chay.test.tsx tests/dong-chay-cloud.test.tsx tests/df0-chang-theo-ngay.test.tsx tests/df0-dem-de-xuat.test.tsx tests/dong-chay-so-cu.test.tsx"   # bai-nhan-tru-bai-chi-anh E9 — bộ thử dòng chảy có sẵn
+    zalo_import_nhe: node --test scripts/zalo-import-job-nhe.test.mjs
+    zalo_import_khoa: bash db/db-thu.sh oneinvest_suite_zik --chay node --test --test-concurrency=1 scripts/zalo-import-job-khoa.itest.mjs
+    cloud_sync_do: node --test scripts/cloud-sync-do.test.mjs
     refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
     refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
     s07_thuan: "bash -o pipefail -c 'cd pipeline && node --test scripts/s07-danh-muc.test.mjs | tee /dev/stderr | grep \"pass 9$\" >/dev/null'"   # thu-danh-muc-s07 E2, E3, E4, E6, E8 — hàm bóc thuần, HTML giả, không DB; đòi đúng chín ca chạy
     s07_db: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node --test --test-concurrency=1 scripts/s07-danh-muc-db.test.mjs | tee /dev/stderr | grep \"pass 8$\" >/dev/null'"   # thu-danh-muc-s07 E1, E5, E7, E9 — 093 + nạp trên lược đồ tạm của DB riêng lượt; đòi đúng tám ca chạy
+    ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
   script:
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
@@ -502,6 +506,10 @@ executors:
     api_matrix_tu_thu: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs --tu-thu"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
+    # bo-canh-dem-luot-agent — L4d chạy bản chép, HOME giả, launchctl/pkill là bản giả; riêng bcdl_doc_that chỉ đọc số trên kho phiên thật
+    bcdl_tho: "node scripts/watchdog-l4d-agentdb/acceptance.mjs"
+    bcdl_doc_that: "env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=\"$HOME\" /bin/bash scripts/watchdog-l4d-agentdb/doc-that.sh"
+    bcdl_tai_lieu: "for f in docs/ops/runtime-map.md docs/ops/runbook-openclaw-hook.md; do grep -q transcript_events $f && grep -q first-done $f && grep -q watchdog-agentdb.d $f || exit 1; done"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"
     zc3_l4a_drop: "node scripts/audit-p1-resilience/acceptance.mjs l4a-drop"
     zc3_l5b_db: "node scripts/audit-p1-resilience/acceptance.mjs l5b-db"
@@ -864,6 +872,7 @@ executors:
     lnb_tai_lieu: "node scripts/link-nguoi-ban-s03/acceptance.mjs tai-lieu"
     s07_nap_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs"   # thu-danh-muc-s07 E10 — nạp mọi snapshot S07 thật của máy thu vào lược đồ tạm, so số đếm độc lập, soát tên miền; chỉ chạy ở máy có raw
     s07_nap_that_doi_chung: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs --doi-chung 2>&1 | tee /dev/stderr | grep \"ĐỐI CHỨNG ĐỎ ĐÚNG\" >/dev/null'"   # thu-danh-muc-s07 E11 — cùng dữ liệu, ba cách phá phải đỏ đúng tên
+    ycns_that: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc 6c4ee41db57e718bc280eac462ddbfc245d17df4"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
