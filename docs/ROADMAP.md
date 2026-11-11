@@ -327,6 +327,11 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   cho ngày áp đã qua (dấu ghi trong ngày áp, sống qua lượt DO1 kế; từ chối thoát 2). TB-AC-11 dựng lược đồ chưa 087 trong giao
   dịch. Chạy `--write` trên máy thu và bật lại bước DO1 trong `cloud-sync.sh`: lời riêng của Mạnh. Hai giới hạn đã biết ở
   `_acceptance/do1-giu-dau-doi-thang/contract.md` §Notes (chạy tay `--ngay` ngày cũ; lượt cuối vắt qua nửa đêm ngày đổi thang).
+- **S03 lên nhanh nấc 1, phần Claude (s03-len-nhanh-nac-1, 10/11)**: lượt nạp nhanh 15′ (`--luot-nhanh`, hàng
+  `s03-nap-nhanh`) cho ba bước transform chờ khoá DB tối đa 10 giây (`PGOPTIONS`); đụng khoá → «BỎ LƯỢT», lùi trọn, lượt
+  sau làm; bỏ 8 lượt liền → JOB FAIL, thoát 75. Bảy bước đo của cloud-sync có job riêng `scripts/cloud-sync-do.sh` (mỗi
+  giờ, plist chờ ZCode); `cloud-sync.sh` tự bỏ chúng khi job giờ vừa chạy trọn dưới 2 giờ, ngược lại tự chạy dưới cùng
+  khoá. Đo 10/11 trên DB thử: transform-zalo + media + bait-gap ≈ 76 s/lượt — LT2 chưa cần.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
