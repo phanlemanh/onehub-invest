@@ -5,7 +5,7 @@ slug: au3-moi-truong-thu-buoc-doc-gop
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-10T07:55:00Z
 design_doc: _acceptance/au3-moi-truong-thu-buoc-doc-gop/design.md
@@ -58,3 +58,5 @@ Bỏ quét không gian — một trục (hộp thử có hay không có tệp gi
 ## Notes
 
 - Tiền lệ sửa hộp thử sau ký: `au3-nap-bao-loi` dòng `d-20261030T234514Z-2` (thêm vong-doi giả, transform-media giả).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Lời mô tả chiều đỏ của E1 ghi hai dòng «(được 127)» nhưng phép đo thật chỉ in một dòng như vậy; phép đo vẫn bắt đúng hai ca đỏ khi thiếu bước đọc gộp.
