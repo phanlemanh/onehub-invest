@@ -17,7 +17,7 @@
 - `floor_raw` khớp `^[1-9][0-9]{0,2}$`; `floor_band` ∈ `lower|middle|upper`; sai → RAISE nêu tên trường. Trường lạ vẫn bị CHECK từ chối.
 - CHECK `field_assertions_field_chk` = tập của 082 (`property_type, bedrooms, bathrooms, street_raw, block_raw, offer_status, street_number, unit_number, frontage_length, lot_size_dimensions, stories, latitude, longitude, builder_name, area_id`) + `floor_raw, floor_band`.
 - Phát biểu: `method_version = 'transform-zalo@dv4'`, `evidence_tier = observed`, `method = parser`, `evidence = {"trich": "<đoạn>"}`, chủ thể là bài (`subjectKey(source, post_id)`).
-- Không đổi `pipeline/sync-cloud.mjs`, không route Zalo, không lệnh áp cloud; nguồn gọi bằng mã S0x; chữ bài không vào kho (mẫu đọc tay ở `research-local/`).
+- Không đổi `pipeline/sync-cloud.mjs`, không route kênh chat S03, không lệnh áp cloud; nguồn gọi bằng mã S0x; chữ bài không vào kho (mẫu đọc tay ở `research-local/`).
 - Ca test mang mã `DV4-AC-<n>` trong tên để executor lọc được.
 
 ## Review Focus

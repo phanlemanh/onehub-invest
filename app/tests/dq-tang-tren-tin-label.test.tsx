@@ -17,7 +17,7 @@ test("DV4-AC-7 nhãn s03-floor-fill: tên kiểm, đối tượng, chi tiết đ
   const duoi = khoi.match(/d\.co_tang \|\| '\/' \|\| d\.tong \|\| '([^']+)'/)
   assert.ok(duoi, "450 đổi khuôn chi tiết — test phải theo")
   for (const [n, m] of [[0, 0], [712, 4801], [1, 4801]]) {
-    const detail = `${n}/${m}${duoi[1]}`
+    const detail: string = `${n}/${m}${duoi[1]}`
     const t = dqDetail("s03-floor-fill", detail)
     assert.equal(t.known, true, `chi tiết «${detail}»`)
     assert.match(t.text, /tầng/)

@@ -857,7 +857,7 @@ executors:
     dv4_do_toan_bo: "bash pipeline/scripts/tang-tren-tin-db.sh do"   # tang-tren-tin-s03 E2, E10 — toàn bộ S03 trong giao dịch ROLLBACK trên DB thử, chỉ in số
     dv4_mau: "node pipeline/scripts/do-tang-tren-tin.mjs --mau"   # tang-tren-tin-s03 E6 — đáp án đọc tay ở research-local, chỉ in số
     dv4_luat: "node pipeline/vocab.mjs --check && bash pipeline/scripts/tang-tren-tin-db.sh luat"   # tang-tren-tin-s03 E8 — ADR-0011 + DQ s03-floor-fill trên DB thử
-    dv4_ranh_gioi: "node pipeline/scripts/do-tang-tren-tin.mjs --ranh-gioi --base origin/main"   # tang-tren-tin-s03 E11 — sync cloud, route Zalo, tên nguồn, mẫu ignored
+    dv4_ranh_gioi: "node pipeline/scripts/do-tang-tren-tin.mjs --ranh-gioi --base origin/main"   # tang-tren-tin-s03 E11 — sync cloud, route kênh chat S03, tên nguồn, mẫu ignored
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

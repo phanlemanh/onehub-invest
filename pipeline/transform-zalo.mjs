@@ -339,6 +339,11 @@ function tangTuMa(m) {
   return so && Number(so) > 0 ? String(Number(so)) : null;
 }
 
+// Bài rổ hàng: từ hai dòng liệt kê (gạch đầu dòng hay số thứ tự) mỗi dòng nêu một loại căn («- 2PN …», «1. Căn hộ 2N1 …») — nhiều
+// căn trong một bài, tầng không thuộc riêng tin nào (đo trên mẫu đọc tay 11/11: 5/18 ca lệch là rổ chỉ có một mã căn).
+const DONG_CAN = /^[ \t]*(?:[-–•*+✅🔸🔹▪️]|\d{1,2}[.)])[ \t]*.*?(?<![\p{L}\d])(?:\d\s*(?:pn|n\+?|ng)|studio|stu|căn\s*hộ|duplex|penthouse)(?![\p{L}])/gimu;
+const laRoHang = (so) => (so.match(DONG_CAN) ?? []).length >= 2;
+
 /** Số tầng hợp lệ (1–999, không đệm) hay null. */
 const soTang = (s) => (s && /^\d+$/.test(s) && Number(s) >= 1 && Number(s) <= 999 ? String(Number(s)) : null);
 
@@ -350,7 +355,7 @@ export function docTang(text, { _dotBien } = {}) {
   const rong = { floor: null, floorBand: null, trich: null };
   const so = gatSo(text).normalize("NFC");
   const ma = maTrongBai(so);
-  if (new Set(ma.map((m) => m[0].toUpperCase())).size > 1) return rong;
+  if (new Set(ma.map((m) => m[0].toUpperCase())).size > 1 || laRoHang(so)) return rong;
   const mSo = so.match(_dotBien === "bo-chan-nhieu-tang" ? TANG_SO_BO_CHAN : TANG_SO);
   if (mSo) {
     const floor = soTang(mSo[1]);

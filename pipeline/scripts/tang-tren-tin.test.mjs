@@ -35,6 +35,10 @@ const MA_TRAN = [
   ["M26", "tang 12", null, null],
   ["M27", "gia tang 5 trieu", null, null],
   ["M28", "S1.12.08 và S2.05.01 tầng cao", null, null],
+  ["M29", "Mã căn: S2.091710, full đồ", "17", null],
+  ["M30", "Rổ hàng:\n- 2PN trống S702 giá 6tr\n- 2PN bếp rèm tầng thấp S9 giá 7tr", null, null],
+  ["M31", "1. Căn hộ 2N1 toà S1.03\n- Tầng 20 ban công\n2. Căn hộ 1N+ toà S2.01", null, null],
+  ["M32", "Bán căn 2PN tầng 12\n- Full đồ\n- Sổ hồng", "12", null],
 ];
 /** Review Focus của kế hoạch: chữ «tầng N» thắng mã căn; chữ NFD + khoảng trắng lạ. */
 const REVIEW = [
@@ -66,7 +70,7 @@ test("DV4-AC-3 ma trận M1…M28 và Review Focus: mỗi ca một assert, tríc
     daChay.push(ma);
   }
   console.log(`ma_ca_da_chay=${daChay.join(",")}`);
-  assert.equal(daChay.filter((m) => m.startsWith("M")).length, 28);
+  assert.equal(daChay.filter((m) => m.startsWith("M")).length, 32);
 });
 
 test("DV4-AC-3 đột biến: bỏ chặn «tầng 2-3» thì M22 đỏ; đọc «T<số>» trần thì M17 đỏ", () => {

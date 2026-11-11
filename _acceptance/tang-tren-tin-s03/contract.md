@@ -59,8 +59,9 @@ Source input: hàng DV4 của `docs/plan/lo-trinh.json`; Cổng Đáng «Build c
   - tin căn hộ S03 có tầng hoặc dải trong 8–25%; in số kèm mẫu số, không in chữ bài;
   - dòng DQ `s03-floor-fill` chạy trên đúng đầu ra đó ra `pass` và tỉ lệ nó in khớp số trên.
 - AC-9: Given diff của hàng so với main, When quét, Then:
-  - `pipeline/sync-cloud.mjs` không đổi, không có lệnh áp cloud, không tệp nào dưới route Zalo đổi;
-  - không tệp nào của diff chứa tên nguồn thật lấy từ `source_registry` local (đối chứng: tên đó trong tệp giả thì quét đỏ);
+  - `pipeline/sync-cloud.mjs` không đổi, không có lệnh áp cloud trong mã hay script, không tệp nào dưới route kênh chat S03 đổi;
+  - không dòng nào hàng này thêm chứa tên nguồn thật lấy từ `source_registry` local đứng riêng như một từ (định danh kỹ thuật đã có
+    trên kho như tên tệp, tên bảng không tính; đối chứng: tên đó đứng riêng trong tệp giả thì quét đỏ, dính trong tên bảng thì không);
   - tệp mẫu đọc tay nằm ở `research-local/` và `git check-ignore` xác nhận.
 
 ## Coverage

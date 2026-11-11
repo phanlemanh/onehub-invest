@@ -9,7 +9,7 @@
     {"id": "AC-6", "p": "Sẽ chạy bình thường trên máy chưa áp migration mới — chỉ bỏ qua phần tầng và báo rõ số migration còn thiếu."},
     {"id": "AC-7", "p": "Sẽ khai đủ sáu điều kiện cho trường dải tầng (RESO không có), có dòng kiểm chất lượng «s03-floor-fill» với nhãn tiếng Việt trên trang chất lượng Ops."},
     {"id": "AC-8", "p": "Sẽ không làm đổi số tin S03 (tầng không vào khoá gom), và khoảng 8–25% tin căn hộ S03 có tầng sau khi đọc."},
-    {"id": "AC-9", "p": "Sẽ không đưa gì mới lên cloud, không đụng đường Zalo, không lộ tên nguồn thật; mẫu đọc tay nằm ngoài kho."}
+    {"id": "AC-9", "p": "Sẽ không đưa gì mới lên cloud, không đụng route kênh chat S03, không lộ tên nguồn thật; mẫu đọc tay nằm ngoài kho."}
   ],
   "wont_do": [
     {"id": "OOS-1", "p": "KHÔNG làm hướng căn — phần đó ở lại SV2."},

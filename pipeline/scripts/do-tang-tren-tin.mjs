@@ -162,13 +162,24 @@ function tepTrongThuMuc(d) {
 async function ranhGioi() {
   const thu = giaTri("--thu-ten-nguon");
   const base = giaTri("--base") ?? "origin/main";
-  const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8" });
+  const git = (...a) => execFileSync("git", ["-C", ROOT, ...a], { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+  // Trang máy sinh (bản đồ sản phẩm, lộ trình) không mang lệnh áp; vẫn được quét tên nguồn như mọi tệp.
+  const BO_SINH = [":(exclude)LO-TRINH.html", ":(exclude)PRODUCT-MAP.md"];
   const tep = thu ? tepTrongThuMuc(thu) : git("diff", "--name-only", `${base}...HEAD`).split("\n").filter(Boolean).map((f) => join(ROOT, f));
   const rel = tep.map((f) => f.slice(ROOT.length + 1));
   const syncCloud = rel.filter((f) => f === "pipeline/sync-cloud.mjs").length;
   const routeZalo = rel.filter((f) => /^app\/src\/app\/.*zalo/i.test(f) || f.startsWith("collector/")).length;
-  const them = thu ? "" : git("diff", `${base}...HEAD`, "--unified=0").split("\n").filter((l) => l.startsWith("+")).join("\n");
-  const apCloud = /supabase\s+db\s+push|api\.supabase\.com/i.test(them) ? 1 : 0;
+  // Dòng thêm theo tệp: lệnh áp chỉ tính ở mã/script (tài liệu được nêu tên lệnh); tên nguồn tính trên dòng thêm — luật hiện hành
+  // chỉ chặn tên MỚI (tên cũ còn trên kho dọn sau 05/11, ROADMAP), nên tên đã có sẵn trong tệp trên nhánh chính không tính.
+  const themTheoTep = new Map();
+  if (!thu) {
+    let tepHt = null;
+    for (const l of git("diff", `${base}...HEAD`, "--unified=0", "--", ".", ...BO_SINH).split("\n")) {
+      if (l.startsWith("+++ ")) { tepHt = l.slice(6); themTheoTep.set(tepHt, []); continue; }
+      if (l.startsWith("+") && tepHt) themTheoTep.get(tepHt).push(l.slice(1));
+    }
+  }
+  const apCloud = [...themTheoTep].filter(([f, ds]) => !/\.md$/.test(f) && /supabase\s+db\s+push|api\.supabase\.com/i.test(ds.join("\n"))).length;
   const c = await noi(DB_CHUNG, { chiDoc: true });
   let ten;
   try {
@@ -178,8 +189,16 @@ async function ranhGioi() {
     await c.end();
   }
   if (!ten.length) { console.error("--ranh-gioi: source_registry không có tên — không soát được thì không báo xanh"); return 2; }
-  const tenNguon = tep.filter((f) => existsSync(f) && statSync(f).isFile())
-    .filter((f) => { const s = readFileSync(f, "utf8").toLowerCase(); return ten.some((x) => s.includes(x)); }).length;
+  const noiDung = thu
+    ? tep.filter((f) => existsSync(f) && statSync(f).isFile()).map((f) => [f.slice(ROOT.length + 1), readFileSync(f, "utf8")])
+    : [...themTheoTep].map(([f, ds]) => [f, ds.join("\n")]);
+  // Tên đứng riêng như một từ trong câu chữ mới tính; tên dính «_ - . / @» là định danh kỹ thuật đã có trên kho (tên tệp
+  // transform-*, bảng stg_*, khoá snapshot) — không phải tên mới đưa ra ngoài.
+  const thoat = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const mau = ten.map((x) => new RegExp(`(?<![\\p{L}\\p{N}_\\-./@])${thoat(x)}(?![\\p{L}\\p{N}_\\-./@])`, "iu"));
+  const coTen = noiDung.filter(([, s]) => mau.some((re) => re.test(s))).map(([f]) => f);
+  const tenNguon = coTen.length;
+  if (coTen.length) console.error(`--ranh-gioi: tệp có tên nguồn thật đứng riêng (tên không in): ${coTen.join(", ")}`);
   let ignored = 0;
   try { execFileSync("git", ["-C", join(homedir(), "dev/onehub-invest"), "check-ignore", "-q", "research-local/tang-tren-tin-s03/mau-doc-tay.jsonl"]); ignored = 1; } catch { ignored = 0; }
   console.log(`sync_cloud_doi=${syncCloud} route_zalo_doi=${routeZalo} ap_cloud=${apCloud} ten_nguon=${tenNguon} mau_ignored=${ignored} tep_quet=${tep.length}`);
