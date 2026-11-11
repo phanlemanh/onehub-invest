@@ -5,8 +5,10 @@ slug: thuoc-lech-ma-nguon-va-lich-s05
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-11-thuoc-lech-ma-nguon-va-lich-s05-design.md
+approved_by: Mạnh
+approved_at: 2026-11-11
 ---
 
 # Acceptance Contract: thuoc-lech-ma-nguon-va-lich-s05
