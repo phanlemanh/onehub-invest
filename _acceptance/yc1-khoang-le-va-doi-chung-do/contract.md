@@ -5,8 +5,10 @@ slug: yc1-khoang-le-va-doi-chung-do
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-11-yc1-khoang-le-va-doi-chung-do-design.md
+veto_state: mo
+veto_opened_at: 2026-11-11T20:40:00Z
 ---
 
 # Acceptance Contract: yc1-khoang-le-va-doi-chung-do
