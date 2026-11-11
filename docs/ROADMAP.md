@@ -688,6 +688,21 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       snapshot mới. Sửa DA3.
     - Q6: lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode. Sửa ghi chú DA29.
     Mục chờ DA22 thêm ghi chú: 3/3 mẫu lệch tên chủ đầu tư, đo lệch ngay khi có stg; chưa chuyển thành hàng. Không hàng mới.
+46. **Kho tư liệu dự án, video thu thử, sao lưu mã hoá** (11/11, Mạnh chốt ba quyết định ở phiên bàn lưu trữ ảnh; căn cứ: bản
+    quyết định và bản phân tích local ngày 11/11 ở research-local, không vào kho):
+    - QĐ1: máy thu giữ **kho tư liệu** của dự án và chủ đầu tư (media, tài liệu bán hàng, văn bản pháp lý, hợp đồng mua bán) làm
+      nguồn tư liệu cho người dùng. Mạnh «Đồng ý, chỉ công khai»: chỉ tài liệu công khai; hợp đồng chỉ bản mẫu, hợp đồng đã ký có
+      thông tin người mua thì không thu, hoặc che hết trước khi lưu.
+    - QĐ2: **video thu thử 2 tuần có trần dung lượng** (Mạnh «Thu thử có trần»); video vượt trần chỉ ghi đường dẫn và vài khung
+      hình. Số trần chưa chốt. Hết 2 tuần đo rồi trình chính sách giữ.
+    - QĐ3: **bản sao lưu mã hoá** (Mạnh «Cho, khoá giữ ở máy», trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài máy
+      không?»). Tầng A được rời máy **chỉ** trong bản sao lưu đã mã hoá ngay trên máy thu; khoá chỉ ở máy thu và một bản Mạnh giữ
+      riêng, không lên cloud, kho git hay kênh nào. Phạm vi bản sao lưu: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ
+      khác tầng A giữ nguyên. Sửa đổi ADR-0007 (mục «Sửa đổi 2026-11-11»). AGENTS luật 6 và `.claude/rules/pii-spl.md` chưa sửa
+      theo, chờ lời trực tiếp của Mạnh.
+    Số đo căn cứ (máy thu, 11/11): 34.063 ảnh, 8,8 GB; 73% là bản trùng; 26,6% lượt tải ảnh S03 lỗi lúc thu; chưa có bản sao lưu ảnh
+    nào; chi phí lưu trữ khoảng 0–5 USD/tháng.
+    Còn mở: nhà cung cấp kho ngoài, trần video, thứ tự nguồn, Invest chỉ hiện dữ kiện hay cho tải tệp. Chưa cắt hàng.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

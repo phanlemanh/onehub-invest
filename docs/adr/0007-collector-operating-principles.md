@@ -272,3 +272,18 @@ Không đổi: bốn thứ tầng A ở sửa đổi 26/10 vẫn không lên kho
 và bộ soát trên đường lên cloud (`sync-cloud`, `push-ops-facts`, `tier-a-guard`) giữ nguyên. Kết quả model trả về đi
 vào DB máy thu như cũ; giá trị nào mang tên nguồn thật vẫn bị che khi rời máy. Luật 7 (LLM ngoài đường ghi dữ liệu)
 giữ nguyên.
+
+## Sửa đổi 2026-11-11 — bản sao lưu mã hoá được rời máy
+
+Mạnh chốt (11/11, phiên bàn lưu trữ ảnh, ROADMAP §3 mục 46) khi trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài
+máy không?»: «Cho, khoá giữ ở máy». Căn cứ: máy thu chưa có bản sao lưu ảnh và raw snapshot nào, mà nguồn không tải lại
+được; snapshot chứa định danh tài khoản thu và tên nguồn thật, thuộc tầng A.
+
+- **Được rời máy:** tầng A, **chỉ** khi nằm trong bản sao lưu đã mã hoá ngay trên máy thu trước khi gửi. Kho ngoài chỉ
+  nhận khối dữ liệu không đọc được.
+- **Khoá:** chỉ ở máy thu và một bản Mạnh giữ riêng. Khoá không lên cloud, kho git hay kênh nào.
+- **Phạm vi bản sao lưu:** raw snapshot, kho gốc ảnh và tư liệu, bản dump DB.
+
+Không đổi: mọi chỗ khác tầng A giữ nguyên — bốn thứ tầng A ở sửa đổi 26/10 vẫn không lên kho công khai, cloud, cổng Invest
+hay API công khai dưới dạng đọc được; mọi bộ che và bộ soát trên đường lên cloud giữ nguyên. Bản sao lưu sang đĩa ngoài cắm
+tại máy thu (§5 DR) không đổi. Còn mở: nhà cung cấp kho ngoài; chưa cắt hàng sao lưu.
