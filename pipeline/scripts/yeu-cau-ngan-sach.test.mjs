@@ -15,6 +15,8 @@ const { docNganSach } = await import(pathToFileURL(TEP).href);
 
 const T = 1e9, TR = 1e6;
 const r = (x) => Math.round(x);
+// Sáu dấu nối mà mẫu «khoang» nhận (NOI của yeu-cau.mjs) — trục A của yc1-khoang-le-va-doi-chung-do.
+const NOI_KLR = ["-", "–", "—", "~", "đến", "tới"];
 // [chữ, dịch vụ, min, max, mã] — bảng ca của hợp đồng, viết trước.
 const CA = [
   ["cần mua 2pn 2ty6", "sale", null, 2.6 * T, "Ngoài-10"],
@@ -51,9 +53,20 @@ const CA = [
   ["mua 2 tỷ 70m²", "sale", null, 2 * T, "chặn phần lẻ"],
   ["mua 2 tỷ 5 tầng", "sale", null, 2 * T, "chặn phần lẻ"],
   ["mua 2 tỷ 2 căn", "sale", null, 2 * T, "chặn phần lẻ"],
+  // yc1-khoang-le-va-doi-chung-do AC-1: khoảng có phần lẻ viết rời ở đầu dưới — sáu dấu nối của NOI × hai đơn vị (ma trận
+  // sinh từ danh sách, không chép tay từng ca), một ca hai đầu cùng lẻ, một đối chứng ngày không thành phần lẻ.
+  ...NOI_KLR.map((n) => [`cần mua 2 tỷ 5 ${n} 3 tỷ`, "sale", 2.5 * T, 3 * T, "khoảng lẻ rời"]),
+  ...NOI_KLR.map((n) => [`cần thuê 8tr 5 ${n} 9tr`, "rent_lt", 8.5 * TR, 9 * TR, "khoảng lẻ rời"]),
+  ["cần mua 2 tỷ 2 - 2 tỷ 5", "sale", 2.2 * T, 2.5 * T, "khoảng lẻ rời"],
+  ["tìm thuê tc 8tr 7-8/11", "rent_lt", null, 8 * TR, "khoảng lẻ rời"],
 ];
-const TONG_CA = 34;
-const MA_PHAI_CO = ["Ngoài-4", "Ngoài-5", "Ngoài-7", "Ngoài-9", "Ngoài-10", "Ngoài-11", "tc", "2ty6", "6tr5", "quay đầu"];
+const TONG_CA = 48;
+// 34 ca đầu là bảng của YC1 (sua-doc-ngan-sach-yeu-cau), không được đổi lặng lẽ: băm JSON của chúng ghim bằng hằng tính ở main
+// 7e7b7073 (`node -e` in cạnh hằng trong ca «YCNS bảng ca»). 14 ca sau là của yc1-khoang-le-va-doi-chung-do.
+const SO_CA_CU = 34;
+const BAM_CA_CU = "8aa6d1a294a921384ce37ff455d32b81440be46ddf7ff8eea118157a9b47d0e2";
+const bamCaCu = (ca) => createHash("sha256").update(JSON.stringify(ca.slice(0, SO_CA_CU))).digest("hex");
+const MA_PHAI_CO = ["Ngoài-4", "Ngoài-5", "Ngoài-7", "Ngoài-9", "Ngoài-10", "Ngoài-11", "tc", "2ty6", "6tr5", "quay đầu", "khoảng lẻ rời"];
 // Ngoài-4/7/9 cùng lớp «min lớn hơn max», Ngoài-5/11 cùng lớp «khoảng thiếu đơn vị»: mỗi lớp đếm gộp; 2ty6, 6tr5 đếm cả
 // ca viết liền của Ngoài-10.
 const LOP = { "Ngoài-4": ["Ngoài-4", "Ngoài-7", "Ngoài-9"], "Ngoài-7": ["Ngoài-4", "Ngoài-7", "Ngoài-9"],
@@ -63,6 +76,7 @@ const VIET_LIEN = { "2ty6": /\d\s*ty\d/, "6tr5": /\d\s*tr\d/ };
 /** Đếm ca của mỗi mã; ném «THIEU CA <mã>» khi mã nào dưới hai ca, «TONG CA LECH» khi tổng khác hằng ghim. */
 function kiemBangCa(ca) {
   if (ca.length !== TONG_CA) throw new Error(`TONG CA LECH: ${ca.length} ≠ ${TONG_CA}`);
+  if (bamCaCu(ca) !== BAM_CA_CU) throw new Error(`BANG CA CU DOI: băm ${bamCaCu(ca)} ≠ ${BAM_CA_CU}`);
   for (const ma of MA_PHAI_CO) {
     const n = ca.filter(([t, , , , m]) => (LOP[ma] ?? [ma]).includes(m) || (VIET_LIEN[ma] && VIET_LIEN[ma].test(t))).length;
     if (n < 2) throw new Error(`THIEU CA ${ma}`);
@@ -104,6 +118,21 @@ test("YCNS bảng ca: tổng ghim và mỗi mã có ít nhất hai ca; xoá mộ
   assert.throws(() => kiemBangCa(bot), /TONG CA LECH|THIEU CA Ngoài-4/);
   const botMot = CA.slice(1);
   assert.throws(() => kiemBangCa(botMot), /TONG CA LECH/);
+});
+
+test("YCNS-KLR khoảng có phần lẻ viết rời (yc1-khoang-le-va-doi-chung-do AC-1)", async () => {
+  const ca = theoMa(["khoảng lẻ rời"]);
+  assert.equal(ca.length, NOI_KLR.length * 2 + 2, "số ô của mã «khoảng lẻ rời» phải bằng 6 dấu nối × 2 đơn vị + 2");
+  assert.equal(kiemCa(docNganSach, ca, (m, t) => `KHOANG LE ROI ${t}`), 14);
+  // Chiều đỏ: bản sao giữ chặn dấu nối ở nhánh phần lẻ viết rời của đầu dưới khoảng.
+  const bo = await banSao("|\\s(?<alec>\\d{1,3})${CHAN_LE})?(?<aruoi>", "|\\s(?<alec>\\d{1,3})${CHAN_LE}${CACH_LE})?(?<aruoi>");
+  assert.throws(() => kiemCa(bo.docNganSach, ca, (m, t) => `KHOANG LE ROI ${t}`), /KHOANG LE ROI cần mua 2 tỷ 5 - 3 tỷ/);
+});
+
+test("YCNS bảng ca cũ của YC1 giữ nguyên; đổi đích một ca cũ thì đỏ", () => {
+  kiemBangCa(CA);
+  const doi = CA.map((c, i) => (i === 0 ? [c[0], c[1], c[2], 2.7 * T, c[4]] : c));
+  assert.throws(() => kiemBangCa(doi), /BANG CA CU DOI/);
 });
 
 test("YCNS-AC-1 phần lẻ viết liền", async () => {

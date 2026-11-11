@@ -3,13 +3,14 @@
 // bộ bài S03 khớp `laYeuCau`, CHỈ ĐỌC DB (giao dịch read only). Không ghi gì, không gọi model.
 //
 //   node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc <sha>   # DB: DATABASE_URL, mặc định DB máy thu :5433
-//   node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --tu-kiem     # chiều đỏ: bộ ca dựng sẵn, bộ đọc làm rơi «tc 8tr» → thoát 1
+//   node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --tu-kiem     # bốn đột biến, mỗi đột biến phải bật đúng lý do đỏ → thoát 0
 //
 // In dòng «YCNS-DO tổng … · có ngân sách cũ … mới … · mất … · thêm … · đổi giá trị … · thuê từ 100 triệu … · min lớn hơn
 // max …» và tối đa 30 mẫu đổi giá trị. Thoát 1 khi số có ngân sách giảm, có bài mất ngân sách, có bài thuê từ 100
 // triệu/tháng hay có min > max; thoát 2 khi gọi sai.
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { realpathSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
@@ -22,11 +23,48 @@ const TRAN_THUE = 100e6;
 const SO_MAU = 30;
 
 /** Bộ đọc ngân sách ở commit `sha`: dựng tệp tạm cạnh yeu-cau.mjs (giữ import tương đối), nạp, xoá. */
+const bam = (s) => createHash("sha256").update(s).digest("hex").slice(0, 12);
+
 async function docCuTaiCommit(sha) {
   const nguon = execFileSync("git", ["show", `${sha}:pipeline/lib/yeu-cau.mjs`], { cwd: path.join(HERE, "..", ".."), encoding: "utf8" });
   const tep = path.join(LIB, `.yeu-cau-goc-${process.pid}.mjs`);
   writeFileSync(tep, nguon);
-  try { return (await import(pathToFileURL(tep).href)).docNganSach; } finally { rmSync(tep, { force: true }); }
+  try { return { doc: (await import(pathToFileURL(tep).href)).docNganSach, bam: bam(nguon) }; } finally { rmSync(tep, { force: true }); }
+}
+
+// yc1-khoang-le-va-doi-chung-do AC-3/AC-4: bài dựng từ chữ thật, bộ đọc A = docNganSach thật, bộ đọc B = A với đúng một
+// đột biến trên đầu ra thật. Mỗi đột biến phải bật đúng tập lý do của nó (deepEqual), đối chứng dương không bật gì.
+export const BAI_MAU = [
+  { id: "thue", text: "cần thuê 8tr 5 - 9tr" },
+  { id: "mua", text: "cần mua 2 tỷ 5 - 3 tỷ" },
+  { id: "tc", text: "cần thuê 2pn tc 8tr" },
+  { id: "khong", text: "cần mua căn 2pn" },
+];
+const docThat = (t, k) => docNganSach(t, k);
+const doiMot = (id, f) => (t, k) => {
+  const b = BAI_MAU.find((x) => x.text === t);
+  const v = docThat(t, k);
+  return b && b.id === id ? f(v) : v;
+};
+/** Bốn đột biến của AC-3: tên · bộ đọc B · tập lý do mong. */
+export const DOT_BIEN = [
+  ["mat-va-giam", doiMot("tc", () => ({ min: null, max: null })), ["SO CO NGAN SACH GIAM", "MAT NGAN SACH"]],
+  ["chi-mat", (t, k) => {
+    const b = BAI_MAU.find((x) => x.text === t);
+    if (b?.id === "tc") return { min: null, max: null };
+    if (b?.id === "khong") return { min: null, max: 2e9 };
+    return docThat(t, k);
+  }, ["MAT NGAN SACH"]],
+  ["thue-100-trieu", doiMot("thue", (v) => ({ ...v, max: 120e6 })), ["THUE TU 100 TRIEU"]],
+  ["min-lon-hon-max", doiMot("mua", (v) => ({ min: v.max, max: v.min })), ["MIN LON HON MAX"]],
+];
+
+/** Chạy bốn đột biến qua soSanh + lyDoDo; trả danh sách {ten, ok, duoc, mong}. */
+export function tuKiem(ss = soSanh, ly = lyDoDo) {
+  return DOT_BIEN.map(([ten, docB, mong]) => {
+    const duoc = ly(ss(BAI_MAU, docThat, docB));
+    return { ten, ok: JSON.stringify(duoc) === JSON.stringify(mong), duoc, mong };
+  });
 }
 
 /** So hai bộ đọc trên danh sách {id, text}; trả số đếm và mẫu đổi giá trị. */
@@ -76,10 +114,12 @@ function inKetQua(d) {
 
 async function main(argv) {
   if (argv.includes("--tu-kiem")) {
-    // Chiều đỏ: bộ đọc làm rơi «tc 8tr» nhưng đọc thêm một bài khác — tổng không giảm mà vẫn phải đỏ vì có bài mất.
-    const bai = [{ id: "a", text: "cần thuê 2pn tc 8tr" }, { id: "b", text: "cần mua 2ty6" }, { id: "c", text: "cần thuê tài chính 7" }];
-    const roi = (t, k) => (t.includes("tc 8tr") ? { min: null, max: null } : docNganSach(t, k));
-    return inKetQua(soSanh(bai, (t, k) => (t.includes("tài chính 7") ? { min: null, max: null } : docNganSach(t, k)), roi));
+    const kq = tuKiem();
+    for (const k of kq) console.log(`${k.ok ? "ok  " : "SAI "} ${k.ten}: được [${k.duoc.join(", ")}], mong [${k.mong.join(", ")}]`);
+    const sai = kq.filter((k) => !k.ok);
+    for (const k of sai) console.log(`YCNS-DO TU-KIEM FAIL ${k.ten}`);
+    if (!sai.length) console.log(`YCNS-DO TU-KIEM PASS ${kq.length}/${kq.length}`);
+    return sai.length ? 1 : 0;
   }
   const i = argv.indexOf("--goc");
   const sha = i >= 0 ? argv[i + 1] : null;
@@ -87,7 +127,8 @@ async function main(argv) {
     console.error("dùng: do-ngan-sach-yeu-cau.mjs --goc <sha> | --tu-kiem");
     return 2;
   }
-  const docCu = await docCuTaiCommit(sha);
+  const { doc: docCu, bam: bamCu } = await docCuTaiCommit(sha);
+  console.log(`YCNS-DO gốc ${sha.slice(0, 12)} băm ${bamCu} · mới băm ${bam(readFileSync(path.join(LIB, "yeu-cau.mjs"), "utf8"))}`);
   const c = new pg.Client({ connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
   await c.connect();
   try {
