@@ -1,58 +1,50 @@
+# Review findings: app-test-chap-chon-e4b-sap (round 2)
+
 ## Trong hợp đồng
 
-Không có.
+Không có finding nào map được vào AC.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hồ sơ ghi trần CGT-DC đã ký là 600 giây và 'không nới', nhưng mã đang chạy ở 1200 giây và bộ canh mới lại khoá cứng 1200 giây**
-  Người dùng thấy gì: Hồ sơ nói phép đo đối chiếu giá tốt bị giới hạn 600 giây, nhưng thực tế máy cho phép tới 1200 giây. Người ký có thể tưởng giới hạn chặt hơn thực tế.
-  Căn cứ: Chỉ là lệch con số trong tài liệu, không ảnh hưởng người dùng cuối, và ghi chú lại rất rẻ.
-  file: `_acceptance/app-test-chap-chon-e4b-sap/contract.md`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Gate 1 đã niêm dù thẻ có cờ đỏ chặn Cổng Phạm vi: thiếu dòng «Đã tra tri thức» và thiếu gap-probe hoặc descope**
-  Người dùng thấy gì: Thẻ duyệt phạm vi được ký khi còn cờ cảnh báo chưa xử lý, nên người ký thiếu một lượt phản biện độc lập. Người dùng cuối không thấy ảnh hưởng gì.
-  Căn cứ: Chỉ là thiếu bước quy trình nội bộ, không mất dữ liệu, có thể ghi chú lại và bổ sung sau.
-  file: `_acceptance/app-test-chap-chon-e4b-sap/card.html`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Bộ canh «TRAN BI DOI» so mọi số trong cả hai tệp test, không riêng hằng trần, và chạy mãi trong bộ chung**
-  Người dùng thấy gì: Sau này, sửa bất kỳ con số nào trong hai tệp kiểm thử đó cũng có thể làm bộ kiểm đỏ giả dù không nới trần nào. Người dùng cuối không bị ảnh hưởng, chỉ làm chậm đội phát triển.
-  Căn cứ: Báo đỏ giả gây phiền nhưng không làm hỏng sản phẩm, và người làm sau gỡ được bằng cách thu hẹp phép so.
+- **Rào 'TRAN BI DOI' khoá mọi hằng số của hai tệp test trong bộ chung, không chỉ trần đã ký**
+  Người dùng thấy gì: Sau khi gộp, người sửa hai tệp đối chiếu có thể bị báo đỏ giả trong bộ test chung dù không nới trần nào. Việc này chỉ làm chậm người làm, không ảnh hưởng người dùng cuối.
+  Căn cứ: Chỉ gây báo đỏ giả cho người phát triển, không mất dữ liệu, người sửa tự gỡ được bằng cách chỉnh lại phép kiểm khi gặp.
   file: `app/tests/suite-chung-bo-ca.test.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Hồ sơ khẳng định «giữ trần 600 giây» cho CGT-DC, nhưng mã đang chạy với trần 1.200 giây**
-  Người dùng thấy gì: Tài liệu thiết kế nói giới hạn thời gian 600 giây nhưng máy đang áp 1200 giây, nên mô tả không khớp thực tế. Người dùng cuối không thấy ảnh hưởng.
-  Căn cứ: Sai lệch chỉ nằm ở tài liệu, không mất dữ liệu, sửa lời hoặc ghi chú rất rẻ.
-  file: `docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Ca SCB-AC-2 so hằng số với merge-base nên thành chốt chặn vĩnh viễn: sau khi gộp, mọi nhánh sửa một số trong hai tệp test đều đỏ «TRAN BI DOI»**
-  Người dùng thấy gì: Các nhánh làm việc sau này có thể bị báo đỏ giả khi sửa hai tệp kiểm thử, làm chậm việc giao tính năng. Người dùng cuối không bị ảnh hưởng.
-  Căn cứ: Hậu quả chỉ là phiền toái cho người phát triển, tự gỡ được bằng cách sửa phép so, không rủi ro dữ liệu.
+- **Phép kiểm 'hằng trần không đổi so với gốc nhánh' so mọi con số trong cả tệp và chạy mãi trong bộ chung, nên sẽ đỏ 'TRAN BI DOI' với mọi sửa sau này chạm số**
+  Người dùng thấy gì: Các lần sửa test sau này có chạm một con số bất kỳ có thể bị chặn bởi báo đỏ giả ở bộ test chung. Người dùng cuối không thấy gì, nhưng đội làm việc mất thời gian gỡ.
+  Căn cứ: Hậu quả nhẹ và chỉ nội bộ, không ảnh hưởng dữ liệu hay người dùng, sửa sau rẻ khi thực sự gặp.
   file: `app/tests/suite-chung-bo-ca.test.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 (assertion âm tính đứng một mình): đối chứng «ca thứ năm» chỉ notDeepEqual, không ghim kết quả dương**
-  Người dùng thấy gì: Một phép kiểm tự thử có thể vẫn xanh dù bộ đếm hỏng, nên độ tin cậy của bộ kiểm thấp hơn vẻ ngoài. Người dùng cuối không thấy ảnh hưởng.
-  Căn cứ: Mức nhẹ, chỉ làm yếu một lớp kiểm phụ và có thể siết lại sau với chi phí thấp.
+- **Hình dạng 1 — Đo CHỈ DẪN thay vì ĐẦU RA: SCB-AC-1 đếm ca bỏ qua bằng regex trên mã nguồn, không đọc kết quả node:test**
+  Người dùng thấy gì: Phép kiểm tự động có thể không phát hiện nếu một ca bị bỏ qua bằng cách khác với cách đã khai. Người dùng cuối không bị ảnh hưởng trực tiếp.
+  Căn cứ: Chỉ là khoảng hở trong lưới an toàn nội bộ của test, không làm hỏng chức năng nào, và đầu ra thật vẫn được người kiểm tra xem.
   file: `app/tests/suite-chung-bo-ca.test.tsx`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): SCB-AC-1 đọc mã nguồn và package.json, không đọc kết quả bỏ qua thật**
-  Người dùng thấy gì: Một lớp kiểm phụ chỉ nhìn vào mã chứ không nhìn kết quả chạy thật, nên có thể bỏ sót một cách bỏ qua ca khác thường. Người dùng cuối không thấy ảnh hưởng.
-  Căn cứ: Đã có lớp kiểm khác đọc đầu ra thật, nên rủi ro thấp và chỉ cần ghi lại hạn chế.
+- **Hình dạng 5 — Tuyên quét LỚP «đúng bốn ca của bộ chung» nhưng chỉ quét hai tệp và một cơ chế**
+  Người dùng thấy gì: Nếu sau này có thêm ca bị bỏ qua ở tệp test khác, phép kiểm này sẽ không báo. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Rủi ro chỉ là sót phát hiện trong tương lai ở test nội bộ, không mất dữ liệu, và có thể mở rộng phạm vi quét sau với chi phí thấp.
   file: `app/tests/suite-chung-bo-ca.test.tsx`
   severity: low
   Đề xuất: known-limits
+
+- **Hình dạng 4 — Assertion âm tính một mình: đối chứng «ca thứ năm» chỉ dùng notDeepEqual, không ghim kết quả**
+  Người dùng thấy gì: Phép thử đối chứng có thể qua dù bộ đếm nhận sai, nên độ tin cậy của lưới kiểm giảm nhẹ. Người dùng cuối không thấy ảnh hưởng.
+  Căn cứ: Hậu quả rất nhẹ và chỉ nội bộ test, không đụng dữ liệu hay người dùng, sửa sau rẻ.
+  file: `app/tests/suite-chung-bo-ca.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
+
+Không có.
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
