@@ -11,6 +11,8 @@ const LENH = path.join(path.dirname(fileURLToPath(import.meta.url)), "dung-workt
 const git = (cwd, ...a) => execFileSync("git", a, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 const ghi = (f, s) => { mkdirSync(path.dirname(f), { recursive: true }); writeFileSync(f, s); };
 
+const NEXT_ENV = '/// <reference types="next" />\nimport "./.next/dev/types/routes.d.ts";\n';
+
 // Checkout chính giả: .worktreeinclude + .gitignore đã commit; env, node_modules, types chưa theo dõi.
 function dung(t, { nextGia = false } = {}) {
   const goc = realpathSync(mkdtempSync(path.join(tmpdir(), "dwc-")));
@@ -23,6 +25,7 @@ function dung(t, { nextGia = false } = {}) {
   ghi(path.join(chinh, ".worktreeinclude"), "app/.env.local\n**/.env\n");
   ghi(path.join(chinh, ".gitignore"), ".env\n.env.local\nnode_modules/\n.next/\nbi-mat.json\n");
   for (const d of ["app", "pipeline"]) { ghi(path.join(chinh, d, "package.json"), "{}\n"); ghi(path.join(chinh, d, "package-lock.json"), "{\"v\":1}\n"); }
+  ghi(path.join(chinh, "app/next-env.d.ts"), NEXT_ENV);
   git(chinh, "add", "-A");
   git(chinh, "commit", "-qm", "goc");
   ghi(path.join(chinh, ".env"), "GOC=1\n");
@@ -33,7 +36,10 @@ function dung(t, { nextGia = false } = {}) {
   ghi(path.join(chinh, "app/.next/dev/types/routes.d.ts"), "// tu chinh\n");
   if (nextGia) {
     const bin = path.join(chinh, "app/node_modules/.bin/next");
-    ghi(bin, "#!/usr/bin/env bash\nmkdir -p .next/types && echo '// tu typegen' > .next/types/routes.d.ts\n");
+    // Giống next typegen thật: sinh .next/types (đường tương đối hai cấp) và viết lại next-env.d.ts.
+    ghi(bin, "#!/usr/bin/env bash\nmkdir -p .next/types && echo '// tu typegen' > .next/types/routes.d.ts\n"
+      + "printf 'import(\"../../src/app/page.js\")\\n// Validate ../../src/app/page.tsx\\n' > .next/types/validator.ts\n"
+      + "echo 'import \"./.next/types/routes.d.ts\";' > next-env.d.ts\n");
     chmodSync(bin, 0o755);
   }
   const wt = path.join(goc, "wt");
@@ -71,6 +77,11 @@ test("S4V-AC-7 — next typegen có thì sinh types bằng nó; đích là check
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /sinh app\/\.next\/dev\/types \(next typegen\)/);
   assert.equal(readFileSync(path.join(wt, "app/.next/dev/types/routes.d.ts"), "utf8").trim(), "// tu typegen", "S4V-AC-7 types không từ typegen");
+  assert.equal(readFileSync(path.join(wt, "app/.next/dev/types/validator.ts"), "utf8"),
+    'import("../../../src/app/page.js")\n// Validate ../../../src/app/page.tsx\n',
+    "S4V-AC-7 đường tương đối trong .next/dev/types không lên đúng app/ (lệch một cấp)");
+  assert.equal(readFileSync(path.join(wt, "app/next-env.d.ts"), "utf8"), NEXT_ENV, "S4V-AC-7 next typegen để lại next-env.d.ts bị sửa");
+  assert.equal(git(wt, "status", "--porcelain", "--", "app/next-env.d.ts"), "", "S4V-AC-7 next-env.d.ts bẩn sau khi dựng");
   const truoc = git(chinh, "status", "--porcelain", "--ignored");
   const c = chay(chinh, "--khong-tsc");
   assert.equal(c.status, 2, "S4V-AC-7 đích = checkout chính mà không thoát 2");

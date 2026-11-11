@@ -56,11 +56,20 @@ done < <(cd "$WT" && find . -maxdepth 3 -name package.json -not -path '*/node_mo
 # 3. app/.next/dev/types
 if [ -d "$WT/app" ]; then
   if [ ! -d "$WT/app/.next/dev/types" ]; then
-    if [ -x "$WT/app/node_modules/.bin/next" ]; then (cd "$WT/app" && ./node_modules/.bin/next typegen >/dev/null 2>&1) || true; fi
+    if [ -x "$WT/app/node_modules/.bin/next" ]; then
+      # next typegen viết lại next-env.d.ts (trỏ sang .next/types) — tệp đã theo dõi: giữ bản cũ rồi trả lại nguyên.
+      NE="$WT/app/next-env.d.ts"; NE_GIU=""
+      if [ -f "$NE" ]; then NE_GIU=$(mktemp) && cp -p "$NE" "$NE_GIU"; fi
+      (cd "$WT/app" && ./node_modules/.bin/next typegen >/dev/null 2>&1) || true
+      if [ -n "$NE_GIU" ]; then cmp -s "$NE_GIU" "$NE" || cp -p "$NE_GIU" "$NE"; rm -f "$NE_GIU"; fi
+    fi
     if [ -d "$WT/app/.next/dev/types" ]; then
       echo "  sinh app/.next/dev/types (next typegen)"
     elif [ -d "$WT/app/.next/types" ]; then
-      mkdir -p "$WT/app/.next/dev" && cp -R "$WT/app/.next/types" "$WT/app/.next/dev/types" && echo "  sinh app/.next/dev/types (next typegen)"
+      # .next/types sâu hơn app/ hai cấp, .next/dev/types ba cấp: mọi đường tương đối «../../» lên app/ phải thêm một «../».
+      mkdir -p "$WT/app/.next/dev" && cp -R "$WT/app/.next/types" "$WT/app/.next/dev/types" \
+        && find "$WT/app/.next/dev/types" -type f -name '*.ts' -exec perl -pi -e 's{(?<![./])\.\./\.\./(?!\.\./)}{../../../}g' {} + \
+        && echo "  sinh app/.next/dev/types (next typegen)"
     elif [ -d "$CHINH/app/.next/dev/types" ]; then
       mkdir -p "$WT/app/.next/dev" && cp -R "$CHINH/app/.next/dev/types" "$WT/app/.next/dev/types" && echo "  chép app/.next/dev/types từ checkout chính"
     else
