@@ -6,10 +6,8 @@ owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
 status: implemented
-veto_state: mo
-veto_opened_at: 2026-11-10T21:05:00Z
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-10-do-san-sl1-kdm-design.md
 ---
 
@@ -51,11 +49,6 @@ Then với mỗi câu ghi (INSERT, UPDATE, DELETE, DROP) trong hai tệp, lệnh
 nhất phía sau là `ROLLBACK`; bản sao có câu ghi trước `BEGIN` đầu tiên, hay ngay sau một `ROLLBACK`, làm phép quét đỏ gọi tên tệp
 và dòng; ca `KDM-PX1` tự dựng mọi khu vực nó cần (cả khu vực cha) nên chạy được trên DB trống của CI.
 
-### AC-5 — Hồi quy
-Given `scripts/*.test.mjs`,
-When chạy,
-Then xanh.
-
 ## Coverage
 
 Trục (preset test-matrix cho «thước gán khu vực»):
@@ -63,14 +56,20 @@ Trục (preset test-matrix cho «thước gán khu vực»):
   [thước CE: `khuVucKhopTen` của bên ghi + mồi KDM — AC-1, AC-2, AC-3]
 - DB: đã áp 084 · chưa áp 084. [AC-1 — nhánh chưa áp đi qua `coDanhBa` của bên ghi]
 - Chỗ đứng của phép đo: chỉ đọc · giao dịch ROLLBACK. [AC-4]
-- Hồi quy. [AC-5]
+- Hồi quy `scripts/*.test.mjs`: thu khỏi tiêu chí (Known limits, Mạnh chọn 11/11).
 
-Core → AC-1…AC-5. Later: hai ca SL1-AC-5 «áp 069», «hai thứ tự» — hồ sơ riêng chờ Mạnh. Never: sửa 90 tin thật.
+Core → AC-1…AC-4. Later: hai ca SL1-AC-5 «áp 069», «hai thứ tự» — hồ sơ riêng chờ Mạnh. Never: sửa 90 tin thật.
 
 ## Out of scope
 
 - Hai ca SL1-AC-5 của `pipeline/scripts/s03-len-cong.itest.mjs` (tách hồ sơ riêng, chờ Mạnh đọc lại AC-5 của `s03-len-cong`).
 - Sửa dữ liệu, transform, `reassign-areas` hay `khuVucKhopTen` của bên ghi.
 - Đổi `executors.test.*` của hồ sơ đã ký; gỡ KDM-AC-3 khỏi `scripts/ci-bo-qua.json`.
+- Hồi quy cả bộ `node --test scripts/*.test.mjs` (AC-5 cũ) — thu khỏi tiêu chí, xem Notes.
 
 ## Notes
+- Known limits — chọn ở Cổng Phạm vi 2026-11-11 (Mạnh: «Thu AC-5, mở PR»):
+  - AC-5 cũ (hồi quy `scripts/*.test.mjs` xanh) không có bằng chứng máy: hai lượt chấm đỏ vì ca chập chờn khi máy tải —
+    vòng 1 KDM quá giờ (đã sửa), vòng 2 `AU11-AC-3` của `scripts/ci-test-module.test.mjs` «Connection terminated
+    unexpectedly» (chạy riêng xanh 5/5, main đỏ cùng chỗ). Các ca của chính hàng (KDM-AC-3, KDM-AC-4, KDM-AC-5, KDM-PX1) đo ở
+    E3; CI vẫn chạy bộ scripts trên mọi PR.
