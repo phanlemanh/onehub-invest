@@ -25,7 +25,7 @@ evals:
     cmd: config:executors.test.can_gia_tot_doi_chieu
     layer: backend-effect
     paths: [app/tests/can-gia-tot-doi-chieu.test.tsx, app/tests/suite-chung-bo-ca.test.tsx]
-    expected: "exit 0; 'CGT-DC đối chiếu DB máy thu chỉ đọc' báo ok, không SKIP; dòng 'CGT-DC đối chiếu <n> tin' với n bằng số tin P1 bán của kho"
+    expected: "exit 0; 'CGT-DC đối chiếu DB máy thu chỉ đọc' báo ok, không SKIP; dòng 'CGT-DC đối chiếu <n> tin' với n bằng số tin P1 bán của kho, đọc trong ảnh chụp chung (không còn đỏ 'DB đổi sau đối chiếu' vì lượt nạp sống)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4
@@ -34,7 +34,7 @@ evals:
     cmd: config:executors.test.app_ui
     layer: backend-effect
     paths: [app/tests/suite-chung-bo-ca.test.tsx, app/tests/tin-rao-doi-chieu.test.tsx, app/tests/can-gia-tot-doi-chieu.test.tsx]
-    expected: "exit 0; ca 'SCB-AC-2' xanh: hàm bỏ qua trả lý do khi ONEHUB_SUITE_CHUNG=1 và false khi vắng; bản đột biến trả lý do cả khi vắng biến đỏ 'BO QUA KHI CHAY RIENG'; mọi hằng trần (700, 1000, các timeout) của hai tệp test bằng bản ở gốc nhánh (git show, bỏ qua trên CI), đổi một hằng thì đỏ 'TRAN BI DOI'"
+    expected: "exit 0; ca 'SCB-AC-2' xanh: hàm bỏ qua trả lý do khi ONEHUB_SUITE_CHUNG=1 và false khi vắng; bản đột biến trả lý do cả khi vắng biến đỏ 'BO QUA KHI CHAY RIENG'; mọi trần có tên (timeout của ca, ngưỡng ms, số lượt, giới hạn song song) của hai tệp test bằng bản ở gốc vòng 07af8ca9 (git show, bỏ qua trên CI), đổi một trần thì đỏ 'TRAN BI DOI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
@@ -45,3 +45,12 @@ evals:
     paths: [docs/superpowers/specs/2026-11-10-app-test-chap-chon-e4b-sap-design.md, _acceptance/app-test-chap-chon-e4b-sap/contract.md]
     expected: "Bảng thay lời trong design doc đổi đúng vế 'trong suite app' của e4b-danh-sach-tin-nhanh AC-3 thành điều kiện chạy riêng, giữ 700 ms và bốn kiểu sắp; không đổi lời can-gia-tot-sua-ba-loi AC-7"
     evidence_required: [verifier, verified_at, rationale]
+
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    paths: [app/tests/helpers/anh-chup.ts, app/tests/anh-chup.test.tsx, app/tests/can-gia-tot-doi-chieu.test.tsx, app/tests/suite-chung-bo-ca.test.tsx, _acceptance/config.yaml]
+    expected: "exit 0; ca 'ANH-CHUP ghi xen giữa không lọt…' báo ok trên DB của riêng lượt: giữ ảnh chụp thì tám lời đọc song song qua pool đều thấy số trước khi ghi, không giữ thì đỏ 'ANH CHUP KHONG GIU: 2 → 3'; ca 'SCB-AC-2 trần có tên… gốc vòng' báo ok, sửa '632 giây' không đỏ, đổi 'timeout: 1_200_000' đỏ 'TRAN BI DOI'; config.yaml khai feature_loop.model_evals gồm app-test-chap-chon-e4b-sap/E2 và /E3 (lượt chấm in 'Chay rieng … 2 lenh')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

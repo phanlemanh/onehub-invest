@@ -13,6 +13,7 @@ feature_loop:
   repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
   repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
   do_san_tren_nen: true        # vòng khác gặp đúng cái đỏ đã có dòng nền trên main vẫn ghim, kèm nhãn «đỏ sẵn trên nền», không in «ĐẠT»
+  model_evals: [app-test-chap-chon-e4b-sap/E2, app-test-chap-chon-e4b-sap/E3]
 design_pass:
   ds_skill: onehub-ui
   # Hàng giao diện sửa thẳng route THẬT trên nhánh của hàng (host-embedded), không dựng route proto riêng.

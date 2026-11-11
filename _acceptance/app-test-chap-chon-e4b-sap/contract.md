@@ -33,7 +33,8 @@ mình ≈ 450 giây, trong suite quá trần ca). Phần chập chờn do mã te
 - **Given** executor riêng `tir_doi_chieu` và `can_gia_tot_doi_chieu` trên DB máy thu
 - **When** chạy từng executor
 - **Then** bốn ca chạy, không ca nào bỏ qua, với nguyên trần đã ký (700 ms mỗi sort, 20 tổ hợp, khối trần E4b giống
-  hệt, đủ mọi tin P1); không hằng trần nào trong hai tệp test đổi so với `main` trước vòng; bản đột biến bỏ qua cả khi
+  hệt, đủ mọi tin P1); không trần có tên nào (timeout của ca, ngưỡng ms, số lượt đo, giới hạn song song) trong hai tệp test đổi so với gốc vòng
+  `07af8ca9`; bản đột biến bỏ qua cả khi
   chạy riêng thì đỏ `BO QUA KHI CHAY RIENG`
 
 ### AC-3: Lời mới của E4B-AC-3
@@ -41,6 +42,15 @@ mình ≈ 450 giây, trong suite quá trần ca). Phần chập chờn do mã te
 - **When** người đọc tiêu chí E4B-AC-3 sau vòng này
 - **Then** điều kiện đo là chạy riêng trên DB máy thu, bản mới dưới 700 ms ở cả bốn kiểu sắp; vế «trong suite app»
   thôi là điều kiện; CGT-DC giữ nguyên lời AC-7 của `can-gia-tot-sua-ba-loi`
+
+### AC-4: Đo chạy riêng ổn định trên DB máy thu dùng chung (đổi khuôn, Mạnh 11/11)
+- **Given** lượt nạp sống ghi vào DB máy thu trong lúc chấm, và lượt chấm chạy nhiều lệnh cùng lúc
+- **When** chấm hồ sơ
+- **Then** (a) mọi lời đọc của ca CGT-DC đi qua một ảnh chụp REPEATABLE READ READ ONLY chung, nên ghi xen giữa không lọt vào
+  phép so (thước hai chiều trên DB của riêng lượt: giữ ảnh chụp thì số đếm không đổi, không giữ thì đỏ
+  `ANH CHUP KHONG GIU`); (b) hai lệnh đo DB máy thu (`tir_doi_chieu`, `can_gia_tot_doi_chieu`) chạy riêng, tuần tự, sau mọi
+  lệnh khác của lượt chấm (`feature_loop.model_evals`); (c) phép so trần ghim gốc vòng `07af8ca9` và chỉ so trần có tên —
+  sửa một số khác (chú thích đo) không đỏ, đổi timeout của ca thì đỏ `TRAN BI DOI`
 
 ## Coverage
 
@@ -57,3 +67,4 @@ bị chạm ở AC-3.
 ## Notes
 
 - Câu chỉ người biết (sổ, Hỏi-1, Hỏi-2): đổi lời tiêu chí đã ký E4B-AC-3; cho CGT-DC rời bộ chung.
+- Đổi khuôn sau 3 lượt chấm REJECT vì môi trường (Mạnh «Đổi khuôn, chấm lượt 4», 11/11): thêm AC-4; không nới trần nào.
