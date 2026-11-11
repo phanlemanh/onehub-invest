@@ -5,7 +5,7 @@ slug: tu-vung-du-an-muc-39
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [docs, pipeline]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-11T20:05:00Z
 design_doc: docs/superpowers/specs/2026-11-11-tu-vung-du-an-muc-39-design.md
@@ -78,3 +78,9 @@ ba nguồn, mỗi mục một AC; đổi lại không có bằng chứng độ p
 - FRAMING.md, ROADMAP văn xuôi, tài liệu nghiên cứu.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: Chú thích cạnh trường loại hình trong mappings.yaml còn tả theo cách gọi cũ dù trường đã khai PropertySubType.
+  - Ngoài-3: CONTEXT ghi trước tên các trường mở rộng (MarketTier, SalesStatus, HandoverDate, ma_nha_nuoc, project_node_id, subzone_node_id) chưa khai chính thức; các hàng sau khai.
+  - Ngoài-4: Bảng lưu vết của ADR-0011 còn xếp «Dự án con» vào phân khu, cạnh khối sửa đổi nói ngược lại.
+  - Ngoài-7: Test chỉ kiểm chữ có mặt trong khối Tin sơ cấp, không kiểm câu phủ định «không vào danh sách Bán, thước giá, metrics».
+  - Ngoài-8: Test kiểm sáu mức gắn bằng chữ rời trong cả khối, không ràng vào cùng dòng thang.
