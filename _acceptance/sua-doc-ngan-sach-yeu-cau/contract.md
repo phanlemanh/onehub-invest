@@ -5,7 +5,7 @@ slug: sua-doc-ngan-sach-yeu-cau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-11-sua-doc-ngan-sach-yeu-cau-design.md
 approved_by: Mạnh
 approved_at: 2026-11-11
@@ -79,3 +79,10 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai trục liệt tay t�
 - Gom nhu cầu trong 7 ngày: hàng YC4.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Lệnh đo trên dữ liệu thật hứa một chiều đỏ (đầu dưới lớn hơn đầu trên) mà chưa có ca thử chạy chiều đó.
+  - Ngoài-2: Lệnh đo chọn bài và đọc dịch vụ khác đường ghi thật của bảng Yêu cầu, nên số đo có thể lệch nhẹ.
+  - Ngoài-4: Lệnh đo lấy dịch vụ chỉ từ chữ bài, không theo phát biểu thắng; vài bài thuê được đo như chưa rõ dịch vụ.
+  - Ngoài-6: Chiều đỏ của bộ kiểm ma trận không bao giờ chạm tới thông điệp «THIEU CA».
+  - Ngoài-7: Luật «mỗi mã ít nhất hai ca» đếm gộp, Ngoài-7 và Ngoài-9 mỗi mã chỉ có một ca riêng.
