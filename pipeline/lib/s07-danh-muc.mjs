@@ -117,6 +117,8 @@ const pjTrong = (html, tru) => {
  * lặp ở mọi trang không tính.
  * @returns {{ the: object[], khongMa: number }}
  */
+const laDienTich = (s) => s != null && /\d\s*(ha|m²|m2)$/i.test(s) && !/\/\s*m(²|2)$/i.test(s);
+
 export function bocTheDanhSach(item, mien = mienCua(item)) {
   const html = String(item?.payload?.listHtml ?? "");
   const trang = Number(item?.meta?.request?.page);
@@ -134,7 +136,9 @@ export function bocTheDanhSach(item, mien = mienCua(item)) {
       const nhan = giaiThucThe((m[1].match(/aria-label="([^"]*)"/) || [])[1] ?? "");
       if (/căn/i.test(nhan)) soCan = soNguyenVn(nhan);
       else if (/tòa|toà/i.test(nhan)) soToa = soNguyenVn(nhan);
-      else if (!nhan && dienTich == null) dienTich = chu(m[2]);
+      // ô không nhãn có ba dạng trên raw thật: «N ha», «N m²», «N triệu/m²» — chỉ hai dạng đầu là diện tích; ô giá bỏ qua
+      // (giá chỉ dùng nội bộ, bảng thẻ không có cột giá).
+      else if (!nhan && dienTich == null && laDienTich(chu(m[2]))) dienTich = chu(m[2]);
     }
     const anhKhoi = k.slice(0, Math.max(0, k.indexOf("re__prj-card-info")));
     the.push({

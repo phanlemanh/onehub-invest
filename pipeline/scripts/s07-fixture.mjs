@@ -4,7 +4,11 @@ export const MIEN = "nguon-thu.test";
 export const W = `https://${MIEN}`;
 export const ANH = `https://tep9.${MIEN}`;
 
-export const theChinh = ({ id, duong = `/du-an-can-ho-chung-cu-quan-a/du-an-mot-pj${id}`, ten = "Dự án Một", cauHinh = true, cdt = true }) => `
+// oKhongNhan: thay hẳn khối cấu hình bằng các ô không aria-label theo thứ tự cho sẵn (raw thật có ba dạng: «N ha», «N m²», «N triệu/m²»).
+const khoiKhongNhan = (o) => o.map((v) => `<span class="re__prj-card-config-value">${v}</span>`).join(`<span class="re__prj-card-config-dot">·</span>`);
+export const theChinh = ({ id, duong = `/du-an-can-ho-chung-cu-quan-a/du-an-mot-pj${id}`, ten = "Dự án Một", cauHinh = true, cdt = true, oKhongNhan = null }) => oKhongNhan
+  ? theChinh({ id, duong, ten, cauHinh: false, cdt }).replace(`<div class="re__prj-card-config re__clearfix">`, `<div class="re__prj-card-config re__clearfix">${khoiKhongNhan(oKhongNhan)}`)
+  : `
 <div class="js__project-card js__card-project-web re__prj-card-full">
  <a href="${duong}" title="${ten}" class="re__clearfix" tracking-id="project-card-plp">
   <div class="re__prj-card-image"><img alt="${ten}" class="lazyload" data-src="${ANH}/crop/240x180/2026/01/02/a-1_wm.jpg"><img class="lazyload" data-src="${ANH}/crop/240x180/2026/01/02/a-2_wm.jpg">

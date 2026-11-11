@@ -32,6 +32,14 @@ test("S07-AC-2 should-NOT-fire: thẻ không trỏ tới trang dự án bị b�
   const r = bocTheDanhSach(itemDanhSach(2, [theChinh({ id: 1, duong: "/ban-can-ho/tin-rao-pr55" })]));
   assert.deepEqual([r.the.length, r.khongMa], [0, 1]);
   assert.deepEqual(bocTheDanhSach(itemDanhSach(3, [])), { the: [], khongMa: 0 });
+  // S4-r1: ô giá «… triệu/m²» cũng không có aria-label — không được thành diện tích (21% thẻ thật từng dính).
+  const g = bocTheDanhSach(itemDanhSach(4, [
+    theChinh({ id: 21, oKhongNhan: ["36 triệu/m²"] }),
+    theChinh({ id: 22, oKhongNhan: ["38 triệu/m²", "2,5 ha"] }),
+    theChinh({ id: 23, oKhongNhan: ["1.200 m²", "6 triệu/m²"] }),
+  ])).the;
+  assert.deepEqual(g.map((d) => d.land_area_raw), [null, "2,5 ha", "1.200 m²"], "chỉ ô có đơn vị ha/m² (không «/m²») là diện tích");
+  assert.ok(!JSON.stringify(g).includes("triệu"), "giá/m² không lọt vào dòng thẻ");
 });
 
 test("S07-AC-3 trang dự án: mỗi trường một khẳng định, mô tả trọn khối, link ứng viên", () => {
