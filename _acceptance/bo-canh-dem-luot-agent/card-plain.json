@@ -18,6 +18,10 @@
       "p": "Sẽ chỉ ghi cảnh báo khi số dòng giảm mà không có dòng mới; có dòng mới thì vẫn tắt."
     },
     {
+      "id": "AC-5",
+      "p": "Sẽ tắt và nêu lý do khi kho phiên hỏng hay khoá lâu, không coi là 0; kho nhàn rỗi, kho đang ghi vẫn đọc được."
+    },
+    {
       "id": "AC-6",
       "p": "Sẽ giữ mốc sau khi tắt, nên người phải điều tra trước khi bật lại; mốc hỏng cũng tắt."
     },
@@ -32,17 +36,17 @@
     {
       "id": "AC-9",
       "p": "Sẽ đọc thử kho thật trong đúng môi trường launchd trước khi gộp, vì gộp là có hiệu lực."
-    }
-  ],
-  "wont_do": [
+    },
     {
-      "id": "AC-5",
-      "p": "Chặn tắt nhầm và bỏ sót khi đọc: kho hỏng hay khoá lâu thì tắt, không coi là 0; kho nhàn rỗi, kho đang ghi vẫn đọc được."
+      "id": "AC-10",
+      "p": "Sẽ ghi đủ vào sổ vận hành: gộp là có hiệu lực, kiểm gì sau gộp, ai xử mốc sau một lần tắt, cách lùi, và các lượt bộ canh không thấy."
     },
     {
       "id": "AC-11",
-      "p": "Chặn lớp dò log trượt dòng cảnh báo khi khối log lớn."
-    },
+      "p": "Sẽ vẫn bắt được dòng cảnh báo khi khối log mới lớn hơn 400 KB."
+    }
+  ],
+  "wont_do": [
     {
       "id": "OOS-1",
       "p": "Không khởi động lại gateway hay sửa cấu hình OpenClaw trong hồ sơ này."
@@ -136,5 +140,13 @@
       "i": 11,
       "p": "Bước lùi và cách ghi mốc có sai sót nhỏ. Đã sửa bước lùi; kho biến mất giữ mức cảnh báo, chấp nhận."
     }
-  ]
+  ],
+  "decisions": [
+    {
+      "id": "E12",
+      "q": "Sổ vận hành đã đủ để người trực xử một lần tắt chưa?",
+      "why": "Hai tài liệu phủ đủ các mục của tiêu chí; người mới còn phải đoán ba chỗ nhỏ: kênh báo anh lúc nửa đêm, lệnh chỉ-đếm để kiểm phiên đang chạy, và gateway bị tắt bằng cơ chế nào."
+    }
+  ],
+  "analyst_plain": ""
 }
