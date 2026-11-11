@@ -197,8 +197,46 @@ Luật đọc (bên nạp):
    Cột `attributes` của `stg_s07_project` là mảng cặp `{label, value}` theo thứ tự nguồn (đối tượng jsonb không giữ thứ tự).
 7. Sitemap lẫn trang lọc (theo giá, theo tỉnh) với trang dự án: chỉ `<loc>` kết thúc bằng `-pj<id>` là dự án.
 
+## Nguồn con S03 `s03-tu-lieu-drive` — tư liệu sau link Drive/Docs trong bài S03 (v10)
+
+Mạnh chốt 11/11: «Thu link Drive trước», lượt tải đầu «Bỏ PSD». Chưa có bộ nạp stg (hàng thuộc cụm «Kho tư liệu dự án»,
+làn Claude); `import-airbnb.mjs` không có nguồn này trong ALLOWLIST.
+
+- **Thu gì**: tệp sau các link Google Drive/Docs mà bài S03 dẫn tới — chỉ link «ai có link cũng xem được»; không đăng
+  nhập, không cookie, không xin quyền. Bỏ tệp PSD và biểu mẫu Forms. Trần mỗi lượt 5 GB; video > 300 MB chỉ ghi item bỏ.
+  Tệp Google gốc (Sheets/Docs/Slides) xuất sang xlsx/docx/pptx. Gặp 403/429, «vượt hạn mức xem» hay trang xác minh → dừng
+  cả lượt, phần còn lại ghi `run-stopped-blocked`; không thử lại liên tục, không đổi cách để né.
+- **Hợp đồng và giấy tờ người mua KHÔNG vào snapshot** (QĐ1; raw bất biến nên tệp đã vào `media/` không gỡ được): tệp có
+  tên tệp HOẶC tên thư mục khớp HĐMB, hợp đồng, đặt cọc, thoả thuận, CCCD/CMND/căn cước, giấy tờ khách, xác nhận chuyển
+  tiền, uỷ nhiệm chi — mọi loại tệp — chỉ ghi item `drive-file-skipped` `contract-review-needed`. Bản tải cho người soát
+  để ngoài `snapshots/` (thư mục xoá được của máy thu); soát xong là «bản mẫu» thì lượt sau ghi vào một snapshot mới.
+- **Layout**: snapshot thường `vn/vn__s03-tu-lieu-drive__<ts>/` gồm `items-0001.json.gz`, `media/<sha256[:16]>.<ext>` —
+  tên theo băm NỘI DUNG (khác `media/` v2 của zalo-agent, băm URL) — và `manifest.json` khai đủ mọi tệp trong `files`.
+  Hai tệp cùng nội dung chỉ lưu một bản. `manifest.schemaVersion = 10`; `coverage.methods = {"public-link-no-login": n}`.
+- **RawItem**: một item mỗi mã tệp Drive (một tệp được nhiều bài dẫn tới vẫn một item; `posts[]` là hợp các bài);
+  `sourceId` = mã tệp Drive; `meta.method = "public-link-no-login"`. `payload` chung: `driveId`, `name`, `folderPath`
+  (mảng tên thư mục tính từ gốc link), `googleNative` (`spreadsheets|document|presentation|null`), `typeGuess`
+  (`image|pdf|spreadsheet|document|presentation|video|archive|psd|other` — ĐOÁN theo đuôi tên tệp; bộ nạp suy lại từ
+  `contentType` và magic bytes), `rootLinks` (link gốc trong bài), `posts` (`[{post_id, group, posted_at}]`). `kind`:
+  - `drive-file` — đã tải: thêm `file` (đường `media/…`), `sha256`, `bytes`, `contentType`.
+  - `drive-file-skipped` — không tải: `skipReason` một trong `psd-excluded`, `video-over-300mb`, `run-cap-5gb`,
+    `contract-review-needed`, `run-stopped-blocked`; `bytesAnnounced` khi biết.
+  - `drive-file-error` — tải lỗi: `error` (`http <mã>`, `trang HTML lạ thay vì tệp`).
+
+Luật đọc:
+
+1. Tệp chỉ ở máy thu: không sync cloud, không lên Invest hay API; soát từng tệp làm sau ở Ops.
+2. `posts[].group` là tên nhóm S03 (tầng C, ADR-0007 sửa 24/10). Item không có tên hay SĐT người gửi, không có định danh
+   tài khoản thu (tầng A).
+3. Tên tệp và nội dung có thể chứa SĐT người bán (tầng C) — giữ nguyên, collector không chuẩn hoá.
+4. Cùng `driveId` ở hai snapshot: lấy bản mới nhất theo `fetchedAt`; cùng `sha256` là cùng nội dung.
+
 ## Lịch sử phiên bản
 
+- **schemaVersion 10 (2026-11-11, phiên thu thay làn thu — S03 tư liệu Drive, lượt tải đầu)**: thêm nguồn con
+  `s03-tu-lieu-drive` (kind `drive-file`, `drive-file-skipped`, `drive-file-error`) — hình dạng ở mục nguồn phía trên.
+  `media/` của nguồn này đặt tên theo băm nội dung. Manifest ghi `schemaVersion 10`. Chưa có bộ nạp; bên import chưa nhận
+  nguồn này (bỏ qua có dòng báo).
 - **schemaVersion 9 (2026-11-11, phiên thu thay làn thu — DAZ3 S07 danh mục dự án)**: thêm nguồn `s07-danh-muc` (kind
   `project_sitemap`, `project_list_page`, `project_catalog`) — hình dạng ở mục nguồn phía trên. RawItem không thêm trường
   chung. Mọi snapshot S07 tới nay mang `schemaVersion 4` trong manifest (`SnapshotWriter` chưa nhận số phiên bản; cùng
