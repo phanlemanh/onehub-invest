@@ -5,7 +5,7 @@ slug: s03-len-nhanh-nac-1
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-10-s03-len-nhanh-nac-1-design.md
 approved_by: Mạnh
 approved_at: 2026-11-10T10:17:58Z
@@ -89,3 +89,7 @@ Thước CE: số đo (a) ở design doc §2; hành vi trước vòng là lời 
 
 - Số đo (a) chạy trên DB thử lúc máy rảnh; dưới tải giờ sáng (resolve-properties lượt 05:30 gần 3 giờ) chưa đo — phần
   đụng khoá do AC-4, AC-5 lo.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Lượt nạp nhanh tự viết lại cách báo lỗi thay vì dùng bộ báo lỗi chung của các job; đổi cách báo lỗi chung phải nhớ sửa cả lượt nhanh.
+  - Ngoài-2: Khi lượt nhanh đụng khoá giữa bước làm tươi, phần bait gap đã ghi còn phần danh bạ người bị bỏ lặng lẽ tới lượt sau.
+  - Ngoài-3: Ca chiều đỏ của bài kiểm khoá chỉ đo «chưa xong sau 20 giây», chưa có đối chứng rằng lượt không khoá xong dưới 20 giây.
