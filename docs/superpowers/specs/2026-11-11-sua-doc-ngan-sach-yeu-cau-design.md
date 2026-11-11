@@ -35,15 +35,20 @@ Chữ ký `docNganSach(text, kind) → {min, max}` giữ nguyên.
 1. **Phần lẻ sau đơn vị.** Sau đơn vị tỷ: 1–2 chữ số liền hoặc cách một khoảng trắng là phần thập phân (`2ty6` → 2,6;
    `2ty65` → 2,65; `2 tỷ 5` → 2,5); đúng 3 chữ số là triệu (`2 tỷ 500` → 2,5 tỷ). Sau đơn vị triệu: 1 chữ số là phần
    mười (`6tr5` → 6,5 triệu); 3 chữ số là nghìn (`6tr500` → 6,5 triệu). `rưỡi` sau đơn vị cộng nửa đơn vị. Số theo sau mà
-   dính `pn`, `phòng`, `m2`, `m²`, `tầng`, `căn` thì không phải phần lẻ (`2 tỷ 2pn` → 2 tỷ).
-2. **Khoảng đầu dưới thiếu đơn vị.** Đầu dưới lấy đơn vị của đầu trên; nếu với đơn vị tỷ mà đầu dưới lớn hơn đầu trên thì
-   đầu dưới là triệu (`800 - 1,2 tỷ` → 800 triệu tới 1,2 tỷ). Với đơn vị triệu mà vẫn ngược thì đầu dưới trống.
+   dính `pn`, `phòng`, `m` (gồm `m2`, `m²`), `tầng`, `căn` thì không phải phần lẻ (`2 tỷ 2pn` → 2 tỷ).
+2. **Khoảng đầu dưới thiếu đơn vị.** Đầu dưới lấy đơn vị của đầu trên; với đầu trên là tỷ mà số đầu dưới từ 100 trở
+   lên thì đầu dưới là triệu (`800 - 1,2 tỷ` → 800 triệu tới 1,2 tỷ); còn lại khoảng ngược thì đảo (`3-2 tỷ` → 2 tới 3 tỷ).
+   Phần lẻ viết cách (`8tr 5`) không được đứng trước dấu nối hay gạch chéo — đó là ngày hay khoảng khác (`tc 8tr 7-8/11`).
 3. **Không bao giờ min > max.** Sàn và trần viết rời mà ngược nhau → giữ biểu thức đầu, bỏ vế sau. Kiểm cuối hàm: còn
    min > max thì trả cả hai trống (lưới an toàn, không có ca nào trong ma trận chạm nó).
-4. **Số trơn sau «tc», «tài chính», «ngân sách».** Không đơn vị → thuê: triệu; mua: tỷ; dịch vụ trống: không đọc.
+4. **Số trơn sau «tc», «tài chính», «ngân sách».** Không đơn vị → thuê: triệu; mua: tỷ; dịch vụ trống: không đọc và nhường biểu thức kế bên (`tài chính 10 11tr` → 11 triệu); số trơn đứng ngay trước một số khác cũng nhường.
 5. **«quay đầu».** `X quay đầu` là trần X (đã đúng ở bộ gốc, giữ bằng ca); `a-b quay đầu` giữ khoảng.
 
-Luật giá phi lý `lyDoGiaPhiLy` của transform giữ nguyên làm chốt cuối cho từng đầu.
+Luật giá phi lý `lyDoGiaPhiLy` của transform giữ nguyên làm chốt cuối cho từng đầu; thêm trần thuê 100 triệu/tháng (đầu nào
+chạm thì trống).
+
+Đo 11/11 sau sửa (lệnh `do-ngan-sach-yeu-cau.mjs`): 12.755 bài, có ngân sách 9.075 → 9.086, mất 0, thêm 11, đổi giá trị
+1.467, thuê từ 100 triệu 0, min > max 0.
 
 ## Phép đo
 
