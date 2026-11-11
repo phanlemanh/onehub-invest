@@ -62,6 +62,14 @@ _Avoid_: block, chung cư
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
 
+**Tầng (của tin)**: Tầng nơi căn rao nằm, đọc từ chữ bài («tầng 12», «lầu 5») hoặc từ mã căn đủ («S1.12.08»), lưu là số 1–999. Nhãn UI «Tầng».
+- Code: `floor_raw` · RESO: UnitFloorLocation (DD 2.1)
+_Avoid_: số tầng (đó là `stories` — tổng tầng của nhà), lầu
+
+**Dải tầng**: Tầng nói theo khoảng khi môi giới không nêu số: «tầng thấp», «tầng trung», «tầng cao». Chỉ ghi khi bài không có số tầng. Nhãn UI «Dải tầng».
+- Code: `floor_band` (`lower` · `middle` · `upper`) · RESO: không có — extension (ADR-0011)
+_Avoid_: khoảng tầng, cao tầng (là loại toà)
+
 **Thửa**: Một mảnh đất — cấp `parcel` của danh bạ vật thể; tin đất gắn ở thửa. Chưa nối thửa với tòa nhà phố khi chưa có số nhà, số thửa (ADR-0016 §2).
 - Code: `parcel` · RESO: ParcelNumber; resource local `Parcel` (ADR-0016 §11)
 _Avoid_: lô, mảnh, plot
@@ -436,7 +444,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường của toà» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» · `street_number` «Số nhà» · `unit_number` «Mã căn» · `frontage_length` «Mặt tiền» · `lot_size_dimensions` «Ngang × dài» · `stories` «Số tầng» · `latitude` «Vĩ độ» · `longitude` «Kinh độ» · `builder_name` «Chủ đầu tư» · `area_id` «Phường của toà» · `floor_raw` «Tầng» · `floor_band` «Dải tầng» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» · `registry_inherit` «Kế thừa từ danh bạ» |
 | Trạng thái danh bạ | `registry_status` | local | `parties.status`, `buildings.status`, `stacks.status`, `units.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
@@ -453,6 +461,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 | Nội thất | `furnished` | Furnished | — | `furnished` «Đủ nội thất» · `partially` «Nội thất cơ bản» · `unfurnished` «Nhà trống» · `negotiable` «Thoả thuận» |
 | Hướng | `direction_faces` | local | — | `east` «Đông» · `west` «Tây» · `south` «Nam» · `north` «Bắc» · `northeast` «Đông Bắc» · `southeast` «Đông Nam» · `northwest` «Tây Bắc» · `southwest` «Tây Nam» |
+| Dải tầng | `floor_band` | local | — | `lower` «Tầng thấp» · `middle` «Tầng trung» · `upper` «Tầng cao» |
 | View | `view` | View | — | `city` «Thành phố» · `lake` «Hồ» · `river` «Sông» · `park_greenbelt` «Công viên» · `garden` «Vườn, nội khu» · `pool` «Bể bơi» · `panoramic` «Toàn cảnh» · `other` «Khác» |
 | Phí đã gồm | `rent_includes` | RentIncludes | — | `management` «Phí quản lý» · `electricity` «Điện» · `water` «Nước» · `internet` «Internet» · `none` «Không gồm gì» · `other` «Khác» |
 | Cơ sở giá | `price_basis` | local | — | `net` «Thu về (NET)» · `gom_phi` «Đã gồm phí» · `chua_gom_phi` «Chưa gồm phí» |

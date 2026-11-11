@@ -27,8 +27,8 @@ Source input: hàng DV4 của `docs/plan/lo-trinh.json`; Cổng Đáng «Build c
 - AC-1: Given DB thử đã có schema của main (tới 088) và một tin S06 có `floor_raw`, When áp 095 hai lần, Then:
   - không lỗi; `field_assertions` nhận trường `floor_raw` và `floor_band`; một trường lạ (`floor_lol`) vẫn bị từ chối;
   - tin S06 có đúng một phát biểu `legacy` cho `floor_raw` sau lần một, lần hai không thêm;
-  - ma trận viết trước ghi qua phát biểu ở mọi phương pháp: nhận `12`, `1`, `999`, `low`, `mid`, `high`; từ chối `0`, `1234`, `012`, `abc`, `tầng 5`,
-    `tầng cao` cho `floor_raw` và `cao`, `HIGH`, `medium` cho `floor_band`, mỗi dòng từ chối có thông điệp nêu tên trường.
+  - ma trận viết trước ghi qua phát biểu ở mọi phương pháp: nhận `12`, `1`, `999`, `lower`, `middle`, `upper`; từ chối `0`, `1234`, `012`, `abc`,
+    `tầng 5`, `tầng cao` cho `floor_raw` và `cao`, `UPPER`, `high`, `mid` cho `floor_band`, mỗi dòng từ chối có thông điệp nêu tên trường.
 - AC-2 (cross-layer): Given bản DB thử chép từ DB máy thu, When áp 095 rồi `resolve_offer_fields` toàn bộ trong giao dịch ROLLBACK, Then từng cặp
   (`offer_id`, `floor_raw`) đã có giữ nguyên, các cột khác của phân xử không tin nào đổi; Given một tin S06 đã qua 095, When ghi lại qua `writeOffers` hai
   lượt, Then `floor_raw` còn nguyên.

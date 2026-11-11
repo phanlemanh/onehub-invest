@@ -14,7 +14,7 @@
 
 - Migration số 095, tệp `db/migrations/095_tang_tren_tin.sql`; chạy lại an toàn (áp hai lần không lỗi, không thêm dòng).
 - 095 chỉ nạp trên DB thử `oneinvest_u1_dv4` (dựng bằng `bash db/db-thu.sh oneinvest_u1_dv4`) hoặc DB của lượt suite; KHÔNG áp lên `oneinvest` dùng chung (luật đợt 27/10).
-- `floor_raw` khớp `^[1-9][0-9]{0,2}$`; `floor_band` ∈ `low|mid|high`; sai → RAISE nêu tên trường. Trường lạ vẫn bị CHECK từ chối.
+- `floor_raw` khớp `^[1-9][0-9]{0,2}$`; `floor_band` ∈ `lower|middle|upper`; sai → RAISE nêu tên trường. Trường lạ vẫn bị CHECK từ chối.
 - CHECK `field_assertions_field_chk` = tập của 082 (`property_type, bedrooms, bathrooms, street_raw, block_raw, offer_status, street_number, unit_number, frontage_length, lot_size_dimensions, stories, latitude, longitude, builder_name, area_id`) + `floor_raw, floor_band`.
 - Phát biểu: `method_version = 'transform-zalo@dv4'`, `evidence_tier = observed`, `method = parser`, `evidence = {"trich": "<đoạn>"}`, chủ thể là bài (`subjectKey(source, post_id)`).
 - Không đổi `pipeline/sync-cloud.mjs`, không route Zalo, không lệnh áp cloud; nguồn gọi bằng mã S0x; chữ bài không vào kho (mẫu đọc tay ở `research-local/`).
@@ -37,7 +37,7 @@
 - Test: `pipeline/scripts/tang-tren-tin.test.mjs`
 
 **Interfaces:**
-- Produces: `export function docTang(text: string): { floor: string|null, floorBand: "low"|"mid"|"high"|null, trich: string|null }`; `parsePost(text).floor`, `.floorBand`, `.trichTang`.
+- Produces: `export function docTang(text: string): { floor: string|null, floorBand: "lower"|"middle"|"upper"|null, trich: string|null }`; `parsePost(text).floor`, `.floorBand`, `.trichTang`.
 - Phục vụ E4 (AC-3).
 
 - [ ] **Step 1: Viết test ma trận** `DV4-AC-3 ma trận M1…M28`: bảng 28 ca chép nguyên mục «Ma trận viết trước» của design doc (mã, chữ, floor, floorBand); mỗi ca một `assert.deepEqual({floor, floorBand}, đáp án, mã)`; với mọi giá trị khác null `assert.ok(text.normalize("NFC").includes(trich))`; cuối test in `ma_ca_da_chay=<28 mã>` và `assert.equal(daChay.length, 28)`. Thêm ca Review Focus 1–2 (mã `R1`, `R2`).

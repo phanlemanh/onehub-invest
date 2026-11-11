@@ -24,7 +24,7 @@ Tra bản DD 2.1 local (`research-local/reso/dd-2.1.json`, ngày 11/11):
 | Trường | Cột `sale_offer_records` | Giá trị | RESO |
 |---|---|---|---|
 | Tầng | `floor_raw` (có từ 030) | số tầng `1`–`999`, chữ số không đệm (`12`) | `UnitFloorLocation` |
-| Dải tầng | không có cột | `low` · `mid` · `high` | không có field chuẩn → extension, đủ 6 điều kiện ADR-0011 |
+| Dải tầng | không có cột | `lower` · `middle` · `upper` | không có field chuẩn → extension, đủ 6 điều kiện ADR-0011 |
 
 **Dải tầng tách khỏi `floor_raw` (câu hỏi Hỏi-1 ở thẻ).** SV2 (02/11) lưu «tầng cao» thẳng vào `floor_raw`. `UnitFloorLocation` tối đa 3 ký tự và là
 một tầng cụ thể, nên một dải không hợp; ghi chú của hàng DV4 cũng đòi dải là extension nếu không có field chuẩn. Tách ra thì `floor_raw` giữ đúng nghĩa
@@ -37,12 +37,12 @@ RESO cho mọi nguồn (S06 đều là số), và bên đọc đang có (`review
 
 1. CHECK `field_assertions_field_chk` = tập của 082 cộng `floor_raw`, `floor_band`. Hàng nào sau đó định nghĩa lại CHECK này (PL18 078, SV2 khi nối lại)
    phải giữ hai trường; ghi vào sổ migration.
-2. Trigger miền giá trị trên phát biểu, mọi phương pháp: `floor_raw` khớp `^[1-9][0-9]{0,2}$`, `floor_band` thuộc `low|mid|high`; sai thì RAISE nêu tên trường.
+2. Trigger miền giá trị trên phát biểu, mọi phương pháp: `floor_raw` khớp `^[1-9][0-9]{0,2}$`, `floor_band` thuộc `lower|middle|upper`; sai thì RAISE nêu tên trường.
 3. Phát biểu `legacy` cho mọi `floor_raw` đã có (747 tin S06, từ 030), khuôn cắt chuyển PL15: mỗi dòng gắn `offer_id` của chính nó, chỉ đỡ tin đã sinh ra
    nó; đứng TRƯỚC trigger miền để giá trị cũ ngoài miền (4 tin S06 mang `0`) vẫn được giữ, còn từ nay về sau thì bị từ chối. Chạy hai lần không thêm dòng.
 4. `resolve_offer_fields`: vá thân hàm đang có theo khuôn mốc của 068/069 (thêm `floor_raw` vào ba chỗ dựng cột), không chép cả hàm, để áp được ở mọi thứ tự với các migration vá khác. Không có `coalesce` với giá trị cũ.
 5. Sổ từ vựng `ref_lookup`: `assertion_field` thêm `floor_raw` «Tầng» (`UnitFloorLocation`), `floor_band` «Dải tầng» (local); trục mới `floor_band`
-   (`low` «Tầng thấp», `mid` «Tầng trung», `high` «Tầng cao»).
+   (`lower` «Tầng thấp», `middle` «Tầng trung», `upper` «Tầng cao»). Không dùng `low`/`high`: trùng mã trục `confidence`, bộ lint từ vựng bắt nhầm (đổi ở S3).
 
 Chỉ DB local. Áp máy thu là lời riêng của Mạnh; không áp cloud, không đổi `pipeline/sync-cloud.mjs`. `floor_raw` vốn có trong danh sách sync, nên tầng số của
 S03 tới `/ops/**` ở cloud theo lượt sync kế (cùng đường với tầng S06 hôm nay, không tới Invest).
@@ -56,7 +56,7 @@ S03 tới `/ops/**` ở cloud theo lượt sync kế (cùng đường với tầ
   là tầng (tháng, thứ, tên toà «T16», «T21»). «tang» không dấu + số: 0 bài, nên không nhận làm từ dẫn (không dấu dễ là «tăng»).
 - **Không đọc:** «nhà 5 tầng», «3 tầng» (số đứng trước là số tầng của nhà); «tầng 2-3», «tầng 1 và 2» (nhiều tầng); số theo sau «m», «m2».
 - **Tầng từ mã căn** dạng toà + tầng + trục («S1.12.08», «GH3-1203» ra 12); mã che tầng («PR6xx20») ra null.
-- **Dải:** «tầng cao», «tầng trung cao» → `high`; «tầng trung», «trung tầng», «tầng vừa» → `mid`; «tầng thấp» → `low`. Có số thì chỉ ghi số.
+- **Dải:** «tầng cao», «tầng trung cao» → `upper`; «tầng trung», «trung tầng», «tầng vừa» → `middle`; «tầng thấp» → `lower`. Có số thì chỉ ghi số.
 - **Bài nhiều mã căn** (cùng luật trục ở SV1): để trống, chờ PL18 tách căn.
 - **Trích dẫn:** `trich` là đoạn chữ khớp nguyên văn trong bài sau chuẩn hoá NFC (vd «tầng 12», «S1.12.08»). Phát biểu chỉ ghi khi `trich` có thật trong
   chữ bài.
@@ -71,7 +71,7 @@ DB chưa áp 095 (CHECK chặn): transform kiểm trước, in cảnh báo nêu 
 1. Tra cứu: DD 2.1 không có field dải tầng (`UnitFloorLocation` là một tầng, ≤3 ký tự); `dd: null`, `checked_on: 2026-11-11` trong `pipeline/mappings.yaml`.
 2. Lý do VN: môi giới VN thường che số tầng và chỉ nói dải («tầng trung») — 09/11 phần lớn tin S03 ghi tầng là dải.
 3. Migration 095.
-4. Ràng buộc: trigger miền `low|mid|high` + trục từ vựng `floor_band`.
+4. Ràng buộc: trigger miền `lower|middle|upper` + trục từ vựng `floor_band`.
 5. Khai trong `pipeline/mappings.yaml` (trường + trục từ vựng); `floor_raw` sửa `dd: null` cũ thành `UnitFloorLocation`.
 6. DQ: dòng `s03-floor-fill` trong `pipeline/sql/450_dq_checks.sql` — `skip` khi S03 chưa có phát biểu tầng hay dải, `pass` khi tỉ lệ tin căn hộ S03 có tầng
    hoặc dải từ 5%, `fail` khi dưới; nhãn diễn giải ở `app/src/lib/dq-labels` cùng PR (luật đợt 30/10).
@@ -90,12 +90,12 @@ Câu do người viết, không lấy từ bài thật. Mỗi dòng là MỘT ca
 | M6 | S1.12.08 | 12 | |
 | M7 | GH3-1203 | 12 | |
 | M8 | PR6xx20 | | |
-| M9 | tầng cao | | high |
-| M10 | tầng trung cao | | high |
-| M11 | tầng trung | | mid |
-| M12 | trung tầng | | mid |
-| M13 | tầng vừa | | mid |
-| M14 | tầng thấp | | low |
+| M9 | tầng cao | | upper |
+| M10 | tầng trung cao | | upper |
+| M11 | tầng trung | | middle |
+| M12 | trung tầng | | middle |
+| M13 | tầng vừa | | middle |
+| M14 | tầng thấp | | lower |
 | M15 | tầng 15, tầng cao | 15 | |
 | M16 | bàn giao T4/2027 | | |
 | M17 | T12 view sông | | |

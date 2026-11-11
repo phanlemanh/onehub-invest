@@ -14,10 +14,10 @@ import { docBiDanhAnToan, docPhuongHopLe, docThiTruongCoPhuong, docThiTruongCoXa
 import { matchXaCuCoTienTo } from "./lib/dvhc.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { ganSdtQuaNguoi } from "./lib/gan-sdt-qua-nguoi.mjs";
-import { phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuToaTruc, rutLoaiHinhCu } from "./lib/assert.mjs";
+import { co095, subjectKey, phatBieuLoaiHinh, phatBieuPhongNgu, phatBieuTang, phatBieuToaTruc, rutLoaiHinhCu, rutTangCu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { normText } from "./lib/norm-text.mjs";
-import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
+import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, FLOOR_BAND, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -305,15 +305,72 @@ const MA_TOA_KHAC = /(?<![\p{L}\p{N}_.\-])[A-Z]{1,3}\d{1,3}(?:[A-Z]\d?)?(?![\p{L
 /** Toà duy nhất khi so không phân biệt hoa thường, giữ nguyên chữ của lần đầu; không có hoặc nhiều toà thì null. */
 const motToa = (ds) => (new Set(ds.map((t) => t.toUpperCase())).size === 1 ? ds[0] : null);
 
+/** Các mã căn trong chữ bài, theo dạng khớp đầu tiên của MA_DANG. */
+function maTrongBai(so) {
+  for (const re of MA_DANG) {
+    const thay = [...so.matchAll(re)].filter((m) => !KHONG_PHAI_TOA.test(m[1]));
+    if (thay.length) return thay;
+  }
+  return [];
+}
+
+// ---- Tầng của căn (hồ sơ tang-tren-tin-s03, DV4; bộ đọc lấy từ phần tầng của SV2, audit 02/11 §10) ----
+// Số tầng chỉ khi có từ dẫn «tầng», «lầu»: «T<số>» trần đa phần là tháng, thứ, tên toà (đo 11/11: 0/40 bài mẫu là tầng),
+// «tang» không dấu dễ là «tăng». Không đọc khi số đứng trước («nhà 5 tầng» là số tầng của nhà), nhiều tầng («tầng 2-3»,
+// «tầng 1 và 2»), hay số theo sau là diện tích.
+const DUOI_KHONG_PHAI_TANG = "(?![\\d\\p{L}]|[.,]\\d|\\s*(?:m\\b|m2|tầng|tum|và|,\\s*\\d|-\\s*\\d))";
+// Số đứng riêng ngay trước «tầng» («nhà 5 tầng 2 mặt») chặn; đuôi mã căn («S1.12.08 tầng 15») thì không.
+const TRUOC_TANG = "(?<![\\p{L}]|(?<![\\p{L}\\p{N}.\\-_])\\d{1,2}\\s*)";
+const TANG_SO = new RegExp(`${TRUOC_TANG}(?:tầng|lầu)\\s*[:\\-]?\\s*(\\d{1,4})${DUOI_KHONG_PHAI_TANG}`, "iu");
+const TANG_SO_BO_CHAN = /(?<![\p{L}]|\d\s*)(?:tầng|lầu)\s*[:-]?\s*(\d{1,4})(?![\d\p{L}])/iu; // chỉ cho ca đột biến
+const T_TRAN = /(?<![\p{L}\d])T(\d{1,2})(?![\d/])/u; // chỉ cho ca đột biến
+const TANG_DAI = /(?<![\p{L}])(?:tầng\s*(trung\s*cao|trung|cao|thấp|vừa)|(trung)\s*tầng)(?![\p{L}]|\s*(?:cấp|tâm))/iu;
+
+/** Dải tầng về đúng ba mã: «trung cao» ra cao, «vừa» ra trung. */
+function maDai(m) {
+  const k = (m[1] ?? m[2]).toLowerCase().replace(/\s+/gu, " ");
+  if (k === "cao" || k === "trung cao") return FLOOR_BAND.upper;
+  return k === "thấp" ? FLOOR_BAND.lower : FLOOR_BAND.middle;
+}
+
+/** Tầng trong mã căn: hai chữ số trước trục ở dạng đủ («S1.12.08», «GH3-1203»); mã che tầng thì null. */
+function tangTuMa(m) {
+  const so = m[0].slice(m[1].length).match(/(\d{2})[.\-_]?\d{2}[A-Z]?$/iu)?.[1];
+  return so && Number(so) > 0 ? String(Number(so)) : null;
+}
+
+/** Số tầng hợp lệ (1–999, không đệm) hay null. */
+const soTang = (s) => (s && /^\d+$/.test(s) && Number(s) >= 1 && Number(s) <= 999 ? String(Number(s)) : null);
+
+/** Tầng đọc từ chữ bài. Bài nhiều mã căn để trống (chờ PL18 tách căn). Có số thì không ghi dải.
+ *  @param {string} text
+ *  @param {{ _dotBien?: "bo-chan-nhieu-tang"|"doc-T-tran" }} [opts] `_dotBien` chỉ để ca đột biến của test chứng thước đỏ được
+ *  @returns {{ floor: string|null, floorBand: "lower"|"middle"|"upper"|null, trich: string|null }} trich: đoạn khớp nguyên văn trong chữ NFC */
+export function docTang(text, { _dotBien } = {}) {
+  const rong = { floor: null, floorBand: null, trich: null };
+  const so = gatSo(text).normalize("NFC");
+  const ma = maTrongBai(so);
+  if (new Set(ma.map((m) => m[0].toUpperCase())).size > 1) return rong;
+  const mSo = so.match(_dotBien === "bo-chan-nhieu-tang" ? TANG_SO_BO_CHAN : TANG_SO);
+  if (mSo) {
+    const floor = soTang(mSo[1]);
+    return floor ? { floor, floorBand: null, trich: mSo[0] } : rong;
+  }
+  if (_dotBien === "doc-T-tran") {
+    const t = so.match(T_TRAN);
+    if (t && soTang(t[1])) return { floor: soTang(t[1]), floorBand: null, trich: t[0] };
+  }
+  const tangMa = ma.length ? tangTuMa(ma[0]) : null;
+  if (tangMa) return { floor: tangMa, floorBand: null, trich: ma[0][0] };
+  const dai = so.match(TANG_DAI);
+  return dai ? { floor: null, floorBand: maDai(dai), trich: dai[0] } : rong;
+}
+
 /** Toà và trục đọc từ chữ bài (AC-8). Bài nhiều mã (thường nhiều căn) để trống trục, chờ PL18; toà chỉ giữ khi mọi mã cùng toà.
  *  @returns {{ block: string|null, unit: string|null }} */
 export function docToaTruc(text) {
   const so = gatSo(text);
-  let thay = [];
-  for (const re of MA_DANG) {
-    thay = [...so.matchAll(re)].filter((m) => !KHONG_PHAI_TOA.test(m[1]));
-    if (thay.length) break;
-  }
+  const thay = maTrongBai(so);
   const units = [...new Set(thay.map((m) => m[0].toUpperCase()))];
   let unit = thay[0]?.[0] ?? null;
   if (units.length !== 1) unit = null;
@@ -393,6 +450,10 @@ export function parsePost(text, { giaKhongDonVi = true } = {}) {
   out.phone = out.phones[0] ?? null;
   out.ma = maToaCan(text);
   Object.assign(out, docToaTruc(text));
+  const tang = docTang(text);
+  out.floor = tang.floor;
+  out.floorBand = tang.floorBand;
+  out.trichTang = tang.trich;
 
   // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
   // thành null để transform bỏ qua thay vì gãy INSERT bigint.
@@ -765,6 +826,9 @@ export async function docThiTruongNhom(client, khoaNhom = khoaNhomThat) {
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 // `suyLoaiTin: false` tắt bước suy loại (RM1) — chỉ cho thước đối chiếu trước/sau; đường chạy thật luôn bật.
 // `khoaNhom` chỉ để thước truyền hàm đột biến (nhom-hai-lan-s03-xu-goc); đường chạy thật luôn dùng khoaNhomThat.
+/** Phiên bản bộ đọc tầng (DV4) — method_version của phát biểu tầng. */
+export const TANG_VERSION = "transform-zalo@dv4";
+
 export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin = true, khoaNhom = khoaNhomThat, ganSo = ganSdtQuaNguoi } = {}) {
   // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
   // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
@@ -852,7 +916,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh }],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh, floor: pr.floor, floorBand: pr.floorBand, trichTang: pr.trichTang }],
         phone: null, baiSdt: [], sellerName: null, sellerNameAt: null,
       };
       dedup.set(offerId, o);
@@ -860,7 +924,7 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
       o.nReposts++;
       gopKhuVuc(o, pr.areaId ?? null);
       o.postIds.push(pr.post.post_id);
-      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh });
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at, sender_id: pr.post.sender_id, block: pr.block, unit: pr.unit, loaiHinh: pr.loaiHinh, nguonLoaiHinh: pr.nguonLoaiHinh, floor: pr.floor, floorBand: pr.floorBand, trichTang: pr.trichTang });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -918,10 +982,19 @@ export async function runTransformZalo(client, { parse = parsePost, suyLoaiTin =
   const dongLoai = phatBieuLoaiHinh("S03", baiDoc, LOAI_HINH_VERSION).filter((d) => !chuTheKhac.has(d.subject_key));
   const rutLoai = await rutLoaiHinhCu(client, dongLoai.map((d) => d.subject_key), LOAI_HINH_VERSION);
   console.log(`loại hình: ${dongLoai.length} phát biểu, rút ${rutLoai}`);
+  // DV4 (tang-tren-tin-s03): tầng qua phát biểu khi DB đã áp 095; chưa áp thì CHECK chặn nên bỏ phần tầng, lượt vẫn chạy.
+  const coTang = await co095(client);
+  if (!coTang) console.warn("transform-zalo: DB chưa áp migration 095, bỏ phát biểu tầng ở lượt này");
+  const dongTang = coTang ? phatBieuTang("S03", baiDoc, TANG_VERSION) : [];
   // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
   const { reconcile } = await writeOffers(client, "S03", rows, {
-    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai],
+    assertions: [...phatBieuPhongNgu("S03", nhom, "transform-zalo@045"), ...phatBieuToaTruc("S03", baiDoc, "transform-zalo@sv1"), ...dongLoai, ...dongTang],
   });
+  if (coTang) {
+    const rutTang = await rutTangCu(client, baiDoc.map((p) => subjectKey("S03", p.post_id)), dongTang.map((d) => `${d.subject_key}|${d.field}`), TANG_VERSION);
+    if (rutTang) await client.query("SELECT resolve_offer_fields($1::text[])", [rows.map((r) => r.offer_id)]);
+    console.log(`tầng: ${dongTang.length} phát biểu, rút ${rutTang}`);
+  }
   // enrich-nguoi-s03: writeOffers vừa upsert seller_phone về số riêng của tin, nên tin đang mang số qua người đăng được gán lại
   // ngay trong giao dịch này — không có khoảng tin rơi về «Chưa có số» cho cloud-sync chép. Số mới do lượt sau dungNguoi.
   // `ganSo` thay bộ gán CHỈ cho đối chứng của thước.
