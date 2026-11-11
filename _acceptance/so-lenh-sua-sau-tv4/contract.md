@@ -5,7 +5,9 @@ slug: so-lenh-sua-sau-tv4
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: không tệp nào khớp t3_paths (pipeline/lib, app/src/lib, pipeline/cron, scripts/cap-token-may, docs)
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-so-lenh-sua-sau-tv4-design.md
 ---
 
