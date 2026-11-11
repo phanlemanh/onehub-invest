@@ -36,7 +36,7 @@ phát biểu loại hình suy sinh sau 069; view `sale_offers` trước 070). Đ
 `scripts/*.test.mjs`, nên tách ra không làm chậm việc gỡ E8 cho các hàng khác. Câu hỏi gửi giám sát kèm số đo: 2.225 tin
 đổi `property_type` vì 37.977 phát biểu inferred; 067 phát lại vỡ ở cột `seller_phone_inferred` của 070.
 
-**(3) Không ghi DB dùng chung.** Thước và test của nó chỉ đọc hoặc ghi trong `BEGIN … ROLLBACK`; probe quét cả hai tệp.
+**(3) Không ghi DB dùng chung.** Thước và test của nó chỉ đọc hoặc ghi trong `BEGIN … ROLLBACK`; probe quét cả hai tệp theo quan hệ (lệnh giao dịch gần nhất trước/sau mỗi câu ghi). Ba lượt `--thu` của KDM-AC-3 chạy qua `db/db-thu.sh --chay` trên DB của riêng lượt: S4 r1 đo băm `property_offers` lệch vì job nạp 15 phút ghi DB chung giữa lượt, và hai lượt song song tranh khoá 33033 tới quá giờ. Ca `KDM-PX1` tự dựng khu vực cha để chạy được trên DB trống của CI.
 
 ## 3. Ngoài vòng
 

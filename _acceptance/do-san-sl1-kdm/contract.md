@@ -39,7 +39,7 @@ Then hai kết quả bằng nhau từng ô (ô một hợp lệ, ô hai không);
 «KDM-PX1»; sau ROLLBACK không còn khu vực mồi nào trong DB.
 
 ### AC-3 — KDM-AC-3 xanh lại, ba chiều giữ nghĩa
-Given DB local hiện tại,
+Given mỗi lượt `--thu` chạy trên DB của riêng lượt chép từ bản mẫu của DB local (`db/db-thu.sh --chay`), không trên DB dùng chung,
 When `node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs`,
 Then KDM-AC-3 xanh: bản thường exit 0 với dòng PASS; `--pha khong-sua` và `--pha mo-loc` vẫn exit 1 và gọi tên tin mồi như hồ
 sơ `do-khu-vuc-tu-dung-moi` đã ký.
@@ -47,8 +47,9 @@ sơ `do-khu-vuc-tu-dung-moi` đã ký.
 ### AC-4 — Không ghi DB dùng chung
 Given `scripts/kiem-tin-rao-gan-khu-vuc.mjs` và `scripts/kiem-tin-rao-gan-khu-vuc.test.mjs`,
 When quét,
-Then mọi câu ghi (INSERT, UPDATE, DELETE, DROP) trong hai tệp nằm sau một `BEGIN` và trước `ROLLBACK` của cùng kết nối; bản sao
-có một câu ghi ngoài giao dịch làm phép quét đỏ gọi tên tệp và dòng.
+Then với mỗi câu ghi (INSERT, UPDATE, DELETE, DROP) trong hai tệp, lệnh giao dịch thật gần nhất phía trước là `BEGIN` và gần
+nhất phía sau là `ROLLBACK`; bản sao có câu ghi trước `BEGIN` đầu tiên, hay ngay sau một `ROLLBACK`, làm phép quét đỏ gọi tên tệp
+và dòng; ca `KDM-PX1` tự dựng mọi khu vực nó cần (cả khu vực cha) nên chạy được trên DB trống của CI.
 
 ### AC-5 — Hồi quy
 Given `scripts/*.test.mjs`,
