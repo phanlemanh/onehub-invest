@@ -43,3 +43,42 @@ wall: 1927s
 - **claude-sonnet-5-5**: 5 agent · 12 calls · out 18,048 · in 24 · cache_read 224,216 · cache_create 189,404
 - **claude-haiku-5-5**: 13 agent · 36 calls · out 20,252 · in 72 · cache_read 616,596 · cache_create 434,444
 
+### S4 round 1 (chấm lại) — wf_383200c0-f9c (19 agent, 46,216 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:bugs | claude-opus-5-5 | 13 | 9,366 | 26 | 629,932 | 98 |
+| review:conventions | claude-opus-5-5 | 15 | 6,924 | 30 | 1,038,363 | 78 |
+| review:measurement | claude-opus-5-5 | 5 | 5,202 | 10 | 168,459 | 52 |
+| synthesize:report | claude-sonnet-5-5 | 2 | 4,232 | 4 | 35,070 | 24 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 9 | 3,666 | 18 | 223,086 | 1134 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 2,009 | 4 | 29,046 | 8 |
+| machine:bash pipeline/scripts/tang-tren-tin-db.s | claude-haiku-5-5 | 2 | 2,003 | 4 | 6,600 | 568 |
+| machine:node pipeline/vocab.mjs --check && bash | claude-haiku-5-5 | 2 | 1,639 | 4 | 29,073 | 257 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,591 | 4 | 29,040 | 7 |
+| machine:cd app && npm test | claude-haiku-5-5 | 4 | 1,477 | 8 | 66,604 | 634 |
+| triage | claude-sonnet-5-5 | 2 | 1,432 | 4 | 27,395 | 12 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,232 | 4 | 29,051 | 18 |
+| machine:node --test pipeline/scripts/tang-tren-t | claude-haiku-5-5 | 2 | 1,072 | 4 | 29,057 | 6 |
+| machine:bash pipeline/scripts/tang-tren-tin-db.s | claude-haiku-5-5 | 2 | 1,001 | 4 | 29,060 | 191 |
+| machine:node pipeline/scripts/do-tang-tren-tin.m | claude-haiku-5-5 | 2 | 952 | 4 | 29,061 | 6 |
+| machine:node pipeline/scripts/do-tang-tren-tin.m | claude-haiku-5-5 | 2 | 751 | 4 | 29,072 | 5 |
+| machine:cd app && node --import tsx --test tests | claude-haiku-5-5 | 2 | 747 | 4 | 29,060 | 5 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 579 | 4 | 29,028 | 30 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 341 | 4 | 24,526 | 4 |
+
+
+wall: 1871s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 13 | 18,719 | 586,838 | 1832 | 17:49:51 | 18:20:23 |
+| review | 3 | 21,492 | 1,836,754 | 100 | 17:49:51 | 17:51:31 |
+| triage | 1 | 1,432 | 27,395 | 12 | 18:20:23 | 18:20:35 |
+| capture | 1 | 341 | 24,526 | 4 | 18:20:35 | 18:20:39 |
+| synthesize | 1 | 4,232 | 35,070 | 24 | 18:20:39 | 18:21:02 |
+
+- **claude-opus-5-5**: 3 agent · 33 calls · out 21,492 · in 66 · cache_read 1,836,754 · cache_create 228,580
+- **claude-sonnet-5-5**: 3 agent · 6 calls · out 6,005 · in 12 · cache_read 86,991 · cache_create 108,478
+- **claude-haiku-5-5**: 13 agent · 35 calls · out 18,719 · in 70 · cache_read 586,838 · cache_create 424,775
+
