@@ -5,7 +5,9 @@ slug: sao-luu-ma-hoa-b2
 owner: phanlemanh@gmail.com
 risk_tier: T3      # giám sát giao T3: dữ liệu tầng A rời máy (dù đã mã hoá) khi lượt gửi thật chạy
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md
 ---
 
