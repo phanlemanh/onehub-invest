@@ -581,8 +581,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     bán», «Đã bàn giao» từ RESO `DevelopmentStatus` cộng extension `SalesStatus`, `HandoverDate`. URL, tìm kiếm và bộ lọc không đổi theo trạng thái.
     Kế hoạch thi công bản 2 (Mạnh «Theo khuyến nghị», 08/11): (1) cặp nối dự án do máy đề xuất, đội ops duyệt trên thẻ, cặp cùng căn cứ duyệt
     loạt bằng «thẻ luật», Mạnh xem mẫu; (2) mở thu toàn bộ S09 khi S09 phủ ≥ 50% trong 282 dự án S06 và phân giải ≥ 70% mã toà S03 ở hai dự
-    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục hoặc đã người duyệt cặp nối, có xã/phường, và có tin đang rao
-    hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
+    án thử; (3) dự án hiện trên Invest khi có ít nhất một nguồn danh mục **đã qua thẻ luật** (sửa bởi mục 44 Hỏi-1, 11/11) hoặc đã
+    người duyệt cặp nối, có xã/phường, và có tin đang rao hoặc quỹ căn chủ đầu tư. Hàng việc: `docs/plan/ke-hoach-danh-ba-du-an-0811.md` §5 (giám sát đặt mã chính thức).
     Mốc S09 hai thước (Mạnh, 08/11: «Điều quan trọng nhất của tôi là nguồn S03», chọn «cả hai»): nấc 1 thu S09 cho các dự án S03 nói
     tới khi phủ đo trên bài S03 ≥ 50% và phân giải ≥ 70%; nấc 2 thu toàn bộ khi thêm phủ 282 dự án S06 ≥ 50%. Số sơ bộ: thước S03 ≈ 99%,
     thước S06 ≈ 4,6% (S09 là danh mục Hà Nội). Hàng DA10, DAZ2.
@@ -653,6 +653,41 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Số đo nền (DB máy thu 10/11): 11.616 bài Yêu cầu S03, luật bỏ sót thêm khoảng 1.300 bài viết tắt; số phòng đọc được 96%, ngân sách
     73%, dịch vụ suy được 86%; dự án theo tên nhóm 42%, phường 0,1%; 670 người đăng, 317 người viết 94% số bài; gom theo người và chữ
     còn 4.832. Hàng mới: YC0–YC8 (YC1 sửa bộ đọc ngân sách đi trước YC0). SH12 (tín hiệu cầu, chờ Q8b) nay do YC7, YC8 gánh.
+44. **Mô hình dòng chảy danh bạ dự án** (11/11, Mạnh «Theo khuyến nghị» cả năm câu Hỏi-1..Hỏi-5; căn cứ
+    `docs/architecture/mo-hinh-danh-ba-du-an.md` bản 2, §7): bản song song của `mo-hinh-pipeline-mot-can-nha.md` (mục 32) cho
+    **bản ghi nguồn → dự án** — tám chặng D1–D8, khuôn chung bản ghi nguồn, căn cứ đề xuất cặp K1–K5, phân xử thuộc tính, đo hằng ngày.
+    Phần lớn ghép từ ADR-0016, mục 38–40, DAZ4; điều mới chỉ ở năm câu:
+    - Hỏi-1: bản ghi danh mục không khớp nút nào thì máy **đúc nút ứng viên** hàng loạt; nút chỉ được nối tin và lên Invest sau khi qua
+      **thẻ luật theo nguồn** (Mạnh xem mẫu) hoặc người duyệt. Thêm vào DA18. **Siết** điều kiện Invest ở mục 39: «có nguồn danh mục»
+      thành «có nguồn danh mục đã qua thẻ luật».
+    - Hỏi-2: điểm do nguồn danh mục công bố (S07 trong trang, S08 trong bản đồ nhúng) làm **điểm dự án**, ghi nguồn S0x; không gọi dịch
+      vụ định vị bên ngoài. Thêm vào DA16. Đa giác, tâm từ OSM vẫn thuộc mục chờ DA21.
+    - Hỏi-3: thêm **mức hồ sơ dự án** M0–M5 (Có tên → Có nguồn → Có xã → Đối chiếu ≥ 2 nguồn khớp → Có pháp lý từ nguồn nhà nước →
+      Đang bán) vào DA20, là thước phụ ở Ops cạnh độ đủ bảy nhóm; không thành north star; mã M, khác bậc B0–B5. CONTEXT thêm thuật ngữ.
+    - Hỏi-4: thu danh mục S07 (**DAZ3**) **trước** DA3, ưu tiên Hà Nội và HCM thay cho «dự án có tin mà chưa nối»; bỏ DA3 khỏi
+      `dung_tren` của DAZ3. Thu chậm (≥ 10 s/trang, ~16 giờ) theo giải pháp ZCode.
+    - Hỏi-5: **khuôn chung bản ghi nguồn** (§1.1) làm trong DA3, không mở hàng riêng.
+    Theo §6 (đối chiếu mã): DA3 kèm migration mở `registry_aliases`, `registry_events` (055) cho nút dự án và nguồn S10–S15.
+    Sửa lời hàng: DA3, DA16, DA18, DA20, DAZ3. Không hàng mới.
+45. **Kiểm kê danh bạ dự án: trang gốc ↔ dữ liệu** (11/11, Mạnh «Theo khuyến nghị» cả sáu câu Q1–Q6; căn cứ: bản kiểm kê local
+    ngày 11/11 (research-local, không vào kho vì có ảnh trang gốc)). Phát hiện chính:
+    - Mất lớn nhất ở bước **raw → stg**: lớp dự án S08 (177 dự án: địa chỉ, chủ đầu tư, điểm 174/177…) không bảng nào đọc;
+      S09, S10, S11 có raw nhưng chưa có bảng stg.
+    - **0 phát biểu cấp dự án**; bảng nối S08 mới nối **8/177** dự án (vào 2 nút), 27 dự án mới chưa có trong bảng nối.
+    - App **chưa có trang danh bạ, chưa có trang dự án** (Ops không có mục, Invest không có route).
+    Sáu câu đã duyệt:
+    - Q1: thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án (mỗi ô có giá trị, ngày snapshot, trạng thái khớp/lệch/trống;
+      nút mở trang gốc chỉ ở máy thu). Sửa DA20, DN2.
+    - Q2: hàng stg cấp dự án S08 (**DA30**, đã có) đứng trước DA3. Sửa ghi chú DA30, DA3; `dung_tren` của DA3 thêm DA30.
+    - Q3: S10, S11 vào stg đã có mã (DA29, DA24a); mở rộng DA16 sang S11 (pháp lý, quy mô), DA16 đứng trên DA24a. S10 đi cùng DA17.
+      Sửa DA16, DA17.
+    - Q4: S09 lấy toà từ trang công khai (dữ liệu nền của trang có 115 toà Ocean Park 1, 61 toà Grand Park, kèm ngày bàn giao từng
+      toà); đóng DAZ1 với số đo mới, việc thu là làn ZCode. Sửa DAZ1.
+    - Q5: bản ghi nguồn cấp lô/toà (S11: Ocean Park 1 là 4 bản ghi cấp lô, tên pháp lý khác) nối vào toà/phân khu có sẵn qua thẻ
+      từng cặp; đủ 20 mẫu thì viết thẻ luật. Cùng DA3: quy ước giá trị rỗng giả («Đang cập nhật», «--», «0»), nối lại S08 theo
+      snapshot mới. Sửa DA3.
+    - Q6: lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode. Sửa ghi chú DA29.
+    Mục chờ DA22 thêm ghi chú: 3/3 mẫu lệch tên chủ đầu tư, đo lệch ngay khi có stg; chưa chuyển thành hàng. Không hàng mới.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
