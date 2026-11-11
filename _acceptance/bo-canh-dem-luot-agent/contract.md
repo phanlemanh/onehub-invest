@@ -5,7 +5,7 @@ slug: bo-canh-dem-luot-agent
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-06
 ---
@@ -64,3 +64,17 @@ Source input: `claudedp-0511-16`, `zcode-0511-27`, `zcode-0511-29`, `claudedp-05
 - L4d không thấy: lượt `BOOT.md` (xoá phiên sau khi chạy, số về như cũ) và phiên incognito (kho trong bộ nhớ), theo mã `~/dev/openclaw`, chưa đối chiếu bản đang chạy. 05/11: hook đang bật chỉ có hook thu, 0 tệp `BOOT.md` trong 3 tầng thư mục OpenClaw.
 - Agent mới xuất hiện đúng trước lần chạy đầu thì bị tính vào mốc; chấp nhận vì 14 ngày qua chỉ có 1 ngày có lượt.
 - Việc còn phải làm sau Cổng Phạm vi: ZCode sửa mã và thêm ca theo `gap-probe.md`, phép đọc thật `doc-that.sh` (AC-9), gom tên thật về một hằng; làn Claude viết tài liệu (AC-10).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: Phép thử an toàn của bộ canh chỉ có ý nghĩa trên đúng máy của tác giả; chạy ở máy khác nó vẫn báo đạt dù không kiểm được gì. Bộ canh thật vẫn hoạt động bình thường.
+  - Ngoài-2: Đường log theo ngày của bộ canh chưa có ca kiểm riêng, nên nếu nó hỏng với khối log lớn thì phép thử vẫn báo đạt. Đường log chính đã được kiểm.
+  - Ngoài-3: Phép kiểm rằng tệp cảnh báo và log thật không bị đụng đến có thể đạt mà không đo gì khi chạy ở máy khác hoặc khi chưa từng có cảnh báo.
+  - Ngoài-4: Khi bộ canh không đọc được kho phiên, nó đưa ra cùng một câu cảnh báo cho nhiều nguyên nhân khác nhau, nên người trực phải tự dò nguyên nhân. Gateway vẫn được tắt an toàn.
+  - Ngoài-5: Phép thử không chạm máy thật có thể đạt rỗng khi checkout nằm chỗ khác, nên bằng chứng nghiệm thu chỉ đáng tin trên máy của tác giả.
+  - Ngoài-6: Phép thử có thể báo đạt dù lần chạy lại không ghi thêm cảnh báo về mốc cần xử, nên người trực có thể không biết phải xử mốc nếu hành vi này hỏng.
+  - Ngoài-7: Phép thử chưa xác nhận cảnh báo có nêu tên agent gây ra lượt mới, nên nếu sau này mất tên đó thì người trực khó biết agent nào chạy.
+  - Ngoài-8: Thẻ duyệt đưa cho người ký thiếu một tiêu chí về tài liệu và xếp nhầm hai việc sẽ làm vào mục «sẽ không làm», nên người ký có thể hiểu sai phạm vi.
+  - Ngoài-9: Bộ phép thử ghi cứng tên người dùng và thư mục máy của Mạnh; chạy trên máy khác thì một phép kiểm báo đạt mà thực ra không đo gì.
+  - Ngoài-10: Một nhánh dò log theo ngày của bộ canh đã được sửa nhưng chưa có phép thử riêng; nếu nhánh này hỏng, lượt agent chỉ ghi ở log đó có thể không bị tắt gateway.
+  - Ngoài-11: Phép kiểm tệp cảnh báo thật chỉ có nghĩa trên máy của Mạnh; trên máy khác nó báo đạt mà không đo gì.
+  - Ngoài-12: Khi bộ canh tắt gateway vì không đọc được kho phiên, thông báo dùng chung một câu cho mọi nguyên nhân nên người vận hành phải tự đoán nguyên nhân cụ thể.
+  - Ngoài-13: Chỗ sửa dò log theo ngày chưa có phép thử riêng, nên chưa chắc nó tắt gateway đúng khi lượt agent chỉ để dấu ở log đó.

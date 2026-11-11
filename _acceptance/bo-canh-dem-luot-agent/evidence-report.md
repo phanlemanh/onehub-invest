@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: bo-canh-dem-luot-agent
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ea5bec6a0a3855d2a787e679e1595afa67154973
-human_signoff:
+human_signoff: Mạnh 2026-11-11
 ---
 
 # Evidence Report: bo-canh-dem-luot-agent
@@ -185,7 +185,7 @@ human_signoff:
     - Runbook mục «L4d tắt gateway» (docs/ops/runbook-openclaw-hook.md) cần ghi lệnh hay kênh cụ thể cho bước «KẸT ngay trên kênh», và điều cần làm nếu Mạnh chưa trả lời lúc nửa đêm (mặc định hợp lý là để gateway tắt đến sáng).
     - Cùng mục đó cần một lệnh chỉ-đếm cụ thể để kiểm «không còn phiên nào đang chạy» ở bước 3, và cách cụ thể trả lời «có gửi gì ra ngoài không» ở bước 2 (log nào, lệnh đếm nào, không in nội dung).
     - Ghi gateway bị tắt bằng cơ chế nào (bootout, kill hay launchctl unload) và cách xác nhận trạng thái tắt trước khi chạy `launchctl bootstrap` ở bước 5; nguồn đối chiếu là hàm alert() trong scripts/zalo-watchdog.sh, file này phải nằm trong Input của eval.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-11-11 — Đạt
 
 ### Lệnh suite (hồi quy)
 
