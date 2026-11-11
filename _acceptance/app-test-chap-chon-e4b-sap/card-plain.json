@@ -1,16 +1,1 @@
-{
-  "feature_plain": "Bộ kiểm app chạy chung thôi đỏ ngẫu nhiên khi máy bận: bốn ca đo tốc độ trên dữ liệu thật chỉ chạy riêng, với nguyên mức trần đã ký.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ cho bộ kiểm app chạy chung bỏ qua bốn ca đo tốc độ (ba ca danh sách tin nhanh, một ca đối chiếu căn giá tốt), và ghi rõ mỗi ca chạy riêng ở lệnh nào; ca đo danh sách tin dưới 1 giây vẫn chạy chung."},
-    {"id": "AC-2", "p": "Sẽ chạy đủ bốn ca đó khi gọi lệnh riêng của từng hồ sơ, giữ nguyên mức trần: danh sách tin dưới 0,7 giây mỗi kiểu sắp, đối chiếu đủ mọi tin giá tốt; máy đỏ nếu có ai đổi mức trần."},
-    {"id": "AC-3", "p": "Sẽ đổi lời tiêu chí tốc độ danh sách tin đã ký: chỉ đo khi chạy riêng, thôi đo khi tám bộ kiểm chạy cùng lúc; tiêu chí căn giá tốt giữ nguyên lời."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG làm câu truy vấn nhanh hơn ở vòng này (thêm chỉ mục cho danh sách tin, tăng tốc trang căn giá tốt) — đó là hàng sản phẩm riêng."},
-    {"id": "OOS-2", "p": "KHÔNG nới mức trần nào (0,7 giây, 1 giây, 600 giây)."},
-    {"id": "OOS-3", "p": "KHÔNG đổi lời tiêu chí căn giá tốt — lời đó vốn đã đo chạy một mình."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Một trục: ca đo tốc độ chạy chung hay chạy riêng — AC-1 phủ chạy chung, AC-2 phủ chạy riêng; AC-3 là chỗ chạm lời đã ký."}
-  ]
-}
+{"feature_plain":"Bộ kiểm app chạy chung thôi đỏ vì tải máy: hai ca đối chiếu DB máy thu chạy riêng, tuần tự, và ca giá tốt đọc trong một ảnh chụp chung nên lượt nạp sống không làm lệch phép so."}
