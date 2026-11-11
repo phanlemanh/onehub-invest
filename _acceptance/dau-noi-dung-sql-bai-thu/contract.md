@@ -5,7 +5,7 @@ slug: dau-noi-dung-sql-bai-thu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-10
 design_doc: docs/superpowers/specs/2026-11-10-dau-noi-dung-sql-bai-thu-design.md
@@ -76,3 +76,6 @@ Bỏ quét không gian bằng dòng sổ `bỏ coverage-scan`: các trục liệ
 
 - Test DB: các bài kiểm pipeline chạy trong giao dịch ROLLBACK; bài kiểm app chạy trên lược đồ tạm. `--simulate` đọc DB máy thu,
   mọi ghi ROLLBACK. Không áp migration nào.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-11:
+  - Ngoài-1: ba lệnh đo chạy tay (`do-nhom-hai-lan`, `do-gop-anh`, `do-nhanh-bai-s03`) còn định nghĩa bài thử cũ, nên số
+    của chúng có thể lẫn bài thử noi-dung; số Ops và lệnh kiểm tin giả không bị ảnh hưởng.
