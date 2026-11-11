@@ -5,7 +5,7 @@ slug: tang-tren-tin-s03
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/** khớp t3_paths (lộ trình ghi T2)
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-tang-tren-tin-s03-design.md
@@ -92,3 +92,7 @@ Source input: hàng DV4 của `docs/plan/lo-trinh.json`; Cổng Đáng «Build c
 - Áp 095 lên DB máy thu hay cloud; chạy lại transform trên DB chung (lời riêng của Mạnh, giám sát xếp).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: nếu bộ đọc tầng hỏng hẳn, dòng kiểm chất lượng «s03-floor-fill» ghi «bỏ qua» thay vì báo đỏ, nên việc mất toàn bộ tầng có thể không bị thấy ngay.
+  - Ngoài-2: phép kiểm «tệp đáp án đọc tay nằm ngoài kho» xem luật bỏ qua của checkout chính, không phải của nhánh đang kiểm.

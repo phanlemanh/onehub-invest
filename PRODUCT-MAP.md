@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>27 việc"]
+  GD --> B["Sắp mở vòng<br/>26 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>170 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>109 việc"] --> GG{"Cổng Giá trị"}
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>174 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>113 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -44,7 +44,6 @@ flowchart TD
 - Tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án, không đè phường đã có (`phuong-tu-du-an`)
 - Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn (`s06-du-an-len-tin-can`)
 - Người vận hành gộp hai nút danh bạ, tách, đổi cha, đổi loại giữa dự án con và phân khu, hay rút một nút sai trên Ops, và mọi bí danh, liên kết tin, phát biểu kế thừa phía sau đi theo (`sua-cay-danh-ba`)
-- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị (triệu/tháng cho thuê, tỷ cho mua) ở các cách viết tắt «tc 8tr», «2ty6», «6tr5», «quay đầu» và sáu lỗi Ngoài-4/5/7/9/10/11 của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
 - Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn) (`thuoc-tinh-danh-muc-s08-s09`)
 - Quỹ căn chủ đầu tư S08 thành tin sơ cấp gắn đúng căn, mang giá chủ đầu tư và trạng thái quỹ, và không xuất hiện ở danh sách Bán, thước giá hay metrics (`tin-so-cap-s08`)
 - Phân khu và toà S09 vào danh bạ không sinh toà trùng, và có ba số quyết định thu S09: phủ trên dự án của S03, phủ trên 282 dự án S06, phân giải mã toà S03 (`toa-s09-vao-danh-ba`)
@@ -72,10 +71,6 @@ flowchart TD
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
-## Đang làm
-
-- Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO (`tang-tren-tin-s03`)
-
 ## Đã giao — chờ phiên nghiệm thu
 
 - Người duyệt vai Vận hành ở máy thu thấy ảnh tin chỉ có URL gốc (S06, S05) trên thẻ duyệt — ảnh đi qua máy chủ theo media_key, trình duyệt không nhận URL hay tên miền nguồn (`anh-goc-qua-may-chu`)
@@ -98,6 +93,7 @@ flowchart TD
 - Danh bạ đủ 3.321 xã, phường, đặc khu theo mã 5 số của Cục Thống kê trong areas dưới đúng 34 tỉnh; 10.033 tên xã cũ thành bí danh (441 xã cũ bị tách trả «cần chọn xã»); tin S03, S06 khớp tên xã hiện hành và tên xã cũ an toàn ở mọi tỉnh; reassign không xoá xã danh bạ; đo tin có xã trước/sau theo tỉnh (`danh-ba-phuong-xa-toan-quoc`)
 - Danh bạ có toà · trục · căn cao tầng Ocean Park 1 và Grand Park dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; chủ đầu tư ghi ở cấp toà (Building.BuilderName) (`danh-ba-toa-truc-can`)
 - Danh bạ vật thể dựng được toà ở cả 34 tỉnh/thành — mã tỉnh ISO qua bảng tra trong migration, UPI nhận mọi mã, chủ đầu tư ghi đúng phương pháp nguồn (`danh-ba-vat-the-toan-quoc`)
+- Các bản SQL chép định nghĩa bài thử (Luồng 7 ngày ở pipeline và app, Dòng chảy dữ liệu, thước dư lượng tin giả) nhận dấu noi-dung như testMarker, để số Ops và lệnh kiểm tin giả khớp tập transform đọc (`dau-noi-dung-sql-bai-thu`)
 - DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại (`db-tu-khoi-dong`)
 - Mỗi căn và mỗi tin chưa gắn căn có bậc dữ liệu B0–B5 tính bằng một hàm, phân bố bậc theo thị trường × loại hình được chụp mỗi ngày và in ra được, và một kiểm chất lượng giữ bất biến «mọi đề xuất enrich đã áp có phát biểu tương ứng» (`de-xuat-thanh-phat-bieu-bac`)
 - /api/v1/deals chỉ trả dữ liệu cho token ops cho tới khi tin mock được rút khỏi canonical (`deals-api-tam-dong`)
@@ -169,9 +165,12 @@ flowchart TD
 - Người vận hành thấy cùng một số SLO trên /ops và /ops/collections (`slo-mot-nguon`)
 - Mọi route API của app nằm trong một sổ bề mặt và chỉ trả đúng thứ sổ cho phép (`so-be-mat-api`)
 - Người vận hành mở /ops và thấy chi phí, token, độ trễ của mọi cuộc gọi AI theo việc, model và ngày (`so-cuoc-goi-ai`)
+- Lệnh có khuôn đã duyệt trên cloud được máy thu kéo về bằng token máy riêng, áp đúng một lần và báo kết quả cùng giá trị trước/sau lên cloud (`so-lenh-bo-ap`)
 - Người vận hành khai mọi đơn vị thu (nhóm S03, nhóm S05, vùng S06, market S02) trong một sổ trên /ops, mỗi đơn vị có mã ổn định dạng S03-N012, thị trường, dự án nhóm chuyên và trạng thái vòng đời (`so-nhom-mot-noi`)
 - Một sổ từ vựng sinh bảng ref_*, hằng TS/JS, enum prompt và nhãn tiếng Việt; lint đỏ khi có enum viết tay ngoài sổ (`so-tu-vung-mot-nguon`)
 - Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi (`soat-tang-a-moi-duong-len-cloud`)
+- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị ở các cách viết tắt và sáu lỗi Ngoài của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
+- Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO (`tang-tren-tin-s03`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
 - Người duyệt thấy người đăng của mỗi tin trên thẻ ghép căn (tên, SĐT, số tin đang rao) và nhận ra ngay khi hai tin cùng một người (`the-duyet-hien-nguoi-dang`)
@@ -195,6 +194,7 @@ flowchart TD
 - Màn gắn nhãn hiện ảnh bài S03 ngay trong thẻ thay cho dòng link, xem lớn được để đọc chữ trên ảnh (`anh-tren-the-gan-nhan`)
 - Sổ bề mặt API khai /api/zalo-media rộng bằng hoặc hơn quyền thật sau PL3 (ảnh snapshot cho vai Vận hành), route và hai bộ kiểm tĩnh khớp sổ (`api-surface-anh-vai-ops`)
 - Test «Căn giá tốt» và «Kiểm chất lượng dữ liệu mới nhất» chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`app-test-chiu-song-song`)
+- Hộp thử AU3 có bước đọc gộp — phép đo nạp báo lỗi của job Zalo xanh lại sau khi job chạy sáu bước, ba hồ sơ đã ký ghim lại được (`au3-moi-truong-thu-buoc-doc-gop`)
 - AU3 phần nạp — tác vụ Chợ Tốt và Facebook báo lỗi rõ khi nạp hỏng, không nhảy qua snapshot lỗi (`au3-nap-bao-loi`)
 - audit-all.sh và trang Ops ở máy local đọc log job ở checkout chính dù chạy từ worktree, không báo LIMITED hay «Hỏng» giả vì thư mục log rỗng (`audit-all-doc-log-o-checkout`)
 - ca ON16-AC-2 của audit-all.test.mjs thôi chập chờn qua ranh giới phút — hộp test ghim mốc giờ của dòng tiêu đề bằng bản giả date (`audit-all-test-moc-phut`)
@@ -235,6 +235,7 @@ flowchart TD
 - Đo hiệu quả hằng ngày — mẫu soát cuốn chiếu 20 bài, tỉ lệ giữ nháp theo cách đọc × ô, ước bỏ sót, tín hiệu không cần nhãn, dòng chuyển bậc; lát phường/xã, dự án, toà; xem trên /ops/quality (`do-hieu-qua-hang-ngay`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
+- Thước gán khu vực tin rao (KDM-AC-3) theo luật khớp xã PX1 — gỡ ca đỏ sẵn làm hồi quy scripts đỏ cho mọi hàng (`do-san-sl1-kdm`)
 - DO1 giữ dấu ngày lập mốc (đổi thang, lập mốc đầu) suốt cả ngày qua mọi lượt cloud-sync, ngày ấy không có dòng chuyển bậc, lệnh sửa ngày đổi thang đã qua, thước TB-AC-11 chạy được sau khi máy thu áp 087 (`do1-giu-dau-doi-thang`)
 - Bước đêm đọc gộp S03 chạy được ở kho không có .env trên /bin/bash 3.2 — bộ test agent xanh ở mọi worktree (`doc-gop-env-rong`)
 - Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
@@ -284,6 +285,7 @@ flowchart TD
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
 - Lệnh nhãn bạc S03 — model lớn (Claude Haiku 5.5, OpenAI Decisions, Qwen 27B local) đọc bài S03 và ghi ý định tin, bán/thuê, xác suất, câu trích vào bảng nhãn bạc riêng (migration 065), kèm chế độ đo trên tập vàng — không ghi dữ liệu canonical (`nhan-bac-model-lon-s03`)
 - Dòng kiểm chất lượng ảnh tin media:local-file có nhãn tiếng Việt trên /ops/quality (`nhan-dq-media-local-file`)
+- Trạng thái mã nguồn draft có nhãn «Chưa thu» trên cổng Ops, kèm ca kiểm thuần đòi mọi giá trị CHECK của source_registry.status có nhãn (`nhan-trang-thai-nguon-draft`)
 - Lấy mẫu gắn nhãn theo nhóm S03 coi một nhóm thật đăng ký hai lần trong sổ là một tầng, không sửa dữ liệu thật (`nhom-dang-ky-hai-lan-s03`)
 - Xử gốc nhóm S03 đăng ký hai lần — dọn sổ theo lời Mạnh, transform so khoá đã chuẩn hoá, vá hai lỗ phép đo của hồ sơ trước (`nhom-hai-lan-s03-xu-goc`)
 - Tick bật nhóm trên /ops/sources luôn ghi requireMention true, và bộ ghi cấu hình OpenClaw từ chối mọi bản cấu hình phạm bất biến bộ canh trước khi ghi (`nhom-moi-requiremention`)
@@ -311,6 +313,7 @@ flowchart TD
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
 - Bài S03 có «<số> năm/nữ» (cho vay, tuyển dụng) không bị coi là dấu hiệu phòng ngủ «<số>n» nên không thành tin rao; viết tắt phòng ngủ thật («2n1wc», «1n1k») vẫn nhận như cũ (`s03-cho-vay-khong-phai-bds`) — đã giao — máy thông, cửa veto còn mở
 - Tin rao S03 thôi gộp nhầm bài của nhiều người khi thiếu phường/diện tích, và cột «Luồng 7 ngày» đếm đúng tập bài transform đọc (`s03-gop-trung-dung`)
+- S03 lên nhanh nấc 1 (phần Claude) — lượt nạp nhanh 15′ đặt lock_timeout ngắn cho ba bước transform, đụng khoá DB thì bỏ lượt và báo khi bỏ 8 lượt liền; bảy bước đo dời khỏi cloud-sync sang job mỗi giờ với cờ tự nhận (`s03-len-nhanh-nac-1`)
 - job nạp S03 liệt kê được bản thu khi số thư mục vượt giới hạn đối số, và lỗi liệt kê làm job đỏ thay vì im lặng (`s03-nap-argmax`) — đã giao — máy thông, cửa veto còn mở
 - Tác vụ nạp S03 nạp thêm snapshot hồ sơ người bán (s03-ho-so) vào stg_s03_ho_so với con trỏ riêng; thiếu 080 thì giữ con trỏ để nạp lại đủ (`s03-nap-ho-so`)
 - Lượt nạp S03 mỗi 15 phút ban ngày (7:00–22:00) — nạp → transform → media → refresh, khoá bận thì bỏ lượt; lượt 00:00 giữ nguyên sáu bước (`s03-nap-nhanh`) — đã giao — máy thông, cửa veto còn mở
