@@ -505,6 +505,10 @@ executors:
     api_matrix_tu_thu: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs --tu-thu"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
+    # bo-canh-dem-luot-agent — L4d chạy bản chép, HOME giả, launchctl/pkill là bản giả; riêng bcdl_doc_that chỉ đọc số trên kho phiên thật
+    bcdl_tho: "node scripts/watchdog-l4d-agentdb/acceptance.mjs"
+    bcdl_doc_that: "env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME=\"$HOME\" /bin/bash scripts/watchdog-l4d-agentdb/doc-that.sh"
+    bcdl_tai_lieu: "for f in docs/ops/runtime-map.md docs/ops/runbook-openclaw-hook.md; do grep -q transcript_events $f && grep -q first-done $f && grep -q watchdog-agentdb.d $f || exit 1; done"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"
     zc3_l4a_drop: "node scripts/audit-p1-resilience/acceptance.mjs l4a-drop"
     zc3_l5b_db: "node scripts/audit-p1-resilience/acceptance.mjs l5b-db"
