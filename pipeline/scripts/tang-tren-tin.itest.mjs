@@ -133,11 +133,15 @@ test("DV4-AC-2 tin S06 qua 095 ghi lại bằng writeOffers hai lượt vẫn c�
     await c.query("UPDATE sale_offer_records SET floor_raw = '11' WHERE offer_id = $1", [id]);
     await napTang(c);
     const hang = (await c.query("SELECT offer_id, kind, price_vnd, area_m2, confidence, first_seen, last_seen FROM sale_offer_records WHERE offer_id = $1", [id])).rows[0];
+    // writeOffers đối soát cả nguồn: ghi một tin thì mọi tin S06 khác bị rút (hàng chục nghìn dòng, nhiều phút). Nghỉ sẵn chúng trong
+    // giao dịch (ROLLBACK cuối ca) để đối soát không còn việc — ca chỉ đo đường ghi lại của chính tin này.
+    await c.query(`UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot'
+      WHERE source = 'S06' AND offer_id <> $1 AND retired_at IS NULL`, [id]);
     for (const lan of [1, 2]) {
       await writeOffers(c, "S06", [hang], { actor: "test:dv4" });
       assert.equal(await tangCua(c, id), "11", `DV4-AC-2 lượt ${lan}`);
     }
-    await c.query("DELETE FROM field_assertions WHERE field = 'floor_raw' AND rule_id = $1", [`offer:${id}`]);
+    await c.query("UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'test-dv4' WHERE field = 'floor_raw' AND rule_id = $1 AND retracted_at IS NULL", [`offer:${id}`]);
     await c.query("SELECT resolve_offer_fields($1::text[])", [[id]]);
     assert.equal(await tangCua(c, id), null, "DV4-AC-2 đối chứng: không có legacy mà tầng vẫn còn — thước không phân biệt");
   }, { nap: false });
