@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ea5bec6a0a3855d2a787e679e1595afa67154973
+verified_commit: 5bc27724237aadea6a5c0d249bf1de36bc506c03
 human_signoff: Mạnh 2026-11-11
 ---
 
@@ -242,3 +242,7 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 
 Round 1: lịch sử nằm trong báo cáo round trước (baseline đã đo ở round đó).
 Round 2: mọi eval máy xanh, lệnh suite xanh; E12 (judgment) còn một thấu kính chưa chắc, chờ người quyết ở Cổng 2.
+
+### Re-pin lần 1 — 2026-11-11, do bằng chứng cũ do nhận main 7e7b7073 và 6f345276 sau lượt chấm
+run_id: repin-20261111T161310Z-88408
+sha: 5bc27724237aadea6a5c0d249bf1de36bc506c03 · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths)
