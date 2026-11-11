@@ -1,0 +1,37 @@
+schema_version: 1
+slug: s10-bang-hang-vao-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s10_db
+    long_running: 45
+    paths: ["db/migrations/089_s10_bang_hang.sql", "pipeline/import-airbnb.mjs", "pipeline/scripts/transform-s10.itest.mjs"]
+    expected: "Ca «S10-AC-1» xanh: áp 089 hai lần, băm lược đồ (information_schema.columns + pg_constraint của bốn đối tượng) bằng nhau; tập cột stg_s10_stock ⊇ COT_S10 nhập từ import-airbnb.mjs (so tập, không chép tay danh sách); INSERT hai dòng stg_s10_project cùng (snapshot_id, project_id) với project_label NULL bị từ chối 23505; s10_project_links từ chối noi thiếu nút, chua_noi thiếu lý do, trạng thái lạ (23514). Chiều đỏ: bản 089 bỏ một cột của COT_S10 → assert ghim «S10-AC-1» gọi tên cột."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s10_db
+    long_running: 45
+    paths: ["db/migrations/089_s10_bang_hang.sql", "pipeline/import-airbnb.mjs", "pipeline/lib/s10-bang-hang.mjs", "pipeline/scripts/transform-s10.itest.mjs"]
+    expected: "Ca «S10-AC-2» xanh trên snapshot vn__s10-bang-hang__2026-11-11T013501853: số dòng stg_s10_stock của snapshot = Σ bocS10(item).dong.length trên item đủ duBoLoc (tính độc lập trong test từ tệp snapshot); số dòng lech_khuon = Σ lechKhuon; stdout không có CHUA-AP-089; lần nạp hai: số dòng không đổi. Chiều đỏ cùng snapshot: DB chưa áp 089 → stdout có CHUA-AP-089 và to_regclass('stg_s10_stock') IS NULL, assert ghim «S10-AC-2». Snapshot vắng → ca đỏ nêu đường, không bỏ qua."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s10_db
+    long_running: 45
+    paths: ["pipeline/transform-s10.mjs", "pipeline/noi-du-an-s08.mjs", "pipeline/scripts/transform-s10.itest.mjs"]
+    expected: "Ca «S10-AC-3» xanh: dòng mồi stg_s10_project dựng từ meta.duAn/phanKhu/projectLabel của snapshot 11/11, gồm ít nhất một project_id có hai dòng (hai project_label) — hai lượt transform cho cùng s10_project_links và cùng updated_at; một project_id mồi có hai du_an khác nhau → «loi: du-an-nhieu-ten», thoát 1, bảng không đổi; tệp nối gitignored nối một project_id vào một nút project mồi → s10_project_links có đúng 1 noi trỏ nút đó, mọi project_id khác chua_noi với ly_do; --thu không ghi (đếm trước = sau); chạy lại không đổi updated_at; bảy tệp lỗi (slug-khong-co, nut-khong-phai-project, du-an-hai-dong, project-id-la, tin-hieu-khong-khop, ung-vien-bi-sot, tep-khong-bi-bo-qua) mỗi tệp in đúng «loi: <mã>», thoát 1, bảng không đổi; stdout mọi lượt không chứa du_an hay project_id nào của mồi. Chiều đỏ: tệp có tín hiệu không khớp tên → thoát 1, assert ghim «S10-AC-3»."
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s10_db
+    long_running: 45
+    paths: ["db/migrations/089_s10_bang_hang.sql", "pipeline/scripts/transform-s10.itest.mjs"]
+    expected: "Ca «S10-AC-4» xanh: view s10_quy_can_du_an lọc theo asset_node_id của nút đã nối trả số dòng = count(DISTINCT stock_id) của project_id đó trong stg_s10_stock (đếm độc lập); chèn snapshot sau cùng stock_id với status_raw khác → view mang status_raw mới, số dòng không đổi; dự án chua_noi → 0 dòng. Chiều đỏ: bản view bỏ chọn snapshot mới nhất → số dòng tăng, assert ghim «S10-AC-4»."
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.test.s10_chan
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/sql/**", "app/**", "data-api/**", "pipeline/transform-*", "_acceptance/s10-bang-hang-vao-danh-ba/probes/chan.sh"]
+    expected: "Probe exit 0, in «s10-chan: PASS»: không tệp nào đã theo dõi dưới pipeline/sync-cloud.mjs, pipeline/sql/, app/, data-api/, pipeline/transform-* (trừ transform-s10.mjs) chứa một trong bốn tên stg_s10_stock, stg_s10_project, s10_project_links, s10_quy_can_du_an. Chiều đỏ trên bản sao cây tạm, năm ca, mỗi ca chèn «s10_quy_can_du_an» vào một tệp của một gốc (pipeline/sync-cloud.mjs, pipeline/sql/, app/, data-api/, một pipeline/transform-* khác transform-s10.mjs) → probe thoát 1, in «s10-chan: ĐỎ <tệp>» đúng tệp đó; ca thứ sáu chèn tên vào transform-s10.mjs → probe vẫn thoát 0."
