@@ -3,7 +3,7 @@
 -- Chạy mỗi lượt cloud-sync, TRƯỚC push-ops-facts (scripts/cloud-sync.sh). Idempotent: xoá rồi ghi lại đúng ba dòng
 -- (7d · 30d · all) trong một giao dịch. CHỈ ghi data_flow_snapshot; bảng nạp và bảng tin chỉ được đọc.
 -- Mốc = now() của lượt làm tươi; ngày theo giờ VN. Phép gộp chuyển nguyên từ getDataFlow (app/src/lib/data-flow-
--- queries.ts) trước DF1: bài thử theo ba dấu của pipeline/lib/test-posts.mjs, năm trường lõi của lib/data-level.ts,
+-- queries.ts) trước DF1: bài thử theo bốn dấu của pipeline/lib/test-posts.mjs (dấu nội dung chép từ NOI_DUNG_SQL, GN5), năm trường lõi của lib/data-level.ts,
 -- S06 «đọc được» = min(tin, quảng cáo) (chưa có khoá nối ngược), chuỗi ngày 30 ngày gần nhất cho mọi cửa sổ.
 -- Tên không mang tiền tố lược đồ: phép đo chạy tệp này trên lược đồ tạm mà không chạm bảng thật.
 -- Mốc «hôm nay» = `now()`; phép đo đặt `SET oneinvest.flow_now = '<ISO>'` trong phiên để ghim ngày (trống → now()).
@@ -40,7 +40,7 @@ src AS (SELECT * FROM (VALUES ('S03', 1), ('S05', 2), ('S06', 3)) AS s(source, o
 flag AS (SELECT coalesce(current_setting('oneinvest.flow_branch', true), '') = 'on' AS on_),
 -- Bài S03/S05: bản chụp mới nhất của mỗi post_id; nguồn theo tác tử; dấu bài thử.
 p AS (
-  SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, group_name, posted_at
+  SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, group_name, posted_at, text
   FROM stg_zalo_posts
   ORDER BY post_id, captured_at DESC
 ),
@@ -48,7 +48,8 @@ t AS (
   SELECT post_id, posted_at, group_name,
          CASE WHEN agent_id = 'apify-facebook' THEN 'S05' ELSE 'S03' END AS src,
          (/*<<<IS_TEST*/split_part(snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(snapshot_id, '__', 2) = 'example'
-          OR coalesce(agent_id, '') ~* '^(e2e|test|mock)' OR btrim(coalesce(group_name, '')) ~* '^test($|[^[:alpha:]])'/*IS_TEST>>>*/) AS is_test
+          OR coalesce(agent_id, '') ~* '^(e2e|test|mock)' OR btrim(coalesce(group_name, '')) ~* '^test($|[^[:alpha:]])'
+          OR normalize(coalesce(text, ''), NFC) ~* 'trycloudflare\.com|\[tên sàn\]'/*IS_TEST>>>*/) AS is_test
   FROM p
 ),
 used AS (
