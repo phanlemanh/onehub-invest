@@ -1,0 +1,48 @@
+schema_version: 1
+feature_slug: nhan-trang-thai-nguon-draft
+# Ca «SL-AC-n» ở app/tests/source-status-labels.test.tsx — thuần, đọc db/migrations và CONTEXT.md, không chạm DB; chạy trong
+# suite app (`cd app && npm test`, glob tests/*.test.tsx). Ca ON12-AC-7 ở app/tests/ops-nhan-theo-context.test.tsx đọc DB của
+# lượt (db/db-thu.sh --chay). Mọi eval dùng chung một lệnh nên chấm một lần.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/source-status-labels.ts, app/tests/source-status-labels.test.tsx]
+    expected: "exit 0; output có dòng '✔ SL-AC-1' (không skip); ca 'SL-AC-1' ma trận viết trước 5 giá trị hợp lệ × nhãn (draft «Chưa thu», active «Đang dùng», paused «Tạm dừng», completed «Đã xong», retired «Đã ngừng») + số khoá bảng = 5 + 5 giá trị lạ → «Giá trị khác» known false; chiều đỏ: bỏ dòng draft khỏi bảng nhãn thì ca đỏ với actual { label: 'Giá trị khác', known: false } cho 'draft'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/source-status-labels.ts, app/tests/source-status-labels.test.tsx, db/migrations/**]
+    expected: "exit 0; output có ba dòng ✔ mở đầu 'SL-AC-2' (không skip); ca 'SL-AC-2 mọi giá trị…' ghim tập đọc được = [active, completed, draft, paused, retired] rồi đòi đủ nhãn; ca 'SL-AC-2 đối chứng' cùng chuỗi migration thật nối thêm CHECK có 'archived' → ném 'trạng thái mã nguồn chưa có nhãn: archived', bảng nhãn trước hàng (thiếu draft) → thiếu [archived, draft], chuỗi 'SELECT 1;' → 'không thấy CHECK source_registry_status_chk'; ca 'SL-AC-2 đối chứng: CHECK của source_groups…' (a) chỉ source_groups_status_chk thêm 'archived' → vẫn đọc đúng năm giá trị và xanh, (b) source_registry thêm 'archived' rồi source_groups đặt lại năm giá trị → vẫn ném '…chưa có nhãn: archived'; chiều đỏ trên vật thật: bỏ dòng draft thì 'SL-AC-2 mọi giá trị…' đỏ với 'trạng thái mã nguồn chưa có nhãn: draft'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [CONTEXT.md, app/src/lib/source-status-labels.ts, app/tests/source-status-labels.test.tsx]
+    expected: "exit 0; output có hai dòng ✔ mở đầu 'SL-AC-3' (không skip); ca 'SL-AC-3 khối thuật ngữ…' deepEqual năm cặp `code` «nhãn» của khối «Trạng thái mã nguồn» với NHAN_TRANG_THAI_NGUON; ca 'SL-AC-3 đối chứng' đổi «Chưa thu» thành «Nháp» trên bản sao CONTEXT → deepEqual ném (thông điệp chứa 'Nháp'), chuỗi không có khối → 'CONTEXT.md thiếu khối thuật ngữ «Trạng thái mã nguồn»'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/source-status-labels.ts, app/tests/ops-nhan-theo-context.test.tsx]
+    expected: "exit 0; ca 'ON12-AC-7 mọi giá trị đang có trên DB local có nhãn' xanh, dòng log '# ON12-AC-7 DB local: trạng thái nguồn …' ghi tập trạng thái thực tế của DB lượt — có 'draft' thì ca này là bằng chứng gỡ đỏ; không còn 'draft' (mã đã chuyển active trước lượt) thì báo cáo ghi 'DB lượt không còn draft — AC-4 chỉ chứng suite xanh, nhãn draft dựa vào E1, E2, E5' chứ không đánh đỏ; chiều đỏ đã đo: trên cây trước hàng (bảng thiếu draft, vòng 3 của s03-len-nhanh-nac-1, sha 48a1a12a) cùng ca đỏ với tập thực tế ['draft']"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/source-status-labels.ts, app/src/components/ops/sources/registry-table.tsx, app/tests/source-status-labels.test.tsx]
+    expected: "exit 0; output có dòng '✔ SL-AC-5' (không skip); ca render RegistryTable (renderToStaticMarkup) với dòng S07 draft và S01 active: HTML khớp '>Chưa thu<' và '>Đang dùng<', không chứa 'Giá trị khác' hay '>draft<'; chiều đỏ đã đo: bỏ dòng draft khỏi bảng nhãn thì ca đỏ 'The input did not match the regular expression />Chưa thu</'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/mappings.yaml, pipeline/scripts/vocab-lint.test.mjs, pipeline/lib/vocab-core.mjs, app/src/lib/source-status-labels.ts]
+    expected: "exit 0; output có '✔ VL-AC-5 ma trận kiểm kê' (không skip): REG_THAT.allow bằng tập NGOAI_LE ghim (không còn source-status-labels.ts|registry_status), lintTree cây thật hits [] và allowStale []; chiều đỏ đã đo ở đường nền (sha 9e79e971 + bảng có draft, ngoại lệ chưa gỡ): ca đỏ với allowStale = [{ path: 'app/src/lib/source-status-labels.ts', axis: 'registry_status', … }]"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

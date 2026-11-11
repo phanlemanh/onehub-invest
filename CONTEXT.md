@@ -465,6 +465,9 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 - Code: `source (source_registry.code)` · RESO: OriginatingSystemName
 _Avoid_: kênh dữ liệu
 
+**Trạng thái mã nguồn**: Vòng đời một mã nguồn trong danh mục nguồn (CHECK `source_registry_status_chk`, migration 047) — `draft` «Chưa thu» · `active` «Đang dùng» · `paused` «Tạm dừng» · `completed` «Đã xong» · `retired` «Đã ngừng». «Chưa thu» là mã đã đăng ký trong danh mục nhưng chưa thu; nhãn hiện ở `/ops/sources`.
+- Code: `source_registry.status (sourceStatusLabel)` · RESO: —
+
 **Snapshot**: Bản ghi thô collector thu được — bất biến, chỉ ghi mới (luật 1). Mọi diễn giải nằm ở pipeline.
 - Code: `snapshot (raw)` · RESO: —
 _Avoid_: bản chụp, dump
