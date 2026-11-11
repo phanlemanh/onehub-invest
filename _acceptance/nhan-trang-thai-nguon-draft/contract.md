@@ -5,8 +5,10 @@ slug: nhan-trang-thai-nguon-draft
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-11-11-nhan-trang-thai-nguon-draft-design.md
+approved_by: Mạnh
+approved_at: 2026-11-11
 ---
 
 # Acceptance Contract: nhan-trang-thai-nguon-draft
