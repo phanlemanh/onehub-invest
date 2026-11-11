@@ -17,6 +17,15 @@ const GROUP_TEST = /^test(?!\p{L})/iu;
 // Nhóm tên toàn chữ số KHÔNG là dấu: đó là mã nhóm chưa có tên, có thể là nhóm thật.
 const NOI_DUNG_TEST = /trycloudflare\.com|\[tên sàn\]/iu;
 
+// Bản SQL của NOI_DUNG_TEST (dau-noi-dung-sql-bai-thu, GN5): chuỗi DUY NHẤT trong pipeline. ops-flow.mjs và
+// scripts/test-data-residue.mjs nội suy hằng; pipeline/sql/600_data_flow.sql (đoạn IS_TEST) và app/src/lib/collections-queries.ts
+// chép chữ — scripts/dau-bai-thu-sql.test.mjs (DND-AC-1) giữ cả bốn bản khớp testMarker từng dòng.
+// DB máy thu C.UTF-8 (PG 17): ~* gập chữ có dấu như cờ iu; normalize(…, NFC) như .normalize("NFC"); coalesce để NOT (…) không NULL.
+/** Vế SQL «bài mang dấu noi-dung» trên cột chữ `col`. */
+export const noiDungSql = (col) => `normalize(coalesce(${col}, ''), NFC) ~* 'trycloudflare\\.com|\\[tên sàn\\]'`;
+/** Vế ấy trên cột `text` của stg_zalo_posts. */
+export const NOI_DUNG_SQL = noiDungSql("text");
+
 /**
  * Dấu thử của một hàng stg, hoặc null khi là post thật.
  * @param {{ snapshot_id?: string|null, agent_id?: string|null, group_name?: string|null, text?: string|null }} row
