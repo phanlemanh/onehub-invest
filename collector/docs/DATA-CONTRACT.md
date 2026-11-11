@@ -153,7 +153,8 @@ Luật đọc:
   (đo 11/11). Mỗi snapshot là một lô nhỏ (5–10 item) ghi ngay
   khi lấy được, để gãy giữa lượt không mất phần đã lấy — một lượt thu cho ra nhiều snapshot.
 - **Không đăng nhập.** Thu bằng trình duyệt thật ở phiên khách; `meta.sessionLoggedIn = false` là bắt buộc với
-  `project_list_page` và `project_catalog`; item có `true` hoặc thiếu cờ thì bộ nạp bỏ có đếm. Riêng `project_sitemap` của
+  `project_list_page` và `project_catalog`; item có `true` hoặc thiếu cờ thì bộ nạp bỏ có đếm (Mạnh duyệt 11/11, Hỏi-1 của hàng
+  `thu-danh-muc-s07`). Riêng `project_sitemap` của
   lượt 10/11 không ghi cờ (tệp công khai) — vẫn nhận.
 - Nhịp và trần do làn thu chọn (ROADMAP §3 mục 39): tuần tự, một lời mỗi lần; gặp 403, 429 hoặc trang thử thách thì dừng
   cả lượt, nghỉ lùi dần 1 → 3 → 12 → 24 giờ; không vượt lớp chặn bot. Script thu ở `research-local/` (mang tên miền),
@@ -193,6 +194,7 @@ Luật đọc (bên nạp):
 5. **Giá và lịch sử giá** trên trang dự án chỉ dùng nội bộ (ROADMAP §3 mục 27), không lên cổng.
 6. Khoá ba bảng stg là `(snapshot_id, pj_id)`: nạp lại cùng snapshot không nhân dòng; một dự án thu lại ở snapshot sau là
    dòng mới. Chọn bản mới nhất theo `captured_at` (= `fetchedAt` của item) là việc của bước đọc stg.
+   Cột `attributes` của `stg_s07_project` là mảng cặp `{label, value}` theo thứ tự nguồn (đối tượng jsonb không giữ thứ tự).
 7. Sitemap lẫn trang lọc (theo giá, theo tỉnh) với trang dự án: chỉ `<loc>` kết thúc bằng `-pj<id>` là dự án.
 
 ## Lịch sử phiên bản
