@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0ef9cb05708550c0cdab7018f216a90a6c118a89
+verified_commit: b55b77caf65ae9a4bb41b87784a57676103dafe6
 human_signoff:
 ---
 
@@ -180,3 +180,7 @@ none — không có eval nhiều lượt chạy; mọi eval deterministic và đ
 
 Round 1: 10/10 eval xanh, REJECT vì đỏ nền ON12-AC-7 (lệnh suite app npm test đỏ ở nền). Returned to implementation.
 Round 2: 10 eval carry-forward từ round 1 (delta không chạm paths của eval), sáu lệnh suite xanh — PASS.
+
+### Re-pin lần 1 — 2026-11-11, do main mới (6f345276) + vòng sửa sau TV4 chạm lenh.mjs, lenh.ts, cap-token-may
+run_id: repin-20261111T150434Z-39410
+sha: b55b77caf65ae9a4bb41b87784a57676103dafe6 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
