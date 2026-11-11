@@ -124,8 +124,9 @@ canonical:
       rationale: "URL gốc tin đăng"
       checked_on: "2026-10-22"
     property_type:
-      dd: PropertyType
+      dd: PropertySubType
       note: >
+        loại hình là PropertySubType (DA4, ROADMAP §3 mục 39 C7) — PropertyType do `kind` mang (sale/rent_lt).
         apartment≈Residential+SubType Condominium; house≈Residential SFR/Townhouse;
         land≈Land; commercial≈CommercialSale/CommercialLease; unknown=chưa có tín
         hiệu (P1 text); room=LOCAL EXTENSION VN (Phòng trọ — DD PropertySubType
@@ -136,11 +137,12 @@ canonical:
       note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); S06 đọc payload street_name qua phát biểu source_field (DS1); số nhà chưa tách cột"
       checked_on: "2026-11-03"
     block_raw:
-      dd: null
-      rationale: >
-        mã tòa/block kiểu môi giới VN (LBV, LD2, S1.03) — DD không có trường
-        "block"; tòa chuẩn hoá qua asset_nodes node_type=building (≈ComplexName)
-      checked_on: "2026-10-22"
+      dd: BuildingName
+      note: >
+        mã tòa/block kiểu môi giới VN (LBV, LD2, S1.03) — chữ thô của tên toà
+        (BuildingName, ADR-0013 §2); toà chuẩn hoá qua danh bạ vật thể `buildings`
+        (ADR-0016 §2), không qua họ Vùng
+      checked_on: "2026-11-11"
     floor_raw:
       dd: null
       rationale: >
@@ -267,15 +269,15 @@ sources:
       - "floornumber, unitnumber, block → dedup cấp căn (R4)"
       - "latitude, longitude (phủ 99.98%) → geo-polygon (R2)"
   S08:
-    label: "danh mục dự án (quỹ căn chủ đầu tư — chỉ nội bộ, AGENTS.md luật 5)"
+    label: "danh mục dự án (quỹ căn chủ đầu tư — thông tin dự án công khai, ROADMAP §3 mục 38)"
     staging: stg_s08_inventory
     transform: null  # chưa có — importer của ZCode (PL10 bước 1) nạp staging trước
     method: "field cấu trúc trực tiếp (item inventory_unit, DATA-CONTRACT v4)"
-    policy: "không tái xuất nguyên văn lên cổng Invest / API công khai; chỉ dựng danh mục căn + hiệu chuẩn"
+    policy: "thông tin dự án (kể cả giá chủ đầu tư, trạng thái quỹ căn) là công khai — được lên cloud, cổng Invest, API qua danh bạ (mục 38); tên nguồn thật là tầng A, không rời máy; stg_s08_inventory không sync nguyên bảng; căn sơ cấp chưa thành tin trong danh sách Bán (mục 39 Hỏi-3)"
     checked_on: "2026-10-24"  # tra research-local/reso/dd-2.1.json
     fields:
-      project_id: "khoá nối sang khu đô thị qua s08_project_links (migration 074), không phải field RESO; chỉ local"
-      project_name: "→ Building.ComplexName khi đối chiếu tay (DN1), không ghi vào asset_nodes vì asset_nodes lên cloud; chỉ local"
+      project_id: "khoá nối sang nút dự án qua s08_project_links (migration 074), không phải field RESO; là bí danh của nút dự án"
+      project_name: "→ SubdivisionName (tên nút dự án `project`, ADR-0013 §2) — đối chiếu qua bảng nối dự án (DA3), không tự ghi đè tên nút"
       product_code: "→ UnitNumber (mã căn; tầng/toà tách ở transform — ADR-0013 §2)"
       subdivision_name: "→ Building.ComplexName (phân khu); high_rise lẫn toà → BuildingName"
       apartment_type_name: "→ PropertySubType (chữ nguồn không đồng nhất — chuẩn hoá ở transform)"
