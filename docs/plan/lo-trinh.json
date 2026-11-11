@@ -3594,14 +3594,14 @@
       ],
       "dot": "danh-ba-nha-0311",
       "nhom": "danh-ba",
-      "cau_giao": "Người vận hành mở trang Danh bạ trên Ops và thấy cây dự án → toà với số căn, số đã xác nhận, số có tin, số off-market, biết toà nào còn thiếu",
+      "cau_giao": "Người vận hành mở trang Danh bạ trên Ops và thấy cây dự án → toà với số căn, số đã xác nhận, số có tin, số off-market, biết toà nào còn thiếu; từ cây mở được màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án: mỗi ô có giá trị, ngày snapshot và trạng thái khớp, lệch hay trống; nút mở trang gốc chỉ có ở máy thu",
       "vi_sao": "Mạnh 03/11 hỏi có bảng xem dự án, toà, căn chưa; đo: chưa có trang nào. Trả lời «Danh bạ phủ tới đâu».",
       "vung": [
         "app/src/app/ops/registry",
         "app/src/lib",
         "CONTEXT.md"
       ],
-      "ghi_chu": "Slug registry và thuật ngữ off-market vào CONTEXT.md cùng hàng này. Đọc ở máy thu trước; thông tin dự án S08 là công khai từ 08/11 (mục 38). Off-market không dùng trạng thái S08."
+      "ghi_chu": "Slug registry và thuật ngữ off-market vào CONTEXT.md cùng hàng này. Đọc ở máy thu trước; thông tin dự án S08 là công khai từ 08/11 (mục 38). Off-market không dùng trạng thái S08. Sửa 11/11 (mục 45 Q1): thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án: mỗi ô có giá trị, ngày snapshot và trạng thái khớp, lệch hay trống; nút mở trang gốc chỉ có ở máy thu, dùng chung với DA20."
     },
     {
       "ma": "DN3",
@@ -4583,8 +4583,8 @@
       "hang": "T3",
       "vai": "Người vận hành",
       "tieu_chi": 10,
-      "cau_giao": "Người vận hành mở thẻ nối dự án trên Ops, thấy cặp mã nguồn ↔ dự án máy đề xuất kèm căn cứ, duyệt từng cặp hoặc cả loạt cùng căn cứ, và mỗi cặp đã duyệt thành một bí danh; mỗi nguồn danh mục đi qua một bộ chuyển stg_* → khuôn chung bản ghi nguồn làm đầu vào bộ đề xuất cặp",
-      "bat_khi": "8 cặp S08 đã nối hiện trong bảng mới và view thay s08_project_links trả đúng 8 dòng; duyệt một cặp sinh đúng một bí danh node:<id>; hoàn tác 5 giây khôi phục; thẻ luật duyệt loạt có nhật ký và đảo được; registry_aliases.kind nhận thêm ma_nha_nuoc; khuôn chung bản ghi nguồn (mã nguồn, mã dự án nguồn, mã cha, tên chuẩn hoá, địa chỉ, tỉnh, xã, điểm nguồn, CĐT, mã số DN, loại hình) có bộ chuyển cho mọi nguồn danh mục đã có stg_*; registry_aliases và registry_events nhận nút dự án và nguồn S10–S15",
+      "cau_giao": "Người vận hành mở thẻ nối dự án trên Ops, thấy cặp mã nguồn ↔ dự án máy đề xuất kèm căn cứ, duyệt từng cặp hoặc cả loạt cùng căn cứ, và mỗi cặp đã duyệt thành một bí danh; mỗi nguồn danh mục đi qua một bộ chuyển stg_* → khuôn chung bản ghi nguồn làm đầu vào bộ đề xuất cặp; bản ghi nguồn cấp lô hay toà nối vào toà, phân khu có sẵn qua thẻ từng cặp",
+      "bat_khi": "8 cặp S08 đã nối hiện trong bảng mới và view thay s08_project_links trả đúng 8 dòng; duyệt một cặp sinh đúng một bí danh node:<id>; hoàn tác 5 giây khôi phục; thẻ luật duyệt loạt có nhật ký và đảo được; registry_aliases.kind nhận thêm ma_nha_nuoc; khuôn chung bản ghi nguồn (mã nguồn, mã dự án nguồn, mã cha, tên chuẩn hoá, địa chỉ, tỉnh, xã, điểm nguồn, CĐT, mã số DN, loại hình) có bộ chuyển cho mọi nguồn danh mục đã có stg_*; registry_aliases và registry_events nhận nút dự án và nguồn S10–S15; bản ghi S11 cấp lô của Ocean Park 1 (4 bản ghi, tên pháp lý khác) nối được vào toà hoặc phân khu có sẵn qua thẻ từng cặp; giá trị rỗng giả («Đang cập nhật», «--», «0») về trống theo một quy ước ở khuôn chung; 27 dự án S08 mới của snapshot sau có trạng thái nối",
       "vi_sao": "Ba cơ chế bí danh dự án cùng tồn tại và registry_aliases chưa nhận nút vùng; S06, S08, S09, S07 cần một chỗ nối có người duyệt. Mạnh 08/11: máy đề xuất, đội ops duyệt, cặp cùng căn cứ duyệt bằng thẻ luật.",
       "vung": [
         "db/migrations",
@@ -4592,7 +4592,7 @@
         "app/src/app/ops/review",
         "app/src/lib/ops"
       ],
-      "ghi_chu": "Hạng T3: quyền duyệt và dữ liệu nối. Khái quát migration 074, bảng cũ thành view. Khuôn giao diện ReUI theo mục 35. Kế hoạch: DA3. Sửa 09/11 (mục 40): mở kind ma_nha_nuoc ngay ở migration này để DA24 không cần migration riêng. Sửa 11/11 (mục 44 Hỏi-5): khuôn chung bản ghi nguồn (mo-hinh-danh-ba-du-an.md §1.1) làm trong hàng này, không mở hàng riêng; migration của hàng mở thêm registry_aliases, registry_events (055) cho nút dự án và nguồn S10–S15.",
+      "ghi_chu": "Hạng T3: quyền duyệt và dữ liệu nối. Khái quát migration 074, bảng cũ thành view. Khuôn giao diện ReUI theo mục 35. Kế hoạch: DA3. Sửa 09/11 (mục 40): mở kind ma_nha_nuoc ngay ở migration này để DA24 không cần migration riêng. Sửa 11/11 (mục 44 Hỏi-5): khuôn chung bản ghi nguồn (mo-hinh-danh-ba-du-an.md §1.1) làm trong hàng này, không mở hàng riêng; migration của hàng mở thêm registry_aliases, registry_events (055) cho nút dự án và nguồn S10–S15. Sửa 11/11 (mục 45 Q5 và kiểm kê §5 mục 2): khuôn chung nhận bản ghi cấp lô/toà, nối qua thẻ từng cặp, đủ 20 mẫu thì viết thẻ luật; quy ước giá trị rỗng giả; nối lại S08 theo snapshot mới (27 dự án mới chưa có trong bảng nối). Đứng sau DA30 (mục 45 Q2).",
       "phu": [
         "DA3"
       ]
@@ -4745,14 +4745,14 @@
       "hang": "T2",
       "vai": "nen",
       "tieu_chi": 6,
-      "cau_giao": "Snapshot thô thu thử S09 cho Ocean Park 1 và Grand Park theo cách ZCode chọn, kèm nháp DATA-CONTRACT S09 v1 và bộ nạp vào stg_*",
-      "bat_khi": "Một snapshot trong trần đã duyệt (≤ 60 lời gọi); không đi đường robots cấm khi chưa báo Mạnh; bộ nạp chạy lại không nhân dòng",
+      "cau_giao": "Snapshot thô thu thử S09 cho Ocean Park 1 và Grand Park theo cách ZCode chọn, kèm nháp DATA-CONTRACT S09 v1 và bộ nạp vào stg_*; danh sách toà lấy từ trang công khai (dữ liệu nền của trang)",
+      "bat_khi": "Một snapshot trong trần đã duyệt (≤ 60 lời gọi); không đi đường robots cấm khi chưa báo Mạnh; bộ nạp chạy lại không nhân dòng; snapshot có 115 toà Ocean Park 1 và 61 toà Grand Park, kèm ngày bàn giao từng toà",
       "vi_sao": "Tên toà thật là thứ danh bạ thiếu nhất; S09 có cây dự án → phân khu → toà. Mạnh duyệt thu thử 08/11 (mục 39 Q3).",
       "vung": [
         "collector/src",
         "pipeline/import-s09*"
       ],
-      "ghi_chu": "Làn ZCode; giao qua liên làn (vòng claudedp-0811-6). Claude cấp mã S09 trong source_registry, duyệt hợp đồng, viết migration stg_* S09 trước khi ZCode nạp. robots.txt của S09 cấm đường API nội bộ và đường quỹ căn.",
+      "ghi_chu": "Làn ZCode; giao qua liên làn (vòng claudedp-0811-6). Claude cấp mã S09 trong source_registry, duyệt hợp đồng, viết migration stg_* S09 trước khi ZCode nạp. robots.txt của S09 cấm đường API nội bộ và đường quỹ căn. Sửa 11/11 (mục 45 Q4): S09 lấy toà từ trang công khai — trang ghi số toà «Đang cập nhật» nhưng dữ liệu nền của trang có 115 toà Ocean Park 1, 61 toà Grand Park kèm ngày bàn giao từng toà; đóng DAZ1 với số đo mới. Việc thu là làn ZCode.",
       "phu": [
         "DAZ1"
       ]
@@ -4962,7 +4962,8 @@
       "dung_tren": [
         "DA15",
         "PX2",
-        "DAZ1"
+        "DAZ1",
+        "DA24a"
       ],
       "dot": "danh-ba-du-an-toan-dien-0911",
       "nhom": "danh-ba-du-an",
@@ -4971,14 +4972,14 @@
       "hang": "T2",
       "vai": "nen",
       "tieu_chi": 9,
-      "cau_giao": "Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí, điểm toạ độ do nguồn công bố), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn)",
+      "cau_giao": "Thuộc tính trong danh mục S08, S09 và S11 (pháp lý, quy mô) thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí, điểm toạ độ do nguồn công bố), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn)",
       "bat_khi": "Mỗi dự án S08 có ít nhất một phát biểu phân loại–quy mô và một phát biểu chủ đầu tư; nạp lại snapshot không nhân phát biểu, snapshot sau đổi giá trị thì phát biểu cũ hết hiệu lực; S08 và S09 nói khác nhau thì lên thẻ, không đè; dự án S08 có điểm trong bản đồ nhúng thì có phát biểu điểm dự án ghi nguồn S08; 0 lời gọi dịch vụ định vị bên ngoài",
       "vi_sao": "Kế hoạch 08/11 chỉ dựng toà–trục–căn từ S08; thuộc tính dự án, toà, căn trong S08 (60.131 dòng) và S09 chưa thành phát biểu nào.",
       "vung": [
         "pipeline/lib/danh-ba-vat-the.mjs",
         "pipeline/thuoc-tinh-danh-muc"
       ],
-      "ghi_chu": "Dãy B. Phần S09 chỉ chạy cho dự án đã có snapshot S09; dự án chưa có thì chỉ S08. Đơn vị một chuẩn: m², VND, ngày ISO. Sửa 11/11 (mục 44 Hỏi-2): điểm dự án lấy từ nguồn danh mục (S08 trong bản đồ nhúng; S07 trong trang khi DAZ3 có dữ liệu), ghi nguồn S0x, không gọi dịch vụ định vị; đa giác và tâm OSM thuộc DA21.",
+      "ghi_chu": "Dãy B. Phần S09 chỉ chạy cho dự án đã có snapshot S09; dự án chưa có thì chỉ S08. Đơn vị một chuẩn: m², VND, ngày ISO. Sửa 11/11 (mục 44 Hỏi-2): điểm dự án lấy từ nguồn danh mục (S08 trong bản đồ nhúng; S07 trong trang khi DAZ3 có dữ liệu), ghi nguồn S0x, không gọi dịch vụ định vị; đa giác và tâm OSM thuộc DA21. Sửa 11/11 (mục 45 Q3): mở rộng sang S11, nguồn pháp lý thật duy nhất (2.546 văn bản trên 428 dự án), cho pháp lý và quy mô; đứng trên DA24a (stg S11). S10 đi cùng DA17.",
       "phu": [
         "DA16"
       ]
@@ -5004,7 +5005,7 @@
         "pipeline/sql",
         "app/src/lib"
       ],
-      "ghi_chu": "Dãy A. Hạng T3: thêm loại tin và chạm truy vấn Invest. MarketTier là extension (RESO NewConstructionYN khác nghĩa); giá thanh toán sớm là extension EarlyPaymentPrice; ngày nhận nhà dùng RESO AvailabilityDate.",
+      "ghi_chu": "Dãy A. Hạng T3: thêm loại tin và chạm truy vấn Invest. MarketTier là extension (RESO NewConstructionYN khác nghĩa); giá thanh toán sớm là extension EarlyPaymentPrice; ngày nhận nhà dùng RESO AvailabilityDate. Sửa 11/11 (mục 45 Q3): S10 đi cùng DA17 — bảng hàng S10 (DA29) cũng thành tin sơ cấp theo luật của hàng này.",
       "phu": [
         "DA17"
       ]
@@ -5071,14 +5072,14 @@
       "hang": "T2",
       "vai": "Người vận hành",
       "tieu_chi": 9,
-      "cau_giao": "Người vận hành mở trang Danh bạ và thấy độ đủ hồ sơ của từng dự án theo bảy nhóm thông tin — trống, một nguồn, nhiều nguồn khớp, mâu thuẫn — cùng thẻ mâu thuẫn và tỉ lệ dự án đủ năm nhóm đầu mỗi ngày, cùng mức hồ sơ dự án M0–M5 (Có tên → Có nguồn → Có xã → Đối chiếu ≥ 2 nguồn khớp → Có pháp lý từ nguồn nhà nước → Đang bán)",
-      "bat_khi": "Bảng có đủ dự án × bảy nhóm, tính mỗi đêm; cấy một mâu thuẫn chủ đầu tư thì có thẻ; số «đủ N1–N5» có lát vùng × quy mô; mốc M2 (≥ 80% dự án S08 và 100% dự án S03 nói tới đủ N1–N5) chỉ báo, không chặn; mỗi dự án có đúng một mức hồ sơ M0–M5, phân bố mức tính mỗi đêm",
+      "cau_giao": "Người vận hành mở trang Danh bạ và thấy độ đủ hồ sơ của từng dự án theo bảy nhóm thông tin — trống, một nguồn, nhiều nguồn khớp, mâu thuẫn — cùng thẻ mâu thuẫn và tỉ lệ dự án đủ năm nhóm đầu mỗi ngày, cùng mức hồ sơ dự án M0–M5 (Có tên → Có nguồn → Có xã → Đối chiếu ≥ 2 nguồn khớp → Có pháp lý từ nguồn nhà nước → Đang bán); mở được màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án: mỗi ô có giá trị, ngày snapshot và trạng thái khớp, lệch hay trống; nút mở trang gốc chỉ có ở máy thu",
+      "bat_khi": "Bảng có đủ dự án × bảy nhóm, tính mỗi đêm; cấy một mâu thuẫn chủ đầu tư thì có thẻ; số «đủ N1–N5» có lát vùng × quy mô; mốc M2 (≥ 80% dự án S08 và 100% dự án S03 nói tới đủ N1–N5) chỉ báo, không chặn; mỗi dự án có đúng một mức hồ sơ M0–M5, phân bố mức tính mỗi đêm; màn Hồ sơ đối chiếu của một dự án có đủ trường × nguồn, ô nào cũng mang ngày snapshot và trạng thái khớp/lệch/trống; trên cloud không có nút mở trang gốc",
       "vi_sao": "Mạnh 09/11 Q5: độ đủ hồ sơ là thước «toàn diện» của danh bạ, khác DA14 (mức gắn của tin). Bảy nhóm: danh tính, vị trí, phân loại và quy mô, pháp lý, tiến độ, sản phẩm sơ cấp và giá, mô tả và media.",
       "vung": [
         "pipeline/sql",
         "app/src/app/ops/registry"
       ],
-      "ghi_chu": "Dãy C. DA13 đọc tiêu chí hiển thị (mục 39) từ bảng này. Sửa 11/11 (mục 44 Hỏi-3): mức hồ sơ M0–M5 là thước phụ ở Ops cạnh độ đủ bảy nhóm, không thành north star; mã M khác bậc B0–B5. «Mốc M2» ở điều kiện bắt là mốc độ đủ của mục 40 Q5, khác mức M2.",
+      "ghi_chu": "Dãy C. DA13 đọc tiêu chí hiển thị (mục 39) từ bảng này. Sửa 11/11 (mục 44 Hỏi-3): mức hồ sơ M0–M5 là thước phụ ở Ops cạnh độ đủ bảy nhóm, không thành north star; mã M khác bậc B0–B5. «Mốc M2» ở điều kiện bắt là mốc độ đủ của mục 40 Q5, khác mức M2. Sửa 11/11 (mục 45 Q1): thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án: mỗi ô có giá trị, ngày snapshot và trạng thái khớp, lệch hay trống; nút mở trang gốc chỉ có ở máy thu; DA20 không chỉ đếm, người nhìn được từng ô (khoảng trống K6 của kiểm kê).",
       "phu": [
         "DA20"
       ]
@@ -5118,7 +5119,7 @@
         "db/migrations/089_s10_bang_hang.sql",
         "pipeline/transform-s10*"
       ],
-      "ghi_chu": "Migration 089; đang làm ở dãy P3 đợt dot0-cam-mau.",
+      "ghi_chu": "Migration 089; đang làm ở dãy P3 đợt dot0-cam-mau. Sửa 11/11 (mục 45 Q6): lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode — raw S10 hiện chỉ có id số.",
       "phu": [
         "DA29"
       ]
@@ -5161,7 +5162,7 @@
         "db/migrations/094_stg_s08_du_an.sql",
         "pipeline/transform-s08-du-an*"
       ],
-      "ghi_chu": "Bộ nạp raw→stg thuộc làn ZCode, migration và transform làn Claude.",
+      "ghi_chu": "Bộ nạp raw→stg thuộc làn ZCode, migration và transform làn Claude. Đứng trước DA3 (mục 45 Q2): mọi raw danh mục vào stg trước khi nối.",
       "phu": [
         "DA30"
       ]
@@ -6287,7 +6288,8 @@
       "phu": [
         "DA22"
       ],
-      "mo_lai_khi": "DA20 thấy ≥ 20 dự án có chủ đầu tư lệch tên giữa nguồn, hoặc Invest cần lọc theo chủ đầu tư"
+      "mo_lai_khi": "DA20 thấy ≥ 20 dự án có chủ đầu tư lệch tên giữa nguồn, hoặc Invest cần lọc theo chủ đầu tư",
+      "ghi_chu": "3/3 mẫu lệch tên chủ đầu tư; đo lệch ngay khi có stg (kiểm kê 11/11 §5 mục 6)."
     },
     {
       "ma": "DA23",
