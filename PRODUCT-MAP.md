@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>27 việc"]
+  GD --> B["Sắp mở vòng<br/>26 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>172 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>111 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>173 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>112 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -44,7 +44,6 @@ flowchart TD
 - Tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án, không đè phường đã có (`phuong-tu-du-an`)
 - Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn (`s06-du-an-len-tin-can`)
 - Người vận hành gộp hai nút danh bạ, tách, đổi cha, đổi loại giữa dự án con và phân khu, hay rút một nút sai trên Ops, và mọi bí danh, liên kết tin, phát biểu kế thừa phía sau đi theo (`sua-cay-danh-ba`)
-- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị (triệu/tháng cho thuê, tỷ cho mua) ở các cách viết tắt «tc 8tr», «2ty6», «6tr5», «quay đầu» và sáu lỗi Ngoài-4/5/7/9/10/11 của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
 - Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn) (`thuoc-tinh-danh-muc-s08-s09`)
 - Quỹ căn chủ đầu tư S08 thành tin sơ cấp gắn đúng căn, mang giá chủ đầu tư và trạng thái quỹ, và không xuất hiện ở danh sách Bán, thước giá hay metrics (`tin-so-cap-s08`)
 - Phân khu và toà S09 vào danh bạ không sinh toà trùng, và có ba số quyết định thu S09: phủ trên dự án của S03, phủ trên 282 dự án S06, phân giải mã toà S03 (`toa-s09-vao-danh-ba`)
@@ -170,6 +169,7 @@ flowchart TD
 - Người vận hành khai mọi đơn vị thu (nhóm S03, nhóm S05, vùng S06, market S02) trong một sổ trên /ops, mỗi đơn vị có mã ổn định dạng S03-N012, thị trường, dự án nhóm chuyên và trạng thái vòng đời (`so-nhom-mot-noi`)
 - Một sổ từ vựng sinh bảng ref_*, hằng TS/JS, enum prompt và nhãn tiếng Việt; lint đỏ khi có enum viết tay ngoài sổ (`so-tu-vung-mot-nguon`)
 - Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi (`soat-tang-a-moi-duong-len-cloud`)
+- Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị ở các cách viết tắt và sáu lỗi Ngoài của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
 - Người duyệt thấy người đăng của mỗi tin trên thẻ ghép căn (tên, SĐT, số tin đang rao) và nhận ra ngay khi hai tin cùng một người (`the-duyet-hien-nguoi-dang`)
@@ -234,6 +234,7 @@ flowchart TD
 - Đo hiệu quả hằng ngày — mẫu soát cuốn chiếu 20 bài, tỉ lệ giữ nháp theo cách đọc × ô, ước bỏ sót, tín hiệu không cần nhãn, dòng chuyển bậc; lát phường/xã, dự án, toà; xem trên /ops/quality (`do-hieu-qua-hang-ngay`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
+- Thước gán khu vực tin rao (KDM-AC-3) theo luật khớp xã PX1 — gỡ ca đỏ sẵn làm hồi quy scripts đỏ cho mọi hàng (`do-san-sl1-kdm`)
 - DO1 giữ dấu ngày lập mốc (đổi thang, lập mốc đầu) suốt cả ngày qua mọi lượt cloud-sync, ngày ấy không có dòng chuyển bậc, lệnh sửa ngày đổi thang đã qua, thước TB-AC-11 chạy được sau khi máy thu áp 087 (`do1-giu-dau-doi-thang`)
 - Bước đêm đọc gộp S03 chạy được ở kho không có .env trên /bin/bash 3.2 — bộ test agent xanh ở mọi worktree (`doc-gop-env-rong`)
 - Đọc gộp S03 hằng ngày — lệnh hang-ngay đọc toàn bộ bài S03 mới của một ngày đã khử trùng theo tin bằng model của bảng chọn PL30, trần 20 USD theo ngày chi, chạy lại không gọi lại bài đã đọc; bước đêm pipeline/doc-gop-hang-ngay.sh (`doc-gop-hang-ngay`)
