@@ -776,6 +776,11 @@ _Avoid_: collection unit, source group
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
 
+**Token máy**: Chìa riêng của một máy thu, đặt theo tên (vd `may-thu-1`), để máy ấy kéo lệnh đã duyệt và gửi kết quả lên máy chủ. Mỗi token mang quyền hẹp (`ops:pull`), thu hồi riêng được, máy chủ chỉ giữ bản băm. Khác mật khẩu chung của máy nạp số: mật khẩu chung bị từ chối ở mọi cửa của đường lệnh (ADR-0015, TV4).
+- Code: `machine_token (machine_tokens: name, token_hash, scopes, revoked_at, last_used_at)` · RESO: —
+- Ghi chú: «Máy thu kéo lần cuối» trên màn lệnh là lần dùng cuối của token máy còn hiệu lực có `ops:pull`.
+_Avoid_: API key, bearer chung, token chung
+
 **Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách bài thành tin rao. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các bài gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
 - Code: `context_rule (context_rules)` · RESO: —
 - Slug URL: `context-rules`
