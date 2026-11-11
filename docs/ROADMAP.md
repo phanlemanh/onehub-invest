@@ -678,7 +678,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Sáu câu đã duyệt:
     - Q1: thêm màn «Hồ sơ đối chiếu trường × nguồn» cho từng dự án (mỗi ô có giá trị, ngày snapshot, trạng thái khớp/lệch/trống;
       nút mở trang gốc chỉ ở máy thu). Sửa DA20, DN2.
-    - Q2: hàng stg cấp dự án S08 (**DA30**, đã có) đứng trước DA3. Sửa ghi chú DA30, DA3.
+    - Q2: hàng stg cấp dự án S08 (**DA30**, đã có) đứng trước DA3. Sửa ghi chú DA30, DA3; `dung_tren` của DA3 thêm DA30.
     - Q3: S10, S11 vào stg đã có mã (DA29, DA24a); mở rộng DA16 sang S11 (pháp lý, quy mô), DA16 đứng trên DA24a. S10 đi cùng DA17.
       Sửa DA16, DA17.
     - Q4: S09 lấy toà từ trang công khai (dữ liệu nền của trang có 115 toà Ocean Park 1, 61 toà Grand Park, kèm ngày bàn giao từng
