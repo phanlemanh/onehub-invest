@@ -48,7 +48,14 @@ async function toanBo() {
     await napPhatBieu(c);
     const chup = async () => new Map((await c.query(
       `SELECT offer_id, floor_raw, md5((to_jsonb(r) - 'floor_raw' - 'field_provenance')::text) AS h FROM sale_offer_records r`)).rows.map((r) => [r.offer_id, r]));
+    // Mốc nền: phân xử lại một lượt TRƯỚC 095 — cột lưu trên DB có thể đã lệch đầu ra phân xử từ trước (độ trễ có sẵn, không do
+    // hàng này); so sau 095 với mốc này mới đo đúng phần 095 gây ra. In riêng số lệch có sẵn để không giấu.
+    const goc = await chup();
+    await c.query("SELECT resolve_offer_fields(NULL)");
     const truoc = await chup();
+    let lechSan = 0;
+    for (const [id, r] of goc) if (truoc.get(id)?.h !== r.h || truoc.get(id)?.floor_raw !== r.floor_raw) lechSan++;
+    console.log(`lech_co_san_truoc_095=${lechSan}`);
     await napTang(c);
     await c.query("SELECT resolve_offer_fields(NULL)");
     const sau = await chup();
