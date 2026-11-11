@@ -222,7 +222,9 @@ làn Claude); `import-airbnb.mjs` không có nguồn này trong ALLOWLIST.
   `contentType` và magic bytes), `rootLinks` (link gốc trong bài), `posts` (`[{post_id, group, posted_at}]`). `kind`:
   - `drive-file` — đã tải: thêm `file` (đường `media/…`), `sha256`, `bytes`, `contentType`.
   - `drive-file-skipped` — không tải: `skipReason` một trong `psd-excluded`, `video-over-300mb`, `run-cap-5gb`,
-    `contract-review-needed`, `run-stopped-blocked`; `bytesAnnounced` khi biết.
+    `contract-review-needed`, `large-file-pending` (Drive trả trang cảnh báo «không quét được virus» cho tệp trên khoảng
+    100 MB — collector KHÔNG bấm xác nhận; cỡ trang ghi ở `sizeShown`, chờ người quyết), `run-stopped-blocked`;
+    `bytesAnnounced` khi biết.
   - `drive-file-error` — tải lỗi: `error` (`http <mã>`, `trang HTML lạ thay vì tệp`).
 
 Luật đọc:
