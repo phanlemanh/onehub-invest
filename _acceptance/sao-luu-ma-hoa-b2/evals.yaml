@@ -1,0 +1,83 @@
+schema_version: 1
+feature_slug: sao-luu-ma-hoa-b2
+# Mọi ca chạy trên cây giả và kho restic cục bộ dưới thư mục tạm; restic giả (ghi lời gọi) cho các ca bước chặn. Không ca nào chạm B2,
+# Keychain đăng nhập hay DB oneinvest dùng chung (E6 tự dựng và xoá một DB nguồn nhỏ oneinvest_u1_saoluu_* trên :5433).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "ca C1 (chay thiếu xác nhận → mã 3, restic giả 0 lời gọi, không thư mục dump) và C13 (khoi-tao thiếu xác nhận → mã 3, 0 lời gọi, keychain tạm không có mục mới); ca dương cùng fixture cho từng lệnh (có xác nhận → restic giả có lời gọi backup / init); thông điệp ghim «C1», «C13»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/sao-luu-ngoai-may.sh", "scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "ca C2–C5: mã 4, 4, 5, 6, mỗi ca 0 lời gọi restic; stdout+stderr không chứa khoá giả hay mật khẩu giả; đối chứng dương: cấu hình 600 ngoài kho đi tiếp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/sao-luu-ngoai-may.sh", "scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "ca C7: tập tệp của `restic ls` = tập tệp cây giả trừ đúng các tệp dưới collector/state đã liệt kê viết trước trong ma trận (một dòng mỗi tệp gài, không suy từ hằng); C15: tệp dưới collector/snapshots mang từng từ của luật (chat_profile, author, qrcode, session_log…) có đủ trong restic ls, bản đột biến áp luật lên snapshots thì đỏ; số tệp, tổng cỡ khớp; kho ảnh vắng → kho_anh: chua_co, mã 0; bản đột biến bỏ luật loại trừ thì ca đỏ, thông điệp nêu tên tệp gài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "không tệp nào dưới data/ của kho cục bộ chứa chuỗi canh (đối chứng: chuỗi canh có trong cây nguồn); restore bằng mật khẩu sai thoát ≠0; quét tệp của hàng không thấy curl/rclone/aws/scp/rsync ngoài comment, tệp gài một lệnh curl thì đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/sao-luu-ngoai-may.sh", "scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "kho dựng bằng chính chay (bản dump tạm đã xoá); ca C10: ≥50 tệp raw snapshot so với đĩa + mọi tệp dump so với dump_sha256 của trạng thái, khớp hết, mã 0; C11 cùng kho sau khi phá một tệp pack: mã 1 nêu bước hỏng; C14 sửa byte tệp dump trong kho: mã 1 nêu tên tệp dump; trạng thái thiếu dump_sha256: mã 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.sl_db
+    expected: "DB nguồn nhỏ tự dựng trên :5433 (không đụng oneinvest), dump -Fc + so-dong.tsv đếm bằng đúng câu DEM_SQL rút từ db-sao-luu.sh → chay → kiem-db: số dòng mọi bảng khớp so-dong.tsv, mã 0, DB thử đích bị xoá; so-dong.tsv sửa lệch một dòng → mã 1 nêu bảng lệch"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.itest.mjs", "scripts/db-sao-luu.sh"]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "tệp trạng thái sau lượt ok và lượt lỗi có đủ trường; không chứa khoá giả, đường kho, mã nguồn giả"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.sl_freshness
+    expected: "ca C12: check-freshness với trạng thái 35h → 0, 37h → 1, lỗi → 1, không có tệp và chưa bật → 0 kèm «chưa bật», không có tệp mà đã có tệp xác nhận → 1 kèm «đã bật mà chưa có lượt»; các ca nguồn cũ của tệp test vẫn xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/check-freshness.mjs", "scripts/check-freshness.test.mjs", "scripts/lib/sao-luu-ngoai-may.mjs"]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "sau lượt dùng khoá giả: log, trạng thái, stdout/stderr không chứa giá trị; soat-khoa trên cây có tệp gài → mã 1, in đường, không in giá trị; cây sạch → mã 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.sl_test
+    expected: "ca C9: 12 bản giả (--time) → sau forget còn đúng tập 7/4/6 theo ngày đã viết trước; C8: byte_moi < 1% lần đầu; C6: dump lỗi → loi/dump, 0 lời gọi backup"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/lib/sao-luu-ngoai-may.mjs", "scripts/sao-luu-ngoai-may.test.mjs"]
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.sl_ranh_gioi
+    expected: "sync_cloud_doi=0 collector_doi=0 plist=0 launchctl=0 kho_tu_xa_trong_test=0 ten_nguon=0, mã 0; đối chứng --thu-ten-nguon gài tên trong tệp giả thì đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: ["scripts/**", "_acceptance/sao-luu-ma-hoa-b2/**", "docs/superpowers/**"]

@@ -257,7 +257,11 @@ executors:
     df4_cu: "cd app && bash ../db/db-thu.sh oneinvest_suite_df4cu --chay node --import tsx --test --test-concurrency=1 tests/ops-dong-chay.test.tsx tests/dong-chay-cloud.test.tsx tests/df0-chang-theo-ngay.test.tsx tests/df0-dem-de-xuat.test.tsx tests/dong-chay-so-cu.test.tsx"   # bai-nhan-tru-bai-chi-anh E9 — bộ thử dòng chảy có sẵn
     refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
     refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
+    sl_test: "node --test --test-concurrency=1 scripts/sao-luu-ngoai-may.test.mjs"   # sao-luu-ma-hoa-b2 E1–E5, E7, E9, E10 — cây giả + kho restic cục bộ dưới thư mục tạm, restic giả đếm lời gọi
+    sl_db: "node --test --test-concurrency=1 scripts/sao-luu-ngoai-may.itest.mjs"   # sao-luu-ma-hoa-b2 E6 — DB nguồn nhỏ oneinvest_u1_saoluu_* tự dựng/xoá trên :5433, dump → kho cục bộ → kiem-db, so so-dong.tsv; không dump DB oneinvest
+    sl_freshness: "node --test scripts/check-freshness.test.mjs"   # sao-luu-ma-hoa-b2 E8 — dòng «Sao lưu ngoài máy» 35h/37h/lỗi/chưa bật
   script:
+    sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
