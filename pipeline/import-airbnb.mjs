@@ -315,13 +315,20 @@ async function main() {
   let s08 = 0;
   let s08Detail = 0;
   let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
-    for (const it of items) {
+    const S10_UT = { "177": 0, "178": 1 };
+    const itemsSap = [...items].sort((a, b) => {
+      const ua = a.source === NGUON_S10 && a.kind === "stock_table" ? S10_UT[a.meta?.request?.block_type] ?? 9 : 9.5;
+      const ub = b.source === NGUON_S10 && b.kind === "stock_table" ? S10_UT[b.meta?.request?.block_type] ?? 9 : 9.5;
+      return ua - ub;
+    });
+    for (const it of itemsSap) {
       if (it.source === "s03-ho-so") {
         if (coBang) { await napHoSo(client, it); hoSo++; }
         else { hoSoBo++; }
         continue;
       }
       if (it.source === NGUON_S10) {
+        // 1211-23(b): nạp stock_table 177 TRƯỚC 178 trong cùng snapshot — trùng stock_id giữ 177, không dựa may
         // DATA-CONTRACT S10 luật 1: item thiếu bộ lọc rộng (snapshot 10/11 trước lượt thu lại) bị máy chủ lọc — bỏ có đếm.
         // Chọn snapshot MỚI NHẤT cho mỗi sourceId là việc của bước đọc stg (089), không phải bộ nạp: nạp mọi snapshot đủ lọc.
         if (it.kind === "project_tree") { s10Cay++; continue; } // v11: cây đối chiếu — khai hợp đồng, chưa nạp bảng nào

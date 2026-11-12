@@ -7,8 +7,9 @@
 
 /** Khuôn cột theo block_type: chỉ số ô (đếm cả ô trong chú thích) → trường. */
 export const KHUON_S10 = {
-  // 1211-22 (đo 1.078 dòng 177 snapshot 014105012): 9 = giá «N tỷ»; 8 = trạng thái (thường trống);
-  // 13 = ngày bàn giao («d/m/yyyy» hoặc «CSBH…»); 18 = văn bản hợp đồng (HĐMB-VHM-VPB…); 20 = ngân hàng.
+  // 1211-22 (đo 1.078 dòng 177 snapshot 014105012): 9 = giá «N tỷ»; 13 = ngày bàn giao («d/m/yyyy»
+  // hoặc «CSBH…»); 18 = văn bản hợp đồng (HĐMB-VHM-VPB…); 20 = ngân hàng. KHÔNG có cột trạng thái
+  // thật trong bảng 177 (ô 8 thường trống, đôi khi chứa giá niêm yết khác — nằm nguyên trong raw_row).
   177: { soO: 29, ma: 0, phanKhu: 1, day: 2, loai: 3, dtDat: 4, dtXay: 5, hienTrang: 6, huong: 7, gia: 9, trangThai: null, ghiChu: [18, 20], ngay: 13 },
   178: { soO: 16, ma: 0, phanKhu: 1, day: 2, loai: 3, dtDat: 5, dtXay: 6, huong: 7, hienTrang: 8, gia: null, trangThai: 10, ghiChu: [13], ngay: null },
 };
