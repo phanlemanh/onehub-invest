@@ -1,0 +1,89 @@
+schema_version: 1
+feature_slug: tang-tren-tin-s03
+# Ca «DV4-AC-n»: thuần ở pipeline/scripts/tang-tren-tin.test.mjs; DB thử oneinvest_u1_dv4 (chép từ DB máy thu bằng db/db-thu.sh) ở
+# pipeline/scripts/tang-tren-tin.itest.mjs; phép đo toàn bộ bài, mẫu đọc tay và ranh giới ở pipeline/scripts/do-tang-tren-tin.mjs. 095 chỉ nạp
+# trong DB thử, không chạm DB oneinvest dùng chung (luật đợt 27/10). Mỗi ma trận có ca đỏ: bản đột biến ghim mã ca.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_db
+    paths: [db/migrations/095_*, pipeline/scripts/tang-tren-tin.itest.mjs, pipeline/scripts/tang-tren-tin-db.sh]
+    expected: "exit 0; ca 'DV4-AC-1' xanh: áp 095 hai lần không lỗi; floor_raw, floor_band được nhận, floor_lol bị từ chối; tin S06 fixture 1 phát biểu legacy sau lần một, vẫn 1 sau lần hai; mỗi dòng ma trận một assert, dòng từ chối ghim tên trường trong thông điệp; đối chứng: bản sao 095 bỏ NOT EXISTS của bước legacy thì đỏ ghim 'DV4-AC-1'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_do_toan_bo
+    paths: [db/migrations/095_*, pipeline/scripts/do-tang-tren-tin.mjs, pipeline/scripts/tang-tren-tin-db.sh]
+    expected: "exit 0; dòng 'floor_raw_lech=0/<N>' với N ≥ 700 so từng cặp offer_id và giá trị, và 'cot_doi=0'; chạy trong giao dịch ROLLBACK trên DB thử; bản bỏ bước legacy thì 'floor_raw_lech' khác 0 và lệnh thoát khác 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_db
+    paths: [db/migrations/095_*, pipeline/scripts/tang-tren-tin.itest.mjs, pipeline/lib/write-offers.mjs]
+    expected: "exit 0; ca 'DV4-AC-2' xanh: tin S06 có floor_raw ghi lại qua writeOffers hai lượt, floor_raw còn nguyên; đối chứng: tin S06 không có phát biểu legacy thì floor_raw về null (thước phân biệt được)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dv4_doc
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/tang-tren-tin.test.mjs]
+    expected: "exit 0; ca 'DV4-AC-3' xanh, mỗi mã ca M1…M28 của ma trận design doc một assert và test in danh sách mã đã chạy đủ 28; mỗi giá trị khác null có trich nằm trong chữ NFC; ca đỏ: bản đột biến bỏ chặn «tầng 2-3» và bản đọc «T<số>» trần đều đỏ ghim 'DV4-AC-3'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/assert.mjs, db/migrations/095_*, pipeline/scripts/tang-tren-tin.itest.mjs]
+    expected: "exit 0; ca 'DV4-AC-4' xanh: phát biểu đúng chủ thể, observed, parser, evidence.trich; cột floor_raw đúng số; lần hai số dòng không đổi; bài đổi giá trị thì dòng cũ retract_reason='thay-boi-luot'; hai bài khác tầng thì conflict=true"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.dv4_mau
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-tang-tren-tin.mjs]
+    expected: "exit 0; dòng 'dung=<n>/<m>' với n/m ≥ 0.95, 'moc_thanh_tang=0/<k>' với k ≥ 1, 'sot=<a>/<b>'; đáp án đọc từ research-local/tang-tren-tin-s03/mau-doc-tay.jsonl ở checkout chính, không chép vào kho; thiếu tệp đáp án thì thoát khác 0 với thông điệp, không in chữ bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/tang-tren-tin.itest.mjs]
+    expected: "exit 0; ca 'DV4-AC-6' xanh: trên DB thử chưa áp 095 transform xong, stderr có '095', số tin bằng lượt trước, 0 phát biểu tầng; cùng ca sau khi áp 095 có phát biểu tầng (đối chứng dương)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dv4_luat
+    paths: [pipeline/mappings.yaml, pipeline/sql/450_dq_checks.sql, pipeline/scripts/tang-tren-tin.test.mjs, pipeline/lib/vocab.generated.mjs]
+    expected: "exit 0; vocab --check xanh; vocab --check-db xanh trên DB thử đã áp 095 và đỏ trên DB thử chưa áp (đối chứng); ca 'DV4-AC-7' xanh: mappings có floor_raw→UnitFloorLocation, floor_band dd null + rationale + checked_on, trục floor_band ba mã; dòng DQ s03-floor-fill ra skip/pass/fail đúng ba fixture trên DB thử; ca đỏ: mappings giả thiếu rationale thì đỏ ghim 'DV4-AC-7'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dv4_nhan
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-tang-tren-tin-label.test.tsx]
+    expected: "exit 0; ca 'DV4-AC-7' xanh: nhãn diễn giải của s03-floor-fill có chữ tiếng Việt, không rơi về mã thô; đối chứng: mã kiểm lạ rơi về mã thô"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.dv4_do_toan_bo
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-tang-tren-tin.mjs]
+    expected: "exit 0; dòng 'offer_id_lech=0' và 'dot_bien_lech=<d>' với d > 0; dòng 'co_tang=<n>/<m>' với n/m trong [0.08, 0.25]; dòng 'dq_s03_floor_fill=pass ti_le=<r>' với r bằng n/m, DQ chạy trên chính đầu ra transform đó; trong giao dịch ROLLBACK trên DB thử; không in chữ bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.dv4_ranh_gioi
+    paths: [pipeline/scripts/do-tang-tren-tin.mjs]
+    expected: "exit 0; dòng 'sync_cloud_doi=0 route_zalo_doi=0 ap_cloud=0 ten_nguon=0 mau_ignored=1'; đối chứng: tệp giả trong thư mục tạm chứa một tên nguồn thật từ source_registry thì đếm ten_nguon=1 và thoát khác 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
