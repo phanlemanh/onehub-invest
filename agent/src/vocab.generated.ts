@@ -7,7 +7,7 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
-  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude", "builder_name", "area_id", "floor_raw", "floor_band", "project_node_id", "subzone_node_id"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "registry_inherit"],
   registry_status: ["active", "merged", "split", "retired"],
@@ -63,7 +63,7 @@ export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "la
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
-export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status", street_number: "street_number", unit_number: "unit_number", frontage_length: "frontage_length", lot_size_dimensions: "lot_size_dimensions", stories: "stories", latitude: "latitude", longitude: "longitude", builder_name: "builder_name", area_id: "area_id", floor_raw: "floor_raw", floor_band: "floor_band", project_node_id: "project_node_id", subzone_node_id: "subzone_node_id" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", registry_inherit: "registry_inherit" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
@@ -85,7 +85,7 @@ export const VIEW = { city: "city", lake: "lake", river: "river", park_greenbelt
 export const RENT_INCLUDES = { management: "management", electricity: "electricity", water: "water", internet: "internet", none: "none", other: "other" } as const;
 export const PRICE_BASIS = { net: "net", gom_phi: "gom_phi", chua_gom_phi: "chua_gom_phi" } as const;
 
-export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "floor_band", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
+export const CANONICAL_FIELDS = ["offer_id", "source", "kind", "price_vnd", "area_m2", "price_perm2", "bedrooms", "phuong_raw", "district_raw", "confidence", "first_seen", "last_seen", "n_reposts", "post_ids", "price_tier", "seller_name", "seller_phone", "seller_phone_inferred", "seller_phone_hash", "seller_ref", "bait_gap_pct", "listing_url", "property_type", "street_raw", "block_raw", "floor_raw", "floor_band", "project_node_id", "subzone_node_id", "area_id", "bathrooms", "street_number", "unit_number", "frontage_length", "lot_size_dimensions", "stories", "latitude", "longitude"] as const;
 
 /** Danh sách code nối bằng `|` — cho chuỗi enum trong prompt LLM. */
 export function promptEnum(axis: VocabAxis): string {

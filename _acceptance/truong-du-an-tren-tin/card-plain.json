@@ -1,0 +1,5 @@
+{
+ "feature_plain": "Tin rao của mọi nguồn nay ghi được dự án, phân khu và phường của nó dưới dạng phát biểu có căn cứ (migration 096); DB chặn id sai loại nút, id không tồn tại, phường không phải cấp phường/xã. Chưa áp lên DB máy thu — việc đó cần lời riêng của anh sau khi gộp.",
+ "decisions": [],
+ "analyst_plain": ""
+}
