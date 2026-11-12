@@ -286,4 +286,5 @@ máy không?»: «Cho, khoá giữ ở máy». Căn cứ: máy thu chưa có b�
 
 Không đổi: mọi chỗ khác tầng A giữ nguyên — bốn thứ tầng A ở sửa đổi 26/10 vẫn không lên kho công khai, cloud, cổng Invest
 hay API công khai dưới dạng đọc được; mọi bộ che và bộ soát trên đường lên cloud giữ nguyên. Bản sao lưu sang đĩa ngoài cắm
-tại máy thu (§5 DR) không đổi. Còn mở: nhà cung cấp kho ngoài; chưa cắt hàng sao lưu.
+tại máy thu (§5 DR) không đổi. Nhà cung cấp kho ngoài: Backblaze B2, tài khoản riêng tách khỏi Supabase (ROADMAP §3 mục 46 QĐ5). Còn mở:
+chưa cắt hàng sao lưu.
