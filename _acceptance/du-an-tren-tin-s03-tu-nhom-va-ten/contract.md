@@ -24,9 +24,10 @@ chờ lời riêng của Mạnh sau gộp. Không migration, không gọi model.
   một phát biểu `project_node_id` = P1, lớp `inferred`, phương pháp `e1_rule`, luật `du-an-nhom-mot-du-an`, evidence mang
   khoá nhóm và mã dòng sổ; bài nhóm B, C không có dòng nào của luật này.
 - AC-2: Given bài thuộc tin S03 có nhãn bạc mới nhất nêu tên dự án, When chạy với `--ghi`, Then bài mà tên khớp tên hay bí
-  danh của đúng một nút project (không phân biệt hoa thường) VÀ chữ tên có trong chữ bài có một phát biểu luật
-  `du-an-ten-bai`, evidence mang mã nhãn và đoạn trích; không dòng cho: tên không khớp nút, tên khớp hai nút, tên không có
-  trong chữ bài, tên chỉ nằm ở nhãn cũ hơn nhãn mới nhất.
+  danh của đúng một nút project (không phân biệt hoa thường) VÀ nhãn có căn cứ thuộc tập Cổng Phạm vi chốt ở Hỏi-4 (mặc định:
+  `chu_bai` với đoạn trích đã kiểm) có một phát biểu luật `du-an-ten-bai` với lớp và phương pháp theo Hỏi-3/Hỏi-4, evidence
+  mang mã nhãn, căn cứ và đoạn trích; không dòng cho: tên không khớp nút, tên khớp hai nút, nhãn căn cứ ngoài tập (ngữ cảnh
+  nhóm, kiến thức nghề, ảnh khi chọn A), trích chưa kiểm, tên chỉ nằm ở nhãn cũ hơn nhãn mới nhất.
 - AC-3: Given tin có bài ở hai nhóm một-dự-án khác nhau, và tin có dự án theo nhóm khác dự án theo tên bài, When chạy với
   `--ghi`, Then không bài nào của hai tin ấy có phát biểu của hai luật; tin có hai nguồn cùng một dự án có cả hai dòng; với
   `--bang-mau-thuan <tệp>` tệp liệt đúng các tin mâu thuẫn kèm dự án ứng viên và nguồn, không chứa chữ bài.
@@ -39,9 +40,10 @@ chờ lời riêng của Mạnh sau gộp. Không migration, không gọi model.
 - AC-6: Given DB thử, When chạy không cờ, Then lệnh in bảng đếm và số dòng `field_assertions` trước, sau bằng nhau; When
   DB thiếu `field_assertions` hay CHECK chưa có `project_node_id`, Then thoát 2 với thông điệp gọi tên điều thiếu; `--ghi`
   lỗi giữa chừng thì không dòng nào được ghi (một giao dịch).
-- AC-7: Given bảng đếm của lần chạy thử trên DB thử có cả hai nguồn, When đọc các dòng số, Then hợp = tin (i) + tin (ii) −
-  trùng; còn lại = tin S03 − hợp − mâu thuẫn; mâu thuẫn ≤ trùng + số tin nhiều-nhóm; mỗi dòng bằng đúng số tính lại từ DB
-  bằng truy vấn độc lập của test.
+- AC-7: Given bảng đếm của lần chạy thử trên DB thử có cả hai nguồn, When đọc các dòng số rồi chạy `--ghi`, Then «tin có dự
+  án» = số tin có ít nhất một phát biểu sống của hai luật sau `--ghi` (đếm lại trong `field_assertions`); tin có dự án + mâu
+  thuẫn = số tin có ít nhất một ứng viên; còn lại = tin S03 − tin có dự án − mâu thuẫn; mỗi dòng bằng đúng số tính lại bằng
+  truy vấn độc lập của test. And chạy thử trên DB của lượt (bản sao dữ liệu thật) cho tin (i) > 0 và gặp đủ hai dạng khoá nhóm.
 - AC-8: Given mã của hai tệp mới, When kiểm phụ thuộc, Then lệnh chỉ import `pg`, `node:*` và `pipeline/lib/*`; không
   gọi mạng hay model; mã trường, lớp, phương pháp lấy từ `pipeline/lib/vocab.generated.mjs` (không viết tay).
 - AC-9: Given cây làm việc, When chạy `cd pipeline && npm test`, Then thoát 0.
@@ -49,18 +51,19 @@ chờ lời riêng của Mạnh sau gộp. Không migration, không gọi model.
 ## Coverage
 
 Trục (quét không gian AC theo nguồn × trạng thái bài × đổi theo thời gian):
-- Nguồn: (i) sổ nhóm · (ii) tên bài · cả hai trùng · cả hai lệch — AC-1, AC-2, AC-3.
-- Trạng thái nhóm: một dự án · nhiều · không · hai dạng khoá · hai dòng sổ lệch — AC-1 (ca hai dòng sổ lệch ở design).
+- Nguồn: (i) sổ nhóm · (ii) tên bài theo căn cứ nhãn (chữ bài · ngữ cảnh nhóm · kiến thức nghề · ảnh) · cả hai trùng · cả hai lệch — AC-1, AC-2, AC-3.
+- Trạng thái nhóm: một dự án · nhiều · không · hai dạng khoá · hai dòng sổ lệch — AC-1.
 - Trạng thái tên: khớp một nút · khớp hai nút · không khớp · không trong chữ bài · nhãn cũ — AC-2.
-- Tin: một bài · nhiều bài cùng dự án · nhiều bài khác dự án · bài không thuộc tin — AC-3, AC-1.
+- Tin: một bài · nhiều bài cùng dự án · nhiều bài khác dự án · bài thuộc hai tin · bài không thuộc tin — AC-3, AC-1.
 - Thời gian: lượt đầu · sổ đổi · danh bạ đổi · chạy lại không đổi — AC-4.
 - Cùng chủ thể có phát biểu khác: fact · observed · inferred khác luật — AC-5.
 - Chế độ chạy: thử · ghi · thiếu bảng · lỗi giữa chừng — AC-6.
-[CE chưa kiểm chứng] Đủ: mọi ô của tích trục có ít nhất một AC hoặc một dòng Out of scope; bài thuộc nhiều tin chỉ khai ở design.
+[CE chưa kiểm chứng] Đủ: mọi ô của tích trục có ít nhất một AC hoặc một dòng Out of scope.
 
 ## Đường đo
 
-- «tin S03 có dự án ~86%» ← dòng «hợp» của bảng đếm chạy thử (AC-6, AC-7) trên DB máy thu, chạy lại trước lời ghi thật.
+- «tin S03 có dự án» ← dòng «tin có dự án» của bảng đếm chạy thử (AC-6, AC-7) trên DB máy thu, chạy lại trước lời ghi thật.
+  Đo 13/11: 82,6% (A) · 83,6% (B) · 86,0% (C) — ngưỡng «~86%» đề xuất trong ô cơ hội tính cả nhãn suy từ ngữ cảnh nhóm (Hỏi-4).
 - «0 tin mâu thuẫn bị ghi» ← AC-3 trên DB thử; trên DB thật: dòng «mâu thuẫn» + tệp `--bang-mau-thuan`.
 - «xét lại được, không chồng» ← AC-4.
 - «≥95% đúng» trên mẫu đọc tay: không đo ở hàng này — mẫu đọc tay sau khi ghi thật (Out of scope).
