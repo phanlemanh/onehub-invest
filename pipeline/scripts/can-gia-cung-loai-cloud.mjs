@@ -10,9 +10,11 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
+import { PROPERTY_TYPE } from "../lib/vocab.generated.mjs";
 import { mgmtExec } from "../sync-cloud.mjs";
 
-const LOAI = ["apartment", "house", "land", "commercial"];
+// Bốn loại có thước ở cả hai phía (AC-10); «phòng» hiếm, «chưa rõ» không có thước.
+const LOAI = [PROPERTY_TYPE.apartment, PROPERTY_TYPE.house, PROPERTY_TYPE.land, PROPERTY_TYPE.commercial];
 const BAM = "SELECT md5(pg_get_viewdef('v_ruler_p2'::regclass)) AS bam, pg_get_viewdef('v_ruler_p2'::regclass) AS def";
 
 /** Phán quyết thuần: trả danh sách lỗi (rỗng = khớp). */
