@@ -330,19 +330,18 @@ async function main() {
       }
       if (it.source === NGUON_S10) {
         // 1211-23(b): nạp stock_table 177 TRƯỚC 178 trong cùng snapshot — trùng stock_id giữ 177, không dựa may
-        if (it.kind === "stock_table") {
-          s10Boc += (String(it.payload?.html ?? "").match(/class="[^"]*\bp_row\b/g) || []).length;
-          const rq = it.payload?.meta?.request ?? it.meta?.request ?? {};
-          if (rq.area_max in { "": 1 } || rq.area_max == null || rq.price_max == null) s10ThieuLoc++;
-          else if (String(rq.area_max) === "" || String(rq.price_max) === "") s10ThieuLoc++;
-        }
+        // 1211-26: Σ bóc đếm MỘT chỗ (ở duBoLoc dưới) — không đếm đôi tại đây
         // DATA-CONTRACT S10 luật 1: item thiếu bộ lọc rộng (snapshot 10/11 trước lượt thu lại) bị máy chủ lọc — bỏ có đếm.
         // Chọn snapshot MỚI NHẤT cho mỗi sourceId là việc của bước đọc stg (089), không phải bộ nạp: nạp mọi snapshot đủ lọc.
         if (it.kind === "project_tree") { s10Cay++; continue; } // v11: cây đối chiếu — khai hợp đồng, chưa nạp bảng nào
         if (!coBangS10Db) { s10Bo++; continue; }
         if (it.kind !== "stock_table") { s10Bo++; continue; }
-        if (!duBoLoc(it)) { s10ThieuLoc++; continue; }
+        if (!duBoLoc(it)) {
+          s10ThieuLoc += (String(it.payload?.html ?? "").match(/class="[^"]*\bp_row\b/g) || []).length; // 1211-26: đếm DÒNG bỏ
+          continue;
+        }
         const r = bocS10(it);
+        s10Boc += r.dong.length + 0; // đủ lọc: Σ bóc = dòng bóc (đếm ở bocS10, cộng khi đủ lọc)
         s10Lech += r.lechKhuon;
         if (r.khongStockId) console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`);
         s10Dong += await napS10(client, r.dong, manifest.snapshotId, manifest.finishedAt, it.payload?.cond ?? null);
@@ -505,7 +504,7 @@ async function main() {
     console.log(
       `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
       + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} item thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn, trùng ${s10TrungLan})`
-      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + thiếu bộ lọc bỏ nguyên` : ""),
+      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + thiếu bộ lọc bỏ nguyên (dòng)` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
