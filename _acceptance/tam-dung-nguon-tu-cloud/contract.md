@@ -80,7 +80,7 @@ lý do: không gửi được»):
 
 ## Out of scope
 
-- Nút «đóng băng thay đổi» của owner (ADR-0015 §7) — Hỏi-1, khuyến nghị tách hàng riêng.
+- Nút «đóng băng thay đổi» của owner (ADR-0015 §7) — Hỏi-3, khuyến nghị tách hàng riêng.
 - Lệnh đảo một chạm từ dòng lệnh đã áp; sửa lệnh cũ.
 - Đổi cột «Trạng thái» (badge) của lưới ngay sau áp: badge vẫn đọc bản tin 15′; chỉ nút Thao tác theo trạng thái hiệu
   lực (AC-6).

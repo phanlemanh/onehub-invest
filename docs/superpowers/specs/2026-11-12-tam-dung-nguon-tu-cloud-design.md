@@ -149,13 +149,14 @@ có. Chân ngành: [NGÀNH: GitHub Actions — «Disable workflow» một nút k
 - Cắt ngang: nhật ký người thật cùng giao dịch; UI chỉ ghi mã S0x.
 
 **Core** (8 tiêu chí): A đủ ma trận (AC-6); B đủ chín ô (AC-4, AC-5); C (AC-3, AC-8); D route (AC-1, AC-2), đầu-cuối
-(AC-7), màn (AC-8). **Later**: nút «đóng băng thay đổi» của owner (Hỏi-1); lệnh đảo một chạm từ dòng đã áp; cột
+(AC-7), màn (AC-8). **Later**: nút «đóng băng thay đổi» của owner (Hỏi-3); lệnh đảo một chạm từ dòng đã áp; cột
 trạng thái của badge trạng thái của lưới cập nhật ngay sau áp (cần bản tin nhanh). **Never**: cloud gọi vào máy thu; sửa `source_registry`
 từ cloud bằng đường khác ngoài lệnh.
 
 ## Câu hỏi cho Mạnh (sổ S1)
 
-- Hỏi-1: nút «đóng băng thay đổi» của owner (ADR §7, TV4 ghi «TV4b») — khuyến nghị tách hàng riêng, vì cần chỗ lưu
+- Hỏi-1: bỏ design-pass — màn ghép hết từ thành phần đã cài; nhìn màn thật ở ảnh chụp của E11 tại Cổng Bằng chứng.
+- Hỏi-3: nút «đóng băng thay đổi» của owner (ADR §7, TV4 ghi «TV4b») — khuyến nghị tách hàng riêng, vì cần chỗ lưu
   công tắc ở cloud và chặn cả route kéo; kèm vào đây thì thêm 2 tiêu chí và chạm route `pull` của TV4.
 - Hỏi-2: vai `ops` tự duyệt lệnh tạm dừng của mình (không chờ admin) — khuyến nghị có, theo §4.8 #1 «lệnh S05/S06,
   tạm dừng … thì không [cần người thứ hai]»; lối khác: mọi lệnh tạm dừng của ops chờ admin duyệt, đổi lại đêm khuya
