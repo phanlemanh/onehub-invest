@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const SLUG = "dbv-itest-xanh-lai-tren-main";
 const TEP = "pipeline/scripts/danh-ba-vat-the.itest.mjs";
-const DUOC_DOI = [TEP, "_acceptance/config.yaml", "PRODUCT-MAP.md", "LO-TRINH.html", `docs/superpowers/specs/2026-11-12-${SLUG}-design.md`];
+const DUOC_DOI = [TEP, "_acceptance/config.yaml", "PRODUCT-MAP.md", "LO-TRINH.html", `docs/superpowers/specs/2026-11-12-${SLUG}-design.md`, `docs/superpowers/plans/2026-11-12-${SLUG}.md`];
 // Ngoại lệ khai trước (AC-3, AC-5): so dấu lược đồ DBV-AC-1 đổi DB đo sang DB dừng ở 082; kỳ vọng method DBV-AC-9 theo hợp
 // đồng đã ký DA1 (source_field). Mỗi ngoại lệ kèm lời gọi thay thế phải có trong bản mới.
 export const KHAI_TRUOC = [

@@ -26,7 +26,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.dbvx_giu
-    expected: "exit 0; 'DBVX-GIU PASS': probe dừng khác 0 khi tệp kiểm có thay đổi chưa commit; in sha HEAD và danh sách tệp diff merge-base..HEAD, mọi tệp nằm trong danh sách AC-3; mọi lời gọi assert.*(…) của bản merge-base (trọn tham số tới ngoặc đóng, gộp khoảng trắng) có nguyên văn trong bản mới trừ đúng hai lời gọi khai trước (so dấu lược đồ DBV-AC-1; kỳ vọng method của DBV-AC-9); in số lời gọi so. Chiều đỏ trong cùng probe: bản chép đổi một số kỳ vọng ở dòng thứ hai của một assert nhiều dòng → probe gọi tên lời gọi đó"
+    expected: "exit 0; 'DBVX-GIU PASS': probe dừng khác 0 khi tệp kiểm có thay đổi chưa commit; in sha HEAD và danh sách tệp diff merge-base..HEAD, mọi tệp nằm trong danh sách AC-3 (gồm design doc và kế hoạch); mọi lời gọi assert.*(…) của bản merge-base (trọn tham số tới ngoặc đóng, gộp khoảng trắng) có nguyên văn trong bản mới trừ đúng hai lời gọi khai trước (so dấu lược đồ DBV-AC-1; kỳ vọng method của DBV-AC-9); in số lời gọi so. Chiều đỏ trong cùng probe: bản chép đổi một số kỳ vọng ở dòng thứ hai của một assert nhiều dòng → probe gọi tên lời gọi đó"
     paths: ["pipeline/scripts/danh-ba-vat-the.itest.mjs", "_acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5

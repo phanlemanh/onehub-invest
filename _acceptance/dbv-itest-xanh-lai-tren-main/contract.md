@@ -31,7 +31,7 @@ luật ISO một tỉnh mà #406 (DA1) đưa vào lệnh dựng (`loi: "nhieu-ti
 - AC-3: Given tệp kiểm sau sửa, When chạy `dbv_db`, Then 18/18 ca ok, không ca nào SKIP hay TODO (đếm từ đầu ra TAP); và
   probe tĩnh so cây làm việc với merge-base (đòi tệp kiểm không có thay đổi chưa commit) thấy: diff chỉ chạm
   `pipeline/scripts/danh-ba-vat-the.itest.mjs`, `_acceptance/dbv-itest-xanh-lai-tren-main/**`, `_acceptance/config.yaml`,
-  design doc, và bản đồ máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html`; MỌI lời gọi `assert.*(…)` của bản merge-base (trọn
+  design doc và kế hoạch (`docs/superpowers/{specs,plans}/2026-11-12-dbv-itest-xanh-lai-tren-main*.md`), và bản đồ máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html`; MỌI lời gọi `assert.*(…)` của bản merge-base (trọn
   tham số tới dấu đóng ngoặc, gộp khoảng trắng) còn nguyên văn trong bản mới, trừ đúng một lời gọi đã khai trước — phép so
   dấu lược đồ của DBV-AC-1 đổi DB đo từ `db` sang DB dừng ở 082, thông điệp giữ nguyên; và (AC-5) kỳ vọng `method` của
   DBV-AC-9 đổi `hitl` → `source_field`.
