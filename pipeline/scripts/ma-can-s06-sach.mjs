@@ -12,10 +12,11 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { resolveOffers } from "../lib/assert.mjs";
+import { ASSERTION_FIELD } from "../lib/vocab.generated.mjs";
 
 /** Diện dọn: phát biểu S06 trường nguồn còn hiệu lực, mã căn/số nhà, từ cờ hoặc mang giá trị rác. */
 export const DIEN = `subject_key LIKE 'S06:%' AND method = 'source_field' AND retracted_at IS NULL
-  AND field IN ('unit_number', 'street_number')
+  AND field IN ('${ASSERTION_FIELD.unit_number}', '${ASSERTION_FIELD.street_number}')
   AND (rule_id IN ('payload.unitnumber_display', 'payload.streetnumber_display')
        OR (field = 'unit_number' AND btrim(value) ~ '^(0+|1)$')
        OR (field = 'street_number' AND btrim(value) ~ '^0+$'))`;
