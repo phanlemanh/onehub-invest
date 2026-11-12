@@ -630,6 +630,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     Số đo nền (audit 09–10/11): trong tin có nhiều bản chữ khác nhau, gộp nhầm 25% [17–35%] (đọc tay), 15% [5–36%] (đồng thuận hai
     model lớn); tách nhầm 2–4%; Haiku gom mù gộp đúng 98% [88–100%]. Hàng mới: GT5–GT8, DV2–DV5; sửa lời GT4 (thành thước, T2), PL18
     (E2 tách rổ lên đầu).
+    **DV4** `tang-tren-tin-s03` (11/11, Mạnh duyệt Cổng Phạm vi và kế hoạch): tầng của tin S03 qua phát biểu có trích dẫn, migration
+    095 — số tầng → `floor_raw` (RESO `UnitFloorLocation`, tra DD 2.1), dải «tầng thấp/trung/cao» → extension `floor_band`
+    (`lower`·`middle`·`upper`, không có cột); 747 tầng S06 giữ bằng phát biểu legacy; DQ `s03-floor-fill`. DV4 nhận trọn phần tầng
+    của SV2; SV2 khi nối lại chỉ còn hướng và phải giữ hai trường tầng trong CHECK. Áp 095 lên máy thu là lời riêng của Mạnh.
 42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
     kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
     **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
