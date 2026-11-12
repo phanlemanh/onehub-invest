@@ -361,7 +361,7 @@ không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên 
 - **Theo nhịp**: 15′ cloud-sync + ops-facts (`cloud-sync`) · 15′ tín hiệu sống S03 (`zalo-heartbeat`) · 5′ bộ canh
   (`zalo-watchdog`).
 - **Chạy liên tục** (KeepAlive): `kev-gate` :8009 · `collector-api` (đã chạy dưới launchd) · gateway OpenClaw.
-- **Không chạy dưới launchd**: backup (V1); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
+- **Không chạy dưới launchd**: sao lưu ngoài máy (V1, `scripts/sao-luu-ngoai-may.sh` — công cụ có, chưa nạp lịch); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
 
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
@@ -634,6 +634,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     095 — số tầng → `floor_raw` (RESO `UnitFloorLocation`, tra DD 2.1), dải «tầng thấp/trung/cao» → extension `floor_band`
     (`lower`·`middle`·`upper`, không có cột); 747 tầng S06 giữ bằng phát biểu legacy; DQ `s03-floor-fill`. DV4 nhận trọn phần tầng
     của SV2; SV2 khi nối lại chỉ còn hướng và phải giữ hai trường tầng trong CHECK. Áp 095 lên máy thu là lời riêng của Mạnh.
+    **DA2** `truong-du-an-tren-tin` (12/11, Mạnh duyệt Cổng Phạm vi và kế hoạch, T3): migration 096 — tin (resource Property) nhận
+    phát biểu `project_node_id` (RESO `SubdivisionName`, id nút `project`), `subzone_node_id` (extension, id nút `subzone` hay ba nút
+    `building` Grand Park tới DA1) và `area_id` (phường, trước chỉ ở Building); nhãn sổ «Phường». Chỉ phát biểu, chưa dựng cột,
+    bộ phân xử không đổi — GCQ2, DA9 đọc phát biểu. Migration sau phải giữ hai trường trong CHECK. Áp 096 lên máy thu là lời riêng của Mạnh.
 42. **Căn giá tốt theo vị trí** (09/11, Mạnh «Chốt theo đề xuất»; bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md`, phân tích ở
     kho tri thức riêng `wiki/chu-de/can-gia-tot-vi-tri.md`): «giá tốt» = giá/m² nằm trong **20% thấp nhất** của nhóm so sánh, so với
     **trung vị**. Nhóm = nút vị trí sâu nhất đủ căn (toà → phân khu → dự án → phường) × loại hình × bán/thuê, thêm số phòng ngủ khi nhóm
@@ -697,6 +701,83 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       snapshot mới. Sửa DA3.
     - Q6: lượt thu S10 kế tiếp lấy thêm danh mục dự án (id → tên), làn ZCode. Sửa ghi chú DA29.
     Mục chờ DA22 thêm ghi chú: 3/3 mẫu lệch tên chủ đầu tư, đo lệch ngay khi có stg; chưa chuyển thành hàng. Không hàng mới.
+46. **Kho tư liệu dự án, ảnh có vòng đời, sao lưu mã hoá** (11–12/11, Mạnh chốt QĐ1–QĐ17 ở phiên bàn lưu trữ ảnh và tư liệu;
+    căn cứ: bản quyết định và bản phân tích local ngày 11/11 ở research-local, không vào kho). Mỗi QĐ: lời Mạnh, cách hiểu, điều
+    chưa chốt:
+    - QĐ1: máy thu giữ **kho tư liệu** của dự án và chủ đầu tư (media, tài liệu bán hàng, văn bản pháp lý, hợp đồng mua bán) làm
+      nguồn tư liệu cho người dùng. Mạnh «Đồng ý, chỉ công khai»: chỉ tài liệu công khai; hợp đồng chỉ bản mẫu, hợp đồng đã ký có
+      thông tin người mua thì không thu, hoặc che hết trước khi lưu.
+    - QĐ2: **video thu thử 2 tuần có trần dung lượng** (Mạnh «Thu thử có trần»); video vượt trần chỉ ghi đường dẫn và vài khung
+      hình. Số trần chốt ở QĐ14. Chưa chốt: giữ bản gốc, bản nén hay chỉ khung hình — hết 2 tuần đo rồi trình.
+    - QĐ3: **bản sao lưu mã hoá** (Mạnh «Cho, khoá giữ ở máy», trả lời câu «Có cho một bản sao lưu đã mã hoá ra kho ngoài máy
+      không?»). Tầng A được rời máy **chỉ** trong bản sao lưu đã mã hoá ngay trên máy thu; khoá chỉ ở máy thu và một bản Mạnh giữ
+      riêng, không lên cloud, kho git hay kênh nào. Phạm vi bản sao lưu: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ
+      khác tầng A giữ nguyên. Sửa đổi ADR-0007 (mục «Sửa đổi 2026-11-11»), AGENTS luật 6 và `.claude/rules/pii-spl.md`. Chưa
+      chốt: cách Mạnh giữ bản khoá riêng, lịch chạy, phép thử khôi phục.
+    - QĐ4: **ảnh thu nhỏ trên cloud đặt ở Supabase Storage đang có** (Mạnh «Kiểm tra gói supabase và vercel trước», rồi «Đặt ở
+      Supabase»). Hai thùng: thùng kín cho ảnh Ops (vai `ops` trở lên, xoá sau 90 ngày, trần 5 GB theo mục 18) và thùng công khai
+      cho ảnh bìa, ảnh dự án Invest. Chỉ lớp dẫn xuất lên cloud; không mở thêm R2. Tạo thùng và chính sách truy cập là thay đổi cloud
+      thật, xin Mạnh duyệt lúc làm hàng.
+    - QĐ5: **bản sao lưu mã hoá đặt ở Backblaze B2**, tài khoản riêng tách khỏi Supabase (Mạnh «Tách, dùng B2»), để bản sao lưu không
+      chết cùng bản chính. Mạnh đã tạo tài khoản; còn phía Mạnh: thùng kín, khoá ứng dụng giới hạn theo thùng, đặt ở tệp ngoài kho
+      trên máy thu. Chưa chốt: lịch chạy, thử khôi phục định kỳ, có bật khoá chống xoá (Object Lock) không.
+    - QĐ6: **kho gốc theo băm nội dung làm sớm**, không chờ máy mới (Mạnh «Làm sớm»). Mỗi tệp một bản đặt tên theo sha256, bất biến;
+      manifest ghi mỗi lần gặp; dùng chung cho ảnh, tư liệu, video. Luật 1 giữ: chỉ đổi cách sắp xếp, có bảng đối chiếu đường dẫn
+      cũ → mới. Bước chuyển kho cũ chỉ chạy sau khi có bản sao lưu đã thử khôi phục đạt, và xin Mạnh duyệt riêng.
+    - QĐ7: **ảnh S06 tải tối đa 8 ảnh mỗi tin** (Mạnh «Tải tối đa 8 ảnh»; trợ lý khuyên 3). Ảnh thứ 9 trở đi chỉ ghi đường dẫn; ảnh
+      S06 lên Invest vẫn phải xem mẫu dấu tên nguồn trước. Chưa chốt: có tải bù ảnh của tin đã thu không.
+    - QĐ8: **ảnh có vòng đời** (Mạnh «Cho xoá có hạn»). Gom ảnh gần giống về căn bằng pHash, mỗi căn một bộ ảnh chọn lọc. Giữ lâu dài:
+      ảnh thu nhỏ, dấu vân tay, ảnh gốc của bộ chọn lọc và của dự án, tư liệu theo phiên bản. Ảnh gốc còn lại xoá sau một hạn tính
+      từ khi tin gỡ, mỗi lần xoá ghi sổ. Sửa luật 1 theo nghĩa hẹp (AGENTS luật 1). Chưa chốt: con số hạn giữ (sau 2 tuần đo), số
+      ảnh gốc giữ mỗi căn, có áp cho S03 như S06 không.
+    - QĐ9: **Invest cho tải nguyên tệp tư liệu dự án** (Mạnh «Cho tải tệp»; trợ lý khuyên chỉ hiện dữ kiện). Trong phạm vi QĐ1; mỗi
+      tệp qua bước soát có người duyệt ở Ops trước khi công khai; tệp in tên hay dấu nguồn thu không lên nguyên trạng. Đã nêu rủi ro
+      bản quyền và băng thông. Chưa chốt: tải có cần đăng nhập không, có xin ý kiến pháp lý trước khi mở không, xử tệp có dấu nguồn.
+    - QĐ10: **tệp tải trên trang dự án lấy từ Supabase, Google Drive chỉ là cửa nạp tệp cho đội** (Mạnh «Supabase, Drive nạp»). Kho
+      gốc ở máy thu, bản sao lưu ở B2; Drive không phục vụ tải, không là kho chính; bản gốc chưa soát không lên Drive ở dạng đọc
+      được. Chưa chốt: tài khoản giữ thư mục nạp, ai được thả tệp, nhịp kéo; thư mục nạp cần mã S0x và mục DATA-CONTRACT.
+    - QĐ11: **thu tư liệu dự án từ nhóm S03 trước**, S11, S10, S08, S07 sau (Mạnh «Nhóm S03 trước»; trợ lý khuyên S11). QĐ13 làm rõ.
+    - QĐ12: **sửa lỗi tải ảnh S03 trước khi thêm nhánh thu tệp** (Mạnh «Sửa lỗi trước»); lượt đếm tệp không phải chờ. Chưa chốt
+      trong bản quyết định: ngưỡng «đã sửa xong» (đề xuất lỗi dưới 5% trong 3 ngày liền), có tải bù ảnh đã lỗi không.
+      Bổ sung 11/11 (Mạnh «Theo đề xuất»): ảnh chat cũ của S03 hỏng vì máy chủ ảnh (host) — **chấp nhận mất**; không dùng phiên
+      đăng nhập, không sửa plugin kênh, ghi là lỗi vĩnh viễn, không thử lại; ngưỡng xong giữ dưới 5% trong 3 ngày liền, không tính
+      các host đã chấp nhận mất.
+    - QĐ13: **thu tư liệu sau các link Drive mở công khai mà bài S03 dẫn tới, trước S11** (Mạnh «Thu link Drive trước»); làm rõ
+      QĐ11 sau số đo (tệp gửi thẳng trong nhóm chỉ 14, tư liệu nằm sau link Drive). Ba giới hạn: chỉ link ai có link cũng xem
+      được, không xin quyền, không đăng nhập; đếm trước rồi mới tải; soát từng tệp trước khi lên Invest. Chưa chốt: đi sâu bao
+      nhiêu tầng thư mục, link chết có ghi lại để hỏi người đăng không.
+    - QĐ14: **trần thu thử video: 20 GB cả đợt, 300 MB mỗi tệp** (Mạnh «Đồng ý trần này»), chốt số cho QĐ2; vượt trần chỉ ghi
+      đường dẫn và vài khung hình.
+    - QĐ15: **chạy bản sao lưu mã hoá lên B2 luôn, không chờ ổ ngoài** (Mạnh «Chạy B2 luôn»). Khoá sinh trên máy thu; lượt gửi đầu
+      chỉ chạy sau khi Mạnh xác nhận đã cất bản khoá (bước chặn trong job; không dán khoá vào hội thoại, kho git, Drive). Bản B2 đã
+      thử khôi phục đạt là điều kiện cho bước chuyển kho (QĐ6) và job xoá ảnh (QĐ8). Chưa chốt: Mạnh cất bản khoá ở đâu, lịch
+      chạy, Object Lock và thời hạn (không dài hơn hạn giữ ảnh của QĐ8).
+    - QĐ16: **lượt tải link Drive S03 đầu tiên: tải hết trừ PSD, dừng ở trần 5 GB** (Mạnh «Bỏ PSD»); bỏ biểu mẫu Forms; video tính
+      vào trần QĐ14. Trần sửa ở QĐ17.
+    - QĐ17 (12/11): **nâng trần đợt tư liệu Drive S03 lên 15 GB** (Mạnh «Nâng trần»), đủ cho tài liệu và ảnh của 3.554 tệp đã liệt
+      kê; tài liệu trước, ảnh sau; vẫn bỏ PSD; video vẫn vào trần QĐ14; gặp dấu xác minh của Drive thì dừng và nghỉ, không vượt.
+      Bổ sung 11/11 (Mạnh «Theo đề xuất»), giữ ở 12/11: tệp mà Drive trả trang cảnh báo không quét được virus **được bấm xác nhận
+      để tải, chỉ với tệp ≤ 300 MB**; tệp trên 300 MB chỉ ghi mục bỏ; tệp tải về để ở máy thu, không mở, không chạy. Trần 15 GB
+      áp cho cả đợt Drive.
+    Số đo căn cứ (máy thu, 11/11): 34.063 ảnh, 8,8 GB; 73% là bản trùng; 26,6% lượt tải ảnh S03 lỗi lúc thu; chưa có bản sao lưu ảnh
+    nào; chi phí lưu trữ khoảng 0–5 USD/tháng.
+    Còn mở: các điều «chưa chốt» ở từng QĐ. Thứ tự đề xuất: hàng sao lưu B2 → kho theo băm → vòng đời ảnh, kho tư liệu và video.
+    Chưa cắt hàng.
+47. **Lịch thu tự động, ưu tiên tăng thu** (12/11, Mạnh «Đồng ý với các lời khuyên ở 6 câu»; căn cứ: bản rà soát lịch thu local
+    ngày 12/11 ở research-local, không vào kho). Nguyên tắc Mạnh nêu: «Nếu chưa có đặt lịch trước, tính năng sau. Nhưng ưu tiên giai
+    đoạn này tăng thu» — nguồn nào chưa có lịch thì đặt lịch trước, tính năng làm sau; giai đoạn này ưu tiên tăng lượng thu. Đường
+    thu, trần và nhịp cuối cùng vẫn do làn ZCode chọn; gặp 403, 429 hay trang thử thách thì dừng lượt, không vượt lớp chặn.
+    - S02: Mạnh tự đăng nhập lại phiên thu (tầng A, chỉ ở máy); nguồn trả 401 từ 29/10. Thực tế 12/11: Mạnh đã đăng nhập lại; lượt
+      kiểm lại do làn ZCode.
+    - S06: bật các vùng đang nháp. Thực tế 12/11: hai vùng đã bật sau khi đo thử; vùng thứ ba giữ nháp vì nguồn không có mã vùng
+      riêng, chờ transform gán tỉnh theo từng tin.
+    - S05: bật lại, 2 lượt/ngày thay vì 4; đo chi phí một tuần rồi quyết tiếp.
+    - S10: một lượt mỗi tuần, giờ hành chính, bằng phiên của Mạnh; hết phiên thì dừng, không tự đăng nhập. Đây là lời chấp nhận rủi
+      ro tài khoản.
+    - S07: ba lượt/ngày; trần 100 lời gọi mỗi lượt do liên làn đặt (khuyến nghị trình Mạnh là 150). Thực tế 12/11: nguồn chặn,
+      bộ thu tự nghỉ 24 giờ.
+    - Gỡ dịch vụ model cục bộ bị trùng trong launchd (bật lại liên tục vì trùng cổng), giữ bản «gate». Đã gỡ 12/11.
+    Hàng «lịch thu trên Ops» (xem đủ job, mã thoát, bật/tắt, đổi nhịp từ `/ops/collections`) mới là đề xuất, chưa cắt.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -797,7 +878,7 @@ Theo dõi: giám sát đợt báo một dòng mỗi ngày (hiện tại so với
 ### Track 5 — Vận hành
 | # | Việc | Trạng thái |
 |---|---|---|
-| V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
+| V1 | Sao lưu ngoài máy mã hoá: `scripts/sao-luu-ngoai-may.sh` (restic, mã hoá trên máy thu, đích B2 — QĐ3/QĐ5/QĐ15 11/11) — `chay` hằng ngày (dump DB → backup raw snapshot + `collector/state` trừ tệp phiên/khoá + kho ảnh + dump → giữ 7/4/6), `kiem` tuần (≥50 tệp + dump so sha256), `kiem-db` tháng (khôi phục vào DB thử, so `so-dong.tsv`), bước chặn tệp xác nhận «đã cất bản khoá», `check-freshness` đỏ khi quá 36 giờ — `_acceptance/sao-luu-ma-hoa-b2` (T3) | 🔄 S4; chứng minh trên dữ liệu giả + kho cục bộ. Lượt gửi thật chờ luật 6 sửa, thùng + khoá B2 của Mạnh, lời Mạnh; nạp launchd sau hàng P4 (runtime-map); cảnh báo `/ops` hàng riêng |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
