@@ -1,0 +1,95 @@
+schema_version: 1
+feature_slug: thu-danh-muc-s07
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành xanh, bản đột biến đỏ với thông điệp ghim.
+# DB: mọi bài kiểm có nạp chạy trên lược đồ tạm của DB riêng lượt (db/db-thu.sh --chay), bảng stg dựng bằng CHÍNH tệp
+# db/migrations/093_stg_s07.sql; không ghi DB chung :5433, không áp migration lên DB chung.
+# HTML trong bài kiểm là GIẢ (dựng theo khuôn lớp CSS, miền thử .test). Chỉ E10, E11 đọc raw thật của máy thu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s07_db
+    layer: backend-effect
+    paths: [db/migrations/093_stg_s07.sql, pipeline/scripts/s07-danh-muc-db.test.mjs]
+    expected: "exit 0; đúng tám ca chạy, trong đó hai ca 'S07-AC-1'. Ca 1: áp tệp 093 thật HAI lần vào lược đồ tạm rỗng; bộ soát lược đồ (đọc pg_constraint, pg_indexes, obj_description, col_description — không đọc chữ của tệp 093) trả danh sách lỗi rỗng: ba bảng stg_s07_project_card, stg_s07_project, stg_s07_sitemap_url; mỗi bảng khoá chính đúng (snapshot_id, pj_id), có chỉ mục trên (pj_id, captured_at DESC), chú thích bảng chứa 'không sync cloud'; cột price_range_raw có chú thích chứa 'chỉ nội bộ'; dấu lược đồ (danh sách cột + kiểu + chỉ mục) trước và sau lần áp thứ hai giống hệt; số bảng trong lược đồ tạm sau khi áp = số bảng trước + 3. Ca 2 (chiều đỏ, cùng bộ soát, ba bản đột biến của chữ 093 áp vào ba lược đồ tạm khác): bỏ một CREATE INDEX → lỗi gọi tên 'thiếu chỉ mục (pj_id, captured_at DESC)' kèm tên bảng; bỏ COMMENT của price_range_raw → 'price_range_raw thiếu chú thích chỉ nội bộ'; đổi khoá chính thành (pj_id) → 'khoá chính của <bảng> không phải (snapshot_id, pj_id)'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s07_thuan
+    layer: backend-effect
+    paths: [pipeline/lib/s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc.test.mjs]
+    expected: "exit 0; đúng chín ca chạy, trong đó hai ca 'S07-AC-2'. Ca 1: trang giả có hai thẻ chính và một khối nổi bật mang thẻ pj9001 → đúng 2 dòng, không có pj9001; từng trường của thẻ đủ cấu hình khẳng định riêng (pj_id, list_page, list_position, path, project_type_slug, area_slug, project_name, development_status_raw, unparsed_address đã giải thực thể HTML, land_area_raw '11,93 ha', number_of_units_total 1314 từ nhãn '1.314 căn hộ', number_of_buildings_total 2, builder_name_raw, summary_raw, image_paths); thẻ thứ hai thiếu cấu hình và chủ đầu tư → bốn cột đó NULL. Ca 2 (không-được-nhận): thẻ trỏ tới tin rao (không phải trang dự án) → 0 dòng, khongMa = 1; trang không thẻ → 0 dòng, khongMa = 0. Chiều đỏ nằm ngay trong ca 1: thẻ nổi bật có mặt trong cùng HTML mà không được thành dòng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s07_thuan
+    layer: backend-effect
+    paths: [pipeline/lib/s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc.test.mjs]
+    expected: "exit 0; trong chín ca có ba ca 'S07-AC-3'. Ca trang dự án: một item giả → mỗi trường một khẳng định (tên đã giải thực thể, địa chỉ, toạ độ, trạng thái và ghi chú trạng thái tách riêng, attributes giữ đúng thứ tự bảy nhãn của nguồn, builder_name_raw + builder_ref 1876 + builder_path tương đối, legal_raw, scale_raw, price_range_raw, amenities, breadcrumb, faq với một khối JSON-LD hỏng bị bỏ qua, image_paths, og_image_path); description_html chứa trọn hai tầng div lồng và KHÔNG chứa lớp của khối kế sau; desc_link_pj_ids = [7001, 7002] (bỏ link trỏ về chính dự án), related_pj_ids = [8001]. Ca không-được-nhận: toạ độ 0,0 → NULL cả hai; meta.loaiHinh ghi 'khu' vẫn ra project_type_slug 'khu-do-thi-moi'; children chứa chính nó thì bỏ; item mainHtml null → null; đường dẫn không phải trang dự án → null. Ca đường dẫn: tách đúng mã, loại hình khớp tên dài nhất ('khu-nghi-duong-sinh-thai'), khu vực có gạch dưới ('tan-uyen_1-bd'), loại hình lạ → project_type_slug NULL, trang lọc theo giá → null."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s07_thuan
+    layer: backend-effect
+    paths: [pipeline/lib/s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc.test.mjs]
+    expected: "exit 0; trong chín ca có một ca 'S07-AC-4': sitemap giả năm <loc> (một trang gốc loại hình, một trang lọc theo giá, hai đường dẫn dự án, một đường dẫn dự án lặp) → đúng 2 dòng với pj_id, path tương đối, project_type_slug, area_slug; khac = 3. Chiều đỏ trong cùng fixture: trang lọc và đường dẫn lặp có mặt mà không thành dòng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s07_db
+    layer: backend-effect
+    paths: [pipeline/import-s07-danh-muc.mjs, pipeline/lib/s07-danh-muc.mjs, db/migrations/093_stg_s07.sql, pipeline/scripts/s07-danh-muc-db.test.mjs]
+    expected: "exit 0; trong tám ca có ba ca 'S07-AC-5', chạy bộ nạp THẬT bằng tiến trình con trên lược đồ tạm đã áp 093. Ca nạp lại: snapshot giả gồm một trang danh sách hai thẻ, một trang dự án, một trang dự án phiên đăng nhập, một sitemap → lần một ghi 2 thẻ, 1 dự án, 2 đường dẫn; lần hai dòng tổng kết ghi '0 thẻ danh sách · 0 trang dự án · 0 đường dẫn sitemap' và số dòng ba bảng không đổi; airbnb_snapshots có đúng 1 dòng cho snapshot đó; ĐỌC LẠI TỪ DB một dòng của mỗi bảng và so từng cột với đầu ra hàm bóc trên cùng item bằng bộ so cột (trả danh sách tên cột lệch — phải rỗng): attributes là mảng cặp {label, value} đúng thứ tự bảy nhãn của nguồn, ba mảng mã dự án là mảng số, toạ độ của item 0,0 là NULL, captured_at bằng fetchedAt của item (KHÔNG phải giờ nạp), jsonb đọc ra đúng cấu trúc; chiều đỏ của bộ so cột trên cùng dòng: đổi chỗ legal_raw với scale_raw → bộ so trả đúng hai tên cột đó; đổi captured_at thành giờ khác → trả 'captured_at'. Ca thư mục cha: thư mục có snapshot S07 đã nạp, snapshot S07 mới chứa lại dự án 61 và thêm dự án 62, và một snapshot nguồn khác → dòng tổng kết '1 snapshot (1 đã có dấu' ; dự án 61 có 2 dòng (hai snapshot), 62 có 1 dòng, dự án 63 của nguồn khác 0 dòng. Ca hai thứ tự: cùng hai snapshot (cũ, mới — chung dự án 61 với nội dung khác nhau) nạp cũ→mới vào lược đồ A và mới→cũ vào lược đồ B → băm nội dung ba bảng (mọi cột, sắp theo khoá) của A và B giống hệt; đối chứng đỏ: sửa một ô ở B thì băm khác. Chiều đỏ: cùng fixture, nếu khoá bảng chỉ là pj_id thì khẳng định '61 có 2 dòng' sai — bản đột biến khoá ở E1 chứng bộ soát bắt được đổi khoá."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.s07_thuan
+    layer: backend-effect
+    paths: [pipeline/lib/s07-danh-muc.mjs, pipeline/import-s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc.test.mjs]
+    expected: "exit 0; trong chín ca có hai ca 'S07-AC-6'. Ca tên miền: mienCua lấy miền từ canonical; trang không canonical suy từ hậu tố chung của host; đuôi công cộng kiểu com.vn không bị chọn; trang chỉ có một máy con vẫn ra miền gốc; không link → null. boMien: link trang → tương đối (cả dạng www), link ảnh → 's07://<máy con>/…', miền trần viết hoa trong chữ → 'S07', link youtube giữ nguyên, null → null. Ở các ca AC-2, AC-3 mỗi dòng bóc ra được khẳng định JSON không chứa miền thử. Ca rào (chiều đỏ, cùng fixture với ca lành): dongCuaSnapshot trên item lành → kiemKhongMien không ném; gài miền thử vào một trường của một dòng → ném thông điệp chứa 'còn tên miền nguồn' và tên bảng stg_s07_project."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.s07_db
+    layer: backend-effect
+    paths: [pipeline/import-s07-danh-muc.mjs, pipeline/lib/s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc-db.test.mjs]
+    expected: "exit 0; trong tám ca có một ca 'S07-AC-6' trên bộ nạp thật. Vế lành: sau lần nạp của E5, câu SELECT count(*) WHERE row_to_json(t)::text ILIKE '%<miền thử>%' trả 0 ở cả ba bảng. Vế đỏ (cùng snapshot giả, nạp vào lược đồ tạm sạch với S07_HOST đặt SAI thành một miền khác): tiến trình thoát khác 0, stderr chứa 'còn tên miền nguồn', ba bảng 0 dòng và airbnb_snapshots không có dấu của snapshot đó — cấu hình miền sai không làm tên miền thật lọt vào stg."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.s07_thuan
+    layer: backend-effect
+    paths: [pipeline/lib/s07-danh-muc.mjs, pipeline/import-s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc.test.mjs, pipeline/scripts/s07-danh-muc-db.test.mjs]
+    expected: "exit 0; trong chín ca có một ca 'S07-AC-7': laPhienKhach trả true cho item sessionLoggedIn false; false cho sessionLoggedIn true; false cho trang dự án THIẾU cờ; true cho sitemap thiếu cờ; false cho sitemap có cờ true. dongCuaSnapshot trên bảy item (hai trang danh sách chung một dự án, hai trang dự án trong đó một phiên đăng nhập, một sitemap, một item nguồn khác, một kind lạ) → thẻ [11, 12, 13] (dự án lặp giữa hai trang chỉ một dòng), 1 dự án, 2 đường dẫn; phần bỏ đếm theo lý do: phiên đăng nhập hoặc thiếu cờ 1, lặp trong snapshot 2 (thẻ của dự án 12 và một đường dẫn lặp trong sitemap), kind lạ 1, nguồn khác 1, trang dự án rỗng 0, thẻ không trỏ dự án 0. Cùng ca, snapshot thứ hai thêm một trang dự án THIẾU cờ, một trang dự án mainHtml rỗng và một thẻ trỏ tới tin rao → ba con số tương ứng tăng đúng 1, không dòng nào sinh thêm. Vế bộ nạp thật nằm ở ca nạp lại của E5: dòng tổng kết chứa 'bỏ 1 item phiên đăng nhập' và dự án của item đó không có dòng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.s07_db
+    layer: backend-effect
+    paths: [pipeline/import-s07-danh-muc.mjs, pipeline/scripts/s07-danh-muc-db.test.mjs]
+    expected: "exit 0; trong tám ca có hai ca 'S07-AC-8'. Ca chưa áp 093 (lược đồ tạm chỉ có airbnb_snapshots): bộ nạp thoát 0, stdout chứa 'CHUA-AP-093', airbnb_snapshots 0 dòng cho snapshot đó. Ca không-được-nhận (lược đồ đã áp 093, đếm dòng trước và sau bằng nhau): manifest schemaVersion 10 → thoát khác 0, stderr 'schemaVersion 10 chưa hỗ trợ'; tệp items bị thay sau khi ghi manifest → thoát khác 0, stderr 'checksum sai'; thư mục tên '…__TEST' và thư mục thiếu manifest → thoát 0, stderr 'bỏ qua', không dòng dấu. Đối chứng dương cùng fixture: snapshot schemaVersion 4 và 9 lành được nạp (ca thư mục cha của E5)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s07_nap_that
+    layer: backend-effect
+    paths: [pipeline/import-s07-danh-muc.mjs, pipeline/lib/s07-danh-muc.mjs, db/migrations/093_stg_s07.sql, pipeline/scripts/s07-nap-that.mjs, collector/docs/DATA-CONTRACT.md]
+    expected: "exit 0 trên máy thu. Gốc snapshot nhận qua --goc, mặc định suy từ thư mục git chung của vị trí lệnh (checkout chính)/collector/snapshots/vn; dòng JSON kết quả in đường thật (realpath) của gốc và số snapshot S07 đã đọc (≥ 12). Lệnh dựng lược đồ tạm trên DB thử, áp tệp 093 thật, chạy bộ nạp thật trên cả gốc HAI lần. Số đếm ĐỘC LẬP trên raw tính bằng đường khác bộ bóc: thẻ chính = số chuỗi mở thẻ trong listHtml; trang dự án = số item kind project_catalog; sitemap = số <loc> kết thúc bằng -pj<số>. Phần bỏ cũng đếm bằng đường khác bộ bóc, theo lý do: item cờ đăng nhập true hoặc (trang danh sách, trang dự án) thiếu cờ; mã dự án lặp trong cùng snapshot; trang dự án mainHtml rỗng; thẻ có href không kết thúc bằng -pj<số>. Xanh khi: với từng bảng, số dòng = số đếm độc lập − tổng phần bỏ; từng con số bỏ bằng con số tương ứng trong dòng tổng kết của bộ nạp; số item kind lạ = 0 và số item lành mà bộ bóc trả rỗng = 0; 0 dòng stg có (snapshot_id, pj_id) thuộc item cờ true; lần nạp hai ghi 0 dòng ở cả ba bảng; số dòng dấu = số snapshot; 0 dòng stg chứa bất kỳ tên miền nào suy từ canonical của raw; 0 link còn lại trong stg có máy chủ chứa nhãn của nguồn (nhãn = nhãn đầu của tên miền suy từ raw, không phân biệt hoa thường); 0 tệp của vòng trong kho (093, bộ nạp, hàm bóc, hai tệp test, lệnh này, mục S07 của DATA-CONTRACT) chứa tên miền hoặc nhãn đó. Lệnh in thêm (không phải điều kiện): số máy chủ khác nhau còn lại trong stg và số dòng stg còn nhãn nguồn trong văn bản tự do. Lệnh không in tên miền hay nhãn. Lệnh xoá lược đồ tạm khi xong."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s07_nap_that_doi_chung
+    layer: backend-effect
+    paths: [pipeline/scripts/s07-nap-that.mjs, pipeline/import-s07-danh-muc.mjs, pipeline/lib/s07-danh-muc.mjs]
+    expected: "exit 0 và stdout có dòng 'ĐỐI CHỨNG ĐỎ ĐÚNG' — chiều đỏ của E10 trên CÙNG dữ liệu thật và cùng bộ so. Sau lần nạp lành, lệnh phá ba cách ở dữ liệu, mỗi cách bộ so phải báo đúng tên rồi lệnh hoàn lại: (1) xoá một dòng stg_s07_project_card → 'LỆCH stg_s07_project_card'; (2) chèn một dòng stg_s07_project mang tên miền suy từ raw → 'TÊN MIỀN trong stg_s07_project'; (3) xoá một dòng dấu ở airbnb_snapshots rồi nạp lại → ba bảng 0 dòng mới nhưng dòng tổng kết đọc lại 1 snapshot → 'ĐỌC LẠI 1 snapshot'. Hai đối chứng về chính lệnh đo, chạy bằng tiến trình con của cùng lệnh: (4) DATABASE_URL trỏ DB chung ở cả hai dạng máy chủ localhost và 127.0.0.1 → thoát 2, thông điệp ghim 'TỪ CHỐI: DB chung', số lược đồ của DB thử trước và sau bằng nhau (lệnh nhận DB theo TÊN cơ sở dữ liệu: chỉ chạy khi tên khớp oneinvest_<…>, không theo chuỗi máy chủ); (5) --goc trỏ thư mục rỗng → thoát 2, 'KHÔNG CÓ SNAPSHOT S07'. Thiếu một trong năm thông điệp → exit 1, không in dòng đối chứng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

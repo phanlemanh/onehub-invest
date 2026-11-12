@@ -144,11 +144,20 @@ canonical:
         (ADR-0016 §2), không qua họ Vùng
       checked_on: "2026-11-11"
     floor_raw:
+      dd: UnitFloorLocation
+      note: >
+        số tầng nơi căn rao nằm (1–999, chữ số không đệm). Tra DD 2.1 local 11/11: UnitFloorLocation (Property, chuỗi
+        ≤3 ký tự, không danh sách giá trị); EntryLevel là tầng lối vào chính, StoriesTotal là tổng tầng toà — không dùng.
+        S06 có từ 030; S03 đọc từ chữ bài qua phát biểu (DV4 tang-tren-tin-s03, migration 095); cột do resolve_offer_fields dựng.
+      checked_on: "2026-11-11"
+    floor_band:
       dd: null
       rationale: >
-        tầng lầu từ text — chưa đối chiếu DD (ứng viên UnitFloorNumber cần tra
-        dd.reso.org trước khi dùng ngoài raw); hiện chỉ lưu raw để matching signals
-      checked_on: "2026-10-22"
+        dải tầng «tầng thấp, trung, cao» khi môi giới không nói số (đo 09/11: phần lớn tin S03 ghi tầng là dải). DD 2.1 không
+        có field dải tầng (UnitFloorLocation là một tầng, ≤3 ký tự) → extension đủ 6 điều kiện ADR-0011: tra cứu 11/11,
+        lý do VN, migration 095, trigger miền lower|middle|upper + trục floor_band, khai ở đây, DQ s03-floor-fill. Không có cột:
+        chỉ ở phát biểu và field_provenance của tin.
+      checked_on: "2026-11-11"
     bathrooms:
       dd: BathroomsTotalInteger
       note: "đối chiếu research/reso-standards.md bảng field map; migration 030/031"
@@ -368,7 +377,7 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
     checked_on: "2026-11-07"
     columns: [field_assertions.field]
     nullable: false
@@ -388,6 +397,8 @@ enums:
       - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
       - { code: builder_name, label_vi: Chủ đầu tư, dd_lookup: BuilderName }   # DB1 (082): resource Building, ADR-0016 §3
       - { code: area_id, label_vi: Phường của toà }   # DB1 (082): resource Building, phường/xã (areas submarket) suy từ vùng; DD 2.1 không có cấp phường
+      - { code: floor_raw, label_vi: Tầng, dd_lookup: UnitFloorLocation }   # DV4 (095): số tầng của căn rao, DD 2.1
+      - { code: floor_band, label_vi: Dải tầng }   # DV4 (095): extension, DD 2.1 không có dải tầng
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -610,6 +621,18 @@ enums:
       - { code: southeast, label_vi: Đông Nam }
       - { code: northwest, label_vi: Tây Bắc }
       - { code: southwest, label_vi: Tây Nam }
+  floor_band:
+    term_vi: Dải tầng
+    dd_field: null
+    local: true
+    rationale: "extension dải tầng của tin khi môi giới không nói số (DV4 tang-tren-tin-s03, migration 095): DD 2.1 chỉ có UnitFloorLocation (một tầng, ≤3 ký tự). Ràng buộc: trigger miền của 095 trên phát biểu field floor_band. Mã lower/middle/upper (không dùng low/high: trùng mã trục confidence, bộ lint từ vựng bắt nhầm). DQ: s03-floor-fill (450)."
+    checked_on: "2026-11-11"
+    columns: []
+    nullable: true
+    values:
+      - { code: lower, label_vi: Tầng thấp }
+      - { code: middle, label_vi: Tầng trung }
+      - { code: upper, label_vi: Tầng cao }
   view:
     term_vi: View
     dd_field: View

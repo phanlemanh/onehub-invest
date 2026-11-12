@@ -210,6 +210,9 @@ executors:
     dbs_mjs: "bash db/db-thu.sh oneinvest_suite_dbs_mjs --chay node --test scripts/ops-local-dong-bang.test.mjs"   # dong-bang-stage-b-resolve E4b, E6 — bản tin cloud + HD11 trên DB của riêng lượt, so vị từ ba nơi
     dbs_khong_ghi: "node --test scripts/dong-bang-khong-ghi.test.mjs"   # dong-bang-stage-b-resolve E7 — quét diff so nhánh chính: không migration, không câu ghi mới
     dbs_s03_len_cong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dbs_sl1 --chay node --test --test-skip-pattern 'SL1-AC-5 (áp 069|hai thứ tự)' scripts/s03-len-cong.itest.mjs"   # dong-bang-stage-b-resolve E9c — itest s03-len-cong trên DB của riêng lượt; bỏ hai ca SL1-AC-5 áp 069 (đỏ sẵn trên 773a0040, không thuộc vòng)
+    sl1_ac5_ca: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_sl1c --chay node --test --test-name-pattern 'SL1-AC-5 (áp 069|hai thứ tự)' scripts/s03-len-cong.itest.mjs"   # sl1-ac5-the-gioi-069 E1, E2 — hai ca SL1-AC-5 trên DB của riêng lượt chép từ máy thu
+    sl1_ac5_toan: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_sl1t --chay node --test scripts/s03-len-cong.itest.mjs"   # sl1-ac5-the-gioi-069 E3 — cả tệp itest s03-len-cong, không bỏ ca nào
+    sl1_ac5_tu_choi: "bash _acceptance/sl1-ac5-the-gioi-069/probes/tu-choi-oneinvest.sh"   # sl1-ac5-the-gioi-069 E4 — itest từ chối DATABASE_URL trỏ oneinvest (cổng 1, không chạm DB)
     hd9_route: "cd app && node --import tsx --test --test-name-pattern='HD9' tests/the-duyet-du-can-cu.test.tsx"   # quyet-dinh-phai-cham-ung-vien E1–E7: route decide trên lược đồ tạm của bộ thẻ duyệt + thẻ trong jsdom
     ma_thi_truong_dai: "cd app && node --import tsx --test tests/ma-thi-truong-dai.test.tsx"   # khu-vuc-vung-moi-s06 E1: marketNameOf tra mã thị trường dài (tạm)
     can_theo_tin: "cd pipeline && DATABASE_URL=${CT_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_ct} node --test --test-concurrency=1 scripts/can-theo-tin.itest.mjs"   # can-theo-tin-khi-phan-xu-lai E1–E4: căn của tin chung bài đăng theo áp/hoàn tác + sửa một lần (066), giao dịch ROLLBACK — DB thử
@@ -265,9 +268,15 @@ executors:
     cloud_sync_do: node --test scripts/cloud-sync-do.test.mjs
     refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
     refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
+    s07_thuan: "bash -o pipefail -c 'cd pipeline && node --test scripts/s07-danh-muc.test.mjs | tee /dev/stderr | grep \"pass 9$\" >/dev/null'"   # thu-danh-muc-s07 E2, E3, E4, E6, E8 — hàm bóc thuần, HTML giả, không DB; đòi đúng chín ca chạy
+    s07_db: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node --test --test-concurrency=1 scripts/s07-danh-muc-db.test.mjs | tee /dev/stderr | grep \"pass 8$\" >/dev/null'"   # thu-danh-muc-s07 E1, E5, E7, E9 — 093 + nạp trên lược đồ tạm của DB riêng lượt; đòi đúng tám ca chạy
+    dv4_doc: "node --test pipeline/scripts/tang-tren-tin.test.mjs"   # tang-tren-tin-s03 E4 — ma trận bộ đọc tầng, hàm thuần
+    dv4_nhan: "cd app && node --import tsx --test tests/dq-tang-tren-tin-label.test.tsx"   # tang-tren-tin-s03 E9 — nhãn dq-labels
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
+    dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
@@ -625,6 +634,8 @@ executors:
     tl_lich_s05_tu_kiem: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/lich-s05.mjs --tu-kiem"   # thuoc-lech AC-3 chiều đỏ
     tl_thay_e11_e12: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/thay-e11-e12.mjs"   # thuoc-lech AC-4
     tl_ma_bao_cao: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/ma-bao-cao.mjs"   # thuoc-lech AC-5 (kèm tự kiểm)
+    au11_cho_tinh: "node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs"   # au11-ac3-postgis-tam-chap-chon AC-4 — giữ thông điệp ca cũ, không chạm ci-db-init, hết pg_isready
+    au11_duoi_tai: "node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs"   # au11-ac3-postgis-tam-chap-chon AC-3 — bản cũ đỏ dưới tải rồi bản mới 10/10 xanh
     # watchdog-l4b-history (2410-15, T3) — bản chép bộ canh + HOME giả + stub launchctl/pkill/pgrep/osascript/curl/sleep (luật 8)
     wdh_p1: "node scripts/watchdog-l4b-history/acceptance.mjs p1-marker-so"
     wdh_p2: "node scripts/watchdog-l4b-history/acceptance.mjs p2-duong-dan-khac"
@@ -875,6 +886,13 @@ executors:
     lnb_tien_kiem: "node scripts/link-nguoi-ban-s03/acceptance.mjs tien-kiem"
     lnb_ten_nguon: "node scripts/link-nguoi-ban-s03/acceptance.mjs ten-nguon"   # đọc danh sách tên từ source_registry local, không in
     lnb_tai_lieu: "node scripts/link-nguoi-ban-s03/acceptance.mjs tai-lieu"
+    s07_nap_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs"   # thu-danh-muc-s07 E10 — nạp mọi snapshot S07 thật của máy thu vào lược đồ tạm, so số đếm độc lập, soát tên miền; chỉ chạy ở máy có raw
+    s07_nap_that_doi_chung: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node scripts/s07-nap-that.mjs --doi-chung 2>&1 | tee /dev/stderr | grep \"ĐỐI CHỨNG ĐỎ ĐÚNG\" >/dev/null'"   # thu-danh-muc-s07 E11 — cùng dữ liệu, ba cách phá phải đỏ đúng tên
+    dv4_db: "bash pipeline/scripts/tang-tren-tin-db.sh itest"   # tang-tren-tin-s03 E1, E3, E5, E7 — DB thử oneinvest_u1_dv4 chép từ DB máy thu, 095 chỉ nạp ở đó
+    dv4_do_toan_bo: "bash pipeline/scripts/tang-tren-tin-db.sh do"   # tang-tren-tin-s03 E2, E10 — toàn bộ S03 trong giao dịch ROLLBACK trên DB thử, chỉ in số
+    dv4_mau: "node pipeline/scripts/do-tang-tren-tin.mjs --mau"   # tang-tren-tin-s03 E6 — đáp án đọc tay ở research-local, chỉ in số
+    dv4_luat: "node pipeline/vocab.mjs --check && bash pipeline/scripts/tang-tren-tin-db.sh luat"   # tang-tren-tin-s03 E8 — ADR-0011 + DQ s03-floor-fill trên DB thử
+    dv4_ranh_gioi: "node pipeline/scripts/do-tang-tren-tin.mjs --ranh-gioi --base origin/main"   # tang-tren-tin-s03 E11 — sync cloud, route kênh chat S03, tên nguồn, mẫu ignored
     ycns_that: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc 6c4ee41db57e718bc280eac462ddbfc245d17df4"
     ycns_that_klr: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --goc 7e7b7073dc534f15d12e69cf33231dc198844750"   # yc1-khoang-le-va-doi-chung-do AC-2 — so với bộ đọc của YC1 đã gộp (#419), chỉ đọc DB máy thu
     ycns_tu_kiem: "node pipeline/scripts/do-ngan-sach-yeu-cau.mjs --tu-kiem"   # yc1-khoang-le-va-doi-chung-do AC-4 — bốn đột biến, mỗi đột biến bật đúng lý do
