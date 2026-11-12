@@ -5637,6 +5637,98 @@
         "app/src/lib/inquiry-demand.ts"
       ],
       "ghi_chu": "Q4: bật cờ hiện trên Invest sau 4 tuần YC7 chạy trên Ops; ngưỡng và ngày đọc vào ô cơ hội ở Cổng Đáng. Chỉ số tự tổng hợp từ bài nhóm, không phải số của S06/S07 (không vướng mục 27)."
+    },
+    {
+      "dot": "tu-lieu-metadata-1211",
+      "nhom": "tu-lieu-metadata",
+      "ma": "TL1",
+      "slug": "nap-tu-lieu-drive-s03",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "phu": [
+        "TL1"
+      ],
+      "cau_giao": "Bộ nạp đưa snapshot tư liệu Drive S03 (DATA-CONTRACT v10) vào bảng stg, mỗi tệp một dòng theo băm nội dung, nối về bài và nhóm dẫn tới, nạp lại không nhân đôi",
+      "bat_khi": "Nạp cùng snapshot hai lần liên tiếp, số dòng không đổi; mọi tệp trong manifest có đúng một dòng; tệp mang cờ soát của collector (vd «bản mẫu hay đã ký») giữ cờ và không đi tiếp tới bước nào gửi ra ngoài",
+      "vi_sao": "Phân tích 12/11: 154 PDF, 81 bảng tính, ≥ 492 ảnh tư liệu Drive đã tải về máy thu theo DATA-CONTRACT v10 nháp nhưng chưa có bảng, nên không tra, không nối về bài hay dự án được.",
+      "vung": [
+        "db/migrations",
+        "pipeline/import-s03-tu-lieu.mjs"
+      ],
+      "ghi_chu": "Giáp làn: bộ nạp stg (import-*) thuộc làn ZCode theo AGENTS.md, migration bảng stg do Claude viết — điều phối liên làn giao khi mở hàng. Cần DATA-CONTRACT v10 «s03-tu-lieu-drive» đã gộp (việc của làn thu, ghi ở «Ra khỏi kho» của PR cắt lượt). Bảng chỉ ở local, không sync cloud. Tên thư mục Drive có thể chứa tên nguồn in sẵn: không lên kênh GitHub."
+    },
+    {
+      "dot": "tu-lieu-metadata-1211",
+      "nhom": "tu-lieu-metadata",
+      "ma": "TL2",
+      "slug": "loc-tu-lieu-nguoi-mua",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "TL1"
+      ],
+      "phu": [
+        "TL2"
+      ],
+      "cau_giao": "Bộ lọc tại máy thu đánh dấu tệp tư liệu nghi chứa thông tin người mua (hợp đồng đã điền), tệp ấy không bao giờ đi tới model cloud hay lên cloud và lên thẻ soát ở Ops máy thu",
+      "bat_khi": "Trên các tệp nghi hợp đồng đã soát tay 11/11, mọi tệp có dấu vết người mua bị chặn; test chứng đường gửi model và sync-cloud từ chối tệp mang cờ; tệp chưa qua lọc mặc định bị chặn",
+      "vi_sao": "Lượt soát tay 11/11 trên một mẫu nhỏ tệp nghi hợp đồng: phần lớn là bản mẫu hay không phải hợp đồng, nhưng có tệp mang dấu vết người mua — người mua không thuộc tầng C như người bán. Muốn biết thì phải đọc tệp, nên phải lọc tại máy trước mọi lời gọi cloud.",
+      "vung": [
+        "pipeline/lib",
+        "pipeline/sync-cloud.mjs",
+        "app/src/lib/ops/**"
+      ],
+      "ghi_chu": "Hạng T3: chạm dữ liệu cá nhân người mua. Luật tên tệp + đọc trang đầu bằng model local (không gọi cloud). Mặc định chặn: chỉ tệp được lọc xác nhận «không có người mua» mới đi tiếp. Thẻ soát chỉ ở /ops máy thu, không có nội dung tệp trên cloud."
+    },
+    {
+      "dot": "tu-lieu-metadata-1211",
+      "nhom": "tu-lieu-metadata",
+      "ma": "TL3",
+      "slug": "metadata-tu-lieu-haiku",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "TL2"
+      ],
+      "phu": [
+        "TL3"
+      ],
+      "cau_giao": "Tệp tư liệu đã qua lọc có phong bì metadata theo RESO Media: Haiku viết tiêu đề, tóm tắt một dòng, loại tư liệu, dự án, toà, ngày ban hành kèm trang trích; mỗi lượt chạy là một phiên bản mới, không ghi đè",
+      "bat_khi": "Trên mẫu khoảng 60 tệp máy nháp nhãn, Mạnh duyệt: đúng loại tư liệu ≥ 90%; không tệp «hợp đồng đã điền» nào xếp vào loại sẽ trích tiếp; mọi dòng có model, prompt_version, run_id và trang trích; không tệp mang cờ TL2 nào nằm trong log gửi đi",
+      "vi_sao": "Phân tích 12/11: một lời gọi Haiku làm được cả phân loại lẫn metadata chữ; Gemini Decisions không sinh chữ nên bị loại. Bản gốc ở DB máy thu (raw bất biến, nối được danh bạ, giữ lịch sử khi đổi model), JSONL chỉ là bản xuất.",
+      "vung": [
+        "db/migrations",
+        "pipeline/lib"
+      ],
+      "ghi_chu": "Hạng T3: gửi dữ liệu ra model cloud. Cổng Phạm vi cần lời Mạnh cho gửi tư liệu Drive (đã lọc) tới Haiku — lớp dữ liệu chưa có trong ADR-0007 sửa 06/11. Tra RESO DD 2.1 (MediaCategory, MediaType, ShortDescription, LongDescription, ImageOf) trước khi đặt cột; phần mở rộng jsonb theo JSON Schema có schema_version. Chỉ gửi vài trang đầu để lời gọi dưới 100K token. Ngưỡng và mẫu đo vào ô cơ hội ở Cổng Đáng."
+    },
+    {
+      "dot": "tu-lieu-metadata-1211",
+      "nhom": "tu-lieu-metadata",
+      "ma": "TL4",
+      "slug": "ops-tu-lieu",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "TL3"
+      ],
+      "phu": [
+        "TL4"
+      ],
+      "cau_giao": "Người vận hành ở máy thu tìm tư liệu theo dự án và loại, xem tiêu đề, tóm tắt, trang trích, mở tệp gốc và sửa nhãn; nhãn sửa ghi thành phát biểu lớp người",
+      "bat_khi": "Lọc theo dự án và loại trả đúng tệp; sửa nhãn tạo phát biểu lớp người, không ghi đè dòng máy; trang có trống, tải, lỗi kèm Thử lại; trên cloud trang không có tệp hay nội dung tư liệu",
+      "vi_sao": "Metadata chỉ có giá trị khi người tra được và sửa được; nhãn người sửa là nhãn bạc cho lượt đo sau.",
+      "vung": [
+        "app/src/app/ops/documents",
+        "app/src/lib/ops/**",
+        "CONTEXT.md"
+      ],
+      "ghi_chu": "Chỉ máy thu (tệp không lên cloud). Slug route mới phải thêm vào CONTEXT.md và test route-slugs cùng PR; tên slug chốt ở Cổng Phạm vi. UI theo ReUI (data-grid, filters)."
     }
   ],
   "chan_troi": [
@@ -6351,6 +6443,46 @@
         "DA28"
       ],
       "mo_lai_khi": "DA20 có số phủ nhóm pháp lý và Mạnh mở"
+    },
+    {
+      "ma": "TL5",
+      "dot": "tu-lieu-metadata-1211",
+      "cau_giao": "Chữ bóc sẵn một lần cho tài liệu và ảnh có chữ, model sau đọc chữ thay vì đọc lại tệp",
+      "ly_do": "Luật 11: chưa đo được tiền đọc lại — mới có một lượt đọc (TL3)",
+      "phu": [
+        "TL5"
+      ],
+      "mo_lai_khi": "Có lượt đọc thứ hai trên cùng kho tư liệu hoặc ảnh và đo được tiền đọc lại"
+    },
+    {
+      "ma": "TL6",
+      "dot": "tu-lieu-metadata-1211",
+      "cau_giao": "Lệnh xuất gói JSONL theo phong bì (bài, ảnh, tư liệu) cho một dự án để model đọc",
+      "ly_do": "Chưa có bên dùng gói",
+      "phu": [
+        "TL6"
+      ],
+      "mo_lai_khi": "Một hàng cần model đọc gói theo dự án (vd TL7, danh bạ dự án)"
+    },
+    {
+      "ma": "TL7",
+      "dot": "tu-lieu-metadata-1211",
+      "cau_giao": "Bảng giá, mặt bằng trong tư liệu thành phát biểu của danh bạ dự án (toà, trục, căn, giá chủ đầu tư)",
+      "ly_do": "Cần TL3 đã giao và đo được độ đúng ở loại «bảng giá», «mặt bằng»; tư liệu S03 do môi giới dán, phải phân biệt với nguồn chủ đầu tư (ROADMAP §3 mục 38)",
+      "phu": [
+        "TL7"
+      ],
+      "mo_lai_khi": "TL3 đạt ngưỡng ở loại «bảng giá», «mặt bằng»"
+    },
+    {
+      "ma": "TL8",
+      "dot": "tu-lieu-metadata-1211",
+      "cau_giao": "Ảnh tin có loại ảnh và mô tả ngắn trong phong bì từ kết quả VLM",
+      "ly_do": "KC3 (VLM ảnh S03) chưa qua Cổng Giá trị",
+      "phu": [
+        "TL8"
+      ],
+      "mo_lai_khi": "KC3 qua Cổng Giá trị"
     }
   ],
   "da_bac": []
