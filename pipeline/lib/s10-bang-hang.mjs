@@ -59,7 +59,7 @@ export function ngayDmy(s) {
 
 /**
  * Bóc mọi `tr.p_row` của một item `stock_table`.
- * @returns {{ dong: object[], lechKhuon: number, khongStockId: number }}
+ * @returns {{ dong: object[], lechKhuon: number, khongStockId: number, khongProjectId: number }}
  */
 export function bocS10(item) {
   const html = String(item?.payload?.html ?? "");
@@ -67,11 +67,12 @@ export function bocS10(item) {
   const projectId = Number(item?.meta?.request?.project_id);
   const k = KHUON_S10[bt];
   const dong = [];
-  let lechKhuon = 0, khongStockId = 0;
+  let lechKhuon = 0, khongStockId = 0, khongProjectId = 0;
   for (const m of html.matchAll(RE_DONG)) {
     const raw = m[0];
     const stock = raw.match(/[?&]stock_id=(\d+)/);
     if (!stock) { khongStockId++; continue; }
+    if (!Number.isFinite(projectId)) { khongProjectId++; continue; } // 1211-31(b): fail-closed — không ghi project_id NaN
     const o = [...m[1].matchAll(RE_O)].map((x) => chuTho(x[1]));
     const d = { stock_id: stock[1], source_id: `s10:${stock[1]}`, project_id: projectId, block_type: bt, raw_row: raw };
     if (!k || o.length !== k.soO) {

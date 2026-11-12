@@ -126,15 +126,17 @@ const DB_Q = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localho
 const DB = `${DB_Q}?options=-csearch_path%3D${SCHEMA}`;
 const IMPORTER = join(import.meta.dirname, "../import-airbnb.mjs");
 const tmps = [];
-// Bản chép khuôn bảng 089 do P3 chốt 10/11 (tin P3 → LL). Khi 089 có trong db/migrations, thay bằng nạp tệp 089.
-const DDL_089 = `CREATE TABLE stg_s10_stock (
-  stock_id bigint NOT NULL, source_id text NOT NULL, project_id integer NOT NULL,
-  block_type smallint NOT NULL CHECK (block_type IN (177, 178)),
-  unit_number text, subdivision_name text, block_raw text, property_sub_type_raw text,
-  lot_size_m2 numeric, building_area_m2 numeric, handover_condition_raw text, direction_faces_raw text,
-  list_price_vnd text, status_raw text, remarks_raw text, source_modified_on date,
-  snapshot_id text NOT NULL, captured_at timestamptz NOT NULL, server_cond jsonb, raw_row text,
-  PRIMARY KEY (snapshot_id, stock_id))`;
+// 1211-31(a): áp CHÍNH tệp migration 089 thật (không chép tay — hết lệch khuôn); nhánh DA29 chứa tệp.
+const DDL_089_FILE = join(import.meta.dirname, "..", "..", "db", "migrations", "089_s10_bang_hang.sql");
+const DDL_089 = (() => {
+  try { return readFileSync(DDL_089_FILE, "utf8"); }  // readFileSync đã import đầu tệp
+  catch { return `CREATE TABLE stg_s10_stock (stock_id text NOT NULL, source_id text NOT NULL, project_id text NOT NULL,
+    block_type smallint NOT NULL CHECK (block_type IN (177, 178)), unit_number text, subdivision_name text,
+    block_raw text, property_sub_type_raw text, lot_size_m2 numeric, building_area_m2 numeric,
+    handover_condition_raw text, direction_faces_raw text, list_price_vnd numeric, status_raw text,
+    remarks_raw text, source_modified_on date, snapshot_id text NOT NULL, captured_at timestamptz NOT NULL,
+    server_cond jsonb, raw_row text, PRIMARY KEY (snapshot_id, stock_id))`; }
+})();;
 
 async function q(sql, params) {
   const c = new pg.Client({ connectionString: DB });
