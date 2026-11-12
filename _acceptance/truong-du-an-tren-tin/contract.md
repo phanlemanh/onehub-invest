@@ -5,7 +5,7 @@ slug: truong-du-an-tren-tin
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-truong-du-an-tren-tin-design.md
@@ -63,3 +63,6 @@ sai); luật cũ của 082, 095 (ca giữ nguyên); đổi lại không có bằ
   trường, gỡ bằng `next typegen`, không do hàng này.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: Sổ từ vựng ghi chú trường phường trên tin thiếu phần lý do và nói sai rằng tin chưa có cột phường.
+  - Ngoài-2: Ca «áp 096 lần hai» không chạy trên CI (cần container DB của máy thu), chỉ chạy ở lượt chấm máy thu; hàng sau đưa về chạy được trên CI.

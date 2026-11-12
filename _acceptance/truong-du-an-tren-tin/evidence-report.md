@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fa25f268bc3463a4f0baea4c91f3afc31584c5d4
-human_signoff:
+human_signoff: Mạnh 2026-11-12
 ---
 
 # Evidence Report: truong-du-an-tren-tin
