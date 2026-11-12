@@ -12,8 +12,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 const SLUG = "dbv-itest-xanh-lai-tren-main";
 const TEP = "pipeline/scripts/danh-ba-vat-the.itest.mjs";
 const DUOC_DOI = [TEP, "_acceptance/config.yaml", "PRODUCT-MAP.md", "LO-TRINH.html", `docs/superpowers/specs/2026-11-12-${SLUG}-design.md`];
-// Ngoại lệ khai trước: phép so dấu lược đồ của DBV-AC-1 đổi DB đo sang DB dừng ở 082 (thông điệp giữ nguyên).
-export const KHAI_TRUOC = 'assert.equal(await dau(db), dau1, "DBV-AC-1 áp 082 lần hai đổi lược đồ")';
+// Ngoại lệ khai trước (AC-3, AC-5): so dấu lược đồ DBV-AC-1 đổi DB đo sang DB dừng ở 082; kỳ vọng method DBV-AC-9 theo hợp
+// đồng đã ký DA1 (source_field). Mỗi ngoại lệ kèm lời gọi thay thế phải có trong bản mới.
+export const KHAI_TRUOC = [
+  ['assert.equal(await dau(db), dau1, "DBV-AC-1 áp 082 lần hai đổi lược đồ")', 'assert.equal(await dau(db082), dau1, "DBV-AC-1 áp 082 lần hai đổi lược đồ")'],
+  ['assert.deepEqual([r.evidence_tier, r.method, r.ban], ["fact", "hitl", bamTep])', 'assert.deepEqual([r.evidence_tier, r.method, r.ban], ["fact", "source_field", bamTep])'],
+];
 const git = (...a) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).trim();
 
 /** Rút mọi lời gọi assert.*( … ) với trọn tham số tới ngoặc đóng; bỏ qua ngoặc nằm trong chuỗi, template, regex. */
@@ -60,7 +64,8 @@ export const gon = (s) => s.replace(/\s+/g, " ");
 /** Lời gọi của bản cũ không còn nguyên văn trong bản mới (trừ KHAI_TRUOC). */
 export function thieu(cu, moi) {
   const tapMoi = new Set(rutAssert(moi).map((x) => x.gon));
-  return rutAssert(cu).filter((x) => x.gon !== gon(KHAI_TRUOC) && !tapMoi.has(x.gon)).map((x) => x.gon);
+  const ngoaiLe = new Set(KHAI_TRUOC.map(([c]) => gon(c)));
+  return rutAssert(cu).filter((x) => !ngoaiLe.has(x.gon) && !tapMoi.has(x.gon)).map((x) => x.gon);
 }
 
 let sai = 0;
@@ -77,8 +82,12 @@ const cu = execFileSync("git", ["show", `${goc}:${TEP}`], { cwd: ROOT, encoding:
 const moi = readFileSync(path.join(ROOT, TEP), "utf8");
 const dsCu = rutAssert(cu);
 const mat = thieu(cu, moi);
-kiem(dsCu.length >= 50 && mat.length === 0, `${dsCu.length} lời gọi assert của merge-base còn nguyên văn (trừ 1 khai trước)${mat.length ? ` — mất/sửa: ${mat.join(" ‖ ")}` : ""}`);
-kiem(dsCu.some((x) => x.gon === gon(KHAI_TRUOC)), "lời gọi khai trước có thật ở merge-base");
+kiem(dsCu.length >= 50 && mat.length === 0, `${dsCu.length} lời gọi assert của merge-base còn nguyên văn (trừ ${KHAI_TRUOC.length} khai trước)${mat.length ? ` — mất/sửa: ${mat.join(" ‖ ")}` : ""}`);
+const dsMoi = new Set(rutAssert(moi).map((x) => x.gon));
+for (const [c, m] of KHAI_TRUOC) {
+  kiem(dsCu.some((x) => x.gon === gon(c)), `lời gọi khai trước có thật ở merge-base: ${c.slice(0, 60)}…`);
+  kiem(dsMoi.has(gon(m)), `lời gọi thay thế có trong bản mới: ${m.slice(0, 60)}…`);
+}
 kiem(moi.includes('"DBV-AC-1 áp 082 lần hai đổi lược đồ"'), "thông điệp ghim DBV-AC-1 còn trong bản mới");
 // Chiều đỏ: đổi một chữ số ở dòng thứ hai của một assert nhiều dòng trong bản mới.
 const nhieuDong = rutAssert(moi).find((x) => { const d = x.tho.split("\n"); return d.length > 1 && /\d/.test(d.slice(1).join("\n")); });

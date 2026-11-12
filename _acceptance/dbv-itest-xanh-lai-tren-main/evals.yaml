@@ -26,7 +26,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.dbvx_giu
-    expected: "exit 0; 'DBVX-GIU PASS': probe dừng khác 0 khi tệp kiểm có thay đổi chưa commit; in sha HEAD và danh sách tệp diff merge-base..HEAD, mọi tệp nằm trong danh sách AC-3; mọi lời gọi assert.*(…) của bản merge-base (trọn tham số tới ngoặc đóng, gộp khoảng trắng) có nguyên văn trong bản mới trừ đúng một lời gọi khai trước (so dấu lược đồ DBV-AC-1); in số lời gọi so. Chiều đỏ trong cùng probe: bản chép đổi một số kỳ vọng ở dòng thứ hai của một assert nhiều dòng → probe gọi tên lời gọi đó"
+    expected: "exit 0; 'DBVX-GIU PASS': probe dừng khác 0 khi tệp kiểm có thay đổi chưa commit; in sha HEAD và danh sách tệp diff merge-base..HEAD, mọi tệp nằm trong danh sách AC-3; mọi lời gọi assert.*(…) của bản merge-base (trọn tham số tới ngoặc đóng, gộp khoảng trắng) có nguyên văn trong bản mới trừ đúng hai lời gọi khai trước (so dấu lược đồ DBV-AC-1; kỳ vọng method của DBV-AC-9); in số lời gọi so. Chiều đỏ trong cùng probe: bản chép đổi một số kỳ vọng ở dòng thứ hai của một assert nhiều dòng → probe gọi tên lời gọi đó"
     paths: ["pipeline/scripts/danh-ba-vat-the.itest.mjs", "_acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
@@ -35,4 +35,11 @@ evals:
     cmd: config:executors.script.dbvx_doi_chung
     expected: "exit 0; 'DOI CHUNG A DO (nhieu-tinh)': bản merge-base của tệp kiểm chạy ca DBV-AC-3 thoát khác 0 và đầu ra có 'nhieu-tinh'; 'DOI CHUNG B DO (thong diep ghim)': bản mới chạy ca DBV-AC-1 với DBV_MIG_THAY = bản chép 082 không lũy đẳng thoát khác 0 và đầu ra có 'DBV-AC-1 áp 082 lần hai đổi lược đồ'; 'DB THU TRUOC <n> SAU <n>' với hai số bằng nhau (đếm pg_database tên oneinvest_dbv_% trên :5433)"
     paths: ["pipeline/scripts/danh-ba-vat-the.itest.mjs", "_acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dbv_db
+    expected: "exit 0; ca 'DBV-AC-9 chủ đầu tư từ từ điển …' ok với mọi phát biểu builder_name mang [fact, source_field, băm tệp]; ca 'DBM-AC-5 bước đêm …' ok — bản chép duc-thua dựng được (không còn 'bản chép duc-thua: không thấy') và thước bắt được khoá thừa"
+    paths: ["pipeline/scripts/danh-ba-vat-the.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -8,7 +8,7 @@ surfaces: [cli]
 status: approved
 design_doc: docs/superpowers/specs/2026-11-12-dbv-itest-xanh-lai-tren-main-design.md
 veto_state: mo
-veto_opened_at: 2026-11-12T05:55:33Z
+veto_opened_at: 2026-11-12T05:58:18Z
 ---
 
 # Acceptance Contract: dbv-itest-xanh-lai-tren-main
@@ -33,11 +33,18 @@ luật ISO một tỉnh mà #406 (DA1) đưa vào lệnh dựng (`loi: "nhieu-ti
   `pipeline/scripts/danh-ba-vat-the.itest.mjs`, `_acceptance/dbv-itest-xanh-lai-tren-main/**`, `_acceptance/config.yaml`,
   design doc, và bản đồ máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html`; MỌI lời gọi `assert.*(…)` của bản merge-base (trọn
   tham số tới dấu đóng ngoặc, gộp khoảng trắng) còn nguyên văn trong bản mới, trừ đúng một lời gọi đã khai trước — phép so
-  dấu lược đồ của DBV-AC-1 đổi DB đo từ `db` sang DB dừng ở 082, thông điệp giữ nguyên.
+  dấu lược đồ của DBV-AC-1 đổi DB đo từ `db` sang DB dừng ở 082, thông điệp giữ nguyên; và (AC-5) kỳ vọng `method` của
+  DBV-AC-9 đổi `hitl` → `source_field`.
 - AC-4: Given hai đối chứng đỏ, When probe chạy (a) bản tệp ở merge-base với ca DBV-AC-3 và (b) bản mới với ca DBV-AC-1 và
   `DBV_MIG_THAY` là bản chép 082 không lũy đẳng (mỗi lần áp tạo một bảng tên ngẫu nhiên), Then (a) đỏ và đầu ra có
   `nhieu-tinh`, (b) đỏ và đầu ra có đúng thông điệp ghim «DBV-AC-1 áp 082 lần hai đổi lược đồ»; số DB `oneinvest_dbv_%` trên
   :5433 sau probe bằng trước probe (đo bằng `pg_database`, gồm DB `_082` mà `after` của tệp phải xoá).
+- AC-5: Given hai ca bị lỗi `nhieu-tinh` che (đo ra sau khi sửa AC-2): DBV-AC-9 đòi chủ đầu tư từ tệp từ điển ghi
+  `method = hitl`, trái hợp đồng đã ký của DA1 (`_acceptance/danh-ba-vat-the-toan-quoc/contract.md`: «phát biểu
+  `builder_name` mang `method = source_field`»); và bản chép «duc-thua» của DBM-AC-5 neo vào dòng `dung(c, { khuSlugs, runId:
+  … })` mà #406 đã thêm `log`. When sửa đúng hai chỗ — kỳ vọng `method` thành `source_field`, dòng neo của bản chép khớp dòng
+  hiện tại của `pipeline/danh-ba-vat-the.mjs` (kể cả `, log`) — Then DBV-AC-9 và DBM-AC-5 ok; thước «khoá thừa» của DBM-AC-5
+  vẫn bắt được bản chép (`assert.ok(… "DBM-AC-5 thước không bắt được khoá thừa")` ok), và không kỳ vọng nào khác của hai ca đổi.
 
 ## Coverage
 
@@ -45,7 +52,8 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai nguyên nhân đỏ 
 
 - Trục A — fixture theo luật thật: luật một tỉnh → AC-2 · chiều đỏ fixture cũ → AC-4(a)
 - Trục B — phép đo lũy đẳng đúng nghĩa: DB dừng ở 082 → AC-1 · chiều đỏ bản chép không lũy đẳng → AC-4(b)
-- Trục C — không nới thước: 18/18 và không assert nào bị sửa → AC-3
+- Trục C — không nới thước: 18/18 và không assert nào bị sửa ngoài chỗ khai → AC-3
+- Trục D — ca bị che, kéo theo hợp đồng đã ký: DBV-AC-9, DBM-AC-5 → AC-5
 
 ## Out of scope
 
