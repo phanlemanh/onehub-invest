@@ -191,6 +191,11 @@
       "tep": "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
       "ca": "SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0",
       "ly_do": "cần bài S03 thật ở stg_zalo_posts (DB máy thu) — DB CI dựng từ migration không có, lượt nạp rỗng"
+    },
+    {
+      "tep": "pipeline/scripts/truong-du-an-tren-tin.test.mjs",
+      "ca": "TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi",
+      "ly_do": "áp 096 lần hai qua docker exec (apTep của db-thu-dbv) — chỉ chạy ở máy thu; lượt chấm S4 vòng 3 xanh; sẽ chuyển sang pg.Client và gỡ bỏ-qua ở hàng itest-nap-lai-migration-cu-sau-095"
     }
   ],
   "agent": [
