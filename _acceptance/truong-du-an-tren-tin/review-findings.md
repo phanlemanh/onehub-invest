@@ -1,4 +1,4 @@
-# Review findings: truong-du-an-tren-tin (round 2)
+# Review findings: truong-du-an-tren-tin (round 3)
 
 ## Trong hợp đồng
 
@@ -6,7 +6,7 @@
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **canonical.fields.area_id: dd null nhưng thiếu rationale, và ghi sai «chưa dựng cột trên tin» trong khi sale_offers.area_id đã có từ 008 (r1)**
+- **canonical.fields.area_id: dd null nhưng thiếu rationale, và ghi sai «chưa dựng cột trên tin» trong khi sale_offers.area_id đã có từ 008 (r1 · tệp đã đổi)**
   Người dùng thấy gì: Sổ từ vựng mô tả sai về trường phường trên tin, nên người đọc sau có thể hiểu nhầm nguồn nào là đúng khi hai bên lệch nhau. Người dùng cuối không thấy gì khác trên cổng.
   Căn cứ: Chỉ là lời giải thích trong sổ nội bộ, không làm mất hay sai dữ liệu của người dùng, và sửa lại sau rất rẻ.
   file: `pipeline/mappings.yaml`
@@ -19,5 +19,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `pipeline/scripts/truong-du-an-tren-tin.test.mjs`
   severity: medium
   Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
