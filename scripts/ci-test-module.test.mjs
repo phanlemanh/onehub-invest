@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { after, before, describe, test } from "node:test";
 
 import { CAM, loiDanhSach, nodeOptions } from "./lib/ci-can-du-lieu.mjs";
+import { choPostgisTam, daQuaKhoiDongLai, LOI_CHUA_KHOI_DONG_LAI, LOI_SELECT_CHUA_ON } from "./lib/cho-postgis-tam.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pg = createRequire(path.join(REPO, "app/package.json"))("pg");
@@ -38,11 +39,16 @@ before(async () => {
     execFileSync("docker", ["run", "-d", "--name", PG_NAME, "-p", "127.0.0.1::5432", "-e", "POSTGRES_USER=oneinvest", "-e", "POSTGRES_PASS=oneinvest", "-e", "POSTGRES_DB=oneinvest", "kartoza/postgis:17-3.5"], { stdio: "ignore" });
     port = execFileSync("docker", ["port", PG_NAME, "5432"], { encoding: "utf8" }).trim().split(":").pop();
     assert.notEqual(port, "5433", "PostGIS tạm không được trùng cổng DB thật");
-    for (let i = 0; i < 90; i++) {
-      if (spawnSync("docker", ["exec", PG_NAME, "pg_isready", "-h", "localhost", "-U", "oneinvest", "-d", "oneinvest"]).status === 0) break;
-      execFileSync("sleep", ["2"]);
-    }
-    execFileSync("sleep", ["3"]);
+    // au11-ac3-postgis-tam-chap-chon: chờ qua lần khởi động lại sau khởi tạo của ảnh kartoza (log gộp stdout + stderr), rồi
+    // SELECT 1 từ host thành công hai lần liền — không dựa vào báo-sẵn-sàng sớm của postgres trong pha khởi tạo.
+    await choPostgisTam({
+      docLog: () => { const r = spawnSync("docker", ["logs", PG_NAME], { encoding: "utf8" }); return `${r.stdout}${r.stderr}`; },
+      chayTruyVan: async () => {
+        const c = new pg.Client({ connectionString: url("oneinvest"), connectionTimeoutMillis: 5000 });
+        c.on("error", () => {});
+        try { await c.connect(); await c.query("SELECT 1"); } finally { await c.end().catch(() => {}); }
+      },
+    });
   } catch (e) {
     setupErr = e.message;
   }
@@ -52,6 +58,46 @@ after(() => {
   rmSync(TMP, { recursive: true, force: true });
 });
 const ready = () => assert.equal(setupErr, null, `dựng PostGIS tạm không được: ${setupErr}`);
+
+// Log thật của kartoza/postgis:17-3.5 (12/11), rút gọn: khởi tạo → sẵn sàng lần 1 → tắt → mốc khởi động lại → sẵn sàng lần 2.
+const LOG_KARTOZA = [
+  "2026-11-12 01:48:27.578 UTC [74] LOG:  starting PostgreSQL 17.7 (Debian 17.7-3.pgdg12+1) on aarch64-unknown-linux-gnu",
+  "2026-11-12 01:48:27.585 UTC [74] LOG:  database system is ready to accept connections",
+  "2026-11-12 01:48:29.093 UTC [74] LOG:  received smart shutdown request",
+  "2026-11-12 01:48:29.198 UTC [74] LOG:  database system is shut down",
+  "[Entrypoint] \u001b[1;31m Postgres initialisation process completed .... restarting in foreground \u001b[0m",
+  "2026-11-12 01:48:30.499 UTC [209] LOG:  starting PostgreSQL 17.7 (Debian 17.7-3.pgdg12+1) on aarch64-unknown-linux-gnu",
+  "2026-11-12 01:48:30.505 UTC [209] LOG:  database system is ready to accept connections",
+];
+const logToi = (dong) => LOG_KARTOZA.slice(0, LOG_KARTOZA.findIndex((l) => l.includes(dong)) + 1).join("\n");
+/** Luật chờ cũ: thấy một dòng sẵn sàng là xong (như lệnh hỏi sẵn sàng của postgres trong pha khởi tạo). */
+const cuDaSanSang = (log) => log.includes("ready to accept connections");
+
+describe("AU11-AC-3 bước chờ PostGIS tạm (au11-ac3-postgis-tam-chap-chon)", () => {
+  test("AU11-AC-3 bước chờ PostGIS tạm qua được lần khởi động lại sau khởi tạo", () => {
+    const truocMoc = logToi("received smart shutdown request");
+    assert.equal(daQuaKhoiDongLai(truocMoc), false, "trước mốc khởi động lại thì chưa sẵn sàng");
+    assert.equal(daQuaKhoiDongLai(LOG_KARTOZA.join("\n")), true, "sau dòng sẵn sàng thứ hai thì sẵn sàng");
+    // Chiều đỏ: luật cũ báo sẵn sàng ngay trước lần khởi động lại.
+    assert.throws(() => { if (cuDaSanSang(truocMoc)) throw new Error("BUOC CHO CU TRA VE TRUOC KHI KHOI DONG LAI"); },
+      /BUOC CHO CU TRA VE TRUOC KHI KHOI DONG LAI/);
+  });
+
+  const gia = (kq) => { let i = 0; const f = async () => { const k = kq[Math.min(i, kq.length - 1)]; i++; if (k !== "ok") throw new Error("lỗi"); }; f.lan = () => i; return f; };
+  test("AU11-AC-3 choPostgisTam không thấy mốc thì hết hạn đúng tên bước", async () => {
+    await assert.rejects(choPostgisTam({ docLog: () => logToi("received smart shutdown request"), chayTruyVan: gia(["ok"]), han: 1000, nhip: 50 }),
+      new RegExp(`^Error: ${LOI_CHUA_KHOI_DONG_LAI}$`));
+  });
+  test("AU11-AC-3 choPostgisTam lỗi giữa chừng thì đếm lại từ đầu", async () => {
+    const q = gia(["ok", "loi", "ok", "ok"]);
+    await choPostgisTam({ docLog: () => LOG_KARTOZA.join("\n"), chayTruyVan: q, han: 10_000, cach: 10 });
+    assert.equal(q.lan(), 4, "phải trả về sau đúng lần gọi thứ tư");
+  });
+  test("AU11-AC-3 choPostgisTam SELECT chưa ổn thì hết hạn đúng tên bước", async () => {
+    await assert.rejects(choPostgisTam({ docLog: () => LOG_KARTOZA.join("\n"), chayTruyVan: gia(["ok", "loi", "ok", "loi"]), han: 300, cach: 40 }),
+      new RegExp(`^Error: ${LOI_SELECT_CHUA_ON}$`));
+  });
+});
 
 describe("AU11-AC-3 ci-db-init", () => {
   test("AU11-AC-3 ci-db-init dựng DB trống từ migration", async () => {
