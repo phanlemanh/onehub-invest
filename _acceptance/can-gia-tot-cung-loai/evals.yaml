@@ -1,0 +1,77 @@
+schema_version: 1
+slug: can-gia-tot-cung-loai
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_db
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Ca CG8-AC-1 trên DB thử oneinvest_u1_cg8 (BEGIN…ROLLBACK): căn hộ và nhà cùng phường, thước v_ruler_p2 khác nhau → mỗi bait_gap_pct bằng công thức với trung vị đúng phường × loại, một assert mỗi tin; bản đột biến (thước v_ruler_p2_area) đỏ, thông điệp nêu mã tin"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_db
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Ca CG8-AC-2: ma trận viết trước bốn ô (unknown · NULL · có loại thiếu thước cùng loại · thuê), phường có thước cả phường → cả bốn bait_gap_pct NULL, một assert mỗi ô; đối chứng dương: tin căn hộ có thước cùng loại thì có số; log in đúng hai đếm chua-ro-loai và thieu-thuoc-cung-loai bằng số ô"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_db
+    paths: [app/src/lib/deals.ts, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Ca CG8-AC-3: chạy dealsSql và dealSql của app trên DB thử → median_perm2, ruler_n của từng dòng bằng dòng v_ruler_p2 cùng phường × loại; tin unknown không có trong danh sách; đột biến nối v_ruler_p2_area thì đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.cg8_ham
+    paths: [app/src/lib/deals-chi-tiet.ts, app/tests/can-gia-cung-loai.test.tsx]
+    expected: "lyDoRoi: unknown → «Chưa rõ loại hình — không so được với thước cùng loại»; có loại thiếu thước → «Phường chưa đủ tin <nhãn loại> để dựng thước»; cauChungMinh của căn hộ có số chứa «thước căn hộ cùng phường», nhà chứa «thước nhà … cùng phường» theo LABELS_VI; ca cũ (quá hạn, đắt hơn thước, dưới ngưỡng, trên ngưỡng loại) giữ nguyên chữ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_db
+    paths: [app/src/app/api/v1/deals/route.ts, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Ca CG8-AC-5: gọi GET handler /api/v1/deals của app với token ops trên DB thử → mọi dòng discountPct lệch ≤ 0,1 so với tính lại từ v_ruler_p2 cùng phường × loại, 0 dòng unknown, meta.ruler chứa «phường × loại hình»; đối chứng đỏ: không token → 401"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_db
+    paths: [data-api/src/routes/deals.ts, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Ca CG8-AC-6: gọi dealsRoute của data-api (Hono app.request) trên DB thử → mọi dòng có propertyType ≠ unknown, discountPct lệch ≤ 0,1 so với tính lại từ v_ruler_p2; khoá phản hồi cũ đủ và cùng kiểu (bảng khoá viết trước); area, market, min_discount lọc đúng trên fixture; đột biến trỏ market_asset_stats thì đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg8_do
+    paths: [pipeline/refresh-bait-gap.mjs, app/src/lib/deals.ts, app/src/app/api/v1/deals/route.ts, data-api/src/routes/deals.ts, pipeline/scripts/can-gia-cung-loai*]
+    expected: "Toàn bộ tin trên bản chép DB máy thu, refreshBaitGap trong giao dịch: lech_pipeline=0 unknown_co_so=0 thue_co_so=0; trung vị số giảm căn hộ trong ±10% (in kèm số theo thước cả phường và mẫu số); thoát khác 0 khi một điều kiện hỏng, nêu điều kiện"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/ops/deals/**, app/src/lib/deals-chi-tiet.ts]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 (http://localhost:3460), đăng nhập tài khoản ops thử. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "Mở /ops/deals, chọn một căn hộ trong danh sách → trang /ops/deals/<mã> ở 1280 px sáng → evidence/E8-step1.png (câu chứng minh)"
+      - "Mở /ops/deals/<mã tin P1 bán loại unknown> 1280 sáng → evidence/E8-step2.png (lý do rời danh sách)"
+      - "Mở /ops/deals/<mã tin P1 bán có loại mà phường thiếu thước cùng loại> 1280 tối → evidence/E8-step3.png"
+    expected: "Bước 1 câu chứng minh nói «thước căn hộ cùng phường»; bước 2 lý do «Chưa rõ loại hình — không so được với thước cùng loại»; bước 3 lý do «Phường chưa đủ tin … để dựng thước»; chữ đọc được ở sáng và tối, không tràn khung"
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cg8_ranh_gioi
+    paths: [pipeline/scripts/can-gia-cung-loai*]
+    expected: "migration_doi=0 sync_cloud_doi=0 contact_doi=0 ten_nguon=0; đối chứng: tệp giả dưới db/migrations trong cây tạm thì đếm 1 và thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
