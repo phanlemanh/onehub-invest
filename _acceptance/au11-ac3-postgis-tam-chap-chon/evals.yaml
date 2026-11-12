@@ -1,0 +1,39 @@
+schema_version: 1
+feature_slug: au11-ac3-postgis-tam-chap-chon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ci_test_module
+    expected: "exit 0; ca 'AU11-AC-3 bước chờ PostGIS tạm qua được lần khởi động lại sau khởi tạo' ok, không SKIP: daQuaKhoiDongLai trên log cắt trước mốc → false, sau dòng ready thứ hai → true; luật cũ trên log cắt trước mốc → true và ca ghim 'BUOC CHO CU TRA VE TRUOC KHI KHOI DONG LAI'"
+    paths: ["scripts/ci-test-module.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ci_test_module
+    expected: "exit 0; ba ca 'AU11-AC-3 choPostgisTam …' ok, không SKIP: không mốc + hạn 1 giây → ném 'chưa thấy khởi động lại sau khởi tạo'; ok, lỗi, ok, ok → trả về sau đúng 4 lần gọi truy vấn; ok, lỗi, ok rồi hết hạn → ném 'SELECT 1 chưa ổn định'"
+    paths: ["scripts/ci-test-module.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.au11_duoi_tai
+    expected: "exit 0; in số tiến trình đốt CPU = os.availableParallelism(); 'BAN CU DO <k>/<n>' với k ≥ 1 và đầu ra lần đỏ có 'Connection terminated'; 'AU11-DUOI-TAI PASS 10/10' cho bản mới; 'LOG THAT KHOP MOC' (daQuaKhoiDongLai trên docker logs 2>&1 thật → true, dòng mốc khớp bộ log của test); in thời gian từng lần; sau lượt không còn container au11-pg-* và tiến trình đốt CPU"
+    paths: ["scripts/ci-test-module.test.mjs", "_acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs"]
+    long_running: 30
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ci_test_module
+    expected: "exit 0; đầu ra TAP có năm dòng ok cho năm ca 'AU11-AC-3 …' cũ, không dòng nào kèm '# SKIP'; các ca 'AU11-AC-4 …' ok"
+    paths: ["scripts/ci-test-module.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au11_cho_tinh
+    expected: "exit 0; 'AU11-GIU PASS': mọi chuỗi thông điệp assert của các ca AU11-AC-3, AU11-AC-4 cũ (rút từ git show <merge-base>:scripts/ci-test-module.test.mjs) còn nguyên trong tệp mới; git diff merge-base..HEAD không chạm scripts/ci-db-init.mjs; tệp mới không còn 'pg_isready'. Chiều đỏ trong cùng probe: bản chép chuỗi xoá một thông điệp cũ → probe gọi tên thông điệp đó"
+    paths: ["scripts/ci-test-module.test.mjs", "scripts/ci-db-init.mjs", "_acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
