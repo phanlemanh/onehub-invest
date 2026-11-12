@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>177 việc"]
+  GB --> DG["Đã giao<br/>178 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>114 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -195,6 +195,7 @@ flowchart TD
 - Sổ bề mặt API khai /api/zalo-media rộng bằng hoặc hơn quyền thật sau PL3 (ảnh snapshot cho vai Vận hành), route và hai bộ kiểm tĩnh khớp sổ (`api-surface-anh-vai-ops`)
 - Bộ test app chung bỏ bốn ca đo thời gian theo tải (E4B-AC-3, E4B-AC-4, E4B-AC-7, CGT-DC) — chúng chỉ chạy riêng qua executor của hồ sơ mình, nguyên trần đã ký (`app-test-chap-chon-e4b-sap`)
 - Test «Căn giá tốt» và «Kiểm chất lượng dữ liệu mới nhất» chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`app-test-chiu-song-song`)
+- Ca AU11-AC-3 chờ PostGIS docker tạm qua lần khởi động lại sau khởi tạo rồi mới kết nối, không còn đỏ chập chờn dưới tải (`au11-ac3-postgis-tam-chap-chon`)
 - Hộp thử AU3 có bước đọc gộp — phép đo nạp báo lỗi của job Zalo xanh lại sau khi job chạy sáu bước, ba hồ sơ đã ký ghim lại được (`au3-moi-truong-thu-buoc-doc-gop`)
 - AU3 phần nạp — tác vụ Chợ Tốt và Facebook báo lỗi rõ khi nạp hỏng, không nhảy qua snapshot lỗi (`au3-nap-bao-loi`)
 - audit-all.sh và trang Ops ở máy local đọc log job ở checkout chính dù chạy từ worktree, không báo LIMITED hay «Hỏng» giả vì thư mục log rỗng (`audit-all-doc-log-o-checkout`)
