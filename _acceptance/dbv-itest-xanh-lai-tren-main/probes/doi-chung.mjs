@@ -61,21 +61,30 @@ if (!okB) { sai++; console.log(b.out.split("\n").filter((l) => /✖|Error/.test(
 
 // Dọn DB: mọi DB thử tệp tạo phải đã bị xoá ở after.
 const sau = await dsDb();
-/** pid chủ của DB thử oneinvest_dbv_<pid>[_hậu tố]; tiến trình còn sống → không phải sót của probe. */
-const conSong = (ten) => {
-  const pid = Number(/^oneinvest_dbv_(\d+)/.exec(ten)?.[1]);
-  if (!pid) return false;
-  try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
-};
+/**
+ * Chủ của DB thử: pid là nhóm số đầu tiên sau «oneinvest_dbv_», cho phép tiền tố chữ (oneinvest_dbv_that_<pid>, tệp anh em).
+ * Chỉ DB tách được pid MÀ tiến trình đó đã thoát mới là «sót» của probe; tách không được pid, hoặc tiến trình còn sống →
+ * của người khác: không tính, không xoá (r1, r2 xoá nhầm DB của lượt chạy song song).
+ */
+export const pidChu = (ten) => { const m = /^oneinvest_dbv_(?:[a-z]+_)*(\d+)(?:_|$)/.exec(ten); return m ? Number(m[1]) : null; };
+const song = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
+const laSot = (ten) => { const pid = pidChu(ten); return pid !== null && !song(pid); };
 // Hai chiều của luật «còn sống»: DB mang pid của chính probe → còn sống; DB mang pid một tiến trình đã thoát → sót.
 const chet = spawnSync(process.execPath, ["-e", "0"]).pid;
-const okSong = conSong(`oneinvest_dbv_${process.pid}`) && !conSong(`oneinvest_dbv_${chet}_082`);
-console.log(okSong ? "LUAT CON SONG HAI CHIEU OK" : "LUAT CON SONG SAI — không phân biệt được tiến trình sống và đã thoát");
+// Ma trận viết trước: [tên, là sót?]. Mỗi dạng tên của họ oneinvest_dbv_% đã gặp, cả chiều sống lẫn chiều đã thoát.
+const MA_TRAN_SOT = [
+  [`oneinvest_dbv_${process.pid}`, false], [`oneinvest_dbv_${process.pid}_082`, false], [`oneinvest_dbv_that_${process.pid}`, false],
+  [`oneinvest_dbv_${chet}`, true], [`oneinvest_dbv_${chet}_truoc`, true], [`oneinvest_dbv_that_${chet}`, true],
+  ["oneinvest_dbv_khong_so", false], ["oneinvest_dbv_", false],
+];
+const lech = MA_TRAN_SOT.filter(([t, k]) => laSot(t) !== k).map(([t, k]) => `${t} (kỳ vọng ${k ? "sót" : "không sót"})`);
+const okSong = lech.length === 0;
+console.log(okSong ? `LUAT CON SONG HAI CHIEU OK (${MA_TRAN_SOT.length} dạng tên)` : `LUAT CON SONG SAI — ${lech.join(" · ")}`);
 if (!okSong) sai++;
 const moi = [...sau].filter((d) => !truoc.has(d));
-const sot = moi.filter((d) => !conSong(d));
-const cuaKhac = moi.filter(conSong);
-console.log(`DB THU TRUOC ${truoc.size} SAU ${sau.size} · mới của tiến trình còn sống (không tính): ${cuaKhac.length}${sot.length ? ` — sót: ${sot.join(", ")}` : ""}`);
+const sot = moi.filter(laSot);
+const cuaKhac = moi.filter((d) => !laSot(d));
+console.log(`DB THU TRUOC ${truoc.size} SAU ${sau.size} · mới không phải của probe (không tính): ${cuaKhac.length}${sot.length ? ` — sót: ${sot.join(", ")}` : ""}`);
 if (sot.length) {
   sai++;
   const c = new pg.Client({ connectionString: `${MAY_CHU}/postgres` });

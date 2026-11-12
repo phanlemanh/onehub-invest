@@ -33,7 +33,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.dbvx_doi_chung
-    expected: "exit 0; 'DOI CHUNG A DO (nhieu-tinh)': bản merge-base của tệp kiểm chạy ca DBV-AC-3 thoát khác 0 và đầu ra có 'nhieu-tinh'; 'DOI CHUNG B DO (thong diep ghim)': bản mới chạy ca DBV-AC-1 với DBV_MIG_THAY = bản chép 082 không lũy đẳng thoát khác 0 và đầu ra có 'DBV-AC-1 áp 082 lần hai đổi lược đồ'; 'LUAT CON SONG HAI CHIEU OK'; dòng 'DB THU TRUOC … SAU …' không có vế '— sót:' (không DB oneinvest_dbv_% mới nào của tiến trình đã thoát; DB của tiến trình còn sống không tính, không xoá)"
+    expected: "exit 0; 'DOI CHUNG A DO (nhieu-tinh)': bản merge-base của tệp kiểm chạy ca DBV-AC-3 thoát khác 0 và đầu ra có 'nhieu-tinh'; 'DOI CHUNG B DO (thong diep ghim)': bản mới chạy ca DBV-AC-1 với DBV_MIG_THAY = bản chép 082 không lũy đẳng thoát khác 0 và đầu ra có 'DBV-AC-1 áp 082 lần hai đổi lược đồ'; 'LUAT CON SONG HAI CHIEU OK (8 dạng tên)' — ma trận viết trước gồm oneinvest_dbv_<pid>, _<pid>_082, _that_<pid> của tiến trình sống (không sót) và đã thoát (sót), cùng tên không có số (không sót); dòng 'DB THU TRUOC … SAU …' không có vế '— sót:' (không DB oneinvest_dbv_% mới nào của tiến trình đã thoát; DB của tiến trình còn sống không tính, không xoá)"
     paths: ["pipeline/scripts/danh-ba-vat-the.itest.mjs", "_acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
