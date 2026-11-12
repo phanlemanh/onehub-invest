@@ -278,6 +278,7 @@ executors:
     cg8_db: "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"   # can-gia-tot-cung-loai E1–E3, E5, E6 — DB thử oneinvest_u1_cg8 chép từ DB máy thu, ca trong BEGIN…ROLLBACK
     cg8_do: "bash pipeline/scripts/can-gia-cung-loai-db.sh do"   # can-gia-tot-cung-loai E7 — đếm toàn bộ tin trên bản chép, chỉ in số
     cg8_ranh_gioi: "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"   # can-gia-tot-cung-loai E9 — không migration, không sync-cloud, không thêm liên lạc, không tên nguồn
+    cg8_cloud_view: "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"   # can-gia-tot-cung-loai E10 — chỉ SELECT qua Management API: định nghĩa v_ruler_p2 cloud = máy thu, đủ bốn loại
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base

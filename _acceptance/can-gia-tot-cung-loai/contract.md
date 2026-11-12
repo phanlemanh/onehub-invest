@@ -20,12 +20,14 @@ migration. Bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md` (Mạn
 
 ## Criteria
 
-- AC-1: Given DB thử có hai tin P1 bán cùng phường (một căn hộ, một nhà) với thước `v_ruler_p2` khác nhau cho hai loại, When chạy
-  `refreshBaitGap`, Then `bait_gap_pct` của mỗi tin bằng `ROUND((1 − price_perm2 / m) × 100, 1)` với `m` là trung vị của đúng
-  phường × loại của nó; bản đột biến dùng `v_ruler_p2_area` thì phép kiểm đỏ, thông điệp nêu mã tin.
-- AC-2: Given tin P1 bán loại `unknown`, tin P1 bán loại NULL, tin P1 bán có loại nhưng phường × loại không có dòng thước, và tin P1
-  thuê, When chạy `refreshBaitGap`, Then cả bốn có `bait_gap_pct` NULL, kể cả khi phường có thước cả phường; log của bước in số
-  tin không chấm theo hai lý do `chua-ro-loai` và `thieu-thuoc-cung-loai`.
+- AC-1: Given DB thử có tin P1 bán của bốn loại (căn hộ, nhà, đất, thương mại) cùng một phường, mỗi loại một thước `v_ruler_p2`
+  khác nhau, When chạy `refreshBaitGap`, Then `bait_gap_pct` của mỗi tin bằng `ROUND((1 − price_perm2 / m) × 100, 1)` với `m` là
+  trung vị của đúng phường × loại của nó (một assert mỗi loại); bản đột biến dùng `v_ruler_p2_area` thì đỏ ở mọi ô, thông điệp
+  nêu mã tin.
+- AC-2: Given phường có thước cả phường và ma trận viết trước gồm tin P1 bán loại `unknown`, loại NULL, bốn tin P1 bán có loại (căn
+  hộ, nhà, đất, thương mại) mà phường × loại không có dòng thước, và tin P1 thuê, When chạy `refreshBaitGap`, Then cả bảy có
+  `bait_gap_pct` NULL (một assert mỗi ô, theo Hỏi-2: thiếu thước cùng loại thì không lùi về thước khác); log của bước in số tin
+  không chấm theo hai lý do `chua-ro-loai` và `thieu-thuoc-cung-loai`, bằng số ô.
 - AC-3 (cross-layer): Given DB thử sau AC-1, When đọc danh sách `/ops/deals` (`dealsSql`) và trang một căn (`dealSql`), Then trung
   vị giá/m² và số căn của thước in ra là của đúng dòng `v_ruler_p2` đã tính `bait_gap_pct`; không tin `unknown` nào trong danh
   sách.
@@ -33,28 +35,36 @@ migration. Bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md` (Mạn
   lần lượt ra «Chưa rõ loại hình — không so được với thước cùng loại» và «Phường chưa đủ tin <loại> để dựng thước»; câu chứng minh
   của tin có số giảm nói «thước <loại> cùng phường» với nhãn loại tiếng Việt từ `LABELS_VI.property_type`.
 - AC-5 (cross-layer): Given DB thử, When gọi `/api/v1/deals` của app bằng token ops, Then mỗi dòng có số giảm khớp tính lại từ
-  `v_ruler_p2` cùng phường × loại (lệch ≤ 0,1 điểm), không dòng nào loại `unknown`, và `meta.ruler` nêu «phường × loại hình».
+  `v_ruler_p2` cùng phường × loại (lệch ≤ 0,1 điểm), không dòng nào loại `unknown` hay tin thuê (fixture có tin thuê cùng phường có
+  thước bán), và `meta.ruler` nêu «phường × loại hình».
 - AC-6 (cross-layer): Given DB thử, When gọi `/v1/deals` của data-api, Then mỗi dòng có `propertyType` khác `unknown`, số giảm khớp
-  tính lại từ `v_ruler_p2` cùng phường × loại (lệch ≤ 0,1 điểm), và các trường cũ của phản hồi giữ nguyên tên và kiểu; `area`,
-  `market`, `limit`, `min_discount` lọc như trước.
+  tính lại từ `v_ruler_p2` cùng phường × loại (lệch ≤ 0,1 điểm), không dòng nào là tin thuê (fixture có tin thuê cùng phường có
+  thước bán), và các trường cũ của phản hồi giữ nguyên tên và kiểu; `area`, `market`, `limit`, `min_discount` lọc như trước.
 - AC-7 (cross-layer): Given DB thử chép từ DB máy thu, When chạy `refreshBaitGap` trong giao dịch rồi đếm bằng SQL viết riêng,
-  Then: 0 tin P1 có `bait_gap_pct` lệch quá 0,1 điểm so với thước cùng phường × loại; 0 tin `unknown` hay thuê có số giảm; trung vị
-  số giảm của tin căn hộ có thước nằm trong ±10% (in kèm số cũ theo thước cả phường và mẫu số).
-- AC-8: Given trang `/ops/deals/[offerId]` trên bản chạy, When mở một căn hộ trong danh sách, một tin chưa rõ loại và một tin thiếu
-  thước cùng loại, Then câu chứng minh và lý do hiện đúng chữ của AC-4, đọc được ở sáng và tối.
+  Then: 0 tin P1 có `bait_gap_pct` lệch quá 0,1 điểm so với thước cùng phường × loại; 0 tin `unknown` hay thuê có số giảm; gọi hai API
+  (app `/api/v1/deals`, data-api `/v1/deals`) với `limit` tối đa trên từng thị trường của bản chép: 0 dòng lệch quá 0,1 điểm, 0 dòng
+  thuê hay `unknown` (in mẫu số mỗi API); trung vị số giảm của tin căn hộ có thước nằm trong ±10% (in kèm số cũ theo thước cả phường
+  và mẫu số).
+- AC-8: Given trang `/ops/deals/[offerId]` trên bản chạy trỏ DB thử `oneinvest_u1_cg8` đã chạy `refreshBaitGap` mới, When mở một căn hộ trong danh sách, một tin chưa rõ loại và một tin thiếu
+  thước cùng loại, Then câu chứng minh và lý do hiện đúng chữ của AC-4, số giảm trên thẻ bằng `ROUND((1 − giá/m² ÷ trung vị in trên thẻ) × 100, 1)`,
+  đọc được ở sáng và tối.
 - AC-9: Given diff của hàng so với main, When quét, Then không tệp nào dưới `db/migrations/`, `pipeline/sync-cloud.mjs` không đổi,
   phản hồi data-api không thêm trường liên lạc người bán (`contact` giữ nguyên khối cũ), và không dòng thêm nào chứa tên nguồn thật.
+- AC-10: Given DB cloud (đọc qua Management API, chỉ SELECT) và DB máy thu, When so định nghĩa `v_ruler_p2`, Then băm
+  `pg_get_viewdef('v_ruler_p2')` hai phía bằng nhau và cloud có dòng thước cho cả bốn loại; lệch hay vắng thì thoát khác 0 nêu phía
+  lệch.
 
 ## Coverage
 
-- Trục loại hình × trạng thái thước: căn hộ, nhà, đất, thương mại × (có thước cùng loại · thiếu) · `unknown` · NULL (AC-1, AC-2). Thước:
-  ma trận viết trước, mỗi ô một assert, có ca đột biến đỏ.
+- Trục loại hình × trạng thái thước: căn hộ, nhà, đất, thương mại × (có thước cùng loại · thiếu) · `unknown` · NULL — 10 ô (AC-1, AC-2).
+  Thước: ma trận viết trước, mỗi ô một assert, có ca đột biến đỏ.
 - Trục bán/thuê: bán chấm, thuê không chấm ở cả ba đường (AC-2, AC-5, AC-6, AC-7).
 - Trục đường đọc: pipeline · Ops danh sách · Ops một căn · API app · API công khai (AC-1, AC-3, AC-5, AC-6). Thước: tính lại độc lập
   từ `v_ruler_p2`, không dùng mã của hàng.
 - Trục dữ liệu thật: toàn bộ tin bán trên bản chép DB máy thu (AC-7). Thước: phép đếm SQL viết riêng, in mẫu số.
 - Trục lời cho người: lý do và câu chứng minh (AC-4 hàm thuần, AC-8 trên màn).
 - Trục ranh giới: không migration, không đổi sync cloud, không lộ thêm liên lạc (AC-9).
+- Trục triển khai: thước trên cloud là đúng view của máy thu (AC-10).
 
 ## Đường đo
 
