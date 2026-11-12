@@ -1,8 +1,10 @@
 -- 089_s10_bang_hang.sql — DA29 s10-bang-hang-vao-danh-ba: bảng hàng chủ đầu tư S10 vào stg và nối vào nút dự án của danh bạ.
 -- docs/superpowers/specs/2026-11-11-s10-bang-hang-vao-danh-ba-design.md · _acceptance/s10-bang-hang-vao-danh-ba (Mạnh duyệt 12/11,
 -- Hỏi-1 A, Hỏi-2 A) · ROADMAP §3 mục 45 Q3. Số 089 do vùng khai của hàng (giám sát đợt dot0-cam-mau).
--- KHÔNG sync cloud: ba bảng và view không vào FILL của pipeline/sync-cloud.mjs — stg_* là tầng A (payload theo nguồn), bảng nối
--- cùng luật 074. Quỹ căn S10 là tin sơ cấp (DA17): không vào Bán, thước giá, metrics. Áp lên DB máy thu là lời riêng của Mạnh.
+-- KHÔNG sync cloud: ba bảng và view không vào FILL của pipeline/sync-cloud.mjs — stg_* chỉ ở máy thu, bảng nối cùng luật 074
+-- (thông tin dự án S10 là công khai theo ROADMAP §3 mục 38; tên nguồn thật vẫn chỉ ở source_registry local).
+-- block_type chỉ nhận 177, 178: nguồn thêm loại khối mới thì lô nạp lỗi và lượt nạp dừng (fail-closed) — nới CHECK bằng migration
+-- mới, không bỏ qua. Quỹ căn S10 là tin sơ cấp (DA17): không vào Bán, thước giá, metrics. Áp lên DB máy thu là lời riêng của Mạnh.
 -- Idempotent: chạy lại không lỗi, lược đồ không đổi.
 
 -- ---- 1. Bảng hàng: đúng cột COT_S10 của pipeline/import-airbnb.mjs (napS10) ----
@@ -66,12 +68,20 @@ CREATE TABLE IF NOT EXISTS s10_project_links (
 );
 CREATE INDEX IF NOT EXISTS s10_project_links_node_idx ON s10_project_links (asset_node_id);
 
--- ---- 4. Quỹ căn S10 theo nút dự án: mỗi stock_id lấy dòng của snapshot mới nhất ----
+-- ---- 4. Quỹ căn S10 theo nút dự án: mỗi stock_id lấy dòng của snapshot mới nhất có nó ----
+-- Bảng hàng là ảnh chụp toàn bộ một (dự án, loại khối): sản phẩm vắng ở snapshot mới nhất của (project_id, block_type) đã rút
+-- khỏi bảng (bán xong, chủ đầu tư gỡ). Cố ý giữ dòng cuối của nó để còn lịch sử, gắn con_trong_bang = false; bên đọc quỹ căn
+-- hiện tại lọc con_trong_bang.
 CREATE OR REPLACE VIEW s10_quy_can_du_an AS
 SELECT l.asset_node_id, s.project_id, s.block_type, s.stock_id, s.unit_number, s.subdivision_name, s.block_raw,
        s.property_sub_type_raw, s.lot_size_m2, s.building_area_m2, s.direction_faces_raw, s.list_price_vnd, s.status_raw,
-       s.source_modified_on, s.snapshot_id, s.captured_at
+       s.source_modified_on, s.snapshot_id, s.captured_at,
+       (s.snapshot_id = m.snapshot_id) AS con_trong_bang
   FROM (SELECT DISTINCT ON (project_id, stock_id) *
           FROM stg_s10_stock
          ORDER BY project_id, stock_id, captured_at DESC NULLS LAST, id DESC) s
+  JOIN (SELECT DISTINCT ON (project_id, block_type) project_id, block_type, snapshot_id
+          FROM stg_s10_stock
+         ORDER BY project_id, block_type, captured_at DESC NULLS LAST, id DESC) m
+    ON m.project_id = s.project_id AND m.block_type = s.block_type
   JOIN s10_project_links l ON l.project_id = s.project_id AND l.status = 'noi';

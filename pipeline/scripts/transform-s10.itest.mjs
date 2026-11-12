@@ -228,7 +228,10 @@ test("S10-AC-4 view quỹ căn theo nút: mỗi căn bản mới nhất, dự á
     assert.equal(await dem(), mong, "S10-AC-4: số dòng view khác số stock_id của dự án");
     // Snapshot sau cùng stock_id, trạng thái khác.
     const { rows: [goc] } = await c.query(
-      "SELECT * FROM stg_s10_stock WHERE project_id = $1 ORDER BY stock_id LIMIT 1", [ca.noi.project_id]);
+      `SELECT * FROM stg_s10_stock WHERE project_id = $1 AND block_type IN (
+         SELECT block_type FROM stg_s10_stock WHERE project_id = $1 GROUP BY 1 HAVING count(DISTINCT stock_id) >= 2)
+       ORDER BY stock_id LIMIT 1`, [ca.noi.project_id]);
+    assert.ok(goc, "S10-AC-4: dự án đã nối không có loại khối nào từ hai sản phẩm");
     await c.query(
       `INSERT INTO stg_s10_stock (stock_id, source_id, project_id, block_type, status_raw, snapshot_id, captured_at, raw_row)
        VALUES ($1, $2, $3, $4, 'Trạng thái mới S10-AC-4', 'snap-sau-S10-AC-4', $5::timestamptz + interval '1 day', $6)`,
@@ -237,6 +240,12 @@ test("S10-AC-4 view quỹ căn theo nút: mỗi căn bản mới nhất, dự á
     const { rows: [v] } = await c.query(
       "SELECT status_raw FROM s10_quy_can_du_an WHERE asset_node_id = $1 AND stock_id = $2", [ca.noi.nut, goc.stock_id]);
     assert.equal(v.status_raw, "Trạng thái mới S10-AC-4", "S10-AC-4: view không lấy snapshot mới nhất");
+    // Snapshot sau chỉ còn một sản phẩm của (dự án, loại khối) này: sản phẩm khác coi như đã rút khỏi bảng (con_trong_bang = false).
+    const { rows: tt } = await c.query(
+      `SELECT stock_id, con_trong_bang FROM s10_quy_can_du_an WHERE asset_node_id = $1 AND block_type = $2`, [ca.noi.nut, goc.block_type]);
+    assert.ok(tt.find((r) => r.stock_id === goc.stock_id)?.con_trong_bang === true, "S10-AC-4: sản phẩm có ở snapshot mới nhất bị gắn đã rút");
+    const rut = tt.filter((r) => r.stock_id !== goc.stock_id);
+    assert.ok(rut.length > 0 && rut.every((r) => r.con_trong_bang === false), "S10-AC-4: sản phẩm vắng ở snapshot mới nhất vẫn gắn còn trong bảng");
     // Chiều đỏ: cùng phép đếm trên bảng thô (không chọn bản mới nhất) thì dư một dòng.
     const { rows: [{ n: tho }] } = await c.query("SELECT count(*)::int n FROM stg_s10_stock WHERE project_id = $1", [ca.noi.project_id]);
     assert.ok(tho > mong, "S10-AC-4: thước không phân biệt được bản view bỏ chọn snapshot mới nhất");
