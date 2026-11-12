@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { sqlNapLai } from "./nap-view-song.mjs";
+import { napLai095 } from "./nap-095.mjs";
 
 export const MIG_061 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/061_dac_trung_nha.sql"), "utf8");
 /** Phần hàm của 061 (§3 trigger kiểu/miền → §5 sổ): nạp lại sau khi bộ nạp 045 đè resolve_offer_fields bằng bản cũ. */
@@ -17,6 +18,7 @@ export async function napDacTrung(client, { sql = MIG_061 } = {}) {
   await client.query("SELECT pg_advisory_xact_lock(33033)");
   await client.query(await sqlNapLai(client, sql));
   await client.query(MIG_069);
+  await napLai095(client);
 }
 
 /** Gọi ngay sau mọi lần nạp lại 045/059 trong giao dịch: DB đã có cột 061 → nạp lại phần hàm 061 mà 045/059 vừa đè. */
