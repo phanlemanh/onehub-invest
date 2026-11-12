@@ -5,9 +5,9 @@ slug: tam-dung-nguon-tu-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: không tệp nào khớp t3_paths (app/src/app/api/v1/ops/change-requests, app/src/lib, app/src/components/ops/collections, app/tests)
 surfaces: [ui, api]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-tam-dung-nguon-tu-cloud-design.md
 ---
 
