@@ -274,6 +274,8 @@ executors:
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
+    dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
