@@ -191,6 +191,16 @@
       "tep": "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
       "ca": "SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0",
       "ly_do": "cần bài S03 thật ở stg_zalo_posts (DB máy thu) — DB CI dựng từ migration không có, lượt nạp rỗng"
+    },
+    {
+      "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
+      "ca": "SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env",
+      "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
+    },
+    {
+      "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
+      "ca": "SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd",
+      "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
     }
   ],
   "agent": [
