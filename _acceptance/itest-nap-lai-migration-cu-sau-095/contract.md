@@ -21,24 +21,29 @@ cũng chạm ràng buộc này.
 
 ## Criteria
 
-- AC-1: Given DB thử đủ migration có ràng buộc trường sống rộng hơn 061 (có phát biểu `floor_raw`), When gọi `napDacTrung`
-  (nạp lại 061 qua `sqlNapLai`) trong giao dịch, Then không lỗi «violated by some row» và định nghĩa ràng buộc sau nạp
-  bằng định nghĩa trước nạp; và khi thêm một trường giả `qx_thu` vào ràng buộc sống (mô phỏng 096) rồi nạp lại 061, 045,
-  059, trường giả còn nguyên. Khi tập sống nằm trọn trong tập của tệp đang nạp thì `sqlNapLai` trả nguyên từng byte.
+- AC-1: Given DB thử đủ migration, When gọi `sqlNapLai`/`napDacTrung` nạp lại 061, 045, 059 trong giao dịch trên ma trận
+  viết trước bốn ô — tập sống bằng tập tệp · tập sống ⊊ tập tệp · tập tệp ⊊ tập sống (thêm trường giả `qx_thu` vào ràng buộc
+  sống, mô phỏng 096) · giao một phần (tập sống có `qx_thu`, tệp có trường mà tập sống bỏ) — Then không lỗi «violated by
+  some row», tập trường sau nạp ⊇ hợp tập sống và tập tệp ở mọi ô, và ở hai ô «tập sống ⊆ tập tệp» `sqlNapLai` trả nguyên
+  từng byte; `kiem-do-sau-070.test.mjs` (KD-AC-3) ok.
 - AC-2: Given `s06-duong.itest.mjs` và `sdt-trong-duong.itest.mjs`, When chạy mỗi tệp trên DB của riêng lượt
   (`db-thu.sh --chay`), Then mọi ca ok (10/10 và 14/14), không SKIP.
 - AC-3: Given các ca đo VỀ một migration cũ trong `phat-bieu-db.itest.mjs` (PD-AC-1 045 áp hai lần, PD-AC-1 sổ),
   `trang-thai-chao.itest.mjs` (AC-3 trục, AC-7) và `nap-lai-db.itest.mjs` (ND-AC-1 áp 044 hai lần), When chạy mỗi tệp trên
-  DB của riêng lượt, Then mọi ca ok, không SKIP; các ca ấy đo trên DB dựng từ `db/migrations` dừng ở đúng mức migration
-  mà ca nói tới.
-- AC-4: Given `danh-ba-vat-the-that.itest.mjs` chép khu vực từ máy thu sang DB thử, When chạy, Then bốn ca ok; câu chép
-  `areas` mang `parent_id`, `admin_code` và các thị trường cha của mọi khu vực được chép.
+  DB của riêng lượt, Then mọi ca ok, không SKIP; mỗi ca ấy assert số migration lớn nhất đã áp trên DB nó đo bằng đúng X
+  của ca (in ra), và DB đó dựng bằng `taoDbThu(…, { hetSo: X })`.
+- AC-4: Given `danh-ba-vat-the-that.itest.mjs` chép khu vực từ máy thu sang DB thử, When chạy, Then pass 4, fail 0; và một ca
+  assert dương: mọi area được chép có `parent_id` thì area cha có trong DB thử, và mọi thị trường cha có `admin_code` khác null.
 - AC-5: Given bản cũ (merge-base) của `pipeline/lib/nap-view-song.mjs`, When probe đối chứng chạy kịch bản của AC-1, Then
-  nạp lại 061 lỗi «violated by some row» và trường giả `qx_thu` mất; và bản merge-base của từng tệp kiểm ở AC-2…AC-4 đỏ như
-  trên main. Probe chỉ xoá DB thử của chính nó.
-- AC-6: Given diff so merge-base, Then chỉ chạm các tệp kiểm của AC-2…AC-4, tệp kiểm mới của AC-1, `pipeline/lib/nap-*.mjs`,
+  nạp lại 061 lỗi «violated by some row» và trường giả `qx_thu` mất; và bản merge-base của đúng sáu tệp kiểm ở AC-2…AC-4
+  (tên từng tệp in ra) đỏ như trên main. Probe chỉ xoá DB thử của chính nó.
+- AC-6: Given diff so merge-base, Then chỉ chạm các tệp kiểm của AC-2…AC-4 và AC-7, tệp kiểm mới của AC-1, `pipeline/lib/nap-*.mjs`,
   `_acceptance/itest-nap-lai-migration-cu-sau-095/**`, `_acceptance/config.yaml`, design doc, kế hoạch và bản đồ máy sinh;
   mọi lời gọi `assert.*(…)` của các tệp kiểm bị đổi còn nguyên văn so merge-base; không migration, không mã sản phẩm.
+
+- AC-7: Given cây đã nhận main có migration 096 (DA2) và DA5, When chấm, Then probe tĩnh thấy `db/migrations/096_*.sql`
+  (thiếu → thoát khác 0 «CHUA CO 096»), và `dac-trung-s06.itest.mjs` chạy trên DB riêng ok 8/8, không SKIP, với mọi lời gọi
+  assert của nó còn nguyên văn.
 
 ## Coverage
 
@@ -49,10 +54,10 @@ Bỏ quét không gian (dòng `descope` trong sổ) — bảng quét 21 tệp đ
 - Trục C — tệp dựng tính năng trên DB đủ: AC-2
 - Trục D — ngoài lớp trong ranh giới (luật một tỉnh): AC-4
 - Trục E — không nới thước, không chạm sản phẩm: AC-6
+- Trục F — bền với 096 đo trên 096 thật, tệp của N1 sau DA5: AC-7
 
 ## Out of scope
 
-- `pipeline/scripts/dac-trung-s06.itest.mjs` (N1, DA5) tới khi DA5 gộp — khi ấy nhận main và sửa trong hàng này.
 - Bốn tệp đỏ vì lý do khác liệt ở `anh-em.md` (danh-ba-nguoi, the-duyet-nguoi, so-nhom, vocab-db).
 - Migration đã commit và mã sản phẩm.
 

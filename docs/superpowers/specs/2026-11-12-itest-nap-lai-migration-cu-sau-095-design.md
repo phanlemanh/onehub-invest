@@ -44,7 +44,7 @@ Không job đêm, finalize hay sync nào gọi chúng. Ràng buộc trên DB má
 
 **(B) Bộ nạp lại dùng để dựng tính năng trên DB đủ migration không bao giờ thu hẹp ràng buộc trường.**
 - Trong `sqlNapLai` (đường chung của mọi lần nạp lại), mọi câu `ADD CONSTRAINT field_assertions_field_chk CHECK (field IN
-  (…))` thay bằng định nghĩa đang sống trên DB khi tập sống KHÔNG nằm trong tập của tệp đang nạp.
+  (…))` thay bằng HỢP của tập sống và tập của tệp đang nạp (không bỏ trường nào của cả hai phía) khi tập sống KHÔNG nằm trong tập của tệp.
 - Tập sống nằm trọn trong tập của tệp thì giữ nguyên từng byte, để KD-AC-3 của `kiem-do-sau-070.test.mjs` vẫn đúng.
 - Bắt theo khuôn, không chép giá trị trục, như `sqlNapLai059`.
 - Bền với 096: 096 thêm trường vào ràng buộc sống, bộ nạp lại tự giữ, không cần bản vá mới.
@@ -65,6 +65,11 @@ thị trường cha (luật ISO một tỉnh, #406).
 - Một trường giả thêm vào ràng buộc sống (mô phỏng 096) mất đi nếu thiếu (B), còn nguyên khi có (B).
 - Bản merge-base của từng tệp kiểm đỏ như trên main.
 
+## Bền với 096 — đo thật, không chỉ mô phỏng
+
+Lượt chấm cuối chạy trên cây đã nhận main có 096 (DA2) và DA5: probe tĩnh đòi `db/migrations/096_*.sql` có mặt và
+`dac-trung-s06.itest.mjs` (sau DA5) vào phạm vi. Trước khi hai hàng ấy gộp, hàng dừng sau S3 chờ.
+
 ## Thứ tự gộp
 
 GS giữ thứ tự gộp: hàng này vào main SAU DA5 và DA2. `pipeline/lib/nap-061.mjs` nằm trong vùng của hồ sơ khác, nên gộp
@@ -72,6 +77,5 @@ trước sẽ buộc chúng ghim lại.
 
 ## Ngoài phạm vi
 
-- `dac-trung-s06.itest.mjs` (N1, DA5) tới khi DA5 gộp.
 - Bốn tệp đỏ vì lý do khác (`anh-em.md`).
 - Migration đã commit, mã sản phẩm.
