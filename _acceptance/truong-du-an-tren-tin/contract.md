@@ -5,7 +5,7 @@ slug: truong-du-an-tren-tin
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-truong-du-an-tren-tin-design.md
