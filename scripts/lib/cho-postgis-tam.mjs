@@ -8,11 +8,13 @@ export const DONG_SAN_SANG = "ready to accept connections";
 export const LOI_CHUA_KHOI_DONG_LAI = "chưa thấy khởi động lại sau khởi tạo";
 export const LOI_SELECT_CHUA_ON = "SELECT 1 chưa ổn định";
 
-/** Log (gộp stdout và stderr) đã qua lần khởi động lại sau khởi tạo: có dòng mốc và SAU nó có dòng sẵn sàng. */
+/**
+ * Log đã qua lần khởi động lại sau khởi tạo: có dòng mốc VÀ có từ hai dòng sẵn sàng trở lên. Không dựa vào thứ tự dòng: `docker
+ * logs` tách stdout (mốc của entrypoint) và stderr (dòng của postgres), nối hai luồng thì mốc đứng trước cả dòng sẵn sàng lần một.
+ */
 export function daQuaKhoiDongLai(log) {
   const s = String(log ?? "");
-  const i = s.indexOf(MOC_KHOI_DONG_LAI);
-  return i >= 0 && s.indexOf(DONG_SAN_SANG, i + MOC_KHOI_DONG_LAI.length) >= 0;
+  return s.includes(MOC_KHOI_DONG_LAI) && s.split(DONG_SAN_SANG).length - 1 >= 2;
 }
 
 const ngu = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -28,16 +30,17 @@ export async function choPostgisTam({ docLog, chayTruyVan, han = 180_000, nhip =
     if (Date.now() >= het) throw new Error(LOI_CHUA_KHOI_DONG_LAI);
     await ngu(nhip);
   }
-  let lien = 0;
+  let lien = 0, cuoi = null;
   for (;;) {
     try {
       await chayTruyVan();
       lien++;
       if (lien >= lanLienTiep) return;
-    } catch {
+    } catch (e) {
       lien = 0;
+      cuoi = e;
     }
-    if (Date.now() >= het) throw new Error(LOI_SELECT_CHUA_ON);
+    if (Date.now() >= het) throw new Error(cuoi ? `${LOI_SELECT_CHUA_ON}: ${cuoi.message}` : LOI_SELECT_CHUA_ON, { cause: cuoi });
     await ngu(cach);
   }
 }

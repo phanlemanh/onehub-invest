@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // au11-ac3-postgis-tam-chap-chon AC-3: dưới tải đốt CPU (bằng số nhân), BẢN CŨ của scripts/ci-test-module.test.mjs phải đỏ ít nhất
 // một lần «Connection terminated» (không thì tải không chứng gì → «TAI KHONG TAI HIEN LOI CU»), rồi BẢN MỚI 10/10 xanh dưới cùng
-// tải; thêm: log docker thật (gộp stdout + stderr) qua daQuaKhoiDongLai ra true và dòng mốc khớp bộ log của test.
-// Luôn dọn tiến trình đốt CPU, container au11-pg-*, tệp tạm.
+// tải; thêm: log docker thật (stdout nối stderr, đúng như bước chờ đọc) qua daQuaKhoiDongLai ra true và dòng mốc khớp bộ log của test.
+// Luôn dọn tiến trình đốt CPU, tệp tạm và CHỈ container au11-* sinh ra trong lượt probe (container có từ trước — của phiên khác — để yên).
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -16,11 +16,14 @@ const SO_LAN = 10;
 const CPU = os.availableParallelism();
 const CU = path.join(ROOT, "scripts", `.ci-test-module-cu-${process.pid}.test.mjs`);
 const dot = [];
+const dsAu11 = () => spawnSync("docker", ["ps", "-aq", "--no-trunc", "--filter", "name=au11-"], { encoding: "utf8" }).stdout.trim().split("\n").filter(Boolean);
+const coTruoc = new Set(dsAu11());
+const moiSinh = () => dsAu11().filter((id) => !coTruoc.has(id));
 
 function don() {
   for (const p of dot) { try { p.kill("SIGKILL"); } catch {} }
   rmSync(CU, { force: true });
-  const ids = spawnSync("docker", ["ps", "-aq", "--filter", "name=au11-"], { encoding: "utf8" }).stdout.trim().split("\n").filter(Boolean);
+  const ids = moiSinh();
   if (ids.length) spawnSync("docker", ["rm", "-f", ...ids]);
 }
 process.on("exit", don);
@@ -82,6 +85,7 @@ for (let i = 1; i <= SO_LAN; i++) {
 console.log(xanh === SO_LAN ? `AU11-DUOI-TAI PASS ${xanh}/${SO_LAN}` : `AU11-DUOI-TAI FAIL ${xanh}/${SO_LAN}`);
 if (xanh !== SO_LAN) sai++;
 don();
-const conLai = spawnSync("docker", ["ps", "-aq", "--filter", "name=au11-"], { encoding: "utf8" }).stdout.trim();
-console.log(conLai ? "CON SOT CONTAINER" : "đã dọn tiến trình đốt CPU và container tạm");
+const conLai = moiSinh();
+console.log(conLai.length ? `CON SOT CONTAINER ${conLai.length}` : "đã dọn tiến trình đốt CPU và container tạm của lượt");
+if (conLai.length) sai++;
 process.exitCode = sai ? 1 : 0;

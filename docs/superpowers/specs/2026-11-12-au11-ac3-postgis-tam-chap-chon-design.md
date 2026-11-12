@@ -22,7 +22,9 @@ thêm 3 giây cố định rồi mới kết nối. Dưới tải, lần khởi 
 Chỉ sửa `scripts/ci-test-module.test.mjs`; không sửa `scripts/ci-db-init.mjs` (vật sản phẩm của AU11).
 
 1. **Hàm thuần `daQuaKhoiDongLai(log)`.** Trả `true` khi và chỉ khi trong `log` có dòng mốc khởi động lại
-   `Postgres initialisation process completed` và SAU dòng đó có dòng `ready to accept connections`.
+   `Postgres initialisation process completed` VÀ có từ hai dòng `ready to accept connections` trở lên. Không dựa vào thứ tự
+   dòng: `docker logs` trả stdout (mốc của entrypoint) và stderr (dòng của postgres) thành hai luồng, nối hai luồng thì mốc đứng
+   trước cả dòng sẵn sàng lần một (lượt chấm r1 bắt lỗi này ở bản «SAU dòng mốc»).
 2. **Bước chờ mới trong `before`.**
    - Vòng lặp tối đa 180 giây đọc `docker logs <tên>` tới khi `daQuaKhoiDongLai` đúng.
    - Sau đó kết nối thật từ host qua cổng đã ánh xạ và chạy `SELECT 1`. Phải thành công hai lần liên tiếp cách nhau 1 giây;
