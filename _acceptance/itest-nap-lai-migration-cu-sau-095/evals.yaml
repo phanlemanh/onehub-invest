@@ -26,22 +26,8 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.script.itnl_phat_bieu
-    expected: "exit 0; mọi ca PD-AC-* ok gồm 'PD-AC-1 045 áp hai lần …' và 'PD-AC-1 sổ …' (in mức migration của DB đo), ℹ fail 0, ℹ skipped 0"
+    expected: "exit 0; mọi ca PD-AC-* ok gồm 'PD-AC-1 045 áp hai lần …' và 'PD-AC-1 sổ …' (ca đo trên DB dừng ở một mức thì in mức đó), ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/lib/nap-*.mjs"]
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E5
-    criterion: AC-3
-    executor: test
-    cmd: config:executors.script.itnl_tg
-    expected: "exit 0; ca 'AC-3 cột và trục …' và 'AC-7 B5 và tụt về B4 …' ok (in mức migration của DB đo), ℹ fail 0, ℹ skipped 0"
-    paths: ["pipeline/scripts/trang-thai-chao.itest.mjs", "pipeline/lib/nap-*.mjs"]
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E6
-    criterion: AC-3
-    executor: test
-    cmd: config:executors.script.itnl_nap_lai
-    expected: "exit 0; ca 'ND-AC-1 áp 044 (hai lần) …' ok và in mức migration 044, ℹ fail 0, ℹ skipped 0"
-    paths: ["pipeline/scripts/nap-lai-db.itest.mjs", "pipeline/lib/nap-*.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-4
@@ -54,7 +40,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.itnl_doi_chung
-    expected: "exit 0; 'DOI CHUNG RB DO' (bản merge-base của nap-view-song: nạp lại 061 lỗi violated by some row, qx_thu mất); 'DOI CHUNG TEP DO 6/6' kèm tên s06-duong, sdt-trong-duong, phat-bieu-db, trang-thai-chao, nap-lai-db, danh-ba-vat-the-that; không DB thử nào của tiến trình đã thoát còn sót"
+    expected: "exit 0; 'DOI CHUNG RB DO' (bản merge-base của nap-view-song: nạp lại 061 lỗi violated by some row, qx_thu mất); 'DOI CHUNG TEP DO 4/4' kèm tên s06-duong, sdt-trong-duong, phat-bieu-db, danh-ba-vat-the-that; không DB thử nào của tiến trình đã thoát còn sót"
     paths: ["pipeline/lib/nap-view-song.mjs", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9

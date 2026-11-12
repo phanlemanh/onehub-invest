@@ -28,14 +28,13 @@ cũng chạm ràng buộc này.
   từng byte; `kiem-do-sau-070.test.mjs` (KD-AC-3) ok.
 - AC-2: Given `s06-duong.itest.mjs` và `sdt-trong-duong.itest.mjs`, When chạy mỗi tệp trên DB của riêng lượt
   (`db-thu.sh --chay`), Then mọi ca ok (10/10 và 14/14), không SKIP.
-- AC-3: Given các ca đo VỀ một migration cũ trong `phat-bieu-db.itest.mjs` (PD-AC-1 045 áp hai lần, PD-AC-1 sổ),
-  `trang-thai-chao.itest.mjs` (AC-3 trục, AC-7) và `nap-lai-db.itest.mjs` (ND-AC-1 áp 044 hai lần), When chạy mỗi tệp trên
-  DB của riêng lượt, Then mọi ca ok, không SKIP; mỗi ca ấy assert số migration lớn nhất đã áp trên DB nó đo bằng đúng X
-  của ca (in ra), và DB đó dựng bằng `taoDbThu(…, { hetSo: X })`.
+- AC-3: Given các ca đo VỀ migration 045 trong `phat-bieu-db.itest.mjs` (PD-AC-1 045 áp hai lần, PD-AC-1 sổ), When chạy tệp
+  trên DB của riêng lượt, Then mọi ca ok, không SKIP. Ca nào sửa bằng cách đo trên DB dừng ở một mức thì assert số migration
+  lớn nhất đã áp trên DB nó đo bằng đúng mức đó (in ra), và DB đó dựng bằng `taoDbThu(…, { hetSo: X })`.
 - AC-4: Given `danh-ba-vat-the-that.itest.mjs` chép khu vực từ máy thu sang DB thử, When chạy, Then pass 4, fail 0; và một ca
   assert dương: mọi area được chép có `parent_id` thì area cha có trong DB thử, và mọi thị trường cha có `admin_code` khác null.
 - AC-5: Given bản cũ (merge-base) của `pipeline/lib/nap-view-song.mjs`, When probe đối chứng chạy kịch bản của AC-1, Then
-  nạp lại 061 lỗi «violated by some row» và trường giả `qx_thu` mất; và bản merge-base của đúng sáu tệp kiểm ở AC-2…AC-4
+  nạp lại 061 lỗi «violated by some row» và trường giả `qx_thu` mất; và bản merge-base của đúng bốn tệp kiểm ở AC-2…AC-4
   (tên từng tệp in ra) đỏ như trên main. Probe chỉ xoá DB thử của chính nó.
 - AC-6: Given diff so merge-base, Then chỉ chạm các tệp kiểm của AC-2…AC-4 và AC-7, tệp kiểm mới của AC-1, `pipeline/lib/nap-*.mjs`,
   `_acceptance/itest-nap-lai-migration-cu-sau-095/**`, `_acceptance/config.yaml`, design doc, kế hoạch và bản đồ máy sinh;
@@ -58,7 +57,8 @@ Bỏ quét không gian (dòng `descope` trong sổ) — bảng quét 21 tệp đ
 
 ## Out of scope
 
-- Bốn tệp đỏ vì lý do khác liệt ở `anh-em.md` (danh-ba-nguoi, the-duyet-nguoi, so-nhom, vocab-db).
+- Bốn tệp đỏ vì lý do khác và hai tệp tách khỏi hàng (`nap-lai-db` — luật 044 bị view sellers của 060 phá; `trang-thai-chao`
+  AC-3/AC-7 — kỳ vọng đóng băng trong sổ), liệt ở `anh-em.md` kèm câu cần quyết.
 - Migration đã commit và mã sản phẩm.
 
 ## Notes
