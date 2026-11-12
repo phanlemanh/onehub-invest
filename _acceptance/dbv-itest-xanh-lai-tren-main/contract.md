@@ -37,8 +37,9 @@ luật ISO một tỉnh mà #406 (DA1) đưa vào lệnh dựng (`loi: "nhieu-ti
   DBV-AC-9 đổi `hitl` → `source_field`.
 - AC-4: Given hai đối chứng đỏ, When probe chạy (a) bản tệp ở merge-base với ca DBV-AC-3 và (b) bản mới với ca DBV-AC-1 và
   `DBV_MIG_THAY` là bản chép 082 không lũy đẳng (mỗi lần áp tạo một bảng tên ngẫu nhiên), Then (a) đỏ và đầu ra có
-  `nhieu-tinh`, (b) đỏ và đầu ra có đúng thông điệp ghim «DBV-AC-1 áp 082 lần hai đổi lược đồ»; số DB `oneinvest_dbv_%` trên
-  :5433 sau probe bằng trước probe (đo bằng `pg_database`, gồm DB `_082` mà `after` của tệp phải xoá).
+  `nhieu-tinh`, (b) đỏ và đầu ra có đúng thông điệp ghim «DBV-AC-1 áp 082 lần hai đổi lược đồ»; sau probe không còn DB
+  `oneinvest_dbv_%` mới nào mà tiến trình chủ (pid trong tên) đã thoát — đo bằng `pg_database`, gồm DB `_082` mà `after` của
+  tệp phải xoá; DB mới của tiến trình còn sống (lượt chạy song song) không tính và probe không xoá.
 - AC-5: Given hai ca bị lỗi `nhieu-tinh` che (đo ra sau khi sửa AC-2): DBV-AC-9 đòi chủ đầu tư từ tệp từ điển ghi
   `method = hitl`, trái hợp đồng đã ký của DA1 (`_acceptance/danh-ba-vat-the-toan-quoc/contract.md`: «phát biểu
   `builder_name` mang `method = source_field`»); và bản chép «duc-thua» của DBM-AC-5 neo vào dòng `dung(c, { khuSlugs, runId:

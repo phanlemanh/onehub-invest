@@ -3,7 +3,9 @@
 //   (a) bản merge-base (fixture vùng cũ) chạy ca DBV-AC-3 → đỏ và đầu ra có «nhieu-tinh»;
 //   (b) bản mới chạy ca DBV-AC-1 với DBV_MIG_THAY = bản chép 082 không lũy đẳng (mỗi lần áp tạo một bảng tên ngẫu nhiên)
 //       → đỏ với đúng thông điệp ghim.
-// Đếm DB oneinvest_dbv_% trên :5433 trước và sau (pg_database); DB mới còn sót sau probe là FAIL (rồi mới dọn).
+// Đếm DB oneinvest_dbv_% trên :5433 trước và sau (pg_database). DB mới mà tiến trình chủ (pid trong tên) đã chết là sót của
+// probe → FAIL. DB của tiến trình còn sống (lượt chấm chạy song song, phiên khác) KHÔNG phải của probe: không tính, không xoá
+// — r1 xoá nhầm DB của itest đang chạy song song và cắt kết nối của nó.
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -59,8 +61,21 @@ if (!okB) { sai++; console.log(b.out.split("\n").filter((l) => /✖|Error/.test(
 
 // Dọn DB: mọi DB thử tệp tạo phải đã bị xoá ở after.
 const sau = await dsDb();
-const sot = [...sau].filter((d) => !truoc.has(d));
-console.log(`DB THU TRUOC ${truoc.size} SAU ${sau.size}${sot.length ? ` — sót: ${sot.join(", ")}` : ""}`);
+/** pid chủ của DB thử oneinvest_dbv_<pid>[_hậu tố]; tiến trình còn sống → không phải sót của probe. */
+const conSong = (ten) => {
+  const pid = Number(/^oneinvest_dbv_(\d+)/.exec(ten)?.[1]);
+  if (!pid) return false;
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
+};
+// Hai chiều của luật «còn sống»: DB mang pid của chính probe → còn sống; DB mang pid một tiến trình đã thoát → sót.
+const chet = spawnSync(process.execPath, ["-e", "0"]).pid;
+const okSong = conSong(`oneinvest_dbv_${process.pid}`) && !conSong(`oneinvest_dbv_${chet}_082`);
+console.log(okSong ? "LUAT CON SONG HAI CHIEU OK" : "LUAT CON SONG SAI — không phân biệt được tiến trình sống và đã thoát");
+if (!okSong) sai++;
+const moi = [...sau].filter((d) => !truoc.has(d));
+const sot = moi.filter((d) => !conSong(d));
+const cuaKhac = moi.filter(conSong);
+console.log(`DB THU TRUOC ${truoc.size} SAU ${sau.size} · mới của tiến trình còn sống (không tính): ${cuaKhac.length}${sot.length ? ` — sót: ${sot.join(", ")}` : ""}`);
 if (sot.length) {
   sai++;
   const c = new pg.Client({ connectionString: `${MAY_CHU}/postgres` });
