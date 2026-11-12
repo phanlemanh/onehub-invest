@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: du-an-tren-tin-s03-tu-nhom-va-ten
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-1 chạy (không skip) trên DB thử oneinvest_dbv_dat_<pid> dựng từ db/migrations: ma trận viết trước nhóm A (một dự án, sổ hai dạng khoá) · B (ba dự án) · C (rỗng), mỗi nhóm 2 bài thuộc tin S03; sau --ghi đếm dòng luật du-an-nhom-mot-du-an theo bài = {A1:1, A2:1, B1:0, B2:0, C1:0, C2:0}, mỗi dòng A có value=P1, tier inferred, method e1_rule, evidence.nhom và evidence.so_nhom_id khác rỗng. Chiều đỏ cùng fixture: bản sao lib đột biến bỏ điều kiện đúng-một-dự-án → ca đỏ ghim «DAT-AC-1 nhóm nhiều dự án sinh phát biểu»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-2 chạy: ma trận viết trước 6 bài — khớp tên (hoa thường khác) · khớp bí danh · tên không khớp nút · tên khớp hai nút · tên không có trong chữ bài · tên chỉ ở nhãn cũ (nhãn mới nhất không tên); đếm dòng luật du-an-ten-bai = {1,1,0,0,0,0}; hai dòng có evidence.label_id và evidence.trich nằm trong chữ bài. Chiều đỏ: đột biến bỏ kiểm chữ-tên-trong-bài → ghim «DAT-AC-2 tên không trong bài vẫn ghi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-3 chạy: tin T1 (bài ở nhóm P1 và nhóm P2) · tin T2 (nhóm P1, tên bài P2) · tin T3 (nhóm P1, tên bài P1); sau --ghi số dòng hai luật trên bài của T1 = 0, T2 = 0, T3 = 2 (một mỗi luật); tệp --bang-mau-thuan có đúng tập mã tin {T1, T2} với ứng viên {P1,P2} và nguồn, không chứa chuỗi chữ bài của fixture. Chiều đỏ: đột biến bỏ luật mâu thuẫn → ghim «DAT-AC-3 tin mâu thuẫn bị ghi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-4 chạy: lượt 1 --ghi; đổi sổ nhóm A thành hai dự án, gỡ bí danh của bài khớp bí danh, đổi nhóm D từ P1 sang P2; lượt 2 --ghi: bài nhóm A và bài bí danh có dòng cũ retract_reason='xet-lai-so-nhom-danh-ba' và 0 dòng sống của luật; bài nhóm D có đúng 1 dòng sống value=P2; lượt 3 --ghi báo 0 chèn, 0 rút và tập dòng sống không đổi. Chiều đỏ: đột biến bỏ bước rút phần thừa → ghim «DAT-AC-4 phát biểu cũ còn sống sau khi sổ đổi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-5 chạy: bài X (nhóm P1) có sẵn fact·hitl P2, bài Y (nhóm P1, tên P1) có sẵn observed·parser P1, bài Z (tên P1) có sẵn fact·hitl P1; sau --ghi hai lượt: các dòng sẵn có giữ nguyên (retracted_at null, value không đổi); luật nhóm 0 dòng ở X, Y; luật tên 1 dòng ở Y, 0 ở Z. Chiều đỏ: đột biến bỏ kiểm tầng cao → ghim «DAT-AC-5 luật suy ra ghi đè chỗ có phát biểu tầng cao»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-6 chạy: chạy không cờ → exit 0, stdout có dòng «chạy thử», count(field_assertions) trước = sau; DB thử dựng tới 095 (CHECK thiếu project_node_id) → exit 2, stderr ghim /project_node_id/; DB không có field_assertions → exit 2 ghim /field_assertions/; --ghi với lỗi tiêm sau lô đầu (biến môi trường của test) → exit 1 và count không đổi. Chiều đỏ: đột biến bỏ BEGIN/ROLLBACK → ghim «DAT-AC-6 ghi dở khi lỗi giữa chừng»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-7 chạy trên fixture của AC-1…AC-5 gộp: đọc các số của bảng đếm (dạng máy đọc --json) và so với truy vấn SQL độc lập của test cho từng dòng (tin S03, tin (i), tin (ii), trùng, hợp, mâu thuẫn, còn lại) — bằng nhau từng dòng; quan hệ hợp = (i)+(ii)−trùng và còn lại = tổng − hợp − mâu thuẫn đúng. Chiều đỏ: đột biến đếm trùng hai lần → ghim «DAT-AC-7 dòng hợp lệch truy vấn độc lập»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
+    expected: "exit 0; ca DAT-AC-8 chạy (không cần DB): phân tích câu import của hai tệp — tập nguồn ⊂ {pg, node:*, ../lib/*, ./*}; không có fetch(, http, https, @anthropic-ai, openai, agent/; không chuỗi viết tay 'project_node_id', 'inferred', 'observed', 'e1_rule', 'e2_llm' ngoài tệp sinh (chỉ qua ASSERTION_FIELD/EVIDENCE_TIER/ASSERTION_METHOD). Đối chứng dương: bản sao có thêm import 'node:https' → ca ghim «DAT-AC-8 import ngoài danh sách: node:https»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0 (cd pipeline && npm test), gồm VL-AC-5 xanh không sửa ca."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
