@@ -14,10 +14,6 @@ const GOC = path.join(DIR, "..", "..");
 const PLIST = path.join(GOC, "pipeline", "cron", "com.oneinvest.ops-apply.plist");
 const RUNTIME_MAP = path.join(GOC, "docs", "ops", "runtime-map.md");
 const LAUNCH_THAT = path.join(homedir(), "Library", "LaunchAgents");
-// plist và launchd chỉ có trên macOS (máy thu); runner CI Linux không có plutil → bỏ qua có tên, không đỏ giả.
-const KHONG_PLUTIL = spawnSync("plutil", ["-help"], { encoding: "utf8" }).error
-  ? "cần plutil của macOS (máy thu) — runner này không có"
-  : false;
 
 /** plist → JSON qua plutil. */
 function docPlist(tep) {
@@ -68,7 +64,7 @@ function kiemPlistDaCai(tep) {
 const chupThat = () =>
   existsSync(LAUNCH_THAT) ? readdirSync(LAUNCH_THAT).sort().map((f) => [f, statSync(path.join(LAUNCH_THAT, f)).mtimeMs]) : null;
 
-test("SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env", { skip: KHONG_PLUTIL }, () => {
+test("SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env", () => {
   kiemPlistNguon(PLIST);
   // Đối chứng đỏ: plist đời TV4.
   const tam = mkdtempSync(path.join(tmpdir(), "plist-tv4-"));
@@ -82,7 +78,7 @@ test("SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env", { skip:
   }
 });
 
-test("SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd", { skip: KHONG_PLUTIL }, () => {
+test("SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd", () => {
   const dong = rutDongCai(readFileSync(RUNTIME_MAP, "utf8"));
   const truoc = chupThat();
   const tam = mkdtempSync(path.join(tmpdir(), "launch-tam-"));
