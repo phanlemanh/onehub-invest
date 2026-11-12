@@ -770,7 +770,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - S05: bật lại, 2 lượt/ngày thay vì 4; đo chi phí một tuần rồi quyết tiếp.
     - S10: một lượt mỗi tuần, giờ hành chính, bằng phiên của Mạnh; hết phiên thì dừng, không tự đăng nhập. Đây là lời chấp nhận rủi
       ro tài khoản.
-    - S07: ba lượt/ngày, trần 100 lời gọi mỗi lượt. Thực tế 12/11: nguồn chặn, bộ thu tự nghỉ 24 giờ.
+    - S07: ba lượt/ngày; trần 100 lời gọi mỗi lượt do liên làn đặt (khuyến nghị trình Mạnh là 150). Thực tế 12/11: nguồn chặn,
+      bộ thu tự nghỉ 24 giờ.
     - Gỡ dịch vụ model cục bộ bị trùng trong launchd (bật lại liên tục vì trùng cổng), giữ bản «gate». Đã gỡ 12/11.
     Hàng «lịch thu trên Ops» (xem đủ job, mã thoát, bật/tắt, đổi nhịp từ `/ops/collections`) mới là đề xuất, chưa cắt.
 
