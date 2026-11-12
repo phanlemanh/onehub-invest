@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2d7dfbf7ed6f2eff47a0375da01860a37c054493
+verified_commit: 7843731cc31d0faf783740785adb3ba24d3eb8ab
 human_signoff: Mạnh 2026-11-12
 ---
 
@@ -188,3 +188,7 @@ none — every multi-run eval is uniform
 
 Round 1: REJECT — 3 suite đỏ do worktree thiếu tạo phẩm, 2 finding trong hợp đồng. Trả về thực thi.
 Round 2: PASS — mọi eval và mọi lệnh suite xanh trên commit 2d7dfbf7.
+
+### Re-pin lần 1 — 2026-11-12, do hoá cũ do gộp main sau chữ ký (3 tệp scripts/ từ main)
+run_id: repin-20261112T142659Z-34417
+sha: 7843731cc31d0faf783740785adb3ba24d3eb8ab · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
