@@ -44,6 +44,10 @@ cũng chạm ràng buộc này.
 - AC-7: Given cây đã nhận main có migration 096 (DA2) và DA5, When chấm, Then probe tĩnh thấy `db/migrations/096_*.sql`
   (thiếu → thoát khác 0 «CHUA CO 096»), và `dac-trung-s06.itest.mjs` chạy trên DB riêng ok 8/8, không SKIP, với mọi lời gọi
   assert của nó còn nguyên văn.
+- AC-8: Given ca TDT-AC-4 của DA2 («áp 096 lần hai») đang áp tệp qua `apTep` (docker exec) nên bị ghi vào
+  `scripts/ci-bo-qua.json` để bỏ qua trên CI, When chuyển ca sang áp qua `pg.Client` (đọc tệp 096 rồi `query`), Then ca chạy
+  xanh trên runner CI (không cần docker exec) và dòng bỏ-qua tương ứng trong `scripts/ci-bo-qua.json` được gỡ. Làm sau khi
+  DA2 vào main, cùng lượt với AC-7.
 
 ## Coverage
 
@@ -55,6 +59,7 @@ Bỏ quét không gian (dòng `descope` trong sổ) — bảng quét 21 tệp đ
 - Trục D — ngoài lớp trong ranh giới (luật một tỉnh): AC-4
 - Trục E — không nới thước, không chạm sản phẩm: AC-6
 - Trục F — bền với 096 đo trên 096 thật, tệp của N1 sau DA5: AC-7
+- Trục G — ca áp 096 chạy được trên CI, gỡ bỏ-qua: AC-8
 
 ## Out of scope
 
