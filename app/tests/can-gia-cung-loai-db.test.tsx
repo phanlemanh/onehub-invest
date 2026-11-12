@@ -2,25 +2,28 @@
 // AC-6 (/v1/deals của data-api). Fixture và giao dịch dùng chung với itest pipeline (can-gia-cung-loai-fixture.itest.mjs: BEGIN…ROLLBACK,
 // lược đồ riêng). Hai route đọc qua `pool` dùng chung → trong ca, pool.query trỏ vào client của giao dịch (cùng lược đồ riêng);
 // thước kỳ vọng tính lại độc lập bằng SQL viết riêng trên v_ruler_p2, không dùng mã của hàng.
-// Chạy: node --experimental-test-module-mocks --import tsx --test tests/can-gia-cung-loai-db.test.tsx (next/headers giả: ngoài
-// máy chủ Next `cookies()` ném lỗi — ca không token cần đi tới phiên rỗng để ra 401).
-import { before, mock, test } from "node:test";
+// Chạy: npm test (hoặc node --import tsx --test tests/can-gia-cung-loai-db.test.tsx). Ngoài máy chủ Next `cookies()` ném lỗi,
+// nên ca 401 đo cổng với phiên rỗng và vị trí cổng trước truy vấn trong route — cùng khuôn tin-rao-cong-khai.test.tsx.
+import { before, test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import type pg from "pg";
+import { canCallOpsApi } from "../src/lib/ops-access";
 
-mock.module("next/headers", {
-  namedExports: { cookies: async () => ({ get: () => undefined }), headers: async () => new Headers() },
-});
+// Tệp ngoài app (pipeline .mjs, data-api .ts) nạp qua URL: tsc của app không kiểu-hoá chéo module.
+const ngoai = (rel: string) => import(pathToFileURL(join(import.meta.dirname, rel)).href);
 process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 const nap = async () => ({
-  fx: await import("../../pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs"),
+  fx: await ngoai("../../pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs"),
   refreshBaitGap: (await import("../../pipeline/refresh-bait-gap.mjs")).refreshBaitGap,
   deals: await import("../src/lib/deals"),
   pool: (await import("../src/lib/db")).pool,
   GET: (await import("../src/app/api/v1/deals/route")).GET,
-  poolApi: (await import("../../data-api/src/db/client.ts")).pool,
-  dealsRoute: (await import("../../data-api/src/routes/deals.ts")).dealsRoute,
+  poolApi: (await ngoai("../../data-api/src/db/client.ts")).pool as pg.Pool,
+  dealsRoute: (await ngoai("../../data-api/src/routes/deals.ts")).dealsRoute,
 });
 let m: Awaited<ReturnType<typeof nap>>;
 before(async () => {
@@ -118,8 +121,10 @@ test("CG8-AC-5 /api/v1/deals: số giảm theo thước cùng loại, không unk
       for (const id of [ac2.unknown, ac2.null, ac2.thue]) assert.ok(!ma.includes(id), `CG8-AC-5 ${id} lọt danh sách`);
       assert.match(body.meta.ruler, /phường × loại hình/);
       delete process.env.OPS_API_TOKEN;
-      const khong = await quaClient(c, () => m.GET(new Request("http://x/api/v1/deals")));
-      assert.equal(khong.status, 401, "CG8-AC-5 không token mà không 401");
+      assert.equal(await canCallOpsApi(new Request("http://x/api/v1/deals"), async () => null), false, "CG8-AC-5 không token mà cổng mở");
+      const nguon = readFileSync(join(import.meta.dirname, "../src/app/api/v1/deals/route.ts"), "utf8");
+      const cong = nguon.indexOf("canCallOpsApi(req, getSessionUser)");
+      assert.ok(cong > 0 && cong < nguon.indexOf("pool.query"), "CG8-AC-5 cổng 401 không đứng trước truy vấn");
     } finally {
       if (cu === undefined) delete process.env.OPS_API_TOKEN;
       else process.env.OPS_API_TOKEN = cu;
