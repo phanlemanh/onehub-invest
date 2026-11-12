@@ -16,7 +16,8 @@ import * as DON from "./ma-can-s06-sach.mjs";
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const LIB = join(PIPE, "lib");
 const SCRIPTS = join(PIPE, "scripts");
-const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n3";
+const DB_URL = process.env.DATABASE_URL;   // npm test cấp DB của riêng lượt (db/db-thu.sh); vắng (CI) thì ca DB bỏ qua
+const BO_DB = DB_URL ? false : "thiếu DATABASE_URL — chạy qua npm test";
 
 // ---- bản sao đột biến ----
 let dem = 0;
@@ -117,8 +118,8 @@ test("MCS-AC-3: block của nguồn thành block_raw, chữ đã chuẩn hoá; r
 
 // ---- ca DB ----
 let c;
-before(async () => { c = new pg.Client({ connectionString: DB_URL }); await c.connect(); });
-after(async () => { await c.end(); });
+before(async () => { if (!DB_URL) return; c = new pg.Client({ connectionString: DB_URL }); await c.connect(); });
+after(async () => { await c?.end(); });
 
 async function trongGiaoDich(fn) {
   await c.query("BEGIN");
@@ -192,7 +193,7 @@ async function kiemAC4(transform) {
   return loi;
 }
 
-test("MCS-AC-4: transform không phát biểu từ cờ, thay rác bằng mã thật (nhóm A), giữ rác chỉ có cờ (nhóm B), toà 20/20", { timeout: 300_000 }, async () => {
+test("MCS-AC-4: transform không phát biểu từ cờ, thay rác bằng mã thật (nhóm A), giữ rác chỉ có cờ (nhóm B), toà 20/20", { timeout: 300_000, skip: BO_DB }, async () => {
   assert.equal(TIN_AC4.length, 20);
   await trongGiaoDich(async () => assert.deepEqual(await kiemAC4(runTransformChotot), []));
   // chiều đỏ 1: bộ đọc đời cũ
@@ -274,7 +275,7 @@ async function kiemAC5(don) {
   return loi;
 }
 
-test("MCS-AC-5: lệnh dọn chạy thử chỉ đếm; --ghi rút đúng rác S06, giữ sạch và ngoài diện, phân xử lại cột", { timeout: 300_000 }, async () => {
+test("MCS-AC-5: lệnh dọn chạy thử chỉ đếm; --ghi rút đúng rác S06, giữ sạch và ngoài diện, phân xử lại cột", { timeout: 300_000, skip: BO_DB }, async () => {
   await trongGiaoDich(async () => assert.deepEqual(await kiemAC5(DON.donRac), []));
   const m1 = await napDotBien(join(SCRIPTS, "ma-can-s06-sach.mjs"), [["OR (field = 'street_number' AND btrim(value) ~ '^0+$'))", "OR (field = 'street_number'))"]]);
   await trongGiaoDich(async () => assert.ok((await kiemAC5(m1.donRac)).includes("MCS-AC-5 rút phát biểu sạch"),
@@ -284,7 +285,7 @@ test("MCS-AC-5: lệnh dọn chạy thử chỉ đếm; --ghi rút đúng rác S
     "MCS-AC-5 rút phát biểu ngoài diện — bản sao bỏ lọc nguồn/phương pháp mà thước không thấy"));
 });
 
-test("MCS-RF-1: DB chưa có field_assertions — lệnh dọn dừng có tên", { timeout: 60_000 }, async () => {
+test("MCS-RF-1: DB chưa có field_assertions — lệnh dọn dừng có tên", { timeout: 60_000, skip: BO_DB }, async () => {
   await c.query("BEGIN");
   try {
     await c.query("CREATE SCHEMA mcs_trong");
@@ -323,7 +324,7 @@ async function kiemAC6(bang) {
   return loi;
 }
 
-test("MCS-AC-6: bảng nghĩa pty_project_type theo category, tỉ lệ trên số tin của giá trị", { timeout: 120_000 }, async () => {
+test("MCS-AC-6: bảng nghĩa pty_project_type theo category, tỉ lệ trên số tin của giá trị", { timeout: 120_000, skip: BO_DB }, async () => {
   await trongGiaoDich(async () => assert.deepEqual(await kiemAC6(DON.bangPty), []));
   const m = await napDotBien(join(SCRIPTS, "ma-can-s06-sach.mjs"), [["h.ti_le = h.n ? m / h.n : 0;", "h.ti_le = m / 1000;"]]);
   await trongGiaoDich(async () => assert.ok((await kiemAC6(m.bangPty)).includes("MCS-AC-6 tỉ lệ sai mẫu số"),
