@@ -278,7 +278,7 @@ executors:
     itnl_s06_duong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_ds --chay node --test --test-concurrency=1 scripts/s06-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_sdt: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_sdt --chay node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_phat_bieu: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_pd --chay node --test --test-concurrency=1 scripts/phat-bieu-db.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
-    itnl_doi_chung: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_doi_chung: "bash db/db-thu.sh oneinvest_suite_itnl_dc --chay node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_kd070: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_kd --chay node --test --test-concurrency=1 scripts/kiem-do-sau-070.test.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_co096: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/co-096.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_dac_trung: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_dt --chay node --test --test-concurrency=1 scripts/dac-trung-s06.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
