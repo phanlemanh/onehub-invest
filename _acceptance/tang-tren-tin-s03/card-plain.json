@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Tin rao căn hộ S03 có ghi tầng («tầng 12», «tầng trung», mã căn «S1.12.08») sẽ mang tầng đó, kèm đoạn chữ làm bằng chứng, theo đúng chuẩn RESO.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ mở được chỗ lưu tầng (số tầng và dải cao/trung/thấp), chạy lại không sinh trùng, giá trị sai khuôn hay trường lạ vẫn bị từ chối."},
+    {"id": "AC-2", "p": "Sẽ giữ nguyên tầng của 747 tin S06 đang có — không tin nào mất tầng hay đổi cột khác khi chuyển sang cách lưu mới."},
+    {"id": "AC-3", "p": "Sẽ đọc đúng 28 câu mẫu viết sẵn, gồm các bẫy: «bàn giao T4/2027», «toà T21», «nhà 5 tầng», «tầng 2-3» đều không thành tầng."},
+    {"id": "AC-4", "p": "Sẽ ghi tầng đọc được thành phát biểu của bài kèm đoạn trích; chạy lại không nhân dòng, bài sửa thì phát biểu cũ được rút, hai bài lệch tầng thì báo bất đồng."},
+    {"id": "AC-5", "p": "Sẽ đo trên 300 bài thật đọc tay: tầng máy đọc ra đúng từ 95%, không mốc bàn giao nào bị đọc thành tầng, số bài bị sót in ra."},
+    {"id": "AC-6", "p": "Sẽ chạy bình thường trên máy chưa áp migration mới — chỉ bỏ qua phần tầng và báo rõ số migration còn thiếu."},
+    {"id": "AC-7", "p": "Sẽ khai đủ sáu điều kiện cho trường dải tầng (RESO không có), có dòng kiểm chất lượng «s03-floor-fill» với nhãn tiếng Việt trên trang chất lượng Ops."},
+    {"id": "AC-8", "p": "Sẽ không làm đổi số tin S03 (tầng không vào khoá gom), và khoảng 8–25% tin căn hộ S03 có tầng sau khi đọc."},
+    {"id": "AC-9", "p": "Sẽ không đưa gì mới lên cloud, không đụng route kênh chat S03, không lộ tên nguồn thật; mẫu đọc tay nằm ngoài kho."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG làm hướng căn — phần đó ở lại SV2."},
+    {"id": "OOS-2", "p": "KHÔNG thêm cột riêng cho dải tầng, không đưa dải tầng lên cloud, Invest hay API."},
+    {"id": "OOS-3", "p": "KHÔNG ghi tầng cho tin S06 mới — S06 vốn đã không có tầng cho tin vào sau 21/10, việc này để hàng riêng."},
+    {"id": "OOS-4", "p": "KHÔNG đọc tầng trong mã viết liền «S801», không tách bài nhiều căn (PL18), không gắn tầng vào căn danh bạ (PL20)."},
+    {"id": "OOS-5", "p": "KHÔNG dùng model AI để đọc tầng — chỉ luật."},
+    {"id": "OOS-6", "p": "KHÔNG áp migration 095 lên máy thu hay cloud trong hàng này — đó là lời riêng của anh."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài hàng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Giá trị đúng/sai cho cả hai trường, ở mọi cách ghi, cộng một trường lạ — mỗi dạng sai một dòng mẫu, có ca đỏ (AC-1)."},
+    {"i": 1, "p": "Dữ liệu cũ: tin S06 đang có tầng phải còn nguyên; so từng tin trước và sau trên bản chép DB (AC-1, AC-2)."},
+    {"i": 2, "p": "Các cách viết tầng: số có chữ «tầng», mã căn, dải, «T<số>», số tầng của nhà, nhiều tầng, nhiều mã căn — đo bằng 28 câu mẫu (AC-3)."},
+    {"i": 3, "p": "Độ đúng trên bài thật: 300 bài đọc tay; giới hạn: đáp án do một tác tử đọc, không người duyệt (AC-5)."},
+    {"i": 4, "p": "Các lượt chạy: lần đầu, chạy lại, bài sửa, hai bài lệch — đếm dòng phát biểu và đọc bất đồng (AC-4)."},
+    {"i": 5, "p": "Máy chưa áp và đã áp migration (AC-6)."},
+    {"i": 6, "p": "Toàn bộ S03: số tin không đổi, tỉ lệ tin có tầng (AC-8)."},
+    {"i": 7, "p": "Luật: RESO/ADR-0011, dòng kiểm chất lượng có nhãn, không lên cloud, không lộ tên nguồn (AC-7, AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Lo tin S06 mới mất tầng sau khi đổi cách lưu — đã đo: S06 vốn không ghi tầng cho tin mới (tin cuối có tầng từ 21/10), nên không có gì mất; ghi rõ vào thiết kế và phạm vi loại trừ."},
+    {"i": 1, "p": "Luật bỏ «T<số>» trần chưa có số đo — đã đo: 986 bài, mẫu 40 bài không bài nào là tầng thật; ghi lại căn cứ và in riêng số sót loại này."},
+    {"i": 2, "p": "«tang» không dấu dễ là «tăng» — đã đo: không bài nào viết vậy trước số, nên bỏ hẳn; thêm hai câu mẫu chặn."},
+    {"i": 3, "p": "Kiểm từ vựng trên DB và dòng kiểm chất lượng chưa đo trên đầu ra thật — đã thêm cả hai, dòng kiểm phải khớp tỉ lệ đo toàn bộ."},
+    {"i": 4, "p": "Câu mẫu gộp nhiều câu một dòng — đã tách thành 28 ca có mã, mỗi ca một kiểm."}
+  ]
+}
