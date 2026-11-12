@@ -164,12 +164,12 @@ canonical:
       checked_on: "2026-10-22"
     street_number:
       dd: StreetNumber
-      note: "số nhà của tin S06 (payload street_number, vắng thì streetnumber_display) — chỉ qua phát biểu, migration 061 (HD5)"
-      checked_on: "2026-10-31"
+      note: "số nhà của tin S06 (payload street_number; streetnumber_display là cờ hiển thị, không đọc — DA5; số toàn chữ số 0 bỏ) — chỉ qua phát biểu, migration 061 (HD5)"
+      checked_on: "2026-11-12"
     unit_number:
       dd: UnitNumber
-      note: "mã căn công bố của tin S06 (payload unitnumber_display, vắng thì unitnumber) — giữ nguyên chữ nguồn; migration 061"
-      checked_on: "2026-10-31"
+      note: "mã căn công bố của tin S06 (payload unitnumber; unitnumber_display là cờ hiển thị, không đọc — DA5; 0…, 1 bỏ) — giữ nguyên chữ nguồn; migration 061"
+      checked_on: "2026-11-12"
     frontage_length:
       dd: FrontageLength
       note: "mặt tiền (m) — payload width S06; numeric, CHECK > 0; migration 061"
