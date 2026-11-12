@@ -17,8 +17,8 @@ const app = await import(pathToFileURL(APP_TS).href);
 
 const NOW = new Date("2026-10-23T12:00:00Z");
 const ago = (h) => new Date(NOW.getTime() - h * 3.6e6).toISOString();
-const IDS = { S01: ["s01a", "s01b"], S02: ["s02"], S03: ["s03agent", "s03mock"], S05: ["s05hook"], S06: ["s06"], S07: ["s07"] };
-const MEASURED = ["S01", "S02", "S03", "S05", "S06"];
+const IDS = { S01: ["s01a", "s01b"], S02: ["s02"], S03: ["s03agent", "s03mock"], S05: ["s05hook"], S06: ["s06"], S07: ["s07"], S10: ["s10"], S11: ["s11"] };
+const MEASURED = ["S01", "S02", "S03", "S05", "S06", "S10", "S11"];   // S10, S11: khai-slo-s10-s11
 // Mã active không khai SLO: S07 (ma trận đòi một mã như vậy).
 const REGISTRY = [...MEASURED, "S07"].map((code) => ({ code, source_ids: IDS[code] }));
 
@@ -51,7 +51,7 @@ const MATRIX = [
   ["mọi mã tươi", Object.fromEntries(MEASURED.map((c) => [c, "fresh"]))],
   ["mọi mã quá hạn", Object.fromEntries(MEASURED.map((c) => [c, "stale"]))],
   ["mọi mã chưa có", Object.fromEntries(MEASURED.map((c) => [c, "none"]))],
-  ["trộn", { S01: "stale", S02: "fresh", S03: "none", S05: "fresh", S06: "stale" }],
+  ["trộn", { S01: "stale", S02: "fresh", S03: "none", S05: "fresh", S06: "stale", S10: "fresh", S11: "stale" }],
 ];
 
 const norm = (s) => s.replace(/\s+/g, " ").trim();

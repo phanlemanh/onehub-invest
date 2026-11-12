@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: khai-slo-s10-s11
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.check_freshness
+    expected: "exit 0; ca 'AC-5 bảng SLO đúng từng giá trị giờ' ok với S10: 192, S11: 192; ba ca GT-AC-8 ok (TIME_SOURCE bằng ma trận có S10, S11; SQL từng probe lấy max đúng cột)"
+    paths: ["scripts/lib/freshness.mjs", "scripts/check-freshness.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.freshness_parity
+    expected: "exit 0; 'SL-AC-1 hằng + SQL hai bản bằng nhau' và 'SL-AC-1 readFreshness hai bản ra cùng hàng' ok với MEASURED có S10, S11; ca đột biến SLO S03 vẫn đỏ đúng S03"
+    paths: ["scripts/lib/freshness.mjs", "app/src/lib/freshness.ts", "scripts/freshness-parity.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.check_freshness
+    expected: "exit 0; bốn ca 'GT-AC-4 S10/S11 tuổi = SLO → fresh', '= SLO+1 → stale' ok, 'GT-AC-4 ma trận biên đủ 16 ca' ok; 'KSL-AC-2 bản thu S11 mới không làm S10 tươi; S10 mới không làm S11 tươi' ok, không SKIP"
+    paths: ["scripts/lib/freshness.mjs", "scripts/check-freshness.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.check_freshness
+    expected: "exit 0; 'KSL-AC-3 chưa có bản thu → none «chưa có dữ liệu», không còn no-slo' ok, không SKIP"
+    paths: ["scripts/lib/freshness.mjs", "scripts/check-freshness.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tl_bao_cao
+    expected: "exit 0; bốn ca của 'TL-AC-2 kiểm mã từ S10 không dựa vào sức khoẻ' ok (kể cả 'S10, S11 đều tươi → vẫn qua' và chiều đỏ 'gọi tên S11/-'); ca 'ra đủ số chính, không để giao dịch mở' ok trên DB máy thu, in 'TL-AC-2 độ tươi mã từ S10: n' với n > 0"
+    paths: ["scripts/bao-cao-ngay.test.mjs", "scripts/bao-cao-ngay.mjs", "scripts/lib/freshness.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s05_slo
+    expected: "exit 0; 'S5-AC-1 bảng SLO hai bản: S05 = 96, các mã khác giữ nguyên' ok (kiểm các mã khai trong MONG); mọi ca khác của s05-slo ok"
+    paths: ["scripts/s05-slo.test.mjs", "scripts/lib/freshness.mjs", "app/src/lib/freshness.ts"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s08l_app
+    expected: "exit 0; tests/ops-facts-so-tong-hop.test.tsx và tests/slo-mot-nguon.test.tsx 0 fail"
+    paths: ["app/src/lib/freshness.ts"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
