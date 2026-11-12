@@ -7,13 +7,11 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b68006ebec18f6ea6054abd65a2c2d2bec8d2aa5
+verified_commit: d25d189a6977cc97d5b5e389c71eee31b107ca63
 human_signoff:
 ---
 
 # Evidence Report: truong-du-an-tren-tin
-
-Round 1. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -22,118 +20,133 @@ Round 1. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iteration
 | E3 | AC-3 | test | FAIL |
 | E4 | AC-4 | test | FAIL |
 | E5 | AC-5 | test | FAIL |
-| E6 | AC-6 | test | PASS |
-| E6b | AC-6 | test | PASS |
-| E6c | AC-6 | test | PASS |
+| E6 | AC-6 | test | PASS (carry-forward round 1) |
+| E6b | AC-6 | test | PASS (carry-forward round 1) |
+| E6c | AC-6 | test | PASS (carry-forward round 1) |
 
-Lệnh `cd pipeline && npm test` phủ E1 đến E5 và kết thúc thất bại ở lần chạy duy nhất (1 lần, 0 lần qua). Không có lệnh thất bại nào nằm ngoài các eval đã gán. Đuôi output là một assertion `deepStrictEqual` so hai danh sách (assertion_field, evidence_tier, registry_status, ... kèm nhãn tiếng Việt) còn lệch; chi tiết đầy đủ nằm trong run-log.
+Lệnh fail không gắn eval riêng: `cd pipeline && npm test` (mã thoát 1) phủ E1 đến E5 cùng một lần chạy. Nguyên nhân thấy trong đuôi log nằm ở `pipeline/scripts/tu-vung-du-an.test.mjs`: ca «TV39-AC-5 mappings.yaml khai đúng ba dòng và bỏ nhãn chỉ nội bộ của S08» báo còn nối toà ComplexName tại `canonical.fields.subzone_node_id.rationale`, và ca đối chứng «mỗi ô đưa giá trị cũ về → đỏ gọi tên ô» không khớp thông điệp mong đợi tại `sources.S08.fields.block_code`. Đuôi log không cho thấy ca TDT-AC-1 đến TDT-AC-5 đỏ riêng; cả E1 đến E5 bị tính fail vì lệnh chung thoát khác 0.
 
 ## Evidence
 
 - eval: E1
-  run_id: bfid0rm6q
-  baseline: red
+  run_id: ba6qhph6u
+  exit_code: 1
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-12T10:27:54Z
   output: |
-    cd pipeline && npm test thất bại; assertion deepStrictEqual trên danh sách từ vựng không khớp (đuôi log trong run-log).
+    Lệnh chung `cd pipeline && npm test` thoát khác 0 (1 lần chạy, 0 lần qua).
+    Ca đỏ thấy trong đuôi log: tu-vung-du-an.test.mjs — TV39-AC-5 (hai ca).
 
 - eval: E2
-  run_id: bfid0rm6q
-  baseline: red
+  run_id: ba6qhph6u
+  exit_code: 1
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-12T10:27:54Z
   output: |
-    cùng lần chạy cd pipeline && npm test như E1; lần chạy thất bại.
+    Lệnh chung `cd pipeline && npm test` thoát khác 0 (1 lần chạy, 0 lần qua).
+    Ca đỏ thấy trong đuôi log: tu-vung-du-an.test.mjs — TV39-AC-5 (hai ca).
 
 - eval: E3
-  run_id: bfid0rm6q
-  baseline: red
+  run_id: ba6qhph6u
+  exit_code: 1
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-12T10:27:54Z
   output: |
-    cùng lần chạy cd pipeline && npm test như E1; lần chạy thất bại.
+    Lệnh chung `cd pipeline && npm test` thoát khác 0 (1 lần chạy, 0 lần qua).
+    Ca đỏ thấy trong đuôi log: tu-vung-du-an.test.mjs — TV39-AC-5 (hai ca).
 
 - eval: E4
-  run_id: bfid0rm6q
-  baseline: red
+  run_id: ba6qhph6u
+  exit_code: 1
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-12T10:27:54Z
   output: |
-    cùng lần chạy cd pipeline && npm test như E1; lần chạy thất bại.
+    Lệnh chung `cd pipeline && npm test` thoát khác 0 (1 lần chạy, 0 lần qua).
+    Ca đỏ thấy trong đuôi log: tu-vung-du-an.test.mjs — TV39-AC-5 (hai ca).
 
 - eval: E5
-  run_id: bfid0rm6q
-  baseline: red
+  run_id: ba6qhph6u
+  exit_code: 1
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-11-12T10:27:54Z
   output: |
-    cùng lần chạy cd pipeline && npm test như E1; lần chạy thất bại.
+    Lệnh chung `cd pipeline && npm test` thoát khác 0 (1 lần chạy, 0 lần qua).
+    TV39-AC-5 còn nối toà ComplexName tại canonical.fields.subzone_node_id.rationale.
+    Ca đối chứng không khớp: còn nối toà asset_nodes tại sources.S08.fields.block_code.
 
 - eval: E6
   run_id: minted-truong-du-an-tren-tin-E6-r1
   exit_code: 0
-  baseline: red
-  verifier: config:executors.dbv_db
+  baseline: n-a
+  verifier: config:executors.test.dbv_db
   verified_at: 2026-11-12T10:27:54Z
-  output: |
-    node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the.itest.mjs
-    ℹ duration_ms 51295.957833
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6b
   run_id: minted-truong-du-an-tren-tin-E6b-r1
   exit_code: 0
-  baseline: red
-  verifier: config:executors.app_ui
+  baseline: n-a
+  verifier: config:executors.test.app_ui
   verified_at: 2026-11-12T10:27:54Z
-  output: |
-    cd app && npm test
-    ℹ duration_ms 464088.001959
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6c
   run_id: minted-truong-du-an-tren-tin-E6c-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.app
   verified_at: 2026-11-12T10:27:54Z
-  output: |
-    cd app && npx tsc --noEmit && npm run lint xanh, không in lỗi.
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-truong-du-an-tren-tin-SUITE-npm_test-r1
+  run_id: minted-truong-du-an-tren-tin-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-12T10:27:54Z
+  verified_at: 2026-11-12T11:02:25Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-truong-du-an-tren-tin-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-11-12T11:02:25Z
+
+- cmd: cd app && npm test
+  run_id: minted-truong-du-an-tren-tin-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-12T11:02:25Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-truong-du-an-tren-tin-SUITE-test_lint_rules-r1
+  run_id: minted-truong-du-an-tren-tin-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-12T10:27:54Z
+  verified_at: 2026-11-12T11:02:25Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-truong-du-an-tren-tin-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-truong-du-an-tren-tin-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-12T10:27:54Z
+  verified_at: 2026-11-12T11:02:25Z
 
 ## Known limits
 
 ## Ngoài hợp đồng
 
-Hai lỗi ngoài hợp đồng đã ghi ở review-findings.md (sổ ánh xạ area_id thiếu rationale; TDT-AC-4 phụ thuộc docker exec trên CI). Người quyết ở Gate 2.
-
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+carried tu round 1 — baseline khong do lai round nay.
+Baseline khong do: moi eval (field baseline ghi n-a vi evals.yaml khong doi tu lan baseline cuoi).
+Eval không-phân-biệt (xanh cả hai phía): không có.
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất
+none — moi eval chay 1 lan (deterministic), khong co eval nhieu lan.
 
 ## Judge
 
-Không có judge panel nào được đề xuất ở round này; mọi eval là máy (executor test), không có mục judgment. human_override: để trống.
+Không có judgment item nào trong round này; tất cả eval là executor test. Không có panel, không có human_override cần điền.
 
 ## Iterations
 
-Round 1: E1, E2, E3, E4, E5 failed — lần chạy `cd pipeline && npm test` thất bại ở assertion deepStrictEqual trên danh sách từ vựng; E6, E6b, E6c và ba lệnh suite xanh. Returned to implementation.
+Round 1: E1 đến E5 đã đo baseline; E6, E6b, E6c chạy xong với run_id minted ở trên và được carry sang round 2.
+Round 2: E1, E2, E3, E4, E5 failed — lệnh chung `cd pipeline && npm test` thoát khác 0, ca TV39-AC-5 trong tu-vung-du-an.test.mjs đỏ (còn nối toà ComplexName ở canonical.fields.subzone_node_id.rationale; ca đối chứng lệch thông điệp ở sources.S08.fields.block_code). Returned to implementation.

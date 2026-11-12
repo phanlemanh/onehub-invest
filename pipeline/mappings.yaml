@@ -169,7 +169,7 @@ canonical:
       dd: null
       rationale: >
         phân khu của tin — id nút asset_nodes loại subzone (ba nút building của Grand Park được nhận tới khi DA1 đổi loại).
-        Sáu điều kiện ADR-0011 Qđ 3: (1) tra DD 2.1 local 12/11 — ComplexName chỉ có ở resource Building, Property không có
+        Sáu điều kiện ADR-0011 Qđ 3: (1) tra DD 2.1 local 12/11 — field phân khu của RESO chỉ có ở resource Building, Property không có
         field phân khu; (2) lý do VN: phân khu là nhánh mở bán riêng trong đại dự án cùng chủ đầu tư, người mua tìm theo nó;
         (3) migration 096; (4) trigger field_assertions_vat_the_082 kiểm id là nút phân khu, chỉ resource Property; (5) khai ở
         mappings này (canonical.fields + trục assertion_field); (6) DQ: miền giá trị qua pipeline/dq-enum-vocab.mjs
