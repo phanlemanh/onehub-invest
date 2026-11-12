@@ -66,6 +66,38 @@ commit `568ed825b` nhánh `fix/zalouser-plugin-hooks` ở `~/dev/openclaw`
    mới; turn bị gián đoạn 17:59 được restart-recovery chạy xong (stopReason=stop)
    và KHÔNG gửi tin nào; watchdog 21:29/21:34 "ok".
 
+## L4d — bộ canh đếm lượt agent trên kho phiên (`_acceptance/bo-canh-dem-luot-agent/`, T3)
+
+Lỗ được đóng: L4b chỉ dò dòng timing trong log gateway; lượt agent chạy nhanh hơn ngưỡng in timing (lượt tin riêng 30/10)
+không để lại dòng nào nên L4b bỏ sót. L4d đếm `transcript_events` trong MỌI `~/.openclaw/agents/*/agent/openclaw-agent.sqlite`
+(glob, không liệt kê cứng agent), chỉ `SELECT COUNT(*) | MAX(created_at)` chỉ-đọc (`mode=ro` khi kho đang mở, `immutable=1`
+khi kho đóng sạch), không đụng cột nội dung, không in nội dung phiên. L4b vẫn chạy song song — hai nguồn độc lập.
+
+- **Gộp là có hiệu lực.** launchd `com.oneinvest.zalo-watchdog` chạy `scripts/zalo-watchdog.sh` thẳng từ checkout chính
+  (qua `~/dev/one-invest`) mỗi 5′: gộp PR + `git pull --ff-only` trong checkout chính là L4d chạy ở lượt canh kế. Không
+  build, không khởi động lại gateway, không đổi plist.
+- **Lần chạy đầu ghi mốc, không tắt.** Thư mục mốc `pipeline/logs/zalo-watchdog-agentdb.d/` — mỗi agent một tệp
+  `<agent>` chứa `count|max_created_at`, cờ `.first-done` đánh dấu đã qua lần đầu. Lần đầu (chưa có `.first-done`) chỉ ghi mốc
+  cho kho chưa có mốc; lịch sử (gồm lượt 30/10 đã xử) không tắt. Từ lần hai: số dòng hoặc `MAX(created_at)` tăng → tắt
+  gateway; kho phiên mới xuất hiện đã có dòng → tắt; kho mới rỗng `0|0` → ghi mốc; số giảm mà max không tăng → WARN, cập nhật
+  mốc (dòng chuyển sang kho lưu trữ). Đọc hỏng sau 3 lần thử, thiếu bảng, đầu ra lệch khuôn, mốc rỗng/sai khuôn → ĐỎ, tắt,
+  giữ nguyên tệp mốc (không coi là 0).
+- **Kiểm sau khi gộp** (trong 15′): `ls pipeline/logs/zalo-watchdog-agentdb.d/` có `.first-done` và một tệp cho mỗi agent
+  đang có kho phiên; mỗi tệp đúng khuôn `số|số`; dòng cuối `pipeline/logs/zalo-watchdog-run.log` là «ok»; tệp cảnh báo
+  `pipeline/logs/zalo-watchdog-alerts.log` không có dòng `L4d` mới; gateway vẫn chạy (`launchctl list | grep ai.openclaw.gateway`
+  có PID). Có dòng `L4d` ĐỎ ngay lượt đầu → xử như một lần tắt (runbook `runbook-openclaw-hook.md` mục «L4d tắt gateway»).
+- **Mốc cố ý không tự tiến sau khi tắt.** Bật lại gateway mà chưa xử mốc thì lượt canh kế tắt tiếp — luật 8: người đọc trước
+  khi bật lại. Ai xử và xử thế nào: runbook mục «L4d tắt gateway».
+- **Lùi:** hoàn tác commit L4d trên `main` bằng một PR (không sửa tay checkout chính), rồi **xoá thư mục mốc**
+  `rm -rf pipeline/logs/zalo-watchdog-agentdb.d` trong checkout chính — để nguyên thì lần bật L4d sau so với mốc cũ và tắt nhầm
+  vì mọi dòng tích luỹ giữa hai lần.
+- **L4d KHÔNG thấy:** lượt agent không ghi `transcript_events` (ví dụ lời gọi công cụ chạy trước khi ghi phiên rồi gateway
+  chết giữa chừng); kho phiên nằm ngoài `~/.openclaw/agents/*/agent/openclaw-agent.sqlite` (OpenClaw đổi đường lưu); lượt
+  xảy ra rồi bị chuyển hết sang kho lưu trữ giữa hai lượt canh mà `MAX(created_at)` không tăng; và mọi việc lượt agent đã làm
+  trong khoảng ≤5′ trước khi lượt canh kế tắt gateway — L4d tắt SAU, không chặn trước.
+- **Chưa đo:** tỉ lệ tắt nhầm trên máy thu qua nhiều ngày; thời gian đọc khi kho phiên lớn; hành vi khi OpenClaw nâng bản đổi
+  lược đồ `transcript_events` (thiết kế là ĐỎ fail-closed, chưa gặp thật); tương tác với việc dọn lưu trữ của OpenClaw.
+
 ## Vercel — prod của app/ (chốt 2026-10-23)
 
 Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.env` (chmod 600).
