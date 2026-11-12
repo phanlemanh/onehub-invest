@@ -1,0 +1,38 @@
+{
+  "feature_plain": "Máy thu có công cụ tự sao lưu mỗi ngày raw snapshot, trạng thái thu, kho ảnh và bản dump DB vào kho restic đã mã hoá ngay trên máy (đích là B2), có thử khôi phục và cảnh báo khi quá hạn — hàng này chỉ chứng minh trên dữ liệu giả, chưa gửi gì thật.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ không gửi hay khởi tạo gì khi anh chưa tạo tệp «đã cất bản khoá» — lệnh dừng trước khi gọi restic."},
+    {"id": "AC-2", "p": "Sẽ từ chối chạy khi tệp khoá B2 sai quyền, nằm trong kho, máy thiếu restic hay Keychain thiếu mật khẩu — mỗi lỗi một mã riêng, không in giá trị khoá."},
+    {"id": "AC-3", "p": "Sẽ sao lưu đủ bốn mục, chỉ bỏ tệp phiên/khoá trong trạng thái thu; raw snapshot giữ trọn kể cả tệp có tên giống «profile»."},
+    {"id": "AC-5", "p": "Sẽ thử khôi phục hằng tuần ít nhất 50 tệp cộng bản dump và so băm; kho hay bản dump bị hỏng thì báo đỏ."},
+    {"id": "AC-6", "p": "Sẽ khôi phục bản dump DB vào một DB thử và so số dòng từng bảng; lệch thì báo đỏ."},
+    {"id": "AC-7", "p": "Sẽ ghi trạng thái mỗi lượt và làm check-freshness báo đỏ khi bản mới nhất cũ hơn 36 giờ, lượt cuối lỗi, hay đã bật mà chưa chạy lần nào."},
+    {"id": "AC-9", "p": "Sẽ giữ 7 bản ngày, 4 bản tuần, 6 bản tháng; chạy lại chỉ gửi phần mới; dump lỗi thì không sao lưu nửa vời."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Sẽ KHÔNG để lọt tệp chưa mã hoá — kho không chứa chữ gốc, mật khẩu sai thì không mở được, không lệnh tải lên nào ngoài restic."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG để khoá hay mật khẩu nằm trong log, tệp trạng thái hay kho git; lệnh soát khoá chỉ in đường tệp."},
+    {"id": "AC-10", "p": "Sẽ KHÔNG đụng sync-cloud, collector, launchd, B2 thật hay tên nguồn thật trong hàng này."},
+    {"id": "OOS-1", "p": "KHÔNG gửi dữ liệu thật lên B2, không nạp lịch launchd — chờ luật 6 đã sửa, thùng và khoá của anh, và lời riêng của anh."},
+    {"id": "OOS-2", "p": "KHÔNG sửa luật 6 / ADR-0007 — giám sát lo."},
+    {"id": "OOS-3", "p": "KHÔNG hiện cảnh báo trên /ops ở hàng này — đề xuất hàng riêng."},
+    {"id": "OOS-4", "p": "KHÔNG làm Object Lock, ổ ngoài, hay xoá các bản dump cũ trên máy."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài hàng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Điều kiện chạy: thiếu xác nhận, khoá sai quyền, khoá trong kho, thiếu restic, thiếu Keychain, đủ — mỗi ca một kiểm, đếm lời gọi restic (AC-1, AC-2)."},
+    {"i": 1, "p": "Phạm vi dữ liệu: bốn mục, loại tệp phiên chỉ trong trạng thái thu, kho ảnh chưa có — so danh sách tệp trong kho với cây giả (AC-3)."},
+    {"i": 2, "p": "Bảo mật: mã hoá, khoá không lộ, không đường tải lên khác (AC-2, AC-4, AC-8, AC-10)."},
+    {"i": 3, "p": "Khôi phục tệp và DB, mỗi loại có ca phá hỏng (AC-5, AC-6)."},
+    {"i": 4, "p": "Vận hành: trạng thái, cảnh báo quá hạn, giữ phiên bản, chạy lại, lỗi giữa chừng (AC-7, AC-9)."},
+    {"i": 5, "p": "Ranh giới hàng: không dữ liệu thật, không launchd (AC-10)."},
+    {"i": 6, "p": "Chưa kiểm chứng: luật bỏ tệp phiên theo tên — tệp phiên mang tên trung tính sẽ lọt (vẫn đã mã hoá); bước code kiểm kê trạng thái thu thật bằng số đếm."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thử khôi phục bản dump không có mốc so sau khi bản tạm bị xoá — đã sửa: lượt sao lưu ghi băm bản dump, lượt thử so với đó, thiếu mốc thì báo đỏ."},
+    {"i": 1, "p": "Luật bỏ tệp phiên áp nhầm lên raw snapshot, làm mất lặng lẽ dữ liệu không thu lại được — đã sửa: chỉ áp trong trạng thái thu, có ca kiểm ngược."},
+    {"i": 2, "p": "Đã bật mà job chưa chạy lần nào thì không ai thấy — đã sửa: có tệp xác nhận mà chưa có lượt nào thì báo đỏ."},
+    {"i": 3, "p": "Chọn restic được ghi là máy tự quyết trong khi đổi công cụ sau này là dựng lại kho — đã đổi thành câu hỏi cho anh, nêu cả borg, kopia."},
+    {"i": 4, "p": "Chưa đo lệnh khởi tạo khi thiếu xác nhận — đã thêm ca."}
+  ]
+}
