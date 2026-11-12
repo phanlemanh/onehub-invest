@@ -5,9 +5,7 @@ slug: s10-bang-hang-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
-approved_by: Mạnh
-approved_at: 2026-11-12
+status: draft
 design_doc: docs/superpowers/specs/2026-11-11-s10-bang-hang-vao-danh-ba-design.md
 ---
 
@@ -31,8 +29,9 @@ Then lần hai không lỗi và lược đồ không đổi; cột của `stg_s1
 ### AC-2 — Bộ nạp ghi thật vào bảng của 089
 Given snapshot `vn__s10-bang-hang__2026-11-11T013501853` (119 `stock_table`) và DB của riêng lượt đã áp 089,
 When chạy `node pipeline/import-airbnb.mjs <snapshot>` hai lần,
-Then lần một ghi vào `stg_s10_stock` đúng tổng số dòng `bocS10` trả cho các item đủ bộ lọc của snapshot, `lech_khuon` bằng số lệch khuôn
-`bocS10` đếm, không in `CHUA-AP-089`; lần hai ghi 0 dòng; cùng snapshot trên DB chưa áp 089 thì in `CHUA-AP-089` và `stg_s10_stock` không có.
+Then lần một ghi vào `stg_s10_stock` đúng số `stock_id` khác nhau trong các dòng `bocS10` trả cho các item đủ bộ lọc của snapshot;
+mỗi `stock_id` có ở cả bảng 177 và 178 giữ dòng của bảng 177, dòng còn lại được đếm và in theo snapshot ở dòng tổng kết của bộ nạp
+(`trùng <số>`); tổng `bocS10` = số ghi + số trùng; `lech_khuon` bằng số lệch khuôn `bocS10` đếm; không in `CHUA-AP-089`; lần hai ghi 0 dòng; cùng snapshot trên DB chưa áp 089 thì in `CHUA-AP-089` và `stg_s10_stock` không có.
 
 ### AC-3 — Lệnh nối dự án S10 vào nút danh bạ
 Given dòng `stg_s10_project` dựng từ `meta` của snapshot 11/11 (có dự án nhiều dòng: hai nhãn khối hay hai phân khu), một tệp bảng nối

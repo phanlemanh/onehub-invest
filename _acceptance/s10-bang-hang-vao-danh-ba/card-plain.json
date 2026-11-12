@@ -1,11 +1,39 @@
-{"feature_plain":"Bảng hàng chủ đầu tư S10 (căn, giá, trạng thái) vào kho dữ liệu và nối được vào đúng dự án trong danh bạ, nhưng chưa lên cổng hay số liệu nào.",
-"will_do":[
- {"id":"AC-1","p":"Sẽ tạo bảng chứa bảng hàng S10, tên dự án S10 và bảng nối dự án, chạy lại không lỗi."},
- {"id":"AC-2","p":"Sẽ nạp thật bảng hàng lượt thu 11/11 vào kho, nạp lại không nhân dòng."},
- {"id":"AC-3","p":"Sẽ nối dự án S10 vào dự án của danh bạ theo bảng nối người duyệt, sai một chỗ thì không ghi gì."},
- {"id":"AC-4","p":"Sẽ đọc được quỹ căn S10 theo từng dự án của danh bạ, mỗi căn lấy bản mới nhất."},
- {"id":"AC-5","p":"Chặn bảng S10 khỏi cloud, danh sách Bán, thước giá, metrics, app và API."}],
-"wont_do":[
- {"id":"OOS-1","p":"Sẽ KHÔNG sửa bộ nạp và hợp đồng dữ liệu v11 — việc của ZCode, đã giao qua LL."},
- {"id":"OOS-2","p":"Sẽ KHÔNG nạp tay hay áp migration trên máy thu."},
- {"id":"OOS-3","p":"Sẽ KHÔNG làm trang danh bạ, trang dự án, tin sơ cấp hay S11."}]}
+{
+ "feature_plain": "Bảng hàng chủ đầu tư S10 (căn, giá, trạng thái) vào kho dữ liệu và nối được vào đúng dự án trong danh bạ, nhưng chưa lên cổng hay số liệu nào.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ tạo bảng chứa bảng hàng S10, tên dự án S10 và bảng nối dự án, chạy lại không lỗi."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ nạp thật bảng hàng lượt 11/11: mỗi căn đúng một dòng; căn có ở cả hai bảng của chủ đầu tư giữ bản bảng 177, bản còn lại được đếm và in ra; nạp lại không nhân dòng. (ĐỔI ở lượt này)"
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ nối dự án S10 vào dự án của danh bạ theo bảng nối người duyệt, sai một chỗ thì không ghi gì."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ đọc được quỹ căn S10 theo từng dự án của danh bạ, mỗi căn lấy bản mới nhất."
+  },
+  {
+   "id": "AC-5",
+   "p": "Chặn bảng S10 khỏi cloud, danh sách Bán, thước giá, metrics, app và API."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "OOS-1",
+   "p": "Sẽ KHÔNG sửa bộ nạp và hợp đồng dữ liệu v11 — việc của ZCode, đã giao qua LL."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Sẽ KHÔNG nạp tay hay áp migration trên máy thu."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Sẽ KHÔNG làm trang danh bạ, trang dự án, tin sơ cấp hay S11."
+  }
+ ]
+}

@@ -14,7 +14,7 @@ evals:
     cmd: config:executors.test.s10_db
     long_running: 45
     paths: ["db/migrations/089_s10_bang_hang.sql", "pipeline/import-airbnb.mjs", "pipeline/lib/s10-bang-hang.mjs", "pipeline/scripts/transform-s10.itest.mjs"]
-    expected: "Ca «S10-AC-2» xanh trên snapshot vn__s10-bang-hang__2026-11-11T013501853: số dòng stg_s10_stock của snapshot = Σ bocS10(item).dong.length trên item đủ duBoLoc (tính độc lập trong test từ tệp snapshot); số dòng lech_khuon = Σ lechKhuon; stdout không có CHUA-AP-089; lần nạp hai: số dòng không đổi. Chiều đỏ cùng snapshot: DB chưa áp 089 → stdout có CHUA-AP-089 và to_regclass('stg_s10_stock') IS NULL, assert ghim «S10-AC-2». Snapshot vắng → ca đỏ nêu đường, không bỏ qua."
+    expected: "Ca «S10-AC-2» xanh trên snapshot vn__s10-bang-hang__2026-11-11T013501853: tính độc lập trong test từ tệp snapshot trên item đủ duBoLoc: T = Σ bocS10(item).dong.length, K = số stock_id khác nhau mỗi snapshot (cộng qua lượt), C = số dòng trùng chéo 177↔178; số dòng stg_s10_stock của lượt = K; mọi stock_id trùng chéo có block_type = '177' trong stg; tổng «trùng <số>» tính ở lần nạp một; tổng số «trùng <số>» bộ nạp in qua các snapshot = C và T = K + C (lượt 11/11 đo 12/11: 112.641 = 109.087 + 3.554); số dòng lech_khuon = Σ lechKhuon; stdout không có CHUA-AP-089; lần nạp hai: số dòng không đổi. Chiều đỏ của đẳng thức: dòng tổng kết thiếu «trùng <số>» hoặc tổng in ≠ C → assert ghim «S10-AC-2» nêu hai số. Chiều đỏ cùng snapshot: DB chưa áp 089 → stdout có CHUA-AP-089 và to_regclass('stg_s10_stock') IS NULL, assert ghim «S10-AC-2». Snapshot vắng → ca đỏ nêu đường, không bỏ qua."
   - id: E3
     criterion: AC-3
     executor: test
