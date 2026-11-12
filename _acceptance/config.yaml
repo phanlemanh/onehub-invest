@@ -274,6 +274,14 @@ executors:
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    itnl_giu_rb: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_rb --chay node --test --test-concurrency=1 scripts/nap-lai-giu-rang-buoc.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_s06_duong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_ds --chay node --test --test-concurrency=1 scripts/s06-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_sdt: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_sdt --chay node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_phat_bieu: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_pd --chay node --test --test-concurrency=1 scripts/phat-bieu-db.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_tg: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_tg --chay node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_nap_lai: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_nd --chay node --test --test-concurrency=1 scripts/nap-lai-db.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_doi_chung: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_giu: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/giu.mjs"   # itest-nap-lai-migration-cu-sau-095
     dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
     dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
