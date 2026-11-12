@@ -188,10 +188,17 @@ nêu đường + mã `S0x`, không bao giờ in tên.
   áp `change_request_applies` (một lệnh tối đa một lần), báo kết quả ngay qua `push-ops-facts.mjs --chi-lenh` → `ingest`.
   Cloud không gọi vào máy thu.
 - **Phanh**: tạo tệp `~/.oneinvest/ops-apply.dung` → bộ áp thoát 0, không kéo, không áp. Chỉ người ngồi máy thu tạo được.
-- **Chưa chạy** tới khi đủ ba bước sau gộp, mỗi bước một lời của Mạnh: (1) áp 091 lên DB máy thu (sao lưu trước) rồi lên
-  Supabase; (2) cấp token: `DATABASE_URL=<cloud> node scripts/cap-token-may.mjs --name may-thu-1 --scope ops:pull`, chép token
-  in ra vào `cloud.env` của máy thu; (3) nạp `pipeline/cron/com.oneinvest.ops-apply.plist` (thay `__ROOT__`, nhịp 60″).
-- Thu hồi một máy: `node scripts/cap-token-may.mjs --thu-hoi <tên>` trên DB cloud.
+- Ba bước triển khai, mỗi bước một lời của Mạnh: (1) áp 091 lên DB máy thu (sao lưu trước) rồi lên Supabase; (2) cấp
+  token từ máy thu qua Management API, token ghi thẳng vào `cloud.env`, không in ra:
+  `node scripts/cap-token-may.mjs --name may-thu-1 --scope ops:pull --qua-mgmt --ghi-cloud-env` (`cloud.env` đã có
+  `OPS_MACHINE_TOKEN` thì từ chối; tên đang có token hiệu lực thì từ chối); (3) cài plist, rồi nạp vào launchd.
+- Cài plist (nhịp 60″) — chạy ở gốc kho; node neo tuyệt đối vì PATH của launchd chỉ có `/usr/bin:/bin:/usr/sbin:/sbin`.
+  Đổi chỗ đặt node (không phải đổi bản qua symlink `~/.local/bin/node`) thì chạy lại dòng này:
+
+  sed -e "s#__NODE__#$(command -v node)#g" -e "s#__ROOT__#$(pwd)#g" pipeline/cron/com.oneinvest.ops-apply.plist > ~/Library/LaunchAgents/com.oneinvest.ops-apply.plist
+
+  Nạp là bước riêng: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.oneinvest.ops-apply.plist`.
+- Thu hồi một máy: `node scripts/cap-token-may.mjs --thu-hoi <tên> --qua-mgmt` (từ máy thu) hoặc với `DATABASE_URL` trỏ DB.
 
 ## Số tổng hợp Ops lên cloud (chốt 2026-10-24, `_acceptance/ops-facts-so-tong-hop/`, ADR-0014)
 
