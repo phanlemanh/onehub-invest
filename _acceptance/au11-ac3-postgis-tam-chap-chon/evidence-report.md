@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 17aaae51b7c9a2ef0b70d971af2d09fad34f07d7
-human_signoff:
+human_signoff: Mạnh 2026-11-12
 ---
 
 # Evidence Report: au11-ac3-postgis-tam-chap-chon

@@ -5,7 +5,7 @@ slug: au11-ac3-postgis-tam-chap-chon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-12-au11-ac3-postgis-tam-chap-chon-design.md
 veto_state: mo
 veto_opened_at: 2026-11-12T02:12:00Z
