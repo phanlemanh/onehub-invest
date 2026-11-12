@@ -11,7 +11,9 @@ import pg from "pg";
 import { luocDoRieng, neuLaBang } from "../lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../lib/nap-060.mjs";
 
-const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+// Không mặc định về DB dùng chung: thiếu DATABASE_URL thì dừng (lượt chấm, npm test và can-gia-cung-loai-db.sh đều đặt DB thử).
+const DB_URL = process.env.DATABASE_URL;
+if (!DB_URL) throw new Error("can-gia-cung-loai-fixture: thiếu DATABASE_URL — chạy qua can-gia-cung-loai-db.sh itest hoặc npm test (DB thử)");
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const SQL_034 = readFileSync(join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8");
 const BANG = ["sale_offer_records", "registry_aliases", "parties", "ref_lookup", "properties", "property_offers", "ops_audit", "areas", "stg_zalo_posts"];

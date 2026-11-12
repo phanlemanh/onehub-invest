@@ -14,7 +14,8 @@ import { canCallOpsApi } from "../src/lib/ops-access";
 
 // Tệp ngoài app (pipeline .mjs, data-api .ts) nạp qua URL: tsc của app không kiểu-hoá chéo module.
 const ngoai = (rel: string) => import(pathToFileURL(join(import.meta.dirname, rel)).href);
-process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+// Không mặc định về DB dùng chung: thiếu DATABASE_URL thì dừng (npm test và can-gia-cung-loai-db.sh đều đặt DB thử).
+if (!process.env.DATABASE_URL) throw new Error("can-gia-cung-loai-db.test: thiếu DATABASE_URL — chạy qua npm test hoặc can-gia-cung-loai-db.sh itest");
 
 const nap = async () => ({
   fx: await ngoai("../../pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs"),
