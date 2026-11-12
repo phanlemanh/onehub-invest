@@ -59,7 +59,8 @@ export function ngayDmy(s) {
 
 /**
  * Bóc mọi `tr.p_row` của một item `stock_table`.
- * @returns {{ dong: object[], lechKhuon: number, khongStockId: number, khongProjectId: number }}
+ * @returns {{ dong: object[], lechKhuon: number, khongStockId: number, khongProjectId: number, soDongDoc: number }}
+ * 1211-32(3): soDongDoc = tổng tr.p_row đọc được (đối soát khép: soDongDoc = dong + khongStockId + khongProjectId + lechKhuon).
  */
 export function bocS10(item) {
   const html = String(item?.payload?.html ?? "");
@@ -67,8 +68,9 @@ export function bocS10(item) {
   const projectId = Number(item?.meta?.request?.project_id);
   const k = KHUON_S10[bt];
   const dong = [];
-  let lechKhuon = 0, khongStockId = 0, khongProjectId = 0;
+  let lechKhuon = 0, khongStockId = 0, khongProjectId = 0, soDongDoc = 0;
   for (const m of html.matchAll(RE_DONG)) {
+    soDongDoc++;
     const raw = m[0];
     const stock = raw.match(/[?&]stock_id=(\d+)/);
     if (!stock) { khongStockId++; continue; }
@@ -100,5 +102,5 @@ export function bocS10(item) {
     }
     dong.push(d);
   }
-  return { dong, lechKhuon, khongStockId };
+  return { dong, lechKhuon, khongStockId, khongProjectId, soDongDoc };
 }

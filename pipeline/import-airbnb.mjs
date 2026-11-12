@@ -283,7 +283,7 @@ async function main() {
     console.log(`CHUA-AP-089: bảng ${STG_S10} chưa có (migration 089 chưa áp) — snapshot S10 bỏ qua, KHÔNG đánh dấu đã nạp`);
   }
   let s10Dong = 0, s10Bo = 0, s10ThieuLoc = 0, s10Lech = 0, s10Cay = 0, s10ProjectDong = 0, s10ProjectBo = 0;
-  let s10Boc = 0; // 1211-24: Σ tr.p_row bóc được (đối soát)
+  let s10Boc = 0, s10KhongStock = 0, s10KhongPJ = 0;
   try {
     await client.query("BEGIN");
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
@@ -341,8 +341,8 @@ async function main() {
         if (!duBoLoc(it)) { s10ThieuLoc += soDongTrang; continue; } // 1211-26: đếm DÒNG bỏ
         const r = bocS10(it);
         s10Lech += r.lechKhuon;
-        if (r.khongStockId) console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`);
-        if (r.khongProjectId) console.warn(`S10: ${r.khongProjectId} dòng không có project_id (bỏ — fail-closed 1211-31b): ${it.sourceId} ${manifest.snapshotId}`);
+        if (r.khongStockId) { s10KhongStock += r.khongStockId; console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`); }
+        if (r.khongProjectId) { s10KhongPJ += r.khongProjectId; console.warn(`S10: ${r.khongProjectId} dòng không có project_id (bỏ — fail-closed 1211-31b): ${it.sourceId} ${manifest.snapshotId}`); }
         s10Dong += await napS10(client, r.dong, manifest.snapshotId, manifest.finishedAt, it.payload?.cond ?? null);
         // 1111-17: dòng danh bạ dự án từ meta của chính item (snapshot 11/11 đã phát đủ ba trường)
         if (!coBangS10ProjectDb) {
@@ -503,7 +503,7 @@ async function main() {
     console.log(
       `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
       + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} dòng thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn, trùng ${s10TrungLan})`
-      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + thiếu bộ lọc ${s10ThieuLoc} (dòng)` : ""),
+      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + không stock_id ${s10KhongStock} + không project_id ${s10KhongPJ} + thiếu bộ lọc ${s10ThieuLoc} (dòng)` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
