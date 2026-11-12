@@ -829,7 +829,7 @@ _Avoid_: lịch sử lệnh, nhật ký lệnh
 
 **Thao tác**: Tiêu đề cột hành động của một bảng Ops — chứa nút cho từng hàng (vd Tạm dừng, Bật lại); chỉ hiện với vai được làm.
 - Code: cột `thao-tac` · RESO: —
-_Avoid_: Actions, Hành động
+_Avoid_: Actions
 
 **Token máy**: Chìa riêng của một máy thu, đặt theo tên (vd `may-thu-1`), để máy ấy kéo lệnh đã duyệt và gửi kết quả lên máy chủ. Mỗi token mang quyền hẹp (`ops:pull`), thu hồi riêng được, máy chủ chỉ giữ bản băm. Khác mật khẩu chung của máy nạp số: mật khẩu chung bị từ chối ở mọi cửa của đường lệnh (ADR-0015, TV4).
 - Code: `machine_token (machine_tokens: name, token_hash, scopes, revoked_at, last_used_at)` · RESO: —
