@@ -19,8 +19,8 @@ const { SnapshotWriter } = await import(new URL("../../collector/src/core/storag
 // trước khi bất kỳ kênh nào bắt đầu ghi seller; hai mảng phải đồng bộ với nhau
 // và với dòng «bên import phải chấp nhận» trong DATA-CONTRACT.md.
 test("schemaVersion: cả hai importer chấp nhận {1..5} — v4 và v5 cùng lúc", () => {
-  assert.deepEqual(S01_V, [1, 2, 3, 4, 5, 6, 7, 8]); // v8: nguồn S10/S11 (DATA-CONTRACT)
-  assert.deepEqual(S06_V, [1, 2, 3, 4, 5, 6, 7, 8], "hai importer không được lệch nhau");
+  assert.deepEqual(S01_V, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]); // v9 S07 · v10 Drive S03 · v11 S10 meta dự án
+  assert.deepEqual(S06_V, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "hai importer không được lệch nhau");
   assert.ok(S01_V.includes(4), "v4 vẫn phải nạp — kênh chưa ghi seller giữ version cũ");
   assert.ok(S01_V.includes(5) && S06_V.includes(5), "v5 phải nạp ngay từ vòng này");
 });
@@ -71,16 +71,17 @@ test("readSnapshot: manifest v5 + item có seller đọc qua (giữ seller trong
   }
 });
 
-// link-nguoi-ban-s03: v6/v7 ĐÃ khai; v8 (nguồn S10/S11, 10/11) cũng đã khai — đổi ca: v9 chưa khai bị từ chối rõ ràng.
+// link-nguoi-ban-s03: v6/v7 ĐÃ khai; v8 (nguồn S10/S11) — v9 s07-danh-muc · v10 s03-tu-lieu-drive ·
+// v11 S10 meta dự án đều ĐÃ khai (1211-29). Ca should-NOT-fire đổi sang phiên bản THẬT SỰ chưa khai (v12).
 // U1(1): fixture bằng SnapshotWriter (manifest ĐỦ trường) rồi chỉ đổi
-// schemaVersion=9 → GHIM ĐÚNG thông điệp từ chối, không phụ thuộc nhánh khác.
-test("readSnapshot: v9 chưa khai bị từ chối rõ ràng", async () => {
-  assert.ok(S06_V.includes(6) && S06_V.includes(7) && S06_V.includes(8), "v6/v7/v8 phải nằm trong SUPPORTED");
+// schemaVersion=12 → GHIM ĐÚNG thông điệp từ chối, không phụ thuộc nhánh khác.
+test("readSnapshot: v12 chưa khai bị từ chối rõ ràng", async () => {
+  assert.ok(S06_V.includes(6) && S06_V.includes(7) && S06_V.includes(8) && S06_V.includes(11), "v6/v7/v8/v11 phải nằm trong SUPPORTED");
   const dir = await dirSnapshot([{
     sourceId: "1", kind: "listing", fetchedAt: "2026-11-02T08:00:00Z", payload: PAYLOAD_V5,
-  }], { schemaVersion: 9 });
+  }], { schemaVersion: 12 });
   try {
-    await assert.rejects(() => readSnapshot(dir), /schemaVersion 9 chưa hỗ trợ/);
+    await assert.rejects(() => readSnapshot(dir), /schemaVersion 12 chưa hỗ trợ/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
