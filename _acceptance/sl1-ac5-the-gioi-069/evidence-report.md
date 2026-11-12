@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0ef73dec54f8c0c40adac4abd959297396c36fa6
+verified_commit: 35a0e3cf901beda2cea73bfa0c65e759b2f1679e
 human_signoff: Mạnh 2026-11-12
 ---
 
@@ -111,3 +111,7 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 ## Iterations
 
 Round 1: E1, E2, E3, E4 đều đạt, không có eval nào hỏng. Không có judgment item (mọi eval là test hoặc script, không khai judge panel).
+
+### Re-pin lần 1 — 2026-11-12, do main đổi pipeline/lib/assert.mjs, nap-061.mjs (#422)
+run_id: repin-20261112T083627Z-18971
+sha: 35a0e3cf901beda2cea73bfa0c65e759b2f1679e · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng
