@@ -1,5 +1,5 @@
 // can-gia-cung-loai-db.test.tsx — hồ sơ can-gia-tot-cung-loai (CG8), ca xuyên lớp AC-3 (/ops/deals), AC-5 (/api/v1/deals của app),
-// AC-6 (/v1/deals của data-api). Fixture và giao dịch dùng chung với itest pipeline (can-gia-cung-loai-fixture.mjs: BEGIN…ROLLBACK,
+// AC-6 (/v1/deals của data-api). Fixture và giao dịch dùng chung với itest pipeline (can-gia-cung-loai-fixture.itest.mjs: BEGIN…ROLLBACK,
 // lược đồ riêng). Hai route đọc qua `pool` dùng chung → trong ca, pool.query trỏ vào client của giao dịch (cùng lược đồ riêng);
 // thước kỳ vọng tính lại độc lập bằng SQL viết riêng trên v_ruler_p2, không dùng mã của hàng.
 // Chạy: node --experimental-test-module-mocks --import tsx --test tests/can-gia-cung-loai-db.test.tsx (next/headers giả: ngoài
@@ -14,7 +14,7 @@ mock.module("next/headers", {
 process.env.DATABASE_URL ??= "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 const nap = async () => ({
-  fx: await import("../../pipeline/scripts/can-gia-cung-loai-fixture.mjs"),
+  fx: await import("../../pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs"),
   refreshBaitGap: (await import("../../pipeline/refresh-bait-gap.mjs")).refreshBaitGap,
   deals: await import("../src/lib/deals"),
   pool: (await import("../src/lib/db")).pool,

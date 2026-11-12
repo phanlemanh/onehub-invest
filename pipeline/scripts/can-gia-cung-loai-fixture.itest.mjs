@@ -1,4 +1,4 @@
-// can-gia-cung-loai-fixture.mjs — fixture dùng chung của itest pipeline và test xuyên lớp app/data-api; hồ sơ can-gia-tot-cung-loai (CG8): số giảm của Căn giá tốt so với thước cùng phường × loại
+// can-gia-cung-loai-fixture.itest.mjs — fixture dùng chung của itest pipeline và test xuyên lớp app/data-api; hồ sơ can-gia-tot-cung-loai (CG8): số giảm của Căn giá tốt so với thước cùng phường × loại
 // hình (v_ruler_p2), không lùi về thước cả phường (Hỏi-2). BEGIN…ROLLBACK trên DATABASE_URL (lượt chấm: DB thử
 // oneinvest_u1_cg8); mỗi ca dựng lược đồ riêng (bản rỗng các bảng, view tin 044, thước 034, sellers 060) — không chạm dữ
 // liệu dùng chung, không để lại dòng nào. Số là số bịa. Ma trận viết trước; một assert mỗi ô; có ca đột biến đỏ.

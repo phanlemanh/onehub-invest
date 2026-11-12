@@ -4,9 +4,10 @@
 //   node scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main [--root <kho>]
 //   node scripts/can-gia-cung-loai-ranh-gioi.mjs --doi-chung   cây tạm có tệp giả dưới db/migrations → migration_doi=1, thoát 1
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
@@ -19,7 +20,9 @@ const HO_SO = /^(_acceptance\/|LO-TRINH\.html$|PRODUCT-MAP\.md$)/;
 
 /** Đếm thuần trên danh sách tệp đổi + dòng thêm theo tệp. */
 export function dem({ tep, themTheoTep, tenNguon }) {
-  const coTen = (dong) => dong.filter((l) => tenNguon.some((t) => l.toLowerCase().includes(t))).length;
+  // Tên đứng riêng: không tính khi dính chữ, số hay «_» hai bên (tên bảng như stg_<nguồn>_posts là định danh có sẵn, không lộ).
+  const mau = tenNguon.map((t) => new RegExp(`(?<![a-z0-9_])${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z0-9_])`));
+  const coTen = (dong) => dong.filter((l) => mau.some((m) => m.test(l.toLowerCase()))).length;
   const theoNhom = (hoSo) => Object.entries(themTheoTep).filter(([f]) => HO_SO.test(f) === hoSo).flatMap(([, d]) => d);
   return {
     migration_doi: tep.filter((f) => f.startsWith("db/migrations/")).length,
@@ -91,4 +94,5 @@ async function main() {
   process.exitCode = inVaThoat(dem({ ...docDiff(root, mb), tenNguon }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) await main();

@@ -3,9 +3,10 @@
 // In băm md5(pg_get_viewdef) hai phía và số dòng thước theo loại trên cloud; lệch, vắng view, thiếu loại → thoát 1 nêu phía.
 //   node scripts/can-gia-cung-loai-cloud.mjs              so thật
 //   node scripts/can-gia-cung-loai-cloud.mjs --doi-chung  đối chứng đỏ: so băm cloud với định nghĩa máy thu sửa một ký tự
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
@@ -57,4 +58,5 @@ async function main() {
   process.exitCode = loi.length ? 1 : 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) await main();

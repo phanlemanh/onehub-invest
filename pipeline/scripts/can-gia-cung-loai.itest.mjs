@@ -1,11 +1,11 @@
 // can-gia-cung-loai.itest.mjs — hồ sơ can-gia-tot-cung-loai (CG8): số giảm của Căn giá tốt so với thước cùng phường × loại
-// hình (v_ruler_p2), không lùi về thước cả phường (Hỏi-2). Fixture và giao dịch ở can-gia-cung-loai-fixture.mjs (BEGIN…ROLLBACK,
+// hình (v_ruler_p2), không lùi về thước cả phường (Hỏi-2). Fixture và giao dịch ở can-gia-cung-loai-fixture.itest.mjs (BEGIN…ROLLBACK,
 // lược đồ riêng — không chạm dữ liệu dùng chung). Ma trận viết trước; một assert mỗi ô; có ca đột biến đỏ.
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
-import { THUOC_A, dungFixture, gapCua, withTx } from "./can-gia-cung-loai-fixture.mjs";
+import { THUOC_A, dungFixture, gapCua, withTx } from "./can-gia-cung-loai-fixture.itest.mjs";
 
 const gapTheoMa = async (c, ids) => Object.fromEntries((await c.query(
   `SELECT offer_id, bait_gap_pct FROM sale_offer_records WHERE offer_id = ANY($1)`, [ids])).rows
