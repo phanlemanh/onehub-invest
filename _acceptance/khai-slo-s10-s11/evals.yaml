@@ -50,3 +50,10 @@ evals:
     expected: "exit 0; tests/ops-facts-so-tong-hop.test.tsx và tests/slo-mot-nguon.test.tsx 0 fail"
     paths: ["app/src/lib/freshness.ts"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.freshness_parity
+    expected: "exit 0; hai ca của 'KSL-AC-6 tóm tắt /ops tính S10, S11 vào mẫu số' ok: S10, S11 none → 'n/(n+2) nguồn đạt SLO'; S10, S11 fresh → '(n+2)/(n+2) nguồn đạt SLO'"
+    paths: ["app/src/lib/freshness.ts", "scripts/freshness-parity.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

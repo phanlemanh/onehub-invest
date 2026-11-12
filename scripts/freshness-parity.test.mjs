@@ -88,6 +88,20 @@ async function parityProblems(a, b) {
 const tmps = [];
 after(() => tmps.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
+describe("KSL-AC-6 tóm tắt /ops tính S10, S11 vào mẫu số", () => {
+  const cacMaKhac = MEASURED.filter((c) => c !== "S10" && c !== "S11");
+  const tom = async (s1011) => {
+    const states = { ...Object.fromEntries(cacMaKhac.map((c) => [c, "fresh"])), S10: s1011, S11: s1011 };
+    return app.sloSummaryText(app.summarizeFreshness(await app.readFreshness(fakeClient(states), { now: NOW })));
+  };
+  test("S10, S11 chưa có dữ liệu → đếm vào tổng, không vào số đạt", async () => {
+    assert.equal(await tom("none"), `${cacMaKhac.length}/${cacMaKhac.length + 2} nguồn đạt SLO`);
+  });
+  test("S10, S11 tươi → đủ", async () => {
+    assert.equal(await tom("fresh"), `${cacMaKhac.length + 2}/${cacMaKhac.length + 2} nguồn đạt SLO`);
+  });
+});
+
 describe("định nghĩa độ tươi app ↔ CLI (AU6)", () => {
   test("SL-AC-1 hằng + SQL hai bản bằng nhau", async () => {
     assert.deepEqual(app.SLO_HOURS, cli.SLO_HOURS);
