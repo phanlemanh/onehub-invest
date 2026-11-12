@@ -90,6 +90,31 @@
         "DS1"
       ],
       "that": "2026-11-03"
+    },
+    {
+      "ma": "DAM1",
+      "ten": "Tin rao mang dự án và gắn được vào danh bạ; trang dự án trên Invest hiện thông tin có nguồn",
+      "ten_ngan": "Định vị căn và thông tin dự án",
+      "loai": "phat-hanh",
+      "dot": "danh-ba-du-an-0811",
+      "hang": [
+        "DA2",
+        "DA5",
+        "DA6",
+        "DA30",
+        "DA29",
+        "DA3",
+        "DA15",
+        "DV2",
+        "DV3",
+        "DA9",
+        "DA14",
+        "DAZ1",
+        "DA10",
+        "PL20",
+        "DA13"
+      ],
+      "ghi_chu": "Mạnh duyệt dựng mốc 12/11 («Làm cả hai»). Thứ tự hàng là thứ tự làm. Số đo 12/11: 0 tin đang mang dự án; danh bạ có 20 dự án, 69 toà, 1.736 căn. PL20 cũng thuộc mốc GCM1 và hiện dưới GCM1 (mốc đứng trước trong tệp); PL20 còn chờ hai điều kiện: tên toà từ S09 và sổ nhóm → dự án (đã ghi 19/30 dòng). Việc cần xong trước nằm ngoài mốc: DA4, GCQ2, PX1, DV1, DB1b, DA7, PL13, PL15, DB1, DN4, DS2, DA16, DA17, DA19, DA20."
     }
   ],
   "hang": [
