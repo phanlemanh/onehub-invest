@@ -5,7 +5,9 @@ slug: can-gia-tot-cung-loai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-can-gia-tot-cung-loai-design.md
 ---
 
