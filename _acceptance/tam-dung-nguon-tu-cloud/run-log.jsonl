@@ -23,3 +23,7 @@
 {"ts":"2026-11-12T13:34:11Z","sha":"6104a7720c39fde1817a60c16822435e082450eb","round":1,"kind":"baseline","evals_hash":"fb57a4586b69f7d2f3e818dbac9093f99fc744d479e46a5dcb2535924137052e","non_discriminating":[]}
 {"ts":"2026-11-12T13:34:11Z","sha":"6104a7720c39fde1817a60c16822435e082450eb","round":1,"kind":"round-tally","verdict":"PASS","expected":11,"returned":11,"blocked":0}
 {"ts":"2026-11-12T13:34:11Z","sha":"6104a7720c39fde1817a60c16822435e082450eb","round":1,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":17}
+{"kind":"thuoc-vat","ts":"2026-11-12T14:15:31Z","round":1,"san":"0a2dcbb9184096db75b706169590168f8dd39c81","vat":[11,2],"thuoc":[0,0],"ho_so":[284,4],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"kind":"thuoc-vat","ts":"2026-11-12T14:15:36Z","round":1,"san":"0a2dcbb9184096db75b706169590168f8dd39c81","vat":[11,2],"thuoc":[0,0],"ho_so":[284,4],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"kind":"cay-doi","ts":"2026-11-12T14:15:36Z","round":1,"luot_ts":"2026-11-12T13:34:11Z","sha":"6104a7720c39fde1817a60c16822435e082450eb","tep":[{"tep":"app/next-env.d.ts","doi":"đổi nội dung","truoc":"1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"}],"commit":[],"moi":[]}
+{"kind":"ghi-boi-tac-tu-cham","ts":"2026-11-12T14:15:36Z","round":1,"luot_ts":"2026-11-12T13:34:11Z","sha":"6104a7720c39fde1817a60c16822435e082450eb","tac_tu":[],"tep_khong_ro":["app/next-env.d.ts"]}
