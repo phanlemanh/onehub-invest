@@ -94,6 +94,7 @@ executors:
     tir_be_mat: "node --test scripts/check-api-surface.test.mjs scripts/check-mcp-tools.test.mjs"   # tin-rao-tren-invest E6 — sổ bề mặt: khoá publicOffers, đối chứng route khác
     svc_sync_cu: "node --test pipeline/sync-cloud.test.mjs pipeline/scripts/sync-cloud-pii.test.mjs pipeline/scripts/soat-tang-a.test.mjs"   # sellers-view-len-cloud E5 — hồi quy sync
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
+    tl_bao_cao: "node --test scripts/bao-cao-ngay.test.mjs"   # thuoc-lech-ma-nguon-va-lich-s05 AC-1 (thuần), AC-2 (DB máy thu chỉ đọc)
     kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
@@ -159,6 +160,8 @@ executors:
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
     so_lenh_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs"   # so-lenh-bo-ap (TV4): hàm kiểm lệnh, migration 091, bộ áp ops-apply trên DB thử
     so_lenh_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx"   # so-lenh-bo-ap (TV4): route lệnh, kéo bằng token máy, kết quả qua ingest, trên DB thử
+    ops_apply_plist: "cd pipeline && node --test scripts/ops-apply-plist.test.mjs"   # so-lenh-sua-sau-tv4: plist ops-apply neo node tuyệt đối, dòng cài trong runtime-map chạy được dưới PATH của launchd
+    cap_token_may: "node --test scripts/cap-token-may.test.mjs"   # so-lenh-sua-sau-tv4: cấp token máy qua Management API (mgmtExec giả), tự ghi cloud.env tạm
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
     cong_tac_ghim: "node --test scripts/cong-tac-ghim.itest.mjs"   # cong-tac-test-ghim-ban-cu: đối chứng ghim, cần DB local :5433
     quyen_bon_vai: "cd app && node --import tsx --test tests/quyen-bon-vai.test.tsx"   # quyen-bon-vai-mot-cho (TV1): bảng quyền bốn vai + audit cùng transaction, cần DB local :5433
@@ -274,6 +277,8 @@ executors:
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
+    dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
     pl34_test_khac: "node --test scripts/nap-argmax.test.mjs && cd pipeline && node --test scripts/media-wiring.test.mjs scripts/importer-bo-qua-du-lieu-thu.test.mjs"   # pl34-lich-dem-sau-buoc AC-4 — ba test còn lại nhắc zalo-import-daily
     df4_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_df4that --chay node scripts/do-nhanh-bai-s03.mjs"   # bai-nhan-tru-bai-chi-anh E10 — số thật trên DB của riêng lượt, so bản merge-base
@@ -627,6 +632,10 @@ executors:
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
     kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
+    tl_lich_s05: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/lich-s05.mjs"   # thuoc-lech AC-3 (thay E11, E12 của khoa-nap-s05-paused): cửa sổ mặc định theo quan hệ
+    tl_lich_s05_tu_kiem: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/lich-s05.mjs --tu-kiem"   # thuoc-lech AC-3 chiều đỏ
+    tl_thay_e11_e12: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/thay-e11-e12.mjs"   # thuoc-lech AC-4
+    tl_ma_bao_cao: "node _acceptance/thuoc-lech-ma-nguon-va-lich-s05/probes/ma-bao-cao.mjs"   # thuoc-lech AC-5 (kèm tự kiểm)
     au11_cho_tinh: "node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs"   # au11-ac3-postgis-tam-chap-chon AC-4 — giữ thông điệp ca cũ, không chạm ci-db-init, hết pg_isready
     au11_duoi_tai: "node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs"   # au11-ac3-postgis-tam-chap-chon AC-3 — bản cũ đỏ dưới tải rồi bản mới 10/10 xanh
     # watchdog-l4b-history (2410-15, T3) — bản chép bộ canh + HOME giả + stub launchctl/pkill/pgrep/osascript/curl/sleep (luật 8)
