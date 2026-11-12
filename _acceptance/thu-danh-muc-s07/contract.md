@@ -5,7 +5,7 @@ slug: thu-danh-muc-s07
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, db]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-thu-danh-muc-s07-design.md
@@ -126,3 +126,5 @@ của công cụ tích hợp dữ liệu.
   `mask-source-names`.
 - `attributes` lưu thành mảng các cặp `{label, value}` để giữ thứ tự nguồn (đối tượng jsonb không giữ thứ tự khoá).
 - Đếm trên 12 snapshot hiện có (11/11): 38 trang danh sách và 7 trang dự án có cờ `false`, 2 sitemap thiếu cờ, 0 item cờ `true`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: giá trị từng cột của dự án S07 mới được kiểm trên trang mẫu tự dựng; trên dữ liệu thật mới đếm số dòng, nên vài cột có thể trống hay sai trên kiểu trang chưa mô phỏng — người dùng dữ liệu nên soát các cột này trước khi dựa vào.
