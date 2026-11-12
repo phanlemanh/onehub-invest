@@ -342,6 +342,7 @@ async function main() {
         const r = bocS10(it);
         s10Lech += r.lechKhuon;
         if (r.khongStockId) console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`);
+        if (r.khongProjectId) console.warn(`S10: ${r.khongProjectId} dòng không có project_id (bỏ — fail-closed 1211-31b): ${it.sourceId} ${manifest.snapshotId}`);
         s10Dong += await napS10(client, r.dong, manifest.snapshotId, manifest.finishedAt, it.payload?.cond ?? null);
         // 1111-17: dòng danh bạ dự án từ meta của chính item (snapshot 11/11 đã phát đủ ba trường)
         if (!coBangS10ProjectDb) {
