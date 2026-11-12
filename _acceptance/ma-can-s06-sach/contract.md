@@ -5,7 +5,7 @@ slug: ma-can-s06-sach
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-ma-can-s06-sach-design.md
