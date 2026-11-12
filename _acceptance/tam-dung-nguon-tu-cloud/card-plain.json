@@ -1,0 +1,81 @@
+{
+ "feature_plain": "Người vận hành bấm «Tạm dừng» một nguồn ngay trên trang Thu thập ở cloud, ghi lý do, rồi thấy lệnh đi tới «Đã áp lúc HH:MM» kèm trạng thái trước và sau — không cần ai ngồi ở máy thu.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ cho người gửi tự duyệt lệnh tạm dừng của mình sau khi xem trước/sau; bật lại chỉ quản trị viên; người xem không gửi được."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ giữ lệnh nhắm S03 ở «Chờ người thứ hai duyệt», và chỉ quản trị viên khác người gửi thấy nút Duyệt/Từ chối."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ tắt nút «Gửi lệnh» khi lý do trống hay chỉ có khoảng trắng; máy chủ cũng từ chối lệnh thiếu lý do."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ hiện mỗi lệnh một nhãn tiến trình theo giờ Việt Nam, tới «Đã áp lúc HH:MM · Đang chạy → Tạm dừng»."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ báo «Máy thu chưa nhận lệnh từ HH:MM» khi lệnh đã duyệt mà máy thu im quá 5 phút."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ chỉ hiện nút đúng vai, đúng trạng thái nguồn, và đổi nút ngay khi lệnh đã áp dù bản tin 15 phút chưa tới."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ chứng trên DB thử cả chuỗi bấm → máy thu áp → lượt thu kế tiếp của S05 không chạy; bật lại thì chạy."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ chụp màn thật: bấm Tạm dừng S05, nút tắt khi chưa có lý do, sau gửi thấy dòng lệnh «Chờ máy thu nhận»."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-4",
+   "p": "Sẽ hiện mỗi lệnh đúng một nhãn tiến trình theo giờ Việt Nam (chờ duyệt, chờ máy thu, đã nhận, đã áp kèm trước → sau, không áp được, hoàn lại, bị từ chối) — không bao giờ báo «đã áp» khi máy thu chưa báo."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG làm nút «đóng băng thay đổi» của owner (câu hỏi Hỏi-3)."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG có nút hoàn tác một chạm từ lệnh đã áp; muốn đảo thì bấm lệnh mới."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đổi ô trạng thái của lưới ngay sau áp — ô đó vẫn theo bản tin 15 phút; chỉ nút đổi ngay."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG quản nhóm S05, vùng S06 (TV5) hay S03 qua gateway (TV6)."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG nạp job kéo lệnh trên máy thu ở vòng này — làm sau khi gộp hàng sửa sau TV4."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Vai × trạng thái nguồn × lệnh chờ: đủ 30 ô, mỗi ô một kỳ vọng viết trước (AC-6)."
+  },
+  {
+   "i": 1,
+   "p": "Mọi chặng của lệnh và ba ca máy thu (chưa kéo, im quá 5′, vừa kéo) đều có nhãn (AC-4, AC-5)."
+  },
+  {
+   "i": 2,
+   "p": "Ô lý do: trống, khoảng trắng, quá 500 ký tự, hợp lệ (AC-3, AC-8)."
+  },
+  {
+   "i": 3,
+   "p": "Bốn tầng: máy chủ, hàm hiển thị, chuỗi đầu-cuối tới lượt thu, màn thật (AC-1–AC-8)."
+  }
+ ]
+}
