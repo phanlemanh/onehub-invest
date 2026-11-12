@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 2d7dfbf7ed6f2eff47a0375da01860a37c054493
-human_signoff:
+human_signoff: Mạnh 2026-11-12
 ---
 
 # Evidence Report: sao-luu-ma-hoa-b2

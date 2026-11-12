@@ -5,7 +5,7 @@ slug: sao-luu-ma-hoa-b2
 owner: phanlemanh@gmail.com
 risk_tier: T3      # giám sát giao T3: dữ liệu tầng A rời máy (dù đã mã hoá) khi lượt gửi thật chạy
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-sao-luu-ma-hoa-b2-design.md
@@ -77,3 +77,11 @@ AC-4, AC-10.
 - Object Lock và hạn giữ dài hơn hạn ảnh QĐ8; ổ ngoài; xoá các bản dump cũ dưới `~/onehub-backups/db`.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: Gõ sai giờ ở cờ phụ --luc khi chạy tay thì lượt sao lưu có thể báo lỗi hoặc ghi trạng thái lệch; chạy lại đúng lệnh là xong.
+  - Ngoài-3: Phép thử khôi phục DB có thể báo đạt khi pg_restore bị cắt ở khâu cuối sau khi dữ liệu bảng đã nạp đủ.
+  - Ngoài-4: Lượt sao lưu và lượt thử khôi phục chạy trùng giờ thì kết quả một lượt có thể bị ghi đè, cảnh báo tuổi bản sao lưu lệch.
+  - Ngoài-5: Bài kiểm tra chặn lệnh tải ra ngoài chỉ có đối chứng cho curl; bốn lệnh còn lại chưa có ca thử riêng.
+  - Ngoài-6: Bài kiểm tra bản ghi trạng thái chỉ đo lượt thành công; lượt lỗi chưa được chứng minh sạch khoá và đủ trường.
+  - Ngoài-7: Bài kiểm tra cảnh báo quá hạn dùng tệp trạng thái viết tay, chưa đọc tệp do lệnh chay ghi ra.
