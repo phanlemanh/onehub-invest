@@ -31,7 +31,7 @@ cũng chạm ràng buộc này.
 - AC-3: Given các ca đo VỀ migration 045 trong `phat-bieu-db.itest.mjs` (PD-AC-1 045 áp hai lần, PD-AC-1 sổ), When chạy tệp
   trên DB của riêng lượt, Then mọi ca ok, không SKIP. Ca nào sửa bằng cách đo trên DB dừng ở một mức thì assert số migration
   lớn nhất đã áp trên DB nó đo bằng đúng mức đó (in ra), và DB đó dựng bằng `taoDbThu(…, { hetSo: X })`.
-- AC-4: Given `danh-ba-vat-the-that.itest.mjs` chép khu vực từ máy thu sang DB thử, When chạy, Then pass 4, fail 0; và một ca
+- AC-4: Given `danh-ba-vat-the-that.itest.mjs` chép khu vực từ máy thu sang DB thử, When chạy, Then pass 5, fail 0; và một ca mới
   assert dương: mọi area được chép có `parent_id` thì area cha có trong DB thử, và mọi thị trường cha có `admin_code` khác null.
 - AC-5: Given bản cũ (merge-base) của `pipeline/lib/nap-view-song.mjs`, When probe đối chứng chạy kịch bản của AC-1, Then
   nạp lại 061 lỗi «violated by some row» và trường giả `qx_thu` mất; và bản merge-base của đúng bốn tệp kiểm ở AC-2…AC-4
