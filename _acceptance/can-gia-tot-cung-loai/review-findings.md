@@ -1,67 +1,54 @@
-# Review findings: can-gia-tot-cung-loai (round 1)
-
 ## Trong hợp đồng
 
-Không có finding nào map được vào AC.
+(không có finding nào)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **data-api /v1/deals chuyển từ bảng precompute market_asset_stats sang view v_ruler_p2 tính trung vị lúc chạy**
-  Người dùng thấy gì: API công khai Căn giá tốt có thể chậm hơn khi nhiều người gọi cùng lúc vì mỗi lượt gọi tính lại giá trung vị; kết quả trả về vẫn đúng.
-  Căn cứ: Chỉ ảnh hưởng tốc độ chứ không làm sai số hay mất dữ liệu, người dùng tải lại là được, và dữ liệu hiện còn nhỏ nên chưa thấy chậm thật.
+- **min_discount=0 bị đổi ngầm thành 5 ở cả hai API, nên phép đo AC-7 và ca AC-6 không chạy trên mẫu mà chúng tưởng**
+  Người dùng thấy gì: Phép đo trên dữ liệu thật chỉ phủ các tin giảm từ 5% trở lên, các tin giảm ít hơn không được kiểm. Người dùng thấy danh sách giá tốt vẫn đúng như trước.
+  Căn cứ: Không làm sai số hiển thị cho người dùng, chỉ làm mẫu kiểm hẹp hơn lời mô tả, và có thể ghi chú rõ rồi sửa sau với chi phí thấp.
+  file: `pipeline/scripts/do-can-gia-cung-loai.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Bộ kiểm ranh giới AC-9 không quét nội dung tệp chưa track, dù chú thích nói «đếm cả thay đổi chưa commit»**
+  Người dùng thấy gì: Công cụ rà tên nguồn thật có thể bỏ sót tệp mới chưa được thêm vào git. Hiện tại không có tên nguồn nào lọt ra, nhưng một tệp mới trong tương lai có thể không bị bắt.
+  Căn cứ: Chưa có dữ liệu nào lộ, rủi ro chỉ xảy ra nếu sau này có tệp mới chưa thêm vào git, và khi commit thì bộ kiểm sẽ thấy.
+  file: `pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **data-api /v1/deals bị hỏng trên lược đồ độc lập của bản public (thiếu v_ruler_p2, properties, sale_offers.property_type)**
+  Người dùng thấy gì: Ai cài API công khai theo hướng dẫn với dữ liệu mẫu sẽ nhận lỗi ở danh sách căn giá tốt sau lần đẩy bản public tới. Trên hệ thống của mình thì không bị.
+  Căn cứ: Chỉ ảnh hưởng người ngoài tự cài bản mẫu sau khi Mạnh chủ động đẩy bản public, nên có thể ghi lại và xử lý trước lúc đẩy.
   file: `data-api/src/routes/deals.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **lyDoRoi vẫn ghi «thước phường» cho căn đắt hơn trong khi câu chứng minh đã đổi sang thước cùng loại**
-  Người dùng thấy gì: Trên trang một căn đắt hơn mặt bằng, một câu vẫn nói «thước phường» trong khi câu khác nói «thước cùng loại», nên người đọc có thể thấy hai cách gọi cho cùng một con số.
-  Căn cứ: Chỉ là chữ gây khó hiểu nhẹ, con số hiển thị vẫn đúng, và sửa chữ sau rất rẻ.
-  file: `app/src/lib/deals-chi-tiet.ts`
-  severity: low
-  Đề xuất: known-limits
-
-- **Lệnh đo E7 gọi API với min_discount=0 nhưng cả hai route tự đổi 0 thành 5, nên tin giảm 0–5% không bao giờ được kiểm**
-  Người dùng thấy gì: Bằng chứng đo trên dữ liệu thật chỉ phủ các tin giảm từ 5% trở lên, nhưng được mô tả như toàn bộ tin, nên người đọc có thể tin độ phủ rộng hơn thực tế.
-  Căn cứ: Không ảnh hưởng người dùng cuối, các dòng đã kiểm vẫn đúng, chỉ cần ghi rõ mẫu bị cắt trong bằng chứng.
-  file: `pipeline/scripts/do-can-gia-cung-loai.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Bộ soát ranh giới E9 tính tệp chưa track vào danh sách tệp nhưng không quét nội dung của chúng để tìm tên nguồn**
-  Người dùng thấy gì: Công cụ kiểm tra rò tên nguồn thật có thể bỏ sót tên nằm trong tệp mới chưa thêm vào git, nên một lần rò có thể lọt mà vẫn báo sạch.
-  Căn cứ: Rủi ro chỉ xảy ra khi có tệp mới chưa add và chứa tên nguồn, các rào khác khi đẩy lên vẫn còn, và cấp thêm vài dòng quét là rẻ nhưng chưa gấp.
-  file: `pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs`
-  severity: low
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (âm-tính-một-mình): đột biến AC-6 không chạy route mà vẫn xanh khi câu SQL hỏng**
-  Người dùng thấy gì: Phép thử bảo vệ việc API công khai dùng đúng thước cùng loại luôn báo đạt, nên nếu sau này ai đó quay lại thước cả phường thì không có gì báo động.
-  Căn cứ: Lỗi nằm ở lưới an toàn chứ chưa làm sai số hôm nay, nhưng nó che mất lần hồi quy sau; sửa phép thử là việc nhỏ.
+- **Hình dạng 4 (âm tính một mình): ca đột biến AC-6 không bao giờ đỏ, mọi đường hỏng đều thành null và assert vẫn qua**
+  Người dùng thấy gì: Bài kiểm giả lập lỗi cho API công khai luôn báo qua, nên nếu sau này ai đó làm API tính số giảm sai thì bài kiểm này có thể không phát hiện. Số liệu hiện tại người dùng thấy vẫn đúng.
+  Căn cứ: Không gây sai dữ liệu hôm nay, chỉ làm lưới an toàn cho thay đổi sau kém tin cậy, và các phép đo khác trong cùng hàng vẫn kiểm số giảm của API.
   file: `app/tests/can-gia-cung-loai-db.test.tsx`
   severity: high
   Đề xuất: known-limits
 
-- **Hình dạng 4 (âm-tính-một-mình): đột biến AC-3 đạt cả khi bản đột biến làm mất dòng căn hộ**
-  Người dùng thấy gì: Phép thử xác nhận danh sách Ops in đúng giá trung vị cùng loại có thể báo đạt dù bản sai không còn trả dòng nào, nên bắt lỗi yếu hơn vẻ ngoài.
-  Căn cứ: Không làm sai dữ liệu hiện tại, chỉ làm lưới kiểm lỏng hơn, và gia cố sau rất rẻ.
+- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): ca 401 của AC-5 grep mã nguồn route thay vì gọi GET không token**
+  Người dùng thấy gì: Bài kiểm việc chặn người không có quyền chỉ kiểm cách viết mã chứ không thử gọi thật. Nếu cổng chặn bị làm hỏng sau này thì bài kiểm này có thể không báo.
+  Căn cứ: Quyền truy cập hiện vẫn đúng và API này đang đóng với người ngoài, nên rủi ro thấp và sửa lại bài kiểm sau không tốn kém.
   file: `app/tests/can-gia-cung-loai-db.test.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): «không token → 401» của AC-5 đo bằng grep mã nguồn route**
-  Người dùng thấy gì: Phép thử chặn người chưa đăng nhập vào danh sách Căn giá tốt chỉ kiểm thứ tự chữ trong mã, nên có thể không phát hiện nếu cổng chặn bị gỡ trên thực tế.
-  Căn cứ: Cổng chặn hiện còn đúng và ngoài phạm vi hàng này; rủi ro là hồi quy sau nên ghi lại để làm phép thử gọi thật khi đụng lại API.
-  file: `app/tests/can-gia-cung-loai-db.test.tsx`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 4 (âm-tính-một-mình): E9 chỉ có đối chứng cho migration_doi, còn contact_doi và ten_nguon = 0 không có đối chứng dương**
-  Người dùng thấy gì: Hai bộ kiểm chặn lộ liên lạc người bán và tên nguồn thật chưa từng được thử để biết chúng có thật sự báo đỏ, nên số 0 có thể là do chúng không bắt được gì.
-  Căn cứ: Không làm lộ dữ liệu hiện tại, chỉ làm độ tin của kết quả sạch thấp hơn, và thêm ca thử sau là rẻ.
+- **Hình dạng 4 (âm tính một mình): ten_nguon=0 của bộ soát ranh giới không có đối chứng dương, danh sách tên rỗng vẫn cho 0**
+  Người dùng thấy gì: Công cụ rà tên nguồn thật có thể báo sạch trong khi thực ra không có danh sách tên nào để so. Chưa có bằng chứng tên nguồn nào bị lộ trong thay đổi này.
+  Căn cứ: Không có dữ liệu bị lộ ở lượt này, và rủi ro chỉ xuất hiện khi môi trường chấm thiếu danh sách tên, có thể ghi chú để lần chạy sau kiểm kỹ hơn.
   file: `pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs`
   severity: medium
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 4/8 lỗi rơi vào file không bộ đo nào phủ (pipeline/scripts/do-can-gia-cung-loai.mjs, app/tests/can-gia-cung-loai-db.test.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+## Chưa adversarial-verify (refuter chết)
+
+⚠ Cụm ngoài vùng phủ: 3/6 lỗi rơi vào file không bộ đo nào phủ (pipeline/scripts/do-can-gia-cung-loai.mjs, app/tests/can-gia-cung-loai-db.test.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+
