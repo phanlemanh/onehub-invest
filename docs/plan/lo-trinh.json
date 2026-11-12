@@ -3066,19 +3066,20 @@
     {
       "ma": "SV2",
       "slug": "s03-luu-tang-huong",
-      "cau_giao": "Lưu tầng và hướng của tin S03 bằng migration mới: thêm floor_raw vào field_assertions_field_chk, thêm trường hướng kèm nhãn «của cái gì» (ban công, cửa, không nói), nhiều giá trị",
+      "cau_giao": "Lưu hướng của tin S03 bằng migration mới: thêm trường hướng (unit_facing) kèm nhãn «của cái gì» (ban công, cửa, không nói), nhiều giá trị, cùng từ vựng hướng và dòng DQ hướng",
       "vai": "nen",
       "tieu_chi": 7,
       "vi_sao": "Audit S03 02/11: mô phỏng 29% tin có hướng, 7% có khoảng tầng, hiện không có chỗ lưu.",
       "hang": "T3",
       "dung_tren": [
-        "SV1"
+        "SV1",
+        "DV4"
       ],
-      "bat_khi": "Tầng và hướng đọc được đi tới phát biểu của tin; trường hướng khai đủ 6 điều kiện ADR-0011 vì DirectionFaces không dùng được",
+      "bat_khi": "Hướng đọc được đi tới phát biểu của tin; trường hướng khai đủ 6 điều kiện ADR-0011 vì DirectionFaces không dùng được",
       "nhom": "tin-rao-0511",
       "dot": "tin-rao-0511",
       "phu": [],
-      "ghi_chu": "Mạnh chốt cách lưu hướng một trường kèm nhãn (02/11). Migration số 067. Không cản ra mắt 05/11: chưa kịp thì sang sau. Tạm dừng 02/11 giữa S3 theo docs/plan/ra-mat-0511-so-luong-chat-luong.md §4 mục 2, nhánh claude/s03-luu-tang-huong, nối lại sau 05/11.",
+      "ghi_chu": "Mạnh chốt cách lưu hướng một trường kèm nhãn (02/11). Migration số 067. Không cản ra mắt 05/11: chưa kịp thì sang sau. Tạm dừng 02/11 giữa S3 theo docs/plan/ra-mat-0511-so-luong-chat-luong.md §4 mục 2, nhánh claude/s03-luu-tang-huong, nối lại sau 05/11. Sửa 11/11: thu lại chỉ còn HƯỚNG (unit_facing, từ vựng hướng, dòng DQ hướng); phần tầng đã chuyển sang DV4 tang-tren-tin-s03 (migration 095, dải tầng là trường extension floor_band), SV2 đứng trên DV4.",
       "vung": [
         "db/migrations/067*",
         "pipeline/transform-zalo.mjs",
@@ -4824,7 +4825,7 @@
         "collector/src",
         "pipeline/import-s07*"
       ],
-      "ghi_chu": "Làn ZCode; giao qua liên làn. Claude viết migration stg_* S07. Sửa 11/11 (mục 44 Hỏi-4): thu trước DA3, bỏ DA3 khỏi dung_tren; ưu tiên Hà Nội và HCM thay cho «dự án có tin mà chưa nối» (cần DA3); thu chậm (≥ 10 s/trang, ~16 giờ), xong thì DA3 có dữ liệu ngay.",
+      "ghi_chu": "Làn ZCode; giao qua liên làn. Claude viết migration stg_* S07. Sửa 11/11 (mục 44 Hỏi-4): thu trước DA3, bỏ DA3 khỏi dung_tren; ưu tiên Hà Nội và HCM thay cho «dự án có tin mà chưa nối» (cần DA3); thu chậm (≥ 10 s/trang, ~16 giờ), xong thì DA3 có dữ liệu ngay. Số đo 11/11: S07 có khoảng 6.080 dự án, 608 trang danh sách. Phần nạp đang làm ở hồ sơ thu-danh-muc-s07 với migration 093.",
       "phu": [
         "DAZ3"
       ]
@@ -4974,13 +4975,13 @@
       "vai": "nen",
       "tieu_chi": 9,
       "cau_giao": "Thuộc tính trong danh mục S08, S09 và S11 (pháp lý, quy mô) thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí, điểm toạ độ do nguồn công bố), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn)",
-      "bat_khi": "Mỗi dự án S08 có ít nhất một phát biểu phân loại–quy mô và một phát biểu chủ đầu tư; nạp lại snapshot không nhân phát biểu, snapshot sau đổi giá trị thì phát biểu cũ hết hiệu lực; S08 và S09 nói khác nhau thì lên thẻ, không đè; dự án S08 có điểm trong bản đồ nhúng thì có phát biểu điểm dự án ghi nguồn S08; 0 lời gọi dịch vụ định vị bên ngoài",
+      "bat_khi": "Mỗi dự án S08 có ít nhất một phát biểu phân loại–quy mô và một phát biểu chủ đầu tư; nạp lại snapshot không nhân phát biểu, snapshot sau đổi giá trị thì phát biểu cũ hết hiệu lực; S08 và S09 nói khác nhau thì lên thẻ, không đè; dự án S08 có điểm trong bản đồ nhúng thì có phát biểu điểm dự án ghi nguồn S08; 0 lời gọi dịch vụ định vị bên ngoài; mọi đường lên cloud từ stg_s07 (description_html, summary_raw) phải qua bộ che tên nguồn (mask-source-names)",
       "vi_sao": "Kế hoạch 08/11 chỉ dựng toà–trục–căn từ S08; thuộc tính dự án, toà, căn trong S08 (60.131 dòng) và S09 chưa thành phát biểu nào.",
       "vung": [
         "pipeline/lib/danh-ba-vat-the.mjs",
         "pipeline/thuoc-tinh-danh-muc"
       ],
-      "ghi_chu": "Dãy B. Phần S09 chỉ chạy cho dự án đã có snapshot S09; dự án chưa có thì chỉ S08. Đơn vị một chuẩn: m², VND, ngày ISO. Sửa 11/11 (mục 44 Hỏi-2): điểm dự án lấy từ nguồn danh mục (S08 trong bản đồ nhúng; S07 trong trang khi DAZ3 có dữ liệu), ghi nguồn S0x, không gọi dịch vụ định vị; đa giác và tâm OSM thuộc DA21. Sửa 11/11 (mục 45 Q3): mở rộng sang S11, nguồn pháp lý thật duy nhất (2.546 văn bản trên 428 dự án), cho pháp lý và quy mô; đứng trên DA24a (stg S11). S10 đi cùng DA17.",
+      "ghi_chu": "Dãy B. Phần S09 chỉ chạy cho dự án đã có snapshot S09; dự án chưa có thì chỉ S08. Đơn vị một chuẩn: m², VND, ngày ISO. Sửa 11/11 (mục 44 Hỏi-2): điểm dự án lấy từ nguồn danh mục (S08 trong bản đồ nhúng; S07 trong trang khi DAZ3 có dữ liệu), ghi nguồn S0x, không gọi dịch vụ định vị; đa giác và tâm OSM thuộc DA21. Sửa 11/11 (mục 45 Q3): mở rộng sang S11, nguồn pháp lý thật duy nhất (2.546 văn bản trên 428 dự án), cho pháp lý và quy mô; đứng trên DA24a (stg S11). S10 đi cùng DA17. Sửa 11/11: thêm vế mọi đường lên cloud từ stg_s07 (description_html, summary_raw) phải qua bộ che tên nguồn (mask-source-names).",
       "phu": [
         "DA16"
       ]
@@ -5402,7 +5403,7 @@
         "pipeline/mappings.yaml",
         "db/migrations"
       ],
-      "ghi_chu": "Kiểm RESO DD 2.1 trước (bản local có EntryLevel, UnitFloorLocation); dải tầng là extension nếu không có field chuẩn, khai đủ 6 điều kiện ADR-0011. Số migration giám sát cấp.",
+      "ghi_chu": "Kiểm RESO DD 2.1 trước (bản local có EntryLevel, UnitFloorLocation); dải tầng là extension nếu không có field chuẩn, khai đủ 6 điều kiện ADR-0011. Số migration giám sát cấp. Sửa 11/11: nhận trọn phần tầng của SV2 (SV2 chỉ còn hướng); migration 095. Mạnh duyệt Cổng Phạm vi 11/11: floor_band là trường extension riêng; mẫu 300 bài do tác tử đọc mù.",
       "dot": "dinh-vi-gom-tin-s03-1011"
     },
     {
