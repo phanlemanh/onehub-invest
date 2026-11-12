@@ -16,7 +16,7 @@ const AXES = [
   "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
   "registry_status", "alias_kind", "catalog_tier", "registry_event_kind", "party_role", "contact_kind", "contact_rule",
   "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
-  "furnished", "direction_faces", "view", "rent_includes", "price_basis",
+  "furnished", "direction_faces", "floor_band", "view", "rent_includes", "price_basis",
 ];
 
 // Ma trận nhãn viết trước (71 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
@@ -41,6 +41,7 @@ const NHAN = [
   ["assertion_field", "stories", "Số tầng"], ["assertion_field", "latitude", "Vĩ độ"], ["assertion_field", "longitude", "Kinh độ"],
   // danh-ba-toa-truc-can (082): hai trường của toà, phương pháp kế thừa, bí danh mã tại nguồn, bậc dòng danh mục.
   ["assertion_field", "builder_name", "Chủ đầu tư"], ["assertion_field", "area_id", "Phường của toà"],
+  ["assertion_field", "floor_raw", "Tầng"], ["assertion_field", "floor_band", "Dải tầng"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -76,6 +77,7 @@ const NHAN = [
   ["direction_faces", "east", "Đông"], ["direction_faces", "west", "Tây"], ["direction_faces", "south", "Nam"],
   ["direction_faces", "north", "Bắc"], ["direction_faces", "northeast", "Đông Bắc"], ["direction_faces", "southeast", "Đông Nam"],
   ["direction_faces", "northwest", "Tây Bắc"], ["direction_faces", "southwest", "Tây Nam"],
+  ["floor_band", "lower", "Tầng thấp"], ["floor_band", "middle", "Tầng trung"], ["floor_band", "upper", "Tầng cao"],
   ["view", "city", "Thành phố"], ["view", "lake", "Hồ"], ["view", "river", "Sông"], ["view", "park_greenbelt", "Công viên"],
   ["view", "garden", "Vườn, nội khu"], ["view", "pool", "Bể bơi"], ["view", "panoramic", "Toàn cảnh"], ["view", "other", "Khác"],
   ["rent_includes", "management", "Phí quản lý"], ["rent_includes", "electricity", "Điện"], ["rent_includes", "water", "Nước"],
@@ -90,11 +92,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 25 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 26 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 120); // HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
+  assert.equal(NHAN.length, 125); // tang-tren-tin-s03 (095): +2 mã assertion_field, trục floor_band 3 mã; HD5 (061; giám sát duyệt P1-87): +7 mã assertion_field; SD3 thêm alias_kind sdt; enrich-nguoi-s03 (079) +4 mã liên lạc; link-nguoi-ban-s03 (080) +1 luật; truong-nhan-s03-081 +29 mã nhãn; danh-ba-toa-truc-can (082): +7 (builder_name, area_id, registry_inherit, ma_nguon, ba bậc catalog_tier)
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

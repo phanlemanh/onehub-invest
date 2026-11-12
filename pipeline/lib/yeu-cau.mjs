@@ -18,6 +18,8 @@ const NUM = String.raw`(\d+(?:[.,]\d+)*)`;
 // Chữ đứng sau phần lẻ thì số đó không phải phần lẻ («2 tỷ 2pn», «2 tỷ 70m2», «2 tỷ 5 tầng», «2 tỷ 2 căn»).
 const CHAN_LE = String.raw`(?![\d.,])(?!\s*(?:pn|phòng|m(?!\p{L})|tầng|căn))`;
 // Phần lẻ viết cách («8tr 5») không đứng trước dấu nối hay gạch chéo — đó là ngày hay khoảng khác («tc 8tr 7-8/11»).
+// Riêng đầu dưới của mẫu «khoang» không chặn: dấu nối đã do NOI đòi, đầu trên do TIEN("b") đòi có đơn vị («2 tỷ 5 - 3 tỷ»,
+// yc1-khoang-le-va-doi-chung-do).
 const CACH_LE = String.raw`(?!\s*[-–—~/])`;
 /** «số + đơn vị (+ phần lẻ) (+ rưỡi)» với tiền tố tên nhóm `p` (khoảng có hai số nên cần hai bộ tên). */
 const TIEN = (p, batBuoc = true) =>
@@ -28,7 +30,7 @@ const SAU = String.raw`(?!\p{L})(?!\s*\/\s*m)`;
 const NOI = String.raw`\s*(?:-|–|—|~|đến|tới)\s*`;
 const MAU_NS = [
   // Thứ tự = ưu tiên khi hai mẫu cùng bắt đầu ở một chỗ.
-  ["khoang", new RegExp(String.raw`(?:từ\s*)?(?<![\d.,])(?<aso>\d+(?:[.,]\d+)*)\s*(?:(?<adv>tỷ|tỉ|ty|triệu|tr|củ)(?:(?<ale>\d{1,3})${CHAN_LE}|\s(?<alec>\d{1,3})${CHAN_LE}${CACH_LE})?(?<aruoi>\s*rưỡi)?)?${NOI}${TIEN("b")}${SAU}`, "giu")],
+  ["khoang", new RegExp(String.raw`(?:từ\s*)?(?<![\d.,])(?<aso>\d+(?:[.,]\d+)*)\s*(?:(?<adv>tỷ|tỉ|ty|triệu|tr|củ)(?:(?<ale>\d{1,3})${CHAN_LE}|\s(?<alec>\d{1,3})${CHAN_LE})?(?<aruoi>\s*rưỡi)?)?${NOI}${TIEN("b")}${SAU}`, "giu")],
   ["tran", new RegExp(String.raw`(?:tầm\s+dưới|dưới|tối\s*đa|không\s+quá|max)\s*:?\s*${TIEN("a")}${SAU}`, "giu")],
   ["san", new RegExp(String.raw`(?:trên|từ|tối\s*thiểu|min)\s*:?\s*${TIEN("a")}${SAU}`, "giu")],
   // Số trơn sau «tc / tài chính / ngân sách»: đơn vị theo dịch vụ (thuê → triệu, mua → tỷ), không phải đầu một khoảng.
