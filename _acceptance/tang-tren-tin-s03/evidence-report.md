@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6ecc9f8b11c68ce067f0ac9b532c21c2c597ae3b
+verified_commit: 93936ec0c26bffb3fcac27c6b6f7ae553ef0386a
 human_signoff: Mạnh 2026-11-12
 ---
 
@@ -186,3 +186,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: tat ca eval E1-E11 va cac lenh suite deu xanh; khong co judgment item, khong eval ui-check.
+
+### Re-pin lần 1 — 2026-11-12, do nhận main 87019f64 (DA4 sửa pipeline/mappings.yaml)
+run_id: repin-20261112T002444Z-89976
+sha: 93936ec0c26bffb3fcac27c6b6f7ae553ef0386a · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng

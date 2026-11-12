@@ -52,3 +52,4 @@
 {"ts":"2026-11-11T17:49:45Z","sha":"6ecc9f8b11c68ce067f0ac9b532c21c2c597ae3b","round":1,"kind":"round-tally","verdict":"PASS","expected":13,"returned":13,"blocked":0}
 {"ts":"2026-11-11T17:49:45Z","sha":"6ecc9f8b11c68ce067f0ac9b532c21c2c597ae3b","round":1,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":17}
 {"kind":"thuoc-vat","ts":"2026-11-11T18:21:14Z","round":1,"san":"764ca707fe51e2b3e797063c8f8f7967d5b8165f","vat":[0,0],"thuoc":[0,0],"ho_so":[117,0],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"ts":"2026-11-12T00:54:59Z","kind":"repin","run_id":"repin-20261112T002444Z-89976","sha":"93936ec0c26bffb3fcac27c6b6f7ae553ef0386a","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0,"E11":0},"wall_s":1815,"so_lenh":13,"tong_ket":{"ket_cuc":"xanh","phut":30.3,"so_lenh":13,"model_goi":0,"model_carry":0,"chap_chon":0}}
