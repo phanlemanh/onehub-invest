@@ -36,10 +36,19 @@ Chỉ sửa `scripts/ci-test-module.test.mjs`; không sửa `scripts/ci-db-init.
      «ready» thứ hai.
    - Hàm mới trả false rồi true. Luật cũ («có dòng ready là xong», tương đương pg_isready) trả true ngay ở thời điểm thứ nhất.
      Đây là chiều đỏ, ghim thông điệp `BUOC CHO CU TRA VE TRUOC KHI KHOI DONG LAI`.
-4. **Bằng chứng dưới tải.**
-   - Probe `_acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs` bật 8 tiến trình đốt CPU (bằng số nhân).
-   - Trong lúc đó nó chạy `node --test scripts/ci-test-module.test.mjs` 10 lần liên tiếp, đếm số lần xanh và thời gian từng lần.
-   - Thoát 0 khi 10/10 xanh. Tiến trình đốt CPU và container tạm luôn được dọn kể cả khi lỗi.
+4. **Hàm chờ tách được.** `choPostgisTam({ docLog, chayTruyVan, han })` nhận hàm đọc log, hàm truy vấn và thời hạn. `before()`
+   truyền vào `docker logs <tên> 2>&1` (gộp stdout và stderr — postgres ghi ra stderr) và kết nối thật từ host. Ba ca thuần
+   chứng đường hết hạn và đường đếm lại bằng nguồn giả.
+5. **Bằng chứng dưới tải, có chiều đỏ.**
+   - Probe `probes/duoi-tai.mjs` bật số tiến trình đốt CPU bằng `os.availableParallelism()` và in ra.
+   - Trước hết chạy BẢN CŨ của tệp (dựng từ `git show origin/main:` ra tệp tạm cạnh tệp thật) tới 10 lần dưới tải. Phải có ít
+     nhất một lần đỏ chứa «Connection terminated»; không có thì thoát khác 0 với «TAI KHONG TAI HIEN LOI CU», nghĩa là tải chưa
+     đủ để chứng gì.
+   - Rồi chạy bản mới 10 lần dưới cùng tải, đòi 10/10 xanh.
+   - Lưu `docker logs` thật của một container, đòi `daQuaKhoiDongLai` ra true và dòng mốc khớp bộ log trong test.
+   - Luôn dọn tiến trình đốt CPU và container tạm.
+6. **Giữ nguyên ca cũ.** Probe `probes/cho-tinh.mjs` so mọi thông điệp assert của các ca AU11-AC-3, AU11-AC-4 ở merge-base với
+   tệp mới, đòi không còn `pg_isready` và không chạm `scripts/ci-db-init.mjs`.
 
 ## Ngoài phạm vi
 
