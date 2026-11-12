@@ -2,7 +2,7 @@
 // một tệp nguồn với đúng một chỗ thay (đối chứng đỏ). Cùng khuôn với so-lenh.test.tsx của TV4.
 import assert from "node:assert/strict"
 import { readFileSync, rmSync, writeFileSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { dirname, extname, join } from "node:path"
 
 export type Goi = { cookie?: string; auth?: string; body?: unknown }
 
@@ -22,11 +22,11 @@ export const doc = async (res: Response) => ({
   body: (await res.json().catch(() => null)) as Record<string, unknown>,
 })
 
-/** Bản chép tạm cùng thư mục (alias @/ và import tương đối còn đúng), tên ẩn, đúng một chỗ thay; xoá sau khi dùng. */
+/** Bản chép tạm cùng thư mục (alias @/ và import tương đối còn đúng), tên `_tam-…` (tệp chấm đứng ngoài include của tsconfig, JSX biên dịch sai), đúng một chỗ thay; xoá sau khi dùng. */
 export async function banSao<T>(tep: string, tu: string, thanh: string, dung: (duong: string) => Promise<T>): Promise<T> {
   const goc = readFileSync(tep, "utf8")
   assert.equal(goc.split(tu).length, 2, `không thấy đúng một chỗ «${tu}» trong ${tep}`)
-  const dot = join(dirname(tep), `.dot-${process.pid}-${Math.random().toString(36).slice(2)}.ts`)
+  const dot = join(dirname(tep), `_tam-${process.pid}-${Math.random().toString(36).slice(2)}${extname(tep)}`)
   writeFileSync(dot, goc.replace(tu, thanh))
   try {
     return await dung(dot)
