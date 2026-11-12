@@ -10,9 +10,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const SLUG = "itest-nap-lai-migration-cu-sau-095";
 const KIEM = ["s06-duong", "sdt-trong-duong", "phat-bieu-db", "danh-ba-vat-the-that", "dac-trung-s06", "nap-lai-giu-rang-buoc"]
-  .map((t) => `pipeline/scripts/${t}.itest.mjs`);
+  .map((t) => `pipeline/scripts/${t}.itest.mjs`)
+  .concat(["pipeline/scripts/truong-du-an-tren-tin.test.mjs"]);   // AC-8: TDT-AC-4 áp 096 qua pg.Client
 const duocDoi = (f) => KIEM.includes(f) || /^pipeline\/lib\/nap-[0-9a-z-]+\.mjs$/.test(f) || f.startsWith(`_acceptance/${SLUG}/`)
-  || ["_acceptance/config.yaml", "PRODUCT-MAP.md", "LO-TRINH.html", `docs/superpowers/specs/2026-11-12-${SLUG}-design.md`,
+  || ["_acceptance/config.yaml", "scripts/ci-bo-qua.json", "PRODUCT-MAP.md", "LO-TRINH.html", `docs/superpowers/specs/2026-11-12-${SLUG}-design.md`,
     `docs/superpowers/plans/2026-11-12-${SLUG}.md`].includes(f);
 const git = (...a) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).trim();
 

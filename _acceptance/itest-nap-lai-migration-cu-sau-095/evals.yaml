@@ -66,8 +66,15 @@ evals:
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-7
-    executor: test
+    executor: script
     cmd: config:executors.script.itnl_dac_trung
     expected: "exit 0; ℹ pass 8, ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/dac-trung-s06.itest.mjs", "pipeline/lib/nap-*.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.itnl_tdt
+    expected: "exit 0; 'TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi' ok, cả tệp ℹ fail 0, ℹ skipped 0; probe in 'ITNL-TDT PASS': tệp không còn apTep/docker, scripts/ci-bo-qua.json không còn mục TDT-AC-4, tự kiểm trên bản chép có mục ấy thì FAIL gọi tên mục"
+    paths: ["pipeline/scripts/truong-du-an-tren-tin.test.mjs", "scripts/ci-bo-qua.json", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/tdt-ci.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
