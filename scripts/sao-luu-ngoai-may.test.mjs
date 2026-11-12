@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { after, before, describe, test } from "node:test";
 
 import {
-  LUAT_LOAI_TRU_STATE, chay, demTepHang, docCauHinh, khoiTao, kiem, kiemTruoc, lsMoiNhat, soatKhoa,
+  LUAT_LOAI_TRU_STATE, chay, demTepHang, docCauHinh, khoiTao, kiem, kiemTruoc, loiPgRestoreConLai, lsMoiNhat, soatKhoa,
 } from "./lib/sao-luu-ngoai-may.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -69,6 +69,7 @@ exit 2
   const dump = path.join(g, "bin", "dump-gia");
   viet(dump, dumpLoi ? "#!/bin/bash\nexit 1\n" : `#!/bin/bash
 mkdir -p "$1"; printf 'dump-co-dinh-%s\\n' {1..400} > "$1/a.dump"; printf 'public.t\\t3\\n' > "$1/so-dong.tsv"
+echo "$DB_CONTAINER" >> ${JSON.stringify(path.join(g, "container.log"))}
 `, 0o755);
   const goc = path.join(g, "goc");
   for (let i = 0; i < 80; i++) viet(path.join(goc, "collector", "snapshots", `d${i % 4}`, `f${String(i).padStart(3, "0")}.json`), `{"i":${i},"r":"${randomBytes(32768).toString("hex")}"}\n`);
@@ -79,6 +80,7 @@ mkdir -p "$1"; printf 'dump-co-dinh-%s\\n' {1..400} > "$1/a.dump"; printf 'publi
   const env = {
     SAO_LUU_CAU_HINH: cauHinh, SAO_LUU_THU_MUC: thuMuc, SAO_LUU_SECURITY: security, SAO_LUU_GOC_NGUON: goc,
     SAO_LUU_LENH_DUMP: `bash ${dump}`, SAO_LUU_RESTIC: resticThat ? "restic" : resticGia, SAO_LUU_LOG: path.join(g, "log"),
+    DB_CONTAINER: "onehub-container-thu",
   };
   const cfg = docCauHinh({ env, home });
   const goi = () => (fs.existsSync(goiLog) ? fs.readFileSync(goiLog, "utf8").split("\n").filter(Boolean) : []);
@@ -95,8 +97,9 @@ function khongLoKhoa(chu, ca, f) {
   for (const v of [B2ID, B2KEY, mk].filter(Boolean)) assert.ok(!chu.includes(v), `${ca}: đầu ra chứa giá trị khoá`);
 }
 
-function demTmpSaoLuu() {
-  return fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith("sao-luu-")).length;
+function demTmpSaoLuu(f) {
+  const d = path.join(f.thuMuc, "tam");
+  return fs.existsSync(d) ? fs.readdirSync(d).filter((n) => n.startsWith("sao-luu-")).length : 0;
 }
 
 function resticThu(f, args, mk) {
@@ -107,11 +110,11 @@ function resticThu(f, args, mk) {
 describe("bước chặn và cấu hình (AC-1, AC-2)", () => {
   test("C1 chay thiếu tệp xác nhận → mã 3, 0 lời gọi restic, không thư mục dump", () => {
     const f = dung({ xacNhan: false, coMuc: true });
-    const truoc = demTmpSaoLuu();
+    const truoc = demTmpSaoLuu(f);
     const r = chay(f.cfg);
     assert.equal(r.ma, 3, "C1: mã thoát");
     assert.deepEqual(f.goi(), [], "C1: restic giả có lời gọi");
-    assert.equal(demTmpSaoLuu(), truoc, "C1: có thư mục dump mới");
+    assert.equal(demTmpSaoLuu(f), truoc, "C1: có thư mục dump mới");
     const c = cli(f, "chay");
     assert.equal(c.code, 3, "C1: CLI mã thoát");
     khongLoKhoa(c.ra, "C1", f);
@@ -121,6 +124,14 @@ describe("bước chặn và cấu hình (AC-1, AC-2)", () => {
     const f = dung({ coMuc: true });
     chay(f.cfg);
     assert.ok(f.goi().some((l) => / backup /.test(` ${l} `)), "C1+: không có lời gọi backup");
+  });
+
+  test("C1c lệnh dump nhận DB_CONTAINER của cấu hình, không container mặc định của tiến trình", () => {
+    const f = dung({ coMuc: true });
+    const cu = process.env.DB_CONTAINER;
+    process.env.DB_CONTAINER = "one-invest-db";
+    try { chay(f.cfg); } finally { if (cu === undefined) delete process.env.DB_CONTAINER; else process.env.DB_CONTAINER = cu; }
+    assert.equal(fs.readFileSync(path.join(f.g, "container.log"), "utf8").trim(), "onehub-container-thu", "C1c: container của lệnh dump");
   });
 
   test("C13 khoi-tao thiếu tệp xác nhận → mã 3, 0 lời gọi, không tạo mục Keychain", () => {
@@ -238,6 +249,13 @@ describe("sao lưu thật trên kho cục bộ (AC-3, AC-4, AC-7, AC-8, AC-9, AC
     assert.ok(thieu(lsMoiNhat(d.cfg).tep).length > 0, "C15 đối chứng: bản đột biến không làm mất tệp nào — thước không đỏ được");
   });
 
+  test("C7b thư mục dump nằm dưới thư mục sao lưu, không ở thư mục tạm hệ thống; lượt ok dọn nó", () => {
+    const tt = JSON.parse(fs.readFileSync(f.cfg.tepTrangThai, "utf8"));
+    assert.ok(tt.dump_duong.startsWith(path.join(f.thuMuc, "tam") + path.sep), `C7b: dump ở ${tt.dump_duong}`);
+    assert.equal(docCauHinh({ env: {}, home: "/nha/u" }).thuMuc, path.join("/nha/u", ".oneinvest", "sao-luu"), "C7b: mặc định dưới $HOME");
+    assert.equal(fs.existsSync(tt.dump_duong), false, "C7b: lượt ok còn để lại thư mục dump");
+  });
+
   test("C8 chạy lại không đổi nguồn → byte mới dưới 1% lần đầu", () => {
     assert.equal(lan2.ma, 0, `C8: ${lan2.lyDo}`);
     assert.ok(lan2.trangThai.byte_moi < 0.01 * lan1.trangThai.byte_moi, `C8: byte_moi ${lan2.trangThai.byte_moi} / ${lan1.trangThai.byte_moi}`);
@@ -289,6 +307,12 @@ describe("sao lưu thật trên kho cục bộ (AC-3, AC-4, AC-7, AC-8, AC-9, AC
     assert.equal(r.ma, 0, `C10: ${r.thongDiep}`);
     assert.ok(r.soTep >= 52, `C10: chỉ khôi phục ${r.soTep} tệp`);
     assert.deepEqual(r.lech, [], "C10: lệch");
+  });
+
+  test("C10b kho có ít tệp raw hơn ngưỡng → mã 1 nêu số tệp, không báo ok", () => {
+    const r = kiem(f.cfg, { hatGiong: 42, tyLeDoc: "100%", soTep: 1000 });
+    assert.equal(r.ma, 1, `C10b: mã — ${r.thongDiep}`);
+    assert.match(r.thongDiep, /tệp raw snapshot.*cần ít nhất 1000/, "C10b: thông điệp");
   });
 
   test("C14 sha256 mốc của tệp dump sai → mã 1 nêu tệp dump; thiếu mốc → mã 1", () => {
@@ -378,5 +402,29 @@ describe("quét lệnh của hàng (AC-4, AC-10)", () => {
     const tTest = "scripts/sao-luu-ngoai-may.test.mjs";
     assert.equal(demTepHang(tTest, fs.readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n")).kho_tu_xa_trong_test, 0, "E11: test dùng kho từ xa");
     assert.equal(demTepHang(tTest, ["const kho = \"" + "b" + "2:thung:onehub\";"]).kho_tu_xa_trong_test, 1, "E11 đối chứng: kho từ xa gài không bị bắt");
+  });
+});
+
+describe("kiem-db chấp nhận đúng lớp lỗi pg_cron (AC-6)", () => {
+  const cron = [
+    "pg_restore: error: could not execute query: ERROR:  can only create extension in database oneinvest",
+    "DETAIL:  Jobs must be scheduled from the database configured in cron.database_name",
+    "Command was: CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;", "", "",
+    "pg_restore: error: could not execute query: ERROR:  extension \"pg_cron\" does not exist",
+    "Command was: COMMENT ON EXTENSION pg_cron IS 'Job scheduler for PostgreSQL';", "",
+    "pg_restore: error: could not execute query: ERROR:  schema \"cron\" does not exist",
+    "Command was: COPY cron.job (jobid, schedule) FROM stdin;",
+    "pg_restore: error: could not execute query: ERROR:  relation \"cron.jobid_seq\" does not exist",
+    "LINE 1: SELECT pg_catalog.setval('cron.jobid_seq', 1, false);",
+    "Command was: SELECT pg_catalog.setval('cron.jobid_seq', 1, false);", "",
+    "pg_restore: warning: errors ignored on restore: 4", "",
+  ].join("\n");
+  test("C17 chỉ lỗi pg_cron và schema cron → không còn lỗi", () => {
+    assert.deepEqual(loiPgRestoreConLai(cron), [], "C17");
+  });
+  test("C17 đỏ: thêm một lỗi bảng public → còn đúng lỗi đó", () => {
+    const con = loiPgRestoreConLai(`${cron}pg_restore: error: could not execute query: ERROR:  relation "public.t_nam" does not exist\nCommand was: COPY public.t_nam (id, x) FROM stdin;\n`);
+    assert.equal(con.length, 1, "C17 đỏ: số lỗi còn lại");
+    assert.match(con[0], /public\.t_nam/, "C17 đỏ: lỗi giữ lại");
   });
 });

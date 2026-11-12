@@ -240,10 +240,18 @@ export function chay(cfg, { luc = null, now = new Date(), _dotBien = null } = {}
     ghiTrangThai(cfg, tt);
     return { ma: 1, lyDo, trangThai: tt };
   };
-  const tam = fs.mkdtempSync(path.join(os.tmpdir(), "sao-luu-"));
+  // Thư mục dump nằm dưới thư mục sao lưu ở $HOME, KHÔNG ở os.tmpdir(): db-sao-luu.sh ghi dump qua container phụ gắn thư
+  // mục đích, mà Colima chỉ gắn $HOME — dưới /var/folders container ghi vào máy ảo và máy này không có bản dump nào.
+  fs.mkdirSync(path.join(cfg.thuMuc, "tam"), { recursive: true, mode: 0o700 });
+  const tam = fs.mkdtempSync(path.join(cfg.thuMuc, "tam", "sao-luu-"));
   const dumpDir = path.join(tam, "db");
-  const d = spawnSync("bash", ["-c", `${cfg.lenhDump} "$1"`, "bash", dumpDir], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  if (d.error || d.status !== 0) return loi("dump", `dump DB lỗi (mã ${d.status}); giữ ${tam} để soi`);
+  // DB_CONTAINER của cấu hình đi xuống lệnh dump: db-sao-luu.sh đọc biến này, thiếu nó thì nó dump container mặc định.
+  const d = spawnSync("bash", ["-c", `${cfg.lenhDump} "$1"`, "bash", dumpDir],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, DB_CONTAINER: cfg.container } });
+  if (d.error || d.status !== 0) {
+    const cuoi = `${d.stdout || ""}${d.stderr || ""}`.trim().split("\n").filter(Boolean).slice(-1)[0] || "";
+    return loi("dump", `dump DB lỗi (mã ${d.status}): ${cuoi.slice(0, 200)}; giữ ${tam} để soi`);
+  }
   const dumpSha = bamThuMuc(dumpDir);
   const nguon = nguonSaoLuu(cfg);
   tt.kho_anh = nguon.khoAnh;
@@ -326,6 +334,8 @@ export function kiem(cfg, { hatGiong = Date.now(), soTep = 50, tyLeDoc = "5%" } 
   const dump = ls.tep.filter((p) => p.startsWith(tt.dump_duong + path.sep));
   const r = prng(hatGiong);
   const chon = [...snap].sort().map((p) => [r(), p]).sort((a, b) => a[0] - b[0]).slice(0, soTep).map((x) => x[1]);
+  // AC-5: phải khôi phục đủ soTep tệp raw snapshot — kho thiếu (gốc lệch, snapshots vắng lúc chạy) không được báo ok
+  if (chon.length < soTep) return ketThuc(1, `bản mới nhất chỉ có ${chon.length} tệp raw snapshot dưới ${path.relative(cfg.gocNguon, gocSnap) || gocSnap}, cần ít nhất ${soTep}`, { soTep: chon.length });
   const tatCa = [...chon, ...dump];
   const dich = fs.mkdtempSync(path.join(os.tmpdir(), "sao-luu-kiem-"));
   try {
@@ -378,6 +388,20 @@ function docSoDong(text) {
   return m;
 }
 
+/**
+ * Lỗi pg_restore còn lại sau khi bỏ đúng một lớp được chấp nhận: extension pg_cron chỉ tạo được trong DB «oneinvest»
+ * (cron.database_name), nên nạp vào DB thử luôn lỗi ở CREATE/COMMENT EXTENSION pg_cron và mọi đối tượng schema cron theo
+ * sau (COPY cron.job…, setval cron.*_seq). Bảng schema cron vốn nằm ngoài phép đếm DEM_SQL. Lỗi nào khác → giữ, kiem-db đỏ.
+ */
+export function loiPgRestoreConLai(stderr) {
+  const khoi = String(stderr).split(/^(?=pg_restore: )/m).filter((k) => /^pg_restore: error:/.test(k));
+  const lenhCron = (k) => {
+    const lenh = (k.match(/^Command was: (.*)$/m) || [])[1] || "";
+    return /^(CREATE|COMMENT ON) EXTENSION (IF NOT EXISTS )?pg_cron\b/.test(lenh) || /^(COPY |SELECT pg_catalog\.setval\(')cron\./.test(lenh);
+  };
+  return khoi.filter((k) => !lenhCron(k)).map((k) => k.trim());
+}
+
 export function kiemDb(cfg) {
   const k = kiemTruoc(cfg, { lenh: "kiem-db" });
   if (k.ma) return { ma: k.ma, thongDiep: k.lyDo, bangLech: [] };
@@ -400,7 +424,10 @@ export function kiemDb(cfg) {
     const pr = spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", cfg.container, "pg_restore", "-U", "oneinvest", "-h", "localhost",
       "--no-owner", "--no-privileges", "-d", ten], { stdio: [fd, "pipe", "pipe"], encoding: "utf8" });
     fs.closeSync(fd);
-    if (pr.status !== 0) return { ma: 1, thongDiep: `pg_restore lỗi: ${(pr.stderr || "").split("\n")[0]}`, bangLech: [] };
+    if (pr.status !== 0) {
+      const loiCon = loiPgRestoreConLai(pr.stderr || "");
+      if (pr.error || loiCon.length) return { ma: 1, thongDiep: `pg_restore lỗi: ${(loiCon[0] || pr.stderr || "").split("\n")[0]}`, bangLech: [] };
+    }
     const dem = psql(cfg, ten, `${rutDemSql(cfg.goc)} \\gexec\n`);
     if (dem.status !== 0) return { ma: 1, thongDiep: "đếm số dòng trên DB thử lỗi", bangLech: [] };
     const goc = docSoDong(fs.readFileSync(tsv, "utf8"));

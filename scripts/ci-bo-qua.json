@@ -255,6 +255,16 @@
       "tep": "scripts/kiem-tin-rao-gan-khu-vuc.test.mjs",
       "ca": "KDM-AC-3 ba chiều trên cùng DB",
       "ly_do": "cần bài stg thật của S03/S05/S06 ở DB local (tin mồi chọn từ kết quả lượt nền)"
+    },
+    {
+      "tep": "scripts/sao-luu-ngoai-may.test.mjs",
+      "ca": "sao lưu thật trên kho cục bộ (AC-3, AC-4, AC-7, AC-8, AC-9, AC-5)",
+      "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
+    },
+    {
+      "tep": "scripts/sao-luu-ngoai-may.test.mjs",
+      "ca": "giữ phiên bản và khoá kho (AC-9)",
+      "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
     }
   ]
 }
