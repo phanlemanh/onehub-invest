@@ -5,7 +5,9 @@ slug: khoa-gop-can-khong-gia
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-12-khoa-gop-can-khong-gia-design.md
 ---
 
