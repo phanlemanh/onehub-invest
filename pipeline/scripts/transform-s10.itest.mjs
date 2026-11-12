@@ -6,7 +6,7 @@ import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { test } from "node:test";
 
 import pg from "pg";
@@ -104,22 +104,49 @@ test("S10-AC-1 089 đúng khuôn bộ nạp, chạy lại không đổi lược 
 test("S10-AC-2 bộ nạp ghi đủ dòng bộ bóc trả, nạp lại không thêm", { timeout: 1_800_000 }, async () => {
   const c = await ketNoi();
   try {
-    let mong = 0, lech = 0;
-    for (const d of ca.snap) for (const it of itemsCua(d)) {
-      if (it.kind !== "stock_table" || !duBoLoc(it)) continue;
-      const b = bocS10(it); mong += b.dong.length; lech += b.lechKhuon;
+    // T = Σ dòng bộ bóc trả, K = số stock_id khác nhau mỗi snapshot, C = dòng trùng chéo 177↔178 (cùng snapshot).
+    let tong = 0, khac = 0, cheo = 0, lech = 0;
+    const khoaCheo = []; // "<snapshot>|<stock_id>" có ở cả 177 và 178
+    for (const d of ca.snap) {
+      const thay = new Map();
+      for (const it of itemsCua(d)) {
+        if (it.kind !== "stock_table" || !duBoLoc(it)) continue;
+        const b = bocS10(it); lech += b.lechKhuon;
+        const bt = String(it.meta?.request?.block_type);
+        for (const r of b.dong) {
+          tong++;
+          if (!thay.has(r.stock_id)) { thay.set(r.stock_id, new Set([bt])); khac++; }
+          else { cheo++; thay.get(r.stock_id).add(bt); }
+        }
+      }
+      for (const [id, s] of thay) if (s.has("177") && s.has("178")) khoaCheo.push(`${basename(d)}|${id}`);
     }
-    assert.ok(mong > 0, "S10-AC-2: lượt 11/11 không có dòng nào đủ bộ lọc");
+    assert.ok(tong > 0, "S10-AC-2: lượt 11/11 không có dòng nào đủ bộ lọc");
+    assert.equal(tong, khac + cheo, "S10-AC-2: đếm độc lập không khép");
+    let trungIn = 0;
     for (const d of ca.snap) {
       const r = chay(NAP, [d]);
       assert.equal(r.status, 0, `S10-AC-2: bộ nạp thoát ${r.status}\n${r.stdout}${r.stderr}`);
       assert.doesNotMatch(r.stdout, /CHUA-AP-089/, "S10-AC-2: bộ nạp in CHUA-AP-089 sau khi áp 089");
+      const m = r.stdout.match(/dòng S10[^\n]*trùng (\d+)\)/);
+      if (/dòng S10/.test(r.stdout)) {
+        assert.ok(m, `S10-AC-2: dòng tổng kết thiếu «trùng <số>» — ${d}\n${r.stdout}`);
+        trungIn += Number(m[1]);
+      }
     }
+    assert.equal(trungIn, cheo, `S10-AC-2: bộ nạp in tổng trùng ${trungIn}, đếm độc lập ${cheo}`);
     const dem = async () => (await c.query(
       `SELECT count(*)::int n, count(*) FILTER (WHERE unit_number IS NULL AND status_raw IS NULL AND property_sub_type_raw IS NULL)::int lech
          FROM stg_s10_stock WHERE snapshot_id LIKE $1`, [`${NGAY_LUOT}%`])).rows[0];
     const a = await dem();
-    assert.deepEqual([a.n, a.lech], [mong, lech], "S10-AC-2: số dòng stg_s10_stock khác tổng bocS10 của lượt");
+    assert.deepEqual([a.n, a.lech], [khac, lech], `S10-AC-2: stg_s10_stock khác số stock_id khác nhau (T ${tong} = K ${khac} + C ${cheo})`);
+    // Căn trùng chéo giữ dòng của bảng 177.
+    assert.ok(khoaCheo.length > 0, "S10-AC-2: lượt 11/11 không có căn trùng chéo 177↔178 — ca giữ 177 không được đo");
+    const { rows: [g] } = await c.query(
+      `SELECT count(*) FILTER (WHERE block_type = 177)::int n177, count(*)::int n FROM stg_s10_stock
+        WHERE snapshot_id || '|' || stock_id = ANY($1::text[])`, [khoaCheo]);
+    assert.deepEqual([g.n, g.n177], [khoaCheo.length, khoaCheo.length],
+      `S10-AC-2: ${khoaCheo.length} căn trùng chéo, stg có ${g.n} dòng, ${g.n177} dòng bảng 177`);
     for (const d of ca.snap) chay(NAP, [d]);
     assert.deepEqual(await dem(), a, "S10-AC-2: nạp lại thêm dòng");
   } finally { await c.end(); }
