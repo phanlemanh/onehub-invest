@@ -272,6 +272,9 @@ executors:
     cloud_sync_do: node --test scripts/cloud-sync-do.test.mjs
     refresh_bait_gap_khoa: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_rbk --chay node --test --test-concurrency=1 scripts/refresh-bait-gap-khoa.itest.mjs
     refresh_bait_gap_goi: node --test pipeline/scripts/refresh-bait-gap-goi.test.mjs
+    sl_test: "node --test --test-concurrency=1 scripts/sao-luu-ngoai-may.test.mjs"   # sao-luu-ma-hoa-b2 E1–E5, E7, E9, E10 — cây giả + kho restic cục bộ dưới thư mục tạm, restic giả đếm lời gọi
+    sl_db: "node --test --test-concurrency=1 scripts/sao-luu-ngoai-may.itest.mjs"   # sao-luu-ma-hoa-b2 E6 — DB nguồn nhỏ oneinvest_u1_saoluu_* tự dựng/xoá trên :5433, dump → kho cục bộ → kiem-db, so so-dong.tsv; không dump DB oneinvest
+    sl_freshness: "node --test scripts/check-freshness.test.mjs"   # sao-luu-ma-hoa-b2 E8 — dòng «Sao lưu ngoài máy» 35h/37h/lỗi/chưa bật
     s07_thuan: "bash -o pipefail -c 'cd pipeline && node --test scripts/s07-danh-muc.test.mjs | tee /dev/stderr | grep \"pass 9$\" >/dev/null'"   # thu-danh-muc-s07 E2, E3, E4, E6, E8 — hàm bóc thuần, HTML giả, không DB; đòi đúng chín ca chạy
     s07_db: "bash -o pipefail -c 'cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s07 --chay node --test --test-concurrency=1 scripts/s07-danh-muc-db.test.mjs | tee /dev/stderr | grep \"pass 8$\" >/dev/null'"   # thu-danh-muc-s07 E1, E5, E7, E9 — 093 + nạp trên lược đồ tạm của DB riêng lượt; đòi đúng tám ca chạy
     dv4_doc: "node --test pipeline/scripts/tang-tren-tin.test.mjs"   # tang-tren-tin-s03 E4 — ma trận bộ đọc tầng, hàm thuần
@@ -279,6 +282,7 @@ executors:
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
     dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
     pl34_khong_lui: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vxF -e 'VIOLATION [pl34-lich-dem-sau-buoc]: status=implemented but no evidence-report.md' -e 'VIOLATION [pl34-lich-dem-sau-buoc]: verdict PASS but human_signoff is empty (Gate 2 pending)'"   # pl34-lich-dem-sau-buoc AC-5 — lưới trước-gộp chỉ còn hai dòng chờ của chính hồ sơ (chưa ký)
