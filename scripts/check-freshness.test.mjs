@@ -16,6 +16,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, describe, test } from "node:test";
 
 import { PROBES, SLO_HOURS, TIME_SOURCE, readFreshness } from "./lib/freshness.mjs";
+import { SAO_LUU_SLO_GIO, docTrangThaiSaoLuu } from "./lib/sao-luu-ngoai-may.mjs";
+
+// Ca CLI chạy với thư mục trạng thái sao lưu RỖNG của riêng lượt (chưa bật) — không đọc ~/.oneinvest của máy chạy test.
+const SAO_LUU_RONG = mkdtempSync(path.join(tmpdir(), "freshness-sao-luu-"));
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, "check-freshness.mjs");
@@ -263,7 +267,7 @@ async function withSchema(f, fn) {
 function cli(schema, args = [], env = {}) {
   return new Promise((resolve) => {
     const c = spawn(process.execPath, [CLI, "--schema", schema, "--now", NOW.toISOString(), ...args], {
-      env: { ...process.env, WEBHOOK_URL: "", ...env },
+      env: { ...process.env, WEBHOOK_URL: "", SAO_LUU_THU_MUC: SAO_LUU_RONG, ...env },
     });
     let stdout = "";
     let stderr = "";
@@ -616,4 +620,48 @@ test("GT-AC-6 DB hiện tại (chẩn đoán, không chặn)", async (t) => {
     extra.push(`S06 nạp=${c6.nap?.toISOString?.() ?? "—"} thu=${c6.thu?.toISOString?.() ?? "—"} lệch-snapshot=${c6.lech}`);
   }
   t.diagnostic(`gt-live: thoát json=${js.code} chữ=${txt.code} · lỗi: ${bad} · ${extra.join(" · ")} · chấm lúc ${new Date().toISOString()}`);
+});
+
+describe("C12 sao lưu ngoài máy (sao-luu-ma-hoa-b2 AC-7)", () => {
+  const thu = (tt, { xacNhan = true, hong = false } = {}) => {
+    const d = mkdtempSync(path.join(tmpdir(), "c12-"));
+    if (xacNhan) writeFileSync(path.join(d, "da-cat-khoa"), "x\n");
+    if (tt) writeFileSync(path.join(d, "trang-thai.json"), hong ? "{\"ket_qua\": \"ok\", " : JSON.stringify(tt));
+    return { d, tepTrangThai: path.join(d, "trang-thai.json"), tepXacNhan: path.join(d, "da-cat-khoa") };
+  };
+  const okCach = (h) => ({ ket_qua: "ok", lan_ok_cuoi: ago(h) });
+  const doc = (x) => docTrangThaiSaoLuu({ tepTrangThai: x.tepTrangThai, tepXacNhan: x.tepXacNhan, now: NOW });
+  test("C12 SLO là 36 giờ", () => assert.equal(SAO_LUU_SLO_GIO, 36, "C12: SLO"));
+  test("C12a 35 giờ → ok", () => assert.deepEqual([doc(thu(okCach(35))).trangThai, doc(thu(okCach(35))).xau], ["ok", false], "C12a"));
+  test("C12b 37 giờ → quá hạn, xấu", () => assert.deepEqual([doc(thu(okCach(37))).trangThai, doc(thu(okCach(37))).xau], ["qua-han", true], "C12b"));
+  test("C12c lượt cuối lỗi → xấu dù bản tốt cuối còn mới", () => {
+    const r = doc(thu({ ket_qua: "loi", buoc_loi: "backup", lan_ok_cuoi: ago(2) }));
+    assert.deepEqual([r.trangThai, r.xau], ["loi", true], "C12c");
+    assert.match(r.dong, /backup/, "C12c: dòng nêu bước lỗi");
+  });
+  test("C12d chưa có tệp, chưa bật → chua-bat, không xấu", () => {
+    const r = doc(thu(null, { xacNhan: false }));
+    assert.deepEqual([r.trangThai, r.xau], ["chua-bat", false], "C12d");
+    assert.match(r.dong, /chưa bật/, "C12d: dòng");
+  });
+  test("C12e chưa có tệp mà đã bật → xấu", () => {
+    const r = doc(thu(null));
+    assert.deepEqual([r.trangThai, r.xau], ["chua-co-luot", true], "C12e");
+    assert.match(r.dong, /đã bật mà chưa có lượt/, "C12e: dòng");
+  });
+  test("C12e2 tệp trạng thái hỏng → loi, xấu", () => assert.deepEqual([doc(thu({}, { hong: true })).trangThai, doc(thu({}, { hong: true })).xau], ["loi", true], "C12e2"));
+  test("C12f lan_ok_cuoi ở tương lai (đồng hồ lùi) → ok, tuổi 0", () => {
+    const r = doc(thu(okCach(-5)));
+    assert.deepEqual([r.trangThai, r.tuoiGio, r.xau], ["ok", 0, false], "C12f");
+  });
+  test("C12 CLI: nguồn đều tươi, sao lưu 37 giờ → thoát 1, stderr nêu dòng sao lưu; 35 giờ → thoát 0", async (t) => {
+    if (needDb(t)) return;
+    const cu = thu(okCach(37));
+    const moi = thu(okCach(35));
+    const [r37, r35] = await withSchema(baseFixture(), async (s) => [await cli(s, [], { SAO_LUU_THU_MUC: cu.d }), await cli(s, [], { SAO_LUU_THU_MUC: moi.d })]);
+    assert.equal(r37.code, 1, `C12 CLI 37h: mã\n${r37.stderr}`);
+    assert.match(r37.stderr, /Sao lưu ngoài máy: quá hạn 36 giờ/, "C12 CLI 37h: stderr");
+    assert.equal(r35.code, 0, `C12 CLI 35h: mã\n${r35.stderr}`);
+    assert.match(r35.stdout, /Sao lưu ngoài máy: ok/, "C12 CLI 35h: stdout");
+  });
 });
