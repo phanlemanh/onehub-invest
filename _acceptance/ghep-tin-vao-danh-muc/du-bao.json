@@ -1,0 +1,46 @@
+{
+  "ngay_tinh": "2026-11-12",
+  "hang": {
+    "ma": "PL20",
+    "gio_may": [
+      0.49,
+      3.77
+    ],
+    "phan_tram": 1.43
+  },
+  "moc": {
+    "ten": "Việc đầu tiên sau 05/11",
+    "bat_dau": "2026-11-12",
+    "hoan_tat": "2026-11-13",
+    "gio_may": [
+      16.33,
+      48.57000000000001
+    ],
+    "gio_cho": 6.24,
+    "gio_cho_do": true,
+    "muc_tieu": null,
+    "hang": [
+      "GC0",
+      "GN0",
+      "GN0b",
+      "GN0c",
+      "PL30",
+      "DO1",
+      "PL34",
+      "DO3",
+      "PL18",
+      "GCQ1",
+      "GCQ2",
+      "GC1",
+      "DN1",
+      "DB1",
+      "GN1",
+      "GN2",
+      "PL13",
+      "PL20",
+      "GC2",
+      "GC3",
+      "DO2"
+    ]
+  }
+}
