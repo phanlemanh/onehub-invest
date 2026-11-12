@@ -146,6 +146,7 @@ const COT_S10 = ["stock_id", "source_id", "project_id", "block_type", "unit_numb
   "property_sub_type_raw", "lot_size_m2", "building_area_m2", "handover_condition_raw", "direction_faces_raw",
   "list_price_vnd", "status_raw", "remarks_raw", "source_modified_on", "snapshot_id", "captured_at", "server_cond", "raw_row"];
 /** Nạp dòng của một item stock_table theo lô 500; trả số dòng THẬT SỰ ghi (nạp lại cùng snapshot → 0). */
+let s10TrungLan = 0; // 1211-22(2): đếm dòng trùng bị ON CONFLICT bỏ theo lượt nạp
 async function napS10(client, rows, snapshotId, capturedAt, cond) {
   let ghi = 0;
   for (let i = 0; i < rows.length; i += 500) {
@@ -160,8 +161,12 @@ async function napS10(client, rows, snapshotId, capturedAt, cond) {
       params.push(...v);
       return `(${v.map((_, j) => `$${base + j + 1}`).join(",")})`;
     });
+    const dangCo = new Set((await client.query(
+      `SELECT stock_id FROM ${STG_S10} WHERE snapshot_id = $1 AND stock_id = ANY($2::text[])`,
+      [snapshotId, lo.map((d) => d.stock_id)])).rows.map((x) => x.stock_id));
+    s10TrungLan += lo.filter((d) => dangCo.has(d.stock_id)).length;
     const r = await client.query(
-      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(",")}
+      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(", ")}
        ON CONFLICT (snapshot_id, stock_id) DO NOTHING`, params);
     ghi += r.rowCount ?? 0;
   }
@@ -485,7 +490,7 @@ async function main() {
     await client.query("COMMIT");
     console.log(
       `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
-      + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn)` : ""),
+      + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn, trùng ${s10TrungLan})` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

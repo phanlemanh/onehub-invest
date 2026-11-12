@@ -7,7 +7,9 @@
 
 /** Khuôn cột theo block_type: chỉ số ô (đếm cả ô trong chú thích) → trường. */
 export const KHUON_S10 = {
-  177: { soO: 29, ma: 0, phanKhu: 1, day: 2, loai: 3, dtDat: 4, dtXay: 5, hienTrang: 6, huong: 7, gia: 8, trangThai: 9, ghiChu: [13, 14], ngay: 18 },
+  // 1211-22 (đo 1.078 dòng 177 snapshot 014105012): 9 = giá «N tỷ»; 8 = trạng thái (thường trống);
+  // 13 = ngày bàn giao («d/m/yyyy» hoặc «CSBH…»); 18 = văn bản hợp đồng (HĐMB-VHM-VPB…); 20 = ngân hàng.
+  177: { soO: 29, ma: 0, phanKhu: 1, day: 2, loai: 3, dtDat: 4, dtXay: 5, hienTrang: 6, huong: 7, gia: 9, trangThai: null, ghiChu: [18, 20], ngay: 13 },
   178: { soO: 16, ma: 0, phanKhu: 1, day: 2, loai: 3, dtDat: 5, dtXay: 6, huong: 7, hienTrang: 8, gia: null, trangThai: 10, ghiChu: [13], ngay: null },
 };
 
@@ -41,7 +43,7 @@ export function soM2(s) {
 /** Giá VND thô: chỉ chữ số (có thể có dấu chấm/phẩy nhóm nghìn) → bigint dạng chuỗi; 0 hoặc rỗng → null. */
 export function giaVnd(s) {
   if (s == null) return null;
-  const t = String(s).replace(/[.,\s]/g, "");
+  const t = String(s).replace(/[.,\s]/g, "").replace(/t[ỷi]$/i, "");
   if (!/^\d+$/.test(t)) return null;
   return /^0+$/.test(t) ? null : t.replace(/^0+/, "");
 }
@@ -88,7 +90,7 @@ export function bocS10(item) {
         handover_condition_raw: rongThanhNull(o[k.hienTrang]),
         direction_faces_raw: rongThanhNull(o[k.huong]),
         list_price_vnd: k.gia == null ? null : giaVnd(o[k.gia]),
-        status_raw: rongThanhNull(o[k.trangThai]),
+        status_raw: k.trangThai == null ? null : rongThanhNull(o[k.trangThai]),
         remarks_raw: ghi.length ? ghi.join(" · ") : null,
         source_modified_on: k.ngay == null ? null : ngayDmy(o[k.ngay]),
         lech_khuon: false,
