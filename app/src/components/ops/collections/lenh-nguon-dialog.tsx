@@ -2,7 +2,7 @@
 
 // Hộp thoại xác nhận lệnh tạm dừng/bật lại một nguồn (TV4b `tam-dung-nguon-tu-cloud`, ADR-0015 §6): xem trước → sau,
 // ghi lý do bắt buộc, gửi `POST /api/v1/ops/change-requests` kèm `tu_duyet` (route tự xử đích S03 chờ người thứ hai).
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/reui/alert"
@@ -47,16 +47,10 @@ export function LenhNguonDialog({
   const [lyDo, setLyDo] = useState("")
   const [dangGui, setDangGui] = useState(false)
   const [loi, setLoi] = useState<string | null>(null)
-  const khoa = useRef("")
+  // Một lần dựng = một ý định: nơi dùng dựng hộp thoại mới mỗi lần mở (FeedsGrid gắn nó khi bấm nút), nên khoá
+  // idempotency sinh một lần ở đây — bấm Gửi hai lần trong cùng lần mở chỉ ra một lệnh.
+  const [khoa] = useState(() => crypto.randomUUID())
   const guiRef = useRef(false)
-
-  // Mỗi lần mở là một ý định mới: khoá idempotency mới, ô trống (bấm Gửi hai lần trong cùng lần mở chỉ ra một lệnh).
-  useEffect(() => {
-    if (!open) return
-    khoa.current = crypto.randomUUID()
-    setLyDo("")
-    setLoi(null)
-  }, [open])
 
   const [truoc, sau] = loai === "pause" ? ["active", "paused"] : ["paused", "active"]
   const hopLe = coTheGui(lyDo)
@@ -69,8 +63,8 @@ export function LenhNguonDialog({
     const t = lyDo.trim()
     const body =
       loai === "pause"
-        ? { type: "source.pause", target: code, payload: { reason: t }, ly_do: t, tu_duyet: true, idempotency_key: khoa.current }
-        : { type: "source.resume", target: code, payload: {}, ly_do: t, tu_duyet: true, idempotency_key: khoa.current }
+        ? { type: "source.pause", target: code, payload: { reason: t }, ly_do: t, tu_duyet: true, idempotency_key: khoa }
+        : { type: "source.resume", target: code, payload: {}, ly_do: t, tu_duyet: true, idempotency_key: khoa }
     try {
       const res = await fetch("/api/v1/ops/change-requests", {
         method: "POST",

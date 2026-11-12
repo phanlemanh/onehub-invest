@@ -45,7 +45,7 @@ type ClientNs = typeof import("react-dom/client")
 let R: ReactNs & ClientNs
 const nap = async () => (R ??= { ...(await import("react")), ...(await import("react-dom/client")) } as ReactNs & ClientNs)
 const act = async (f: () => unknown) => (await nap()).act(f as () => Promise<void>)
-const createElement = (...a: Parameters<ReactNs["createElement"]>) => R.createElement(...a)
+const createElement = (t: unknown, p: Record<string, unknown>) => R.createElement(t as never, p as never)
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..")
 const COL = join(APP, "src/components/ops/collections")
@@ -158,4 +158,113 @@ test("TD-AC-3b bật lại: payload rỗng, lý do đi bằng ly_do; đang gửi
   const dang = nut("Đang gửi…")
   assert.equal(dang.length, 1, "phải có nút «Đang gửi…»")
   assert.equal(dang[0].hasAttribute("disabled"), true)
+})
+
+// ---- TD-AC-6b: cột Thao tác theo vai ----
+const NGUON = (code: string, status: string) => ({
+  code, labelVi: "thu", status, note: null, lastRunAt: null, lastRunSource: null, items24h: 0, stgRows: 0, offers: null,
+  freshnessHrs: null, sloHours: null, freshness: null,
+})
+const FEEDS = [NGUON("S05", "active"), NGUON("S06", "paused"), NGUON("S08", "retired")]
+const lenhCho = { id: "c9", type: "source.pause", target: "S05", payload: { reason: "x" }, status: "approved", requested_by: "user:A",
+  approved_by: "user:A", note: null, before: null, after: null, result: null, created_at: "2026-11-12T03:00:00Z", decided_at: null,
+  queued_at: null, finished_at: null }
+
+async function dungLuoi(vai: string, lenh: unknown[] = [], tep = join(COL, "feeds-grid.tsx")) {
+  await nap()
+  const { FeedsGrid } = await import(pathToFileURL(tep).href)
+  await dung(createElement(FeedsGrid, { feeds: FEEDS, thaoTac: { vai, lenh, factsPushedAt: "2026-11-12T03:00:00Z", onDaGui: () => {} } }))
+}
+const coTieuDeThaoTac = () => [...document.querySelectorAll("th")].some((th) => th.textContent?.includes("Thao tác"))
+const hangCua = (code: string) => [...document.querySelectorAll("tr")].find((tr) => tr.textContent?.includes(code))
+
+test("TD-AC-6b cột Thao tác: viewer không cột; ops một Tạm dừng; admin thêm Bật lại; có lệnh chờ thì không nút", async () => {
+  await dungLuoi("viewer")
+  assert.equal(coTieuDeThaoTac(), false, "viewer thấy cột Thao tác")
+  assert.equal(nut("Tạm dừng").length + nut("Bật lại").length, 0)
+  await act(async () => root?.unmount())
+  root = null
+
+  await dungLuoi("ops")
+  assert.equal(coTieuDeThaoTac(), true)
+  assert.equal(nut("Tạm dừng").length, 1)
+  assert.ok(hangCua("S05")?.textContent?.includes("Tạm dừng"))
+  assert.equal(nut("Bật lại").length, 0)
+  await act(async () => root?.unmount())
+  root = null
+
+  await dungLuoi("admin")
+  assert.deepEqual([nut("Tạm dừng").length, nut("Bật lại").length], [1, 1])
+  assert.ok(hangCua("S06")?.textContent?.includes("Bật lại"))
+  await act(async () => root?.unmount())
+  root = null
+
+  await dungLuoi("admin", [lenhCho])
+  assert.ok(hangCua("S05")?.textContent?.includes("Đang có lệnh chờ"))
+  assert.equal(nut("Tạm dừng").length, 0, "S05 có lệnh chờ vẫn còn nút")
+  await act(async () => root?.unmount())
+  root = null
+
+  const thay = await banSao(join(COL, "feeds-grid.tsx"), "BAC_VAI[thaoTac.vai] >= BAC_VAI.ops", "true", async (dot) => {
+    await dungLuoi("viewer", [], dot)
+    return coTieuDeThaoTac()
+  })
+  assert.equal(thay, true, "viewer: bản sao bỏ kiểm vai phải hiện cột cho viewer")
+})
+
+// ---- TD-AC-6d: vùng Lệnh gần đây ----
+async function dungVung(vai: string, actor: string) {
+  await nap()
+  const { LenhGanDay } = await import(pathToFileURL(join(COL, "lenh-gan-day.tsx")).href)
+  await dung(createElement(LenhGanDay, { vai, actor, taiLai: 0 }))
+}
+const lenhS03 = { ...lenhCho, id: "c3", target: "S03", status: "submitted", approved_by: null }
+
+test("TD-AC-6d Lệnh gần đây: tải · trống · lỗi + Thử lại · Duyệt S03 chỉ cho admin khác người gửi", async () => {
+  fetchGia(() => new Promise<Response>(() => {}))
+  await dungVung("ops", "user:B")
+  assert.ok(document.querySelector("[data-slot=skeleton]"), "đang tải phải có Skeleton")
+  await act(async () => root?.unmount())
+  root = null
+
+  fetchGia(() => json({ commands: [], last_pull_at: null }))
+  await dungVung("ops", "user:B")
+  assert.ok(coChu("Chưa có lệnh nào"))
+  await act(async () => root?.unmount())
+  root = null
+
+  const goi = fetchGia(() => json({ error: "x" }, 500))
+  await dungVung("ops", "user:B")
+  assert.ok(coChu("Không tải được danh sách lệnh"))
+  await bam(nut("Thử lại")[0])
+  assert.equal(goi.length, 2, "Thử lại phải gọi fetch lần hai")
+  await act(async () => root?.unmount())
+  root = null
+
+  const thay = async (vai: string, actor: string) => {
+    fetchGia(() => json({ commands: [lenhS03], last_pull_at: null }))
+    await dungVung(vai, actor)
+    const r = [nut("Duyệt").length, nut("Từ chối").length]
+    await act(async () => root?.unmount())
+    root = null
+    return r
+  }
+  assert.deepEqual(await thay("admin", "user:B"), [1, 1], "admin khác người gửi phải thấy Duyệt/Từ chối")
+  assert.deepEqual(await thay("admin", "user:A"), [0, 0], "người gửi không tự duyệt S03")
+  assert.deepEqual(await thay("ops", "user:B"), [0, 0], "vai ops không duyệt")
+})
+
+test("TD-RF trang ẩn: vùng lệnh không tự tải lại; hiện lại thì tải", async (t) => {
+  t.mock.timers.enable({ apis: ["setInterval"] })
+  const goi = fetchGia(() => json({ commands: [lenhCho], last_pull_at: null }))
+  await dungVung("ops", "user:B")
+  assert.equal(goi.length, 1)
+  Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true })
+  await act(async () => t.mock.timers.tick(30_000))
+  await cho()
+  assert.equal(goi.length, 1, "trang ẩn vẫn tải lại")
+  Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true })
+  await act(async () => t.mock.timers.tick(30_000))
+  await cho()
+  assert.equal(goi.length, 2, "trang hiện phải tải lại")
 })
