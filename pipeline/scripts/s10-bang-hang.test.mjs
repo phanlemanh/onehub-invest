@@ -1,7 +1,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -128,15 +128,8 @@ const IMPORTER = join(import.meta.dirname, "../import-airbnb.mjs");
 const tmps = [];
 // 1211-31(a): áp CHÍNH tệp migration 089 thật (không chép tay — hết lệch khuôn); nhánh DA29 chứa tệp.
 const DDL_089_FILE = join(import.meta.dirname, "..", "..", "db", "migrations", "089_s10_bang_hang.sql");
-const DDL_089 = (() => {
-  try { return readFileSync(DDL_089_FILE, "utf8"); }  // readFileSync đã import đầu tệp
-  catch { return `CREATE TABLE stg_s10_stock (stock_id text NOT NULL, source_id text NOT NULL, project_id text NOT NULL,
-    block_type smallint NOT NULL CHECK (block_type IN (177, 178)), unit_number text, subdivision_name text,
-    block_raw text, property_sub_type_raw text, lot_size_m2 numeric, building_area_m2 numeric,
-    handover_condition_raw text, direction_faces_raw text, list_price_vnd numeric, status_raw text,
-    remarks_raw text, source_modified_on date, snapshot_id text NOT NULL, captured_at timestamptz NOT NULL,
-    server_cond jsonb, raw_row text, PRIMARY KEY (snapshot_id, stock_id))`; }
-})();;
+// 1211-31 MỞ LẠI(1): KHÔNG có DDL dự phòng — không đọc được 089 là ném (ca đỏ), hết chạy ẩn trên DDL chép tay
+const DDL_089 = readFileSync(DDL_089_FILE, "utf8");;
 
 async function q(sql, params) {
   const c = new pg.Client({ connectionString: DB });
@@ -147,8 +140,10 @@ test.before(async () => {
   const c = new pg.Client({ connectionString: DB_Q });
   await c.connect();
   try {
-    await c.query(`CREATE SCHEMA "${SCHEMA}"`);
+    await c.query(`CREATE SCHEMA IF NOT EXISTS "${SCHEMA}"`);
     await c.query(`CREATE TABLE "${SCHEMA}".airbnb_snapshots (LIKE public.airbnb_snapshots INCLUDING ALL)`);
+    // 089 thật tạo s10_project_links REFERENCES asset_nodes(id) — DB thử cần bảng này trước q(DDL_089)
+    await c.query(`CREATE TABLE IF NOT EXISTS public.asset_nodes (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY)`);
   } finally { await c.end(); }
 });
 test.after(async () => {
@@ -186,6 +181,8 @@ test("S10-8 DB chưa có 089: in CHUA-AP-089, thoát 0, KHÔNG đánh dấu snap
 });
 
 test("S10-9 có 089: nạp dòng đủ lọc, bỏ item thiếu lọc có đếm, nạp lại cùng snapshot không nhân đôi; schemaVersion 4 cũ vẫn nhận", async () => {
+  // 089 thật: s10_project_links REFERENCES asset_nodes(id) — DB thử cần bảng này trước khi áp DDL
+  await q(`CREATE TABLE IF NOT EXISTS asset_nodes (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY)`);
   await q(DDL_089);
   const dir = snapGia("2026-11-11T014000002", [
     item(177, dong177(21) + dong177(22, { gia: "0" })),

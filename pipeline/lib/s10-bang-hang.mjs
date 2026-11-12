@@ -74,7 +74,8 @@ export function bocS10(item) {
     const raw = m[0];
     const stock = raw.match(/[?&]stock_id=(\d+)/);
     if (!stock) { khongStockId++; continue; }
-    if (!Number.isFinite(projectId)) { khongProjectId++; continue; } // 1211-31(b): fail-closed — không ghi project_id NaN
+    // 1211-31 MỞ LẠI(2): kiểm /^\d+$/ trên CHUỖI GỐC — Number('')/Number(null) = 0 đang lọt thành project_id 0
+    if (!/^\d+$/.test(String(item?.meta?.request?.project_id ?? ""))) { khongProjectId++; continue; }
     const o = [...m[1].matchAll(RE_O)].map((x) => chuTho(x[1]));
     const d = { stock_id: stock[1], source_id: `s10:${stock[1]}`, project_id: projectId, block_type: bt, raw_row: raw };
     if (!k || o.length !== k.soO) {

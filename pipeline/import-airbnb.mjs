@@ -340,6 +340,10 @@ async function main() {
         s10Boc += soDongTrang; // Σ bóc = TẤT CẢ tr.p_row (đủ lọc + thiếu lọc) — đẳng thức tự khép
         if (!duBoLoc(it)) { s10ThieuLoc += soDongTrang; continue; } // 1211-26: đếm DÒNG bỏ
         const r = bocS10(it);
+        // 1211-31 MỞ LẠI(3): đếm stock_id lặp TRONG CÙNG item (cùng bảng) — có thể chỉ dòng đầu được ghi
+        const demTrongItem = new Map();
+        for (const d of r.dong) demTrongItem.set(d.stock_id, (demTrongItem.get(d.stock_id) ?? 0) + 1);
+        for (const [, n] of demTrongItem) if (n > 1) s10TrungLan += n - 1;
         s10Lech += r.lechKhuon;
         if (r.khongStockId) { s10KhongStock += r.khongStockId; console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`); }
         if (r.khongProjectId) { s10KhongPJ += r.khongProjectId; console.warn(`S10: ${r.khongProjectId} dòng không có project_id (bỏ — fail-closed 1211-31b): ${it.sourceId} ${manifest.snapshotId}`); }
