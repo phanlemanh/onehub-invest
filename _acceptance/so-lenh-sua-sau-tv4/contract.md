@@ -5,7 +5,7 @@ slug: so-lenh-sua-sau-tv4
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: không tệp nào khớp t3_paths (pipeline/lib, app/src/lib, pipeline/cron, scripts/cap-token-may, docs)
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-11
 design_doc: docs/superpowers/specs/2026-11-11-so-lenh-sua-sau-tv4-design.md
@@ -84,3 +84,11 @@ Không có `opportunity.md` (hàng do giám sát mở từ quyết định Gate 
 - Nạp plist vào launchd và các bước triển khai khác: sau gộp, theo lời Mạnh.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-12:
+  - Ngoài-1: cấp token mà máy thu chưa có thư mục cấu hình thì lệnh báo lỗi nhưng token đã có hiệu lực, không ai giữ bản gốc; người vận hành thu hồi rồi cấp lại.
+  - Ngoài-3: cloud.env còn dòng token cũ bị ghi chú thì công cụ cấp vẫn coi là đã có token, bộ kéo lệnh đọc token đã thu hồi; dọn dòng cũ rồi chạy lại.
+  - Ngoài-4: ghi tệp hỏng sau khi token đã lên cloud thì tên máy bị khoá với token không ai giữ cho tới khi thu hồi tay.
+  - Ngoài-5: máy đặt OPS_APPLY_CONFIG_DIR riêng thì token mới ghi sang tệp khác với tệp bộ kéo lệnh đọc; chép token sang đúng tệp.
+  - Ngoài-6: ghi cloud.env thất bại thì thông báo không nói cloud đã cấp token, người chạy phải tự biết thu hồi trước khi thử lại.
+  - Ngoài-7: dịch vụ cloud trả phản hồi lạ thì công cụ có thể báo nhầm đang có token hiệu lực và bỏ token vừa cấp; thu hồi rồi cấp lại.
