@@ -30,7 +30,10 @@ async function kichBan(hamNap, giaTruoc) {
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     if (giaTruoc) {
       const truc061 = [...MIG_061.matchAll(/'([a-z_0-9]+)'/g)].map((m) => m[1]);
+      // Bảng chỉ thêm (trigger chặn xoá): tắt trigger CHỈ trong giao dịch này — giao dịch luôn ROLLBACK.
+      await c.query("SET LOCAL session_replication_role = replica");
       await c.query("DELETE FROM field_assertions WHERE NOT field = ANY($1)", [truc061]);
+      await c.query("SET LOCAL session_replication_role = origin");
       const song = await truongSong(c);
       await c.query("ALTER TABLE field_assertions DROP CONSTRAINT field_assertions_field_chk");
       await c.query(`ALTER TABLE field_assertions ADD CONSTRAINT field_assertions_field_chk CHECK (field IN (${[...song, GIA].map((f) => `'${f}'`).join(", ")}))`);
@@ -43,7 +46,7 @@ const cu1 = await kichBan(sqlNapLai, false), moi1 = await kichBan(sqlNapLaiDayDu
 const cu2 = await kichBan(sqlNapLai, true), moi2 = await kichBan(sqlNapLaiDayDu, true);
 await c.end();
 const okRB = /violated by some row/.test(cu1.loi ?? "") && moi1.loi === null && cu2.loi === null && cu2.coGia === false && moi2.coGia === true;
-console.log(`RB: cũ «${cu1.loi ?? "không lỗi"}» · mới ${moi1.loi ?? "không lỗi"} · cũ mất ${GIA}: ${cu2.coGia === false} · mới giữ ${GIA}: ${moi2.coGia}`);
+console.log(`RB: cũ «${cu1.loi ?? "không lỗi"}» · mới ${moi1.loi ?? "không lỗi"} · cũ mất ${GIA}: ${cu2.coGia === false}${cu2.loi ? ` (lỗi ${cu2.loi})` : ""} · mới giữ ${GIA}: ${moi2.coGia}${moi2.loi ? ` (lỗi ${moi2.loi})` : ""}`);
 kiem(okRB, okRB ? "DOI CHUNG RB DO" : "DOI CHUNG RB KHONG DO DUNG");
 
 // (TEP)
