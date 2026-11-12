@@ -146,6 +146,7 @@ const COT_S10 = ["stock_id", "source_id", "project_id", "block_type", "unit_numb
   "property_sub_type_raw", "lot_size_m2", "building_area_m2", "handover_condition_raw", "direction_faces_raw",
   "list_price_vnd", "status_raw", "remarks_raw", "source_modified_on", "snapshot_id", "captured_at", "server_cond", "raw_row"];
 /** Nạp dòng của một item stock_table theo lô 500; trả số dòng THẬT SỰ ghi (nạp lại cùng snapshot → 0). */
+let s10TrungLan = 0; // 1211-22(2): đếm dòng trùng bị ON CONFLICT bỏ theo lượt nạp
 async function napS10(client, rows, snapshotId, capturedAt, cond) {
   let ghi = 0;
   for (let i = 0; i < rows.length; i += 500) {
@@ -160,8 +161,12 @@ async function napS10(client, rows, snapshotId, capturedAt, cond) {
       params.push(...v);
       return `(${v.map((_, j) => `$${base + j + 1}`).join(",")})`;
     });
+    const dangCo = new Set((await client.query(
+      `SELECT stock_id FROM ${STG_S10} WHERE snapshot_id = $1 AND stock_id = ANY($2::text[])`,
+      [snapshotId, lo.map((d) => d.stock_id)])).rows.map((x) => x.stock_id));
+    s10TrungLan += lo.filter((d) => dangCo.has(d.stock_id)).length;
     const r = await client.query(
-      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(",")}
+      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(", ")}
        ON CONFLICT (snapshot_id, stock_id) DO NOTHING`, params);
     ghi += r.rowCount ?? 0;
   }
@@ -278,6 +283,7 @@ async function main() {
     console.log(`CHUA-AP-089: bảng ${STG_S10} chưa có (migration 089 chưa áp) — snapshot S10 bỏ qua, KHÔNG đánh dấu đã nạp`);
   }
   let s10Dong = 0, s10Bo = 0, s10ThieuLoc = 0, s10Lech = 0, s10Cay = 0, s10ProjectDong = 0, s10ProjectBo = 0;
+  let s10Boc = 0; // 1211-24: Σ tr.p_row bóc được (đối soát)
   try {
     await client.query("BEGIN");
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
@@ -310,13 +316,26 @@ async function main() {
   let s08 = 0;
   let s08Detail = 0;
   let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
-    for (const it of items) {
+    const S10_UT = { "177": 0, "178": 1 };
+    const itemsSap = [...items].sort((a, b) => {
+      const ua = a.source === NGUON_S10 && a.kind === "stock_table" ? S10_UT[a.meta?.request?.block_type] ?? 9 : 9.5;
+      const ub = b.source === NGUON_S10 && b.kind === "stock_table" ? S10_UT[b.meta?.request?.block_type] ?? 9 : 9.5;
+      return ua - ub;
+    });
+    for (const it of itemsSap) {
       if (it.source === "s03-ho-so") {
         if (coBang) { await napHoSo(client, it); hoSo++; }
         else { hoSoBo++; }
         continue;
       }
       if (it.source === NGUON_S10) {
+        // 1211-23(b): nạp stock_table 177 TRƯỚC 178 trong cùng snapshot — trùng stock_id giữ 177, không dựa may
+        if (it.kind === "stock_table") {
+          s10Boc += (String(it.payload?.html ?? "").match(/class="[^"]*\bp_row\b/g) || []).length;
+          const rq = it.payload?.meta?.request ?? it.meta?.request ?? {};
+          if (rq.area_max in { "": 1 } || rq.area_max == null || rq.price_max == null) s10ThieuLoc++;
+          else if (String(rq.area_max) === "" || String(rq.price_max) === "") s10ThieuLoc++;
+        }
         // DATA-CONTRACT S10 luật 1: item thiếu bộ lọc rộng (snapshot 10/11 trước lượt thu lại) bị máy chủ lọc — bỏ có đếm.
         // Chọn snapshot MỚI NHẤT cho mỗi sourceId là việc của bước đọc stg (089), không phải bộ nạp: nạp mọi snapshot đủ lọc.
         if (it.kind === "project_tree") { s10Cay++; continue; } // v11: cây đối chiếu — khai hợp đồng, chưa nạp bảng nào
@@ -485,7 +504,8 @@ async function main() {
     await client.query("COMMIT");
     console.log(
       `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
-      + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn)` : ""),
+      + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} item thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn, trùng ${s10TrungLan})`
+      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + thiếu bộ lọc bỏ nguyên` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
