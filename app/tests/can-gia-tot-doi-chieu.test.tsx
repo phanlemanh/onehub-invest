@@ -5,6 +5,8 @@ import assert from "node:assert/strict"
 
 import type { DealRow } from "../src/lib/deals"
 import { tabCua, thieuGi } from "../src/lib/deals-chi-tiet"
+import { giuAnhChup } from "./helpers/anh-chup"
+import { boQuaTrongSuiteChung } from "./helpers/suite-chung"
 
 const goc = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 process.env.DATABASE_URL = `${goc}${goc.includes("?") ? "&" : "?"}options=-c%20default_transaction_read_only%3Don`
@@ -84,9 +86,13 @@ after(async () => {
   await pool.end().catch(() => {})
 })
 
-test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 1_200_000 }, async () => {
+test("CGT-DC đối chiếu DB máy thu chỉ đọc", { skip: boQuaTrongSuiteChung("can_gia_tot_doi_chieu"), timeout: 1_200_000 }, async () => {
   const { pool } = await import("../src/lib/db")
   const { getDeal, getDeals, dealHang } = await import("../src/lib/deals")
+  // Đổi khuôn 11/11 (lời Mạnh): mọi lời đọc của ca đi qua một ảnh chụp REPEATABLE READ READ ONLY chung, nên lượt nạp sống ghi
+  // giữa chừng không làm lệch phép so; phép so «DB đổi» dưới đây vì thế đo tính nhất quán của chính ảnh chụp.
+  const nha = await giuAnhChup(pool as unknown as Parameters<typeof giuAnhChup>[0], process.env.DATABASE_URL!)
+  try {
   const dem = async () => {
     const { rows } = await pool.query<{ o: string; m: string }>("SELECT (SELECT count(*) FROM sale_offers) AS o, (SELECT count(*) FROM media) AS m")
     return rows[0]
@@ -142,4 +148,7 @@ test("CGT-DC đối chiếu DB máy thu chỉ đọc", { timeout: 1_200_000 }, a
   console.log(`CGT-DC n=${rows.length} · tin P1 bán=${p1.length} · tab đủ=${tab.du}, xác minh=${tab["xac-minh"]}, còn thiếu=${tab.thieu}`)
   console.log(`CGT-DC số định hướng: căn nào=${dem5[0]}, ở đâu=${dem5[1]}, ảnh gì=${dem5[2]}, vì sao=${dem5[3]}, gọi ai=${dem5[4]} · đạt từ 4 trên 5=${tu4}/${rows.length}`)
   assert.deepEqual(await dem(), truoc, "CGT-DC DB đổi sau đối chiếu")
+  } finally {
+    await nha()
+  }
 })

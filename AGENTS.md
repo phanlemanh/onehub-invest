@@ -97,6 +97,10 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 ## Luật bất biến
 
 1. **Raw snapshot BẤT BIẾN** — collector chỉ ghi mới, không sửa/xoá. Mọi diễn giải nằm ở pipeline.
+   **Ngoại lệ hạn giữ ảnh, video gốc** (Mạnh chốt 2026-11-11, «Cho xoá có hạn», ROADMAP §3 mục 46 QĐ8): tệp ảnh và video GỐC
+   có hạn giữ, hết hạn được xoá, mỗi lần xoá ghi sổ (băm, lý do, thời điểm). Giữ mãi: chữ bài, dữ liệu tin, manifest, ảnh thu
+   nhỏ, dấu vân tay ảnh, bộ ảnh chọn lọc, tư liệu dự án. Hạn giữ chưa chốt; lượt xoá thật chỉ chạy sau khi có bản sao lưu đã thử
+   khôi phục và có lời riêng của Mạnh. Collector vẫn chỉ ghi mới, không sửa.
 2. **Schema chỉ đổi qua migration mới** trong `db/migrations/` (số kế tiếp). Không sửa
    migration đã commit, không sửa tay DB production.
 3. **RESO-first (ADR-0011)**: field/enum mới phải tra RESO Data Dictionary trước; chỉ tạo
@@ -139,6 +143,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    **Gửi model đọc tin** (Mạnh chốt 2026-11-06, sửa đổi ADR-0007): chữ bài, ảnh, tên nhóm và tên nguồn in sẵn trong bài
    được gửi nguyên văn, không che, tới đúng ba model Haiku, DeepSeek V4.1 Flash, GLM-5.3 Flash. Không gửi hồ sơ user app,
    định danh tài khoản thu, phiên/khoá/QR, bảng giải mã nguồn. Mọi chỗ khác tầng A giữ nguyên.
+   **Bản sao lưu mã hoá** (Mạnh chốt 2026-11-11, sửa đổi ADR-0007; ROADMAP §3 mục 46 QĐ3): tầng A được rời máy CHỈ trong bản
+   sao lưu đã mã hoá ngay trên máy thu; khoá chỉ ở máy thu và một bản Mạnh giữ riêng, không lên cloud, kho git hay kênh nào.
+   Phạm vi: raw snapshot, kho gốc ảnh và tư liệu, bản dump DB. Mọi chỗ khác tầng A giữ nguyên.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;

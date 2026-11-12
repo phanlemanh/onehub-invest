@@ -1,0 +1,30 @@
+schema_version: 1
+slug: sl1-ac5-the-gioi-069
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sl1_ac5_ca
+    long_running: 45
+    paths: ["pipeline/scripts/s03-len-cong.itest.mjs", "pipeline/lib/nap-061.mjs", "pipeline/lib/assert.mjs"]
+    expected: "Ca «SL1-AC-5 áp 069 chỉ đổi ô luật 069 định đổi» xanh trên DB của riêng lượt chép từ DB máy thu (db-thu --chay): đếm phát biểu property_type inferred sống ≥ 1000 (thiếu thì assert đỏ nêu số, không skip). Giá trị kỳ vọng từ câu SQL độc lập trên field_assertions (không gọi resolve_offer_fields), bốn loại mỗi loại ≥ 1 tin: (a) không phát biểu suy → băm trọn dòng trừ updated_at bằng trước; (b) một giá trị suy không lớp trên → property_type = giá trị đó, fp.property_type.tier = inferred; (c) hai giá trị suy không lớp trên → unknown, goi_y dài 2; (d) có observed/fact → property_type và fp.property_type bằng trước. Ở (b), (c): khoá cột đổi ⊆ {property_type, field_provenance}, khoá fp đổi ⊆ {property_type}. Ba chiều đỏ cùng fixture, mỗi chiều assert ghim «SL1-AC-5»: UPDATE bathrooms một tin (a); UPDATE một cột ngoài property_type một tin (b); jsonb_set một khoá fp khác property_type một tin (b)."
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sl1_ac5_ca
+    long_running: 45
+    paths: ["pipeline/scripts/s03-len-cong.itest.mjs", "pipeline/scripts/fixtures/067_tang_huong_tin.ban-sao.sql"]
+    expected: "Ca «SL1-AC-5 hai thứ tự với 068» xanh: năm thứ tự chạy trong giao dịch riêng, gỡ view sale_offers trước khi phát lại thứ tự có 067; mọi assert cũ giữ nguyên (fp_sdt, unit_facing, inferred_vao_cot, 068 vá không trùng, dấu số, dấu trạng thái chào, cột 067 nhận phân xử, MOC-069 khi mất mốc). Chiều đỏ cùng ca: thứ tự 067→069 không gỡ view thì c.query(MIG_067) bị từ chối với lỗi khớp /seller_phone_inferred/, assert ghim «SL1-AC-5». Sau ma trận, pg_get_viewdef('sale_offers') đọc ở kết nối mới bằng giá trị đọc trước ma trận."
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sl1_ac5_toan
+    long_running: 60
+    paths: ["pipeline/scripts/s03-len-cong.itest.mjs"]
+    expected: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_sl1t --chay node --test scripts/s03-len-cong.itest.mjs exit 0, dòng tổng kết «skipped 0» và «fail 0»."
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.test.sl1_ac5_tu_choi
+    paths: ["pipeline/scripts/s03-len-cong.itest.mjs", "_acceptance/sl1-ac5-the-gioi-069/probes/tu-choi-oneinvest.sh"]
+    expected: "Probe exit 0, in «tu-choi-oneinvest: PASS»: chạy tệp itest với DATABASE_URL trỏ DB tên oneinvest (cổng 1, không server) thì thoát ≠ 0 kèm «không chạy trên oneinvest». Chiều đỏ: bản sao tệp gỡ dòng ném lỗi → probe thoát 1, in «tu-choi-oneinvest: ĐỎ» gọi tên bản sao."
