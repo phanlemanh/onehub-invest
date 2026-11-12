@@ -93,7 +93,7 @@ export function isAllowedSource(source) {
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
 // link-nguoi-ban-s03 (v7): nguồn s03-ho-so + kind ho-so — {6,7} S03 bất kể
 // thứ tự gộp với nhánh album (v6); bên import chấp nhận {1..7}
-// v8 (2026-11-10): nguồn s10-bang-hang + s11-nn1-du-an — RawItem không thêm trường chung; bên import chấp nhận {1..8}
+// v8 (2026-11-10): nguồn s10-bang-hang + s11-nn1-du-an — RawItem không thêm trường chung; bên import chấp nhận {1..11}
 export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
@@ -162,7 +162,7 @@ async function napS10(client, rows, snapshotId, capturedAt, cond) {
       return `(${v.map((_, j) => `$${base + j + 1}`).join(",")})`;
     });
     const dangCo = new Set((await client.query(
-      `SELECT stock_id FROM ${STG_S10} WHERE snapshot_id = $1 AND stock_id = ANY($2::text[])`,
+      `SELECT stock_id FROM ${STG_S10} WHERE snapshot_id = $1 AND stock_id::text = ANY($2)`,
       [snapshotId, lo.map((d) => d.stock_id)])).rows.map((x) => x.stock_id));
     s10TrungLan += lo.filter((d) => dangCo.has(d.stock_id)).length;
     const r = await client.query(

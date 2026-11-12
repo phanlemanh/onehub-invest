@@ -19,8 +19,8 @@ const { SnapshotWriter } = await import(new URL("../../collector/src/core/storag
 // trước khi bất kỳ kênh nào bắt đầu ghi seller; hai mảng phải đồng bộ với nhau
 // và với dòng «bên import phải chấp nhận» trong DATA-CONTRACT.md.
 test("schemaVersion: cả hai importer chấp nhận {1..5} — v4 và v5 cùng lúc", () => {
-  assert.deepEqual(S01_V, [1, 2, 3, 4, 5, 6, 7, 8]); // v8: nguồn S10/S11 (DATA-CONTRACT)
-  assert.deepEqual(S06_V, [1, 2, 3, 4, 5, 6, 7, 8], "hai importer không được lệch nhau");
+  assert.deepEqual(S01_V, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]); // v9 S07 · v10 Drive S03 · v11 S10 meta dự án
+  assert.deepEqual(S06_V, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "hai importer không được lệch nhau");
   assert.ok(S01_V.includes(4), "v4 vẫn phải nạp — kênh chưa ghi seller giữ version cũ");
   assert.ok(S01_V.includes(5) && S06_V.includes(5), "v5 phải nạp ngay từ vòng này");
 });

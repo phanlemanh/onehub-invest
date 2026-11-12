@@ -11,6 +11,10 @@ const REPO = join(HERE, "../..");
 const NAP_FILE = process.env.S10_IMPORT_FILE;
 const DB = process.env.S10_ITEST_DB ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_s10_danhba";
 if (!NAP_FILE) { console.log("bỏ qua — thiếu S10_IMPORT_FILE"); process.exit(0); }
+// 1211-29(3): chỉ chạy trên DB THỬ (tên oneinvest_*_s10_danhba) — chặn DB máy thu (DROP stg_s10_* là thảm họa)
+if (!/_s10_danhba$/.test(new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "")) {
+  console.error("s10-project-kiem-truc-tiep: S10_ITEST_DB phải DB thử oneinvest_*_s10_danhba — từ chối DB khác"); process.exit(2);
+}
 const NAP = NAP_FILE.startsWith("/") ? NAP_FILE : join(REPO, NAP_FILE);
 const pg = (await import("../node_modules/pg/lib/index.js")).default;
 const c = new pg.Client({ connectionString: DB });

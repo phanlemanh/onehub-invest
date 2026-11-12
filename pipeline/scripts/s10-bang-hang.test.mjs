@@ -17,11 +17,13 @@ const oc = (s) => `<!-- <td class="text-center"> ${s} </td> -->`;
 const ma = (id, bt, code) =>
   `<td class="text-center"><a href="javascript:void(0);" data-url="/index.php?mod=home&sub=project&act=load_stock_popover&stock_id=${id}&stock_type=${bt}">${code}</a></td>`;
 
-function dong177(id, { gia = "15561000000", ngay = "6/10/2026" } = {}) {
+function dong177(id, { gia = "15561000000 tỷ", ngay = "6/10/2026" } = {}) {
+  // Khuôn mới 1211-22 (đo 1.078 dòng thật): ô 9 = giá «N tỷ» (trong chú thích — đọc cả comment vẫn phải ra),
+  // ô 13 = ngày bàn giao, ô 18 = văn bản HĐ, ô 20 = ngân hàng; KHÔNG có cột trạng thái (ô 8 trống).
   return `<tr class="p_row"> ${ma(id, 177, "A-01")} ${o("Khu Gia - Phân khu Một")} ${o("Dãy A")} ${o("Liền kề")}
     <td class="text-center"> 100 m<sup>2</sup> </td> <td class="text-center"> 333.3 m<sup>2</sup> </td> ${o("Thô")} ${o("ĐB")}
-    ${oc(gia)} ${o("<strong>Check admin</strong>")} <!-- <td></td> <td></td> <td></td> --> ${o("41m")} ${o("")} ${oc("")}
-    ${o('<a href="#">PTG</a>')} ${o("---")} ${o(ngay)} ${oc("")} <td> --- </td> <td> </td>
+    <td> </td> <!-- <td class="text-center"> ${gia} </td> --> <td> </td> <td> </td> <td>6834000000</td> ${o(ngay)} <td> </td> <td> </td> <td> </td>
+    <td> --- </td> <td> --- </td> <td> </td> ${o("TECHCOMBANK")} <td> </td>
     <!--<td> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td class="text-center"> </td> --> </tr>`;
 }
 function dong178(id) {
@@ -53,10 +55,10 @@ test("S10-1 khuôn 177: đủ 29 ô, giá đọc từ ô trong chú thích, ngà
   assert.equal(d.building_area_m2, 333.3);
   assert.equal(d.handover_condition_raw, "Thô");
   assert.equal(d.direction_faces_raw, "ĐB");
-  assert.equal(d.list_price_vnd, "15561000000", "giá nằm TRONG chú thích HTML vẫn phải đọc");
-  assert.equal(d.status_raw, "Check admin");
-  assert.equal(d.remarks_raw, "41m");
-  assert.equal(d.source_modified_on, "2026-10-06");
+  assert.equal(d.list_price_vnd, "15561000000", "giá «N tỷ» ô 9 nằm TRONG chú thích HTML vẫn phải đọc (1211-22)");
+  assert.equal(d.status_raw, null, "khuôn 177 không có cột trạng thái (1211-22)");
+  assert.equal(d.source_modified_on, "2026-10-06", "ngày ô 13");
+  assert.match(d.raw_row, /TECHCOMBANK/, "ngân hàng ô 20 nguyên trong raw_row");
   assert.match(d.raw_row, /<!--/, "raw_row giữ nguyên dòng gồm chú thích");
 });
 
@@ -130,7 +132,7 @@ const DDL_089 = `CREATE TABLE stg_s10_stock (
   block_type smallint NOT NULL CHECK (block_type IN (177, 178)),
   unit_number text, subdivision_name text, block_raw text, property_sub_type_raw text,
   lot_size_m2 numeric, building_area_m2 numeric, handover_condition_raw text, direction_faces_raw text,
-  list_price_vnd bigint, status_raw text, remarks_raw text, source_modified_on date,
+  list_price_vnd text, status_raw text, remarks_raw text, source_modified_on date,
   snapshot_id text NOT NULL, captured_at timestamptz NOT NULL, server_cond jsonb, raw_row text,
   PRIMARY KEY (snapshot_id, stock_id))`;
 
@@ -189,7 +191,7 @@ test("S10-9 có 089: nạp dòng đủ lọc, bỏ item thiếu lọc có đếm
   ], 4);
   const r1 = nap(dir);
   assert.equal(r1.status, 0, r1.stderr);
-  assert.match(r1.stdout, /2 dòng S10 \(bỏ 1 item thiếu bộ lọc/);
+  assert.match(r1.stdout, /2 dòng S10, .*\(cây 0, bỏ 1 dòng thiếu bộ lọc/);
   const rows = await q(`SELECT stock_id::text, list_price_vnd::text, server_cond, snapshot_id FROM stg_s10_stock ORDER BY stock_id`);
   assert.deepEqual(rows.rows.map((x) => [x.stock_id, x.list_price_vnd]), [["21", "15561000000"], ["22", null]]);
   assert.equal(rows.rows[0].server_cond, "`is_trash`=0", "payload.cond lưu vào server_cond");
@@ -200,8 +202,8 @@ test("S10-9 có 089: nạp dòng đủ lọc, bỏ item thiếu lọc có đếm
   assert.equal(s.rows[0].n, 1);
 });
 
-test("S10-10 should-NOT-fire: snapshot schemaVersion 9 bị từ chối (chưa hỗ trợ)", () => {
+test("S10-10: snapshot schemaVersion 9 được nạp (v9 s07-danh-muc nhận {1..11} — 1211-29)", () => {
   const r = nap(snapGia("2026-11-11T014000003", [item(177, dong177(31))], 9));
-  assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /schemaVersion 9 chưa hỗ trợ/);
+  assert.equal(r.status, 0, "rc 0: " + (r.stderr || "").slice(0, 200));
+  assert.doesNotMatch(r.stderr, /schemaVersion .* chưa hỗ trợ/);
 });
