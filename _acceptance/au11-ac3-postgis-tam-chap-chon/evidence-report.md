@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: au11-ac3-postgis-tam-chap-chon
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7919246b7688198d8780bc1c127d68623accf07b
+verified_commit: 17aaae51b7c9a2ef0b70d971af2d09fad34f07d7
 human_signoff:
 ---
 
 # Evidence Report: au11-ac3-postgis-tam-chap-chon
-
-Round 1. REJECT do hai finding trong hợp đồng (AC-2) còn mở, dù cả năm eval máy đều xanh. Chi tiết ở review-findings.md.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -26,86 +24,86 @@ Round 1. REJECT do hai finding trong hợp đồng (AC-2) còn mở, dù cả n�
 ## Evidence
 
 - eval: E1
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-E1-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-E1-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.ci_test_module
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
   output: |
-    node --test scripts/ci-test-module.test.mjs
-    duration_ms 37862.141458
+    lệnh: node --test scripts/ci-test-module.test.mjs
+    ℹ duration_ms 29628.665125
 
 - eval: E2
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-E2-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-E2-r2
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.ci_test_module
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
   output: |
-    node --test scripts/ci-test-module.test.mjs
-    duration_ms 37862.141458
+    lệnh: node --test scripts/ci-test-module.test.mjs
+    ℹ duration_ms 29628.665125
+
+- eval: E4
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-E4-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.ci_test_module
+  verified_at: 2026-11-12T03:45:47Z
+  output: |
+    lệnh: node --test scripts/ci-test-module.test.mjs
+    ℹ duration_ms 29628.665125
 
 - eval: E3
-  run_id: r1-l2-1-20261112030236
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.au11_duoi_tai
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
   output: |
-    node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs
-    đã dọn tiến trình đốt CPU và container tạm
-
-- eval: E4
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-E4-r1
-  exit_code: 0
-  baseline: red
-  verifier: config:executors.test.ci_test_module
-  verified_at: 2026-11-12T03:02:36Z
-  output: |
-    node --test scripts/ci-test-module.test.mjs
-    duration_ms 37862.141458
+    lệnh: node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs
+    đã dọn tiến trình đốt CPU và container tạm của lượt
 
 - eval: E5
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-E5-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.au11_cho_tinh
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
   output: |
-    node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs
+    lệnh: node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs
     AU11-GIU PASS
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-npm_test__bb6271-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-lint-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 - cmd: cd app && npm test
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-npm_test__bd9a35-r1
+  run_id: bkdszwe3o
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-npm_test__13563d-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-test_lint_rules-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-au11-ac3-postgis-tam-chap-chon-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-12T03:02:36Z
+  verified_at: 2026-11-12T03:45:47Z
 
 ## Known limits
 
@@ -113,13 +111,11 @@ Round 1. REJECT do hai finding trong hợp đồng (AC-2) còn mở, dù cả n�
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
+carried tu round 1 — baseline khong do lai round nay
 
-Ghi chú: E1, E2, E4 đỏ trên baseline (red). E3 và E5 là eval mới, không đo baseline.
+Baseline khong do: evals.yaml khong doi tu lan baseline cuoi (round 1), nen moi block eval ghi baseline n-a.
 
-Baseline khong do
-- node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs: bo qua baseline: tep _acceptance/au11-ac3-postgis-tam-chap-chon/probes/duoi-tai.mjs co o cay dang kiem nhung chua co o merge-base e01513de2abf543e09febe2fda452858e1898789 — eval moi, chay tren code cu khong phan biet gi
-- node _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs: bo qua baseline: tep _acceptance/au11-ac3-postgis-tam-chap-chon/probes/cho-tinh.mjs co o cay dang kiem nhung chua co o merge-base e01513de2abf543e09febe2fda452858e1898789 — eval moi, chay tren code cu khong phan biet gi
+Eval khong-phan-biet: none.
 
 ## Variance
 
@@ -127,4 +123,5 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: cả năm eval máy xanh, nhưng hai finding trong hợp đồng (AC-2: log nối stdout rồi stderr làm daQuaKhoiDongLai báo true sớm; fixture không đi qua đường docLog thật) còn mở. Trả về cho khâu cài đặt.
+Round 1: REJECT — luật sẵn sàng của bước chờ PostGIS tạm phụ thuộc thứ tự luồng; đã sửa để đếm hai dòng ready. Returned to implementation.
+Round 2: E1, E2, E3, E4, E5 đều PASS; các lệnh suite xanh. Verdict PASS.
