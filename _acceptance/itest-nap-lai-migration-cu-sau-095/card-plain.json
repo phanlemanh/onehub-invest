@@ -1,0 +1,1 @@
+{"feature_plain":"Các bài kiểm nạp lại migration cũ chạy xanh lại trên DB đã có migration mới; bộ nạp lại không còn làm mất ràng buộc trường đang có, nên lượt dọn dữ liệu sau này không vỡ.","decisions":[]}
