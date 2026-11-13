@@ -75,12 +75,14 @@ export function maNgan(id: string): string {
  * chưa áp 064 (`areas` còn mã dài `vn-thanh-pho-*`/`vn-tinh-*`, S06 `da-nang` → `vn-da-nang`) ra tên mã dài. */
 /** Tỉnh cũ đã sáp nhập (đơn vị hành chính 2025) mà vùng thu S06 còn dùng làm mã (`binh-duong`): `areas` chỉ có 34 thị trường
  *  mới nên không có tên. Khoá khớp `SAP_NHAP` của `pipeline/lib/thi-truong.mjs` (test `ten-tinh-cu` canh hai bên). */
-export const TINH_CU: Readonly<Record<string, { ten: string; nay: string }>> = {
-  "vn-binh-duong": { ten: "Bình Dương", nay: "vn-hcmc" },
-  "vn-ba-ria-vung-tau": { ten: "Bà Rịa – Vũng Tàu", nay: "vn-hcmc" },
-  "vn-hai-duong": { ten: "Hải Dương", nay: "vn-hai-phong" },
-  "vn-quang-nam": { ten: "Quảng Nam", nay: "vn-da-nang" },
+const TINH_CU_THEO_THI_TRUONG: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "vn-hcmc": { "vn-binh-duong": "Bình Dương", "vn-ba-ria-vung-tau": "Bà Rịa – Vũng Tàu" },
+  "vn-hai-phong": { "vn-hai-duong": "Hải Dương" },
+  "vn-da-nang": { "vn-quang-nam": "Quảng Nam" },
 }
+export const TINH_CU: Readonly<Record<string, { ten: string; nay: string }>> = Object.fromEntries(
+  Object.entries(TINH_CU_THEO_THI_TRUONG).flatMap(([nay, cu]) => Object.entries(cu).map(([ma, ten]) => [ma, { ten, nay }])),
+)
 
 export function marketNameOf(code: string, areaNames: ReadonlyMap<string, string>): TenThiTruong {
   if (code === "vn") return { name: "Toàn quốc", known: true }

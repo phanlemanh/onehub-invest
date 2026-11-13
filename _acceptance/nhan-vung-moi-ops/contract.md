@@ -40,3 +40,6 @@ ON12-AC-7 vẫn đỏ khi có vùng lạ.
   `app/src/components/ops/overview/status.ts`, `app/src/components/ops/overview/objectives-grid.tsx` (trang `/ops`),
   `app/src/components/ops/quality-tables.tsx` (`/ops/quality`), `app/src/lib/dq-labels.ts` (nhãn dòng kiểm chất lượng).
   Invest không gọi hàm này.
+- CI lượt đầu (9be26163) đỏ hai ca do chính bản sửa: KV-AC-1 (`app/tests/ma-thi-truong-dai.test.tsx`, hồ sơ
+  test-app-tren-db-chung) lấy `binh-duong` làm mã lạ «có chủ đích» — dòng ấy đổi sang tên mới và thêm mã lạ `vung-la`;
+  ON12-AC-2 bắt chuỗi `vn-hcmc` như chữ tiếng Anh — bảng viết lại để mã chỉ nằm ở khoá object (bộ rút chuỗi bỏ qua khoá).
