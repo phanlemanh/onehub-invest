@@ -5,7 +5,7 @@ slug: s10-bang-hang-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-11-s10-bang-hang-vao-danh-ba-design.md
@@ -79,3 +79,9 @@ Core → AC-1…AC-5. Later: tin sơ cấp từ quỹ căn (DA17), trang dự á
 ## Notes
 - Phụ thuộc: «đọc được ở danh bạ trên dữ liệu thật của máy thu» cần bộ nạp v11 của ZCode vào main; vòng này chứng bằng dòng mồi dựng
   từ `meta` của snapshot 11/11 trên DB của riêng lượt (GS 11/11).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-1: tài liệu hợp đồng dữ liệu ghi trái nhau về việc phiên bản 10 đã được nhận hay chưa; dữ liệu không bị ảnh hưởng.
+  - Ngoài-2: khi chủ đầu tư gỡ hết bảng hàng của một dự án, quỹ căn cũ vẫn hiện như còn bán; chưa có trang nào đọc số này.
+  - Ngoài-3: hai bài kiểm tra phụ của bộ nạp chạy trên bảng tự dựng chứ không phải bảng thật của 089.
+  - Ngoài-4: một bài kiểm tra tự viết tệp mô tả snapshot thay vì dùng bộ ghi thật.
+  - Ngoài-5: bài kiểm tra nạp dữ liệu phiên bản 9 thiếu ca đối chứng rằng dòng đã vào kho.
