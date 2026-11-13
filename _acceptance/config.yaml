@@ -282,8 +282,13 @@ executors:
     dv4_doc: "node --test pipeline/scripts/tang-tren-tin.test.mjs"   # tang-tren-tin-s03 E4 — ma trận bộ đọc tầng, hàm thuần
     dv4_nhan: "cd app && node --import tsx --test tests/dq-tang-tren-tin-label.test.tsx"   # tang-tren-tin-s03 E9 — nhãn dq-labels
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
+    cg8_ham: "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"   # can-gia-tot-cung-loai E4 — lý do rời danh sách, câu chứng minh theo loại hình (hàm thuần)
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    cg8_db: "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"   # can-gia-tot-cung-loai E1–E3, E5, E6 — DB thử oneinvest_u1_cg8 chép từ DB máy thu, ca trong BEGIN…ROLLBACK
+    cg8_do: "bash pipeline/scripts/can-gia-cung-loai-db.sh do"   # can-gia-tot-cung-loai E7 — đếm toàn bộ tin trên bản chép, chỉ in số
+    cg8_ranh_gioi: "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"   # can-gia-tot-cung-loai E9 — không migration, không sync-cloud, không thêm liên lạc, không tên nguồn
+    cg8_cloud_view: "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"   # can-gia-tot-cung-loai E10 — chỉ SELECT qua Management API: định nghĩa v_ruler_p2 cloud = máy thu, đủ bốn loại
     sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
     dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
