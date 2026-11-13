@@ -5,7 +5,7 @@ slug: khai-slo-s10-s11
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ops]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-13T12:16:00Z
 approved_by:
