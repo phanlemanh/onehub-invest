@@ -84,6 +84,19 @@ nhận `project_link`. Sổ từ vựng: `alias_kind` thêm `ma_nha_nuoc` trong 
 `vocab.mjs --emit-seed`. Không sync cloud bảng mới (mã nguồn S08 nội bộ nguồn; thông tin dự án công khai đi qua
 danh bạ ở hàng sau).
 
+### Vòng đời cặp
+
+```mermaid
+stateDiagram-v2
+  [*] --> de_xuat: bộ đề xuất (K3 hôm nay)
+  [*] --> chua_noi: không ứng viên / nhiều ứng viên / không điểm
+  de_xuat --> noi: Nối (ops) — 1 bí danh + 1 dòng nhật ký
+  de_xuat --> tu_choi: Không phải + lý do
+  de_xuat --> de_xuat: Để sau / Hoàn tác trong 5 giây
+  de_xuat --> noi: Thẻ luật (admin) — cả loạt, rule_id
+  noi --> de_xuat: Đảo luật — bí danh đặt retired_at, mở lại thẻ
+```
+
 ## 3. Làm được khi chỉ có S08 · phải chờ nguồn
 
 - **Làm được ngay:** bảng + view + mở bí danh; bộ chuyển S08; quy ước rỗng giả; K3 trên S08; trạng thái nối cho 27
