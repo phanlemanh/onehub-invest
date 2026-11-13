@@ -1,24 +1,72 @@
 {
  "feature_plain": "Danh bạ có đủ toà và phân khu S09 của Ocean Park 1 và Grand Park, không sinh toà trùng, nên hàng nghìn bài S03 nêu tên toà nay gắn được vào toà thật.",
  "will_do": [
-  {"id":"AC-1","p":"Sẽ nhận bản thu S09 khuôn API vào bảng tạm giữ nguyên dữ liệu; nạp lại cùng bản thu không thêm dòng; item hỏng bị bỏ và đếm theo lý do."},
-  {"id":"AC-2","p":"Sẽ gộp hai bản ghi cùng tên của một toà (như OS2 ở Grand Park) thành một toà; cùng tên mà khác phân khu thì không gộp."},
-  {"id":"AC-3","p":"Sẽ biến toà S09 trùng toà đã có thành tên gọi khác của toà đó; toà chưa có thì xử theo câu Hỏi-3; tên trùng hai toà thì lên thẻ duyệt."},
-  {"id":"AC-4","p":"Sẽ dựng phân khu S09 thành nút trong danh bạ, dùng lại nút đã có, và đặt mỗi toà dưới phân khu của nó."},
-  {"id":"AC-5","p":"Sẽ dựng lại hai, ba lần mà không sinh khoá mới nào."},
-  {"id":"AC-6","p":"Sẽ ra đúng 115 toà Ocean Park 1 và 60 toà Grand Park (61 bản ghi), 13 và 7 phân khu, khớp số đếm trên hai bản Mạnh mở tay."},
-  {"id":"AC-7","p":"Sẽ đếm bằng thước riêng số bài S03 gắn được toà, và số bài chỉ nêu phân khu hay cụm, trước và sau."},
-  {"id":"AC-8","p":"Sẽ bỏ qua bước S09 có báo lý do khi chưa có bảng tạm hay chưa có dữ liệu một khu, phần danh bạ cũ giữ nguyên."},
-  {"id":"AC-9","p":"Sẽ KHÔNG chạm thu thập, ảnh chụp nguồn, đồng bộ cloud hay giao diện, và không để tên nguồn thật vào kho."},
-  {"id":"AC-10","p":"Sẽ dựng cấp cụm Grand Park (S10, S5…) nếu Mạnh chọn làm trong hàng này ở Hỏi-1."}
+  {
+   "id": "AC-1",
+   "p": "Sẽ nhận bản thu S09 khuôn API vào bảng tạm giữ nguyên dữ liệu; nạp lại cùng bản thu không thêm dòng; item hỏng bị bỏ và đếm theo lý do."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ gộp hai bản ghi cùng tên của một toà (như OS2 ở Grand Park) thành một toà; cùng tên mà khác phân khu thì không gộp."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ biến toà S09 trùng toà đã có thành tên gọi khác của toà đó; toà chưa có thì xử theo câu Hỏi-3; tên trùng hai toà thì lên thẻ duyệt."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ dựng phân khu S09 thành nút trong danh bạ, dùng lại nút đã có; toà mới đặt dưới phân khu của nó, còn toà S08 đã có giữ chỗ cũ và một bảng xem (view) cho biết phân khu của nó."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ dựng lại hai, ba lần mà không sinh khoá mới nào."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ ra đúng 115 toà Ocean Park 1 và 60 toà Grand Park (61 bản ghi), 13 và 7 phân khu, khớp số đếm trên hai bản Mạnh mở tay."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ đếm bằng thước riêng số bài S03 gắn được toà, và số bài chỉ nêu phân khu hay cụm, trước và sau."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ bỏ qua bước S09 có báo lý do khi chưa có bảng tạm hay chưa có dữ liệu một khu, phần danh bạ cũ giữ nguyên."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ KHÔNG chạm thu thập, ảnh chụp nguồn, đồng bộ cloud hay giao diện, và không để tên nguồn thật vào kho."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ dựng cấp cụm Grand Park (S10, S5…) nếu Mạnh chọn làm trong hàng này ở Hỏi-1."
+  }
  ],
  "wont_do": [
-  {"id":"OOS-1","p":"KHÔNG viết bộ nạp định kỳ S09 — việc của làn thu, dùng chung hàm của hàng này."},
-  {"id":"OOS-2","p":"KHÔNG đưa ngày bàn giao, loại cao/thấp tầng, chủ đầu tư vào danh bạ — để hàng thuộc tính danh mục (DA16)."},
-  {"id":"OOS-3","p":"KHÔNG đưa toà của các dự án khác ngoài hai khu — để hàng S09 toàn danh mục (DA10)."},
-  {"id":"OOS-4","p":"KHÔNG dựng trục, căn từ S09."},
-  {"id":"OOS-5","p":"KHÔNG áp bảng mới lên máy thu hay dựng thật trước khi gộp và có lời Mạnh."},
-  {"id":"OOS-6","p":"KHÔNG gán dự án cho nhóm S03, và không xử toà của dự án khác lẫn trong nhóm (H1–H3, M1–M3)."}
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG viết bộ nạp định kỳ S09 — việc của làn thu, dùng chung hàm của hàng này."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG đưa ngày bàn giao, loại cao/thấp tầng, chủ đầu tư vào danh bạ — để hàng thuộc tính danh mục (DA16)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đưa toà của các dự án khác ngoài hai khu — để hàng S09 toàn danh mục (DA10)."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG dựng trục, căn từ S09."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG áp bảng mới lên máy thu hay dựng thật trước khi gộp và có lời Mạnh."
+  },
+  {
+   "id": "OOS-6",
+   "p": "KHÔNG gán dự án cho nhóm S03, và không xử toà của dự án khác lẫn trong nhóm (H1–H3, M1–M3)."
+  }
  ],
  "scope_plain": "Phần bỏ ngoài và hàng nhận nó:"
 }

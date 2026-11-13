@@ -5,9 +5,7 @@ slug: toa-s09-hai-khu-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: approved
-approved_by: Mạnh
-approved_at: 2026-11-13
+status: draft
 design_doc: docs/superpowers/specs/2026-11-13-toa-s09-hai-khu-vao-danh-ba-design.md
 ---
 
@@ -36,8 +34,10 @@ là bản thu khuôn API (Mạnh chốt 13/11 thu định kỳ đường này); 
   toà không khớp xử theo Hỏi-3 — lối khuyến nghị: đúc với `catalog_tier = 'mot_loi_khai'` và UPI (lối khác: không đúc, mỗi toà một thẻ `review_queue` `entity_match`, chiều đỏ là đột biến đúc thẳng); tên khớp hai toà không ghi toà nào và có đúng một
   thẻ `review_queue` `entity_match` nêu hai khoá toà; 0 toà có hai UPI, 0 `block_id` S09 làm bí danh hai toà.
 - AC-4: Given cùng DB thử, When dựng, Then mỗi phân khu S09 thành đúng một nút `subzone` con của khu (phân khu trùng tên
-  nút đã có thì dùng lại nút đó, đếm 0 nút mới); nút vùng của toà là phân khu của nó; toà S09 không phân khu nằm ở cấp
-  khu; toà S08 ở cấp khu mà S09 nêu phân khu thì chuyển xuống phân khu.
+  nút đã có thì dùng lại nút đó, đếm 0 nút mới); toà mới từ S09 được tạo với nút vùng là phân khu (hay cụm) của nó; toà S09
+  không phân khu nằm ở cấp khu; toà S08 đã có giữ nguyên nút vùng (bảng toà chỉ thêm, 082) và view `v_toa_nut_vung` (097)
+  trả phân khu (hay cụm) S09 của nó qua bí danh mã nguồn S09 — mọi toà nối S09 có đúng một dòng ở view, toà không nối S09
+  trả nút vùng gốc.
 - AC-5: Given DB thử đã dựng, When dựng lại lần hai và lần ba, Then 0 khoá toà, nút, bí danh, thẻ mới; tập
   `(building_key, upi)` và nút vùng của mọi toà giống hệt lần một (so băm).
 - AC-6 (cross-layer): Given bản chép DB máy thu sang DB thử (DB riêng cho lượt, xoá khi xong) và bản thu khuôn API 13/11
@@ -65,7 +65,7 @@ là bản thu khuôn API (Mạnh chốt 13/11 thu định kỳ đường này); 
 - Trục nạp: hợp lệ · thiếu `sourceId` · `kind` lạ · chi tiết không đọc được · `meta` lệch payload · nạp lại (AC-1).
 - Trục gộp toà: cùng tên cùng phân khu · cùng tên khác phân khu · cách viết khác · thiếu trường (AC-2).
 - Trục khớp danh bạ: khớp một · không khớp · khớp hai (AC-3).
-- Trục phân khu: mới · trùng nút có · toà không phân khu · chuyển toà S08 (AC-4); cụm theo Hỏi-1 (AC-10).
+- Trục phân khu: mới · trùng nút có · toà không phân khu · toà S08 giữ nút vùng, view phân khu (AC-4); cụm theo Hỏi-1 (AC-10).
 - Trục tất định: chạy lại hai, ba lần (AC-5).
 - Trục dữ liệu thật: bản thu API trên bản chép máy thu, đối chứng hai bản tay, số kỳ vọng 115 · 61 · 91 · 59 · 13 · 7 · 60 · 12 · 34 (AC-6).
 - Trục giá trị cho người dùng: số bài S03 gắn được toà trước/sau, thước độc lập (AC-7).

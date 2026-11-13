@@ -23,7 +23,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.s09_db
-    expected: "Ca DA31-AC-4: mỗi phân khu đúng một nút subzone con của khu; phân khu trùng tên nút có sẵn dùng lại (0 nút mới); region_node_id của toà = nút phân khu; toà không phân khu ở cấp khu; toà S08 cấp khu chuyển xuống phân khu S09. Chiều đỏ: đột biến không tra nút có sẵn thì ra hai nút cùng tên, ca đỏ nêu tên phân khu"
+    expected: "Ca DA31-AC-4: mỗi phân khu đúng một nút subzone con của khu; phân khu trùng tên nút có sẵn dùng lại (0 nút mới); toà mới có region_node_id = nút phân khu; toà không phân khu ở cấp khu; toà S08 có sẵn giữ region_node_id (so trước/sau) và v_toa_nut_vung trả nút phân khu S09 của nó, mỗi toà đúng một dòng, toà không nối S09 trả nút gốc. Chiều đỏ: đột biến không tra nút có sẵn thì ra hai nút cùng tên, ca đỏ nêu tên phân khu"
     paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s09*"]
   - id: E5
     criterion: AC-5

@@ -78,8 +78,9 @@ trong `pipeline/lib/s09-du-an.mjs`: hai dòng, id dự án S09 → slug khu):
 2. **Toà**: mỗi toà S09 tra bí danh `ma_nguon` S09 trước (chạy lại không đúc); chưa có thì so tên chuẩn hoá với toà của
    khu: khớp đúng một → thêm bí danh `ma_nguon` S09 + `ten` vào toà đó; khớp không toà nào → (Hỏi-3, khuyến nghị) đúc toà mới
    `catalog_tier = 'mot_loi_khai'` (bậc thấp nhất, như DA10) — lối khác: không đúc, mỗi toà một thẻ `entity_match`, bí danh `ma_nguon` + `ten`; khớp từ hai toà → không ghi, vào
-   thẻ `review_queue` (`entity_match`) kèm căn cứ. Nút vùng của toà = phân khu S09 của nó; toà S08 đang ở cấp khu được
-   chuyển xuống phân khu khi S09 nói rõ.
+   thẻ `review_queue` (`entity_match`) kèm căn cứ. Toà mới tạo với nút vùng = phân khu (hay cụm) S09 của nó. Toà S08 đã có giữ nguyên nút vùng:
+   bảng toà chỉ thêm (082, chỉ đổi được status/merged_into). View `v_toa_nut_vung` (097) trả nút vùng hiệu lực của
+   mọi toà — phân khu hay cụm S09 qua bí danh mã nguồn S09, không nối S09 thì nút gốc (Mạnh chọn lối A ở Cổng Phạm vi 13/11).
 3. **Cụm** (nếu Mạnh chọn trong hàng này — Hỏi-1): mã `<chữ><số>.<số>` cùng tiền tố từ hai toà trở lên trong một phân khu
    (`S10.01…S10.07`) → nút `subzone` con của phân khu, tên = tiền tố (`S10`), bí danh viết liền. Bài ghi `S10` phân giải về
    cụm, không về toà.
