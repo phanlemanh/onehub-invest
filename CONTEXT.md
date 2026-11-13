@@ -819,6 +819,18 @@ _Avoid_: collection unit, source group
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
 
+**Tạm dừng nguồn** / **Bật lại nguồn**: Hai lệnh dừng và cho chạy lại mọi lượt thu của một mã nguồn. Người vận hành bấm ở cột «Thao tác» của bảng Sức khoẻ nguồn trên `/ops/collections`, ghi lý do. Người gửi tự duyệt sau khi xem trước → sau, trừ lệnh nhắm S03 (cần người thứ hai). Bật lại cần quản trị viên. Trong dòng trước → sau của lệnh, `active` hiện «Đang chạy» (nói về việc thu); danh mục nguồn vẫn ghi «Đang dùng» (TV4b).
+- Code: `source.pause` · `source.resume` (loại `change_requests.type`); lý do ở `payload.reason` (tạm dừng) và `note` · RESO: —
+_Avoid_: tắt nguồn, khoá nguồn, kill
+
+**Lệnh gần đây**: Vùng dưới bảng Sức khoẻ nguồn liệt kê 20 lệnh mới nhất kèm tiến trình: chờ duyệt → chờ máy thu nhận → máy thu đã nhận → đã áp (hoặc không áp được, bị từ chối, đã hoàn lại) (TV4b).
+- Code: `LenhGanDay` (`components/ops/collections/lenh-gan-day.tsx`), nhãn từ `trangThaiLenh` (`lib/lenh-hien.ts`) · RESO: —
+_Avoid_: lịch sử lệnh, nhật ký lệnh
+
+**Thao tác**: Tiêu đề cột hành động của một bảng Ops — chứa nút cho từng hàng (vd Tạm dừng, Bật lại); chỉ hiện với vai được làm.
+- Code: cột `thao-tac` · RESO: —
+_Avoid_: Actions
+
 **Token máy**: Chìa riêng của một máy thu, đặt theo tên (vd `may-thu-1`), để máy ấy kéo lệnh đã duyệt và gửi kết quả lên máy chủ. Mỗi token mang quyền hẹp (`ops:pull`), thu hồi riêng được, máy chủ chỉ giữ bản băm. Khác mật khẩu chung của máy nạp số: mật khẩu chung bị từ chối ở mọi cửa của đường lệnh (ADR-0015, TV4).
 - Code: `machine_token (machine_tokens: name, token_hash, scopes, revoked_at, last_used_at)` · RESO: —
 - Ghi chú: «Máy thu kéo lần cuối» trên màn lệnh là lần dùng cuối của token máy còn hiệu lực có `ops:pull`.
