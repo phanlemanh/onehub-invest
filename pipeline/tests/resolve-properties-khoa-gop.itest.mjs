@@ -1,7 +1,7 @@
 // resolve-properties-khoa-gop.itest.mjs — hồ sơ _acceptance/khoa-gop-can-khong-gia (DA6, T3): migration 098 dọn link thừa + UNIQUE,
 // resolver giữ căn cho tin đã gắn. Chỉ chạy trên DB của riêng lượt chép dữ liệu máy thu (db/db-thu.sh oneinvest_suite_kgc --chay);
 // DB ấy xoá khi lệnh dừng. Chiều đỏ chạy resolver bản gốc của nhánh chính (git show origin/main) trong SAVEPOINT rồi hoàn lại.
-// Thứ tự ca (node:test tuần tự): AC-8 (trước 098) → AC-1 → AC-2 → AC-3 → AC-4 → AC-5 → AC-6 → AC-7.
+// Thứ tự ca (node:test tuần tự): AC-8 (trước 098) → AC-1 → AC-2 → AC-3 → AC-4 → AC-5 → AC-6 → AC-7 → AC-9.
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -354,5 +354,82 @@ test("KGC-AC-7 tin chưa gắn vào căn đúng khoá, tin đã gắn không the
     assert.ok(Number(lc[0]) > m0, "KGC-AC-7: căn của C không phải căn mới");
     assert.equal(await so(c, "SELECT count(*) FROM properties WHERE id > $1", [m0]), 1, "KGC-AC-7: lượt hai sinh khác một căn mới");
     assert.equal(await canRiengA(), 0, "KGC-AC-7: có căn sinh cho riêng A");
+  } finally { await c.end(); }
+});
+
+// AC-9 (mở lại phạm vi 13/11): migration 101 thay reconcile_stale_offers — tin kế đã có căn khác thì link của tin cũ vào nhật ký.
+const MIG101 = readFileSync(join(GOC, "db/migrations/101_doi_soat_chuyen_link.sql"), "utf8");
+function ham044() {
+  const r = spawnSync("git", ["-C", GOC, "show", "origin/main:db/migrations/044_nap_lai_khong_xoa.sql"], { encoding: "utf8" });
+  assert.equal(r.status, 0, `KGC: không đọc được 044 bản gốc: ${r.stderr}`);
+  const m = r.stdout.match(/CREATE OR REPLACE FUNCTION reconcile_stale_offers[\s\S]*?\nEND \$\$;/);
+  assert.ok(m, "KGC: không cắt được hàm reconcile_stale_offers của 044");
+  return m[0];
+}
+
+test("KGC-AC-9 đối soát đêm không làm căn mất link âm thầm", { timeout: 600_000 }, async () => {
+  const c = await ketNoi();
+  const NGUON = "kgc-ac9";
+  // Dòng mồi tổng hợp: nguồn thử, mã tin giả. X→P1, Y→P2 (Y kế X); X2→P3, Y2 chưa gắn (Y2 kế X2).
+  const gieo = async () => {
+    const can = async () => (await c.query("INSERT INTO properties DEFAULT VALUES RETURNING id")).rows[0].id;
+    const tin = async (id, posts) => c.query(
+      `INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids)
+       VALUES ($1, 'sale', now(), now(), $2, $3)`, [id, NGUON, posts]);
+    const lk = (p, o, s) => c.query(
+      `INSERT INTO property_offers (property_id, offer_id, score, signals, linked_at)
+       VALUES ($1, $2, $3, '{"kgc":"ac9"}'::jsonb, '2001-01-01T00:00:00Z')`, [p, o, s]);
+    const [P1, P2, P3] = [await can(), await can(), await can()];
+    await tin("kgc9_X", ["kgc9_bai1"]); await tin("kgc9_Y", ["kgc9_bai1"]);
+    await tin("kgc9_X2", ["kgc9_bai2"]); await tin("kgc9_Y2", ["kgc9_bai2"]);
+    await lk(P1, "kgc9_X", 0.91); await lk(P2, "kgc9_Y", 0.92); await lk(P3, "kgc9_X2", 0.93);
+    return { P1: String(P1), P2: String(P2), P3: String(P3) };
+  };
+  const chay = async () => (await c.query("SELECT reconcile_stale_offers($1, $2, 'kgc-ac9') s", [NGUON, ["kgc9_Y", "kgc9_Y2"]])).rows[0].s;
+  const lk = async (o) => (await c.query("SELECT property_id FROM property_offers WHERE offer_id = $1", [o])).rows.map((r) => String(r.property_id));
+  /** Trả danh sách lỗi theo AC-9; rỗng = đạt. */
+  const kiem = async ({ P1, P2, P3 }, tongKet) => {
+    const loi = [];
+    const y = await lk("kgc9_Y"); if (y.join() !== P2) loi.push(`Y không đúng một link tới P2 (có ${y})`);
+    const nk = (await c.query(
+      `SELECT property_id::text p, score::text s, signals, linked_at, reason FROM property_offer_unlinks WHERE offer_id = 'kgc9_X'`)).rows;
+    if (nk.length !== 1 || nk[0].p !== P1 || nk[0].s !== "0.91" || nk[0].signals?.kgc !== "ac9"
+        || new Date(nk[0].linked_at).toISOString() !== "2001-01-01T00:00:00.000Z" || !nk[0].reason.includes("kgc9_Y")) {
+      loi.push(`nhật ký không có đúng dòng (P1, X) — có ${nk.length} dòng`);
+    }
+    const y2 = await lk("kgc9_Y2"); if (y2.join() !== P3) loi.push(`Y2 không đúng một link tới P3 (có ${y2})`);
+    for (const o of ["kgc9_X", "kgc9_X2"]) if ((await lk(o)).length) loi.push(`${o} còn link`);
+    if (await so(c, "SELECT count(*) FROM property_offer_unlinks WHERE offer_id = 'kgc9_X2'")) loi.push("X2 bị ghi nhật ký dù Y2 chưa gắn");
+    if (tongKet?.links_journaled !== 1) loi.push(`tổng kết links_journaled = ${tongKet?.links_journaled}`);
+    return loi;
+  };
+  try {
+    await c.query(MIG); // 098 đã áp ở AC-1; áp lại an toàn (AC-2) để ca chạy được một mình
+    // Chiều đỏ 1: hàm của 044 → link (P1, X) biến mất, nhật ký trống.
+    await c.query("BEGIN");
+    await c.query(ham044());
+    const g1 = await gieo();
+    await chay();
+    assert.equal(await so(c, "SELECT count(*) FROM property_offer_unlinks WHERE offer_id = 'kgc9_X'"), 0, "KGC-AC-9: 044 đã ghi nhật ký — chiều đỏ mất nghĩa");
+    assert.equal(await so(c, "SELECT count(*) FROM property_offers WHERE property_id = $1", [g1.P1]), 0, "KGC-AC-9: 044 vẫn giữ link của P1 — chiều đỏ mất nghĩa");
+    assert.ok((await kiem(g1, null)).some((l) => l.startsWith("nhật ký")), "KGC-AC-9: phép kiểm không bắt được 044 mất link");
+    await c.query("ROLLBACK");
+    // Chiều đỏ 2: bản sao 101 bỏ câu ghi nhật ký → phép kiểm đỏ.
+    const boGhi = MIG101.replace(/WITH j AS \([\s\S]*?SELECT journaled \+ count\(\*\) INTO journaled FROM j;/, "");
+    assert.notEqual(boGhi, MIG101, "KGC: không cắt được câu ghi nhật ký của 101");
+    await c.query("BEGIN");
+    await c.query(boGhi);
+    const g2 = await gieo();
+    const t2 = await chay();
+    assert.ok((await kiem(g2, t2)).length > 0, "KGC-AC-9: bản bỏ ghi nhật ký vẫn đạt — phép kiểm không phân biệt");
+    await c.query("ROLLBACK");
+    // Xanh: áp 101 hai lần (chạy lại an toàn) rồi đối soát.
+    await c.query("BEGIN");
+    await c.query(MIG101);
+    await c.query(MIG101);
+    const g = await gieo();
+    const t = await chay();
+    assert.deepEqual(await kiem(g, t), [], "KGC-AC-9");
+    await c.query("ROLLBACK");
   } finally { await c.end(); }
 });
