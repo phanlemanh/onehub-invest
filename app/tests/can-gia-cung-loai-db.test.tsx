@@ -16,8 +16,9 @@ import { canCallOpsApi } from "../src/lib/ops-access";
 const ngoai = (rel: string) => import(pathToFileURL(join(import.meta.dirname, rel)).href);
 // Không mặc định về DB dùng chung ở máy: thiếu DATABASE_URL thì dừng (npm test và can-gia-cung-loai-db.sh đều đặt DB thử).
 // Trên CI (biến CI) DB «oneinvest» là DB trống dựng từ migration cho riêng lượt, nên mặc định về nó như các test khác.
-if (!process.env.DATABASE_URL && process.env.CI) process.env.DATABASE_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-if (!process.env.DATABASE_URL) throw new Error("can-gia-cung-loai-db.test: thiếu DATABASE_URL — chạy qua npm test hoặc can-gia-cung-loai-db.sh itest");
+const DB_URL = process.env.DATABASE_URL ?? (process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : "");
+if (!DB_URL) throw new Error("can-gia-cung-loai-db.test: thiếu DATABASE_URL — chạy qua npm test hoặc can-gia-cung-loai-db.sh itest");
+process.env.DATABASE_URL = DB_URL;
 
 const nap = async () => ({
   fx: await ngoai("../../pipeline/scripts/can-gia-cung-loai-fixture.itest.mjs"),
