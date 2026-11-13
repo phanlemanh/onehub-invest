@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 000c7872862ec44bc2c95ad43e1be70aa044c87f
+verified_commit: eab5acd7f009a848636d39964298b864d2797ca1
 human_signoff:
 ---
 
@@ -180,3 +180,7 @@ none — every multi-run eval is uniform
 
 Round 1: lịch sử round trước nằm trong run-log.jsonl và evidence cũ của vòng.
 Round 2: E1–E10 và toàn bộ lệnh suite đều đạt, verdict PASS.
+
+### Re-pin lần 1 — 2026-11-13, do sửa bài kiểm agent AC-10 (CI) và ghim chiều đỏ itest vào gốc vòng (Ngoài-1/4/6)
+run_id: repin-20261113T151614Z-21966
+sha: eab5acd7f009a848636d39964298b864d2797ca1 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
