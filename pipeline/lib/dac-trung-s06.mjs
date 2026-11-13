@@ -7,6 +7,9 @@ import { chuaDaySo } from "./sdt-trong-chuoi.mjs";
 /** Khung toạ độ Việt Nam (gồm đảo): vĩ 8–24, kinh 102–110. */
 const KHUNG_VN = { vi: [8, 24], kinh: [102, 110] };
 const TRAN = { met: 200, tang: 100, wc: 50 };
+// DA5: mã căn chỉ gồm chữ số 0 hay đúng «1», số nhà chỉ gồm chữ số 0 là rác (điều kiện bật của hàng DA5).
+const MA_CAN_RAC = /^(0+|1)$/;
+const SO_NHA_RAC = /^0+$/;
 
 /** Số từ giá trị nguồn: số JSON, hoặc chuỗi số (dấu phẩy thập phân, đuôi «m»/«tầng» cho phép). Không đọc được → null. */
 export function docSo(v) {
@@ -49,11 +52,16 @@ export function docDacTrungS06(ad) {
   const duong = docDuong(p.street_name);
   if (duong) them(ASSERTION_FIELD.street_raw, duong, "payload.street_name");
 
-  const soNha = chu(p.street_number) ? ["street_number", chu(p.street_number)] : chu(p.streetnumber_display) ? ["streetnumber_display", chu(p.streetnumber_display)] : null;
-  if (soNha) them(ASSERTION_FIELD.street_number, soNha[1], `payload.${soNha[0]}`);
+  // DA5: *_display của S06 là cờ hiển thị (chỉ 0, 1 — đo 12/11), không phải giá trị: chỉ đọc trường thật.
+  const soNha = chu(p.street_number);
+  if (soNha && !SO_NHA_RAC.test(soNha)) them(ASSERTION_FIELD.street_number, soNha, "payload.street_number");
 
-  const maCan = chu(p.unitnumber_display) ? ["unitnumber_display", chu(p.unitnumber_display)] : chu(p.unitnumber) ? ["unitnumber", chu(p.unitnumber)] : null;
-  if (maCan) them(ASSERTION_FIELD.unit_number, maCan[1], `payload.${maCan[0]}`);
+  const maCan = chu(p.unitnumber);
+  if (maCan && !MA_CAN_RAC.test(maCan)) them(ASSERTION_FIELD.unit_number, maCan, "payload.unitnumber");
+
+  // DA5: toà của tin từ trường block của nguồn — chữ thô (BuildingName), chuẩn hoá toà ở danh bạ.
+  const toa = chu(p.block).normalize("NFC").replace(/\s+/g, " ");
+  if (toa) them(ASSERTION_FIELD.block_raw, toa, "payload.block");
 
   const ngang = docSo(p.width);
   const dai = docSo(p.length);
