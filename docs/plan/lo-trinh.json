@@ -90,6 +90,34 @@
         "DS1"
       ],
       "that": "2026-11-03"
+    },
+    {
+      "ma": "DAM1",
+      "ten": "Tin rao mang dự án và gắn được vào danh bạ; trang dự án trên Invest hiện thông tin có nguồn",
+      "ten_ngan": "Định vị căn và thông tin dự án",
+      "loai": "phat-hanh",
+      "dot": "danh-ba-du-an-0811",
+      "hang": [
+        "DA2",
+        "DA5",
+        "DA6",
+        "DA30",
+        "DA29",
+        "DA3",
+        "DA15",
+        "DV6",
+        "DV2",
+        "DV3",
+        "DA9",
+        "DA14",
+        "DAZ1",
+        "DA31",
+        "DA10",
+        "PL35",
+        "PL20",
+        "DA13"
+      ],
+      "ghi_chu": "Mạnh duyệt dựng mốc 12/11 («Làm cả hai»). Thứ tự hàng là thứ tự làm. Số đo 12/11: 0 tin đang mang dự án; danh bạ có 20 dự án, 69 toà, 1.736 căn. PL20 cũng thuộc mốc GCM1 và hiện dưới GCM1 (mốc đứng trước trong tệp); PL20 còn chờ hai điều kiện: tên toà từ S09 và sổ nhóm → dự án (đã ghi 19/30 dòng). Việc cần xong trước nằm ngoài mốc: DA4, GCQ2, PX1, DV1, DB1b, DA7, PL13, PL15, DB1, DN4, DS2, DA16, DA17, DA19, DA20. Sửa 13/11 (lượt cắt no-cat-hang-1311): thêm DV6 trước DV2, DV3; DA31 (lát hai khu của DA10) trước DA10; PL35 (tập nhãn) trước PL20."
     }
   ],
   "hang": [
@@ -437,9 +465,11 @@
       "vi_sao": "§0.2 D-3: ghép căn là phát biểu; D1/D3.",
       "hang": "T2",
       "dung_tren": [
-        "PL13",
         "PL15",
-        "DB1"
+        "DB1",
+        "DA31",
+        "DV6",
+        "PL35"
       ],
       "slug": "ghep-tin-vao-danh-muc",
       "bat_khi": "Trên tập test: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A",
@@ -448,7 +478,7 @@
       "phu": [
         "C2.7"
       ],
-      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1."
+      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1. Sửa 13/11 (no-cat-hang-1311): dung_tren bỏ PL13, thêm DA31 (toà S09 hai khu), DV6 (dự án trên tin S03 từ nhóm và tên) và PL35 (tập nhãn) — số đo S1 12/11: chữ bài đã ra tên toà, mã căn đủ dày từ đọc gộp, nút cổ chai là danh bạ thiếu toà, sổ nhóm chưa gắn dự án và chưa có tập test nhãn người."
     },
     {
       "ma": "PL21",
@@ -4764,7 +4794,8 @@
         "DAZ1",
         "DB1b",
         "DA3",
-        "DA7"
+        "DA7",
+        "DA31"
       ],
       "dot": "danh-ba-du-an-0811",
       "nhom": "danh-ba-du-an",
@@ -4781,7 +4812,7 @@
         "pipeline/danh-ba-vat-the.mjs",
         "pipeline/lib/danh-ba-vat-the.mjs"
       ],
-      "ghi_chu": "Toà chỉ có từ S09 nhận catalog_tier thấp nhất. Số đo sơ bộ 08/11: phủ thước S03 ≈ 99% bài ở nhóm một dự án; phủ thước S06 ≈ 4,6% (S09 là danh mục Hà Nội, 252/282 dự án S06 ở HCM). Không đạt nấc 2: Claude báo liên làn để ZCode tìm đường khác cho HCM, Đà Nẵng. Kế hoạch: DA5 + DO-S09. Sửa 09/11 (mục 40): khớp nút ứng viên từ tin.",
+      "ghi_chu": "Toà chỉ có từ S09 nhận catalog_tier thấp nhất. Số đo sơ bộ 08/11: phủ thước S03 ≈ 99% bài ở nhóm một dự án; phủ thước S06 ≈ 4,6% (S09 là danh mục Hà Nội, 252/282 dự án S06 ở HCM). Không đạt nấc 2: Claude báo liên làn để ZCode tìm đường khác cho HCM, Đà Nẵng. Kế hoạch: DA5 + DO-S09. Sửa 09/11 (mục 40): khớp nút ứng viên từ tin. Sửa 13/11 (no-cat-hang-1311): lát hai khu tách thành DA31; hàng này giữ ba số phủ và phần S09 ngoài hai khu.",
       "phu": [
         "DA10"
       ]
@@ -5346,7 +5377,8 @@
       "tieu_chi": 7,
       "nhom": "dinh-vi-s03",
       "dung_tren": [
-        "DA2"
+        "DA2",
+        "DV6"
       ],
       "phu": [
         "DV2"
@@ -5369,7 +5401,8 @@
       "tieu_chi": 7,
       "nhom": "dinh-vi-s03",
       "dung_tren": [
-        "DA2"
+        "DA2",
+        "DV6"
       ],
       "phu": [
         "DV3"
@@ -5730,6 +5763,321 @@
         "CONTEXT.md"
       ],
       "ghi_chu": "Chỉ máy thu (tệp không lên cloud). Slug route mới phải thêm vào CONTEXT.md và test route-slugs cùng PR; tên slug chốt ở Cổng Phạm vi. UI theo ReUI (data-grid, filters)."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "DV6",
+      "slug": "du-an-tren-tin-s03-tu-nhom-va-ten",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "nhom": "dinh-vi-s03",
+      "dung_tren": [
+        "DA2"
+      ],
+      "phu": [
+        "A1"
+      ],
+      "cau_giao": "Tin S03 mang phát biểu dự án (project_node_id) suy ra từ hai nguồn chắc: nhóm mà sổ ghi đúng một dự án, và tên dự án bài tự nêu khớp đúng một nút danh bạ; tin hai nguồn chỉ hai dự án khác nhau không ghi mà vào bảng mâu thuẫn",
+      "bat_khi": "Chạy không cờ chỉ đếm, số dòng field_assertions không đổi; --ghi chạy lại lần hai 0 dòng chèn, 0 dòng rút; sổ nhóm hay bí danh đổi thì phát biểu mất điều kiện bị rút có lý do; phát biểu fact hay observed có sẵn không bị đụng; bảng đếm khớp truy vấn độc lập",
+      "vi_sao": "Tin S03 chưa có phát biểu dự án nào dù DA2 đã mở ô project_node_id; đo 12/11 hợp hai nguồn phủ phần lớn tin S03. DV2, DV3, GCQ2, DF7 và PL20 cần dự án trên tin trước.",
+      "vung": [
+        "pipeline/lib/du-an-tren-tin-s03.mjs",
+        "pipeline/scripts/du-an-tren-tin-s03*"
+      ],
+      "ghi_chu": "Hàng đã chạy trước khi có mã: Cổng Đáng 13/11 (Mạnh «Làm»), Cổng Phạm vi đã duyệt, hồ sơ _acceptance/du-an-tren-tin-s03-tu-nhom-va-ten/ trên nhánh feat/du-an-tren-tin-s03-tu-nhom-va-ten. Là phần đầu của GCQ2 (quy ước nhóm) và DF7 (phường thật). Không migration, không gọi model; ghi thật trên máy thu chờ lời riêng của Mạnh sau gộp."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "VM1",
+      "slug": "s06-gan-tinh-theo-tung-tin",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "nhom": "s06-vung-moi",
+      "dung_tren": [],
+      "phu": [
+        "B2",
+        "B3"
+      ],
+      "cau_giao": "Transform S06 gán thị trường và phường cho tin theo tỉnh của chính tin chứ không theo vùng thu, nên vùng thứ ba đang nháp bật được, và ba vùng mới có số đo gán phường, toạ độ kèm ngưỡng",
+      "bat_khi": "Tin của đơn vị thu chỉ có mã vùng cũ (đang nháp) mà nằm ở hai tỉnh cũ đã sáp nhập đều vào đúng một thị trường; tin Hà Nội, TP.HCM, Đà Nẵng gán phường không đổi so với trước; mỗi vùng mới có tỉ lệ tin có phường và có toạ độ ghi vào bảng kiểm chất lượng, dưới ngưỡng thì đỏ có tên vùng",
+      "vi_sao": "ROADMAP §3 mục 47 (12/11): hai vùng S06 mới đã bật; vùng thứ ba giữ nháp vì nguồn không có mã vùng riêng, chờ transform gán tỉnh theo từng tin. Hôm nay thị trường của tin lấy từ city_code của đơn vị thu.",
+      "vung": [
+        "pipeline/transform-chotot.mjs",
+        "pipeline/lib/thi-truong.mjs",
+        "pipeline/sql"
+      ],
+      "ghi_chu": "Gộp B2 và B3: đo gán phường không có giá trị khi vùng thứ ba chưa vào canonical, và cùng một bước transform. Ngưỡng tỉ lệ chốt ở Cổng Phạm vi trên số đo hai vùng đã bật. Bật vùng trong collection_units và lượt thu đầu là bước triển khai làn ZCode (ra khỏi kho). Hàng trước: s06-vung-moi-len-canonical, s06-region-tinh (đã ký)."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "NL1",
+      "slug": "sellers-theo-luat-044",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "nhom": "nap-lai",
+      "dung_tren": [],
+      "phu": [
+        "B4"
+      ],
+      "cau_giao": "Không view nào ngoài hai view sống đọc thẳng bảng bản ghi tin, trừ ngoại lệ có tên được khai trong luật 044 và ca kiểm; ca ND-AC-1 của nap-lai-db.itest xanh trên main",
+      "bat_khi": "ND-AC-1 xanh trên DB của lượt dựng từ db/migrations; tập view phụ thuộc trực tiếp bảng bản ghi bằng đúng danh sách cho phép (thêm một view đọc thẳng thì ca đỏ, có đối chứng); số người bán và ngày đầu, ngày cuối trước, sau khớp đếm độc lập hoặc phần co lại được đo và in",
+      "vi_sao": "View sellers của migration 060 có CTE lich đọc thẳng sale_offer_records (gồm tin đã nghỉ) — vi phạm thật trên DB hôm nay, lộ ra ở hàng itest-nap-lai-migration-cu-sau-095; giám sát không cho dời ca sang DB dừng ở 044 để giấu.",
+      "vung": [
+        "db/migrations",
+        "pipeline/scripts/nap-lai-db.itest.mjs"
+      ],
+      "ghi_chu": "Câu chọn ở Cổng Phạm vi: (a) miễn luật có tên cho sellers vì lịch hoạt động người bán gồm cả tin đã nghỉ — số giữ nguyên; (b) migration mới cho sellers đọc qua view sống — ngày đầu, ngày cuối chỉ tính trên tin sống, đo trước số người bán đổi. Bên đọc sellers: app/src/lib/ops-queries.ts, app/src/lib/deals.ts, pipeline/sync-cloud.mjs, refresh-bait-gap, do-danh-ba-sdt, do-so-ghep-s06. T3 vì đổi migration và dữ liệu lên cloud."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "IT1",
+      "slug": "itest-ky-vong-theo-so-hien-hanh",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "nhom": "itest-xanh",
+      "dung_tren": [],
+      "phu": [
+        "B5",
+        "B6a"
+      ],
+      "cau_giao": "Ba itest kiểm sổ và mã (trang-thai-chao, vocab-db, so-nhom) đọc kỳ vọng từ sổ và mã hiện hành thay vì danh sách chép tay hay bộ rút câu gãy, nên xanh trên main",
+      "bat_khi": "trang-thai-chao AC-3 so trục với pipeline/mappings.yaml hiện hành; AC-7 xanh hoặc có nguyên nhân đã soi ghi trong hồ sơ; vocab-db nạp được câu ref_* của 081; so-nhom SN-AC-1/2 rút được câu đọc của script thu S06 hiện hành; mỗi ca sửa có đối chứng đỏ (thêm mã vào sổ mà không thêm vào kỳ vọng thì đỏ đúng chỗ)",
+      "vi_sao": "Quét 12/11 trên main (hàng itest-nap-lai-migration-cu-sau-095, anh-em.md): bốn tệp itest đỏ vì kỳ vọng đóng băng trong sổ hay bộ rút câu không đọc mã mới, không phải vì lớp nạp lại.",
+      "vung": [
+        "pipeline/scripts/trang-thai-chao.itest.mjs",
+        "pipeline/scripts/vocab-db.itest.mjs",
+        "pipeline/scripts/so-nhom.itest.mjs"
+      ],
+      "ghi_chu": "Gom B5 và B6a: cùng một lỗi lớp «kỳ vọng ghi tay lệch sổ hiện hành». AC-7 của trang-thai-chao chưa rõ nguyên nhân; Cổng Phạm vi soi trước, khác lớp thì tách. Script thu S06 là làn ZCode: chỉ sửa bộ rút ở test, không sửa script thu."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "IT2",
+      "slug": "itest-doc-lap-du-lieu-may-thu",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "nhom": "itest-xanh",
+      "dung_tren": [],
+      "phu": [
+        "B6b"
+      ],
+      "cau_giao": "danh-ba-nguoi.itest và the-duyet-nguoi.itest tự dựng dữ liệu mồi cho ca của mình nên xanh trên DB của lượt bất kể trạng thái bản chép từ máy thu",
+      "bat_khi": "danh-ba-nguoi AC-8 và HD13 E7, the-duyet-nguoi TN-AC-10 xanh trên DB của lượt dựng từ db/migrations và trên bản chép DB thật; đối chứng: bỏ dòng mồi thì ca đỏ đúng tên; không ca nào đọc số đếm của dữ liệu thật làm kỳ vọng",
+      "vi_sao": "Quét 12/11: hai ca danh-ba-nguoi đỏ vì bản chép có SĐT S06 chưa có Người, một ca the-duyet-nguoi đỏ vì số thẻ lệch số nhóm đếm trên bản chép — ca phụ thuộc trạng thái dữ liệu, không phụ thuộc lược đồ.",
+      "vung": [
+        "pipeline/scripts/danh-ba-nguoi.itest.mjs",
+        "pipeline/scripts/the-duyet-nguoi.itest.mjs"
+      ],
+      "ghi_chu": "Nếu soi ra số lệch là lỗi thật của bước dựng danh bạ Người (không phải lỗi ca) thì ghi vào hồ sơ và cắt hàng sửa riêng, không nới ca."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "IT3",
+      "slug": "itest-chay-dinh-ky",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "nhom": "itest-xanh",
+      "dung_tren": [],
+      "phu": [
+        "B10"
+      ],
+      "cau_giao": "Các itest không chạy trên CI chạy định kỳ trên máy thu, mỗi tệp trên DB của riêng lượt, và kết quả đỏ, xanh từng tệp hiện trên Ops",
+      "bat_khi": "Mỗi đêm một lượt chạy mọi tệp *.itest.* của pipeline, agent, scripts qua db/db-thu.sh --chay, không ghi DB :5433 chung; kết quả từng tệp ghi vào bảng kiểm chất lượng và hiện ở /ops/quality; tệp mới thêm tự vào lượt mà không sửa danh sách; một tệp treo quá trần thời gian bị dừng và ghi đỏ có tên",
+      "vi_sao": "Itest cần DB máy thu nên CI không chạy; hôm nay chỉ chạy khi có người nhớ, nên bốn tệp đỏ trên main nhiều ngày mới lộ (quét 12/11).",
+      "vung": [
+        "scripts",
+        "pipeline/cron"
+      ],
+      "ghi_chu": "Không đứng trên IT1, IT2: lượt chạy vẫn có giá trị khi còn tệp đỏ — đó chính là việc nó báo. Plist launchd là làn ZCode nếu nằm ở pipeline/cron; chốt ở Cổng Phạm vi. Không chạy chồng lượt chấm của phiên khác (dùng tên DB riêng)."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "CI1",
+      "slug": "props-trang-ops-quality",
+      "hang": "T1",
+      "vai": "nen",
+      "tieu_chi": 3,
+      "nhom": "ci-ve-sinh",
+      "dung_tren": [],
+      "phu": [
+        "B7"
+      ],
+      "cau_giao": "Trang /ops/quality khai props đúng kiểu trang của Next nên typecheck của app xanh cả khi thư mục kiểu sinh .next/types cũ hay vắng",
+      "bat_khi": "npx tsc --noEmit trong app xanh trên cây sạch không có .next và trên cây có .next/types cũ; trang vẫn đọc tham số lat-do như trước",
+      "vi_sao": "Props tuỳ chọn có giá trị mặc định ở app/src/app/ops/quality/page.tsx làm TS2344 khi typegen cũ; hôm nay chỉ xanh nhờ typegen mới.",
+      "vung": [
+        "app/src/app/ops/quality"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì T1, không cùng vùng với CI2."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "CI2",
+      "slug": "bo-qua-co-ten-trong-ci-bo-qua",
+      "hang": "T1",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "nhom": "ci-ve-sinh",
+      "dung_tren": [],
+      "phu": [
+        "B8"
+      ],
+      "cau_giao": "Ca kiểm cần công cụ chỉ có trên macOS (plutil, PlistBuddy, launchctl) được khai có tên trong scripts/ci-bo-qua.json thay vì tự bỏ qua trong tệp test",
+      "bat_khi": "ops-apply-plist SS-AC-6, SS-AC-7 và các ca cùng dạng ở scripts/ có dòng trong ci-bo-qua.json kèm lý do; trên máy thu (macOS) các ca vẫn chạy và xanh; trên runner Linux số ca bỏ qua bằng số dòng khai",
+      "vi_sao": "Commit f30fa526 cho hai ca plist tự bỏ qua khi thiếu plutil — bỏ qua không có tên trong danh sách thì máy chấm không thấy và không nhắc gỡ.",
+      "vung": [
+        "pipeline/scripts/ops-apply-plist.test.mjs",
+        "scripts/ci-bo-qua.json",
+        "scripts/install-cron-chi.test.mjs"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì T1. Lỗi stale chéo của ci-bo-qua.json là lỗi kit — gửi kit, không sửa ở đây."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "SB1",
+      "slug": "khoi-tao-sao-luu-dung-thu-tu",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "nhom": "sao-luu",
+      "dung_tren": [],
+      "phu": [
+        "B9"
+      ],
+      "cau_giao": "Lệnh khoi-tao của sao lưu mã hoá sinh mật khẩu kho mà không đòi tệp xác nhận da-cat-khoa; chỉ lượt chay đầu tiên đòi tệp ấy, đúng thứ tự checklist cho người",
+      "bat_khi": "khoi-tao thiếu da-cat-khoa vẫn sinh mục Keychain và gọi restic init (restic giả), in lời dặn cất bản mật khẩu; chay thiếu da-cat-khoa dừng mã 3, 0 lời gọi restic; ca C13 cũ đổi theo, có đối chứng; tài liệu thiết kế và checklist cùng một thứ tự",
+      "vi_sao": "Hàng sao-luu-ma-hoa-b2 (PR #430): khoi-tao đòi da-cat-khoa — tệp người tạo SAU khi đã cất mật khẩu — trước khi mật khẩu tồn tại; checklist cho người phải dặn tạo tệp trước, ngược nghĩa của tệp.",
+      "vung": [
+        "scripts/sao-luu-ngoai-may.sh",
+        "scripts/lib/sao-luu-ngoai-may.mjs",
+        "scripts/sao-luu-ngoai-may.test.mjs"
+      ],
+      "ghi_chu": "T3 theo hạng của hàng sao-luu-ma-hoa-b2 (tầng A rời máy khi lượt gửi thật chạy). Lượt gửi thật vẫn chờ lời riêng của Mạnh."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "TV18",
+      "slug": "lich-thu-tren-ops",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "nhom": "tv-lenh",
+      "dung_tren": [],
+      "phu": [
+        "B11"
+      ],
+      "cau_giao": "Người vận hành mở /ops/collections và thấy lịch thu của mọi job theo nguồn S0x: nhịp, lần chạy cuối kèm mã thoát, lần chạy kế, job đang tắt",
+      "bat_khi": "Danh sách job khớp các job launchd đã cài trên máy thu (đọc từ plist thật, không chép tay); mỗi job có nhịp, lần chạy cuối, mã thoát, lần kế; chỉ mã S0x, không tên nguồn thật; trên cloud đọc từ ops-facts, có trống, tải, lỗi kèm Thử lại",
+      "vi_sao": "ROADMAP §3 mục 47 (12/11) đã chốt lịch thu từng nguồn nhưng chưa có trang; muốn biết lịch phải đọc plist trên máy thu.",
+      "vung": [
+        "app/src/app/ops/collections",
+        "app/src/components/ops/collections",
+        "pipeline/push-ops-facts.mjs"
+      ],
+      "ghi_chu": "Chỉ xem. Bật, tắt và đổi nhịp từ cloud thuộc TV7 (lịch và chạy lại từ cloud) và TV5; hàng này là phần đọc mà TV7 sẽ dùng. Nếu đụng push-ops-facts.mjs (t3_paths) thì nâng hạng T3 ở Cổng Phạm vi. UI theo ReUI (data-grid)."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "DA31",
+      "slug": "toa-s09-hai-khu-vao-danh-ba",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "nhom": "danh-ba-du-an",
+      "dung_tren": [
+        "DAZ1",
+        "DB1"
+      ],
+      "phu": [
+        "B12"
+      ],
+      "cau_giao": "Phân khu và toà S09 của Ocean Park 1 và Grand Park vào danh bạ không sinh toà trùng, nên tên toà bài S03 nêu mà danh bạ chỉ có từ S08 khớp được",
+      "bat_khi": "Hai khu có đủ toà của snapshot S09 (115 và 61); 0 toà có hai UPI; toà khớp toà S08 thành bí danh, không khớp thì lên thẻ; Grand Park có cấp phân khu để bài ghi phân khu thay toà phân giải được; dựng lại hai lần không đổi khoá; số bài S03 hai khu gắn được toà trước, sau khớp đếm độc lập",
+      "vi_sao": "Số đo S1 của PL20 (12/11): hàng nghìn bài căn hộ hai khu nêu toà không có trong danh bạ (danh bạ chỉ từ S08); nút cổ chai là danh bạ, không phải bộ đọc.",
+      "vung": [
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs",
+        "db/migrations"
+      ],
+      "ghi_chu": "Lát hai khu của DA10, tách ra để PL20 không chờ ba số phủ của DA10 (phủ trên S06 cần S09 rộng hơn). DA10 đứng trên hàng này cho phần còn lại. Toà chỉ có từ S09 nhận catalog_tier thấp nhất như DA10."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "PL35",
+      "slug": "tap-nhan-ghep-tin-hai-khu",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "nhom": "danh-muc",
+      "dung_tren": [
+        "GC0",
+        "DA31"
+      ],
+      "phu": [
+        "B13"
+      ],
+      "cau_giao": "Mẫu 300–450 bài căn hộ S03 của Ocean Park 1 và Grand Park chọn phân tầng theo khu và mức gắn, có nháp nhãn toà, trục, căn do tác tử điền kèm căn cứ, nạp vào eval_labels ở trạng thái nháp chờ người duyệt trên /ops/labels, và đóng băng được thành tập test của PL20",
+      "bat_khi": "Chọn mẫu chạy lại ra cùng tập (hạt cố định); mỗi tầng đủ cỡ cho cận dưới Wilson ở ngưỡng nhóm A; nháp không ghi đè nhãn người; tập đóng băng có băm, đổi một dòng thì băm đổi; tác tử điền nháp không đọc kết quả của bộ gắn PL20",
+      "vi_sao": "Số đo S1 của PL20 (12/11): chưa có tập test nhãn người ở mức trục, toà nên cận dưới Wilson không đo được. Mạnh chốt 06/11: trợ lý điền nháp, Mạnh duyệt.",
+      "vung": [
+        "pipeline/label-sample.mjs",
+        "pipeline/lib/eval-labels.mjs"
+      ],
+      "ghi_chu": "Người duyệt nháp là việc vận hành (ra khỏi kho); PL20 đo trên phần đã duyệt. Đứng trên DA31 để mẫu chọn theo danh bạ đã có toà S09. Q3 (gắn mù) vẫn hoãn tới PL21."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "TN1",
+      "slug": "don-ten-nguon-kho-cong-khai",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "nhom": "ten-nguon",
+      "dung_tren": [],
+      "phu": [
+        "B14"
+      ],
+      "cau_giao": "Cây mã trên main không còn tên nguồn thật (kể cả tên miền và đường dẫn tệp mang tên nguồn) ngoài danh sách cho phép có lý do, và một răng chạy được trên CI chặn PR thêm tên nguồn thật mà không đưa danh sách tên lên kho công khai ở dạng đọc được",
+      "bat_khi": "Quét HEAD bằng danh sách tên của source_registry trên máy thu ra 0 tệp ngoài danh sách cho phép; tệp đổi tên có redirect hay bản đồ đổi tên nếu là route; răng CI đỏ khi PR thêm một tên thật (đối chứng bằng tên thử), xanh khi chỉ có mã S0x; test, fixture dùng chuỗi bịa; lịch sử git không viết lại trong hàng này",
+      "vi_sao": "Luật 6 AGENTS.md: tên nguồn thật là tầng A. Đo 03/11 còn hàng trăm tệp trên kho công khai; Mạnh chốt 03/11 dọn sau 05/11, và 05/11 chốt gộp việc chặn tên mới bằng máy (Ngoài-4 của #324) vào cùng hàng.",
+      "vung": [
+        "docs",
+        "_acceptance",
+        "pipeline",
+        "scripts",
+        ".github/workflows"
+      ],
+      "ghi_chu": "Đo lại số tệp ở Cổng Phạm vi (đếm theo danh sách tên, không in tên lên kênh công khai). Viết lại lịch sử git hay đổi kho sang riêng tư là quyết định của Mạnh, không thuộc hàng. Đổi tên hàng loạt dễ xung đột với PR đang mở: gộp vào cửa sổ ít PR. Vùng rộng có chủ đích; lịch xếp hàng này không chồng hàng khác."
+    },
+    {
+      "dot": "no-cat-hang-1311",
+      "ma": "ZC11",
+      "slug": "bo-nap-s10-khong-nap-ma-0",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "nhom": "zcode",
+      "dung_tren": [
+        "DA29"
+      ],
+      "phu": [
+        "B15"
+      ],
+      "cau_giao": "Bộ nạp S10 bỏ có đếm dòng bảng hàng thiếu mã dự án (null, chuỗi rỗng) thay vì ghi với mã dự án 0, và test bộ nạp chạy trên chính migration 089 thay vì DDL chép tay",
+      "bat_khi": "Dòng thiếu project_id: 0 dòng stg_s10_stock mang project_id «0», dòng tổng kết in số dòng bỏ; s10-project-nap.itest áp tệp 089 thật; đối chứng: bỏ một cột của 089 thì test đỏ đúng tên cột",
+      "vi_sao": "Review vòng 2 của s10-bang-hang-vao-danh-ba (DA29): bocS10 chỉ chặn NaN nên null hay rỗng thành 0; hai test napS10Project dựng bảng mô phỏng 089 lệch migration thật — ghi known-limits, sửa khi làn thu sửa bộ nạp.",
+      "vung": [
+        "pipeline/lib/s10-bang-hang.mjs",
+        "pipeline/import-airbnb.mjs",
+        "pipeline/tests/s10-project-nap.itest.mjs"
+      ],
+      "ghi_chu": "Làn ZCode (bộ nạp, bộ bóc): giao qua liên làn. Đứng trên DA29 vì tệp chỉ có trên nhánh của DA29 tới khi gộp."
     }
   ],
   "chan_troi": [
