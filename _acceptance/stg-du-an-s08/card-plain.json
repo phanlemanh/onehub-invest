@@ -1,0 +1,23 @@
+{
+ "feature_plain": "Thông tin cấp dự án của S08 (địa chỉ, chủ đầu tư, loại hình, hình thức sở hữu, điểm trên bản đồ) có chỗ nằm trong một bảng ở máy thu, để bước nối dự án (DA3) đọc được — hiện bộ nạp đang bỏ hết phần này.",
+ "will_do": [
+  {"id":"AC-2","p":"Sẽ nạp hai lượt thu S08 (01/11 và 07/11): lượt 07/11 ra đúng 177 dự án, nạp lại lần hai không thêm dòng nào."},
+  {"id":"AC-3","p":"Sẽ có địa chỉ và chủ đầu tư cho cả 177 dự án, loại hình 76 thấp tầng · 101 cao tầng, hình thức sở hữu cho 149 dự án, và điểm bản đồ cho 174 dự án — cả 174 điểm nằm trong lãnh thổ Việt Nam."},
+  {"id":"AC-4","p":"Sẽ vẫn nạp được khi một dự án thiếu trang chi tiết, thiếu bản đồ hay bản đồ ghi số hỏng — ô đó để trống, lượt nạp không gãy."},
+  {"id":"AC-5","p":"Sẽ KHÔNG đưa bảng này lên cloud, cổng Invest hay API — nó chỉ ở máy thu."}
+ ],
+ "wont_do": [
+  {"id":"AC-1","p":"Chặn mọi thay đổi ngoài ý muốn: chạy migration 094 hai lần không đổi gì, và không đụng bảng quỹ căn S08 đang có."},
+  {"id":"OOS-1","p":"KHÔNG sửa bộ nạp: phần đó của ZCode, gửi lời giao qua phiên liên làn sau khi anh duyệt."},
+  {"id":"OOS-2","p":"KHÔNG áp 094 lên DB máy thu — việc đó chờ lời riêng của anh."},
+  {"id":"OOS-3","p":"KHÔNG chuẩn hoá hình thức sở hữu hay nối vào dự án của danh bạ — để DA3."},
+  {"id":"OOS-4","p":"KHÔNG viết lệnh chuyển đổi riêng: bảng tự tính các ô đọc được ngay lúc nạp."}
+ ],
+ "coverage_plain": [
+  {"i":0,"p":"Đường dữ liệu: từ lượt thu vào bảng, đọc ra ô, nạp lại không nhân (AC-2, AC-3)."},
+  {"i":1,"p":"Cấu trúc bảng: tạo, chạy lại, không đụng bảng cũ (AC-1)."},
+  {"i":2,"p":"Năm thông tin câu giao đòi đều có số đếm trên lượt thu thật 07/11 (AC-3)."},
+  {"i":3,"p":"Dữ liệu xấu không làm gãy lượt nạp (AC-4)."},
+  {"i":4,"p":"Bảng không ra khỏi máy thu (AC-5)."}
+ ]
+}
