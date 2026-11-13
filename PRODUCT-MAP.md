@@ -10,7 +10,7 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>23 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>18 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>184 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>116 việc"] --> GG{"Cổng Giá trị"}
@@ -63,6 +63,7 @@ flowchart TD
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
 - Nhận kit 2.37.0 — chép lớp CI theo bản cài, gỡ chân engine đỏ của đường nền (`nhan-kit-2-37-0`)
+- Trang tổng quan /ops hiện tên Việt cho vùng thu S06 là tỉnh cũ đã sáp nhập (binh-duong) thay vì in mã thô (`nhan-vung-moi-ops`)
 - API Thu thập trên cloud không đọc bảng chỉ có ở máy thu — gỡ 500 của /api/v1/ops/collections (`ops-collections-api-cloud`)
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
