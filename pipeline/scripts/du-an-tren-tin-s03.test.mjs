@@ -4,6 +4,7 @@
 // Chiều đỏ: chép pipeline/lib + tệp lệnh vào thư mục tạm trong pipeline/ (giữ đường import), thay đúng một chuỗi, chạy bản tạm.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -111,8 +112,9 @@ async function fxAc1(c) {
   await so(c, "zalouser:group:111", [P1]); await so(c, "111", [P1]);
   await so(c, "222", [P1, P2, P3]); await so(c, "333", []);
   await so(c, "zalouser:group:444", [P1]); await so(c, "444", [P2]);
-  for (const [p, g] of [["A1", "zalouser:group:111"], ["A2", "111"], ["B1", "222"], ["B2", "222"], ["C1", "333"], ["C2", "333"], ["L1", "444"], ["L2", "zalouser:group:444"], ["N", "111"]]) await bai(c, p, g);
-  for (const p of ["A1", "A2", "B1", "B2", "C1", "C2", "L1", "L2"]) await tin(c, `T-${p}`, [p]);
+  await so(c, "zalouser:group:555", [P1]); await so(c, "555", [P1, P2]);
+  for (const [p, g] of [["A1", "zalouser:group:111"], ["A2", "111"], ["B1", "222"], ["B2", "222"], ["C1", "333"], ["C2", "333"], ["L1", "444"], ["L2", "zalouser:group:444"], ["M1", "555"], ["N", "111"]]) await bai(c, p, g);
+  for (const p of ["A1", "A2", "B1", "B2", "C1", "C2", "L1", "L2", "M1"]) await tin(c, `T-${p}`, [p]);
   return { P1 };
 }
 
@@ -121,20 +123,20 @@ test("DAT-AC-1 nhóm đúng một dự án sinh phát biểu, nhóm nhiều/khô
   const { P1 } = await fxAc1(c);
   const kq = await (await that()).chay(c, { ghi: true, ...im });
   const rows = await dong(c);
-  const thuc = Object.fromEntries(["A1", "A2", "B1", "B2", "C1", "C2", "L1", "L2", "N"].map((p) => [p, cua(rows, p, RULE.nhom).length]));
-  assert.deepEqual(thuc, { A1: 1, A2: 1, B1: 0, B2: 0, C1: 0, C2: 0, L1: 0, L2: 0, N: 0 }, "DAT-AC-1 nhóm nhiều dự án sinh phát biểu");
+  const thuc = Object.fromEntries(["A1", "A2", "B1", "B2", "C1", "C2", "L1", "L2", "M1", "N"].map((p) => [p, cua(rows, p, RULE.nhom).length]));
+  assert.deepEqual(thuc, { A1: 1, A2: 1, B1: 0, B2: 0, C1: 0, C2: 0, L1: 0, L2: 0, M1: 0, N: 0 }, "DAT-AC-1 nhóm nhiều dự án sinh phát biểu");
   for (const r of cua(rows, "A1").concat(cua(rows, "A2"))) {
     assert.equal(r.value, P1);
     assert.equal(r.evidence_tier, EVIDENCE_TIER.inferred);
     assert.equal(r.method, ASSERTION_METHOD.e1_rule);
     assert.ok(r.evidence.nhom && r.evidence.so_nhom_id, "DAT-AC-1 thiếu evidence nhóm/dòng sổ");
   }
-  assert.equal(kq.dem.nhom_lech, 1, "DAT-AC-1 nhóm hai dòng sổ lệch không được đếm");
+  assert.equal(kq.dem.nhom_lech, 2, "DAT-AC-1 nhóm hai dòng sổ lệch không được đếm");
 });
 
 test("DAT-AC-1 chiều đỏ: bỏ điều kiện đúng-một-dự-án", { skip: BO_DB }, async () => {
   const c = await xoa(); await fxAc1(c);
-  const m = await banDot("lib", "if (ids.length !== 1) continue;", "if (ids.length === 0) continue;");
+  const m = await banDot("lib", "const mot = ds.filter((r) => (r.project_node_ids ?? []).length === 1);", "const mot = ds.filter((r) => (r.project_node_ids ?? []).length >= 1);");
   await m.chay(c, { ghi: true, ...im });
   const rows = await dong(c);
   assert.ok(cua(rows, "B1", RULE.nhom).length > 0, "đột biến phải làm nhóm B sinh phát biểu");
@@ -201,8 +203,10 @@ test("DAT-AC-3 tin mâu thuẫn không ghi, đưa vào bảng; tin hai nguồn c
   assert.deepEqual([n(["a", "b"]), n(["c"]), n(["d"]), n(["B"])], [0, 0, 2, 0], "DAT-AC-3 tin mâu thuẫn bị ghi");
   const txt = readFileSync(bang, "utf8");
   const ma = txt.trim().split("\n").slice(1).map((l) => l.split("\t"));
-  assert.deepEqual(ma.map((x) => x[0]).sort(), ["T1", "T2"]);
-  for (const x of ma) assert.equal(x[1], [P1, P2].sort().join(","));
+  assert.deepEqual(ma.map((x) => x[0]).sort(), ["T1", "T2", "T4"], "DAT-AC-3 tin rơi im lặng khỏi bảng mâu thuẫn");
+  for (const x of ma.filter((y) => y[0] !== "T4")) { assert.equal(x[1], [P1, P2].sort().join(",")); assert.equal(x[3], "hai-du-an"); }
+  const t4 = ma.find((y) => y[0] === "T4");
+  assert.deepEqual([t4[1], t4[3]], [P1, "bai-chung-tin-mau-thuan"]);
   assert.ok(!/bài [abcdB]/.test(txt), "DAT-AC-3 bảng chứa chữ bài");
 });
 
@@ -283,35 +287,61 @@ test("DAT-AC-5 chiều đỏ: bỏ kiểm tầng cao", { skip: BO_DB }, async ()
   assert.throws(() => assert.equal(k, 0, "DAT-AC-5 luật suy ra ghi đè chỗ có phát biểu tầng cao"), /DAT-AC-5 luật suy ra ghi đè/);
 });
 
-const demFa = async (c) => Number((await c.query("SELECT count(*) FROM field_assertions")).rows[0].count);
+const songSet = async (c) => JSON.stringify((await dong(c)).map((r) => [r.subject_key, r.rule_id, r.value]));
+/** DB đã có phát biểu của lượt trước, rồi sổ đổi — chạy thử hay lỗi giữa chừng mà ghi thì tập dòng sống phải đổi. */
+async function fxCoDong(c) {
+  const fx = await fxAc4(c);
+  await (await that()).chay(c, { ghi: true, ...im });
+  await doiAc4(c, fx);
+  return fx;
+}
+function cli(url, args, env = {}) {
+  return spawnSync(process.execPath, [LENH, ...args], { env: { ...process.env, DATABASE_URL: url, ...env }, encoding: "utf8" });
+}
 
-test("DAT-AC-6 chạy thử không ghi; DB thiếu thì thoát 2; lỗi giữa chừng không để lại dòng", { skip: BO_DB }, async () => {
-  const c = await xoa(); await fxAc1(c);
+test("DAT-AC-6 chạy thử không đổi tập dòng sống; lỗi giữa chừng không để lại thay đổi", { skip: BO_DB }, async () => {
+  const c = await xoa(); await fxCoDong(c);
   const { chay } = await that();
-  const log = []; const n0 = await demFa(c);
-  await chay(c, { log: (s) => log.push(s) });
-  assert.equal(await demFa(c), n0);
-  assert.ok(log.some((s) => s.includes("chạy thử")));
-  await assert.rejects(chay(db.truoc, im), (e) => e.code === "THIEU_DB" && new RegExp(F).test(e.message));
-  await assert.rejects(chay(db.trong, im), (e) => e.code === "THIEU_DB" && /field_assertions/.test(e.message));
+  const truoc = await songSet(c);
+  const log = [];
+  await chay(c, { log: (x) => log.push(x) });
+  assert.equal(await songSet(c), truoc, "DAT-AC-6 chạy thử đổi dữ liệu");
+  assert.ok(log.some((x) => x.includes("chạy thử")));
   process.env.DAT_LOI_SAU_LO = "1";
   try { await assert.rejects(chay(c, { ghi: true, ...im }), /lỗi tiêm/); } finally { delete process.env.DAT_LOI_SAU_LO; }
-  assert.equal(await demFa(c), n0, "DAT-AC-6 ghi dở khi lỗi giữa chừng");
+  assert.equal(await songSet(c), truoc, "DAT-AC-6 ghi dở khi lỗi giữa chừng");
+  // Đối chứng dương: cùng dữ liệu, --ghi thật thì tập dòng sống đổi (sổ đã đổi sau lượt trước).
+  await chay(c, { ghi: true, ...im });
+  assert.notEqual(await songSet(c), truoc, "DAT-AC-6 đối chứng: --ghi phải đổi tập dòng sống");
 });
 
-test("DAT-AC-6 chiều đỏ: bỏ BEGIN/ROLLBACK (tệp lệnh)", { skip: BO_DB }, async () => {
-  const c = await xoa(); await fxAc4(c);
-  const { chay } = await that();
-  await chay(c, { ghi: true, ...im });
-  await c.query(`UPDATE collection_units SET project_node_ids = '{}'`);
-  const n0 = (await dong(c)).length;
+test("DAT-AC-6 chiều đỏ: bỏ ROLLBACK (tệp lệnh) → ghi dở", { skip: BO_DB }, async () => {
+  const c = await xoa(); await fxCoDong(c);
+  const truoc = await songSet(c);
   const m = await banDot("scripts", 'await client.query("ROLLBACK");', "");
   process.env.DAT_LOI_SAU_LO = "1";
   try { await assert.rejects(m.chay(c, { ghi: true, ...im })); } finally { delete process.env.DAT_LOI_SAU_LO; }
   await c.query("COMMIT").catch(() => {});
-  const n1 = (await dong(c)).length;
-  // Bản đột biến bỏ ROLLBACK: bước rút đã chạy trong giao dịch còn mở rồi được COMMIT ở trên → số dòng sống đổi.
-  assert.throws(() => assert.equal(n1, n0, "DAT-AC-6 ghi dở khi lỗi giữa chừng"), /DAT-AC-6 ghi dở/);
+  const sau = await songSet(c);
+  assert.throws(() => assert.equal(sau, truoc, "DAT-AC-6 ghi dở khi lỗi giữa chừng"), /DAT-AC-6 ghi dở/);
+});
+
+test("DAT-AC-6 lệnh thật: mã thoát 0/2/1, stdout, stderr", { skip: BO_DB }, async () => {
+  const c = await xoa(); await fxCoDong(c);
+  const url = `${MAY_CHU}/${moi.at(-1).ten}`;
+  const truoc = await songSet(c);
+  const a = cli(url, []);
+  assert.equal(a.status, 0, a.stderr); assert.match(a.stdout, /chạy thử/);
+  assert.equal(await songSet(c), truoc);
+  const b = cli(`${MAY_CHU}/${TEN("truoc")}`, []);
+  assert.equal(b.status, 2); assert.match(b.stderr, new RegExp(`${F}.*096`));
+  const d = cli(`${MAY_CHU}/${TEN("trong")}`, []);
+  assert.equal(d.status, 2); assert.match(d.stderr, /field_assertions/);
+  const e = cli(url, ["--ghi"], { DAT_LOI_SAU_LO: "1" });
+  assert.equal(e.status, 1); assert.match(e.stderr, /lỗi tiêm/);
+  assert.equal(await songSet(c), truoc, "DAT-AC-6 lệnh thật ghi dở khi lỗi");
+  const g = cli(url, ["--bang-mau-thuan"]);
+  assert.equal(g.status, 2);
 });
 
 async function fxGop(c) {
@@ -322,6 +352,9 @@ async function fxGop(c) {
   await bai(c, "t1", "g9"); await nhan(c, "t1", chuBai("Du an Mot")); await tin(c, "TT", ["t1"]);
   await bai(c, "o1", null); await nhan(c, "o1", chuBai("Du an Bon")); await tin(c, "TO", ["o1"]);
   await tin(c, "TR", ["khong-co-bai"]);
+  const P2 = (await c.query("SELECT id FROM asset_nodes WHERE name = 'Du an Hai'")).rows[0].id;
+  await so(c, "g8", [P2]); await bai(c, "x1", "g9"); await bai(c, "x2", "g8"); await bai(c, "xB", "g9");
+  await tin(c, "TX1", ["x1", "x2", "xB"]); await tin(c, "TX4", ["xB"]);
 }
 test("DAT-AC-7 bảng đếm khớp truy vấn độc lập; tin có dự án = tin có dòng sống sau --ghi", { skip: BO_DB }, async () => {
   const c = await xoa(); await fxGop(c);
@@ -337,12 +370,13 @@ test("DAT-AC-7 bảng đếm khớp truy vấn độc lập; tin có dự án = 
   const tongTin = await n(`SELECT count(*) n FROM sale_offer_records WHERE source = 'S03' AND $1::text IS NOT NULL AND $2::text[] IS NOT NULL`);
   assert.equal(d.tin_s03, tongTin);
   assert.equal(d.tin_co_du_an, coDuAn, "DAT-AC-7 tin có dự án lệch field_assertions");
-  assert.equal(d.con_lai, d.tin_s03 - d.tin_co_du_an - d.mau_thuan);
+  // còn lại đo độc lập ở dưới (số tin không có ứng viên nào theo SQL), không chép công thức của lib.
   // Đối chiếu độc lập: tính lại ứng viên bằng SQL (nhóm một dự án theo khoá thật + nhãn chu_bai trích đã kiểm khớp tên).
   const uv = (await c.query(`
-    WITH so AS (SELECT regexp_replace(group_key, '^([^:]+:)?group:(?=.)', '') k, min(project_node_ids[1]) p, count(DISTINCT project_node_ids[1]) n
-                  FROM collection_units WHERE source_code = 'S03' AND cardinality(project_node_ids) = 1 GROUP BY 1),
-         nhom AS (SELECT p.post_id, s.p::text pid, 'i' src FROM stg_zalo_posts p JOIN so s ON s.k = regexp_replace(coalesce(p.conversation_id, ''), '^([^:]+:)?group:(?=.)', '') WHERE s.n = 1),
+    WITH so AS (SELECT regexp_replace(group_key, '^([^:]+:)?group:(?=.)', '') k, min(project_node_ids[1]) p,
+                       count(DISTINCT project_node_ids[1]) n, bool_and(coalesce(cardinality(project_node_ids), 0) = 1) moi_dong_mot
+                  FROM collection_units WHERE source_code = 'S03' GROUP BY 1),
+         nhom AS (SELECT p.post_id, s.p::text pid, 'i' src FROM stg_zalo_posts p JOIN so s ON s.k = regexp_replace(coalesce(p.conversation_id, ''), '^([^:]+:)?group:(?=.)', '') WHERE s.n = 1 AND s.moi_dong_mot),
          nl AS (SELECT DISTINCT ON (post_id) post_id, probabilities->'o'->'project' j FROM silver_labels ORDER BY post_id, labeled_at DESC),
          ten AS (SELECT nl.post_id, a.id::text pid, 'ii' src FROM nl JOIN asset_nodes a ON a.node_type = 'project'
                    AND (lower(a.name) = lower(nl.j->>'v') OR lower(nl.j->>'v') = ANY (SELECT lower(x) FROM unnest(a.aliases) x))
@@ -353,8 +387,9 @@ test("DAT-AC-7 bảng đếm khớp truy vấn độc lập; tin có dự án = 
   assert.equal(d.tin_i, uv.filter((r) => r.ci).length, "DAT-AC-7 tin (i) lệch truy vấn độc lập");
   assert.equal(d.tin_ii, uv.filter((r) => r.cii).length, "DAT-AC-7 tin (ii) lệch truy vấn độc lập");
   assert.equal(d.trung, uv.filter((r) => r.ci && r.cii).length);
-  assert.equal(d.mau_thuan, uv.filter((r) => r.pids.length > 1).length);
+  assert.ok(d.mau_thuan >= uv.filter((r) => r.pids.length > 1).length);
   assert.equal(d.tin_co_du_an + d.mau_thuan, uv.length, "DAT-AC-7 tin có dự án + mâu thuẫn ≠ tin có ứng viên");
+  assert.equal(d.con_lai, tongTin - uv.length, "DAT-AC-7 còn lại lệch số tin không ứng viên");
 });
 
 test("DAT-AC-7 chiều đỏ: tin có dự án gồm cả tin mâu thuẫn", { skip: BO_DB }, async () => {
@@ -394,7 +429,9 @@ test("DAT-AC-7b chạy thử trên DB của lượt (bản sao dữ liệu thậ
 function kiemNguon(src) {
   const imp = [...src.matchAll(/^\s*import\s[^;]*?from\s+"([^"]+)"/gms)].map((m) => m[1]);
   const ngoai = imp.filter((s) => !(s === "pg" || s.startsWith("node:") || s.startsWith("../lib/") || s.startsWith("./")));
-  const cam = ["fetch(", "@anthropic-ai", "openai", "agent/"].filter((k) => src.includes(k));
+  const CAM_NODE = ["node:http", "node:https", "node:http2", "node:net", "node:tls", "node:dns", "node:dgram"];
+  const ngoaiNode = imp.filter((x) => CAM_NODE.includes(x));
+  const cam = ["fetch(", "undici", "@anthropic-ai", "openai", "agent/", ...ngoaiNode].filter((k) => src.includes(k));
   const viet = [ASSERTION_FIELD.project_node_id, EVIDENCE_TIER.inferred, EVIDENCE_TIER.observed, ASSERTION_METHOD.e1_rule,
     ASSERTION_METHOD.e2_llm].filter((k) => src.includes(`"${k}"`) || src.includes(`'${k}'`));
   return { ngoai, cam, viet };
@@ -408,9 +445,11 @@ test("DAT-AC-8 chỉ import pg, node:*, pipeline/lib; không mạng/model; khôn
 });
 
 test("DAT-AC-8 đối chứng dương: thêm import node:https bị bắt", () => {
-  const src = `import https from "node:https";\nimport x from "axios";\n` + readFileSync(LENH, "utf8");
-  const k = kiemNguon(src);
-  assert.throws(() => assert.deepEqual(k.ngoai, [], "DAT-AC-8 import ngoài danh sách: axios"), /DAT-AC-8 import ngoài danh sách/);
+  const k = kiemNguon(`import https from "node:https";\n` + readFileSync(LENH, "utf8"));
+  assert.throws(() => assert.deepEqual(k.cam, [], "DAT-AC-8 import ngoài danh sách: node:https"), /DAT-AC-8 import ngoài danh sách: node:https/);
+  assert.deepEqual(k.cam, ["node:https"]);
+  const k2 = kiemNguon(`import x from "axios";\n` + readFileSync(LENH, "utf8"));
+  assert.deepEqual(k2.ngoai, ["axios"]);
 });
 
 // ---------- ca thuần ----------
@@ -421,6 +460,7 @@ test("DAT-thuần: bài thuộc hai tin, một tin mâu thuẫn → bài không 
     nhan: [], nut: [], tin: [{ offer_id: "T1", post_ids: ["a", "b"] }, { offer_id: "T2", post_ids: ["a"] }, { offer_id: "T3", post_ids: ["c"] }],
   });
   assert.deepEqual(kq.dong.map((d) => d.subject_key), ["S03:c"]);
-  assert.equal(kq.dem.mau_thuan, 1);
+  assert.deepEqual(kq.mauThuan.map((m) => [m.offer_id, m.ly_do]), [["T1", "hai-du-an"], ["T2", "bai-chung-tin-mau-thuan"]]);
+  assert.equal(kq.dem.tin_co_du_an + kq.dem.mau_thuan, 3);
   assert.ok(!existsSync(join(PIPE, ".dat-dot-khong-co")));
 });

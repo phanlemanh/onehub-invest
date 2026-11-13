@@ -23,7 +23,7 @@ evals:
     cmd: config:executors.test.pipeline
     layer: backend-effect
     paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.mjs, pipeline/scripts/du-an-tren-tin-s03.test.mjs]
-    expected: "exit 0; ca DAT-AC-3 chạy: tin T1 (bài ở nhóm P1 và nhóm P2) · tin T2 (nhóm P1, tên bài P2) · tin T3 (nhóm P1, tên bài P1) · tin T4 chung một bài B với T1 (B ở nhóm P1); sau --ghi số dòng hai luật trên bài của T1 = 0, T2 = 0, T3 = 2 (một mỗi luật), bài B = 0; tệp --bang-mau-thuan có đúng tập mã tin {T1, T2} với ứng viên {P1,P2} và nguồn, không chứa chuỗi chữ bài của fixture. Chiều đỏ: đột biến bỏ luật mâu thuẫn → ghim «DAT-AC-3 tin mâu thuẫn bị ghi»."
+    expected: "exit 0; ca DAT-AC-3 chạy: tin T1 (bài ở nhóm P1 và nhóm P2) · tin T2 (nhóm P1, tên bài P2) · tin T3 (nhóm P1, tên bài P1) · tin T4 chung một bài B với T1 (B ở nhóm P1); sau --ghi số dòng hai luật trên bài của T1 = 0, T2 = 0, T3 = 2 (một mỗi luật), bài B = 0; tệp --bang-mau-thuan có đúng tập mã tin {T1, T2, T4}: T1, T2 ứng viên {P1,P2} lý do hai-du-an, T4 (mọi bài mang ứng viên thuộc tin mâu thuẫn T1) ứng viên {P1} lý do bai-chung-tin-mau-thuan, không chứa chuỗi chữ bài của fixture. Chiều đỏ: đột biến bỏ luật mâu thuẫn → ghim «DAT-AC-3 tin mâu thuẫn bị ghi»."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4

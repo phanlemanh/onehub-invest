@@ -48,19 +48,24 @@ function dangKhoa(k) {
 export function tinhDuAn({ nhom, bai, nhan, nut, tin, tangCao = [], canCu = CAN_CU_NHAN }) {
   const dang = new Set();
   // (i) sổ nhóm: khoá thật → một dự án; khoá thật có hai dòng lệch dự án thì bỏ.
-  const soNhom = new Map();
-  const lech = new Set();
+  // Khoá thật dùng được chỉ khi MỌI dòng sổ của nó ghi đúng một dự án và cùng một dự án; có dòng nhiều/không dự án hay
+  // hai dự án khác nhau mà ít nhất một dòng một-dự-án → lệch, bỏ.
+  const theoKhoa = new Map();
   for (const r of nhom) {
     const d = dangKhoa(r.group_key);
     if (d) dang.add(d);
-    const ids = (r.project_node_ids ?? []).map(String);
-    if (ids.length !== 1) continue;
     const k = khoaNhomThat(r.group_key);
-    const cu = soNhom.get(k);
-    if (cu && cu.pid !== ids[0]) lech.add(k);
-    else if (!cu) soNhom.set(k, { pid: ids[0], so_nhom_id: String(r.id), nhom: k });
+    theoKhoa.set(k, [...(theoKhoa.get(k) ?? []), r]);
   }
-  for (const k of lech) soNhom.delete(k);
+  const soNhom = new Map();
+  const lech = new Set();
+  for (const [k, ds] of theoKhoa) {
+    const mot = ds.filter((r) => (r.project_node_ids ?? []).length === 1);
+    if (!mot.length) continue;
+    const pids = new Set(mot.map((r) => String(r.project_node_ids[0])));
+    if (mot.length !== ds.length || pids.size > 1) { lech.add(k); continue; }
+    soNhom.set(k, { pid: [...pids][0], so_nhom_id: String(mot[0].id), nhom: k });
+  }
 
   // (ii) tên → nút project (tên chuẩn hoá khớp tên hay bí danh).
   const theoTen = new Map();
@@ -128,20 +133,27 @@ export function tinhDuAn({ nhom, bai, nhan, nut, tin, tangCao = [], canCu = CAN_
     if (mau) {
       dem.mau_thuan++;
       for (const p of posts) baiChan.add(p);
-      mauThuan.push({ offer_id: t.offer_id, ung_vien: [...pids].sort(), nguon: [...new Set(uv.map((u) => `${u.rule}:${u.pid}`))].sort() });
+      mauThuan.push({ offer_id: t.offer_id, ung_vien: [...pids].sort(), nguon: [...new Set(uv.map((u) => `${u.rule}:${u.pid}`))].sort(), ly_do: "hai-du-an" });
     } else if (pids.size) tinTot.push(t);
   }
 
   const dong = [];
   const daGhi = new Set();
   for (const t of tinTot) {
-    let co = false;
-    for (const p of t.post_ids ?? []) {
-      if (baiChan.has(p)) continue;
-      co = true;
+    const tot = (t.post_ids ?? []).filter((p) => !baiChan.has(p) && (ungVien.get(p) ?? []).length);
+    if (!tot.length) {
+      // Mọi bài mang ứng viên của tin đều thuộc một tin mâu thuẫn khác → tin cũng đưa người duyệt, không rơi im lặng.
+      const uv = (t.post_ids ?? []).flatMap((p) => ungVien.get(p) ?? []);
+      dem.mau_thuan++;
+      mauThuan.push({ offer_id: t.offer_id, ung_vien: [...new Set(uv.map((u) => u.pid))].sort(),
+        nguon: [...new Set(uv.map((u) => `${u.rule}:${u.pid}`))].sort(), ly_do: "bai-chung-tin-mau-thuan" });
+      continue;
+    }
+    dem.tin_co_du_an++;
+    for (const p of tot) {
       if (daGhi.has(p)) continue;
       daGhi.add(p);
-      for (const u of ungVien.get(p) ?? []) {
+      for (const u of ungVien.get(p)) {
         if (u.rule === RULE.nhom) dem.bai_i++; else dem.bai_ii++;
         dong.push({
           subject_key: subjectKey(NGUON, p), field: ASSERTION_FIELD.project_node_id, value: u.pid,
@@ -149,8 +161,6 @@ export function tinhDuAn({ nhom, bai, nhan, nut, tin, tangCao = [], canCu = CAN_
         });
       }
     }
-    // Tin mà mọi bài có ứng viên đều bị chặn bởi tin mâu thuẫn khác thì không có dự án.
-    if (co && (t.post_ids ?? []).some((p) => !baiChan.has(p) && (ungVien.get(p) ?? []).length)) dem.tin_co_du_an++;
   }
   dem.con_lai = dem.tin_s03 - dem.tin_co_du_an - dem.mau_thuan;
   dem.khoa_nhom_dang = [...dang].sort();

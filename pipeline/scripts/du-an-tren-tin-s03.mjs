@@ -63,9 +63,10 @@ export async function ghiPhatBieu(client, dong) {
   return { chen, rut: rut.rowCount };
 }
 
-/** Bảng tin mâu thuẫn (TSV): mã tin · dự án ứng viên · nguồn (luật:dự án). Không chữ bài. */
+/** Bảng tin mâu thuẫn (TSV): mã tin · dự án ứng viên · nguồn (luật:dự án) · lý do. Không chữ bài. */
 export function veBangMauThuan(mauThuan) {
-  return ["offer_id\tung_vien\tnguon", ...mauThuan.map((m) => `${m.offer_id}\t${m.ung_vien.join(",")}\t${m.nguon.join(",")}`)].join("\n") + "\n";
+  return ["offer_id\tung_vien\tnguon\tly_do",
+    ...mauThuan.map((m) => `${m.offer_id}\t${m.ung_vien.join(",")}\t${m.nguon.join(",")}\t${m.ly_do}`)].join("\n") + "\n";
 }
 
 /**
