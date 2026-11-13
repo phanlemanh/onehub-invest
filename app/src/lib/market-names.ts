@@ -73,6 +73,17 @@ export function maNgan(id: string): string {
 /** Mã thị trường/khu vực (`hanoi`, `vn-tinh-an-giang`, `vn`) → tên khu vực; mã lạ → «(chưa có tên Việt)».
  * Tra cả hai chiều vì DB có thể ở trước hoặc sau 064: mã dài ghi từ trước 064 (dòng kiểm cũ) ra tên mã ngắn; mã ngắn trên DB
  * chưa áp 064 (`areas` còn mã dài `vn-thanh-pho-*`/`vn-tinh-*`, S06 `da-nang` → `vn-da-nang`) ra tên mã dài. */
+/** Tỉnh cũ đã sáp nhập (đơn vị hành chính 2025) mà vùng thu S06 còn dùng làm mã (`binh-duong`): `areas` chỉ có 34 thị trường
+ *  mới nên không có tên. Khoá khớp `SAP_NHAP` của `pipeline/lib/thi-truong.mjs` (test `ten-tinh-cu` canh hai bên). */
+const TINH_CU_THEO_THI_TRUONG: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  "vn-hcmc": { "vn-binh-duong": "Bình Dương", "vn-ba-ria-vung-tau": "Bà Rịa – Vũng Tàu" },
+  "vn-hai-phong": { "vn-hai-duong": "Hải Dương" },
+  "vn-da-nang": { "vn-quang-nam": "Quảng Nam" },
+}
+export const TINH_CU: Readonly<Record<string, { ten: string; nay: string }>> = Object.fromEntries(
+  Object.entries(TINH_CU_THEO_THI_TRUONG).flatMap(([nay, cu]) => Object.entries(cu).map(([ma, ten]) => [ma, { ten, nay }])),
+)
+
 export function marketNameOf(code: string, areaNames: ReadonlyMap<string, string>): TenThiTruong {
   if (code === "vn") return { name: "Toàn quốc", known: true }
   const ngan = code.startsWith("vn-") ? code.slice(3) : code
@@ -82,5 +93,11 @@ export function marketNameOf(code: string, areaNames: ReadonlyMap<string, string
     areaNames.get(`vn-${ngan}`) ??
     areaNames.get(`vn-thanh-pho-${ngan}`) ??
     areaNames.get(`vn-tinh-${ngan}`)
-  return ten ? { name: ten, known: true } : { name: `${code} (chưa có tên Việt)`, known: false }
+  if (ten) return { name: ten, known: true }
+  const cu = TINH_CU[`vn-${ngan}`]
+  if (cu) {
+    const nay = areaNames.get(cu.nay)
+    return { name: nay ? `${cu.ten} (nay thuộc ${nay})` : cu.ten, known: true }
+  }
+  return { name: `${code} (chưa có tên Việt)`, known: false }
 }
