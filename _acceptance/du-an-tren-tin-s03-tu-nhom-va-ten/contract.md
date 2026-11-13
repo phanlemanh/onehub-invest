@@ -5,7 +5,7 @@ slug: du-an-tren-tin-s03-tu-nhom-va-ten
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-du-an-tren-tin-s03-tu-nhom-va-ten-design.md
@@ -76,3 +76,14 @@ Trục (quét không gian AC theo nguồn × trạng thái bài × đổi theo t
 - Nối lệnh vào chuỗi chạy đêm (Hỏi-2) và thẻ duyệt trong `/ops/review` cho tin mâu thuẫn (Hỏi-1, DV3).
 - Dự án từ người bán (DV2), từ mã toà (DV3); 892 tin còn lại; 16 tên dự án ngoài danh bạ.
 - Cột dự án trên `sale_offers` / bộ phân xử; `subzone_node_id`; mẫu đọc tay độ đúng.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-1: một dòng mô tả của E1 trong bộ tiêu chí ghi số nhóm lệch 1, ca thử đang đo 2 — chữ mô tả lệch, phép đo không đổi.
+  - Ngoài-2: gõ `--bang-mau-thuan` thiếu đường tệp mà kèm `--ghi` ngay sau thì lệnh coi `--ghi` là tên tệp và vẫn ghi thật.
+  - Ngoài-4: phép kiểm «không gọi mạng» chỉ bắt dạng `import … from`, chưa bắt `require` hay `import()` động.
+  - Ngoài-6: phép kiểm «bảng mâu thuẫn không chứa chữ bài» chỉ kiểm vắng mặt, chưa có ca phá thử cho thấy nó đỏ được.
+  - Ngoài-8: phát biểu dự án chưa mang mã lượt chạy (`run_id`, `changed_by`), nên khó truy dòng nào thuộc lượt ghi nào.
+  - Ngoài-9: phát biểu từ chữ bài lấy mốc thời gian là lúc chạy lệnh, không phải lúc bài đăng.
+  - Ngoài-10: dữ liệu thử của nhãn bạc dựng tay theo khuôn bên đọc, chưa đi qua bộ ghi nhãn thật.
