@@ -3,10 +3,10 @@ schema_version: 1
 slug: tap-nhan-ghep-tin-hai-khu
 feature: Mẫu 300–450 bài căn hộ S03 của Ocean Park 1 và Grand Park chọn phân tầng theo khu và mức gắn, có nháp nhãn toà, trục, căn do tác tử điền kèm căn cứ, nạp vào eval_labels ở trạng thái nháp chờ người duyệt trên /ops/labels, và đóng băng được thành tập test của PL20
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-11-13T02:24:37Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
