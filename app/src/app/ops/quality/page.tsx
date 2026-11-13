@@ -40,8 +40,13 @@ async function LamGiauKhoi({ lat, areaNames }: { lat: LatDo; areaNames: Record<s
   return <LamGiau data={await loadLamGiau(pool)} lat={lat} areaNames={areaNames} />;
 }
 
-export default async function QualityPage({ searchParams }: { searchParams?: Promise<{ "lat-do"?: string }> } = {}) {
-  const lat = latDo((await searchParams)?.["lat-do"]);
+/** Props đúng hình trang của Next (bắt buộc, không mặc định): tham số mặc định làm props có thể là undefined và kiểu
+ *  kiểm trang của Next (next-types-plugin cũ) báo TS2344 (CI1). `lat-do` lặp trên URL thì lấy giá trị đầu. */
+type QualityPageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function QualityPage({ searchParams }: QualityPageProps) {
+  const latTho = (await searchParams)["lat-do"];
+  const lat = latDo(Array.isArray(latTho) ? latTho[0] : latTho);
   const ruler = await getRulerHealth();
   // ON9: bản mới nhất theo (kiểm, đối tượng) — bảng và số đầu trang cùng một nguồn (dqSection bên dưới).
   const { rows: dqRaw } = await loadDqChecks(pool);
