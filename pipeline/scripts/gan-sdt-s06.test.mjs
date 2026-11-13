@@ -17,6 +17,7 @@ import { nap070 } from "../lib/nap-070.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { dongGan } from "../gan-sdt-s06.mjs";
 
 const DB_URL =
@@ -27,11 +28,21 @@ const MOC_1 = "field_provenance -> 'offer_status' AS fp_chao";
 const MOC_2 = "ELSE jsonb_build_object('offer_status', max(o.fp_chao::text)::jsonb) END AS field_provenance";
 const CHEN_1 = ", field_provenance -> 'seller_phone' AS fp_sdt";
 const CHEN_2 = "\n             || CASE WHEN max(o.fp_sdt::text) IS NULL THEN '{}'::jsonb\n                     ELSE jsonb_build_object('seller_phone', max(o.fp_sdt::text)::jsonb) END";
+// 099 (phuong-tu-du-an) chèn sau 068 cạnh cùng các mốc: phần chèn ở «END AS field_provenance» nằm giữa phần của 068 và
+// « AS field_provenance», nên phải gỡ trước thì mốc 2 của 068 mới hiện lại. Rút nguyên văn từ tệp 099 (không chép), DB chưa áp
+// 099 thì replace không đổi gì.
+const MIG_099 = readFileSync(join(import.meta.dirname, "../../db/migrations/099_phuong_tu_du_an.sql"), "utf8");
+const CHEN_099 = [
+  MIG_099.match(/moc_1 \|\| \$m\$(, field_provenance -> 'area_id' AS fp_area)\$m\$/)?.[1],
+  MIG_099.match(/replace\(dinh_nghia, moc_2, \$m\$END([\s\S]*?) AS field_provenance\$m\$\)/)?.[1],
+];
+assert.ok(CHEN_099.every(Boolean), "gan-sdt-s06: không rút được phần chèn của 099");
 
 /** Định nghĩa hàm phân xử đang chạy ở public, đổi tên lược đồ, gỡ phần giữ của 068 nếu DB này đã áp. */
 async function hamTruoc068(c, sc) {
   const { rows } = await c.query(`SELECT pg_get_functiondef(to_regprocedure('public.resolve_offer_fields(text[])')) AS d`);
   return rows[0].d.replace("public.resolve_offer_fields", `${sc}.resolve_offer_fields`)
+    .replace(CHEN_099[0], "").replace(CHEN_099[1], "")
     .replace(CHEN_1, "").replace(CHEN_2, "");
 }
 
