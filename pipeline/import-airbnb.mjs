@@ -1,4 +1,5 @@
 // import-airbnb.mjs — nạp snapshot từ one-invest-collector theo DATA-CONTRACT
+import { dongDuAnS08, CAU_CHEN_S08_PROJECT } from "./lib/s08-du-an.mjs"; // DA30 1211-35
 // (collector/docs/DATA-CONTRACT.md schemaVersion 1–2): verify sha256 từng file trước khi parse.
 // v2 chỉ thêm file media/* + RawItem.meta.mediaFiles — items đọc y như v1;
 // meta.mediaFiles (zalo-agent) → stg_zalo_posts.media_files (PII tầng A, chỉ local).
@@ -212,8 +213,16 @@ async function main() {
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
     // INSERT vào bảng snapshot đĩa chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
     // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
+    const coS08DanhMuc = items.some((it) => it.source === "s08-danh-muc");
+    const coBang094 = coS08DanhMuc ? await client.query(
+      `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'stg_s08_project'`).then((r) => (r.rowCount ?? 0) >= 1).catch(() => false) : false;
+    let s08ProjectDong = 0;
     const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
-    if (!(!coBang && boHetHoSo)) {
+    // 1211-35 MỞ LẠI(2): thiếu 094 → ROLLBACK CẢ LƯỢT mọi snapshot CÓ item project_catalog (giống hồ sơ S03)
+    // — giữ phần dự án không mất khi chỉ lẫn căn; áp 094 rồi nạp lại được đủ.
+    const coCatalogS08 = items.some((it) => it.source === "s08-danh-muc" && it.kind === "project_catalog");
+    const boHetS08 = coCatalogS08 && !coBang094;
+    if (!(!coBang && boHetHoSo) && !boHetS08) {
       await client.query(
         `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
          VALUES ($1,$2,$3,$4,$5)
@@ -341,7 +350,9 @@ async function main() {
           s08Detail++;
           continue;
         }
-        if (it.meta?.state === "catalog") {
+        // 1211-35 DA30: item project_catalog GOM vào stg_s08_project (không bỏ nữa) —
+        // dongDuAnS08 xử lý trọn snapshot sau vòng (catalog + detail theo mã dự án)
+        if (it.kind === "project_catalog" || it.meta?.state === "catalog") {
           s08Catalog++;
           continue;
         }
@@ -388,9 +399,29 @@ async function main() {
         osm++;
       }
     }
+    // 1211-35 DA30: dòng stg_s08_project từ item project_catalog + inventory_unit/detail (bỏ đếm-bỏ cũ)
+    if (coS08DanhMuc && coBang094) {
+      const itemsS08 = items.filter((it) => it.source === "s08-danh-muc");
+      const cacDong = dongDuAnS08(itemsS08, manifest.snapshotId);
+      for (const dong of cacDong) {
+        const r = await client.query(CAU_CHEN_S08_PROJECT, [
+          dong.snapshot_id, dong.project_id,
+          dong.catalog_payload == null ? null : JSON.stringify(dong.catalog_payload),
+          dong.detail_payload == null ? null : JSON.stringify(dong.detail_payload),
+          dong.fetched_at,
+        ]);
+        s08ProjectDong += r.rowCount ?? 0;
+      }
+      console.log(`S08 danh mục: ${cacDong.length} dự án (stg_s08_project ghi ${s08ProjectDong})`);
+    } else if (coS08DanhMuc && !coBang094) {
+      console.log("CHUA-AP-094: bảng stg_s08_project chưa có (migration 094 chưa áp) — phần dự án S08 bỏ");
+      await client.query("ROLLBACK").catch(() => {});
+      console.log("snapshot CÓ item project_catalog — KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ — 1211-35 MỞ LẠI(2))");
+      return; // thoát 0 — AC-6: rollback cả lượt kể cả khi snapshot lẫn căn
+    }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, ${s08Catalog} catalog gom stg_s08_project), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
