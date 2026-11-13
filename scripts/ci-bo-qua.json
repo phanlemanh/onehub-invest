@@ -191,6 +191,21 @@
       "tep": "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs",
       "ca": "SLT-DC-10 lát s03-loai-tin: lần một thêm n, lần hai cùng seed thêm 0, --thu thêm 0",
       "ly_do": "cần bài S03 thật ở stg_zalo_posts (DB máy thu) — DB CI dựng từ migration không có, lượt nạp rỗng"
+    },
+    {
+      "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
+      "ca": "SS-AC-6 plist neo node bằng __NODE__, không còn /usr/bin/env",
+      "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
+    },
+    {
+      "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
+      "ca": "SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd",
+      "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
+    },
+    {
+      "tep": "pipeline/scripts/truong-du-an-tren-tin.test.mjs",
+      "ca": "TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi",
+      "ly_do": "áp 096 lần hai qua docker exec (apTep của db-thu-dbv) — chỉ chạy ở máy thu; lượt chấm S4 vòng 3 xanh; sẽ chuyển sang pg.Client và gỡ bỏ-qua ở hàng itest-nap-lai-migration-cu-sau-095"
     }
   ],
   "agent": [
@@ -255,6 +270,16 @@
       "tep": "scripts/kiem-tin-rao-gan-khu-vuc.test.mjs",
       "ca": "KDM-AC-3 ba chiều trên cùng DB",
       "ly_do": "cần bài stg thật của S03/S05/S06 ở DB local (tin mồi chọn từ kết quả lượt nền)"
+    },
+    {
+      "tep": "scripts/sao-luu-ngoai-may.test.mjs",
+      "ca": "sao lưu thật trên kho cục bộ (AC-3, AC-4, AC-7, AC-8, AC-9, AC-5)",
+      "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
+    },
+    {
+      "tep": "scripts/sao-luu-ngoai-may.test.mjs",
+      "ca": "giữ phiên bản và khoá kho (AC-9)",
+      "ly_do": "cần restic thật (brew, chỉ có trên máy thu) — runner ubuntu của CI không cài; ca bước chặn và quét lệnh dùng restic giả vẫn chạy"
     }
   ]
 }

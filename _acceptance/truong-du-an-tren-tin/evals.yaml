@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: truong-du-an-tren-tin
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [db/migrations/096_truong_du_an_tren_tin.sql, pipeline/scripts/truong-du-an-tren-tin.test.mjs]
+    expected: "exit 0; ca TDT-AC-1 chạy (không skip) trên DB thử oneinvest_dbv_tdt_<pid> dựng từ db/migrations của nhánh: ma trận viết trước 4 giá trị (project_node_id = id nút project · subzone_node_id = id nút subzone · subzone_node_id = id nút building cũ · area_id = id submarket) × 9 cặp lớp/phương pháp hợp lệ = 36 lần chèn Property, đếm dòng đọc lại = 36 (nút asset_nodes project, subzone, building do test chèn vào DB thử — chuỗi migration không có seed nút; nút building mang đúng các cột của ba nút Grand Park: node_type, name, slug, parent_id trỏ nút project) và tập (field, value, tier, method) đọc lại bằng đúng tập đã chèn. Chiều đỏ cùng fixture: DBV_MIG_THAY trỏ bản 096 đột biến bỏ project_node_id khỏi CHECK → ca đỏ ghim «TDT-AC-1 không ghi được project_node_id»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [db/migrations/096_truong_du_an_tren_tin.sql, pipeline/scripts/truong-du-an-tren-tin.test.mjs]
+    expected: "exit 0; ca TDT-AC-2 chạy: ma trận viết trước 17 ca sai, mỗi ca rejects với regex ghim tên trường — project_name /field_assertions_field_chk/ · project_node_id ∈ {id subzone, id building, 999999999, 'abc', '012'} /project_node_id/ · subzone_node_id ∈ {id project, 999999999, 'abc', '0'} /subzone_node_id/ · area_id Property ∈ {id market, 'khong-co-khu'} /area_id phải là phường\\/xã/ · project_node_id@Building, subzone_node_id@Building, builder_name@Property /không thuộc resource/ (đếm ca = 17); sau ma trận số dòng ba trường không tăng. Chiều đỏ: bản 096 đột biến bỏ kiểm node_type của project_node_id → ca «id subzone» không bị từ chối, ghim «TDT-AC-2 nhận project_node_id trỏ nút subzone»; bản đột biến bỏ kiểm chữ số của subzone_node_id → ghim «TDT-AC-2 nhận subzone_node_id không phải số»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    layer: backend-effect
+    paths: [db/migrations/096_truong_du_an_tren_tin.sql, pipeline/scripts/truong-du-an-tren-tin.test.mjs]
+    expected: "exit 0; ca TDT-AC-3 chạy: Building area_id (submarket, inferred·registry_inherit) và builder_name (fact·hitl) ghi được; Property floor_raw '12' và floor_band 'upper' ghi được; Building với khoá 'S03:x' bị từ chối /resource không khớp khoá/; registry_inherit với fact bị từ chối /registry_inherit chỉ đi với lớp inferred/. Chiều đỏ: bản 096 đột biến bỏ floor_raw khỏi CHECK → ca đỏ ghim «TDT-AC-3 mất trường tầng của 095»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.pipeline
+    paths: [db/migrations/096_truong_du_an_tren_tin.sql, pipeline/scripts/truong-du-an-tren-tin.test.mjs]
+    expected: "exit 0; ca TDT-AC-4 chạy: dấu lược đồ = (pg_get_constraintdef của field_assertions_field_chk, pg_get_functiondef của field_assertions_vat_the_082, các dòng ref_lookup lookup_name='assertion_field' sắp theo mã) trước và sau khi áp 096 lần hai bằng nhau; áp lần hai thoát không lỗi. Đối chứng dương: dấu sau 096 khác dấu của DB dựng tới 095 (096 thật sự đổi lược đồ)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/mappings.yaml, pipeline/scripts/truong-du-an-tren-tin.test.mjs, db/migrations/096_truong_du_an_tren_tin.sql]
+    expected: "exit 0; ca TDT-AC-5 chạy: đọc mappings.yaml bằng yaml của pipeline — trục assertion_field có project_node_id (dd_lookup SubdivisionName), subzone_node_id (không dd_lookup), area_id label_vi «Phường»; canonical.fields.subzone_node_id.dd = null, rationale chứa sáu dấu viết trước (tra DD 2.1, lý do VN, 096, trigger, mappings, DQ) và checked_on, dấu DQ trỏ đường `pipeline/dq-enum-vocab.mjs` có thật trên đĩa và mã DA9; canonical.fields.project_node_id.dd = SubdivisionName; canonical.fields.area_id có mặt; `vocab.mjs --check` thoát 0; `vocab.mjs --check-db` với DATABASE_URL của DB thử thoát 0. Chiều đỏ: DB thử xoá dòng ref_lookup assertion_field·subzone_node_id trong giao dịch → --check-db trên DB ấy thoát 1 ghim «TDT-AC-5 check-db không thấy thiếu subzone_node_id» khi không đỏ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.dbv_db
+    paths: [db/migrations/096_truong_du_an_tren_tin.sql, pipeline/scripts/danh-ba-vat-the.itest.mjs]
+    expected: "exit 0; danh-ba-vat-the.itest.mjs xanh không sửa ca (DBV-AC-1 vẫn từ chối builder_name ở Property, DBV-AC-12 phường của toà đếm 4)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6b
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [pipeline/mappings.yaml, app/src/lib/vocab.generated.ts]
+    expected: "exit 0; suite app (db-thu --chay) xanh với tệp sinh từ vựng mới."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6c
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app
+    layer: backend-effect
+    paths: [app/src/lib/vocab.generated.ts]
+    expected: "exit 0 sau khi worktree đã chạy `cd app && npx next typegen` (sinh .next/types, môi trường); tsc --noEmit và lint của app xanh. Đối chứng: tập lỗi tsc trên base cùng typegen rỗng, nên lỗi nào xuất hiện là do hàng này."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

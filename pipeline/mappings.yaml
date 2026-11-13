@@ -158,18 +158,41 @@ canonical:
         lý do VN, migration 095, trigger miền lower|middle|upper + trục floor_band, khai ở đây, DQ s03-floor-fill. Không có cột:
         chỉ ở phát biểu và field_provenance của tin.
       checked_on: "2026-11-11"
+    project_node_id:
+      dd: SubdivisionName
+      note: >
+        dự án của tin — id nút asset_nodes loại project (ADR-0016 §1, CONTEXT «Dự án»). Tra DD 2.1 local 12/11:
+        SubdivisionName có ở Property và Building. Chỉ phát biểu (DA2, migration 096: trigger kiểm id là nút project);
+        bộ phân xử chưa dựng cột — GCQ2, DA9 đọc phát biểu.
+      checked_on: "2026-11-12"
+    subzone_node_id:
+      dd: null
+      rationale: >
+        phân khu của tin — id nút asset_nodes loại subzone (ba nút building của Grand Park được nhận tới khi DA1 đổi loại).
+        Sáu điều kiện ADR-0011 Qđ 3: (1) tra DD 2.1 local 12/11 — field phân khu của RESO chỉ có ở resource Building, Property không có
+        field phân khu; (2) lý do VN: phân khu là nhánh mở bán riêng trong đại dự án cùng chủ đầu tư, người mua tìm theo nó;
+        (3) migration 096; (4) trigger field_assertions_vat_the_082 kiểm id là nút phân khu, chỉ resource Property; (5) khai ở
+        mappings này (canonical.fields + trục assertion_field); (6) DQ: miền giá trị qua pipeline/dq-enum-vocab.mjs
+        (field_assertions.field), độ phủ trên tin ở hàng DA9 — thoả một phần tới khi DA9 gộp. Không có cột.
+      checked_on: "2026-11-12"
+    area_id:
+      dd: null
+      note: >
+        phường/xã của tin — mã areas cấp submarket (DA2, migration 096 mở phát biểu area_id cho resource Property; 082 đã có
+        ở Building). Local: DD 2.1 không có cấp phường, City là tên không phải mã. Chỉ phát biểu, chưa dựng cột trên tin.
+      checked_on: "2026-11-12"
     bathrooms:
       dd: BathroomsTotalInteger
       note: "đối chiếu research/reso-standards.md bảng field map; migration 030/031"
       checked_on: "2026-10-22"
     street_number:
       dd: StreetNumber
-      note: "số nhà của tin S06 (payload street_number, vắng thì streetnumber_display) — chỉ qua phát biểu, migration 061 (HD5)"
-      checked_on: "2026-10-31"
+      note: "số nhà của tin S06 (payload street_number; streetnumber_display là cờ hiển thị, không đọc — DA5; số toàn chữ số 0 bỏ) — chỉ qua phát biểu, migration 061 (HD5)"
+      checked_on: "2026-11-12"
     unit_number:
       dd: UnitNumber
-      note: "mã căn công bố của tin S06 (payload unitnumber_display, vắng thì unitnumber) — giữ nguyên chữ nguồn; migration 061"
-      checked_on: "2026-10-31"
+      note: "mã căn công bố của tin S06 (payload unitnumber; unitnumber_display là cờ hiển thị, không đọc — DA5; 0…, 1 bỏ) — giữ nguyên chữ nguồn; migration 061"
+      checked_on: "2026-11-12"
     frontage_length:
       dd: FrontageLength
       note: "mặt tiền (m) — payload width S06; numeric, CHECK > 0; migration 061"
@@ -377,8 +400,8 @@ enums:
     term_vi: Trường phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
-    checked_on: "2026-11-07"
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059) + bảy đặc trưng nhà S06 (HD5, migration 061) + hai trường của toà (DB1, migration 082: builder_name, area_id — chỉ resource Building) + tầng và dải tầng của tin (DV4, migration 095: floor_raw → UnitFloorLocation tra DD 2.1 11/11, floor_band extension) + dự án, phân khu, phường của tin (DA2, migration 096: project_node_id → SubdivisionName tra DD 2.1 12/11, subzone_node_id extension, area_id mở cho resource Property); dd_lookup = tên field RESO của trường (BuilderName: tra DD 2.1 07/11 — field của resource Building). DQ: dq-enum-vocab field_assertions.field. Cột resource_name (CHECK ở 082: Property · Building · Stack · Unit) giữ tên resource RESO viết hoa nên nằm ngoài sổ: Property, Building theo DD 2.1; Stack, Unit là resource local (ADR-0016 §11 — DD 2.1 chỉ có UnitNumber/SubId trên tin, không resource bền cho căn, trục)"
+    checked_on: "2026-11-12"
     columns: [field_assertions.field]
     nullable: false
     values:
@@ -396,9 +419,11 @@ enums:
       - { code: latitude, label_vi: Vĩ độ, dd_lookup: Latitude }
       - { code: longitude, label_vi: Kinh độ, dd_lookup: Longitude }
       - { code: builder_name, label_vi: Chủ đầu tư, dd_lookup: BuilderName }   # DB1 (082): resource Building, ADR-0016 §3
-      - { code: area_id, label_vi: Phường của toà }   # DB1 (082): resource Building, phường/xã (areas submarket) suy từ vùng; DD 2.1 không có cấp phường
+      - { code: area_id, label_vi: Phường }   # DB1 (082) resource Building; DA2 (096) mở cho Property — phường/xã (areas submarket); DD 2.1 không có cấp phường
       - { code: floor_raw, label_vi: Tầng, dd_lookup: UnitFloorLocation }   # DV4 (095): số tầng của căn rao, DD 2.1
       - { code: floor_band, label_vi: Dải tầng }   # DV4 (095): extension, DD 2.1 không có dải tầng
+      - { code: project_node_id, label_vi: Dự án, dd_lookup: SubdivisionName }   # DA2 (096): resource Property, id nút asset_nodes loại project
+      - { code: subzone_node_id, label_vi: Phân khu }   # DA2 (096): resource Property, id nút subzone (hay building của Grand Park tới DA1); extension
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
