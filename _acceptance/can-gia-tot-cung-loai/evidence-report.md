@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 537ec7067f8982ef2646f3abc65f3935b9e3bbbb
-human_signoff:
+human_signoff: Mạnh 2026-11-13
 ---
 
 # Evidence Report: can-gia-tot-cung-loai

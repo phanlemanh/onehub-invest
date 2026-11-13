@@ -5,7 +5,7 @@ slug: can-gia-tot-cung-loai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-can-gia-tot-cung-loai-design.md
@@ -87,3 +87,10 @@ migration. Bản phạm vi `docs/plan/pham-vi-can-gia-tot-vi-tri-0911.md` (Mạn
 ## Notes
 
 - Lượt chạy thật của `refresh-bait-gap` trên DB máy thu là job đêm sẵn có; hàng không chạy tay trên DB dùng chung.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-1: Phép đo trên dữ liệu thật chỉ phủ tin giảm từ 5% trở lên; tin giảm ít hơn chưa được kiểm.
+  - Ngoài-2: Công cụ rà tên nguồn có thể sót nội dung tệp mới chưa thêm vào git.
+  - Ngoài-3: Người tự cài bản API công khai với dữ liệu mẫu gặp lỗi ở danh sách căn giá tốt — phải xử lý trước lần đẩy bản public kế.
+  - Ngoài-4: Bài kiểm giả lập lỗi của API công khai luôn báo qua, lưới an toàn cho thay đổi sau còn yếu.
+  - Ngoài-5: Bài kiểm chặn người không có quyền chỉ soi cách viết mã, không gọi thật.
+  - Ngoài-6: Công cụ rà tên nguồn chưa có ca kiểm ngược khi danh sách tên rỗng.
