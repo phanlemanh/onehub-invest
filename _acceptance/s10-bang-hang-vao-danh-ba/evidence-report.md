@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6cf597c84cbefc58538b69110303708378147fe5
+verified_commit: a23b0e82c570476175efe150a1ebec813da39152
 human_signoff: Mạnh 2026-11-13
 ---
 
@@ -126,3 +126,7 @@ none — every multi-run eval is uniform
 Round 1: lich su nam trong run-log.jsonl cua feature.
 Round 2: BLOCKED — tac tu cham khong cho lenh nen chay xong.
 Round 3: E1 den E5 va sau lenh suite deu xanh tren commit 6cf597c8; verdict PASS.
+
+### Re-pin lần 1 — 2026-11-13, do hoá cũ do gộp main #438 (paths app/**)
+run_id: repin-20261113T061135Z-19605
+sha: a23b0e82c570476175efe150a1ebec813da39152 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
