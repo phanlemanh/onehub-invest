@@ -295,16 +295,16 @@ test("PTD-AC-4 chiều đỏ: 099 coi mọi cột phường là giữ nguyên", 
 });
 
 // ---------- PTD-AC-5 ----------
-/** Mồi ranh giới thật: một dòng cấp 6 của Hà Nội chép từ DB máy (chỉ đọc). DB máy không có (CI) → null. */
-async function moiOsm() {
-  const c = new pg.Client({ connectionString: `${MAY_CHU}/oneinvest`, options: "-c default_transaction_read_only=on" });
-  try {
-    await c.connect();
-    const { rows } = await c.query(
-      `SELECT osm_id, name, payload FROM stg_osm_boundaries
-        WHERE snapshot_id LIKE 'hanoi__%' AND payload->'tags'->>'admin_level' = '6' ORDER BY snapshot_id DESC, osm_id LIMIT 1`);
-    return rows[0] ?? null;
-  } catch { return null; } finally { await c.end().catch(() => {}); }
+/**
+ * Mồi ranh giới dựng ngay trong DB thử của lượt (không đọc DB máy — CI chạy được): một quan hệ cấp 6 theo khuôn trả về
+ * của Overpass `out geom` mà lib/osm.mjs toMultiPolygon đọc (members role outer, geometry {lat, lon}, vòng khép kín).
+ */
+function moiOsm() {
+  const [x0, y0, d] = [105.85, 21.02, 0.01];
+  const vong = [[x0, y0], [x0 + d, y0], [x0 + d, y0 + d], [x0, y0 + d], [x0, y0]].map(([lon, lat]) => ({ lat, lon }));
+  const payload = { type: "relation", id: 990000001, tags: { boundary: "administrative", admin_level: "6", name: "Phường Thử Ptd" },
+    members: [{ type: "way", role: "outer", geometry: vong }] };
+  return { osm_id: "990000001", name: "Phường Thử Ptd", payload };
 }
 /** Chuỗi bước S03 → phân xử → reassign-areas → phân xử. `ghiTin` là writeOffers (bản thật hay đột biến). */
 async function kiemAc5(c, { lenh, ghiTin }, osm) {
@@ -336,14 +336,11 @@ async function kiemAc5(c, { lenh, ghiTin }, osm) {
   assert.equal((await cot(c, "T-W1")).area_id, W1, "PTD-AC-5 tin W1 mất phường sau reassign + phân xử");
   assert.equal((await cot(c, "T-LAC")).area_id, null, "PTD-AC-5 tin khu lạc không giữ NULL sau phân xử");
 }
-test("PTD-AC-5 chuỗi S03 → phân xử → reassign-areas → phân xử giữ phường kế thừa và NULL của khu lạc", { skip: BO_DB }, async (t) => {
-  const osm = await moiOsm();
-  if (!osm) return t.skip("cần stg_osm_boundaries thật của Hà Nội trên DB máy (CI dựng từ migration)");
-  await kiemAc5(await xoa(), await that(), osm);
+test("PTD-AC-5 chuỗi S03 → phân xử → reassign-areas → phân xử giữ phường kế thừa và NULL của khu lạc", { skip: BO_DB }, async () => {
+  await kiemAc5(await xoa(), await that(), moiOsm());
 });
-test("PTD-AC-5 chiều đỏ: bước ghi tin bỏ lời gọi phân xử", { skip: BO_DB }, async (t) => {
-  const osm = await moiOsm();
-  if (!osm) return t.skip("cần stg_osm_boundaries thật của Hà Nội trên DB máy (CI dựng từ migration)");
+test("PTD-AC-5 chiều đỏ: bước ghi tin bỏ lời gọi phân xử", { skip: BO_DB }, async () => {
+  const osm = moiOsm();
   const dot = await banDot("lib/write-offers.mjs", "const resolve = await resolveOffers(client, offers.map((o) => o.offer_id));",
     "const resolve = null;");
   await assert.rejects(kiemAc5(await xoa(), dot, osm), /PTD-AC-5 S03 chạy lại xoá phường kế thừa/);
