@@ -1,26 +1,21 @@
-// thoi-luong-tep.mjs — bộ báo cáo node:test đo thời lượng tường của từng tệp khi chạy tuần tự (--test-concurrency=1):
-// từ sự kiện cuối của tệp trước tới sự kiện cuối của tệp này, nên gồm cả nạp mô-đun và before/after. In JSON mỗi dòng
+// thoi-luong-tep.mjs — bộ báo cáo node:test cộng thời lượng các ca cấp cao nhất theo từng tệp, in JSON mỗi dòng
 // {"tep":"scripts/x.test.mjs","giay":12.3,"ca":4,"hong":0}. Dùng qua chay-nua.mjs (THOI_LUONG_TEP) để chia lại hai nửa.
+// Giới hạn: sự kiện của tệp con tới bộ báo cáo dồn cục, nên không đo được thời gian tường; số này không gồm nạp mô-đun
+// và before/after cấp tệp (đo 13/11: tổng các tệp thấp hơn thời gian tường vài phần trăm).
 import { relative } from 'node:path';
 
 export default async function* thoiLuongTep(nguon) {
   const tong = new Map();
-  let mocCuoi = performance.now();
   for await (const { type, data } of nguon) {
-    const bay = performance.now();
-    if (data?.file) {
-      const tep = relative(process.cwd(), data.file);
-      let o = tong.get(tep);
-      if (!o) { o = { tep, batDau: mocCuoi, ketThuc: bay, ca: 0, hong: 0 }; tong.set(tep, o); }
-      o.ketThuc = bay;
-      if ((type === 'test:pass' || type === 'test:fail') && data.nesting === 0) {
-        o.ca += 1;
-        if (type === 'test:fail') o.hong += 1;
-      }
-    }
-    mocCuoi = bay;
+    if ((type !== 'test:pass' && type !== 'test:fail') || data.nesting !== 0 || !data.file) continue;
+    const tep = relative(process.cwd(), data.file);
+    const o = tong.get(tep) ?? { tep, giay: 0, ca: 0, hong: 0 };
+    o.giay += (data.details?.duration_ms ?? 0) / 1000;
+    o.ca += 1;
+    if (type === 'test:fail') o.hong += 1;
+    tong.set(tep, o);
   }
-  const dong = [...tong.values()].map(({ tep, batDau, ketThuc, ca, hong }) =>
-    ({ tep, giay: Math.round((ketThuc - batDau) / 100) / 10, ca, hong }));
-  for (const o of dong.sort((x, y) => y.giay - x.giay)) yield `${JSON.stringify(o)}\n`;
+  for (const o of [...tong.values()].sort((x, y) => y.giay - x.giay)) {
+    yield `${JSON.stringify({ ...o, giay: Math.round(o.giay * 10) / 10 })}\n`;
+  }
 }

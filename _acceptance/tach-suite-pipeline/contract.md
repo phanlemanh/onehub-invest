@@ -31,6 +31,18 @@ lượng tường từng tệp để chia lại khi cần.
 - AC-3: Given mỗi nửa chạy MỘT MÌNH trên DB thử trống của nó, When chạy, Then xanh (không phụ thuộc trạng thái tệp nửa kia để lại).
 - AC-4: Given máy yên, When chạy hai nửa song song, Then mỗi nửa ≤ 12 phút.
 
+## Đo 13/11 (lượt khoá s4 của P2, 16:11–16:42Z, tải 1′ 3,7–4,9, không job thu/nạp)
+
+| Lượt | Nửa A | Nửa B |
+|---|---|---|
+| Song song, mỗi nửa một DB thử trống | 9,6′ · 205/205 ca xanh | 11,2′ · 568 xanh, 1 bỏ qua, 0 đỏ |
+| Một mình, DB thử trống | 8,6′ · 205/205 xanh | 10,6′ · 568 xanh, 1 bỏ qua, 0 đỏ |
+
+- AC-3: mỗi nửa xanh khi chạy một mình trên DB trống của nó — không tệp nào phụ thuộc trạng thái tệp nửa kia để lại.
+- AC-4: song song ≤ 12′ mỗi nửa (đích nhận của giám sát đợt: ≤ 15′ trên máy tải vừa). Tổng 774 ca = hai nửa phủ trọn.
+- Lượt song song đầu tiên lộ lỗi bộ đo `thoi-luong-tep.mjs` bản đầu (đo thời gian tường theo sự kiện, mà sự kiện tệp con
+  về dồn cục): sửa thành cộng thời lượng ca cấp cao nhất, ghi giới hạn ở đầu tệp. Không ảnh hưởng `test:a`/`test:b`.
+
 ## Out of scope
 
 - Đổi lệnh `npm test` hay CI.
