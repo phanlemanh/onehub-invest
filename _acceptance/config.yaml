@@ -212,6 +212,8 @@ executors:
     dbs_mjs: "bash db/db-thu.sh oneinvest_suite_dbs_mjs --chay node --test scripts/ops-local-dong-bang.test.mjs"   # dong-bang-stage-b-resolve E4b, E6 — bản tin cloud + HD11 trên DB của riêng lượt, so vị từ ba nơi
     dbs_khong_ghi: "node --test scripts/dong-bang-khong-ghi.test.mjs"   # dong-bang-stage-b-resolve E7 — quét diff so nhánh chính: không migration, không câu ghi mới
     dbs_s03_len_cong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_dbs_sl1 --chay node --test --test-skip-pattern 'SL1-AC-5 (áp 069|hai thứ tự)' scripts/s03-len-cong.itest.mjs"   # dong-bang-stage-b-resolve E9c — itest s03-len-cong trên DB của riêng lượt; bỏ hai ca SL1-AC-5 áp 069 (đỏ sẵn trên 773a0040, không thuộc vòng)
+    s10_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_s10 --chay node --test --test-concurrency=1 scripts/transform-s10.itest.mjs"   # s10-bang-hang-vao-danh-ba E1–E4 — 089, bộ nạp thật, lệnh nối, view trên DB của riêng lượt; snapshot 11/11 ở máy thu; ngoài CI
+    s10_chan: "bash _acceptance/s10-bang-hang-vao-danh-ba/probes/chan.sh"   # s10-bang-hang-vao-danh-ba E5 — bảng S10 không vào cloud, Bán, thước, metrics, app, API
     sl1_ac5_ca: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_sl1c --chay node --test --test-name-pattern 'SL1-AC-5 (áp 069|hai thứ tự)' scripts/s03-len-cong.itest.mjs"   # sl1-ac5-the-gioi-069 E1, E2 — hai ca SL1-AC-5 trên DB của riêng lượt chép từ máy thu
     sl1_ac5_toan: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_sl1t --chay node --test scripts/s03-len-cong.itest.mjs"   # sl1-ac5-the-gioi-069 E3 — cả tệp itest s03-len-cong, không bỏ ca nào
     sl1_ac5_tu_choi: "bash _acceptance/sl1-ac5-the-gioi-069/probes/tu-choi-oneinvest.sh"   # sl1-ac5-the-gioi-069 E4 — itest từ chối DATABASE_URL trỏ oneinvest (cổng 1, không chạm DB)
@@ -282,8 +284,13 @@ executors:
     dv4_doc: "node --test pipeline/scripts/tang-tren-tin.test.mjs"   # tang-tren-tin-s03 E4 — ma trận bộ đọc tầng, hàm thuần
     dv4_nhan: "cd app && node --import tsx --test tests/dq-tang-tren-tin-label.test.tsx"   # tang-tren-tin-s03 E9 — nhãn dq-labels
     ycns_doc: "node --test pipeline/scripts/yeu-cau-ngan-sach.test.mjs"
+    cg8_ham: "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"   # can-gia-tot-cung-loai E4 — lý do rời danh sách, câu chứng minh theo loại hình (hàm thuần)
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    cg8_db: "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"   # can-gia-tot-cung-loai E1–E3, E5, E6 — DB thử oneinvest_u1_cg8 chép từ DB máy thu, ca trong BEGIN…ROLLBACK
+    cg8_do: "bash pipeline/scripts/can-gia-cung-loai-db.sh do"   # can-gia-tot-cung-loai E7 — đếm toàn bộ tin trên bản chép, chỉ in số
+    cg8_ranh_gioi: "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"   # can-gia-tot-cung-loai E9 — không migration, không sync-cloud, không thêm liên lạc, không tên nguồn
+    cg8_cloud_view: "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"   # can-gia-tot-cung-loai E10 — chỉ SELECT qua Management API: định nghĩa v_ruler_p2 cloud = máy thu, đủ bốn loại
     sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa
     dbvx_doi_chung: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/doi-chung.mjs"   # dbv-itest-xanh-lai-tren-main AC-4 — fixture cũ đỏ nhieu-tinh, 082 không lũy đẳng đỏ đúng thông điệp
