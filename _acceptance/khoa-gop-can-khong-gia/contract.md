@@ -5,9 +5,9 @@ slug: khoa-gop-can-khong-gia
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
-approved_by: Mạnh
-approved_at: 2026-11-13
+status: draft
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-11-12-khoa-gop-can-khong-gia-design.md
 ---
 
@@ -68,15 +68,24 @@ Given DB của riêng lượt chưa áp 098 (còn tin gắn hơn một căn từ
 When đổi giá một tin đã gắn căn rồi chạy `chayResolve`,
 Then số tin gắn hơn một căn không tăng và tin ấy không có link mới.
 
+### AC-9 — Đối soát đêm không làm căn mất link âm thầm
+Given DB của riêng lượt đã áp 098 và `db/migrations/101_doi_soat_chuyen_link.sql`, dòng mồi tổng hợp của một nguồn thử: tin cũ X gắn
+căn P1 và tin kế Y (cùng bài với X, có trong lượt nạp) gắn căn P2; tin cũ X2 gắn căn P3 và tin kế Y2 chưa gắn căn nào,
+When gọi `reconcile_stale_offers` cho lượt nạp chỉ gồm Y, Y2,
+Then Y vẫn đúng một link tới P2; link (P1, X) nằm trọn trong `property_offer_unlinks` với lý do nêu tin kế; Y2 có đúng một link tới
+P3 (chuyển như trước); X, X2 không còn link nào; tổng kết trả về đếm số link ghi nhật ký. Chiều đỏ: cùng dòng mồi với hàm của 044
+(trước 101) thì link (P1, X) biến mất mà nhật ký không có dòng nào.
+
 ## Coverage
 
 Trục (preset risk-premortem + entity-feature cho «link tin → căn»):
 - Dữ liệu đang hỏng: dọn (AC-1) · chạy lại (AC-2) · đảo được (AC-3).
-- Vòng đời tin: tin mới (AC-7) · tin đã gắn chạy lại (AC-4) · tin đổi giá (AC-5) · DB chưa áp migration (AC-8).
+- Vòng đời tin: tin mới (AC-7) · tin đã gắn chạy lại (AC-4) · tin đổi giá (AC-5) · DB chưa áp migration (AC-8) · tin bị thay
+  bằng tin kế ở đối soát đêm (AC-9).
 - Định danh căn: stable_key giữ nguyên (AC-1, AC-6) · căn không bị xoá (AC-1) · không gộp căn khác bậc giá (khoá giữ nguyên, AC-7).
 - Ràng buộc: UNIQUE chặn link thứ hai (AC-2).
 
-Core → AC-1…AC-8. Later: gộp các căn đã sinh do đổi giá trước đây (cần người phân biệt với căn khác nhau cùng toà); căn rỗng sau dọn (2.542 trên máy thu) hiện ở Ops. Never: xoá căn
+Core → AC-1…AC-9. Later: gộp các căn đã sinh do đổi giá trước đây (cần người phân biệt với căn khác nhau cùng toà); căn rỗng sau dọn (2.542 trên máy thu) hiện ở Ops. Never: xoá căn
 (M-1).
 
 ## Đường đo
@@ -99,4 +108,7 @@ Core → AC-1…AC-8. Later: gộp các căn đã sinh do đổi giá trước �
 - Ghim lại các hồ sơ đã ký có `paths` chạm `resolve-properties.mjs` sau khi gộp (việc của giám sát đợt).
 
 ## Notes
-- Số migration 098 chờ sổ của LL; đổi số thì đổi tên tệp và chữ ở hợp đồng này cùng lượt.
+- Mở lại phạm vi 13/11 (Mạnh «Sửa trong DA6»): thêm AC-9 sau khi lượt chấm 1 phát hiện 044 chép link sang tin kế bằng
+  `ON CONFLICT DO NOTHING` — có UNIQUE của 098 thì link cũ mất không dấu vết khi tin kế đã có căn. Hôm nay 0 link rơi vào ca này
+  (chỉ tin S06 có link, tin S06 chưa từng bị thay); rủi ro thành thật khi tin S03/S05 gắn căn (GC0–GC3).
+- Số migration 098, 101 chờ sổ của LL; đổi số thì đổi tên tệp và chữ ở hợp đồng này cùng lượt.

@@ -63,3 +63,10 @@ evals:
     cmd: config:executors.test.kgc_deadlock
     paths: ["pipeline/resolve-properties.mjs", "pipeline/lib/thu-lai-deadlock.sql-base.json"]
     expected: "node --test pipeline/lib/thu-lai-deadlock.test.mjs exit 0: bản chụp câu SQL của resolver khớp tệp sau khi đổi khoá (bộ thử lại deadlock vẫn bọc đủ câu)."
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.kgc_db
+    long_running: 55
+    paths: ["db/migrations/101_doi_soat_chuyen_link.sql", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
+    expected: "Ca «KGC-AC-9» xanh trên dòng mồi tổng hợp (nguồn thử, mã tin giả) sau 098 + 101: X→P1, Y→P2 (Y có trong lượt, post_ids chung với X); X2→P3, Y2 chưa gắn; reconcile_stale_offers(nguồn, [Y, Y2], actor) → Y đúng 1 link tới P2; property_offer_unlinks có đúng dòng (P1, X, score, signals, linked_at) của ảnh chụp, reason chứa mã Y; Y2 đúng 1 link tới P3; X, X2 0 link; tổng kết jsonb có khoá đếm link ghi nhật ký = 1. Chiều đỏ trong SAVEPOINT: nạp lại thân hàm của 044 (CREATE OR REPLACE từ git show) rồi cùng dòng mồi → nhật ký 0 dòng cho X và (P1, X) không còn ở đâu, assert ghim «KGC-AC-9»; ROLLBACK TO."
