@@ -21,6 +21,7 @@
     "scripts/nap-lai-ba-luot-fk.test.mjs",
     "scripts/ops-facts-so-tong-hop.test.mjs",
     "scripts/phat-bieu.test.mjs",
+    "scripts/phuong-tu-du-an.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
     "scripts/soat-tang-a.test.mjs",
     "scripts/test-posts.test.mjs",
