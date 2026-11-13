@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import YAML from "yaml";
-import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
+import { GOC, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 
 const MIG = join(GOC, "db/migrations/096_truong_du_an_tren_tin.sql");
 const GOC_TEN = `oneinvest_dbv_tdt_${process.pid}`;
@@ -191,9 +191,11 @@ const DAU = `SELECT (SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE c
      FROM ref_lookup WHERE lookup_name = 'assertion_field') r)::text AS so`;
 
 test("TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi", async () => {
-  const { c, ten } = db.chinh;
+  const { c } = db.chinh;
   const truoc = (await c.query(DAU)).rows[0];
-  apTep(ten, MIG);
+  // Áp lần hai qua chính pg.Client (giao thức truy vấn đơn, như scripts/ci-db-init.mjs dựng DB thử) — không cần docker,
+  // nên ca chạy được ở CI (hàng itest-nap-lai-migration-cu-sau-095 AC-8; trước đây apTep qua docker exec, phải bỏ-qua).
+  await c.query(readFileSync(MIG, "utf8"));
   const sau = (await c.query(DAU)).rows[0];
   assert.deepEqual(sau, truoc);
   // đối chứng dương: 096 thật sự đổi lược đồ
