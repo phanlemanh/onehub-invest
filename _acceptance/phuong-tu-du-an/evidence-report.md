@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9cc6ce0b0b00337b33e54fe9ec96c0eacb8b96eb
+verified_commit: 46a0cc8d808adb174d5bf6e886f5c7d0a8da1f05
 human_signoff:
 ---
 
@@ -170,3 +170,7 @@ none — mọi eval chạy một lần, deterministic, không có phương sai.
 
 Round 1 và 2: lịch sử nằm trong run-log.jsonl cùng thư mục, báo cáo này thay thế nội dung cũ.
 Round 3: E1 đến E9 đều pass trên cây 9cc6ce0b; không có judgment item hay panel nào cần người chốt.
+
+### Re-pin lần 1 — 2026-11-13, do sửa gan-sdt-s06.test sau lượt chấm 3 (CI #448 đỏ trên DB đủ migration)
+run_id: repin-20261113T192417Z-44432
+sha: 46a0cc8d808adb174d5bf6e886f5c7d0a8da1f05 · suites: 7 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
