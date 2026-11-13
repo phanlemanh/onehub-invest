@@ -2,12 +2,12 @@
 // Ca DB chạy trên DB thử oneinvest_dbv_ptd_<pid>_<khoá> dựng từ db/migrations của nhánh (gồm 099 rồi 102) bằng db-thu-dbv.mjs; mỗi ca
 // nhân bản một DB mẫu (field_assertions chỉ thêm, không TRUNCATE được). Phát biểu kế thừa sinh bằng chính bộ ghi (--ghi), không
 // chèn tay; phát biểu dự án trên bài (đầu vào, do DV6 sinh) chèn tay theo khuôn của DV6.
-// Chiều đỏ: (i) chép pipeline/lib + tệp lệnh vào thư mục tạm trong pipeline/ (giữ đường import), thay đúng một chuỗi;
+// Chiều đỏ: (i) chép pipeline/lib + tệp lệnh + transform-zalo vào thư mục tạm trong pipeline/ (giữ đường import), thay đúng một chuỗi;
 // (ii) bản 102 đột biến dựng DB mẫu riêng (thay của taoDbThu) — 102 định nghĩa lại hàm phường của 099.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -33,11 +33,17 @@ const im = { log: () => {} };
 let nDot = 0;
 /** @param {string} tep đường tương đối trong pipeline/ (lib/… hoặc scripts/phuong-tu-du-an.mjs) */
 async function banDot(tep, cu, moi) {
-  const dir = join(PIPE, `.ptd-dot-${process.pid}-${++nDot}`);
-  tam.push(dir);
+  // Bản chép nằm ở <tạm>/p (cùng độ sâu với pipeline/): lib/nap-*.mjs đọc «../../db/migrations» — <tạm>/db trỏ về db/ của kho;
+  // `pg` vẫn tìm thấy ở pipeline/node_modules khi leo thư mục.
+  const goc = join(PIPE, `.ptd-dot-${process.pid}-${++nDot}`);
+  tam.push(goc);
+  const dir = join(goc, "p");
+  mkdirSync(dir, { recursive: true });
+  symlinkSync(join(GOC, "db"), join(goc, "db"));
   cpSync(join(PIPE, "lib"), join(dir, "lib"), { recursive: true });
   mkdirSync(join(dir, "scripts"), { recursive: true });
   cpSync(LENH, join(dir, "scripts/phuong-tu-du-an.mjs"));
+  cpSync(join(PIPE, "transform-zalo.mjs"), join(dir, "transform-zalo.mjs"));   // bước S03 thật, import ./lib của bản chép
   const dich = join(dir, tep);
   const src = readFileSync(dich, "utf8");
   assert.ok(src.includes(cu), `đột biến rỗng: không thấy chuỗi «${cu.slice(0, 60)}» trong ${tep}`);
@@ -45,11 +51,13 @@ async function banDot(tep, cu, moi) {
   return {
     lenh: await import(pathToFileURL(join(dir, "scripts/phuong-tu-du-an.mjs")).href),
     ghiTin: (await import(pathToFileURL(join(dir, "lib/write-offers.mjs")).href)).writeOffers,
+    chayS03: (await import(pathToFileURL(join(dir, "transform-zalo.mjs")).href)).runTransformZalo,
   };
 }
 const that = async () => ({
   lenh: await import(pathToFileURL(LENH).href),
   ghiTin: (await import(pathToFileURL(join(PIPE, "lib/write-offers.mjs")).href)).writeOffers,
+  chayS03: (await import(pathToFileURL(join(PIPE, "transform-zalo.mjs")).href)).runTransformZalo,
 });
 
 /**
@@ -268,7 +276,7 @@ test("PTD-AC-2 chiều đỏ: bỏ luật mâu thuẫn", { skip: BO_DB }, async 
 test("PTD-AC-3 ma trận cột × phường kế thừa sau phân xử; phường nguồn không bị đổi", { skip: BO_DB }, async () => {
   await kiemAc3(await xoa(), await that());
 });
-test("PTD-AC-3 qua bước ghi tin S03 (writeOffers của transform-zalo): cột tỉnh nhận W1", { skip: BO_DB }, async () => {
+test("PTD-AC-3 qua bộ ghi tin writeOffers (bộ ghi S03 dùng): cột tỉnh nhận W1", { skip: BO_DB }, async () => {
   const c = await xoa();
   const { lenh, ghiTin } = await that();
   await fxAc3(c);
@@ -312,10 +320,14 @@ function moiOsm() {
     members: [{ type: "way", role: "outer", geometry: vong }] };
   return { osm_id: "990000001", name: "Phường Thử Ptd", payload };
 }
-/** Chuỗi bước S03 → phân xử → reassign-areas → phân xử. `ghiTin` là writeOffers (bản thật hay đột biến). */
-async function kiemAc5(c, { lenh, ghiTin }, osm) {
+/**
+ * Chuỗi bước S03 → phân xử → reassign-areas → phân xử. Bước S03 là runTransformZalo thật (bản thật hay bản chép đột biến)
+ * trên bài stg_zalo_posts mồi: tin do chính transform sinh (khoá dính, writeOffers, phân xử), không chèn hàng tay.
+ */
+async function kiemAc5(c, { lenh, chayS03 }, osm) {
   const { runReassign } = await import(pathToFileURL(join(PIPE, "reassign-areas.mjs")).href);
   await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hanoi__ptd', 'hanoi', 'ptd-thu', '{}')`);
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hanoi__ptd-zalo', 'hanoi', 'zalo-agent', '{}')`);
   await c.query(`INSERT INTO stg_osm_boundaries (osm_id, snapshot_id, name, payload) VALUES ($1, 'hanoi__ptd', $2, $3)`,
     [osm.osm_id, osm.name, osm.payload]);
   const r0 = await runReassign(c, ["hanoi"], { log: { log() {}, warn() {} } });
@@ -325,21 +337,31 @@ async function kiemAc5(c, { lenh, ghiTin }, osm) {
   await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
                  VALUES ('vn-hanoi-ptd-lac', 'vn-hanoi', 'submarket', 'Lạc', 'vn', '{"source": "osm-phuong", "osm_id": "1"}')`);
   const D1 = await nut(c, "D1", [W1]);
-  await tin(c, "T-W1", ["X"], "vn-hanoi"); await duAn(c, "X", D1);
+  // Bài S03 không nêu phường: transform để cột trống, phường chỉ đến từ dự án.
+  const X = `ptd-x-${process.pid}`;
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at)
+                 VALUES ($1, 'hanoi__ptd-zalo', 'openclaw-hook', 'Nhóm thử PTD', $2, now() - interval '1 hour')`,
+    [X, "Bán căn hộ 2PN 71.3m2 dự án thử, giá 3.71 tỷ. LH 0987654321"]);
+  await duAn(c, X, D1);
   await tin(c, "T-LAC", ["Y"], "vn-hanoi-ptd-lac");
+  await c.query("UPDATE sale_offer_records SET source = 'S05' WHERE offer_id = 'T-LAC'");   // ngoài lượt đối soát S03
+  const tinX = async () => {
+    const { rows } = await c.query("SELECT offer_id FROM sale_offer_records WHERE $1 = ANY(post_ids) AND retired_at IS NULL", [X]);
+    assert.equal(rows.length, 1, `PTD-AC-5 bước S03 phải sinh đúng một tin cho bài mồi, được ${rows.length}`);
+    return rows[0].offer_id;
+  };
+  await chayS03(c);
+  const T1 = await tinX();
   await lenh.chay(c, { ghi: true, log: im.log });
-  assert.equal((await cot(c, "T-W1")).area_id, W1, "PTD-AC-5 lượt đầu: tin không nhận phường");
-  const now = new Date();
-  await ghiTin(c, "S03", [
-    { offer_id: "T-W1", kind: "sale", first_seen: now, last_seen: now, post_ids: ["X"], area_id: "vn-hanoi" },
-    { offer_id: "T-LAC", kind: "sale", first_seen: now, last_seen: now, post_ids: ["Y"], area_id: "vn-hanoi-ptd-lac" },
-  ]);
-  assert.equal((await cot(c, "T-W1")).area_id, W1, "PTD-AC-5 S03 chạy lại xoá phường kế thừa");
+  assert.equal((await cot(c, T1)).area_id, W1, "PTD-AC-5 lượt đầu: tin không nhận phường");
+  await chayS03(c);
+  assert.equal(await tinX(), T1, "PTD-AC-5 bước S03 chạy lại đổi khoá tin");
+  assert.equal((await cot(c, T1)).area_id, W1, "PTD-AC-5 S03 chạy lại xoá phường kế thừa");
   await phanXu(c);
   await runReassign(c, ["hanoi"], { log: { log() {}, warn() {} }, xoaKhuVucLac: true });
   assert.equal((await cot(c, "T-LAC")).area_id, null, "PTD-AC-5 reassign-areas không đặt NULL cho tin khu lạc");
   await phanXu(c);
-  assert.equal((await cot(c, "T-W1")).area_id, W1, "PTD-AC-5 tin W1 mất phường sau reassign + phân xử");
+  assert.equal((await cot(c, T1)).area_id, W1, "PTD-AC-5 tin W1 mất phường sau reassign + phân xử");
   assert.equal((await cot(c, "T-LAC")).area_id, null, "PTD-AC-5 tin khu lạc không giữ NULL sau phân xử");
 }
 test("PTD-AC-5 chuỗi S03 → phân xử → reassign-areas → phân xử giữ phường kế thừa và NULL của khu lạc", { skip: BO_DB }, async () => {
@@ -467,7 +489,7 @@ test("PTD-AC-8 chạy thử không đổi gì; thiếu 096/099 thoát 2; lỗi g
 });
 test("PTD-AC-8 chiều đỏ: bỏ ROLLBACK", { skip: BO_DB }, async () => {
   await banDot("scripts/phuong-tu-du-an.mjs", 'await client.query("ROLLBACK");', 'await client.query("COMMIT");');
-  const lenhDot = join(tam.at(-1), "scripts/phuong-tu-du-an.mjs");
+  const lenhDot = join(tam.at(-1), "p", "scripts/phuong-tu-du-an.mjs");
   const c = await xoa();
   await fxAc3(c);
   assert.equal(cli(urlCua(c), ["--ghi"], {}, lenhDot).status, 0);
