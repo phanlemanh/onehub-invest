@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-13T08:34:01Z",
-  "generated_sha": "9adb04c258fc12b311df2674ae2407fe15d48151",
+  "generated_at": "2026-11-13T13:59:10Z",
+  "generated_sha": "000c7872862ec44bc2c95ad43e1be70aa044c87f",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "khoa-gop-can-khong-gia",
-  "round": 1,
+  "round": 2,
   "riskTier": "T3",
   "evals": [
     {
@@ -20,7 +20,7 @@
         "db/migrations/098_khoa_gop_can.sql",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -34,7 +34,7 @@
         "db/migrations/098_khoa_gop_can.sql",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -48,7 +48,7 @@
         "db/migrations/098_khoa_gop_can.sql",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -62,7 +62,7 @@
         "pipeline/resolve-properties.mjs",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -76,7 +76,7 @@
         "pipeline/resolve-properties.mjs",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -90,7 +90,7 @@
         "pipeline/resolve-properties.mjs",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -104,7 +104,7 @@
         "pipeline/resolve-properties.mjs",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -118,7 +118,7 @@
         "pipeline/resolve-properties.mjs",
         "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
       ],
-      "longRunning": 55,
+      "longRunning": 90,
       "ref": "config:executors.test.kgc_db"
     },
     {
@@ -133,6 +133,20 @@
         "pipeline/lib/thu-lai-deadlock.sql-base.json"
       ],
       "ref": "config:executors.test.kgc_deadlock"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-9",
+      "cmd": "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kgc --chay node --test --test-concurrency=1 tests/resolve-properties-khoa-gop.itest.mjs",
+      "expected": "\"Ca «KGC-AC-9» xanh trên dòng mồi tổng hợp (nguồn thử, mã tin giả) sau 098 + 101: X→P1, Y→P2 (Y có trong lượt, post_ids chung với X); X2→P3, Y2 chưa gắn; reconcile_stale_offers(nguồn, [Y, Y2], actor) → Y đúng 1 link tới P2; property_offer_unlinks có đúng dòng (P1, X, score, signals, linked_at) của ảnh chụp, reason chứa mã Y; Y2 đúng 1 link tới P3; X, X2 0 link; tổng kết jsonb có khoá đếm link ghi nhật ký = 1. Chiều đỏ trong SAVEPOINT: nạp lại thân hàm của 044 (CREATE OR REPLACE từ git show) rồi cùng dòng mồi → nhật ký 0 dòng cho X và (P1, X) không còn ở đâu, assert ghim «KGC-AC-9»; ROLLBACK TO.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/101_doi_soat_chuyen_link.sql",
+        "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
+      ],
+      "longRunning": 90,
+      "ref": "config:executors.test.kgc_db"
     }
   ],
   "suiteCommands": [
@@ -143,14 +157,14 @@
     "cd app && npm run test:lint-rules",
     "node scripts/check-portal-compliance.mjs"
   ],
-  "diffBase": "8518c392f53a0906c8b90c2fb256594bc3725cb8",
+  "diffBase": "66de32c2ce9187a51a245df2f484a46deab6f59f",
   "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/khoa-gop-can-khong-gia",
   "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/judge-personas.md",
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/khoa-gop-can-khong-gia/_acceptance/khoa-gop-can-khong-gia/contract.md",
-  "invokedAt": "2026-11-13T08:34:01Z",
-  "invokedSha": "9adb04c258fc12b311df2674ae2407fe15d48151",
+  "invokedAt": "2026-11-13T13:59:10Z",
+  "invokedSha": "000c7872862ec44bc2c95ad43e1be70aa044c87f",
   "vungVat": [
     "_acceptance/config.yaml",
     "_acceptance/khoa-gop-can-khong-gia/card-plain.json",
@@ -158,7 +172,9 @@
     "_acceptance/khoa-gop-can-khong-gia/design-floor.json",
     "_acceptance/khoa-gop-can-khong-gia/du-bao.json",
     "_acceptance/khoa-gop-can-khong-gia/evals.yaml",
+    "_acceptance/khoa-gop-can-khong-gia/s4-args.json",
     "db/migrations/098_khoa_gop_can.sql",
+    "db/migrations/101_doi_soat_chuyen_link.sql",
     "pipeline/lib/thu-lai-deadlock.sql-base.json",
     "pipeline/resolve-properties.mjs",
     "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
@@ -183,8 +199,11 @@
     "PRODUCT-MAP.md",
     "_acceptance/khoa-gop-can-khong-gia/contract.md",
     "_acceptance/khoa-gop-can-khong-gia/decisions.jsonl",
+    "_acceptance/khoa-gop-can-khong-gia/evidence-report.md",
     "_acceptance/khoa-gop-can-khong-gia/gap-probe.md",
     "_acceptance/khoa-gop-can-khong-gia/opportunity.md",
+    "_acceptance/khoa-gop-can-khong-gia/review-findings.md",
+    "_acceptance/khoa-gop-can-khong-gia/run-log.jsonl",
     "_acceptance/khoa-gop-can-khong-gia/usage-report.md",
     "docs/superpowers/plans/2026-11-13-khoa-gop-can-khong-gia.md",
     "docs/superpowers/specs/2026-11-12-khoa-gop-can-khong-gia-design.md"
@@ -200,10 +219,15 @@
     "_acceptance/khoa-gop-can-khong-gia/design-floor.json",
     "_acceptance/khoa-gop-can-khong-gia/du-bao.json",
     "_acceptance/khoa-gop-can-khong-gia/evals.yaml",
+    "_acceptance/khoa-gop-can-khong-gia/evidence-report.md",
     "_acceptance/khoa-gop-can-khong-gia/gap-probe.md",
     "_acceptance/khoa-gop-can-khong-gia/opportunity.md",
+    "_acceptance/khoa-gop-can-khong-gia/review-findings.md",
+    "_acceptance/khoa-gop-can-khong-gia/run-log.jsonl",
+    "_acceptance/khoa-gop-can-khong-gia/s4-args.json",
     "_acceptance/khoa-gop-can-khong-gia/usage-report.md",
     "db/migrations/098_khoa_gop_can.sql",
+    "db/migrations/101_doi_soat_chuyen_link.sql",
     "docs/superpowers/plans/2026-11-13-khoa-gop-can-khong-gia.md",
     "docs/superpowers/specs/2026-11-12-khoa-gop-can-khong-gia-design.md",
     "pipeline/lib/thu-lai-deadlock.sql-base.json",
@@ -217,27 +241,30 @@
     "_acceptance/khoa-gop-can-khong-gia/design-floor.json",
     "_acceptance/khoa-gop-can-khong-gia/du-bao.json",
     "_acceptance/khoa-gop-can-khong-gia/evals.yaml",
+    "_acceptance/khoa-gop-can-khong-gia/s4-args.json",
     "db/migrations/098_khoa_gop_can.sql",
+    "db/migrations/101_doi_soat_chuyen_link.sql",
     "pipeline/lib/thu-lai-deadlock.sql-base.json",
     "pipeline/resolve-properties.mjs",
     "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
   ],
   "coverageFiles": [
     "db/migrations/098_khoa_gop_can.sql",
+    "db/migrations/101_doi_soat_chuyen_link.sql",
     "pipeline/lib/thu-lai-deadlock.sql-base.json",
     "pipeline/resolve-properties.mjs",
     "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"
   ],
   "coEvalPaths": true,
-  "evalsHash": "d8dc8fa6845c11f8d6bb20f56c7be5cc85d0d898dd8be7f183abe3ad4c1ecc42",
+  "evalsHash": "b0a4c6ed43c755ea1b5ff3d52e74c0ad3d7b3f3be05851cce9ed4bb4eab95c4f",
   "runBaseline": true,
   "thuocChup": {
-    "sha": "9adb04c258fc12b311df2674ae2407fe15d48151",
-    "n": 334,
-    "digest": "096ccb094781027c554f497934dc341c55fd904ab4bf4525a6bc42798051b5cf",
+    "sha": "000c7872862ec44bc2c95ad43e1be70aa044c87f",
+    "n": 339,
+    "digest": "386dc7cc2b1c06e3769e346f15e3b32af03afe64e96311d2637aa18487a8ff20",
     "tep": {
-      "_acceptance/config.yaml": "7ec464e3f96d102559101feaa96a3118eef16a80b6fc0f1ec23215291edb137d",
-      "_acceptance/khoa-gop-can-khong-gia/evals.yaml": "d8dc8fa6845c11f8d6bb20f56c7be5cc85d0d898dd8be7f183abe3ad4c1ecc42",
+      "_acceptance/config.yaml": "732bfd42cffdd2a5dec055f512cbdeded2ff705063603ae42a828001643f5e62",
+      "_acceptance/khoa-gop-can-khong-gia/evals.yaml": "b0a4c6ed43c755ea1b5ff3d52e74c0ad3d7b3f3be05851cce9ed4bb4eab95c4f",
       "agent/tests/ai-call-log.test.ts": "ec1671d58ec1ca4c35ae90d48bf18dc70e53f0556478a46a5ef19e06d8754800",
       "agent/tests/cat-chu.test.ts": "ee25ff528d95bf8fe50c908c1c91c4a3787d562f079c483ffdbd6851dbc763db",
       "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
@@ -311,7 +338,7 @@
       "app/tests/deals-phi-ly.test.tsx": "8fcb817d1e52c56cac0e28b14c5d039a54531a41264f4d0a4d27be4efb1a20fe",
       "app/tests/df0-chang-theo-ngay.test.tsx": "2c99f80bb34b07388aa1185bbb868f91be61819c8c95b5d2692a04b4dfac5c59",
       "app/tests/df0-dem-de-xuat.test.tsx": "39cc3d297fd6ac5a5c469e612894604bc5e54cb521d833cf253a7d079d24bd74",
-      "app/tests/dinh-danh-thu.test.tsx": "da11be9ce21924a470c34e74c1cf6a4c51c21efd3cbfdfc59d00894c41957f84",
+      "app/tests/dinh-danh-thu.test.tsx": "2b963022956a030caab7b6c7c35b68ed54d5cbc46e724d8d32813bd3fab8fe3a",
       "app/tests/do-hang-ngay-labels.test.tsx": "86492a2451ff089c37e8c9e4893a891d08f950ad8057251a6869595c4bbf687a",
       "app/tests/do-hang-ngay-quality.test.tsx": "7f0b6107949d16fd162d007dee37542366ccdc2c836c325e73fa22a9a109d31d",
       "app/tests/do-lam-giau.test.tsx": "8f89b1643266dd7657a3c26aa81efa9c24fec567011d5498d5390514237a3c32",
@@ -349,6 +376,7 @@
       "app/tests/labels-truong-moi-chuan.test.ts": "9ae32f7754580e83f06498ed2d28a4365f7824b5c832a67b1e4a5e02a409d5c4",
       "app/tests/labels-truong-moi-route.test.tsx": "c62d0e610f995c6e16d489ff34b7c008ceb06fc579582f30eb13b67289e61c86",
       "app/tests/labels.test.tsx": "d87842a939bca0bb93e3a39ff999fada1e9356f5c3a14815b29d5625b6d7e556",
+      "app/tests/lenh-hien.test.ts": "723dc5228ad88022898d088d838249f8f9b13786693dc3cfbc65cb65680c4ed5",
       "app/tests/listing-detail.test.tsx": "b1b46d4aeee7101e8fd96b35c3c69fc01c70a977c8cab5eafb0ffc9613de8fd1",
       "app/tests/listings-browse.test.tsx": "b53547dc7039562b329c476fe8b03028a4cae08c6b018f12c0ff5a03683533f8",
       "app/tests/lockdown-cloud-theo-facts.test.tsx": "228a09ddad1fffd8159eac681254a1f6aef0a6fee327c974d01efd4f188a0436",
@@ -359,7 +387,7 @@
       "app/tests/media-canonical.test.tsx": "fc29d30d7c7d44f946d1ac6b70214d60615bc8f50a171d98d7dacf6fcecd4e37",
       "app/tests/nhom-moi-requiremention.test.tsx": "81af294d81dbeddeb7ac974778913379e43f68713370d72d9d7dc32b0ad65c66",
       "app/tests/nhom-s03-tren-cloud.test.tsx": "bb0e73ec9dfc17ac3809bf26591c7886347c5fefae5aab03684b491d7bc0f96e",
-      "app/tests/o-kpi-chi-do-local.test.tsx": "d2e50793542cf346d74d00c747d0fe596f03e9a5a40de92a2d484fb8481b04e4",
+      "app/tests/o-kpi-chi-do-local.test.tsx": "3280441a86ef9e9a1eac43ba49e18736b36c87295d0a43a480efac5d000d763e",
       "app/tests/ops-cloud-khong-bang-nap.test.tsx": "26ed69b8cddc2610e6d9460c90379598ddf7d2fef19b6591b0a1300f39b20e0e",
       "app/tests/ops-collections-api-cloud.test.tsx": "48552c8090384cf13f2488891b36573dbd1d7f32bd782756497dcef152a95686",
       "app/tests/ops-dong-chay.test.tsx": "8f1fc32f419ffeb6bbdc4183c82fa27326e7523d041ac19162c5e0d5360875ff",
@@ -390,6 +418,9 @@
       "app/tests/soat-tang-a.test.tsx": "a9b3e92980aa952465981679127e0942cc41be0b3780d1cdc1b108cd719c2d58",
       "app/tests/source-status-labels.test.tsx": "e02337263da052ad7e8860f77b4d30ed4c5685a5df4bad7841ed9375d1a26124",
       "app/tests/suite-chung-bo-ca.test.tsx": "57f341a11f384e266a095a39fd1db9c1bf1384c123b18da22fb62c8d7759878b",
+      "app/tests/tam-dung-dau-cuoi.test.tsx": "1990b368709dd5f031061099d291690e6cb9212ec0172b9496ea0a1631bd6d41",
+      "app/tests/tam-dung-nguon-ui.test.tsx": "b1f5f90b1631fbc945fffb93f28a37578c14139e9453466b6347f3fd7e782770",
+      "app/tests/tam-dung-nguon.test.tsx": "9edb05f07bb5e5bca3d980e8be5f5adc9386a4dc8963ce3bbbfa7ba9a8bf816b",
       "app/tests/ten-tinh-cu.test.tsx": "51586b023fa0f51d8165d20c78f14d0b331528c36026247a1d9f8d5faac48032",
       "app/tests/thang-bac.test.tsx": "95af62f95d2c522e1b18e056e0c987e2134dedf5a2962d4e19d88280590ea1ad",
       "app/tests/the-duyet-du-can-cu.test.tsx": "adb659985130cd62d5797ffdedf9ec554c0919b6530d0c99c70582037505628a",
@@ -458,6 +489,7 @@
       "pipeline/scripts/do-hang-ngay.test.mjs": "56c4670ccbbf51661d6957b7e8fe4703d272081c8e22c61fbffc0d4c327612c6",
       "pipeline/scripts/do-lam-giau.test.mjs": "669ca9ab6af2a267d985edd590471e7f0c18297476d9a129578594fd66592842",
       "pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs": "5698aaeaf6307530cbf9df7c73154017b90e0dba062ebb9573bf0e987da12877",
+      "pipeline/scripts/du-an-tren-tin-s03.test.mjs": "bb4ca26757c087423ce0781ee81d985194490ff21699a599b2b6e03701d4e609",
       "pipeline/scripts/enrich-nguoi-s03.test.mjs": "63f147ec31c3efb9835d438fe4c8695596cd0589468e1aa64d69d22a2abd07ef",
       "pipeline/scripts/entrypoint-symlink.test.mjs": "ced4ad1c37f16bb8eb218425ed71dbcb180e364eb1c5fdd4e0a2de938b62939b",
       "pipeline/scripts/eval-classify-ghep.test.mjs": "e76636389363fcc9b8e608682811cdb4e20b1afa55158eedaac5cf1f1ba7b125",
@@ -509,7 +541,7 @@
       "pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs": "1f35e651c6032646d76e70db1f447bc5d131ed86ab8c83e3a5c857bdb91c4476",
       "pipeline/scripts/transform-zalo-loai-tin-doi-chieu.test.mjs": "ea5061e883fe5e97dfd1cb66d9319fa7a0196e773121a75f78b11213b759c852",
       "pipeline/scripts/transform-zalo-loai-tin.test.mjs": "55be671ddf1b785456160b0e107780d3f1d4010a12328597b89c2577aa7de553",
-      "pipeline/scripts/truong-du-an-tren-tin.test.mjs": "27bc98745bca4b6fe5d5edc217838be3e5cd86568680476f0c2550560f532ec4",
+      "pipeline/scripts/truong-du-an-tren-tin.test.mjs": "e103db87f5e44f168c4b5bb8630c9edfaa6b923320d775b7b7abc670166e4a59",
       "pipeline/scripts/tu-vung-du-an.test.mjs": "3fc0043b9d86e1475a117e350d71842f0d70040ddf05fa33424f268c24f40717",
       "pipeline/scripts/va-doc-tin.test.mjs": "cbce328a2a4b339e1a1d884f98dbb5fba1ac39e38abc1636f57883389be6fea4",
       "pipeline/scripts/vn-day.test.mjs": "bf472c3ebb15820f3e37585aea3017d160c3c729306ec92da8e5423da675db7e",
@@ -526,12 +558,12 @@
       "scripts/audit-all.test.mjs": "c8dad70e08cd9751de3e0f6e99582a2494fb7d12af9c360f7f258754243120c7",
       "scripts/auth-error-e2-superseded.test.mjs": "f7261f9d8484def915fd0bd2cd8fc49525c73f3c66758b991eb96f2d0985ede3",
       "scripts/auth-error-thu-lai-retry.test.mjs": "fc2312609cb4d56d58b3576c9c843d506b1a14c2ccf297f6aa3fecf8b29ed3f0",
-      "scripts/bao-cao-ngay.test.mjs": "a88d162d375d4aecb1f32b0d52b3e33654d916c71e775b89b326adefba8d9b6f",
+      "scripts/bao-cao-ngay.test.mjs": "50af9b9160e2fb09d580eed50ab786cf2e439d3f95f28bf41602375f87626971",
       "scripts/bo-worktree.test.mjs": "242c63e5e4ad72cc89a94153e7b2cbe8785a859771adb9b25b66974587d52c02",
       "scripts/can-gia-tot-quet-ma.test.mjs": "a89bfe21898a3d973384219b286c345bdaeed905ea9d086bd6e5868747f691f3",
       "scripts/cap-token-may.test.mjs": "16b5341d357f7d61a560bc825bf50027174b80a6e63390ec05b1a206a1d095c8",
       "scripts/check-api-surface.test.mjs": "6112875736ce3c147a2acc89381be2716d7a3e57e42f622b4e65cef68d299498",
-      "scripts/check-freshness.test.mjs": "49d7b9e532ef9bd2d64086cbb56721d8182a3351081d94402b913e90314631d7",
+      "scripts/check-freshness.test.mjs": "e360ab2697b1123e54dd21ac32e1e92826720971aabf296da9e083b8877498b1",
       "scripts/check-mcp-tools.test.mjs": "46793efedb29ae46e7a98efd5634a82c6208d6ee5057d23299f53875497ade83",
       "scripts/ci-bo-qua-df-ac-3.test.mjs": "8fd923f94cf976f98fc380936e1dfc9c983abac57bd8171c7e3705b2823389ef",
       "scripts/ci-test-module.test.mjs": "f65be14192f0df54b701eaa631598768c951655d7b7a0d47fc4bea8aa7ef7def",
@@ -549,7 +581,7 @@
       "scripts/don-hex-tho.test.mjs": "26506892c549a93e7e7373aaf098b2e8e2462655be2c3ebf87c47079d8088c98",
       "scripts/dong-bang-khong-ghi.test.mjs": "e156a42bb085db3ac79df3eb1c91380cefaee0a1c8761402c65288e29999f824",
       "scripts/enrich-buoc-job.test.mjs": "f90391cd5289238240b863ce5bc900904bd61985d22b098b7f99bf3eeaa8d8bb",
-      "scripts/freshness-parity.test.mjs": "6c2256d978d3469e20965100b1913f5e87d45c57492637f5a87fc80c9b6b9b02",
+      "scripts/freshness-parity.test.mjs": "afa3d76b506f61cd36ad8b546c6bde7fa1240f43eca78ffacf3babe146c4ac9f",
       "scripts/install-cron-chi.test.mjs": "65d46e4ba4782b53fa787b4e3c1185e73e8c1d418eb88e90844d268da01e6e5d",
       "scripts/job-exit.test.mjs": "2712dc6ab748231d2541f67fc7b0618d4f6c7e922ca2708184d40df1cbcea332",
       "scripts/kiem-tin-rao-gan-khu-vuc.test.mjs": "4b6a0861f32ceff81c6f0cf344e40d4ccf2084f8472082158bd2c0e0f1d30bb1",
@@ -562,7 +594,7 @@
       "scripts/s03-nap-ho-so.test.mjs": "c745f32dbc17402f100234e2e1f1320d40cde82522862edcfc0decd5bbafa4df",
       "scripts/s03-nap-nhanh.test.mjs": "5e8ef6ae72bda9c81c8ff873a61771ea38b2425ef15faa09c4fa558eb51e0d12",
       "scripts/s05-khoa-nap.test.mjs": "0ec98d5e34456b0d6376dc9c123554be5a59bbf7248f4baab2f5092dadf9d0b9",
-      "scripts/s05-slo.test.mjs": "e3d99934109ef712c51512cc2f17cf154b8a6bcfe7e938d56297b88bf91d3e73",
+      "scripts/s05-slo.test.mjs": "6485d543a3f4266e57592e89980bb33298ebc8cb4fb252b58ac6b17471fb0248",
       "scripts/sao-luu-ngoai-may.test.mjs": "1102f8cfbb9030d0132d575ab56ffe99fcaa97445879cf9739d728ce5a63f475",
       "scripts/ui-capture-browser.test.mjs": "95940254d4d44afd87f035bc1493fe789afbdc41248f30f3ef1c180db221bfd8",
       "scripts/ui-capture-login.test.mjs": "dc29635ce1aae530c2f1f74a04d5b4aa1f59ee8bac348a109bb9399f4195c3db",
@@ -573,7 +605,7 @@
     }
   },
   "cayChup": {
-    "sha": "9adb04c258fc12b311df2674ae2407fe15d48151",
+    "sha": "000c7872862ec44bc2c95ad43e1be70aa044c87f",
     "ban": {},
     "chuaTheoDoi": []
   }
