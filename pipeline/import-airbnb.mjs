@@ -216,14 +216,12 @@ async function main() {
     const coS08DanhMuc = items.some((it) => it.source === "s08-danh-muc");
     const coBang094 = coS08DanhMuc ? await client.query(
       `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'stg_s08_project'`).then((r) => (r.rowCount ?? 0) >= 1).catch(() => false) : false;
-    let daInChuaAp094 = false;
     let s08ProjectDong = 0;
     const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
-    // 1211-35: snapshot chỉ chứa catalog/detail s08-danh-muc && thiếu 094 → rollback + thoát 0 (cùng AC-6),
-    // để sau khi áp 094 lượt nạp lại được đủ (KHÔNG đánh dấu đã nạp).
-    const boHetS08 = items.length > 0 && items.every((it) => it.source === "s08-danh-muc")
-      && items.every((it) => it.kind === "project_catalog" || (it.kind === "inventory_unit" && it.meta?.state === "detail"))
-      && !coBang094;
+    // 1211-35 MỞ LẠI(2): thiếu 094 → ROLLBACK CẢ LƯỢT mọi snapshot CÓ item project_catalog (giống hồ sơ S03)
+    // — giữ phần dự án không mất khi chỉ lẫn căn; áp 094 rồi nạp lại được đủ.
+    const coCatalogS08 = items.some((it) => it.source === "s08-danh-muc" && it.kind === "project_catalog");
+    const boHetS08 = coCatalogS08 && !coBang094;
     if (!(!coBang && boHetHoSo) && !boHetS08) {
       await client.query(
         `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
@@ -417,16 +415,13 @@ async function main() {
       console.log(`S08 danh mục: ${cacDong.length} dự án (stg_s08_project ghi ${s08ProjectDong})`);
     } else if (coS08DanhMuc && !coBang094) {
       console.log("CHUA-AP-094: bảng stg_s08_project chưa có (migration 094 chưa áp) — phần dự án S08 bỏ");
-      if (boHetS08) {
-        await client.query("ROLLBACK").catch(() => {});
-        console.log("snapshot S08 chỉ gồm catalog/detail — KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ)");
-        daInChuaAp094 = true;
-        return; // thoát 0 — AC-6
-      }
+      await client.query("ROLLBACK").catch(() => {});
+      console.log("snapshot CÓ item project_catalog — KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ — 1211-35 MỞ LẠI(2))");
+      return; // thoát 0 — AC-6: rollback cả lượt kể cả khi snapshot lẫn căn
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, ${s08Catalog} catalog gom stg_s08_project), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
