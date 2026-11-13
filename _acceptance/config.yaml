@@ -291,6 +291,16 @@ executors:
     cg8_ham: "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"   # can-gia-tot-cung-loai E4 — lý do rời danh sách, câu chứng minh theo loại hình (hàm thuần)
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
   script:
+    itnl_giu_rb: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_rb --chay node --test --test-concurrency=1 scripts/nap-lai-giu-rang-buoc.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_s06_duong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_ds --chay node --test --test-concurrency=1 scripts/s06-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_sdt: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_sdt --chay node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_phat_bieu: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_pd --chay node --test --test-concurrency=1 scripts/phat-bieu-db.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_doi_chung: "bash db/db-thu.sh oneinvest_suite_itnl_dc --chay node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_kd070: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_kd --chay node --test --test-concurrency=1 scripts/kiem-do-sau-070.test.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_co096: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/co-096.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_dac_trung: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_dt --chay node --test --test-concurrency=1 scripts/dac-trung-s06.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_giu: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/giu.mjs"   # itest-nap-lai-migration-cu-sau-095
+    itnl_tdt: "node _acceptance/itest-nap-lai-migration-cu-sau-095/probes/tdt-ci.mjs && cd pipeline && node --test --test-concurrency=1 scripts/truong-du-an-tren-tin.test.mjs"   # itest-nap-lai-migration-cu-sau-095 AC-8
     cg8_db: "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"   # can-gia-tot-cung-loai E1–E3, E5, E6 — DB thử oneinvest_u1_cg8 chép từ DB máy thu, ca trong BEGIN…ROLLBACK
     cg8_do: "bash pipeline/scripts/can-gia-cung-loai-db.sh do"   # can-gia-tot-cung-loai E7 — đếm toàn bộ tin trên bản chép, chỉ in số
     cg8_ranh_gioi: "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"   # can-gia-tot-cung-loai E9 — không migration, không sync-cloud, không thêm liên lạc, không tên nguồn
