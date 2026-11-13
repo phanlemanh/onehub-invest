@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: de8873bd26e7987de0cfb6df74d2f52c3b2b00b4
-human_signoff:
+human_signoff: Mạnh 2026-11-13
 ---
 
 # Evidence Report: tam-dung-nguon-tu-cloud
@@ -133,7 +133,7 @@ human_signoff:
   run_id: minted-tam-dung-nguon-tu-cloud-E11-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-12T23:38:27Z
   screenshot: evidence/E11-step1.png
   observed: |

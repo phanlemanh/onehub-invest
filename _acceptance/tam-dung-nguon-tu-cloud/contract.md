@@ -5,7 +5,7 @@ slug: tam-dung-nguon-tu-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: không tệp nào khớp t3_paths (app/src/app/api/v1/ops/change-requests, app/src/lib, app/src/components/ops/collections, app/tests)
 surfaces: [ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-tam-dung-nguon-tu-cloud-design.md
@@ -88,3 +88,8 @@ lý do: không gửi được»):
 - Nạp plist `ops-apply` và đo nhịp ≤ 5′ trên máy thật (triển khai sau gộp hàng sửa sau TV4).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-1: Bấm Duyệt hay Từ chối mà bị từ chối thì màn không báo gì, chỉ tải lại, trông như nút không ăn.
+  - Ngoài-2: Lỗi mạng hay thiếu quyền khi duyệt lệnh không hiện lời giải thích; người duyệt phải tải lại mới thấy trạng thái thật.
+  - Ngoài-3: Duyệt lệnh Bật lại S03 làm mất lý do ở cột Lý do của Lệnh gần đây; lý do còn trong nhật ký gửi.
