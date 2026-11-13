@@ -73,13 +73,16 @@ async function tin(c: pg.Client, id: string, gap: number | null, over: Over = {}
 const khoa = (id: string, i: number) => (Buffer.from(`${id}-${i}`).toString("hex") + "0".repeat(32)).slice(0, 31) + (i % 10)
 const srcDau = (id: string) => `/api/zalo-media?snapshot=snap_cgt&file=${encodeURIComponent(`media/${id}-0.jpg`)}`
 
-/** Thước: năm căn cùng phường giá `m`/m², không số giảm. v_ruler_p2_area (034) ra trung vị `m`, n = 5. */
+/** Thước: mỗi loại (căn hộ, nhà riêng) năm căn cùng phường giá `m`/m², không số giảm. Từ CG8 thước là phường × loại hình
+ *  (v_ruler_p2, 034): mỗi loại ra trung vị `m`, n căn. */
 async function thuoc(c: pg.Client, area: string, m = M, n = 5) {
-  for (let i = 0; i < n; i++) {
-    const oid = `thuoc-${area}-${i}`
-    await c.query(`INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier, property_type, area_id, area_m2, price_perm2) VALUES ($1, 'S06', 'sale', 'high', now(), now(), '{}', 'P2', 'unknown', $2, 80, $3)`, [oid, area, m])
-    const pid = (await c.query(`INSERT INTO properties (kind, area_id) VALUES ('sale', $1) RETURNING id`, [area])).rows[0].id
-    await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [pid, oid])
+  for (const loai of ["apartment", "house"]) {
+    for (let i = 0; i < n; i++) {
+      const oid = `thuoc-${area}-${loai}-${i}`
+      await c.query(`INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier, property_type, area_id, area_m2, price_perm2) VALUES ($1, 'S06', 'sale', 'high', now(), now(), '{}', 'P2', $4, $2, 80, $3)`, [oid, area, m, loai])
+      const pid = (await c.query(`INSERT INTO properties (kind, area_id, property_type) VALUES ('sale', $1, $2) RETURNING id`, [area, loai])).rows[0].id
+      await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [pid, oid])
+    }
   }
 }
 
@@ -352,6 +355,8 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     await tin(c, "b1x", 15, { seller_phone_hash: "h-b1" })
     await tin(c, "b1y", 16, { seller_phone_hash: "h-b1" })
     await tin(c, "b2", 25, { block_raw: null, floor_raw: null, unit_number: null, street_number: null, street_raw: null, district_raw: null, property_type: "unknown", bedrooms: null }, { anh: 0, bai: false })
+    // CG8: tin chưa rõ loại không vào danh sách — sheet của danh sách kiểm trên căn hộ cùng các mục trống.
+    await tin(c, "b3", 24, { block_raw: null, floor_raw: null, unit_number: null, street_number: null, street_raw: null, district_raw: null, bedrooms: null }, { anh: 0, bai: false })
     const that = await dsThat()
     const { deal } = await that.getDeal("b1")
     assert.ok(deal, "CGT-AC-2 không đọc được căn")
@@ -387,7 +392,7 @@ test("CGT-AC-2 đủ cột ở đâu, gọi ai, tin; mỗi giá trị đúng dò
     // Đỏ: trang vẽ như sheet thì mục trống ghi «chưa có».
     await vaoTrang(await banPage(PAGE_CAN, [[`beMat="trang"`, `beMat="sheet"`]]), "ops", { offerId: "b2" })
     assert.throws(kiemKhongRong, /CGT-AC-2 trang ghi «chưa có»/)
-    await vaoTrang(await banPage(PAGE_DS), "ops", { can: "b2" })
+    await vaoTrang(await banPage(PAGE_DS), "ops", { can: "b3" })
     for (const nhan of ["Toà", "Tầng", "Căn", "Đường", "Khu vực theo tin"]) assert.equal(dong(nhan), "chưa có", `CGT-AC-2 sheet thiếu «chưa có» ở ${nhan}`)
 
     // Đỏ: tráo hai cột toà và đường trong câu SQL.
@@ -541,7 +546,6 @@ test("CGT-AC-4 căn ngoài khoảng ngưỡng: câu chứng minh đúng, không 
 
 // ==== CGT-AC-5 ====
 const MA_TRAN_THIEU: { ma: string; over: Over; opt: { anh?: number; bai?: boolean }; nhan: string }[] = [
-  { ma: "t-loai", over: { property_type: "unknown" }, opt: {}, nhan: "Chưa rõ loại hình" },
   { ma: "t-dia", over: { block_raw: null, street_raw: null }, opt: {}, nhan: "Chỉ biết phường, chưa có toà hay đường" },
   { ma: "t-anh", over: {}, opt: { anh: 0 }, nhan: "Chưa có ảnh" },
   { ma: "t-chu", over: {}, opt: { bai: false }, nhan: "Chưa có chữ bài" },
@@ -569,6 +573,7 @@ test("CGT-AC-5 ma trận bảy trường: một nhãn trong thân, hàng «Thi�
   assert.throws(() => kiemThieuGi(dot.thieuGi), /CGT-AC-5 thiếu nhãn/)
   await withTx(async (c) => {
     for (const x of MA_TRAN_THIEU) await tin(c, x.ma, 20, x.over, x.opt)
+    await tin(c, "t-loai", 20, { property_type: "unknown" })
     await tin(c, "t-du", 21)
     await tin(c, "t-m2", null, { area_m2: null })
     await tin(c, "t-thuoc", null, { area_id: PC })
@@ -580,7 +585,10 @@ test("CGT-AC-5 ma trận bảy trường: một nhãn trong thân, hàng «Thi�
       assert.match(hang(x.ma)!.textContent ?? "", /Thiếu 1/, `CGT-AC-5 ${x.ma} hàng`)
       soAssert++
     }
-    assert.equal(demTab("Còn thiếu"), 5, "CGT-AC-5 tab Còn thiếu")
+    // CG8 (AC-3): tin chưa rõ loại không có số giảm nên không vào danh sách; trang một căn nói lý do.
+    assert.equal(hang("t-loai"), null, "CGT-AC-5 tin chưa rõ loại lọt danh sách")
+    soAssert++
+    assert.equal(demTab("Còn thiếu"), 4, "CGT-AC-5 tab Còn thiếu")
     assert.equal(demTab("Đủ để gọi"), 1, "CGT-AC-5 tab Đủ để gọi")
     const can = await chiTiet()
     for (const [ma, nhan] of [["t-m2", "Chưa có diện tích"], ["t-thuoc", "Chưa có thước phường"]]) {
@@ -594,6 +602,7 @@ test("CGT-AC-5 ma trận bảy trường: một nhãn trong thân, hàng «Thi�
     await vaoTrang(can, "ops", { offerId: "t-du" })
     assert.equal(document.querySelector("[data-deal-thieu]"), null, "CGT-AC-5 căn đủ có nhãn thiếu")
     const { deal } = await (await dsThat()).getDeal("t-loai")
+    assert.equal(deal!.roiDanhSach, "Chưa rõ loại hình — không so được với thước cùng loại", "CGT-AC-5 lý do tin chưa rõ loại")
     const h = (await dsThat()).dealHang(deal!, { xemNoiDung: true, mayThu: true })
     assert.ok(h.ten.startsWith("Chưa rõ loại hình") && !h.ten.includes("unknown"), "CGT-AC-5 tên căn mang unknown")
     assert.equal(tabCua(h), "thieu")

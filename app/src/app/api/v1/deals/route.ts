@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { THUOC_CUNG_LOAI } from "@/lib/deals";
 import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 import { canCallOpsApi } from "@/lib/ops-access";
 
@@ -35,14 +36,14 @@ export async function GET(req: Request) {
   params.push(limit, minDiscount);
 
   const { rows } = await pool.query(
-    `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area)
+    `WITH ruler AS (${THUOC_CUNG_LOAI})
      SELECT o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
             o.confidence, o.last_seen::text,
             o.area_id, a.name AS phuong,
             r.m AS median_perm2, r.n AS ruler_n,
             ROUND((1 - o.price_perm2::numeric / r.m::numeric) * 100, 1) AS discount_pct
      FROM sale_offers o
-     JOIN ruler r ON r.area_id = o.area_id
+     JOIN ruler r ON r.area_id = o.area_id AND r.property_type = o.property_type
      LEFT JOIN areas a ON a.id = o.area_id
      WHERE o.price_tier = 'P1' AND o.kind = 'sale'
        AND o.price_perm2 > 0 AND o.area_id IS NOT NULL
@@ -70,6 +71,6 @@ export async function GET(req: Request) {
       confidence: r.confidence,
       lastSeen: r.last_seen,
     })),
-    meta: { total: rows.length, minDiscount, ruler: "S06 phường n>=5" },
+    meta: { total: rows.length, minDiscount, ruler: "phường × loại hình, n>=5" },
   });
 }
