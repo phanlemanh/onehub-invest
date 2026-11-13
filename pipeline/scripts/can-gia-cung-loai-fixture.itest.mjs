@@ -11,8 +11,9 @@ import pg from "pg";
 import { luocDoRieng, neuLaBang } from "../lib/luoc-do-rieng.mjs";
 import { MIG_060 } from "../lib/nap-060.mjs";
 
-// Không mặc định về DB dùng chung: thiếu DATABASE_URL thì dừng (lượt chấm, npm test và can-gia-cung-loai-db.sh đều đặt DB thử).
-const DB_URL = process.env.DATABASE_URL;
+// Không mặc định về DB dùng chung ở máy: thiếu DATABASE_URL thì dừng (lượt chấm, npm test và can-gia-cung-loai-db.sh đều đặt DB thử).
+// Trên CI (biến CI) DB «oneinvest» là DB trống dựng từ migration cho riêng lượt.
+const DB_URL = process.env.DATABASE_URL ?? (process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : undefined);
 if (!DB_URL) throw new Error("can-gia-cung-loai-fixture: thiếu DATABASE_URL — chạy qua can-gia-cung-loai-db.sh itest hoặc npm test (DB thử)");
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const SQL_034 = readFileSync(join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8");
