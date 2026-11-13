@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3697415ee12b1e3029a6cdb9d00e548b7e128172
+verified_commit: 537ec7067f8982ef2646f3abc65f3935b9e3bbbb
 human_signoff:
 ---
 
@@ -183,3 +183,7 @@ Round 1: baseline đo lần cuối; evals.yaml không đổi từ đó.
 Round 2: BLOCKED ở E8 — CSS chưa biên dịch trên bản chạy webpack. Returned to implementation.
 Round 3: E8 chụp lại và đạt (dev server :3460, DB oneinvest_u1_cg8); E1-E7, E9, E10 carry-forward từ round 2; sáu lệnh suite đạt.
 
+
+### Re-pin lần 1 — 2026-11-13, do hoá cũ do sửa test cho CI (c6a56357, 38567701) và gộp main tới 408f5fde
+run_id: repin-20261113T042835Z-94060
+sha: 537ec7067f8982ef2646f3abc65f3935b9e3bbbb · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E8 · AC không có chốt máy: AC-8
