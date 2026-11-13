@@ -3,10 +3,10 @@ schema_version: 1
 slug: toa-s09-hai-khu-vao-danh-ba
 feature: Phân khu và toà S09 của Ocean Park 1 và Grand Park vào danh bạ không sinh toà trùng, nên tên toà bài S03 nêu mà danh bạ chỉ có từ S08 khớp được
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build   # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-11-12T00:00:00Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
@@ -46,6 +46,13 @@ Vì sao: Số đo S1 của PL20 (12/11): hàng nghìn bài căn hộ hai khu nê
   Bảng trên đo trên bản thu API `vn__…T120908161`; LL so hai khuôn: 0 khoá lệch ở hai khu (toà 115/115, 61/61, bàn giao
   91/91, 59/59, phân khu 13/13, 7/7). Bản API giữ theo lời Mạnh 13/11, chỉ dùng đối chiếu.
 - Mọi lời gọi tới nguồn S09 đang đóng băng: hàng chỉ đọc bản thu đã có.
+
+### Cổng Đáng — lát tách bởi giám sát 13/11
+
+- DA31 là lát đầu của DA10 (`toa-s09-vao-danh-ba`), giám sát tách ở PR #436 để PL20 không chờ ba số phủ của DA10.
+- Cơ hội đã được Mạnh quyết build: gói danh bạ dự án Q1–Q9 «Theo khuyến nghị» (09/11) và mốc DAM1 «Làm cả hai» (12/11),
+  trong đó có DA10. Giám sát trả yêu cầu U1-119 «duyệt» 13/11 13:42Z và dặn nêu dòng này trên thẻ Cổng Phạm vi để Mạnh
+  thấy và phản đối được.
 
 ## Ngưỡng chết / ngưỡng UAT
 
