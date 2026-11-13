@@ -5,7 +5,7 @@ slug: khai-slo-s10-s11
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, ops]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-13T12:16:00Z
 approved_by:
@@ -68,3 +68,5 @@ Bỏ quét không gian (dòng `descope` trong sổ) — một hằng hai bản c
 - Sửa `muc-tieu.json` (ô đã biết của báo cáo ngày) cho S10, S11 «chưa có dữ liệu»: quyết của liên làn khi báo cáo ngày đỏ.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-2: bài kiểm báo cáo ngày dùng dữ liệu mẫu viết tay, nên nếu báo cáo đổi cách viết hàng «chưa có dữ liệu» thì bài kiểm vẫn xanh trong khi báo cáo thật có thể lệch.
