@@ -1,0 +1,27 @@
+{
+ "feature_plain": "Tin S03 đã biết dự án mà dự án nằm trọn một phường thì nhận phường ấy (ghi rõ «suy ra từ dự án»), chỉ khi tin đang chỉ tới tỉnh hoặc trống; tin đã có phường giữ nguyên. Đo 13/11: khoảng 5.249 tin S03 lên có phường.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ ghi phường suy ra cho bài thuộc dự án nằm trọn một phường; dự án nhiều phường, chỉ tới tỉnh hay trống không sinh gì."},
+  {"id":"AC-2","p":"Sẽ KHÔNG ghi phường cho bài mà hai nguồn chỉ ra hai dự án khác nhau."},
+  {"id":"AC-3","p":"Sẽ đưa phường suy ra vào cột phường của tin chỉ khi tin đang tới tỉnh hoặc trống; tin đã có phường giữ nguyên; tin có hai phường suy ra khác nhau giữ nguyên."},
+  {"id":"AC-4","p":"Sẽ rút phường suy ra khi tin mất dự án hay dự án đổi phường, và trả cột về đúng giá trị nguồn đã ghi."},
+  {"id":"AC-5","p":"Sẽ giữ phường suy ra qua lượt nạp S03 đêm sau và lượt gán lại khu vực."},
+  {"id":"AC-6","p":"Sẽ khớp đếm độc lập: số tin có phường sau = trước + số tin được nâng; 0 tin đã có phường bị đổi."},
+  {"id":"AC-7","p":"Sẽ giữ mọi luật cũ của bộ phân xử; áp migration lần hai không đổi gì."},
+  {"id":"AC-8","p":"Sẽ chỉ đếm khi chạy không cờ; ghi thật là một giao dịch; DB thiếu thì dừng và nói thiếu gì."},
+  {"id":"AC-9","p":"Sẽ giữ bộ kiểm pipeline và bộ kiểm danh bạ xanh."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"KHÔNG ghi thật, KHÔNG áp migration lên máy thu hay cloud trong vòng này — chờ lời anh sau gộp, đếm lại trước."},
+  {"id":"OOS-2","p":"KHÔNG sửa thước DF7 hay giao diện nhãn «suy ra từ dự án»."},
+  {"id":"OOS-3","p":"KHÔNG xử dự án nhiều phường (Phú Mỹ Hưng) hay 5 dự án chỉ tới tỉnh."},
+  {"id":"OOS-4","p":"KHÔNG làm bộ ghi dự án trên tin (DV6 và các hàng khác)."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Bộ phân xử lẽ ra không trả cột về khi tin mất dự án — đã sửa: lưu giá trị gốc, hết căn cứ thì trả về gốc."},
+  {"i":1,"p":"Chưa đo tương tác với bước gán lại khu vực — đã thêm ca chạy chuỗi thật."},
+  {"i":2,"p":"Dữ liệu thử chèn tay có thể lệch khuôn bộ ghi thật — đã đổi sang sinh bằng chính bộ ghi, thêm ca đầu-cuối."},
+  {"i":3,"p":"Độ phủ tự nhận đủ — đã khai ô loại có lý do, S06 ra ngoài phạm vi."},
+  {"i":4,"p":"Chưa có đường đo trên máy thu — đã khai tệp đo và điều kiện chặn trước lời ghi thật."}
+ ]
+}
