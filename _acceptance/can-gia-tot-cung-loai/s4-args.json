@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-11-12T21:41:25Z",
-  "generated_sha": "6ae849faff427f7ace786af443cbec2d92c6d35c",
+  "generated_at": "2026-11-13T01:10:40Z",
+  "generated_sha": "3697415ee12b1e3029a6cdb9d00e548b7e128172",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "can-gia-tot-cung-loai",
-  "round": 2,
+  "round": 3,
   "riskTier": "T2",
   "evals": [
     {
@@ -230,11 +230,15 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.37.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/can-gia-tot-cung-loai/_acceptance/can-gia-tot-cung-loai/contract.md",
-  "invokedAt": "2026-11-12T21:41:25Z",
-  "invokedSha": "6ae849faff427f7ace786af443cbec2d92c6d35c",
+  "invokedAt": "2026-11-13T01:10:40Z",
+  "invokedSha": "3697415ee12b1e3029a6cdb9d00e548b7e128172",
   "vungVat": [
     "_acceptance/can-gia-tot-cung-loai/card-plain.json",
     "_acceptance/can-gia-tot-cung-loai/evals.yaml",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-list.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step1.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step2.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step3.png",
     "_acceptance/can-gia-tot-cung-loai/s4-args.json",
     "_acceptance/config.yaml",
     "app/src/app/api/v1/deals/route.ts",
@@ -292,6 +296,10 @@
     "_acceptance/can-gia-tot-cung-loai/duong-nen.md",
     "_acceptance/can-gia-tot-cung-loai/evals.yaml",
     "_acceptance/can-gia-tot-cung-loai/evidence-report.md",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-list.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step1.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step2.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step3.png",
     "_acceptance/can-gia-tot-cung-loai/figures/index.md",
     "_acceptance/can-gia-tot-cung-loai/gap-probe.md",
     "_acceptance/can-gia-tot-cung-loai/review-findings.md",
@@ -320,6 +328,10 @@
   "fileDoTrongDiff": [
     "_acceptance/can-gia-tot-cung-loai/card-plain.json",
     "_acceptance/can-gia-tot-cung-loai/evals.yaml",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-list.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step1.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step2.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step3.png",
     "_acceptance/can-gia-tot-cung-loai/s4-args.json",
     "_acceptance/config.yaml",
     "app/src/app/api/v1/deals/route.ts",
@@ -358,8 +370,142 @@
     "fromRound": 1,
     "nonDiscriminating": []
   },
+  "carriedEvals": [
+    {
+      "id": "E1",
+      "runId": "minted-can-gia-tot-cung-loai-E1-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"
+    },
+    {
+      "id": "E2",
+      "runId": "minted-can-gia-tot-cung-loai-E2-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"
+    },
+    {
+      "id": "E3",
+      "runId": "minted-can-gia-tot-cung-loai-E3-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-can-gia-tot-cung-loai-E4-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"
+    },
+    {
+      "id": "E5",
+      "runId": "minted-can-gia-tot-cung-loai-E5-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"
+    },
+    {
+      "id": "E6",
+      "runId": "minted-can-gia-tot-cung-loai-E6-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh itest"
+    },
+    {
+      "id": "E7",
+      "runId": "minted-can-gia-tot-cung-loai-E7-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "bash pipeline/scripts/can-gia-cung-loai-db.sh do"
+    },
+    {
+      "id": "E9",
+      "runId": "minted-can-gia-tot-cung-loai-E9-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"
+    },
+    {
+      "id": "E10",
+      "runId": "minted-can-gia-tot-cung-loai-E10-r2",
+      "fromRound": 2,
+      "verifiedAt": "2026-11-12T21:41:25Z",
+      "cmd": "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "pipeline/scripts/do-can-gia-cung-loai.mjs",
+      "title": "min_discount=0 bị đổi ngầm thành 5 ở cả hai API, nên phép đo AC-7 và ca AC-6 không chạy trên mẫu mà chúng tưởng",
+      "severity": "medium",
+      "plain": "Phép đo trên dữ liệu thật chỉ phủ các tin giảm từ 5% trở lên, các tin giảm ít hơn không được kiểm. Người dùng thấy danh sách giá tốt vẫn đúng như trước.",
+      "can_cu": "Không làm sai số hiển thị cho người dùng, chỉ làm mẫu kiểm hẹp hơn lời mô tả, và có thể ghi chú rõ rồi sửa sau với chi phí thấp.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs",
+      "title": "Bộ kiểm ranh giới AC-9 không quét nội dung tệp chưa track, dù chú thích nói «đếm cả thay đổi chưa commit»",
+      "severity": "low",
+      "plain": "Công cụ rà tên nguồn thật có thể bỏ sót tệp mới chưa được thêm vào git. Hiện tại không có tên nguồn nào lọt ra, nhưng một tệp mới trong tương lai có thể không bị bắt.",
+      "can_cu": "Chưa có dữ liệu nào lộ, rủi ro chỉ xảy ra nếu sau này có tệp mới chưa thêm vào git, và khi commit thì bộ kiểm sẽ thấy.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "data-api/src/routes/deals.ts",
+      "title": "data-api /v1/deals bị hỏng trên lược đồ độc lập của bản public (thiếu v_ruler_p2, properties, sale_offers.property_type)",
+      "severity": "medium",
+      "plain": "Ai cài API công khai theo hướng dẫn với dữ liệu mẫu sẽ nhận lỗi ở danh sách căn giá tốt sau lần đẩy bản public tới. Trên hệ thống của mình thì không bị.",
+      "can_cu": "Chỉ ảnh hưởng người ngoài tự cài bản mẫu sau khi Mạnh chủ động đẩy bản public, nên có thể ghi lại và xử lý trước lúc đẩy.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/can-gia-cung-loai-db.test.tsx",
+      "title": "Hình dạng 4 (âm tính một mình): ca đột biến AC-6 không bao giờ đỏ, mọi đường hỏng đều thành null và assert vẫn qua",
+      "severity": "high",
+      "plain": "Bài kiểm giả lập lỗi cho API công khai luôn báo qua, nên nếu sau này ai đó làm API tính số giảm sai thì bài kiểm này có thể không phát hiện. Số liệu hiện tại người dùng thấy vẫn đúng.",
+      "can_cu": "Không gây sai dữ liệu hôm nay, chỉ làm lưới an toàn cho thay đổi sau kém tin cậy, và các phép đo khác trong cùng hàng vẫn kiểm số giảm của API.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/can-gia-cung-loai-db.test.tsx",
+      "title": "Hình dạng 1 (đo chỉ dẫn thay vì đầu ra): ca 401 của AC-5 grep mã nguồn route thay vì gọi GET không token",
+      "severity": "medium",
+      "plain": "Bài kiểm việc chặn người không có quyền chỉ kiểm cách viết mã chứ không thử gọi thật. Nếu cổng chặn bị làm hỏng sau này thì bài kiểm này có thể không báo.",
+      "can_cu": "Quyền truy cập hiện vẫn đúng và API này đang đóng với người ngoài, nên rủi ro thấp và sửa lại bài kiểm sau không tốn kém.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs",
+      "title": "Hình dạng 4 (âm tính một mình): ten_nguon=0 của bộ soát ranh giới không có đối chứng dương, danh sách tên rỗng vẫn cho 0",
+      "severity": "medium",
+      "plain": "Công cụ rà tên nguồn thật có thể báo sạch trong khi thực ra không có danh sách tên nào để so. Chưa có bằng chứng tên nguồn nào bị lộ trong thay đổi này.",
+      "can_cu": "Không có dữ liệu bị lộ ở lượt này, và rủi ro chỉ xuất hiện khi môi trường chấm thiếu danh sách tên, có thể ghi chú để lần chạy sau kiểm kỹ hơn.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-list.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step1.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step2.png",
+    "_acceptance/can-gia-tot-cung-loai/evidence/E8-step3.png",
+    "_acceptance/can-gia-tot-cung-loai/s4-args.json"
+  ],
   "thuocChup": {
-    "sha": "6ae849faff427f7ace786af443cbec2d92c6d35c",
+    "sha": "3697415ee12b1e3029a6cdb9d00e548b7e128172",
     "n": 329,
     "digest": "6c915f6d4462702bb77fc6fa6a17c48ec41427b2b999b6d7c4625f2d762aae02",
     "tep": {
@@ -695,7 +841,7 @@
     }
   },
   "cayChup": {
-    "sha": "6ae849faff427f7ace786af443cbec2d92c6d35c",
+    "sha": "3697415ee12b1e3029a6cdb9d00e548b7e128172",
     "ban": {},
     "chuaTheoDoi": []
   }
