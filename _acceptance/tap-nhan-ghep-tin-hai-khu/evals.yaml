@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: tap-nhan-ghep-tin-hai-khu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-1 trên DB thử oneinvest_u1_pl35: hai lần chọn cùng seed ra cùng băm danh sách ref_id, lần hai thêm 0 dòng; seed khác ra băm khác; mỗi nhóm bài trùng chữ một đại diện. Chiều đỏ: bản đột biến chọn bằng Math.random thì ca đỏ, thông điệp nêu «hai lần khác tập»"
+    paths: ["pipeline/label-sample.mjs", "pipeline/lib/eval-labels.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-2: ma trận năm tầng viết trước, một assert mỗi tầng: chọn đúng min(75, số bài khác nhau), stratum đúng; tầng thiếu in «thiếu N» và cận dưới Wilson tối đa. Chiều đỏ: đột biến cỡ cố định 75 không kẹp thì tầng thiếu đỏ, thông điệp nêu tên tầng"
+    paths: ["pipeline/label-sample.mjs", "pipeline/lib/eval-labels.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pl35_ham
+    expected: "Ca PL35-AC-3: nhóm khớp đúng OP1 → op1, đúng GP → gp, khớp cả hai → loại, không khớp → loại; một assert mỗi loại nhóm. Chiều đỏ: bỏ luật «khớp đúng một» thì ca nhóm khớp hai mẫu đỏ, thông điệp nêu tên nhóm"
+    paths: ["pipeline/lib/eval-labels.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pl35_ham
+    expected: "Ca PL35-AC-4: ma trận viết trước năm ô (toà khớp, trục khớp, toà ngoài danh bạ, không nêu toà, toà mơ hồ) ra toa/truc/khong đúng từng ô; bộ phân tầng chỉ nhận chữ bài và danh sách toà/trục (chữ ký hàm), không nhận phát biểu. Chiều đỏ: đổi danh bạ đầu vào thì ô đổi tương ứng; đột biến coi toà mơ hồ là toa thì ô đó đỏ nêu mã ô"
+    paths: ["pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-5: tác tử giả trả nhãn kèm câu trích cho từng bài; draft ghi đủ building, stack, unit_number và can_cu; câu trích không có trong chữ bài thì ô trống; nhapTuDraft thật của app (app/src/lib/labels-cuon-chieu.ts) đọc ra đúng các ô. Chiều đỏ: đột biến ghi draft sai khoá cach_doc thì nhapTuDraft trả null, ca đỏ nêu ref_id"
+    paths: ["pipeline/label-nhap-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E5b
+    criterion: AC-5
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Bản chạy: dev server Turbopack của worktree dãy U1 (http://localhost:3460) với DATABASE_URL trỏ DB thử oneinvest_u1_pl35 sau khi `bash pipeline/scripts/tap-nhan-hai-khu-db.sh ghi-thu` đã nạp nháp (tác tử giả) cho lát hai-khu-ghep; đăng nhập tài khoản ops thử. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "Mở /ops/labels?lat=hai-khu-ghep, mở một bài có nháp → 1280 px sáng → evidence/E5b-step1.png (ba ô Toà, Trục, Mã căn điền sẵn)"
+      - "Sửa ô Trục, bấm Lưu → evidence/E5b-step2.png; lệnh in của ghi-thu --doc-nhan cho bài đó ba dòng eval_labels"
+    expected: "Bước 1 ba ô building, stack, unit_number hiện đúng giá trị nháp của bài (đối chiếu bảng ghi-thu in); bước 2 lưu được, eval_labels của bài có đúng ba trường với giá trị trục đã sửa; chữ đọc được, không tràn khung"
+    paths: ["pipeline/label-nhap-ghep.mjs", "app/src/app/ops/labels/**", "app/src/components/ops/labels/**"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-6: bài đã có nhãn người giữ nguyên draft (so băm trước/sau), lệnh ghi 0 dòng eval_labels (đếm trước/sau), bài chưa có nhãn được nháp (đối chứng dương cùng fixture). Chiều đỏ: đột biến bỏ điều kiện bỏ qua bài đã gắn thì ca đỏ nêu item_id"
+    paths: ["pipeline/label-nhap-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E7
+    criterion: AC-7
+    also_covers: [AC-4]
+    executor: script
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-7 chạy CẢ chọn mẫu và nháp trên DB thử đã REVOKE SELECT trên field_assertions với vai chạy lệnh: hai lệnh xong exit 0; cấy dòng field_assertions cho bài fixture rồi chọn lại thì băm tập và stratum không đổi (AC-4); bản đột biến đọc field_assertions thì DB trả lỗi quyền (ghim thông điệp permission denied)"
+    paths: ["pipeline/label-nhap-ghep.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E7b
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.pl35_ranh_gioi
+    expected: "Quét tĩnh: doc_pl20=0 (label-sample.mjs, label-nhap-ghep.mjs, lib/tang-ghep.mjs và tệp chúng import trong pipeline/ không chứa field_assertions, UniversalPropertyId, UniversalPropertySubId hay import mã PL20); đối chứng: tệp giả trong cây tạm có field_assertions thì đếm 1, thoát 1, nêu tên tệp"
+    paths: ["pipeline/label-sample.mjs", "pipeline/label-nhap-ghep.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.pl35_db
+    expected: "Ca PL35-AC-8 trên DB thử: nhãn người ghi qua ghiNhan thật của app (app/src/lib/labels-queries.ts), có bài hai người khớp và bài hai người lệch; đóng băng hai lần cùng dữ liệu ra cùng băm sha256 (băm in trong tệp bằng băm tính lại); đổi một nhãn thì băm đổi; mỗi ref_id một dòng; bài lệch bị loại và đếm riêng; khoá của mọi dòng đúng {ref_id, stratum, building, stack, unit_number} — không text, quote, labeler. Chiều đỏ: đột biến không sắp khoá thì hai lần khác băm, ca nêu «băm không ổn định»; đột biến đọc khoá phẳng sai thì ca đỏ nêu ref_id"
+    paths: ["pipeline/label-dong-bang.mjs", "app/src/lib/labels-queries.ts", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.pl35_do
+    layer: backend-effect
+    expected: "Trên DB thử chép từ DB máy thu (DB riêng cho chế độ do, xoá khi xong): danh bạ chưa có toà S09 của hai khu thì thoát 2 «chưa DA31»; in bảng nhóm → khu kèm số bài, so với bảng kỳ vọng viết trước pipeline/scripts/tap-nhan-hai-khu-nhom.json (nhóm lạ hay thiếu → thoát 1 nêu tên nhóm); in số bài có và chọn mỗi tầng; tầng nào chọn dưới 75 thì thoát 1 nêu tầng; tổng ngoài 300–450 thì thoát 1; eval_labels đếm trước = sau; không gọi model"
+    paths: ["pipeline/label-sample.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.pl35_ranh_gioi
+    expected: "migration_doi=0 sync_cloud_doi=0 app_doi=0 ten_nguon=0; đối chứng dương ten_nguon: danh sách tên nguồn đọc từ DB máy thu không rỗng (in số tên, rỗng thì thoát 2); đối chứng đỏ: tệp giả dưới db/migrations trong cây tạm thì đếm 1, thoát 1"
+    paths: ["pipeline/scripts/tap-nhan-hai-khu*"]
