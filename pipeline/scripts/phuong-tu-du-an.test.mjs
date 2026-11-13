@@ -1,9 +1,9 @@
 // phuong-tu-du-an — phép đo PTD-AC-1…8 (_acceptance/phuong-tu-du-an).
-// Ca DB chạy trên DB thử oneinvest_dbv_ptd_<pid>_<khoá> dựng từ db/migrations của nhánh (gồm 099) bằng db-thu-dbv.mjs; mỗi ca
+// Ca DB chạy trên DB thử oneinvest_dbv_ptd_<pid>_<khoá> dựng từ db/migrations của nhánh (gồm 099 rồi 102) bằng db-thu-dbv.mjs; mỗi ca
 // nhân bản một DB mẫu (field_assertions chỉ thêm, không TRUNCATE được). Phát biểu kế thừa sinh bằng chính bộ ghi (--ghi), không
 // chèn tay; phát biểu dự án trên bài (đầu vào, do DV6 sinh) chèn tay theo khuôn của DV6.
 // Chiều đỏ: (i) chép pipeline/lib + tệp lệnh vào thư mục tạm trong pipeline/ (giữ đường import), thay đúng một chuỗi;
-// (ii) bản 099 đột biến dựng DB mẫu riêng (thay của taoDbThu).
+// (ii) bản 102 đột biến dựng DB mẫu riêng (thay của taoDbThu) — 102 định nghĩa lại hàm phường của 099.
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -20,6 +20,7 @@ import { GOC, MAY_CHU, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
 const PIPE = join(import.meta.dirname, "..");
 const LENH = join(PIPE, "scripts/phuong-tu-du-an.mjs");
 const MIG = join(GOC, "db/migrations/099_phuong_tu_du_an.sql");
+const MIG_VA = join(GOC, "db/migrations/102_phuong_tu_du_an_va.sql");   // 102 định nghĩa lại hàm phường của 099
 const FA = ASSERTION_FIELD.area_id;
 const FP = ASSERTION_FIELD.project_node_id;
 const DB_URL = process.env.DATABASE_URL;
@@ -51,20 +52,24 @@ const that = async () => ({
   ghiTin: (await import(pathToFileURL(join(PIPE, "lib/write-offers.mjs")).href)).writeOffers,
 });
 
-/** Bản 099 đột biến (thay đúng một chuỗi) — tệp cùng tên trong thư mục tạm, cho taoDbThu({thay}). */
+/**
+ * Bản 102 đột biến (thay đúng một chuỗi) — tệp cùng tên trong thư mục tạm, cho taoDbThu({thay}). Đột biến nhắm 102 vì 102
+ * định nghĩa lại hàm resolve_offer_area_du_an sau 099: đột biến 099 sẽ bị 102 ghi đè.
+ */
 function migDot(cu, moi) {
   const dir = mkdtempSync(join(tmpdir(), "ptd-mig-"));
   tam.push(dir);
-  const src = readFileSync(MIG, "utf8");
-  assert.ok(src.includes(cu), `đột biến 099 rỗng: không thấy «${cu.slice(0, 60)}»`);
-  const f = join(dir, "099_phuong_tu_du_an.sql");
+  const src = readFileSync(MIG_VA, "utf8");
+  assert.ok(src.includes(cu), `đột biến 102 rỗng: không thấy «${cu.slice(0, 60)}»`);
+  const f = join(dir, "102_phuong_tu_du_an_va.sql");
   writeFileSync(f, src.replace(cu, moi));
   return f;
 }
-const DOT_099_GIU_PHUONG = ["CASE WHEN ar.region_type = 'submarket' THEN g.goc", "CASE WHEN false THEN g.goc"];
-const DOT_099_GOC = [
+const DOT_102_GIU_PHUONG = ["CASE WHEN ar.region_type = 'submarket' THEN g.goc", "CASE WHEN false THEN g.goc"];
+const DOT_102_GOC = [
   "CASE WHEN o.la_nhan AND o.fp ->> 'v' IS NOT DISTINCT FROM o.cot THEN o.fp ->> 'goc' ELSE o.cot END AS goc",
   "o.cot AS goc"];
+const DOT_102_PHUONG_CON = ["JOIN areas aw ON aw.id = fa.value AND aw.region_type = 'submarket'", ""];
 
 // ---------- DB thử ----------
 const db = {};
@@ -84,8 +89,9 @@ before(async () => {
   if (BO_DB) return;
   await Promise.all([
     taoDbThu(TEN("mau")),
-    taoDbThu(TEN("mau3"), { thay: migDot(...DOT_099_GIU_PHUONG) }),
-    taoDbThu(TEN("mau4"), { thay: migDot(...DOT_099_GOC) }),
+    taoDbThu(TEN("mau3"), { thay: migDot(...DOT_102_GIU_PHUONG) }),
+    taoDbThu(TEN("mau4"), { thay: migDot(...DOT_102_GOC) }),
+    taoDbThu(TEN("mau5"), { thay: migDot(...DOT_102_PHUONG_CON) }),
     moDb("t095", { hetSo: 95 }),
     moDb("t098", { hetSo: 98 }),
   ]);
@@ -93,7 +99,7 @@ before(async () => {
 after(async () => {
   for (const [k, c] of Object.entries(db)) { await c.end().catch(() => {}); await xoaDbThu(TEN(k)); }
   for (const c of moi) { await c.c.end().catch(() => {}); await xoaDbThu(c.ten); }
-  for (const k of ["mau", "mau3", "mau4"]) await xoaDbThu(TEN(k));
+  for (const k of ["mau", "mau3", "mau4", "mau5"]) await xoaDbThu(TEN(k));
   for (const d of tam) rmSync(d, { recursive: true, force: true });
 });
 let nCa = 0;
@@ -273,7 +279,7 @@ test("PTD-AC-3 qua bước ghi tin S03 (writeOffers của transform-zalo): cột
   assert.equal((await cot(c, "T-TINH-MOT")).area_id, W("w1"), "PTD-AC-3 bước S03 xoá phường kế thừa");
   assert.equal((await cot(c, "T-W2-MOT")).area_id, W("w2"), "PTD-AC-3 tin có phường bị đổi");
 });
-test("PTD-AC-3 chiều đỏ: 099 bỏ điều kiện «cột không phải phường»", { skip: BO_DB }, async () => {
+test("PTD-AC-3 chiều đỏ: 102 bỏ điều kiện «cột không phải phường»", { skip: BO_DB }, async () => {
   await assert.rejects(kiemAc3(await xoa("mau3"), await that()), /PTD-AC-3 tin có phường bị đổi/);
 });
 test("PTD-AC-3 chiều đỏ: bộ ghi đổi khoá chủ thể — phát biểu không tới cột", { skip: BO_DB }, async () => {
@@ -290,7 +296,7 @@ test("PTD-AC-4 chiều đỏ: tệp lệnh bỏ bước rút", { skip: BO_DB }, 
     "WHERE false AND fa.retracted_at IS NULL AND fa.field = $1 AND fa.rule_id = $2");
   await assert.rejects(kiemAc4(await xoa(), dot), /PTD-AC-4 phát biểu kế thừa còn sống sau khi gỡ dự án/);
 });
-test("PTD-AC-4 chiều đỏ: 099 coi mọi cột phường là giữ nguyên", { skip: BO_DB }, async () => {
+test("PTD-AC-4 chiều đỏ: 102 coi mọi cột phường là giữ nguyên", { skip: BO_DB }, async () => {
   await assert.rejects(kiemAc4(await xoa("mau4"), await that()), /PTD-AC-4 phường kế thừa còn trên cột sau khi rút/);
 });
 
@@ -346,6 +352,42 @@ test("PTD-AC-5 chiều đỏ: bước ghi tin bỏ lời gọi phân xử", { sk
   await assert.rejects(kiemAc5(await xoa(), dot, osm), /PTD-AC-5 S03 chạy lại xoá phường kế thừa/);
 });
 
+/**
+ * Phường kế thừa bị dọn: reassign-areas --xoa-khu-vuc-lac đặt NULL cho tin rồi xoá khu vực lạc, phát biểu kế thừa còn sống.
+ * Lượt phân xử kế không được đưa mã đã xoá vào cột (khoá ngoại) — bản vá 102.
+ */
+async function kiemAc5Don(c, { lenh }, osm) {
+  const { runReassign } = await import(pathToFileURL(join(PIPE, "reassign-areas.mjs")).href);
+  const im2 = { log() {}, warn() {} };
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('hanoi__ptd', 'hanoi', 'ptd-thu', '{}')`);
+  await c.query(`INSERT INTO stg_osm_boundaries (osm_id, snapshot_id, name, payload) VALUES ($1, 'hanoi__ptd', $2, $3)`,
+    [osm.osm_id, osm.name, osm.payload]);
+  await runReassign(c, ["hanoi"], { log: im2 });
+  await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
+                 VALUES ('vn-hanoi-ptd-lac', 'vn-hanoi', 'submarket', 'Lạc', 'vn', '{"source": "osm-phuong", "osm_id": "1"}')`);
+  const D9 = await nut(c, "D9", ["vn-hanoi-ptd-lac"]);
+  await tin(c, "T-9", ["Z"], "vn-hanoi"); await duAn(c, "Z", D9);
+  await lenh.chay(c, { ghi: true, log: im.log });
+  assert.equal((await cot(c, "T-9")).area_id, "vn-hanoi-ptd-lac", "PTD-AC-5 lượt đầu: tin không nhận phường lạc");
+  await runReassign(c, ["hanoi"], { log: im2, xoaKhuVucLac: true });
+  assert.equal((await c.query(`SELECT count(*)::int n FROM areas WHERE id = 'vn-hanoi-ptd-lac'`)).rows[0].n, 0,
+    "PTD-AC-5 reassign-areas không xoá khu lạc");
+  try {
+    await phanXu(c);
+  } catch (e) {
+    assert.fail(`PTD-AC-5 phường kế thừa đã xoá làm vỡ phân xử: ${e.message}`);
+  }
+  const t9 = await cot(c, "T-9");
+  assert.equal(t9.area_id, null, "PTD-AC-5 tin của phường đã xoá không giữ NULL");
+  assert.notEqual(t9.fp?.nguon, "du-an", "PTD-AC-5 tin của phường đã xoá còn nhãn du-an");
+}
+test("PTD-AC-5 phường kế thừa bị reassign-areas dọn: phân xử không vỡ, tin giữ NULL", { skip: BO_DB }, async () => {
+  await kiemAc5Don(await xoa(), await that(), moiOsm());
+});
+test("PTD-AC-5 chiều đỏ: 102 bỏ điều kiện phường còn trong areas", { skip: BO_DB }, async () => {
+  await assert.rejects(kiemAc5Don(await xoa("mau5"), await that(), moiOsm()), /PTD-AC-5 phường kế thừa đã xoá làm vỡ phân xử/);
+});
+
 // ---------- PTD-AC-6 ----------
 test("PTD-AC-6 đếm độc lập: tin có phường sau = trước + K, tin vốn có phường không đổi", { skip: BO_DB }, async () => {
   const c = await xoa();
@@ -378,12 +420,17 @@ test("PTD-AC-6 đếm độc lập: tin có phường sau = trước + K, tin v�
 });
 
 // ---------- PTD-AC-7 ----------
-test("PTD-AC-7 áp 099 lần hai không đổi thân hàm; thân hàm khác bản dựng tới 098", { skip: BO_DB }, async () => {
+test("PTD-AC-7 áp lại 099 rồi 102 không đổi thân hai hàm; thân hàm khác bản dựng tới 098", { skip: BO_DB }, async () => {
   const c = await xoa();
   const def = async (k) => (await k.query("SELECT pg_get_functiondef('resolve_offer_fields(text[])'::regprocedure) d")).rows[0].d;
+  const defVung = async (k) => (await k.query("SELECT pg_get_functiondef('resolve_offer_area_du_an(text[])'::regprocedure) d")).rows[0].d;
   const d1 = await def(c);
+  const v1 = await defVung(c);
   apTep(moi.at(-1).ten, MIG);
+  apTep(moi.at(-1).ten, MIG_VA);
   assert.equal(await def(c), d1, "PTD-AC-7 áp 099 lần hai đổi thân hàm");
+  assert.equal(await defVung(c), v1, "PTD-AC-7 áp lại 099 rồi 102 đổi hàm phường");
+  assert.match(v1, /JOIN areas aw/, "PTD-AC-7 hàm phường thiếu bản vá 102");
   assert.notEqual(await def(db.t098), d1, "PTD-AC-7 đối chứng: thân hàm có 099 trùng bản dựng tới 098");
   assert.match(d1, /resolve_offer_area_du_an/, "PTD-AC-7 thân hàm thiếu lời gọi 099");
 });
