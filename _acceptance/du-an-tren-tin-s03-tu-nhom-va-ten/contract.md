@@ -5,7 +5,7 @@ slug: du-an-tren-tin-s03-tu-nhom-va-ten
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-du-an-tren-tin-s03-tu-nhom-va-ten-design.md
