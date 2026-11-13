@@ -38,7 +38,7 @@ bước S09 trong giao dịch dựng của `pipeline/danh-ba-vat-the.mjs`, sau b
 - Test `pipeline/lib/s09-du-an.test.mjs`: ma trận bốn ô AC-2 + ma trận cụm. Kiểm: `node --test pipeline/lib/s09-du-an.test.mjs`.
 
 ### T3 — bước S09 trong dựng (E3, E4, E5, E8, E10)
-- `pipeline/lib/danh-ba-s09.mjs` `buocS09(c, { khu, isoKhu, noi, log })` gọi trong `dung()` sau bước S08, cùng giao dịch;
+- `pipeline/lib/s09-dung.mjs` `buocS09(c, { khu, isoKhu, noi, log })` gọi trong `dung()` sau bước S08, cùng giao dịch;
   `dung()` nhận `noiS09` (mặc định `NOI_KHU_S09`), tổng kết thêm khoá `s09`.
 - `SQL_KHU_CUA_TOA` leo tới ông (cụm → phân khu → khu).
 - Itest `pipeline/scripts/danh-ba-s09.itest.mjs` (DB thử `oneinvest_dbv_s09_<pid>` qua `db-thu-dbv.mjs`), ca DA31-AC-1,3,4,5,8,10.

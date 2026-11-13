@@ -5,7 +5,7 @@ slug: toa-s09-hai-khu-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-toa-s09-hai-khu-vao-danh-ba-design.md
