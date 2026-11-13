@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { sqlNapLai } from "./nap-view-song.mjs";
+import { sqlNapLaiDayDu } from "./nap-view-song.mjs";
 import { napLai095 } from "./nap-095.mjs";
 
 export const MIG_061 = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../db/migrations/061_dac_trung_nha.sql"), "utf8");
@@ -16,7 +16,7 @@ export const MIG_069 = readFileSync(join(dirname(fileURLToPath(import.meta.url))
 /** Nạp 061 trong giao dịch đang mở (áp lại an toàn — 061 idempotent). */
 export async function napDacTrung(client, { sql = MIG_061 } = {}) {
   await client.query("SELECT pg_advisory_xact_lock(33033)");
-  await client.query(await sqlNapLai(client, sql));
+  await client.query(await sqlNapLaiDayDu(client, sql));
   await client.query(MIG_069);
   await napLai095(client);
 }
