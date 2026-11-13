@@ -36,7 +36,8 @@ async function banDot(tep, cu, moi) {
   const src = readFileSync(dich, "utf8");
   assert.ok(src.includes(cu), `đột biến rỗng: không thấy chuỗi «${cu.slice(0, 60)}»`);
   writeFileSync(dich, src.replace(cu, moi));
-  return import(pathToFileURL(join(dir, "scripts/du-an-tren-tin-s03.mjs")).href);
+  banDot.lenh = join(dir, "scripts/du-an-tren-tin-s03.mjs");
+  return import(pathToFileURL(banDot.lenh).href);
 }
 const that = () => import(pathToFileURL(LENH).href);
 
@@ -295,8 +296,8 @@ async function fxCoDong(c) {
   await doiAc4(c, fx);
   return fx;
 }
-function cli(url, args, env = {}) {
-  return spawnSync(process.execPath, [LENH, ...args], { env: { ...process.env, DATABASE_URL: url, ...env }, encoding: "utf8" });
+function cli(url, args, env = {}, lenh = LENH) {
+  return spawnSync(process.execPath, [lenh, ...args], { env: { ...process.env, DATABASE_URL: url, ...env }, encoding: "utf8" });
 }
 
 test("DAT-AC-6 chạy thử không đổi tập dòng sống; lỗi giữa chừng không để lại thay đổi", { skip: BO_DB }, async () => {
@@ -423,6 +424,29 @@ test("DAT-AC-7b chạy thử trên DB của lượt (bản sao dữ liệu thậ
   } finally {
     await c.end();
   }
+});
+
+test("DAT-AC-1 chiều đỏ: bỏ luật «mọi dòng sổ cùng một dự án» → nhóm đăng ký hai lần lệch vẫn ghi", { skip: BO_DB }, async () => {
+  const c = await xoa(); await fxAc1(c);
+  const m = await banDot("lib", "if (mot.length !== ds.length || pids.size > 1)", "if (pids.size > 1)");
+  await m.chay(c, { ghi: true, ...im });
+  const k = cua(await dong(c), "M1", RULE.nhom).length;
+  assert.throws(() => assert.equal(k, 0, "DAT-AC-1 nhóm sổ lệch sinh phát biểu"), /DAT-AC-1 nhóm sổ lệch sinh phát biểu/);
+});
+
+test("DAT-AC-3 chiều đỏ: tin có bài chung với tin mâu thuẫn rơi im lặng", { skip: BO_DB }, async () => {
+  const c = await xoa(); await fxAc3(c);
+  const m = await banDot("lib", "if (!tot.length) {", "if (false) {");
+  const bang = join(tmpdir(), `dat-mt-do-${process.pid}.tsv`); tam.push(bang);
+  await m.chay(c, { ghi: true, bangMauThuan: bang, ...im });
+  const ma = readFileSync(bang, "utf8").trim().split("\n").slice(1).map((l) => l.split("\t")[0]).sort();
+  assert.throws(() => assert.deepEqual(ma, ["T1", "T2", "T4"], "DAT-AC-3 tin rơi im lặng khỏi bảng mâu thuẫn"), /DAT-AC-3 tin rơi im lặng/);
+});
+
+test("DAT-AC-6 chiều đỏ: lệnh thật trả 1 thay vì 2 khi DB thiếu", { skip: BO_DB }, async () => {
+  await banDot("scripts", 'e.code === "THIEU_DB" || e.code === "DOI_SO" ? 2 : 1', "1");
+  const b = cli(`${MAY_CHU}/${TEN("truoc")}`, [], {}, banDot.lenh);
+  assert.throws(() => assert.equal(b.status, 2, "DAT-AC-6 mã thoát thiếu DB không phải 2"), /DAT-AC-6 mã thoát/);
 });
 
 // ---------- AC-8: phụ thuộc và hằng (không cần DB) ----------
