@@ -31,3 +31,12 @@ ON12-AC-7 vẫn đỏ khi có vùng lạ.
 
 - OOS-1: Đổi mã vùng thu S06 sang mã thị trường mới: mã vùng là việc của làn thu.
 - OOS-2: Chạy bộ test app đầy đủ trên máy: khoá chấm đang có người giữ chờ bản sửa; CI chạy bộ đầy đủ.
+
+## Notes
+
+- `binh-duong` là VÙNG THU của nguồn S06 (nguồn vẫn chia theo tỉnh cũ), không phải đơn vị hành chính hiện hành; nhãn
+  «(nay thuộc Hồ Chí Minh)» nói rõ điều đó. Không đổi mã vùng S06 (làn thu), không thêm dòng `areas`, không sửa DB.
+- Nơi khác cũng in tên qua `marketNameOf`, nên cùng nhận bản sửa (không mở rộng sửa thêm):
+  `app/src/components/ops/overview/status.ts`, `app/src/components/ops/overview/objectives-grid.tsx` (trang `/ops`),
+  `app/src/components/ops/quality-tables.tsx` (`/ops/quality`), `app/src/lib/dq-labels.ts` (nhãn dòng kiểm chất lượng).
+  Invest không gọi hàm này.
