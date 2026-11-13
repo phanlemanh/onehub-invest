@@ -16,12 +16,12 @@ const HN = { latitude: 21.0285, longitude: 105.8542 };
 // toạ độ số thực, street_number là chuỗi (có «số 88»).
 const MA_TRAN = [
   ["số nhà · hợp lệ", { payload: { street_number: "số 88" } }, [f("street_number", "số 88", "payload.street_number")]],
-  ["số nhà · chỉ streetnumber_display", { payload: { streetnumber_display: "208" } }, [f("street_number", "208", "payload.streetnumber_display")]],
+  ["số nhà · chỉ cờ streetnumber_display (không đọc)", { payload: { streetnumber_display: "1" } }, []],
   ["số nhà · rác (chữ rỗng)", { payload: { street_number: "  " } }, []],
   ["số nhà · vắng", { payload: {} }, []],
-  ["mã căn · hợp lệ", { payload: { unitnumber_display: "A-12.05" } }, [f("unit_number", "A-12.05", "payload.unitnumber_display")]],
+  ["mã căn · hợp lệ", { payload: { unitnumber: "A-12.05" } }, [f("unit_number", "A-12.05", "payload.unitnumber")]],
   ["mã căn · chỉ unitnumber", { payload: { unitnumber: "1205" } }, [f("unit_number", "1205", "payload.unitnumber")]],
-  ["mã căn · rác (chữ rỗng)", { payload: { unitnumber_display: "" } }, []],
+  ["mã căn · rác (chữ rỗng)", { payload: { unitnumber: "" } }, []],
   ["ngang + dài · số JSON", { payload: { width: 4.5, length: 15 } }, [f("frontage_length", "4.5", "payload.width"), f("lot_size_dimensions", "4.5 x 15", "payload.width+payload.length")]],
   ["ngang + dài · chuỗi phẩy thập phân", { payload: { width: "4,5", length: "15" } }, [f("frontage_length", "4.5", "payload.width"), f("lot_size_dimensions", "4.5 x 15", "payload.width+payload.length")]],
   ["ngang · chuỗi kèm đơn vị", { payload: { width: "5m" } }, [f("frontage_length", "5", "payload.width")]],
