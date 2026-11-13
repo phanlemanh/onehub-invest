@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 3fb19b808eb895af5b9921766ba74a5b72a52315
-human_signoff:
+human_signoff: Mạnh 2026-11-13
 ---
 
 # Evidence Report: ma-can-s06-sach

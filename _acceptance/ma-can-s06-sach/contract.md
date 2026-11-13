@@ -5,7 +5,7 @@ slug: ma-can-s06-sach
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-12
 design_doc: docs/superpowers/specs/2026-11-12-ma-can-s06-sach-design.md
@@ -73,3 +73,6 @@ rác/sạch) và AC-5 (rác theo nguồn × sạch); đổi lại không có b�
 - OOS-4: Bộ thu S06 (làn ZCode) — cờ hiển thị vẫn lưu trong thô.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-1: Lệnh dọn rác S06 còn viết cứng tên trường; nếu sau này tên trường đổi thì lệnh có thể bỏ sót rác hay đếm sai số tin có toà.
+  - Ngoài-2: Bài kiểm bảng nghĩa loại dự án chỉ kiểm chữ có mặt, không kiểm số; bảng bị sửa tay sai số thì bài kiểm vẫn xanh.
