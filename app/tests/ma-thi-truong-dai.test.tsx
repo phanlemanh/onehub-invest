@@ -33,7 +33,8 @@ const MA_TRAN: [string, string | null][] = [
   ["vn-thanh-pho-hue", "Thành phố Huế"],
   ["hanoi", "Hà Nội"],
   ["hcmc", "Hồ Chí Minh"],
-  ["binh-duong", null], // đã nhập vào TP.HCM, areas không có mã — có chủ đích
+  ["binh-duong", "Bình Dương (nay thuộc Hồ Chí Minh)"], // vùng thu S06 theo tỉnh cũ: areas không có mã, tên từ TINH_CU (nhan-vung-moi-ops)
+  ["vung-la", null], // mã lạ vẫn báo
   ["danang", null], // không khớp mờ
 ]
 
