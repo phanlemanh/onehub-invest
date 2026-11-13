@@ -5,7 +5,11 @@ slug: itest-nap-lai-migration-cu-sau-095
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-11-13T12:50:00Z
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-11-12-itest-nap-lai-migration-cu-sau-095-design.md
 ---
 
