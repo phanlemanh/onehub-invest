@@ -32,8 +32,8 @@ jobs:
           cache-dependency-path: |
             app/package-lock.json
             pipeline/package-lock.json
-      - name: cài phụ thuộc # test của app chạy pipeline/push-ops-facts.mjs
-        run: (cd app && npm ci) && (cd pipeline && npm ci)
+      - name: cài phụ thuộc # test của app chạy pipeline/push-ops-facts.mjs; test CG8 gọi route data-api
+        run: (cd app && npm ci) && (cd pipeline && npm ci) && (cd data-api && npm ci)
       - name: typecheck
         working-directory: app
         run: npx next typegen && npx tsc --noEmit

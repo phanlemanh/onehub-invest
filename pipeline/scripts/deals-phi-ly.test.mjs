@@ -84,10 +84,10 @@ async function thuoc(c) {
     await c.query(
       `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
          property_type, area_id, area_m2, price_perm2)
-       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'unknown', $2, 80, $3)`,
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'apartment', $2, 80, $3)`,
       [oid, PHUONG, M],
     );
-    const pid = (await c.query(`INSERT INTO properties (kind, area_id) VALUES ('sale', $1) RETURNING id`, [PHUONG])).rows[0].id;
+    const pid = (await c.query(`INSERT INTO properties (kind, area_id, property_type) VALUES ('sale', $1, 'apartment') RETURNING id`, [PHUONG])).rows[0].id;
     await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [pid, oid]);
   }
   const ruler = (await c.query(`SELECT area_id, m FROM v_ruler_p2_area`)).rows;
@@ -107,7 +107,7 @@ async function fixture(c) {
     await c.query(
       `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
          seller_phone_hash, seller_phone, property_type, area_id, area_m2, bedrooms, price_perm2, bait_gap_pct)
-       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', $2, $8, 'unknown', $3, $4, $5, $6::numeric,
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', $2, $8, 'apartment', $3, $4, $5, $6::numeric,
                ROUND((1 - $6::numeric / $7::numeric) * 100, 1))`,
       [id, H, ruler.area_id, area, beds, perm2, m, SO_H],
     );

@@ -60,6 +60,13 @@ export function dealHang(d: DealRow, vai: { xemNoiDung: boolean; mayThu: boolean
   };
 }
 
+/**
+ * Thước của Căn giá tốt (CG8): trung vị giá/m² theo phường × loại hình (`v_ruler_p2`), đúng thước `refresh-bait-gap` dùng tính
+ * `bait_gap_pct` — trung vị và số căn in trên thẻ là của chính thước đó. Loại chưa rõ không có thước.
+ */
+export const THUOC_CUNG_LOAI = `SELECT area_id, property_type, m, n FROM v_ruler_p2
+  WHERE property_type IS NOT NULL AND property_type <> 'unknown'`;
+
 /** Cột của một tin. `cloud`: không đọc cột ngoài CLOUD_ALLOW; `unit_number`, `street_number` ở lại máy thu. */
 const cotTin = (cloud: boolean) => `o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
               o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
@@ -95,10 +102,10 @@ const noiBai = (cloud: boolean) => (cloud
  */
 export function dealsSql({ cloud = false }: { cloud?: boolean } = {}): string {
   const bai = noiBai(cloud);
-  return `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area), base AS (
+  return `WITH ruler AS (${THUOC_CUNG_LOAI}), base AS (
        SELECT ${cotTin(cloud)}
        FROM sale_offers o
-       JOIN ruler r ON r.area_id = o.area_id
+       JOIN ruler r ON r.area_id = o.area_id AND r.property_type = o.property_type
        LEFT JOIN areas a ON a.id = o.area_id
        LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
        WHERE o.price_tier = 'P1'
@@ -122,7 +129,7 @@ export function dealSql({ cloud = false }: { cloud?: boolean } = {}): string {
   return `WITH b AS (
        SELECT ${cotTin(cloud)}
        FROM sale_offers o
-       LEFT JOIN v_ruler_p2_area r ON r.area_id = o.area_id
+       LEFT JOIN (${THUOC_CUNG_LOAI}) r ON r.area_id = o.area_id AND r.property_type = o.property_type
        LEFT JOIN areas a ON a.id = o.area_id
        LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
        WHERE o.offer_id = $1 AND o.price_tier = 'P1' AND o.kind = 'sale'

@@ -1,0 +1,80 @@
+{
+ "feature_plain": "Tin S06 thôi mang mã căn «0», «1» và số nhà «0» bịa ra từ cờ hiển thị của nguồn, và có thêm toà lấy từ trường toà của nguồn; kèm một lệnh dọn rác cũ (mặc định chỉ đếm) và bảng đo nghĩa loại dự án của nguồn.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ lấy mã căn chỉ từ trường mã căn thật của nguồn, bỏ qua cờ hiển thị; mã «0», «1» không còn thành mã căn."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ lấy số nhà chỉ từ trường số nhà thật; số nhà toàn chữ số 0 bị bỏ, số nhà «1» giữ."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ đọc trường toà của nguồn (A, B, A1…) thành toà của tin, bỏ ô rỗng."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ chạy bộ đọc mới trong lượt nạp đêm: tin có cả rác lẫn mã thật được thay bằng mã thật, tin chỉ có rác giữ nguyên tới lượt dọn."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ có lệnh dọn: mặc định chỉ đếm rác và tỉ lệ tin có toà, không ghi; khi được bảo ghi thì rút đúng rác S06, giữ mọi thứ khác, tính lại cột mã căn, số nhà của tin."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ có bảng đếm loại dự án của nguồn theo loại nhà người bán chọn, đặt cạnh giả thuyết của ZCode, để anh tự cân."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ giữ bộ kiểm pipeline xanh."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG rút rác trên DB máy thu hay cloud trong vòng này — lượt ghi chờ lời anh sau khi gộp."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG đọc tầng S06, KHÔNG dùng loại dự án để gán loại hình hay dự án."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG gắn toà vào danh bạ toà."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG đụng bộ thu S06 (làn ZCode)."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Bỏ quét không gian tiêu chí: các ma trận viết trước trong AC-1 tới AC-3 (cờ × trường thật × giá trị rác, sạch) và AC-5 (rác theo nguồn × sạch) là toàn bộ phạm vi; không có bằng chứng độ phủ ngoài chúng."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Ngưỡng 80% để kết luận «khớp/lệch» cho bảng loại dự án là máy tự đặt — đã bỏ cột kết luận, bảng chỉ đưa số."
+  },
+  {
+   "i": 1,
+   "p": "Ngưỡng «≥ 95% tin có toà» chưa có chỗ in số — lệnh dọn nay in dòng toà: số tin có toà thô, số tin có toà, tỉ lệ."
+  },
+  {
+   "i": 2,
+   "p": "Phép đo «lượt nạp không rút rác» dễ xanh giả vì rác cài trên tin không được đọc lại — nay cài trên chính tin được đọc, và tách tin bị thay với tin giữ."
+  },
+  {
+   "i": 3,
+   "p": "Lệnh dọn chưa được chứng không rút nhầm dữ liệu nguồn khác và tính lại cột đúng — đã thêm ca S03, ca phương pháp khác, ca tin có mã từ chữ bài."
+  },
+  {
+   "i": 4,
+   "p": "Bảng loại dự án có thể viết tay mà không ai biết — nay mang dòng «sinh bởi lệnh» và dòng tổng 12.856; chuyện «không nới ca test khác» để anh đọc diff ở Cổng Bằng chứng."
+  }
+ ],
+ "decisions_plain": []
+}

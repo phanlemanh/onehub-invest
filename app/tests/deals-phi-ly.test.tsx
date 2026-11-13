@@ -51,10 +51,10 @@ async function thuoc(c: pg.Client) {
     await c.query(
       `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
          property_type, area_id, area_m2, price_perm2)
-       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'unknown', $2, 80, $3)`,
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'apartment', $2, 80, $3)`,
       [oid, PHUONG, M],
     );
-    const pid = (await c.query(`INSERT INTO properties (kind, area_id) VALUES ('sale', $1) RETURNING id`, [PHUONG])).rows[0].id;
+    const pid = (await c.query(`INSERT INTO properties (kind, area_id, property_type) VALUES ('sale', $1, 'apartment') RETURNING id`, [PHUONG])).rows[0].id;
     await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [pid, oid]);
   }
   const ruler = (await c.query(`SELECT area_id, m FROM v_ruler_p2_area`)).rows;
@@ -72,7 +72,7 @@ async function seed(c: pg.Client, gaps: (number | null)[]): Promise<string[]> {
     await c.query(
       `INSERT INTO sale_offers (offer_id, source, kind, confidence, first_seen, last_seen, post_ids, price_tier,
          property_type, area_id, area_m2, bedrooms, price_vnd, price_perm2, n_reposts, bait_gap_pct)
-       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'unknown', $2, 80, 2, 4000000000,
+       VALUES ($1, 'S03', 'sale', 'high', now(), now(), '{}', 'P1', 'apartment', $2, 80, 2, 4000000000,
                $3::numeric, 1, $4)`,
       // giá/m² cố ý KHÔNG khớp số giảm — chứng trang đọc bait_gap_pct chứ không tự tính lại
       [id, ruler.area_id, Math.round(Number(ruler.m) * 0.99), gap],

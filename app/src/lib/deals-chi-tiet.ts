@@ -62,7 +62,16 @@ export type DealHang = DealChiTiet & {
 export const soPct = (pct: number): string => String(Number(Math.abs(pct).toFixed(1)));
 
 /** Cùng điều kiện với WHERE của `dealsSql`; `quaHan` do SQL tính vì mốc 45 ngày theo giờ DB. */
-export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, quaHan: boolean): string | null {
+export function lyDoRoi(
+  d: Pick<DealChiTiet, "discountPct" | "medianPerm2"> & { propertyType?: string | null },
+  quaHan: boolean,
+): string | null {
+  // CG8: thước là phường × loại hình (v_ruler_p2), không lùi về thước cả phường (Hỏi-2) — nên tin chưa rõ loại hay phường
+  // thiếu thước cùng loại không có số giảm, và lý do nói đúng vì sao. `propertyType` vắng (undefined) là nơi gọi không mang loại.
+  if (d.propertyType !== undefined && d.medianPerm2 === null) {
+    const nhan = loaiHinh(d.propertyType);
+    return nhan ? `Phường chưa đủ tin ${nhan.toLowerCase()} để dựng thước` : "Chưa rõ loại hình — không so được với thước cùng loại";
+  }
   if (d.discountPct === null || d.medianPerm2 === null) return "Không tính được mức giảm";
   if (quaHan) return `Tin quá ${NGAY_TOI_DA} ngày chưa thấy lại`;
   if (d.discountPct < 0) return `Đắt hơn thước phường ${soPct(d.discountPct)}%, không phải căn giá tốt`;
@@ -71,14 +80,24 @@ export function lyDoRoi(d: Pick<DealChiTiet, "discountPct" | "medianPerm2">, qua
   return null;
 }
 
+/**
+ * Cụm thước trong câu cho người (CG8): «thước căn hộ cùng phường». Tin có số giảm luôn có loại đã biết; không có loại thì giữ
+ * «thước phường» (chỉ còn ở dữ liệu thử cũ không mang loại).
+ */
+export function thuocCua(t: string | null | undefined): string {
+  const nhan = loaiHinh(t ?? null);
+  return nhan ? `thước ${nhan.toLowerCase()} cùng phường` : "thước phường";
+}
+
 /** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
 export function cauChungMinh(d: DealChiTiet): string | null {
   if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
   // Trang một căn mở cả căn đã rời danh sách (Hỏi-1), nên câu phải đúng ngoài khoảng ngưỡng; số giảm âm là căn đắt hơn thước.
   const chenh = fmtInt(Math.abs(d.medianPerm2 - d.pricePerm2) / 1e6);
   const pct = soPct(d.discountPct);
-  if (d.discountPct < 0) return `Đắt hơn thước phường ${chenh} tr/m², tức ${pct}%, nên không phải căn giá tốt.`;
-  const re = `Rẻ hơn thước phường ${chenh} tr/m², tức ${pct}%`;
+  const thuoc = thuocCua(d.propertyType);
+  if (d.discountPct < 0) return `Đắt hơn ${thuoc} ${chenh} tr/m², tức ${pct}%, nên không phải căn giá tốt.`;
+  const re = `Rẻ hơn ${thuoc} ${chenh} tr/m², tức ${pct}%`;
   if (d.discountPct < NGUONG_VAO_PCT) return `${re}, chưa tới ngưỡng vào danh sách ${NGUONG_VAO_PCT}%.`;
   if (d.discountPct > NGUONG_LOAI_PCT) return `${re}, vượt ngưỡng loại ${NGUONG_LOAI_PCT}% nên đã rời danh sách.`;
   return d.discountPct > NGHI_NGO_PCT
