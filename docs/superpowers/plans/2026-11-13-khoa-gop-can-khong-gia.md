@@ -41,5 +41,19 @@
 - Kiểm: `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kgc --chay node --test --test-concurrency=1 tests/resolve-properties-khoa-gop.itest.mjs`
   — chạy trong khoá s4 (chép DB máy thu, chạy resolver trên dữ liệu thật).
 
+## Task 4 — Migration 101 đối soát chuyển link (phục vụ E10, AC-9; mở lại phạm vi 13/11)
+
+- Files: `db/migrations/101_doi_soat_chuyen_link.sql` (CREATE OR REPLACE `reconcile_stale_offers`, cùng chữ ký 044, chép thân 044
+  rồi đổi khối «Liên kết căn»): trước khi chép sang Y, nếu Y đã có link → `INSERT INTO property_offer_unlinks` trọn dòng link của X,
+  reason `'DA6 doi soat: tin ke ' || y || ' da gan can khac'`, đếm vào biến `journaled`; Y chưa có link → chép như cũ. Sau đó xoá
+  link của X như cũ. Tổng kết jsonb thêm khoá `links_journaled`. Không BEGIN/COMMIT; idempotent nhờ CREATE OR REPLACE.
+- Itest: ca «KGC-AC-9» cuối tệp `pipeline/tests/resolve-properties-khoa-gop.itest.mjs`, nguồn thử `kgc-ac9`, mã tin giả, áp 101
+  trong ca. Hai ca xanh: Y đã có căn khác (nhật ký đúng một dòng bằng ảnh chụp link X) · Y2 chưa có căn (nhận P3). Hai chiều đỏ trong
+  SAVEPOINT: (a) nạp thân hàm 044 từ `git show origin/main:db/migrations/044_nap_lai_khong_xoa.sql` (cắt đúng khối hàm) → nhật ký 0
+  dòng, link (P1, X) không còn ở đâu; (b) bản sao 101 bỏ câu ghi nhật ký → assert «KGC-AC-9» đỏ.
+- Verify: `cd pipeline && bash ../db/db-thu.sh oneinvest_suite_kgc --chay node --test --test-concurrency=1 --test-name-pattern=KGC-AC-9 tests/resolve-properties-khoa-gop.itest.mjs`
+  exit 0; áp 101 hai lần trên DB thử không lỗi.
+- Độc lập: không (dùng bảng nhật ký của 098, cùng tệp itest).
+
 ## Sau S3
 Hồ sơ đã ký chạm `resolve-properties.mjs` (dong-bang-stage-b-resolve, resolve-thu-lai-deadlock) cần ghim lại sau gộp — báo GS (OOS-3).
