@@ -11,12 +11,15 @@
  *   S03  airbnb_snapshots.collected_at của snapshot chứa bài S03 (agent_id không thuộc mã khác)
  *   S05  airbnb_snapshots.collected_at của snapshot chứa bài S05 (agent_id ∈ source_ids của S05)
  *   S06  airbnb_snapshots.collected_at của snapshot chứa tin stg_chotot_ads
+ *   S08  airbnb_snapshots.collected_at của snapshot chứa dòng stg_s08_inventory
+ *   S10, S11  airbnb_snapshots.collected_at của bản thu nguồn (chưa có bảng stg)
  * Thành phố = nơi mã đó có dữ liệu (không ghép chéo). Mã `completed` (S04) không đo.
  */
 
 /** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu —
- * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich). */
-export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 };
+ * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich).
+ * S10, S11 = 192 giờ (8 ngày, khuôn S01, S08): thu một lượt/tuần (khai-slo-s10-s11, giám sát đợt duyệt 12/11). */
+export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 };
 
 /** Cột thời gian (giờ thu) mà probe của từng mã lấy max — phép đo đối chiếu khai báo này với SQL thật. */
 export const TIME_SOURCE = {
@@ -26,6 +29,8 @@ export const TIME_SOURCE = {
   S05: "airbnb_snapshots.collected_at",
   S06: "airbnb_snapshots.collected_at",
   S08: "airbnb_snapshots.collected_at",
+  S10: "airbnb_snapshots.collected_at",
+  S11: "airbnb_snapshots.collected_at",
 };
 
 const ZALO_POSTS = `
@@ -59,6 +64,18 @@ export const PROBES = {
     sql: `SELECT s.city, max(s.collected_at) AS last
           FROM stg_s08_inventory i JOIN airbnb_snapshots s USING (snapshot_id)
           WHERE s.source = ANY($1) GROUP BY s.city`,
+    args: (ids) => [ids],
+  },
+  // S10, S11 chưa có bảng stg (bộ nạp làn ZCode chưa có): đo ở mức bản thu, như S01 — bản thu nào của nguồn
+  // cũng là một lần thu. Có bảng stg thì siết về join như S06, S08.
+  S10: {
+    sql: `SELECT city, max(collected_at) AS last FROM airbnb_snapshots
+          WHERE source = ANY($1) GROUP BY city`,
+    args: (ids) => [ids],
+  },
+  S11: {
+    sql: `SELECT city, max(collected_at) AS last FROM airbnb_snapshots
+          WHERE source = ANY($1) GROUP BY city`,
     args: (ids) => [ids],
   },
 };
