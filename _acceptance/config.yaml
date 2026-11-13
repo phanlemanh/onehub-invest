@@ -160,6 +160,10 @@ executors:
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
     so_lenh_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_tv4 --chay node --test scripts/lenh.test.mjs scripts/so-lenh.itest.mjs"   # so-lenh-bo-ap (TV4): hàm kiểm lệnh, migration 091, bộ áp ops-apply trên DB thử
     so_lenh_app: "cd app && bash ../db/db-thu.sh oneinvest_suite_tv4app --chay node --import tsx --test tests/so-lenh.test.tsx"   # so-lenh-bo-ap (TV4): route lệnh, kéo bằng token máy, kết quả qua ingest, trên DB thử
+    noi_da_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_nda --chay node --test scripts/bang-noi-du-an.itest.mjs"   # bang-noi-ma-du-an (DA3): migration, view, bí danh, bộ chuyển S08 thật, bộ đề xuất trên DB thử chép từ DB máy thu
+    noi_da_ham: "cd pipeline && node --test lib/ban-ghi-nguon.test.mjs lib/de-xuat-noi-du-an.test.mjs"   # bang-noi-ma-du-an (DA3): khuôn chung bản ghi nguồn, rỗng giả, ma trận căn cứ — không DB
+    noi_da_route: "cd app && bash ../db/db-thu.sh oneinvest_suite_ndar --chay node --import tsx --test tests/noi-du-an.test.tsx"   # bang-noi-ma-du-an (DA3): route duyệt cặp, thẻ luật, cấp lô/toà trên DB thử
+    noi_da_ui: "cd app && node --import tsx --test tests/noi-du-an-ui.test.tsx"   # bang-noi-ma-du-an (DA3): hạng mục «Nối dự án» dựng thật (jsdom)
     ops_apply_plist: "cd pipeline && node --test scripts/ops-apply-plist.test.mjs"   # so-lenh-sua-sau-tv4: plist ops-apply neo node tuyệt đối, dòng cài trong runtime-map chạy được dưới PATH của launchd
     cap_token_may: "node --test scripts/cap-token-may.test.mjs"   # so-lenh-sua-sau-tv4: cấp token máy qua Management API (mgmtExec giả), tự ghi cloud.env tạm
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
