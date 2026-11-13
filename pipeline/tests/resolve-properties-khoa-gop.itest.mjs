@@ -104,10 +104,12 @@ async function catDuLieu(c, nhan) {
     UNION SELECT p.stable_key FROM (${P}) l JOIN properties p ON p.id = l.property_id WHERE l.offer_id IN (${D}) AND p.stable_key IS NOT NULL
     UNION SELECT DISTINCT ck FROM kgc_tin WHERE ('x' || substr(md5('kgc-1|' || ck), 1, 7))::bit(28)::int % 100 < 3`);
   const giu = (await c.query(`SELECT count(*)::int tin, count(DISTINCT ck)::int cum FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu)`)).rows[0];
-  await c.query(`UPDATE sale_offer_records r SET retired_at = now(), retired_reason = 'het_trong_luot'
+  // Tin ngoài tập: retired + đổi source sang 'kgc-cat' để câu chèn của resolver (lọc source = 'S06') không quét chúng
+  // (không xoá được: mọi khoá ngoại trỏ vào bảng này là RESTRICT).
+  await c.query(`UPDATE sale_offer_records r SET retired_at = now(), retired_reason = 'het_trong_luot', source = 'kgc-cat'
     WHERE r.source = 'S06' AND r.retired_at IS NULL AND r.offer_id NOT IN (SELECT offer_id FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu))`);
   await c.query(`DELETE FROM stg_chotot_ads WHERE list_id NOT IN (SELECT list_id FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu))`);
-  await c.query("DROP TABLE kgc_tin; DROP TABLE kgc_giu");
+  await c.query("DROP TABLE kgc_tin; DROP TABLE kgc_giu; ANALYZE sale_offer_records; ANALYZE stg_chotot_ads");
   console.log(`KGC tập cắt (${nhan}): giữ ${giu.cum}/${tong.cum} cụm (${(100 * giu.cum / tong.cum).toFixed(1)}%), ${giu.tin}/${tong.tin} tin; cắt ${Date.now() - t0} ms`);
   return { giu, tong };
 }
@@ -214,12 +216,12 @@ test("KGC-AC-3 khôi phục được từ nhật ký", async () => {
     const hieu = (a, b) => [...a].filter((k) => !b.has(k)).length + [...b].filter((k) => !a.has(k)).length;
     await c.query("BEGIN");
     await boRangBuoc(c);
-    await c.query("SAVEPOINT do");
+    await c.query("SAVEPOINT sp_do");
     // Chiều đỏ: bỏ một dòng nhật ký trước khi chèn lại → hiệu khác rỗng.
     await c.query("DELETE FROM property_offer_unlinks WHERE ctid = (SELECT ctid FROM property_offer_unlinks LIMIT 1)");
     await c.query("INSERT INTO property_offers (property_id, offer_id, score, signals, linked_at) SELECT property_id, offer_id, score, signals, linked_at FROM property_offer_unlinks");
     assert.equal(hieu(await tapLink(c), ca.truoc), 1, "KGC-AC-3: bỏ một dòng nhật ký mà hiệu không là 1 dòng thiếu");
-    await c.query("ROLLBACK TO SAVEPOINT do");
+    await c.query("ROLLBACK TO SAVEPOINT sp_do");
     await c.query("INSERT INTO property_offers (property_id, offer_id, score, signals, linked_at) SELECT property_id, offer_id, score, signals, linked_at FROM property_offer_unlinks");
     assert.equal(hieu(await tapLink(c), ca.truoc), 0, "KGC-AC-3: chèn lại nhật ký không bằng ảnh chụp trước dọn");
     await c.query("ROLLBACK");

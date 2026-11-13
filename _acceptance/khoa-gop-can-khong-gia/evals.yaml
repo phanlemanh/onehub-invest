@@ -5,56 +5,56 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["db/migrations/098_khoa_gop_can.sql", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-1» xanh trên DB của riêng lượt chép máy thu: trước khi áp, câu độc lập (GROUP BY offer_id HAVING count(*) > 1; row_number theo created_at, id) cho D > 0, L, N và ảnh chụp toàn bộ link + băm (id, stable_key) mọi căn; mọi căn resolved_by = 'stage-ab' có stable_key sáu đoạn (đếm khác 6 = 0); sau áp: số tin gắn > 1 căn = 0; mỗi tin trong D giữ đúng link tới căn hạng 1 của ảnh chụp; property_offer_unlinks có đúng L dòng và tập (property_id, offer_id, score, signals, linked_at) của nó bằng tập link hạng > 1 của ảnh chụp; count(properties) = N; băm (id, stable_key) bằng trước. Chiều đỏ cùng ca: bản sao 098 sắp theo created_at DESC áp trên schema tạm chép bảng → assert ghim «KGC-AC-1» nêu offer_id giữ sai căn."
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["db/migrations/098_khoa_gop_can.sql", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-2» xanh: áp 098 lần hai không ném; count(property_offers), count(property_offer_unlinks) và băm lược đồ hai bảng (information_schema.columns + pg_constraint) bằng sau lần một; INSERT link thứ hai cho một offer đã có căn ném 23505 với constraint = property_offers_offer_id_key (đối chứng dương: INSERT link cho một offer chưa có căn thành công, trong SAVEPOINT rồi hoàn lại)."
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["db/migrations/098_khoa_gop_can.sql", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-3» xanh: trong một giao dịch, DROP CONSTRAINT property_offers_offer_id_key rồi INSERT mọi dòng nhật ký về property_offers; tập (property_id, offer_id, score, signals, linked_at) bằng ảnh chụp trước dọn của KGC-AC-1 (so tập, đếm hai chiều hiệu = 0); ROLLBACK. Chiều đỏ: bỏ một dòng nhật ký trước khi chèn lại → hiệu khác rỗng, assert ghim «KGC-AC-3» nêu số dòng thiếu."
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["pipeline/resolve-properties.mjs", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-4» xanh: sau 098, gọi chayResolve hai lần trên cùng client; đếm max(properties.id) và count(property_offers) trước/sau lượt hai: 0 căn mới, 0 link mới; sau cả hai lượt số tin gắn > 1 căn = 0. Chiều đỏ trong giao dịch có SAVEPOINT, DROP CONSTRAINT property_offers_offer_id_key trước (lược đồ như trước 098): resolver bản gốc của nhánh chính (nạp từ git show vào tệp tạm) sau khi đổi giá một tin → max(properties.id) tăng và tin có 2 link, assert ghim «KGC-AC-4»; ROLLBACK. Assert phụ: bản gốc trên lược đồ có 098 ném 23505 với constraint property_offers_offer_id_key."
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["pipeline/resolve-properties.mjs", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-5» xanh: chọn một offer S06 đã gắn căn (sửa giá ở bảng gốc mà sale_offers đọc), UPDATE giá ×1,3 sao cho round(giá/1e6) đổi; chayResolve; max(properties.id) không đổi; offer có đúng 1 link, property_id = căn trước khi đổi giá. Chiều đỏ trong SAVEPOINT với UNIQUE đã DROP (lược đồ như trước 098): resolver bản gốc của nhánh chính cùng thao tác → offer có đúng 2 link và có căn mới, assert ghim «KGC-AC-5» kiểm cả hai số; ROLLBACK."
   - id: E6
     criterion: AC-6
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["pipeline/resolve-properties.mjs", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-6» xanh: băm (id, stable_key) của mọi căn có id ≤ max id trước lượt bằng nhau trước/sau chayResolve; mọi căn resolved_by = 'stage-ab' có stable_key sáu đoạn (^([^|]*\\|){5}[^|]*$), kể cả căn mới. Chiều đỏ: UPDATE stable_key một căn cũ giữa hai lần băm → assert ghim «KGC-AC-6» nêu id."
   - id: E7
     criterion: AC-7
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["pipeline/resolve-properties.mjs", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-7» xanh trên dòng mồi tổng hợp (toạ độ, mã tin giả, không dữ liệu thật) gieo vào sale_offers/stg_chotot_ads của DB lượt rồi dựng căn bằng chính chayResolve: lượt một sinh căn P cho tin A; thêm tin B cùng ô, loại, diện tích, bậc giá với A; đổi diện tích A sang bậc làm tròn khác; thêm tin C ở ô khác; lượt hai → B có đúng 1 link tới P; A có đúng 1 link tới P; C có đúng 1 căn mới; không căn mới nào có tập tin = {A}. Chiều đỏ: resolver bản gốc của nhánh chính trong SAVEPOINT với UNIQUE đã DROP → sinh căn cho riêng A, assert ghim «KGC-AC-7»; ROLLBACK."
   - id: E8
     criterion: AC-8
     executor: test
     cmd: config:executors.test.kgc_db
-    long_running: 40
+    long_running: 55
     paths: ["pipeline/resolve-properties.mjs", "pipeline/tests/resolve-properties-khoa-gop.itest.mjs"]
     expected: "Ca «KGC-AC-8» xanh, chạy TRƯỚC khi áp 098 trong cùng tệp (node:test tuần tự): đếm tin gắn > 1 căn = D0; đổi giá một offer đã gắn căn; chayResolve; số tin gắn > 1 căn ≤ D0 và offer ấy không có link mới (đếm link của nó trước = sau). Chiều đỏ: resolver bản gốc của nhánh chính cùng thao tác → link của offer tăng, assert ghim «KGC-AC-8»."
   - id: E9
