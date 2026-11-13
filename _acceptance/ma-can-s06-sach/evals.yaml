@@ -1,0 +1,54 @@
+schema_version: 1
+feature_slug: ma-can-s06-sach
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs]
+    expected: "exit 0; ca MCS-AC-1 chạy ma trận viết trước 4 × 7 = 28 ô (cờ unitnumber_display × unitnumber), đếm ô = 28; ô có unit_number đúng bằng tập {unitnumber ∈ {1205, A-12.05}} × 4 cờ = 8 ô, mọi phát biểu rule_id payload.unitnumber. Chiều đỏ cùng ma trận: bản sao đột biến của dac-trung-s06.mjs đọc lại unitnumber_display trước → ca ghim «MCS-AC-1 đọc cờ unitnumber_display làm mã căn»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs]
+    expected: "exit 0; ca MCS-AC-2 chạy ma trận 4 × 7 = 28 ô (cờ streetnumber_display × street_number), đếm = 28; ô có street_number = {số 88, 208, 1} × 4 cờ = 12 ô, rule_id payload.street_number. Chiều đỏ: bản sao đột biến bỏ luật «chỉ gồm chữ số 0» → ca ghim «MCS-AC-2 nhận số nhà 0»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs]
+    expected: "exit 0; ca MCS-AC-3 chạy 8 giá trị block viết trước: đúng 4 phát biểu block_raw (A, A1, zen b, 2), rule_id payload.block, 0 phát biểu cho rỗng, toàn khoảng trắng, vắng. Chiều đỏ: bản sao đột biến bỏ dòng đọc block → ca ghim «MCS-AC-3 không đọc block»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/dac-trung-s06.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs]
+    expected: "exit 0; ca MCS-AC-4 chạy runTransformChotot trong giao dịch ROLLBACK trên DB của lượt (nạp 045, 059, 061 như dac-trung-s06.itest); rác cài sẵn trên chính khoá chủ thể của tin mồi trong stg. Bảng đếm viết trước: nhóm A (3 tin) mỗi tin 1 rác cờ «0» bị rút thay-boi-luot và 1 phát biểu 1205 hiệu lực; nhóm B (3 tin) mọi rác (mã căn 0, 1, số nhà 0) còn hiệu lực, số dòng đếm trước = sau; 0 phát biểu lượt này mang rule payload.*_display; block_raw fact·source_field hiệu lực 20/20. Chiều đỏ: bản sao đột biến của bộ đọc (đọc lại cờ) → ca ghim «MCS-AC-4 transform ghi phát biểu từ cờ»; bản sao đột biến của transform gọi retractRule cho rule cờ → ca ghim «MCS-AC-4 transform rút rác»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/ma-can-s06-sach.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs]
+    expected: "exit 0; ca MCS-AC-5 trong giao dịch ROLLBACK: bảng rác viết trước (mỗi (trường, rule_id, giá trị) một số đếm định trước) + sạch S06 + ngoài diện (mã căn 1 của S03, mã căn 0 S06 phương pháp e1_rule) + một tin rác cộng chữ bài 1205; chạy thử in đúng bảng đếm và dòng toà N/M, count(*) hiệu lực trước = sau; --ghi → 0 rác hiệu lực, sạch và ngoài diện còn nguyên, cột unit_number tin chữ bài = 1205, tin chỉ rác = NULL; --ghi lần hai rút 0. Chiều đỏ: bản sao đột biến bỏ điều kiện giá trị (rút cả số nhà 1 sạch) → ca ghim «MCS-AC-5 rút phát biểu sạch»; bản sao bỏ lọc nguồn/phương pháp → ca ghim «MCS-AC-5 rút phát biểu ngoài diện»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/ma-can-s06-sach.mjs, pipeline/scripts/ma-can-s06-sach.test.mjs, docs/research/pty-project-type-s06.md]
+    expected: "exit 0; ca MCS-AC-6: stg mồi 5 giá trị pty_project_type × category đã định số → bảng đúng 5 hàng, mỗi hàng tổng cột category = số tin, loại đa số và tỉ lệ đúng từng hàng viết trước, cột giả thuyết đúng bảng ZCode, dòng tổng = số tin mồi có pty, có dòng «sinh bởi». Tệp docs/research/pty-project-type-s06.md có dòng «sinh bởi» và dòng tổng 12.856 (số đo 12/11 trên DB local). Chiều đỏ: bản sao đột biến tính tỉ lệ trên toàn bộ tin thay vì tin của giá trị → ca ghim «MCS-AC-6 tỉ lệ sai mẫu số»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/dac-trung-s06.test.mjs]
+    expected: "exit 0; suite pipeline xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
