@@ -5,7 +5,7 @@ slug: phuong-tu-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-phuong-tu-du-an-design.md
@@ -67,3 +67,11 @@ luật cũ của bộ phân xử — AC-7; chế độ chạy — AC-8.
 - Sửa thước DF7 và giao diện nhãn «suy ra từ dự án» (DF7 đọc `field_provenance`).
 - Nút nhiều phường (Phú Mỹ Hưng) và 5 nút chỉ tới tỉnh.
 - Bộ ghi dự án trên tin (DV6, GCQ2, DV2, DV3).
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-1: Tài liệu pipeline/CLAUDE.md chưa có dòng giới thiệu lệnh phuong-tu-du-an.mjs và migration cần áp trước.
+  - Ngoài-2: Áp lại 099 bằng tay sau 102 sẽ âm thầm khôi phục bản phân xử lỗi khoá ngoại mà 102 đã vá — luôn áp 102 sau 099.
+  - Ngoài-3: Bộ kiểm dựng phát biểu dự án bằng tay theo khuôn hiện tại, không sinh bằng bộ ghi DV6; DV6 đổi khuôn thì bộ kiểm có thể không bắt.
+  - Ngoài-5: Ca tin không nhận phường chỉ kiểm nhãn nguồn khác «du-an», chưa kiểm khoá area_id vắng hẳn trong field_provenance.
