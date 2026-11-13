@@ -26,7 +26,9 @@ Căn cứ: ô `_acceptance/phuong-tu-du-an/opportunity.md` (Mạnh 09/11 «Theo 
 
 ### 2. Đường vào cột — migration 099 (Hỏi-1, số xin ở sổ LL)
 
-`CREATE OR REPLACE FUNCTION resolve_offer_fields` (thân bản 068 + một nhánh): sau khi dựng các cột cũ, với mỗi tin:
+Theo khuôn 068 (không chép thân hàm — đọc định nghĩa đang chạy, chèn cạnh mốc, thiếu mốc thì dừng `MOC-099`, áp lại được):
+(a) giữ khoá `field_provenance->'area_id'` mang `nguon = 'du-an'` qua lượt dựng lại; (b) hàm mới
+`resolve_offer_area_du_an(text[])` chạy ngay sau UPDATE chính và cộng số tin đổi vào kết quả. Với mỗi tin:
 
 - giá trị gốc G của cột = `field_provenance->'area_id'->>'goc'` khi cột đang mang nhãn `nguon = 'du-an'` (phường do chính nhánh
   ghi lượt trước), ngược lại = cột hiện tại (giá trị nguồn ghi);
@@ -36,9 +38,9 @@ Căn cứ: ô `_acceptance/phuong-tu-du-an/opportunity.md` (Mạnh 09/11 «Theo 
 - G trống hay tỉnh và không có (hay có hai) phường kế thừa → cột = G, bỏ khoá `area_id` khỏi `field_provenance` — gỡ dự án thì
   cột trở về giá trị nguồn kể cả khi transform không chạy lại (S06, lượt phân xử lẻ).
 
-Vì `transform-zalo` ghi lại cột tỉnh mỗi lượt (và xoá `field_provenance` theo bộ phân xử), bước S03 gọi `resolve_offer_fields`
-cho mọi tin vừa ghi (hôm nay chỉ gọi khi `rutTang`) — sửa một dòng ở `pipeline/transform-zalo.mjs`. Bước biến đổi thuộc làn
-Claude. `reassign-areas.mjs` (chạy sau mọi transform VN) với tin rao chỉ đặt NULL cho khu vực lạc; chuỗi transform → phân xử →
+`transform-zalo` ghi lại cột tỉnh mỗi lượt qua `writeOffers`, và `writeOffers` đã gọi `resolveOffers` cho mọi tin vừa ghi
+(`pipeline/lib/write-offers.mjs:69`) — nên không cần sửa `transform-zalo`. `reassign-areas.mjs` (chạy sau mọi transform VN) với
+tin rao chỉ đặt NULL cho khu vực lạc; chuỗi transform → phân xử →
 reassign-areas → phân xử được đo ở AC-5.
 
 ### 3. Nhãn
