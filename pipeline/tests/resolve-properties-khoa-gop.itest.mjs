@@ -75,6 +75,44 @@ const soLink = (c, id) => so(c, "SELECT count(*) FROM property_offers WHERE offe
 const maxCan = (c) => so(c, "SELECT coalesce(max(id), 0) FROM properties");
 const boRangBuoc = (c) => c.query("ALTER TABLE property_offers DROP CONSTRAINT IF EXISTS property_offers_offer_id_key");
 
+// ── Tập cắt (GS 13/11, lối B; sổ approach của hồ sơ): một lượt resolver trên dữ liệu đầy đủ mất hơn 2 giờ (95 ms/cụm × ~77k cụm),
+// nên AC-8 (trong giao dịch, hoàn lại) và AC-4…AC-7 chạy trên tập cắt THEO LUẬT, lặp lại được:
+//   giữ mọi tin S06 có khoá cụm thuộc K = { khoá cụm hiện tại của mọi tin từng gắn hơn một căn }
+//                                      ∪ { stable_key mọi căn mà các tin ấy từng gắn }
+//                                      ∪ { khoá cụm có md5('kgc-1|' || khoá) mod 100 < 3 }  (mẫu đại diện, hạt giống cố định)
+//   tin khác: đánh dấu retired (biến khỏi sale_offers, không xoá, không chạm property_offers); xoá dòng stg_chotot_ads không giữ.
+// «Tin từng gắn hơn một căn»: trước 098 = GROUP BY offer_id HAVING count(*) > 1; sau 098 = offer_id có trong nhật ký — cùng một tập.
+const CK = `floor(s.latitude / 0.0005)::text || '|' || floor(s.longitude / 0.0005)::text || '|' || o.kind || '|'
+  || COALESCE(o.property_type, '?') || '|' || round(o.area_m2)::text || '|' || round(o.price_vnd / 1e6)::text`;
+async function catDuLieu(c, nhan) {
+  const coNhatKy = (await c.query("SELECT to_regclass('property_offer_unlinks') r")).rows[0].r !== null
+    && await so(c, "SELECT count(*) FROM property_offer_unlinks") > 0;
+  const D = coNhatKy ? "SELECT DISTINCT offer_id FROM property_offer_unlinks"
+    : "SELECT offer_id FROM property_offers GROUP BY offer_id HAVING count(*) > 1";
+  const P = coNhatKy ? "SELECT property_id, offer_id FROM property_offers UNION SELECT property_id, offer_id FROM property_offer_unlinks"
+    : "SELECT property_id, offer_id FROM property_offers";
+  const t0 = Date.now();
+  const tong = (await c.query(`SELECT count(*)::int tin, count(DISTINCT ck)::int cum FROM (SELECT ${CK} ck FROM sale_offers o JOIN stg_chotot_ads s
+    ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
+    WHERE o.source = 'S06' AND s.latitude IS NOT NULL AND o.area_m2 IS NOT NULL AND o.price_vnd > 0) x`)).rows[0];
+  await c.query(`CREATE TEMP TABLE kgc_tin AS
+    SELECT o.offer_id, s.list_id, ${CK} ck FROM sale_offers o JOIN stg_chotot_ads s
+      ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
+     WHERE o.source = 'S06' AND s.latitude IS NOT NULL AND o.area_m2 IS NOT NULL AND o.price_vnd > 0`);
+  await c.query(`CREATE TEMP TABLE kgc_giu AS
+    SELECT t.ck FROM kgc_tin t WHERE t.offer_id IN (${D})
+    UNION SELECT p.stable_key FROM (${P}) l JOIN properties p ON p.id = l.property_id WHERE l.offer_id IN (${D}) AND p.stable_key IS NOT NULL
+    UNION SELECT DISTINCT ck FROM kgc_tin WHERE ('x' || substr(md5('kgc-1|' || ck), 1, 7))::bit(28)::int % 100 < 3`);
+  const giu = (await c.query(`SELECT count(*)::int tin, count(DISTINCT ck)::int cum FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu)`)).rows[0];
+  await c.query(`UPDATE sale_offer_records r SET retired_at = now(), retired_reason = 'het_trong_luot'
+    WHERE r.source = 'S06' AND r.retired_at IS NULL AND r.offer_id NOT IN (SELECT offer_id FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu))`);
+  await c.query(`DELETE FROM stg_chotot_ads WHERE list_id NOT IN (SELECT list_id FROM kgc_tin WHERE ck IN (SELECT ck FROM kgc_giu))`);
+  await c.query("DROP TABLE kgc_tin; DROP TABLE kgc_giu");
+  console.log(`KGC tập cắt (${nhan}): giữ ${giu.cum}/${tong.cum} cụm (${(100 * giu.cum / tong.cum).toFixed(1)}%), ${giu.tin}/${tong.tin} tin; cắt ${Date.now() - t0} ms`);
+  return { giu, tong };
+}
+async function doGio(nhan, f) { const t0 = Date.now(); const r = await f(); console.log(`KGC resolver (${nhan}): ${Math.round((Date.now() - t0) / 1000)} s`); return r; }
+
 const ca = {}; // ảnh chụp trước dọn, dùng chung AC-1 → AC-3
 
 test("KGC-AC-8 trước 098: đổi giá một tin đã gắn không thêm link", { timeout: 2_400_000 }, async () => {
@@ -84,10 +122,11 @@ test("KGC-AC-8 trước 098: đổi giá một tin đã gắn không thêm link"
       "KGC-AC-8: DB của lượt đã có UNIQUE trước 098");
     const d0 = await so(c, DUP);
     await c.query("BEGIN");
+    await catDuLieu(c, "AC-8, trong giao dịch, hoàn lại");
     const t = await tinDoiGia(c);
     await doiGia(c, t.offer_id);
     await c.query("SAVEPOINT xanh");
-    await chayResolve(c, { ghi: im });
+    await doGio("AC-8 xanh", () => chayResolve(c, { ghi: im }));
     assert.ok(await so(c, DUP) <= d0, "KGC-AC-8: số tin gắn hơn một căn tăng");
     assert.equal(await soLink(c, t.offer_id), 1, "KGC-AC-8: tin đổi giá có link mới");
     await c.query("ROLLBACK TO SAVEPOINT xanh");
@@ -187,12 +226,21 @@ test("KGC-AC-3 khôi phục được từ nhật ký", async () => {
   } finally { await c.end(); }
 });
 
+test("KGC-CAT cắt dữ liệu theo luật trước AC-4…AC-7", { timeout: 600_000 }, async () => {
+  const c = await ketNoi();
+  try {
+    const { giu, tong } = await catDuLieu(c, "AC-4…AC-7");
+    assert.ok(giu.cum > 0 && giu.cum < tong.cum, "KGC-CAT: tập cắt rỗng hoặc không cắt gì");
+    assert.equal(await so(c, DUP), 0, "KGC-CAT: cắt làm hỏng trạng thái sau 098");
+  } finally { await c.end(); }
+});
+
 test("KGC-AC-4 resolver hai lần liền không sinh gì thêm", { timeout: 2_400_000 }, async () => {
   const c = await ketNoi();
   try {
-    await chayResolve(c, { ghi: im });
+    await doGio("AC-4 lượt một", () => chayResolve(c, { ghi: im }));
     const truoc = [await maxCan(c), await so(c, "SELECT count(*) FROM property_offers")];
-    await chayResolve(c, { ghi: im });
+    await doGio("AC-4 lượt hai", () => chayResolve(c, { ghi: im }));
     assert.deepEqual([await maxCan(c), await so(c, "SELECT count(*) FROM property_offers")], truoc, "KGC-AC-4: lượt hai sinh căn hay link");
     assert.equal(await so(c, DUP), 0, "KGC-AC-4: còn tin gắn hơn một căn");
     // Chiều đỏ (lược đồ như trước 098): resolver bản gốc sau khi đổi giá một tin → căn mới và tin có 2 link.
