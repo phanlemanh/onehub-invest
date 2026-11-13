@@ -5,7 +5,7 @@ slug: stg-du-an-s08
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-12-stg-du-an-s08-design.md
@@ -89,3 +89,6 @@ Core → AC-1…AC-5. Later: bộ nạp thật ghi bảng (làn ZCode, GIAO sau 
 ## Notes
 - Phụ thuộc: «177 dự án có dòng trên máy thu» cần bộ nạp của ZCode vào main và 094 áp ở máy thu; vòng này chứng bằng nạp mồi đúng câu
   chèn của lời GIAO trên DB của riêng lượt.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-2: nếu bước kiểm bảng dự án gặp sự cố cơ sở dữ liệu thật, lượt nạp S08 hỏng theo cách khó hiểu thay vì báo đúng lỗi; chạy lại được.
+  - Ngoài-4: cùng sự cố đó có thể bị báo nhầm thành «chưa áp 094».

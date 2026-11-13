@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f62edfd5cad29cce32442b9e6db271e902bb9080
-human_signoff:
+human_signoff: Mạnh 2026-11-13
 ---
 
 # Evidence Report: stg-du-an-s08

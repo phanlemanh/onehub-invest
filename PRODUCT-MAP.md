@@ -11,8 +11,8 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>183 việc"]
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GB --> DG["Đã giao<br/>184 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>116 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -68,10 +68,6 @@ flowchart TD
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
-
-## Đang làm
-
-- Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng (`stg-du-an-s08`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -347,6 +343,7 @@ flowchart TD
 - Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - Lệnh tạm dừng có hẹn bật lại sai kiểu không còn làm kẹt hàng lệnh, job ops-apply tìm được node dưới launchd, và token máy cấp được từ máy thu qua Management API (`so-lenh-sua-sau-tv4`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
+- Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng (`stg-du-an-s08`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
 - Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files (`stg-zalo-media-files`)
 - Khoá Data API Supabase prod — thu quyền anon/authenticated, bật RLS mọi bảng public (migration 037) (`supabase-lock-anon-rls`)
