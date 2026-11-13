@@ -95,6 +95,18 @@ export function fmtVnDateTime(v: string | Date | number | null | undefined): str
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} (GMT+7)`;
 }
 
+/**
+ * Chỉ giờ phút, mặc định giờ VN: "10:05" (dòng tiến trình lệnh TV4b); không đọc được hoặc không ghi múi → "—".
+ * `tz` chỉ để ca đối chứng của test chạy được với múi khác.
+ */
+export function fmtVnClock(v: string | Date | number | null | undefined, tz: string = VN_TZ): string {
+  const d = toInstant(v);
+  if (!d) return "—";
+  const f = tz === VN_TZ ? VN_PARTS : new Intl.DateTimeFormat("en-CA", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
+  return `${p.hour}:${p.minute}`;
+}
+
 /** Mốc chỉ có ngày, theo ngày VN: "2026-10-24"; không đọc được → "—". */
 export function fmtVnDate(v: string | Date | number | null | undefined): string {
   const d = toInstant(v);
