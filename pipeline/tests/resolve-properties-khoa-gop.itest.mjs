@@ -1,6 +1,7 @@
 // resolve-properties-khoa-gop.itest.mjs — hồ sơ _acceptance/khoa-gop-can-khong-gia (DA6, T3): migration 098 dọn link thừa + UNIQUE,
 // resolver giữ căn cho tin đã gắn. Chỉ chạy trên DB của riêng lượt chép dữ liệu máy thu (db/db-thu.sh oneinvest_suite_kgc --chay);
-// DB ấy xoá khi lệnh dừng. Chiều đỏ chạy resolver bản gốc của nhánh chính (git show origin/main) trong SAVEPOINT rồi hoàn lại.
+// DB ấy xoá khi lệnh dừng. Chiều đỏ chạy resolver bản gốc của cây gốc vòng GOC_VONG (git show, ghim sha — đứng yên sau khi
+// gộp, như resolve-properties-dong-bang.itest.mjs) trong SAVEPOINT rồi hoàn lại.
 // Thứ tự ca (node:test tuần tự): AC-8 (trước 098) → AC-1 → AC-2 → AC-3 → AC-4 → AC-5 → AC-6 → AC-7 → AC-9.
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
@@ -20,6 +21,8 @@ if (!/\/oneinvest_suite_[a-z0-9_]+$/.test(DB_URL)) {
 }
 const PIPE = join(import.meta.dirname, "..");
 const GOC = join(PIPE, "..");
+// Gốc vòng DA6: origin/main lúc chấm vòng 2 (66de32c2), chưa có luật DA6 — ghim để chiều đỏ không mất nghĩa sau khi gộp.
+const GOC_VONG = "66de32c2ce9187a51a245df2f484a46deab6f59f";
 const MIG = readFileSync(join(GOC, "db/migrations/098_khoa_gop_can.sql"), "utf8");
 const im = () => {}; // nuốt log resolver
 
@@ -27,12 +30,12 @@ const im = () => {}; // nuốt log resolver
 const TAM = mkdtempSync(join(tmpdir(), "kgc-goc-"));
 after(() => rmSync(TAM, { recursive: true, force: true }));
 async function resolverGoc() {
-  const r = spawnSync("git", ["-C", GOC, "show", "origin/main:pipeline/resolve-properties.mjs"], { encoding: "utf8" });
+  const r = spawnSync("git", ["-C", GOC, "show", `${GOC_VONG}:pipeline/resolve-properties.mjs`], { encoding: "utf8" });
   assert.equal(r.status, 0, `KGC: không đọc được resolver bản gốc: ${r.stderr}`);
   const src = r.stdout
     .replace(/from "\.\/lib\/([a-z0-9-]+\.mjs)"/g, (_, f) => `from "${pathToFileURL(join(PIPE, "lib", f)).href}"`)
     .replace(/from "pg"/, `from "${import.meta.resolve("pg")}"`);
-  assert.ok(!/NOT EXISTS \(SELECT 1 FROM property_offers po/.test(src), "KGC: nhánh chính đã có luật DA6 — chiều đỏ mất nghĩa");
+  assert.ok(!/NOT EXISTS \(SELECT 1 FROM property_offers po/.test(src), "KGC: gốc vòng đã có luật DA6 — chiều đỏ mất nghĩa");
   const tep = join(TAM, `goc-${Date.now()}.mjs`);
   writeFileSync(tep, src);
   return (await import(pathToFileURL(tep).href)).chayResolve;
@@ -360,7 +363,7 @@ test("KGC-AC-7 tin chưa gắn vào căn đúng khoá, tin đã gắn không the
 // AC-9 (mở lại phạm vi 13/11): migration 101 thay reconcile_stale_offers — tin kế đã có căn khác thì link của tin cũ vào nhật ký.
 const MIG101 = readFileSync(join(GOC, "db/migrations/101_doi_soat_chuyen_link.sql"), "utf8");
 function ham044() {
-  const r = spawnSync("git", ["-C", GOC, "show", "origin/main:db/migrations/044_nap_lai_khong_xoa.sql"], { encoding: "utf8" });
+  const r = spawnSync("git", ["-C", GOC, "show", `${GOC_VONG}:db/migrations/044_nap_lai_khong_xoa.sql`], { encoding: "utf8" });
   assert.equal(r.status, 0, `KGC: không đọc được 044 bản gốc: ${r.stderr}`);
   const m = r.stdout.match(/CREATE OR REPLACE FUNCTION reconcile_stale_offers[\s\S]*?\nEND \$\$;/);
   assert.ok(m, "KGC: không cắt được hàm reconcile_stale_offers của 044");
