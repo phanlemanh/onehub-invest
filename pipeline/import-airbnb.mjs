@@ -1,4 +1,5 @@
 // import-airbnb.mjs — nạp snapshot từ one-invest-collector theo DATA-CONTRACT
+import { dongDuAnS08, CAU_CHEN_S08_PROJECT } from "./lib/s08-du-an.mjs"; // DA30 1211-35
 // (collector/docs/DATA-CONTRACT.md schemaVersion 1–2): verify sha256 từng file trước khi parse.
 // v2 chỉ thêm file media/* + RawItem.meta.mediaFiles — items đọc y như v1;
 // meta.mediaFiles (zalo-agent) → stg_zalo_posts.media_files (PII tầng A, chỉ local).
@@ -16,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 // 2610-10 vòng 2: đường nạp S08 dùng ĐÚNG hàm pure này (BÁO 2610-17)
 import { s08RowOf, s08Num, s08Int } from "./import-s08-row.mjs";
+import { bocS10, duBoLoc } from "./lib/s10-bang-hang.mjs";
 export { s08Num, s08Int }; // re-export — test cũ import từ đây
 
 // Luật khuôn tên thư mục dùng chung cho cả hai importer (PL1 mở lại vòng 4,
@@ -81,6 +83,7 @@ const AIRBNB_IMPORTER_SOURCES = new Set([
   "s08-danh-muc", // PL10/BÁO 2510-12: snapshot vn__s08-danh-muc__ nạp qua
                   // import-airbnb vào stg_s08_inventory — thiếu là bị allowlist
                   // bỏ exit 0 (0 dòng stg, không job nào báo lỗi)
+  "s10-bang-hang", // v8 (DATA-CONTRACT mục S10): bảng hàng CĐT → stg_s10_stock (089)
 ]);
 export function isAllowedSource(source) {
   return AIRBNB_IMPORTER_SOURCES.has(String(source));
@@ -91,7 +94,8 @@ export function isAllowedSource(source) {
 // Export để test; mọi lần nới phải cập nhật DATA-CONTRACT «bên import phải chấp nhận».
 // link-nguoi-ban-s03 (v7): nguồn s03-ho-so + kind ho-so — {6,7} S03 bất kể
 // thứ tự gộp với nhánh album (v6); bên import chấp nhận {1..7}
-export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7];
+// v8 (2026-11-10): nguồn s10-bang-hang + s11-nn1-du-an — RawItem không thêm trường chung; bên import chấp nhận {1..11}
+export const SUPPORTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 /** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
   const m = String(name).match(/__([^_]+)__/);
@@ -126,6 +130,70 @@ async function napHoSo(client, it) {
      VALUES ($1,$2,$3,$4,$5)
      ON CONFLICT (source_id) DO NOTHING`,
     [it.sourceId, it.payload.ma_tai_khoan, it.payload.username || "", it.payload.loai ?? it.meta?.loai_ket_qua, it.fetchedAt]);
+}
+
+// S10 (089 của làn Claude): bảng stg_s10_stock. DB chưa có bảng → in CHUA-AP-089, snapshot S10 KHÔNG đánh dấu đã nạp
+// (như hồ sơ 080) để sau khi áp 089 nạp lại được. Lỗi dò bảng KHÔNG nuốt thành false — ném, dừng lượt.
+export const STG_S10 = "stg_s10_stock";
+// 1111-17: bảng danh bạ dự án S10 (cùng migration 089 của làn Claude).
+export const STG_S10_PROJECT = "stg_s10_project";
+export const NGUON_S10 = "s10-bang-hang";
+async function coBangS10(client, bang = STG_S10) {
+  const r = await client.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = $1`, [bang]);
+  return (r.rowCount ?? 0) >= 1;
+}
+const COT_S10 = ["stock_id", "source_id", "project_id", "block_type", "unit_number", "subdivision_name", "block_raw",
+  "property_sub_type_raw", "lot_size_m2", "building_area_m2", "handover_condition_raw", "direction_faces_raw",
+  "list_price_vnd", "status_raw", "remarks_raw", "source_modified_on", "snapshot_id", "captured_at", "server_cond", "raw_row"];
+/** Nạp dòng của một item stock_table theo lô 500; trả số dòng THẬT SỰ ghi (nạp lại cùng snapshot → 0). */
+let s10TrungLan = 0; // 1211-22(2): đếm dòng trùng bị ON CONFLICT bỏ theo lượt nạp
+async function napS10(client, rows, snapshotId, capturedAt, cond) {
+  let ghi = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const lo = rows.slice(i, i + 500);
+    const params = [];
+    const values = lo.map((d) => {
+      const v = [d.stock_id, d.source_id, d.project_id, d.block_type, d.unit_number, d.subdivision_name, d.block_raw,
+        d.property_sub_type_raw, d.lot_size_m2, d.building_area_m2, d.handover_condition_raw, d.direction_faces_raw,
+        d.list_price_vnd, d.status_raw, d.remarks_raw, d.source_modified_on, snapshotId, capturedAt,
+        cond == null ? null : JSON.stringify(cond), stripNullBytes(d.raw_row)];
+      const base = params.length;
+      params.push(...v);
+      return `(${v.map((_, j) => `$${base + j + 1}`).join(",")})`;
+    });
+    const dangCo = new Set((await client.query(
+      `SELECT stock_id FROM ${STG_S10} WHERE snapshot_id = $1 AND stock_id::text = ANY($2)`,
+      [snapshotId, lo.map((d) => d.stock_id)])).rows.map((x) => x.stock_id));
+    s10TrungLan += lo.filter((d) => dangCo.has(d.stock_id)).length;
+    const r = await client.query(
+      `INSERT INTO ${STG_S10} (${COT_S10.join(", ")}) VALUES ${values.join(", ")}
+       ON CONFLICT (snapshot_id, stock_id) DO NOTHING`, params);
+    ghi += r.rowCount ?? 0;
+  }
+  return ghi;
+}
+
+/** Chuẩn hoá chuỗi meta S10: rỗng hoặc «---» → NULL; stripNullBytes (1111-17). */
+const donChuoiS10 = (v) => {
+  const s = typeof v === "string" ? v : v == null ? "" : String(v);
+  const t = stripNullBytes(s.trim());
+  return t === "" || t === "---" ? null : t;
+};
+
+/** DA29 (1111-17): mỗi item stock_table ghi 1 dòng stg_s10_project — hai item cùng
+ *  project_id cùng nhãn (bt177 + bt178) ra 1 dòng nhờ ON CONFLICT DO NOTHING;
+ *  khoá (snapshot_id, project_id, project_label) NULLS NOT DISTINCT do 089 tạo. */
+async function napS10Project(client, it, snapshotId, capturedAt) {
+  const projectId = donChuoiS10(it.meta?.request?.project_id);
+  if (projectId == null) return 0; // thiếu project_id → không có khoá, bỏ có đếm ở gọi chỗ
+  const r = await client.query(
+    `INSERT INTO ${STG_S10_PROJECT} (project_id, du_an, phan_khu, project_label, snapshot_id, captured_at)
+     VALUES ($1,$2,$3,$4,$5,$6)
+     ON CONFLICT (snapshot_id, project_id, project_label) DO NOTHING`,
+    [projectId, donChuoiS10(it.meta?.duAn), donChuoiS10(it.meta?.phanKhu),
+     donChuoiS10(it.meta?.projectLabel), snapshotId, capturedAt]);
+  return r.rowCount ?? 0;
 }
 
 async function main() {
@@ -207,13 +275,33 @@ async function main() {
     if (!hoSoDaChua080) { console.log("CHUA-AP-080: bảng " + STG_HO_SO + " chưa có (migration 080 chưa áp) — snapshot hồ sơ bỏ qua, KHÔNG đánh dấu đã nạp; nguồn khác nạp như cũ"); hoSoDaChua080 = true; }
   }
   let hoSo = 0, hoSoBo = 0;
+  const coS10Item = items.some((it) => it.source === NGUON_S10);
+  const coBangS10Db = coS10Item ? await coBangS10(client) : false;
+  // 1111-17: bảng danh bạ dự án thiếu riêng → in 1 lần như luật stock, KHÔNG bỏ phần stock đã có bảng.
+  const coBangS10ProjectDb = coS10Item ? await coBangS10(client, STG_S10_PROJECT) : false;
+  let daInChuaAp089Project = true; // in CHUA-AP-089 cho stg_s10_project đúng 1 lần mỗi lượt (khi bảng thiếu riêng)
+  if (coS10Item && !coBangS10Db) {
+    console.log(`CHUA-AP-089: bảng ${STG_S10} chưa có (migration 089 chưa áp) — snapshot S10 bỏ qua, KHÔNG đánh dấu đã nạp`);
+  }
+  let s10Dong = 0, s10Bo = 0, s10ThieuLoc = 0, s10Lech = 0, s10Cay = 0, s10ProjectDong = 0, s10ProjectBo = 0;
+  let s10Boc = 0, s10KhongStock = 0, s10KhongPJ = 0;
   try {
     await client.query("BEGIN");
     // 0711-37(d): snapshot HỒ SƠ KHÔNG được đánh dấu đã-nạp khi DB thiếu 080 —
     // INSERT vào bảng snapshot đĩa chỉ cho các nguồn khác; nếu hồ sơ bỏ hết,
     // rollback và thoát 0 (AC-6), để sau khi áp 080 lượt nạp lại được đủ.
+    const coS08DanhMuc = items.some((it) => it.source === "s08-danh-muc");
+    const coBang094 = coS08DanhMuc ? await client.query(
+      `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'stg_s08_project'`).then((r) => (r.rowCount ?? 0) >= 1).catch(() => false) : false;
+    let s08ProjectDong = 0;
     const boHetHoSo = items.length > 0 && items.every((it) => it.source === "s03-ho-so");
-    if (!(!coBang && boHetHoSo)) {
+    // Cùng luật cho S10 khi DB thiếu 089.
+    const boHetS10 = items.length > 0 && items.every((it) => it.source === NGUON_S10) && !coBangS10Db;
+    // 1211-35 MỞ LẠI(2): thiếu 094 → ROLLBACK CẢ LƯỢT mọi snapshot CÓ item project_catalog (giống hồ sơ S03)
+    // — giữ phần dự án không mất khi chỉ lẫn căn; áp 094 rồi nạp lại được đủ.
+    const coCatalogS08 = items.some((it) => it.source === "s08-danh-muc" && it.kind === "project_catalog");
+    const boHetS08 = coCatalogS08 && !coBang094;
+    if (!(!coBang && boHetHoSo) && !boHetS10 && !boHetS08) {
       await client.query(
         `INSERT INTO airbnb_snapshots (snapshot_id, city, source, collected_at, manifest)
          VALUES ($1,$2,$3,$4,$5)
@@ -237,10 +325,46 @@ async function main() {
   let s08 = 0;
   let s08Detail = 0;
   let s08Catalog = 0; // 2610-22(3): đếm item project_catalog bỏ
-    for (const it of items) {
+    const S10_UT = { "177": 0, "178": 1 };
+    const itemsSap = [...items].sort((a, b) => {
+      const ua = a.source === NGUON_S10 && a.kind === "stock_table" ? S10_UT[a.meta?.request?.block_type] ?? 9 : 9.5;
+      const ub = b.source === NGUON_S10 && b.kind === "stock_table" ? S10_UT[b.meta?.request?.block_type] ?? 9 : 9.5;
+      return ua - ub;
+    });
+    for (const it of itemsSap) {
       if (it.source === "s03-ho-so") {
         if (coBang) { await napHoSo(client, it); hoSo++; }
         else { hoSoBo++; }
+        continue;
+      }
+      if (it.source === NGUON_S10) {
+        // 1211-23(b): nạp stock_table 177 TRƯỚC 178 trong cùng snapshot — trùng stock_id giữ 177, không dựa may
+        // 1211-26: Σ bóc đếm MỘT chỗ (ở duBoLoc dưới) — không đếm đôi tại đây
+        // DATA-CONTRACT S10 luật 1: item thiếu bộ lọc rộng (snapshot 10/11 trước lượt thu lại) bị máy chủ lọc — bỏ có đếm.
+        // Chọn snapshot MỚI NHẤT cho mỗi sourceId là việc của bước đọc stg (089), không phải bộ nạp: nạp mọi snapshot đủ lọc.
+        if (it.kind === "project_tree") { s10Cay++; continue; } // v11: cây đối chiếu — khai hợp đồng, chưa nạp bảng nào
+        if (!coBangS10Db) { s10Bo++; continue; }
+        if (it.kind !== "stock_table") { s10Bo++; continue; }
+        const soDongTrang = (String(it.payload?.html ?? "").match(/class="[^"]*\bp_row\b/g) || []).length;
+        s10Boc += soDongTrang; // Σ bóc = TẤT CẢ tr.p_row (đủ lọc + thiếu lọc) — đẳng thức tự khép
+        if (!duBoLoc(it)) { s10ThieuLoc += soDongTrang; continue; } // 1211-26: đếm DÒNG bỏ
+        const r = bocS10(it);
+        // 1211-31 MỞ LẠI(3): đếm stock_id lặp TRONG CÙNG item (cùng bảng) — có thể chỉ dòng đầu được ghi
+        const demTrongItem = new Map();
+        for (const d of r.dong) demTrongItem.set(d.stock_id, (demTrongItem.get(d.stock_id) ?? 0) + 1);
+        for (const [, n] of demTrongItem) if (n > 1) s10TrungLan += n - 1;
+        s10Lech += r.lechKhuon;
+        if (r.khongStockId) { s10KhongStock += r.khongStockId; console.warn(`S10: ${r.khongStockId} dòng không có stock_id (bỏ): ${it.sourceId} ${manifest.snapshotId}`); }
+        if (r.khongProjectId) { s10KhongPJ += r.khongProjectId; console.warn(`S10: ${r.khongProjectId} dòng không có project_id (bỏ — fail-closed 1211-31b): ${it.sourceId} ${manifest.snapshotId}`); }
+        s10Dong += await napS10(client, r.dong, manifest.snapshotId, manifest.finishedAt, it.payload?.cond ?? null);
+        // 1111-17: dòng danh bạ dự án từ meta của chính item (snapshot 11/11 đã phát đủ ba trường)
+        if (!coBangS10ProjectDb) {
+          if (daInChuaAp089Project) { console.log(`CHUA-AP-089: bảng ${STG_S10_PROJECT} chưa có — phần danh bạ dự án S10 bỏ, stock vẫn nạp`); daInChuaAp089Project = false; }
+        } else {
+          const themProject = await napS10Project(client, it, manifest.snapshotId, manifest.finishedAt);
+          s10ProjectDong += themProject;
+          if (themProject === 0 && donChuoiS10(it.meta?.request?.project_id) == null) s10ProjectBo++;
+        }
         continue;
       }
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
@@ -341,7 +465,9 @@ async function main() {
           s08Detail++;
           continue;
         }
-        if (it.meta?.state === "catalog") {
+        // 1211-35 DA30: item project_catalog GOM vào stg_s08_project (không bỏ nữa) —
+        // dongDuAnS08 xử lý trọn snapshot sau vòng (catalog + detail theo mã dự án)
+        if (it.kind === "project_catalog" || it.meta?.state === "catalog") {
           s08Catalog++;
           continue;
         }
@@ -388,9 +514,31 @@ async function main() {
         osm++;
       }
     }
+    // 1211-35 DA30: dòng stg_s08_project từ item project_catalog + inventory_unit/detail (bỏ đếm-bỏ cũ)
+    if (coS08DanhMuc && coBang094) {
+      const itemsS08 = items.filter((it) => it.source === "s08-danh-muc");
+      const cacDong = dongDuAnS08(itemsS08, manifest.snapshotId);
+      for (const dong of cacDong) {
+        const r = await client.query(CAU_CHEN_S08_PROJECT, [
+          dong.snapshot_id, dong.project_id,
+          dong.catalog_payload == null ? null : JSON.stringify(dong.catalog_payload),
+          dong.detail_payload == null ? null : JSON.stringify(dong.detail_payload),
+          dong.fetched_at,
+        ]);
+        s08ProjectDong += r.rowCount ?? 0;
+      }
+      console.log(`S08 danh mục: ${cacDong.length} dự án (stg_s08_project ghi ${s08ProjectDong})`);
+    } else if (coS08DanhMuc && !coBang094) {
+      console.log("CHUA-AP-094: bảng stg_s08_project chưa có (migration 094 chưa áp) — phần dự án S08 bỏ");
+      await client.query("ROLLBACK").catch(() => {});
+      console.log("snapshot CÓ item project_catalog — KHÔNG đánh dấu đã nạp (áp 094 rồi nạp lại được đủ — 1211-35 MỞ LẠI(2))");
+      return; // thoát 0 — AC-6: rollback cả lượt kể cả khi snapshot lẫn căn
+    }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, +${s08Catalog} catalog bỏ), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail, ${s08Catalog} catalog gom stg_s08_project), ${hoSo} hồ sơ S03${hoSoBo ? ` (+${hoSoBo} BỎ do CHUA-AP-080)` : ""}`
+      + (coS10Item ? `, ${s10Dong} dòng S10, ${s10ProjectDong} dòng danh bạ dự án S10 (cây ${s10Cay}, bỏ ${s10ThieuLoc} dòng thiếu bộ lọc, ${s10Bo} khác, ${s10ProjectBo} thiếu project_id, ${s10Lech} lệch khuôn, trùng ${s10TrungLan})`
+      + `\n  S10 đối soát: bóc ${s10Boc} tr.p_row → stg ${s10Dong} + trùng bỏ ${s10TrungLan} + lệch khuôn ${s10Lech} + không stock_id ${s10KhongStock} + không project_id ${s10KhongPJ} + thiếu bộ lọc ${s10ThieuLoc} (dòng)` : ""),
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

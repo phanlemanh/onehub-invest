@@ -30,21 +30,33 @@ export const KHOA_BAIT_GAP = "SELECT pg_advisory_xact_lock(hashtext('refresh-bai
  * @param {import("pg").Client} c
  */
 export async function refreshBaitGap(c) {
-  // ---- 1. Ruler: median perm2 theo phường từ vải S06 ----
+  // ---- 1. Ruler: median perm2 theo phường × loại hình (CG8: v_ruler_p2 — một căn một phiếu, chỉ bán, n≥5) ----
+  // Không dùng thước cả phường (v_ruler_p2_area): gộp mọi loại hình làm căn hộ đúng giá hiện «rẻ ~35%» (đo 12/11).
   const ruler = await c.query(`
-    SELECT area_id, m, n FROM v_ruler_p2_area`);
-  console.log(`ruler: ${ruler.rows.length} phường (S06 n≥5, max n=${Math.max(0, ...ruler.rows.map((r) => Number(r.n)))})`);
+    SELECT property_type, count(*)::int AS so_phuong, max(n)::int AS max_n
+      FROM v_ruler_p2 WHERE property_type IS NOT NULL AND property_type <> 'unknown'
+     GROUP BY property_type ORDER BY property_type`);
+  console.log(`ruler: ${ruler.rows.map((r) => `${r.property_type}=${r.so_phuong} phường`).join(", ") || "0 phường"} (phường × loại, n≥5)`);
 
-  // ---- 2. bait_gap_pct trên offers P1 ----
+  // ---- 2. bait_gap_pct trên offers P1: chỉ tin bán, có loại đã biết, có thước CÙNG phường × loại; không lùi thước (Hỏi-2) ----
   await c.query(`UPDATE sale_offers SET bait_gap_pct = NULL WHERE price_tier = 'P1'`);
   const gap = await c.query(`
-    WITH r AS (SELECT area_id, m FROM v_ruler_p2_area)
+    WITH r AS (SELECT area_id, property_type, m FROM v_ruler_p2
+                WHERE property_type IS NOT NULL AND property_type <> 'unknown')
     UPDATE sale_offers o
     SET bait_gap_pct = ROUND((1 - o.price_perm2::numeric / r.m::numeric) * 100, 1)
     FROM r
-    WHERE r.area_id = o.area_id
+    WHERE r.area_id = o.area_id AND r.property_type = o.property_type
       AND o.price_tier = 'P1' AND o.kind = 'sale' AND o.price_perm2 > 0`);
   console.log(`bait_gap_pct: cập nhật ${gap.rowCount} offers P1`);
+  // Tin P1 bán có giá/m² mà không chấm, theo lý do — cùng hai lý do trang một căn ghi (lyDoRoi).
+  const kc = (await c.query(`
+    SELECT count(*) FILTER (WHERE property_type IS NULL OR property_type = 'unknown')::int AS chua_ro_loai,
+           count(*) FILTER (WHERE property_type IS NOT NULL AND property_type <> 'unknown')::int AS thieu_thuoc_cung_loai
+      FROM sale_offers
+     WHERE price_tier = 'P1' AND kind = 'sale' AND price_perm2 > 0 AND bait_gap_pct IS NULL`)).rows[0];
+  const khongCham = { chua_ro_loai: kc.chua_ro_loai, thieu_thuoc_cung_loai: kc.thieu_thuoc_cung_loai };
+  console.log(`không chấm: chua-ro-loai=${khongCham.chua_ro_loai} thieu-thuoc-cung-loai=${khongCham.thieu_thuoc_cung_loai}`);
 
   // ---- 3. Người bán: từ SD3 (060) `sellers` là VIEW trên bí danh `sdt` của danh bạ + tin — tự đúng, bước này chỉ đếm.
   // Không còn ghi/xoá sellers và không còn audit bait-gap:sellers-orphan (view không có dòng mồ côi để dọn). ----
@@ -69,6 +81,7 @@ export async function refreshBaitGap(c) {
     gap: gap.rowCount,
     sellersRemaining: remaining,
     loaiPhiLy: loai.total,
+    khongCham,
   };
 }
 
