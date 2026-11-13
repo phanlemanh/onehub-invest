@@ -12,7 +12,7 @@ import {
   readZaloHealth,
   getZaloGroups,
 } from "@/lib/collections-queries";
-import { xemDinhDanhThu } from "@/lib/ops-access";
+import { vaiHieuLuc, xemDinhDanhThu } from "@/lib/ops-access";
 import { freshnessLocalOnly, getSourceFeedHealth, getLockdownStatus } from "@/lib/ops-queries";
 import { getCloudOpsView, withLockdownGates } from "@/lib/ops-cloud";
 import { getSourceRoles } from "@/lib/source-roles";
@@ -72,7 +72,9 @@ export async function CollectionsContent({
   doc?: (nowMs: number) => Promise<CollectionsData>;
 }) {
   const [data, user] = await Promise.all([doc(nowMs), getUser()]);
-  return <CollectionsView {...(xemDinhDanhThu(user) ? data : cheDinhDanhThu(data))} />;
+  // TV4b: vai và actor của phiên cho cột Thao tác, nút Duyệt — route vẫn kiểm quyền lại ở mỗi lời gọi.
+  const phien = { vai: vaiHieuLuc(user), actor: user ? `user:${user.id}` : "" };
+  return <CollectionsView {...(xemDinhDanhThu(user) ? data : cheDinhDanhThu(data))} {...phien} />;
 }
 
 /** Props của các vùng không dựng trên cloud — giữ kiểu CollectionsData, không mang số nào. */

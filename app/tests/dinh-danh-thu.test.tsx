@@ -407,7 +407,12 @@ describe("DD-AC-5 trang Thu thập", () => {
     // Nhánh cloud thật: trang cloud không mang mã tài khoản cho bất kỳ vai nào; ops nhận đúng dữ liệu thô như hôm nay.
     const { tho, po } = await doTrangCloud(mod)
     assert.doesNotMatch(JSON.stringify(tho), MA_CAY, "cloud: dữ liệu thô của trang không mang mã cấy")
-    assert.equal(JSON.stringify(po), JSON.stringify(tho), "cloud ô 'ops': props bằng dữ liệu thô (như hôm nay)")
+    // TV4b thêm vai + actor (`user:<id>` của chính phiên) để cột Thao tác và vùng «Lệnh gần đây» biết vai — ngoài hai khoá đó
+    // props vẫn bằng dữ liệu thô.
+    const { vai: vaiPo, actor: actorPo, ...poTho } = po as Record<string, unknown>
+    assert.equal(vaiPo, "ops", "cloud ô 'ops': props mang vai hiệu lực của phiên")
+    assert.match(String(actorPo), /^user:/, "cloud ô 'ops': actor là mã phiên của chính người xem")
+    assert.equal(JSON.stringify(poTho), JSON.stringify(tho), "cloud ô 'ops': props bằng dữ liệu thô (như hôm nay)")
     // Đối chứng dương trên đường cloud thật: bản chép tạm cho nhánh cloud mang bảng nhóm của bản tin (có tài khoản giữ nhóm)
     // → ops thấy dd-acc-1, viewer vẫn bị che; thêm bỏ dòng che → ô viewer đỏ.
     const nhomCloud = (src: string) => src.replace("return { ...CLOUD_EMPTY, funnel,", "return { ...CLOUD_EMPTY, zaloGroups: await getZaloGroups(), funnel,")
