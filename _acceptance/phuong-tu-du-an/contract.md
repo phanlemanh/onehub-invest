@@ -5,7 +5,9 @@ slug: phuong-tu-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-phuong-tu-du-an-design.md
 ---
 

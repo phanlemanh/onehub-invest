@@ -7,11 +7,11 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>24 việc"]
+  GD --> B["Sắp mở vòng<br/>23 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>183 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>116 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
@@ -41,7 +41,6 @@ flowchart TD
 - Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu, rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn (`nut-ung-vien-tu-tin`)
 - Người vận hành mở /ops/inquiries và lọc Yêu cầu theo dịch vụ, dự án, số phòng, ngân sách, người đăng, thời gian, trạng thái; mở một Yêu cầu thấy tiêu chí kèm câu trích và cách đọc, các bài đã đăng, người đăng nối sang /ops/people, và đánh dấu «Không phải Yêu cầu» (`ops-bang-yeu-cau`)
 - Kiểm «phường» và «trường lõi» trên đồng chảy và bậc dữ liệu chỉ nhận khu cấp phường; tin chỉ gắn tới tỉnh hay thành phố không còn được tính là có phường (`phuong-that-trong-truong-loi`)
-- Tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án, không đè phường đã có (`phuong-tu-du-an`)
 - Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn (`s06-du-an-len-tin-can`)
 - Người vận hành gộp hai nút danh bạ, tách, đổi cha, đổi loại giữa dự án con và phân khu, hay rút một nút sai trên Ops, và mọi bí danh, liên kết tin, phát biểu kế thừa phía sau đi theo (`sua-cay-danh-ba`)
 - Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn) (`thuoc-tinh-danh-muc-s08-s09`)
@@ -68,6 +67,10 @@ flowchart TD
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
+
+## Đang làm
+
+- DA9 — tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án (phát biểu area_id kế thừa + bộ phân xử đưa vào cột khi tin chỉ tới tỉnh hay trống), không đè phường đã có (`phuong-tu-du-an`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
