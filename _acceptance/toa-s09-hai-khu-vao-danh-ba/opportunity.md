@@ -42,8 +42,9 @@ Vì sao: Số đo S1 của PL20 (12/11): hàng nghìn bài căn hộ hai khu nê
 | Bài chỉ nêu cụm («S10», «R1») — cần cấp cụm | 102 | 2.486 |
 | Tên toà còn thiếu sau S09 | 39 (H1–H3, M1–M3, C1Z1… — toà dự án khác lẫn nhóm) | 21 (lẻ, ≤ 5 bài mỗi tên) |
 
-- Hai bản thu Mạnh mở tay (114111483, 114545270) chỉ có 1 item mỗi bản — không so được; bản giữ có ghi chú «meta/notes bị
-  sửa 12:16Z 13/11, payload không kiểm được» (Mạnh quyết giữ, 13/11).
+- Nguồn chính: hai bản Mạnh mở tay (`hanoi/…T092747119` OP1, `hcmc/…T092747129` GP, khuôn trang `{url, nextData}`).
+  Bảng trên đo trên bản thu API `vn__…T120908161`; LL so hai khuôn: 0 khoá lệch ở hai khu (toà 115/115, 61/61, bàn giao
+  91/91, 59/59, phân khu 13/13, 7/7). Bản API giữ theo lời Mạnh 13/11, chỉ dùng đối chiếu.
 - Mọi lời gọi tới nguồn S09 đang đóng băng: hàng chỉ đọc bản thu đã có.
 
 ## Ngưỡng chết / ngưỡng UAT

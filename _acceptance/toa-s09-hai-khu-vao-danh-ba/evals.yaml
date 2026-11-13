@@ -1,0 +1,65 @@
+schema_version: 1
+feature_slug: toa-s09-hai-khu-vao-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-1 trên DB thử oneinvest_s09_<pid> áp 001…097: fixture tổng hợp viết trước nạp hai lần; lần một đúng số dòng hợp lệ, lần hai 0; bỏ thiếu-sourceId 1, kind-la 1, chi-tiet-loi 1; project_id của item meta lệch = chiTiet.data.id; v_s09_toa đủ mọi bản ghi toà (toà không phân khu có sector_id NULL), v_s09_phan_khu đủ mọi phân khu. Chiều đỏ: đột biến bỏ ON CONFLICT thì lần hai lỗi khoá trùng, ca đỏ nêu «nạp lại»"
+    paths: ["db/migrations/097_*", "pipeline/lib/s09*", "pipeline/scripts/*s09*"]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s09_ham
+    expected: "Ca DA31-AC-2: ma trận bốn ô viết trước, một assert mỗi ô (gộp cùng phân khu · gộp bản không phân khu dạng OS2 · không gộp khác phân khu → mơ hồ · cách viết khác gộp). Chiều đỏ: đột biến khoá gộp theo block_id thì ô OS2 ra hai toà, ca đỏ nêu mã ô"
+    paths: ["pipeline/lib/s09*", "pipeline/lib/danh-ba-vat-the.mjs"]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-3: khớp một → thêm bí danh ma_nguon S09 + ten, đếm toà không đổi; không khớp → (Hỏi-3 lối khuyến nghị) toà mới catalog_tier mot_loi_khai có UPI; khớp hai → 0 toà ghi, 1 thẻ review_queue entity_match nêu hai khoá; SELECT đếm toà có hai UPI = 0, block_id làm bí danh hai toà = 0. Chiều đỏ: đột biến chọn toà đầu khi khớp hai thì ca đỏ nêu tên toà"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/lib/s09*", "pipeline/scripts/*s09*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-4: mỗi phân khu đúng một nút subzone con của khu; phân khu trùng tên nút có sẵn dùng lại (0 nút mới); region_node_id của toà = nút phân khu; toà không phân khu ở cấp khu; toà S08 cấp khu chuyển xuống phân khu S09. Chiều đỏ: đột biến không tra nút có sẵn thì ra hai nút cùng tên, ca đỏ nêu tên phân khu"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s09*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-5: dựng ba lần; lần hai, ba 0 khoá toà/nút/bí danh/thẻ mới; băm tập (building_key, upi, region_node_id) bằng nhau cả ba lần. Chiều đỏ: đột biến bỏ tra bí danh ma_nguon S09 trước khi đúc thì lần hai đúc thêm, ca đỏ nêu «khoá mới ở lần hai»"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s09*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s09_that
+    expected: "Trên DB thử chép từ DB máy thu (xoá khi xong), bản thu API 13/11 nạp qua dongItemS09: v_s09_toa hai khu 115 và 61, ngày bàn giao 91 và 59, v_s09_phan_khu 13 và 7 — bằng số đếm trực tiếp trên hai bản Mạnh mở tay (đọc tệp riêng trong script, không import hàm của hàng); danh bạ OP1 toà nối S09 = 115, GP = 60 (61 bản ghi), nút phân khu 13 và 7, toà S08 nhận bí danh 12 và 34, toà hai UPI 0; in bảng trước/sau; số lệch kỳ vọng thì thoát 1 nêu ô"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/lib/s09*", "pipeline/scripts/*s09*", "db/migrations/097_*"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s09_that
+    expected: "Cùng DB thử: thước đếm độc lập viết trong script đo (không import hàm dựng) in số bài S03 căn hộ nhóm một khu gắn được toà, và số bài chỉ nêu phân khu/cụm phân giải được về một nút vùng, trước/sau mỗi khu; sau > trước ở cả hai khu; số trước bằng số đếm trên DB máy thu trước lượt (đối chứng thước, chỉ đọc)"
+    paths: ["pipeline/scripts/*s09*"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-8: DB thử áp tới 096 (không stg_s09_item) và DB thử có 097 nhưng 0 dòng một khu: bước S09 in «bỏ qua — …», thoát 0, băm danh bạ bằng băm khi chạy bản trước hàng (bước S08 không đổi). Chiều đỏ: đột biến bỏ kiểm to_regclass thì lệnh lỗi relation does not exist, ca đỏ"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s09*"]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s09_ranh_gioi
+    expected: "ngoai_vung=0 collector_doi=0 snapshots_doi=0 sync_cloud_doi=0 app_doi=0 ten_nguon=0 097_ap_hai_lan=ok; đối chứng dương ten_nguon: danh sách tên đọc từ DB máy thu không rỗng (in số tên, rỗng → thoát 2); đối chứng đỏ: tệp giả ngoài vùng trong cây tạm thì đếm 1, thoát 1"
+    paths: ["pipeline/scripts/*s09*", "db/migrations/097_*"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.s09_db
+    expected: "Ca DA31-AC-10 (chỉ khi Hỏi-1 = trong hàng này): ma trận bốn ô viết trước, một assert mỗi ô — tiền tố S10 hai toà cùng phân khu → 1 nút cụm con của phân khu, toà S10.0x trỏ cụm; toà lẻ GH1 → 0 nút; cùng tiền tố khác phân khu → 0 nút; toà không dấu chấm → 0 nút; dựng lại 0 nút mới. Chiều đỏ: đột biến bỏ điều kiện từ hai toà thì ô GH1 ra nút, ca đỏ nêu mã ô"
+    paths: ["pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/lib/s09*", "pipeline/scripts/*s09*"]
