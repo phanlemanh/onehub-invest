@@ -12,6 +12,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: config:executors.script.itnl_s06_duong
+    long_running: 30
     expected: "exit 0; ℹ pass 10, ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/s06-duong.itest.mjs", "pipeline/lib/nap-*.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -19,6 +20,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: config:executors.script.itnl_sdt
+    long_running: 30
     expected: "exit 0; ℹ pass 14, ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/sdt-trong-duong.itest.mjs", "pipeline/lib/nap-*.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -26,6 +28,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.script.itnl_phat_bieu
+    long_running: 45
     expected: "exit 0; mọi ca PD-AC-* ok gồm 'PD-AC-1 045 áp hai lần …' và 'PD-AC-1 sổ …' (ca đo trên DB dừng ở một mức thì in mức đó), ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/phat-bieu-db.itest.mjs", "pipeline/lib/nap-*.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -33,6 +36,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.dbv_that
+    long_running: 30
     expected: "exit 0; ℹ pass 5, ℹ fail 0; ca 'DBV-AC-7 vùng chép theo luật một tỉnh …' assert dương cha của mọi area được chép có mặt và thị trường cha có admin_code ok; đầu ra không có 'tinh-khong-co-iso' hay 'nhieu-tinh'"
     paths: ["pipeline/scripts/danh-ba-vat-the-that.itest.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -40,6 +44,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.itnl_doi_chung
+    long_running: 90
     expected: "exit 0; 'DOI CHUNG RB DO' (bản merge-base của nap-view-song: nạp lại 061 lỗi violated by some row, qx_thu mất); 'DOI CHUNG TEP DO 4/4' kèm tên s06-duong, sdt-trong-duong, phat-bieu-db, danh-ba-vat-the-that; không DB thử nào của tiến trình đã thoát còn sót"
     paths: ["pipeline/lib/nap-view-song.mjs", "_acceptance/itest-nap-lai-migration-cu-sau-095/probes/doi-chung.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -68,6 +73,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.itnl_dac_trung
+    long_running: 30
     expected: "exit 0; ℹ pass 8, ℹ fail 0, ℹ skipped 0"
     paths: ["pipeline/scripts/dac-trung-s06.itest.mjs", "pipeline/lib/nap-*.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
