@@ -5,7 +5,7 @@ slug: itest-nap-lai-migration-cu-sau-095
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-13T12:50:00Z
 approved_by:
@@ -72,3 +72,9 @@ Bỏ quét không gian (dòng `descope` trong sổ) — bảng quét 21 tệp đ
 - Migration đã commit và mã sản phẩm.
 
 ## Notes
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-13:
+  - Ngoài-2: probe co-096 chưa so mức migration của từng ca thử với DB nó dựng, nên ca đầu tiên dựng DB sai mức sẽ không bị báo đỏ.
+  - Ngoài-3: bước kiểm tiền đề «có phát biểu ngoài 061» trong bài thử nạp lại luôn qua, nên bài thử có thể xanh khi dữ liệu thử không đủ để làm lộ lỗi.
+  - Ngoài-4: vòng kiểm hợp trường sau nạp lại có thể chạy không lần nào nếu bộ nạp đổi cách viết câu, khi đó bài thử xanh mà không kiểm gì.
+  - Ngoài-5: probe co-096 chỉ in mức migration, không so với mức của ca, nên lệch mức không làm probe đỏ.
+  - Ngoài-6: đối chứng TEP coi mọi lần đỏ là đúng, không ghim thông điệp lỗi, nên đỏ vì hạ tầng cũng được tính là đạt.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: dab8b51740f582bf3a828580d7ceec333339deab
-human_signoff:
+human_signoff: Mạnh 2026-11-13
 ---
 
 # Evidence Report: itest-nap-lai-migration-cu-sau-095
