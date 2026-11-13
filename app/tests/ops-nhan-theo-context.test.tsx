@@ -361,7 +361,7 @@ test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ
   assert.deepEqual(loi, [], `bảng kiểm chất lượng còn chữ chưa diễn giải:\n${inSoi(loi)}`)
   // Trang thật (đúng hàm nạp của /ops/quality) cũng sạch.
   const { default: QualityPage } = await import("../src/app/ops/quality/page")
-  const page = await render(await QualityPage())
+  const page = await render(await QualityPage({ searchParams: Promise.resolve({}) }))
   assert.ok(page.includes("Kiểm chất lượng (7 ngày)"), "trang không có bảng kiểm chất lượng")
   assert.deepEqual(soiHtml(page), [], `trang /ops/quality còn chữ chưa diễn giải:\n${inSoi(soiHtml(page))}`)
 })
