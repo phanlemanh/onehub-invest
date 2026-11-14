@@ -3,11 +3,11 @@
 //   node pipeline/scripts/tap-nhan-hai-khu-ranh-gioi.mjs --base origin/main [--them-gia]
 // E7b: label-sample.mjs, label-nhap-ghep.mjs, lib/tang-ghep.mjs và mọi tệp trong pipeline/ mà chúng import TĨNH (bắc cầu) không chứa
 //   field_assertions, UniversalPropertyId, UniversalPropertySubId, và không import mã gắn của PL20 (MA_PL20). Import động không
-//   theo: label-sample.mjs chỉ nạp transform-zalo.mjs động cho lát phân tầng loại tin — đường chạy hai khu không chạm nó; E7 (thu
+//   theo: label-sample.mjs chỉ nạp transform của S03 theo kiểu động cho lát phân tầng loại tin — đường chạy hai khu không chạm nó; E7 (thu
 //   quyền DB lúc chạy) phủ lệnh thật. Đối chứng: cây tạm có tệp giả import tệp chứa field_assertions → đếm 1, nêu tên tệp.
 // E10: diff <base>...HEAD không đổi db/migrations/, pipeline/sync-cloud.mjs, app/; không dòng thêm, thông điệp, tác giả hay tên tệp
 //   nào chứa tên nguồn thật (đọc source_registry của DB máy thu, chỉ đọc; rỗng → thoát 2; chỉ in số). Định danh lược đồ có sẵn bỏ
-//   khỏi dòng trước khi dò; tệp máy sinh không quét chữ. Đối chứng: thêm một tệp giả dưới db/migrations/ thì đếm 1 (--them-gia: thoát 1).
+//   và tên tệp đã có trên nhánh gốc bỏ khỏi dòng trước khi dò; tệp máy sinh không quét chữ. Đối chứng: thêm một tệp giả dưới db/migrations/ thì đếm 1 (--them-gia: thoát 1).
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -88,10 +88,17 @@ for (const r of rows) for (const t of [r.real_name, ...(Array.isArray(r.source_i
 console.log(`ten_nguon_doi_chung=${ten.size}`);
 if (ten.size === 0) { console.error("danh sách tên nguồn rỗng — không đo được"); process.exit(2); }
 const DINH_DANH = new Set(dd.map((r) => r.t.toLowerCase()));
-const boDinhDanh = (l) => l.toLowerCase().replace(/[a-z0-9_]+/g, (w) => (w.includes("_") && DINH_DANH.has(w) ? "" : w));
+// Tên tệp đã có trên nhánh gốc (vd «transform-…mjs») cũng là định danh công khai sẵn: bỏ khỏi dòng như định danh lược đồ.
+const TEN_TEP = new Set(git("ls-tree", "-r", "--name-only", BASE).split("\n").flatMap((f) => {
+  const b = f.split("/").pop().toLowerCase();
+  return /[-_]/.test(b) ? [b, b.replace(/\.[a-z0-9]+$/, "")] : [];
+}));
+const boDinhDanh = (l) => l.toLowerCase()
+  .replace(/[a-z0-9_][a-z0-9_.-]*/g, (w) => (TEN_TEP.has(w) ? "" : w))
+  .replace(/[a-z0-9_]+/g, (w) => (w.includes("_") && DINH_DANH.has(w) ? "" : w));
 const coTen = (l) => { const x = boDinhDanh(l); return [...ten].some((t) => x.includes(t)); };
 const mau = [...ten][0];
-if (!coTen(`+ const x = "${mau}";`) || coTen("+ INSERT INTO airbnb_snapshots")) { console.error("bộ dò tên nguồn hỏng"); process.exit(2); }
+if (!coTen(`+ const x = "${mau}";`) || !coTen(`+ chạy ${mau}-moi.mjs`) || coTen("+ INSERT INTO airbnb_snapshots")) { console.error("bộ dò tên nguồn hỏng"); process.exit(2); }
 console.log("doi_chung_bo_do=ok");
 const them = [];
 let tepDang = "";

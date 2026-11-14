@@ -54,8 +54,12 @@ export function chonMauHaiKhu(posts, danhBa, { seed, co = CO_TANG, tinCua = new 
   const khuBai = new Map();
   let boNhom = 0, boLoaiKhac = 0;
   const cuaLat = [];
+  const demNhom = new Map(); // tên nhóm → { khu, so } cho mọi nhóm của lô (bảng nhóm → khu của AC-9)
   for (const p of posts) {
     const khu = khuCuaNhom(p.group_name);
+    const dn = demNhom.get(p.group_name ?? "") ?? { khu, so: 0 };
+    dn.so++;
+    demNhom.set(p.group_name ?? "", dn);
     if (!khu) { boNhom++; continue; }
     if (laLoaiKhac(p.text)) { boLoaiKhac++; continue; }
     khuBai.set(p.post_id, khu);
@@ -78,5 +82,5 @@ export function chonMauHaiKhu(posts, danhBa, { seed, co = CO_TANG, tinCua = new 
       ...(thieu ? { nhan: TANG_BAT_BUOC.includes(t) ? "bắt buộc" : "cho PL36" } : {}),
     };
   }
-  return { chon, moiTang, tin_cua_lat: cuaLat.length, khac_nhau: dai.length, bo_nhom: boNhom, bo_loai_khac: boLoaiKhac, bo_su_kien, bo_vi_trung };
+  return { chon, moiTang, tin_cua_lat: cuaLat.length, khac_nhau: dai.length, bo_nhom: boNhom, bo_loai_khac: boLoaiKhac, dem_nhom: demNhom, bo_su_kien, bo_vi_trung };
 }

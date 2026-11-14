@@ -14,8 +14,6 @@ import pg from "pg";
 import { layMau } from "../label-sample.mjs";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { CAU_CHEN_S09_ITEM, NOI_KHU_S09, dongItemS09 } from "../lib/s09-du-an.mjs";
-import { khuCuaNhom } from "../lib/eval-labels.mjs";
-import { loadStgPosts } from "../lib/test-posts.mjs";
 import { KHU_SLUG, LAT_HAI_KHU } from "../lib/mau-hai-khu.mjs";
 import { CO_TANG, TANG_BAT_BUOC } from "../lib/tang-ghep.mjs";
 
@@ -72,30 +70,21 @@ async function main() {
       if (Object.values(s09).some((x) => x === 0)) { console.error("chưa có toà S09"); process.exitCode = 2; return; }
     }
 
-    // Bảng nhóm → khu so với bảng viết trước.
+    const { rows: [{ so: nhanTruoc }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
+    const kq = await layMau(c, { lat: LAT_HAI_KHU, seed: SEED, thu: true, haiKhu: { co: CO_TANG } });
+    const { rows: [{ so: nhanSau }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
+    // Bảng nhóm → khu so với bảng viết trước (số bài theo nhóm do bộ chọn mẫu đếm trên lô đã gạt bài thử).
     const ky = JSON.parse(readFileSync(join(import.meta.dirname, "tap-nhan-hai-khu-nhom.json"), "utf8"));
-    const { posts } = await loadStgPosts(c, "zalo");
-    const theoNhom = new Map();
-    for (const p of posts) {
-      const khu = khuCuaNhom(p.group_name);
-      if (!khu && !ky.ngoai.includes(p.group_name)) continue;
-      const x = theoNhom.get(p.group_name) ?? { khu, so: 0 };
-      x.so++;
-      theoNhom.set(p.group_name, x);
-    }
-    console.log("\n| nhóm | khu máy | khu kỳ vọng | số bài |\n|---|---|---|---|");
     const kyKhu = new Map([...ky.op1.map((n) => [n, "op1"]), ...ky.gp.map((n) => [n, "gp"]), ...ky.ngoai.map((n) => [n, null])]);
-    for (const [n, x] of [...theoNhom].sort((a, b) => b[1].so - a[1].so)) {
+    const theoNhom = [...kq.dem_nhom].filter(([n, x]) => x.khu || kyKhu.has(n)).sort((a, b) => b[1].so - a[1].so);
+    console.log("\n| nhóm | khu máy | khu kỳ vọng | số bài |\n|---|---|---|---|");
+    for (const [n, x] of theoNhom) {
       const mong = kyKhu.has(n) ? kyKhu.get(n) : "(lạ)";
       console.log(`| ${n} | ${x.khu ?? "—"} | ${mong ?? "—"} | ${x.so} |`);
       if (mong === "(lạ)") loi.push(`nhóm lạ «${n}» (máy xếp ${x.khu})`);
       else if (mong !== x.khu) loi.push(`nhóm «${n}»: máy xếp ${x.khu ?? "ngoài"}, kỳ vọng ${mong ?? "ngoài"}`);
     }
-    for (const n of kyKhu.keys()) if (!theoNhom.has(n)) loi.push(`nhóm thiếu «${n}» (có trong bảng kỳ vọng, không có bài)`);
-
-    const { rows: [{ so: nhanTruoc }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
-    const kq = await layMau(c, { lat: LAT_HAI_KHU, seed: SEED, thu: true, haiKhu: { co: CO_TANG } });
-    const { rows: [{ so: nhanSau }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
+    for (const n of kyKhu.keys()) if (!kq.dem_nhom.has(n)) loi.push(`nhóm thiếu «${n}» (có trong bảng kỳ vọng, không có bài)`);
     console.log(`\ndanh_ba ${JSON.stringify(kq.danh_ba)} · bo_loai_khac ${kq.bo_loai_khac} · tin_cua_lat ${kq.tin_cua_lat} · khac_nhau ${kq.khac_nhau} · bo_su_kien ${kq.bo_su_kien} · bo_vi_trung ${kq.bo_vi_trung}`);
     console.log("| tầng | có | chọn | ghi chú |\n|---|---|---|---|");
     for (const [t, x] of Object.entries(kq.moiTangHaiKhu)) {
