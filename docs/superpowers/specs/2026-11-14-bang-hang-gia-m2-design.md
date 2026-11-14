@@ -64,6 +64,31 @@ Một dòng cho mỗi tin đang rao (`sale_offers`, cả bán lẫn thuê, mọi
    104», thoát 0.
 7. **`bait_gap_pct`** giữ nghĩa gốc: chênh giá câu P1 so với thước P2 cùng phường × loại (CG8), không đổi.
 
+
+```mermaid
+flowchart TD
+  T[Tin đang rao] --> V{Hợp lệ? loại đã biết · có phường · có giá · trong khoảng · qua ON11}
+  V -- không --> K[Không chấm, ghi ly_do]
+  V -- có --> B{Bán hay thuê?}
+  B -- bán --> M2[Thước giá/m²]
+  B -- thuê --> TM{Có m²?}
+  TM -- có --> M2
+  TM -- không --> PN{Có số PN?}
+  PN -- không --> K
+  PN -- có --> TH[Thước giá tháng, nhóm phường × loại × thuê × PN]
+  M2 --> G{Có PN và nhóm cùng PN ≥ 10 phiếu?}
+  G -- có --> GP[Nhóm phường × loại × kind × PN]
+  G -- không --> GL[Nhóm phường × loại × kind, ly_do pn-duoi-10 nếu có PN]
+  GP --> N{Số phiếu}
+  GL --> N
+  TH --> N
+  N -- dưới 5 --> K
+  N -- 5–9 --> S[Có số, không nhãn]
+  N -- từ 10 --> L{≤ p20 và dưới trung vị ≥ 5%?}
+  L -- có --> R[Nhãn Rẻ trong phường; > 35% thêm Cần xác minh]
+  L -- không --> S
+```
+
 ### 2.3 Mã lý do
 
 Lùi cấp: `pn-duoi-10` (nhóm cùng PN dưới 10 phiếu, dùng nhóm không chia PN). Không chấm: `chua-ro-loai`, `thieu-phuong`,
@@ -82,6 +107,14 @@ Lùi cấp: `pn-duoi-10` (nhóm cùng PN dưới 10 phiếu, dùng nhóm không 
 - **Bảng chưa có hay rỗng (Hỏi-5):** app trên Vercel đọc cloud; gộp vào `main` triển khai app trước khi Mạnh áp DDL cloud. Khuyến
   nghị: ba đường đọc kiểm bảng (`to_regclass` + có dòng); thiếu thì đọc theo cách CG8 (thước `v_ruler_p2`, chỉ bán) như hôm nay, không
   lỗi. Lối khác: chặn gộp tới khi DDL cloud đã áp.
+```mermaid
+flowchart LR
+  Q[/ops/deals, /api/v1/deals, /v1/deals] --> C{Bảng offer_price_rank có và có dòng?}
+  C -- có --> R[Đọc bảng: bán và thuê, P1 và P2, nhãn và hạng]
+  C -- không, khuyến nghị --> O[Đọc như CG8: thước v_ruler_p2, chỉ bán]
+  C -- không, lối khác --> X[Không xảy ra: chặn gộp tới khi DDL cloud đã áp]
+```
+
 - **Cloud:** `pipeline/sync-cloud.mjs` đẩy `offer_price_rank` như bảng con của tin sống; tệp catch-up DDL cho cloud nằm ở
   `docs/ops/`, áp là lời riêng của Mạnh. Cloud chưa có bảng → sync bỏ qua bảng này với một dòng cảnh báo, các bảng khác chạy như cũ.
 
