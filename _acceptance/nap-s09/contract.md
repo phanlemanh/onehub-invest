@@ -5,7 +5,7 @@ slug: nap-s09
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-14T07:13:26Z
 design_doc: docs/superpowers/specs/2026-11-14-nap-s09-design.md
@@ -61,3 +61,6 @@ main qua cổng. Lượt nạp thật trên máy thu là bước triển khai ri
 ## Notes
 
 - Bộ nạp là làn thu: lỗi logic nạp trả làn thu qua GS; làn Claude chỉ sửa lỗi tích hợp và thêm thước.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-2: Máy kiểm tự động hiển thị xanh nhưng thực ra không chạy các ca kiểm bộ nạp S09, nên lỗi sau này có thể lọt qua mà không ai biết.
+  - Ngoài-3: Một phép kiểm trong bộ test luôn cho kết quả đạt nên không thêm bảo đảm gì, nhưng không làm sai dữ liệu hay trải nghiệm của ai.
