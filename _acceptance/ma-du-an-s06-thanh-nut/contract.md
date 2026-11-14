@@ -5,7 +5,7 @@ slug: ma-du-an-s06-thanh-nut
 owner: phanlemanh@gmail.com
 risk_tier: T3      # hàng khai T3; chạm db/migrations và tạo nút danh bạ
 surfaces: [cli]      # lệnh pipeline + migration; từ vựng kit không có db
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-ma-du-an-s06-thanh-nut-design.md
@@ -99,3 +99,7 @@ Ngưỡng của `opportunity.md` (chép từ `bat_khi`):
 ## Notes
 
 - Số trong lời hàng (268 mã / 11.045 tin) là định nghĩa nhóm giá; hợp đồng theo chữ `bat_khi` (344 mã / 11.941 tin, 14/11).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-2: Áp thẻ luật lần hai trên dữ liệu đã đổi rồi đảo luật đầu thì máy báo đã đảo nhưng liên kết dự án còn nguyên; đảo luật sau thì gỡ cả liên kết của luật đầu.
+  - Ngoài-3: Phép kiểm chống đúc dự án trùng khi áp lần hai chưa chứng minh được là sẽ đỏ nếu bước chống trùng bị bỏ.
+  - Ngoài-4: Phép kiểm trợ lý đọc ngữ cảnh chưa chứng minh được là sẽ đỏ nếu bỏ điều kiện loại dự án ứng viên.
