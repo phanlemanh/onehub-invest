@@ -1,0 +1,65 @@
+schema_version: 1
+feature_slug: nap-s16-vao-danh-ba
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-1 trên DB oneinvest_suite_s16 (db-thu.sh, áp 001…103): fixture tổng hợp viết trước đủ 11 kind nạp hai lần qua dongS16 + câu chèn; lần một đúng số dòng hợp lệ bốn bảng, lần hai 0; bỏ thiếu-source-id 1, kind-la 1; dòng trùng y hệt trong csv ghi một lần; payload.url không có '://'; 103 áp lần hai lược đồ không đổi (so bản chụp information_schema); chèn bí danh source 'S16' được, 'S1A' bị từ chối 23514. Chiều đỏ: đột biến bỏ ON CONFLICT thì lần hai lỗi khoá trùng, ca đỏ nêu «nạp lại»"
+    paths: ["db/migrations/103_*", "pipeline/lib/s16*", "pipeline/scripts/*s16*"]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s16_that
+    expected: "Trên DB thử chép DB máy thu (xoá khi xong), ba bản thu S16 nạp qua dongS16; bộ đếm độc lập trong script đọc thẳng snapshot (không import pipeline/lib/s16*) ra số dự án, khu, toà, cặp (dự án, mã căn) — kỳ vọng cặp 147.266, in cạnh số tệp kê 147.268 kèm dòng lý do lệch — và nhóm mơ hồ; bảng hai cột stg/đếm thẳng bằng nhau từng ô; lệch thì thoát 1 nêu ô. Chỉ in số, không in mã căn hay tên nguồn"
+    paths: ["db/migrations/103_*", "pipeline/lib/s16*", "pipeline/scripts/*s16*"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s16_ham
+    expected: "Ca DA33-AC-3: ma trận năm ô viết trước, một assert mỗi ô (khác khu → một căn · khác hoa thường → một căn · toà thật + nhãn gom → toà thật · hai toà tiền tố → mơ hồ kèm hai tên · không toà tiền tố → mơ hồ). Cùng ma trận chạy qua v_s16_can trong E1 phải ra cùng kết quả (một luật hai bên đọc). Chiều đỏ: đột biến chọn toà đầu khi mơ hồ thì ô bốn đỏ, ca nêu mã ô"
+    paths: ["pipeline/lib/s16*", "db/migrations/103_*"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-4: ba dự án S16 tổng hợp, hai có trong NOI_DU_AN_S16 trỏ hai khu thử; dựng → toà, căn chỉ ở hai khu; dự án không nối 0 dòng buildings/units/bí danh, lệnh in số căn bị bỏ của nó; assert NOI_DU_AN_S16 bằng đúng năm cặp ghi trong contract (đọc bảng từ thiết kế §5.1). Chiều đỏ: đột biến nối theo tên gần đúng thì dự án thứ ba có toà, ca đỏ nêu «dự án không nối»"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*"]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-5: khớp một → bí danh ma_nguon S16 '<du_an>/<toa_id>' + ten, đếm toà không đổi; không khớp, có căn → đúng một toà bậc theo Hỏi-2 có UPI, region_node_id = phân khu trùng tên hoặc khu; nhãn gom có toa_id mà 0 căn → 0 toà, lệnh đếm «toà 0 căn» = 1; khớp hai → 0 toà, 1 thẻ entity_match nêu hai khoá vật thể; evidence mọi thẻ S16 không chứa token mã căn/toa_id/tên toà S16 của fixture (đối chứng dương: hàm soát bắt được khi cấy); SELECT toà hai UPI = 0, toa_id bí danh hai toà = 0. Chiều đỏ: đột biến chọn toà đầu khi khớp hai thì ca đỏ nêu tên toà"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*"]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-6: căn S08 cùng mã cùng toà nhận bí danh S16, 0 căn mới; lệch toà → 0 căn, 1 thẻ nêu hai khoá toà (evidence không mang token S16); mã mới tách được → căn có stack_key và floor đúng (assert giá trị); mã lô → stack_key NULL, sub_id = unit_key; SELECT mã S16 bí danh hai căn = 0, căn hai bí danh S16 = 0. Chiều đỏ: đột biến bỏ tra căn S08 thì có căn trùng mã, ca đỏ nêu mã"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*"]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-7: hai DB riêng oneinvest_suite_s16 và oneinvest_suite_s16b, cùng fixture; DB một S08 rồi S16, DB hai S16 trước rồi thêm dòng S08 và dựng lại; fixture có mã chung cùng toà và ít nhất một mã chung khác toà; tập (mã → số căn, có bí danh S16, số thẻ) bằng nhau; mã cùng toà đúng một căn mang cả bí danh S08 lẫn S16; mã khác toà đúng một căn và đúng một thẻ ở cả hai DB. Chiều đỏ: đột biến bỏ tra bí danh S16 trong bước S08 thì DB hai có mã hai căn, ca đỏ nêu «thứ tự»; đột biến bỏ kiểm toà trong bước S08 thì DB hai 0 thẻ, ca đỏ nêu «lệch toà»"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*"]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.s16_db
+    expected: "Ca DA33-AC-8: dựng ba lần; lần hai, ba 0 khoá toà/trục/căn, 0 bí danh, 0 thẻ mới; băm tập (unit_key, building_key, stack_key, floor) bằng nhau cả ba lần. Chiều đỏ: đột biến bỏ tra bí danh ma_nguon S16 trước khi đúc thì lần hai đúc thêm, ca đỏ nêu «khoá mới ở lần hai»"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*"]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.s16_soat
+    expected: "Ca DA33-AC-9: năm ca đỏ (thêm stg_s16_can vào danh sách đẩy · cấy mã căn S16 vào payload asset_nodes · cấy toa_id S16 vào asset_nodes · cấy mã căn vào một bảng khác trong FILL · cấy toa_id vào evidence một thẻ rồi gọi soatS16) mỗi ca hàm soát trả lỗi nêu bảng + cột, chuỗi lỗi không chứa giá trị cấy; payload sạch → xanh; khớp theo token (mã đứng trong chuỗi dài hơn không khớp nhầm, ca âm có tên). Thêm: quét mọi tệp diff của hàng (git diff origin/main) không có token tên nguồn thật lấy từ source_registry local (bỏ qua khi máy không có registry, in một dòng lý do)"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/lib/s16*", "pipeline/scripts/*s16*"]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.s16_that
+    expected: "Cùng script E2, sau khi nạp: dựng danh bạ năm khu đã nối; in bảng theo khu (toà nối, toà mới, căn S16, căn S08 nhận bí danh S16, thẻ); bảng số căn theo từng toà mới (tên che) và số toà mới dưới 10 căn; ở GP, OP1 ba phần (căn S08 nhận bí danh S16 · thẻ lệch toà · mã thuộc căn mơ hồ) đếm bằng ba SELECT riêng, tổng bằng số mã S08 có trong S16 đếm lúc chạy (đo 14/11: 1.283 và 153); 0 thẻ S16 mang token S16; sync-cloud chạy thử không gửi: 0 token S16 trong mọi bảng sẽ đẩy; SELECT toà hai UPI = 0, mã hai căn = 0; dựng lần hai 0 khoá mới, cùng số. Lệch thì thoát 1 nêu ô"
+    paths: ["pipeline/lib/s16*", "pipeline/danh-ba-vat-the.mjs", "pipeline/lib/danh-ba-vat-the.mjs", "pipeline/scripts/*s16*", "db/migrations/103_*"]

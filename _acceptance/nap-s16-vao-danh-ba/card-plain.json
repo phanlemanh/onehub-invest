@@ -1,0 +1,26 @@
+{
+ "feature_plain": "Mã căn chủ đầu tư S16 vào danh bạ ở năm khu đã có nút: toà, căn không trùng, căn S08 cùng mã thành một căn, và mã lấy bằng đăng nhập không rời máy.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ có bảng stg S16 nạp lại không nhân dòng, và hàm nạp dùng chung cho làn thu."},
+  {"id":"AC-2","p":"Sẽ đếm dự án, khu, toà, mã căn trong stg khớp với một bộ đếm đọc thẳng ba bản thu."},
+  {"id":"AC-3","p":"Sẽ gộp mỗi mã căn thành một căn; mã nằm dưới hai toà mà không chọn được thì ra thẻ."},
+  {"id":"AC-4","p":"Sẽ chỉ đưa vào danh bạ năm dự án S16 đã nối nút theo bảng anh duyệt."},
+  {"id":"AC-5","p":"Sẽ khớp toà S16 vào toà có sẵn hoặc đúc toà mới một lần; nhãn gom không có căn thì không thành toà."},
+  {"id":"AC-7","p":"Sẽ ra cùng một tập căn dù dựng S08 trước hay S16 trước."},
+  {"id":"AC-8","p":"Sẽ dựng lại bao nhiêu lần cũng không sinh toà, căn hay thẻ mới."},
+  {"id":"AC-9","p":"Sẽ chặn mọi lượt đồng bộ cloud có mang mã căn, mã toà, mã khu S16, kể cả trong thẻ duyệt."},
+  {"id":"AC-10","p":"Sẽ dựng trên bản chép dữ liệu máy thu và in số theo khu, theo toà mới, kèm phép cộng ba phần cho mã S08."}
+ ],
+ "wont_do": [
+  {"id":"AC-6","p":"Sẽ KHÔNG đúc căn thứ hai khi S08 đã có cùng mã cùng toà; khác toà thì chỉ ra thẻ."},
+  {"id":"OOS-1","p":"KHÔNG áp 103 hay dựng danh bạ trên DB máy thu ở hàng này — cần lời riêng của anh sau khi gộp."},
+  {"id":"OOS-2","p":"KHÔNG ghi dòng S16 vào sổ nguồn của máy thu ở hàng này — bước triển khai, cần lời anh."},
+  {"id":"OOS-3","p":"KHÔNG viết bộ nạp bản thu — làn thu viết, gọi hàm của hàng này."},
+  {"id":"OOS-4","p":"KHÔNG đưa tin rao, giá chủ đầu tư, quỹ căn S16 thành tin hay giá."},
+  {"id":"OOS-5","p":"KHÔNG đúc nút cho chín dự án S16 chưa có nút — chờ thẻ luật theo nguồn."},
+  {"id":"OOS-6","p":"KHÔNG tạo nút phân khu mới từ S16 khi chưa có lời anh áp mục 38 cho S16."},
+  {"id":"OOS-7","p":"KHÔNG hiện mã căn lấy bằng đăng nhập hay tin rao S16 lên Invest, API; KHÔNG thu định kỳ bằng đăng nhập."},
+  {"id":"OOS-8","p":"KHÔNG bù 47 toà khép một phần (khoảng 11.868 căn)."},
+  {"id":"OOS-9","p":"KHÔNG làm việc gắn tin vào căn theo thứ tự S16 > S08 > S03 — đó là các hàng GC."}
+ ]
+}
