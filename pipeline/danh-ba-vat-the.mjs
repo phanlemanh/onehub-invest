@@ -21,6 +21,8 @@ import {
 } from "./lib/danh-ba-vat-the.mjs";
 import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
+import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
+import { buocS09 } from "./lib/s09-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -64,6 +66,7 @@ export async function napBangIso(c) {
  */
 export async function dung(c, {
   khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null, tep: null }, runId = `dbv-${Date.now()}`, log = console.log, isoTheo = null,
+  noiS09 = NOI_KHU_S09,
 } = {}) {
   if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
@@ -210,6 +213,9 @@ export async function dung(c, {
         [t.key, kq.area_id, JSON.stringify({ nut_vung: kq.nut_vung }), runId]);
       phuong += r.rowCount;
     }
+
+    // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
+    const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
     await c.query("COMMIT");
 
     const theoKhu = {};
@@ -236,6 +242,7 @@ export async function dung(c, {
       builder_name_moi: builder,
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
+      s09,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
