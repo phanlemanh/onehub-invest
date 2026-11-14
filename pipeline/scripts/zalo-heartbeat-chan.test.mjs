@@ -90,12 +90,17 @@ test("D3-1: DOWN 2 nhịp → đúng 1 cảnh báo L6(d); nhịp 3 không lặp;
 test("D3-2: up lại → tự đóng (state xoá); sự cố kế sau khi hồi sẽ báo lại", () => {
   const home = mkdtempSync(join(tmpdir(), "s03-hb2-"));
   const cli = stubCli(home);
+  writeFileSync(join(home, "drift.sh"), "#!/bin/bash\nexit 0\n"); chmodSync(join(home, "drift.sh"), 0o755); // mọi ca UP bơm drift giả
   const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
   chayHb({ home, cli, state, alerts, moc }); // nhịp 1
   chayHb({ home, cli, state, alerts, moc }); // nhịp 2 — cảnh báo
-  chayHb({ home, cli, state, alerts, moc, up: true }); // up → tự đóng
+  chayHb({ home, cli, state, alerts, moc, up: true, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } }); // up → tự đóng
   assert.equal(require0(state), false, "state xoá khi up");
   assert.equal((docAlerts(alerts).match(/S03-SỐNG \[d\]/g) ?? []).length, 1, "vẫn đúng 1 cảnh báo của sự cố cũ");
+  // 1411-30 vòng 3(1): sự cố MỚI sau khi hồi phải được BÁO LẠI — hai nhịp DOWN nữa → 2 dòng [d]
+  chayHb({ home, cli, state, alerts, moc });
+  chayHb({ home, cli, state, alerts, moc });
+  assert.equal((docAlerts(alerts).match(/S03-SỐNG \[d\]/g) ?? []).length, 2, "sự cố mới sau khi hồi báo lại (2 dòng [d])");
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -139,13 +144,44 @@ test("D3-5: UP mà post 202 cuối cũ hơn 24 giờ → có dòng alert silent-
   const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
   const dau = join(home, "drift-dau");
   writeFileSync(join(home, "drift.sh"), "#!/bin/bash\nexit 0\n"); chmodSync(join(home, "drift.sh"), 0o755);
-  const cu = new Date(Date.now() - 25 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
+  // 1411-30 vòng 3(2): giờ phải ĐÚNG ISO như log thật (có «T» — bản trước ghi
+  // «YYYY-MM-DD HH:MM:SS» không T làm mốc parse 0 → ca xanh VÌ LỖI).
+  const cu = new Date(Date.now() - 25 * 3600_000).toISOString();
   const logDir = join(home, ".openclaw", "logs");
   mkdirSync(logDir, { recursive: true });
   writeFileSync(join(logDir, "oneinvest-zalo-pipe.log"), `${cu} post 202 hi-1\n${cu} heartbeat zalouser up accs=1/1\n`);
   chayHb({ home, cli, state, alerts, moc, up: true, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } });
   const log = readFileSync(join(logDir, "oneinvest-zalo-pipe.log"), "utf8");
   assert.match(log, /alert silent-gate/, "up + không tin 24h → alert silent-gate");
+  // ca âm: post 202 cách 1 giờ → KHÔNG có alert silent-gate (mốc parse đúng mới qua ca này)
+  const gan = new Date(Date.now() - 1 * 3600_000).toISOString();
+  writeFileSync(join(logDir, "oneinvest-zalo-pipe.log"), `${gan} post 202 hi-2\n`);
+  chayHb({ home, cli, state, alerts, moc, up: true, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } });
+  const log2 = readFileSync(join(logDir, "oneinvest-zalo-pipe.log"), "utf8");
+  assert.doesNotMatch(log2, /alert silent-gate/, "post 202 cách 1 giờ → KHÔNG alert (ca âm — giờ sai cũ sẽ làm ca này đỏ)");
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("D3-6 (vòng 3-3): CLI directory treo quá trần 20s → heartbeat kết thúc < ~25s, reason=unknown, VẪN cảnh báo L6(d)", () => {
+  const home = mkdtempSync(join(tmpdir(), "s03-hb6-"));
+  const cli = join(home, "cli");
+  writeFileSync(cli, `#!/bin/bash
+if [ "$1" = "channels" ]; then echo "Zalo Personal default disconnected"; exit 0; fi
+if [ "$1" = "directory" ]; then sleep 40; echo "groups: ok"; exit 0; fi
+exit 9`);
+  chmodSync(cli, 0o755);
+  const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
+  const t0 = Date.now();
+  // nhịp 1: directory treo → hết 20s → reason=unknown (cảnh báo L6(d) tính từ nhịp 2 theo luật ≥2 nhịp)
+  const r1 = chayHb({ home, cli, state, alerts, moc });
+  assert.match(readFileSync(state, "utf8"), /reason=unknown/, "hết giờ → reason=unknown");
+  // nhịp 2: directory trả ngay (lần gọi sau bị trần 1/giờ chặn — không treo) → đủ 2 nhịp → cảnh báo
+  const r2 = chayHb({ home, cli, state, alerts, moc });
+  const matS = (Date.now() - t0) / 1000;
+  assert.equal(r1.status, 0, `rc 0 nhịp treo — thực tế ${r1.status}`);
+  assert.equal(r2.status, 0, `rc 0 nhịp 2 — thực tế ${r2.status}`);
+  assert.ok(matS < 25, `hai nhịp phải kết thúc dưới ~25 giây (trần 20s + nhịp nhanh) — thực tế ${matS.toFixed(1)}s`);
+  assert.match(docAlerts(alerts), /S03-SỐNG \[d\]/, "vẫn chạy cảnh báo L6(d) khi lý do unknown");
   rmSync(home, { recursive: true, force: true });
 });
 

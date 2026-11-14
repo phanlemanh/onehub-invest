@@ -52,11 +52,27 @@ if [ -f "$HEARTBEAT_LINH_MUC" ]; then
 fi
 if [ "$GIOI_NHOM" = "1" ]; then
   date -u +%s > "$HEARTBEAT_LINH_MUC"
-  NHOM_OUT="$("$OPENCLAW" directory groups list --channel zalouser 2>&1 || true)"
+  # 1411-30 vòng 3(3): bọc trần ~20 giây — chạy nền rồi kill (macOS không có
+  # timeout; perl alarm sau exec không giết được con) — gateway treo đúng lúc
+  # DOWN thì heartbeat không được treo theo (mất cả dòng DOWN lẫn cảnh báo —
+  # đúng tình huống việc này sinh ra để bắt).
+  TEP_NHOM="$HEARTBEAT_LINH_MUC.out"
+  "$OPENCLAW" directory groups list --channel zalouser >"$TEP_NHOM" 2>&1 &
+  PID_NHOM=$!
+  ( sleep 20; kill "$PID_NHOM" 2>/dev/null ) >/dev/null 2>&1 & # chuyển hướng — giữ pipe mở làm trình gọi chờ EOF
+  CANH=$!
+  wait "$PID_NHOM"
+  RC_NHOM=$?
+  kill "$CANH" 2>/dev/null || true
+  # KHÔNG wait CANH — subshell sống tối đa tới 20s tự thoát (wait sẽ thêm 20s mỗi ca)
+  NHOM_OUT="$(cat "$TEP_NHOM" 2>/dev/null)"
+  rm -f "$TEP_NHOM"
   if printf '%s' "$NHOM_OUT" | grep -q "Đăng nhập thất bại"; then
     LY_DO="session"
   elif [ -n "$NHOM_OUT" ]; then
     LY_DO="stopped"
+  elif [ "$RC_NHOM" -ge 128 ]; then
+    LY_DO="unknown" # hết 20s bị kill (SIGTERM → 143); vẫn chạy cảnh báo L6(d) phía dưới
   fi
 fi
 # viết lại state GIỮ cờ d (cảnh báo một lần mỗi sự cố — heartbeat không được ghi đè mất cờ)
