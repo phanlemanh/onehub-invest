@@ -7,13 +7,13 @@
 ```mermaid
 flowchart TD
   A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
-  GD --> B["Sắp mở vòng<br/>24 việc"]
+  GD --> B["Sắp mở vòng<br/>22 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>17 việc"] --> GP{"Cổng Phạm vi"}
+  B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>183 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>116 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>187 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>123 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -28,7 +28,6 @@ flowchart TD
 - Mỗi tin đang rao có giá/m² hợp lệ mang hạng phần trăm trong nhóm sâu nhất đủ căn (hôm nay phường × loại × bán/thuê, thêm số phòng ngủ khi nhóm vẫn đủ), cùng số căn, trung vị, p20, phần trăm dưới trung vị, nhãn và lý do lùi cấp, do pipeline tính sẵn; /ops/deals và /v1/deals đọc bảng này (`bang-hang-gia-m2`)
 - Người vận hành mở thẻ nối dự án trên Ops, thấy cặp mã nguồn ↔ dự án máy đề xuất kèm căn cứ, duyệt từng cặp hoặc cả loạt cùng căn cứ, và mỗi cặp đã duyệt thành một bí danh (`bang-noi-ma-du-an`)
 - Transform S03 và S05 ghi mỗi Yêu cầu vào bảng inquiry_records (dịch vụ, loại hình, số phòng, diện tích, ngân sách với đầu dưới ở ListPriceLow, khu, bài nguồn, bằng chứng ý định); ý định lấy từ phát biểu lớp cao nhất giữa luật laYeuCau và nhãn model đọc tin, Kev thêm vào khi PL5 giao (`bang-yeu-cau-noi-lai`)
-- Số giảm của Căn giá tốt ở /ops/deals và ở API /v1/deals chỉ so tin với thước cùng phường × loại hình × bán/thuê; tin chưa rõ loại hình không có số giảm và ghi lý do (`can-gia-tot-cung-loai`)
 - Người vận hành chọn một vị trí bất kỳ trên cây (tỉnh → phường → dự án → phân khu → toà), lọc loại hình, bán hay thuê, số phòng ngủ, diện tích, tầng, đường và thấy danh sách Căn giá tốt xếp theo hạng giá/m², mỗi dòng kèm nhóm so sánh, số căn trong nhóm, lý do lùi cấp và độ tin (`can-gia-tot-loc-xep-hang`)
 - Người vận hành mở trang đo hằng ngày và thấy phân bố tin theo sáu mức gắn (căn, trục, toà, phân khu, dự án, phường) theo nguồn × vùng × loại nhà, kèm cảnh báo khi một ô giảm (`chi-so-muc-gan`)
 - Bản chiếu Danh bạ lên cloud gồm toà, trục, căn, bảng nối dự án, phát biểu thuộc tính dự án và tin sơ cấp, không mang tên nguồn thật, và trang Danh bạ đọc được trên cloud (`danh-ba-len-cloud`)
@@ -41,7 +40,6 @@ flowchart TD
 - Người vận hành thấy thẻ các dự án, toà mà tin nói tới nhưng danh bạ chưa có, gom theo tần suất kèm tin mẫu, rồi tạo nút ứng viên hoặc trỏ vào nút có sẵn (`nut-ung-vien-tu-tin`)
 - Người vận hành mở /ops/inquiries và lọc Yêu cầu theo dịch vụ, dự án, số phòng, ngân sách, người đăng, thời gian, trạng thái; mở một Yêu cầu thấy tiêu chí kèm câu trích và cách đọc, các bài đã đăng, người đăng nối sang /ops/people, và đánh dấu «Không phải Yêu cầu» (`ops-bang-yeu-cau`)
 - Kiểm «phường» và «trường lõi» trên đồng chảy và bậc dữ liệu chỉ nhận khu cấp phường; tin chỉ gắn tới tỉnh hay thành phố không còn được tính là có phường (`phuong-that-trong-truong-loi`)
-- Tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án, không đè phường đã có (`phuong-tu-du-an`)
 - Dự án của tin S06 (SubdivisionName, project_node) đi tới tin và căn (`s06-du-an-len-tin-can`)
 - Người vận hành gộp hai nút danh bạ, tách, đổi cha, đổi loại giữa dự án con và phân khu, hay rút một nút sai trên Ops, và mọi bí danh, liên kết tin, phát biểu kế thừa phía sau đi theo (`sua-cay-danh-ba`)
 - Thuộc tính trong danh mục S08 và S09 thành phát biểu ở đúng cấp: dự án (quy mô, loại hình, chủ đầu tư, bàn giao, loại căn và số căn, phí), phân khu, toà (tầng, hầm, thang máy, toạ độ, bàn giao), căn (diện tích kèm cách tính, phòng, hướng, loại căn) (`thuoc-tinh-danh-muc-s08-s09`)
@@ -64,9 +62,12 @@ flowchart TD
 - Nhận kit 2.35.0 — đổi đường bộ đệm có số sang 2.35.0 và khai vùng giao diện (design-floor bậc M1) (`nhan-kit-2-35-0`)
 - Nhận kit 2.36.0 — chép lớp CI theo thẻ, vẽ lại bản đồ, bật GITATTR-TEP-SINH (`nhan-kit-2-36-0`)
 - Nhận kit 2.37.0 — chép lớp CI theo bản cài, gỡ chân engine đỏ của đường nền (`nhan-kit-2-37-0`)
+- Trang tổng quan /ops hiện tên Việt cho vùng thu S06 là tỉnh cũ đã sáp nhập (binh-duong) thay vì in mã thô (`nhan-vung-moi-ops`)
 - API Thu thập trên cloud không đọc bảng chỉ có ở máy thu — gỡ 500 của /api/v1/ops/collections (`ops-collections-api-cloud`)
+- Trang /ops/quality khai props đúng kiểu trang của Next nên typecheck của app xanh cả khi thư mục kiểu sinh .next/types cũ hay vắng (`props-trang-ops-quality`)
 - MCP ReUI của kho gửi kèm key giấy phép (đọc từ biến môi trường) và kiểu giao diện của app, để phiên Claude dùng được gói Pro mà không phải đăng nhập (`reui-mcp-key`)
 - harness của s06-vung-moi-len-canonical chạy được transform-chotot có import gan-sdt-s06.mjs (`s06-vung-moi-harness-gan-sdt`)
+- Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
 ## Đã giao — chờ phiên nghiệm thu
@@ -78,6 +79,7 @@ flowchart TD
 - Bộ bóc SĐT của S03/S05 bắt đủ bốn dạng viết tách lạ, bỏ số 11 chữ số, và tin chọn SĐT theo luật rõ trên mọi bài của tin — dạng số ra giữ nguyên (`boc-sdt-du-va-chon-ro`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
 - Người vận hành quét Căn giá tốt trên một bảng có tab và lọc, mở sheet một căn để biết căn nào, ở đâu, ảnh gì, vì sao giá tốt, gọi ai, so với các căn cùng tiêu chí; căn thiếu dữ liệu ghi rõ thiếu gì; vai Người xem không nhận ảnh, chữ bài, liên hệ (`can-gia-tot-biet-can`)
+- Số giảm của Căn giá tốt ở /ops/deals và ở API /v1/deals chỉ so tin với thước cùng phường × loại hình × bán/thuê; tin chưa rõ loại hình không có số giảm và ghi lý do (`can-gia-tot-cung-loai`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
 - Đọc gộp tin S03 (chữ, mọi ảnh, thẻ nhóm) ra 17 ô với bảng chọn model theo ô, mặc định Haiku 5.5 (`chon-model-theo-o`)
@@ -104,6 +106,7 @@ flowchart TD
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
 - Người vận hành mở /ops/data-flow ở máy thu khi bước làm tươi số dòng chảy hỏng quá 45 phút thì thấy cảnh báo số cũ như trên cloud, không phải số cũ trình bày như số mới (`dong-chay-so-cu-may-thu`)
 - Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0% (`dq-moi-nhat-moi-kiem`)
+- Tin S03 mang phát biểu dự án (project_node_id) từ hai nguồn chắc — nhóm có đúng một dự án trong sổ nhóm, và tên dự án bài tự nêu khớp danh bạ; tin mâu thuẫn không ghi mà đưa người duyệt (`du-an-tren-tin-s03-tu-nhom-va-ten`)
 - Lệnh dựng danh bạ vật thể chạy được trên DB máy thu bằng cờ cho phép tường minh, kiểm slug khu, và có bước trong chạy đêm (`dung-danh-ba-may-thu`)
 - Ô đường viết không dấu so như dạng có dấu — «30 thang 4» ↔ «2 thang 4» là hai đường khác, «3 thang 2» không bị coi số 3 là số nhà, ô chỉ «Ngo»/«Hem» là thiếu tên đường (`duong-thang-n-khong-dau`)
 - Enrich chạy mỗi đêm sau lượt nạp S03/S05 — mỗi tin một giao dịch ngắn, ghi đề xuất và áp luật xác định, lỗi LLM có đếm, dòng tổng kết đếm đúng, không bốc lại tin đã thử (`enrich-chay-sau-nap`)
@@ -121,6 +124,7 @@ flowchart TD
 - Chấm lại ghép căn không đổi thẻ người vừa quyết, và so phường theo cùng khoá với thẻ duyệt (`judge-giu-quyet-dinh-nguoi`)
 - Bộ đánh giá ghép căn loại trừ tất định một cặp khi một đặc trưng nhà khác rõ, ghi đặc trưng nào khác vào evidence (`judge-luat-loai-tru-dac-trung`)
 - Ghép căn kết luận bằng luật ngưỡng trong code, LLM chỉ viết lời giải thích; mỗi lần chấm ghi model và trace lên thẻ; mọi cặp ứng viên needs_llm sinh đúng một thẻ ghép căn (`judge-nguong-la-code`)
+- Mỗi tin thuộc nhiều nhất một căn, và đổi giá một tin không sinh căn mới (`khoa-gop-can-khong-gia`)
 - Thẻ duyệt ghép căn và luật chấm cùng coi «P.12» là «Phường 12» (`khoa-phuong-chung-phuong-so`)
 - Leak gate của sync cloud đỏ khi role anon còn SELECT được bất kỳ bảng hay view nào (`leak-gate-kiem-anon`)
 - Nhà đầu tư mở /listing/[id] thấy đầu trang product-detail-5, ảnh tự thu khi có (không có thì ẩn gallery), lịch form-5 không còn điều khiển thô, vùng dữ liệu có Skeleton và Empty (`listing-detail-product-detail-5`)
@@ -128,6 +132,7 @@ flowchart TD
 - Nhật ký thao tác Ops (GET /api/v1/ops/audit) không trả dấu máy enrich:thu — thao tác của người không bị đẩy khỏi 100 dòng gần nhất (`loc-enrich-thu-ops-audit`)
 - Trên máy chủ, ô và lưới Khoá an toàn đọc khối lockdown máy thu đẩy lên; không có số thì 8/8 lớp «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và collector API ở Máy móc cùng trạng thái với Khoá an toàn (`lockdown-cloud-theo-facts`)
 - Route POST /api/v1/ops/zalo/login từ chối accountId không có trong danh sách tài khoản trước khi spawn openclaw channels login (`login-kiem-id`)
+- DA5 — tin S06 không còn mã căn và số nhà rác từ cờ nguồn, và mang toà từ trường block của nguồn thành phát biểu (`ma-can-s06-sach`)
 - Người gắn nhãn mở màn gắn nhãn trên /ops, gắn trường lõi cho tin của lát mà không thấy giá trị máy đoán, và 20% tin được gắn trùng để đo đồng thuận (`man-gan-nhan-mu`)
 - Bản khai công cụ app/docs/api/mcp-tools.json khớp sổ bề mặt API: công cụ tin rao đòi bearer ops hoặc bị gỡ, không công cụ nào ghi «public» trái sổ (`mcp-tools-theo-so-be-mat`)
 - Ảnh của tin S03 và S06 nằm ở một bảng media canonical theo RESO Media nối với offer, và /ops/review, /ops/data-flow ở máy thu đọc ảnh từ bảng này (`media-canonical-reso`)
@@ -145,6 +150,7 @@ flowchart TD
 - Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px (`ops-review-khung-hang-cho`)
 - Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên (`phat-bieu-va-phan-xu`)
 - Thẻ duyệt ghép căn và luật chấm đọc trọn các cách ghi phường số (`phuong-so`)
+- DA9 — tin gắn dự án nằm trọn một xã nhận phường suy ra từ dự án (phát biểu area_id kế thừa + bộ phân xử đưa vào cột khi tin chỉ tới tỉnh hay trống), không đè phường đã có (`phuong-tu-du-an`)
 - Proxy ảnh tin /api/zalo-media chỉ phục vụ ảnh raster an toàn (jpeg/png/webp/gif); SVG và kiểu ảnh lạ trả 415; mọi phản hồi ảnh mang nosniff + CSP sandbox (`proxy-anh-chan-svg`)
 - Mọi route /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở ops-access.ts, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction (`quyen-bon-vai-mot-cho`)
 - Quyết định trên thẻ ghép căn chỉ ghi khi chạm đúng một ứng viên còn chờ; không chạm được thì route trả lỗi có tên, thẻ vẫn chờ, không dòng nào được ghi (`quyet-dinh-phai-cham-ung-vien`)
@@ -168,6 +174,7 @@ flowchart TD
 - Một sổ từ vựng sinh bảng ref_*, hằng TS/JS, enum prompt và nhãn tiếng Việt; lint đỏ khi có enum viết tay ngoài sổ (`so-tu-vung-mot-nguon`)
 - Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi (`soat-tang-a-moi-duong-len-cloud`)
 - Bộ đọc ngân sách của Yêu cầu đọc đúng đầu dưới, đầu trên và đơn vị ở các cách viết tắt và sáu lỗi Ngoài của hồ sơ bang-yeu-cau (`sua-doc-ngan-sach-yeu-cau`)
+- Người vận hành bấm tạm dừng hoặc bật lại một nguồn trên /ops ở cloud, ghi lý do, và thấy lệnh đi tới «đã áp lúc HH:MM» kèm trạng thái trước và sau (`tam-dung-nguon-tu-cloud`)
 - Tin S03 ghi tầng (số tầng hay dải cao, trung, thấp) mang phát biểu tầng có trích dẫn, ở field đã kiểm RESO (`tang-tren-tin-s03`)
 - Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ tới bảng canonical — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong (`tap-nhan-mau-ocp1`)
 - Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch (`the-duyet-du-can-cu`)
@@ -177,6 +184,7 @@ flowchart TD
 - Người duyệt mở thẻ ghép căn và thấy bảng so đọc giá trị sống của hai tin, ô thiếu một bên hiện «Thiếu» chứ không tính là «Lệch» (`the-so-doc-gia-tri-song`)
 - Mọi phát biểu có thời điểm quan sát; mỗi tin có trạng thái chào được phân xử từ bằng chứng theo thời gian; giá và trạng thái của tin được giữ thành lịch sử gom được theo căn; căn lên B5 khi đang chào, còn trong cửa sổ độ tươi và có lịch sử giá (`thoi-gian-va-hieu-luc`)
 - Phần danh mục dự án của S07 thu theo giải pháp ZCode, ưu tiên Hà Nội và HCM, và nạp vào stg_* không nhân dòng (`thu-danh-muc-s07`)
+- Phân khu và toà S09 của Ocean Park 1 và Grand Park vào danh bạ không sinh toà trùng, nên tên toà bài S03 nêu mà danh bạ chỉ có từ S08 khớp được (`toa-s09-hai-khu-vao-danh-ba`)
 - Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx (`trang-chu-methodology`)
 - Job nạp Zalo hằng đêm thoát khác 0 khi bước transform-zalo hoặc refresh-bait-gap hỏng, mỗi bước hỏng in một dòng JOB FAIL; phần nạp giữ nguyên (`transform-zalo-boc-job-run`)
 - DA2 — tin rao mọi nguồn ghi được phát biểu dự án, phân khu và phường (project_node_id, subzone_node_id, area_id ở resource Property), migration 096 (`truong-du-an-tren-tin`)
@@ -268,9 +276,11 @@ flowchart TD
 - PL1 — importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST), không ghi chúng vào stg_* (`importer-bo-qua-du-lieu-thu`)
 - lối cài riêng job sao lưu tuần — install-cron.sh --chi backup chỉ cài job sao lưu, không khởi động lại job thu đang chạy (`install-cron-chi`) — đã giao — máy thông, cửa veto còn mở
 - Bản đồ đích cổng Invest — block đích cho mọi route Invest trước khi dọn tiếp (`invest-target-map`)
+- Itest nạp lại migration cũ xanh lại trên DB đã có 095 — phép đo về migration X chạy trên DB dừng ở X, bộ nạp lại không bao giờ thu hẹp ràng buộc trường, bền với 096 (`itest-nap-lai-migration-cu-sau-095`)
 - ZC1 nối tiếp — cứng hoá ingest của collector API (media rác không làm hỏng lô, id tin chữ giữ nguyên, payload nguyên vẹn) (`kev-nhan-cung-hoa`)
 - sửa thước kiểm kev-nhan đỏ sẵn trên main — tên thư mục giả theo khuôn PL1 và chữ log Kev hỏng theo ZC6 (`kev-nhan-thuoc-sau-pl1`)
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
+- Khai hạn độ tươi 192 giờ cho S10, S11 — báo độ tươi thôi ghi «chưa khai SLO», ca báo cáo ngày không còn dựa vào việc hai nguồn đang hỏng (`khai-slo-s10-s11`)
 - kho tri thức riêng tư đi kèm — nguồn của mọi bản phạm vi đang dùng là trang tri thức ghim băm (`kho-tri-thuc-invest`)
 - khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ; S05 tạm dừng thì bước thu không gọi Apify; lịch S05 xuống 2 lượt/tuần (`khoa-nap-s05-paused`)
 - Người duyệt thấy đủ các ảnh khác nhau của một tin, không bị ảnh đăng lại lấp hết trần 12 ảnh; màn gắn nhãn dùng cùng luật (`khu-trung-anh-tin`)
@@ -330,6 +340,7 @@ flowchart TD
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
 - bộ thu và bộ nạp S08 không nuốt lỗi token, không trùng sourceId danh mục, không đọc nhầm số (`s08-noi-tiep`)
+- Bảng hàng chủ đầu tư S10 vào stg (migration 089) và nối được vào nút dự án của danh bạ (`s10-bang-hang-vao-danh-ba`)
 - Máy thu có công cụ sao lưu hằng ngày ra kho restic mã hoá trên máy (đích B2), thử khôi phục định kỳ và cảnh báo quá hạn — chứng minh trên dữ liệu giả (`sao-luu-ma-hoa-b2`)
 - Phép đo danh bạ SĐT chặt — mỗi số một người đo mỗi đêm, đúng ảnh và tên đúng người khi chuyển 060, che số /ops/people qua loader thật (`sd3-lam-chat-do-danh-ba`)
 - Test người bán theo SĐT (SD3) chịu chạy song song — mỗi ca dựng lược đồ riêng, không xếp hàng khoá tư vấn dùng chung (`sd3-test-chiu-song-song`)
@@ -343,6 +354,7 @@ flowchart TD
 - Số ghép S06 không vào danh bạ Người và hiện trên Invest kèm nhãn chưa xác minh — điều kiện trước khi áp 068, migration 070 (`so-ghep-s06-nhan-danh-ba`)
 - Lệnh tạm dừng có hẹn bật lại sai kiểu không còn làm kẹt hàng lệnh, job ops-apply tìm được node dưới launchd, và token máy cấp được từ máy thu qua Management API (`so-lenh-sua-sau-tv4`)
 - ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau (`sourceid-tin-anh`)
+- Danh mục cấp dự án của S08 (địa chỉ, chủ đầu tư, điểm toạ độ, hình thức sở hữu, loại hình) nằm trong stg_s08_project, nạp lại không nhân dòng (`stg-du-an-s08`)
 - Bảng staging stg_s08_inventory cho danh mục căn S08 (migration 040) (`stg-s08-inventory`)
 - Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files (`stg-zalo-media-files`)
 - Khoá Data API Supabase prod — thu quyền anon/authenticated, bật RLS mọi bảng public (migration 037) (`supabase-lock-anon-rls`)

@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: tam-dung-nguon-tu-cloud
+# Ca «TD-AC-n». Bốn executor:
+# - tdn_route (app, DB thử của riêng lượt): tests/tam-dung-nguon.test.tsx — handler route thật trên lược đồ tạm chạy 091.
+# - tdn_hien (app, không DB): tests/lenh-hien.test.ts — hàm thuần trangThaiLenh, coTheGui, nutNguon.
+# - tdn_dau_cuoi (app, DB thử của riêng lượt): tests/tam-dung-dau-cuoi.test.tsx — route → kéo → apLenh → ingest → isRunnable.
+# - tdn_ui (app, jsdom, không DB): tests/tam-dung-nguon-ui.test.tsx — hộp thoại và cột Thao tác dựng thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tdn_route
+    paths: [app/src/app/api/v1/ops/change-requests/route.ts, app/tests/tam-dung-nguon.test.tsx]
+    expected: "exit 0; ca 'TD-AC-1' trên lược đồ tạm chạy 091: vai ops POST source.pause S05 reason 'hết credit' tu_duyet true → 201, SELECT status, approved_by, requested_by, decided_at deepEqual {status:'approved', approved_by: actor, requested_by: actor, decided_at khác null}; ops_audit tăng đúng 2 dòng với action ['change_request.create','change_request.decide']; cùng lời gọi không tu_duyet → status 'submitted', audit tăng 1; viewer → 403; ops gửi source.resume tu_duyet → 403 và đếm change_requests không đổi; admin gửi source.resume S05 tu_duyet → 'approved'; cùng giao dịch: bản sao route làm lần ghi audit 'change_request.decide' ném lỗi → POST trả 5xx, đếm change_requests và ops_audit deepEqual trước (không còn lệnh treo ở 'submitted'); đối chứng đỏ: bản sao route bỏ nhánh tu_duyet thì ô ops pause tu_duyet ra 'submitted', ca nêu 'tu-duyet'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tdn_route
+    paths: [app/src/app/api/v1/ops/change-requests/route.ts, "app/src/app/api/v1/ops/change-requests/[id]/decide/route.ts", app/tests/tam-dung-nguon.test.tsx]
+    expected: "exit 0; ca 'TD-AC-2': admin A POST source.pause S03 tu_duyet true → 201 status 'submitted', audit tăng 1; A gọi decide approve → 409 body.error 'can-nguoi-thu-hai', status vẫn 'submitted'; admin B decide approve → 200 status 'approved'; đối chứng đỏ: bản sao route bỏ điều kiện target S03 trong nhánh tu_duyet thì lệnh S03 ra 'approved', ca nêu 'S03'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tdn_hien
+    paths: [app/src/lib/lenh-hien.ts, app/tests/lenh-hien.test.ts]
+    expected: "exit 0; ca 'TD-AC-3a' ma trận viết trước 5 ô (assert đúng 5 phần tử): coTheGui('') false, coTheGui('   ') false, coTheGui('a'.repeat(501)) false, coTheGui('a'.repeat(500)) true, coTheGui('  hết credit ') true; đối chứng đỏ: bản sao bỏ trim thì ô '   ' lệch, ca nêu 'khoang-trang'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tdn_ui
+    paths: [app/src/components/ops/collections/lenh-nguon-dialog.tsx, app/tests/tam-dung-nguon-ui.test.tsx]
+    expected: "exit 0; ca 'TD-AC-3b' dựng hộp thoại thật trong jsdom cho S05 active: nút 'Gửi lệnh' có disabled khi ô Lý do trống và khi gõ '   '; gõ 'hết credit' thì nút bật; bấm gửi với fetch giả → fetch được gọi đúng 1 lần với body.tu_duyet true, body.payload.reason 'hết credit', body.idempotency_key chuỗi khác rỗng; bấm hai lần liền → vẫn 1 lần gọi; fetch giả trả 400 {ly_do:'thieu-reason'} → Alert hiện chữ chứa 'lý do', ô Lý do giữ nguyên chữ; đối chứng đỏ: bản sao bỏ disabled thì ca nêu 'nut-tat'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tdn_route
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/change-requests/route.ts, app/tests/tam-dung-nguon.test.tsx]
+    expected: "exit 0; ca 'TD-AC-3c': vai ops POST source.pause S05 payload.reason '   ' tu_duyet true → 400 body.ly_do 'thieu-reason'; đếm change_requests và ops_audit deepEqual trước; đối chứng dương cùng fixture với reason 'hết credit' → 201"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tdn_hien
+    paths: [app/src/lib/lenh-hien.ts, app/tests/lenh-hien.test.ts]
+    expected: "exit 0; ca 'TD-AC-4' ma trận viết trước 8 ô (assert đúng 8 phần tử trước khi lặp), mỗi ô deepEqual nhãn: submitted S03 → 'Chờ người thứ hai duyệt'; submitted S05 → 'Chờ duyệt'; approved → 'Chờ máy thu nhận'; queued queued_at 2026-11-12T03:05:00Z → 'Máy thu đã nhận lúc 10:05'; applied finished_at 2026-11-12T03:07:00Z before {status:'active'} after {status:'paused'} → nhãn 'Đã áp lúc 10:07' và truoc_sau 'Đang chạy → Tạm dừng'; failed result {ly_do:'nguon-khong-active'} → nhãn bắt đầu 'Không áp được:' và chứa lý do đã dịch; reverted → 'Đã hoàn lại'; rejected → 'Bị từ chối'; mỗi ô còn deepEqual tone viết trước (submitted/approved → 'warning-light', queued → 'info-light', submitted S03 → 'info-light', applied → 'success-light', failed → 'destructive-light', reverted/rejected → 'secondary'); đối chứng đỏ: bản sao dùng giờ UTC thì ô queued ra '03:05', ca nêu 'gio-vn'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tdn_hien
+    paths: [app/src/lib/lenh-hien.ts, app/tests/lenh-hien.test.ts]
+    expected: "exit 0; ca 'TD-AC-5' ma trận viết trước 6 ô (assert đúng 6): approved + lastPullAt null → canh 'Máy thu chưa kéo lệnh lần nào'; approved + lastPullAt cũ 6 phút (03:00Z, now 03:06Z) → 'Máy thu chưa nhận lệnh từ 10:00'; approved + lastPullAt cũ 4 phút → canh null; queued, applied, submitted cùng lastPullAt null → canh null; đối chứng đỏ: bản sao bỏ điều kiện status approved thì ô queued có cờ, ca nêu 'chi-approved'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tdn_hien
+    paths: [app/src/lib/lenh-hien.ts, app/tests/lenh-hien.test.ts]
+    expected: "exit 0; ca 'TD-AC-6' ma trận viết trước 30 ô = 3 vai × 5 trạng thái × 2 lệnh chờ (assert đúng 30 phần tử, sinh bằng vòng lặp từ ba mảng khai trước, kỳ vọng từng ô viết tay trong một bảng 30 dòng): đúng 2 ô ra 'pause' (ops·active·không chờ, admin·active·không chờ), đúng 1 ô ra 'resume' (admin·paused·không chờ), 6 ô có chờ ở active/paused với vai ≥ ops ra {nut:null, ghi_chu:'Đang có lệnh chờ'}, các ô còn lại {nut:null}; đối chứng đỏ: bản sao cho ops bật lại thì ô ops·paused lệch, ca nêu 'resume-admin'; ca 'TD-AC-6c' trangThaiHieuLuc ma trận viết trước 4 ô (assert đúng 4): bản tin 'active' + lệnh applied after.status 'paused' finished_at sau factsPushedAt → 'paused'; cùng lệnh nhưng finished_at trước factsPushedAt → 'active'; lệnh mới nhất là failed → 'active'; không lệnh → 'active'; đối chứng đỏ: bản sao bỏ so finished_at với factsPushedAt thì ô thứ hai lệch, ca nêu 'moc-ban-tin'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tdn_dau_cuoi
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/change-requests/**, app/src/app/api/v1/ops/ingest/route.ts, app/src/lib/lenh-hien.ts, pipeline/lib/lenh.mjs, pipeline/lib/vong-doi.mjs, app/tests/tam-dung-dau-cuoi.test.tsx]
+    expected: "exit 0; ca 'TD-AC-7' trên DB thử, lược đồ tạm kiểu cloud (091 + machine_tokens có token thử ops:pull) và lược đồ tạm kiểu máy thu (091 + source_registry S05 active): route tạo (vai ops, tu_duyet) → GET …/pull bằng token máy trả đúng lệnh đó → apLenh của pipeline/lib/lenh.mjs → POST ingest kind change_request_results bằng token máy → GET danh sách: lệnh status 'applied', before.status 'active', after.status 'paused', trangThaiLenh nhãn bắt đầu 'Đã áp lúc'; isRunnable(docTrangThai(S05)) báo không chạy; lặp với source.resume vai admin tu_duyet → applied, after.status 'active', isRunnable báo chạy; đối chứng đỏ: chạy lại chuỗi pause với route bỏ nhánh tu_duyet → GET pull trả 0 lệnh và isRunnable vẫn chạy, ca nêu 'cho-duyet'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tdn_ui
+    paths: [app/src/components/ops/collections/feeds-grid.tsx, app/src/components/ops/collections/lenh-gan-day.tsx, app/src/components/ops/collections/lenh-nguon-dialog.tsx, app/tests/tam-dung-nguon-ui.test.tsx]
+    expected: "exit 0; ca 'TD-AC-6b' dựng FeedsGrid thật trong jsdom với ba nguồn (S05 active, S06 paused, S08 retired): vai viewer → không có tiêu đề cột 'Thao tác' và 0 nút 'Tạm dừng'/'Bật lại'; vai ops → đúng 1 nút 'Tạm dừng' (hàng S05), 0 nút 'Bật lại'; vai admin → 1 'Tạm dừng', 1 'Bật lại' (hàng S06); S05 có lệnh chờ → hàng S05 chữ 'Đang có lệnh chờ', 0 nút; đối chứng đỏ: bản sao FeedsGrid bỏ kiểm vai thì viewer thấy cột, ca nêu 'viewer'; ca 'TD-AC-6d' dựng vùng Lệnh gần đây thật với fetch giả: đang chờ fetch → có Skeleton (data-slot='skeleton'); trả {commands:[]} → chữ 'Chưa có lệnh nào'; trả 500 → chữ 'Không tải được danh sách lệnh' và nút 'Thử lại', bấm Thử lại → fetch gọi lần hai; dòng S03 submitted requested_by 'user:A': phiên admin 'user:B' thấy nút 'Duyệt' và 'Từ chối', phiên admin 'user:A' và phiên ops không thấy; hộp thoại đang gửi (fetch treo) → nút mang chữ 'Đang gửi…' và disabled"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/collections/**, app/src/lib/lenh-hien.ts, app/src/app/api/v1/ops/change-requests/route.ts]
+    steps: "Từ gốc worktree đang kiểm: dựng DB thử 'bash db/db-thu.sh oneinvest_p4_tv4b' (chép DB local, đủ bảng 091 và tài khoản thử); ghim S05 đang chạy trên DB thử bằng psql trong container one-invest-db (UPDATE source_registry SET status = 'active' WHERE code = 'S05' trên oneinvest_p4_tv4b, không chạm DB chung) rồi kiểm SELECT status trả active; chạy 'DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p4_tv4b node scripts/dev-ops-account.mjs' và cùng DATABASE_URL với '--vai viewer' để có hai tài khoản thử (mật khẩu ở .claude/ops-test-account.json, .claude/viewer-test-account.json, không in ra); chạy app dev ở cổng riêng :3464 với cùng DATABASE_URL ('npm --prefix app run dev -- -p 3464'); mọi URL là http://localhost:3464. Đăng nhập /login bằng tài khoản ops; mở /ops/collections; chụp lưới Sức khoẻ nguồn; bấm 'Tạm dừng' ở hàng S05; chụp hộp thoại khi ô Lý do trống; gõ 'thử TV4b — hết credit'; chụp; bấm 'Gửi lệnh'; chụp vùng 'Lệnh gần đây' và hàng S05. Đăng xuất, đăng nhập tài khoản viewer, mở /ops/collections, chụp lưới. Xong xoá DB thử: 'bash db/db-thu.sh oneinvest_p4_tv4b --xoa'."
+    expected: "vai ops: lưới có cột 'Thao tác', hàng S05 có nút 'Tạm dừng'; hộp thoại có tiêu đề nêu S05 và dòng 'Đang chạy → Tạm dừng'; nút 'Gửi lệnh' mờ/tắt khi Lý do trống, bật sau khi gõ; sau gửi có toast 'Đã gửi lệnh tạm dừng S05', vùng 'Lệnh gần đây' có dòng S05 với nhãn 'Chờ máy thu nhận' (và có thể dòng 'Máy thu chưa…'), hàng S05 hiện 'Đang có lệnh chờ' thay cho nút; vai viewer: không có cột 'Thao tác', vùng 'Lệnh gần đây' vẫn đọc được. Giới hạn đã khai: màn chạy trên đường dữ liệu máy thu (trang Thu thập dựng FeedsGrid và vùng lệnh bằng cùng thành phần ở cả hai đường); đường cloud của cùng thành phần do E10 dựng với dữ liệu kiểu bản tin"
+    evidence_required: [screenshot, observed, verifier, verified_at]

@@ -201,11 +201,6 @@
       "tep": "pipeline/scripts/ops-apply-plist.test.mjs",
       "ca": "SS-AC-7 chạy đúng dòng cài của runtime-map vào thư mục tạm: node tuyệt đối chạy dưới PATH launchd",
       "ly_do": "cần plutil của macOS, chỉ chạy ở máy thu; lượt chấm S4 vòng 2 xanh; sẽ viết lại phép đọc plist không phụ thuộc plutil ở hàng nối"
-    },
-    {
-      "tep": "pipeline/scripts/truong-du-an-tren-tin.test.mjs",
-      "ca": "TDT-AC-4 áp 096 lần hai không lỗi, dấu lược đồ không đổi",
-      "ly_do": "áp 096 lần hai qua docker exec (apTep của db-thu-dbv) — chỉ chạy ở máy thu; lượt chấm S4 vòng 3 xanh; sẽ chuyển sang pg.Client và gỡ bỏ-qua ở hàng itest-nap-lai-migration-cu-sau-095"
     }
   ],
   "agent": [

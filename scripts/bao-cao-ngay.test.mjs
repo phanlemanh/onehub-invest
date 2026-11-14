@@ -152,6 +152,41 @@ function chiMaNguon(ds) {
   return ds.filter((x) => !/^S\d{2}\//.test(x));
 }
 
+/** TL-AC-2 không dựa vào sức khoẻ nguồn (khai-slo-s10-s11 AC-4): đếm mã từ S10 trên TOÀN danh sách độ tươi `fr` (mọi
+ * trạng thái), nhãn của mọi hàng ấy phải qua `chiMaNguon`, và mỗi hàng hỏng phải có mặt trong báo cáo (`freshnessBad` hoặc
+ * `daBiet`). Bản cũ chỉ đếm trong `freshnessBad`, nên S10, S11 có SLO và còn tươi thì ca đỏ oan dù báo cáo đúng. */
+function kiemTuS10(fr, ngu) {
+  const tuS10 = fr.filter((r) => /^S[1-9]\d$/.test(r.code));
+  const nhan = (r) => `${r.code}/${r.city ?? "-"}`;
+  const trongBaoCao = [...(ngu.freshnessBad ?? []), ...(ngu.daBiet ?? [])];
+  const loi = [
+    ...chiMaNguon(tuS10.map((r) => `${nhan(r)} ${r.status}`)),
+    ...tuS10.filter((r) => r.status !== "fresh" && !trongBaoCao.some((x) => x.startsWith(`${nhan(r)} `))).map((r) => `thiếu ${nhan(r)}`),
+  ];
+  return { hai: tuS10.length, loi };
+}
+
+describe("TL-AC-2 kiểm mã từ S10 không dựa vào sức khoẻ (khai-slo-s10-s11 AC-4)", () => {
+  const fr = [
+    { code: "S01", city: "vn", status: "fresh" },
+    { code: "S10", city: "vn", status: "fresh" },
+    { code: "S11", city: null, status: "none" },
+  ];
+  test("S10 tươi, S11 chưa có dữ liệu và có trong báo cáo → qua, đếm 2", () => {
+    assert.deepEqual(kiemTuS10(fr, { freshnessBad: ["S11/- ?h>192h"], daBiet: [] }), { hai: 2, loi: [] });
+  });
+  test("S10, S11 đều tươi → vẫn qua, đếm 2 (bản cũ đếm 0 và đỏ oan)", () => {
+    const tuoi = fr.map((r) => ({ ...r, status: "fresh" }));
+    assert.deepEqual(kiemTuS10(tuoi, { freshnessBad: [], daBiet: [] }), { hai: 2, loi: [] });
+  });
+  test("hàng hỏng nằm ở ô đã biết cũng tính là có mặt", () => {
+    assert.deepEqual(kiemTuS10(fr, { freshnessBad: [], daBiet: ["S11/- ?h>192h — đang thử (tới 2026-11-20)"] }).loi, []);
+  });
+  test("chiều đỏ: S11 hỏng mà báo cáo không có → gọi tên S11/-", () => {
+    assert.deepEqual(kiemTuS10(fr, { freshnessBad: [], daBiet: [] }).loi, ["thiếu S11/-"]);
+  });
+});
+
 describe("TL-AC-1 hàm kiểm mã nguồn hai chiều", () => {
   test("S01, S10, S11 qua; tên lạ, chữ thường, một chữ số bị gọi tên", () => {
     assert.deepEqual(chiMaNguon(["S01/vn 461h>48h", "S10/- ?h>null", "S11/- ?h>null"]), []);
@@ -178,12 +213,15 @@ describe("gom() trên DB local (chỉ đọc)", async () => {
       const [{ s }] = (await client.query("SELECT current_setting('transaction_read_only') s")).rows;
       assert.equal(s, "off", "gom() phải ROLLBACK, không để lại giao dịch chỉ đọc đang mở");
       assert.deepEqual(chiMaNguon(kq.ngu.freshnessBad), [], "độ tươi chỉ mang mã nguồn Sxx");
-      // TL-AC-2: nguồn S10 trở lên trong bộ đăng ký phải đi qua đúng hàm kiểm (không chỉ S0x).
+      // TL-AC-2: nguồn S10 trở lên trong bộ đăng ký phải đi qua đúng hàm kiểm (không chỉ S0x). Đếm trên toàn danh sách
+      // độ tươi, mọi trạng thái — không dựa vào việc nguồn đang hỏng (khai-slo-s10-s11 AC-4).
       const [{ n: dangKy }] = (await client.query(
         "SELECT count(*)::int n FROM source_registry WHERE status = 'active' AND code ~ '^S[1-9][0-9]$'")).rows;
-      const hai = kq.ngu.freshnessBad.filter((x) => /^S[1-9]\d\//.test(x)).length;
+      const { readFreshness } = await import("./lib/freshness.mjs");
+      const { hai, loi } = kiemTuS10(await readFreshness(client), kq.ngu);
       console.log(`TL-AC-2 độ tươi mã từ S10: ${hai} (bộ đăng ký active có ${dangKy})`);
       if (dangKy > 0) assert.ok(hai > 0, "độ tươi không có mã nào từ S10 dù bộ đăng ký có");
+      assert.deepEqual(loi, [], "mã từ S10 trong độ tươi: nhãn phải là mã Sxx, hàng hỏng phải có trong báo cáo");
       // Chiều đỏ trên chính danh sách thật: thêm một tên nguồn lạ thì hàm gọi đúng tên ấy.
       assert.deepEqual(chiMaNguon([...kq.ngu.freshnessBad, "chotot/x"]), ["chotot/x"], "độ tươi chỉ mang mã nguồn Sxx");
     } finally {

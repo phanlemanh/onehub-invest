@@ -15,7 +15,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, describe, test } from "node:test";
 
-import { PROBES, SLO_HOURS, TIME_SOURCE, readFreshness } from "./lib/freshness.mjs";
+import { PROBES, SLO_HOURS, TIME_SOURCE, describe as moTa, readFreshness } from "./lib/freshness.mjs";
 import { SAO_LUU_SLO_GIO, docTrangThaiSaoLuu } from "./lib/sao-luu-ngoai-may.mjs";
 
 // Ca CLI chạy với thư mục trạng thái sao lưu RỖNG của riêng lượt (chưa bật) — không đọc ~/.oneinvest của máy chạy test.
@@ -40,6 +40,8 @@ const IDS = {
   S05: ["canary-s05"],
   S06: ["canary-s06"],
   S08: ["canary-s08"],
+  S10: ["canary-s10"],
+  S11: ["canary-s11"],
 };
 const ALL_IDS = Object.values(IDS).flat();
 
@@ -72,6 +74,8 @@ function baseFixture() {
       { code: "S05", status: "active", ids: IDS.S05 },
       { code: "S06", status: "active", ids: IDS.S06 },
       { code: "S08", status: "active", ids: IDS.S08 },
+      { code: "S10", status: "active", ids: IDS.S10 },
+      { code: "S11", status: "active", ids: IDS.S11 },
     ],
     snapshots: [
       { id: "hanoi__s01a__1", city: "hanoi", source: IDS.S01[0], at: ago(24 * 9) },
@@ -85,6 +89,8 @@ function baseFixture() {
       { id: "hanoi__s06__1", city: "hanoi", source: IDS.S06[0], at: ago(10) },
       { id: "hcmc__s06__1", city: "hcmc", source: IDS.S06[0], at: ago(10) },
       { id: "vn__s08__1", city: "vn", source: IDS.S08[0], at: ago(2) },
+      { id: "vn__s10__1", city: "vn", source: IDS.S10[0], at: ago(3) },
+      { id: "vn__s11__1", city: "vn", source: IDS.S11[0], at: ago(4) },
     ],
     airdna: [{ id: "m1", country: "vn", at: ago(48) }],
     posts: [
@@ -228,8 +234,38 @@ describe("AC-5 SLO", () => {
     assert.equal(rows.filter((r) => r.code === "S04").length, 0, "S04 completed không được đo");
     assert.deepEqual(rows.filter((r) => r.code === "S07").map((r) => r.status), ["no-slo"], "mã active chưa khai SLO phải ra đúng một no-slo");
   });
-  test("AC-5 bảng SLO đúng năm giá trị giờ", () => {
-    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192 });
+  test("AC-5 bảng SLO đúng từng giá trị giờ", () => {
+    // khai-slo-s10-s11 AC-1: S10, S11 = 192 giờ (giám sát đợt duyệt 12/11).
+    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36, S08: 192, S10: 192, S11: 192 });
+  });
+});
+
+// ------------------------------------------------------- khai-slo-s10-s11 --
+describe("KSL S10, S11 có SLO", () => {
+  test("KSL-AC-2 bản thu S11 mới không làm S10 tươi; S10 mới không làm S11 tươi", async (t) => {
+    if (needDb(t)) return;
+    const f = baseFixture();
+    f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(193);
+    f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(1);
+    let rows = await freshnessOf(f);
+    assert.equal(one(rows, "S10", "vn").status, "stale", "S10 193 giờ phải quá hạn dù S11 mới thu");
+    assert.equal(one(rows, "S11", "vn").status, "fresh");
+    f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(1);
+    f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(193);
+    rows = await freshnessOf(f);
+    assert.equal(one(rows, "S10", "vn").status, "fresh");
+    assert.equal(one(rows, "S11", "vn").status, "stale", "S11 193 giờ phải quá hạn dù S10 mới thu");
+  });
+  test("KSL-AC-3 chưa có bản thu → none «chưa có dữ liệu», không còn no-slo", async (t) => {
+    if (needDb(t)) return;
+    const f = baseFixture();
+    f.snapshots = f.snapshots.filter((x) => x.id !== "vn__s10__1" && x.id !== "vn__s11__1");
+    const rows = await freshnessOf(f);
+    for (const code of ["S10", "S11"]) {
+      const m = rows.filter((r) => r.code === code);
+      assert.deepEqual(m.map((r) => [r.status, r.sloHours]), [["none", 192]], `${code} không bản thu`);
+      assert.equal(moTa(m[0]), `${code}: chưa có dữ liệu ở bảng nạp của nguồn`);
+    }
   });
 });
 
@@ -508,6 +544,8 @@ const EDGE = [
   ["S05", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = ago(h); }],
   ["S06", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s06__1").at = ago(h); }],
   ["S08", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s08__1").at = ago(h); }],
+  ["S10", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s10__1").at = ago(h); }],
+  ["S11", "vn", (f, h) => { f.snapshots.find((x) => x.id === "vn__s11__1").at = ago(h); }],
 ];
 let edgeRan = 0;
 describe("GT-AC-4 ma trận biên SLO", () => {
@@ -523,9 +561,9 @@ describe("GT-AC-4 ma trận biên SLO", () => {
       });
     }
   }
-  test("GT-AC-4 ma trận biên đủ 12 ca", () => {
+  test("GT-AC-4 ma trận biên đủ 16 ca", () => {
     assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(SLO_HOURS).sort(), "ma trận phải phủ đúng mọi mã có SLO");
-    assert.equal(edgeRan, 12, `chỉ ${edgeRan}/12 ca biên đã chạy tới cuối`);
+    assert.equal(edgeRan, 16, `chỉ ${edgeRan}/16 ca biên đã chạy tới cuối`);
   });
 });
 
@@ -547,6 +585,8 @@ const TIME_MATRIX = {
   S05: "airbnb_snapshots.collected_at",
   S06: "airbnb_snapshots.collected_at",
   S08: "airbnb_snapshots.collected_at",
+  S10: "airbnb_snapshots.collected_at",
+  S11: "airbnb_snapshots.collected_at",
 };
 /** Cột mà SQL của probe thật sự lấy max — giải bí danh bảng từ FROM/JOIN. Trả danh sách lỗi có tên mã. */
 function timeColumnProblems(probes, declared) {

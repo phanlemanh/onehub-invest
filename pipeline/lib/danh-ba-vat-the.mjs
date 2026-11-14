@@ -237,11 +237,14 @@ export function kiemDich(thamSo, { dbThat = false } = {}) {
   return dbThat ? { ok: true, loai: "that" } : { ok: false, ly_do: THONG_DIEP.thieuCo };
 }
 
-/** Khu của một toà: project của region_node_id, hoặc cha (project) của phân khu. */
+/** Khu của một toà: project của region_node_id, cha (project) của phân khu, hay ông (project) của cụm S09 (DA31). */
 const SQL_KHU_CUA_TOA = `
-  SELECT b.building_key, COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug) AS khu
+  SELECT b.building_key,
+         COALESCE(CASE WHEN n.node_type = 'project' THEN n.slug END, p.slug, g.slug) AS khu
     FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id
-    LEFT JOIN asset_nodes p ON p.id = n.parent_id AND p.node_type = 'project'`;
+    LEFT JOIN asset_nodes p ON p.id = n.parent_id AND p.node_type = 'project'
+    LEFT JOIN asset_nodes p2 ON p2.id = n.parent_id
+    LEFT JOIN asset_nodes g ON g.id = p2.parent_id AND g.node_type = 'project'`;
 
 /**
  * Đếm độc lập toà, trục, căn theo khu bằng SQL trên ba bảng (không đọc tổng kết bộ dựng).
