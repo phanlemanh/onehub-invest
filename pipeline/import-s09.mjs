@@ -80,7 +80,9 @@ if (CHAY_TRUC_TIEP) {
     process.exit(2);
   }
   napS09(thuMuc, db).catch((e) => {
-    console.error(`import-s09: ${e.message}`);
+    // pg ném AggregateError (message rỗng) khi localhost phân giải ra cả IPv6 lẫn IPv4 mà cả hai từ chối — in lỗi con.
+    const loi = e.message || (e.errors ?? []).map((x) => x.message || x.code).filter(Boolean).join("; ") || e.code || String(e);
+    console.error(`import-s09: ${loi}`);
     process.exit(1);
   });
 }

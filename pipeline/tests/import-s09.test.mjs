@@ -59,10 +59,17 @@ test("S09-1: nạp trọn snapshot đúng khuôn → số dòng = số item, ch�
   assert.equal(fk, 1, "dòng airbnb_snapshots có (city vn, source s09-du-an)");
   const st = (await q("SELECT count(*)::int n FROM stg_s09_item WHERE snapshot_id = $1", [l1.snapshotId])).rows[0].n;
   assert.equal(st, 3);
-  const l2 = await napS09(dir, DB);
+  const l2 = await napS09(dir, DB); // lần hai không ném lỗi
   assert.equal(l2.ghi, 0, "nạp lại ghi 0 dòng mới");
+  assert.equal(l2.snapshotId, l1.snapshotId, "lần hai nhận cùng snapshot_id");
   const st2 = (await q("SELECT count(*)::int n FROM stg_s09_item WHERE snapshot_id = $1", [l1.snapshotId])).rows[0].n;
   assert.equal(st2, 3, "vẫn 3 dòng, không nhân đôi");
+  // nap-s09 AC-1: dòng snapshot vẫn đúng một, mọi dòng stg của lượt trỏ đúng dòng đó (không có dòng mồ côi).
+  const fk2 = (await q("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1 AND source = 's09-du-an' AND city = 'vn'", [l1.snapshotId])).rows[0].n;
+  assert.equal(fk2, 1, "airbnb_snapshots vẫn đúng một dòng của snapshot sau lần hai");
+  const moCoi = (await q(`SELECT count(*)::int n FROM stg_s09_item s LEFT JOIN airbnb_snapshots a USING (snapshot_id)
+                          WHERE a.snapshot_id IS NULL`)).rows[0].n;
+  assert.equal(moCoi, 0, "không dòng stg_s09_item nào trỏ snapshot không có");
 });
 
 test("S09-2 ca đỏ: thiếu sourceId / kind lạ / du-an thiếu chiTiet.data.id → bỏ có đếm đúng ba lý do", async () => {
@@ -97,5 +104,31 @@ test("S09-3 chặn cho phép (1411-8 MỞ LẠI(2)): URL biến thể trỏ DB k
     assert.equal(r.status, 2, `rc 2 với ${url}: stderr=${(r.stderr || "").slice(0, 120)}`);
     assert.match(r.stderr, /từ chối/, "in lời từ chối");
     assert.doesNotMatch(r.stderr, /connect|ECONNREFUSED|ETIMEDOUT|password/i, "từ chối xảy ra TRƯỚC khi kết nối (stderr không có lỗi kết nối)");
+  }
+});
+
+test("S09-4 đối chứng dương của chốt chặn (nap-s09 AC-3): cùng ba URL kèm --may-thu → qua chốt, lỗi là lỗi kết nối", async () => {
+  const dir = await sinh([item()]);
+  // Tiền điều kiện: cổng 1 trên máy này phải từ chối kết nối — nếu không, ca có thể ghi vào một DB thật.
+  const { createConnection } = await import("node:net");
+  const dong = await new Promise((ok) => {
+    const s = createConnection({ host: "localhost", port: 1 });
+    s.once("connect", () => { s.destroy(); ok(false); });
+    s.once("error", () => ok(true));
+  });
+  assert.ok(dong, "cổng localhost:1 đang mở — dừng ca để không ghi nhầm DB thật");
+  const NGUOI = "oneinvest:" + "sai-mat-khau";
+  const bienThe = [
+    `postgresql://${NGUOI}@localhost:1/oneinvest?sslmode=disable`,
+    `postgres://${NGUOI}@localhost:1/oneinvest_san`,
+    `postgres://${NGUOI}@localhost:1/oneinvest`,
+  ];
+  for (const url of bienThe) {
+    const r = spawnSync("node", [join(REPO, "pipeline", "import-s09.mjs"), dir, "--may-thu"], {
+      encoding: "utf8", timeout: 60_000, env: { ...process.env, DATABASE_URL: url },
+    });
+    assert.doesNotMatch(r.stderr, /từ chối/, `--may-thu vẫn bị chốt chặn từ chối với ${url}`);
+    assert.equal(r.status, 1, `qua chốt rồi lỗi kết nối phải thoát 1 với ${url}: stderr=${(r.stderr || "").slice(0, 120)}`);
+    assert.match(r.stderr, /ECONNREFUSED|connect/i, `lỗi in ra phải là lỗi kết nối với ${url}`);
   }
 });
