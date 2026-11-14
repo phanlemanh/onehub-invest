@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b7df91fe2d764f88becac6dfcb9bdae818eeabde
+verified_commit: c1857f44c3f66038bba51bdd2929333e4dad2958
 human_signoff: Mạnh 2026-11-14
 ---
 
@@ -173,3 +173,7 @@ none — every multi-run eval is uniform
 
 Round 1: lượt chấm 1 — sửa AC-8b (so bước S08 với bản trước hàng) và E9 (bỏ định danh lược đồ, thêm đối chứng dương). Returned to implementation.
 Round 2: E9 chạy lại, các eval khác carry-forward từ round 1; toàn bộ eval và lệnh suite xanh, verdict PASS.
+
+### Re-pin lần 1 — 2026-11-14, do sửa DBS-AC-6 sau chữ ký, CI chân scripts đỏ; nhận main 78f100c9
+run_id: repin-20261114T025727Z-99777
+sha: c1857f44c3f66038bba51bdd2929333e4dad2958 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
