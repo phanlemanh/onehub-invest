@@ -207,6 +207,8 @@ test("PL35-AC-7 + AC-4 chọn mẫu và nháp chạy xong khi vai không đọc 
     assert.ok(kn.ghi > 0, "PL35-AC-7 nháp phải chạy xong và ghi dưới vai không đọc field_assertions");
     // Cấy phát biểu toà/trục PL20 (bằng vai chủ) cho bài fixture — toà khác danh bạ để nếu bộ phân tầng đọc thì tầng sẽ đổi.
     await c.query("RESET ROLE");
+    // field_assertions chỉ thêm (trigger chặn DELETE): cấy trong giao dịch, ROLLBACK ở finally.
+    await c.query("BEGIN");
     const pb = phatBieuToaTruc("S03", BAI.filter((b) => /^pl35-o[tk]/.test(b.post_id)).map((b) => ({ post_id: b.post_id, posted_at: "2026-11-10T03:00:00Z", block: "QB2", unit: "QB2.0910" })), "pl35-cay");
     for (const r of pb) {
       await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, observed_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
@@ -226,8 +228,8 @@ test("PL35-AC-7 + AC-4 chọn mẫu và nháp chạy xong khi vai không đọc 
       const dot = { query: async (...a) => { await c.query("SELECT count(*) FROM field_assertions"); return c.query(...a); } };
       await assert.rejects(layMau(dot, { lat: LAT, seed: "s1", thu: true, haiKhu: { co: 75 } }), /permission denied/, "PL35-AC-7 đột biến đọc field_assertions phải bị DB chặn");
     } finally {
+      await c.query("ROLLBACK");
       await c.query("RESET ROLE");
-      await c.query("DELETE FROM field_assertions WHERE method_version = 'pl35-cay'");
     }
   } finally {
     await c.query("RESET ROLE").catch(() => {});
