@@ -98,13 +98,14 @@ const FIXTURE = [
   ["fx-trung-b", "Khu Trùng Tên Fx", [[XA.th, 10]], 0],
   ["fx-tan", "Khu Điểm Tản Fx", [[XA.lb, 10]], 0.03],
   ["fx-doi", "Tháp Khu Doi Chung Fx", [[XA.ak, 10]], 0],
+  ["fx-lech-xa", "Khu Lệch Xã Fx", [[XA.ak, 4], [XA.lb, 7]], 0], // xã nhiều tin nhất = long-binh (7 > 4), id lớn hơn
   ...Array.from({ length: 28 }, (_, i) => [`fx-d${String(i + 1).padStart(2, "0")}`, `Dự án Lấp Fx ${i + 1}`, [[XA.ak, 10 + i]], 0]),
 ];
 // Kết cục chuẩn kỳ vọng ở lần dựng đầu (mã fx-9 dưới ngưỡng: không có mặt).
 const KY_VONG = Object.fromEntries([
   ["fx-gp", "noi:16"], ["fx-rong", "chua_noi:khong-ten"], ["fx-2tinh", "chua_noi:lech-tinh"], ["fx-sun", "duc"],
   ["fx-sun-t", "duc"], ["fx-10", "duc"], ["fx-hoa", "duc"], ["fx-trung-a", "duc"], ["fx-trung-b", "duc"], ["fx-tan", "duc"],
-  ["fx-doi", "chua_noi:nhieu-ung-vien"], ...Array.from({ length: 28 }, (_, i) => [`fx-d${String(i + 1).padStart(2, "0")}`, "duc"]),
+  ["fx-doi", "chua_noi:nhieu-ung-vien"], ["fx-lech-xa", "duc"], ...Array.from({ length: 28 }, (_, i) => [`fx-d${String(i + 1).padStart(2, "0")}`, "duc"]),
 ]);
 
 /** Dựng fixture trong giao dịch đang mở: schema ms6_fx che hai bảng nguồn, view chép từ 100, hai nút «đôi» xác minh. */
@@ -192,6 +193,20 @@ test("MS6-AC-4 áp đúng băm: luật, nút ứng viên, bí danh, trạng thá
     assert.match(theoMa[ma].slug, new RegExp(`^${lop.chuanTen(ten).replace(/ /g, "-")}(-[0-9]+)?$`), `MS6-AC-4: slug nút ${ma} không suy từ tên`);
   }
   assert.deepEqual(theoMa["fx-hoa"].area_ids, [XA.ak], "MS6-AC-4: hoà xã không chọn id nhỏ nhất");
+  // Quan hệ «xã nhiều tin nhất», tính độc lập từ bảng fixture (hoà → id nhỏ nhất), so cho MỌI mã đúc.
+  const xaNhieu = Object.fromEntries((await c.query(`SELECT DISTINCT ON (ma) ma, area_id FROM (
+      SELECT s.payload->>'projectid' ma, r.area_id, count(*) n FROM ms6_fx.sale_offer_records r
+        JOIN ms6_fx.stg_chotot_ads s ON s.list_id::text = r.originating_system_key GROUP BY 1, 2) x
+      ORDER BY ma, n DESC, area_id`)).rows.map((r) => [r.ma, r.area_id]));
+  for (const [ma, k] of Object.entries(KY_VONG)) {
+    if (k === "duc") assert.deepEqual(theoMa[ma].area_ids, [xaNhieu[ma]], `xa-nhieu-nhat: ${ma} không mang xã nhiều tin nhất`);
+  }
+  assert.deepEqual(theoMa["fx-lech-xa"].area_ids, [XA.lb], "xa-nhieu-nhat: fx-lech-xa (7 tin long-binh, 4 tin an-khanh)");
+  // Đối chứng đỏ: bản sao câu đọc mã chọn xã ÍT tin nhất thì fx-lech-xa ra an-khanh.
+  const SQL_PHA = L.SQL_DOC_MA.replace("ORDER BY ma, count(*) DESC, area_id", "ORDER BY ma, count(*) ASC, area_id");
+  assert.notEqual(SQL_PHA, L.SQL_DOC_MA, "xa-nhieu-nhat: không phá được câu đọc mã (khuôn ORDER BY đổi?)");
+  const pha = (await c.query(SQL_PHA)).rows.find((r) => r.ma === "fx-lech-xa");
+  assert.equal(pha.xa_nhieu, XA.ak, "xa-nhieu-nhat: bản phá vẫn chọn long-binh — ca không phân biệt được");
   assert.deepEqual([theoMa["fx-trung-a"].slug, theoMa["fx-trung-b"].slug].sort(), ["khu-trung-ten-fx", "khu-trung-ten-fx-2"], "MS6-AC-4: hai mã cùng tên");
   assert.equal(Number(theoMa["fx-gp"].id), 16, "MS6-AC-4: fx-gp không nối Grand Park");
   const bd = (await c.query(`SELECT substring(value FROM 7) ma, object_key FROM registry_aliases
