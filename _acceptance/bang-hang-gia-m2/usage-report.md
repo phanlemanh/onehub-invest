@@ -46,3 +46,43 @@ wall: 3205s
 - **claude-opus-5-5**: 3 agent · 38 calls · out 25,980 · in 76 · cache_read 2,133,013 · cache_create 245,436
 - **claude-haiku-5-5**: 11 agent · 41 calls · out 25,123 · in 82 · cache_read 890,210 · cache_create 404,758
 
+
+### S4 round 2 (wf_c59c1599-435) — wf_c59c1599-435 (18 agent, 48,032 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| synthesize:report | claude-sonnet-5-5 | 7 | 7,466 | 14 | 305,180 | 47 |
+| baseline:diffBase | claude-sonnet-5-5 | 3 | 4,892 | 6 | 72,913 | 31 |
+| review:measurement | claude-opus-5-5 | 8 | 4,413 | 16 | 318,576 | 46 |
+| machine:cd pipeline && npm run test:b | claude-haiku-5-5 | 7 | 4,388 | 14 | 167,760 | 814 |
+| review:bugs | claude-opus-5-5 | 12 | 3,898 | 24 | 613,561 | 44 |
+| machine:cd pipeline && npm run test:a | claude-haiku-5-5 | 5 | 3,373 | 10 | 98,984 | 712 |
+| review:conventions | claude-opus-5-5 | 11 | 3,237 | 22 | 507,390 | 37 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,775 | 4 | 3,300 | 585 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,758 | 4 | 27,614 | 45 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,766 | 4 | 30,932 | 8 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,584 | 4 | 30,926 | 7 |
+| machine:cd pipeline && bash ../db/db-thu.sh onei | claude-haiku-5-5 | 2 | 1,436 | 4 | 30,984 | 22 |
+| machine:bash pipeline/scripts/hang-gia-db.sh do | claude-haiku-5-5 | 2 | 1,396 | 4 | 30,942 | 67 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,179 | 4 | 30,937 | 19 |
+| machine:cd app && bash ../db/db-thu.sh oneinvest | claude-haiku-5-5 | 2 | 1,158 | 4 | 30,990 | 21 |
+| machine:cd pipeline && node --test --test-name-p | claude-haiku-5-5 | 2 | 989 | 4 | 31,012 | 7 |
+| triage | claude-sonnet-5-5 | 2 | 985 | 4 | 28,964 | 9 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 339 | 4 | 26,412 | 3 |
+
+
+wall: 2249s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 4,892 | 72,913 | 31 | 14:23:21 | 14:23:52 |
+| review | 3 | 11,548 | 1,439,527 | 47 | 14:23:21 | 14:24:08 |
+| machine | 11 | 22,802 | 514,381 | 2189 | 14:23:21 | 14:59:51 |
+| triage | 1 | 985 | 28,964 | 9 | 14:59:51 | 15:00:00 |
+| capture | 1 | 339 | 26,412 | 3 | 15:00:00 | 15:00:03 |
+| synthesize | 1 | 7,466 | 305,180 | 47 | 15:00:03 | 15:00:51 |
+
+- **claude-sonnet-5-5**: 4 agent · 14 calls · out 13,682 · in 28 · cache_read 433,469 · cache_create 167,009
+- **claude-opus-5-5**: 3 agent · 31 calls · out 11,548 · in 62 · cache_read 1,439,527 · cache_create 202,235
+- **claude-haiku-5-5**: 11 agent · 30 calls · out 22,802 · in 60 · cache_read 514,381 · cache_create 409,777
+
