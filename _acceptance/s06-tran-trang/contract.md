@@ -60,7 +60,10 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai thay đổi rời nh
 
 ## Đo
 
-(điền sau phép đo AC-4 — tệp `_acceptance/s06-tran-trang/do-nap-55k.md`)
+Số đo đầy đủ: `_acceptance/s06-tran-trang/do-nap-55k.md` (14/11 08:46Z–09:13Z). Tóm tắt: bước thu 10′35″ → 36′25″; nạp và
+transform khoảng 3′ cả hai lượt; resolve-properties ước +8–15% (theo cỡ bảng, mức sai lớn); không lấn cửa S03, hai lượt
+trong ngày không chồng. Phát hiện chặn: một tin thiếu `region_v2` làm nạp hỏng cả vùng binh-duong và dừng chuỗi trước
+transform — làn ZCode.
 
 ## Notes
 
