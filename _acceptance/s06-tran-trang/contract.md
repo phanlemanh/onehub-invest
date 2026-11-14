@@ -5,7 +5,7 @@ slug: s06-tran-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-14T09:17:16Z
 design_doc: docs/superpowers/specs/2026-11-14-s06-tran-trang-design.md
@@ -42,9 +42,10 @@ không thử lại (Mạnh 14/11: có API thì thu hết nhanh, bị chặn thì
   resolve-properties là ước lượng ngoại suy kèm mức sai, và kết luận: tổng thời gian chuỗi đêm S06 với trần mới, có
   lấn cửa S03 16:55Z–17:15Z không, đề xuất giữ giờ, dời giờ hay chia lượt.
 
-- AC-5: Given một snapshot S06 có một tin thiếu `region_v2` đứng trước hai tin thường, When chạy bộ nạp trên DB thử,
-  Then bộ nạp thoát 0, hai tin thường vào `stg_chotot_ads`, tin thiếu `region_v2` không vào, và đầu ra đếm tin bị bỏ
-  (bản sửa bộ nạp do làn ZCode viết theo `tin MỞ LẠI`, P2 tích hợp; phát hiện từ phép đo AC-4).
+- AC-5: Given một snapshot S06 có một tin thiếu `region_v2` đứng trước các tin thường, When chạy bộ nạp trên DB thử,
+  Then tin thiếu `region_v2` không vào `stg_chotot_ads`, mọi tin thường vẫn vào (không huỷ cả vùng), đầu ra đếm tin bị
+  bỏ; dưới ngưỡng 1% số tin vùng bộ nạp thoát 0, vượt ngưỡng thoát 2 (bản sửa bộ nạp do làn ZCode viết theo
+  `tin MỞ LẠI`, P2 tích hợp; phát hiện từ phép đo AC-4).
 
 ## Coverage
 

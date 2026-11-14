@@ -19,8 +19,8 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.s06tt_chia
-    expected: "exit 0; CN-1 và CN-2 ok. Chiều đỏ: gỡ scripts/collect-chotot-chan.test.mjs khỏi nửa a thì CN-1 đỏ gọi tên tệp thiếu"
-    paths: ["pipeline/test-nua.json", "pipeline/scripts/chia-nua.test.mjs"]
+    expected: "exit 0; CN-1 và CN-2 ok. Chiều đỏ: gỡ scripts/collect-chotot-chan.test.mjs hay scripts/import-chotot-chan.test.mjs khỏi nửa b thì CN-1 đỏ gọi tên tệp thiếu"
+    paths: ["pipeline/test-nua.json", "pipeline/scripts/chia-nua.test.mjs", "pipeline/package.json"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -33,6 +33,6 @@ evals:
     criterion: AC-5
     executor: test
     cmd: config:executors.test.s06tt_region
-    expected: "exit 0; ℹ tests 1 · pass 1: bộ nạp thoát 0, đúng hai tin thường trong stg_chotot_ads, tin thiếu region_v2 không vào, đầu ra nhắc region_v2. Chiều đỏ: bộ nạp hiện tại trên main thoát 1 (23502 NOT NULL) ở tin đầu, ca đỏ với «bộ nạp phải thoát 0 …»"
+    expected: "exit 0; ℹ tests 2 · pass 2 · skipped 0: dưới ngưỡng (1 lạ + 150 thường) bộ nạp thoát 0, 150 tin vào, đầu ra «bỏ 1 … region_v2»; vượt ngưỡng (1 lạ + 2 thường) thoát 2, hai tin thường vẫn vào. Chiều đỏ: bộ nạp trên main thoát 1 (23502 NOT NULL) ở tin đầu — cả hai ca đỏ"
     paths: ["pipeline/import-chotot.mjs", "_acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
