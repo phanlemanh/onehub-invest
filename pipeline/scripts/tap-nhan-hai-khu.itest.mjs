@@ -36,6 +36,7 @@ them("zd2", NHOM.op1, "Cần bán gấp căn 1 ngủ, giá thương lượng s�
 them("zs1", NHOM.op1, '{"type":"join","member":"x"}');               // bài sự kiện
 them("zh1", NHOM.hai, "Bán căn QA1 giá tốt");                         // nhóm khớp hai khu
 them("zn1", NHOM.khong, "Bán căn QA1 nhóm ngoài");                    // nhóm không khớp
+them("zl1", NHOM.gp, "Cho thuê nhà phố mặt tiền đường lớn");          // chữ nêu loại nhà khác → không vào lát
 const MONG_TANG = { "op1-toa": 75, "op1-truc": 3, "op1-khong": 10, "gp-toa": 5, "gp-khong": 4 };
 const MONG_NHAN = { "op1-truc": "cho PL36", "op1-khong": "bắt buộc", "gp-toa": "bắt buộc", "gp-khong": "bắt buộc" };
 
@@ -138,6 +139,7 @@ test("PL35-AC-2 mỗi tầng min(75, số bài khác nhau), stratum đúng tần
     assert.ok(!tap.some((r) => r.ref_id === "pl35-zh1"), "PL35-AC-3 nhóm khớp hai khu không vào lát");
     assert.ok(!tap.some((r) => r.ref_id === "pl35-zn1"), "PL35-AC-3 nhóm không khớp không vào lát");
     assert.ok(tap.filter((r) => r.ref_id.startsWith("pl35-g")).every((r) => r.stratum.startsWith("gp-")), "PL35-AC-3 khu ghi theo nhóm GP");
+    assert.ok(!tap.some((r) => r.ref_id === "pl35-zl1") && k.bo_loai_khac === 1, "PL35 bài chữ nêu nhà phố không vào lát");
   } finally { await dong(c); }
 });
 

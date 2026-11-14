@@ -84,3 +84,18 @@ test("PL35 chọn mẫu thuần: mỗi tầng min(cỡ, số bài khác nhau), t
   const lai = chonMauHaiKhu(bai, db, { seed: "s", co: 5 });
   assert.deepEqual(lai.chon.map((r) => r.ref_id), kq.chon.map((r) => r.ref_id), "cùng seed cùng tập");
 });
+
+// ---- Lọc căn hộ bằng chữ bài (không đọc phát biểu loại nhà) ----
+test("PL35 lọc loại nhà bằng chữ: nêu loại khác và không dấu hiệu căn hộ → loại; còn lại giữ", async () => {
+  const { laLoaiKhac } = await import("../lib/mau-hai-khu.mjs");
+  const O_LOC = [
+    ["Cho thuê nhà phố Vinhomes Grand Park mặt tiền", true],
+    ["Bán shophouse chân đế toà S1", true],
+    ["Bán căn hộ 2PN view shophouse", false],
+    ["Chuyển nhượng căn 2 ngủ toà S5.03 gần biệt thự", false],
+    ["Bán căn S1.01 giá tốt", false],
+    ["Cho thuê văn phòng tầng 1", true],
+    ["Căn 1PN+1 full đồ", false],
+  ];
+  for (const [chu, mong] of O_LOC) assert.equal(laLoaiKhac(chu), mong, `PL35 lọc loại nhà «${chu}»`);
+});

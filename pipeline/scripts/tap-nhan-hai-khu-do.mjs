@@ -96,7 +96,7 @@ async function main() {
     const { rows: [{ so: nhanTruoc }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
     const kq = await layMau(c, { lat: LAT_HAI_KHU, seed: SEED, thu: true, haiKhu: { co: CO_TANG } });
     const { rows: [{ so: nhanSau }] } = await c.query("SELECT count(*)::int AS so FROM eval_labels");
-    console.log(`\ndanh_ba ${JSON.stringify(kq.danh_ba)} · tin_cua_lat ${kq.tin_cua_lat} · khac_nhau ${kq.khac_nhau} · bo_su_kien ${kq.bo_su_kien} · bo_vi_trung ${kq.bo_vi_trung}`);
+    console.log(`\ndanh_ba ${JSON.stringify(kq.danh_ba)} · bo_loai_khac ${kq.bo_loai_khac} · tin_cua_lat ${kq.tin_cua_lat} · khac_nhau ${kq.khac_nhau} · bo_su_kien ${kq.bo_su_kien} · bo_vi_trung ${kq.bo_vi_trung}`);
     console.log("| tầng | có | chọn | ghi chú |\n|---|---|---|---|");
     for (const [t, x] of Object.entries(kq.moiTangHaiKhu)) {
       console.log(`| ${t} | ${x.co} | ${x.chon} | ${x.thieu ? `thiếu ${x.thieu}, Wilson tối đa ${x.wilson_toi_da}, ${x.nhan}` : ""} |`);

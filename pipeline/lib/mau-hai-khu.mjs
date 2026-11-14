@@ -1,11 +1,18 @@
 // mau-hai-khu.mjs — PL35 tap-nhan-ghep-tin-hai-khu: chọn mẫu lát `hai-khu-ghep` (phần thuần + đọc danh bạ khu).
-// Bài S03 của nhóm khớp đúng một khu (khuCuaNhom), khử trùng (khuTrung), phân tầng khu × mức gắn (lib/tang-ghep.mjs),
+// Bài S03 của nhóm khớp đúng một khu (khuCuaNhom), gạt bài chữ nêu loại nhà khác (laLoaiKhac), khử trùng (khuTrung), phân tầng khu × mức gắn (lib/tang-ghep.mjs),
 // mỗi tầng min(75, số bài khác nhau) chọn tất định bằng chonMau theo seed. Không đọc phát biểu hay kết quả gắn của PL20:
 // danh bạ khu đọc từ buildings, stacks, asset_nodes, registry_aliases (AC-4, AC-7).
 import { chonMau, khuCuaNhom, khuTrung } from "./eval-labels.mjs";
 import { CO_TANG, TANG_BAT_BUOC, TANG_HAI_KHU, mucGan, tangCua, wilsonDuoiDungHet } from "./tang-ghep.mjs";
 
 export const LAT_HAI_KHU = "hai-khu-ghep";
+
+// Lọc căn hộ chỉ bằng chữ bài (loại nhà có cấu trúc nằm ở phát biểu — AC-7 cấm đọc): bài nêu loại nhà khác và không nêu dấu hiệu
+// căn hộ thì không vào lát. Bài không nêu gì vẫn vào (đa số bài căn hộ trong nhóm cư dân không ghi chữ «căn hộ»).
+const LOAI_KHAC = /(?<![\p{L}\p{N}])(?:nhà phố|shophouse|shop house|biệt thự|liền kề|đất nền|lô đất|nhà riêng|văn phòng|mặt bằng|ki ?ốt)(?![\p{L}\p{N}])/iu;
+const CAN_HO = /(?<![\p{L}\p{N}])(?:căn hộ|chung cư|cc|studio|duplex|penthouse|\d ?pn|\d ?phòng ngủ|\d ?ngủ)(?![\p{L}\p{N}])/iu;
+/** Bài nêu loại nhà khác căn hộ và không nêu dấu hiệu căn hộ. */
+export const laLoaiKhac = (text) => { const t = String(text ?? "").normalize("NFC"); return LOAI_KHAC.test(t) && !CAN_HO.test(t); };
 /** Khu → slug nút project của danh bạ. */
 export const KHU_SLUG = Object.freeze({ op1: "vinhomes-ocean-park-1", gp: "vinhomes-grand-park" });
 
@@ -45,11 +52,12 @@ export async function docDanhBaKhu(c, slug) {
  */
 export function chonMauHaiKhu(posts, danhBa, { seed, co = CO_TANG, tinCua = new Map() }) {
   const khuBai = new Map();
-  let boNhom = 0;
+  let boNhom = 0, boLoaiKhac = 0;
   const cuaLat = [];
   for (const p of posts) {
     const khu = khuCuaNhom(p.group_name);
     if (!khu) { boNhom++; continue; }
+    if (laLoaiKhac(p.text)) { boLoaiKhac++; continue; }
     khuBai.set(p.post_id, khu);
     cuaLat.push(p);
   }
@@ -70,5 +78,5 @@ export function chonMauHaiKhu(posts, danhBa, { seed, co = CO_TANG, tinCua = new 
       ...(thieu ? { nhan: TANG_BAT_BUOC.includes(t) ? "bắt buộc" : "cho PL36" } : {}),
     };
   }
-  return { chon, moiTang, tin_cua_lat: cuaLat.length, khac_nhau: dai.length, bo_nhom: boNhom, bo_su_kien, bo_vi_trung };
+  return { chon, moiTang, tin_cua_lat: cuaLat.length, khac_nhau: dai.length, bo_nhom: boNhom, bo_loai_khac: boLoaiKhac, bo_su_kien, bo_vi_trung };
 }

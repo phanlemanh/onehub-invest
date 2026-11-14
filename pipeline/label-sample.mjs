@@ -158,7 +158,7 @@ async function layMauHaiKhu(client, { lat, seed, thu, trongGiaoDich, co, daCo, p
   }
   return {
     lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien: kq.bo_su_kien, bo_vi_trung: kq.bo_vi_trung,
-    tin_cua_lat: kq.tin_cua_lat, khac_nhau: kq.khac_nhau, chon: kq.chon.length, bo_nhom: kq.bo_nhom,
+    tin_cua_lat: kq.tin_cua_lat, khac_nhau: kq.khac_nhau, chon: kq.chon.length, bo_nhom: kq.bo_nhom, bo_loai_khac: kq.bo_loai_khac,
     trung: kq.chon.filter((r) => r.double_label).length, dev: kq.chon.filter((r) => r.split === "dev").length,
     them, thieu: 0, thu, moiTangHaiKhu: kq.moiTang,
     danh_ba: Object.fromEntries(Object.entries(danhBa).map(([k, d]) => [k, { toa: d.toa.length, truc: d.truc.length }])),
@@ -221,7 +221,7 @@ async function main() {
     console.log(`bo_vi_trung ${kq.bo_vi_trung} · bo_su_kien ${kq.bo_su_kien} · gat_theo_dau ${JSON.stringify(kq.gat_theo_dau)}`);
     if (kq.moiTang) console.log(`tầng: ${JSON.stringify(kq.moiTang)}`);
     if (kq.moiTangHaiKhu) {
-      console.log(`danh bạ: ${JSON.stringify(kq.danh_ba)} · bỏ vì nhóm không khớp đúng một khu: ${kq.bo_nhom}`);
+      console.log(`danh bạ: ${JSON.stringify(kq.danh_ba)} · bỏ vì nhóm không khớp đúng một khu: ${kq.bo_nhom} · bỏ vì chữ nêu loại nhà khác: ${kq.bo_loai_khac}`);
       for (const [t, x] of Object.entries(kq.moiTangHaiKhu)) {
         console.log(`tầng ${t}: có ${x.co} · chọn ${x.chon}${x.thieu ? ` · thiếu ${x.thieu} · cận dưới Wilson tối đa ${x.wilson_toi_da} · ${x.nhan}` : ""}`);
       }
