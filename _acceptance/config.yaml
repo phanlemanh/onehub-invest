@@ -31,6 +31,10 @@ executors:
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     pipeline_a: "cd pipeline && npm run test:a"     # tach-suite-pipeline — nửa A của npm test (pipeline/test-nua.json), DB thử oneinvest_suite_pipeline_a
     pipeline_b: "cd pipeline && npm run test:b"     # tach-suite-pipeline — nửa B, DB thử oneinvest_suite_pipeline_b; hợp hai nửa = npm test (scripts/chia-nua.test.mjs canh)
+    s06tt_chan: "bash db/db-thu.sh oneinvest_suite_s06tt_chan --chay node --test pipeline/scripts/collect-chotot-chan.test.mjs"   # s06-tran-trang E2 — 403/429 dừng cả lượt, không thử lại, rc 3, snapshot phần đã có
+    s06tt_tran: "node --test _acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"   # s06-tran-trang E1 — trần mặc định 210, cờ --pages và CHOTOT_MAX_PAGES vẫn thắng
+    s06tt_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-tran-trang E3 — tệp test mới nằm đúng một nửa
+    s06tt_region: "bash db/db-thu.sh oneinvest_suite_s06tt_region --chay node --test _acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"   # s06-tran-trang E5 — tin thiếu region_v2 bỏ qua có đếm, không huỷ cả vùng
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh

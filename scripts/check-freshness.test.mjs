@@ -419,7 +419,7 @@ function chototSnapshot(ts, { city, finishedAt, listIds }) {
   mkdirSync(dir, { recursive: true });
   const items = listIds.map((id) => ({
     source: S06_PIPE,   // importer lọc theo trường này
-    payload: { list_id: id, region_v2: 0, category: 0, type: "s" },
+    payload: { list_id: id, region_v2: 13000, category: 0, type: "s" }, // mã vùng thật khác 0: bộ nạp 1411-23 coi region_v2 falsy là thiếu
     meta: { city },
     fetchedAt: finishedAt,
   }));
