@@ -4,6 +4,24 @@
   "ghi_chu": "Thêm việc bằng skill cắt lượt (/acceptance-gate:cat-luot), hoặc viết hàng theo khuôn skills/acceptance/references/lo-trinh-template.json của gói acceptance-gate; mở vòng bằng /feature-loop:feature-loop <mã>.",
   "moc": [
     {
+      "ma": "VHM1",
+      "ten": "Kênh S03 rơi thì có người được báo trong 35 phút, máy thu chết thì trong 90 phút, và Ops cloud hiện đúng trạng thái",
+      "ten_ngan": "Vận hành ổn định",
+      "loai": "phat-hanh",
+      "dot": "van-hanh-on-dinh-1411",
+      "hang": [
+        "VH1",
+        "VH2",
+        "VH3",
+        "VH4",
+        "VH5",
+        "VH6",
+        "VH7",
+        "VH8"
+      ],
+      "ghi_chu": "Mạnh «Theo khuyến nghị» 14/11 cho sáu việc §7 (ROADMAP §3 mục 49). Thứ tự hàng là thứ tự làm: VH1 (D1) → VH2 (D5) → VH3 (D4) → VH4 (D2) → VH5 (D6) → VH6 (R1) → VH7 (D8) → VH8 (O1). Làn thu chạy song song, ngoài mốc: VHZ1 (D3) → VHZ2 (P1) → VHZ3 (P3), và VHZ4 (D7) sau VH1. VH4 chỉ mở vòng khi Mạnh đã tạo và cất token. Runbook một trang: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §6."
+    },
+    {
       "ma": "MN1",
       "ten": "Nhịp 1: người vận hành chọn một dự án trên Ops và thấy căn xếp theo hạng giá",
       "ten_ngan": "Nhịp 1 — cấp dự án trên Ops",
@@ -168,6 +186,276 @@
     }
   ],
   "hang": [
+    {
+      "ma": "VH1",
+      "slug": "canh-bao-day-toi-nguoi",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [],
+      "cau_giao": "Khi một điều kiện vận hành có tên đỏ (S03 DOWN quá 30′ ban ngày hay 60′ đêm, L6 a/b, L5b DB, Kev, job FAIL mới, dòng chuẩn AUTH FAIL [S0x], facts không đẩy quá 45′), một issue mở trong kho riêng tư trên GitHub, mỗi điều kiện đúng một issue, nhắc lại mỗi 6 giờ và tự đóng khi hồi; nội dung chỉ mã S0x, giờ và tên điều kiện, qua bộ soát tầng A",
+      "bat_khi": "Tái hiện sự cố 13/11 trên bản chép log (khuôn harness canh-bao-s03-ngung-thu): issue mở ≤ 35′ sau lúc rơi, đúng 1 issue, nhắc sau 6 giờ, tự đóng khi heartbeat up; cấy tên nguồn thật hay định danh tài khoản thu vào nội dung: lệnh dừng trước khi gửi (tier-a-guard), không issue nào mở; fixture một dòng AUTH FAIL [S02] → 1 issue; chạy lại cùng trạng thái không mở issue thứ hai; tuần khoẻ phát lại từ log: ≤ 5 cảnh báo",
+      "vi_sao": "Sự cố 13–14/11: máy phát hiện đúng lúc (heartbeat DOWN, L6 a/b) nhưng đầu ra chỉ là tệp log và một banner macOS — 34 giờ không ai được báo. Mạnh chọn kênh 14/11 (D1 «Theo khuyến nghị»): issue trong kho riêng tư, qua tier-a-guard.",
+      "vung": [
+        "scripts/canh-bao-day.mjs",
+        "scripts/lib/canh-bao"
+      ],
+      "ghi_chu": "T3: đường gửi tin rời máy — mọi nội dung đi qua tier-a-guard như push-ops-facts (luật 6). Kênh duy nhất là issue GitHub; bộ đẩy KHÔNG BAO GIỜ gửi qua Zalo hay OpenClaw (luật 8), chỉ ĐỌC log heartbeat, zalo-watchdog-alerts.log và log job — không sửa tệp làn thu. Định nghĩa khuôn dòng AUTH FAIL [S0x] ở hàng này; làn thu phát dòng ở VHZ4. L6(d) và lý do session/stopped của VHZ1 là điều kiện thêm khi hàng ấy gộp — không chặn hàng này. plist 5′ là bước triển khai sau gộp, cần lời Mạnh. Điều kiện job FAIL chỉ bật cho job đã dọn ở VH5; trước đó hạ WARN. Cổng Phạm vi chốt kho riêng tư nào nhận issue và token gửi issue trên máy thu. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH2",
+      "slug": "nhip-song-tach-slo",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D5"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "dung_tren": [],
+      "cau_giao": "Mã chảy liên tục (S03) có khối liveness — tuổi bản thu mới nhất so ngưỡng 30′ ban ngày, 3 giờ đêm — đi cùng khối freshness trong facts và một dòng của check-freshness, còn SLO độ tươi 72 giờ của S03 giữ nguyên",
+      "bat_khi": "Ma trận biên 1799/1800 giây ban ngày, biên khung 07–22h +07; parity với L6(a) trên cùng fixture (một định nghĩa); check-freshness in dòng nhịp sống mà kết luận SLO 72 giờ của S03 không đổi; facts có khối liveness kèm measured_at; tier-a-guard xanh",
+      "vi_sao": "13/11 check-freshness vẫn coi S03 «tươi» sau 34 giờ đứt vì SLO 72 giờ trả lời câu «dữ liệu có cũ không», không phải phép kiểm sống. SLO 72 giờ đã chốt (AU4) và giữ; nhịp sống là thước riêng thêm vào.",
+      "vung": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.mjs",
+        "pipeline/push-ops-facts.mjs"
+      ],
+      "ghi_chu": "T3: chạm pipeline/push-ops-facts.mjs (t3_paths). Chung push-ops-facts.mjs với VH8 — chạy liền nhau, không song song. Ngưỡng L6(a) ở scripts/lib/s03-song.sh (làn thu) không sửa trong hàng này: hàng này đặt định nghĩa và test parity; làn thu chuyển s03-song.sh sang đọc chung qua liên làn nếu cần. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH3",
+      "slug": "ops-cloud-hien-s03",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D4"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "ON22"
+      ],
+      "cau_giao": "Người vận hành mở /ops/collections trên cloud và thấy kênh S03 «Đứt» kèm «đứt từ <giờ>» khi facts báo kênh không nối, có mục «Kênh S03 đứt» trong danh sách cần chú ý, và không thấy badge xanh khi facts cũ",
+      "bat_khi": "Facts connected=false → trang cloud hiện «Đứt» và mục attention «Kênh S03 đứt»; facts connected=true → «Đang nối»; facts cũ 46′ → Alert facts cũ, 0 badge xanh cho S03; thiếu facts → «Chưa có tín hiệu sống» như cũ; trang máy thu không đổi",
+      "vi_sao": "13–14/11 trang Ops cloud (nơi Mạnh xem từ xa) hiện «Chưa có tín hiệu sống» suốt sự cố: nhánh cloud dùng CLOUD_EMPTY.zaloHealth dù facts đã mang health (uptime 0%).",
+      "vung": [
+        "app/src/components/ops/collections"
+      ],
+      "ghi_chu": "health đã có trong facts trên main (push-ops-facts, từ trước ON22) — không cần hàng mới đẩy số; đứng trên ON22 (đã ký 24/10) vì đọc facts qua đường getLocalFacts và cờ stale của nó. Mốc facts và mờ khi quá 45′ theo khuôn FactsStaleAlert. Luật ReUI cho mọi sửa UI. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH4",
+      "slug": "dead-man-ngoai-may",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D2"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "VH1",
+        "ON22"
+      ],
+      "cau_giao": "Khi máy thu tắt, mất mạng hay launchd chết, một job lịch ngoài máy (GitHub Actions 30′) đọc mốc facts và trạng thái S03 qua một route ops chỉ-đọc bằng token chỉ-đọc và mở issue trên cùng kênh của bộ đẩy khi facts cũ quá 60′ hoặc S03 không nối quá 60′",
+      "bat_khi": "Trên preview hay fixture: dừng đẩy facts → issue mở ≤ 90′, đúng 1 issue, tự đóng khi facts tươi lại; S03 connected=false 61′ → issue; khoẻ 7 ngày phát lại → 0 issue; route trả 401 khi thiếu hay sai token, token chỉ đọc được mốc và trạng thái tổng hợp (không tên nguồn thật, không nội dung); tier-a-guard xanh trên payload route",
+      "vi_sao": "Bộ đẩy VH1 chạy trên máy thu nên chết cùng máy. Mạnh 14/11 (D2 «Theo khuyến nghị») đồng ý chủ trương token chỉ-đọc cho dead-man.",
+      "vung": [
+        ".github/workflows/dead-man.yml",
+        "app/src/app/api/v1/ops/coverage"
+      ],
+      "ghi_chu": "T3: route dưới app/src/app/api/v1/ops/** (t3_paths) và một quyền mới (token). Chỉ mở vòng khi Mạnh đã tạo và cất token theo quy trình secret — việc của người, không phải hàng; agent không cầm token. Đứng trên VH1 vì dùng chung kênh issue và khuôn nội dung. Kho công khai: workflow chạy schedule, không chạy trên PR từ fork; lịch GitHub có thể trễ 5–15′. Cổng Phạm vi chốt token mở issue trong kho riêng tư từ workflow của kho công khai. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH5",
+      "slug": "don-bao-dong-gia",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D6"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "VH1"
+      ],
+      "cau_giao": "Job launchd chỉ thoát khác 0 khi có lỗi thật: bước đo hay đọc model (mau-soat-cuon-chieu, doc-gop-hang-ngay) lỗi thành WARN có đếm, S10/S11 chưa có bộ nạp hiện «chưa thu» thay «quá hạn», S01 dừng có chủ ý hiện «tạm dừng»",
+      "bat_khi": "Cấy lỗi bước đọc model: cloud-sync và zalo-import thoát 0, dòng WARN có đếm; lặp ≥ N lượt → điều kiện của VH1 bật; cấy lỗi sync-cloud thật: vẫn thoát khác 0 (giữ AU3); check-freshness: S10/S11 «chưa thu», S01 «tạm dừng», không vào danh sách quá hạn; phát lại 7 ngày log: mọi job thoát 0 trừ lỗi thật",
+      "vi_sao": "Đo 14/11: cloud-sync đỏ 38 lượt liền vì bước đọc model, zalo-import đỏ cùng kiểu, S10/S11/S01 đỏ thường trực — đỏ thật không ai phân biệt, và một kênh đẩy gửi mọi thứ này sẽ bị tắt tiếng.",
+      "vung": [
+        "scripts/cloud-sync.sh",
+        "scripts/zalo-import-daily.sh",
+        "scripts/lib/freshness.mjs"
+      ],
+      "ghi_chu": "T3: scripts/cloud-sync.sh (t3_paths). zalo-import-daily.sh chỉ sửa bước transform trở đi (bước thu/nạp là làn thu). Chung scripts/lib/freshness.mjs với VH2 — chạy sau VH2. Không giấu lỗi thật: WARN lặp vẫn vào VH1. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH6",
+      "slug": "kiem-sau-dang-nhap-s03",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "R1"
+      ],
+      "hang": "T3",
+      "vai": "Người vận hành",
+      "tieu_chi": 7,
+      "dung_tren": [],
+      "cau_giao": "Người vận hành quét QR đăng nhập lại S03 ở /ops/sources và thấy «bài mới đầu tiên lúc <giờ>» khi hook có dòng sau mốc QR, hoặc lời nhắc kiểm nhóm và hook khi 10′ không có bài — không chỉ «đã nối»",
+      "bat_khi": "E2e trên dev với hook log giả: QR giả → trạng thái «chờ bài»; thêm dòng hook sau mốc → «đã nhận bài lúc …»; 10′ không dòng → lời nhắc; trang không gọi lệnh ghi nào trên openclaw ngoài luồng QR có sẵn; không hiện định danh tài khoản thu",
+      "vi_sao": "14/11 sau QR trang chỉ báo «đã nối»; runbook phải kiểm tay /ops/collections. Lần rơi kiểu H1 (phiên đá nhau) lộ ra ở chỗ QR xong mà không có bài.",
+      "vung": [
+        "app/src/app/ops/sources",
+        "app/src/app/api/v1/ops/zalo/login"
+      ],
+      "ghi_chu": "T3: chạm route đăng nhập Zalo dưới app/src/app/api/v1/ops/** (t3_paths); chỉ thêm phần ĐỌC dòng hook sau mốc QR, không đổi luồng đăng nhập. An toàn Zalo (luật 8 AGENTS.md): đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở; không gửi gì vào nhóm, không đổi ~/.openclaw/openclaw.json, requireMention, dmPolicy, bindings; phép đo chạy trên bản chép hay fixture, không gọi lệnh ghi nào trên openclaw. Định danh tài khoản thu là tầng A, không hiện, không rời máy. Luật ReUI cho mọi sửa UI. Dưới mục tiêu cỡ: một kết quả hẹp, giữ riêng vì vùng khác hẳn. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH7",
+      "slug": "khoa-ghi-properties",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "D8"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "dung_tren": [],
+      "cau_giao": "Các bước ghi properties (lượt đêm S06, lượt nạp nhanh S03, lượt chấm song song) giữ chung một khoá tư vấn: đụng khoá thì chờ có hạn hoặc bỏ lượt có ghi, không còn deadlock trong resolve-properties",
+      "bat_khi": "Itest trên DB của lượt: hai tiến trình resolve-properties chạy cùng lúc → một chờ hay bỏ lượt có dòng log, 0 lỗi deadlock; quá hạn chờ → thoát có mã và dòng «bỏ lượt»; chạy đơn → kết quả như trước; đo thật 14 đêm: 0 deadlock trong chotot.log",
+      "vi_sao": "Lượt đêm S06 trước 14/11 hỏng bước resolve-properties do khoá chéo với job khác, không ai được báo.",
+      "vung": [
+        "pipeline/resolve-properties.mjs",
+        "pipeline/lib",
+        "scripts/chotot-daily.sh"
+      ],
+      "ghi_chu": "chotot-daily.sh chỉ sửa bước resolve trở đi (bước thu/nạp là làn thu). Khuôn bỏ lượt theo --luot-nhanh có sẵn. Dưới mục tiêu cỡ, giữ riêng vì khác vùng. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VH8",
+      "slug": "tai-nguyen-may-vao-facts",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh",
+      "phu": [
+        "O1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "VH1"
+      ],
+      "cau_giao": "Facts mang RAM trống và swap đang dùng của máy thu kèm measured_at, hiện trên /ops, và swap quá 90% kéo dài là một điều kiện có tên của bộ đẩy",
+      "bat_khi": "Một lượt push-ops-facts --kho: khối tài nguyên có RAM, swap, measured_at; tier-a-guard xanh; fixture swap 91% hai lượt liền → VH1 mở 1 issue, 89% → 0",
+      "vi_sao": "14/11 swap 6,8/8 GB đang dùng — chưa là nút thắt nhưng là dấu áp lực khi lượt chấm song song chạy.",
+      "vung": [
+        "pipeline/push-ops-facts.mjs",
+        "scripts/canh-bao-day.mjs"
+      ],
+      "ghi_chu": "T3: pipeline/push-ops-facts.mjs (t3_paths). Chung push-ops-facts.mjs với VH2 — chạy sau VH2. Dưới mục tiêu cỡ: một kết quả hẹp; không gộp VH2 vì khác câu giao. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VHZ1",
+      "slug": "l6d-down-keo-dai-ly-do",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh-thu",
+      "phu": [
+        "D3"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Heartbeat S03 DOWN từ hai nhịp liền (≥ 30′) bật L6(d) mà không cần CLI in «not linked», và dòng heartbeat ghi lý do DOWN reason=session hay reason=stopped từ lệnh liệt kê nhóm chỉ-đọc gọi tối đa 1 lần mỗi giờ",
+      "bat_khi": "Fixture DOWN 2 nhịp → 1 cảnh báo L6(d); 1 nhịp → 0; phát lại log 13/11: reason=session; kiểu 09/11: reason=stopped; lệnh liệt kê nhóm chỉ gọi khi DOWN, ≤ 1 lần/giờ; 0 lệnh ghi, 0 tin gửi ra nhóm",
+      "vi_sao": "13/11 L6(c) mù vì CLI vẫn in «linked» khi phiên đã chết; heartbeat không phân biệt «kênh dừng» (P1 xử được) với «phiên mất hiệu lực» (cần QR).",
+      "vung": [
+        "collector/scripts/zalo-heartbeat.sh",
+        "scripts/lib/s03-song.sh"
+      ],
+      "ghi_chu": "Làn ZCode; giao qua liên làn, thứ tự làn thu VHZ1 → VHZ2 → VHZ3. T3: an toàn Zalo — lệnh liệt kê nhóm gọi máy chủ. An toàn Zalo (luật 8 AGENTS.md): đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở; không gửi gì vào nhóm, không đổi ~/.openclaw/openclaw.json, requireMention, dmPolicy, bindings; phép đo chạy trên bản chép hay fixture, không gọi lệnh ghi nào trên openclaw. VH1 đọc L6(d) và lý do như điều kiện thêm khi hàng này gộp. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VHZ2",
+      "slug": "watchdog-tu-khoi-dong-gateway",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh-thu",
+      "phu": [
+        "P1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "VHZ1",
+        "VH1"
+      ],
+      "cau_giao": "Khi L6(b) đỏ từ 10′ và mọi lớp lockdown cùng lượt «ok» và L4d không thấy lượt agent dở, watchdog khởi động lại gateway một lần (trần 1 lần mỗi 6 giờ), ghi sổ và báo qua bộ đẩy; không bao giờ tự quét QR, không đổi cấu hình",
+      "bat_khi": "Harness canh-bao-s03-ngung-thu: kiểu 09/11 → đúng 1 lần khởi động lại; kiểu 13/11 (reason=session) → 1 lần rồi báo «cần QR» qua VH1; một lớp lockdown đỏ hay có lượt agent dở → 0 lần, chỉ báo; lần thứ hai trong 6 giờ → 0 lần, chỉ báo; 0 lệnh ghi cấu hình openclaw; đo thật sau triển khai: đứt trung vị khi bộ hẹn treo ≤ 15′",
+      "vi_sao": "Bộ tự khởi động lại kênh treo 3/10 lần (07/11, 09/11, 13/11); launchd không biết kênh trong tiến trình đã chết. Mạnh 14/11 (P1 «Theo khuyến nghị»): cho phép với trần 1 lần mỗi 6 giờ, chỉ khi lockdown xanh và không lượt agent dở.",
+      "vung": [
+        "scripts/zalo-watchdog.sh",
+        "scripts/lib/s03-song.sh",
+        "scripts/canh-bao-s03-ngung-thu"
+      ],
+      "ghi_chu": "Làn ZCode; giao qua liên làn sau VHZ1. T3: scripts/zalo-watchdog.sh (t3_paths). An toàn Zalo (luật 8 AGENTS.md): đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở; không gửi gì vào nhóm, không đổi ~/.openclaw/openclaw.json, requireMention, dmPolicy, bindings; phép đo chạy trên bản chép hay fixture, không gọi lệnh ghi nào trên openclaw. Khởi động lại gateway có thể chạy «khôi phục lượt agent bị gián đoạn» (sự cố 22/10): điều kiện L4d và trần tần suất là bắt buộc. Bật trên máy thu là bước triển khai riêng (tin GIAO triển khai), cần bằng chứng hai phía. Đứng trên VH1 (báo qua bộ đẩy) và VHZ1 (lý do session/stopped). Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VHZ3",
+      "slug": "va-goc-bo-hen-khoi-dong-lai",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh-thu",
+      "phu": [
+        "P3"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [
+        "VHZ2"
+      ],
+      "cau_giao": "Bộ tự khởi động lại kênh S03 trong gateway chạy đúng hẹn sau khi kết nối nghe tin bị đóng, và bản vá được cài vào runtime gateway theo quy trình runtime-map",
+      "bat_khi": "Test đơn vị tái hiện bộ hẹn không chạy → đỏ trước vá, xanh sau vá; build và cài theo quy trình runtime-map (openclaw.plugin.json), watchdog L1b xanh sau cài, lockdown 8/8 lớp xanh; sau cài 14 ngày: 0 lần L6(b)",
+      "vi_sao": "Gốc kỹ thuật của 09/11 và 13/11: bộ hẹn khởi động lại không chạy. Mạnh 14/11 (P3 «Theo khuyến nghị»): cài bản vá gốc vào runtime gateway theo runtime-map.",
+      "vung": [
+        "collector/openclaw"
+      ],
+      "ghi_chu": "Làn ZCode; giao qua liên làn sau VHZ2. Mã vá nằm ở kho openclaw ngoài kho này (nhánh vá hiện có); trong kho chỉ chạm collector/openclaw nếu cần. T3: an toàn Zalo — build hay cài sai làm gateway crash-loop (đã trả giá 22/10). An toàn Zalo (luật 8 AGENTS.md): đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở; không gửi gì vào nhóm, không đổi ~/.openclaw/openclaw.json, requireMention, dmPolicy, bindings; phép đo chạy trên bản chép hay fixture, không gọi lệnh ghi nào trên openclaw. Cài vào runtime là tin GIAO triển khai riêng. Đứng trên VHZ2 để có lưới tự phục hồi khi cài. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
+    {
+      "ma": "VHZ4",
+      "slug": "dong-chuan-auth-fail",
+      "dot": "van-hanh-on-dinh-1411",
+      "nhom": "van-hanh-on-dinh-thu",
+      "phu": [
+        "D7"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [
+        "VH1"
+      ],
+      "cau_giao": "Bộ thu từng nguồn ghi một dòng chuẩn AUTH FAIL [S0x] khi xác thực hỏng (401, «đăng nhập thất bại») để bộ đẩy báo ngay, không chờ SLO",
+      "bat_khi": "Fixture 401 ở bộ thu S02 → đúng 1 dòng AUTH FAIL [S02] theo khuôn của VH1 → VH1 mở 1 issue; dòng chỉ mang mã S0x, không định danh tài khoản thu; S02 đang 401 được báo ngay khi VH1 bật",
+      "vi_sao": "S02 trả 401 từ 13/11 12:05Z (32 lần) mà SLO 35 ngày nên im lặng tới tháng 12 — cùng kiểu «đứt im lặng» với S03.",
+      "vung": [
+        "collector/src",
+        "pipeline/airdna-rotate.mjs"
+      ],
+      "ghi_chu": "Làn ZCode (bộ thu); giao qua liên làn. Khuôn dòng do VH1 định nghĩa; điều kiện D1 đọc dòng nằm ở VH1. Đăng nhập lại S02 là việc tài khoản của Mạnh, không thuộc hàng. Dưới mục tiêu cỡ, làn thu. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+    },
     {
       "ma": "PL1",
       "cau_giao": "Importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST) và không ghi chúng vào stg_*",
