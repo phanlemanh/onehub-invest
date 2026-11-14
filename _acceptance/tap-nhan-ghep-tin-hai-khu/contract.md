@@ -5,7 +5,7 @@ slug: tap-nhan-ghep-tin-hai-khu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-13-tap-nhan-ghep-tin-hai-khu-design.md
@@ -89,3 +89,5 @@ tầng trục OP1 vẫn chọn nhưng thiếu cỡ chỉ báo, để PL36 dùng.
 ## Notes
 
 - Lượt nạp thật vào DB máy thu (gọi model) chạy sau gộp — xem Hỏi-2 trong sổ.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-15:
+  - Ngoài-1: ca test «pipeline khớp agent» chỉ dò chữ trong mã nguồn bên đọc tin, chưa so trực tiếp cách gửi bài tới model của hai bên.

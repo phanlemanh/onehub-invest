@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fa3c136ef6020d4c8f277d36a14859a3b39e4fa1
-human_signoff:
+human_signoff: Mạnh 2026-11-15
 ---
 
 # Evidence Report: tap-nhan-ghep-tin-hai-khu
@@ -84,7 +84,7 @@ human_signoff:
   run_id: minted-tap-nhan-ghep-tin-hai-khu-E5b-r3
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui
+  verifier: config:dev_server.start   # tác tử chấm lái trình duyệt trên bản dev của worktree (:3460); bản tổng hợp ghi khoá executors.ui không có trong config — sửa nhãn lúc ký theo tiền lệ của kho
   verified_at: 2026-11-14T15:38:21Z
   screenshot: evidence/E5b-step1.png
   observed: |
