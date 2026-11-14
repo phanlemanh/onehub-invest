@@ -40,17 +40,19 @@ WITH phi_ly AS (
            WHEN t.thuoc = 'gia-thang-pn' AND NOT t.gia_tri BETWEEN 1000000 AND 500000000 THEN 'ngoai-khoang'
          END AS loai_ra
     FROM tin2 t
-), v AS (            -- phiếu thước gia-m2: tin thấy sau cùng của phiếu
-  SELECT DISTINCT ON (l.phieu) l.phieu, l.area_id, l.property_type, l.kind, l.bedrooms, l.gia_tri
+), v AS (            -- phiếu thước gia-m2: tin thấy sau cùng của phiếu trong từng phường × loại × bán/thuê (căn S06 có tin ở
+                     -- hai phường hay hai loại góp một phiếu cho mỗi nhóm, không mất phiếu ở nhóm kia)
+  SELECT DISTINCT ON (l.phieu, l.area_id, l.property_type, l.kind) l.phieu, l.area_id, l.property_type, l.kind, l.bedrooms, l.gia_tri
     FROM loc l
    WHERE l.loai_ra IS NULL AND l.thuoc = 'gia-m2'
-   ORDER BY l.phieu, l.last_seen DESC NULLS LAST, l.offer_id
+   ORDER BY l.phieu, l.area_id, l.property_type, l.kind, l.last_seen DESC NULLS LAST, l.offer_id
 ), vm AS (           -- phiếu nhóm giá tháng: mọi tin thuê hợp lệ cùng PN có giá tháng trong khoảng (có và không m²)
-  SELECT DISTINCT ON (l.phieu) l.phieu, l.area_id, l.property_type, l.bedrooms, l.price_vnd::numeric AS gia_tri
+  SELECT DISTINCT ON (l.phieu, l.area_id, l.property_type, l.bedrooms) l.phieu, l.area_id, l.property_type, l.bedrooms,
+         l.price_vnd::numeric AS gia_tri
     FROM loc l
    WHERE l.kind = 'rent_lt' AND l.bedrooms IS NOT NULL AND l.price_vnd BETWEEN 1000000 AND 500000000
      AND l.loai_ra IS NULL
-   ORDER BY l.phieu, l.last_seen DESC NULLS LAST, l.offer_id
+   ORDER BY l.phieu, l.area_id, l.property_type, l.bedrooms, l.last_seen DESC NULLS LAST, l.offer_id
 ), mem AS (
   SELECT 'all|' || area_id || '|' || property_type || '|' || kind AS g, phieu, gia_tri FROM v
   UNION ALL
@@ -76,8 +78,10 @@ WITH phi_ly AS (
          (l.thuoc = 'gia-m2' AND vv.bedrooms IS NOT NULL AND coalesce(sp.n, 0) < 10) AS lui_pn,
          coalesce(vv.area_id, vt.area_id) AS nut
     FROM loc l
-    LEFT JOIN v vv ON l.thuoc = 'gia-m2' AND vv.phieu = l.phieu
-    LEFT JOIN vm vt ON l.thuoc = 'gia-thang-pn' AND vt.phieu = l.phieu
+    LEFT JOIN v vv ON l.thuoc = 'gia-m2' AND vv.phieu = l.phieu AND vv.area_id = l.area_id
+                  AND vv.property_type = l.property_type AND vv.kind = l.kind
+    LEFT JOIN vm vt ON l.thuoc = 'gia-thang-pn' AND vt.phieu = l.phieu AND vt.area_id = l.area_id
+                   AND vt.property_type = l.property_type AND vt.bedrooms = l.bedrooms
     LEFT JOIN st sp ON sp.g = 'pn|' || vv.area_id || '|' || vv.property_type || '|' || vv.kind || '|' || vv.bedrooms
    WHERE l.loai_ra IS NULL
 ), so AS (

@@ -19,15 +19,24 @@ export const SQL_420 = readFileSync(new URL("./sql/420_price_rank.sql", import.m
 /** Khoá advisory riêng của bước chấm — hai job đêm chạy chồng thì xếp hàng. */
 export const KHOA_XEP_HANG = "SELECT pg_advisory_xact_lock(hashtext('xep-hang-gia'))";
 
+/** Loại hình mà diện tích ghi trên tin là diện tích sàn của chính căn — luật «phòng quá nhỏ» chỉ đúng nghĩa ở đây. */
+export const LOAI_DIEN_TICH_SAN = new Set(["apartment", "room"]);
+
 /**
  * Lý do phi lý ON11 của một tin cho bước chấm. Tin không có diện tích không bị coi là phi lý ở đây: tin thuê thiếu m² được so
  * theo giá tháng cùng số phòng ngủ (QĐ4), tin bán thiếu m² rơi vào «thieu-gia» ở 420. Chỉ còn luật số phòng ngủ ngoài khoảng.
- * @param {{ area_m2: unknown, bedrooms: unknown }} r
+ * «Phòng quá nhỏ» (diện tích chia số phòng ngủ dưới 20 m²) chỉ áp cho căn hộ và phòng: nhà phố ghi diện tích đất, nhà nhiều
+ * tầng nên chia cho số phòng là phép đo sai (đo 14/11 trên bản chép máy thu: 18.709 tin nhà S06 bị loại oan; ON11 viết khi tin
+ * S03 chưa có loại hình — giới hạn đã ghi ở lib/deal-plausibility.mjs).
+ * @param {{ area_m2: unknown, bedrooms: unknown, property_type?: string | null }} r
  * @returns {string | null}
  */
 export function lyDoPhiLy(r) {
   const area = r.area_m2 == null ? null : Number(r.area_m2);
-  if (area !== null && Number.isFinite(area) && area > 0) return implausibleReason({ areaM2: area, bedrooms: r.bedrooms });
+  if (area !== null && Number.isFinite(area) && area > 0) {
+    const ly = implausibleReason({ areaM2: area, bedrooms: r.bedrooms });
+    return ly === "phong-qua-nho" && !LOAI_DIEN_TICH_SAN.has(r.property_type ?? "") ? null : ly;
+  }
   const beds = r.bedrooms == null ? null : Number(r.bedrooms);
   return beds !== null && Number.isFinite(beds) && beds > PLAUSIBILITY.maxBedrooms ? "phong-ngu-ngoai-khoang" : null;
 }
@@ -51,7 +60,10 @@ export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint =
   await c.query(mo);
   try {
     await c.query(KHOA_XEP_HANG);
-    const tin = await c.query(`SELECT offer_id, area_m2, bedrooms FROM sale_offers`);
+    // Câu 420 gom 100 nghìn tin qua nhiều CTE; ước lượng dòng trên CTE kém nên bộ lập kế hoạch dễ chọn vòng lặp lồng (đo 14/11
+    // trên bản chép chưa ANALYZE: 50 phút/lượt; tắt vòng lặp lồng: 3,5 giây). Chỉ trong giao dịch của bước chấm.
+    await c.query("SELECT set_config('enable_nestloop', 'off', true)");
+    const tin = await c.query(`SELECT offer_id, area_m2, bedrooms, property_type FROM sale_offers`);
     const phiLy = [];
     for (const r of tin.rows) {
       const ly = lyDoPhiLy(r);

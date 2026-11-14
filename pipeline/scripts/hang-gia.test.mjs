@@ -116,6 +116,9 @@ const DOT_NGUONG_5 = ["so.n >= 10 AND so.gia_tri <= so.p20", "so.n >= 5 AND so.g
 const DOT_MOI_TIN = [
   "coalesce((SELECT 'p:' || min(po.property_id) FROM property_offers po WHERE po.offer_id = t.offer_id),\n                  'o:' || t.offer_id) AS phieu",
   "'o:' || t.offer_id AS phieu"];
+const DOT_PHIEU_BAT_KE_PHUONG = [
+  ["SELECT DISTINCT ON (l.phieu, l.area_id, l.property_type, l.kind) l.phieu", "SELECT DISTINCT ON (l.phieu) l.phieu"],
+  ["ORDER BY l.phieu, l.area_id, l.property_type, l.kind, l.last_seen", "ORDER BY l.phieu, l.last_seen"]];
 const DOT_BO_KIND = [
   ["'all|' || area_id || '|' || property_type || '|' || kind AS g", "'all|' || area_id || '|' || property_type AS g"],
   ["ELSE 'all|' || vv.area_id || '|' || vv.property_type || '|' || vv.kind", "ELSE 'all|' || vv.area_id || '|' || vv.property_type"],
@@ -183,13 +186,18 @@ async function fixtureAc2(c) {
   await can(c, ["ac2-s6x"]);
   const s03 = [44, 45, 48, 49, 51, 52, 53, 56, 58].map((x) => x * M);
   for (const [i, v] of s03.entries()) await tin(c, { id: `ac2-s3-${i}`, phuong: p, m2: 60, perm2: v });
-  return [55 * M, 47 * M, ...s03];   // phiếu: căn ba tin (55), căn của s6x (47), 9 tin S03
+  // Căn S06 có tin ở hai phường (301 căn trên bản chép 14/11): tin ở a5 thấy sau cùng, nhưng nhóm a2 vẫn nhận phiếu của tin a2.
+  await tin(c, { id: "ac2-s6m-a2", nguon: "S06", phuong: p, m2: 60, perm2: 57 * M });
+  await tin(c, { id: "ac2-s6m-a5", nguon: "S06", phuong: A("a5"), m2: 60, perm2: 90 * M });
+  await can(c, ["ac2-s6m-a2", "ac2-s6m-a5"]);
+  return [55 * M, 47 * M, 57 * M, ...s03];   // phiếu: căn ba tin (55), căn của s6x (47), căn hai phường ở a2 (57), 9 tin S03
 }
 function kiemAc2(d, phieu) {
   const loi = [];
   const kv = kyVong(phieu);
   for (const id of ["ac2-s6a", "ac2-s6b", "ac2-s6c"]) loi.push(...soDong(d[id], kv.cua(55 * M), id));
   loi.push(...soDong(d["ac2-s6x"], kv.cua(47 * M), "ac2-s6x"));
+  loi.push(...soDong(d["ac2-s6m-a2"], kv.cua(57 * M), "ac2-s6m-a2"));
   return loi;
 }
 test("CG9-AC-2 căn ba tin một phiếu (tin thấy sau cùng), tin hai căn một phiếu, S03 chung nhóm; đột biến mỗi tin một phiếu đỏ", async () => {
@@ -198,11 +206,15 @@ test("CG9-AC-2 căn ba tin một phiếu (tin thấy sau cùng), tin hai căn m�
   await xepHangGia(c, { log: im.log });
   const d = await dongs(c);
   assert.deepEqual(kiemAc2(d, phieu), []);
-  assert.equal(so(d["ac2-s3-0"].n), 11, "tin S03 chung nhóm với S06, n = 11 phiếu");
+  assert.equal(so(d["ac2-s3-0"].n), 12, "tin S03 chung nhóm với S06, n = 12 phiếu");
   assert.equal(d["ac2-s6a"].hang_pct, d["ac2-s6c"].hang_pct, "mọi tin một căn cùng hạng");
   await xepHangGia(c, { log: im.log, sql: dot(DOT_MOI_TIN) });
   const loi = kiemAc2(await dongs(c), phieu);
-  assert.ok(loi.some((x) => x.includes("n=13 ≠ 11")), `đột biến mỗi tin một phiếu phải đỏ (n mong đợi 11, thật 13); lỗi: ${loi.join(" | ")}`);
+  assert.ok(loi.some((x) => x.includes("n=14 ≠ 12")), `đột biến mỗi tin một phiếu phải đỏ (n mong đợi 12, thật 14); lỗi: ${loi.join(" | ")}`);
+  // Đột biến: phiếu chọn tin đại diện bất kể phường (lỗi thấy trên bản chép 14/11) → nhóm a2 mất phiếu của căn hai phường.
+  await xepHangGia(c, { log: im.log, sql: dot(...DOT_PHIEU_BAT_KE_PHUONG) });
+  const loi2 = kiemAc2(await dongs(c), phieu);
+  assert.ok(loi2.some((x) => x.startsWith("ac2-s6m-a2")), `đột biến phiếu bất kể phường phải đỏ ở ac2-s6m-a2; lỗi: ${loi2.join(" | ")}`);
 });
 
 // ---------- AC-3: lùi cấp và lý do ----------
@@ -221,6 +233,7 @@ test("CG9-AC-3 ma trận 12 ô: chia PN, lùi PN, không PN, sáu lý do không 
   await tin(c, { id: "ac3-ngoai-khoang", phuong: p, m2: 70, perm2: 600 * M });
   await tin(c, { id: "ac3-dt-nho", phuong: p, m2: 5, perm2: 64 * M });
   await tin(c, { id: "ac3-phong-nho", phuong: p, m2: 40, perm2: 64 * M, pn: 3 });
+  await tin(c, { id: "ac3-nha-pho", phuong: p, loai: "house", m2: 40, perm2: 120 * M, pn: 4 });   // diện tích đất, nhà nhiều tầng
   await xepHangGia(c, { log: im.log });
   const d = await dongs(c);
   assert.equal(so(d["ac3-pn2-1"].pn_nhom), 2, "PN đủ 10: chia PN");
@@ -237,6 +250,7 @@ test("CG9-AC-3 ma trận 12 ô: chia PN, lùi PN, không PN, sáu lý do không 
   assert.equal(d["ac3-ngoai-khoang"].ly_do, "ngoai-khoang");
   assert.equal(d["ac3-dt-nho"].ly_do, "phi-ly:dien-tich-ngoai-khoang");
   assert.equal(d["ac3-phong-nho"].ly_do, "phi-ly:phong-qua-nho");
+  assert.equal(d["ac3-nha-pho"].ly_do, "nhom-duoi-5", "nhà phố 40 m² 4PN không phải «phòng quá nhỏ» (diện tích đất) — được chấm");
   assert.equal(d["ac3-pn2-0"].nhan, "re-trong-phuong", "rẻ quá 35% vẫn mang nhãn");
   assert.equal(d["ac3-pn2-0"].can_xac_minh, true, "rẻ quá 35% → cần xác minh");
   assert.equal(d["ac3-pn2-5"].can_xac_minh, false, "đối chứng: căn giữa nhóm không cần xác minh");

@@ -31,20 +31,21 @@ WITH tin AS (
 ), khoa AS (
   SELECT DISTINCT r.thuoc, r.nut, r.property_type, r.kind, r.pn_nhom FROM offer_price_rank r WHERE r.cap = 'phuong' AND ${CHAM}
 ), thanh_vien AS (
-  SELECT k.thuoc, k.nut, k.property_type, k.kind, k.pn_nhom, h.phieu, h.last_seen, h.offer_id,
+  SELECT k.thuoc, k.nut, k.property_type, k.kind, k.pn_nhom, h.phieu, h.last_seen, h.offer_id, h.bedrooms,
          h.property_type AS loai_tv, h.kind AS kind_tv,
          CASE k.thuoc WHEN 'gia-m2' THEN h.price_perm2::numeric ELSE h.price_vnd::numeric END AS v
     FROM khoa k
     JOIN tin h ON h.area_id = k.nut AND h.property_type = k.property_type
               AND (k.thuoc = 'gia-thang-pn' OR h.kind = k.kind)
-   WHERE (k.thuoc = 'gia-m2' AND EXISTS (SELECT 1 FROM hop_le x WHERE x.offer_id = h.offer_id AND x.thuoc = 'gia-m2')
-          AND (k.pn_nhom IS NULL OR h.bedrooms = k.pn_nhom))
+   WHERE (k.thuoc = 'gia-m2' AND EXISTS (SELECT 1 FROM hop_le x WHERE x.offer_id = h.offer_id AND x.thuoc = 'gia-m2'))
       OR (k.thuoc = 'gia-thang-pn' AND h.kind = 'rent_lt' AND h.bedrooms = k.pn_nhom
           AND h.price_vnd BETWEEN 1000000 AND 500000000
           AND EXISTS (SELECT 1 FROM hop_le x WHERE x.offer_id = h.offer_id))
-), phieu AS (
-  SELECT DISTINCT ON (thuoc, nut, property_type, kind, pn_nhom, phieu) *
-    FROM thanh_vien ORDER BY thuoc, nut, property_type, kind, pn_nhom, phieu, last_seen DESC NULLS LAST, offer_id
+), phieu AS (      -- tin đại diện của phiếu trong nhóm (thấy sau cùng); nhóm chia PN giữ phiếu mà tin đại diện có đúng số PN
+  SELECT * FROM (
+    SELECT DISTINCT ON (thuoc, nut, property_type, kind, pn_nhom, phieu) *
+      FROM thanh_vien ORDER BY thuoc, nut, property_type, kind, pn_nhom, phieu, last_seen DESC NULLS LAST, offer_id) d
+   WHERE thuoc = 'gia-thang-pn' OR pn_nhom IS NULL OR bedrooms = pn_nhom
 ), st AS (
   SELECT thuoc, nut, property_type, kind, pn_nhom, count(*)::int AS n,
          percentile_cont(0.5) WITHIN GROUP (ORDER BY v) AS tv,
