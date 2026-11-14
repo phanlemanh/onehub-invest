@@ -5,7 +5,9 @@ slug: tap-nhan-ghep-tin-hai-khu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data, ui]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-13-tap-nhan-ghep-tin-hai-khu-design.md
 ---
 
