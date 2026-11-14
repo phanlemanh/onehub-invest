@@ -23,6 +23,8 @@ import { basename } from "node:path";
 import { khoaNhomThat } from "./lib/eval-labels.mjs";
 import { NOI_KHU_S09 } from "./lib/s09-du-an.mjs";
 import { buocS09 } from "./lib/s09-dung.mjs";
+import { NOI_DU_AN_S16 } from "./lib/s16-danh-muc.mjs";
+import { buocS16, napS16TheoKhu, theLechS16 } from "./lib/s16-dung.mjs";
 
 export const KHU_MAC_DINH = Object.freeze(["vinhomes-ocean-park-1", "vinhomes-grand-park"]);
 const ISO = Object.freeze({ hanoi: "VN-HN", hcmc: "VN-SG" });
@@ -66,7 +68,7 @@ export async function napBangIso(c) {
  */
 export async function dung(c, {
   khuSlugs = KHU_MAC_DINH, tuDien = { giaTri: new Map(), ban: null, tep: null }, runId = `dbv-${Date.now()}`, log = console.log, isoTheo = null,
-  noiS09 = NOI_KHU_S09,
+  noiS09 = NOI_KHU_S09, noiS16 = NOI_DU_AN_S16,
 } = {}) {
   if (!Array.isArray(khuSlugs) || khuSlugs.length === 0) throw new LoiGoi("danh sách khu rỗng — không dựng gì");
   await c.query("BEGIN");
@@ -117,7 +119,10 @@ export async function dung(c, {
     const { rows: bd } = await c.query(
       "SELECT value, object_key FROM registry_aliases WHERE retired_at IS NULL AND kind = 'ma_nguon' AND source = $1", [NGUON_DANH_MUC]);
     const biDanh = new Map(bd.map((r) => [r.value, r.object_key]));
-    const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu });
+    // DA33 §5.5: toà, trục, căn S16 đã có của khu — bước S08 gắn bí danh vào chúng thay vì đúc; lệch toà → thẻ.
+    const s16TheoKhu = await napS16TheoKhu(c, khuIds);
+    const kh = keHoachDung({ dongS08: s08, biDanh, phanKhuTheoKhu, s16TheoKhu });
+    const theLech = await theLechS16(c, kh.lechS16);
 
     // Ghi: toà → trục → căn → bí danh.
     const toaMoi = kh.toa.filter((t) => t.moi);
@@ -216,6 +221,8 @@ export async function dung(c, {
 
     // DA31: phân khu, cụm, toà S09 (sau bước S08, cùng giao dịch). Chưa áp 097 hay khu không có dòng S09 → bỏ qua có lý do.
     const s09 = await buocS09(c, { khu, isoKhu, noi: noiS09, log });
+    // DA33: toà, căn S16 của khu đã nối (sau S08, S09; cùng giao dịch). Chưa áp 103 → bỏ qua có lý do.
+    const s16 = await buocS16(c, { khu, isoKhu, noi: noiS16, log });
     await c.query("COMMIT");
 
     const theoKhu = {};
@@ -243,6 +250,8 @@ export async function dung(c, {
       phuong_moi: phuong,
       ly_do_phuong: lyDoPhuong,
       s09,
+      s16,
+      s08_lech_s16: theLech,
     };
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
