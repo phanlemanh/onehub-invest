@@ -787,7 +787,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     đây cũng là cách so nếu chưa có m2. Cũng bỏ rào sau khi lên thực tế đánh giá.»
     - **Mỏ neo và ba nhịp** (QĐ9): nhịp 1 cấp dự án trên Ops (mốc MN1) → nhịp 2 cấp toà ở Ocean Park 1 và Grand Park (MN2) → nhịp 3
       tầng, ngoài hai khu, lên Invest (MN3). Thước chính: số tin căn hộ đang rao được xếp hạng giá từ cấp dự án trở xuống và hiện
-      trên màn (14/11: 0). Việc đang làm giữ nguyên, xếp theo mỏ neo. Chỉnh lộ trình: tách DA3 hai lát, lát mỏng DA32 đi trước (QĐ5);
+      trên màn (14/11: 0). Việc đang làm giữ nguyên, xếp theo mỏ neo. Chỉnh lộ trình: tách DA3 hai lát, lát mỏng DA32 đi trước (QĐ5), tự mở
+      `registry_aliases` cho nút dự án bằng migration 100; DS2 đứng thẳng trên DA32, DA7 rời đường găng (GS quyết 14/11 theo mục 44
+      Hỏi-1);
       PL20 thành nhịp toà, trục và căn ở PL36 (QĐ6); hàng nạp S16 DA33 (QĐ7). QĐ1, QĐ2 (lời ghi thật DV6 rồi DA5, sao lưu và chạy
       thử lại trước) và QĐ8 (mở ngay CG9, gộp DA6) là việc vận hành, không vào lộ trình.
     - **QĐ3 — lên Invest chưa dựng rào**: căn giá tốt lên Invest do máy tự hiện. Bỏ bước «gọi thử mẫu, đạt mới mở» và bỏ việc giấu căn
@@ -799,11 +801,15 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       2PN), đúng thông lệ thị trường; tin thuê có m² và tin bán giữ giá/m². Cùng ngưỡng 20% và 5%, nhóm từ 10. Chưa dựng rào; đánh giá
       sau khi lên thật. Giao ở CG10, CG11.
     - **Nguồn S16** (14/11, Mạnh «Cả phần đăng nhập»; «Phần đăng nhập là mã chính từ chủ đầu tư, nên sự tin cậy cao»): danh mục do
-      một chủ đầu tư tự công bố. Đưa cả phần lấy bằng đăng nhập vào đường ống. Mã căn S16 là nguồn tin cậy cao nhất khi dựng cây
+      một chủ đầu tư tự công bố. Lời «Cả phần đăng nhập» trả lời câu «đưa dữ liệu S16 có sẵn vào đường ống tới đâu», nên mọi phần
+      đã có — danh mục, tin rao và mã căn lấy bằng đăng nhập — vào đường ống. Mã căn S16 là nguồn tin cậy cao nhất khi dựng cây
       toà → căn ở các dự án của chủ đầu tư đó, xếp trên S08 và trên mã suy từ tin S03. **Chưa có lời**: thu định kỳ bằng phiên đăng
-      nhập; hiện mã căn lấy bằng đăng nhập lên cổng Invest hay API công khai — mặc định **chỉ nội bộ** tới khi Mạnh nói khác. Trường
-      nguồn và tên thư mục bản thu mang tên thật nên chỉ ở máy thu; mọi thứ rời máy đổi về `S16`. Phiên đăng nhập, định danh tài
-      khoản thu vẫn là tầng A (luật 6). Hàng DA33, migration 103 do Claude viết sau khi làn thu giao bản thu và hợp đồng dữ liệu.
+      nhập; hiện mã căn lấy bằng đăng nhập lên cổng Invest hay API công khai; hiện tin rao S16 lên cổng — mặc định **chỉ nội bộ** tới
+      khi Mạnh nói khác. Trường nguồn và tên thư mục bản thu mang tên thật nên chỉ ở máy thu; mọi thứ rời máy đổi về `S16`. Phiên
+      đăng nhập, định danh tài khoản thu vẫn là tầng A (luật 6). Hàng DA33: bộ nạp `import-s16*` vào bảng stg là làn thu (ZCode viết,
+      Claude duyệt hợp đồng); Claude viết migration 103 và phần từ stg vào danh bạ.
+    - **Nguyên tắc thu chung** (14/11, Mạnh ở phiên liên làn): «nơi nào dùng API để thu được thì để làn thu thu nhanh và thu hết,
+      nơi nào chặn thì tuân thủ, không làm máy móc quá».
     - **Nguồn S09** (13/11, Mạnh «Thu như vừa rồi, đó trách nhiệm của S09, nhiệm vụ của bạn là giao việc và kiểm tra kết quả và hỗ
       trợ»): thu định kỳ qua đường API (miền API riêng), trách nhiệm ở nguồn; không trình lại câu robots, điều khoản. Luật thu chung
       giữ: không đăng nhập, dừng khi gặp 403, 429 hay trang thử thách, không vượt chặn. Giữ bản thu ngày 13/11 kèm ghi chú phần meta
