@@ -31,7 +31,9 @@
     "scripts/truong-du-an-tren-tin.test.mjs",
     "scripts/tu-vung-du-an.test.mjs",
     "scripts/vocab.test.mjs",
-    "scripts/yeu-cau-ngan-sach.test.mjs"
+    "scripts/yeu-cau-ngan-sach.test.mjs",
+    "tests/s08-danh-muc-nap.test.mjs",
+    "scripts/db-thu-chot.test.mjs"
   ],
   "b": [
     "parse.test.mjs",
