@@ -50,10 +50,14 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
              (array_agg(area_id ORDER BY last_seen DESC))[1] area_id,
              (array_agg(kind ORDER BY last_seen DESC))[1] kind,
              (array_agg(property_type ORDER BY last_seen DESC))[1] pt,
-             round(avg(latitude)::numeric, 6) lat, round(avg(longitude)::numeric, 6) lng
+             round(avg(latitude)::numeric, 6) lat, round(avg(longitude)::numeric, 6) lng,
+             count(*) FILTER (WHERE NOT EXISTS (
+               SELECT 1 FROM property_offers po WHERE po.offer_id = g.offer_id))::int n_chua_gan
       FROM g GROUP BY cluster_key`);
 
-    let nEvidence = 0, nNew = 0, nMatched = 0;
+    // DA6 (ADR-0013 câu 3): tin đã gắn căn giữ căn của nó dù giá, diện tích, vị trí đổi. Cụm không khớp căn nào mà mọi tin
+    // đều đã gắn (vd một tin vừa đổi giá rơi sang bậc giá mới) thì không sinh căn; link chỉ chèn cho tin chưa gắn căn nào.
+    let nEvidence = 0, nNew = 0, nMatched = 0, nBoQua = 0;
     for (const cl of clusters) {
       // MATCH existing qua stable_key (= cluster_key)
       const { rows: existing } = await q.query(
@@ -68,6 +72,9 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
           `UPDATE properties SET last_seen = GREATEST(last_seen, $2), n_evidence = $3 WHERE id = $1`,
           [pid, cl.ls, cl.n],
         );
+      } else if (cl.n_chua_gan === 0) {
+        nBoQua++;
+        continue;
       } else {
         // CREATE NEW (pending — chờ HITL verify)
         const { rows: ins } = await q.query(
@@ -91,13 +98,14 @@ export async function chayResolve(c, { ghi = console.log, ...opts } = {}) {
            AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
            AND ${KHONG_CAP_THI_TRUONG}
            AND ${CLUSTER_EXPR} = $2
-         ON CONFLICT (property_id, offer_id) DO NOTHING`,
+           AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id)
+         ON CONFLICT DO NOTHING`,
         [pid, cl.cluster_key],
       );
       nEvidence += cl.n;
     }
     ghi(
-      `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) | ${nEvidence} offers`,
+      `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) + bỏ ${nBoQua} cụm toàn tin đã gắn | ${nEvidence} offers`,
     );
     ghi(`Stage A: gỡ ${await goSdtKhoiCan(q)} ô đường mang số`);
     ghi(`Stage A: điền đường ${await dienDuongCan(q)} căn đang trống`);
