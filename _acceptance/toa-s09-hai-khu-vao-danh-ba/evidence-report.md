@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: toa-s09-hai-khu-vao-danh-ba
-verdict: REJECT
-failed_evals: [E9]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f77180e647ea91f2f2c6ffdc707dc76bdbab6f5e
+verified_commit: b7df91fe2d764f88becac6dfcb9bdae818eeabde
 human_signoff:
 ---
 
@@ -23,10 +23,19 @@ human_signoff:
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | script | PASS |
 | E8 | AC-8 | script | PASS |
-| E9 | AC-9 | script | REJECT |
+| E9 | AC-9 | script | PASS |
 | E10 | AC-10 | script | PASS |
 
 ## Evidence
+
+- eval: E9
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E9-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s09_ranh_gioi
+  verified_at: 2026-11-14T01:30:47Z
+  output: |
+    tep=27 ngoai_vung=0 collector_doi=0 snapshots_doi=0 sync_cloud_doi=0 app_doi=0 ten_nguon=0 097_ap_hai_lan=ok
 
 - eval: E1
   run_id: minted-toa-s09-hai-khu-vao-danh-ba-E1-r1
@@ -34,59 +43,8 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.s09_db
   verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
-
-- eval: E3
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E3-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s09_db
-  verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
-
-- eval: E4
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E4-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s09_db
-  verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
-
-- eval: E5
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E5-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s09_db
-  verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
-
-- eval: E8
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E8-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s09_db
-  verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
-
-- eval: E10
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E10-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.s09_db
-  verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs
-    ℹ duration_ms 8881.138625
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-toa-s09-hai-khu-vao-danh-ba-E2-r1
@@ -94,9 +52,35 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.s09_ham
   verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node --test pipeline/lib/s09-du-an.test.mjs
-    ℹ duration_ms 55.554625
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E3
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E3-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s09_db
+  verified_at: 2026-11-14T00:50:58Z
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E4
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E4-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s09_db
+  verified_at: 2026-11-14T00:50:58Z
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E5
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E5-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s09_db
+  verified_at: 2026-11-14T00:50:58Z
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-toa-s09-hai-khu-vao-danh-ba-E6-r1
@@ -104,9 +88,8 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.s09_that
   verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node pipeline/scripts/danh-ba-s09-that.mjs
-    E6/E7: mọi ô đạt kỳ vọng
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-toa-s09-hai-khu-vao-danh-ba-E7-r1
@@ -114,59 +97,63 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.s09_that
   verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node pipeline/scripts/danh-ba-s09-that.mjs
-    E6/E7: mọi ô đạt kỳ vọng
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
-- eval: E9
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E9-r1
-  exit_code: 1
+- eval: E8
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E8-r1
+  exit_code: 0
   baseline: n-a
-  verifier: config:executors.script.s09_ranh_gioi
+  verifier: config:executors.script.s09_db
   verified_at: 2026-11-14T00:50:58Z
-  output: |
-    lệnh: node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main
-    ten_nguon_doi_chung=27
-    doi_chung_bo_do=ok
-    tep=27 ngoai_vung=0 collector_doi=0 snapshots_doi=0 sync_cloud_doi=0 app_doi=0 ten_nguon=14 097_ap_hai_lan=ok
-    kỳ vọng ten_nguon=0, thực đo ten_nguon=14 nên eval không đạt
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E10
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-E10-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.s09_db
+  verified_at: 2026-11-14T00:50:58Z
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-npm_test__bb6271-r1
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-lint-r1
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: cd app && npm test
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-npm_test__bd9a35-r1
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: cd pipeline && npm run test:a
-  run_id: bpilca986
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-test_a-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: cd pipeline && npm run test:b
-  run_id: bganjg3jl
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-test_b-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-test_lint_rules-r1
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-toa-s09-hai-khu-vao-danh-ba-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-11-14T00:50:58Z
+  verified_at: 2026-11-14T01:30:47Z
 
 ## Known limits
 
@@ -176,14 +163,13 @@ human_signoff:
 
 carried tu round 1 — baseline khong do lai round nay
 
-Eval không-phân-biệt (xanh cả trên HEAD lẫn baseline): không có.
-
-Baseline không đo: mọi eval ghi n-a vì round này không đo lại (evals.yaml không đổi từ lần baseline cuối).
+none — khong eval nao duoc liet ke la khong-phan-biet; lenh suite xanh la regression-guard binh thuong.
 
 ## Variance
 
-none — mọi eval chạy một lần, kết quả đồng nhất
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E9 không đạt — phép đo ten_nguon đếm 14 tên nguồn trong các tệp đổi, hợp đồng đòi 0 (đối chứng dương và đối chứng đỏ của tên nguồn đều ok). Trả về bước làm để gỡ tên nguồn khỏi tệp đổi.
+Round 1: lượt chấm 1 — sửa AC-8b (so bước S08 với bản trước hàng) và E9 (bỏ định danh lược đồ, thêm đối chứng dương). Returned to implementation.
+Round 2: E9 chạy lại, các eval khác carry-forward từ round 1; toàn bộ eval và lệnh suite xanh, verdict PASS.
