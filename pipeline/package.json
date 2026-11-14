@@ -8,7 +8,7 @@
   },
   "scripts": {
     "eval:classify": "node eval-classify.mjs",
-    "test": "bash ../db/db-thu.sh oneinvest_suite_pipeline --chay node --test --test-concurrency=1 'parse.test.mjs' 'sync-pii.test.mjs' 'sync-cloud.test.mjs' 'scripts/*.test.mjs' 'tests/s08-danh-muc-nap.test.mjs'",
+    "test": "bash ../db/db-thu.sh oneinvest_suite_pipeline --chay node --test --test-concurrency=1 'parse.test.mjs' 'sync-pii.test.mjs' 'sync-cloud.test.mjs' 'scripts/*.test.mjs' 'tests/s08-danh-muc-nap.test.mjs' 'tests/import-s09.test.mjs'",
     "test:a": "bash ../db/db-thu.sh oneinvest_suite_pipeline_a --chay node chay-nua.mjs a",
     "test:b": "bash ../db/db-thu.sh oneinvest_suite_pipeline_b --chay node chay-nua.mjs b"
   },

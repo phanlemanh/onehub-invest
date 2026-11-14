@@ -36,8 +36,6 @@
   ],
   "b": [
     "parse.test.mjs",
-    "sync-pii.test.mjs",
-    "sync-cloud.test.mjs",
     "scripts/airbnb-nghi.test.mjs",
     "scripts/backfill-zalo-media.test.mjs",
     "scripts/bait-gap-sellers.test.mjs",
@@ -89,6 +87,9 @@
     "scripts/vn-day.test.mjs",
     "scripts/vocab-lint.test.mjs",
     "scripts/vong-doi.test.mjs",
-    "scripts/write-offers.test.mjs"
+    "scripts/write-offers.test.mjs",
+    "sync-cloud.test.mjs",
+    "sync-pii.test.mjs",
+    "tests/import-s09.test.mjs"
   ]
 }
