@@ -1,38 +1,116 @@
 {
-  "feature_plain": "Tin căn hộ S06 biết mình thuộc dự án nào: mỗi dự án S06 có từ 10 tin đang rao được nối vào một dự án trong danh bạ, sau khi anh xem mẫu và duyệt một lần cho cả loạt.",
+  "feature_plain": "Tin căn hộ S06 biết mình thuộc dự án nào: 339 dự án S06 đủ 10 tin được nối vào danh bạ (17 vào dự án có sẵn, 322 thành dự án mới chờ duyệt — trên dữ liệu hôm nay 320 vì 2 dự án không có xã), sau khi anh xem mẫu và duyệt một lần cho cả loạt; gỡ được cả loạt.",
   "scope_plain": "Ngoài phạm vi lần này:",
   "will_do": [
-    {"id": "AC-2", "p": "Sẽ xếp từng dự án S06 vào đúng một trong ba ngả — nối dự án có sẵn, tạo dự án mới chờ duyệt, hay bỏ qua có lý do — và không nối nhầm khi chỉ trùng chữ với dự án ở tỉnh khác."},
-    {"id": "AC-3", "p": "Sẽ in một thẻ mẫu cho anh xem: tổng theo từng ngả và các dòng tiêu biểu, chỉ tên dự án, tỉnh, xã, số tin, kèm một mã băm khoá đúng tập anh đã xem."},
-    {"id": "AC-4", "p": "Sẽ chỉ áp khi mã băm anh duyệt khớp dữ liệu hiện tại; lệch thì không ghi gì và báo dựng thẻ mới."},
-    {"id": "AC-5", "p": "Sẽ bảo đảm sau khi áp: không dự án S06 nào nối hai dự án, không cặp nào lệch tỉnh, không dự án đủ 10 tin nào thiếu trạng thái."},
-    {"id": "AC-6", "p": "Sẽ không đổi gì khi chạy lại lần hai."},
-    {"id": "AC-7", "p": "Sẽ gỡ được cả loạt bằng một lệnh, và áp lại thì nối về đúng dự án cũ, không tạo dự án trùng."},
-    {"id": "AC-8", "p": "Sẽ cho tin S06 đọc được dự án của mình, số tin khớp một phép đếm độc lập."},
-    {"id": "AC-10", "p": "Sẽ không để dự án mới chờ duyệt tự gán vào tin S03 hay tên nhóm qua khớp tên; dự án đã có vẫn khớp như cũ."},
-    {"id": "AC-9", "p": "Sẽ chạy trọn trên bản chép dữ liệu thật và đưa thẻ mẫu thật cùng mã băm vào bằng chứng để anh xem ở Cổng Bằng chứng."}
+    {
+      "id": "AC-2",
+      "p": "Sẽ xếp từng dự án S06 vào đúng một trong ba ngả — nối dự án có sẵn, tạo dự án mới chờ duyệt, hay bỏ qua có lý do — và không nối nhầm khi chỉ trùng chữ với dự án ở tỉnh khác."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ in một thẻ mẫu cho anh xem: tổng theo từng ngả và các dòng tiêu biểu, chỉ tên dự án, tỉnh, xã, số tin, kèm một mã băm khoá đúng tập anh đã xem."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ chỉ áp khi mã băm anh duyệt khớp dữ liệu hiện tại; lệch thì không ghi gì và báo dựng thẻ mới."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ bảo đảm sau khi áp: không dự án S06 nào nối hai dự án, không cặp nào lệch tỉnh, không dự án đủ 10 tin nào thiếu trạng thái."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ không đổi gì khi chạy lại lần hai."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ gỡ được cả loạt bằng một lệnh, và áp lại thì nối về đúng dự án cũ, không tạo dự án trùng."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ cho tin S06 đọc được dự án của mình, số tin khớp một phép đếm độc lập."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ không để dự án mới chờ duyệt tự gán vào tin S03 hay tên nhóm qua khớp tên; dự án đã có vẫn khớp như cũ."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ chạy trọn trên bản chép dữ liệu thật và đưa thẻ mẫu thật cùng mã băm vào bằng chứng để anh xem ở Cổng Bằng chứng."
+    }
   ],
   "wont_do": [
-    {"id": "AC-1", "p": "Chặn mọi cách ghi phá danh bạ: không xoá được bí danh, không có dòng nối thiếu dự án hay thiếu lý do; danh bạ có thêm hạng tin cậy, 20 dự án anh nhập mang hạng «Xác minh»."},
-    {"id": "OOS-1", "p": "KHÔNG làm dự án S06 dưới 10 tin (906 dự án, 2.697 tin) — cùng lệnh, hạ ngưỡng sau."},
-    {"id": "OOS-2", "p": "KHÔNG dựng phân khu thật và thẻ duyệt từng cặp trên Ops — để bảng nối đầy đủ (DA3)."},
-    {"id": "OOS-3", "p": "KHÔNG ghi dự án lên từng tin — việc kế (DS2) đọc kết quả của lần này."},
-    {"id": "OOS-4", "p": "KHÔNG nối nguồn danh mục khác (S08, S07, S11) — để bảng nối đầy đủ."},
-    {"id": "OOS-5", "p": "KHÔNG áp lên máy thu trong vòng này — chỉ khi anh nói «Áp thẻ luật S06 <băm>» sau khi gộp."},
-    {"id": "OOS-6", "p": "KHÔNG đưa bảng nối và mã nguồn lên cloud."}
+    {
+      "id": "AC-1",
+      "p": "Chặn mọi cách ghi phá danh bạ: không xoá được bí danh, không có dòng nối thiếu dự án hay thiếu lý do; danh bạ có thêm hạng tin cậy, 20 dự án anh nhập mang hạng «Xác minh»."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG làm dự án S06 dưới 10 tin (906 dự án, 2.697 tin) — cùng lệnh, hạ ngưỡng sau."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG dựng phân khu thật và thẻ duyệt từng cặp trên Ops — để bảng nối đầy đủ (DA3)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG ghi dự án lên từng tin — việc kế (DS2) đọc kết quả của lần này."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG nối nguồn danh mục khác (S08, S07, S11) — để bảng nối đầy đủ."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG áp lên máy thu trong vòng này — chỉ khi anh nói «Áp thẻ luật S06 <băm>» sau khi gộp."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG đưa bảng nối và mã nguồn lên cloud."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Đã xét đủ các ngả của một dự án S06 (tên rỗng, hai tỉnh, trùng một hay hai dự án, trùng chữ khác tỉnh, tên lồng nhau, còn lại) — đo trên cả 344 dự án thật (AC-2)."},
-    {"i": 1, "p": "Đã xét trọn vòng đời của thẻ duyệt: dựng, áp đúng băm, áp sai băm, chạy lại, gỡ, áp lại (AC-3, AC-4, AC-6, AC-7)."},
-    {"i": 2, "p": "Mọi điều kiện xong của hàng đều có phép đo riêng: một dự án một nút, không lệch tỉnh, đủ trạng thái, hạng thấp nhất có xã, chạy lại không đổi, đếm tin khớp (AC-4 đến AC-8)."},
-    {"i": 3, "p": "Đo ở bốn tầng: cấu trúc dữ liệu (AC-1), luật xếp ngả (AC-2), lệnh trên dữ liệu mẫu (AC-3 đến AC-8, AC-10), dữ liệu thật chép (AC-9)."},
-    {"i": 4, "p": "Đã soát dự án mới đi tới đâu: hai bộ khớp tên khác nguồn bỏ qua chúng (AC-10); sáu chỗ đọc danh bạ còn lại là câu Hỏi-3."}
+    {
+      "i": 0,
+      "p": "Đã xét đủ các ngả của một dự án S06 (tên rỗng, hai tỉnh, trùng một hay hai dự án, trùng chữ khác tỉnh, tên lồng nhau, còn lại) — đo trên cả 344 dự án thật (AC-2)."
+    },
+    {
+      "i": 1,
+      "p": "Đã xét trọn vòng đời của thẻ duyệt: dựng, áp đúng băm, áp sai băm, chạy lại, gỡ, áp lại (AC-3, AC-4, AC-6, AC-7)."
+    },
+    {
+      "i": 2,
+      "p": "Mọi điều kiện xong của hàng đều có phép đo riêng: một dự án một nút, không lệch tỉnh, đủ trạng thái, hạng thấp nhất có xã, chạy lại không đổi, đếm tin khớp (AC-4 đến AC-8)."
+    },
+    {
+      "i": 3,
+      "p": "Đo ở bốn tầng: cấu trúc dữ liệu (AC-1), luật xếp ngả (AC-2), lệnh trên dữ liệu mẫu (AC-3 đến AC-8, AC-10), dữ liệu thật chép (AC-9)."
+    },
+    {
+      "i": 4,
+      "p": "Đã soát dự án mới đi tới đâu: hai bộ khớp tên khác nguồn bỏ qua chúng (AC-10); sáu chỗ đọc danh bạ còn lại là câu Hỏi-3."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Chạy lại có thể đổi kết quả khi hai dự án tên lồng nhau — đã sửa: dự án mới chờ duyệt không được coi là «dự án có sẵn», có phép đo riêng."},
-    {"i": 1, "p": "Thiết kế chưa nói cách biết bí danh thuộc lần duyệt nào — đã sửa: tra qua bảng trạng thái, không thêm cột vào bảng bí danh dùng chung."},
-    {"i": 2, "p": "Dự án mới sẽ lên cloud và tự gán vào tin S03 qua khớp tên mà chưa ai đo — đã sửa: bỏ mã nguồn khỏi dự án mới, thêm tiêu chí AC-10, phần còn lại thành câu Hỏi-3."},
-    {"i": 3, "p": "Một phép đo dùng dữ liệu giả thay vì câu đọc thật — đã sửa: chạy câu đọc thật trên DB thử."},
-    {"i": 4, "p": "Chênh lệch 344 với 268 dự án chưa hiện trước người ký — đã ghi ở hợp đồng và nêu trong lời mời này."}
+    {
+      "i": 0,
+      "p": "Chạy lại có thể đổi kết quả khi hai dự án tên lồng nhau — đã sửa: dự án mới chờ duyệt không được coi là «dự án có sẵn», có phép đo riêng."
+    },
+    {
+      "i": 1,
+      "p": "Thiết kế chưa nói cách biết bí danh thuộc lần duyệt nào — đã sửa: tra qua bảng trạng thái, không thêm cột vào bảng bí danh dùng chung."
+    },
+    {
+      "i": 2,
+      "p": "Dự án mới sẽ lên cloud và tự gán vào tin S03 qua khớp tên mà chưa ai đo — đã sửa: bỏ mã nguồn khỏi dự án mới, thêm tiêu chí AC-10, phần còn lại thành câu Hỏi-3."
+    },
+    {
+      "i": 3,
+      "p": "Một phép đo dùng dữ liệu giả thay vì câu đọc thật — đã sửa: chạy câu đọc thật trên DB thử."
+    },
+    {
+      "i": 4,
+      "p": "Chênh lệch 344 với 268 dự án chưa hiện trước người ký — đã ghi ở hợp đồng và nêu trong lời mời này."
+    }
   ]
 }
