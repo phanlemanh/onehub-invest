@@ -365,6 +365,7 @@ _Avoid_: giá vải
 _Avoid_: đơn giá
 
 **Thước giá**: Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view `v_ruler_p2_*`). Thước để đo căn giá tốt.
+- Ghi chú: Sửa 14/11 (ROADMAP §3 mục 48, QĐ4): tin thuê thiếu m² dùng thước giá thuê/tháng theo số phòng ngủ trong nhóm; tin thuê có m² và tin bán giữ giá/m². Định nghĩa đầy đủ theo nhóm vị trí viết lại ở CG9, CG10.
 - Code: `ruler` · RESO: không có — chỉ số nội bộ
 _Avoid_: ruler
 
