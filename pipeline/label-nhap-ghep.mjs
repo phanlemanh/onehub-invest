@@ -53,11 +53,24 @@ Chỉ trả về một object JSON: {"building":{"v":...,"trich":...},"stack":{"
 /** Model mặc định của agent/config (cùng bảng chọn với đọc gộp S03, PL30 — một chỗ đổi model). */
 export function modelMacDinh(root = ROOT) {
   const cau = JSON.parse(readFileSync(path.join(root, "agent/config/doc-gop-s03.json"), "utf8"));
-  return cau.model[cau.mac_dinh].gateway;
+  const gw = cau?.model?.[cau?.mac_dinh]?.gateway;
+  if (typeof gw !== "string" || !GATEWAY_DUYET.includes(gw)) {
+    throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — mac_dinh «${cau?.mac_dinh}» không trỏ model có gateway trong ba mã đã duyệt`);
+  }
+  return gw;
+}
+
+/** Ba model đã duyệt cho việc đọc tin (AGENTS.md luật 6) — chép từ agent/src/enrich/doc-gop-s03/cau-hinh.ts GATEWAY_DUYET. */
+export const GATEWAY_DUYET = Object.freeze(["anthropic/claude-haiku-5.5", "zai/glm-5.3-flash", "deepseek/deepseek-v4.1-flash-1017"]);
+/** Cờ gửi kèm lời gọi, theo mã Gateway — cùng luật tuyChonGui của agent (DeepSeek chỉ đi nhà cung cấp đã ghim). */
+export function tuyChonGui(gateway) {
+  const chung = { zeroDataRetention: true, disallowPromptTraining: true };
+  return { gateway: gateway.startsWith("deepseek/") ? { ...chung, only: ["baseten"] } : chung };
 }
 
 /** Tác tử thật: một lời gọi Gateway (API kiểu OpenAI), không giữ dữ liệu, không dùng huấn luyện. */
 export function tacTuGateway({ model = modelMacDinh(), fetchFn = fetch } = {}) {
+  if (!GATEWAY_DUYET.includes(model)) throw new Error(`label-nhap-ghep: model «${model}» ngoài ba mã đã duyệt`);
   const base = process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1";
   return async ({ chu, toa, truc }) => {
     if (!process.env.AI_GATEWAY_API_KEY) throw new Error("label-nhap-ghep: thiếu AI_GATEWAY_API_KEY — chạy với --env-file=.env");
@@ -70,14 +83,18 @@ export function tacTuGateway({ model = modelMacDinh(), fetchFn = fetch } = {}) {
           { role: "system", content: HUONG_DAN },
           { role: "user", content: `Danh sách toà: ${toa.join(", ") || "(trống)"}\nTrục đã biết: ${truc.join(", ") || "(trống)"}\n\nBài:\n${chu}` },
         ],
-        providerOptions: { gateway: { zeroDataRetention: true, disallowPromptTraining: true } },
+        providerOptions: tuyChonGui(model),
       }),
     });
     if (!res.ok) throw new Error(`label-nhap-ghep: Gateway trả ${res.status}`);
     const raw = (await res.json())?.choices?.[0]?.message?.content ?? "";
     const s = String(raw).replace(/```(?:json)?/g, "");
     const a = s.indexOf("{"), b = s.lastIndexOf("}");
-    try { return a >= 0 && b > a ? JSON.parse(s.slice(a, b + 1)) : null; } catch { return null; }
+    let o = null;
+    try { o = a >= 0 && b > a ? JSON.parse(s.slice(a, b + 1)) : null; } catch { o = null; }
+    // Trả lời không đọc được là LỖI (đếm vào loi, không ghi nháp rỗng — nháp rỗng làm lần sau bỏ qua bài).
+    if (!o || typeof o !== "object" || Array.isArray(o)) throw new Error("label-nhap-ghep: trả lời của model không phải object JSON");
+    return o;
   };
 }
 

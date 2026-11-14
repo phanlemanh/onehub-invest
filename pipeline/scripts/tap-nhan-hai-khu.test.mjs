@@ -99,3 +99,26 @@ test("PL35 lọc loại nhà bằng chữ: nêu loại khác và không dấu hi
   ];
   for (const [chu, mong] of O_LOC) assert.equal(laLoaiKhac(chu), mong, `PL35 lọc loại nhà «${chu}»`);
 });
+
+// ---- Ô thêm sau lượt chấm 1 (S4-r1): mã căn khi trục chưa có trong danh bạ, toà không có tên ----
+test("PL35-AC-4 mã căn của toà có trong danh bạ mà trục chưa có → toa; toà không có tên không khớp con số", () => {
+  assert.equal(mucGan("Bán căn QB2.1215 view hồ", DANH_BA), "toa");
+  assert.equal(mucGan("Bán căn QB2.1210 view hồ", DANH_BA), "truc");
+  const coToaKhongTen = { toa: [{ key: "x", ten: [] }, { key: "bld_B", ten: ["QB2"] }], truc: [{ toa_key: "x", truc: "10" }] };
+  assert.equal(mucGan("giá 1210 triệu", coToaKhongTen), "khong");
+  assert.equal(mucGan("Bán QB2 giá tốt", coToaKhongTen), "toa");
+});
+
+// ---- Tác tử thật: trả lời hỏng là lỗi; cờ định tuyến theo model ----
+test("PL35 tác tử Gateway: trả lời không phải JSON → ném lỗi; DeepSeek ghim nhà cung cấp; model ngoài danh sách → lỗi", async () => {
+  const { tacTuGateway, tuyChonGui } = await import("../label-nhap-ghep.mjs");
+  process.env.AI_GATEWAY_API_KEY ??= "khoa-gia";
+  const fetchHong = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: "xin lỗi, tôi không biết" } }] }) });
+  await assert.rejects(tacTuGateway({ model: "anthropic/claude-haiku-5.5", fetchFn: fetchHong })({ chu: "x", toa: [], truc: [] }), /không phải object JSON/);
+  let than;
+  const fetchTot = async (_u, o) => { than = JSON.parse(o.body); return { ok: true, json: async () => ({ choices: [{ message: { content: '{"building":{"v":null}}' } }] }) }; };
+  await tacTuGateway({ model: "deepseek/deepseek-v4.1-flash-1017", fetchFn: fetchTot })({ chu: "x", toa: [], truc: [] });
+  assert.deepEqual(than.providerOptions.gateway.only, ["baseten"]);
+  assert.equal(tuyChonGui("anthropic/claude-haiku-5.5").gateway.only, undefined);
+  assert.throws(() => tacTuGateway({ model: "khac/model" }), /ngoài ba mã đã duyệt/);
+});

@@ -94,18 +94,19 @@ test("PL35-AC-1 tất định: hai lần cùng seed cùng tập, lần hai thêm
     const k1 = await layMau(c, { lat: LAT, seed: "s1", thu: false, haiKhu: { co: 75 } });
     const t1 = await docTap(c);
     const k2 = await layMau(c, { lat: LAT, seed: "s1", thu: false, haiKhu: { co: 75 } });
-    const t2 = await docTap(c);
-    assert.equal(bamTap(t1.map((r) => r.ref_id)), bamTap(t2.map((r) => r.ref_id)), "PL35-AC-1 hai lần cùng seed khác tập");
+    // So đầu ra của lần hai (tập nó chọn) với tập lần một đã ghi — không đọc lại bảng (lần hai không ghi).
+    const ma = (ds) => bamTap(ds.map((r) => `${r.ref_id}|${r.stratum}`));
+    assert.equal(ma(k2.tap), ma(t1), "PL35-AC-1 hai lần cùng seed khác tập");
+    assert.equal(ma(k1.tap), ma(t1), "PL35-AC-1 tập lần một trả về phải bằng tập đã ghi");
     assert.ok(k1.them > 0, "PL35-AC-1 lần một phải thêm dòng");
     assert.equal(k2.them, 0, "PL35-AC-1 lần hai phải thêm 0 dòng");
+    // Seed khác (lát tên khác, --thu, cỡ 5 trên tầng op1-toa 80 bài) phải ra tập khác tập cùng cỡ của seed s1.
     const k3 = await layMau(c, { lat: `${LAT}-seed-khac`, seed: "s2", thu: true, haiKhu: { co: 5 } });
     const k1nho = await layMau(c, { lat: `${LAT}-seed-khac`, seed: "s1", thu: true, haiKhu: { co: 5 } });
-    assert.notEqual(k3.chon, 0);
-    // Cỡ 5 trên tầng op1-toa (80 bài): hai seed phải ra hai tập khác nhau — đọc qua tập ref_id của lần --thu.
+    assert.notEqual(ma(k3.tap), ma(k1nho.tap), "PL35-AC-1 seed khác phải ra tập khác (trên DB)");
     assert.equal(k1.bo_vi_trung, 2, "PL35-AC-1 hai bản trùng chữ của ok01 phải bị bỏ");
     assert.ok(t1.some((r) => r.ref_id === "pl35-ok01") && !t1.some((r) => r.ref_id.startsWith("pl35-zd")), "PL35-AC-1 đại diện trùng chữ là post_id nhỏ nhất");
     assert.equal(k1.bo_su_kien, 1, "PL35-AC-1 bài sự kiện phải bị gạt");
-    assert.ok(k1nho && k3, "chạy được hai seed");
   } finally { await dong(c); }
 });
 
@@ -171,6 +172,11 @@ test("PL35-AC-6 bài đã có nhãn người: draft không đổi, 0 dòng eval_
   const c = await moPhien();
   try {
     await layMau(c, { lat: LAT, seed: "s1", thu: false, haiKhu: { co: 75 } });
+    // Tác tử lỗi (trả lời hỏng) → đếm vào loi, không ghi nháp nào (lần sau còn nháp lại được).
+    const hong = await nhapLat(c, { lat: LAT, tacTu: async () => { throw new Error("trả lời hỏng"); } });
+    assert.equal(hong.ghi, 0, "PL35 tác tử lỗi không được ghi nháp");
+    assert.ok(hong.loi > 0, "PL35 tác tử lỗi phải đếm vào loi");
+    assert.equal((await c.query("SELECT count(*)::int AS so FROM eval_label_items WHERE lat = $1 AND draft IS NOT NULL", [LAT])).rows[0].so, 0, "PL35 tác tử lỗi để lại nháp");
     const { rows: it } = await c.query("SELECT item_id::int, ref_id, double_label FROM eval_label_items WHERE lat = $1 ORDER BY item_id LIMIT 2", [LAT]);
     const [daGan, chuaGan] = it;
     const r = await ghiNhan(c, "nguoi-thu-1", LAT, daGan.item_id, [
@@ -218,11 +224,8 @@ test("PL35-AC-7 + AC-4 chọn mẫu và nháp chạy xong khi vai không đọc 
       await c.query(`SET ROLE ${VAI}`);
       const lai = await layMau(c, { lat: LAT, seed: "s1", thu: true, haiKhu: { co: 75 } });
       await c.query("RESET ROLE");
-      const { chonMauHaiKhu } = await import("../lib/mau-hai-khu.mjs");
-      assert.ok(lai && chonMauHaiKhu, "chọn lại chạy xong");
-      const sau = await docTap(c);
-      assert.equal(bamTap(sau.map((r) => `${r.ref_id}|${r.stratum}`)), bamTap(truoc.map((r) => `${r.ref_id}|${r.stratum}`)), "PL35-AC-4 cấy phát biểu PL20 làm đổi tập hoặc stratum");
-      assert.equal(lai.chon, truoc.length, "PL35-AC-4 chọn lại (--thu) phải cùng cỡ");
+      // Đầu ra của lần chọn lại (tập nó trả) so với tập đã ghi trước khi cấy.
+      assert.equal(bamTap(lai.tap.map((r) => `${r.ref_id}|${r.stratum}`)), bamTap(truoc.map((r) => `${r.ref_id}|${r.stratum}`)), "PL35-AC-4 cấy phát biểu PL20 làm đổi tập hoặc stratum");
       // Đột biến: chọn mẫu mà đọc field_assertions (client bọc chèn câu đọc trước mọi câu) → DB trả lỗi quyền.
       await c.query(`SET ROLE ${VAI}`);
       const dot = { query: async (...a) => { await c.query("SELECT count(*) FROM field_assertions"); return c.query(...a); } };

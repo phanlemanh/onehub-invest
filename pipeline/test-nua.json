@@ -24,6 +24,7 @@
     "scripts/phuong-tu-du-an.test.mjs",
     "scripts/refresh-bait-gap-goi.test.mjs",
     "scripts/soat-tang-a.test.mjs",
+    "scripts/tap-nhan-hai-khu.test.mjs",
     "scripts/test-posts.test.mjs",
     "scripts/thu-so-s06-viec.test.mjs",
     "scripts/tin-rao-gan-khu-vuc.test.mjs",

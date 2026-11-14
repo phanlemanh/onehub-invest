@@ -19,6 +19,11 @@ function mauTen(ten) {
   return new RegExp(`(?<![A-Z0-9.])${tu.map(thoat).join(" ?")}(?![A-Z0-9]|\\.[A-Z0-9])`);
 }
 
+/** Mẫu mã căn của một tên toà: tên rồi 3–4 chữ số (cách bởi tối đa một dấu cách/chấm/gạch), không dính số phía sau. */
+function mauMaCan(ten) {
+  return new RegExp(`(?<![A-Z0-9.])${ten.split(" ").map(thoat).join(" ?")}[ .-]?[0-9]{3,4}(?![0-9])`);
+}
+
 /**
  * Mức gắn của một bài theo chữ bài và danh bạ của khu.
  *   - mã căn của một trục khớp (tên toà rồi số căn có hai chữ số cuối là mã trục, hay dạng «xx<trục>») → `truc`;
@@ -34,7 +39,9 @@ export function mucGan(text, { toa, truc = [] }) {
   const khopTruc = new Set();
   for (const t of toa) {
     const ten = t.ten.map((x) => boDau(x).replace(/[^A-Z0-9.]+/g, " ").trim()).filter(Boolean);
-    if (ten.some((x) => mauTen(x).test(chu))) khopToa.add(t.key);
+    if (!ten.length) continue; // toà không có tên: không dò (mẫu rỗng sẽ khớp mọi con số)
+    // Tên trần, hay mã căn «<toà>.<tầng><căn>» (3–4 chữ số dính dấu chấm) kể cả khi trục chưa có trong danh bạ.
+    if (ten.some((x) => mauTen(x).test(chu) || mauMaCan(x).test(chu))) khopToa.add(t.key);
     // Mã căn «<toà>.<tầng><trục>» dính dấu chấm nên không khớp mẫu tên trần — dò riêng theo từng trục của toà.
     for (const s of truc) {
       if (s.toa_key !== t.key) continue;

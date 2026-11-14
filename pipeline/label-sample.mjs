@@ -160,7 +160,7 @@ async function layMauHaiKhu(client, { lat, seed, thu, trongGiaoDich, co, daCo, p
     lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien: kq.bo_su_kien, bo_vi_trung: kq.bo_vi_trung,
     tin_cua_lat: kq.tin_cua_lat, khac_nhau: kq.khac_nhau, chon: kq.chon.length, bo_nhom: kq.bo_nhom, bo_loai_khac: kq.bo_loai_khac, dem_nhom: kq.dem_nhom,
     trung: kq.chon.filter((r) => r.double_label).length, dev: kq.chon.filter((r) => r.split === "dev").length,
-    them, thieu: 0, thu, moiTangHaiKhu: kq.moiTang,
+    them, thieu: 0, thu, moiTangHaiKhu: kq.moiTang, tap: kq.chon.map((r) => ({ ref_id: r.ref_id, stratum: r.stratum })),
     danh_ba: Object.fromEntries(Object.entries(danhBa).map(([k, d]) => [k, { toa: d.toa.length, truc: d.truc.length }])),
   };
 }
