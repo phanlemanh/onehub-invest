@@ -10,6 +10,21 @@ set -uo pipefail
 LOG="$HOME/.openclaw/logs/oneinvest-zalo-pipe.log"
 OPENCLAW="${ZALO_OPENCLAW_CLI:-$HOME/.openclaw/bin/openclaw}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+# 1411-30 vòng 4: hàm trần ~20 giây DÙNG CHUNG cho MỌI lời gọi tới gateway CLI —
+# chạy nền + kill (perl alarm sau exec không giết được con; subshell nền phải
+# redirect /dev/null — giữ pipe mở làm trình gọi chờ EOF). Trả rc lệnh; bị kill
+# trần → rc ≥128 (SIGTERM 143).
+chay_20s() { # $1 = tệp bơm output; còn lại = lệnh + đối số
+  local tep="$1"; shift
+  "$@" >"$tep" 2>&1 &
+  local pid=$! canh
+  ( sleep 20; kill "$pid" 2>/dev/null ) >/dev/null 2>&1 &
+  canh=$!
+  wait "$pid"
+  local rc=$?
+  kill "$canh" 2>/dev/null || true
+  return $rc
+}
 # 1411-30 D3: state + đường ghi đè được để test bơm (mặc định đúng máy thật).
 HEARTBEAT_STATE="${ZALO_HEARTBEAT_STATE:-$HOME/.openclaw/logs/.zalo-heartbeat-down}"
 ROOT_ZCODE="${ZALO_HEARTBEAT_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
@@ -18,7 +33,17 @@ HEARTBEAT_LINH_MUC="${ZALO_HEARTBEAT_LINH_MUC:-$HOME/.openclaw/logs/.zalo-heartb
 mkdir -p "$(dirname "$LOG")"
 touch "$LOG"
 
-STATUS="$("$OPENCLAW" channels status 2>/dev/null || true)"
+# 1411-30 vòng 4: channels status cũng bọc trần — gateway treo đúng lúc thì
+# heartbeat không treo theo; hết giờ coi là DOWN reason=unknown và KHÔNG gọi
+# lệnh nhóm trong nhịp đó (lựa chọn: mốc 1/giờ đã ghi là phí, lý do chưa rõ
+# để nhịp kế đo lại khi gateway có thể đã hồi).
+TEP_ST="$HEARTBEAT_STATE.out"
+RC_ST=0
+chay_20s "$TEP_ST" "$OPENCLAW" channels status || RC_ST=$?
+STATUS="$(cat "$TEP_ST" 2>/dev/null)"
+rm -f "$TEP_ST"
+ST_TREO=0
+[ "$RC_ST" -ge 128 ] && { ST_TREO=1; STATUS=""; }
 # Đa tài khoản: ĐÚNG khi MỌI dòng "Zalo Personal ... connected" đều connected
 TOTAL=$(echo "$STATUS" | grep -c "Zalo Personal" || true)
 # 1411-30: grep -w — «disconnected» chứa chuỗi «connected» nên grep thường đếm cả
@@ -46,33 +71,31 @@ LY_DO="$(grep -oE "^reason=[a-z]+" "$HEARTBEAT_STATE" 2>/dev/null | cut -d= -f2 
 # lệnh nhóm: chỉ khi DOWN, trần 1/giờ (mốc lưu riêng); KHÔNG in danh sách nhóm
 # hay định danh — chỉ lấy reason.
 GIOI_NHOM=1
-if [ -f "$HEARTBEAT_LINH_MUC" ]; then
+if [ "$ST_TREO" = "1" ]; then
+  # 1411-30 vòng 4: channels status hết giờ → lý do chưa rõ, KHÔNG gọi lệnh nhóm
+  # trong nhịp này (mốc 1/giờ đã ghi là phí; nhịp kế đo lại khi gateway có thể đã hồi)
+  LY_DO="unknown"
+elif [ -f "$HEARTBEAT_LINH_MUC" ]; then
   MOC=$(cat "$HEARTBEAT_LINH_MUC" 2>/dev/null || echo 0)
   [ $(( $(date -u +%s) - ${MOC:-0} )) -lt 3600 ] && GIOI_NHOM=0
 fi
-if [ "$GIOI_NHOM" = "1" ]; then
+if [ "$ST_TREO" = "1" ]; then
+  : # lý do đã đặt unknown phía trên
+elif [ "$GIOI_NHOM" = "1" ]; then
   date -u +%s > "$HEARTBEAT_LINH_MUC"
-  # 1411-30 vòng 3(3): bọc trần ~20 giây — chạy nền rồi kill (macOS không có
-  # timeout; perl alarm sau exec không giết được con) — gateway treo đúng lúc
-  # DOWN thì heartbeat không được treo theo (mất cả dòng DOWN lẫn cảnh báo —
-  # đúng tình huống việc này sinh ra để bắt).
+  # trần ~20 giây DÙNG CHUNG chay_20s; bị kill → LUÔN reason=unknown dù
+  # lệnh kịp in một phần output (phần rời không kết luận được lý do).
   TEP_NHOM="$HEARTBEAT_LINH_MUC.out"
-  "$OPENCLAW" directory groups list --channel zalouser >"$TEP_NHOM" 2>&1 &
-  PID_NHOM=$!
-  ( sleep 20; kill "$PID_NHOM" 2>/dev/null ) >/dev/null 2>&1 & # chuyển hướng — giữ pipe mở làm trình gọi chờ EOF
-  CANH=$!
-  wait "$PID_NHOM"
+  chay_20s "$TEP_NHOM" "$OPENCLAW" directory groups list --channel zalouser
   RC_NHOM=$?
-  kill "$CANH" 2>/dev/null || true
-  # KHÔNG wait CANH — subshell sống tối đa tới 20s tự thoát (wait sẽ thêm 20s mỗi ca)
   NHOM_OUT="$(cat "$TEP_NHOM" 2>/dev/null)"
   rm -f "$TEP_NHOM"
-  if printf '%s' "$NHOM_OUT" | grep -q "Đăng nhập thất bại"; then
+  if [ "$RC_NHOM" -ge 128 ]; then
+    LY_DO="unknown"
+  elif printf '%s' "$NHOM_OUT" | grep -q "Đăng nhập thất bại"; then
     LY_DO="session"
   elif [ -n "$NHOM_OUT" ]; then
     LY_DO="stopped"
-  elif [ "$RC_NHOM" -ge 128 ]; then
-    LY_DO="unknown" # hết 20s bị kill (SIGTERM → 143); vẫn chạy cảnh báo L6(d) phía dưới
   fi
 fi
 # viết lại state GIỮ cờ d (cảnh báo một lần mỗi sự cố — heartbeat không được ghi đè mất cờ)

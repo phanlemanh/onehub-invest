@@ -185,4 +185,42 @@ exit 9`);
   rmSync(home, { recursive: true, force: true });
 });
 
+test("D3-7 (vòng 4): CLI status ngủ quá trần → heartbeat < ~25s, DOWN reason=unknown, nhịp tăng, lần 2 có [d]. CA ĐỎ: gỡ bọc trần status (gọi trực tiếp) → ca này timeout đỏ", () => {
+  const home = mkdtempSync(join(tmpdir(), "s03-hb7-"));
+  const cli = join(home, "cli");
+  writeFileSync(cli, `#!/bin/bash
+if [ "$1" = "channels" ]; then sleep 40; echo "Zalo Personal default disconnected"; exit 0; fi
+exit 9`);
+  chmodSync(cli, 0o755);
+  const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
+  const chay = () => chayHb({ home, cli, state, alerts, moc, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } });
+  const t0 = Date.now();
+  chay();
+  const mat1 = (Date.now() - t0) / 1000;
+  assert.ok(mat1 < 25, `nhịp 1 phải xong dưới ~25s (trần 20s) — thực tế ${mat1.toFixed(1)}s`);
+  assert.match(readFileSync(state, "utf8"), /nhip=1/, "nhịp 1");
+  assert.match(readFileSync(state, "utf8"), /reason=unknown/, "status hết giờ → reason=unknown");
+  const t1 = Date.now();
+  chay();
+  const mat2 = (Date.now() - t1) / 1000;
+  assert.ok(mat2 < 25, `nhịp 2 cũng phải xong dưới ~25s — thực tế ${mat2.toFixed(1)}s`);
+  assert.match(readFileSync(state, "utf8"), /nhip=2/, "nhịp tăng qua hai lần chạy");
+  assert.match(docAlerts(alerts), /S03-SỐNG \[d\]/, "lần 2 có cảnh báo L6(d)");
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("D3-8 (vòng 4): lệnh nhóm in MỘT PHẦN output rồi ngủ quá trần → reason=unknown (không phải stopped). CA ĐỎ: đảo ưu tiên kiểm stopped trước unknown → ca này đỏ", () => {
+  const home = mkdtempSync(join(tmpdir(), "s03-hb8-"));
+  const cli = join(home, "cli");
+  writeFileSync(cli, `#!/bin/bash
+if [ "$1" = "channels" ]; then echo "Zalo Personal default disconnected"; exit 0; fi
+if [ "$1" = "directory" ]; then echo "groups: ok (một phần output)"; sleep 40; exit 0; fi
+exit 9`);
+  chmodSync(cli, 0o755);
+  const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
+  chayHb({ home, cli, state, alerts, moc, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } });
+  assert.match(readFileSync(state, "utf8"), /reason=unknown/, "bị kill giữa chừng → LUÔN unknown dù có phần output");
+  rmSync(home, { recursive: true, force: true });
+});
+
 function require0(p) { try { readFileSync(p); return true; } catch { return false; } }
