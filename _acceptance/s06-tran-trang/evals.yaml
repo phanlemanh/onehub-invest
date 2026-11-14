@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: s06-tran-trang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s06tt_tran
+    expected: "exit 0; ℹ tests 3 · pass 3: mặc định 210, CHOTOT_MAX_PAGES=7 → 7, --pages 3 thắng biến. Chiều đỏ: đổi mặc định về 25 thì ca đầu đỏ với «mặc định phải là 210»"
+    paths: ["pipeline/collect-chotot.mjs", "_acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s06tt_chan
+    expected: "exit 0; ℹ tests 2 · pass 2 · skipped 0 (thiếu DATABASE_URL thì tệp thoát trước khi khai ca → tests 0 = không đạt); hai ca ok: «CA-ĐỎ tĩnh: fetchPage còn gắn dungLuot …» và «429 ở trang 2 → fetch đúng 10 lời …» — ca sau assert số lời = 10, mã thoát 3, stderr có «DỪNG CẢ LƯỢT», snapshot hanoi 200 tin và hcmc 50 tin. Chiều đỏ: bỏ dòng gắn dungLuot thì cả hai ca đỏ"
+    paths: ["pipeline/collect-chotot.mjs", "pipeline/scripts/collect-chotot-chan.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s06tt_chia
+    expected: "exit 0; CN-1 và CN-2 ok. Chiều đỏ: gỡ scripts/collect-chotot-chan.test.mjs hay scripts/import-chotot-chan.test.mjs khỏi nửa b thì CN-1 đỏ gọi tên tệp thiếu"
+    paths: ["pipeline/test-nua.json", "pipeline/scripts/chia-nua.test.mjs", "pipeline/package.json"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: judgment
+    inputs: ["_acceptance/s06-tran-trang/do-nap-55k.md", "_acceptance/s06-tran-trang/contract.md"]
+    question: "Tệp số đo có ghi thời gian bước thu (từ manifest) và thời gian import, transform, reassign-areas, 300 + 400 cho cả lượt 55 nghìn và lượt 16 nghìn tin kèm tải máy và việc chạy cùng; phần resolve-properties có ghi là ước lượng ngoại suy từ hộp 20 phút kèm mức sai; có giờ bắt đầu chuỗi theo lịch và giờ kết thúc dự kiến đặt cạnh 16:55Z, và kết luận rõ tổng thời gian chuỗi đêm S06 với trần mới, có lấn cửa S03 16:55Z–17:15Z không, kèm đề xuất giữ giờ, dời giờ hay chia lượt?"
+    expected: "PASS khi đủ số cho hai lượt (kể cả bước thu), có giờ bắt đầu và giờ kết thúc dự kiến, và kết luận dựa trên số; thiếu bước thu, thiếu giờ bắt đầu hay kết luận không dựa trên số → FAIL"
+    evidence_required: [run_id, verdict, rationale]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s06tt_region
+    expected: "exit 0; ℹ tests 2 · pass 2 · skipped 0: dưới ngưỡng (1 lạ + 150 thường) bộ nạp thoát 0, 150 tin vào, đầu ra «bỏ 1 … region_v2»; vượt ngưỡng (1 lạ + 2 thường) thoát 2, hai tin thường vẫn vào. Chiều đỏ: bộ nạp trên main thoát 1 (23502 NOT NULL) ở tin đầu — cả hai ca đỏ"
+    paths: ["pipeline/import-chotot.mjs", "_acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -89,7 +89,9 @@ const ua = () => UAS[Math.floor(Math.random() * UAS.length)];
 
 function argPages() {
   const i = process.argv.indexOf("--pages");
-  return i > 0 ? parseInt(process.argv[i + 1]) : parseInt(process.env.CHOTOT_MAX_PAGES ?? "25");
+  // 1411-19: trần mặc định 210 trang/nguồn tin (was 25) — lượt thường đang bỏ sót ~3,5× tin
+  // nhà đất (đo 14/11: 57.295 có thể lấy vs 16.189); dừng tự nhiên khi hết trang hoặc mốc 10.000 máy chủ.
+  return i > 0 ? parseInt(process.argv[i + 1]) : parseInt(process.env.CHOTOT_MAX_PAGES ?? "210");
 }
 const MAX_PAGES = Number.isFinite(argPages()) ? argPages() : 25;
 const DRY = process.argv.includes("--dry");
@@ -102,10 +104,20 @@ async function fetchPage(vung, feed, page) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const res = await fetch(url, { headers: { "user-agent": ua(), accept: "application/json" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // 1411-20 MỞ LẠI: 403/429 = bị chặn → ném NGAY lỗi đánh dấu dungLuot, KHÔNG thử lại
+        // (đúng luật dừng khi bị chặn); lỗi mạng/5xx khác giữ cách thử lại cũ.
+        if (res.status === 403 || res.status === 429) {
+          const ch = new Error(`page ${page}: HTTP ${res.status}`);
+          ch.dungLuot = true;
+          throw ch;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const body = await res.json();
       return body.ads ?? [];
     } catch (e) {
+      if (e.dungLuot) throw e;
       if (attempt === 3) throw new Error(`page ${page}: ${e.message} (đã thử ${attempt} lần)`);
       await sleep(1500 * attempt);
     }
@@ -182,8 +194,16 @@ async function main() {
         try {
           ads = await fetchPage(region, feed, page);
         } catch (e) {
+          if (e.dungLuot) {
+            // 1411-19: 403/429 — dừng CẢ LƯỢT, ghi phần đã có rồi thoát ngay.
+            console.error(`⛔ ${region.city}/${feed.note}: ${e.message} — DỪNG CẢ LƯỢT`);
+            const seenDung = new Set();
+            const uniqueDung = items.filter((i) => !seenDung.has(i.sourceId) && seenDung.add(i.sourceId));
+            if (uniqueDung.length > 0) await writeSnapshot(region.city, uniqueDung, { discovered: uniqueDung.length, failed: failed.length, notes, startedAt });
+            process.exit(3);
+          }
           failed.push(`${region.city}/${feed.note}: ${e.message}`);
-          break; // fail-soft: bỏ dư feed này, sang feed kế
+          break; // fail-soft: lỗi khác — bỏ dư feed này, sang feed kế
         }
         if (ads.length === 0) break; // hết trang — dừng feed
         for (const ad of ads) {
