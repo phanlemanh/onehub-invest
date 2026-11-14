@@ -1,5 +1,5 @@
 // s08-danh-muc-nap.test.mjs — test bộ nạp S08 danh mục (stg_s08_project) trên DB thử riêng.
-// CHẠY LẺ (ghi chú 1311-1b — tệp KHÔNG nằm trong glob npm test, chạy bằng lệnh này):
+// Nằm trong npm test (nửa a của test-nua.json); chạy lẻ bằng lệnh này (ghi chú 1311-1b):
 //   bash db/db-thu.sh oneinvest_suite_s08_nap_sua --chay node --test pipeline/tests/s08-danh-muc-nap.test.mjs
 // db-thu cấp DATABASE_URL trỏ DB thử; thiếu DATABASE_URL thì bỏ qua (npm test nơi không dựng DB không chết).
 // Đường bộ nạp tự suy từ repo (ghi chú 1311-1b — hết biến môi trường S10_IMPORT_FILE).
