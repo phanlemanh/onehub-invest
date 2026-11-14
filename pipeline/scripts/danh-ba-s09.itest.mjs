@@ -5,6 +5,9 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import { GOC, apTep, taoDbThu, xoaDbThu } from "./db-thu-dbv.mjs";
@@ -209,6 +212,64 @@ test("DA31-AC-8 chưa áp 097 / khu không có dòng S09: bỏ qua có lý do, d
   assert.deepEqual(tk2.s09.bo_qua_khu, [KHU]);
   assert.ok(nhatKy.some((s) => s.includes(`khu ${KHU} không có dòng S09`)), "DA31-AC-8 không in lý do khu");
   assert.equal(bam(await anh(db)), truoc2, "DA31-AC-8 danh bạ đổi khi khu không có dòng");
+});
+
+// ---- AC-8b: bước S08 cho cùng danh bạ như bản TRƯỚC hàng (mã của merge-base với main), trên fixture CÓ dữ liệu S08 ----
+const S08_MA = ["Q12-01-01", "Q12-02-01", "Q12-03-02", "Q12-04-02", "QA1-05-01"];
+async function moiS08(c) {
+  const khu = await idNut(c, KHU);
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('q-s08', 'q', 'S08', '{}') ON CONFLICT DO NOTHING`);
+  await c.query(`INSERT INTO s08_project_links (project_id, asset_node_id, status) VALUES ('q8', $1, 'noi') ON CONFLICT DO NOTHING`, [khu]);
+  for (const ma of S08_MA) {
+    await c.query(`INSERT INTO stg_s08_inventory (source_id, snapshot_id, project_id, project_type, state, product_code, subdivision_name, payload)
+                   VALUES ($1, 'q-s08', 'q8', 'high_rise', 'notSold', $2, NULL, '{}')`, [`q8:${ma}`, ma]);
+  }
+}
+/** Danh bạ dạng chuẩn: khoá vật thể thay bằng bí danh ma_nguon S08 nhỏ nhất của nó (khoá ULID ngẫu nhiên mỗi lần đúc). */
+async function anhChuan(c) {
+  const q = async (s) => (await c.query(s)).rows;
+  const canon = new Map((await q(`SELECT object_key, min(value) AS v FROM registry_aliases
+                                   WHERE kind = 'ma_nguon' AND source = 'S08' GROUP BY 1`)).map((r) => [r.object_key, r.v]));
+  const k = (x) => canon.get(x) ?? x;
+  const sx = (a) => a.map((r) => JSON.stringify(r)).sort();
+  return {
+    toa: sx((await q("SELECT b.building_key AS k, n.slug, b.iso_region, b.catalog_tier FROM buildings b JOIN asset_nodes n ON n.id = b.region_node_id"))
+      .map((r) => ({ ...r, k: k(r.k) }))),
+    truc: sx((await q("SELECT stack_key AS k, building_key AS b FROM stacks")).map((r) => ({ k: k(r.k), b: k(r.b) }))),
+    can: sx((await q("SELECT unit_key AS k, building_key AS b, floor FROM units")).map((r) => ({ k: k(r.k), b: k(r.b), floor: r.floor }))),
+    bi_danh: sx((await q("SELECT object_key, kind, value, source FROM registry_aliases")).map((r) => ({ ...r, object_key: k(r.object_key) }))),
+    phat_bieu: sx((await q(`SELECT subject_key, field, value, method FROM field_assertions WHERE resource_name = 'Building' AND retracted_at IS NULL`))
+      .map((r) => ({ ...r, subject_key: k(r.subject_key) }))),
+  };
+}
+test("DA31-AC-8b bước S08 cho cùng danh bạ như bản trước hàng: chưa áp 097, và có 097 mà khu không có dòng S09", async () => {
+  const goc = mkdtempSync(join(tmpdir(), "da31-truoc-"));
+  const ten = ["cu", "moi096", "moi097"].map((h) => `${TEN}_${h}`);
+  const ds = [];
+  try {
+    const base = execFileSync("git", ["-C", GOC, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+    execFileSync("bash", ["-c", `git -C "${GOC}" archive ${base} pipeline | tar -x -C "${goc}"`]);
+    symlinkSync(realpathSync(join(GOC, "pipeline/node_modules")), join(goc, "pipeline/node_modules"));
+    const { dung: dungCu } = await import(join(goc, "pipeline/danh-ba-vat-the.mjs"));
+    const urls = await Promise.all([taoDbThu(ten[0], { hetSo: 96 }), taoDbThu(ten[1], { hetSo: 96 }), taoDbThu(ten[2])]);
+    for (const u of urls) { const c = new pg.Client({ connectionString: u }); await c.connect(); ds.push(c); }
+    for (const c of ds) { await moiKhu(c); await moiS08(c); }
+    const o = { khuSlugs: [KHU], isoTheo: () => "VN-HN", log: () => {}, runId: "da31-itest" };
+    await dungCu(ds[0], o);
+    const tk1 = await dung(ds[1], { ...o, noiS09: NOI });
+    const tk2 = await dung(ds[2], { ...o, noiS09: { "q-khong-co": KHU } });
+    const cu = await anhChuan(ds[0]);
+    assert.ok(cu.toa.length > 4 && cu.can.length >= 4 && cu.truc.length > 0,
+      `DA31-AC-8b fixture không cho bước S08 đúc gì (${cu.toa.length} toà, ${cu.truc.length} trục, ${cu.can.length} căn)`);
+    assert.equal(tk1.s09.bo_qua, "chua-ap-097");
+    assert.deepEqual(await anhChuan(ds[1]), cu, "DA31-AC-8b chưa áp 097: danh bạ khác bản trước hàng");
+    assert.deepEqual(tk2.s09.bo_qua_khu, [KHU]);
+    assert.deepEqual(await anhChuan(ds[2]), cu, "DA31-AC-8b khu không có dòng S09: danh bạ khác bản trước hàng");
+  } finally {
+    await Promise.all(ds.map((c) => c.end().catch(() => {})));
+    await Promise.all(ten.map((t) => xoaDbThu(t)));
+    rmSync(goc, { recursive: true, force: true });
+  }
 });
 
 test("DA31-AC-9 097 áp hai lần không lỗi", () => {

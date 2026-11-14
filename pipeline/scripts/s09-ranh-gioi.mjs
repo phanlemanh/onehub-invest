@@ -34,7 +34,11 @@ const may = new pg.Client({ connectionString: process.env.S09_MAY_THU ?? "postgr
 await may.connect();
 await may.query("SET default_transaction_read_only = on");
 const { rows } = await may.query("SELECT real_name, source_ids FROM source_registry");
+// Định danh lược đồ có từ trước hàng (tên bảng, cột: airbnb_snapshots, stg_zalo_posts…) không phải chỗ lộ tên nguồn: bỏ khỏi dòng trước khi dò.
+const { rows: dd } = await may.query(`SELECT table_name AS t FROM information_schema.tables WHERE table_schema = 'public'
+                                       UNION SELECT column_name FROM information_schema.columns WHERE table_schema = 'public'`);
 await may.end();
+const DINH_DANH = new Set(dd.map((r) => r.t.toLowerCase()));
 const ten = new Set();
 for (const r of rows) for (const t of [r.real_name, ...(Array.isArray(r.source_ids) ? r.source_ids : [])]) {
   const s = String(t ?? "").trim().toLowerCase();
@@ -42,16 +46,23 @@ for (const r of rows) for (const t of [r.real_name, ...(Array.isArray(r.source_i
 }
 console.log(`ten_nguon_doi_chung=${ten.size}`);
 if (ten.size === 0) { console.error("danh sách tên nguồn rỗng — không đo được"); process.exit(2); }
-// Bỏ tệp máy sinh từ hồ sơ chung (bản đồ, lộ trình — không do hàng viết) và tên bảng lược đồ có sẵn từ trước (airbnb_snapshots).
+// Bỏ tệp máy sinh từ hồ sơ chung (bản đồ, lộ trình — không do hàng viết).
 const MAY_SINH = new Set(["LO-TRINH.html", "PRODUCT-MAP.md"]);
-const DINH_DANH_LUOC_DO = /airbnb_snapshots/g;
+const boDinhDanh = (l) => l.replace(/[a-z0-9_]+/g, (w) => (w.includes("_") && DINH_DANH.has(w) ? "" : w));
 const them = [];
 let tepDang = "";
 for (const l of git("diff", "-U0", `${BASE}...HEAD`).split("\n")) {
   if (l.startsWith("+++ ")) { tepDang = l.replace(/^\+\+\+ (b\/)?/, ""); continue; }
-  if (l.startsWith("+") && !MAY_SINH.has(tepDang)) them.push(l.toLowerCase().replace(DINH_DANH_LUOC_DO, ""));
+  if (l.startsWith("+") && !MAY_SINH.has(tepDang)) them.push(boDinhDanh(l.toLowerCase()));
 }
-kq.ten_nguon = them.filter((l) => [...ten].some((t) => l.includes(t))).length;
+const coTen = (l) => [...ten].some((t) => l.includes(t));
+kq.ten_nguon = them.filter(coTen).length;
+// Đối chứng dương của bộ dò (không in tên): dòng giả mang một tên thật phải bị bắt, tên bảng có sẵn thì không.
+const mau = [...ten][0];
+if (!coTen(boDinhDanh(`+ const x = "${mau}";`)) || coTen(boDinhDanh("+ from stg_zalo_posts p"))) {
+  console.error("bộ dò tên nguồn hỏng — đối chứng dương không bắt được"); process.exit(2);
+}
+console.log("doi_chung_bo_do=ok");
 
 const db = `oneinvest_dbv_s09rg_${process.pid}`;
 try {
