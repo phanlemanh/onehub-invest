@@ -95,6 +95,7 @@ song_b_restart() {
   # đỏ khi đã quá 2′ kể từ attempt mà KHÔNG có starting provider nào SAU nó
   if [ $(( now - moc_a )) -ge 120 ]; then
     if [ -z "$moc_s" ] || [ "$moc_s" -le "$moc_a" ]; then
+      if ! grep -q '^b-moc=' "$state" 2>/dev/null; then echo "b-moc=$moc_a" >> "$state" 2>/dev/null; fi
       if song_chua_bao b "$state"; then
         song_canh_bao b "auto-restart hẹn khởi động lại nhưng $(( now - moc_a ))s (≥2′) không có dòng starting provider — bộ hẹn treo (kiểu sự cố 09/11)?" "$state" "$alog"
       fi
@@ -102,6 +103,7 @@ song_b_restart() {
     fi
   fi
   song_hoi_xoa b "$state"
+  sed -i '' '/^b-moc=/d' "$state" 2>/dev/null || true
   return 1
 }
 

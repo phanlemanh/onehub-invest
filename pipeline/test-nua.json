@@ -87,6 +87,7 @@
     "scripts/vocab-lint.test.mjs",
     "scripts/vong-doi.test.mjs",
     "scripts/write-offers.test.mjs",
+    "scripts/zalo-watchdog-vhz2.test.mjs",
     "sync-cloud.test.mjs",
     "sync-pii.test.mjs",
     "tests/import-s09.test.mjs"
