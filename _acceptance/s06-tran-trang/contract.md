@@ -5,7 +5,7 @@ slug: s06-tran-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-14T09:17:16Z
 design_doc: docs/superpowers/specs/2026-11-14-s06-tran-trang-design.md
