@@ -89,7 +89,9 @@ const ua = () => UAS[Math.floor(Math.random() * UAS.length)];
 
 function argPages() {
   const i = process.argv.indexOf("--pages");
-  return i > 0 ? parseInt(process.argv[i + 1]) : parseInt(process.env.CHOTOT_MAX_PAGES ?? "25");
+  // 1411-19: trần mặc định 210 trang/nguồn tin (was 25) — lượt thường đang bỏ sót ~3,5× tin
+  // nhà đất (đo 14/11: 57.295 có thể lấy vs 16.189); dừng tự nhiên khi hết trang hoặc mốc 10.000 máy chủ.
+  return i > 0 ? parseInt(process.argv[i + 1]) : parseInt(process.env.CHOTOT_MAX_PAGES ?? "210");
 }
 const MAX_PAGES = Number.isFinite(argPages()) ? argPages() : 25;
 const DRY = process.argv.includes("--dry");
@@ -182,8 +184,16 @@ async function main() {
         try {
           ads = await fetchPage(region, feed, page);
         } catch (e) {
+          if (e.dungLuot) {
+            // 1411-19: 403/429 — dừng CẢ LƯỢT, ghi phần đã có rồi thoát ngay.
+            console.error(`⛔ ${region.city}/${feed.note}: ${e.message} — DỪNG CẢ LƯỢT`);
+            const seenDung = new Set();
+            const uniqueDung = items.filter((i) => !seenDung.has(i.sourceId) && seenDung.add(i.sourceId));
+            if (uniqueDung.length > 0) await writeSnapshot(region.city, uniqueDung, { discovered: uniqueDung.length, failed: failed.length, notes, startedAt });
+            process.exit(3);
+          }
           failed.push(`${region.city}/${feed.note}: ${e.message}`);
-          break; // fail-soft: bỏ dư feed này, sang feed kế
+          break; // fail-soft: lỗi khác — bỏ dư feed này, sang feed kế
         }
         if (ads.length === 0) break; // hết trang — dừng feed
         for (const ad of ads) {
