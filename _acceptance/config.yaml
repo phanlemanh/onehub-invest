@@ -166,6 +166,9 @@ executors:
     tdn_hien: "cd app && node --import tsx --test tests/lenh-hien.test.ts"   # tam-dung-nguon-tu-cloud (TV4b): hàm thuần nhãn lệnh, cờ máy thu, nút theo vai — không DB
     tdn_dau_cuoi: "cd app && bash ../db/db-thu.sh oneinvest_suite_tdndc --chay node --import tsx --test tests/tam-dung-dau-cuoi.test.tsx"   # tam-dung-nguon-tu-cloud (TV4b): route → kéo → apLenh → ingest → isRunnable, trên DB thử
     tdn_ui: "cd app && node --import tsx --test tests/tam-dung-nguon-ui.test.tsx"   # tam-dung-nguon-tu-cloud (TV4b): hộp thoại và cột Thao tác dựng thật (jsdom)
+    ms6_lop: "node --test pipeline/tests/noi-du-an-s06-lop.test.mjs"   # ma-du-an-s06-thanh-nut (DA32) E2: hàm thuần phân lớp mã dự án S06 và thẻ luật — không DB
+    ms6_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ms6 --chay node --test --test-concurrency=1 tests/noi-du-an-s06.itest.mjs"   # ma-du-an-s06-thanh-nut (DA32) E1, E3–E8, E10: migration 100 + lệnh dựng/áp/đảo trên fixture, bộ dự án S03 bỏ nút ứng viên; DB của riêng lượt, tự áp 100
+    ms6_agent: "cd agent && bash ../db/db-thu.sh oneinvest_suite_ms6a --chay node --import tsx --test tests/context-resolver-ung-vien.test.ts"   # ma-du-an-s06-thanh-nut (DA32) E11: context-resolver bỏ nút mot_loi_khai; DB của riêng lượt
     ops_apply_plist: "cd pipeline && node --test scripts/ops-apply-plist.test.mjs"   # so-lenh-sua-sau-tv4: plist ops-apply neo node tuyệt đối, dòng cài trong runtime-map chạy được dưới PATH của launchd
     cap_token_may: "node --test scripts/cap-token-may.test.mjs"   # so-lenh-sua-sau-tv4: cấp token máy qua Management API (mgmtExec giả), tự ghi cloud.env tạm
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
@@ -295,6 +298,7 @@ executors:
     s09_ham: "node --test pipeline/lib/s09-du-an.test.mjs"   # toa-s09-hai-khu-vao-danh-ba E2 — gộp toà S09 thuần, ma trận viết trước, không DB
     ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
   script:
+    ms6_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ms6t --chay node scripts/noi-du-an-s06-that.mjs"   # ma-du-an-s06-thanh-nut (DA32) E9: thẻ luật S06 trên bản chép DB máy thu — dựng, áp, ba câu kiểm, view khớp đếm độc lập
     itnl_giu_rb: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_rb --chay node --test --test-concurrency=1 scripts/nap-lai-giu-rang-buoc.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_s06_duong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_ds --chay node --test --test-concurrency=1 scripts/s06-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_sdt: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_sdt --chay node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
