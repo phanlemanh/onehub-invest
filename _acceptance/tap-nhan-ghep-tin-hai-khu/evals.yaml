@@ -38,8 +38,8 @@ evals:
     layer: ui-observed
     steps:
       - "Bản chạy: dev server Turbopack của worktree dãy U1 (http://localhost:3460) với DATABASE_URL trỏ DB thử oneinvest_u1_pl35 sau khi `bash pipeline/scripts/tap-nhan-hai-khu-db.sh ghi-thu` đã nạp nháp (tác tử giả) cho lát hai-khu-ghep; đăng nhập tài khoản ops thử. KHÔNG tạo hay sửa tệp nào trong cây."
-      - "Mở /ops/labels?lat=hai-khu-ghep, mở một bài có nháp → 1280 px sáng → evidence/E5b-step1.png (ba ô Toà, Trục, Mã căn điền sẵn)"
-      - "Sửa ô Trục, bấm Lưu → evidence/E5b-step2.png; lệnh in của ghi-thu --doc-nhan cho bài đó ba dòng eval_labels"
+      - "Mở /ops/labels?lat=hai-khu-ghep&nhom=op1-truc (tầng có nháp đủ ba ô ở đầu hàng; không phải lưu bài khác để tới), bài đầu có nháp → 1280 px sáng → evidence/E5b-step1.png (ba ô Toà, Trục, Mã căn điền sẵn)"
+      - "Sửa ô Trục, bấm Lưu → evidence/E5b-step2.png; lệnh in của ghi-thu --doc-nhan cho bài đó ba dòng eval_labels. Cách sửa hợp lệ của màn: giá trị trục mới không có trong chữ bài thì đổi căn cứ ô đó sang «Nghề» và điền Lý do trước khi Lưu (căn cứ «Chữ» với giá trị không có trong bài bị màn chặn, POST trả 400 — đó là kiểm hợp lệ đúng thiết kế, không phải lỗi app; lần Lưu hợp lệ phải trả 200)"
     expected: "Bước 1 ba ô building, stack, unit_number hiện đúng giá trị nháp của bài (đối chiếu bảng ghi-thu in); bước 2 lưu được, eval_labels của bài có đúng ba trường với giá trị trục đã sửa; chữ đọc được, không tràn khung"
     paths: ["pipeline/label-nhap-ghep.mjs", "app/src/app/ops/labels/**", "app/src/components/ops/labels/**"]
   - id: E6

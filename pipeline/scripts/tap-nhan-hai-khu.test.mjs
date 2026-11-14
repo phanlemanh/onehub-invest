@@ -122,3 +122,13 @@ test("PL35 tác tử Gateway: trả lời không phải JSON → ném lỗi; Dee
   assert.equal(tuyChonGui("anthropic/claude-haiku-5.5").gateway.only, undefined);
   assert.throws(() => tacTuGateway({ model: "khac/model" }), /ngoài ba mã đã duyệt/);
 });
+
+// ---- Danh sách model đã duyệt: bản của pipeline phải khớp bản của agent (một nguồn sự thật, PL30) ----
+test("PL35 GATEWAY_DUYET và luật DeepSeek của pipeline khớp agent/src/enrich/doc-gop-s03/cau-hinh.ts", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { GATEWAY_DUYET } = await import("../label-nhap-ghep.mjs");
+  const src = readFileSync(new URL("../../agent/src/enrich/doc-gop-s03/cau-hinh.ts", import.meta.url), "utf8");
+  const ds = JSON.parse(/GATEWAY_DUYET\s*=\s*(\[[^\]]*\])/.exec(src)[1]);
+  assert.deepEqual([...GATEWAY_DUYET], ds, "PL35 danh sách model của pipeline lệch agent");
+  assert.match(src, /startsWith\("deepseek\/"\)\s*\?\s*\{\s*\.\.\.chung,\s*only:\s*\["baseten"\]\s*\}/, "PL35 luật ghim DeepSeek của agent đổi — cập nhật tuyChonGui của pipeline");
+});
