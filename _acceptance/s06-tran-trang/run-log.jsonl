@@ -22,3 +22,4 @@
 {"ts":"2026-11-14T10:11:17Z","sha":"e8dec6d91e7551b7939e82cf324920ef43409100","round":1,"kind":"round-tally","verdict":"PASS","expected":11,"returned":11,"blocked":0}
 {"ts":"2026-11-14T10:11:17Z","sha":"e8dec6d91e7551b7939e82cf324920ef43409100","round":1,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":1,"bypass_ack":0,"verified_at":11}
 {"kind":"thuoc-vat","ts":"2026-11-14T11:11:41Z","round":1,"san":"24cbbf68d5193b036540e913f1b4da3f452f34fb","vat":[1,1],"thuoc":[0,0],"ho_so":[1,0],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"ts":"2026-11-14T14:20:22Z","kind":"repin","run_id":"repin-20261114T134443Z-17794","sha":"9eb6d243891bd45d5b31f2224b9d551685051c87","suites_exit":[0,0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E5":0},"wall_s":2138.5,"so_lenh":11,"evals_not_machine":["E4"],"tong_ket":{"ket_cuc":"xanh","phut":35.6,"so_lenh":11,"model_goi":0,"model_carry":0,"chap_chon":0}}
