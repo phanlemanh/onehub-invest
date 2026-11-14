@@ -5,7 +5,7 @@ slug: nap-s09
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-14T07:13:26Z
 design_doc: docs/superpowers/specs/2026-11-14-nap-s09-design.md
