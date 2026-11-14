@@ -818,6 +818,23 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     thuê; tính thử ra 855 căn bán, 1.280 căn thuê đạt chuẩn «giá tốt» ở cấp dự án; 268 mã dự án S06 phủ 11.045 tin; tin thuê S03
     có m² 622/3.459; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03. Hàng mới: DA32, DA33, DA34, PL36 và nợ RP1, FR1, PB1, IT4, IT6, IT5,
     CI3; sửa lời DA3, DA7, PL20, CG7, CG10, CG14, GC2, TN1. AGENTS.md không đổi: S16 chưa có trong luật 5, 6 nên không mâu thuẫn.
+49. **Vận hành ổn định sau sự cố S03 đứt 34 giờ (13–14/11)** (14/11, phiên điều phối liên làn, Mạnh «Theo khuyến nghị» cho cả sáu
+    việc ở §7 của `docs/ops/de-xuat-van-hanh-on-dinh-1411.md`; bản phạm vi `docs/plan/pham-vi-van-hanh-on-dinh-1411.md`, căn cứ ở kho
+    tri thức riêng `wiki/dot/van-hanh-on-dinh-1411.md`). Sự cố: kênh S03 ngừng thu từ 13/11 00:54Z tới 14/11 khoảng 11:00Z, 0 bài.
+    Máy phát hiện đúng lúc (heartbeat DOWN, bộ canh L6) nhưng không lớp nào đẩy tin tới người — cảnh báo chỉ nằm trong tệp log và
+    một banner trên máy thu. Bộ tự khởi động lại của kênh hẹn lịch mà không chạy, rồi phiên mất hiệu lực nên phải quét QR lại.
+    - **D1 — kênh đẩy cảnh báo**: issue trong kho riêng tư trên GitHub, mọi nội dung qua bộ chặn tầng A (`tier-a-guard`). Hàng VH1.
+    - **P1 — watchdog tự khởi động lại gateway** khi bộ hẹn treo: trần 1 lần mỗi 6 giờ, chỉ khi mọi lớp lockdown xanh và không có
+      lượt agent dở; không bao giờ tự quét QR, không đổi cấu hình. Hàng VHZ2 (làn thu).
+    - **D2 — token chỉ-đọc cho dead-man** (GitHub Actions): đồng ý chủ trương; tạo và cất token do Mạnh làm theo quy trình secret,
+      agent không cầm token. Hàng VH4 chỉ mở vòng khi đã có token.
+    - **P2 — quy ước**: tài khoản thu S03 chỉ gateway dùng. Câu H1 (sáng 13/11 Mạnh có mở tài khoản ở nơi khác không) **chưa trả
+      lời**. Việc của người, không vào lộ trình.
+    - **Đăng nhập lại S02** (401 từ 13/11): việc tài khoản của Mạnh, không vào lộ trình.
+    - **P3 — vá gốc bộ hẹn khởi động lại** cài vào runtime gateway theo quy trình `docs/ops/runtime-map.md`. Hàng VHZ3 (làn thu).
+    D3–D8, R1, O1 trong quyền giám sát tự xếp. SLO độ tươi 72 giờ của S03 **giữ nguyên** (đã chốt, AU4); «nhịp sống» là thước riêng
+    thêm vào (D5, hàng VH2). Mốc VHM1, thứ tự VH1 (D1) → VH2 (D5) → VH3 (D4) → VH4 (D2) → VH5 (D6) → VH6 (R1) → VH7 (D8) → VH8 (O1);
+    làn thu VHZ1 (D3) → VHZ2 (P1) → VHZ3 (P3), VHZ4 (dòng chuẩn `AUTH FAIL [S0x]` của D7). Runbook một trang: §6 của tài liệu.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
