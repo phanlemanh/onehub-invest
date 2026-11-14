@@ -200,4 +200,4 @@ Ngưỡng ở `opportunity.md` (dòng `bat_khi` của hàng) đo như sau:
 ## Notes
 - Số migration 103 theo lời giao của giám sát.
 - Lời giao nói «8 kind»; ba bản thu đo được 11 kind (thiết kế §2). Hợp đồng dữ liệu cần sửa chữ này khi duyệt.
-- TẠM DỪNG 14/11 theo lời giám sát đợt (hạn mức tuần): cuối S3, mã xong; lượt đo thật E2 khớp từng ô, E10 đang chạy lại sau sửa AC-10 (bốn phần, tập gốc là mã S08 đã thành căn). Lệnh kế khi GS báo: chạy lại `node pipeline/scripts/danh-ba-s16-that.mjs` (thoát 0), đặt contract `status: implemented`, rồi `/feature-loop:feature-loop nap-s16-vao-danh-ba` vào S4.
+- TẠM DỪNG 14/11 theo lời giám sát đợt (hạn mức tuần): cuối S3, mã xong; lượt đo thật E2 khớp từng ô, E10 xanh 14/11 (bốn phần khớp: GP 1.282 = 1.280 + 2 + 0 + 0, OP1 153 = 117 + 0 + 0 + 36; mã S08 chưa thành căn in riêng: GP 1, OP1 10; dựng lại 0 khoá mới). Lệnh kế khi GS báo: chạy lại `node pipeline/scripts/danh-ba-s16-that.mjs` (thoát 0), đặt contract `status: implemented`, rồi `/feature-loop:feature-loop nap-s16-vao-danh-ba` vào S4.
