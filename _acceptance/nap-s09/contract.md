@@ -20,23 +20,27 @@ main qua cổng. Lượt nạp thật trên máy thu là bước triển khai ri
 ## Criteria
 
 - AC-1: Given DB thử áp 097 và snapshot tổng hợp khuôn API (một `danh-muc`, hai `du-an` hợp lệ), When chạy bộ nạp hai lần,
-  Then lần một ghi đúng 3 dòng `stg_s09_item` và đúng một dòng `airbnb_snapshots` (city `vn`, source `s09-du-an`), lần hai
-  ghi 0 dòng, tổng dòng không đổi.
+  Then lần một ghi đúng 3 dòng `stg_s09_item` và đúng một dòng `airbnb_snapshots` (city `vn`, source `s09-du-an`); lần hai
+  không lỗi, ghi 0 dòng, `stg_s09_item` vẫn 3 dòng, `airbnb_snapshots` vẫn đúng một dòng của snapshot, và mọi dòng
+  `stg_s09_item` của snapshot trỏ đúng dòng đó.
 - AC-2: Given snapshot có một item thiếu `sourceId`, một `kind` lạ, một `du-an` thiếu `chiTiet.data.id` và một item hợp lệ,
   When nạp, Then bỏ đúng 1/1/1 theo ba lý do và ghi đúng 1 dòng.
 - AC-3: Given URL DB không phải `oneinvest_suite_*` (dạng `postgresql://…?sslmode=`, tên gần giống, DB máy thu trần) và
   không có cờ `--may-thu`, When chạy lệnh, Then thoát 2 với lời từ chối, trước khi kết nối (một assert mỗi dạng); đối
-  chứng dương: cùng URL kèm `--may-thu` thì qua chốt — lỗi in ra là lỗi kết nối, không phải lời từ chối.
+  chứng dương: cùng ba dạng kèm `--may-thu` thì qua chốt — lỗi in ra là lỗi kết nối, không phải lời từ chối. Mọi URL của
+  hai ca trỏ tới cổng đóng (`localhost:1`, mật khẩu giả, giữ tên DB) và ca kiểm trước rằng cổng ấy từ chối kết nối, nên
+  không ca nào ghi được vào DB máy thu.
 - AC-4 (cross-layer): Given DB thử chép từ DB máy thu (xoá khi xong) và bản thu S09 13/11, When chạy lệnh nạp hai lần, Then lần
   một in 345/345, bỏ 0/0/0, lần hai 0/345; `v_s09_toa` hai khu 115 và 61 bản ghi, `v_s09_phan_khu` 13 và 7 — bằng số của DA31.
 - AC-5 (judgment): Given mục schemaVersion 13 của `collector/docs/DATA-CONTRACT.md`, `db/migrations/097_stg_s09_item.sql` và
   `pipeline/lib/s09-du-an.mjs`, When đối chiếu, Then hợp đồng dữ liệu nêu đúng hai `kind`, khoá dự án `chiTiet.data.id`,
   điều kiện `chiTiet.meta.code = "200"`, bảng đích `stg_s09_item` và việc không dùng `item.meta`/`manifest.notes` — khớp
   cột sinh của 097 và luật bỏ của `dongItemS09`.
-- AC-6: Given diff của hàng so với main, When quét, Then tệp đổi chỉ nằm trong vùng hàng (năm tệp của bộ nạp, `_acceptance/`,
-  tài liệu của hàng); `pipeline/sync-cloud.mjs`, `app/`, `db/migrations/` không đổi; không dòng thêm nào chứa tên nguồn hay
-  tên miền thật (danh sách tên đọc từ DB máy thu không rỗng); tệp test mới nằm trong đúng một nửa của `pipeline/test-nua.json`
-  và ca chia-nua xanh.
+- AC-6: Given diff và các commit của hàng so với main, When quét, Then tệp đổi chỉ nằm trong vùng hàng (năm tệp của bộ nạp,
+  `pipeline/scripts/nap-s09*`, `_acceptance/nap-s09/`, `_acceptance/config.yaml`, design doc của hàng, `PRODUCT-MAP.md`,
+  `LO-TRINH.html`); `pipeline/sync-cloud.mjs`, `app/`, `db/migrations/` không đổi; không dòng thêm nào, không thông điệp hay
+  tác giả commit nào, không tên tệp đổi nào chứa tên nguồn hay tên miền thật (danh sách tên đọc từ DB máy thu không rỗng);
+  tệp test mới nằm trong đúng một nửa của `pipeline/test-nua.json` và ca chia-nua xanh.
 
 ## Coverage
 
