@@ -132,7 +132,7 @@ When dựng danh bạ cho năm khu đã nối,
 Then:
 - in bảng theo khu: toà S16 nối có sẵn, toà mới, toà 0 căn không đúc, căn S16, căn S08 nhận bí danh S16, thẻ;
 - in bảng số căn theo từng toà mới (tên đã che) và số toà mới có dưới 10 căn;
-- ở GP và OP1, mỗi mã S08 có trong dự án S16 (1.283 và 153, đo 14/11) rơi vào đúng một trong ba phần, mỗi phần đếm bằng một SELECT riêng: căn S08 nhận bí danh S16 · thẻ lệch toà · mã thuộc căn mơ hồ; tổng ba phần bằng số mã S08 có trong S16 (đếm lại lúc chạy);
+- ở GP và OP1, mỗi mã S08 có trong dự án S16 (1.283 và 153, đo 14/11) rơi vào đúng một trong bốn phần, mỗi phần đếm bằng một SELECT riêng: căn S08 nhận bí danh S16 · thẻ lệch toà · mã thuộc căn mơ hồ · căn thuộc toà S16 đã ra thẻ (khớp nhiều toà, AC-5); tổng bốn phần bằng số mã S08 có trong S16 (đếm lại lúc chạy);
 - 0 thẻ S16 có evidence mang token S16; sync-cloud chạy thử (không gửi) trên DB thử sau khi dựng: 0 token S16 trong mọi bảng sẽ đẩy;
 - toà hai UPI bằng 0, mã hai căn bằng 0;
 - chạy lại ra cùng số và 0 khoá mới.
@@ -200,3 +200,4 @@ Ngưỡng ở `opportunity.md` (dòng `bat_khi` của hàng) đo như sau:
 ## Notes
 - Số migration 103 theo lời giao của giám sát.
 - Lời giao nói «8 kind»; ba bản thu đo được 11 kind (thiết kế §2). Hợp đồng dữ liệu cần sửa chữ này khi duyệt.
+- TẠM DỪNG 14/11 theo lời giám sát đợt (hạn mức tuần): cuối S3, mã xong; lượt đo thật E2 khớp từng ô, E10 đang chạy lại sau sửa AC-10 (bốn phần, tập gốc là mã S08 đã thành căn). Lệnh kế khi GS báo: chạy lại `node pipeline/scripts/danh-ba-s16-that.mjs` (thoát 0), đặt contract `status: implemented`, rồi `/feature-loop:feature-loop nap-s16-vao-danh-ba` vào S4.

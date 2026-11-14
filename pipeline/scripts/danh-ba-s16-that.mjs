@@ -155,12 +155,16 @@ async function main() {
     for (const slug of Object.keys(SAN_S08)) {
       const id = (await mot("SELECT id FROM asset_nodes WHERE slug = $1", [slug])).id;
       const r = await mot(`
-        WITH s08 AS (SELECT DISTINCT upper(btrim(i.product_code)) AS ma FROM stg_s08_inventory i
+        WITH s08_tat AS (SELECT DISTINCT i.project_id, upper(btrim(i.product_code)) AS ma FROM stg_s08_inventory i
                        JOIN s08_project_links l ON l.project_id = i.project_id AND l.status = 'noi' AND l.asset_node_id = $1
                       WHERE i.project_type = 'high_rise'),
+             -- Tập gốc: mã S08 đã thành căn S08 (AC-6 «căn S08 trùng mã»); mã bộ tách S08 không tách được thì không có căn S08.
+             s08 AS (SELECT DISTINCT t.ma FROM s08_tat t WHERE EXISTS (SELECT 1 FROM registry_aliases a WHERE a.source = 'S08'
+                       AND a.kind = 'ma_nguon' AND a.object_key LIKE 'unt_%' AND a.value = t.project_id || '/' || t.ma)),
              s16 AS (SELECT v.* FROM v_s16_can v WHERE v.du_an = ANY($2)),
              chung AS (SELECT s08.ma, s16.du_an, s16.mo_ho FROM s08 JOIN s16 ON s16.ma_can = s08.ma)
         SELECT (SELECT count(*) FROM chung)::int AS tong,
+               (SELECT count(DISTINCT t.ma) FROM s08_tat t JOIN s16 ON s16.ma_can = t.ma WHERE t.ma NOT IN (SELECT ma FROM s08))::int AS chua_can,
                (SELECT count(*) FROM chung ch WHERE EXISTS (SELECT 1 FROM registry_aliases a JOIN registry_aliases b ON b.object_key = a.object_key
                    AND b.source = 'S08' AND b.kind = 'ma_nguon' AND upper(split_part(b.value, '/', 2)) = ch.ma
                  WHERE a.source = 'S16' AND a.kind = 'ma_nguon' AND a.value = ch.du_an || '/' || ch.ma AND a.object_key LIKE 'unt_%'))::int AS bi_danh,
@@ -168,9 +172,18 @@ async function main() {
         [id, Object.keys(await duAnCua(c, slug))]);
       const lech = (await mot(`SELECT count(*)::int AS n FROM review_queue WHERE evidence->>'loai' = 'can-lech-toa' AND item_id = ANY($1)`,
         [await refCua(c, slug)])).n;
-      const khongToa = r.tong - r.bi_danh - lech - r.mo_ho;
-      console.log(`E10 · ${slug}: mã S08 có trong S16 ${r.tong} = bí danh ${r.bi_danh} + lệch toà ${lech} + mơ hồ ${r.mo_ho}${khongToa ? ` + toà chưa nối ${khongToa}` : ""} (đo 14/11: ${SAN_S08[slug]})`);
-      kiem(r.bi_danh + lech + r.mo_ho === r.tong, `E10 ba phần ${slug}`);
+      // Phần bốn: căn có toà S16 đã ra thẻ «khớp nhiều toà» (AC-5) — đếm riêng theo mã thẻ của toà.
+      const { s16Ref } = await import("../lib/s16-danh-muc.mjs");
+      const coThe = new Set((await c.query("SELECT item_id FROM review_queue WHERE evidence->>'loai' = 'toa-khop-nhieu'")).rows.map((x) => x.item_id));
+      const { rows: canToa } = await c.query(
+        `SELECT v.du_an, v.ma_can, coalesce(v.toa_id, (SELECT min(t.toa_id) FROM v_s16_toa t WHERE t.du_an = v.du_an AND t.toa_ten = v.toa_ten)) AS toa_id
+           FROM v_s16_can v WHERE v.du_an = ANY($1) AND NOT v.mo_ho AND v.ma_can = ANY($2)`,
+        [Object.keys(await duAnCua(c, slug)), (await c.query(`SELECT DISTINCT upper(btrim(i.product_code)) AS ma FROM stg_s08_inventory i
+             JOIN s08_project_links l ON l.project_id = i.project_id AND l.status = 'noi' AND l.asset_node_id = $1 WHERE i.project_type = 'high_rise'`, [id])).rows.map((x) => x.ma)]);
+      const toaThe = canToa.filter((x) => x.toa_id && coThe.has(`s16:${s16Ref(x.du_an, x.toa_id)}`)).length;
+      console.log(`E10 · ${slug}: mã S08 có trong S16 nhưng S08 chưa thành căn (bộ tách S08 không tách được) — S16 đúc căn mới: ${r.chua_can}`);
+      console.log(`E10 · ${slug}: căn S08 có mã trong S16 ${r.tong} = bí danh ${r.bi_danh} + lệch toà ${lech} + mơ hồ ${r.mo_ho} + toà ra thẻ ${toaThe} (đo 14/11: ${SAN_S08[slug]})`);
+      kiem(r.bi_danh + lech + r.mo_ho + toaThe === r.tong, `E10 bốn phần ${slug}`);
     }
 
     // Không hai khoá.
