@@ -318,7 +318,7 @@ test("PL34-AC-3 tệp thật: chạy trong job gọi doc-gop-s03.ts hai lần tr
 
 // Bảy tệp test của kho nhắc zalo-import-daily (đo 09/11) — thêm tệp mới thì kê vào đây và vào AC-4 của hồ sơ.
 const TEP_NHAC = [
-  "pipeline/scripts/hang-gia.itest.mjs",   // CG9 AC-11: thứ tự bước xep-hang-gia
+  "pipeline/scripts/hang-gia.test.mjs",   // CG9 AC-11: thứ tự bước xep-hang-gia
   "pipeline/scripts/importer-bo-qua-du-lieu-thu.test.mjs",
   "pipeline/scripts/media-wiring.test.mjs",
   "scripts/enrich-buoc-job.test.mjs",

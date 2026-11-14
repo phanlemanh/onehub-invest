@@ -1,4 +1,4 @@
-// hang-gia.itest.mjs — phép đo CG9 bang-hang-gia-m2 (_acceptance/bang-hang-gia-m2): AC-1…AC-5, AC-11.
+// hang-gia.test.mjs — phép đo CG9 bang-hang-gia-m2 (_acceptance/bang-hang-gia-m2): AC-1…AC-5, AC-11.
 // Mỗi ca chạy trên DB thử trống dựng từ db/migrations của nhánh (gồm 104) bằng db-thu-dbv.mjs, nhân bản từ DB mẫu; fixture viết
 // trước, số kỳ vọng tính độc lập bằng kyVong() (không gọi mã của hàng). Chiều đỏ: thay đúng một chuỗi trong SQL_420 rồi chạy lại
 // bước chấm trên cùng fixture — bộ kiểm phải trả lỗi nêu mã tin.
