@@ -104,10 +104,20 @@ async function fetchPage(vung, feed, page) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const res = await fetch(url, { headers: { "user-agent": ua(), accept: "application/json" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // 1411-20 MỞ LẠI: 403/429 = bị chặn → ném NGAY lỗi đánh dấu dungLuot, KHÔNG thử lại
+        // (đúng luật dừng khi bị chặn); lỗi mạng/5xx khác giữ cách thử lại cũ.
+        if (res.status === 403 || res.status === 429) {
+          const ch = new Error(`page ${page}: HTTP ${res.status}`);
+          ch.dungLuot = true;
+          throw ch;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const body = await res.json();
       return body.ads ?? [];
     } catch (e) {
+      if (e.dungLuot) throw e;
       if (attempt === 3) throw new Error(`page ${page}: ${e.message} (đã thử ${attempt} lần)`);
       await sleep(1500 * attempt);
     }
