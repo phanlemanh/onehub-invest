@@ -237,6 +237,22 @@ Luật đọc:
 
 ## Lịch sử phiên bản
 
+- **schemaVersion 13 (2026-11-14, claudedp-1411-8 — S09 danh mục dự án khuôn API, bộ nạp `stg_s09_item`)**: nguồn
+  `s09-du-an` (khuôn API, một lượt thu toàn danh mục `vn/vn__s09-du-an__<ISO>/`, `manifest.coverage.methods =
+  {"api-cong-khai-http": n}`; snapshot 13/11 mang `schemaVersion 1` trong manifest — bất biến giữ nguyên, bộ nạp nhận
+  diện theo `source`; số 13 bỏ qua 12 vì **v12 = S16 (nháp chờ duyệt)** — snapshot S16 13-14/11 đã
+  ghi 12). Hình dạng item: `danh-muc` (`{ url, soTrang, soDuAn }`, một item mỗi lượt) và `du-an` (`du-an-<id>`,
+  `{ url, danhMuc, chiTiet: { data, meta: { code } } }` — `data.id` uuid là khoá dự án; `insight_by_block[]` là toà
+  (`id` uuid khoá toà, `block_code`/`block_name`, `sector_uuid` và `handover_date_from` có thể vắng, một tên có thể
+  hai `id`); `insight_by_sector[]` phân khu; `blocks` KHÔNG phải số toà; `chiTiet.meta.code` khác `"200"` → item
+  không dùng. **Bên đọc không dùng `manifest.coverage.notes` và `item.meta` làm dữ liệu** — lời Mạnh kèm bản 13/11:
+  «meta.layTu và notes của manifest bị sửa 12:16Z 13/11; payload không kiểm được vì mất sha256 gốc». Nạp bằng
+  `pipeline/import-s09.mjs` (dùng lại `dongItemS09` + `CAU_CHEN_S09_ITEM` của DA31) vào `stg_s09_item`
+  (migration 097): tự chèn dòng `airbnb_snapshots` (city `vn`, source `s09-du-an`, ON CONFLICT DO NOTHING), in số
+  bỏ theo ba lý do (thiếu sourceId / kind lạ / chi tiết lỗi); bản 13/11 kỳ vọng 345 dòng bỏ 0/0/0, nạp lại 0.
+  Toà/phân khu/cụm dựng ở lệnh dựng danh bạ (view `v_s09_toa`, `v_s09_phan_khu`) — không phải việc bộ nạp. Bản ghi
+  đầy đủ: `_acceptance/toa-s09-hai-khu-vao-danh-ba/s09-data-contract-api-nhap.md` (soạn DA31, đã soát 14/11).
+
 - **schemaVersion 11 (2026-11-11, DA29 s10-bang-hang-vao-danh-ba — meta dự án cho danh bạ)**: nguồn `s10-bang-hang`
   thêm `meta.duAn` (tên dự án cha), `meta.phanKhu` (tên phân khu) trên item `stock_table` (lượt thu 11/11 đã phát;
   `projectLabel` có từ v8), và item `kind project_tree` theo hình dạng thực tế lượt 11/11 (sourceId `project-tree`,

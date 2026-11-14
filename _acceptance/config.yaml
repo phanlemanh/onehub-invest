@@ -170,6 +170,9 @@ executors:
     tdn_hien: "cd app && node --import tsx --test tests/lenh-hien.test.ts"   # tam-dung-nguon-tu-cloud (TV4b): hàm thuần nhãn lệnh, cờ máy thu, nút theo vai — không DB
     tdn_dau_cuoi: "cd app && bash ../db/db-thu.sh oneinvest_suite_tdndc --chay node --import tsx --test tests/tam-dung-dau-cuoi.test.tsx"   # tam-dung-nguon-tu-cloud (TV4b): route → kéo → apLenh → ingest → isRunnable, trên DB thử
     tdn_ui: "cd app && node --import tsx --test tests/tam-dung-nguon-ui.test.tsx"   # tam-dung-nguon-tu-cloud (TV4b): hộp thoại và cột Thao tác dựng thật (jsdom)
+    ms6_lop: "node --test pipeline/tests/noi-du-an-s06-lop.test.mjs"   # ma-du-an-s06-thanh-nut (DA32) E2: hàm thuần phân lớp mã dự án S06 và thẻ luật — không DB
+    ms6_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ms6 --chay node --test --test-concurrency=1 tests/noi-du-an-s06.itest.mjs"   # ma-du-an-s06-thanh-nut (DA32) E1, E3–E8, E10: migration 100 + lệnh dựng/áp/đảo trên fixture, bộ dự án S03 bỏ nút ứng viên; DB của riêng lượt, tự áp 100
+    ms6_agent: "cd agent && bash ../db/db-thu.sh oneinvest_suite_ms6a --chay node --import tsx --test tests/context-resolver-ung-vien.test.ts"   # ma-du-an-s06-thanh-nut (DA32) E11: context-resolver bỏ nút mot_loi_khai; DB của riêng lượt
     ops_apply_plist: "cd pipeline && node --test scripts/ops-apply-plist.test.mjs"   # so-lenh-sua-sau-tv4: plist ops-apply neo node tuyệt đối, dòng cài trong runtime-map chạy được dưới PATH của launchd
     cap_token_may: "node --test scripts/cap-token-may.test.mjs"   # so-lenh-sua-sau-tv4: cấp token máy qua Management API (mgmtExec giả), tự ghi cloud.env tạm
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
@@ -297,7 +300,9 @@ executors:
     cg8_ham: "cd app && node --import tsx --test tests/can-gia-cung-loai.test.tsx"   # can-gia-tot-cung-loai E4 — lý do rời danh sách, câu chứng minh theo loại hình (hàm thuần)
     ycns_do_test: "node --test pipeline/scripts/do-ngan-sach-yeu-cau.test.mjs"   # yc1-khoang-le-va-doi-chung-do AC-3, AC-4 — bốn lý do đỏ của lệnh đo, không DB
     s09_ham: "node --test pipeline/lib/s09-du-an.test.mjs"   # toa-s09-hai-khu-vao-danh-ba E2 — gộp toà S09 thuần, ma trận viết trước, không DB
+    ns09_test: "bash db/db-thu.sh oneinvest_suite_nap_s09 --chay node --test pipeline/tests/import-s09.test.mjs"   # nap-s09 E1–E3 — bộ nạp S09 trên DB thử: nạp, nạp lại, ba lý do bỏ, chốt chặn và đối chứng --may-thu
   script:
+    ms6_that: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_ms6t --chay node scripts/noi-du-an-s06-that.mjs"   # ma-du-an-s06-thanh-nut (DA32) E9: thẻ luật S06 trên bản chép DB máy thu — dựng, áp, ba câu kiểm, view khớp đếm độc lập
     itnl_giu_rb: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_rb --chay node --test --test-concurrency=1 scripts/nap-lai-giu-rang-buoc.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_s06_duong: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_ds --chay node --test --test-concurrency=1 scripts/s06-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
     itnl_sdt: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_itnl_sdt --chay node --test --test-concurrency=1 scripts/sdt-trong-duong.itest.mjs"   # itest-nap-lai-migration-cu-sau-095
@@ -937,6 +942,8 @@ executors:
     s09_db: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-s09.itest.mjs"   # toa-s09-hai-khu-vao-danh-ba E1, E3–E5, E8 — DB thử oneinvest_s09_<pid> ở :5433 áp 001…097, fixture tổng hợp
     s09_that: "node pipeline/scripts/danh-ba-s09-that.mjs"   # toa-s09-hai-khu-vao-danh-ba E6, E7 — chép máy thu sang DB thử, nạp bản thu API S09, đối chứng hai bản tay, chỉ in số; ngoài CI
     s09_ranh_gioi: "node pipeline/scripts/s09-ranh-gioi.mjs --base origin/main"   # toa-s09-hai-khu-vao-danh-ba E9 — vùng, tầng A, 097 áp hai lần
+    ns09_that: "node pipeline/scripts/nap-s09-that.mjs"   # nap-s09 E4 — bản chép DB máy thu, chạy lệnh nạp hai lần trên bản thu S09 13/11, số khớp DA31; ngoài CI
+    ns09_ranh_gioi: "node pipeline/scripts/nap-s09-ranh-gioi.mjs --base origin/main"   # nap-s09 E6 — vùng, tên nguồn, chia nửa test pipeline
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

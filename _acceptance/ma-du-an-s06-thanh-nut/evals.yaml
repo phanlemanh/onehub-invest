@@ -1,0 +1,90 @@
+schema_version: 1
+feature_slug: ma-du-an-s06-thanh-nut
+# Ca «MS6-AC-n». Bốn executor (khai ở _acceptance/config.yaml khi vào S3):
+# - ms6_lop (pipeline, không DB): pipeline/tests/noi-du-an-s06-lop.test.mjs — hàm thuần phanLop, dungThe.
+# - ms6_db (pipeline, DB thử của riêng lượt): pipeline/tests/noi-du-an-s06.itest.mjs — áp 100 lên bản chép rồi chạy lệnh trên
+#   fixture trong schema tạm; mỗi ca tự áp 100 trước (DB thử của suite không áp migration của nhánh).
+# - ms6_agent (agent, DB thử của riêng lượt): agent/tests/context-resolver-ung-vien.test.ts — bộ phân giải ngữ cảnh bỏ nút mot_loi_khai.
+# - ms6_that (pipeline, DB thử của riêng lượt, dữ liệu thật chép): pipeline/scripts/noi-du-an-s06-that.mjs — dựng thẻ, áp, kiểm
+#   bất biến trên dữ liệu S06 thật; ghi thẻ ra evidence/.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [db/migrations/100_ma_du_an_s06_nut.sql, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-1': áp 100 hai lần, lần hai không lỗi, dấu lược đồ (information_schema columns + pg_constraint của asset_nodes, registry_aliases, registry_events, project_links, project_link_rules + định nghĩa view s06_offer_project) deepEqual giữa lần một và lần hai; SELECT count(*) FROM asset_nodes WHERE catalog_tier IS DISTINCT FROM 'xac_minh' = 0 trước khi chèn nút mới; INSERT registry_aliases object_key 'node:<id nút 1>' thành công, 'node:abc' ném lỗi check; INSERT project_links status 'noi' asset_node_id NULL ném lỗi, status 'chua_noi' ly_do NULL ném lỗi; DELETE FROM registry_aliases một dòng ném lỗi chứa 'chỉ thêm'; đối chứng đỏ: bản sao 100 bỏ mục CHECK object_key thì ô 'node:<id>' ném lỗi, ca nêu 'node-key'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ms6_lop
+    paths: [pipeline/lib/noi-du-an-s06-lop.mjs, pipeline/tests/noi-du-an-s06-lop.test.mjs]
+    expected: "exit 0; ca 'MS6-AC-2' ma trận viết trước 10 ô (assert đúng 10 phần tử, kết cục so deepEqual): tên '' → {status:'chua_noi', ly_do:'khong-ten'}; tên 'Đang cập nhật' → chua_noi khong-ten; hai tỉnh → chua_noi lech-tinh; chạm một nút cùng tỉnh → {status:'noi', node_id:<id>}; chạm hai nút cùng tỉnh → chua_noi nhieu-ung-vien; 'Sunrise Riverside' TP.HCM với nút Hà Nội bí danh 'riverside' → {status:'duc'}; bí danh 'abc' (dưới 8 ký tự) không tính chạm → duc; tên 'Sunrise Riverside Tower' với nút catalog_tier 'mot_loi_khai' bí danh 'sunrise riverside' cùng tỉnh → duc (nút ứng viên không tính là nút có sẵn); còn lại → duc; còn lại điểm tản → duc kèm co_diem_tan true; đối chứng đỏ: bản sao phanLop bỏ điều kiện cùng tỉnh thì ô Sunrise Riverside ra noi, ca nêu 'cung-tinh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [pipeline/noi-du-an-s06.mjs, pipeline/lib/noi-du-an-s06-lop.mjs, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-2b' trên DB thử fixture: câu SQL đọc mã xuất từ lệnh (docMa) chạy thật, dòng trả về của mã 'Vinhomes Grand Park' fixture đưa thẳng vào phanLop → {status:'noi', node_id:<id nút Grand Park của fixture>}, lệch thì ca nêu 'doc-ma-that'; ca 'MS6-AC-3' trên fixture 40 mã (đủ mọi lớp): chạy --the tệp tạm; tổng theo lớp trong tệp deepEqual phép đếm SQL độc lập viết trong test; bảng mẫu có đúng năm tầng với số dòng {lon:10, giua:10, nguong:5, noi_co_san:<số mã chạm nút>, tu_choi:<số mã chua_noi>}; bảng mẫu không chứa mã nguồn nào của fixture; dòng cuối 'băm: <64 hex>' bằng sha256 của danh sách kết cục chuẩn hoá (mã → kết cục, sắp theo mã) tính lại độc lập trong test; đếm dòng bốn bảng asset_nodes, registry_aliases, project_links, project_link_rules deepEqual trước; đối chứng đỏ: đổi kết cục một mã trong danh sách thì băm tính lại khác băm trong tệp, ca nêu 'bam-ket-cuc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [pipeline/noi-du-an-s06.mjs, db/migrations/100_ma_du_an_s06_nut.sql, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-4': --ap --bam <băm đúng> --nguoi 'thu' → project_link_rules thêm đúng 1 dòng mau_bam = băm; mỗi mã lớp duc có đúng 1 nút catalog_tier 'mot_loi_khai', cardinality(area_ids) >= 1 và area_ids[1] = xã có nhiều tin nhất của mã tính độc lập; mỗi mã nối có đúng 1 registry_aliases còn hiệu lực (object_key 'node:'||id, source 'S06', kind 'ma_nguon', value 'du_an/'||mã); mọi mã ≥10 tin có 1 dòng project_links, dòng của mã nối có rule_id = id dòng luật; slug và meta::text của mọi nút ứng viên không chứa mã nguồn nào của fixture; mã fixture có đúng 9 tin đang rao: 0 registry_aliases value 'du_an/'||mã, 0 nút, 0 dòng project_links, còn mã có đúng 10 tin thì có (đối chứng dương ở ranh ngưỡng); ca 'MS6-AC-4b': --bam sai → thoát khác 0, stderr chứa 'bam-lech', đếm bốn bảng deepEqual trước; ca 'MS6-AC-4c': dựng thẻ, chèn thêm một tin vào fixture, áp băm cũ → 'bam-lech', 0 dòng đổi; cùng giao dịch: bản sao lệnh ném lỗi sau khi chèn nút thứ nhất → đếm bốn bảng deepEqual trước"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [pipeline/noi-du-an-s06.mjs, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-5' sau áp trên fixture, ba câu kiem* xuất từ lệnh (cũng dùng ở E9) trả 0 dòng: hai-nut, lech-tinh, thieu-trang-thai; mã fixture có 9 tin: 0 dòng project_links (câu kiemThieuTrangThai không đòi mã dưới ngưỡng); đối chứng đỏ cùng fixture trong giao dịch ROLLBACK: chèn bí danh thứ hai cho một mã trỏ nút khác (đổi giá trị đường né chỉ mục) → kiemHaiNut 1 dòng nêu mã; đổi area_ids một nút ứng viên sang xã tỉnh khác → kiemLechTinh 1 dòng; xoá một dòng project_links → kiemThieuTrangThai 1 dòng; mỗi lần đỏ thông điệp chứa đúng tên câu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [pipeline/noi-du-an-s06.mjs, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-6' trên fixture có cặp mã tên lồng nhau ('Sunrise Riverside' và 'Sunrise Riverside Tower', cùng tỉnh, đều ≥10 tin): sau lần áp một, dựng thẻ lại và --ap lần hai → băm của thẻ dựng lại bằng băm lần một; stdout chứa 'đã áp, không đổi'; tập (id, object_key, value, retired_at) của registry_aliases deepEqual trước; đếm asset_nodes và project_link_rules không đổi; đối chứng đỏ: bản sao lệnh cho phanLop tính cả nút mot_loi_khai thì băm lần hai khác lần một, ca nêu 'nut-ung-vien-cham'; bản sao bỏ bước tra nút qua project_links thì lần hai đúc thêm nút, ca nêu 'nut-trung'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ms6_db
+    paths: [pipeline/noi-du-an-s06.mjs, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-7': --dao <rule_id> --nguoi 'thu' → mọi registry_aliases S06 ma_nguon có value 'du_an/'||source_project_id của các dòng project_links mang rule_id đó có retired_at khác null (đếm còn hiệu lực = 0); mọi project_links của luật status 'chua_noi' ly_do 'dao-luat'; project_link_rules dao_at, dao_by khác null; đếm asset_nodes không đổi; áp lại (thẻ mới, băm mới) → mỗi mã có bí danh mới, object_key của bí danh mới deepEqual object_key của bí danh đã đảo cho cùng mã; đếm asset_nodes vẫn không đổi; cùng giao dịch: bản sao lệnh ném lỗi giữa chừng khi đảo → không bí danh nào có retired_at mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ms6_db
+    layer: backend-effect
+    paths: [db/migrations/100_ma_du_an_s06_nut.sql, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-8' sau áp trên fixture: count(*) FROM s06_offer_project bằng phép đếm độc lập viết trong test (sale_offer_records đang rao căn hộ S06 ⨝ stg_chotot_ads projectid ⨝ registry_aliases còn hiệu lực, không qua view); SELECT offer_id, count(DISTINCT node_id) GROUP BY 1 HAVING >1 trả 0 dòng; đối chứng đỏ: đặt retired_at một bí danh → cả view lẫn phép đếm giảm đúng số tin của mã đó"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ms6_that
+    paths: [pipeline/noi-du-an-s06.mjs, pipeline/scripts/noi-du-an-s06-that.mjs, db/migrations/100_ma_du_an_s06_nut.sql]
+    expected: "exit 0; trên bản chép DB máy thu (DB thử của riêng lượt): áp 100, dựng thẻ ra _acceptance/ma-du-an-s06-thanh-nut/evidence/the-luat-s06.md, in một dòng 'thẻ: <N> mã ≥10 tin, <T> tin, băm <64 hex>'; N và T bằng phép đếm độc lập (in cả hai, so bằng nhau) và tổng từng lớp khớp; áp bằng băm ấy; kiemHaiNut, kiemLechTinh, kiemThieuTrangThai đều 0; đếm view s06_offer_project bằng phép đếm độc lập; tệp thẻ trong evidence KHÔNG chứa mã nguồn S06 nào (chỉ tên dự án, tỉnh, xã, số tin) — script soát và đỏ 'lo-ma-nguon' nếu có; đối chứng đỏ (--doi-chung): phá bộ đếm độc lập lệch 1 thì script đỏ 'tong-lech'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ms6_db
+    layer: backend-effect
+    paths: [pipeline/lib/du-an-tren-tin-s03.mjs, pipeline/tests/noi-du-an-s06.itest.mjs]
+    expected: "exit 0; ca 'MS6-AC-10a' sau áp trên fixture: bộ dự án trên tin S03 (hàm đọc nút của du-an-tren-tin-s03.mjs) chạy trên một bài S03 fixture có tên nhóm đúng bằng tên một nút ứng viên → không gán nút đó (kết quả không chứa node_id của nút mot_loi_khai); đối chứng dương cùng fixture: bài có tên nhóm 'Vinhomes Grand Park' → gán đúng nút xac_minh Grand Park; đối chứng đỏ: bản sao bỏ điều kiện catalog_tier thì bài thứ nhất gán nút ứng viên, ca nêu 'loc-ung-vien-s03'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ms6_agent
+    layer: backend-effect
+    paths: [agent/src/agents/context-resolver.ts, agent/tests/context-resolver-ung-vien.test.ts]
+    expected: "exit 0; ca 'MS6-AC-10b' trên DB thử của riêng lượt có một nút mot_loi_khai và một nút xac_minh: context-resolver với tên nhóm đúng bằng tên nút ứng viên → không trả project của nút đó; với tên nhóm khớp nút xac_minh → trả đúng slug nút ấy (đối chứng dương); đối chứng đỏ: bản sao câu đọc bỏ điều kiện catalog_tier thì ô thứ nhất trả nút ứng viên, ca nêu 'loc-ung-vien-agent'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
