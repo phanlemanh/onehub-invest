@@ -34,11 +34,15 @@ Ba lệnh trong `pipeline/`, mỗi lệnh một việc, dùng lại hạ tầng 
   tầng chỉ đọc chữ bài và bảng danh bạ (`buildings`, `stacks`); không đọc phát biểu của PL20.
 - **Tầng** = khu × mức gắn. Mức `can` (0 bài) và `truc` của GP (1 bài) không đủ cỡ — gộp vào tầng gần nhất (`truc` GP
   vào `toa` GP) và khai giới hạn. Năm tầng: OP1-toa, OP1-truc, OP1-khong, GP-toa, GP-khong.
+  Sửa 14/11 (ROADMAP §3 mục 48, QĐ6 — PL20 chỉ còn nhịp toà, trục và căn ở PL36): bốn tầng OP1-toa, OP1-khong, GP-toa,
+  GP-khong là tầng **bắt buộc** đủ cỡ; OP1-truc vẫn chọn `min(75, …)` nhưng thiếu cỡ chỉ báo «cho PL36», không chặn.
 - **Cỡ mỗi tầng** = `min(75, số bài khác nhau của tầng)`; tổng trên số đo S1 ≈ 375 (trong 300–450). Tầng thiếu in
   «thiếu N» và cận dưới Wilson tối đa đạt được.
 - **Tất định**: khử trùng bằng `khuTrung` có sẵn; chọn trong tầng bằng `chonMau` (băm `seed:chon:khoa`); cùng đầu vào và
   seed → cùng tập; chạy lại không thêm dòng (`ON CONFLICT DO NOTHING`). Ghi `eval_label_items` với `stratum` = tầng.
 - Chạy thật chỉ sau khi DA31 gộp (danh bạ có toà S09); trước đó bài có toà S09 rơi vào tầng `khong`.
+  DA31 đã gộp 14/11 nhưng máy thu chưa áp 097 và chưa dựng S09 (cần bộ nạp làn thu và lời Mạnh). Phép đo trên bản chép
+  (AC-9) không chờ: nếu danh bạ bản chép chưa có toà S09 thì nạp bản thu S09 13/11 và chạy bước S09 trên bản chép, như DA31 E6.
 
 ### 2.2 Nháp nhãn — `label-nhap-ghep.mjs --lat hai-khu-ghep`
 

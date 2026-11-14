@@ -15,7 +15,9 @@ design_doc: docs/superpowers/specs/2026-11-13-tap-nhan-ghep-tin-hai-khu-design.m
 
 PL20 chưa có tập test nhãn người ở mức toà, trục nên không đo được cận dưới Wilson nhóm A (0,95). Số đo S1 của PL20
 (12/11): OP1 6.301 bài căn hộ (toà 2.415, trục 166, căn 0), GP 4.683 (toà 506, trục 1, căn 0). Mạnh chốt 06/11 trợ lý điền
-nháp, Mạnh duyệt; Cổng Đáng «build» 13/11. Hàng đứng sau DA31; chạy thật sau khi DA31 gộp.
+nháp, Mạnh duyệt; Cổng Đáng «build» 13/11. Hàng đứng sau DA31 (đã gộp 14/11). Sửa 14/11 (ROADMAP §3 mục 48, QĐ6): PL20
+chỉ còn nhịp toà, trục và căn chuyển sang PL36 — tập nhãn ưu tiên nhãn toà: bốn tầng khu × {toà, không gắn} bắt buộc đủ cỡ;
+tầng trục OP1 vẫn chọn nhưng thiếu cỡ chỉ báo, để PL36 dùng.
 
 ## Criteria
 
@@ -24,7 +26,8 @@ nháp, Mạnh duyệt; Cổng Đáng «build» 13/11. Hàng đứng sau DA31; ch
   thêm 0 dòng; seed khác ra tập khác; mỗi nhóm bài trùng chữ chỉ có một đại diện.
 - AC-2: Given fixture có năm tầng khu × mức gắn với số bài viết trước (một tầng đủ, một tầng thiếu dưới 75), When chọn mẫu,
   Then mỗi tầng chọn đúng `min(75, số bài khác nhau)` (một assert mỗi tầng), `stratum` ghi đúng tầng, và báo cáo in
-  «thiếu N» cùng cận dưới Wilson tối đa cho tầng thiếu.
+  «thiếu N» cùng cận dưới Wilson tối đa cho tầng thiếu; tầng thiếu thuộc bốn tầng toà/không gắn được đánh dấu «bắt buộc»,
+  tầng trục OP1 thiếu được đánh dấu «cho PL36» (một assert mỗi nhãn).
 - AC-3: Given bảng mẫu tên nhóm hai khu và fixture có nhóm OP1, nhóm GP, nhóm khớp cả hai mẫu, nhóm không khớp mẫu nào,
   When chọn mẫu, Then bài chỉ vào lát khi nhóm khớp đúng một khu, khu ghi theo nhóm (một assert mỗi loại nhóm).
 - AC-4: Given bộ phân tầng mức gắn và ma trận viết trước (tên toà khớp danh bạ, mã trục khớp, tên toà không có trong danh
@@ -44,17 +47,18 @@ nháp, Mạnh duyệt; Cổng Đáng «build» 13/11. Hàng đứng sau DA31; ch
   gắn lệch), When đóng băng hai lần trên cùng dữ liệu, Then hai tệp có cùng băm sha256 in trong tệp; đổi một nhãn người thì
   băm đổi; mỗi `ref_id` đúng một dòng, bài hai người gắn lệch bị loại và đếm riêng; tệp chỉ có `ref_id`, `stratum`, nhãn ba
   trường — không chữ bài, câu trích, người gắn.
-- AC-9 (cross-layer): Given DB thử chép từ DB máy thu có toà S09 của hai khu (DA31 đã gộp; chưa có thì thoát 2 «chưa
-  DA31»), When chạy chọn mẫu và phân tầng (không gọi model), Then in bảng nhóm → khu kèm số bài và mọi nhóm khớp bảng kỳ
-  vọng viết trước (nhóm lạ hay thiếu thì đỏ), in số bài có và chọn mỗi tầng, cả năm tầng đủ 75 (tầng nào dưới 75 thì thoát
-  1 nêu tầng), tổng trong 300–450, và 0 dòng `eval_labels` đổi so với trước lượt.
+- AC-9 (cross-layer): Given DB thử chép từ DB máy thu, danh bạ có toà S09 của hai khu — máy thu chưa dựng S09 thì bản chép
+  nạp bản thu S09 13/11 và dựng bước S09 của DA31 (đường của DA31 E6); không dựng được thì thoát 2 «chưa có toà S09», When
+  chạy chọn mẫu và phân tầng (không gọi model), Then in bảng nhóm → khu kèm số bài và mọi nhóm khớp bảng kỳ vọng viết trước
+  (nhóm lạ hay thiếu thì đỏ), in số bài có và chọn mỗi tầng, bốn tầng toà/không gắn đủ 75 (tầng nào dưới 75 thì thoát 1 nêu
+  tầng), tầng trục OP1 in số không chặn, tổng trong 300–450, và 0 dòng `eval_labels` đổi so với trước lượt.
 - AC-10: Given diff của hàng so với main, When quét, Then không tệp nào dưới `db/migrations/`, `pipeline/sync-cloud.mjs`
   và `app/` không đổi, và không dòng thêm nào chứa tên nguồn thật (danh sách tên đọc được không rỗng).
 
 ## Coverage
 
-- Trục tầng: khu (OP1, GP) × mức gắn (toà, trục, không) — năm tầng có, căn và trục GP gộp có tên (AC-2, AC-4). Thước: ma
-  trận viết trước, một assert mỗi tầng.
+- Trục tầng: khu (OP1, GP) × mức gắn (toà, trục, không) — năm tầng có, căn và trục GP gộp có tên; bốn tầng toà/không gắn
+  bắt buộc đủ cỡ, tầng trục cho PL36 (AC-2, AC-4, AC-9). Thước: ma trận viết trước, một assert mỗi tầng.
 - Trục khu của nhóm: khớp một khu · khớp hai khu · không khớp (AC-3).
 - Trục tất định: cùng seed · seed khác · chạy lại · trùng chữ (AC-1).
 - Trục nháp: có căn cứ · căn cứ không có trong bài · không suy được · round-trip qua hàm và màn thật (AC-5).
@@ -77,7 +81,7 @@ nháp, Mạnh duyệt; Cổng Đáng «build» 13/11. Hàng đứng sau DA31; ch
 - Người duyệt nháp trên `/ops/labels` (việc vận hành, ra khỏi kho); PL20 đo trên phần đã duyệt.
 - Gắn mù không có nháp (Q3, hoãn tới PL21).
 - Đổi màn `/ops/labels` (hiện câu trích cạnh ô) — màn đã đọc `draft`.
-- Mức căn và trục Grand Park đủ cỡ Wilson — chờ danh bạ và đọc tầng (DA31, GC).
+- Nhãn trục, căn đủ cỡ Wilson (cả hai khu) — nhịp trục và căn của PL36 (ROADMAP §3 mục 48, QĐ6).
 - Gắn dự án cho nhóm S03 trong sổ nhóm (DV6).
 
 ## Notes

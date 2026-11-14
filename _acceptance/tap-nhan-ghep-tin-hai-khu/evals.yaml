@@ -11,7 +11,7 @@ evals:
     criterion: AC-2
     executor: script
     cmd: config:executors.script.pl35_db
-    expected: "Ca PL35-AC-2: ma trận năm tầng viết trước, một assert mỗi tầng: chọn đúng min(75, số bài khác nhau), stratum đúng; tầng thiếu in «thiếu N» và cận dưới Wilson tối đa. Chiều đỏ: đột biến cỡ cố định 75 không kẹp thì tầng thiếu đỏ, thông điệp nêu tên tầng"
+    expected: "Ca PL35-AC-2: ma trận năm tầng viết trước, một assert mỗi tầng: chọn đúng min(75, số bài khác nhau), stratum đúng; tầng thiếu in «thiếu N» và cận dưới Wilson tối đa; tầng thiếu trong bốn tầng toà/không gắn mang nhãn «bắt buộc», tầng trục OP1 thiếu mang nhãn «cho PL36». Chiều đỏ: đột biến cỡ cố định 75 không kẹp thì tầng thiếu đỏ, thông điệp nêu tên tầng"
     paths: ["pipeline/label-sample.mjs", "pipeline/lib/eval-labels.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
   - id: E3
     criterion: AC-3
@@ -72,7 +72,7 @@ evals:
     executor: script
     cmd: config:executors.script.pl35_do
     layer: backend-effect
-    expected: "Trên DB thử chép từ DB máy thu (DB riêng cho chế độ do, xoá khi xong): danh bạ chưa có toà S09 của hai khu thì thoát 2 «chưa DA31»; in bảng nhóm → khu kèm số bài, so với bảng kỳ vọng viết trước pipeline/scripts/tap-nhan-hai-khu-nhom.json (nhóm lạ hay thiếu → thoát 1 nêu tên nhóm); in số bài có và chọn mỗi tầng; tầng nào chọn dưới 75 thì thoát 1 nêu tầng; tổng ngoài 300–450 thì thoát 1; eval_labels đếm trước = sau; không gọi model"
+    expected: "Trên DB thử chép từ DB máy thu (DB riêng cho chế độ do, xoá khi xong): danh bạ bản chép chưa có toà S09 của hai khu thì nạp bản thu S09 13/11 và dựng bước S09 của DA31 trên bản chép, không dựng được thì thoát 2 «chưa có toà S09»; in bảng nhóm → khu kèm số bài, so với bảng kỳ vọng viết trước pipeline/scripts/tap-nhan-hai-khu-nhom.json (nhóm lạ hay thiếu → thoát 1 nêu tên nhóm); in số bài có và chọn mỗi tầng; tầng nào trong bốn tầng toà/không gắn chọn dưới 75 thì thoát 1 nêu tầng, tầng trục OP1 chỉ in số; tổng ngoài 300–450 thì thoát 1; eval_labels đếm trước = sau; không gọi model"
     paths: ["pipeline/label-sample.mjs", "pipeline/lib/tang-ghep.mjs", "pipeline/scripts/tap-nhan-hai-khu*"]
   - id: E10
     criterion: AC-10
