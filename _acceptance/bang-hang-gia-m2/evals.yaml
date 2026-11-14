@@ -78,6 +78,12 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals]
+    steps:
+      - "Bản chạy: dev server của worktree này trên cổng 3464 với DATABASE_URL trỏ DB thử oneinvest_u1_cg9 (bản chép máy thu đã áp 104 và chấm bằng `bash pipeline/scripts/hang-gia-db.sh ghi-thu`); chạy nền `env DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u1_cg9 npm --prefix app run dev -- -p 3464` nếu cổng chưa mở, đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs). KHÔNG tạo hay sửa tệp nào trong cây."
+      - "Mở http://localhost:3464/ops/deals ở 1280 px sáng → evidence/E10-step1.png (danh sách: có tin S06, căn cần xác minh đứng cuối)"
+      - "Mở /ops/deals/offer_07e2e89511db504e (căn có nhãn, dưới trung vị 16,5%) 1280 sáng → evidence/E10-step2.png (câu «So với N căn cùng phường, cùng loại …», «Rẻ trong phường», không «Cần xác minh»)"
+      - "Mở /ops/deals/offer_002fc1c0073d52cd (căn cần xác minh, dưới trung vị 37,5%) 1280 tối → evidence/E10-step3.png (nhãn «Cần xác minh»)"
+      - "Mở /ops/deals/offer_0054ade373ca8bba (nhóm 8 căn) 1280 tối → evidence/E10-step4.png (lý do «Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn»)"
     expected: "Chụp /ops/deals và /ops/deals/[offerId] (căn có nhãn, căn cần xác minh, tin nhóm 5–9) ở sáng và tối trên bản chạy trỏ DB thử của AC-9: nhãn «Rẻ trong phường», chữ «Cần xác minh» chỉ ở căn có cờ, dòng «so với N căn …», lý do nhom-5-9 hiện đúng chữ AC-6; con số trên màn khớp dòng offer_price_rank của tin"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E11
