@@ -42,7 +42,7 @@ const MONG_NHAN = { "op1-truc": "cho PL36", "op1-khong": "bắt buộc", "gp-toa
 
 async function dungFixture(c) {
   const { rows } = await c.query("SELECT current_database() AS db");
-  assert.match(rows[0].db, /^oneinvest_(u1_pl35|suite_[a-z0-9_]+)$/, `PL35 itest chỉ chạy trên DB thử, không trên ${rows[0].db}`);
+  assert.match(rows[0].db, /^oneinvest_(u1_pl35(_it)?|suite_[a-z0-9_]+)$/, `PL35 itest chỉ chạy trên DB thử, không trên ${rows[0].db}`);
   for (const t of ["stg_zalo_posts", "sale_offer_records", "buildings", "stacks", "asset_nodes", "registry_aliases"]) {
     await c.query(`CREATE TEMP TABLE ${t} (LIKE public.${t} INCLUDING DEFAULTS)`);
   }
