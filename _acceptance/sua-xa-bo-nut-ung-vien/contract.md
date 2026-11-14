@@ -5,7 +5,7 @@ slug: sua-xa-bo-nut-ung-vien
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-14T11:11:00Z
 approved_by:
