@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: eab5acd7f009a848636d39964298b864d2797ca1
-human_signoff:
+human_signoff: Mạnh 2026-11-14
 ---
 
 # Evidence Report: khoa-gop-can-khong-gia

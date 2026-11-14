@@ -5,7 +5,7 @@ slug: khoa-gop-can-khong-gia
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-12-khoa-gop-can-khong-gia-design.md
@@ -112,3 +112,7 @@ Core → AC-1…AC-9. Later: gộp các căn đã sinh do đổi giá trước �
   `ON CONFLICT DO NOTHING` — có UNIQUE của 098 thì link cũ mất không dấu vết khi tin kế đã có căn. Hôm nay 0 link rơi vào ca này
   (chỉ tin S06 có link, tin S06 chưa từng bị thay); rủi ro thành thật khi tin S03/S05 gắn căn (GC0–GC3).
 - Số migration 098, 101 chờ sổ của LL; đổi số thì đổi tên tệp và chữ ở hợp đồng này cùng lượt.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-2: số bằng chứng của căn (n_evidence) vẫn đếm cả tin đã gắn căn khác, nên có thể cao hơn số tin gắn thật.
+  - Ngoài-3: đối soát đêm ghi một dòng nhật ký thừa khi tin kế gắn đúng căn của tin cũ; không mất link.
+  - Ngoài-5: ngày thấy đầu, cuối và toạ độ của căn có thể lấy cả từ tin đã gắn căn khác.
