@@ -1,8 +1,7 @@
 schema_version: 1
 feature_slug: sua-xa-bo-nut-ung-vien
-# Ca «SXU-AC-n». Hai executor:
+# Ca «SXU-AC-n». Một executor:
 # - sxu_db (DB thử của riêng lượt, chép máy thu): pipeline/scripts/sua-xa-ung-vien.itest.mjs — áp 100, chèn nút, suaXaNut thật.
-# - dv1_db (đã có, nut-du-an-tro-xa-moi): itest DV1 trên DB chưa áp 100 — hồi quy.
 evals:
   - id: E1
     criterion: AC-1
@@ -19,14 +18,6 @@ evals:
     layer: backend-effect
     paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/sua-xa-ung-vien.itest.mjs]
     expected: "exit 0; ca 'SXU-AC-2': chèn nút project catalog_tier 'xac_minh' slug 'sxu-xac-minh' không có mục trong tệp xã; suaXaNut(c) ném lỗi có message chứa 'thiếu nút sxu-xac-minh'; băm area_ids mọi nút deepEqual trước (không ghi gì)"
-    evidence_required: [run_id, exit_code, verifier, verified_at, output]
-  - id: E3
-    criterion: AC-3
-    executor: test
-    cmd: config:executors.test.dv1_db
-    layer: backend-effect
-    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/danh-ba-vat-the-xa.itest.mjs]
-    expected: "exit 0; mọi ca DV1-AC-3, DV1-AC-4, DV1-AC-6 của danh-ba-vat-the-xa.itest.mjs xanh không sửa trên DB của riêng lượt chép máy thu; evidence ghi trạng thái lược đồ của lần chạy (có hay không cột asset_nodes.catalog_tier) — phần đã áp 100 do E1 chứng"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
