@@ -45,7 +45,10 @@ async function loadNodes(): Promise<AssetNode[]> {
   await c.connect();
   try {
     const { rows } = await c.query(
-      `SELECT id, slug, name, node_type, aliases, area_ids FROM asset_nodes`,
+      // DA32 Hỏi-3: bỏ nút ứng viên do thẻ luật S06 đúc (catalog_tier mot_loi_khai) — tên nhóm không tự gán vào nút chưa duyệt
+      // khác nguồn. to_jsonb để câu chạy được cả trên DB chưa áp migration 100.
+      `SELECT n.id, n.slug, n.name, n.node_type, n.aliases, n.area_ids FROM asset_nodes n
+        WHERE (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai'`,
     );
     cachedNodes = rows.map((r: Record<string, unknown>) => ({
       id: Number(r.id),
