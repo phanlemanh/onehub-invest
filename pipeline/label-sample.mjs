@@ -2,6 +2,7 @@
 // label-sample.mjs — PL7 `man-gan-nhan-mu` (AC-2): chọn tin của một lát vào eval_label_items để người gắn nhãn mù.
 //   node pipeline/label-sample.mjs --lat ocp1 --n 200 --seed <s> [--nhom-khop <regex>] [--thu]
 //   node pipeline/label-sample.mjs --lat s03-loai-tin --n 150 --seed <s>   (lát phân tầng loại tin, mọi nhóm — AC-10 RM1)
+//   node pipeline/label-sample.mjs --lat hai-khu-ghep --seed <s> [--co 75]   (PL35: phân tầng khu × mức gắn, mỗi tầng min(co, …))
 //   node pipeline/label-sample.mjs --lat s03-theo-nhom --seed <s> --theo-nhom --moi-nhom-lon 30 --moi-nhom-nho 5 --so-nhom-lon 10   (GC0)
 // Tin S03 ở stg_zalo_posts, gạt post thử bằng ĐÚNG bộ lọc của transform (lib/test-posts.mjs, L19), lọc nhóm theo mẫu tên
 // của lát, khử trùng theo nội dung, chọn tất định theo seed (lib/eval-labels.mjs). Chạy lại cùng tham số: 0 dòng thêm.
@@ -13,7 +14,8 @@ import pg from "pg";
 import { loadStgPosts } from "./lib/test-posts.mjs";
 import { docTinCua, ghepLat } from "./label-ghep.mjs";
 import { chonMau, chonMauTheoNhom, donViCuaBai, donViTheoNhomThat, khoaNhomThat, khuTrung, LAT_NHOM } from "./lib/eval-labels.mjs";
-import { tangLoai } from "./transform-zalo.mjs";
+import { chonMauHaiKhu, docDanhBaKhu, KHU_SLUG, LAT_HAI_KHU } from "./lib/mau-hai-khu.mjs";
+import { CO_TANG } from "./lib/tang-ghep.mjs";
 
 /** Lát phân tầng theo loại tin (s03-nhan-loai-tin-rong AC-10): ba tầng bằng nhau, mọi nhóm, không lọc tên nhóm. */
 export const LAT_PHAN_TANG = Object.freeze({ "s03-loai-tin": ["chu-bai", "moi-nhan", "van-bo"] });
@@ -50,10 +52,16 @@ function docCo(argv) {
     const a = argv[i];
     if (a === "--thu") co.thu = true;
     else if (a === "--theo-nhom") co.theoNhom = true;
-    else if (["--lat", "--n", "--seed", "--nhom-khop", "--moi-nhom-lon", "--moi-nhom-nho", "--so-nhom-lon"].includes(a)) co[a.slice(2)] = argv[++i];
+    else if (["--lat", "--n", "--co", "--seed", "--nhom-khop", "--moi-nhom-lon", "--moi-nhom-nho", "--so-nhom-lon"].includes(a)) co[a.slice(2)] = argv[++i];
     else throw new Error(`label-sample: cờ lạ «${a}»`);
   }
   if (!co.lat || !/^[a-z0-9-]+$/.test(co.lat)) throw new Error("label-sample: thiếu --lat (chữ thường, số, gạch nối)");
+  if (co.lat === LAT_HAI_KHU) {
+    const c = co.co === undefined ? CO_TANG : Number(co.co);
+    if (!Number.isInteger(c) || c <= 0) throw new Error("label-sample: --co phải là số nguyên dương");
+    if (!co.seed) throw new Error("label-sample: thiếu --seed");
+    return { lat: co.lat, seed: co.seed, thu: co.thu, haiKhu: { co: c } };
+  }
   if (co.theoNhom) {
     const so = (k, mac) => {
       const v = co[k] === undefined ? mac : Number(co[k]);
@@ -77,7 +85,7 @@ function docCo(argv) {
  * @param {{ lat: string, n: number, seed: string, nhom: RegExp|null, thu: boolean, trongGiaoDich?: boolean }} co
  *   trongGiaoDich: người gọi đã mở transaction (test, thước) — ghi bằng SAVEPOINT thay cho BEGIN…COMMIT.
  */
-export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = false, theoNhom = null }) {
+export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = false, theoNhom = null, haiKhu = null }) {
   const { rows: cu } = await client.query(
     `SELECT count(*)::int AS so, array_agg(DISTINCT seed) AS seeds FROM eval_label_items WHERE lat = $1`, [lat]);
   if (cu[0].so > 0 && !(cu[0].seeds.length === 1 && cu[0].seeds[0] === seed)) {
@@ -85,11 +93,13 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
   }
   const { posts, rejected } = await loadStgPosts(client, "zalo");
   const tinCua = await docTinCua(client);
+  if (haiKhu) return layMauHaiKhu(client, { lat, seed, thu, trongGiaoDich, co: haiKhu.co, daCo: cu[0].so, posts, rejected, tinCua });
   if (theoNhom) return layMauTheoNhom(client, { lat, seed, thu, trongGiaoDich, theoNhom, daCo: cu[0].so, posts: nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts, rejected, tinCua });
   const cuaLat = nhom ? posts.filter((p) => nhom.test(p.group_name ?? "")) : posts;
   const tangs = LAT_PHAN_TANG[lat];
+  // transform-zalo nạp động: chỉ lát phân tầng loại tin cần tangLoai; đường hai khu (PL35) không nạp mã chạm phát biểu.
   const { chon, khac_nhau, moiTang, bo_su_kien, bo_vi_trung } = tangs
-    ? chonMauPhanTang(cuaLat, tangLoai(cuaLat), { n, seed, tangs, tinCua })
+    ? chonMauPhanTang(cuaLat, (await import("./transform-zalo.mjs")).tangLoai(cuaLat), { n, seed, tangs, tinCua })
     : chonMau(cuaLat, { n, seed, tinCua });
   const [mo, xong, lui] = trongGiaoDich
     ? ["SAVEPOINT label_sample", "RELEASE SAVEPOINT label_sample", "ROLLBACK TO SAVEPOINT label_sample"]
@@ -116,6 +126,42 @@ export async function layMau(client, { lat, n, seed, nhom, thu, trongGiaoDich = 
     lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien, bo_vi_trung, tin_cua_lat: cuaLat.length, khac_nhau, chon: chon.length,
     trung: chon.filter((r) => r.double_label).length, dev: chon.filter((r) => r.split === "dev").length,
     them, thieu: Math.max(0, n - chon.length), thu, ...(moiTang ? { moiTang } : {}),
+  };
+}
+
+/** Mẫu hai khu (PL35): danh bạ khu đọc từ buildings/stacks/asset_nodes/registry_aliases, không đọc phát biểu. Lát đã có dòng
+ * thì giữ nguyên (cùng lý do mẫu theo nhóm: bài mới có thể đẩy bài cũ ra khỏi tập chọn). */
+async function layMauHaiKhu(client, { lat, seed, thu, trongGiaoDich, co, daCo, posts, rejected, tinCua }) {
+  const danhBa = {};
+  for (const [khu, slug] of Object.entries(KHU_SLUG)) danhBa[khu] = await docDanhBaKhu(client, slug);
+  const kq = chonMauHaiKhu(posts, danhBa, { seed, co, tinCua });
+  const [mo, xong, lui] = trongGiaoDich
+    ? ["SAVEPOINT label_sample", "RELEASE SAVEPOINT label_sample", "ROLLBACK TO SAVEPOINT label_sample"]
+    : ["BEGIN", "COMMIT", "ROLLBACK"];
+  let them = 0;
+  if (!thu && daCo === 0) {
+    await client.query(mo);
+    try {
+      for (const r of kq.chon) {
+        const res = await client.query(
+          `INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed, stratum)
+           VALUES ($1, 'S03', $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`,
+          [lat, r.ref_id, r.text_hash, r.split, r.double_label, seed, r.stratum]);
+        them += res.rowCount;
+      }
+      await ghepLat(client, { lat });
+      await client.query(xong);
+    } catch (e) {
+      await client.query(lui).catch(() => {});
+      throw e;
+    }
+  }
+  return {
+    lat, gat_post_thu: rejected.total, gat_theo_dau: rejected.by_marker, bo_su_kien: kq.bo_su_kien, bo_vi_trung: kq.bo_vi_trung,
+    tin_cua_lat: kq.tin_cua_lat, khac_nhau: kq.khac_nhau, chon: kq.chon.length, bo_nhom: kq.bo_nhom,
+    trung: kq.chon.filter((r) => r.double_label).length, dev: kq.chon.filter((r) => r.split === "dev").length,
+    them, thieu: 0, thu, moiTangHaiKhu: kq.moiTang,
+    danh_ba: Object.fromEntries(Object.entries(danhBa).map(([k, d]) => [k, { toa: d.toa.length, truc: d.truc.length }])),
   };
 }
 
@@ -174,6 +220,12 @@ async function main() {
     console.log(`chon ${kq.chon} · trung ${kq.trung} · dev ${kq.dev} / test ${kq.chon - kq.dev} · them ${kq.them}${kq.thu ? " (--thu: không ghi)" : ""}`);
     console.log(`bo_vi_trung ${kq.bo_vi_trung} · bo_su_kien ${kq.bo_su_kien} · gat_theo_dau ${JSON.stringify(kq.gat_theo_dau)}`);
     if (kq.moiTang) console.log(`tầng: ${JSON.stringify(kq.moiTang)}`);
+    if (kq.moiTangHaiKhu) {
+      console.log(`danh bạ: ${JSON.stringify(kq.danh_ba)} · bỏ vì nhóm không khớp đúng một khu: ${kq.bo_nhom}`);
+      for (const [t, x] of Object.entries(kq.moiTangHaiKhu)) {
+        console.log(`tầng ${t}: có ${x.co} · chọn ${x.chon}${x.thieu ? ` · thiếu ${x.thieu} · cận dưới Wilson tối đa ${x.wilson_toi_da} · ${x.nhan}` : ""}`);
+      }
+    }
     if (kq.moiNhom) {
       for (const x of kq.moiNhom) console.log(`nhóm ${x.unit_code}: chọn ${x.chon}/${x.can}, nội dung ${x.khac_nhau}, bỏ vì trùng ${x.bo_vi_trung}${x.chon < x.can ? " · thiếu" : ""}`);
       console.log(`bỏ vì không có đơn vị trong sổ: ${kq.bo_khong_don_vi}`);
