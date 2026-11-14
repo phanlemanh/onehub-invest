@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: nap-s09
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ns09_test
+    expected: "Ca S09-1 trên DB thử oneinvest_suite_nap_s09 (áp chính tệp 097): snapshot tổng hợp ba item → lần một ghi 3 dòng stg_s09_item và 1 dòng airbnb_snapshots, lần hai không lỗi, ghi 0, stg_s09_item vẫn 3, airbnb_snapshots của snapshot vẫn đúng 1, mọi dòng stg trỏ đúng snapshot_id đó. Chiều đỏ: bỏ ON CONFLICT trong câu chèn thì lần hai lỗi khoá trùng, ca đỏ"
+    paths: ["pipeline/import-s09.mjs", "pipeline/tests/import-s09.test.mjs", "pipeline/lib/s09-du-an.mjs"]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ns09_test
+    expected: "Ca S09-2: bốn item (thiếu sourceId, kind lạ, du-an thiếu chiTiet.data.id, một hợp lệ) → bo = 1/1/1, ghi 1. Chiều đỏ: đột biến không đếm kind lạ thì assert deepEqual bo đỏ"
+    paths: ["pipeline/import-s09.mjs", "pipeline/tests/import-s09.test.mjs", "pipeline/lib/s09-du-an.mjs"]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ns09_test
+    expected: "Ca S09-3: ba dạng URL không phải suite, không --may-thu → mỗi dạng thoát 2, stderr có «từ chối», không có lỗi kết nối. Ca S09-4 (đối chứng dương): cùng ba URL kèm --may-thu → không có «từ chối», stderr là lỗi kết nối, thoát 1. Mọi URL trỏ cổng đóng localhost:1 (mật khẩu giả, giữ tên DB); ca kiểm trước cổng ấy từ chối kết nối. Chiều đỏ: gỡ chốt chặn thì S09-3 đỏ; chốt chặn từ chối cả khi có --may-thu thì S09-4 đỏ"
+    paths: ["pipeline/import-s09.mjs", "pipeline/tests/import-s09.test.mjs"]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.ns09_that
+    expected: "Chép DB máy thu sang DB thử oneinvest_suite_ns09that_<pid> (xoá khi xong), áp 097 nếu chưa có, đếm dòng S09 của snapshot trong bản chép (đã có thì thoát 3 «đã nạp sẵn», tách khỏi lệch số), chạy lệnh nạp (tiến trình con, đúng dòng lệnh triển khai, trỏ bản chép) hai lần trên bản thu vn__s09-du-an__2026-11-13T120908161: lần một in 345/345 bỏ 0/0/0, lần hai 0/345; v_s09_toa hai khu 115 và 61, v_s09_phan_khu 13 và 7; lệch thì thoát 1 nêu ô; số dòng stg_s09_item của DB máy thu đếm trước và sau lượt bằng nhau (DB máy thu chưa có bảng thì ghi «không có bảng»)"
+    paths: ["pipeline/import-s09.mjs", "pipeline/scripts/nap-s09*", "pipeline/lib/s09-du-an.mjs"]
+  - id: E5
+    criterion: AC-5
+    executor: judgment
+    inputs: [collector/docs/DATA-CONTRACT.md, db/migrations/097_stg_s09_item.sql, pipeline/lib/s09-du-an.mjs]
+    question: "Mục schemaVersion 13 của DATA-CONTRACT.md có nêu đúng hai kind (danh-muc, du-an), khoá dự án là payload.chiTiet.data.id, item chỉ dùng khi chiTiet.meta.code = \"200\", bảng đích stg_s09_item, và không dùng item.meta/manifest.notes làm dữ liệu không? Các điều đó có khớp cột sinh project_id, detail_ok của 097 và luật bỏ của dongItemS09 không? Có câu nào trong mục ấy mâu thuẫn với hai tệp kia không?"
+    paths: ["collector/docs/DATA-CONTRACT.md"]
+    expected: "Mục v13 nêu đủ năm điều và khớp 097, dongItemS09; không câu nào mâu thuẫn"
+    evidence_required: [judged_by, verdict, rationale]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ns09_ranh_gioi
+    expected: "ngoai_vung=0 sync_cloud_doi=0 app_doi=0 migration_doi=0 ten_nguon=0 ten_nguon_commit=0 test_nua=ok (vùng đúng bằng chữ AC-6; quét dòng thêm, thông điệp, tác giả và tên tệp của mọi commit origin/main..HEAD); đối chứng dương bộ dò tên nguồn (tên thật đọc từ DB máy thu, không in tên) bắt được một dòng giả; danh sách tên rỗng → thoát 2; --them-gia thêm tệp giả pipeline/scripts/khac.mjs thì đếm 1, thoát 1; đối chứng dương phần commit: một thông điệp giả mang tên thật thì bị bắt"
+    paths: ["pipeline/scripts/nap-s09*", "pipeline/test-nua.json", "pipeline/package.json"]
