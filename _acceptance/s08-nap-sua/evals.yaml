@@ -29,3 +29,10 @@ evals:
     expected: "exit 0; CN-1 và CN-2 ok. Chiều đỏ: gỡ tests/s08-danh-muc-nap.test.mjs khỏi nửa a thì CN-1 đỏ gọi tên tệp thiếu"
     paths: ["pipeline/test-nua.json", "pipeline/package.json", "pipeline/scripts/chia-nua.test.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s08ns_chot
+    expected: "exit 0; ℹ tests 3 · pass 3: CHOT-1 tên DB quy đúng từ mọi cách viết; CHOT-2 ma trận 5 URL bị từ chối (4 cách viết DB máy thu + 1 DB không tiền tố suite), 2 URL suite được nhận, thiếu URL bị từ chối; CHOT-3 tệp test S08 thật thoát đúng 2 với cả 5 URL, stderr có «s08-danh-muc-nap: từ chối», không in URL kèm mật khẩu. Chiều đỏ: tệp S08 bản trước (so nguyên chuỗi) — CHOT-3 đỏ «URL lọt chốt chặn: postgresql://…»"
+    paths: ["pipeline/lib/db-thu-chot.mjs", "pipeline/tests/s08-danh-muc-nap.test.mjs", "pipeline/scripts/db-thu-chot.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

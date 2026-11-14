@@ -5,7 +5,7 @@
 // Đường bộ nạp tự suy từ repo (ghi chú 1311-1b — hết biến môi trường S10_IMPORT_FILE).
 // 1311-2 MỞ LẠI: S08-2 chiều đỏ xét snapshot CÓ catalog; S08-3 đối chứng DƯƠNG snapshot CHỈ CĂN
 // thiếu 094 vẫn nạp stg_s08_inventory + ĐÁNH DẤU (hết hồi quy — importer xét coCatalogS08, không coS08DanhMuc).
-// Chặn DB (1211-29(3) sửa 1311-2): từ chối DB MÁY THU (tên 'oneinvest' trần) — chỉ nhận DB db-thu cấp.
+// Chặn DB: hàm chung pipeline/lib/db-thu-chot.mjs — danh sách cho phép theo tên DB oneinvest_suite_* (s08-nap-sua AC-5).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -13,15 +13,13 @@ import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { chotDbThu } from "../lib/db-thu-chot.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
 const NAP = join(REPO, "pipeline", "import-airbnb.mjs"); // tự suy đường bộ nạp
 const DDL_094 = readFileSync(join(REPO, "db", "migrations", "094_stg_s08_du_an.sql"), "utf8"); // 1311-1a: áp CHÍNH tệp 094
-const DB = process.env.DATABASE_URL ?? "";
-if (!DB) { console.log("s08-danh-muc-nap: bỏ qua — thiếu DATABASE_URL (chạy lẻ qua db/db-thu.sh … --chay)"); process.exit(0); }
-const tenDb = new URL(DB.replace("postgres://", "http://")).pathname.split("/").pop() ?? "";
-const mayThu = /^postgres:\/\/oneinvest:oneinvest@(localhost|127\.0\.0\.1):5433\/oneinvest$/.test(DB);
-if (mayThu) { console.error("s08-danh-muc-nap: từ chối DB máy thu — phải chạy qua db/db-thu.sh (DB thử)"); process.exit(2); }
+// Chốt chặn chung (s08-nap-sua AC-5): chỉ DB thử oneinvest_suite_*; thiếu URL thì bỏ qua như cũ.
+const DB = chotDbThu({ ten: "s08-danh-muc-nap", khiThieu: "bo-qua" });
 const pg = (await import("../node_modules/pg/lib/index.js")).default;
 const itemS08 = (ten) => ({
   source: "s08-danh-muc", sourceId: ten, kind: "project_catalog", fetchedAt: "2026-11-12T00:00:00Z",

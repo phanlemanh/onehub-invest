@@ -5,7 +5,7 @@ slug: s08-nap-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: draft
 veto_state: mo
 veto_opened_at: 2026-11-14T03:50:45Z
 design_doc: docs/superpowers/specs/2026-11-14-s08-nap-sua-design.md
@@ -35,6 +35,12 @@ căn — lượt thu S08 mất im lặng trên máy thu chưa áp 094. ZCode s�
 - AC-4: Given tệp test `pipeline/tests/s08-danh-muc-nap.test.mjs` vừa vào `npm test`, When chạy bộ canh chia
   nửa, Then hợp hai nửa của `pipeline/test-nua.json` bằng đúng tập tệp `npm test`, không thiếu, không trùng.
 
+- AC-5: Given tệp test `pipeline/tests/s08-danh-muc-nap.test.mjs` (có `DROP TABLE stg_s08_project CASCADE`), When chạy
+  nó với một `DATABASE_URL` mà tên DB không khớp `^oneinvest_suite_[a-z0-9_]+$` — gồm các cách viết khác nhau cùng trỏ DB
+  máy thu `oneinvest` (`postgresql://`, có `?sslmode=…`, host `127.0.0.1`, không mật khẩu) và DB thử không mang tiền tố
+  suite — Then tệp thoát 2 trước khi nối DB, in lý do mà không in URL; DB suite thì chạy bình thường. Chốt chặn là hàm
+  dùng chung `pipeline/lib/db-thu-chot.mjs` (nâng phạm vi ở Cổng Bằng chứng 14/11, Ngoài-1/3/4/6).
+
 ## Coverage
 
 Bỏ quét không gian — một điều kiện rẽ nhánh hai trục rời rạc, liệt tay đủ (dòng `descope` trong sổ):
@@ -44,6 +50,7 @@ Bỏ quét không gian — một điều kiện rẽ nhánh hai trục rời r�
 - Ô (chỉ căn, thiếu 094) → AC-1 · (có danh mục, thiếu 094) → AC-2 · (có danh mục, có 094) → AC-3 ·
   (chỉ căn, có 094) đi nhánh `coS08DanhMuc && coBang094` của `import-airbnb.mjs`, dòng mã không đổi ở hồ sơ này — không thêm ca đo.
 - Trục bộ test: tệp mới vào đúng một nửa → AC-4.
+- Trục an toàn DB của test: tên DB suite · DB máy thu viết nhiều cách · DB thử không tiền tố suite → AC-5.
 
 ## Out of scope
 
@@ -56,3 +63,7 @@ Bỏ quét không gian — một điều kiện rẽ nhánh hai trục rời r�
 ## Notes
 
 - Giới hạn có tên: trên CI tệp test tự bỏ qua (không có DATABASE_URL) — ba ca S08 chỉ đo ở lượt chấm trên máy; việc phụ gửi làn thu cấp DB thử cho tệp test trên CI.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-2: trên CI ba ca S08 không chạy (thiếu DATABASE_URL thì tệp tự bỏ qua) mà vẫn báo xanh; chỉ lượt chấm trên máy đo được.
+  - Ngoài-5: trùng Ngoài-2 — lỗi hồi quy nạp S08 có thể lọt qua CI.
+  - Ngoài-7: dữ liệu căn trong test viết tay, không rút từ bộ thu thật; lệch khuôn giữa thu và nạp sẽ không bị test bắt.
