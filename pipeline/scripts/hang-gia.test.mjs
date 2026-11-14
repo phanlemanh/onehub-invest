@@ -176,6 +176,9 @@ async function fixtureAc2(c) {
   await tin(c, { id: "ac2-s6c", nguon: "S06", phuong: p, m2: 60, perm2: 55 * M });   // thấy sau cùng của căn
   await tin(c, { id: "ac2-s6x", nguon: "S06", phuong: p, m2: 60, perm2: 47 * M });   // gắn hai căn
   await can(c, ["ac2-s6a", "ac2-s6b", "ac2-s6c"]);
+  // DA6 (098) thêm UNIQUE property_offers(offer_id); máy thu chưa áp 098 vẫn có tin gắn hai căn (1.853 tin đo 11/11) — mô phỏng
+  // trạng thái ấy trên DB thử để bước chấm vẫn ra một phiếu.
+  await c.query(`ALTER TABLE property_offers DROP CONSTRAINT IF EXISTS property_offers_offer_id_key`);
   await can(c, ["ac2-s6x"]);
   await can(c, ["ac2-s6x"]);
   const s03 = [44, 45, 48, 49, 51, 52, 53, 56, 58].map((x) => x * M);
