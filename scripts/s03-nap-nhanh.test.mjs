@@ -26,8 +26,8 @@ const STATE = "pipeline/logs/apify-daily.state";
 const KHOA = `${STATE}.lock`;
 const MOC_CU = "2026-10-24T000000Z";
 const MOC_MOI = "2026-10-25T000000Z";
-const NHAN_DU = ["import-airbnb", `transform-${KENH}`, "transform-media", "refresh-bait-gap", "doc-gop-hang-ngay", "enrich-run"];
-const NHAN_NHANH = NHAN_DU.slice(0, 4);
+const NHAN_DU = ["import-airbnb", `transform-${KENH}`, "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
+const NHAN_NHANH = NHAN_DU.slice(0, 5);   // CG9: xep-hang-gia chạy cả ở lượt nhanh, ngay sau refresh
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
 const DOC_GOP_GIA = '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n';
 

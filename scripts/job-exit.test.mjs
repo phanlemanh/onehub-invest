@@ -129,7 +129,7 @@ const JOBS = {
     },
     // TV2b vòng 3 (cong-tac-that): cổng vòng đời S06 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
     // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
-    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
+    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -138,7 +138,7 @@ const JOBS = {
       // mốc đúng khuôn TS_RE của tệp bọc (có gạch ngang) — khuôn cũ không gạch bị bỏ qua, import-airbnb không được gọi
       dirs: ["collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-23T000000", "pipeline/logs"],
     },
-    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap"],
+    seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap", "xep-hang-gia"],
   },
   "airdna-daily": {
     script: "scripts/airdna-daily.sh",
@@ -229,8 +229,8 @@ describe("AC-6 job_step", () => {
 
 // ------------------------------------------------------------- AC-1, AC-2 --
 for (const [ac, job, steps] of [
-  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]],
-  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap"]],
+  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties", "xep-hang-gia"]],
+  ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap", "xep-hang-gia"]],
 ]) {
   const J = JOBS[job];
   describe(`${ac} ${job}`, () => {

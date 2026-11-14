@@ -151,6 +151,7 @@ fi
 . "$ROOT/scripts/lib/job-step.sh"
 job_run apify-facebook-daily transform-fb node "$ROOT/pipeline/transform-fb.mjs"
 job_run apify-facebook-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+job_run apify-facebook-daily xep-hang-gia node "$ROOT/pipeline/xep-hang-gia.mjs"   # CG9: hạng giá sau định vị
 # 2510-4: bước thu hỏng (đã log ở đầu) — nạp + transform vẫn chạy xong ở trên,
 # giờ trả mã thu giữ lại để launchd thấy lượt có lỗi thu.
 if [ "$THU_RC" != 0 ]; then exit "$THU_RC"; fi

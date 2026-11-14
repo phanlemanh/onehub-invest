@@ -24,9 +24,9 @@ const STATE = "pipeline/logs/apify-daily.state";
 const SO_BO = "pipeline/logs/zalo-import-bo-luot.state";
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
 const DOC_GOP_GIA = '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n';
-const NHANH = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap"];
+const NHANH = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "xep-hang-gia"];
 const DEM = [...NHANH, "doc-gop-hang-ngay", "enrich-run"];
-const BA = ["transform-zalo", "transform-media", "refresh-bait-gap"];
+const BA = ["transform-zalo", "transform-media", "refresh-bait-gap", "xep-hang-gia"];
 
 const NODE_SHIM = `#!/bin/bash
 step=node

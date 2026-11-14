@@ -68,4 +68,6 @@ job_run chotot-daily transform-chotot node "$ROOT/pipeline/transform-chotot.mjs"
 job_run chotot-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S06
 job_run chotot-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 job_run chotot-daily resolve-properties node "$ROOT/pipeline/resolve-properties.mjs"
+# CG9: hạng giá chấm SAU định vị — căn S06 mới của đêm đã vào property_offers (mỗi căn một phiếu).
+job_run chotot-daily xep-hang-gia node "$ROOT/pipeline/xep-hang-gia.mjs"
 exit "$JOB_RC"
