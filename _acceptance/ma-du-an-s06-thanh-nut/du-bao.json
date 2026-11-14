@@ -1,0 +1,31 @@
+{
+  "ngay_tinh": "2026-11-14",
+  "hang": {
+    "ma": "DA32",
+    "gio_may": [
+      1.46,
+      5.87
+    ],
+    "phan_tram": 2.19
+  },
+  "moc": {
+    "ten": "Nhịp 1 — cấp dự án trên Ops",
+    "bat_dau": "2026-11-14",
+    "hoan_tat": "2026-11-15",
+    "gio_may": [
+      13.350000000000001,
+      40.519999999999996
+    ],
+    "gio_cho": 4.9799999999999995,
+    "gio_cho_do": true,
+    "muc_tieu": null,
+    "hang": [
+      "CG9",
+      "DA32",
+      "DS2",
+      "CG10",
+      "CG3",
+      "DA7"
+    ]
+  }
+}

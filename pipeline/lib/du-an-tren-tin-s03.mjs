@@ -178,7 +178,10 @@ export async function docDuLieu(client) {
                                probabilities->'o'->'project'->>'trich_ok' AS trich_ok
                           FROM silver_labels WHERE source_code = $1
                          ORDER BY post_id, labeled_at DESC, label_id DESC`, [NGUON]);
-  const nut = await q(`SELECT id, name, aliases FROM asset_nodes WHERE node_type = 'project'`);
+  // DA32 Hỏi-3: bỏ nút ứng viên do thẻ luật S06 đúc (catalog_tier mot_loi_khai) — tên S06 không tự gán dự án cho tin S03.
+  // Đọc qua to_jsonb để câu vẫn chạy trên DB chưa áp migration 100 (chưa có cột).
+  const nut = await q(`SELECT n.id, n.name, n.aliases FROM asset_nodes n
+                        WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai'`);
   const tin = await q(`SELECT offer_id, post_ids FROM sale_offer_records WHERE source = $1`, [NGUON]);
   const tangCao = await q(`SELECT subject_key, evidence_tier FROM field_assertions
                             WHERE field = $1 AND retracted_at IS NULL AND subject_key LIKE $2
