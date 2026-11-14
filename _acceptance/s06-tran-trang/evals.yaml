@@ -29,3 +29,10 @@ evals:
     question: "Tệp số đo có ghi thời gian bước thu (từ manifest) và thời gian import, transform, reassign-areas, 300 + 400 cho cả lượt 55 nghìn và lượt 16 nghìn tin kèm tải máy và việc chạy cùng; phần resolve-properties có ghi là ước lượng ngoại suy từ hộp 20 phút kèm mức sai; có giờ bắt đầu chuỗi theo lịch và giờ kết thúc dự kiến đặt cạnh 16:55Z, và kết luận rõ tổng thời gian chuỗi đêm S06 với trần mới, có lấn cửa S03 16:55Z–17:15Z không, kèm đề xuất giữ giờ, dời giờ hay chia lượt?"
     expected: "PASS khi đủ số cho hai lượt (kể cả bước thu), có giờ bắt đầu và giờ kết thúc dự kiến, và kết luận dựa trên số; thiếu bước thu, thiếu giờ bắt đầu hay kết luận không dựa trên số → FAIL"
     evidence_required: [run_id, verdict, rationale]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.s06tt_region
+    expected: "exit 0; ℹ tests 1 · pass 1: bộ nạp thoát 0, đúng hai tin thường trong stg_chotot_ads, tin thiếu region_v2 không vào, đầu ra nhắc region_v2. Chiều đỏ: bộ nạp hiện tại trên main thoát 1 (23502 NOT NULL) ở tin đầu, ca đỏ với «bộ nạp phải thoát 0 …»"
+    paths: ["pipeline/import-chotot.mjs", "_acceptance/s06-tran-trang/probes/nap-thieu-region.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -5,7 +5,9 @@ slug: s06-tran-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-11-14T09:17:16Z
 design_doc: docs/superpowers/specs/2026-11-14-s06-tran-trang-design.md
 approved_by:
 approved_at:
@@ -40,6 +42,10 @@ không thử lại (Mạnh 14/11: có API thì thu hết nhanh, bị chặn thì
   resolve-properties là ước lượng ngoại suy kèm mức sai, và kết luận: tổng thời gian chuỗi đêm S06 với trần mới, có
   lấn cửa S03 16:55Z–17:15Z không, đề xuất giữ giờ, dời giờ hay chia lượt.
 
+- AC-5: Given một snapshot S06 có một tin thiếu `region_v2` đứng trước hai tin thường, When chạy bộ nạp trên DB thử,
+  Then bộ nạp thoát 0, hai tin thường vào `stg_chotot_ads`, tin thiếu `region_v2` không vào, và đầu ra đếm tin bị bỏ
+  (bản sửa bộ nạp do làn ZCode viết theo `tin MỞ LẠI`, P2 tích hợp; phát hiện từ phép đo AC-4).
+
 ## Coverage
 
 Bỏ quét không gian (dòng `descope` trong sổ) — hai thay đổi rời nhau của bộ thu cộng một phép đo vận hành, liệt tay:
@@ -49,6 +55,7 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai thay đổi rời nh
   (403 đi chung nhánh mã với 429 theo đọc mã, chưa có ca chạy)
 - Trục bộ test: tệp mới vào đúng một nửa → AC-3
 - Trục vận hành: thời lượng chuỗi đêm theo lượng tin → AC-4
+- Trục dữ liệu lạ ở bước nạp: tin thiếu `region_v2` → AC-5; các cột NOT NULL khác không đo ở hồ sơ này
 
 ## Out of scope
 
@@ -56,7 +63,7 @@ Bỏ quét không gian (dòng `descope` trong sổ) — hai thay đổi rời nh
   plist cần lời Mạnh.
 - Ca 403 riêng và ca 5xx/lỗi mạng không thêm phép đo ở hồ sơ này.
 - Ba tệp test khác còn chặn DB kiểu danh sách cấm: hàng `test-pha-chi-chay-db-suite`.
-- Mọi đổi logic thu khác của `collect-chotot.mjs`: làn ZCode.
+- Mọi đổi logic thu khác của `collect-chotot.mjs` và logic nạp khác của `import-chotot.mjs`: làn ZCode.
 
 ## Đo
 
