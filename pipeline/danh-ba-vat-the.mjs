@@ -300,13 +300,17 @@ export async function napBangXa(c, muc) {
  * @param {import("pg").Client} c
  * @param {{ tep?: string, thu?: boolean, rut?: boolean }} [o] rut=false chỉ cho chiều đỏ của test
  */
+// Nút dự án mà tệp xã quản: bỏ nút ứng viên do thẻ luật S06 đúc (catalog_tier mot_loi_khai, xã lấy từ tin lúc đúc — DA32),
+// qua to_jsonb để câu chạy được cả trên DB chưa áp migration 100 (hồ sơ sua-xa-bo-nut-ung-vien).
+export const SQL_NUT_SUA_XA = `SELECT n.id::int AS id, n.slug, n.area_ids FROM asset_nodes n
+  WHERE n.node_type = 'project' AND (to_jsonb(n) ->> 'catalog_tier') IS DISTINCT FROM 'mot_loi_khai' ORDER BY n.slug`;
+
 export async function suaXaNut(c, { tep = TEP_XA, thu = false, rut = true } = {}) {
   const tepXa = JSON.parse(readFileSync(tep, "utf8"));
   await c.query("BEGIN");
   try {
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [KHOA_CO_VAN]);
-    const { rows: nut } = await c.query(
-      "SELECT id::int AS id, slug, area_ids FROM asset_nodes WHERE node_type = 'project' ORDER BY slug");
+    const { rows: nut } = await c.query(SQL_NUT_SUA_XA);
     const loiTep = kiemTepXa(tepXa, nut.map((n) => n.slug));
     if (loiTep.length) throw new LoiGoi(loiTep.join("; "));
     const muc = tepXa.nut;
