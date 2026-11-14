@@ -15,6 +15,7 @@ const VUNG = [
   /^pipeline\/danh-ba-vat-the\.mjs$/, /^pipeline\/lib\/danh-ba-vat-the\.mjs$/, /^_acceptance\/toa-s09-hai-khu-vao-danh-ba\//,
   /^_acceptance\/config\.yaml$/, /^docs\/superpowers\/(specs|plans)\/2026-11-13-toa-s09-hai-khu-vao-danh-ba[^/]*$/,
   /^PRODUCT-MAP\.md$/, /^LO-TRINH\.html$/,
+  /^scripts\/ops-local-dong-bang\.test\.mjs$/, // một dòng miễn DBS-AC-6 cho câu chặn trùng thẻ toà S09 (sau chữ ký, CI chân scripts)
 ];
 
 const git = (...a) => execFileSync("git", ["-C", GOC, ...a], { encoding: "utf8", maxBuffer: 1 << 28 });
