@@ -2,12 +2,13 @@
 // Áp 104 nếu chưa có, chạy bước chấm hai lần, rồi đếm độc lập bằng SQL viết riêng ở tệp này (không dùng 420):
 //   · nhóm: với mỗi khoá nhóm có trong bảng, dựng lại phiếu (căn S06 nhỏ nhất hoặc chính tin, tin thấy sau cùng) từ sale_offers +
 //     property_offers và tính lại n, trung vị → lech = số tin có n hay trung vị khác bảng;
-//   · so_khac_loai = số tin mà nhóm dựng lại chứa phiếu khác loại hình hay khác bán/thuê với tin (0 theo cấu trúc khoá);
+//   · sai_khoa = số tin được chấm mà khoá nhóm ghi trong bảng (loại hình, bán/thuê) khác chính tin ở sale_offers, hay dòng
+//     thước giá tháng mà không phải tin thuê — tức tin bị so với nhóm khác loại hay khác bán/thuê (đối chứng --doi-chung-khoa);
 //   · nhan_nhom_duoi_10 = tin có nhãn ở nhóm dưới 10 phiếu; tong_lech = số dòng bảng khác số tin đang rao;
 //   · lần hai giống lần một (so từng dòng trừ computed_at, run_id).
 // In bảng đếm bán/thuê × (có nhãn · chỉ số · từng lý do không chấm) và mẫu số; thoát 1 nêu điều kiện hỏng.
-// DB phải là DB thử oneinvest_<…> khác «oneinvest» (thoát 2). --doi-chung-hong: chấm bằng bản 420 đột biến «mỗi tin một phiếu»,
-// phép đếm phải đỏ (thoát 0 khi đỏ đúng, 1 khi không đỏ).
+// DB phải là DB thử oneinvest_<…> khác «oneinvest» (thoát 2). Hai đối chứng chấm bằng bản 420 đột biến, phép đếm phải đỏ (thoát 0
+// khi đỏ đúng, 1 khi không đỏ): --doi-chung-hong «mỗi tin một phiếu» → lech > 0; --doi-chung-khoa «ghi kind cố định 'sale'» → sai_khoa > 0.
 import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -18,6 +19,7 @@ const MIG = new URL("../../db/migrations/104_offer_price_rank.sql", import.meta.
 const DOT_MOI_TIN = [
   "coalesce((SELECT 'p:' || min(po.property_id) FROM property_offers po WHERE po.offer_id = t.offer_id),\n                  'o:' || t.offer_id) AS phieu",
   "'o:' || t.offer_id AS phieu"];
+const DOT_KHOA = ["SELECT l.offer_id, l.kind, l.property_type, l.bedrooms, l.thuoc,", "SELECT l.offer_id, 'sale', l.property_type, l.bedrooms, l.thuoc,"];
 const CHAM = `(r.ly_do IS NULL OR r.ly_do IN ('nhom-5-9', 'nhom-duoi-5', 'pn-duoi-10'))`;
 
 /** Câu đếm độc lập: dựng lại nhóm của từng khoá có trong bảng. */
@@ -48,8 +50,7 @@ WITH tin AS (
    WHERE thuoc = 'gia-thang-pn' OR pn_nhom IS NULL OR bedrooms = pn_nhom
 ), st AS (
   SELECT thuoc, nut, property_type, kind, pn_nhom, count(*)::int AS n,
-         percentile_cont(0.5) WITHIN GROUP (ORDER BY v) AS tv,
-         count(*) FILTER (WHERE loai_tv IS DISTINCT FROM property_type OR (thuoc = 'gia-m2' AND kind_tv IS DISTINCT FROM kind)) AS khac
+         percentile_cont(0.5) WITHIN GROUP (ORDER BY v) AS tv
     FROM phieu GROUP BY 1, 2, 3, 4, 5
 )
 SELECT
@@ -59,7 +60,10 @@ SELECT
   (SELECT count(*) FROM offer_price_rank r WHERE r.cap = 'phuong' AND ${CHAM}
       AND NOT EXISTS (SELECT 1 FROM st WHERE st.thuoc = r.thuoc AND st.nut = r.nut AND st.property_type = r.property_type
                        AND st.kind = r.kind AND st.pn_nhom IS NOT DISTINCT FROM r.pn_nhom))::int AS khong_dung_lai,
-  (SELECT coalesce(sum(khac), 0) FROM st)::int AS so_khac_loai,
+  (SELECT count(*) FROM offer_price_rank r JOIN sale_offers o USING (offer_id)
+    WHERE r.hang_pct IS NOT NULL
+      AND (r.kind IS DISTINCT FROM o.kind OR r.property_type IS DISTINCT FROM o.property_type
+           OR (r.thuoc = 'gia-thang-pn' AND r.kind <> 'rent_lt')))::int AS sai_khoa,
   (SELECT count(*) FROM offer_price_rank WHERE nhan IS NOT NULL AND n < 10)::int AS nhan_nhom_duoi_10,
   ((SELECT count(*) FROM offer_price_rank) - (SELECT count(*) FROM sale_offers))::int AS tong_lech`;
 
@@ -79,12 +83,14 @@ async function main() {
     return 2;
   }
   const hong = process.argv.includes("--doi-chung-hong");
+  const khoa = process.argv.includes("--doi-chung-khoa");
   const c = new pg.Client({ connectionString: url });
   await c.connect();
   try {
     await c.query(readFileSync(MIG, "utf8"));
-    const sql = hong ? SQL_420.split(DOT_MOI_TIN[0]).join(DOT_MOI_TIN[1]) : SQL_420;
-    if (hong && sql === SQL_420) throw new Error("đột biến rỗng — không thấy chuỗi phiếu trong 420");
+    const dot = hong ? DOT_MOI_TIN : khoa ? DOT_KHOA : null;
+    const sql = dot ? SQL_420.split(dot[0]).join(dot[1]) : SQL_420;
+    if (dot && sql === SQL_420) throw new Error("đột biến rỗng — không thấy chuỗi cần thay trong 420");
     const t0 = Date.now();
     await xepHangGia(c, { sql, log: () => {} });
     const giay1 = (Date.now() - t0) / 1000;
@@ -98,13 +104,14 @@ async function main() {
     console.log(`bước chấm: ${giay1.toFixed(1)} giây/lượt`);
     console.log("bảng đếm (kind · ô · số tin):");
     for (const r of bang) console.log(`  ${r.kind} · ${r.o} · ${r.n}`);
-    const dk = { lech: d.lech, khong_dung_lai: d.khong_dung_lai, so_khac_loai: d.so_khac_loai, nhan_nhom_duoi_10: d.nhan_nhom_duoi_10,
+    const dk = { lech: d.lech, khong_dung_lai: d.khong_dung_lai, sai_khoa: d.sai_khoa, nhan_nhom_duoi_10: d.nhan_nhom_duoi_10,
       tong_lech: d.tong_lech, lan_hai_khac: anh1 === anh2 ? 0 : 1 };
     for (const [k, v] of Object.entries(dk)) console.log(`${k}=${v}`);
     const sai = Object.entries(dk).filter(([, v]) => v !== 0).map(([k]) => k);
-    if (hong) {
-      console.log(sai.includes("lech") ? "đối chứng hỏng: đỏ đúng (lech > 0)" : "đối chứng hỏng: KHÔNG đỏ");
-      return sai.includes("lech") ? 0 : 1;
+    if (dot) {
+      const can = hong ? "lech" : "sai_khoa";
+      console.log(sai.includes(can) ? `đối chứng ${hong ? "hỏng" : "khoá"}: đỏ đúng (${can} > 0)` : `đối chứng ${hong ? "hỏng" : "khoá"}: KHÔNG đỏ`);
+      return sai.includes(can) ? 0 : 1;
     }
     console.log(sai.length ? `KẾT: hỏng — ${sai.join(", ")}` : "KẾT: đạt");
     return sai.length ? 1 : 0;

@@ -1,5 +1,5 @@
 // hang-gia-doc.test.tsx — hồ sơ bang-hang-gia-m2 (CG9), ca xuyên lớp AC-6 (/ops/deals) và AC-7 (/api/v1/deals của app, /v1/deals
-// của data-api). DB thử trống dựng từ db/migrations của nhánh (pipeline/scripts/hang-gia-fixture.mjs), chấm bằng chính bước chấm
+// của data-api). DB thử trống dựng từ db/migrations của nhánh (pipeline/scripts/hang-gia-fixture.itest.mjs), chấm bằng chính bước chấm
 // (xepHangGia); số kỳ vọng đọc thẳng từ offer_price_rank bằng SQL viết riêng, không dùng mã đọc của hàng. Hai route đọc qua `pool`
 // → trong ca, pool.query trỏ vào client của DB thử. Hàm thuần (lyDoRoi, cauChungMinh) có ma trận chữ viết trước.
 import { after, before, test } from "node:test";
@@ -21,7 +21,7 @@ const ngoai = (rel: string) => import(pathToFileURL(join(import.meta.dirname, re
 process.env.DATABASE_URL ??= process.env.CI ? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" : "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_suite_cg9_doc_khong_dung";
 
 const nap = async () => ({
-  fx: await ngoai("../../pipeline/scripts/hang-gia-fixture.mjs"),
+  fx: await ngoai("../../pipeline/scripts/hang-gia-fixture.itest.mjs"),
   xep: (await ngoai("../../pipeline/xep-hang-gia.mjs")).xepHangGia as (c: pg.Client, o?: object) => Promise<unknown>,
   deals: await import("../src/lib/deals"),
   pool: (await import("../src/lib/db")).pool,
@@ -41,6 +41,8 @@ before(async () => {
   await m.xep(co.c, { log: () => {} });
   await m.fx.fixtureDoc(rong.c);   // có 104 nhưng chưa chấm lượt nào
   await m.fx.fixtureDoc(khong.c);  // chưa áp 104
+  await m.fx.fixtureCg8(rong.c);   // dữ liệu thước CG8 để lối lùi có dòng thật
+  await m.fx.fixtureCg8(khong.c);
 });
 after(async () => {
   for (const d of Object.values(db)) await d.dong();
@@ -72,7 +74,13 @@ test("CG9-AC-6 dealsSql: đúng tập tin bán có nhãn (P1 và P2), thứ tự
   const { c } = db.co;
   const b = await bang(c);
   const { rows } = await c.query(m.deals.dealsSql({ coBang: true }), [5, 100]);
-  const ky = [...b.values()].filter((r) => r.kind === "sale" && r.nhan && Number(r.duoi_trung_vi_pct) >= 5 && Number(r.duoi_trung_vi_pct) <= 50);
+  const cu = new Set((await c.query(`SELECT offer_id FROM sale_offers WHERE last_seen < now() - interval '45 days'`)).rows.map((r) => r.offer_id));
+  const ky = [...b.values()].filter((r) => r.kind === "sale" && r.nhan && Number(r.duoi_trung_vi_pct) >= 5 && Number(r.duoi_trung_vi_pct) <= 50
+    && !cu.has(r.offer_id));
+  // Ma trận rời danh sách: hai tin có nhãn nhưng phải vắng — rẻ quá 50% và quá 45 ngày (đối chứng: cả hai có nhãn trong bảng).
+  const qua50 = b.get("doc-a2-qua-50")!, quaHan = b.get("doc-a2-qua-han")!;
+  assert.ok(qua50.nhan && Number(qua50.duoi_trung_vi_pct) > 50, `doc-a2-qua-50 phải có nhãn và dưới trung vị > 50%: ${JSON.stringify(qua50)}`);
+  assert.ok(quaHan.nhan && cu.has("doc-a2-qua-han"), "doc-a2-qua-han phải có nhãn và quá 45 ngày");
   ky.sort((x, y) => Number(x.can_xac_minh) - Number(y.can_xac_minh) || Number(y.duoi_trung_vi_pct) - Number(x.duoi_trung_vi_pct) || x.offer_id.localeCompare(y.offer_id));
   assert.deepEqual(rows.map((r) => r.offer_id), ky.map((r) => r.offer_id), "tập và thứ tự danh sách = tin bán có nhãn của bảng");
   assert.ok(rows.some((r) => r.source === "S06"), "tin S06 (P2) vào danh sách — gánh CG2");
@@ -84,6 +92,9 @@ test("CG9-AC-6 dealsSql: đúng tập tin bán có nhãn (P1 và P2), thứ tự
     assert.equal(so(r.median_perm2), so(k.trung_vi), `${r.offer_id}: trung vị = bảng`);
   }
   assert.equal(rows.at(-1)?.offer_id, "doc-a1-0", "tin cần xác minh đứng cuối");
+  const ids = rows.map((r) => r.offer_id);
+  assert.ok(!ids.includes("doc-a2-qua-50"), "tin rẻ quá 50% rời danh sách (trần cũ, Hỏi-2)");
+  assert.ok(!ids.includes("doc-a2-qua-han"), "tin quá 45 ngày rời danh sách");
 });
 
 test("CG9-AC-6 trang một căn: cauChungMinh N = n của bảng, «cùng 2PN», nhãn, cặp «Cần xác minh»; đột biến N = số tin đỏ", async () => {
@@ -138,7 +149,7 @@ test("CG9-AC-6 bảng chưa có hoặc rỗng: dealsSql/getDeals/getDeal đọc 
     const { c } = db[k];
     assert.equal(await quaClient(c, () => m.deals.coBangHang()), false, `${k}: coBangHang phải false`);
     const ds = await quaClient(c, () => m.deals.getDeals());
-    assert.ok(Array.isArray(ds.rows), `${k}: getDeals trả mảng`);
+    assert.deepEqual(ds.rows.map((r) => r.offerId).sort(), ["doc-a1-2", "doc-a1-3"], `${k}: getDeals đọc thước CG8 — đúng hai tin P1 có số giảm`);
     assert.ok(ds.rows.every((r) => r.rank == null), `${k}: không có khối hạng khi đọc thước CG8`);
     const mot = await quaClient(c, () => m.deals.getDeal("doc-a1-1"));
     assert.equal(mot.deal, null, `${k}: thước CG8 chỉ mở tin P1 — tin S06 không mở`);
@@ -189,15 +200,20 @@ test("CG9-AC-7 /v1/deals data-api: kind vắng/sale/rent_lt, số = bảng, trư
   const thue = await goi("kind=rent_lt&limit=100&min_discount=0");
   kiemRank(thue.body.data, b, "rent_lt", "data-api kind=rent_lt");
   assert.ok(vang.body.data.every((r) => !r.offerId.startsWith("doc-a4")), "tin thuê chỉ có khi kind=rent_lt");
-  assert.deepEqual((await goi("area=cg9-a2&limit=100&min_discount=0")).body.data.map((r) => r.offerId).every((id) => id.startsWith("doc-a2")), true);
+  const theoPhuong = (await goi("area=cg9-a2&limit=100&min_discount=0")).body.data;
+  assert.ok(theoPhuong.length > 0 && theoPhuong.length < vang.body.data.length, `lọc area: có dòng và ít hơn cả danh sách (${theoPhuong.length})`);
+  assert.ok(theoPhuong.every((r) => r.offerId.startsWith("doc-a2")), "lọc area: chỉ tin phường a2");
   assert.equal((await goi("market=cg9-tinh&limit=100&min_discount=0")).body.data.length, vang.body.data.length);
   assert.equal((await goi("limit=1&min_discount=0")).body.data.length, 1);
-  assert.ok((await goi("limit=100&min_discount=15")).body.data.every((r) => r.discountPct >= 15));
+  const tu15 = (await goi("limit=100&min_discount=15")).body.data;
+  assert.ok(tu15.length > 0 && tu15.length < vang.body.data.length, `lọc min_discount: có dòng và ít hơn cả danh sách (${tu15.length})`);
+  assert.ok(tu15.every((r) => r.discountPct >= 15), "lọc min_discount: mọi dòng từ 15%");
   assert.equal((await goi("kind=xyz")).status, 400);
   for (const k of ["khong", "rong"]) {
     const res = (await quaClient(db[k].c, () => m.dealsRoute.request("/?limit=100&min_discount=0"))) as Response;
     assert.equal(res.status, 200, `data-api ${k}: bảng thiếu/rỗng vẫn 200`);
     const j = (await res.json()) as { data: Dong[] };
+    assert.ok(j.data.length > 0, `data-api ${k}: lối lùi CG8 phải có dòng (fixtureCg8)`);
     assert.ok(j.data.every((r) => r.rank === undefined), `data-api ${k}: đọc thước CG8, không khối rank`);
   }
 });
@@ -220,6 +236,7 @@ test("CG9-AC-7 /api/v1/deals app (token ops): kind, số = bảng, trường cũ
     for (const k of ["khong", "rong"]) {
       const r = await goi("limit=100&min_discount=0", db[k].c);
       assert.equal(r.status, 200, `app ${k}: 200`);
+      assert.ok(r.body.data.length > 0, `app ${k}: lối lùi CG8 phải có dòng (fixtureCg8)`);
       assert.ok(r.body.data.every((x) => x.rank === undefined), `app ${k}: đọc thước CG8`);
     }
   } finally {

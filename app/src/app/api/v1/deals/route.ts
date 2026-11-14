@@ -4,6 +4,7 @@ import { pool } from "@/lib/db";
 import { THUOC_CUNG_LOAI, coBangHang } from "@/lib/deals";
 import { giaiMaKhuVuc } from "@/lib/ma-thi-truong";
 import { canCallOpsApi } from "@/lib/ops-access";
+import { KIND } from "@/lib/vocab.generated";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,11 @@ export async function GET(req: Request) {
   }
   const u = new URL(req.url);
   const rawKind = u.searchParams.get("kind");
-  if (rawKind !== null && rawKind !== "sale" && rawKind !== "rent_lt") {
-    return NextResponse.json({ error: "kind phải là sale hoặc rent_lt" }, { status: 400 });
+  const kinds: string[] = Object.values(KIND);
+  if (rawKind !== null && !kinds.includes(rawKind)) {
+    return NextResponse.json({ error: `kind phải là một trong ${kinds.join(", ")}` }, { status: 400 });
   }
-  const kind = rawKind ?? "sale";
+  const kind = rawKind ?? KIND.sale;
   const rawMarket = u.searchParams.get("market");
   // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
   const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;

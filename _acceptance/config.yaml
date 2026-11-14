@@ -310,7 +310,7 @@ executors:
     cg8_cloud_view: "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"   # can-gia-tot-cung-loai E10 — chỉ SELECT qua Management API: định nghĩa v_ruler_p2 cloud = máy thu, đủ bốn loại
     cg9_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs"   # bang-hang-gia-m2 E1–E5 — DB của riêng lượt (chuỗi migration của nhánh), ma trận viết trước, đột biến đỏ
     cg9_doc: "cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx"   # bang-hang-gia-m2 E6, E7 — /ops/deals, /api/v1/deals, /v1/deals đọc offer_price_rank trên DB của riêng lượt
-    cg9_sync: "cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --base origin/main"   # bang-hang-gia-m2 E8 — cloud giả có/không bảng; diff không đổi bait_gap_pct, không tên nguồn
+    cg9_sync: "cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main"   # bang-hang-gia-m2 E8 — cloud giả có/không bảng; diff không đổi bait_gap_pct, không tên nguồn
     cg9_do: "bash pipeline/scripts/hang-gia-db.sh do"   # bang-hang-gia-m2 E9 — DB thử chép từ DB máy thu, áp 104, chấm hai lần, đếm độc lập
     sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     dbvx_giu: "node _acceptance/dbv-itest-xanh-lai-tren-main/probes/giu.mjs"   # dbv-itest-xanh-lai-tren-main AC-3 — diff chỉ chạm tệp kiểm, không assert nào bị sửa

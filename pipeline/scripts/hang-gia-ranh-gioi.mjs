@@ -3,7 +3,7 @@
 // không in tên). Đếm cả tệp chưa theo dõi trong cây làm việc. Danh sách tên rỗng → thoát 1 (không soát được thì không cho qua).
 //   node pipeline/scripts/hang-gia-ranh-gioi.mjs --base origin/main
 //   node pipeline/scripts/hang-gia-ranh-gioi.mjs --doi-chung   hai cây tạm: sửa refresh-bait-gap → bait_gap_doi=1; thêm dòng mang
-//                                                               tên giả → ten_nguon=1; cả hai phải thoát 1
+//                                                               tên giả → ten_nguon=1; đỏ đúng cả hai thì thoát 0
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -91,7 +91,7 @@ async function main() {
     const d2 = dem({ ...cayTam((t) => writeFileSync(join(t, "moi.mjs"), `const x = "${tenNguon[0]}";\n`)), tenNguon });
     const ok = d1.bait_gap_doi === 1 && d2.ten_nguon === 1;
     console.log(`doi-chung: bait_gap_doi=${d1.bait_gap_doi} ten_nguon=${d2.ten_nguon} → ${ok ? "đỏ đúng" : "KHÔNG đỏ"}`);
-    return ok ? 1 : 2;
+    return ok ? 0 : 1;   // thoát 0 khi phép đo đỏ đúng ở cả hai cây tạm — để lệnh nghiệm thu nối được bằng &&
   }
   const i = a.indexOf("--base");
   const root = git(process.cwd(), "rev-parse", "--show-toplevel").trim();

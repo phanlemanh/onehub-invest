@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { PLAUSIBILITY, implausibleReason } from "./lib/deal-plausibility.mjs";
+import { PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -20,7 +21,7 @@ export const SQL_420 = readFileSync(new URL("./sql/420_price_rank.sql", import.m
 export const KHOA_XEP_HANG = "SELECT pg_advisory_xact_lock(hashtext('xep-hang-gia'))";
 
 /** Loại hình mà diện tích ghi trên tin là diện tích sàn của chính căn — luật «phòng quá nhỏ» chỉ đúng nghĩa ở đây. */
-export const LOAI_DIEN_TICH_SAN = new Set(["apartment", "room"]);
+export const LOAI_DIEN_TICH_SAN = new Set([PROPERTY_TYPE.apartment, PROPERTY_TYPE.room]);
 
 /**
  * Lý do phi lý ON11 của một tin cho bước chấm. Tin không có diện tích không bị coi là phi lý ở đây: tin thuê thiếu m² được so

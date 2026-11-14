@@ -63,7 +63,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.cg9_sync
     paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, pipeline/scripts/hang-gia*]
-    expected: "Ca CG9-AC-8: cloud giả có offer_price_rank → chép đúng dòng của tin sống, cột chép không gồm cột lộ tên nguồn; cloud giả thiếu bảng → một dòng «bỏ qua offer_price_rank» và các bảng khác vẫn chép (đối chứng: thiếu một bảng cũ thì vẫn lỗi như trước); quét diff so origin/main: ca CG8 (refresh-bait-gap) không đổi, 0 dòng thêm chứa tên nguồn thật"
+    expected: "Ca CG9-AC-8: cloud giả có offer_price_rank → chép đúng dòng của tin sống, cột chép không gồm cột lộ tên nguồn; cloud giả thiếu bảng → một dòng «bỏ qua offer_price_rank» và các bảng khác vẫn chép (đối chứng: thiếu một bảng cũ thì vẫn lỗi như trước); đối chứng --doi-chung của công cụ rà (hai cây tạm: sửa refresh-bait-gap, thêm dòng mang tên nguồn giả) đỏ đúng; quét diff so điểm tách nhánh: refresh-bait-gap không đổi, 0 dòng thêm (cả tệp chưa theo dõi) chứa tên nguồn thật"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-9
@@ -71,7 +71,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.cg9_do
     paths: [db/migrations/104_*, pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/scripts/hang-gia*]
-    expected: "Bản chép DB máy thu, áp 104, chấm hai lần: bảng đếm bán/thuê × (có nhãn · chỉ số · từng lý do không chấm) khớp phép đếm SQL viết riêng (lech=0), lần hai = lần một, nhan_nhom_duoi_10=0, so_khac_loai=0; in mẫu số; thoát khác 0 khi một điều kiện hỏng, nêu điều kiện; đối chứng --doi-chung-hong (đếm mỗi tin một phiếu) đỏ"
+    expected: "Bản chép DB máy thu, áp 104, chấm hai lần: bảng đếm bán/thuê × (có nhãn · chỉ số · từng lý do không chấm) khớp phép đếm SQL viết riêng (lech=0), lần hai = lần một, nhan_nhom_duoi_10=0, sai_khoa=0 (khoá nhóm trong bảng = loại hình, bán/thuê của chính tin); in mẫu số; thoát khác 0 khi một điều kiện hỏng, nêu điều kiện; hai đối chứng đỏ đúng: --doi-chung-hong (mỗi tin một phiếu → lech > 0), --doi-chung-khoa (ghi kind cố định → sai_khoa > 0)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-10
