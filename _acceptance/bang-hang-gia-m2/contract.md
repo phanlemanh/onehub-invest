@@ -5,7 +5,7 @@ slug: bang-hang-gia-m2
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-bang-hang-gia-m2-design.md
@@ -101,3 +101,9 @@ thuê, P1 lẫn P2, mỗi căn một phiếu; `/ops/deals` và hai API đọc b�
 ## Notes
 
 - Bước chấm đêm là bước `xep-hang-gia` riêng trong ba job đêm, sau bước định vị (AC-11); DB chưa áp 104 thì in một dòng «chưa áp 104», không lỗi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-15:
+  - Ngoài-1: Phép thử lối lùi CG8 dùng số giảm điền tay, nên nếu bước tính số giảm cũ đổi cách tính thì phép thử không báo.
+  - Ngoài-3: Tệp cấu hình chạy thử dùng chung `.claude/launch.json` bị định dạng lại toàn tệp, có thể xung đột khi gộp với nhánh khác.
+  - Ngoài-4: Khi bảng hạng giá chưa có hay rỗng, API của app trả tin bán cho yêu cầu tin thuê (`kind=rent_lt`) mà không báo.
+  - Ngoài-5: API công khai `data-api` có cùng lối lùi: chưa có bảng hạng giá thì hỏi tin thuê nhận tin bán.
+  - Ngoài-6: Tin chưa kịp chấm hạng hiện lý do sai «phường chưa đủ tin để dựng thước» tới lần chấm đêm kế tiếp.

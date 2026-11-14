@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 98722352bd4cfa31cd42c1a443bb0ef9dcf063a3
-human_signoff:
+human_signoff: Mạnh 2026-11-15
 ---
 
 # Evidence Report: bang-hang-gia-m2
@@ -133,7 +133,7 @@ human_signoff:
   run_id: minted-bang-hang-gia-m2-E10-r1
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-14T07:14:55Z
   carried_from_round: 1
   screenshot: evidence/E10-step1.png
