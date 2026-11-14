@@ -14,6 +14,7 @@ import pg from "pg";
 import { dung } from "../danh-ba-vat-the.mjs";
 import { CAU_CHEN_S09_ITEM, NOI_KHU_S09, dongItemS09 } from "../lib/s09-du-an.mjs";
 import { khoaNhomThat } from "../lib/eval-labels.mjs";
+import { ASSERTION_FIELD, PROPERTY_TYPE } from "../lib/vocab.generated.mjs";
 
 const GOC = join(import.meta.dirname, "../..");
 const MAY = "postgres://oneinvest:oneinvest@localhost:5433";
@@ -49,7 +50,7 @@ const chuan = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").re
   .replace(/(\d)\s+(?=\d)/g, "$1.").replace(/[\s\-_]+/g, "").toUpperCase();
 /** Tên toà nêu trong phát biểu: block_raw nguyên; unit_number lấy phần trước dấu ngăn cuối («S1.01-1205» → «S1.01»). */
 const tenNeu = (field, v) => {
-  if (field === "block_raw") return chuan(v);
+  if (field === ASSERTION_FIELD.block_raw) return chuan(v);
   const m = String(v ?? "").trim().match(/^(.+?)[\s\-_/]+[0-9]{2,5}[A-Za-z]?$/);
   return m ? chuan(m[1]) : null;
 };
@@ -95,9 +96,10 @@ async function thuoc(c, khuSlugs) {
     SELECT fa.subject_key, fa.field, fa.value, p.conversation_id
       FROM field_assertions fa
       JOIN stg_zalo_posts p ON fa.subject_key = 'S03:' || p.post_id
-     WHERE fa.resource_name = 'Property' AND fa.field IN ('block_raw', 'unit_number') AND fa.retracted_at IS NULL
-       AND EXISTS (SELECT 1 FROM field_assertions t WHERE t.subject_key = fa.subject_key AND t.field = 'property_type'
-                     AND t.value = 'apartment' AND t.retracted_at IS NULL)`);
+     WHERE fa.resource_name = 'Property' AND fa.field = ANY($1) AND fa.retracted_at IS NULL
+       AND EXISTS (SELECT 1 FROM field_assertions t WHERE t.subject_key = fa.subject_key AND t.field = $2
+                     AND t.value = $3 AND t.retracted_at IS NULL)`,
+    [[ASSERTION_FIELD.block_raw, ASSERTION_FIELD.unit_number], ASSERTION_FIELD.property_type, PROPERTY_TYPE.apartment]);
   const ra = Object.fromEntries(khuSlugs.map((s) => [s, { bai_co_ten: new Set(), gan_toa: new Set(), chi_vung: new Set() }]));
   const neu = new Map(); // bài → {slug, ten:Set}
   for (const r of pb) {
