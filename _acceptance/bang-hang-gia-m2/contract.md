@@ -5,7 +5,7 @@ slug: bang-hang-gia-m2
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui, api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-bang-hang-gia-m2-design.md

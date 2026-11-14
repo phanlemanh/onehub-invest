@@ -4,43 +4,121 @@
     {
       "name": "app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3456"],
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3456"
+      ],
       "port": 3456
     },
     {
       "name": "app-3460",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3460"],
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3460"
+      ],
       "port": 3460
     },
     {
       "name": "app-3460-worktree",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["SNAPSHOTS_DIR=../../../../collector/snapshots", "npm", "--prefix", "app", "run", "dev", "--", "-p", "3460"],
+      "runtimeArgs": [
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3460"
+      ],
       "port": 3460
     },
     {
       "name": "app-3461",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3461"],
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3461"
+      ],
       "port": 3461
     },
     {
       "name": "app-3462-do1",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_do1", "SNAPSHOTS_DIR=../../../../collector/snapshots", "npm", "--prefix", "app", "run", "dev", "--", "-p", "3462"],
+      "runtimeArgs": [
+        "DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_do1",
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3462"
+      ],
       "port": 3462
     },
     {
       "name": "app-3463-do3",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_do3", "SNAPSHOTS_DIR=../../../../collector/snapshots", "npm", "--prefix", "app", "run", "dev", "--", "-p", "3463"],
+      "runtimeArgs": [
+        "DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_do3",
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3463"
+      ],
       "port": 3463
+    },
+    {
+      "name": "app-3464-cg9",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u1_cg9",
+        "SNAPSHOTS_DIR=../../../../collector/snapshots",
+        "npm",
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3464"
+      ],
+      "port": 3464
     },
     {
       "name": "data-api",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "data-api", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "data-api",
+        "run",
+        "dev"
+      ],
       "port": 3001
     }
   ]
