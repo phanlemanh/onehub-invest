@@ -68,12 +68,19 @@ async function loadRegions() {
 }
 // cg=1000 nhà đất | cg=1010 căn hộ; st=s bán | st=u thuê (type từng ad là
 // chân lý — feed chỉ quyết định page nào duyệt).
-const FEEDS = [
-  { cg: 1000, st: "s", note: "nhà đất bán" },
-  { cg: 1010, st: "s", note: "căn hộ bán" },
-  { cg: 1000, st: "u", note: "nhà đất thuê" },
-  { cg: 1010, st: "u", note: "căn hộ thuê" },
-];
+// 1411-14/16 «S06 đi API»: --khong-loc (hoặc CHOTOT_KHONG_LOC=1) — thu KHÔNG truyền
+// cg/st (một lượt vùng thay vì 4 feed): feed cấu hình hẹp cho ra ít tin (~135 HP) trong
+// khi API không-lọc trả tổng ~7.333 tin HP; category/type từng ad vẫn đầy đủ trong
+// payload nên importer/transform không cần đổi. meta.khongLoc đánh dấu chế độ.
+const KHONG_LOC = process.argv.includes("--khong-loc") || process.env.CHOTOT_KHONG_LOC === "1";
+const FEEDS = KHONG_LOC
+  ? [{ cg: null, st: null, note: "khong-loc" }]
+  : [
+      { cg: 1000, st: "s", note: "nhà đất bán" },
+      { cg: 1010, st: "s", note: "căn hộ bán" },
+      { cg: 1000, st: "u", note: "nhà đất thuê" },
+      { cg: 1010, st: "u", note: "căn hộ thuê" },
+    ];
 
 const UAS = [
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
@@ -98,7 +105,9 @@ async function fetchPage(vung, feed, page) {
   // 0111-2: vung mang `region` (mã tỉnh) hoặc `region_v2` (mã phường cũ) —
   // đúng một tham số khu vực lên API theo chế độ của vùng.
   const vungQs = vung.region !== undefined ? `region=${vung.region}` : `region_v2=${vung.region_v2}`;
-  const url = `${API}?${vungQs}&cg=${feed.cg}&st=${feed.st}&o=${page * LIMIT}&page=${page}&limit=${LIMIT}&key_param_included=true`;
+  // --khong-loc: không truyền cg/st — lấy toàn bộ loại hình vùng này.
+  const feedQs = feed.cg ? `&cg=${feed.cg}&st=${feed.st}` : "";
+  const url = `${API}?${vungQs}${feedQs}&o=${page * LIMIT}&page=${page}&limit=${LIMIT}&key_param_included=true`;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const res = await fetch(url, { headers: { "user-agent": ua(), accept: "application/json" } });
@@ -196,7 +205,7 @@ async function main() {
             payload: ad,
             // 0111-2: meta mang đúng chế độ mã của vùng — `region` (tỉnh) hoặc
             // `region_v2` (phường cũ); importer lấy a.region_v2 từ payload trước.
-            meta: { city: region.cityCode, ...("region" in region ? { region: region.region } : { region_v2: region.region_v2 }), cg: feed.cg, st: feed.st, page },
+            meta: { city: region.cityCode, ...("region" in region ? { region: region.region } : { region_v2: region.region_v2 }), ...(feed.cg ? { cg: feed.cg, st: feed.st } : { khongLoc: true }), page },
           });
         }
         feedCount += ads.length;
