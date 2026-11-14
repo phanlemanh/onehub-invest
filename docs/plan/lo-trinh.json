@@ -4,6 +4,53 @@
   "ghi_chu": "Thêm việc bằng skill cắt lượt (/acceptance-gate:cat-luot), hoặc viết hàng theo khuôn skills/acceptance/references/lo-trinh-template.json của gói acceptance-gate; mở vòng bằng /feature-loop:feature-loop <mã>.",
   "moc": [
     {
+      "ma": "MN1",
+      "ten": "Nhịp 1: người vận hành chọn một dự án trên Ops và thấy căn xếp theo hạng giá",
+      "ten_ngan": "Nhịp 1 — cấp dự án trên Ops",
+      "loai": "phat-hanh",
+      "dot": "mo-neo-1411",
+      "hang": [
+        "CG9",
+        "DA32",
+        "DS2",
+        "CG10",
+        "CG3",
+        "DA7"
+      ],
+      "ghi_chu": "Mạnh chốt 14/11 (QĐ9, ROADMAP §3 mục 48). Thứ tự hàng là thứ tự làm: CG9 → DA32 → DS2 → CG10 → CG3; DA32 chạy song song CG9 và là đường găng nối dự án S06. DA7 thuộc mốc nhưng rời đường găng (GS quyết 14/11): chạy song song, nâng chất lượng nối. DV6 (đã gộp; ghi thật là lời của Mạnh) và DA6 (đã gộp #446) nằm dưới. Đích số 14/11: khoảng 5.000 tin bán và 6.700 tin thuê xếp hạng ở cấp dự án."
+    },
+    {
+      "ma": "MN2",
+      "ten": "Nhịp 2: chọn một toà ở Ocean Park 1 hay Grand Park và thấy căn xếp hạng",
+      "ten_ngan": "Nhịp 2 — cấp toà ở hai khu",
+      "loai": "phat-hanh",
+      "dot": "mo-neo-1411",
+      "hang": [
+        "DA31",
+        "DA34",
+        "PL35",
+        "PL20",
+        "CG11"
+      ],
+      "ghi_chu": "Mạnh chốt 14/11 (QĐ6, QĐ9). Thứ tự: DA31 → PL35 → PL20 (nhịp toà) → CG11; DA34 sau DA31, song song PL35. GC1 (đọc số m² bị sót) đã ký 05/11. Bắt đầu cùng lúc nhịp 1 (không chồng vùng), nối vào CG11 khi CG10 xong. Đích 14/11: Ocean Park 1 bán từ 492 tin trong 18 toà; tỉ lệ tên toà khớp danh bạ từ 51% lên theo số DA31."
+    },
+    {
+      "ma": "MN3",
+      "ten": "Nhịp 3: lọc tầng, mở ra ngoài hai khu và căn giá tốt lên Invest",
+      "ten_ngan": "Nhịp 3 — tầng, S16, Invest",
+      "loai": "phat-hanh",
+      "dot": "mo-neo-1411",
+      "hang": [
+        "DA33",
+        "PL36",
+        "CG12",
+        "CG7",
+        "CG14",
+        "DA13"
+      ],
+      "ghi_chu": "Mạnh chốt 14/11 (QĐ3, QĐ7, QĐ9). CG7, CG14 không còn chờ CG5 → CG6 (máy tự hiện, chưa dựng rào); CG5, CG6, CG13 song song khi có người gọi. DA33 chờ làn thu giao bản thu S16."
+    },
+    {
       "ma": "GCM1",
       "ten": "Việc đầu tiên sau 05/11: tin căn hộ S03 gắn được toà hoặc trục, diện tích suy ra hiện có nhãn, bắt đầu từ Ocean Park",
       "loai": "phat-hanh",
@@ -459,9 +506,9 @@
     },
     {
       "ma": "PL20",
-      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park được gắn vào Danh bạ ở mức sâu nhất biết được, trục hoặc căn, bằng một phát biểu trường căn",
+      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park được gắn vào toà của Danh bạ (hoặc phân khu khi bài chỉ nêu phân khu) bằng một phát biểu trường toà; trục và căn là nhịp sau (PL36)",
       "vai": "nen",
-      "tieu_chi": 10,
+      "tieu_chi": 9,
       "vi_sao": "§0.2 D-3: ghép căn là phát biểu; D1/D3.",
       "hang": "T2",
       "dung_tren": [
@@ -472,13 +519,37 @@
         "PL35"
       ],
       "slug": "ghep-tin-vao-danh-muc",
-      "bat_khi": "Trên tập test: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A",
+      "bat_khi": "Trên tập test đóng băng của PL35: cận dưới Wilson của gắn toà đạt ngưỡng nhóm A; số tin hai khu gắn được toà trước, sau khớp phép đếm độc lập; 0 tin gắn hai toà; chạy lại không đổi",
       "nhom": "danh-muc",
       "dot": "phan-loai-2310",
       "phu": [
         "C2.7"
       ],
-      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1. Sửa 13/11 (no-cat-hang-1311): dung_tren bỏ PL13, thêm DA31 (toà S09 hai khu), DV6 (dự án trên tin S03 từ nhóm và tên) và PL35 (tập nhãn) — số đo S1 12/11: chữ bài đã ra tên toà, mã căn đủ dày từ đọc gộp, nút cổ chai là danh bạ thiếu toà, sổ nhóm chưa gắn dự án và chưa có tập test nhãn người."
+      "ghi_chu": "Mạnh chốt 03/11: gắn vào Danh bạ (DB1), mở lát sang Grand Park. docs/superpowers/specs/2026-11-03-danh-ba-xac-nhan-toan-quoc-design.md. Mạnh chốt 04/11: chuỗi này làm đầu tiên sau 05/11, bắt đầu từ Ocean Park (mốc GCM1, docs/plan/pham-vi-gan-can-s03-0411.md). Mức gắn theo ADR-0016 §5; Grand Park phần lớn chỉ tới toà, tín hiệu ngoài chữ bài ở mục chờ GCH1. Sửa 13/11 (no-cat-hang-1311): dung_tren bỏ PL13, thêm DA31 (toà S09 hai khu), DV6 (dự án trên tin S03 từ nhóm và tên) và PL35 (tập nhãn) — số đo S1 12/11: chữ bài đã ra tên toà, mã căn đủ dày từ đọc gộp, nút cổ chai là danh bạ thiếu toà, sổ nhóm chưa gắn dự án và chưa có tập test nhãn người. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ6 chia hai nhịp — hàng này giữ slug và là nhịp toà (đủ cho CG11); trục và căn chuyển sang PL36. Tên hàng cũ «mức sâu nhất, trục hoặc căn» thành của PL36."
+    },
+    {
+      "ma": "PL36",
+      "slug": "ghep-tin-vao-truc-can",
+      "dot": "mo-neo-1411",
+      "nhom": "danh-muc",
+      "phu": [
+        "M2"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "PL20"
+      ],
+      "cau_giao": "Tin căn hộ cao tầng Ocean Park 1 và Grand Park đã gắn toà được gắn tiếp vào trục hoặc căn của Danh bạ ở mức sâu nhất biết được, bằng một phát biểu trường căn, và tầng suy từ mã căn khi tin không ghi tầng",
+      "bat_khi": "Trên tập test đóng băng của PL35: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A; gắn căn chỉ khi đủ toà + tầng + số căn hoặc mã căn khớp bí danh; 0 tin gắn hai căn; tin chỉ biết toà giữ mức toà, không bị hạ; tầng suy từ mã căn ghi phát biểu riêng có nguồn; chạy lại không đổi",
+      "vi_sao": "Mạnh chốt QĐ6 14/11: chia PL20 hai nhịp, gắn toà trước (đủ cho CG11), trục và căn sau. Đo 14/11: trần gắn căn từ chữ tin hai khu chỉ khoảng 82 tin; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03; trục và mã căn (S08 hôm nay, S16 khi có) là đường ra.",
+      "vung": [
+        "pipeline/ghep-tin-vao-danh-muc.mjs",
+        "pipeline/sql",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Nhịp sau của PL20 (C2.7 của đợt phan-loai-2310 ở PL20). Mức gắn theo ADR-0016 §5. Mã căn S16 là neo tin cậy cao nhất khi có DA33 (không đứng trên DA33: lát đầu chạy với mã S08 của hai khu). Tầng là bộ lọc có ghi độ phủ, không chia nhóm (mục 42)."
     },
     {
       "ma": "PL21",
@@ -3223,13 +3294,13 @@
       "dung_tren": [
         "DS1",
         "DA2",
-        "DA7"
+        "DA32"
       ],
       "bat_khi": "Dự án có mặt ở tin và căn; các trường khác không giảm quá 1 điểm %; tin căn hộ S06 đang sống có dự án ≥ 30% (mốc 282 dự án)",
       "nhom": "tin-rao-0511",
       "dot": "tin-rao-0511",
       "phu": [],
-      "ghi_chu": "Mạnh chọn tách ở Hỏi-1 của DS1 (03/11). Hạng T3: migration thêm trường phát biểu và cột tin, sửa sync-cloud. Không cản ra mắt 05/11. Mở rộng 08/11 (kế hoạch danh bạ dự án): trường ở DA2, mã đã nối ở DA7; tên dự án đã nối trong tiêu đề nhận phát biểu parser. DDL cloud xin Mạnh duyệt.",
+      "ghi_chu": "Mạnh chọn tách ở Hỏi-1 của DS1 (03/11). Hạng T3: migration thêm trường phát biểu và cột tin, sửa sync-cloud. Không cản ra mắt 05/11. Mở rộng 08/11 (kế hoạch danh bạ dự án): trường ở DA2, mã đã nối ở DA7; tên dự án đã nối trong tiêu đề nhận phát biểu parser. DDL cloud xin Mạnh duyệt. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): GS quyết 14/11 (PR #450): đứng trên DA32 thay DA7 — theo mục 44 Hỏi-1 nút qua thẻ luật theo nguồn được nối tin ngay; DA7 chạy song song. Chuỗi nhịp 1: DA32 → DS2 → CG10.",
       "vung": [
         "db/migrations",
         "pipeline/transform-chotot.mjs",
@@ -3344,7 +3415,7 @@
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "T3: dữ liệu mới, quyền ghi. Quyết định ghi đi qua người (luật 7). Cổng Phạm vi phải chốt ghi ở máy thu hay từ cloud theo đường lệnh ADR-0015. Sửa kết quả là thêm dòng, không ghi đè."
+      "ghi_chu": "T3: dữ liệu mới, quyền ghi. Quyết định ghi đi qua người (luật 7). Cổng Phạm vi phải chốt ghi ở máy thu hay từ cloud theo đường lệnh ADR-0015. Sửa kết quả là thêm dòng, không ghi đè. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ3: song song, không còn là cổng của CG7, CG14; kết quả gọi chỉ thêm dấu «đã xác minh»."
     },
     {
       "dot": "can-gia-tot-0311",
@@ -3367,7 +3438,7 @@
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "Điều kiện chọn đưa lên theo Hỏi-1 ở Cổng Đáng của CG1. Lý do do người viết hoặc chọn; LLM không ghi."
+      "ghi_chu": "Điều kiện chọn đưa lên theo Hỏi-1 ở Cổng Đáng của CG1. Lý do do người viết hoặc chọn; LLM không ghi. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ3: song song, không còn là cổng của CG7 — căn đạt chuẩn tự lên Invest; hàng này chỉ còn phần biên tập (nhãn lý do, thứ tự hiển thị). GS quyết 14/11 (PR #450): giữ hàng, ưu tiên thấp, xét lại sau MN1. CG7, CG14 giữ riêng, không gộp."
     },
     {
       "dot": "can-gia-tot-0311",
@@ -3378,20 +3449,20 @@
       "vai": "Nhà đầu tư",
       "tieu_chi": 10,
       "dung_tren": [
-        "CG6",
+        "CG10",
         "TR1"
       ],
       "phu": [
         "CG7"
       ],
-      "cau_giao": "Nhà đầu tư mở cổng Invest và thấy các căn được đội vận hành chọn, kèm nhãn giá tốt, lý do, chỉ số so với thước, dấu đã xác minh và ngày xác minh",
+      "cau_giao": "Nhà đầu tư mở cổng Invest và thấy các căn máy chấm «giá tốt» (từ cấp dự án trở xuống), kèm lý do, chỉ số so với thước, dấu «chưa xác minh» hoặc «đã xác minh» và ngày xác minh khi đội đã gọi",
       "vi_sao": "Phiên nghiệm thu people-hien-so-goc 03/11: Mạnh chấm 3, «Không sử dụng được» (PR #282, docs/plan/pham-vi-can-gia-tot-0311.md). Đích cuối của vòng: thông tin đã xác minh cho nhà đầu tư; dựng trên đường đưa tin và người bán lên cloud của TR1.",
       "vung": [
         "pipeline/sync-cloud.mjs",
         "app/src/app/(app)/[country]/[market]/listings/**",
         "app/src/components/listing/**"
       ],
-      "ghi_chu": "T3, khó đảo vì ra người dùng thật. Ghi chú nội bộ của cuộc gọi không lên cloud; không tên nguồn thật, không số AirDNA; leak gate phải xanh. Ảnh theo AC1."
+      "ghi_chu": "T3, khó đảo vì ra người dùng thật. Ghi chú nội bộ của cuộc gọi không lên cloud; không tên nguồn thật, không số AirDNA; leak gate phải xanh. Ảnh theo AC1. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ3 — máy tự hiện, chưa dựng rào: bỏ chuỗi CG5 → CG6, bỏ bước gọi thử mẫu, căn rẻ quá 35% vẫn hiện với nhãn «Cần xác minh». Dấu «đã xác minh» hiện khi CG5 có kết quả (song song, không chặn). Rào chỉ dựng sau khi Mạnh dùng thật và đánh giá lại."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3440,7 +3511,7 @@
         "app/src/lib/deals.ts",
         "data-api/src/routes/deals.ts"
       ],
-      "ghi_chu": "Gánh CG2 (tin S06 vào danh sách, giữ cờ thiếu SĐT) và CG4 (tin thuê) của đợt can-gia-tot-0311. T3: bảng mới bằng migration (đề xuất offer_price_rank, xin số ở sổ giám sát) và đường lên cloud cho /v1/deals. Bước SQL họ 400 (đề xuất 420_price_rank.sql), chạy sau định vị. Q2, Q4: nhóm từ 10 mới gắn nhãn; trung vị chung P1 + P2, mỗi căn một phiếu (khoá gộp căn DA6 khi có). Ở hàng này chỉ có cấp phường nên nhãn là «rẻ trong phường» (Q1); CG10 bật «giá tốt». Trần 35% → «Cần xác minh» giữ; tin phi lý (ON11) bị loại; bait_gap_pct về nghĩa gốc chênh giá câu. Sửa định nghĩa «Căn giá tốt» và «Thước giá» trong CONTEXT.md cùng hàng này theo Q1–Q3."
+      "ghi_chu": "Gánh CG2 (tin S06 vào danh sách, giữ cờ thiếu SĐT) và CG4 (tin thuê) của đợt can-gia-tot-0311. T3: bảng mới bằng migration (đề xuất offer_price_rank, xin số ở sổ giám sát) và đường lên cloud cho /v1/deals. Bước SQL họ 400 (đề xuất 420_price_rank.sql), chạy sau định vị. Q2, Q4: nhóm từ 10 mới gắn nhãn; trung vị chung P1 + P2, mỗi căn một phiếu (khoá gộp căn DA6 khi có). Ở hàng này chỉ có cấp phường nên nhãn là «rẻ trong phường» (Q1); CG10 bật «giá tốt». Trần 35% → «Cần xác minh» giữ; tin phi lý (ON11) bị loại; bait_gap_pct về nghĩa gốc chênh giá câu. Sửa định nghĩa «Căn giá tốt» và «Thước giá» trong CONTEXT.md cùng hàng này theo Q1–Q3. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ4 tin thuê thiếu m² so giá thuê/tháng theo số phòng ngủ ở nhóm dự án — giao ở CG10; hàng này giữ giá/m² ở cấp phường, nên thiết kế khoá nhóm mang cột thước (giá/m² hay giá tháng) để CG10 chỉ thêm cấp và thước. GS quyết 14/11 (PR #450): cơ chế hạng nhận khoá thước (giá/m² hoặc giá tháng × số phòng ngủ) ngay từ đầu để CG10 chỉ thêm cấp dự án; phạm vi chính thức do Cổng Phạm vi của CG9 chốt."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3449,24 +3520,23 @@
       "slug": "gia-tot-cap-du-an",
       "hang": "T2",
       "vai": "Người vận hành",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "dung_tren": [
         "CG9",
-        "DA2",
         "DS2",
-        "DA7"
+        "DV6"
       ],
       "phu": [
         "CG10"
       ],
-      "cau_giao": "Người vận hành thấy tin có dự án được xếp hạng trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «giá tốt» khi nằm trong 20% giá/m² thấp nhất và thấp hơn trung vị từ 5%; tin chỉ biết phường mang «rẻ trong phường»; mỗi dòng ghi so với bao nhiêu căn của nhóm nào",
+      "cau_giao": "Người vận hành thấy tin có dự án được xếp hạng trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «giá tốt» khi nằm trong 20% thấp nhất và thấp hơn trung vị từ 5% — giá/m² cho tin bán và tin thuê có m², giá thuê/tháng theo số phòng ngủ cho tin thuê thiếu m²; tin chỉ biết phường mang «rẻ trong phường»; mỗi dòng ghi so với bao nhiêu căn của nhóm nào và thước đang dùng",
       "vi_sao": "Phân tích 09/11: ở cấp phường p20 thấp hơn trung vị 17,6% chủ yếu do khác dự án; ở cấp dự án chỉ 5,3%, nên «giá tốt» chỉ đúng nghĩa từ cấp dự án (Q1, Q3). Đại diện: 2.732 tin bán S06 trong 124 dự án có nhóm từ 10.",
       "vung": [
         "pipeline/sql",
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "Đích đề xuất (chốt ở Cổng Đáng): từ 35% tin bán căn hộ được chấm ở cấp dự án trở xuống. Lát đầu S06 khi DA7 nối dự án; S03 theo DV2, DV3. Ngưỡng đo giá trị của CG13 vào ô cơ hội của hàng này."
+      "ghi_chu": "Đích đề xuất (chốt ở Cổng Đáng): từ 35% tin bán căn hộ được chấm ở cấp dự án trở xuống. Lát đầu S06 khi DA7 nối dự án; S03 theo DV2, DV3. Ngưỡng đo giá trị của CG13 vào ô cơ hội của hàng này. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): dung_tren bỏ DA2, DA7 (đã nằm dưới DS2), thêm DV6 (dự án trên tin S03). QĐ4: tin thuê thiếu m² so giá thuê/tháng trong nhóm dự án × số phòng ngủ (1PN với 1PN), cùng ngưỡng 20% và 5%, nhóm từ 10; tin có m² và tin bán giữ giá/m²; chưa dựng rào, đánh giá sau khi lên thật. QĐ3: ô cơ hội không đặt ngưỡng chặn lên Invest."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3492,7 +3562,7 @@
         "app/src/app/ops/deals",
         "app/src/lib/deals.ts"
       ],
-      "ghi_chu": "Gánh CGP1 của đợt can-gia-tot-0311 (tin S03 không phường so theo toà); CGP1 không mở riêng. Lát đầu Ocean Park 1 và Grand Park. Tầng chỉ là bộ lọc, không chia nhóm: S03 che tầng trong mã căn, S06 có tầng ở 6% tin căn hộ bán; tin chưa rõ tầng ẩn khi lọc tầng. Đích đề xuất: từ 50% tin bán căn hộ chấm ở cấp dự án trở xuống."
+      "ghi_chu": "Gánh CGP1 của đợt can-gia-tot-0311 (tin S03 không phường so theo toà); CGP1 không mở riêng. Lát đầu Ocean Park 1 và Grand Park. Tầng chỉ là bộ lọc, không chia nhóm: S03 che tầng trong mã căn, S06 có tầng ở 6% tin căn hộ bán; tin chưa rõ tầng ẩn khi lọc tầng. Đích đề xuất: từ 50% tin bán căn hộ chấm ở cấp dự án trở xuống. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): giữ PL20 trong dung_tren — PL20 nay là nhịp toà, đủ cho hàng này; trục, căn (PL36) không chặn. Lọc dải tầng phủ thêm khi PL36 suy tầng từ mã căn. QĐ4 áp như CG10 cho tin thuê thiếu m²."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3539,7 +3609,7 @@
         "pipeline/sql",
         "app/src/app/ops/deals"
       ],
-      "ghi_chu": "Hàng giao phép đo; ngưỡng (đề xuất: từ 70% còn bán và đúng giá, từ 60% còn giá tốt sau 7 ngày, «Cần xác minh» không quá 20% trong 30 căn đầu) là đo giá trị, vào ô cơ hội của CG10 ở Cổng Đáng. Việc gọi người bán là của đội vận hành (ra khỏi kho)."
+      "ghi_chu": "Hàng giao phép đo; ngưỡng (đề xuất: từ 70% còn bán và đúng giá, từ 60% còn giá tốt sau 7 ngày, «Cần xác minh» không quá 20% trong 30 căn đầu) là đo giá trị, vào ô cơ hội của CG10 ở Cổng Đáng. Việc gọi người bán là của đội vận hành (ra khỏi kho). Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ3: song song; ngưỡng ở đây là phép đo giá trị, không phải điều kiện mở Invest."
     },
     {
       "dot": "can-gia-tot-vi-tri-0911",
@@ -3563,7 +3633,7 @@
         "app/src/app/(app)/[country]/[market]/listings/**",
         "app/src/components/listing/**"
       ],
-      "ghi_chu": "T3: ra người dùng thật. Chữ nói «rẻ so với giá đang rao của căn tương đương», không «dưới giá trị thị trường» (chưa có giá giao dịch). Nhãn «giá tốt» chỉ từ cấp dự án (Q1); cấp phường «rẻ trong phường». Lên theo CG6–CG7: đội chọn rồi mới lên. SĐT chỉ qua «Xem số»; không tên nguồn thật, không số S02 hay AirDNA; leak gate xanh."
+      "ghi_chu": "T3: ra người dùng thật. Chữ nói «rẻ so với giá đang rao của căn tương đương», không «dưới giá trị thị trường» (chưa có giá giao dịch). Nhãn «giá tốt» chỉ từ cấp dự án (Q1); cấp phường «rẻ trong phường». SĐT chỉ qua «Xem số»; không tên nguồn thật, không số S02 hay AirDNA; leak gate xanh. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ3 — không còn «đội chọn rồi mới lên»: căn đạt chuẩn do máy tự hiện, dấu «chưa xác minh» / «đã xác minh»; CG7 không còn chờ CG5 → CG6."
     },
     {
       "ma": "DN1",
@@ -3732,7 +3802,7 @@
       "vai": "nen",
       "tieu_chi": 10,
       "dung_tren": [
-        "PL20"
+        "PL36"
       ],
       "phu": [
         "GC2"
@@ -3747,7 +3817,7 @@
         "pipeline/sql",
         "pipeline/mappings.yaml"
       ],
-      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; Từ 08/11 giá trị S08 là thông tin dự án công khai (mục 38); dải vẫn dựng từ tin có ghi số. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²). Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11)."
+      "ghi_chu": "Luật 7: bảng tra xác định, ghi FieldAssertion với LivingAreaSource = Estimated, LLM không tự ghi. Giá trị đến từ tin S03 nên không vướng ADR-0016 §9; Từ 08/11 giá trị S08 là thông tin dự án công khai (mục 38); dải vẫn dựng từ tin có ghi số. Chưa tra DD 2.1 cho dạng dải, không có thì khai extension ở ADR-0013 §9. Phân khu thuộc họ Vùng: dải ở mức này là thống kê theo nhóm, không phải kế thừa vật thể, và 759/882 tin ước tính nằm ở mức này; Cổng Phạm vi chốt cách ghi. Môi giới có nơi ghi thông thuỷ, có nơi ghi tim tường, lệch khoảng 8–10%, nhãn phải nói được. Dải dựng theo loại căn kèm số WC khi tin có ghi: đo 04/11, 2PN 1WC khác hẳn 2PN 2WC (Ocean Park trung vị 55 so với 63 m², Grand Park 59 so với 67 m²). Đọc phát biểu (từ PL18 và bộ đọc luật), không đọc thẳng silver_labels (Q5 07/11). Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): đứng trên PL36 thay PL20: dải dựng theo trục cần nhịp trục; PL20 nay chỉ gắn toà. QĐ4 cho tin thuê thiếu m² so giá tháng theo số phòng ngủ ở CG10, nên hàng này không còn trên đường găng của trung vị thuê. GS quyết 14/11 (PR #450): giữ trong mốc GCM1; hạ ưu tiên, rời đường găng trung vị thuê theo QĐ4."
     },
     {
       "ma": "GC3",
@@ -4604,9 +4674,33 @@
       ]
     },
     {
+      "ma": "DA32",
+      "slug": "ma-du-an-s06-thanh-nut",
+      "dot": "mo-neo-1411",
+      "nhom": "danh-ba-du-an",
+      "phu": [
+        "M1"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "dung_tren": [
+        "DA2"
+      ],
+      "cau_giao": "Mỗi mã dự án S06 có từ 10 tin căn hộ đang rao thành bí danh của đúng một nút dự án — nút có sẵn hoặc nút ứng viên máy đúc hàng loạt từ mã — qua một thẻ luật theo nguồn mà Mạnh xem mẫu trước khi áp, nên tin S06 đọc được dự án của mình qua bí danh",
+      "bat_khi": "Trên DB máy thu: mọi mã S06 có từ 10 tin căn hộ đang rao (14/11: 268 mã, phủ 11.045 tin) có trạng thái nối, ứng viên hoặc từ chối có lý do; 0 mã nối hai nút; 0 cặp lệch tỉnh; nút ứng viên mang catalog_tier thấp nhất và có ít nhất một area_ids; thẻ luật có nhật ký, mẫu Mạnh xem ghi băm, đảo được cả loạt; chạy lại lần hai không đổi bí danh; số tin S06 căn hộ đọc được dự án qua bí danh khớp phép đếm SQL độc lập",
+      "vi_sao": "Phân tích 14/11: đường S06 qua DA3 (T3, chờ Cổng Phạm vi) → DA7 → DS2 là đường găng của nhịp 1, trong khi 268 mã dự án S06 đã phủ 11.045 tin căn hộ đang rao. Mạnh chốt QĐ5 14/11: lát mỏng «mã dự án S06 thành nút» đi trước bằng thẻ luật theo nguồn (đúng Hỏi-1 mục 44), Mạnh xem mẫu.",
+      "vung": [
+        "db/migrations",
+        "pipeline/noi-du-an-s06.mjs"
+      ],
+      "ghi_chu": "Lát mỏng của DA3; DA3 (bang-noi-ma-du-an) giữ slug và hồ sơ, thành lát đầy đủ đứng sau hàng này (S08, S11, khuôn chung bản ghi nguồn, thẻ từng cặp). Hạng T3: dữ liệu nối và nút mới. Chỗ ghi bí danh (GS quyết 14/11, PR #450): hàng này tự mở registry_aliases (và registry_events) cho nút dự án, không dùng bảng tạm, bằng migration số 100 (đã dành cho dãy P4); DA3 lát đầy đủ lấy số mới khi tới lượt. Nút ứng viên chưa qua thẻ luật thì 0 tin nối, 0 lên Invest (mục 44 Hỏi-1). Số mốc 268 mã đo 14/11; DA7 lời hàng ghi 282 mã đo 08/11 — đo lại ở Cổng Phạm vi."
+    },
+    {
       "dung_tren": [
         "DA2",
-        "DA30"
+        "DA30",
+        "DA32"
       ],
       "dot": "danh-ba-du-an-0811",
       "nhom": "danh-ba-du-an",
@@ -4624,7 +4718,7 @@
         "app/src/app/ops/review",
         "app/src/lib/ops"
       ],
-      "ghi_chu": "Hạng T3: quyền duyệt và dữ liệu nối. Khái quát migration 074, bảng cũ thành view. Khuôn giao diện ReUI theo mục 35. Kế hoạch: DA3. Sửa 09/11 (mục 40): mở kind ma_nha_nuoc ngay ở migration này để DA24 không cần migration riêng. Sửa 11/11 (mục 44 Hỏi-5): khuôn chung bản ghi nguồn (mo-hinh-danh-ba-du-an.md §1.1) làm trong hàng này, không mở hàng riêng; migration của hàng mở thêm registry_aliases, registry_events (055) cho nút dự án và nguồn S10–S15. Sửa 11/11 (mục 45 Q5 và kiểm kê §5 mục 2): khuôn chung nhận bản ghi cấp lô/toà, nối qua thẻ từng cặp, đủ 20 mẫu thì viết thẻ luật; quy ước giá trị rỗng giả; nối lại S08 theo snapshot mới (27 dự án mới chưa có trong bảng nối). Đứng sau DA30 (mục 45 Q2).",
+      "ghi_chu": "Hạng T3: quyền duyệt và dữ liệu nối. Khái quát migration 074, bảng cũ thành view. Khuôn giao diện ReUI theo mục 35. Kế hoạch: DA3. Sửa 09/11 (mục 40): mở kind ma_nha_nuoc ngay ở migration này để DA24 không cần migration riêng. Sửa 11/11 (mục 44 Hỏi-5): khuôn chung bản ghi nguồn (mo-hinh-danh-ba-du-an.md §1.1) làm trong hàng này, không mở hàng riêng; migration của hàng mở thêm registry_aliases, registry_events (055) cho nút dự án và nguồn S10–S15. Sửa 11/11 (mục 45 Q5 và kiểm kê §5 mục 2): khuôn chung nhận bản ghi cấp lô/toà, nối qua thẻ từng cặp, đủ 20 mẫu thì viết thẻ luật; quy ước giá trị rỗng giả; nối lại S08 theo snapshot mới (27 dự án mới chưa có trong bảng nối). Đứng sau DA30 (mục 45 Q2). Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): QĐ5 tách hai lát — lát mỏng mã dự án S06 thành nút (DA32) đi trước; hàng này giữ slug và hồ sơ, là lát đầy đủ (S08, S11, khuôn chung, thẻ từng cặp). GS quyết 14/11 (PR #450): phần mở registry_aliases, registry_events cho nút dự án đã chuyển sang DA32 (migration 100); migration của hàng này lấy số mới khi tới lượt.",
       "phu": [
         "DA3"
       ]
@@ -4695,7 +4789,7 @@
     },
     {
       "dung_tren": [
-        "DA3",
+        "DA32",
         "PX1"
       ],
       "dot": "danh-ba-du-an-0811",
@@ -4712,7 +4806,7 @@
         "pipeline/noi-du-an-s08.mjs",
         "db/migrations"
       ],
-      "ghi_chu": "Máy đề xuất theo tên chuẩn hoá + tỉnh; đội ops duyệt trên thẻ DA3, Mạnh xem mẫu (mục 39). Kế hoạch: DA2.",
+      "ghi_chu": "Máy đề xuất theo tên chuẩn hoá + tỉnh; đội ops duyệt trên thẻ DA3, Mạnh xem mẫu (mục 39). Kế hoạch: DA2. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): đứng trên DA32 thay DA3. GS quyết 14/11 (PR #450): rời đường găng — chạy song song, duyệt các mã thẻ luật của DA32 không phủ hay lệch để nâng chất lượng nối; không hàng nào của đường găng đứng trên hàng này.",
       "phu": [
         "DA7"
       ]
@@ -6044,7 +6138,7 @@
         "B14"
       ],
       "cau_giao": "Cây mã trên main không còn tên nguồn thật (kể cả tên miền và đường dẫn tệp mang tên nguồn) ngoài danh sách cho phép có lý do, và một răng chạy được trên CI chặn PR thêm tên nguồn thật mà không đưa danh sách tên lên kho công khai ở dạng đọc được",
-      "bat_khi": "Quét HEAD bằng danh sách tên của source_registry trên máy thu ra 0 tệp ngoài danh sách cho phép; tệp đổi tên có redirect hay bản đồ đổi tên nếu là route; răng CI đỏ khi PR thêm một tên thật (đối chứng bằng tên thử), xanh khi chỉ có mã S0x; test, fixture dùng chuỗi bịa; lịch sử git không viết lại trong hàng này",
+      "bat_khi": "Quét HEAD bằng danh sách tên của source_registry trên máy thu ra 0 tệp ngoài danh sách cho phép; tệp đổi tên có redirect hay bản đồ đổi tên nếu là route; răng CI đỏ khi PR thêm một tên thật (đối chứng bằng tên thử), xanh khi chỉ có mã S0x; test, fixture dùng chuỗi bịa; lịch sử git không viết lại trong hàng này; tệp tham số lượt chấm (_acceptance/<slug>/s4-args*) không còn được theo dõi trên main và .gitignore chặn tệp mới",
       "vi_sao": "Luật 6 AGENTS.md: tên nguồn thật là tầng A. Đo 03/11 còn hàng trăm tệp trên kho công khai; Mạnh chốt 03/11 dọn sau 05/11, và 05/11 chốt gộp việc chặn tên mới bằng máy (Ngoài-4 của #324) vào cùng hàng.",
       "vung": [
         "docs",
@@ -6053,7 +6147,7 @@
         "scripts",
         ".github/workflows"
       ],
-      "ghi_chu": "Đo lại số tệp ở Cổng Phạm vi (đếm theo danh sách tên, không in tên lên kênh công khai). Viết lại lịch sử git hay đổi kho sang riêng tư là quyết định của Mạnh, không thuộc hàng. Đổi tên hàng loạt dễ xung đột với PR đang mở: gộp vào cửa sổ ít PR. Vùng rộng có chủ đích; lịch xếp hàng này không chồng hàng khác."
+      "ghi_chu": "Đo lại số tệp ở Cổng Phạm vi (đếm theo danh sách tên, không in tên lên kênh công khai). Viết lại lịch sử git hay đổi kho sang riêng tư là quyết định của Mạnh, không thuộc hàng. Đổi tên hàng loạt dễ xung đột với PR đang mở: gộp vào cửa sổ ít PR. Vùng rộng có chủ đích; lịch xếp hàng này không chồng hàng khác. Sửa 14/11 (mo-neo-1411, ROADMAP §3 mục 48): bổ sung — trên main có 142 tệp s4-args* được theo dõi trong _acceptance/, 2 tệp khớp mẫu tên nguồn; từ nay tệp args lượt chấm không commit."
     },
     {
       "dot": "no-cat-hang-1311",
@@ -6078,6 +6172,205 @@
         "pipeline/tests/s10-project-nap.itest.mjs"
       ],
       "ghi_chu": "Làn ZCode (bộ nạp, bộ bóc): giao qua liên làn. Đứng trên DA29 vì tệp chỉ có trên nhánh của DA29 tới khi gộp."
+    },
+    {
+      "ma": "DA34",
+      "slug": "the-toa-s09-quyet-duoc",
+      "dot": "mo-neo-1411",
+      "nhom": "danh-ba-du-an",
+      "phu": [
+        "M4"
+      ],
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "dung_tren": [
+        "DA31"
+      ],
+      "cau_giao": "Người vận hành mở thẻ duyệt toà S09 mơ hồ trên /ops/review, bấm Khớp, Bác hay Hoãn và quyết định được nhận, áp vào danh bạ (bí danh vào toà có sẵn hoặc toà mới), có nhật ký và hoàn tác",
+      "bat_khi": "Thẻ entity_match của S09 quyết được cả ba nút trên /ops/review (hôm nay route chỉ nhận khuôn pair:<offer_a>|<offer_b> nên từ chối); Khớp sinh đúng một bí danh vào toà đã chọn, Bác không sinh toà, Hoãn giữ thẻ; thẻ ghép tin cặp cũ vẫn quyết như trước; quyết định ghi registry_events; dựng lại danh bạ hai lần không đổi khoá",
+      "vi_sao": "Ngoài-1 của DA31 (toa-s09-hai-khu-vao-danh-ba): thẻ duyệt toà S09 dùng item_type entity_match nhưng route quyết định ở /ops/review chỉ nhận khuôn pair, nên thẻ không bao giờ quyết được. Mạnh ký Cổng Bằng chứng DA31 sáng 14/11 và chọn «mở hợp đồng mới» cho mục này.",
+      "vung": [
+        "app/src/app/api/v1/ops/review",
+        "app/src/lib/ops",
+        "app/src/app/ops/review",
+        "pipeline/lib/s09-dung.mjs"
+      ],
+      "ghi_chu": "Nhịp 2 (mốc MN2), sau DA31. Quyết định đi qua người (luật 7). Nếu Cổng Phạm vi thấy áp quyết định cần migration hay quyền mới thì lên T3."
+    },
+    {
+      "ma": "DA33",
+      "slug": "nap-s16-vao-danh-ba",
+      "dot": "mo-neo-1411",
+      "nhom": "danh-ba-du-an",
+      "phu": [
+        "M3"
+      ],
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DA31"
+      ],
+      "cau_giao": "Dự án, phân khu, toà và mã căn S16 vào danh bạ không sinh toà, căn trùng, và mã căn S16 là neo tin cậy cao nhất khi dựng cây toà → căn ở các dự án của chủ đầu tư S16, xếp trên S08 và trên mã suy từ tin S03",
+      "bat_khi": "Trên DB máy thu: bản thu S16 nạp vào stg (migration 103) bằng bộ nạp của làn thu theo DATA-CONTRACT có schemaVersion mới; số dự án, phân khu, toà, mã căn trong stg khớp manifest bản thu; 0 toà hai UPI, 0 căn hai khoá; căn S08 trùng mã căn S16 thành bí danh của cùng căn, lệch thì lên thẻ; ở dự án có cả hai, cây toà → căn lấy mã S16 làm khoá và S08 thành bí danh; mã căn lấy bằng đăng nhập không rời máy (bộ soát sync-cloud đỏ khi cấy một dòng); mọi thứ rời máy chỉ mang mã S16; chạy lại không đổi khoá",
+      "vi_sao": "Mạnh chốt 14/11 «Cả phần đăng nhập»: «Phần đăng nhập là mã chính từ chủ đầu tư, nên sự tin cậy cao». Danh bạ căn hôm nay 1.736 căn, đều từ S08, chỉ hai khu; S16 có khoảng 103 nghìn mã căn, 226 toà. QĐ7: cắt hàng nạp S16.",
+      "vung": [
+        "db/migrations",
+        "pipeline/danh-ba-vat-the.mjs",
+        "pipeline/lib/danh-ba-vat-the.mjs"
+      ],
+      "ghi_chu": "Chỉ mở vòng khi làn thu đã giao bản thu S16 và hợp đồng dữ liệu (DATA-CONTRACT tăng schemaVersion) — việc của làn thu, không phải hàng. Migration 103 do Claude viết (Claude giữ sổ số migration). Phân làn (GS quyết 14/11, PR #450): bộ nạp import-s16* vào bảng stg là làn thu (ZCode viết, Claude duyệt hợp đồng); Claude viết migration 103 và phần từ stg vào danh bạ. Trường nguồn và tên thư mục bản thu mang tên thật chỉ ở máy thu; mọi thứ rời máy đổi về S16. Tin rao S16 cũng vào đường ống (mục 48). CHƯA có lời: thu định kỳ bằng phiên đăng nhập; hiện mã căn lấy bằng đăng nhập và hiện tin rao S16 lên Invest hay API công khai — mặc định chỉ nội bộ tới khi Mạnh nói khác. Thông tin dự án công khai (tên, toà, phân khu) theo mục 38 nếu Mạnh xác nhận áp cho S16."
+    },
+    {
+      "ma": "IT4",
+      "slug": "db-thu-ap-migration-nhanh",
+      "dot": "mo-neo-1411",
+      "nhom": "itest-xanh",
+      "phu": [
+        "N4"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "dung_tren": [],
+      "cau_giao": "DB thử của các suite (db/db-thu.sh --chay) áp mọi migration của nhánh mà bản mẫu chưa có, theo số, trước khi chạy lệnh, nên lượt chấm local đo trên cùng lược đồ mà CI dựng",
+      "bat_khi": "Nhánh có migration mới chưa áp ở DB chung: suite chạy qua db-thu --chay thấy lược đồ mới (ca kiểm đỏ trên bản cũ); migration áp lỗi thì lệnh dừng, thoát khác 0, nêu tệp; migration đã có ở bản mẫu không áp lại; DB chung :5433 không bị ghi; ba lượt chấm từng xanh local mà đỏ CI dựng lại được thành đỏ local",
+      "vi_sao": "Ba lần chấm local xanh mà CI đỏ vì DB thử chép từ bản mẫu của DB chung, không có migration của nhánh đang chấm. Ưu tiên cao: mọi lượt chấm có migration đều bị ảnh hưởng.",
+      "vung": [
+        "db/db-thu.sh",
+        "db/dau-luoc-do.sql"
+      ],
+      "ghi_chu": "Ưu tiên cao (giám sát xếp trước các hàng nợ khác). Không chạy migration lên DB chung (luật bảng làn). Dưới mục tiêu cỡ, giữ riêng: vùng db-thu dùng chung cho mọi lượt chấm."
+    },
+    {
+      "ma": "IT6",
+      "slug": "suite-luot-cham-phu-chan-ci",
+      "dot": "mo-neo-1411",
+      "nhom": "itest-xanh",
+      "phu": [
+        "N7"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "dung_tren": [],
+      "cau_giao": "Lượt chấm local chạy đủ các chân test mà CI chạy: mọi job chạy test trong .github/workflows/ có một suite tương ứng trong feature_loop.suite_keys của _acceptance/config.yaml, hoặc được khai miễn có lý do, và một ca kiểm so hai danh sách",
+      "bat_khi": "Ca kiểm đọc .github/workflows/*.yml và suite_keys, đỏ khi có job test không có suite và không có dòng miễn (đối chứng: trên main hôm nay đỏ vì chân scripts — node --test scripts/*.test.mjs — không có suite); thêm suite hay dòng miễn thì xanh; ca kiểm chạy trong lượt chấm và trên CI; dòng miễn mang lý do, không rỗng; dựng lại ca DBS-AC-6 của PR #449 thì lượt chấm local đỏ như CI",
+      "vi_sao": "PR #449 (DA31) qua lượt chấm local xanh nhưng CI đỏ ở chân scripts (ca DBS-AC-6 trong scripts/*.test.mjs), vì bộ node --test scripts/*.test.mjs không nằm trong feature_loop.suite_keys. Cùng họ lỗi với IT4: lượt chấm local đo khác CI.",
+      "vung": [
+        "_acceptance/config.yaml",
+        "scripts/suite-phu-ci.mjs",
+        ".github/workflows"
+      ],
+      "ghi_chu": "Tách khỏi IT4 (một kết quả mỗi hàng): IT4 sửa lược đồ của DB thử, hàng này sửa danh sách chân chạy. Ưu tiên cao như IT4. PR cắt lượt không sửa config.yaml; hàng này sửa. Thêm suite scripts có thể kéo dài lượt chấm: chốt trần ở Cổng Phạm vi."
+    },
+    {
+      "ma": "RP1",
+      "slug": "resolve-chen-link-theo-tap",
+      "dot": "mo-neo-1411",
+      "nhom": "can-nha",
+      "phu": [
+        "N1"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "dung_tren": [
+        "DA6"
+      ],
+      "cau_giao": "Bước gộp căn hằng ngày chèn link tin → căn theo tập (một câu cho mỗi lô) thay vì một lượt cho từng cụm, nên chạy xong trong khung chạy đêm mà kết quả không đổi",
+      "bat_khi": "Trên DB thử chép từ máy thu: thời gian một lượt resolve-properties giảm từ khoảng 4 giờ 15 phút (78.715 cụm) xuống dưới ngưỡng chốt ở Cổng Phạm vi; bảng properties và property_offers sau lượt mới khớp lượt cũ (băm theo khoá) trên cùng đầu vào; itest của DA6 (khoa-gop-can-khong-gia) chạy lại trên dữ liệu đầy đủ, không chỉ tập cắt, và xanh; chạy lại hai lần không sinh căn mới",
+      "vi_sao": "Đo khi làm DA6: bước gộp căn hằng ngày chèn link theo từng cụm, 78.715 cụm mất khoảng 4 giờ 15 phút mỗi lượt; itest của DA6 phải chạy trên tập cắt vì lượt đầy đủ quá lâu.",
+      "vung": [
+        "pipeline/resolve-properties.mjs"
+      ],
+      "ghi_chu": "Đứng sau DA6 (PR #446) vì cùng tệp và cần khoá gộp mới. Không đổi luật gộp, chỉ đổi cách ghi."
+    },
+    {
+      "ma": "FR1",
+      "slug": "do-s10-tren-stg",
+      "dot": "mo-neo-1411",
+      "nhom": "do-luong",
+      "phu": [
+        "N2"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "dung_tren": [],
+      "cau_giao": "Ô độ tươi của S10 đo trên bảng stg_s10_stock (lượt nạp gần nhất có dòng) thay vì mức bản thu, nên lượt thu hỏng ra 0 dòng không còn hiện «tươi»",
+      "bat_khi": "check-freshness và /ops đọc S10 từ stg: lượt nạp 0 dòng thì S10 không «fresh»; lượt có dòng thì «fresh» như cũ; có ca kiểm đối chứng đỏ trên bản cũ (bản thu mới, stg rỗng); các nguồn khác không đổi kết quả",
+      "vi_sao": "Ngoài hợp đồng của hàng khai-slo-s10-s11 (review-findings, đề xuất new-contract): probe S10 đo ở mức bản thu dù bộ nạp stg_s10_stock đã có, nên S10 báo «fresh» cả khi lượt nạp ra 0 dòng.",
+      "vung": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.mjs"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì vùng khác mọi hàng của đợt. S11 làm cùng khi bộ nạp S11 có bảng stg."
+    },
+    {
+      "ma": "PB1",
+      "slug": "luoc-do-mau-data-api-v-ruler-p2",
+      "dot": "mo-neo-1411",
+      "nhom": "be-mat-api",
+      "phu": [
+        "N3"
+      ],
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "dung_tren": [],
+      "cau_giao": "Lược đồ mẫu của data-api bản công khai (data-api/db + seed.sql) dựng được view v_ruler_p2 mà route /v1/deals đọc, nên bản công khai chạy từ lược đồ mẫu không lỗi ở /v1/deals",
+      "bat_khi": "Dựng DB trống từ data-api/db rồi seed.sql: v_ruler_p2 có mặt, GET /v1/deals trả 200 (danh sách rỗng hay có dòng mẫu); ca kiểm đỏ trên lược đồ mẫu hiện tại; bộ soát sync-public không lộ tên nguồn thật",
+      "vi_sao": "data-api/src/routes/deals.ts đọc v_ruler_p2 nhưng lược đồ mẫu trong data-api/db không có view này; bản công khai chạy theo README sẽ lỗi ở /v1/deals. Phải xong trước lần sync-public kế.",
+      "vung": [
+        "data-api/db",
+        "data-api/seed.sql"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; giữ riêng vì đi theo lịch sync-public (lệnh chỉ người gọi). Sync-public là việc của người (ra khỏi kho)."
+    },
+    {
+      "ma": "IT5",
+      "slug": "itest-ham-tach",
+      "dot": "mo-neo-1411",
+      "nhom": "itest-xanh",
+      "phu": [
+        "N5"
+      ],
+      "hang": "T1",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "dung_tren": [],
+      "cau_giao": "Hàm tach() của bài thử nạp lại (tách tên trường từ câu ràng buộc) có ca kiểm riêng, và bước kiểm tiền đề «có phát biểu ngoài 061» đỏ được khi dữ liệu thử không đủ",
+      "bat_khi": "Ca kiểm tach() trên chữ thật của 045, 059, 061 ra đúng tập trường; câu có trích dẫn lạ ra lỗi thay vì tập rỗng; tiền đề đỏ trên dữ liệu thử chỉ có trường của 061 (đối chứng); bài thử nạp lại vẫn xanh trên main",
+      "vi_sao": "Ngoài-3 của hàng itest-nap-lai-migration-cu-sau-095 (Known limits ở Cổng Bằng chứng 13/11, severity high): tiền đề «có phát biểu ngoài 061» dựa trên tach() luôn đúng, nên bài thử có thể xanh khi dữ liệu thử không đủ làm lộ lỗi.",
+      "vung": [
+        "pipeline/scripts/nap-lai-giu-rang-buoc.itest.mjs",
+        "pipeline/lib/nap-view-song.mjs"
+      ],
+      "ghi_chu": "Chỉ mã kiểm thử; T1. Dưới mục tiêu cỡ, giữ riêng vì khác vùng IT4."
+    },
+    {
+      "ma": "CI3",
+      "slug": "props-layout-khong-next",
+      "dot": "mo-neo-1411",
+      "nhom": "ci-ve-sinh",
+      "phu": [
+        "N6"
+      ],
+      "hang": "T1",
+      "vai": "nen",
+      "tieu_chi": 3,
+      "dung_tren": [],
+      "cau_giao": "Typecheck của app xanh trên cây không có .next: các layout và trang /ops/data-flow không còn lỗi TS2304 LayoutProps, PageProps",
+      "bat_khi": "cd app && npx tsc --noEmit thoát 0 trên cây sạch không có .next; trên cây có kiểu sinh bởi next typegen vẫn 0; npm run lint 0; trang và layout dựng như trước",
+      "vi_sao": "OOS-1 của hàng CI1 (props-trang-ops-quality): lỗi TS2304 LayoutProps/PageProps của các layout và /ops/data-flow khi không có .next, nằm ngoài vùng CI1; cây không có .next vẫn cần next typegen.",
+      "vung": [
+        "app/src/app/ops/data-flow",
+        "app/src/app/ops/layout.tsx",
+        "app/src/app/(app)"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ; T1 như CI1. Phiên làm hàng liệt đủ tệp layout lỗi ở Cổng Phạm vi rồi khai thêm vùng."
     }
   ],
   "chan_troi": [
