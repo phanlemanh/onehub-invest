@@ -1,0 +1,90 @@
+schema_version: 1
+slug: bang-hang-gia-m2
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [db/migrations/104_*, pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-1 trên DB của riêng lượt: ma trận viết trước ba nhóm (12 · 7 · 4 phiếu) → mỗi ô so với phép tính độc lập trong test (n, trung_vi, p20, hang_pct, duoi_trung_vi_pct lệch ≤ 0,1; nhãn re-trong-phuong đúng tập tin ≤ p20 và dưới trung vị từ 5%; nhóm 7 ly_do=nhom-5-9 không nhãn; nhóm 4 ly_do=nhom-duoi-5 không số); hai bản đột biến (bỏ điều kiện 5%, bỏ ngưỡng 10) đỏ, thông điệp nêu mã tin"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-2: căn ba tin S06 → một phiếu bằng giá tin thấy sau cùng; tin gắn hai căn → một phiếu; tin S03 phiếu riêng cùng nhóm; n bằng đếm phiếu độc lập; mọi tin một căn cùng hang_pct; đột biến mỗi tin một phiếu đỏ nêu n mong đợi và n thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/lib/deal-plausibility.mjs, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-3: ma trận viết trước 12 ô (PN đủ, PN dưới 10, không PN, unknown, NULL, không phường, không giá, ngoài khoảng, hai lý do phi lý ON11, dưới trung vị quá 35%) → một assert mỗi ô về pn_nhom/ly_do/nhan/can_xac_minh; đối chứng dương cùng fixture: tin hợp lệ có hạng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [pipeline/sql/420_price_rank.sql, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-4: thuê có m² thuoc=gia-m2 trong nhóm thuê (không lẫn bán — đột biến bỏ khoá kind đỏ); thuê 2PN thiếu m² thuoc=gia-thang-pn, pn_nhom=2, trung_vi = trung vị giá tháng nhóm 2PN tính độc lập; 1PN nhom-duoi-5; thiếu cả hai thieu-dt-va-pn; giá ngoài khoảng thuê ngoai-khoang"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [db/migrations/104_*, pipeline/xep-hang-gia.mjs, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-5: chạy lại → 0 dòng khác (trừ computed_at, run_id); đột biến ném lỗi sau xoá → bảng còn đủ dòng cũ; áp 104 lần hai không lỗi; cap nhận bốn giá trị và từ chối 'quan' (lỗi CHECK); số dòng = số tin trong sale_offers"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_doc
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, pipeline/scripts/hang-gia*, app/tests/hang-gia*]
+    expected: "Ca CG9-AC-6 trên DB của riêng lượt: dealsSql trả đúng tập tin bán có nhan (P1 và P2), thứ tự can_xac_minh rồi duoi_trung_vi_pct giảm, không tin > 50% hay quá 45 ngày; median/n/discount mỗi dòng bằng bảng; ma trận viết trước mọi mã ly_do (pn-duoi-10, nhom-5-9, nhom-duoi-5, chua-ro-loai, thieu-phuong, thieu-gia, ngoai-khoang, phi-ly:<lý do>, thieu-dt-va-pn) cộng một mã lạ → lyDoRoi ra đúng chữ ghim, một assert mỗi ô; cauChungMinh có «so với N căn cùng phường, cùng loại» với N = offer_price_rank.n (đột biến N = số tin đỏ) và «cùng 2PN» khi pn_nhom=2; tin can_xac_minh có chữ «Cần xác minh», tin không cờ không có (cặp dương/âm); DB không có bảng hoặc bảng rỗng → dealsSql/dealSql đọc theo lối Hỏi-5, không ném lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_doc
+    paths: [data-api/src/routes/deals.ts, app/src/app/api/v1/deals/route.ts, app/tests/hang-gia*]
+    expected: "Ca CG9-AC-7: dealsRoute data-api (app.request) và GET /api/v1/deals của app (token ops) với kind vắng / sale / rent_lt → mọi dòng có nhan và đúng kind; discountPct, rank.n, rank.median, rank.p20, rank.percentile, rank.label, rank.needsVerification bằng dòng bảng; bảng khoá cũ viết trước còn đủ tên và kiểu; area, market, limit, min_discount lọc đúng trên fixture; kind=xyz → 400; DB không có bảng hoặc bảng rỗng → cả hai API trả theo lối Hỏi-5, mã 200"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_sync
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-8: cloud giả có offer_price_rank → chép đúng dòng của tin sống, cột chép không gồm cột lộ tên nguồn; cloud giả thiếu bảng → một dòng «bỏ qua offer_price_rank» và các bảng khác vẫn chép (đối chứng: thiếu một bảng cũ thì vẫn lỗi như trước); quét diff so origin/main: ca CG8 (refresh-bait-gap) không đổi, 0 dòng thêm chứa tên nguồn thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_do
+    paths: [db/migrations/104_*, pipeline/sql/420_price_rank.sql, pipeline/xep-hang-gia.mjs, pipeline/scripts/hang-gia*]
+    expected: "Bản chép DB máy thu, áp 104, chấm hai lần: bảng đếm bán/thuê × (có nhãn · chỉ số · từng lý do không chấm) khớp phép đếm SQL viết riêng (lech=0), lần hai = lần một, nhan_nhom_duoi_10=0, so_khac_loai=0; in mẫu số; thoát khác 0 khi một điều kiện hỏng, nêu điều kiện; đối chứng --doi-chung-hong (đếm mỗi tin một phiếu) đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/lib/deals.ts, app/src/lib/deals-chi-tiet.ts, app/src/app/ops/deals]
+    expected: "Chụp /ops/deals và /ops/deals/[offerId] (căn có nhãn, căn cần xác minh, tin nhóm 5–9) ở sáng và tối trên bản chạy trỏ DB thử của AC-9: nhãn «Rẻ trong phường», chữ «Cần xác minh» chỉ ở căn có cờ, dòng «so với N căn …», lý do nhom-5-9 hiện đúng chữ AC-6; con số trên màn khớp dòng offer_price_rank của tin"
+    evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E11
+    criterion: AC-11
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cg9_db
+    paths: [scripts/chotot-daily.sh, scripts/zalo-import-daily.sh, scripts/apify-facebook-daily.sh, pipeline/xep-hang-gia.mjs, pipeline/scripts/hang-gia*]
+    expected: "Ca CG9-AC-11: đọc ba script đêm → mỗi job đúng một bước xep-hang-gia sau resolve-properties (chotot-daily) hoặc sau refresh-bait-gap (zalo-import-daily, apify-facebook-daily); bản sao script bỏ bước hay đặt trước resolve-properties → đỏ nêu tên job; chạy xep-hang-gia.mjs trên lược đồ không có 104 → thoát 0, đúng dòng «chưa áp 104», 0 bảng mới; trên DB có 104 → run_id mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
