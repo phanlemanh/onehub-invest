@@ -151,6 +151,8 @@ async function goiDeals(mod: { getDeals: () => Promise<unknown> }, code: string,
   const { pool } = await import("../src/lib/db")
   const cauLenh: string[] = []
   const q = t.mock.method(pool, "query", (async (sql: string) => {
+    // CG9: câu hỏi «bảng hạng giá có chưa» (coBangHang) không thuộc dãy câu đọc — trả «chưa có» để đọc theo thước CG8.
+    if (sql.includes("to_regclass('public.offer_price_rank')")) return { rows: [{ co: false }] }
     cauLenh.push(sql)
     if (cauLenh.length === 1) throw Object.assign(new Error("lỗi thử"), { code })
     return { rows: [] }
@@ -177,11 +179,11 @@ test("SHS-AC-6 getDeals chỉ rơi về bản cloud khi thiếu lược đồ m�
 
   // Đối chứng đỏ: bản chép bỏ lọc mã (catch trần đời trước) nuốt deadlock.
   const goc = readFileSync(join(APP, "src/lib/deals.ts"), "utf8")
-  const tu = `    if (!thieuLuocDo(e)) throw e;\n    const { rows } = await pool.query(sql({ cloud: true }), values);`
+  const tu = `    if (!thieuLuocDo(e)) throw e;\n    const { rows } = await pool.query(sql({ cloud: true, coBang }), values);`
   assert.ok(goc.includes(tu), "đột biến không áp được")
   mkdirSync(thuMuc, { recursive: true })
   const f = join(thuMuc, "deals-cu.ts")
-  writeFileSync(f, goc.replace(tu, `    const { rows } = await pool.query(sql({ cloud: true }), values);`).replace(/from "\.\/([\w./-]+)"/g, (_m, ten: string) => `from "${pathToFileURL(join(APP, `src/lib/${ten}.ts`)).href}"`))
+  writeFileSync(f, goc.replace(tu, `    const { rows } = await pool.query(sql({ cloud: true, coBang }), values);`).replace(/from "\.\/([\w./-]+)"/g, (_m, ten: string) => `from "${pathToFileURL(join(APP, `src/lib/${ten}.ts`)).href}"`))
   const cu = (await import(pathToFileURL(f).href)) as typeof that
   const { kq } = await goiDeals(cu, "40P01", t)
   assert.throws(() => assert.equal(kq, "ném", "SHS-AC-6 40P01 bị nuốt thành bản cloud"), /SHS-AC-6 40P01 bị nuốt/)

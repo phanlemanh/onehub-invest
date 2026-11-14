@@ -46,7 +46,46 @@ export type DealChiTiet = {
   postTextFull: string | null;
   /** Lý do căn không còn trong danh sách; null khi còn trong danh sách. */
   roiDanhSach: string | null;
+  /** Hạng giá tính sẵn (CG9, bảng offer_price_rank); null khi bảng chưa có hay chưa chấm — khi đó số theo thước CG8. */
+  rank?: HangGia | null;
 };
+
+/** Một dòng offer_price_rank cho trang (CG9). Số NULL khi tin không chấm (`reason` nói vì sao). */
+export type HangGia = {
+  n: number | null;
+  median: number | null;
+  p20: number | null;
+  pct: number | null; // hạng phần trăm trong nhóm, 0 = rẻ nhất
+  below: number | null; // % dưới trung vị
+  label: string | null; // re-trong-phuong | gia-tot
+  needsVerification: boolean;
+  bedroomsGroup: number | null;
+  reason: string | null;
+  metric: string | null; // gia-m2 | gia-thang-pn
+};
+
+/** Nhãn hạng trên trang (CONTEXT.md «Rẻ trong phường»; «Giá tốt» từ cấp dự án — CG10). */
+export const NHAN_HANG: Record<string, string> = { "re-trong-phuong": "Rẻ trong phường", "gia-tot": "Giá tốt" };
+export const CHU_CAN_XAC_MINH = "Cần xác minh";
+
+/** Chữ của từng mã lý do trong offer_price_rank.ly_do (420_price_rank.sql); mã lạ → `CHU_LY_DO_LA`. */
+export const CHU_LY_DO: Record<string, string> = {
+  "chua-ro-loai": "Chưa rõ loại hình — không so được với căn cùng loại",
+  "thieu-phuong": "Chưa rõ phường — không có nhóm để so",
+  "thieu-gia": "Thiếu giá hoặc diện tích — không tính được giá/m²",
+  "thieu-dt-va-pn": "Tin thuê thiếu cả diện tích lẫn số phòng ngủ — không so được",
+  "ngoai-khoang": "Giá nằm ngoài khoảng hợp lệ để so",
+  "phi-ly": "Diện tích hoặc số phòng phi lý — đã loại khỏi so sánh",
+  "nhom-duoi-5": "Nhóm so sánh dưới 5 căn — chưa chấm hạng",
+  "nhom-5-9": "Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn",
+  "pn-duoi-10": "Chưa đủ 10 căn cùng số phòng ngủ — so với cả nhóm cùng loại trong phường",
+};
+export const CHU_LY_DO_LA = "Chưa chấm được hạng giá";
+
+/** Chữ cho một mã lý do; `phi-ly:<lý do ON11>` dùng chữ của `phi-ly`. */
+export function chuLyDo(ma: string): string {
+  return CHU_LY_DO[ma.split(":")[0]] ?? CHU_LY_DO_LA;
+}
 
 /** Một hàng của bảng và sheet: `DealChiTiet` đã áp vai cộng các chữ tính phía máy chủ (`dealHang` của lib/deals). */
 export type DealHang = DealChiTiet & {
@@ -63,9 +102,21 @@ export const soPct = (pct: number): string => String(Number(Math.abs(pct).toFixe
 
 /** Cùng điều kiện với WHERE của `dealsSql`; `quaHan` do SQL tính vì mốc 45 ngày theo giờ DB. */
 export function lyDoRoi(
-  d: Pick<DealChiTiet, "discountPct" | "medianPerm2"> & { propertyType?: string | null },
+  d: Pick<DealChiTiet, "discountPct" | "medianPerm2"> & { propertyType?: string | null; rank?: HangGia | null },
   quaHan: boolean,
 ): string | null {
+  // CG9: có hạng tính sẵn thì lý do đọc từ bảng — tin không chấm mang mã lý do, tin có số mà không nhãn nói vì sao.
+  if (d.rank) {
+    const r = d.rank;
+    if (r.below === null) return chuLyDo(r.reason ?? "");
+    if (quaHan) return `Tin quá ${NGAY_TOI_DA} ngày chưa thấy lại`;
+    if (r.reason === "nhom-5-9") return chuLyDo(r.reason);
+    if (r.below < 0) return `Đắt hơn trung vị nhóm ${soPct(r.below)}%, không phải căn giá tốt`;
+    if (r.below < NGUONG_VAO_PCT) return `Thấp hơn trung vị ${soPct(r.below)}%, dưới ngưỡng ${NGUONG_VAO_PCT}%`;
+    if (r.below > NGUONG_LOAI_PCT) return `Thấp hơn trung vị ${soPct(r.below)}%, trên ngưỡng ${NGUONG_LOAI_PCT}%`;
+    if (!r.label) return "Không nằm trong 20% rẻ nhất của nhóm";
+    return null;
+  }
   // CG8: thước là phường × loại hình (v_ruler_p2), không lùi về thước cả phường (Hỏi-2) — nên tin chưa rõ loại hay phường
   // thiếu thước cùng loại không có số giảm, và lý do nói đúng vì sao. `propertyType` vắng (undefined) là nơi gọi không mang loại.
   if (d.propertyType !== undefined && d.medianPerm2 === null) {
@@ -89,8 +140,23 @@ export function thuocCua(t: string | null | undefined): string {
   return nhan ? `thước ${nhan.toLowerCase()} cùng phường` : "thước phường";
 }
 
+/** Câu chứng minh của hạng giá (CG9): so với bao nhiêu căn, cùng nhóm nào, thấp hơn trung vị bao nhiêu, nhãn gì. */
+export function cauHang(d: Pick<DealChiTiet, "propertyType"> & { rank?: HangGia | null }): string | null {
+  const r = d.rank;
+  if (!r || r.n === null || r.below === null) return null;
+  const loai = loaiHinh(d.propertyType ?? null);
+  const nhom = `So với ${fmtInt(r.n)} căn cùng phường, cùng loại${loai ? ` (${loai.toLowerCase()})` : ""}${r.bedroomsGroup !== null ? `, cùng ${r.bedroomsGroup}PN` : ""}`;
+  const theo = r.metric === "gia-thang-pn" ? " theo giá thuê tháng" : "";
+  if (r.below < 0) return `${nhom}${theo}: đắt hơn trung vị ${soPct(r.below)}%.`;
+  const phan = [`${nhom}${theo}: thấp hơn trung vị ${soPct(r.below)}%`];
+  if (r.label) phan.push(`nằm trong 20% rẻ nhất — ${NHAN_HANG[r.label] ?? r.label}`);
+  if (r.needsVerification) phan.push(`rẻ quá ${NGHI_NGO_PCT}% nên mang nhãn «${CHU_CAN_XAC_MINH}»: gọi xác minh trước khi tin`);
+  return `${phan.join(", ")}.`;
+}
+
 /** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
 export function cauChungMinh(d: DealChiTiet): string | null {
+  if (d.rank) return cauHang(d);
   if (!d.pricePerm2 || !d.medianPerm2 || d.discountPct === null) return null;
   // Trang một căn mở cả căn đã rời danh sách (Hỏi-1), nên câu phải đúng ngoài khoảng ngưỡng; số giảm âm là căn đắt hơn thước.
   const chenh = fmtInt(Math.abs(d.medianPerm2 - d.pricePerm2) / 1e6);
