@@ -5,7 +5,7 @@ slug: toa-s09-hai-khu-vao-danh-ba
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, data]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-13
 design_doc: docs/superpowers/specs/2026-11-13-toa-s09-hai-khu-vao-danh-ba-design.md
@@ -97,3 +97,15 @@ là bản thu khuôn API (Mạnh chốt 13/11 thu định kỳ đường này); 
   viết theo lối khuyến nghị; Mạnh chọn lối khác ở Hỏi-2 hay Hỏi-3 thì máy viết lại AC, eval và mở lại thẻ Cổng Phạm vi
   trước khi code.
 - Nháp hợp đồng dữ liệu S09 khuôn API: `s09-data-contract-api-nhap.md` trong hồ sơ (LL chuyển làn thu).
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-2: Một số toà có tên viết có khoảng trắng giữa hai số có thể được xếp vào phân khu thay vì cụm toà trong cách xem vùng, dù lúc tạo toà lại xếp vào cụm.
+  - Ngoài-3: Muốn thêm khu thứ ba hoặc sửa nối sai giữa dự án nguồn và khu thì phải sửa mã rồi gộp lại, không chỉnh được bằng dữ liệu.
+  - Ngoài-4: Nếu bản thu S09 có thời điểm thu hay nội dung sai dạng thì cả lượt nạp có thể lỗi thay vì chỉ bỏ dòng hỏng đó.
+  - Ngoài-5: Với toà có nhiều mã nguồn S09 viết khác nhau, vùng hiển thị của toà có thể lúc là cụm lúc là phân khu giữa các lần xem.
+  - Ngoài-6: Bộ kiểm tra tên nguồn thật có thể im lặng nếu chính nó hỏng, nên một tên nguồn lọt vào thay đổi có thể không bị báo.
+  - Ngoài-7: Nếu có toà S09 ghi tên kiểu có khoảng trắng giữa hai số, danh bạ có thể xếp toà đó vào phân khu thay vì cụm. Dữ liệu 13/11 chưa có toà nào như vậy nên hiện chưa sai số nào.
+  - Ngoài-8: Trên máy thu, bảng S09 mới sẽ được áp sau hai thay đổi có số lớn hơn, khác thứ tự trên DB dựng mới. Hai phần này độc lập nên khả năng gây lỗi rất thấp.
+  - Ngoài-9: Với toà có nhiều cách viết tên, danh bạ có thể báo toà thuộc phân khu thay vì cụm và kết quả có thể đổi giữa các lần chạy. Hiện dữ liệu thật chưa có toà nào như vậy.
+  - Ngoài-10: Phép kiểm không phát hiện được trường hợp một toà bị tạo thành hai dòng riêng, nên kết quả an toàn có thể xanh dù có toà trùng.
+  - Ngoài-11: Phép đo trên dữ liệu thật báo không có toà hai mã định danh nhưng không thể phát hiện việc cùng một toà bị đúc thành hai bản.
+  - Ngoài-12: Lần kiểm ranh giới theo cấu hình không tự chứng minh rằng nó bắt được tệp nằm ngoài vùng cho phép, nên kết quả xanh chưa chắc đáng tin hoàn toàn.
