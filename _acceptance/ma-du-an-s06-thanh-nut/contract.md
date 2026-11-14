@@ -5,7 +5,7 @@ slug: ma-du-an-s06-thanh-nut
 owner: phanlemanh@gmail.com
 risk_tier: T3      # hàng khai T3; chạm db/migrations và tạo nút danh bạ
 surfaces: [cli]      # lệnh pipeline + migration; từ vựng kit không có db
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-11-14
 design_doc: docs/superpowers/specs/2026-11-14-ma-du-an-s06-thanh-nut-design.md
