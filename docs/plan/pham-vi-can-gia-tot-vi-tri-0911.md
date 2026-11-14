@@ -16,6 +16,10 @@
 > thêm số phòng ngủ khi nhóm vẫn đủ; ghi bảng tính sẵn ở pipeline (họ 400); app và API chỉ đọc. Tầng, hướng, view, nội thất là bộ
 > lọc, không chia nhóm. LLM không quyết điểm.
 >
+> **Sửa 14/11 (ROADMAP §3 mục 48, QĐ4):** tin thuê thiếu m² so giá thuê/tháng theo số phòng ngủ trong nhóm (1PN với 1PN), cùng
+> ngưỡng 20% và 5%, nhóm từ 10; tin thuê có m² và tin bán giữ giá/m². QĐ3: căn đạt chuẩn lên Invest do máy tự hiện, chưa dựng rào
+> (CG7, CG14 không còn chờ CG5 → CG6).
+>
 > **Hàng có sẵn, sửa lời trong cùng PR:** CG3 viết lại câu giao (chọn vị trí bất kỳ trên cây + lọc), đứng trên CG9 thay CG2. CG2 và
 > CG4 chuyển khỏi hàng, CG9 gánh (S06 và tin thuê vào cùng bảng hạng). CGP1 không mở riêng, giao cùng CG11. PL26 thêm ghi chú: CG8
 > giao trước phần so cùng loại.

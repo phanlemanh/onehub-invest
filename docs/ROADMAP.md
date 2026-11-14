@@ -647,6 +647,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     - Q3: giá tốt = top 20% **và** thấp hơn trung vị **từ 5%**; trần 35% → «Cần xác minh» giữ nguyên.
     - Q4: trung vị tính **chung P1 (S03, S05) và P2 (S06)**, mỗi căn một phiếu.
     - Q5: **CG8** (so cùng loại hình ở `/ops/deals` và `/v1/deals`) làm trước mọi hàng khác, tách khỏi PL26.
+    - **Sửa 14/11 (mục 48, QĐ4):** tin thuê thiếu m² so **giá thuê/tháng theo số phòng ngủ** trong nhóm thay giá/m²; tin thuê có m²
+      và tin bán giữ giá/m². QĐ3: căn đạt chuẩn lên Invest do máy tự hiện, chưa dựng rào.
     Số đo nền (DB máy thu 09/11): thước hiện nay gộp mọi loại hình theo phường, trung vị giá/m² căn hộ thấp hơn trung vị cả phường 45,5%
     (127 phường), nên căn hộ đúng giá hiện «rẻ» khoảng 45% cả trên API công khai. Ở cấp phường p20 thấp hơn trung vị 17,6%, ở cấp dự án
     5,3%. Hàng mới: CG8–CG14; viết lại CG3 (tra theo vị trí bất kỳ); CG2, CG4 chuyển khỏi hàng, CG9 gánh; CGP1 giao cùng CG11.
@@ -778,6 +780,38 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       bộ thu tự nghỉ 24 giờ.
     - Gỡ dịch vụ model cục bộ bị trùng trong launchd (bật lại liên tục vì trùng cổng), giữ bản «gate». Đã gỡ 12/11.
     Hàng «lịch thu trên Ops» (xem đủ job, mã thoát, bật/tắt, đổi nhịp từ `/ops/collections`) mới là đề xuất, chưa cắt.
+48. **Mỏ neo đợt: «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»** (14/11, Mạnh «Đồng ý theo khuyến nghị» cho chín quyết định
+    QĐ1–QĐ9; quyết định nguồn S16 cùng ngày; S09 ngày 13/11; bản phạm vi `docs/plan/pham-vi-mo-neo-1411.md`, căn cứ ở kho tri thức
+    riêng `wiki/dot/mo-neo-1411.md`). Nguyên văn: «Đồng ý theo khuyến nghị, mục 2 lên invest chưa cần rào, rào chỉ dựng sau khi rõ
+    tôi trải nghiệm thực tế và đánh giá lại nếu cần thiết. Về giá thuê thông lệ thị trường đang so với nhu cầu như giá căn 2pn, 1pn
+    đây cũng là cách so nếu chưa có m2. Cũng bỏ rào sau khi lên thực tế đánh giá.»
+    - **Mỏ neo và ba nhịp** (QĐ9): nhịp 1 cấp dự án trên Ops (mốc MN1) → nhịp 2 cấp toà ở Ocean Park 1 và Grand Park (MN2) → nhịp 3
+      tầng, ngoài hai khu, lên Invest (MN3). Thước chính: số tin căn hộ đang rao được xếp hạng giá từ cấp dự án trở xuống và hiện
+      trên màn (14/11: 0). Việc đang làm giữ nguyên, xếp theo mỏ neo. Chỉnh lộ trình: tách DA3 hai lát, lát mỏng DA32 đi trước (QĐ5);
+      PL20 thành nhịp toà, trục và căn ở PL36 (QĐ6); hàng nạp S16 DA33 (QĐ7). QĐ1, QĐ2 (lời ghi thật DV6 rồi DA5, sao lưu và chạy
+      thử lại trước) và QĐ8 (mở ngay CG9, gộp DA6) là việc vận hành, không vào lộ trình.
+    - **QĐ3 — lên Invest chưa dựng rào**: căn giá tốt lên Invest do máy tự hiện. Bỏ bước «gọi thử mẫu, đạt mới mở» và bỏ việc giấu căn
+      rẻ quá 35%; rào chỉ dựng sau khi Mạnh dùng thật và đánh giá lại. Giữ nghĩa «giá tốt» ở mục 42 (20% thấp nhất, dưới trung vị từ
+      5%, nhóm từ 10, từ cấp dự án trở xuống) vì đó là định nghĩa nhãn; căn rẻ quá 35% vẫn hiện với nhãn «Cần xác minh»; giữ dấu
+      «chưa xác minh» / «đã xác minh», dòng «so với N căn, thấp hơn trung vị X%» và thước đang dùng. CG7, CG14 không còn chờ
+      CG5 → CG6; CG5, CG6, CG13 chạy song song.
+    - **QĐ4 — thước tin thuê** (sửa mục 42): tin thuê thiếu m² so giá thuê/tháng theo số phòng ngủ trong nhóm (1PN với 1PN, 2PN với
+      2PN), đúng thông lệ thị trường; tin thuê có m² và tin bán giữ giá/m². Cùng ngưỡng 20% và 5%, nhóm từ 10. Chưa dựng rào; đánh giá
+      sau khi lên thật. Giao ở CG10, CG11.
+    - **Nguồn S16** (14/11, Mạnh «Cả phần đăng nhập»; «Phần đăng nhập là mã chính từ chủ đầu tư, nên sự tin cậy cao»): danh mục do
+      một chủ đầu tư tự công bố. Đưa cả phần lấy bằng đăng nhập vào đường ống. Mã căn S16 là nguồn tin cậy cao nhất khi dựng cây
+      toà → căn ở các dự án của chủ đầu tư đó, xếp trên S08 và trên mã suy từ tin S03. **Chưa có lời**: thu định kỳ bằng phiên đăng
+      nhập; hiện mã căn lấy bằng đăng nhập lên cổng Invest hay API công khai — mặc định **chỉ nội bộ** tới khi Mạnh nói khác. Trường
+      nguồn và tên thư mục bản thu mang tên thật nên chỉ ở máy thu; mọi thứ rời máy đổi về `S16`. Phiên đăng nhập, định danh tài
+      khoản thu vẫn là tầng A (luật 6). Hàng DA33, migration 103 do Claude viết sau khi làn thu giao bản thu và hợp đồng dữ liệu.
+    - **Nguồn S09** (13/11, Mạnh «Thu như vừa rồi, đó trách nhiệm của S09, nhiệm vụ của bạn là giao việc và kiểm tra kết quả và hỗ
+      trợ»): thu định kỳ qua đường API (miền API riêng), trách nhiệm ở nguồn; không trình lại câu robots, điều khoản. Luật thu chung
+      giữ: không đăng nhập, dừng khi gặp 403, 429 hay trang thử thách, không vượt chặn. Giữ bản thu ngày 13/11 kèm ghi chú phần meta
+      bị sửa (bản thu bất biến, luật 1: ghi chú đi kèm, không ghi đè).
+    Số đo nền (DB máy thu 14/11): tin căn hộ đang rao bán 11.716, thuê 24.900; nhóm dự án từ 10 tin phủ 5.082 tin bán và 6.710 tin
+    thuê; tính thử ra 855 căn bán, 1.280 căn thuê đạt chuẩn «giá tốt» ở cấp dự án; 268 mã dự án S06 phủ 11.045 tin; tin thuê S03
+    có m² 622/3.459; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03. Hàng mới: DA32, DA33, DA34, PL36 và nợ RP1, FR1, PB1, IT4, IT6, IT5,
+    CI3; sửa lời DA3, DA7, PL20, CG7, CG10, CG14, GC2, TN1. AGENTS.md không đổi: S16 chưa có trong luật 5, 6 nên không mâu thuẫn.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -785,6 +819,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 > AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
 > `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
 > lịch sử; đồng bộ với lộ trình ở hàng AU8.
+>
+> **Từ 14/11 (mục 48):** mỏ neo của đợt là «ở dự án B, tháp X, tầng A — căn nào giá tốt nhất»; ba mốc MN1 (cấp dự án trên Ops),
+> MN2 (cấp toà ở hai khu), MN3 (tầng, S16, Invest) đứng đầu `docs/plan/lo-trinh.json`, thứ tự hàng trong mốc là thứ tự làm.
 
 ### Mục tiêu dữ liệu ra mắt 05/11 (Mạnh chốt 31/10, mức «thách thức»)
 
