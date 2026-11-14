@@ -5,7 +5,7 @@ slug: s06-tran-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-14T09:17:16Z
 design_doc: docs/superpowers/specs/2026-11-14-s06-tran-trang-design.md
@@ -76,3 +76,9 @@ transform — làn ZCode.
 ## Notes
 
 - Giới hạn có tên: trên CI tệp test mới tự bỏ qua (không có DATABASE_URL) — AC-2 chỉ đo ở lượt chấm trên máy.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-14:
+  - Ngoài-1: chạy thử --dry mà gặp 403/429 vẫn ghi snapshot thật, và snapshot ghi nhầm không xoá được.
+  - Ngoài-3: biến trần đặt sai (rỗng hay chữ) làm lượt thu lặng lẽ quay về 25 trang, không cảnh báo.
+  - Ngoài-5: trùng Ngoài-1 — nhánh bị chặn không kiểm --dry trước khi ghi snapshot.
+  - Ngoài-6: trùng Ngoài-3 — giá trị dự phòng của trần vẫn là 25.
+  - Ngoài-7: probe AC-5 chỉ có ca xa ranh giới 1%, chưa ghim đúng con số ngưỡng.
