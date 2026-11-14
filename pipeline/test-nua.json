@@ -42,6 +42,7 @@
     "scripts/boc-sdt.test.mjs",
     "scripts/cam-mau-s03.test.mjs",
     "scripts/chotot-khong-lui-noi-dung.test.mjs",
+    "scripts/collect-chotot-chan.test.mjs",
     "scripts/cong-tac-that-v2.test.mjs",
     "scripts/cong-tac-that.test.mjs",
     "scripts/dac-trung-s06.test.mjs",
