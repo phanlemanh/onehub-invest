@@ -333,14 +333,13 @@
       "tieu_chi": 7,
       "dung_tren": [],
       "cau_giao": "Các bước ghi properties (lượt đêm S06, lượt nạp nhanh S03, lượt chấm song song) giữ chung một khoá tư vấn: đụng khoá thì chờ có hạn hoặc bỏ lượt có ghi, không còn deadlock trong resolve-properties",
-      "bat_khi": "Itest trên DB của lượt: hai tiến trình resolve-properties chạy cùng lúc → một chờ hay bỏ lượt có dòng log, 0 lỗi deadlock; quá hạn chờ → thoát có mã và dòng «bỏ lượt»; chạy đơn → kết quả như trước; đo thật 14 đêm: 0 deadlock trong chotot.log",
+      "bat_khi": "Itest trên DB của lượt: hai tiến trình resolve-properties chạy cùng lúc → một chờ hay bỏ lượt có dòng log, 0 lỗi deadlock; quá hạn chờ → thoát có mã và dòng «bỏ lượt»; chạy đơn → kết quả như trước; đo thật 14 đêm: 0 deadlock trong log job đêm S06",
       "vi_sao": "Lượt đêm S06 trước 14/11 hỏng bước resolve-properties do khoá chéo với job khác, không ai được báo.",
       "vung": [
         "pipeline/resolve-properties.mjs",
-        "pipeline/lib",
-        "scripts/chotot-daily.sh"
+        "pipeline/lib"
       ],
-      "ghi_chu": "chotot-daily.sh chỉ sửa bước resolve trở đi (bước thu/nạp là làn thu). Khuôn bỏ lượt theo --luot-nhanh có sẵn. Dưới mục tiêu cỡ, giữ riêng vì khác vùng. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
+      "ghi_chu": "Script hằng ngày của S06 trong scripts/ chỉ sửa bước resolve trở đi (bước thu/nạp là làn thu). Khuôn bỏ lượt theo --luot-nhanh có sẵn. Dưới mục tiêu cỡ, giữ riêng vì khác vùng. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
     },
     {
       "ma": "VH8",
@@ -452,7 +451,7 @@
       "vi_sao": "S02 trả 401 từ 13/11 12:05Z (32 lần) mà SLO 35 ngày nên im lặng tới tháng 12 — cùng kiểu «đứt im lặng» với S03.",
       "vung": [
         "collector/src",
-        "pipeline/airdna-rotate.mjs"
+        "pipeline/collect-*"
       ],
       "ghi_chu": "Làn ZCode (bộ thu); giao qua liên làn. Khuôn dòng do VH1 định nghĩa; điều kiện D1 đọc dòng nằm ở VH1. Đăng nhập lại S02 là việc tài khoản của Mạnh, không thuộc hàng. Dưới mục tiêu cỡ, làn thu. Căn cứ: docs/ops/de-xuat-van-hanh-on-dinh-1411.md §5, ROADMAP §3 mục 49."
     },
