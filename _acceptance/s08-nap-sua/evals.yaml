@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: s08-nap-sua
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s08ns_can
+    expected: "exit 0; dòng tổng ℹ tests 1 · pass 1 · skipped 0 (ca bị bỏ qua vì thiếu DATABASE_URL = không đạt), «S08-3 đối chứng DƯƠNG» ok (2 dòng stg_s08_inventory, đánh dấu = 1, không CHUA-AP-094). Chiều đỏ: trả điều kiện hoãn về coS08DanhMuc thì ca này đỏ ở assert «không rơi nhánh rollback dự án»"
+    paths: ["pipeline/import-airbnb.mjs", "pipeline/tests/s08-danh-muc-nap.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s08ns_hoan
+    expected: "exit 0; dòng tổng ℹ tests 1 · pass 1 · skipped 0 (ca bị bỏ qua vì thiếu DATABASE_URL = không đạt), «S08-2 chiều đỏ» ok (in CHUA-AP-094, đánh dấu = 0). Chiều đỏ: bỏ nhánh hoãn thì snapshot có danh mục bị đánh dấu, ca đỏ ở «KHÔNG đánh dấu»"
+    paths: ["pipeline/import-airbnb.mjs", "pipeline/tests/s08-danh-muc-nap.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s08ns_094
+    expected: "exit 0; dòng tổng ℹ tests 1 · pass 1 · skipped 0 (ca bị bỏ qua vì thiếu DATABASE_URL = không đạt), «S08-1 có 094» ok (2 dự án, 1 dòng có detail_payload, nạp lại vẫn 2)"
+    paths: ["pipeline/import-airbnb.mjs", "pipeline/tests/s08-danh-muc-nap.test.mjs", "db/migrations/094_stg_s08_du_an.sql"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.s08ns_chia
+    expected: "exit 0; CN-1 và CN-2 ok. Chiều đỏ: gỡ tests/s08-danh-muc-nap.test.mjs khỏi nửa a thì CN-1 đỏ gọi tên tệp thiếu"
+    paths: ["pipeline/test-nua.json", "pipeline/package.json", "pipeline/scripts/chia-nua.test.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
