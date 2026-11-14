@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, chmodSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,7 +41,7 @@ exit 9
   return p;
 };
 
-const chayHb = ({ home, cli, state, alerts, moc, up = false }) => spawnSync("bash", [SCRIPT], {
+const chayHb = ({ home, cli, state, alerts, moc, up = false, them = {} }) => spawnSync("bash", [SCRIPT], {
   encoding: "utf8", timeout: 60_000,
   env: {
     ...process.env,
@@ -54,6 +54,7 @@ const chayHb = ({ home, cli, state, alerts, moc, up = false }) => spawnSync("bas
     HOME: home,
     ZALO_HEARTBEAT_ROOT: REPO,
     S03_SONG_OSASCRIPT: "/usr/bin/true",
+    ...them,
   },
 });
 const docDem = (home) => { try { return (readFileSync(join(home, "dem"), "utf8").match(/lan-/g) ?? []).length; } catch { return 0; } };
@@ -107,6 +108,44 @@ test("D3-3: directory lỗi khác (không phải Đăng nhập thất bại) →
   writeFileSync(join(home, "dem"), "lan-da-co\n");
   chayHb({ home, cli, state, alerts, moc });
   assert.match(readFileSync(state, "utf8"), /reason=stopped/, "lỗi khác → reason=stopped");
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("D3-4 (1411-20 MỞ LẠI): UP → zalo-drift.sh (giả) ĐƯỢC gọi; DOWN → không được gọi. CA ĐỎ: ai thêm lại exit 0 ở nhánh UP thì ca này đỏ (drift không được gọi)", () => {
+  const home = mkdtempSync(join(tmpdir(), "s03-hb4-"));
+  const cli = stubCli(home);
+  const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
+  const dau = join(home, "drift-dau"); // stub drift ghi tệp đánh dấu
+  // stub drift nhận đường tệp đánh dấu qua $1 (heartbeat truyền ZALO_DRIFT_DAU)
+  writeFileSync(join(home, "drift.sh"), `#!/bin/bash\necho called >> "$1"\n`);
+  chmodSync(join(home, "drift.sh"), 0o755);
+  const env = { GIA_DEM: join(home, "dem"), ZALO_OPENCLAW_CLI: cli, ZALO_HEARTBEAT_STATE: state,
+    ZALO_HEARTBEAT_ALERTS: alerts, ZALO_HEARTBEAT_LINH_MUC: moc, HOME: home, ZALO_HEARTBEAT_ROOT: REPO,
+    S03_SONG_OSASCRIPT: "/usr/bin/true", ZALO_DRIFT_SH: join(home, "drift.sh"), ZALO_DRIFT_DAU: dau };
+  // nhịp DOWN — không drift (env stub drift vẫn truyền để chứng minh exit trước drift)
+  chayHb({ home, cli, state, alerts, moc, them: { ZALO_DRIFT_SH: join(home, "drift.sh"), ZALO_DRIFT_DAU: dau } });
+  const khong = spawnSync("bash", [SCRIPT], { encoding: "utf8", env: { ...env, GIA_STATUS: "down", HOME: home }, timeout: 60_000 });
+  assert.equal(khong.status, 0);
+  assert.equal(require0(dau), false, "DOWN không gọi drift");
+  // nhịp UP — drift được gọi (mốc alert drift chưa có → RUN_DRIFT=1)
+  chayHb({ home, cli, state, alerts, moc, up: true, them: { ZALO_DRIFT_SH: join(home, "drift.sh"), ZALO_DRIFT_DAU: dau } });
+  assert.equal(require0(dau), true, "UP gọi drift (mã chết nếu ai thêm lại exit 0 nhánh UP)");
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("D3-5: UP mà post 202 cuối cũ hơn 24 giờ → có dòng alert silent-gate", () => {
+  const home = mkdtempSync(join(tmpdir(), "s03-hb5-"));
+  const cli = stubCli(home);
+  const state = join(home, "state"), alerts = join(home, "alerts.log"), moc = join(home, "moc");
+  const dau = join(home, "drift-dau");
+  writeFileSync(join(home, "drift.sh"), "#!/bin/bash\nexit 0\n"); chmodSync(join(home, "drift.sh"), 0o755);
+  const cu = new Date(Date.now() - 25 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
+  const logDir = join(home, ".openclaw", "logs");
+  mkdirSync(logDir, { recursive: true });
+  writeFileSync(join(logDir, "oneinvest-zalo-pipe.log"), `${cu} post 202 hi-1\n${cu} heartbeat zalouser up accs=1/1\n`);
+  chayHb({ home, cli, state, alerts, moc, up: true, them: { ZALO_DRIFT_SH: join(home, "drift.sh") } });
+  const log = readFileSync(join(logDir, "oneinvest-zalo-pipe.log"), "utf8");
+  assert.match(log, /alert silent-gate/, "up + không tin 24h → alert silent-gate");
   rmSync(home, { recursive: true, force: true });
 });
 

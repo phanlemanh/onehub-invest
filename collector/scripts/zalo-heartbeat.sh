@@ -24,12 +24,15 @@ TOTAL=$(echo "$STATUS" | grep -c "Zalo Personal" || true)
 # 1411-30: grep -w — «disconnected» chứa chuỗi «connected» nên grep thường đếm cả
 # tài khoản RỚT là connected (stub test làm lộ); -w khớp nguyên từ.
 UP=$(echo "$STATUS" | grep "Zalo Personal" | grep -cw connected || true)
+UP_LA=0
 if [ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ]; then
   echo "$TS heartbeat zalouser up accs=${UP}/${TOTAL}" >> "$LOG"
   # 1411-30 D3: up — tự đóng cảnh báo DOWN kéo dài (xoá cờ d) + xoá đếm nhịp.
-  if [ -f "$HEARTBEAT_STATE" ]; then rm -f "$HEARTBEAT_STATE"; fi
-  exit 0
-fi
+  # 1411-20 MỞ LẠI: KHÔNG exit ở đây — drift-check + silent-gate bên dưới phải chạy
+  # MỖI nhịp up (hai lớp an toàn luật 8; vòng trước exit sớm làm chúng thành mã chết).
+  rm -f "$HEARTBEAT_STATE"
+  UP_LA=1
+else
 # 1411-30 D3 — DOWN: đếm nhịp liền, cảnh báo L6(d) khi ≥2 nhịp (≥30′), rồi
 # phân biệt lý do bằng lệnh liệt kê nhóm CHỈ-ĐỌC tối đa 1 lần/giờ.
 NHIP_DOWN=1
@@ -74,15 +77,21 @@ S03_SONG_OSASCRIPT="${S03_SONG_OSASCRIPT:-osascript}"
 source "$(cd "$(dirname "$0")/../.." && pwd)/scripts/lib/s03-song.sh"
 song_d_down_kdai "$NHIP_DOWN" "$HEARTBEAT_STATE" "$HEARTBEAT_ALERTS"
 exit 0
-
-# Drift-check (Phase 2): 1 giờ/lần — so allowlist với membership thật
-LAST_DRIFT="$(grep ' alert drift' "$LOG" 2>/dev/null | tail -1 | cut -c1-19)"
-RUN_DRIFT=1
-if [ -n "$LAST_DRIFT" ]; then
-  LD_EPOCH="$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "$LAST_DRIFT" +%s 2>/dev/null || echo 0)"
-  [ $(( ($(date -u +%s) - LD_EPOCH) / 3600 )) -lt 1 ] && RUN_DRIFT=0
 fi
-[ "$RUN_DRIFT" = "1" ] && bash "$(dirname "$0")/zalo-drift.sh" || true
+
+# Drift-check (Phase 2): 1 giờ/lần — so allowlist với membership thật.
+# 1411-20 MỞ LẠI: chỉ chạy khi UP (main cũ: DOWN exit trước khối này); env
+# ZALO_DRIFT_SH + ZALO_DRIFT_DAU để test bơm stub ghi tệp đánh dấu.
+RUN_DRIFT=0
+if [ "$UP_LA" = "1" ]; then
+  LAST_DRIFT="$(grep ' alert drift' "$LOG" 2>/dev/null | tail -1 | cut -c1-19)"
+  RUN_DRIFT=1
+  if [ -n "$LAST_DRIFT" ]; then
+    LD_EPOCH="$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "$LAST_DRIFT" +%s 2>/dev/null || echo 0)"
+    [ $(( ($(date -u +%s) - LD_EPOCH) / 3600 )) -lt 1 ] && RUN_DRIFT=0
+  fi
+  [ "$RUN_DRIFT" = "1" ] && bash "${ZALO_DRIFT_SH:-$(dirname "$0")/zalo-drift.sh}" "${ZALO_DRIFT_DAU:-}" || true
+fi
 
 # Chết im lặng: up nhưng dòng " post 202" cuối cũ hơn 24h (chỉ cảnh báo khi
 # trước đó từng có tin thật — log có ít nhất 1 dòng post 202)
