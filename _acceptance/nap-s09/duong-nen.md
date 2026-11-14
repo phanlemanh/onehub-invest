@@ -1,7 +1,7 @@
 ---
 slug: nap-s09
-at: 2026-11-14T06:32:41.833Z
-sha: f240699e204d0040a83394e388902b59df7a7f93
+at: 2026-11-14T07:11:55.366Z
+sha: f85944120e6056655dac7e5f5b5e656f8f3acf2a
 nen: do
 cong_cu: xanh
 suite: do
@@ -11,13 +11,7 @@ engine: xanh
 
 ## Dòng đỏ
 
-- nen suite: DO SAN executors.test.agent ma 1
-- nen suite: DO SAN executors.test.app ma 1
-- nen suite: DO SAN executors.test.app_ui ma 1
-- nen suite: DO SAN executors.test.pipeline_a ma 1
-- nen suite: DO SAN executors.test.pipeline_b ma 1
-- nen suite: DO SAN executors.test.ui_lint_rules ma 1
-- nen suite: DO SAN executors.script.portal_static ma 1
+- nen suite: DO SAN executors.test.app ma 2
 
 ## Dòng vàng
 
