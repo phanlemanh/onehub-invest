@@ -117,3 +117,28 @@ song_c_notlinked() {
   song_hoi_xoa c "$state"
   return 1
 }
+
+# (d) <so_nhip_down> <state> <alerts_log> — 1411-30 D3: heartbeat DOWN ≥ 2 nhịp liền
+# (nhịp 15′ → ≥30′) = DOWN kéo dài, cảnh báo như L6 a/b KHÔNG phụ thuộc CLI in «not
+# linked» (l6c mù với kiểu phiên chết 13/11: status vẫn in linked khi tệp phiên còn
+# trên đĩa). Báo MỘT LẦN mỗi sự cố, tự đóng (xoá cờ) khi up — heartbeat gọi song_d_hoi_xoa.
+song_d_down_kdai() {
+  local so_nhip="$1" state="$2" alog="$3"
+  if [ "${so_nhip:-0}" -ge 2 ] 2>/dev/null; then
+    if song_chua_bao d "$state"; then
+      song_canh_bao d "heartbeat DOWN ${so_nhip} nhịp liền (≥30′) — S03 DOWN kéo dài, xem reason trên log heartbeat" "$state" "$alog"
+    fi
+    return 0
+  fi
+  song_d_hoi_xoa "$state"
+  return 1
+}
+
+# <state> — xoá cờ d khi up (heartbeat gọi khi UP).
+song_d_hoi_xoa() {
+  local state="$1"
+  if [ -f "$state" ] && grep -qx d "$state" 2>/dev/null; then
+    grep -vx d "$state" > "${state}.tmp" 2>/dev/null
+    mv "${state}.tmp" "$state"
+  fi
+}

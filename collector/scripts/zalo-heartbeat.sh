@@ -8,23 +8,72 @@
 set -uo pipefail
 
 LOG="$HOME/.openclaw/logs/oneinvest-zalo-pipe.log"
-OPENCLAW="$HOME/.openclaw/bin/openclaw"
+OPENCLAW="${ZALO_OPENCLAW_CLI:-$HOME/.openclaw/bin/openclaw}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+# 1411-30 D3: state + đường ghi đè được để test bơm (mặc định đúng máy thật).
+HEARTBEAT_STATE="${ZALO_HEARTBEAT_STATE:-$HOME/.openclaw/logs/.zalo-heartbeat-down}"
+ROOT_ZCODE="${ZALO_HEARTBEAT_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+HEARTBEAT_ALERTS="${ZALO_HEARTBEAT_ALERTS:-$ROOT_ZCODE/pipeline/logs/zalo-watchdog-alerts.log}"
+HEARTBEAT_LINH_MUC="${ZALO_HEARTBEAT_LINH_MUC:-$HOME/.openclaw/logs/.zalo-heartbeat-nhom-moc}"
 mkdir -p "$(dirname "$LOG")"
 touch "$LOG"
 
 STATUS="$("$OPENCLAW" channels status 2>/dev/null || true)"
 # Đa tài khoản: ĐÚNG khi MỌI dòng "Zalo Personal ... connected" đều connected
 TOTAL=$(echo "$STATUS" | grep -c "Zalo Personal" || true)
-UP=$(echo "$STATUS" | grep "Zalo Personal" | grep -c "connected" || true)
+# 1411-30: grep -w — «disconnected» chứa chuỗi «connected» nên grep thường đếm cả
+# tài khoản RỚT là connected (stub test làm lộ); -w khớp nguyên từ.
+UP=$(echo "$STATUS" | grep "Zalo Personal" | grep -cw connected || true)
 if [ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ]; then
   echo "$TS heartbeat zalouser up accs=${UP}/${TOTAL}" >> "$LOG"
-elif [ "$TOTAL" -gt 0 ]; then
-  echo "$TS heartbeat zalouser DOWN accs=${UP}/${TOTAL}" >> "$LOG"
-else
-  echo "$TS heartbeat zalouser DOWN" >> "$LOG"
+  # 1411-30 D3: up — tự đóng cảnh báo DOWN kéo dài (xoá cờ d) + xoá đếm nhịp.
+  if [ -f "$HEARTBEAT_STATE" ]; then rm -f "$HEARTBEAT_STATE"; fi
+  exit 0
 fi
-[ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ] || exit 0
+# 1411-30 D3 — DOWN: đếm nhịp liền, cảnh báo L6(d) khi ≥2 nhịp (≥30′), rồi
+# phân biệt lý do bằng lệnh liệt kê nhóm CHỈ-ĐỌC tối đa 1 lần/giờ.
+NHIP_DOWN=1
+CO_CANH_BAO_D=0
+if [ -f "$HEARTBEAT_STATE" ]; then
+  NHIP_CU=$(grep -oE "^nhip=[0-9]+" "$HEARTBEAT_STATE" 2>/dev/null | cut -d= -f2)
+  [ -n "$NHIP_CU" ] && NHIP_DOWN=$(( NHIP_CU + 1 ))
+  grep -qx d "$HEARTBEAT_STATE" 2>/dev/null && CO_CANH_BAO_D=1
+fi
+LY_DO="$(grep -oE "^reason=[a-z]+" "$HEARTBEAT_STATE" 2>/dev/null | cut -d= -f2 | tail -1)"
+# lệnh nhóm: chỉ khi DOWN, trần 1/giờ (mốc lưu riêng); KHÔNG in danh sách nhóm
+# hay định danh — chỉ lấy reason.
+GIOI_NHOM=1
+if [ -f "$HEARTBEAT_LINH_MUC" ]; then
+  MOC=$(cat "$HEARTBEAT_LINH_MUC" 2>/dev/null || echo 0)
+  [ $(( $(date -u +%s) - ${MOC:-0} )) -lt 3600 ] && GIOI_NHOM=0
+fi
+if [ "$GIOI_NHOM" = "1" ]; then
+  date -u +%s > "$HEARTBEAT_LINH_MUC"
+  NHOM_OUT="$("$OPENCLAW" directory groups list --channel zalouser 2>&1 || true)"
+  if printf '%s' "$NHOM_OUT" | grep -q "Đăng nhập thất bại"; then
+    LY_DO="session"
+  elif [ -n "$NHOM_OUT" ]; then
+    LY_DO="stopped"
+  fi
+fi
+# viết lại state GIỮ cờ d (cảnh báo một lần mỗi sự cố — heartbeat không được ghi đè mất cờ)
+{
+  echo "nhip=$NHIP_DOWN"
+  [ -n "$LY_DO" ] && echo "reason=$LY_DO"
+  [ "$CO_CANH_BAO_D" = "1" ] && echo "d"
+} > "$HEARTBEAT_STATE"
+if [ -n "$LY_DO" ]; then
+  echo "$TS heartbeat zalouser DOWN accs=${UP:-0}/${TOTAL:-0} reason=$LY_DO" >> "$LOG"
+else
+  echo "$TS heartbeat zalouser DOWN accs=${UP:-0}/${TOTAL:-0}" >> "$LOG"
+fi
+# cảnh báo L6(d): source lib dùng chung khuôn L6 a/b (canh_bao một lần mỗi sự cố,
+# tự đóng khi up); env override cho test.
+S03_SONG_STATE="$HEARTBEAT_STATE"
+S03_SONG_OSASCRIPT="${S03_SONG_OSASCRIPT:-osascript}"
+source "$(cd "$(dirname "$0")/../.." && pwd)/scripts/lib/s03-song.sh"
+song_d_down_kdai "$NHIP_DOWN" "$HEARTBEAT_STATE" "$HEARTBEAT_ALERTS"
+exit 0
 
 # Drift-check (Phase 2): 1 giờ/lần — so allowlist với membership thật
 LAST_DRIFT="$(grep ' alert drift' "$LOG" 2>/dev/null | tail -1 | cut -c1-19)"
