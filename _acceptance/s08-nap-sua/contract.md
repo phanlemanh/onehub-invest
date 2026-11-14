@@ -5,7 +5,7 @@ slug: s08-nap-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-11-14T03:50:45Z
 design_doc: docs/superpowers/specs/2026-11-14-s08-nap-sua-design.md
