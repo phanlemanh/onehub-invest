@@ -5,7 +5,7 @@ slug: s08-nap-sua
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-14T12:40:35Z
 design_doc: docs/superpowers/specs/2026-11-14-s08-nap-sua-design.md
@@ -67,3 +67,8 @@ Bỏ quét không gian — một điều kiện rẽ nhánh hai trục rời r�
   - Ngoài-2: trên CI ba ca S08 không chạy (thiếu DATABASE_URL thì tệp tự bỏ qua) mà vẫn báo xanh; chỉ lượt chấm trên máy đo được.
   - Ngoài-5: trùng Ngoài-2 — lỗi hồi quy nạp S08 có thể lọt qua CI.
   - Ngoài-7: dữ liệu căn trong test viết tay, không rút từ bộ thu thật; lệch khuôn giữa thu và nạp sẽ không bị test bắt.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-15:
+  - Ngoài-3: dữ liệu căn S08 trong test viết tay đúng khuôn bên đọc, không rút từ bộ thu; lệch khuôn giữa thu và nạp không bị test bắt.
+  - Ngoài-5: trên CI tệp test S08 tự bỏ qua trước khi chạy ca nào mà vẫn báo xanh; ba ca S08 chỉ đo ở lượt chấm trên máy.
+  - Ngoài-8: trùng Ngoài-5 (lượt 1) — hồi quy nạp S08 có thể lọt qua CI.
+  - Ngoài-10: trùng Ngoài-3 (lượt 1) — fixture viết tay, không rút từ bộ thu.
