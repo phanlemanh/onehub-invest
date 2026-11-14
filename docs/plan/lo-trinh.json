@@ -6658,6 +6658,31 @@
         "app/src/app/(app)"
       ],
       "ghi_chu": "Dưới mục tiêu cỡ; T1 như CI1. Phiên làm hàng liệt đủ tệp layout lỗi ở Cổng Phạm vi rồi khai thêm vùng."
+    },
+    {
+      "dot": "dinh-vi-cap-du-an-1511",
+      "nhom": "dinh-vi-s03",
+      "ma": "DV7",
+      "slug": "du-an-cua-tin-len-dinh-vi",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "dung_tren": [
+        "DV6",
+        "DA32"
+      ],
+      "phu": [
+        "DV7"
+      ],
+      "cau_giao": "Mọi tin S03, S05, S06 có chứng cứ dự án được định vị cấp dự án qua một nguồn chung (view offer_project), và ô Định vị của màn chặng cùng bậc B2 của thang dữ liệu đọc đúng nguồn ấy",
+      "bat_khi": "Ô Định vị S03 (cửa sổ all) trên DB máy thu từ 0 lên khoảng 4.934 sau một lượt 600_data_flow.sql (cửa sổ 7d khoảng 754); số tin B2 của thang bậc bằng số ô Định vị; «chờ khớp» cấp toà không đổi; S06 tự lên số khi thẻ luật được áp",
+      "vi_sao": "Điều tra 15/11: 4.934/6.102 tin S03 đã mang dự án (DV6) mà màn và bậc B2 vẫn 0 vì hai chỗ cắm rỗng (600 #377, 087). Bước 4 của đường găng nhịp 1; CG10 và /ops/deals đọc nguồn này.",
+      "vung": [
+        "db/migrations",
+        "pipeline/sql",
+        "app/src/components/ops/data-flow"
+      ],
+      "ghi_chu": "GS giao 15/11, chọn đường A (migration 105, T3, Gate 1.5 một trang); không nhận DS2 — DS2 còn cột trên tin, căn và sync-cloud. Lời áp 105 lên DB máy thu xin ở Cổng Phạm vi."
     }
   ],
   "chan_troi": [
