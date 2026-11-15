@@ -39,3 +39,6 @@ CLAUDE.local.md
 .claude/ops-test-account.json
 .claude/viewer-test-account.json
 .claude/ops-role-test-account.json
+
+# resolve-so-stage-a: bản resolve-properties cũ rút từ git khi so (tự dọn, kể cả khi bị ngắt)
+pipeline/.resolve-cu.*.tmp.mjs

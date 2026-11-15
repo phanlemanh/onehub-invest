@@ -123,7 +123,7 @@ const soCau = (cau, base) => {
 const quetGoiThang = (src) => { if (/\bc\.query\(/.test(src)) throw new Error("RTLD-AC-7 còn c.query trực tiếp"); };
 test("RTLD-AC-7 chữ SQL không đổi", () => {
   // đối chứng dương của bộ rút trên bản chụp base
-  assert.equal(BASE.cau.length, 7);
+  assert.equal(BASE.cau.length, 12);
   assert.ok(BASE.cau[0].startsWith("floor(s.latitude / 0.0005)"));
   assert.ok(BASE.cau.some((s) => s.startsWith("INSERT INTO property_offers")));
   const src = readFileSync(NGUON, "utf8");
