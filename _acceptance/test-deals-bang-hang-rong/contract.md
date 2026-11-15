@@ -5,7 +5,7 @@ slug: test-deals-bang-hang-rong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ci]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-11-15T08:25:00Z
 approved_by:
@@ -44,3 +44,5 @@ CGB-AC-1…3) và mọi lượt chấm, ghim lại ở máy này đỏ theo. CI 
   này) — luật cho mọi ca mới; (2) `db-thu.sh` nhận danh sách bảng dẫn xuất (`offer_price_rank`, `project_area_band`, bảng metrics) và
   pg_dump `--exclude-table-data` cho chúng, để bản chép mang lược đồ mà không mang dòng; lượt đo dữ liệu thật (hang-gia-db.sh do)
   vẫn chép đủ vì nó cần dòng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-15:
+  - Ngoài-1: Tệp test của màn một căn (CGT) chưa có phép thử riêng báo đỏ khi phần dựng tiền đề bị gỡ — chỉ lộ khi chạy trên bản chép máy thu.
