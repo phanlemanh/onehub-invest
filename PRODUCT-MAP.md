@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>194 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>126 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>195 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>127 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -114,6 +114,7 @@ flowchart TD
 - check-freshness đo S03/S05/S06 theo giờ THU thật của snapshot thay vì giờ NẠP — nguồn ngừng thu mà bị nạp lại bản cũ phải báo quá hạn (`freshness-do-gio-thu-that-s03`)
 - check-freshness đo độ tươi theo bảng thật của từng nguồn, có SLO cho S05 và S06, không còn dòng quá hạn giả (`freshness-theo-nguon-that`)
 - Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm (`gan-nhan-theo-nhom-s03`)
+- Tin có dự án được xếp hạng giá trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «Giá tốt» khi nằm trong 20% thấp nhất và dưới trung vị từ 5%; tin chỉ biết phường giữ «Rẻ trong phường»; /ops/deals lọc được theo dự án, mỗi căn một dòng, tab «Cần xác minh» đếm trên toàn tập; dải diện tích dự án × PN là phát biểu suy ra riêng (`gia-tot-cap-du-an`)
 - Gỡ tài khoản Zalo kiểm bản cấu hình sau khi gỡ trước lệnh đăng xuất: cấu hình phạm bất biến bộ canh thì từ chối mà không đăng xuất phiên nào (`go-tai-khoan-kiem-cfg-truoc-logout`)
 - Route gỡ tài khoản thu DELETE /api/v1/ops/zalo/accounts từ chối id rỗng hoặc không có trong danh sách tài khoản trước khi gọi openclaw (`go-tai-khoan-kiem-id`)
 - Ảnh của tin chỉ-ảnh S03 (ảnh gửi riêng trước hay sau tin chữ, cùng người, dưới 2 phút) vào đúng offer trong bảng ảnh canonical; bảng nạp và sale_offers giữ nguyên (`gop-tin-chi-anh-o-transform`)
@@ -258,6 +259,7 @@ flowchart TD
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
 - Đóng băng Stage B của bộ dựng căn và thẻ Ghép căn — không sinh cặp, không gieo thẻ, thẻ chờ không hiện, dữ liệu cũ giữ nguyên (`dong-bang-stage-b-resolve`)
+- Mọi tin S03, S05, S06 có chứng cứ dự án được định vị cấp dự án qua một nguồn chung trong DB (view offer_project, migration 105, chỉ máy thu), và ô Định vị của màn chặng cùng bậc B2 của thang dữ liệu đọc đúng nguồn ấy — ô Định vị S03 trên DB máy thu từ 0 lên khoảng 4.934 (`du-an-cua-tin-len-dinh-vi`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
 - Danh sách tin công khai nhanh — getPublicOffers rút trang trước, đếm tài khoản nhiều tên chỉ cho người bán của trang, tổng đếm theo hàm cửa sổ; trang đầu vn-hcmc bốn kiểu sắp dưới 1000 ms trên DB máy thu, có biên, không nới trần E4b (`e4b-danh-sach-tin-nhanh`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
