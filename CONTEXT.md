@@ -204,10 +204,22 @@ _Avoid_: bí danh SĐT (đó là khoá định danh), số phụ
 **Tài khoản nhiều tên**: Chữ thay tên người đăng khi một tài khoản nguồn mang từ ba tên trở lên, nên không tên nào đáng tin. Tin không có tên thì ghi «Chưa có tên».
 - Code: `sellerManyNames`, `OFFER_MANY_NAMES`
 
-**Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.
-- Code: `deal` · RESO: không có — chỉ số nội bộ
+**Căn giá tốt**: Tin rao bán (P1 và P2) mang nhãn hạng giá: giá nằm trong 20% thấp nhất của nhóm so sánh và thấp hơn trung vị nhóm từ 5%, nhóm từ 10 căn (ROADMAP §3 mục 42 Q1–Q3). Nhóm cấp phường mang nhãn «Rẻ trong phường»; nhãn «Giá tốt» chỉ từ cấp dự án trở xuống (CG10). Danh sách ở cổng Ops; bảng hạng chưa có thì danh sách lùi về thước giá cùng phường × loại hình của CG8.
+- Code: `deal` · `offer_price_rank.nhan` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
 _Avoid_: deal tốt, kèo
+
+**Hạng giá**: Vị trí giá của một tin trong nhóm so sánh, tính sẵn ở pipeline cho mọi tin đang rao (bán và thuê): số căn của nhóm, trung vị, p20, phần trăm hạng (0 = rẻ nhất), phần trăm dưới trung vị, nhãn và lý do lùi cấp hay không chấm. Nhóm từ 10 căn có nhãn; 5–9 căn chỉ có số; dưới 5 không chấm.
+- Code: `offer_price_rank` (migration 104) · `pipeline/sql/420_price_rank.sql` · `xep-hang-gia.mjs` · `rank` (API) · RESO: không có — chỉ số nội bộ
+_Avoid_: điểm giá, xếp loại
+
+**Nhóm so sánh**: Tập căn mà một tin được so giá: cùng nút vị trí sâu nhất đủ căn (hôm nay là phường; dự án, phân khu, toà ở CG10, CG11), cùng loại hình, cùng bán hay thuê, thêm cùng số phòng ngủ khi nhóm ấy đủ 10 căn. Mỗi căn một phiếu, chung P1 và P2. Tin thuê thiếu m² so giá thuê tháng trong nhóm cùng số phòng ngủ.
+- Code: `cap`, `nut`, `pn_nhom`, `thuoc` (`gia-m2`, `gia-thang-pn`) của `offer_price_rank` · RESO: không có — chỉ số nội bộ
+_Avoid_: thước phường (đã là nhóm), bucket
+
+**Rẻ trong phường**: Nhãn hạng giá ở nhóm cấp phường — cùng điều kiện với Căn giá tốt (20% thấp nhất, dưới trung vị từ 5%, nhóm từ 10 căn) nhưng chênh giá cấp phường còn gồm chênh giữa các dự án, nên chưa gọi là «Giá tốt».
+- Code: `re-trong-phuong` (`offer_price_rank.nhan`) · `NHAN_HANG` · RESO: không có — chỉ số nội bộ
+_Avoid_: giá tốt (dành cho cấp dự án trở xuống)
 
 **Kiểm chất lượng**: Một phép kiểm dữ liệu chạy định kỳ ở pipeline (độ tươi, từ vựng enum, số tham chiếu…), ghi kết quả theo từng đối tượng (bảng, nguồn, thị trường). Bảng «Kiểm chất lượng» trên `/ops/quality` hiện bản mới nhất của mỗi kiểm cho từng đối tượng trong 7 ngày; đầu trang đếm «n kiểm» (loại kiểm) và «m đối tượng» (dòng).
 - Code: `dq_check_results` · `check_name` · `entity` · RESO: không có — chỉ số nội bộ
@@ -218,8 +230,8 @@ _Avoid_: DQ check, test dữ liệu
 - Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
 _Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 
-**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
-- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
+**Tin cần xác minh**: Căn giá tốt rẻ hơn trung vị nhóm so sánh quá 35% — vẫn mang nhãn và vẫn hiện trên danh sách (mỏ neo 14/11 QĐ3: không giấu), đứng sau mọi căn giảm đến 35%, hàng mang nhãn «Cần xác minh»; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng không được chấm hạng, lý do `phi-ly:<lý do>`.
+- Code: `suspect` · `can_xac_minh` (`offer_price_rank`) · `NGHI_NGO_PCT = 35` (`app/src/lib/deals-chi-tiet.ts`, `deals.ts` xuất lại) · RESO: không có — chỉ số nội bộ
 - Nhãn số lần đăng: «đăng 1 lần», «đăng n lần» (`repostLabel`)
 _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
 
@@ -364,8 +376,8 @@ _Avoid_: giá vải
 - Code: `price_perm2` · RESO: SalePricePerArea / LeasePricePerArea + PricePerAreaUnit (DD 2.1) — vẫn tự tính
 _Avoid_: đơn giá
 
-**Thước giá**: Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view `v_ruler_p2_*`). Thước để đo căn giá tốt.
-- Ghi chú: Sửa 14/11 (ROADMAP §3 mục 48, QĐ4): tin thuê thiếu m² dùng thước giá thuê/tháng theo số phòng ngủ trong nhóm; tin thuê có m² và tin bán giữ giá/m². Định nghĩa đầy đủ theo nhóm vị trí viết lại ở CG9, CG10.
+**Thước giá**: Trung vị của nhóm so sánh mà hạng giá dùng: giá/m² cho tin bán và tin thuê có m², giá thuê/tháng theo số phòng ngủ cho tin thuê thiếu m² (QĐ4 14/11); mỗi căn một phiếu, chung P1 và P2 (CG9, bảng `offer_price_rank`). Thước cũ của CG8 — trung vị giá/m² P2 cùng phường × loại hình, n ≥ 5 (view `v_ruler_p2`) — còn là lối lùi khi bảng hạng chưa có hay rỗng.
+- Ghi chú: Sửa 14/11 (ROADMAP §3 mục 48, QĐ4); CG9 viết lại theo nhóm so sánh, CG10 thêm cấp dự án.
 - Code: `ruler` · RESO: không có — chỉ số nội bộ
 _Avoid_: ruler
 
