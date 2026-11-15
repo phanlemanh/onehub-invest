@@ -3,10 +3,10 @@ schema_version: 1
 slug: gia-tot-cap-du-an
 feature: Người vận hành thấy tin có dự án được xếp hạng trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «giá tốt» khi nằm trong 20% thấp nhất và thấp hơn trung vị từ 5% — giá/m² cho tin bán và tin thuê có m², giá thuê/tháng theo số phòng ngủ cho tin thuê thiếu m²; tin chỉ biết phường mang «rẻ trong phường»; mỗi dòng ghi so với bao nhiêu căn của nhóm nào và thước đang dùng
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-11-15T06:59:46Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
