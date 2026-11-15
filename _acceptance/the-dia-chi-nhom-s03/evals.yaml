@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: the-dia-chi-nhom-s03
+# Ca «TG1-AC-n». Executor khai ở _acceptance/config.yaml khi vào S3:
+# - tg1_unit (pipeline, không DB): pipeline/tests/the-dia-chi-nhom.test.mjs — hàm thuần dựng nháp, ma trận viết trước.
+# - tg1_db (pipeline, DB thử của riêng lượt): pipeline/tests/the-dia-chi-nhom.itest.mjs — áp 108, lệnh dựng nháp trên năm lớp.
+# - tg1_lui (pipeline, DB thử của riêng lượt): pipeline/tests/the-dia-chi-nhom-lui.itest.mjs — hồ sơ ap-may-thu/ + tệp lùi.
+# - tg1_app (app, DB thử của riêng lượt): app/tests/the-dia-chi-nhom-app.itest.tsx — route card-decide, đọc thẻ, khoá nhóm.
+# - tg1_that (pipeline, bản chép DB máy thu oneinvest_u1_tg1 qua db/db-thu.sh, không chạm oneinvest): pipeline/scripts/the-dia-chi-nhom-that.mjs.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tg1_db
+    paths: [db/migrations/108_the_dia_chi_nhom.sql, pipeline/tests/the-dia-chi-nhom.itest.mjs]
+    expected: "exit 0; ca 'TG1-AC-1': áp 108 hai lần, lần hai không lỗi; dấu lược đồ (information_schema.columns của hai bảng theo thứ tự + định nghĩa trigger) deepEqual giữa hai lần; chèn dự án là nút subzone, phân khu là nút project, phường là areas cấp market, 4 dự án — mỗi chèn bị từ chối với thông điệp nêu ô; chèn hợp lệ được; git diff origin/main -- pipeline/sync-cloud.mjs rỗng; đối chứng đỏ: bản sao 108 bỏ kiểm loại nút dự án thì ca nêu 'kiem-du-an'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tg1_unit
+    paths: [pipeline/lib/the-dia-chi-nhom.mjs, pipeline/tests/the-dia-chi-nhom.test.mjs]
+    expected: "exit 0; ca 'TG1-AC-2' ma trận viết trước 13 ô (assert đúng 13 phần tử), mỗi ô so deepEqual {du_an, phuong, tinh, phan_khu, muc_dich} cùng căn cứ {nguon, so_bai}: sổ một dự án → dự án sổ, căn cứ 'so'; nhãn một tên 40 bài → nút đó; hai tên 30 và 12 bài trên 50 bài nêu tên → hai nút xếp theo số bài; tên 2 bài → trống; tên không khớp nút → trống; một dự án có phường → phường dự án, tỉnh theo phường; hai dự án cùng phường → phường đó; tin 7/10 cùng phường → phường đó, 5/10 → trống; phân khu 6/10 bài ≥ 3 → nút đó, 2 bài → trống; bán 18/20 → ban; thuê 17/20 → thue; 10/10 → ca_hai; 4 bài đọc → trống kèm so_bai_doc 4; đối chứng đỏ: bản sao hạ ngưỡng 10% về 0 thì ô 'tên dưới ngưỡng' ra nút, ca nêu 'nguong-ten'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tg1_db
+    paths: [pipeline/scripts/the-dia-chi-nhom.mjs, pipeline/lib/the-dia-chi-nhom.mjs, pipeline/tests/the-dia-chi-nhom.itest.mjs]
+    expected: "exit 0; ca 'TG1-AC-3' trên DB thử: fixture năm lớp nhóm (collection_units + stg_zalo_posts + silver_labels đúng ràng buộc bảng thật, khoá nhóm có và không tiền tố group:); sau lệnh dựng nháp: mỗi nhóm thật có bài đúng một thẻ status nhap, nhóm chưa có trong sổ có thẻ unit_code NULL, nhóm hai dòng sổ cùng khoá thật một thẻ, nhóm không bài không thẻ; mỗi thẻ một dòng lịch sử action dung_nhap; chạy lần hai: băm mọi dòng hai bảng deepEqual, không thêm lịch sử; thẻ da_duyet và bac đặt trước giữ nguyên byte; băm collection_units, field_assertions, sale_offer_records trước và sau bằng nhau; đối chứng đỏ: bản sao lệnh bỏ điều kiện status thì thẻ da_duyet bị đổi, ca nêu 'giu-da-duyet'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tg1_app
+    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/source-groups/route.ts, app/src/lib/ops-access.ts, app/tests/the-dia-chi-nhom-app.itest.tsx]
+    expected: "exit 0; ca 'TG1-AC-4' trên DB thử: người vai ops nhận → status da_duyet, version +1, một dòng lịch sử {action nhan, actor, at, before, after} và một dòng ops_audit action unit.card_decide cùng giao dịch; sửa (đổi dự án, mục đích) → version +1, before/after đúng hai ô; bác có lý do → bac, decision_note lưu; bác không lý do → 400 không ghi; version cũ → 409 không ghi dòng nào (đếm ba bảng); viewer → 403; dự án là nút subzone → 400 nêu ô du_an; đối chứng đỏ: bản sao bỏ kiểm version thì ca nêu 'version-409'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: ui-check
+    cmd: config:dev_server.start
+    target: "http://localhost:3460/ops/sources"
+    paths: [app/src/components/ops/sources, app/src/lib/the-dia-chi-nhom.ts]
+    steps:
+      - "Bản chạy: DB thử oneinvest_u1_tg1 (bản chép DB máy thu, db/db-thu.sh) đã áp 108 và chạy lệnh dựng nháp; dev :3460 trỏ DB thử; tài khoản ops thử (node scripts/dev-ops-account.mjs --vai ops với DATABASE_URL của DB thử). Dừng hay dựng lại server CHỈ theo cổng: `lsof -ti tcp:3460 | xargs kill`; cấm pkill/killall theo tên"
+      - "1280 px sáng: /ops/sources, khu Sổ đơn vị thu, tab Nhóm S03 → evidence/E5-step1.png; ghi dòng đầu lưới «Thẻ địa chỉ: x/27 nhóm có thẻ · n chờ duyệt» so với số lệnh dựng nháp in, badge từng hàng, hai nhóm «Chưa có trong sổ» ở cuối"
+      - "Mở «Duyệt thẻ» ở nhóm lớn nhất chưa ghi dự án → evidence/E5-step2.png; ghi bốn ô và dòng căn cứ từng ô"
+      - "Bấm Nhận → evidence/E5-step3.png: badge Đã duyệt, bộ đếm chờ duyệt giảm một; mở nhóm khác, sửa ô bán/thuê rồi Lưu sửa → evidence/E5-step4.png; mở nhóm thứ ba, Bác không lý do (thấy lỗi), rồi có lý do → evidence/E5-step5.png"
+      - "Khổ 375 → evidence/E5-step6.png, ghi không tràn ngang; che email thanh bên trên mọi ảnh"
+    expected: "Đầu lưới hiện bộ đếm thẻ khớp số lệnh in; mỗi hàng badge thẻ; nhóm chưa có trong sổ ở cuối; hộp hiện bốn ô kèm căn cứ; nhận, sửa, bác đổi badge và bộ đếm; bác không lý do bị chặn; ảnh từng bước; email che"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tg1_app
+    paths: [app/src/lib/the-dia-chi-nhom.ts, app/src/app/api/v1/ops/source-groups/route.ts, app/src/components/ops/sources, app/tests/the-dia-chi-nhom-app.itest.tsx]
+    expected: "exit 0; ca 'TG1-AC-6': dựng trang /ops/sources (render server) và gọi mọi action đọc/ghi của route source-groups trên fixture có khoá nhóm mồi; đếm khoá mồi trong HTML và thân phản hồi = 0; đối chứng dương: chèn một khoá mồi vào chuỗi đếm thì ra ≥ 1; lược đồ tạm không có bảng thẻ: hàm đọc thẻ trả null, trang dựng không lỗi và không có khu thẻ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.tg1_that_dem
+    paths: [db/migrations/108_the_dia_chi_nhom.sql, pipeline/scripts/the-dia-chi-nhom.mjs, pipeline/scripts/the-dia-chi-nhom-that.mjs]
+    expected: "exit 0; trên bản chép DB máy thu (tên DB khớp oneinvest_u1_tg1, từ chối oneinvest): áp 108, chạy lệnh dựng nháp, in số nhóm có thẻ, số nhóm thật có bài đếm độc lập (câu riêng trong script, không dùng hàm của lệnh), năm lớp của bảng phủ ca, thời gian chạy; số nhóm có thẻ bằng số đếm độc lập; mỗi lớp bằng số đếm độc lập của lớp đó; ghi bảng số ra .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.tg1_that_chat_luong
+    paths: [pipeline/lib/the-dia-chi-nhom.mjs, pipeline/scripts/the-dia-chi-nhom-that.mjs]
+    expected: "exit 0; trên bản chép DB máy thu: với mọi nhóm sổ ghi đúng một dự án (mốc 15/11: 13), dựng nháp với cờ bỏ qua sổ; in từng nhóm: mã sổ, dự án sổ, dự án nháp, khớp/không; in tổng khớp/13; đạt khi từ 9; nhóm nháp trống ô dự án tính là không khớp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.tg1_lui
+    paths: [_acceptance/the-dia-chi-nhom-s03/ap-may-thu, pipeline/tests/the-dia-chi-nhom-lui.itest.mjs]
+    expected: "exit 0; ca 'TG1-AC-9a': ap-may-thu/ có đúng năm tệp README.md, sao-luu.sh (pg_dump ra ~/onehub-backups/db/, kiểm tệp khác rỗng), so-chay-thu.md, 108-lui.sql, kiem-sau.sql; README nêu bốn tệp kia theo thứ tự bước; 108-lui.sql không CASCADE; ca 'TG1-AC-9b' trên DB thử: áp 108, dựng một thẻ, chạy 108-lui.sql → to_regclass hai bảng IS NULL; áp lại 108 được; chạy kiem-sau.sql trên DB đã áp không lỗi và in số thẻ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    inputs: [_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png, CONTEXT.md]
+    question: "Trên ảnh hộp duyệt thẻ, người duyệt không đọc mã có biết mỗi ô (dự án, phường và tỉnh, phân khu, bán/thuê) lấy từ đâu và bao nhiêu bài làm căn cứ không, và CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã, định nghĩa không?"
+    expected: "Mỗi ô có dòng căn cứ bằng chữ thường (nguồn và số bài); ô trống nói vì sao; CONTEXT.md có mục thuật ngữ đủ ba phần"
+    evidence_required: [run_id, verdict, rationale, verifier, verified_at]
