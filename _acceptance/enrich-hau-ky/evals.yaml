@@ -69,6 +69,8 @@ evals:
     criterion: AC-9
     executor: test
     cmd: config:executors.test.agent
+    status: not-run
+    superseded_by: l2-bao-thu-doi-probe-that#AC-5
     expected: "exit 0; ca 'AC-9 E1 đất từ nội dung tin' xanh với MA TRẬN viết trước 5 dòng (fixture e1-land-cases.json, tin thật đã bỏ dòng liên hệ): LÔ ĐẤT/nhóm CHUNG CƯ → land 'trong tin'; đất thổ cư → land 'trong tin'; 'Nhà 4 tầng trên lô đất 50m2' → không land; tin không từ khoá/nhóm 'Chung Cư Vin' → apartment 'tên nhóm'; tin 'nhà phố… diện tích đất 60m2' → house. Đếm assert = 5. Ca 'AC-9 chỉ land đổi' (đọc DB local, chỉ đọc): mọi tin bán S03/S05 qua luật cũ (bản chép đóng băng trong test) và resolveContext mới → mọi cặp khác nhau có 'land' ở một phía, và số cặp khác > 0 (đối chứng dương). Chiều đỏ: bỏ phủ quyết nhiều tầng trong bản sao luật → dòng 3 đỏ, ghim 'AC-9 phủ quyết nhiều tầng'; luật quét-tin-trước (lối khác Hỏi-4) qua cùng phép so → đỏ, ghim 'AC-9 đổi loại không phải land'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
     paths: [agent/src/agents/context-resolver.ts, agent/tests/context-resolver.test.ts, agent/tests/fixtures/**]

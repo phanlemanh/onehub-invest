@@ -68,7 +68,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/tests/judge-entity-duong.test.ts, agent/package.json, app/package.json]
-    expected: "exit 0; ca 'CD-AC-10 suite chung không thêm probe dữ liệu thật' quét glob suite đọc từ agent/package.json VÀ app/package.json (tests/*.test.ts, tests/*.test.tsx), danh sách nợ rỗng: 0 dấu t.skip(\"cần DB máy thu trong mọi tệp, không tệp nào khai test( với tên năm ca đã dời; in số tệp mỗi module; chiều đỏ: chèn một dấu probe vào nội dung judge-luat.test.ts → ném 'CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat.test.ts 1 > 0'; thêm app/probes/the-duyet-phuong-that.test.tsx vào danh sách suite → ném 'CD-AC-10 tệp suite có probe dữ liệu thật'"
+    expected: "exit 0; ca 'CD-AC-10 suite chung không thêm probe dữ liệu thật' quét glob suite đọc từ agent/package.json VÀ app/package.json (tests/*.test.ts, tests/*.test.tsx), danh sách nợ: agent rỗng, app đúng {anh-goc-doi-chieu: 1, danh-ba-nguoi-doi-chieu: 2, sellers-chip: 1, the-duyet-du-can-cu: 3, the-so-gia-tri-song: 1, the-duyet-hien-nguoi-dang: 1} (đo 15/11), số dấu t.skip(\"cần DB máy thu mỗi tệp ≤ nợ của tệp, không tệp nào khai test( với tên năm ca đã dời; in số tệp mỗi module; chiều đỏ: chèn một dấu probe vào nội dung judge-luat.test.ts → ném 'CD-AC-10 probe dữ liệu thật vượt danh sách nợ: judge-luat.test.ts 1 > 0'; thêm app/probes/the-duyet-phuong-that.test.tsx vào danh sách suite → ném 'CD-AC-10 tệp suite có probe dữ liệu thật'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-8
@@ -84,7 +84,7 @@ evals:
     cmd: config:executors.test.probe_du_lieu_that
     layer: backend-effect
     paths: [agent/tsconfig.json, agent/probes/du-lieu-that.test.ts, agent/probes/**]
-    expected: "exit 0; ca 'PT-AC-9 tsconfig kiểm agent/probes': agent/tsconfig.json include có 'probes/**/*.ts'; npx tsc --noEmit -p agent trả 0 lỗi mà đường tệp nằm dưới agent/probes/ (lỗi node_modules tồn đọng không tính, in số); chiều đỏ: chép một tệp probe sang agent/probes/.pt-loi-<pid>.ts có thêm dòng `const x: number = \"a\";`, tsc báo lỗi nêu đúng tệp đó (TS2322), xoá tệp cuối lượt"
+    expected: "exit 0; ca 'PT-AC-9 tsconfig kiểm agent/probes': agent/tsconfig.json include có 'probes/**/*.ts'; npx tsc --noEmit -p agent trả 0 lỗi mà đường tệp nằm dưới agent/probes/ (lỗi node_modules tồn đọng không tính, in số); chiều đỏ: chép một tệp probe sang agent/probes/pt-loi-<pid>.ts (tên không mở đầu bằng chấm — glob của tsc bỏ tệp ẩn) có thêm dòng `const x: number = \"a\";`, tsc báo lỗi nêu đúng tệp đó (TS2322), xoá tệp cuối lượt"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-10

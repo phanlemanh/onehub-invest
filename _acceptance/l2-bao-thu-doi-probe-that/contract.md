@@ -56,9 +56,11 @@ Bảng phủ ca đo trên DB máy thu ở design doc §1.
     `TPL-AC-6 probe: .* cùng phường mà báo lech`, không phụ thuộc thứ tự dữ liệu;
   - TPL-AC-1…5 còn trong suite app.
 - **AC-7** Given glob suite agent (`tests/*.test.ts`) và app (`tests/*.test.tsx`), When quét, Then:
-  - không tệp nào còn dấu `t.skip("cần DB máy thu`;
-  - không tệp nào khai tên ca của năm probe đã dời;
-  - danh sách nợ của CD-AC-10 rỗng.
+  - suite agent không tệp nào còn dấu `t.skip("cần DB máy thu`;
+  - suite app chỉ còn đúng danh sách nợ đo ngày 15/11 (9 ca ở 6 tệp: anh-goc-doi-chieu 1, danh-ba-nguoi-doi-chieu 2,
+    sellers-chip 1, the-duyet-du-can-cu 3, the-so-gia-tri-song 1, the-duyet-hien-nguoi-dang 1). Số ca mỗi tệp không vượt
+    danh sách. Dời 9 ca này là hàng riêng (dòng sổ descope S3);
+  - không tệp suite nào khai tên ca của năm probe đã dời.
   - Chiều đỏ: chèn một dấu probe vào một tệp suite thì ca đỏ, gọi tên tệp.
 - **AC-8** Given `scripts/probe-du-lieu-that.sh`, When chạy trên DB máy thu, Then:
   - in mỗi tệp probe một dòng ✅ hay ❌; toàn ✅ thì thoát 0, có ❌ thì thoát 1 kèm ca đỏ;

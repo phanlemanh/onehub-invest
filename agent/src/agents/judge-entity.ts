@@ -100,9 +100,10 @@ export function khoaDuong(v: string): string[] {
     .replace(/(\d)\s+\/(?=\d)/gu, "$1/")
     // L1: dồn dấu phẩy lặp và khoảng trắng quanh nó («Hẻm 5 ,,1/ X» → «hẻm 5, 1/ x»).
     .replace(/\s*,[\s,]*/gu, ", ")
-    // L2: số nhà trần rồi dấu phẩy («208, Nguyễn Hữu Cảnh, …») — tên đường là đoạn sau số nhà.
-    // …trừ khi đó là tên đường dạng ngày/tháng («3/2, Phường 12», «19/5, Tân Bình») hay đoạn sau phẩy là đơn vị hành chính.
-    .replace(/^(?!(?:3\/2|30\/4|19\/5|2\/9|1\/5|23\/9)\s*,)\d[\p{L}\d/-]*\s*,(?!\s*(?:phường|p\.|quận|q\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\s.]|$)))\s*/u, "")
+    // L2 (danh sách cho phép, hồ sơ l2-bao-thu-doi-probe-that): bóc số nhà trước phẩy CHỈ khi đoạn sau mở đầu bằng một từ
+    // trọn Đường/Phố/Đ./duong/pho hay cụm Hẻm/Ngõ/Ngách/Kiệt («46, Đường Điện Biên Phủ», «237/6, Hẻm 237 …»). «3,5m», «15, Q1»,
+    // «3/2, Phường 12», «208, Nguyễn Hữu Cảnh» không bóc.
+    .replace(/^\d[\p{L}\d/-]*\s*,\s*(?=(?:(?:đường|phố|duong|pho|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(?=[\s.-])|đ\.))/u, "")
     .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
     .replace(/,.*$/u, "")
     .trim()

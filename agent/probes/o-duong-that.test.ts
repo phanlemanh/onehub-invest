@@ -31,7 +31,7 @@ const DONG_CUM = '    .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|k
 // Dòng mới của khoaDuong (hồ sơ tach-o-duong-dau-vao-ban), nguyên văn — chỗ đột biến của chiều đỏ từng lớp.
 const DONG_LOP: Record<string, RegExp> = {
   L1: /^ {4}\.replace\(\/\\s\*,\[\\s,\]\*\/gu, ", "\)\n/m,
-  L2: /^ {4}\.replace\(\/\^\(\?!\(\?:3\\\/2.*\n/m,
+  L2: /^ {4}\.replace\(\/\^\\d\[\\p\{L\}\\d\/-\]\*\\s\*,\\s\*\(\?=.*\n/m,
   L3: /^ {4}\.replace\(\/\^\.\*\\S\\s\+\(\?:ngõ.*\n/m,
   L4: /^ {4}\.replace\(\/\(ngõ\|ngo\|ngách.*"\$1\$2\$3"\)\n/m,
   L5: /^ {4}\.replace\(\/\(\\d\)\\s\+\\\/.*\n/m,
@@ -126,9 +126,9 @@ test("CD-AC-8 probe ô đường thật", async (t) => {
 function tenDocLap(v: string): string {
   const c = chuan(v);
   const so = c.match(/^(\d[\p{L}\d/-]*)\s*,\s*(.*)$/u);
-  const ngayLe = (x: string) => ["3/2", "30/4", "19/5", "2/9", "1/5", "23/9"].includes(x);
-  const hanhChinh = (x: string) => /^(phường|p\.|quận|q\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\s.]|$))/iu.test(x);
-  const t0 = so && !ngayLe(so[1]) && !hanhChinh(so[2]) ? so[2] : c;
+  // L2 danh sách cho phép (hồ sơ l2-bao-thu-doi-probe-that): chỉ bóc khi sau phẩy là từ trọn tiền tố đường hay cụm vị trí.
+  const tienToDuong = (x: string) => /^(?:(?:đường|phố|duong|pho|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(?=[\s.-])|đ\.)/iu.test(x);
+  const t0 = so && tienToDuong(so[2]) ? so[2] : c;
   let t = t0.replace(CUM, "").split(",")[0].trim();
   t = t.replace(new RegExp(`(\\S)\\s+${TU}\\.?\\s*\\d[\\p{L}\\d/-]*$`, "iu"), "$1");
   const m = [...t.matchAll(new RegExp(`\\S\\s+${TU}\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s+|$)`, "giu"))].pop();
@@ -202,4 +202,30 @@ test("CD-AC-11 mục Ô đường thật chạy hai nhánh", (t) => {
   assert.equal(hong.ma, 1, `CD-AC-11 nhánh đột biến thoát ${hong.ma}: ${hong.ra}`);
   assert.match(hong.ra, /❌ Ô đường thật: .*ra Lệch/, "CD-AC-11 nhánh đột biến không in giá trị lệch");
   t.diagnostic(`CD-AC-11: ${sach.ra.trim()} · ${hong.ra.trim().slice(0, 160)}`);
+});
+
+// ---------- CD-AC-16: L2 danh sách cho phép đổi khoá trên DB máy thu (hồ sơ l2-bao-thu-doi-probe-that) ----------
+// Bản main f78e7382 = luật hiện tại với dòng L2 cũ (danh sách loại trừ) — chép đóng băng bằng thay đúng một dòng.
+const DONG_L2_MOI = '    .replace(/^\\d[\\p{L}\\d/-]*\\s*,\\s*(?=(?:(?:đường|phố|duong|pho|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(?=[\\s.-])|đ\\.))/u, "")\n';
+const DONG_L2_CU = '    .replace(/^(?!(?:3\\/2|30\\/4|19\\/5|2\\/9|1\\/5|23\\/9)\\s*,)\\d[\\p{L}\\d/-]*\\s*,(?!\\s*(?:phường|p\\.|quận|q\\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\\s.]|$)))\\s*/u, "")\n';
+const DOI_DA_BIET = [
+  "3,5m", "4,3m", "4,5m", "7,5m", "50 , Tân Khánh , tân Uyên , Tp , Hcm",
+  "44d/17, Khu Pho Binh Đáng, Phường Bình Hòa, Thành phố Hồ Chí Minh", "2A, Khu dân cư Vĩnh Phú 1",
+  "208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh", "34/1A, Đỗ Mười",
+];
+const khoaSo = (k: string) => /^\d+[a-z]?(?:\s+\d+[a-z]?)*$/u.test(k);
+test("CD-AC-16 L2 bảo thủ đổi khoá trên DB máy thu", async (t) => {
+  if (process.env.CI) return t.skip("cần DB máy thu có tin thật — CI chỉ có lược đồ");
+  if (trongScript()) return t.skip("đang chạy bên trong script probe — ca đối chiếu bản cũ chỉ chạy ở executor");
+  const cu = await dotBienTen("l2cu", (s) => s.replace(DONG_L2_MOI, DONG_L2_CU));
+  const giaTri = await docO();
+  const kq = (m: Mod, v: string) => JSON.stringify(m.khoaDuong(v));
+  const doi = giaTri.filter((v) => kq(that, v) !== kq(cu, v));
+  t.diagnostic(`CD-AC-16: ${doi.length} giá trị đổi khoá: ${doi.map((v) => `${v} [${kq(cu, v)} → ${kq(that, v)}]`).join(" | ")}`);
+  for (const v of DOI_DA_BIET) if (giaTri.includes(v)) assert.ok(doi.includes(v), `CD-AC-16 giá trị trong bảng không đổi khoá: ${v}`);
+  assert.ok(DOI_DA_BIET.filter((v) => giaTri.includes(v)).length >= 5, "CD-AC-16 bàn đo quá ít giá trị trong bảng");
+  for (const v of doi) {
+    const moi = that.khoaDuong(v);
+    assert.ok(moi.every(khoaSo), `CD-AC-16 L2 sinh khoá đường mới: ${v} → ${JSON.stringify(moi)}`);
+  }
 });
