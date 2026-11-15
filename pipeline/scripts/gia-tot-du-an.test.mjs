@@ -277,3 +277,20 @@ test("CG10-AC-5 dải m²: 2PN 12 mẫu ra p10/p50/p90, 1PN 7 mẫu không dòng
   assert.equal((await c.query(`SELECT count(*)::int n FROM project_area_band`)).rows[0].n, truoc, "CG10-AC-5 lỗi giữa chừng mất dải cũ");
   assert.ok(Object.keys(await dongs(c)).length > 0, "CG10-AC-5 lỗi giữa chừng mất hạng cũ");
 });
+
+// ---------- AC-8 (phần pipeline): đồng bộ cloud chép dòng cấp dự án theo luật có sẵn; dải m² không lên cloud ----------
+import { FILL, childFilterSql, selectList } from "../sync-cloud.mjs";
+test("CG10-AC-8 sync-cloud (không sửa) chọn đúng các dòng cap=du_an của tin sống; project_area_band không trong FILL", async () => {
+  const c = await dbCa();
+  await fixtureAc1(c);
+  await tin(c, { id: "ac8-nghi", duAn: (await duAn(c)), phuong: A("a4"), m2: 60, perm2: 40 * M });
+  await xepHangGia(c, im);
+  await c.query(`UPDATE sale_offer_records SET retired_at = now() WHERE offer_id = 'ac1-2pn-0'`); // tin rút: sync không chép
+  const chon = (await c.query(`SELECT count(*)::int n FROM offer_price_rank${childFilterSql("offer_price_rank")} AND cap = 'du_an'`)).rows[0].n;
+  const docLap = (await c.query(`SELECT count(*)::int n FROM offer_price_rank h JOIN sale_offer_records r USING (offer_id)
+                                   WHERE r.retired_at IS NULL AND h.cap = 'du_an'`)).rows[0].n;
+  assert.ok(docLap > 30, `đối chứng: phải có dòng cấp dự án (${docLap})`);
+  assert.equal(chon, docLap, "CG10-AC-8 sync chọn số dòng cấp dự án khác đếm độc lập");
+  assert.ok(selectList("offer_price_rank", ["cap", "nut", "nhan"]).cols.includes("nut"), "cột nut phải lên cloud");
+  assert.ok(!FILL.includes("project_area_band"), "CG10-AC-8 project_area_band không được sync (cloud đi sau)");
+});

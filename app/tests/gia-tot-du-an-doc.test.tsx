@@ -139,7 +139,7 @@ test("CG10-AC-7 danh sách: lọc dự án không cắt 30, mỗi căn một dò
   const ky = async (nut: string | null) => (await c.query(
     `SELECT h.offer_id, h.can_xac_minh, coalesce((SELECT min(property_id)::text FROM property_offers po WHERE po.offer_id = h.offer_id), h.offer_id) AS can
        FROM offer_price_rank h WHERE h.kind = 'sale' AND h.nhan IS NOT NULL AND h.duoi_trung_vi_pct BETWEEN 5 AND 50
-        AND ($1::text IS NULL OR (h.cap = 'du_an' AND h.nut = $1))`, [nut])).rows;
+        AND ($1::text IS NULL OR (h.cap = 'du_an' AND h.nut = $1))`, [nut])).rows as { offer_id: string; can_xac_minh: boolean; can: string }[];
   const k1 = await ky(String(d1));
   const can1 = new Set(k1.map((r) => r.can));
   assert.ok(can1.size > 30, `đối chứng: dự án 1 phải có hơn 30 căn nhãn (có ${can1.size})`);
@@ -178,4 +178,55 @@ test("CG10-AC-7 danh sách: lọc dự án không cắt 30, mỗi căn một dò
   // CG9 danh sách không lọc vẫn một nguồn với câu SQL: so_tin có mặt, tin trong danh sách theo bảng
   assert.ok(ds30.rows.every((r) => (r.soTin ?? 0) >= 1));
   assert.ok(so(ds30.rows[0].discountPct) !== null);
+});
+
+// ---------- AC-8: hai API ----------
+type DongApi = { offerId: string; discountPct: number; rank?: { level: string | null; node: string | null; label: string | null; n: number | null } } & Record<string, unknown>;
+const KHOA_CU_DATA_API = ["offerId", "priceVnd", "areaM2", "pricePerm2", "bedrooms", "phuong", "marketId", "propertyType", "medianPerm2",
+  "discountPct", "confidence", "firstSeen", "lastSeen", "nReposts", "contact"];
+const KHOA_CU_APP = ["offerId", "source", "priceVnd", "areaM2", "pricePerm2", "bedrooms", "phuong", "medianPerm2", "rulerN", "discountPct",
+  "confidence", "lastSeen"];
+test("CG10-AC-8 /v1/deals và /api/v1/deals: project lọc tin cấp dự án, rank.node, project sai → 400, khoá cũ đủ, lược đồ kiểu cloud 200", async () => {
+  const kyTap = async (cl: pg.Client, nut: string) => new Set((await cl.query(
+    `SELECT offer_id FROM offer_price_rank WHERE kind = 'sale' AND nhan IS NOT NULL AND duoi_trung_vi_pct BETWEEN 0 AND 50
+        AND cap = 'du_an' AND nut = $1`, [nut])).rows.map((r) => r.offer_id as string));
+  const ky = await kyTap(c6, String(d6));
+  assert.ok(ky.size > 0, "đối chứng: dự án Sáu phải có tin bán nhãn cấp dự án");
+  const dataApi = async (cl: pg.Client, q: string) => quaClient(cl, async () => {
+    const res = await m.dealsRoute.request(`/?${q}`);
+    return { status: res.status, body: (await res.json()) as { data: DongApi[] } };
+  });
+  const cu = process.env.OPS_API_TOKEN;
+  process.env.OPS_API_TOKEN = "cg10-thu-token";
+  const app = async (cl: pg.Client, q: string) => quaClient(cl, async () => {
+    const res = await m.GET(new Request(`http://x/api/v1/deals?${q}`, { headers: { authorization: "Bearer cg10-thu-token" } }));
+    return { status: res.status, body: (await res.json()) as { data: DongApi[] } };
+  });
+  try {
+    for (const [ten, goi, khoa] of [["data-api", dataApi, KHOA_CU_DATA_API], ["app", app, KHOA_CU_APP]] as const) {
+      const r = await goi(c6, `project=${d6}&limit=100&min_discount=0`);
+      assert.equal(r.status, 200, `${ten} project hợp lệ`);
+      assert.deepEqual(new Set(r.body.data.map((x) => x.offerId)), ky, `${ten}: project trả đúng tập tin cấp dự án của nút`);
+      for (const x of r.body.data) {
+        assert.equal(x.rank?.level, "du_an", `${ten} ${x.offerId} level`);
+        assert.equal(x.rank?.node, String(d6), `${ten} ${x.offerId} node`);
+        for (const k of khoa) assert.ok(k in x, `${ten} ${x.offerId} thiếu khoá cũ ${k}`);
+      }
+      assert.ok(r.body.data.some((x) => x.rank?.label === "gia-tot"), `${ten}: có dòng gia-tot`);
+      const tatCa = await goi(c6, "limit=100&min_discount=0");
+      assert.ok(tatCa.body.data.some((x) => x.rank?.level === "phuong"), `${ten}: đối chứng — không lọc thì có cả dòng cấp phường`);
+      assert.ok(tatCa.body.data.some((x) => x.rank?.node === "cg10-a3"), `${ten}: dòng cấp phường mang node = area_id`);
+      for (const sai of ["abc", "1;drop", "1".repeat(19)]) assert.equal((await goi(c6, `project=${encodeURIComponent(sai)}`)).status, 400, `${ten} project=${sai}`);
+      // lược đồ kiểu cloud: không view 105, không 106 — bảng hạng chỉ cấp phường
+      const cloud = await m.fx.dbCa({ view: false, bo106: true });
+      await m.fx.tin(cloud, { id: "cl-0", phuong: m.fx.A("a1"), m2: 60, perm2: 40 * M });
+      await m.xep(cloud, im);
+      const rc = await goi(cloud, `project=${d6}&limit=100&min_discount=0`);
+      assert.equal(rc.status, 200, `${ten}: lược đồ kiểu cloud vẫn 200`);
+      assert.deepEqual(rc.body.data, [], `${ten}: lược đồ kiểu cloud không có tin cấp dự án`);
+    }
+  } finally {
+    if (cu === undefined) delete process.env.OPS_API_TOKEN;
+    else process.env.OPS_API_TOKEN = cu;
+  }
 });

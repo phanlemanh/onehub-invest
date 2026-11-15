@@ -80,7 +80,7 @@ export function DealBody({ d, xemNoiDung, mayThu, beMat, choGhep }: {
     </Khoi>
   )
   const viSao = (
-    <Khoi tieuDe={d.discountPct !== null && d.discountPct >= NGUONG_VAO_PCT ? "Vì sao giá tốt" : `So với ${nhanThuoc(d).toLowerCase()}`} beMat={beMat}>
+    <Khoi tieuDe={d.discountPct !== null && d.discountPct >= NGUONG_VAO_PCT ? "Vì sao giá tốt" : "So với thước phường"} beMat={beMat}>
       <div className="flex flex-col gap-3">
         {d.cau && <p className="text-sm text-pretty" data-deal-chung-minh>{d.cau}</p>}
         {d.rank?.level === "du_an" && d.rank.node && (
