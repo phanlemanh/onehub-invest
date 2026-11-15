@@ -88,7 +88,7 @@ cum AS (
 -- Định vị CẤP DỰ ÁN (DV7, migration 105): tin có đúng một dự án gốc trong nguồn chung offer_project — cùng nguồn với bậc B2
 -- (offer_located, data_level_units). Khớp toà (nhịp 2, PL20) và gắn căn (nhịp 3, GC0–GC3) chưa có bảng nối: CTE rỗng là chỗ
 -- duy nhất phải đổi khi bộ gắn ra đời. «Chờ khớp» (locatedPending) giữ nghĩa cấp toà: tin ghi toà/trục mà chưa khớp nút toà.
-dinh_vi_link AS (SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'),
+dinh_vi_link AS MATERIALIZED (SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'),
 toa_link AS (SELECT NULL::text AS offer_id WHERE false),
 gan_can_link AS (SELECT NULL::text AS offer_id WHERE false),
 muc AS (

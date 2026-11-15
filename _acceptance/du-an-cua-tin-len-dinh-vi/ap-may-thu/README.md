@@ -32,5 +32,5 @@ mục: `README.md` (tệp này), `sao-luu.sh`, `so-chay-thu.md`, `105-lui.sql`, 
    kê; số B2 hôm nay bằng `b2_ky_vong`.
 
 **Dòng chuyển bậc dự kiến.** Lượt `do-hang-ngay` đầu sau áp ghi một loạt dòng `huong = 'len'` (B1 → B2) vào
-`data_level_change`, tới số `b2_ky_vong` (tin S03 có dự án và đủ năm trường lõi — xem `so-chay-thu.md`). Đây là đổi định
+`data_level_change`, tới số `b2_ky_vong` (tin có dự án và đủ năm trường lõi, mọi nguồn — xem `so-chay-thu.md`). Đây là đổi định
 nghĩa một lần, không phải biến động dữ liệu; báo cáo DO1 ngày áp đọc theo chú thích này.

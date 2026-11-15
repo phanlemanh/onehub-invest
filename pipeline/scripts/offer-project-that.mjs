@@ -141,7 +141,7 @@ try {
         "`node pipeline/scripts/offer-project-that.mjs --chay-thu` (E9). Sau ROLLBACK DB máy thu không đổi: " + sach + ".", ``,
         `| Cửa sổ | Nguồn | Định vị nền | Định vị sau | Chờ khớp nền | Chờ khớp sau |`, `|---|---|---|---|---|---|`, ...dong, ``,
         `Đếm độc lập S03 \`mot_du_an\`: all ${kq.dlAll}, 7d ${kq.dl7}. \`s06_offer_project\`: ${kq.s06} dòng.`,
-        `Tin S03 có dự án và đủ năm trường lõi (B2 dự kiến, \`b2_ky_vong\`, số dòng «len» lượt đầu): ${kq.b2KyVong}.`, ``];
+        `Tin có dự án và đủ năm trường lõi, mọi nguồn (B2 dự kiến, \`b2_ky_vong\`, số dòng «len» lượt đầu): ${kq.b2KyVong}.`, ``];
       console.log(bang.join("\n"));
       if (ghi) writeFileSync(join(process.cwd(), ghi), bang.join("\n"));
       if (g("all", "S03").loc !== kq.dlAll) { console.error("[dv7] LỆCH: S03 all ≠ đếm độc lập"); exit = 1; }
