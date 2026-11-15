@@ -1,0 +1,44 @@
+{
+  "feature_plain": "Màn Chất lượng từng chặng thôi báo 0 tin định vị: khoảng 4.934 tin S03 đã có dự án sẽ hiện ở ô Định vị (cấp dự án), và thang bậc B2 đọc cùng một nguồn nên hai chỗ không lệch nhau.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm một bảng xem «dự án của tin» chỉ ở máy thu (migration 105), chạy lại không lỗi, không thêm bảng dữ liệu, không đổi đường đẩy lên cloud."},
+    {"id": "AC-2", "p": "Sẽ định vị tin S03, S05 khi mọi bài mang dự án của tin cùng chỉ một dự án; tin có bài mang hai dự án khác nhau thì đánh «xung đột», không định vị; phân khu, toà quy về dự án gốc — kiểm trên 15 lớp tin viết trước."},
+    {"id": "AC-3", "p": "Sẽ định vị tin S06 qua mã dự án nguồn ngay khi thẻ luật S06 được áp, không cần sửa mã thêm; nút ứng viên mang hạng tin cậy thấp để bên đọc lọc."},
+    {"id": "AC-4", "p": "Sẽ cho bậc B2 của thang dữ liệu đọc cùng nguồn: tin có dự án và đủ năm trường lõi lên B2, tin thiếu trường vẫn B0, tin xung đột vẫn B1; tính một lần cho cả bảng, không tính từng tin."},
+    {"id": "AC-5", "p": "Sẽ cho ô Định vị của màn bằng đúng số tin có một dự án trong từng cửa sổ; ô «chờ khớp» vẫn đếm tin ghi toà, trục chờ khớp toà như cũ."},
+    {"id": "AC-6", "p": "Sẽ đối chiếu trên dữ liệu thật của máy thu (chỉ đọc): số tin S03 định vị bằng một phép đếm độc lập, in danh sách tin xung đột nếu có."},
+    {"id": "AC-7", "p": "Sẽ giữ chuỗi chạy 15 phút không chậm: bước làm tươi màn không quá 2 lần hôm nay và dưới 15 giây, bước tính bậc dưới 2 giây (đo trên máy thu rồi lùi)."},
+    {"id": "AC-8", "p": "Sẽ ghi rõ trên màn «Định vị (cấp dự án)» và câu gợi ý «chờ khớp toà» có số, kèm thuật ngữ trong từ vựng."},
+    {"id": "AC-9", "p": "Sẽ chạy thử trên DB máy thu trong một giao dịch rồi lùi: ô Định vị S03 lên khoảng 4.934 (7 ngày: khoảng 754), S05, S06 vẫn 0, «chờ khớp» không đổi, và sau đó máy thu không đổi gì."},
+    {"id": "AC-10", "p": "Sẽ ghi sẵn năm thứ để chữ ký Cổng Bằng chứng kèm lời áp: lệnh áp, số chạy thử, sao lưu ra ~/onehub-backups/db/, tệp lùi đã thử thật, lệnh kiểm sau."},
+    {"id": "AC-11", "p": "Sẽ sửa các chỗ khác của app cùng đọc «định vị» (danh sách bản ghi trang dòng chảy, phép đếm kiểm bậc, test thang bậc) để chúng không lệch hay đỏ sau khi áp; cloud không có bảng xem vẫn chạy."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG định vị cấp toà, trục hay gắn căn — để PL20 và nhịp 2–3."},
+    {"id": "OOS-2", "p": "KHÔNG định vị tin S06 không phải căn hộ (2.625 tin có mã) hay theo chữ tin S06."},
+    {"id": "OOS-3", "p": "KHÔNG thêm cột dự án lên tin, căn hay đẩy lên cloud — việc của DS2."},
+    {"id": "OOS-4", "p": "KHÔNG gom tin S03 vào căn — việc của GT5."},
+    {"id": "OOS-5", "p": "KHÔNG đọc phát biểu phân khu riêng (hôm nay 0 dòng)."},
+    {"id": "OOS-6", "p": "KHÔNG làm xếp hạng giá cấp dự án hay bộ lọc dự án trên /ops/deals — N1 làm, đọc nguồn này."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Nguồn: S03, S05 theo bài và S06 theo mã nguồn đều có tiêu chí (AC-2, AC-3, AC-6, AC-9); S06 theo chữ tin để sau."},
+    {"i": 1, "p": "Tin × bài × dự án: chín lớp đếm từ DB máy thu, kể cả lớp hôm nay 0 tin như tin hai dự án (AC-2)."},
+    {"i": 2, "p": "Chứng cứ: phát biểu sống, đã rút, nút gốc, nút con, nút ứng viên (AC-2, AC-3)."},
+    {"i": 3, "p": "Trạng thái tin: nguồn không lọc tin hết hạn; bên đọc tự lọc — đây là giả định chờ anh gạch."},
+    {"i": 4, "p": "Người đọc phía sau: màn chặng, bậc B2, danh sách bản ghi, phép đếm kiểm bậc, cloud và tốc độ chuỗi 15 phút đều có tiêu chí (AC-4, AC-5, AC-7–AC-11)."},
+    {"i": 5, "p": "Tầng nút: dự án, phân khu, phân khu cháu (12 nút), toà đều quy về dự án gốc (AC-2)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Tệp làm tươi màn tự chốt giao dịch, nên chạy thử «rồi lùi» sẽ áp thật migration lên máy thu — đã sửa: bộ chạy giữ giao dịch, bỏ lệnh chốt của tệp, còn lệnh chốt thì dừng trước khi chạy."},
+    {"i": 1, "p": "Tính bậc từng tin qua bảng xem chạy hơn 130 giây mỗi 15 phút — đã sửa: tính một lần cho cả bảng, trần 2 giây."},
+    {"i": 2, "p": "Danh sách bản ghi của trang dòng chảy gán cứng «chưa định vị» — đã thêm AC-11 sửa nó (máy thu đọc nguồn, cloud giữ nguyên)."},
+    {"i": 3, "p": "Câu gợi ý «Chưa định vị» sẽ đếm cả tin đã định vị, và phép kiểm cũ chỉ kiểm một câu vốn không có trên màn — đã đổi sang kiểm câu mới có số."},
+    {"i": 4, "p": "Ô nút con chỉ một tầng trong khi danh bạ có 12 phân khu lồng nhau — đã thêm ô phân khu cháu và toà."},
+    {"i": 5, "p": "Hai bộ kiểm có sẵn sẽ đỏ trên DB thử chép sau khi áp — đã đưa vào AC-11."},
+    {"i": 6, "p": "Ô «tin S06 hai mã dự án» không thể có vì ràng buộc bảng — đã bỏ ô, ghi lý do."},
+    {"i": 7, "p": "So «chờ khớp» với ảnh chụp cũ sẽ lúc đỏ lúc xanh — đã đổi sang đo nền trong cùng giao dịch."},
+    {"i": 8, "p": "Tệp lùi chưa định thứ tự và có thể xoá dây chuyền — đã định: thay hàm trước, xoá bảng xem không dây chuyền, có bên phụ thuộc thì lùi thất bại cả khối."},
+    {"i": 9, "p": "Lượt tính bậc đầu sau áp sẽ ghi một loạt dòng «lên bậc» — ghi số dự kiến trong hướng dẫn áp; phát biểu phân khu riêng để ngoài phạm vi."}
+  ]
+}
