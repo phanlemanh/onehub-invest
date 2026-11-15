@@ -5,7 +5,7 @@ slug: du-an-cua-tin-len-dinh-vi
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm db/migrations (t3_paths); GS chọn đường A 15/11
 surfaces: [cli, data, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-du-an-cua-tin-len-dinh-vi-design.md
@@ -108,6 +108,14 @@ Bảng phủ ca (skill morphological-scan) ở `discovery/bang-phu-ca.md`, mọi
 - CG10 xếp hạng cấp dự án và bộ lọc dự án trên `/ops/deals` — N1, đọc view này.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: tệp bằng chứng mạng của ca nhìn màn không ghi được yêu cầu nào, nên hồ sơ chưa chứng được trang Dòng chảy tải không có phản hồi lỗi.
+  - Ngoài-2: ảnh chụp bảng «Chất lượng từng chặng» bị cuộn mất cột tên nguồn, người đọc ảnh phải suy nguồn theo thứ tự dòng.
+  - Ngoài-3: bộ thu bằng chứng ghi nhầm trang hướng dẫn thay cho dữ liệu mạng mà không báo lỗi.
+  - Ngoài-4: một số bài test màn dòng chảy dùng bảng mẫu gõ tay, nên nếu nguồn định vị đổi cột thì các test ấy vẫn có thể xanh.
+  - Ngoài-5: tệp sao lưu và tệp kiểm sau khi áp mới được kiểm có đúng chữ, chưa chạy thử; lỗi nếu có sẽ lộ lúc áp lên máy thu.
+  - Ngoài-6: phép kiểm «tính bậc theo tập» chỉ dựa vào việc không thấy tên hàm cũ; bản viết lại chậm theo tên khác sẽ không bị nó bắt.
 
 - Ra khỏi kho: áp 105 lên DB máy thu đi cùng chữ ký Cổng Bằng chứng theo luật «Ai quyết gì»; người chạy theo
   `ap-may-thu/`.
