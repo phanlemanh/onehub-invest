@@ -819,6 +819,40 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
     thuê; tính thử ra 855 căn bán, 1.280 căn thuê đạt chuẩn «giá tốt» ở cấp dự án; 268 mã dự án S06 phủ 11.045 tin; tin thuê S03
     có m² 622/3.459; tầng có ở 17% tin bán, 6% tin thuê căn hộ S03. Hàng mới: DA32, DA33, DA34, PL36 và nợ RP1, FR1, PB1, IT4, IT6, IT5,
     CI3; sửa lời DA3, DA7, PL20, CG7, CG10, CG14, GC2, TN1. AGENTS.md không đổi: S16 chưa có trong luật 5, 6 nên không mâu thuẫn.
+49. **Vận hành ổn định sau sự cố S03 đứt 34 giờ (13–14/11)** (14/11, phiên điều phối liên làn, Mạnh «Theo khuyến nghị» cho cả sáu
+    việc ở §7 của `docs/ops/de-xuat-van-hanh-on-dinh-1411.md`; bản phạm vi `docs/plan/pham-vi-van-hanh-on-dinh-1411.md`, căn cứ ở kho
+    tri thức riêng `wiki/dot/van-hanh-on-dinh-1411.md`). Sự cố: kênh S03 ngừng thu từ 13/11 00:54Z tới 14/11 khoảng 11:00Z, 0 bài.
+    Máy phát hiện đúng lúc (heartbeat DOWN, bộ canh L6) nhưng không lớp nào đẩy tin tới người — cảnh báo chỉ nằm trong tệp log và
+    một banner trên máy thu. Bộ tự khởi động lại của kênh hẹn lịch mà không chạy, rồi phiên mất hiệu lực nên phải quét QR lại.
+    - **D1 — kênh đẩy cảnh báo**: issue trong kho riêng tư trên GitHub, mọi nội dung qua bộ chặn tầng A (`tier-a-guard`). Hàng VH1.
+    - **P1 — watchdog tự khởi động lại gateway** khi bộ hẹn treo: trần 1 lần mỗi 6 giờ, chỉ khi mọi lớp lockdown xanh và không có
+      lượt agent dở; không bao giờ tự quét QR, không đổi cấu hình. Hàng VHZ2 (làn thu).
+    - **D2 — token chỉ-đọc cho dead-man** (GitHub Actions): đồng ý chủ trương; tạo và cất token do Mạnh làm theo quy trình secret,
+      agent không cầm token. Hàng VH4 chỉ mở vòng khi đã có token.
+    - **P2 — quy ước**: tài khoản thu S03 chỉ gateway dùng. Câu H1 (sáng 13/11 Mạnh có mở tài khoản ở nơi khác không) **chưa trả
+      lời**. Việc của người, không vào lộ trình.
+    - **Đăng nhập lại S02** (401 từ 13/11): việc tài khoản của Mạnh, không vào lộ trình.
+    - **P3 — vá gốc bộ hẹn khởi động lại** cài vào runtime gateway theo quy trình `docs/ops/runtime-map.md`. Hàng VHZ3 (làn thu).
+    D3–D8, R1, O1 trong quyền giám sát tự xếp. SLO độ tươi 72 giờ của S03 **giữ nguyên** (đã chốt, AU4); «nhịp sống» là thước riêng
+    thêm vào (D5, hàng VH2). Mốc VHM1, thứ tự VH1 (D1) → VH2 (D5) → VH3 (D4) → VH4 (D2) → VH5 (D6) → VH6 (R1) → VH7 (D8) → VH8 (O1);
+    làn thu VHZ1 (D3) → VHZ2 (P1) → VHZ3 (P3), VHZ4 (dòng chuẩn `AUTH FAIL [S0x]` của D7). Runbook một trang: §6 của tài liệu.
+50. **Mạnh ở cổng, giám sát chịu hiệu quả lộ trình** (15/11, Mạnh gõ ở phiên giám sát: «Tôi muốn chốt lại luật, tôi chỉ xuất hiện ở
+    các cổng, hiệu quả của lộ trình do bạn điều phối», rồi «Có, kèm luôn» cho câu về lời áp). Căn cứ: điều tra tiến độ chậm
+    `docs/research/dieu-tra-tien-do-cham-1511.md`. Tới sáng 15/11 màn «Chất lượng từng chặng» vẫn báo 0 tin định vị, trong khi
+    4.934/6.102 tin S03 đã mang dự án từ 14/11: ô trên màn nối vào bảng rỗng và không hàng nào trong lộ trình nối lại. Từ 05/11 gộp
+    140 PR, khoảng 23 nằm trên chuỗi định vị → giá; 43 là sửa cái vừa làm; 42% lượt chấm bị trả; 182 câu hỏi tới Mạnh trong 10 ngày.
+    - **Mạnh chỉ xuất hiện ở các cổng** (Phạm vi, 1.5, Bằng chứng, Đáng và phiên nghiệm thu).
+    - **Giám sát chịu hiệu quả lộ trình**: đường găng, cắt và gom hàng, thứ tự gộp, số dãy; báo bằng con số trên màn.
+    - **Hàng trên đường găng xong khi số trên màn đổi trên dữ liệu thật**, không xong ở «gộp».
+    - **Chữ ký Cổng Bằng chứng kèm lời áp lên DB máy thu** những gì hồ sơ ghi đủ năm thứ (lệnh áp, số chạy thử, sao lưu, cách
+      lùi, lệnh kiểm sau). Sửa câu «DDL và ghi dữ liệu thật cần lời riêng» ở các mục trước cho phần máy thu; cloud không đổi.
+    - **Vẫn cần lời riêng**: tiền, DDL hay ghi dữ liệu trên cloud, xoá dữ liệu và việc không lùi được, sửa luật an toàn.
+    - **Bảng phủ ca trước khi viết mã** cho transform, bước khớp, lời gọi ngoài.
+    Cùng ngày Mạnh cho ba lời ở phiên điều tra: «Có, cấp dự án» (dải diện tích suy ra theo dự án × số phòng ngủ là phát biểu «suy
+    ra» riêng, không ghi đè diện tích, không dùng để chia giá khi chấm giá tốt; gộp vào CG10), «Áp 104 và thẻ luật S06 luôn»,
+    «Gộp nhanh #457 và #456». Đường găng nhịp 1 (MN1): nguồn «dự án của tin» mọi nguồn + ô Định vị (hàng `du-an-cua-tin-len-dinh-vi`,
+    migration 105) → CG10 xếp hạng cấp dự án + lọc dự án trên `/ops/deals` (một lát). Hàng ngoài đường găng tạm dừng tới khi MN1
+    xong, trừ cảnh báo vận hành (VH1).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

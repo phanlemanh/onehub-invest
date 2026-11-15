@@ -7,6 +7,18 @@ import { normText } from "./norm-text.mjs";
 /** Mẫu tên nhóm của từng lát (tên nhóm S03 là tầng C). Lát OCP1: cùng mẫu đã dùng để đếm lát 26/10. */
 export const LAT_NHOM = Object.freeze({ ocp1: "ocp|ocean|masteri" });
 
+/**
+ * Khu của nhóm cho lát `hai-khu-ghep` (PL35, tên nhóm S03 là tầng C): OP1 — «OCP1», «OCP» đứng riêng, «VHOP», «Ocean Park 1»;
+ * GP — «Grand Park», «VHGP». Không gồm «Masteri» (chợ nhiều dự án) và «OCP2/3», «Oceanpark City».
+ */
+export const LAT_KHU = Object.freeze({ op1: "ocp ?1(?![0-9])|\\bocp\\b(?! ?[23])|vhop|ocean ?park ?1(?![0-9])", gp: "grand ?par|vhgp" });
+
+/** Khu của một nhóm: khớp ĐÚNG một mẫu của LAT_KHU → khu đó; khớp hai hay không khớp → null (bài không vào lát). */
+export function khuCuaNhom(tenNhom) {
+  const khop = Object.entries(LAT_KHU).filter(([, mau]) => new RegExp(mau, "i").test(String(tenNhom ?? ""))).map(([k]) => k);
+  return khop.length === 1 ? khop[0] : null;
+}
+
 /** Phần tin được hai người gắn (F5). */
 export const TI_LE_TRUNG = 0.2;
 
