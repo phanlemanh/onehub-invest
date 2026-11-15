@@ -34,6 +34,11 @@ executors:
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json; npm test tự chạy trên DB của riêng lượt (db/db-thu.sh --chay)
     pipeline_a: "cd pipeline && npm run test:a"     # tach-suite-pipeline — nửa A của npm test (pipeline/test-nua.json), DB thử oneinvest_suite_pipeline_a
     pipeline_b: "cd pipeline && npm run test:b"     # tach-suite-pipeline — nửa B, DB thử oneinvest_suite_pipeline_b; hợp hai nửa = npm test (scripts/chia-nua.test.mjs canh)
+    s08ns_can: "bash db/db-thu.sh oneinvest_suite_s08ns_can --chay node --test --test-name-pattern='^S08-3' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E1 — snapshot chỉ căn, thiếu 094: nạp + đánh dấu
+    s08ns_hoan: "bash db/db-thu.sh oneinvest_suite_s08ns_hoan --chay node --test --test-name-pattern='^S08-2' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E2 — có danh mục, thiếu 094: hoãn, không đánh dấu
+    s08ns_094: "bash db/db-thu.sh oneinvest_suite_s08ns_094 --chay node --test --test-name-pattern='^S08-1' pipeline/tests/s08-danh-muc-nap.test.mjs"   # s08-nap-sua E3 — có 094: nạp dự án, nạp lại không nhân
+    s08ns_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s08-nap-sua E4 — tệp test mới nằm đúng một nửa
+    s08ns_chot: "cd pipeline && node --test scripts/db-thu-chot.test.mjs"   # s08-nap-sua E5 — chốt chặn chung: chỉ DB oneinvest_suite_*, tệp S08 thoát 2 với mọi cách viết DB máy thu
     s06tt_chan: "bash db/db-thu.sh oneinvest_suite_s06tt_chan --chay node --test pipeline/scripts/collect-chotot-chan.test.mjs"   # s06-tran-trang E2 — 403/429 dừng cả lượt, không thử lại, rc 3, snapshot phần đã có
     s06tt_tran: "node --test _acceptance/s06-tran-trang/probes/tran-mac-dinh.test.mjs"   # s06-tran-trang E1 — trần mặc định 210, cờ --pages và CHOTOT_MAX_PAGES vẫn thắng
     s06tt_chia: "cd pipeline && node --test scripts/chia-nua.test.mjs"   # s06-tran-trang E3 — tệp test mới nằm đúng một nửa
@@ -82,6 +87,8 @@ executors:
     ecw_app_nhan: "cd app && node --import tsx --test tests/dq-eval-classify-label.test.tsx"   # eval-classify-wilson E9 — nhãn dq-labels
     kd_test: "node --test pipeline/scripts/kiem-do-sau-070.test.mjs"   # kiem-do-sau-ap-070-sua E1, E2, E3 — lược đồ riêng BEGIN…ROLLBACK trên :5433
     dgs_thuan: "cd agent && node --import tsx --test tests/doc-gop-s03.test.ts"   # chon-model-theo-o E1, E2, E3, E6, E8, E10 — Gateway giả, không DB
+    gta_agent: "cd agent && bash ../db/db-thu.sh oneinvest_suite_gta --chay node --import tsx --test --test-concurrency=1 tests/goi-thang-anthropic.test.ts"   # goi-thang-anthropic E1–E6 — máy chủ Anthropic giả + Gateway giả, DB của riêng lượt
+    gta_pipeline: "node --test pipeline/scripts/goi-thang-anthropic.test.mjs"   # goi-thang-anthropic E7, E8 — tiến trình con giả, máy chủ Anthropic giả, không DB
     dgs_db: "cd agent && bash ../db/db-thu.sh oneinvest_suite_dgs --chay node --import tsx --test --test-concurrency=1 tests/doc-gop-s03-db.itest.ts"   # chon-model-theo-o E4, E5, E7, E9 — Gateway giả, DB của riêng lượt
     dgs_so_that: "cd agent && DGS_SO_THAT=1 node --import tsx --test --test-name-pattern=DGS-AC-10 tests/doc-gop-s03.test.ts"   # chon-model-theo-o E10 — đọc tóm tắt lượt chấm Haiku thật
     ddb_pipeline: "node --test pipeline/do-danh-ba-sdt.test.mjs"   # do-danh-ba-sdt E1 — hàm thuần năm số, không DB
@@ -335,6 +342,10 @@ executors:
     cg9_doc: "cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx"   # bang-hang-gia-m2 E6, E7 — /ops/deals, /api/v1/deals, /v1/deals đọc offer_price_rank trên DB của riêng lượt
     cg9_sync: "cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main"   # bang-hang-gia-m2 E8 — cloud giả có/không bảng; diff không đổi bait_gap_pct, không tên nguồn
     cg9_do: "bash pipeline/scripts/hang-gia-db.sh do"   # bang-hang-gia-m2 E9 — DB thử chép từ DB máy thu, áp 104, chấm hai lần, đếm độc lập
+    cg10_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg10 --chay node --test --test-concurrency=1 scripts/gia-tot-du-an.test.mjs scripts/hang-gia.test.mjs"   # gia-tot-cap-du-an E1–E5 — DB trắng từ migration của nhánh (view 105 tạm), ma trận viết trước, đột biến đỏ; ca CG9 chạy cùng để chứng không hồi quy
+    cg10_doc: "cd app && bash ../db/db-thu.sh oneinvest_suite_cg10_doc --chay node --import tsx --test --test-concurrency=1 tests/gia-tot-du-an-doc.test.tsx"   # gia-tot-cap-du-an E6, E7 — trang một căn, danh sách /ops/deals đọc cấp dự án
+    cg10_ranh: "cd app && bash ../db/db-thu.sh oneinvest_suite_cg10_ranh --chay node --import tsx --test --test-concurrency=1 --test-name-pattern=CG10-AC-8 tests/gia-tot-du-an-doc.test.tsx && cd ../pipeline && node --test --test-concurrency=1 --test-name-pattern=CG10-AC-8 scripts/gia-tot-du-an.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main"   # gia-tot-cap-du-an E8 — hai API lọc dự án + rank.node, sync chọn dòng cấp dự án theo luật có sẵn, rà ranh giới (bait_gap, tên nguồn) có đối chứng
+    cg10_do: "bash pipeline/scripts/gia-tot-du-an-db.sh do"   # gia-tot-cap-du-an E9 — DB thử chép từ DB máy thu, áp 104/105/106, chấm hai lần, đếm độc lập, thước MN1 ≥ 10.000, OP1 ≥ 100 căn, hai đối chứng
     hf_deals: "cd app && bash ../db/db-thu.sh oneinvest_suite_hf --chay node --import tsx --test --test-concurrency=1 tests/can-gia-cung-loai-db.test.tsx tests/can-gia-tot-biet-can.test.tsx"   # test-deals-bang-hang-rong E1 — hai tệp ca /ops/deals cũ trên DB của lượt chép máy thu (có dòng offer_price_rank)
     sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     pl35_db: "bash pipeline/scripts/tap-nhan-hai-khu-db.sh itest"   # tap-nhan-ghep-tin-hai-khu E1, E2, E5, E6, E7 — DB thử riêng, tác tử giả
@@ -395,6 +406,7 @@ executors:
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
+    gta_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [goi-thang-anthropic]'"   # goi-thang-anthropic E13
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local

@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>194 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>126 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>196 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>127 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -114,6 +114,7 @@ flowchart TD
 - check-freshness đo S03/S05/S06 theo giờ THU thật của snapshot thay vì giờ NẠP — nguồn ngừng thu mà bị nạp lại bản cũ phải báo quá hạn (`freshness-do-gio-thu-that-s03`)
 - check-freshness đo độ tươi theo bảng thật của từng nguồn, có SLO cho S05 và S06, không còn dòng quá hạn giả (`freshness-theo-nguon-that`)
 - Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm (`gan-nhan-theo-nhom-s03`)
+- Tin có dự án được xếp hạng giá trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «Giá tốt» khi nằm trong 20% thấp nhất và dưới trung vị từ 5%; tin chỉ biết phường giữ «Rẻ trong phường»; /ops/deals lọc được theo dự án, mỗi căn một dòng, tab «Cần xác minh» đếm trên toàn tập; dải diện tích dự án × PN là phát biểu suy ra riêng (`gia-tot-cap-du-an`)
 - Gỡ tài khoản Zalo kiểm bản cấu hình sau khi gỡ trước lệnh đăng xuất: cấu hình phạm bất biến bộ canh thì từ chối mà không đăng xuất phiên nào (`go-tai-khoan-kiem-cfg-truoc-logout`)
 - Route gỡ tài khoản thu DELETE /api/v1/ops/zalo/accounts từ chối id rỗng hoặc không có trong danh sách tài khoản trước khi gọi openclaw (`go-tai-khoan-kiem-id`)
 - Ảnh của tin chỉ-ảnh S03 (ảnh gửi riêng trước hay sau tin chữ, cùng người, dưới 2 phút) vào đúng offer trong bảng ảnh canonical; bảng nạp và sale_offers giữ nguyên (`gop-tin-chi-anh-o-transform`)
@@ -271,6 +272,7 @@ flowchart TD
 - Người vận hành đọc mọi mốc giờ trên cổng Ops theo giờ Việt Nam có ghi múi, ngày gom theo giờ Việt Nam, và nguồn quá hạn hiện đúng mức trễ thay vì tuổi bằng SLO (`gio-ops-gio-vn`)
 - 2410-1 — mốc thu captured_at của stg Zalo và Chợ Tốt luôn là giờ thu snapshot, nạp lại không làm sai, có script khôi phục kèm sao lưu (`giu-captured-at`)
 - Ngôn ngữ chuẩn — CONTEXT.md, luật đặt tên, bối cảnh sản phẩm, test slug route (`glossary-context`)
+- Đọc gộp S03 và nháp nhãn PL35 có thêm đường gọi Haiku thẳng API Anthropic song song Vercel AI Gateway (thứ tự và tự lùi bằng bảng chọn), ghi rõ lỗi nhà cung cấp và dừng sớm khi hết tiền (`goi-thang-anthropic`)
 - guard-edits lấy gốc theo kho chứa tệp — luật chặn sửa migration đã commit chạy cả khi tệp ở worktree khác (`guard-edits-goc-theo-tep`)
 - ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả (`hook-spool-nghiem-ngat`)
 - ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway (`hook-zalo-spool`)
@@ -345,6 +347,7 @@ flowchart TD
 - Trần trang thu S06 mặc định 210, 403/429 dừng cả lượt không thử lại, kèm số đo chuỗi đêm khi nạp 55 nghìn tin (`s06-tran-trang`)
 - tin S06 của vùng mới (Đà Nẵng, Hải Phòng, Bình Dương đã sáp nhập vào TP.HCM) lên canonical có phường — mã thị trường ngắn một khuôn (migration 064), bước nạp phường và bước chuyển S06 đọc thành phố từ một chỗ ánh xạ thay cho danh sách cứng (`s06-vung-moi-len-canonical`)
 - S08 thu đúng một lượt mỗi tuần theo launchd và có SLO độ tươi 192 giờ (`s08-lich-tuan`)
+- Sửa hồi quy bộ nạp S08 — snapshot chỉ căn thiếu 094 vẫn nạp và đánh dấu; snapshot có danh mục dự án hoãn khi thiếu 094 (`s08-nap-sua`)
 - bộ thu và bộ nạp S08 không nuốt lỗi token, không trùng sourceId danh mục, không đọc nhầm số (`s08-noi-tiep`)
 - Bảng hàng chủ đầu tư S10 vào stg (migration 089) và nối được vào nút dự án của danh bạ (`s10-bang-hang-vao-danh-ba`)
 - Máy thu có công cụ sao lưu hằng ngày ra kho restic mã hoá trên máy (đích B2), thử khôi phục định kỳ và cảnh báo quá hạn — chứng minh trên dữ liệu giả (`sao-luu-ma-hoa-b2`)
