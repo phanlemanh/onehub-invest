@@ -23,7 +23,7 @@ const STATE = "pipeline/logs/apify-daily.state";
 const LOCK = `${STATE}.lock`;
 // pl34-lich-dem-sau-buoc (AC-1, Mạnh duyệt 09/11): doc-gop-hang-ngay sau nhả khoá nạp, trước enrich-run — lời «năm bước» của
 // enrich-chay-sau-nap#AC-6 thay bởi pl34-lich-dem-sau-buoc#AC-1. Tệp giả của bước gọi qua node giả nên mang nhãn của nó.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "doc-gop-hang-ngay", "enrich-run"];
+const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "xep-hang-gia", "doc-gop-hang-ngay", "enrich-run"];
 const DOC_GOP = "pipeline/doc-gop-hang-ngay.sh";
 const DOC_GOP_GIA = '#!/bin/bash\nexec node "$(dirname "$0")/doc-gop-hang-ngay.mjs"\n';
 const PID_KHAC = "424242";
