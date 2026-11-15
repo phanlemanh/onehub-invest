@@ -60,7 +60,14 @@ evals:
     criterion: AC-8
     executor: ui-check
     cmd: config:dev_server.start
-    paths: [app/src/components/ops/data-flow, CONTEXT.md]
+    paths: [app/src/components/ops/data-flow, CONTEXT.md, _acceptance/du-an-cua-tin-len-dinh-vi/probes/ban-chay-e8.mjs]
+    target: "http://localhost:3460/ops/data-flow"
+    steps:
+      - "Bản chạy: node _acceptance/du-an-cua-tin-len-dinh-vi/probes/ban-chay-e8.mjs (DB thử oneinvest_u1_dv7: áp 105, làm tươi 600, in số kỳ vọng S03 located all/7d đếm độc lập và locatedPending từng nguồn); thoát khác 0 thì FAIL. Chạy đúng lệnh `ban chay` nó in (dev :3460 trỏ DB thử) và lệnh `tai khoan` (vai ops, không in mật khẩu); đăng nhập bằng loginState của scripts/ui-capture-login.mjs với DATABASE_URL của DB thử. Không lên thì FAIL «bản chạy :3460 không lên»"
+      - "1280 px sáng: /ops/data-flow cửa sổ «Tất cả», cuộn tới phần «Chất lượng từng chặng» → evidence/E8-step1.png; ghi tiêu đề cột Định vị (phải chứa «cấp dự án») và số ô Định vị của S03, S06 — so với số kỳ vọng bộ dựng in (S03 all)"
+      - "Đổi cửa sổ 7 ngày → evidence/E8-step2.png; ghi ô Định vị S03 so với số kỳ vọng 7d"
+      - "Sơ đồ dòng chảy: rê hoặc bấm nút «Chưa định vị» → evidence/E8-step3.png; ghi câu gợi ý (phải nói tin ghi toà/trục chờ khớp toà gồm cả tin đã định vị cấp dự án) và số trong câu so với locatedPending bộ dựng in cho cửa sổ đang chọn"
+      - "Che email đăng nhập ở thanh bên trên mọi ảnh trước khi lưu; grep CONTEXT.md có thuật ngữ «Định vị (cấp dự án)»"
     expected: "Trên app dev của worktree trỏ DB thử của lượt đã áp 105 và làm tươi 600 với fixture có tin mot_du_an vừa ghi toà, đăng nhập tài khoản ops thử, mở /ops/data-flow: phần «Chất lượng từng chặng» có tiêu đề cột Định vị chứa «cấp dự án» và ô Định vị của nguồn có tin mot_du_an hiện số khác 0 bằng số tin mot_du_an của fixture; trên sơ đồ dòng chảy, gợi ý nút «Chưa định vị» có câu nói số tin ghi toà/trục chờ khớp toà gồm cả tin đã định vị cấp dự án, kèm đúng số locatedPending; ảnh chụp mỗi bước, email thanh bên che; CONTEXT.md có nhãn cột mới"
     evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
   - id: E9
