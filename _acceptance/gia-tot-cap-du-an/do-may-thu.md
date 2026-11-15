@@ -16,6 +16,11 @@ giữ khoá s4 của đợt, nhánh `feat/gia-tot-cap-du-an` @ 6e905784.
 
 Mẫu số: tin đang rao bán 51.778 · thuê 60.572.
 
+## Tin S03 (mốc MS2 — lát l03)
+
+Trên cùng bản chép: **4.109 tin S03** có hạng cấp dự án (thuê 3.071 · bán 1.038), trong đó **841** mang nhãn «Giá tốt»; 4.008 trong số
+đó là căn hộ. Độ lệch so mặt bằng S06 đọc ở cột «Giảm so thước» của `/ops/deals` (thước cấp dự án gồm tin mọi nguồn cùng dự án).
+
 ## Bảng đếm (cấp · bán/thuê · thước · ô · số tin)
 
 ```
