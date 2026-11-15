@@ -5,7 +5,7 @@ slug: resolve-stage-a-theo-tap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-15-resolve-stage-a-theo-tap-design.md
 veto_state: mo
 veto_opened_at: 2026-11-15T03:40:00Z
