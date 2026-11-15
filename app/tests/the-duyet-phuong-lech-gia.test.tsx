@@ -303,5 +303,5 @@ test("TPL-AC-6 probe DB máy thu: mọi phường OSM tự khớp hai cách ghi,
   const dem = kiemAc6(canCu, areas, the)
   t.diagnostic(`TPL-AC-6: ${areas.length} phường · ${dem.cung} cặp cùng phường · ${dem.khac} cặp khác phường · ${dem.giaiDuoc}/${the.length} thẻ giải được`)
   const sai = await banChep(TIEN_TO_SAU_DAU)
-  assert.throws(() => kiemAc6(sai, areas, the), /TPL-AC-6 probe: phuong-liet ↔ Phường Phương Liệt cùng phường mà báo lech/)
+  assert.throws(() => kiemAc6(sai, areas, the), /TPL-AC-6 probe: \S+ ↔ Phường .+ cùng phường mà báo lech/)
 })

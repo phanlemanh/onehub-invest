@@ -16,6 +16,16 @@ import type { TaoModel } from "../src/enrich/doc-gop-s03/doc.js";
 import { chayHangNgay, DONG_CHAM_TRAN } from "../src/enrich/doc-gop-s03/hang-ngay.js";
 import { FIELDS, type Field } from "../src/enrich/doc-gop-s03/o.js";
 
+/** goi-thang-anthropic: bảng chọn của kho nay cho Haiku đi thẳng API Anthropic; các ca PL30/PL34 dưới đây đo hành vi qua Gateway
+ * giả (taoModel), nên chạy trên bản sao bảng chọn của kho với mọi model ở đường gateway. */
+const CAU_GW = (() => {
+  const goc = JSON.parse(readFileSync(join(import.meta.dirname, "../config/doc-gop-s03.json"), "utf8"));
+  for (const m of Object.values(goc.model) as { duong?: string }[]) delete m.duong;
+  const tep = join(mkdtempSync(join(tmpdir(), "cau-gw-")), "doc-gop-s03.json");
+  writeFileSync(tep, JSON.stringify(goc));
+  return tep;
+})();
+
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const HAI = "anthropic/claude-haiku-5.5";
 const AGENT = join(import.meta.dirname, "..");
@@ -113,7 +123,7 @@ async function dungNgayD(c: pg.Client) {
   ]);
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, source) VALUES ($1, 'sale', now(), now(), $2, 'S03')`,
     [`pl34-offer-${process.pid}`, [ids.t1, ids.t2]]);
-  await chayLuot({ client: c, co: { post: [ids.r, ids.x0], tranUsd: 1, runId: "pl34-truoc" }, taoModel: gatewayGia([]), log: () => {} });
+  await chayLuot({ client: c, co: { cauHinh: CAU_GW, post: [ids.r, ids.x0], tranUsd: 1, runId: "pl34-truoc" }, taoModel: gatewayGia([]), log: () => {} });
   const seGoi = [ids.a, ids.b, ids.t1, ids.c1, ids.anh, ids.x];
   return { ids, seGoi };
 }
@@ -129,7 +139,7 @@ test("PL34-AC-1 --thu: phạm vi ngày giờ VN, gạt thử và sự kiện, kh
     const { ids, seGoi } = await dungNgayD(c);
     const truoc = { sl: await dem(c, "silver_labels"), ai: await dem(c, "ai_calls") };
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 20, thu: true }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 20, thu: true }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
     const t = kq.tomTat;
     assert.ok(!kq.seGoi.includes(ids.thu), "BAI THU LOT VAO PHAM VI");
     assert.ok(!kq.seGoi.includes(ids.t2), "TIN DOC HAI LAN");
@@ -153,6 +163,7 @@ test("PL34-AC-1 --thu: phạm vi ngày giờ VN, gạt thử và sự kiện, kh
 test("PL34-AC-1-CLI --thu không đòi khoá Gateway", () => {
   const env = { ...process.env };
   delete env.AI_GATEWAY_API_KEY;
+  delete env.ANTHROPIC_API_KEY; // goi-thang-anthropic: --thu cũng không đòi khoá Anthropic
   const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/doc-gop-s03.ts", "hang-ngay", "--ngay", "2001-01-02", "--thu"], { cwd: AGENT, env, encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   const dong = r.stdout.trim().split("\n").at(-1)!;
@@ -167,7 +178,7 @@ test("PL34-AC-2 chạy thật: một lời gọi Haiku mỗi đơn vị, ghi nh�
     const truoc = await demHet();
     const ai0 = await dem(c, "ai_calls");
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
     assert.equal(kq.ma, 0);
     assert.equal(ghi.length, 6);
     assert.ok(ghi.every((g) => g.gateway === HAI));
@@ -184,7 +195,7 @@ test("PL34-AC-2 chạy thật: một lời gọi Haiku mỗi đơn vị, ghi nh�
 test("PL34-AC-3 chạy lại cùng ngày không gọi lại; JSON hỏng và lỗi mạng được gọi lại", async () => {
   await withTx(async (c) => {
     await dungNgayD(c);
-    const co = { ngay: NGAY, tranNgayUsd: 20, thu: false };
+    const co = { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 20, thu: false };
     await chayHangNgay({ client: c, co, bayGio: BAY_GIO, taoModel: gatewayGia([]), ...im });
     const sl = await dem(c, "silver_labels");
     const ghi: Ghi[] = [];
@@ -200,7 +211,7 @@ test("PL34-AC-3 chạy lại cùng ngày không gọi lại; JSON hỏng và l�
 test("PL34-AC-3-HONG lượt hai chỉ gọi lại đơn vị JSON hỏng và đơn vị lỗi mạng", async () => {
   await withTx(async (c) => {
     await dungNgayD(c);
-    const co = { ngay: NGAY, tranNgayUsd: 20, thu: false };
+    const co = { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 20, thu: false };
     const m = M();
     await chayHangNgay({ client: c, co, bayGio: BAY_GIO, ...im,
       taoModel: gatewayGia([], (p) => (p.includes(`Bán căn A ${m}`) ? "khong phai json" : p.includes(`Cho thuê B ${m}`) ? new TypeError("mang") : json17())) });
@@ -218,9 +229,9 @@ test("PL34-AC-3-DANG-LAI bài đăng lại ngày sau (post_id mới, cùng chữ
       { key: "p", text: `Tin P ${m} 2PN`, luc: "2001-01-02T09:00:00+07:00" },
       { key: "p2", text: `Tin P ${m} 2PN`, luc: "2001-01-03T09:00:00+07:00" },
     ]);
-    await chayHangNgay({ client: c, co: { ngay: "2001-01-02", tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia([]), ...im });
+    await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: "2001-01-02", tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia([]), ...im });
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: "2001-01-03", tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: "2001-01-03", tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia(ghi), ...im });
     assert.equal(ghi.length, 1, "DANG LAI KHONG CO NHAN");
     assert.deepEqual(kq.seGoi, [ids.p2]);
     const { rows } = await c.query(`SELECT count(*)::int n FROM silver_labels WHERE post_id = $1 AND json_ok`, [ids.p2]);
@@ -233,7 +244,7 @@ test("PL34-AC-4 chạm trần giữa lượt: gọi tới trần, dừng có tê
     await dungNgayD(c);
     const ghi: Ghi[] = [];
     const loi: string[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 0.015, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 0.015, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
       taoModel: gatewayGia(ghi), log: () => {}, logLoi: (s) => loi.push(s) });
     assert.ok(ghi.length > 0, "TU CHOI CA LUOT");
     assert.equal(ghi.length, 3, "VUOT TRAN NGAY");
@@ -248,7 +259,7 @@ test("PL34-AC-4 chạm trần giữa lượt: gọi tới trần, dừng có tê
   await withTx(async (c) => {
     await dungNgayD(c);
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 1, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01, taoModel: gatewayGia(ghi), ...im });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 1, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01, taoModel: gatewayGia(ghi), ...im });
     assert.equal(ghi.length, 6);
     assert.equal(kq.tomTat.cham_tran, false);
     assert.equal(kq.ma, 0);
@@ -259,7 +270,7 @@ test("PL34-AC-4-DAT tiền thật lớn hơn ước: tổng tiền vẫn ≤ tr�
   await withTx(async (c) => {
     await dungNgayD(c);
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 0.05, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 0.05, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
       taoModel: gatewayGia(ghi, () => json17(), "0.03"), ...im });
     assert.equal(ghi.length, 1, "CHI THAT VUOT TRAN");
     assert.ok(kq.tomTat.usd <= 0.05, "CHI THAT VUOT TRAN");
@@ -279,7 +290,7 @@ test("PL34-AC-5 trần chia chung trong ngày chi, chi ngày khác không tính"
     await chenTien(c, "pl34-2001-01-05-b2001-01-01-x", 0.02);
     await chenTien(c, "pl34-2001-01-04-b2001-01-01-y", 5);
     const ghi: Ghi[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 0.033, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01, taoModel: gatewayGia(ghi), ...im });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 0.033, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01, taoModel: gatewayGia(ghi), ...im });
     assert.ok(Math.abs(kq.tomTat.chi_ngay_truoc - 0.02) < 1e-9, "CONG CHI NGAY KHAC");
     assert.equal(ghi.length, 2, "TRAN KHONG CHIA CHUNG NGAY");
     assert.equal(kq.ma, 3);
@@ -292,7 +303,7 @@ test("PL34-AC-5-DA-CHAM chi ngày đã ≥ trần: 0 lời gọi, dừng có tê
     await chenTien(c, "pl34-2001-01-05-b2001-01-01-x", 0.05);
     const ghi: Ghi[] = [];
     const loi: string[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 0.033, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 0.033, thu: false }, bayGio: BAY_GIO, uoc: () => 0.01,
       taoModel: gatewayGia(ghi), log: () => {}, logLoi: (s) => loi.push(s) });
     assert.equal(ghi.length, 0, "TRAN KHONG CHIA CHUNG NGAY");
     assert.ok(loi.some((s) => s.includes(DONG_CHAM_TRAN)));
@@ -304,7 +315,7 @@ test("PL34-AC-6 mọi lời gọi hỏng thì mã 1 gọi tên lớp hỏng; h�
   const chay = async (tra: (p: string) => string | Error) => withTx(async (c) => {
     await dungNgayD(c);
     const loi: string[] = [];
-    const kq = await chayHangNgay({ client: c, co: { ngay: NGAY, tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia([], tra), log: () => {}, logLoi: (s) => loi.push(s) });
+    const kq = await chayHangNgay({ client: c, co: { cauHinh: CAU_GW, ngay: NGAY, tranNgayUsd: 20, thu: false }, bayGio: BAY_GIO, taoModel: gatewayGia([], tra), log: () => {}, logLoi: (s) => loi.push(s) });
     return { kq, loi: loi.join("\n") };
   });
   const a = await chay(() => new TypeError("mang"));
@@ -328,6 +339,7 @@ test("PL34-AC-7 đầu vào sai thoát 2 trước DB và trước mọi lời g�
   writeFileSync(sai, JSON.stringify({ phien_ban: 1, mac_dinh: "qwen", model: { haiku: { gateway: HAI, gia_vao: 0.1, gia_ra: 0.5 } }, o: { bathrooms: "nguoi" } }));
   const env: NodeJS.ProcessEnv = { ...process.env, DATABASE_URL: "postgresql://127.0.0.1:9/khong" };
   delete env.AI_GATEWAY_API_KEY;
+  delete env.ANTHROPIC_API_KEY;
   const ca: [string[], string][] = [
     [["--toan-bo"], "co khong nhan: --toan-bo"],
     [["--ngay", "2026-13-40"], "NGAY SAI KHUON: 2026-13-40"],
@@ -335,12 +347,14 @@ test("PL34-AC-7 đầu vào sai thoát 2 trước DB và trước mọi lời g�
     [["--tran-ngay-usd", "-1"], "TRAN SAI: -1"],
     [["--tran-ngay-usd", "abc"], "TRAN SAI: abc"],
     [["--cau-hinh", sai], "qwen"],
-    [["--ngay", "2001-01-02"], "AI_GATEWAY_API_KEY"],
+    [["--ngay", "2001-01-02"], "THIEU KHOA ANTHROPIC_API_KEY"],
   ];
   for (const [args, can] of ca) {
     const r = spawnSync(process.execPath, ["--import", "tsx", "scripts/doc-gop-s03.ts", "hang-ngay", ...args], { cwd: AGENT, env, encoding: "utf8" });
-    const ghim = can.startsWith("NGAY") ? "NGAY SAI VAN CHAY" : can === "AI_GATEWAY_API_KEY" ? "THIEU KHOA VAN CHAY" : "DAU VAO SAI VAN CHAY";
-    assert.equal(r.status, 2, `${ghim} — ${args.join(" ")} (mã ${r.status}) ${r.stderr}`);
+    const thieuKhoa = can.startsWith("THIEU KHOA");
+    const ghim = can.startsWith("NGAY") ? "NGAY SAI VAN CHAY" : thieuKhoa ? "THIEU KHOA VAN CHAY" : "DAU VAO SAI VAN CHAY";
+    // goi-thang-anthropic: thiếu khoá có mã riêng 5 (bảng chọn của kho cho Haiku đi đường anthropic → ANTHROPIC_API_KEY).
+    assert.equal(r.status, thieuKhoa ? 5 : 2, `${ghim} — ${args.join(" ")} (mã ${r.status}) ${r.stderr}`);
     assert.ok(r.stderr.includes(can), `${ghim} — ${args.join(" ")}: stderr thiếu «${can}»: ${r.stderr}`);
     assert.ok(!r.stderr.includes("ECONNREFUSED"), `${args.join(" ")}: đã chạm DB trước khi kiểm`);
   }

@@ -16,6 +16,8 @@ export const dynamic = "force-dynamic";
  * Query: ?market=<id>&limit=30&min_discount=5&kind=sale|rent_lt
  * CG9: có bảng hạng giá (offer_price_rank) thì danh sách = tin có nhãn hạng của đúng loại tin (P1 và P2), số giảm = % dưới trung
  * vị nhóm, thêm khối `rank`; `kind` vắng = sale, giá trị khác → 400. Bảng chưa có hay rỗng (Hỏi-5) → thước CG8 như cũ (P1 bán).
+ * CG10 (gia-tot-cap-du-an): `project=<id nút dự án>` (chỉ chữ số, sai khuôn → 400) giữ tin xếp hạng cấp dự án của nút đó; khối
+ * `rank` thêm `node`. Chưa có bảng hạng thì không có cấp dự án → `project` trả danh sách rỗng.
  * Lưu ý: contact info (PII tầng A) KHÔNG trả về.
  */
 export async function GET(req: Request) {
@@ -29,12 +31,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: `kind phải là một trong ${kinds.join(", ")}` }, { status: 400 });
   }
   const kind = rawKind ?? KIND.sale;
+  const rawProject = u.searchParams.get("project");
+  if (rawProject !== null && !/^[0-9]{1,18}$/.test(rawProject)) {
+    return NextResponse.json({ error: "project phải là mã số nút dự án" }, { status: 400 });
+  }
   const rawMarket = u.searchParams.get("market");
   // Mã thị trường dài đã đổi sang mã ngắn (migration 064) trả như gọi bằng mã mới.
   const market = rawMarket ? await giaiMaKhuVuc(rawMarket) : null;
   const limit = Math.min(100, Number(u.searchParams.get("limit") ?? 30) || 30);
   const minDiscount = Math.max(0, Math.min(50, Number(u.searchParams.get("min_discount") ?? 5) || 5));
   const coBang = await coBangHang();
+  if (rawProject !== null && !coBang) return NextResponse.json({ data: [], meta: { total: 0, minDiscount, kind, project: rawProject } });
 
   const params: unknown[] = [];
   let marketWhere = "";
@@ -50,6 +57,10 @@ export async function GET(req: Request) {
   if (coBang) {
     params.push(kind);
     pKind = params.length;
+    if (rawProject !== null) {
+      params.push(rawProject);
+      marketWhere += ` AND h.cap = 'du_an' AND h.nut = $${params.length}`;
+    }
   }
 
   const { rows } = await pool.query(coBang ? sqlBang(pLimit, pMin, pKind, marketWhere) : sqlCu(pLimit, pMin, marketWhere), params);
@@ -82,7 +93,7 @@ function sqlBang(pLimit: number, pMin: number, pKind: number, marketWhere: strin
             o.confidence, o.last_seen::text, o.area_id, a.name AS phuong,
             CASE WHEN h.thuoc = 'gia-m2' THEN h.trung_vi END AS median_perm2, h.n AS ruler_n,
             h.duoi_trung_vi_pct AS discount_pct,
-            h.cap, h.n, h.trung_vi, h.p20, h.hang_pct, h.nhan, h.can_xac_minh, h.thuoc, h.pn_nhom, h.ly_do
+            h.cap, h.nut, h.n, h.trung_vi, h.p20, h.hang_pct, h.nhan, h.can_xac_minh, h.thuoc, h.pn_nhom, h.ly_do
      FROM offer_price_rank h
      JOIN sale_offers o ON o.offer_id = h.offer_id
      LEFT JOIN areas a ON a.id = o.area_id
@@ -120,6 +131,7 @@ function khoiHang(r: Record<string, unknown>) {
   const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   return {
     level: r.cap ?? null,
+    node: r.nut ?? null,
     n: num(r.n),
     median: num(r.trung_vi),
     p20: num(r.p20),
