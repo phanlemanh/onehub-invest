@@ -139,6 +139,7 @@ executors:
     dbv_that: "node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-that.itest.mjs"   # danh-ba-toa-truc-can E7, E11b — chép chỉ đọc S08 lát từ máy thu sang DB thử, chỉ in số; ngoài CI
     dv1_db: "bash db/db-thu.sh oneinvest_suite_dv1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa.itest.mjs"   # nut-du-an-tro-xa-moi E3, E4, E6 — DB của riêng lượt chép từ máy thu (có PX1, 69 toà), lệnh --sua-xa thật; ngoài CI
     dv1_that: "bash db/db-thu.sh oneinvest_suite_dv1t --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-xa-that.itest.mjs"   # nut-du-an-tro-xa-moi E7 — DB của riêng lượt + phiên chỉ đọc máy thu, chỉ in số; ngoài CI
+    sxu_db: "bash db/db-thu.sh oneinvest_suite_sxu --chay node --test --test-concurrency=1 pipeline/scripts/sua-xa-ung-vien.itest.mjs"   # sua-xa-bo-nut-ung-vien E1, E2, E4 — --sua-xa bỏ nút ứng viên mot_loi_khai; DB của riêng lượt, tự áp 100; ngoài CI
     da1_db: "bash db/db-thu.sh oneinvest_suite_da1 --chay node --test --test-concurrency=1 pipeline/scripts/danh-ba-vat-the-iso.itest.mjs"   # danh-ba-vat-the-toan-quoc E1–E3, E4b–E7 — DB của riêng lượt chép từ máy thu (chưa 088), áp 088 trong ca; ngoài CI
     tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     dsk_doc: "node scripts/kiem-tin-rao-gan-khu-vuc.mjs"   # do-san-sl1-kdm AC-1 — chỉ đọc DB local: 0 tin trỏ khu vực không hợp lệ theo vị từ của bên ghi (PX1)
@@ -267,7 +268,7 @@ executors:
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
     nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
-    judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
+    judge_entity_duong: "cd agent && node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts"   # chuan-hoa-o-duong — khoá đường bỏ ngõ/số nhà/đuôi địa chỉ, thẻ = luật; probe ô đường thật trên DB máy thu (bỏ qua có lý do dưới CI)
     judge_entity_khong_dau: "cd agent && node --import tsx --test tests/judge-entity-khong-dau.test.ts"   # duong-thang-n-khong-dau — khoá đường có dấu = không dấu (tháng N, từ vị trí trần); probe DB máy thu bỏ qua có lý do dưới CI
     the_duyet_nguoi: "cd pipeline && node --test scripts/the-duyet-nguoi.test.mjs"
     the_duyet_nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_U2_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_nguoi} node --test scripts/the-duyet-nguoi.itest.mjs"
@@ -323,6 +324,11 @@ executors:
     cg8_do: "bash pipeline/scripts/can-gia-cung-loai-db.sh do"   # can-gia-tot-cung-loai E7 — đếm toàn bộ tin trên bản chép, chỉ in số
     cg8_ranh_gioi: "node pipeline/scripts/can-gia-cung-loai-ranh-gioi.mjs --base origin/main"   # can-gia-tot-cung-loai E9 — không migration, không sync-cloud, không thêm liên lạc, không tên nguồn
     cg8_cloud_view: "cd pipeline && node scripts/can-gia-cung-loai-cloud.mjs"   # can-gia-tot-cung-loai E10 — chỉ SELECT qua Management API: định nghĩa v_ruler_p2 cloud = máy thu, đủ bốn loại
+    cg9_db: "cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs"   # bang-hang-gia-m2 E1–E5 — DB của riêng lượt (chuỗi migration của nhánh), ma trận viết trước, đột biến đỏ
+    cg9_doc: "cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx"   # bang-hang-gia-m2 E6, E7 — /ops/deals, /api/v1/deals, /v1/deals đọc offer_price_rank trên DB của riêng lượt
+    cg9_sync: "cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main"   # bang-hang-gia-m2 E8 — cloud giả có/không bảng; diff không đổi bait_gap_pct, không tên nguồn
+    cg9_do: "bash pipeline/scripts/hang-gia-db.sh do"   # bang-hang-gia-m2 E9 — DB thử chép từ DB máy thu, áp 104, chấm hai lần, đếm độc lập
+    hf_deals: "cd app && bash ../db/db-thu.sh oneinvest_suite_hf --chay node --import tsx --test --test-concurrency=1 tests/can-gia-cung-loai-db.test.tsx tests/can-gia-tot-biet-can.test.tsx"   # test-deals-bang-hang-rong E1 — hai tệp ca /ops/deals cũ trên DB của lượt chép máy thu (có dòng offer_price_rank)
     sl_ranh_gioi: "node scripts/lib/sao-luu-ngoai-may.mjs --ranh-gioi --base origin/main"   # sao-luu-ma-hoa-b2 E11 — sync-cloud, collector, plist/launchctl, kho từ xa trong test, tên nguồn
     pl35_db: "bash pipeline/scripts/tap-nhan-hai-khu-db.sh itest"   # tap-nhan-ghep-tin-hai-khu E1, E2, E5, E6, E7 — DB thử riêng, tác tử giả
     pl35_do: "bash pipeline/scripts/tap-nhan-hai-khu-db.sh do"   # tap-nhan-ghep-tin-hai-khu E9 — chọn mẫu trên bản chép DB máy thu, không gọi model

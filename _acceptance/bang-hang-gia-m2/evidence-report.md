@@ -1,0 +1,212 @@
+---
+schema_version: 2
+feature_slug: bang-hang-gia-m2
+verdict: PASS
+failed_evals: []
+reason:
+verified_by: fresh-context verification subagent
+enforcement_mode: strict
+bypass_used: false
+verified_commit: c0e066215d3d0d01292937cd18324826eea479af
+human_signoff: Mạnh 2026-11-15
+---
+
+# Evidence Report: bang-hang-gia-m2
+
+| Eval | Criterion | Executor | Verdict |
+|---|---|---|---|
+| E1 | AC-1 | script | PASS |
+| E2 | AC-2 | script | PASS |
+| E3 | AC-3 | script | PASS |
+| E4 | AC-4 | script | PASS |
+| E5 | AC-5 | script | PASS |
+| E6 | AC-6 | script | PASS |
+| E7 | AC-7 | script | PASS |
+| E8 | AC-8 | script | PASS |
+| E9 | AC-9 | script | PASS |
+| E10 | AC-10 | ui-check | PASS |
+| E11 | AC-11 | script | PASS |
+
+## Evidence
+
+- eval: E1
+  run_id: minted-bang-hang-gia-m2-E1-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E2
+  run_id: minted-bang-hang-gia-m2-E2-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E3
+  run_id: minted-bang-hang-gia-m2-E3-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E4
+  run_id: minted-bang-hang-gia-m2-E4-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E5
+  run_id: minted-bang-hang-gia-m2-E5-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E11
+  run_id: minted-bang-hang-gia-m2-E11-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_db
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs
+    ℹ duration_ms 5391.488
+
+- eval: E6
+  run_id: minted-bang-hang-gia-m2-E6-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_doc
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx
+    ℹ duration_ms 5324.691583
+
+- eval: E7
+  run_id: minted-bang-hang-gia-m2-E7-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_doc
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx
+    ℹ duration_ms 5324.691583
+
+- eval: E8
+  run_id: minted-bang-hang-gia-m2-E8-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_sync
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main
+    KẾT: trong ranh giới
+
+- eval: E9
+  run_id: minted-bang-hang-gia-m2-E9-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.cg9_do
+  verified_at: 2026-11-14T14:21:41Z
+  output: |
+    cmd: bash pipeline/scripts/hang-gia-db.sh do
+    đối chứng khoá: đỏ đúng (sai_khoa > 0)
+
+- eval: E10
+  run_id: minted-bang-hang-gia-m2-E10-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.design.ui_check
+  verified_at: 2026-11-15T06:35:00Z
+  screenshot: evidence/E10-step1.png
+  observed: |
+    Chấm lại (vòng delta E10, 15/11) bằng tác tử context sạch trên dev server :3464 (Turbopack, CSS Tailwind thật) trỏ DB thử oneinvest_u1_cg9 (chấm lại 15/11 00:00Z), cây 2e68ff7c (bằng c0e06621 ngoài tệp T1), innerWidth 1280; email đăng nhập đã che.
+    step1 (/ops/deals, sáng): «Căn giá tốt · Giảm từ 5% · 45 ngày gần nhất»; thanh lọc «Tất cả 30 · Đủ để gọi 0 · Cần xác minh 0 · Còn thiếu 30»; mọi dòng nguồn S06, giảm −35%, cột Thước phường. Căn cần xác minh xếp sau 4.809 căn thường (DB: 5–35%) nên nằm ngoài 30 dòng đầu — đúng thứ tự «cần xác minh đứng cuối».
+    step2 (offer_07e2e89511db504e, sáng): «So với 145 căn cùng phường, cùng loại (căn hộ), cùng 2PN: thấp hơn trung vị 16.5%, nằm trong 20% rẻ nhất — Rẻ trong phường.» 41 tr/m², thước 49 tr/m², 145 tin S06, 16.5%; không có «Cần xác minh». Khớp DB.
+    step3 (offer_002fc1c0073d52cd, tối): nhãn «Cần xác minh»; «So với 48 căn cùng phường, cùng loại (nhà riêng): thấp hơn trung vị 38.1%, nằm trong 20% rẻ nhất — Rẻ trong phường, rẻ quá 35% nên mang nhãn «Cần xác minh»…» 167 / 269 tr/m², 48 tin, 38.1%. Khớp DB.
+    step4 (offer_0054ade373ca8bba, tối): «Đã rời danh sách», «Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn»; «So với 8 căn cùng phường, cùng loại (đất): thấp hơn trung vị 46.4%…»; 8 / 14 tr/m², 8 tin; không có «Rẻ trong phường»; có «Cần xác minh» theo cờ can_xac_minh=true. Khớp DB.
+  network_observed: n-a (driver)
+  ghi chú: chạy lại sau chữ ký vì deals.ts đổi (search_path); thay ảnh round 1 không CSS
+  ảnh đã che: step1 cột «Gọi ai» (SĐT, tên người bán), step2 SĐT ở ô Gọi ai và trong chữ bài, step3 ảnh tin rao có mặt người (làm mờ) và SĐT — quy ước ảnh chứng mới lên kho công khai vẫn che (04/11); che sau khi chấm, không đổi kết quả
+
+### Lệnh suite (hồi quy)
+
+- cmd: cd agent && npm test
+  run_id: minted-bang-hang-gia-m2-SUITE-npm_test__bb6271-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-bang-hang-gia-m2-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: cd app && npm test
+  run_id: minted-bang-hang-gia-m2-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: cd pipeline && npm run test:a
+  run_id: minted-bang-hang-gia-m2-SUITE-test_a-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: cd pipeline && npm run test:b
+  run_id: minted-bang-hang-gia-m2-SUITE-test_b-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: cd app && npm run test:lint-rules
+  run_id: minted-bang-hang-gia-m2-SUITE-test_lint_rules-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+- cmd: node scripts/check-portal-compliance.mjs
+  run_id: minted-bang-hang-gia-m2-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  exit_code: 0
+  verified_at: 2026-11-14T14:21:41Z
+
+## Known limits
+
+## Ngoài hợp đồng
+
+## Analyst
+
+none — moi eval feature deu red tren baseline (co phan biet)
+
+Baseline khong do
+- cd pipeline && bash ../db/db-thu.sh oneinvest_suite_cg9 --chay node --test --test-concurrency=1 scripts/hang-gia.test.mjs: bo qua baseline: tep pipeline/scripts/hang-gia.test.mjs co o cay dang kiem nhung chua co o merge-base b8953e89d25e344a5a1e86fe50cb99c5a2e553dd — eval moi, chay tren code cu khong phan biet gi
+- cd app && bash ../db/db-thu.sh oneinvest_suite_cg9_doc --chay node --import tsx --test --test-concurrency=1 tests/hang-gia-doc.test.tsx: bo qua baseline: tep app/tests/hang-gia-doc.test.tsx co o cay dang kiem nhung chua co o merge-base b8953e89d25e344a5a1e86fe50cb99c5a2e553dd — eval moi, chay tren code cu khong phan biet gi
+- cd pipeline && node --test --test-name-pattern=CG9-AC-8 sync-cloud.test.mjs && node scripts/hang-gia-ranh-gioi.mjs --doi-chung && node scripts/hang-gia-ranh-gioi.mjs --base origin/main: bo qua baseline: tep pipeline/scripts/hang-gia-ranh-gioi.mjs co o cay dang kiem nhung chua co o merge-base b8953e89d25e344a5a1e86fe50cb99c5a2e553dd — eval moi, chay tren code cu khong phan biet gi
+- bash pipeline/scripts/hang-gia-db.sh do: bo qua baseline: tep pipeline/scripts/hang-gia-db.sh co o cay dang kiem nhung chua co o merge-base b8953e89d25e344a5a1e86fe50cb99c5a2e553dd — eval moi, chay tren code cu khong phan biet gi
+
+## Variance
+
+none — every multi-run eval is uniform
+
+## Iterations
+
+Round 1: tổng kết REJECT — năm phát hiện trong hợp đồng về phép đo yếu (vế âm thiếu đối chứng dương ở AC-6, AC-7, AC-8, AC-9; ma trận AC-6 thiếu phần tử). Returned to implementation.
+Round 2: toàn bộ eval PASS trên commit 98722352 sau bản sửa 687b0c51; E10 mang sang từ round 1 vì delta không chạm paths của nó.
+Round 3 (delta sau chữ ký, 15/11): chỉ E10 chạy lại trên mã hiện tại vì deals.ts đổi (search_path) sau ký — PASS, ảnh mới có CSS thay ảnh round 1.
+
+### Re-pin lần 1 — 2026-11-15, do nhận main f78e7382 (bản sửa tách ô đường), sửa search_path + stub test sau ký
+run_id: repin-20261115T051440Z-65465
+sha: c0e066215d3d0d01292937cd18324826eea479af · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E10 · diff chạm vật đo ngoài làn máy: E10 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10

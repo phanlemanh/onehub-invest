@@ -182,3 +182,32 @@ test("CG8-AC-6 data-api /v1/deals: propertyType, thước cùng loại, khoá c�
     assert.notEqual(gCu === null || gCu === undefined ? null : Number(gCu), m.fx.gapCua(m.fx.THUOC_A.apartment[1]), "CG8-AC-6 đột biến market_asset_stats không đỏ");
   });
 });
+
+// Tiền đề «chưa có hạng» (hotfix test-deals-bang-hang-rong): DB của lượt chép cả dữ liệu máy thu (db/db-thu.sh), nên từ khi 104
+// áp lên máy thu bảng public.offer_price_rank có dòng. Ca cũ phải tự dựng tiền đề trong giao dịch: lược đồ riêng mang bản RỖNG của
+// bảng hạng. Cặp hai chiều trên cùng tiền đề: public có một dòng hạng → withTx thường: coBangHang() false; đối chứng bỏ bản rỗng
+// (boBangHang) → bảng public lọt qua search_path → coBangHang() true.
+async function hangPublic(c: pg.Client) {
+  const id = "cg8-tien-de-hang";
+  await c.query(`INSERT INTO public.sale_offer_records (offer_id, kind, first_seen, last_seen) VALUES ($1, 'sale', now(), now()) ON CONFLICT DO NOTHING`, [id]);
+  await c.query(`INSERT INTO public.offer_price_rank (offer_id, kind, run_id) VALUES ($1, 'sale', 'tien-de') ON CONFLICT DO NOTHING`, [id]);
+  return Number((await c.query(`SELECT count(*) AS n FROM public.offer_price_rank`)).rows[0].n);
+}
+
+test("CG8-TIEN-DE bảng hạng của lược đồ riêng rỗng dù DB của lượt có dòng hạng; đối chứng bỏ bản rỗng thì đỏ", async (t) => {
+  const coBang104 = await m.fx.withTx(async (c: pg.Client) => (await c.query(`SELECT to_regclass('public.offer_price_rank') IS NOT NULL AS co`)).rows[0].co);
+  if (!coBang104) {
+    t.skip("DB của lượt chưa áp 104 — không có bảng hạng để lọt");
+    return;
+  }
+  await m.fx.withTx(async (c: pg.Client) => {
+    assert.ok((await hangPublic(c)) >= 1, "CG8-TIEN-DE tiền đề: public.offer_price_rank phải có dòng");
+    const co = await quaClient(c, () => m.deals.coBangHang());
+    assert.equal(co, false, "CG8-TIEN-DE: bảng hạng public lọt vào lược đồ riêng của ca — /ops/deals sẽ đọc đường bảng hạng");
+  });
+  await m.fx.withTx(async (c: pg.Client) => {
+    await hangPublic(c);
+    const co = await quaClient(c, () => m.deals.coBangHang());
+    assert.equal(co, true, "CG8-TIEN-DE đối chứng: bỏ bản rỗng mà bảng public không lọt — phép đo không phân biệt");
+  }, { boBangHang: true });
+});
