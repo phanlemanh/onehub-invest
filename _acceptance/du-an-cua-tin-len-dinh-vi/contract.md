@@ -32,10 +32,11 @@ thứ — lệnh áp, số chạy thử, sao lưu trước (ngoài cây kho, `~/
   `offer_located(text)` giữ chữ ký và kiểu trả của 087; không bảng mới, và `pipeline/sync-cloud.mjs` không đổi trong diff.
 - **AC-2** Given ma trận lớp tin theo bài viết trước từ bảng phủ ca (1 bài 0 dự án · 1 bài 1 dự án · nhiều bài 0 dự án ·
   nhiều bài một phần bài có dự án · nhiều bài mọi bài cùng dự án · nhiều bài hai dự án gốc khác nhau · một bài hai dự án
-  · một bài hai luật cùng nút · phát biểu đã rút · phân khu con quy về dự án gốc · phân khu cháu (phân khu → phân khu → dự án)
-  · toà → dự án · hai nút con của cùng một dự án · tin 0 bài · tin S05), When đọc `offer_project`, Then mỗi ô ra đúng một kết cục viết trước (không dòng · `mot_du_an` với nút gốc và
+  · một bài hai luật cùng nút · phát biểu đã rút · tin 0 bài · tin S05; ô nút con không có đường qua phát biểu vì trigger 082/096 buộc
+  `project_node_id` trỏ nút loại dự án — đo ở AC-3), When đọc `offer_project`, Then mỗi ô ra đúng một kết cục viết trước (không dòng · `mot_du_an` với nút gốc và
   hai số đếm bài · `xung_dot` với nút NULL), số assert bằng số ô, và mỗi `offer_id` một dòng.
-- **AC-3** Given `s06_offer_project` có dòng (bí danh S06 trỏ nút có sẵn, nút ứng viên `mot_loi_khai`, nút con) và khi
+- **AC-3** Given `s06_offer_project` có dòng (bí danh S06 trỏ nút có sẵn, nút ứng viên `mot_loi_khai`, phân khu con, phân
+  khu cháu, toà con) và khi
   rỗng, When đọc `offer_project`, Then tin S06 có dòng `evidence = 'ma_nguon'` với nút gốc và `catalog_tier` của nút
   gốc; bí danh đã thôi thì không dòng; rỗng thì 0 dòng S06. (Một tin S06 không thể mang hai bí danh: khoá `list_id` và
   `registry_aliases_ma_nguon_uq` buộc mỗi tin tối đa một nút — không dựng ô ấy.)

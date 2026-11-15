@@ -85,14 +85,18 @@ cum AS (
   FROM property_offers po JOIN sale_offers o ON o.offer_id = po.offer_id
   GROUP BY 1
 ),
--- Chưa có bảng nối tin → nút danh bạ (V9, chuỗi GC0–GC3): hai CTE rỗng này là chỗ DUY NHẤT phải đổi khi bộ gắn ra đời.
-dinh_vi_link AS (SELECT NULL::text AS offer_id WHERE false),
+-- Định vị CẤP DỰ ÁN (DV7, migration 105): tin có đúng một dự án gốc trong nguồn chung offer_project — cùng nguồn với bậc B2
+-- (offer_located, data_level_units). Khớp toà (nhịp 2, PL20) và gắn căn (nhịp 3, GC0–GC3) chưa có bảng nối: CTE rỗng là chỗ
+-- duy nhất phải đổi khi bộ gắn ra đời. «Chờ khớp» (locatedPending) giữ nghĩa cấp toà: tin ghi toà/trục mà chưa khớp nút toà.
+dinh_vi_link AS (SELECT offer_id FROM offer_project WHERE status = 'mot_du_an'),
+toa_link AS (SELECT NULL::text AS offer_id WHERE false),
 gan_can_link AS (SELECT NULL::text AS offer_id WHERE false),
 muc AS (
   SELECT o.offer_id,
          EXISTS (SELECT 1 FROM property_offers po JOIN cum c ON c.property_id = po.property_id
                  WHERE po.offer_id = o.offer_id AND c.n >= 2) AS clustered,
          EXISTS (SELECT 1 FROM dinh_vi_link l WHERE l.offer_id = o.offer_id) AS located,
+         EXISTS (SELECT 1 FROM toa_link l WHERE l.offer_id = o.offer_id) AS toa_khop,
          EXISTS (SELECT 1 FROM gan_can_link l WHERE l.offer_id = o.offer_id) AS unit_linked,
          coalesce(/*<<<LOCATED_PENDING*/nullif(btrim(o.block_raw), '') IS NOT NULL OR o.unit_number ~* 'xx'/*LOCATED_PENDING>>>*/, false) AS ghi_toa,
          coalesce(/*<<<UNIQUE_ID*/(nullif(btrim(o.block_raw), '') IS NOT NULL AND o.unit_number !~* 'xx'
@@ -108,7 +112,7 @@ offers_daily AS (
          count(*) FILTER (WHERE m.clustered) AS clustered,
          count(*) FILTER (WHERE m.located) AS located,
          count(*) FILTER (WHERE m.unit_linked) AS unit_linked,
-         count(*) FILTER (WHERE m.ghi_toa AND NOT m.located) AS located_pending,
+         count(*) FILTER (WHERE m.ghi_toa AND NOT m.toa_khop) AS located_pending,
          count(*) FILTER (WHERE m.dinh_danh AND NOT m.unit_linked) AS unique_id_pending,
          count(*) FILTER (WHERE m.located AND NOT m.unit_linked) AS deep_located,
          count(*) FILTER (WHERE m.clustered AND NOT m.located AND NOT m.unit_linked) AS deep_clustered,
