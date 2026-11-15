@@ -1,0 +1,29 @@
+schema_version: 1
+feature_slug: sua-xa-bo-nut-ung-vien
+# Ca «SXU-AC-n». Một executor:
+# - sxu_db (DB thử của riêng lượt, chép máy thu): pipeline/scripts/sua-xa-ung-vien.itest.mjs — áp 100, chèn nút, suaXaNut thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sxu_db
+    layer: backend-effect
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/sua-xa-ung-vien.itest.mjs]
+    expected: "exit 0; ca 'SXU-AC-1': áp 100, chèn nút project catalog_tier 'mot_loi_khai' slug 'sxu-ung-vien' area_ids ['vn-hcmc-an-khanh'] (không có mục trong tệp xã); ghi lệch area_ids của nút 'vinhomes-grand-park' thành ['vn-hcmc-an-khanh'] trước; suaXaNut(c) không ném; nút 'vinhomes-grand-park' có area_ids deepEqual mục của nó trong tệp xã; SELECT area_ids của nút ấy deepEqual ['vn-hcmc-an-khanh']; mọi nút có mục trong tệp xã có area_ids deepEqual mục của nó; đối chứng đỏ: bản sao danh-ba-vat-the.mjs (tệp tạm, import tuyệt đối) bỏ điều kiện catalog_tier → suaXaNut ném lỗi có message chứa 'sxu-ung-vien', đếm và băm area_ids mọi nút deepEqual trước, ca nêu 'loc-ung-vien-sua-xa'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sxu_db
+    layer: backend-effect
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/sua-xa-ung-vien.itest.mjs]
+    expected: "exit 0; ca 'SXU-AC-2': chèn nút project catalog_tier 'xac_minh' slug 'sxu-xac-minh' không có mục trong tệp xã; suaXaNut(c) ném lỗi có message chứa 'thiếu nút sxu-xac-minh'; băm area_ids mọi nút deepEqual trước (không ghi gì)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sxu_db
+    layer: backend-effect
+    paths: [pipeline/danh-ba-vat-the.mjs, pipeline/scripts/sua-xa-ung-vien.itest.mjs]
+    expected: "exit 0; ca 'SXU-AC-3': câu đọc nút xuất từ danh-ba-vat-the.mjs (SQL_NUT_SUA_XA) chạy trên bảng tạm chép asset_nodes không có cột catalog_tier (search_path trỏ schema tạm) → không lỗi, số dòng = số nút project của bảng tạm; đối chứng dương: cùng câu trên bảng có cột với một nút mot_loi_khai, một nút catalog_tier NULL và một nút xac_minh → kết quả có nút NULL và nút xac_minh, không có nút mot_loi_khai, số dòng = số nút project trừ nút mot_loi_khai"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
