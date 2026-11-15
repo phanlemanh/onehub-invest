@@ -28,13 +28,19 @@ export const THUOC_A = { apartment: [10, 100 * TR], commercial: [5, 120 * TR], l
 export const GIA_TIN = 80 * TR;
 export const gapCua = (m) => Math.round((1 - GIA_TIN / m) * 1000) / 10;
 
-/** Một giao dịch có lược đồ riêng; luôn ROLLBACK. */
-export async function withTx(fn) {
+/**
+ * Một giao dịch có lược đồ riêng; luôn ROLLBACK. Bảng hạng `offer_price_rank` (104, CG9) cũng chép RỖNG vào lược đồ riêng: DB
+ * của lượt là bản chép cả dữ liệu `oneinvest` (db/db-thu.sh), và từ khi 104 áp lên máy thu bản chép mang hàng trăm nghìn dòng hạng —
+ * để bảng public lọt qua search_path thì `coBangHang()` ra true và ca CG8 đọc nhầm đường bảng hạng. Ca tự dựng tiền đề «chưa có hạng».
+ * `boBangHang` chỉ cho ca đối chứng (bỏ bản rỗng → bảng public lọt qua).
+ */
+export async function withTx(fn, { boBangHang = false } = {}) {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     await c.query("BEGIN");
-    await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "cg8" });
+    const hang = boBangHang ? [] : await neuLaBang(c, "offer_price_rank");
+    await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers")), ...hang], { tienTo: "cg8" });
     await c.query("CREATE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL");
     await c.query(SQL_034);
     await c.query(MIG_060);

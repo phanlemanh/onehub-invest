@@ -112,7 +112,9 @@ async function withTx<T>(fn: (c: pg.Client, sc: string) => Promise<T>): Promise<
   conn = c
   try {
     await c.query("BEGIN")
-    const sc = await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers"))], { tienTo: "cgt" })
+    // Bảng hạng (104) chép RỖNG: DB của lượt chép cả dữ liệu máy thu, bảng public có dòng thì /ops/deals đọc đường bảng hạng
+    // và tin của ca (chưa có hạng) rơi khỏi danh sách. Ca tự dựng tiền đề «chưa có hạng» (đối chứng ở can-gia-cung-loai-db).
+    const sc = await luocDoRieng(c, [...BANG, ...(await neuLaBang(c, "sellers")), ...(await neuLaBang(c, "offer_price_rank"))], { tienTo: "cgt" })
     await c.query(SQL_070) // view thật: CLOUD_ALLOW đòi cột tính seller_phone_inferred
     await c.query(SQL_034)
     await c.query(MIG_060)
