@@ -1,13 +1,14 @@
 // doc.ts — PL30: một lời gọi đọc gộp và gộp kết quả theo bảng chọn. Đường gọi theo nhóm (goi-thang-anthropic 15/11):
 // "gateway" qua Vercel AI Gateway (AI SDK), "anthropic" thẳng API Anthropic (SDK chính chủ @anthropic-ai/sdk). Không ném lỗi:
 // lỗi gọi thành error_kind `<lớp>:<http>:<kiểu>:<tên lớp>` (loi-nha-cung-cap.ts), JSON hỏng thành json_ok=false. Mỗi lời gọi một
-// dòng ai_calls (viec «doc-gop-s03»), model ghi theo mã model, không theo đường. Luật 7: chỉ trả kết quả cho người gọi ghi nhãn bạc.
+// dòng ai_calls (viec «doc-gop-s03»), model ghi `<đường>:<mã gọi>` (gateway:anthropic/claude-haiku-5.5, anthropic:claude-haiku-5-5).
+// Luật 7: chỉ trả kết quả cho người gọi ghi nhãn bạc.
 import Anthropic from "@anthropic-ai/sdk";
 import { createGateway, generateText, type LanguageModel } from "ai";
 import { recordCallDb, soToken, type RecordCall } from "../../runtime/ai-call-log.js";
 import { chuoiLoi, phanLoaiLoi, type LopLoi } from "../../runtime/loi-nha-cung-cap.js";
 import { trichCoThat } from "../luat-trich-dan.js";
-import { DUONG_ANTHROPIC, tuyChonGui, type Duong, type KeHoach } from "./cau-hinh.js";
+import { DUONG_ANTHROPIC, modelSo, tuyChonGui, type Duong, type KeHoach } from "./cau-hinh.js";
 import { FIELDS, type Field } from "./o.js";
 import { HUONG_DAN, tinNhan } from "./prompt.js";
 import type { The } from "./the.js";
@@ -118,7 +119,7 @@ export async function hoiGop(o: {
     kq = { gateway: o.gateway, duong, json: null, json_ok: false, error_kind: chuoiLoi(p), lop: p.lop, vao: null, ra: null, usd: 0, usd_gateway: null, ms: Date.now() - t0 };
   }
   await (o.recordCall ?? recordCallDb)({
-    viec: VIEC, model: `gateway:${o.gateway}`, inputTokens: kq.vao, outputTokens: kq.ra,
+    viec: VIEC, model: modelSo(o.gateway, duong), inputTokens: kq.vao, outputTokens: kq.ra,
     latencyMs: kq.ms, ok: kq.error_kind === null, loi: kq.error_kind, trace: o.trace ?? null, khach: "pipeline",
   }).catch(() => {});
   return kq;

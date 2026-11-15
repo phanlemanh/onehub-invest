@@ -3,7 +3,7 @@
 // không chữ bài, không tên người — làm bằng chứng AC-10, ghim băm prompt, bảng chọn và mã.
 import { appendFileSync, writeFileSync } from "node:fs";
 import pg from "pg";
-import { keHoach, khoaThieu, napCauHinh } from "./cau-hinh.js";
+import { duongDung, keHoach, khoaThieu, napCauHinh } from "./cau-hinh.js";
 import { bangCham, maSha, type BangCham, type KetQuaThe } from "./cham.js";
 import { uocThe } from "./chay.js";
 import { gop, hoiGop, type KetQuaGoi, type TaoAnthropic, type TaoModel } from "./doc.js";
@@ -41,7 +41,7 @@ export async function chamLuot(o: {
     const goi = new Map<string, KetQuaGoi>();
     for (const n of kh.nhom) {
       if (chi + uocThe(t, n.gia) > o.tranUsd) throw new Error(`cham tran ${o.tranUsd} USD giua luot (da chi ${chi.toFixed(4)})`);
-      const k = await hoiGop({ gateway: n.gateway, duong: n.duong, gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: async () => {} });
+      const k = await hoiGop({ gateway: n.gateway, duong: (kh.tuLui ? duongDung(n, true) : [])[0] ?? n.duong[0], gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: async () => {} });
       chi += k.usd;
       if (laLopDung(k.lop)) throw new Error(`dung som ${k.lop}: ${k.error_kind}`); // hết tiền / khoá sai: không bắn tiếp
       goi.set(n.gateway, k);

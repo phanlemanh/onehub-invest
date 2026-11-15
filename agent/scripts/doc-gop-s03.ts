@@ -9,7 +9,8 @@
 //   cham --split test|dev --tran-usd <USD> [--lat s03-theo-nhom] [--cau-hinh <tệp>] [--ra <bảng.md>] [--tom-tat <tệp.json>]
 //       chấm bộ đọc trên nhãn vàng; chỉ đọc DB, không ghi bảng nào.
 // Khoá theo đường của bảng chọn (goi-thang-anthropic): ANTHROPIC_API_KEY cho model đi đường anthropic, AI_GATEWAY_API_KEY cho
-// model đi Gateway (người chạy nạp .env bằng --env-file). Bảng chọn và cờ được kiểm trước khoá: sai thì thoát 2; thiếu khoá thoát 5
+// model đi Gateway (người chạy nạp .env bằng --env-file); bảng có `tu_lui` thì chỉ cần khoá của MỘT đường mỗi model, đường thiếu khoá
+// hay cạn tiền được lùi qua (dòng `JOB WARN … chuyen-duong`). Bảng chọn và cờ được kiểm trước khoá: sai thì thoát 2; thiếu khoá thoát 5
 // với dòng `THIEU KHOA <biến>`, chưa nối DB, chưa gọi model. Hết tiền (HTTP 402) hay khoá sai (401/403) ở một lời gọi: lượt dừng
 // ngay, stderr `JOB FAIL [doc-gop-s03] het-tien|khoa: …`. Thoát: 0 xong · 1 mọi lời gọi hỏng / khoá sai · 2 đầu vào sai · 3 trần ·
 // 4 hết tiền · 5 thiếu khoá.
@@ -42,6 +43,7 @@ export async function lenhChay(argv: string[]): Promise<number> {
   await c.connect();
   try {
     const kq = await chayLuot({ client: c, co });
+    for (const d of kq.chuyenDuong) console.error(d);
     if (kq.dung) {
       console.error(dongDung(kq));
       return kq.dung === "het-tien" ? 4 : 1;

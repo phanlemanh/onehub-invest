@@ -62,11 +62,13 @@ export function cauHinhMacDinh(root = ROOT) {
   if (typeof gw !== "string" || !MODEL_DUYET.includes(gw)) {
     throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — mac_dinh «${cau?.mac_dinh}» không trỏ model có gateway trong ba mã đã duyệt`);
   }
-  const duong = m.duong ?? "gateway";
-  if (duong !== "gateway" && !(duong === "anthropic" && DUONG_ANTHROPIC[gw])) {
-    throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — model ${gw} không có đường «${duong}»`);
+  const ds = m.duong === undefined ? ["gateway"] : Array.isArray(m.duong) ? m.duong : [m.duong];
+  for (const d of ds) {
+    if (d !== "gateway" && !(d === "anthropic" && DUONG_ANTHROPIC[gw])) {
+      throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — model ${gw} không có đường «${d}»`);
+    }
   }
-  return { model: gw, duong };
+  return { model: gw, duong: ds, tuLui: cau.tu_lui === true };
 }
 export const modelMacDinh = (root = ROOT) => cauHinhMacDinh(root).model;
 
@@ -160,10 +162,27 @@ export function tacTuAnthropic({ model = modelMacDinh(), taoClient } = {}) {
   };
 }
 
-/** Tác tử theo bảng chọn: đường của model mặc định. */
-export function tacTuMacDinh(root = ROOT) {
-  const { model, duong } = cauHinhMacDinh(root);
-  return duong === "anthropic" ? tacTuAnthropic({ model }) : tacTuGateway({ model });
+const KHOA_DUONG = Object.freeze({ gateway: "AI_GATEWAY_API_KEY", anthropic: "ANTHROPIC_API_KEY" });
+
+/** Tác tử theo bảng chọn: các đường của model mặc định theo thứ tự. Không tự lùi: đường đầu. Tự lùi (`tu_lui`): bỏ đường thiếu
+ * khoá, và khi đường đang dùng hết tiền thì lùi sang đường kế, thử lại bài đó, in dòng `chuyen-duong` (cùng luật agent). */
+export function tacTuMacDinh(root = ROOT, { log = console.error, tao = { anthropic: tacTuAnthropic, gateway: tacTuGateway } } = {}) {
+  const { model, duong, tuLui } = cauHinhMacDinh(root);
+  const ds = tuLui ? duong.filter((d) => process.env[KHOA_DUONG[d]]) : [duong[0]];
+  if (!ds.length) ds.push(duong[0]); // không đường nào có khoá: lời gọi tự báo thiếu khoá
+  if (ds[0] !== duong[0]) log(`JOB WARN [label-nhap-ghep] chuyen-duong: ${model} ${duong[0]} -> ${ds[0]} (thieu-khoa ${KHOA_DUONG[duong[0]]})`);
+  const tacTu = new Map(ds.map((d) => [d, tao[d]({ model })]));
+  return async (vao) => {
+    for (;;) {
+      try {
+        return await tacTu.get(ds[0])(vao);
+      } catch (e) {
+        if (!(e?.het_tien && tuLui && ds.length > 1)) throw e;
+        log(`JOB WARN [label-nhap-ghep] chuyen-duong: ${model} ${ds[0]} -> ${ds[1]} (het-tien)`);
+        ds.shift();
+      }
+    }
+  };
 }
 
 /**

@@ -5,7 +5,7 @@
 import { SQL_GHI_DOC } from "../doc-toan-bo.js";
 import { KIND as KIND_SINH, LISTING_INTENT } from "../../vocab.generated.js";
 import type { RecordCall } from "../../runtime/ai-call-log.js";
-import { keHoach, napCauHinh, type KeHoach, type NhomGoi } from "./cau-hinh.js";
+import { duongDung, keHoach, KHOA_DUONG, napCauHinh, type Duong, type KeHoach, type NhomGoi } from "./cau-hinh.js";
 import { hoiGop, kiemTrich, type KetQuaGoi, type TaoAnthropic, type TaoModel } from "./doc.js";
 import { laLopDung } from "../../runtime/loi-nha-cung-cap.js";
 import { FIELDS, type Field } from "./o.js";
@@ -17,7 +17,12 @@ export type TomTatChay = {
   the: number; goi: number; loi: number; hong: number; lopLoi: string[]; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number;
   /** goi-thang-anthropic: lượt dừng sớm vì lớp lỗi làm mọi lời gọi sau hỏng (hết tiền, khoá sai); `loiDung` là chuỗi ai_calls.loi. */
   dung: "het-tien" | "khoa" | null; loiDung: string | null; duongDung: string | null;
+  /** Dòng `chuyen-duong` mỗi lần một model lùi sang đường kế (tu_lui): thiếu khoá lúc đầu lượt hay gặp lớp dừng giữa lượt. */
+  chuyenDuong: string[];
 };
+/** Dòng log khi lùi đường — để biết credit một đường đã cạn. */
+export const dongChuyenDuong = (gateway: string, tu: Duong, sang: Duong, lyDo: string): string =>
+  `JOB WARN [doc-gop-s03] chuyen-duong: ${gateway} ${tu} -> ${sang} (${lyDo})`;
 /** Dòng stderr cho cảnh báo bám vào khi lượt dừng sớm. */
 export const dongDung = (k: Pick<TomTatChay, "dung" | "loiDung" | "duongDung">): string => {
   const [, http = "-", kieu = "-"] = (k.loiDung ?? "").split(":");
@@ -73,7 +78,7 @@ export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string },
   const intent = yd && typeof yd.v === "string" && Y_DINH.has(yd.v) ? yd.v : "unknown";
   const kv = giao("kind") ? o.kind?.v : undefined;
   const probabilities = {
-    nguon: "doc-gop", duong: n.duong, cau_hinh_sha: cau.sha, prompt_sha: PROMPT_SHA, o_duoc_giao: n.o, o,
+    nguon: "doc-gop", duong: k.duong ?? n.duong[0], cau_hinh_sha: cau.sha, prompt_sha: PROMPT_SHA, o_duoc_giao: n.o, o,
     so_anh: t.anh.length, anh_thieu: t.anh_thieu, token_vao: k.vao, token_ra: k.ra, finish: k.finish ?? null,
   };
   return [
@@ -92,7 +97,7 @@ export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string },
 export async function chayLuot(o: {
   client: Q; co: CoChay; taoModel?: TaoModel; taoAnthropic?: TaoAnthropic; recordCall?: RecordCall; the?: The[];
   uoc?: (t: The, gia: { vao: number; ra: number }) => number; log?: (s: string) => void;
-  doDaDoc?: boolean; goiDenTran?: boolean;
+  doDaDoc?: boolean; goiDenTran?: boolean; env?: NodeJS.ProcessEnv;
 }): Promise<TomTatChay> {
   const log = o.log ?? console.log;
   const cau = napCauHinh(o.co.cauHinh); // bảng sai → ném trước mọi lời gọi
@@ -101,7 +106,7 @@ export async function chayLuot(o: {
   const uoc = o.uoc ?? uocThe;
   const tatCa = o.the ?? (o.co.lat ? await docTheTheoLat(o.client, o.co.lat, o.co.split) : await docTheTheoPost(o.client, o.co.post ?? []));
   const the = tatCa.filter((t) => t.text.trim() || t.anh.length);
-  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, hong: 0, lopLoi: [], ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length, dung: null, loiDung: null, duongDung: null };
+  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, hong: 0, lopLoi: [], ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length, dung: null, loiDung: null, duongDung: null, chuyenDuong: [] };
   if (kq.bo) log(`bo ${kq.bo} bai khong chu khong anh`);
 
   // Đã có nhãn đọc được cùng (bài, chữ, model, prompt) → không gọi lại.
@@ -120,6 +125,19 @@ export async function chayLuot(o: {
     return { ...kq, conLai: viec.length, dungTran: true };
   }
   const record = o.recordCall ?? ghiAiCallQua(o.client);
+  // Đường còn dùng của từng model. Không tự lùi: đúng đường đầu (lệnh đã kiểm khoá). Tự lùi: bỏ đường thiếu khoá (ghi chuyen-duong);
+  // không đường nào có khoá thì giữ đường đầu để lời gọi tự hỏng và được báo như cũ.
+  const env = o.env ?? process.env;
+  const con = new Map<string, Duong[]>();
+  for (const n of kh.nhom) {
+    const dung = kh.tuLui ? duongDung(n, true, env) : [n.duong[0]];
+    if (kh.tuLui && dung.length && dung[0] !== n.duong[0]) {
+      const d = dongChuyenDuong(n.gateway, n.duong[0], dung[0], `thieu-khoa ${KHOA_DUONG[n.duong[0]]}`);
+      kq.chuyenDuong.push(d);
+      log(d);
+    }
+    con.set(n.gateway, dung.length ? dung : [n.duong[0]]);
+  }
   let datNhat = 0; // tiền thật lớn nhất của một lời gọi trong lượt (goiDenTran)
   for (let i = 0; i < viec.length; i++) {
     const { t, n } = viec[i];
@@ -130,7 +148,8 @@ export async function chayLuot(o: {
       log(`cham tran ${o.co.tranUsd} USD: da chi ${kq.usd.toFixed(4)}, con lai ${kq.conLai}`);
       break;
     }
-    const k = await hoiGop({ gateway: n.gateway, duong: n.duong, gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: record, trace: runId });
+    const ds = con.get(n.gateway)!;
+    const k = await hoiGop({ gateway: n.gateway, duong: ds[0], gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: record, trace: runId });
     kq.goi++;
     kq.usd += k.usd;
     datNhat = Math.max(datNhat, k.usd);
@@ -139,8 +158,16 @@ export async function chayLuot(o: {
       kq.loi++;
       if (!kq.lopLoi.includes(k.error_kind)) kq.lopLoi.push(k.error_kind);
       log(`loi goi ${n.gateway} bai ${t.post_id}: ${k.error_kind}`);
-      if (laLopDung(k.lop)) { // hết tiền / khoá sai: mọi lời gọi sau cũng hỏng — dừng cả lượt, không bắn tiếp
-        Object.assign(kq, { dung: k.lop, loiDung: k.error_kind, duongDung: n.duong, conLai: viec.length - i - 1 });
+      if (laLopDung(k.lop) && kh.tuLui && ds.length > 1) { // tự lùi: đường này cạn tiền / khoá sai → thử lại bài này ở đường kế
+        const d = dongChuyenDuong(n.gateway, ds[0], ds[1], k.error_kind);
+        kq.chuyenDuong.push(d);
+        log(d);
+        ds.shift();
+        i--;
+        continue;
+      }
+      if (laLopDung(k.lop)) { // hết tiền / khoá sai, không còn đường: mọi lời gọi sau cũng hỏng — dừng cả lượt, không bắn tiếp
+        Object.assign(kq, { dung: k.lop, loiDung: k.error_kind, duongDung: ds[0], conLai: viec.length - i - 1 });
         log(`dung som: ${k.lop} (${k.error_kind}), con lai ${kq.conLai} loi goi`);
         break;
       }

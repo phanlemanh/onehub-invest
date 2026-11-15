@@ -1,7 +1,13 @@
 # Gọi thẳng Anthropic cho Haiku (goi-thang-anthropic) — thiết kế
 
-Ngày 15/11/2026 · T2 · giao bởi phiên giám sát đợt dot0-cam-mau theo lời Mạnh 15/11: «Hiện nay tôi đang có 200 usd api credit từ
-claude platform. Tôi muốn dùng nó thay cho Vercel Gate Way».
+Ngày 15/11/2026 · T2 · phiên giám sát đợt dot0-cam-mau giao theo lời Mạnh ngày 15/11:
+- «Hiện nay tôi đang có 200 usd api credit từ claude platform. Tôi muốn dùng nó thay cho Vercel Gate Way».
+- Đính chính ngay sau đó: «Đúng hơn là tận dụng chứ không thay thế vercel AI gateway».
+
+**Cập nhật theo lời đính chính.** Gateway giữ nguyên: không gỡ, không đổi hành vi. Haiku có hai đường song song, thứ tự thử khai trong
+bảng chọn, mặc định Anthropic trước. Khoá `tu_lui` quyết khi một đường cạn tiền hay thiếu khoá thì lùi sang đường kia (ghi dòng
+`chuyen-duong`) hay dừng. `ai_calls.model` mang tiền tố đường. Những mục dưới viết «Haiku đặt `duong: "anthropic"`» nay đọc là
+`duong: ["anthropic", "gateway"]`, `tu_lui: true`.
 
 ## Vấn đề
 
@@ -26,7 +32,10 @@ Ngày 15/11 lúc 06:2xZ, đếm bằng `hang-ngay --thu` (chỉ đọc) ra số 
 1. **Đường gọi là một trường của bảng chọn.** Trong `agent/config/doc-gop-s03.json`, mỗi model có thêm `duong: "anthropic" | "gateway"`
    (vắng thì là `gateway`). Haiku đặt `duong: "anthropic"`; GLM và DeepSeek vẫn đi Gateway. Đổi đường lần sau chỉ cần sửa tệp này, đúng
    tinh thần PL30.
-2. **Mã model giữ nguyên làm danh tính.** Dòng nhãn bạc vẫn ghi `gateway:anthropic/claude-haiku-5.5`, `ai_calls.model` cũng vậy. Ba bên
+2. **Mã model giữ nguyên làm danh tính nhãn.** Dòng nhãn bạc vẫn ghi `gateway:anthropic/claude-haiku-5.5`, đi đường nào cũng vậy; nhờ
+   thế khi đổi đường thì bài đã đọc không bị đọc lại. Riêng `ai_calls.model` mang tiền tố đường theo lời đính chính:
+   `anthropic:claude-haiku-5-5` hoặc `gateway:anthropic/claude-haiku-5.5`. Bảng `ai_model_prices` chưa có giá cho cả hai chuỗi này (chỉ có
+   giá Qwen), nên tiền tố mới không làm thẻ Ops mất số nào. Ba bên
    đọc phía sau dùng chuỗi này làm khoá và nhờ thế không đổi gì:
    - bộ dò «đã đọc» của `hang-ngay` và `chay`;
    - khoá cách đọc của `mau-soat-cuon-chieu`, cùng nháp PL35;

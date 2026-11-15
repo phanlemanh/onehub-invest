@@ -1,23 +1,71 @@
 {
-  "feature_plain": "Bước đọc tin S03 hằng đêm và việc nháp nhãn PL35 gọi Haiku thẳng tài khoản Claude Platform của anh (200 USD), không qua Vercel Gateway (ví đang rỗng). Đổi đường gọi chỉ bằng sửa tệp cấu hình. Khi hết tiền, máy dừng ngay và báo rõ «hết tiền», không bắn tiếp hàng nghìn lời hỏng như 12–14/11.",
+  "feature_plain": "Bước đọc tin S03 hằng đêm và việc nháp nhãn PL35 có thêm đường gọi Haiku thẳng tài khoản Claude Platform của anh (200 USD), CHẠY SONG SONG Vercel Gateway (Gateway giữ nguyên). Mặc định thử Anthropic trước; một đường cạn tiền hay thiếu khoá thì tự lùi sang đường kia trong cùng trần 20 USD/ngày, ghi dòng «chuyen-duong». Cả hai cạn thì dừng ngay và báo «hết tiền».",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ cho tệp cấu hình chọn đường gọi từng model: Haiku đi thẳng Anthropic, GLM và DeepSeek vẫn qua Gateway; vẫn chỉ ba model đã duyệt."},
-    {"id": "AC-2", "p": "Sẽ gửi Haiku đúng một lời gọi mỗi bài, kèm chữ và ảnh theo thứ tự, khoá lấy từ .env lúc chạy."},
-    {"id": "AC-3", "p": "Sẽ giữ nguyên tên model trong sổ nhãn và sổ cuộc gọi, để thẻ Ops, trần 20 USD/ngày và việc «không đọc lại bài đã đọc» chạy như cũ."},
-    {"id": "AC-4", "p": "Sẽ dừng ngay với một dòng «THIEU KHOA <tên biến>» khi .env chưa có khoá, chưa gọi gì."},
-    {"id": "AC-5", "p": "Sẽ ghi lỗi trong sổ cuộc gọi kèm mã HTTP và loại lỗi (hết tiền, khoá sai, quá tải…), không chỉ tên lớp."},
-    {"id": "AC-6", "p": "Sẽ dừng cả lượt ngay ở lời gọi hết tiền đầu tiên (kể cả khi Anthropic báo «credit balance is too low») và in dòng JOB FAIL … het-tien."},
-    {"id": "AC-7", "p": "Sẽ cho bước đêm bỏ bước «hôm kia» và bước rút mẫu soát dừng luôn khi đã hết tiền."},
-    {"id": "AC-8", "p": "Sẽ cho việc nháp nhãn PL35 đi cùng đường Haiku thẳng và dừng lát khi hết tiền."},
-    {"id": "AC-9", "p": "Sẽ giữ toàn bộ bộ test agent, pipeline, bản đồ sản phẩm và lưới trước khi gộp xanh."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ cho tệp cấu hình khai thứ tự đường gọi từng model (Haiku: Anthropic rồi Gateway) và một khoá «tự lùi»; GLM, DeepSeek vẫn chỉ qua Gateway; vẫn chỉ ba model đã duyệt."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ gửi Haiku đúng một lời gọi mỗi bài, kèm chữ và ảnh theo thứ tự, khoá lấy từ .env lúc chạy."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ giữ nguyên tên model trong sổ nhãn (bài đã đọc không đọc lại khi đổi đường), còn sổ cuộc gọi ghi rõ lời gọi đi đường nào."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ dừng với dòng «THIEU KHOA <tên biến>» khi một model không còn đường nào có khoá — có khoá Gateway thôi cũng đủ chạy."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ ghi lỗi trong sổ cuộc gọi kèm mã HTTP và loại lỗi (hết tiền, khoá sai, quá tải…), không chỉ tên lớp."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ tự lùi sang Gateway khi Anthropic báo hết tiền (kể cả «credit balance is too low») và đọc tiếp bài đó; cả hai cạn thì dừng cả lượt, in JOB FAIL … het-tien."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ cho bước đêm bỏ bước «hôm kia» và bước rút mẫu soát dừng luôn khi đã hết tiền."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ cho việc nháp nhãn PL35 đi cùng hai đường và tự lùi như bước đêm."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ toàn bộ bộ test agent, pipeline, bản đồ sản phẩm và lưới trước khi gộp xanh."
+    }
   ],
   "wont_do": [
-    {"id": "OOS-1", "p": "Không chuyển ba công cụ đo chạy tay (nhãn bạc, VLM ảnh, so ba model) — vẫn qua Gateway."},
-    {"id": "OOS-2", "p": "Không sửa cloud-sync.sh (tệp rủi ro cao); bước rút mẫu tự dừng ở tệp của nó."},
-    {"id": "OOS-3", "p": "Không dựng bộ cảnh báo bám dòng «hết tiền» — thuộc việc vận hành ổn định."},
-    {"id": "OOS-4", "p": "Không tính bậc giá Haiku trên 100K token — bài lớn nhất vẫn dưới ngưỡng."},
-    {"id": "OOS-5", "p": "Không tự đặt khoá vào .env máy thu (việc của anh); chạy bù 2.515 bài là sau khi gộp."},
-    {"id": "OOS-6", "p": "Không thêm sổ cuộc gọi cho việc nháp PL35 (hiện trạng không ghi)."},
-    {"id": "OOS-7", "p": "Không tách bộ đo DO1 theo đường gọi — nhãn đã mang dấu đường để tách sau."}
+    {
+      "id": "OOS-1",
+      "p": "Không chuyển ba công cụ đo chạy tay (nhãn bạc, VLM ảnh, so ba model) — vẫn qua Gateway."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không sửa cloud-sync.sh (tệp rủi ro cao); bước rút mẫu tự dừng ở tệp của nó."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không dựng bộ cảnh báo bám dòng «hết tiền» — thuộc việc vận hành ổn định."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không tính bậc giá Haiku trên 100K token — bài lớn nhất vẫn dưới ngưỡng."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Không tự đặt khoá vào .env máy thu (việc của anh); chạy bù 2.515 bài là sau khi gộp."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Không thêm sổ cuộc gọi cho việc nháp PL35 (hiện trạng không ghi)."
+    },
+    {
+      "id": "OOS-7",
+      "p": "Không tách bộ đo DO1 theo đường gọi — nhãn đã mang dấu đường để tách sau."
+    }
   ]
 }

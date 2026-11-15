@@ -107,15 +107,15 @@ function clientGia() {
 
 test("GTA-AC-8 nháp PL35 đường anthropic: POST /v1/messages model claude-haiku-5-5 khoá từ ANTHROPIC_API_KEY; thiếu khoá gọi tên biến; 402 bài đầu → dừng lát", async () => {
   const l = await import("../label-nhap-ghep.mjs");
-  assert.deepEqual(l.cauHinhMacDinh(), { model: "anthropic/claude-haiku-5.5", duong: "anthropic" }, "BANG CHON CHUA DAT HAIKU DUONG ANTHROPIC");
+  assert.deepEqual(l.cauHinhMacDinh(), { model: "anthropic/claude-haiku-5.5", duong: ["anthropic", "gateway"], tuLui: true }, "BANG CHON CHUA DAT HAIKU HAI DUONG");
   const cu = { k: process.env.ANTHROPIC_API_KEY, u: process.env.ANTHROPIC_BASE_URL };
   const sv = await mayChuGia(() => ({ status: 200, body: tinNhan('{"building":{"v":null,"trich":""}}') }));
   try {
     delete process.env.ANTHROPIC_API_KEY;
-    await assert.rejects(l.tacTuMacDinh()({ chu: "x", toa: [], truc: [] }), /ANTHROPIC_API_KEY/);
+    await assert.rejects(l.tacTuAnthropic()({ chu: "x", toa: [], truc: [] }), /ANTHROPIC_API_KEY/);
     process.env.ANTHROPIC_API_KEY = "khoa-gia-gta";
     process.env.ANTHROPIC_BASE_URL = sv.url;
-    const tl = await l.tacTuMacDinh()({ chu: "Bán căn", toa: ["S1.01"], truc: [] });
+    const tl = await l.tacTuMacDinh(undefined, { log: () => {} })({ chu: "Bán căn", toa: ["S1.01"], truc: [] });
     assert.deepEqual(tl, { building: { v: null, trich: "" } });
     assert.equal(sv.ghi.length, 1);
     assert.equal(sv.ghi[0].url, "/v1/messages");
@@ -133,7 +133,7 @@ test("GTA-AC-8 nháp PL35 đường anthropic: POST /v1/messages model claude-ha
   try {
     process.env.ANTHROPIC_BASE_URL = sv2.url;
     const c = clientGia();
-    const kq = await l.nhapLat(c, { lat: "hai-khu-ghep", tacTu: l.tacTuMacDinh() });
+    const kq = await l.nhapLat(c, { lat: "hai-khu-ghep", tacTu: l.tacTuAnthropic() });
     assert.equal(sv2.ghi.length, 1, `HET TIEN VAN GOI TIEP: ${sv2.ghi.length}`);
     assert.equal(kq.het_tien, true);
     assert.equal(kq.goi, 1);
@@ -153,7 +153,7 @@ test("GTA-AC-8 nháp PL35 đường anthropic: 400 «credit balance is too low»
   try {
     process.env.ANTHROPIC_API_KEY = "khoa-gia-gta";
     process.env.ANTHROPIC_BASE_URL = sv.url;
-    const kq = await l.nhapLat(clientGia(), { lat: "hai-khu-ghep", tacTu: l.tacTuMacDinh() });
+    const kq = await l.nhapLat(clientGia(), { lat: "hai-khu-ghep", tacTu: l.tacTuAnthropic() });
     assert.equal(kq.het_tien, true, kq.loi_cuoi);
     assert.equal(sv.ghi.length, 1);
   } finally {
@@ -169,4 +169,35 @@ test("GTA-AC-8 nháp PL35 qua Gateway: 402 insufficient_funds cũng là hết ti
   const fetch402 = async () => ({ ok: false, status: 402, json: async () => ({ error: { type: "insufficient_funds", message: "x" } }) });
   const loi = await l.tacTuGateway({ model: "zai/glm-5.3-flash", fetchFn: fetch402 })({ chu: "x", toa: [], truc: [] }).then(() => null, (e) => e);
   assert.ok(loi?.het_tien, loi?.message);
+});
+
+test("GTA-AC-8 nháp PL35 tự lùi: Anthropic hết tiền → dòng chuyen-duong, bài đó và các bài sau qua Gateway; thiếu khoá Anthropic → lùi từ đầu", async () => {
+  const l = await import("../label-nhap-ghep.mjs");
+  const cu = { k: process.env.ANTHROPIC_API_KEY, u: process.env.ANTHROPIC_BASE_URL, g: process.env.AI_GATEWAY_API_KEY };
+  const sv = await mayChuGia(() => HET_TIEN);
+  try {
+    process.env.ANTHROPIC_API_KEY = "khoa-gia-gta";
+    process.env.ANTHROPIC_BASE_URL = sv.url;
+    process.env.AI_GATEWAY_API_KEY = "khoa-gia";
+    const gw = [];
+    const log = [];
+    const tao = { anthropic: l.tacTuAnthropic, gateway: () => async (vao) => { gw.push(vao.chu); return { building: { v: null, trich: "" } }; } };
+    const kq = await l.nhapLat(clientGia(), { lat: "hai-khu-ghep", tacTu: l.tacTuMacDinh(undefined, { log: (d) => log.push(d), tao }) });
+    assert.equal(sv.ghi.length, 1, "ANTHROPIC CAN TIEN VAN GOI TIEP");
+    assert.equal(gw.length, 3, `GATEWAY PHAI NHAP CA BA BAI: ${gw.length}`);
+    assert.equal(kq.het_tien, undefined);
+    assert.equal(kq.loi, 0);
+    assert.ok(log.some((d) => d === "JOB WARN [label-nhap-ghep] chuyen-duong: anthropic/claude-haiku-5.5 anthropic -> gateway (het-tien)"), log.join("\n"));
+    delete process.env.ANTHROPIC_API_KEY;
+    const log2 = [];
+    const gw2 = [];
+    const tao2 = { anthropic: l.tacTuAnthropic, gateway: () => async (vao) => { gw2.push(vao.chu); return {}; } };
+    await l.tacTuMacDinh(undefined, { log: (d) => log2.push(d), tao: tao2 })({ chu: "x", toa: [], truc: [] });
+    assert.equal(sv.ghi.length, 1, "THIEU KHOA ANTHROPIC VAN GOI ANTHROPIC");
+    assert.equal(gw2.length, 1);
+    assert.ok(log2.some((d) => d.includes("thieu-khoa ANTHROPIC_API_KEY")), log2.join("\n"));
+  } finally {
+    await sv.dong();
+    for (const [k, v] of [["ANTHROPIC_API_KEY", cu.k], ["ANTHROPIC_BASE_URL", cu.u], ["AI_GATEWAY_API_KEY", cu.g]]) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
 });

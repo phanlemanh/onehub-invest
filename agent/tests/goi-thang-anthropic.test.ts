@@ -13,7 +13,7 @@ import { test } from "node:test";
 import Anthropic from "@anthropic-ai/sdk";
 import { MockLanguageModelV4 } from "ai/test";
 import pg from "pg";
-import { DUONG_ANTHROPIC, keHoach, khoaCan, kiemCauHinh, MODEL_DUYET, napCauHinh } from "../src/enrich/doc-gop-s03/cau-hinh.js";
+import { DUONG_ANTHROPIC, keHoach, khoaCan, khoaThieu, kiemCauHinh, MODEL_DUYET, napCauHinh } from "../src/enrich/doc-gop-s03/cau-hinh.js";
 import { chayLuot } from "../src/enrich/doc-gop-s03/chay.js";
 import { hoiGop, taoAnthropicMacDinh, type TaoModel } from "../src/enrich/doc-gop-s03/doc.js";
 import { chayHangNgay } from "../src/enrich/doc-gop-s03/hang-ngay.js";
@@ -92,19 +92,30 @@ const BANG_HAI_ANTHROPIC = { phien_ban: 1, mac_dinh: "haiku", model: { haiku: { 
 const BANG_CO_GW = { phien_ban: 1, mac_dinh: "haiku", model: { haiku: { gateway: HAI, duong: "anthropic", gia_vao: 0.1, gia_ra: 0.5 }, glm: { gateway: GLM, gia_vao: 0.15, gia_ra: 0.5 } }, o: { area_m2: "glm" } };
 
 // ---------------------------------------------------------------- AC-1
-test("GTA-AC-1 bảng chọn của kho: Haiku đường anthropic mã claude-haiku-5-5; GLM/DeepSeek gateway; danh sách đóng ba mã; từ chối đường sai", () => {
+test("GTA-AC-1 bảng chọn của kho: Haiku hai đường anthropic rồi gateway, tự lùi bật; GLM/DeepSeek gateway; danh sách đóng ba mã; từ chối đường sai", () => {
   const kh = keHoach(napCauHinh().cauHinh);
   const hai = kh.nhom.find((n) => n.gateway === HAI)!;
-  assert.equal(hai.duong, "anthropic", "BANG CHON CHUA DAT HAIKU DUONG ANTHROPIC");
+  assert.deepEqual(hai.duong, ["anthropic", "gateway"], "BANG CHON CHUA DAT HAIKU HAI DUONG, ANTHROPIC TRUOC");
+  assert.equal(kh.tuLui, true);
   assert.equal(DUONG_ANTHROPIC[HAI], "claude-haiku-5-5");
-  for (const n of kh.nhom.filter((x) => x.gateway !== HAI)) assert.equal(n.duong, "gateway");
+  for (const n of kh.nhom.filter((x) => x.gateway !== HAI)) assert.deepEqual(n.duong, ["gateway"]);
   assert.deepEqual([...MODEL_DUYET], [HAI, GLM, DS]);
-  assert.deepEqual(khoaCan(kh), ["ANTHROPIC_API_KEY"]);
+  assert.deepEqual(khoaCan(kh), ["AI_GATEWAY_API_KEY", "ANTHROPIC_API_KEY"]);
+  // Tự lùi: một khoá bất kỳ là đủ; vắng cả hai thì báo cả hai.
+  assert.deepEqual(khoaThieu(kh, { AI_GATEWAY_API_KEY: "x" }), []);
+  assert.deepEqual(khoaThieu(kh, { ANTHROPIC_API_KEY: "x" }), []);
+  assert.deepEqual(khoaThieu(kh, {}), ["AI_GATEWAY_API_KEY", "ANTHROPIC_API_KEY"]);
+  // Không tự lùi: phải có khoá của đường đầu.
+  const khKhong = keHoach(kiemCauHinh({ ...napCauHinh().cauHinh, tu_lui: false }));
+  assert.deepEqual(khoaThieu(khKhong, { AI_GATEWAY_API_KEY: "x" }), ["ANTHROPIC_API_KEY"]);
+  assert.throws(() => kiemCauHinh({ ...napCauHinh().cauHinh, tu_lui: "co" }), /tu_lui phải là true\/false/);
   const mau = (m: Record<string, unknown>) => ({ phien_ban: 1, mac_dinh: "x", model: { x: { gia_vao: 0.1, gia_ra: 0.5, ...m } }, o: {} });
   assert.throws(() => kiemCauHinh(mau({ gateway: GLM, duong: "anthropic" })), /model x \(zai\/glm-5\.3-flash\) không có đường anthropic/);
   assert.throws(() => kiemCauHinh(mau({ gateway: DS, duong: "anthropic" })), /model x \(deepseek\/deepseek-v4\.1-flash-1017\) không có đường anthropic/);
   assert.throws(() => kiemCauHinh(mau({ gateway: HAI, duong: "openai" })), /model x có duong "openai"/);
-  assert.equal(keHoach(kiemCauHinh(mau({ gateway: GLM }))).nhom[0].duong, "gateway", "VANG duong PHAI LA gateway");
+  assert.throws(() => kiemCauHinh(mau({ gateway: HAI, duong: ["anthropic", "anthropic"] })), /rỗng hay lặp/);
+  assert.throws(() => kiemCauHinh(mau({ gateway: GLM, duong: ["gateway", "anthropic"] })), /không có đường anthropic/);
+  assert.deepEqual(keHoach(kiemCauHinh(mau({ gateway: GLM }))).nhom[0].duong, ["gateway"], "VANG duong PHAI LA gateway");
   assert.deepEqual(khoaCan(keHoach(kiemCauHinh(BANG_CO_GW))), ["AI_GATEWAY_API_KEY", "ANTHROPIC_API_KEY"]);
 });
 
@@ -121,7 +132,7 @@ test("GTA-AC-2 lời gọi thẳng: một POST /v1/messages, model claude-haiku-
       } } as never) as never;
       const the = theCoAnh();
       const kh = keHoach(kiemCauHinh(BANG_CO_GW));
-      for (const n of kh.nhom) await hoiGop({ gateway: n.gateway, duong: n.duong, gia: n.gia, the, taoModel: tm, recordCall: async () => {} });
+      for (const n of kh.nhom) await hoiGop({ gateway: n.gateway, duong: n.duong[0], gia: n.gia, the, taoModel: tm, recordCall: async () => {} });
       assert.equal(sv.ghi.length, 1, `SO LOI GOI THANG ${sv.ghi.length}`);
       const y = sv.ghi[0];
       assert.equal(y.url, "/v1/messages");
@@ -163,7 +174,7 @@ async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
 const theChu = (k: string): The => ({ post_id: `gta-${process.pid}-${k}`, text_hash: `h-${k}`, group_name: "Nhóm thử GTA", group_note: null, text: `Bài ${k} GTA ${process.pid}`, anh: [], anh_thieu: 0 });
 
 // ---------------------------------------------------------------- AC-3
-test("GTA-AC-3 nhãn bạc giữ danh tính model, ghi đường thật, tiền tính theo giá bảng; ai_calls model không đổi; chạy lại không gọi lại", async () => {
+test("GTA-AC-3 nhãn bạc giữ danh tính model, ghi đường thật, tiền tính theo giá bảng; ai_calls model mang tiền tố đường; chạy lại không gọi lại", async () => {
   const sv = await mayChu(() => ({ status: 200, body: tinNhanTot() }));
   const bang = tepBang(BANG_HAI_ANTHROPIC);
   try {
@@ -178,7 +189,7 @@ test("GTA-AC-3 nhãn bạc giữ danh tính model, ghi đường thật, tiền 
       assert.equal(rows[0].p.duong, "anthropic");
       assert.ok(Math.abs(rows[0].usd - 0.00095) < 1e-9, `cost_usd ${rows[0].usd}`);
       const { rows: ai } = await c.query(`SELECT model, ok, loi FROM ai_calls WHERE trace = $1`, [co.runId]);
-      assert.deepEqual(ai, [{ model: `gateway:${HAI}`, ok: true, loi: null }]);
+      assert.deepEqual(ai, [{ model: "anthropic:claude-haiku-5-5", ok: true, loi: null }], "AI_CALLS PHAI GHI DUONG GOI");
       const lan2 = await chayLuot({ client: c, co, the: [t], doDaDoc: true, log: () => {} });
       assert.equal(lan2.goi, 0, "CHAY LAI GOI LAI BAI DA DOC");
       assert.equal(sv.ghi.length, 1);
@@ -194,10 +205,13 @@ test("GTA-AC-4 thiếu khoá: hang-ngay/chay/cham thoát 5 trước DB và trư�
   delete env.ANTHROPIC_API_KEY;
   delete env.AI_GATEWAY_API_KEY;
   const bangGw = tepBang(BANG_CO_GW);
+  const bangHai = tepBang(BANG_HAI_ANTHROPIC);
   const ca: [string[], NodeJS.ProcessEnv, string][] = [
     [["hang-ngay", "--ngay", "2001-02-02"], env, "THIEU KHOA ANTHROPIC_API_KEY"],
+    [["hang-ngay", "--ngay", "2001-02-02"], env, "THIEU KHOA AI_GATEWAY_API_KEY"],
     [["chay", "--post", "x", "--tran-usd", "1"], env, "THIEU KHOA ANTHROPIC_API_KEY"],
     [["cham", "--split", "test", "--tran-usd", "1"], env, "THIEU KHOA ANTHROPIC_API_KEY"],
+    [["hang-ngay", "--ngay", "2001-02-02", "--cau-hinh", bangHai], { ...env, AI_GATEWAY_API_KEY: "co" }, "THIEU KHOA ANTHROPIC_API_KEY"],
     [["hang-ngay", "--ngay", "2001-02-02", "--cau-hinh", bangGw], { ...env, ANTHROPIC_API_KEY: "co" }, "THIEU KHOA AI_GATEWAY_API_KEY"],
   ];
   for (const [args, e, can] of ca) {
@@ -206,6 +220,10 @@ test("GTA-AC-4 thiếu khoá: hang-ngay/chay/cham thoát 5 trước DB và trư�
     assert.ok(r.stderr.includes(can), `${args.join(" ")}: stderr thiếu «${can}»: ${r.stderr}`);
     assert.ok(!r.stderr.includes("ECONNREFUSED"), `${args.join(" ")}: đã chạm DB trước khi kiểm khoá`);
   }
+  // Bảng của kho (tự lùi): chỉ có khoá Gateway là đủ — không thoát 5 (đi tiếp tới DB giả và hỏng ở đó).
+  const mot = spawnSync(process.execPath, ["--import", "tsx", "scripts/doc-gop-s03.ts", "hang-ngay", "--ngay", "2001-02-02"], { cwd: AGENT, env: { ...env, AI_GATEWAY_API_KEY: "co" }, encoding: "utf8" });
+  assert.notEqual(mot.status, 5, `TU LUI MA VAN DOI DU HAI KHOA: ${mot.stderr}`);
+  assert.ok(!mot.stderr.includes("THIEU KHOA"), mot.stderr);
   await voiEnv({ ANTHROPIC_API_KEY: "khoa-tuong-minh" }, async () => {
     assert.equal(taoAnthropicMacDinh().apiKey, "khoa-tuong-minh");
     assert.equal(taoAnthropicMacDinh().authToken, null, "CLIENT GIU HAI LOAI KHOA");
@@ -343,4 +361,59 @@ test("GTA-AC-6 hang-ngay dừng sớm: 402 → 1 lời gọi, mã 4, JOB FAIL he
     await svg.dong();
   }
   void im;
+});
+
+// ---------------------------------------------------------------- AC-6 tự lùi
+test("GTA-AC-6 tự lùi: Anthropic 402 → dòng chuyen-duong, các bài còn lại qua Gateway trong cùng trần, mã 0; thiếu khoá Anthropic → lùi ngay từ đầu; cả hai cạn → mã 4", async () => {
+  const bangLui = tepBang({ phien_ban: 1, mac_dinh: "haiku", tu_lui: true, model: { haiku: { gateway: HAI, duong: ["anthropic", "gateway"], gia_vao: 0.1, gia_ra: 0.5 } }, o: { bathrooms: "nguoi" } });
+  const gwTot = (ghi: string[]): TaoModel => (id) => new MockLanguageModelV4({ modelId: id, doGenerate: async () => {
+    ghi.push(id);
+    return { content: [{ type: "text", text: json17() }], finishReason: { unified: "stop", raw: "stop" },
+      usage: { inputTokens: { total: 5000, noCache: 5000, cacheRead: undefined, cacheWrite: undefined }, outputTokens: { total: 900, text: 900, reasoning: undefined } }, warnings: [],
+      providerMetadata: { gateway: { cost: "0.002" } } };
+  } } as never) as never;
+  const gwHet: TaoModel = (id) => new MockLanguageModelV4({ modelId: id, doGenerate: async () => {
+    throw Object.assign(new Error("ví rỗng"), { name: "GatewayInternalServerError", statusCode: 402 });
+  } } as never) as never;
+  const chay = async (env: Record<string, string | undefined>, taoModel: TaoModel, nhan: string) => {
+    const sv = await mayChu(() => loiAnthropic(402, "billing_error"));
+    try {
+      return await voiEnv({ ANTHROPIC_BASE_URL: sv.url, AI_GATEWAY_API_KEY: "khoa-gia", ...env }, () => withTx(async (c) => {
+        await baBai(c, nhan);
+        const loiDong: string[] = [];
+        const calls: AiCallRecord[] = [];
+        const kq = await chayHangNgay({
+          client: c, co: { ngay: NGAY, tranNgayUsd: 20, thu: false, cauHinh: bangLui }, bayGio: BAY_GIO, taoModel, log: () => {}, logLoi: (s) => loiDong.push(s),
+          recordCall: async (r) => { calls.push(r); },
+        });
+        const { rows } = await c.query(`SELECT model, probabilities->>'duong' duong FROM silver_labels WHERE post_id LIKE $1`, [`gta-${process.pid}-${nhan}-%`]);
+        return { kq, loiDong, calls, nhan: rows as { model: string; duong: string }[], yeu: sv.ghi.length };
+      }));
+    } finally {
+      await sv.dong();
+    }
+  };
+  const ghi: string[] = [];
+  const a = await chay({ ANTHROPIC_API_KEY: "khoa-gia" }, gwTot(ghi), "lui");
+  assert.equal(a.yeu, 1, "ANTHROPIC CAN TIEN VAN GOI TIEP");
+  assert.equal(ghi.length, 3, `GATEWAY PHAI DOC CA BA BAI: ${ghi.length}`);
+  assert.equal(a.kq.ma, 0, a.loiDong.join("\n"));
+  assert.equal(a.nhan.length, 3);
+  assert.ok(a.nhan.every((r) => r.model === `gateway:${HAI}` && r.duong === "gateway"), JSON.stringify(a.nhan));
+  assert.ok(a.loiDong.some((d) => d.startsWith(`JOB WARN [doc-gop-s03] chuyen-duong: ${HAI} anthropic -> gateway (het-tien:402:billing_error`)), a.loiDong.join("\n"));
+  assert.deepEqual(a.calls.map((r) => r.model), ["anthropic:claude-haiku-5-5", `gateway:${HAI}`, `gateway:${HAI}`, `gateway:${HAI}`]);
+  assert.equal(a.kq.tomTat.chuyen_duong?.length, 1);
+
+  const ghi2: string[] = [];
+  const b = await chay({ ANTHROPIC_API_KEY: undefined }, gwTot(ghi2), "thieu");
+  assert.equal(b.yeu, 0, "THIEU KHOA ANTHROPIC VAN GOI ANTHROPIC");
+  assert.equal(ghi2.length, 3);
+  assert.equal(b.kq.ma, 0);
+  assert.ok(b.loiDong.some((d) => d.includes("chuyen-duong") && d.includes("thieu-khoa ANTHROPIC_API_KEY")), b.loiDong.join("\n"));
+
+  const c = await chay({ ANTHROPIC_API_KEY: "khoa-gia" }, gwHet, "can");
+  assert.equal(c.yeu, 1);
+  assert.equal(c.calls.length, 2, "CA HAI DUONG CAN: một lời mỗi đường rồi dừng");
+  assert.equal(c.kq.ma, 4);
+  assert.ok(c.loiDong.includes("JOB FAIL [doc-gop-s03] het-tien: gateway 402 -"), c.loiDong.join("\n"));
 });

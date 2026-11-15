@@ -21,7 +21,7 @@ export type TomTatHangNgay = {
   ngay_bai: string; ngay_chi: string; tho: number; bai_thu: number; su_kien: number; trung: number; don_vi: number;
   da_doc: number; bo: number; can_goi: number; goi: number; loi: number; json_hong: number; ghi: number; usd: number;
   chi_ngay_truoc: number; tran: number; cham_tran: boolean; con_lai: number; uoc_usd: number;
-  dung?: "het-tien" | "khoa" | null; loi_dung?: string | null;
+  dung?: "het-tien" | "khoa" | null; loi_dung?: string | null; chuyen_duong?: string[];
 };
 /** Mã thoát: 0 xong · 1 mọi lời gọi hỏng hoặc dừng vì khoá sai · 3 chạm trần · 4 dừng vì hết tiền (goi-thang-anthropic). */
 export type KetQuaHangNgay = { ma: 0 | 1 | 3 | 4; tomTat: TomTatHangNgay; seGoi: string[] };
@@ -143,7 +143,8 @@ export async function chayHangNgay(o: {
       client: o.client, the: canDoc, doDaDoc: true, goiDenTran: true, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: o.recordCall, uoc, log,
       co: { post: seGoi, tranUsd: conTran, cauHinh: o.co.cauHinh, runId: `pl34-${ngayChi}-b${ngayBai}-${bayGio.toISOString()}` },
     });
-    Object.assign(tom, { goi: kq.goi, loi: kq.loi, json_hong: kq.hong, ghi: kq.ghi, usd: Number(kq.usd.toFixed(6)), cham_tran: kq.dungTran, con_lai: kq.conLai, dung: kq.dung, loi_dung: kq.loiDung });
+    Object.assign(tom, { goi: kq.goi, loi: kq.loi, json_hong: kq.hong, ghi: kq.ghi, usd: Number(kq.usd.toFixed(6)), cham_tran: kq.dungTran, con_lai: kq.conLai, dung: kq.dung, loi_dung: kq.loiDung, chuyen_duong: kq.chuyenDuong });
+    for (const d of kq.chuyenDuong) logLoi(d); // stderr: cảnh báo bám vào «credit một đường đã cạn»
   }
   if (kq?.dung) {
     logLoi(dongDung(kq));
