@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b49f39504c44397fc973dc6b4dc8b25997d5379c
-human_signoff:
+human_signoff: Mạnh 2026-11-15
 ---
 
 # Evidence Report: tach-o-duong-dau-vao-ban

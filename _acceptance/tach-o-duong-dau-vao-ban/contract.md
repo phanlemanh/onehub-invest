@@ -5,7 +5,7 @@ slug: tach-o-duong-dau-vao-ban
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-tach-o-duong-dau-vao-ban-design.md
@@ -94,3 +94,7 @@ Không có ô cơ hội (hàng do GS giao trực tiếp). Điểm xong đo bằn
 
 - `_acceptance/config.yaml` cũng thuộc vùng hàng `ngoai-n-tu-dinh-tuyen-bat` (P2). Lát này chỉ sửa dòng executor
   `judge_entity_duong`; P2 nhận main sau.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-15:
+  - Ngoài-1: Tệp đo dữ liệu thật agent/probes/ chưa nằm trong bước kiểm kiểu của agent (hàng kế đưa vào).
+  - Ngoài-4: Bộ lọc của phép đo KD-AC-6 nhận hai vị trí mới mà chưa có ca cố định ghim.
+  - Ngoài-5: Bộ tách tham chiếu của probe dùng lại ba bước chuẩn hoá của chính luật, nên một bước viết sai có thể lọt.
