@@ -5,7 +5,7 @@ slug: gia-tot-cap-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [db, pipeline, ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-gia-tot-cap-du-an-design.md
@@ -121,6 +121,15 @@ Trục lấy từ bảng phủ ca đo chỉ đọc 15/11 (thiết kế §6; ghi 
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: Trang danh sách tách đôi dòng import để hai bài kiểm tra cũ khớp chuỗi; gộp lại thì hai bài đó đỏ dù trang không hỏng.
+  - Ngoài-2: Trang một căn có thể không báo căn đã rời danh sách giá tốt với tin thuê hoặc tin không đại diện.
+  - Ngoài-4: API nhận mã dự án có số 0 đứng đầu nhưng trả danh sách rỗng thay vì báo lỗi.
+  - Ngoài-5: Với cùng mã có số 0 đầu, API trả rỗng còn trang Ops vẫn hiện dự án.
+  - Ngoài-6: /ops/deals?project=<mã sai dạng> hiện danh sách chung thay vì báo không tìm thấy dự án.
+  - Ngoài-7: Bài kiểm tra lược đồ kiểu cloud chỉ khẳng định rỗng trên DB không có tin khớp, nên không bắt được lọc sai trên cloud.
+  - Ngoài-8: Bài kiểm tra AC-6 không phân biệt N = số căn với N = số tin vì dữ liệu thử có mỗi căn một tin.
+  - Ngoài-9: Dữ liệu thử dự án dựng tay theo khuôn view 105 (bản chép), lệch với dữ liệu thật chỉ lộ ở phép đo trên bản chép máy thu.
 - PR gộp SAU DV7 (`du-an-cua-tin-len-dinh-vi`, migration 105): test dựng view tạm từ thân 105 nên vòng chạy không chờ. Gộp trước khi áp
   106 vẫn an toàn: bước chấm đêm bỏ dải khi thiếu bảng (AC-4).
 - Migration 106 do N1 giữ số; sổ số migration của điều phối liên làn ghi 106 cho hàng này.

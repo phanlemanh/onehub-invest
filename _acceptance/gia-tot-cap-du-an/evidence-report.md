@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e0b197c45e76e598d023f30192b88314605bb495
-human_signoff:
+human_signoff: Mạnh 2026-11-16
 ---
 
 # Evidence Report: gia-tot-cap-du-an
@@ -122,7 +122,7 @@ human_signoff:
   run_id: minted-gia-tot-cap-du-an-E10-r1
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: config:executors.design.ui_check
   verified_at: 2026-11-15T12:50:06Z
   carried_from_round: 1
   screenshot: evidence/E10-step1.png

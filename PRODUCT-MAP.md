@@ -11,9 +11,9 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>192 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>126 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>127 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
 
@@ -69,10 +69,6 @@ flowchart TD
 - Tách bộ kiểm pipeline của lượt chấm thành hai nửa chạy song song, mỗi nửa một DB thử, để một lệnh không vượt trần chờ 30 phút của tác tử chấm (`tach-suite-pipeline`)
 - hai test app chạy trên DB chung thôi đỏ vì mã vùng dài cũ và thôi treo khi có DDL xếp hàng (`test-app-tren-db-chung`)
 
-## Đang làm
-
-- Tin có dự án được xếp hạng giá trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «Giá tốt» khi nằm trong 20% thấp nhất và dưới trung vị từ 5%; tin chỉ biết phường giữ «Rẻ trong phường»; /ops/deals lọc được theo dự án, mỗi căn một dòng, tab «Cần xác minh» đếm trên toàn tập; dải diện tích dự án × PN là phát biểu suy ra riêng (`gia-tot-cap-du-an`)
-
 ## Đã giao — chờ phiên nghiệm thu
 
 - Người duyệt vai Vận hành ở máy thu thấy ảnh tin chỉ có URL gốc (S06, S05) trên thẻ duyệt — ảnh đi qua máy chủ theo media_key, trình duyệt không nhận URL hay tên miền nguồn (`anh-goc-qua-may-chu`)
@@ -118,6 +114,7 @@ flowchart TD
 - check-freshness đo S03/S05/S06 theo giờ THU thật của snapshot thay vì giờ NẠP — nguồn ngừng thu mà bị nạp lại bản cũ phải báo quá hạn (`freshness-do-gio-thu-that-s03`)
 - check-freshness đo độ tươi theo bảng thật của từng nguồn, có SLO cho S05 và S06, không còn dòng quá hạn giả (`freshness-theo-nguon-that`)
 - Người gắn nhãn mở mẫu của từng nhóm S03 trên /ops/labels, gắn điều người trong nhóm hiểu gồm phân khu, trục, tầng, số WC, bài nhiều căn, người bán, SĐT, mỗi trường ghi căn cứ, bài phải dùng ngữ cảnh ghi lý do, rồi xem máy đọc gì để ghi loại trường hợp, và thấy bảng trường hợp theo nhóm (`gan-nhan-theo-nhom-s03`)
+- Tin có dự án được xếp hạng giá trong nhóm dự án × loại (× số phòng ngủ) và mang nhãn «Giá tốt» khi nằm trong 20% thấp nhất và dưới trung vị từ 5%; tin chỉ biết phường giữ «Rẻ trong phường»; /ops/deals lọc được theo dự án, mỗi căn một dòng, tab «Cần xác minh» đếm trên toàn tập; dải diện tích dự án × PN là phát biểu suy ra riêng (`gia-tot-cap-du-an`)
 - Gỡ tài khoản Zalo kiểm bản cấu hình sau khi gỡ trước lệnh đăng xuất: cấu hình phạm bất biến bộ canh thì từ chối mà không đăng xuất phiên nào (`go-tai-khoan-kiem-cfg-truoc-logout`)
 - Route gỡ tài khoản thu DELETE /api/v1/ops/zalo/accounts từ chối id rỗng hoặc không có trong danh sách tài khoản trước khi gọi openclaw (`go-tai-khoan-kiem-id`)
 - Ảnh của tin chỉ-ảnh S03 (ảnh gửi riêng trước hay sau tin chữ, cùng người, dưới 2 phút) vào đúng offer trong bảng ảnh canonical; bảng nạp và sale_offers giữ nguyên (`gop-tin-chi-anh-o-transform`)
