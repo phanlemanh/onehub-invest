@@ -5,7 +5,7 @@ slug: test-deals-bang-hang-rong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ci]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-11-15T08:25:00Z
 approved_by:
