@@ -63,6 +63,7 @@ export function cauHinhMacDinh(root = ROOT) {
     throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — mac_dinh «${cau?.mac_dinh}» không trỏ model có gateway trong ba mã đã duyệt`);
   }
   const ds = m.duong === undefined ? ["gateway"] : Array.isArray(m.duong) ? m.duong : [m.duong];
+  if (!ds.length || new Set(ds).size !== ds.length) throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — duong của ${gw} rỗng hay lặp`);
   for (const d of ds) {
     if (d !== "gateway" && !(d === "anthropic" && DUONG_ANTHROPIC[gw])) {
       throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — model ${gw} không có đường «${d}»`);
@@ -79,8 +80,13 @@ export const DUONG_ANTHROPIC = Object.freeze({ "anthropic/claude-haiku-5.5": "cl
 
 /** Lỗi hết tiền nhà cung cấp (HTTP 402 hay kiểu billing_error / insufficient_funds): nhapLat dừng cả lát. */
 export class LoiHetTien extends Error {
-  constructor(nguon, http, kieu) { super(`label-nhap-ghep: ${nguon} hết tiền (${http ?? "-"} ${kieu ?? "-"})`); this.het_tien = true; }
+  constructor(nguon, http, kieu) { super(`label-nhap-ghep: ${nguon} hết tiền (${http ?? "-"} ${kieu ?? "-"})`); this.het_tien = true; this.lop_dung = "het-tien"; }
 }
+/** Khoá sai / bị từ chối (HTTP 401/403): cùng lớp dừng như agent — tự lùi sang đường kế, hết đường thì dừng cả lát. */
+export class LoiKhoa extends Error {
+  constructor(nguon, http, kieu) { super(`label-nhap-ghep: ${nguon} từ chối khoá (${http ?? "-"} ${kieu ?? "-"})`); this.lop_dung = "khoa"; }
+}
+const laKhoaSai = (http) => http === 401 || http === 403;
 /** Hết tiền: 402, kiểu billing_error / insufficient_funds, hay 400 «credit balance is too low» của API Anthropic (cùng luật
  * agent/src/runtime/loi-nha-cung-cap.ts; message chỉ để so mẫu, không chép ra). */
 const laHetTien = (http, kieu, msg = "") =>
@@ -115,6 +121,7 @@ export function tacTuGateway({ model = modelMacDinh(), fetchFn = fetch } = {}) {
       let msg = "";
       try { const j = await res.json(); kieu = j?.error?.type ?? null; msg = String(j?.error?.message ?? ""); } catch { kieu = null; }
       if (laHetTien(res.status, kieu, msg)) throw new LoiHetTien("Gateway", res.status, kieu);
+      if (laKhoaSai(res.status)) throw new LoiKhoa("Gateway", res.status, kieu);
       throw new Error(`label-nhap-ghep: Gateway trả ${res.status}`);
     }
     return docTraLoi((await res.json())?.choices?.[0]?.message?.content ?? "");
@@ -156,6 +163,7 @@ export function tacTuAnthropic({ model = modelMacDinh(), taoClient } = {}) {
     } catch (e) {
       const kieu = typeof e?.type === "string" ? e.type : e?.error?.error?.type ?? null;
       if (laHetTien(e?.status, kieu, String(e?.message ?? ""))) throw new LoiHetTien("Anthropic", e.status, kieu);
+      if (laKhoaSai(e?.status)) throw new LoiKhoa("Anthropic", e.status, kieu);
       throw new Error(`label-nhap-ghep: Anthropic trả ${e?.status ?? e?.name ?? "lỗi"}${kieu ? ` ${kieu}` : ""}`);
     }
     return docTraLoi((r.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join(""));
@@ -177,8 +185,8 @@ export function tacTuMacDinh(root = ROOT, { log = console.error, tao = { anthrop
       try {
         return await tacTu.get(ds[0])(vao);
       } catch (e) {
-        if (!(e?.het_tien && tuLui && ds.length > 1)) throw e;
-        log(`JOB WARN [label-nhap-ghep] chuyen-duong: ${model} ${ds[0]} -> ${ds[1]} (het-tien)`);
+        if (!(e?.lop_dung && tuLui && ds.length > 1)) throw e;
+        log(`JOB WARN [label-nhap-ghep] chuyen-duong: ${model} ${ds[0]} -> ${ds[1]} (${e.lop_dung})`);
         ds.shift();
       }
     }
@@ -217,6 +225,7 @@ export async function nhapLat(c, { lat, tacTu, gioiHan = Infinity, lamLai = fals
     try { traLoi = await tacTu({ chu: r.text ?? "", ...danhBa[khu] }); } catch (e) {
       kq.loi++; kq.loi_cuoi = String(e.message ?? e);
       if (e?.het_tien) { kq.het_tien = true; break; } // hết tiền: mọi lời gọi sau cũng hỏng — dừng cả lát
+      if (e?.lop_dung === "khoa") { kq.khoa_sai = true; break; } // khoá sai, hết đường: dừng cả lát, không bắn tiếp
       continue;
     }
     const { draft, bo } = draftTuTraLoi(traLoi, r.text ?? "");
@@ -257,6 +266,7 @@ async function main() {
     console.log(`bỏ: có nhãn người ${kq.bo_co_nguoi} · đã có nháp ${kq.bo_co_nhap} · nhóm không khớp khu ${kq.bo_khu} · ô bỏ vì câu trích không có trong bài ${kq.o_bo_trich} · lỗi gọi ${kq.loi}`);
     for (const m of kq.mau) console.log(`mẫu item ${m.item_id}: ${JSON.stringify(m.o)}${m.bo.length ? ` · bỏ ${m.bo.join(",")}` : ""}`);
     if (kq.het_tien) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); console.error("JOB FAIL [label-nhap-ghep] het-tien"); process.exitCode = 4; }
+    else if (kq.khoa_sai) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); console.error("JOB FAIL [label-nhap-ghep] khoa"); process.exitCode = 1; }
     else if (kq.loi) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); process.exitCode = 1; }
   } finally {
     await c.end();

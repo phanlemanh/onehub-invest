@@ -224,6 +224,7 @@ test("GTA-AC-4 thiếu khoá: hang-ngay/chay/cham thoát 5 trước DB và trư�
   const mot = spawnSync(process.execPath, ["--import", "tsx", "scripts/doc-gop-s03.ts", "hang-ngay", "--ngay", "2001-02-02"], { cwd: AGENT, env: { ...env, AI_GATEWAY_API_KEY: "co" }, encoding: "utf8" });
   assert.notEqual(mot.status, 5, `TU LUI MA VAN DOI DU HAI KHOA: ${mot.stderr}`);
   assert.ok(!mot.stderr.includes("THIEU KHOA"), mot.stderr);
+  assert.match(mot.stderr, /ECONNREFUSED|127\.0\.0\.1:9/, `TU LUI PHAI DI TIEP TOI DB (gia): ${mot.stderr}`);
   await voiEnv({ ANTHROPIC_API_KEY: "khoa-tuong-minh" }, async () => {
     assert.equal(taoAnthropicMacDinh().apiKey, "khoa-tuong-minh");
     assert.equal(taoAnthropicMacDinh().authToken, null, "CLIENT GIU HAI LOAI KHOA");

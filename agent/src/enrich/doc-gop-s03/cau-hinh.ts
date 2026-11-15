@@ -1,7 +1,8 @@
 // cau-hinh.ts — PL30 `chon-model-theo-o`: bảng chọn model theo ô cho bộ đọc gộp S03. Đổi model của một ô chỉ bằng sửa
 // tệp agent/config/doc-gop-s03.json (câu chặn của hàng); mã bộ đọc không đổi. Tệp sai thì dừng trước lời gọi đầu.
-// Ba mã model là danh sách đóng theo ADR-0007 sửa đổi 06/11 («Model khác cần lời mới của Mạnh»). Cờ gửi (không giữ dữ
-// liệu, không huấn luyện, DeepSeek chỉ qua Baseten) đặt ở đây theo mã model, bảng chọn không tắt được.
+// Ba mã model là danh sách đóng theo ADR-0007 sửa đổi 06/11 («Model khác cần lời mới của Mạnh»). Cờ gửi Gateway (không giữ
+// dữ liệu, không huấn luyện, DeepSeek chỉ qua Baseten) đặt ở đây theo mã model, bảng chọn không tắt được — nhưng CHỈ áp cho
+// đường gateway: đường anthropic không có cờ theo lời gọi tương đương (Mạnh chấp nhận ở Cổng Phạm vi goi-thang-anthropic, Hỏi-1).
 // goi-thang-anthropic (15/11, Mạnh: «tận dụng chứ không thay thế Vercel AI Gateway»): mỗi model có `duong` — một đường hay danh
 // sách đường theo thứ tự thử: "gateway" (mặc định) và "anthropic" (API Anthropic thẳng, chỉ model có trong DUONG_ANTHROPIC).
 // `tu_lui` (mặc định false): đường đang dùng gặp lớp dừng (hết tiền, khoá sai) hay thiếu khoá thì lùi sang đường kế trong cùng

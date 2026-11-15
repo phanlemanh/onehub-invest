@@ -201,3 +201,27 @@ test("GTA-AC-8 nháp PL35 tự lùi: Anthropic hết tiền → dòng chuyen-duo
     for (const [k, v] of [["ANTHROPIC_API_KEY", cu.k], ["ANTHROPIC_BASE_URL", cu.u], ["AI_GATEWAY_API_KEY", cu.g]]) if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
 });
+
+test("GTA-AC-8 nháp PL35 khoá sai 401: tự lùi sang Gateway (bảng tự lùi); một đường thì dừng lát sau 1 lời gọi", async () => {
+  const l = await import("../label-nhap-ghep.mjs");
+  const cu = { k: process.env.ANTHROPIC_API_KEY, u: process.env.ANTHROPIC_BASE_URL, g: process.env.AI_GATEWAY_API_KEY };
+  const sv = await mayChuGia(() => ({ status: 401, body: { type: "error", error: { type: "authentication_error", message: "x" } } }));
+  try {
+    process.env.ANTHROPIC_API_KEY = "khoa-sai";
+    process.env.ANTHROPIC_BASE_URL = sv.url;
+    process.env.AI_GATEWAY_API_KEY = "khoa-gia";
+    const gw = [], log = [];
+    const tao = { anthropic: l.tacTuAnthropic, gateway: () => async (vao) => { gw.push(vao.chu); return {}; } };
+    const kq = await l.nhapLat(clientGia(), { lat: "hai-khu-ghep", tacTu: l.tacTuMacDinh(undefined, { log: (d) => log.push(d), tao }) });
+    assert.equal(sv.ghi.length, 1);
+    assert.equal(gw.length, 3, "KHOA SAI KHONG LUI SANG GATEWAY");
+    assert.ok(log.some((d) => d.endsWith("anthropic -> gateway (khoa)")), log.join("\n"));
+    assert.equal(kq.loi, 0);
+    const kq2 = await l.nhapLat(clientGia(), { lat: "hai-khu-ghep", tacTu: l.tacTuAnthropic() });
+    assert.equal(sv.ghi.length, 2, "KHOA SAI MOT DUONG VAN BAN TIEP");
+    assert.equal(kq2.khoa_sai, true);
+  } finally {
+    await sv.dong();
+    for (const [k, v] of [["ANTHROPIC_API_KEY", cu.k], ["ANTHROPIC_BASE_URL", cu.u], ["AI_GATEWAY_API_KEY", cu.g]]) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
+});
