@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 98722352bd4cfa31cd42c1a443bb0ef9dcf063a3
+verified_commit: c0e066215d3d0d01292937cd18324826eea479af
 human_signoff: Mạnh 2026-11-15
 ---
 
@@ -204,3 +204,7 @@ none — every multi-run eval is uniform
 
 Round 1: tổng kết REJECT — năm phát hiện trong hợp đồng về phép đo yếu (vế âm thiếu đối chứng dương ở AC-6, AC-7, AC-8, AC-9; ma trận AC-6 thiếu phần tử). Returned to implementation.
 Round 2: toàn bộ eval PASS trên commit 98722352 sau bản sửa 687b0c51; E10 mang sang từ round 1 vì delta không chạm paths của nó.
+
+### Re-pin lần 1 — 2026-11-15, do nhận main f78e7382 (bản sửa tách ô đường), sửa search_path + stub test sau ký
+run_id: repin-20261115T051440Z-65465
+sha: c0e066215d3d0d01292937cd18324826eea479af · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E10 · diff chạm vật đo ngoài làn máy: E10 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
