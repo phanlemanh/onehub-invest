@@ -11,7 +11,10 @@ set -euo pipefail
 GOC="$(cd "$(dirname "$0")/../.." && pwd)"
 CHE="${1:?so|gio}"; shift
 MAU=""; PHA=0; TRAN=300; TRUOC="2026-11-14 22:30:00+00"; TOI=""
-while [ $# -gt 0 ]; do case "$1" in --mau) MAU="$2"; shift 2;; --pha) PHA=1; shift;; --tran-giay) TRAN="$2"; shift 2;; --truoc) TRUOC="$2"; shift 2;; --toi-thieu-link) TOI="$2"; shift 2;; *) echo "lạ: $1"; exit 2;; esac; done
+# Bản cũ ghim ở mốc nhánh d2b4beaf (Stage A vòng mỗi cụm), không ở origin/main: sau khi hàng gộp, origin/main là chính bản
+# theo tập và phép so sẽ thành so bản mới với chính nó. --rev để đổi mốc.
+REV=d2b4beaf
+while [ $# -gt 0 ]; do case "$1" in --mau) MAU="$2"; shift 2;; --pha) PHA=1; shift;; --tran-giay) TRAN="$2"; shift 2;; --truoc) TRUOC="$2"; shift 2;; --toi-thieu-link) TOI="$2"; shift 2;; --rev) REV="$2"; shift 2;; *) echo "lạ: $1"; exit 2;; esac; done
 P=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -q -At -v ON_ERROR_STOP=1)
 CU=oneinvest_suite_rsa_cu_$$; MOI=oneinvest_suite_rsa_moi_$$
 don() { for t in "$CU" "$MOI"; do "${P[@]}" -d postgres -c "DROP DATABASE IF EXISTS $t WITH (FORCE)" >/dev/null 2>&1 || true; done; }
@@ -28,10 +31,14 @@ if [ "$CHE" = gio ]; then
   node scripts/resolve-so-stage-a.mjs --moi "$MOI" --chi-moi --tran-giay "$TRAN" --toi-thieu-link "${TOI:-1000}"
 else
   if [ "$PHA" = 1 ]; then
-    # gắn trước MỘT tin chưa gắn vào một căn khác cụm ở bản «mới» — dữ liệu hai bên lệch nhau đúng một dòng
+    # gắn trước MỘT tin chưa gắn, NẰM NGOÀI tập Stage A (không còn dòng stg sau --mau), vào căn id nhỏ nhất ở bản «mới» —
+    # Stage A không đụng tin đó nên hai bên lệch nhau đúng một link, không lan sang tập căn; ORDER BY cho tất định.
     "${P[@]}" -d "$MOI" -c "INSERT INTO property_offers (property_id, offer_id, score, signals)
       SELECT (SELECT min(id) FROM properties), o.offer_id, 1.0, '{}'::jsonb FROM sale_offers o
-      WHERE o.source='S06' AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id=o.offer_id) LIMIT 1"
+      WHERE o.source='S06' AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id=o.offer_id)
+        AND o.offer_id NOT IN (SELECT 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
+                               FROM stg_chotot_ads s)
+      ORDER BY o.offer_id LIMIT 1"
   fi
-  node scripts/resolve-so-stage-a.mjs --cu "$CU" --moi "$MOI" --toi-thieu-link "${TOI:-1}"
+  node scripts/resolve-so-stage-a.mjs --cu "$CU" --moi "$MOI" --rev "$REV" --toi-thieu-link "${TOI:-1}"
 fi

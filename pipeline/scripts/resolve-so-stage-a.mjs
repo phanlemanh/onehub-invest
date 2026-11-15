@@ -115,7 +115,7 @@ try {
     if (!process.exitCode) console.log(`ĐẠT: dưới trần ${TRAN} giây, lần 2 không đổi`);
   } else {
     kiemLoc(REV);
-    const cu = ghiTam(".resolve-cu.tmp.mjs", REV); tmp.push(cu);
+    const cu = ghiTam(`.resolve-cu.${process.pid}.tmp.mjs`, REV); tmp.push(cu);
     const truoc = (await anh(MOI)).property_offers.size;
     const [gCu, gMoi] = await Promise.all([chay(CU, cu, "cũ"), chay(MOI, moi, "mới")]);
     const [a, b] = await Promise.all([anh(CU), anh(MOI)]);

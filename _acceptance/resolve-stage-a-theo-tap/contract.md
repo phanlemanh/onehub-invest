@@ -25,7 +25,7 @@ gom không đổi; Stage B vẫn đóng băng.
 ### AC-1 — Cùng kết quả với vòng mỗi cụm
 Given hai bản chép DB máy thu cùng dữ liệu (mẫu `list_id % 20 = 0` của `stg_chotot_ads`), đưa về trạng thái trước lượt đêm
 14/11 22:30Z (xoá căn và link tạo từ mốc ấy trên bản chép),
-When bản cũ (rút từ `origin/main`) chạy trên một bản chép và bản mới chạy trên bản kia,
+When bản cũ (rút từ mốc nhánh `d2b4beaf`, cùng chữ với `origin/main` lúc mở hàng) chạy trên một bản chép và bản mới chạy trên bản kia,
 Then tập (stable_key, offer_id, score, signals) của `property_offers` và tập căn (stable_key, n_evidence, first_seen, last_seen,
 area_id, kind, property_type, geo, verification, resolved_by, cluster_key) bằng nhau, lệch 0; dòng log `Stage A:` hai bản giống
 hệt; và lượt thật sự chạy qua đường chèn: ít nhất 1 căn mới và 1 link mới, không thì phép so thoát 1.
@@ -73,7 +73,7 @@ Then không có tệp nào; bảng tạm chỉ là `CREATE TEMP TABLE` trong phi
 Trục (preset risk-premortem cho «viết lại một bước dựng căn, giữ kết quả»):
 
 - Lớp cụm: khớp căn · mới có tin chưa gắn · mới toàn tin đã gắn · khớp còn tin chưa gắn — AC-1 trên dữ liệu thật (đếm ở design §Bảng phủ ca).
-- Lớp tin: đã gắn · chưa gắn — AC-1. Thiếu toạ độ (30 tin), thiếu m², giá ≤ 0, cấp thị trường, list_id trùng, thuộc nhiều cụm: số đếm 0 hoặc gần 0 trên dữ liệu nên AC-1 không chạy qua — chưa phủ bằng dữ liệu; điều kiện lọc (hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề lọc tin S06) được so chữ với `origin/main` ở lượt AC-1 (dòng «điều kiện lọc: khớp …», có đối chứng âm); AC-5 chỉ ghim chữ SQL từ hàng này về sau, bản chụp rút từ chính hàng này.
+- Lớp tin: đã gắn · chưa gắn — AC-1. Thiếu toạ độ (30 tin), thiếu m², giá ≤ 0, cấp thị trường, list_id trùng, thuộc nhiều cụm: số đếm 0 hoặc gần 0 trên dữ liệu nên AC-1 không chạy qua — chưa phủ bằng dữ liệu; điều kiện lọc (hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề lọc tin S06) được so chữ với bản cũ `d2b4beaf` ở lượt AC-1 (dòng «điều kiện lọc: khớp …», có đối chứng âm); AC-5 chỉ ghim chữ SQL từ hàng này về sau, bản chụp rút từ chính hàng này.
 - Lượt: lần đầu (AC-1, AC-3) · lần hai (AC-4) · gặp deadlock (AC-6).
 - Thước: phép so có chiều đỏ (AC-2) · phép đo giờ có chiều đỏ (AC-3).
 - Người đọc phía sau: tập dòng không đổi (AC-1) · itest cũ (AC-7).

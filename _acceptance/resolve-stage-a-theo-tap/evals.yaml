@@ -6,7 +6,7 @@ evals:
     executor: test
     cmd: config:executors.test.rsa_so
     paths: [pipeline/resolve-properties.mjs, pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
-    expected: "exit 0; dựng bản chép DB máy thu bằng db/db-thu.sh, giữ list_id % 20 = 0 của stg_chotot_ads, xoá căn và link tạo từ 2026-11-14 22:30Z, chép thành hai DB; trước khi chạy, dòng «điều kiện lọc: khớp bản origin/main (3 mẩu) · đối chứng âm đỏ» (hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề lọc tin S06 của bản mới giữ nguyên chữ bản cũ; khác thì «ĐIỀU KIỆN LỌC KHÁC BẢN …», exit 1); bản cũ (git show origin/main:pipeline/resolve-properties.mjs) và bản mới chạy song song; in «properties: cũ N · mới N · lệch 0», «property_offers: cũ M · mới M · lệch 0», «idempotent … lệch sau lần 2 0» hai dòng, và «TỔNG lệch 0 · … · đối chứng âm thấy lệch 1»; hai dòng [cũ]/[mới] mang cùng chuỗi «Stage A: … clusters → …»; dòng «đường chèn: <c> căn mới · <l> link mới» với c ≥ 1 và l ≥ 1 (đối chứng dương: đường chèn thật sự chạy; c hoặc l bằng 0 thì «KHÔNG CHẠY QUA ĐƯỜNG CHÈN» và exit 1). Chiều đỏ của phép so ở E2."
+    expected: "exit 0; dựng bản chép DB máy thu bằng db/db-thu.sh, giữ list_id % 20 = 0 của stg_chotot_ads, xoá căn và link tạo từ 2026-11-14 22:30Z, chép thành hai DB; trước khi chạy, dòng «điều kiện lọc: khớp bản d2b4beaf (3 mẩu) · đối chứng âm đỏ» (hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề lọc tin S06 của bản mới giữ nguyên chữ bản cũ; khác thì «ĐIỀU KIỆN LỌC KHÁC BẢN …», exit 1); bản cũ (git show d2b4beaf:pipeline/resolve-properties.mjs — mốc nhánh, resolve-properties.mjs giống hệt origin/main lúc mở hàng; ghim mốc để phép so còn nghĩa sau khi gộp) và bản mới chạy song song; in «properties: cũ N · mới N · lệch 0», «property_offers: cũ M · mới M · lệch 0», «idempotent … lệch sau lần 2 0» hai dòng, và «TỔNG lệch 0 · … · đối chứng âm thấy lệch 1»; hai dòng [cũ]/[mới] mang cùng chuỗi «Stage A: … clusters → …»; dòng «đường chèn: <c> căn mới · <l> link mới» với c ≥ 1 và l ≥ 1 (đối chứng dương: đường chèn thật sự chạy; c hoặc l bằng 0 thì «KHÔNG CHẠY QUA ĐƯỜNG CHÈN» và exit 1). Chiều đỏ của phép so ở E2."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
@@ -14,7 +14,7 @@ evals:
     cmd: config:executors.test.rsa_so_pha
     expected_exit: 1
     paths: [pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
-    expected: "exit 1 (chiều đỏ của E1, cùng bộ dựng bản chép, mẫu list_id % 200 = 0): bản «mới» được gắn sẵn một tin chưa gắn vào căn id nhỏ nhất trước khi chạy; output có «property_offers: … lệch 1», một dòng mẫu bắt đầu «+{\"stable_key\"», và «TỔNG lệch 1 · … · đối chứng âm thấy lệch 1»."
+    expected: "exit 1 (chiều đỏ của E1, cùng bộ dựng bản chép, mẫu list_id % 200 = 0): bản «mới» được gắn sẵn một tin S06 chưa gắn NẰM NGOÀI tập Stage A (offer_id nhỏ nhất không còn dòng stg sau mẫu) vào căn id nhỏ nhất trước khi chạy; output có «properties: … lệch 0», «property_offers: … lệch 1», một dòng mẫu bắt đầu «+{\"stable_key\"», và «TỔNG lệch 1 · … · đối chứng âm thấy lệch 1»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
