@@ -90,7 +90,11 @@ const COT_HANG = `CASE WHEN h.thuoc = 'gia-m2' THEN h.trung_vi END AS median_per
               coalesce(h.can_xac_minh, false) AS suspect,
               h.n AS rank_n, h.trung_vi AS rank_median, h.p20 AS rank_p20, h.hang_pct AS rank_pct,
               h.duoi_trung_vi_pct AS rank_below, h.nhan AS rank_label, coalesce(h.can_xac_minh, false) AS rank_cxm,
-              h.pn_nhom AS rank_pn, h.ly_do AS rank_reason, h.thuoc AS rank_metric, (h.offer_id IS NOT NULL) AS co_hang,`;
+              h.pn_nhom AS rank_pn, h.ly_do AS rank_reason, h.thuoc AS rank_metric, (h.offer_id IS NOT NULL) AS co_hang,
+              h.cap AS rank_level, h.nut AS rank_node, pn.name AS rank_node_name,`;
+
+/** Tên dự án của nhóm so sánh cấp dự án (CG10): asset_nodes đã sync cloud; không đọc view offer_project (chỉ máy thu). */
+const NOI_TEN_DU_AN = "LEFT JOIN asset_nodes pn ON h.cap = 'du_an' AND pn.id::text = h.nut";
 
 /** Bài gốc mới nhất của tin; bản cloud không có `stg_zalo_posts` (Hỏi-6). */
 const noiBai = (cloud: boolean) => (cloud
@@ -111,23 +115,38 @@ const noiBai = (cloud: boolean) => (cloud
  * tin phi lý đã bị pipeline gạt số giảm về NULL (ON11) nên không lọt vào đây. Thứ tự: tin thường trước tin cần xác
  * minh, mỗi nhóm giảm dần — sắp TRƯỚC LIMIT, không thì 30 thẻ vẫn toàn tin sát trần.
  */
-export function dealsSql({ cloud = false, coBang = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
+export function dealsSql({ cloud = false, coBang = false, duAn = false, chiXacMinh = false }:
+  { cloud?: boolean; coBang?: boolean; duAn?: boolean; chiXacMinh?: boolean } = {}): string {
   const bai = noiBai(cloud);
   if (coBang) {
     // CG9: danh sách = tin bán có nhãn hạng (P1 và P2 — gánh CG2), xếp tin cần xác minh sau rồi % dưới trung vị giảm dần;
-    // trần 50% và hạn 45 ngày giữ như cũ (Hỏi-2).
-    return `WITH base AS (
-       SELECT ${cotTin(cloud, true)}
+    // trần 50% và hạn 45 ngày giữ như cũ (Hỏi-2). CG10: mỗi căn một dòng (căn S06 nhỏ nhất trong property_offers, hay chính
+    // tin) — tin thấy sau cùng làm đại diện, `so_tin` = số tin của căn qua điều kiện; `duAn` thêm $3 = id nút dự án, chỉ tin
+    // cấp dự án của nút đó; `chiXacMinh` chỉ tin cần xác minh (tab đếm trên toàn tập, Hỏi-3) kèm `tong` = số căn của tập.
+    return `WITH loc AS (
+       SELECT ${cotTin(cloud, true)},
+              coalesce((SELECT min(po.property_id)::text FROM property_offers po WHERE po.offer_id = o.offer_id), o.offer_id) AS can_key,
+              o.last_seen AS thay_cuoi
        FROM offer_price_rank h
        JOIN sale_offers o ON o.offer_id = h.offer_id
+       ${NOI_TEN_DU_AN}
        LEFT JOIN areas a ON a.id = o.area_id
        LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
        WHERE h.kind = 'sale'
          AND h.nhan IS NOT NULL
          AND o.last_seen >= now() - interval '${NGAY_TOI_DA} days'
          AND h.duoi_trung_vi_pct >= $1
-         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}
-       ORDER BY suspect, discount_pct DESC, o.offer_id
+         AND h.duoi_trung_vi_pct <= ${NGUONG_LOAI_PCT}${duAn ? `
+         AND h.cap = 'du_an' AND h.nut = $3` : ""}
+     ), gom AS (
+       SELECT DISTINCT ON (l.can_key) l.*, count(*) OVER (PARTITION BY l.can_key) AS so_tin
+       FROM loc l
+       ORDER BY l.can_key, l.thay_cuoi DESC, l.offer_id
+     ), base AS (
+       SELECT g.*, count(*) OVER () AS tong
+       FROM gom g${chiXacMinh ? `
+       WHERE g.suspect` : ""}
+       ORDER BY g.suspect, g.discount_pct DESC, g.offer_id
        LIMIT $2
      )
      SELECT b.*, ${bai.cot}
@@ -158,12 +177,13 @@ export function dealsSql({ cloud = false, coBang = false }: { cloud?: boolean; c
 
 /**
  * Một tin bán theo mã, không lọc theo mức giảm: căn rời danh sách vẫn mở, kèm lý do (Hỏi-1). `coBang` (CG9): mọi tin bán
- * (P1 và P2) kèm hạng tính sẵn; không bảng thì chỉ tin P1 với thước CG8 như cũ.
+ * (P1 và P2) kèm hạng tính sẵn — và tin thuê (CG10: trang một căn thuê đọc hạng giá tháng × PN; danh sách vẫn chỉ tin bán, Hỏi-2);
+ * không bảng thì chỉ tin bán P1 với thước CG8 như cũ.
  */
 export function dealSql({ cloud = false, coBang = false }: { cloud?: boolean; coBang?: boolean } = {}): string {
   const bai = noiBai(cloud);
   const thuoc = coBang
-    ? "LEFT JOIN offer_price_rank h ON h.offer_id = o.offer_id"
+    ? `LEFT JOIN offer_price_rank h ON h.offer_id = o.offer_id ${NOI_TEN_DU_AN}`
     : `LEFT JOIN (${THUOC_CUNG_LOAI}) r ON r.area_id = o.area_id AND r.property_type = o.property_type`;
   return `WITH b AS (
        SELECT ${cotTin(cloud, coBang)}
@@ -171,7 +191,7 @@ export function dealSql({ cloud = false, coBang = false }: { cloud?: boolean; co
        ${thuoc}
        LEFT JOIN areas a ON a.id = o.area_id
        LEFT JOIN sellers sel ON sel.phone_hash = o.seller_phone_hash
-       WHERE o.offer_id = $1 AND o.kind = 'sale'${coBang ? "" : " AND o.price_tier = 'P1'"}
+       WHERE o.offer_id = $1 AND ${coBang ? "o.kind IN ('sale', 'rent_lt')" : "o.kind = 'sale' AND o.price_tier = 'P1'"}
      )
      SELECT b.*, ${bai.cot}
      FROM b
@@ -217,6 +237,7 @@ export function toDealRow(r: DealSqlRow): DealRow {
     roiDanhSach: null,
     brokerNAds: num(r.broker_n_ads),
     brokerMedianGap: num(r.broker_med_gap),
+    soTin: Number(r.so_tin ?? 1),
     rank: r.co_hang === true
       ? {
           n: num(r.rank_n),
@@ -229,6 +250,9 @@ export function toDealRow(r: DealSqlRow): DealRow {
           bedroomsGroup: num(r.rank_pn),
           reason: (r.rank_reason as string | null) ?? null,
           metric: (r.rank_metric as string | null) ?? null,
+          level: (r.rank_level as string | null) ?? null,
+          node: (r.rank_node as string | null) ?? null,
+          nodeName: (r.rank_node_name as string | null) ?? null,
         }
       : null,
   };
@@ -299,9 +323,43 @@ async function hoanTat(rows: DealRow[], mayThu: boolean): Promise<{ rows: DealRo
   };
 }
 
-export async function getDeals(limit = SO_CAN_DANH_SACH, minDiscountPct = NGUONG_VAO_PCT): Promise<{ rows: DealRow[]; mayThu: boolean }> {
-  const { rows, mayThu } = await truyVan(dealsSql, [minDiscountPct, limit]);
+/** Giới hạn danh sách khi lọc một dự án (CG10): không cắt 30 — Ocean Park 1 có 140 căn. */
+export const SO_CAN_DU_AN = 300;
+
+/** `project` (id nút dự án, đã qua `parseProject`) → chỉ tin cấp dự án của nút đó, giới hạn mặc định SO_CAN_DU_AN. */
+export async function getDeals(limit?: number, minDiscountPct = NGUONG_VAO_PCT, { project = null }: { project?: string | null } = {}):
+  Promise<{ rows: DealRow[]; mayThu: boolean }> {
+  const lim = limit ?? (project ? SO_CAN_DU_AN : SO_CAN_DANH_SACH);
+  const sql = (o: { cloud?: boolean; coBang?: boolean }) => dealsSql({ ...o, duAn: Boolean(project) && o.coBang === true });
+  // Không có bảng hạng thì không có cấp dự án: lọc dự án trả rỗng thay vì danh sách cả phường.
+  if (project && !(await coBangHang())) return { rows: [], mayThu: true };
+  const { rows, mayThu } = await truyVan(sql, project ? [minDiscountPct, lim, project] : [minDiscountPct, lim]);
   return hoanTat(rows.map(toDealRow), mayThu);
+}
+
+/**
+ * Tab «Cần xác minh» trên TOÀN tập (CG10 Hỏi-3): đếm và liệt kê tin cần xác minh qua cùng điều kiện danh sách, không chỉ trong
+ * 30 dòng đã cắt. `null` khi chưa có bảng hạng (lối CG8: tab đếm trong danh sách như cũ).
+ */
+export async function getXacMinh({ project = null, limit = SO_CAN_DU_AN }: { project?: string | null; limit?: number } = {}):
+  Promise<{ tong: number; rows: DealRow[]; mayThu: boolean } | null> {
+  if (!(await coBangHang())) return null;
+  const sql = (o: { cloud?: boolean; coBang?: boolean }) => dealsSql({ ...o, duAn: Boolean(project), chiXacMinh: true });
+  const { rows, mayThu } = await truyVan(sql, project ? [NGUONG_VAO_PCT, limit, project] : [NGUONG_VAO_PCT, limit]);
+  const xong = await hoanTat(rows.map(toDealRow), mayThu);
+  return { tong: Number(rows[0]?.tong ?? 0), rows: xong.rows, mayThu: xong.mayThu };
+}
+
+/** Id nút dự án từ tham số URL: chỉ chữ số, tối đa 18 ký tự (vừa bigint); sai khuôn → null. */
+export function parseProject(v: string | string[] | undefined | null): string | null {
+  const s = Array.isArray(v) ? v[0] : v;
+  return typeof s === "string" && /^[0-9]{1,18}$/.test(s) ? s.replace(/^0+(?=\d)/, "") : null;
+}
+
+/** Nút dự án theo id (asset_nodes đã sync cloud); không có hay không phải dự án → null. */
+export async function getDuAn(id: string): Promise<{ id: string; ten: string } | null> {
+  const { rows } = await pool.query(`SELECT id::text AS id, name FROM asset_nodes WHERE id = $1::bigint AND node_type = 'project'`, [id]);
+  return rows[0] ? { id: rows[0].id, ten: rows[0].name } : null;
 }
 
 /**
@@ -314,11 +372,25 @@ export async function dealTrongDanhSach(offerId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+/**
+ * Dải m² dự án × PN (CG10, project_area_band — chỉ máy thu) cho căn hộ cấp dự án thiếu diện tích có PN. Bảng vắng (cloud,
+ * máy thu chưa áp 106) → null, không lỗi; lỗi khác ném tiếp cho khối lỗi.
+ */
+async function daiM2Cua(d: DealRow): Promise<{ p10: number; p90: number } | null> {
+  if (d.rank?.level !== "du_an" || !d.rank.node || d.areaM2 || d.bedrooms == null || d.propertyType !== "apartment") return null;
+  if (!/^\d+$/.test(d.rank.node)) return null;
+  const { rows: co } = await pool.query(`SELECT to_regclass('project_area_band') IS NOT NULL AS co`);
+  if (!co[0]?.co) return null;
+  const { rows } = await pool.query(`SELECT p10, p90 FROM project_area_band WHERE project_node_id = $1 AND bedrooms = $2`,
+    [d.rank.node, d.bedrooms]);
+  return rows[0] ? { p10: Number(rows[0].p10), p90: Number(rows[0].p90) } : null;
+}
+
 /** Một căn theo mã; mã lạ hay tin không phải tin bán (không bảng hạng: không phải P1 bán) trả `deal: null`. */
 export async function getDeal(offerId: string): Promise<{ deal: DealRow | null; mayThu: boolean }> {
   const { rows, mayThu } = await truyVan(dealSql, [offerId]);
   if (!rows[0]) return { deal: null, mayThu };
-  const d = toDealRow(rows[0]);
+  const d = { ...toDealRow(rows[0]), daiM2: await daiM2Cua(toDealRow(rows[0])) };
   const xong = await hoanTat([{ ...d, roiDanhSach: lyDoRoi(d, rows[0].qua_han === true) }], mayThu);
   return { deal: xong.rows[0], mayThu: xong.mayThu };
 }

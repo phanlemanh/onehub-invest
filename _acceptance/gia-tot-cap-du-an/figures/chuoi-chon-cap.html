@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chuỗi chọn cấp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400;
+      letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Flowchart · gia-tot-cap-du-an · Hỏi-1</p>
+    <h1>Chuỗi chọn cấp cho một tin hợp lệ</h1>
+
+    <svg viewBox="0 0 1000 816" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#3b6ea5"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Arrows (drawn first) -->
+      <line x1="500" y1="88" x2="500" y2="120" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D1 không → CG9 -->
+      <path d="M380 168 H168 Q160 168 160 176 V276" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D1 có ↓ -->
+      <line x1="500" y1="216" x2="500" y2="256" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D2 có → du_an Giá tốt (accent) -->
+      <line x1="620" y1="304" x2="720" y2="304" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- D2 không ↓ -->
+      <line x1="500" y1="352" x2="500" y2="392" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D3 không (<5) → CG9 -->
+      <path d="M380 440 H168 Q160 440 160 432 V332" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D3 có ↓ -->
+      <line x1="500" y1="488" x2="500" y2="528" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D4 có → Lùi phường -->
+      <line x1="620" y1="576" x2="720" y2="576" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- D4 không ↓ -->
+      <line x1="500" y1="624" x2="500" y2="664" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Arrow labels -->
+      <rect x="244" y="146" width="52" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="270" y="155" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">KHÔNG</text>
+
+      <rect x="508" y="230" width="24" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="512" y="239" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CÓ</text>
+
+      <rect x="656" y="282" width="28" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="670" y="291" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">CÓ</text>
+
+      <rect x="508" y="366" width="52" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="512" y="375" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.12em">KHÔNG</text>
+
+      <rect x="224" y="418" width="92" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="270" y="427" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">KHÔNG · &lt;5</text>
+
+      <rect x="508" y="502" width="24" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="512" y="511" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CÓ</text>
+
+      <rect x="656" y="554" width="28" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="670" y="563" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">CÓ</text>
+
+      <rect x="508" y="638" width="52" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="512" y="647" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.12em">KHÔNG</text>
+
+      <!-- Start: Tin hợp lệ -->
+      <rect x="420" y="40" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="420" y="40" width="160" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="500" y="68" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tin hợp lệ</text>
+
+      <!-- D1 -->
+      <polygon points="500,120 620,168 500,216 380,168" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="500" y="164" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có một dự án?</text>
+      <text x="500" y="180" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">offer_project mot_du_an</text>
+
+      <!-- D2 -->
+      <polygon points="500,256 620,304 500,352 380,304" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="500" y="300" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhóm dự án</text>
+      <text x="500" y="314" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">≥10 phiếu?</text>
+
+      <!-- D3 -->
+      <polygon points="500,392 620,440 500,488 380,440" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="500" y="436" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhóm dự án</text>
+      <text x="500" y="450" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">5–9 phiếu?</text>
+
+      <!-- D4 -->
+      <polygon points="500,528 620,576 500,624 380,576" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="500" y="572" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhóm phường</text>
+      <text x="500" y="586" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">≥10 phiếu?</text>
+
+      <!-- End: Chuỗi phường CG9 -->
+      <rect x="40" y="276" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="40" y="276" width="240" height="56" rx="28" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="160" y="302" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chuỗi phường CG9</text>
+      <text x="160" y="318" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Rẻ trong phường</text>
+
+      <!-- End: cap du_an Giá tốt (focal) -->
+      <rect x="720" y="276" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="720" y="276" width="240" height="56" rx="28" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="840" y="302" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">cap du_an · nhãn Giá tốt</text>
+      <text x="840" y="318" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">khi ≤p20 và ≥5% dưới trung vị</text>
+
+      <!-- End: Lùi phường -->
+      <rect x="720" y="548" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="720" y="548" width="240" height="56" rx="28" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="840" y="574" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lùi phường</text>
+      <text x="840" y="590" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Hỏi-1 · khuyến nghị</text>
+
+      <!-- End: cap du_an không nhãn -->
+      <rect x="380" y="664" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="380" y="664" width="240" height="56" rx="28" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="500" y="690" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">cap du_an, có số, không nhãn</text>
+      <text x="500" y="706" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ly_do = nhom-5-9</text>
+
+      <!-- Legend -->
+      <line x1="40" y1="748" x2="960" y2="748" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="764" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI · HÌNH MANG LOẠI</text>
+      <text x="960" y="764" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.12em">AC-1 · AC-2</text>
+
+      <rect x="40" y="780" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="72" y="790" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Đầu / kết (bầu dục)</text>
+
+      <polygon points="232,786 244,780 256,786 244,792" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="264" y="790" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Câu hỏi (thoi)</text>
+
+      <line x1="404" y1="786" x2="432" y2="786" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <text x="440" y="790" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Đường lên nhãn Giá tốt</text>
+
+      <line x1="604" y1="786" x2="632" y2="786" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="640" y="790" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh</text>
+    </svg>
+  </div>
+</body>
+</html>
