@@ -152,7 +152,7 @@ async function goiDeals(mod: { getDeals: () => Promise<unknown> }, code: string,
   const cauLenh: string[] = []
   const q = t.mock.method(pool, "query", (async (sql: string) => {
     // CG9: câu hỏi «bảng hạng giá có chưa» (coBangHang) không thuộc dãy câu đọc — trả «chưa có» để đọc theo thước CG8.
-    if (sql.includes("to_regclass('public.offer_price_rank')")) return { rows: [{ co: false }] }
+    if (/to_regclass\('(public\.)?offer_price_rank'\)/.test(sql)) return { rows: [{ co: false }] }
     cauLenh.push(sql)
     if (cauLenh.length === 1) throw Object.assign(new Error("lỗi thử"), { code })
     return { rows: [] }
