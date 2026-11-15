@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e0b197c45e76e598d023f30192b88314605bb495
+verified_commit: 195293f79166813e55cc46ca9c42a4d1de98fc24
 human_signoff: Mạnh 2026-11-16
 ---
 
@@ -184,3 +184,7 @@ none — every multi-run eval is uniform
 
 Round 1: lenh suite app npm test va pipeline test:a bao do (S4 luot 1 bi tu choi) — da sua test-nua xep tep test moi, tach dong import trang cho ca nguon SHS/OD1, bang khoa cu AC-8 kiem ca kieu. Returned to implementation.
 Round 2: E6, E7, E8 chay lai va cac lenh suite xanh; E1–E5, E9, E10 carry-forward tu round 1. Verdict PASS.
+
+### Re-pin lần 1 — 2026-11-15, do nhận main a57563bb (DV7 #465); fixture không view + regex TPL-AC-6
+run_id: repin-20261115T204827Z-69937
+sha: 195293f79166813e55cc46ca9c42a4d1de98fc24 · suites: 7 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 · AC không có chốt máy: AC-10
