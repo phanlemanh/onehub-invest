@@ -144,6 +144,7 @@ human_signoff: Mạnh 2026-11-15
     step4 (offer_0054ade373ca8bba, tối): «Đã rời danh sách», «Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn»; «So với 8 căn cùng phường, cùng loại (đất): thấp hơn trung vị 46.4%…»; 8 / 14 tr/m², 8 tin; không có «Rẻ trong phường»; có «Cần xác minh» theo cờ can_xac_minh=true. Khớp DB.
   network_observed: n-a (driver)
   ghi chú: chạy lại sau chữ ký vì deals.ts đổi (search_path); thay ảnh round 1 không CSS
+  ảnh đã che: step1 cột «Gọi ai» (SĐT, tên người bán), step2 SĐT ở ô Gọi ai và trong chữ bài, step3 ảnh tin rao có mặt người (làm mờ) và SĐT — quy ước ảnh chứng mới lên kho công khai vẫn che (04/11); che sau khi chấm, không đổi kết quả
 
 ### Lệnh suite (hồi quy)
 
