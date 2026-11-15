@@ -37,10 +37,10 @@ cd ~/dev/onehub-invest/agent && for d in 2026-11-11 2026-11-12 2026-11-13 2026-1
 ## 2. Sao lưu trước
 
 ```bash
-mkdir -p ~/dev/onehub-invest/state/sao-luu && docker exec -e PGPASSWORD=oneinvest one-invest-db pg_dump -U oneinvest -h localhost -d oneinvest -Fc -t silver_labels -t ai_calls > ~/dev/onehub-invest/state/sao-luu/truoc-chay-bu-goi-thang-anthropic-$(date -u +%Y%m%dT%H%MZ).dump && ls -la ~/dev/onehub-invest/state/sao-luu/ | tail -1
+mkdir -p ~/onehub-backups/db && docker exec -e PGPASSWORD=oneinvest one-invest-db pg_dump -U oneinvest -h localhost -d oneinvest -Fc -t silver_labels -t ai_calls > ~/onehub-backups/db/truoc-chay-bu-doc-gop-$(date -u +%Y%m%dT%H%MZ).dump && ls -la ~/onehub-backups/db/ | tail -1
 ```
 
-`state/` nằm trong gitignore, không commit.
+Bản sao lưu để NGOÀI cây kho (luật của kho), tại `~/onehub-backups/db/`.
 
 ## 3. Lệnh áp
 
@@ -64,7 +64,9 @@ cd ~/dev/onehub-invest/agent && for d in 2026-11-11 2026-11-12 2026-11-13 2026-1
 ## 4. Cách lùi
 
 Run id của lượt áp có dạng `pl34-<ngày chi>-b<ngày bài>-<ISO>`, ngày chi theo giờ VN lúc chạy (`2026-11-15` nếu chạy trước 17:00Z).
-Xoá đúng các dòng của lượt áp (sao lưu ở bước 2 phục hồi được bằng `pg_restore --data-only`):
+Xoá đúng các dòng của lượt áp. Muốn trở về đúng trạng thái trước lượt áp thì xoá rồi phục hồi từ bản sao lưu ở bước 2:
+`docker exec -i -e PGPASSWORD=oneinvest one-invest-db pg_restore -U oneinvest -h localhost -d oneinvest --data-only -t silver_labels -t ai_calls < ~/onehub-backups/db/truoc-chay-bu-doc-gop-<UTC>.dump`
+(sau khi TRUNCATE hai bảng trong cùng giao dịch, hoặc chỉ chạy lệnh DELETE dưới đây — đủ cho lượt áp chỉ-thêm-dòng).
 
 ```sql
 BEGIN;
