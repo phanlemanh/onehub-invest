@@ -48,7 +48,7 @@ chèn mỗi lượt nên không còn dòng cấp dự án sau lượt chấm k�
 
 ```sql
 SELECT to_regclass('project_area_band') IS NOT NULL AS co_106;
-SELECT count(*) FROM project_area_band;                                                   -- số nhóm dải m² (≈ 359, đo 15/11)
+SELECT count(*) FROM project_area_band;                                                   -- số nhóm dải m² (288 trên bản chép 15/11)
 SELECT count(*) FROM offer_price_rank WHERE cap = 'du_an' AND property_type = 'apartment'
    AND hang_pct IS NOT NULL;                                                              -- thước MN1, ≥ 10.000
 SELECT count(*) FROM offer_price_rank WHERE cap = 'du_an' AND nut = '1' AND kind = 'sale' AND nhan IS NOT NULL;   -- OP1
