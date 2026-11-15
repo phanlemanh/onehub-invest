@@ -3,7 +3,7 @@
 // Chạy ở: executors.test.judge_entity_duong (eval của chuan-hoa-o-duong, duong-thang-n-khong-dau, che-do-thu-tren-ops và
 // hồ sơ này) và scripts/o-duong-that.sh (mục «Ô đường thật» của scripts/audit-all.sh, /ops-check đọc mỗi sáng).
 // O_DUONG_DOT_BIEN=1: probe chạy bằng bản luật đột biến bỏ dòng cắt cụm — để kiểm nhánh ❌ của script.
-import { after, before, test } from "node:test";
+import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -28,16 +28,27 @@ async function dotBien(doi: (s: string) => string): Promise<Mod> {
   return (await import(f)) as Mod;
 }
 const DONG_CUM = '    .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s*,\\s*|\\s+|$))+/u, "")\n';
-const DONG_L3 = '    .replace(/^.*\\S\\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s+|$)/u, "")\n';
-let boCumMod: Mod;
-let boL3Mod: Mod;
-before(async () => {
-  boCumMod = await dotBien((s) => s.replace(DONG_CUM, ""));
-  boL3Mod = await dotBien((s) => s.replace(DONG_L3, ""));
-});
+// Dòng mới của khoaDuong (hồ sơ tach-o-duong-dau-vao-ban), nguyên văn — chỗ đột biến của chiều đỏ từng lớp.
+const DONG_LOP: Record<string, RegExp> = {
+  L1: /^ {4}\.replace\(\/\\s\*,\[\\s,\]\*\/gu, ", "\)\n/m,
+  L2: /^ {4}\.replace\(\/\^\(\?!\(\?:3\\\/2.*\n/m,
+  L3: /^ {4}\.replace\(\/\^\.\*\\S\\s\+\(\?:ngõ.*\n/m,
+  L4: /^ {4}\.replace\(\/\(ngõ\|ngo\|ngách.*"\$1\$2\$3"\)\n/m,
+  L5: /^ {4}\.replace\(\/\(\\d\)\\s\+\\\/.*\n/m,
+};
+const NHO = new Map<string, Promise<Mod>>();
+/** Bản đột biến tạo khi cần lần đầu: lượt script (/ops-check) không chạy chiều đỏ nên không ghi tệp tạm vào src/. */
+const dotBienTen = (ten: string, doi: (s: string) => string) => {
+  if (!NHO.has(ten)) NHO.set(ten, dotBien(doi));
+  return NHO.get(ten)!;
+};
+const boCum = () => dotBienTen("cum", (s) => s.replace(DONG_CUM, ""));
+const boLop = (ma: string) => dotBienTen(ma, (s) => s.replace(DONG_LOP[ma], ""));
+/** Trong scripts/o-duong-that.sh: chỉ đo dữ liệu, không chạy chiều đỏ (chiều đỏ đã chạy ở executor judge_entity_duong). */
+const trongScript = () => process.env.O_DUONG_TRONG_SCRIPT === "1";
 const dotBienBat = () => process.env.O_DUONG_DOT_BIEN === "1";
 /** Luật đang đo: bản thật, hoặc bản đột biến khi script kiểm nhánh ❌. */
-const luat = (): Mod => (dotBienBat() ? boCumMod : that);
+const luat = async (): Promise<Mod> => (dotBienBat() ? boCum() : that);
 
 const TU = "(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)";
 /** Chuẩn hoá độc lập: bề rộng hẻm số lẻ, trắng trước gạch chéo giữa hai số, dấu phẩy lặp. */
@@ -99,8 +110,11 @@ test("CD-AC-8 probe ô đường thật", async (t) => {
       .filter((x) => odDuongDacBiet(x.p.a.street) || odDuongDacBiet(x.p.b.street));
     t.diagnostic(`CD-AC-8: ${giaTri.length} giá trị street_raw có cụm vị trí · ${the.length} thẻ người nhận có ô đường đặc biệt`);
     assert.ok(giaTri.length >= 100, `CD-AC-8 bàn đo quá ít: ${giaTri.length} giá trị`);
-    kiemAc8(luat(), giaTri, the);
-    assert.throws(() => kiemAc8(boCumMod, giaTri, []), /CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch/);
+    kiemAc8(await luat(), giaTri, the);
+    if (!trongScript()) {
+      const bc = await boCum();
+      assert.throws(() => kiemAc8(bc, giaTri, []), /CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch/);
+    }
   } finally {
     await c.end();
   }
@@ -110,7 +124,13 @@ test("CD-AC-8 probe ô đường thật", async (t) => {
 // Chọn và tách bằng regex riêng, không import khoaDuong. Bảng phủ ca 15/11: L1 1 · L2 3 · L3 55 · L4 2 · L5 2 giá trị hỏng.
 /** Phần tên độc lập: bỏ số nhà trần trước phẩy, bỏ cụm đầu, cắt phẩy, rồi bỏ mọi thứ tới hết cụm cuối đứng sau chữ. */
 function tenDocLap(v: string): string {
-  const t = chuan(v).replace(/^\d[\p{L}\d/-]*\s*,\s*/u, "").replace(CUM, "").split(",")[0].trim();
+  const c = chuan(v);
+  const so = c.match(/^(\d[\p{L}\d/-]*)\s*,\s*(.*)$/u);
+  const ngayLe = (x: string) => ["3/2", "30/4", "19/5", "2/9", "1/5", "23/9"].includes(x);
+  const hanhChinh = (x: string) => /^(phường|p\.|quận|q\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\s.]|$))/iu.test(x);
+  const t0 = so && !ngayLe(so[1]) && !hanhChinh(so[2]) ? so[2] : c;
+  let t = t0.replace(CUM, "").split(",")[0].trim();
+  t = t.replace(new RegExp(`(\\S)\\s+${TU}\\.?\\s*\\d[\\p{L}\\d/-]*$`, "iu"), "$1");
   const m = [...t.matchAll(new RegExp(`\\S\\s+${TU}\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s+|$)`, "giu"))].pop();
   return m ? t.slice((m.index ?? 0) + m[0].length).trim() : t;
 }
@@ -121,12 +141,16 @@ const LOP_CHON: [string, RegExp][] = [
   ["L4", new RegExp(`${TU}\\s*\\d+[.,]\\d+\\s*m`, "iu")],
   ["L5", /\d\s+\/\s*\d/u],
 ];
-const TOI_THIEU: Record<string, number> = { L2: 1, L3: 30 };
-function kiemAc12(mod: Mod, giaTri: string[]): Record<string, number> {
+// Sàn từ đo 15/11 (L1 66 · L2 13 · L3 88 · L4 1 · L5 2): một lớp co về 0 là phép đo rỗng, đỏ.
+const TOI_THIEU: Record<string, number> = { L1: 1, L2: 1, L3: 30, L4: 1, L5: 1 };
+function kiemAc12(mod: Mod, giaTri: string[], chi?: string): Record<string, number> {
   const dem: Record<string, number> = {};
   for (const [ma, chon] of LOP_CHON) {
+    if (chi && ma !== chi) continue;
     // Chỉ đo giá trị mà bộ tách độc lập rút được tên đường có khoá (đường đánh số, ô chỉ có cụm: ngoài diện).
-    const ds = giaTri.filter((v) => chon.test(v.normalize("NFC")) && mod.khoaDuong(tenDocLap(v)).length > 0);
+    // Mẫu số độc lập với luật đang đo: phần tên phải còn chữ ngoài tiền tố Đường/Phố và không chỉ là số (đường đánh số).
+    const coTen = (v: string) => /\p{L}/u.test(tenDocLap(v).replace(/^(?:đường|phố|duong|pho)(?=[\s-]|$)/iu, "").replace(/\bsố\b/iu, ""));
+    const ds = giaTri.filter((v) => chon.test(v.normalize("NFC")) && coTen(v));
     dem[ma] = ds.length;
     const sai = ds.filter((v) => mod.soDuong(v, tenDocLap(v)) !== "khop");
     assert.equal(sai.length, 0, `CD-AC-12 ${ma} ra Lệch: ${sai.length}/${ds.length} giá trị: ${sai.slice(0, 20).join(" | ")}`);
@@ -136,10 +160,15 @@ function kiemAc12(mod: Mod, giaTri: string[]): Record<string, number> {
 test("CD-AC-12 probe lớp ô đường thật", async (t) => {
   if (process.env.CI) return t.skip("cần DB máy thu có tin thật — CI chỉ có lược đồ");
   const giaTri = await docO();
-  const dem = kiemAc12(luat(), giaTri);
+  const dem = kiemAc12(await luat(), giaTri);
   t.diagnostic(`CD-AC-12 lớp: ${Object.entries(dem).map(([k, n]) => `${k}=${n}`).join(" ")}`);
   for (const [ma, n] of Object.entries(TOI_THIEU)) assert.ok(dem[ma] >= n, `CD-AC-12 bàn đo ${ma} quá ít: ${dem[ma]} < ${n}`);
-  assert.throws(() => kiemAc12(boL3Mod, giaTri), /CD-AC-12 L3 ra Lệch: [1-9]/);
+  if (trongScript()) return;
+  // Chiều đỏ từng lớp: bỏ đúng dòng của lớp đó trong khoaDuong → lớp ấy ra Lệch trên dữ liệu thật.
+  for (const ma of Object.keys(DONG_LOP)) {
+    const bl = await boLop(ma);
+    assert.throws(() => kiemAc12(bl, giaTri, ma), new RegExp(`CD-AC-12 ${ma} ra Lệch: [1-9]`), `CD-AC-12 chiều đỏ ${ma} không đỏ`);
+  }
 });
 
 // ---------- CD-AC-11: mục «Ô đường thật» của audit-all chạy được cả hai nhánh ----------

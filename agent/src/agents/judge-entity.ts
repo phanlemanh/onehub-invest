@@ -101,10 +101,13 @@ export function khoaDuong(v: string): string[] {
     // L1: dồn dấu phẩy lặp và khoảng trắng quanh nó («Hẻm 5 ,,1/ X» → «hẻm 5, 1/ x»).
     .replace(/\s*,[\s,]*/gu, ", ")
     // L2: số nhà trần rồi dấu phẩy («208, Nguyễn Hữu Cảnh, …») — tên đường là đoạn sau số nhà.
-    .replace(/^\d[\p{L}\d/-]*\s*,\s*/u, "")
+    // …trừ khi đó là tên đường dạng ngày/tháng («3/2, Phường 12», «19/5, Tân Bình») hay đoạn sau phẩy là đơn vị hành chính.
+    .replace(/^(?!(?:3\/2|30\/4|19\/5|2\/9|1\/5|23\/9)\s*,)\d[\p{L}\d/-]*\s*,(?!\s*(?:phường|p\.|quận|q\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\s.]|$)))\s*/u, "")
     .replace(/^(?:(?:số|so|ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s*,\s*|\s+|$))+/u, "")
     .replace(/,.*$/u, "")
     .trim()
+    // L3, cụm đứng cuối ô («tôn thất tùng hẻm 86»): tên đường ở trước cụm — chỉ bỏ cụm.
+    .replace(/(\S)\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*$/u, "$1")
     // L3: cụm ngõ/ngách/hẻm/kiệt đứng sau chữ khác («Đường Kiệt 91 Lê Tân Trung», «Số nhà 17 ngõ 60 Dương Khuê») — lấy phần
     // sau cụm cuối. Không áp cho «số»: «Đường số 7» là tên đường.
     .replace(/^.*\S\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\.?\s*\d[\p{L}\d/-]*(?:\s+|$)/u, "")

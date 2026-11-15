@@ -177,6 +177,11 @@ const L2: [string, string, string][] = [
   ["208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh", "Nguyễn Hữu Cảnh", "khop"],
   ["46, Đường Điện Biên Phủ, Phường Hòa Khê, Quận Thanh Khê, Đà Nẵng", "Điện Biên Phủ", "khop"],
   ["Đường 70, Phường Phương Canh, Quận Nam Từ Liêm, Hà Nội", "Minh Khai", "thieu"],
+  // Tên đường dạng ngày/tháng đứng trước phẩy KHÔNG phải số nhà (S4 r1 bắt được).
+  ["3/2, Phường 12, Quận 10", "3/2", "khop"],
+  ["30/4, Phường 1", "Đường 30/4", "khop"],
+  ["Đường 3/2, Phường 12", "3/2", "khop"],
+  ["19/5, Tân Bình", "Đường 19/5", "khop"],
 ];
 const L3: [string, string, string][] = [
   ["Đường Kiệt 91 Lê Tân Trung", "Lê Tân Trung", "khop"],
@@ -185,6 +190,9 @@ const L3: [string, string, string][] = [
   ["Ngách xxx Ngõ 364 Phố Giải Phóng", "Giải Phóng", "khop"],
   ["Đường Kiệt 91 Lê Tân Trung", "Tô Hiệu", "lech"],
   ["Đường số 7", "Đường số 9", "lech"],
+  // Cụm đứng CUỐI ô: tên đường ở trước cụm (S4 r1 bắt được, giá trị thật «tôn thất tùng hẻm 86»).
+  ["tôn thất tùng hẻm 86", "Tôn Thất Tùng", "khop"],
+  ["Lê Văn Sỹ hẻm 12", "Lê Văn Sỹ", "khop"],
 ];
 const L4: [string, string, string][] = [["hẻm 3,5m Lê Văn Sỹ", "Lê Văn Sỹ", "khop"], ["Ngõ 2.5m", "Minh Khai", "thieu"]];
 const L5: [string, string, string][] = [
@@ -198,7 +206,7 @@ const LOP: [string, string, [string, string, string][]][] = [
 const DONG_L4 = '    .replace(/(ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)(\\.?\\s*\\d+)[.,](\\d+\\s*m)(?=[\\s,]|$)/gu, "$1$2$3")\n';
 const DONG_L5 = '    .replace(/(\\d)\\s+\\/(?=\\d)/gu, "$1/")\n';
 const DONG_L1 = '    .replace(/\\s*,[\\s,]*/gu, ", ")\n';
-const DONG_L2 = '    .replace(/^\\d[\\p{L}\\d/-]*\\s*,\\s*/u, "")\n';
+const DONG_L2 = '    .replace(/^(?!(?:3\\/2|30\\/4|19\\/5|2\\/9|1\\/5|23\\/9)\\s*,)\\d[\\p{L}\\d/-]*\\s*,(?!\\s*(?:phường|p\\.|quận|q\\.|huyện|xã|thị xã|thành phố|tỉnh|tp(?=[\\s.]|$)))\\s*/u, "")\n';
 const DONG_L3 = '    .replace(/^.*\\S\\s+(?:ngõ|ngo|ngách|ngach|hẻm|hem|kiệt|kiet)\\.?\\s*\\d[\\p{L}\\d/-]*(?:\\s+|$)/u, "")\n';
 function kiemLop(mod: Mod, ma: string): number {
   const [, ten, ds] = LOP.find(([m]) => m === ma)!;
@@ -213,15 +221,18 @@ function kiemLop(mod: Mod, ma: string): number {
   return n;
 }
 test("CD-AC-9 lớp đầu vào bẩn", async () => {
-  assert.equal(LOP.reduce((s, [m]) => s + kiemLop(that, m), 0), 30);
-  assert.ok(!that.khoaDuong("hẻm 3,5m, 1 trục thẳng thới tam thôn 16").includes("5m"), "CD-AC-9 L4 bề rộng hẻm thành khoá rác");
+  assert.equal(LOP.reduce((s, [m]) => s + kiemLop(that, m), 0), 42);
+  const R = "hẻm 3,5m, 1 trục thẳng thới tam thôn 16";
+  const kiemRac = (mod: Mod) => assert.deepEqual(mod.khoaDuong(R), ["truc thang thoi tam thon 16", "1 truc thang thoi tam thon 16"], "CD-AC-9 L4 bề rộng hẻm thành khoá rác");
   const boDong = async (dong: string) => dotBien((s) => s.replace(dong, ""));
   assert.throws(() => kiemLop(boL1, "L1"), /CD-AC-9 L1 dấu phẩy lặp: Hẻm 5 ,,1\/ Đường chùa Pháp thạnh ↔ Chùa Pháp Thạnh/);
   const boL2 = await boDong(DONG_L2);
   assert.throws(() => kiemLop(boL2, "L2"), /CD-AC-9 L2 số nhà rồi phẩy: 208, Nguyễn Hữu Cảnh/);
   assert.throws(() => kiemLop(boL3Mod, "L3"), /CD-AC-9 L3 cụm sau chữ khác: Đường Kiệt 91 Lê Tân Trung ↔ Lê Tân Trung/);
+  kiemRac(that);
   const boL4 = await boDong(DONG_L4);
   assert.throws(() => kiemLop(boL4, "L4"), /CD-AC-9 L4 bề rộng hẻm: Ngõ 2\.5m ↔ Minh Khai/);
+  assert.throws(() => kiemRac(boL4), /CD-AC-9 L4 bề rộng hẻm thành khoá rác/);
   const boL5 = await boDong(DONG_L5);
   assert.throws(() => kiemLop(boL5, "L5"), /CD-AC-9 L5 trắng trước gạch chéo/);
 });
@@ -269,8 +280,8 @@ function kiemAc7(luat: SoFn): number {
   return n;
 }
 test("CD-AC-7 thẻ và luật cùng khoá đường", () => {
-  assert.equal(MA_TRAN_7.length, 44);
-  assert.equal(kiemAc7(that.soDuong), 88);
+  assert.equal(MA_TRAN_7.length, 50);
+  assert.equal(kiemAc7(that.soDuong), 100);
   assert.throws(() => kiemAc7(boCumMod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Ngõ 254 Minh Khai \| Minh Khai/);
   assert.throws(() => kiemAc7(boL3Mod.soDuong), /CD-AC-7 luật lệch thẻ duyệt ở: Đường Kiệt 91 Lê Tân Trung/);
 });

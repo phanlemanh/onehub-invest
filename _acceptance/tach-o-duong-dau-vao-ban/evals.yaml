@@ -18,7 +18,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L2: «208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh» ↔ «Nguyễn Hữu Cảnh» và «46, Đường Điện Biên Phủ, Phường Hòa Khê, Quận Thanh Khê, Đà Nẵng» ↔ «Điện Biên Phủ»: 'khop' hai chiều; đối chứng: «Đường 70, Phường Phương Canh, Quận Nam Từ Liêm, Hà Nội» ↔ «Minh Khai» = 'thieu'; chiều đỏ: đột biến bỏ bước số-nhà-rồi-phẩy → đỏ 'CD-AC-9 L2 số nhà rồi phẩy: 208, Nguyễn Hữu Cảnh'"
+    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L2: «208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, Tp Hồ Chí Minh» ↔ «Nguyễn Hữu Cảnh» và «46, Đường Điện Biên Phủ, Phường Hòa Khê, Quận Thanh Khê, Đà Nẵng» ↔ «Điện Biên Phủ»: 'khop' hai chiều; đối chứng: «Đường 70, Phường Phương Canh, Quận Nam Từ Liêm, Hà Nội» ↔ «Minh Khai» = 'thieu'; tên đường dạng ngày/tháng trước phẩy không bị coi là số nhà: «3/2, Phường 12, Quận 10»↔«3/2», «30/4, Phường 1»↔«Đường 30/4», «Đường 3/2, Phường 12»↔«3/2», «19/5, Tân Bình»↔«Đường 19/5» 'khop' (đỏ trên bản r1, xanh sau sửa); chiều đỏ: đột biến bỏ bước số-nhà-rồi-phẩy → đỏ 'CD-AC-9 L2 số nhà rồi phẩy: 208, Nguyễn Hữu Cảnh'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -26,7 +26,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L3: «Đường Kiệt 91 Lê Tân Trung»↔«Lê Tân Trung», «Đường Kiệt 322 Đường Hải Phòng»↔«Hải Phòng», «Số nhà 17 ngõ 60 Dương Khuê, Dịch Vọng Hậu, Cầu Giấy»↔«Dương Khuê», «Ngách xxx Ngõ 364 Phố Giải Phóng»↔«Giải Phóng»: 'khop' hai chiều; đối chứng 'lech': «Đường Kiệt 91 Lê Tân Trung»↔«Tô Hiệu», «Đường số 7»↔«Đường số 9»; chiều đỏ: đột biến bỏ bước cụm-giữa-chuỗi → đỏ 'CD-AC-9 L3 cụm sau chữ khác: Đường Kiệt 91 Lê Tân Trung ↔ Lê Tân Trung'"
+    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L3: «Đường Kiệt 91 Lê Tân Trung»↔«Lê Tân Trung», «Đường Kiệt 322 Đường Hải Phòng»↔«Hải Phòng», «Số nhà 17 ngõ 60 Dương Khuê, Dịch Vọng Hậu, Cầu Giấy»↔«Dương Khuê», «Ngách xxx Ngõ 364 Phố Giải Phóng»↔«Giải Phóng»: 'khop' hai chiều; đối chứng 'lech': «Đường Kiệt 91 Lê Tân Trung»↔«Tô Hiệu», «Đường số 7»↔«Đường số 9»; cụm đứng cuối ô: «tôn thất tùng hẻm 86»↔«Tôn Thất Tùng», «Lê Văn Sỹ hẻm 12»↔«Lê Văn Sỹ» 'khop'; chiều đỏ: đột biến bỏ bước cụm-giữa-chuỗi → đỏ 'CD-AC-9 L3 cụm sau chữ khác: Đường Kiệt 91 Lê Tân Trung ↔ Lê Tân Trung'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -34,7 +34,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-entity-duong.test.ts]
-    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L4/L5: «hẻm 3,5m Lê Văn Sỹ»↔«Lê Văn Sỹ» 'khop'; «Ngõ 2.5m»↔«Minh Khai» 'thieu'; khoaDuong(«hẻm 3,5m, 1 trục thẳng thới tam thôn 16») không chứa '5m'; «Hẻm 822 /131A HƯƠNG LỘ 2 BÌNH TRỊ ĐÔNG A, QUẬN BÌNH TÂN , TPHCM»↔«Hương Lộ 2 Bình Trị Đông A» 'khop'; đối chứng «1/ TRẦN VĂN MƯỜI»↔«Trần Văn Mười» 'khop'; chiều đỏ: đột biến bỏ bước bề rộng → đỏ 'CD-AC-9 L4 bề rộng hẻm: Ngõ 2.5m ↔ Minh Khai'; đột biến bỏ bước gạch chéo → đỏ 'CD-AC-9 L5 trắng trước gạch chéo'"
+    expected: "exit 0; ca 'CD-AC-9 lớp đầu vào bẩn' — L4/L5: «hẻm 3,5m Lê Văn Sỹ»↔«Lê Văn Sỹ» 'khop'; «Ngõ 2.5m»↔«Minh Khai» 'thieu'; khoaDuong(«hẻm 3,5m, 1 trục thẳng thới tam thôn 16») deepEqual ['truc thang thoi tam thon 16','1 truc thang thoi tam thon 16'] và bản đột biến bỏ bước bề rộng đỏ 'CD-AC-9 L4 bề rộng hẻm thành khoá rác'; «Hẻm 822 /131A HƯƠNG LỘ 2 BÌNH TRỊ ĐÔNG A, QUẬN BÌNH TÂN , TPHCM»↔«Hương Lộ 2 Bình Trị Đông A» 'khop'; đối chứng «1/ TRẦN VĂN MƯỜI»↔«Trần Văn Mười» 'khop'; chiều đỏ: đột biến bỏ bước bề rộng → đỏ 'CD-AC-9 L4 bề rộng hẻm: Ngõ 2.5m ↔ Minh Khai'; đột biến bỏ bước gạch chéo → đỏ 'CD-AC-9 L5 trắng trước gạch chéo'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -58,7 +58,7 @@ evals:
     cmd: config:executors.test.judge_entity_duong
     layer: backend-effect
     paths: [agent/probes/o-duong-that.test.ts, scripts/o-duong-that.sh, scripts/audit-all.sh, agent/src/agents/judge-entity.ts]
-    expected: "exit 0 trên máy thu; (a) ca 'CD-AC-8 probe ô đường thật' xanh như lúc ký (≥ 100 giá trị cụm đầu, 0 lệch, đột biến bỏ cắt cụm đỏ 'CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch'); (b) ca 'CD-AC-12 probe lớp ô đường thật': mỗi lớp L1–L5 chọn bằng regex riêng trên SELECT DISTINCT street_raw (cụm ở bất kỳ vị trí), bộ tách độc lập theo lớp (không import khoaDuong), soDuong(giá trị, phần tên) = 'khop' ở mọi giá trị đã chọn; diagnostic 'CD-AC-12 lớp: L1=… L2=… L3=… L4=… L5=…'; số chọn L3 ≥ 30 và L2 ≥ 1 (đo 15/11: 55 và 3); chiều đỏ: luật đột biến bỏ bước L3 → ném 'CD-AC-12 L3 ra Lệch' kèm ít nhất một giá trị; (c) ca 'CD-AC-11 mục Ô đường thật chạy hai nhánh': chạy bash scripts/o-duong-that.sh → exit 0, stdout có '✅ Ô đường thật' và 'lớp:'; chạy với O_DUONG_DOT_BIEN=1 → exit 1, stdout có '❌ Ô đường thật' và một giá trị lệch; scripts/audit-all.sh có dòng gọi scripts/o-duong-that.sh nằm trong nhánh pass/fail (khớp regex o-duong-that\\.sh.*&&.*pass.*\\|\\|.*fail hoặc if/else tương đương); chiều đỏ của phép khớp: hàm kiểm chạy trên bản audit-all bỏ dòng gọi → ném 'CD-AC-11 audit-all thiếu mục Ô đường thật'"
+    expected: "exit 0 trên máy thu; (a) ca 'CD-AC-8 probe ô đường thật' xanh như lúc ký (≥ 100 giá trị cụm đầu, 0 lệch, đột biến bỏ cắt cụm đỏ 'CD-AC-8 ô đường thật có tiền tố vị trí ra Lệch'); (b) ca 'CD-AC-12 probe lớp ô đường thật': mỗi lớp L1–L5 chọn bằng regex riêng trên SELECT DISTINCT street_raw (cụm ở bất kỳ vị trí), bộ tách độc lập theo lớp (không import khoaDuong), soDuong(giá trị, phần tên) = 'khop' ở mọi giá trị đã chọn; diagnostic 'CD-AC-12 lớp: L1=… L2=… L3=… L4=… L5=…'; mẫu số chọn độc lập với luật (phần tên còn chữ); sàn mọi lớp L1 ≥ 1, L2 ≥ 1, L3 ≥ 30, L4 ≥ 1, L5 ≥ 1 (đo 15/11: 66 · 13 · 89 · 1 · 2); chiều đỏ từng lớp: bản luật bỏ đúng dòng của lớp Ln → ném 'CD-AC-12 Ln ra Lệch' kèm ít nhất một giá trị, cho cả năm lớp; lượt chạy trong scripts/o-duong-that.sh (O_DUONG_TRONG_SCRIPT=1) không tạo tệp đột biến và không chạy chiều đỏ; (c) ca 'CD-AC-11 mục Ô đường thật chạy hai nhánh': chạy bash scripts/o-duong-that.sh → exit 0, stdout có '✅ Ô đường thật' và 'lớp:'; chạy với O_DUONG_DOT_BIEN=1 → exit 1, stdout có '❌ Ô đường thật' và một giá trị lệch; scripts/audit-all.sh có dòng gọi scripts/o-duong-that.sh nằm trong nhánh pass/fail (khớp regex o-duong-that\\.sh.*&&.*pass.*\\|\\|.*fail hoặc if/else tương đương); chiều đỏ của phép khớp: hàm kiểm chạy trên bản audit-all bỏ dòng gọi → ném 'CD-AC-11 audit-all thiếu mục Ô đường thật'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
