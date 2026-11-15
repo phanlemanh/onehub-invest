@@ -5,9 +5,9 @@ slug: du-an-cua-tin-len-dinh-vi
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm db/migrations (t3_paths); GS chọn đường A 15/11
 surfaces: [cli, data, ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-11-15
 design_doc: docs/superpowers/specs/2026-11-15-du-an-cua-tin-len-dinh-vi-design.md
 ---
 
