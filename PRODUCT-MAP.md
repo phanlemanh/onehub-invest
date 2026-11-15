@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>193 việc"]
+  GB --> DG["Đã giao<br/>194 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>126 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -258,6 +258,7 @@ flowchart TD
 - Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - Biểu mẫu theo nhóm chọn đơn vị giá theo Loại tin, hỏi lại khi giá lạ, và thẻ hiện mã để chép (`don-vi-gia-theo-loai-tin`)
 - Đóng băng Stage B của bộ dựng căn và thẻ Ghép căn — không sinh cặp, không gieo thẻ, thẻ chờ không hiện, dữ liệu cũ giữ nguyên (`dong-bang-stage-b-resolve`)
+- Mọi tin S03, S05, S06 có chứng cứ dự án được định vị cấp dự án qua một nguồn chung trong DB (view offer_project, migration 105, chỉ máy thu), và ô Định vị của màn chặng cùng bậc B2 của thang dữ liệu đọc đúng nguồn ấy — ô Định vị S03 trên DB máy thu từ 0 lên khoảng 4.934 (`du-an-cua-tin-len-dinh-vi`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
 - Danh sách tin công khai nhanh — getPublicOffers rút trang trước, đếm tài khoản nhiều tên chỉ cho người bán của trang, tổng đếm theo hàm cửa sổ; trang đầu vn-hcmc bốn kiểu sắp dưới 1000 ms trên DB máy thu, có biên, không nới trần E4b (`e4b-danh-sach-tin-nhanh`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
