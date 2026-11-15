@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 4504f78407ba7f037e46b195bfdc12cabdebe73a
-human_signoff:
+human_signoff: Mạnh 2026-11-16
 ---
 
 # Evidence Report: goi-thang-anthropic

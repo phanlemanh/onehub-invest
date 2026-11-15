@@ -5,7 +5,7 @@ slug: goi-thang-anthropic
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-11-15-goi-thang-anthropic-design.md
 approved_by: Mạnh
 approved_at: 2026-11-15
@@ -188,3 +188,7 @@ Quét theo bảng phủ ca của thiết kế (đường × model × cách hỏn
 - Nợ môi trường worktree (gom hàng nền, theo giám sát 15/11): worktree mới của Claude thiếu `data-api/node_modules` — suite
   `cd app && npm test` đỏ ở S4 round 1 (CG9-AC-7, `tests/hang-gia-doc.test.tsx` không nạp được `pg` qua `data-api/src/db/client.ts`);
   sửa tay bằng symlink sang checkout chính rồi chấm lại round 2. Cùng nhóm với nợ phải chạy `npx next typegen` trong `app/` trước suite app.
+- Known limits — chọn ở Cổng Bằng chứng 2026-11-16:
+  - Ngoài-1: bước kiểm trước khi gộp của hồ sơ lọc mọi dòng vi phạm mang tên hồ sơ, nên có thể báo xanh dù hồ sơ còn một lỗi hình thức.
+  - Ngoài-2: khi lượt đọc tin dừng sớm vì hết tiền hay khoá sai, số bài còn lại báo thấp hơn thật một bài.
+  - Ngoài-3: ca thử «cả hai đường cùng cạn tiền» dùng lỗi Gateway dựng tay, không đi qua thư viện Gateway thật.
