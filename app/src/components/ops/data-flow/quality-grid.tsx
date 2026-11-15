@@ -50,6 +50,7 @@ const levelColumn = (
   id: "clustered" | "located" | "unitLinked",
   title: string,
   pending?: "locatedPending" | "uniqueIdPending",
+  size = 110,
 ): ColumnDef<DataGridFeatures, QualityRow> => ({
   accessorFn: (r) => r[id] ?? -1,
   id,
@@ -57,7 +58,7 @@ const levelColumn = (
   cell: ({ row }) => (
     <StageCell value={row.original[id]} of={row.original.offers} pending={pending ? row.original[pending] : null} />
   ),
-  size: 110,
+  size,
   enableSorting: true,
   meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
 })
@@ -135,7 +136,7 @@ const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
     meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
   },
   levelColumn("clustered", "Gom cụm"),
-  levelColumn("located", "Định vị", "locatedPending"),
+  levelColumn("located", "Định vị (cấp dự án)", "locatedPending", 170),
   levelColumn("unitLinked", "Gắn căn", "uniqueIdPending"),
   {
     accessorFn: (r) => r.latestAt ?? "",
@@ -177,7 +178,8 @@ export function QualityGrid({ bySource, byGroup }: { bySource: QualityRow[]; byG
             <FrameTitle>Chất lượng từng chặng</FrameTitle>
             <FrameDescription className="text-xs text-pretty">
               Nút thắt là chặng yếu nhất của hàng: đọc được, đủ trường lõi (bậc B1) hoặc có phường. Gom cụm · Định vị · Gắn
-              căn tính trên Tin rao; Định vị và Gắn căn chỉ tính tin khớp danh bạ.
+              căn tính trên Tin rao; Định vị và Gắn căn chỉ tính tin khớp danh bạ. Định vị hôm nay ở cấp dự án; «chờ khớp» là tin ghi toà,
+              trục chưa khớp nút toà, kể cả tin đã định vị cấp dự án.
             </FrameDescription>
             {levelsPending ? (
               <FrameDescription className="text-xs text-pretty">Số mức nhận diện có ở lượt làm tươi kế.</FrameDescription>

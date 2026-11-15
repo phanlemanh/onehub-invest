@@ -411,7 +411,8 @@ describe("DF6-AC-3 số cũ giữ nguyên so với 600 của merge-base", () => 
 })
 
 // ---------- AC-4: chạy trần → null, trang như trước ----------
-const LOI_GOI_MIEN = new Set(["pipeline/refresh-data-flow.mjs", "pipeline/scripts/do-nhanh-bai-s03.mjs"])
+// DV7: offer-project-that.mjs là phép đo (chạy thử 105 + 600 trong giao dịch lùi trên máy thu), cùng lớp với do-nhanh-bai-s03.
+const LOI_GOI_MIEN = new Set(["pipeline/refresh-data-flow.mjs", "pipeline/scripts/do-nhanh-bai-s03.mjs", "pipeline/scripts/offer-project-that.mjs"])
 /** Lối gọi 600 không đi qua bộ chạy: dòng mã (không phải chú thích) trong scripts/, pipeline/ nhắc tệp 600 mà không nhắc bộ chạy. */
 function loiGoi600(them: string[] = []): string[] {
   const out: string[] = []
