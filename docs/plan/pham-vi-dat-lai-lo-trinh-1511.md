@@ -10,7 +10,7 @@
 > mỗi mốc một con số trên màn; mười một lát là giá trị `nhom` của hàng (`l01-…` tới `l11-…`); việc nền ở `nen-giu-nha`.
 >
 > **Bản này chỉ mang mã của việc MỚI** (mục tiêu cần mà lộ trình chưa có, và việc nợ ngoài lộ trình). Phần xếp lại hàng có sẵn
-> làm trong cùng PR, không mang mã của bản này: 72 hàng giữ đổi `nhom` theo lát; 61 hàng hoãn và 8 hàng gộp chuyển thành mục
+> làm trong cùng PR, không mang mã của bản này: 73 hàng giữ đổi `nhom` theo lát; 61 hàng hoãn và 7 hàng gộp chuyển thành mục
 > chờ điều kiện; 5 hàng và 16 mã chờ bị bác vào `da_bac`; 29 hàng nền đổi `nhom`; mười mốc cũ thay bằng sáu mốc mới; hàng
 > phải sửa lời mang ghi chú «Đặt lại lộ trình 15/11». Hàng đã xong không đổi.
 >

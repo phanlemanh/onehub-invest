@@ -882,8 +882,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
       dự án nằm gần hết ở hai dự án đã có toà; L11 (mặt bằng S06, danh bạ mở rộng, gồm DA7) sau MS3.
     - **Thước MS1 là đúng con số ô «Định vị» trên màn** (view `offer_project` của DV7: tin có ít nhất một bài mang dự án, không
       xung đột; chạy thử 15/11: 4.934). Phép đếm theo bài đầu của tin (4.260 / 6.295) là phép đo phụ.
-    - **Xếp lại 175 hàng chưa xong**: 72 giữ trong lát, 29 nền (`nen-giu-nha`, chỉ làm khi đỏ hay khi chặn một lát), 61 hoãn và
-      8 gộp thành mục chờ điều kiện có điều kiện mở lại, 5 bác. 16 mã chờ lỗi thời bác. 137 hàng đã xong không đổi. Thêm 9 hàng
+    - **Xếp lại 175 hàng chưa xong**: 73 giữ trong lát, 29 nền (`nen-giu-nha`, chỉ làm khi đỏ hay khi chặn một lát), 61 hoãn và
+      7 gộp thành mục chờ điều kiện có điều kiện mở lại, 5 bác. 16 mã chờ lỗi thời bác. 137 hàng đã xong không đổi. Thêm 9 hàng
       và 12 mục chờ cho việc mục tiêu cần mà lộ trình chưa có và việc nợ ngoài lộ trình.
     - Trạng thái thật của một hàng đọc cả trên nhánh đang làm, không chỉ trên `main`. Ngưỡng 90% (MS1) và 50% (MS3) là đề
       xuất, chốt ở Cổng Phạm vi của hàng mang thước.
