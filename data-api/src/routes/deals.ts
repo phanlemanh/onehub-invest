@@ -7,9 +7,10 @@ export const dealsRoute = new Hono();
 /**
  * CG9 Hỏi-5: bảng hạng giá có và đã có dòng chưa. Chưa (cloud trước khi áp DDL, máy chưa chấm lượt đầu) → đọc thước CG8 như cũ.
  * Hai câu riêng: hỏi EXISTS trên bảng chưa có là lỗi phân tích câu.
+ * Dò theo search_path (không ghi `public.`) — cùng chỗ câu đọc tìm bảng.
  */
 export async function coBangHang(): Promise<boolean> {
-  const { rows } = await pool.query(`SELECT to_regclass('public.offer_price_rank') IS NOT NULL AS co`);
+  const { rows } = await pool.query(`SELECT to_regclass('offer_price_rank') IS NOT NULL AS co`);
   if (!rows[0]?.co) return false;
   const { rows: r2 } = await pool.query(`SELECT EXISTS (SELECT 1 FROM offer_price_rank) AS co`);
   return r2[0]?.co === true;

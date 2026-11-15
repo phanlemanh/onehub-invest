@@ -51,7 +51,7 @@ export function lyDoPhiLy(r) {
  *   theoKind: Record<string, { nhan: number, chiSo: number, khongCham: Record<string, number> }> }>}
  */
 export async function xepHangGia(c, { runId = `xhg-${randomUUID()}`, savepoint = false, sql = SQL_420, sauXoa, log = console.log } = {}) {
-  if (!(await c.query("SELECT to_regclass('public.offer_price_rank') AS t")).rows[0].t) {
+  if (!(await c.query("SELECT to_regclass('offer_price_rank') AS t")).rows[0].t) {
     log("xep-hang-gia: chưa áp 104 — bỏ qua, không ghi");
     return { chuaAp104: true, runId: null, tong: 0, theoKind: {} };
   }

@@ -157,6 +157,21 @@ test("CG9-AC-6 bảng chưa có hoặc rỗng: dealsSql/getDeals/getDeal đọc 
   assert.equal(await quaClient(db.co.c, () => m.deals.coBangHang()), true, "đối chứng: DB đã chấm → true");
 });
 
+test("CG9-AC-6/AC-7 bảng có ở public nhưng search_path trỏ lược đồ không có bảng (lược đồ cloud trong test): dò bảng theo search_path, không ném", async () => {
+  const { c } = db.co;
+  await c.query("BEGIN");
+  try {
+    await c.query("CREATE SCHEMA cg9_khong_bang");
+    await c.query("SET LOCAL search_path = cg9_khong_bang");
+    assert.equal(await quaClient(c, () => m.deals.coBangHang()), false, "app: bảng không thấy theo search_path → false");
+    const api = (await ngoai("../../data-api/src/routes/deals.ts")).coBangHang as () => Promise<boolean>;
+    assert.equal(await quaClient(c, () => api()), false, "data-api: bảng không thấy theo search_path → false");
+  } finally {
+    await c.query("ROLLBACK");
+  }
+  assert.equal(await quaClient(c, () => m.deals.coBangHang()), true, "đối chứng: search_path mặc định → true");
+});
+
 // ---------- AC-7: hai API ----------
 const KHOA_CU_APP: Record<string, string> = { offerId: "string", source: "string", priceVnd: "number", areaM2: "number", pricePerm2: "number",
   bedrooms: "object|number", phuong: "string", medianPerm2: "number|object", rulerN: "number", discountPct: "number", confidence: "string", lastSeen: "string" };
