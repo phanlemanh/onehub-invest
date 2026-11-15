@@ -26,10 +26,11 @@ máy thu. Luật «Ai quyết gì»: chữ ký Cổng Bằng chứng kèm lời 
   không lỗi và lược đồ không đổi; có bảng `group_address_cards` và `group_address_card_history`; trigger từ chối dự án không
   phải nút `project`, phân khu không phải `subzone`/`building`, phường không phải cấp phường, quá 3 dự án; `pipeline/sync-cloud.mjs`
   không nhắc hai bảng.
-- **AC-2** Given ma trận viết trước các nhóm giả (sổ một dự án · nhãn một tên · nhãn hai tên đều đủ ngưỡng · tên dưới ngưỡng ·
-  tên không khớp nút · một dự án có phường · hai dự án cùng phường · phường theo tin ≥ 60% · phân khu đủ và thiếu · bán 90% ·
-  thuê 85% · cả hai · dưới 5 bài đọc), When gọi hàm dựng nháp, Then mỗi ô ra đúng giá trị viết trước và mỗi ô có giá trị mang
-  nguồn căn cứ cùng số bài căn cứ; ô trống mang số bài đã đọc.
+- **AC-2** Given ma trận viết trước 16 nhóm giả (sổ một dự án · nhãn một tên 40 bài · hai tên 30 và 12 trên 50 bài nêu tên ·
+  bốn tên đều đủ ngưỡng · tên 2 bài · tên 4/50 bài (dưới 10%) · tên không khớp nút · một dự án có phường · hai dự án cùng phường ·
+  tin 7/10 cùng phường · tin 5/10 · phân khu 6/10 · phân khu 2 bài · bán 18/20 · thuê 17/20 và cả hai 10/10 · dưới 5 bài đọc),
+  When gọi hàm dựng nháp, Then mỗi ô ra đúng giá trị viết trước (bốn tên chỉ giữ 3 nút theo số bài; tên dưới 10% để trống) và
+  mỗi ô có giá trị mang nguồn căn cứ cùng số bài căn cứ; ô trống mang số bài đã đọc.
 - **AC-3** Given DB thử có các nhóm giả của năm lớp (một dự án trong sổ · chưa ghi · nhiều dự án · chưa có trong sổ · trong sổ
   không bài), When chạy lệnh dựng nháp, Then mọi nhóm thật có bài có đúng một thẻ `nhap` (nhóm chưa có trong sổ có thẻ với
   `unit_code` NULL), nhóm không bài không có thẻ; chạy lần hai không đổi dòng nào và không thêm lịch sử; thẻ `da_duyet`, `bac`
@@ -39,12 +40,12 @@ máy thu. Luật «Ai quyết gì»: chữ ký Cổng Bằng chứng kèm lời 
   409 không ghi gì; viewer → 403; tham chiếu sai → 400 nêu ô.
 - **AC-5** Given lưới «Nhóm S03» trên `/ops/sources` ở máy thu, When người vai ops mở trang, Then đầu lưới có «Thẻ địa chỉ:
   x/27 nhóm có thẻ · n chờ duyệt», mỗi hàng có badge trạng thái thẻ, nhóm chưa có trong sổ hiện ở cuối lưới; hộp «Duyệt thẻ»
-  hiện bốn ô kèm dòng căn cứ; nhận, sửa, bác trên màn đổi badge và bộ đếm (ảnh chụp từng bước).
+  hiện bốn ô kèm dòng căn cứ; nhận, sửa, bác trên màn đổi badge và bộ đếm; ô trống hiện vì sao; viewer thấy hộp không có nút ghi; lưu khi thẻ đã đổi hiện lỗi, giữ chữ đã nhập và có «Tải lại thẻ» (ảnh chụp từng bước).
 - **AC-6** Given trang `/ops/sources` và mọi phản hồi của route `source-groups`, When đếm khoá nhóm thật của các thẻ trong HTML
   và thân phản hồi, Then số chỗ khớp là 0 (chỉ mã sổ, mã thẻ); đối chứng chèn một khoá vào chuỗi đếm thì ra ≥ 1; lược đồ không
   có bảng thẻ (như cloud) thì khu thẻ không vẽ và trang không lỗi.
 - **AC-7** Given bản chép DB máy thu, When áp 108 rồi chạy lệnh dựng nháp, Then số nhóm có thẻ bằng số nhóm thật có bài đếm độc
-  lập (mốc 15/11: 27), chia đúng năm lớp của bảng phủ ca; lệnh in thời gian chạy; DB máy thu không đổi.
+  lập (mốc 15/11: 27), chia đúng năm lớp của bảng phủ ca; trong các nhóm có từ 5 bài đọc, ô bán/thuê có giá trị ở ít nhất một nửa số nhóm và ô dự án ở ít nhất một nửa (sàn khai trước, đo trên nhãn thật); lệnh in thời gian chạy; DB máy thu không đổi.
 - **AC-8** Given 13 nhóm sổ ghi đúng một dự án trên bản chép DB máy thu, When dựng nháp CHỈ từ nhãn (bỏ qua sổ), Then in số nhóm
   nháp trùng dự án của sổ; đạt khi từ 9/13 — phép đo chất lượng nháp trước buổi duyệt.
 - **AC-9** Given thư mục `ap-may-thu/` của hồ sơ, Then có đủ năm tệp (README thứ tự bước, sao lưu ra `~/onehub-backups/db/`, số

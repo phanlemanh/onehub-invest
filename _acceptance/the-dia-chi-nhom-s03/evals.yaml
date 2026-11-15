@@ -19,7 +19,7 @@ evals:
     executor: test
     cmd: config:executors.test.tg1_unit
     paths: [pipeline/lib/the-dia-chi-nhom.mjs, pipeline/tests/the-dia-chi-nhom.test.mjs]
-    expected: "exit 0; ca 'TG1-AC-2' ma trận viết trước 13 ô (assert đúng 13 phần tử), mỗi ô so deepEqual {du_an, phuong, tinh, phan_khu, muc_dich} cùng căn cứ {nguon, so_bai}: sổ một dự án → dự án sổ, căn cứ 'so'; nhãn một tên 40 bài → nút đó; hai tên 30 và 12 bài trên 50 bài nêu tên → hai nút xếp theo số bài; tên 2 bài → trống; tên không khớp nút → trống; một dự án có phường → phường dự án, tỉnh theo phường; hai dự án cùng phường → phường đó; tin 7/10 cùng phường → phường đó, 5/10 → trống; phân khu 6/10 bài ≥ 3 → nút đó, 2 bài → trống; bán 18/20 → ban; thuê 17/20 → thue; 10/10 → ca_hai; 4 bài đọc → trống kèm so_bai_doc 4; đối chứng đỏ: bản sao hạ ngưỡng 10% về 0 thì ô 'tên dưới ngưỡng' ra nút, ca nêu 'nguong-ten'"
+    expected: "exit 0; ca 'TG1-AC-2' ma trận viết trước 16 ô (assert số phần tử = 16), mỗi ô so deepEqual {du_an, phuong, tinh, phan_khu, muc_dich} cùng căn cứ {nguon, so_bai}: sổ một dự án → dự án sổ, căn cứ 'so'; nhãn một tên 40 bài → nút đó; hai tên 30 và 12 trên 50 bài nêu tên → hai nút xếp theo số bài; bốn tên 20, 15, 10, 8 trên 53 bài → ba nút đầu; tên 2 bài → trống; tên 4/50 bài (≥ 3 bài nhưng 8%) → trống; tên không khớp nút → trống; một dự án có phường → phường dự án, tỉnh theo phường; hai dự án cùng phường → phường đó; tin 7/10 cùng phường → phường đó; tin 5/10 → trống; phân khu 6/10 bài → nút đó; phân khu 2 bài → trống; bán 18/20 → ban; thuê 17/20 → thue và 10/10 → ca_hai (hai ô); 4 bài đọc → trống kèm so_bai_doc 4; đối chứng đỏ: bản sao bỏ luật 10% thì ô 'tên 4/50' ra nút, ca nêu 'nguong-10'; bản sao bỏ trần 3 nút thì ô 'bốn tên' ra bốn nút, ca nêu 'tran-3'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -46,8 +46,11 @@ evals:
       - "1280 px sáng: /ops/sources, khu Sổ đơn vị thu, tab Nhóm S03 → evidence/E5-step1.png; ghi dòng đầu lưới «Thẻ địa chỉ: x/27 nhóm có thẻ · n chờ duyệt» so với số lệnh dựng nháp in, badge từng hàng, hai nhóm «Chưa có trong sổ» ở cuối"
       - "Mở «Duyệt thẻ» ở nhóm lớn nhất chưa ghi dự án → evidence/E5-step2.png; ghi bốn ô và dòng căn cứ từng ô"
       - "Bấm Nhận → evidence/E5-step3.png: badge Đã duyệt, bộ đếm chờ duyệt giảm một; mở nhóm khác, sửa ô bán/thuê rồi Lưu sửa → evidence/E5-step4.png; mở nhóm thứ ba, Bác không lý do (thấy lỗi), rồi có lý do → evidence/E5-step5.png"
+      - "Mở «Duyệt thẻ» ở một nhóm dưới 5 bài đọc → evidence/E5-step-o-trong.png; ghi ô trống và dòng vì sao"
+      - "Tab thứ hai: sửa thẻ một nhóm rồi lưu; tab đầu (đã mở cùng thẻ trước đó) Lưu sửa → evidence/E5-step-409.png: Alert nêu thẻ đã đổi, chữ đã nhập còn, có «Tải lại thẻ»"
+      - "Đăng nhập vai viewer (dev-ops-account --vai viewer), mở một thẻ → evidence/E5-step-viewer.png: ô chỉ đọc, không nút Nhận/Lưu sửa/Bác"
       - "Khổ 375 → evidence/E5-step6.png, ghi không tràn ngang; che email thanh bên trên mọi ảnh"
-    expected: "Đầu lưới hiện bộ đếm thẻ khớp số lệnh in; mỗi hàng badge thẻ; nhóm chưa có trong sổ ở cuối; hộp hiện bốn ô kèm căn cứ; nhận, sửa, bác đổi badge và bộ đếm; bác không lý do bị chặn; ảnh từng bước; email che"
+    expected: "Đầu lưới hiện bộ đếm thẻ khớp số lệnh in; mỗi hàng badge thẻ; nhóm chưa có trong sổ ở cuối; hộp hiện bốn ô kèm căn cứ; nhận, sửa, bác đổi badge và bộ đếm; bác không lý do bị chặn; ô trống nói vì sao; lưu khi thẻ đã đổi hiện lỗi giữ chữ và có Tải lại thẻ; viewer không có nút ghi; ảnh từng bước; email che"
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E6
     criterion: AC-6
@@ -61,7 +64,7 @@ evals:
     executor: script
     cmd: config:executors.script.tg1_that_dem
     paths: [db/migrations/108_the_dia_chi_nhom.sql, pipeline/scripts/the-dia-chi-nhom.mjs, pipeline/scripts/the-dia-chi-nhom-that.mjs]
-    expected: "exit 0; trên bản chép DB máy thu (tên DB khớp oneinvest_u1_tg1, từ chối oneinvest): áp 108, chạy lệnh dựng nháp, in số nhóm có thẻ, số nhóm thật có bài đếm độc lập (câu riêng trong script, không dùng hàm của lệnh), năm lớp của bảng phủ ca, thời gian chạy; số nhóm có thẻ bằng số đếm độc lập; mỗi lớp bằng số đếm độc lập của lớp đó; ghi bảng số ra .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"
+    expected: "exit 0; trên bản chép DB máy thu (tên DB khớp oneinvest_u1_tg1, từ chối oneinvest): áp 108, chạy lệnh dựng nháp, in số nhóm có thẻ, số nhóm thật có bài đếm độc lập (câu riêng trong script, không dùng hàm của lệnh), năm lớp của bảng phủ ca, thời gian chạy; số nhóm có thẻ bằng số đếm độc lập; mỗi lớp bằng số đếm độc lập của lớp đó; in số nhóm có giá trị ở từng ô (dự án, phường, phân khu, bán/thuê) trong các nhóm có từ 5 bài đọc; đạt khi ô bán/thuê và ô dự án mỗi ô có giá trị ở ít nhất một nửa số nhóm ấy (sàn khai trước, đo trên nhãn thật — canh lệch khuôn nhãn); ghi bảng số ra .acceptance-runs/the-dia-chi-nhom-s03/so-chay-thu.md"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
@@ -80,7 +83,7 @@ evals:
   - id: E10
     criterion: AC-10
     executor: judgment
-    inputs: [_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png, CONTEXT.md]
-    question: "Trên ảnh hộp duyệt thẻ, người duyệt không đọc mã có biết mỗi ô (dự án, phường và tỉnh, phân khu, bán/thuê) lấy từ đâu và bao nhiêu bài làm căn cứ không, và CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã, định nghĩa không?"
+    inputs: [_acceptance/the-dia-chi-nhom-s03/evidence/E5-step2.png, _acceptance/the-dia-chi-nhom-s03/evidence/E5-step-o-trong.png, CONTEXT.md]
+    question: "Trên hai ảnh hộp duyệt thẻ (một thẻ đủ ô, một thẻ có ô trống), người duyệt không đọc mã có biết mỗi ô (dự án, phường và tỉnh, phân khu, bán/thuê) lấy từ đâu và bao nhiêu bài làm căn cứ không, và CONTEXT.md có mục «Thẻ địa chỉ nhóm» đủ nhãn, mã, định nghĩa không?"
     expected: "Mỗi ô có dòng căn cứ bằng chữ thường (nguồn và số bài); ô trống nói vì sao; CONTEXT.md có mục thuật ngữ đủ ba phần"
     evidence_required: [run_id, verdict, rationale, verifier, verified_at]
