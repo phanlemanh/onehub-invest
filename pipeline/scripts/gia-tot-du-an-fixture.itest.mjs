@@ -53,6 +53,9 @@ export async function dbCa({ view = true, luocDoView = null, bo106 = false } = {
   await c.connect();
   moi.push({ ten, c });
   if (bo106) await c.query(`DROP TABLE project_area_band`);
+  // Từ khi 105 (DV7) có trên main, DB dựng từ migration đã mang view public.offer_project (kèm hàm phụ thuộc): ca «không view»
+  // và ca view ở lược đồ khác phải gỡ nó trước, không thì ca dò lược đồ đo nhầm view của 105.
+  if (!view || luocDoView) await c.query(`DROP VIEW IF EXISTS public.offer_project CASCADE`);
   if (view) {
     if (luocDoView) {
       await c.query(`CREATE SCHEMA ${luocDoView}`);
