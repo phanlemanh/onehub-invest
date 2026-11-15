@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: resolve-stage-a-theo-tap
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.rsa_so
+    paths: [pipeline/resolve-properties.mjs, pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
+    expected: "exit 0; dựng bản chép DB máy thu bằng db/db-thu.sh, giữ list_id % 20 = 0 của stg_chotot_ads, xoá căn và link tạo từ 2026-11-14 22:30Z, chép thành hai DB; bản cũ (git show origin/main:pipeline/resolve-properties.mjs) và bản mới chạy song song; in «properties: cũ N · mới N · lệch 0», «property_offers: cũ M · mới M · lệch 0», «idempotent … lệch sau lần 2 0» hai dòng, và «TỔNG lệch 0 · … · đối chứng âm thấy lệch 1»; hai dòng [cũ]/[mới] mang cùng chuỗi «Stage A: … clusters → …»; dòng «đường chèn: <c> căn mới · <l> link mới» với c ≥ 1 và l ≥ 1 (đối chứng dương: đường chèn thật sự chạy; c hoặc l bằng 0 thì «KHÔNG CHẠY QUA ĐƯỜNG CHÈN» và exit 1). Chiều đỏ của phép so ở E2."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.rsa_so_pha
+    expected_exit: 1
+    paths: [pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
+    expected: "exit 1 (chiều đỏ của E1, cùng bộ dựng bản chép, mẫu list_id % 200 = 0): bản «mới» được gắn sẵn một tin chưa gắn vào căn id nhỏ nhất trước khi chạy; output có «property_offers: … lệch 1», một dòng mẫu bắt đầu «+{\"stable_key\"», và «TỔNG lệch 1 · … · đối chứng âm thấy lệch 1»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.rsa_gio
+    paths: [pipeline/resolve-properties.mjs, pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
+    expected: "exit 0; bản chép ĐỦ dữ liệu (không mẫu), xoá căn và link tạo từ 2026-11-14 22:30Z: dòng «[mới] … : <g> giây · Stage A: <~90 nghìn> clusters → …» với g < 300, dòng «đường chèn: <c> căn mới · <l> link mới» với l ≥ 1000 (thiếu thì «KHÔNG CHẠY QUA ĐƯỜNG CHÈN», exit 1), dòng «[mới lần 2] … + 0 NEW (pending) …», và «ĐẠT: dưới trần 300 giây, lần 2 không đổi»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.rsa_gio_do
+    expected_exit: 1
+    paths: [pipeline/scripts/resolve-so-stage-a.mjs, pipeline/scripts/resolve-so-stage-a.sh]
+    expected: "exit 1 (chiều đỏ của E3, cùng bộ dựng): «VƯỢT TRẦN: bản mới <g> giây ≥ 0 giây»."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.rtld_unit
+    paths: [pipeline/resolve-properties.mjs, pipeline/lib/thu-lai-deadlock.sql-base.json, pipeline/lib/thu-lai-deadlock.test.mjs]
+    expected: "exit 0; ca «RTLD-AC-7 chữ SQL không đổi» xanh: bản chụp có 12 câu (base d2b4beaf, ghi chú chụp lại ở hàng resolve-stage-a-theo-tap), mọi template SQL của resolve-properties.mjs khớp; đối chứng trong ca (đổi DO NOTHING → DO UPDATE) đỏ với «RTLD-AC-7 SQL đổi: »; và bốn ca RTLD-AC-1…4 xanh."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.rsa_rtld_itest
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-deadlock.itest.mjs]
+    expected: "exit 0; ba ca RTLD-AC-5, RTLD-AC-6, RTLD-AC-8 xanh trên DB thử oneinvest_p3_rtld_<pid>: vũ đạo dựng vòng chờ ngay lần đầu client gặp câu bắt đầu «INSERT INTO property_offers» — ở bản mới đó là câu chèn link theo tập; RTLD-AC-6 đòi soLanThuLai ≥ 1 ở lượt có vũ đạo và lượt tắt thử lại ném 40P01; lượt có vũ đạo hoàn tất, ảnh ba bảng bằng lượt sạch, lần tắt thử lại ném 40P01, dòng tổng kết «resolve-properties: thử lại sau deadlock N lần»; RTLD-AC-9 bị bỏ qua (đỏ sẵn trên main)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dbs_resolve
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-dong-bang.itest.mjs]
+    expected: "exit 0; ca DBS-AC-1 xanh trên DB của riêng lượt (Stage B không chạm property_candidates, kết quả Stage A bằng bản origin/main)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7b
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.kgc_db
+    paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-khoa-gop.itest.mjs]
+    expected: "exit 0; mọi ca của itest khoa-gop-can-khong-gia xanh trên DB của riêng lượt."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.rsa_khong_ddl
+    paths: [db/migrations/**]
+    expected: "exit 0; in «không migration mới» — git diff origin/main...HEAD không có tệp nào dưới db/migrations/."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

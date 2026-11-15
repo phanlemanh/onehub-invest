@@ -12,6 +12,13 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? proces
 const CU = arg("--cu"), MOI = arg("--moi"), REV = arg("--rev", "origin/main"), CHI_MOI = process.argv.includes("--chi-moi");
 // Trần giây cho bản mới (điểm xong của hàng: Stage A dưới 5 phút); --tran-giay 0 là chiều đỏ của chính phép đo.
 const TRAN = Number(arg("--tran-giay", "300"));
+// Đối chứng dương: lượt so phải thật sự chạy qua đường chèn (gap-probe P1) — đếm căn mới và link mới của lần một.
+const TOI_THIEU = Number(arg("--toi-thieu-link", "1"));
+const kiemChen = (dong, linkTruoc, linkSau) => {
+  const moi = Number((dong ?? "").match(/\+ (\d+) NEW/)?.[1] ?? 0), chen = linkSau - linkTruoc;
+  console.log(`đường chèn: ${moi} căn mới · ${chen} link mới`);
+  if (moi < 1 || chen < TOI_THIEU) { console.log(`KHÔNG CHẠY QUA ĐƯỜNG CHÈN: ${moi} căn mới, ${chen} link mới < ${TOI_THIEU}`); process.exitCode = 1; }
+};
 for (const t of [MOI, ...(CHI_MOI ? [] : [CU])])
   if (!/^oneinvest_suite_[a-z0-9_]+$/.test(t ?? "")) { console.error(`so-stage-a: DB phải dạng oneinvest_suite_*, nhận «${t}»`); process.exit(2); }
 
@@ -73,15 +80,19 @@ try {
     }
   };
   if (CHI_MOI) {
+    const truoc = (await anh(MOI)).property_offers.size;
     kiemTran(await chay(MOI, moi, "mới"));
     const a = await anh(MOI);
+    kiemChen(dongMoi.at(-1), truoc, a.property_offers.size);
     await chay(MOI, moi, "mới lần 2");
     kiemLan2(a, await anh(MOI));
     if (!process.exitCode) console.log(`ĐẠT: dưới trần ${TRAN} giây, lần 2 không đổi`);
   } else {
     const cu = ghiTam(".resolve-cu.tmp.mjs", REV); tmp.push(cu);
+    const truoc = (await anh(MOI)).property_offers.size;
     const [gCu, gMoi] = await Promise.all([chay(CU, cu, "cũ"), chay(MOI, moi, "mới")]);
     const [a, b] = await Promise.all([anh(CU), anh(MOI)]);
+    kiemChen(dongMoi[0], truoc, b.property_offers.size);
     let tong = 0;
     for (const k of ["properties", "property_offers"]) {
       const d = lech(a[k], b[k]); tong += d.n;
