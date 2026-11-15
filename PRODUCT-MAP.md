@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>20 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>192 việc"]
+  GB --> DG["Đã giao<br/>193 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>127 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>1 việc"]
 ```
@@ -327,6 +327,7 @@ flowchart TD
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
 - script đo nền hiệu năng chỉ chạy trên DB local — rào assertLocalDatabaseUrl trước mọi lệnh ghi DB (`rao-db-local-do-nen`)
 - Thước nạp lại ba lượt (PL14) chạy được khi có tin còn ảnh bị luật mới loại — đối chứng 039 đổi mọi khoá ngoại trỏ bảng bản ghi sang xoá dây chuyền, gồm bảng ảnh thêm sau (`reconcile-tin-con-anh`)
+- Stage A của bộ dựng căn chạy theo tập — cùng tập căn và link như vòng mỗi cụm, xong dưới 5 phút thay vì hàng giờ (`resolve-stage-a-theo-tap`)
 - Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia) (`review-card-photos`)
 - Backend ảnh tin cho hàng duyệt /ops/review (route /api/zalo-media + loader ảnh theo thẻ) (`review-media-backend`)
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
