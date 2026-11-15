@@ -56,3 +56,4 @@
 {"ts":"2026-11-15T15:04:18Z","sha":"e0b197c45e76e598d023f30192b88314605bb495","round":2,"kind":"baseline","evals_hash":"b4d2e10c87dc7fea41f6afe93914cb7ac7899f5a004e8276e8233631d0154212","non_discriminating":[],"carried_from_round":1}
 {"ts":"2026-11-15T15:04:18Z","sha":"e0b197c45e76e598d023f30192b88314605bb495","round":2,"kind":"round-tally","verdict":"PASS","expected":9,"returned":9,"blocked":0}
 {"ts":"2026-11-15T15:04:18Z","sha":"e0b197c45e76e598d023f30192b88314605bb495","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":10}
+{"kind":"thuoc-vat","ts":"2026-11-15T15:42:38Z","round":2,"san":"e45f36333c0639c30995fc29b613f468f35563d3","vat":[28,7],"thuoc":[0,0],"ho_so":[323,1],"nhat":0,"lan":0,"tep_thuoc":[]}
