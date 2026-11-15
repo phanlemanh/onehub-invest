@@ -126,6 +126,11 @@ _Avoid_: gắn cụm, linked (trên UI)
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
 _Avoid_: gắn toà, căn suy ra
 
+**Định vị (cấp dự án)**: Mức định vị hiện có từ 15/11: tin có đúng một dự án gốc trong nguồn chung «dự án của tin» — S03, S05 qua phát biểu dự án trên bài, S06 qua mã dự án nguồn đã nối nút. Tin có bài mang hai dự án gốc khác nhau là «xung đột», không định vị. Nút phân khu, toà quy về dự án gốc. Cấp toà, trục chưa có, nên «chờ khớp» vẫn đếm tin ghi toà, trục chưa khớp nút toà, kể cả tin đã định vị cấp dự án.
+- Code: view `offer_project` (`status` `mot_du_an` · `xung_dot`), `offer_located()`; trên màn: cột `located` · RESO: `SubdivisionName`
+- Slug URL: — (số hiện trên trang Dòng chảy dữ liệu)
+_Avoid_: định vị toà (khi mới tới dự án), gắn dự án
+
 **Gom cụm**: Máy gom các tin trông giống nhau (cùng vùng, loại, diện tích, giá) thành một cụm — công cụ gợi ý cho bước định vị, **không phải một bậc** và không đưa tin lên bậc nào. Trên trang Dòng chảy chỉ đếm tin nằm trong cụm có từ hai tin sống; cụm một tin không tính. Khác gom trùng (bài đăng lại, trùng nội dung gộp thành một tin — nằm trong B1).
 - Code: `clustered` (khối `dataFlow`), cụm ở bảng `properties` · RESO: không có
 - Slug URL: — (không có trang riêng; số hiện trên trang Dòng chảy dữ liệu)
