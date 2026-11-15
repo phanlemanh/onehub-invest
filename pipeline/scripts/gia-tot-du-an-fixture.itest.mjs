@@ -86,7 +86,8 @@ let nNgay = 0;
  * mang phát biểu project_node_id. last_seen tăng dần theo thứ tự chèn (tin chèn sau = thấy sau).
  */
 export async function tin(c, o) {
-  const ngay = new Date(Date.UTC(2026, 10, 1) + (++nNgay) * 60_000).toISOString();
+  // Trong 45 ngày tính tới lúc chạy (danh sách /ops/deals lọc 45 ngày); tăng dần theo thứ tự chèn. `cu: true` → 60 ngày trước.
+  const ngay = new Date(Date.now() - (o.cu ? 60 : 1) * 86_400_000 + (++nNgay) * 1000).toISOString();
   const duAnDs = o.duAn == null ? [] : Array.isArray(o.duAn) ? o.duAn : [o.duAn];
   const nguon = o.nguon ?? "S03";
   const bai = duAnDs.length ? duAnDs.map((_, i) => `${o.id}-b${i}`) : [];

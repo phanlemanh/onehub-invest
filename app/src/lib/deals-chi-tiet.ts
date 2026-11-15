@@ -48,6 +48,8 @@ export type DealChiTiet = {
   roiDanhSach: string | null;
   /** Hạng giá tính sẵn (CG9, bảng offer_price_rank); null khi bảng chưa có hay chưa chấm — khi đó số theo thước CG8. */
   rank?: HangGia | null;
+  /** Dải m² thường gặp của dự án × PN (CG10, project_area_band) cho căn hộ thiếu diện tích; null khi không có. Suy ra, không phải m² của tin. */
+  daiM2?: { p10: number; p90: number } | null;
 };
 
 /** Một dòng offer_price_rank cho trang (CG9). Số NULL khi tin không chấm (`reason` nói vì sao). */
@@ -62,6 +64,12 @@ export type HangGia = {
   bedroomsGroup: number | null;
   reason: string | null;
   metric: string | null; // gia-m2 | gia-thang-pn
+  /** Cấp của nhóm so sánh (CG10): phuong | du_an; null ở dữ liệu CG9 cũ không mang cột. */
+  level?: string | null;
+  /** Nút của nhóm: area_id (phường) hay asset_nodes.id (dự án). */
+  node?: string | null;
+  /** Tên dự án khi level = du_an (asset_nodes.name). */
+  nodeName?: string | null;
 };
 
 /** Nhãn hạng trên trang (CONTEXT.md «Rẻ trong phường»; «Giá tốt» từ cấp dự án — CG10). */
@@ -145,14 +153,21 @@ export function cauHang(d: Pick<DealChiTiet, "propertyType"> & { rank?: HangGia 
   const r = d.rank;
   if (!r || r.n === null || r.below === null) return null;
   const loai = loaiHinh(d.propertyType ?? null);
-  const nhom = `So với ${fmtInt(r.n)} căn cùng phường, cùng loại${loai ? ` (${loai.toLowerCase()})` : ""}${r.bedroomsGroup !== null ? `, cùng ${r.bedroomsGroup}PN` : ""}`;
-  const theo = r.metric === "gia-thang-pn" ? " theo giá thuê tháng" : "";
+  const noi = r.level === "du_an" ? `cùng dự án ${r.nodeName?.trim() || "này"}` : "cùng phường";
+  const nhom = `So với ${fmtInt(r.n)} căn ${noi}, cùng loại${loai ? ` (${loai.toLowerCase()})` : ""}${r.bedroomsGroup !== null ? `, cùng ${r.bedroomsGroup}PN` : ""}`;
+  const theo = r.metric === "gia-thang-pn" ? ", theo giá thuê tháng" : "";
   if (r.below < 0) return `${nhom}${theo}: đắt hơn trung vị ${soPct(r.below)}%.`;
   const phan = [`${nhom}${theo}: thấp hơn trung vị ${soPct(r.below)}%`];
   if (r.label) phan.push(`nằm trong 20% rẻ nhất — ${NHAN_HANG[r.label] ?? r.label}`);
   if (r.needsVerification) phan.push(`rẻ quá ${NGHI_NGO_PCT}% nên mang nhãn «${CHU_CAN_XAC_MINH}»: gọi xác minh trước khi tin`);
   return `${phan.join(", ")}.`;
 }
+
+/** Dải m² suy ra (CG10): «≈ a–b m² · suy ra», a, b = p10, p90 làm tròn. */
+export const chuDaiM2 = (d: { p10: number; p90: number }): string => `≈ ${Math.round(d.p10)}–${Math.round(d.p90)} m² · suy ra`;
+
+/** Nhãn dòng thước trên trang: thước dự án khi nhóm so sánh là dự án (CG10), không thì thước phường. */
+export const nhanThuoc = (d: Pick<DealChiTiet, "rank">): string => (d.rank?.level === "du_an" ? "Thước dự án" : "Thước phường");
 
 /** Câu chứng minh: rẻ hơn thước bao nhiêu và đứng đâu so với ngưỡng. */
 export function cauChungMinh(d: DealChiTiet): string | null {
