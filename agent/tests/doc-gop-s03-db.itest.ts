@@ -153,7 +153,7 @@ test("DGS-AC-7 JSON hỏng ghi lại kèm tiền, lỗi mạng không ghi; lư�
     assert.ok(r[0].cost > 0);
     const { rows: loi } = await c.query(`SELECT ok, loi FROM ai_calls ORDER BY id DESC LIMIT 3`);
     assert.equal(await dem(c, "ai_calls"), ai0 + 3);
-    assert.ok(loi.some((x) => !x.ok && x.loi === "TypeError"));
+    assert.ok(loi.some((x) => !x.ok && x.loi === "khac:-:-:TypeError")); // goi-thang-anthropic: lớp lỗi kèm tên lớp
     const ghi2: Ghi[] = [];
     await chayLuot({ client: c, co: { cauHinh: CAU_GW, lat, tranUsd: 1 }, taoModel: gatewayGia(() => json17(), ghi2), log: () => {} });
     assert.equal(ghi2.length, 2, "chỉ gọi lại bài JSON hỏng và bài lỗi mạng");
