@@ -5,7 +5,7 @@ slug: goi-thang-anthropic
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-11-15-goi-thang-anthropic-design.md
 approved_by: Mạnh
 approved_at: 2026-11-15
