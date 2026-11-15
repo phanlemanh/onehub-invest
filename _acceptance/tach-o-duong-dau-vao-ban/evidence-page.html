@@ -1,0 +1,125 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · tach-o-duong-dau-vao-ban</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Bộ tách ô đường (khoaDuong, luật judge và thẻ duyệt) xử đúng năm lớp đầu vào bẩn có thật trong DB máy thu, và ca probe đo dữ liệu thật ra khỏi suite chung sang chỗ chạy có người đọc</h1><div class="sub">Trang hồ sơ · <span class="mono">tach-o-duong-dau-vao-ban</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Bộ tách ô đường (khoaDuong, luật judge và thẻ duyệt) xử đúng năm lớp đầu vào bẩn có thật trong DB máy thu, và ca probe đo dữ liệu thật ra khỏi suite chung sang chỗ chạy có người đọc</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Suite agent đỏ sẵn trên main d2b4beaf. Nguyên nhân là ca CD-AC-8 probe ô đường thật gặp «Hẻm 5 ,,1/ Đường chùa Pháp thạnh», dữ liệu S06 đêm 14/11. Suite chung đỏ thì chặn mọi lượt chấm và ghim lại; nhãn «đỏ sẵn trên nền» không áp cho suite. Hàng do GS giao (đợt dot0-cam-mau, ưu tiên số một), điểm xong: suite agent xanh trên bản chép DB máy thu mới nhất.</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-11-15</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>8</b></span><span data-k="phep_do">Phép đo <b>8</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>8</b></span><span data-k="quyet_dinh_nguoi">người <b>2</b></span><span data-k="ma">Mã <b>b49f395</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Suite agent đỏ sẵn trên main d2b4beaf. Nguyên nhân là ca CD-AC-8 probe ô đường thật gặp «Hẻm 5 ,,1/ Đường chùa Pháp thạnh», dữ liệu S06 đêm 14/11. Suite chung đỏ thì chặn mọi lượt chấm và ghim lại; nhãn «đỏ sẵn trên nền» không áp cho suite. Hàng do GS giao (đợt dot0-cam-mau, ưu tiên số một), điểm xong: suite agent xanh trên bản chép DB máy thu mới nhất.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given ô đường có cụm vị trí rồi đến dấu phẩy lặp hay khoảng trắng trước phẩy («Hẻm 5 ,,1/ Đường chùa Pháp</li><li data-ac="AC-2"><b>AC-2</b> — Given ô đường mở đầu bằng số nhà trần rồi đến dấu phẩy («208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh,</li><li data-ac="AC-3"><b>AC-3</b> — Given cụm vị trí ngõ/ngách/hẻm/kiệt đứng sau chữ khác («Đường Kiệt 91 Lê Tân Trung», «Đường Kiệt 322 Đường</li><li data-ac="AC-4"><b>AC-4</b> — Given bề rộng hẻm có số lẻ hay khoảng trắng trước gạch chéo giữa hai số, When so, Then:</li><li data-ac="AC-5"><b>AC-5</b> — (cross-layer) Given ma trận AC-1…AC-4 cộng ma trận cũ CD-AC-1…7, When chạy trên luật judge và trên bản thẻ</li><li data-ac="AC-6"><b>AC-6</b> — Given glob suite agent (`tests/*.test.ts` của `agent/package.json`), When quét mọi tệp khớp tìm dấu probe</li><li data-ac="AC-7"><b>AC-7</b> — (cross-layer) Given DB máy thu hiện tại, When chạy probe qua `executors.test.judge_entity_duong`, Then:</li><li data-ac="AC-8"><b>AC-8</b> — Given bản chép DB máy thu mới nhất (`db/db-thu.sh`), When chạy `cd agent &amp;&amp; npm test`, Then exit 0.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="mono" data-design-doc>docs/superpowers/specs/2026-11-15-tach-o-duong-dau-vao-ban-design.md</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 10</button><button class="btn" data-loc="may" aria-pressed="false">Máy 8</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 2</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261115T020444Z-1"><b>2026-11-15</b> · Máy · approach · S1 — Đã tra tri thức: bộ tách ô đường khoaDuong chuẩn hoá ô đường street_raw: cụm vị trí ngõ hẻm, dấu phẩy, số nhà, đường đứng trước kiệt; probe CD-AC-8 dữ liệu thật trong suite chung<div class="note">Kho đã khai tri_thuc — bước thiết kế tra trang trước khi chọn.</div></li><li data-loai="may" data-id="d-20261115T020444Z-2"><b>2026-11-15</b> · Máy · approach · S1 — Sửa bộ tách theo năm lớp đầu vào đo được trên DB máy thu (L1 dấu phẩy lặp, L2 số nhà rồi phẩy, L3 cụm sau chữ khác, L4 bề rộng hẻm, L5 trắng trước gạch chéo), không vá riêng chuỗi gây đỏ.<div class="note">GS giao «bộ tách ô đường phải xử được lớp đầu vào này, không chỉ đúng một chuỗi»; bảng phủ ca ở design doc §2.</div></li><li data-loai="may" data-id="d-20261115T020444Z-3"><b>2026-11-15</b> · Máy · approach · S1 — Bước cụm-giữa-chuỗi (L3) chỉ áp cho ngõ/ngách/hẻm/kiệt, không áp cho «số».<div class="note">«Đường số 7» và «Đường số 9» phải còn Lệch (CD-AC-3 của chuan-hoa-o-duong).</div></li><li data-loai="may" data-id="d-20261115T020444Z-4"><b>2026-11-15</b> · Máy · approach · S1 — Dời ca probe dữ liệu thật sang agent/probes/o-duong-that.test.ts và cho executor judge_entity_duong chạy thêm tệp đó, thay vì sửa evals của ba hồ sơ đã ký.<div class="note">chuan-hoa-o-duong, duong-thang-n-khong-dau, che-do-thu-tren-ops đo ca probe qua executor judge_entity_duong (_acceptance/config.yaml).</div></li><li data-loai="may" data-id="d-20261115T020444Z-5"><b>2026-11-15</b> · Máy · approach · S1 — Hỏi-1: ca probe dữ liệu thật thành cổng gì — khuyến nghị C: ra khỏi suite chung, chạy ở eval của hồ sơ dùng executor judge_entity_duong và ở mục «Ô đường thật» của audit-all.sh mà /ops-check đọc mỗi sáng; suite chỉ còn ca cố định chép từ dữ liệu thật.<div class="note">Đặt phép đo dữ liệu đổi mỗi đêm vào suite chung là đánh đổi giữa an toàn dữ liệu và khả năng làm việc của cả kho — chỉ chủ kho cân được.</div></li><li data-loai="may" data-id="d-20261115T020809Z-6"><b>2026-11-15</b> · Máy · descope · S1 — Hỏi-2: bốn ca probe dữ liệu thật khác còn trong suite agent (KD-AC-6 phần b, hai ca LT-AC-6, ca đếm tin context-resolver) — khuyến nghị KHÔNG dời trong lát này, chỉ khoá số bằng danh sách nợ của CD-AC-10 và mở một hàng riêng dời chúng.<div class="note">Lát này nằm trên đường găng (mọi lượt chấm khác chờ), bốn ca kia chưa đỏ, và dời chúng chạm thêm hai tệp test của hai hồ sơ đã ký khác.</div></li><li data-loai="nguoi" data-id="d-20261115T024228Z-7"><b>2026-11-15</b> · Người (Mạnh) · approach · gate1 — Mạnh duyệt theo khuyến nghị: Hỏi-1 chọn C (probe dữ liệu thật ra khỏi suite chung, chạy ở eval hồ sơ và /ops-check); Hỏi-2 khoá số bốn ca probe còn lại bằng danh sách nợ, dời ở hàng riêng.<div class="note">người chọn ở Cổng Phạm vi: /acceptance-gate:approve tach-o-duong-dau-vao-ban duyệt</div></li><li data-loai="nguoi" data-id="d-20261115T024228Z-8"><b>2026-11-15</b> · Người · seal · gate1 — </li><li data-loai="may" data-id="d-20261115T025147Z-9"><b>2026-11-15</b> · Máy · fix · S3 — Sửa hai hàm phụ trong tệp test của hồ sơ đã ký duong-thang-n-khong-dau (agent/tests/judge-entity-khong-dau.test.ts): bộ loại HD2 và lớp tiền tố gõ sai dấu nhận thêm đúng hai vị trí mới mà khoaDuong nay bóc (số nhà trước phẩy, cụm ngõ/ngách/hẻm/kiệt sau chữ khác); không đổi ngưỡng hay thông điệp nào.<div class="note">Bước L2/L3 đưa tiền tố Đường/Phố về đầu phần tên, nên ca KD-AC-6 phần b (so khoá có dấu với không dấu trên dữ liệu thật) đỏ 7 giá trị — cùng lớp hai cách đọc HD2 mà ca này vốn loại ở vị trí đầu chuỗi; sau sửa 0 lệch, số gõ sai dấu đếm riêng 2 → 3.</div></li><li data-loai="may" data-id="d-20261115T035729Z-10"><b>2026-11-15</b> · Máy · fix · S4-r1 — Sửa ba lỗi do chính bản sửa sinh ra trong năm lớp mà lượt chấm r1 bắt (dù phân loại ngoài hợp đồng): L2 không coi tên đường ngày/tháng (3/2, 30/4, 19/5, 2/9, 1/5, 23/9) hay số đứng trước đơn vị hành chính là số nhà; L3 giữ tên đường đứng trước cụm cuối ô («tôn thất tùng hẻm 86»); probe CD-AC-12 có sàn và chiều đỏ cho cả năm lớp, mẫu số độc lập với luật, và assert khoá rác L4 ghim khoá đúng + có chiều đỏ. Probe chỉ tạo bản đột biến khi cần, nên lượt /ops-check không ghi tệp tạm. Hai finding còn lại (tsconfig chưa gồm agent/probes, tệp đột biến lúc bị ngắt nay chỉ còn ở lượt executor) để Cổng 2.<div class="note">GS chỉ đạo 15/11: lỗi do bản sửa sinh ra trong lớp L1–L5 không được thành giới hạn đã biết — mỗi giới hạn như vậy lại đẻ một hàng sửa; các ca mới đỏ trên bản r1 (CD-AC-9 L2 «3/2, Phường 12, Quận 10 ↔ 3/2») rồi xanh sau sửa.</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E1-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E2-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E3-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E4-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E5-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E6-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E7-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-8</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-tach-o-duong-dau-vao-ban-E8-r1</td><td class="mono">2026-11-15T03:58:18Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given ô đường có cụm vị trí rồi đến dấu phẩy lặp hay khoảng trắng trước phẩy («Hẻm 5 ,,1/ Đường chùa Pháp</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E1-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given ô đường mở đầu bằng số nhà trần rồi đến dấu phẩy («208, Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh,</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E2-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · test</h3><p class="crit">AC-3: Given cụm vị trí ngõ/ngách/hẻm/kiệt đứng sau chữ khác («Đường Kiệt 91 Lê Tân Trung», «Đường Kiệt 322 Đường</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E3-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · test</h3><p class="crit">AC-4: Given bề rộng hẻm có số lẻ hay khoảng trắng trước gạch chéo giữa hai số, When so, Then:</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E4-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · test</h3><p class="crit">AC-5: (cross-layer) Given ma trận AC-1…AC-4 cộng ma trận cũ CD-AC-1…7, When chạy trên luật judge và trên bản thẻ</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E5-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · test</h3><p class="crit">AC-6: Given glob suite agent (`tests/*.test.ts` của `agent/package.json`), When quét mọi tệp khớp tìm dấu probe</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E6-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · test</h3><p class="crit">AC-7: (cross-layer) Given DB máy thu hiện tại, When chạy probe qua `executors.test.judge_entity_duong`, Then:</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E7-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.judge_entity_duong</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd agent &amp;&amp; node --import tsx --test tests/judge-entity-duong.test.ts probes/o-duong-that.test.ts
+ℹ duration_ms 1872.408375
+__EXIT=0</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · test</h3><p class="crit">AC-8: Given bản chép DB máy thu mới nhất (`db/db-thu.sh`), When chạy `cd agent &amp;&amp; npm test`, Then exit 0.</p>
+<div class="kv"><span>run_id <b>minted-tach-o-duong-dau-vao-ban-E8-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.agent</b></span><span>verified_at <b>2026-11-15T03:58:18Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">cd agent &amp;&amp; npm test
+ℹ duration_ms 28540.956792
+__EXIT=0</pre>
+</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1 đến E8 đạt cả tám, không eval nào hỏng; không có mục judgment chờ người.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Typo từ vị trí («kiêt 90»), đuôi rác sau tên («… an lạc bình tân»), số nhà dính chữ («175/cô Giang»).</li><li data-loai="ngoai">Đọc tên đường bằng model; sửa dữ liệu nguồn hay thu thập S06 (làn ZCode).</li><li data-loai="ngoai">Đẩy cảnh báo chủ động (issue riêng tư) khi probe ❌ — /ops-check là kênh đọc của lát này.</li><li data-loai="ngoai">Dời bốn ca probe dữ liệu thật khác còn trong suite agent (KD-AC-6 phần b, hai ca LT-AC-6, ca đếm tin của context-resolver). Hiện chúng chưa đỏ, nên chỉ được khoá số bằng danh sách nợ của AC-6; dời là việc riêng (Hỏi-2).</li><li data-loai="ngoai">Sửa evals của ba hồ sơ đã ký dùng `judge_entity_duong` — executor chạy thêm tệp probe nên eval của chúng đo như cũ.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">b49f39504c44397fc973dc6b4dc8b25997d5379c</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
