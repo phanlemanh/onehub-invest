@@ -182,10 +182,28 @@ test("CG10-AC-7 danh sách: lọc dự án không cắt 30, mỗi căn một dò
 
 // ---------- AC-8: hai API ----------
 type DongApi = { offerId: string; discountPct: number; rank?: { level: string | null; node: string | null; label: string | null; n: number | null } } & Record<string, unknown>;
-const KHOA_CU_DATA_API = ["offerId", "priceVnd", "areaM2", "pricePerm2", "bedrooms", "phuong", "marketId", "propertyType", "medianPerm2",
-  "discountPct", "confidence", "firstSeen", "lastSeen", "nReposts", "contact"];
-const KHOA_CU_APP = ["offerId", "source", "priceVnd", "areaM2", "pricePerm2", "bedrooms", "phuong", "medianPerm2", "rulerN", "discountPct",
-  "confidence", "lastSeen"];
+// Bảng khoá cũ viết trước: tên + kiểu (typeof, "null" khi được rỗng) — đổi kiểu một khoá cũ là phá hợp đồng API như mất khoá.
+const SO = ["number", "null"], CHU = ["string", "null"];
+const KHOA_CU_DATA_API: [string, string[]][] = [["offerId", ["string"]], ["priceVnd", SO], ["areaM2", SO], ["pricePerm2", SO],
+  ["bedrooms", SO], ["phuong", CHU], ["marketId", CHU], ["propertyType", CHU], ["medianPerm2", SO], ["discountPct", SO],
+  ["confidence", CHU], ["firstSeen", CHU], ["lastSeen", CHU], ["nReposts", SO], ["contact", ["object", "null"]]];
+const KHOA_CU_APP: [string, string[]][] = [["offerId", ["string"]], ["source", CHU], ["priceVnd", SO], ["areaM2", SO], ["pricePerm2", SO],
+  ["bedrooms", SO], ["phuong", CHU], ["medianPerm2", SO], ["rulerN", SO], ["discountPct", SO], ["confidence", CHU], ["lastSeen", CHU]];
+const kieu = (v: unknown) => (v === null ? "null" : typeof v);
+function kiemKhoaCu(ten: string, x: Record<string, unknown>, khoa: [string, string[]][]) {
+  for (const [k, cho] of khoa) {
+    assert.ok(k in x, `${ten} ${String(x.offerId)} thiếu khoá cũ ${k}`);
+    assert.ok(cho.includes(kieu(x[k])), `${ten} ${String(x.offerId)} khoá cũ ${k} đổi kiểu: ${kieu(x[k])} (cũ: ${cho.join("|")})`);
+  }
+}
+test("CG10-AC-8 đối chứng bảng khoá cũ: mất khoá hay đổi kiểu đều đỏ", () => {
+  const dong = { offerId: "x", source: "S03", priceVnd: 1, areaM2: 1, pricePerm2: 1, bedrooms: null, phuong: "p", medianPerm2: 1, rulerN: 5,
+    discountPct: 10, confidence: "high", lastSeen: "2026-11-01" };
+  kiemKhoaCu("đối chứng", dong, KHOA_CU_APP);
+  assert.throws(() => kiemKhoaCu("đối chứng", { ...dong, priceVnd: "1" }, KHOA_CU_APP), /đổi kiểu/);
+  const { rulerN: _bo, ...thieu } = dong;
+  assert.throws(() => kiemKhoaCu("đối chứng", thieu, KHOA_CU_APP), /thiếu khoá cũ rulerN/);
+});
 test("CG10-AC-8 /v1/deals và /api/v1/deals: project lọc tin cấp dự án, rank.node, project sai → 400, khoá cũ đủ, lược đồ kiểu cloud 200", async () => {
   const kyTap = async (cl: pg.Client, nut: string) => new Set((await cl.query(
     `SELECT offer_id FROM offer_price_rank WHERE kind = 'sale' AND nhan IS NOT NULL AND duoi_trung_vi_pct BETWEEN 0 AND 50
@@ -210,7 +228,7 @@ test("CG10-AC-8 /v1/deals và /api/v1/deals: project lọc tin cấp dự án, r
       for (const x of r.body.data) {
         assert.equal(x.rank?.level, "du_an", `${ten} ${x.offerId} level`);
         assert.equal(x.rank?.node, String(d6), `${ten} ${x.offerId} node`);
-        for (const k of khoa) assert.ok(k in x, `${ten} ${x.offerId} thiếu khoá cũ ${k}`);
+        kiemKhoaCu(ten, x, khoa);
       }
       assert.ok(r.body.data.some((x) => x.rank?.label === "gia-tot"), `${ten}: có dòng gia-tot`);
       const tatCa = await goi(c6, "limit=100&min_discount=0");

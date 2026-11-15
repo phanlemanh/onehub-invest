@@ -11,7 +11,9 @@ import { RegionError } from "@/components/states/region-error";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { getSessionUser } from "@/lib/auth";
-import { dealHang, dealTheoVai, getDeals, getDuAn, getXacMinh, parseProject } from "@/lib/deals";
+import { dealHang, dealTheoVai, getDeals } from "@/lib/deals";
+// Tách dòng: hai ca test nguồn (SHS-AC-6, OD1-AC-9) chép trang và thay nguyên văn dòng import trên.
+import { getDuAn, getXacMinh, parseProject } from "@/lib/deals";
 import { NGAY_TOI_DA, NGUONG_VAO_PCT } from "@/lib/deals-chi-tiet";
 import { canAccessOps, xemNoiDungTin } from "@/lib/ops-access";
 import { loadPendingUnitMatches } from "@/lib/ops/review-cho-ghep";
