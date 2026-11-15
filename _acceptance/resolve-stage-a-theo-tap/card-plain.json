@@ -1,5 +1,5 @@
 {
-  "feature_plain": "Bước dựng căn của chuỗi đêm (gom tin S06 thành căn) chạy trong vài giây thay vì hơn 3 giờ, ra đúng cùng các căn và link như trước — nhờ vậy các bước sau (chỉ số, hạng giá) kịp chạy mỗi đêm.",
+  "feature_plain": "Bước gom tin S06 vào căn của chuỗi đêm từ khoảng 7 giờ còn dưới 10 phút (đo trên bản chép đủ dữ liệu: 6,8 giây cho 91.623 cụm), kết quả không đổi: trên mẫu so với bản cũ, tập căn và link lệch 0.",
   "will_do": [
     {
       "id": "AC-1",
