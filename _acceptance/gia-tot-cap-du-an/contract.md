@@ -130,6 +130,7 @@ Trục lấy từ bảng phủ ca đo chỉ đọc 15/11 (thiết kế §6; ghi 
   - Ngoài-7: Bài kiểm tra lược đồ kiểu cloud chỉ khẳng định rỗng trên DB không có tin khớp, nên không bắt được lọc sai trên cloud.
   - Ngoài-8: Bài kiểm tra AC-6 không phân biệt N = số căn với N = số tin vì dữ liệu thử có mỗi căn một tin.
   - Ngoài-9: Dữ liệu thử dự án dựng tay theo khuôn view 105 (bản chép), lệch với dữ liệu thật chỉ lộ ở phép đo trên bản chép máy thu.
+- Sửa ngoài phạm vi CG10 — ca probe dữ liệu thật TPL-AC-6 đỏ trên mọi nhánh ở máy thu vì dữ liệu trôi (cặp phuong-duc ↔ Phường Phượng Dực đứng trước); GS duyệt 15/11 20:45Z để gỡ hàng ghim; hàng IT7 (`l2-bao-thu-doi-probe-that`, P4) sẽ dời hẳn probe này ra `app/probes/`.
 - PR gộp SAU DV7 (`du-an-cua-tin-len-dinh-vi`, migration 105): test dựng view tạm từ thân 105 nên vòng chạy không chờ. Gộp trước khi áp
   106 vẫn an toàn: bước chấm đêm bỏ dải khi thiếu bảng (AC-4).
 - Migration 106 do N1 giữ số; sổ số migration của điều phối liên làn ghi 106 cho hàng này.
