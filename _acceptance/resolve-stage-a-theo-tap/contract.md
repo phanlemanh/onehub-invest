@@ -73,7 +73,7 @@ Then không có tệp nào; bảng tạm chỉ là `CREATE TEMP TABLE` trong phi
 Trục (preset risk-premortem cho «viết lại một bước dựng căn, giữ kết quả»):
 
 - Lớp cụm: khớp căn · mới có tin chưa gắn · mới toàn tin đã gắn · khớp còn tin chưa gắn — AC-1 trên dữ liệu thật (đếm ở design §Bảng phủ ca).
-- Lớp tin: đã gắn · chưa gắn — AC-1. Thiếu toạ độ (30 tin), thiếu m², giá ≤ 0, cấp thị trường, list_id trùng, thuộc nhiều cụm: số đếm 0 hoặc gần 0 trên dữ liệu nên AC-1 không chạy qua — chưa phủ bằng dữ liệu; điều kiện lọc giữ nguyên chữ của bản cũ và bị ghim bởi AC-5.
+- Lớp tin: đã gắn · chưa gắn — AC-1. Thiếu toạ độ (30 tin), thiếu m², giá ≤ 0, cấp thị trường, list_id trùng, thuộc nhiều cụm: số đếm 0 hoặc gần 0 trên dữ liệu nên AC-1 không chạy qua — chưa phủ bằng dữ liệu; điều kiện lọc (hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề lọc tin S06) được so chữ với `origin/main` ở lượt AC-1 (dòng «điều kiện lọc: khớp …», có đối chứng âm); AC-5 chỉ ghim chữ SQL từ hàng này về sau, bản chụp rút từ chính hàng này.
 - Lượt: lần đầu (AC-1, AC-3) · lần hai (AC-4) · gặp deadlock (AC-6).
 - Thước: phép so có chiều đỏ (AC-2) · phép đo giờ có chiều đỏ (AC-3).
 - Người đọc phía sau: tập dòng không đổi (AC-1) · itest cũ (AC-7).

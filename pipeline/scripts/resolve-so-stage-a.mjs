@@ -3,7 +3,7 @@
 // Chỉ nhận DB thử oneinvest_suite_*; từ chối oneinvest. In thời gian từng bản, số lệch từng bảng; thoát 1 khi lệch.
 //   node scripts/resolve-so-stage-a.mjs --cu oneinvest_suite_sat_cu --moi oneinvest_suite_sat_moi [--rev origin/main] [--chi-moi]
 import { execFileSync } from "node:child_process";
-import { rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
 
@@ -27,6 +27,28 @@ const ghiTam = (ten, rev) => {
   const p = join(GOC, ten);
   writeFileSync(p, execFileSync("git", ["show", `${rev}:pipeline/resolve-properties.mjs`], { cwd: GOC }));
   return p;
+};
+
+// Điều kiện lọc của Stage A phải GIỮ NGUYÊN chữ của bản cũ (rút từ git, không từ ảnh chụp của chính cây đang sửa):
+// hai hằng CLUSTER_EXPR, KHONG_CAP_THI_TRUONG và mệnh đề nối + lọc tin S06 của Stage A, so sau khi gộp khoảng trắng.
+const gop = (t) => t.replace(/\s+/g, " ");
+const hang = (src, ten) => src.match(new RegExp(`const ${ten} = \`[^\`]*\``))?.[0];
+const MENH_DE_LOC = /ON o\.offer_id = 'offer_' \|\| substr\(encode\(digest\('S06\|' \|\| s\.list_id::text, 'sha256'\), 'hex'\), 1, 16\)\s+WHERE o\.source = 'S06' AND s\.latitude IS NOT NULL\s+AND o\.area_m2 IS NOT NULL AND o\.price_vnd > 0/;
+function soLoc(cu, moi) {
+  const manh = [hang(cu, "CLUSTER_EXPR"), hang(cu, "KHONG_CAP_THI_TRUONG"), cu.match(MENH_DE_LOC)?.[0]];
+  if (manh.some((m) => !m)) return { ok: false, ly_do: "bản cũ thiếu một mẩu điều kiện lọc" };
+  const thieu = manh.filter((m) => !gop(moi).includes(gop(m)));
+  return { ok: thieu.length === 0, n: manh.length, ly_do: thieu.map((m) => m.slice(0, 60)).join(" | ") };
+}
+const kiemLoc = (rev) => {
+  const cu = execFileSync("git", ["show", `${rev}:pipeline/resolve-properties.mjs`], { cwd: GOC, encoding: "utf8" });
+  const moi = readFileSync(join(GOC, "resolve-properties.mjs"), "utf8");
+  const r = soLoc(cu, moi);
+  // đối chứng âm: đổi một điều kiện của bản mới thì phép so phải đỏ
+  const hong = soLoc(cu, moi.replace("o.price_vnd > 0", "o.price_vnd >= 0"));
+  if (hong.ok) throw new Error("so-stage-a: phép so điều kiện lọc không thấy đổi «price_vnd > 0» (đối chứng âm hỏng)");
+  console.log(r.ok ? `điều kiện lọc: khớp bản ${rev} (${r.n} mẩu) · đối chứng âm đỏ` : `ĐIỀU KIỆN LỌC KHÁC BẢN ${rev}: ${r.ly_do}`);
+  if (!r.ok) process.exitCode = 1;
 };
 
 let dongMoi = [];
@@ -67,15 +89,19 @@ function lech(a, b) {
 }
 
 const tmp = [];
+// bị ngắt (SIGINT/SIGTERM) thì finally không chạy — dọn tệp tạm bản cũ ở đây rồi thoát đúng mã tín hiệu
+for (const [tin, ma] of [["SIGINT", 130], ["SIGTERM", 143]])
+  process.on(tin, () => { for (const p of tmp) rmSync(p, { force: true }); process.exit(ma); });
 try {
   const moi = join(GOC, "resolve-properties.mjs");
   const kiemTran = (g) => {
     if (!(g < TRAN)) { console.log(`VƯỢT TRẦN: bản mới ${g.toFixed(1)} giây ≥ ${TRAN} giây`); process.exitCode = 1; }
   };
   const kiemLan2 = (a, b) => {
-    // lần hai trên cùng dữ liệu: không căn mới, không link mới
-    if (!/\+ 0 NEW/.test(dongMoi.at(-1) ?? "") || a.property_offers.size !== b.property_offers.size) {
-      console.log(`KHÔNG IDEMPOTENT: lần 2 «${dongMoi.at(-1)}» · link ${a.property_offers.size} → ${b.property_offers.size}`);
+    // lần hai trên cùng dữ liệu: không căn mới, và TẬP căn lẫn TẬP link (không chỉ số lượng) lệch 0 so với sau lần một
+    const lechLan2 = ["properties", "property_offers"].map((k) => [k, lech(a[k], b[k]).n]);
+    if (!/\+ 0 NEW/.test(dongMoi.at(-1) ?? "") || lechLan2.some(([, n]) => n)) {
+      console.log(`KHÔNG IDEMPOTENT: lần 2 «${dongMoi.at(-1)}» · ${lechLan2.map(([k, n]) => `${k} lệch ${n}`).join(" · ")}`);
       process.exitCode = 1;
     }
   };
@@ -88,6 +114,7 @@ try {
     kiemLan2(a, await anh(MOI));
     if (!process.exitCode) console.log(`ĐẠT: dưới trần ${TRAN} giây, lần 2 không đổi`);
   } else {
+    kiemLoc(REV);
     const cu = ghiTam(".resolve-cu.tmp.mjs", REV); tmp.push(cu);
     const truoc = (await anh(MOI)).property_offers.size;
     const [gCu, gMoi] = await Promise.all([chay(CU, cu, "cũ"), chay(MOI, moi, "mới")]);

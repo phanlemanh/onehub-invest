@@ -1,20 +1,56 @@
 {
   "feature_plain": "Bước dựng căn của chuỗi đêm (gom tin S06 thành căn) chạy trong vài giây thay vì hơn 3 giờ, ra đúng cùng các căn và link như trước — nhờ vậy các bước sau (chỉ số, hạng giá) kịp chạy mỗi đêm.",
   "will_do": [
-    {"id":"AC-1","p":"Sẽ cho ra đúng cùng tập căn và link với bản cũ khi chạy trên hai bản chép cùng dữ liệu, và chứng rằng lượt so thật sự tạo căn mới và link mới."},
-    {"id":"AC-2","p":"Sẽ có phép so tự đỏ khi hai bên lệch dù chỉ một link."},
-    {"id":"AC-3","p":"Sẽ xong dưới 5 phút trên bản chép đủ dữ liệu, với lượng việc cỡ một đêm (từ 1.000 link mới trở lên)."},
-    {"id":"AC-4","p":"Sẽ không tạo thêm gì khi chạy lại lần hai trên cùng dữ liệu."},
-    {"id":"AC-5","p":"Sẽ giữ mọi câu SQL đi qua bộ thử lại khi gặp deadlock, chữ SQL được ghim lại."},
-    {"id":"AC-6","p":"Sẽ vẫn tự thử lại và hoàn tất khi gặp deadlock thật ở câu chèn link mới."},
-    {"id":"AC-7","p":"Sẽ giữ xanh các phép đo cũ của bước dựng căn (Stage B đóng băng, khoá gộp căn)."},
-    {"id":"AC-8","p":"Sẽ không đổi lược đồ: không migration, chỉ bảng tạm trong phiên chạy."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ cho ra đúng cùng tập căn và link với bản cũ khi chạy trên hai bản chép cùng dữ liệu, giữ nguyên chữ điều kiện lọc của bản cũ, và chứng rằng lượt so thật sự tạo căn mới và link mới."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ có phép so tự đỏ khi hai bên lệch dù chỉ một link."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ xong dưới 5 phút trên bản chép đủ dữ liệu, với lượng việc cỡ một đêm (từ 1.000 link mới trở lên)."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ không tạo thêm gì khi chạy lại lần hai trên cùng dữ liệu."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ giữ mọi câu SQL đi qua bộ thử lại khi gặp deadlock, chữ SQL được ghim lại."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ vẫn tự thử lại và hoàn tất khi gặp deadlock thật ở câu chèn link mới."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ giữ xanh các phép đo cũ của bước dựng căn: Stage B đóng băng xanh hết; ở khoá gộp căn, mọi ca gọi bộ dựng căn xanh, chỉ ba ca đòi DB chưa áp 098 được đỏ."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ không đổi lược đồ: không migration, chỉ bảng tạm trong phiên chạy."
+    }
   ],
   "wont_do": [
-    {"id":"OOS-1","p":"Không so bản cũ trên đủ dữ liệu trong lượt chấm (bản cũ chạy hàng giờ) — lượt chấm so trên mẫu 5%, một lượt đủ dữ liệu chạy riêng và phải ra lệch 0 trước khi trình Cổng Bằng chứng."},
-    {"id":"OOS-2","p":"Không đổi luật gom căn, Stage B, hay bước nào khác của chuỗi đêm."},
-    {"id":"OOS-3","p":"Không chạm lượt resolve đang chạy trên máy thu; chỉ đếm chỉ đọc."},
-    {"id":"OOS-4","p":"Không sửa ca RTLD-AC-9 đã đỏ sẵn trên main."}
+    {
+      "id": "OOS-1",
+      "p": "Không so bản cũ trên đủ dữ liệu: phép này CHƯA ĐO (bản cũ chạy hàng giờ, lượt đủ dữ liệu bị dừng để nhường máy) và không là điều kiện của Cổng Bằng chứng; căn cứ thay là mẫu 10% và mẫu trước lượt đêm đều lệch 0, có tạo căn và link mới."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không đổi luật gom căn, Stage B, hay bước nào khác của chuỗi đêm."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không chạm lượt resolve đang chạy trên máy thu; chỉ đếm chỉ đọc."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không sửa ca RTLD-AC-9 đã đỏ sẵn trên main."
+    }
   ],
   "decisions_plain": []
 }
