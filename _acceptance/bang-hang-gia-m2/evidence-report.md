@@ -130,20 +130,20 @@ human_signoff: Mạnh 2026-11-15
     đối chứng khoá: đỏ đúng (sai_khoa > 0)
 
 - eval: E10
-  run_id: minted-bang-hang-gia-m2-E10-r1
+  run_id: minted-bang-hang-gia-m2-E10-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-11-14T07:14:55Z
-  carried_from_round: 1
+  verified_at: 2026-11-15T06:35:00Z
   screenshot: evidence/E10-step1.png
   observed: |
-    step1 (/ops/deals, 1280 sáng): trang dựng không có CSS. Thấy thanh bên, bộ lọc «Cần xác minh 30», bảng có ảnh, giá, mức giảm ~−35%, «Thước phường», số tin 49 / 111 / 273…, cột Gọi ai có SĐT và tên người bán, nguồn S06. Không có hàng nào có nhãn «Cần xác minh». Không thấy được vị trí cuối danh sách.
-    step2 (offer_07e2e89511db504e, sáng): chữ trên trang gồm «2,8 tỷ −16.5% S03», «Vì sao giá tốt: So với 145 căn cùng phường, cùng loại (căn hộ), cùng 2PN: thấp hơn trung vị 16.5%, nằm trong 20% rẻ nhất — Rẻ trong phường.», Giá/m² 41 tr/m², Thước phường 49 tr/m², Số tin dựng thước 145 tin S06, Mức giảm 16.5%. Không có «Cần xác minh». Khớp expected.
-    step3 (offer_002fc1c0073d52cd, tối): có nhãn «Cần xác minh» ở đầu trang. «So với 50 căn cùng phường, cùng loại (nhà riêng): thấp hơn trung vị 37.5%, nằm trong 20% rẻ nhất — Rẻ trong phường, rồi quá 35% nên mang nhãn «Cần xác minh»: gọi xác minh trước khi tin.», Mức giảm 37.5%. Khớp expected.
-    step4 (offer_0054ade373ca8bba, tối): thấy «Đã rời danh sách», lý do «Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn», «So với 8 căn cùng phường, cùng loại (đất): thấp hơn trung vị 46.4%», Mức giảm 46.4%, không có «Rẻ trong phường». Trang cũng hiện «Cần xác minh» vì cờ can_xac_minh=true trong DB. Khớp expected và DB. Cả bốn frame đều không có CSS nên không đánh giá được giao diện sáng/tối thật.
+    Chấm lại (vòng delta E10, 15/11) bằng tác tử context sạch trên dev server :3464 (Turbopack, CSS Tailwind thật) trỏ DB thử oneinvest_u1_cg9 (chấm lại 15/11 00:00Z), cây 2e68ff7c (bằng c0e06621 ngoài tệp T1), innerWidth 1280; email đăng nhập đã che.
+    step1 (/ops/deals, sáng): «Căn giá tốt · Giảm từ 5% · 45 ngày gần nhất»; thanh lọc «Tất cả 30 · Đủ để gọi 0 · Cần xác minh 0 · Còn thiếu 30»; mọi dòng nguồn S06, giảm −35%, cột Thước phường. Căn cần xác minh xếp sau 4.809 căn thường (DB: 5–35%) nên nằm ngoài 30 dòng đầu — đúng thứ tự «cần xác minh đứng cuối».
+    step2 (offer_07e2e89511db504e, sáng): «So với 145 căn cùng phường, cùng loại (căn hộ), cùng 2PN: thấp hơn trung vị 16.5%, nằm trong 20% rẻ nhất — Rẻ trong phường.» 41 tr/m², thước 49 tr/m², 145 tin S06, 16.5%; không có «Cần xác minh». Khớp DB.
+    step3 (offer_002fc1c0073d52cd, tối): nhãn «Cần xác minh»; «So với 48 căn cùng phường, cùng loại (nhà riêng): thấp hơn trung vị 38.1%, nằm trong 20% rẻ nhất — Rẻ trong phường, rẻ quá 35% nên mang nhãn «Cần xác minh»…» 167 / 269 tr/m², 48 tin, 38.1%. Khớp DB.
+    step4 (offer_0054ade373ca8bba, tối): «Đã rời danh sách», «Nhóm so sánh chỉ có 5–9 căn — có số, chưa gắn nhãn»; «So với 8 căn cùng phường, cùng loại (đất): thấp hơn trung vị 46.4%…»; 8 / 14 tr/m², 8 tin; không có «Rẻ trong phường»; có «Cần xác minh» theo cờ can_xac_minh=true. Khớp DB.
   network_observed: n-a (driver)
-  ghi chú: carry-forward tu round 1 — delta khong cham paths cua eval
+  ghi chú: chạy lại sau chữ ký vì deals.ts đổi (search_path); thay ảnh round 1 không CSS
 
 ### Lệnh suite (hồi quy)
 
@@ -204,6 +204,7 @@ none — every multi-run eval is uniform
 
 Round 1: tổng kết REJECT — năm phát hiện trong hợp đồng về phép đo yếu (vế âm thiếu đối chứng dương ở AC-6, AC-7, AC-8, AC-9; ma trận AC-6 thiếu phần tử). Returned to implementation.
 Round 2: toàn bộ eval PASS trên commit 98722352 sau bản sửa 687b0c51; E10 mang sang từ round 1 vì delta không chạm paths của nó.
+Round 3 (delta sau chữ ký, 15/11): chỉ E10 chạy lại trên mã hiện tại vì deals.ts đổi (search_path) sau ký — PASS, ảnh mới có CSS thay ảnh round 1.
 
 ### Re-pin lần 1 — 2026-11-15, do nhận main f78e7382 (bản sửa tách ô đường), sửa search_path + stub test sau ký
 run_id: repin-20261115T051440Z-65465
