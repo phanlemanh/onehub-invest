@@ -59,7 +59,9 @@ Then resolve hoàn tất, kết quả bằng lượt sạch, dòng tổng kết 
 ### AC-7 — Người đọc cũ của Stage A còn xanh
 Given itest Stage B đóng băng và itest khoá gộp căn không giá trên DB của riêng lượt,
 When chạy hai itest,
-Then cả hai thoát 0.
+Then itest Stage B thoát 0; ở itest khoá gộp, mọi ca gọi bộ dựng căn (KGC-AC-2, AC-4…AC-7, AC-9, KGC-CAT) xanh, và chỉ ba ca
+tiền đề trước-098 (KGC-AC-8, KGC-AC-1, KGC-AC-3) đỏ — chúng đòi DB chưa áp 098 trong khi DB máy thu đã áp, nên đỏ ở câu kiểm tiền
+đề trước khi gọi bộ dựng căn, trên main cũng vậy (itest thoát 1, đạt-có-giới-hạn).
 
 ### AC-8 — Không DDL lên lược đồ
 Given diff của nhánh so với `origin/main`,

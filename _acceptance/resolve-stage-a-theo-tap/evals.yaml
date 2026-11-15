@@ -56,8 +56,9 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.kgc_db
+    expected_exit: 1
     paths: [pipeline/resolve-properties.mjs, pipeline/tests/resolve-properties-khoa-gop.itest.mjs]
-    expected: "exit 0; mọi ca của itest khoa-gop-can-khong-gia xanh trên DB của riêng lượt."
+    expected: "exit 1 (đạt-có-giới-hạn): «pass 7 · fail 3»; ba ca đỏ đúng là KGC-AC-8 («DB của lượt đã có UNIQUE trước 098»), KGC-AC-1 («dữ liệu chép không có tin gắn hơn một căn — phép đo mất nghĩa») và KGC-AC-3 (dùng ảnh chụp của AC-1) — ca tiền đề trước-098, đỏ vì DB máy thu đã áp 098, không gọi tới bộ dựng căn; mọi ca gọi chayResolve (KGC-AC-2, KGC-CAT, AC-4…AC-7, AC-9) xanh. Ca đỏ nào khác ba ca này là KHÔNG đạt."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
