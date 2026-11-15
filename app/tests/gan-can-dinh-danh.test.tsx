@@ -357,7 +357,7 @@ async function flowLocal(w: Win): Promise<DF> {
 /** Ô của ba cột mức nhận diện theo hàng (tên hàng → chữ ô), đọc từ bảng DOM thật. */
 function oBaCot(root: Element): { thu: string[]; o: Record<string, string[]> } {
   const th = [...root.querySelectorAll("thead th")].map((e) => txt(e))
-  const idx = ["Gom cụm", "Định vị", "Gắn căn"].map((t) => th.indexOf(t))
+  const idx = ["Gom cụm", "Định vị (cấp dự án)", "Gắn căn"].map((t) => th.indexOf(t))  // DV7: cột Định vị nói rõ cấp dự án
   const o: Record<string, string[]> = {}
   for (const tr of root.querySelectorAll("tbody tr")) {
     const td = [...tr.querySelectorAll("td")]
@@ -382,7 +382,7 @@ describe("lưới Chất lượng từng chặng", () => {
     const root = await luoi(rows)
     const { thu, o } = oBaCot(root)
     const i = thu.indexOf("Có phường")
-    assert.deepEqual(thu.slice(i, i + 4), ["Có phường", "Gom cụm", "Định vị", "Gắn căn"], `thứ tự cột: ${thu.join(" | ")}`)
+    assert.deepEqual(thu.slice(i, i + 4), ["Có phường", "Gom cụm", "Định vị (cấp dự án)", "Gắn căn"], `thứ tự cột: ${thu.join(" | ")}`)
     assert.equal(thu.filter((t) => t === "Gắn căn").length, 1)
     // Dò ô bằng textContent ghép: số + tỉ lệ + dòng phụ liền nhau (không khoảng trắng giữa span) — so bằng chuẩn hoá.
     for (const r of rows.filter((x) => x.id === "S03" || x.id === "S06")) {

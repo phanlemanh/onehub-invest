@@ -2,8 +2,8 @@
 // model của bảng chọn PL30, trần tiền theo NGÀY CHI (giờ VN lúc chạy), chạy lại không gọi lại bài đã đọc.
 // Luật 7: chỉ ghi silver_labels + ai_calls (qua chayLuot). Thiết kế: docs/superpowers/specs/2026-11-08-doc-gop-hang-ngay-design.md.
 import { keHoach, napCauHinh } from "./cau-hinh.js";
-import { chayLuot, uocThe, type TomTatChay } from "./chay.js";
-import type { TaoModel } from "./doc.js";
+import { chayLuot, dongDung, uocThe, type TomTatChay } from "./chay.js";
+import type { TaoAnthropic, TaoModel } from "./doc.js";
 import { PROMPT_VERSION } from "./prompt.js";
 import type { RecordCall } from "../../runtime/ai-call-log.js";
 import { docTheTheoPost, type Q, type The } from "./the.js";
@@ -21,8 +21,10 @@ export type TomTatHangNgay = {
   ngay_bai: string; ngay_chi: string; tho: number; bai_thu: number; su_kien: number; trung: number; don_vi: number;
   da_doc: number; bo: number; can_goi: number; goi: number; loi: number; json_hong: number; ghi: number; usd: number;
   chi_ngay_truoc: number; tran: number; cham_tran: boolean; con_lai: number; uoc_usd: number;
+  dung?: "het-tien" | "khoa" | null; loi_dung?: string | null; chuyen_duong?: string[];
 };
-export type KetQuaHangNgay = { ma: 0 | 1 | 3; tomTat: TomTatHangNgay; seGoi: string[] };
+/** Mã thoát: 0 xong · 1 mọi lời gọi hỏng hoặc dừng vì khoá sai · 3 chạm trần · 4 dừng vì hết tiền (goi-thang-anthropic). */
+export type KetQuaHangNgay = { ma: 0 | 1 | 3 | 4; tomTat: TomTatHangNgay; seGoi: string[] };
 
 const CO = new Set(["--ngay", "--tran-ngay-usd", "--cau-hinh", "--thu"]);
 
@@ -100,7 +102,7 @@ async function daDoc(c: Q, the: The[], promptVersion: string): Promise<Set<strin
 }
 
 export async function chayHangNgay(o: {
-  client: Q; co: CoHangNgay; bayGio?: Date; taoModel?: TaoModel; recordCall?: RecordCall;
+  client: Q; co: CoHangNgay; bayGio?: Date; taoModel?: TaoModel; taoAnthropic?: TaoAnthropic; recordCall?: RecordCall;
   uoc?: (t: The, gia: { vao: number; ra: number }) => number; log?: (s: string) => void; logLoi?: (s: string) => void;
 }): Promise<KetQuaHangNgay> {
   const log = o.log ?? console.log;
@@ -138,10 +140,15 @@ export async function chayHangNgay(o: {
     tom.con_lai = canDoc.length;
   } else if (canDoc.length) {
     kq = await chayLuot({
-      client: o.client, the: canDoc, doDaDoc: true, goiDenTran: true, taoModel: o.taoModel, recordCall: o.recordCall, uoc, log,
+      client: o.client, the: canDoc, doDaDoc: true, goiDenTran: true, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: o.recordCall, uoc, log,
       co: { post: seGoi, tranUsd: conTran, cauHinh: o.co.cauHinh, runId: `pl34-${ngayChi}-b${ngayBai}-${bayGio.toISOString()}` },
     });
-    Object.assign(tom, { goi: kq.goi, loi: kq.loi, json_hong: kq.hong, ghi: kq.ghi, usd: Number(kq.usd.toFixed(6)), cham_tran: kq.dungTran, con_lai: kq.conLai });
+    Object.assign(tom, { goi: kq.goi, loi: kq.loi, json_hong: kq.hong, ghi: kq.ghi, usd: Number(kq.usd.toFixed(6)), cham_tran: kq.dungTran, con_lai: kq.conLai, dung: kq.dung, loi_dung: kq.loiDung, chuyen_duong: kq.chuyenDuong });
+    for (const d of kq.chuyenDuong) logLoi(d); // stderr: cảnh báo bám vào «credit một đường đã cạn»
+  }
+  if (kq?.dung) {
+    logLoi(dongDung(kq));
+    return { ma: kq.dung === "het-tien" ? 4 : 1, tomTat: tom, seGoi };
   }
   if (tom.cham_tran) {
     logLoi(`${DONG_CHAM_TRAN} ${o.co.tranNgayUsd} USD ngay ${ngayChi}: da chi ${(chiTruoc + tom.usd).toFixed(4)}, con lai ${tom.con_lai} loi goi`);

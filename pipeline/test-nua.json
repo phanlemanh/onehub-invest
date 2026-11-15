@@ -10,6 +10,7 @@
     "scripts/dau-bai-thu-sql.test.mjs",
     "scripts/do-ngan-sach-yeu-cau.test.mjs",
     "scripts/entrypoint-symlink.test.mjs",
+    "scripts/goi-thang-anthropic.test.mjs",
     "scripts/hang-gia.test.mjs",
     "scripts/importer-schema-v5.test.mjs",
     "scripts/install-collector-api.test.mjs",
@@ -33,7 +34,8 @@
     "scripts/truong-du-an-tren-tin.test.mjs",
     "scripts/tu-vung-du-an.test.mjs",
     "scripts/vocab.test.mjs",
-    "scripts/yeu-cau-ngan-sach.test.mjs"
+    "scripts/yeu-cau-ngan-sach.test.mjs",
+    "scripts/gia-tot-du-an.test.mjs"
   ],
   "b": [
     "parse.test.mjs",

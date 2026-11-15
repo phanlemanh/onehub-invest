@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Frame, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { type DealHang, loaiHinh, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, soPct } from "@/lib/deals-chi-tiet"
+import { chuDaiM2, type DealHang, loaiHinh, nhanThuoc, NGHI_NGO_PCT, NGUONG_LOAI_PCT, NGUONG_VAO_PCT, soPct } from "@/lib/deals-chi-tiet"
 import { fmtInt, fmtVnDate } from "@/lib/format"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
@@ -83,9 +83,15 @@ export function DealBody({ d, xemNoiDung, mayThu, beMat, choGhep }: {
     <Khoi tieuDe={d.discountPct !== null && d.discountPct >= NGUONG_VAO_PCT ? "Vì sao giá tốt" : "So với thước phường"} beMat={beMat}>
       <div className="flex flex-col gap-3">
         {d.cau && <p className="text-sm text-pretty" data-deal-chung-minh>{d.cau}</p>}
+        {d.rank?.level === "du_an" && d.rank.node && (
+          <Button variant="link" size="xs" className="self-start px-0" nativeButton={false}
+            render={<Link prefetch={false} href={`/ops/deals?project=${encodeURIComponent(d.rank.node)}`} />} data-deal-xem-du-an>
+            Xem cả dự án
+          </Button>
+        )}
         <dl className="flex flex-col gap-2">
           <Dong nhan="Giá/m² căn này" value={trM2(d.pricePerm2)} beMat={beMat} />
-          <Dong nhan="Thước phường" value={trM2(d.medianPerm2)} beMat={beMat} />
+          <Dong nhan={nhanThuoc(d)} value={trM2(d.medianPerm2)} beMat={beMat} />
           <Dong nhan="Số tin dựng thước" value={d.rulerN ? `${fmtInt(d.rulerN)} tin S06` : null} beMat={beMat} />
           <Dong nhan="Mức giảm" value={d.discountPct === null ? null : d.discountPct < 0 ? `Đắt hơn ${soPct(d.discountPct)}%` : `${soPct(d.discountPct)}%`} beMat={beMat} />
           <Dong nhan="Ngưỡng" value={`Vào từ ${NGUONG_VAO_PCT}%, xác minh trên ${NGHI_NGO_PCT}%, loại trên ${NGUONG_LOAI_PCT}%`} beMat={beMat} />
@@ -138,7 +144,7 @@ export function DealBody({ d, xemNoiDung, mayThu, beMat, choGhep }: {
       <div className="flex flex-col gap-3">
         <dl className="flex flex-col gap-2">
           <Dong nhan="Loại hình" value={loaiHinh(d.propertyType)} beMat={beMat} />
-          <Dong nhan="Diện tích" value={d.areaM2 ? `${fmtInt(d.areaM2)} m²` : null} beMat={beMat} />
+          <Dong nhan="Diện tích" value={d.areaM2 ? `${fmtInt(d.areaM2)} m²` : d.daiM2 ? chuDaiM2(d.daiM2) : null} beMat={beMat} />
           <Dong nhan="Phòng ngủ" value={d.bedrooms ? fmtInt(d.bedrooms) : null} beMat={beMat} />
           <Dong nhan="Nguồn" value={d.source} beMat={beMat} />
           <Dong nhan="Độ tin trích xuất" value={LABELS_VI.confidence[d.confidence as keyof typeof LABELS_VI.confidence] ?? d.confidence} beMat={beMat} />

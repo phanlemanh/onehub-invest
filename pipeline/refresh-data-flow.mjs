@@ -9,6 +9,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { napNhanhBai } from "./lib/nhanh-bai-s03.mjs";
+import { dinhViKhiCoView } from "./lib/than-600.mjs";
+
+export { DONG_DINH_VI, dinhViKhiCoView } from "./lib/than-600.mjs";
 
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -20,7 +23,7 @@ const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
  */
 export async function chayLamTuoi(c, sql) {
   const dem = await napNhanhBai(c);
-  await c.query(sql);
+  await c.query(await dinhViKhiCoView(c, sql));
   return dem;
 }
 

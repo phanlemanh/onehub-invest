@@ -55,7 +55,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, DealHangGhep>[] = [
           <Button variant="link" size="xs" className="max-w-full justify-start">
             <span className="truncate">{[loaiHinh(d.propertyType) ?? "Chưa rõ loại hình", d.areaM2 ? `${Math.round(d.areaM2)} m²` : null, d.bedrooms ? `${d.bedrooms}PN` : null].filter(Boolean).join(" · ")}</span>
           </Button>
-          <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong].filter(Boolean).join(" · ")}</span>
+          <span className="text-muted-foreground max-w-full truncate ps-2 text-xs">{[d.block, d.phuong, d.soTin && d.soTin > 1 ? `${d.soTin} tin` : null].filter(Boolean).join(" · ")}</span>
           <div className="ps-2"><DealChoGhep ids={d.choGhep} /></div>
         </div>
       </div>
@@ -173,8 +173,10 @@ function hopBoLoc(query: FilterQuery): (d: DealHang) => boolean {
 /** Hằng ngoài component: mặc định `{}` mới mỗi lần vẽ làm `rows` đổi danh tính → bảng tự về trang 1. */
 const KHONG_CHO_GHEP: Record<string, number[]> = {}
 
-export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP }: {
+export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, mayThu, choGhep = KHONG_CHO_GHEP, xacMinh }: {
   rows: DealHang[]
+  /** Tab «Cần xác minh» trên toàn tập (CG10 Hỏi-3): tổng số căn và các căn của tab; vắng → tab đếm trong `rows` như cũ. */
+  xacMinh?: { tong: number; rows: DealHang[] }
   moBanDau?: string | null
   locBanDau?: FilterQuery
   xemNoiDung: boolean
@@ -183,6 +185,9 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   choGhep?: Record<string, number[]>
 }) {
   const rows = useMemo<DealHangGhep[]>(() => tho.map((d) => (choGhep[d.offerId] ? { ...d, choGhep: choGhep[d.offerId] } : d)), [tho, choGhep])
+  // Căn của tab «Cần xác minh» khi đếm trên toàn tập; sheet mở được cả căn chỉ có ở tab này.
+  const xmRows = useMemo<DealHangGhep[] | null>(() => xacMinh?.rows ?? null, [xacMinh])
+  const moDuoc = useMemo(() => (xmRows ? [...rows, ...xmRows.filter((x) => !rows.some((d) => d.offerId === x.offerId))] : rows), [rows, xmRows])
   const [tab, setTab] = useState<Tab>("all")
   const [query, setQuery] = useState<FilterQuery>(() => locBanDau ?? createFilterQuery())
   // Nút Back khôi phục trang từ bộ đệm router, prop là của lần tải đầu; `datMo` chỉ đổi URL, nên URL mới biết căn đang xem.
@@ -196,12 +201,14 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
 
   const fields = useMemo(() => truongLoc(rows, xemNoiDung && mayThu), [rows, xemNoiDung, mayThu])
   const quaLoc = useMemo(() => rows.filter(hopBoLoc(query)), [rows, query])
+  const xmLoc = useMemo(() => (xmRows ? xmRows.filter(hopBoLoc(query)) : null), [xmRows, query])
   const dem = useMemo(() => {
     const c: Record<Tab, number> = { all: quaLoc.length, du: 0, "xac-minh": 0, thieu: 0 }
     for (const d of quaLoc) c[tabCua(d)]++
+    if (xacMinh && xmLoc) c["xac-minh"] = flattenFilterConditions(query).some((k) => k.values.length > 0) ? xmLoc.length : xacMinh.tong
     return c
-  }, [quaLoc])
-  const data = useMemo(() => (tab === "all" ? quaLoc : quaLoc.filter((d) => tabCua(d) === tab)), [quaLoc, tab])
+  }, [quaLoc, xmLoc, xacMinh, query])
+  const data = useMemo(() => (tab === "all" ? quaLoc : tab === "xac-minh" && xmLoc ? xmLoc : quaLoc.filter((d) => tabCua(d) === tab)), [quaLoc, xmLoc, tab])
 
   // Vai Người xem không có liên hệ: bỏ hẳn cột, không ghi «Chưa có SĐT» vì căn không thiếu số.
   const cot = useMemo(() => (xemNoiDung ? COLUMNS : COLUMNS.filter((c) => c.id !== "goi")), [xemNoiDung])
@@ -219,7 +226,7 @@ export function DealsGrid({ rows: tho, moBanDau = null, locBanDau, xemNoiDung, m
   // Thứ tự chuyển căn trong sheet: đúng thứ tự đang thấy (lọc + sắp), không chỉ trang hiện tại.
   const thuTu = table.getSortedRowModel().rows.map((r) => r.original)
   const viTri = thuTu.findIndex((d) => d.offerId === moId)
-  const mo = rows.find((d) => d.offerId === moId) ?? null
+  const mo = moDuoc.find((d) => d.offerId === moId) ?? null
 
   const datMo = (id: string | null) => {
     setMoId(id)
