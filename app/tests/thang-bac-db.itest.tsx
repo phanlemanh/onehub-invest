@@ -16,6 +16,7 @@ import { loadDo1, type Do1 } from "../src/lib/do-hang-ngay"
 
 const GOC = join(import.meta.dirname, "../..")
 const SQL_087 = readFileSync(join(GOC, "db/migrations/087_thang_bac_moi.sql"), "utf8")
+const SQL_105 = readFileSync(join(GOC, "db/migrations/105_offer_project.sql"), "utf8")
 const ROUTER = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
 const ve = (data: Do1 | null) =>
   renderToStaticMarkup(<AppRouterContext.Provider value={ROUTER as never}><DoHangNgay data={data} lat="tong" /></AppRouterContext.Provider>)
@@ -141,8 +142,9 @@ test("TB-AC-7 bên ghi thật → bên đọc thật: dòng đổi thang lên kh
   })
 })
 
-// ---- E8b · AC-8: truy vấn bản ghi thật của Dòng chảy trên DB có 087 — tin trong cụm ở B1, lọc B2 rỗng ----
-test("TB-AC-8 truy vấn bản ghi thật: tin S06 trong cụm ở B1, tin thiếu giá ở B0, lọc B2 rỗng (kèm chiều đỏ)", async () => {
+// ---- E8b · AC-8: truy vấn bản ghi thật của Dòng chảy — tin trong cụm ở B1 (cụm không cho bậc); thang mới DV7 (105): lọc B2
+// ra đúng tin định vị cấp dự án đủ lõi, không còn rỗng ----
+test("TB-AC-8 truy vấn bản ghi thật: tin S06 trong cụm ở B1, tin thiếu giá ở B0, lọc B2 ra đúng tin định vị (kèm chiều đỏ)", async () => {
   await trongGiaoDich(async () => {
     const { rows: [w] } = await c.query("SELECT id FROM areas WHERE region_type = 'submarket' ORDER BY id LIMIT 1")
     const T = `tb8-${process.pid}`
@@ -155,10 +157,18 @@ test("TB-AC-8 truy vấn bản ghi thật: tin S06 trong cụm ở B1, tin thi�
     const { rows: [p] } = await c.query(
       "INSERT INTO properties (area_id, property_type, verification) VALUES ($1, 'apartment', 'pending') RETURNING id", [w.id])
     for (const id of ids.slice(0, 3)) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [p.id, id])
+    // DV7: tin S03 có một bài mang phát biểu dự án sống → định vị cấp dự án qua offer_project (105 áp trong giao dịch).
+    await c.query(SQL_105)
+    const { rows: [nut] } = await c.query(`INSERT INTO asset_nodes (node_type, name, slug) VALUES ('project', $1, $1) RETURNING id`, [`${T}-du-an`])
+    const dv = `${T}-5`
+    await c.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, price_vnd, area_m2, area_id, source, post_ids,
+        first_seen, last_seen) VALUES ($1, 'sale', 'apartment', 2e9, 60, $2, 'S03', ARRAY[$3], now(), now())`, [dv, w.id, `${T}-bai`])
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, rule_id, observed_at)
+      VALUES ($1, 'project_node_id', $2, 'inferred', 'e1_rule', 'du-an-nhom-mot-du-an', now())`, [`S03:${T}-bai`, String(nut.id)])
     const recs = (await docBanGhi()).filter((r) => r.offerId.startsWith(T))
     assert.deepEqual(recs.map((r) => [r.offerId, levelOf(r)]).sort(),
-      [[ids[0], "B1"], [ids[1], "B1"], [ids[2], "B1"], [ids[3], "B0"]], "TB-AC-8 bậc của bản ghi lệch")
-    assert.deepEqual(recs.filter((r) => levelOf(r) === "B2"), [], "TB-AC-8 lọc B2 phải rỗng")
+      [[ids[0], "B1"], [ids[1], "B1"], [ids[2], "B1"], [ids[3], "B0"], [dv, "B2"]], "TB-AC-8 bậc của bản ghi lệch")
+    assert.deepEqual(recs.filter((r) => levelOf(r) === "B2").map((r) => r.offerId), [dv], "TB-AC-8 lọc B2 phải ra đúng tin định vị")
     // chiều đỏ: bản sao câu truy vấn truyền cờ cụm (EXISTS property_offers, luật 056) vào tham số cuối → tin trong cụm lên B2
     const { rows: lech } = await c.query(`SELECT o.offer_id, l.data_level FROM sale_offers o
       CROSS JOIN LATERAL offer_data_level(o.kind, o.property_type, o.price_vnd, o.area_m2, o.area_id,
