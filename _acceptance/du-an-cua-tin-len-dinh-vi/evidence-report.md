@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3645a289f0413fbb09c070f787e460da2ed202d6
+verified_commit: fb0c44c65be545edf53c5195df76b6cd02473e95
 human_signoff: Mạnh 2026-11-16
 ---
 
@@ -200,3 +200,7 @@ Round 1: xem lich su round truoc, da tra ve implementation.
 Round 2: xem lich su round truoc, baseline do lan cuoi o round nay.
 Round 3: E1-E6, E8, E10, E11 PASS; E7 va E9 bi chan vi tai may.
 Round 4: E7 va E9 chay lai tren may thu, PASS; cac eval con lai carry-forward tu round 3.
+
+### Re-pin lần 1 — 2026-11-15, do sửa DT-AC-7: refresh-data-flow không tự trỏ DB chung khi được test import; gộp main c6273411; E9 ghi ra .acceptance-runs
+run_id: repin-20261115T185908Z-26856
+sha: fb0c44c65be545edf53c5195df76b6cd02473e95 · suites: 7 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 · AC không có chốt máy: AC-8
