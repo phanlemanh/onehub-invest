@@ -1,20 +1,28 @@
 // cau-hinh.ts — PL30 `chon-model-theo-o`: bảng chọn model theo ô cho bộ đọc gộp S03. Đổi model của một ô chỉ bằng sửa
 // tệp agent/config/doc-gop-s03.json (câu chặn của hàng); mã bộ đọc không đổi. Tệp sai thì dừng trước lời gọi đầu.
-// Ba mã Gateway là danh sách đóng theo ADR-0007 sửa đổi 06/11 («Model khác cần lời mới của Mạnh»). Cờ gửi (không giữ dữ
-// liệu, không huấn luyện, DeepSeek chỉ qua Baseten) đặt ở đây theo mã Gateway, bảng chọn không tắt được.
+// Ba mã model là danh sách đóng theo ADR-0007 sửa đổi 06/11 («Model khác cần lời mới của Mạnh»). Cờ gửi (không giữ dữ
+// liệu, không huấn luyện, DeepSeek chỉ qua Baseten) đặt ở đây theo mã model, bảng chọn không tắt được.
+// goi-thang-anthropic (15/11): mỗi model có `duong` — "gateway" (mặc định) hay "anthropic" (API Anthropic thẳng, chỉ model có
+// trong DUONG_ANTHROPIC). Mã model (trường `gateway`) vẫn là danh tính: silver_labels.model, ai_calls.model không đổi theo đường.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { FIELDS, laField, type Field } from "./o.js";
 
-export const GATEWAY_DUYET = ["anthropic/claude-haiku-5.5", "zai/glm-5.3-flash", "deepseek/deepseek-v4.1-flash-1017"] as const;
+export const MODEL_DUYET = ["anthropic/claude-haiku-5.5", "zai/glm-5.3-flash", "deepseek/deepseek-v4.1-flash-1017"] as const;
+/** Model được gọi thẳng API Anthropic và mã gọi tương ứng (skill claude-api: Claude Haiku 5.5 = `claude-haiku-5-5`). */
+export const DUONG_ANTHROPIC: Readonly<Record<string, string>> = Object.freeze({ "anthropic/claude-haiku-5.5": "claude-haiku-5-5" });
+export const DUONG = ["gateway", "anthropic"] as const;
+export type Duong = (typeof DUONG)[number];
+/** Biến môi trường chứa khoá của từng đường (đọc lúc gọi, không lưu). */
+export const KHOA_DUONG: Readonly<Record<Duong, string>> = Object.freeze({ gateway: "AI_GATEWAY_API_KEY", anthropic: "ANTHROPIC_API_KEY" });
 /** Giá trị ô «để người duyệt»: không model nào điền ô này vào kết quả gộp. */
 export const NGUOI = "nguoi";
 export const DUONG_MAC_DINH = join(import.meta.dirname, "../../../config/doc-gop-s03.json");
 
-export type Model = { gateway: string; gia_vao: number; gia_ra: number };
+export type Model = { gateway: string; gia_vao: number; gia_ra: number; duong?: Duong };
 export type CauHinh = { phien_ban: 1; mac_dinh: string; model: Record<string, Model>; o: Partial<Record<Field, string>> };
-export type NhomGoi = { khoa: string; gateway: string; gia: { vao: number; ra: number }; o: Field[] };
+export type NhomGoi = { khoa: string; gateway: string; duong: Duong; gia: { vao: number; ra: number }; o: Field[] };
 export type KeHoach = { nhom: NhomGoi[]; nguoi: Field[] };
 
 const laSoKhongAm = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0;
@@ -29,8 +37,14 @@ export function kiemCauHinh(x: unknown): CauHinh {
     if (k === NGUOI) throw new Error(`bảng chọn: khoá model «${NGUOI}» dành cho người duyệt`);
     if (!banGhi(m)) throw new Error(`bảng chọn: model ${k} không phải object`);
     if (typeof m.gateway !== "string" || !m.gateway) throw new Error(`bảng chọn: model ${k} thiếu gateway`);
-    if (!(GATEWAY_DUYET as readonly string[]).includes(m.gateway)) {
-      throw new Error(`bảng chọn: model ${k} dùng gateway ${m.gateway} ngoài ba mã đã duyệt (${GATEWAY_DUYET.join(", ")})`);
+    if (!(MODEL_DUYET as readonly string[]).includes(m.gateway)) {
+      throw new Error(`bảng chọn: model ${k} dùng gateway ${m.gateway} ngoài ba mã đã duyệt (${MODEL_DUYET.join(", ")})`);
+    }
+    if (m.duong !== undefined && !(DUONG as readonly unknown[]).includes(m.duong)) {
+      throw new Error(`bảng chọn: model ${k} có duong ${JSON.stringify(m.duong)} — chỉ ${DUONG.join(" | ")}`);
+    }
+    if (m.duong === "anthropic" && !DUONG_ANTHROPIC[m.gateway]) {
+      throw new Error(`bảng chọn: model ${k} (${m.gateway}) không có đường anthropic — chỉ ${Object.keys(DUONG_ANTHROPIC).join(", ")}`);
     }
     if (!laSoKhongAm(m.gia_vao)) throw new Error(`bảng chọn: model ${k} thiếu gia_vao`);
     if (!laSoKhongAm(m.gia_ra)) throw new Error(`bảng chọn: model ${k} thiếu gia_ra`);
@@ -76,10 +90,18 @@ export function keHoach(c: CauHinh): KeHoach {
   }
   const nhom = [...theoKhoa.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([khoa, o]) => {
     const m = c.model[khoa];
-    return { khoa, gateway: m.gateway, gia: { vao: m.gia_vao, ra: m.gia_ra }, o };
+    return { khoa, gateway: m.gateway, duong: m.duong ?? "gateway", gia: { vao: m.gia_vao, ra: m.gia_ra }, o };
   });
   return { nhom, nguoi };
 }
+
+/** Khoá môi trường mà kế hoạch cần (theo đường của từng nhóm), xếp theo tên; vắng biến nào thì lệnh thoát 5 trước lời gọi đầu. */
+export function khoaCan(kh: KeHoach): string[] {
+  return [...new Set(kh.nhom.map((n) => KHOA_DUONG[n.duong]))].sort();
+}
+
+/** Khoá vắng (rỗng hay không đặt) trong môi trường. */
+export const khoaThieu = (kh: KeHoach, env: NodeJS.ProcessEnv = process.env): string[] => khoaCan(kh).filter((k) => !env[k]);
 
 /** Cờ gửi kèm mọi lời gọi Gateway, theo mã Gateway — không đọc từ bảng chọn. */
 export function tuyChonGui(gateway: string): { gateway: { zeroDataRetention: true; disallowPromptTraining: true; only?: string[] } } {

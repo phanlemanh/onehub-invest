@@ -2,7 +2,7 @@
 // Chạy qua `db/db-thu.sh oneinvest_suite_dgs --chay` (executor dgs_db) — DB của riêng lượt, không đụng DB chung.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -99,7 +99,7 @@ test("DGS-AC-4 tin nhắn có chữ nguyên văn, ảnh tệp, nhóm; không ng�
     const { lat } = await dungLat(c, [{ text: "Bán căn TEN_THAT_Z 2PN giá 3,4 tỷ", anh: 2 }]);
     const ghi: Ghi[] = [];
     let anhThieu = -1;
-    await chayLuot({ client: c, co: { lat, tranUsd: 1, thu: true }, taoModel: gatewayGia(() => json17(), ghi), recordCall: async () => {}, log: () => {} });
+    await chayLuot({ client: c, co: { cauHinh: CAU_GW, lat, tranUsd: 1, thu: true }, taoModel: gatewayGia(() => json17(), ghi), recordCall: async () => {}, log: () => {} });
     const { docTheTheoLat } = await import("../src/enrich/doc-gop-s03/the.js");
     anhThieu = (await docTheTheoLat(c, lat))[0].anh_thieu;
     assert.equal(ghi.length, 1);
@@ -121,7 +121,7 @@ test("DGS-AC-5 chay ghi đúng một nhãn bạc + một ai_calls; bảng khác 
   await withTx(async (c) => {
     const { lat, ids } = await dungLat(c, [{ text: "Cho thuê căn 2PN PR2 giá 14tr" }]);
     const truoc = { so: await dem(c, "sale_offers"), ep: await dem(c, "enrichment_proposals"), rq: await dem(c, "review_queue"), el: await dem(c, "eval_labels"), ai: await dem(c, "ai_calls") };
-    await chayLuot({ client: c, co: { lat, tranUsd: 1, runId: "dgs-run" }, log: () => {},
+    await chayLuot({ client: c, co: { cauHinh: CAU_GW, lat, tranUsd: 1, runId: "dgs-run" }, log: () => {},
       taoModel: gatewayGia(() => json17({ listing_intent: { v: "offer", cc: "chu_bai", trich: "Cho thuê" }, kind: { v: "rent_lt", cc: "chu_bai", trich: "Cho thuê" } }), []) });
     const { rows } = await c.query(`SELECT model, prompt_version, listing_intent, kind, probabilities p, json_ok FROM silver_labels WHERE post_id = $1`, [ids[0]]);
     assert.equal(rows.length, 1);
@@ -146,7 +146,7 @@ test("DGS-AC-7 JSON hỏng ghi lại kèm tiền, lỗi mạng không ghi; lư�
     const { lat, ids } = await dungLat(c, [{ text: "bai A hong" }, { text: "bai B mang" }, { text: "bai C tot" }]);
     const tra1 = (p: string) => (p.includes("bai A") ? "khong phai json" : p.includes("bai B") ? new TypeError("mang") : json17());
     const ai0 = await dem(c, "ai_calls");
-    await chayLuot({ client: c, co: { lat, tranUsd: 1 }, taoModel: gatewayGia(tra1, []), log: () => {} });
+    await chayLuot({ client: c, co: { cauHinh: CAU_GW, lat, tranUsd: 1 }, taoModel: gatewayGia(tra1, []), log: () => {} });
     const nhan = async () => (await c.query(`SELECT post_id, json_ok, error_kind, cost_usd::float8 cost FROM silver_labels WHERE post_id = ANY ($1) ORDER BY post_id`, [ids])).rows;
     let r = await nhan();
     assert.deepEqual(r.map((x) => [x.post_id, x.json_ok, x.error_kind]), [[ids[0], false, "json-hong"], [ids[2], true, null]]);
@@ -155,7 +155,7 @@ test("DGS-AC-7 JSON hỏng ghi lại kèm tiền, lỗi mạng không ghi; lư�
     assert.equal(await dem(c, "ai_calls"), ai0 + 3);
     assert.ok(loi.some((x) => !x.ok && x.loi === "TypeError"));
     const ghi2: Ghi[] = [];
-    await chayLuot({ client: c, co: { lat, tranUsd: 1 }, taoModel: gatewayGia(() => json17(), ghi2), log: () => {} });
+    await chayLuot({ client: c, co: { cauHinh: CAU_GW, lat, tranUsd: 1 }, taoModel: gatewayGia(() => json17(), ghi2), log: () => {} });
     assert.equal(ghi2.length, 2, "chỉ gọi lại bài JSON hỏng và bài lỗi mạng");
     r = await nhan();
     assert.deepEqual(r.map((x) => x.json_ok), [true, true, true]);
@@ -165,6 +165,16 @@ test("DGS-AC-7 JSON hỏng ghi lại kèm tiền, lỗi mạng không ghi; lư�
 
 // ---------- lệnh cham (AC-9) ----------
 import { chamLuot } from "../src/enrich/doc-gop-s03/cham-lenh.js";
+
+/** goi-thang-anthropic: bảng chọn của kho nay cho Haiku đi thẳng API Anthropic; các ca PL30/PL34 dưới đây đo hành vi qua Gateway
+ * giả (taoModel), nên chạy trên bản sao bảng chọn của kho với mọi model ở đường gateway. */
+const CAU_GW = (() => {
+  const goc = JSON.parse(readFileSync(join(import.meta.dirname, "../config/doc-gop-s03.json"), "utf8"));
+  for (const m of Object.values(goc.model) as { duong?: string }[]) delete m.duong;
+  const tep = join(mkdtempSync(join(tmpdir(), "cau-gw-")), "doc-gop-s03.json");
+  writeFileSync(tep, JSON.stringify(goc));
+  return tep;
+})();
 
 test("DGS-AC-9 chấm trên lát vàng tạm khớp bảng tính tay, không ghi DB, tóm tắt chỉ có số", async () => {
   await withTx(async (c) => {
@@ -183,7 +193,7 @@ test("DGS-AC-9 chấm trên lát vàng tạm khớp bảng tính tay, không ghi
       area_m2: { v: "62.0", cc: "chu_bai", trich: "bai" },
     });
     const truoc = [await dem(c, "silver_labels"), await dem(c, "ai_calls"), await dem(c, "eval_labels")];
-    const { tomTat } = await chamLuot({ client: c, lat, tranUsd: 1, taoModel: gatewayGia(tra, []), log: () => {} });
+    const { tomTat } = await chamLuot({ cauHinh: CAU_GW, client: c, lat, tranUsd: 1, taoModel: gatewayGia(tra, []), log: () => {} });
     assert.deepEqual([tomTat.o.listing_intent?.dung, tomTat.o.listing_intent?.n], [3, 3]);
     assert.deepEqual([tomTat.o.price_min_vnd?.dung, tomTat.o.price_min_vnd?.n], [2, 3], "BANG CHAM LECH BANG TINH TAY");
     assert.deepEqual([tomTat.o.area_m2?.dung, tomTat.o.area_m2?.n], [3, 3], "BANG CHAM LECH BANG TINH TAY");
@@ -203,7 +213,7 @@ test("DGS-AC-9 lệnh chấm chỉ lấy thẻ đã gắn nhãn", async () => {
     const items = (await c.query(`SELECT item_id::int FROM eval_label_items WHERE lat = $1 ORDER BY item_id`, [lat])).rows;
     await c.query(`DELETE FROM eval_labels WHERE item_id = $1`, [items[1].item_id]);
     const ghi: Ghi[] = [];
-    const { tomTat } = await chamLuot({ client: c, lat, tranUsd: 1, taoModel: gatewayGia(() => json17(), ghi), log: () => {} });
+    const { tomTat } = await chamLuot({ cauHinh: CAU_GW, client: c, lat, tranUsd: 1, taoModel: gatewayGia(() => json17(), ghi), log: () => {} });
     assert.equal(tomTat.so_the, 1, "CHAM GOI THE CHUA CO NHAN");
     assert.equal(ghi.length, 1, "CHAM GOI THE CHUA CO NHAN");
   });

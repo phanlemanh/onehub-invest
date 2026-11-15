@@ -2,11 +2,15 @@
 // label-nhap-ghep.mjs — PL35 tap-nhan-ghep-tin-hai-khu (AC-5, AC-6, AC-7): nháp nhãn toà, trục, căn cho bài của lát
 // `hai-khu-ghep`, ghi vào eval_label_items.draft theo khuôn màn /ops/labels đọc (app/src/lib/labels-cuon-chieu.ts nhapTuDraft).
 //   node --env-file=.env pipeline/label-nhap-ghep.mjs --lat hai-khu-ghep [--gioi-han N] [--lam-lai] [--thu]
-// Tác tử (model mặc định của agent/config/doc-gop-s03.json, qua Vercel AI Gateway) chỉ nhận chữ bài và danh sách toà/trục của
+// Tác tử (model mặc định của agent/config/doc-gop-s03.json, đi theo `duong` của model đó: "anthropic" gọi thẳng API Anthropic bằng
+// SDK chính chủ mượn từ agent/node_modules, khoá ANTHROPIC_API_KEY; "gateway" qua Vercel AI Gateway, khoá AI_GATEWAY_API_KEY —
+// goi-thang-anthropic 15/11). Hết tiền (HTTP 402) ở một lời gọi: lát dừng ngay, in `JOB FAIL [label-nhap-ghep] het-tien`, thoát 4.
+// Tác tử chỉ nhận chữ bài và danh sách toà/trục của
 // khu đọc từ danh bạ — không nhận, không đọc phát biểu hay kết quả gắn của PL20. Mỗi ô kèm câu trích nguyên văn; câu trích
 // không có trong chữ bài thì ô đó để trống. Bài đã có nhãn người: không đổi draft. Lệnh không ghi eval_labels (Luật 7: nháp
 // chờ người duyệt). Bài đã có nháp thì bỏ qua, trừ khi --lam-lai. --thu: gọi tác tử, in, không ghi.
 import { readFileSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -50,18 +54,36 @@ const HUONG_DAN = `Bạn đọc một bài rao bất động sản trong nhóm c
 Mỗi ô kèm "trich": câu trích NGUYÊN VĂN, ngắn, chép từ bài làm căn cứ. Không suy đoán; không có căn cứ trong bài thì v = null.
 Chỉ trả về một object JSON: {"building":{"v":...,"trich":...},"stack":{"v":...,"trich":...},"unit_number":{"v":...,"trich":...}}`;
 
-/** Model mặc định của agent/config (cùng bảng chọn với đọc gộp S03, PL30 — một chỗ đổi model). */
-export function modelMacDinh(root = ROOT) {
+/** Model mặc định của agent/config (cùng bảng chọn với đọc gộp S03, PL30 — một chỗ đổi model) và đường gọi của nó. */
+export function cauHinhMacDinh(root = ROOT) {
   const cau = JSON.parse(readFileSync(path.join(root, "agent/config/doc-gop-s03.json"), "utf8"));
-  const gw = cau?.model?.[cau?.mac_dinh]?.gateway;
-  if (typeof gw !== "string" || !GATEWAY_DUYET.includes(gw)) {
+  const m = cau?.model?.[cau?.mac_dinh];
+  const gw = m?.gateway;
+  if (typeof gw !== "string" || !MODEL_DUYET.includes(gw)) {
     throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — mac_dinh «${cau?.mac_dinh}» không trỏ model có gateway trong ba mã đã duyệt`);
   }
-  return gw;
+  const duong = m.duong ?? "gateway";
+  if (duong !== "gateway" && !(duong === "anthropic" && DUONG_ANTHROPIC[gw])) {
+    throw new Error(`label-nhap-ghep: agent/config/doc-gop-s03.json — model ${gw} không có đường «${duong}»`);
+  }
+  return { model: gw, duong };
 }
+export const modelMacDinh = (root = ROOT) => cauHinhMacDinh(root).model;
 
-/** Ba model đã duyệt cho việc đọc tin (AGENTS.md luật 6) — chép từ agent/src/enrich/doc-gop-s03/cau-hinh.ts GATEWAY_DUYET. */
-export const GATEWAY_DUYET = Object.freeze(["anthropic/claude-haiku-5.5", "zai/glm-5.3-flash", "deepseek/deepseek-v4.1-flash-1017"]);
+/** Ba model đã duyệt cho việc đọc tin (AGENTS.md luật 6) và bảng đường anthropic — chép từ agent/src/enrich/doc-gop-s03/cau-hinh.ts
+ * (MODEL_DUYET, DUONG_ANTHROPIC); test PL35 canh hai bản khớp. */
+export const MODEL_DUYET = Object.freeze(["anthropic/claude-haiku-5.5", "zai/glm-5.3-flash", "deepseek/deepseek-v4.1-flash-1017"]);
+export const DUONG_ANTHROPIC = Object.freeze({ "anthropic/claude-haiku-5.5": "claude-haiku-5-5" });
+
+/** Lỗi hết tiền nhà cung cấp (HTTP 402 hay kiểu billing_error / insufficient_funds): nhapLat dừng cả lát. */
+export class LoiHetTien extends Error {
+  constructor(nguon, http, kieu) { super(`label-nhap-ghep: ${nguon} hết tiền (${http ?? "-"} ${kieu ?? "-"})`); this.het_tien = true; }
+}
+/** Hết tiền: 402, kiểu billing_error / insufficient_funds, hay 400 «credit balance is too low» của API Anthropic (cùng luật
+ * agent/src/runtime/loi-nha-cung-cap.ts; message chỉ để so mẫu, không chép ra). */
+const laHetTien = (http, kieu, msg = "") =>
+  http === 402 || kieu === "billing_error" || kieu === "insufficient_funds" || (http === 400 && /credit balance is too low/i.test(msg));
+
 /** Cờ gửi kèm lời gọi, theo mã Gateway — cùng luật tuyChonGui của agent (DeepSeek chỉ đi nhà cung cấp đã ghim). */
 export function tuyChonGui(gateway) {
   const chung = { zeroDataRetention: true, disallowPromptTraining: true };
@@ -70,7 +92,7 @@ export function tuyChonGui(gateway) {
 
 /** Tác tử thật: một lời gọi Gateway (API kiểu OpenAI), không giữ dữ liệu, không dùng huấn luyện. */
 export function tacTuGateway({ model = modelMacDinh(), fetchFn = fetch } = {}) {
-  if (!GATEWAY_DUYET.includes(model)) throw new Error(`label-nhap-ghep: model «${model}» ngoài ba mã đã duyệt`);
+  if (!MODEL_DUYET.includes(model)) throw new Error(`label-nhap-ghep: model «${model}» ngoài ba mã đã duyệt`);
   const base = process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1";
   return async ({ chu, toa, truc }) => {
     if (!process.env.AI_GATEWAY_API_KEY) throw new Error("label-nhap-ghep: thiếu AI_GATEWAY_API_KEY — chạy với --env-file=.env");
@@ -86,16 +108,62 @@ export function tacTuGateway({ model = modelMacDinh(), fetchFn = fetch } = {}) {
         providerOptions: tuyChonGui(model),
       }),
     });
-    if (!res.ok) throw new Error(`label-nhap-ghep: Gateway trả ${res.status}`);
-    const raw = (await res.json())?.choices?.[0]?.message?.content ?? "";
+    if (!res.ok) {
+      let kieu = null;
+      let msg = "";
+      try { const j = await res.json(); kieu = j?.error?.type ?? null; msg = String(j?.error?.message ?? ""); } catch { kieu = null; }
+      if (laHetTien(res.status, kieu, msg)) throw new LoiHetTien("Gateway", res.status, kieu);
+      throw new Error(`label-nhap-ghep: Gateway trả ${res.status}`);
+    }
+    return docTraLoi((await res.json())?.choices?.[0]?.message?.content ?? "");
+  };
+}
+
+/** Chữ model trả về → object JSON; không đọc được là LỖI (đếm vào loi, không ghi nháp rỗng — nháp rỗng làm lần sau bỏ qua bài). */
+function docTraLoi(raw) {
+  {
     const s = String(raw).replace(/```(?:json)?/g, "");
     const a = s.indexOf("{"), b = s.lastIndexOf("}");
     let o = null;
     try { o = a >= 0 && b > a ? JSON.parse(s.slice(a, b + 1)) : null; } catch { o = null; }
-    // Trả lời không đọc được là LỖI (đếm vào loi, không ghi nháp rỗng — nháp rỗng làm lần sau bỏ qua bài).
     if (!o || typeof o !== "object" || Array.isArray(o)) throw new Error("label-nhap-ghep: trả lời của model không phải object JSON");
     return o;
+  }
+}
+
+/** SDK chính chủ @anthropic-ai/sdk, mượn từ agent/node_modules (pipeline không mang phụ thuộc này). */
+export function napSdkAnthropic(root = ROOT) {
+  const m = createRequire(path.join(root, "agent/package.json"))("@anthropic-ai/sdk");
+  return m.default ?? m.Anthropic ?? m;
+}
+
+/** Tác tử thật đường anthropic: một lời gọi API Anthropic (SDK chính chủ). Khoá ANTHROPIC_API_KEY đọc lúc gọi, truyền tường minh
+ * (không rơi về hồ sơ đăng nhập trên đĩa). Không gửi temperature (Haiku 5.5 trả 400 với giá trị lấy mẫu khác mặc định). */
+export function tacTuAnthropic({ model = modelMacDinh(), taoClient } = {}) {
+  const ma = DUONG_ANTHROPIC[model];
+  if (!ma) throw new Error(`label-nhap-ghep: model «${model}» không có đường anthropic`);
+  return async ({ chu, toa, truc }) => {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error("label-nhap-ghep: thiếu ANTHROPIC_API_KEY — chạy với --env-file=.env");
+    const client = taoClient ? taoClient() : new (napSdkAnthropic())({ apiKey: process.env.ANTHROPIC_API_KEY, authToken: null, maxRetries: 2, timeout: 120_000 });
+    let r;
+    try {
+      r = await client.messages.create({
+        model: ma, max_tokens: 600, system: HUONG_DAN,
+        messages: [{ role: "user", content: `Danh sách toà: ${toa.join(", ") || "(trống)"}\nTrục đã biết: ${truc.join(", ") || "(trống)"}\n\nBài:\n${chu}` }],
+      });
+    } catch (e) {
+      const kieu = typeof e?.type === "string" ? e.type : e?.error?.error?.type ?? null;
+      if (laHetTien(e?.status, kieu, String(e?.message ?? ""))) throw new LoiHetTien("Anthropic", e.status, kieu);
+      throw new Error(`label-nhap-ghep: Anthropic trả ${e?.status ?? e?.name ?? "lỗi"}${kieu ? ` ${kieu}` : ""}`);
+    }
+    return docTraLoi((r.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join(""));
   };
+}
+
+/** Tác tử theo bảng chọn: đường của model mặc định. */
+export function tacTuMacDinh(root = ROOT) {
+  const { model, duong } = cauHinhMacDinh(root);
+  return duong === "anthropic" ? tacTuAnthropic({ model }) : tacTuGateway({ model });
 }
 
 /**
@@ -127,7 +195,11 @@ export async function nhapLat(c, { lat, tacTu, gioiHan = Infinity, lamLai = fals
     if (kq.goi >= gioiHan) break;
     kq.goi++;
     let traLoi;
-    try { traLoi = await tacTu({ chu: r.text ?? "", ...danhBa[khu] }); } catch (e) { kq.loi++; kq.loi_cuoi = String(e.message ?? e); continue; }
+    try { traLoi = await tacTu({ chu: r.text ?? "", ...danhBa[khu] }); } catch (e) {
+      kq.loi++; kq.loi_cuoi = String(e.message ?? e);
+      if (e?.het_tien) { kq.het_tien = true; break; } // hết tiền: mọi lời gọi sau cũng hỏng — dừng cả lát
+      continue;
+    }
     const { draft, bo } = draftTuTraLoi(traLoi, r.text ?? "");
     kq.o_bo_trich += bo.length;
     if (kq.mau.length < 3) kq.mau.push({ item_id: r.item_id, o: draft.cach_doc[CACH_DOC].o, bo });
@@ -161,11 +233,12 @@ async function main() {
   const c = new pg.Client({ connectionString: DATABASE_URL });
   await c.connect();
   try {
-    const kq = await nhapLat(c, { ...co, tacTu: tacTuGateway() });
+    const kq = await nhapLat(c, { ...co, tacTu: tacTuMacDinh() });
     console.log(`label-nhap-ghep: lát ${kq.lat} · ${kq.tong} bài · gọi ${kq.goi} · ghi ${kq.ghi}${co.thu ? " (--thu: không ghi)" : ""}`);
     console.log(`bỏ: có nhãn người ${kq.bo_co_nguoi} · đã có nháp ${kq.bo_co_nhap} · nhóm không khớp khu ${kq.bo_khu} · ô bỏ vì câu trích không có trong bài ${kq.o_bo_trich} · lỗi gọi ${kq.loi}`);
     for (const m of kq.mau) console.log(`mẫu item ${m.item_id}: ${JSON.stringify(m.o)}${m.bo.length ? ` · bỏ ${m.bo.join(",")}` : ""}`);
-    if (kq.loi) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); process.exitCode = 1; }
+    if (kq.het_tien) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); console.error("JOB FAIL [label-nhap-ghep] het-tien"); process.exitCode = 4; }
+    else if (kq.loi) { console.error(`lỗi gọi cuối: ${kq.loi_cuoi}`); process.exitCode = 1; }
   } finally {
     await c.end();
   }

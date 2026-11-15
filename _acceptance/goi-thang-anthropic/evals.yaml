@@ -1,0 +1,99 @@
+schema_version: 1
+feature_slug: goi-thang-anthropic
+# Hai executor riêng của hồ sơ:
+#   gta_agent    — agent/tests/goi-thang-anthropic.test.ts (máy chủ Anthropic giả qua ANTHROPIC_BASE_URL + Gateway giả, ca DB trên DB của
+#                  riêng lượt qua db/db-thu.sh, BEGIN…ROLLBACK)
+#   gta_pipeline — pipeline/scripts/goi-thang-anthropic.test.mjs (label-nhap-ghep, doc-gop-hang-ngay.sh, mau-soat — tiến trình con giả)
+# Mỗi ca mang tiền tố GTA-AC-<n>; chiều đỏ ghi ở expected là bản trước vòng (main f78e7382).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/config/doc-gop-s03.json, agent/src/enrich/doc-gop-s03/cau-hinh.ts, pipeline/label-nhap-ghep.mjs]
+    expected: "exit 0; các ca 'GTA-AC-1 …' ok: Haiku duong anthropic mã gọi claude-haiku-5-5, GLM/DeepSeek gateway, MODEL_DUYET ba mã, bảng chọn anthropic cho GLM/DeepSeek hay duong lạ bị từ chối gọi tên model, bản chép pipeline khớp. Chiều đỏ: main không có trường duong → ca đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/src/enrich/doc-gop-s03/doc.ts, agent/src/enrich/doc-gop-s03/prompt.ts, agent/config/doc-gop-s03.json]
+    expected: "exit 0; ca 'GTA-AC-2 …' ok: máy chủ giả nhận đúng 1 POST /v1/messages, model claude-haiku-5-5, max_tokens 8000, Authorization Bearer khoá giả, không temperature, không thinking, nội dung chữ · Ảnh 1 · image base64 · Ảnh 2 · image base64; Gateway giả nhận 0 lời gọi Haiku và lời gọi GLM mang zeroDataRetention. Chiều đỏ: main gọi Gateway"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/src/enrich/doc-gop-s03/doc.ts, agent/src/enrich/doc-gop-s03/chay.ts]
+    expected: "exit 0; ca 'GTA-AC-3 …' ok: silver_labels.model gateway:anthropic/claude-haiku-5.5, probabilities.duong anthropic, cost_usd 0.00095, ai_calls.model không đổi ok true, chạy lại 0 lời gọi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/scripts/doc-gop-s03.ts, agent/src/enrich/doc-gop-s03/cham-lenh.ts, agent/src/enrich/doc-gop-s03/cau-hinh.ts]
+    expected: "exit 0; ca 'GTA-AC-4 …' ok: hang-ngay/chay/cham thoát 5 với 'THIEU KHOA ANTHROPIC_API_KEY' (bảng Haiku anthropic) và 'THIEU KHOA AI_GATEWAY_API_KEY' (bảng có nhóm gateway), không ECONNREFUSED; client đường anthropic nhận khoá tường minh. Chiều đỏ: main thoát 2 và chỉ biết AI_GATEWAY_API_KEY"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/src/runtime/loi-nha-cung-cap.ts, agent/src/enrich/doc-gop-s03/doc.ts]
+    expected: "exit 0; ca 'GTA-AC-5 …' ok: bảng bảy ca ra đúng chuỗi loi (khoa:401:authentication_error:AuthenticationError · het-tien:402:billing_error:… · han-muc:429:rate_limit_error:RateLimitError · may-chu:529:overloaded_error:… · het-gio:-:-:… · het-tien:402:insufficient_funds:GatewayInternalServerError · may-chu:500:…), mọi chuỗi ≤ 80 ký tự, không chứa chữ message của máy chủ giả. Chiều đỏ: main ghi tên lớp trần"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.gta_agent
+    paths: [agent/src/enrich/doc-gop-s03/chay.ts, agent/src/enrich/doc-gop-s03/hang-ngay.ts, agent/scripts/doc-gop-s03.ts]
+    expected: "exit 0; ca 'GTA-AC-6 …' ok: ba bài, lời gọi đầu 402 → 1 lời gọi, 1 dòng ai_calls, 0 nhãn, mã 4, stderr 'JOB FAIL [doc-gop-s03] het-tien: anthropic 402 billing_error' (và gateway 402 insufficient_funds); 401 → 1 lời gọi, mã 1, 'JOB FAIL [doc-gop-s03] khoa'; 429 → 3 lời gọi. Chiều đỏ: main gọi đủ 3 lời"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.gta_pipeline
+    paths: [pipeline/doc-gop-hang-ngay.sh, pipeline/mau-soat-cuon-chieu.mjs]
+    expected: "exit 0; ca 'GTA-AC-7 …' ok: node giả thoát 4 → doc-gop-hang-ngay.sh gọi hang-ngay đúng 1 lần, thoát 4; goiDocGopThat với con thoát 4 → lỗi mang het_tien, main in 'JOB FAIL [cloud-sync] bước mau-soat-cuon-chieu het-tien' thoát 4; con thoát 3 giữ hành vi cũ. Chiều đỏ: main gọi 2 lần"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.gta_pipeline
+    paths: [pipeline/label-nhap-ghep.mjs]
+    expected: "exit 0; ca 'GTA-AC-8 …' ok: tác tử đường anthropic POST /v1/messages model claude-haiku-5-5 khoá từ ANTHROPIC_API_KEY; thiếu khoá ném lỗi gọi tên biến; 402 ở bài đầu → 1 lời gọi, het_tien true, 0 nháp ghi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/**]
+    expected: "exit 0; bộ test agent xanh (kể cả ca PL30/PL34 cũ đã chỉnh mã thoát thiếu khoá 2→5)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline_a
+    paths: [pipeline/**]
+    expected: "exit 0; nửa A bộ test pipeline xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline_b
+    paths: [pipeline/**]
+    expected: "exit 0; nửa B bộ test pipeline xanh (có ca PL35 bản chép MODEL_DUYET)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.product_map
+    paths: [PRODUCT-MAP.md, LO-TRINH.html, _acceptance/**]
+    expected: "exit 0; 'PRODUCT-MAP.md khớp hồ sơ xưởng.' và 'LO-TRINH.html khớp tệp ý định và hồ sơ.'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.gta_luoi
+    paths: [_acceptance/**]
+    expected: "exit 0; lưới trước-merge không còn VIOLATION nào ngoài dòng chờ của chính goi-thang-anthropic"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

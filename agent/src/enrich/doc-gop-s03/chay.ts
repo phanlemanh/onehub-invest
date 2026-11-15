@@ -6,13 +6,23 @@ import { SQL_GHI_DOC } from "../doc-toan-bo.js";
 import { KIND as KIND_SINH, LISTING_INTENT } from "../../vocab.generated.js";
 import type { RecordCall } from "../../runtime/ai-call-log.js";
 import { keHoach, napCauHinh, type KeHoach, type NhomGoi } from "./cau-hinh.js";
-import { hoiGop, kiemTrich, type KetQuaGoi, type TaoModel } from "./doc.js";
+import { hoiGop, kiemTrich, type KetQuaGoi, type TaoAnthropic, type TaoModel } from "./doc.js";
+import { laLopDung } from "../../runtime/loi-nha-cung-cap.js";
 import { FIELDS, type Field } from "./o.js";
 import { chuNguoiDung, HUONG_DAN, PROMPT_SHA, PROMPT_VERSION } from "./prompt.js";
 import { docTheTheoLat, docTheTheoPost, type Q, type The } from "./the.js";
 
 export type CoChay = { lat?: string; split?: "dev" | "test"; post?: string[]; tranUsd: number; cauHinh?: string; runId?: string; thu?: boolean };
-export type TomTatChay = { the: number; goi: number; loi: number; hong: number; lopLoi: string[]; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number };
+export type TomTatChay = {
+  the: number; goi: number; loi: number; hong: number; lopLoi: string[]; ghi: number; usd: number; conLai: number; dungTran: boolean; bo: number;
+  /** goi-thang-anthropic: lượt dừng sớm vì lớp lỗi làm mọi lời gọi sau hỏng (hết tiền, khoá sai); `loiDung` là chuỗi ai_calls.loi. */
+  dung: "het-tien" | "khoa" | null; loiDung: string | null; duongDung: string | null;
+};
+/** Dòng stderr cho cảnh báo bám vào khi lượt dừng sớm. */
+export const dongDung = (k: Pick<TomTatChay, "dung" | "loiDung" | "duongDung">): string => {
+  const [, http = "-", kieu = "-"] = (k.loiDung ?? "").split(":");
+  return `JOB FAIL [doc-gop-s03] ${k.dung}: ${k.duongDung ?? "-"} ${http} ${kieu}`;
+};
 
 const CO = new Set(["--lat", "--split", "--post", "--tran-usd", "--cau-hinh", "--run-id", "--thu"]);
 
@@ -63,7 +73,7 @@ export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string },
   const intent = yd && typeof yd.v === "string" && Y_DINH.has(yd.v) ? yd.v : "unknown";
   const kv = giao("kind") ? o.kind?.v : undefined;
   const probabilities = {
-    nguon: "doc-gop", cau_hinh_sha: cau.sha, prompt_sha: PROMPT_SHA, o_duoc_giao: n.o, o,
+    nguon: "doc-gop", duong: n.duong, cau_hinh_sha: cau.sha, prompt_sha: PROMPT_SHA, o_duoc_giao: n.o, o,
     so_anh: t.anh.length, anh_thieu: t.anh_thieu, token_vao: k.vao, token_ra: k.ra, finish: k.finish ?? null,
   };
   return [
@@ -80,7 +90,7 @@ export function dongNhan(t: The, n: NhomGoi, k: KetQuaGoi, cau: { sha: string },
  *   thật lớn nhất đã gặp trong lượt) cộng tiền thật đã chi, vượt trần thì dừng.
  */
 export async function chayLuot(o: {
-  client: Q; co: CoChay; taoModel?: TaoModel; recordCall?: RecordCall; the?: The[];
+  client: Q; co: CoChay; taoModel?: TaoModel; taoAnthropic?: TaoAnthropic; recordCall?: RecordCall; the?: The[];
   uoc?: (t: The, gia: { vao: number; ra: number }) => number; log?: (s: string) => void;
   doDaDoc?: boolean; goiDenTran?: boolean;
 }): Promise<TomTatChay> {
@@ -91,7 +101,7 @@ export async function chayLuot(o: {
   const uoc = o.uoc ?? uocThe;
   const tatCa = o.the ?? (o.co.lat ? await docTheTheoLat(o.client, o.co.lat, o.co.split) : await docTheTheoPost(o.client, o.co.post ?? []));
   const the = tatCa.filter((t) => t.text.trim() || t.anh.length);
-  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, hong: 0, lopLoi: [], ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length };
+  const kq: TomTatChay = { the: the.length, goi: 0, loi: 0, hong: 0, lopLoi: [], ghi: 0, usd: 0, conLai: 0, dungTran: false, bo: tatCa.length - the.length, dung: null, loiDung: null, duongDung: null };
   if (kq.bo) log(`bo ${kq.bo} bai khong chu khong anh`);
 
   // Đã có nhãn đọc được cùng (bài, chữ, model, prompt) → không gọi lại.
@@ -120,7 +130,7 @@ export async function chayLuot(o: {
       log(`cham tran ${o.co.tranUsd} USD: da chi ${kq.usd.toFixed(4)}, con lai ${kq.conLai}`);
       break;
     }
-    const k = await hoiGop({ gateway: n.gateway, gia: n.gia, the: t, taoModel: o.taoModel, recordCall: record, trace: runId });
+    const k = await hoiGop({ gateway: n.gateway, duong: n.duong, gia: n.gia, the: t, taoModel: o.taoModel, taoAnthropic: o.taoAnthropic, recordCall: record, trace: runId });
     kq.goi++;
     kq.usd += k.usd;
     datNhat = Math.max(datNhat, k.usd);
@@ -129,6 +139,11 @@ export async function chayLuot(o: {
       kq.loi++;
       if (!kq.lopLoi.includes(k.error_kind)) kq.lopLoi.push(k.error_kind);
       log(`loi goi ${n.gateway} bai ${t.post_id}: ${k.error_kind}`);
+      if (laLopDung(k.lop)) { // hết tiền / khoá sai: mọi lời gọi sau cũng hỏng — dừng cả lượt, không bắn tiếp
+        Object.assign(kq, { dung: k.lop, loiDung: k.error_kind, duongDung: n.duong, conLai: viec.length - i - 1 });
+        log(`dung som: ${k.lop} (${k.error_kind}), con lai ${kq.conLai} loi goi`);
+        break;
+      }
       continue;
     }
     if (!o.co.thu) kq.ghi += (await o.client.query(SQL_GHI_DOC, dongNhan(t, n, k, cau, runId))).rowCount ?? 0;
