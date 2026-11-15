@@ -50,6 +50,7 @@ const levelColumn = (
   id: "clustered" | "located" | "unitLinked",
   title: string,
   pending?: "locatedPending" | "uniqueIdPending",
+  size = 110,
 ): ColumnDef<DataGridFeatures, QualityRow> => ({
   accessorFn: (r) => r[id] ?? -1,
   id,
@@ -57,7 +58,7 @@ const levelColumn = (
   cell: ({ row }) => (
     <StageCell value={row.original[id]} of={row.original.offers} pending={pending ? row.original[pending] : null} />
   ),
-  size: 110,
+  size,
   enableSorting: true,
   meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
 })
@@ -135,7 +136,7 @@ const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
     meta: { headerClassName: "hidden lg:table-cell", cellClassName: "hidden lg:table-cell" },
   },
   levelColumn("clustered", "Gom cụm"),
-  levelColumn("located", "Định vị (cấp dự án)", "locatedPending"),
+  levelColumn("located", "Định vị (cấp dự án)", "locatedPending", 170),
   levelColumn("unitLinked", "Gắn căn", "uniqueIdPending"),
   {
     accessorFn: (r) => r.latestAt ?? "",
