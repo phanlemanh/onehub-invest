@@ -378,6 +378,8 @@ executors:
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
+    nntd_do: "node _acceptance/ngoai-n-tu-dinh-tuyen-bat/do-mo-phong.mjs"   # ngoai-n-tu-dinh-tuyen-bat: dựng lại 9 hồ sơ đã ký (mốc d2b4beaf) về trước Cổng 2, chạy dinh-tuyen-may.cjs của kit với config thật
+    nntd_luoi: "! bash scripts/pre-merge-check.sh . --base origin/main 2>&1 | grep '^VIOLATION' | grep -vF 'VIOLATION [ngoai-n-tu-dinh-tuyen-bat]'"   # ngoai-n-tu-dinh-tuyen-bat AC-8 — lưới trước-gộp không có vi phạm nào ngoài dòng chờ của chính hồ sơ
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
